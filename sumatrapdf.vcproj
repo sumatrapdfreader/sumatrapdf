@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\utf_util.c"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\win_util.c"
 				>
 			</File>

@@ -16,4 +16,5 @@ Long term todo:
 * better, animated about screen
 * a nicer way to show selected text
 * convert WindowInfo_* to a class
+* update poppler to latest version
 
