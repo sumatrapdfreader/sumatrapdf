@@ -56,7 +56,7 @@ bool Translations_SetCurrentLanguage(const char* lang)
     return false;
 }
 
-const char* Translatations_GetTranslation(const char* txt)
+const char* Translations_GetTranslationA(const char* txt)
 {
     // perf shortcut: don't bother translating if we use default lanuage
     if (0 == currLangIdx)
@@ -82,9 +82,9 @@ const char* Translatations_GetTranslation(const char* txt)
 static WCHAR* lastTxtCached = NULL;
 
 // TODO: this is not thread-safe. lastTxtCached should be per-thread
-const WCHAR* Translatations_GetTranslationW(const char* txt)
+const WCHAR* Translations_GetTranslationW(const char* txt)
 {
-    txt = Translatations_GetTranslation(txt);
+    txt = Translations_GetTranslationA(txt);
     if (!txt) return NULL;
     if (lastTxtCached)
         free(lastTxtCached);

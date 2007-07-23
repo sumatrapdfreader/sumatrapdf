@@ -1,5 +1,7 @@
 Short term todo (before next 0.7 release):
 * change toolbar tooltips after changing a language
+* fix Translations_GetTranslationW() so that second call to 
+Translations_GetTranslationW() doesn't free data returned by previous call
 * use MultiByteToWideChar() 
   (http://msdn2.microsoft.com/en-us/library/ms776413.aspx) with CP_UTF8
   for utf8->utf16 conversion

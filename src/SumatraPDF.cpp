@@ -558,7 +558,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
         if (str_eq(title, SEP_ITEM))
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
         else {
-            const WCHAR* wtitle = Translatations_GetTranslationW(title);
+            const WCHAR* wtitle = Translations_GetTranslationW(title);
             if (wtitle)
                 AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
         }
@@ -3702,17 +3702,28 @@ static void OnMenuAbout() {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-BOOL PrivateIsAppThemed() {
-    BOOL isThemed = FALSE;
-    HMODULE hDll = LoadLibrary("uxtheme.dll");
-    if (!hDll) return FALSE;
+class LibLoader {
+public:
+    LibLoader(const char *libName) {
+        _hlib = LoadLibrary(libName);
+    }
+    ~LibLoader() { if (_hlib) FreeLibrary(_hlib); }
+    FARPROC GetProcAddr(const char *procName) {
+        if (!_hlib) return NULL;
+        return GetProcAddress(_hlib, procName);
+    }
+    HMODULE _hlib;
+};
 
-    FARPROC fp = GetProcAddress(hDll, "IsAppThemed");
-    if (fp)
-        isThemed = fp();
-
-    FreeLibrary(hDll);
-    return isThemed;
+bool IsAppThemed() {
+    LibLoader lib("uxtheme.dll");
+    FARPROC fp = lib.GetProcAddr("IsAppThemed");
+    if (!fp) 
+        return false;
+    if (fp())
+        return true;
+    else
+        return false;
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
@@ -3734,8 +3745,6 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN )
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
-    BOOL            bIsAppThemed = PrivateIsAppThemed();
-
     HWND hwndOwner = win->hwndFrame;
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
                                  0,0,0,0, hwndOwner,(HMENU)IDC_TOOLBAR, hInst,NULL);
@@ -3791,7 +3800,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     rbBand.fMask   = /*RBBIM_COLORS | RBBIM_TEXT | RBBIM_BACKGROUND | */
                    RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE /*| RBBIM_SIZE*/;
     rbBand.fStyle  = /*RBBS_CHILDEDGE |*//* RBBS_BREAK |*/ RBBS_FIXEDSIZE /*| RBBS_GRIPPERALWAYS*/;
-    if (bIsAppThemed)
+    if (IsAppThemed())
         rbBand.fStyle |= RBBS_CHILDEDGE;
     rbBand.hbmBack = NULL;
     rbBand.lpText     = "Toolbar";
