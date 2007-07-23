@@ -2656,7 +2656,7 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
-static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y)
+static void OnMouseRightButtonDown(WindowInfo *win, int x, int y)
 {
     assert(win);
     if (!win) return;
@@ -2678,7 +2678,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y)
     }
 }
 
-static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
+static void OnMouseRightButtonUp(WindowInfo *win, int x, int y)
 {
     PdfLink *       link;
     const char *    url;
@@ -2772,7 +2772,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     }
 }
 
-static void OnMouseRightButtonDown(WindowInfo *win, int x, int y)
+static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y)
 {
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
     assert (win);
@@ -2793,7 +2793,7 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y)
     }
 }
 
-static void OnMouseRightButtonUp(WindowInfo *win, int x, int y)
+static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
 {
     assert (win);
     if (!win) return;
