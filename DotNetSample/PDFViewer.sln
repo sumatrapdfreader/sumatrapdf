@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDFViewer", "PDFViewer\PDFViewer.csproj", "{859467C7-DDAB-4335-829D-9A78A19814AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlugInInterface", "PlugInInterface\PlugInInterface.csproj", "{BE6E1AEF-8290-42DA-A19D-6C1ED5C5E893}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamplePlugIn", "SamplePlugIn\SamplePlugIn.csproj", "{0D961C8A-DCF1-4955-B157-4231337734BD}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://146.89.110.236:8080/
+		SccProjectUniqueName0 = PDFViewer\\PDFViewer.csproj
+		SccProjectName0 = ../../../../PDFViewer
+		SccLocalPath0 = PDFViewer
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = PlugInInterface\\PlugInInterface.csproj
+		SccProjectName2 = PlugInInterface
+		SccLocalPath2 = PlugInInterface
+		SccProjectUniqueName3 = SamplePlugIn\\SamplePlugIn.csproj
+		SccProjectName3 = SamplePlugIn
+		SccLocalPath3 = SamplePlugIn
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{859467C7-DDAB-4335-829D-9A78A19814AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{859467C7-DDAB-4335-829D-9A78A19814AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{859467C7-DDAB-4335-829D-9A78A19814AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{859467C7-DDAB-4335-829D-9A78A19814AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE6E1AEF-8290-42DA-A19D-6C1ED5C5E893}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE6E1AEF-8290-42DA-A19D-6C1ED5C5E893}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE6E1AEF-8290-42DA-A19D-6C1ED5C5E893}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE6E1AEF-8290-42DA-A19D-6C1ED5C5E893}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D961C8A-DCF1-4955-B157-4231337734BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D961C8A-DCF1-4955-B157-4231337734BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D961C8A-DCF1-4955-B157-4231337734BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D961C8A-DCF1-4955-B157-4231337734BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

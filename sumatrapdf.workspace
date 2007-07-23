@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="sumatrapdf workspace">
+		<Project filename="sumatrapdf.cbp" active="1" >
+			<Depends filename="fitzlib.cbp" />
+			<Depends filename="popplerlib.cbp" />
+		</Project>
+		<Project filename="fitzlib.cbp" />
+		<Project filename="popplerlib.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

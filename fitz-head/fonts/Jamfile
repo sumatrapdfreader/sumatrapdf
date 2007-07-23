@@ -1,0 +1,20 @@
+SubDir TOP fonts ;
+
+Library libfonts :
+	Dingbats.cff
+	StandardSymL.cff
+	URWChanceryL-MediItal.cff
+	NimbusMonL-Bold.cff
+	NimbusMonL-BoldObli.cff
+	NimbusMonL-Regu.cff
+	NimbusMonL-ReguObli.cff
+	NimbusRomNo9L-Medi.cff
+	NimbusRomNo9L-MediItal.cff
+	NimbusRomNo9L-Regu.cff
+	NimbusRomNo9L-ReguItal.cff
+	NimbusSanL-Bold.cff
+	NimbusSanL-BoldItal.cff
+	NimbusSanL-Regu.cff
+	NimbusSanL-ReguItal.cff
+	;
+

@@ -1,0 +1,192 @@
+# -------------------------------------------------------------------------
+#
+# Jamrules -- the build flags for Fitz and GhostPDF
+# This file is sourced by Jamfile when making
+# Put all configuration stuff here
+#
+
+OPTIM = ; # disable jam's built-in optimization flags 
+if $(OS) = MINGW
+{
+	FREETYPECC ?= -Ic:/msys/1.0/local/include -Ic:/msys/1.0/local/include/freetype2 ;
+	FREETYPELD ?= -Lc:/msys/1.0/local/lib -lfreetype ;
+}
+
+FREETYPECC ?= "`freetype-config --cflags`" ;
+FREETYPELD ?= "`freetype-config --libs`" ;
+
+# Optional modules:
+
+HAVE_JBIG2DEC ?= no ;
+HAVE_JASPER ?= no ;
+
+# -------------------------------------------------------------------------
+
+# Default optimize/profile/debug compiler/linker switches
+# Basic system should be mostly SUSv3 compliant
+# These are good for GCC
+
+# FLAG_CCALL = -Wall -D_XOPEN_SOURCE=600 $(FREETYPECC) ;
+FLAG_CCALL = -Wall $(FREETYPECC) ;
+FLAG_CCALL = -Wall $(FREETYPECC) ;
+FLAG_CCDEBUG = -g -O ;
+FLAG_CCRELEASE = -O3 ;
+FLAG_CCPROFILE = -g -pg ;
+FLAG_LDPROFILE = -pg ;
+
+# Now it gets hairy...
+
+switch $(OS)
+{
+	case LINUX :
+		HAVE_X11 = yes ;
+		NEED_STRLCPY = yes ;
+		NEED_STRLCAT = yes ;
+		NEED_STRSEP = no ;
+		FLAG_CCALL += -std=gnu99 -DHAVE_C99 ;
+		FLAG_LDALL += -L/opt/local/lib -L/usr/X11R6/lib ;
+
+		switch $(CC)-$(OSPLAT)
+		{
+		case icc-X86 :
+			FLAG_CCRELEASE = -DARCH_X86 -O3 -ip -tpp6 -xM ;
+			FLAG_CCPROFILE = -g -qp ;
+		case gcc-X86 :
+			# add -msse -msse2 when such functions exist...
+			FLAG_CCRELEASE = -DARCH_X86 -O3 -march=pentium -mmmx ;
+		}
+
+	case MACOSX :
+		FLAG_LDALL += -L/opt/local/lib -L/usr/X11R6/lib ;
+		FLAG_CCALL += -I/usr/X11R6/include -std=gnu99 -DHAVE_C99 -Wno-pointer-sign ;
+		FLAG_CCRELEASE = -DARCH_PPC -faltivec -fast ;
+
+	case MINGW :
+		NEED_GETOPT = yes ;
+		NEED_STRSEP = yes ;
+		NEED_STRLCAT = yes ;
+		NEED_STRLCPY = yes ;
+		FLAG_CCALL += -std=gnu99 -DHAVE_C99 -DWIN32 ;
+		NOARSCAN = yes ;
+
+	case SOLARIS :
+		HAVE_X11 = yes ;
+		NEED_STRSEP = yes ;
+		FLAG_CCALL += -std=c89 ;
+		FLAG_CCRELEASE += -DARCH_SPARC ;
+
+	# Additional platforms go here
+
+	case * :
+		Echo "OS '$(OS)' not known by build system." ;
+		Echo "If you get errors, please edit Jamrules." ;
+		FLAG_CCALL += -std=c89 ;
+}
+
+# -------------------------------------------------------------------------
+#
+# Switch on BUILD type (profile, debug or release)
+#
+
+BUILD ?= debug ;
+
+switch $(BUILD)
+{
+	case debug :
+		Echo "Building DEBUG target" ;
+		CCFLAGS = $(FLAG_CCALL) $(FLAG_CCDEBUG) ;
+		LINKFLAGS = $(FLAG_LDALL) $(FLAG_LDDEBUG) ;
+	case release :
+		Echo "Building RELEASE target" ;
+		CCFLAGS = $(FLAG_CCALL) $(FLAG_CCRELEASE) ;
+		LINKFLAGS = $(FLAG_LDALL) $(FLAG_LDRELEASE) ;
+	case profile :
+		Echo "Building PROFILE target" ;
+		CCFLAGS = $(FLAG_CCALL) $(FLAG_CCPROFILE) ;
+		LINKFLAGS = $(FLAG_LDALL) $(FLAG_LDPROFILE) ;
+	case * :
+		Exit "Unknown BUILD target:" $(BUILD) ;
+}
+
+# -------------------------------------------------------------------------
+#
+# Fitz specific rules
+#
+
+ALL_LOCATE_TARGET = [ FDirName $(TOP) build $(BUILD) ] ;
+
+HDRS = [ FDirName $(TOP) include ] ;
+
+BINDIR = [ FDirName $(TOP) dist ] ;
+
+LINKLIBS = $(FREETYPELD) -lexpat -ljpeg -lz -lm ;
+FITZLIBS =
+	# libsamus -- discontinued
+        libmupdf libfonts
+	libdraw
+	libworld
+	libstream
+	libbase
+;
+
+if $(HAVE_JASPER) = yes
+{
+	DEFINES += HAVE_JASPER ;
+	LINKLIBS += -ljasper ;
+}
+
+if $(HAVE_JBIG2DEC) = yes
+{
+	DEFINES += HAVE_JBIG2DEC ;
+	LINKLIBS += -ljbig2dec ;
+}
+
+if $(NEED_GETOPT)  = yes { DEFINES += NEED_GETOPT ; }
+if $(NEED_STRLCAT) = yes { DEFINES += NEED_STRLCAT ; }
+if $(NEED_STRLCPY) = yes { DEFINES += NEED_STRLCPY ; }
+if $(NEED_STRSEP)  = yes { DEFINES += NEED_STRSEP ; }
+
+rule UserObject
+{
+	switch $(>)
+	{
+	case *.rc :
+		WindRes $(<) : $(>) ;
+
+	case *.cff :
+		Cc $(<) : $(<:S=.c) ;
+		HexDump $(<:S=.c) : $(>) ;
+
+	case * :
+		Echo "unknown suffix on" $(>) ;
+	}
+}
+
+rule HexDump
+{
+	Depends $(<) : $(>) ;
+	MakeLocate $(<) : $(LOCATE_SOURCE) ;
+	Clean clean : $(<) ;
+}
+
+rule WindRes
+{
+	Depends $(<) : $(>) ;
+	Clean clean : $(<) ;
+}
+
+actions HexDump { xxd -i $(>) | sed -e 's/unsigned/const unsigned/' > $(<) }
+actions WindRes { windres -i $(>) -o $(<) --include-dir=$(>:D) }
+
+rule XCopy
+{
+	for i in $(<)
+	{
+		local d = [ FDirName $(ALL_LOCATE_TARGET) $(i:D) ] ;
+		LOCATE on $(i:G=xcopy) = $(ALL_LOCATE_TARGET) ;
+		Depends $(i:G=xcopy) : $(d:G=dir) ;
+		MkDir $(d:G=dir) ;
+		File $(i:G=xcopy) : $(i) ;
+	}
+}
+

@@ -1,0 +1,47 @@
+SubDir TOP stream ;
+
+Library libstream :
+
+	crypt_arc4.c
+	crypt_crc32.c
+	crypt_md5.c
+
+	obj_array.c
+	obj_dict.c
+	obj_parse.c
+	obj_print.c
+	obj_simple.c
+
+	stm_buffer.c
+	stm_filter.c
+	stm_open.c
+	stm_read.c
+	stm_write.c
+	stm_misc.c
+
+	filt_pipeline.c
+	filt_arc4.c
+	filt_null.c
+
+	filt_a85d.c
+	filt_a85e.c
+	filt_ahxd.c
+	filt_ahxe.c
+	filt_dctd.c
+	filt_dcte.c
+	filt_faxd.c
+	filt_faxdtab.c
+	filt_faxe.c
+	filt_faxetab.c
+	filt_flate.c
+	filt_lzwd.c
+	filt_lzwe.c
+	filt_predict.c
+	filt_rld.c
+	filt_rle.c
+
+	;
+
+if $(HAVE_JASPER)   = yes { Library libstream : filt_jpxd.c ; }
+if $(HAVE_JBIG2DEC) = yes { Library libstream : filt_jbig2d.c ; }
+

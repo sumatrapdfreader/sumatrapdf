@@ -1,0 +1,14 @@
+SubDir TOP draw ;
+
+Library libdraw :
+	draw_pixmap.c
+	draw_fill.c
+	draw_stroke.c
+	draw_scan.c
+	draw_font.c
+
+	draw_main.c
+	draw_node.c
+	draw_prim.c
+	;
+
