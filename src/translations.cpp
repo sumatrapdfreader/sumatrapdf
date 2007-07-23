@@ -29,6 +29,7 @@ const char **g_transTranslations;
 
 // numeric index of the current language. 0 ... g_transLangsCount-1
 static int currLangIdx = 0;
+static WCHAR **g_translationsUnicode = NULL;  // cached unicode translations
 
 /* 'data'/'data_len' is a text describing all texts we translate.
    It builds data structures need for quick lookup of translations
@@ -56,16 +57,15 @@ bool Translations_SetCurrentLanguage(const char* lang)
     return false;
 }
 
-const char* Translations_GetTranslationA(const char* txt)
+const char* Translations_GetTranslationAndIndexA(const char* txt, int& idx)
 {
-    // perf shortcut: don't bother translating if we use default lanuage
-    if (0 == currLangIdx)
-        return txt;
+    assert(currLangIdx < g_transLangsCount);
     for (int i=0; i < g_transTranslationsCount; i++) {
         // TODO: translations are sorted so can use binary search
         const char *tmp =  g_transTranslations[i];
         int cmp_res = strcmp(txt, tmp);
         if (0 == cmp_res) {
+            idx = i;
             tmp = g_transTranslations[(currLangIdx * g_transTranslationsCount) + i];
             if (NULL == tmp)
                 return txt;
@@ -76,26 +76,47 @@ const char* Translations_GetTranslationA(const char* txt)
         }
     }
     assert(0); // bad - didn't find a translation
+    idx = -1;
     return txt;
 }
 
-static WCHAR* lastTxtCached = NULL;
+const char* Translations_GetTranslationA(const char* txt)
+{
+    // perf shortcut: don't bother translating if we use default lanuage
+    if (0 == currLangIdx)
+        return txt;
+    int idx;
+    return Translations_GetTranslationAndIndexA(txt, idx);
+}
 
-// TODO: this is not thread-safe. lastTxtCached should be per-thread
 const WCHAR* Translations_GetTranslationW(const char* txt)
 {
-    txt = Translations_GetTranslationA(txt);
-    if (!txt) return NULL;
-    if (lastTxtCached)
-        free(lastTxtCached);
-    lastTxtCached = utf8_to_utf16(txt);
-    return (const WCHAR*)lastTxtCached;
+    if (!g_translationsUnicode) {
+        g_translationsUnicode = (WCHAR**)zmalloc(sizeof(WCHAR*) * g_transTranslationsCount * g_transLangsCount);
+        if (!g_translationsUnicode)
+            return NULL;
+    }
+    int idx;
+    txt = Translations_GetTranslationAndIndexA(txt, idx);
+    if (!txt || (-1 == idx)) return NULL;
+    int transIdx = (currLangIdx * g_transTranslationsCount) + idx;
+    WCHAR *trans = g_translationsUnicode[transIdx];
+    if (!trans) {
+        g_translationsUnicode[transIdx] = utf8_to_utf16(txt);
+        trans = g_translationsUnicode[transIdx];
+    }
+    return (const WCHAR*)trans;
 }
 
 void Translations_FreeData()
 {
     // TODO: will be more when we implement Translations_FromData
-    free(lastTxtCached);
-    lastTxtCached = NULL;
+    if (!g_translationsUnicode)
+        return;
+    for (int i=0; i < (g_transTranslationsCount * g_transLangsCount); i++) {
+        free(g_translationsUnicode[i]);
+    }
+    free(g_translationsUnicode);
+    g_translationsUnicode = NULL;
 }
 

@@ -205,12 +205,12 @@ static HWND                         gHwndAbout;
 
 typedef struct ToolbarButtonInfo {
     /* information provided at compile time */
-    int         bitmapResourceId;
-    int         cmdId;
-    TCHAR *     toolTip;
+    int           bitmapResourceId;
+    int           cmdId;
+    const char *  toolTip;
 
     /* information calculated at runtime */
-    int         index;
+    int           index;
 } ToolbarButtonInfo;
 
 #define IDB_SEPARATOR  -1
@@ -3735,7 +3735,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
         tbButton.idCommand = gToolbarButtons[i].cmdId;
         tbButton.fsState = TBSTATE_ENABLED;
         tbButton.fsStyle = TBSTYLE_BUTTON;
-        tbButton.iString = (INT_PTR)gToolbarButtons[i].toolTip;
+        tbButton.iString = (INT_PTR)Translations_GetTranslationW(gToolbarButtons[i].toolTip);
     }
     return tbButton;
 }
@@ -3779,7 +3779,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     lres = SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
 
-    lres = SendMessage(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+    lres = SendMessage(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
     RECT rc;
     lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
 
