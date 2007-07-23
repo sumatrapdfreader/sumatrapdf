@@ -4,129 +4,158 @@
 # you use a proper text editor (notepad++ or notepad2 will work)
 # What follows below is a line listing all languages supported
 # in this file followed by translations themselves
-Languages: en pl fr de
+# Contributors:
+# Hakan ATA - Turkish
+#
+Languages: en pl fr de tr
 -
 &File
 pl:Plik
 de:&Datei
 fr:&Fichier
+tr:&Dosya
 -
 &Open\tCtrl-O
 pl:Otwórz\tCtrl-O
 de:&Öffnen\tCtrl-O
 fr:Ouvrir\tCtrl-O
+tr:&Aç\tCtrl-O
 -
 &Close\tCtrl-W
 pl:&Zamknij\tCtrl-W
 de:&Schließen\tCtrl-W
 fr:&Fermer\tCtrl-W
+tr:Kapa&t\tCtrl-W
 -
 &Save as
 pl:Zapisz jako
+tr:&Farklı kaydet
 -
 &Print
 pl:Drukuj
 de:&Drucken
+tr:&Yazdır\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 pl:Zrób domyślnym programem dla PDF
 de:Standardmäßig PDFs öffnen
+tr:&Varsayılan PDF okuyucusu yap
 -
 E&xit\tCtrl-Q
 pl:Wyjdź\tCtrl-Q
 de:E&nde\tCtrl-Q
 fr:Quitter\tCtrl-Q
+tr:Çı&kış\tCtrl-O
 -
 &View
 pl:&Widok
 de:&Ansicht
 fr:&Afffichage
+tr:&Göster
 -
 Single page
 pl:Jedna strona
 de:Einzelnde Seite
 fr:Une seule page
+tr:Tek sayfa
 -
 Facing
 pl:Na przeciwko
 de:Doppelseite
 fr:Page double
+tr:Çift sayfa
 -
 Continuous
 pl:Ciągły
 de:Fortlaufend
 fr:Continue
+tr:Devamlı
 -
 Continuous facing
 pl:Ciągły na przeciwko
 de:Fortlaufende Doppelseite
 fr:Continue - Page double
+tr:Devamlı çift sayfa
 -
 Rotate left
 pl:Obróć w lewo
 de:Drehung links
 fr:Rotation horaire
+tr:Sola çevir
 -
 Rotate right
 pl:Obróć w prawo
 de:Drehung rechts
 fr:Rotation antihoraire
+tr:Sağa çevir
 -
 Show toolbar
 pl:Pokaż toolbar
 de:Werkzeugleiste zeigen
+tr:Araç kutusunu göster
 -
 Use MuPDF rendering engine
 pl:Użyj MuPDF do renderowania
 de:MuPDF Renderingengine benutzen
+tr:MuPDF görüntüleme motorunu kullan
 -
 &Go To
 pl:Idź do
 de:&Gehe zu
 fr:Atteindre
+tr:&Git
 -
 Next Page
 pl:Następna strona
 de:Nächste Seite
 fr:Page suivante
+tr:Sonraki Sayfa
 -
 Previous Page
 pl:Poprzednia strona
 de:Vorherige Seite
 fr:Page précédente
+tr:Önceki Sayfa
 -
 First Page\tHome
 pl:Pierwsza strona\tHome
 de:Erste Seite\tHome
 fr:Première page\tHome
+tr:İlk Sayfa\tHome
 -
 Last Page\tEnd
 pl:Ostatnia strona\tEnd
 de:Letzte Seite\tEnd
 fr:Dernière page\tEnd
+tr:Son Sayfa\tEnd
 -
 Page...\tCtrl-G
 pl:Strona...\tCtrl-G
 de:Seite...
+tr:Sayfa...\tCtrl-G
 -
 &Zoom
 pl:Powiększenie
 de:&Zoom
+tr:&Yakınlaştırma
 -
 Fit &Page\tCtrl-0
 pl:Dopasuj do strony\tCtrl-0
 de:An Seite anpassen\tCtrl-0
 fr:Page entière\tCtrl-0
+tr:&Sayfaya sığdır\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 pl:Prawdziwy rozmiar\tCtrl-1
 de:Tat&sächliche Größe\tCtrl-1
 fr:Taille réelle\tCtrl-1
+tr:Gerçek Boyut\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 pl:Dopasuj do szerokości\tCtrl-2
 de:An Breite Anpassen\tCtrl-2
 fr:Pleine largeur
+tr:Genişliğe &sığdır\tCtrl-2
 -
 6400%
 -
@@ -156,55 +185,76 @@ fr:Pleine largeur
 -
 &Language
 pl:Język
+tr:Dil
 -
 &English
 pl:&Angielski
+tr:&English
 -
 &German
 pl:&Niemiecki
+tr:&Deutsche
 -
 &Polish
 pl:&Polski
+tr:Polca
 -
 &French
 pl:&Francuski
+tr:&Fransızca
+-
+&Turkish
+pl:&Turecki
+tr:&Türkçe
 -
 &Help
 pl:&Pomoc
 de:&Hilfe
+tr:&Yardım
 -
 &Visit website
 pl:Strona www
 de:&Website
+tr:&Web sayfası
 -
 &About
 pl:O programie
 de:&Über
+tr:&Hakkında
 -
 Zoom In
 pl:Powiększ
+tr:Yakınlaştır
 -
 Zoom Out
 pl:Pomniejsz
+tr:Uzaklaştır
 -
 About SumatraPDF
 pl:O programie
+tr:SumatraPDF hakkında
 -
 Open
 pl:Otwórz
 de:&Öffnen\tCtrl-O
+tr:&Aç\tCtrl-O
 -
 SumatraPDF is now a default reader for PDF files.
 pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
+tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
 -
 Failed to save a file
 pl:Problem przy zapisywaniu pliku.
+tr:Dosya kaydedilirken hata çıktı.
 -
 Error loading PDF file.
 pl:Problem przy otwarzaniu pliku.
+tr:Dosya yüklenirken hata çıktı.
 -
 Could not open Printer
 pl:Drukarka niedostępna.
+tr:Yazıcıya erişilemiyor.
 -
 Printing problem.
 pl:Problem z drukowaniem.
+tr:Yazdırma problemi.

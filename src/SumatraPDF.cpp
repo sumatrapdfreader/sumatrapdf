@@ -231,6 +231,25 @@ ToolbarButtonInfo gToolbarButtons[] = {
 
 static const char *g_currLangName;
 
+static void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo);
+static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
+static void RebuildProgramMenus(void);
+
+#define SEP_ITEM "-----"
+
+typedef struct MenuDef {
+    const char *m_title;
+    int         m_id;
+} MenuDef;
+
+MenuDef menuDefLang[] = {
+    { _TRN("&English"), IDM_LANG_EN },
+    { _TRN("&French"),  IDM_LANG_FR },
+    { _TRN("&German"),  IDM_LANG_DE },
+    { _TRN("&Polish"),  IDM_LANG_PL },
+    { _TRN("&Turkish"), IDM_LANG_TR },
+};
+
 struct LangDef {
     const char* _langName;
     int         _langId;
@@ -239,13 +258,10 @@ struct LangDef {
     {"pl", IDM_LANG_PL},
     {"fr", IDM_LANG_FR},
     {"de", IDM_LANG_DE},
+    {"tr", IDM_LANG_TR},
 };
 
 #define LANGS_COUNT dimof(g_langs)
-
-static void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo);
-static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
-static void RebuildProgramMenus(void);
 
 const char* CurrLangNameGet() {
     if (!g_currLangName)
@@ -482,13 +498,6 @@ static UINT AllocNewMenuId(void)
     return firstId;
 }
 
-#define SEP_ITEM "-----"
-
-typedef struct MenuDef {
-    const char *m_title;
-    int         m_id;
-} MenuDef;
-
 MenuDef menuDefFile[] = {
     { _TRN("&Open\tCtrl-O"),       IDM_OPEN },
     { _TRN("&Close\tCtrl-W"),      IDM_CLOSE  },
@@ -540,13 +549,6 @@ MenuDef menuDefZoom[] = {
     { _TRN("25%"),                         IDM_ZOOM_25 },
     { _TRN("12.5%"),                       IDM_ZOOM_12_5 },
     { _TRN("8.33%"),                       IDM_ZOOM_8_33 },
-};
-
-MenuDef menuDefLang[] = {
-    { _TRN("&English"), IDM_LANG_EN },
-    { _TRN("&French"),  IDM_LANG_FR },
-    { _TRN("&German"),  IDM_LANG_DE },
-    { _TRN("&Polish"),  IDM_LANG_PL },
 };
 
 MenuDef menuDefHelp[] = {
@@ -4107,6 +4109,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_PL:
                 case IDM_LANG_FR:
                 case IDM_LANG_DE:
+                case IDM_LANG_TR:
                     OnMenuLanguage((int)wmId);
                     break;
 

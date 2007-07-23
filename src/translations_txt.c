@@ -9,13 +9,13 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 4;
+int g_transLangsCount = 5;
 
 const char *g_transLangs[] = {
-  "en", "pl", "de", "fr"
+  "en", "pl", "tr", "de", "fr"
 };
 
-int g_transTranslationsCount = 56;
+int g_transTranslationsCount = 57;
 
 const char *g_transTranslations[] = {
 
@@ -33,6 +33,7 @@ const char *g_transTranslations[] = {
   "&Polish",
   "&Print",
   "&Save as",
+  "&Turkish",
   "&View",
   "&Visit website",
   "&Zoom",
@@ -91,6 +92,7 @@ const char *g_transTranslations[] = {
   "&Polski",
   "Drukuj",
   "Zapisz jako",
+  "&Turecki",
   "&Widok",
   "Strona www",
   "Powi\304\231kszenie",
@@ -135,6 +137,65 @@ const char *g_transTranslations[] = {
   "Powi\304\231ksz",
   "Pomniejsz",
 
+  /* Translations for language tr */
+  "&Hakk\304\261nda",
+  "Kapa&t\tCtrl-W",
+  "&English",
+  "&Dosya",
+  "&Frans\304\261zca",
+  "&Deutsche",
+  "&Git",
+  "&Yard\304\261m",
+  "Dil",
+  "&A\303\247\tCtrl-O",
+  "Polca",
+  "&Yazd\304\261r\tCtrl-P",
+  "&Farkl\304\261 kaydet",
+  "&T\303\274rk\303\247e",
+  "&G\303\266ster",
+  "&Web sayfas\304\261",
+  "&Yak\304\261nla\305\237t\304\261rma",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "SumatraPDF hakk\304\261nda",
+  "Ger\303\247ek Boyut\tCtrl-1",
+  "Devaml\304\261",
+  "Devaml\304\261 \303\247ift sayfa",
+  "Yaz\304\261c\304\261ya eri\305\237ilemiyor.",
+  "\303\207\304\261&k\304\261\305\237\tCtrl-O",
+  "Dosya y\303\274klenirken hata \303\247\304\261kt\304\261.",
+  "\303\207ift sayfa",
+  "Dosya kaydedilirken hata \303\247\304\261kt\304\261.",
+  "\304\260lk Sayfa\tHome",
+  "&Sayfaya s\304\261\304\237d\304\261r\tCtrl-0",
+  "Geni\305\237li\304\237e &s\304\261\304\237d\304\261r\tCtrl-2",
+  "Son Sayfa\tEnd",
+  "&Varsay\304\261lan PDF okuyucusu yap",
+  "Sonraki Sayfa",
+  "&A\303\247\tCtrl-O",
+  "Sayfa...\tCtrl-G",
+  "\303\226nceki Sayfa",
+  "Yazd\304\261rma problemi.",
+  "Sola \303\247evir",
+  "Sa\304\237a \303\247evir",
+  "Ara\303\247 kutusunu g\303\266ster",
+  "Tek sayfa",
+  "SumatraPDF varsay\304\261lan PDF okuyucusu olarak atand\304\261.",
+  "MuPDF g\303\266r\303\274nt\303\274leme motorunu kullan",
+  "Yak\304\261nla\305\237t\304\261r",
+  "Uzakla\305\237t\304\261r",
+
   /* Translations for language de */
   "&\303\234ber",
   "&Schlie\303\237en\tCtrl-W",
@@ -148,6 +209,7 @@ const char *g_transTranslations[] = {
   "&\303\226ffnen\tCtrl-O",
   NULL,
   "&Drucken",
+  NULL,
   NULL,
   "&Ansicht",
   "&Website",
@@ -204,6 +266,7 @@ const char *g_transTranslations[] = {
   NULL,
   NULL,
   "Ouvrir\tCtrl-O",
+  NULL,
   NULL,
   NULL,
   NULL,
