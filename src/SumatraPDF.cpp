@@ -216,13 +216,13 @@ typedef struct ToolbarButtonInfo {
 #define IDB_SEPARATOR  -1
 
 ToolbarButtonInfo gToolbarButtons[] = {
-    { IDB_SILK_OPEN,     IDM_OPEN, _TRN("Open"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR, 0, 0 },
-    { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE, _TRN("Previous Page"), 0 },
-    { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE, _TRN("Next Page"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR, 0, 0 },
-    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN, _TRN("Zoom In"), 0 },
-    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT, _TRN("Zoom Out"), 0 }
+    { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"), 0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
+    { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"), 0 },
+    { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"), 0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
+    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"), 0 },
+    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 }
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -439,30 +439,6 @@ void RenderQueue_Pop(PageRenderRequest *req)
     *req = gPageRenderRequests[gPageRenderRequestsCount];
     assert(gPageRenderRequestsCount >= 0);
     UnlockCache();
-}
-
-static HMENU FindMenuItem(WindowInfo *win, UINT id)
-{
-    HMENU menuMain = GetMenu(win->hwndFrame);
-
-    /* TODO: to be fully valid, it would have to be recursive */
-    for (int i = 0; i < GetMenuItemCount(menuMain); i++) {
-        UINT thisId = GetMenuItemID(menuMain, i);
-        HMENU subMenu = GetSubMenu(menuMain, i);
-        if (id == thisId)
-            return subMenu;
-        for (int j = 0; j < GetMenuItemCount(subMenu); j++) {
-            thisId = GetMenuItemID(menuMain, j);
-            if (id == thisId)
-                return GetSubMenu(subMenu, j);
-        }
-    }
-    return NULL;
-}
-
-static HMENU GetFileMenu(HWND hwnd)
-{
-    return GetSubMenu(GetMenu(hwnd), 0);
 }
 
 static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
