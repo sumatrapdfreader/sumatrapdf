@@ -243,11 +243,12 @@ typedef struct MenuDef {
 } MenuDef;
 
 MenuDef menuDefLang[] = {
-    { _TRN("&English"), IDM_LANG_EN },
-    { _TRN("&French"),  IDM_LANG_FR },
-    { _TRN("&German"),  IDM_LANG_DE },
-    { _TRN("&Polish"),  IDM_LANG_PL },
-    { _TRN("&Turkish"), IDM_LANG_TR },
+    { _TRN("&English"),     IDM_LANG_EN },
+    { _TRN("&Belarusian"),  IDM_LANG_BY },
+    { _TRN("&French"),      IDM_LANG_FR },
+    { _TRN("&German"),      IDM_LANG_DE },
+    { _TRN("&Polish"),      IDM_LANG_PL },
+    { _TRN("&Turkish"),     IDM_LANG_TR },
 };
 
 struct LangDef {
@@ -255,9 +256,10 @@ struct LangDef {
     int         _langId;
 } g_langs[] = {
     {"en", IDM_LANG_EN},
-    {"pl", IDM_LANG_PL},
+    {"by", IDM_LANG_BY},
     {"fr", IDM_LANG_FR},
     {"de", IDM_LANG_DE},
+    {"pl", IDM_LANG_PL},
     {"tr", IDM_LANG_TR},
 };
 
@@ -4095,6 +4097,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_FR:
                 case IDM_LANG_DE:
                 case IDM_LANG_TR:
+                case IDM_LANG_BY:
                     OnMenuLanguage((int)wmId);
                     break;
 
