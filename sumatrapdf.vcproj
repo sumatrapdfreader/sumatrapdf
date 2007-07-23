@@ -262,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\strlist_util.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SumatraDialogs.cc"
 				>
 			</File>
@@ -345,6 +349,10 @@
 			</File>
 			<File
 				RelativePath=".\baseutils\str_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\strlist_util.h"
 				>
 			</File>
 			<File

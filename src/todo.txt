@@ -15,6 +15,6 @@ Long term todo:
 * show keybindings in help
 * better, animated about screen
 * a nicer way to show selected text
-* convert WindowInfo_* to a class
 * update poppler to latest version
+* make dialog-boxes translatable
 

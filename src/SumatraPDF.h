@@ -13,12 +13,12 @@
 #define _WIN32_WINNT 0x0400
 #endif
 
-#ifndef _WIN32_WINDOWS                // Allow use of features specific to Windows 98 or later.
+#ifndef _WIN32_WINDOWS        // Allow use of features specific to Windows 98 or later.
 #define _WIN32_WINDOWS 0x0410 // Change this to the appropriate value to target Windows Me or later.
 #endif
 
-#ifndef _WIN32_IE                        // Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0600        // Change this to the appropriate value to target other versions of IE.
+#ifndef _WIN32_IE             // Allow use of features specific to IE 6.0 or later.
+#define _WIN32_IE 0x0600      // Change this to the appropriate value to target other versions of IE.
 #endif
 
 //#define WIN32_LEAN_AND_MEAN                // Exclude rarely-used stuff from Windows headers
@@ -61,18 +61,18 @@ typedef struct {
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
-	MA_IDLE = 0,
-	MA_DRAGGING,
-	MA_SELECTING
+    MA_IDLE = 0,
+    MA_DRAGGING,
+    MA_SELECTING
 };
 
 /* Represents selected area on given page */
 typedef struct SelectionOnPage {
-	int				pageNo;
-	RectD			selectionPage;		/* position of selection rectangle on page */
-	RectI			selectionCanvas;	/* position of selection rectangle on canvas */
-	SelectionOnPage	*next;				/* pointer to next page with selected area
-										 * or NULL if such page not exists */
+    int              pageNo;
+    RectD            selectionPage;     /* position of selection rectangle on page */
+    RectI            selectionCanvas;   /* position of selection rectangle on canvas */
+    SelectionOnPage* next;              /* pointer to next page with selected area
+                                         * or NULL if such page not exists */
 } SelectionOnPage;
 
 /* Describes information related to one window with (optional) pdf document
@@ -112,10 +112,10 @@ public:
     PdfLink *       linkOnLastButtonDown;
     const char *    url;
 
-	/*if set to TRUE, page rotating, zooming, and scrolling is impossible */
-	bool			documentBlocked;
+    /* if true, page rotating, zooming, and scrolling is impossible */
+    bool            documentBlocked;
 
-	MouseAction     mouseAction;
+    MouseAction     mouseAction;
 
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
@@ -123,21 +123,19 @@ public:
     int             dragPrevPosX, dragPrevPosY;
     AnimState       animState;
 
-	bool showSelection;
-	
-	/* selection rectangle in screen coordinates
-	 * while selecting, it represents area which is being selected */
-	RectI selectionRect;
+    bool            showSelection;
 
-	/* after selection is done, the selected area is converted
-	 * to user coordinates for each page which has not empty intersection with it */
-	SelectionOnPage *selectionOnPage;
+    /* selection rectangle in screen coordinates
+     * while selecting, it represents area which is being selected */
+    RectI           selectionRect;
 
+    /* after selection is done, the selected area is converted
+     * to user coordinates for each page which has not empty intersection with it */
+    SelectionOnPage *selectionOnPage;
 
 private:
     RECT m_canvasRc;
 };
-
 #endif
 
 #define SUMATRAPDF_API __declspec(dllexport)

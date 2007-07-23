@@ -11,11 +11,13 @@
 
 #include "SumatraPDF.h"
 
-#include "str_util.h"
 #include "file_util.h"
 #include "geom_util.h"
-#include "win_util.h"
+#include "str_strsafe.h"
+#include "str_util.h"
+#include "strlist_util.h"
 #include "translations.h"
+#include "win_util.h"
 
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
@@ -36,8 +38,6 @@
 
 #include <shellapi.h>
 #include <shlobj.h>
-
-#include "str_strsafe.h"
 
 #include <windowsx.h>
 
@@ -150,11 +150,6 @@ static BOOL             gDebugShowLinks = FALSE;
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
 #define MAX_RECENT_FILES_IN_MENU 15
-
-typedef struct StrList {
-    struct StrList *    next;
-    char *              str;
-} StrList;
 
 static FileHistoryList *            gFileHistoryRoot = NULL;
 
@@ -3686,48 +3681,6 @@ static void OnChar(WindowInfo *win, int key)
     }
 }
 
-static inline bool IsEnumPrintersArg(const char *txt)
-{
-    if (str_ieq(txt, ENUM_PRINTERS_ARG_TXT))
-        return true;
-    return false;
-}
-
-static inline bool IsDontRegisterExtArg(const char *txt)
-{
-    if (str_ieq(txt, NO_REGISTER_EXT_ARG_TXT))
-        return true;
-    return false;
-}
-
-static inline bool IsPrintToArg(const char *txt)
-{
-    if (str_ieq(txt, PRINT_TO_ARG_TXT))
-        return true;
-    return false;
-}
-
-static inline bool IsPrintToDefaultArg(const char *txt)
-{
-    if (str_ieq(txt, PRINT_TO_ARG_TXT))
-        return true;
-    return false;
-}
-
-static inline bool IsExitOnPrintArg(const char *txt)
-{
-    if (str_ieq(txt, EXIT_ON_PRINT_ARG_TXT))
-        return true;
-    return false;
-}
-
-static inline bool IsBenchArg(const char *txt)
-{
-    if (str_ieq(txt, BENCH_ARG_TXT))
-        return true;
-    return false;
-}
-
 static bool IsBenchMode(void)
 {
     if (NULL != gBenchFileName)
@@ -4314,55 +4267,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static void StrList_Reverse(StrList **strListRoot)
-{
-    StrList *newRoot = NULL;
-    StrList *cur, *next;
-    if (!strListRoot)
-        return;
-    cur = *strListRoot;
-    while (cur) {
-        next = cur->next;
-        cur->next = newRoot;
-        newRoot = cur;
-        cur = next;
-    }
-    *strListRoot = newRoot;
-}
-
-static BOOL StrList_InsertAndOwn(StrList **root, char *txt)
-{
-    StrList *   el;
-    assert(root && txt);
-    if (!root || !txt)
-        return FALSE;
-
-    el = (StrList*)malloc(sizeof(StrList));
-    if (!el)
-        return FALSE;
-    el->str = txt;
-    el->next = *root;
-    *root = el;
-    return TRUE;
-}
-
-static void StrList_Destroy(StrList **root)
-{
-    StrList *   cur;
-    StrList *   next;
-
-    if (!root)
-        return;
-    cur = *root;
-    while (cur) {
-        next = cur->next;
-        free((void*)cur->str);
-        free((void*)cur);
-        cur = next;
-    }
-    *root = NULL;
-}
-
 static StrList *StrList_FromCmdLine(char *cmdLine)
 {
     char *     exePath;
@@ -4614,6 +4518,8 @@ char *GetDefaultPrinterName()
     return NULL;
 }     
 
+#define is_arg(txt) str_ieq(txt, currArg->str)
+
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
     StrList *           argListRoot;
@@ -4649,19 +4555,19 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     currArg = argListRoot->next;
     char *printerName = NULL;
     while (currArg) {
-        if (IsEnumPrintersArg(currArg->str)) {
+        if (is_arg(ENUM_PRINTERS_ARG_TXT)) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             goto Exit;
         }
 
-        if (IsDontRegisterExtArg(currArg->str)) {
+        if (is_arg(NO_REGISTER_EXT_ARG_TXT)) {
             registerForPdfExtentions = false;
             currArg = currArg->next;
             continue;
         }
 
-        if (IsBenchArg(currArg->str)) {
+        if (is_arg(BENCH_ARG_TXT)) {
             currArg = currArg->next;
             if (currArg) {
                 gBenchFileName = currArg->str;
@@ -4671,18 +4577,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             break;
         }
 
-        if (IsExitOnPrintArg(currArg->str)) {
+        if (is_arg(EXIT_ON_PRINT_ARG_TXT)) {
             currArg = currArg->next;
             exitOnPrint = true;
             continue;
         }
 
-        if (IsPrintToDefaultArg(currArg->str)) {
+        if (is_arg(PRINT_TO_DEFAULT_ARG_TXT)) {
             printToDefaultPrinter = true;
             continue;
         }
 
-        if (IsPrintToArg(currArg->str)) {
+        if (is_arg(PRINT_TO_ARG_TXT)) {
             currArg = currArg->next;
             if (currArg) {
                 printerName = currArg->str;
