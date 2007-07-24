@@ -89,6 +89,11 @@ const char* Translations_GetTranslationA(const char* txt)
     return Translations_GetTranslationAndIndexA(txt, idx);
 }
 
+// Return a utf16 version of a translation for 'txt'.
+// Memory for the string needs to be allocated and is cached in g_translationsUnicode
+// array. That way the client doesn't have to worry about the lifetime of the string.
+// All allocated strings can be freed with Translations_FreeData(), which should be
+// done at program exit so that we're guaranteed no-one is using the data
 const WCHAR* Translations_GetTranslationW(const char* txt)
 {
     if (!g_translationsUnicode) {
@@ -108,6 +113,7 @@ const WCHAR* Translations_GetTranslationW(const char* txt)
     return (const WCHAR*)trans;
 }
 
+// Call at program exit to free all memory related to traslations functionality.
 void Translations_FreeData()
 {
     // TODO: will be more when we implement Translations_FromData
