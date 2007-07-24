@@ -234,6 +234,7 @@ static const char *g_currLangName;
 static void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo);
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
+static void UpdateToolbarButtonsToolTips(void);
 
 #define SEP_ITEM "-----"
 
@@ -3415,7 +3416,7 @@ static void LanguageChanged(const char *langName)
     CurrLangNameSet(langName);
 
     RebuildProgramMenus();
-    // TODO: recreate tooltips
+    UpdateToolbarButtonsToolTips();
 }
 
 static void OnMenuLanguage(int langId)
@@ -3745,6 +3746,40 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
 #define WS_TOOLBAR (WS_CHILD | WS_CLIPSIBLINGS | \
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN )
+
+static void BuildTBBUTTONINFO(TBBUTTONINFOW& info, WCHAR *txt) {
+    info.cbSize = sizeof(TBBUTTONINFOW);
+    info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
+    info.pszText = txt;
+}
+
+// Set toolbar button tooltips taking current language into account.
+static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
+{
+    TBBUTTONINFOW buttonInfo;
+    HWND hwnd = win->hwndToolbar;
+    LRESULT res;
+    for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+        WPARAM buttonId = i;
+        const char *txt = gToolbarButtons[i].toolTip;
+        if (NULL == txt)
+            continue;
+        const WCHAR *translation = Translations_GetTranslationW(txt);
+        BuildTBBUTTONINFO(buttonInfo, (WCHAR*)translation);
+        res = ::SendMessage(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)&buttonInfo);
+        assert(0 != res);
+    }    
+}
+
+static void UpdateToolbarButtonsToolTips(void)
+{
+    WindowInfo *win = gWindowList;
+    while (win) {
+        UpdateToolbarButtonsToolTipsForWindow(win);
+        MenuUpdateStateForWindow(win);
+        win = win->next;
+    }        
+}
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HWND hwndOwner = win->hwndFrame;
