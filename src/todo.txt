@@ -1,7 +1,4 @@
 Short term todo (before next 0.7 release):
-* when starting for the first time, detect language from windows settings
-  see http://msdn2.microsoft.com/en-us/library/bb507201.aspx, GetLocaleInfo(),
-  LOCALE_ICOUNTRY
 
 Long term todo:
 * find

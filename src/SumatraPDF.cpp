@@ -287,7 +287,6 @@ bool CurrLangNameSet(const char* langName) {
 
     bool ok = Translations_SetCurrentLanguage(langName);
     assert(ok);
-
     return true;
 }
 
@@ -814,8 +813,10 @@ static void Prefs_GetFileName(DString* pDs)
     AppGenDataFilename(PREFS_FILE_NAME, pDs);
 }
 
-/* Load preferences from the preferences file. */
-static void Prefs_Load(void)
+/* Load preferences from the preferences file.
+   Returns true if preferences file was loaded, false if it didn't exist.
+*/
+static bool Prefs_Load(void)
 {
     DString             path;
     static bool         loaded = false;
@@ -833,7 +834,7 @@ static void Prefs_Load(void)
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (str_empty(prefsTxt)) {
         DBG_OUT("  no prefs file or is empty\n");
-        return;
+        return false;
     }
     DBG_OUT("Prefs file %s:\n%s\n", path.pString, prefsTxt);
 
@@ -842,6 +843,7 @@ static void Prefs_Load(void)
 
     DStringFree(&path);
     free((void*)prefsTxt);
+    return true;
 }
 
 static struct idToZoomMap {
@@ -4542,7 +4544,50 @@ char *GetDefaultPrinterName()
     if (GetDefaultPrinterA(buf, &bufSize))
         return str_dup(buf);
     return NULL;
-}     
+}
+
+// based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
+static const char *g_lcidLangMap[] = {
+    "en", "0409", NULL, // English
+    "pl", "0415", NULL, // Polish
+    "fr", "080c", "0c0c", "040c", "140c", "180c", "100c", NULL, // French
+    "de", "0407", "0c07", "1407", "1007", "0807", NULL, // German
+    "tr", "041f", NULL, // Turkish
+    "by", "0423", NULL, // Belarusian
+    NULL
+};
+
+static const char *GetLangFromLcid(const char *lcid)
+{
+    const char *lang;
+    const char *langLcid;
+    int i = 0;
+    for (;;) {
+        lang = g_lcidLangMap[i++];
+        if (NULL == lang)
+            return NULL;
+        for (;;) {
+            langLcid = g_lcidLangMap[i++];
+            if (NULL == langLcid)
+                break;
+            if (str_eq(lcid, langLcid))
+                return lang;
+        }
+    }
+    assert(0);
+    return NULL;
+}
+
+static void GuessLanguage()
+{
+    char langBuf[20];
+    int res = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE, langBuf, sizeof(langBuf));
+    assert(0 != res);
+    if (0 == res) return;
+    const char *lang = GetLangFromLcid((const char*)&langBuf[0]);
+    if (NULL != lang)
+        CurrLangNameSet(lang);
+}
 
 #define is_arg(txt) str_ieq(txt, currArg->str)
 
@@ -4572,7 +4617,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (!argListRoot)
         return 0;
 
-    Prefs_Load();
+    bool prefsLoaded = Prefs_Load();
+    if (!prefsLoaded) {
+        // assume that this is because prefs file didn't exist i.e. this is
+        // the first time Sumatra is launched.
+        GuessLanguage();
+    }
     /* parse argument list. If BENCH_ARG_TXT was given, then we're in benchmarking mode. Otherwise
     we assume that all arguments are PDF file names.
     BENCH_ARG_TXT can be followed by file or directory name. If file, it can additionally be followed by
