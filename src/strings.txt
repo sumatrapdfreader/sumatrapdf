@@ -7,6 +7,7 @@
 # Contributors:
 # Hakan ATA - Turkish
 # Яўген Змачынскі - Belarusian
+# fiuzzy - French
 Languages: en pl fr de tr by
 -
 &File
@@ -32,18 +33,21 @@ by:Зачыніць\tCtrl-W
 -
 &Save as
 pl:Zapisz jako
+fr:Enregistrer sous
 tr:&Farklı kaydet
 by:Захаваць як
 -
 &Print
 pl:Drukuj
 de:&Drucken
+fr:Imprimer
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 pl:Zrób domyślnym programem dla PDF
 de:Standardmäßig PDFs öffnen
+fr:Définir SumatraPDF comme lecteur PDf par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 -
@@ -92,26 +96,28 @@ by:Працягла дзьве старонкі
 Rotate left
 pl:Obróć w lewo
 de:Drehung links
-fr:Rotation horaire
+fr:Rotation antihoraire
 tr:Sola çevir
 by:Павярнуць налева
 -
 Rotate right
 pl:Obróć w prawo
 de:Drehung rechts
-fr:Rotation antihoraire
+fr:Rotation horaire
 tr:Sağa çevir
 by:Павярнуць направа
 -
 Show toolbar
 pl:Pokaż toolbar
 de:Werkzeugleiste zeigen
+fr:Barre d'outil
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
 -
 Use MuPDF rendering engine
 pl:Użyj MuPDF do renderowania
 de:MuPDF Renderingengine benutzen
+fr:Utiliser le moteur de rendu MuPDF
 tr:MuPDF görüntüleme motorunu kullan
 by:Выкарыстоўваць MuPDF-магчымасці
 -
@@ -159,6 +165,7 @@ by:Старонка...\tCtrl-G
 &Zoom
 pl:Powiększenie
 de:&Zoom
+fr:Zoom
 tr:&Yakınlaştırma
 by:Памер
 -
@@ -211,96 +218,115 @@ by:Змясціць па шырыне
 -
 &Language
 pl:Język
+fr:Langue
 tr:Dil
 by:Мова
 -
 &English
 pl:&Angielski
+fr:Anglais
 tr:&English
 by:Ангельская
 -
 &Belarusian
+fr:Bélarusse
 -
 &German
 pl:&Niemiecki
+fr:Allemand
 tr:&Deutsche
 by:Нямецкая
 -
 &Polish
 pl:&Polski
+fr:Polonais
 tr:Polca
 by:Польская
 -
 &French
 pl:&Francuski
+fr:Français
 tr:&Fransızca
 by:Француская
 -
 &Turkish
 pl:&Turecki
+fr:Turc
 tr:&Türkçe
 by:Турэцкая
 -
 &Help
 pl:&Pomoc
 de:&Hilfe
+fr:Aide
 tr:&Yardım
 by:Дапамога
 -
 &Visit website
 pl:Strona www
 de:&Website
+fr:Visiter le site web
 tr:&Web sayfası
 by:Наведаць сайт
 -
 &About
 pl:O programie
 de:&Über
+fr:A propos
 tr:&Hakkında
 by:Аб праграме
 -
 Open
 pl:Otwórz
 de:&Öffnen
+fr:Ouvrir
 tr:&Aç
 by:Адчыніць
 -
 Zoom In
 pl:Powiększ
+fr:Zoom avant
 tr:Yakınlaştır
 by:Павялічыць
 -
 Zoom Out
 pl:Pomniejsz
+fr:Zoom arrière
 tr:Uzaklaştır
 by:Паменьшыць
 -
 About SumatraPDF
 pl:O programie
+fr:A propos de SumatraPDF
 tr:SumatraPDF hakkında
 by:Аб SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
+fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
 tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
 by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчанні.
 -
 Failed to save a file
 pl:Problem przy zapisywaniu pliku.
+fr:Echec d'enregistrement du fichier
 tr:Dosya kaydedilirken hata çıktı.
 by:Немагчыма захаваць файл
 -
 Error loading PDF file.
 pl:Problem przy otwarzaniu pliku.
+fr:Erreur à l'ouverture du fichier PDF.
 tr:Dosya yüklenirken hata çıktı.
 by:Памылка пры адчыненні файла.
 -
 Could not open Printer
 pl:Drukarka niedostępna.
+fr:Impossible d'accéder à l'imprimante
 tr:Yazıcıya erişilemiyor.
 by:Немагчыма адчыніць друкарку
 -
 Printing problem.
 pl:Problem z drukowaniem.
+fr:Problème d'impression.
 tr:Yazdırma problemi.
 by:Памылка з друкаваннем.
