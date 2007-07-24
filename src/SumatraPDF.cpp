@@ -39,6 +39,7 @@
 #include <shellapi.h>
 #include <shlobj.h>
 
+#include "WinUtil.hpp"
 #include <windowsx.h>
 
 // some stupid things are in headers of MinGW 5.1.3 :-\
@@ -3705,30 +3706,6 @@ static void OnMenuAbout() {
     if (!gHwndAbout)
         return;
     ShowWindow(gHwndAbout, SW_SHOW);
-}
-
-class LibLoader {
-public:
-    LibLoader(const char *libName) {
-        _hlib = LoadLibrary(libName);
-    }
-    ~LibLoader() { if (_hlib) FreeLibrary(_hlib); }
-    FARPROC GetProcAddr(const char *procName) {
-        if (!_hlib) return NULL;
-        return GetProcAddress(_hlib, procName);
-    }
-    HMODULE _hlib;
-};
-
-bool IsAppThemed() {
-    LibLoader lib("uxtheme.dll");
-    FARPROC fp = lib.GetProcAddr("IsAppThemed");
-    if (!fp) 
-        return false;
-    if (fp())
-        return true;
-    else
-        return false;
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
