@@ -245,15 +245,16 @@ typedef struct MenuDef {
 } MenuDef;
 
 MenuDef menuDefLang[] = {
-    { _TRN("&English"),     IDM_LANG_EN },
-    { _TRN("&Belarusian"),  IDM_LANG_BY },
-    { _TRN("&French"),      IDM_LANG_FR },
-    { _TRN("&German"),      IDM_LANG_DE },
-    { _TRN("&Hungarian"),   IDM_LANG_HU },
-    { _TRN("&Japanese"),    IDM_LANG_JA },
-    { _TRN("&Persian"),     IDM_LANG_FA },
-    { _TRN("&Polish"),      IDM_LANG_PL },
-    { _TRN("&Turkish"),     IDM_LANG_TR },
+    { _TRN("English"),     IDM_LANG_EN },
+    { _TRN("Belarusian"),  IDM_LANG_BY },
+    { _TRN("Danish"),      IDM_LANG_DK },
+    { _TRN("French"),      IDM_LANG_FR },
+    { _TRN("German"),      IDM_LANG_DE },
+    { _TRN("Hungarian"),   IDM_LANG_HU },
+    { _TRN("Japanese"),    IDM_LANG_JA },
+    { _TRN("Persian"),     IDM_LANG_FA },
+    { _TRN("Polish"),      IDM_LANG_PL },
+    { _TRN("Turkish"),     IDM_LANG_TR },
 };
 
 struct LangDef {
@@ -269,6 +270,22 @@ struct LangDef {
     {"ja", IDM_LANG_JA},
     {"hu", IDM_LANG_HU},
     {"fa", IDM_LANG_FA},
+    {"dk", IDM_LANG_DK},
+};
+
+// based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
+static const char *g_lcidLangMap[] = {
+    "en", "0409", NULL, // English
+    "pl", "0415", NULL, // Polish
+    "fr", "080c", "0c0c", "040c", "140c", "180c", "100c", NULL, // French
+    "de", "0407", "0c07", "1407", "1007", "0807", NULL, // German
+    "tr", "041f", NULL, // Turkish
+    "by", "0423", NULL, // Belarusian
+    "ja", NULL, // Japanese
+    "hu", NULL, // Hungarian
+    "fa", NULL, // Persian
+    "dk", NULL, // Danish
+    NULL
 };
 
 #define LANGS_COUNT dimof(g_langs)
@@ -300,6 +317,38 @@ bool CurrLangNameSet(const char* langName) {
 void CurrLangNameFree() {
     free((void*)g_currLangName);
     g_currLangName = NULL;
+}
+
+static const char *GetLangFromLcid(const char *lcid)
+{
+    const char *lang;
+    const char *langLcid;
+    int i = 0;
+    for (;;) {
+        lang = g_lcidLangMap[i++];
+        if (NULL == lang)
+            return NULL;
+        for (;;) {
+            langLcid = g_lcidLangMap[i++];
+            if (NULL == langLcid)
+                break;
+            if (str_eq(lcid, langLcid))
+                return lang;
+        }
+    }
+    assert(0);
+    return NULL;
+}
+
+static void GuessLanguage()
+{
+    char langBuf[20];
+    int res = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE, langBuf, sizeof(langBuf));
+    assert(0 != res);
+    if (0 == res) return;
+    const char *lang = GetLangFromLcid((const char*)&langBuf[0]);
+    if (NULL != lang)
+        CurrLangNameSet(lang);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -4121,6 +4170,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_JA:
                 case IDM_LANG_HU:
                 case IDM_LANG_FA:
+                case IDM_LANG_DK:
                     OnMenuLanguage((int)wmId);
                     break;
 
@@ -4530,52 +4580,6 @@ char *GetDefaultPrinterName()
     if (GetDefaultPrinterA(buf, &bufSize))
         return str_dup(buf);
     return NULL;
-}
-
-// based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
-static const char *g_lcidLangMap[] = {
-    "en", "0409", NULL, // English
-    "pl", "0415", NULL, // Polish
-    "fr", "080c", "0c0c", "040c", "140c", "180c", "100c", NULL, // French
-    "de", "0407", "0c07", "1407", "1007", "0807", NULL, // German
-    "tr", "041f", NULL, // Turkish
-    "by", "0423", NULL, // Belarusian
-    "ja", NULL, // Japanese
-    "hu", NULL, // Hungarian
-    "fa", NULL, // Persian
-    NULL
-};
-
-static const char *GetLangFromLcid(const char *lcid)
-{
-    const char *lang;
-    const char *langLcid;
-    int i = 0;
-    for (;;) {
-        lang = g_lcidLangMap[i++];
-        if (NULL == lang)
-            return NULL;
-        for (;;) {
-            langLcid = g_lcidLangMap[i++];
-            if (NULL == langLcid)
-                break;
-            if (str_eq(lcid, langLcid))
-                return lang;
-        }
-    }
-    assert(0);
-    return NULL;
-}
-
-static void GuessLanguage()
-{
-    char langBuf[20];
-    int res = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE, langBuf, sizeof(langBuf));
-    assert(0 != res);
-    if (0 == res) return;
-    const char *lang = GetLangFromLcid((const char*)&langBuf[0]);
-    if (NULL != lang)
-        CurrLangNameSet(lang);
 }
 
 #define is_arg(txt) str_ieq(txt, currArg->str)
