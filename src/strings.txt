@@ -28,7 +28,7 @@ fa:فايل
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
 de:&Öffnen\tCtrl-O
-fr:Ouvrir\tCtrl-O
+fr:&Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
 ja:開く(&O)\tCtrl-O
@@ -47,7 +47,7 @@ fa:بستن\tCtrl-W
 &Save as
 hu:Ment&és másként
 pl:Zapisz jako
-fr:Enregistrer sous
+fr:&Enregistrer sous
 tr:&Farklı kaydet
 by:Захаваць як
 ja:名前を付けて保存(&S)
@@ -57,7 +57,7 @@ fa:ذخيره تحت
 hu:Nyomt&atás
 pl:Drukuj
 de:&Drucken
-fr:Imprimer
+fr:&Imprimer
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
 ja:印刷(&P)
@@ -87,7 +87,7 @@ fa:خروج\tCtrl-Q
 hu:&Nézet
 pl:&Widok
 de:&Ansicht
-fr:&Afffichage
+fr:&Affichage
 tr:&Göster
 by:Выгляд
 ja:表示(&V)
@@ -157,7 +157,7 @@ Show toolbar
 hu:Állapotsor
 pl:Pokaż toolbar
 de:Werkzeugleiste zeigen
-fr:Barre d'outil
+fr:Afficher la barre d'outil
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
 ja:ツール バーの表示
@@ -227,6 +227,7 @@ Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
 de:Seite...
+fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
 ja:ページ...\tCtrl-G
@@ -301,7 +302,7 @@ fa:اندازه متناسب با عرض پنجره\tCtrl-2
 &Language
 hu:&Nyelv
 pl:Język
-fr:Langue
+fr:&Langue
 tr:Dil
 by:Мова
 ja:言語(&L)
@@ -317,7 +318,7 @@ ja:英語(&E)
 fa:انگليسی
 -
 &Belarusian
-fr:Bélarusse
+fr:Biélorusse
 ja:ベラルーシ語(&B)
 fa:بلاروسی
 -
@@ -342,9 +343,11 @@ fa:لهستانی
 &Japanese
 pl:Japoński
 fa:ژاپنی
+fr:Japonais
 -
 &Hungarian
 pl:Węgierski
+fr:Hongrois
 fa:مجارستانی
 -
 &Persian
