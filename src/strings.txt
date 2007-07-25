@@ -8,7 +8,8 @@
 # Hakan ATA - Turkish
 # Яўген Змачынскі - Belarusian
 # fiuzzy - French
-Languages: en pl fr de tr by
+# Nardog - Japanese
+Languages: en pl fr de tr by ja
 -
 &File
 pl:Plik
@@ -16,6 +17,7 @@ de:&Datei
 fr:&Fichier
 tr:&Dosya
 by:Файл
+ja:ファイル(&F)
 -
 &Open\tCtrl-O
 pl:Otwórz\tCtrl-O
@@ -23,6 +25,7 @@ de:&Öffnen\tCtrl-O
 fr:Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
+ja:開く(&O)\tCtrl-O
 -
 &Close\tCtrl-W
 pl:&Zamknij\tCtrl-W
@@ -30,12 +33,14 @@ de:&Schließen\tCtrl-W
 fr:&Fermer\tCtrl-W
 tr:Kapa&t\tCtrl-W
 by:Зачыніць\tCtrl-W
+ja:閉じる(&C)\tCtrl-W
 -
 &Save as
 pl:Zapisz jako
 fr:Enregistrer sous
 tr:&Farklı kaydet
 by:Захаваць як
+ja:名前を付けて保存(&S)
 -
 &Print
 pl:Drukuj
@@ -43,6 +48,7 @@ de:&Drucken
 fr:Imprimer
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
+ja:印刷(&P)
 -
 Make SumatraPDF a default PDF reader
 pl:Zrób domyślnym programem dla PDF
@@ -50,6 +56,7 @@ de:Standardmäßig PDFs öffnen
 fr:Définir SumatraPDF comme lecteur PDf par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
+ja:SumatraPDF を既定の PDF リーダーにする
 -
 E&xit\tCtrl-Q
 pl:Wyjdź\tCtrl-Q
@@ -57,6 +64,7 @@ de:E&nde\tCtrl-Q
 fr:Quitter\tCtrl-Q
 tr:Çı&kış\tCtrl-O
 by:Выйсце\tCtrl-Q
+ja:終了(&X)\tCtrl-Q
 -
 &View
 pl:&Widok
@@ -64,6 +72,7 @@ de:&Ansicht
 fr:&Afffichage
 tr:&Göster
 by:Выгляд
+ja:表示(&V)
 -
 Single page
 pl:Jedna strona
@@ -71,6 +80,7 @@ de:Einzelnde Seite
 fr:Une seule page
 tr:Tek sayfa
 by:Адна старонка
+ja:単一ページ
 -
 Facing
 pl:Na przeciwko
@@ -78,6 +88,7 @@ de:Doppelseite
 fr:Page double
 tr:Çift sayfa
 by:Дзьве старонкі
+ja:見返し
 -
 Continuous
 pl:Ciągły
@@ -85,6 +96,7 @@ de:Fortlaufend
 fr:Continue
 tr:Devamlı
 by:Працягла
+ja:連続
 -
 Continuous facing
 pl:Ciągły na przeciwko
@@ -92,6 +104,7 @@ de:Fortlaufende Doppelseite
 fr:Continue - Page double
 tr:Devamlı çift sayfa
 by:Працягла дзьве старонкі
+ja:連続の見返し
 -
 Rotate left
 pl:Obróć w lewo
@@ -99,6 +112,7 @@ de:Drehung links
 fr:Rotation antihoraire
 tr:Sola çevir
 by:Павярнуць налева
+ja:左に回転
 -
 Rotate right
 pl:Obróć w prawo
@@ -106,6 +120,7 @@ de:Drehung rechts
 fr:Rotation horaire
 tr:Sağa çevir
 by:Павярнуць направа
+ja:右に回転
 -
 Show toolbar
 pl:Pokaż toolbar
@@ -113,6 +128,7 @@ de:Werkzeugleiste zeigen
 fr:Barre d'outil
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
+ja:ツール バーの表示
 -
 Use MuPDF rendering engine
 pl:Użyj MuPDF do renderowania
@@ -120,6 +136,7 @@ de:MuPDF Renderingengine benutzen
 fr:Utiliser le moteur de rendu MuPDF
 tr:MuPDF görüntüleme motorunu kullan
 by:Выкарыстоўваць MuPDF-магчымасці
+ja:MuPDF 描画エンジンを使用する
 -
 &Go To
 pl:Idź do
@@ -127,6 +144,7 @@ de:&Gehe zu
 fr:Atteindre
 tr:&Git
 by:Перайсці да
+ja:移動(&G)
 -
 Next Page
 pl:Następna strona
@@ -134,6 +152,7 @@ de:Nächste Seite
 fr:Page suivante
 tr:Sonraki Sayfa
 by:Наступная старонка
+ja:次のページ
 -
 Previous Page
 pl:Poprzednia strona
@@ -141,6 +160,7 @@ de:Vorherige Seite
 fr:Page précédente
 tr:Önceki Sayfa
 by:Папярэдняя старонка
+ja:前のページ
 -
 First Page\tHome
 pl:Pierwsza strona\tHome
@@ -148,6 +168,7 @@ de:Erste Seite\tHome
 fr:Première page\tHome
 tr:İlk Sayfa\tHome
 by:Першая старонка\tHome
+ja:最初のページ\tHome
 -
 Last Page\tEnd
 pl:Ostatnia strona\tEnd
@@ -155,12 +176,14 @@ de:Letzte Seite\tEnd
 fr:Dernière page\tEnd
 tr:Son Sayfa\tEnd
 by:Апошняя старонка\tEnd
+ja:最後のページ\tEnd
 -
 Page...\tCtrl-G
 pl:Strona...\tCtrl-G
 de:Seite...
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
+ja:ページ...\tCtrl-G
 -
 &Zoom
 pl:Powiększenie
@@ -168,6 +191,7 @@ de:&Zoom
 fr:Zoom
 tr:&Yakınlaştırma
 by:Памер
+ja:拡大と縮小(&Z)
 -
 Fit &Page\tCtrl-0
 pl:Dopasuj do strony\tCtrl-0
@@ -175,6 +199,7 @@ de:An Seite anpassen\tCtrl-0
 fr:Page entière\tCtrl-0
 tr:&Sayfaya sığdır\tCtrl-0
 by:Змясціць старонку\tCtrl-0
+ja:ページに合わせる(&P)\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 pl:Prawdziwy rozmiar\tCtrl-1
@@ -182,6 +207,7 @@ de:Tat&sächliche Größe\tCtrl-1
 fr:Taille réelle\tCtrl-1
 tr:Gerçek Boyut\tCtrl-1
 by:Рэальны памер\tCtrl-1
+ja:実際のサイズ\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 pl:Dopasuj do szerokości\tCtrl-2
@@ -189,6 +215,7 @@ de:An Breite Anpassen\tCtrl-2
 fr:Pleine largeur
 tr:Genişliğe &sığdır\tCtrl-2
 by:Змясціць па шырыне
+ja:幅に合わせる(&H)\tCtrl-2
 -
 6400%
 -
@@ -221,39 +248,49 @@ pl:Język
 fr:Langue
 tr:Dil
 by:Мова
+ja:言語(&L)
 -
 &English
 pl:&Angielski
 fr:Anglais
 tr:&English
 by:Ангельская
+ja:英語(&E)
 -
 &Belarusian
 fr:Bélarusse
+ja:ベラルーシ語(&B)
 -
 &German
 pl:&Niemiecki
 fr:Allemand
 tr:&Deutsche
 by:Нямецкая
+ja:ドイツ語(&G)
 -
 &Polish
 pl:&Polski
 fr:Polonais
 tr:Polca
 by:Польская
+ja:ポーランド語(&P)
+-
+&Japanese
+pl:Japoński
 -
 &French
 pl:&Francuski
 fr:Français
 tr:&Fransızca
 by:Француская
+ja:フランス語(&F)
 -
 &Turkish
 pl:&Turecki
 fr:Turc
 tr:&Türkçe
 by:Турэцкая
+ja:トルコ語(&T)
 -
 &Help
 pl:&Pomoc
@@ -261,6 +298,7 @@ de:&Hilfe
 fr:Aide
 tr:&Yardım
 by:Дапамога
+ja:ヘルプ(&H)
 -
 &Visit website
 pl:Strona www
@@ -268,6 +306,7 @@ de:&Website
 fr:Visiter le site web
 tr:&Web sayfası
 by:Наведаць сайт
+ja:ウェブサイトの訪問(&V)
 -
 &About
 pl:O programie
@@ -275,6 +314,7 @@ de:&Über
 fr:A propos
 tr:&Hakkında
 by:Аб праграме
+ja:バージョン情報(&A)
 -
 Open
 pl:Otwórz
@@ -282,51 +322,60 @@ de:&Öffnen
 fr:Ouvrir
 tr:&Aç
 by:Адчыніць
+ja:開く
 -
 Zoom In
 pl:Powiększ
 fr:Zoom avant
 tr:Yakınlaştır
 by:Павялічыць
+ja:拡大
 -
 Zoom Out
 pl:Pomniejsz
 fr:Zoom arrière
 tr:Uzaklaştır
 by:Паменьшыць
+ja:縮小
 -
 About SumatraPDF
 pl:O programie
 fr:A propos de SumatraPDF
 tr:SumatraPDF hakkında
 by:Аб SumatraPDF
+ja:SumatraPDF のバージョン情報
 -
 SumatraPDF is now a default reader for PDF files.
 pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
 fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
 tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
 by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчанні.
+ja:SumatraPDF は現在 PDF ファイル用の既定のリーダーです。
 -
 Failed to save a file
 pl:Problem przy zapisywaniu pliku.
 fr:Echec d'enregistrement du fichier
 tr:Dosya kaydedilirken hata çıktı.
 by:Немагчыма захаваць файл
+ja:ファイルの保存に失敗しました
 -
 Error loading PDF file.
 pl:Problem przy otwarzaniu pliku.
 fr:Erreur à l'ouverture du fichier PDF.
 tr:Dosya yüklenirken hata çıktı.
 by:Памылка пры адчыненні файла.
+ja:PDF ファイルの読み込みエラーです。
 -
 Could not open Printer
 pl:Drukarka niedostępna.
 fr:Impossible d'accéder à l'imprimante
 tr:Yazıcıya erişilemiyor.
 by:Немагчыма адчыніць друкарку
+ja:プリンタを開くことができませんでした
 -
 Printing problem.
 pl:Problem z drukowaniem.
 fr:Problème d'impression.
 tr:Yazdırma problemi.
 by:Памылка з друкаваннем.
+ja:印刷の問題です。

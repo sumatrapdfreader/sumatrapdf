@@ -5,9 +5,14 @@ def as_utf8(n):
     if n < 0x7f:
         assert 0 # don't pass me those
     if n < 0x7ff:
-        y = (n >> 6) | 192 # 110yyyyy
-        z = (n & 0x3f) | 128 # 10zzzzzz
-        return [y,z]        
+        y = ((n >> 6) & 0x1f) | 0xC0 # 110yyyyy
+        z = (n & 0x3f) | 0x80 # 10zzzzzz
+        return [y,z]
+    if n < 0xffff:
+        a = ((n >> 12) & 0x0f) | 0xE0
+        b = ((n >> 6) & 0x3f) | 0x80
+        c = (n & 0xf) | 0x80
+        return [a,b,c]
     assert 0 # too lazy to encode those
 
 # TODO: stupid C escaping fails on e.g. \xcbb
