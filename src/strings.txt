@@ -11,7 +11,8 @@
 # laclasse - French
 # Nardog - Japanese
 # Richard Magyar - Hungarian
-Languages: en pl fr de tr by ja hu
+# Mardi Az Pansad Dastgah Artesh - Persian
+Languages: en pl fr de tr by ja hu fa
 -
 &File
 hu:&Fájl
@@ -21,6 +22,7 @@ fr:&Fichier
 tr:&Dosya
 by:Файл
 ja:ファイル(&F)
+fa:فايل
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -30,6 +32,7 @@ fr:Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
 ja:開く(&O)\tCtrl-O
+fa:باز کردن\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -39,6 +42,7 @@ fr:&Fermer\tCtrl-W
 tr:Kapa&t\tCtrl-W
 by:Зачыніць\tCtrl-W
 ja:閉じる(&C)\tCtrl-W
+fa:بستن\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -47,6 +51,7 @@ fr:Enregistrer sous
 tr:&Farklı kaydet
 by:Захаваць як
 ja:名前を付けて保存(&S)
+fa:ذخيره تحت
 -
 &Print
 hu:Nyomt&atás
@@ -56,6 +61,7 @@ fr:Imprimer
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
 ja:印刷(&P)
+fa:پرينت\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -65,6 +71,7 @@ fr:Définir SumatraPDF comme lecteur PDf par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ja:SumatraPDF を既定の PDF リーダーにする
+fa:در آوردن سوماترا بصورت بازکننده استاندارد فايلهای پی دی اف
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -74,6 +81,7 @@ fr:Quitter\tCtrl-Q
 tr:Çı&kış\tCtrl-O
 by:Выйсце\tCtrl-Q
 ja:終了(&X)\tCtrl-Q
+fa:خروج\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -83,6 +91,7 @@ fr:&Afffichage
 tr:&Göster
 by:Выгляд
 ja:表示(&V)
+fa:نمايش
 -
 Single page
 hu:Egy oldalas
@@ -92,6 +101,7 @@ fr:Une seule page
 tr:Tek sayfa
 by:Адна старонка
 ja:単一ページ
+fa:نمايش تک صفحه ای
 -
 Facing
 hu:Oldalpár
@@ -101,6 +111,7 @@ fr:Page double
 tr:Çift sayfa
 by:Дзьве старонкі
 ja:見返し
+fa:نمايش دو صفحه ای
 -
 Continuous
 hu:Folyamatos
@@ -110,6 +121,7 @@ fr:Continue
 tr:Devamlı
 by:Працягла
 ja:連続
+fa:نمايش پيوسته
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -119,6 +131,7 @@ fr:Continue - Page double
 tr:Devamlı çift sayfa
 by:Працягла дзьве старонкі
 ja:連続の見返し
+fa:نمايش دو صفحه ای پيوسته
 -
 Rotate left
 hu:Forgatás balra
@@ -128,6 +141,7 @@ fr:Rotation antihoraire
 tr:Sola çevir
 by:Павярнуць налева
 ja:左に回転
+fa:چرخاندن به چپ
 -
 Rotate right
 hu:Forgatás jobbra
@@ -137,6 +151,7 @@ fr:Rotation horaire
 tr:Sağa çevir
 by:Павярнуць направа
 ja:右に回転
+fa:چرخاندن به راست
 -
 Show toolbar
 hu:Állapotsor
@@ -146,6 +161,7 @@ fr:Barre d'outil
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
 ja:ツール バーの表示
+fa:نشان دادن منو های ابزار
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -155,6 +171,7 @@ fr:Utiliser le moteur de rendu MuPDF
 tr:MuPDF görüntüleme motorunu kullan
 by:Выкарыстоўваць MuPDF-магчымасці
 ja:MuPDF 描画エンジンを使用する
+fa:استفاده از مو پی دی اف بعنوان موتور استاندارد
 -
 &Go To
 hu:U&grás
@@ -164,6 +181,7 @@ fr:Atteindre
 tr:&Git
 by:Перайсці да
 ja:移動(&G)
+fa:برو به
 -
 Next Page
 hu:Következő oldal
@@ -173,6 +191,7 @@ fr:Page suivante
 tr:Sonraki Sayfa
 by:Наступная старонка
 ja:次のページ
+fa:صفحه بعد
 -
 Previous Page
 hu:Előző oldal
@@ -182,6 +201,7 @@ fr:Page précédente
 tr:Önceki Sayfa
 by:Папярэдняя старонка
 ja:前のページ
+fa:صفحه قبل
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -191,6 +211,7 @@ fr:Première page\tHome
 tr:İlk Sayfa\tHome
 by:Першая старонка\tHome
 ja:最初のページ\tHome
+fa:صفحه اول\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -200,6 +221,7 @@ fr:Dernière page\tEnd
 tr:Son Sayfa\tEnd
 by:Апошняя старонка\tEnd
 ja:最後のページ\tEnd
+fa:صفحه آخر\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -208,6 +230,7 @@ de:Seite...
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
 ja:ページ...\tCtrl-G
+fa:...صفحه\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -217,6 +240,7 @@ fr:Zoom
 tr:&Yakınlaştırma
 by:Памер
 ja:拡大と縮小(&Z)
+fa:تغيير اندازه
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -226,6 +250,7 @@ fr:Page entière\tCtrl-0
 tr:&Sayfaya sığdır\tCtrl-0
 by:Змясціць старонку\tCtrl-0
 ja:ページに合わせる(&P)\tCtrl-0
+fa:اندازه متناسب با پنجره\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -235,6 +260,7 @@ fr:Taille réelle\tCtrl-1
 tr:Gerçek Boyut\tCtrl-1
 by:Рэальны памер\tCtrl-1
 ja:実際のサイズ\tCtrl-1
+fa:اندازه واقعی\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -244,6 +270,7 @@ fr:Pleine largeur
 tr:Genişliğe &sığdır\tCtrl-2
 by:Змясціць па шырыне
 ja:幅に合わせる(&H)\tCtrl-2
+fa:اندازه متناسب با عرض پنجره\tCtrl-2
 -
 6400%
 -
@@ -278,6 +305,7 @@ fr:Langue
 tr:Dil
 by:Мова
 ja:言語(&L)
+fa:زبان
 -
 &English
 hu:&Angol
@@ -286,10 +314,12 @@ fr:Anglais
 tr:&English
 by:Ангельская
 ja:英語(&E)
+fa:انگليسی
 -
 &Belarusian
 fr:Bélarusse
 ja:ベラルーシ語(&B)
+fa:بلاروسی
 -
 &German
 hu:Né&met
@@ -298,6 +328,7 @@ fr:Allemand
 tr:&Deutsche
 by:Нямецкая
 ja:ドイツ語(&G)
+fa:آلمانی
 -
 &Polish
 hu:&Lengyel
@@ -306,12 +337,18 @@ fr:Polonais
 tr:Polca
 by:Польская
 ja:ポーランド語(&P)
+fa:لهستانی
 -
 &Japanese
 pl:Japoński
+fa:ژاپنی
 -
 &Hungarian
 pl:Węgierski
+fa:مجارستانی
+-
+&Persian
+pl:Perski
 -
 &French
 hu:&Francia
@@ -320,6 +357,7 @@ fr:Français
 tr:&Fransızca
 by:Француская
 ja:フランス語(&F)
+fa:فرانسوی
 -
 &Turkish
 hu:&Török
@@ -328,6 +366,7 @@ fr:Turc
 tr:&Türkçe
 by:Турэцкая
 ja:トルコ語(&T)
+fa:ترکی
 -
 &Help
 hu:&Súgó
@@ -337,6 +376,7 @@ fr:Aide
 tr:&Yardım
 by:Дапамога
 ja:ヘルプ(&H)
+fa:راهنما
 -
 &Visit website
 hu:&Weboldal
@@ -346,6 +386,7 @@ fr:Visiter le site web
 tr:&Web sayfası
 by:Наведаць сайт
 ja:ウェブサイトの訪問(&V)
+fa:ديدن سايت وب
 -
 &About
 hu:Név&jegy
@@ -355,6 +396,7 @@ fr:A propos
 tr:&Hakkında
 by:Аб праграме
 ja:バージョン情報(&A)
+fa:درباره
 -
 Open
 hu:Megny&itás
@@ -364,6 +406,7 @@ fr:Ouvrir
 tr:&Aç
 by:Адчыніць
 ja:開く
+fa:باز کردن
 -
 Zoom In
 hu:Nagyítás
@@ -372,6 +415,7 @@ fr:Zoom avant
 tr:Yakınlaştır
 by:Павялічыць
 ja:拡大
+fa:بزرگ کردن
 -
 Zoom Out
 hu:Kicsinyítés
@@ -380,6 +424,7 @@ fr:Zoom arrière
 tr:Uzaklaştır
 by:Паменьшыць
 ja:縮小
+fa:کوچک کردن
 -
 About SumatraPDF
 hu:SumatraPDF névjegye
@@ -388,6 +433,7 @@ fr:A propos de SumatraPDF
 tr:SumatraPDF hakkında
 by:Аб SumatraPDF
 ja:SumatraPDF のバージョン情報
+fa:درباره سوماترا پی دی اف
 -
 SumatraPDF is now a default reader for PDF files.
 hu:A SumatraPDF az alapértelmezett PDF olvasó.
@@ -396,6 +442,7 @@ fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
 tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
 by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчанні.
 ja:SumatraPDF は現在 PDF ファイル用の既定のリーダーです。
+fa:سوماترا پی دی اف اکنون بازکننده استاندارد فايل های پی دی اف است
 -
 Failed to save a file
 hu:Nem lehet menteni a fájlt.
@@ -404,6 +451,7 @@ fr:Echec d'enregistrement du fichier
 tr:Dosya kaydedilirken hata çıktı.
 by:Немагчыма захаваць файл
 ja:ファイルの保存に失敗しました
+fa:ذخيره کردن فايل با مشکل روبرو شد
 -
 Error loading PDF file.
 hu:Hiba a PDF betöltése közben.
@@ -412,6 +460,7 @@ fr:Erreur à l'ouverture du fichier PDF.
 tr:Dosya yüklenirken hata çıktı.
 by:Памылка пры адчыненні файла.
 ja:PDF ファイルの読み込みエラーです。
+fa:باز کردن فايل با مشکل روبرو شد
 -
 Could not open Printer
 hu:Nem lehet megnyitni a Nyomtatót.
@@ -420,6 +469,7 @@ fr:Impossible d'accéder à l'imprimante
 tr:Yazıcıya erişilemiyor.
 by:Немагчыма адчыніць друкарку
 ja:プリンタを開くことができませんでした
+fa:مکالمه با پرينتر با مشکل روبرو شد
 -
 Printing problem.
 hu:Nyomtatási probléma.
@@ -428,3 +478,4 @@ fr:Problème d'impression.
 tr:Yazdırma problemi.
 by:Памылка з друкаваннем.
 ja:印刷の問題です。
+fa:پرينت با مشکل روبرو شد
