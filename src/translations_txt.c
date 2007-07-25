@@ -9,13 +9,13 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 7;
+int g_transLangsCount = 8;
 
 const char *g_transLangs[] = {
-  "en", "pl", "fr", "tr", "by", "ja", "de"
+  "en", "hu", "pl", "fr", "tr", "by", "ja", "de"
 };
 
-int g_transTranslationsCount = 59;
+int g_transTranslationsCount = 60;
 
 const char *g_transTranslations[] = {
 
@@ -29,6 +29,7 @@ const char *g_transTranslations[] = {
   "&German",
   "&Go To",
   "&Help",
+  "&Hungarian",
   "&Japanese",
   "&Language",
   "&Open\tCtrl-O",
@@ -80,6 +81,68 @@ const char *g_transTranslations[] = {
   "Zoom In",
   "Zoom Out",
 
+  /* Translations for language hu */
+  "N\303\251v&jegy",
+  NULL,
+  "Be&zr\303\241s\tCtrl-W",
+  "&Angol",
+  "&F\303\241jl",
+  "&Francia",
+  "N\303\251&met",
+  "U&gr\303\241s",
+  "&S\303\272g\303\263",
+  NULL,
+  NULL,
+  "&Nyelv",
+  "Megny&it\303\241s\tCtrl-O",
+  "&Lengyel",
+  "Nyomt&at\303\241s",
+  "Ment&\303\251s m\303\241sk\303\251nt",
+  "&T\303\266r\303\266k",
+  "&N\303\251zet",
+  "&Weboldal",
+  "&Nagy\303\255t\303\241s",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "SumatraPDF n\303\251vjegye",
+  "&Eredeti M\303\251ret\tCtrl-1",
+  "Folyamatos",
+  "Folyamatos oldalp\303\241r",
+  "Nem lehet megnyitni a Nyomtat\303\263t.",
+  "&Kil\303\251p\303\251s\tCtrl-Q",
+  "Hiba a PDF bet\303\266lt\303\251se k\303\266zben.",
+  "Oldalp\303\241r",
+  "Nem lehet menteni a f\303\241jlt.",
+  "Els\305\221 oldal\tHome",
+  "&Teljes Oldal\tCtrl-0",
+  "Oldal&sz\303\251less\303\251g\tCtrl-2",
+  "Utols\303\263 oldal\tEnd",
+  "SumatraPDF mint alap\303\251rtelmezett PDF olvas\303\263",
+  "K\303\266vetkez\305\221 oldal",
+  "Megny&it\303\241s",
+  "Oldal...\tCtrl-G",
+  "El\305\221z\305\221 oldal",
+  "Nyomtat\303\241si probl\303\251ma.",
+  "Forgat\303\241s balra",
+  "Forgat\303\241s jobbra",
+  "\303\201llapotsor",
+  "Egy oldalas",
+  "A SumatraPDF az alap\303\251rtelmezett PDF olvas\303\263.",
+  "MuPDF megjelen\303\255t\305\221 motor",
+  "Nagy\303\255t\303\241s",
+  "Kicsiny\303\255t\303\251s",
+
   /* Translations for language pl */
   "O programie",
   NULL,
@@ -90,6 +153,7 @@ const char *g_transTranslations[] = {
   "&Niemiecki",
   "Id\305\272 do",
   "&Pomoc",
+  "W\304\231gierski",
   "Japo\305\204ski",
   "J\304\231zyk",
   "Otw\303\263rz\tCtrl-O",
@@ -152,6 +216,7 @@ const char *g_transTranslations[] = {
   "Atteindre",
   "Aide",
   NULL,
+  NULL,
   "Langue",
   "Ouvrir\tCtrl-O",
   "Polonais",
@@ -212,6 +277,7 @@ const char *g_transTranslations[] = {
   "&Deutsche",
   "&Git",
   "&Yard\304\261m",
+  NULL,
   NULL,
   "Dil",
   "&A\303\247\tCtrl-O",
@@ -274,6 +340,7 @@ const char *g_transTranslations[] = {
   "\320\237\320\265\321\200\320\260\320\271\321\201\321\206\321\226 \320\264\320\260",
   "\320\224\320\260\320\277\320\260\320\274\320\276\320\263\320\260",
   NULL,
+  NULL,
   "\320\234\320\276\320\262\320\260",
   "\320\220\320\264\321\207\321\213\320\275\321\226\321\206\321\214\tCtrl-O",
   "\320\237\320\276\320\273\321\214\321\201\320\272\320\260\321\217",
@@ -335,6 +402,7 @@ const char *g_transTranslations[] = {
   "\347\247\213\345\213\205(&G)",
   "\343\203\210\343\203\213\343\203\207(&H)",
   NULL,
+  NULL,
   "\350\250\200\350\252\216(&L)",
   "\351\226\213\343\201\217(&O)\tCtrl-O",
   "\343\203\215\343\203\214\343\203\211\343\203\203\343\203\211\350\252\216(&P)",
@@ -395,6 +463,7 @@ const char *g_transTranslations[] = {
   NULL,
   "&Gehe zu",
   "&Hilfe",
+  NULL,
   NULL,
   NULL,
   "&\303\226ffnen\tCtrl-O",

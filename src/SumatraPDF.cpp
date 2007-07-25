@@ -249,6 +249,7 @@ MenuDef menuDefLang[] = {
     { _TRN("&Belarusian"),  IDM_LANG_BY },
     { _TRN("&French"),      IDM_LANG_FR },
     { _TRN("&German"),      IDM_LANG_DE },
+    { _TRN("&Hungarian"),   IDM_LANG_HU },
     { _TRN("&Japanese"),    IDM_LANG_JA },
     { _TRN("&Polish"),      IDM_LANG_PL },
     { _TRN("&Turkish"),     IDM_LANG_TR },
@@ -265,6 +266,7 @@ struct LangDef {
     {"pl", IDM_LANG_PL},
     {"tr", IDM_LANG_TR},
     {"ja", IDM_LANG_JA},
+    {"hu", IDM_LANG_HU},
 };
 
 #define LANGS_COUNT dimof(g_langs)
@@ -4115,6 +4117,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_TR:
                 case IDM_LANG_BY:
                 case IDM_LANG_JA:
+                case IDM_LANG_HU:
                     OnMenuLanguage((int)wmId);
                     break;
 
@@ -4535,6 +4538,7 @@ static const char *g_lcidLangMap[] = {
     "tr", "041f", NULL, // Turkish
     "by", "0423", NULL, // Belarusian
     "ja", NULL, // Japanese
+    "hu", NULL, // Hungarian
     NULL
 };
 
