@@ -5,6 +5,7 @@
 # What follows below is a line listing all languages supported
 # in this file followed by translations themselves
 # Contributors:
+# Lars Wohlfahrt (www.eviltux.de) - German
 # Hakan ATA - Turkish
 # Яўген Змачынскі - Belarusian
 # fiuzzy - French
@@ -50,6 +51,7 @@ dk:&Luk\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
+de:&Speichern unter...
 pl:Zapisz jako
 fr:&Enregistrer sous
 tr:&Farklı kaydet
@@ -105,7 +107,7 @@ dk:&Vis
 Single page
 hu:Egy oldalas
 pl:Jedna strona
-de:Einzelnde Seite
+de:Einzelne Seite
 fr:Une seule page
 tr:Tek sayfa
 by:Адна старонка
@@ -292,7 +294,7 @@ dk:Akt&ual størrelse\tCtrl-1
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
 pl:Dopasuj do szerokości\tCtrl-2
-de:An Breite Anpassen\tCtrl-2
+de:An Breite anpassen\tCtrl-2
 fr:Pleine largeur
 tr:Genişliğe &sığdır\tCtrl-2
 by:Змясціць па шырыне
@@ -330,6 +332,7 @@ dk:Tilpas &bredde\tCtrl-2
 hu:&Nyelv
 pl:Język
 fr:&Langue
+de:Sprache
 tr:Dil
 by:Мова
 ja:言語(&L)
@@ -340,6 +343,7 @@ English
 hu:Angol
 pl:Angielski
 fr:Anglais
+de:Englisch
 tr:English
 by:Ангельская
 ja:英語
@@ -348,6 +352,7 @@ dk:Engelsk
 -
 Belarusian
 fr:Biélorusse
+de:&Weißrussisch
 ja:ベラルーシ語
 fa:بلاروسی
 dk:Hviderussisk
@@ -358,6 +363,7 @@ pl:Dański
 German
 hu:Német
 pl:Niemiecki
+de:&Deutsch
 fr:Allemand
 tr:Deutsche
 by:Нямецкая
@@ -369,6 +375,7 @@ Polish
 hu:Lengyel
 pl:Polski
 fr:Polonais
+de:&Polnisch
 tr:Polca
 by:Польская
 ja:ポーランド語
@@ -379,15 +386,18 @@ Japanese
 pl:Japoński
 fa:ژاپنی
 fr:Japonais
+de:&Japanisch
 -
 Hungarian
 pl:Węgierski
 fr:Hongrois
 fa:مجارستانی
 dk:Ungarsk
+de:&Ungrarisch
 -
 Persian
 pl:Perski
+de:&Französisch
 -
 French
 hu:Francia
@@ -403,6 +413,7 @@ Turkish
 hu:Török
 pl:Turecki
 fr:Turc
+de:Türkisch
 tr:Türkçe
 by:Турэцкая
 ja:トルコ語
@@ -454,6 +465,7 @@ fa:باز کردن
 dk:Åbn
 -
 Zoom In
+de:Reinzoomen
 hu:Nagyítás
 pl:Powiększ
 fr:Zoom avant
@@ -464,6 +476,7 @@ fa:بزرگ کردن
 dk:Zoom ind
 -
 Zoom Out
+de:Rauszoomen
 hu:Kicsinyítés
 pl:Pomniejsz
 fr:Zoom arrière
@@ -474,6 +487,7 @@ fa:کوچک کردن
 dk:Zoom ud
 -
 About SumatraPDF
+de:Über SumatraPDF
 hu:SumatraPDF névjegye
 pl:O programie
 fr:A propos de SumatraPDF
@@ -484,6 +498,7 @@ fa:درباره سوماترا پی دی اف
 dk:Om SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
+de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
 hu:A SumatraPDF az alapértelmezett PDF olvasó.
 pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
 fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
@@ -494,6 +509,7 @@ fa:سوماترا پی دی اف اکنون بازکننده استاندارد 
 dk:SumatraPDF er nu din standardlæser for PDF filer.
 -
 Failed to save a file
+de:Fehler beim Speichern der Datei
 hu:Nem lehet menteni a fájlt.
 pl:Problem przy zapisywaniu pliku.
 fr:Echec d'enregistrement du fichier
@@ -504,6 +520,7 @@ fa:ذخيره کردن فايل با مشکل روبرو شد
 dk:Kunne ikke gemme filen
 -
 Error loading PDF file.
+de:Fehler beim Laden der Datei
 hu:Hiba a PDF betöltése közben.
 pl:Problem przy otwarzaniu pliku.
 fr:Erreur à l'ouverture du fichier PDF.
@@ -514,6 +531,7 @@ fa:باز کردن فايل با مشکل روبرو شد
 dk:Fejl ved åbning af PDF-fil
 -
 Could not open Printer
+de:Konnte den Drucker nicht ansprechen.
 hu:Nem lehet megnyitni a Nyomtatót.
 pl:Drukarka niedostępna.
 fr:Impossible d'accéder à l'imprimante
@@ -524,6 +542,7 @@ fa:مکالمه با پرينتر با مشکل روبرو شد
 dk:Kunne ikke åbne printeren
 -
 Printing problem.
+de:Druckerproblem
 hu:Nyomtatási probléma.
 pl:Problem z drukowaniem.
 fr:Problème d'impression.
