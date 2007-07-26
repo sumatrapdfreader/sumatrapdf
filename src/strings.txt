@@ -14,7 +14,8 @@
 # Richard Magyar - Hungarian
 # Mardi Az Pansad Dastgah Artesh - Persian
 # Lars J. Helbo - Danish
-Languages: en pl fr de tr by ja hu fa dk
+# Angelo Contardi - Italian
+Languages: en pl fr de tr by ja hu fa dk it
 -
 &File
 hu:&Fájl
@@ -26,6 +27,7 @@ by:Файл
 ja:ファイル(&F)
 fa:فايل
 dk:&Filer
+it:&File
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -37,6 +39,7 @@ by:Адчыніць\tCtrl-O
 ja:開く(&O)\tCtrl-O
 fa:باز کردن\tCtrl-O
 dk:&Åbn\tCtrl-O
+it:&Apri\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -48,6 +51,7 @@ by:Зачыніць\tCtrl-W
 ja:閉じる(&C)\tCtrl-W
 fa:بستن\tCtrl-W
 dk:&Luk\tCtrl-W
+it:&Chiudi\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -59,6 +63,7 @@ by:Захаваць як
 ja:名前を付けて保存(&S)
 fa:ذخيره تحت
 dk:&Gem som
+it:&Salva come
 -
 &Print
 hu:Nyomt&atás
@@ -70,6 +75,7 @@ by:Друкаваць\tCtrl-P
 ja:印刷(&P)
 fa:پرينت\tCtrl-P
 dk:&Udskriv
+it:&Stampa
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -81,6 +87,7 @@ by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ja:SumatraPDF を既定の PDF リーダーにする
 fa:در آوردن سوماترا بصورت بازکننده استاندارد فايلهای پی دی اف
 dk:Gør SumatraPDF til din standard PDF læser
+it:Imposta SumatraPDF come Lettore Predefinito di Files PDF.
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -92,6 +99,7 @@ by:Выйсце\tCtrl-Q
 ja:終了(&X)\tCtrl-Q
 fa:خروج\tCtrl-Q
 dk:&Slut\tCtrl-Q
+it:&Esci\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -103,6 +111,7 @@ by:Выгляд
 ja:表示(&V)
 fa:نمايش
 dk:&Vis
+it:Mostra
 -
 Single page
 hu:Egy oldalas
@@ -114,6 +123,7 @@ by:Адна старонка
 ja:単一ページ
 fa:نمايش تک صفحه ای
 dk:Enkelt side
+it:Pagina Singola
 -
 Facing
 hu:Oldalpár
@@ -125,6 +135,7 @@ by:Дзьве старонкі
 ja:見返し
 fa:نمايش دو صفحه ای
 dk:Modstående
+it:Pagine Affiancate
 -
 Continuous
 hu:Folyamatos
@@ -136,6 +147,7 @@ by:Працягла
 ja:連続
 fa:نمايش پيوسته
 dk:Fortløbende
+it:Scorrimento Pagina
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -147,6 +159,7 @@ by:Працягла дзьве старонкі
 ja:連続の見返し
 fa:نمايش دو صفحه ای پيوسته
 dk:Fortløbende modstående
+it:Scorrimento Pagine Affiancate
 -
 Rotate left
 hu:Forgatás balra
@@ -158,6 +171,7 @@ by:Павярнуць налева
 ja:左に回転
 fa:چرخاندن به چپ
 dk:Drej venstre
+it:Ruota a Sinistra
 -
 Rotate right
 hu:Forgatás jobbra
@@ -169,6 +183,7 @@ by:Павярнуць направа
 ja:右に回転
 fa:چرخاندن به راست
 dk:Drej højre
+it:Ruota a Destra
 -
 Show toolbar
 hu:Állapotsor
@@ -180,6 +195,7 @@ by:Паказаль панэль прыладаў
 ja:ツール バーの表示
 fa:نشان دادن منو های ابزار
 dk:Vis værktøjslinie
+it:Mostra la Barra degli Strumenti
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -191,6 +207,7 @@ by:Выкарыстоўваць MuPDF-магчымасці
 ja:MuPDF 描画エンジンを使用する
 fa:استفاده از مو پی دی اف بعنوان موتور استاندارد
 dk:Brug MuPDF renderingengine
+it:Usa MuPDF come Motore di Rendering
 -
 &Go To
 hu:U&grás
@@ -202,6 +219,7 @@ by:Перайсці да
 ja:移動(&G)
 fa:برو به
 dk:&Gå til
+it:&Vai a
 -
 Next Page
 hu:Következő oldal
@@ -213,6 +231,7 @@ by:Наступная старонка
 ja:次のページ
 fa:صفحه بعد
 dk:Næste side
+it:Pagina Successiva
 -
 Previous Page
 hu:Előző oldal
@@ -224,6 +243,7 @@ by:Папярэдняя старонка
 ja:前のページ
 fa:صفحه قبل
 dk:Forrige side
+it:Pagina Precedente
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -235,6 +255,7 @@ by:Першая старонка\tHome
 ja:最初のページ\tHome
 fa:صفحه اول\tHome
 dk:Første side\tHome
+it:Prima Pagina
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -246,6 +267,7 @@ by:Апошняя старонка\tEnd
 ja:最後のページ\tEnd
 fa:صفحه آخر\tEnd
 dk:Sidste side\tEnd
+it:Ultima Pagina
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -257,6 +279,7 @@ by:Старонка...\tCtrl-G
 ja:ページ...\tCtrl-G
 fa:...صفحه\tCtrl-G
 dk:Side...\tCtrl-G
+it:Pagina...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -268,6 +291,7 @@ by:Памер
 ja:拡大と縮小(&Z)
 fa:تغيير اندازه
 dk:&Zoom
+it:&+/-
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -279,6 +303,7 @@ by:Змясціць старонку\tCtrl-0
 ja:ページに合わせる(&P)\tCtrl-0
 fa:اندازه متناسب با پنجره\tCtrl-0
 dk:Hele &siden\tCtrl-0
+it:Intera &Pagina\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -290,6 +315,7 @@ by:Рэальны памер\tCtrl-1
 ja:実際のサイズ\tCtrl-1
 fa:اندازه واقعی\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
+it:Dimensione Reale
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -301,6 +327,7 @@ by:Змясціць па шырыне
 ja:幅に合わせる(&H)\tCtrl-2
 fa:اندازه متناسب با عرض پنجره\tCtrl-2
 dk:Tilpas &bredde\tCtrl-2
+it:&Larghezza Pagina\tCtrl-2
 -
 6400%
 -
@@ -330,7 +357,7 @@ dk:Tilpas &bredde\tCtrl-2
 -
 &Language
 hu:&Nyelv
-pl:Język
+pl:&Język
 fr:&Langue
 de:Sprache
 tr:Dil
@@ -338,6 +365,7 @@ by:Мова
 ja:言語(&L)
 fa:زبان
 dk:&Sprog
+it:&Linguaggio
 -
 English
 hu:Angol
@@ -349,65 +377,74 @@ by:Ангельская
 ja:英語
 fa:انگليسی
 dk:Engelsk
+it:Inglese
 -
 Belarusian
 fr:Biélorusse
-de:&Weißrussisch
+de:Weißrussisch
 ja:ベラルーシ語
 fa:بلاروسی
 dk:Hviderussisk
+it:Bielorusso
 -
 Danish
 pl:Dański
+it:Danese
 -
 German
 hu:Német
 pl:Niemiecki
-de:&Deutsch
+de:Deutsch
 fr:Allemand
 tr:Deutsche
 by:Нямецкая
 ja:ドイツ語
 fa:آلمانی
 dk:Tysk
+it:Tedesco
 -
 Polish
 hu:Lengyel
 pl:Polski
 fr:Polonais
-de:&Polnisch
+de:Polnisch
 tr:Polca
 by:Польская
 ja:ポーランド語
 fa:لهستانی
 dk:Polsk
+it:Polacco
 -
 Japanese
 pl:Japoński
 fa:ژاپنی
 fr:Japonais
-de:&Japanisch
+de:Japanisch
+it:Giapponese
 -
 Hungarian
 pl:Węgierski
 fr:Hongrois
 fa:مجارستانی
 dk:Ungarsk
-de:&Ungrarisch
+de:Ungrarisch
+it:Ungherese
 -
 Persian
 pl:Perski
-de:&Französisch
+it:Persiano
 -
 French
 hu:Francia
 pl:Francuski
 fr:Français
+de:Französisch
 tr:Fransızca
 by:Француская
 ja:フランス語
 fa:فرانسوی
 dk:Fransk
+it:Francese
 -
 Turkish
 hu:Török
@@ -419,6 +456,11 @@ by:Турэцкая
 ja:トルコ語
 fa:ترکی
 dk:Tyrkisk
+it:Turco
+-
+Italian
+pl:Włoski
+it:Italiano
 -
 &Help
 hu:&Súgó
@@ -430,6 +472,7 @@ by:Дапамога
 ja:ヘルプ(&H)
 fa:راهنما
 dk:&Hjælp
+it:Aiuto
 -
 &Visit website
 hu:&Weboldal
@@ -441,6 +484,7 @@ by:Наведаць сайт
 ja:ウェブサイトの訪問(&V)
 fa:ديدن سايت وب
 dk:Besøg &webside
+it:&Visita il Sito WEB
 -
 &About
 hu:Név&jegy
@@ -452,6 +496,7 @@ by:Аб праграме
 ja:バージョン情報(&A)
 fa:درباره
 dk:&Om
+it:&A proposito di
 -
 Open
 hu:Megny&itás
@@ -463,6 +508,7 @@ by:Адчыніць
 ja:開く
 fa:باز کردن
 dk:Åbn
+it:Apri
 -
 Zoom In
 de:Reinzoomen
@@ -474,6 +520,7 @@ by:Павялічыць
 ja:拡大
 fa:بزرگ کردن
 dk:Zoom ind
+it:Ingrandisci
 -
 Zoom Out
 de:Rauszoomen
@@ -485,6 +532,7 @@ by:Паменьшыць
 ja:縮小
 fa:کوچک کردن
 dk:Zoom ud
+it:Diminuisci
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -496,6 +544,7 @@ by:Аб SumatraPDF
 ja:SumatraPDF のバージョン情報
 fa:درباره سوماترا پی دی اف
 dk:Om SumatraPDF
+it:A proposito di SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -507,6 +556,7 @@ by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчан
 ja:SumatraPDF は現在 PDF ファイル用の既定のリーダーです。
 fa:سوماترا پی دی اف اکنون بازکننده استاندارد فايل های پی دی اف است
 dk:SumatraPDF er nu din standardlæser for PDF filer.
+it:SumatraPDF è stato impostato come Lettore Predefinito di Files PDF.
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei
@@ -518,6 +568,7 @@ by:Немагчыма захаваць файл
 ja:ファイルの保存に失敗しました
 fa:ذخيره کردن فايل با مشکل روبرو شد
 dk:Kunne ikke gemme filen
+it:Fallito il Salvataggio del File PDF
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -529,6 +580,7 @@ by:Памылка пры адчыненні файла.
 ja:PDF ファイルの読み込みエラーです。
 fa:باز کردن فايل با مشکل روبرو شد
 dk:Fejl ved åbning af PDF-fil
+it:Riscontrati Errori durante l'Apertura del File PDF
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -540,6 +592,7 @@ by:Немагчыма адчыніць друкарку
 ja:プリンタを開くことができませんでした
 fa:مکالمه با پرينتر با مشکل روبرو شد
 dk:Kunne ikke åbne printeren
+it:Stampante non accessibile
 -
 Printing problem.
 de:Druckerproblem
@@ -551,3 +604,4 @@ by:Памылка з друкаваннем.
 dk:Printer problem
 ja:印刷の問題です。
 fa:پرينت با مشکل روبرو شد
+it:Problemi di Stampa
