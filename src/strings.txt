@@ -15,6 +15,7 @@
 # Mardi Az Pansad Dastgah Artesh - Persian
 # Lars J. Helbo - Danish
 # Angelo Contardi - Italian
+# iBlawgger - Italian
 Languages: en pl fr de tr by ja hu fa dk it
 -
 &File
@@ -255,7 +256,7 @@ by:Першая старонка\tHome
 ja:最初のページ\tHome
 fa:صفحه اول\tHome
 dk:Første side\tHome
-it:Prima Pagina
+it:Prima Pagina\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -267,7 +268,7 @@ by:Апошняя старонка\tEnd
 ja:最後のページ\tEnd
 fa:صفحه آخر\tEnd
 dk:Sidste side\tEnd
-it:Ultima Pagina
+it:Ultima Pagina\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -291,7 +292,7 @@ by:Памер
 ja:拡大と縮小(&Z)
 fa:تغيير اندازه
 dk:&Zoom
-it:&+/-
+it:&Ingrandisci
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -315,7 +316,7 @@ by:Рэальны памер\tCtrl-1
 ja:実際のサイズ\tCtrl-1
 fa:اندازه واقعی\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
-it:Dimensione Reale
+it:Dimensione Reale\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -461,6 +462,7 @@ it:Turco
 Italian
 pl:Włoski
 it:Italiano
+fr:Italien
 -
 &Help
 hu:&Súgó
