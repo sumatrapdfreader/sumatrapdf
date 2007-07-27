@@ -18,7 +18,8 @@
 # iBlawgger - Italian
 # Barry Haveman (webstek.info) - Dutch
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
-Languages: en pl fr de tr by ja hu fa dk it nl ta
+# Jose Virgili - Spanish
+Languages: en pl fr de tr by ja hu fa dk it nl ta es
 -
 &File
 hu:&Fájl
@@ -33,6 +34,7 @@ dk:&Filer
 it:&File
 nl:&Bestand
 ta:கோப்பு
+es:&Archivo
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -47,6 +49,7 @@ dk:&Åbn\tCtrl-O
 it:&Apri\tCtrl-O
 nl:&Open\tCtrl-O
 ta:திற\tCtrl-O
+es:&Abrir\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -61,6 +64,7 @@ dk:&Luk\tCtrl-W
 it:&Chiudi\tCtrl-W
 nl:&Sluiten\tCtrl-W
 ta:மூடு\tCtrl-W
+es:&Cerrar\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -75,6 +79,7 @@ dk:&Gem som
 it:&Salva come
 nl:Opslaan als
 ta:எனச் சேமி
+es:&Guardar como
 -
 &Print
 hu:Nyomt&atás
@@ -89,6 +94,7 @@ dk:&Udskriv
 it:&Stampa
 nl:&Print
 ta:அச்சிடு
+es:&Imprimir
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -103,6 +109,7 @@ dk:Gør SumatraPDF til din standard PDF læser
 it:Imposta SumatraPDF come Lettore Predefinito di Files PDF
 nl:Maak SumatraPDF de standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
+es:Convertir SumatraPDF en lector PDF por defecto
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -117,6 +124,7 @@ dk:&Slut\tCtrl-Q
 it:&Esci\tCtrl-Q
 nl:&Sluiten\tCtrl-Q
 ta:வெளியேறு\tCtrl-Q
+es:&Salir\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -131,6 +139,7 @@ dk:&Vis
 it:Mostra
 nl::&Beeld
 ta:நோக்கு
+es:&Ver
 -
 Single page
 hu:Egy oldalas
@@ -145,6 +154,7 @@ dk:Enkelt side
 it:Pagina Singola
 nl:Enkele pagina
 ta:ஒற்றைப் பக்கம்
+es:Página Única
 -
 Facing
 hu:Oldalpár
@@ -159,6 +169,7 @@ dk:Modstående
 it:Pagine Affiancate
 nl:Dubbele pagina
 ta:முகப்பு
+es:Página Doble
 -
 Continuous
 hu:Folyamatos
@@ -173,6 +184,7 @@ dk:Fortløbende
 it:Scorrimento Pagina
 nl:Doorlopend
 ta:தொடர்
+es:Contínua
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -187,6 +199,7 @@ dk:Fortløbende modstående
 it:Scorrimento Pagine Affiancate
 nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
+es:Página Doble Contínua
 -
 Rotate left
 hu:Forgatás balra
@@ -201,6 +214,7 @@ dk:Drej venstre
 it:Ruota a Sinistra
 nl:Linksom draaien
 ta:இடதுப்புறம் சுழற்று
+es:Girar a la izquierda
 -
 Rotate right
 hu:Forgatás jobbra
@@ -215,6 +229,7 @@ dk:Drej højre
 it:Ruota a Destra
 nl:Rechtsom draaien
 ta:வலப்புறம் சுழற்று
+es:Girar a la derecha
 -
 Show toolbar
 hu:Állapotsor
@@ -229,6 +244,7 @@ dk:Vis værktøjslinie
 it:Mostra la Barra degli Strumenti
 nl:Toon werkbalk
 ta:கருவிப்பட்டை காண்பி
+es:Mostrar barra de herramientas
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -243,6 +259,7 @@ dk:Brug MuPDF renderingengine
 it:Usa MuPDF come Motore di Rendering
 nl:Gebruik de MuPDF render-enigine
 ta:MuPDF பதிப்பு வரை பொறியை தேர்
+es:Usar motor de renderizado MuPDF
 -
 &Go To
 hu:U&grás
@@ -257,6 +274,7 @@ dk:&Gå til
 it:&Vai a
 nl:Ga naar
 ta:அங்கு செல்
+es:&Ir a
 -
 Next Page
 hu:Következő oldal
@@ -271,6 +289,7 @@ dk:Næste side
 it:Pagina Successiva
 nl:Volgende pagina
 ta:அடுத்த பக்கம்
+es:Página Siguiente
 -
 Previous Page
 hu:Előző oldal
@@ -285,6 +304,7 @@ dk:Forrige side
 it:Pagina Precedente
 nl:Vorige pagina
 ta:முந்தைய பக்கம்
+es:Página Anterior
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -299,6 +319,7 @@ dk:Første side\tHome
 it:Prima Pagina\tHome
 nl:Eerste pagina\tHome
 ta:முதல் பக்கம்\tHome
+es:Primera Página\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -313,6 +334,7 @@ dk:Sidste side\tEnd
 it:Ultima Pagina\tEnd
 nl:Laatste pagina\tEnd
 ta:இறுதி பக்கம்\tEnd
+es:Última Página\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -327,6 +349,7 @@ dk:Side...\tCtrl-G
 it:Pagina...\tCtrl-G
 nl:Pagina...\tCtrl-G
 ta:பக்கம்...\tCtrl-G
+es:Página...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -341,6 +364,7 @@ dk:&Zoom
 it:&Ingrandisci
 nl:Vergroten
 ta:பெரிதாக்கு
+es:&Zoom
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -355,6 +379,7 @@ dk:Hele &siden\tCtrl-0
 it:Intera &Pagina\tCtrl-0
 nl:Aan pagina aanpassen\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
+es:Ajustar &Página\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -369,6 +394,7 @@ dk:Akt&ual størrelse\tCtrl-1
 it:Dimensione Reale\tCtrl-1
 nl:Normale grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
+es:Tamaño Real\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -383,6 +409,7 @@ dk:Tilpas &bredde\tCtrl-2
 it:&Larghezza Pagina\tCtrl-2
 nl:Passend in breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
+es:&Ancho de Página\tCtrl-2
 -
 6400%
 -
@@ -423,6 +450,7 @@ dk:&Sprog
 it:&Linguaggio
 nl:&Taal
 ta:மொழி
+es:&Idioma
 -
 English
 hu:Angol
@@ -437,6 +465,7 @@ dk:Engelsk
 it:Inglese
 nl:Engels
 ta:ஆங்கிலம்
+es:Inglés
 -
 Belarusian
 fr:Biélorusse
@@ -446,12 +475,14 @@ fa:بلاروسی
 dk:Hviderussisk
 it:Bielorusso
 nl:Wit-russicch
+es:Bieloruso
 -
 Danish
 pl:Dański
 it:Danese
 nl:Deens
 ta:டச்சு
+es:Danés
 -
 German
 hu:Német
@@ -466,6 +497,7 @@ dk:Tysk
 it:Tedesco
 nl:Duits
 ta:ஜெர்மானியம்
+es:Alemán
 -
 Polish
 hu:Lengyel
@@ -479,6 +511,7 @@ fa:لهستانی
 dk:Polsk
 it:Polacco
 nl:Pools
+es:Polaco
 -
 Japanese
 pl:Japoński
@@ -488,6 +521,7 @@ de:Japanisch
 it:Giapponese
 nl:Japans
 ta:ஜப்பானியம்
+es:Japonés
 -
 Hungarian
 pl:Węgierski
@@ -497,10 +531,12 @@ dk:Ungarsk
 de:Ungrarisch
 it:Ungherese
 nl:Hongaars
+es:Húngaro
 -
 Persian
 pl:Perski
 it:Persiano
+es:Persa
 -
 French
 hu:Francia
@@ -515,6 +551,7 @@ dk:Fransk
 it:Francese
 nl:Frans
 ta:பிரஞ்சு
+es:Francés
 -
 Turkish
 hu:Török
@@ -528,6 +565,7 @@ fa:ترکی
 dk:Tyrkisk
 it:Turco
 nl:Turks
+es:Turco
 -
 Tamil
 de:Tamilische Sprache
@@ -537,16 +575,23 @@ hu:Tamil nyelv
 ja:タミル語
 pl:Tamilski
 tr:Tamilce
+es:Tamil
 -
 Italian
 pl:Włoski
 it:Italiano
 fr:Italien
+es:Italiano
 -
 Dutch
 pl:Holenderski
 nl:Nederlands
 de:Höllandisch
+es:Holandés
+-
+Spanish
+es:Español
+pl:Hiszpański
 -
 &Help
 hu:&Súgó
@@ -561,6 +606,7 @@ dk:&Hjælp
 it:Aiuto
 nl:Help
 ta:உதவி
+es:&Ayuda
 -
 &Visit website
 hu:&Weboldal
@@ -575,6 +621,7 @@ dk:Besøg &webside
 it:&Visita il Sito WEB
 nl:Bezoek de website
 ta:வலைத்தளம் செல்
+es:&Visitar Sitio Web
 -
 &About
 hu:Név&jegy
@@ -589,6 +636,7 @@ dk:&Om
 it:&A proposito di
 nl:Over
 ta:பற்றி
+es:&Acerca de
 -
 Open
 hu:Megny&itás
@@ -603,6 +651,7 @@ dk:Åbn
 it:Apri
 nl:Openen
 ta:திற
+es:Abrir
 -
 Zoom In
 de:Reinzoomen
@@ -617,6 +666,7 @@ dk:Zoom ind
 it:Ingrandisci
 nl:Zoom in
 ta:பெரிதாக்கு
+es:Acercar Zoom
 -
 Zoom Out
 de:Rauszoomen
@@ -631,6 +681,7 @@ dk:Zoom ud
 it:Diminuisci
 nl:Zoom uit
 ta:சிறிதாக்கு
+es:Alejar Zoom
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -645,6 +696,7 @@ dk:Om SumatraPDF
 it:A proposito di SumatraPDF
 nl:Over SumatraPDF
 ta:SumatraPDF பற்றி
+es:Acerca de SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -659,6 +711,7 @@ dk:SumatraPDF er nu din standardlæser for PDF filer.
 it:SumatraPDF è stato impostato come Lettore Predefinito di Files PDF.
 nl:SumatraPDF is nu de standaard PDF lezer.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
+es:SumatraPDF es ahora el lector PDF por defecto.
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -673,6 +726,7 @@ dk:Kunne ikke gemme filen.
 it:Fallito il Salvataggio del File PDF.
 nl:Opslaan mislukt.
 ta:கோப்பு சேமிப்பு தோற்பு
+es:Error al Guardar el Archivo
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -687,6 +741,7 @@ dk:Fejl ved åbning af PDF-fil
 it:Riscontrati Errori durante l'Apertura del File PDF
 nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
+es:Error al Cargar el Archivo PDF.
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -701,6 +756,7 @@ dk:Kunne ikke åbne printeren
 it:Stampante non accessibile
 nl:Kon printen niet vinden.
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
+es:Impresora no accesible
 -
 Printing problem.
 de:Druckerproblem
@@ -715,3 +771,4 @@ nl:Probleem bij printen.
 ja:印刷の問題です。
 fa:پرينت با مشکل روبرو شد
 it:Problemi di Stampa
+es:Error de impresión.
