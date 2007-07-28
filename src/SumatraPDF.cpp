@@ -259,6 +259,8 @@ MenuDef menuDefLang[] = {
     { _TRN("Spanish"),     IDM_LANG_ES },
     { _TRN("Tamil"),       IDM_LANG_TA },
     { _TRN("Turkish"),     IDM_LANG_TR },
+    { SEP_ITEM,            0 },
+    { _TRN("Contribute translation"), IDM_CONTRIBUTE_TRANSLATION },
 };
 
 struct LangDef {
@@ -3754,6 +3756,11 @@ static const char *RecentFileNameFromMenuItemId(UINT  menuId) {
     return NULL;
 }
 
+static void OnMenuContributeTranslation()
+{
+    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
+}
+
 #define FRAMES_PER_SECS 60
 #define ANIM_FREQ_IN_MS  1000 / FRAMES_PER_SECS
 
@@ -4188,7 +4195,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_ES:
                     OnMenuLanguage((int)wmId);
                     break;
-
+                case IDM_CONTRIBUTE_TRANSLATION:
+                    OnMenuContributeTranslation();
+                    break;
                 case IDM_ABOUT:
                     OnMenuAbout();
                     break;

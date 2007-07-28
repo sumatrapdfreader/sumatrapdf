@@ -772,3 +772,6 @@ ja:印刷の問題です。
 fa:پرينت با مشکل روبرو شد
 it:Problemi di Stampa
 es:Error de impresión.
+-
+Contribute translation
+pl:Pomóż przy translacji
