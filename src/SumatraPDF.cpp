@@ -2719,27 +2719,16 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y)
             SetCursor(gCursorDrag);
             DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
         }
-    } else if (WS_ABOUT == win->state) {
-        win->url = AboutGetLink(win, x, y);
     }
 }
 
 static void OnMouseRightButtonUp(WindowInfo *win, int x, int y)
 {
     PdfLink *       link;
-    const char *    url;
     int             dragDx, dragDy;
 
     assert(win);
     if (!win) return;
-
-    if (WS_ABOUT == win->state) {
-        url = AboutGetLink(win, x, y);
-        if (url == win->url)
-            LaunchBrowser(url);
-        win->url = NULL;
-        return;
-    }
 
     if (WS_SHOWING_PDF != win->state)
         return;
@@ -2836,6 +2825,8 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y)
         win->mouseAction = MA_SELECTING;
 
         triggerRepaintDisplayNow(win);
+    } else if (WS_ABOUT == win->state) {
+        win->url = AboutGetLink(win, x, y);
     }
 }
 
@@ -2843,6 +2834,14 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
 {
     assert (win);
     if (!win) return;
+
+    if (WS_ABOUT == win->state) {
+        const char* url = AboutGetLink(win, x, y);
+        if (url == win->url)
+            LaunchBrowser(url);
+        win->url = NULL;
+        return;
+    }
 
     if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_SELECTING) {
         assert (win->dm);
