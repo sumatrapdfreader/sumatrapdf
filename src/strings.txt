@@ -774,4 +774,5 @@ it:Problemi di Stampa
 es:Error de impresión.
 -
 Contribute translation
+de:Übersetzung beisteuern
 pl:Pomóż przy translacji

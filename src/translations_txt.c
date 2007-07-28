@@ -119,7 +119,7 @@ const char *g_transTranslations[] = {
   "Wei\303\237russisch",
   "Fortlaufend",
   "Fortlaufende Doppelseite",
-  NULL,
+  "\303\234bersetzung beisteuern",
   "Konnte den Drucker nicht ansprechen.",
   NULL,
   "H\303\266llandisch",
