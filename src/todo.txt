@@ -1,10 +1,11 @@
 Short term todo (before next 0.7 release):
 
 Long term todo:
+* crash reporting with breakpad
+* use bencoding for preferences instead of ad-hoc text format
 * find
 * show table of contents
 * check for new version on-line
-* crash reporting with breakpad
 * show keybindings in help
 * better, animated about screen
 * a nicer way to show selected text

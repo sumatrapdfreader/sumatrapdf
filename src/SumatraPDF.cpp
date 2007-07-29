@@ -41,6 +41,7 @@
 
 #include "WinUtil.hpp"
 #include <windowsx.h>
+#include "client\windows\handler\exception_handler.h"
 
 // some stupid things are in headers of MinGW 5.1.3 :-\
 // why we have to define these constants & prototypes again (?!)
@@ -4574,6 +4575,18 @@ char *GetDefaultPrinterName()
 }
 
 #define is_arg(txt) str_ieq(txt, currArg->str)
+using google_breakpad::ExceptionHandler;
+
+// Return false so that the exception is also handled by Windows
+bool SumatraMinidumpCallback(const wchar_t *dump_path,
+                       const wchar_t *minidump_id,
+                       void *context,
+                       EXCEPTION_POINTERS *exinfo,
+                       MDRawAssertionInfo *assertion,
+                       bool succeeded)
+{
+    return false;
+}
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -4591,6 +4604,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     u_DoAllTests();
 
+    std::wstring dump_path = L".";
+    ExceptionHandler exceptionHandler(dump_path, NULL, SumatraMinidumpCallback, NULL, ExceptionHandler::HANDLER_ALL);
     INITCOMMONCONTROLSEX cex;
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;

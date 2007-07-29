@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="true"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir).\poppler&quot;;&quot;$(ProjectDir).\poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir).\poppler\poppler&quot;;&quot;$(ProjectDir).\poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;;&quot;$(ProjectDir)breakpad&quot;"
 				PreprocessorDefinitions="_WIN32;WIN32;_WINDOWS;_DEBUG;DEBUG;USE_OWN_GET_AUTH_DATA;POPPLER_DATADIR=\&quot;\&quot;;ENABLE_ZLIB=1;;ENABLE_LIBJPEG=1"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="freetype231mt_d.lib comctl32.lib zlib_ds.lib jpeg_ds.lib winspool.lib Msimg32.lib"
+				AdditionalDependencies="freetype231mt_d.lib comctl32.lib zlib_ds.lib jpeg_ds.lib winspool.lib Msimg32.lib wininet.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)ext\freetype231&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\jpeg&quot;"
 				GenerateManifest="true"
@@ -134,7 +134,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="false"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir).\baseutils&quot;;&quot;$(ProjectDir).\src&quot;;&quot;$(ProjectDir).\poppler&quot;;&quot;$(ProjectDir).\poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir).\poppler\poppler&quot;;&quot;$(ProjectDir).\poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;;&quot;$(ProjectDir)breakpad&quot;"
 				PreprocessorDefinitions="WIN32;_WIN32;NDEBUG;_WINDOWS;USE_OWN_GET_AUTH_DATA;POPPLER_DATADIR=\&quot;\&quot;;ENABLE_ZLIB=1;ENABLE_LIBJPEG=1"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -160,7 +160,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="freetype231mt.lib comctl32.lib zlib_s.lib jpeg_s.lib winspool.lib Msimg32.lib"
+				AdditionalDependencies="freetype231mt.lib comctl32.lib zlib_s.lib jpeg_s.lib winspool.lib Msimg32.lib wininet.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)ext\freetype231&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\jpeg&quot;"
 				IgnoreDefaultLibraryNames=""
@@ -428,6 +428,98 @@
 			<File
 				RelativePath=".\src\icons-silk\zoom_out.bmp"
 				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Breakpad"
+			>
+			<File
+				RelativePath=".\breakpad\client\windows\sender\crash_report_sender.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\client\windows\sender\crash_report_sender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\client\windows\handler\exception_handler.cc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ExceptionHandling="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ExceptionHandling="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\breakpad\client\windows\handler\exception_handler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\common\windows\guid_string.cc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ExceptionHandling="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ExceptionHandling="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\breakpad\common\windows\guid_string.h"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\common\windows\http_upload.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\common\windows\http_upload.h"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\common\windows\string_utils-inl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\breakpad\common\windows\string_utils.cc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ExceptionHandling="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ExceptionHandling="1"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>
