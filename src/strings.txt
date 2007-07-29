@@ -137,7 +137,7 @@ ja:表示(&V)
 fa:نمايش
 dk:&Vis
 it:Mostra
-nl::&Beeld
+nl:&Beeld
 ta:நோக்கு
 es:&Ver
 -
@@ -474,7 +474,7 @@ ja:ベラルーシ語
 fa:بلاروسی
 dk:Hviderussisk
 it:Bielorusso
-nl:Wit-russicch
+nl:Wit-russisch
 es:Bieloruso
 -
 Danish
@@ -540,6 +540,7 @@ Persian
 pl:Perski
 it:Persiano
 es:Persa
+nl:Persisch
 ja:ペルシア語
 -
 French
@@ -580,12 +581,14 @@ ja:タミル語
 pl:Tamilski
 tr:Tamilce
 es:Tamil
+nl:Tamil
 -
 Italian
 pl:Włoski
 it:Italiano
 fr:Italien
 es:Italiano
+nl:Italiaans
 ja:イタリア語
 -
 Dutch
@@ -598,6 +601,7 @@ ja:オランダ語
 Spanish
 es:Español
 pl:Hiszpański
+nl:Spaans
 ja:スペイン語
 -
 &Help
@@ -774,7 +778,7 @@ tr:Yazdırma problemi.
 by:Памылка з друкаваннем.
 dk:Printer problem
 ta:அச்சுப்பொறி சிக்கல்
-nl:Probleem bij printen.
+nl:Probleem bij het printen.
 ja:印刷の問題です。
 fa:پرينت با مشکل روبرو شد
 it:Problemi di Stampa
@@ -784,3 +788,4 @@ Contribute translation
 de:Übersetzung beisteuern
 pl:Pomóż przy translacji
 ja:翻訳の提供
+nl:Help met vertalen
