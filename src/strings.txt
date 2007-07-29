@@ -483,6 +483,7 @@ it:Danese
 nl:Deens
 ta:டச்சு
 es:Danés
+ja:デンマーク語
 -
 German
 hu:Német
@@ -522,6 +523,7 @@ it:Giapponese
 nl:Japans
 ta:ஜப்பானியம்
 es:Japonés
+ja:日本語
 -
 Hungarian
 pl:Węgierski
@@ -532,11 +534,13 @@ de:Ungrarisch
 it:Ungherese
 nl:Hongaars
 es:Húngaro
+ja:ハンガリー語
 -
 Persian
 pl:Perski
 it:Persiano
 es:Persa
+ja:ペルシア語
 -
 French
 hu:Francia
@@ -582,16 +586,19 @@ pl:Włoski
 it:Italiano
 fr:Italien
 es:Italiano
+ja:イタリア語
 -
 Dutch
 pl:Holenderski
 nl:Nederlands
 de:Höllandisch
 es:Holandés
+ja:オランダ語
 -
 Spanish
 es:Español
 pl:Hiszpański
+ja:スペイン語
 -
 &Help
 hu:&Súgó
@@ -776,3 +783,4 @@ es:Error de impresión.
 Contribute translation
 de:Übersetzung beisteuern
 pl:Pomóż przy translacji
+ja:翻訳の提供
