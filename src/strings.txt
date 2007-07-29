@@ -19,7 +19,8 @@
 # Barry Haveman (webstek.info) - Dutch
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
-Languages: en pl fr de tr by ja hu fa dk it nl ta es
+# Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr
 -
 &File
 hu:&Fájl
@@ -35,6 +36,7 @@ it:&File
 nl:&Bestand
 ta:கோப்பு
 es:&Archivo
+hr:&Datoteka
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -50,6 +52,7 @@ it:&Apri\tCtrl-O
 nl:&Open\tCtrl-O
 ta:திற\tCtrl-O
 es:&Abrir\tCtrl-O
+hr:&Otvori\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -65,6 +68,7 @@ it:&Chiudi\tCtrl-W
 nl:&Sluiten\tCtrl-W
 ta:மூடு\tCtrl-W
 es:&Cerrar\tCtrl-W
+hr:&Zatvori\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -80,6 +84,7 @@ it:&Salva come
 nl:Opslaan als
 ta:எனச் சேமி
 es:&Guardar como
+hr:&Spremi kao...
 -
 &Print
 hu:Nyomt&atás
@@ -95,6 +100,7 @@ it:&Stampa
 nl:&Print
 ta:அச்சிடு
 es:&Imprimir
+hr:&Ispiši
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -110,6 +116,7 @@ it:Imposta SumatraPDF come Lettore Predefinito di Files PDF
 nl:Maak SumatraPDF de standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
+hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -125,6 +132,7 @@ it:&Esci\tCtrl-Q
 nl:&Sluiten\tCtrl-Q
 ta:வெளியேறு\tCtrl-Q
 es:&Salir\tCtrl-Q
+hr:&Izađi\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -140,6 +148,7 @@ it:Mostra
 nl:&Beeld
 ta:நோக்கு
 es:&Ver
+hr:&Pogled
 -
 Single page
 hu:Egy oldalas
@@ -155,6 +164,7 @@ it:Pagina Singola
 nl:Enkele pagina
 ta:ஒற்றைப் பக்கம்
 es:Página Única
+hr:Jedna stranica
 -
 Facing
 hu:Oldalpár
@@ -170,6 +180,7 @@ it:Pagine Affiancate
 nl:Dubbele pagina
 ta:முகப்பு
 es:Página Doble
+hr:Dvije stranice
 -
 Continuous
 hu:Folyamatos
@@ -185,6 +196,7 @@ it:Scorrimento Pagina
 nl:Doorlopend
 ta:தொடர்
 es:Contínua
+hr:Sljedno
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -200,6 +212,7 @@ it:Scorrimento Pagine Affiancate
 nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
 es:Página Doble Contínua
+hr:Dvije stranice sljedno
 -
 Rotate left
 hu:Forgatás balra
@@ -215,6 +228,7 @@ it:Ruota a Sinistra
 nl:Linksom draaien
 ta:இடதுப்புறம் சுழற்று
 es:Girar a la izquierda
+hr:Zaokreni nalijevo
 -
 Rotate right
 hu:Forgatás jobbra
@@ -230,6 +244,7 @@ it:Ruota a Destra
 nl:Rechtsom draaien
 ta:வலப்புறம் சுழற்று
 es:Girar a la derecha
+hr:Zaokreni nadesno
 -
 Show toolbar
 hu:Állapotsor
@@ -245,6 +260,7 @@ it:Mostra la Barra degli Strumenti
 nl:Toon werkbalk
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
+hr:Pokaži alatnu traku
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -260,6 +276,7 @@ it:Usa MuPDF come Motore di Rendering
 nl:Gebruik de MuPDF render-enigine
 ta:MuPDF பதிப்பு வரை பொறியை தேர்
 es:Usar motor de renderizado MuPDF
+hr:Koristi MuPDF za prikaz PDF datoteka
 -
 &Go To
 hu:U&grás
@@ -275,6 +292,7 @@ it:&Vai a
 nl:Ga naar
 ta:அங்கு செல்
 es:&Ir a
+hr:Idi na
 -
 Next Page
 hu:Következő oldal
@@ -290,6 +308,7 @@ it:Pagina Successiva
 nl:Volgende pagina
 ta:அடுத்த பக்கம்
 es:Página Siguiente
+hr:Sljedeća stranica
 -
 Previous Page
 hu:Előző oldal
@@ -305,6 +324,7 @@ it:Pagina Precedente
 nl:Vorige pagina
 ta:முந்தைய பக்கம்
 es:Página Anterior
+hr:Prethodna stranica
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -320,6 +340,7 @@ it:Prima Pagina\tHome
 nl:Eerste pagina\tHome
 ta:முதல் பக்கம்\tHome
 es:Primera Página\tHome
+hr:Prva stranica\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -335,6 +356,7 @@ it:Ultima Pagina\tEnd
 nl:Laatste pagina\tEnd
 ta:இறுதி பக்கம்\tEnd
 es:Última Página\tEnd
+hr:Posljednja stranica\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -350,6 +372,7 @@ it:Pagina...\tCtrl-G
 nl:Pagina...\tCtrl-G
 ta:பக்கம்...\tCtrl-G
 es:Página...\tCtrl-G
+hr:Stranica...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -365,6 +388,7 @@ it:&Ingrandisci
 nl:Vergroten
 ta:பெரிதாக்கு
 es:&Zoom
+hr:&Povećaj
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -380,6 +404,7 @@ it:Intera &Pagina\tCtrl-0
 nl:Aan pagina aanpassen\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
 es:Ajustar &Página\tCtrl-0
+hr:Podesi &stranicu\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -395,6 +420,7 @@ it:Dimensione Reale\tCtrl-1
 nl:Normale grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
 es:Tamaño Real\tCtrl-1
+hr:Stvarna veličina\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -410,6 +436,7 @@ it:&Larghezza Pagina\tCtrl-2
 nl:Passend in breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
 es:&Ancho de Página\tCtrl-2
+hr:&Podesi po širini\tCtrl-2
 -
 6400%
 -
@@ -451,6 +478,7 @@ it:&Linguaggio
 nl:&Taal
 ta:மொழி
 es:&Idioma
+hr:&Jezik
 -
 English
 hu:Angol
@@ -466,6 +494,7 @@ it:Inglese
 nl:Engels
 ta:ஆங்கிலம்
 es:Inglés
+hr:Engleski
 -
 Belarusian
 fr:Biélorusse
@@ -476,6 +505,7 @@ dk:Hviderussisk
 it:Bielorusso
 nl:Wit-russisch
 es:Bieloruso
+hr:Bjeloruski
 -
 Danish
 pl:Dański
@@ -484,6 +514,7 @@ nl:Deens
 ta:டச்சு
 es:Danés
 ja:デンマーク語
+hr:Danski
 -
 German
 hu:Német
@@ -499,6 +530,7 @@ it:Tedesco
 nl:Duits
 ta:ஜெர்மானியம்
 es:Alemán
+hr:Njemački
 -
 Polish
 hu:Lengyel
@@ -513,6 +545,7 @@ dk:Polsk
 it:Polacco
 nl:Pools
 es:Polaco
+hr:Poljski
 -
 Japanese
 pl:Japoński
@@ -524,6 +557,7 @@ nl:Japans
 ta:ஜப்பானியம்
 es:Japonés
 ja:日本語
+hr:Japanski
 -
 Hungarian
 pl:Węgierski
@@ -535,6 +569,7 @@ it:Ungherese
 nl:Hongaars
 es:Húngaro
 ja:ハンガリー語
+hr:Mađarski
 -
 Persian
 pl:Perski
@@ -542,6 +577,7 @@ it:Persiano
 es:Persa
 nl:Persisch
 ja:ペルシア語
+hr:Perzijski
 -
 French
 hu:Francia
@@ -557,6 +593,7 @@ it:Francese
 nl:Frans
 ta:பிரஞ்சு
 es:Francés
+hr:Francuski
 -
 Turkish
 hu:Török
@@ -571,6 +608,7 @@ dk:Tyrkisk
 it:Turco
 nl:Turks
 es:Turco
+hr:Turski
 -
 Tamil
 de:Tamilische Sprache
@@ -582,6 +620,7 @@ pl:Tamilski
 tr:Tamilce
 es:Tamil
 nl:Tamil
+hr:Tamilski
 -
 Italian
 pl:Włoski
@@ -590,6 +629,7 @@ fr:Italien
 es:Italiano
 nl:Italiaans
 ja:イタリア語
+hr:Talijanski
 -
 Dutch
 pl:Holenderski
@@ -597,12 +637,19 @@ nl:Nederlands
 de:Höllandisch
 es:Holandés
 ja:オランダ語
+hr:Nizozemski
 -
 Spanish
 es:Español
 pl:Hiszpański
 nl:Spaans
 ja:スペイン語
+hr:Španjolski
+-
+Croatian
+pl:Chorwacki
+de:Kroatische
+hr:Hrvatski
 -
 &Help
 hu:&Súgó
@@ -618,6 +665,7 @@ it:Aiuto
 nl:Help
 ta:உதவி
 es:&Ayuda
+hr:&Pomoć
 -
 &Visit website
 hu:&Weboldal
@@ -633,6 +681,7 @@ it:&Visita il Sito WEB
 nl:Bezoek de website
 ta:வலைத்தளம் செல்
 es:&Visitar Sitio Web
+hr:&Posjeti Internet stranicu
 -
 &About
 hu:Név&jegy
@@ -648,6 +697,7 @@ it:&A proposito di
 nl:Over
 ta:பற்றி
 es:&Acerca de
+hr:&O...
 -
 Open
 hu:Megny&itás
@@ -663,6 +713,7 @@ it:Apri
 nl:Openen
 ta:திற
 es:Abrir
+hr:Otvori
 -
 Zoom In
 de:Reinzoomen
@@ -678,6 +729,7 @@ it:Ingrandisci
 nl:Zoom in
 ta:பெரிதாக்கு
 es:Acercar Zoom
+hr:Povećaj
 -
 Zoom Out
 de:Rauszoomen
@@ -693,6 +745,7 @@ it:Diminuisci
 nl:Zoom uit
 ta:சிறிதாக்கு
 es:Alejar Zoom
+hr:Umanji
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -708,6 +761,7 @@ it:A proposito di SumatraPDF
 nl:Over SumatraPDF
 ta:SumatraPDF பற்றி
 es:Acerca de SumatraPDF
+hr:O programu SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -723,6 +777,7 @@ it:SumatraPDF è stato impostato come Lettore Predefinito di Files PDF.
 nl:SumatraPDF is nu de standaard PDF lezer.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
 es:SumatraPDF es ahora el lector PDF por defecto.
+hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -738,6 +793,7 @@ it:Fallito il Salvataggio del File PDF.
 nl:Opslaan mislukt.
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
+hr:Spremanje datoteke je neuspjelo.
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -753,6 +809,7 @@ it:Riscontrati Errori durante l'Apertura del File PDF
 nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
+hr:Greška kod učitavanja PDF datoteke.
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -768,6 +825,7 @@ it:Stampante non accessibile
 nl:Kon printen niet vinden.
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
+hr:Nije moguće otvoriti pisač.
 -
 Printing problem.
 de:Druckerproblem
@@ -783,9 +841,11 @@ ja:印刷の問題です。
 fa:پرينت با مشکل روبرو شد
 it:Problemi di Stampa
 es:Error de impresión.
+hr:Problem kod ispisivanja.
 -
 Contribute translation
 de:Übersetzung beisteuern
 pl:Pomóż przy translacji
 ja:翻訳の提供
 nl:Help met vertalen
+hr:Pomozi prijevodom ovog programa
