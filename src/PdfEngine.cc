@@ -506,6 +506,7 @@ TryPoppler:
 
 ErrorPoppler:
     delete _popplerEngine;
+    _popplerEngine = NULL;
     return false;
 }
 

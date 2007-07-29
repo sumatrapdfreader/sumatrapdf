@@ -1,5 +1,4 @@
 @set PATH=%PATH%;%ProgramFiles%\Microsoft Visual Studio 8\Common7\IDE
-@set NSIS_EXE=%ProgramFiles%\NSIS\makensis.exe
 @set PATH=%PATH%;%ProgramFiles%\NSIS
 @set FASTDL_PATH=C:\kjk\src\web\fastdl\www
 
@@ -7,13 +6,16 @@
 @set VERSION=%1
 @IF NOT DEFINED VERSION GOTO VERSION_NEEDED
 
-@rem TODO: check if %NSIS_EXE% file exists, GOTO NSIS_NEEDED if not
-@rem @IF NOT EXISTS %NSIS_EXE% GOTO NSIS_NEEDED
+@rem check if makensis exists
+@makensis /version
+@IF ERRORLEVEL 1 goto NSIS_NEEDED
+
 devenv ..\sumatrapdf.sln /Rebuild "Release|Win32"
 @IF ERRORLEVEL 1 goto BUILD_FAILED
 echo Compilation ok!
 copy ..\Release\SumatraPDF.exe ..\Release\SumatraPDF-uncomp.exe
-upx --best ..\Release\SumatraPDF.exe
+@rem upx --best ..\Release\SumatraPDF.exe
+upx300 --ultra-brute ..\Release\SumatraPDF.exe
 @IF ERRORLEVEL 1 goto PACK_FAILED
 
 @makensis installer
