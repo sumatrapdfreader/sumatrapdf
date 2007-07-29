@@ -124,6 +124,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define CANVAS_CLASS_NAME   _T("SUMATRA_PDF_CANVAS")
 #define ABOUT_CLASS_NAME    _T("SUMATRA_PDF_ABOUT")
 #define APP_NAME            _T("SumatraPDF")
+#define APP_NAME_STR        "SumatraPDF"
 #define PDF_DOC_NAME        _T("Adobe PDF Document")
 #define ABOUT_WIN_TITLE     _TR("About SumatraPDF")
 #define PREFS_FILE_NAME     _T("sumatrapdfprefs.txt")
@@ -972,6 +973,17 @@ static double ZoomMenuItemToZoom(UINT menuItemId)
     }
     assert(0);
     return 100.0;
+}
+
+static void SeeLastError(void) {
+    char *msgBuf = NULL;
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR) &msgBuf, 0, NULL);
+    if (!msgBuf) return;
+    printf("SeeLastError(): %s\n", msgBuf);
+    OutputDebugStringA(msgBuf);
+    LocalFree(msgBuf);
 }
 
 static void Win32_Win_GetSize(HWND hwnd, int *dxOut, int *dyOut)
@@ -1856,6 +1868,13 @@ bool WindowsVer2000OrGreater()
     return false;
 }
 
+bool WindowsVerVistaOrGreater()
+{
+    if (WindowsVerMajor() >= 6)
+        return true;
+    return false;
+}
+
 static bool AlreadyRegisteredForPdfExtentions(void)
 {
     bool    registered = false;
@@ -1885,11 +1904,25 @@ Exit:
     return registered;
 }
 
+static void WriteRegStrA(HKEY keySub, char *keyName, char *valName, char *value)
+{
+    HKEY keyTmp = NULL;
+    LONG res = RegCreateKeyExA(keySub, keyName, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &keyTmp, NULL);
+    if (ERROR_SUCCESS != res) {
+        SeeLastError();
+        goto Exit;
+    }
+    res = RegSetValueExA(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, strlen(value)+1);
+    if (ERROR_SUCCESS != res)
+        SeeLastError();
+Exit:
+    if (NULL != keyTmp)
+        RegCloseKey(keyTmp);
+}
+
 static void AssociateExeWithPdfExtensions()
 {
-    char        tmp[256];
-    HKEY        key = NULL, kicon = NULL, kshell = NULL, kopen = NULL, kcmd = NULL;
-    DWORD       disp;
+    char        tmp[512];
     HRESULT     hr;
 
     char * exePath = ExePathGet();
@@ -1900,72 +1933,17 @@ static void AssociateExeWithPdfExtensions()
     if (WindowsVer2000OrGreater())
         hkeyToUse = HKEY_LOCAL_MACHINE;
 
-    /* key\.pdf */
-    if (RegCreateKeyEx(hkeyToUse,
-                ".pdf", 0, NULL, REG_OPTION_NON_VOLATILE,
-                KEY_WRITE, NULL, &key, &disp))
-        goto Exit;
-
-    if (RegSetValueEx(key, "", 0, REG_SZ, (const BYTE*)APP_NAME, sizeof(APP_NAME)))
-        goto Exit;
-
-    RegCloseKey(key);
-    key = NULL;
-
-    /* key\APP_NAME */
-    if (RegCreateKeyEx(hkeyToUse,
-                APP_NAME, 0, NULL, REG_OPTION_NON_VOLATILE,
-                KEY_WRITE, NULL, &key, &disp))
-        goto Exit;
-
-    if (RegSetValueEx(key, "", 0, REG_SZ, (const BYTE*)PDF_DOC_NAME, sizeof(PDF_DOC_NAME)))
-        goto Exit;
-
-    /* key\APP_NAME\DefaultIcon */
-    if (RegCreateKeyEx(key,
-                "DefaultIcon", 0, NULL, REG_OPTION_NON_VOLATILE,
-                KEY_WRITE, NULL, &kicon, &disp))
-        goto Exit;
+    WriteRegStrA(hkeyToUse, "Software\\Classes\\.pdf", NULL, APP_NAME_STR);
 
     /* Note: I don't understand why icon index has to be 0, but it just has to */
     hr = StringCchPrintfA(tmp, dimof(tmp), "%s,0", exePath);
-    if (RegSetValueEx(kicon, "", 0, REG_SZ, (const BYTE*)tmp, strlen(tmp)+1))
-        goto Exit;
-
-    RegCloseKey(kicon);
-    kicon = NULL;
-
-    /* HKEY_CLASSES_ROOT\APP_NAME\Shell\Open\Command */
-    if (RegCreateKeyEx(key,
-                "shell", 0, NULL, REG_OPTION_NON_VOLATILE,
-                KEY_WRITE, NULL, &kshell, &disp))
-        goto Exit;
-
-    if (RegCreateKeyEx(kshell,
-                "open", 0, NULL, REG_OPTION_NON_VOLATILE,
-                KEY_WRITE, NULL, &kopen, &disp))
-        goto Exit;
-
-    if (RegCreateKeyEx(kopen,
-                "command", 0, NULL, REG_OPTION_NON_VOLATILE,
-                KEY_WRITE, NULL, &kcmd, &disp))
-        goto Exit;
+    WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR _T("\\DefaultIcon"), NULL, tmp);
 
     hr = StringCchPrintfA(tmp,  dimof(tmp), "\"%s\" \"%%1\"", exePath);
-    if (RegSetValueEx(kcmd, "", 0, REG_SZ, (const BYTE*)tmp, strlen(tmp)+1))
-        goto Exit;
+    WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR "\\shell\\open\\command", NULL, tmp);
+    WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR "\\shell", NULL, "open");
 
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
-
-Exit:
-    if (kcmd)
-        RegCloseKey(kcmd);
-    if (kopen)
-        RegCloseKey(kopen);
-    if (kshell)
-        RegCloseKey(kshell);
-    if (key)
-        RegCloseKey(key);
     free(exePath);
 }
 
@@ -2107,17 +2085,6 @@ static void DrawCenteredText(HDC hdc, RECT *r, char *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, strlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-}
-
-static void SeeLastError(void) {
-    char *msgBuf = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR) &msgBuf, 0, NULL);
-    if (!msgBuf) return;
-    printf("SeeLastError(): %s\n", msgBuf);
-    OutputDebugStringA(msgBuf);
-    LocalFree(msgBuf);
 }
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect) {
