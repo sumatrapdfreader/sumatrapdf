@@ -20,7 +20,8 @@
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr
+# Zero-8 - Русский
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru
 -
 &File
 hu:&Fájl
@@ -37,6 +38,7 @@ nl:&Bestand
 ta:கோப்பு
 es:&Archivo
 hr:&Datoteka
+ru:Файл
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -53,6 +55,7 @@ nl:&Open\tCtrl-O
 ta:திற\tCtrl-O
 es:&Abrir\tCtrl-O
 hr:&Otvori\tCtrl-O
+ru:Открыть\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -69,6 +72,7 @@ nl:&Sluiten\tCtrl-W
 ta:மூடு\tCtrl-W
 es:&Cerrar\tCtrl-W
 hr:&Zatvori\tCtrl-W
+ru:Закрыть\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -85,6 +89,7 @@ nl:Opslaan als
 ta:எனச் சேமி
 es:&Guardar como
 hr:&Spremi kao...
+ru:Сохранить как...
 -
 &Print
 hu:Nyomt&atás
@@ -101,6 +106,7 @@ nl:&Print
 ta:அச்சிடு
 es:&Imprimir
 hr:&Ispiši
+ru:Печать
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -117,6 +123,7 @@ nl:Maak SumatraPDF de standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
+ru:Инициировать с PDF
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -133,6 +140,7 @@ nl:&Sluiten\tCtrl-Q
 ta:வெளியேறு\tCtrl-Q
 es:&Salir\tCtrl-Q
 hr:&Izađi\tCtrl-Q
+ru:Выход\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -149,6 +157,7 @@ nl:&Beeld
 ta:நோக்கு
 es:&Ver
 hr:&Pogled
+ru:Просмотр
 -
 Single page
 hu:Egy oldalas
@@ -165,6 +174,7 @@ nl:Enkele pagina
 ta:ஒற்றைப் பக்கம்
 es:Página Única
 hr:Jedna stranica
+ru:Одна страница
 -
 Facing
 hu:Oldalpár
@@ -181,6 +191,7 @@ nl:Dubbele pagina
 ta:முகப்பு
 es:Página Doble
 hr:Dvije stranice
+ru:Две страницы
 -
 Continuous
 hu:Folyamatos
@@ -197,6 +208,7 @@ nl:Doorlopend
 ta:தொடர்
 es:Contínua
 hr:Sljedno
+ru:Продолжить
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -213,6 +225,7 @@ nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
 es:Página Doble Contínua
 hr:Dvije stranice sljedno
+ru:Продолжить две страницы
 -
 Rotate left
 hu:Forgatás balra
@@ -229,6 +242,7 @@ nl:Linksom draaien
 ta:இடதுப்புறம் சுழற்று
 es:Girar a la izquierda
 hr:Zaokreni nalijevo
+ru:Повернуть налево
 -
 Rotate right
 hu:Forgatás jobbra
@@ -245,6 +259,7 @@ nl:Rechtsom draaien
 ta:வலப்புறம் சுழற்று
 es:Girar a la derecha
 hr:Zaokreni nadesno
+ru:Повернуть направо
 -
 Show toolbar
 hu:Állapotsor
@@ -261,6 +276,7 @@ nl:Toon werkbalk
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
 hr:Pokaži alatnu traku
+ru:Показать панель инструментов
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -277,6 +293,7 @@ nl:Gebruik de MuPDF render-enigine
 ta:MuPDF பதிப்பு வரை பொறியை தேர்
 es:Usar motor de renderizado MuPDF
 hr:Koristi MuPDF za prikaz PDF datoteka
+ru:Use MuPDF rendering engine
 -
 &Go To
 hu:U&grás
@@ -293,6 +310,7 @@ nl:Ga naar
 ta:அங்கு செல்
 es:&Ir a
 hr:Idi na
+ru:Перейти
 -
 Next Page
 hu:Következő oldal
@@ -309,6 +327,7 @@ nl:Volgende pagina
 ta:அடுத்த பக்கம்
 es:Página Siguiente
 hr:Sljedeća stranica
+ru:Следующая страница
 -
 Previous Page
 hu:Előző oldal
@@ -325,6 +344,7 @@ nl:Vorige pagina
 ta:முந்தைய பக்கம்
 es:Página Anterior
 hr:Prethodna stranica
+ru:Предыдущая страница
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -341,6 +361,7 @@ nl:Eerste pagina\tHome
 ta:முதல் பக்கம்\tHome
 es:Primera Página\tHome
 hr:Prva stranica\tHome
+ru:Первая страница\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -357,6 +378,7 @@ nl:Laatste pagina\tEnd
 ta:இறுதி பக்கம்\tEnd
 es:Última Página\tEnd
 hr:Posljednja stranica\tEnd
+ru:Последняя страница\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -373,6 +395,7 @@ nl:Pagina...\tCtrl-G
 ta:பக்கம்...\tCtrl-G
 es:Página...\tCtrl-G
 hr:Stranica...\tCtrl-G
+ru:Страница...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -389,6 +412,7 @@ nl:Vergroten
 ta:பெரிதாக்கு
 es:&Zoom
 hr:&Povećaj
+ru:Масштаб
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -405,6 +429,7 @@ nl:Aan pagina aanpassen\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
 es:Ajustar &Página\tCtrl-0
 hr:Podesi &stranicu\tCtrl-0
+ru:По размеру страницы\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -421,6 +446,7 @@ nl:Normale grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
 es:Tamaño Real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
+ru:Реальный размер\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -437,6 +463,7 @@ nl:Passend in breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
 es:&Ancho de Página\tCtrl-2
 hr:&Podesi po širini\tCtrl-2
+ru:По ширине\tCtrl-2
 -
 6400%
 -
@@ -479,6 +506,7 @@ nl:&Taal
 ta:மொழி
 es:&Idioma
 hr:&Jezik
+ru:Русский
 -
 English
 hu:Angol
@@ -651,6 +679,10 @@ pl:Chorwacki
 de:Kroatische
 hr:Hrvatski
 -
+Russian
+pl:Rosyjski
+ru:Русский
+-
 &Help
 hu:&Súgó
 pl:&Pomoc
@@ -666,6 +698,7 @@ nl:Help
 ta:உதவி
 es:&Ayuda
 hr:&Pomoć
+ru:Помощь
 -
 &Visit website
 hu:&Weboldal
@@ -682,6 +715,7 @@ nl:Bezoek de website
 ta:வலைத்தளம் செல்
 es:&Visitar Sitio Web
 hr:&Posjeti Internet stranicu
+ru:Посетить сайт
 -
 &About
 hu:Név&jegy
@@ -698,6 +732,7 @@ nl:Over
 ta:பற்றி
 es:&Acerca de
 hr:&O...
+ru:О программе
 -
 Open
 hu:Megny&itás
@@ -714,6 +749,7 @@ nl:Openen
 ta:திற
 es:Abrir
 hr:Otvori
+ru:Открыть
 -
 Zoom In
 de:Reinzoomen
@@ -730,6 +766,7 @@ nl:Zoom in
 ta:பெரிதாக்கு
 es:Acercar Zoom
 hr:Povećaj
+ru:Откройте
 -
 Zoom Out
 de:Rauszoomen
@@ -746,6 +783,7 @@ nl:Zoom uit
 ta:சிறிதாக்கு
 es:Alejar Zoom
 hr:Umanji
+ru:Закройте
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -762,6 +800,7 @@ nl:Over SumatraPDF
 ta:SumatraPDF பற்றி
 es:Acerca de SumatraPDF
 hr:O programu SumatraPDF
+ru:О программе
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -778,6 +817,7 @@ nl:SumatraPDF is nu de standaard PDF lezer.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
 es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
+ru:Инициировать с PDF
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -794,6 +834,7 @@ nl:Opslaan mislukt.
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
 hr:Spremanje datoteke je neuspjelo.
+ru:Ошибка сохранения
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -810,6 +851,7 @@ nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
 hr:Greška kod učitavanja PDF datoteke.
+ru:Ошибка чтения
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -826,6 +868,7 @@ nl:Kon printen niet vinden.
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
 hr:Nije moguće otvoriti pisač.
+ru:Нет принтера
 -
 Printing problem.
 de:Druckerproblem
@@ -842,6 +885,7 @@ fa:پرينت با مشکل روبرو شد
 it:Problemi di Stampa
 es:Error de impresión.
 hr:Problem kod ispisivanja.
+ru:Ошибка принтера
 -
 Contribute translation
 de:Übersetzung beisteuern
@@ -849,3 +893,4 @@ pl:Pomóż przy translacji
 ja:翻訳の提供
 nl:Help met vertalen
 hr:Pomozi prijevodom ovog programa
+ru:Помогите с переводом
