@@ -22,7 +22,8 @@
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
 # Zero-8 - Русский
 # Mohammed Al-Foulad (http://mbsee.info) - Arabic
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar
+# WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn
 -
 &File
 hu:&Fájl
@@ -41,6 +42,7 @@ es:&Archivo
 hr:&Datoteka
 ru:Файл
 ar:ملف
+cn: 文件(&F)
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -59,6 +61,7 @@ es:&Abrir\tCtrl-O
 hr:&Otvori\tCtrl-O
 ru:Открыть\tCtrl-O
 ar:&فتح\tCtrl-O
+cn:打开\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -77,6 +80,7 @@ es:&Cerrar\tCtrl-W
 hr:&Zatvori\tCtrl-W
 ru:Закрыть\tCtrl-W
 ar:&إغلاق\tCtrl-W
+cn:关闭(&C)\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -95,6 +99,7 @@ es:&Guardar como
 hr:&Spremi kao...
 ru:Сохранить как...
 ar:&حفظ كـ
+cn:另存为(&S)
 -
 &Print
 hu:Nyomt&atás
@@ -113,6 +118,7 @@ es:&Imprimir
 hr:&Ispiši
 ru:Печать
 ar:&طباعة
+cn:打印(&P)
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -131,6 +137,7 @@ es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Инициировать с PDF
 ar: PDF جعل هذا البرنامج القارىء الرئيسي لملفات
+cn:设置 SumatraPDF 为默认 PDF 阅读器
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -149,6 +156,7 @@ es:&Salir\tCtrl-Q
 hr:&Izađi\tCtrl-Q
 ru:Выход\tCtrl-Q
 ar:إغلاق البرنامج\tCtrl-Q
+cn:退出(&X)\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -167,6 +175,7 @@ es:&Ver
 hr:&Pogled
 ru:Просмотр
 ar:&العرض
+cn:查看(&V)
 -
 Single page
 hu:Egy oldalas
@@ -185,6 +194,7 @@ es:Página Única
 hr:Jedna stranica
 ru:Одна страница
 ar:صفحة واحدة
+cn:单个页面
 -
 Facing
 hu:Oldalpár
@@ -203,6 +213,7 @@ es:Página Doble
 hr:Dvije stranice
 ru:Две страницы
 ar:صفحتان متقابلتان
+cn:平铺页面
 -
 Continuous
 hu:Folyamatos
@@ -221,6 +232,7 @@ es:Contínua
 hr:Sljedno
 ru:Продолжить
 ar:صفحات متتالية
+cn:连续页面
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -239,6 +251,7 @@ es:Página Doble Contínua
 hr:Dvije stranice sljedno
 ru:Продолжить две страницы
 ar:صفحات متقابلتان متتاليتان
+cn:连续平铺页面
 -
 Rotate left
 hu:Forgatás balra
@@ -257,6 +270,7 @@ es:Girar a la izquierda
 hr:Zaokreni nalijevo
 ru:Повернуть налево
 ar:دوران لليسار
+cn:向左旋转
 -
 Rotate right
 hu:Forgatás jobbra
@@ -275,6 +289,7 @@ es:Girar a la derecha
 hr:Zaokreni nadesno
 ru:Повернуть направо
 ar:دوران لليمين
+cn:向右旋转
 -
 Show toolbar
 hu:Állapotsor
@@ -293,6 +308,7 @@ es:Mostrar barra de herramientas
 hr:Pokaži alatnu traku
 ru:Показать панель инструментов
 ar:عرض شريط الأدوات
+cn:显示工具栏
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -311,6 +327,7 @@ es:Usar motor de renderizado MuPDF
 hr:Koristi MuPDF za prikaz PDF datoteka
 ru:Use MuPDF rendering engine
 ar: التشغيلي Mupdf استخدام محرك 
+cn:使用 MuPDF 渲染引擎
 -
 &Go To
 hu:U&grás
@@ -329,6 +346,7 @@ es:&Ir a
 hr:Idi na
 ru:Перейти
 ar:&الذهاب إلى
+cn:转到(&G)
 -
 Next Page
 hu:Következő oldal
@@ -347,6 +365,7 @@ es:Página Siguiente
 hr:Sljedeća stranica
 ru:Следующая страница
 ar:الصفحة التالية
+cn:下一页
 -
 Previous Page
 hu:Előző oldal
@@ -365,6 +384,7 @@ es:Página Anterior
 hr:Prethodna stranica
 ru:Предыдущая страница
 ar:الصفحة السابقة
+cn:上一页
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -383,6 +403,7 @@ es:Primera Página\tHome
 hr:Prva stranica\tHome
 ru:Первая страница\tHome
 ar:الصفحة الأولى\tHome
+cn:第一页\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -401,6 +422,7 @@ es:Última Página\tEnd
 hr:Posljednja stranica\tEnd
 ru:Последняя страница\tEnd
 ar:الصفحة الأخيرة\tEnd
+cn:最后一页\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -419,6 +441,7 @@ es:Página...\tCtrl-G
 hr:Stranica...\tCtrl-G
 ru:Страница...\tCtrl-G
 ar:صفحة محددة\tCtrl-G
+cn:页面...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -437,6 +460,7 @@ es:&Zoom
 hr:&Povećaj
 ru:Масштаб
 ar:التقريب
+cn:缩放(&Z)
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -455,6 +479,7 @@ es:Ajustar &Página\tCtrl-0
 hr:Podesi &stranicu\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
+cn:适合页面\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -473,6 +498,7 @@ es:Tamaño Real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
+cn:实际大小\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -491,6 +517,7 @@ es:&Ancho de Página\tCtrl-2
 hr:&Podesi po širini\tCtrl-2
 ru:По ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
+cn:适合宽度\tCtrl-2
 -
 6400%
 -
@@ -535,6 +562,7 @@ es:&Idioma
 hr:&Jezik
 ru:Русский
 ar:&اللغة
+cn:语言(&L)
 -
 English
 hu:Angol
@@ -731,6 +759,10 @@ Arabic
 pl:Arabski
 ar:العربية
 -
+Chinese Simplified
+pl:Chiński uproszczony
+cn:简体中文
+-
 &Help
 hu:&Súgó
 pl:&Pomoc
@@ -748,6 +780,7 @@ es:&Ayuda
 hr:&Pomoć
 ru:Помощь
 ar:&مساعدة
+cn:帮助(&H)
 -
 &Visit website
 hu:&Weboldal
@@ -766,6 +799,7 @@ es:&Visitar Sitio Web
 hr:&Posjeti Internet stranicu
 ru:Посетить сайт
 ar:&زيارة موقع البرنامج
+cn:访问网站(&V)
 -
 &About
 hu:Név&jegy
@@ -784,6 +818,7 @@ es:&Acerca de
 hr:&O...
 ru:О программе
 ar:حول البرنامج
+cn:关于(&A)
 -
 Open
 hu:Megny&itás
@@ -802,6 +837,7 @@ es:Abrir
 hr:Otvori
 ru:Открыть
 ar:فتح
+cn:打开
 -
 Zoom In
 de:Reinzoomen
@@ -820,6 +856,7 @@ es:Acercar Zoom
 hr:Povećaj
 ru:Откройте
 ar:تكبير
+cn:放大
 -
 Zoom Out
 de:Rauszoomen
@@ -838,6 +875,7 @@ es:Alejar Zoom
 hr:Umanji
 ru:Закройте
 ar:تصغير
+cn:缩小
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -856,6 +894,7 @@ es:Acerca de SumatraPDF
 hr:O programu SumatraPDF
 ru:О программе
 ar:SumatraPDF حول برنامج 
+cn:关于 SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -874,6 +913,7 @@ es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
 ru:Инициировать с PDF
 ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
+cn:已将 SumatraPDF 设置为默认 PDF 阅读器
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -892,6 +932,7 @@ es:Error al Guardar el Archivo
 hr:Spremanje datoteke je neuspjelo.
 ru:Ошибка сохранения
 ar:فشل حفظ الملف
+cn:保存文件失败
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -910,6 +951,7 @@ es:Error al Cargar el Archivo PDF.
 hr:Greška kod učitavanja PDF datoteke.
 ru:Ошибка чтения
 ar:هناك خطأ في تشغيل الملف
+cn:载入 PDF 文件是发生错误
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -928,6 +970,7 @@ es:Impresora no accesible
 hr:Nije moguće otvoriti pisač.
 ru:Нет принтера
 ar:تعذر فتح الطابعة
+cn:不能打开打印机
 -
 Printing problem.
 de:Druckerproblem
@@ -946,6 +989,7 @@ es:Error de impresión.
 hr:Problem kod ispisivanja.
 ru:Ошибка принтера
 ar:يوجد مشكلة في الطباعة
+cn:打印问题。
 -
 Contribute translation
 de:Übersetzung beisteuern
@@ -955,3 +999,4 @@ nl:Help met vertalen
 hr:Pomozi prijevodom ovog programa
 ru:Помогите с переводом
 ar:ساهم في ترجمة البرنامج 
+cn:提供翻印
