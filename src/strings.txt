@@ -20,7 +20,8 @@
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
-# Zero-8 - Русский
+# Zero-8 - Russian
+# Dmitry Yerokhin (erodim@mail.ru) - Russian
 # Mohammed Al-Foulad (http://mbsee.info) - Arabic
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
 # Linus Persson - Swedish
@@ -141,7 +142,7 @@ nl:Maak SumatraPDF de standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
-ru:Инициировать с PDF
+ru:Ассоциировать с файлами PDF
 ar: PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:设置 SumatraPDF 为默认 PDF 阅读器
 sv:Använd SumatraPDF som standardläsare för PDF
@@ -181,7 +182,7 @@ nl:&Beeld
 ta:நோக்கு
 es:&Ver
 hr:&Pogled
-ru:Просмотр
+ru:Вид
 ar:&العرض
 cn:查看(&V)
 sv:&Visa
@@ -241,7 +242,7 @@ nl:Doorlopend
 ta:தொடர்
 es:Contínua
 hr:Sljedno
-ru:Продолжить
+ru:Непрерывно
 ar:صفحات متتالية
 cn:连续页面
 sv:Fortlöpande
@@ -261,7 +262,7 @@ nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
 es:Página Doble Contínua
 hr:Dvije stranice sljedno
-ru:Продолжить две страницы
+ru:Непрерывно по две страницы
 ar:صفحات متقابلتان متتاليتان
 cn:连续平铺页面
 sv:Fortlöpande uppslag
@@ -281,7 +282,7 @@ nl:Linksom draaien
 ta:இடதுப்புறம் சுழற்று
 es:Girar a la izquierda
 hr:Zaokreni nalijevo
-ru:Повернуть налево
+ru:Повернуть влево
 ar:دوران لليسار
 cn:向左旋转
 sv:Rotera åt vänster
@@ -301,7 +302,7 @@ nl:Rechtsom draaien
 ta:வலப்புறம் சுழற்று
 es:Girar a la derecha
 hr:Zaokreni nadesno
-ru:Повернуть направо
+ru:Повернуть вправо
 ar:دوران لليمين
 cn:向右旋转
 sv:Rotera åt höger
@@ -321,7 +322,7 @@ nl:Toon werkbalk
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
 hr:Pokaži alatnu traku
-ru:Показать панель инструментов
+ru:Показ панели инструментов
 ar:عرض شريط الأدوات
 cn:显示工具栏
 sv:Visa verktygsfält
@@ -341,7 +342,7 @@ nl:Gebruik de MuPDF render-enigine
 ta:MuPDF பதிப்பு வரை பொறியை தேர்
 es:Usar motor de renderizado MuPDF
 hr:Koristi MuPDF za prikaz PDF datoteka
-ru:Use MuPDF rendering engine
+ru:Рендеринг с помощью движка MuPDF
 ar: التشغيلي Mupdf استخدام محرك 
 cn:使用 MuPDF 渲染引擎
 sv:Använd MuPDF renderingsmotor
@@ -461,7 +462,7 @@ nl:Pagina...\tCtrl-G
 ta:பக்கம்...\tCtrl-G
 es:Página...\tCtrl-G
 hr:Stranica...\tCtrl-G
-ru:Страница...\tCtrl-G
+ru:Указанная страница...\tCtrl-G
 ar:صفحة محددة\tCtrl-G
 cn:页面...\tCtrl-G
 sv:Sida...\tCtrl-G
@@ -541,7 +542,7 @@ nl:Passend in breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
 es:&Ancho de Página\tCtrl-2
 hr:&Podesi po širini\tCtrl-2
-ru:По ширине\tCtrl-2
+ru:Заполнение по ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
 cn:适合宽度\tCtrl-2
 sv:Anpassa efter bredd\tCtrl-2
@@ -587,7 +588,7 @@ nl:&Taal
 ta:மொழி
 es:&Idioma
 hr:&Jezik
-ru:Русский
+ru:Язык/Language
 ar:&اللغة
 cn:语言(&L)
 sv:&Språk
@@ -607,6 +608,7 @@ nl:Engels
 ta:ஆங்கிலம்
 es:Inglés
 hr:Engleski
+ru:Английский/English
 ar:الإنجليزية
 sv:Engelska
 -
@@ -620,6 +622,7 @@ it:Bielorusso
 nl:Wit-russisch
 es:Bieloruso
 hr:Bjeloruski
+ru:Белорусский
 ar:البيلاروسية
 sv:Vitryska
 -
@@ -631,6 +634,7 @@ ta:டச்சு
 es:Danés
 ja:デンマーク語
 hr:Danski
+ru:Датский
 ar:الدنماركية
 sv:Danska
 -
@@ -649,6 +653,7 @@ nl:Duits
 ta:ஜெர்மானியம்
 es:Alemán
 hr:Njemački
+ru:Немецкий
 ar:الإلمانية
 sv:Tyska
 -
@@ -666,6 +671,7 @@ it:Polacco
 nl:Pools
 es:Polaco
 hr:Poljski
+ru:Польский
 ar:البولندية
 sv:Polska
 -
@@ -680,6 +686,7 @@ ta:ஜப்பானியம்
 es:Japonés
 ja:日本語
 hr:Japanski
+ru:Японский
 ar:اليابانية
 sv:Japanska
 -
@@ -694,6 +701,7 @@ nl:Hongaars
 es:Húngaro
 ja:ハンガリー語
 hr:Mađarski
+ru:Венгерский
 ar:الهنجارية
 sv:Ungerska
 -
@@ -704,6 +712,7 @@ es:Persa
 nl:Persisch
 ja:ペルシア語
 hr:Perzijski
+ru:Персидский
 ar:الفارسية
 sv:Persiska
 -
@@ -722,6 +731,7 @@ nl:Frans
 ta:பிரஞ்சு
 es:Francés
 hr:Francuski
+ru:Французский
 ar:الفرنسية
 sv:Franska
 -
@@ -739,6 +749,7 @@ it:Turco
 nl:Turks
 es:Turco
 hr:Turski
+ru:Турецкий
 ar:التركية
 sv:Turkiska
 -
@@ -753,6 +764,7 @@ tr:Tamilce
 es:Tamil
 nl:Tamil
 hr:Tamilski
+ru:Тамильский
 ar:التامل
 sv:Tamil
 -
@@ -764,6 +776,7 @@ es:Italiano
 nl:Italiaans
 ja:イタリア語
 hr:Talijanski
+ru:Итальянский
 ar:الإيطالية
 sv:Italienska
 -
@@ -774,6 +787,7 @@ de:Höllandisch
 es:Holandés
 ja:オランダ語
 hr:Nizozemski
+ru:Голландский
 ar:الهولندية
 sv:Holländska
 -
@@ -783,6 +797,7 @@ pl:Hiszpański
 nl:Spaans
 ja:スペイン語
 hr:Španjolski
+ru:Испанский
 ar:الإسبانية
 sv:Spanska
 -
@@ -790,6 +805,7 @@ Croatian
 pl:Chorwacki
 de:Kroatische
 hr:Hrvatski
+ru:Хорватский
 sv:Kroatiska
 -
 Russian
@@ -800,11 +816,13 @@ sv:Ryska
 -
 Arabic
 pl:Arabski
+ru:Арабский
 ar:العربية
 sv:Arabiska
 -
 Chinese Simplified
 pl:Chiński uproszczony
+ru:Китайский упрощённый
 cn:简体中文
 sv:Kinesiska, förenklad
 -
@@ -826,7 +844,7 @@ nl:Help
 ta:உதவி
 es:&Ayuda
 hr:&Pomoć
-ru:Помощь
+ru:Справка
 ar:&مساعدة
 cn:帮助(&H)
 sv:&Hjälp
@@ -866,7 +884,7 @@ nl:Over
 ta:பற்றி
 es:&Acerca de
 hr:&O...
-ru:О программе
+ru:О программе...
 ar:حول البرنامج
 cn:关于(&A)
 sv:&Om
@@ -906,7 +924,7 @@ nl:Zoom in
 ta:பெரிதாக்கு
 es:Acercar Zoom
 hr:Povećaj
-ru:Откройте
+ru:Увеличить
 ar:تكبير
 cn:放大
 sv:Zooma in
@@ -926,7 +944,7 @@ nl:Zoom uit
 ta:சிறிதாக்கு
 es:Alejar Zoom
 hr:Umanji
-ru:Закройте
+ru:Уменьшить
 ar:تصغير
 cn:缩小
 sv:Zooma ut
@@ -946,7 +964,7 @@ nl:Over SumatraPDF
 ta:SumatraPDF பற்றி
 es:Acerca de SumatraPDF
 hr:O programu SumatraPDF
-ru:О программе
+ru:О программе SumatraPDF
 ar:SumatraPDF حول برنامج 
 cn:关于 SumatraPDF
 sv:Om SumatraPDF
@@ -966,7 +984,7 @@ nl:SumatraPDF is nu de standaard PDF lezer.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
 es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
-ru:Инициировать с PDF
+ru:SumatraPDF теперь является программой для открытия файлов PDF по умолчанию.
 ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
 cn:已将 SumatraPDF 设置为默认 PDF 阅读器
 sv:SumatraPDF är nu standardläsare för PDF-filer.
@@ -986,7 +1004,7 @@ nl:Opslaan mislukt.
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
 hr:Spremanje datoteke je neuspjelo.
-ru:Ошибка сохранения
+ru:Невозможно сохранить файл.
 ar:فشل حفظ الملف
 cn:保存文件失败
 sv:Kan inte spara filen.
@@ -1006,7 +1024,7 @@ nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
 hr:Greška kod učitavanja PDF datoteke.
-ru:Ошибка чтения
+ru:Невозможно загрузить PDF-файл.
 ar:هناك خطأ في تشغيل الملف
 cn:载入 PDF 文件是发生错误
 sv:Kan inte öppna PDF-filen.
@@ -1026,7 +1044,7 @@ nl:Kon printen niet vinden.
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
 hr:Nije moguće otvoriti pisač.
-ru:Нет принтера
+ru:Невозможно найти принтер.
 ar:تعذر فتح الطابعة
 cn:不能打开打印机
 sv:Kan inte anropa skrivaren.
@@ -1046,7 +1064,7 @@ fa:پرينت با مشکل روبرو شد
 it:Problemi di Stampa
 es:Error de impresión.
 hr:Problem kod ispisivanja.
-ru:Ошибка принтера
+ru:Ошибка при печати.
 ar:يوجد مشكلة في الطباعة
 cn:打印问题。
 sv:Utskriftsproblem.
@@ -1057,7 +1075,7 @@ pl:Pomóż przy translacji
 ja:翻訳の提供
 nl:Help met vertalen
 hr:Pomozi prijevodom ovog programa
-ru:Помогите с переводом
+ru:Помочь с переводом
 ar:ساهم في ترجمة البرنامج 
 cn:提供翻印
 sv:Bidra med översättning
