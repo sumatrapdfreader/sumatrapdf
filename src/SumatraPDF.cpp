@@ -4629,8 +4629,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     u_DoAllTests();
 
+#ifdef CRASHHANDLER
     std::wstring dump_path = L".";
     ExceptionHandler exceptionHandler(dump_path, NULL, SumatraMinidumpCallback, NULL, ExceptionHandler::HANDLER_ALL);
+#endif
+
     INITCOMMONCONTROLSEX cex;
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;
