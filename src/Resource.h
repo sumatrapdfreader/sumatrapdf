@@ -68,6 +68,7 @@
 #define IDM_LANG_ES                     463
 #define IDM_LANG_HR                     464
 #define IDM_LANG_RU                     465
+#define IDM_LANG_AR                     466
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000

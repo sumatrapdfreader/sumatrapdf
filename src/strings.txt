@@ -21,7 +21,8 @@
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
 # Zero-8 - Русский
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru
+# Mohammed Al-Foulad (http://mbsee.info) - Arabic
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar
 -
 &File
 hu:&Fájl
@@ -39,6 +40,7 @@ ta:கோப்பு
 es:&Archivo
 hr:&Datoteka
 ru:Файл
+ar:ملف
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -56,6 +58,7 @@ ta:திற\tCtrl-O
 es:&Abrir\tCtrl-O
 hr:&Otvori\tCtrl-O
 ru:Открыть\tCtrl-O
+ar:&فتح\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -73,6 +76,7 @@ ta:மூடு\tCtrl-W
 es:&Cerrar\tCtrl-W
 hr:&Zatvori\tCtrl-W
 ru:Закрыть\tCtrl-W
+ar:&إغلاق\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -90,6 +94,7 @@ ta:எனச் சேமி
 es:&Guardar como
 hr:&Spremi kao...
 ru:Сохранить как...
+ar:&حفظ كـ
 -
 &Print
 hu:Nyomt&atás
@@ -107,6 +112,7 @@ ta:அச்சிடு
 es:&Imprimir
 hr:&Ispiši
 ru:Печать
+ar:&طباعة
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -124,6 +130,7 @@ ta:SumatraPDFயை முன்னிருப்பு PDF படிப்ப�
 es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Инициировать с PDF
+ar: PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -141,6 +148,7 @@ ta:வெளியேறு\tCtrl-Q
 es:&Salir\tCtrl-Q
 hr:&Izađi\tCtrl-Q
 ru:Выход\tCtrl-Q
+ar:إغلاق البرنامج\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -158,6 +166,7 @@ ta:நோக்கு
 es:&Ver
 hr:&Pogled
 ru:Просмотр
+ar:&العرض
 -
 Single page
 hu:Egy oldalas
@@ -175,6 +184,7 @@ ta:ஒற்றைப் பக்கம்
 es:Página Única
 hr:Jedna stranica
 ru:Одна страница
+ar:صفحة واحدة
 -
 Facing
 hu:Oldalpár
@@ -192,6 +202,7 @@ ta:முகப்பு
 es:Página Doble
 hr:Dvije stranice
 ru:Две страницы
+ar:صفحتان متقابلتان
 -
 Continuous
 hu:Folyamatos
@@ -209,6 +220,7 @@ ta:தொடர்
 es:Contínua
 hr:Sljedno
 ru:Продолжить
+ar:صفحات متتالية
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -226,6 +238,7 @@ ta:தொடர் முகப்பு
 es:Página Doble Contínua
 hr:Dvije stranice sljedno
 ru:Продолжить две страницы
+ar:صفحات متقابلتان متتاليتان
 -
 Rotate left
 hu:Forgatás balra
@@ -243,6 +256,7 @@ ta:இடதுப்புறம் சுழற்று
 es:Girar a la izquierda
 hr:Zaokreni nalijevo
 ru:Повернуть налево
+ar:دوران لليسار
 -
 Rotate right
 hu:Forgatás jobbra
@@ -260,6 +274,7 @@ ta:வலப்புறம் சுழற்று
 es:Girar a la derecha
 hr:Zaokreni nadesno
 ru:Повернуть направо
+ar:دوران لليمين
 -
 Show toolbar
 hu:Állapotsor
@@ -277,6 +292,7 @@ ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
 hr:Pokaži alatnu traku
 ru:Показать панель инструментов
+ar:عرض شريط الأدوات
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -294,6 +310,7 @@ ta:MuPDF பதிப்பு வரை பொறியை தேர்
 es:Usar motor de renderizado MuPDF
 hr:Koristi MuPDF za prikaz PDF datoteka
 ru:Use MuPDF rendering engine
+ar: التشغيلي Mupdf استخدام محرك 
 -
 &Go To
 hu:U&grás
@@ -311,6 +328,7 @@ ta:அங்கு செல்
 es:&Ir a
 hr:Idi na
 ru:Перейти
+ar:&الذهاب إلى
 -
 Next Page
 hu:Következő oldal
@@ -328,6 +346,7 @@ ta:அடுத்த பக்கம்
 es:Página Siguiente
 hr:Sljedeća stranica
 ru:Следующая страница
+ar:الصفحة التالية
 -
 Previous Page
 hu:Előző oldal
@@ -345,6 +364,7 @@ ta:முந்தைய பக்கம்
 es:Página Anterior
 hr:Prethodna stranica
 ru:Предыдущая страница
+ar:الصفحة السابقة
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -362,6 +382,7 @@ ta:முதல் பக்கம்\tHome
 es:Primera Página\tHome
 hr:Prva stranica\tHome
 ru:Первая страница\tHome
+ar:الصفحة الأولى\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -379,6 +400,7 @@ ta:இறுதி பக்கம்\tEnd
 es:Última Página\tEnd
 hr:Posljednja stranica\tEnd
 ru:Последняя страница\tEnd
+ar:الصفحة الأخيرة\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -396,6 +418,7 @@ ta:பக்கம்...\tCtrl-G
 es:Página...\tCtrl-G
 hr:Stranica...\tCtrl-G
 ru:Страница...\tCtrl-G
+ar:صفحة محددة\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -413,6 +436,7 @@ ta:பெரிதாக்கு
 es:&Zoom
 hr:&Povećaj
 ru:Масштаб
+ar:التقريب
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -430,6 +454,7 @@ ta:பக்கம் பொருந்தவை\tCtrl-0
 es:Ajustar &Página\tCtrl-0
 hr:Podesi &stranicu\tCtrl-0
 ru:По размеру страницы\tCtrl-0
+ar:مناسب للشاشة\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -447,6 +472,7 @@ ta:மெய் அளவு\tCtrl-1
 es:Tamaño Real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
+ar:الحجم الحقيقي\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -464,6 +490,7 @@ ta:அகலம் பொருந்தவை\tCtrl-2
 es:&Ancho de Página\tCtrl-2
 hr:&Podesi po širini\tCtrl-2
 ru:По ширине\tCtrl-2
+ar:مناسب لعرض الشاشة\tCtrl-2
 -
 6400%
 -
@@ -507,6 +534,7 @@ ta:மொழி
 es:&Idioma
 hr:&Jezik
 ru:Русский
+ar:&اللغة
 -
 English
 hu:Angol
@@ -523,6 +551,7 @@ nl:Engels
 ta:ஆங்கிலம்
 es:Inglés
 hr:Engleski
+ar:الإنجليزية
 -
 Belarusian
 fr:Biélorusse
@@ -534,6 +563,7 @@ it:Bielorusso
 nl:Wit-russisch
 es:Bieloruso
 hr:Bjeloruski
+ar:البيلاروسية
 -
 Danish
 pl:Dański
@@ -543,6 +573,7 @@ ta:டச்சு
 es:Danés
 ja:デンマーク語
 hr:Danski
+ar:الدنماركية
 -
 German
 hu:Német
@@ -559,6 +590,7 @@ nl:Duits
 ta:ஜெர்மானியம்
 es:Alemán
 hr:Njemački
+ar:الإلمانية
 -
 Polish
 hu:Lengyel
@@ -574,6 +606,7 @@ it:Polacco
 nl:Pools
 es:Polaco
 hr:Poljski
+ar:البولندية
 -
 Japanese
 pl:Japoński
@@ -586,6 +619,7 @@ ta:ஜப்பானியம்
 es:Japonés
 ja:日本語
 hr:Japanski
+ar:اليابانية
 -
 Hungarian
 pl:Węgierski
@@ -598,6 +632,8 @@ nl:Hongaars
 es:Húngaro
 ja:ハンガリー語
 hr:Mađarski
+ar:الهنجارية
+
 -
 Persian
 pl:Perski
@@ -606,6 +642,7 @@ es:Persa
 nl:Persisch
 ja:ペルシア語
 hr:Perzijski
+ar:الفارسية
 -
 French
 hu:Francia
@@ -622,6 +659,7 @@ nl:Frans
 ta:பிரஞ்சு
 es:Francés
 hr:Francuski
+ar:الفرنسية
 -
 Turkish
 hu:Török
@@ -637,6 +675,7 @@ it:Turco
 nl:Turks
 es:Turco
 hr:Turski
+ar:التركية
 -
 Tamil
 de:Tamilische Sprache
@@ -649,6 +688,7 @@ tr:Tamilce
 es:Tamil
 nl:Tamil
 hr:Tamilski
+ar:التامل
 -
 Italian
 pl:Włoski
@@ -658,6 +698,7 @@ es:Italiano
 nl:Italiaans
 ja:イタリア語
 hr:Talijanski
+ar:الإيطالية
 -
 Dutch
 pl:Holenderski
@@ -666,6 +707,7 @@ de:Höllandisch
 es:Holandés
 ja:オランダ語
 hr:Nizozemski
+ar:الهولندية
 -
 Spanish
 es:Español
@@ -673,6 +715,7 @@ pl:Hiszpański
 nl:Spaans
 ja:スペイン語
 hr:Španjolski
+ar:الإسبانية
 -
 Croatian
 pl:Chorwacki
@@ -682,6 +725,11 @@ hr:Hrvatski
 Russian
 pl:Rosyjski
 ru:Русский
+ar:الروسية
+-
+Arabic
+pl:Arabski
+ar:العربية
 -
 &Help
 hu:&Súgó
@@ -699,6 +747,7 @@ ta:உதவி
 es:&Ayuda
 hr:&Pomoć
 ru:Помощь
+ar:&مساعدة
 -
 &Visit website
 hu:&Weboldal
@@ -716,6 +765,7 @@ ta:வலைத்தளம் செல்
 es:&Visitar Sitio Web
 hr:&Posjeti Internet stranicu
 ru:Посетить сайт
+ar:&زيارة موقع البرنامج
 -
 &About
 hu:Név&jegy
@@ -733,6 +783,7 @@ ta:பற்றி
 es:&Acerca de
 hr:&O...
 ru:О программе
+ar:حول البرنامج
 -
 Open
 hu:Megny&itás
@@ -750,6 +801,7 @@ ta:திற
 es:Abrir
 hr:Otvori
 ru:Открыть
+ar:فتح
 -
 Zoom In
 de:Reinzoomen
@@ -767,6 +819,7 @@ ta:பெரிதாக்கு
 es:Acercar Zoom
 hr:Povećaj
 ru:Откройте
+ar:تكبير
 -
 Zoom Out
 de:Rauszoomen
@@ -784,6 +837,7 @@ ta:சிறிதாக்கு
 es:Alejar Zoom
 hr:Umanji
 ru:Закройте
+ar:تصغير
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -801,6 +855,7 @@ ta:SumatraPDF பற்றி
 es:Acerca de SumatraPDF
 hr:O programu SumatraPDF
 ru:О программе
+ar:SumatraPDF حول برنامج 
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -818,6 +873,7 @@ ta:SumatraPDF இப்போது உங்கள் முன்னிரு�
 es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
 ru:Инициировать с PDF
+ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -835,6 +891,7 @@ ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
 hr:Spremanje datoteke je neuspjelo.
 ru:Ошибка сохранения
+ar:فشل حفظ الملف
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -852,6 +909,7 @@ ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
 hr:Greška kod učitavanja PDF datoteke.
 ru:Ошибка чтения
+ar:هناك خطأ في تشغيل الملف
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -869,6 +927,7 @@ ta:அச்சுப்பொறியை திறக்க முடியவ
 es:Impresora no accesible
 hr:Nije moguće otvoriti pisač.
 ru:Нет принтера
+ar:تعذر فتح الطابعة
 -
 Printing problem.
 de:Druckerproblem
@@ -886,6 +945,7 @@ it:Problemi di Stampa
 es:Error de impresión.
 hr:Problem kod ispisivanja.
 ru:Ошибка принтера
+ar:يوجد مشكلة في الطباعة
 -
 Contribute translation
 de:Übersetzung beisteuern
@@ -894,3 +954,4 @@ ja:翻訳の提供
 nl:Help met vertalen
 hr:Pomozi prijevodom ovog programa
 ru:Помогите с переводом
+ar:ساهم في ترجمة البرنامج 
