@@ -23,7 +23,8 @@
 # Zero-8 - Русский
 # Mohammed Al-Foulad (http://mbsee.info) - Arabic
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn
+# Linus Persson - Swedish
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv
 -
 &File
 hu:&Fájl
@@ -43,6 +44,7 @@ hr:&Datoteka
 ru:Файл
 ar:ملف
 cn: 文件(&F)
+sv:&Arkiv
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -62,6 +64,7 @@ hr:&Otvori\tCtrl-O
 ru:Открыть\tCtrl-O
 ar:&فتح\tCtrl-O
 cn:打开\tCtrl-O
+sv:&Öppna\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zrás\tCtrl-W
@@ -81,6 +84,7 @@ hr:&Zatvori\tCtrl-W
 ru:Закрыть\tCtrl-W
 ar:&إغلاق\tCtrl-W
 cn:关闭(&C)\tCtrl-W
+sv:&Stäng\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -100,6 +104,7 @@ hr:&Spremi kao...
 ru:Сохранить как...
 ar:&حفظ كـ
 cn:另存为(&S)
+sv:Spara so&m...
 -
 &Print
 hu:Nyomt&atás
@@ -119,6 +124,7 @@ hr:&Ispiši
 ru:Печать
 ar:&طباعة
 cn:打印(&P)
+sv:Skriv &ut\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -138,6 +144,7 @@ hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Инициировать с PDF
 ar: PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:设置 SumatraPDF 为默认 PDF 阅读器
+sv:Använd SumatraPDF som standardläsare för PDF
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -157,6 +164,7 @@ hr:&Izađi\tCtrl-Q
 ru:Выход\tCtrl-Q
 ar:إغلاق البرنامج\tCtrl-Q
 cn:退出(&X)\tCtrl-Q
+sv:&Avsluta\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -176,6 +184,7 @@ hr:&Pogled
 ru:Просмотр
 ar:&العرض
 cn:查看(&V)
+sv:&Visa
 -
 Single page
 hu:Egy oldalas
@@ -195,6 +204,7 @@ hr:Jedna stranica
 ru:Одна страница
 ar:صفحة واحدة
 cn:单个页面
+sv:Enkel sida
 -
 Facing
 hu:Oldalpár
@@ -214,6 +224,7 @@ hr:Dvije stranice
 ru:Две страницы
 ar:صفحتان متقابلتان
 cn:平铺页面
+sv:Uppslag
 -
 Continuous
 hu:Folyamatos
@@ -233,6 +244,7 @@ hr:Sljedno
 ru:Продолжить
 ar:صفحات متتالية
 cn:连续页面
+sv:Fortlöpande
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -252,6 +264,7 @@ hr:Dvije stranice sljedno
 ru:Продолжить две страницы
 ar:صفحات متقابلتان متتاليتان
 cn:连续平铺页面
+sv:Fortlöpande uppslag
 -
 Rotate left
 hu:Forgatás balra
@@ -271,6 +284,7 @@ hr:Zaokreni nalijevo
 ru:Повернуть налево
 ar:دوران لليسار
 cn:向左旋转
+sv:Rotera åt vänster
 -
 Rotate right
 hu:Forgatás jobbra
@@ -290,6 +304,7 @@ hr:Zaokreni nadesno
 ru:Повернуть направо
 ar:دوران لليمين
 cn:向右旋转
+sv:Rotera åt höger
 -
 Show toolbar
 hu:Állapotsor
@@ -309,6 +324,7 @@ hr:Pokaži alatnu traku
 ru:Показать панель инструментов
 ar:عرض شريط الأدوات
 cn:显示工具栏
+sv:Visa verktygsfält
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -328,6 +344,7 @@ hr:Koristi MuPDF za prikaz PDF datoteka
 ru:Use MuPDF rendering engine
 ar: التشغيلي Mupdf استخدام محرك 
 cn:使用 MuPDF 渲染引擎
+sv:Använd MuPDF renderingsmotor
 -
 &Go To
 hu:U&grás
@@ -347,6 +364,7 @@ hr:Idi na
 ru:Перейти
 ar:&الذهاب إلى
 cn:转到(&G)
+sv:&Gå till
 -
 Next Page
 hu:Következő oldal
@@ -366,6 +384,7 @@ hr:Sljedeća stranica
 ru:Следующая страница
 ar:الصفحة التالية
 cn:下一页
+sv:Nästa sida
 -
 Previous Page
 hu:Előző oldal
@@ -385,6 +404,7 @@ hr:Prethodna stranica
 ru:Предыдущая страница
 ar:الصفحة السابقة
 cn:上一页
+sv:Föregående sida
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -404,6 +424,7 @@ hr:Prva stranica\tHome
 ru:Первая страница\tHome
 ar:الصفحة الأولى\tHome
 cn:第一页\tHome
+sv:Första sidan\tHome
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -423,6 +444,7 @@ hr:Posljednja stranica\tEnd
 ru:Последняя страница\tEnd
 ar:الصفحة الأخيرة\tEnd
 cn:最后一页\tEnd
+sv:Sista sidan\tEnd
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -442,6 +464,7 @@ hr:Stranica...\tCtrl-G
 ru:Страница...\tCtrl-G
 ar:صفحة محددة\tCtrl-G
 cn:页面...\tCtrl-G
+sv:Sida...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -461,6 +484,7 @@ hr:&Povećaj
 ru:Масштаб
 ar:التقريب
 cn:缩放(&Z)
+sv:&Zoom
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -480,6 +504,7 @@ hr:Podesi &stranicu\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
 cn:适合页面\tCtrl-0
+sv:Anpa&ssa efter helsida\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -499,6 +524,7 @@ hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
 cn:实际大小\tCtrl-1
+sv:Normal storlek\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -518,6 +544,7 @@ hr:&Podesi po širini\tCtrl-2
 ru:По ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
 cn:适合宽度\tCtrl-2
+sv:Anpassa efter bredd\tCtrl-2
 -
 6400%
 -
@@ -563,6 +590,7 @@ hr:&Jezik
 ru:Русский
 ar:&اللغة
 cn:语言(&L)
+sv:&Språk
 -
 English
 hu:Angol
@@ -580,6 +608,7 @@ ta:ஆங்கிலம்
 es:Inglés
 hr:Engleski
 ar:الإنجليزية
+sv:Engelska
 -
 Belarusian
 fr:Biélorusse
@@ -592,6 +621,7 @@ nl:Wit-russisch
 es:Bieloruso
 hr:Bjeloruski
 ar:البيلاروسية
+sv:Vitryska
 -
 Danish
 pl:Dański
@@ -602,6 +632,7 @@ es:Danés
 ja:デンマーク語
 hr:Danski
 ar:الدنماركية
+sv:Danska
 -
 German
 hu:Német
@@ -619,6 +650,7 @@ ta:ஜெர்மானியம்
 es:Alemán
 hr:Njemački
 ar:الإلمانية
+sv:Tyska
 -
 Polish
 hu:Lengyel
@@ -635,6 +667,7 @@ nl:Pools
 es:Polaco
 hr:Poljski
 ar:البولندية
+sv:Polska
 -
 Japanese
 pl:Japoński
@@ -648,6 +681,7 @@ es:Japonés
 ja:日本語
 hr:Japanski
 ar:اليابانية
+sv:Japanska
 -
 Hungarian
 pl:Węgierski
@@ -661,7 +695,7 @@ es:Húngaro
 ja:ハンガリー語
 hr:Mađarski
 ar:الهنجارية
-
+sv:Ungerska
 -
 Persian
 pl:Perski
@@ -671,6 +705,7 @@ nl:Persisch
 ja:ペルシア語
 hr:Perzijski
 ar:الفارسية
+sv:Persiska
 -
 French
 hu:Francia
@@ -688,6 +723,7 @@ ta:பிரஞ்சு
 es:Francés
 hr:Francuski
 ar:الفرنسية
+sv:Franska
 -
 Turkish
 hu:Török
@@ -704,6 +740,7 @@ nl:Turks
 es:Turco
 hr:Turski
 ar:التركية
+sv:Turkiska
 -
 Tamil
 de:Tamilische Sprache
@@ -717,6 +754,7 @@ es:Tamil
 nl:Tamil
 hr:Tamilski
 ar:التامل
+sv:Tamil
 -
 Italian
 pl:Włoski
@@ -727,6 +765,7 @@ nl:Italiaans
 ja:イタリア語
 hr:Talijanski
 ar:الإيطالية
+sv:Italienska
 -
 Dutch
 pl:Holenderski
@@ -736,6 +775,7 @@ es:Holandés
 ja:オランダ語
 hr:Nizozemski
 ar:الهولندية
+sv:Holländska
 -
 Spanish
 es:Español
@@ -744,24 +784,32 @@ nl:Spaans
 ja:スペイン語
 hr:Španjolski
 ar:الإسبانية
+sv:Spanska
 -
 Croatian
 pl:Chorwacki
 de:Kroatische
 hr:Hrvatski
+sv:Kroatiska
 -
 Russian
 pl:Rosyjski
 ru:Русский
 ar:الروسية
+sv:Ryska
 -
 Arabic
 pl:Arabski
 ar:العربية
+sv:Arabiska
 -
 Chinese Simplified
 pl:Chiński uproszczony
 cn:简体中文
+sv:Kinesiska, förenklad
+-
+Swedish
+pl:Szwecki
 -
 &Help
 hu:&Súgó
@@ -781,6 +829,7 @@ hr:&Pomoć
 ru:Помощь
 ar:&مساعدة
 cn:帮助(&H)
+sv:&Hjälp
 -
 &Visit website
 hu:&Weboldal
@@ -800,6 +849,7 @@ hr:&Posjeti Internet stranicu
 ru:Посетить сайт
 ar:&زيارة موقع البرنامج
 cn:访问网站(&V)
+sv:Besök webbplats
 -
 &About
 hu:Név&jegy
@@ -819,6 +869,7 @@ hr:&O...
 ru:О программе
 ar:حول البرنامج
 cn:关于(&A)
+sv:&Om
 -
 Open
 hu:Megny&itás
@@ -838,6 +889,7 @@ hr:Otvori
 ru:Открыть
 ar:فتح
 cn:打开
+sv:Öppna
 -
 Zoom In
 de:Reinzoomen
@@ -857,6 +909,7 @@ hr:Povećaj
 ru:Откройте
 ar:تكبير
 cn:放大
+sv:Zooma in
 -
 Zoom Out
 de:Rauszoomen
@@ -876,6 +929,7 @@ hr:Umanji
 ru:Закройте
 ar:تصغير
 cn:缩小
+sv:Zooma ut
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -895,6 +949,7 @@ hr:O programu SumatraPDF
 ru:О программе
 ar:SumatraPDF حول برنامج 
 cn:关于 SumatraPDF
+sv:Om SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -914,6 +969,7 @@ hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
 ru:Инициировать с PDF
 ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
 cn:已将 SumatraPDF 设置为默认 PDF 阅读器
+sv:SumatraPDF är nu standardläsare för PDF-filer.
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -933,6 +989,7 @@ hr:Spremanje datoteke je neuspjelo.
 ru:Ошибка сохранения
 ar:فشل حفظ الملف
 cn:保存文件失败
+sv:Kan inte spara filen.
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -952,6 +1009,7 @@ hr:Greška kod učitavanja PDF datoteke.
 ru:Ошибка чтения
 ar:هناك خطأ في تشغيل الملف
 cn:载入 PDF 文件是发生错误
+sv:Kan inte öppna PDF-filen.
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -971,6 +1029,7 @@ hr:Nije moguće otvoriti pisač.
 ru:Нет принтера
 ar:تعذر فتح الطابعة
 cn:不能打开打印机
+sv:Kan inte anropa skrivaren.
 -
 Printing problem.
 de:Druckerproblem
@@ -990,6 +1049,7 @@ hr:Problem kod ispisivanja.
 ru:Ошибка принтера
 ar:يوجد مشكلة في الطباعة
 cn:打印问题。
+sv:Utskriftsproblem.
 -
 Contribute translation
 de:Übersetzung beisteuern
@@ -1000,3 +1060,4 @@ hr:Pomozi prijevodom ovog programa
 ru:Помогите с переводом
 ar:ساهم في ترجمة البرنامج 
 cn:提供翻印
+sv:Bidra med översättning
