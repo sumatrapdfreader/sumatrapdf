@@ -9,10 +9,10 @@ def as_utf8(n):
         z = (n & 0x3f) | 0x80 # 10zzzzzz
         return [y,z]
     if n < 0xffff:
-        a = ((n >> 12) & 0x0f) | 0xE0
-        b = ((n >> 6) & 0x3f) | 0x80
-        c = (n & 0xf) | 0x80
-        return [a,b,c]
+        x = ((n >> 12) & 0x0f) | 0xE0
+        y = ((n >> 6) & 0x3f) | 0x80
+        z = (n & 0x3f) | 0x80
+        return [x,y,z]
     assert 0 # too lazy to encode those
 
 # TODO: stupid C escaping fails on e.g. \xcbb
