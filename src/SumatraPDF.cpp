@@ -107,7 +107,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WM_HSCROLL_HANDLED 0
 
 #define ABOUT_WIN_DX 440
-#define ABOUT_WIN_DY 300
+#define ABOUT_WIN_DY 328
 
 #define WM_APP_REPAINT_DELAYED (WM_APP + 10)
 #define WM_APP_REPAINT_NOW     (WM_APP + 11)
@@ -2384,6 +2384,9 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { "toolbar icons", "Mark James", "http://www.famfamfam.com/lab/icons/silk/",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
+    { "translations", "The Translators", "http://blog.kowalczyk.info/software/sumatrapdf/translators.html",
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
     { NULL, NULL, NULL,
     0, 0, 0, 0, 0, 0, 0, 0 }
 };
@@ -3908,6 +3911,8 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
             assert(gHwndAbout);
             gHwndAbout = NULL;
             break;
+
+        /* TODO: handle mouse move/down/up so that links work */
 
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
