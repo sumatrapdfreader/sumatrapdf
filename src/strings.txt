@@ -26,6 +26,7 @@
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
 # Linus Persson - Swedish
 # Kristian Vrhel - Czech
+# Boubker Talibi - Arabic
 Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz
 -
 &File
@@ -275,7 +276,7 @@ ta:தொடர் முகப்பு
 es:Página Doble Contínua
 hr:Dvije stranice sljedno
 ru:Непрерывно по две страницы
-ar:صفحات متقابلتان متتاليتان
+ar:صفحات متقابلة متتالية
 cn:连续平铺页面
 sv:Fortlöpande uppslag
 cz:Průběžně protilehlé
