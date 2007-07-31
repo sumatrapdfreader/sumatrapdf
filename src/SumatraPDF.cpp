@@ -917,7 +917,7 @@ static bool Prefs_Load(void)
     DStringInit(&path);
     Prefs_GetFileName(&path);
 
-    size_t prefsFileLen;
+    uint64_t prefsFileLen;
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (str_empty(prefsTxt)) {
         DBG_OUT("  no prefs file or is empty\n");
