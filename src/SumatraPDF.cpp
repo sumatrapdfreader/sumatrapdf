@@ -4669,8 +4669,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         }
 
         if (is_arg(NO_REGISTER_EXT_ARG_TXT)) {
-            registerForPdfExtentions = false;
             currArg = currArg->next;
+            registerForPdfExtentions = false;
             continue;
         }
 
@@ -4691,6 +4691,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         }
 
         if (is_arg(PRINT_TO_DEFAULT_ARG_TXT)) {
+            currArg = currArg->next;
             printToDefaultPrinter = true;
             continue;
         }
