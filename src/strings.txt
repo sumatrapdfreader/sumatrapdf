@@ -72,7 +72,7 @@ sv:&Öppna\tCtrl-O
 cz:&Otevřít\tCtrl-O
 -
 &Close\tCtrl-W
-hu:Be&zrás\tCtrl-W
+hu:Be&zárás\tCtrl-W
 pl:&Zamknij\tCtrl-W
 de:&Schließen\tCtrl-W
 fr:&Fermer\tCtrl-W
@@ -324,7 +324,7 @@ sv:Rotera åt höger
 cz:Otočit zobrazení doprava
 -
 Show toolbar
-hu:Állapotsor
+hu:Eszköztár
 pl:Pokaż toolbar
 de:Werkzeugleiste zeigen
 fr:Afficher la barre d'outil
@@ -643,6 +643,7 @@ sv:Engelska
 cz:Angličtina
 -
 Belarusian
+hu:Belorusz
 fr:Biélorusse
 de:Weißrussisch
 ja:ベラルーシ語
@@ -658,6 +659,7 @@ sv:Vitryska
 cz:Běloruština
 -
 Danish
+hu:Dán
 pl:Dański
 it:Danese
 nl:Deens
@@ -710,6 +712,7 @@ sv:Polska
 cz:Polština
 -
 Japanese
+hu:Japán
 pl:Japoński
 fa:ژاپنی
 fr:Japonais
@@ -726,6 +729,7 @@ sv:Japanska
 cz:Japonština
 -
 Hungarian
+hu:Magyar
 pl:Węgierski
 fr:Hongrois
 fa:مجارستانی
@@ -742,6 +746,7 @@ sv:Ungerska
 cz:Maďarština
 -
 Persian
+hu:Perzsa
 pl:Perski
 it:Persiano
 es:Persa
@@ -809,6 +814,7 @@ sv:Tamil
 cz:Tamilština
 -
 Italian
+hu:Olasz
 pl:Włoski
 it:Italiano
 fr:Italien
@@ -822,6 +828,7 @@ sv:Italienska
 cz:Italština
 -
 Dutch
+hu:Holland
 pl:Holenderski
 nl:Nederlands
 de:Höllandisch
@@ -834,6 +841,7 @@ sv:Holländska
 cz:Nizozemština
 -
 Spanish
+hu:Spanyol
 es:Español
 pl:Hiszpański
 nl:Spaans
@@ -845,6 +853,7 @@ sv:Spanska
 cz:Španělština
 -
 Croatian
+hu:Horvát
 pl:Chorwacki
 de:Kroatische
 hr:Hrvatski
@@ -853,6 +862,7 @@ sv:Kroatiska
 cz:Chorvatština
 -
 Russian
+hu:Orosz
 pl:Rosyjski
 ru:Русский
 ar:الروسية
@@ -860,6 +870,7 @@ sv:Ryska
 cz:Ruština
 -
 Arabic
+hu:Arab
 pl:Arabski
 ru:Арабский
 ar:العربية
@@ -867,6 +878,7 @@ sv:Arabiska
 cz:Arabština
 -
 Chinese Simplified
+hu:Egyszerűsített Kínai
 pl:Chiński uproszczony
 ru:Китайский упрощённый
 cn:简体中文
@@ -874,6 +886,7 @@ sv:Kinesiska, förenklad
 cz:Zjednodušená čínština
 -
 Swedish
+hu:Svéd
 pl:Szwecki
 cz:Švédština
 -
@@ -1133,6 +1146,7 @@ sv:Utskriftsproblem.
 cz:Problém s tiskem
 -
 Contribute translation
+hu:Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
 pl:Pomóż przy translacji
 ja:翻訳の提供
