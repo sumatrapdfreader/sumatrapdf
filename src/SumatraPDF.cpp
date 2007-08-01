@@ -4240,6 +4240,15 @@ InitMouseWheelInfo:
             if (!win || !win->dm) /* TODO: check for pdfDoc as well ? */
                 break;
 
+            if (LOWORD(wParam) == MK_CONTROL)
+            {
+                if ((short)HIWORD(wParam) < 0)
+                    win->dm->zoomBy(ZOOM_OUT_FACTOR);
+                else
+                    win->dm->zoomBy(ZOOM_IN_FACTOR);
+                return 0;
+            }
+
             if (gDeltaPerLine == 0)
                break;
 
