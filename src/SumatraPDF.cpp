@@ -41,7 +41,10 @@
 
 #include "WinUtil.hpp"
 #include <windowsx.h>
+
+#ifdef CRASHHANDLER
 #include "client\windows\handler\exception_handler.h"
+#endif
 
 // some stupid things are in headers of MinGW 5.1.3 :-\
 // why we have to define these constants & prototypes again (?!)
@@ -4608,6 +4611,7 @@ char *GetDefaultPrinterName()
 }
 
 #define is_arg(txt) str_ieq(txt, currArg->str)
+#ifdef CRASHHANDLER
 using google_breakpad::ExceptionHandler;
 
 // Return false so that the exception is also handled by Windows
@@ -4620,6 +4624,7 @@ bool SumatraMinidumpCallback(const wchar_t *dump_path,
 {
     return false;
 }
+#endif
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
