@@ -99,10 +99,13 @@
 					<Add option="-lstdc++" />
 					<Add library="comctl32" />
 					<Add library="winspool" />
+					<Add library="msimg32" />
 					<Add directory="$(GTK_BASEPATH)\lib" />
 				</Linker>
 			</Target>
 		</Build>
+		<Unit filename="baseutils\WinUtil.cpp" />
+		<Unit filename="baseutils\WinUtil.hpp" />
 		<Unit filename="baseutils\base_util.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -119,15 +122,52 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="baseutils\geom_util.h" />
+		<Unit filename="baseutils\log_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\log_util.h" />
 		<Unit filename="baseutils\mingwstrsafe.h" />
+		<Unit filename="baseutils\ms_ui_helper.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\ms_ui_helper.h" />
+		<Unit filename="baseutils\ms_ui_shguim.h" />
+		<Unit filename="baseutils\netstr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\netstr.h" />
+		<Unit filename="baseutils\pdiff.cc">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\pdiff.h" />
+		<Unit filename="baseutils\prefs_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\prefs_util.h" />
+		<Unit filename="baseutils\str_strsafe.h" />
 		<Unit filename="baseutils\str_util.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="baseutils\str_util.h" />
+		<Unit filename="baseutils\strlist_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\strlist_util.h" />
+		<Unit filename="baseutils\tstr_util.h" />
+		<Unit filename="baseutils\utf_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\utf_util.h" />
+		<Unit filename="baseutils\win_dib.h" />
+		<Unit filename="baseutils\win_image.h" />
 		<Unit filename="baseutils\win_util.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="baseutils\win_util.h" />
+		<Unit filename="baseutils\wstr_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\wstr_util.h" />
 		<Unit filename="src\AppPrefs.cc">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -179,9 +219,14 @@
 		<Unit filename="src\toolbar.bmp" />
 		<Unit filename="src\translations.cpp" />
 		<Unit filename="src\translations.h" />
+		<Unit filename="src\translations_txt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src\translations_txt.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
+			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
