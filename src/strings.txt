@@ -28,7 +28,8 @@
 # Kristian Vrhel - Czech
 # Boubker Talibi - Arabic
 # geodimo - Greek
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr
+# Uthen Phutneam - Thai
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th
 -
 &File
 hu:&Fájl
@@ -51,6 +52,7 @@ cn: 文件(&F)
 sv:&Arkiv
 cz:&Soubor
 gr:&Αρχείο
+th:แฟ้ม
 -
 &Open\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -73,6 +75,7 @@ cn:打开\tCtrl-O
 sv:&Öppna\tCtrl-O
 cz:&Otevřít\tCtrl-O
 gr:Ά&νοιγμα\tCtrl-O
+th:เปิด\tCtrl-O
 -
 &Close\tCtrl-W
 hu:Be&zárás\tCtrl-W
@@ -95,6 +98,7 @@ cn:关闭(&C)\tCtrl-W
 sv:&Stäng\tCtrl-W
 cz:&Zavřít\tCtrl-W
 gr:&Κλείσιμο\tCtrl-W
+th:ปิด\tCtrl-W
 -
 &Save as
 hu:Ment&és másként
@@ -117,6 +121,7 @@ cn:另存为(&S)
 sv:Spara so&m...
 cz:&Uložit jako
 gr:Α&ποθήκευση ως
+th:บันทึกเป็น
 -
 &Print
 hu:Nyomt&atás
@@ -139,6 +144,7 @@ cn:打印(&P)
 sv:Skriv &ut\tCtrl-P
 cz:&Tisk
 gr:&Εκτύπωση
+th:พิมพ์
 -
 Make SumatraPDF a default PDF reader
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -161,6 +167,7 @@ cn:设置 SumatraPDF 为默认 PDF 阅读器
 sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
 gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη PDF
+th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 -
 E&xit\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -183,6 +190,7 @@ cn:退出(&X)\tCtrl-Q
 sv:&Avsluta\tCtrl-Q
 cz:&Konec\tCtrl-Q
 gr:Έ&ξοδος\tCtrl-Q
+th:ออก\tCtrl-Q
 -
 &View
 hu:&Nézet
@@ -205,6 +213,7 @@ cn:查看(&V)
 sv:&Visa
 cz:&Zobrazit
 gr:&Προβολή
+th:มุมมอง
 -
 Single page
 hu:Egy oldalas
@@ -227,6 +236,7 @@ cn:单个页面
 sv:Enkel sida
 cz:Jedna stránka
 gr:Μονή σελίδα
+th:หน้าเดี่ยว
 -
 Facing
 hu:Oldalpár
@@ -249,6 +259,7 @@ cn:平铺页面
 sv:Uppslag
 cz:Protilehlé
 gr:Αντικριστά
+th:เป็นหน้า
 -
 Continuous
 hu:Folyamatos
@@ -271,6 +282,7 @@ cn:连续页面
 sv:Fortlöpande
 cz:Průběžně
 gr:Συνεχόμενα
+th:ต่อเนื่อง
 -
 Continuous facing
 hu:Folyamatos oldalpár
@@ -293,6 +305,7 @@ cn:连续平铺页面
 sv:Fortlöpande uppslag
 cz:Průběžně protilehlé
 gr:Αντικριστά και συνεχόμενα
+th:เป็นหน้าต่อเนื่อง
 -
 Rotate left
 hu:Forgatás balra
@@ -315,6 +328,7 @@ cn:向左旋转
 sv:Rotera åt vänster
 cz:Otočit zobrazení doleva
 gr:Περιστροφή αριστερά
+th:หมุนซ้าย
 -
 Rotate right
 hu:Forgatás jobbra
@@ -337,6 +351,7 @@ cn:向右旋转
 sv:Rotera åt höger
 cz:Otočit zobrazení doprava
 gr:Περιστροφή δεξιά
+th:หมุนขวา
 -
 Show toolbar
 hu:Eszköztár
@@ -359,6 +374,7 @@ cn:显示工具栏
 sv:Visa verktygsfält
 cz:Zobrazit lištu nástrojů
 gr:Εμφάνιση γραμμής εργαλείων
+th:แสดงแถบเครื่องมือ
 -
 Use MuPDF rendering engine
 hu:MuPDF megjelenítő motor
@@ -381,6 +397,7 @@ cn:使用 MuPDF 渲染引擎
 sv:Använd MuPDF renderingsmotor
 cz:Použít zobrazení pomocí MuPDF 
 gr:Χρήση μηχανής απόδοσης MuPDF
+th:ใช้ MuPDF rendering engine
 -
 &Go To
 hu:U&grás
@@ -403,6 +420,7 @@ cn:转到(&G)
 sv:&Gå till
 cz:Jdi na
 gr:&Μετάβαση
+th:ไปที่
 -
 Next Page
 hu:Következő oldal
@@ -425,6 +443,7 @@ cn:下一页
 sv:Nästa sida
 cz:Další stránka
 gr:Επόμενη σελίδα
+th:หน้าถัดไป
 -
 Previous Page
 hu:Előző oldal
@@ -447,6 +466,7 @@ cn:上一页
 sv:Föregående sida
 cz:Předchozí stránka
 gr:Προηγούμενη σελίδα
+th:หน้าก่อนหน้า
 -
 First Page\tHome
 hu:Első oldal\tHome
@@ -469,6 +489,7 @@ cn:第一页\tHome
 sv:Första sidan\tHome
 cz:První stránka\tHome
 gr:Πρώτη σελίδα\tHome
+th:หน้าแรก
 -
 Last Page\tEnd
 hu:Utolsó oldal\tEnd
@@ -491,6 +512,7 @@ cn:最后一页\tEnd
 sv:Sista sidan\tEnd
 cz:Poslední stránka\tEnd
 gr:Τελευταία σελίδα\tEnd
+th:หน้าสุดท้าย
 -
 Page...\tCtrl-G
 hu:Oldal...\tCtrl-G
@@ -513,6 +535,7 @@ cn:页面...\tCtrl-G
 sv:Sida...\tCtrl-G
 cz:Stránka...\tCtrl-G
 gr:Σελίδα...\tCtrl-G
+th:หน้า...\tCtrl-G
 -
 &Zoom
 hu:&Nagyítás
@@ -535,6 +558,7 @@ cn:缩放(&Z)
 sv:&Zoom
 cz:&Zvětšení
 gr:&Εστίαση
+th:ขยาย
 -
 Fit &Page\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
@@ -557,6 +581,7 @@ cn:适合页面\tCtrl-0
 sv:Anpa&ssa efter helsida\tCtrl-0
 cz:Přizpůsobit stránce\tCtrl-0
 gr:Ολόκληρη σελίδα\tCtrl-0
+th:พอดีหน้า\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
@@ -579,6 +604,7 @@ cn:实际大小\tCtrl-1
 sv:Normal storlek\tCtrl-1
 cz:Skutečná velikost\tCtrl-1
 gr:Πραγματικό μέγεθος\tCtrl-1
+th:ขนาดจริง\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -601,6 +627,7 @@ cn:适合宽度\tCtrl-2
 sv:Anpassa efter bredd\tCtrl-2
 cz:Podle šířky\tCtrl-2
 gr:Στο πλάτος παραθύρου\tCtrl-2
+th:พอดีความกว้าง\tCtrl-2
 -
 6400%
 -
@@ -649,6 +676,7 @@ cn:语言(&L)
 sv:&Språk
 cz:Jazyk
 gr:&Γλώσσα
+th:ภาษา
 -
 English
 hu:Angol
@@ -670,6 +698,7 @@ ar:الإنجليزية
 sv:Engelska
 cz:Angličtina
 gr:Αγγλικά
+th:English
 -
 Belarusian
 hu:Belorusz
@@ -687,6 +716,7 @@ ar:البيلاروسية
 sv:Vitryska
 cz:Běloruština
 gr:Λευκορώσσικα
+th:Belarusian
 -
 Danish
 hu:Dán
@@ -702,6 +732,7 @@ ar:الدنماركية
 sv:Danska
 cz:Dánština
 gr:Δανικά
+th:Danish
 -
 German
 hu:Német
@@ -723,6 +754,7 @@ ar:الإلمانية
 sv:Tyska
 cz:Němčina
 gr:Γερμανικά
+th:German
 -
 Polish
 hu:Lengyel
@@ -743,6 +775,7 @@ ar:البولندية
 sv:Polska
 cz:Polština
 gr:Πολωνικά
+th:Polish
 -
 Japanese
 hu:Japán
@@ -761,6 +794,7 @@ ar:اليابانية
 sv:Japanska
 cz:Japonština
 gr:Γιαπωνέζικα
+th:Japanese
 -
 Hungarian
 hu:Magyar
@@ -779,6 +813,7 @@ ar:الهنجارية
 sv:Ungerska
 cz:Maďarština
 gr:Μαγιάρικά
+th:Hungarian
 -
 Persian
 hu:Perzsa
@@ -793,6 +828,7 @@ ar:الفارسية
 sv:Persiska
 cz:Perština
 gr:Περσικά
+th:Persian
 -
 French
 hu:Francia
@@ -814,6 +850,7 @@ ar:الفرنسية
 sv:Franska
 cz:Francouzština
 gr:Γαλλικά
+th:French
 -
 Turkish
 hu:Török
@@ -834,6 +871,7 @@ ar:التركية
 sv:Turkiska
 cz:Turečtina
 gr:Τούρκικα
+th:Turkish
 -
 Tamil
 de:Tamilische Sprache
@@ -851,6 +889,7 @@ ar:التامل
 sv:Tamil
 cz:Tamilština
 gr:Ταμιλικά
+th:Tamil
 -
 Italian
 hu:Olasz
@@ -866,6 +905,7 @@ ar:الإيطالية
 sv:Italienska
 cz:Italština
 gr:Ιταλικά
+th:Italian
 -
 Dutch
 hu:Holland
@@ -880,6 +920,7 @@ ar:الهولندية
 sv:Holländska
 cz:Nizozemština
 gr:Ολλανδικά
+th:Dutch
 -
 Spanish
 hu:Spanyol
@@ -893,6 +934,7 @@ ar:الإسبانية
 sv:Spanska
 cz:Španělština
 gr:Ισπανικά
+th:Spanish
 -
 Croatian
 hu:Horvát
@@ -903,6 +945,7 @@ ru:Хорватский
 sv:Kroatiska
 cz:Chorvatština
 gr:Κροατικά
+th:Croatian
 -
 Russian
 hu:Orosz
@@ -944,6 +987,9 @@ gr:Τσέχικα
 Greek
 gr:Ελληνικά
 -
+Thai
+th:ไทย
+-
 &Help
 hu:&Súgó
 pl:&Pomoc
@@ -965,6 +1011,7 @@ cn:帮助(&H)
 sv:&Hjälp
 cz:&Nápověda
 gr:&Βοήθεια
+th:ช่วยเหลือ
 -
 &Visit website
 hu:&Weboldal
@@ -987,6 +1034,7 @@ cn:访问网站(&V)
 sv:Besök webbplats
 cz:&Navštívit webovou stránku
 gr:&Ιστοσελίδα προγράμματος
+th:เยี่ยมเว็บไชด์
 -
 &About
 hu:Név&jegy
@@ -1009,6 +1057,7 @@ cn:关于(&A)
 sv:&Om
 cz:&O programu
 gr:&Πέρι...
+th:เกี่ยวกับ
 -
 Open
 hu:Megny&itás
@@ -1031,6 +1080,7 @@ cn:打开
 sv:Öppna
 cz:Otevřít
 gr:Άνοιγμα
+th:เปิด
 -
 Zoom In
 de:Reinzoomen
@@ -1053,6 +1103,7 @@ cn:放大
 sv:Zooma in
 cz:Zvětšení
 gr:Μεγένθυση
+th:ขยาย
 -
 Zoom Out
 de:Rauszoomen
@@ -1075,6 +1126,7 @@ cn:缩小
 sv:Zooma ut
 cz:Zmenšení
 gr:Σμίκρυνση
+th:ย่อ
 -
 About SumatraPDF
 de:Über SumatraPDF
@@ -1097,6 +1149,7 @@ cn:关于 SumatraPDF
 sv:Om SumatraPDF
 cz:O programu SumatraPDF
 gr:Για το πρόγραμμα SumatraPDF
+th:เกี่ยวกับ SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -1119,6 +1172,7 @@ cn:已将 SumatraPDF 设置为默认 PDF 阅读器
 sv:SumatraPDF är nu standardläsare för PDF-filer.
 cz:SumatraPDF je nyní nastaven jako defaultní čtečka PDF souborů.
 gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγραμμα ανάγνωσης PDF
+th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 -
 Failed to save a file
 de:Fehler beim Speichern der Datei.
@@ -1141,6 +1195,7 @@ cn:保存文件失败
 sv:Kan inte spara filen.
 cz:Uložení souboru selhalo
 gr:Αποτυχία αποθήκευσης αρχείου
+th:การบันทึกไฟล์ล้มเหลว
 -
 Error loading PDF file.
 de:Fehler beim Laden der Datei
@@ -1163,6 +1218,7 @@ cn:载入 PDF 文件是发生错误
 sv:Kan inte öppna PDF-filen.
 cz:Chyba při načítání PDF souboru.
 gr:Σφάλμα κατά τη φόρτωση του αρχείου
+th:การเปิดไฟล์ผิดพลาด
 -
 Could not open Printer
 de:Konnte den Drucker nicht ansprechen.
@@ -1185,6 +1241,7 @@ cn:不能打开打印机
 sv:Kan inte anropa skrivaren.
 cz:Není možné otevřít tiskárnu
 gr:Δε μπορεί να ανοίξει ο εκτυπωτής
+th:ไม่สามารถเปิดเครื่องพิมพ์ได้
 -
 Printing problem.
 de:Druckerproblem
@@ -1207,6 +1264,7 @@ cn:打印问题。
 sv:Utskriftsproblem.
 cz:Problém s tiskem
 gr:Πρόβλημα εκτύπωσης
+th:การพิมพ์เกิดปัญหา
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1221,3 +1279,4 @@ cn:提供翻印
 sv:Bidra med översättning
 cz:Zašli překlad
 gr:Βοήθησε στη μετάφραση
+th:ช่วยเหลือในการแปล
