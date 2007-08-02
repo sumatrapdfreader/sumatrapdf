@@ -1083,6 +1083,8 @@ void DisplayModel::zoomBy(double zoomFactor)
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     if (newZoom > ZOOM_MAX)
         return;
+    if (newZoom < ZOOM_MIN)
+        return;
     zoomTo(newZoom);
 }
 
