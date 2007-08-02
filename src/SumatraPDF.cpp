@@ -2277,15 +2277,57 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (!hbmp)
             continue;
 
+        // Frame info
+        int fx = xDest, fy = yDest, fw = bmpDx - 4, fh = bmpDy - 4;
+        // Shadow info
+        int sx = fx + 4, sy = fy + 4, sw = fw, sh = fh;
+        // Adjust frame/shadow info base on page/bitmap size
+        if (bmpDy < currPageDy) {
+            if (yDest <= 0) {
+                sy = fy;
+                sh = sh + 4;
+                fy = fy - 1;
+                if (yDest + bmpDy < currPageDy) {
+                    sh = sh + 5;
+                    fh = fh + 6;
+                }
+            }
+            else {
+                sh = sh + 4;
+                fh = fh + 6;
+            }
+        }
+        if (bmpDx < currPageDx) {
+            fw = sw = bmpDx + 1;
+            if (xDest <= 0) {
+                fx = fx - 1;
+            }
+        }
+        // Draw shadow
+        RECT rc;
+        HBRUSH br = CreateSolidBrush(RGB(0x44, 0x44, 0x44));
+        rect_set(&rc, sx, sy, sw, sh);
+        FillRect(hdc, &rc, br);
+        DeleteBrush(br);
+
+        // Draw frame
+        HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x88, 0x88, 0x88));
+        SelectObject(hdc, pe);
+        DrawLineSimple(hdc, fx, fy, fx+fw-1, fy);
+        DrawLineSimple(hdc, fx, fy, fx, fy+fh-1);
+        DrawLineSimple(hdc, fx+fw-1, fy, fx+fw-1, fy+fh-1);
+        DrawLineSimple(hdc, fx, fy+fh-1, fx+fw-1, fy+fh-1);
+        DeletePen(pe);
+
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
             SelectObject(bmpDC, hbmp);
 #if 0
             if ((currPageDx != renderedBmpDx) || (currPageDy != renderedBmpDy))
-                StretchBlt(hdc, xDest, yDest, bmpDx, bmpDy, bmpDC, xSrc, ySrc, renderedBmpDx, renderedBmpDy, SRCCOPY);
+                StretchBlt(hdc, fx+1, fy+1, fw-2, fh-2, bmpDC, xSrc, ySrc, renderedBmpDx, renderedBmpDy, SRCCOPY);
             else
 #endif
-                BitBlt(hdc, xDest, yDest, bmpDx, bmpDy, bmpDC, xSrc, ySrc, SRCCOPY);
+                BitBlt(hdc, fx+1, fy+1, fw-2, fh-2, bmpDC, xSrc, ySrc, SRCCOPY);
             DeleteDC(bmpDC);
         }
         DeleteObject(hbmp);
