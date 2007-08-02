@@ -6,7 +6,7 @@
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Refer to MSDN for the latest info on corresponding values for different platforms.
 #ifndef WINVER
-#define WINVER 0x0410
+#define WINVER 0x0500
 #endif
 
 #ifndef _WIN32_WINNT 
@@ -136,7 +136,7 @@ public:
     void EnterFullscreen();
     void ExitFullscreen();
 private:
-    bool m_wasToolbarVisible;
+    BOOL m_wasToolbarVisible;
     long m_stylePrev;
     HMENU m_menuPrev;
     RECT m_frameRc;

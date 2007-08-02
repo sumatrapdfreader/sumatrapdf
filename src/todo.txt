@@ -1,11 +1,12 @@
-Short term todo (before next 0.7 release):
-
-Long term todo:
+Short term todo (before next 0.8 release):
+* finish fullscreen
 * crash reporting with breakpad
 * use bencoding for preferences instead of ad-hoc text format
-* find
 * show table of contents
 * check for new version on-line
+
+Long term todo:
+* find
 * show keybindings in help
 * better, animated about screen
 * a nicer way to show selected text

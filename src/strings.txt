@@ -353,6 +353,8 @@ cz:Otočit zobrazení doprava
 gr:Περιστροφή δεξιά
 th:หมุนขวา
 -
+Fullscreen
+-
 Show toolbar
 hu:Eszköztár
 pl:Pokaż toolbar

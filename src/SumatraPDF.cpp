@@ -595,6 +595,8 @@ MenuDef menuDefView[] = {
     { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT },
     { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT },
     { SEP_ITEM, 0 },
+    { _TRN("Fullscreen"),                  IDM_VIEW_FULLSCREEN },
+    { SEP_ITEM, 0 },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR },
     { SEP_ITEM, 0 },
     { _TRN("Use MuPDF rendering engine"),  IDM_VIEW_USE_FITZ },
@@ -1377,7 +1379,8 @@ static void MenuUpdateLanguage(WindowInfo *win) {
 
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
-        IDM_VIEW_SINGLE_PAGE, IDM_VIEW_FACING, IDM_VIEW_CONTINUOUS, IDM_VIEW_CONTINUOUS_FACING,
+        IDM_VIEW_SINGLE_PAGE, IDM_VIEW_FACING, IDM_VIEW_CONTINUOUS, 
+        IDM_VIEW_CONTINUOUS_FACING, IDM_VIEW_FULLSCREEN,
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_ZOOM_FIT_PAGE,
         IDM_ZOOM_ACTUAL_SIZE, IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_6400, IDM_ZOOM_3200,
@@ -4226,6 +4229,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_GOTO_PAGE:
                     OnMenuGoToPage(win);
+                    break;
+
+                case IDM_VIEW_FULLSCREEN:
+                    OnMenuViewFullscreen(win);
                     break;
 
                 case IDM_VIEW_CONTINUOUS_FACING:

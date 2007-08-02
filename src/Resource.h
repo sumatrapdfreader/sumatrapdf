@@ -52,6 +52,7 @@
 #define IDM_VIEW_USE_FITZ               437
 #define IDM_SAVEAS                      438
 #define IDM_CONTRIBUTE_TRANSLATION      439
+#define IDM_VIEW_FULLSCREEN             440
 #define IDM_LANG_EN                     450
 #define IDM_LANG_FR                     451
 #define IDM_LANG_PL                     452
