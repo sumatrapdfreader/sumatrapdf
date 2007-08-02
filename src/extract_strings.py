@@ -198,6 +198,9 @@ def dump_diffs(strings_dict, strings):
         if SS_ONLY_IN_TXT == str_state:
             print "'%s'" % s
 
+def langs_sort_func(x,y):
+    return cmp(len(y[1]),len(x[1]))
+
 def dump_missing_per_language(strings_dict, dump_strings=False):
     untranslated_dict = {}
     # strings that don't need to be translated
@@ -216,7 +219,9 @@ def dump_missing_per_language(strings_dict, dump_strings=False):
             if not found_translation:
                 untranslated.append(txt)
         untranslated_dict[lang] = untranslated
-    for (lang, untranslated) in untranslated_dict.items():
+    items = untranslated_dict.items()
+    items.sort(langs_sort_func)
+    for (lang, untranslated) in items:
         print "Language %s: %3d untranslated" % (lang, len(untranslated))
         if not dump_strings: continue
         for u in untranslated:
