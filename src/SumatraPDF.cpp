@@ -3624,6 +3624,71 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
+void WindowInfo::EnterFullscreen()
+{
+    if (!IsWindowVisible(hwndFrame)) return;
+
+    int x, y, w, h;
+    MONITORINFOEX mi;
+    HMONITOR m = MonitorFromWindow(hwndFrame, MONITOR_DEFAULTTONEAREST);
+    if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi)) {
+        x = 0;
+        y = 0;
+        w = GetSystemMetrics(SM_CXSCREEN);
+        h = GetSystemMetrics(SM_CYSCREEN);
+    }
+    else {
+        x = mi.rcMonitor.left;
+        y = mi.rcMonitor.top;
+        w = rect_dx(&mi.rcMonitor);
+        h = rect_dy(&mi.rcMonitor);
+    }
+    long ws = m_stylePrev = GetWindowLong(hwndFrame, GWL_STYLE);
+    ws &= WS_MAXIMIZE | ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+
+    m_menuPrev = GetMenu(hwndFrame);
+    m_wasToolbarVisible = IsWindowVisible(hwndToolbar);
+    GetWindowRect(hwndFrame, &m_frameRc);
+
+    SetMenu(hwndFrame, NULL);
+    ShowWindow(hwndReBar, SW_HIDE);
+    SetWindowLong(hwndFrame, GWL_STYLE, ws);
+    SetWindowPos(hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
+    SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+}
+
+void WindowInfo::ExitFullscreen()
+{
+    if (!m_stylePrev) return;
+    if (m_wasToolbarVisible)
+        ShowWindow(hwndReBar, SW_SHOW);
+    SetMenu(hwndFrame, m_menuPrev);
+    SetWindowLong(hwndFrame, GWL_STYLE, m_stylePrev);
+    SetWindowPos(hwndFrame, HWND_NOTOPMOST,
+                 m_frameRc.left, m_frameRc.top,
+                 rect_dx(&m_frameRc), rect_dy(&m_frameRc),
+                 SWP_FRAMECHANGED|SWP_NOZORDER);
+    m_stylePrev = 0;
+}
+
+static void OnMenuViewFullscreen(WindowInfo *current)
+{
+    static bool fullscreen = false;
+    
+    assert(current);
+
+    WindowInfo* win = gWindowList;
+    fullscreen = !fullscreen;
+    while (win) {
+        if (fullscreen)
+            win->EnterFullscreen();
+        else
+            win->ExitFullscreen();
+        win = win->next;
+    }
+    SetFocus(current->hwndFrame);
+}
+
 #define KEY_PRESSED_MASK 0x8000
 static bool WasKeyDown(int virtKey)
 {
