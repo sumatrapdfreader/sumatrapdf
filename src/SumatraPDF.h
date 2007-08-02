@@ -133,7 +133,13 @@ public:
      * to user coordinates for each page which has not empty intersection with it */
     SelectionOnPage *selectionOnPage;
 
+    void EnterFullscreen();
+    void ExitFullscreen();
 private:
+    bool m_wasToolbarVisible;
+    long m_stylePrev;
+    HMENU m_menuPrev;
+    RECT m_frameRc;
     RECT m_canvasRc;
 };
 #endif
