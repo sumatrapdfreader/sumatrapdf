@@ -5,6 +5,7 @@
 # What follows below is a line listing all languages supported
 # in this file followed by translations themselves
 # Contributors:
+# Francisco Fuchs (pontocinza.blogspot.com) - Brazilian Portuguese
 # Lars Wohlfahrt (www.eviltux.de) - German
 # Hakan ATA - Turkish
 # Яўген Змачынскі - Belarusian
@@ -30,9 +31,10 @@
 # geodimo - Greek
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br
 -
 &File
+br:&Arquivo
 hu:&Fájl
 pl:Plik
 de:&Datei
@@ -57,6 +59,7 @@ th:แฟ้ม
 pt:&Ficheiro
 -
 &Open\tCtrl-O
+br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
 de:&Öffnen\tCtrl-O
@@ -81,6 +84,7 @@ th:เปิด\tCtrl-O
 pt:&Abrir\tCtrl-O
 -
 &Close\tCtrl-W
+br:&Fechar\tCtrl-W
 hu:Be&zárás\tCtrl-W
 pl:&Zamknij\tCtrl-W
 de:&Schließen\tCtrl-W
@@ -105,6 +109,7 @@ th:ปิด\tCtrl-W
 pt:&Fechar\tCtrl-W
 -
 &Save as
+br:&Salvar como...
 hu:Ment&és másként
 de:&Speichern unter...
 pl:Zapisz jako
@@ -129,6 +134,7 @@ th:บันทึกเป็น
 pt:Guardar como
 -
 &Print
+br:&Imprimir
 hu:Nyomt&atás
 pl:Drukuj
 de:&Drucken
@@ -153,6 +159,7 @@ th:พิมพ์
 pt:&Imprimir
 -
 Make SumatraPDF a default PDF reader
+br:Fazer do SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
 de:Standardmäßig PDFs öffnen
@@ -177,6 +184,7 @@ th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหล�
 pt:Fazer de SumatraPDF o leitor de PDF pedefenido
 -
 E&xit\tCtrl-Q
+br:Sai&r\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
 pl:Wyjdź\tCtrl-Q
 de:E&nde\tCtrl-Q
@@ -201,6 +209,7 @@ th:ออก\tCtrl-Q
 pt:&Sair\tCtrl-Q
 -
 &View
+br:&Ver
 hu:&Nézet
 pl:&Widok
 de:&Ansicht
@@ -225,6 +234,7 @@ th:มุมมอง
 pt:&Ver
 -
 Single page
+br:Página única
 hu:Egy oldalas
 pl:Jedna strona
 de:Einzelne Seite
@@ -249,6 +259,7 @@ th:หน้าเดี่ยว
 pt:Página Única
 -
 Facing
+br:Página dupla
 hu:Oldalpár
 pl:Na przeciwko
 de:Doppelseite
@@ -273,6 +284,7 @@ th:เป็นหน้า
 pt:Página Dupla
 -
 Continuous
+br:Contínuo
 hu:Folyamatos
 pl:Ciągły
 de:Fortlaufend
@@ -297,6 +309,7 @@ th:ต่อเนื่อง
 pt:Contínua
 -
 Continuous facing
+br:Página dupla contínua
 hu:Folyamatos oldalpár
 pl:Ciągły na przeciwko
 de:Fortlaufende Doppelseite
@@ -321,6 +334,7 @@ th:เป็นหน้าต่อเนื่อง
 pt:Página Dupla Contínua
 -
 Rotate left
+br:Girar à esquerda
 hu:Forgatás balra
 pl:Obróć w lewo
 de:Drehung links
@@ -345,6 +359,7 @@ th:หมุนซ้าย
 pt:Rodar à esquerda
 -
 Rotate right
+br:Girar à direita
 hu:Forgatás jobbra
 pl:Obróć w prawo
 de:Drehung rechts
@@ -368,9 +383,11 @@ gr:Περιστροφή δεξιά
 th:หมุนขวา
 pt:Rodar à direita
 -
-Fullscreen
+Fullscreen\tF11
+pl:Na cały ekran\tF11
 -
 Show toolbar
+br:Mostrar barra de ferramentas
 hu:Eszköztár
 pl:Pokaż toolbar
 de:Werkzeugleiste zeigen
@@ -395,6 +412,7 @@ th:แสดงแถบเครื่องมือ
 pt:Mostrar barra de ferramentas
 -
 Use MuPDF rendering engine
+br:Usar motor de renderização MuPDF
 hu:MuPDF megjelenítő motor
 pl:Użyj MuPDF do renderowania
 de:MuPDF Renderingengine benutzen
@@ -419,6 +437,7 @@ th:ใช้ MuPDF rendering engine
 pt:Usar motor renderizador MuPDF
 -
 &Go To
+br:Ir &para
 hu:U&grás
 pl:Idź do
 de:&Gehe zu
@@ -443,6 +462,7 @@ th:ไปที่
 pt:Ir para
 -
 Next Page
+br:Página seguinte
 hu:Következő oldal
 pl:Następna strona
 de:Nächste Seite
@@ -467,6 +487,7 @@ th:หน้าถัดไป
 pt:Próxima página
 -
 Previous Page
+br:Página anterior
 hu:Előző oldal
 pl:Poprzednia strona
 de:Vorherige Seite
@@ -491,6 +512,7 @@ th:หน้าก่อนหน้า
 pt:Página anterior
 -
 First Page\tHome
+br:Primeira página\tHome
 hu:Első oldal\tHome
 pl:Pierwsza strona\tHome
 de:Erste Seite\tHome
@@ -515,6 +537,7 @@ th:หน้าแรก
 pt:Primeira página\tHome
 -
 Last Page\tEnd
+br:Última página\tEnd
 hu:Utolsó oldal\tEnd
 pl:Ostatnia strona\tEnd
 de:Letzte Seite\tEnd
@@ -539,6 +562,7 @@ th:หน้าสุดท้าย
 pt:Última página\tEnd
 -
 Page...\tCtrl-G
+br:Página...\tCtrl-G
 hu:Oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
 de:Seite...
@@ -563,6 +587,7 @@ th:หน้า...\tCtrl-G
 pt:Página...\tCtrl-G
 -
 &Zoom
+br:&Zoom
 hu:&Nagyítás
 pl:Powiększenie
 de:&Zoom
@@ -587,6 +612,7 @@ th:ขยาย
 pt:&Zoom
 -
 Fit &Page\tCtrl-0
+br:&Página inteira\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
 pl:Dopasuj do strony\tCtrl-0
 de:An Seite anpassen\tCtrl-0
@@ -611,6 +637,7 @@ th:พอดีหน้า\tCtrl-0
 pt:Ajustar &Página\tCtrl-0
 -
 Act&ual Size\tCtrl-1
+br:&Tamanho real\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
 pl:Prawdziwy rozmiar\tCtrl-1
 de:Tat&sächliche Größe\tCtrl-1
@@ -635,6 +662,7 @@ th:ขนาดจริง\tCtrl-1
 pt:Tamanho real\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
+br:Ajustar pela l&argura\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
 pl:Dopasuj do szerokości\tCtrl-2
 de:An Breite anpassen\tCtrl-2
@@ -685,6 +713,7 @@ pt:Largura de página\tCtrl-2
 8.33%
 -
 &Language
+br:I&dioma
 hu:&Nyelv
 pl:&Język
 fr:&Langue
@@ -709,6 +738,7 @@ th:ภาษา
 pt:&Linguagem
 -
 English
+br:Inglês
 hu:Angol
 pl:Angielski
 fr:Anglais
@@ -733,6 +763,7 @@ pt:Inglês
 -
 Belarusian
 hu:Belorusz
+br:Bielorusso
 fr:Biélorusse
 de:Weißrussisch
 ja:ベラルーシ語
@@ -752,6 +783,7 @@ pt:Bielorusso
 -
 Danish
 hu:Dán
+br:Dinamarquês
 pl:Dański
 it:Danese
 nl:Deens
@@ -768,6 +800,7 @@ th:Danish
 pt:Dinamarquês
 -
 German
+br:Alemão
 hu:Német
 pl:Niemiecki
 de:Deutsch
@@ -791,6 +824,7 @@ th:German
 pt:Alemão
 -
 Polish
+br:Polonês
 hu:Lengyel
 pl:Polski
 fr:Polonais
@@ -814,6 +848,7 @@ pt:Polaco
 -
 Japanese
 hu:Japán
+br:Japonês
 pl:Japoński
 fa:ژاپنی
 fr:Japonais
@@ -834,6 +869,7 @@ pt:Japonês
 -
 Hungarian
 hu:Magyar
+br:Húngaro
 pl:Węgierski
 fr:Hongrois
 fa:مجارستانی
@@ -854,6 +890,7 @@ pt:Hungaro
 -
 Persian
 hu:Perzsa
+br:Persa
 pl:Perski
 it:Persiano
 es:Persa
@@ -869,6 +906,7 @@ th:Persian
 pt:Persa
 -
 French
+br:Francês
 hu:Francia
 pl:Francuski
 fr:Français
@@ -892,6 +930,7 @@ th:French
 pt:Francês
 -
 Turkish
+br:Turco
 hu:Török
 pl:Turecki
 fr:Turc
@@ -914,6 +953,7 @@ th:Turkish
 pt:Turco
 -
 Tamil
+br:Tâmil
 de:Tamilische Sprache
 fa:زبان تامیل
 fr:Tamoul
@@ -934,6 +974,7 @@ pt:Tamil
 -
 Italian
 hu:Olasz
+br:Italiano
 pl:Włoski
 it:Italiano
 fr:Italien
@@ -951,6 +992,7 @@ pt:Italiano
 -
 Dutch
 hu:Holland
+br:Holandês
 pl:Holenderski
 nl:Nederlands
 de:Höllandisch
@@ -967,6 +1009,7 @@ pt:Holandês
 -
 Spanish
 hu:Spanyol
+br:Espanhol
 es:Español
 pl:Hiszpański
 nl:Spaans
@@ -982,6 +1025,7 @@ pt:Espanhol
 -
 Croatian
 hu:Horvát
+br:Croata
 pl:Chorwacki
 de:Kroatische
 hr:Hrvatski
@@ -994,6 +1038,7 @@ pt:Croata
 -
 Russian
 hu:Orosz
+br:Russo
 pl:Rosyjski
 ru:Русский
 ar:الروسية
@@ -1004,6 +1049,7 @@ pt:Russo
 -
 Arabic
 hu:Arab
+br:Árabe
 pl:Arabski
 ru:Арабский
 ar:العربية
@@ -1042,7 +1088,11 @@ th:ไทย
 Portuguese (Portugal)
 pt:Português
 -
+Brazillian
+pl:Brazylijski
+-
 &Help
+br:A&juda
 hu:&Súgó
 pl:&Pomoc
 de:&Hilfe
@@ -1067,6 +1117,7 @@ th:ช่วยเหลือ
 pt:&Ajuda
 -
 &Visit website
+br:Visitar o &Website
 hu:&Weboldal
 pl:Strona www
 de:&Website
@@ -1091,6 +1142,7 @@ th:เยี่ยมเว็บไชด์
 pt:Visitar a página Web
 -
 &About
+br:S&obre
 hu:Név&jegy
 pl:O programie
 de:&Über
@@ -1115,6 +1167,7 @@ th:เกี่ยวกับ
 pt:Acerca de...
 -
 Open
+br:Abrir
 hu:Megny&itás
 pl:Otwórz
 de:&Öffnen
@@ -1139,6 +1192,7 @@ th:เปิด
 pt:Abrir
 -
 Zoom In
+br:Zoom In
 de:Reinzoomen
 hu:Nagyítás
 pl:Powiększ
@@ -1163,6 +1217,7 @@ th:ขยาย
 pt:Aproximar Zoom
 -
 Zoom Out
+br:Zoom Out
 de:Rauszoomen
 hu:Kicsinyítés
 pl:Pomniejsz
@@ -1187,6 +1242,7 @@ th:ย่อ
 pt:Afastar Zoom
 -
 About SumatraPDF
+br:Sobre o SumatraPDF
 de:Über SumatraPDF
 hu:SumatraPDF névjegye
 pl:O programie
@@ -1211,6 +1267,7 @@ th:เกี่ยวกับ SumatraPDF
 pt:Acerca de SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
+br:SumatraPDF tornou-se o leitor PDF padrão.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
 hu:A SumatraPDF az alapértelmezett PDF olvasó.
 pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
@@ -1235,6 +1292,7 @@ th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป�
 pt:SumatraPDF é agora o leitor de PDF por defeito.
 -
 Failed to save a file
+br:Erro ao salvar o arquivo.
 de:Fehler beim Speichern der Datei.
 hu:Nem lehet menteni a fájlt.
 pl:Problem przy zapisywaniu pliku.
@@ -1259,6 +1317,7 @@ th:การบันทึกไฟล์ล้มเหลว
 pt:Erro ao guardar arquivo.
 -
 Error loading PDF file.
+br:Erro ao abrir o arquivo PDF.
 de:Fehler beim Laden der Datei
 hu:Hiba a PDF betöltése közben.
 pl:Problem przy otwarzaniu pliku.
@@ -1283,6 +1342,7 @@ th:การเปิดไฟล์ผิดพลาด
 pt:Erro a carregar ficheiro PDF.
 -
 Could not open Printer
+br:Erro ao acessar a impressora.
 de:Konnte den Drucker nicht ansprechen.
 hu:Nem lehet megnyitni a Nyomtatót.
 pl:Drukarka niedostępna.
@@ -1307,6 +1367,7 @@ th:ไม่สามารถเปิดเครื่องพิมพ์�
 pt:Não foi possivel abrir a impressora.
 -
 Printing problem.
+br:Problema de impressão.
 de:Druckerproblem
 hu:Nyomtatási probléma.
 pl:Problem z drukowaniem.

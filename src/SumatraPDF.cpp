@@ -253,6 +253,7 @@ MenuDef menuDefLang[] = {
     { _TRN("English"),     IDM_LANG_EN },
     { _TRN("Arabic"),      IDM_LANG_AR },
     { _TRN("Belarusian"),  IDM_LANG_BY },
+    { _TRN("Brazillian"),  IDM_LANG_BR },
     { _TRN("Chinese Simplified"), IDM_LANG_CN },
     { _TRN("Croatian"),    IDM_LANG_HR },
     { _TRN("Czech"),       IDM_LANG_CZ },
@@ -304,6 +305,7 @@ struct LangDef {
     {"gr", IDM_LANG_GR},
     {"th", IDM_LANG_TH},
     {"pt", IDM_LANG_PT},
+    {"br", IDM_LANG_BR},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -331,6 +333,7 @@ static const char *g_lcidLangMap[] = {
     "gr", NULL, // Greek
     "th", NULL, // Thai
     "pt", NULL, // Portuguese (Portugal)
+    "br", NULL, // Portuguese (Brazillian)
     NULL
 };
 
@@ -4318,6 +4321,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_GR:
                 case IDM_LANG_TH:
                 case IDM_LANG_PT:
+                case IDM_LANG_BR:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:
