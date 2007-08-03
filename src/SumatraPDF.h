@@ -133,6 +133,8 @@ public:
      * to user coordinates for each page which has not empty intersection with it */
     SelectionOnPage *selectionOnPage;
 
+    static bool fullscreen;
+    bool IsFullscreen() { return fullscreen; }
     void EnterFullscreen();
     void ExitFullscreen();
 private:

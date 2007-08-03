@@ -1815,8 +1815,6 @@ static void WindowInfo_ResizeToWindow(WindowInfo *win)
 
 void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo)
 {
-    bool fullScreen = false;
-
     assert(win);
     if (!win) return;
     assert(win->dm);
@@ -1829,7 +1827,7 @@ void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo)
     int displayDy = GetDeviceCaps(hdc, VERTRES);
 
     int  dx, dy;
-    if (fullScreen) {
+    if (win->IsFullscreen()) {
         /* TODO: fullscreen not yet supported */
         assert(0);
         dx = displayDx;
@@ -3672,6 +3670,8 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
+bool WindowInfo::fullscreen = false;
+
 void WindowInfo::EnterFullscreen()
 {
     if (!IsWindowVisible(hwndFrame)) return;
@@ -3721,14 +3721,11 @@ void WindowInfo::ExitFullscreen()
 
 static void OnMenuViewFullscreen(WindowInfo *current)
 {
-    static bool fullscreen = false;
-    
     assert(current);
-
     WindowInfo* win = gWindowList;
-    fullscreen = !fullscreen;
+    WindowInfo::fullscreen = !WindowInfo::fullscreen;
     while (win) {
-        if (fullscreen)
+        if (WindowInfo::fullscreen)
             win->EnterFullscreen();
         else
             win->ExitFullscreen();
@@ -3814,7 +3811,9 @@ static void OnChar(WindowInfo *win, int key)
 
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
-    if (VK_SPACE == key) {
+    if (VK_ESCAPE == key && win->IsFullscreen()) {
+        OnMenuViewFullscreen(win);
+    } else if (VK_SPACE == key) {
         win->dm->scrollYByAreaDy(true, true);
     } else if (VK_BACK == key) {
         win->dm->scrollYByAreaDy(false, true);
