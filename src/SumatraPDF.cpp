@@ -598,7 +598,7 @@ MenuDef menuDefView[] = {
     { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT },
     { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT },
     { SEP_ITEM, 0 },
-    { _TRN("Fullscreen"),                  IDM_VIEW_FULLSCREEN },
+    { _TRN("Fullscreen\tF11"),             IDM_VIEW_FULLSCREEN },
     { SEP_ITEM, 0 },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR },
     { SEP_ITEM, 0 },
