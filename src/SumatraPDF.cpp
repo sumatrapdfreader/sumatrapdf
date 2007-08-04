@@ -2751,7 +2751,7 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
-static void OnMouseRightButtonDown(WindowInfo *win, int x, int y)
+static void OnDraggingStart(WindowInfo *win, int x, int y)
 {
     assert(win);
     if (!win) return;
@@ -2771,7 +2771,7 @@ static void OnMouseRightButtonDown(WindowInfo *win, int x, int y)
     }
 }
 
-static void OnMouseRightButtonUp(WindowInfo *win, int x, int y)
+static void OnDraggingStop(WindowInfo *win, int x, int y)
 {
     PdfLink *       link;
     int             dragDx, dragDy;
@@ -2794,7 +2794,6 @@ static void OnMouseRightButtonUp(WindowInfo *win, int x, int y)
         WinMoveDocBy(win, dragDx, -dragDy*2);
         win->dragPrevPosX = x;
         win->dragPrevPosY = y;
-        win->mouseAction = MA_IDLE;
         SetCursor(gCursorArrow);
         ReleaseCapture();            
         return;
@@ -2856,12 +2855,8 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     }
 }
 
-static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y)
+static void OnSelectionStart(WindowInfo *win, int x, int y)
 {
-    //DBG_OUT("Right button clicked on %d %d\n", x, y);
-    assert (win);
-    if (!win) return;
-
     if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_IDLE) {
         win->documentBlocked = true;
         DeleteOldSelectionInfo (win);
@@ -2879,7 +2874,41 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y)
     }
 }
 
-static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
+static void OnSelectionStop(WindowInfo *win, int x, int y)
+{
+    if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_SELECTING) {
+        assert (win->dm);
+        if (!win->dm) return;
+        win->documentBlocked = false;
+
+        win->selectionRect.dx = abs (x - win->selectionRect.x);
+        win->selectionRect.dy = abs (y - win->selectionRect.y);
+        win->selectionRect.x = min (win->selectionRect.x, x);
+        win->selectionRect.y = min (win->selectionRect.y, y);
+
+        if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
+            win->showSelection = false;
+        } else {
+            ConvertSelectionRectToSelectionOnPage (win);
+            CopySelectionTextToClipboard (win);
+        }
+        triggerRepaintDisplayNow(win);
+    }
+}
+
+static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
+{
+    //DBG_OUT("Right button clicked on %d %d\n", x, y);
+    assert (win);
+    if (!win) return;
+
+    if ((key & MK_CONTROL) != 0)
+        OnSelectionStart(win, x, y);
+    else
+        OnDraggingStart(win, x, y);
+}
+
+static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
 {
     assert (win);
     if (!win) return;
@@ -2892,25 +2921,12 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
         return;
     }
 
-    if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_SELECTING) {
-        assert (win->dm);
-        if (!win->dm) return;
-        win->documentBlocked = false;
+    if ((key & MK_CONTROL) != 0)
+        OnSelectionStop(win, x, y);
+    else
+        OnDraggingStop(win, x, y);
 
-        win->selectionRect.dx = abs (x - win->selectionRect.x);
-        win->selectionRect.dy = abs (y - win->selectionRect.y);
-        win->selectionRect.x = min (win->selectionRect.x, x);
-        win->selectionRect.y = min (win->selectionRect.y, y);
-
-        win->mouseAction = MA_IDLE;
-        if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
-            win->showSelection = false;
-        } else {
-            ConvertSelectionRectToSelectionOnPage (win);
-            CopySelectionTextToClipboard (win);
-        }
-        triggerRepaintDisplayNow(win);
-    }
+    win->mouseAction = MA_IDLE;
 }
 
 #define ABOUT_ANIM_TIMER_ID 15
@@ -4084,22 +4100,12 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
         case WM_LBUTTONDOWN:
             if (win)
-                OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_LBUTTONUP:
             if (win)
-                OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            break;
-
-        case WM_RBUTTONDOWN:
-            if (win)
-                OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            break;
-
-        case WM_RBUTTONUP:
-            if (win)
-                OnMouseRightButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
         case WM_SETCURSOR:
