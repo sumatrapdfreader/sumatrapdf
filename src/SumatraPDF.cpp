@@ -4022,7 +4022,8 @@ static void DoFindText(WindowInfo *win, Unicode *str, int len)
 
         RectI pageOnScreen;
         PdfPageInfo *pdfPage = NULL;
-        bool found = true, matched = false;
+        GBool found = true;
+        bool matched = false;
         while (true) {
             double left = 0.0, right = 0.0, top = 0.0, bottom = 0.0;
             if (!matched)
@@ -4107,27 +4108,39 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
 }
 
+// TODO: after changing the language we have to change the text of the label,
+// resize the label and move text box. Right now 
+#define FIND_TXT_POS_X 146
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
-    const wchar_t *text = L"Find:";  // _TRW("Find:")
-    int height, lenght = wcslen(text);
-    HWND find, label;
-    RECT rect;
+    const WCHAR *text = _TRW("Find:");
     SIZE size;
     HDC dc = GetWindowDC(win->hwndToolbar);
-    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-    GetTextExtentPoint32W(dc, text, lenght, &size);
+    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
+    int text_len = wcslen(text);
+    HFONT prevFnt = (HFONT)SelectObject(dc, fnt);
+    GetTextExtentPoint32W(dc, text, text_len, &size);
+    SelectObject(dc, prevFnt);
     ReleaseDC(win->hwndToolbar, dc);
 
-    find = CreateWindowEx(WS_EX_CLIENTEDGE, "edit", "",
-                          WS_VISIBLE|WS_CHILD|WS_BORDER|ES_AUTOHSCROLL,
-                          150, 0, 160, 22, win->hwndToolbar, (HMENU)0, hInst, NULL);
-    GetWindowRect(find, &rect);
-    height = rect.bottom - rect.top + 1;
-    label = CreateWindowExW(0, L"static", text, WS_VISIBLE|WS_CHILD,
-                         150, (height - size.cy) / 2 + 1, size.cx + 2, size.cy,
+    HWND find = CreateWindowEx(WS_EX_CLIENTEDGE, "edit", "",
+                          WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
+                          FIND_TXT_POS_X, 0, 160, 22, win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    // TODO: on XP when using new controls, the text is being drawn on beige
+    // background which doesn't look good on the toolbar.
+    // We need to make text drawing transparent. One way is to subclass static
+    // control and over-ride WM_PAINT and use SetBkMode(dc, TRANSPARENT) before
+    // drawing. Another one would be to handle WM_CTLCOLOR and call 
+    // SetBkMode(dc,TRANSPARENT) there, but that probably won't work since parent
+    // window is toolbar
+    RECT findWndRect;
+    GetWindowRect(find, &findWndRect);
+    int findWndDy = rect_dy(&findWndRect) + 1;
+    HWND label = CreateWindowExW(0, L"static", text, WS_VISIBLE | WS_CHILD,
+                         FIND_TXT_POS_X, (findWndDy - size.cy) / 2 - 1, size.cx + 2, size.cy,
                          win->hwndToolbar, (HMENU)0, hInst, NULL);
-    MoveWindow(find, 150 + size.cx + 2, 0, 160, 22, false);
+    MoveWindow(find, FIND_TXT_POS_X + size.cx + 2, 0, 160, 22, false);
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
     if (!DefWndProcFindBox)
@@ -4966,7 +4979,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     INITCOMMONCONTROLSEX cex;
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;
+    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
     InitCommonControlsEx(&cex);
 
     argListRoot = StrList_FromCmdLine(lpCmdLine);

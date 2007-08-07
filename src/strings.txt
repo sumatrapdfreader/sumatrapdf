@@ -1166,6 +1166,9 @@ gr:&Πέρι...
 th:เกี่ยวกับ
 pt:Acerca de...
 -
+Find:
+pl:Szukaj:
+-
 Open
 br:Abrir
 hu:Megny&itás
