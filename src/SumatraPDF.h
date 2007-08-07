@@ -100,6 +100,8 @@ public:
     HWND            hwndCanvas;
     HWND            hwndToolbar;
     HWND            hwndReBar;
+    HWND            hwndFindBox;
+    HWND            hwndTocBox;
 
     HDC             hdc;
     BITMAPINFO *    dibInfo;

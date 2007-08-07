@@ -23,6 +23,7 @@
 #include "FileHistory.h"
 #include "AppPrefs.h"
 #include "DisplayModelSplash.h"
+#include "TextOutputDev.h"
 
 /* TODO: this and StandardSecurityHandler::getAuthData() and new GlobalParams
    should be moved to another file (PopplerInit(), PopplerDeinit() */
@@ -228,7 +229,8 @@ ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"), 0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
     { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"), 0 },
-    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 }
+    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 }
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -1684,6 +1686,7 @@ Exit:
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
+    InvalidateRect(win->hwndFindBox, NULL, true);
     return win;
 }
 
@@ -3859,6 +3862,9 @@ static void OnChar(WindowInfo *win, int key)
             win->dm->zoomBy(ZOOM_OUT_FACTOR);
     } else if ('r' == key) {
         ReloadPdfDocument(win);
+    } else if ('/' == key) {
+        SendMessage(win->hwndFindBox, EM_SETSEL, 0, -1);
+        SetFocus(win->hwndFindBox);
     }
 }
 
@@ -3962,6 +3968,175 @@ static void UpdateToolbarButtonsToolTips(void)
     }        
 }
 
+static RectI MapPageRectToScreen(DisplayModel *dm, PdfPageInfo *pdfPage,
+                            double left, double top, double right, double bottom)
+{
+    double shiftX, shiftY;
+    if (dm->areaOffset.x != 0.0)
+        shiftX = dm->areaOffset.x - pdfPage->currPosX;
+    else
+        shiftX = 0.0;
+
+    if (dm->areaOffset.y != 0.0) {
+        shiftY = dm->areaOffset.y - pdfPage->currPosY + 3.0;
+    }
+    else {
+        shiftY = 0.0;
+    }
+    
+    RectI ri;
+    ri.x = (int)(left + pdfPage->screenX - shiftX);
+    ri.y = (int)(top + pdfPage->screenY - shiftY);
+    ri.dx = (int)ceil(right - left + 1);
+    ri.dy = (int)ceil(bottom - top + 1);
+
+    return ri;
+}
+
+static void DoFindText(WindowInfo *win, Unicode *str, int len)
+{
+    TextOutputDev textOut(NULL, gTrue, gFalse, gFalse);
+    if (!textOut.isOk()) return;
+
+    PDFDoc* doc = NULL;
+    int pageCount = win->dm->pdfEngine()->pageCount();
+    if (gUseFitz)
+        doc = new PDFDoc(new GooString(win->dm->pdfEngine()->fileName()), NULL, NULL, NULL);
+    else
+        doc = ((PdfEnginePoppler*)win->dm->pdfEngine())->pdfDoc();
+
+    assert(doc);
+    if (!doc || !doc->isOk()) {
+        return;
+    }
+
+    double scale = win->dm->zoomReal() * 0.01;
+    double dpi = 72.0 * scale;
+
+    DeleteOldSelectionInfo(win);
+    win->showSelection = false;
+    for (int pageNo = win->dm->currentPageNo(); pageNo <= pageCount; pageNo++) {
+        doc->displayPage(&textOut, pageNo, dpi, dpi, 0, gFalse, gTrue, gFalse);
+        TextPage *textPage = textOut.takeText();
+        if (!textPage) continue;
+
+        RectI pageOnScreen;
+        PdfPageInfo *pdfPage = NULL;
+        bool found = true, matched = false;
+        while (true) {
+            double left = 0.0, right = 0.0, top = 0.0, bottom = 0.0;
+            if (!matched)
+                found = textPage->findText(str, len, gTrue, gTrue, gFalse, gFalse, gFalse, gFalse,
+                                            &left, &top, &right, &bottom);
+            else
+                found = textPage->findText(str, len, gFalse, gTrue, gTrue, gFalse, gFalse, gFalse,
+                                            &left, &top, &right, &bottom);
+            if (!found) break;
+
+            matched = true;
+            if (pageNo != win->dm->currentPageNo())
+                win->dm->goToPage(pageNo, 0);
+            if (!pdfPage)
+                pdfPage = win->dm->getPageInfo(pageNo);
+
+            int scrollX = 0, scrollY = 0;
+            RectI ri = MapPageRectToScreen(win->dm, pdfPage, left, top, right, bottom);
+            if (ri.y + ri.dy > pdfPage->bitmapY + pdfPage->bitmapDy)
+                scrollY = pdfPage->currDy - ri.y;
+            if (ri.x + ri.dx > pdfPage->bitmapX + pdfPage->bitmapDx)
+                scrollX = pdfPage->currDx - ri.x - ri.dx;
+
+            if (!win->showSelection && (scrollX > 0 || scrollY > 0)) {
+                win->dm->goToPage(pageNo, scrollY, scrollX);
+                pdfPage = win->dm->getPageInfo(pageNo);
+                ri = MapPageRectToScreen(win->dm, pdfPage, left, top, right, bottom);
+            }
+
+            if (!win->showSelection) {
+                win->showSelection = true;
+                pageOnScreen.x = pdfPage->screenX;
+                pageOnScreen.y = pdfPage->screenY;
+                pageOnScreen.dx = pdfPage->bitmapDx;
+                pageOnScreen.dy = pdfPage->bitmapDy;
+            }
+
+            RectI intersect;
+            if (RectI_Intersect(&ri, &pageOnScreen, &intersect)) {
+                SelectionOnPage *selOnPage = (SelectionOnPage*)malloc(sizeof(SelectionOnPage));
+                RectD_FromRectI(&selOnPage->selectionPage, &intersect);
+                win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
+                selOnPage->next = win->selectionOnPage;
+                win->selectionOnPage = selOnPage;
+            }
+        }
+        delete textPage;
+
+        if (matched) {
+            triggerRepaintDisplayNow(win);
+            SetFocus(win->hwndFrame);
+            break;
+        }
+    }
+
+    if (gUseFitz) {
+        delete doc;
+    }
+}
+
+static WNDPROC DefWndProcFindBox = NULL;
+static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+    if (!win || !win->dm) {
+        return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+
+    if (WM_CHAR == message) {
+        if (VK_RETURN == wParam) {
+            wchar_t buf[256];
+            int len = GetWindowTextW(hwnd, buf, sizeof(buf));  // sizeof ?!
+            Unicode str[256];
+            for (int i = 0; i < len; i++)
+                str[i] = (Unicode)buf[i];
+            DoFindText(win, str, len);
+        }
+        else if (VK_ESCAPE == wParam || VK_TAB == wParam) {
+            SetFocus(win->hwndFrame);
+        }
+    }
+    return CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
+}
+
+static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
+{
+    const wchar_t *text = L"Find:";  // _TRW("Find:")
+    int height, lenght = wcslen(text);
+    HWND find, label;
+    RECT rect;
+    SIZE size;
+    HDC dc = GetWindowDC(win->hwndToolbar);
+    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    GetTextExtentPoint32W(dc, text, lenght, &size);
+    ReleaseDC(win->hwndToolbar, dc);
+
+    find = CreateWindowEx(WS_EX_CLIENTEDGE, "edit", "",
+                          WS_VISIBLE|WS_CHILD|WS_BORDER|ES_AUTOHSCROLL,
+                          150, 0, 160, 22, win->hwndToolbar, (HMENU)0, hInst, NULL);
+    GetWindowRect(find, &rect);
+    height = rect.bottom - rect.top + 1;
+    label = CreateWindowExW(0, L"static", text, WS_VISIBLE|WS_CHILD,
+                         150, (height - size.cy) / 2 + 1, size.cx + 2, size.cy,
+                         win->hwndToolbar, (HMENU)0, hInst, NULL);
+    MoveWindow(find, 150 + size.cx + 2, 0, 160, 22, false);
+    SetWindowFont(label, fnt, true);
+    SetWindowFont(find, fnt, true);
+    if (!DefWndProcFindBox)
+        DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
+    SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
+    SetWindowLong(find, GWL_USERDATA, (LONG)win);
+    win->hwndFindBox = find;
+}
+
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HWND hwndOwner = win->hwndFrame;
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
@@ -4035,6 +4210,8 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     // partially unpainted if using classic scheme on xp or vista
     //gReBarDyFrame = bIsAppThemed ? 0 : 2;
     gReBarDyFrame = 0;
+    
+    CreateFindBox(win, hInst);
 }
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
