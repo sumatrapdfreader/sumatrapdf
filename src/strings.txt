@@ -163,7 +163,7 @@ br:Fazer do SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
 de:Standardmäßig PDFs öffnen
-fr:Définir SumatraPDF comme lecteur PDf par défaut
+fr:Définir SumatraPDF comme lecteur PDF par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ja:SumatraPDF を既定の PDF リーダーにする
@@ -391,7 +391,7 @@ br:Mostrar barra de ferramentas
 hu:Eszköztár
 pl:Pokaż toolbar
 de:Werkzeugleiste zeigen
-fr:Afficher la barre d'outil
+fr:Afficher la barre d'outils
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
 ja:ツール バーの表示
@@ -784,6 +784,7 @@ pt:Bielorusso
 Danish
 hu:Dán
 br:Dinamarquês
+fr:Danois
 pl:Dański
 it:Danese
 nl:Deens
@@ -891,6 +892,7 @@ pt:Hungaro
 Persian
 hu:Perzsa
 br:Persa
+fr:Perse
 pl:Perski
 it:Persiano
 es:Persa
@@ -993,6 +995,7 @@ pt:Italiano
 Dutch
 hu:Holland
 br:Holandês
+fr:Néerlandais
 pl:Holenderski
 nl:Nederlands
 de:Höllandisch
@@ -1010,6 +1013,7 @@ pt:Holandês
 Spanish
 hu:Spanyol
 br:Espanhol
+fr:Espagnol
 es:Español
 pl:Hiszpański
 nl:Spaans
@@ -1026,6 +1030,7 @@ pt:Espanhol
 Croatian
 hu:Horvát
 br:Croata
+fr:Croate
 pl:Chorwacki
 de:Kroatische
 hr:Hrvatski
@@ -1039,6 +1044,7 @@ pt:Croata
 Russian
 hu:Orosz
 br:Russo
+fr:Russe
 pl:Rosyjski
 ru:Русский
 ar:الروسية
@@ -1050,6 +1056,7 @@ pt:Russo
 Arabic
 hu:Arab
 br:Árabe
+fr:Arabe
 pl:Arabski
 ru:Арабский
 ar:العربية
@@ -1060,6 +1067,7 @@ pt:Árabe
 -
 Chinese Simplified
 hu:Egyszerűsített Kínai
+fr:Chinois simplifié
 pl:Chiński uproszczony
 ru:Китайский упрощённый
 cn:简体中文
@@ -1070,23 +1078,27 @@ pt:Chinês Simplificado
 -
 Swedish
 hu:Svéd
+fr:Suédois
 pl:Szwecki
 cz:Švédština
 gr:Σουηδικά
 pt:Sueco
 -
 Czech
+fr:Tchèque
 pl:Czechosłowacki
 gr:Τσέχικα
 -
 Greek
 gr:Ελληνικά
+fr:Grec
 -
 Thai
 th:ไทย
 -
 Portuguese (Portugal)
 pt:Português
+fr:Portuguais
 -
 Brazillian
 pl:Brazylijski
@@ -1397,6 +1409,7 @@ pt:Problema de impressão.
 Contribute translation
 hu:Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
+fr:Contribuer à la traduction
 pl:Pomóż przy translacji
 ja:翻訳の提供
 nl:Help met vertalen
