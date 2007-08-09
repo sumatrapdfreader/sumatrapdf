@@ -160,6 +160,8 @@ public:
     int  pageCount() const { return _pdfEngine->pageCount(); }
     bool load(const char *fileName, int startPage, WindowInfo *win);
     bool validPageNo(int pageNo) const { return _pdfEngine->validPageNo(pageNo); }
+    bool hasTocTree() { return _pdfEngine->hasTocTree(); }
+    PdfTocItem *getTocTree() { return _pdfEngine->getTocTree(); }
 
     /* current rotation selected by user */
     int rotation(void) const { return _rotation; }
@@ -235,6 +237,7 @@ public:
     bool            goToNextPage(int scrollY);
     bool            goToFirstPage(void);
     bool            goToLastPage(void);
+    virtual void    goToTocLink(void *link) = 0;
 
     void            scrollXTo(int xOff);
     void            scrollXBy(int dx);

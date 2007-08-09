@@ -830,9 +830,7 @@ Exit:
 
 void DisplayModelSplash::handleLink(PdfLink *pdfLink)
 {
-    Link *          link;
-    LinkAction *    action;
-    LinkActionKind  actionKind;
+    Link *link;
 
     assert(pdfLink);
     if (!pdfLink) return;
@@ -841,8 +839,12 @@ void DisplayModelSplash::handleLink(PdfLink *pdfLink)
     assert(link);
     if (!link) return;
 
-    action = link->getAction();
-    actionKind = action->getKind();
+    handleLinkAction(link->getAction());
+}
+
+void DisplayModelSplash::handleLinkAction(LinkAction *action)
+{
+    LinkActionKind  actionKind = action->getKind();
 
     switch (actionKind) {
         case actionGoTo:
@@ -866,4 +868,10 @@ void DisplayModelSplash::handleLink(PdfLink *pdfLink)
     }
 }
 
+void DisplayModelSplash::goToTocLink(void *link)
+{
+    if (!link)
+        return;
 
+    handleLinkAction((LinkAction *)link);
+}

@@ -113,6 +113,23 @@ void DisplayModelFitz::handleLink(PdfLink *pdfLink)
     // TODO: implement me
 }
 
+void DisplayModelFitz::goToTocLink(void *link)
+{
+    if (!link)
+        return;
+
+    switch (((pdf_link *)link)->kind) {
+        case PDF_LURI:
+            break;
+        case PDF_LGOTO:
+        case PDF_LUNKNOWN: {
+            int page = pdfEngineFitz()->findPageNo(((pdf_link *)link)->dest);
+            if (page > 0) goToPage(page, 0);
+        }
+        break;
+    }
+}
+
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * to <buf>. Returnes number of copied characters */
 int DisplayModelFitz::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)

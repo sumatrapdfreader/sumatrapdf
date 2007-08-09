@@ -49,6 +49,7 @@
 
 class GooString;
 class Link;
+class LinkAction;
 class LinkDest;
 class LinkGoTo;
 class LinkGoToR;
@@ -75,11 +76,13 @@ public:
     PdfEnginePoppler * pdfEnginePoppler() { return (PdfEnginePoppler*)pdfEngine(); }
 
     virtual void  handleLink(PdfLink *pdfLink);
+    virtual void  goToTocLink(void *link);
 
     TextPage *    GetTextPage(int pageNo);
 
     void          EnsureSearchHitVisible();
 
+    void          handleLinkAction(LinkAction *action);
     void          handleLinkGoTo(LinkGoTo *linkGoTo);
     void          handleLinkGoToR(LinkGoToR *linkGoToR);
     void          handleLinkURI(LinkURI *linkURI);
