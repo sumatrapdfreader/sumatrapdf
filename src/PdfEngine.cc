@@ -13,8 +13,10 @@
 #include "TextOutputDev.h"
 #include "PDFDoc.h"
 #include "SecurityHandler.h"
+#include "Outline.h"
 #include "Link.h"
 #include "str_util.h"
+#include "utf_util.h"
 
 // in SumatraPDF.cpp
 extern "C" char *GetPasswordForFile(WindowInfo *win, const char *fileName);
@@ -237,6 +239,55 @@ bool PdfEnginePoppler::load(const char *fileName, WindowInfo *win)
     for (int i=0; i < _pageCount; i++)
         _linksForPage[i] = NULL;
     return true;
+}
+
+PdfTocItem *PdfEnginePoppler::buildTocTree(GooList *items)
+{
+    PdfTocItem *entry = NULL;
+
+    for ( int i = 0; i < items->getLength(); ++i ) {
+        OutlineItem *item = (OutlineItem *)items->get( i );
+        int n, len = item->getTitleLength();
+        if (len == 0) continue;
+
+        Unicode *title = item->getTitle();
+        wchar_t *name = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
+        for (n = 0; n < len; n++)
+            name[n] = (wchar_t)title[n];
+        name[n] = 0;
+        
+        PdfTocItem *node = new PdfTocItem(name, item->getAction());
+        
+        if (!entry)
+            entry = node;
+        else
+            entry->AddSibling(node);
+
+        item->open();
+        GooList *kids = item->getKids();
+        if (kids) node->AddChild(buildTocTree(kids));
+    }
+
+    return entry;
+}
+
+bool PdfEnginePoppler::hasTocTree()
+{
+    return _pdfDoc->getOutline() != NULL;
+}
+
+PdfTocItem *PdfEnginePoppler::getTocTree()
+{
+    Outline *outline = _pdfDoc->getOutline();
+    if (!outline)
+        return NULL;
+
+    GooList *items = outline->getItems();
+
+    if (!items)
+        return NULL;
+
+    return buildTocTree(items);
 }
 
 int PdfEnginePoppler::pageRotation(int pageNo)
@@ -508,6 +559,44 @@ ErrorPoppler:
     delete _popplerEngine;
     _popplerEngine = NULL;
     return false;
+}
+
+PdfTocItem *PdfEngineFitz::buildTocTree(pdf_outline *entry)
+{
+    wchar_t *name = utf8_to_utf16(entry->title);
+    PdfTocItem *node = new PdfTocItem(name, entry->link);
+
+    if (entry->child)
+        node->AddChild(buildTocTree(entry->child));
+    
+    if (entry->next)
+        node->AddSibling(buildTocTree(entry->next));
+
+    return node;
+}
+
+PdfTocItem *PdfEngineFitz::getTocTree()
+{
+    if (!hasTocTree())
+        return NULL;
+
+    return buildTocTree(_outline);
+}
+
+int PdfEngineFitz::findPageNo(fz_obj *dest)
+{
+    int p = 0;
+    int n = fz_tonum(dest), g = fz_togen(dest);
+
+    while (p < _pageCount) {
+        if (n == fz_tonum(_pageTree->pref[p]) &&
+            g == fz_togen(_pageTree->pref[p]))
+            return p + 1;
+
+        p++;
+    }
+
+    return 0;
 }
 
 pdf_page *PdfEngineFitz::getPdfPage(int pageNo)

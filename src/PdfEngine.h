@@ -12,6 +12,7 @@
 
 class WindowInfo;
 
+class GooList;
 class SplashBitmap;
 class SplashOutputDev;
 class PDFDoc;
@@ -31,6 +32,55 @@ extern const char* const LINK_ACTION_MOVIE;
 #define INVALID_ROTATION    -1
 /* It seems that PDF documents are encoded assuming DPI of 72.0 */
 #define PDF_FILE_DPI        72
+
+class PdfTocItem {
+public:
+    wchar_t *title;
+    void *link;
+
+    PdfTocItem *child;
+    PdfTocItem *next;
+
+    PdfTocItem(wchar_t *title, void *link)
+    {
+        this->title = title;
+        this->link = link;
+        this->child = NULL;
+        this->next = NULL;
+    }
+
+    ~PdfTocItem()
+    {
+        delete child;
+        delete next;
+        free(title);
+    }
+
+    void AddChild(PdfTocItem *child)
+    {
+        AppendTo(&this->child, child);
+    }
+    
+    void AddSibling(PdfTocItem *sibling)
+    {
+        AppendTo(&this->next, sibling);
+    }
+
+private:
+    void AppendTo(PdfTocItem **root, PdfTocItem *item)
+    {
+        if (!root || !item)
+            return;
+        if (!*root) {
+            *root = item;
+            return;
+        }
+        PdfTocItem *p = *root;
+        while (p->next)
+            p = p->next;
+        p->next = item;
+    }
+};
 
 void SplashColorsInit(void);
 
@@ -117,6 +167,9 @@ public:
     virtual int linkCount(int pageNo) = 0;
     virtual const char* linkType(int pageNo, int linkNo) = 0;
 
+    virtual bool hasTocTree() = 0;
+    virtual PdfTocItem *getTocTree() = 0;
+
 protected:
     const char *_fileName;
     int _pageCount;
@@ -137,11 +190,14 @@ public:
     virtual bool printingAllowed();
     virtual int linkCount(int pageNo);
     virtual const char* linkType(int pageNo, int linkNo);
+    virtual bool hasTocTree();
+    virtual PdfTocItem *getTocTree();
 
     PDFDoc* pdfDoc() { return _pdfDoc; }
     SplashOutputDev *   outputDevice();
 private:
     Links* getLinksForPage(int pageNo);
+    PdfTocItem *buildTocTree(GooList *items);
 
     PDFDoc *            _pdfDoc;
     SplashOutputDev *   _outputDev;
@@ -162,10 +218,13 @@ public:
     virtual bool printingAllowed();
     virtual int linkCount(int pageNo);
     virtual const char* linkType(int pageNo, int linkNo);
+    virtual bool hasTocTree() { return _outline != NULL; }
+    virtual PdfTocItem *getTocTree();
 
     fz_matrix viewctm (pdf_page *page, float zoom, int rotate);
 
     pdf_page * getPdfPage(int pageNo);
+    int        findPageNo(fz_obj *dest);
 
 private:
     PdfEnginePoppler* _popplerEngine;
@@ -176,6 +235,7 @@ private:
     pdf_pagetree * pages() { return _pageTree; }
 
     void dropPdfPage(int pageNo);
+    PdfTocItem *buildTocTree(pdf_outline *entry);
 
     pdf_xref *      _xref;
     pdf_outline *   _outline;
