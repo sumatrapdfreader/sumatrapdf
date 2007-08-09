@@ -539,6 +539,7 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 {
 	fz_error *error;
 	fz_obj *size;
+	fz_obj *obj;
 	int i;
 
 	char buf[65536];	/* yeowch! */
@@ -587,6 +588,14 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	}
 
 	error = readxrefsections(xref, xref->startxref, buf, sizeof buf);
+	if (error)
+		return error;
+
+	obj = fz_dictgets(xref->trailer, "Root");
+	if (!obj)
+		return fz_throw("syntaxerror: trailer missing Root entry");
+
+	error = pdf_loadindirect(&xref->root, xref, obj);
 	if (error)
 		return error;
 
