@@ -19,11 +19,7 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Title");
 	if (obj)
 	{
-	#ifdef WIN32
-		error = pdf_toucs2(&node->title, obj);
-	#else
 		error = pdf_toutf8(&node->title, obj);
-	#endif
 		if (error)
 			return error;
 		pdf_logpage("title %s\n", node->title);
