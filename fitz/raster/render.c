@@ -770,6 +770,7 @@ cleanup:
 static fz_error *
 rendernode(fz_renderer *gc, fz_node *node, fz_matrix ctm)
 {
+tailcall:
 	if (!node)
 		return nil;
 
@@ -796,9 +797,11 @@ rendernode(fz_renderer *gc, fz_node *node, fz_matrix ctm)
 	case FZ_NSHADE:
 		return rendershade(gc, (fz_shadenode*)node, ctm);
 	case FZ_NLINK:
-		return rendernode(gc, ((fz_linknode*)node)->tree->root, ctm);
+		node = ((fz_linknode*)node)->tree->root;
+		goto tailcall;
 	case FZ_NMETA:
-		return rendernode(gc, node->first, ctm);
+		node = node->first;
+		goto tailcall;
 	}
 
 	return nil;

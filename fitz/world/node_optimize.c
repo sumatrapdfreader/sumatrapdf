@@ -83,6 +83,7 @@ static void cleanovers(fz_node *node)
 	fz_node *current;
 	fz_node *child;
 
+tailcall:
 	prev = nil;
 	for (current = node->first; current; current = next)
 	{
@@ -109,8 +110,17 @@ static void cleanovers(fz_node *node)
 			prev = current;
 	}
 
-	for (current = node->first; current; current = current->next)
+	for (current = node->first; current->next; current = current->next) 
+	{
+		/* optimization for stack usage in deep recursion: if this is the last
+		   node, do a tailcall instead of recursing */
+		if (!current->next)
+		{
+			node = current;
+			goto tailcall;
+		}
 		cleanovers(current);
+	}
 }
 
 /*
@@ -172,9 +182,19 @@ static void cleanmasks(fz_node *node)
 	fz_node *shape;
 	fz_node *color;
 	fz_rect bbox;
+	fz_node *for_tail_call;
 
-	for (current = node->first; current; current = current->next)
-		cleanmasks(current);
+tailcall:
+	/* optimization for stack usage in deep recursion: for the last node,
+	   instead of recursing remember the node and at the end do a tailcall
+	   with this node */
+	for_tail_call = NULL;
+	for (current = node->first; current; current = current->next) {
+		if (!current->next) {
+			for_tail_call = current;
+		} else
+			cleanmasks(current);
+	}
 
 	prev = nil;
 	for (current = node->first; current; current = current->next)
@@ -216,6 +236,11 @@ retry:
 
 		prev = current;
 	}
+
+	if (for_tail_call) {
+		node = for_tail_call;
+		goto tailcall;
+	}
 }
 
 /*
@@ -234,6 +259,7 @@ static fz_error *clean1x1(fz_node *node)
 	float v[FZ_MAXCOLORS];
 	int i;
 
+tailcall:
 	for (current = node->first; current; current = current->next)
 	{
 		if (fz_isimagenode(current))
@@ -286,6 +312,13 @@ static fz_error *clean1x1(fz_node *node)
 					current = (fz_node*)rect;
 				}
 			}
+		}
+
+		if (!current->next) {
+			/* optimization for stack usage in deep recursion: if this is a 
+			   last node, do a tailcall instead of recursing */
+			node = current;
+			goto tailcall;
 		}
 
 		error = clean1x1(current);
