@@ -110,7 +110,7 @@ tailcall:
 			prev = current;
 	}
 
-	for (current = node->first; current->next; current = current->next) 
+	for (current = node->first; current; current = current->next) 
 	{
 		/* optimization for stack usage in deep recursion: if this is the last
 		   node, do a tailcall instead of recursing */
