@@ -84,6 +84,7 @@ fz_droprenderer(fz_renderer *gc)
 	fz_free(gc);
 }
 
+#if 0
 /*
  * Transform
  */
@@ -102,6 +103,7 @@ DEBUG("{\n");
 DEBUG("}\n");
 	return error;
 }
+#endif
 
 /*
  * Color
@@ -785,7 +787,12 @@ tailcall:
 	case FZ_NMASK:
 		return rendermask(gc, (fz_masknode*)node, ctm);
 	case FZ_NTRANSFORM:
-		return rendertransform(gc, (fz_transformnode*)node, ctm);
+	{
+		fz_transformnode* transform = (fz_transformnode*)node;
+		ctm = fz_concat(transform->m, ctm);
+		node = transform->super.first;
+		goto tailcall;
+	}
 	case FZ_NCOLOR:
 		return rendersolid(gc, (fz_solidnode*)node, ctm);
 	case FZ_NPATH:
