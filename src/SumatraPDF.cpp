@@ -241,6 +241,7 @@ static const char *g_currLangName;
 
 static void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo);
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
+static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
 static void UpdateToolbarButtonsToolTips(void);
 
@@ -1487,6 +1488,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         return NULL;
     win->hwndCanvas = hwndCanvas;
     CreateToolbar(win, ghinst);
+    CreateTocBox(win, ghinst);
+
     return win;
 }
 
@@ -3102,6 +3105,9 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
+        win->ClearTocBox();
+        if (win->tocVisible)
+            win->HideTocBox();
         delete win->dm;
         win->dm = NULL;
         WindowInfo_RedrawAll(win);
@@ -3518,7 +3524,11 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
-    SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
+    
+    if (win->tocVisible)
+        win->ShowTocBox();
+    else
+        SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
 }
 
 static void ReloadPdfDocument(WindowInfo *win)
@@ -3585,6 +3595,11 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     ReloadPdfDocument(win);
     win = gWindowList;
     while (win) {
+        if (win->tocReady) {
+            win->ClearTocBox();
+            if (win->tocVisible)
+                win->LoadTocTree();
+        }
         MenuUpdateUseFitzStateForWindow(win);
         win = win->next;
     }
@@ -3724,7 +3739,10 @@ void WindowInfo::EnterFullscreen()
     ShowWindow(hwndReBar, SW_HIDE);
     SetWindowLong(hwndFrame, GWL_STYLE, ws);
     SetWindowPos(hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+    if (tocVisible)
+        ShowTocBox();
+    else
+        SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
 }
 
 void WindowInfo::ExitFullscreen()
@@ -3821,6 +3839,11 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         // Emulate acrobat: "Shift Ctrl -" is rotate counter-clockwise
         if (shiftPressed & ctrlPressed)
             RotateLeft(win);
+    } else if (VK_F12 == key) {
+        if (!win->tocVisible)
+            win->ShowTocBox();
+        else
+            win->HideTocBox();
     }
 }
 
@@ -4227,6 +4250,97 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     CreateFindBox(win, hInst);
 }
 
+static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
+{
+    win->hwndTocBox = CreateWindowEx(WS_EX_CLIENTEDGE, "SysTreeView32", "TOC",
+                        TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
+                        TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
+                        WS_TABSTOP|WS_CHILD|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
+                        0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
+    assert(win->hwndTocBox);
+    if (!win->hwndTocBox)
+        SeeLastError();
+    else
+        TreeView_SetUnicodeFormat(win->hwndTocBox, true);
+}
+
+#define TreeView_InsertItemW(w,i)   (HTREEITEM)SendMessageW((w),TVM_INSERTITEMW,0,(LPARAM)(i))
+#define TreeView_GetItemW(w,i)      (BOOL)SendMessageW((w),TVM_GETITEMW,0,(LPARAM)(i))
+
+HTREEITEM WindowInfo::AddTocItemToView(PdfTocItem *entry, HTREEITEM parent)
+{
+    TV_INSERTSTRUCTW tvinsert;
+    tvinsert.hParent = (HTREEITEM)parent;
+    tvinsert.hInsertAfter = TVI_LAST;
+    tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM;
+    tvinsert.itemex.lParam = (LPARAM)entry->link;
+    tvinsert.itemex.pszText = entry->title;
+    return TreeView_InsertItemW(hwndTocBox, &tvinsert);
+}
+
+void WindowInfo::CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent)
+{
+    while (entry) {
+        HTREEITEM node = AddTocItemToView(entry, parent);
+        CreateTocTreeView(entry->child, node);
+        entry = entry->next;
+    }
+}
+
+void WindowInfo::LoadTocTree()
+{
+    PdfTocItem *toc = dm->getTocTree();
+    if (toc) {
+        CreateTocTreeView(toc);
+        delete toc;
+    }
+    tocReady = true;
+}
+
+void WindowInfo::ShowTocBox()
+{
+    RECT r;
+    GetClientRect(hwndFrame, &r);
+
+    int cx = rect_dx(&r) / 4, cy = 0;
+    int cw = rect_dx(&r), ch = rect_dy(&r);
+
+    if (gShowToolbar && !fullscreen)
+        cy = gReBarDy + gReBarDyFrame;
+
+    if (!tocReady)
+        LoadTocTree();
+
+    SetWindowPos(hwndTocBox, NULL,  0, cy, cx, ch - cy, SWP_SHOWWINDOW);
+    SetWindowPos(hwndCanvas, NULL, cx, cy, cw - cx, ch - cy, SWP_NOZORDER);
+
+    tocVisible = true;
+}
+
+void WindowInfo::HideTocBox()
+{
+    RECT r;
+    GetClientRect(hwndFrame, &r);
+
+    int cx = rect_dx(&r) / 4, cy = 0;
+    int cw = rect_dx(&r), ch = rect_dy(&r);
+
+    if (gShowToolbar && !fullscreen)
+        cy = gReBarDy + gReBarDyFrame;
+
+    SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
+    ShowWindow(hwndTocBox, SW_HIDE);
+
+    tocVisible = false;
+}
+
+void WindowInfo::ClearTocBox()
+{
+    if (!tocReady) return;
+    TreeView_DeleteAllItems(hwndTocBox);
+    tocReady = false;
+}
+
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -4605,6 +4719,32 @@ InitMouseWheelInfo:
                 OnBenchNextAction(win);
             break;
 
+        case WM_NOTIFY:
+            if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
+                switch (((LPNMHDR)lParam)->code) {
+                    case TVN_SELCHANGEDW: {
+                        TV_ITEMW tvi;
+                        tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
+                        tvi.cchTextMax = 0;
+                        tvi.pszText = NULL;
+                        tvi.mask = TVIF_PARAM;
+                        if (TreeView_GetItemW(win->hwndTocBox, &tvi))
+                            win->dm->goToTocLink((void *)tvi.lParam);
+                    }
+                    break;
+                    case TVN_KEYDOWN: {
+                        TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
+                        if (VK_TAB == ptvkd->wVKey) {
+                            SetFocus(win->hwndFrame);
+                        }
+                        else if (VK_F12 == ptvkd->wVKey) {
+                            win->HideTocBox();
+                        }
+                    }
+                    break;
+                }
+            }
+           break;
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
