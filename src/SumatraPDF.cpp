@@ -1690,6 +1690,7 @@ Exit:
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
     InvalidateRect(win->hwndFindBox, NULL, true);
+    win->ShowTocBox();
     return win;
 }
 
@@ -4299,6 +4300,9 @@ void WindowInfo::LoadTocTree()
 
 void WindowInfo::ShowTocBox()
 {
+    if (!dm->hasTocTree())
+        return;
+
     RECT r;
     GetClientRect(hwndFrame, &r);
 
