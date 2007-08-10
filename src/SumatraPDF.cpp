@@ -3840,6 +3840,8 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         // Emulate acrobat: "Shift Ctrl -" is rotate counter-clockwise
         if (shiftPressed & ctrlPressed)
             RotateLeft(win);
+    } else if (VK_F11 == key) {
+        OnMenuViewFullscreen(win);
     } else if (VK_F12 == key) {
         if (!win->tocVisible)
             win->ShowTocBox();
@@ -4740,6 +4742,9 @@ InitMouseWheelInfo:
                         TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
                         if (VK_TAB == ptvkd->wVKey) {
                             SetFocus(win->hwndFrame);
+                        }
+                        else if (VK_F11 == ptvkd->wVKey) {
+                            OnMenuViewFullscreen(win);
                         }
                         else if (VK_F12 == ptvkd->wVKey) {
                             win->HideTocBox();
