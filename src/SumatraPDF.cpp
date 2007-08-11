@@ -681,14 +681,6 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
     return m;
 }
 
-static HMENU g_currMenu = NULL;
-
-static void DestroyCurrentMenu()
-{
-    DestroyMenu(g_currMenu);
-    g_currMenu = NULL;
-}
-
 static void AppendRecentFilesToMenu(HMENU m)
 {
     if (!gFileHistoryRoot) return;
@@ -712,33 +704,28 @@ static void AppendRecentFilesToMenu(HMENU m)
     }
 }
 
-static HMENU ForceRebuildMenu()
+static void WindowInfo_RebuildMenu(WindowInfo *win)
 {
-    HMENU tmp;
-    DestroyCurrentMenu();
-    g_currMenu = CreateMenu();
-    tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
+    if (win->hMenu) {
+        DestroyMenu(win->hMenu);
+        win->hMenu = NULL;
+    }
+    
+    HMENU mainMenu = CreateMenu();
+    HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
     AppendRecentFilesToMenu(tmp);
-    AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&File"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&File"));
     tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
-    AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&View"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&View"));
     tmp = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo));
-    AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Go To"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Go To"));
     tmp = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom));
-    AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Zoom"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Zoom"));
     tmp = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang));
-    AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Language"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Language"));
     tmp = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
-    AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Help"));
-    return g_currMenu;
-}
-
-static HMENU GetProgramMenu()
-{
-    if (NULL == g_currMenu)
-        ForceRebuildMenu();
-    assert(g_currMenu);
-    return g_currMenu;
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Help"));
+    win->hMenu = mainMenu;
 }
 
 /* Return the full exe path of my own executable.
@@ -1472,9 +1459,6 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
             DEF_WIN_DX, DEF_WIN_DY,
             NULL, NULL,
             ghinst, NULL);
-    HMENU m = GetProgramMenu();
-    BOOL ok = SetMenu(hwndFrame, m);
-    assert(ok);
 #endif
 
     if (!hwndFrame)
@@ -1490,6 +1474,10 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
             ghinst, NULL);
     if (!hwndCanvas)
         return NULL;
+    WindowInfo_RebuildMenu(win);
+    assert(win->hMenu);
+    BOOL ok = SetMenu(hwndFrame, win->hMenu);
+    assert(ok);
     win->hwndCanvas = hwndCanvas;
     CreateToolbar(win, ghinst);
     CreateTocBox(win, ghinst);
@@ -3552,10 +3540,10 @@ static void ReloadPdfDocument(WindowInfo *win)
 
 static void RebuildProgramMenus(void)
 {
-    HMENU m = ForceRebuildMenu();
     WindowInfo *win = gWindowList;
     while (win) {
-        SetMenu(win->hwndFrame, m);
+        WindowInfo_RebuildMenu(win);
+        SetMenu(win->hwndFrame, win->hMenu);
         MenuUpdateStateForWindow(win);
         win = win->next;
     }
@@ -3566,7 +3554,6 @@ static void LanguageChanged(const char *langName)
     assert(!str_eq(langName, CurrLangNameGet()));
 
     CurrLangNameSet(langName);
-
     RebuildProgramMenus();
     UpdateToolbarButtonsToolTips();
 }

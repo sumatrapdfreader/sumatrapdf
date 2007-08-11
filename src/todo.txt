@@ -12,14 +12,13 @@ Short term todo (before next 0.8 release):
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
   * when TOC is shown, keyboard navigation shortcuts don't work. We need to
     be smarter about focus handling
-* bug: menu handling is broken when more then one window is opened and then
-  closed. We need create separate menu for each window
 
 Long term todo:
 * show keybindings in help
 * better, animated about screen
 * a nicer way to show selected text
 * make dialog-boxes translatable
+* handle links
 
 Maybe:
 * use MultiByteToWideChar() 

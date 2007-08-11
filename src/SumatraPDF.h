@@ -102,6 +102,7 @@ public:
     HWND            hwndReBar;
     HWND            hwndFindBox;
     HWND            hwndTocBox;
+    HMENU           hMenu;
 
     HDC             hdc;
     BITMAPINFO *    dibInfo;
