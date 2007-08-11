@@ -128,6 +128,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define FRAME_CLASS_NAME    _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME   _T("SUMATRA_PDF_CANVAS")
 #define ABOUT_CLASS_NAME    _T("SUMATRA_PDF_ABOUT")
+#define SPLITER_CLASS_NAME  _T("Spliter")
 #define APP_NAME            _T("SumatraPDF")
 #define APP_NAME_STR        "SumatraPDF"
 #define PDF_DOC_NAME        _T("Adobe PDF Document")
@@ -145,6 +146,8 @@ static BOOL             gDebugShowLinks = FALSE;
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_WIN_DX 612
 #define DEF_WIN_DY 792
+
+#define DEF_SPLITER_DX  4
 
 #define REPAINT_TIMER_ID    1
 #define REPAINT_DELAY_IN_MS 400
@@ -4253,13 +4256,69 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     CreateFindBox(win, hInst);
 }
 
+static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    static POINT cur;
+    static bool resizing = false;
+    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+
+    switch (message)
+    {
+        case WM_MOUSEMOVE:
+            if (resizing) {
+                short dx, ty = 0, tw;
+                POINT pcur;
+
+                GetCursorPos(&pcur);
+                dx = (short)(pcur.x - cur.x);
+                cur = pcur;
+
+                RECT r;
+                GetWindowRect(win->hwndTocBox, &r);
+                tw = rect_dx(&r) + dx;
+                if (tw <= DEF_WIN_DX / 4) break;
+
+                GetClientRect(win->hwndFrame, &r);
+                int width = rect_dx(&r) - tw - DEF_SPLITER_DX;
+                int height = rect_dy(&r);
+
+                if (gShowToolbar && !win->IsFullscreen()) {
+                    ty = gReBarDy + gReBarDyFrame;
+                    height -= ty;
+                }
+
+                MoveWindow(win->hwndTocBox, 0, ty, tw, height, true);
+                MoveWindow(win->hwndCanvas, tw + DEF_SPLITER_DX, ty, width, height, true);
+                MoveWindow(hwnd, tw, ty, DEF_SPLITER_DX, height, true);
+                return 0;
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            SetCapture(hwnd);
+            GetCursorPos(&cur);
+            resizing = true;
+            break;
+        case WM_LBUTTONUP:
+            ReleaseCapture();
+            resizing = false;
+            break;
+    }
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
+    HWND spliter = CreateWindow("Spliter", "", WS_CHILDWINDOW, 0, 0, 0, 0,
+                                win->hwndFrame, (HMENU)0, hInst, NULL);
+    SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
+
     win->hwndTocBox = CreateWindowEx(WS_EX_CLIENTEDGE, "SysTreeView32", "TOC",
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
                         0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
+    SetWindowLong(win->hwndTocBox, GWL_USERDATA, (LONG)spliter);
+
     assert(win->hwndTocBox);
     if (!win->hwndTocBox)
         SeeLastError();
@@ -4305,20 +4364,28 @@ void WindowInfo::ShowTocBox()
     if (!dm->hasTocTree())
         return;
 
-    RECT r;
-    GetClientRect(hwndFrame, &r);
-
-    int cx = rect_dx(&r) / 4, cy = 0;
-    int cw = rect_dx(&r), ch = rect_dy(&r);
-
-    if (gShowToolbar && !fullscreen)
-        cy = gReBarDy + gReBarDyFrame;
-
     if (!tocReady)
         LoadTocTree();
 
-    SetWindowPos(hwndTocBox, NULL,  0, cy, cx, ch - cy, SWP_SHOWWINDOW);
-    SetWindowPos(hwndCanvas, NULL, cx, cy, cw - cx, ch - cy, SWP_NOZORDER);
+    RECT rtoc, rframe;
+    int cw, ch, cx, cy = 0;
+
+    GetClientRect(hwndFrame, &rframe);
+    GetWindowRect(hwndTocBox, &rtoc);
+
+    if (gShowToolbar && !fullscreen)
+        cy = gReBarDy + gReBarDyFrame;
+    ch = rect_dy(&rframe) - cy;
+
+    cx = rect_dx(&rtoc);
+    if (cx == 0) // first time
+        cx = rect_dx(&rframe) / 4;
+    cw = rect_dx(&rframe) - cx - DEF_SPLITER_DX;
+
+    HWND spliter = (HWND)GetWindowLong(hwndTocBox, GWL_USERDATA);
+    SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(spliter, NULL, cx, cy, DEF_SPLITER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndCanvas, NULL, cx + DEF_SPLITER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
 
     tocVisible = true;
 }
@@ -4328,14 +4395,16 @@ void WindowInfo::HideTocBox()
     RECT r;
     GetClientRect(hwndFrame, &r);
 
-    int cx = rect_dx(&r) / 4, cy = 0;
+    int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
     if (gShowToolbar && !fullscreen)
         cy = gReBarDy + gReBarDyFrame;
 
+    HWND spliter = (HWND)GetWindowLong(hwndTocBox, GWL_USERDATA);
     SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
     ShowWindow(hwndTocBox, SW_HIDE);
+    ShowWindow(spliter, SW_HIDE);
 
     tocVisible = false;
 }
@@ -4808,6 +4877,22 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.hbrBackground  = NULL;
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = ABOUT_CLASS_NAME;
+    wcex.hIconSm        = 0;
+    atom = RegisterClassEx(&wcex);
+    if (!atom)
+        return FALSE;
+
+    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = WndProcSpliter;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = 0;
+    wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
+    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    wcex.lpszMenuName   = NULL;
+    wcex.lpszClassName  = SPLITER_CLASS_NAME;
     wcex.hIconSm        = 0;
     atom = RegisterClassEx(&wcex);
     if (!atom)
