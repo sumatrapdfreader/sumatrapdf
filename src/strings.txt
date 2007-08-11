@@ -11,7 +11,7 @@
 # Яўген Змачынскі - Belarusian
 # fiuzzy - French
 # laclasse - French
-# Nardog - Japanese
+# Nardog (nardog.takoweb.com) - Japanese
 # Richard Magyar - Hungarian
 # Mardi Az Pansad Dastgah Artesh - Persian
 # Lars J. Helbo - Danish
@@ -385,6 +385,7 @@ pt:Rodar à direita
 -
 Fullscreen\tF11
 pl:Na cały ekran\tF11
+ja:全画面表示\tF11
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -1040,6 +1041,7 @@ cz:Chorvatština
 gr:Κροατικά
 th:Croatian
 pt:Croata
+ja:クロアチア語
 -
 Russian
 hu:Orosz
@@ -1052,6 +1054,7 @@ sv:Ryska
 cz:Ruština
 gr:Ρωσσικά
 pt:Russo
+ja:ロシア語
 -
 Arabic
 hu:Arab
@@ -1064,6 +1067,7 @@ sv:Arabiska
 cz:Arabština
 gr:Αραβικά
 pt:Árabe
+ja:アラビア語
 -
 Chinese Simplified
 hu:Egyszerűsített Kínai
@@ -1075,6 +1079,7 @@ sv:Kinesiska, förenklad
 cz:Zjednodušená čínština
 gr:Απλοποιημένα Κινέζικα
 pt:Chinês Simplificado
+ja:簡体字中国語
 -
 Swedish
 hu:Svéd
@@ -1083,25 +1088,31 @@ pl:Szwecki
 cz:Švédština
 gr:Σουηδικά
 pt:Sueco
+ja:スウェーデン語
 -
 Czech
 fr:Tchèque
 pl:Czechosłowacki
 gr:Τσέχικα
+ja:チェコ語
 -
 Greek
 gr:Ελληνικά
 fr:Grec
+ja:ギリシャ語
 -
 Thai
 th:ไทย
+ja:タイ語
 -
 Portuguese (Portugal)
 pt:Português
 fr:Portuguais
+ja:ポルトガル語 (ポルトガル)
 -
 Brazillian
 pl:Brazylijski
+ja:ブラジル語
 -
 &Help
 br:A&juda
@@ -1180,6 +1191,7 @@ pt:Acerca de...
 -
 Find:
 pl:Szukaj:
+ja:検索:
 -
 Open
 br:Abrir
