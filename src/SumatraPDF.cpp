@@ -689,7 +689,7 @@ static void DestroyCurrentMenu()
     g_currMenu = NULL;
 }
 
-static void AddRecentFilesToMenu(HMENU m)
+static void AppendRecentFilesToMenu(HMENU m)
 {
     if (!gFileHistoryRoot) return;
 
@@ -718,7 +718,7 @@ static HMENU ForceRebuildMenu()
     DestroyCurrentMenu();
     g_currMenu = CreateMenu();
     tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
-    AddRecentFilesToMenu(tmp);
+    AppendRecentFilesToMenu(tmp);
     AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&File"));
     tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
     AppendMenuW(g_currMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&View"));
@@ -1473,7 +1473,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
             NULL, NULL,
             ghinst, NULL);
     HMENU m = GetProgramMenu();
-    SetMenu(hwndFrame, m);
+    BOOL ok = SetMenu(hwndFrame, m);
+    assert(ok);
 #endif
 
     if (!hwndFrame)
