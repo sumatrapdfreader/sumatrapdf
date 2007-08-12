@@ -31,7 +31,8 @@
 # geodimo - Greek
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br
+# Jon Ivar F. Omland - Norwegian
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no
 -
 &File
 br:&Arquivo
@@ -57,6 +58,7 @@ cz:&Soubor
 gr:&Αρχείο
 th:แฟ้ม
 pt:&Ficheiro
+no:&Fil
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -82,6 +84,7 @@ cz:&Otevřít\tCtrl-O
 gr:Ά&νοιγμα\tCtrl-O
 th:เปิด\tCtrl-O
 pt:&Abrir\tCtrl-O
+no:&Åpne\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -107,6 +110,7 @@ cz:&Zavřít\tCtrl-W
 gr:&Κλείσιμο\tCtrl-W
 th:ปิด\tCtrl-W
 pt:&Fechar\tCtrl-W
+no:&Lukk\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -132,6 +136,7 @@ cz:&Uložit jako
 gr:Α&ποθήκευση ως
 th:บันทึกเป็น
 pt:Guardar como
+no:Lagre &som
 -
 &Print
 br:&Imprimir
@@ -157,6 +162,7 @@ cz:&Tisk
 gr:&Εκτύπωση
 th:พิมพ์
 pt:&Imprimir
+no:Skriv &ut\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -182,6 +188,7 @@ cz:Nastavit SumatraPDF jako výchozí PDF čtečku
 gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη PDF
 th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 pt:Fazer de SumatraPDF o leitor de PDF pedefenido
+no:Bruk SumatraPDF som standard PDF-leser
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -207,6 +214,7 @@ cz:&Konec\tCtrl-Q
 gr:Έ&ξοδος\tCtrl-Q
 th:ออก\tCtrl-Q
 pt:&Sair\tCtrl-Q
+no:&Avslutt\tCtrl-Q
 -
 &View
 br:&Ver
@@ -232,6 +240,7 @@ cz:&Zobrazit
 gr:&Προβολή
 th:มุมมอง
 pt:&Ver
+no:&Vis
 -
 Single page
 br:Página única
@@ -257,6 +266,7 @@ cz:Jedna stránka
 gr:Μονή σελίδα
 th:หน้าเดี่ยว
 pt:Página Única
+no:Enkel side
 -
 Facing
 br:Página dupla
@@ -282,6 +292,7 @@ cz:Protilehlé
 gr:Αντικριστά
 th:เป็นหน้า
 pt:Página Dupla
+no:Motstående
 -
 Continuous
 br:Contínuo
@@ -307,6 +318,7 @@ cz:Průběžně
 gr:Συνεχόμενα
 th:ต่อเนื่อง
 pt:Contínua
+no:Kontinuerlig
 -
 Continuous facing
 br:Página dupla contínua
@@ -332,6 +344,7 @@ cz:Průběžně protilehlé
 gr:Αντικριστά και συνεχόμενα
 th:เป็นหน้าต่อเนื่อง
 pt:Página Dupla Contínua
+no:Kontinuerlig motstående
 -
 Rotate left
 br:Girar à esquerda
@@ -357,6 +370,7 @@ cz:Otočit zobrazení doleva
 gr:Περιστροφή αριστερά
 th:หมุนซ้าย
 pt:Rodar à esquerda
+no:Roter til venstre
 -
 Rotate right
 br:Girar à direita
@@ -382,10 +396,12 @@ cz:Otočit zobrazení doprava
 gr:Περιστροφή δεξιά
 th:หมุนขวา
 pt:Rodar à direita
+no:Roter til høyre
 -
 Fullscreen\tF11
 pl:Na cały ekran\tF11
 ja:全画面表示\tF11
+no:Full skjerm\tF11
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -411,6 +427,7 @@ cz:Zobrazit lištu nástrojů
 gr:Εμφάνιση γραμμής εργαλείων
 th:แสดงแถบเครื่องมือ
 pt:Mostrar barra de ferramentas
+no:Vis verktøylinje
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -436,6 +453,7 @@ cz:Použít zobrazení pomocí MuPDF
 gr:Χρήση μηχανής απόδοσης MuPDF
 th:ใช้ MuPDF rendering engine
 pt:Usar motor renderizador MuPDF
+no:Bruk MuPDF renderingsmotor
 -
 &Go To
 br:Ir &para
@@ -461,6 +479,7 @@ cz:Jdi na
 gr:&Μετάβαση
 th:ไปที่
 pt:Ir para
+no:&Gå til
 -
 Next Page
 br:Página seguinte
@@ -486,6 +505,7 @@ cz:Další stránka
 gr:Επόμενη σελίδα
 th:หน้าถัดไป
 pt:Próxima página
+no:Neste side
 -
 Previous Page
 br:Página anterior
@@ -511,6 +531,7 @@ cz:Předchozí stránka
 gr:Προηγούμενη σελίδα
 th:หน้าก่อนหน้า
 pt:Página anterior
+no:Forrige side
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -536,6 +557,7 @@ cz:První stránka\tHome
 gr:Πρώτη σελίδα\tHome
 th:หน้าแรก
 pt:Primeira página\tHome
+no:Første side\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -561,6 +583,7 @@ cz:Poslední stránka\tEnd
 gr:Τελευταία σελίδα\tEnd
 th:หน้าสุดท้าย
 pt:Última página\tEnd
+no:Siste side\tEnd
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -586,6 +609,7 @@ cz:Stránka...\tCtrl-G
 gr:Σελίδα...\tCtrl-G
 th:หน้า...\tCtrl-G
 pt:Página...\tCtrl-G
+no:Side...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -611,6 +635,7 @@ cz:&Zvětšení
 gr:&Εστίαση
 th:ขยาย
 pt:&Zoom
+no:&Zoom
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -636,6 +661,7 @@ cz:Přizpůsobit stránce\tCtrl-0
 gr:Ολόκληρη σελίδα\tCtrl-0
 th:พอดีหน้า\tCtrl-0
 pt:Ajustar &Página\tCtrl-0
+no:Tilpass &side\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -661,6 +687,7 @@ cz:Skutečná velikost\tCtrl-1
 gr:Πραγματικό μέγεθος\tCtrl-1
 th:ขนาดจริง\tCtrl-1
 pt:Tamanho real\tCtrl-1
+no:F&aktisk størrelse\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -686,6 +713,7 @@ cz:Podle šířky\tCtrl-2
 gr:Στο πλάτος παραθύρου\tCtrl-2
 th:พอดีความกว้าง\tCtrl-2
 pt:Largura de página\tCtrl-2
+no:Tilpass &bredde\tCtrl-2
 -
 6400%
 -
@@ -737,6 +765,7 @@ cz:Jazyk
 gr:&Γλώσσα
 th:ภาษา
 pt:&Linguagem
+no:&Språk
 -
 English
 br:Inglês
@@ -761,6 +790,7 @@ cz:Angličtina
 gr:Αγγλικά
 th:English
 pt:Inglês
+no:Engelsk
 -
 Belarusian
 hu:Belorusz
@@ -781,6 +811,7 @@ cz:Běloruština
 gr:Λευκορώσσικα
 th:Belarusian
 pt:Bielorusso
+no:Hviterussisk
 -
 Danish
 hu:Dán
@@ -800,6 +831,7 @@ cz:Dánština
 gr:Δανικά
 th:Danish
 pt:Dinamarquês
+no:Dansk
 -
 German
 br:Alemão
@@ -824,6 +856,7 @@ cz:Němčina
 gr:Γερμανικά
 th:German
 pt:Alemão
+no:Tysk
 -
 Polish
 br:Polonês
@@ -847,6 +880,7 @@ cz:Polština
 gr:Πολωνικά
 th:Polish
 pt:Polaco
+no:Polsk
 -
 Japanese
 hu:Japán
@@ -868,6 +902,7 @@ cz:Japonština
 gr:Γιαπωνέζικα
 th:Japanese
 pt:Japonês
+no:Japansk
 -
 Hungarian
 hu:Magyar
@@ -889,6 +924,7 @@ cz:Maďarština
 gr:Μαγιάρικά
 th:Hungarian
 pt:Hungaro
+no:Ungarsk
 -
 Persian
 hu:Perzsa
@@ -907,6 +943,7 @@ cz:Perština
 gr:Περσικά
 th:Persian
 pt:Persa
+no:Persisk
 -
 French
 br:Francês
@@ -931,6 +968,7 @@ cz:Francouzština
 gr:Γαλλικά
 th:French
 pt:Francês
+no:Fransk
 -
 Turkish
 br:Turco
@@ -954,6 +992,7 @@ cz:Turečtina
 gr:Τούρκικα
 th:Turkish
 pt:Turco
+no:Tyrkisk
 -
 Tamil
 br:Tâmil
@@ -974,6 +1013,7 @@ cz:Tamilština
 gr:Ταμιλικά
 th:Tamil
 pt:Tamil
+no:Tamil
 -
 Italian
 hu:Olasz
@@ -992,6 +1032,7 @@ cz:Italština
 gr:Ιταλικά
 th:Italian
 pt:Italiano
+no:Italiensk
 -
 Dutch
 hu:Holland
@@ -1010,6 +1051,7 @@ cz:Nizozemština
 gr:Ολλανδικά
 th:Dutch
 pt:Holandês
+no:Nederlandsk
 -
 Spanish
 hu:Spanyol
@@ -1027,6 +1069,7 @@ cz:Španělština
 gr:Ισπανικά
 th:Spanish
 pt:Espanhol
+no:Spansk
 -
 Croatian
 hu:Horvát
@@ -1042,6 +1085,7 @@ gr:Κροατικά
 th:Croatian
 pt:Croata
 ja:クロアチア語
+no:Kroatisk
 -
 Russian
 hu:Orosz
@@ -1055,6 +1099,7 @@ cz:Ruština
 gr:Ρωσσικά
 pt:Russo
 ja:ロシア語
+no:Russisk
 -
 Arabic
 hu:Arab
@@ -1068,6 +1113,7 @@ cz:Arabština
 gr:Αραβικά
 pt:Árabe
 ja:アラビア語
+no:Arabisk
 -
 Chinese Simplified
 hu:Egyszerűsített Kínai
@@ -1080,6 +1126,7 @@ cz:Zjednodušená čínština
 gr:Απλοποιημένα Κινέζικα
 pt:Chinês Simplificado
 ja:簡体字中国語
+no:Kinesisk, forenklet
 -
 Swedish
 hu:Svéd
@@ -1089,30 +1136,40 @@ cz:Švédština
 gr:Σουηδικά
 pt:Sueco
 ja:スウェーデン語
+no:Svensk
 -
 Czech
 fr:Tchèque
 pl:Czechosłowacki
 gr:Τσέχικα
 ja:チェコ語
+no:Tjekkisk
 -
 Greek
 gr:Ελληνικά
 fr:Grec
 ja:ギリシャ語
+no:Gresk
 -
 Thai
 th:ไทย
 ja:タイ語
+no:Thai
 -
 Portuguese (Portugal)
 pt:Português
 fr:Portuguais
 ja:ポルトガル語 (ポルトガル)
+no:Portugisisk
 -
 Brazillian
 pl:Brazylijski
 ja:ブラジル語
+no:Brasiliansk
+-
+Norwegian
+no:Norsk
+pl:Norweski
 -
 &Help
 br:A&juda
@@ -1138,6 +1195,7 @@ cz:&Nápověda
 gr:&Βοήθεια
 th:ช่วยเหลือ
 pt:&Ajuda
+no:&Hjelp
 -
 &Visit website
 br:Visitar o &Website
@@ -1163,6 +1221,7 @@ cz:&Navštívit webovou stránku
 gr:&Ιστοσελίδα προγράμματος
 th:เยี่ยมเว็บไชด์
 pt:Visitar a página Web
+no:Besøk &hjemmeside
 -
 &About
 br:S&obre
@@ -1188,6 +1247,7 @@ cz:&O programu
 gr:&Πέρι...
 th:เกี่ยวกับ
 pt:Acerca de...
+no:&Om
 -
 Find:
 pl:Szukaj:
@@ -1217,6 +1277,7 @@ cz:Otevřít
 gr:Άνοιγμα
 th:เปิด
 pt:Abrir
+no:Åpne
 -
 Zoom In
 br:Zoom In
@@ -1242,6 +1303,7 @@ cz:Zvětšení
 gr:Μεγένθυση
 th:ขยาย
 pt:Aproximar Zoom
+no:Forstørr
 -
 Zoom Out
 br:Zoom Out
@@ -1267,6 +1329,7 @@ cz:Zmenšení
 gr:Σμίκρυνση
 th:ย่อ
 pt:Afastar Zoom
+no:Forminsk
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1292,6 +1355,7 @@ cz:O programu SumatraPDF
 gr:Για το πρόγραμμα SumatraPDF
 th:เกี่ยวกับ SumatraPDF
 pt:Acerca de SumatraPDF
+no:Om SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1317,6 +1381,7 @@ cz:SumatraPDF je nyní nastaven jako defaultní čtečka PDF souborů.
 gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγραμμα ανάγνωσης PDF
 th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 pt:SumatraPDF é agora o leitor de PDF por defeito.
+no:SumatraPDF er nå standard PDF-leser.
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1342,6 +1407,7 @@ cz:Uložení souboru selhalo
 gr:Αποτυχία αποθήκευσης αρχείου
 th:การบันทึกไฟล์ล้มเหลว
 pt:Erro ao guardar arquivo.
+no:Kan ikke lagre filen.
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1367,6 +1433,7 @@ cz:Chyba při načítání PDF souboru.
 gr:Σφάλμα κατά τη φόρτωση του αρχείου
 th:การเปิดไฟล์ผิดพลาด
 pt:Erro a carregar ficheiro PDF.
+no:Feil ved åpning av PDF-fil.
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1392,6 +1459,7 @@ cz:Není možné otevřít tiskárnu
 gr:Δε μπορεί να ανοίξει ο εκτυπωτής
 th:ไม่สามารถเปิดเครื่องพิมพ์ได้
 pt:Não foi possivel abrir a impressora.
+no:Kan ikke finne skriveren.
 -
 Printing problem.
 br:Problema de impressão.
@@ -1417,6 +1485,7 @@ cz:Problém s tiskem
 gr:Πρόβλημα εκτύπωσης
 th:การพิมพ์เกิดปัญหา
 pt:Problema de impressão.
+no:Problem med utskrift.
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1434,3 +1503,4 @@ cz:Zašli překlad
 gr:Βοήθησε στη μετάφραση
 th:ช่วยเหลือในการแปล
 pt:Contribuir na tradução.
+no:Bidra med oversetting
