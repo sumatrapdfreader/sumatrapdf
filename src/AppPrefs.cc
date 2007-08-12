@@ -1,6 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
 #include "AppPrefs.h"
+#include "benc_util.h"
 #include "str_util.h"
 #include "DisplayModel.h"
 #include "DisplayState.h"
@@ -33,6 +34,58 @@ static BOOL FileExists(const char *fileName)
   if (0 != res)
     return FALSE;
   return TRUE;
+}
+
+#define GLOBAL_PREFS_STR "gp"
+
+#define DICT_NEW(boname) \
+    benc_dict* boname = benc_dict_new(); \
+    if (!boname) \
+        goto Error;
+
+#define DICT_ADD_INT64(doname,name,val) \
+    ok = benc_dict_insert_int64(doname,name,(int64_t)val); \
+    if (!ok) \
+        goto Error;
+
+#define DICT_ADD_STR(doname,name,val) \
+        ok = benc_dict_insert_str(doname,name,val); \
+        if (!ok) \
+            goto Error;
+
+#define DICT_ADD_DICT(doname,name,val) \
+        ok = benc_dict_insert2(doname,name,(benc_obj*)val); \
+        if (!ok) \
+            goto Error;
+
+benc_dict* Prefs_SerializeGlobal(void)
+{
+    BOOL       ok;
+    DICT_NEW(prefs);
+    DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gShowToolbar);
+    DICT_ADD_INT64(prefs, USE_FITZ_STR, gUseFitz);
+    DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gPdfAssociateDontAskAgain);
+    DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gPdfAssociateShouldAssociate);
+    DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
+    return prefs;
+Error:
+    benc_dict_delete(prefs);
+    return NULL;
+}
+       
+benc_obj* Prefs_Serialize2(FileHistoryList **root)
+{
+    BOOL       ok;
+    DICT_NEW(prefs);
+
+    benc_dict* global = Prefs_SerializeGlobal();
+    if (!global)
+        goto Error;
+    DICT_ADD_DICT(prefs,GLOBAL_PREFS_STR, global);
+    return (benc_obj*)prefs;
+Error:
+    benc_dict_delete(prefs);
+    return NULL;
 }
 
 bool Prefs_Serialize(FileHistoryList **root, DString *strOut)

@@ -222,6 +222,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\benc_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\benc_util.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\DisplayModel.cc"
 				>
 			</File>
