@@ -4132,6 +4132,17 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
 }
 
+static WNDPROC DefWndProcToolbar = NULL;
+static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (WM_CTLCOLORSTATIC == message) {
+        SetBkMode((HDC)wParam, TRANSPARENT);
+        SelectBrush((HDC)wParam, GetStockBrush(NULL_BRUSH));
+        return 0;
+    }
+    return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
+}
+
 // TODO: after changing the language we have to change the text of the label,
 // resize the label and move text box. Right now 
 #define FIND_TXT_POS_X 146
@@ -4151,13 +4162,6 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
                           WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
                           FIND_TXT_POS_X, 0, 160, 22, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    // TODO: on XP when using new controls, the text is being drawn on beige
-    // background which doesn't look good on the toolbar.
-    // We need to make text drawing transparent. One way is to subclass static
-    // control and over-ride WM_PAINT and use SetBkMode(dc, TRANSPARENT) before
-    // drawing. Another one would be to handle WM_CTLCOLOR and call 
-    // SetBkMode(dc,TRANSPARENT) there, but that probably won't work since parent
-    // window is toolbar
     RECT findWndRect;
     GetWindowRect(find, &findWndRect);
     int findWndDy = rect_dy(&findWndRect) + 1;
@@ -4167,9 +4171,8 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     MoveWindow(find, FIND_TXT_POS_X + size.cx + 2, 0, 160, 22, false);
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
-    if (!DefWndProcFindBox)
-        DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
-    SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
+    DefWndProcToolbar = (WNDPROC)SetWindowLong(win->hwndToolbar, GWL_WNDPROC, (LONG)WndProcToolbar);
+    DefWndProcFindBox = (WNDPROC)SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
     SetWindowLong(find, GWL_USERDATA, (LONG)win);
     win->hwndFindBox = find;
 }
