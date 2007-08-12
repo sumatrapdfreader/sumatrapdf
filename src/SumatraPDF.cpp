@@ -4171,8 +4171,12 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     MoveWindow(find, FIND_TXT_POS_X + size.cx + 2, 0, 160, 22, false);
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
-    DefWndProcToolbar = (WNDPROC)SetWindowLong(win->hwndToolbar, GWL_WNDPROC, (LONG)WndProcToolbar);
-    DefWndProcFindBox = (WNDPROC)SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
+    if (!DefWndProcToolbar)
+        DefWndProcToolbar = (WNDPROC)GetWindowLong(win->hwndToolbar, GWL_WNDPROC);
+    SetWindowLong(win->hwndToolbar, GWL_WNDPROC, (LONG)WndProcToolbar);
+    if (!DefWndProcFindBox)
+        DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
+    SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
     SetWindowLong(find, GWL_USERDATA, (LONG)win);
     win->hwndFindBox = find;
 }
