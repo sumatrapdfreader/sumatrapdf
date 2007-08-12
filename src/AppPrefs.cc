@@ -17,6 +17,7 @@ extern BOOL gShowToolbar;
 extern BOOL gUseFitz;
 extern BOOL gPdfAssociateDontAskAgain;
 extern BOOL gPdfAssociateShouldAssociate;
+
 extern bool CurrLangNameSet(const char* langName);
 extern const char* CurrLangNameGet();
 
@@ -72,7 +73,75 @@ Error:
     benc_dict_delete(prefs);
     return NULL;
 }
-       
+
+benc_dict* DisplayState_Serialize2(DisplayState *ds)
+{
+    BOOL  ok;
+    const char * txt;
+    
+    DICT_NEW(prefs);
+    DICT_ADD_STR(prefs, FILE_STR, ds->filePath);
+    txt = DisplayModeNameFromEnum(ds->displayMode);
+    if (txt)
+        DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
+    DICT_ADD_INT64(prefs, VISIBLE_STR, ds->visible);
+    DICT_ADD_INT64(prefs, PAGE_NO_STR, ds->pageNo);
+    DICT_ADD_INT64(prefs, ROTATION_STR, ds->rotation);
+    DICT_ADD_INT64(prefs, FULLSCREEN_STR, ds->fullScreen);
+    DICT_ADD_INT64(prefs, SCROLL_X_STR, ds->scrollX);
+    DICT_ADD_INT64(prefs, SCROLL_Y_STR, ds->scrollY);
+    DICT_ADD_INT64(prefs, WINDOW_X_STR, ds->windowX);
+    DICT_ADD_INT64(prefs, WINDOW_Y_STR, ds->windowY);
+    DICT_ADD_INT64(prefs, WINDOW_DX_STR, ds->windowDx);
+    DICT_ADD_INT64(prefs, WINDOW_DY_STR, ds->windowDy);
+
+    txt = str_printf("%.4f", ds->zoomVirtual);
+    if (txt) {
+        DICT_ADD_STR(prefs, ZOOM_VIRTUAL_STR, txt);
+        free((void*)txt);
+    }
+
+    return prefs;
+Error:
+    benc_dict_delete(prefs);
+    return NULL;
+}
+
+static benc_dict* FileHistoryList_Node_Serialize2(FileHistoryList *node)
+{
+    assert(node);
+    if (!node) return NULL;
+
+    return DisplayState_Serialize2(&(node->state));
+}
+
+benc_array* FileHistoryList_Serialize2(FileHistoryList **root)
+{
+    BOOL ok;
+    assert(root);
+    if (!root) return NULL;
+
+    benc_array* arr = benc_array_new();
+    if (arr)
+        goto Error;
+
+    FileHistoryList *curr = *root;
+    while (curr) {
+        benc_obj* bobj = (benc_obj*) FileHistoryList_Node_Serialize2(curr);
+        if (!bobj)
+            goto Error;
+        ok = benc_array_append(arr, bobj);
+        if (!ok)
+            goto Error;
+        curr = curr->next;
+    }
+    return arr;
+Error:
+    if (arr)
+        benc_array_delete(arr);
+    return NULL;      
+}
+
 benc_obj* Prefs_Serialize2(FileHistoryList **root)
 {
     BOOL       ok;
@@ -81,7 +150,11 @@ benc_obj* Prefs_Serialize2(FileHistoryList **root)
     benc_dict* global = Prefs_SerializeGlobal();
     if (!global)
         goto Error;
-    DICT_ADD_DICT(prefs,GLOBAL_PREFS_STR, global);
+    DICT_ADD_DICT(prefs, GLOBAL_PREFS_STR, global);
+    benc_array *fileHistory = FileHistoryList_Serialize2(root);
+    if (!fileHistory)
+        goto Error;
+    DICT_ADD_DICT(prefs, FILE_HISTORY_STR, fileHistory);
     return (benc_obj*)prefs;
 Error:
     benc_dict_delete(prefs);
@@ -282,6 +355,73 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     fileHistoryNode->state = *state;
     FileHistoryList_Node_Append(fileHistoryRoot, fileHistoryNode);
     fileHistoryNode = NULL;
+}
+
+void PrefsSetBool(benc_dict *dict, const char *key, BOOL *valOut)
+{
+    benc_obj * bobj = benc_dict_find(dict, key, strlen(key));
+    benc_int64 *bint = benc_obj_as_int64(bobj);
+    if (!bint)
+        return;
+    int64_t val = bint->m_val;
+    *valOut = (BOOL)val;
+}
+
+static bool FileHistory_Deserialize(benc_obj* obj, DisplayState *state)
+{
+    benc_dict* dict = benc_obj_as_dict(obj);
+    if (!dict)
+        return false;
+    DisplayState_Init(state);
+
+    assert(0); /* TODO: write me */
+
+    return true;
+}
+
+bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
+{
+    benc_obj * bobj;
+    benc_str * bstr;
+    bobj = benc_obj_from_data(prefsTxt, prefsTxtLen);
+    if (!bobj)
+        return false;
+    benc_dict* all = benc_obj_as_dict(bobj);
+    if (!all)
+        goto Error;
+
+    benc_dict* global = benc_obj_as_dict(benc_dict_find(all, GLOBAL_PREFS_STR, strlen(GLOBAL_PREFS_STR)));
+    if (global)
+        goto Error;
+
+    PrefsSetBool(global, SHOW_TOOLBAR_STR, &gShowToolbar);
+    PrefsSetBool(global, USE_FITZ_STR, &gUseFitz);
+    PrefsSetBool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gPdfAssociateDontAskAgain);
+    PrefsSetBool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gPdfAssociateShouldAssociate);
+
+    bstr = benc_obj_as_str(benc_dict_find(global, UI_LANGUAGE_STR, strlen(UI_LANGUAGE_STR)));
+    if (bstr)
+        CurrLangNameSet(bstr->m_str);
+
+    benc_array* fileHistory = benc_obj_as_array(benc_dict_find(all, FILE_HISTORY_STR, strlen(FILE_HISTORY_STR)));
+    if (fileHistory)
+        goto Error;
+    size_t dlen = benc_array_len(fileHistory);
+    for (size_t i = 0; i < dlen; i++) {
+#if 0
+        DisplayState state;
+        FileHistory_Deserialize(&state);
+        if (state.filePath) {
+            if (FileExists(state.filePath))
+                FileHistory_Add(fileHistoryRoot, &state);
+        }
+#endif
+    }
+    benc_obj_delete(bobj);
+    return true;
+Error:
+    benc_obj_delete(bobj);
+    return false;
 }
 
 /* Deserialize preferences from text. Put state into 'dsOut' and add all history
