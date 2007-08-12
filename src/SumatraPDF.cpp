@@ -1321,6 +1321,11 @@ static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
     InvalidateRect(win->hwndCanvas, NULL, false);
     if (update)
         UpdateWindow(win->hwndCanvas);
+    InvalidateRect(win->hwndToolbar, NULL, true);
+    if (!win->dm)   // Avoid focus on Find box
+        HideCaret(NULL);
+    else
+        ShowCaret(NULL);
 }
 
 static bool FileCloseMenuEnabled(void) {
@@ -1688,7 +1693,6 @@ Exit:
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
-    InvalidateRect(win->hwndFindBox, NULL, true);
     win->ShowTocBox();
     return win;
 }
