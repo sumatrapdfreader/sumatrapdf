@@ -4771,6 +4771,14 @@ InitMouseWheelInfo:
             if (gDeltaPerLine == 0)
                break;
 
+            if (DM_SINGLE_PAGE == win->dm->displayMode()) {
+                if ((short) HIWORD (wParam) > 0)
+                    win->dm->goToPrevPage(0);
+                else
+                    win->dm->goToNextPage(0);
+                return 0;
+            }
+
             gAccumDelta += (short) HIWORD (wParam);     // 120 or -120
 
             while (gAccumDelta >= gDeltaPerLine)
