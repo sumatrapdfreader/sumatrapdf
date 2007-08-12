@@ -224,6 +224,9 @@ public:
         _totalDrawAreaSize = size;
         drawAreaSize = SizeD(size.dx() - _scrollbarYDx, size.dy() - _scrollbarXDy);
     }
+    
+    bool            needHScroll() { return drawAreaSize.dxI() < _canvasSize.dxI(); }
+    bool            needVScroll() { return drawAreaSize.dyI() < _canvasSize.dyI(); }
 
     void            changeTotalDrawAreaSize(SizeD totalDrawAreaSize);
 

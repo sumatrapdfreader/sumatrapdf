@@ -1418,8 +1418,12 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     }
     /* Hide scrollbars if not showing a PDF */
     /* TODO: doesn't really fit the name of the function */
-    if (WS_SHOWING_PDF == win->state)
-        ShowScrollBar(win->hwndCanvas, SB_BOTH, TRUE);
+    if (WS_SHOWING_PDF == win->state) {
+        if (win->dm->needHScroll())
+            ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
+        if (win->dm->needVScroll())
+            ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
+    }
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win_set_text(win->hwndFrame, APP_NAME);
