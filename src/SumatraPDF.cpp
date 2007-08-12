@@ -1429,7 +1429,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     if (WS_SHOWING_PDF == win->state) {
         if (win->dm->needHScroll())
             ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
-        if (win->dm->needVScroll())
+        if (win->dm->needVScroll() || (DM_SINGLE_PAGE == win->dm->displayMode() && win->dm->pageCount() > 1))
             ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
     }
     else {
@@ -1808,10 +1808,17 @@ void DisplayModel::setScrollbarsState(void)
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
     if (drawAreaDy >= canvasDy) {
-        si.nPos = 0;
         si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
+        if (DM_SINGLE_PAGE == win->dm->displayMode()) {
+            si.nPos = win->dm->currentPageNo() - 1;
+            si.nMax = win->dm->pageCount() - 1;
+            si.nPage = 1;
+        }
+        else {
+            si.nPos = 0;
+            si.nMax = 99;
+            si.nPage = 100;
+        }
     } else {
         si.nPos = (int)areaOffset.y;
         si.nMin = 0;
@@ -3389,12 +3396,15 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 	if (win->documentBlocked) return;
     SCROLLINFO   si = {0};
     int          iVertPos;
+    int          lineHeight = 16;
 
     si.cbSize = sizeof (si);
     si.fMask  = SIF_ALL;
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
 
     iVertPos = si.nPos;
+    if (DM_SINGLE_PAGE == win->dm->displayMode())
+        lineHeight = 1;
 
     switch (LOWORD(wParam))
     {
@@ -3407,11 +3417,11 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
            break;
 
         case SB_LINEUP:
-           si.nPos -= 16;
+           si.nPos -= lineHeight;
            break;
 
         case SB_LINEDOWN:
-           si.nPos += 16;
+           si.nPos += lineHeight;
            break;
 
         case SB_PAGEUP:
@@ -3437,8 +3447,12 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
 
     // If the position has changed, scroll the window and update it
-    if (win->dm && (si.nPos != iVertPos))
-        win->dm->scrollYTo(si.nPos);
+    if (win->dm && (si.nPos != iVertPos)) {
+        if (DM_SINGLE_PAGE == win->dm->displayMode())
+            win->dm->goToPage(si.nPos + 1, 0);
+        else
+            win->dm->scrollYTo(si.nPos);
+    }
 }
 
 static void OnHScroll(WindowInfo *win, WPARAM wParam)
