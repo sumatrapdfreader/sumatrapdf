@@ -1317,15 +1317,18 @@ static int WindowInfoList_Len(void) {
     return len;
 }
 
-static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
-    InvalidateRect(win->hwndCanvas, NULL, false);
-    if (update)
-        UpdateWindow(win->hwndCanvas);
+static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     InvalidateRect(win->hwndToolbar, NULL, true);
     if (!win->dm)   // Avoid focus on Find box
         HideCaret(NULL);
     else
         ShowCaret(NULL);
+}
+
+static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
+    InvalidateRect(win->hwndCanvas, NULL, false);
+    if (update)
+        UpdateWindow(win->hwndCanvas);
 }
 
 static bool FileCloseMenuEnabled(void) {
@@ -1679,8 +1682,10 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
     if (!reuseExistingWindow && !fileFromHistory)
         WindowInfo_ResizeToPage(win, startPage);
 
-    if (reuseExistingWindow)
+    if (reuseExistingWindow) {
         WindowInfo_RedrawAll(win);
+        WindowInfo_UpdateFindbox(win);
+    }
 
 Exit:
     if (!reuseExistingWindow)
@@ -3115,6 +3120,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         delete win->dm;
         win->dm = NULL;
         WindowInfo_RedrawAll(win);
+        WindowInfo_UpdateFindbox(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         WindowInfoList_Remove(win);
