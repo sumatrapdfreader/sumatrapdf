@@ -398,10 +398,10 @@ th:หมุนขวา
 pt:Rodar à direita
 no:Roter til høyre
 -
-Fullscreen\tF11
-pl:Na cały ekran\tF11
-ja:全画面表示\tF11
-no:Full skjerm\tF11
+Fullscreen\tCtrl-L
+pl:Na cały ekran\tCtrl-L
+ja:全画面表示\tCtrl-L
+no:Full skjerm\tCtrl-L
 -
 Show toolbar
 br:Mostrar barra de ferramentas

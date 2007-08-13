@@ -610,7 +610,7 @@ MenuDef menuDefView[] = {
     { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT },
     { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT },
     { SEP_ITEM, 0 },
-    { _TRN("Fullscreen\tF11"),             IDM_VIEW_FULLSCREEN },
+    { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN },
     { SEP_ITEM, 0 },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR },
     { SEP_ITEM, 0 },
@@ -3863,8 +3863,14 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         // Emulate acrobat: "Shift Ctrl -" is rotate counter-clockwise
         if (shiftPressed & ctrlPressed)
             RotateLeft(win);
-    } else if (VK_F11 == key) {
-        OnMenuViewFullscreen(win);
+    } else if ('L' == key) {
+        if (ctrlPressed)
+            OnMenuViewFullscreen(win);
+    } else if ('F' == key) {
+        if (ctrlPressed) {
+        SendMessage(win->hwndFindBox, EM_SETSEL, 0, -1);
+        SetFocus(win->hwndFindBox);
+        }
     } else if (VK_F12 == key) {
         if (!win->tocVisible)
             win->ShowTocBox();
@@ -3890,9 +3896,9 @@ static void OnChar(WindowInfo *win, int key)
         win->dm->scrollYByAreaDy(false, true);
     } else if ('g' == key) {
         OnMenuGoToPage(win);
-    } else if ('k' == key) {
-        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
     } else if ('j' == key) {
+        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+    } else if ('k' == key) {
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
     } else if ('n' == key) {
         win->dm->goToNextPage(0);
