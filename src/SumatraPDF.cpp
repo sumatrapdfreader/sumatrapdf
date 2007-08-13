@@ -1480,7 +1480,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         return NULL;
 
     win = WindowInfo_New(hwndFrame);
-    hwndCanvas = CreateWindow(
+    hwndCanvas = CreateWindowEx(
+            WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
             CW_USEDEFAULT, CW_USEDEFAULT,
@@ -1809,7 +1810,7 @@ void DisplayModel::setScrollbarsState(void)
 
     if (drawAreaDy >= canvasDy) {
         si.nMin = 0;
-        if (DM_SINGLE_PAGE == win->dm->displayMode()) {
+        if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
             si.nPos = win->dm->currentPageNo() - 1;
             si.nMax = win->dm->pageCount() - 1;
             si.nPage = 1;
@@ -3403,7 +3404,7 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
 
     iVertPos = si.nPos;
-    if (DM_SINGLE_PAGE == win->dm->displayMode())
+    if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
         lineHeight = 1;
 
     switch (LOWORD(wParam))
@@ -3448,7 +3449,7 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (win->dm && (si.nPos != iVertPos)) {
-        if (DM_SINGLE_PAGE == win->dm->displayMode())
+        if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
             win->dm->goToPage(si.nPos + 1, 0);
         else
             win->dm->scrollYTo(si.nPos);
