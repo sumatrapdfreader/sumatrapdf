@@ -399,6 +399,7 @@ pt:Rodar à direita
 no:Roter til høyre
 -
 Fullscreen\tCtrl-L
+hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
 no:Full skjerm\tCtrl-L
@@ -1139,6 +1140,7 @@ ja:スウェーデン語
 no:Svensk
 -
 Czech
+hu:Cseh
 fr:Tchèque
 pl:Czechosłowacki
 gr:Τσέχικα
@@ -1146,28 +1148,33 @@ ja:チェコ語
 no:Tjekkisk
 -
 Greek
+hu:Görög
 gr:Ελληνικά
 fr:Grec
 ja:ギリシャ語
 no:Gresk
 -
 Thai
+hu:Thai
 th:ไทย
 ja:タイ語
 no:Thai
 -
 Portuguese (Portugal)
+hu:Portugál
 pt:Português
 fr:Portuguais
 ja:ポルトガル語 (ポルトガル)
 no:Portugisisk
 -
 Brazillian
+hu:Brazil
 pl:Brazylijski
 ja:ブラジル語
 no:Brasiliansk
 -
 Norwegian
+hu:Norvég
 no:Norsk
 pl:Norweski
 -
@@ -1250,6 +1257,7 @@ pt:Acerca de...
 no:&Om
 -
 Find:
+hu:Keresés:
 pl:Szukaj:
 ja:検索:
 -
