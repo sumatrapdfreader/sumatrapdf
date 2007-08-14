@@ -563,7 +563,11 @@ ErrorPoppler:
 
 PdfTocItem *PdfEngineFitz::buildTocTree(pdf_outline *entry)
 {
-    wchar_t *name = utf8_to_utf16(entry->title);
+    wchar_t *dname = utf8_to_utf16(entry->title);
+    wchar_t *name = (wchar_t *)malloc((wcslen(dname) + 2) * sizeof(wchar_t));
+    swprintf(name, L"\x007F%s", dname);
+    free(dname);
+
     PdfTocItem *node = new PdfTocItem(name, entry->link);
 
     if (entry->child)
