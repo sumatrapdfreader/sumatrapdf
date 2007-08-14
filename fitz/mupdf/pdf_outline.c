@@ -19,6 +19,12 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Title");
 	if (obj)
 	{
+		if (fz_isindirect(obj))
+		{
+			error = pdf_loadindirect(&obj, xref, obj);
+			if (error)
+				return error;
+		}
 		error = pdf_toutf8(&node->title, obj);
 		if (error)
 			return error;
