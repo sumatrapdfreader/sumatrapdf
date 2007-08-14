@@ -599,6 +599,10 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	if (error)
 		return error;
 
+	error = pdf_loadnametrees(xref);
+	if (error)
+		return error;
+
 	return nil;
 }
 
