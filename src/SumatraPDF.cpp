@@ -4370,7 +4370,15 @@ HTREEITEM WindowInfo::AddTocItemToView(PdfTocItem *entry, HTREEITEM parent)
     TV_INSERTSTRUCTW tvinsert;
     tvinsert.hParent = (HTREEITEM)parent;
     tvinsert.hInsertAfter = TVI_LAST;
-    tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM;
+    if (parent == NULL) {
+        tvinsert.itemex.state = TVIS_EXPANDED;
+        tvinsert.itemex.stateMask = TVIS_EXPANDED;
+    }
+    else {
+        tvinsert.itemex.state = 0;
+        tvinsert.itemex.stateMask = 0;
+    }
+    tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
     tvinsert.itemex.lParam = (LPARAM)entry->link;
     tvinsert.itemex.pszText = entry->title;
     return TreeView_InsertItemW(hwndTocBox, &tvinsert);
