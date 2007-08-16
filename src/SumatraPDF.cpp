@@ -4323,7 +4323,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
 
-    win->hwndTocBox = CreateWindowEx(WS_EX_CLIENTEDGE, "SysTreeView32", "TOC",
+    win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, "TOC",
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
