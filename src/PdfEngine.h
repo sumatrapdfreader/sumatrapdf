@@ -170,10 +170,17 @@ public:
     virtual bool hasTocTree() = 0;
     virtual PdfTocItem *getTocTree() = 0;
 
+    bool enableEngineSwitch() { return _enableEngineSwitch; }
+    void setEnableEngineSwitch(bool enable) { _enableEngineSwitch = enable; }
+
 protected:
     const char *_fileName;
     int _pageCount;
     WindowInfo *_windowInfo;
+
+    /* true by default. If true, if fitz engine fails to load PDF file, it'll
+       transparently switch to using poppler engine */
+    bool _enableEngineSwitch;
 };
 
 class PdfEnginePoppler : public PdfEngine {

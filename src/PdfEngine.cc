@@ -547,6 +547,8 @@ DecryptedOk:
 Error:
     return false;
 TryPoppler:
+    if (!_enableEngineSwitch)
+        return false;
     _popplerEngine = new PdfEnginePoppler();
     if (!_popplerEngine)
         return false;
@@ -618,7 +620,7 @@ pdf_page *PdfEngineFitz::getPdfPage(int pageNo)
     // TODO: should check for error from pdf_getpageobject?
     fz_obj * obj = pdf_getpageobject(_pageTree, pageNo - 1);
     fz_error * error = pdf_loadpage(&page, _xref, obj);
-    assert (!error);
+    //assert (!error);
     if (error) {
         if (!ReleaseSemaphore(_getPageSem, 1, NULL))
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
@@ -752,6 +754,9 @@ RenderedBitmap *PdfEngineFitz::renderBitmap(
     ConvertPixmapForWindows(image);
     return new RenderedBitmapFitz(image);
 TryPoppler:
+    if (!_enableEngineSwitch)
+        return NULL;
+
     _popplerEngine = new PdfEnginePoppler();
     if (!_popplerEngine)
         return false;

@@ -770,6 +770,7 @@ static void renderPdf(const char *fileName, RenderType renderType)
 
     if (fileNameFitz) {
         engineFitz = new PdfEngineFitz();
+        engineFitz->setEnableEngineSwitch(false);
 
         MsTimer msTimer;
         if (!engineFitz->load(fileNameFitz, NULL)) {
@@ -827,7 +828,7 @@ static void renderPdf(const char *fileName, RenderType renderType)
 
             if (gfTimings)
                 if (!bmpFitz)
-                    LogInfo("page fitz   %d: failed to render\n", curPage);
+                    LogInfo("page fitz   %d: failed to renderin %.2f ms\n", curPage, timeInMs);
                 else
                     LogInfo("page fitz   %d (%dx%d): %.2f ms\n", curPage, bmpFitz->dx(), bmpFitz->dy(), timeInMs);
             if (gfLinks)
