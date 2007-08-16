@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="true"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)fitz\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils\msvc&quot;;&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)fitz\include&quot;"
 				PreprocessorDefinitions="_WIN32;WIN32;_DEBUG;_WINDOWS;DEBUG;USE_OWN_GET_AUTH_DATA;POPPLER_DATADIR=\&quot;\&quot;;ENABLE_ZLIB=1;ENABLE_LIBJPEG=1"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -134,7 +134,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="false"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)fitz\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils\msvc&quot;;&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)fitz\include&quot;"
 				PreprocessorDefinitions="_WIN32;WIN32;NDEBUG;_WINDOWS;USE_OWN_GET_AUTH_DATA;POPPLER_DATADIR=\&quot;\&quot;;ENABLE_ZLIB=1;ENABLE_LIBJPEG=1"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -234,6 +234,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\utf_util.c"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\win_util.c"
 				>
 			</File>
@@ -265,6 +269,10 @@
 			</File>
 			<File
 				RelativePath=".\baseutils\strlist_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\utf_util.h"
 				>
 			</File>
 			<File

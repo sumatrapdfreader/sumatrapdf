@@ -1,5 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
+
+#include "base_util.h"
 #include "win_util.h"
 #include "PdfEngine.h"
 

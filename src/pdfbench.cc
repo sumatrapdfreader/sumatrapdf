@@ -16,8 +16,8 @@
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-#include "str_util.h"
 #include "base_util.h"
+#include "str_util.h"
 #include "file_util.h"
 
 #include "PdfEngine.h"
@@ -1066,7 +1066,7 @@ void renderFileList(char *pdfFileList)
     char *data = NULL;
     char *dataNormalized = NULL;
     char *pdfFileName;
-    size_t fileSize;
+    uint64_t fileSize;
 
     assert(pdfFileList);
     if (!pdfFileList)
