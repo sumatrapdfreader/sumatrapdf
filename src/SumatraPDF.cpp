@@ -4457,7 +4457,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     
     HWND closeToc = CreateWindow(WC_STATIC, "",
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                        1, 2, 3, 5, spliter, (HMENU)0, hInst, NULL);
+                        0, 0, 5, 9, spliter, (HMENU)0, hInst, NULL);
     SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
     SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
 
