@@ -122,7 +122,7 @@ benc_array* FileHistoryList_Serialize2(FileHistoryList **root)
     if (!root) return NULL;
 
     benc_array* arr = benc_array_new();
-    if (arr)
+    if (!arr)
         goto Error;
 
     FileHistoryList *curr = *root;
@@ -142,9 +142,11 @@ Error:
     return NULL;      
 }
 
-benc_obj* Prefs_Serialize2(FileHistoryList **root)
+const char *Prefs_Serialize2(FileHistoryList **root, size_t* lenOut)
 {
-    BOOL       ok;
+    BOOL        ok;
+    char *      data = NULL;
+
     DICT_NEW(prefs);
 
     benc_dict* global = Prefs_SerializeGlobal();
@@ -155,10 +157,11 @@ benc_obj* Prefs_Serialize2(FileHistoryList **root)
     if (!fileHistory)
         goto Error;
     DICT_ADD_DICT(prefs, FILE_HISTORY_STR, fileHistory);
-    return (benc_obj*)prefs;
+
+    data = benc_obj_to_data((benc_obj*)prefs, lenOut);
 Error:
     benc_dict_delete(prefs);
-    return NULL;
+    return (const char*)data;
 }
 
 bool Prefs_Serialize(FileHistoryList **root, DString *strOut)

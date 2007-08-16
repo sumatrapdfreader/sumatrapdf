@@ -109,6 +109,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PDF_DOC_NAME        _T("Adobe PDF Document")
 #define ABOUT_WIN_TITLE     _TR("About SumatraPDF")
 #define PREFS_FILE_NAME     _T("sumatrapdfprefs.txt")
+#define PREFS_FILE_NAME_NEW _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR         _T("SumatraPDF")
 
 #define BENCH_ARG_TXT             "-bench"
@@ -890,10 +891,16 @@ static void AppGenDataFilename(char* pFilename, DString* pDs)
     DStringAppend(pDs, pFilename, -1);
 }
 
-static void Prefs_GetFileName(DString* pDs)
+static void Prefs_GetFileNameOld(DString* pDs)
 {
     assert(0 == pDs->length);
     AppGenDataFilename(PREFS_FILE_NAME, pDs);
+}
+
+static void Prefs_GetFileNameNew(DString* pDs)
+{
+    assert(0 == pDs->length);
+    AppGenDataFilename(PREFS_FILE_NAME_NEW, pDs);
 }
 
 /* Load preferences from the preferences file.
@@ -901,32 +908,48 @@ static void Prefs_GetFileName(DString* pDs)
 */
 static bool Prefs_Load(void)
 {
-    DString             path;
-    static bool         loaded = false;
-    char *              prefsTxt = NULL;
+    DString         path;
+    static bool     loaded = false;
+    char *          prefsTxt = NULL;
+    uint64_t        prefsFileLen;
+    bool            ok = false;
 
     assert(!loaded);
     loaded = true;
 
     DBG_OUT("Prefs_Load()\n");
 
+#if 0
     DStringInit(&path);
-    Prefs_GetFileName(&path);
+    Prefs_GetFileNameNew(&path);
+    prefsTxt = file_read_all(path.pString, &prefsFileLen);
+    if (!str_empty(prefsTxt)) {
+        ok = Prefs_Deserialize2(prefsTxt, prefsFileLen, &gFileHistoryRoot);
+        assert(ok);
+        goto Exit;
+    }
+#endif
 
-    uint64_t prefsFileLen;
+    /* TODO: temporary, try to load preferences in old format. This is only for the
+       transitional period. In some future release I'll nuke all the code
+       related to old preferences format. */
+    DStringInit(&path);
+    Prefs_GetFileNameOld(&path);
+
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (str_empty(prefsTxt)) {
         DBG_OUT("  no prefs file or is empty\n");
-        return false;
+        goto Exit;
     }
     DBG_OUT("Prefs file %s:\n%s\n", path.pString, prefsTxt);
 
-    bool fOk = Prefs_Deserialize(prefsTxt, &gFileHistoryRoot);
-    assert(fOk);
+    ok = Prefs_Deserialize(prefsTxt, &gFileHistoryRoot);
+    assert(ok);
 
+Exit:
     DStringFree(&path);
     free((void*)prefsTxt);
-    return true;
+    return ok;
 }
 
 static struct idToZoomMap {
@@ -1091,16 +1114,38 @@ static void UpdateCurrentFileDisplayState(void)
     }
 }
 
-static void Prefs_Save(void)
+static bool Prefs_Save2(void)
+{
+    DString     path;
+    size_t      dataLen;
+    bool        ok = false;
+
+    DStringInit(&path);
+    /* mark currently shown files as visible */
+    UpdateCurrentFileDisplayState();
+
+    const char *data = Prefs_Serialize2(&gFileHistoryRoot, &dataLen);
+    if (!data)
+        goto Exit;
+
+    assert(dataLen > 0);
+    Prefs_GetFileNameNew(&path);
+    /* TODO: consider 2-step process:
+        * write to a temp file
+        * rename temp file to final file */
+    if (write_to_file(path.pString, (void*)data, dataLen))
+        ok = true;
+
+Exit:
+    free((void*)data);
+    DStringFree(&path);
+    return ok;
+}
+
+static void Prefs_SaveOld(void)
 {
     DString       path;
     DString       prefsStr;
-
-#if 0
-    if (gPrefsSaved)
-        return;
-    gPrefsSaved = TRUE;
-#endif
 
     DStringInit(&prefsStr);
 
@@ -1112,7 +1157,7 @@ static void Prefs_Save(void)
         goto Exit;
 
     DStringInit(&path);
-    Prefs_GetFileName(&path);
+    Prefs_GetFileNameOld(&path);
     DBG_OUT("prefs file=%s\nprefs:\n%s\n", path.pString, prefsStr.pString);
     /* TODO: consider 2-step process:
         * write to a temp file
@@ -1122,6 +1167,13 @@ static void Prefs_Save(void)
 Exit:
     DStringFree(&prefsStr);
     DStringFree(&path);
+}
+
+static void Prefs_Save(void)
+{
+    /* TODO: temporary, save in both formats */
+    Prefs_Save2();
+    Prefs_SaveOld();
 }
 
 static bool WindowInfo_Dib_Init(WindowInfo *win) {
