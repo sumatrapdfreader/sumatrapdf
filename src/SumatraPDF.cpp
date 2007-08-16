@@ -4138,6 +4138,18 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             SetFocus(win->hwndFrame);
         }
     }
+    else if (WM_ERASEBKGND == message) {
+        RECT r;
+        Edit_GetRect(hwnd, &r);
+        if (r.left == 0 && r.top == 0) { // virgin box
+            r.left += 4;
+            r.top += 3;
+            r.bottom += 3;
+            r.right -= 2;
+            Edit_SetRectNoPaint(hwnd, &r);
+        }
+    }
+
     return CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
 }
 
@@ -4167,17 +4179,17 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     SelectObject(dc, prevFnt);
     ReleaseDC(win->hwndToolbar, dc);
 
-    HWND find = CreateWindowEx(WS_EX_CLIENTEDGE, "edit", "",
-                          WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
-                          FIND_TXT_POS_X, 0, 160, 22, win->hwndToolbar, (HMENU)0, hInst, NULL);
+    HWND find = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "",
+                          WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
+                          FIND_TXT_POS_X, 1, 160, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     RECT findWndRect;
     GetWindowRect(find, &findWndRect);
     int findWndDy = rect_dy(&findWndRect) + 1;
-    HWND label = CreateWindowExW(0, L"static", text, WS_VISIBLE | WS_CHILD,
-                         FIND_TXT_POS_X, (findWndDy - size.cy) / 2 - 1, size.cx + 2, size.cy,
+    HWND label = CreateWindowExW(0, WC_STATICW, text, WS_VISIBLE | WS_CHILD,
+                         FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx + 2, size.cy,
                          win->hwndToolbar, (HMENU)0, hInst, NULL);
-    MoveWindow(find, FIND_TXT_POS_X + size.cx + 2, 0, 160, 22, false);
+    MoveWindow(find, FIND_TXT_POS_X + size.cx + 2, 1, 160, 20, false);
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
     if (!DefWndProcToolbar)
