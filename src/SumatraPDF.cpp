@@ -4516,13 +4516,15 @@ void WindowInfo::ShowTocBox()
     LoadTocTree();
 
     RECT rtoc, rframe;
-    int cw, ch, cx, cy = 0;
+    int cw, ch, cx, cy;
 
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
     if (gShowToolbar && !fullscreen)
         cy = gReBarDy + gReBarDyFrame;
+    else
+        cy = 0;
     ch = rect_dy(&rframe) - cy;
 
     cx = rect_dx(&rtoc);
