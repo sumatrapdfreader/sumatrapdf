@@ -3736,14 +3736,9 @@ static void OnMenuViewShowHideToolbar()
             ShowWindow(win->hwndReBar, SW_SHOW);
         else
             ShowWindow(win->hwndReBar, SW_HIDE);
-        int dx, dy, x, y;
-        Win32_Win_GetPos(win->hwndFrame, &x, &y);
-        Win32_Win_GetSize(win->hwndFrame, &dx, &dy);
-        // TODO: a hack. I add 1 to dy to cause sending WM_SIZE msg to hwndFrame
-        // but I shouldn't really change the size. But I don't know how to
-        // cause sending WM_SIZE otherwise. I tried calling OnSize() directly,
-        // but it left scrollbar partially hidden
-        MoveWindow(win->hwndFrame, x, y, dx, dy+1, TRUE);
+        RECT rect;
+        GetClientRect(win->hwndFrame, &rect);
+        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
         MenuUpdateShowToolbarStateForWindow(win);
         win = win->next;
     }
