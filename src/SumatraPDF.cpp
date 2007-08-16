@@ -1,14 +1,5 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
-
-// have to undef _WIN32_IE here to use TB_* constants
-// (_WIN32_IE was defined in *.cbp - codeblocks project file)
-// ==> we have to use a stable API instead of MinGW 5.1.3 :-\
-
-#ifdef __GNUC__
-#undef _WIN32_IE
-#endif
-
 #include "SumatraPDF.h"
 
 #include "file_util.h"
@@ -45,22 +36,6 @@
 
 #ifdef CRASHHANDLER
 #include "client\windows\handler\exception_handler.h"
-#endif
-
-// some stupid things are in headers of MinGW 5.1.3 :-\
-// why we have to define these constants & prototypes again (?!)
-#ifdef __GNUC__
-#ifndef VK_OEM_PLUS
-#define VK_OEM_PLUS     0xBB
-#endif
-#ifndef VK_OEM_MINUS
-#define VK_OEM_MINUS 0xBD
-#endif
-
-extern "C" {
-extern BOOL WINAPI GetDefaultPrinterA(LPSTR,LPDWORD);
-extern BOOL WINAPI GetDefaultPrinterW(LPWSTR,LPDWORD);
-}
 #endif
 
 // this sucks but I don't know any other way
