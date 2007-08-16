@@ -136,12 +136,13 @@ public:
      * to user coordinates for each page which has not empty intersection with it */
     SelectionOnPage *selectionOnPage;
 
-    bool tocReady;
+    bool tocLoaded;
     bool tocVisible;
     void ShowTocBox();
     void HideTocBox();
     void ClearTocBox();
     void LoadTocTree();
+    void ToggleTocBox();
 
     void CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent=NULL);
     HTREEITEM AddTocItemToView(PdfTocItem *entry, HTREEITEM parent);

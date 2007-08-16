@@ -1,17 +1,15 @@
 Short term todo (before next 0.8 release):
 * finish find
   * add next/previous buttons
-  * "Find:" label needs to be transparrent so it looks right on XP's toolbar
-  * Ctrl-F as a keyboard shortcut
 * crash reporting with breakpad
 * use bencoding for preferences instead of ad-hoc text format
 * check for new version on-line
 * finish TOC:
-  * menu item for TOC
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
   * when TOC is shown, keyboard navigation shortcuts don't work. We need to
     be smarter about focus handling
+  * remember toc state for a given document in prefs
 
 Long term todo:
 * show keybindings in help

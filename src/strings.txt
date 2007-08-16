@@ -413,6 +413,8 @@ pt:Rodar à direita
 no:Roter til høyre
 sk:Otočiť vpravo
 -
+Bookmarks
+-
 Fullscreen\tCtrl-L
 hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L

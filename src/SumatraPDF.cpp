@@ -588,6 +588,8 @@ MenuDef menuDefView[] = {
     { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT },
     { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT },
     { SEP_ITEM, 0 },
+    { _TRN("Bookmarks"),                   IDM_VIEW_BOOKMARKS },
+    { SEP_ITEM, 0 },
     { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN },
     { SEP_ITEM, 0 },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR },
@@ -1336,6 +1338,29 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
+static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
+    HMENU hmenu = GetMenu(win->hwndFrame);
+    bool enabled = true;
+    if (WS_SHOWING_PDF != win->state) {
+        enabled = false;
+    } else {
+        if (!win->dm || !win->dm->hasTocTree())
+            enabled = false;
+    }
+
+    if (!enabled) {
+        EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
+        return;
+    }
+
+    EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
+
+    if (win->tocVisible)
+        CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
+    else
+        CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
+}
+
 static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
     if (gShowToolbar)
@@ -1391,6 +1416,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     else
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
 
+    MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
     MenuUpdateUseFitzStateForWindow(win);
     MenuUpdateLanguage(win);
@@ -3101,8 +3127,10 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
         win->ClearTocBox();
-        if (win->tocVisible)
+        if (win->tocVisible) {
             win->HideTocBox();
+            MenuUpdateBookmarksStateForWindow(win);
+        }
         delete win->dm;
         win->dm = NULL;
         WindowInfo_RedrawAll(win);
@@ -3597,12 +3625,13 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     ReloadPdfDocument(win);
     win = gWindowList;
     while (win) {
-        if (win->tocReady) {
+        if (win->tocLoaded) {
             win->ClearTocBox();
             if (win->tocVisible)
                 win->LoadTocTree();
         }
         MenuUpdateUseFitzStateForWindow(win);
+        MenuUpdateBookmarksStateForWindow(win);
         win = win->next;
     }
 }
@@ -3850,10 +3879,8 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         SetFocus(win->hwndFindBox);
         }
     } else if (VK_F12 == key) {
-        if (!win->tocVisible)
-            win->ShowTocBox();
-        else
-            win->HideTocBox();
+        if (win)
+            win->ToggleTocBox();
     }
 }
 
@@ -4382,21 +4409,32 @@ void WindowInfo::CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent)
 
 void WindowInfo::LoadTocTree()
 {
+    if (tocLoaded)
+        return;
+
     PdfTocItem *toc = dm->getTocTree();
     if (toc) {
         CreateTocTreeView(toc);
         delete toc;
     }
-    tocReady = true;
+    tocLoaded = true;
+}
+
+void WindowInfo::ToggleTocBox()
+{
+    if (!tocVisible)
+        ShowTocBox();
+    else
+        HideTocBox();
+    MenuUpdateBookmarksStateForWindow(this);
 }
 
 void WindowInfo::ShowTocBox()
 {
     if (!dm->hasTocTree())
-        return;
+        goto Exit;
 
-    if (!tocReady)
-        LoadTocTree();
+    LoadTocTree();
 
     RECT rtoc, rframe;
     int cw, ch, cx, cy = 0;
@@ -4417,7 +4455,7 @@ void WindowInfo::ShowTocBox()
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(spliter, NULL, cx, cy, DEF_SPLITER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndCanvas, NULL, cx + DEF_SPLITER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-
+Exit:
     tocVisible = true;
 }
 
@@ -4442,9 +4480,9 @@ void WindowInfo::HideTocBox()
 
 void WindowInfo::ClearTocBox()
 {
-    if (!tocReady) return;
+    if (!tocLoaded) return;
     TreeView_DeleteAllItems(hwndTocBox);
-    tocReady = false;
+    tocLoaded = false;
 }
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -4650,10 +4688,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuZoom(win, (UINT)wmId);
                     break;
 
-                case IDM_ZOOM_FIT_VISIBLE:
-                    /* TODO: implement me */
-                    break;
-
                 case IDM_VIEW_SINGLE_PAGE:
                     OnMenuViewSinglePage(win);
                     break;
@@ -4668,6 +4702,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_SHOW_HIDE_TOOLBAR:
                     OnMenuViewShowHideToolbar();
+                    break;
+
+                case IDM_VIEW_BOOKMARKS:
+                    if (win)
+                        win->ToggleTocBox();
                     break;
 
                 case IDM_VIEW_USE_FITZ:
@@ -4825,10 +4864,12 @@ InitMouseWheelInfo:
                 CloseWindow(win, TRUE);
             break;
 
+#if 0
         case IDM_VIEW_WITH_ACROBAT:
             if (win)
                 ViewWithAcrobat(win);
             break;
+#endif
 
         case MSG_BENCH_NEXT_ACTION:
             if (win)
