@@ -601,7 +601,7 @@ void LogInfo(char *fmt, ...)
 
 static void printUsageAndExit(int argc, char **argv)
 {
-    printf("Usage: pdftest [-preview] [-slowpreview] [-timings] [-text] [-resolution NxM] [-recursive] [-page N] [-out out.txt] pdf-files-to-process\n");
+    printf("Usage: pdftest [-fitz|-both] [-links] [-preview|-slowpreview] [-loadonly] [-timings] [-text] [-links] [-resolution NxM] [-recursive] [-page N] [-out out.txt] pdf-files-to-process\n");
     for (int i=0; i < argc; i++) {
         printf("i=%d, '%s'\n", i, argv[i]);
     }
