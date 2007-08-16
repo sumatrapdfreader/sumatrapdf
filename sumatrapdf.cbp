@@ -12,18 +12,10 @@
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-D_WIN32" />
-					<Add option="-DWIN32" />
-					<Add option="-D_WINDOWS" />
 					<Add option="-D_DEBUG" />
 					<Add option="-DDEBUG" />
-					<Add option="-DUSE_OWN_GET_AUTH_DATA" />
-					<Add option='-DPOPPLER_DATADIR=\&quot;\&quot;' />
-					<Add option="-DENABLE_ZLIB=1" />
-					<Add option="-DENABLE_LIBJPEG=1" />
-					<Add option="-D_WIN32_IE=0x0500" />
+					<Add option="-Dinline=" />
 					<Add directory="$(PROJECTTOPDIR)\baseutils" />
 					<Add directory="$(PROJECTTOPDIR)\src" />
 					<Add directory="$(PROJECTTOPDIR)\poppler" />
@@ -44,13 +36,15 @@
 					<Add directory="$(GTK_BASEPATH)\include" />
 				</ResourceCompiler>
 				<Linker>
-					<Add option="lib.a" />
+					<Add option="Debug_Win32\libpopplerlib_d.a" />
+					<Add option="Debug_Win32-fitz\libfitzlib_d.a" />
 					<Add option="-lfreetype" />
 					<Add option="-lz" />
 					<Add option="-ljpeg" />
 					<Add option="-lstdc++" />
 					<Add library="comctl32" />
 					<Add library="winspool" />
+					<Add library="msimg32" />
 					<Add directory="$(GTK_BASEPATH)\lib" />
 				</Linker>
 			</Target>
@@ -60,17 +54,9 @@
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O3" />
-					<Add option="-W" />
-					<Add option="-DWIN32" />
-					<Add option="-D_WIN32" />
+					<Add option="-Os" />
+					<Add option="-O2" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DUSE_OWN_GET_AUTH_DATA" />
-					<Add option='-DPOPPLER_DATADIR=\&quot;\&quot;' />
-					<Add option="-DENABLE_ZLIB=1" />
-					<Add option="-DENABLE_LIBJPEG=1" />
-					<Add option="-D_WIN32_IE=0x0500" />
 					<Add directory="$(PROJECTTOPDIR)\baseutils" />
 					<Add directory="$(PROJECTTOPDIR)\src" />
 					<Add directory="$(PROJECTTOPDIR)\poppler" />
@@ -104,12 +90,29 @@
 				</Linker>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-g" />
+			<Add option="-DWIN32" />
+			<Add option="-D_WIN32" />
+			<Add option="-D_WINDOWS" />
+			<Add option="-DUSE_OWN_GET_AUTH_DATA" />
+			<Add option='-DPOPPLER_DATADIR=\&quot;\&quot;' />
+			<Add option="-DENABLE_ZLIB=1" />
+			<Add option="-DENABLE_LIBJPEG=1" />
+			<Add option="-D_WIN32_WINNT=0x0500" />
+			<Add option="-D_WIN32_IE=0x0501" />
+		</Compiler>
 		<Unit filename="baseutils\WinUtil.cpp" />
 		<Unit filename="baseutils\WinUtil.hpp" />
 		<Unit filename="baseutils\base_util.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="baseutils\base_util.h" />
+		<Unit filename="baseutils\benc_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="baseutils\benc_util.h" />
 		<Unit filename="baseutils\dstring.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -126,7 +129,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="baseutils\log_util.h" />
-		<Unit filename="baseutils\mingwstrsafe.h" />
 		<Unit filename="baseutils\ms_ui_helper.c">
 			<Option compilerVar="CC" />
 		</Unit>

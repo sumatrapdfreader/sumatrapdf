@@ -14,18 +14,10 @@
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
-					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-D_WIN32" />
-					<Add option="-DWIN32" />
-					<Add option="-D_WINDOWS" />
 					<Add option="-D_DEBUG" />
 					<Add option="-DDEBUG" />
-					<Add option="-DUSE_OWN_GET_AUTH_DATA" />
-					<Add option='-DPOPPLER_DATADIR=\&quot;\&quot;' />
-					<Add option="-DENABLE_ZLIB=1" />
-					<Add option="-DENABLE_LIBJPEG=1" />
-					<Add option="-D_WIN32_IE=0x0500" />
+					<Add option="-Dinline=" />
 					<Add directory="$(PROJECTTOPDIR)\baseutils" />
 					<Add directory="$(PROJECTTOPDIR)\src" />
 					<Add directory="$(PROJECTTOPDIR)\poppler" />
@@ -56,18 +48,9 @@
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
-					<Add option="-O3" />
-					<Add option="-W" />
-					<Add option="-g" />
-					<Add option="-DWIN32" />
-					<Add option="-D_WIN32" />
+					<Add option="-Os" />
+					<Add option="-O2" />
 					<Add option="-DNDEBUG" />
-					<Add option="-D_WINDOWS" />
-					<Add option="-DUSE_OWN_GET_AUTH_DATA" />
-					<Add option='-DPOPPLER_DATADIR=\&quot;\&quot;' />
-					<Add option="-DENABLE_ZLIB=1" />
-					<Add option="-DENABLE_LIBJPEG=1" />
-					<Add option="-D_WIN32_IE=0x0500" />
 					<Add directory="$(PROJECTTOPDIR)\baseutils" />
 					<Add directory="$(PROJECTTOPDIR)\src" />
 					<Add directory="$(PROJECTTOPDIR)\poppler" />
@@ -92,6 +75,18 @@
 				</Linker>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-g" />
+			<Add option="-D_WIN32" />
+			<Add option="-DWIN32" />
+			<Add option="-D_WINDOWS" />
+			<Add option="-DUSE_OWN_GET_AUTH_DATA" />
+			<Add option='-DPOPPLER_DATADIR=\&quot;\&quot;' />
+			<Add option="-DENABLE_ZLIB=1" />
+			<Add option="-DENABLE_LIBJPEG=1" />
+			<Add option="-D_WIN32_IE=0x0501" />
+		</Compiler>
 		<Unit filename="poppler\fofi\FoFiBase.cc">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -409,6 +404,7 @@
 		<Extensions>
 			<code_completion />
 			<envvars />
+			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
