@@ -904,31 +904,51 @@ static void Prefs_GetFileNameNew(DString* pDs)
 }
 
 /* Load preferences from the preferences file.
-   Returns true if preferences file was loaded, false if it didn't exist.
+   Returns true if preferences file was loaded, false if there was an error.
 */
-static bool Prefs_Load(void)
+static bool Prefs_LoadNew(void)
 {
     DString         path;
-    static bool     loaded = false;
     char *          prefsTxt = NULL;
     uint64_t        prefsFileLen;
     bool            ok = false;
 
+#ifdef DEBUG
+    static bool     loaded = false;
     assert(!loaded);
     loaded = true;
+#endif
 
-    DBG_OUT("Prefs_Load()\n");
-
-#if 0
     DStringInit(&path);
     Prefs_GetFileNameNew(&path);
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize2(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
-        goto Exit;
     }
+
+    DStringFree(&path);
+    free((void*)prefsTxt);
+    return ok;
+}
+
+/* Load preferences from the preferences file.
+   Returns true if preferences file was loaded, false if it didn't exist.
+*/
+static bool Prefs_LoadOld(void)
+{
+    DString         path;
+    char *          prefsTxt = NULL;
+    uint64_t        prefsFileLen;
+    bool            ok = false;
+
+#ifdef DEBUG
+    static bool     loaded = false;
+    assert(!loaded);
+    loaded = true;
 #endif
+
+    DBG_OUT("Prefs_Load()\n");
 
     /* TODO: temporary, try to load preferences in old format. This is only for the
        transitional period. In some future release I'll nuke all the code
@@ -950,6 +970,13 @@ Exit:
     DStringFree(&path);
     free((void*)prefsTxt);
     return ok;
+}
+
+static bool Prefs_Load(void)
+{
+    Prefs_LoadOld();
+    //Prefs_LoadNew();
+    return true;
 }
 
 static struct idToZoomMap {

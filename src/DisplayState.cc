@@ -54,17 +54,17 @@ const char *DisplayModeNameFromEnum(DisplayMode var)
 #define IS_STR_ENUM(enumName) \
     if (str_eq(txt, enumName##_STR)) { \
         *resOut = enumName; \
-        return TRUE; \
+        return true; \
     }
 
-BOOL DisplayModeEnumFromName(const char *txt, DisplayMode *resOut)
+bool DisplayModeEnumFromName(const char *txt, DisplayMode *resOut)
 {
     IS_STR_ENUM(DM_SINGLE_PAGE)
     IS_STR_ENUM(DM_FACING)
     IS_STR_ENUM(DM_CONTINUOUS)
     IS_STR_ENUM(DM_CONTINUOUS_FACING)
     assert(0);
-    return FALSE;
+    return false;
 }
 
 void DisplayState_Init(DisplayState *ds)
@@ -84,7 +84,7 @@ void DisplayState_Free(DisplayState *ds)
     DisplayState_Init(ds);
 }
 
-BOOL DisplayState_Serialize(DisplayState *ds, DString *strOut)
+bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
 {
     const char *        displayModeName = NULL;
 

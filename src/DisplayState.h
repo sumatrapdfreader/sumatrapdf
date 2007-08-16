@@ -67,11 +67,11 @@ BOOL    validRotation(int rotation);
 BOOL    ValidZoomVirtual(double zoomVirtual);
 
 const char *      DisplayModeNameFromEnum(DisplayMode var);
-BOOL              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);
+bool              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);
 
 void    DisplayState_Init(DisplayState *ds);
 void    DisplayState_Free(DisplayState *ds);
-BOOL    DisplayState_Serialize(DisplayState *ds, DString *strOut);
+bool    DisplayState_Serialize(DisplayState *ds, DString *strOut);
 
 #endif
 

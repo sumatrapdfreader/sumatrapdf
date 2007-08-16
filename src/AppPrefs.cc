@@ -37,6 +37,26 @@ static BOOL FileExists(const char *fileName)
   return TRUE;
 }
 
+static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
+{
+    assert(txt);
+    if (!txt) return false;
+    return DisplayModeEnumFromName(txt, resOut);
+}
+
+static bool ParseDouble(const char *txt, double *resOut)
+{
+    int res;
+
+    assert(txt);
+    if (!txt) return false;
+
+    res = sscanf(txt, "%lf", resOut);
+    if (1 != res)
+        return false;
+    return true;
+}
+
 #define GLOBAL_PREFS_STR "gp"
 
 #define DICT_NEW(boname) \
@@ -72,6 +92,66 @@ benc_dict* Prefs_SerializeGlobal(void)
 Error:
     benc_dict_delete(prefs);
     return NULL;
+}
+
+static bool dict_get_bool(benc_dict* dict, const char* key, BOOL* valOut)
+{
+    benc_obj* obj = benc_dict_find2(dict, key);
+    if (!obj) return false;
+    benc_int64* val = benc_obj_as_int64(obj);
+    assert(val);
+    if (!val) return false;
+    *valOut = (BOOL) val->m_val;
+    return true;
+}
+
+static bool dict_get_int(benc_dict* dict, const char* key, int* valOut)
+{
+    benc_obj* obj = benc_dict_find2(dict, key);
+    if (!obj) return false;
+    benc_int64* val = benc_obj_as_int64(obj);
+    assert(val);
+    if (!val) return false;
+    *valOut = (int) val->m_val;
+    return true;
+}
+
+static bool dict_get_double(benc_dict* dict, const char* key, double* valOut)
+{
+    benc_obj* obj = benc_dict_find2(dict, key);
+    if (!obj) return false;
+    benc_str* val = benc_obj_as_str(obj);
+    assert(val);
+    if (!val) return false;
+    return ParseDouble(val->m_str, valOut);
+}
+
+bool DisplayState_Deserialize2(benc_dict* dict, DisplayState *ds)
+{
+    DisplayState_Init(ds);
+
+#if 0
+    DICT_ADD_STR(prefs, FILE_STR, ds->filePath);
+    txt = DisplayModeNameFromEnum(ds->displayMode);
+    if (txt)
+        DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
+#endif
+
+    dict_get_bool(dict, VISIBLE_STR, &ds->visible);
+    dict_get_int(dict, PAGE_NO_STR, &ds->pageNo);
+    dict_get_int(dict, ROTATION_STR, &ds->rotation);
+    dict_get_bool(dict, FULLSCREEN_STR, &ds->fullScreen);
+
+    dict_get_int(dict, SCROLL_X_STR, &ds->scrollX);
+    dict_get_int(dict, SCROLL_Y_STR, &ds->scrollY);
+    dict_get_int(dict, WINDOW_X_STR, &ds->windowX);
+    dict_get_int(dict, WINDOW_Y_STR, &ds->windowY);
+    dict_get_int(dict, WINDOW_DX_STR, &ds->windowDx);
+    dict_get_int(dict, WINDOW_DY_STR, &ds->windowDy);
+
+    dict_get_double(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
+
+    return true;
 }
 
 benc_dict* DisplayState_Serialize2(DisplayState *ds)
@@ -173,26 +253,6 @@ bool Prefs_Serialize(FileHistoryList **root, DString *strOut)
     DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_ASSOCIATE_STR, gPdfAssociateShouldAssociate);
     DStringSprintf(strOut, "  %s: %s\n", UI_LANGUAGE_STR, CurrLangNameGet());
     return FileHistoryList_Serialize(root, strOut);
-}
-
-static BOOL ParseDisplayMode(const char *txt, DisplayMode *resOut)
-{
-    assert(txt);
-    if (!txt) return FALSE;
-    return DisplayModeEnumFromName(txt, resOut);
-}
-
-static BOOL ParseDouble(const char *txt, double *resOut)
-{
-    int res;
-
-    assert(txt);
-    if (!txt) return FALSE;
-
-    res = sscanf(txt, "%lf", resOut);
-    if (1 != res)
-        return FALSE;
-    return TRUE;
 }
 
 static BOOL ParseInt(const char *txt, int *resOut)
@@ -370,18 +430,6 @@ void PrefsSetBool(benc_dict *dict, const char *key, BOOL *valOut)
     *valOut = (BOOL)val;
 }
 
-static bool FileHistory_Deserialize(benc_obj* obj, DisplayState *state)
-{
-    benc_dict* dict = benc_obj_as_dict(obj);
-    if (!dict)
-        return false;
-    DisplayState_Init(state);
-
-    assert(0); /* TODO: write me */
-
-    return true;
-}
-
 bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {
     benc_obj * bobj;
@@ -411,14 +459,15 @@ bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryLis
         goto Error;
     size_t dlen = benc_array_len(fileHistory);
     for (size_t i = 0; i < dlen; i++) {
-#if 0
         DisplayState state;
-        FileHistory_Deserialize(&state);
+        benc_dict *dict = benc_obj_as_dict(benc_array_get(fileHistory, i));
+        assert(dict);
+        if (!dict) continue;
+        DisplayState_Deserialize2(dict, &state);
         if (state.filePath) {
             if (FileExists(state.filePath))
                 FileHistory_Add(fileHistoryRoot, &state);
         }
-#endif
     }
     benc_obj_delete(bobj);
     return true;
