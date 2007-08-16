@@ -3643,7 +3643,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
     
-    if (win->tocVisible)
+    if (win->tocLoaded && win->tocVisible)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
