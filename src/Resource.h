@@ -109,6 +109,7 @@
 #define IDB_SILK_PREV                   2004
 #define IDB_SILK_ZOOM_IN                2005
 #define IDB_SILK_ZOOM_OUT               2006
+#define IDB_CLOSE_TOC                   2007
 #define IDT_FILE_NEW                    3000
 #define IDT_FILE_OPEN                   3001
 #define IDT_FILE_METAPATH               3002

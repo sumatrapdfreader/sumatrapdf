@@ -123,7 +123,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define DEF_WIN_DX 612
 #define DEF_WIN_DY 792
 
-#define DEF_SPLITER_DX  4
+#define DEF_SPLITER_DX  5
 
 #define REPAINT_TIMER_ID    1
 #define REPAINT_DELAY_IN_MS 400
@@ -154,6 +154,8 @@ static HBRUSH                       gBrushLinkDebug;
 
 static HPEN                         ghpenWhite;
 static HPEN                         ghpenBlue;
+
+static HBITMAP                      gBitmapCloseToc;
 
 #ifdef _WINDLL
 static bool                         gRunningDLL = true;
@@ -3224,6 +3226,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && quitIfLast) {
         assert(0 == WindowInfoList_Len());
+        DeleteBitmap(gBitmapCloseToc);
         PostQuitMessage(0);
     } else {
         if (!gRunningDLL)
@@ -4433,6 +4436,10 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
             ReleaseCapture();
             resizing = false;
             break;
+        case WM_COMMAND:
+            if (HIWORD(wParam) == STN_CLICKED)
+                win->ToggleTocBox();
+            break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
@@ -4442,6 +4449,12 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     HWND spliter = CreateWindow("Spliter", "", WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
+    
+    HWND closeToc = CreateWindow(WC_STATIC, "",
+                        SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
+                        1, 2, 3, 5, spliter, (HMENU)0, hInst, NULL);
+    SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
+    SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
 
     win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, "TOC",
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
@@ -5086,6 +5099,9 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gBrushWhite  = CreateSolidBrush(COL_WHITE);
     gBrushShadow = CreateSolidBrush(COL_WINDOW_SHADOW);
     gBrushLinkDebug = CreateSolidBrush(RGB(0x00,0x00,0xff));
+    
+    gBitmapCloseToc = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_CLOSE_TOC));
+
     return TRUE;
 }
 
