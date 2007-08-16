@@ -4239,9 +4239,11 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             for (int i = 0; i < len; i++)
                 str[i] = (Unicode)buf[i];
             DoFindText(win, str, len);
+            return 1;
         }
         else if (VK_ESCAPE == wParam || VK_TAB == wParam) {
             SetFocus(win->hwndFrame);
+            return 1;
         }
     }
     else if (WM_ERASEBKGND == message) {
@@ -4974,6 +4976,7 @@ InitMouseWheelInfo:
                         TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
                         if (VK_TAB == ptvkd->wVKey) {
                             SetFocus(win->hwndFrame);
+                            return 1;
                         }
                         else if (VK_F11 == ptvkd->wVKey) {
                             OnMenuViewFullscreen(win);
