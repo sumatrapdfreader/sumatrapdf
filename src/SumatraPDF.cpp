@@ -910,9 +910,7 @@ static void Prefs_GetFileNameNew(DString* pDs)
 */
 static bool Prefs_LoadNew(void)
 {
-    DString         path;
-    char *          prefsTxt = NULL;
-    uint64_t        prefsFileLen;
+    char *          prefsTxt;
     bool            ok = false;
 
 #ifdef DEBUG
@@ -921,8 +919,10 @@ static bool Prefs_LoadNew(void)
     loaded = true;
 #endif
 
+    DString         path;
     DStringInit(&path);
     Prefs_GetFileNameNew(&path);
+    uint64_t prefsFileLen;
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize2(prefsTxt, prefsFileLen, &gFileHistoryRoot);
@@ -976,8 +976,12 @@ Exit:
 
 static bool Prefs_Load(void)
 {
-    Prefs_LoadOld();
-    //Prefs_LoadNew();
+    bool ok = Prefs_LoadNew();
+    // TODO: loading old prefs is only temporary, for one revision, so that we
+    // silently migrate old prefs to new format. We'll ditch the code for old
+    // prefs in the future
+    if (!ok)
+        Prefs_LoadOld();
     return true;
 }
 
@@ -1143,7 +1147,7 @@ static void UpdateCurrentFileDisplayState(void)
     }
 }
 
-static bool Prefs_Save2(void)
+static bool Prefs_SaveNew(void)
 {
     DString     path;
     size_t      dataLen;
@@ -1200,8 +1204,8 @@ Exit:
 
 static void Prefs_Save(void)
 {
-    /* TODO: temporary, save in both formats */
-    Prefs_Save2();
+    /* TODO: temporary, save in both formats. In the future we'll ditch old format */
+    Prefs_SaveNew();
     Prefs_SaveOld();
 }
 

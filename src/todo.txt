@@ -2,7 +2,8 @@ Short term todo (before next 0.8 release):
 * finish find
   * add next/previous buttons
 * crash reporting with breakpad
-* use bencoding for preferences instead of ad-hoc text format
+ - on startup check for crash dumps and tries to submit them. Delete crash file
+   (even if submission failed)
 * check for new version on-line
 * finish TOC:
   * an easy way to close TOC (I like the header with close button like in
@@ -10,6 +11,9 @@ Short term todo (before next 0.8 release):
   * when TOC is shown, keyboard navigation shortcuts don't work. We need to
     be smarter about focus handling
   * remember toc state for a given document in prefs
+* preserve fullScreen info per document and respect it when opening a PDF
+* bug: going into fullscreen mode on my laptop/Win XP doesn't cover the whole
+  screen (upper part of the size of start bar is not used)
 
 Long term todo:
 * show keybindings in help
@@ -17,6 +21,9 @@ Long term todo:
 * a nicer way to show selected text
 * make dialog-boxes translatable
 * handle links
+* replace DString with something better (sstr ?) and provide C++ wrapper
+  to make it easier to use in C++ code without all those annoying DStringInit()
+  calls
 
 Maybe:
 * use MultiByteToWideChar() 

@@ -26,6 +26,7 @@ extern const char* CurrLangNameGet();
 #define DEFAULT_WINDOW_DX    640
 #define DEFAULT_WINDOW_DY    480
 
+/* TODO: move to file_util.c ? */
 static BOOL FileExists(const char *fileName)
 {
   struct stat buf;
@@ -42,19 +43,6 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
     assert(txt);
     if (!txt) return false;
     return DisplayModeEnumFromName(txt, resOut);
-}
-
-static bool ParseDouble(const char *txt, double *resOut)
-{
-    int res;
-
-    assert(txt);
-    if (!txt) return false;
-
-    res = sscanf(txt, "%lf", resOut);
-    if (1 != res)
-        return false;
-    return true;
 }
 
 #define GLOBAL_PREFS_STR "gp"
@@ -94,63 +82,34 @@ Error:
     return NULL;
 }
 
-static bool dict_get_bool(benc_dict* dict, const char* key, BOOL* valOut)
+/* TODO: move to benc_util.c ? */
+static BOOL dict_get_str_dup(benc_dict* dict, const char* key, const char** valOut)
 {
-    benc_obj* obj = benc_dict_find2(dict, key);
-    if (!obj) return false;
-    benc_int64* val = benc_obj_as_int64(obj);
-    assert(val);
-    if (!val) return false;
-    *valOut = (BOOL) val->m_val;
+    const char *str = dict_get_str(dict, key);
+    if (!str) return FALSE;
+    *valOut = str_dup(str);
     return true;
-}
-
-static bool dict_get_int(benc_dict* dict, const char* key, int* valOut)
-{
-    benc_obj* obj = benc_dict_find2(dict, key);
-    if (!obj) return false;
-    benc_int64* val = benc_obj_as_int64(obj);
-    assert(val);
-    if (!val) return false;
-    *valOut = (int) val->m_val;
-    return true;
-}
-
-static bool dict_get_double(benc_dict* dict, const char* key, double* valOut)
-{
-    benc_obj* obj = benc_dict_find2(dict, key);
-    if (!obj) return false;
-    benc_str* val = benc_obj_as_str(obj);
-    assert(val);
-    if (!val) return false;
-    return ParseDouble(val->m_str, valOut);
 }
 
 bool DisplayState_Deserialize2(benc_dict* dict, DisplayState *ds)
 {
     DisplayState_Init(ds);
 
-#if 0
-    DICT_ADD_STR(prefs, FILE_STR, ds->filePath);
-    txt = DisplayModeNameFromEnum(ds->displayMode);
+    dict_get_str_dup(dict, FILE_STR, &ds->filePath);
+    const char* txt = dict_get_str(dict, DISPLAY_MODE_STR);
     if (txt)
-        DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
-#endif
-
+        DisplayModeEnumFromName(txt, &ds->displayMode);
     dict_get_bool(dict, VISIBLE_STR, &ds->visible);
     dict_get_int(dict, PAGE_NO_STR, &ds->pageNo);
     dict_get_int(dict, ROTATION_STR, &ds->rotation);
     dict_get_bool(dict, FULLSCREEN_STR, &ds->fullScreen);
-
     dict_get_int(dict, SCROLL_X_STR, &ds->scrollX);
     dict_get_int(dict, SCROLL_Y_STR, &ds->scrollY);
     dict_get_int(dict, WINDOW_X_STR, &ds->windowX);
     dict_get_int(dict, WINDOW_Y_STR, &ds->windowY);
     dict_get_int(dict, WINDOW_DX_STR, &ds->windowDx);
     dict_get_int(dict, WINDOW_DY_STR, &ds->windowDy);
-
-    dict_get_double(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
-
+    dict_get_double_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
     return true;
 }
 
@@ -332,7 +291,7 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
     }
 
     if (str_eq(ZOOM_VIRTUAL_STR, key)) {
-        fOk = ParseDouble(value, &dsOut->zoomVirtual);
+        fOk = str_to_double(value, &dsOut->zoomVirtual);
         assert(fOk);
         if (!fOk || !ValidZoomVirtual(dsOut->zoomVirtual))
             dsOut->zoomVirtual = 100.0;
@@ -420,16 +379,6 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     fileHistoryNode = NULL;
 }
 
-void PrefsSetBool(benc_dict *dict, const char *key, BOOL *valOut)
-{
-    benc_obj * bobj = benc_dict_find(dict, key, strlen(key));
-    benc_int64 *bint = benc_obj_as_int64(bobj);
-    if (!bint)
-        return;
-    int64_t val = bint->m_val;
-    *valOut = (BOOL)val;
-}
-
 bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {
     benc_obj * bobj;
@@ -437,25 +386,25 @@ bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryLis
     bobj = benc_obj_from_data(prefsTxt, prefsTxtLen);
     if (!bobj)
         return false;
-    benc_dict* all = benc_obj_as_dict(bobj);
-    if (!all)
+    benc_dict* prefs = benc_obj_as_dict(bobj);
+    if (!prefs)
         goto Error;
 
-    benc_dict* global = benc_obj_as_dict(benc_dict_find(all, GLOBAL_PREFS_STR, strlen(GLOBAL_PREFS_STR)));
-    if (global)
+    benc_dict* global = benc_obj_as_dict(benc_dict_find2(prefs, GLOBAL_PREFS_STR));
+    if (!global)
         goto Error;
 
-    PrefsSetBool(global, SHOW_TOOLBAR_STR, &gShowToolbar);
-    PrefsSetBool(global, USE_FITZ_STR, &gUseFitz);
-    PrefsSetBool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gPdfAssociateDontAskAgain);
-    PrefsSetBool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gPdfAssociateShouldAssociate);
+    dict_get_bool(global, SHOW_TOOLBAR_STR, &gShowToolbar);
+    dict_get_bool(global, USE_FITZ_STR, &gUseFitz);
+    dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gPdfAssociateDontAskAgain);
+    dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gPdfAssociateShouldAssociate);
 
-    bstr = benc_obj_as_str(benc_dict_find(global, UI_LANGUAGE_STR, strlen(UI_LANGUAGE_STR)));
+    bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));
     if (bstr)
         CurrLangNameSet(bstr->m_str);
 
-    benc_array* fileHistory = benc_obj_as_array(benc_dict_find(all, FILE_HISTORY_STR, strlen(FILE_HISTORY_STR)));
-    if (fileHistory)
+    benc_array* fileHistory = benc_obj_as_array(benc_dict_find2(prefs, FILE_HISTORY_STR));
+    if (!fileHistory)
         goto Error;
     size_t dlen = benc_array_len(fileHistory);
     for (size_t i = 0; i < dlen; i++) {
