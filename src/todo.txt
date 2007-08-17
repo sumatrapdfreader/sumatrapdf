@@ -32,4 +32,7 @@ Maybe:
 * update poppler to latest version
 * speedup poppler
 * improve fitz to handle more PDFs
-
+* DisplayState::visible could be removed. It was used when we were automatically
+  reopening previously opened files, but we don't do it anymore, so we don't
+  have to track it.
+  
