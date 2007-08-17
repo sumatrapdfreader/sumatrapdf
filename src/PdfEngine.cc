@@ -273,7 +273,12 @@ PdfTocItem *PdfEnginePoppler::buildTocTree(GooList *items)
 
 bool PdfEnginePoppler::hasTocTree()
 {
-    return _pdfDoc->getOutline() != NULL;
+    Outline *outline = _pdfDoc->getOutline();
+    if (!outline)
+        return false;
+    if (!outline->getItems())
+        return false;
+    return true;
 }
 
 PdfTocItem *PdfEnginePoppler::getTocTree()
