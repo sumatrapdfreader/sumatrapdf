@@ -1384,10 +1384,14 @@ static int WindowInfoList_Len(void) {
 
 static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     InvalidateRect(win->hwndToolbar, NULL, true);
-    if (!win->dm)   // Avoid focus on Find box
+    if (!win->dm) {  // Avoid focus on Find box
+        EnableWindow(win->hwndFindBox, false);
         HideCaret(NULL);
-    else
+    }
+    else {
+        EnableWindow(win->hwndFindBox, true);
         ShowCaret(NULL);
+    }
 }
 
 static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
@@ -1586,6 +1590,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     win->hwndCanvas = hwndCanvas;
     CreateToolbar(win, ghinst);
     CreateTocBox(win, ghinst);
+    WindowInfo_UpdateFindbox(win);
 
     return win;
 }
