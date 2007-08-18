@@ -3211,11 +3211,11 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        win->ClearTocBox();
         if (win->tocVisible) {
             win->HideTocBox();
             MenuUpdateBookmarksStateForWindow(win);
         }
+        win->ClearTocBox();
         delete win->dm;
         win->dm = NULL;
         WindowInfo_RedrawAll(win);
