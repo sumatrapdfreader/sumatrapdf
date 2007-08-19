@@ -211,7 +211,9 @@ ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
     { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"), 0 },
     { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 }
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, -1 },
+    { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
+    { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 }
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -3926,6 +3928,19 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     SetFocus(win->hwndFrame);
 }
 
+static void OnMenuFindNext(WindowInfo *win)
+{
+    PdfSearchResult *rect = win->dm->Find();
+    if (rect)
+        WindowInfo_ShowSearchResult(win, rect);
+}
+
+static void OnMenuFindPrev(WindowInfo *win)
+{
+    // TODO:
+    // Need more code in search engine before implement this function
+}
+
 #define KEY_PRESSED_MASK 0x8000
 static bool WasKeyDown(int virtKey)
 {
@@ -4004,9 +4019,7 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
             win->ToggleTocBox();
     } else if (VK_F3 == key || (ctrlPressed && 'G' == key)) {
         if (win) {
-            PdfSearchResult *rect = win->dm->Find();
-            if (rect)
-                WindowInfo_ShowSearchResult(win, rect);
+            OnMenuFindNext(win);
         }
     }
 }
@@ -4261,6 +4274,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     ShowWindow(hwndToolbar, SW_SHOW);
     HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
+    int padding = -1;
     for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         if (IDB_SEPARATOR != gToolbarButtons[i].bitmapResourceId) {
             HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(gToolbarButtons[i].bitmapResourceId));
@@ -4275,6 +4289,10 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
             DeleteObject(hbmp);
             gToolbarButtons[i].index = index;
         }
+        else if (-1 == gToolbarButtons[i].index) {
+            gToolbarButtons[i].index = 0;
+            padding = i;
+        }
         tbButtons[i] = TbButtonFromButtonInfo(i);
     }
     lres = SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
@@ -4287,6 +4305,14 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     lres = SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
 
     lres = SendMessage(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+
+    TBBUTTONINFO bi;
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_BYINDEX|TBIF_SIZE;
+    SendMessage(hwndToolbar, TB_GETBUTTONINFO, padding, (LPARAM)&bi);
+    bi.cx = 200;
+    SendMessage(hwndToolbar, TB_SETBUTTONINFO, padding, (LPARAM)&bi);
+
     RECT rc;
     lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
 
@@ -4781,6 +4807,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_ROTATE_RIGHT:
                     OnMenuViewRotateRight(win);
+                    break;
+
+                case IDM_FIND_NEXT:
+                    OnMenuFindNext(win);
+                    break;
+
+                case IDM_FIND_PREV:
+                    OnMenuFindPrev(win);
                     break;
 
                 case IDM_VISIT_WEBSITE:
