@@ -3225,6 +3225,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         win->dm = NULL;
         WindowInfo_RedrawAll(win);
         WindowInfo_UpdateFindbox(win);
+        DeleteOldSelectionInfo(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         WindowInfoList_Remove(win);
@@ -3896,6 +3897,36 @@ static void OnMenuViewFullscreen(WindowInfo *current)
     SetFocus(current->hwndFrame);
 }
 
+static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
+{
+    RectI pageOnScreen;
+    PdfPageInfo *pdfPage = win->dm->getPageInfo(result->page);
+    pageOnScreen.x = pdfPage->screenX;
+    pageOnScreen.y = pdfPage->screenY;
+    pageOnScreen.dx = pdfPage->bitmapDx;
+    pageOnScreen.dy = pdfPage->bitmapDy;
+
+    RectI rect = {
+        result->left,
+        result->top,
+        result->right - result->left,
+        result->bottom - result->top
+    };
+    RectI intersect;
+    DeleteOldSelectionInfo(win);
+    if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {
+        SelectionOnPage *selOnPage = (SelectionOnPage*)malloc(sizeof(SelectionOnPage));
+        RectD_FromRectI(&selOnPage->selectionPage, &intersect);
+        win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
+        selOnPage->next = win->selectionOnPage;
+        win->selectionOnPage = selOnPage;
+    }
+
+    win->showSelection = true;
+    triggerRepaintDisplayNow(win);
+    SetFocus(win->hwndFrame);
+}
+
 #define KEY_PRESSED_MASK 0x8000
 static bool WasKeyDown(int virtKey)
 {
@@ -3972,6 +4003,12 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
     } else if (VK_F12 == key) {
         if (win)
             win->ToggleTocBox();
+    } else if (VK_F3 == key || (ctrlPressed && 'G' == key)) {
+        if (win) {
+            PdfSearchResult *rect = win->dm->Find();
+            if (rect)
+                WindowInfo_ShowSearchResult(win, rect);
+        }
     }
 }
 
@@ -4119,122 +4156,6 @@ static void UpdateToolbarButtonsToolTips(void)
     }        
 }
 
-static RectI MapPageRectToScreen(DisplayModel *dm, PdfPageInfo *pdfPage,
-                            double left, double top, double right, double bottom)
-{
-    double shiftX, shiftY;
-    if (dm->areaOffset.x != 0.0)
-        shiftX = dm->areaOffset.x - pdfPage->currPosX;
-    else
-        shiftX = 0.0;
-
-    if (dm->areaOffset.y != 0.0) {
-        shiftY = dm->areaOffset.y - pdfPage->currPosY + 3.0;
-    }
-    else {
-        shiftY = 0.0;
-    }
-    
-    RectI ri;
-    ri.x = (int)(left + pdfPage->screenX - shiftX);
-    ri.y = (int)(top + pdfPage->screenY - shiftY);
-    ri.dx = (int)ceil(right - left + 1);
-    ri.dy = (int)ceil(bottom - top + 1);
-
-    return ri;
-}
-
-static void DoFindText(WindowInfo *win, Unicode *str, int len)
-{
-    TextOutputDev textOut(NULL, gTrue, gFalse, gFalse);
-    if (!textOut.isOk()) return;
-
-    PDFDoc* doc = NULL;
-    int pageCount = win->dm->pdfEngine()->pageCount();
-    if (gUseFitz)
-        doc = new PDFDoc(new GooString(win->dm->pdfEngine()->fileName()), NULL, NULL, NULL);
-    else
-        doc = ((PdfEnginePoppler*)win->dm->pdfEngine())->pdfDoc();
-
-    assert(doc);
-    if (!doc || !doc->isOk()) {
-        return;
-    }
-
-    double scale = win->dm->zoomReal() * 0.01;
-    double dpi = 72.0 * scale;
-
-    DeleteOldSelectionInfo(win);
-    win->showSelection = false;
-    for (int pageNo = win->dm->currentPageNo(); pageNo <= pageCount; pageNo++) {
-        doc->displayPage(&textOut, pageNo, dpi, dpi, 0, gFalse, gTrue, gFalse);
-        TextPage *textPage = textOut.takeText();
-        if (!textPage) continue;
-
-        RectI pageOnScreen;
-        PdfPageInfo *pdfPage = NULL;
-        GBool found = true;
-        bool matched = false;
-        while (true) {
-            double left = 0.0, right = 0.0, top = 0.0, bottom = 0.0;
-            if (!matched)
-                found = textPage->findText(str, len, gTrue, gTrue, gFalse, gFalse, gFalse, gFalse,
-                                            &left, &top, &right, &bottom);
-            else
-                found = textPage->findText(str, len, gFalse, gTrue, gTrue, gFalse, gFalse, gFalse,
-                                            &left, &top, &right, &bottom);
-            if (!found) break;
-
-            matched = true;
-            if (pageNo != win->dm->currentPageNo())
-                win->dm->goToPage(pageNo, 0);
-            if (!pdfPage)
-                pdfPage = win->dm->getPageInfo(pageNo);
-
-            int scrollX = 0, scrollY = 0;
-            RectI ri = MapPageRectToScreen(win->dm, pdfPage, left, top, right, bottom);
-            if (ri.y + ri.dy > pdfPage->bitmapY + pdfPage->bitmapDy)
-                scrollY = pdfPage->currDy - ri.y;
-            if (ri.x + ri.dx > pdfPage->bitmapX + pdfPage->bitmapDx)
-                scrollX = pdfPage->currDx - ri.x - ri.dx;
-
-            if (!win->showSelection && (scrollX > 0 || scrollY > 0)) {
-                win->dm->goToPage(pageNo, scrollY, scrollX);
-                pdfPage = win->dm->getPageInfo(pageNo);
-                ri = MapPageRectToScreen(win->dm, pdfPage, left, top, right, bottom);
-            }
-
-            if (!win->showSelection) {
-                win->showSelection = true;
-                pageOnScreen.x = pdfPage->screenX;
-                pageOnScreen.y = pdfPage->screenY;
-                pageOnScreen.dx = pdfPage->bitmapDx;
-                pageOnScreen.dy = pdfPage->bitmapDy;
-            }
-
-            RectI intersect;
-            if (RectI_Intersect(&ri, &pageOnScreen, &intersect)) {
-                SelectionOnPage *selOnPage = (SelectionOnPage*)malloc(sizeof(SelectionOnPage));
-                RectD_FromRectI(&selOnPage->selectionPage, &intersect);
-                win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
-                selOnPage->next = win->selectionOnPage;
-                win->selectionOnPage = selOnPage;
-            }
-        }
-        delete textPage;
-
-        if (matched) {
-            triggerRepaintDisplayNow(win);
-            SetFocus(win->hwndFrame);
-            break;
-        }
-    }
-
-    if (gUseFitz) {
-        delete doc;
-    }
-}
-
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -4245,12 +4166,21 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
-            wchar_t buf[256];
-            int len = GetWindowTextW(hwnd, buf, sizeof(buf));  // sizeof ?!
-            Unicode str[256];
-            for (int i = 0; i < len; i++)
-                str[i] = (Unicode)buf[i];
-            DoFindText(win, str, len);
+            PdfSearchResult *rect = NULL;
+    
+            if (!Edit_GetModify(hwnd))
+                rect = win->dm->Find();
+            else {
+                wchar_t text[256];
+                GetWindowTextW(hwnd, text, sizeof(text));
+                if (wcslen(text) > 0)
+                    rect = win->dm->Find(text);
+            }
+
+            if (rect)
+                WindowInfo_ShowSearchResult(win, rect);
+
+            Edit_SetModify(hwnd, FALSE);
             return 1;
         }
         else if (VK_ESCAPE == wParam || VK_TAB == wParam) {
