@@ -1777,10 +1777,9 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
     if (!reuseExistingWindow && !fileFromHistory)
         WindowInfo_ResizeToPage(win, startPage);
 
-    if (reuseExistingWindow) {
+    if (reuseExistingWindow)
         WindowInfo_RedrawAll(win);
-        WindowInfo_UpdateFindbox(win);
-    }
+    WindowInfo_UpdateFindbox(win);
 
 Exit:
     if (!reuseExistingWindow)
