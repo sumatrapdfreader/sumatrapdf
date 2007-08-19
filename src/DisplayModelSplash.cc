@@ -159,6 +159,7 @@ DisplayModelSplash::DisplayModelSplash(DisplayMode displayMode) :
     DisplayModel(displayMode)
 {
     _pdfEngine = new PdfEnginePoppler();
+    _pdfSearchEngine = new PdfSearchPoppler((PdfEnginePoppler *)_pdfEngine);
 }
 
 TextPage *DisplayModelSplash::GetTextPage(int pageNo)
@@ -874,4 +875,48 @@ void DisplayModelSplash::goToTocLink(void *link)
         return;
 
     handleLinkAction((LinkAction *)link);
+}
+
+void  DisplayModelSplash::MapResultRectToScreen(PdfSearchResult *rect)
+{
+    PdfPageInfo *pageInfo = getPageInfo(rect->page);
+
+    double scale = zoomReal() * 0.01;
+    double left = scale * rect->left, top = scale * rect->top;
+    double right = scale * rect->right, bottom = scale * rect->bottom;
+    double vx = pageInfo->screenX - pageInfo->bitmapX,
+           vy = pageInfo->screenY - pageInfo->bitmapY;
+    
+    int rot = rotation();
+    normalizeRotation (&rot);
+    if (rot == 90 || rot == 180)
+        vx += pageInfo->currDx;
+    if (rot == 180 || rot == 270)
+        vy += pageInfo->currDy;
+
+    left = left - 0.5 + vx;
+    top = top - 3.5 + vy;
+    right = right + 0.5 + vx;
+    bottom = bottom + 0.5 + vy;
+
+    rect->left = (int)floor(left);
+    rect->top = (int)floor(top);
+    rect->right = (int)ceil(right) + 5;
+    rect->bottom = (int)ceil(bottom);
+
+    int sx = 0, sy = 0;
+    if (rect->bottom > pageInfo->bitmapY + pageInfo->bitmapDy)
+        sy = rect->bottom + 5 - pageInfo->bitmapY - pageInfo->bitmapDy;
+
+    if (rect->right > pageInfo->bitmapX + pageInfo->bitmapDx)
+        sx = rect->right + 5 - pageInfo->bitmapX - pageInfo->bitmapDx;
+
+    if (sx > 0 || sy > 0) {
+        scrollXBy(sx);
+        scrollYBy(sy, false);
+        rect->left -= sx;
+        rect->top -= sy;
+        rect->right -= sx;
+        rect->bottom -= sy;
+    }
 }

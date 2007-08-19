@@ -8,6 +8,7 @@ DisplayModelFitz::DisplayModelFitz(DisplayMode displayMode) :
     DisplayModel(displayMode)
 {
     _pdfEngine = new PdfEngineFitz();
+    _pdfSearchEngine = new PdfSearchFitz((PdfEngineFitz *)_pdfEngine);
 }
 
 DisplayModelFitz::~DisplayModelFitz()
@@ -184,4 +185,55 @@ int DisplayModelFitz::getTextInRegion(int pageNo, RectD *region, unsigned short 
     pdf_droptextline(line);
 
     return p;
+}
+
+void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
+{
+    PdfPageInfo *pageInfo = getPageInfo(rect->page);
+    pdf_page *page = pdfEngineFitz()->getPdfPage(rect->page);
+    int rot = rotation();
+    normalizeRotation (&rot);
+
+    double vx = pageInfo->screenX - pageInfo->bitmapX,
+           vy = pageInfo->screenY - pageInfo->bitmapY;
+    if (rot == 90 || rot == 180)
+        vx += pageInfo->currDx;
+    if (rot == 180 || rot == 270)
+        vy += pageInfo->currDy;
+
+    double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
+    fz_matrix ctm = pdfEngineFitz()->viewctm(page, zoomReal() * 0.01, rot);
+    fz_point tp, p1 = {left, top}, p2 = {right, bottom};
+
+    tp = fz_transformpoint(ctm, p1);
+    left = tp.x - 0.5 + vx;
+    top = tp.y - 0.5 + vy;
+
+    tp = fz_transformpoint(ctm, p2);
+    right = tp.x + 0.5 + vx;
+    bottom = tp.y + 0.5 + vy;
+
+    rect->left = (int)floor(left);
+    rect->top = (int)floor(top) + 5;
+    rect->right = (int)ceil(right) + 5;
+    rect->bottom = (int)ceil(bottom);
+
+    int rdx = (int)ceil(right - left) + 5;
+    int rdy = (int)ceil(bottom - top) - 5;  // why negative here ?
+
+    int sx = 0, sy = 0;
+    if (rect->top - rdy > pageInfo->bitmapY + pageInfo->bitmapDy)
+        sy = rect->top - rdy - pageInfo->bitmapY - pageInfo->bitmapDy;
+
+    if (rect->left + rdx > pageInfo->bitmapX + pageInfo->bitmapDx)
+        sx = rect->left + rdx - pageInfo->bitmapX - pageInfo->bitmapDx;
+
+    if (sx > 0 || sy > 0) {
+        scrollXBy(sx);
+        scrollYBy(sy, false);
+        rect->left -= sx;
+        rect->top -= sy;
+        rect->right -= sx;
+        rect->bottom -= sy;
+    }
 }

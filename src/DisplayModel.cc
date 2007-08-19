@@ -156,6 +156,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
 
 DisplayModel::~DisplayModel()
 {
+    delete _pdfSearchEngine;
     delete _pdfEngine;
 }
 
@@ -1312,3 +1313,31 @@ bool BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rota
     return false;
 }
 
+PdfSearchResult *DisplayModel::Find(wchar_t *text)
+{
+    // TODO:
+    //  Add more paramters to this method for
+    //  setting search info before lookup:
+    //  - Case-sensitive
+    //  - Search all
+    //  - Forward/Backward
+    showBusyCursor();
+
+    bool found;
+    if (text != NULL)
+        found = _pdfSearchEngine->FindFirst(currentPageNo(), text);
+    else
+        found = _pdfSearchEngine->FindNext();
+
+    if (found) {
+        PdfSearchResult &rect = _pdfSearchEngine->result;
+
+        goToPage(rect.page, 0);
+        MapResultRectToScreen(&rect);
+        showNormalCursor();
+        return &rect;
+    }
+
+    showNormalCursor();
+    return NULL;
+}

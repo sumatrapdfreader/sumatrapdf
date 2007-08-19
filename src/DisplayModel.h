@@ -7,6 +7,7 @@
 #include "geom_util.h"
 #include "DisplayState.h"
 #include "PdfEngine.h"
+#include "PdfSearch.h"
 
 class GooString;
 class Link;
@@ -270,7 +271,11 @@ public:
     void            rectCvtUserToScreen(int pageNo, RectD *r);
     void            rectCvtScreenToUser(int *pageNo, RectD *r);
 
+    PdfSearchResult *Find(wchar_t *text = NULL);
+
 protected:
+    virtual void    MapResultRectToScreen(PdfSearchResult *rect) = 0;
+
     int             getPageNoByPoint (double x, double y);
 
     void            startRenderingPage(int pageNo);
@@ -293,6 +298,7 @@ protected:
     void            showNormalCursor();
 
     PdfEngine *     _pdfEngine;
+    PdfSearchEngine *_pdfSearchEngine;
     DisplayMode     _displayMode; /* TODO: not used yet */
     bool            _fullScreen;
     /* In non-continuous mode is the first page from a PDF file that we're
