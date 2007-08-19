@@ -147,6 +147,7 @@ static WindowInfo*                  gWindowList;
 static HCURSOR                      gCursorArrow;
 static HCURSOR                      gCursorHand;
 static HCURSOR                      gCursorDrag;
+static HCURSOR                      gCursorIBeam;
 static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushShadow;
@@ -1387,11 +1388,11 @@ static int WindowInfoList_Len(void) {
 static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     InvalidateRect(win->hwndToolbar, NULL, true);
     if (!win->dm) {  // Avoid focus on Find box
-        EnableWindow(win->hwndFindBox, false);
+        SetClassLong(win->hwndFindBox, GCL_HCURSOR, (LONG)gCursorArrow);
         HideCaret(NULL);
     }
     else {
-        EnableWindow(win->hwndFindBox, true);
+        SetClassLong(win->hwndFindBox, GCL_HCURSOR, (LONG)gCursorIBeam);
         ShowCaret(NULL);
     }
 }
@@ -5063,6 +5064,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     SplashColorsInit();
     gCursorArrow = LoadCursor(NULL, IDC_ARROW);
+    gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
     gCursorHand  = LoadCursor(NULL, IDC_HAND); // apparently only available if WINVER >= 0x0500
     if (!gCursorHand)
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
