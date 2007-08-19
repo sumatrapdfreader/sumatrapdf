@@ -62,6 +62,8 @@ IDB_SILK_PREV           BITMAP                  "icons-silk\\previous.bmp"
 IDB_SILK_ZOOM_IN        BITMAP                  "icons-silk\\zoom_in.bmp"
 IDB_SILK_ZOOM_OUT       BITMAP                  "icons-silk\\zoom_out.bmp"
 IDB_CLOSE_TOC           BITMAP                  "closetoc.bmp"
+IDB_FIND_NEXT           BITMAP                  "icons-silk\\next.bmp"
+IDB_FIND_PREV           BITMAP                  "icons-silk\\previous.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
