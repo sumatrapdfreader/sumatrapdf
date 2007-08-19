@@ -198,6 +198,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src\PdfEngine.h" />
+		<Unit filename="src\PdfSearch.cc" />
+		<Unit filename="src\PdfSearch.h" />
 		<Unit filename="src\Resource.h" />
 		<Unit filename="src\SumatraDialogs.cc">
 			<Option compilerVar="CC" />
