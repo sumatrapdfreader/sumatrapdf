@@ -1116,9 +1116,8 @@ void DisplayModel::showNormalCursor(void)
 
 void DisplayModel::showBusyCursor(void)
 {
-    // TODO: what is the right cursor?
-    // can I set it per-window only?
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
+    // TODO: can I set it per-window only?
+    SetCursor(LoadCursor(NULL, IDC_WAIT));
 }
 
 void LockCache(void) {
