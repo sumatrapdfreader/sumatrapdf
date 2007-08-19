@@ -36,7 +36,7 @@ void PdfSearchPoppler::Reset()
     page = NULL;
 }
 
-bool PdfSearchPoppler::FindStaringAtPage(int startPage)
+bool PdfSearchPoppler::FindStartingAtPage(int startPage)
 {
     PDFDoc *doc = engine->pdfDoc();
     int pageCount = doc->getNumPages();
@@ -67,7 +67,7 @@ bool PdfSearchPoppler::FindFirst(int page, wchar_t *text)
 {
     SetText(text);
 
-    return FindStaringAtPage(page);
+    return FindStartingAtPage(page);
 }
 
 bool PdfSearchPoppler::FindNext()
@@ -86,7 +86,7 @@ bool PdfSearchPoppler::FindNext()
         return true;
     }
 
-    return FindStaringAtPage(result.page + 1);
+    return FindStartingAtPage(result.page + 1);
 }
 
 // Fitz
@@ -150,7 +150,7 @@ bool PdfSearchFitz::FindTextInPage(int page)
     return false;
 }
 
-bool PdfSearchFitz::FindStaringAtPage(int startPage)
+bool PdfSearchFitz::FindStartingAtPage(int startPage)
 {
     int pageCount = engine->pageCount();
 
@@ -176,7 +176,7 @@ bool PdfSearchFitz::FindFirst(int page, wchar_t *text)
 {
     SetText(text);
 
-    return FindStaringAtPage(page);
+    return FindStartingAtPage(page);
 }
 
 bool PdfSearchFitz::FindNext()
@@ -187,5 +187,5 @@ bool PdfSearchFitz::FindNext()
     if (FindTextInPage())
         return true;
 
-    return FindStaringAtPage(result.page + 1);
+    return FindStartingAtPage(result.page + 1);
 }

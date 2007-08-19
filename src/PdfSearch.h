@@ -69,7 +69,7 @@ public:
     virtual bool FindNext();
 
 protected:
-    bool FindStaringAtPage(int page);
+    bool FindStartingAtPage(int page);
 };
 
 class PdfSearchFitz : public PdfSearchEngine
@@ -89,7 +89,7 @@ public:
 
 protected:
     bool FindTextInPage(int page = 0);
-    bool FindStaringAtPage(int page);
+    bool FindStartingAtPage(int page);
 };
 
 #endif // _PDF_SEARCH_H
