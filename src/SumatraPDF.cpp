@@ -213,8 +213,8 @@ ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"), 0 },
     { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, -1 },
+    { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
-    { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 }
 };
 
 #define DEFAULT_LANGUAGE "en"
