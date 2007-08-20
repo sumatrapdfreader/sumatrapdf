@@ -1324,6 +1324,10 @@ pl:Szukaj:
 ja:検索:
 sk:Hľadať:
 -
+Find Previous
+-
+Find Next
+-
 Open
 br:Abrir
 hu:Megny&itás
