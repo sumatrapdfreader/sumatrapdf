@@ -137,7 +137,7 @@ public:
     SelectionOnPage *selectionOnPage;
 
     bool tocLoaded;
-    bool tocVisible;
+
     void ShowTocBox();
     void HideTocBox();
     void ClearTocBox();

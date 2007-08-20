@@ -45,6 +45,7 @@ enum DisplayMode {
 #define PDF_ASSOCIATE_DONT_ASK_STR  "PdfAssociateDontAskAgain"
 #define PDF_ASSOCIATE_ASSOCIATE_STR "PdfAssociateShouldAssociate"
 #define UI_LANGUAGE_STR             "UILanguage"
+#define SHOW_TOC_STR                "ShowToc"
 
 typedef struct DisplayState {
     const char *        filePath;
@@ -60,6 +61,7 @@ typedef struct DisplayState {
     int                 windowY;
     int                 windowDx;
     int                 windowDy;
+    BOOL                showToc;
 } DisplayState;
 
 void    normalizeRotation(int *rotation);

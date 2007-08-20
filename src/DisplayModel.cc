@@ -112,6 +112,7 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     ds->windowDy = dm->drawAreaSize.dyI();
     ds->windowX = 0;
     ds->windowY = 0;
+    ds->showToc = dm->_showToc;
     return TRUE;
 }
 
@@ -140,6 +141,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
     _fullScreen = false;
+    _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
     _pdfEngine = NULL;

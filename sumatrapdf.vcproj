@@ -266,6 +266,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PdfSearch.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\str_util.c"
 				>
 			</File>
@@ -357,6 +361,10 @@
 			</File>
 			<File
 				RelativePath=".\src\PdfEngine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PdfSearch.h"
 				>
 			</File>
 			<File

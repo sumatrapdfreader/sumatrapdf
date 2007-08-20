@@ -273,6 +273,8 @@ public:
 
     PdfSearchResult *Find(wchar_t *text = NULL);
 
+    BOOL            _showToc;
+
 protected:
     virtual void    MapResultRectToScreen(PdfSearchResult *rect) = 0;
 

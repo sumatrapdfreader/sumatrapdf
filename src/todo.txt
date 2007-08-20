@@ -16,6 +16,8 @@ Short term todo (before next 0.8 release):
   screen (upper part of the size of start bar is not used)
 
 Long term todo:
+* move DisplayState into DisplayModel and use it directly, instead of 
+  duplicating the fields in DisplayModel. Rename to SerializedState.
 * show keybindings in help
 * better, animated about screen
 * a nicer way to show selected text

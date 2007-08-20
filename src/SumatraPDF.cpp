@@ -1447,7 +1447,7 @@ static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
 
     EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
 
-    if (win->tocVisible)
+    if (win->dm->_showToc)
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
@@ -1762,6 +1762,7 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
     if (fileFromHistory) {
         zoomVirtual = fileFromHistory->state.zoomVirtual;
         rotation = fileFromHistory->state.rotation;
+        win->dm->_showToc = fileFromHistory->state.showToc;
     }
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -1795,7 +1796,8 @@ Exit:
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
-    win->ShowTocBox();
+    if (win->dm->_showToc)
+        win->ShowTocBox();
     return win;
 }
 
@@ -3218,7 +3220,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        if (win->tocVisible) {
+        if (win->dm->_showToc) {
             win->HideTocBox();
             MenuUpdateBookmarksStateForWindow(win);
         }
@@ -3655,7 +3657,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
     
-    if (win->tocLoaded && win->tocVisible)
+    if (win->tocLoaded && win->dm->_showToc)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
@@ -3726,7 +3728,7 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     while (win) {
         if (win->tocLoaded) {
             win->ClearTocBox();
-            if (win->tocVisible)
+            if (win->dm->_showToc)
                 win->LoadTocTree();
         }
         MenuUpdateUseFitzStateForWindow(win);
@@ -3864,7 +3866,7 @@ void WindowInfo::EnterFullscreen()
     ShowWindow(hwndReBar, SW_HIDE);
     SetWindowLong(hwndFrame, GWL_STYLE, ws);
     SetWindowPos(hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    if (tocVisible)
+    if (dm->_showToc)
         ShowTocBox();
     else
         SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
@@ -4481,7 +4483,7 @@ void WindowInfo::LoadTocTree()
 
 void WindowInfo::ToggleTocBox()
 {
-    if (!tocVisible)
+    if (!dm->_showToc)
         ShowTocBox();
     else
         HideTocBox();
@@ -4517,7 +4519,7 @@ void WindowInfo::ShowTocBox()
     SetWindowPos(spliter, NULL, cx, cy, DEF_SPLITER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndCanvas, NULL, cx + DEF_SPLITER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
 Exit:
-    tocVisible = true;
+    dm->_showToc = TRUE;
 }
 
 void WindowInfo::HideTocBox()
@@ -4536,7 +4538,7 @@ void WindowInfo::HideTocBox()
     ShowWindow(hwndTocBox, SW_HIDE);
     ShowWindow(spliter, SW_HIDE);
 
-    tocVisible = false;
+    dm->_showToc = FALSE;
 }
 
 void WindowInfo::ClearTocBox()

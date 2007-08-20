@@ -109,11 +109,12 @@ bool DisplayState_Deserialize2(benc_dict* dict, DisplayState *ds)
     dict_get_int(dict, WINDOW_Y_STR, &ds->windowY);
     dict_get_int(dict, WINDOW_DX_STR, &ds->windowDx);
     dict_get_int(dict, WINDOW_DY_STR, &ds->windowDy);
+    dict_get_bool(dict, SHOW_TOC_STR, &ds->showToc);
     dict_get_double_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
     return true;
 }
 
-benc_dict* DisplayState_Serialize2(DisplayState *ds)
+benc_dict* DisplayState_SerializeNew(DisplayState *ds)
 {
     BOOL  ok;
     const char * txt;
@@ -133,6 +134,7 @@ benc_dict* DisplayState_Serialize2(DisplayState *ds)
     DICT_ADD_INT64(prefs, WINDOW_Y_STR, ds->windowY);
     DICT_ADD_INT64(prefs, WINDOW_DX_STR, ds->windowDx);
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, ds->windowDy);
+    DICT_ADD_INT64(prefs, SHOW_TOC_STR, ds->showToc);
 
     txt = str_printf("%.4f", ds->zoomVirtual);
     if (txt) {
@@ -151,7 +153,7 @@ static benc_dict* FileHistoryList_Node_Serialize2(FileHistoryList *node)
     assert(node);
     if (!node) return NULL;
 
-    return DisplayState_Serialize2(&(node->state));
+    return DisplayState_SerializeNew(&(node->state));
 }
 
 benc_array* FileHistoryList_Serialize2(FileHistoryList **root)
