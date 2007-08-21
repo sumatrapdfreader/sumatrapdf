@@ -271,7 +271,7 @@ public:
     void            rectCvtUserToScreen(int pageNo, RectD *r);
     void            rectCvtScreenToUser(int *pageNo, RectD *r);
 
-    PdfSearchResult *Find(wchar_t *text = NULL);
+    PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, wchar_t *text = NULL);
 
     BOOL            _showToc;
 

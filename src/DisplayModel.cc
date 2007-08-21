@@ -1315,17 +1315,12 @@ bool BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rota
     return false;
 }
 
-PdfSearchResult *DisplayModel::Find(wchar_t *text)
+PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, wchar_t *text)
 {
-    // TODO:
-    //  Add more paramters to this method for
-    //  setting search info before lookup:
-    //  - Case-sensitive
-    //  - Search all
-    //  - Forward/Backward
     showBusyCursor();
 
     bool found;
+    _pdfSearchEngine->SetDirection(direction);
     if (text != NULL)
         found = _pdfSearchEngine->FindFirst(currentPageNo(), text);
     else
