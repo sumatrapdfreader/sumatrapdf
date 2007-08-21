@@ -4,6 +4,11 @@
 #include <windows.h>
 #include "PdfEngine.h"
 
+enum PdfSearchDirection {
+    FIND_BACKWARD = false,
+    FIND_FORWARD  = true
+};
+
 class PDFDoc;
 class TextOutputDev;
 class TextPage;
@@ -21,10 +26,10 @@ class PdfSearchEngine
 protected:
     void *text;
     int   length;
+    bool  forward;
 
 public:
     bool sensitive;
-    bool forward;
 
     PdfSearchResult result;
 
@@ -43,6 +48,7 @@ public:
     
     virtual void Reset() {}
     virtual void SetText(wchar_t *text);
+    virtual void SetDirection(bool forward) { this->forward = forward; }
     virtual bool FindFirst(int page, wchar_t *text) = 0;
     virtual bool FindNext() = 0;
 
@@ -78,16 +84,19 @@ private:
     PdfEngineFitz *engine;
     pdf_textline *line;
     pdf_textline *current;
-    int last;
+    long last;
 public:
     PdfSearchFitz(PdfEngineFitz *engine);
     virtual ~PdfSearchFitz();
 
     virtual void Reset();
+    virtual void SetDirection(bool forward);
     virtual bool FindFirst(int page, wchar_t *text);
     virtual bool FindNext();
 
 protected:
+    void inline ReverseLineList();
+    bool inline MatchAtPosition(int n);
     bool FindTextInPage(int page = 0);
     bool FindStartingAtPage(int page);
 };

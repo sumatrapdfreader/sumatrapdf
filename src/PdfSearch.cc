@@ -3,6 +3,9 @@
 #include <PDFDoc.h>
 #include <TextOutputDev.h>
 #include <Page.h>
+#include <UnicodeTypeTable.h>
+
+#define NONE    MAXLONG
 
 void PdfSearchEngine::SetText(wchar_t *text)
 {
@@ -50,7 +53,7 @@ bool PdfSearchPoppler::FindStartingAtPage(int startPage)
 
         double left, right, top, bottom;
         if (page->findText((Unicode *)text, length,
-                           gTrue, gTrue, gFalse, gFalse, gFalse, gFalse,
+                           gTrue, gTrue, gFalse, gFalse, sensitive, !forward,
                            &left, &top, &right, &bottom)) {
             result.page = pageNo;
             result.left = (int)floor(left);
@@ -77,7 +80,7 @@ bool PdfSearchPoppler::FindNext()
 
     double left, right, top, bottom;
     if (page->findText((Unicode *)text, length,
-                       gFalse, gTrue, gTrue, gFalse, gFalse, gFalse,
+                       gFalse, gTrue, gTrue, gFalse, sensitive, !forward,
                        &left, &top, &right, &bottom)) {
         result.left = (int)floor(left);
         result.top = (int)floor(top);
@@ -95,7 +98,7 @@ PdfSearchFitz::PdfSearchFitz(PdfEngineFitz *engine) : PdfSearchEngine()
     this->engine = engine;
     this->line = NULL;
     this->current = NULL;
-    this->last = -1;
+    this->last = NONE;
 }
 
 PdfSearchFitz::~PdfSearchFitz()
@@ -107,66 +110,143 @@ void PdfSearchFitz::Reset()
     if (line)
         pdf_droptextline(line);
     line = current = NULL;
-    last = -1;
+    last = NONE;
+}
+
+void PdfSearchFitz::ReverseLineList()
+{
+    if (!line)
+        return;
+
+    pdf_textline *prev = line, *curr = line->next;
+    while (curr) {
+        pdf_textline *next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+    line->next = NULL;
+    line = prev;
+}
+
+void PdfSearchFitz::SetDirection(bool forward)
+{
+    if (forward == this->forward)
+        return;
+    this->forward = forward;
+
+    if (forward)
+        last = last + 2;
+    else
+        last = last - 2;
+
+    ReverseLineList();
+}
+
+bool inline PdfSearchFitz::MatchAtPosition(int n)
+{
+    Unicode *p = (Unicode *)text;
+    result.left = current->text[n].bbox.x0;
+    result.top = current->text[n].bbox.y0;
+    last = n;
+
+    while (n < current->len && *p) {
+        Unicode c = current->text[n].c;
+        if (*p != c && (sensitive || unicodeToUpper(*p) != unicodeToUpper(c)))
+            break;
+        p++;
+        n++;
+    }
+
+    if (*p == 0) { // Found
+        result.right = current->text[n-1].bbox.x1;
+        result.bottom = current->text[n-1].bbox.y1;
+        if (forward)
+            last = last + 1;
+        else
+            last = last - 1;
+        return true;
+    }
+
+    return false;
 }
 
 // TODO:
 // Apply Boyer-Moore algorithm here
 bool PdfSearchFitz::FindTextInPage(int page)
 {
-    Unicode *p = (Unicode *)text;
-    int start = last > 0 ? last : 0;
+    Unicode p = *(Unicode *)text;
+    int start = last;
 
-    while (current) {
-        for (int i = start; i < current->len; i++) {
-            if (*p == current->text[i].c) {
-                result.left = current->text[i].bbox.x0;
-                result.top = current->text[i].bbox.y0;
-                last = i;
-
-                while (i < current->len && *p && *p == current->text[i].c) {
-                    p++;
-                    i++;
+    if (forward) {
+        if (NONE == start)
+            start = 0;
+        while (current) {
+            for (int i = start; i < current->len; i++) {
+                if (p == current->text[i].c) {
+                    if (MatchAtPosition(i))
+                        goto Found;
                 }
-
-                if (*p == 0) { // Found
-                    result.right = current->text[i-1].bbox.x1;
-                    result.bottom = current->text[i-1].bbox.y1;
-                    if (page > 0)
-                        result.page = page;
-                    last = last + 1;
-                    return true;
-                }
-                else {
-                    i = last;
-                }
-                p = (Unicode *)text;
             }
+            current = current->next;
+            start = 0;
         }
-
-        current = current->next;
-        start = 0;
+    } else {
+        if (current && NONE == start)
+            start = current->len - length;
+        while (current) {
+            for (int i = start; i >= 0; i--) {
+                if (p == current->text[i].c) {
+                    if (MatchAtPosition(i))
+                        goto Found;
+                }
+            }
+            current = current->next;
+            if (current)
+                start = current->len - length;
+        }
     }
     return false;
+
+Found:
+    if (page > 0)
+        result.page = page;
+    return true;
 }
 
-bool PdfSearchFitz::FindStartingAtPage(int startPage)
+bool PdfSearchFitz::FindStartingAtPage(int pageNo)
 {
-    int pageCount = engine->pageCount();
+    int pageEnd, step;
 
-    for (int pageNo = startPage; pageNo <= pageCount; pageNo++) {
+    if (forward) {
+        pageEnd = engine->pageCount() + 1;
+        step = 1;
+    } else {
+        pageEnd = 0;
+        step = -1;
+    }
+
+    while (pageNo != pageEnd) {
         Reset();
 
         pdf_page *page = engine->getPdfPage(pageNo);
-        if (!page) continue;
+        if (!page)
+            goto NextPage;
 
         pdf_textline *line;
         if (pdf_loadtextfromtree(&line, page->tree, fz_identity())) // if error
-            continue;
+            goto NextPage;
 
-        this->line = this->current = line;
+        this->line = line;
+        if (!forward)
+            ReverseLineList();
+
+        this->current = this->line;
         if (FindTextInPage(pageNo))
             return true;
+
+    NextPage:
+        pageNo += step;
     }
 
     return false;
@@ -181,11 +261,8 @@ bool PdfSearchFitz::FindFirst(int page, wchar_t *text)
 
 bool PdfSearchFitz::FindNext()
 {
-    if (!current)
-        return false;
-
     if (FindTextInPage())
         return true;
 
-    return FindStartingAtPage(result.page + 1);
+    return FindStartingAtPage(result.page + (forward ? 1 : -1));
 }
