@@ -3940,8 +3940,9 @@ static void OnMenuFindNext(WindowInfo *win)
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
-    // TODO:
-    // Need more code in search engine before implement this function
+    PdfSearchResult *rect = win->dm->Find(FIND_BACKWARD);
+    if (rect)
+        WindowInfo_ShowSearchResult(win, rect);
 }
 
 #define KEY_PRESSED_MASK 0x8000
@@ -4189,7 +4190,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
                 wchar_t text[256];
                 GetWindowTextW(hwnd, text, sizeof(text));
                 if (wcslen(text) > 0)
-                    rect = win->dm->Find(text);
+                    rect = win->dm->Find(FIND_FORWARD, text);
             }
 
             if (rect)
