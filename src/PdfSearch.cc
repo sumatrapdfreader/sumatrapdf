@@ -39,17 +39,29 @@ void PdfSearchPoppler::Reset()
     page = NULL;
 }
 
-bool PdfSearchPoppler::FindStartingAtPage(int startPage)
+bool PdfSearchPoppler::FindStartingAtPage(int pageNo)
 {
-    PDFDoc *doc = engine->pdfDoc();
-    int pageCount = doc->getNumPages();
+    if (!text)
+        return false;
 
-    for (int pageNo = startPage; pageNo <= pageCount; pageNo++) {
+    PDFDoc *doc = engine->pdfDoc();
+    int pageEnd, step;
+
+    if (forward) {
+        pageEnd = doc->getNumPages() + 1;
+        step = 1;
+    } else {
+        pageEnd = 0;
+        step = -1;
+    }
+
+    while (pageNo != pageEnd) {
         Reset();
 
         doc->displayPage(dev, pageNo, 72.0, 72.0, 0, gFalse, gTrue, gFalse);
         page = dev->takeText();
-        if (!page) continue;
+        if (!page)
+            goto NextPage;
 
         double left, right, top, bottom;
         if (page->findText((Unicode *)text, length,
@@ -62,6 +74,9 @@ bool PdfSearchPoppler::FindStartingAtPage(int startPage)
             result.bottom = (int)ceil(bottom);
             return true;
         }
+
+    NextPage:
+        pageNo += step;
     }
     return false;
 }
@@ -89,7 +104,14 @@ bool PdfSearchPoppler::FindNext()
         return true;
     }
 
-    return FindStartingAtPage(result.page + 1);
+    int newPage;
+    if (forward) {
+        newPage = result.page + 1;
+    }
+    else {
+        newPage = result.page - 1;
+    }
+    return FindStartingAtPage(newPage);
 }
 
 // Fitz
