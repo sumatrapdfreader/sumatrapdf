@@ -4023,7 +4023,10 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
             win->ToggleTocBox();
     } else if (VK_F3 == key || (ctrlPressed && 'G' == key)) {
         if (win) {
-            OnMenuFindNext(win);
+            if (shiftPressed)
+                OnMenuFindPrev(win);
+            else
+                OnMenuFindNext(win);
         }
     }
 }
