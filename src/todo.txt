@@ -12,8 +12,6 @@ Short term todo (before next 0.8 release):
     be smarter about focus handling
   * remember toc state for a given document in prefs
 * preserve fullScreen info per document and respect it when opening a PDF
-* bug: going into fullscreen mode on my laptop/Win XP doesn't cover the whole
-  screen (upper part of the size of start bar is not used)
 * fullscreen mode should be per window, not global to the app
 
 Long term todo:

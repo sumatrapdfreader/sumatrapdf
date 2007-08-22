@@ -3862,7 +3862,8 @@ void WindowInfo::EnterFullscreen()
         h = rect_dy(&mi.rcMonitor);
     }
     long ws = m_stylePrev = GetWindowLong(hwndFrame, GWL_STYLE);
-    ws &= WS_MAXIMIZE | ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    ws |= WS_MAXIMIZE;
 
     m_menuPrev = GetMenu(hwndFrame);
     m_wasToolbarVisible = IsWindowVisible(hwndToolbar);
@@ -3872,7 +3873,7 @@ void WindowInfo::EnterFullscreen()
     ShowWindow(hwndReBar, SW_HIDE);
     SetWindowLong(hwndFrame, GWL_STYLE, ws);
     SetWindowPos(hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    if (dm->_showToc)
+    if (tocLoaded && dm->_showToc)
         ShowTocBox();
     else
         SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
