@@ -270,5 +270,11 @@ bool PdfSearchFitz::FindNext()
     if (FindTextInPage())
         return true;
 
-    return FindStartingAtPage(result.page + (forward ? 1 : -1));
+    int newPage;
+    if (forward) {
+        newPage = result.page + 1;
+    } else {
+        newPage = result.page - 1;
+    }
+    return FindStartingAtPage(newPage);
 }

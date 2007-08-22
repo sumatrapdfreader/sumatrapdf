@@ -39,6 +39,7 @@ public:
         text = NULL;
         sensitive = true;
         forward = true;
+        result.page = 1;
     }
 
     virtual ~PdfSearchEngine()

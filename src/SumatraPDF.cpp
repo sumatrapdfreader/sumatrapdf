@@ -3914,8 +3914,14 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
         result->left,
         result->top,
         result->right - result->left,
-        result->bottom - result->top
+        0
     };
+    // TODO: this should really be fixed by the upper layer and bottom should always be >= top
+    // assert(result->bottom >= result->top);
+    if (result->top > result->bottom)
+        rect.dy = result->top - result->bottom;
+    else
+        rect.dy = result->bottom - result->top;
     RectI intersect;
     DeleteOldSelectionInfo(win);
     if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {
