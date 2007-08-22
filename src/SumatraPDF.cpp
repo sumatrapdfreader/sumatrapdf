@@ -229,6 +229,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
 static void UpdateToolbarButtonsToolTips(void);
+static void OnMenuFindMatchCase(WindowInfo *win);
 
 #define SEP_ITEM "-----"
 
@@ -1783,7 +1784,6 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
         WindowInfo_ResizeToPage(win, startPage);
 
     if (reuseExistingWindow) {
-        void OnMenuFindMatchCase(WindowInfo *win);
 
         WindowInfo_RedrawAll(win);
         OnMenuFindMatchCase(win);
@@ -3423,7 +3423,7 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    char *sep = strrchr(srcFileName, DIR_SEP_CHAR);
+    const char *sep = strrchr(srcFileName, DIR_SEP_CHAR);
     if (sep)
         strcpy(dstFileName, sep + 1);
     else
