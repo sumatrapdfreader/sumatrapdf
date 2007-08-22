@@ -1328,6 +1328,8 @@ Find Previous
 -
 Find Next
 -
+Match case
+-
 Open
 br:Abrir
 hu:Megny&itás
