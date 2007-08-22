@@ -175,6 +175,9 @@ bool inline PdfSearchFitz::MatchAtPosition(int n)
 // Apply Boyer-Moore algorithm here
 bool PdfSearchFitz::FindTextInPage(int page)
 {
+    if (!text)
+        return false;
+
     Unicode p = *(Unicode *)text;
     int start = last;
 
@@ -216,6 +219,9 @@ Found:
 
 bool PdfSearchFitz::FindStartingAtPage(int pageNo)
 {
+    if (!text)
+        return false;
+
     int pageEnd, step;
 
     if (forward) {
