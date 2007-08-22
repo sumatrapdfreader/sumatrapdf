@@ -215,6 +215,7 @@ ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, -1 },
     { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
+    { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"), 0 },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -3951,6 +3952,15 @@ static void OnMenuFindPrev(WindowInfo *win)
         WindowInfo_ShowSearchResult(win, rect);
 }
 
+static void OnMenuFindMatchCase(WindowInfo *win)
+{
+    TBBUTTONINFO bi;
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_BYINDEX|TBIF_STATE;
+    SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, 10, (LPARAM)&bi);
+    win->dm->SetFindMatchCase((bi.fsState & TBSTATE_CHECKED) != 0);
+}
+
 #define KEY_PRESSED_MASK 0x8000
 static bool WasKeyDown(int virtKey)
 {
@@ -4307,6 +4317,10 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
             padding = i;
         }
         tbButtons[i] = TbButtonFromButtonInfo(i);
+        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
+            tbButtons[i].fsState |= TB_PRESSBUTTON;
+            tbButtons[i].fsStyle = BTNS_CHECK;
+        }
     }
     lres = SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
@@ -4828,6 +4842,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_FIND_PREV:
                     OnMenuFindPrev(win);
+                    break;
+
+                case IDM_FIND_MATCH:
+                    OnMenuFindMatchCase(win);
                     break;
 
                 case IDM_VISIT_WEBSITE:
