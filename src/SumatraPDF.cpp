@@ -3419,11 +3419,12 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
+    char *sep = strrchr(srcFileName, DIR_SEP_CHAR);
+    if (sep)
+        strcpy(dstFileName, sep + 1);
+    else
+        strcpy(dstFileName, srcFileName);
     ofn.lpstrFile = dstFileName;
-
-    // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
-    // use the contents of szFile to initialize itself.
-    ofn.lpstrFile[0] = '\0';
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = "PDF\0*.pdf\0All\0*.*\0";
     ofn.nFilterIndex = 1;
