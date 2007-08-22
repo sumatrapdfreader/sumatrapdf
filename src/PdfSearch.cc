@@ -143,6 +143,13 @@ void PdfSearchFitz::SetDirection(bool forward)
     ReverseLineList();
 }
 
+bool inline PdfSearchFitz::MatchChars(int c1, int c2)
+{
+    if (sensitive)
+        return c1 == c2;
+    return (c1 == c2) || (unicodeToUpper(c1) == unicodeToUpper(c2));
+}
+
 bool inline PdfSearchFitz::MatchAtPosition(int n)
 {
     Unicode *p = (Unicode *)text;
@@ -151,8 +158,7 @@ bool inline PdfSearchFitz::MatchAtPosition(int n)
     last = n;
 
     while (n < current->len && *p) {
-        Unicode c = current->text[n].c;
-        if (*p != c && (sensitive || unicodeToUpper(*p) != unicodeToUpper(c)))
+        if (!MatchChars(*p, current->text[n].c))
             break;
         p++;
         n++;
@@ -186,7 +192,7 @@ bool PdfSearchFitz::FindTextInPage(int page)
             start = 0;
         while (current) {
             for (int i = start; i < current->len; i++) {
-                if (p == current->text[i].c) {
+                if (MatchChars(p, current->text[i].c)) {
                     if (MatchAtPosition(i))
                         goto Found;
                 }
@@ -199,7 +205,7 @@ bool PdfSearchFitz::FindTextInPage(int page)
             start = current->len - length;
         while (current) {
             for (int i = start; i >= 0; i--) {
-                if (p == current->text[i].c) {
+                if (MatchChars(p, current->text[i].c)) {
                     if (MatchAtPosition(i))
                         goto Found;
                 }

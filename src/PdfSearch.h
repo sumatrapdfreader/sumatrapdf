@@ -27,10 +27,9 @@ protected:
     void *text;
     int   length;
     bool  forward;
-
-public:
     bool sensitive;
 
+public:
     PdfSearchResult result;
 
 public:
@@ -49,6 +48,7 @@ public:
     
     virtual void Reset() {}
     virtual void SetText(wchar_t *text);
+    virtual void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
     virtual void SetDirection(bool forward) { this->forward = forward; }
     virtual bool FindFirst(int page, wchar_t *text) = 0;
     virtual bool FindNext() = 0;
@@ -97,6 +97,7 @@ public:
 
 protected:
     void inline ReverseLineList();
+    bool inline MatchChars(int c1, int c2);
     bool inline MatchAtPosition(int n);
     bool FindTextInPage(int page = 0);
     bool FindStartingAtPage(int page);
