@@ -4004,15 +4004,15 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
     //DBG_OUT("key=%d,%c,shift=%d,ctrl=%d\n", key, (char)key, (int)shiftPressed, (int)ctrlPressed);
 
     if (VK_PRIOR == key) {
-        /* TODO: more intelligence (see VK_NEXT comment). Also, probably
-           it's exactly the same as 'n' so the code should be factored out */
-        win->dm->goToPrevPage(0);
-       /* SendMessage (win->hwnd, WM_VSCROLL, SB_PAGEUP, 0); */
+        int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+       SendMessage (win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
+            win->dm->goToPrevPage(0);
     } else if (VK_NEXT == key) {
-        /* TODO: this probably should be more intelligent (scroll if not yet at the bottom,
-           go to next page if at the bottom, and something entirely different in continuous mode */
-        win->dm->goToNextPage(0);
-        /* SendMessage (win->hwnd, WM_VSCROLL, SB_PAGEDOWN, 0); */
+        int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
+        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
+            win->dm->goToNextPage(0);
     } else if (VK_UP == key) {
         SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
     } else if (VK_DOWN == key) {
