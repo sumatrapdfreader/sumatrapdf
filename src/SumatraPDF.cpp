@@ -4318,7 +4318,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
             gToolbarButtons[i].index = index;
         }
         else if (-1 == gToolbarButtons[i].index) {
-            gToolbarButtons[i].index = 0;
             padding = i;
         }
         tbButtons[i] = TbButtonFromButtonInfo(i);
