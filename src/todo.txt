@@ -16,16 +16,23 @@ Short term todo (before next 0.8 release):
   screen (upper part of the size of start bar is not used)
 
 Long term todo:
+* handle links
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
 * show keybindings in help
 * better, animated about screen
 * a nicer way to show selected text
 * make dialog-boxes translatable
-* handle links
 * replace DString with something better (sstr ?) and provide C++ wrapper
   to make it easier to use in C++ code without all those annoying DStringInit()
   calls
+* move fitz code to a separate Google code project (fitz-kjk?) and link to it
+  via svn:externals, like we do for poppler. fitz should be trunk and fitz-head
+  should become branches/devel. Add standalone makefiles etc. so that it can
+  be tested and worked on independently of Sumatra. Preserving history of
+  changes for fitz code might be challenging - I'm not sure if google import
+  will handle 2 branches. In the worst case I can write a script to reply
+  checkins.
 
 Maybe:
 * use MultiByteToWideChar() 
