@@ -41,6 +41,7 @@
 #define IDM_FIND_FIRST                  435
 #define IDM_FIND_NEXT                   436
 #define IDM_FIND_PREV                   437
+#define IDM_FIND_MATCH                  438
 
 #define IDM_ZOOM_FIT_PAGE               440
 #define IDM_ZOOM_ACTUAL_SIZE            441
@@ -116,6 +117,7 @@
 #define IDB_CLOSE_TOC                   2007
 #define IDB_FIND_NEXT                   2008
 #define IDB_FIND_PREV                   2009
+#define IDB_FIND_MATCH                  2010
 #define IDT_FILE_NEW                    3000
 #define IDT_FILE_OPEN                   3001
 #define IDT_FILE_METAPATH               3002
