@@ -3905,6 +3905,14 @@ static void OnMenuViewFullscreen(WindowInfo *current)
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
 {
+    if (!result) {
+        // TODO: i18n
+        MessageBox(win->hwndFrame,
+            "SumatraPDF has finished searching the document. No matches were found",
+            "SumatraPDF", MB_OK);
+        return;
+    }
+
     RectI pageOnScreen;
     PdfPageInfo *pdfPage = win->dm->getPageInfo(result->page);
     pageOnScreen.x = pdfPage->screenX;
@@ -3942,15 +3950,13 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 static void OnMenuFindNext(WindowInfo *win)
 {
     PdfSearchResult *rect = win->dm->Find();
-    if (rect)
-        WindowInfo_ShowSearchResult(win, rect);
+    WindowInfo_ShowSearchResult(win, rect);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
     PdfSearchResult *rect = win->dm->Find(FIND_BACKWARD);
-    if (rect)
-        WindowInfo_ShowSearchResult(win, rect);
+    WindowInfo_ShowSearchResult(win, rect);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -4212,9 +4218,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
                 if (wcslen(text) > 0)
                     rect = win->dm->Find(FIND_FORWARD, text);
             }
-
-            if (rect)
-                WindowInfo_ShowSearchResult(win, rect);
+            WindowInfo_ShowSearchResult(win, rect);
 
             Edit_SetModify(hwnd, FALSE);
             return 1;
