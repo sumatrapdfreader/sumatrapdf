@@ -3900,14 +3900,6 @@ static void OnMenuViewFullscreen(WindowInfo *current)
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
 {
-    if (!result) {
-        // TODO: i18n
-        MessageBox(win->hwndFrame,
-            "SumatraPDF has finished searching the document. No matches were found",
-            "SumatraPDF", MB_OK);
-        return;
-    }
-
     RectI pageOnScreen;
     PdfPageInfo *pdfPage = win->dm->getPageInfo(result->page);
     pageOnScreen.x = pdfPage->screenX;
@@ -3921,7 +3913,8 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
         result->right - result->left,
         0
     };
-    // TODO: this should really be fixed by the upper layer and bottom should always be >= top
+    // TODO: this should really be fixed by the upper layer and here
+    // bottom should always be >= top
     // assert(result->bottom >= result->top);
     if (result->top > result->bottom)
         rect.dy = result->top - result->bottom;
