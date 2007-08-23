@@ -36,7 +36,7 @@ public:
     PdfSearchEngine()
     {
         text = NULL;
-        sensitive = true;
+        sensitive = false;
         forward = true;
         result.page = 1;
     }
@@ -48,7 +48,7 @@ public:
     
     virtual void Reset() {}
     virtual void SetText(wchar_t *text);
-    virtual void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
+    void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
     virtual void SetDirection(bool forward) { this->forward = forward; }
     virtual bool FindFirst(int page, wchar_t *text) = 0;
     virtual bool FindNext() = 0;

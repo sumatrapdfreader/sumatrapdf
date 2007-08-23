@@ -3938,13 +3938,15 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 static void OnMenuFindNext(WindowInfo *win)
 {
     PdfSearchResult *rect = win->dm->Find();
-    WindowInfo_ShowSearchResult(win, rect);
+    if (rect)
+        WindowInfo_ShowSearchResult(win, rect);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
     PdfSearchResult *rect = win->dm->Find(FIND_BACKWARD);
-    WindowInfo_ShowSearchResult(win, rect);
+    if (rect)
+        WindowInfo_ShowSearchResult(win, rect);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -4200,13 +4202,14 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     
             if (!Edit_GetModify(hwnd))
                 rect = win->dm->Find();
-            else {
+            if (!rect) {
                 wchar_t text[256];
                 GetWindowTextW(hwnd, text, sizeof(text));
                 if (wcslen(text) > 0)
                     rect = win->dm->Find(FIND_FORWARD, text);
             }
-            WindowInfo_ShowSearchResult(win, rect);
+            if (rect)
+                WindowInfo_ShowSearchResult(win, rect);
 
             Edit_SetModify(hwnd, FALSE);
             return 1;
@@ -4310,7 +4313,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
         }
         tbButtons[i] = TbButtonFromButtonInfo(i);
         if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
-            tbButtons[i].fsState |= TB_PRESSBUTTON;
             tbButtons[i].fsStyle = BTNS_CHECK;
         }
     }
