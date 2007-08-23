@@ -102,6 +102,8 @@ public:
     HWND            hwndReBar;
     HWND            hwndFindBox;
     HWND            hwndTocBox;
+    HWND            hwndSpliter;
+    HWND            hwndTracker;
     HMENU           hMenu;
 
     HDC             hdc;
@@ -143,6 +145,9 @@ public:
     void ClearTocBox();
     void LoadTocTree();
     void ToggleTocBox();
+
+    void TrackMouse(HWND hwnd=NULL);
+    void FindStart();
 
     void CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent=NULL);
     HTREEITEM AddTocItemToView(PdfTocItem *entry, HTREEITEM parent);

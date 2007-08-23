@@ -3936,8 +3936,9 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     }
 
     win->showSelection = true;
+    win->TrackMouse();
+
     triggerRepaintDisplayNow(win);
-    SetFocus(win->hwndFrame);
 }
 
 static void OnMenuFindNext(WindowInfo *win)
@@ -4033,8 +4034,7 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
             OnMenuViewFullscreen(win);
     } else if ('F' == key) {
         if (ctrlPressed) {
-        SendMessage(win->hwndFindBox, EM_SETSEL, 0, -1);
-        SetFocus(win->hwndFindBox);
+            win->FindStart();
         }
     } else if (VK_F12 == key) {
         if (win)
@@ -4088,8 +4088,7 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('r' == key) {
         ReloadPdfDocument(win);
     } else if ('/' == key) {
-        SendMessage(win->hwndFindBox, EM_SETSEL, 0, -1);
-        SetFocus(win->hwndFindBox);
+        win->FindStart();
     }
 }
 
@@ -4234,6 +4233,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             r.right -= 2;
             Edit_SetRectNoPaint(hwnd, &r);
         }
+    }
+    else if (WM_SETFOCUS == message) {
+        win->hwndTracker = NULL;
     }
 
     return CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
@@ -4434,11 +4436,63 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
+void WindowInfo::FindStart()
+{
+    hwndTracker = NULL;
+    SendMessage(hwndFindBox, EM_SETSEL, 0, -1);
+    SetFocus(hwndFindBox);
+}
+
+void WindowInfo::TrackMouse(HWND tracker)
+{
+    if (!tracker)
+        tracker = hwndCanvas;
+    else
+    if (hwndFrame != GetActiveWindow() || hwndFindBox == GetFocus() || hwndTracker == tracker)
+        return;
+
+    TRACKMOUSEEVENT tme = { sizeof(tme) };
+    tme.dwFlags = TME_LEAVE;
+    tme.hwndTrack = hwndTracker = tracker;
+    TrackMouseEvent(&tme);
+    if (tracker == hwndCanvas)
+        SetFocus(hwndFrame);
+    else
+        SetFocus(hwndTocBox);
+}
+
+static WNDPROC DefWndProcTocBox = NULL;
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+    switch (message) {
+        case WM_MOUSELEAVE:
+            win->hwndTracker = NULL;
+            return 0;
+        case WM_MOUSEMOVE:
+            win->TrackMouse(hwnd);
+            break;
+        case WM_CHAR:
+            if (win)
+                OnChar(win, wParam);
+            break;
+
+        case WM_KEYDOWN:
+            if (wParam < VK_PRIOR && wParam > VK_DOWN) {
+                if (win)
+                    OnKeydown(win, wParam, lParam);
+            }
+            break;
+    }
+    return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
+}
+
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND spliter = CreateWindow("Spliter", "", WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
+    win->hwndSpliter = spliter;
     
     HWND closeToc = CreateWindow(WC_STATIC, "",
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
@@ -4451,13 +4505,17 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
                         0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
-    SetWindowLong(win->hwndTocBox, GWL_USERDATA, (LONG)spliter);
+    SetWindowLong(win->hwndTocBox, GWL_USERDATA, (LONG)win);
 
     assert(win->hwndTocBox);
     if (!win->hwndTocBox)
         SeeLastError();
     else
         TreeView_SetUnicodeFormat(win->hwndTocBox, true);
+        
+    if (NULL == DefWndProcTocBox)
+        DefWndProcTocBox = (WNDPROC)GetWindowLong(win->hwndTocBox, GWL_WNDPROC);
+    SetWindowLong(win->hwndTocBox, GWL_WNDPROC, (LONG)WndProcTocBox);
 }
 
 #define TreeView_InsertItemW(w,i)   (HTREEITEM)SendMessageW((w),TVM_INSERTITEMW,0,(LPARAM)(i))
@@ -4537,9 +4595,8 @@ void WindowInfo::ShowTocBox()
         cx = rect_dx(&rframe) / 4;
     cw = rect_dx(&rframe) - cx - DEF_SPLITER_DX;
 
-    HWND spliter = (HWND)GetWindowLong(hwndTocBox, GWL_USERDATA);
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(spliter, NULL, cx, cy, DEF_SPLITER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndSpliter, NULL, cx, cy, DEF_SPLITER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndCanvas, NULL, cx + DEF_SPLITER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
 Exit:
     dm->_showToc = TRUE;
@@ -4556,10 +4613,9 @@ void WindowInfo::HideTocBox()
     if (gShowToolbar && !m_fullscreen)
         cy = gReBarDy + gReBarDyFrame;
 
-    HWND spliter = (HWND)GetWindowLong(hwndTocBox, GWL_USERDATA);
     SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
     ShowWindow(hwndTocBox, SW_HIDE);
-    ShowWindow(spliter, SW_HIDE);
+    ShowWindow(hwndSpliter, SW_HIDE);
 
     dm->_showToc = FALSE;
 }
@@ -4627,7 +4683,12 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             OnHScroll(win, wParam);
             return WM_HSCROLL_HANDLED;
 
+        case WM_MOUSELEAVE:
+            win->hwndTracker = NULL;
+            return 0;
+
         case WM_MOUSEMOVE:
+            win->TrackMouse(hwnd);
             if (win)
                 OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
@@ -4992,12 +5053,6 @@ InitMouseWheelInfo:
                         if (VK_TAB == ptvkd->wVKey) {
                             SetFocus(win->hwndFrame);
                             return 1;
-                        }
-                        else if (VK_F11 == ptvkd->wVKey) {
-                            OnMenuViewFullscreen(win);
-                        }
-                        else if (VK_F12 == ptvkd->wVKey) {
-                            win->HideTocBox();
                         }
                     }
                     break;
