@@ -12,7 +12,6 @@ Short term todo (before next 0.8 release):
     be smarter about focus handling
   * remember toc state for a given document in prefs
 * preserve fullScreen info per document and respect it when opening a PDF
-* fullscreen mode should be per window, not global to the app
 
 Long term todo:
 * handle links

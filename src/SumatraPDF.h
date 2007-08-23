@@ -147,8 +147,8 @@ public:
     void CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent=NULL);
     HTREEITEM AddTocItemToView(PdfTocItem *entry, HTREEITEM parent);
 
-    static bool fullscreen;
-    bool IsFullscreen() { return fullscreen; }
+    bool m_fullscreen;
+    bool IsFullscreen() { return m_fullscreen; }
     void EnterFullscreen();
     void ExitFullscreen();
 private:

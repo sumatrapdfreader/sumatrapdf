@@ -3840,11 +3840,9 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
-bool WindowInfo::fullscreen = false;
-
 void WindowInfo::EnterFullscreen()
 {
-    if (!IsWindowVisible(hwndFrame)) return;
+    if (m_fullscreen || !IsWindowVisible(hwndFrame)) return;
 
     int x, y, w, h;
     MONITORINFOEX mi;
@@ -3877,11 +3875,12 @@ void WindowInfo::EnterFullscreen()
         ShowTocBox();
     else
         SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+    m_fullscreen = true;
 }
 
 void WindowInfo::ExitFullscreen()
 {
-    if (!m_stylePrev) return;
+    if (!m_fullscreen) return;
     if (m_wasToolbarVisible)
         ShowWindow(hwndReBar, SW_SHOW);
     SetMenu(hwndFrame, m_menuPrev);
@@ -3890,22 +3889,18 @@ void WindowInfo::ExitFullscreen()
                  m_frameRc.left, m_frameRc.top,
                  rect_dx(&m_frameRc), rect_dy(&m_frameRc),
                  SWP_FRAMECHANGED|SWP_NOZORDER);
-    m_stylePrev = 0;
+    m_fullscreen = false;
 }
 
 static void OnMenuViewFullscreen(WindowInfo *current)
 {
     assert(current);
-    WindowInfo* win = gWindowList;
-    WindowInfo::fullscreen = !WindowInfo::fullscreen;
-    while (win) {
-        if (WindowInfo::fullscreen)
-            win->EnterFullscreen();
-        else
-            win->ExitFullscreen();
-        win = win->next;
-    }
-    SetFocus(current->hwndFrame);
+    if (!current)
+        return;
+    if (current->IsFullscreen())
+        current->ExitFullscreen();
+    else
+        current->EnterFullscreen();
 }
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
@@ -4536,7 +4531,7 @@ void WindowInfo::ShowTocBox()
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
-    if (gShowToolbar && !fullscreen)
+    if (gShowToolbar && !m_fullscreen)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
@@ -4563,7 +4558,7 @@ void WindowInfo::HideTocBox()
     int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
-    if (gShowToolbar && !fullscreen)
+    if (gShowToolbar && !m_fullscreen)
         cy = gReBarDy + gReBarDyFrame;
 
     HWND spliter = (HWND)GetWindowLong(hwndTocBox, GWL_USERDATA);
