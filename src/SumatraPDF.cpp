@@ -3843,6 +3843,7 @@ static void OnMenuViewRotateRight(WindowInfo *win)
 void WindowInfo::EnterFullscreen()
 {
     if (m_fullscreen || !IsWindowVisible(hwndFrame)) return;
+    m_fullscreen = true;
 
     int x, y, w, h;
     MONITORINFOEX mi;
@@ -3875,12 +3876,13 @@ void WindowInfo::EnterFullscreen()
         ShowTocBox();
     else
         SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
-    m_fullscreen = true;
 }
 
 void WindowInfo::ExitFullscreen()
 {
     if (!m_fullscreen) return;
+    m_fullscreen = false;
+
     if (m_wasToolbarVisible)
         ShowWindow(hwndReBar, SW_SHOW);
     SetMenu(hwndFrame, m_menuPrev);
@@ -3889,7 +3891,6 @@ void WindowInfo::ExitFullscreen()
                  m_frameRc.left, m_frameRc.top,
                  rect_dx(&m_frameRc), rect_dy(&m_frameRc),
                  SWP_FRAMECHANGED|SWP_NOZORDER);
-    m_fullscreen = false;
 }
 
 static void OnMenuViewFullscreen(WindowInfo *current)
