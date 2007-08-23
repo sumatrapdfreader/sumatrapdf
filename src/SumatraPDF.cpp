@@ -2989,8 +2989,6 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
         win->mouseAction = MA_SELECTING;
 
         triggerRepaintDisplayNow(win);
-    } else if (WS_ABOUT == win->state) {
-        win->url = AboutGetLink(win, x, y);
     }
 }
 
@@ -3021,6 +3019,13 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
     assert (win);
     if (!win) return;
+
+    if (WS_ABOUT == win->state) {
+        // remember a link under so that on mouse up we only activate
+        // link if mouse up is on the same link as mouse down
+        win->url = AboutGetLink(win, x, y);
+        return;
+    }
 
     if ((key & MK_CONTROL) != 0)
         OnSelectionStart(win, x, y);
