@@ -2547,9 +2547,6 @@ typedef struct AboutLayoutInfoEl {
 } AboutLayoutInfoEl;
 
 AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { "design", "Krzysztof Kowalczyk", "http://blog.kowalczyk.info",
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
     { "programming", "Krzysztof Kowalczyk", "http://blog.kowalczyk.info",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
@@ -2559,16 +2556,13 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { "pdf rendering 2", "MuPDF", "http://ccxvii.net/apparition/",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "license", "GPL v2", "http://www.gnu.org/copyleft/gpl.html",
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
     { "website", "http://blog.kowalczyk.info/software/sumatra", "http://blog.kowalczyk.info/software/sumatrapdf",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "forums", "http://blog.kowalczyk.info/forum_sumatra", "http://blog.kowalczyk.info/forum_sumatra",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "program icon", "Goce Mitevski", "http://monsteer.deviantart.com",
+    { "program icon", "Zenon", "http://www.flashvidz.tk/",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "toolbar icons", "Mark James", "http://www.famfamfam.com/lab/icons/silk/",
