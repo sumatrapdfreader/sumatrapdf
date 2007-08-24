@@ -88,6 +88,7 @@
 #define IDM_LANG_BR                     484
 #define IDM_LANG_NO                     485
 #define IDM_LANG_SK                     486
+#define IDM_LANG_VN                     487
 
 #define IDM_VISIT_WEBSITE               500
 #define IDM_ABOUT                       501
