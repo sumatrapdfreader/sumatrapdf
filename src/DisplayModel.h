@@ -142,6 +142,10 @@ typedef struct SearchStateData {
     int             currPage; /* page for the last hit */
 } SearchStateData;
 
+/* Information needed to drive the display of a given PDF document on a screen.
+   You can think of it as a model in the MVC pardigm.
+   All the display changes should be done through changing this model via
+   API and re-displaying things based on new display information */
 class DisplayModel
 {
 public:
