@@ -1,5 +1,48 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
+
+/* How to think of display logic: physical screen of size
+   drawAreaSize is a window into (possibly much larger)
+   total area (canvas) of size canvasSize.
+
+   In DM_SINGLE_PAGE mode total area is the size of currently displayed page
+   given current zoomLovel and rotation.
+   In DM_CONTINUOUS mode total area consist of all pages rendered sequentially
+   with a given zoomLevel and rotation. totalAreaDy is the sum of heights
+   of all pages plus spaces between them and totalAreaDx is the size of
+   the widest page.
+
+   A possible configuration could look like this:
+
+ -----------------------------------
+ |                                 |
+ |          -------------          |
+ |          | screen    |          |
+ |          | i.e.      |          |
+ |          | drawArea  |          |
+ |          -------------          |
+ |                                 |
+ |                                 |
+ |    canvas                       |
+ |                                 |
+ |                                 |
+ |                                 |
+ |                                 |
+ -----------------------------------
+
+  We calculate the total area size and position of each page we display on the
+  canvas. Canvas has to be >= draw area.
+
+  Changing zoomLevel or rotation requires recalculation of total area and
+  position of pdf pages in it.
+
+  We keep the offset of draw area relative to total area. The offset changes
+  due to scrolling (with keys or using scrollbars).
+
+  To draw we calculate which part of each page overlaps draw area, we render
+  those pages to a bitmap and display those bitmaps.
+*/
+
 #include "DisplayModel.h"
 
 #include "str_util.h"
