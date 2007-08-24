@@ -311,27 +311,27 @@ static const char *g_lcidLangMap[] = {
     "de", "0407", "0c07", "1407", "1007", "0807", NULL, // German
     "tr", "041f", NULL, // Turkish
     "by", "0423", NULL, // Belarusian
-    "ja", NULL, // Japanese
-    "hu", NULL, // Hungarian
-    "fa", NULL, // Persian
-    "dk", NULL, // Danish
-    "it", NULL, // Italian
-    "nl", NULL, // Dutch
-    "ta", NULL, // Tamil
-    "es", NULL, // Spanish
-    "hr", NULL, // Croatian
-    "ru", NULL, // Russian
-    "ar", NULL, // Arabic
+    "ja", "0411", NULL, // Japanese
+    "hu", "040e", NULL, // Hungarian
+    "fa", "0429", NULL, // Persian
+    "dk", "0406", NULL, // Danish
+    "it", "0410", NULL, // Italian
+    "nl", "0813", "0413", NULL, // Dutch
+    "ta", "0449", NULL, // Tamil
+    "es", "0c0a", "040a", "500a", "280a", "3c0a", "180a", "080a", "2c0a", NULL, // Spanish
+    "hr", "101a", "041a", NULL, // Croatian
+    "ru", "0419", NULL, // Russian
+    "ar", "1401", "3c01", "0c01", "0801", "2c01", "3401", "3001", "1001", "1801", "2001", "4001", "0401", "2801", "1c01", "3801", "2401", NULL, // Arabic
     "cn", NULL, // Chinese Simplified
-    "sv", NULL, // Swedish
-    "cz", NULL, // Czech
-    "gr", NULL, // Greek
-    "th", NULL, // Thai
-    "pt", NULL, // Portuguese (Portugal)
-    "br", NULL, // Portuguese (Brazillian)
-    "no", NULL, // Norwegian
-    "sk", NULL, // Slovak
-    "vn", NULL, // Vietnamese
+    "sv", "081d", "041d", NULL, // Swedish
+    "cz", "0405", NULL, // Czech
+    "gr", "0408", NULL, // Greek
+    "th", "041e", NULL, // Thai
+    "pt", "0816", NULL, // Portuguese (Portugal)
+    "br", "0416", NULL, // Portuguese (Brazillian)
+    "no", "0414", "0814", NULL, // Norwegian
+    "sk", "041b", NULL, // Slovak
+    "vn", "042a", NULL, // Vietnamese
     NULL
 };
 
