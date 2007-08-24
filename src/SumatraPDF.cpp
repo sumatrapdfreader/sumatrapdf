@@ -4015,6 +4015,11 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEUP, 0);
     } else if (VK_RIGHT == key) {
         SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEDOWN, 0);
+    } else if (VK_SPACE == key) {
+        if (shiftPressed)
+            win->dm->scrollYByAreaDy(false, true);
+        else
+            win->dm->scrollYByAreaDy(true, true);
     } else if (VK_HOME == key) {
         win->dm->goToFirstPage();
     } else if (VK_END == key) {
@@ -4063,8 +4068,6 @@ static void OnChar(WindowInfo *win, int key)
 
     if (VK_ESCAPE == key && win->IsFullscreen()) {
         OnMenuViewFullscreen(win);
-    } else if (VK_SPACE == key) {
-        win->dm->scrollYByAreaDy(true, true);
     } else if (VK_BACK == key) {
         win->dm->scrollYByAreaDy(false, true);
     } else if ('g' == key) {
