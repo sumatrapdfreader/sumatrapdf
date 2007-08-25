@@ -100,6 +100,7 @@ public:
     HWND            hwndCanvas;
     HWND            hwndToolbar;
     HWND            hwndReBar;
+    HWND            hwndFindText;
     HWND            hwndFindBox;
     HWND            hwndTocBox;
     HWND            hwndSpliter;

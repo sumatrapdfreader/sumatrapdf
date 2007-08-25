@@ -190,6 +190,7 @@ static PageRenderRequest *          gCurPageRenderReq;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
+static int                          gToolbarSpacer = -1;
 static HWND                         gHwndAbout;
 
 typedef struct ToolbarButtonInfo {
@@ -228,7 +229,8 @@ static void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo);
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
-static void UpdateToolbarButtonsToolTips(void);
+static void UpdateToolbarFindText(WindowInfo *win);
+static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
 
 #define SEP_ITEM "-----"
@@ -3702,7 +3704,7 @@ static void LanguageChanged(const char *langName)
 
     CurrLangNameSet(langName);
     RebuildProgramMenus();
-    UpdateToolbarButtonsToolTips();
+    UpdateToolbarToolText();
 }
 
 static void OnMenuLanguage(int langId)
@@ -4185,13 +4187,14 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
         BuildTBBUTTONINFO(buttonInfo, (WCHAR*)translation);
         res = ::SendMessage(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
-    }    
+    }
 }
 
-static void UpdateToolbarButtonsToolTips(void)
+static void UpdateToolbarToolText(void)
 {
     WindowInfo *win = gWindowList;
     while (win) {
+        UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
         MenuUpdateStateForWindow(win);
         win = win->next;
@@ -4258,42 +4261,61 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
 }
 
-// TODO: after changing the language we have to change the text of the label,
-// resize the label and move text box. Right now 
 #define FIND_TXT_POS_X 146
-static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
+#define FIND_BOX_WIDTH 160
+static void UpdateToolbarFindText(WindowInfo *win)
 {
     const WCHAR *text = _TRW("Find:");
-    SIZE size;
-    HDC dc = GetWindowDC(win->hwndToolbar);
-    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
     int text_len = wcslen(text);
-    HFONT prevFnt = (HFONT)SelectObject(dc, fnt);
-    GetTextExtentPoint32W(dc, text, text_len, &size);
-    SelectObject(dc, prevFnt);
-    ReleaseDC(win->hwndToolbar, dc);
+    HDC dc = GetWindowDC(win->hwndFindText);
+    SIZE size;
 
-    HWND find = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "",
-                          WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
-                          FIND_TXT_POS_X, 1, 160, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+    SetWindowTextW(win->hwndFindText, text);
+    GetTextExtentPoint32W(dc, text, text_len, &size);
+    ReleaseDC(win->hwndFindText, dc);
 
     RECT findWndRect;
-    GetWindowRect(find, &findWndRect);
+    GetWindowRect(win->hwndFindBox, &findWndRect);
     int findWndDy = rect_dy(&findWndRect) + 1;
-    HWND label = CreateWindowExW(0, WC_STATICW, text, WS_VISIBLE | WS_CHILD,
-                         FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx + 2, size.cy,
-                         win->hwndToolbar, (HMENU)0, hInst, NULL);
-    MoveWindow(find, FIND_TXT_POS_X + size.cx + 2, 1, 160, 20, false);
+
+    MoveWindow(win->hwndFindText, FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
+    MoveWindow(win->hwndFindBox, FIND_TXT_POS_X + size.cx, 1, FIND_BOX_WIDTH, 20, false);
+
+    TBBUTTONINFO bi;
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_BYINDEX|TBIF_SIZE;
+    SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, gToolbarSpacer, (LPARAM)&bi);
+    bi.cx = size.cx + rect_dx(&findWndRect) + 15;
+    SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, gToolbarSpacer, (LPARAM)&bi);
+}
+
+static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
+{
+    HWND find = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "",
+                            WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
+                            FIND_TXT_POS_X, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HWND label = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
+                            FIND_TXT_POS_X, 1, 0, 0,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
+
     if (!DefWndProcToolbar)
         DefWndProcToolbar = (WNDPROC)GetWindowLong(win->hwndToolbar, GWL_WNDPROC);
     SetWindowLong(win->hwndToolbar, GWL_WNDPROC, (LONG)WndProcToolbar);
+
     if (!DefWndProcFindBox)
         DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
     SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
     SetWindowLong(find, GWL_USERDATA, (LONG)win);
+
+    win->hwndFindText = label;
     win->hwndFindBox = find;
+
+    UpdateToolbarFindText(win);
 }
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
@@ -4306,7 +4328,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     ShowWindow(hwndToolbar, SW_SHOW);
     HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
-    int padding = -1;
     for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         if (IDB_SEPARATOR != gToolbarButtons[i].bitmapResourceId) {
             HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(gToolbarButtons[i].bitmapResourceId));
@@ -4322,7 +4343,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
             gToolbarButtons[i].index = index;
         }
         else if (-1 == gToolbarButtons[i].index) {
-            padding = i;
+            gToolbarSpacer = i;
         }
         tbButtons[i] = TbButtonFromButtonInfo(i);
         if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
@@ -4339,13 +4360,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     lres = SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
 
     lres = SendMessage(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
-
-    TBBUTTONINFO bi;
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_BYINDEX|TBIF_SIZE;
-    SendMessage(hwndToolbar, TB_GETBUTTONINFO, padding, (LPARAM)&bi);
-    bi.cx = 200;
-    SendMessage(hwndToolbar, TB_SETBUTTONINFO, padding, (LPARAM)&bi);
 
     RECT rc;
     lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
