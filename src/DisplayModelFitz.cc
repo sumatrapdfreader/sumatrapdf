@@ -212,28 +212,40 @@ void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
     tp = fz_transformpoint(ctm, p2);
     right = tp.x + 0.5 + vx;
     bottom = tp.y + 0.5 + vy;
+    
+    if (top > bottom) {
+        double tmp = top;
+        top = bottom;
+        bottom = tmp;
+    }
 
     rect->left = (int)floor(left);
-    rect->top = (int)floor(top) + 5;
+    rect->top = (int)floor(top);
     rect->right = (int)ceil(right) + 5;
-    rect->bottom = (int)ceil(bottom);
-
-    int rdx = (int)ceil(right - left) + 5;
-    int rdy = (int)ceil(bottom - top) - 5;  // why negative here ?
+    rect->bottom = (int)ceil(bottom) + 5;
 
     int sx = 0, sy = 0;
-    if (rect->top - rdy > pageInfo->bitmapY + pageInfo->bitmapDy)
-        sy = rect->top - rdy - pageInfo->bitmapY - pageInfo->bitmapDy;
+    if (rect->bottom > pageInfo->bitmapY + pageInfo->bitmapDy)
+        sy = rect->bottom - pageInfo->bitmapY - pageInfo->bitmapDy;
 
-    if (rect->left + rdx > pageInfo->bitmapX + pageInfo->bitmapDx)
-        sx = rect->left + rdx - pageInfo->bitmapX - pageInfo->bitmapDx;
+    if (rect->left < pageInfo->bitmapX) {
+        sx = rect->left - pageInfo->bitmapX - 5;
+        if (sx + pageInfo->bitmapX < 0)
+            sx = -pageInfo->bitmapX;
+    }
+    else
+    if (rect->right > pageInfo->bitmapX + pageInfo->bitmapDx)
+        sx = rect->right - pageInfo->bitmapX - pageInfo->bitmapDx;
 
-    if (sx > 0 || sy > 0) {
+    if (sx != 0) {
         scrollXBy(sx);
-        scrollYBy(sy, false);
         rect->left -= sx;
-        rect->top -= sy;
         rect->right -= sx;
+    }
+
+    if (sy > 0) {
+        scrollYBy(sy, false);
+        rect->top -= sy;
         rect->bottom -= sy;
     }
 }
