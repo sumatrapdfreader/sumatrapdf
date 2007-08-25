@@ -225,17 +225,18 @@ void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
     rect->bottom = (int)ceil(bottom) + 5;
 
     int sx = 0, sy = 0;
-    if (rect->bottom > pageInfo->bitmapY + pageInfo->bitmapDy)
-        sy = rect->bottom - pageInfo->bitmapY - pageInfo->bitmapDy;
+    if (rect->bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
+        sy = rect->bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy;
 
-    if (rect->left < pageInfo->bitmapX) {
-        sx = rect->left - pageInfo->bitmapX - 5;
-        if (sx + pageInfo->bitmapX < 0)
-            sx = -pageInfo->bitmapX;
+    if (rect->left < pageInfo->screenX + pageInfo->bitmapX) {
+        sx = rect->left - pageInfo->screenX - pageInfo->bitmapX - 5;
+        if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
+            sx = -(pageInfo->screenX + pageInfo->bitmapX);
     }
     else
-    if (rect->right > pageInfo->bitmapX + pageInfo->bitmapDx)
-        sx = rect->right - pageInfo->bitmapX - pageInfo->bitmapDx;
+    if (rect->right > pageInfo->screenX + pageInfo->bitmapDx) {
+        sx = rect->right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
+    }
 
     if (sx != 0) {
         scrollXBy(sx);
