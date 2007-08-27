@@ -167,13 +167,9 @@ static bool                         gRunningDLL = false;
 
 static char *                       gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
-BOOL                                gShowToolbar = TRUE;
-BOOL                                gUseFitz = TRUE;
-/* If false, we won't ask the user if he wants Sumatra to handle PDF files */
-BOOL                                gPdfAssociateDontAskAgain = FALSE;
-/* If gPdfAssociateDontAskAgain is TRUE, says whether we should silently associate
-   or not */
-BOOL                                gPdfAssociateShouldAssociate = TRUE;
+
+SerializableGlobalPrefs             gGlobalPrefs;
+
 #ifdef DOUBLE_BUFFER
 static bool                         gUseDoubleBuffer = true;
 #else
@@ -398,6 +394,13 @@ static void GuessLanguage()
     const char *lang = GetLangFromLcid((const char*)&langBuf[0]);
     if (NULL != lang)
         CurrLangNameSet(lang);
+}
+
+void SerializableGlobalPrefs_Init() {
+    gGlobalPrefs.m_showToolbar = TRUE;
+    gGlobalPrefs.m_useFitz = TRUE;
+    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
+    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -1466,7 +1469,7 @@ static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
 
 static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
-    if (gShowToolbar)
+    if (gGlobalPrefs.m_showToolbar)
         CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
@@ -1474,7 +1477,7 @@ static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
 
 static void MenuUpdateUseFitzStateForWindow(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
-    if (gUseFitz)
+    if (gGlobalPrefs.m_useFitz)
         CheckMenuItem(hmenu, IDM_VIEW_USE_FITZ, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_USE_FITZ, MF_BYCOMMAND | MF_UNCHECKED);
@@ -1739,7 +1742,7 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
         offsetY = fileFromHistory->state.scrollY;
     }
 
-    if (gUseFitz) {
+    if (gGlobalPrefs.m_useFitz) {
         win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     } else {
@@ -2127,17 +2130,17 @@ static void RegisterForPdfExtentions(HWND hwnd)
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
-    if (!gPdfAssociateDontAskAgain) {
-        int result = Dialog_PdfAssociate(hwnd, &gPdfAssociateDontAskAgain);
+    if (!gGlobalPrefs.m_pdfAssociateDontAskAgain) {
+        int result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
         if (DIALOG_NO_PRESSED == result) {
-            gPdfAssociateShouldAssociate = FALSE;
+            gGlobalPrefs.m_pdfAssociateShouldAssociate = FALSE;
         } else {
             assert(DIALOG_OK_PRESSED == result);
-            gPdfAssociateShouldAssociate = TRUE;
+            gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
         }
     }
 
-    if (gPdfAssociateShouldAssociate)
+    if (gGlobalPrefs.m_pdfAssociateShouldAssociate)
         AssociateExeWithPdfExtensions();
 }
 
@@ -3666,7 +3669,7 @@ static void OneMenuMakeDefaultReader(void)
 static void OnSize(WindowInfo *win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gShowToolbar) {
+    if (gGlobalPrefs.m_showToolbar) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, rebBarDy, SWP_NOZORDER);
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
@@ -3732,10 +3735,10 @@ static void OnMenuViewUseFitz(WindowInfo *win)
 {
     assert(win);
     DBG_OUT("OnMenuViewUseFitz()\n");
-    if (gUseFitz)
-        gUseFitz = FALSE;
+    if (gGlobalPrefs.m_useFitz)
+        gGlobalPrefs.m_useFitz = FALSE;
     else
-        gUseFitz = TRUE;
+        gGlobalPrefs.m_useFitz = TRUE;
 
     ReloadPdfDocument(win);
     win = gWindowList;
@@ -3753,14 +3756,14 @@ static void OnMenuViewUseFitz(WindowInfo *win)
 
 static void OnMenuViewShowHideToolbar()
 {
-    if (gShowToolbar)
-        gShowToolbar = FALSE;
+    if (gGlobalPrefs.m_showToolbar)
+        gGlobalPrefs.m_showToolbar = FALSE;
     else
-        gShowToolbar = TRUE;
+        gGlobalPrefs.m_showToolbar = TRUE;
 
     WindowInfo* win = gWindowList;
     while (win) {
-        if (gShowToolbar)
+        if (gGlobalPrefs.m_showToolbar)
             ShowWindow(win->hwndReBar, SW_SHOW);
         else
             ShowWindow(win->hwndReBar, SW_HIDE);
@@ -4432,7 +4435,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 int width = rect_dx(&r) - tw - DEF_SPLITER_DX;
                 int height = rect_dy(&r);
 
-                if (gShowToolbar && !win->IsFullscreen()) {
+                if (gGlobalPrefs.m_showToolbar && !win->IsFullscreen()) {
                     ty = gReBarDy + gReBarDyFrame;
                     height -= ty;
                 }
@@ -4608,7 +4611,7 @@ void WindowInfo::ShowTocBox()
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
-    if (gShowToolbar && !m_fullscreen)
+    if (gGlobalPrefs.m_showToolbar && !m_fullscreen)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
@@ -4634,7 +4637,7 @@ void WindowInfo::HideTocBox()
     int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
-    if (gShowToolbar && !m_fullscreen)
+    if (gGlobalPrefs.m_showToolbar && !m_fullscreen)
         cy = gReBarDy + gReBarDyFrame;
 
     SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
@@ -5699,7 +5702,7 @@ static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
 
-    if (gUseFitz) {
+    if (gGlobalPrefs.m_useFitz) {
         pdfWin->dm = DisplayModelFitz_CreateFromFileName(fileName, 
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, pdfWin);
     } 
@@ -5891,7 +5894,8 @@ WindowInfo* Sumatra_Init(HWND pHandle)
     MSG                 msg = {0};
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
-    gUseFitz = TRUE;
+
+    SerializableGlobalPrefs_Init();
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 

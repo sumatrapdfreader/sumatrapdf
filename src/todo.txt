@@ -20,6 +20,8 @@ Short term todo (before next 0.8 release):
 * maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
   and TransparentBlt). Instead, dynamically load the functions. Needed for
   working on NT. On the other hand: is NT worth supporting?
+* useFitz should also be remembered per file and when switching rendering
+  engine, we should only re-load current file.
 
 Long term todo:
 * handle links

@@ -11,11 +11,6 @@
 #include "DisplayState.h"
 #include "FileHistory.h"
 
-extern BOOL gShowToolbar;
-extern BOOL gUseFitz;
-extern BOOL gPdfAssociateDontAskAgain;
-extern BOOL gPdfAssociateShouldAssociate;
-
 extern bool CurrLangNameSet(const char* langName);
 extern const char* CurrLangNameGet();
 
@@ -57,10 +52,10 @@ benc_dict* Prefs_SerializeGlobal(void)
 {
     BOOL       ok;
     DICT_NEW(prefs);
-    DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gShowToolbar);
-    DICT_ADD_INT64(prefs, USE_FITZ_STR, gUseFitz);
-    DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gPdfAssociateDontAskAgain);
-    DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gPdfAssociateShouldAssociate);
+    DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gGlobalPrefs.m_showToolbar);
+    DICT_ADD_INT64(prefs, USE_FITZ_STR, gGlobalPrefs.m_useFitz);
+    DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs.m_pdfAssociateDontAskAgain);
+    DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs.m_pdfAssociateShouldAssociate);
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -195,10 +190,10 @@ Error:
 bool Prefs_Serialize(FileHistoryList **root, DString *strOut)
 {
     assert(0 == strOut->length);
-    DStringSprintf(strOut, "  %s: %d\n", SHOW_TOOLBAR_STR, gShowToolbar);
-    DStringSprintf(strOut, "  %s: %d\n", USE_FITZ_STR, gUseFitz);
-    DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_DONT_ASK_STR, gPdfAssociateDontAskAgain);
-    DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_ASSOCIATE_STR, gPdfAssociateShouldAssociate);
+    DStringSprintf(strOut, "  %s: %d\n", SHOW_TOOLBAR_STR, gGlobalPrefs->m_showToolbar);
+    DStringSprintf(strOut, "  %s: %d\n", USE_FITZ_STR, gGlobalPrefs->m_useFitz);
+    DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs->m_pdfAssociateDontAskAgain);
+    DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs->m_pdfAssociateShouldAssociate);
     DStringSprintf(strOut, "  %s: %s\n", UI_LANGUAGE_STR, CurrLangNameGet());
     return FileHistoryList_Serialize(root, strOut);
 }
@@ -384,10 +379,10 @@ bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryLis
     if (!global)
         goto Error;
 
-    dict_get_bool(global, SHOW_TOOLBAR_STR, &gShowToolbar);
-    dict_get_bool(global, USE_FITZ_STR, &gUseFitz);
-    dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gPdfAssociateDontAskAgain);
-    dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gPdfAssociateShouldAssociate);
+    dict_get_bool(global, SHOW_TOOLBAR_STR, &gGlobalPrefs.m_showToolbar);
+    dict_get_bool(global, USE_FITZ_STR, &gGlobalPrefs.m_useFitz);
+    dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
+    dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));
     if (bstr)
@@ -473,23 +468,23 @@ StartOver:
         switch (state) {
             case PPS_START:
                 if (str_eq(SHOW_TOOLBAR_STR, key)) {
-                    gShowToolbar = TRUE;
-                    ParseBool(value, &gShowToolbar);
+                    gGlobalPrefs.m_showToolbar = TRUE;
+                    ParseBool(value, &gGlobalPrefs.m_showToolbar);
                     break;
                 }
                 if (str_eq(USE_FITZ_STR, key)) {
-                    gUseFitz = TRUE;
-                    ParseBool(value, &gUseFitz);
+                    gGlobalPrefs.m_useFitz = TRUE;
+                    ParseBool(value, &gGlobalPrefs.m_useFitz);
                     break;
                 }
                 if (str_eq(PDF_ASSOCIATE_DONT_ASK_STR, key)) {
-                    gPdfAssociateDontAskAgain = FALSE;
-                    ParseBool(value, &gPdfAssociateDontAskAgain);
+                    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
+                    ParseBool(value, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
                     break;
                 }
                 if (str_eq(PDF_ASSOCIATE_ASSOCIATE_STR, key)) {
-                    gPdfAssociateShouldAssociate = TRUE;
-                    ParseBool(value, &gPdfAssociateShouldAssociate);
+                    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
+                    ParseBool(value, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
                     break;
                 }
                 if (str_eq(UI_LANGUAGE_STR, key)) {
