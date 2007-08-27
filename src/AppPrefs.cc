@@ -4,12 +4,12 @@
 #include "base_util.h"
 #include "benc_util.h"
 #include "str_util.h"
+#include "file_util.h"
 #include "dstring.h"
 
 #include "AppPrefs.h"
 #include "DisplayState.h"
 #include "FileHistory.h"
-#include <sys/stat.h>
 
 extern BOOL gShowToolbar;
 extern BOOL gUseFitz;
@@ -23,18 +23,6 @@ extern const char* CurrLangNameGet();
 #define DEFAULT_WINDOW_Y     20
 #define DEFAULT_WINDOW_DX    640
 #define DEFAULT_WINDOW_DY    480
-
-/* TODO: move to file_util.c ? */
-static BOOL FileExists(const char *fileName)
-{
-  struct stat buf;
-  int         res;
-  
-  res = stat(fileName, &buf);
-  if (0 != res)
-    return FALSE;
-  return TRUE;
-}
 
 static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
 {
@@ -370,7 +358,7 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
 void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
 {
     FileHistoryList *   fileHistoryNode = NULL;
-    if (!FileExists(state->filePath)) {
+    if (!file_exists(state->filePath)) {
         DBG_OUT("FileHistory_Add() file '%s' doesn't exist anymore\n", state->filePath);
         return;
     }
@@ -416,7 +404,7 @@ bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryLis
         if (!dict) continue;
         DisplayState_Deserialize2(dict, &state);
         if (state.filePath) {
-            if (FileExists(state.filePath))
+            if (file_exists(state.filePath))
                 FileHistory_Add(fileHistoryRoot, &state);
         }
     }
@@ -544,7 +532,7 @@ Next:
 
     if (PPS_IN_FILE_HISTORY == state) {
         if (currState.filePath) {
-            if (FileExists(currState.filePath))
+            if (file_exists(currState.filePath))
                 FileHistory_Add(fileHistoryRoot, &currState);
         }
     }
