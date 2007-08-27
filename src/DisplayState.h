@@ -36,6 +36,7 @@ enum DisplayMode {
 #define FULLSCREEN_STR              "Fullscreen"
 #define SCROLL_X_STR                "Scroll X"
 #define SCROLL_Y_STR                "Scroll Y"
+#define WINDOW_STATE_STR            "Window State"
 #define WINDOW_X_STR                "Window X"
 #define WINDOW_Y_STR                "Window Y"
 #define WINDOW_DX_STR               "Window DX"

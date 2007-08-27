@@ -56,6 +56,13 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, USE_FITZ_STR, gGlobalPrefs.m_useFitz);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs.m_pdfAssociateDontAskAgain);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs.m_pdfAssociateShouldAssociate);
+
+    DICT_ADD_INT64(prefs, WINDOW_STATE_STR, gGlobalPrefs.m_windowState);
+    DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_windowPosX);
+    DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
+    DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
+    DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
+
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -164,7 +171,7 @@ Error:
     return NULL;      
 }
 
-const char *Prefs_Serialize2(FileHistoryList **root, size_t* lenOut)
+const char *Prefs_SerializeNew(FileHistoryList **root, size_t* lenOut)
 {
     BOOL        ok;
     char *      data = NULL;
@@ -187,7 +194,7 @@ Error:
 }
 
 #if 0
-bool Prefs_Serialize(FileHistoryList **root, DString *strOut)
+bool Prefs_SerializeOld(FileHistoryList **root, DString *strOut)
 {
     assert(0 == strOut->length);
     DStringSprintf(strOut, "  %s: %d\n", SHOW_TOOLBAR_STR, gGlobalPrefs->m_showToolbar);
@@ -364,7 +371,7 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     fileHistoryNode = NULL;
 }
 
-bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
+bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {
     benc_obj * bobj;
     benc_str * bstr;
@@ -383,6 +390,12 @@ bool Prefs_Deserialize2(const char *prefsTxt, size_t prefsTxtLen, FileHistoryLis
     dict_get_bool(global, USE_FITZ_STR, &gGlobalPrefs.m_useFitz);
     dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
+
+    dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
+    dict_get_int(global, WINDOW_X_STR, &gGlobalPrefs.m_windowPosX);
+    dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);
+    dict_get_int(global, WINDOW_DX_STR, &gGlobalPrefs.m_windowDx);
+    dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));
     if (bstr)
@@ -414,7 +427,7 @@ Error:
    items to file history list 'root'.
    Return FALSE if there was an error.
    An ode to a state machine. */
-bool Prefs_Deserialize(const char *prefsTxt, FileHistoryList **fileHistoryRoot)
+bool Prefs_DeserializeOld(const char *prefsTxt, FileHistoryList **fileHistoryRoot)
 {
     PrefsParsingState   state = PPS_START;
     char *              prefsTxtNormalized = NULL;

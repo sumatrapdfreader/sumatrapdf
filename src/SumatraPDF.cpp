@@ -401,6 +401,12 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_useFitz = TRUE;
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
+
+    gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+    gGlobalPrefs.m_windowPosX = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -749,17 +755,23 @@ static void WinResizeClientArea(HWND hwnd, int dx, int dy)
     SetWindowPos(hwnd, NULL, 0, 0, win_dx, win_dy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
 }
 
-static void SetCanvasSizeToDxDy(WindowInfo *win, int w, int h)
+static void SetCanvasSizeToDxDy(WindowInfo *win, int dx, int dy)
 {
-    RECT canvasRect;
+    RECT canvasRect, frameRect;
     GetWindowRect(win->hwndCanvas, &canvasRect);
-    RECT frameRect;
     GetWindowRect(win->hwndFrame, &frameRect);
-    int dx = rect_dx(&frameRect) - rect_dx(&canvasRect);
-    assert(dx >= 0);
-    int dy = rect_dy(&frameRect) - rect_dy(&canvasRect);
-    assert(dy >= 0);
-    SetWindowPos(win->hwndFrame, NULL, 0, 0, w+dx, h+dy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
+    int frameDx = rect_dx(&frameRect);
+    int canvasDx = rect_dx(&canvasRect);
+    int diffDx = frameDx - canvasDx;
+    assert(diffDx > 0);
+    int newDx = dx + diffDx;
+
+    int frameDy = rect_dy(&frameRect);
+    int canvasDy = rect_dy(&canvasRect);
+    int diffDy = frameDy - canvasDy;
+    assert(diffDy > 0);
+    int newDy = dy + diffDy;
+    SetWindowPos(win->hwndFrame, NULL, 0, 0, newDx, newDy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
     //SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
 }
 
@@ -938,7 +950,7 @@ static bool Prefs_LoadNew(void)
     uint64_t prefsFileLen;
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
-        ok = Prefs_Deserialize2(prefsTxt, prefsFileLen, &gFileHistoryRoot);
+        ok = Prefs_DeserializeNew(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
     }
 
@@ -978,7 +990,7 @@ static bool Prefs_LoadOld(void)
     }
     DBG_OUT("Prefs file %s:\n%s\n", path.pString, prefsTxt);
 
-    ok = Prefs_Deserialize(prefsTxt, &gFileHistoryRoot);
+    ok = Prefs_DeserializeOld(prefsTxt, &gFileHistoryRoot);
     assert(ok);
 
 Exit:
@@ -1170,7 +1182,7 @@ static bool Prefs_SaveNew(void)
     /* mark currently shown files as visible */
     UpdateCurrentFileDisplayState();
 
-    const char *data = Prefs_Serialize2(&gFileHistoryRoot, &dataLen);
+    const char *data = Prefs_SerializeNew(&gFileHistoryRoot, &dataLen);
     if (!data)
         goto Exit;
 
@@ -1199,7 +1211,7 @@ static void Prefs_SaveOld(void)
     /* mark currently shown files as visible */
     UpdateCurrentFileDisplayState();
 
-    bool fOk = Prefs_Serialize(&gFileHistoryRoot, &prefsStr);
+    bool fOk = Prefs_SerializeOld(&gFileHistoryRoot, &prefsStr);
     if (!fOk)
         goto Exit;
 
@@ -1559,9 +1571,31 @@ static void MenuToolbarUpdateStateForAllWindows(void) {
     }
 }
 
+#define MIN_WIN_DX 50
+#define MAX_WIN_DX 4096
+#define MIN_WIN_DY 50
+#define MAX_WIN_DY 4096
+
 static WindowInfo* WindowInfo_CreateEmpty(void) {
     HWND        hwndFrame, hwndCanvas;
     WindowInfo* win;
+
+    /* TODO: maybe adjustement of size and position should be outside of this function */
+    int winPosX = CW_USEDEFAULT;
+    int winPosY = CW_USEDEFAULT;
+    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowPosX) {
+        winPosX = gGlobalPrefs.m_windowPosX;
+        if (winPosX < 0) {
+            winPosX = CW_USEDEFAULT;
+            winPosY = CW_USEDEFAULT;
+        } else {
+            winPosY = gGlobalPrefs.m_windowPosY;
+            if (winPosY < 0) {
+                winPosX = CW_USEDEFAULT;
+                winPosY = CW_USEDEFAULT;
+            }
+        }
+    }
 
 #if FANCY_UI
     hwndFrame = CreateWindowEx(
@@ -1573,15 +1607,15 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         FRAME_CLASS_NAME, windowTitle,
         WS_POPUP,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        DEF_WIN_DX, DEF_WIN_DY,
+        CW_USEDEFAULT, CW_USEDEFAULT,
         NULL, NULL,
         ghinst, NULL);
 #else
     hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, windowTitle,
             WS_OVERLAPPEDWINDOW,
+            winPosX, winPosY,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            DEF_WIN_DX, DEF_WIN_DY,
             NULL, NULL,
             ghinst, NULL);
 #endif
@@ -1590,12 +1624,25 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         return NULL;
 
     win = WindowInfo_New(hwndFrame);
+    int winDx = DEF_WIN_DX;
+    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDx) {
+        winDx = gGlobalPrefs.m_windowDx;
+        if (winDx < MIN_WIN_DX || winDx > MAX_WIN_DX)
+            winDx = DEF_WIN_DX;
+    }
+    int winDy = DEF_WIN_DY;
+    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDy) {
+        winDy = gGlobalPrefs.m_windowDy;
+        if (winDy < MIN_WIN_DY || winDy > MAX_WIN_DY)
+            winDy = DEF_WIN_DY;
+    }
+
     hwndCanvas = CreateWindowEx(
             WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            DEF_WIN_DX, DEF_WIN_DY,
+            CW_USEDEFAULT, CW_USEDEFAULT,
             hwndFrame, NULL,
             ghinst, NULL);
     if (!hwndCanvas)
@@ -1609,6 +1656,10 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     CreateTocBox(win, ghinst);
     WindowInfo_UpdateFindbox(win);
 
+    //WinResizeClientArea(win->hwndCanvas, winDx, winDy);
+    WinResizeClientArea(win->hwndFrame, winDx, winDy);
+
+    //SetCanvasSizeToDxDy(win, winDx, winDy);
     return win;
 }
 
@@ -1619,11 +1670,10 @@ BOOL GetDesktopWindowClientRect(RECT *r)
     return GetClientRect(hwnd, r);
 }
 
-void GetCanvasDxDyDiff(WindowInfo *win, int *dxOut, int *dyOut)
+static void GetCanvasDxDyDiff(WindowInfo *win, int *dxOut, int *dyOut)
 {
-    RECT canvasRect;
+    RECT canvasRect, totalRect;
     GetWindowRect(win->hwndCanvas, &canvasRect);
-    RECT totalRect;
     GetWindowRect(win->hwndFrame, &totalRect);
     *dxOut = rect_dx(&totalRect) - rect_dx(&canvasRect);
     // TODO: should figure out why it fires in DLL
@@ -1698,8 +1748,10 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
             return NULL;
      }
 
+    /* TODO: need to get rid of that, but not sure if that won't break something
+       i.e. GetCanvasSize() caches size of canvas and some code might depend
+       on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
-    SizeI maxCanvasSize = GetMaxCanvasSize(win);
     SizeD totalDrawAreaSize(win->winSize());
     if (fileFromHistory && !ignoreHistorySizePos) {
         WinResizeClientArea(win->hwndCanvas, fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
@@ -1715,6 +1767,7 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
     /* TODO: make sure it doesn't have a stupid position like 
        outside of the screen etc. */
 #if 0
+    SizeI maxCanvasSize = GetMaxCanvasSize(win);
     if (totalDrawAreaSize.dxI() > maxCanvasSize.dx)
         totalDrawAreaSize.setDx(maxCanvasSize.dx);
     if (totalDrawAreaSize.dyI() > maxCanvasSize.dy)
@@ -3666,6 +3719,22 @@ static void OneMenuMakeDefaultReader(void)
     MessageBox(NULL, _TR("SumatraPDF is now a default reader for PDF files."), "Information", MB_OK);
 }
 
+static void OnMove(WindowInfo *win, int x, int y)
+{
+    /* If the window being moved doesn't show PDF document, remember
+       its position so that it can be persisted (we assume that position
+       of this window is what the user wants to be a position of all
+       new windows */
+    if (win->state != WS_ABOUT)
+        return;
+    /* x,y is the coordinates of client area, but we need to remember
+       the position of window on screen */
+    RECT rc;
+    GetWindowRect(win->hwndFrame, &rc);
+    gGlobalPrefs.m_windowPosX = rc.left;
+    gGlobalPrefs.m_windowPosY = rc.top;
+}
+
 static void OnSize(WindowInfo *win, int dx, int dy)
 {
     int rebBarDy = 0;
@@ -4793,6 +4862,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 OnSize(win, dx, dy);
             }
             break;
+        case WM_MOVE:
+            if (win) {
+                int x = LOWORD(lParam);
+                int y = HIWORD(lParam);
+                OnMove(win, x, y);
+            }
 
         case WM_COMMAND:
             wmId    = LOWORD(wParam);
@@ -5484,6 +5559,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
     InitCommonControlsEx(&cex);
 
+    SerializableGlobalPrefs_Init();
     argListRoot = StrList_FromCmdLine(lpCmdLine);
     assert(argListRoot);
     if (!argListRoot)
@@ -5606,7 +5682,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         /* disable benchmark mode if we couldn't open file to benchmark */
         gBenchFileName = 0;
 #ifdef REOPEN_FILES_AT_STARTUP
-            FileHistoryList * currFile = gFileHistoryRoot;
+        FileHistoryList * currFile = gFileHistoryRoot;
         while (currFile) {
             if (currFile->state.visible) {
                 win = LoadPdf(currFile->state.filePath, false);

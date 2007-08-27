@@ -23,6 +23,7 @@ Short term todo (before next 0.8 release):
 * useFitz should also be remembered per file and when switching rendering
   engine, we should only re-load current file.
 
+
 Long term todo:
 * handle links
 * move DisplayState into DisplayModel and use it directly, instead of 
