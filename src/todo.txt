@@ -17,6 +17,9 @@ Short term todo (before next 0.8 release):
   a program (rc.exe might be smart enough to compress it). If yes, need to
   figure out how to save space (maybe save 32bit icons in vista format as PNGs
   and standard XP icon as a standard *.ico format).
+* maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
+  and TransparentBlt). Instead, dynamically load the functions. Needed for
+  working on NT. On the other hand: is NT worth supporting?
 
 Long term todo:
 * handle links
