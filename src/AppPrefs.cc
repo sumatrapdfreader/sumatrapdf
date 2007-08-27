@@ -1,17 +1,15 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
-#include "AppPrefs.h"
+
+#include "base_util.h"
 #include "benc_util.h"
 #include "str_util.h"
-#include "DisplayModel.h"
-#include "DisplayState.h"
 #include "dstring.h"
+
+#include "AppPrefs.h"
+#include "DisplayState.h"
 #include "FileHistory.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <assert.h>
 
 extern BOOL gShowToolbar;
 extern BOOL gUseFitz;
@@ -205,6 +203,7 @@ Error:
     return (const char*)data;
 }
 
+#if 0
 bool Prefs_Serialize(FileHistoryList **root, DString *strOut)
 {
     assert(0 == strOut->length);
@@ -215,6 +214,7 @@ bool Prefs_Serialize(FileHistoryList **root, DString *strOut)
     DStringSprintf(strOut, "  %s: %s\n", UI_LANGUAGE_STR, CurrLangNameGet());
     return FileHistoryList_Serialize(root, strOut);
 }
+#endif
 
 static BOOL ParseInt(const char *txt, int *resOut)
 {

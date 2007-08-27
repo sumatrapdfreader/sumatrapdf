@@ -1185,6 +1185,7 @@ Exit:
     return ok;
 }
 
+#if 0
 static void Prefs_SaveOld(void)
 {
     DString       path;
@@ -1211,12 +1212,15 @@ Exit:
     DStringFree(&prefsStr);
     DStringFree(&path);
 }
+#endif
 
 static void Prefs_Save(void)
 {
     /* TODO: temporary, save in both formats. In the future we'll ditch old format */
     Prefs_SaveNew();
+#if 0
     Prefs_SaveOld();
+#endif
 }
 
 static bool WindowInfo_Dib_Init(WindowInfo *win) {

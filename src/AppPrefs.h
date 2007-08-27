@@ -3,10 +3,10 @@
 #ifndef APP_PREFS_H_
 #define APP_PREFS_H_
 
-#include "DisplayState.h"
-#include "FileHistory.h"
-
+#if 0
 bool        Prefs_Serialize(FileHistoryList **root, DString *strOut);
+#endif
+struct FileHistoryList;
 bool        Prefs_Deserialize(const char *prefsTxt, FileHistoryList **fileHistoryRoot);
 
 const char *Prefs_Serialize2(FileHistoryList **root, size_t* lenOut);
