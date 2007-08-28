@@ -12,7 +12,7 @@
 # fiuzzy - French
 # laclasse - French
 # Nardog (nardog.takoweb.com) - Japanese
-# Richard Magyar - Hungarian
+# Richard Magyar (magyar_richard@yahoo.com)- Hungarian
 # Mardi Az Pansad Dastgah Artesh - Persian
 # Lars J. Helbo - Danish
 # Angelo Contardi - Italian
@@ -444,6 +444,7 @@ vn:Quay phải
 lt:Pasukti dešinėn
 -
 Bookmarks
+hu:Könyvjelzők
 lt:Žymės
 -
 Fullscreen\tCtrl-L
@@ -1343,15 +1344,18 @@ vn:Na Uy
 lt:Norvegų
 -
 Slovak
+hu:Szlovák
 pl:Słowacki
 vn:Slovakia
 lt:Slovakų
 -
 Vietnamese
+hu:Vietnámi
 pl:Vietnamski
 vn:Tiếng Việt
 -
 Lithuanian
+hu:Litván
 lt:Lietuvių
 -
 &Help
@@ -1450,12 +1454,15 @@ vn:Tìm kiếm
 lt:Ieškoti
 -
 Find Previous
+hu:Előző Keresése
 lt:Rasti kitą
 -
 Find Next
+hu:Következő Keresése
 lt:Rasti ankstesnį
 -
 Match case
+hu:Kis- és nagybetű megkülönböztetése
 -
 Open
 br:Abrir
