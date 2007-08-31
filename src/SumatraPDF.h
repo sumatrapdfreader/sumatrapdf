@@ -102,6 +102,12 @@ public:
         hdc = NULL;
         nFindPercent = 0;
         bFindStatusVisible = false;
+        documentBlocked = false;
+        showSelection = false;
+        m_fullscreen = false;
+        mouseAction = MA_IDLE;
+        memzero(animState, sizeof(animState));
+        memzero(selectionRect, sizeof(selectionRect));
     }
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
