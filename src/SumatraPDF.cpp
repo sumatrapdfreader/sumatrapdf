@@ -104,6 +104,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define CANVAS_CLASS_NAME   _T("SUMATRA_PDF_CANVAS")
 #define ABOUT_CLASS_NAME    _T("SUMATRA_PDF_ABOUT")
 #define SPLITER_CLASS_NAME  _T("Spliter")
+#define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define APP_NAME            _T("SumatraPDF")
 #define APP_NAME_STR        "SumatraPDF"
 #define PDF_DOC_NAME        _T("Adobe PDF Document")
@@ -4025,11 +4026,47 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     triggerRepaintDisplayNow(win);
 }
 
+static void WindowInfo_ShowFindStatus(WindowInfo *win)
+{
+    LPARAM disable = (LPARAM)MAKELONG(0,0);
+
+    ShowWindow(win->hwndFindStatus, SW_SHOW);
+    win->bFindStatusVisible = true;
+
+    EnableWindow(win->hwndFindBox, false);
+    SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
+    SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
+    SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
+}
+
+static void WindowInfo_HideFindStatus(WindowInfo *win)
+{
+    LPARAM enable = (LPARAM)MAKELONG(1,0);
+
+    if (!win->dm->bFoundText)
+        SetWindowTextW(win->hwndFindStatus, L"No matches were found");
+    else {
+        wchar_t buf[256];
+        swprintf(buf, L"Found text at page %d", win->dm->currentPageNo());
+        SetWindowTextW(win->hwndFindStatus, buf);
+    }
+    Sleep(3000);
+
+    ShowWindow(win->hwndFindStatus, SW_HIDE);
+    win->bFindStatusVisible = false;
+
+    EnableWindow(win->hwndFindBox, true);
+    SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
+    SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
+    SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
+}
+
 static void OnMenuFindNext(WindowInfo *win)
 {
     PdfSearchResult *rect = win->dm->Find();
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WindowInfo_HideFindStatus, (void*)win, 0, 0);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
@@ -4037,6 +4074,7 @@ static void OnMenuFindPrev(WindowInfo *win)
     PdfSearchResult *rect = win->dm->Find(FIND_BACKWARD);
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WindowInfo_HideFindStatus, (void*)win, 0, 0);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -4302,6 +4340,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             }
             if (rect)
                 WindowInfo_ShowSearchResult(win, rect);
+            CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WindowInfo_HideFindStatus, (void*)win, 0, 0);
 
             Edit_SetModify(hwnd, FALSE);
             return 1;
@@ -4340,6 +4379,62 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
 }
 
+#define FIND_STATUS_WIDTH 200
+static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+    if (!win || !win->dm)
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    if (WM_ERASEBKGND == message) {
+        RECT rect;
+        GetClientRect(hwnd, &rect);
+        DrawFrameControl((HDC)wParam, &rect, DFC_BUTTON, DFCS_BUTTONPUSH);
+        return true;
+    }
+    else
+    if (WM_PAINT == message) {
+        RECT rect;
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        HFONT oldfnt = SelectFont(hdc, (HFONT)GetStockObject(DEFAULT_GUI_FONT));
+        wchar_t text[256];
+
+        GetClientRect(hwnd, &rect);
+        GetWindowTextW(hwnd, text, 256);
+
+        SetBkMode(hdc, TRANSPARENT);
+        rect.left += 10;
+        rect.top += 4;
+        DrawTextW(hdc, text, wcslen(text), &rect, DT_LEFT);
+        
+        rect.top += 20;
+        rect.bottom = rect.top + 5;
+        rect.right = rect.left + FIND_STATUS_WIDTH - 20;
+        DrawLineSimple(hdc, rect.left, rect.top, rect.right, rect.top);
+        DrawLineSimple(hdc, rect.left, rect.bottom, rect.right, rect.bottom);
+        DrawLineSimple(hdc, rect.left, rect.top, rect.left, rect.bottom);
+        DrawLineSimple(hdc, rect.right, rect.top, rect.right, rect.bottom);
+        
+        int percent = win->nFindPercent;
+        if (percent > 100)
+            percent = 100;
+        rect.top += 2;
+        rect.left += 2;
+        rect.right = rect.left + (FIND_STATUS_WIDTH - 20) * percent / 100 - 3;
+        rect.bottom -= 1;
+        FillRect(hdc, &rect, gBrushShadow);
+
+        SelectFont(hdc, oldfnt);
+        EndPaint(hwnd, &ps);
+        return WM_PAINT_HANDLED;
+    }
+    else if (WM_SETTEXT == message) {
+        InvalidateRect(hwnd, NULL, true);
+    }
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
 #define FIND_TXT_POS_X 146
 #define FIND_BOX_WIDTH 160
 static void UpdateToolbarFindText(WindowInfo *win)
@@ -4359,6 +4454,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     MoveWindow(win->hwndFindText, FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
     MoveWindow(win->hwndFindBox, FIND_TXT_POS_X + size.cx, 1, FIND_BOX_WIDTH, 20, false);
+    MoveWindow(win->hwndFindStatus, 10, 10, FIND_STATUS_WIDTH, 36, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
@@ -4378,9 +4474,13 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
                             FIND_TXT_POS_X, 1, 0, 0,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
+    HWND status = CreateWindowEx(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, "", WS_CHILD|SS_CENTER,
+                            0, 0, 0, 0, win->hwndCanvas, (HMENU)0, hInst, NULL);
+
     HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
+    SetWindowFont(status, fnt, true);
 
     if (!DefWndProcToolbar)
         DefWndProcToolbar = (WNDPROC)GetWindowLong(win->hwndToolbar, GWL_WNDPROC);
@@ -4391,8 +4491,11 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
     SetWindowLong(find, GWL_USERDATA, (LONG)win);
 
+    SetWindowLong(status, GWL_USERDATA, (LONG)win);
+
     win->hwndFindText = label;
     win->hwndFindBox = find;
+    win->hwndFindStatus = status;
 
     UpdateToolbarFindText(win);
 }
@@ -4540,6 +4643,25 @@ void WindowInfo::FindStart()
     hwndTracker = NULL;
     SendMessage(hwndFindBox, EM_SETSEL, 0, -1);
     SetFocus(hwndFindBox);
+}
+
+void WindowInfo::FindUpdateStatus(int current, int total)
+{
+    if (!bFindStatusVisible) {
+        WindowInfo_ShowFindStatus(this);
+    }
+
+    wchar_t buf[256];
+    swprintf(buf, L"Searching %d of %d...", current, total);
+    SetWindowTextW(hwndFindStatus, buf);
+
+    nFindPercent = current * 100 / total;
+
+    MSG msg = { 0 };
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 }
 
 void WindowInfo::TrackMouse(HWND tracker)
@@ -5236,6 +5358,22 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = SPLITER_CLASS_NAME;
+    wcex.hIconSm        = 0;
+    atom = RegisterClassEx(&wcex);
+    if (!atom)
+        return FALSE;
+
+    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = WndProcFindStatus;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = 0;
+    wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
+    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+    wcex.lpszMenuName   = NULL;
+    wcex.lpszClassName  = FINDSTATUS_CLASS_NAME;
     wcex.hIconSm        = 0;
     atom = RegisterClassEx(&wcex);
     if (!atom)

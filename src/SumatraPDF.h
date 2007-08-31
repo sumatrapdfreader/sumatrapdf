@@ -77,10 +77,31 @@ typedef struct SelectionOnPage {
 
 /* Describes information related to one window with (optional) pdf document
    on the screen */
-class WindowInfo {
+class WindowInfo : public PdfSearchTracker
+{
 public:
     WindowInfo() {
-        memzero(this, sizeof(*this)); // TODO: this might not be valid
+        //memzero(this, sizeof(*this)); // Don't use this way, it'll clear the virtual table
+        dm = NULL;
+        dibInfo = NULL;
+        next = NULL;
+        linkOnLastButtonDown = NULL;
+        url = NULL;
+        selectionOnPage = NULL;
+        tocLoaded = false;
+        hwndFrame = NULL;
+        hwndCanvas = NULL;
+        hwndToolbar = NULL;
+        hwndReBar = NULL;
+        hwndFindText = NULL;
+        hwndFindBox = NULL;
+        hwndTocBox = NULL;
+        hwndSpliter = NULL;
+        hwndTracker = NULL;
+        hMenu = NULL;
+        hdc = NULL;
+        nFindPercent = 0;
+        bFindStatusVisible = false;
     }
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
@@ -102,6 +123,7 @@ public:
     HWND            hwndReBar;
     HWND            hwndFindText;
     HWND            hwndFindBox;
+    HWND            hwndFindStatus;
     HWND            hwndTocBox;
     HWND            hwndSpliter;
     HWND            hwndTracker;
@@ -109,6 +131,9 @@ public:
 
     HDC             hdc;
     BITMAPINFO *    dibInfo;
+
+    int             nFindPercent;
+    bool            bFindStatusVisible;
 
     /* bitmap and hdc for (optional) double-buffering */
     HDC             hdcToDraw;
@@ -149,6 +174,7 @@ public:
 
     void TrackMouse(HWND hwnd=NULL);
     void FindStart();
+    virtual void FindUpdateStatus(int count, int total);
 
     void CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent=NULL);
     HTREEITEM AddTocItemToView(PdfTocItem *entry, HTREEITEM parent);
