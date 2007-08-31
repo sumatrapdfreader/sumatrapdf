@@ -106,8 +106,8 @@ public:
         showSelection = false;
         m_fullscreen = false;
         mouseAction = MA_IDLE;
-        memzero(animState, sizeof(animState));
-        memzero(selectionRect, sizeof(selectionRect));
+        memzero(&animState, sizeof(animState));
+        memzero(&selectionRect, sizeof(selectionRect));
     }
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
