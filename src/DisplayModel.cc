@@ -226,6 +226,8 @@ bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win)
 
     if (!buildPagesInfo())
         return false;
+
+    _pdfSearchEngine->tracker = (PdfSearchTracker *)win;
     return true;
 }
 
