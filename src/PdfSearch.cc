@@ -46,9 +46,10 @@ bool PdfSearchPoppler::FindStartingAtPage(int pageNo)
 
     PDFDoc *doc = engine->pdfDoc();
     int pageEnd, step;
+    int total = doc->getNumPages();
 
     if (forward) {
-        pageEnd = doc->getNumPages() + 1;
+        pageEnd = total + 1;
         step = 1;
     } else {
         pageEnd = 0;
@@ -56,6 +57,7 @@ bool PdfSearchPoppler::FindStartingAtPage(int pageNo)
     }
 
     while (pageNo != pageEnd) {
+        UpdateTracker(pageNo, total);
         Reset();
 
         doc->displayPage(dev, pageNo, 72.0, 72.0, 0, gFalse, gTrue, gFalse);
@@ -251,9 +253,10 @@ bool PdfSearchFitz::FindStartingAtPage(int pageNo)
         return false;
 
     int pageEnd, step;
+    int total = engine->pageCount();
 
     if (forward) {
-        pageEnd = engine->pageCount() + 1;
+        pageEnd = total + 1;
         step = 1;
     } else {
         pageEnd = 0;
@@ -261,6 +264,7 @@ bool PdfSearchFitz::FindStartingAtPage(int pageNo)
     }
 
     while (pageNo != pageEnd) {
+        UpdateTracker(pageNo, total);
         Reset();
 
         pdf_page *page = engine->getPdfPage(pageNo);

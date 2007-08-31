@@ -21,6 +21,12 @@ typedef struct {
     int bottom;
 } PdfSearchResult;
 
+class PdfSearchTracker
+{
+public:
+    virtual void FindUpdateStatus(int count, int total) = 0;
+};
+
 class PdfSearchEngine
 {
 protected:
@@ -31,10 +37,12 @@ protected:
 
 public:
     PdfSearchResult result;
+    PdfSearchTracker *tracker;
 
 public:
     PdfSearchEngine()
     {
+        tracker = NULL;
         text = NULL;
         sensitive = false;
         forward = true;
@@ -58,6 +66,19 @@ protected:
     {
         free(text);
         Reset();
+    }
+    
+    void UpdateTracker(int pageNo, int total)
+    {
+        if (!tracker)
+            return;
+
+        int count;
+        if (forward)
+            count = pageNo;
+        else
+            count = total - pageNo + 1;
+        tracker->FindUpdateStatus(count, total);
     }
 };
 
