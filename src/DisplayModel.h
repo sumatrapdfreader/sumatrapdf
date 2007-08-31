@@ -277,6 +277,7 @@ public:
 
     void            SetFindMatchCase(bool match) { _pdfSearchEngine->SetSensitive(match); }
     PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, wchar_t *text = NULL);
+    BOOL            bFoundText;
 
     BOOL            _showToc;
 

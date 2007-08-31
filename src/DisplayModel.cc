@@ -1364,14 +1364,13 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, wchar_t *text)
 {
     showBusyCursor();
 
-    BOOL found;
     _pdfSearchEngine->SetDirection(direction);
     if (text != NULL)
-        found = _pdfSearchEngine->FindFirst(currentPageNo(), text);
+        bFoundText = _pdfSearchEngine->FindFirst(currentPageNo(), text);
     else
-        found = _pdfSearchEngine->FindNext();
+        bFoundText = _pdfSearchEngine->FindNext();
 
-    if (found) {
+    if (bFoundText) {
         PdfSearchResult &rect = _pdfSearchEngine->result;
 
         goToPage(rect.page, 0);
