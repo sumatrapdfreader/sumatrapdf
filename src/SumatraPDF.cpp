@@ -4050,15 +4050,15 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
         swprintf(buf, L"Found text at page %d", win->dm->currentPageNo());
         SetWindowTextW(win->hwndFindStatus, buf);
     }
-    Sleep(3000);
-
-    ShowWindow(win->hwndFindStatus, SW_HIDE);
-    win->bFindStatusVisible = false;
-
     EnableWindow(win->hwndFindBox, true);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
+
+    Sleep(3000);
+
+    ShowWindow(win->hwndFindStatus, SW_HIDE);
+    win->bFindStatusVisible = false;
 }
 
 static void OnMenuFindNext(WindowInfo *win)
