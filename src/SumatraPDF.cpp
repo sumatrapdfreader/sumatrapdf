@@ -1870,7 +1870,7 @@ Exit:
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
-    if (win->dm->_showToc)
+    if (win->dm && win->dm->_showToc)
         win->ShowTocBox();
     return win;
 }
