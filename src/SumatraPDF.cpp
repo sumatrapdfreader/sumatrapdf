@@ -64,7 +64,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #endif
 
 /* default UI settings */
-#define DEFAULT_DISPLAY_MODE DM_CONTINUOUS
+#define DEFAULT_DISPLAY_MODE DM_SINGLE_PAGE
 
 //#define DEFAULT_ZOOM            ZOOM_FIT_WIDTH
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
