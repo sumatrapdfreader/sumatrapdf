@@ -5823,17 +5823,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (0 == pdfOpened) {
         /* disable benchmark mode if we couldn't open file to benchmark */
         gBenchFileName = 0;
-#ifdef REOPEN_FILES_AT_STARTUP
-        FileHistoryList * currFile = gFileHistoryRoot;
-        while (currFile) {
-            if (currFile->state.visible) {
-                win = LoadPdf(currFile->state.filePath, false);
-                if (win)
-                    ++pdfOpened;
-            }
-            currFile = currFile->next;
-        }
-#endif
         if (0 == pdfOpened) {
             win = WindowInfo_CreateEmpty();
             if (!win)
