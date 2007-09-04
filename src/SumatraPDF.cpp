@@ -1732,14 +1732,13 @@ static void RecalcSelectionPosition (WindowInfo *win) {
     }
 }
 
-static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = true, bool ignoreHistory = false)
+static WindowInfo* LoadPdf(const char *fileName)
 {
     assert(fileName);
     if (!fileName) return NULL;
 
     FileHistoryList *   fileFromHistory = NULL;
-    if (!ignoreHistory)
-        fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
 
     WindowInfo *        win;
     bool reuseExistingWindow = false;
@@ -1757,7 +1756,7 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
     SizeD totalDrawAreaSize(win->winSize());
-    if (fileFromHistory && !ignoreHistorySizePos) {
+    if (fileFromHistory) {
         WinResizeClientArea(win->hwndCanvas, fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
         totalDrawAreaSize = SizeD(fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
         Win32_Win_SetPos(win->hwndFrame, fileFromHistory->state.windowX, fileFromHistory->state.windowY);
@@ -5823,19 +5822,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (0 == pdfOpened) {
         /* disable benchmark mode if we couldn't open file to benchmark */
         gBenchFileName = 0;
-        if (0 == pdfOpened) {
-            win = WindowInfo_CreateEmpty();
-            if (!win)
-                goto Exit;
-            WindowInfoList_Add(win);
+        win = WindowInfo_CreateEmpty();
+        if (!win)
+            goto Exit;
+        WindowInfoList_Add(win);
 
-            /* TODO: should this be part of WindowInfo_CreateEmpty() ? */
-            DragAcceptFiles(win->hwndFrame, TRUE);
-            ShowWindow(win->hwndCanvas, SW_SHOW);
-            UpdateWindow(win->hwndCanvas);
-            ShowWindow(win->hwndFrame, SW_SHOW);
-            UpdateWindow(win->hwndFrame);
-        }
+        /* TODO: should this be part of WindowInfo_CreateEmpty() ? */
+        DragAcceptFiles(win->hwndFrame, TRUE);
+        ShowWindow(win->hwndCanvas, SW_SHOW);
+        UpdateWindow(win->hwndCanvas);
+        ShowWindow(win->hwndFrame, SW_SHOW);
+        UpdateWindow(win->hwndFrame);
     }
 
     if (IsBenchMode()) {
