@@ -35,7 +35,8 @@
 # Radoslav Zelenák - Slovak republic
 # Nguyen Luong Dong - Vietnamese
 # Viktoras Jakovlevas - Lithuania
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt
+# Masley b. Mastil - Bahasa Melayu (Malaysian)
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my
 -
 &File
 br:&Arquivo
@@ -64,7 +65,8 @@ pt:&Ficheiro
 no:&Fil
 sk:Súbor
 vn:&Tệp tin
-lt:&Failas 
+lt:&Failas
+my:&Fail 
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -94,6 +96,7 @@ no:&Åpne\tCtrl-O
 sk:Otvoriť\tCtrl-O
 vn:&Mở tệp\tCtrl-O
 lt:&Atverti\tCtrl-O
+my:&Buka\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -123,6 +126,7 @@ no:&Lukk\tCtrl-W
 sk:Zatvoriť\tCtrl-W
 vn:&Đóng tệp\tCtrl-W
 lt:&Užverti\tCtrl-W
+my:&Tutup\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -152,6 +156,7 @@ no:Lagre &som
 sk:Uložiť ako...
 vn:&Sao lưu
 lt:&Įrašyti kaip...
+my:&Simpan sebagai
 -
 &Print
 br:&Imprimir
@@ -181,6 +186,7 @@ no:Skriv &ut\tCtrl-P
 sk:Tlač\tCtrl-P
 vn:&In\tCtrl-P
 lt:&Spausdinti\tCtrl-P
+my:&Cetak\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -210,6 +216,7 @@ no:Bruk SumatraPDF som standard PDF-leser
 sk:Nastaviť SumatraPDF ako predvolený PDF prehlaidač
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định
 lt:Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
+my:Jadikan SumatraPDF pembaca utama PDF
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -239,6 +246,7 @@ no:&Avslutt\tCtrl-Q
 sk:Ukonciť\tCtrl-Q
 vn:Th&oát\tCtrl-Q
 lt:Baigti darbą\tCtrl-Q
+my:&Keluar\tCtrl-Q
 -
 &View
 br:&Ver
@@ -268,6 +276,7 @@ no:&Vis
 sk:Zobraziť
 vn:&Xem
 lt:Peržiūra
+my:&Lihat
 -
 Single page
 br:Página única
@@ -297,6 +306,7 @@ no:Enkel side
 sk:Jedna strana
 vn:Trang đơn
 lt:Vienas puslapis
+my:Satu Mukasurat
 -
 Facing
 br:Página dupla
@@ -326,6 +336,7 @@ no:Motstående
 sk:Dve strany
 vn:Trang kép
 lt:Puslapiavimas
+my:Dua belah mukasurat
 -
 Continuous
 br:Contínuo
@@ -355,6 +366,7 @@ no:Kontinuerlig
 sk:Priebežne
 vn:Liên tục
 lt:Besitęsiantis
+my:Bersambung
 -
 Continuous facing
 br:Página dupla contínua
@@ -384,6 +396,7 @@ no:Kontinuerlig motstående
 sk:Dve strany priebežne
 vn:Liên tục trang kép
 lt:Besitęsiantis puslapiavimas
+my:Dua belah mukasurat bersambung
 -
 Rotate left
 br:Girar à esquerda
@@ -413,6 +426,7 @@ no:Roter til venstre
 sk:Otočiť vľavo
 vn:Quay trái
 lt:Pasukti kairėn
+my:Ubah ke kiri
 -
 Rotate right
 br:Girar à direita
@@ -442,10 +456,12 @@ no:Roter til høyre
 sk:Otočiť vpravo
 vn:Quay phải
 lt:Pasukti dešinėn
+my:Ubah ke kanan
 -
 Bookmarks
 hu:Könyvjelzők
 lt:Žymės
+my:Penanda
 -
 Fullscreen\tCtrl-L
 hu:Teljes Képernyő\tCtrl+L
@@ -455,6 +471,7 @@ no:Full skjerm\tCtrl-L
 sk:Na celú stránku\tCtrl-L
 vn:Toàn màn hình\tCtrl-L
 lt:Visame ekrane\tCtrl-L
+my:Mukasurat Penuh\tCtrl-L
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -484,6 +501,7 @@ no:Vis verktøylinje
 sk:Zobraziť panel nástrojov
 vn:Hiện thanh công cụ
 lt:Rodyti įrankinę
+my:Tunjukkan Bar Alat
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -513,6 +531,7 @@ no:Bruk MuPDF renderingsmotor
 sk:Použiť zobrazovacie jadro MuPDF
 vn:Dùng động cơ trình diễn MuPDF
 lt:Atvaizduoti naudojant MuPDF
+my:Guna MuPDF enjin
 -
 &Go To
 br:Ir &para
@@ -542,6 +561,7 @@ no:&Gå til
 sk:Ísť na
 vn:&Nhảy đến
 lt:&Eiti
+my:&Pergi Ke
 -
 Next Page
 br:Página seguinte
@@ -571,6 +591,7 @@ no:Neste side
 sk:Ďaľšia strana
 vn:Trang tiếp
 lt:Kitas puslapis
+my:Mukasurat seterusnya
 -
 Previous Page
 br:Página anterior
@@ -600,6 +621,7 @@ no:Forrige side
 sk:Predchádzajúca strana
 vn:Trang trước
 lt:Ankstesnis puslapis
+my:Mukasurat sebelumnya
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -629,6 +651,7 @@ no:Første side\tHome
 sk:Prvá strana\tHome
 vn:Trang đầu\tHome
 lt:Pirmas puslapis\tHome
+my:Mukasurat pertama\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -658,6 +681,7 @@ no:Siste side\tEnd
 sk:Posledná strana\tEnd
 vn:Trang cuối\tEnd
 lt:Paskutinis puslapis\tEnd
+my:Mukasurat terakhir
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -687,6 +711,7 @@ no:Side...\tCtrl-G
 sk:Strana...\tCtrl-G
 vn:Trang...\tCtrl-G
 lt:Puslapis...\tCtrl-G
+my:Mukasurat...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -716,6 +741,7 @@ no:&Zoom
 sk:Zvačšenie
 vn:&Thu-Phóng
 lt:Artinimas
+my:&Fokus
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -745,6 +771,7 @@ no:Tilpass &side\tCtrl-0
 sk:Prispôsobiť stránke
 vn:Vừa &trang\tCtrl-0
 lt:Pritaikyti lange\tCtrl-0
+my:&Muatkan mukasurat\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -774,6 +801,7 @@ no:F&aktisk størrelse\tCtrl-1
 sk:Skutočná veľkosť
 vn:Kích thướ&c thật\tCtrl-1
 lt:Tikrasis dydis\tCtrl-1
+my:&Saiz sebenar\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -803,6 +831,7 @@ no:Tilpass &bredde\tCtrl-2
 sk:Na šírku obrazovky\tCtrl-2
 vn:Vừa chiều &rộng\tCtrl-2
 lt:Pritaikyti plotį\tCtrl-2
+my:&Muatkan lebar\tCtrl-2
 -
 6400%
 -
@@ -858,6 +887,7 @@ no:&Språk
 sk:Jazyk
 vn:N&gôn ngữ
 lt:Kalba
+my:&Bahasa
 -
 English
 br:Inglês
@@ -886,6 +916,7 @@ no:Engelsk
 sk:Anglický
 vn:Anh
 lt:Anglų
+my:English
 -
 Belarusian
 hu:Belorusz
@@ -910,6 +941,7 @@ no:Hviterussisk
 sk:Bieloruský
 vn:Belarut
 lt:Baltarusių
+my:Belarusian
 -
 Danish
 hu:Dán
@@ -933,6 +965,7 @@ no:Dansk
 sk:Dánsky
 vn:Đan Mạch
 lt:Danų
+my:Danish
 -
 German
 br:Alemão
@@ -961,6 +994,7 @@ no:Tysk
 sk:Nemecký
 vn:Đức
 lt:Vokiečių
+my:German
 -
 Polish
 br:Polonês
@@ -988,6 +1022,7 @@ no:Polsk
 sk:Poľský
 vn:Ba Lan
 lt:Lenkų
+my:Polish
 -
 Japanese
 hu:Japán
@@ -1013,6 +1048,7 @@ no:Japansk
 sk:Japonský
 vn:Nhật Bản
 lt:Japonų
+my:Japanese
 -
 Hungarian
 hu:Magyar
@@ -1038,6 +1074,7 @@ no:Ungarsk
 sk:Maďarský
 vn:Hungari
 lt:Vengrų
+my:Hungarian
 -
 Persian
 hu:Perzsa
@@ -1060,6 +1097,7 @@ no:Persisk
 sk:Perzský
 vn:Ba Tư
 lt:Persų
+my:Persian
 -
 French
 br:Francês
@@ -1088,6 +1126,7 @@ no:Fransk
 sk:Francúzsky
 vn:Pháp
 lt:Prancūzų
+my:French
 -
 Turkish
 br:Turco
@@ -1115,6 +1154,7 @@ no:Tyrkisk
 sk:Turecký
 vn:Thổ Nhĩ Kỳ
 lt:Turkų
+my:Turkish
 -
 Tamil
 br:Tâmil
@@ -1139,6 +1179,7 @@ no:Tamil
 sk:Tamilský
 vn:Tamil
 lt:Tamilų
+my:Tamil
 -
 Italian
 hu:Olasz
@@ -1161,6 +1202,7 @@ no:Italiensk
 sk:Taliansky
 vn:Italia
 lt:Italų
+my:Italian
 -
 Dutch
 hu:Holland
@@ -1183,6 +1225,7 @@ no:Nederlandsk
 sk:Holandský
 vn:Hà Lan
 lt:Olandų
+my:Dutch
 -
 Spanish
 hu:Spanyol
@@ -1204,6 +1247,7 @@ no:Spansk
 sk:Španielsky
 vn:Tây Ban Nha
 lt:Ispanų
+my:Spanish
 -
 Croatian
 hu:Horvát
@@ -1223,6 +1267,7 @@ no:Kroatisk
 sk:Chorvátsky
 vn:Croatia
 lt:Kroatų
+my:Crotian
 -
 Russian
 hu:Orosz
@@ -1240,6 +1285,7 @@ no:Russisk
 sk:Ruský
 vn:Nga
 lt:Rusų
+my:Russian
 -
 Arabic
 hu:Arab
@@ -1257,6 +1303,7 @@ no:Arabisk
 sk:Arabský
 vn:Arập
 lt:Arabų
+my:Arabic
 -
 Chinese Simplified
 hu:Egyszerűsített Kínai
@@ -1273,6 +1320,7 @@ no:Kinesisk, forenklet
 sk:Zjednodušený čínsky
 vn:Trung Quốc
 lt:Supaprastintoji kinų
+my:Chinese Simplified
 -
 Swedish
 hu:Svéd
@@ -1286,6 +1334,7 @@ no:Svensk
 sk:Švédsky
 vn:Thuỵ Điển
 lt:Švedų
+my:Swedish
 -
 Czech
 hu:Cseh
@@ -1297,6 +1346,7 @@ no:Tjekkisk
 sk:Český
 vn:Séc
 lt:Čekų
+my:Czech
 -
 Greek
 hu:Görög
@@ -1307,6 +1357,7 @@ no:Gresk
 sk:Grécky
 vn:Hy Lạp
 lt:Graikų
+my:Greek
 -
 Thai
 hu:Thai
@@ -1315,6 +1366,7 @@ ja:タイ語
 no:Thai
 sk:Thajský
 vn:Thái Lan
+my:Thai
 -
 Portuguese (Portugal)
 hu:Portugál
@@ -1325,6 +1377,7 @@ no:Portugisisk
 sk:Portugalský
 vn:Bồ Đào Nha
 lt:Portugalų
+my:Portuguese (Portugal)
 -
 Brazillian
 hu:Brazil
@@ -1334,6 +1387,7 @@ no:Brasiliansk
 sk:Brazílsky
 vn:Brazil
 lt:Brazilų
+my:Brazillian
 -
 Norwegian
 hu:Norvég
@@ -1342,21 +1396,28 @@ pl:Norweski
 sk:Nórsky
 vn:Na Uy
 lt:Norvegų
+my:Norwegian
 -
 Slovak
 hu:Szlovák
 pl:Słowacki
 vn:Slovakia
 lt:Slovakų
+my:Slovak
 -
 Vietnamese
 hu:Vietnámi
 pl:Vietnamski
 vn:Tiếng Việt
+my:Vietnamese
 -
 Lithuanian
 hu:Litván
 lt:Lietuvių
+my:Lithuanian
+-
+Malaysian
+my:Bahasa Melayu
 -
 &Help
 br:A&juda
@@ -1386,6 +1447,7 @@ no:&Hjelp
 sk:Nápoveda
 vn:G&iúp đỡ
 lt:&Pagalba
+my:&Bantuan
 -
 &Visit website
 br:Visitar o &Website
@@ -1415,6 +1477,7 @@ no:Besøk &hjemmeside
 sk:Navštíviť webstránku
 vn:Thăm website
 lt:Aplankyti svetainę
+my:&Lawat lamanweb
 -
 &About
 br:S&obre
@@ -1444,6 +1507,7 @@ no:&Om
 sk:O programe
 vn:Giới thiệu
 lt:Apie
+my:&Mengenai
 -
 Find:
 hu:Keresés:
@@ -1452,17 +1516,21 @@ ja:検索:
 sk:Hľadať:
 vn:Tìm kiếm
 lt:Ieškoti
+my:Cari
 -
 Find Previous
 hu:Előző Keresése
 lt:Rasti kitą
+my:Cari sebelum
 -
 Find Next
 hu:Következő Keresése
 lt:Rasti ankstesnį
+my:Cari selepas
 -
 Match case
 hu:Kis- és nagybetű megkülönböztetése
+my:Hampir sama
 -
 Open
 br:Abrir
@@ -1492,6 +1560,7 @@ no:Åpne
 sk:Otvoriť
 vn:Mở tệp
 lt:Atverti
+my:Buka
 -
 Zoom In
 br:Zoom In
@@ -1521,6 +1590,7 @@ no:Forstørr
 sk:Zvačšiť
 vn:Phóng to
 lt:Priartinti
+my:Fokus ke dalam
 -
 Zoom Out
 br:Zoom Out
@@ -1550,6 +1620,7 @@ no:Forminsk
 sk:Zmenšiť
 vn:Thu nhỏ
 lt:Sumažinti
+my:Fokus ke luar
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1579,6 +1650,7 @@ no:Om SumatraPDF
 sk:O programe SumatraPDF
 vn:Giới thiệu SumatraPDF
 lt:Apie SumatraPDF
+my:Mengenai SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1608,6 +1680,7 @@ no:SumatraPDF er nå standard PDF-leser.
 sk:SumatraPDF je teraz nastavený ako predvolený prehlaidač PDF súborov.
 vn:Hiện giờ SumatraPDF là trình đọc PDF mặc định của bạn.
 lt:SumatraPDF nėra numatytasis PDF dokumentų skaitytuvas
+my:SumatraPDF adalah pembaca utama fail PDF sekarang
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1637,6 +1710,7 @@ no:Kan ikke lagre filen.
 sk:Zlyhanie pri ukladaní súboru.
 vn:Không lưu được tệp.
 lt:Nepavyko išsaugoti failo
+my:Gagal menyimpan fail
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1666,6 +1740,7 @@ no:Feil ved åpning av PDF-fil.
 sk:Chyba pri načítaní PDF súboru.
 vn:Lỗi nạp tệp PDF.
 lt:Klaida įkeliant PDF dokumentą
+my:Masalah memuatkan fail PDF
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1695,6 +1770,7 @@ no:Kan ikke finne skriveren.
 sk:Nie je možné otvoriť tlačiareň.
 vn:Không mở được máy in.
 lt:Nepavyko atverti spausdintuvo
+my:Pencetak tidak dapat dibuka
 -
 Printing problem.
 br:Problema de impressão.
@@ -1724,6 +1800,7 @@ no:Problem med utskrift.
 sk:Problém pri tlači.
 vn:Lỗi in.
 lt:Spausdinimo klaida
+my:Masalah mencetak
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1745,3 +1822,4 @@ no:Bidra med oversetting
 sk:Prispieť k prekladu
 vn:Đóng góp dịch
 lt:Pasiklydę vertime
+my:Menyumbangkan alihbahasa
