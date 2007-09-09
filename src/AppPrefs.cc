@@ -57,6 +57,9 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs.m_pdfAssociateDontAskAgain);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs.m_pdfAssociateShouldAssociate);
 
+    DICT_ADD_INT64(prefs, BG_COLOR_STR, gGlobalPrefs.m_bgColor);
+    DICT_ADD_INT64(prefs, ESC_TO_EXIT_STR, gGlobalPrefs.m_escToExit);
+
     DICT_ADD_INT64(prefs, WINDOW_STATE_STR, gGlobalPrefs.m_windowState);
     DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_windowPosX);
     DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
@@ -390,6 +393,8 @@ bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryL
     dict_get_bool(global, USE_FITZ_STR, &gGlobalPrefs.m_useFitz);
     dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
+    dict_get_bool(global, ESC_TO_EXIT_STR, &gGlobalPrefs.m_escToExit);
+    dict_get_int(global, BG_COLOR_STR, &gGlobalPrefs.m_bgColor);
 
     dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
     dict_get_int(global, WINDOW_X_STR, &gGlobalPrefs.m_windowPosX);

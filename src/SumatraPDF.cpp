@@ -100,6 +100,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW RGB(0x40, 0x40, 0x40)
 
+#define ABOUT_BG_COLOR          RGB(255,242,0)
+
 #define FRAME_CLASS_NAME    _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME   _T("SUMATRA_PDF_CANVAS")
 #define ABOUT_CLASS_NAME    _T("SUMATRA_PDF_ABOUT")
@@ -119,6 +121,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PRINT_TO_DEFAULT_ARG_TXT  "-print-to-default"
 #define EXIT_ON_PRINT_ARG_TXT     "-exit-on-print"
 #define ENUM_PRINTERS_ARG_TXT     "-enum-printers"
+#define ESC_TO_EXIT_ARG_TXT       "-esc-to-exit"
+#define BG_COLOR_TXT              "-bgcolor"
 
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_WIN_DX 612
@@ -408,7 +412,8 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_useFitz = TRUE;
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
-
+    gGlobalPrefs.m_escToExit = FALSE;
+    gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
     gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
     gGlobalPrefs.m_windowPosX = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
@@ -2594,9 +2599,6 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 #define RIGHT_TXT_FONT          "Arial Black"
 #define RIGHT_TXT_FONT_SIZE     12
 
-#define ABOUT_BG_COLOR          RGB(255,242,0)
-#define ABOUT_RECT_BG_COLOR     RGB(247,148,29)
-
 #define ABOUT_TXT_DY            6
 
 typedef struct AboutLayoutInfoEl {
@@ -2679,8 +2681,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     DString         str;
     DStringInit(&str);
 
-    HBRUSH brushBg = CreateSolidBrush(ABOUT_BG_COLOR);
-    HBRUSH brushRectBg = CreateSolidBrush(ABOUT_RECT_BG_COLOR);
+    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
     HPEN penRectBorder = CreatePen(PS_SOLID, ABOUT_RECT_BORDER_DX_DY, COL_BLACK);
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
@@ -2780,9 +2781,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     txt = SUMATRA_TXT;
     TextOut(hdc, x, y, txt, strlen(txt));
 
-    //SetTextColor(hdc, ABOUT_RECT_BG_COLOR);
     (HFONT)SelectObject(hdc, fontBetaTxt);
-    //SelectObject(hdc, brushRectBg);
     x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = BETA_TXT;
@@ -2835,7 +2834,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     Win32_Font_Delete(fontRightTxt);
 
     DeleteObject(brushBg);
-    DeleteObject(brushRectBg);
     DeleteObject(penBorder);
     DeleteObject(penDivideLine);
     DeleteObject(penRectBorder);
@@ -4180,16 +4178,19 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
 
 static void OnChar(WindowInfo *win, int key)
 {
-    if (!win->dm)
-        return;
-    if (win->documentBlocked)
-        return;
-
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
-    if (VK_ESCAPE == key && win->IsFullscreen()) {
-        OnMenuViewFullscreen(win);
-    } else if (VK_BACK == key) {
+    if (VK_ESCAPE == key) {
+        if (win->dm && !win->documentBlocked && win->IsFullscreen())
+            OnMenuViewFullscreen(win);
+        else if (gGlobalPrefs.m_escToExit)
+            DestroyWindow(win->hwndFrame);
+    }
+
+    if (!win->dm || win->documentBlocked)
+        return;
+
+    if (VK_BACK == key) {
         win->dm->scrollYByAreaDy(false, true);
     } else if ('g' == key) {
         OnMenuGoToPage(win);
@@ -5678,6 +5679,51 @@ bool SumatraMinidumpCallback(const wchar_t *dump_path,
 }
 #endif
 
+static int HexToNum(char c)
+{
+    if ((c >= '0') && (c <= '9'))
+        return c - '0';
+    if ((c >= 'a') && (c <= 'f'))
+        return c - 'a' + 10;
+    if ((c >= 'A') && (c <= 'F'))
+        return c - 'A' + 10;
+    return -1;
+}
+
+static int ParseHexByte(const char ** txt)
+{
+    if (!txt) return -1;
+    const char *s = *txt;
+    int c1 = HexToNum(*s++);
+    if (-1 == c1)
+        return -1;
+    int c2 = HexToNum(*s++);
+    if (-1 == c2)
+        return -1;
+    *txt = s;
+    return (16 * c1) + c2;
+}
+
+/* Parse 'txt' as hex color and set it as background color */
+static void ParseBgColor(const char* txt)
+{
+    if (str_startswith(txt, "0x"))
+        txt += 2;
+    int r = ParseHexByte(&txt);
+    if (-1 == r)
+        return;
+    int g = ParseHexByte(&txt);
+    if (-1 == g)
+        return;
+    int b = ParseHexByte(&txt);
+    if (-1 == b)
+        return;
+    if (*txt)
+        return;
+    int col = RGB(r,g,b);
+    gGlobalPrefs.m_bgColor = col;
+}
+
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
     StrList *           argListRoot;
@@ -5764,6 +5810,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 printerName = currArg->str;
                 currArg = currArg->next;
             }
+            continue;
+        }
+
+        if (is_arg(BG_COLOR_TXT)) {
+            currArg = currArg->next;
+            if (currArg) {
+                ParseBgColor(currArg->str);
+                currArg = currArg->next;
+            }
+            continue;
+        }
+
+        if (is_arg(ESC_TO_EXIT_ARG_TXT)) {
+            currArg = currArg->next;
+            gGlobalPrefs.m_escToExit = TRUE;
             continue;
         }
 

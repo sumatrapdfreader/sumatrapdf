@@ -21,6 +21,9 @@ typedef struct SerializableGlobalPrefs {
        silently associate or not */
     BOOL m_pdfAssociateShouldAssociate;
 
+    int  m_bgColor;
+    BOOL m_escToExit;
+
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
     int  m_windowState;

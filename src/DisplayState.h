@@ -47,6 +47,8 @@ enum DisplayMode {
 #define PDF_ASSOCIATE_ASSOCIATE_STR "PdfAssociateShouldAssociate"
 #define UI_LANGUAGE_STR             "UILanguage"
 #define SHOW_TOC_STR                "ShowToc"
+#define BG_COLOR_STR                "BgColor"
+#define ESC_TO_EXIT_STR             "EscToExit"
 
 typedef struct DisplayState {
     const char *        filePath;
