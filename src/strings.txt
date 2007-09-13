@@ -462,6 +462,7 @@ Bookmarks
 hu:Könyvjelzők
 lt:Žymės
 my:Penanda
+ja:ブックマーク
 -
 Fullscreen\tCtrl-L
 hu:Teljes Képernyő\tCtrl+L
@@ -1397,6 +1398,7 @@ sk:Nórsky
 vn:Na Uy
 lt:Norvegų
 my:Norwegian
+ja:ノルウェー語
 -
 Slovak
 hu:Szlovák
@@ -1404,20 +1406,24 @@ pl:Słowacki
 vn:Slovakia
 lt:Slovakų
 my:Slovak
+ja:スロバキア語
 -
 Vietnamese
 hu:Vietnámi
 pl:Vietnamski
 vn:Tiếng Việt
 my:Vietnamese
+ja:ベトナム語
 -
 Lithuanian
 hu:Litván
 lt:Lietuvių
 my:Lithuanian
+ja:リトアニア語
 -
 Malaysian
 my:Bahasa Melayu
+ja:マレーシア語
 -
 &Help
 br:A&juda
@@ -1522,15 +1528,18 @@ Find Previous
 hu:Előző Keresése
 lt:Rasti kitą
 my:Cari sebelum
+ja:前を検索
 -
 Find Next
 hu:Következő Keresése
 lt:Rasti ankstesnį
 my:Cari selepas
+ja:次を検索
 -
 Match case
 hu:Kis- és nagybetű megkülönböztetése
 my:Hampir sama
+ja:大文字と小文字に一致する
 -
 Open
 br:Abrir
