@@ -6,28 +6,33 @@
 # in this file followed by translations themselves
 # Contributors:
 # Francisco Fuchs (pontocinza.blogspot.com) - Brazilian Portuguese
-# Lars Wohlfahrt (www.eviltux.de) - German
+# German:
+#   Lars Wohlfahrt (www.eviltux.de)
+#   Christopher Amann
 # Hakan ATA - Turkish
 # Яўген Змачынскі - Belarusian
-# fiuzzy - French
-# laclasse - French
+# French:
+#   fiuzzy
+#   laclasse
 # Nardog (nardog.takoweb.com) - Japanese
 # Richard Magyar (magyar_richard@yahoo.com)- Hungarian
 # Mardi Az Pansad Dastgah Artesh - Persian
 # Lars J. Helbo - Danish
-# Angelo Contardi - Italian
-# iBlawgger - Italian
+# Italian:
+#   Angelo Contardi
+#   iBlawgger
 # Barry Haveman (webstek.info) - Dutch
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
 # Zero-8 - Russian
 # Dmitry Yerokhin (erodim@mail.ru) - Russian
-# Mohammed Al-Foulad (http://mbsee.info) - Arabic
+# Arabic:
+#   Mohammed Al-Foulad (http://mbsee.info)
+#   Boubker Talibi
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
 # Linus Persson - Swedish
 # Kristian Vrhel - Czech
-# Boubker Talibi - Arabic
 # geodimo - Greek
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
