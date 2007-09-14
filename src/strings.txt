@@ -72,7 +72,7 @@ my:&Fail
 br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
-de:&Öffnen\tCtrl-O
+de:Ö&ffnen...\tCtrl-O
 fr:&Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
@@ -131,7 +131,7 @@ my:&Tutup\tCtrl-W
 &Save as
 br:&Salvar como...
 hu:Ment&és másként
-de:&Speichern unter...
+de:Speichern &unter...
 pl:Zapisz jako
 fr:&Enregistrer sous
 tr:&Farklı kaydet
@@ -162,7 +162,7 @@ my:&Simpan sebagai
 br:&Imprimir
 hu:Nyomt&atás
 pl:Drukuj
-de:&Drucken
+de:&Drucken...
 fr:&Imprimer
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
@@ -192,7 +192,7 @@ Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
-de:Standardmäßig PDFs öffnen
+de:Standardmäßig pdf-Dateien mit SumatraPDF öffnen
 fr:Définir SumatraPDF comme lecteur PDF par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
@@ -222,7 +222,7 @@ E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
 pl:Wyjdź\tCtrl-Q
-de:E&nde\tCtrl-Q
+de:&Beenden\tCtrl-Q
 fr:Quitter\tCtrl-Q
 tr:Çı&kış\tCtrl-O
 by:Выйсце\tCtrl-Q
@@ -372,7 +372,7 @@ Continuous facing
 br:Página dupla contínua
 hu:Folyamatos oldalpár
 pl:Ciągły na przeciwko
-de:Fortlaufende Doppelseite
+de:Fortlaufende Doppelseiten
 fr:Continue - Page double
 tr:Devamlı çift sayfa
 by:Працягла дзьве старонкі
@@ -459,12 +459,14 @@ lt:Pasukti dešinėn
 my:Ubah ke kanan
 -
 Bookmarks
+de:Lesezeichen
 hu:Könyvjelzők
 lt:Žymės
 my:Penanda
 ja:ブックマーク
 -
 Fullscreen\tCtrl-L
+de:Vollbild
 hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
@@ -478,7 +480,7 @@ Show toolbar
 br:Mostrar barra de ferramentas
 hu:Eszköztár
 pl:Pokaż toolbar
-de:Werkzeugleiste zeigen
+de:Werkzeugleiste anzeigen
 fr:Afficher la barre d'outils
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
@@ -508,7 +510,7 @@ Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
 hu:MuPDF megjelenítő motor
 pl:Użyj MuPDF do renderowania
-de:MuPDF Renderingengine benutzen
+de:MuPDF-Renderingengine benutzen
 fr:Utiliser le moteur de rendu MuPDF
 tr:MuPDF görüntüleme motorunu kullan
 by:Выкарыстоўваць MuPDF-магчымасці
@@ -945,6 +947,7 @@ lt:Baltarusių
 my:Belarusian
 -
 Danish
+de:Dänisch
 hu:Dán
 br:Dinamarquês
 fr:Danois
@@ -1058,7 +1061,7 @@ pl:Węgierski
 fr:Hongrois
 fa:مجارستانی
 dk:Ungarsk
-de:Ungrarisch
+de:Ungarisch
 it:Ungherese
 nl:Hongaars
 es:Húngaro
@@ -1078,6 +1081,7 @@ lt:Vengrų
 my:Hungarian
 -
 Persian
+de:Persisch
 hu:Perzsa
 br:Persa
 fr:Perse
@@ -1159,7 +1163,7 @@ my:Turkish
 -
 Tamil
 br:Tâmil
-de:Tamilische Sprache
+de:Tamilisch (Tamil)
 fa:زبان تامیل
 fr:Tamoul
 hu:Tamil nyelv
@@ -1183,6 +1187,7 @@ lt:Tamilų
 my:Tamil
 -
 Italian
+de:Italienisch
 hu:Olasz
 br:Italiano
 pl:Włoski
@@ -1211,7 +1216,7 @@ br:Holandês
 fr:Néerlandais
 pl:Holenderski
 nl:Nederlands
-de:Höllandisch
+de:Niederländisch
 es:Holandés
 ja:オランダ語
 hr:Nizozemski
@@ -1229,6 +1234,7 @@ lt:Olandų
 my:Dutch
 -
 Spanish
+de:Spanisch
 hu:Spanyol
 br:Espanhol
 fr:Espagnol
@@ -1255,7 +1261,7 @@ hu:Horvát
 br:Croata
 fr:Croate
 pl:Chorwacki
-de:Kroatische
+de:Kroatisch
 hr:Hrvatski
 ru:Хорватский
 sv:Kroatiska
@@ -1271,6 +1277,7 @@ lt:Kroatų
 my:Crotian
 -
 Russian
+de:Russisch
 hu:Orosz
 br:Russo
 fr:Russe
@@ -1289,6 +1296,7 @@ lt:Rusų
 my:Russian
 -
 Arabic
+de:Arabisch
 hu:Arab
 br:Árabe
 fr:Arabe
@@ -1307,6 +1315,7 @@ lt:Arabų
 my:Arabic
 -
 Chinese Simplified
+de:Chinesisch (Kurzzeichen/Hans)
 hu:Egyszerűsített Kínai
 fr:Chinois simplifié
 pl:Chiński uproszczony
@@ -1324,6 +1333,7 @@ lt:Supaprastintoji kinų
 my:Chinese Simplified
 -
 Swedish
+de:Schwedisch
 hu:Svéd
 fr:Suédois
 pl:Szwecki
@@ -1338,6 +1348,7 @@ lt:Švedų
 my:Swedish
 -
 Czech
+de:Tschechisch
 hu:Cseh
 fr:Tchèque
 pl:Czechosłowacki
@@ -1350,6 +1361,7 @@ lt:Čekų
 my:Czech
 -
 Greek
+de:Griechisch
 hu:Görög
 gr:Ελληνικά
 fr:Grec
@@ -1361,6 +1373,7 @@ lt:Graikų
 my:Greek
 -
 Thai
+de:Thailändisch
 hu:Thai
 th:ไทย
 ja:タイ語
@@ -1370,6 +1383,7 @@ vn:Thái Lan
 my:Thai
 -
 Portuguese (Portugal)
+de:Portugiesisch
 hu:Portugál
 pt:Português
 fr:Portuguais
@@ -1381,6 +1395,7 @@ lt:Portugalų
 my:Portuguese (Portugal)
 -
 Brazillian
+de:Portugiesisch (Brasilien)
 hu:Brazil
 pl:Brazylijski
 ja:ブラジル語
@@ -1391,6 +1406,7 @@ lt:Brazilų
 my:Brazillian
 -
 Norwegian
+de:Norwegisch
 hu:Norvég
 no:Norsk
 pl:Norweski
@@ -1401,6 +1417,7 @@ my:Norwegian
 ja:ノルウェー語
 -
 Slovak
+de:Slowakisch
 hu:Szlovák
 pl:Słowacki
 vn:Slovakia
@@ -1409,6 +1426,7 @@ my:Slovak
 ja:スロバキア語
 -
 Vietnamese
+de:Vietnamesisch
 hu:Vietnámi
 pl:Vietnamski
 vn:Tiếng Việt
@@ -1416,12 +1434,14 @@ my:Vietnamese
 ja:ベトナム語
 -
 Lithuanian
+de:Litauisch
 hu:Litván
 lt:Lietuvių
 my:Lithuanian
 ja:リトアニア語
 -
 Malaysian
+de:Malaiisch/Indonesisch
 my:Bahasa Melayu
 ja:マレーシア語
 -
@@ -1459,7 +1479,7 @@ my:&Bantuan
 br:Visitar o &Website
 hu:&Weboldal
 pl:Strona www
-de:&Website
+de:&SumatraPDF im Internet besuchen
 fr:Visiter le site web
 tr:&Web sayfası
 by:Наведаць сайт
@@ -1489,7 +1509,7 @@ my:&Lawat lamanweb
 br:S&obre
 hu:Név&jegy
 pl:O programie
-de:&Über
+de:&Über SumatraPDF
 fr:A propos
 tr:&Hakkında
 by:Аб праграме
@@ -1516,27 +1536,31 @@ lt:Apie
 my:&Mengenai
 -
 Find:
+de:Suchen:
 hu:Keresés:
 pl:Szukaj:
 ja:検索:
 sk:Hľadať:
-vn:Tìm kiếm
-lt:Ieškoti
-my:Cari
+vn:Tìm kiếm:
+lt:Ieškoti:
+my:Cari:
 -
 Find Previous
+de:Rückwärts suchen
 hu:Előző Keresése
 lt:Rasti kitą
 my:Cari sebelum
 ja:前を検索
 -
 Find Next
+de:Weitersuchen
 hu:Következő Keresése
 lt:Rasti ankstesnį
 my:Cari selepas
 ja:次を検索
 -
 Match case
+de:Groß-/Kleinschreibung beachten
 hu:Kis- és nagybetű megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字に一致する
@@ -1545,7 +1569,7 @@ Open
 br:Abrir
 hu:Megny&itás
 pl:Otwórz
-de:&Öffnen
+de:Ö&ffnen...
 fr:Ouvrir
 tr:&Aç
 by:Адчыніць
@@ -1693,7 +1717,7 @@ my:SumatraPDF adalah pembaca utama fail PDF sekarang
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
-de:Fehler beim Speichern der Datei.
+de:Fehler beim Speichern der Datei!
 hu:Nem lehet menteni a fájlt.
 pl:Problem przy zapisywaniu pliku.
 fr:Echec d'enregistrement du fichier
@@ -1723,7 +1747,7 @@ my:Gagal menyimpan fail
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
-de:Fehler beim Laden der Datei
+de:Fehler beim Öffnen der Datei!
 hu:Hiba a PDF betöltése közben.
 pl:Problem przy otwarzaniu pliku.
 fr:Erreur à l'ouverture du fichier PDF.
