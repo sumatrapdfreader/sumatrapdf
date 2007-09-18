@@ -5,12 +5,10 @@ Short term todo (before next 0.8 release):
  - on startup check for crash dumps and tries to submit them. Delete crash file
    (even if submission failed)
 * check for new version on-line
+* remember and restore size and position of the window
 * finish TOC:
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
-  * when TOC is shown, keyboard navigation shortcuts don't work. We need to
-    be smarter about focus handling
-  * remember toc state for a given document in prefs
 * preserve fullScreen info per document and respect it when opening a PDF
 * the new icon is kinda big (286 kB) caused mostly by new high-res Vista
   icon saved uncompressed (I think). Need to figure out if that's really
@@ -22,7 +20,10 @@ Short term todo (before next 0.8 release):
   working on NT. On the other hand: is NT worth supporting?
 * useFitz should also be remembered per file and when switching rendering
   engine, we should only re-load current file.
-
+* bug: switching rendering engines causes draw corruption and moves a window
+* intelligent resizing so that the window takes as much space as possible on the
+  screen (kind of like maximize, but doesn't actually maximizes the window but
+  takes max dx or dy space available and proportional amount of the other axis)
 
 Long term todo:
 * handle links
@@ -42,6 +43,8 @@ Long term todo:
   changes for fitz code might be challenging - I'm not sure if google import
   will handle 2 branches. In the worst case I can write a script to reply
   checkins.
+* when resizing, when we already have a bitmap rendered at a different size, we
+  can use that bitmap stretched, instead of displaying "rendering" text
 
 Maybe:
 * use MultiByteToWideChar() 
