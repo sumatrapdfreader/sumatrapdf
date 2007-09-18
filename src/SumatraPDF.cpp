@@ -3762,7 +3762,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
     
-    if (win->tocLoaded && win->dm->_showToc)
+    if (win->_tocLoaded && win->dm->_showToc)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
@@ -3831,7 +3831,7 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     ReloadPdfDocument(win);
     win = gWindowList;
     while (win) {
-        if (win->tocLoaded) {
+        if (win->_tocLoaded) {
             win->ClearTocBox();
             if (win->dm->_showToc)
                 win->LoadTocTree();
@@ -3971,7 +3971,7 @@ void WindowInfo::EnterFullscreen()
     ShowWindow(hwndReBar, SW_HIDE);
     SetWindowLong(hwndFrame, GWL_STYLE, ws);
     SetWindowPos(hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    if (tocLoaded && dm->_showToc)
+    if (_tocLoaded && dm->_showToc)
         ShowTocBox();
     else
         SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
@@ -4779,26 +4779,26 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     return TreeView_InsertItemW(hwnd, &tvinsert);
 }
 
-static void CreateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
+static void PopluateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
 {
     while (entry) {
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent);
-        CreateTocTreeView(hwnd, entry->child, node);
+        PopluateTocTreeView(hwnd, entry->child, node);
         entry = entry->next;
     }
 }
 
 void WindowInfo::LoadTocTree()
 {
-    if (tocLoaded)
+    if (_tocLoaded)
         return;
 
     PdfTocItem *toc = dm->getTocTree();
     if (toc) {
-        CreateTocTreeView(hwndTocBox, toc);
+        PopluateTocTreeView(hwndTocBox, toc);
         delete toc;
     }
-    tocLoaded = true;
+    _tocLoaded = true;
 }
 
 void WindowInfo::ToggleTocBox()
@@ -4861,9 +4861,9 @@ void WindowInfo::HideTocBox()
 
 void WindowInfo::ClearTocBox()
 {
-    if (!tocLoaded) return;
+    if (!_tocLoaded) return;
     TreeView_DeleteAllItems(hwndTocBox);
-    tocLoaded = false;
+    _tocLoaded = false;
 }
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

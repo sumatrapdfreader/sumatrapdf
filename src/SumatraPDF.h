@@ -87,7 +87,7 @@ public:
         linkOnLastButtonDown = NULL;
         url = NULL;
         selectionOnPage = NULL;
-        tocLoaded = false;
+        _tocLoaded = false;
         hwndFrame = NULL;
         hwndCanvas = NULL;
         hwndToolbar = NULL;
@@ -168,7 +168,7 @@ public:
      * to user coordinates for each page which has not empty intersection with it */
     SelectionOnPage *selectionOnPage;
 
-    bool tocLoaded;
+    bool _tocLoaded;
 
     void ShowTocBox();
     void HideTocBox();
