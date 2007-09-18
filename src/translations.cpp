@@ -71,11 +71,12 @@ const char* Translations_GetTranslationAndIndexA(const char* txt, int& idx)
                 return txt;
             return tmp;
         } else if (cmp_res < 0) {
-            assert(0);  // bad - didn't find a translation
-            return txt;
+            // bad - didn't find a translation
+            break;
         }
     }
-    assert(0); // bad - didn't find a translation
+    // bad - didn't find a translation
+    assert(0);
     idx = -1;
     return txt;
 }

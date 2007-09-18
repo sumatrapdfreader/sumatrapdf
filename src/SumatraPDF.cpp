@@ -8,6 +8,7 @@
 #include "str_util.h"
 #include "strlist_util.h"
 #include "translations.h"
+#include "utf_util.h"
 #include "win_util.h"
 
 #include "SumatraDialogs.h"
@@ -693,9 +694,20 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
         if (str_eq(title, SEP_ITEM))
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
         else {
-            const WCHAR* wtitle = Translations_GetTranslationW(title);
-            if (wtitle)
+            const WCHAR *wtitle = NULL;
+            bool freeWtitle = false;
+            if (menuDefs == menuDefLang) {
+                // special case: languages are not translated
+                wtitle = utf8_to_utf16(title);
+                freeWtitle = true;
+            } else {
+                wtitle = Translations_GetTranslationW(title);
+            }
+            if (wtitle) {
                 AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
+                if (freeWtitle)
+                    free((void*)wtitle);
+            }
         }
     }
     return m;
