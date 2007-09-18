@@ -184,7 +184,6 @@ public:
     void EnterFullscreen();
     void ExitFullscreen();
 private:
-    BOOL m_wasToolbarVisible;
     long m_stylePrev;
     HMENU m_menuPrev;
     RECT m_frameRc;

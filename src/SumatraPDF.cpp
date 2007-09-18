@@ -3964,7 +3964,6 @@ void WindowInfo::EnterFullscreen()
     ws |= WS_MAXIMIZE;
 
     m_menuPrev = GetMenu(hwndFrame);
-    m_wasToolbarVisible = IsWindowVisible(hwndToolbar);
     GetWindowRect(hwndFrame, &m_frameRc);
 
     SetMenu(hwndFrame, NULL);
@@ -3982,7 +3981,7 @@ void WindowInfo::ExitFullscreen()
     if (!IsFullScreen()) return;
     dm->_fullScreen = false;
 
-    if (m_wasToolbarVisible)
+    if (gGlobalPrefs.m_showToolbar)
         ShowWindow(hwndReBar, SW_SHOW);
     SetMenu(hwndFrame, m_menuPrev);
     SetWindowLong(hwndFrame, GWL_STYLE, m_stylePrev);
