@@ -81,7 +81,6 @@ class WindowInfo : public PdfSearchTracker
 {
 public:
     WindowInfo() {
-        //memzero(this, sizeof(*this)); // Don't use this way, it'll clear the virtual table
         dm = NULL;
         dibInfo = NULL;
         next = NULL;

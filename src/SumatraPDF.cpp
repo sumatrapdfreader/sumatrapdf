@@ -126,10 +126,10 @@ static BOOL             gDebugShowLinks = FALSE;
 #define BG_COLOR_TXT              "-bgcolor"
 
 /* Default size for the window, happens to be american A4 size (I think) */
-#define DEF_WIN_DX 612
-#define DEF_WIN_DY 792
+#define DEF_PAGE_DX 612
+#define DEF_PAGE_DY 792
 
-#define DEF_SPLITER_DX  5
+#define SPLITTER_DX  5
 
 #define REPAINT_TIMER_ID    1
 #define REPAINT_DELAY_IN_MS 400
@@ -1651,17 +1651,17 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         return NULL;
 
     win = WindowInfo_New(hwndFrame);
-    int winDx = DEF_WIN_DX;
+    int winDx = DEF_PAGE_DX;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDx) {
         winDx = gGlobalPrefs.m_windowDx;
         if (winDx < MIN_WIN_DX || winDx > MAX_WIN_DX)
-            winDx = DEF_WIN_DX;
+            winDx = DEF_PAGE_DX;
     }
-    int winDy = DEF_WIN_DY;
+    int winDy = DEF_PAGE_DY;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDy) {
         winDy = gGlobalPrefs.m_windowDy;
         if (winDy < MIN_WIN_DY || winDy > MAX_WIN_DY)
-            winDy = DEF_WIN_DY;
+            winDy = DEF_PAGE_DY;
     }
 
     hwndCanvas = CreateWindowEx(
@@ -4622,10 +4622,10 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 RECT r;
                 GetWindowRect(win->hwndTocBox, &r);
                 tw = rect_dx(&r) + dx;
-                if (tw <= DEF_WIN_DX / 4) break;
+                if (tw <= DEF_PAGE_DX / 4) break;
 
                 GetClientRect(win->hwndFrame, &r);
-                int width = rect_dx(&r) - tw - DEF_SPLITER_DX;
+                int width = rect_dx(&r) - tw - SPLITTER_DX;
                 int height = rect_dy(&r);
 
                 if (gGlobalPrefs.m_showToolbar && !win->IsFullscreen()) {
@@ -4634,8 +4634,8 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 }
 
                 MoveWindow(win->hwndTocBox, 0, ty, tw, height, true);
-                MoveWindow(win->hwndCanvas, tw + DEF_SPLITER_DX, ty, width, height, true);
-                MoveWindow(hwnd, tw, ty, DEF_SPLITER_DX, height, true);
+                MoveWindow(win->hwndCanvas, tw + SPLITTER_DX, ty, width, height, true);
+                MoveWindow(hwnd, tw, ty, SPLITTER_DX, height, true);
                 return 0;
             }
             break;
@@ -4832,11 +4832,11 @@ void WindowInfo::ShowTocBox()
     cx = rect_dx(&rtoc);
     if (cx == 0) // first time
         cx = rect_dx(&rframe) / 4;
-    cw = rect_dx(&rframe) - cx - DEF_SPLITER_DX;
+    cw = rect_dx(&rframe) - cx - SPLITTER_DX;
 
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(hwndSpliter, NULL, cx, cy, DEF_SPLITER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-    SetWindowPos(hwndCanvas, NULL, cx + DEF_SPLITER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndSpliter, NULL, cx, cy, SPLITTER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
+    SetWindowPos(hwndCanvas, NULL, cx + SPLITTER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
 Exit:
     dm->_showToc = TRUE;
 }
@@ -5962,7 +5962,7 @@ static WindowInfo* CreateEmpty(HWND parentHandle) {
         CANVAS_CLASS_NAME, NULL,
         WS_CHILD | WS_HSCROLL | WS_VSCROLL,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        DEF_WIN_DX, DEF_WIN_DY,
+        DEF_PAGE_DX, DEF_PAGE_DY,
         parentHandle, NULL,
         ghinst, NULL);
     if (hwndCanvas)
