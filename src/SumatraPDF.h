@@ -180,10 +180,7 @@ public:
     void FindStart();
     virtual void FindUpdateStatus(int count, int total);
 
-    void CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent=NULL);
-    HTREEITEM AddTocItemToView(PdfTocItem *entry, HTREEITEM parent);
-
-    bool IsFullScreen() { return dm->_fullScreen; }
+    BOOL IsFullScreen() { return dm->_fullScreen; }
     void EnterFullscreen();
     void ExitFullscreen();
 private:

@@ -4760,7 +4760,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 #define TreeView_InsertItemW(w,i)   (HTREEITEM)SendMessageW((w),TVM_INSERTITEMW,0,(LPARAM)(i))
 #define TreeView_GetItemW(w,i)      (BOOL)SendMessageW((w),TVM_GETITEMW,0,(LPARAM)(i))
 
-HTREEITEM WindowInfo::AddTocItemToView(PdfTocItem *entry, HTREEITEM parent)
+static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent)
 {
     TV_INSERTSTRUCTW tvinsert;
     tvinsert.hParent = (HTREEITEM)parent;
@@ -4776,14 +4776,14 @@ HTREEITEM WindowInfo::AddTocItemToView(PdfTocItem *entry, HTREEITEM parent)
     tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
     tvinsert.itemex.lParam = (LPARAM)entry->link;
     tvinsert.itemex.pszText = entry->title;
-    return TreeView_InsertItemW(hwndTocBox, &tvinsert);
+    return TreeView_InsertItemW(hwnd, &tvinsert);
 }
 
-void WindowInfo::CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent)
+static void CreateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
 {
     while (entry) {
-        HTREEITEM node = AddTocItemToView(entry, parent);
-        CreateTocTreeView(entry->child, node);
+        HTREEITEM node = AddTocItemToView(hwnd, entry, parent);
+        CreateTocTreeView(hwnd, entry->child, node);
         entry = entry->next;
     }
 }
@@ -4795,7 +4795,7 @@ void WindowInfo::LoadTocTree()
 
     PdfTocItem *toc = dm->getTocTree();
     if (toc) {
-        CreateTocTreeView(toc);
+        CreateTocTreeView(hwndTocBox, toc);
         delete toc;
     }
     tocLoaded = true;
