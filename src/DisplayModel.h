@@ -176,9 +176,6 @@ public:
     void changeDisplayMode(DisplayMode displayMode);
     const char *fileName(void) const { return _pdfEngine->fileName(); }
 
-    bool fullScreen(void) const { return _fullScreen; }
-    void setFullScreen(bool fullScreen) { _fullScreen = fullScreen; }
-
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE
        or ZOOM_FIT_WIDTH, whose real value depends on draw area size */
@@ -280,6 +277,7 @@ public:
     BOOL            bFoundText;
 
     BOOL            _showToc;
+    BOOL            _fullScreen;
 
 protected:
     virtual void    MapResultRectToScreen(PdfSearchResult *rect) = 0;
@@ -308,7 +306,6 @@ protected:
     PdfEngine *     _pdfEngine;
     PdfSearchEngine *_pdfSearchEngine;
     DisplayMode     _displayMode; /* TODO: not used yet */
-    bool            _fullScreen;
     /* In non-continuous mode is the first page from a PDF file that we're
        displaying.
        No meaning in continous mode. */

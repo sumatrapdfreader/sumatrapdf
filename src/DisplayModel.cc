@@ -140,7 +140,7 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     if (!ds->filePath)
         return FALSE;
     ds->displayMode = dm->displayMode();
-    ds->fullScreen = dm->fullScreen();
+    ds->fullScreen = dm->_fullScreen;
     ds->pageNo = dm->currentPageNo();
     ds->rotation = dm->rotation();
     ds->zoomVirtual = dm->zoomVirtual();
@@ -183,7 +183,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _displayMode = displayMode;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
-    _fullScreen = false;
+    _fullScreen = FALSE;
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;

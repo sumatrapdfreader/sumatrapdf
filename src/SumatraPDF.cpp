@@ -2047,7 +2047,7 @@ void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo)
     int displayDy = GetDeviceCaps(hdc, VERTRES);
 
     int  dx, dy;
-    if (win->IsFullscreen()) {
+    if (win->IsFullScreen()) {
         /* TODO: fullscreen not yet supported */
         assert(0);
         dx = displayDx;
@@ -3941,8 +3941,8 @@ static void OnMenuViewRotateRight(WindowInfo *win)
 
 void WindowInfo::EnterFullscreen()
 {
-    if (m_fullscreen || !IsWindowVisible(hwndFrame)) return;
-    m_fullscreen = true;
+    if (IsFullScreen() || !IsWindowVisible(hwndFrame)) return;
+    dm->_fullScreen = TRUE;
 
     int x, y, w, h;
     MONITORINFOEX mi;
@@ -3979,8 +3979,8 @@ void WindowInfo::EnterFullscreen()
 
 void WindowInfo::ExitFullscreen()
 {
-    if (!m_fullscreen) return;
-    m_fullscreen = false;
+    if (!IsFullScreen()) return;
+    dm->_fullScreen = false;
 
     if (m_wasToolbarVisible)
         ShowWindow(hwndReBar, SW_SHOW);
@@ -3997,7 +3997,7 @@ static void OnMenuViewFullscreen(WindowInfo *current)
     assert(current);
     if (!current)
         return;
-    if (current->IsFullscreen())
+    if (current->IsFullScreen())
         current->ExitFullscreen();
     else
         current->EnterFullscreen();
@@ -4196,7 +4196,7 @@ static void OnChar(WindowInfo *win, int key)
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
     if (VK_ESCAPE == key) {
-        if (win->dm && !win->documentBlocked && win->IsFullscreen())
+        if (win->dm && !win->documentBlocked && win->IsFullScreen())
             OnMenuViewFullscreen(win);
         else if (gGlobalPrefs.m_escToExit)
             DestroyWindow(win->hwndFrame);
@@ -4628,7 +4628,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 int width = rect_dx(&r) - tw - SPLITTER_DX;
                 int height = rect_dy(&r);
 
-                if (gGlobalPrefs.m_showToolbar && !win->IsFullscreen()) {
+                if (gGlobalPrefs.m_showToolbar && !win->IsFullScreen()) {
                     ty = gReBarDy + gReBarDyFrame;
                     height -= ty;
                 }
@@ -4823,7 +4823,7 @@ void WindowInfo::ShowTocBox()
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
-    if (gGlobalPrefs.m_showToolbar && !m_fullscreen)
+    if (gGlobalPrefs.m_showToolbar && !IsFullScreen())
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
@@ -4849,7 +4849,7 @@ void WindowInfo::HideTocBox()
     int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
-    if (gGlobalPrefs.m_showToolbar && !m_fullscreen)
+    if (gGlobalPrefs.m_showToolbar && !IsFullScreen())
         cy = gReBarDy + gReBarDyFrame;
 
     SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);

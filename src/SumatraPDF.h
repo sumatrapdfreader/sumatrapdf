@@ -103,7 +103,6 @@ public:
         bFindStatusVisible = false;
         documentBlocked = false;
         showSelection = false;
-        m_fullscreen = false;
         mouseAction = MA_IDLE;
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
@@ -184,8 +183,7 @@ public:
     void CreateTocTreeView(PdfTocItem *entry, HTREEITEM parent=NULL);
     HTREEITEM AddTocItemToView(PdfTocItem *entry, HTREEITEM parent);
 
-    bool m_fullscreen;
-    bool IsFullscreen() { return m_fullscreen; }
+    bool IsFullScreen() { return dm->_fullScreen; }
     void EnterFullscreen();
     void ExitFullscreen();
 private:
