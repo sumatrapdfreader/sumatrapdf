@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 30;
+int g_transLangsCount = 31;
 
 const char *g_transLangs[] = {
-  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt"
+  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt"
 };
 
 int g_transTranslationsCount = 59;
@@ -689,6 +689,67 @@ const char *g_transTranslations[] = {
   "K\303\244yt\303\244 MuPDF render\303\266intimoottoria",
   "Kohdenna l\303\244hemm\303\244ksi",
   "Loitonna kauemmaksi",
+
+  /* Translations for language ca */
+  "&Quant a...",
+  "&Tanca\tCtrl-W",
+  "&Fitxer",
+  "&V\303\251s a",
+  "&Ajuda",
+  "&Llengua",
+  "&Obre\tCtrl-O",
+  "&Imprimeix...\tCtrl-P",
+  "Anomena i de&sa...",
+  "&Visualitza",
+  "Visiteu el lloc &web",
+  "&Escalat",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "Quant al SumatraPDF",
+  "Mida &real\tCtrl-1",
+  "Punts d'inter\303\251s",
+  "Cont\303\255nua",
+  "P\303\240gina doble cont\303\255nua",
+  "Contribu\303\257u en la traducci\303\263",
+  "No s'ha pogut accedir a la impressora.",
+  "S&urt\tCtrl-Q",
+  "S'ha produ\303\257t un error en carregar el fitxer.",
+  "P\303\240gina doble",
+  "S'ha produ\303\257t un error en desar el fitxer.",
+  "Cerca seg\303\274ent",
+  "Cerca anterior",
+  "Cerca:",
+  "Primera p\303\240gina\tInici",
+  "Ajusta a la p\303\240gina\tCtrl-0",
+  "Ajusta a l'am&plada\tCtrl-2",
+  "Pantalla completa\tCtrl-L",
+  "\303\232ltima p\303\240gina\tFinal",
+  "Fes el SumatraPDF el lector de PDF predeterminat",
+  "Distigeix la caixa",
+  "P\303\240gina seg\303\274ent",
+  "Obre",
+  "P\303\240gina...\tCtrl-G",
+  "P\303\240gina anterior",
+  "S'ha produ\303\257t un problema en la impressi\303\263.",
+  "Gira a l'esquerra",
+  "Gira a la dreta",
+  "Mostra la barra d'eines",
+  "Una \303\272nica p\303\240gina",
+  "Ara el SumatraPDF \303\251s el visor de PDF predeterminat.",
+  "Usa el motor de renderitzaci\303\263 MuPDF",
+  "Apropa't",
+  "Allunya't",
 
   /* Translations for language br */
   "S&obre",
