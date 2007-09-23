@@ -213,6 +213,7 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	int t;
 	int i;
 	int c;
+    int pos;
 
 	pdf_logxref("load old xref format\n");
 
@@ -249,12 +250,22 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 				return fz_ioerror(xref->file);
 			if (n != 20)
 				return fz_throw("syntaxerror: truncated xref table");
-			if (!xref->table[ofs + i].type)
+            pos = ofs + i;
+            if (pos >= xref->len)
+            {
+                /* TODO: should I error out? resize xref->table?
+                   It crashes with http://code.google.com/p/sumatrapdf/issues/detail?id=123
+                   where table is allocated with size 8 but we get here with len 9,
+                   overwriting table memory */
+                fz_warn("readoldxref(): pos (%d) out of range (should be 0-%d", pos, xref->len - 1);
+                break;
+            }
+			if (!xref->table[pos].type)
 			{
 				s = buf;
-				xref->table[ofs + i].ofs = atoi(s);
-				xref->table[ofs + i].gen = atoi(s + 11);
-				xref->table[ofs + i].type = s[17];
+				xref->table[pos].ofs = atoi(s);
+				xref->table[pos].gen = atoi(s + 11);
+				xref->table[pos].type = s[17];
 			}
 		}
 	}
