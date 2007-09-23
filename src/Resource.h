@@ -92,7 +92,8 @@
 #define IDM_LANG_LT                     488
 #define IDM_LANG_MY                     489
 #define IDM_LANG_FI                     490
-#define IDM_LAGN_CA                     491
+#define IDM_LANG_CA                     491
+#define IDM_LANG_SI                     492
 
 #define IDM_VISIT_WEBSITE               500
 #define IDM_ABOUT                       501

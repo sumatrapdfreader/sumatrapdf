@@ -43,7 +43,8 @@
 # Masley b. Mastil - Bahasa Melayu (Malaysian)
 # Pekka Halmela - Finnish
 # Joan Montané - Catalan
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca
+# Janez Vehovec - Slovensko (Slovenian)
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si
 -
 &File
 br:&Arquivo
@@ -76,6 +77,7 @@ lt:&Failas
 my:&Fail 
 fi:&Tiedosto
 ca:&Fitxer
+si:&Datoteka
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -108,6 +110,7 @@ lt:&Atverti\tCtrl-O
 my:&Buka\tCtrl-O
 fi:&Avaa\tCtrl-O
 ca:&Obre\tCtrl-O
+si:&Odpri\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -140,6 +143,7 @@ lt:&Užverti\tCtrl-W
 my:&Tutup\tCtrl-W
 fi:&Sulje\tCtrl-W
 ca:&Tanca\tCtrl-W
+si:&Zapri\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -172,6 +176,7 @@ lt:&Įrašyti kaip...
 my:&Simpan sebagai
 fi:&Tallenna nimellä
 ca:Anomena i de&sa...
+si:&Shrani kot
 -
 &Print
 br:&Imprimir
@@ -204,6 +209,7 @@ lt:&Spausdinti\tCtrl-P
 my:&Cetak\tCtrl-P
 fi:&Tulosta\tCtrl-P
 ca:&Imprimeix...\tCtrl-P
+si:&Natisni\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -236,6 +242,7 @@ lt:Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
 my:Jadikan SumatraPDF pembaca utama PDF
 fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 ca:Fes el SumatraPDF el lector de PDF predeterminat
+si:Nastavi SumatraPDF kot privzeti PDF pregledovalnik
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -268,6 +275,7 @@ lt:Baigti darbą\tCtrl-Q
 my:&Keluar\tCtrl-Q
 fi:&Poistu\tCtrl-Q
 ca:S&urt\tCtrl-Q
+si:&Izhod\tCtrl-Q
 -
 &View
 br:&Ver
@@ -300,6 +308,7 @@ lt:Peržiūra
 my:&Lihat
 fi:&Näytä
 ca:&Visualitza
+si:&Pogled
 -
 Single page
 br:Página única
@@ -332,6 +341,7 @@ lt:Vienas puslapis
 my:Satu Mukasurat
 fi:Yksittäinen sivu
 ca:Una única pàgina
+si:Enostransko
 -
 Facing
 br:Página dupla
@@ -364,6 +374,7 @@ lt:Puslapiavimas
 my:Dua belah mukasurat
 fi:Rinnakkain
 ca:Pàgina doble
+si:Dvostransko
 -
 Continuous
 br:Contínuo
@@ -396,6 +407,7 @@ lt:Besitęsiantis
 my:Bersambung
 fi:Peräkkäin
 ca:Contínua
+si:Nepretrgano
 -
 Continuous facing
 br:Página dupla contínua
@@ -428,6 +440,7 @@ lt:Besitęsiantis puslapiavimas
 my:Dua belah mukasurat bersambung
 fi:Peräkkäin ja rinnakkain
 ca:Pàgina doble contínua
+si:Nepretrgano dvostransko
 -
 Rotate left
 br:Girar à esquerda
@@ -460,6 +473,7 @@ lt:Pasukti kairėn
 my:Ubah ke kiri
 fi:Pyöritä vasempaan
 ca:Gira a l'esquerra
+si:Obrni v levo
 -
 Rotate right
 br:Girar à direita
@@ -492,6 +506,7 @@ lt:Pasukti dešinėn
 my:Ubah ke kanan
 fi:Pyöritä oikeaan
 ca:Gira a la dreta
+si:Obrni v desno
 -
 Bookmarks
 de:Lesezeichen
@@ -501,6 +516,7 @@ my:Penanda
 ja:ブックマーク
 fi:Kirjainmerkit
 ca:Punts d'interés
+si:Zaznamki
 -
 Fullscreen\tCtrl-L
 de:Vollbild
@@ -514,6 +530,7 @@ lt:Visame ekrane\tCtrl-L
 my:Mukasurat Penuh\tCtrl-L
 fi:Koko näyttö\tCtrl-L
 ca:Pantalla completa\tCtrl-L
+si:Celozaslonsko\tCtrl-L
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -546,6 +563,7 @@ lt:Rodyti įrankinę
 my:Tunjukkan Bar Alat
 fi:Näytä työkalupalkki
 ca:Mostra la barra d'eines
+si:Prikaži orodno vrstico
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -578,6 +596,7 @@ lt:Atvaizduoti naudojant MuPDF
 my:Guna MuPDF enjin
 fi:Käytä MuPDF renderöintimoottoria
 ca:Usa el motor de renderització MuPDF
+si:Uporabi MuPDF za prikaz PDF datotek
 -
 &Go To
 br:Ir &para
@@ -610,6 +629,7 @@ lt:&Eiti
 my:&Pergi Ke
 fi:&Siirry
 ca:&Vés a
+si:Po&jdi na
 -
 Next Page
 br:Página seguinte
@@ -642,6 +662,7 @@ lt:Kitas puslapis
 my:Mukasurat seterusnya
 fi:Seuraava sivu
 ca:Pàgina següent
+si:Naslednja stran
 -
 Previous Page
 br:Página anterior
@@ -674,6 +695,7 @@ lt:Ankstesnis puslapis
 my:Mukasurat sebelumnya
 fi:Edellinen sivu
 ca:Pàgina anterior
+si:Predhodna stran
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -706,6 +728,7 @@ lt:Pirmas puslapis\tHome
 my:Mukasurat pertama\tHome
 fi:Ensimmäinen sivu\tHome
 ca:Primera pàgina\tInici
+si:Prva stran\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -738,6 +761,7 @@ lt:Paskutinis puslapis\tEnd
 my:Mukasurat terakhir
 fi:Viimeinen sivu\tEnd
 ca:Última pàgina\tFinal
+si:Zadnja stran\tEnd
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -770,6 +794,7 @@ lt:Puslapis...\tCtrl-G
 my:Mukasurat...\tCtrl-G
 fi:Sivulle...\tCtrl-G
 ca:Pàgina...\tCtrl-G
+si:Stran...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -802,6 +827,7 @@ lt:Artinimas
 my:&Fokus
 fi:&Kohdista
 ca:&Escalat
+si:Po&večava
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -834,6 +860,7 @@ lt:Pritaikyti lange\tCtrl-0
 my:&Muatkan mukasurat\tCtrl-0
 fi:Sovita sivu pystysuunnassa\tCtrl-0
 ca:Ajusta a la pàgina\tCtrl-0
+si:&Prilagodi strani\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -866,6 +893,7 @@ lt:Tikrasis dydis\tCtrl-1
 my:&Saiz sebenar\tCtrl-1
 fi:&Todellinen koko\tCtrl-1
 ca:Mida &real\tCtrl-1
+si:&Dejanska velikost\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -898,6 +926,7 @@ lt:Pritaikyti plotį\tCtrl-2
 my:&Muatkan lebar\tCtrl-2
 fi:&Sovita sivu vaakasuunnassa\tCtrl-2
 ca:Ajusta a l'am&plada\tCtrl-2
+si:P&rilagodi po širini\tCtrl-2
 -
 6400%
 -
@@ -956,6 +985,7 @@ lt:Kalba
 my:&Bahasa
 fi:Kieli
 ca:&Llengua
+si:&Jezik
 -
 &Help
 br:A&juda
@@ -988,6 +1018,7 @@ lt:&Pagalba
 my:&Bantuan
 fi:&Ohje
 ca:&Ajuda
+si:P&omoč
 -
 &Visit website
 br:Visitar o &Website
@@ -1020,6 +1051,7 @@ lt:Aplankyti svetainę
 my:&Lawat lamanweb
 fi:Vieraile ohjelman kotisivuilla
 ca:Visiteu el lloc &web
+si:Ob&išči domačo stran
 -
 &About
 br:S&obre
@@ -1052,6 +1084,7 @@ lt:Apie
 my:&Mengenai
 fi:&Tietoja
 ca:&Quant a...
+si:O Progr&amu
 -
 Find:
 de:Suchen:
@@ -1064,6 +1097,7 @@ lt:Ieškoti:
 my:Cari:
 fi:Etsi:
 ca:Cerca:
+si:Najdi:
 -
 Find Previous
 de:Rückwärts suchen
@@ -1073,6 +1107,7 @@ my:Cari sebelum
 ja:前を検索
 fi:Etsi edellinen
 ca:Cerca anterior
+si:Najdi predhodno
 -
 Find Next
 de:Weitersuchen
@@ -1082,6 +1117,7 @@ my:Cari selepas
 ja:次を検索
 fi:Etsi seuraava
 ca:Cerca següent
+si:Najdi naslednje
 -
 Match case
 de:Groß-/Kleinschreibung beachten
@@ -1090,6 +1126,7 @@ my:Hampir sama
 ja:大文字と小文字に一致する
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
+si:Velikost pisave
 -
 Open
 br:Abrir
@@ -1122,6 +1159,7 @@ lt:Atverti
 my:Buka
 fi:Avaa
 ca:Obre
+si:Odpri
 -
 Zoom In
 br:Zoom In
@@ -1154,6 +1192,7 @@ lt:Priartinti
 my:Fokus ke dalam
 fi:Kohdenna lähemmäksi
 ca:Apropa't
+si:Povečaj
 -
 Zoom Out
 br:Zoom Out
@@ -1186,6 +1225,7 @@ lt:Sumažinti
 my:Fokus ke luar
 fi:Loitonna kauemmaksi
 ca:Allunya't
+si:Zmanjšaj
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1218,6 +1258,7 @@ lt:Apie SumatraPDF
 my:Mengenai SumatraPDF
 fi:Tietoja SumatraPDF:stä
 ca:Quant al SumatraPDF
+si:O SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1250,6 +1291,7 @@ lt:SumatraPDF nėra numatytasis PDF dokumentų skaitytuvas
 my:SumatraPDF adalah pembaca utama fail PDF sekarang
 fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
 ca:Ara el SumatraPDF és el visor de PDF predeterminat.
+si:SumatraPFD je privzeti pregledovalnik PDF datotek.
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1282,6 +1324,7 @@ lt:Nepavyko išsaugoti failo
 my:Gagal menyimpan fail
 fi:Tiedoston tallennus epäonnistui
 ca:S'ha produït un error en desar el fitxer.
+si:Snemanje datoteke je neuspešno.
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1314,6 +1357,7 @@ lt:Klaida įkeliant PDF dokumentą
 my:Masalah memuatkan fail PDF
 fi:Tiedoston avaus epäonnistui
 ca:S'ha produït un error en carregar el fitxer.
+si:Napaka pri branju PDF datoteke.
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1346,6 +1390,7 @@ lt:Nepavyko atverti spausdintuvo
 my:Pencetak tidak dapat dibuka
 fi:Tulostinta ei löydy
 ca:No s'ha pogut accedir a la impressora.
+si:Ne morem najti tiskalnika.
 -
 Printing problem.
 br:Problema de impressão.
@@ -1378,6 +1423,7 @@ lt:Spausdinimo klaida
 my:Masalah mencetak
 fi:Tulostusongelma
 ca:S'ha produït un problema en la impressió.
+si:Napaka pri tiskanju.
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1401,3 +1447,4 @@ vn:Đóng góp dịch
 lt:Pasiklydę vertime
 my:Menyumbangkan alihbahasa
 ca:Contribuïu en la traducció
+si:Prispevaj prevod

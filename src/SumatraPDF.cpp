@@ -246,7 +246,7 @@ MenuDef menuDefLang[] = {
     { "English",     IDM_LANG_EN },
     { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
     { "Belarusian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)",  IDM_LANG_BY },
-    { "Catalan (Catala)", IDM_LAGN_CA }, // TODO: it's Català - need to convert to utf8
+    { "Catalan (Catala)", IDM_LANG_CA }, // TODO: it's Català - need to convert to utf8
     { "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", IDM_LANG_CN },
     { "Croatian (Hrvatski)",    IDM_LANG_HR },
     { "Czech (\304\214e\305\241tina)",       IDM_LANG_CZ },
@@ -268,6 +268,7 @@ MenuDef menuDefLang[] = {
     { "Portuguese - Portugal (Portugu\303\252s)",  IDM_LANG_PT },
     { "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)",     IDM_LANG_RU },
     { "Slovak (Sloven\304\215ina)",      IDM_LANG_SK },
+    { "Slovenian (Slovensko)", IDM_LANG_SI },
     { "Spanish (Espa\303\261ol)",     IDM_LANG_ES },
     { "Swedish (Svenska)",     IDM_LANG_SV },
     { "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264)",       IDM_LANG_TA },
@@ -312,7 +313,8 @@ struct LangDef {
     {"lt", IDM_LANG_LT},
     {"my", IDM_LANG_MY},
     {"fi", IDM_LANG_FI},
-    {"ca", IDM_LAGN_CA},
+    {"ca", IDM_LANG_CA},
+    {"si", IDM_LANG_SI},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -348,6 +350,7 @@ static const char *g_lcidLangMap[] = {
     "my", NULL, NULL, // Malaysian
     "fi", NULL, NULL, // Finnish
     "ca", NULL, NULL, // Catalan
+    "si", NULL, NULL, // Slovenian
     NULL
 };
 
@@ -4341,10 +4344,9 @@ static void UpdateToolbarToolText(void)
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
-    if (!win || !win->dm) {
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
-    }
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
@@ -4402,7 +4404,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 #define FIND_STATUS_WIDTH 200
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -4510,8 +4512,6 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
         DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
     SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
     SetWindowLong(find, GWL_USERDATA, (LONG)win);
-
-    SetWindowLong(status, GWL_USERDATA, (LONG)win);
 
     win->hwndFindText = label;
     win->hwndFindBox = find;
@@ -5189,7 +5189,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_LT:
                 case IDM_LANG_MY:
                 case IDM_LANG_FI:
-                case IDM_LAGN_CA:
+                case IDM_LANG_CA:
+                case IDM_LANG_SI:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:

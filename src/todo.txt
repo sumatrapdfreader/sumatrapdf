@@ -24,6 +24,9 @@ Short term todo (before next 0.8 release):
 * intelligent resizing so that the window takes as much space as possible on the
   screen (kind of like maximize, but doesn't actually maximizes the window but
   takes max dx or dy space available and proportional amount of the other axis)
+* don't use GWL_USERDATA to store WindowInfo pointer, use 
+  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
+  of windows and WindowInfo structs)
 
 Long term todo:
 * handle links

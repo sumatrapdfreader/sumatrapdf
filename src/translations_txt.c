@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 31;
+int g_transLangsCount = 32;
 
 const char *g_transLangs[] = {
-  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt"
+  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt"
 };
 
 int g_transTranslationsCount = 59;
@@ -750,6 +750,67 @@ const char *g_transTranslations[] = {
   "Usa el motor de renderitzaci\303\263 MuPDF",
   "Apropa't",
   "Allunya't",
+
+  /* Translations for language si */
+  "O Progr&amu",
+  "&Zapri\tCtrl-W",
+  "&Datoteka",
+  "Po&jdi na",
+  "P&omo\304\215",
+  "&Jezik",
+  "&Odpri\tCtrl-O",
+  "&Natisni\tCtrl-P",
+  "&Shrani kot",
+  "&Pogled",
+  "Ob&i\305\241\304\215i doma\304\215o stran",
+  "Po&ve\304\215ava",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "O SumatraPDF",
+  "&Dejanska velikost\tCtrl-1",
+  "Zaznamki",
+  "Nepretrgano",
+  "Nepretrgano dvostransko",
+  "Prispevaj prevod",
+  "Ne morem najti tiskalnika.",
+  "&Izhod\tCtrl-Q",
+  "Napaka pri branju PDF datoteke.",
+  "Dvostransko",
+  "Snemanje datoteke je neuspe\305\241no.",
+  "Najdi naslednje",
+  "Najdi predhodno",
+  "Najdi:",
+  "Prva stran\tHome",
+  "&Prilagodi strani\tCtrl-0",
+  "P&rilagodi po \305\241irini\tCtrl-2",
+  "Celozaslonsko\tCtrl-L",
+  "Zadnja stran\tEnd",
+  "Nastavi SumatraPDF kot privzeti PDF pregledovalnik",
+  "Velikost pisave",
+  "Naslednja stran",
+  "Odpri",
+  "Stran...\tCtrl-G",
+  "Predhodna stran",
+  "Napaka pri tiskanju.",
+  "Obrni v levo",
+  "Obrni v desno",
+  "Prika\305\276i orodno vrstico",
+  "Enostransko",
+  "SumatraPFD je privzeti pregledovalnik PDF datotek.",
+  "Uporabi MuPDF za prikaz PDF datotek",
+  "Pove\304\215aj",
+  "Zmanj\305\241aj",
 
   /* Translations for language br */
   "S&obre",
