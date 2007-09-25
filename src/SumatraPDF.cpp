@@ -247,6 +247,7 @@ MenuDef menuDefLang[] = {
     { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
     { "Belarusian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)",  IDM_LANG_BY },
     { "Catalan (Catala)", IDM_LANG_CA }, // TODO: it's Català - need to convert to utf8
+    { "Chinese Traditional", IDM_LANG_TW}, // TODO: add the name in chinese traditional
     { "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", IDM_LANG_CN },
     { "Croatian (Hrvatski)",    IDM_LANG_HR },
     { "Czech (\304\214e\305\241tina)",       IDM_LANG_CZ },
@@ -315,6 +316,7 @@ struct LangDef {
     {"fi", IDM_LANG_FI},
     {"ca", IDM_LANG_CA},
     {"si", IDM_LANG_SI},
+    {"tw", IDM_LANG_TW},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -351,6 +353,7 @@ static const char *g_lcidLangMap[] = {
     "fi", NULL, NULL, // Finnish
     "ca", NULL, NULL, // Catalan
     "si", NULL, NULL, // Slovenian
+    "tw", NULL, NULL, // Chinese Traditional
     NULL
 };
 
@@ -5191,6 +5194,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_FI:
                 case IDM_LANG_CA:
                 case IDM_LANG_SI:
+                case IDM_LANG_TW:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:

@@ -44,7 +44,8 @@
 # Pekka Halmela - Finnish
 # Joan Montané - Catalan
 # Janez Vehovec - Slovensko (Slovenian)
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si
+# FreeXD (http://blog.ecstart.com/?47979) - Chinese Traditional
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw
 -
 &File
 br:&Arquivo
@@ -78,6 +79,7 @@ my:&Fail
 fi:&Tiedosto
 ca:&Fitxer
 si:&Datoteka
+tw: 檔案(&F)
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -111,6 +113,7 @@ my:&Buka\tCtrl-O
 fi:&Avaa\tCtrl-O
 ca:&Obre\tCtrl-O
 si:&Odpri\tCtrl-O
+tw:開啟\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -144,6 +147,7 @@ my:&Tutup\tCtrl-W
 fi:&Sulje\tCtrl-W
 ca:&Tanca\tCtrl-W
 si:&Zapri\tCtrl-W
+tw:關閉(&C)\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -177,6 +181,7 @@ my:&Simpan sebagai
 fi:&Tallenna nimellä
 ca:Anomena i de&sa...
 si:&Shrani kot
+tw:另存新檔(&S)
 -
 &Print
 br:&Imprimir
@@ -210,6 +215,7 @@ my:&Cetak\tCtrl-P
 fi:&Tulosta\tCtrl-P
 ca:&Imprimeix...\tCtrl-P
 si:&Natisni\tCtrl-P
+tw:列印(&P)
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -243,6 +249,7 @@ my:Jadikan SumatraPDF pembaca utama PDF
 fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 ca:Fes el SumatraPDF el lector de PDF predeterminat
 si:Nastavi SumatraPDF kot privzeti PDF pregledovalnik
+tw:把 SumatraPDF 作為預設的PDF閱讀工具
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -276,6 +283,7 @@ my:&Keluar\tCtrl-Q
 fi:&Poistu\tCtrl-Q
 ca:S&urt\tCtrl-Q
 si:&Izhod\tCtrl-Q
+tw:離開(&X)\tCtrl-Q
 -
 &View
 br:&Ver
@@ -309,6 +317,7 @@ my:&Lihat
 fi:&Näytä
 ca:&Visualitza
 si:&Pogled
+tw:檢視(&V)
 -
 Single page
 br:Página única
@@ -342,6 +351,7 @@ my:Satu Mukasurat
 fi:Yksittäinen sivu
 ca:Una única pàgina
 si:Enostransko
+tw:單一頁面
 -
 Facing
 br:Página dupla
@@ -375,6 +385,7 @@ my:Dua belah mukasurat
 fi:Rinnakkain
 ca:Pàgina doble
 si:Dvostransko
+tw:整頁模式
 -
 Continuous
 br:Contínuo
@@ -408,6 +419,7 @@ my:Bersambung
 fi:Peräkkäin
 ca:Contínua
 si:Nepretrgano
+tw:連續頁面
 -
 Continuous facing
 br:Página dupla contínua
@@ -441,6 +453,7 @@ my:Dua belah mukasurat bersambung
 fi:Peräkkäin ja rinnakkain
 ca:Pàgina doble contínua
 si:Nepretrgano dvostransko
+tw:連續整頁模式
 -
 Rotate left
 br:Girar à esquerda
@@ -474,6 +487,7 @@ my:Ubah ke kiri
 fi:Pyöritä vasempaan
 ca:Gira a l'esquerra
 si:Obrni v levo
+tw:頁面左旋
 -
 Rotate right
 br:Girar à direita
@@ -507,6 +521,7 @@ my:Ubah ke kanan
 fi:Pyöritä oikeaan
 ca:Gira a la dreta
 si:Obrni v desno
+tw:頁面右旋
 -
 Bookmarks
 de:Lesezeichen
@@ -564,6 +579,7 @@ my:Tunjukkan Bar Alat
 fi:Näytä työkalupalkki
 ca:Mostra la barra d'eines
 si:Prikaži orodno vrstico
+tw:顯示工具列
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -597,6 +613,7 @@ my:Guna MuPDF enjin
 fi:Käytä MuPDF renderöintimoottoria
 ca:Usa el motor de renderització MuPDF
 si:Uporabi MuPDF za prikaz PDF datotek
+tw:使用 MuPDF 渲染引擎
 -
 &Go To
 br:Ir &para
@@ -630,6 +647,7 @@ my:&Pergi Ke
 fi:&Siirry
 ca:&Vés a
 si:Po&jdi na
+tw:移至(&G)
 -
 Next Page
 br:Página seguinte
@@ -663,6 +681,7 @@ my:Mukasurat seterusnya
 fi:Seuraava sivu
 ca:Pàgina següent
 si:Naslednja stran
+tw:下一頁
 -
 Previous Page
 br:Página anterior
@@ -696,6 +715,7 @@ my:Mukasurat sebelumnya
 fi:Edellinen sivu
 ca:Pàgina anterior
 si:Predhodna stran
+tw:上一頁
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -729,6 +749,7 @@ my:Mukasurat pertama\tHome
 fi:Ensimmäinen sivu\tHome
 ca:Primera pàgina\tInici
 si:Prva stran\tHome
+tw:首頁\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -762,6 +783,7 @@ my:Mukasurat terakhir
 fi:Viimeinen sivu\tEnd
 ca:Última pàgina\tFinal
 si:Zadnja stran\tEnd
+tw:尾頁\tEnd
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -795,6 +817,7 @@ my:Mukasurat...\tCtrl-G
 fi:Sivulle...\tCtrl-G
 ca:Pàgina...\tCtrl-G
 si:Stran...\tCtrl-G
+tw:頁面...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -828,6 +851,7 @@ my:&Fokus
 fi:&Kohdista
 ca:&Escalat
 si:Po&večava
+tw:縮放(&Z)
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -861,6 +885,7 @@ my:&Muatkan mukasurat\tCtrl-0
 fi:Sovita sivu pystysuunnassa\tCtrl-0
 ca:Ajusta a la pàgina\tCtrl-0
 si:&Prilagodi strani\tCtrl-0
+tw:適合頁面\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -894,6 +919,7 @@ my:&Saiz sebenar\tCtrl-1
 fi:&Todellinen koko\tCtrl-1
 ca:Mida &real\tCtrl-1
 si:&Dejanska velikost\tCtrl-1
+tw:實際大小\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -927,6 +953,7 @@ my:&Muatkan lebar\tCtrl-2
 fi:&Sovita sivu vaakasuunnassa\tCtrl-2
 ca:Ajusta a l'am&plada\tCtrl-2
 si:P&rilagodi po širini\tCtrl-2
+tw:適合寬度\tCtrl-2
 -
 6400%
 -
@@ -986,6 +1013,7 @@ my:&Bahasa
 fi:Kieli
 ca:&Llengua
 si:&Jezik
+tw:語言(&L)
 -
 &Help
 br:A&juda
@@ -1019,6 +1047,7 @@ my:&Bantuan
 fi:&Ohje
 ca:&Ajuda
 si:P&omoč
+tw:說明(&H)
 -
 &Visit website
 br:Visitar o &Website
@@ -1052,6 +1081,7 @@ my:&Lawat lamanweb
 fi:Vieraile ohjelman kotisivuilla
 ca:Visiteu el lloc &web
 si:Ob&išči domačo stran
+tw:連結網站(&V)
 -
 &About
 br:S&obre
@@ -1085,6 +1115,7 @@ my:&Mengenai
 fi:&Tietoja
 ca:&Quant a...
 si:O Progr&amu
+tw:關於(&A)
 -
 Find:
 de:Suchen:
@@ -1160,6 +1191,7 @@ my:Buka
 fi:Avaa
 ca:Obre
 si:Odpri
+tw:開啟
 -
 Zoom In
 br:Zoom In
@@ -1193,6 +1225,7 @@ my:Fokus ke dalam
 fi:Kohdenna lähemmäksi
 ca:Apropa't
 si:Povečaj
+tw:放大
 -
 Zoom Out
 br:Zoom Out
@@ -1226,6 +1259,7 @@ my:Fokus ke luar
 fi:Loitonna kauemmaksi
 ca:Allunya't
 si:Zmanjšaj
+tw:縮小
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1259,6 +1293,7 @@ my:Mengenai SumatraPDF
 fi:Tietoja SumatraPDF:stä
 ca:Quant al SumatraPDF
 si:O SumatraPDF
+tw:關於 SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1292,6 +1327,7 @@ my:SumatraPDF adalah pembaca utama fail PDF sekarang
 fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
 ca:Ara el SumatraPDF és el visor de PDF predeterminat.
 si:SumatraPFD je privzeti pregledovalnik PDF datotek.
+tw:已經把 SumatraPDF 設為預設的PDF閱讀工具
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1325,6 +1361,7 @@ my:Gagal menyimpan fail
 fi:Tiedoston tallennus epäonnistui
 ca:S'ha produït un error en desar el fitxer.
 si:Snemanje datoteke je neuspešno.
+tw:檔案儲存失敗
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1358,6 +1395,7 @@ my:Masalah memuatkan fail PDF
 fi:Tiedoston avaus epäonnistui
 ca:S'ha produït un error en carregar el fitxer.
 si:Napaka pri branju PDF datoteke.
+tw:讀取PDF檔案時發失錯誤
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1391,6 +1429,7 @@ my:Pencetak tidak dapat dibuka
 fi:Tulostinta ei löydy
 ca:No s'ha pogut accedir a la impressora.
 si:Ne morem najti tiskalnika.
+tw:無法開啟印表機
 -
 Printing problem.
 br:Problema de impressão.
@@ -1424,6 +1463,7 @@ my:Masalah mencetak
 fi:Tulostusongelma
 ca:S'ha produït un problema en la impressió.
 si:Napaka pri tiskanju.
+tw:列印問題
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1448,3 +1488,4 @@ lt:Pasiklydę vertime
 my:Menyumbangkan alihbahasa
 ca:Contribuïu en la traducció
 si:Prispevaj prevod
+tw:翻譯提供
