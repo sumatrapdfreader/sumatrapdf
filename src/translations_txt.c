@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 35;
+int g_transLangsCount = 36;
 
 const char *g_transLangs[] = {
-  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "ml", "he", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt", "tw"
+  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "ml", "he", "rs", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt", "tw"
 };
 
 int g_transTranslationsCount = 59;
@@ -933,6 +933,67 @@ const char *g_transTranslations[] = {
   "\327\224\327\251\327\252\327\236\327\251 \327\221\327\236\327\240\327\225\327\242 \327\250\327\231\327\240\327\223\327\225\327\250 MuPDF",
   "\327\226\327\225\327\235 \327\244\327\240\327\231\327\236\327\224",
   "\327\226\327\225\327\235 \327\224\327\227\327\225\327\246\327\224",
+
+  /* Translations for language rs */
+  "&O programu",
+  "&Zatvori\tCtrl-W",
+  "&Datoteka",
+  "&Idi na",
+  "&Pomo\304\207",
+  "&Jezik",
+  "&Otvori\tCtrl-O",
+  "&\305\240tampaj",
+  "&Sa\304\215uvaj kao...",
+  "Prikaz",
+  "&Poseti Internet stranu",
+  "&Uve\304\207aj",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "O programu SumatraPDF",
+  "Stvarna veli\304\215ina\tCtrl-1",
+  "Bele\305\241ke",
+  "Neprekidni prikaz",
+  "Neprkidni prikaz dve strane",
+  "Pomozi u prevo\304\221enju ovog programa",
+  "Nije mogu\304\207e prona\304\207i \305\241tampa\304\215",
+  "&Iza\304\221i\tCtrl-Q",
+  "Gre\305\241ka pri u\304\215itavanju PDF dokumenta",
+  "Prikaz dve strane",
+  "Gre\305\241ka pri snimanju PDF dokumenta",
+  "Prona\304\221i slede\304\207e",
+  "Prona\304\221i prethodno",
+  "Prona\304\221i",
+  "Prva strana\tHome",
+  "Prilagodi &strani\tCtrl-0",
+  "&Podesi po \305\241irini\tCtrl-2",
+  "Ceo ekran\tCtrl-L",
+  "Poslednja strana\tEnd",
+  "Neka SumatraPDF bude standardni PDF \304\215ita\304\215",
+  "Razlikuj mala i velika slova",
+  "Slede\304\207a strana",
+  "Otvori",
+  "Strana...\tCtrl-G",
+  "Prethodna strana",
+  "Problem sa \305\241tampanjem",
+  "Rotiraj levo",
+  "Rotiraj desno",
+  "Prika\305\276i traku sa alatima",
+  "Prikaz jedne strane",
+  "SumatraPDF je sada standardni \304\215ita\304\215 PDF dokumenata",
+  "Koristi MuPDF za prikaz PDF dokumenata",
+  "Uve\304\207aj",
+  "Umanji",
 
   /* Translations for language br */
   "S&obre",

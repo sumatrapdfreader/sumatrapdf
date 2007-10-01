@@ -47,7 +47,8 @@
 # FreeXD (http://blog.ecstart.com/?47979) - Chinese Traditional
 # Maxin B. John (maxinbjohn@gmail.com) - Malayalam 
 # Eyal Berman - Hebrew
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he
+# milanso (milanso@gmail.com) - Srpski/Latinica (Serbian/Latin)
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he rs
 -
 &File
 br:&Arquivo
@@ -84,6 +85,7 @@ si:&Datoteka
 tw: 檔案(&F)
 ml:ഫയല്‍
 he:&קובץ
+rs:&Datoteka
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -120,6 +122,7 @@ si:&Odpri\tCtrl-O
 tw:開啟\tCtrl-O
 ml:തുറക്കുക\tCtrl-O
 he:&פתח\tCtrl-O
+rs:&Otvori\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -156,6 +159,7 @@ si:&Zapri\tCtrl-W
 tw:關閉(&C)\tCtrl-W
 ml:അടയ്ക്കുക\tCtrl-W
 he:&סגור\tCtrl-W
+rs:&Zatvori\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -192,6 +196,7 @@ si:&Shrani kot
 tw:另存新檔(&S)
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക
 he:שמירה בשם
+rs:&Sačuvaj kao...
 -
 &Print
 br:&Imprimir
@@ -228,6 +233,7 @@ si:&Natisni\tCtrl-P
 tw:列印(&P)
 ml:അച്ചടി\tCtrl-P
 he:הדפס\tCtrl-p
+rs:&Štampaj
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -264,6 +270,7 @@ si:Nastavi SumatraPDF kot privzeti PDF pregledovalnik
 tw:把 SumatraPDF 作為預設的PDF閱讀工具
 ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
 he:הפוך את סומטרה לברירת מחדל עבור קבצי PDF
+rs:Neka SumatraPDF bude standardni PDF čitač
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -300,6 +307,7 @@ si:&Izhod\tCtrl-Q
 tw:離開(&X)\tCtrl-Q
 ml:പുറത്തേക്ക് \tCtrl-Q
 he:יציאה\tCtrl-Q
+rs:&Izađi\tCtrl-Q
 -
 &View
 br:&Ver
@@ -336,6 +344,7 @@ si:&Pogled
 tw:檢視(&V)
 ml:കാഴ്ച്ച
 he:&תצוגה
+rs:Prikaz
 -
 Single page
 br:Página única
@@ -372,6 +381,7 @@ si:Enostransko
 tw:單一頁面
 ml:ഒറ്റ താള്‍
 he:דף יחיד
+rs:Prikaz jedne strane
 -
 Facing
 br:Página dupla
@@ -408,6 +418,7 @@ si:Dvostransko
 tw:整頁模式
 ml:തിരിച്ച്
 he:דף כפול
+rs:Prikaz dve strane
 -
 Continuous
 br:Contínuo
@@ -444,6 +455,7 @@ si:Nepretrgano
 tw:連續頁面
 ml:തുടര്‍ച്ച
 he:המשך
+rs:Neprekidni prikaz
 -
 Continuous facing
 br:Página dupla contínua
@@ -480,6 +492,7 @@ si:Nepretrgano dvostransko
 tw:連續整頁模式
 ml:തുടര്‍ച്ചയായി കാണിക്കുക
 he:המשך תצוגה כפולה
+rs:Neprkidni prikaz dve strane
 -
 Rotate left
 br:Girar à esquerda
@@ -516,6 +529,7 @@ si:Obrni v levo
 tw:頁面左旋
 ml: ഇടത്തേക്കു ചരിക്കുക
 he:סובב שמאלה
+rs:Rotiraj levo
 -
 Rotate right
 br:Girar à direita
@@ -552,6 +566,7 @@ si:Obrni v desno
 tw:頁面右旋
 ml:വലത്തേക്കു ചരിക്കുക
 he:סובב ימינה
+rs:Rotiraj desno
 -
 Bookmarks
 de:Lesezeichen
@@ -562,6 +577,7 @@ ja:ブックマーク
 fi:Kirjainmerkit
 ca:Punts d'interés
 si:Zaznamki
+rs:Beleške
 -
 Fullscreen\tCtrl-L
 de:Vollbild
@@ -578,6 +594,7 @@ ca:Pantalla completa\tCtrl-L
 si:Celozaslonsko\tCtrl-L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl-L
 he:מסך מלא\tCtrl-L
+rs:Ceo ekran\tCtrl-L
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -614,6 +631,7 @@ si:Prikaži orodno vrstico
 tw:顯示工具列
 ml:റ്റുള്‍ബാര്‍  കാണിക്കുക
 he:הצג שורת תפריט
+rs:Prikaži traku sa alatima
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -650,6 +668,7 @@ si:Uporabi MuPDF za prikaz PDF datotek
 tw:使用 MuPDF 渲染引擎
 ml:MuPDF പതിപ്പ് ഉപയോഗിക്കുക
 he:השתמש במנוע רינדור MuPDF
+rs:Koristi MuPDF za prikaz PDF dokumenata
 -
 &Go To
 br:Ir &para
@@ -686,6 +705,7 @@ si:Po&jdi na
 tw:移至(&G)
 ml:അവിടെ സന്ദര്‍ശിക്കുക
 he:לך ל
+rs:&Idi na
 -
 Next Page
 br:Página seguinte
@@ -722,6 +742,7 @@ si:Naslednja stran
 tw:下一頁
 ml:അടുത്ത താള്‍
 he:דף הבא
+rs:Sledeća strana
 -
 Previous Page
 br:Página anterior
@@ -758,6 +779,7 @@ si:Predhodna stran
 tw:上一頁
 ml:മുന്‍പുള്ള താള്‍
 he:דף קודם
+rs:Prethodna strana
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -794,6 +816,7 @@ si:Prva stran\tHome
 tw:首頁\tHome
 ml:ആദ്യ താള്‍\tHome
 he:דף ראשון\tHome
+rs:Prva strana\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -830,6 +853,7 @@ si:Zadnja stran\tEnd
 tw:尾頁\tEnd
 ml:അവസാന താള്‍\tEnd
 he:דף אחרון\tEnd
+rs:Poslednja strana\tEnd
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -866,6 +890,7 @@ si:Stran...\tCtrl-G
 tw:頁面...\tCtrl-G
 ml:താള്‍...\tCtrl-G
 he:דף...\tCtrl-G
+rs:Strana...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -902,6 +927,7 @@ si:Po&večava
 tw:縮放(&Z)
 ml:വലുതാക്കുക
 he:זום
+rs:&Uvećaj
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -938,6 +964,7 @@ si:&Prilagodi strani\tCtrl-0
 tw:適合頁面\tCtrl-0
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl-0
 he:התאם דף\tCtrl-0
+rs:Prilagodi &strani\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -974,6 +1001,7 @@ si:&Dejanska velikost\tCtrl-1
 tw:實際大小\tCtrl-1
 ml:ശരിയായ വലിപ്പം\tCtrl-1
 he:גודל מקור\tCtrl-1
+rs:Stvarna veličina\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -1010,6 +1038,7 @@ si:P&rilagodi po širini\tCtrl-2
 tw:適合寬度\tCtrl-2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
 he:התאם רוחב\tCtrl-2
+rs:&Podesi po širini\tCtrl-2
 -
 6400%
 -
@@ -1072,6 +1101,7 @@ si:&Jezik
 tw:語言(&L)
 ml:ഭാഷ
 he:שפה
+rs:&Jezik
 -
 &Help
 br:A&juda
@@ -1108,6 +1138,7 @@ si:P&omoč
 tw:說明(&H)
 ml:സഹായം
 he:עזרה
+rs:&Pomoć
 -
 &Visit website
 br:Visitar o &Website
@@ -1144,6 +1175,7 @@ si:Ob&išči domačo stran
 tw:連結網站(&V)
 ml:വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 he:בקר באתר
+rs:&Poseti Internet stranu
 -
 &About
 br:S&obre
@@ -1180,6 +1212,7 @@ si:O Progr&amu
 tw:關於(&A)
 ml:പറ്റി
 he:אודות
+rs:&O programu
 -
 Find:
 de:Suchen:
@@ -1195,6 +1228,7 @@ ca:Cerca:
 si:Najdi:
 ml:കണ്ടെത്തുക
 he:חפש
+rs:Pronađi
 -
 Find Previous
 de:Rückwärts suchen
@@ -1207,6 +1241,7 @@ ca:Cerca anterior
 si:Najdi predhodno
 ml: മുന്‍പുള്ളത് കണ്ടെത്തുക
 he:חפש קודם
+rs:Pronađi prethodno
 -
 Find Next
 de:Weitersuchen
@@ -1219,6 +1254,7 @@ ca:Cerca següent
 si:Najdi naslednje
 ml:അടുത്തത് കണ്ടെത്തുക
 he:חפש הבא
+rs:Pronađi sledeće
 -
 Match case
 de:Groß-/Kleinschreibung beachten
@@ -1228,6 +1264,7 @@ ja:大文字と小文字に一致する
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
 si:Velikost pisave
+rs:Razlikuj mala i velika slova
 -
 Open
 br:Abrir
@@ -1264,6 +1301,7 @@ si:Odpri
 tw:開啟
 ml:തുറക്കുക
 he:פתח
+rs:Otvori
 -
 Zoom In
 br:Zoom In
@@ -1300,6 +1338,7 @@ si:Povečaj
 tw:放大
 ml:വലുതാക്കുക
 he:זום פנימה
+rs:Uvećaj
 -
 Zoom Out
 br:Zoom Out
@@ -1336,6 +1375,7 @@ si:Zmanjšaj
 tw:縮小
 ml:ചെറുതാക്കുക
 he:זום החוצה
+rs:Umanji
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1372,6 +1412,7 @@ si:O SumatraPDF
 tw:關於 SumatraPDF
 ml:സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
 he:אודות סומטרהPDF
+rs:O programu SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1407,6 +1448,7 @@ ca:Ara el SumatraPDF és el visor de PDF predeterminat.
 si:SumatraPFD je privzeti pregledovalnik PDF datotek.
 tw:已經把 SumatraPDF 設為預設的PDF閱讀工具
 ml:സുമാത്രാപിഡീഎഫ് ആണ് ഇപ്പൊള്‍ നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം
+rs:SumatraPDF je sada standardni čitač PDF dokumenata
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1442,6 +1484,7 @@ ca:S'ha produït un error en desar el fitxer.
 si:Snemanje datoteke je neuspešno.
 tw:檔案儲存失敗
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
+rs:Greška pri snimanju PDF dokumenta
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1477,6 +1520,7 @@ ca:S'ha produït un error en carregar el fitxer.
 si:Napaka pri branju PDF datoteke.
 tw:讀取PDF檔案時發失錯誤
 ml:PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
+rs:Greška pri učitavanju PDF dokumenta
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1512,6 +1556,7 @@ ca:No s'ha pogut accedir a la impressora.
 si:Ne morem najti tiskalnika.
 tw:無法開啟印表機
 ml:അച്ചടിയന്ത്രം തുറക്കാന്‍ സാധിച്ചില്ല
+rs:Nije moguće pronaći štampač
 -
 Printing problem.
 br:Problema de impressão.
@@ -1547,6 +1592,7 @@ ca:S'ha produït un problema en la impressió.
 si:Napaka pri tiskanju.
 tw:列印問題
 ml:അച്ചടിയില് തകരാര്‍
+rs:Problem sa štampanjem
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1574,3 +1620,4 @@ si:Prispevaj prevod
 tw:翻譯提供
 ml:മാക്സിന്‍ ബി ജൊണ്‍
 he:עזור לתרגם
+rs:Pomozi u prevođenju ovog programa
