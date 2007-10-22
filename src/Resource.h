@@ -99,6 +99,7 @@
 #define IDM_LANG_HE                     495
 #define IDM_LANG_RS                     496
 #define IDM_LANG_ID                     497
+#define IDM_LANG_MK                     498
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
