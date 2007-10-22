@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 36;
+int g_transLangsCount = 37;
 
 const char *g_transLangs[] = {
-  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "ml", "he", "rs", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt", "tw"
+  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "ml", "he", "rs", "id", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt", "tw"
 };
 
 int g_transTranslationsCount = 59;
@@ -994,6 +994,67 @@ const char *g_transTranslations[] = {
   "Koristi MuPDF za prikaz PDF dokumenata",
   "Uve\304\207aj",
   "Umanji",
+
+  /* Translations for language id */
+  "&Tentang",
+  "&Tutup\tCtrl-W",
+  "&Berkas",
+  "&Pergi ke",
+  "Ban&tuan",
+  "Ba&hasa",
+  "&Buka\tCtrl-O",
+  "&Cetak\tCtrl-P",
+  "&Simpan sebagai",
+  "&Lihat",
+  "&Kunjungi Halaman Web",
+  "&Ukuran",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "Tentang SumatraPDF",
+  "&Ukuran Sebenarnya\tCtrl-1",
+  NULL,
+  "Bersambung",
+  "Dua Halaman Bersambung",
+  "Membantu alihbahasa",
+  "Tidak dapat membuka printer",
+  "&Keluar\tCtrl-Q",
+  "Kesalahan dalam memanggil berkas PDF.",
+  "Dua Halaman",
+  "Gagal menyimpan berkas",
+  "Temukan Sesudah",
+  "Temukan Sebelum",
+  "Temukan",
+  "Halaman Pertama\tHome",
+  "&Sesuaikan\tCtrl-0",
+  "Sesuaikan dengan &Lebar\tCtrl-2",
+  "Selayar Penuh\tCtrl-L",
+  "Halaman Terakhir\tEnd",
+  "Jadikan SumatraPDF sebagai pembaca-PDF utama",
+  "Cocokkan Huruf Besar-Kecilnya ",
+  "Halaman Berikutnya",
+  "Buka",
+  "Halaman...\tCtrl-G",
+  "Halaman Sebelumnya",
+  "Masalahan Pencetakkan.",
+  "Putar ke kiri",
+  "Putar ke Kanan",
+  "Perlihatkan toolbar",
+  "Satu Halaman",
+  "SumatraPDF sekarang menjadi pembaca-PDF utama.",
+  "Gunakan MuPDF rendering engine",
+  "Perbesar",
+  "Perkecil",
 
   /* Translations for language br */
   "S&obre",
