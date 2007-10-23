@@ -563,7 +563,7 @@ const char *g_transTranslations[] = {
   "Pasukti de\305\241in\304\227n",
   "Rodyti \304\257rankin\304\231",
   "Vienas puslapis",
-  "SumatraPDF n\304\227ra numatytasis PDF dokument\305\263 skaitytuvas",
+  "SumatraPDF dabar yra numatytasis PDF dokument\305\263 skaitytuvas",
   "Atvaizduoti naudojant MuPDF",
   "Priartinti",
   "Suma\305\276inti",

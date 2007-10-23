@@ -1522,7 +1522,7 @@ pt:SumatraPDF é agora o leitor de PDF por defeito.
 no:SumatraPDF er nå standard PDF-leser.
 sk:SumatraPDF je teraz nastavený ako predvolený prehlaidač PDF súborov.
 vn:Hiện giờ SumatraPDF là trình đọc PDF mặc định của bạn.
-lt:SumatraPDF nėra numatytasis PDF dokumentų skaitytuvas
+lt:SumatraPDF dabar yra numatytasis PDF dokumentų skaitytuvas
 my:SumatraPDF adalah pembaca utama fail PDF sekarang
 fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
 ca:Ara el SumatraPDF és el visor de PDF predeterminat.
