@@ -549,7 +549,7 @@ sk:Otočiť vľavo
 vn:Quay trái
 lt:Pasukti kairėn
 my:Ubah ke kiri
-fi:Pyöritä vasempaan
+fi:Kierrä vasempaan
 ca:Gira a l'esquerra
 si:Obrni v levo
 tw:頁面左旋
@@ -588,7 +588,7 @@ sk:Otočiť vpravo
 vn:Quay phải
 lt:Pasukti dešinėn
 my:Ubah ke kanan
-fi:Pyöritä oikeaan
+fi:Kierrä oikeaan
 ca:Gira a la dreta
 si:Obrni v desno
 tw:頁面右旋
