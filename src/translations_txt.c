@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 38;
+int g_transLangsCount = 39;
 
 const char *g_transLangs[] = {
-  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "ml", "he", "rs", "id", "mk", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt", "tw"
+  "en", "de", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "ml", "he", "rs", "id", "mk", "ro", "br", "fr", "tr", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ru", "ar", "cn", "sv", "cz", "gr", "th", "pt", "tw"
 };
 
 int g_transTranslationsCount = 59;
@@ -1116,6 +1116,67 @@ const char *g_transTranslations[] = {
   "\320\232\320\276\321\200\320\270\321\201\321\202\320\270 MuPDF \320\267\320\260 \320\277\321\200\320\270\320\272\320\260\320\267 \320\275\320\260 PDF \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270",
   "\320\227\320\263\320\276\320\273\320\265\320\274\320\270",
   "\320\235\320\260\320\274\320\260\320\273\320\270",
+
+  /* Translations for language ro */
+  "&Despre",
+  "\303\216nc&hidere\tCtrl-W",
+  "&Fi\305\237ier",
+  "Sal&t la...",
+  "A&jutor",
+  "&Limb\304\203",
+  "&Deschidere\tCtrl-O",
+  "I&mprimare",
+  "Salvare c&a...",
+  "&Vizualizare",
+  "&Viziteaz\304\203 website-ul",
+  "&Panoramare",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "Despre SumatraPDF",
+  "M\304\203rime &actual\304\203\tCtrl-1",
+  "Marcaje",
+  "Continuu",
+  "Pagin\304\203 dubl\304\203 continuu",
+  "Contribuie la traducere",
+  "Imprimant\304\203 inaccesibil\304\203",
+  "&Ie\305\237ire\tCtrl-Q",
+  "Erroare la \303\256nc\304\203rcarea unui fi\305\237ier PDF.",
+  "Dou\304\203 pagini",
+  "Eroare la salvarea unui fi\305\237ier",
+  "Caut\304\203 \303\256nainte",
+  "Caut\304\203 \303\256napoi",
+  "Caut\304\203",
+  "Prima pagin\304\203\tHome",
+  "&Pagin\304\203 \303\256ntreag\304\203\tCtrl-0",
+  "L\304\203\305\243ime pagin\304\203",
+  "Ecran complet",
+  "Ultima pagin\304\203\tEnd",
+  "F\304\203 SumatraPDF un cititor implicit de PDF",
+  "Potrivire litere mari \305\237i mici",
+  "Pagina urm\304\203toare",
+  "Deschide",
+  "Pagina...\tCtrl-G",
+  "Pagina anterioar\304\203",
+  "Problem\304\203 la imprimare.",
+  "Rote\305\237te spre st\303\242nga",
+  "Rote\305\237te spre dreapta",
+  "Arat\304\203 bara de instrumente",
+  "O singur\304\203 pagin\304\203",
+  "SumatraPDF este acum cititorul implicit de fi\305\237iere PDF.",
+  "Utilizeaz\304\203 MuPDF rendering engine",
+  "M\304\203re\305\237te",
+  "Mic\305\237oreaz\304\203",
 
   /* Translations for language br */
   "S&obre",

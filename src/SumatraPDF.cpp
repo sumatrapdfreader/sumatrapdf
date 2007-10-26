@@ -271,6 +271,7 @@ MenuDef menuDefLang[] = {
     { "Polish (Polski)",      IDM_LANG_PL },
     { "Portuguese -  Brazil (Portugu\303\252s)",  IDM_LANG_BR },
     { "Portuguese - Portugal (Portugu\303\252s)",  IDM_LANG_PT },
+    { "Romanian", IDM_LANG_RO},
     { "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)",     IDM_LANG_RU },
     { "Serbian", IDM_LANG_RS},
     { "Slovak (Sloven\304\215ina)",      IDM_LANG_SK },
@@ -327,6 +328,7 @@ struct LangDef {
     {"rs", IDM_LANG_RS},
     {"id", IDM_LANG_ID},
     {"mk", IDM_LANG_MK},
+    {"ro", IDM_LANG_RO},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -369,6 +371,7 @@ static const char *g_lcidLangMap[] = {
     "rs", NULL, NULL, // Serbian
     "id", NULL, NULL, // Indonesian
     "mk", NULL, NULL, // Macedonian
+    "ro", NULL, NULL, // Romanian
     NULL
 };
 
@@ -5215,6 +5218,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_RS:
                 case IDM_LANG_ID:
                 case IDM_LANG_MK:
+                case IDM_LANG_RO:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:
@@ -5753,6 +5757,8 @@ static void ParseBgColor(const char* txt)
 {
     if (str_startswith(txt, "0x"))
         txt += 2;
+    else if (str_startswith(txt, "#")
+        txt += 1;
     int r = ParseHexByte(&txt);
     if (-1 == r)
         return;
