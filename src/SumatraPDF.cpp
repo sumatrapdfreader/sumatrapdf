@@ -5757,7 +5757,7 @@ static void ParseBgColor(const char* txt)
 {
     if (str_startswith(txt, "0x"))
         txt += 2;
-    else if (str_startswith(txt, "#")
+    else if (str_startswith(txt, "#"))
         txt += 1;
     int r = ParseHexByte(&txt);
     if (-1 == r)
