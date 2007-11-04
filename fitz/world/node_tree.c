@@ -50,6 +50,7 @@ fz_insertnodefirst(fz_node *parent, fz_node *child)
 {
     child->parent = parent;
     child->next = parent->first;
+    assert(child->next != child);
     parent->first = child;
     if (!parent->last)
         parent->last = child;
@@ -61,8 +62,10 @@ fz_insertnodelast(fz_node *parent, fz_node *child)
     child->parent = parent;
     if (!parent->first)
         parent->first = child;
-    else
+    else {
         parent->last->next = child;
+        assert(parent->last->next != parent->last);
+    }
     parent->last = child;
 }
 
@@ -74,7 +77,9 @@ fz_insertnodeafter(fz_node *prev, fz_node *child)
 	if (parent->last == prev)
 		parent->last = child;
 	child->next = prev->next;
+    assert(child->next != child);
 	prev->next = child;
+    assert(prev->next != prev);
 }
 
 void
@@ -100,6 +105,7 @@ fz_removenode(fz_node *child)
 		if (node == child)
 		{
 			prev->next = child->next;
+            assert(prev->next != prev);
 		}
 		prev = node;
 		node = node->next;

@@ -200,6 +200,7 @@ tailcall:
 	for (current = node->first; current; current = current->next)
 	{
 retry:
+		assert(current != current->next);
 		if (!current)
 			break;
 
@@ -223,6 +224,10 @@ retry:
 					if (fitsinside(color, bbox))
 					{
 						fz_removenode(current);
+						/* TODO: prev == color was added to fix an infinite loop in some PDF.
+						   There might be a better solution */
+						if (prev == color)
+							break;
 						if (prev)
 							fz_insertnodeafter(prev, color);
 						else
