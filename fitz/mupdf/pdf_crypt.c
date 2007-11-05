@@ -54,12 +54,38 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 {
 	pdf_crypt *crypt = nil;
 	fz_obj *obj;
-	int m;
+	int m, r;
 
 	obj = fz_dictgets(enc, "V");
 	m = 0;
 	if (fz_isint(obj))
 		m = fz_toint(obj);
+
+	obj = fz_dictgets(enc, "R");
+	if (!fz_isint(obj))
+		goto cleanup;
+	r = fz_toint(obj);
+
+	if (m == 4 && r == 4) {
+		fz_obj *crypt_filters, *stream_filter, *string_filter;
+		crypt_filters = fz_dictgets(enc, "CF");
+		stream_filter = fz_dictgets(enc, "StmF");
+		string_filter = fz_dictgets(enc, "StrF");
+		if (fz_isdict(crypt_filters) && fz_isname(stream_filter) && fz_isname(string_filter) &&
+			(0 == strcmp(fz_toname(stream_filter), fz_toname(string_filter)))) {
+				obj = fz_dictgets(crypt_filters, fz_toname(stream_filter));
+				if (fz_isdict(obj)) {
+					obj = fz_dictgets(obj, "CFM");
+					if (fz_isname(obj) && (0 == strcmp("V2", fz_toname(obj)))) {
+						m = 2;
+						r = 3;
+					}
+					// TODO: poppler has length = fz_dictgets(enc, "Length") but we'll
+					// end up with fz_dictgets(enc, "Length") / 8
+				}
+		}
+	}
+
 	if (m != 1 && m != 2)
 		return fz_throw("unsupported encryption: %d", m);
 
@@ -93,10 +119,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	if (crypt->n < 5) goto cleanup;
 	if (crypt->n > 16) goto cleanup;
 
-	obj = fz_dictgets(enc, "R");
-	if (!fz_isint(obj))
-		goto cleanup;
-	crypt->r = fz_toint(obj);
+	crypt->r = r;
 	if (crypt->r != 2 && crypt->r != 3)
 		goto cleanup;
 	if (crypt->r == 2 && crypt->n != 5)
@@ -119,7 +142,8 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	return nil;
 
 cleanup:
-	pdf_dropcrypt(crypt);
+    if (crypt)
+    	pdf_dropcrypt(crypt);
 	return fz_throw("corrupt encryption dictionary");
 }
 
