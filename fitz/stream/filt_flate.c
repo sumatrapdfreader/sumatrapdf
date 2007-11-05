@@ -77,16 +77,25 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	z_streamp zp = &((fz_flate*)f)->z;
 	int err;
 
-	if (in->rp == in->wp && !in->eof)
-		return fz_ioneedin;
-	if (out->wp == out->ep)
+	if (in->rp == in->wp)
+        if (in->eof) {
+            /* TODO: not sure if that's the right way to handle this */
+            out->eof = 1;
+            return fz_iodone;
+        }
+        else
+    		return fz_ioneedin;
+
+    if (out->wp == out->ep)
 		return fz_ioneedout;
 
 	zp->next_in = in->rp;
 	zp->avail_in = in->wp - in->rp;
+    assert(zp->avail_in != 0);
 
 	zp->next_out = out->wp;
 	zp->avail_out = out->ep - out->wp;
+    assert(zp->avail_out != 0);
 
 	err = inflate(zp, Z_NO_FLUSH);
 
