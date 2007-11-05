@@ -60,6 +60,8 @@ struct pdf_crypt_s
 
 	unsigned char key[16];
 	int keylen;
+
+    int encrypt_metadata;
 };
 
 /* crypt.c */

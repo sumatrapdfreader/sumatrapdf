@@ -61,40 +61,62 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	if (fz_isint(obj))
 		m = fz_toint(obj);
 
+	crypt = fz_malloc(sizeof(pdf_crypt));
+	if (!crypt)
+		return fz_outofmem;
+    crypt->encrypt_metadata = 1;
+	crypt->encrypt = fz_keepobj(enc);
+	crypt->id = nil;
+
 	obj = fz_dictgets(enc, "R");
 	if (!fz_isint(obj))
 		goto cleanup;
 	r = fz_toint(obj);
 
+	obj = fz_dictgets(enc, "Length");
+	if (fz_isint(obj))
+		crypt->n = fz_toint(obj) / 8;
+	else
+		crypt->n = 40 / 8;
+
 	if (m == 4 && r == 4) {
-		fz_obj *crypt_filters, *stream_filter, *string_filter;
+		fz_obj *crypt_filters, *stream_filter, *string_filter, *crypt_filter;
 		crypt_filters = fz_dictgets(enc, "CF");
 		stream_filter = fz_dictgets(enc, "StmF");
 		string_filter = fz_dictgets(enc, "StrF");
 		if (fz_isdict(crypt_filters) && fz_isname(stream_filter) && fz_isname(string_filter) &&
 			(0 == strcmp(fz_toname(stream_filter), fz_toname(string_filter)))) {
-				obj = fz_dictgets(crypt_filters, fz_toname(stream_filter));
-				if (fz_isdict(obj)) {
-					obj = fz_dictgets(obj, "CFM");
+				crypt_filter = fz_dictgets(crypt_filters, fz_toname(stream_filter));
+				if (fz_isdict(crypt_filter)) {
+					obj = fz_dictgets(crypt_filter, "CFM");
 					if (fz_isname(obj) && (0 == strcmp("V2", fz_toname(obj)))) {
 						m = 2;
 						r = 3;
 					}
-					// TODO: poppler has length = fz_dictgets(enc, "Length") but we'll
-					// end up with fz_dictgets(enc, "Length") / 8
+                    obj = fz_dictgets(crypt_filter, "Length");
+                    if (fz_isint(obj))
+                        crypt->n = fz_toint(obj);
 				}
 		}
+        obj = fz_dictgets(enc, "EncryptMetadata");
+        if (fz_isbool(obj))
+            crypt->encrypt_metadata = fz_tobool(obj);
+
 	}
 
-	if (m != 1 && m != 2)
+	if (m != 1 && m != 2) {
+		pdf_dropcrypt(crypt);
 		return fz_throw("unsupported encryption: %d", m);
+	}
 
-	crypt = fz_malloc(sizeof(pdf_crypt));
-	if (!crypt)
-		return fz_outofmem;
+	crypt->r = r;
+	if (crypt->n < 5) goto cleanup;
+	if (crypt->n > 16) goto cleanup;
 
-	crypt->encrypt = fz_keepobj(enc);
-	crypt->id = nil;
+	if (crypt->r != 2 && crypt->r != 3)
+		goto cleanup;
+	if (crypt->r == 2 && crypt->n != 5)
+		goto cleanup;
 
 	obj = fz_dictgets(enc, "O");
 	if (!fz_isstring(obj) || fz_tostrlen(obj) != 32)
@@ -110,20 +132,6 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	if (!fz_isint(obj))
 		goto cleanup;
 	crypt->p = fz_toint(obj);
-
-	obj = fz_dictgets(enc, "Length");
-	if (fz_isint(obj))
-		crypt->n = fz_toint(obj) / 8;
-	else
-		crypt->n = 40 / 8;
-	if (crypt->n < 5) goto cleanup;
-	if (crypt->n > 16) goto cleanup;
-
-	crypt->r = r;
-	if (crypt->r != 2 && crypt->r != 3)
-		goto cleanup;
-	if (crypt->r == 2 && crypt->n != 5)
-		goto cleanup;
 
 	if (!fz_isarray(id) || fz_arraylen(id) != 2)
 		goto cleanup;
@@ -142,8 +150,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	return nil;
 
 cleanup:
-    if (crypt)
-    	pdf_dropcrypt(crypt);
+	pdf_dropcrypt(crypt);
 	return fz_throw("corrupt encryption dictionary");
 }
 
@@ -205,6 +212,11 @@ createkey(pdf_crypt *crypt, char *userpw, int pwlen)
 
 	/* Step 5 */
 	fz_md5update(&md5, fz_tostrbuf(crypt->id), fz_tostrlen(crypt->id));
+    if (!crypt->encrypt_metadata) {
+        unsigned char buf[] = {0xff, 0xff, 0xff, 0xff};
+        fz_md5update(&md5, buf, 4);
+    }
+
 	fz_md5final(&md5, crypt->key);
 
 	/* Step 6 (rev 3 only) */
@@ -313,6 +325,7 @@ pdf_newencrypt(pdf_crypt **cp, char *userpw, char *ownerpw, int p, int n, fz_obj
 		return fz_outofmem;
 
 	crypt->encrypt = nil;
+    crypt->encrypt_metadata = 1;
 	crypt->id = fz_keepobj(fz_arrayget(id, 0));
 	crypt->p = p;
 	crypt->n = MIN(MAX(n / 8, 5), 16);
