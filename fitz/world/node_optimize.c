@@ -184,6 +184,10 @@ static void cleanmasks(fz_node *node)
 	fz_rect bbox;
 	fz_node *for_tail_call;
 
+    /* TODO: this has a tendency to loop forever (e.g. in B.Judson - Go It Alone.pdf)
+       so temporarily disable until I figure out the real problem */
+    return;
+
 tailcall:
 	/* optimization for stack usage in deep recursion: for the last node,
 	   instead of recursing remember the node and at the end do a tailcall
