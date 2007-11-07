@@ -37,7 +37,9 @@
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
 # Jon Ivar F. Omland - Norwegian
-# Radoslav Zelenák - Slovak republic
+# Slovakian: (Slovakia)
+#   Radoslav Zelenák
+#   Bernard Holý - TREVERT
 # Nguyen Luong Dong - Vietnamese
 # Viktoras Jakovlevas - Lithuania
 # Masley b. Mastil - Bahasa Melayu (Malaysian)
@@ -238,7 +240,7 @@ gr:&Εκτύπωση
 th:พิมพ์
 pt:&Imprimir
 no:Skriv &ut\tCtrl-P
-sk:Tlač\tCtrl-P
+sk:Tlačiť\tCtrl-P
 vn:&In\tCtrl-P
 lt:&Spausdinti\tCtrl-P
 my:&Cetak\tCtrl-P
@@ -278,7 +280,7 @@ gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη 
 th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 pt:Fazer de SumatraPDF o leitor de PDF pedefenido
 no:Bruk SumatraPDF som standard PDF-leser
-sk:Nastaviť SumatraPDF ako predvolený PDF prehlaidač
+sk:Nastaviť SumatraPDF ako predvolený PDF prehliadač
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định
 lt:Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
 my:Jadikan SumatraPDF pembaca utama PDF
@@ -318,7 +320,7 @@ gr:Έ&ξοδος\tCtrl-Q
 th:ออก\tCtrl-Q
 pt:&Sair\tCtrl-Q
 no:&Avslutt\tCtrl-Q
-sk:Ukonciť\tCtrl-Q
+sk:&Ukončiť\tCtrl-Q
 vn:Th&oát\tCtrl-Q
 lt:Baigti darbą\tCtrl-Q
 my:&Keluar\tCtrl-Q
@@ -358,7 +360,7 @@ gr:&Προβολή
 th:มุมมอง
 pt:&Ver
 no:&Vis
-sk:Zobraziť
+sk:&Zobraziť
 vn:&Xem
 lt:Peržiūra
 my:&Lihat
@@ -625,6 +627,7 @@ si:Zaznamki
 rs:Beleške
 mk:Обележувачи
 ro:Marcaje
+sk:Záložky
 -
 Fullscreen\tCtrl-L
 de:Vollbild
@@ -711,7 +714,7 @@ gr:Χρήση μηχανής απόδοσης MuPDF
 th:ใช้ MuPDF rendering engine
 pt:Usar motor renderizador MuPDF
 no:Bruk MuPDF renderingsmotor
-sk:Použiť zobrazovacie jadro MuPDF
+sk:Použiť zobrazenie pomocou MuPDF
 vn:Dùng động cơ trình diễn MuPDF
 lt:Atvaizduoti naudojant MuPDF
 my:Guna MuPDF enjin
@@ -991,7 +994,7 @@ gr:&Εστίαση
 th:ขยาย
 pt:&Zoom
 no:&Zoom
-sk:Zvačšenie
+sk:&Zväčšenie
 vn:&Thu-Phóng
 lt:Artinimas
 my:&Fokus
@@ -1031,7 +1034,7 @@ gr:Ολόκληρη σελίδα\tCtrl-0
 th:พอดีหน้า\tCtrl-0
 pt:Ajustar &Página\tCtrl-0
 no:Tilpass &side\tCtrl-0
-sk:Prispôsobiť stránke
+sk:Prispôsobiť stránke\tCtrl-0
 vn:Vừa &trang\tCtrl-0
 lt:Pritaikyti lange\tCtrl-0
 my:&Muatkan mukasurat\tCtrl-0
@@ -1071,7 +1074,7 @@ gr:Πραγματικό μέγεθος\tCtrl-1
 th:ขนาดจริง\tCtrl-1
 pt:Tamanho real\tCtrl-1
 no:F&aktisk størrelse\tCtrl-1
-sk:Skutočná veľkosť
+sk:Skutočná veľkosť\tCtrl-1
 vn:Kích thướ&c thật\tCtrl-1
 lt:Tikrasis dydis\tCtrl-1
 my:&Saiz sebenar\tCtrl-1
@@ -1257,7 +1260,7 @@ gr:&Ιστοσελίδα προγράμματος
 th:เยี่ยมเว็บไชด์
 pt:Visitar a página Web
 no:Besøk &hjemmeside
-sk:Navštíviť webstránku
+sk:&Navštíviť webovú stránku
 vn:Thăm website
 lt:Aplankyti svetainę
 my:&Lawat lamanweb
@@ -1297,7 +1300,7 @@ gr:&Πέρι...
 th:เกี่ยวกับ
 pt:Acerca de...
 no:&Om
-sk:O programe
+sk:&O programe...
 vn:Giới thiệu
 lt:Apie
 my:&Mengenai
@@ -1346,6 +1349,7 @@ rs:Pronađi prethodno
 id:Temukan Sebelum
 mk:Најди претходно
 ro:Caută înapoi
+sk:Hľadať predchádzajúce
 -
 Find Next
 de:Weitersuchen
@@ -1362,6 +1366,7 @@ rs:Pronađi sledeće
 id:Temukan Sesudah
 mk:Најди следно
 ro:Caută înainte
+sk:Hľadať ďalšie
 -
 Match case
 de:Groß-/Kleinschreibung beachten
@@ -1375,6 +1380,7 @@ rs:Razlikuj mala i velika slova
 id:Cocokkan Huruf Besar-Kecilnya
 mk:Разликувај мали и големи букви
 ro:Potrivire litere mari şi mici
+sk:Rozlišovať veľké/malé písmená
 -
 Open
 br:Abrir
@@ -1561,7 +1567,7 @@ gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγ�
 th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 pt:SumatraPDF é agora o leitor de PDF por defeito.
 no:SumatraPDF er nå standard PDF-leser.
-sk:SumatraPDF je teraz nastavený ako predvolený prehlaidač PDF súborov.
+sk:SumatraPDF je teraz nastavený ako predvolený prehliadač PDF súborov.
 vn:Hiện giờ SumatraPDF là trình đọc PDF mặc định của bạn.
 lt:SumatraPDF dabar yra numatytasis PDF dokumentų skaitytuvas
 my:SumatraPDF adalah pembaca utama fail PDF sekarang
@@ -1748,7 +1754,7 @@ gr:Βοήθησε στη μετάφραση
 th:ช่วยเหลือในการแปล
 pt:Contribuir na tradução.
 no:Bidra med oversetting
-sk:Prispieť k prekladu
+sk:Prispieť k prekladu programu
 vn:Đóng góp dịch
 lt:Pasiklydę vertime
 my:Menyumbangkan alihbahasa
