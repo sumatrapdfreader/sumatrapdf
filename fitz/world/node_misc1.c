@@ -95,6 +95,10 @@ tailrecursion:
 fz_rect
 fz_boundnode(fz_node *node, fz_matrix ctm)
 {
+    /* TODO: maybe this isn't the right place to fix it, but it fixes a problem
+       with some PDF */
+    if (!node)
+        return fz_emptyrect;
 	switch (node->kind)
 	{
 	case FZ_NTRANSFORM:
