@@ -59,4 +59,24 @@ Maybe:
 * DisplayState::visible could be removed. It was used when we were automatically
   reopening previously opened files, but we don't do it anymore, so we don't
   have to track it.
-  
+
+Crashes that happened:
+1. B.Judson - Go It Alone.pdf
+ 1      pdfbench.exe!fz_boundnode(fz_node_s * node=0x00000000, fz_matrix_s ctm={...}) 
+ 2      pdfbench.exe!fz_boundmasknode(fz_masknode_s * node=0x010ccac8, fz_matrix_s ctm={...}) 
+*3      pdfbench.exe!fz_boundnode(fz_node_s * node=0x010ccac8, fz_matrix_s ctm={...})
+ 4      pdfbench.exe!fitsinside(fz_node_s * node=0x010ccac8, fz_rect_s clip={...}) 
+ 5      pdfbench.exe!cleanmasks(fz_node_s * node=0x041019a0) 
+ 6      pdfbench.exe!cleanmasks(fz_node_s * node=0x011ce558) 
+ 7      pdfbench.exe!fz_optimizetree(fz_tree_s * tree=0x02197198) 
+ 8      pdfbench.exe!pdf_loadpage(pdf_page_s * * pagep=0x0012f9d0, pdf_xref_s * xref=0x01d3dae0, fz_obj_s * dict=0x02d0cfc0) 
+ 9      pdfbench.exe!PdfEngineFitz::getPdfPage(int pageNo=3) 
+ 10     pdfbench.exe!PdfEngineFitz::renderBitmap(int pageNo=3, double zoomReal=100.00000000000000, int rotation=0, int (void *)* abortCheckCbkA=0x00000000, void * abortCheckCbkDataA=0x00000000) 
+ 11     pdfbench.exe!renderPdf(const char * fileName=0x0012fb28, RenderType renderType=renderFitz) 
+ 12     pdfbench.exe!renderDirectory(char * path=0x00a63e68) 
+ 13     pdfbench.exe!renderCmdLineArg(char * cmdLineArg=0x00000000) 
+ 14     pdfbench.exe!main(int argc=8, char * * argv=0x00a62da8) 
+ 15     pdfbench.exe!__tmainCRTStartup() 
+ 16     kernel32.dll!_BaseProcessStart@4() 
+
+
