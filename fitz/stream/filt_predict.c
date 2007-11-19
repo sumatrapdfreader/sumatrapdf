@@ -133,6 +133,7 @@ tiff(fz_predict *p, unsigned char *in, unsigned char *out)
 	}
 }
 
+#if 0
 static void
 png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
 {
@@ -142,6 +143,51 @@ png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
 		left[k] = 0;
 		upleft[k] = 0;
 	}
+
+	if (p->encode)
+	{
+		for (k = 0, i = 0; i < p->stride; k = (k + 1) % p->bpp, i ++)
+		{
+			switch (predictor)
+			{
+			case 0: out[i] = in[i]; break;
+			case 1: out[i] = in[i] - left[k]; break;
+			case 2: out[i] = in[i] - p->ref[i]; break;
+			case 3: out[i] = in[i] - (left[k] + p->ref[i]) / 2; break;
+			case 4: out[i] = in[i] - paeth(left[k], p->ref[i], upleft[k]); break;
+			}
+			left[k] = in[i];
+			upleft[k] = p->ref[i];
+		}
+	}
+	else
+	{
+		for (k = 0, i = 0; i < p->stride; k = (k + 1) % p->bpp, i ++)
+		{
+			switch (predictor)
+			{
+			case 0: out[i] = in[i]; break;
+			case 1: out[i] = in[i] + left[k]; break;
+			case 2: out[i] = in[i] + p->ref[i]; break;
+			case 3: out[i] = in[i] + (left[k] + p->ref[i]) / 2; break;
+			case 4: out[i] = in[i] + paeth(left[k], p->ref[i], upleft[k]); break;
+			}
+			left[k] = out[i];
+			upleft[k] = p->ref[i];
+		}
+	}
+}
+#endif
+
+static void
+png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
+{
+	int buf[MAXC*2];
+	int *upleft, *left, i, k;
+
+	memset(buf, 0, sizeof(buf));
+	left = buf;
+	upleft = buf+p->bpp;
 
 	if (p->encode)
 	{
