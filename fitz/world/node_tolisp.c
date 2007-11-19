@@ -1,4 +1,5 @@
 #include "fitz-base.h"
+#include "fitz-stream.h"
 #include "fitz-world.h"
 
 static void indent(int level)
@@ -14,7 +15,7 @@ static void lispmeta(fz_metanode *node, int level)
 	fz_node *child;
 	indent(level);
 	printf("(meta ");
-	if (node->name) { fz_debugobj(node->name); }
+	if (node->name) { printf(node->name); }
 	if (node->dict) { printf("\n"); fz_debugobj(node->dict); }
 	printf("\n");
 	for (child = node->super.first; child; child = child->next)
@@ -68,7 +69,7 @@ static void lisptransform(fz_transformnode *node, int level)
 	printf(")\n");
 }
 
-static void lispcolor(fz_colornode *node, int level)
+static void lispcolor(fz_solidnode *node, int level)
 {
 	int i;
 	indent(level);
@@ -169,7 +170,7 @@ static void lispnode(fz_node *node, int level)
 	case FZ_NMASK: lispmask((fz_masknode*)node, level); break;
 	case FZ_NBLEND: lispblend((fz_blendnode*)node, level); break;
 	case FZ_NTRANSFORM: lisptransform((fz_transformnode*)node, level); break;
-	case FZ_NCOLOR: lispcolor((fz_colornode*)node, level); break;
+	case FZ_NCOLOR: lispcolor((fz_solidnode*)node, level); break;
 	case FZ_NPATH: lisppath((fz_pathnode*)node, level); break;
 	case FZ_NTEXT: lisptext((fz_textnode*)node, level); break;
 	case FZ_NIMAGE: lispimage((fz_imagenode*)node, level); break;

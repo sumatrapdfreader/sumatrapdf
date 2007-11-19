@@ -836,15 +836,17 @@ fz_rendertree(fz_pixmap **outp,
 	else
 		memset(gc->over->samples, 0x00, gc->over->w * gc->over->h * gc->over->n);
 
-DEBUG("tree %d [%d %d %d %d]\n{\n",
-gc->maskonly ? 1 : 4,
-bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+	DEBUG("tree %d [%d %d %d %d]\n{\n",
+		gc->maskonly ? 1 : 4,
+		bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+
+	/* fz_debugtree(tree); */
 
 	error = rendernode(gc, tree->root, ctm);
 	if (error)
 		return error;
 
-DEBUG("}\n");
+	DEBUG("}\n");
 
 	if (gc->dest)
 	{

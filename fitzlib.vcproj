@@ -330,6 +330,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fitz\world\node_tolisp.c"
+				>
+			</File>
+			<File
 				RelativePath=".\fitz\world\node_tree.c"
 				>
 			</File>
