@@ -133,6 +133,8 @@ tiff(fz_predict *p, unsigned char *in, unsigned char *out)
 	}
 }
 
+/* This is unoptimized version of png for reference. Some of them are
+   specialized for predictor which gives a nice speedup */
 #if 0
 static void
 png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
@@ -178,6 +180,44 @@ png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
 	}
 }
 #endif
+
+static void 
+png_1(fz_predict *p, unsigned char *in, unsigned char *out)
+{
+	int buf[MAXC*2];
+	int *upleft, *left, i, k;
+
+	memset(buf, 0, sizeof(buf));
+	left = buf;
+	upleft = buf+p->bpp;
+
+	if (p->encode)
+	{
+		for (k = 0, i = 0; i < p->stride; k = (k + 1) % p->bpp, i ++)
+		{
+			out[i] = in[i] - left[k];
+			left[k] = in[i];
+			upleft[k] = p->ref[i];
+		}
+	}
+	else
+	{
+		/* This is nasty but very optimized (2x faster than straightforward version) */
+		unsigned char* ref = p->ref;
+		int left_end = buf + p->bpp;
+		unsigned char* out_end = out + p->stride;
+		while (out < out_end)
+		{
+			*out = *in++ + *left;
+			*left++ = *out++;
+			*upleft++ = *ref++;;
+			if (left == left_end) {
+				left = buf;
+				upleft = buf + p->bpp;
+			}
+		}
+	}
+}
 
 static void
 png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
@@ -259,7 +299,10 @@ fz_processpredict(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			else {
 				predictor = *in->rp++;
 			}
-			png(dec, in->rp, out->wp, predictor);
+			if (1 == predictor)
+				png_1(dec, in->rp, out->wp);
+			else
+				png(dec, in->rp, out->wp, predictor);
 		}
 
 		if (dec->ref)
