@@ -702,14 +702,13 @@ rendermask(fz_renderer *gc, fz_masknode *mask, fz_matrix ctm)
 		return nil;
 
 DEBUG("mask [%d %d %d %d]\n{\n", clip.x0, clip.y0, clip.x1, clip.y1);
-
-        {
-        fz_irect sbox = fz_roundrect(fz_boundnode(shape, ctm));
-        fz_irect cbox = fz_roundrect(fz_boundnode(color, ctm));
-        if (cbox.x0 >= sbox.x0 && cbox.x1 <= sbox.x1)
-        if (cbox.y0 >= sbox.y0 && cbox.y1 <= sbox.y1)
-        DEBUG("potentially useless mask\n");
-        }
+{
+	fz_irect sbox = fz_roundrect(fz_boundnode(shape, ctm));
+	fz_irect cbox = fz_roundrect(fz_boundnode(color, ctm));
+	if (cbox.x0 >= sbox.x0 && cbox.x1 <= sbox.x1)
+	if (cbox.y0 >= sbox.y0 && cbox.y1 <= sbox.y1)
+	DEBUG("potentially useless mask\n");
+}
 
 	gc->clip = clip;
 	gc->over = nil;
@@ -814,6 +813,8 @@ tailcall:
 	return nil;
 }
 
+extern void fz_validatetree(fz_tree *tree);
+
 fz_error *
 fz_rendertree(fz_pixmap **outp,
 	fz_renderer *gc, fz_tree *tree, fz_matrix ctm,
@@ -841,6 +842,7 @@ fz_rendertree(fz_pixmap **outp,
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
 	/* fz_debugtree(tree); */
+	/* fz_validatetree(tree); */
 
 	error = rendernode(gc, tree->root, ctm);
 	if (error)
