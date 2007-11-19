@@ -159,7 +159,6 @@ png(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
 			upleft[k] = p->ref[i];
 		}
 	}
-
 	else
 	{
 		for (k = 0, i = 0; i < p->stride; k = (k + 1) % p->bpp, i ++)

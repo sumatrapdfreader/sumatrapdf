@@ -182,34 +182,49 @@ static inline void loadtile8_fast_pad3(byte * restrict src, byte * restrict dst,
 	/* TODO: if there was a reminder, copy it */
 }
 
+static inline void loadtile8_fast_pad4(byte * restrict src, byte * restrict dst, int w, int h)
+{
+	int x;
+	int tocopy = (h * w) / 4;
+	while (tocopy--)
+	{
+		*dst++ = 255;
+		*dst++ = *src++;
+		*dst++ = *src++;
+		*dst++ = *src++;
+		*dst++ = *src++;
+	}
+	/* TODO: if there was a reminder, copy it */
+}
+
 static void loadtile8_fast(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
 {
 	int x;
 
 	if (!pad)
-        {
-                if (sw == dw)
-                {
-                    memmove(dst, src, h * w);
-                }
-                else
-                {
-		    while (h--)
-		    {
-			    memmove(dst, src, w);
-			    src += sw;
-			    dst += dw;
-		    }
-                }
-        }
+	{
+		if (sw == dw)
+			memmove(dst, src, h * w);
+		else
+		{
+			while (h--)
+			{
+				memmove(dst, src, w);
+				src += sw;
+				dst += dw;
+			}
+		}
+	}
 	else
-        {
-                int swdelta = sw - w;
-	        int dwdelta = dw - w - (w / pad);
-                if ( (0 == swdelta) && (0 == dwdelta) )
+	{
+		int swdelta = sw - w;
+		int dwdelta = dw - w - (w / pad);
+		if ( (0 == swdelta) && (0 == dwdelta) )
 		{
 			if (3 == pad)
 				loadtile8_fast_pad3(src, dst, w, h);
+			else if (4 == pad)
+				loadtile8_fast_pad4(src, dst, w, h);
 			else
 				while (h--)
 				{
@@ -233,8 +248,9 @@ static void loadtile8_fast(byte * restrict src, int sw, byte * restrict dst, int
 				src += swdelta;
 				dst += dwdelta;
 			}
-        }
+		}
 }
+
 static void loadtile2(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
 	TILE(ttwo)
 static void loadtile4(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
