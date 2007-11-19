@@ -827,10 +827,10 @@ static void renderPdf(const char *fileName, RenderType renderType)
             double timeInMs = msTimer.timeInMs();
 
             if (gfTimings)
-                if (!bmpFitz)
-                    LogInfo("page fitz   %d: failed to renderin %.2f ms\n", curPage, timeInMs);
+                if (bmpFitz)
+                    LogInfo("page fitz   %d: (%dx%d): %.2f ms\n", curPage, bmpFitz->dx(), bmpFitz->dy(), timeInMs);
                 else
-                    LogInfo("page fitz   %d (%dx%d): %.2f ms\n", curPage, bmpFitz->dx(), bmpFitz->dy(), timeInMs);
+                    LogInfo("page fitz   %d: failed to render in %.2f ms\n", curPage, timeInMs);
             if (gfLinks)
                 DumpLinks(curPage, engineFitz);
         }
@@ -841,10 +841,10 @@ static void renderPdf(const char *fileName, RenderType renderType)
             msTimer.stop();
             double timeInMs = msTimer.timeInMs();
             if (gfTimings)
-                if (!bmpSplash)
-                    LogInfo("page splash %d: failed to render\n", curPage);
+                if (bmpSplash)
+                    LogInfo("page splash %d: (%dx%d): %.2f ms\n", curPage, bmpSplash->dx(), bmpSplash->dy(), timeInMs);
                 else
-                    LogInfo("page splash %d (%dx%d): %.2f ms\n", curPage, bmpSplash->dx(), bmpSplash->dy(), timeInMs);
+                    LogInfo("page splash %d: failed to render in %.2f ms\n", curPage, timeInMs);
             if (gfLinks)
                 DumpLinks(curPage, engineSplash);
         }
