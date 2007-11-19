@@ -143,6 +143,7 @@ DEBUG("solid %s [%d %d %d];\n", solid->cs->name, gc->rgb[0], gc->rgb[1], gc->rgb
 		n = gc->dest->w * gc->dest->h;
 	}
 
+	/* TODO: could be optimized */
 	while (n--)
 	{
 		p[0] = 255;
