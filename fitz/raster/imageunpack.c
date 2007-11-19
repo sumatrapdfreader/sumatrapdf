@@ -184,7 +184,6 @@ static inline void loadtile8_fast_pad3(byte * restrict src, byte * restrict dst,
 
 static inline void loadtile8_fast_pad4(byte * restrict src, byte * restrict dst, int w, int h)
 {
-	int x;
 	int tocopy = (h * w) / 4;
 	while (tocopy--)
 	{
