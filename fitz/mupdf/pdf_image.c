@@ -216,6 +216,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	fz_colorspace *cs = nil;
 	pdf_indexed *indexed = nil;
 	int stride;
+	int size_expected, size_real;
 
 	if ((*imgp = pdf_finditem(xref->store, PDF_KIMAGE, ref)))
 	{
@@ -376,12 +377,24 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		return error;
 	}
 
-	if (img->samples->wp - img->samples->bp < stride * h)
+	size_expected = stride * h;
+	size_real = img->samples->wp - img->samples->bp;
+	if (size_real < size_expected)
 	{
-		/* TODO: colorspace? */
+		fz_buffer *buf;
+		error = fz_newbuffer(&buf, size_expected);
+		if (error) {
+			/* TODO: colorspace? */
+			fz_dropbuffer(img->samples);
+			fz_free(img);
+			fz_droperror(error);
+			return fz_throw("syntaxerror: truncated image data");
+		}
+		memset(buf->bp, 0, size_expected);
+		memmove(buf->bp, img->samples->bp, size_real);
+		buf->wp = buf->bp + size_expected;
 		fz_dropbuffer(img->samples);
-		fz_free(img);
-		return fz_throw("syntaxerror: truncated image data");
+		img->samples = buf;
 	}
 
 	/* 0 means opaque and 1 means transparent, so we invert to get alpha */
