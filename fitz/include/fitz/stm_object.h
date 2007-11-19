@@ -30,8 +30,15 @@ struct fz_keyval_s
 struct fz_obj_s
 {
 	unsigned short refs;
-	char kind;				/* fz_objkind takes 4 bytes :( */
-	union
+	/* Using char for kind makes fz_obj_s 20bytes vs 24 bytes when
+	fz_objkind enum, so do that in release build but in debug build
+	use enum for easier debugging */
+#ifndef NDEBUG
+	fz_objkind kind;
+#else
+	char kind;
+#endif
+    union
 	{
 		int b;
 		int i;
