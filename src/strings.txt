@@ -50,10 +50,11 @@
 # Maxin B. John (maxinbjohn@gmail.com) - Malayalam 
 # Eyal Berman - Hebrew
 # milanso (milanso@gmail.com) - Srpski/Latinica (Serbian/Latin)
+# Горан Обрадовић - Srpski/Latinica (Serbian/Cyrillic )
 # Yudi Wibisono (http://yudiwbs.wordpress.com) - Indonesia
-# Goce Mitevski (goce.mitevski@gmail.com) - Macedonian/Cyrilic
+# Goce Mitevski (goce.mitevski@gmail.com) - Macedonian/Cyrillic 
 # Elly Câmpeanu - Romanian
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he rs id mk ro
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs
 -
 &File
 br:&Arquivo
@@ -87,10 +88,11 @@ my:&Fail
 fi:&Tiedosto
 ca:&Fitxer
 si:&Datoteka
+sr-rs:Датотека
 tw: 檔案(&F)
 ml:ഫയല്‍
 he:&קובץ
-rs:&Datoteka
+sp-rs:&Datoteka
 id:&Berkas
 mk:&Датотека
 ro:&Fişier
@@ -127,10 +129,11 @@ my:&Buka\tCtrl-O
 fi:&Avaa\tCtrl-O
 ca:&Obre\tCtrl-O
 si:&Odpri\tCtrl-O
+sr-rs:Отвори\tCtrl-O
 tw:開啟\tCtrl-O
 ml:തുറക്കുക\tCtrl-O
 he:&פתח\tCtrl-O
-rs:&Otvori\tCtrl-O
+sp-rs:&Otvori\tCtrl-O
 id:&Buka\tCtrl-O
 mk:&Отвори\tCtrl-O
 ro:&Deschidere\tCtrl-O
@@ -167,10 +170,11 @@ my:&Tutup\tCtrl-W
 fi:&Sulje\tCtrl-W
 ca:&Tanca\tCtrl-W
 si:&Zapri\tCtrl-W
+sr-rs:Затвори\tCtrl-W
 tw:關閉(&C)\tCtrl-W
 ml:അടയ്ക്കുക\tCtrl-W
 he:&סגור\tCtrl-W
-rs:&Zatvori\tCtrl-W
+sp-rs:&Zatvori\tCtrl-W
 id:&Tutup\tCtrl-W
 mk:&Затвори\tCtrl-W
 ro:Înc&hidere\tCtrl-W
@@ -207,10 +211,11 @@ my:&Simpan sebagai
 fi:&Tallenna nimellä
 ca:Anomena i de&sa...
 si:&Shrani kot
+sr-rs:Сачувај као...
 tw:另存新檔(&S)
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക
 he:שמירה בשם
-rs:&Sačuvaj kao...
+sp-rs:&Sačuvaj kao...
 id:&Simpan sebagai
 mk:&Зачувај како...
 ro:Salvare c&a...
@@ -247,10 +252,11 @@ my:&Cetak\tCtrl-P
 fi:&Tulosta\tCtrl-P
 ca:&Imprimeix...\tCtrl-P
 si:&Natisni\tCtrl-P
+sr-rs:Штампај
 tw:列印(&P)
 ml:അച്ചടി\tCtrl-P
 he:הדפס\tCtrl-p
-rs:&Štampaj
+sp-rs:&Štampaj
 id:&Cetak\tCtrl-P
 mk:&Печати
 ro:I&mprimare
@@ -287,10 +293,11 @@ my:Jadikan SumatraPDF pembaca utama PDF
 fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 ca:Fes el SumatraPDF el lector de PDF predeterminat
 si:Nastavi SumatraPDF kot privzeti PDF pregledovalnik
+sr-rs:Нека SumatraPFD буде стандардни PDF читач
 tw:把 SumatraPDF 作為預設的PDF閱讀工具
 ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
 he:הפוך את סומטרה לברירת מחדל עבור קבצי PDF
-rs:Neka SumatraPDF bude standardni PDF čitač
+sp-rs:Neka SumatraPDF bude standardni PDF čitač
 id:Jadikan SumatraPDF sebagai pembaca-PDF utama
 mk:Направи го SumatraPDF основен PDF читач
 ro:Fă SumatraPDF un cititor implicit de PDF
@@ -327,10 +334,11 @@ my:&Keluar\tCtrl-Q
 fi:&Poistu\tCtrl-Q
 ca:S&urt\tCtrl-Q
 si:&Izhod\tCtrl-Q
+sr-rs:Изађи\tCtrl-Q
 tw:離開(&X)\tCtrl-Q
 ml:പുറത്തേക്ക് \tCtrl-Q
 he:יציאה\tCtrl-Q
-rs:&Izađi\tCtrl-Q
+sp-rs:&Izađi\tCtrl-Q
 id:&Keluar\tCtrl-Q
 mk:&Излез\tCtrl-Q
 ro:&Ieşire\tCtrl-Q
@@ -367,10 +375,11 @@ my:&Lihat
 fi:&Näytä
 ca:&Visualitza
 si:&Pogled
+sr-rs:Приказ
 tw:檢視(&V)
 ml:കാഴ്ച്ച
 he:&תצוגה
-rs:Prikaz
+sp-rs:Prikaz
 id:&Lihat
 mk:&Приказ
 ro:&Vizualizare
@@ -407,10 +416,11 @@ my:Satu Mukasurat
 fi:Yksittäinen sivu
 ca:Una única pàgina
 si:Enostransko
+sr-rs:Приказ једне стране
 tw:單一頁面
 ml:ഒറ്റ താള്‍
 he:דף יחיד
-rs:Prikaz jedne strane
+sp-rs:Prikaz jedne strane
 id:Satu Halaman
 mk:Една страница
 ro:O singură pagină
@@ -447,10 +457,11 @@ my:Dua belah mukasurat
 fi:Rinnakkain
 ca:Pàgina doble
 si:Dvostransko
+sr-rs:Приказ две стране
 tw:整頁模式
 ml:തിരിച്ച്
 he:דף כפול
-rs:Prikaz dve strane
+sp-rs:Prikaz dve strane
 id:Dua Halaman
 mk:Две страници
 ro:Două pagini
@@ -487,10 +498,11 @@ my:Bersambung
 fi:Peräkkäin
 ca:Contínua
 si:Nepretrgano
+sr-rs:Непрекидни приказ
 tw:連續頁面
 ml:തുടര്‍ച്ച
 he:המשך
-rs:Neprekidni prikaz
+sp-rs:Neprekidni prikaz
 id:Bersambung
 mk:Непрекинат приказ
 ro:Continuu
@@ -527,10 +539,11 @@ my:Dua belah mukasurat bersambung
 fi:Peräkkäin ja rinnakkain
 ca:Pàgina doble contínua
 si:Nepretrgano dvostransko
+sr-rs:Непрекидни приказ на две стране
 tw:連續整頁模式
 ml:തുടര്‍ച്ചയായി കാണിക്കുക
 he:המשך תצוגה כפולה
-rs:Neprkidni prikaz dve strane
+sp-rs:Neprkidni prikaz dve strane
 id:Dua Halaman Bersambung
 mk:Непрекинат приказ со две страници
 ro:Pagină dublă continuu
@@ -567,10 +580,11 @@ my:Ubah ke kiri
 fi:Kierrä vasempaan
 ca:Gira a l'esquerra
 si:Obrni v levo
+sr-rs:Ротирај лево
 tw:頁面左旋
 ml: ഇടത്തേക്കു ചരിക്കുക
 he:סובב שמאלה
-rs:Rotiraj levo
+sp-rs:Rotiraj levo
 id:Putar ke kiri
 mk:Ротирај на лево
 ro:Roteşte spre stânga
@@ -607,10 +621,11 @@ my:Ubah ke kanan
 fi:Kierrä oikeaan
 ca:Gira a la dreta
 si:Obrni v desno
+sr-rs:Ротирај десно
 tw:頁面右旋
 ml:വലത്തേക്കു ചരിക്കുക
 he:סובב ימינה
-rs:Rotiraj desno
+sp-rs:Rotiraj desno
 id:Putar ke Kanan
 mk:Ротирај на десно
 ro:Roteşte spre dreapta
@@ -624,7 +639,8 @@ ja:ブックマーク
 fi:Kirjainmerkit
 ca:Punts d'interés
 si:Zaznamki
-rs:Beleške
+sr-rs:Белешке
+sp-rs:Beleške
 mk:Обележувачи
 ro:Marcaje
 sk:Záložky
@@ -642,9 +658,10 @@ my:Mukasurat Penuh\tCtrl-L
 fi:Koko näyttö\tCtrl-L
 ca:Pantalla completa\tCtrl-L
 si:Celozaslonsko\tCtrl-L
+sr-rs:Цео екран\tCtrl-L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl-L
 he:מסך מלא\tCtrl-L
-rs:Ceo ekran\tCtrl-L
+sp-rs:Ceo ekran\tCtrl-L
 id:Selayar Penuh\tCtrl-L
 mk:На цел екран\tCtrl-L
 ro:Ecran complet
@@ -681,10 +698,11 @@ my:Tunjukkan Bar Alat
 fi:Näytä työkalupalkki
 ca:Mostra la barra d'eines
 si:Prikaži orodno vrstico
+sr-rs:Прикажи траку са алатима
 tw:顯示工具列
 ml:റ്റുള്‍ബാര്‍  കാണിക്കുക
 he:הצג שורת תפריט
-rs:Prikaži traku sa alatima
+sp-rs:Prikaži traku sa alatima
 id:Perlihatkan toolbar
 mk:Прикажи алатник
 ro:Arată bara de instrumente
@@ -721,10 +739,11 @@ my:Guna MuPDF enjin
 fi:Käytä MuPDF renderöintimoottoria
 ca:Usa el motor de renderització MuPDF
 si:Uporabi MuPDF za prikaz PDF datotek
+sr-rs:Користи MuPDF за приказ PDF докумената
 tw:使用 MuPDF 渲染引擎
 ml:MuPDF പതിപ്പ് ഉപയോഗിക്കുക
 he:השתמש במנוע רינדור MuPDF
-rs:Koristi MuPDF za prikaz PDF dokumenata
+sp-rs:Koristi MuPDF za prikaz PDF dokumenata
 id:Gunakan MuPDF rendering engine
 mk:Користи MuPDF за приказ на PDF документи
 ro:Utilizează MuPDF rendering engine
@@ -761,10 +780,11 @@ my:&Pergi Ke
 fi:&Siirry
 ca:&Vés a
 si:Po&jdi na
+sr-rs:Иди на
 tw:移至(&G)
 ml:അവിടെ സന്ദര്‍ശിക്കുക
 he:לך ל
-rs:&Idi na
+sp-rs:&Idi na
 id:&Pergi ke
 mk:П&ојди на
 ro:Sal&t la...
@@ -801,10 +821,11 @@ my:Mukasurat seterusnya
 fi:Seuraava sivu
 ca:Pàgina següent
 si:Naslednja stran
+sr-rs:Следећа страна
 tw:下一頁
 ml:അടുത്ത താള്‍
 he:דף הבא
-rs:Sledeća strana
+sp-rs:Sledeća strana
 id:Halaman Berikutnya
 mk:Следна страница
 ro:Pagina următoare
@@ -841,10 +862,11 @@ my:Mukasurat sebelumnya
 fi:Edellinen sivu
 ca:Pàgina anterior
 si:Predhodna stran
+sr-rs:Претходна страна
 tw:上一頁
 ml:മുന്‍പുള്ള താള്‍
 he:דף קודם
-rs:Prethodna strana
+sp-rs:Prethodna strana
 id:Halaman Sebelumnya
 mk:Претходна страница
 ro:Pagina anterioară
@@ -881,10 +903,11 @@ my:Mukasurat pertama\tHome
 fi:Ensimmäinen sivu\tHome
 ca:Primera pàgina\tInici
 si:Prva stran\tHome
+sr-rs:Прва страна\tHome
 tw:首頁\tHome
 ml:ആദ്യ താള്‍\tHome
 he:דף ראשון\tHome
-rs:Prva strana\tHome
+sp-rs:Prva strana\tHome
 id:Halaman Pertama\tHome
 mk:Прва страница\tHome
 ro:Prima pagină\tHome
@@ -921,10 +944,11 @@ my:Mukasurat terakhir
 fi:Viimeinen sivu\tEnd
 ca:Última pàgina\tFinal
 si:Zadnja stran\tEnd
+sr-rs:Последња страна\tEnd
 tw:尾頁\tEnd
 ml:അവസാന താള്‍\tEnd
 he:דף אחרון\tEnd
-rs:Poslednja strana\tEnd
+sp-rs:Poslednja strana\tEnd
 id:Halaman Terakhir\tEnd
 mk:Последна страница\tEnd
 ro:Ultima pagină\tEnd
@@ -961,10 +985,11 @@ my:Mukasurat...\tCtrl-G
 fi:Sivulle...\tCtrl-G
 ca:Pàgina...\tCtrl-G
 si:Stran...\tCtrl-G
+sr-rs:Страна...\tCtrl-G
 tw:頁面...\tCtrl-G
 ml:താള്‍...\tCtrl-G
 he:דף...\tCtrl-G
-rs:Strana...\tCtrl-G
+sp-rs:Strana...\tCtrl-G
 id:Halaman...\tCtrl-G
 mk:Страница...\tCtrl-G
 ro:Pagina...\tCtrl-G
@@ -1001,10 +1026,11 @@ my:&Fokus
 fi:&Kohdista
 ca:&Escalat
 si:Po&večava
+sr-rs:Увећај
 tw:縮放(&Z)
 ml:വലുതാക്കുക
 he:זום
-rs:&Uvećaj
+sp-rs:&Uvećaj
 id:&Ukuran
 mk:&Зголемување
 ro:&Panoramare
@@ -1041,10 +1067,11 @@ my:&Muatkan mukasurat\tCtrl-0
 fi:Sovita sivu pystysuunnassa\tCtrl-0
 ca:Ajusta a la pàgina\tCtrl-0
 si:&Prilagodi strani\tCtrl-0
+sr-rs:Прилагоди страни\tCtrl-0
 tw:適合頁面\tCtrl-0
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl-0
 he:התאם דף\tCtrl-0
-rs:Prilagodi &strani\tCtrl-0
+sp-rs:Prilagodi &strani\tCtrl-0
 id:&Sesuaikan\tCtrl-0
 mk:Прилагоди на &страница\tCtrl-0
 ro:&Pagină întreagă\tCtrl-0
@@ -1081,10 +1108,11 @@ my:&Saiz sebenar\tCtrl-1
 fi:&Todellinen koko\tCtrl-1
 ca:Mida &real\tCtrl-1
 si:&Dejanska velikost\tCtrl-1
+sr-rs:Страна величина\tCtrl-1
 tw:實際大小\tCtrl-1
 ml:ശരിയായ വലിപ്പം\tCtrl-1
 he:גודל מקור\tCtrl-1
-rs:Stvarna veličina\tCtrl-1
+sp-rs:Stvarna veličina\tCtrl-1
 id:&Ukuran Sebenarnya\tCtrl-1
 mk:Ре&ална големина\tCtrl-1
 ro:Mărime &actuală\tCtrl-1
@@ -1121,10 +1149,11 @@ my:&Muatkan lebar\tCtrl-2
 fi:&Sovita sivu vaakasuunnassa\tCtrl-2
 ca:Ajusta a l'am&plada\tCtrl-2
 si:P&rilagodi po širini\tCtrl-2
+sr-rs:Подеси по ширини\tCtrl-2
 tw:適合寬度\tCtrl-2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
 he:התאם רוחב\tCtrl-2
-rs:&Podesi po širini\tCtrl-2
+sp-rs:&Podesi po širini\tCtrl-2
 id:Sesuaikan dengan &Lebar\tCtrl-2
 mk:Прилагоди на &ширина\tCtrl-2
 ro:Lăţime pagină
@@ -1187,10 +1216,11 @@ my:&Bahasa
 fi:Kieli
 ca:&Llengua
 si:&Jezik
+sr-rs:Језик
 tw:語言(&L)
 ml:ഭാഷ
 he:שפה
-rs:&Jezik
+sp-rs:&Jezik
 id:Ba&hasa
 mk:&Јазик
 ro:&Limbă
@@ -1227,10 +1257,11 @@ my:&Bantuan
 fi:&Ohje
 ca:&Ajuda
 si:P&omoč
+sr-rs:Помоћ
 tw:說明(&H)
 ml:സഹായം
 he:עזרה
-rs:&Pomoć
+sp-rs:&Pomoć
 id:Ban&tuan
 mk:&Помош
 ro:A&jutor
@@ -1267,10 +1298,11 @@ my:&Lawat lamanweb
 fi:Vieraile ohjelman kotisivuilla
 ca:Visiteu el lloc &web
 si:Ob&išči domačo stran
+sr-rs:Посети Интернет страну
 tw:連結網站(&V)
 ml:വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 he:בקר באתר
-rs:&Poseti Internet stranu
+sp-rs:&Poseti Internet stranu
 id:&Kunjungi Halaman Web
 mk:Посети веб-сајт
 ro:&Vizitează website-ul
@@ -1307,10 +1339,11 @@ my:&Mengenai
 fi:&Tietoja
 ca:&Quant a...
 si:O Progr&amu
+sr-rs:О програму
 tw:關於(&A)
 ml:പറ്റി
 he:אודות
-rs:&O programu
+sp-rs:&O programu
 id:&Tentang
 mk:&За SumatraPDF...
 ro:&Despre
@@ -1327,9 +1360,10 @@ my:Cari:
 fi:Etsi:
 ca:Cerca:
 si:Najdi:
+sr-rs:Пронађи
 ml:കണ്ടെത്തുക
 he:חפש
-rs:Pronađi
+sp-rs:Pronađi
 id:Temukan
 mk:Најди
 ro:Caută
@@ -1343,9 +1377,10 @@ ja:前を検索
 fi:Etsi edellinen
 ca:Cerca anterior
 si:Najdi predhodno
+sr-rs:Пронађи претходно
 ml: മുന്‍പുള്ളത് കണ്ടെത്തുക
 he:חפש קודם
-rs:Pronađi prethodno
+sp-rs:Pronađi prethodno
 id:Temukan Sebelum
 mk:Најди претходно
 ro:Caută înapoi
@@ -1360,9 +1395,10 @@ ja:次を検索
 fi:Etsi seuraava
 ca:Cerca següent
 si:Najdi naslednje
+sr-rs:Пронађи следеће
 ml:അടുത്തത് കണ്ടെത്തുക
 he:חפש הבא
-rs:Pronađi sledeće
+sp-rs:Pronađi sledeće
 id:Temukan Sesudah
 mk:Најди следно
 ro:Caută înainte
@@ -1376,7 +1412,8 @@ ja:大文字と小文字に一致する
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
 si:Velikost pisave
-rs:Razlikuj mala i velika slova
+sr-rs:Разликуј мала и велика слова
+sp-rs:Razlikuj mala i velika slova
 id:Cocokkan Huruf Besar-Kecilnya
 mk:Разликувај мали и големи букви
 ro:Potrivire litere mari şi mici
@@ -1414,10 +1451,11 @@ my:Buka
 fi:Avaa
 ca:Obre
 si:Odpri
+sr-rs:Отвори
 tw:開啟
 ml:തുറക്കുക
 he:פתח
-rs:Otvori
+sp-rs:Otvori
 id:Buka
 mk:Отвори
 ro:Deschide
@@ -1454,10 +1492,11 @@ my:Fokus ke dalam
 fi:Kohdenna lähemmäksi
 ca:Apropa't
 si:Povečaj
+sr-rs:Увећај
 tw:放大
 ml:വലുതാക്കുക
 he:זום פנימה
-rs:Uvećaj
+sp-rs:Uvećaj
 id:Perbesar
 mk:Зголеми
 ro:Măreşte
@@ -1494,10 +1533,11 @@ my:Fokus ke luar
 fi:Loitonna kauemmaksi
 ca:Allunya't
 si:Zmanjšaj
+sr-rs:Умањи
 tw:縮小
 ml:ചെറുതാക്കുക
 he:זום החוצה
-rs:Umanji
+sp-rs:Umanji
 id:Perkecil
 mk:Намали
 ro:Micşorează
@@ -1534,10 +1574,11 @@ my:Mengenai SumatraPDF
 fi:Tietoja SumatraPDF:stä
 ca:Quant al SumatraPDF
 si:O SumatraPDF
+sr-rs:О програму SumatraPDF
 tw:關於 SumatraPDF
 ml:സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
 he:אודות סומטרהPDF
-rs:O programu SumatraPDF
+sp-rs:O programu SumatraPDF
 id:Tentang SumatraPDF
 mk:За апликацијата SumatraPDF
 ro:Despre SumatraPDF
@@ -1574,9 +1615,10 @@ my:SumatraPDF adalah pembaca utama fail PDF sekarang
 fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
 ca:Ara el SumatraPDF és el visor de PDF predeterminat.
 si:SumatraPFD je privzeti pregledovalnik PDF datotek.
+sr-rs:SumatraPDF је сада подразумевани читач PDF докумената
 tw:已經把 SumatraPDF 設為預設的PDF閱讀工具
 ml:സുമാത്രാപിഡീഎഫ് ആണ് ഇപ്പൊള്‍ നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം
-rs:SumatraPDF je sada standardni čitač PDF dokumenata
+sp-rs:SumatraPDF je sada podrazumevani čitač PDF dokumenata
 id:SumatraPDF sekarang menjadi pembaca-PDF utama.
 mk:Сега SumatraPDF е основен читач за PDF документи.
 ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
@@ -1613,9 +1655,10 @@ my:Gagal menyimpan fail
 fi:Tiedoston tallennus epäonnistui
 ca:S'ha produït un error en desar el fitxer.
 si:Snemanje datoteke je neuspešno.
+sr-rs:Грешка при снимању PDF документа
 tw:檔案儲存失敗
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
-rs:Greška pri snimanju PDF dokumenta
+sp-rs:Greška pri snimanju PDF dokumenta
 id:Gagal menyimpan berkas
 mk:Грешка при зачувување на PDF документот
 ro:Eroare la salvarea unui fişier
@@ -1652,9 +1695,10 @@ my:Masalah memuatkan fail PDF
 fi:Tiedoston avaus epäonnistui
 ca:S'ha produït un error en carregar el fitxer.
 si:Napaka pri branju PDF datoteke.
+sr-rs:Грешка при учитавању PDF документа
 tw:讀取PDF檔案時發失錯誤
 ml:PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
-rs:Greška pri učitavanju PDF dokumenta
+sp-rs:Greška pri učitavanju PDF dokumenta
 id:Kesalahan dalam memanggil berkas PDF.
 mk:Грешка при вчитување на PDF документот.
 ro:Erroare la încărcarea unui fişier PDF.
@@ -1691,9 +1735,10 @@ my:Pencetak tidak dapat dibuka
 fi:Tulostinta ei löydy
 ca:No s'ha pogut accedir a la impressora.
 si:Ne morem najti tiskalnika.
+sr-rs:Штампач није пронађен
 tw:無法開啟印表機
 ml:അച്ചടിയന്ത്രം തുറക്കാന്‍ സാധിച്ചില്ല
-rs:Nije moguće pronaći štampač
+sp-rs:Štampač nije pronađen
 id:Tidak dapat membuka printer
 mk:Пристапот до печатачот не е можен
 ro:Imprimantă inaccesibilă
@@ -1730,9 +1775,10 @@ my:Masalah mencetak
 fi:Tulostusongelma
 ca:S'ha produït un problema en la impressió.
 si:Napaka pri tiskanju.
+sr-rs:Проблем при штампању
 tw:列印問題
 ml:അച്ചടിയില് തകരാര്‍
-rs:Problem sa štampanjem
+sp-rs:Problem pri štampanju
 id:Masalahan Pencetakkan.
 mk:Проблем при печатење.
 ro:Problemă la imprimare.
@@ -1760,10 +1806,11 @@ lt:Pasiklydę vertime
 my:Menyumbangkan alihbahasa
 ca:Contribuïu en la traducció
 si:Prispevaj prevod
+sr-rs:Помози у превођењу овог програма
 tw:翻譯提供
 ml:മാക്സിന്‍ ബി ജൊണ്‍
 he:עזור לתרגם
-rs:Pomozi u prevođenju ovog programa
+sp-rs:Pomozi u prevođenju ovog programa
 id:Membantu alihbahasa
 mk:Учествувај во преведувањето на оваа апликација
 ro:Contribuie la traducere

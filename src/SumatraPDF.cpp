@@ -273,7 +273,10 @@ MenuDef menuDefLang[] = {
     { "Portuguese - Portugal (Portugu\303\252s)",  IDM_LANG_PT },
     { "Romanian", IDM_LANG_RO},
     { "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)",     IDM_LANG_RU },
-    { "Serbian", IDM_LANG_RS},
+    /* according to http://wiki.snap.com/index.php/User_talk:Snap, Serbian (latin) should 
+       be sp-rs and Serbian (Cyrillic) should be sr-rs */
+    { "Serbian (Latin)", IDM_LANG_SP_RS},
+    { "Serbian (Cyrillic)", IDM_LANG_SR_RS},
     { "Slovak (Sloven\304\215ina)",      IDM_LANG_SK },
     { "Slovenian (Slovensko)", IDM_LANG_SI },
     { "Spanish (Espa\303\261ol)",     IDM_LANG_ES },
@@ -325,10 +328,11 @@ struct LangDef {
     {"tw", IDM_LANG_TW},
     {"ml", IDM_LANG_ML},
     {"he", IDM_LANG_HE},
-    {"rs", IDM_LANG_RS},
+    {"sp-rs", IDM_LANG_SP_RS},
     {"id", IDM_LANG_ID},
     {"mk", IDM_LANG_MK},
     {"ro", IDM_LANG_RO},
+    {"sr-rs", IDM_LANG_SR_RS},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -368,10 +372,11 @@ static const char *g_lcidLangMap[] = {
     "tw", NULL, NULL, // Chinese Traditional
     "ml", NULL, NULL, // Malayalam
     "he", NULL, NULL, // Hebrew
-    "rs", NULL, NULL, // Serbian
+    "sp-rs", NULL, NULL, // Serbian (Latin)
     "id", NULL, NULL, // Indonesian
     "mk", NULL, NULL, // Macedonian
     "ro", NULL, NULL, // Romanian
+    "sr-rs", NULL, NULL, // Serbian (Cyrillic)
     NULL
 };
 
@@ -5215,10 +5220,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_TW:
                 case IDM_LANG_ML:
                 case IDM_LANG_HE:
-                case IDM_LANG_RS:
+                case IDM_LANG_SP_RS:
                 case IDM_LANG_ID:
                 case IDM_LANG_MK:
                 case IDM_LANG_RO:
+                case IDM_LANG_SR_RS:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:
