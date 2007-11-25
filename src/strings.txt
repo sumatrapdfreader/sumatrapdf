@@ -1360,13 +1360,13 @@ my:Cari:
 fi:Etsi:
 ca:Cerca:
 si:Najdi:
-sr-rs:Пронађи
-ml:കണ്ടെത്തുക
-he:חפש
-sp-rs:Pronađi
-id:Temukan
-mk:Најди
-ro:Caută
+sr-rs:Пронађи:
+ml:കണ്ടെത്തുക:
+he:חפש:
+sp-rs:Pronađi:
+id:Temukan:
+mk:Најди:
+ro:Caută:
 -
 Find Previous
 de:Rückwärts suchen
