@@ -560,6 +560,7 @@ TryPoppler:
     bool fok = _popplerEngine->load(fileName, win);
     if (!fok)
         goto ErrorPoppler;
+    _pageCount = _popplerEngine->pageCount();
     return true;
 
 ErrorPoppler:
