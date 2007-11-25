@@ -207,14 +207,14 @@ typedef struct ToolbarButtonInfo {
 
 #define IDB_SEPARATOR  -1
 
-ToolbarButtonInfo gToolbarButtons[] = {
+static ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"), 0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
     { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"), 0 },
     { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"), 0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
-    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"), 0 },
     { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 },
+    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,		_TRN("Zoom In"), 0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, -1 },
     { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
