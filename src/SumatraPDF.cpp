@@ -1881,6 +1881,10 @@ static WindowInfo* LoadPdf(const char *fileName)
         RebuildProgramMenus();
     }
 
+    RECT rect;
+    GetClientRect(win->hwndFrame, &rect);
+    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
+
     /* TODO: if fileFromHistory, set the state based on gFileHistoryList node for
        this entry */
     win->state = WS_SHOWING_PDF;
@@ -2473,12 +2477,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         //BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
         BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo);
-        if (entry) {
-            if ((dm->rotation() != entry->rotation) || (dm->zoomReal() != entry->zoomLevel))
-                entry = NULL;
-            else
-                renderedBmp = entry->bitmap;
-        }
+
+        if (entry)
+            renderedBmp = entry->bitmap;
 
         if (!renderedBmp)
             DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
@@ -2572,11 +2573,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
             SelectObject(bmpDC, hbmp);
-#if 0
-            if ((currPageDx != renderedBmpDx) || (currPageDy != renderedBmpDy))
+            if ((renderedBmpDx < currPageDx) || (renderedBmpDy < currPageDy))
                 StretchBlt(hdc, fx+1, fy+1, fw-2, fh-2, bmpDC, xSrc, ySrc, renderedBmpDx, renderedBmpDy, SRCCOPY);
             else
-#endif
                 BitBlt(hdc, fx+1, fy+1, fw-2, fh-2, bmpDC, xSrc, ySrc, SRCCOPY);
             DeleteDC(bmpDC);
         }
