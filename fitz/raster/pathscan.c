@@ -405,14 +405,19 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 		fz_path_1c1(list, cov, len, dst);
 }
 
+/* In my tests, 64 bytes covers ~90% of cases */
+#define DELTAS_STATIC_MAX 64
+
 fz_error *
 fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_irect clip,
 	fz_pixmap *pix, unsigned char *rgb, int over)
 {
 	fz_error *error;
 	unsigned char *deltas;
+	unsigned char deltas_static_buf[DELTAS_STATIC_MAX];
 	int y, e;
 	int yd, yc;
+	int deltas_count;
 
 	int xmin = fz_idiv(gel->xmin, gel->hs);
 	int xmax = fz_idiv(gel->xmax, gel->hs) + 1;
@@ -430,11 +435,19 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_irect clip,
 	if (gel->len == 0)
 		return nil;
 
-	deltas = fz_malloc(xmax - xmin + 1);
+	deltas_count = xmax - xmin + 1;
+#if 0
+	/* for gathering stats */
+	printf("dc: %d\n", deltas_count);
+#endif
+	if (deltas_count <= DELTAS_STATIC_MAX)
+		deltas = deltas_static_buf;
+	else
+		deltas = fz_malloc(deltas_count);
 	if (!deltas)
 		return fz_outofmem;
 
-	memset(deltas, 0, xmax - xmin + 1);
+	memset(deltas, 0, deltas_count);
 
 	e = 0;
 	y = gel->edges[0].y;
@@ -455,7 +468,8 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_irect clip,
 
 		error = insertael(ael, gel, y, &e);
 		if (error) {
-			fz_free(deltas);
+			if (deltas != deltas_static_buf)
+				fz_free(deltas);
 			return error;
 		}
 
@@ -480,7 +494,8 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_irect clip,
 		blit(pix, xmin + skipx, yd, deltas, skipx, clipn, rgb, over);
 	}
 
-	fz_free(deltas);
+	if (deltas != deltas_static_buf)
+		fz_free(deltas);
 	return nil;
 }
 
