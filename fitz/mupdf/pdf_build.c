@@ -499,6 +499,7 @@ pdf_addtransform(pdf_gstate *gs, fz_node *transform)
 	error = fz_newovernode(&over);
 	if (error) return error;
 
+	/* TODO: it looks like over node is always being leaked */
 	fz_insertnodelast(gs->head, transform);
 	fz_insertnodelast(transform, over);
 	gs->head = over;
