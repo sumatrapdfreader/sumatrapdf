@@ -774,12 +774,12 @@ static void renderPdf(const char *fileName, RenderType renderType)
 
         MsTimer msTimer;
         if (!engineFitz->load(fileNameFitz, NULL)) {
-            LogInfo("failed to load fitz\n");
+            LogInfo("fitz load failed\n");
             goto Error;
         }
         msTimer.stop();
         double timeInMs = msTimer.timeInMs();
-        LogInfo("load fitz  : %.2f ms\n", timeInMs);
+        LogInfo("fl: %.2f ms\n", timeInMs);
         pageCountFitz = engineFitz->pageCount();
     }
 
@@ -788,12 +788,12 @@ static void renderPdf(const char *fileName, RenderType renderType)
 
         MsTimer msTimer;
         if (!engineSplash->load(fileNameSplash, NULL)) {
-            LogInfo("failed to load splash\n");
+            LogInfo("splash load failed\n");
             goto Error;
         }
         msTimer.stop();
         double timeInMs = msTimer.timeInMs();
-        LogInfo("load splash: %.2f ms\n", timeInMs);
+        LogInfo("sl: %.2f ms\n", timeInMs);
         pageCountSplash = engineSplash->pageCount();
     }
 
@@ -811,7 +811,7 @@ static void renderPdf(const char *fileName, RenderType renderType)
             pageCount = pageCountSplash;
             break;
     }
-    LogInfo("page count: %d\n", pageCount);
+    LogInfo("pages: %d\n", pageCount);
 
     for (int curPage = 1; curPage <= pageCount; curPage++) {
         if ((gPageNo != PAGE_NO_NOT_GIVEN) && (gPageNo != curPage))
@@ -828,9 +828,9 @@ static void renderPdf(const char *fileName, RenderType renderType)
 
             if (gfTimings)
                 if (bmpFitz)
-                    LogInfo("page fitz   %d: (%dx%d): %.2f ms\n", curPage, bmpFitz->dx(), bmpFitz->dy(), timeInMs);
+                    LogInfo("f %d: %.2f ms : (%dx%d)\n", curPage, timeInMs, bmpFitz->dx(), bmpFitz->dy());
                 else
-                    LogInfo("page fitz   %d: failed to render in %.2f ms\n", curPage, timeInMs);
+                    LogInfo("fitz failed %d: %.2f ms\n", curPage, timeInMs);
             if (gfLinks)
                 DumpLinks(curPage, engineFitz);
         }
@@ -842,9 +842,9 @@ static void renderPdf(const char *fileName, RenderType renderType)
             double timeInMs = msTimer.timeInMs();
             if (gfTimings)
                 if (bmpSplash)
-                    LogInfo("page splash %d: (%dx%d): %.2f ms\n", curPage, bmpSplash->dx(), bmpSplash->dy(), timeInMs);
+                    LogInfo("s %d: %.2f ms : (%dx%d) \n", curPage, timeInMs, bmpSplash->dx(), bmpSplash->dy());
                 else
-                    LogInfo("page splash %d: failed to render in %.2f ms\n", curPage, timeInMs);
+                    LogInfo("splash failed %d: %.2f ms\n", curPage, timeInMs);
             if (gfLinks)
                 DumpLinks(curPage, engineSplash);
         }
@@ -1216,8 +1216,6 @@ int main(int argc, char **argv)
     if (0 == StrList_Len(&gArgsListRoot))
         printUsageAndExit(argc, argv);
     assert(gArgsListRoot);
-
-    void *leak = malloc(20);
 
     SplashColorsInit();
     globalParams = new GlobalParams("");
