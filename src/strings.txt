@@ -9,7 +9,7 @@
 # German:
 #   Lars Wohlfahrt (www.eviltux.de)
 #   Christopher Amann
-# Hakan ATA - Turkish
+# Hakan ATAC - Turkish
 # Яўген Змачынскі - Belarusian
 # French:
 #   fiuzzy
@@ -632,6 +632,7 @@ ro:Roteşte spre dreapta
 -
 Bookmarks
 de:Lesezeichen
+tr:Yer imleri
 hu:Könyvjelzők
 lt:Žymės
 my:Penanda
@@ -647,6 +648,7 @@ sk:Záložky
 -
 Fullscreen\tCtrl-L
 de:Vollbild
+tr:Tam Ekran\tCtrl-L
 hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
@@ -1350,6 +1352,7 @@ ro:&Despre
 -
 Find:
 de:Suchen:
+tr:Bul:
 hu:Keresés:
 pl:Szukaj:
 ja:検索:
@@ -1370,6 +1373,7 @@ ro:Caută:
 -
 Find Previous
 de:Rückwärts suchen
+tr:Öncekini bul
 hu:Előző Keresése
 lt:Rasti kitą
 my:Cari sebelum
@@ -1388,6 +1392,7 @@ sk:Hľadať predchádzajúce
 -
 Find Next
 de:Weitersuchen
+tr:Sonrakini Bul
 hu:Következő Keresése
 lt:Rasti ankstesnį
 my:Cari selepas
@@ -1406,6 +1411,7 @@ sk:Hľadať ďalšie
 -
 Match case
 de:Groß-/Kleinschreibung beachten
+tr:Büyük/Küçük harf eşleştir
 hu:Kis- és nagybetű megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字に一致する
@@ -1787,6 +1793,7 @@ Contribute translation
 hu:Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
 fr:Contribuer à la traduction
+tr:Çeviriye katkıda bulunun.
 pl:Pomóż przy translacji
 ja:翻訳の提供
 nl:Help met vertalen
