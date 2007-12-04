@@ -3422,11 +3422,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int from
 
         DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
 
-        // render at a big zoom, 250% should be good enough. It's a compromise
-        // between quality and memory usage. TODO: ideally we would use zoom
-        // that matches the size of the page in the printer
-        // TODO: consider using a greater zoom level e.g. 750.0
-        RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 250.0, rotation, NULL, NULL);
+        // TODO: ideally we would use zoom  that matches the size of the page in the printer
+        RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 60000.0 / PDF_FILE_DPI, rotation, NULL, NULL);
         if (!bmp)
             goto Error; /* most likely ran out of memory */
 
@@ -3443,7 +3440,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int from
         if (DMORIENT_LANDSCAPE == devMode->dmOrientation)
             swap_int(&topMargin, &leftMargin);
 
-        bmp->stretchDIBits(hdc, -leftMargin, -topMargin, pageWidth, pageHeight);
+        bmp->stretchDIBits(hdc, leftMargin, topMargin, pageWidth, pageHeight);
         delete bmp;
         if (EndPage(hdc) <= 0) {
             AbortDoc(hdc);
