@@ -16,6 +16,10 @@
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
+// To get PROCESS_MEMORY_COUNTERS_EX
+#define WINVER 0x0502
+#define _WIN32_WINNT 0x0502
+
 #include "base_util.h"
 #include "str_util.h"
 #include "file_util.h"
@@ -44,6 +48,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <psapi.h>
 
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
@@ -733,6 +738,23 @@ void SplashRender::RenderPage(int pageNo)
 }
 #endif
 
+void LogMemUsage()
+{
+    HANDLE hProcess;
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+
+    hProcess = GetCurrentProcess();
+    if (NULL == hProcess)
+        return;
+    
+    if (GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
+    {
+        LogInfo("Private mem usage: 0x%08X\n", pmc.PrivateUsage);
+    }
+    
+    CloseHandle(hProcess);
+}
+
 enum RenderType {
     renderFitz,
     renderSplash,
@@ -765,8 +787,8 @@ static void renderPdf(const char *fileName, RenderType renderType)
             break;
     }
 
-    LogInfo("started: %s\n", fileName);
     initfontlibs_ms();
+    LogInfo("started: %s\n", fileName);
 
     if (fileNameFitz) {
         engineFitz = new PdfEngineFitz();
@@ -775,12 +797,14 @@ static void renderPdf(const char *fileName, RenderType renderType)
         MsTimer msTimer;
         if (!engineFitz->load(fileNameFitz, NULL)) {
             LogInfo("fitz load failed\n");
-            goto Error;
+            delete engineFitz;
+            engineFitz = NULL;
+        } else {
+            msTimer.stop();
+            double timeInMs = msTimer.timeInMs();
+            LogInfo("fl: %.2f ms\n", timeInMs);
+            pageCountFitz = engineFitz->pageCount();
         }
-        msTimer.stop();
-        double timeInMs = msTimer.timeInMs();
-        LogInfo("fl: %.2f ms\n", timeInMs);
-        pageCountFitz = engineFitz->pageCount();
     }
 
     if (fileNameSplash) {
@@ -789,12 +813,14 @@ static void renderPdf(const char *fileName, RenderType renderType)
         MsTimer msTimer;
         if (!engineSplash->load(fileNameSplash, NULL)) {
             LogInfo("splash load failed\n");
-            goto Error;
+            delete engineSplash;
+            engineSplash = NULL;
+        } else {
+            msTimer.stop();
+            double timeInMs = msTimer.timeInMs();
+            LogInfo("sl: %.2f ms\n", timeInMs);
+            pageCountSplash = engineSplash->pageCount();
         }
-        msTimer.stop();
-        double timeInMs = msTimer.timeInMs();
-        LogInfo("sl: %.2f ms\n", timeInMs);
-        pageCountSplash = engineSplash->pageCount();
     }
 
     int pageCount;
@@ -820,7 +846,7 @@ static void renderPdf(const char *fileName, RenderType renderType)
         RenderedBitmap *bmpFitz = NULL;
         RenderedBitmap *bmpSplash = NULL;
 
-        if (fileNameFitz) {
+        if (fileNameFitz && engineFitz) {
             MsTimer msTimer;
             bmpFitz = engineFitz->renderBitmap(curPage, 100.0, 0, NULL, NULL);
             msTimer.stop();
@@ -835,7 +861,7 @@ static void renderPdf(const char *fileName, RenderType renderType)
                 DumpLinks(curPage, engineFitz);
         }
 
-        if (fileNameSplash) {
+        if (fileNameSplash && engineSplash) {
             MsTimer msTimer;
             bmpSplash = engineSplash->renderBitmap(curPage, 100.0, 0, NULL, NULL);
             msTimer.stop();
@@ -853,24 +879,16 @@ static void renderPdf(const char *fileName, RenderType renderType)
             PreviewBitmapSplashFitz(bmpSplash, bmpFitz);
             if (gfSlowPreview)
                 sleep_milliseconds(SLOW_PREVIEW_TIME);
+        } else {
+            delete bmpFitz;
+            delete bmpSplash;
         }
-
-#if 0
-        if (DoPDiff()) {
-            CompareArgs compareArgs;
-            compareArgs.ImgA = new RGBAImageFitz(renderFitz->image);
-            compareArgs.ImgB = new RGBAImageSplash(splashBmp);
-            compareArgs.ImgDiff = NULL;
-            unsigned long pixelDiffCount = Yee_Compare(compareArgs);
-            LogInfo("pixels different: %d\n", (int)pixelDiffCount);
-        }
-#endif
     }
 
-Error:
     delete engineFitz;
     delete engineSplash;
     LogInfo("finished: %s\n", fileName);
+    //LogMemUsage();
 }
 
 static void renderFile(const char *fileName)

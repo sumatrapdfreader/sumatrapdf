@@ -69,12 +69,10 @@ static void drawBitmap(HWND hwnd, RenderedBitmap *bmp)
 
 static void onPaint(HWND hwnd)
 {
-    if (hwnd == gHwndSplash)
-        if (gBmpSplash)
-            drawBitmap(hwnd, gBmpSplash);
-    if (hwnd == gHwndFitz)
-        if (gBmpFitz)
-            drawBitmap(hwnd, gBmpFitz);
+    if (hwnd == gHwndSplash && gBmpSplash)
+        drawBitmap(hwnd, gBmpSplash);
+    if (hwnd == gHwndFitz && gBmpFitz)
+        drawBitmap(hwnd, gBmpFitz);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

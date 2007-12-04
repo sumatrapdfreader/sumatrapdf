@@ -67,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="freetype231mt_d.lib  zlib_ds.lib jpeg_ds.lib"
+				AdditionalDependencies="freetype231mt_d.lib  zlib_ds.lib jpeg_ds.lib psapi.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)\ext\jpeg&quot;;&quot;$(ProjectDir)\ext\zlib&quot;;&quot;$(ProjectDir)\ext\freetype231&quot;"
 				IgnoreDefaultLibraryNames=""
@@ -158,7 +158,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="freetype231mt.lib zlib_s.lib jpeg_s.lib"
+				AdditionalDependencies="freetype231mt.lib zlib_s.lib jpeg_s.lib psapi.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)\ext\jpeg&quot;;&quot;$(ProjectDir)\ext\zlib&quot;;&quot;$(ProjectDir)\ext\freetype231&quot;"
 				IgnoreDefaultLibraryNames=""
