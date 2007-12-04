@@ -204,7 +204,7 @@ png_1(fz_predict *p, unsigned char *in, unsigned char *out)
 	{
 		/* This is nasty but very optimized (2x faster than straightforward version) */
 		unsigned char* ref = p->ref;
-		int left_end = buf + p->bpp;
+		int *left_end = buf + p->bpp;
 		unsigned char* out_end = out + p->stride;
 		while (out < out_end)
 		{
