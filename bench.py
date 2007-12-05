@@ -31,10 +31,13 @@ def do_path(args, p):
 
 def do_file(args, fname):
 	if not is_pdf(fname): return
-	print fname
-	args.append(">>%s" % log_file_name())
-	args.append("2>&1")
-	cmd = string.join(args, " ")
+	#print fname
+	nargs = [el for el in args]
+	nargs.append('"' + fname + '"')
+	nargs.append(">>%s" % log_file_name())
+	nargs.append("2>&1")
+	cmd = string.join(nargs, " ")
+	#print cmd
 	call(cmd, shell=True)
 
 def do_dir(args, d):
@@ -60,7 +63,6 @@ def main():
 			non_args.append(arg)
 	args.append("-timings")
 	args.append("-preview")
-	for el in non_args: args.append(el)
 	if len(non_args) == 0: usage_and_exit()
 	for el in non_args: do_path(args, el)
 
