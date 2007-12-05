@@ -54,7 +54,8 @@
 # Yudi Wibisono (http://yudiwbs.wordpress.com) - Indonesia
 # Goce Mitevski (goce.mitevski@gmail.com) - Macedonian/Cyrillic 
 # Elly Câmpeanu - Romanian
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs
+# Hong Seung-geol (hsgno5@hanmir.com) - Korean
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs kr
 -
 &File
 br:&Arquivo
@@ -96,6 +97,7 @@ sp-rs:&Datoteka
 id:&Berkas
 mk:&Датотека
 ro:&Fişier
+kr:파일(&F)
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -137,6 +139,7 @@ sp-rs:&Otvori\tCtrl-O
 id:&Buka\tCtrl-O
 mk:&Отвори\tCtrl-O
 ro:&Deschidere\tCtrl-O
+kr:열기(&O)...\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -178,6 +181,7 @@ sp-rs:&Zatvori\tCtrl-W
 id:&Tutup\tCtrl-W
 mk:&Затвори\tCtrl-W
 ro:Înc&hidere\tCtrl-W
+kr:닫기(&C)\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -219,6 +223,7 @@ sp-rs:&Sačuvaj kao...
 id:&Simpan sebagai
 mk:&Зачувај како...
 ro:Salvare c&a...
+kr:다른 이름으로 저장(&S)...
 -
 &Print
 br:&Imprimir
@@ -260,6 +265,7 @@ sp-rs:&Štampaj
 id:&Cetak\tCtrl-P
 mk:&Печати
 ro:I&mprimare
+kr:인쇄(&P)...\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -301,6 +307,7 @@ sp-rs:Neka SumatraPDF bude standardni PDF čitač
 id:Jadikan SumatraPDF sebagai pembaca-PDF utama
 mk:Направи го SumatraPDF основен PDF читач
 ro:Fă SumatraPDF un cititor implicit de PDF
+kr:SumatraPDF를 기본 PDF 뷰어로 설정
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -342,6 +349,7 @@ sp-rs:&Izađi\tCtrl-Q
 id:&Keluar\tCtrl-Q
 mk:&Излез\tCtrl-Q
 ro:&Ieşire\tCtrl-Q
+kr:끝내기(&X)\tCtrl-Q
 -
 &View
 br:&Ver
@@ -383,6 +391,7 @@ sp-rs:Prikaz
 id:&Lihat
 mk:&Приказ
 ro:&Vizualizare
+kr:보기(&V)
 -
 Single page
 br:Página única
@@ -424,6 +433,7 @@ sp-rs:Prikaz jedne strane
 id:Satu Halaman
 mk:Една страница
 ro:O singură pagină
+kr:한 장씩
 -
 Facing
 br:Página dupla
@@ -465,6 +475,7 @@ sp-rs:Prikaz dve strane
 id:Dua Halaman
 mk:Две страници
 ro:Două pagini
+kr:여러 장씩
 -
 Continuous
 br:Contínuo
@@ -506,6 +517,7 @@ sp-rs:Neprekidni prikaz
 id:Bersambung
 mk:Непрекинат приказ
 ro:Continuu
+kr:한 장씩 연속
 -
 Continuous facing
 br:Página dupla contínua
@@ -547,6 +559,7 @@ sp-rs:Neprkidni prikaz dve strane
 id:Dua Halaman Bersambung
 mk:Непрекинат приказ со две страници
 ro:Pagină dublă continuu
+kr:여러 장씩 연속
 -
 Rotate left
 br:Girar à esquerda
@@ -588,6 +601,7 @@ sp-rs:Rotiraj levo
 id:Putar ke kiri
 mk:Ротирај на лево
 ro:Roteşte spre stânga
+kr:왼쪽으로 회전
 -
 Rotate right
 br:Girar à direita
@@ -629,6 +643,7 @@ sp-rs:Rotiraj desno
 id:Putar ke Kanan
 mk:Ротирај на десно
 ro:Roteşte spre dreapta
+kr:오른쪽으로 회전
 -
 Bookmarks
 de:Lesezeichen
@@ -645,6 +660,7 @@ sp-rs:Beleške
 mk:Обележувачи
 ro:Marcaje
 sk:Záložky
+kr:책갈피
 -
 Fullscreen\tCtrl-L
 de:Vollbild
@@ -667,6 +683,7 @@ sp-rs:Ceo ekran\tCtrl-L
 id:Selayar Penuh\tCtrl-L
 mk:На цел екран\tCtrl-L
 ro:Ecran complet
+kr:전체 화면\tCtrl-L
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -708,6 +725,7 @@ sp-rs:Prikaži traku sa alatima
 id:Perlihatkan toolbar
 mk:Прикажи алатник
 ro:Arată bara de instrumente
+kr:도구 모음 보기
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -749,6 +767,7 @@ sp-rs:Koristi MuPDF za prikaz PDF dokumenata
 id:Gunakan MuPDF rendering engine
 mk:Користи MuPDF за приказ на PDF документи
 ro:Utilizează MuPDF rendering engine
+kr:MuPDF 랜더링 앤진 사용
 -
 &Go To
 br:Ir &para
@@ -790,6 +809,7 @@ sp-rs:&Idi na
 id:&Pergi ke
 mk:П&ојди на
 ro:Sal&t la...
+kr:이동(&G)
 -
 Next Page
 br:Página seguinte
@@ -831,6 +851,7 @@ sp-rs:Sledeća strana
 id:Halaman Berikutnya
 mk:Следна страница
 ro:Pagina următoare
+kr:다음 장
 -
 Previous Page
 br:Página anterior
@@ -872,6 +893,7 @@ sp-rs:Prethodna strana
 id:Halaman Sebelumnya
 mk:Претходна страница
 ro:Pagina anterioară
+kr:이전 장
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -913,6 +935,7 @@ sp-rs:Prva strana\tHome
 id:Halaman Pertama\tHome
 mk:Прва страница\tHome
 ro:Prima pagină\tHome
+kr:첫 장\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -954,6 +977,7 @@ sp-rs:Poslednja strana\tEnd
 id:Halaman Terakhir\tEnd
 mk:Последна страница\tEnd
 ro:Ultima pagină\tEnd
+kr:마지막 장\tEnd
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -995,6 +1019,7 @@ sp-rs:Strana...\tCtrl-G
 id:Halaman...\tCtrl-G
 mk:Страница...\tCtrl-G
 ro:Pagina...\tCtrl-G
+kr:쪽...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -1036,6 +1061,7 @@ sp-rs:&Uvećaj
 id:&Ukuran
 mk:&Зголемување
 ro:&Panoramare
+kr:확대(&Z)
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -1077,6 +1103,7 @@ sp-rs:Prilagodi &strani\tCtrl-0
 id:&Sesuaikan\tCtrl-0
 mk:Прилагоди на &страница\tCtrl-0
 ro:&Pagină întreagă\tCtrl-0
+kr:창 크기에 맞춤(&P)\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -1118,6 +1145,7 @@ sp-rs:Stvarna veličina\tCtrl-1
 id:&Ukuran Sebenarnya\tCtrl-1
 mk:Ре&ална големина\tCtrl-1
 ro:Mărime &actuală\tCtrl-1
+kr:본래 크기(&U)\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -1159,6 +1187,7 @@ sp-rs:&Podesi po širini\tCtrl-2
 id:Sesuaikan dengan &Lebar\tCtrl-2
 mk:Прилагоди на &ширина\tCtrl-2
 ro:Lăţime pagină
+kr:꽉 찬 화면(&H)\tCtrl-2
 -
 6400%
 -
@@ -1226,6 +1255,7 @@ sp-rs:&Jezik
 id:Ba&hasa
 mk:&Јазик
 ro:&Limbă
+kr:언어(&L)
 -
 &Help
 br:A&juda
@@ -1267,6 +1297,7 @@ sp-rs:&Pomoć
 id:Ban&tuan
 mk:&Помош
 ro:A&jutor
+kr:도움(&H)
 -
 &Visit website
 br:Visitar o &Website
@@ -1308,6 +1339,7 @@ sp-rs:&Poseti Internet stranu
 id:&Kunjungi Halaman Web
 mk:Посети веб-сајт
 ro:&Vizitează website-ul
+kr:웹 사이트 방문(&V)
 -
 &About
 br:S&obre
@@ -1349,6 +1381,7 @@ sp-rs:&O programu
 id:&Tentang
 mk:&За SumatraPDF...
 ro:&Despre
+kr:정보(&A)...
 -
 Find:
 de:Suchen:
@@ -1370,6 +1403,7 @@ sp-rs:Pronađi:
 id:Temukan:
 mk:Најди:
 ro:Caută:
+kr:찾기:
 -
 Find Previous
 de:Rückwärts suchen
@@ -1389,6 +1423,7 @@ id:Temukan Sebelum
 mk:Најди претходно
 ro:Caută înapoi
 sk:Hľadať predchádzajúce
+kr:이전 찾기
 -
 Find Next
 de:Weitersuchen
@@ -1408,6 +1443,7 @@ id:Temukan Sesudah
 mk:Најди следно
 ro:Caută înainte
 sk:Hľadať ďalšie
+kr:다음 찾기
 -
 Match case
 de:Groß-/Kleinschreibung beachten
@@ -1424,6 +1460,7 @@ id:Cocokkan Huruf Besar-Kecilnya
 mk:Разликувај мали и големи букви
 ro:Potrivire litere mari şi mici
 sk:Rozlišovať veľké/malé písmená
+kr:대/소문자 구분
 -
 Open
 br:Abrir
@@ -1465,6 +1502,7 @@ sp-rs:Otvori
 id:Buka
 mk:Отвори
 ro:Deschide
+kr:열기
 -
 Zoom In
 br:Zoom In
@@ -1506,6 +1544,7 @@ sp-rs:Uvećaj
 id:Perbesar
 mk:Зголеми
 ro:Măreşte
+kr:확대
 -
 Zoom Out
 br:Zoom Out
@@ -1547,6 +1586,7 @@ sp-rs:Umanji
 id:Perkecil
 mk:Намали
 ro:Micşorează
+kr:축소
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1588,6 +1628,7 @@ sp-rs:O programu SumatraPDF
 id:Tentang SumatraPDF
 mk:За апликацијата SumatraPDF
 ro:Despre SumatraPDF
+kr:SumatraPDF 정보
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1628,6 +1669,7 @@ sp-rs:SumatraPDF je sada podrazumevani čitač PDF dokumenata
 id:SumatraPDF sekarang menjadi pembaca-PDF utama.
 mk:Сега SumatraPDF е основен читач за PDF документи.
 ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
+kr:SumatraPDF를 기본 PDF 파일 뷰어로 지정합니다.
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1668,6 +1710,7 @@ sp-rs:Greška pri snimanju PDF dokumenta
 id:Gagal menyimpan berkas
 mk:Грешка при зачувување на PDF документот
 ro:Eroare la salvarea unui fişier
+kr:파일을 저장할 수 없습니다.
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1708,6 +1751,7 @@ sp-rs:Greška pri učitavanju PDF dokumenta
 id:Kesalahan dalam memanggil berkas PDF.
 mk:Грешка при вчитување на PDF документот.
 ro:Erroare la încărcarea unui fişier PDF.
+kr:PDF 파일 읽을 수 없습니다.
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1748,6 +1792,7 @@ sp-rs:Štampač nije pronađen
 id:Tidak dapat membuka printer
 mk:Пристапот до печатачот не е можен
 ro:Imprimantă inaccesibilă
+kr:프린터를 열 수 없습니다.
 -
 Printing problem.
 br:Problema de impressão.
@@ -1788,6 +1833,7 @@ sp-rs:Problem pri štampanju
 id:Masalahan Pencetakkan.
 mk:Проблем при печатење.
 ro:Problemă la imprimare.
+kr:인쇄를 할 수 없습니다.
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1821,3 +1867,4 @@ sp-rs:Pomozi u prevođenju ovog programa
 id:Membantu alihbahasa
 mk:Учествувај во преведувањето на оваа апликација
 ro:Contribuie la traducere
+kr:번역 제공
