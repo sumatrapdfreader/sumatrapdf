@@ -3425,11 +3425,6 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int from
 
         DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
 
-        // TODO: ideally we would use zoom  that matches the size of the page in the printer
-        RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 60000.0 / PDF_FILE_DPI, rotation, NULL, NULL);
-        if (!bmp)
-            goto Error; /* most likely ran out of memory */
-
         StartPage(hdc);
         // MM_TEXT: Each logical unit is mapped to one device pixel.
         // Positive x is to the right; positive y is down.
@@ -3440,8 +3435,35 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int from
 
         int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
         int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+
+        // try to use a zoom that matches the size of the page in the
+        // printer
+
+        SizeD pSize = pdfEngine->pageSize(pageNo);
+        double pdfPageWidth = pSize.dx();
+        int realRotation = rotation + pdfEngine->pageRotation(pageNo);
+        normalizeRotation(&realRotation);
+        switch (realRotation)
+        {
+            case 90:
+            case 270:
+                pdfPageWidth = pSize.dy();
+            default:
+                ;
+        }
+        double zoom = 100.0 * (double)pageWidth / pdfPageWidth;
+
+        // ...but try not to use too much RAM
+        while (zoom > 450.0) { 
+            zoom = zoom / 2.0; 
+        }
+
         if (DMORIENT_LANDSCAPE == devMode->dmOrientation)
             swap_int(&topMargin, &leftMargin);
+
+        RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, NULL);
+        if (!bmp)
+            goto Error; /* most likely ran out of memory */
 
         bmp->stretchDIBits(hdc, leftMargin, topMargin, pageWidth, pageHeight);
         delete bmp;
