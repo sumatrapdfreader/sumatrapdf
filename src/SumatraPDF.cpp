@@ -1395,6 +1395,10 @@ static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
             return win;
         if (hwnd == win->hwndReBar)
             return win;
+        if (hwnd == win->hwndFindBox)
+            return win;
+        if (hwnd == win->hwndFindStatus)
+            return win;
         win = win->next;
     }
     return NULL;

@@ -419,7 +419,8 @@ fz_matrix PdfEngineFitz::viewctm (pdf_page *page, float zoom, int rotate)
 {
     fz_matrix ctm;
     ctm = fz_identity();
-    ctm = fz_concat(ctm, fz_translate(0, -page->mediabox.y1));
+    //ctm = fz_concat(ctm, fz_translate(0, -page->mediabox.y1));
+    ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
     ctm = fz_concat(ctm, fz_rotate(rotate + page->rotate));
     return ctm;

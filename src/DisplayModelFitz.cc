@@ -81,11 +81,12 @@ void DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
     int rot = rotation();
     fz_point p;
 
-    normalizeRotation (&rot);
+    normalizeRotation(&rot);
     zoom *= 0.01;
 
-    *pageNo = getPageNoByPoint (*x, *y);
-    if (*pageNo == POINT_OUT_OF_PAGE) return;
+    *pageNo = getPageNoByPoint(*x, *y);
+    if (*pageNo == POINT_OUT_OF_PAGE) 
+        return;
 
     pdf_page *page = pdfEngineFitz()->getPdfPage(*pageNo);
 
@@ -97,7 +98,7 @@ void DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
     fz_matrix ctm = pdfEngineFitz()->viewctm(page, zoom, rot);
     fz_matrix invCtm = fz_invertmatrix(ctm);
 
-    fz_point tp = fz_transformpoint (invCtm, p);
+    fz_point tp = fz_transformpoint(invCtm, p);
 
     double vx = 0, vy = 0;
     if (rot == 90 || rot == 180)
