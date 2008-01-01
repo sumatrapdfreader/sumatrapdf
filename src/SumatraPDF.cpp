@@ -246,6 +246,7 @@ MenuDef menuDefLang[] = {
     { "English",     IDM_LANG_EN },
     { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
     { "Belarusian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)",  IDM_LANG_BY },
+    { "Bengali", IDM_LANG_BN },
     { "Catalan (Catala)", IDM_LANG_CA }, // TODO: it's Català - need to convert to utf8
     { "Chinese Traditional", IDM_LANG_TW}, // TODO: add the name in chinese traditional
     { "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", IDM_LANG_CN },
@@ -335,6 +336,7 @@ struct LangDef {
     {"ro", IDM_LANG_RO},
     {"sr-rs", IDM_LANG_SR_RS},
     {"kr", IDM_LANG_KR},
+    {"bn", IDM_LANG_BN},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -2644,7 +2646,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 #define SUMATRA_TXT             "Sumatra PDF"
 #define SUMATRA_TXT_FONT        "Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   24
-#define BETA_TXT                "Beta v0.7"
+#define BETA_TXT                "Beta v0.8"
 #define BETA_TXT_FONT           "Arial Black"
 #define BETA_TXT_FONT_SIZE      12
 #define LEFT_TXT_FONT           "Arial"
@@ -5251,6 +5253,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_RO:
                 case IDM_LANG_SR_RS:
                 case IDM_LANG_KR:
+                case IDM_LANG_BN:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:
