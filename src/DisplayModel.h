@@ -199,7 +199,7 @@ public:
     PdfPageInfo * getPageInfo(int pageNo) const;
 
     /* an array of PdfPageInfo, len of array is pageCount */
-    PdfPageInfo *   pagesInfo;
+    PdfPageInfo *   _pagesInfo;
 
     /* areaOffset is "polymorphic". If drawAreaSize.dx > totalAreSize.dx then
        areaOffset.x is offset of total area rect inside draw area, otherwise

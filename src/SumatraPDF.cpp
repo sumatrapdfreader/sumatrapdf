@@ -2622,7 +2622,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             rectScreen.bottom = rectScreen.top + rectLink.dy;
             FillRect(hdc, &rectScreen, gBrushLinkDebug);
             DBG_OUT("  link on screen rotate=%d, (x=%d, y=%d, dx=%d, dy=%d)\n",
-                dm->rotation() + dm->pagesInfo[pdfLink->pageNo-1].rotation,
+                dm->rotation() + dm->_pagesInfo[pdfLink->pageNo-1].rotation,
                 rectScreen.left, rectScreen.top, rect_dx(&rectScreen), rect_dy(&rectScreen));
         }
     }

@@ -188,7 +188,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
     _pdfEngine = NULL;
-    pagesInfo = NULL;
+    _pagesInfo = NULL;
 
     _linkCount = 0;
     _links = NULL;
@@ -201,6 +201,10 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
 
 DisplayModel::~DisplayModel()
 {
+    delete searchState.str;
+    delete searchState.strU;
+    free(_pagesInfo);    
+    free(_links);
     delete _pdfSearchEngine;
     delete _pdfEngine;
 }
@@ -208,9 +212,9 @@ DisplayModel::~DisplayModel()
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 {
     assert(validPageNo(pageNo));
-    assert(pagesInfo);
-    if (!pagesInfo) return NULL;
-    return &(pagesInfo[pageNo-1]);
+    assert(_pagesInfo);
+    if (!_pagesInfo) return NULL;
+    return &(_pagesInfo[pageNo-1]);
 }
 
 bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win) 
@@ -233,11 +237,11 @@ bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win)
 
 bool DisplayModel::buildPagesInfo(void)
 {
-    assert(!pagesInfo);
+    assert(!_pagesInfo);
     int _pageCount = pageCount();
 
-    pagesInfo = (PdfPageInfo*)calloc(1, _pageCount * sizeof(PdfPageInfo));
-    if (!pagesInfo)
+    _pagesInfo = (PdfPageInfo*)calloc(1, _pageCount * sizeof(PdfPageInfo));
+    if (!_pagesInfo)
         return false;
 
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
@@ -334,8 +338,8 @@ double DisplayModel::zoomRealFromFirtualForPage(double zoomVirtual, int pageNo)
 
 int DisplayModel::firstVisiblePageNo(void) const
 {
-    assert(pagesInfo);
-    if (!pagesInfo) return INVALID_PAGE_NO;
+    assert(_pagesInfo);
+    if (!_pagesInfo) return INVALID_PAGE_NO;
 
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
@@ -406,8 +410,8 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     int         columns;
     double      newAreaOffsetX;
 
-    assert(pagesInfo);
-    if (!pagesInfo)
+    assert(_pagesInfo);
+    if (!_pagesInfo)
         return;
 
     normalizeRotation(&rotation);
@@ -575,8 +579,8 @@ void DisplayModel::recalcVisibleParts(void)
     PdfPageInfo*    pageInfo;
     int             visibleCount;
 
-    assert(pagesInfo);
-    if (!pagesInfo)
+    assert(_pagesInfo);
+    if (!_pagesInfo)
         return;
 
     drawAreaRect.x = (int)areaOffset.x;
@@ -909,7 +913,7 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
            for non-continuous mode is in DisplayModel::changeStartPage() called
            from DisplayModel::goToPage() */
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
-            PdfPageInfo *pageInfo = &(pagesInfo[pageNo-1]);
+            PdfPageInfo *pageInfo = &(_pagesInfo[pageNo-1]);
             pageInfo->shown = true;
             pageInfo->visible = false;
         }

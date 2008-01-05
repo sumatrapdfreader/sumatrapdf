@@ -167,10 +167,10 @@ TextPage *DisplayModelSplash::GetTextPage(int pageNo)
     assert(pdfDoc);
     if (!pdfDoc) return NULL;
     assert(validPageNo(pageNo));
-    assert(pagesInfo);
-    if (!pagesInfo) return NULL;
+    assert(_pagesInfo);
+    if (!_pagesInfo) return NULL;
 
-    PdfPageInfo * pdfPageInfo = &(pagesInfo[pageNo-1]);
+    PdfPageInfo * pdfPageInfo = &(_pagesInfo[pageNo-1]);
     if (!pdfPageInfo->textPage) {
         TextOutputDev *textOut = new TextOutputDev(NULL, gTrue, gFalse, gFalse);
         if (!textOut)
@@ -189,16 +189,16 @@ TextPage *DisplayModelSplash::GetTextPage(int pageNo)
 void DisplayModelSplash::FreeLinks(void)
 {
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        delete pagesInfo[pageNo-1].links;
-        pagesInfo[pageNo-1].links = NULL;
+        delete _pagesInfo[pageNo-1].links;
+        _pagesInfo[pageNo-1].links = NULL;
     }
 }
 
 void DisplayModelSplash::FreeTextPages()
 {
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
-        delete pagesInfo[pageNo-1].textPage;
-        pagesInfo[pageNo-1].textPage = NULL;
+        delete _pagesInfo[pageNo-1].textPage;
+        _pagesInfo[pageNo-1].textPage = NULL;
     }
 }
 
@@ -209,11 +209,6 @@ DisplayModelSplash::~DisplayModelSplash()
     cancelRenderingForDisplayModel(this);
     FreeLinks();
     FreeTextPages();
-
-    delete searchState.str;
-    delete searchState.strU;
-    free((void*)_links);
-    free((void*)pagesInfo);
 }
 
 /* Map point <x>/<y> on the page <pageNo> to point on the screen. */
@@ -413,8 +408,8 @@ void DisplayModelSplash::EnsureSearchHitVisible()
         goToPage(pageNo, yNewPos, xNewPos);
 }
 
-/* Recalcualte 'linkCount' and 'links' out of 'pagesInfo' data.
-   Should only be called if link data has chagned in 'pagesInfo'. */
+/* Recalcualte 'linkCount' and 'links' out of '_pagesInfo' data.
+   Should only be called if link data has chagned in '_pagesInfo'. */
 void DisplayModelSplash::RecalcLinks(void)
 {
     int             pageNo;
