@@ -69,7 +69,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
-    benc_dict_delete(prefs);
+    benc_obj_delete((benc_obj*)prefs);
     return NULL;
 }
 
@@ -135,7 +135,7 @@ benc_dict* DisplayState_SerializeNew(DisplayState *ds)
 
     return prefs;
 Error:
-    benc_dict_delete(prefs);
+    benc_obj_delete((benc_obj*)prefs);
     return NULL;
 }
 
@@ -192,7 +192,7 @@ const char *Prefs_SerializeNew(FileHistoryList **root, size_t* lenOut)
 
     data = benc_obj_to_data((benc_obj*)prefs, lenOut);
 Error:
-    benc_dict_delete(prefs);
+    benc_obj_delete((benc_obj*)prefs);
     return (const char*)data;
 }
 
