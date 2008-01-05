@@ -484,10 +484,15 @@ Lsetcolorspace:
 			what = PDF_MSTROKE;
 
 Lsetcolor:
-			mat = what == PDF_MSTROKE ? &gstate->stroke : &gstate->fill;
+			if (PDF_MSTROKE == what)
+				mat = &gstate->stroke;
+			else
+				mat = &gstate->fill;
 
-			if (fz_isname(csi->stack[csi->top - 1]))
+			if (fz_isname(csi->stack[csi->top - 1])) {
 				mat->kind = PDF_MPATTERN;
+				mat->shade = nil;
+			}
 
 			switch (mat->kind)
 			{

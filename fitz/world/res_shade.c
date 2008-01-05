@@ -4,13 +4,15 @@
 fz_shade *
 fz_keepshade(fz_shade *shade)
 {
-	shade->refs ++;
+	assert(shade->refs > 0);
+	shade->refs++;
 	return shade;
 }
 
 void
 fz_dropshade(fz_shade *shade)
 {
+	assert(shade->refs > 0);
 	if (--shade->refs == 0)
 	{
 		if (shade->cs)

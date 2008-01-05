@@ -141,19 +141,17 @@ pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v)
     else
         mat = &gs->stroke;
 
-    // TODO: this possibly drops a pattern too many times resulting in droping pattern
-    // used in other places, so don't drop it (better leak than crash).
-    // It's possible that overzeleaus dropping happens in some other place
-#if 0
-    if (mat->pattern)
+    if (mat->pattern) {
+        assert(PDF_MPATTERN == mat->kind);
         pdf_droppattern(mat->pattern);
-#endif
+    }
 
     mat->kind = PDF_MPATTERN;
     if (pat)
         mat->pattern = pdf_keeppattern(pat);
     else
         mat->pattern = nil;
+    mat->shade = nil;
 
     if (v)
         return pdf_setcolor(csi, what, v);
@@ -172,13 +170,19 @@ pdf_setshade(pdf_csi *csi, int what, fz_shade *shade)
 	if (error)
 		return error;
 
-	mat = what == PDF_MFILL ? &gs->fill : &gs->stroke;
+	if (PDF_MFILL == what)
+		mat = &gs->fill;
+	else
+		mat = &gs->stroke;
 
-	if (mat->shade)
+	if (mat->shade) {
+		assert(mat->kind == PDF_MSHADE);
 		fz_dropshade(mat->shade);
+	}
 
 	mat->kind = PDF_MSHADE;
 	mat->shade = fz_keepshade(shade);
+	mat->pattern = nil;
 
 	return nil;
 }
