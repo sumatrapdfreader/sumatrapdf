@@ -679,6 +679,7 @@ sk:Záložky
 kr:책갈피
 bn:বুকমার্কসমূহ
 cn:书签
+fr:Signets
 -
 Fullscreen\tCtrl-L
 de:Vollbild
@@ -704,6 +705,7 @@ ro:Ecran complet
 kr:전체 화면\tCtrl-L
 bn:পুরো পর্দা জুড়ে
 cn:全屏\tCtrl-L
+fr:Plein écran
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -1441,7 +1443,8 @@ mk:Најди:
 ro:Caută:
 kr:찾기:
 bn:খুঁজে নিন:
-cn:查找
+cn:查找:
+fr:Rechercher:
 -
 Find Previous
 de:Rückwärts suchen
@@ -1464,6 +1467,7 @@ sk:Hľadať predchádzajúce
 kr:이전 찾기
 bn:এর আগে খুঁজুন
 cn:上一个
+fr:Occurrence précédente
 -
 Find Next
 de:Weitersuchen
@@ -1486,6 +1490,7 @@ sk:Hľadať ďalšie
 kr:다음 찾기
 bn:এর পরে খুঁজুন
 cn:下一个
+fr:Occurrence suivante
 -
 Match case
 de:Groß-/Kleinschreibung beachten
@@ -1505,6 +1510,7 @@ sk:Rozlišovať veľké/malé písmená
 kr:대/소문자 구분
 bn:অক্ষর মেলান
 cn:大小写匹配
+fr:Respecter la casse
 -
 Open
 br:Abrir
