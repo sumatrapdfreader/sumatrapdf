@@ -245,7 +245,7 @@ typedef struct MenuDef {
 MenuDef menuDefLang[] = {
     { "English",     IDM_LANG_EN },
     { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
-    { "Belarusian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)",  IDM_LANG_BY },
+    { "Belarusian (\320\221\320\265\320\273\320\260\321\200\321\203\321\201\320\272\320\260\321\217)", IDM_LANG_BY },
     { "Bengali", IDM_LANG_BN },
     { "Catalan (Catala)", IDM_LANG_CA }, // TODO: it's Català - need to convert to utf8
     { "Chinese Traditional", IDM_LANG_TW}, // TODO: add the name in chinese traditional
