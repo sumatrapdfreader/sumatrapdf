@@ -102,6 +102,7 @@
 			<Add option="-DENABLE_LIBJPEG=1" />
 			<Add option="-D_WIN32_WINNT=0x0500" />
 			<Add option="-D_WIN32_IE=0x0501" />
+			<Add option="-DDISABLE_STRSAFE" />
 		</Compiler>
 		<Unit filename="baseutils\WinUtil.cpp" />
 		<Unit filename="baseutils\WinUtil.hpp" />
