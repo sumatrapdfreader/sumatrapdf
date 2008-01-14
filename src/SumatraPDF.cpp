@@ -4191,7 +4191,7 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
 
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-       SendMessage (win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+        SendMessage (win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToPrevPage(0);
     } else if (VK_NEXT == key) {
@@ -4249,6 +4249,12 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
     }
 }
 
+static void ClearSearch(WindowInfo *win)
+{
+    win->showSelection = false;
+    triggerRepaintDisplayNow(win);
+}
+
 static void OnChar(WindowInfo *win, int key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
@@ -4258,6 +4264,8 @@ static void OnChar(WindowInfo *win, int key)
             OnMenuViewFullscreen(win);
         else if (gGlobalPrefs.m_escToExit)
             DestroyWindow(win->hwndFrame);
+        else
+            ClearSearch(win);
     }
 
     if (!win->dm || win->documentBlocked)
