@@ -62,7 +62,7 @@ static void fastrgbtocmyk(fz_pixmap *src, fz_pixmap *dst)
 		unsigned char c = 255 - s[1];
 		unsigned char m = 255 - s[2];
 		unsigned char y = 255 - s[3];
-		unsigned char k = MIN(c, MIN(y, m));
+		unsigned char k = MIN(c, MIN(m, y));
 		d[0] = s[0];
 		d[1] = c - k;
 		d[2] = m - k;
