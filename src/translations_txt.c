@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 42;
+int g_transLangsCount = 43;
 
 const char *g_transLangs[] = {
-  "en", "de", "tr", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "kr", "bn", "cn", "fr", "ru", "br", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ar", "sv", "cz", "gr", "th", "pt", "tw"
+  "en", "de", "tr", "hu", "pl", "ja", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "kr", "bn", "cn", "fr", "ru", "gl", "br", "by", "fa", "dk", "it", "nl", "ta", "es", "hr", "ar", "sv", "cz", "gr", "th", "pt", "tw"
 };
 
 int g_transTranslationsCount = 59;
@@ -1605,6 +1605,67 @@ const char *g_transTranslations[] = {
   "\320\243\320\262\320\265\320\273\320\270\321\207\320\270\321\202\321\214",
   "\320\243\320\274\320\265\320\275\321\214\321\210\320\270\321\202\321\214",
 
+  /* Translations for language gl */
+  "Arred&or de",
+  "&Pechar\tCtrl-W",
+  "&Arquivo",
+  "Ir &a",
+  "A&xuda",
+  "I&dioma",
+  "A&brir\tCtrl-O",
+  "&Imprimir",
+  "&Salvar como...",
+  "&Ver",
+  "Visitar o &Website",
+  "&Zoom",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "Arredor do SumatraPDF",
+  "&Tama\303\261o real\tCtrl-1",
+  "Preferidos",
+  "Cont\303\255nuo",
+  "P\303\241xina dobre continua",
+  "Contribuir na traducci\303\263n",
+  "Erro ao aceder \303\241 impressora.",
+  "Sai&r\tCtrl-Q",
+  "Erro ao abrir o arquivo PDF.",
+  "P\303\241xina dobre",
+  "Erro ao salvar o arquivo.",
+  "Atopar Seguinte",
+  "Atopar Anterior",
+  "Procura:",
+  "Primeira p\303\241xina\tHome",
+  "&P\303\241xina enteira\tCtrl-0",
+  "Axustar ao ancho\tCtrl-2",
+  "A toda pantalla\tCtrl-L",
+  "\303\232ltima p\303\241xina\tEnd",
+  "Facer do SumatraPDF o leitor PDF por defecto",
+  "Coincidir mai\303\272sculas e min\303\272sculas",
+  "P\303\241xina seguinte",
+  "Abrir",
+  NULL,
+  "P\303\241xina anterior",
+  "Problema de impresi\303\263n.",
+  "Xirar \303\241 esquerda",
+  "Xirar \303\241 dereita",
+  "Amosar barra de ferramentas",
+  "Unha soa p\303\241xina",
+  "SumatraPDF \303\251 o lector PDF por defecto agora.",
+  "Usar motor de renderizado MuPDF",
+  "Achegar zoom",
+  "Afastar zoom",
+
   /* Translations for language br */
   "S&obre",
   "&Fechar\tCtrl-W",
@@ -1654,7 +1715,7 @@ const char *g_transTranslations[] = {
   NULL,
   "P\303\241gina seguinte",
   "Abrir",
-  "P\303\241gina...\tCtrl-G",
+  "P\303\241xina...\tCtrl-G",
   "P\303\241gina anterior",
   "Problema de impress\303\243o.",
   "Girar \303\240 esquerda",

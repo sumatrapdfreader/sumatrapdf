@@ -56,8 +56,9 @@
 # Elly Câmpeanu - Romanian
 # Hong Seung-geol (hsgno5@hanmir.com) – Korean
 # Shabab Mustafa (shabab.mustafa@gmail.com) - Bengali/ বাংলা
+# Xulio Gómez Díaz - Galego (Galician)
 
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs kr bn
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs kr bn gl
 -
 &File
 br:&Arquivo
@@ -101,6 +102,7 @@ mk:&Датотека
 ro:&Fişier
 kr:파일(&F)
 bn:&ফাইল
+gl:&Arquivo
 -
 &Open\tCtrl-O
 br:A&brir\tCtrl-O
@@ -144,6 +146,7 @@ mk:&Отвори\tCtrl-O
 ro:&Deschidere\tCtrl-O
 kr:열기(&O)...\tCtrl-O
 bn:&খুলুন\tCtrl-O
+gl:A&brir\tCtrl-O
 -
 &Close\tCtrl-W
 br:&Fechar\tCtrl-W
@@ -187,6 +190,7 @@ mk:&Затвори\tCtrl-W
 ro:Înc&hidere\tCtrl-W
 kr:닫기(&C)\tCtrl-W
 bn:&বন্ধ করুন\tCtrl-W
+gl:&Pechar\tCtrl-W
 -
 &Save as
 br:&Salvar como...
@@ -230,6 +234,7 @@ mk:&Зачувај како...
 ro:Salvare c&a...
 kr:다른 이름으로 저장(&S)...
 bn:&ভিন্ন নামে সংরক্ষণ করুন
+gl:&Salvar como...
 -
 &Print
 br:&Imprimir
@@ -273,6 +278,7 @@ mk:&Печати
 ro:I&mprimare
 kr:인쇄(&P)...\tCtrl-P
 bn:&প্রিন্ট করুন
+gl:&Imprimir
 -
 Make SumatraPDF a default PDF reader
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -316,6 +322,7 @@ mk:Направи го SumatraPDF основен PDF читач
 ro:Fă SumatraPDF un cititor implicit de PDF
 kr:SumatraPDF를 기본 PDF 뷰어로 설정
 bn:SumatraPDF-কে ডিফল্ট রিডার হিসেবে নির্বাচন করুন
+gl:Facer do SumatraPDF o leitor PDF por defecto
 -
 E&xit\tCtrl-Q
 br:Sai&r\tCtrl-Q
@@ -359,6 +366,7 @@ mk:&Излез\tCtrl-Q
 ro:&Ieşire\tCtrl-Q
 kr:끝내기(&X)\tCtrl-Q
 bn:&বেরিয়ে আসুন
+gl:Sai&r\tCtrl-Q
 -
 &View
 br:&Ver
@@ -402,6 +410,7 @@ mk:&Приказ
 ro:&Vizualizare
 kr:보기(&V)
 bn:দেখুন
+gl:&Ver
 -
 Single page
 br:Página única
@@ -445,6 +454,7 @@ mk:Една страница
 ro:O singură pagină
 kr:한 장씩
 bn:একটি পাতা
+gl:Unha soa páxina
 -
 Facing
 br:Página dupla
@@ -488,6 +498,7 @@ mk:Две страници
 ro:Două pagini
 kr:여러 장씩
 bn:পাশাপাশি দুটি পাতা
+gl:Páxina dobre
 -
 Continuous
 br:Contínuo
@@ -531,6 +542,7 @@ mk:Непрекинат приказ
 ro:Continuu
 kr:한 장씩 연속
 bn:চলমান...
+gl:Contínuo
 -
 Continuous facing
 br:Página dupla contínua
@@ -574,6 +586,7 @@ mk:Непрекинат приказ со две страници
 ro:Pagină dublă continuu
 kr:여러 장씩 연속
 bn:চলমান এবং পাশাপাশি
+gl:Páxina dobre continua
 -
 Rotate left
 br:Girar à esquerda
@@ -617,6 +630,7 @@ mk:Ротирај на лево
 ro:Roteşte spre stânga
 kr:왼쪽으로 회전
 bn:বামে ঘুরিয়ে নিন
+gl:Xirar á esquerda
 -
 Rotate right
 br:Girar à direita
@@ -660,6 +674,7 @@ mk:Ротирај на десно
 ro:Roteşte spre dreapta
 kr:오른쪽으로 회전
 bn:ডানে ঘুরিয়ে নিন
+gl:Xirar á dereita
 -
 Bookmarks
 de:Lesezeichen
@@ -681,6 +696,7 @@ bn:বুকমার্কসমূহ
 cn:书签
 fr:Signets
 ru:Закладки
+gl:Preferidos
 -
 Fullscreen\tCtrl-L
 de:Vollbild
@@ -708,6 +724,7 @@ bn:পুরো পর্দা জুড়ে
 cn:全屏\tCtrl-L
 fr:Plein écran
 ru:Полный экран
+gl:A toda pantalla\tCtrl-L
 -
 Show toolbar
 br:Mostrar barra de ferramentas
@@ -751,6 +768,7 @@ mk:Прикажи алатник
 ro:Arată bara de instrumente
 kr:도구 모음 보기
 bn:টুলবার দেখুন
+gl:Amosar barra de ferramentas
 -
 Use MuPDF rendering engine
 br:Usar motor de renderização MuPDF
@@ -794,6 +812,7 @@ mk:Користи MuPDF за приказ на PDF документи
 ro:Utilizează MuPDF rendering engine
 kr:MuPDF 랜더링 앤진 사용
 bn:”MuPDF rendering engine” ব্যবহার করুন
+gl:Usar motor de renderizado MuPDF
 -
 &Go To
 br:Ir &para
@@ -837,6 +856,7 @@ mk:П&ојди на
 ro:Sal&t la...
 kr:이동(&G)
 bn:নিয়ে চলুন
+gl:Ir &a
 -
 Next Page
 br:Página seguinte
@@ -880,6 +900,7 @@ mk:Следна страница
 ro:Pagina următoare
 kr:다음 장
 bn:পরের পাতায়
+gl:Páxina seguinte
 -
 Previous Page
 br:Página anterior
@@ -923,6 +944,7 @@ mk:Претходна страница
 ro:Pagina anterioară
 kr:이전 장
 bn:আগের পাতায়
+gl:Páxina anterior
 -
 First Page\tHome
 br:Primeira página\tHome
@@ -966,6 +988,7 @@ mk:Прва страница\tHome
 ro:Prima pagină\tHome
 kr:첫 장\tHome
 bn:প্রথম পাতায়\tHome
+gl:Primeira páxina\tHome
 -
 Last Page\tEnd
 br:Última página\tEnd
@@ -1009,6 +1032,7 @@ mk:Последна страница\tEnd
 ro:Ultima pagină\tEnd
 kr:마지막 장\tEnd
 bn: শেষ পাতায়\tEnd
+gl:Última páxina\tEnd
 -
 Page...\tCtrl-G
 br:Página...\tCtrl-G
@@ -1052,6 +1076,7 @@ mk:Страница...\tCtrl-G
 ro:Pagina...\tCtrl-G
 kr:쪽...\tCtrl-G
 bn:…নং পাতায়
+br:Páxina...\tCtrl-G
 -
 &Zoom
 br:&Zoom
@@ -1095,6 +1120,7 @@ mk:&Зголемување
 ro:&Panoramare
 kr:확대(&Z)
 bn:পাতার আকার
+gl:&Zoom
 -
 Fit &Page\tCtrl-0
 br:&Página inteira\tCtrl-0
@@ -1138,6 +1164,7 @@ mk:Прилагоди на &страница\tCtrl-0
 ro:&Pagină întreagă\tCtrl-0
 kr:창 크기에 맞춤(&P)\tCtrl-0
 bn:পুরো পাতা\tCtrl-0
+gl:&Páxina enteira\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 br:&Tamanho real\tCtrl-1
@@ -1181,6 +1208,7 @@ mk:Ре&ална големина\tCtrl-1
 ro:Mărime &actuală\tCtrl-1
 kr:본래 크기(&U)\tCtrl-1
 bn:আসল আকারে\tCtrl-1
+gl:&Tamaño real\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
@@ -1224,6 +1252,7 @@ mk:Прилагоди на &ширина\tCtrl-2
 ro:Lăţime pagină
 kr:꽉 찬 화면(&H)\tCtrl-2
 bn:উইন্ডোর সমান\tCtrl-2
+gl:Axustar ao ancho\tCtrl-2
 -
 6400%
 -
@@ -1293,6 +1322,7 @@ mk:&Јазик
 ro:&Limbă
 kr:언어(&L)
 bn:ভাষা
+gl:I&dioma
 -
 &Help
 br:A&juda
@@ -1336,6 +1366,7 @@ mk:&Помош
 ro:A&jutor
 kr:도움(&H)
 bn:&সাহায্য
+gl:A&xuda
 -
 &Visit website
 br:Visitar o &Website
@@ -1379,6 +1410,7 @@ mk:Посети веб-сајт
 ro:&Vizitează website-ul
 kr:웹 사이트 방문(&V)
 bn:&আমাদের ওয়েবসাইট দেখুন
+gl:Visitar o &Website
 -
 &About
 br:S&obre
@@ -1422,6 +1454,7 @@ mk:&За SumatraPDF...
 ro:&Despre
 kr:정보(&A)...
 bn:&আমাদের তথ্য
+gl:Arred&or de
 -
 Find:
 de:Suchen:
@@ -1448,6 +1481,7 @@ bn:খুঁজে নিন:
 cn:查找:
 fr:Rechercher:
 ru:Найти:
+gl:Procura:
 -
 Find Previous
 de:Rückwärts suchen
@@ -1472,6 +1506,7 @@ bn:এর আগে খুঁজুন
 cn:上一个
 fr:Occurrence précédente
 ru:Найти предыдущее
+gl:Atopar Anterior
 -
 Find Next
 de:Weitersuchen
@@ -1496,6 +1531,7 @@ bn:এর পরে খুঁজুন
 cn:下一个
 fr:Occurrence suivante
 ru:Найти следующее
+gl:Atopar Seguinte
 -
 Match case
 de:Groß-/Kleinschreibung beachten
@@ -1517,6 +1553,7 @@ bn:অক্ষর মেলান
 cn:大小写匹配
 fr:Respecter la casse
 ru:Учитывать размер
+gl:Coincidir maiúsculas e minúsculas
 -
 Open
 br:Abrir
@@ -1560,6 +1597,7 @@ mk:Отвори
 ro:Deschide
 kr:열기
 bn:খুলুন
+gl:Abrir
 -
 Zoom In
 br:Zoom In
@@ -1603,6 +1641,7 @@ mk:Зголеми
 ro:Măreşte
 kr:확대
 bn:বড় করে দেখুন
+gl:Achegar zoom
 -
 Zoom Out
 br:Zoom Out
@@ -1646,6 +1685,7 @@ mk:Намали
 ro:Micşorează
 kr:축소
 bn:ছোট করে দেখুন
+gl:Afastar zoom
 -
 About SumatraPDF
 br:Sobre o SumatraPDF
@@ -1689,6 +1729,7 @@ mk:За апликацијата SumatraPDF
 ro:Despre SumatraPDF
 kr:SumatraPDF 정보
 bn:”SumatraPDF” সম্পর্কিত তথ্য
+gl:Arredor do SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 br:SumatraPDF tornou-se o leitor PDF padrão.
@@ -1731,6 +1772,7 @@ mk:Сега SumatraPDF е основен читач за PDF документи.
 ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
 kr:SumatraPDF를 기본 PDF 파일 뷰어로 지정합니다.
 bn:”SumatraPDF” এখন আপনার ডিফল্ট পিডিএফ রিডার
+gl:SumatraPDF é o lector PDF por defecto agora.
 -
 Failed to save a file
 br:Erro ao salvar o arquivo.
@@ -1773,6 +1815,7 @@ mk:Грешка при зачувување на PDF документот
 ro:Eroare la salvarea unui fişier
 kr:파일을 저장할 수 없습니다.
 bn:ফাইল সংরক্ষণে ব্যর্থ
+gl:Erro ao salvar o arquivo.
 -
 Error loading PDF file.
 br:Erro ao abrir o arquivo PDF.
@@ -1815,6 +1858,7 @@ mk:Грешка при вчитување на PDF документот.
 ro:Erroare la încărcarea unui fişier PDF.
 kr:PDF 파일 읽을 수 없습니다.
 bn:ERROR: ফাইলটি লোড করা যাচ্ছে না
+gl:Erro ao abrir o arquivo PDF.
 -
 Could not open Printer
 br:Erro ao acessar a impressora.
@@ -1857,6 +1901,7 @@ mk:Пристапот до печатачот не е можен
 ro:Imprimantă inaccesibilă
 kr:프린터를 열 수 없습니다.
 bn:প্রিন্টার খুলছে না
+gl:Erro ao aceder á impressora.
 -
 Printing problem.
 br:Problema de impressão.
@@ -1899,6 +1944,7 @@ mk:Проблем при печатење.
 ro:Problemă la imprimare.
 kr:인쇄를 할 수 없습니다.
 bn:প্রিন্ট করতে সমস্যা হয়েছে
+gl:Problema de impresión.
 -
 Contribute translation
 hu:Járulj hozzá a fordításhoz
@@ -1934,3 +1980,4 @@ mk:Учествувај во преведувањето на оваа аплик
 ro:Contribuie la traducere
 kr:번역 제공
 bn:নতুন ভাষা যোগ করুন
+gl:Contribuir na traducción
