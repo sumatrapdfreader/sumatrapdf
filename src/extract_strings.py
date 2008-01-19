@@ -12,9 +12,9 @@ def state_name(state):
     assert 0
     return "UNKNOWN STATE"
 
-LANGUAGES_TXT = "Languages:"
+LANG_TXT = "Lang:"
 
-def is_langs_line(l): return l.startswith(LANGUAGES_TXT)
+def is_lang_line(l): return l.startswith(LANG_TXT)
 def is_separator_line(l): return l == "-"
 def is_newline_char(c): return c == '\n' or c == '\r'
 
@@ -46,14 +46,16 @@ def parse_line_with_translation(l):
     txt = l[idx+1:]
     return (lang, txt)
 
-def parse_langs_line(l):
-    assert is_langs_line(l)
-    l = l[len(LANGUAGES_TXT):]
-    langs = l.split()
-    for lang in langs:
-        # lang format is either "fr" or "en-us"
-        assert 2 == len(lang) or 5 == len(lang)
-    return langs
+def parse_lang_line(l):
+    assert is_lang_line(l)
+    l = l[len(LANG_TXT)+1:]
+    l_parts = l.split(" ", 1)
+    assert len(l_parts) == 2
+    lang_iso = l_parts[0]
+    lang_name = l_parts[1].strip()
+    # lang format is either "fr" or "en-us"
+    assert 2 == len(lang_iso) or 5 == len(lang_iso)
+    return (lang_iso, lang_name)
 
 def report_error(line_no, line, err_txt):
     print "Error on line %d:" % line_no
@@ -61,12 +63,16 @@ def report_error(line_no, line, err_txt):
     print err_txt
     assert 0
 
-# Returns a dictionary that maps an original, untranslated string to
+# Returns a tuple (strings, langs)
+# 'strings' maps an original, untranslated string to
 # an array of translation, where each translation is a tuple 
 # [language, text translated into this language]
+# 'langs' is an array of language definition tuples. First item in a tuple
+# is language iso code (e.g. "en" or "sp-rs" and second is language name
 def load_strings_file(file_name):
     strings_dict = {}
-    langs = None
+    langs = []
+    lang_codes = {}
     fo = codecs.open(file_name, "r", "utf-8-sig")
     state = ST_NONE
     curr_trans = None
@@ -81,9 +87,13 @@ def load_strings_file(file_name):
         if is_comment_line(l):
             assert ST_NONE == state
             continue
-        if is_langs_line(l):
+        if is_lang_line(l):
             assert ST_NONE == state
-            langs = parse_langs_line(l)
+            lang_info = parse_lang_line(l)
+            langs.append(lang_info)
+            lang_iso = lang_info[0]
+            assert lang_iso not in lang_codes
+            lang_codes[lang_iso] = True
             continue
         if is_separator_line(l):
             if None != curr_trans:
@@ -95,7 +105,7 @@ def load_strings_file(file_name):
             state = ST_BEFORE_ORIG
             curr_trans = None
             continue
-        if None == langs:
+        if 0 == len(langs):
             report_error(line_no, l, "Expected list of languages (Languages: ...)")
         if ST_BEFORE_ORIG == state:
             if None != curr_trans:
@@ -109,7 +119,7 @@ def load_strings_file(file_name):
             if not line_with_translation(l):
                 report_error(line_no, l, "Expected line with translation")
             (lang, txt) = parse_line_with_translation(l)
-            if lang not in langs:
+            if lang not in lang_codes:
                 report_error(line_no, l, "lang '%s' is not in declared list of languages '%s'" % (lang, str(langs)))
             curr_trans.append([lang, txt])
         else:
@@ -123,7 +133,7 @@ def load_strings_file(file_name):
         if key in strings_dict:
             report_error(line_no, l, "'%s' is a duplicate text" % key)
         strings_dict[key] = value
-    return strings_dict
+    return (strings_dict, langs)
 
 def get_lang_list(strings_dict):
     langs = []
@@ -229,7 +239,7 @@ def dump_missing_per_language(strings_dict, dump_strings=False):
                 
 
 def main():
-    strings_dict = load_strings_file(strings_file)
+    (strings_dict, langs) = load_strings_file(strings_file)
     strings = extract_strings_from_c_files(c_files_to_process)
     dump_missing_per_language(strings_dict)
     print

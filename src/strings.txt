@@ -59,7 +59,51 @@
 # Xulio Gómez Díaz - Galego (Galician)
 # Христо Бенев (http://hbcom.info) - Bulgarian/Български	
 
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs kr bn gl bg
+Lang: en English
+Lang: ar Arabic
+Lang: by Belarusian 
+Lang: bg Bulgarian (Български)
+Lang: bn Bengali (বাংলা)
+Lang: ca Catalan (Catala)
+Lang: cn Chinese Simplified
+Lang: tw Chinese Traditional
+Lang: hr Croatian (Hrvatski)
+Lang: cz Czech
+Lang: dk Danish (Dansk)
+Lang: nl Dutch (Nederlands)
+Lang: fi Finnish (Suomen)
+Lang: fr French (Francais)
+Lang: gl Galician (Galego)
+Lang: de German (Deutsch)
+Lang: gr Greek
+Lang: he Hebrew
+Lang: hu Hungarian (Magyar)
+Lang: id Indonesian
+Lang: ja Japanese
+Lang: it Italian (Italiano)
+Lang: kr Korean
+Lang: lt Lithuanian
+Lang: ml Malayalam
+Lang: my Malaysian (Bahasa Melayu)
+Lang: mk Macedonian
+Lang: no Norwegian (Norsk)
+Lang: fa Persian
+Lang: pl Polish (Polski)
+Lang: br Portuguese - Brazil (Português)
+Lang: pt Portuguese - Portugal (Português)
+Lang: ro Romanian
+Lang: ru Russian
+Lang: sp-rs Serbian (Latin)
+Lang: sr-rs Serbian (Cyrillic)
+Lang: sk Slovak
+Lang: si Slovenian (Slovensko)
+Lang: es Spanish
+Lang: sv Swedish (Svenska)
+Lang: ta Tamil
+Lang: th Thai
+Lang: tr Turkish
+Lang: vn Vietnamese
+
 -
 &File
 bg:&Файл

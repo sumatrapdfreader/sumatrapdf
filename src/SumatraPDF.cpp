@@ -242,6 +242,11 @@ typedef struct MenuDef {
     int         m_id;
 } MenuDef;
 
+/* according to http://wiki.snap.com/index.php/User_talk:Snap, Serbian (latin) should 
+   be sp-rs and Serbian (Cyrillic) should be sr-rs */
+#include "LangMenuDef.h"
+
+/*
 MenuDef menuDefLang[] = {
     { "English",     IDM_LANG_EN },
     { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
@@ -277,8 +282,6 @@ MenuDef menuDefLang[] = {
     { "Portuguese - Portugal (Portugu\303\252s)",  IDM_LANG_PT },
     { "Romanian", IDM_LANG_RO},
     { "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)",     IDM_LANG_RU },
-    /* according to http://wiki.snap.com/index.php/User_talk:Snap, Serbian (latin) should 
-       be sp-rs and Serbian (Cyrillic) should be sr-rs */
     { "Serbian (Latin)", IDM_LANG_SP_RS},
     { "Serbian (Cyrillic)", IDM_LANG_SR_RS},
     { "Slovak (Sloven\304\215ina)",      IDM_LANG_SK },
@@ -342,6 +345,7 @@ struct LangDef {
     {"gl", IDM_LANG_GL},
     {"bg", IDM_LANG_BG},
 };
+*/
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
 static const char *g_lcidLangMap[] = {
