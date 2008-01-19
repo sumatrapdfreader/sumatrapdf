@@ -246,6 +246,7 @@ MenuDef menuDefLang[] = {
     { "English",     IDM_LANG_EN },
     { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
     { "Belarusian (\320\221\320\265\320\273\320\260\321\200\321\203\321\201\320\272\320\260\321\217)", IDM_LANG_BY },
+    { "Bulgarian", IDM_LANG_BG },
     { "Bengali", IDM_LANG_BN },
     { "Catalan (Catala)", IDM_LANG_CA }, // TODO: it's Català - need to convert to utf8
     { "Chinese Traditional", IDM_LANG_TW}, // TODO: add the name in chinese traditional
@@ -339,6 +340,7 @@ struct LangDef {
     {"kr", IDM_LANG_KR},
     {"bn", IDM_LANG_BN},
     {"gl", IDM_LANG_GL},
+    {"bg", IDM_LANG_BG},
 };
 
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -385,6 +387,7 @@ static const char *g_lcidLangMap[] = {
     "sr-rs", NULL, NULL, // Serbian (Cyrillic)
     "kr", NULL, NULL, // Korean
     "gl", NULL, NULL, // Galician
+    "bg", NULL, NULL, // Bulgarian
     NULL
 };
 
@@ -5266,6 +5269,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_KR:
                 case IDM_LANG_BN:
                 case IDM_LANG_GL:
+                case IDM_LANG_BG:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:

@@ -57,10 +57,12 @@
 # Hong Seung-geol (hsgno5@hanmir.com) – Korean
 # Shabab Mustafa (shabab.mustafa@gmail.com) - Bengali/ বাংলা
 # Xulio Gómez Díaz - Galego (Galician)
+# Христо Бенев (http://hbcom.info) - Bulgarian/Български	
 
-Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs kr bn gl
+Languages: en pl fr de tr by ja hu fa dk it nl ta es hr ru ar cn sv cz gr th pt br no sk vn lt my fi ca si tw ml he sp-rs id mk ro sr-rs kr bn gl bg
 -
 &File
+bg:&Файл
 br:&Arquivo
 hu:&Fájl
 pl:Plik
@@ -105,6 +107,7 @@ bn:&ফাইল
 gl:&Arquivo
 -
 &Open\tCtrl-O
+bg:&Отвори\tCttl-O
 br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
@@ -149,6 +152,7 @@ bn:&খুলুন\tCtrl-O
 gl:A&brir\tCtrl-O
 -
 &Close\tCtrl-W
+bg:Затвори\tCtrl-W
 br:&Fechar\tCtrl-W
 hu:Be&zárás\tCtrl-W
 pl:&Zamknij\tCtrl-W
@@ -193,6 +197,7 @@ bn:&বন্ধ করুন\tCtrl-W
 gl:&Pechar\tCtrl-W
 -
 &Save as
+bg:&Запиши като...
 br:&Salvar como...
 hu:Ment&és másként
 de:Speichern &unter...
@@ -237,6 +242,7 @@ bn:&ভিন্ন নামে সংরক্ষণ করুন
 gl:&Salvar como...
 -
 &Print
+bg:От&печатай
 br:&Imprimir
 hu:Nyomt&atás
 pl:Drukuj
@@ -281,6 +287,7 @@ bn:&প্রিন্ট করুন
 gl:&Imprimir
 -
 Make SumatraPDF a default PDF reader
+bg:Направи SumatraPDF четец на PDF по подразбиране
 br:Fazer do SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
@@ -325,6 +332,7 @@ bn:SumatraPDF-কে ডিফল্ট রিডার হিসেবে ন�
 gl:Facer do SumatraPDF o leitor PDF por defecto
 -
 E&xit\tCtrl-Q
+bg:&Изход\tCtrl-Q
 br:Sai&r\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
 pl:Wyjdź\tCtrl-Q
@@ -369,6 +377,7 @@ bn:&বেরিয়ে আসুন
 gl:Sai&r\tCtrl-Q
 -
 &View
+bg:&Виж
 br:&Ver
 hu:&Nézet
 pl:&Widok
@@ -413,6 +422,7 @@ bn:দেখুন
 gl:&Ver
 -
 Single page
+bg:Единична страница
 br:Página única
 hu:Egy oldalas
 pl:Jedna strona
@@ -457,6 +467,7 @@ bn:একটি পাতা
 gl:Unha soa páxina
 -
 Facing
+bg:Две страници
 br:Página dupla
 hu:Oldalpár
 pl:Na przeciwko
@@ -501,6 +512,7 @@ bn:পাশাপাশি দুটি পাতা
 gl:Páxina dobre
 -
 Continuous
+bg:Непрекъснати
 br:Contínuo
 hu:Folyamatos
 pl:Ciągły
@@ -545,6 +557,7 @@ bn:চলমান...
 gl:Contínuo
 -
 Continuous facing
+bg:Две непрекъснати
 br:Página dupla contínua
 hu:Folyamatos oldalpár
 pl:Ciągły na przeciwko
@@ -589,6 +602,7 @@ bn:চলমান এবং পাশাপাশি
 gl:Páxina dobre continua
 -
 Rotate left
+bg:Завърти наляво
 br:Girar à esquerda
 hu:Forgatás balra
 pl:Obróć w lewo
@@ -633,6 +647,7 @@ bn:বামে ঘুরিয়ে নিন
 gl:Xirar á esquerda
 -
 Rotate right
+bg:Завърти надясно
 br:Girar à direita
 hu:Forgatás jobbra
 pl:Obróć w prawo
@@ -677,6 +692,7 @@ bn:ডানে ঘুরিয়ে নিন
 gl:Xirar á dereita
 -
 Bookmarks
+bg:Етикети
 de:Lesezeichen
 tr:Yer imleri
 hu:Könyvjelzők
@@ -699,6 +715,7 @@ ru:Закладки
 gl:Preferidos
 -
 Fullscreen\tCtrl-L
+bg:Цял Екран\tCtrl-L
 de:Vollbild
 tr:Tam Ekran\tCtrl-L
 hu:Teljes Képernyő\tCtrl+L
@@ -727,6 +744,7 @@ ru:Полный экран
 gl:A toda pantalla\tCtrl-L
 -
 Show toolbar
+bg:Покажи лентата с инструменти
 br:Mostrar barra de ferramentas
 hu:Eszköztár
 pl:Pokaż toolbar
@@ -771,6 +789,7 @@ bn:টুলবার দেখুন
 gl:Amosar barra de ferramentas
 -
 Use MuPDF rendering engine
+bg:Използвай MuPDF за показване
 br:Usar motor de renderização MuPDF
 hu:MuPDF megjelenítő motor
 pl:Użyj MuPDF do renderowania
@@ -815,6 +834,7 @@ bn:”MuPDF rendering engine” ব্যবহার করুন
 gl:Usar motor de renderizado MuPDF
 -
 &Go To
+bg:Отиди &на
 br:Ir &para
 hu:U&grás
 pl:Idź do
@@ -859,6 +879,7 @@ bn:নিয়ে চলুন
 gl:Ir &a
 -
 Next Page
+bg:Следваща страница
 br:Página seguinte
 hu:Következő oldal
 pl:Następna strona
@@ -903,6 +924,7 @@ bn:পরের পাতায়
 gl:Páxina seguinte
 -
 Previous Page
+bg:Предишна страница
 br:Página anterior
 hu:Előző oldal
 pl:Poprzednia strona
@@ -947,6 +969,7 @@ bn:আগের পাতায়
 gl:Páxina anterior
 -
 First Page\tHome
+bg:Начална страница\tHome
 br:Primeira página\tHome
 hu:Első oldal\tHome
 pl:Pierwsza strona\tHome
@@ -991,6 +1014,7 @@ bn:প্রথম পাতায়\tHome
 gl:Primeira páxina\tHome
 -
 Last Page\tEnd
+bg:Последна страница\tEnd
 br:Última página\tEnd
 hu:Utolsó oldal\tEnd
 pl:Ostatnia strona\tEnd
@@ -1035,6 +1059,7 @@ bn: শেষ পাতায়\tEnd
 gl:Última páxina\tEnd
 -
 Page...\tCtrl-G
+bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
 hu:Oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
@@ -1079,6 +1104,7 @@ bn:…নং পাতায়
 br:Páxina...\tCtrl-G
 -
 &Zoom
+bg:&Мащаб
 br:&Zoom
 hu:&Nagyítás
 pl:Powiększenie
@@ -1123,6 +1149,7 @@ bn:পাতার আকার
 gl:&Zoom
 -
 Fit &Page\tCtrl-0
+bg:Оразмери страницата\tCtrl-0
 br:&Página inteira\tCtrl-0
 hu:&Teljes Oldal\tCtrl-0
 pl:Dopasuj do strony\tCtrl-0
@@ -1167,6 +1194,7 @@ bn:পুরো পাতা\tCtrl-0
 gl:&Páxina enteira\tCtrl-0
 -
 Act&ual Size\tCtrl-1
+bg:Едно към едно\tCtrl-1
 br:&Tamanho real\tCtrl-1
 hu:&Eredeti Méret\tCtrl-1
 pl:Prawdziwy rozmiar\tCtrl-1
@@ -1211,6 +1239,7 @@ bn:আসল আকারে\tCtrl-1
 gl:&Tamaño real\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
+bg:Оразмери по ширина\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
 pl:Dopasuj do szerokości\tCtrl-2
@@ -1281,6 +1310,7 @@ gl:Axustar ao ancho\tCtrl-2
 8.33%
 -
 &Language
+bg:Език
 br:I&dioma
 hu:&Nyelv
 pl:&Język
@@ -1325,6 +1355,7 @@ bn:ভাষা
 gl:I&dioma
 -
 &Help
+bg:Помо&щ
 br:A&juda
 hu:&Súgó
 pl:&Pomoc
@@ -1369,6 +1400,7 @@ bn:&সাহায্য
 gl:A&xuda
 -
 &Visit website
+bg:Посетете сайта
 br:Visitar o &Website
 hu:&Weboldal
 pl:Strona www
@@ -1413,6 +1445,7 @@ bn:&আমাদের ওয়েবসাইট দেখুন
 gl:Visitar o &Website
 -
 &About
+bg:Относно програмата...
 br:S&obre
 hu:Név&jegy
 pl:O programie
@@ -1457,6 +1490,7 @@ bn:&আমাদের তথ্য
 gl:Arred&or de
 -
 Find:
+bg:Търси:
 de:Suchen:
 tr:Bul:
 hu:Keresés:
@@ -1484,6 +1518,7 @@ ru:Найти:
 gl:Procura:
 -
 Find Previous
+bg:Намери предишното
 de:Rückwärts suchen
 tr:Öncekini bul
 hu:Előző Keresése
@@ -1509,6 +1544,7 @@ ru:Найти предыдущее
 gl:Atopar Anterior
 -
 Find Next
+bg:Намери следващото
 de:Weitersuchen
 tr:Sonrakini Bul
 hu:Következő Keresése
@@ -1534,6 +1570,7 @@ ru:Найти следующее
 gl:Atopar Seguinte
 -
 Match case
+bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
 hu:Kis- és nagybetű megkülönböztetése
@@ -1556,6 +1593,7 @@ ru:Учитывать размер
 gl:Coincidir maiúsculas e minúsculas
 -
 Open
+bg:Отвори
 br:Abrir
 hu:Megny&itás
 pl:Otwórz
@@ -1600,6 +1638,7 @@ bn:খুলুন
 gl:Abrir
 -
 Zoom In
+bg:Увеличи
 br:Zoom In
 de:Reinzoomen
 hu:Nagyítás
@@ -1644,6 +1683,7 @@ bn:বড় করে দেখুন
 gl:Achegar zoom
 -
 Zoom Out
+bg:Намали
 br:Zoom Out
 de:Rauszoomen
 hu:Kicsinyítés
@@ -1688,6 +1728,7 @@ bn:ছোট করে দেখুন
 gl:Afastar zoom
 -
 About SumatraPDF
+bg:Относно SumatraPDF
 br:Sobre o SumatraPDF
 de:Über SumatraPDF
 hu:SumatraPDF névjegye
@@ -1732,6 +1773,7 @@ bn:”SumatraPDF” সম্পর্কিত তথ্য
 gl:Arredor do SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
+bg:SumatraPDF е четеца по подразбиране на PDF файлове.
 br:SumatraPDF tornou-se o leitor PDF padrão.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
 hu:A SumatraPDF az alapértelmezett PDF olvasó.
@@ -1775,6 +1817,7 @@ bn:”SumatraPDF” এখন আপনার ডিফল্ট পিডিএ
 gl:SumatraPDF é o lector PDF por defecto agora.
 -
 Failed to save a file
+bg:Грешка при записване на файла
 br:Erro ao salvar o arquivo.
 de:Fehler beim Speichern der Datei!
 hu:Nem lehet menteni a fájlt.
@@ -1818,6 +1861,7 @@ bn:ফাইল সংরক্ষণে ব্যর্থ
 gl:Erro ao salvar o arquivo.
 -
 Error loading PDF file.
+bg:Грешка при зареждане на файла.
 br:Erro ao abrir o arquivo PDF.
 de:Fehler beim Öffnen der Datei!
 hu:Hiba a PDF betöltése közben.
@@ -1861,6 +1905,7 @@ bn:ERROR: ফাইলটি লোড করা যাচ্ছে না
 gl:Erro ao abrir o arquivo PDF.
 -
 Could not open Printer
+bg:Принтера не е достъпен
 br:Erro ao acessar a impressora.
 de:Konnte den Drucker nicht ansprechen.
 hu:Nem lehet megnyitni a Nyomtatót.
@@ -1904,6 +1949,7 @@ bn:প্রিন্টার খুলছে না
 gl:Erro ao aceder á impressora.
 -
 Printing problem.
+bg:Проблем при печатане.
 br:Problema de impressão.
 de:Druckerproblem
 hu:Nyomtatási probléma.
@@ -1947,6 +1993,7 @@ bn:প্রিন্ট করতে সমস্যা হয়েছে
 gl:Problema de impresión.
 -
 Contribute translation
+bg:Допринеси за превода
 hu:Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
 fr:Contribuer à la traduction
