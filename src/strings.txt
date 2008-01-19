@@ -60,49 +60,49 @@
 # Христо Бенев (http://hbcom.info) - Bulgarian/Български	
 
 Lang: en English
-Lang: ar Arabic
-Lang: by Belarusian 
+Lang: ar Arabic (الْعَرَبيّة )
+Lang: by Belarusian (Беларуская)
 Lang: bg Bulgarian (Български)
 Lang: bn Bengali (বাংলা)
-Lang: ca Catalan (Catala)
-Lang: cn Chinese Simplified
-Lang: tw Chinese Traditional
+Lang: ca Catalan (Català)
+Lang: cn Chinese Simplified (简体中文)
+Lang: tw Chinese Traditional (簡體中文)
 Lang: hr Croatian (Hrvatski)
-Lang: cz Czech
+Lang: cz Czech (Čeština)
 Lang: dk Danish (Dansk)
 Lang: nl Dutch (Nederlands)
 Lang: fi Finnish (Suomen)
-Lang: fr French (Francais)
+Lang: fr French (Français)
 Lang: gl Galician (Galego)
 Lang: de German (Deutsch)
-Lang: gr Greek
-Lang: he Hebrew
+Lang: gr Greek (Ελληνικά)
+Lang: he Hebrew (עברית)
 Lang: hu Hungarian (Magyar)
 Lang: id Indonesian
-Lang: ja Japanese
+Lang: ja Japanese (日本語 )
 Lang: it Italian (Italiano)
-Lang: kr Korean
-Lang: lt Lithuanian
-Lang: ml Malayalam
+Lang: kr Korean (한국어)
+Lang: lt Lithuanian (Lietuvių)
+Lang: ml Malayalam (മലയാളം)
 Lang: my Malaysian (Bahasa Melayu)
-Lang: mk Macedonian
+Lang: mk Macedonian (Македонски)
 Lang: no Norwegian (Norsk)
-Lang: fa Persian
+Lang: fa Persian (فارسی )
 Lang: pl Polish (Polski)
 Lang: br Portuguese - Brazil (Português)
 Lang: pt Portuguese - Portugal (Português)
-Lang: ro Romanian
-Lang: ru Russian
+Lang: ro Romanian (Română)
+Lang: ru Russian (Русский)
 Lang: sp-rs Serbian (Latin)
 Lang: sr-rs Serbian (Cyrillic)
-Lang: sk Slovak
-Lang: si Slovenian (Slovensko)
-Lang: es Spanish
+Lang: sk Slovak (Slovenčina)
+Lang: si Slovenian (Slovenščina)
+Lang: es Spanish (Español)
 Lang: sv Swedish (Svenska)
-Lang: ta Tamil
-Lang: th Thai
-Lang: tr Turkish
-Lang: vn Vietnamese
+Lang: ta Tamil (தமிழ்)
+Lang: th Thai (ภาษาไทย)
+Lang: tr Turkish (Türkçe)
+Lang: vn Vietnamese (Việt)
 
 -
 &File
