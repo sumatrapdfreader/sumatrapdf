@@ -16,7 +16,9 @@
 #   laclasse
 # Nardog (nardog.takoweb.com) - Japanese
 # Richard Magyar (magyar_richard@yahoo.com)- Hungarian
-# Mardi Az Pansad Dastgah Artesh - Persian
+# Persian: 
+#   Adham Beyki (odinay@gmail.com)
+#   Mardi Az Pansad Dastgah Artesh
 # Lars J. Helbo - Danish
 # Italian:
 #   Angelo Contardi
@@ -160,7 +162,7 @@ fr:&Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
 ja:開く(&O)\tCtrl-O
-fa:باز کردن\tCtrl-O
+fa:گشودن\tCtrl-O
 dk:&Åbn\tCtrl-O
 it:&Apri\tCtrl-O
 nl:&Open\tCtrl-O
@@ -250,7 +252,7 @@ fr:&Enregistrer sous
 tr:&Farklı kaydet
 by:Захаваць як
 ja:名前を付けて保存(&S)
-fa:ذخيره تحت
+fa:ذخيره به
 dk:&Gem som
 it:&Salva come
 nl:Opslaan als
@@ -295,7 +297,7 @@ fr:&Imprimer
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
 ja:印刷(&P)
-fa:پرينت\tCtrl-P
+fa:چاپ\tCtrl-P
 dk:&Udskriv
 it:&Stampa
 nl:&Print
@@ -340,7 +342,7 @@ fr:Définir SumatraPDF comme lecteur PDF par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ja:SumatraPDF を既定の PDF リーダーにする
-fa:در آوردن سوماترا بصورت بازکننده استاندارد فايلهای پی دی اف
+fa:PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
 dk:Gør SumatraPDF til din standard PDF læser
 it:Imposta SumatraPDF come Lettore Predefinito di Files PDF
 nl:Maak SumatraPDF de standaard PDF lezer
@@ -385,7 +387,7 @@ fr:Quitter\tCtrl-Q
 tr:Çı&kış\tCtrl-O
 by:Выйсце\tCtrl-Q
 ja:終了(&X)\tCtrl-Q
-fa:خروج\tCtrl-Q
+fa:بستن\tCtrl-Q
 dk:&Slut\tCtrl-Q
 it:&Esci\tCtrl-Q
 nl:&Sluiten\tCtrl-Q
@@ -475,7 +477,7 @@ fr:Une seule page
 tr:Tek sayfa
 by:Адна старонка
 ja:単一ページ
-fa:نمايش تک صفحه ای
+fa:نمايش تک‌صفحه‌اي
 dk:Enkelt side
 it:Pagina Singola
 nl:Enkele pagina
@@ -520,7 +522,7 @@ fr:Page double
 tr:Çift sayfa
 by:Дзьве старонкі
 ja:見返し
-fa:نمايش دو صفحه ای
+fa:نمايش دوصفحه‌اي
 dk:Modstående
 it:Pagine Affiancate
 nl:Dubbele pagina
@@ -610,7 +612,7 @@ fr:Continue - Page double
 tr:Devamlı çift sayfa
 by:Працягла дзьве старонкі
 ja:連続の見返し
-fa:نمايش دو صفحه ای پيوسته
+fa:نمايش دوصفحه‌اي پيوسته
 dk:Fortløbende modstående
 it:Scorrimento Pagine Affiancate
 nl:Dubbele pagina doorlopend
@@ -743,6 +745,7 @@ hu:Könyvjelzők
 lt:Žymės
 my:Penanda
 ja:ブックマーク
+fa:بوک‌مارک
 fi:Kirjainmerkit
 ca:Punts d'interés
 si:Zaznamki
@@ -765,6 +768,7 @@ tr:Tam Ekran\tCtrl-L
 hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
+fa:تمام‌صفحه\tCtrl-L
 no:Full skjerm\tCtrl-L
 sk:Na celú stránku\tCtrl-L
 vn:Toàn màn hình\tCtrl-L
@@ -797,7 +801,7 @@ fr:Afficher la barre d'outils
 tr:Araç kutusunu göster
 by:Паказаль панэль прыладаў
 ja:ツール バーの表示
-fa:نشان دادن منو های ابزار
+fa:نمايش نوار ابزار
 dk:Vis værktøjslinie
 it:Mostra la Barra degli Strumenti
 nl:Toon werkbalk
@@ -842,7 +846,7 @@ fr:Utiliser le moteur de rendu MuPDF
 tr:MuPDF görüntüleme motorunu kullan
 by:Выкарыстоўваць MuPDF-магчымасці
 ja:MuPDF 描画エンジンを使用する
-fa:استفاده از مو پی دی اف بعنوان موتور استاندارد
+fa:MuPDF استفاده از موتور رندر
 dk:Brug MuPDF renderingengine
 it:Usa MuPDF come Motore di Rendering
 nl:Gebruik de MuPDF render-enigine
@@ -932,7 +936,7 @@ fr:Page suivante
 tr:Sonraki Sayfa
 by:Наступная старонка
 ja:次のページ
-fa:صفحه بعد
+fa:صفحه‌ي بعد
 dk:Næste side
 it:Pagina Successiva
 nl:Volgende pagina
@@ -977,7 +981,7 @@ fr:Page précédente
 tr:Önceki Sayfa
 by:Папярэдняя старонка
 ja:前のページ
-fa:صفحه قبل
+fa:صفحه‌ي قبل
 dk:Forrige side
 it:Pagina Precedente
 nl:Vorige pagina
@@ -1022,7 +1026,7 @@ fr:Première page\tHome
 tr:İlk Sayfa\tHome
 by:Першая старонка\tHome
 ja:最初のページ\tHome
-fa:صفحه اول\tHome
+fa:صفحه‌ي اول\tHome
 dk:Første side\tHome
 it:Prima Pagina\tHome
 nl:Eerste pagina\tHome
@@ -1067,7 +1071,7 @@ fr:Dernière page\tEnd
 tr:Son Sayfa\tEnd
 by:Апошняя старонка\tEnd
 ja:最後のページ\tEnd
-fa:صفحه آخر\tEnd
+fa:صفحه‌ي آخر\tEnd
 dk:Sidste side\tEnd
 it:Ultima Pagina\tEnd
 nl:Laatste pagina\tEnd
@@ -1112,7 +1116,7 @@ fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
 ja:ページ...\tCtrl-G
-fa:...صفحه\tCtrl-G
+fa:...صفحه‌ي\tCtrl-G
 dk:Side...\tCtrl-G
 it:Pagina...\tCtrl-G
 nl:Pagina...\tCtrl-G
@@ -1202,7 +1206,7 @@ fr:Page entière\tCtrl-0
 tr:&Sayfaya sığdır\tCtrl-0
 by:Змясціць старонку\tCtrl-0
 ja:ページに合わせる(&P)\tCtrl-0
-fa:اندازه متناسب با پنجره\tCtrl-0
+fa:متناسب با پنجره\tCtrl-0
 dk:Hele &siden\tCtrl-0
 it:Intera &Pagina\tCtrl-0
 nl:Aan pagina aanpassen\tCtrl-0
@@ -1247,7 +1251,7 @@ fr:Taille réelle\tCtrl-1
 tr:Gerçek Boyut\tCtrl-1
 by:Рэальны памер\tCtrl-1
 ja:実際のサイズ\tCtrl-1
-fa:اندازه واقعی\tCtrl-1
+fa:اندازه‌ي واقعی\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
 it:Dimensione Reale\tCtrl-1
 nl:Normale grootte\tCtrl-1
@@ -1292,7 +1296,7 @@ fr:Pleine largeur
 tr:Genişliğe &sığdır\tCtrl-2
 by:Змясціць па шырыне
 ja:幅に合わせる(&H)\tCtrl-2
-fa:اندازه متناسب با عرض پنجره\tCtrl-2
+fa:متناسب با عرض پنجره\tCtrl-2
 dk:Tilpas &bredde\tCtrl-2
 it:&Larghezza Pagina\tCtrl-2
 nl:Passend in breedte\tCtrl-2
@@ -1453,7 +1457,7 @@ fr:Visiter le site web
 tr:&Web sayfası
 by:Наведаць сайт
 ja:ウェブサイトの訪問(&V)
-fa:ديدن سايت وب
+fa:بازديد از وب‌سايت
 dk:Besøg &webside
 it:&Visita il Sito WEB
 nl:Bezoek de website
@@ -1540,6 +1544,7 @@ tr:Bul:
 hu:Keresés:
 pl:Szukaj:
 ja:検索:
+fa:جستجو:
 sk:Hľadať:
 vn:Tìm kiếm:
 lt:Ieškoti:
@@ -1569,6 +1574,7 @@ hu:Előző Keresése
 lt:Rasti kitą
 my:Cari sebelum
 ja:前を検索
+fa:قبلي
 fi:Etsi edellinen
 ca:Cerca anterior
 si:Najdi predhodno
@@ -1595,6 +1601,7 @@ hu:Következő Keresése
 lt:Rasti ankstesnį
 my:Cari selepas
 ja:次を検索
+fa:بعدي
 fi:Etsi seuraava
 ca:Cerca següent
 si:Najdi naslednje
@@ -1632,6 +1639,7 @@ sk:Rozlišovať veľké/malé písmená
 kr:대/소문자 구분
 bn:অক্ষর মেলান
 cn:大小写匹配
+fa:تاثير کوچکي و بزرگي حروف
 fr:Respecter la casse
 ru:Учитывать размер
 gl:Coincidir maiúsculas e minúsculas
@@ -1646,7 +1654,7 @@ fr:Ouvrir
 tr:&Aç
 by:Адчыніць
 ja:開く
-fa:باز کردن
+fa:گشودن
 dk:Åbn
 it:Apri
 nl:Openen
@@ -1691,7 +1699,7 @@ fr:Zoom avant
 tr:Yakınlaştır
 by:Павялічыць
 ja:拡大
-fa:بزرگ کردن
+fa:بزرگ‌نمايي
 dk:Zoom ind
 it:Ingrandisci
 nl:Zoom in
@@ -1736,7 +1744,7 @@ fr:Zoom arrière
 tr:Uzaklaştır
 by:Паменьшыць
 ja:縮小
-fa:کوچک کردن
+fa:کوچک‌نمايي
 dk:Zoom ud
 it:Diminuisci
 nl:Zoom uit
@@ -1781,7 +1789,7 @@ fr:A propos de SumatraPDF
 tr:SumatraPDF hakkında
 by:Аб SumatraPDF
 ja:SumatraPDF のバージョン情報
-fa:درباره سوماترا پی دی اف
+fa:SumatraPDF درباره‌ي
 dk:Om SumatraPDF
 it:A proposito di SumatraPDF
 nl:Over SumatraPDF
@@ -1826,7 +1834,7 @@ fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
 tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
 by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчанні.
 ja:SumatraPDF は現在 PDF ファイル用の既定のリーダーです。
-fa:سوماترا پی دی اف اکنون بازکننده استاندارد فايل های پی دی اف است
+fa:.شما خواهد بود PDF مرورگر پيش‌فرض اسناد  SumatraPDF از اين پس
 dk:SumatraPDF er nu din standardlæser for PDF filer.
 it:SumatraPDF è stato impostato come Lettore Predefinito di Files PDF.
 nl:SumatraPDF is nu de standaard PDF lezer.
@@ -1914,7 +1922,7 @@ fr:Erreur à l'ouverture du fichier PDF.
 tr:Dosya yüklenirken hata çıktı.
 by:Памылка пры адчыненні файла.
 ja:PDF ファイルの読み込みエラーです。
-fa:باز کردن فايل با مشکل روبرو شد
+fa:گشودن فايل با مشکل مواجه شد
 dk:Fejl ved åbning af PDF-fil
 it:Riscontrati Errori durante l'Apertura del File PDF
 nl:Fout bij laden PDF bestand.
@@ -1958,7 +1966,7 @@ fr:Impossible d'accéder à l'imprimante
 tr:Yazıcıya erişilemiyor.
 by:Немагчыма адчыніць друкарку
 ja:プリンタを開くことができませんでした
-fa:مکالمه با پرينتر با مشکل روبرو شد
+fa:برنامه قادر به يافتن چاپگر نيست
 dk:Kunne ikke åbne printeren
 it:Stampante non accessibile
 nl:Kon printen niet vinden.
@@ -2005,7 +2013,7 @@ dk:Printer problem
 ta:அச்சுப்பொறி சிக்கல்
 nl:Probleem bij het printen.
 ja:印刷の問題です。
-fa:پرينت با مشکل روبرو شد
+fa:مشکل در چاپ
 it:Problemi di Stampa
 es:Error de impresión.
 hr:Problem kod ispisivanja.
@@ -2063,6 +2071,7 @@ ca:Contribuïu en la traducció
 si:Prispevaj prevod
 sr-rs:Помози у превођењу овог програма
 tw:翻譯提供
+fa:در ترجمه‌ي اين برنامه کمک کنيد
 ml:മാക്സിന്‍ ബി ജൊണ്‍
 he:עזור לתרגם
 sp-rs:Pomozi u prevođenju ovog programa
