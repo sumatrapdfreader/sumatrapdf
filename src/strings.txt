@@ -760,6 +760,7 @@ cn:书签
 fr:Signets
 ru:Закладки
 gl:Preferidos
+es:Marcadores
 -
 Fullscreen\tCtrl-L
 bg:Цял Екран\tCtrl-L
@@ -790,6 +791,7 @@ cn:全屏\tCtrl-L
 fr:Plein écran
 ru:Полный экран
 gl:A toda pantalla\tCtrl-L
+es:Pantalla Completa\tCtrl-L
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -1565,6 +1567,7 @@ cn:查找:
 fr:Rechercher:
 ru:Найти:
 gl:Procura:
+es:Buscar:
 -
 Find Previous
 bg:Намери предишното
@@ -1592,6 +1595,7 @@ cn:上一个
 fr:Occurrence précédente
 ru:Найти предыдущее
 gl:Atopar Anterior
+es:Buscar Anterior
 -
 Find Next
 bg:Намери следващото
@@ -1619,6 +1623,7 @@ cn:下一个
 fr:Occurrence suivante
 ru:Найти следующее
 gl:Atopar Seguinte
+es:Buscar Siguiente
 -
 Match case
 bg:Точно същите букви
@@ -1643,6 +1648,7 @@ fa:تاثير کوچکي و بزرگي حروف
 fr:Respecter la casse
 ru:Учитывать размер
 gl:Coincidir maiúsculas e minúsculas
+es:Coincidir mayúsculas y minúsculas
 -
 Open
 bg:Отвори
@@ -2081,3 +2087,4 @@ ro:Contribuie la traducere
 kr:번역 제공
 bn:নতুন ভাষা যোগ করুন
 gl:Contribuir na traducción
+es:Contribuir en la traducción
