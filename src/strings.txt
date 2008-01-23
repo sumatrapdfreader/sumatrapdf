@@ -761,6 +761,7 @@ fr:Signets
 ru:Закладки
 gl:Preferidos
 es:Marcadores
+th:ที่คั่น
 -
 Fullscreen\tCtrl-L
 bg:Цял Екран\tCtrl-L
@@ -792,6 +793,7 @@ fr:Plein écran
 ru:Полный экран
 gl:A toda pantalla\tCtrl-L
 es:Pantalla Completa\tCtrl-L
+th:เต็มจอภาพ
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -2066,7 +2068,7 @@ cn:提供翻译
 sv:Bidra med översättning
 cz:Zašli překlad
 gr:Βοήθησε στη μετάφραση
-th:ช่วยเหลือในการแปล
+th:ร่วมช่วยเหลือในการแปลภาษา
 pt:Contribuir na tradução.
 no:Bidra med oversetting
 sk:Prispieť k prekladu programu
