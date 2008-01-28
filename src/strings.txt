@@ -750,6 +750,7 @@ fi:Kirjainmerkit
 ca:Punts d'interés
 si:Zaznamki
 sr-rs:Белешке
+tw:書籤
 sp-rs:Beleške
 mk:Обележувачи
 ro:Marcaje
@@ -780,6 +781,7 @@ fi:Koko näyttö\tCtrl-L
 ca:Pantalla completa\tCtrl-L
 si:Celozaslonsko\tCtrl-L
 sr-rs:Цео екран\tCtrl-L
+tw:全螢幕顯示(按Ctrl+L切換)
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl-L
 he:מסך מלא\tCtrl-L
 sp-rs:Ceo ekran\tCtrl-L
