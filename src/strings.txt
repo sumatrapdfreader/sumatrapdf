@@ -24,6 +24,7 @@
 #   Angelo Contardi
 #   iBlawgger
 # Barry Haveman (webstek.info) - Dutch
+#   Kristof Bal 
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
@@ -746,6 +747,7 @@ lt:Žymės
 my:Penanda
 ja:ブックマーク
 fa:بوک‌مارک
+nl:Bladwijzers
 fi:Kirjainmerkit
 ca:Punts d'interés
 si:Zaznamki
@@ -772,6 +774,7 @@ hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
 fa:تمام‌صفحه\tCtrl-L
+nl:Volledig scherm\tCtrl-L
 no:Full skjerm\tCtrl-L
 sk:Na celú stránku\tCtrl-L
 vn:Toàn màn hình\tCtrl-L
@@ -1551,6 +1554,7 @@ hu:Keresés:
 pl:Szukaj:
 ja:検索:
 fa:جستجو:
+nl:Zoek
 sk:Hľadať:
 vn:Tìm kiếm:
 lt:Ieškoti:
@@ -1582,6 +1586,7 @@ lt:Rasti kitą
 my:Cari sebelum
 ja:前を検索
 fa:قبلي
+nl:Vorig zoekresultaat
 fi:Etsi edellinen
 ca:Cerca anterior
 si:Najdi predhodno
@@ -1610,6 +1615,7 @@ lt:Rasti ankstesnį
 my:Cari selepas
 ja:次を検索
 fa:بعدي
+nl:Volgend zoekresultaat
 fi:Etsi seuraava
 ca:Cerca següent
 si:Najdi naslednje
@@ -1636,6 +1642,7 @@ tr:Büyük/Küçük harf eşleştir
 hu:Kis- és nagybetű megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字に一致する
+nl:Hoofdlettergevoelig
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
 si:Velikost pisave
