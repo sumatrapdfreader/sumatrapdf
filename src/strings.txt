@@ -739,6 +739,7 @@ bn:ডানে ঘুরিয়ে নিন
 gl:Xirar á dereita
 -
 Bookmarks
+br:Marcadores
 bg:Етикети
 de:Lesezeichen
 tr:Yer imleri
@@ -767,6 +768,7 @@ es:Marcadores
 th:ที่คั่น
 -
 Fullscreen\tCtrl-L
+br:Tela cheia\tCtrl-L
 bg:Цял Екран\tCtrl-L
 de:Vollbild
 tr:Tam Ekran\tCtrl-L
@@ -1458,7 +1460,7 @@ gl:A&xuda
 -
 &Visit website
 bg:Посетете сайта
-br:Visitar o &Website
+br:Visitar o SumatraPDF na W&eb
 hu:&Weboldal
 pl:Strona www
 de:&SumatraPDF im Internet besuchen
@@ -1503,7 +1505,7 @@ gl:Visitar o &Website
 -
 &About
 bg:Относно програмата...
-br:S&obre
+br:S&obre o SumatraPDF
 hu:Név&jegy
 pl:O programie
 de:&Über SumatraPDF
@@ -1547,6 +1549,7 @@ bn:&আমাদের তথ্য
 gl:Arred&or de
 -
 Find:
+br:Localizar
 bg:Търси:
 de:Suchen:
 tr:Bul:
@@ -1578,6 +1581,7 @@ gl:Procura:
 es:Buscar:
 -
 Find Previous
+br:Localizar anterior
 bg:Намери предишното
 de:Rückwärts suchen
 tr:Öncekini bul
@@ -1607,6 +1611,7 @@ gl:Atopar Anterior
 es:Buscar Anterior
 -
 Find Next
+br:Localizar seguinte
 bg:Намери следващото
 de:Weitersuchen
 tr:Sonrakini Bul
@@ -1636,6 +1641,7 @@ gl:Atopar Seguinte
 es:Buscar Siguiente
 -
 Match case
+br:Diferenciar  minúsculas e Maiúsculas
 bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
@@ -1708,7 +1714,7 @@ gl:Abrir
 -
 Zoom In
 bg:Увеличи
-br:Zoom In
+br:Aumentar Zoom
 de:Reinzoomen
 hu:Nagyítás
 pl:Powiększ
@@ -1753,7 +1759,7 @@ gl:Achegar zoom
 -
 Zoom Out
 bg:Намали
-br:Zoom Out
+br:Diminuir Zoom
 de:Rauszoomen
 hu:Kicsinyítés
 pl:Pomniejsz
