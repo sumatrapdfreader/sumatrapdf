@@ -31,7 +31,7 @@
 # Zero-8 - Russian
 # Dmitry Yerokhin (erodim@mail.ru) - Russian
 # Arabic:
-#   Mohammed Al-Foulad (http://mbsee.info)
+#   Mohammed Al-Foulad (http://www.mbsee.info)
 #   Boubker Talibi
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
 # Linus Persson - Swedish
@@ -351,7 +351,7 @@ ta:SumatraPDFயை முன்னிருப்பு PDF படிப்ப�
 es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Ассоциировать SumatraPDF с файлами PDF
-ar: PDF جعل هذا البرنامج القارىء الرئيسي لملفات
+ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:设置 SumatraPDF 为默认 PDF 阅读器
 sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
@@ -801,6 +801,7 @@ ru:Полный экран
 gl:A toda pantalla\tCtrl-L
 es:Pantalla Completa\tCtrl-L
 th:เต็มจอภาพ
+ar:بحجم الشاشة
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -865,7 +866,7 @@ ta:MuPDF பதிப்பு வரை பொறியை தேர்
 es:Usar motor de renderizado MuPDF
 hr:Koristi MuPDF za prikaz PDF datoteka
 ru:Рендеринг с помощью движка MuPDF
-ar: التشغيلي Mupdf استخدام محرك 
+ar:التشغيلي Mupdf استخدام محرك 
 cn:使用 MuPDF 渲染引擎
 sv:Använd MuPDF renderingsmotor
 cz:Použít zobrazení pomocí MuPDF 
@@ -1579,6 +1580,7 @@ fr:Rechercher:
 ru:Найти:
 gl:Procura:
 es:Buscar:
+ar:بحث
 -
 Find Previous
 br:Localizar anterior
@@ -1609,6 +1611,7 @@ fr:Occurrence précédente
 ru:Найти предыдущее
 gl:Atopar Anterior
 es:Buscar Anterior
+ar:البحث عن السابق
 -
 Find Next
 br:Localizar seguinte
@@ -1666,6 +1669,7 @@ fr:Respecter la casse
 ru:Учитывать размер
 gl:Coincidir maiúsculas e minúsculas
 es:Coincidir mayúsculas y minúsculas
+ar:مناسبة الخط
 -
 Open
 bg:Отвори
