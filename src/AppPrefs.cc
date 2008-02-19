@@ -196,19 +196,6 @@ Error:
     return (const char*)data;
 }
 
-#if 0
-bool Prefs_SerializeOld(FileHistoryList **root, DString *strOut)
-{
-    assert(0 == strOut->length);
-    DStringSprintf(strOut, "  %s: %d\n", SHOW_TOOLBAR_STR, gGlobalPrefs->m_showToolbar);
-    DStringSprintf(strOut, "  %s: %d\n", USE_FITZ_STR, gGlobalPrefs->m_useFitz);
-    DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs->m_pdfAssociateDontAskAgain);
-    DStringSprintf(strOut, "  %s: %d\n", PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs->m_pdfAssociateShouldAssociate);
-    DStringSprintf(strOut, "  %s: %s\n", UI_LANGUAGE_STR, CurrLangNameGet());
-    return FileHistoryList_Serialize(root, strOut);
-}
-#endif
-
 static BOOL ParseInt(const char *txt, int *resOut)
 {
     assert(txt);

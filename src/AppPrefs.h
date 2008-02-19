@@ -35,9 +35,6 @@ typedef struct SerializableGlobalPrefs {
 
 extern SerializableGlobalPrefs gGlobalPrefs;
 
-#if 0
-bool        Prefs_SerializeOld(FileHistoryList **root, DString *strOut);
-#endif
 struct FileHistoryList;
 bool        Prefs_DeserializeOld(const char *prefsTxt, FileHistoryList **fileHistoryRoot);
 

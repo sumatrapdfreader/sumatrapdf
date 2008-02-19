@@ -246,107 +246,6 @@ typedef struct MenuDef {
    be sp-rs and Serbian (Cyrillic) should be sr-rs */
 #include "LangMenuDef.h"
 
-/*
-MenuDef menuDefLang[] = {
-    { "English",     IDM_LANG_EN },
-    { "Arabic (\330\247\331\204\330\271\330\261\330\250\331\212\330\251)",      IDM_LANG_AR },
-    { "Belarusian (\320\221\320\265\320\273\320\260\321\200\321\203\321\201\320\272\320\260\321\217)", IDM_LANG_BY },
-    { "Bulgarian", IDM_LANG_BG },
-    { "Bengali", IDM_LANG_BN },
-    { "Catalan (Catala)", IDM_LANG_CA }, // TODO: it's Català - need to convert to utf8
-    { "Chinese Traditional", IDM_LANG_TW}, // TODO: add the name in chinese traditional
-    { "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", IDM_LANG_CN },
-    { "Croatian (Hrvatski)",    IDM_LANG_HR },
-    { "Czech (\304\214e\305\241tina)",       IDM_LANG_CZ },
-    { "Danish (Dansk)",      IDM_LANG_DK },
-    { "Dutch (Nederlands)",       IDM_LANG_NL },
-    { "Finnish (Suomen)",     IDM_LANG_FI },
-    { "French (Fran\303\247ais)",      IDM_LANG_FR },
-    { "Galician", IDM_LANG_GL },
-    { "German (Deutsch)",      IDM_LANG_DE },
-    { "Greek (\316\225\316\273\316\273\316\267\316\275\316\271\316\272\316\254)",       IDM_LANG_GR },
-    { "Hebrew", IDM_LANG_HE},
-    { "Hungarian (Magyar)",   IDM_LANG_HU },
-    { "Indonesian", IDM_LANG_ID },
-    { "Italian (Italiano)",     IDM_LANG_IT },
-    { "Japanese (\346\227\245\346\234\254\350\252\236)",    IDM_LANG_JA },
-    { "Korean", IDM_LANG_KR },
-    { "Lithuanian (Lietuvi\305\263)",  IDM_LANG_LT },
-    { "Macedonian", IDM_LANG_MK},
-    { "Malaysian (Bahasa Melayu)",   IDM_LANG_MY },
-    { "Malayalam", IDM_LANG_ML },
-    { "Norwegian (Norsk)",   IDM_LANG_NO },
-    { "Persian (\331\201\330\247\330\261\330\263\333\214)",     IDM_LANG_FA },
-    { "Polish (Polski)",      IDM_LANG_PL },
-    { "Portuguese -  Brazil (Portugu\303\252s)",  IDM_LANG_BR },
-    { "Portuguese - Portugal (Portugu\303\252s)",  IDM_LANG_PT },
-    { "Romanian", IDM_LANG_RO},
-    { "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)",     IDM_LANG_RU },
-    { "Serbian (Latin)", IDM_LANG_SP_RS},
-    { "Serbian (Cyrillic)", IDM_LANG_SR_RS},
-    { "Slovak (Sloven\304\215ina)",      IDM_LANG_SK },
-    { "Slovenian (Slovensko)", IDM_LANG_SI },
-    { "Spanish (Espa\303\261ol)",     IDM_LANG_ES },
-    { "Swedish (Svenska)",     IDM_LANG_SV },
-    { "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264)",       IDM_LANG_TA },
-    { "Thai (\340\271\204\340\270\227\340\270\242)",        IDM_LANG_TH },
-    { "Turkish (T\303\274rk\303\247e)",     IDM_LANG_TR },
-    { "Vietnamese (Ti\341\272\277ng Vi\341\273\207t)",  IDM_LANG_VN },
-    { SEP_ITEM,            0 },
-    { _TRN("Contribute translation"), IDM_CONTRIBUTE_TRANSLATION },
-};
-
-struct LangDef {
-    const char* _langName;
-    int         _langId;
-} g_langs[] = {
-    {"en", IDM_LANG_EN},
-    {"by", IDM_LANG_BY},
-    {"fr", IDM_LANG_FR},
-    {"de", IDM_LANG_DE},
-    {"pl", IDM_LANG_PL},
-    {"tr", IDM_LANG_TR},
-    {"ja", IDM_LANG_JA},
-    {"hu", IDM_LANG_HU},
-    {"fa", IDM_LANG_FA},
-    {"dk", IDM_LANG_DK},
-    {"it", IDM_LANG_IT},
-    {"nl", IDM_LANG_NL},
-    {"ta", IDM_LANG_TA},
-    {"es", IDM_LANG_ES},
-    {"hr", IDM_LANG_HR},
-    {"ru", IDM_LANG_RU},
-    {"ar", IDM_LANG_AR},
-    {"cn", IDM_LANG_CN},
-    {"sv", IDM_LANG_SV},
-    {"cz", IDM_LANG_CZ},
-    {"gr", IDM_LANG_GR},
-    {"th", IDM_LANG_TH},
-    {"pt", IDM_LANG_PT},
-    {"br", IDM_LANG_BR},
-    {"no", IDM_LANG_NO},
-    {"sk", IDM_LANG_SK},
-    {"vn", IDM_LANG_VN},
-    {"lt", IDM_LANG_LT},
-    {"my", IDM_LANG_MY},
-    {"fi", IDM_LANG_FI},
-    {"ca", IDM_LANG_CA},
-    {"si", IDM_LANG_SI},
-    {"tw", IDM_LANG_TW},
-    {"ml", IDM_LANG_ML},
-    {"he", IDM_LANG_HE},
-    {"sp-rs", IDM_LANG_SP_RS},
-    {"id", IDM_LANG_ID},
-    {"mk", IDM_LANG_MK},
-    {"ro", IDM_LANG_RO},
-    {"sr-rs", IDM_LANG_SR_RS},
-    {"kr", IDM_LANG_KR},
-    {"bn", IDM_LANG_BN},
-    {"gl", IDM_LANG_GL},
-    {"bg", IDM_LANG_BG},
-};
-*/
-
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
 static const char *g_lcidLangMap[] = {
     "en", "0409", NULL, // English
@@ -845,8 +744,21 @@ static void SetCanvasSizeToDxDy(WindowInfo *win, int dx, int dy)
     int diffDy = frameDy - canvasDy;
     assert(diffDy > 0);
     int newDy = dy + diffDy;
-    SetWindowPos(win->hwndFrame, NULL, 0, 0, newDx, newDy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
-    //SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
+    SetWindowPos(win->hwndFrame, NULL, 0, 0, newDx, newDy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE | SWP_NOZORDER);
+}
+
+/* Set position of canvas window by apropriate change to frame window */
+static void WinSetCanvasPos(WindowInfo *win, int x, int y)
+{
+    RECT canvasRect, frameRect;
+    GetWindowRect(win->hwndCanvas, &canvasRect);
+    GetWindowRect(win->hwndFrame, &frameRect);
+
+    int newX = x + frameRect.left - canvasRect.left;
+    assert(newX < x);
+    int newY = y + frameRect.top - canvasRect.top;
+    assert(newY < y);
+    SetWindowPos(win->hwndFrame, NULL, newY, newY, 0, 0, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOSIZE | SWP_NOZORDER);
 }
 
 static void CaptionPens_Create(void)
@@ -1198,7 +1110,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     const char *    fileName = NULL;
     FileHistoryList*node = NULL;
 
-    if (!win)
+    if (gRunningDLL || !win)
         return;
     if (WS_SHOWING_PDF != win->state)
         return;
@@ -1210,13 +1122,10 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!fileName)
         return;
 
-    if (!gRunningDLL) 
-    {
-        node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-        assert(node);
-        if (!node)
-            return;
-    }
+    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    assert(node);
+    if (!node)
+        return;
 
     DisplayState_Init(&ds);
     if (!displayStateFromDisplayModel(&ds, win->dm))
@@ -1246,7 +1155,7 @@ static void UpdateCurrentFileDisplayState(void)
     }
 }
 
-static bool Prefs_SaveNew(void)
+static bool Prefs_Save(void)
 {
     DString     path;
     size_t      dataLen;
@@ -1272,44 +1181,6 @@ Exit:
     free((void*)data);
     DStringFree(&path);
     return ok;
-}
-
-#if 0
-static void Prefs_SaveOld(void)
-{
-    DString       path;
-    DString       prefsStr;
-
-    DStringInit(&prefsStr);
-
-    /* mark currently shown files as visible */
-    UpdateCurrentFileDisplayState();
-
-    bool fOk = Prefs_SerializeOld(&gFileHistoryRoot, &prefsStr);
-    if (!fOk)
-        goto Exit;
-
-    DStringInit(&path);
-    Prefs_GetFileNameOld(&path);
-    DBG_OUT("prefs file=%s\nprefs:\n%s\n", path.pString, prefsStr.pString);
-    /* TODO: consider 2-step process:
-        * write to a temp file
-        * rename temp file to final file */
-    write_to_file(path.pString, (void*)prefsStr.pString, prefsStr.length);
-    
-Exit:
-    DStringFree(&prefsStr);
-    DStringFree(&path);
-}
-#endif
-
-static void Prefs_Save(void)
-{
-    /* TODO: temporary, save in both formats. In the future we'll ditch old format */
-    Prefs_SaveNew();
-#if 0
-    Prefs_SaveOld();
-#endif
 }
 
 static bool WindowInfo_Dib_Init(WindowInfo *win) {
@@ -1831,9 +1702,9 @@ static WindowInfo* LoadPdf(const char *fileName)
     win->GetCanvasSize();
     SizeD totalDrawAreaSize(win->winSize());
     if (fileFromHistory) {
-        WinResizeClientArea(win->hwndCanvas, fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
+        SetCanvasSizeToDxDy(win, fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
         totalDrawAreaSize = SizeD(fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
-        Win32_Win_SetPos(win->hwndFrame, fileFromHistory->state.windowX, fileFromHistory->state.windowY);
+        WinSetCanvasPos(win, fileFromHistory->state.windowX, fileFromHistory->state.windowY);
     }
 #if 0 // not ready yet
     else {
@@ -2494,6 +2365,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (!pageInfo->shown)
             continue;
 
+        LockCache();
         //BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
         BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo);
 
@@ -2524,6 +2396,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             if (origFont)
                 SelectObject(hdc, origFont);
             Win32_Font_Delete(fontRightTxt);
+            UnlockCache();
             continue;
         }
 
@@ -2534,6 +2407,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
             DrawCenteredText(hdc, &bounds, "Couldn't render the page");
+            UnlockCache();
             continue;
         }
 
@@ -2544,6 +2418,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         int currPageDx = pageInfo->currDx;
         int currPageDy = pageInfo->currDy;
         HBITMAP hbmp = renderedBmp->createDIBitmap(hdc);
+        UnlockCache();
         if (!hbmp)
             continue;
 
