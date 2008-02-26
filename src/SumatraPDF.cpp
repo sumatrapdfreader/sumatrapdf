@@ -134,6 +134,10 @@ static BOOL             gDebugShowLinks = FALSE;
 #define REPAINT_TIMER_ID    1
 #define REPAINT_DELAY_IN_MS 400
 
+#define SMOOTHSCROLL_TIMER_ID       2
+#define SMOOTHSCROLL_DELAY_IN_MS    20
+#define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
+
 /* A special "pointer" vlaue indicating that we tried to render this bitmap
    but couldn't (e.g. due to lack of memory) */
 #define BITMAP_CANNOT_RENDER (RenderedBitmap*)NULL
@@ -154,6 +158,7 @@ static HCURSOR                      gCursorArrow;
 static HCURSOR                      gCursorHand;
 static HCURSOR                      gCursorDrag;
 static HCURSOR                      gCursorIBeam;
+static HCURSOR                      gCursorScroll;
 static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushShadow;
@@ -2949,7 +2954,10 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     if (WS_SHOWING_PDF == win->state) {
         assert(win->dm);
         if (!win->dm) return;
-        if (win->mouseAction == MA_SELECTING) {
+        if (MA_SCROLLING == win->mouseAction) {
+            win->yScrollSpeed = (y - win->dragPrevPosY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+            win->xScrollSpeed = (x - win->dragPrevPosX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        } else if (win->mouseAction == MA_SELECTING) {
             SetCursor(gCursorArrow);
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
@@ -3061,6 +3069,26 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         OnDraggingStop(win, x, y);
 
     win->mouseAction = MA_IDLE;
+}
+
+static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y)
+{
+    assert(win);
+    if (!win) return;
+
+    // Handle message by recording placement then moving document as mouse moves.
+
+    if (win->mouseAction == MA_IDLE) {
+        win->mouseAction = MA_SCROLLING;
+
+        // record current mouse position, distance mouse moves
+        // from this poition is speed to shift document
+        win->dragPrevPosY = y; 
+        win->dragPrevPosX = x;
+        SetCursor(gCursorScroll);
+    } else {
+        win->mouseAction = MA_IDLE;
+    }
 }
 
 #define ABOUT_ANIM_TIMER_ID 15
@@ -4890,10 +4918,21 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
+        case WM_MBUTTONDOWN:
+            if (win && WS_SHOWING_PDF == win->state)
+            {
+                SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+                // TODO: Create window that shows location of initial click for reference
+                OnMouseMiddleButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            }
+            return 0;
+
         case WM_SETCURSOR:
             if (win && win->mouseAction == MA_DRAGGING) {
                 SetCursor(gCursorDrag);
                 return TRUE;
+            } else if (win && MA_SCROLLING == win->mouseAction) {
+                SetCursor(gCursorScroll);
             }
             break;
 
@@ -4902,6 +4941,16 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             if (win) {
                 if (REPAINT_TIMER_ID == wParam)
                     WindowInfo_RedrawAll(win);
+                else if (SMOOTHSCROLL_TIMER_ID == wParam) {
+                    if (MA_SCROLLING == win->mouseAction)
+                        WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
+                    else
+                    {
+                        KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+                        win->yScrollSpeed = 0;
+                        win->xScrollSpeed = 0;
+                    }
+                }
                 else
                     AnimState_NextFrame(&win->animState);
             }
@@ -5377,6 +5426,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorArrow = LoadCursor(NULL, IDC_ARROW);
     gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
     gCursorHand  = LoadCursor(NULL, IDC_HAND); // apparently only available if WINVER >= 0x0500
+    gCursorScroll = LoadCursor(NULL, IDC_SIZEALL);
     if (!gCursorHand)
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gCursorDrag  = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));

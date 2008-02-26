@@ -63,7 +63,8 @@ typedef struct {
 enum MouseAction {
     MA_IDLE = 0,
     MA_DRAGGING,
-    MA_SELECTING
+    MA_SELECTING,
+    MA_SCROLLING
 };
 
 /* Represents selected area on given page */
@@ -156,6 +157,12 @@ public:
        cursor. A delta between previous and current is by how much we
        moved */
     int             dragPrevPosX, dragPrevPosY;
+
+    /* when moving the document by smooth scrolling, this keeps track of
+       the speed at which we should scroll, which depends on the distance
+       of the mouse from the point where the user middle clicked. */
+    int             xScrollSpeed, yScrollSpeed;
+
     AnimState       animState;
 
     bool            showSelection;
