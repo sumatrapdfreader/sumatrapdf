@@ -296,6 +296,7 @@ static const char *g_lcidLangMap[] = {
     "kr", NULL, NULL, // Korean
     "gl", NULL, NULL, // Galician
     "bg", NULL, NULL, // Bulgarian
+    "uk", NULL, NULL, // Ukrainian
     NULL
 };
 
@@ -5198,6 +5199,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_BN:
                 case IDM_LANG_GL:
                 case IDM_LANG_BG:
+                case IDM_LANG_UK:
                     OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:

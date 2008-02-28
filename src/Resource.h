@@ -106,6 +106,7 @@
 #define IDM_LANG_BN                     502
 #define IDM_LANG_GL                     503
 #define IDM_LANG_BG                     504
+#define IDM_LANG_UK                     505
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
