@@ -66,13 +66,8 @@ preloadcolorspace(pdf_xref *xref, fz_obj *ref)
 	pdf_logrsrc("rsrc colorspace %s\n", colorspace->name);
 
 	error = pdf_storeitem(xref->store, PDF_KCOLORSPACE, ref, colorspace);
-	if (error)
-	{
-		fz_dropcolorspace(colorspace);
-		return error;
-	}
-
-	return nil;
+	fz_dropcolorspace(colorspace);
+	return error;
 }
 
 static fz_error *
@@ -93,6 +88,11 @@ preloadpattern(pdf_xref *xref, fz_obj *ref)
 	if (fz_toint(type) == 1)
 	{
 		error = pdf_loadpattern(&pattern, xref, obj, ref);
+		
+		/* We don't want to use the item directly */
+		if(!error)
+			pdf_droppattern(pattern);
+		
 		fz_dropobj(obj);
 		return error;
 	}
@@ -100,6 +100,11 @@ preloadpattern(pdf_xref *xref, fz_obj *ref)
 	else if (fz_toint(type) == 2)
 	{
 		error = pdf_loadshade(&shade, xref, obj, ref);
+		
+		/* We don't want to use the item directly */
+		if(!error)
+			fz_dropshade(shade);
+		
 		fz_dropobj(obj);
 		return error;
 	}
@@ -120,6 +125,11 @@ preloadshading(pdf_xref *xref, fz_obj *ref)
 	error = pdf_resolve(&obj, xref);
 	if (error) return error;
 	error = pdf_loadshade(&shade, xref, obj, ref);
+	
+	/* We don't want to use the item directly */
+	if(!error)
+		fz_dropshade(shade);
+	
 	fz_dropobj(obj);
 	return error;
 }
@@ -144,15 +154,23 @@ preloadxobject(pdf_xref *xref, fz_obj *ref)
 	if (!strcmp(fz_toname(subtype), "Form"))
 	{
 		error = pdf_loadxobject(&xobject, xref, obj, ref);
+		
+		/* We don't want to use the item directly */
+		if(!error)
+			pdf_dropxobject(xobject);
+		
 		fz_dropobj(obj);
 		return error;
 	}
 	else if (!strcmp(fz_toname(subtype), "Image"))
 	{
 		error = pdf_loadimage(&image, xref, obj, ref);
+		
+		/* We don't want to use the item directly */
+		if(!error)
+			fz_dropimage((fz_image*)image);
+		
 		fz_dropobj(obj);
-        if (image)
-		    fz_dropimage((fz_image*)image);
 		return error;
 	}
 	else
