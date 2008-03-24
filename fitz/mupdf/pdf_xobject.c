@@ -22,6 +22,15 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	form->resources = nil;
 	form->contents = nil;
 
+	/* Put item into store at once to prevent a recursive loop if its
+	resources include itself */
+	error = pdf_storeitem(xref->store, PDF_KXOBJECT, ref, form);
+	if (error)
+	{
+		pdf_dropxobject(form);
+		return error;
+	}
+
 	pdf_logrsrc("load xobject %d %d (%p) {\n", fz_tonum(ref), fz_togen(ref), form);
 
 	obj = fz_dictgets(dict, "BBox");
@@ -70,13 +79,6 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	pdf_logrsrc("stream %d bytes\n", form->contents->wp - form->contents->rp);
 
 	pdf_logrsrc("}\n");
-
-	error = pdf_storeitem(xref->store, PDF_KXOBJECT, ref, form);
-	if (error)
-	{
-		pdf_dropxobject(form);
-		return error;
-	}
 
 	*formp = form;
 	return nil;

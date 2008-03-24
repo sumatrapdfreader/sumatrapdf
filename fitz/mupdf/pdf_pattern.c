@@ -50,6 +50,12 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
     pat->xstep = fz_toreal(fz_dictgets(dict, "XStep"));
     pat->ystep = fz_toreal(fz_dictgets(dict, "YStep"));
 
+    /* Put item into store at once to prevent a recursive loop if its
+    resources include itself */
+    error = pdf_storeitem(xref->store, PDF_KPATTERN, stmref, pat);
+    if (error)
+        goto cleanup;
+
     pdf_logrsrc("mask %d\n", pat->ismask);
     pdf_logrsrc("xstep %g\n", pat->xstep);
     pdf_logrsrc("ystep %g\n", pat->ystep);
@@ -125,10 +131,6 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
     fz_optimizetree(pat->tree);
 
     pdf_logrsrc("}\n");
-
-    error = pdf_storeitem(xref->store, PDF_KPATTERN, stmref, pat);
-    if (error)
-        goto cleanup;
 
     *patp = pat;
     return nil;

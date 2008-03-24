@@ -236,6 +236,8 @@ pdf_loadtype3font(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	/*
 	 * Resources
 	 */
+	/* TODO: should call pdf_storeitem before loading resources to
+	prevent a recursive loop */
 
 	resources = nil;
 
