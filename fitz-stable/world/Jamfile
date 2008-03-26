@@ -1,0 +1,19 @@
+SubDir TOP world ;
+
+Library libworld :
+
+	node_toxml.c
+	node_misc1.c
+	node_misc2.c
+	node_optimize.c
+	node_path.c
+	node_text.c
+	node_tree.c
+
+	res_colorspace.c
+	res_font.c
+	res_image.c
+	res_shade.c
+
+	;
+

@@ -1,0 +1,27 @@
+# --------------------------------------------------------------------------
+#
+# This is the Jamfile used for building Fitz and MuPDF.
+# Put compiler options and other tweaks in Jamrules, not here.
+#
+#   http://public.perforce.com/public/jam/src/Jam.html
+#
+# Set environment variable BUILD to one of: debug release profile
+#
+#   jam -sBUILD=release
+#
+
+SubDir TOP ;
+
+InstallFile $(BINDIR) : PUBLIC ;
+InstallFile $(BINDIR) : CHANGES ;
+
+SubInclude TOP base ;
+SubInclude TOP stream ;
+SubInclude TOP world ;
+SubInclude TOP raster ;
+
+SubInclude TOP fonts ;
+SubInclude TOP mupdf ;
+
+SubInclude TOP apps ;
+

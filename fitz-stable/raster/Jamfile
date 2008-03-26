@@ -1,0 +1,20 @@
+SubDir TOP raster ;
+
+Library libraster :
+	glyphcache.c
+	pixmap.c
+	porterduff.c
+	meshdraw.c
+	imagedraw.c
+	imageunpack.c
+	imagescale.c
+	pathscan.c
+	pathfill.c
+	pathstroke.c
+	render.c
+	;
+
+if $(OSPLAT) = PPC     { Library libraster : archppc.c ; }
+if $(OSPLAT) = SPARC   { Library libraster : archsparc.c ; }
+if $(OSPLAT) = X86     { Library libraster : archx86.c ; }
+
