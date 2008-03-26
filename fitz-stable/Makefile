@@ -25,21 +25,30 @@ FREETYPE_LDFLAGS = `freetype-config --libs`
 FONTCONFIG_CFLAGS  = `pkg-config fontconfig --cflags`
 FONTCONFIG_LDFLAGS = `pkg-config fontconfig --libs`
 
+# cc-option
+# Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)
+
+cc-option = $(shell if $(CC) $(OP_CFLAGS) $(1) -S -o /dev/null -xc /dev/null \
+              > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi ;)
+
+CFLAGS += -g -Wall
+CFLAGS += $(call cc-option, -Wno-pointer-sign, "")
+
 ifeq ($(CFG),debug)
-CCFLAGS += -g -O0 -Wall -Wno-pointer-sign ${INCS}
+CFLAGS += -O0  ${INCS}
 else
-CCFLAGS += -g -O2 -Wall -Wno-pointer-sign ${INCS}
+CFLAGS += -O2 ${INCS}
 endif
 
 ifeq ($(HOST),$(HOST_LINUX))
-CCFLAGS += -Wno-pointer-sign -std=gnu99 -DHAVE_C99
+CCFLAGS += -std=gnu99 -DHAVE_C99
 endif
 
 ifeq ($(HOST),$(HOST_MAC))
-CCFLAGS += -Wno-pointer-sign -std=gnu99 -DHAVE_C99
+CFLAGS += -std=gnu99 -DHAVE_C99
 endif
 
-CCFLAGS += ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS}
+CFLAGS += ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS}
 
 LDFLAGS += ${FREETYPE_LDFLAGS} ${FONTCONFIG_LDFLAGS} -lm -ljpeg
 
@@ -199,7 +208,7 @@ $(PDFTOOL_APP): ${PDFTOOL_OBJ}
 	$(CC) -g -o $@ $^ ${LDFLAGS}
 
 $(OUTDIR)/FITZ_%.o: %.c
-	$(CC) -c $(CCFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 inform:
 ifneq ($(CFG),rel)
