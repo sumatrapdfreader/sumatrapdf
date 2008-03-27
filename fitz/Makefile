@@ -35,9 +35,9 @@ CFLAGS += -g -Wall
 CFLAGS += $(call cc-option, -Wno-pointer-sign, "")
 
 ifeq ($(CFG),dbg)
-CFLAGS += -O0  ${INCS}
+CFLAGS += -O0  ${INCS} -DDEBUG
 else
-CFLAGS += -O2 ${INCS}
+CFLAGS += -O2 ${INCS} -DNDEBUG
 endif
 
 ifeq ($(HOST),$(HOST_LINUX))
