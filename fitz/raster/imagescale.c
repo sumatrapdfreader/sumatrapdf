@@ -2,6 +2,11 @@
 #include "fitz-world.h"
 #include "fitz-draw.h"
 
+/* TODO: a hack to make release compile on linux. Need to put it in a better place */
+#ifndef FORCEINLINE
+#define FORCEINLINE
+#endif
+
 typedef unsigned char byte;
 
 static FORCEINLINE void srown(byte * restrict src, byte * restrict dst, unsigned w, unsigned denom, unsigned n)
