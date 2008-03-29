@@ -224,6 +224,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
     { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"), 0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -1288,6 +1289,8 @@ static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
             return win;
         if (hwnd == win->hwndFindStatus)
             return win;
+        if (hwnd == win->hwndPageBox)
+            return win;
         win = win->next;
     }
     return NULL;
@@ -1878,9 +1881,12 @@ void DisplayModel::pageChanged(void)
     if (pageCount <= 0)
         win_set_text(win->hwndFrame, baseName);
     else {
-        char titleBuf[256];
-        HRESULT hr = StringCchPrintfA(titleBuf, dimof(titleBuf), "%s page %d of %d", baseName, currPageNo, pageCount);
-        win_set_text(win->hwndFrame, titleBuf);
+        char buf[256];
+        HRESULT hr = StringCchPrintfA(buf, dimof(buf), " / %d", pageCount);
+        SetWindowText(win->hwndPageTotal, buf);
+        hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
+        SetWindowText(win->hwndPageBox, buf);
+        win_set_text(win->hwndFrame, baseName);
     }
 }
 
@@ -3269,6 +3275,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         win->ClearTocBox();
         delete win->dm;
         win->dm = NULL;
+        SetWindowText(win->hwndPageTotal, "");
         WindowInfo_RedrawAll(win);
         WindowInfo_UpdateFindbox(win);
         DeleteOldSelectionInfo(win);
@@ -4495,6 +4502,102 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     UpdateToolbarFindText(win);
 }
 
+static WNDPROC DefWndProcPageBox = NULL;
+static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    if (!win || !win->dm)
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    if (WM_CHAR == message) {
+        if (VK_RETURN == wParam) {
+        	char buf[256];
+        	int newPageNo;
+        	GetWindowText(win->hwndPageBox, buf, sizeof(buf));
+        	newPageNo = atoi(buf);
+            if (win->dm->validPageNo(newPageNo)) {
+                win->dm->goToPage(newPageNo, 0);
+                SetFocus(win->hwndFrame);
+            }
+            return 1;
+        }
+        else if (VK_ESCAPE == wParam || VK_TAB == wParam) {
+            SetFocus(win->hwndFrame);
+            return 1;
+        }
+    }
+    else if (WM_ERASEBKGND == message) {
+        RECT r;
+        Edit_GetRect(hwnd, &r);
+        if (r.left == 0 && r.top == 0) { // virgin box
+            r.left += 4;
+            r.top += 3;
+            r.bottom += 3;
+            r.right -= 2;
+            Edit_SetRectNoPaint(hwnd, &r);
+        }
+    }
+    else if (WM_SETFOCUS == message) {
+        win->hwndTracker = NULL;
+    }
+
+    return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
+}
+
+#define PAGE_TXT_POS_X 426
+#define PAGE_BOX_WIDTH 40
+#define PAGE_TOTAL_WIDTH 40
+static void UpdateToolbarPageText(WindowInfo *win)
+{
+    const WCHAR *text = L"Page:";
+    int text_len = wcslen(text);
+    HDC dc = GetWindowDC(win->hwndPageText);
+    SIZE size;
+
+    SetWindowTextW(win->hwndPageText, text);
+    GetTextExtentPoint32W(dc, text, text_len, &size);
+    ReleaseDC(win->hwndPageText, dc);
+
+    RECT pageWndRect;
+    GetWindowRect(win->hwndPageBox, &pageWndRect);
+    int pageWndDy = rect_dy(&pageWndRect) + 1;
+
+    MoveWindow(win->hwndPageText, PAGE_TXT_POS_X, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
+    MoveWindow(win->hwndPageBox, PAGE_TXT_POS_X + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
+    MoveWindow(win->hwndPageTotal, PAGE_TXT_POS_X + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 3, PAGE_TOTAL_WIDTH, size.cy, false);
+}
+
+static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
+{
+    HWND page = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "0",
+                            WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
+                            PAGE_TXT_POS_X, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HWND label = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
+                            PAGE_TXT_POS_X, 1, 0, 0,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HWND total = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
+                            PAGE_TXT_POS_X, 1, 0, 0,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
+    SetWindowFont(label, fnt, true);
+    SetWindowFont(page, fnt, true);
+    SetWindowFont(total, fnt, true);
+
+    if (!DefWndProcPageBox)
+        DefWndProcPageBox = (WNDPROC)GetWindowLong(page, GWL_WNDPROC);
+    SetWindowLong(page, GWL_WNDPROC, (LONG)WndProcPageBox);
+    SetWindowLong(page, GWL_USERDATA, (LONG)win);
+
+    win->hwndPageText = label;
+    win->hwndPageBox = page;
+    win->hwndPageTotal = total;
+
+    UpdateToolbarPageText(win);
+}
+
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HWND hwndOwner = win->hwndFrame;
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
@@ -4577,6 +4680,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     gReBarDyFrame = 0;
     
     CreateFindBox(win, hInst);
+    CreatePageBox(win, hInst);
 }
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -4664,7 +4768,7 @@ void WindowInfo::TrackMouse(HWND tracker)
     if (!tracker)
         tracker = hwndCanvas;
     else
-    if (hwndFrame != GetActiveWindow() || hwndFindBox == GetFocus() || hwndTracker == tracker)
+    if (hwndFrame != GetActiveWindow() || hwndFindBox == GetFocus() || hwndPageBox == GetFocus() || hwndTracker == tracker)
         return;
 
     TRACKMOUSEEVENT tme = { sizeof(tme) };
