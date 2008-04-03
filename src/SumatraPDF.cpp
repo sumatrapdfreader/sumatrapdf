@@ -4823,7 +4823,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, "TOC",
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
-                        WS_TABSTOP|WS_CHILD|ES_AUTOVSCROLL|ES_AUTOHSCROLL,
+                        WS_TABSTOP|WS_CHILD,
                         0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
     SetWindowLong(win->hwndTocBox, GWL_USERDATA, (LONG)win);
 
