@@ -905,7 +905,7 @@ static void AppGenDataFilename(char* pFilename, DString* pDs)
     } else {
         AppGetAppDir(pDs);
     }
-    if (!str_endswithi(pDs->pString, DIR_SEP_STR) && !(DIR_SEP_CHAR == pFilename[0])) {
+    if (!char_is_dir_sep(pDs->pString[strlen(pDs->pString)]) && !char_is_dir_sep(pFilename[0])) {
         DStringAppend(pDs, DIR_SEP_STR, -1);
     }
     DStringAppend(pDs, pFilename, -1);
@@ -3486,11 +3486,7 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    const char *sep = strrchr(srcFileName, DIR_SEP_CHAR);
-    if (sep)
-        strcpy(dstFileName, sep + 1);
-    else
-        strcpy(dstFileName, srcFileName);
+    strcpy(dstFileName, FilePath_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = "PDF\0*.pdf\0All\0*.*\0";
