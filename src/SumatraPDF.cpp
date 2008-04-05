@@ -4853,6 +4853,14 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
     tvinsert.itemex.lParam = (LPARAM)entry->link;
     tvinsert.itemex.pszText = entry->title;
+    
+    /* Mu PDF seems to add a left-to-right embedding U+202A character at the
+    start of every entry which shows up as a box on some Windows installs, so
+    skip it. */
+    if (NULL != tvinsert.itemex.pszText && 0x202A == tvinsert.itemex.pszText[0]) {
+        ++tvinsert.itemex.pszText;
+    }
+    
     return TreeView_InsertItemW(hwnd, &tvinsert);
 }
 
