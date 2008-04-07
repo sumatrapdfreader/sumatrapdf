@@ -61,7 +61,8 @@ def main():
     logfile = gen_unique_log_filename()
     print "Logs writtent to '%s' file" % logfile
 
-    localpdfpath = os.path.expanduser("~/fitzstresspdfs")
+    #localpdfpath = os.path.expanduser("~/fitzstresspdfs")
+    localpdfpath = "/mnt/hgfs/macpro/fitz-stress-pdfs"
     make_dir(localpdfpath)
     print "PDFs copied to directory '%s'" % localpdfpath
 
