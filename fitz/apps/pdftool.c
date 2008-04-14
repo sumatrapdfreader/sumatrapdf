@@ -12,7 +12,11 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+#ifdef _MSC_VER
+#include <Winsock2.h>
+#else
 #include <sys/time.h>
+#endif
 
 /*
  * Common operations.
@@ -24,18 +28,31 @@
 char *srcname = "(null)";
 pdf_xref *src = nil;
 pdf_pagetree *srcpages = nil;
+int dieonerror = 1;
 
-/* TODO: temporary until we get fz_printerror from latest fitz */
-void fz_printerror(fz_error *eo)
+void
+fz_printerror(fz_error *eo)
 {
-	/* should do something */
+	fprintf(stderr, "+ %s:%d: %s(): %s\n", eo->file, eo->line, eo->func, eo->msg);
 }
 
-void die(fz_error *eo)
+void printerror(fz_error *eo)
 {
 	fflush(stdout);
 	fz_printerror(eo);
 	fflush(stderr);
+}
+
+void maybedie(fz_error* eo)
+{
+	printerror(eo);
+	if (dieonerror)
+		abort();
+}
+
+void die(fz_error *eo)
+{
+	printerror(eo);
 	abort();
 }
 
@@ -490,7 +507,7 @@ gettime(long *time_)
     *time_ = tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-void
+fz_error*
 drawloadpage(int pagenum, struct benchmark *loadtimes)
 {
 	fz_error *error;
@@ -507,9 +524,14 @@ drawloadpage(int pagenum, struct benchmark *loadtimes)
 	}
 
 	pageobj = pdf_getpageobject(srcpages, pagenum - 1);
+	drawpage = nil;
 	error = pdf_loadpage(&drawpage, src, pageobj);
 	if (error)
-		die(error);
+	{
+		fprintf(stderr, "Failed to open page %d\n", pagenum);
+		maybedie(error);
+		return error;
+	}
 
 	if (benchmark && loadtimes)
 	{
@@ -537,6 +559,7 @@ drawloadpage(int pagenum, struct benchmark *loadtimes)
 			benchmark ? "" : "\n");
 	if (benchmark)
 		fflush(stderr);
+	return nil;
 }
 
 void
@@ -556,15 +579,17 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 	char namebuf[256];
 	char buf[256];
 	int x, y, w, h, b, bh;
-	int fd;
+	int fd = 0;
 	long start;
 	long end;
 	long elapsed;
 
-	drawloadpage(pagenum, loadtimes);
-
+	error = drawloadpage(pagenum, loadtimes);
 	if (benchmark)
 		gettime(&start);
+
+	if (error)
+		goto Exit;
 
 	ctm = fz_identity();
 	ctm = fz_concat(ctm, fz_translate(0, -drawpage->mediabox.y1));
@@ -589,7 +614,10 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 
 	error = fz_newpixmap(&pix, bbox.x0, bbox.y0, w, bh, 4);
 	if (error)
-		die(error);
+	{
+		maybedie(error);
+		goto Exit;
+	}
 
 	memset(pix->samples, 0xff, pix->h * pix->w * pix->n);
 
@@ -600,7 +628,10 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 
 		error = fz_rendertreeover(drawgc, pix, drawpage->tree, ctm);
 		if (error)
-			die(error);
+		{
+			maybedie(error);
+			goto Exit;
+		}
 
 		if (drawpattern)
 		{
@@ -632,7 +663,9 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 	if (drawpattern)
 		close(fd);
 
-	drawfreepage();
+Exit:
+	if (drawpage)
+		drawfreepage();
 
 	if (benchmark)
 	{
@@ -701,7 +734,9 @@ drawpages(char *pagelist)
 	if (benchmark)
 	{
 		memset(&loadtimes, 0x00, sizeof (loadtimes));
+		loadtimes.min = LONG_MAX;
 		memset(&drawtimes, 0x00, sizeof (drawtimes));
+		drawtimes.min = LONG_MAX;
 	}
 
 	spec = strsep(&pagelist, ",");
@@ -1131,6 +1166,10 @@ mainusage(void)
 int
 main(int argc, char **argv)
 {
+	const char *env = getenv("DIEONERROR");
+	if (env)
+		dieonerror = atoi(env);
+
 	if (argc >= 2)
 	{
 		optind = 2;
