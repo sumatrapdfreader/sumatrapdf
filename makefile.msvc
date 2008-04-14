@@ -1,0 +1,150 @@
+# Set default configuration
+!if "$(CFG)"==""
+CFG=dbg
+!endif
+
+# O is directory where object and binary files go
+O = obj-$(CFG)
+
+ZLIB_DIR=ext\zlib
+FREETYPE_DIR=ext\freetype231
+JPEG_DIR=ext\jpeg
+
+CC = cl.exe
+
+CFLAGS = $(CFLAGS) /nologo /c
+# standard windows defines
+CFLAGS = $(CFLAGS) /D "WIN32" /D "_WIN32_WINNT=0x0500"
+#CFLAGS = $(CFLAGS) /D "WIN32_LEAN_AND_MEAN"
+CFLAGS = $(CFLAGS) /D "_SCL_SECURE_NO_DEPRECATE" /D "_CRT_SECURE_NO_DEPRECATE"
+
+# disable "warning C4244: 'argument' : conversion from 'foo' to 'bar', possible loss of data"
+CFLAGS = $(CFLAGS) /wd4244 /wd4996
+
+CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /TC /GS /RTCu /RTCs
+
+# Flags specific to fitz
+FITZ_CFLAGS = $(CFLAGS) /Ifitz/include /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR)
+FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" /D "NEED_GETTIMEOFDAY"
+FITZ_CFLAGS = $(FITZ_CFLAGS) /D "__func__=\"\""
+
+#CFLAGS = $(CFLAGS) /showIncludes
+#CFLAGS = $(CFLAGS) /analyze
+
+LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib
+
+LD = link.exe
+LDFLAGS = $(LDFLAGS) /nologo /DEBUG
+
+!if "$(CFG)"=="dbg"
+LDFLAGS = $(LDFLAGS)
+LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
+!endif
+
+!if "$(CFG)"=="rel"
+LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(JPEG_DIR)\jpeg_s.lib $(ZLIB_DIR)\zlib_s.lib
+LDFLAGS = $(LDFLAGS) /opt:nowin98
+LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
+!endif
+
+BASE_OBJS = \
+	$(O)\base_memory.obj $(O)\base_error.obj $(O)\base_hash.obj $(O)\base_matrix.obj \
+	$(O)\base_rect.obj $(O)\base_rune.obj $(O)\util_strlcat.obj $(O)\util_strlcpy.obj \
+	$(O)\util_strsep.obj $(O)\util_getopt.obj $(O)\util_gettimeofday.obj \
+	$(O)\base_cpudep.obj
+
+STREAM_OBJS = \
+	$(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj $(O)\filt_a85d.obj \
+	$(O)\filt_a85e.obj $(O)\filt_ahxd.obj $(O)\filt_ahxe.obj $(O)\filt_arc4.obj \
+	$(O)\filt_faxd.obj $(O)\filt_faxdtab.obj $(O)\filt_faxe.obj $(O)\filt_faxetab.obj \
+	$(O)\filt_flate.obj $(O)\filt_lzwd.obj $(O)\filt_lzwe.obj $(O)\filt_null.obj \
+	$(O)\filt_pipeline.obj $(O)\filt_predict.obj $(O)\filt_rld.obj $(O)\filt_rle.obj \
+	$(O)\obj_array.obj $(O)\obj_dict.obj $(O)\obj_parse.obj $(O)\obj_print.obj \
+	$(O)\obj_simple.obj $(O)\stm_buffer.obj $(O)\stm_filter.obj $(O)\stm_misc.obj \
+	$(O)\stm_open.obj $(O)\stm_read.obj $(O)\stm_write.obj $(O)\filt_dctd.obj $(O)\filt_dcte.obj
+
+RASTER_OBJS = \
+	$(O)\archx86.obj $(O)\imagescale.obj $(O)\pathfill.obj $(O)\pixmap.obj \
+	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
+	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\render.obj
+
+WORLD_OBJS = \
+	$(O)\node_misc1.obj $(O)\node_misc2.obj $(O)\node_optimize.obj $(O)\node_path.obj \
+	$(O)\node_text.obj $(O)\node_toxml.obj $(O)\node_tree.obj $(O)\res_colorspace.obj \
+	$(O)\res_font.obj $(O)\res_image.obj $(O)\res_shade.obj
+
+MUPDF_OBJS = \
+	$(O)\pdf_annot.obj $(O)\pdf_build.obj $(O)\pdf_cmap.obj $(O)\pdf_colorspace1.obj \
+	$(O)\pdf_colorspace2.obj $(O)\pdf_crypt.obj $(O)\pdf_debug.obj $(O)\pdf_doctor.obj \
+	$(O)\pdf_font.obj $(O)\pdf_fontagl.obj $(O)\pdf_fontenc.obj $(O)\pdf_function.obj \
+	$(O)\pdf_image.obj $(O)\pdf_interpret.obj $(O)\pdf_lex.obj $(O)\pdf_nametree.obj \
+	$(O)\pdf_open.obj $(O)\pdf_outline.obj $(O)\pdf_page.obj $(O)\pdf_pagetree.obj \
+	$(O)\pdf_parse.obj $(O)\pdf_pattern.obj $(O)\pdf_repair.obj $(O)\pdf_resources.obj \
+	$(O)\pdf_save.obj $(O)\pdf_shade.obj $(O)\pdf_shade1.obj $(O)\pdf_shade4.obj \
+	$(O)\pdf_store.obj $(O)\pdf_stream.obj $(O)\pdf_type3.obj $(O)\pdf_unicode.obj \
+	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfilems.obj
+
+LIBS_OBJS = \
+	$(BASE_OBJS) \
+	$(STREAM_OBJS) \
+	$(RASTER_OBJS) \
+	$(WORLD_OBJS) \
+	$(MUPDF_OBJS)
+
+PDFTOOL_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj
+
+PDFTOOL_APP = $(O)\pdftool.exe
+PDFTOOL_PDB = $(O)\pdftool.pdb
+PDFTOOL_MAP = $(O)\pdftool.map
+
+PDFAPP_OBJS = $(LIBS_OBJS) $(O)\pdfapp.obj $(O)\winmain.obj
+
+PDFAPP_APP = $(O)\pdfapp.exe
+PDFAPP_PDB = $(O)\pdfapp.pdb
+PDFAPP_MAP = $(O)\pdfapp.map
+
+all: $(O) $(PDFTOOL_APP) $(PDFAPP_APP)
+
+clean: force
+	-rmdir /S /Q $(O)
+
+$(O): force
+	@if not exist $(O) mkdir $(O)
+
+$(PDFTOOL_APP): $(PDFTOOL_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(PDFTOOL_APP) /PDB:$(PDFTOOL_PDB) \
+	$(PDFTOOL_OBJS) $(LIBS) \
+	/MAP:$(PDFTOOL_MAP) \
+	/SUBSYSTEM:CONSOLE
+
+$(PDFAPP_APP): $(PDFAPP_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(PDFAPP_APP) /PDB:$(PDFAPP_PDB) \
+	$(PDFAPP_OBJS) $(LIBS) \
+	/MAP:$(PDFAPP_MAP) \
+	/SUBSYSTEM:CONSOLE
+
+{fitz\apps\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\apps\common\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\apps\windows\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\base\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\mupdf\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\raster\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\stream\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{fitz\world\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+force: ;
