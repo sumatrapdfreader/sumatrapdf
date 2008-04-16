@@ -21,17 +21,20 @@ CFLAGS = $(CFLAGS) /D "_SCL_SECURE_NO_DEPRECATE" /D "_CRT_SECURE_NO_DEPRECATE"
 # disable "warning C4244: 'argument' : conversion from 'foo' to 'bar', possible loss of data"
 CFLAGS = $(CFLAGS) /wd4244 /wd4996
 
-CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /TC /GS /RTCu /RTCs
+CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /GS /RTCu /RTCs
 
 # Flags specific to fitz
-FITZ_CFLAGS = $(CFLAGS) /Ifitz/include /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR)
+FITZ_CFLAGS = $(CFLAGS) /TC /Ifitz/include /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR)
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" /D "NEED_GETTIMEOFDAY"
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "__func__=\"\""
+
+SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /Ifitz\include /Ipoppler\goo /Ipoppler\poppler /Ipoppler /Ipoppler/splash /Isrc
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "NDEBUG" /D "_WINDOWS"
 
 #CFLAGS = $(CFLAGS) /showIncludes
 #CFLAGS = $(CFLAGS) /analyze
 
-LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib
+LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib comctl32.lib Msimg32.lib Winspool.lib
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG
@@ -92,24 +95,39 @@ LIBS_OBJS = \
 	$(MUPDF_OBJS)
 
 PDFTOOL_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj
-
 PDFTOOL_APP = $(O)\pdftool.exe
 PDFTOOL_PDB = $(O)\pdftool.pdb
 PDFTOOL_MAP = $(O)\pdftool.map
 
 PDFAPP_OBJS = $(LIBS_OBJS) $(O)\pdfapp.obj $(O)\winmain.obj
-
 PDFAPP_APP = $(O)\pdfapp.exe
 PDFAPP_PDB = $(O)\pdfapp.pdb
 PDFAPP_MAP = $(O)\pdfapp.map
 
-all: $(O) $(PDFTOOL_APP) $(PDFAPP_APP)
+SUMATRA_OBJS = \
+	$(O)\AppPrefs.obj $(O)\base_util.obj $(O)\benc_util.obj $(O)\DisplayModel.obj \
+	$(O)\DisplayModelFitz.obj $(O)\DisplayModelSplash.obj $(O)\DisplayState.obj \
+	$(O)\dstring.obj $(O)\file_util.obj $(O)\FileHistory.obj $(O)\geom_util.obj \
+	$(O)\PdfEngine.obj $(O)\PdfSearch.obj $(O)\str_util.obj $(O)\strlist_util.obj \
+	$(O)\SumatraDialogs.obj $(O)\SumatraPDF.obj $(O)\translations.obj \
+	$(O)\translations_txt.obj $(O)\utf_util.obj $(O)\win_util.obj $(O)\WinUtil.obj
+
+SUMATRA_APP = $(O)\SumatraPDF.exe
+SUMATRA_PDB = $(O)\SumatraPDF.pdb
+SUMATRA_MAP = $(O)\SumatraPDF.map
+
+all: $(O) $(PDFTOOL_APP) $(PDFAPP_APP) $(SUMATRA_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
 
 $(O): force
 	@if not exist $(O) mkdir $(O)
+
+$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(SUMATRA_APP) /PDB:$(SUMATRA_PDB) \
+	$(SUMATRA_OBJS) $(LIBS) \
+	/MAP:$(SUMATRA_MAP)
 
 $(PDFTOOL_APP): $(PDFTOOL_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFTOOL_APP) /PDB:$(PDFTOOL_PDB) \
@@ -146,5 +164,20 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 
 {fitz\world\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{baseutils\}.c{$(O)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{baseutils\}.cpp{$(O)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{src\}.cc{$(O)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{src\}.cpp{$(O)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{src\}.c{$(O)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 force: ;
