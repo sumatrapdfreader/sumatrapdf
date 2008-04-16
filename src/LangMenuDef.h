@@ -4,6 +4,7 @@
 MenuDef menuDefLang[] = {
     { "English", IDM_LANG_EN },
     { "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251 )", IDM_LANG_AR },
+    { "Basque (Euskara)", IDM_LANG_EU },
     { "Belarusian (\320\221\320\265\320\273\320\260\321\200\321\203\321\201\320\272\320\260\321\217)", IDM_LANG_BY },
     { "Bengali (\340\246\254\340\246\276\340\246\202\340\246\262\340\246\276)", IDM_LANG_BN },
     { "Bulgarian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)", IDM_LANG_BG },
@@ -57,6 +58,7 @@ struct LangDef {
 } g_langs[] = {
     {"en", IDM_LANG_EN},
     {"ar", IDM_LANG_AR},
+    {"eu", IDM_LANG_EU},
     {"by", IDM_LANG_BY},
     {"bn", IDM_LANG_BN},
     {"bg", IDM_LANG_BG},

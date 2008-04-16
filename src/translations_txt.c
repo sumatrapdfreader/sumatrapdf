@@ -9,10 +9,10 @@ extern "C"
 {
 #endif
 
-int g_transLangsCount = 45;
+int g_transLangsCount = 46;
 
 const char *g_transLangs[] = {
-  "en", "br", "bg", "de", "tr", "hu", "pl", "ja", "fa", "nl", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "sr-rs", "tw", "ml", "he", "sp-rs", "id", "mk", "ro", "kr", "bn", "cn", "fr", "ru", "gl", "es", "th", "ar", "uk", "by", "dk", "it", "ta", "hr", "sv", "cz", "gr", "pt"
+  "en", "br", "bg", "de", "tr", "hu", "pl", "ja", "fa", "nl", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "sr-rs", "tw", "ml", "he", "sp-rs", "id", "mk", "ro", "kr", "bn", "cn", "fr", "ru", "gl", "es", "th", "ar", "uk", "eu", "by", "dk", "it", "ta", "hr", "sv", "cz", "gr", "pt"
 };
 
 int g_transTranslationsCount = 59;
@@ -2214,6 +2214,67 @@ const char *g_transTranslations[] = {
   "\320\243\320\266\320\270\320\262\320\260\321\202\320\270 MuPDF \320\264\320\273\321\217 \320\262\321\226\320\264\321\202\320\262\320\276\321\200\320\265\320\275\320\275\321\217 PDF \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\321\226\320\262",
   "\320\227\320\261\321\226\320\273\321\214\321\210\320\270\321\202\320\270",
   "\320\227\320\274\320\265\320\275\321\210\320\270\321\202\320\270",
+
+  /* Translations for language eu */
+  "Ho&Ni buruz...",
+  "&Itxi\tCtrl-W",
+  "&Fitxategia",
+  "...ra &Joan",
+  "&Laguntza",
+  "&Hizkuntza",
+  "Ireki\tCtrl-O",
+  "&Inprimatu",
+  "... bezala &Gorde",
+  "I&kusi",
+  "&Web orria bisitatu",
+  "&Zoom-a",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "SumatraPDF-taz",
+  "&Berezko neurria\tCtrl-1",
+  "Markagailuak",
+  "Jarraian",
+  "Bi aldetatik jarraian",
+  "Lagun gaitzazu itzulpenekin",
+  "Ezin da inprimagailua ireki",
+  "&Irten\tCtrl-Q",
+  "PDF fitxategia kargargatzerakoan errorea suertatu da",
+  "Bi aldetatik",
+  "Fitxategia ezin izan da gorde",
+  "Hurrengoa bilatu",
+  "Aurrekoa bilatu",
+  "Bilatu",
+  "Lehendabiziko orria \tHome",
+  "Orriaren neurria egokitu\tCtrl-O",
+  "Orriaren zabalera egokitu\tCtrl-2",
+  "Pantaila osoan\tCtrl-L",
+  "Azken orria\tEnd",
+  "Sumatra PDF erabili besterik ezean PDFak irakurtzeko",
+  "Hizki handiak edo txikiak bereizi",
+  "Urrengo orria",
+  "Ireki",
+  "...garren orria\tCtrl-G",
+  "Aurreko orria",
+  "Arazoak inprimatze lanetan",
+  "Ezkerrerantz biratu",
+  "Eskubirantz biratu",
+  "Lanabes barra azaldu",
+  "Orri bakarra",
+  "Sumatra orain berezko PDF irakur tresna bihurtu da.",
+  "MuPDF redender-erako motorra erabili",
+  "Zoom-a hurbildu",
+  "Zoom-a urruneratu",
 
   /* Translations for language by */
   "\320\220\320\261 \320\277\321\200\320\260\320\263\321\200\320\260\320\274\320\265",

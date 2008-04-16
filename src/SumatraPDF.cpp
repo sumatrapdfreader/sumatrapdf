@@ -5308,7 +5308,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_GL:
                 case IDM_LANG_BG:
                 case IDM_LANG_UK:
-                    OnMenuLanguage((int)wmId);
+				case IDM_LANG_EU:
+					OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:
                     OnMenuContributeTranslation();
