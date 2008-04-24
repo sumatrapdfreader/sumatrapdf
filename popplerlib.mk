@@ -18,7 +18,7 @@ INC_DIR += poppler poppler/goo
 INC_DIR += poppler/poppler poppler/splash
 
 ifeq ($(BUILD), debug)
-    CPPFLAGS += -D_DEBUG -DDEBUG
+    CPPFLAGS += -DDEBUG
     CFLAGS += -O0
 else
     ifeq ($(BUILD), release)
@@ -29,10 +29,9 @@ else
     endif
 endif
 
-CPPFLAGS += $(addprefix -I , $(INC_DIR))
+CPPFLAGS += $(addprefix -I ,$(INC_DIR))
 CFLAGS += -Wall
 CFLAGS += -g
-CPPFLAGS += -D_WIN32 -DWIN32 -D_WINDOWS
 CPPFLAGS += -DUSE_OWN_GET_AUTH_DATA
 CPPFLAGS += -D'POPPLER_DATADIR=""'
 CPPFLAGS += -DENABLE_ZLIB=1 -DENABLE_LIBJPEG=1
@@ -213,7 +212,7 @@ HEADERS += poppler/poppler/UTF8.h
 HEADERS += poppler/poppler/XpdfPluginAPI.h
 HEADERS += poppler/poppler/XRef.h
 
-OBJECTS = $(addsuffix .o, $(SOURCES))
+OBJECTS = $(addsuffix .o,$(SOURCES))
 
 .SUFFIXES:
 

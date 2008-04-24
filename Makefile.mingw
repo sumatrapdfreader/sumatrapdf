@@ -24,11 +24,10 @@ INC_DIR += src
 INC_DIR += poppler poppler/goo
 INC_DIR += poppler/poppler poppler/splash
 INC_DIR += fitz/include
-#~ INC_DIR += breakpad
 LDFLAGS += -mwindows
 
 ifeq ($(BUILD), debug)
-    CPPFLAGS += -D_DEBUG -DDEBUG
+    CPPFLAGS += -DDEBUG
     CFLAGS += -O0
 else
     ifeq ($(BUILD), release)
@@ -40,18 +39,16 @@ else
     endif
 endif
 
-CPPFLAGS += $(addprefix -I , $(INC_DIR))
-RCFLAGS += $(addprefix --include-dir=, $(INC_DIR))
+CPPFLAGS += $(addprefix -I ,$(INC_DIR))
+RCFLAGS += $(addprefix --include-dir=,$(INC_DIR))
 CFLAGS += -Wall
 CFLAGS += -g
-CPPFLAGS += -D_WIN32 -DWIN32 -D_WINDOWS
 CPPFLAGS += -DUSE_OWN_GET_AUTH_DATA
 CPPFLAGS += -D'POPPLER_DATADIR=""'
 CPPFLAGS += -DENABLE_ZLIB=1 -DENABLE_LIBJPEG=1
-LDFLAGS += $(addprefix -L , $(LIB_DIR))
+LDFLAGS += $(addprefix -L ,$(LIB_DIR))
 LDLIBS += -lcomctl32
 LDLIBS += -lwinspool -lmsimg32
-#~ LDLIBS += -lwininet
 
 # <winuser.h> missing some VK_OEM stuff unless _WIN32_WINNT >= 0x0500
 CPPFLAGS += -D_WIN32_WINNT=0x0500
@@ -133,7 +130,7 @@ BREAKPAD_HEADERS += breakpad/common/windows/http_upload.h
 BREAKPAD_HEADERS += breakpad/common/windows/string_utils-inl.h
 BREAKPAD_SOURCES += breakpad/common/windows/string_utils.cc # exception handling = 1
 
-OBJECTS = $(addsuffix .o, $(SOURCES))
+OBJECTS = $(addsuffix .o,$(SOURCES))
 RC_OBJECT = $(RC_SOURCE).o
 
 .SUFFIXES:

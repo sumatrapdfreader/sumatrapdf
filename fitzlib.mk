@@ -16,24 +16,22 @@ INC_DIR =
 INC_DIR += fitz/include
 
 ifeq ($(BUILD), debug)
-    CPPFLAGS += -D_DEBUG -DDEBUG
-    CPPFLAGS += -Dinline=
     CFLAGS += -O0
 else
     ifeq ($(BUILD), release)
         CPPFLAGS += -DNDEBUG
-        CPPFLAGS += -Dinline=__forceinline
-        CFLAGS += -Os -O2
+        CFLAGS += -O2
     else
         $(error Build mode should be "debug" or "release")
     endif
 endif
 
-CPPFLAGS += $(addprefix -I , $(INC_DIR))
+CPPFLAGS += $(addprefix -I ,$(INC_DIR))
 CFLAGS += -Wall
 CFLAGS += -g
-CPPFLAGS += -D_WIN32 -DWIN32 -D_WINDOWS
-CPPFLAGS += -DNEED_MATH=1 -DNEED_STRLCPY=1 -DNEED_STRSEP=1
+CPPFLAGS += -DNEED_STRLCAT -DNEED_STRLCPY -DNEED_STRSEP
+CFLAGS += -std=gnu99
+CPPFLAGS += -DHAVE_C99
 
 all: libfitz.a
 .PHONY: all
@@ -137,7 +135,8 @@ SOURCES += fitz/stream/stm_misc.c
 SOURCES += fitz/stream/stm_open.c
 SOURCES += fitz/stream/stm_read.c
 SOURCES += fitz/stream/stm_write.c
-SOURCES += fitz/base/util_getopt.c
+
+# Replacements for common functions:
 SOURCES += fitz/base/util_strlcat.c
 SOURCES += fitz/base/util_strlcpy.c
 SOURCES += fitz/base/util_strsep.c
@@ -201,7 +200,7 @@ FONTS += fitz/fonts/NimbusSanL-ReguItal.cff.c
 FONTS += fitz/fonts/StandardSymL.cff.c
 FONTS += fitz/fonts/URWChanceryL-MediItal.cff.c
 
-OBJECTS = $(addsuffix .o, $(SOURCES) $(FONTS))
+OBJECTS = $(addsuffix .o,$(SOURCES) $(FONTS))
 
 .SUFFIXES:
 
