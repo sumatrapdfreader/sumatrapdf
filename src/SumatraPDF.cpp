@@ -1003,62 +1003,49 @@ static bool Prefs_Load(void)
     return true;
 }
 
-static struct idToZoomMap {
-    UINT id;
-    double zoom;
-} gZoomMenuItemsId[] = {
-    { IDM_ZOOM_6400, 6400.0 },
-    { IDM_ZOOM_3200, 3200.0 },
-    { IDM_ZOOM_1600, 1600.0 },
-    { IDM_ZOOM_800, 800.0 },
-    { IDM_ZOOM_400, 400.0 },
-    { IDM_ZOOM_200, 200.0 },
-    { IDM_ZOOM_150, 150.0 },
-    { IDM_ZOOM_125, 125.0 },
-    { IDM_ZOOM_100, 100.0 },
-    { IDM_ZOOM_50, 50.0 },
-    { IDM_ZOOM_25, 25.0 },
-    { IDM_ZOOM_12_5, 12.5 },
-    { IDM_ZOOM_8_33, 8.33 },
-    { IDM_ZOOM_FIT_PAGE, ZOOM_FIT_PAGE },
-    { IDM_ZOOM_FIT_WIDTH, ZOOM_FIT_WIDTH },
-    { IDM_ZOOM_ACTUAL_SIZE, 100.0 }
-};
+unsigned short gItemId[] = {
+    IDM_ZOOM_6400, IDM_ZOOM_3200, IDM_ZOOM_1600, IDM_ZOOM_800, IDM_ZOOM_400,
+    IDM_ZOOM_200, IDM_ZOOM_150, IDM_ZOOM_125, IDM_ZOOM_100, IDM_ZOOM_50,
+    IDM_ZOOM_25, IDM_ZOOM_12_5, IDM_ZOOM_8_33, IDM_ZOOM_FIT_PAGE, 
+    IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE };
+
+double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 
+    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 100.0 };
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
-    for (int i=0; i < dimof(gZoomMenuItemsId); i++) {
-        if (virtualZoom == gZoomMenuItemsId[i].zoom)
-            return gZoomMenuItemsId[i].id;
+    for (int i=0; i < dimof(gItemZoom); i++) {
+        if (virtualZoom == gItemZoom[i])
+            return gItemId[i];
     }
     return IDM_ZOOM_ACTUAL_SIZE;
+}
+
+static double ZoomMenuItemToZoom(UINT menuItemId)
+{
+    for (int i=0; i<dimof(gItemId); i++) {
+        if (menuItemId == gItemId[i]) {
+            return gItemZoom[i];
+        }
+    }
+    assert(0);
+    return 100.0;
 }
 
 static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId)
 {
     BOOL    found = FALSE;
 
-    for (int i=0; i<dimof(gZoomMenuItemsId); i++) {
+    for (int i=0; i<dimof(gItemId); i++) {
         UINT checkState = MF_BYCOMMAND | MF_UNCHECKED;
-        if (menuItemId == gZoomMenuItemsId[i].id) {
+        if (menuItemId == gItemId[i]) {
             assert(!found);
             found = TRUE;
             checkState = MF_BYCOMMAND | MF_CHECKED;
         }
-        CheckMenuItem(hmenu, gZoomMenuItemsId[i].id, checkState);
+        CheckMenuItem(hmenu, gItemId[i], checkState);
     }
     assert(found);
-}
-
-static double ZoomMenuItemToZoom(UINT menuItemId)
-{
-    for (int i=0; i<dimof(gZoomMenuItemsId); i++) {
-        if (menuItemId == gZoomMenuItemsId[i].id) {
-            return gZoomMenuItemsId[i].zoom;
-        }
-    }
-    assert(0);
-    return 100.0;
 }
 
 static void SeeLastError(void) {
@@ -1468,8 +1455,6 @@ static void MenuUpdateLanguage(WindowInfo *win) {
 
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
-        IDM_VIEW_SINGLE_PAGE, IDM_VIEW_FACING, IDM_VIEW_CONTINUOUS, 
-        IDM_VIEW_CONTINUOUS_FACING, IDM_VIEW_FULLSCREEN,
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_ZOOM_FIT_PAGE,
         IDM_ZOOM_ACTUAL_SIZE, IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_6400, IDM_ZOOM_3200,
@@ -5308,8 +5293,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_GL:
                 case IDM_LANG_BG:
                 case IDM_LANG_UK:
-				case IDM_LANG_EU:
-					OnMenuLanguage((int)wmId);
+                case IDM_LANG_EU:
+                    OnMenuLanguage((int)wmId);
                     break;
                 case IDM_CONTRIBUTE_TRANSLATION:
                     OnMenuContributeTranslation();
