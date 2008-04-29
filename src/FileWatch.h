@@ -1,0 +1,76 @@
+// By william blum, 2008
+#ifndef _FILE_WATCH_H__
+#define _FILE_WATCH_H__
+
+typedef void (__cdecl *WATCHCALLBACK) (PTSTR filename, LPARAM param);
+
+// information concerning a directory being watched
+class FileWatcher {
+public:
+    // Watching file modifications using a loop
+    void Init(PCTSTR filefullpath);
+    bool HasChanged(DWORD waittime = 0);
+    void Clean();
+
+    // Watching file modification via a thread
+    void StartWatchThread(PCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
+    bool IsThreadRunning();
+    void SyncronousAbort();
+
+    PCTSTR filepath() { return szFilepath; }
+
+    FileWatcher() {
+        hDir = NULL;
+        memzero(&this->overl, sizeof(this->overl));
+        curBuffer = 0;
+        pszFilename = NULL;
+        hWatchingThread = NULL;
+        hEvtStopWatching = NULL;
+        // create the event used to abort the "watching" thread
+        hEvtStopWatching = CreateEvent(NULL,TRUE,FALSE,NULL);
+        pCallback = NULL;
+        callbackparam = NULL;
+        szFilepath[0]='0';
+    }
+
+    ~FileWatcher() {
+        if (IsThreadRunning())
+            SyncronousAbort();
+        else
+            Clean();
+
+        if (hEvtStopWatching)
+        {
+            CloseHandle(hEvtStopWatching);
+            hEvtStopWatching = NULL;
+        }
+    }
+
+private:
+    bool ReadDir();
+    
+    static void WINAPI WatchingThread( void *param );
+    void RestartThread();
+
+public:
+    HANDLE  hDir; // handle of the directory to watch
+    TCHAR   szFilepath[_MAX_PATH]; // path to the file watched
+    PCTSTR  pszFilename; // pointer in szFilepath to the file part of the path
+    TCHAR   szDir[_MAX_PATH]; // path to the directory
+    OVERLAPPED overl; // object used for asynchronous API calls
+    BYTE buffer [2][512*sizeof(FILE_NOTIFY_INFORMATION )]; 
+        // a double buffer where the Windows API ReadDirectory will store the list
+        // of files that have been modified.
+    int curBuffer; // current buffer used (alternate between 0 and 1)
+    
+    HANDLE hWatchingThread; // handle of the watching thread
+    
+    HANDLE hEvtStopWatching; // this event is fired when the watching thread needs to be aborted
+
+    WATCHCALLBACK pCallback;// function called when a file change is detected
+    LPARAM callbackparam;   // parameter to pass to the callback function
+
+    struct _stat timestamp; // last modification time stamp of the file
+};
+
+#endif

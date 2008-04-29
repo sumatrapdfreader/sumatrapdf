@@ -35,6 +35,8 @@
 #include "WinUtil.hpp"
 #include <windowsx.h>
 
+#define THREAD_BASED_FILEWATCH
+
 #ifdef CRASHHANDLER
 #include "client\windows\handler\exception_handler.h"
 #endif
@@ -240,6 +242,7 @@ static void RebuildProgramMenus(void);
 static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
+static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh);
 
 #define SEP_ITEM "-----"
 
@@ -1177,6 +1180,26 @@ Exit:
     return ok;
 }
 
+static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
+    PCTSTR fname = win->watcher.filepath();
+    DisplayState ds;
+    DisplayState_Init(&ds);
+    if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
+        return;
+    UpdateDisplayStateWindowPos(win, &ds);
+    RefreshPdfDocument(fname, win, &ds, true, autorefresh);
+}
+
+
+static void WindowInfo_RefreshUpdatedFiles(bool autorefresh) {
+    WindowInfo* curr = gWindowList;
+    while (curr) {
+        if (curr->watcher.HasChanged())
+            WindowInfo_Refresh(curr, autorefresh);
+        curr = curr->next;
+    }
+}
+
 static bool WindowInfo_Dib_Init(WindowInfo *win) {
     assert(NULL == win->dibInfo);
     win->dibInfo = (BITMAPINFO*)malloc(sizeof(BITMAPINFO) + 12);
@@ -1671,34 +1694,19 @@ static void RecalcSelectionPosition (WindowInfo *win) {
     }
 }
 
-static WindowInfo* LoadPdf(const char *fileName)
+static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh)
 {
-    assert(fileName);
-    if (!fileName) return NULL;
+ 
 
-    FileHistoryList *   fileFromHistory = NULL;
-    fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-
-    WindowInfo *        win;
-    bool reuseExistingWindow = false;
-    if ((1 == WindowInfoList_Len()) && (WS_SHOWING_PDF != gWindowList->state)) {
-        win = gWindowList;
-        reuseExistingWindow = true;
-    } else {
-        win = WindowInfo_CreateEmpty();
-        if (!win)
-            return NULL;
-     }
-
-    /* TODO: need to get rid of that, but not sure if that won't break something
+  /* TODO: need to get rid of that, but not sure if that won't break something
        i.e. GetCanvasSize() caches size of canvas and some code might depend
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
     SizeD totalDrawAreaSize(win->winSize());
-    if (fileFromHistory) {
-        SetCanvasSizeToDxDy(win, fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
-        totalDrawAreaSize = SizeD(fileFromHistory->state.windowDx, fileFromHistory->state.windowDy);
-        WinSetCanvasPos(win, fileFromHistory->state.windowX, fileFromHistory->state.windowY);
+    if (!reuseExistingWindow && state) {
+        SetCanvasSizeToDxDy(win, state->windowDx, state->windowDy);
+        totalDrawAreaSize = SizeD(state->windowDx, state->windowDy);
+        WinSetCanvasPos(win, state->windowX, state->windowY);
     }
 #if 0 // not ready yet
     else {
@@ -1718,7 +1726,7 @@ static WindowInfo* LoadPdf(const char *fileName)
     WinResizeClientArea(win->hwndCanvas, totalDrawAreaSize.dxI(), totalDrawAreaSize.dyI());
 #endif
 
-    /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
+       /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
        but scrollbars are not part of the client area on windows so it's better
        not to have them taken into account by DisplayModelSplash code.
        TODO: I think it's broken anyway and DisplayModelSplash needs to know if
@@ -1730,12 +1738,14 @@ static WindowInfo* LoadPdf(const char *fileName)
     int startPage = 1;
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
-    if (fileFromHistory) {
-        startPage = fileFromHistory->state.pageNo;
-        displayMode = fileFromHistory->state.displayMode;
-        offsetX = fileFromHistory->state.scrollX;
-        offsetY = fileFromHistory->state.scrollY;
+    if (state) {
+        startPage = state->pageNo;
+        displayMode = state->displayMode;
+        offsetX = state->scrollX;
+        offsetY = state->scrollY;
     }
+
+    DisplayModel *previousmodel = win->dm;
 
     if (gGlobalPrefs.m_useFitz) {
         win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
@@ -1751,19 +1761,27 @@ static WindowInfo* LoadPdf(const char *fileName)
         if (!reuseExistingWindow && WindowInfoList_ExistsWithError()) {
                 /* don't create more than one window with errors */
                 WindowInfo_Delete(win);
-                return NULL;
+                return false;
         }
-        win->state = WS_ERROR_LOADING_PDF;
         DBG_OUT("failed to load file %s\n", fileName);
-        goto Exit;
+        win->needrefresh = true;
+        // it is an automatic refresh and there is an error while reading the pdf
+        // then fallback to the previous state
+        if(autorefresh) {
+            win->dm = previousmodel;
+        }
+        else {
+            win->state = WS_ERROR_LOADING_PDF;
+            goto Exit;
+        }
+    }
+    else {
+        delete previousmodel;
+        win->needrefresh = false;
     }
 
     win->dm->setAppData((void*)win);
 
-    if (!fileFromHistory) {
-        AddFileToHistory(fileName);
-        RebuildProgramMenus();
-    }
 
     RECT rect;
     GetClientRect(win->hwndFrame, &rect);
@@ -1772,10 +1790,10 @@ static WindowInfo* LoadPdf(const char *fileName)
     /* TODO: if fileFromHistory, set the state based on gFileHistoryList node for
        this entry */
     win->state = WS_SHOWING_PDF;
-    if (fileFromHistory) {
-        zoomVirtual = fileFromHistory->state.zoomVirtual;
-        rotation = fileFromHistory->state.rotation;
-        win->dm->_showToc = fileFromHistory->state.showToc;
+    if (state) {
+        zoomVirtual = state->zoomVirtual;
+        rotation = state->rotation;
+        win->dm->_showToc = state->showToc;
     }
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -1791,19 +1809,18 @@ static WindowInfo* LoadPdf(const char *fileName)
     win->dm->goToPage(startPage, offsetY, offsetX);
 
     /* only resize the window if it's a newly opened window */
-    if (!reuseExistingWindow && !fileFromHistory)
+    if (!reuseExistingWindow ) //&& !fileFromHistory)
         WindowInfo_ResizeToPage(win, startPage);
 
     if (reuseExistingWindow) {
-
         WindowInfo_RedrawAll(win);
-        OnMenuFindMatchCase(win);
+        OnMenuFindMatchCase(win); 
     }
     WindowInfo_UpdateFindbox(win);
 
 Exit:
     if (!reuseExistingWindow)
-        WindowInfoList_Add(win);
+            WindowInfoList_Add(win);
     MenuToolbarUpdateStateForAllWindows();
     assert(win);
     DragAcceptFiles(win->hwndFrame, TRUE);
@@ -1814,7 +1831,55 @@ Exit:
     UpdateWindow(win->hwndCanvas);
     if (win->dm && win->dm->_showToc)
         win->ShowTocBox();
-    return win;
+    if( win->state == WS_ERROR_LOADING_PDF) {
+        WindowInfo_RedrawAll(win);
+        return false;
+    }
+    else
+        return true;
+}
+
+void on_file_change(PTSTR filename, LPARAM param)
+{
+    WindowInfo_Refresh((WindowInfo *) param, true);
+}
+
+
+static WindowInfo* LoadPdf(const char *fileName)
+{
+    assert(fileName);
+    if (!fileName) return NULL;
+
+    WindowInfo *        win;
+    bool reuseExistingWindow = false;
+    if ((1 == WindowInfoList_Len()) && (WS_SHOWING_PDF != gWindowList->state)) {
+        win = gWindowList;
+        reuseExistingWindow = true;
+    } else {
+        win = WindowInfo_CreateEmpty();
+        if (!win)
+            return NULL;
+    }
+
+// define THREAD_BASED_FILEWATCH in order to use the thread-based implementation of 
+// file change detection.
+#ifdef THREAD_BASED_FILEWATCH
+    if (!win->watcher.IsThreadRunning())
+        win->watcher.StartWatchThread(fileName, &on_file_change, (LPARAM)win);
+#else
+    win->watcher.Init(fileName);
+#endif
+
+   FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+   if (RefreshPdfDocument(fileName, win, fileFromHistory ? &fileFromHistory->state : NULL, reuseExistingWindow, false)) {
+        if (!fileFromHistory) {
+            AddFileToHistory(fileName);
+            RebuildProgramMenus();
+        }
+        return win;
+   }
+   else
+        return NULL;
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
@@ -1849,7 +1914,8 @@ static void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
-void DisplayModel::pageChanged(void)
+// The 'status' string is appended to the title of the window.
+void DisplayModel::pageChanged()
 {
     WindowInfo *win = (WindowInfo*)appData();
     assert(win);
@@ -1871,7 +1937,11 @@ void DisplayModel::pageChanged(void)
         SetWindowText(win->hwndPageTotal, buf);
         hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
         SetWindowText(win->hwndPageBox, buf);
-        win_set_text(win->hwndFrame, baseName);
+        if( win->needrefresh )
+            hr = StringCchPrintfA(buf, dimof(buf), "(Press R to refresh) %s", baseName);
+        else
+            hr = StringCchPrintfA(buf, dimof(buf), "%s", baseName);
+        win_set_text(win->hwndFrame, buf);
     }
 }
 
@@ -3251,6 +3321,12 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     win->state = WS_ABOUT;
 
+#ifdef THREAD_BASED_FILEWATCH
+    win->watcher.SyncronousAbort();
+#else
+    win->watcher.Clean();
+#endif
+
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
         if (win->dm->_showToc) {
@@ -4197,7 +4273,8 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('-' == key) {
             win->dm->zoomBy(ZOOM_OUT_FACTOR);
     } else if ('r' == key) {
-        ReloadPdfDocument(win);
+        //ReloadPdfDocument(win);
+        WindowInfo_Refresh(win, false);
     } else if ('/' == key) {
         win->FindStart();
     }
@@ -6039,13 +6116,29 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (registerForPdfExtentions)
         RegisterForPdfExtentions(win ? win->hwndFrame : NULL);
 
+#ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
-
+#else
+    while(1){
+        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
+            }
+        }
+        else 
+            WindowInfo_RefreshUpdatedFiles();
+            Sleep(50);
+    }
+#endif
+    
 Exit:
     WindowInfoList_DeleteAll();
     FileHistoryList_Free(&gFileHistoryRoot);

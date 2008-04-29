@@ -259,6 +259,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\FileWatch.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\geom_util.c"
 				>
 			</File>
@@ -354,6 +358,10 @@
 			</File>
 			<File
 				RelativePath=".\src\FileHistory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\FileWatch.h"
 				>
 			</File>
 			<File

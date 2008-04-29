@@ -34,6 +34,7 @@
 #include "win_util.h"
 #include "DisplayModelSplash.h"
 #include "DisplayModelFitz.h"
+#include "FileWatch.h"
 
 /* TODO: Currently not used. The idea is to be able to switch between different
    visual styles. Because I can. */
@@ -110,6 +111,7 @@ public:
         mouseAction = MA_IDLE;
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
+        needrefresh=false;
     }
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
@@ -123,6 +125,7 @@ public:
     WindowInfo *    next;
     WinState        state;
     WinState        prevState;
+    bool            needrefresh; // true if the view of the PDF is not syncronized with the content of the file on disk
 
     DisplayModel *  dm;
     HWND            hwndFrame;
@@ -180,6 +183,9 @@ public:
     /* after selection is done, the selected area is converted
      * to user coordinates for each page which has not empty intersection with it */
     SelectionOnPage *selectionOnPage;
+
+    // file change watcher
+    FileWatcher     watcher;
 
     bool _tocLoaded;
 
