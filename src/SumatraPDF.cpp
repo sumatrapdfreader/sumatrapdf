@@ -1767,7 +1767,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplaySta
         win->needrefresh = true;
         // it is an automatic refresh and there is an error while reading the pdf
         // then fallback to the previous state
-        if(autorefresh) {
+        if (autorefresh) {
             win->dm = previousmodel;
         }
         else {
@@ -1804,7 +1804,8 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplaySta
         startPage = 1;
     /* TODO: need to calculate proper offsetY, currently giving large offsetY
        remembered for continuous mode breaks things (makes all pages invisible) */
-    offsetY = 0;
+    if (win->dm->displayMode() == DM_CONTINUOUS )
+        offsetY = 0;
     /* TODO: make sure offsetX isn't bogus */
     win->dm->goToPage(startPage, offsetY, offsetX);
 
@@ -1831,7 +1832,7 @@ Exit:
     UpdateWindow(win->hwndCanvas);
     if (win->dm && win->dm->_showToc)
         win->ShowTocBox();
-    if( win->state == WS_ERROR_LOADING_PDF) {
+    if (win->state == WS_ERROR_LOADING_PDF) {
         WindowInfo_RedrawAll(win);
         return false;
     }
@@ -1937,7 +1938,7 @@ void DisplayModel::pageChanged()
         SetWindowText(win->hwndPageTotal, buf);
         hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
         SetWindowText(win->hwndPageBox, buf);
-        if( win->needrefresh )
+        if (win->needrefresh )
             hr = StringCchPrintfA(buf, dimof(buf), "(Press R to refresh) %s", baseName);
         else
             hr = StringCchPrintfA(buf, dimof(buf), "%s", baseName);
