@@ -67,7 +67,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #endif
 
 /* default UI settings */
-#define DEFAULT_DISPLAY_MODE DM_SINGLE_PAGE
 
 //#define DEFAULT_ZOOM            ZOOM_FIT_WIDTH
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
@@ -374,6 +373,7 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
     gGlobalPrefs.m_escToExit = FALSE;
     gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
+    gGlobalPrefs.m_defaultDisplayMode = DM_SINGLE_PAGE;
     gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
     gGlobalPrefs.m_windowPosX = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
@@ -529,18 +529,19 @@ void RenderQueue_Pop(PageRenderRequest *req)
     UnlockCache();
 }
 
-static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
+static void MenuUpdateDisplayMode(WindowInfo *win)
 {
-    HMENU   menuMain;
-    UINT    id;
-    
-    menuMain = GetMenu(win->hwndFrame);
+    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
+    if (win->dm)
+        displayMode = win->dm->displayMode();
+
+    HMENU menuMain = GetMenu(win->hwndFrame);
     CheckMenuItem(menuMain, IDM_VIEW_SINGLE_PAGE, MF_BYCOMMAND | MF_UNCHECKED);
     CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_UNCHECKED);
     CheckMenuItem(menuMain, IDM_VIEW_FACING, MF_BYCOMMAND | MF_UNCHECKED);
     CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS_FACING, MF_BYCOMMAND | MF_UNCHECKED);
 
-    win->dm->changeDisplayMode(displayMode);
+    UINT    id;
     if (DM_SINGLE_PAGE == displayMode) {
         id = IDM_VIEW_SINGLE_PAGE;
     } else if (DM_FACING == displayMode) {
@@ -553,6 +554,16 @@ static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
         assert(0);
 
     CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_CHECKED);
+}
+
+static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
+{
+    if (win->dm)
+        win->dm->changeDisplayMode(displayMode);
+    else {
+        gGlobalPrefs.m_defaultDisplayMode = displayMode;
+    }
+    MenuUpdateDisplayMode(win);
 }
 
 static UINT AllocNewMenuId(void)
@@ -1504,6 +1515,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateShowToolbarStateForWindow(win);
     MenuUpdateUseFitzStateForWindow(win);
     MenuUpdateLanguage(win);
+    MenuUpdateDisplayMode(win);
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -1670,7 +1682,6 @@ SizeI GetMaxCanvasSize(WindowInfo *win)
     return SizeI(maxCanvasDx, maxCanvasDy);
 }
 
-
 static void RecalcSelectionPosition (WindowInfo *win) {
     SelectionOnPage *   selOnPage = win->selectionOnPage;
     RectD               selD;
@@ -1696,9 +1707,7 @@ static void RecalcSelectionPosition (WindowInfo *win) {
 
 static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh)
 {
- 
-
-  /* TODO: need to get rid of that, but not sure if that won't break something
+    /* TODO: need to get rid of that, but not sure if that won't break something
        i.e. GetCanvasSize() caches size of canvas and some code might depend
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
@@ -1726,13 +1735,13 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplaySta
     WinResizeClientArea(win->hwndCanvas, totalDrawAreaSize.dxI(), totalDrawAreaSize.dyI());
 #endif
 
-       /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
+    /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
        but scrollbars are not part of the client area on windows so it's better
        not to have them taken into account by DisplayModelSplash code.
        TODO: I think it's broken anyway and DisplayModelSplash needs to know if
              scrollbars are part of client area in order to accomodate windows
              UI properly */
-    DisplayMode displayMode = DEFAULT_DISPLAY_MODE;
+    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int offsetX = 0;
     int offsetY = 0;
     int startPage = 1;
@@ -1844,7 +1853,6 @@ void on_file_change(PTSTR filename, LPARAM param)
 {
     WindowInfo_Refresh((WindowInfo *) param, true);
 }
-
 
 static WindowInfo* LoadPdf(const char *fileName)
 {
@@ -3756,8 +3764,6 @@ static void OnMenuViewSinglePage(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    if (!WindowInfo_PdfLoaded(win))
-        return;
     SwitchToDisplayMode(win, DM_SINGLE_PAGE);
 }
 
@@ -3765,8 +3771,6 @@ static void OnMenuViewFacing(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    if (!WindowInfo_PdfLoaded(win))
-        return;
     SwitchToDisplayMode(win, DM_FACING);
 }
 
@@ -3905,8 +3909,6 @@ static void OnMenuViewContinuous(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    if (!WindowInfo_PdfLoaded(win))
-        return;
     SwitchToDisplayMode(win, DM_CONTINUOUS);
 }
 
@@ -3914,8 +3916,6 @@ static void OnMenuViewContinuousFacing(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    if (!WindowInfo_PdfLoaded(win))
-        return;
     SwitchToDisplayMode(win, DM_CONTINUOUS_FACING);
 }
 
@@ -6184,7 +6184,7 @@ static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
     pdfWin->GetCanvasSize();
     SizeI maxCanvasSize = GetMaxCanvasSize(pdfWin);
     SizeD totalDrawAreaSize(pdfWin->winSize());
-    DisplayMode displayMode = DEFAULT_DISPLAY_MODE;
+    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int offsetX = 0;
     int offsetY = 0;
     int startPage = 1;

@@ -51,6 +51,8 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
 benc_dict* Prefs_SerializeGlobal(void)
 {
     BOOL       ok;
+    const char * txt;
+
     DICT_NEW(prefs);
     DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gGlobalPrefs.m_showToolbar);
     DICT_ADD_INT64(prefs, USE_FITZ_STR, gGlobalPrefs.m_useFitz);
@@ -59,6 +61,10 @@ benc_dict* Prefs_SerializeGlobal(void)
 
     DICT_ADD_INT64(prefs, BG_COLOR_STR, gGlobalPrefs.m_bgColor);
     DICT_ADD_INT64(prefs, ESC_TO_EXIT_STR, gGlobalPrefs.m_escToExit);
+
+    txt = DisplayModeNameFromEnum(gGlobalPrefs.m_defaultDisplayMode);
+    if (txt)
+        DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
 
     DICT_ADD_INT64(prefs, WINDOW_STATE_STR, gGlobalPrefs.m_windowState);
     DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_windowPosX);
@@ -382,7 +388,9 @@ bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryL
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
     dict_get_bool(global, ESC_TO_EXIT_STR, &gGlobalPrefs.m_escToExit);
     dict_get_int(global, BG_COLOR_STR, &gGlobalPrefs.m_bgColor);
-
+    const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
+    if (txt)
+        DisplayModeEnumFromName(txt, &gGlobalPrefs.m_defaultDisplayMode);
     dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
     dict_get_int(global, WINDOW_X_STR, &gGlobalPrefs.m_windowPosX);
     dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);

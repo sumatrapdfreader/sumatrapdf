@@ -3,6 +3,8 @@
 #ifndef APP_PREFS_H_
 #define APP_PREFS_H_
 
+#include "DisplayState.h"
+
 #define DEFAULT_WIN_POS (int)-1
 
 /* enum from m_windowState */
@@ -26,6 +28,7 @@ typedef struct SerializableGlobalPrefs {
 
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
+    DisplayMode m_defaultDisplayMode;
     int  m_windowState;
     int  m_windowPosX;
     int  m_windowPosY;
