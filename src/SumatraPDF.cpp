@@ -232,7 +232,9 @@ static void RebuildProgramMenus(void);
 static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
-static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh);
+static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
+    DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
+    bool showWin);
 
 #define SEP_ITEM "-----"
 
@@ -1189,7 +1191,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
         return;
     UpdateDisplayStateWindowPos(win, &ds);
-    RefreshPdfDocument(fname, win, &ds, true, autorefresh);
+    RefreshPdfDocument(fname, win, &ds, true, autorefresh, true);
 }
 
 
@@ -1696,7 +1698,9 @@ static void RecalcSelectionPosition (WindowInfo *win) {
     }
 }
 
-static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh)
+static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
+    DisplayState *state, bool reuseExistingWindow, bool autorefresh,
+    bool showWin)
 {
     /* TODO: need to get rid of that, but not sure if that won't break something
        i.e. GetCanvasSize() caches size of canvas and some code might depend
@@ -1783,7 +1787,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplaySta
 
     win->dm->setAppData((void*)win);
 
-
     RECT rect;
     GetClientRect(win->hwndFrame, &rect);
     SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
@@ -1827,8 +1830,10 @@ Exit:
     assert(win);
     DragAcceptFiles(win->hwndFrame, TRUE);
     DragAcceptFiles(win->hwndCanvas, TRUE);
-    ShowWindow(win->hwndFrame, SW_SHOW);
-    ShowWindow(win->hwndCanvas, SW_SHOW);
+    if (showWin) {
+        ShowWindow(win->hwndFrame, SW_SHOW);
+        ShowWindow(win->hwndCanvas, SW_SHOW);
+    }
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
     if (win->dm && win->dm->_showToc) {
@@ -1848,7 +1853,7 @@ void on_file_change(PTSTR filename, LPARAM param)
     WindowInfo_Refresh((WindowInfo *) param, true);
 }
 
-static WindowInfo* LoadPdf(const char *fileName)
+static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1873,16 +1878,20 @@ static WindowInfo* LoadPdf(const char *fileName)
     win->watcher.Init(fileName);
 #endif
 
-   FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-   if (RefreshPdfDocument(fileName, win, fileFromHistory ? &fileFromHistory->state : NULL, reuseExistingWindow, false)) {
+    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    DisplayState *ds = NULL;
+    if (fileFromHistory)
+        ds = &fileFromHistory->state;
+
+    if (RefreshPdfDocument(fileName, win, ds, reuseExistingWindow, false, showWin)) {
         if (!fileFromHistory) {
             AddFileToHistory(fileName);
             RebuildProgramMenus();
         }
         return win;
-   }
-   else
-        return NULL;
+    }
+
+    return NULL;
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
@@ -6070,7 +6079,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 ++pdfOpened;
     } else {
         while (currArg) {
-            win = LoadPdf(currArg->str);
+            bool showWin = !exitOnPrint;
+            win = LoadPdf(currArg->str, showWin);
             if (!win)
                 goto Exit;
 
