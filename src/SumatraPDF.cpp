@@ -1839,8 +1839,10 @@ Exit:
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
-    if (win->dm && win->dm->_showToc)
+    if (win->dm && win->dm->_showToc) {
+        win->ClearTocBox();
         win->ShowTocBox();
+    }
     if (win->state == WS_ERROR_LOADING_PDF) {
         WindowInfo_RedrawAll(win);
         return false;
