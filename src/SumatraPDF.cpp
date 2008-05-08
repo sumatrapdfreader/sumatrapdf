@@ -1780,6 +1780,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplaySta
             win->dm = previousmodel;
         }
         else {
+            delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
             goto Exit;
         }
@@ -5473,15 +5474,21 @@ InitMouseWheelInfo:
 
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
-                switch (((LPNMHDR)lParam)->code) {
-                    case TVN_SELCHANGEDW: {
-                        TV_ITEMW tvi;
-                        tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
-                        tvi.cchTextMax = 0;
-                        tvi.pszText = NULL;
-                        tvi.mask = TVIF_PARAM;
-                        if (TreeView_GetItemW(win->hwndTocBox, &tvi))
-                            win->dm->goToTocLink((void *)tvi.lParam);
+                LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
+                switch (pnmtv->hdr.code) {
+                    case TVN_SELCHANGEDW: { 
+                        // When the focus is set to the toc window the first item in the treeview is automatically
+                        // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
+                        // We have to ignore this message to prevent the current page to be changed.
+                        if (pnmtv->action==TVC_UNKNOWN || pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) {
+                            TV_ITEMW tvi;
+                            tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
+                            tvi.cchTextMax = 0;
+                            tvi.pszText = NULL;
+                            tvi.mask = TVIF_PARAM;
+                            if (TreeView_GetItemW(win->hwndTocBox, &tvi) && win->dm)
+                                win->dm->goToTocLink((void *)tvi.lParam);
+                        }
                     }
                     break;
                     case TVN_KEYDOWN: {
