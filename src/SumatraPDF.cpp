@@ -117,15 +117,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PREFS_FILE_NAME_NEW _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR         _T("SumatraPDF")
 
-#define BENCH_ARG_TXT             "-bench"
-#define PRINT_TO_ARG_TXT          "-print-to"
-#define NO_REGISTER_EXT_ARG_TXT   "-no-register-ext"
-#define PRINT_TO_DEFAULT_ARG_TXT  "-print-to-default"
-#define EXIT_ON_PRINT_ARG_TXT     "-exit-on-print"
-#define ENUM_PRINTERS_ARG_TXT     "-enum-printers"
-#define ESC_TO_EXIT_ARG_TXT       "-esc-to-exit"
-#define BG_COLOR_TXT              "-bgcolor"
-
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
 #define DEF_PAGE_DY 792
@@ -5948,6 +5939,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     int                 pdfOpened = 0;
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
+    bool                printDialog = false;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
@@ -5975,27 +5967,27 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         // the first time Sumatra is launched.
         GuessLanguage();
     }
-    /* parse argument list. If BENCH_ARG_TXT was given, then we're in benchmarking mode. Otherwise
+    /* parse argument list. If -bench was given, then we're in benchmarking mode. Otherwise
     we assume that all arguments are PDF file names.
-    BENCH_ARG_TXT can be followed by file or directory name. If file, it can additionally be followed by
+    -bench can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
     bool registerForPdfExtentions = true;
     currArg = argListRoot->next;
     char *printerName = NULL;
     while (currArg) {
-        if (is_arg(ENUM_PRINTERS_ARG_TXT)) {
+        if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             goto Exit;
         }
 
-        if (is_arg(NO_REGISTER_EXT_ARG_TXT)) {
+        if (is_arg( "-no-register-ext")) {
             currArg = currArg->next;
             registerForPdfExtentions = false;
             continue;
         }
 
-        if (is_arg(BENCH_ARG_TXT)) {
+        if (is_arg("-bench")) {
             currArg = currArg->next;
             if (currArg) {
                 gBenchFileName = currArg->str;
@@ -6005,19 +5997,19 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             break;
         }
 
-        if (is_arg(EXIT_ON_PRINT_ARG_TXT)) {
+        if (is_arg("-exit-on-print")) {
             currArg = currArg->next;
             exitOnPrint = true;
             continue;
         }
 
-        if (is_arg(PRINT_TO_DEFAULT_ARG_TXT)) {
+        if (is_arg("-print-to-default")) {
             currArg = currArg->next;
             printToDefaultPrinter = true;
             continue;
         }
 
-        if (is_arg(PRINT_TO_ARG_TXT)) {
+        if (is_arg("-print-to")) {
             currArg = currArg->next;
             if (currArg) {
                 printerName = currArg->str;
@@ -6026,7 +6018,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
-        if (is_arg(BG_COLOR_TXT)) {
+        if (is_arg("-print-dialog")) {
+            currArg = currArg->next;
+            printDialog = true;
+            continue;
+        }
+
+        if (is_arg("-bgcolor")) {
             currArg = currArg->next;
             if (currArg) {
                 ParseBgColor(currArg->str);
@@ -6035,7 +6033,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
-        if (is_arg(ESC_TO_EXIT_ARG_TXT)) {
+        if (is_arg("-esc-to-exit")) {
             currArg = currArg->next;
             gGlobalPrefs.m_escToExit = TRUE;
             continue;
@@ -6088,13 +6086,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 // note: this prints all of PDF files. Another option would be to
                 // print only the first one
                 PrintFile(win, currArg->str, printerName);
+            } else if (printDialog) {
+                OnMenuPrint(win);
             }
            ++pdfOpened;
             currArg = currArg->next;
         }
     }
 
-    if (printerName && exitOnPrint)
+    if ((printerName || printDialog) && exitOnPrint)
         goto Exit;
  
     if (0 == pdfOpened) {
