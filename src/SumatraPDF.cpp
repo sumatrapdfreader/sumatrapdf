@@ -1883,6 +1883,8 @@ static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
     win->watcher.Init(fileName);
 #endif
 
+   win->pdfsync = new Pdfsync(fileName);
+
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     DisplayState *ds = NULL;
     if (fileFromHistory)
