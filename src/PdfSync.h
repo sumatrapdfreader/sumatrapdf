@@ -97,6 +97,8 @@ public:
     void discard_index() { this->index_discarded = true;}
     bool is_index_discarded() { return this->index_discarded; }
 
+    UINT prepare_commandline(PCTSTR pattern, PCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
+
 private:
     record2srcfile_node *build_decision_tree(int leftrecord, int rightrecord);
     void delete_decision_tree(record2srcfile_node *root);

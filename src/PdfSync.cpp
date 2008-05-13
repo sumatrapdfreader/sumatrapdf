@@ -346,3 +346,34 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
 }
 
 
+// Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
+// the result is stored in cmdline
+UINT Pdfsync::prepare_commandline(PCTSTR pattern, PCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
+{
+  PCTSTR perc;
+  TCHAR buff[12];
+  cmdline[0] = '\0';
+  while (perc = _tcschr(pattern, '%')) {
+      int u = perc-pattern;
+      _tcsncat_s(cmdline, cchCmdline, pattern, u);
+      perc++;
+      if (*perc == 'f') {
+        _tcscat_s(cmdline, cchCmdline, filename);
+      }
+      else if (*perc == 'l') {
+        _itot_s(line, buff, _countof(buff), 10);
+        _tcscat_s(cmdline, cchCmdline, buff);
+      }
+      else if (*perc == 'c') {
+        _itot_s(col, buff, _countof(buff), 10);
+        _tcscat_s(cmdline, cchCmdline, buff);
+      }
+      else
+        _tcsncat_s(cmdline, cchCmdline, perc-1, 2);
+
+      pattern = perc+1;
+  }
+  _tcscat_s(cmdline, cchCmdline, pattern);
+  return 1;
+}
+

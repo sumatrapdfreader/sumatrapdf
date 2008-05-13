@@ -117,6 +117,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PREFS_FILE_NAME_NEW _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR         _T("SumatraPDF")
 
+#define DEFAULT_EDITORPATTERN _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
+
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
 #define DEF_PAGE_DY 792
@@ -372,6 +374,7 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
+    _tcscpy_s(gGlobalPrefs.m_editorpattern, DEFAULT_EDITORPATTERN);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -2982,15 +2985,25 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     char srcname[_MAX_PATH];
     UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcname,_countof(srcname),&line,&col); // record 101
     if (err)
-      DBG_OUT("cannot sync from pdf to source!\n");
+        DBG_OUT("cannot sync from pdf to source!\n");
     else {
-      char pattern[_MAX_PATH];
-
-      sprintf_s(pattern, "\"[Open(|%s|);SelPar(%d,8)]\"", srcname, line);
-
-      ShellExecuteA(NULL, NULL,
-            "C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe", 
-            pattern, NULL, SW_SHOWNORMAL);
+        char cmdline[_MAX_PATH];
+        if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_editorpattern,
+          srcname, line, col, cmdline, _countof(cmdline)) ) {
+            //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
+            STARTUPINFO si;
+            PROCESS_INFORMATION pi;
+            ZeroMemory( &si, sizeof(si) );
+            si.cb = sizeof(si);
+            ZeroMemory( &pi, sizeof(pi) );
+            if (CreateProcess( NULL, cmdline, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi)) {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            }
+            else {
+                DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
+            }
+        }
     }
 }
 
