@@ -261,8 +261,10 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PSTR filename, UINT cchF
 
     // find the entry in the index corresponding to this page
     hash_map<int,pdfsheet_indexentry>::const_iterator it = pdfsheet_index.find(sheet);
-    if( it == pdfsheet_index.end() )
+    if( it == pdfsheet_index.end() ) {
+        fclose(fp);
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
+    }
 
     const pdfsheet_indexentry *sheet_entry = &it->second;
 
@@ -299,8 +301,10 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PSTR filename, UINT cchF
     }
 
     int selected_record = closest_xydist_record!=-1 ? closest_xydist_record : closest_ydist_record;
-    if (selected_record==-1)
+    if (selected_record==-1) {
+      fclose(fp);
       return PDFSYNCERR_NO_SYNC_AT_LOCATION; // no record was found close enough to the hit point
+    }
 
     // We have a record number, we need to find its declaration ('l ...') in the syncfile
 
@@ -328,10 +332,10 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PSTR filename, UINT cchF
             }
         }
     }
-    fclose(fp);
 
     _ASSERT(found);
 
+    fclose(fp);
     return PDFSYNCERR_SUCCESS;
 }
 
