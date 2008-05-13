@@ -1290,6 +1290,10 @@ static void WindowInfo_Delete(WindowInfo *win)
         cancelRenderingForDisplayModel(win->dm);
     }
     delete win->dm;
+    if (win->pdfsync) {
+      delete win->pdfsync;
+      win->pdfsync = NULL;
+    }
     win->dm = NULL;
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
@@ -1878,6 +1882,8 @@ static WindowInfo* LoadPdf(const char *fileName)
 #else
     win->watcher.Init(fileName);
 #endif
+
+   win->pdfsync = new Pdfsync(fileName);
 
    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
    if (RefreshPdfDocument(fileName, win, fileFromHistory ? &fileFromHistory->state : NULL, reuseExistingWindow, false)) {
@@ -2956,6 +2962,35 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
+static void OnInverseSearch(WindowInfo *win, int x, int y)
+{
+    assert(win);
+    if (!win) return;
+
+    int pageNo = POINT_OUT_OF_PAGE;
+    double dblx = x, dbly = y;
+
+    win->dm->cvtScreenToUser(&pageNo, &dblx, &dbly);
+    if (pageNo == POINT_OUT_OF_PAGE) 
+        return;
+
+    UINT line, col;
+    char srcname[_MAX_PATH];
+    UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcname,_countof(srcname),&line,&col); // record 101
+    if (err)
+      DBG_OUT("cannot sync from pdf to source!\n");
+    else {
+      char pattern[_MAX_PATH];
+
+      sprintf_s(pattern, "\"[Open(|%s|);SelPar(%d,8)]\"", srcname, line);
+
+      ShellExecuteA(NULL, NULL,
+            "C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe", 
+            pattern, NULL, SW_SHOWNORMAL);
+    }
+}
+
+
 static void OnDraggingStart(WindowInfo *win, int x, int y)
 {
     assert(win);
@@ -3101,6 +3136,17 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
         triggerRepaintDisplayNow(win);
     }
 }
+
+
+static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
+{
+    //DBG_OUT("Right button clicked on %d %d\n", x, y);
+    assert (win);
+    if (!win) return;
+
+    OnInverseSearch(win, x, y);
+}
+
 
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
 {
@@ -5080,6 +5126,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             break;
 
+        case WM_LBUTTONDBLCLK:
+            if (win)
+                OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
         case WM_LBUTTONDOWN:
             if (win)
                 OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
@@ -5521,7 +5572,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
         return FALSE;
 
     wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc    = WndProcCanvas;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
