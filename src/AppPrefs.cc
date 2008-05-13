@@ -72,6 +72,9 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
 
+    if( gGlobalPrefs.m_inversesearch_cmdline )
+      DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inversesearch_cmdline);
+
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -396,6 +399,9 @@ bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryL
     dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);
     dict_get_int(global, WINDOW_DX_STR, &gGlobalPrefs.m_windowDx);
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
+    const char* invsearch = dict_get_str(global, INVERSE_SEARCH_COMMANDLINE);
+    if( invsearch )
+      strcpy_s(gGlobalPrefs.m_inversesearch_cmdline, invsearch);
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));
     if (bstr)

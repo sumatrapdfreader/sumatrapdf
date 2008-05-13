@@ -49,6 +49,7 @@ enum DisplayMode {
 #define SHOW_TOC_STR                "ShowToc"
 #define BG_COLOR_STR                "BgColor"
 #define ESC_TO_EXIT_STR             "EscToExit"
+#define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
 
 typedef struct DisplayState {
     const char *        filePath;

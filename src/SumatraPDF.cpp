@@ -117,7 +117,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PREFS_FILE_NAME_NEW _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR         _T("SumatraPDF")
 
-#define DEFAULT_EDITORPATTERN _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
+#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
 
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
@@ -374,7 +374,7 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
-    _tcscpy_s(gGlobalPrefs.m_editorpattern, DEFAULT_EDITORPATTERN);
+    _tcscpy_s(gGlobalPrefs.m_inversesearch_cmdline, DEFAULT_INVERSE_SEARCH_COMMANDLINE);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -2982,14 +2982,17 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
         return;
 
     UINT line, col;
-    char srcname[_MAX_PATH];
-    UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcname,_countof(srcname),&line,&col); // record 101
+    char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];
+    UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcfilename,_countof(srcfilename),&line,&col); // record 101
     if (err)
         DBG_OUT("cannot sync from pdf to source!\n");
     else {
+        char *dir= FilePath_GetDir(win->dm->fileName());
+        sprintf_s(srcfilepath, _countof(srcfilepath), "%s" DIR_SEP_STR "%s", dir, srcfilename, _countof(srcfilename));
+        free(dir);
         char cmdline[_MAX_PATH];
-        if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_editorpattern,
-          srcname, line, col, cmdline, _countof(cmdline)) ) {
+        if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
+          srcfilepath, line, col, cmdline, _countof(cmdline)) ) {
             //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
             STARTUPINFO si;
             PROCESS_INFORMATION pi;
