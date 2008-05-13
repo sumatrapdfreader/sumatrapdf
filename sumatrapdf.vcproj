@@ -275,6 +275,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PdfSync.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\str_util.c"
 				>
 			</File>

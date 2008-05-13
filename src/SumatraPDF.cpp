@@ -117,6 +117,15 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PREFS_FILE_NAME_NEW _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR         _T("SumatraPDF")
 
+#define BENCH_ARG_TXT             "-bench"
+#define PRINT_TO_ARG_TXT          "-print-to"
+#define NO_REGISTER_EXT_ARG_TXT   "-no-register-ext"
+#define PRINT_TO_DEFAULT_ARG_TXT  "-print-to-default"
+#define EXIT_ON_PRINT_ARG_TXT     "-exit-on-print"
+#define ENUM_PRINTERS_ARG_TXT     "-enum-printers"
+#define ESC_TO_EXIT_ARG_TXT       "-esc-to-exit"
+#define BG_COLOR_TXT              "-bgcolor"
+
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
 #define DEF_PAGE_DY 792
@@ -232,9 +241,7 @@ static void RebuildProgramMenus(void);
 static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
-static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
-    DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
-    bool showWin);
+static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh);
 
 #define SEP_ITEM "-----"
 
@@ -1191,7 +1198,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
         return;
     UpdateDisplayStateWindowPos(win, &ds);
-    RefreshPdfDocument(fname, win, &ds, true, autorefresh, true);
+    RefreshPdfDocument(fname, win, &ds, true, autorefresh);
 }
 
 
@@ -1698,9 +1705,7 @@ static void RecalcSelectionPosition (WindowInfo *win) {
     }
 }
 
-static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
-    DisplayState *state, bool reuseExistingWindow, bool autorefresh,
-    bool showWin)
+static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, DisplayState *state, bool reuseExistingWindow, bool autorefresh)
 {
     /* TODO: need to get rid of that, but not sure if that won't break something
        i.e. GetCanvasSize() caches size of canvas and some code might depend
@@ -1775,7 +1780,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
             win->dm = previousmodel;
         }
         else {
-            delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
             goto Exit;
         }
@@ -1786,6 +1790,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     }
 
     win->dm->setAppData((void*)win);
+
 
     RECT rect;
     GetClientRect(win->hwndFrame, &rect);
@@ -1830,16 +1835,12 @@ Exit:
     assert(win);
     DragAcceptFiles(win->hwndFrame, TRUE);
     DragAcceptFiles(win->hwndCanvas, TRUE);
-    if (showWin) {
-        ShowWindow(win->hwndFrame, SW_SHOW);
-        ShowWindow(win->hwndCanvas, SW_SHOW);
-    }
+    ShowWindow(win->hwndFrame, SW_SHOW);
+    ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
-    if (win->dm && win->dm->_showToc) {
-        win->ClearTocBox();
+    if (win->dm && win->dm->_showToc)
         win->ShowTocBox();
-    }
     if (win->state == WS_ERROR_LOADING_PDF) {
         WindowInfo_RedrawAll(win);
         return false;
@@ -1853,7 +1854,7 @@ void on_file_change(PTSTR filename, LPARAM param)
     WindowInfo_Refresh((WindowInfo *) param, true);
 }
 
-static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
+static WindowInfo* LoadPdf(const char *fileName)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1878,20 +1879,16 @@ static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
     win->watcher.Init(fileName);
 #endif
 
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-    DisplayState *ds = NULL;
-    if (fileFromHistory)
-        ds = &fileFromHistory->state;
-
-    if (RefreshPdfDocument(fileName, win, ds, reuseExistingWindow, false, showWin)) {
+   FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+   if (RefreshPdfDocument(fileName, win, fileFromHistory ? &fileFromHistory->state : NULL, reuseExistingWindow, false)) {
         if (!fileFromHistory) {
             AddFileToHistory(fileName);
             RebuildProgramMenus();
         }
         return win;
-    }
-
-    return NULL;
+   }
+   else
+        return NULL;
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
@@ -5474,21 +5471,15 @@ InitMouseWheelInfo:
 
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
-                LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
-                switch (pnmtv->hdr.code) {
-                    case TVN_SELCHANGEDW: { 
-                        // When the focus is set to the toc window the first item in the treeview is automatically
-                        // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
-                        // We have to ignore this message to prevent the current page to be changed.
-                        if (pnmtv->action==TVC_UNKNOWN || pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) {
-                            TV_ITEMW tvi;
-                            tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
-                            tvi.cchTextMax = 0;
-                            tvi.pszText = NULL;
-                            tvi.mask = TVIF_PARAM;
-                            if (TreeView_GetItemW(win->hwndTocBox, &tvi) && win->dm)
-                                win->dm->goToTocLink((void *)tvi.lParam);
-                        }
+                switch (((LPNMHDR)lParam)->code) {
+                    case TVN_SELCHANGEDW: {
+                        TV_ITEMW tvi;
+                        tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
+                        tvi.cchTextMax = 0;
+                        tvi.pszText = NULL;
+                        tvi.mask = TVIF_PARAM;
+                        if (TreeView_GetItemW(win->hwndTocBox, &tvi))
+                            win->dm->goToTocLink((void *)tvi.lParam);
                     }
                     break;
                     case TVN_KEYDOWN: {
@@ -5948,7 +5939,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     int                 pdfOpened = 0;
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
-    bool                printDialog = false;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
@@ -5976,27 +5966,27 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         // the first time Sumatra is launched.
         GuessLanguage();
     }
-    /* parse argument list. If -bench was given, then we're in benchmarking mode. Otherwise
+    /* parse argument list. If BENCH_ARG_TXT was given, then we're in benchmarking mode. Otherwise
     we assume that all arguments are PDF file names.
-    -bench can be followed by file or directory name. If file, it can additionally be followed by
+    BENCH_ARG_TXT can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
     bool registerForPdfExtentions = true;
     currArg = argListRoot->next;
     char *printerName = NULL;
     while (currArg) {
-        if (is_arg("-enum-printers")) {
+        if (is_arg(ENUM_PRINTERS_ARG_TXT)) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             goto Exit;
         }
 
-        if (is_arg( "-no-register-ext")) {
+        if (is_arg(NO_REGISTER_EXT_ARG_TXT)) {
             currArg = currArg->next;
             registerForPdfExtentions = false;
             continue;
         }
 
-        if (is_arg("-bench")) {
+        if (is_arg(BENCH_ARG_TXT)) {
             currArg = currArg->next;
             if (currArg) {
                 gBenchFileName = currArg->str;
@@ -6006,19 +5996,19 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             break;
         }
 
-        if (is_arg("-exit-on-print")) {
+        if (is_arg(EXIT_ON_PRINT_ARG_TXT)) {
             currArg = currArg->next;
             exitOnPrint = true;
             continue;
         }
 
-        if (is_arg("-print-to-default")) {
+        if (is_arg(PRINT_TO_DEFAULT_ARG_TXT)) {
             currArg = currArg->next;
             printToDefaultPrinter = true;
             continue;
         }
 
-        if (is_arg("-print-to")) {
+        if (is_arg(PRINT_TO_ARG_TXT)) {
             currArg = currArg->next;
             if (currArg) {
                 printerName = currArg->str;
@@ -6027,13 +6017,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
-        if (is_arg("-print-dialog")) {
-            currArg = currArg->next;
-            printDialog = true;
-            continue;
-        }
-
-        if (is_arg("-bgcolor")) {
+        if (is_arg(BG_COLOR_TXT)) {
             currArg = currArg->next;
             if (currArg) {
                 ParseBgColor(currArg->str);
@@ -6042,7 +6026,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
-        if (is_arg("-esc-to-exit")) {
+        if (is_arg(ESC_TO_EXIT_ARG_TXT)) {
             currArg = currArg->next;
             gGlobalPrefs.m_escToExit = TRUE;
             continue;
@@ -6079,8 +6063,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 ++pdfOpened;
     } else {
         while (currArg) {
-            bool showWin = !exitOnPrint;
-            win = LoadPdf(currArg->str, showWin);
+            win = LoadPdf(currArg->str);
             if (!win)
                 goto Exit;
 
@@ -6096,15 +6079,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 // note: this prints all of PDF files. Another option would be to
                 // print only the first one
                 PrintFile(win, currArg->str, printerName);
-            } else if (printDialog) {
-                OnMenuPrint(win);
             }
            ++pdfOpened;
             currArg = currArg->next;
         }
     }
 
-    if ((printerName || printDialog) && exitOnPrint)
+    if (printerName && exitOnPrint)
         goto Exit;
  
     if (0 == pdfOpened) {

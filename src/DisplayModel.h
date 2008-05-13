@@ -279,10 +279,11 @@ public:
     BOOL            _showToc;
     BOOL            _fullScreen;
 
+    int             getPageNoByPoint (double x, double y);
+
 protected:
     virtual void    MapResultRectToScreen(PdfSearchResult *rect) = 0;
 
-    int             getPageNoByPoint (double x, double y);
 
     void            startRenderingPage(int pageNo);
 

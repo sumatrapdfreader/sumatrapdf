@@ -35,6 +35,7 @@
 #include "DisplayModelSplash.h"
 #include "DisplayModelFitz.h"
 #include "FileWatch.h"
+#include "PdfSync.h"
 
 /* TODO: Currently not used. The idea is to be able to switch between different
    visual styles. Because I can. */
@@ -112,6 +113,7 @@ public:
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
         needrefresh=false;
+        pdfsync=NULL;
     }
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
@@ -186,6 +188,9 @@ public:
 
     // file change watcher
     FileWatcher     watcher;
+    
+    // syncronizer based on .pdfsync file
+    Pdfsync         *pdfsync;
 
     bool _tocLoaded;
 
