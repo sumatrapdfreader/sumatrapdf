@@ -26,7 +26,7 @@ typedef struct SerializableGlobalPrefs {
     int  m_bgColor;
     BOOL m_escToExit;
 
-    TCHAR m_editorpattern[_MAX_PATH]; // pattern used to launch the editor when doing inverse search
+    TCHAR m_inversesearch_cmdline[_MAX_PATH]; // pattern used to launch the editor when doing inverse search
 
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
