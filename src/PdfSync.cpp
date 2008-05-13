@@ -227,13 +227,13 @@ int Pdfsync::rebuild_index()
     }
     scan_and_build_index(fp);
     fclose(fp);
-    this->index_lost = false;
+    this->index_discarded = false;
     return 0;
 }
 
 UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PSTR filename, UINT cchFilename, UINT *line, UINT *col)
 {
-    if( this->index_lost )
+    if( this->index_discarded )
       rebuild_index();
 
     FILE *fp;

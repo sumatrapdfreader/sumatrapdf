@@ -87,15 +87,15 @@ public:
           _ASSERT(n>u && strcmp(filename.c_str()+(n-u),PDFSYNC_EXTENSION) == 0 );
         }
         this->record2src_decitree = NULL;
-        this->index_lost = true;
+        this->index_discarded = true;
     }
     
     int rebuild_index();
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PSTR filename, UINT cchFilename, UINT *line, UINT *col);
     UINT source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
 
-    void lose_index() { this->index_lost = true;}
-    bool is_index_lost() { return this->index_lost; }
+    void discard_index() { this->index_discarded = true;}
+    bool is_index_discarded() { return this->index_discarded; }
 
 private:
     record2srcfile_node *build_decision_tree(int leftrecord, int rightrecord);
@@ -109,5 +109,5 @@ private:
     vector<record_section> record_sections;
     record2srcfile_node *record2src_decitree;
     string syncfilename;
-    bool index_lost; // true if the index needs to be recomputed (it needs to be set to true when a change to the pdfsync file is detected)
+    bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };
