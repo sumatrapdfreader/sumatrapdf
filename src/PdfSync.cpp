@@ -201,9 +201,6 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
     UINT closest_xydist=-1, 
         closest_xydist_record=-1;
 
-    // vertical distance and 
-    // this record will be used instead 
-
     // If no record is found within a distance^2 of PDFSYNC_EPSILON_SQUARE
     // (closest_xydist_record==-1) then we pick up the record that is closest 
     // vertically to the hit-point.

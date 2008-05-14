@@ -1880,14 +1880,16 @@ static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
 
 // define THREAD_BASED_FILEWATCH in order to use the thread-based implementation of 
 // file change detection.
+    TCHAR fullpath[_MAX_PATH];
+    GetFullPathName(fileName, _countof(fullpath), fullpath, NULL);
 #ifdef THREAD_BASED_FILEWATCH
     if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fileName, &on_file_change, (LPARAM)win);
+        win->watcher.StartWatchThread(fullpath, &on_file_change, (LPARAM)win);
 #else
-    win->watcher.Init(fileName);
+    win->watcher.Init(fullpath);
 #endif
 
-   win->pdfsync = new Pdfsync(fileName);
+   win->pdfsync = new Pdfsync(fullpath);
 
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     DisplayState *ds = NULL;
@@ -2988,9 +2990,7 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     if (err!=PDFSYNCERR_SUCCESS)
         DBG_OUT("cannot sync from pdf to source!\n");
     else {
-        char *dir= FilePath_GetDir(win->dm->fileName());
-        sprintf_s(srcfilepath, _countof(srcfilepath), "%s" DIR_SEP_STR "%s", dir, srcfilename, _countof(srcfilename));
-        free(dir);
+        sprintf_s(srcfilepath, _countof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, _countof(srcfilename));
         char cmdline[_MAX_PATH];
         if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
           srcfilepath, line, col, cmdline, _countof(cmdline)) ) {
