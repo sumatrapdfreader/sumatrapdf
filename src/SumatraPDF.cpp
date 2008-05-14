@@ -574,7 +574,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print"),              IDM_PRINT },
     { SEP_ITEM,              0 },
     { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER },
-#ifdef _TEX_GUI_ENHANCEMENT
+#ifdef _PDFSYNC_GUI_ENHANCEMENT
     { _TRN("Set inverse search command-line"), IDM_SET_INVERSESEARCH },
 #endif
     { SEP_ITEM ,             0 },
@@ -6126,6 +6126,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             currArg = currArg->next;
             if (currArg) {
                 ParseBgColor(currArg->str);
+                currArg = currArg->next;
+            }
+            continue;
+        }
+
+        if (is_arg("-inverse-search")) {
+            currArg = currArg->next;
+            if (currArg) {
+                _tcscpy(gGlobalPrefs.m_inversesearch_cmdline,currArg->str);
                 currArg = currArg->next;
             }
             continue;

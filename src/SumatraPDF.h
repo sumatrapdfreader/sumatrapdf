@@ -25,7 +25,7 @@
 
 #define THREAD_BASED_FILEWATCH
 //#define _PDFSYNC_GUI_ENHANCEMENT
-
+ 
 
 #include <windows.h>
 
