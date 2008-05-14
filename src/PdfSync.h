@@ -4,15 +4,84 @@
 
 #pragma once
 #include <windows.h>
-#include <string>
-#include <vector>
-#include <hash_map>
-#include <stack>
-#include <stddef.h>
+#include <crtdbg.h>
+
 #include "base_util.h"
 #include "str_util.h"
+
+
+#ifdef USE_STL
+#include <vector>
+#include <stack>
 using namespace std;
-using namespace stdext;
+typedef stack<int> int_stack;
+#else
+#define ALLOC_INCREMENT  10
+template <class _Ty>
+class vector {
+public:
+    _Ty &operator[](size_t i) const
+    {
+        _ASSERT(i<m_size);
+        return m_data[i];
+    }
+    void clear()
+    {
+        m_size = 0;
+    }
+    void push_back(_Ty v)
+    {
+        if(m_size>=m_allocsize) {
+            m_allocsize += ALLOC_INCREMENT;
+            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
+        }
+        m_data[m_size] = v;
+        m_size++;
+    }
+    void resize(size_t s)
+    {
+        if(s>m_allocsize) {
+            m_allocsize = s+ALLOC_INCREMENT-s%ALLOC_INCREMENT;
+            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
+        }
+        m_size = s;
+    }
+    size_t size()
+    {
+        return m_size;
+    }
+    vector()
+    {
+        m_allocsize = ALLOC_INCREMENT;
+        m_size = 0;
+        m_data = (_Ty *)malloc(sizeof(_Ty) * m_allocsize); 
+    }
+    ~vector()
+    {
+        delete m_data;
+    }
+private:
+    _Ty *m_data;
+    size_t m_allocsize, m_size;
+};
+
+class int_stack : public vector<int> {
+public:
+    void push(int v) {
+        push_back(v);
+    }
+    void pop() {
+        _ASSERT(size()>0);
+        resize(size()-1);
+    }
+    int top() {
+        _ASSERT(size()>0);
+        return (*this)[size()-1];
+    }
+};
+
+#endif
+
 
 // Minimal error distance^2 between a point clicked by the user and a PDF mark
 #define PDFSYNC_EPSILON_SQUARE          800
@@ -26,27 +95,28 @@ using namespace stdext;
 #define PDFSYNCERR_NO_SYNC_AT_LOCATION       3
 
 typedef struct {
- fpos_t openline_pos;
- fpos_t closeline_pos;
+    TCHAR filename[_MAX_PATH]; // source file name
+    fpos_t openline_pos;    // start of the scope in the sync file
+    fpos_t closeline_pos;   // end of the scope
 } src_scope;
 
 
 // a pdfsheet entry gives the starting position in the pdfsync file of a section starting with "s ..." followed by declaration lines of the form "p ...2
 typedef struct {
- fpos_t startpos;
+    fpos_t startpos;
 #if _DEBUG
- fpos_t endpos;
+    fpos_t endpos;
 #endif
 } pdfsheet_indexentry;
 
 
 // a section of consecutive records declarations in the syncfile ('l' lines)
 typedef struct {
- hash_map<string, src_scope>::const_iterator srcfile; // `scoping' source file 
- fpos_t startpos;     // start position in the sync file
- UINT firstrecord;    // number of the first record in the section
+    int srcfile;           // index of the `scoping' source file 
+    fpos_t startpos;       // start position in the sync file
+    UINT firstrecord;      // number of the first record in the section
 #if _DEBUG
- int highestrecord; // highest record #
+    int highestrecord; // highest record #
 #endif
 } record_section;
 
@@ -55,19 +125,19 @@ typedef struct {
 // from the record_sections structure.
 enum nodetype { Leaf, Internal };
 typedef struct {
- nodetype type; // leaf or internal node?
+    nodetype type; // leaf or internal node?
 } record2srcfile_node;
 
 typedef struct {
- record2srcfile_node header;
- int section; // record section number in table record_sections[].
+    record2srcfile_node header;
+    int section; // record section number in table record_sections[].
 } record2srcfile_leaf;
 
 typedef struct {
- record2srcfile_node header;
- int splitvalue; // value to compare to in order to decide whether we go right or left in the tree
- record2srcfile_node *left;
- record2srcfile_node *right;
+    record2srcfile_node header;
+    int splitvalue; // value to compare to in order to decide whether we go right or left in the tree
+    record2srcfile_node *left;
+    record2srcfile_node *right;
 } record2srcfile_internal;
 
 #define PDF_EXTENSION     ".PDF"
@@ -76,22 +146,30 @@ typedef struct {
 class Pdfsync
 {
 public:
-    Pdfsync(string filename)
+    Pdfsync(PCTSTR filename)
     {
-        size_t n = filename.size();
+        size_t n = _tcslen(filename);
         size_t u = _countof(PDF_EXTENSION)-1;
-        if(n>u && _stricmp(filename.c_str()+(n-u),PDF_EXTENSION) == 0 )
-          this->syncfilename = filename.replace(n-u, u, PDFSYNC_EXTENSION);
+        if(n>u && _tcsicmp(filename+(n-u),PDF_EXTENSION) == 0 ) {
+            _tcsncpy_s(this->syncfilename, filename, n-u);
+            _tcscat_s(this->syncfilename, PDFSYNC_EXTENSION);
+        }
         else {
-          size_t u = _countof(PDFSYNC_EXTENSION)-1;
-          _ASSERT(n>u && strcmp(filename.c_str()+(n-u),PDFSYNC_EXTENSION) == 0 );
+            size_t u = _countof(PDFSYNC_EXTENSION)-1;
+            _ASSERT(n>u && _tcsicmp(filename+(n-u),PDFSYNC_EXTENSION) == 0 );
         }
         this->record2src_decitree = NULL;
         this->index_discarded = true;
     }
-    
+
+    ~Pdfsync() {
+        if(this->record2src_decitree)
+            delete_decision_tree(this->record2src_decitree);
+    }
+
+
     int rebuild_index();
-    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PSTR filename, UINT cchFilename, UINT *line, UINT *col);
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
     UINT source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
 
     void discard_index() { this->index_discarded = true;}
@@ -106,10 +184,11 @@ private:
     int scan_and_build_index(FILE *fp);
 
 private:
-    hash_map<int, pdfsheet_indexentry, hash_compare<int, less<int> >> pdfsheet_index;
-    hash_map<string, src_scope> src_scopes;
+    vector<pdfsheet_indexentry> pdfsheet_index;
     vector<record_section> record_sections;
+    vector<src_scope> srcfiles;
     record2srcfile_node *record2src_decitree;
-    string syncfilename;
+    char syncfilename[_MAX_PATH];
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };
+

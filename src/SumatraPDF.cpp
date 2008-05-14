@@ -2972,7 +2972,7 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
 static void OnInverseSearch(WindowInfo *win, int x, int y)
 {
     assert(win);
-    if (!win) return;
+    if (!win || !win->dm) return;
 
     int pageNo = POINT_OUT_OF_PAGE;
     double dblx = x, dbly = y;
