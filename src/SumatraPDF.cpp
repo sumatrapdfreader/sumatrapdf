@@ -35,8 +35,6 @@
 #include "WinUtil.hpp"
 #include <windowsx.h>
 
-#define THREAD_BASED_FILEWATCH
-
 #ifdef CRASHHANDLER
 #include "client\windows\handler\exception_handler.h"
 #endif
@@ -576,7 +574,9 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print"),              IDM_PRINT },
     { SEP_ITEM,              0 },
     { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER },
+#ifdef _TEX_GUI_ENHANCEMENT
     { _TRN("Set inverse search command-line"), IDM_SET_INVERSESEARCH },
+#endif
     { SEP_ITEM ,             0 },
     { _TRN("E&xit\tCtrl-Q"),       IDM_EXIT }
 };
@@ -4034,6 +4034,7 @@ static void OnMenuGoToPage(WindowInfo *win)
         win->dm->goToPage(newPageNo, 0);
 }
 
+#ifdef _PDFSYNC_GUI_ENHANCEMENT
 static void OnMenuSetInverseSearch(WindowInfo *win)
 {
     assert(win);
@@ -4044,6 +4045,7 @@ static void OnMenuSetInverseSearch(WindowInfo *win)
         free(ret);
     }
 }
+#endif
 
 
 
@@ -5379,10 +5381,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuGoToPage(win);
                     break;
 
+#ifdef _PDFSYNC_GUI_ENHANCEMENT
                 case IDM_SET_INVERSESEARCH:
                     OnMenuSetInverseSearch(win);
                     break;
-
+#endif
                 case IDM_VIEW_FULLSCREEN:
                     OnMenuViewFullscreen(win);
                     break;

@@ -45,14 +45,15 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     srcfiles.clear();
 
     // add the initial tex file to the file stack
-    src_scope s;
-    fgetpos(fp, &s.openline_pos);
+    src_file s;
+#ifdef _DEBUG    
     s.closeline_pos = -1;
-
-    stack<int> incstack; // stack of included files
-
+    fgetpos(fp, &s.openline_pos);
+#endif
     _tcscpy_s(s.filename, jobname);
     srcfiles.push_back(s);
+
+    stack<int> incstack; // stack of included files
     incstack.push(srcfiles.size()-1);
 
     UINT cur_sheetNumber = -1;
@@ -68,11 +69,15 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     char c;
     while ((c = fgetc(fp)) && !feof(fp)) {
         if (c!='l' && cur_recordsec!=-1) { // if a section of contiguous 'l' lines finished then create the corresponding section
+#if _DEBUG
             this->record_sections[cur_recordsec].endpos = linepos;
+#endif
             cur_recordsec = -1;
         }
         if (c!='p' && cur_plinesec!=-1) { // if a section of contiguous 'p' lines finished then update the size of the corresponding p-line section
+#if _DEBUG
             this->pline_sections[cur_plinesec].endpos = linepos;
+#endif
             cur_plinesec = -1;
         }
         switch (c) {
@@ -80,18 +85,24 @@ int Pdfsync::scan_and_build_index(FILE *fp)
             {
                 fscanf_s(fp, "%s\n", filename, _countof(filename));
 
-                src_scope s;
+                src_file s;
+                s.first_recordsection = -1;
+                s.last_recordsection = -1;
+                _tcscpy_s(s.filename, filename);
+#ifdef _DEBUG
                 s.openline_pos = linepos;
                 s.closeline_pos = -1;
-                _tcscpy_s(s.filename, filename);
+#endif
                 this->srcfiles.push_back(s);
                 incstack.push(this->srcfiles.size()-1);
             }
             break;
 
         case ')':
+#if _DEBUG
             if (incstack.top()!=-1)
                 this->srcfiles[incstack.top()].closeline_pos = linepos;
+#endif
             incstack.pop();
             fscanf_s(fp, "\n");
             break;
@@ -112,6 +123,11 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 #if _DEBUG
                     record_sections[cur_recordsec].highestrecord = recordNumber;
 #endif
+                    _ASSERT(incstack.top()!=-1);
+                    if( this->srcfiles[incstack.top()].first_recordsection == -1 )
+                        this->srcfiles[incstack.top()].first_recordsection = cur_recordsec;
+                    
+                    this->srcfiles[incstack.top()].last_recordsection = cur_recordsec;
                 }
             }
             break;
@@ -126,7 +142,9 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 if (cur_plinesec==-1){ // section not initiated yet?
                     plines_section sec;
                     sec.startpos = linepos;
+#if _DEBUG
                     sec.endpos = -1;
+#endif
                     pline_sections.push_back(sec);
                     cur_plinesec = pline_sections.size()-1;
 
@@ -148,10 +166,12 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         }
         fgetpos(fp, &linepos);
     }
+#if _DEBUG
     if (cur_recordsec!=-1)
         this->record_sections[cur_recordsec].endpos = linepos;
     if (cur_plinesec!=-1)
         this->pline_sections[cur_plinesec].endpos = linepos;
+#endif
 
     _ASSERT(incstack.size()==1);
 
@@ -225,8 +245,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
         linepos = this->pline_sections[cur_psection].startpos;
         fsetpos(fp, &linepos);
         int c;
-        while ((c = fgetc(fp)) && !feof(fp) && linepos<this->pline_sections[cur_psection].endpos) {
-            _ASSERT(c=='p'); // it's a pdf location
+        while ((c = fgetc(fp))=='p' && !feof(fp)) {
             // skip the optional star
             if (fgetc(fp)=='*')
                 fgetc(fp);
@@ -248,6 +267,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
             }
             fgetpos(fp, &linepos);
         }
+        _ASSERT(linepos == this->pline_sections[cur_psection].endpos);
     }
 
     int selected_record = closest_xydist_record!=-1 ? closest_xydist_record : closest_ydist_record;
@@ -303,41 +323,21 @@ UINT Pdfsync::source_to_record(PCTSTR srcfilename, UINT line, UINT col)
     if (isrc==-1)
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
-    src_scope scope=this->srcfiles[isrc];
+    src_file srcfile=this->srcfiles[isrc];
 
-    // Find the first section that is declared within the scope of the file
-    int leftsection = 0,
-        rightsection = record_sections.size()-1;
-    int n = rightsection-leftsection+1;
-    _ASSERT(rightsection>0);
-    while(n>0){
-        int split = leftsection + (n>>1);
-        if (record_sections[split].endpos < scope.openline_pos)
-            leftsection = split+1;
-        else
-            rightsection = split-1;
-        n = rightsection-leftsection+1;
-    }
-    if( scope.openline_pos > this->record_sections[leftsection].endpos
-        || this->record_sections[leftsection].startpos < scope.closeline_pos)
+    if( srcfile.first_recordsection == -1 )
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
 
 
     // look for sections belonging to the specified file
-    size_t isec=leftsection;
-    while( isec<this->record_sections.size() ) {
+    // starting with the first section that is declared within the scope of the file.
+    for(size_t isec=srcfile.first_recordsection; isec<srcfile.last_recordsection; isec++ ) {
         record_section &sec = this->record_sections[isec];
-
-        if(sec.startpos > scope.closeline_pos)
-            break; // we have passed the last section in scope
-
         // does this section belong to the desired file?
         if( sec.srcfile == isrc ) {            
             // scan the 'l' declarations of the section to find the specified line and column
             // TODO
-
         }
-        isec++;
     }
 
     return PDFSYNCERR_NORECORD_FOR_THATLINE;

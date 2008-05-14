@@ -23,6 +23,10 @@
 
 //#define WIN32_LEAN_AND_MEAN                // Exclude rarely-used stuff from Windows headers
 
+#define THREAD_BASED_FILEWATCH
+//#define _PDFSYNC_GUI_ENHANCEMENT
+
+
 #include <windows.h>
 
 #include <stdlib.h>

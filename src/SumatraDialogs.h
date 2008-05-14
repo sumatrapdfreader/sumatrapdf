@@ -36,7 +36,9 @@ typedef struct {
 } Dialog_PdfAssociate_Data;
 
 int     Dialog_GoToPage(WindowInfo *win);
+#ifdef _PDFSYNC_GUI_ENHANCEMENT
 char *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline);
+#endif
 char *  Dialog_GetPassword(WindowInfo *win, const char *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 

@@ -57,6 +57,8 @@ public:
     }
     ~vector()
     {
+        for(size_t i=0; i<m_size; i++)
+            m_data[i].~_Ty();
         delete m_data;
     }
 private:
@@ -83,10 +85,10 @@ public:
 
 
 // Minimal error distance^2 between a point clicked by the user and a PDF mark
-#define PDFSYNC_EPSILON_SQUARE          800
+#define PDFSYNC_EPSILON_SQUARE               800
 
 // Minimal vertical distance
-#define PDFSYNC_EPSILON_Y               20
+#define PDFSYNC_EPSILON_Y                    20
 
 #define PDFSYNCERR_SUCCESS                   0 // the synchronization succeeded
 #define PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED 1 // the sync file cannot be opened
@@ -99,15 +101,21 @@ public:
 
 typedef struct {
     TCHAR filename[_MAX_PATH]; // source file name
+#ifdef _DEBUG
     fpos_t openline_pos;    // start of the scope in the sync file
     fpos_t closeline_pos;   // end of the scope
-} src_scope;
+#endif
+    size_t first_recordsection; // index of the first record section of that file
+    size_t last_recordsection;  // index of the last record section of that file
+} src_file;
 
 
 // a plines_section is a section of consecutive lines of the form "p ..."
 typedef struct {
     fpos_t startpos; // position of the first "p ..." line
+#if _DEBUG
     fpos_t endpos;
+#endif
 } plines_section;
 
 
@@ -115,10 +123,10 @@ typedef struct {
 typedef struct {
     int srcfile;           // index of the `scoping' source file 
     fpos_t startpos;       // start position in the sync file
-    fpos_t endpos;         // end position in the sync file
     UINT firstrecord;      // number of the first record in the section
 #if _DEBUG
-    int highestrecord; // highest record #
+    fpos_t endpos;         // end position in the sync file
+    int highestrecord;      // highest record #
 #endif
 } record_section;
 
@@ -162,7 +170,7 @@ private:
     vector<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
     vector<plines_section> pline_sections;
     vector<record_section> record_sections;
-    vector<src_scope> srcfiles;
+    vector<src_file> srcfiles;
     TCHAR syncfilename[_MAX_PATH];
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };

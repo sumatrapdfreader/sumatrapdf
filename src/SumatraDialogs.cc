@@ -8,7 +8,7 @@
 #include "win_util.h"
 #include <assert.h>
 
-
+#ifdef _PDFSYNC_GUI_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                       edit;
@@ -71,7 +71,7 @@ char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
     }
     return NULL;
 }
-
+#endif
 
 static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
