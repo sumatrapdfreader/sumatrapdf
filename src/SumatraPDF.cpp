@@ -2985,7 +2985,7 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     UINT line, col;
     char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];
     UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcfilename,_countof(srcfilename),&line,&col); // record 101
-    if (err)
+    if (err!=PDFSYNCERR_SUCCESS)
         DBG_OUT("cannot sync from pdf to source!\n");
     else {
         char *dir= FilePath_GetDir(win->dm->fileName());

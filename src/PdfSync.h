@@ -88,10 +88,14 @@ public:
 // Minimal vertical distance
 #define PDFSYNC_EPSILON_Y               20
 
-#define PDFSYNCERR_SUCCESS                   0
-#define PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED 1
-#define PDFSYNCERR_INVALID_PAGE_NUMBER       2 
-#define PDFSYNCERR_NO_SYNC_AT_LOCATION       3
+#define PDFSYNCERR_SUCCESS                   0 // the synchronization succeeded
+#define PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED 1 // the sync file cannot be opened
+#define PDFSYNCERR_INVALID_PAGE_NUMBER       2 // the given page number does not exist in the sync file
+#define PDFSYNCERR_NO_SYNC_AT_LOCATION       3 // no synchronization found at this location
+
+#define PDFSYNCERR_UNKNOWN_SOURCEFILE        4 // the source file is not present in the sync file
+#define PDFSYNCERR_NORECORD_IN_SOURCEFILE    5 // there is not any record declaration for that particular source file
+#define PDFSYNCERR_NORECORD_FOR_THATLINE     6 // no record found for the requested line
 
 typedef struct {
     TCHAR filename[_MAX_PATH]; // source file name
@@ -100,44 +104,24 @@ typedef struct {
 } src_scope;
 
 
-// a pdfsheet entry gives the starting position in the pdfsync file of a section starting with "s ..." followed by declaration lines of the form "p ...2
+// a plines_section is a section of consecutive lines of the form "p ..."
 typedef struct {
-    fpos_t startpos;
-#if _DEBUG
+    fpos_t startpos; // position of the first "p ..." line
     fpos_t endpos;
-#endif
-} pdfsheet_indexentry;
+} plines_section;
 
 
 // a section of consecutive records declarations in the syncfile ('l' lines)
 typedef struct {
     int srcfile;           // index of the `scoping' source file 
     fpos_t startpos;       // start position in the sync file
+    fpos_t endpos;         // end position in the sync file
     UINT firstrecord;      // number of the first record in the section
 #if _DEBUG
     int highestrecord; // highest record #
 #endif
 } record_section;
 
-
-// Binary decision tree used to quickly find the source filename containing a given record
-// from the record_sections structure.
-enum nodetype { Leaf, Internal };
-typedef struct {
-    nodetype type; // leaf or internal node?
-} record2srcfile_node;
-
-typedef struct {
-    record2srcfile_node header;
-    int section; // record section number in table record_sections[].
-} record2srcfile_leaf;
-
-typedef struct {
-    record2srcfile_node header;
-    int splitvalue; // value to compare to in order to decide whether we go right or left in the tree
-    record2srcfile_node *left;
-    record2srcfile_node *right;
-} record2srcfile_internal;
 
 #define PDF_EXTENSION     ".PDF"
 #define PDFSYNC_EXTENSION ".PDFSYNC"
@@ -157,15 +141,8 @@ public:
             size_t u = _countof(PDFSYNC_EXTENSION)-1;
             _ASSERT(n>u && _tcsicmp(filename+(n-u),PDFSYNC_EXTENSION) == 0 );
         }
-        this->record2src_decitree = NULL;
         this->index_discarded = true;
     }
-
-    ~Pdfsync() {
-        if(this->record2src_decitree)
-            delete_decision_tree(this->record2src_decitree);
-    }
-
 
     int rebuild_index();
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
@@ -177,17 +154,16 @@ public:
     UINT prepare_commandline(PCTSTR pattern, PCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
 
 private:
-    record2srcfile_node *build_decision_tree(int leftrecord, int rightrecord);
-    void delete_decision_tree(record2srcfile_node *root);
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
+    UINT source_to_record(PCTSTR srcfilename, UINT line, UINT col = -1);
 
 private:
-    vector<pdfsheet_indexentry> pdfsheet_index;
+    vector<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
+    vector<plines_section> pline_sections;
     vector<record_section> record_sections;
     vector<src_scope> srcfiles;
-    record2srcfile_node *record2src_decitree;
-    char syncfilename[_MAX_PATH];
+    TCHAR syncfilename[_MAX_PATH];
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };
 

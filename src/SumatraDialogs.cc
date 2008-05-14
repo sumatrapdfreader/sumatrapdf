@@ -69,7 +69,6 @@ char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
     if (DIALOG_OK_PRESSED == dialogResult) {
         return data.out_cmdline;
     }
-    free((void*)data.out_cmdline);
     return NULL;
 }
 
