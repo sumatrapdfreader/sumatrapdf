@@ -76,7 +76,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     fgetpos(fp, &s.openline_pos);
     s.closeline_pos = -1;
 
-    int_stack incstack; // stack of included files
+    stack<int> incstack; // stack of included files
 
     _tcscpy_s(s.filename, jobname);
     srcfiles.push_back(s);

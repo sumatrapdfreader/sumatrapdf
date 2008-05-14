@@ -8,6 +8,72 @@
 #include "win_util.h"
 #include <assert.h>
 
+
+static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    HWND                       edit;
+    Dialog_InverseSearch_Data *  data;
+
+    switch (message)
+    {
+        case WM_INITDIALOG:
+            /* TODO: intelligently center the dialog within the parent window? */
+            data = (Dialog_InverseSearch_Data*)lParam;
+            assert(data);
+            if (!data)
+                return FALSE;
+            assert(data->in_cmdline);
+            SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+            SetDlgItemText(hDlg, IDC_CMDLINE, data->in_cmdline);
+            edit = GetDlgItem(hDlg, IDC_CMDLINE);
+            SetFocus(edit);
+            return FALSE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    data = (Dialog_InverseSearch_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+                    assert(data);
+                    if (!data)
+                        return TRUE;
+                    edit = GetDlgItem(hDlg, IDC_CMDLINE);
+                    data->out_cmdline = win_get_text(edit);
+                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+                    return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}
+
+/* Shows a dialog that let the user configure the inverser search command line
+   Returns the command line as a newly allocated string or
+   NULL if user cancelled the dialog or there was an error.
+   Caller needs to free() the result.
+*/
+char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
+{
+    int                     dialogResult;
+    Dialog_InverseSearch_Data data;
+    
+    assert(cmdline);
+    if (!cmdline) return NULL;
+
+    data.in_cmdline = cmdline;
+    dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_INVERSESEARCH), win->hwndFrame, Dialog_InverseSearch_Proc, (LPARAM)&data);
+    if (DIALOG_OK_PRESSED == dialogResult) {
+        return data.out_cmdline;
+    }
+    free((void*)data.out_cmdline);
+    return NULL;
+}
+
+
 static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                       edit;

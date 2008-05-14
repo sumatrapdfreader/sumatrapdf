@@ -4,23 +4,20 @@
 //
 #define IDI_SUMATRAPDF                  1
 #define IDS_APP_TITLE                   100
-#define IDD_DIALOG1                     129
 #define IDD_DIALOG_GOTO_PAGE            129
 #define IDD_DIALOG_GET_PASSWORD         130
 #define IDD_DIALOG_PDF_ASSOCIATE        131
 #define IDC_CURSORDRAG                  132
+#define IDD_DIALOG_INVERSESEARCH        132
 #define IDR_MAINFRAME                   200
 #define IDD_XPDFWIN_DIALOG              300
 #define IDD_ABOUTBOX                    301
-
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
 #define IDM_PRINT                       403
 #define IDM_MAKE_DEFAULT_READER         404
 #define IDM_EXIT                        405
-//#define IDM_VIEW_WITH_ACROBAT           406
-
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_CONTINUOUS             412
@@ -31,22 +28,18 @@
 #define IDM_VIEW_FULLSCREEN             418
 #define IDM_VIEW_SHOW_HIDE_TOOLBAR      419
 #define IDM_VIEW_USE_FITZ               420
-
 #define IDM_GOTO_NEXT_PAGE              430
 #define IDM_GOTO_PREV_PAGE              431
 #define IDM_GOTO_FIRST_PAGE             432
 #define IDM_GOTO_LAST_PAGE              433
 #define IDM_GOTO_PAGE                   434
-
 #define IDM_FIND_FIRST                  435
 #define IDM_FIND_NEXT                   436
 #define IDM_FIND_PREV                   437
 #define IDM_FIND_MATCH                  438
-
 #define IDM_ZOOM_FIT_PAGE               440
 #define IDM_ZOOM_ACTUAL_SIZE            441
 #define IDM_ZOOM_FIT_WIDTH              442
-//#define IDM_ZOOM_FIT_VISIBLE            407
 #define IDM_ZOOM_6400                   443
 #define IDM_ZOOM_3200                   444
 #define IDM_ZOOM_1600                   445
@@ -60,7 +53,6 @@
 #define IDM_ZOOM_25                     453
 #define IDM_ZOOM_12_5                   454
 #define IDM_ZOOM_8_33                   455
-
 #define IDM_CONTRIBUTE_TRANSLATION      460
 #define IDM_LANG_EN                     461
 #define IDM_LANG_FR                     462
@@ -107,11 +99,10 @@
 #define IDM_LANG_GL                     503
 #define IDM_LANG_BG                     504
 #define IDM_LANG_UK                     505
-#define IDM_LANG_EU						506
-
+#define IDM_LANG_EU                     506
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
-
+#define IDM_SET_INVERSESEARCH           552
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000
@@ -124,6 +115,7 @@
 #define IDC_GET_PASSWORD_EDIT           1004
 #define IDC_GET_PASSWORD_LABEL          1005
 #define IDC_TOOLBAR                     1006
+#define IDC_CMDLINE                     1006
 #define IDC_REBAR                       1007
 #define IDC_DONT_ASK_ME_AGAIN           1008
 #define IDC_PDF_TOC_TREE                1009
@@ -173,7 +165,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1006
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

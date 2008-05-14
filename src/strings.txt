@@ -2204,3 +2204,6 @@ gl:Contribuir na traducción
 es:Contribuir en la traducción
 uk:Допоможіть перекласти
 eu:Lagun gaitzazu itzulpenekin
+-
+Set inverse search command-line
+fr:Configurer la recherche inverse

@@ -14,7 +14,6 @@
 #include <vector>
 #include <stack>
 using namespace std;
-typedef stack<int> int_stack;
 #else
 #define ALLOC_INCREMENT  10
 template <class _Ty>
@@ -64,17 +63,17 @@ private:
     _Ty *m_data;
     size_t m_allocsize, m_size;
 };
-
-class int_stack : public vector<int> {
+template <class _Ty>
+class stack : public vector<_Ty> {
 public:
-    void push(int v) {
+    void push(_Ty v) {
         push_back(v);
     }
     void pop() {
         _ASSERT(size()>0);
         resize(size()-1);
     }
-    int top() {
+    _Ty &top() {
         _ASSERT(size()>0);
         return (*this)[size()-1];
     }

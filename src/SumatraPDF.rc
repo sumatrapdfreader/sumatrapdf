@@ -45,7 +45,7 @@ BEGIN
     "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
     "1",            IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
     "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
-    "g",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
+    "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
 END
 
 
@@ -94,16 +94,27 @@ BEGIN
     PUSHBUTTON      "No",IDCANCEL,160,40,32,14
 END
 
+IDD_DIALOG_INVERSESEARCH DIALOGEX 0, 0, 221, 64
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Inverse search command-line:"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,66,43,59,14
+    PUSHBUTTON      "Cancel",IDCANCEL,154,43,60,14
+    LTEXT           "Enter the command-line to invoke when you double-click on the PDF document:",IDC_GET_PASSWORD_LABEL,7,7,207,16
+    EDITTEXT        IDC_CMDLINE,7,26,207,14,ES_AUTOHSCROLL
+END
+
 IDD_DIALOG_GET_PASSWORD DIALOGEX 0, 0, 176, 70
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Enter password"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK", IDOK,7,49,59,14
-    PUSHBUTTON      "Cancel", IDCANCEL,109,49,60,14
-    LTEXT           "Enter password for test.pdf", IDC_GET_PASSWORD_LABEL,7,7,162,8
-    LTEXT           "Password:", IDC_STATIC,7,27,34,8
-    EDITTEXT        IDC_GET_PASSWORD_EDIT, 48,24,121,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,7,49,59,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,49,60,14
+    LTEXT           "Enter password for test.pdf",IDC_GET_PASSWORD_LABEL,7,7,162,8
+    LTEXT           "Password:",IDC_STATIC,7,27,34,8
+    EDITTEXT        IDC_GET_PASSWORD_EDIT,48,24,121,14,ES_AUTOHSCROLL
 END
 
 
@@ -151,6 +162,14 @@ BEGIN
         BOTTOMMARGIN, 50
     END
 
+    IDD_DIALOG_INVERSESEARCH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 214
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 57
+    END
+
     IDD_DIALOG_GET_PASSWORD, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -168,6 +187,11 @@ END
 //
 
 IDC_CURSORDRAG          CURSOR                  "dragcursor.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
 
 STRINGTABLE 
 BEGIN

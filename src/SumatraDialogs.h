@@ -10,6 +10,13 @@
 #define DIALOG_CANCEL_PRESSED 2
 #define DIALOG_NO_PRESSED 3
 
+
+/* For passing data to/from SetInverseSearch dialog */
+typedef struct {
+    const char *  in_cmdline;   /* current inverse search command line */
+    char *  out_cmdline;         /* inverse search command line selected by the user */
+} Dialog_InverseSearch_Data;
+
 /* For passing data to/from GetPassword dialog */
 typedef struct {
     const char *  fileName;   /* name of the file for which we need the password */
@@ -29,6 +36,7 @@ typedef struct {
 } Dialog_PdfAssociate_Data;
 
 int     Dialog_GoToPage(WindowInfo *win);
+char *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline);
 char *  Dialog_GetPassword(WindowInfo *win, const char *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 

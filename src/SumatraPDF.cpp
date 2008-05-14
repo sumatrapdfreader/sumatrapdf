@@ -576,6 +576,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print"),              IDM_PRINT },
     { SEP_ITEM,              0 },
     { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER },
+    { _TRN("Set inverse search command-line"), IDM_SET_INVERSESEARCH },
     { SEP_ITEM ,             0 },
     { _TRN("E&xit\tCtrl-Q"),       IDM_EXIT }
 };
@@ -4033,6 +4034,19 @@ static void OnMenuGoToPage(WindowInfo *win)
         win->dm->goToPage(newPageNo, 0);
 }
 
+static void OnMenuSetInverseSearch(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return;
+    char *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inversesearch_cmdline);
+    if (ret) {
+        strcpy(gGlobalPrefs.m_inversesearch_cmdline, ret);
+        free(ret);
+    }
+}
+
+
+
 static void OnMenuViewRotateLeft(WindowInfo *win)
 {
     RotateLeft(win);
@@ -5363,6 +5377,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_GOTO_PAGE:
                     OnMenuGoToPage(win);
+                    break;
+
+                case IDM_SET_INVERSESEARCH:
+                    OnMenuSetInverseSearch(win);
                     break;
 
                 case IDM_VIEW_FULLSCREEN:
