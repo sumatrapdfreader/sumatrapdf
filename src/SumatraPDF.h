@@ -131,7 +131,7 @@ public:
     WindowInfo *    next;
     WinState        state;
     WinState        prevState;
-    bool            needrefresh; // true if the view of the PDF is not syncronized with the content of the file on disk
+    bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
 
     DisplayModel *  dm;
     HWND            hwndFrame;
@@ -193,7 +193,7 @@ public:
     // file change watcher
     FileWatcher     watcher;
     
-    // syncronizer based on .pdfsync file
+    // synchronizer based on .pdfsync file
     Pdfsync         *pdfsync;
 
     bool _tocLoaded;
@@ -242,3 +242,5 @@ extern "C" {
     SUMATRAPDF_API WindowInfo* Sumatra_Init(HWND parentHandle);
     SUMATRAPDF_API void Sumatra_Exit();
 }
+
+WindowInfo* WindowInfoList_Find(LPTSTR file);

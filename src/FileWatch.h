@@ -15,7 +15,7 @@ public:
     // Watching file modification via a thread
     void StartWatchThread(PCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
     bool IsThreadRunning();
-    void SyncronousAbort();
+    void SynchronousAbort();
 
     PCTSTR filepath() { return szFilepath; }
 
@@ -35,7 +35,7 @@ public:
 
     ~FileWatcher() {
         if (IsThreadRunning())
-            SyncronousAbort();
+            SynchronousAbort();
         else
             Clean();
 

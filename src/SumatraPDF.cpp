@@ -1391,6 +1391,17 @@ static int WindowInfoList_Len(void) {
     return len;
 }
 
+// Find the first windows showing a given PDF file 
+WindowInfo* WindowInfoList_Find(LPTSTR file) {
+    WindowInfo* curr = gWindowList;
+    while (curr) {
+        if (_tcsicmp(curr->watcher.szFilepath, file) == 0)
+            return curr;
+        curr = curr->next;
+    }
+    return NULL;
+}
+
 static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     InvalidateRect(win->hwndToolbar, NULL, true);
     if (!win->dm) {  // Avoid focus on Find box
@@ -3398,7 +3409,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
     win->state = WS_ABOUT;
 
 #ifdef THREAD_BASED_FILEWATCH
-    win->watcher.SyncronousAbort();
+    win->watcher.SynchronousAbort();
 #else
     win->watcher.Clean();
 #endif
@@ -5556,7 +5567,14 @@ InitMouseWheelInfo:
             break;
 #endif
 
-        case MSG_BENCH_NEXT_ACTION:
+      case WM_DDE_INITIATE:
+          return OnDDEInitiate(hwnd, wParam, lParam);
+      case WM_DDE_EXECUTE:
+          return OnDDExecute(hwnd, wParam, lParam);
+      case WM_DDE_TERMINATE:
+          return OnDDETerminate(hwnd, wParam, lParam);
+
+      case MSG_BENCH_NEXT_ACTION:
             if (win)
                 OnBenchNextAction(win);
             break;

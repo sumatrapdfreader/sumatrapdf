@@ -25,7 +25,7 @@ bool GetDirectory (PCTSTR pszFile, PTSTR pszDir, size_t wMaxSize)
 }
 
 // Abort simultaneously all the watching thread and wait until they are all stopped.
-void SimultaneousSyncronousAbort(int nfw, FileWatcher **fw){
+void SimultaneousSynchronousAbort(int nfw, FileWatcher **fw){
     // Preparing to exit the program: ask the children thread to terminate
     HANDLE *hp = new HANDLE[nfw];
     int k = 0;
@@ -53,7 +53,7 @@ bool FileWatcher::IsThreadRunning()
 }
 
 // Ask for the thread to stop and waith until it ends
-void FileWatcher::SyncronousAbort()
+void FileWatcher::SynchronousAbort()
 {
     SetEvent(hEvtStopWatching);
     if (hWatchingThread)
@@ -68,7 +68,7 @@ void FileWatcher::RestartThread()
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
-        SyncronousAbort();
+        SynchronousAbort();
 
     DWORD watchingthreadID;
 
@@ -99,7 +99,7 @@ void FileWatcher::Init(PCTSTR filefullpath)
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
-        SyncronousAbort();
+        SynchronousAbort();
 
     _tcscpy_s(szFilepath, _countof(szFilepath), filefullpath);
     pszFilename = FilePath_GetBaseName(szFilepath);
@@ -195,7 +195,7 @@ bool FileWatcher::HasChanged(DWORD waittime)
 // Returns true if it is the case.
 bool FileWatcher::ReadDir()
 {
-    // Read the asyncronous result of the previous call to ReadDirectory
+    // Read the asynchronous result of the previous call to ReadDirectory
     DWORD dwNumberbytes;
     GetOverlappedResult(hDir, &overl, &dwNumberbytes, FALSE);
 

@@ -1,5 +1,5 @@
 // Copyright William Blum 2008 http://william.famille-blum.org/
-// PDF-source syncronizer based on .pdfsync file
+// PDF-source synchronizer based on .pdfsync file
 // License: GPLv2
 
 #pragma once
@@ -98,6 +98,7 @@ public:
 #define PDFSYNCERR_UNKNOWN_SOURCEFILE        4 // the source file is not present in the sync file
 #define PDFSYNCERR_NORECORD_IN_SOURCEFILE    5 // there is not any record declaration for that particular source file
 #define PDFSYNCERR_NORECORD_FOR_THATLINE     6 // no record found for the requested line
+#define PDFSYNCERR_SYNCPOINT_FOR_LINE        7 // there is no synchronization point for the given source file line number
 
 typedef struct {
     TCHAR filename[_MAX_PATH]; // source file name
@@ -164,7 +165,8 @@ public:
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(PCTSTR srcfilename, UINT line, UINT col = -1);
+    UINT source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, size_t *rec);
+    FILE *opensyncfile();
 
 private:
     vector<size_t> pdfsheet_index; // pdfsheet_index[i] contains the index in pline_sections of the first pline section for that sheet
@@ -175,3 +177,12 @@ private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };
 
+
+#define PDFSYNC_DDE_SERVICE_A         "SUMATRA"
+#define PDFSYNC_DDE_SERVICE_W         L"SUMATRA"
+#define PDFSYNC_DDE_TOPIC_A           "control"
+#define PDFSYNC_DDE_TOPIC_W           L"control"
+
+LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
+LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);
+LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam);
