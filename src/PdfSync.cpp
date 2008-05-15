@@ -526,10 +526,11 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 UINT page, x, y;
                 UINT ret = win->pdfsync->source_to_pdf(srcfile,line,col, &page, &x, &y);
                 if( (ret == PDFSYNCERR_SUCCESS) && (win->dm) ) {
-                    win->dm->goToPage(page, y);
+                    PdfPageInfo * pageInfo = win->dm->getPageInfo(page);                    
+                    win->dm->goToPage(page, pageInfo->pageDy-(double)y);
                     win->fwdsearchmarkLoc.set(x,y);
                     win->fwdsearchmarkPage = page;
-                    win->showForwardSearchMark = true;
+                    win->showForwardSearchMark = true; 
                 }
             }
             ack.fAck = 1;

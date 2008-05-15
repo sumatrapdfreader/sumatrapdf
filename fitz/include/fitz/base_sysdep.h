@@ -27,7 +27,9 @@
 #endif
 
 #ifdef WIN32
+#if _MSC_VER < 1500
 #	define vsnprintf _vsnprintf
+#endif
 #	include <io.h>
 #else
 #	include <unistd.h>
