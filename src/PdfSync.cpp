@@ -317,8 +317,12 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
 
 // Find the first record corresponding to the given source file, line number (and optionally column number)
 // (at the moment the column parameter is ignored)
-// Return the result in *rec.
+//
+// The index of the record is returned in *rec.
 // return PDFSYNCERR_SUCCESS if a matching record was found
+//
+// If there is no record for that line, the record corresponding to the nearest line is selected 
+// (within a range of EPSILON_LINE)
 UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, size_t *rec)
 {
     // find the source file entry
@@ -339,6 +343,8 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
 
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
+    *rec = -1;
+    UINT min_distance = -1;
     for(size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
         record_section &sec = this->record_sections[isec];
         // does this section belong to the desired file?
@@ -349,9 +355,14 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
             while ((c = fgetc(fp))=='l' && !feof(fp)) {
                 UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
                 fscanf_s(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
-                if (lineNumber == line) {
+                UINT d = abs((int)lineNumber-(int)line);
+                if (d==0) {
                     *rec = recordNumber;
                     return PDFSYNCERR_SUCCESS;
+                }
+                else if (d<EPSILON_LINE && d<min_distance) {
+                    min_distance = d;
+                    *rec = recordNumber;
                 }
             }
 #if _DEBUG
@@ -361,8 +372,7 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
 #endif
         }
     }
-    
-    return PDFSYNCERR_NORECORD_FOR_THATLINE;
+    return (*rec ==-1) ? PDFSYNCERR_NORECORD_FOR_THATLINE : PDFSYNCERR_SUCCESS;
 }
 
 UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
@@ -377,6 +387,7 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
     size_t record;
     UINT ret = source_to_record(fp, srcfilename, line, col, &record);
     if (ret!=PDFSYNCERR_SUCCESS) {
+        DBG_OUT("source->pdf: %s:%u -> no record found, error:%u\n", srcfilename, line, ret);
         fclose(fp);
         return ret;
     }
@@ -516,10 +527,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 UINT ret = win->pdfsync->source_to_pdf(srcfile,line,col, &page, &x, &y);
                 if( (ret == PDFSYNCERR_SUCCESS) && (win->dm) ) {
                     win->dm->goToPage(page, y);
-                    win->fwdsearchmarkRect.x = x-MARK_SIZE/2;
-                    win->fwdsearchmarkRect.y = y-MARK_SIZE/2;
-                    win->fwdsearchmarkRect.dx = MARK_SIZE;
-                    win->fwdsearchmarkRect.dy = MARK_SIZE;
+                    win->fwdsearchmarkLoc.set(x,y);
                     win->fwdsearchmarkPage = page;
                     win->showForwardSearchMark = true;
                 }

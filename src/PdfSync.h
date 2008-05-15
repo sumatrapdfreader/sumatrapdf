@@ -83,6 +83,11 @@ public:
 
 #endif
 
+// size of the mark highlighting the location calculated by forward-search
+#define MARK_SIZE                            10 
+
+// maximum error in the source file line number when doing forward-search
+#define EPSILON_LINE                         5  
 
 // Minimal error distance^2 between a point clicked by the user and a PDF mark
 #define PDFSYNC_EPSILON_SQUARE               800
@@ -90,11 +95,13 @@ public:
 // Minimal vertical distance
 #define PDFSYNC_EPSILON_Y                    20
 
+//////
+// Error codes returned by the synchronization functions
+
 #define PDFSYNCERR_SUCCESS                   0 // the synchronization succeeded
 #define PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED 1 // the sync file cannot be opened
 #define PDFSYNCERR_INVALID_PAGE_NUMBER       2 // the given page number does not exist in the sync file
 #define PDFSYNCERR_NO_SYNC_AT_LOCATION       3 // no synchronization found at this location
-
 #define PDFSYNCERR_UNKNOWN_SOURCEFILE        4 // the source file is not present in the sync file
 #define PDFSYNCERR_NORECORD_IN_SOURCEFILE    5 // there is not any record declaration for that particular source file
 #define PDFSYNCERR_NORECORD_FOR_THATLINE     6 // no record found for the requested line
@@ -177,8 +184,6 @@ private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };
 
-
-#define MARK_SIZE                   10 // size of the mark showing the location calculated by forward-search
 
 #define PDFSYNC_DDE_SERVICE_A         "SUMATRA"
 #define PDFSYNC_DDE_SERVICE_W         L"SUMATRA"

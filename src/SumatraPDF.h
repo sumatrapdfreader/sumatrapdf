@@ -117,7 +117,7 @@ public:
         mouseAction = MA_IDLE;
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
-        memzero(&fwdsearchmarkRect, sizeof(fwdsearchmarkRect));        
+        memzero(&fwdsearchmarkLoc, sizeof(fwdsearchmarkLoc));
         needrefresh=false;
         pdfsync=NULL;
     }
@@ -185,9 +185,9 @@ public:
     /* when doing a forward search, the result location is highlighted with
      * a rectangular mark in the document. These variables indicate the position of the mark
      * and whether it is visible or not. */
-    bool            showForwardSearchMark; // mark visible or not
-    RectD           fwdsearchmarkRect; // location of the mark in the user coordinates
-    int             fwdsearchmarkPage; // page 
+    bool            showForwardSearchMark; // is the mark visible?
+    PointD          fwdsearchmarkLoc;      // location of the mark in user coordinates
+    int             fwdsearchmarkPage;     // page 
 
     bool            showSelection;
 

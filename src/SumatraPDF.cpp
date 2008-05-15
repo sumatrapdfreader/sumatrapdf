@@ -2440,13 +2440,29 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
 }
 
 static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
-    const DWORD selectionColorBlue = 0xffFF0000;
-    if(!win->dm->pageVisible(win->fwdsearchmarkPage))
+    PdfPageInfo *pageInfo = win->dm->getPageInfo(win->fwdsearchmarkPage);
+    if (!pageInfo->visible)
         return;
+    
+    const DWORD selectionColorBlue = 0xff0000FF;
+    const DWORD selectionColorRed = 0xffFF0000;
 
     RectD recD;
     RectI recI;
-    RectD_Copy (&recD, &win->fwdsearchmarkRect);
+    // draw the mark
+    recD.x = win->fwdsearchmarkLoc.x-MARK_SIZE/2;
+    recD.y = win->fwdsearchmarkLoc.y-MARK_SIZE/2;
+    recD.dx = MARK_SIZE;
+    recD.dy = MARK_SIZE;
+    win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
+    RectI_FromRectD (&recI, &recD);
+    PaintTransparentRectangle(win, hdc, &recI, selectionColorRed);
+
+    // draw the line
+    recD.x = 0;
+    recD.y = win->fwdsearchmarkLoc.y-MARK_SIZE;
+    recD.dx = pageInfo->pageDx;
+    recD.dy = 2*MARK_SIZE;
     win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
     RectI_FromRectD (&recI, &recD);
     PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue);
