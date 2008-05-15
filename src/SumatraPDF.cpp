@@ -1873,7 +1873,7 @@ void on_file_change(PTSTR filename, LPARAM param)
     ((WindowInfo *) param)->pdfsync->discard_index();
 }
 
-static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
+WindowInfo* LoadPdf(const char *fileName, bool showWin)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -1913,9 +1913,9 @@ static WindowInfo* LoadPdf(const char *fileName, bool showWin=true)
             RebuildProgramMenus();
         }
         return win;
-   }
+    }
 
-        return NULL;
+    return NULL;
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
@@ -2368,13 +2368,12 @@ static void DrawCenteredText(HDC hdc, RECT *r, char *txt)
     DrawText(hdc, txt, strlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
-static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect) {
+static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor) {
     HBITMAP hbitmap;       // bitmap handle
     BITMAPINFO bmi;        // bitmap header
     VOID *pvBits;          // pointer to DIB section
     BLENDFUNCTION bf;      // structure for alpha blending
     HDC rectDC = CreateCompatibleDC(hdc);
-    const DWORD selectionColorYellow = 0xfff5fc0c;
     const DWORD selectionColorBlack = 0xff000000;
     const int margin = 1;
 
@@ -2397,7 +2396,7 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect) {
                     || y < margin || y > rect->dy - margin - 1)
                 ((UINT32 *)pvBits)[x + y * rect->dx] = selectionColorBlack;
             else
-                ((UINT32 *)pvBits)[x + y * rect->dx] = selectionColorYellow;
+                ((UINT32 *)pvBits)[x + y * rect->dx] = selectionColor;
         }
     }
     bf.BlendOp = AC_SRC_OVER;
@@ -2413,6 +2412,7 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect) {
 }
 
 static void PaintSelection (WindowInfo *win, HDC hdc) {
+    const DWORD selectionColorYellow = 0xfff5fc0c;
     if (win->mouseAction == MA_SELECTING) {
         // during selecting
         RectI selRect;
@@ -2425,7 +2425,7 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
         selRect.dy = abs (win->selectionRect.dy);
 
         if (selRect.dx != 0 && selRect.dy != 0)
-            PaintTransparentRectangle (win, hdc, &selRect);
+            PaintTransparentRectangle (win, hdc, &selRect, selectionColorYellow);
     } else {
         // after selection is done
         SelectionOnPage *selOnPage = win->selectionOnPage;
@@ -2433,10 +2433,23 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
         RecalcSelectionPosition(win);
         while (selOnPage != NULL) {
             if (selOnPage->selectionCanvas.dx != 0 && selOnPage->selectionCanvas.dy != 0)
-                PaintTransparentRectangle(win, hdc, &selOnPage->selectionCanvas);
+                PaintTransparentRectangle(win, hdc, &selOnPage->selectionCanvas, selectionColorYellow);
             selOnPage = selOnPage->next;
         }
     }
+}
+
+static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
+    const DWORD selectionColorBlue = 0xffFF0000;
+    if(!win->dm->pageVisible(win->fwdsearchmarkPage))
+        return;
+
+    RectD recD;
+    RectI recI;
+    RectD_Copy (&recD, &win->fwdsearchmarkRect);
+    win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
+    RectI_FromRectD (&recI, &recD);
+    PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue);
 }
 
 static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
@@ -2581,6 +2594,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
     if (win->showSelection)
         PaintSelection(win, hdc);
+    
+    if (win->showForwardSearchMark)
+        PaintForwardSearchMark(win, hdc);
 
     DBG_OUT("\n");
     if (!gDebugShowLinks)

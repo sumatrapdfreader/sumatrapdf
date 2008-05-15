@@ -178,6 +178,8 @@ private:
 };
 
 
+#define MARK_SIZE                   10 // size of the mark showing the location calculated by forward-search
+
 #define PDFSYNC_DDE_SERVICE_A         "SUMATRA"
 #define PDFSYNC_DDE_SERVICE_W         L"SUMATRA"
 #define PDFSYNC_DDE_TOPIC_A           "control"

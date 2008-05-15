@@ -397,6 +397,7 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
                     *page = sheet;
                     *x = SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
                     *y = SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
+                    DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n", srcfilename, line, record, sheet, *x, *y);
                     fclose(fp);
                     return PDFSYNCERR_SUCCESS;
                 }
@@ -500,18 +501,27 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         if (ret==EOF||ret<4)
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
         else {
-            // Execute the command:
-            // check if the PDF has already been opened
+            // Execute the command.
+
+            // check if the PDF is already opened
             WindowInfo *win = WindowInfoList_Find(pdffile);
-            if (win) {
+            
+            // if not then open it
+            if (!win || WS_SHOWING_PDF != win->state)
+                win = LoadPdf(pdffile);
+            
+            if (win && WS_SHOWING_PDF == win->state) {
+                _ASSERT(win->dm);
                 UINT page, x, y;
                 UINT ret = win->pdfsync->source_to_pdf(srcfile,line,col, &page, &x, &y);
-                if( ret == PDFSYNCERR_SUCCESS ) {
-                    _ASSERT(WS_SHOWING_PDF == win->state);
-                    _ASSERT(win->dm);
-                    if ((WS_SHOWING_PDF == win->state) && (win->dm)) {
-                        win->dm->goToPage(page, y);
-                    }
+                if( (ret == PDFSYNCERR_SUCCESS) && (win->dm) ) {
+                    win->dm->goToPage(page, y);
+                    win->fwdsearchmarkRect.x = x-MARK_SIZE/2;
+                    win->fwdsearchmarkRect.y = y-MARK_SIZE/2;
+                    win->fwdsearchmarkRect.dx = MARK_SIZE;
+                    win->fwdsearchmarkRect.dy = MARK_SIZE;
+                    win->fwdsearchmarkPage = page;
+                    win->showForwardSearchMark = true;
                 }
             }
             ack.fAck = 1;

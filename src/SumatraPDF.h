@@ -113,9 +113,11 @@ public:
         bFindStatusVisible = false;
         documentBlocked = false;
         showSelection = false;
+        showForwardSearchMark = false;
         mouseAction = MA_IDLE;
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
+        memzero(&fwdsearchmarkRect, sizeof(fwdsearchmarkRect));        
         needrefresh=false;
         pdfsync=NULL;
     }
@@ -180,6 +182,13 @@ public:
 
     AnimState       animState;
 
+    /* when doing a forward search, the result location is highlighted with
+     * a rectangular mark in the document. These variables indicate the position of the mark
+     * and whether it is visible or not. */
+    bool            showForwardSearchMark; // mark visible or not
+    RectD           fwdsearchmarkRect; // location of the mark in the user coordinates
+    int             fwdsearchmarkPage; // page 
+
     bool            showSelection;
 
     /* selection rectangle in screen coordinates
@@ -217,6 +226,10 @@ private:
     RECT m_frameRc;
     RECT m_canvasRc;
 };
+
+WindowInfo* WindowInfoList_Find(LPTSTR file);
+WindowInfo* LoadPdf(const char *fileName, bool showWin=true);
+
 #endif
 
 #define SUMATRAPDF_API __declspec(dllexport)
@@ -242,5 +255,3 @@ extern "C" {
     SUMATRAPDF_API WindowInfo* Sumatra_Init(HWND parentHandle);
     SUMATRAPDF_API void Sumatra_Exit();
 }
-
-WindowInfo* WindowInfoList_Find(LPTSTR file);
