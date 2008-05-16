@@ -315,15 +315,18 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
     return PDFSYNCERR_SUCCESS;
 }
 
-// Find the first record corresponding to the given source file, line number (and optionally column number)
+// Find a record corresponding to the given source file, line number and optionally column number.
 // (at the moment the column parameter is ignored)
 //
-// The index of the record is returned in *rec.
-// return PDFSYNCERR_SUCCESS if a matching record was found
+// If there are several *consecutively declared* records for the same line then they are all returned.
+// The list of records is added to the vector 'records' 
 //
 // If there is no record for that line, the record corresponding to the nearest line is selected 
 // (within a range of EPSILON_LINE)
-UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, size_t *rec)
+//
+// The function returns PDFSYNCERR_SUCCESS if a matching record was found.
+//
+UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
 {
     // find the source file entry
     size_t isrc=-1;
@@ -343,26 +346,26 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
 
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
-    *rec = -1;
-    UINT min_distance = -1;
+    UINT min_distance = -1, // distance to the closest record
+         closestrec = -1, // closest record
+         closestrecline = -1; // closest record-line
+    int c;
     for(size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
         record_section &sec = this->record_sections[isec];
         // does this section belong to the desired file?
         if (sec.srcfile == isrc) {
             // scan the 'l' declarations of the section to find the specified line and column
             fsetpos(fp, &sec.startpos);
-            int c;
             while ((c = fgetc(fp))=='l' && !feof(fp)) {
                 UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
                 fscanf_s(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
                 UINT d = abs((int)lineNumber-(int)line);
-                if (d==0) {
-                    *rec = recordNumber;
-                    return PDFSYNCERR_SUCCESS;
-                }
-                else if (d<EPSILON_LINE && d<min_distance) {
+                if (d<EPSILON_LINE && d<min_distance) {
                     min_distance = d;
-                    *rec = recordNumber;
+                    closestrec = recordNumber;
+                    closestrecline = lineNumber;
+                    if (d==0)
+                        goto read_linerecords; // We have found a record for the requested line!
                 }
             }
 #if _DEBUG
@@ -372,7 +375,21 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
 #endif
         }
     }
-    return (*rec ==-1) ? PDFSYNCERR_NORECORD_FOR_THATLINE : PDFSYNCERR_SUCCESS;
+    if (closestrec ==-1)
+        return PDFSYNCERR_NORECORD_FOR_THATLINE;
+
+read_linerecords:
+    // we read all the consecutive records until we reach a record belonging to another line
+    UINT recordNumber = closestrec, columnNumber, lineNumber;
+    do {
+        records.push_back(recordNumber);
+        columnNumber = 0;
+        lineNumber = 0;
+        recordNumber = 0;
+        fscanf_s(fp, "%c %u %u %u\n", &c, 1, &recordNumber, &lineNumber, &columnNumber);
+    } while (c =='l' && !feof(fp) && (lineNumber==closestrecline) );
+    return PDFSYNCERR_SUCCESS;
+
 }
 
 UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
@@ -384,47 +401,52 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
     if (!fp)
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
-    size_t record;
-    UINT ret = source_to_record(fp, srcfilename, line, col, &record);
-    if (ret!=PDFSYNCERR_SUCCESS) {
+    vector<size_t> found_records;
+    UINT ret = source_to_record(fp, srcfilename, line, col, found_records);
+    if (ret!=PDFSYNCERR_SUCCESS || found_records.size() == 0 ) {
         DBG_OUT("source->pdf: %s:%u -> no record found, error:%u\n", srcfilename, line, ret);
         fclose(fp);
         return ret;
     }
 
-    // a record has been found: find the corresponding pages and position in the PDF  
-    for(size_t sheet=0;sheet<this->pdfsheet_index.size();sheet++) {
-        if (this->pdfsheet_index[sheet]!=-1) {
-            fsetpos(fp, &this->pline_sections[this->pdfsheet_index[sheet]].startpos);
-            int c;
-            while ((c = fgetc(fp))=='p' && !feof(fp)) {
-                // skip the optional star
-                if (fgetc(fp)=='*')
-                    fgetc(fp);
-                // read the location
-                UINT recordNumber = 0, xPosition = 0, yPosition = 0;
-                fscanf_s(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
-                if (recordNumber == record) {
-                    *page = sheet;
-                    *x = SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
-                    *y = SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
-                    DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n", srcfilename, line, record, sheet, *x, *y);
-                    fclose(fp);
-                    return PDFSYNCERR_SUCCESS;
+    // records have been found for the desired source position:
+    // we now find the pages and position in the PDF corresponding to the first record in the
+    // list of record found
+    for(size_t irecord=0;irecord<found_records.size();irecord++) {
+        size_t record = found_records[irecord];
+        for(size_t sheet=0;sheet<this->pdfsheet_index.size();sheet++) {
+            if (this->pdfsheet_index[sheet]!=-1) {
+                fsetpos(fp, &this->pline_sections[this->pdfsheet_index[sheet]].startpos);
+                int c;
+                while ((c = fgetc(fp))=='p' && !feof(fp)) {
+                    // skip the optional star
+                    if (fgetc(fp)=='*')
+                        fgetc(fp);
+                    // read the location
+                    UINT recordNumber = 0, xPosition = 0, yPosition = 0;
+                    fscanf_s(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
+                    if (recordNumber == record) {
+                        *page = sheet;
+                        *x = SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
+                        *y = SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
+                        DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n", srcfilename, line, record, sheet, *x, *y);
+                        fclose(fp);
+                        return PDFSYNCERR_SUCCESS;
+                    }
                 }
-            }
-#if _DEBUG
-            fpos_t linepos;
-            fgetpos(fp, &linepos);
-            _ASSERT(feof(fp) || (linepos-1==this->pline_sections[this->pdfsheet_index[sheet]].endpos));
-#endif
+    #if _DEBUG
+                fpos_t linepos;
+                fgetpos(fp, &linepos);
+                _ASSERT(feof(fp) || (linepos-1==this->pline_sections[this->pdfsheet_index[sheet]].endpos));
+    #endif
 
+            }
         }
     }
 
     // the record does not correspond to any point in the PDF: this is possible...  
     fclose(fp);
-    return PDFSYNCERR_SYNCPOINT_FOR_LINE;
+    return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
 
@@ -459,6 +481,7 @@ UINT Pdfsync::prepare_commandline(PCTSTR pattern, PCTSTR filename, UINT line, UI
     return 1;
 }
 
+///// DDE commands handling
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -524,14 +547,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (win && WS_SHOWING_PDF == win->state) {
                 _ASSERT(win->dm);
                 UINT page, x, y;
-                UINT ret = win->pdfsync->source_to_pdf(srcfile,line,col, &page, &x, &y);
-                if( (ret == PDFSYNCERR_SUCCESS) && (win->dm) ) {
-                    PdfPageInfo * pageInfo = win->dm->getPageInfo(page);                    
-                    win->dm->goToPage(page, pageInfo->pageDy-(double)y);
-                    win->fwdsearchmarkLoc.set(x,y);
-                    win->fwdsearchmarkPage = page;
-                    win->showForwardSearchMark = true; 
-                }
+                UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
+                WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
             }
             ack.fAck = 1;
         }

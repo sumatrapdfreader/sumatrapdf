@@ -120,6 +120,8 @@ public:
         memzero(&fwdsearchmarkLoc, sizeof(fwdsearchmarkLoc));
         needrefresh=false;
         pdfsync=NULL;
+        hFindStatusThread = NULL;
+        hvtStopFindStatusThread = NULL;
     }
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
@@ -155,7 +157,9 @@ public:
     BITMAPINFO *    dibInfo;
 
     int             nFindPercent;
-    bool            bFindStatusVisible;
+    bool            bFindStatusVisible;    
+    HANDLE          hFindStatusThread; // handle of the thread showing the status of the search result
+    HANDLE          hvtStopFindStatusThread; // event raised to tell the findstatus thread to stop
 
     /* bitmap and hdc for (optional) double-buffering */
     HDC             hdcToDraw;
@@ -229,6 +233,7 @@ private:
 
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const char *fileName, bool showWin=true);
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, PCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y);
 
 #endif
 

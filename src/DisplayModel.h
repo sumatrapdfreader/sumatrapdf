@@ -281,9 +281,9 @@ public:
 
     int             getPageNoByPoint (double x, double y);
 
-protected:
     virtual void    MapResultRectToScreen(PdfSearchResult *rect) = 0;
 
+protected:
 
     void            startRenderingPage(int pageNo);
 

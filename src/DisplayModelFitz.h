@@ -20,7 +20,6 @@ public:
     virtual void    cvtUserToScreen(int pageNo, double *x, double *y);
     virtual void    cvtScreenToUser(int *pageNo ,double *x, double *y);
 
-protected:
     virtual void MapResultRectToScreen(PdfSearchResult *rect);
 };
 

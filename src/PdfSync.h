@@ -97,15 +97,15 @@ public:
 
 //////
 // Error codes returned by the synchronization functions
-
-#define PDFSYNCERR_SUCCESS                   0 // the synchronization succeeded
-#define PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED 1 // the sync file cannot be opened
-#define PDFSYNCERR_INVALID_PAGE_NUMBER       2 // the given page number does not exist in the sync file
-#define PDFSYNCERR_NO_SYNC_AT_LOCATION       3 // no synchronization found at this location
-#define PDFSYNCERR_UNKNOWN_SOURCEFILE        4 // the source file is not present in the sync file
-#define PDFSYNCERR_NORECORD_IN_SOURCEFILE    5 // there is not any record declaration for that particular source file
-#define PDFSYNCERR_NORECORD_FOR_THATLINE     6 // no record found for the requested line
-#define PDFSYNCERR_SYNCPOINT_FOR_LINE        7 // there is no synchronization point for the given source file line number
+enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
+        PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED, // the sync file cannot be opened
+        PDFSYNCERR_INVALID_PAGE_NUMBER,       // the given page number does not exist in the sync file
+        PDFSYNCERR_NO_SYNC_AT_LOCATION,       // no synchronization found at this location
+        PDFSYNCERR_UNKNOWN_SOURCEFILE,        // the source file is not present in the sync file
+        PDFSYNCERR_NORECORD_IN_SOURCEFILE,    // there is not any record declaration for that particular source file
+        PDFSYNCERR_NORECORD_FOR_THATLINE,     // no record found for the requested line
+        PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD,// a record is found for the given source line but there is not point in the PDF that corresponds to it
+};
 
 typedef struct {
     TCHAR filename[_MAX_PATH]; // source file name
@@ -172,7 +172,7 @@ public:
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, size_t *rec);
+    UINT source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records);
     FILE *opensyncfile();
 
 private:

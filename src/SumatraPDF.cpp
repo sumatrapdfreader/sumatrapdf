@@ -130,6 +130,9 @@ static BOOL             gDebugShowLinks = FALSE;
 #define SMOOTHSCROLL_DELAY_IN_MS    20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
+#define FIND_STATUS_WIDTH       200 // Default width for the find status window
+#define FIND_STATUS_MARGIN      8
+
 /* A special "pointer" vlaue indicating that we tried to render this bitmap
    but couldn't (e.g. due to lack of memory) */
 #define BITMAP_CANNOT_RENDER (RenderedBitmap*)NULL
@@ -1291,6 +1294,14 @@ static void WindowInfo_Delete(WindowInfo *win)
       delete win->pdfsync;
       win->pdfsync = NULL;
     }
+    if(win->hvtStopFindStatusThread) {
+        CloseHandle(win->hvtStopFindStatusThread);
+        win->hvtStopFindStatusThread = NULL;
+    }
+    if(win->hFindStatusThread) {
+        CloseHandle(win->hFindStatusThread);
+        win->hFindStatusThread = NULL;
+    }
     win->dm = NULL;
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
@@ -1650,6 +1661,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     WinResizeClientArea(win->hwndFrame, winDx, winDy);
 
     //SetCanvasSizeToDxDy(win, winDx, winDy);
+
+    win->hvtStopFindStatusThread = CreateEvent(NULL, TRUE, FALSE, NULL);
     return win;
 }
 
@@ -4203,10 +4216,103 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     triggerRepaintDisplayNow(win);
 }
 
+
+
+// Show a message for 3000 millisecond at most
+DWORD WINAPI ShowMessageThread(WindowInfo *win)
+{
+    ShowWindowAsync (win->hwndFindStatus, SW_SHOW);
+    WaitForSingleObject(win->hvtStopFindStatusThread, 3000);
+    ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
+    return 0;
+}
+
+// Display the message 'message' asynchronously
+// If resize = true then the window width is adjusted to the length of the text
+static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize)
+{
+    SetWindowTextW(win->hwndFindStatus, message);
+    if (resize) {
+        // compute the length of the message
+        RECT rc = {0,0,FIND_STATUS_WIDTH,0};
+        HDC hdc = GetDC(win->hwndFindStatus);
+        HGDIOBJ oldFont = SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
+        DrawTextW(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE );
+        SelectObject(hdc, oldFont);
+        ReleaseDC(win->hwndFindStatus, hdc);
+        rc.right += 15;
+        rc.bottom += 12;
+        AdjustWindowRectEx(&rc, GetWindowLong(win->hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win->hwndFindStatus, GWL_EXSTYLE));
+        MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right-rc.left, rc.bottom-rc.top, FALSE);
+    }
+
+    // if a thread has previously been started then make sure it has ended
+    if (win->hFindStatusThread) {
+        SetEvent(win->hvtStopFindStatusThread);
+        WaitForSingleObject(win->hFindStatusThread, INFINITE);
+        CloseHandle(win->hFindStatusThread);
+    }
+    ResetEvent(win->hvtStopFindStatusThread);
+    win->hFindStatusThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowMessageThread, (void*)win, 0, 0);
+}
+
+// hide the message
+static void WindowInfo_HideMessage(WindowInfo *win)
+{
+    if (win->hFindStatusThread) {
+        SetEvent(win->hFindStatusThread);
+        CloseHandle(win->hFindStatusThread);
+        win->hFindStatusThread = NULL;
+        ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
+    }
+}
+
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, PCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y)
+{
+    if (ret == PDFSYNCERR_SUCCESS) {
+        WindowInfo_HideMessage(win);
+
+        // remember the position of the search result for drawing the rect later on
+        win->fwdsearchmarkLoc.set(x,y);
+        win->fwdsearchmarkPage = page;
+        win->showForwardSearchMark = true; 
+
+        // Scroll to show the rectangle highlighting the forward search result
+        PdfSearchResult res;
+        res.page = page;
+        res.left = x-MARK_SIZE/2;
+        res.top = y-MARK_SIZE/2;
+        res.right = res.left+MARK_SIZE;
+        res.bottom = res.top+MARK_SIZE;
+        win->dm->goToPage(page, 0);
+        win->dm->MapResultRectToScreen(&res);
+    }
+    else {
+        wchar_t buf[_MAX_PATH];    
+        if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
+            swprintf_s(buf, _countof(buf), L"Snchronization file cannot be opened");
+        else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
+            swprintf_s(buf, _countof(buf), L"Page number %u inexistant", page);
+        else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
+            swprintf(buf, _countof(buf), L"No synchronization found at this location");
+        else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
+            swprintf(buf, _countof(buf), L"Unknown source file (%S)", srcfilename);
+        else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
+            swprintf(buf, _countof(buf), L"Source file %S has no synchronization point", srcfilename);
+        else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
+            swprintf(buf, _countof(buf), L"No result found around line %u in file %S", line, srcfilename);
+        else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) 
+            swprintf(buf, _countof(buf), L"No result found around line %u in file %S", line, srcfilename);
+
+        WindowInfo_ShowMessage_Asynch(win, buf, true);
+    }
+}
+
 static void WindowInfo_ShowFindStatus(WindowInfo *win)
 {
     LPARAM disable = (LPARAM)MAKELONG(0,0);
 
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
     ShowWindow(win->hwndFindStatus, SW_SHOW);
     win->bFindStatusVisible = true;
 
@@ -4220,30 +4326,28 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
 {
     LPARAM enable = (LPARAM)MAKELONG(1,0);
 
-    if (!win->dm->bFoundText)
-        SetWindowTextW(win->hwndFindStatus, L"No matches were found");
-    else {
-        wchar_t buf[256];
-        swprintf(buf, L"Found text at page %d", win->dm->currentPageNo());
-        SetWindowTextW(win->hwndFindStatus, buf);
-    }
     EnableWindow(win->hwndFindBox, true);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
-    Sleep(3000);
-
-    ShowWindow(win->hwndFindStatus, SW_HIDE);
-    win->bFindStatusVisible = false;
+    if (!win->dm->bFoundText)
+        WindowInfo_ShowMessage_Asynch(win, L"No matches were found", false);
+    else {
+        wchar_t buf[256];
+        swprintf(buf, L"Found text at page %d", win->dm->currentPageNo());
+        WindowInfo_ShowMessage_Asynch(win, buf, false);
+    }    
 }
+
+
 
 static void OnMenuFindNext(WindowInfo *win)
 {
     PdfSearchResult *rect = win->dm->Find();
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
-    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WindowInfo_HideFindStatus, (void*)win, 0, 0);
+    WindowInfo_HideFindStatus(win);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
@@ -4251,7 +4355,7 @@ static void OnMenuFindPrev(WindowInfo *win)
     PdfSearchResult *rect = win->dm->Find(FIND_BACKWARD);
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
-    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WindowInfo_HideFindStatus, (void*)win, 0, 0);
+    WindowInfo_HideFindStatus(win);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -4528,7 +4632,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             }
             if (rect)
                 WindowInfo_ShowSearchResult(win, rect);
-            CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WindowInfo_HideFindStatus, (void*)win, 0, 0);
+            WindowInfo_HideFindStatus(win);
 
             Edit_SetModify(hwnd, FALSE);
             return 1;
@@ -4567,7 +4671,6 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
 }
 
-#define FIND_STATUS_WIDTH 200
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
@@ -4642,7 +4745,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     MoveWindow(win->hwndFindText, FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
     MoveWindow(win->hwndFindBox, FIND_TXT_POS_X + size.cx, 1, FIND_BOX_WIDTH, 20, false);
-    MoveWindow(win->hwndFindStatus, 10, 10, FIND_STATUS_WIDTH, 36, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
