@@ -165,7 +165,10 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	fz_obj *shd;
 
 	if ((*shadep = pdf_finditem(xref->store, PDF_KSHADE, ref)))
+	{
+		fz_keepshade(*shadep);
 		return nil;
+	}
 
 	/*
 	 * Type 2 pattern dictionary
