@@ -72,10 +72,7 @@ gsave(pdf_csi *csi)
 
 	csi->gtop ++;
 
-	if (csi->gstate[csi->gtop].fill.cs)
-		fz_keepcolorspace(csi->gstate[csi->gtop].fill.cs);
-	if (csi->gstate[csi->gtop].stroke.cs)
-		fz_keepcolorspace(csi->gstate[csi->gtop].stroke.cs);
+	pdf_gstatecopied(&csi->gstate[csi->gtop]);
 
 	return nil;
 }
@@ -86,10 +83,7 @@ grestore(pdf_csi *csi)
 	if (csi->gtop == 0)
 		return fz_throw("gstate underflow in content stream");
 
-	if (csi->gstate[csi->gtop].fill.cs)
-		fz_dropcolorspace(csi->gstate[csi->gtop].fill.cs);
-	if (csi->gstate[csi->gtop].stroke.cs)
-		fz_dropcolorspace(csi->gstate[csi->gtop].stroke.cs);
+	pdf_gstatedestroy(&csi->gstate[csi->gtop]);
 
 	csi->gtop --;
 
@@ -102,10 +96,7 @@ pdf_dropcsi(pdf_csi *csi)
 	while (csi->gtop)
 		grestore(csi);
 
-	if (csi->gstate[csi->gtop].fill.cs)
-		fz_dropcolorspace(csi->gstate[csi->gtop].fill.cs);
-	if (csi->gstate[csi->gtop].stroke.cs)
-		fz_dropcolorspace(csi->gstate[csi->gtop].stroke.cs);
+	pdf_gstatedestroy(&csi->gstate[csi->gtop]);
 
 	if (csi->path) fz_dropnode((fz_node*)csi->path);
 	if (csi->clip) fz_dropnode((fz_node*)csi->clip);

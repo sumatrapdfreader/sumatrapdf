@@ -38,6 +38,43 @@ pdf_initgstate(pdf_gstate *gs)
 	gs->head = nil;
 }
 
+/* update the gstate object after it has been copied */
+void
+pdf_gstatecopied(pdf_gstate *gs)
+{
+	if (gs->fill.cs)
+		fz_keepcolorspace(gs->fill.cs);
+	if (gs->stroke.cs)
+		fz_keepcolorspace(gs->stroke.cs);
+	
+	if (gs->fill.pattern)
+		pdf_keeppattern(gs->fill.pattern);
+	if (gs->fill.shade)
+		fz_keepshade(gs->fill.shade);
+	if (gs->stroke.pattern)
+		pdf_keeppattern(gs->stroke.pattern);
+	if (gs->stroke.shade)
+		fz_keepshade(gs->stroke.shade);
+}
+
+void
+pdf_gstatedestroy(pdf_gstate *gs)
+{
+	if (gs->fill.cs)
+		fz_dropcolorspace(gs->fill.cs);
+	if (gs->stroke.cs)
+		fz_dropcolorspace(gs->stroke.cs);
+	
+	if (gs->fill.pattern)
+		pdf_droppattern(gs->fill.pattern);
+	if (gs->fill.shade)
+		fz_dropshade(gs->fill.shade);
+	if (gs->stroke.pattern)
+		pdf_droppattern(gs->stroke.pattern);
+	if (gs->stroke.shade)
+		fz_dropshade(gs->stroke.shade);
+}
+
 fz_error *
 pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs)
 {

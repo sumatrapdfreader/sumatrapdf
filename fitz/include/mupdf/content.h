@@ -86,6 +86,9 @@ struct pdf_csi_s
 
 /* build.c */
 void pdf_initgstate(pdf_gstate *gs);
+void pdf_gstatecopied(pdf_gstate *gs);
+void pdf_gstatedestroy(pdf_gstate *gs);
+
 fz_error *pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs);
 fz_error *pdf_setcolor(pdf_csi *csi, int what, float *v);
 fz_error *pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v);
