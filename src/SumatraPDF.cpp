@@ -28,6 +28,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <direct.h> /* for _mkdir() */
+#include <tchar.h>
 
 #include <shellapi.h>
 #include <shlobj.h>
@@ -375,7 +376,10 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
-    _tcscpy_s(gGlobalPrefs.m_inversesearch_cmdline, DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+    
+    _sntprintf(gGlobalPrefs.m_inversesearch_cmdline,
+        dimof(gGlobalPrefs.m_inversesearch_cmdline),
+        "%s", DEFAULT_INVERSE_SEARCH_COMMANDLINE);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -1192,7 +1196,7 @@ Exit:
 }
 
 static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
-    PCTSTR fname = win->watcher.filepath();
+    LPCTSTR fname = win->watcher.filepath();
     DisplayState ds;
     DisplayState_Init(&ds);
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
@@ -1905,7 +1909,7 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
 // define THREAD_BASED_FILEWATCH in order to use the thread-based implementation of 
 // file change detection.
     TCHAR fullpath[_MAX_PATH];
-    GetFullPathName(fileName, _countof(fullpath), fullpath, NULL);
+    GetFullPathName(fileName, dimof(fullpath), fullpath, NULL);
 #ifdef THREAD_BASED_FILEWATCH
     if (!win->watcher.IsThreadRunning())
         win->watcher.StartWatchThread(fullpath, &on_file_change, (LPARAM)win);
@@ -3042,14 +3046,14 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
 
     UINT line, col;
     char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];
-    UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcfilename,_countof(srcfilename),&line,&col); // record 101
+    UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcfilename,dimof(srcfilename),&line,&col); // record 101
     if (err!=PDFSYNCERR_SUCCESS)
         DBG_OUT("cannot sync from pdf to source!\n");
     else {
-        sprintf_s(srcfilepath, _countof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, _countof(srcfilename));
+        _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
         char cmdline[_MAX_PATH];
         if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
-          srcfilepath, line, col, cmdline, _countof(cmdline)) ) {
+          srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
             //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
             STARTUPINFO si;
             PROCESS_INFORMATION pi;
@@ -4267,7 +4271,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
     }
 }
 
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, PCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y)
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y)
 {
     if (ret == PDFSYNCERR_SUCCESS) {
         WindowInfo_HideMessage(win);
@@ -4290,19 +4294,19 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, PCTSTR srcfilename, UIN
     else {
         wchar_t buf[_MAX_PATH];    
         if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-            swprintf_s(buf, _countof(buf), L"Snchronization file cannot be opened");
+            _snwprintf(buf, dimof(buf), L"Snchronization file cannot be opened");
         else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-            swprintf_s(buf, _countof(buf), L"Page number %u inexistant", page);
+            _snwprintf(buf, dimof(buf), L"Page number %u inexistant", page);
         else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-            swprintf(buf, _countof(buf), L"No synchronization found at this location");
+            _snwprintf(buf, dimof(buf), L"No synchronization found at this location");
         else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-            swprintf(buf, _countof(buf), L"Unknown source file (%S)", srcfilename);
+            _snwprintf(buf, dimof(buf), L"Unknown source file (%S)", srcfilename);
         else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-            swprintf(buf, _countof(buf), L"Source file %S has no synchronization point", srcfilename);
+            _snwprintf(buf, dimof(buf), L"Source file %S has no synchronization point", srcfilename);
         else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-            swprintf(buf, _countof(buf), L"No result found around line %u in file %S", line, srcfilename);
+            _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
         else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) 
-            swprintf(buf, _countof(buf), L"No result found around line %u in file %S", line, srcfilename);
+            _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
 
         WindowInfo_ShowMessage_Asynch(win, buf, true);
     }

@@ -8,16 +8,16 @@ typedef void (__cdecl *WATCHCALLBACK) (PTSTR filename, LPARAM param);
 class FileWatcher {
 public:
     // Watching file modifications using a loop
-    void Init(PCTSTR filefullpath);
+    void Init(LPCTSTR filefullpath);
     bool HasChanged(DWORD waittime = 0);
     void Clean();
 
     // Watching file modification via a thread
-    void StartWatchThread(PCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
+    void StartWatchThread(LPCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
     bool IsThreadRunning();
     void SynchronousAbort();
 
-    PCTSTR filepath() { return szFilepath; }
+    LPCTSTR filepath() { return szFilepath; }
 
     FileWatcher() {
         hDir = NULL;
@@ -55,7 +55,7 @@ private:
 public:
     HANDLE  hDir; // handle of the directory to watch
     TCHAR   szFilepath[_MAX_PATH]; // path to the file watched
-    PCTSTR  pszFilename; // pointer in szFilepath to the file part of the path
+    LPCTSTR  pszFilename; // pointer in szFilepath to the file part of the path
     TCHAR   szDir[_MAX_PATH]; // path to the directory
     OVERLAPPED overl; // object used for asynchronous API calls
     BYTE buffer [2][512*sizeof(FILE_NOTIFY_INFORMATION )]; 

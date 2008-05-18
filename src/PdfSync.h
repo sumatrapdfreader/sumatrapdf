@@ -4,10 +4,13 @@
 
 #pragma once
 #include <windows.h>
-#include <crtdbg.h>
+#include <assert.h>
 
 #include "base_util.h"
 #include "str_util.h"
+#include <string.h>
+#include <stdio.h>
+#include <tchar.h>
 
 
 #ifdef USE_STL
@@ -21,7 +24,7 @@ class vector {
 public:
     _Ty &operator[](size_t i) const
     {
-        _ASSERT(i<m_size);
+        assert(i<m_size);
         return m_data[i];
     }
     void clear()
@@ -72,12 +75,12 @@ public:
         push_back(v);
     }
     void pop() {
-        _ASSERT(size()>0);
-        resize(size()-1);
+        assert(this->size()>0);
+        resize(this->size()-1);
     }
     _Ty &top() {
-        _ASSERT(size()>0);
-        return (*this)[size()-1];
+        assert(this->size()>0);
+        return (*this)[this->size()-1];
     }
 };
 
@@ -109,7 +112,7 @@ enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
 
 typedef struct {
     TCHAR filename[_MAX_PATH]; // source file name
-#ifdef _DEBUG
+#ifndef NDEBUG
     fpos_t openline_pos;    // start of the scope in the sync file
     fpos_t closeline_pos;   // end of the scope
 #endif
@@ -121,7 +124,7 @@ typedef struct {
 // a plines_section is a section of consecutive lines of the form "p ..."
 typedef struct {
     fpos_t startpos; // position of the first "p ..." line
-#if _DEBUG
+#ifndef NDEBUG
     fpos_t endpos;
 #endif
 } plines_section;
@@ -132,7 +135,7 @@ typedef struct {
     int srcfile;           // index of the `scoping' source file 
     fpos_t startpos;       // start position in the sync file
     UINT firstrecord;      // number of the first record in the section
-#if _DEBUG
+#ifndef NDEBUG
     fpos_t endpos;         // end position in the sync file
     int highestrecord;      // highest record #
 #endif
@@ -145,34 +148,47 @@ typedef struct {
 class Pdfsync
 {
 public:
-    Pdfsync(PCTSTR filename)
+    Pdfsync(LPCTSTR filename)
     {
         size_t n = _tcslen(filename);
-        size_t u = _countof(PDF_EXTENSION)-1;
+        size_t u = dimof(PDF_EXTENSION)-1;
         if(n>u && _tcsicmp(filename+(n-u),PDF_EXTENSION) == 0 ) {
-            _tcsncpy_s(this->syncfilename, filename, n-u);
-            _tcscat_s(this->syncfilename, PDFSYNC_EXTENSION);
+            if (0 != filename) {
+                size_t offset = 0;
+                
+                // _tcsncpy_s(this->syncfilename, filename, n-u);
+                if (dimof(this->syncfilename) > n-u) {
+                    memcpy(this->syncfilename, filename,
+                        (n-u) * sizeof *filename);
+                    offset += n-u;
+                }
+                
+                // _tcscat_s(this->syncfilename, PDFSYNC_EXTENSION);
+                _sntprintf(this->syncfilename + offset,
+                    dimof(this->syncfilename) - offset,
+                    "%s", PDFSYNC_EXTENSION);
+            }
         }
         else {
-            size_t u = _countof(PDFSYNC_EXTENSION)-1;
-            _ASSERT(n>u && _tcsicmp(filename+(n-u),PDFSYNC_EXTENSION) == 0 );
+            size_t u = dimof(PDFSYNC_EXTENSION)-1;
+            assert(n>u && _tcsicmp(filename+(n-u),PDFSYNC_EXTENSION) == 0 );
         }
         this->index_discarded = true;
     }
 
     int rebuild_index();
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
-    UINT source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
+    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
 
     void discard_index() { this->index_discarded = true;}
     bool is_index_discarded() { return this->index_discarded; }
 
-    UINT prepare_commandline(PCTSTR pattern, PCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
+    UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
 
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records);
+    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records);
     FILE *opensyncfile();
 
 private:

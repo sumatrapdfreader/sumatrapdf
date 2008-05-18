@@ -400,8 +400,10 @@ bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryL
     dict_get_int(global, WINDOW_DX_STR, &gGlobalPrefs.m_windowDx);
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
     const char* invsearch = dict_get_str(global, INVERSE_SEARCH_COMMANDLINE);
-    if( invsearch )
-      strcpy_s(gGlobalPrefs.m_inversesearch_cmdline, invsearch);
+    if( invsearch ) {
+        str_copy(gGlobalPrefs.m_inversesearch_cmdline,
+            dimof(gGlobalPrefs.m_inversesearch_cmdline), invsearch);
+    }
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));
     if (bstr)

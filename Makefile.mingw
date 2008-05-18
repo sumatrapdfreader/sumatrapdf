@@ -29,13 +29,15 @@ LDFLAGS += -mwindows
 ifeq ($(BUILD), debug)
     CPPFLAGS += -DDEBUG
     CFLAGS += -O0
-else
-    ifeq ($(BUILD), release)
-        CPPFLAGS += -DNDEBUG
-        CFLAGS += -Os -O2
-        LDFLAGS += -s
-    else
-        $(error Build mode should be "debug" or "release")
+endif
+ifeq ($(BUILD), release)
+    CPPFLAGS += -DNDEBUG
+    CFLAGS += -Os -O2
+    LDFLAGS += -s
+endif
+ifneq ($(BUILD), debug)
+    ifneq ($(BUILD), release)
+        $(error BUILD should be "debug" or "release")
     endif
 endif
 
@@ -72,9 +74,11 @@ SOURCES += src/DisplayState.cc
 SOURCES += baseutils/dstring.c
 SOURCES += baseutils/file_util.c
 SOURCES += src/FileHistory.cc
+SOURCES += src/FileWatch.cc
 SOURCES += baseutils/geom_util.c
 SOURCES += src/PdfEngine.cc
 SOURCES += src/PdfSearch.cc
+SOURCES += src/PdfSync.cpp
 SOURCES += baseutils/str_util.c
 SOURCES += baseutils/strlist_util.c
 SOURCES += src/SumatraDialogs.cc
@@ -96,6 +100,7 @@ HEADERS += src/DisplayState.h
 HEADERS += baseutils/dstring.h
 HEADERS += baseutils/file_util.h
 HEADERS += src/FileHistory.h
+HEADERS += src/FileWatch.h
 HEADERS += baseutils/geom_util.h
 HEADERS += src/PdfEngine.h
 HEADERS += src/PdfSearch.h

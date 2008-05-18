@@ -20,12 +20,14 @@ INC_DIR += poppler/poppler poppler/splash
 ifeq ($(BUILD), debug)
     CPPFLAGS += -DDEBUG
     CFLAGS += -O0
-else
-    ifeq ($(BUILD), release)
-        CPPFLAGS += -DNDEBUG
-        CFLAGS += -Os -O2
-    else
-        $(error Build mode should be "debug" or "release")
+endif
+ifeq ($(BUILD), release)
+    CPPFLAGS += -DNDEBUG
+    CFLAGS += -Os -O2
+endif
+ifneq ($(BUILD), debug)
+    ifneq ($(BUILD), release)
+        $(error BUILD should be "debug" or "release")
     endif
 endif
 

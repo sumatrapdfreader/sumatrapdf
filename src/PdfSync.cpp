@@ -5,6 +5,13 @@
 
 #include "PdfSync.h"
 #include "SumatraPDF.h"
+#include <assert.h>
+#include "base_util.h"
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <tchar.h>
+#include "str_util.h"
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
@@ -30,15 +37,15 @@ int Pdfsync::get_record_section(int record_index)
                 rightsection = split-1;
         }
     }
-    _ASSERT(0);
+    assert(0);
     return -1;
 }
 
 FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
-    errno_t err = fopen_s(&fp, syncfilename, "r");
-    if(err!=0) {
+    fp = fopen(syncfilename, "rb");
+    if(NULL == fp) {
         DBG_OUT("The file %s cannot be opened\n", syncfilename);
         return NULL;
     }
@@ -48,11 +55,28 @@ FILE *Pdfsync::opensyncfile()
 int Pdfsync::scan_and_build_index(FILE *fp)
 {
     TCHAR jobname[_MAX_PATH];
-    _ftscanf_s(fp, "%s\n", jobname, _countof(jobname)); // ignore the first line
+    
+    // _ftscanf_s(fp, "%s\n", jobname, dimof(jobname)); // ignore the first line
+    _ftscanf(fp, " ");
+    {
+        size_t offset = 0;
+        while (true) {
+            int c = _gettc(fp);
+            if (_TEOF == c || _istspace(c)) {
+                break;
+            }
+            if (dimof(jobname) > offset + 1) {
+                jobname[offset++] = (TCHAR)c;
+            }
+        }
+        jobname[offset] = 0;
+    }
+    _ftscanf(fp, " ");
+    
     _tcscat(jobname, _T(".tex"));
 
     UINT versionNumber = 0;
-    int ret = _ftscanf_s(fp, "version %u\n", &versionNumber);
+    int ret = _ftscanf(fp, "version %u\n", &versionNumber);
     if (ret==EOF)
         return 1; // bad line format
     else if (versionNumber != 1)
@@ -64,8 +88,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = -1;
     s.last_recordsection = -1;
-    _tcscpy_s(s.filename, jobname);
-#ifdef _DEBUG
+    _sntprintf(s.filename, dimof(s.filename), "%s", jobname);
+#ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
 #endif
@@ -87,13 +111,13 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     char c;
     while ((c = fgetc(fp)) && !feof(fp)) {
         if (c!='l' && cur_recordsec!=-1) { // if a section of contiguous 'l' lines finished then create the corresponding section
-#if _DEBUG
+#ifndef NDEBUG
             this->record_sections[cur_recordsec].endpos = linepos;
 #endif
             cur_recordsec = -1;
         }
         if (c!='p' && cur_plinesec!=-1) { // if a section of contiguous 'p' lines finished then update the size of the corresponding p-line section
-#if _DEBUG
+#ifndef NDEBUG
             this->pline_sections[cur_plinesec].endpos = linepos;
 #endif
             cur_plinesec = -1;
@@ -101,15 +125,36 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         switch (c) {
         case '(': 
             {
-                fscanf_s(fp, "%s\n", filename, _countof(filename));
-                if( _tcsrchr(filename, '.') == NULL) // if the file name has no extension then add .tex at the end
-                    _tcscat_s(filename, _T(".tex"));
+                size_t offset = 0;
+                
+                // fscanf_s(fp, "%s\n", filename, dimof(filename));
+                fscanf(fp, " ");
+                {
+                    while (true) {
+                        int c = getc(fp);
+                        if (EOF == c || isspace(c)) {
+                            break;
+                        }
+                        if (dimof(filename) > offset + 1) {
+                            filename[offset++] = (char)c;
+                        }
+                    }
+                    filename[offset] = 0;
+                }
+                fscanf(fp, " ");
+                
+                // if the file name has no extension then add .tex at the end
+                if( _tcsrchr(filename, '.') == NULL) {
+                    // _tcscat_s(filename, _T(".tex"));
+                    _sntprintf(filename + offset, dimof(filename) - offset,
+                        "%s", _T(".tex"));
+                }
 
                 src_file s;
                 s.first_recordsection = -1;
                 s.last_recordsection = -1;
-                _tcscpy_s(s.filename, filename);
-#ifdef _DEBUG
+                _sntprintf(s.filename, dimof(s.filename), "%s", filename);
+#ifndef NDEBUG
                 s.openline_pos = linepos;
                 s.closeline_pos = -1;
 #endif
@@ -119,17 +164,17 @@ int Pdfsync::scan_and_build_index(FILE *fp)
             break;
 
         case ')':
-#if _DEBUG
+#ifndef NDEBUG
             if (incstack.top()!=-1)
                 this->srcfiles[incstack.top()].closeline_pos = linepos;
 #endif
             incstack.pop();
-            fscanf_s(fp, "\n");
+            fscanf(fp, "\n");
             break;
         case 'l':
             {
                 UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
-                if (fscanf_s(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber) <2)
+                if (fscanf(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber) <2)
                     DBG_OUT("Bad 'l' line in the pdfsync file\n");
                 else {
                     if (cur_recordsec==-1){ // section not initiated yet?
@@ -140,10 +185,10 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                         record_sections.push_back(sec);
                         cur_recordsec = record_sections.size()-1;
                     }
-#if _DEBUG
+#ifndef NDEBUG
                     record_sections[cur_recordsec].highestrecord = recordNumber;
 #endif
-                    _ASSERT(incstack.top()!=-1);
+                    assert(incstack.top()!=-1);
                     if( this->srcfiles[incstack.top()].first_recordsection == -1 )
                         this->srcfiles[incstack.top()].first_recordsection = cur_recordsec;
                     
@@ -157,25 +202,25 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                     fgetc(fp);
 
                 UINT recordNumber = 0, xPosition = 0, yPosition = 0;
-                fscanf_s(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
+                fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
 
                 if (cur_plinesec==-1){ // section not initiated yet?
                     plines_section sec;
                     sec.startpos = linepos;
-#if _DEBUG
+#ifndef NDEBUG
                     sec.endpos = -1;
 #endif
                     pline_sections.push_back(sec);
                     cur_plinesec = pline_sections.size()-1;
 
-                    _ASSERT(cur_sheetNumber!=-1);
+                    assert(cur_sheetNumber!=-1);
                     pdfsheet_index[cur_sheetNumber] = cur_plinesec;
                 }
             }
             break;
         case 's':
             {
-                fscanf_s(fp, " %u\n", &cur_sheetNumber);
+                fscanf(fp, " %u\n", &cur_sheetNumber);
                 size_t nsheet = pdfsheet_index.size();
                 if(cur_sheetNumber>=nsheet) {
                     pdfsheet_index.resize(cur_sheetNumber+1);
@@ -190,14 +235,14 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         }
         fgetpos(fp, &linepos);
     }
-#if _DEBUG
+#ifndef NDEBUG
     if (cur_recordsec!=-1)
         this->record_sections[cur_recordsec].endpos = linepos;
     if (cur_plinesec!=-1)
         this->pline_sections[cur_plinesec].endpos = linepos;
 #endif
 
-    _ASSERT(incstack.size()==1);
+    assert(incstack.size()==1);
 
     return 0;
 }
@@ -259,7 +304,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
                 fgetc(fp);
             // read the location
             UINT recordNumber = 0, xPosition = 0, yPosition = 0;
-            fscanf_s(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
+            fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
             // check whether it is closer that the closest point found so far
             UINT dx = abs((int)x - (int)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition));
             UINT dy = abs((int)y - (int)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition));
@@ -275,7 +320,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
             }
             fgetpos(fp, &linepos);
         }
-        _ASSERT(linepos == this->pline_sections[cur_psection].endpos);
+        assert(linepos == this->pline_sections[cur_psection].endpos);
     }
 
     int selected_record = closest_xydist_record!=-1 ? closest_xydist_record : closest_ydist_record;
@@ -290,14 +335,15 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    _tcscpy_s(filename, cchFilename, this->srcfiles[record_sections[sec].srcfile].filename);
+    _sntprintf(filename, cchFilename, "%s",
+        this->srcfiles[record_sections[sec].srcfile].filename);
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
     bool found = false;
     while (!feof(fp) && !found) {
         UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
-        int ret = fscanf_s(fp, "l %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
+        int ret = fscanf(fp, "l %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
         if (ret==EOF || ret<2)
             DBG_OUT("Bad 'l' line in the pdfsync file\n");
         else {
@@ -308,7 +354,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
             }
         }
     }
-    _ASSERT(found);
+    assert(found);
 
     
     fclose(fp);
@@ -326,7 +372,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
 //
-UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
+UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
 {
     // find the source file entry
     size_t isrc=-1;
@@ -358,7 +404,7 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
             fsetpos(fp, &sec.startpos);
             while ((c = fgetc(fp))=='l' && !feof(fp)) {
                 UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
-                fscanf_s(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
+                fscanf(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
                 UINT d = abs((int)lineNumber-(int)line);
                 if (d<EPSILON_LINE && d<min_distance) {
                     min_distance = d;
@@ -368,10 +414,10 @@ UINT Pdfsync::source_to_record(FILE *fp, PCTSTR srcfilename, UINT line, UINT col
                         goto read_linerecords; // We have found a record for the requested line!
                 }
             }
-#if _DEBUG
+#ifndef NDEBUG
             fpos_t linepos;
             fgetpos(fp, &linepos);
-            _ASSERT(feof(fp) || (linepos-1 == sec.endpos));
+            assert(feof(fp) || (linepos-1 == sec.endpos));
 #endif
         }
     }
@@ -386,13 +432,13 @@ read_linerecords:
         columnNumber = 0;
         lineNumber = 0;
         recordNumber = 0;
-        fscanf_s(fp, "%c %u %u %u\n", &c, 1, &recordNumber, &lineNumber, &columnNumber);
+        fscanf(fp, "%c %u %u %u\n", &c, &recordNumber, &lineNumber, &columnNumber);
     } while (c =='l' && !feof(fp) && (lineNumber==closestrecline) );
     return PDFSYNCERR_SUCCESS;
 
 }
 
-UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
     if( this->index_discarded )
         rebuild_index();
@@ -424,7 +470,7 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
                         fgetc(fp);
                     // read the location
                     UINT recordNumber = 0, xPosition = 0, yPosition = 0;
-                    fscanf_s(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
+                    fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
                     if (recordNumber == record) {
                         *page = sheet;
                         *x = SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
@@ -434,10 +480,10 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
                         return PDFSYNCERR_SUCCESS;
                     }
                 }
-    #if _DEBUG
+    #ifndef NDEBUG
                 fpos_t linepos;
                 fgetpos(fp, &linepos);
-                _ASSERT(feof(fp) || (linepos-1==this->pline_sections[this->pdfsheet_index[sheet]].endpos));
+                assert(feof(fp) || (linepos-1==this->pline_sections[this->pdfsheet_index[sheet]].endpos));
     #endif
 
             }
@@ -452,32 +498,49 @@ UINT Pdfsync::source_to_pdf(PCTSTR srcfilename, UINT line, UINT col, UINT *page,
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the result is stored in cmdline
-UINT Pdfsync::prepare_commandline(PCTSTR pattern, PCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
+UINT Pdfsync::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
 {
-    PCTSTR perc;
-    TCHAR buff[12];
+    LPCTSTR perc;
+    size_t len = 0;
     cmdline[0] = '\0';
     while (perc = _tcschr(pattern, '%')) {
         int u = perc-pattern;
-        _tcsncat_s(cmdline, cchCmdline, pattern, u);
+        
+        // _tcsncat_s(cmdline, cchCmdline, pattern, u);
+        if (cchCmdline > len + u) {
+            memcpy(cmdline + len, pattern, u * sizeof *pattern);
+            len += u;
+            cmdline[len] = 0;
+        }
+        
+        int count;
         perc++;
         if (*perc == 'f') {
-            _tcscat_s(cmdline, cchCmdline, filename);
+            // _tcscat_s(cmdline, cchCmdline, filename);
+            count =
+                _sntprintf(cmdline + len, cchCmdline - len, "%s", filename);
         }
         else if (*perc == 'l') {
-            _itot_s(line, buff, _countof(buff), 10);
-            _tcscat_s(cmdline, cchCmdline, buff);
+            count = _sntprintf(cmdline + len, cchCmdline - len, "%d", line);
         }
         else if (*perc == 'c') {
-            _itot_s(col, buff, _countof(buff), 10);
-            _tcscat_s(cmdline, cchCmdline, buff);
+            count = _sntprintf(cmdline + len, cchCmdline - len, "%d", col);
         }
-        else
-            _tcsncat_s(cmdline, cchCmdline, perc-1, 2);
+        else {
+            // _tcsncat_s(cmdline, cchCmdline, perc-1, 2);
+            count =
+                _sntprintf(cmdline + len, cchCmdline - len, "%.2s", perc-1);
+        }
+        if (count > 0) {
+            len += count;
+        }
 
         pattern = perc+1;
     }
-    _tcscat_s(cmdline, cchCmdline, pattern);
+    
+    // _tcscat_s(cmdline, cchCmdline, pattern);
+    _sntprintf(cmdline + len, cchCmdline - len, "%s", pattern);
+    
     return 1;
 }
 
@@ -531,8 +594,44 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         char pdffile[_MAX_PATH];
         char srcfile[_MAX_PATH];
         UINT line,col;
-        int ret = sscanf_s(command, "[" DDECOMMAND_SYNC_A "(\"%[^\"]\",\"%[^\"]\",%u,%u)]", pdffile, _countof(pdffile), srcfile, _countof(srcfile), &line, &col);
-        if (ret==EOF||ret<4)
+        
+        int ret = 0;
+        // sscanf_s(command, "[" DDECOMMAND_SYNC_A "(\"%[^\"]\",\"%[^\"]\",%u,%u)]", pdffile, dimof(pdffile), srcfile, dimof(srcfile), &line, &col);
+        {
+            const char *pos = command;
+            const char *str_end;
+            
+            if (!str_startswith(pos, "[" DDECOMMAND_SYNC_A "(\"")) {
+                ret = EOF;
+            }
+            if (EOF != ret) {
+                pos += dimof("[" DDECOMMAND_SYNC_A "(\"") - 1;
+                str_end = strchr(pos, '"');
+                if (0 == str_end) {
+                    ret = EOF;
+                }
+            }
+            if (EOF != ret) {
+                str_copyn(pdffile, dimof(pdffile), pos, str_end - pos);
+                pos = str_end;
+                if (!str_startswith(pos, "\",\"")) {
+                    ret = EOF;
+                }
+            }
+            if (EOF != ret) {
+                pos += dimof("\",\"") - 1;
+                str_end = strchr(pos, '"');
+                if (0 == str_end) {
+                    ret = EOF;
+                }
+            }
+            if (EOF != ret) {
+                str_copyn(srcfile, dimof(srcfile), pos, str_end - pos);
+                ret = sscanf(str_end, "\",%u,%u)]", &line, &col);
+            }
+        }
+        
+        if (ret==EOF||ret<2)
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
         else {
             // Execute the command.
@@ -545,7 +644,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 win = LoadPdf(pdffile);
             
             if (win && WS_SHOWING_PDF == win->state) {
-                _ASSERT(win->dm);
+                assert(win->dm);
                 UINT page, x, y;
                 UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
                 WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);

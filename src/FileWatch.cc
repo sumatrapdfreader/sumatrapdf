@@ -4,16 +4,28 @@
 #include "file_util.h"
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <crtdbg.h>
+#include <assert.h>
 #include <time.h>
+#include <string.h>
+#include <base_util.h>
+#include <stdio.h>
+#include <tchar.h>
 
 // Get the directory name from a full file path and copy it to pszDir
-bool GetDirectory (PCTSTR pszFile, PTSTR pszDir, size_t wMaxSize)
+bool GetDirectory (LPCTSTR pszFile, PTSTR pszDir, size_t wMaxSize)
 {
-    PCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
+    LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
 
-    if (EINVAL == _tcsncpy_s(pszDir, wMaxSize, pszFile, pszBaseName-pszFile))
+    // _tcsncpy_s(pszDir, wMaxSize, pszFile, pszBaseName-pszFile)
+    if (0 == pszDir || 0 == pszFile || 0 == wMaxSize) {
         return false;
+    }
+    if (wMaxSize <= (size_t)(pszBaseName-pszFile)) {
+        pszDir[0] = 0;
+        return false;
+    }
+    memcpy(pszDir, pszFile, (pszBaseName-pszFile) * sizeof *pszFile);
+    pszDir[pszBaseName-pszFile] = 0;
 
     // Is the file located in the root directory?
     if (pszDir[pszBaseName-pszFile-2] == ':') {
@@ -95,15 +107,15 @@ void FileWatcher::Clean()
     }
 }
 
-void FileWatcher::Init(PCTSTR filefullpath)
+void FileWatcher::Init(LPCTSTR filefullpath)
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
         SynchronousAbort();
 
-    _tcscpy_s(szFilepath, _countof(szFilepath), filefullpath);
+    _sntprintf(szFilepath, dimof(szFilepath), "%s", filefullpath);
     pszFilename = FilePath_GetBaseName(szFilepath);
-    GetDirectory(filefullpath, szDir, _countof(szDir));
+    GetDirectory(filefullpath, szDir, dimof(szDir));
     
     int res = _tstat(filefullpath, &timestamp);
 
@@ -140,7 +152,7 @@ void FileWatcher::Init(PCTSTR filefullpath)
 }
 
 // Start watching a file for changes
-void FileWatcher::StartWatchThread(PCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param)
+void FileWatcher::StartWatchThread(LPCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param)
 {
     Init(filefullpath);
    
@@ -162,8 +174,8 @@ void WINAPI FileWatcher::WatchingThread( void *param )
     HANDLE hp[2] = { fw->hEvtStopWatching, fw->overl.hEvent};
     while (1) {
         DWORD dwRet = 0;
-        DWORD dwObj = WaitForMultipleObjects(_countof(hp), hp, FALSE, INFINITE ) - WAIT_OBJECT_0;
-        _ASSERT( dwObj >= 0 && dwObj <= _countof(hp) );
+        DWORD dwObj = WaitForMultipleObjects(dimof(hp), hp, FALSE, INFINITE ) - WAIT_OBJECT_0;
+        assert( dwObj >= 0 && dwObj <= dimof(hp) );
         if (dwObj == 0) { // the user asked to quit the program
             break;
         } else if (dwObj == 1) {

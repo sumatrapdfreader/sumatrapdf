@@ -17,12 +17,14 @@ INC_DIR += fitz/include
 
 ifeq ($(BUILD), debug)
     CFLAGS += -O0
-else
-    ifeq ($(BUILD), release)
-        CPPFLAGS += -DNDEBUG
-        CFLAGS += -O2
-    else
-        $(error Build mode should be "debug" or "release")
+endif
+ifeq ($(BUILD), release)
+    CPPFLAGS += -DNDEBUG
+    CFLAGS += -O2
+endif
+ifneq ($(BUILD), debug)
+    ifneq ($(BUILD), release)
+        $(error BUILD should be "debug" or "release")
     endif
 endif
 
