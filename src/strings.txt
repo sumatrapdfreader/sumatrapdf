@@ -36,7 +36,7 @@
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
 # Linus Persson - Swedish
 # Kristian Vrhel - Czech
-# geodimo - Greek
+# Giorgos Dimopoulos (geodimo1985@gmail.com) - Greek (Hellenic)
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
 # Jon Ivar F. Omland - Norwegian
@@ -799,6 +799,7 @@ es:Marcadores
 th:ที่คั่น
 uk:Закладки
 eu:Markagailuak
+gr:Σελιδοδείκτες
 -
 Fullscreen\tCtrl-L
 br:Tela cheia\tCtrl-L
@@ -837,6 +838,7 @@ th:เต็มจอภาพ
 ar:بحجم الشاشة
 uk:На цілий екран\tCtrl-L
 eu:Pantaila osoan\tCtrl-L
+gr:Πλήρης οθόνη\tCtrl-L
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -1591,7 +1593,7 @@ ar:حول البرنامج
 cn:关于(&A)
 sv:&Om
 cz:&O programu
-gr:&Πέρι...
+gr:&Σχετικά...
 th:เกี่ยวกับ
 pt:Acerca de...
 no:&Om
@@ -1650,6 +1652,7 @@ es:Buscar:
 ar:بحث
 uk:Знайти:
 eu:Bilatu
+gr:Αναζήτηση
 -
 Find Previous
 br:Localizar anterior
@@ -1683,6 +1686,7 @@ es:Buscar Anterior
 ar:البحث عن السابق
 uk:Знайти попереднє
 eu:Aurrekoa bilatu
+gr:Αναζήτηση προηγούμενου
 -
 Find Next
 br:Localizar seguinte
@@ -1715,6 +1719,7 @@ gl:Atopar Seguinte
 es:Buscar Siguiente
 uk:Знайти наступне
 eu:Hurrengoa bilatu
+gr:Αναζήτηση επόμενου
 -
 Match case
 br:Diferenciar  minúsculas e Maiúsculas
@@ -1745,6 +1750,7 @@ es:Coincidir mayúsculas y minúsculas
 ar:مناسبة الخط
 uk:Розрізняти малу й велику літери
 eu:Hizki handiak edo txikiak bereizi
+gr:Αντιστοίχιση πεζών-κεφαλαίων
 -
 Open
 bg:Отвори
