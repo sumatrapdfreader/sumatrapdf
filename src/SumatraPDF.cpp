@@ -1990,8 +1990,8 @@ void DisplayModel::pageChanged()
         SetWindowText(win->hwndPageTotal, buf);
         hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
         SetWindowText(win->hwndPageBox, buf);
-        if (win->needrefresh )
-            hr = StringCchPrintfA(buf, dimof(buf), "(Press R to refresh) %s", baseName);
+        if (win->needrefresh)
+            hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", baseName);
         else
             hr = StringCchPrintfA(buf, dimof(buf), "%s", baseName);
         win_set_text(win->hwndFrame, buf);
@@ -4271,6 +4271,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
     }
 }
 
+// Show the result of a PDF forward-search synchronization (initiated by a DDE command)
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y)
 {
     if (ret == PDFSYNCERR_SUCCESS) {

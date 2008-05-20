@@ -12,15 +12,14 @@
 #include <tchar.h>
 
 // Get the directory name from a full file path and copy it to pszDir
-bool GetDirectory (LPCTSTR pszFile, PTSTR pszDir, size_t wMaxSize)
+bool GetDirectory (LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
 {
     LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
 
-    // _tcsncpy_s(pszDir, wMaxSize, pszFile, pszBaseName-pszFile)
-    if (0 == pszDir || 0 == pszFile || 0 == wMaxSize) {
+    if (0 == pszDir || 0 == pszFile || 0 == cchDir) {
         return false;
     }
-    if (wMaxSize <= (size_t)(pszBaseName-pszFile)) {
+    if (cchDir <= (size_t)(pszBaseName-pszFile)) {
         pszDir[0] = 0;
         return false;
     }

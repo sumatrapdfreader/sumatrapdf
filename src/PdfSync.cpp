@@ -1,17 +1,14 @@
 // Copyright William Blum 2008 http://william.famille-blum.org/
 // PDF-source synchronizer based on .pdfsync file
 // License: GPLv2
-
-
-#include "PdfSync.h"
 #include "SumatraPDF.h"
+#include "PdfSync.h"
 #include <assert.h>
-#include "base_util.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include <tchar.h>
-#include "str_util.h"
+//#include <tchar.h>
+#include "tstr_util.h"
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
@@ -52,28 +49,29 @@ FILE *Pdfsync::opensyncfile()
     return fp;
 }
 
+// read a line from a stream (exclude the end-of-line mark)
+LPTSTR ftgetline(LPTSTR dst, size_t cchDst, FILE *fp)
+{
+#if defined(__GNUC__) || !defined(_WIN32) || (_MSC_VER < 1400)
+    if (!_fgetts(dst, cchDst, fp))
+        return NULL;
+
+    LPTSTR end =  dst+tstr_len(dst)-1;
+    while (*end == _T('\n') || *end == _T('\r'))
+        *(end--) = 0;
+    return dst;
+#else
+    return fscanf_s(fp, "%s\n", dst, cchDst) ? dst : NULL;
+#endif
+}
+
+
 int Pdfsync::scan_and_build_index(FILE *fp)
 {
     TCHAR jobname[_MAX_PATH];
     
-    // _ftscanf_s(fp, "%s\n", jobname, dimof(jobname)); // ignore the first line
-    _ftscanf(fp, " ");
-    {
-        size_t offset = 0;
-        while (true) {
-            int c = _gettc(fp);
-            if (_TEOF == c || _istspace(c)) {
-                break;
-            }
-            if (dimof(jobname) > offset + 1) {
-                jobname[offset++] = (TCHAR)c;
-            }
-        }
-        jobname[offset] = 0;
-    }
-    _ftscanf(fp, " ");
-    
-    _tcscat(jobname, _T(".tex"));
+    ftgetline(jobname, dimof(jobname), fp); // get the job name from the first line
+    tstr_cat_s(jobname, dimof(jobname), _T(".tex")); 
 
     UINT versionNumber = 0;
     int ret = _ftscanf(fp, "version %u\n", &versionNumber);
@@ -88,7 +86,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = -1;
     s.last_recordsection = -1;
-    _sntprintf(s.filename, dimof(s.filename), "%s", jobname);
+    tstr_copy(s.filename, dimof(s.filename), jobname);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);
@@ -125,35 +123,17 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         switch (c) {
         case '(': 
             {
-                size_t offset = 0;
-                
-                // fscanf_s(fp, "%s\n", filename, dimof(filename));
-                fscanf(fp, " ");
-                {
-                    while (true) {
-                        int c = getc(fp);
-                        if (EOF == c || isspace(c)) {
-                            break;
-                        }
-                        if (dimof(filename) > offset + 1) {
-                            filename[offset++] = (char)c;
-                        }
-                    }
-                    filename[offset] = 0;
-                }
-                fscanf(fp, " ");
+                ftgetline(filename, dimof(filename), fp);
                 
                 // if the file name has no extension then add .tex at the end
-                if( _tcsrchr(filename, '.') == NULL) {
-                    // _tcscat_s(filename, _T(".tex"));
-                    _sntprintf(filename + offset, dimof(filename) - offset,
-                        "%s", _T(".tex"));
+                if( tstr_find_char(filename, '.') == NULL) {
+                     tstr_cat_s(filename, dimof(filename), _T(".tex"));
                 }
 
                 src_file s;
                 s.first_recordsection = -1;
                 s.last_recordsection = -1;
-                _sntprintf(s.filename, dimof(s.filename), "%s", filename);
+                tstr_copy(s.filename, dimof(s.filename), filename);
 #ifndef NDEBUG
                 s.openline_pos = linepos;
                 s.closeline_pos = -1;
@@ -335,8 +315,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    _sntprintf(filename, cchFilename, "%s",
-        this->srcfiles[record_sections[sec].srcfile].filename);
+    tstr_copy(filename, cchFilename, this->srcfiles[record_sections[sec].srcfile].filename);
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -377,7 +356,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
     // find the source file entry
     size_t isrc=-1;
     for(size_t i=0; i<this->srcfiles.size();i++) {
-        if (0==_tcsicmp(srcfilename, this->srcfiles[i].filename)) {
+        if (tstr_ieq(srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }
@@ -503,44 +482,38 @@ UINT Pdfsync::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, 
     LPCTSTR perc;
     size_t len = 0;
     cmdline[0] = '\0';
-    while (perc = _tcschr(pattern, '%')) {
+    LPTSTR out = cmdline;
+    size_t cchOut = cchCmdline;
+    while (perc = tstr_find_char(pattern, '%')) {
         int u = perc-pattern;
         
-        // _tcsncat_s(cmdline, cchCmdline, pattern, u);
-        if (cchCmdline > len + u) {
-            memcpy(cmdline + len, pattern, u * sizeof *pattern);
-            len += u;
-            cmdline[len] = 0;
-        }
-        
-        int count;
+        tstr_copyn(out, cchOut, pattern, u);
+        len = tstr_len(out);
+        out += len;
+        cchOut -= len;
+
         perc++;
         if (*perc == 'f') {
-            // _tcscat_s(cmdline, cchCmdline, filename);
-            count =
-                _sntprintf(cmdline + len, cchCmdline - len, "%s", filename);
+            tstr_copy(out, cchOut, filename);
         }
         else if (*perc == 'l') {
-            count = _sntprintf(cmdline + len, cchCmdline - len, "%d", line);
+            _sntprintf(out, cchOut, "%d", line);
         }
         else if (*perc == 'c') {
-            count = _sntprintf(cmdline + len, cchCmdline - len, "%d", col);
+            _sntprintf(out, cchOut, "%d", col);
         }
         else {
-            // _tcsncat_s(cmdline, cchCmdline, perc-1, 2);
-            count =
-                _sntprintf(cmdline + len, cchCmdline - len, "%.2s", perc-1);
+            tstr_copyn(out, cchOut, perc-1, 2);
         }
-        if (count > 0) {
-            len += count;
-        }
+        len = tstr_len(out);
+        out += len;
+        cchOut -= len;
 
         pattern = perc+1;
     }
     
-    // _tcscat_s(cmdline, cchCmdline, pattern);
-    _sntprintf(cmdline + len, cchCmdline - len, "%s", pattern);
-    
+    tstr_cat_s(cmdline, cchCmdline, pattern);
+
     return 1;
 }
 
