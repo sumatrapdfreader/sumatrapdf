@@ -373,13 +373,15 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
     UINT min_distance = -1, // distance to the closest record
          closestrec = -1, // closest record
          closestrecline = -1; // closest record-line
+    fpos_t closestrecline_filepos = -1; // position of the closest record-line in the file
     int c;
     for(size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
         record_section &sec = this->record_sections[isec];
         // does this section belong to the desired file?
         if (sec.srcfile == isrc) {
             // scan the 'l' declarations of the section to find the specified line and column
-            fsetpos(fp, &sec.startpos);
+            fpos_t linepos = sec.startpos;
+            fsetpos(fp, &linepos);
             while ((c = fgetc(fp))=='l' && !feof(fp)) {
                 UINT columnNumber = 0, lineNumber = 0, recordNumber = 0;
                 fscanf(fp, " %u %u %u\n", &recordNumber, &lineNumber, &columnNumber);
@@ -388,14 +390,14 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
                     min_distance = d;
                     closestrec = recordNumber;
                     closestrecline = lineNumber;
+                    closestrecline_filepos = linepos;
                     if (d==0)
                         goto read_linerecords; // We have found a record for the requested line!
                 }
+                fgetpos(fp, &linepos);
             }
 #ifndef NDEBUG
-            fpos_t linepos;
-            fgetpos(fp, &linepos);
-            assert(feof(fp) || (linepos-1 == sec.endpos));
+            assert(feof(fp) || (linepos == sec.endpos));
 #endif
         }
     }
@@ -405,6 +407,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
 read_linerecords:
     // we read all the consecutive records until we reach a record belonging to another line
     UINT recordNumber = closestrec, columnNumber, lineNumber;
+    fsetpos(fp, &closestrecline_filepos);
     do {
         records.push_back(recordNumber);
         columnNumber = 0;

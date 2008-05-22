@@ -1197,6 +1197,8 @@ Exit:
 
 static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     LPCTSTR fname = win->watcher.filepath();
+    if (win->pdfsync)
+        win->pdfsync->discard_index();
     DisplayState ds;
     DisplayState_Init(&ds);
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
@@ -1887,7 +1889,6 @@ Exit:
 void on_file_change(PTSTR filename, LPARAM param)
 {
     WindowInfo_Refresh((WindowInfo *) param, true);
-    ((WindowInfo *) param)->pdfsync->discard_index();
 }
 
 WindowInfo* LoadPdf(const char *fileName, bool showWin)

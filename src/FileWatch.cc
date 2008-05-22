@@ -131,15 +131,14 @@ void FileWatcher::Init(LPCTSTR filefullpath)
     curBuffer = 0;
 
     // watch the directory
-    DWORD BytesReturned;
     ReadDirectoryChangesW(
          hDir, /* handle to directory */
          &buffer[curBuffer], /* read results buffer */
          sizeof(buffer[curBuffer]), /* length of buffer */
          FALSE, /* monitoring option */
-         FILE_NOTIFY_CHANGE_CREATION|
+         //FILE_NOTIFY_CHANGE_CREATION|
          FILE_NOTIFY_CHANGE_LAST_WRITE, /* filter conditions */
-         &BytesReturned, /* bytes returned */
+         NULL, /* bytes returned */
          &overl, /* overlapped buffer */
          NULL); /* completion routine */
 
@@ -209,15 +208,14 @@ bool FileWatcher::ReadDir()
     curBuffer = 1 - curBuffer;
 
     // start a new asynchronous call to ReadDirectory in the alternate buffer
-    DWORD BytesReturned;
     ReadDirectoryChangesW(
          hDir, /* handle to directory */
          &buffer[curBuffer], /* read results buffer */
          sizeof(buffer[curBuffer]), /* length of buffer */
          FALSE, /* monitoring option */
-         FILE_NOTIFY_CHANGE_CREATION|
+         //FILE_NOTIFY_CHANGE_CREATION|
          FILE_NOTIFY_CHANGE_LAST_WRITE, /* filter conditions */
-         &BytesReturned, /* bytes returned */
+         NULL, /* bytes returned */
          &overl, /* overlapped buffer */
          NULL); /* completion routine */
 
