@@ -10,6 +10,7 @@
 #include "translations.h"
 #include "utf_util.h"
 #include "win_util.h"
+#include "tstr_util.h"
 
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
@@ -28,7 +29,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <direct.h> /* for _mkdir() */
-#include <tchar.h>
 
 #include <shellapi.h>
 #include <shlobj.h>
@@ -377,9 +377,9 @@ void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
     
-    _sntprintf(gGlobalPrefs.m_inversesearch_cmdline,
+    tstr_copy(gGlobalPrefs.m_inversesearch_cmdline,
         dimof(gGlobalPrefs.m_inversesearch_cmdline),
-        "%s", DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+        DEFAULT_INVERSE_SEARCH_COMMANDLINE);
 }
 
 void LaunchBrowser(const TCHAR *url)

@@ -5,10 +5,9 @@
 #include "PdfSync.h"
 #include <assert.h>
 #include <stdio.h>
-#include <ctype.h>
-#include <string.h>
 //#include <tchar.h>
 #include "tstr_util.h"
+#include "str_util.h"
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
@@ -567,44 +566,16 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         char pdffile[_MAX_PATH];
         char srcfile[_MAX_PATH];
         UINT line,col;
+        const char *pos = command;
         
-        int ret = 0;
-        // sscanf_s(command, "[" DDECOMMAND_SYNC_A "(\"%[^\"]\",\"%[^\"]\",%u,%u)]", pdffile, dimof(pdffile), srcfile, dimof(srcfile), &line, &col);
-        {
-            const char *pos = command;
-            const char *str_end;
-            
-            if (!str_startswith(pos, "[" DDECOMMAND_SYNC_A "(\"")) {
-                ret = EOF;
-            }
-            if (EOF != ret) {
-                pos += dimof("[" DDECOMMAND_SYNC_A "(\"") - 1;
-                str_end = strchr(pos, '"');
-                if (0 == str_end) {
-                    ret = EOF;
-                }
-            }
-            if (EOF != ret) {
-                str_copyn(pdffile, dimof(pdffile), pos, str_end - pos);
-                pos = str_end;
-                if (!str_startswith(pos, "\",\"")) {
-                    ret = EOF;
-                }
-            }
-            if (EOF != ret) {
-                pos += dimof("\",\"") - 1;
-                str_end = strchr(pos, '"');
-                if (0 == str_end) {
-                    ret = EOF;
-                }
-            }
-            if (EOF != ret) {
-                str_copyn(srcfile, dimof(srcfile), pos, str_end - pos);
-                ret = sscanf(str_end, "\",%u,%u)]", &line, &col);
-            }
-        }
-        
-        if (ret==EOF||ret<2)
+        // format is [<DDECOMMAND_SYNC_A>("<pdffile>","srcfile",<line>,<col>)]
+        if (!(
+            str_skip(&pos, "[" DDECOMMAND_SYNC_A "(\"") &&
+            str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+            str_skip(&pos, "\",\"") &&
+            str_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
+            2 == sscanf(pos, "\",%u,%u)]", &line, &col)
+        ))
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
         else {
             // Execute the command.

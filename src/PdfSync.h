@@ -8,9 +8,7 @@
 
 #include "base_util.h"
 #include "str_util.h"
-#include <string.h>
-#include <stdio.h>
-#include <tchar.h>
+#include "tstr_util.h"
 
 
 #ifdef USE_STL
@@ -153,21 +151,10 @@ public:
         size_t n = _tcslen(filename);
         size_t u = dimof(PDF_EXTENSION)-1;
         if(n>u && _tcsicmp(filename+(n-u),PDF_EXTENSION) == 0 ) {
-            if (0 != filename) {
-                size_t offset = 0;
-                
-                // _tcsncpy_s(this->syncfilename, filename, n-u);
-                if (dimof(this->syncfilename) > n-u) {
-                    memcpy(this->syncfilename, filename,
-                        (n-u) * sizeof *filename);
-                    offset += n-u;
-                }
-                
-                // _tcscat_s(this->syncfilename, PDFSYNC_EXTENSION);
-                _sntprintf(this->syncfilename + offset,
-                    dimof(this->syncfilename) - offset,
-                    "%s", PDFSYNC_EXTENSION);
-            }
+            tstr_copyn(this->syncfilename, dimof(this->syncfilename),
+                filename, n-u);
+            tstr_cat_s(this->syncfilename, dimof(this->syncfilename),
+                PDFSYNC_EXTENSION);
         }
         else {
             size_t u = dimof(PDFSYNC_EXTENSION)-1;

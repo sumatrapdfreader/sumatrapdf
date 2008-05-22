@@ -6,25 +6,20 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <time.h>
-#include <string.h>
-#include <base_util.h>
-#include <stdio.h>
-#include <tchar.h>
+#include "tstr_util.h"
+#include "base_util.h"
 
 // Get the directory name from a full file path and copy it to pszDir
 bool GetDirectory (LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
 {
     LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
 
-    if (0 == pszDir || 0 == pszFile || 0 == cchDir) {
+    if (0 == pszDir || 0 == pszFile) {
         return false;
     }
-    if (cchDir <= (size_t)(pszBaseName-pszFile)) {
-        pszDir[0] = 0;
+    if (!tstr_copyn(pszDir, cchDir, pszFile, pszBaseName-pszFile)) {
         return false;
     }
-    memcpy(pszDir, pszFile, (pszBaseName-pszFile) * sizeof *pszFile);
-    pszDir[pszBaseName-pszFile] = 0;
 
     // Is the file located in the root directory?
     if (pszDir[pszBaseName-pszFile-2] == ':') {
@@ -112,7 +107,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
     if (IsThreadRunning())
         SynchronousAbort();
 
-    _sntprintf(szFilepath, dimof(szFilepath), "%s", filefullpath);
+    tstr_copy(szFilepath, dimof(szFilepath), filefullpath);
     pszFilename = FilePath_GetBaseName(szFilepath);
     GetDirectory(filefullpath, szDir, dimof(szDir));
     
