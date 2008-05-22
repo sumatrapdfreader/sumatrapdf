@@ -772,6 +772,8 @@ TryPoppler:
         goto ErrorPoppler;
     return _popplerEngine->renderBitmap(pageNo, zoomReal, rotation, abortCheckCbkA, abortCheckCbkDataA);
 ErrorPoppler:
+    delete _popplerEngine;
+    _popplerEngine = NULL;
     return NULL;
 }
 
