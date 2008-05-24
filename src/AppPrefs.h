@@ -25,6 +25,7 @@ typedef struct {
 
     int  m_bgColor;
     BOOL m_escToExit;
+    BOOL m_fullScreen;
 
     /* pattern used to launch the editor when doing inverse search */
     /* TODO: make it dynamically allocated string */

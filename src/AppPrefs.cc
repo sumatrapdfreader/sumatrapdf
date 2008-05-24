@@ -61,6 +61,7 @@ benc_dict* Prefs_SerializeGlobal(void)
 
     DICT_ADD_INT64(prefs, BG_COLOR_STR, gGlobalPrefs.m_bgColor);
     DICT_ADD_INT64(prefs, ESC_TO_EXIT_STR, gGlobalPrefs.m_escToExit);
+    DICT_ADD_INT64(prefs, FULLSCREEN_STR, gGlobalPrefs.m_fullScreen);
 
     txt = DisplayModeNameFromEnum(gGlobalPrefs.m_defaultDisplayMode);
     if (txt)
@@ -76,10 +77,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
     DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
-
-    if (gGlobalPrefs.m_inversesearch_cmdline)
-      DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inversesearch_cmdline);
-
+    DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inversesearch_cmdline);
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -395,6 +393,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
     dict_get_bool(global, ESC_TO_EXIT_STR, &gGlobalPrefs.m_escToExit);
+    dict_get_bool(global, FULLSCREEN_STR, &gGlobalPrefs.m_fullScreen);
     dict_get_int(global, BG_COLOR_STR, &gGlobalPrefs.m_bgColor);
     const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
     if (txt)

@@ -377,6 +377,7 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
     gGlobalPrefs.m_escToExit = FALSE;
+    gGlobalPrefs.m_fullScreen = FALSE;
     gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
     gGlobalPrefs.m_defaultDisplayMode = DM_SINGLE_PAGE;
     gGlobalPrefs.m_defaultZoom = DEFAULT_ZOOM;
@@ -386,7 +387,7 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
 
-    tstr_copy(gGlobalPrefs.m_inversesearch_cmdline,
+    str_copy(gGlobalPrefs.m_inversesearch_cmdline,
         dimof(gGlobalPrefs.m_inversesearch_cmdline),
         DEFAULT_INVERSE_SEARCH_COMMANDLINE);
 }
@@ -399,12 +400,11 @@ void LaunchBrowser(const TCHAR *url)
 static BOOL pageRenderAbortCb(void *data)
 {
     PageRenderRequest *req = (PageRenderRequest*)data;
-    if (req->abort) {
-        DBG_OUT("Rendering of page %d aborted\n", req->pageNo);
-        return TRUE;
-    }
-    else
+    if (!req->abort)
         return FALSE;
+
+    DBG_OUT("Rendering of page %d aborted\n", req->pageNo);
+    return TRUE;
 }
 
 void RenderQueue_RemoveForDisplayModel(DisplayModel *dm) {
@@ -1084,6 +1084,19 @@ static void MenuUpdateZoom(WindowInfo* win)
     ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
 }
 
+static void MenuUpdateFullscreen(WindowInfo* win)
+{
+    if (win->dm)
+        return; // don't bother for windows with PDF
+
+    /* show default state */
+    HMENU menu = GetMenu(win->hwndFrame);
+    UINT state = MF_BYCOMMAND | MF_UNCHECKED;
+    if (gGlobalPrefs.m_fullScreen)
+        state = MF_BYCOMMAND | MF_CHECKED;
+    CheckMenuItem(menu, IDM_VIEW_FULLSCREEN, state);
+}
+
 static void SeeLastError(void) {
     char *msgBuf = NULL;
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -1559,6 +1572,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateLanguage(win);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
+    MenuUpdateFullscreen(win);
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -4121,7 +4135,7 @@ static void OnMenuSetInverseSearch(WindowInfo *win)
     if (!win) return;
     char *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inversesearch_cmdline);
     if (ret) {
-        strcpy(gGlobalPrefs.m_inversesearch_cmdline, ret);
+        str_copy(gGlobalPrefs.m_inversesearch_cmdline, dimof(gGlobalPrefs.m_inversesearch_cmdline), ret);
         free(ret);
     }
 }
@@ -4193,8 +4207,18 @@ void WindowInfo::ExitFullscreen()
 static void OnMenuViewFullscreen(WindowInfo *win)
 {
     assert(win);
-    if (!win || !win->dm)
+    if (!win)
         return;
+
+    if (!win->dm) {
+        if (gGlobalPrefs.m_fullScreen)
+            gGlobalPrefs.m_fullScreen = FALSE;
+        else
+            gGlobalPrefs.m_fullScreen = TRUE;
+        MenuUpdateFullscreen(win);
+        return;
+    }
+
     if (win->IsFullScreen())
         win->ExitFullscreen();
     else
@@ -6303,7 +6327,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-inverse-search")) {
             currArg = currArg->next;
             if (currArg) {
-                _tcscpy(gGlobalPrefs.m_inversesearch_cmdline,currArg->str);
+                str_copy(gGlobalPrefs.m_inversesearch_cmdline, dimof(gGlobalPrefs.m_inversesearch_cmdline), currArg->str);
                 currArg = currArg->next;
             }
             continue;
