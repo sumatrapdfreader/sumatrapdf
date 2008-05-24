@@ -3072,25 +3072,29 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     }
 }
 
-
 static void OnDraggingStart(WindowInfo *win, int x, int y)
 {
     assert(win);
     if (!win) return;
-    if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_IDLE) {
-        assert(win->dm);
-        if (!win->dm) return;
-        win->linkOnLastButtonDown = win->dm->linkAtPosition(x, y);
-        /* dragging mode only starts when we're not on a link */
-        if (!win->linkOnLastButtonDown) {
-            SetCapture(win->hwndCanvas);
-            win->mouseAction = MA_DRAGGING;
-            win->dragPrevPosX = x;
-            win->dragPrevPosY = y;
-            SetCursor(gCursorDrag);
-            DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
-        }
-    }
+    bool startDragging = (WS_SHOWING_PDF == win->state) && (win->mouseAction == MA_IDLE);
+    if (!startDragging)
+        return;
+
+    assert(win->dm);
+    if (!win->dm) return;
+    win->linkOnLastButtonDown = win->dm->linkAtPosition(x, y);
+    /* dragging mode only starts when we're not on a link */
+    if (win->linkOnLastButtonDown)
+        return;
+
+    SetCapture(win->hwndCanvas);
+    win->mouseAction = MA_DRAGGING;
+    win->dragPrevPosX = x;
+    win->dragPrevPosY = y;
+    win->dragStartX = x;
+    win->dragStartY = y;
+    SetCursor(gCursorDrag);
+    DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
 }
 
 static void OnDraggingStop(WindowInfo *win, int x, int y)
@@ -3108,7 +3112,6 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
     if (!win->dm) return;
 
     if (win->mouseAction == MA_DRAGGING && (GetCapture() == win->hwndCanvas)) {
-        dragDx = 0; dragDy = 0;
         dragDx = x - win->dragPrevPosX;
         dragDy = y - win->dragPrevPosY;
         DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
@@ -3117,7 +3120,15 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
         win->dragPrevPosX = x;
         win->dragPrevPosY = y;
         SetCursor(gCursorArrow);
-        ReleaseCapture();            
+        ReleaseCapture();
+        /* if we had a selection and this was just a click, hide selection */
+        if (win->showSelection) {
+            bool hideSelection = (x == win->dragStartX) && (y == win->dragStartY);
+            if (hideSelection) {
+                win->showSelection = false;
+                triggerRepaintDisplayNow(win);
+            }
+        }
         return;
     }
 
@@ -3152,7 +3163,6 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
             triggerRepaintDisplayNow(win);
         } else {
             if (win->mouseAction == MA_DRAGGING) {
-                dragDx = 0; dragDy = 0;
                 dragDx = -(x - win->dragPrevPosX);
                 dragDy = -(y - win->dragPrevPosY);
                 DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
@@ -3759,7 +3769,8 @@ static void RotateRight(WindowInfo *win)
 
 static void OnVScroll(WindowInfo *win, WPARAM wParam)
 {
-	if (win->documentBlocked) return;
+    if (win->documentBlocked) 
+        return;
     SCROLLINFO   si = {0};
     int          iVertPos;
     int          lineHeight = 16;
@@ -3823,7 +3834,8 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 
 static void OnHScroll(WindowInfo *win, WPARAM wParam)
 {
-	if (win->documentBlocked) return;
+    if (win->documentBlocked) 
+        return;
     SCROLLINFO   si = {0};
     int          iVertPos;
 
@@ -4108,8 +4120,6 @@ static void OnMenuSetInverseSearch(WindowInfo *win)
 }
 #endif
 
-
-
 static void OnMenuViewRotateLeft(WindowInfo *win)
 {
     RotateLeft(win);
@@ -4220,8 +4230,6 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 
     triggerRepaintDisplayNow(win);
 }
-
-
 
 // Show a message for 3000 millisecond at most
 DWORD WINAPI ShowMessageThread(WindowInfo *win)
@@ -4345,8 +4353,6 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
         WindowInfo_ShowMessage_Asynch(win, buf, false);
     }    
 }
-
-
 
 static void OnMenuFindNext(WindowInfo *win)
 {
@@ -4647,8 +4653,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             SetFocus(win->hwndFrame);
             return 1;
         }
-    }
-    else if (WM_ERASEBKGND == message) {
+    } else if (WM_ERASEBKGND == message) {
         RECT r;
         Edit_GetRect(hwnd, &r);
         if (r.left == 0 && r.top == 0) { // virgin box
@@ -4688,9 +4693,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         GetClientRect(hwnd, &rect);
         DrawFrameControl((HDC)wParam, &rect, DFC_BUTTON, DFCS_BUTTONPUSH);
         return true;
-    }
-    else
-    if (WM_PAINT == message) {
+    } else if (WM_PAINT == message) {
         RECT rect;
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
@@ -4725,8 +4728,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         SelectFont(hdc, oldfnt);
         EndPaint(hwnd, &ps);
         return WM_PAINT_HANDLED;
-    }
-    else if (WM_SETTEXT == message) {
+    } else if (WM_SETTEXT == message) {
         InvalidateRect(hwnd, NULL, true);
     }
     return DefWindowProc(hwnd, message, wParam, lParam);

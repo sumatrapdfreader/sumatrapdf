@@ -118,16 +118,20 @@ public:
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
         memzero(&fwdsearchmarkLoc, sizeof(fwdsearchmarkLoc));
-        needrefresh=false;
-        pdfsync=NULL;
+        needrefresh = false;
+        pdfsync = NULL;
         hFindStatusThread = NULL;
         hvtStopFindStatusThread = NULL;
     }
+    
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &m_canvasRc);
     }
+
     int winDx() { return rect_dx(&m_canvasRc); }
+
     int winDy() { return rect_dy(&m_canvasRc); }
+
     SizeI winSize() { return SizeI(rect_dx(&m_canvasRc), rect_dy(&m_canvasRc)); }
 
     /* points to the next element in the list or the first element if
@@ -178,6 +182,9 @@ public:
        cursor. A delta between previous and current is by how much we
        moved */
     int             dragPrevPosX, dragPrevPosY;
+
+    /* when dragging, mouse x/y position when dragging was started */
+    int             dragStartX, dragStartY;
 
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
