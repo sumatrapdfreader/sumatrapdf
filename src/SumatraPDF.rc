@@ -14,7 +14,6 @@
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
-/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -23,19 +22,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SUMATRAPDF          ICON                    "SumatraPDF.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
 
 IDC_SUMATRAPDF ACCELERATORS 
 BEGIN
@@ -47,12 +36,6 @@ BEGIN
     "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
     "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
 
 IDB_TOOLBAR             BITMAP                  "toolbar.bmp"
 IDB_TOOLBAR_DISABLED    BITMAP                  "toolbar-disabled.bmp"
@@ -66,13 +49,10 @@ IDB_FIND_NEXT           BITMAP                  "icons-silk\\next.bmp"
 IDB_FIND_PREV           BITMAP                  "icons-silk\\previous.bmp"
 IDB_FIND_MATCH          BITMAP                  "icons-silk\\matchcase.bmp"
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
+// Dialogs
 
 IDD_DIALOG_GOTO_PAGE DIALOGEX 0, 0, 150, 57
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS
 CAPTION "Go to page"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -84,7 +64,7 @@ BEGIN
 END
 
 IDD_DIALOG_PDF_ASSOCIATE DIALOGEX 100, 100, 200, 62
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS
 CAPTION "Associate with PDF files?"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -95,7 +75,7 @@ BEGIN
 END
 
 IDD_DIALOG_INVERSESEARCH DIALOGEX 0, 0, 221, 64
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS
 CAPTION "Inverse search command-line:"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -106,7 +86,7 @@ BEGIN
 END
 
 IDD_DIALOG_GET_PASSWORD DIALOGEX 0, 0, 176, 70
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS
 CAPTION "Enter password"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -115,6 +95,16 @@ BEGIN
     LTEXT           "Enter password for test.pdf",IDC_GET_PASSWORD_LABEL,7,7,162,8
     LTEXT           "Password:",IDC_STATIC,7,27,34,8
     EDITTEXT        IDC_GET_PASSWORD_EDIT,48,24,121,14,ES_AUTOHSCROLL
+END
+
+IDD_DIALOG_CHANGE_LANGUAGE DIALOGEX 0, 0, 176, 70
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS
+CAPTION "Change language"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK,7,49,59,14
+    PUSHBUTTON      "Cancel", IDCANCEL,109,49,60,14
+	//CONTROL         IDC_LANG_LIST
 END
 
 

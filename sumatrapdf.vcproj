@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="true"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)baseutils\msvc&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;;&quot;$(ProjectDir)breakpad&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)baseutils\msvc&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;;&quot;$(ProjectDir)breakpad&quot;;&quot;$(ProjectDir)DialogSizer&quot;"
 				PreprocessorDefinitions="_WIN32;WIN32;_WINDOWS;_DEBUG;DEBUG;USE_OWN_GET_AUTH_DATA;POPPLER_DATADIR=\&quot;\&quot;;ENABLE_ZLIB=1;;ENABLE_LIBJPEG=1"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -134,7 +134,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="false"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)baseutils\msvc&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;;&quot;$(ProjectDir)breakpad&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)baseutils&quot;;&quot;$(ProjectDir)baseutils\msvc&quot;;&quot;$(ProjectDir)src&quot;;&quot;$(ProjectDir)poppler&quot;;&quot;$(ProjectDir)poppler\goo&quot;;&quot;$(ProjectDir)ext\jpeg&quot;;&quot;$(ProjectDir)ext\zlib&quot;;&quot;$(ProjectDir)ext\freetype231\include&quot;;&quot;$(ProjectDir)poppler\poppler&quot;;&quot;$(ProjectDir)poppler\splash&quot;;&quot;$(ProjectDir)fitz\include&quot;;&quot;$(ProjectDir)breakpad&quot;;&quot;$(ProjectDir)DialogSizer&quot;"
 				PreprocessorDefinitions="WIN32;_WIN32;NDEBUG;_WINDOWS;USE_OWN_GET_AUTH_DATA;POPPLER_DATADIR=\&quot;\&quot;;ENABLE_ZLIB=1;ENABLE_LIBJPEG=1"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -549,6 +549,22 @@
 						ExceptionHandling="1"
 					/>
 				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="DialogSizer"
+			>
+			<File
+				RelativePath=".\DialogSizer\dialogsizer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DialogSizer\dialogsizer_set.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DialogSizer\WinHelper.h"
+				>
 			</File>
 		</Filter>
 	</Files>

@@ -1,12 +1,13 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
+#include <assert.h>
 #include "SumatraDialogs.h"
 
 #include "DisplayModel.h"
 #include "dstring.h"
 #include "Resource.h"
 #include "win_util.h"
-#include <assert.h>
+#include "dialogsizer.h"
 
 #ifdef _PDFSYNC_GUI_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -17,7 +18,6 @@ static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM w
     switch (message)
     {
         case WM_INITDIALOG:
-            /* TODO: intelligently center the dialog within the parent window? */
             data = (Dialog_InverseSearch_Data*)lParam;
             assert(data);
             if (!data)
@@ -146,6 +146,14 @@ char *Dialog_GetPassword(WindowInfo *win, const char *fileName)
     return NULL;
 }
 
+#if 0
+LTEXT           "Go to page:",IDC_STATIC,8,16,39,8
+EDITTEXT        IDC_GOTO_PAGE_EDIT,50,14,54,14,ES_AUTOHSCROLL
+DEFPUSHBUTTON   "Go to page",IDOK,7,36,64,14
+PUSHBUTTON      "Cancel",IDCANCEL,79,36,64,14
+LTEXT           "(of 99999)",IDC_GOTO_PAGE_LABEL_OF,107,17,36,8
+#endif
+
 static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
@@ -157,6 +165,16 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
     switch (message)
     {
         case WM_INITDIALOG:
+        {
+#if 0 // example of using DialogSizer
+            DIALOG_SIZER_START(sz)
+                DIALOG_SIZER_ENTRY(IDOK, DS_MoveY)
+                DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
+                DIALOG_SIZER_ENTRY(IDC_GOTO_PAGE_LABEL_OF, DS_MoveX)
+                DIALOG_SIZER_ENTRY(IDC_GOTO_PAGE_EDIT, DS_SizeX)
+            DIALOG_SIZER_END()
+            DialogSizer_Set(hDlg, sz, TRUE, NULL);
+#endif
             /* TODO: intelligently center the dialog within the parent window? */
             data = (Dialog_GoToPage_Data*)lParam;
             assert(NULL != data);
@@ -177,6 +195,7 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
             win_edit_select_all(editPageNo);
             SetFocus(editPageNo);
             return FALSE;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))

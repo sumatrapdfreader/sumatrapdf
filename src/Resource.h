@@ -8,7 +8,8 @@
 #define IDD_DIALOG_GET_PASSWORD         130
 #define IDD_DIALOG_PDF_ASSOCIATE        131
 #define IDC_CURSORDRAG                  132
-#define IDD_DIALOG_INVERSESEARCH        132
+#define IDD_DIALOG_INVERSESEARCH        133
+#define IDD_DIALOG_CHANGE_LANGUAGE      134
 #define IDR_MAINFRAME                   200
 #define IDD_XPDFWIN_DIALOG              300
 #define IDD_ABOUTBOX                    301
