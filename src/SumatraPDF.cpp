@@ -326,7 +326,7 @@ bool CurrLangNameSet(const char* langName) {
     return true;
 }
 
-void CurrLangNameFree() {
+static void CurrLangNameFree() {
     free((void*)g_currLangName);
     g_currLangName = NULL;
 }
@@ -363,7 +363,15 @@ static void GuessLanguage()
         CurrLangNameSet(lang);
 }
 
-void SerializableGlobalPrefs_Init() {
+static DWORD GetSerialNumber()
+{
+    DWORD serialNumber = 0xFFFFFFFF;
+    GetVolumeInformationA("c:\\", NULL, 0,
+        &serialNumber, NULL, NULL, NULL, 0);
+    return serialNumber;
+}
+
+static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_showToolbar = TRUE;
     gGlobalPrefs.m_useFitz = TRUE;
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
