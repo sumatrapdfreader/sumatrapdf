@@ -1037,7 +1037,7 @@ unsigned short gItemId[] = {
     IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE };
 
 double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 
-    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 100.0 };
+    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE };
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
