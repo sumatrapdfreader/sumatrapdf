@@ -4284,37 +4284,38 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
         // remember the position of the search result for drawing the rect later on
         win->fwdsearchmarkLoc.set(x,y);
         win->fwdsearchmarkPage = page;
-        win->showForwardSearchMark = true; 
+        win->showForwardSearchMark = true;
 
         // Scroll to show the rectangle highlighting the forward search result
         PdfSearchResult res;
         res.page = page;
-        res.left = x-MARK_SIZE/2;
-        res.top = y-MARK_SIZE/2;
-        res.right = res.left+MARK_SIZE;
-        res.bottom = res.top+MARK_SIZE;
+        res.left = x - MARK_SIZE / 2;
+        res.top = y - MARK_SIZE / 2;
+        res.right = res.left + MARK_SIZE;
+        res.bottom = res.top + MARK_SIZE;
         win->dm->goToPage(page, 0);
         win->dm->MapResultRectToScreen(&res);
+        return;
     }
-    else {
-        wchar_t buf[_MAX_PATH];    
-        if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-            _snwprintf(buf, dimof(buf), L"Snchronization file cannot be opened");
-        else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-            _snwprintf(buf, dimof(buf), L"Page number %u inexistant", page);
-        else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-            _snwprintf(buf, dimof(buf), L"No synchronization found at this location");
-        else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-            _snwprintf(buf, dimof(buf), L"Unknown source file (%S)", srcfilename);
-        else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-            _snwprintf(buf, dimof(buf), L"Source file %S has no synchronization point", srcfilename);
-        else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-            _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
-        else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) 
-            _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
 
-        WindowInfo_ShowMessage_Asynch(win, buf, true);
-    }
+    wchar_t buf[_MAX_PATH];
+    wchar_t *txt = &buf[0];
+    if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
+        txt = L"Snchronization file cannot be opened";
+    else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
+        _snwprintf(buf, dimof(buf), L"Page number %u inexistant", page);
+    else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
+        txt = L"No synchronization found at this location";
+    else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
+        _snwprintf(buf, dimof(buf), L"Unknown source file (%S)", srcfilename);
+    else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
+        _snwprintf(buf, dimof(buf), L"Source file %S has no synchronization point", srcfilename);
+    else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
+        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
+    else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
+        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
+
+    WindowInfo_ShowMessage_Asynch(win, txt, true);
 }
 
 static void WindowInfo_ShowFindStatus(WindowInfo *win)
