@@ -109,8 +109,8 @@ public:
         hwndTracker = NULL;
         hMenu = NULL;
         hdc = NULL;
-        nFindPercent = 0;
-        bFindStatusVisible = false;
+        findPercent = 0;
+        findStatusVisible = false;
         showSelection = false;
         showForwardSearchMark = false;
         mouseAction = MA_IDLE;
@@ -119,8 +119,8 @@ public:
         memzero(&fwdsearchmarkLoc, sizeof(fwdsearchmarkLoc));
         needrefresh = false;
         pdfsync = NULL;
-        hFindStatusThread = NULL;
-        hvtStopFindStatusThread = NULL;
+        findStatusThread = NULL;
+        stopFindStatusThreadEvent = NULL;
     }
     
     void GetCanvasSize() { 
@@ -159,10 +159,10 @@ public:
     HDC             hdc;
     BITMAPINFO *    dibInfo;
 
-    int             nFindPercent;
-    bool            bFindStatusVisible;    
-    HANDLE          hFindStatusThread; // handle of the thread showing the status of the search result
-    HANDLE          hvtStopFindStatusThread; // event raised to tell the findstatus thread to stop
+    int             findPercent;
+    bool            findStatusVisible;    
+    HANDLE          findStatusThread; // handle of the thread showing the status of the search result
+    HANDLE          stopFindStatusThreadEvent; // event raised to tell the findstatus thread to stop
 
     /* bitmap and hdc for (optional) double-buffering */
     HDC             hdcToDraw;

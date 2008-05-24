@@ -31,7 +31,7 @@ public:
     }
     void push_back(_Ty v)
     {
-        if(m_size>=m_allocsize) {
+        if (m_size>=m_allocsize) {
             m_allocsize += ALLOC_INCREMENT;
             m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
         }
@@ -40,7 +40,7 @@ public:
     }
     void resize(size_t s)
     {
-        if(s>m_allocsize) {
+        if (s>m_allocsize) {
             m_allocsize = s+ALLOC_INCREMENT-s%ALLOC_INCREMENT;
             m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
         }
@@ -66,6 +66,7 @@ private:
     _Ty *m_data;
     size_t m_allocsize, m_size;
 };
+
 template <class _Ty>
 class stack : public vector<_Ty> {
 public:
@@ -150,7 +151,7 @@ public:
     {
         size_t n = _tcslen(filename);
         size_t u = dimof(PDF_EXTENSION)-1;
-        if(n>u && _tcsicmp(filename+(n-u),PDF_EXTENSION) == 0 ) {
+        if (n>u && _tcsicmp(filename+(n-u), PDF_EXTENSION) == 0 ) {
             tstr_copyn(this->syncfilename, dimof(this->syncfilename),
                 filename, n-u);
             tstr_cat_s(this->syncfilename, dimof(this->syncfilename),

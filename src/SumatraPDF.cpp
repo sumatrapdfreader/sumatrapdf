@@ -1300,13 +1300,13 @@ static void WindowInfo_Delete(WindowInfo *win)
       delete win->pdfsync;
       win->pdfsync = NULL;
     }
-    if(win->hvtStopFindStatusThread) {
-        CloseHandle(win->hvtStopFindStatusThread);
-        win->hvtStopFindStatusThread = NULL;
+    if (win->stopFindStatusThreadEvent) {
+        CloseHandle(win->stopFindStatusThreadEvent);
+        win->stopFindStatusThreadEvent = NULL;
     }
-    if(win->hFindStatusThread) {
-        CloseHandle(win->hFindStatusThread);
-        win->hFindStatusThread = NULL;
+    if (win->findStatusThread) {
+        CloseHandle(win->findStatusThread);
+        win->findStatusThread = NULL;
     }
     win->dm = NULL;
     WindowInfo_Dib_Deinit(win);
@@ -1668,7 +1668,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
 
     //SetCanvasSizeToDxDy(win, winDx, winDy);
 
-    win->hvtStopFindStatusThread = CreateEvent(NULL, TRUE, FALSE, NULL);
+    win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     return win;
 }
 
@@ -3053,7 +3053,7 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     else {
         _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
         char cmdline[_MAX_PATH];
-        if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
+        if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
           srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
             //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
             STARTUPINFO si;
@@ -4229,7 +4229,7 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 DWORD WINAPI ShowMessageThread(WindowInfo *win)
 {
     ShowWindowAsync (win->hwndFindStatus, SW_SHOW);
-    WaitForSingleObject(win->hvtStopFindStatusThread, 3000);
+    WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
     ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
     return 0;
 }
@@ -4254,22 +4254,22 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *messag
     }
 
     // if a thread has previously been started then make sure it has ended
-    if (win->hFindStatusThread) {
-        SetEvent(win->hvtStopFindStatusThread);
-        WaitForSingleObject(win->hFindStatusThread, INFINITE);
-        CloseHandle(win->hFindStatusThread);
+    if (win->findStatusThread) {
+        SetEvent(win->stopFindStatusThreadEvent);
+        WaitForSingleObject(win->findStatusThread, INFINITE);
+        CloseHandle(win->findStatusThread);
     }
-    ResetEvent(win->hvtStopFindStatusThread);
-    win->hFindStatusThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowMessageThread, (void*)win, 0, 0);
+    ResetEvent(win->stopFindStatusThreadEvent);
+    win->findStatusThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowMessageThread, (void*)win, 0, 0);
 }
 
 // hide the message
 static void WindowInfo_HideMessage(WindowInfo *win)
 {
-    if (win->hFindStatusThread) {
-        SetEvent(win->hFindStatusThread);
-        CloseHandle(win->hFindStatusThread);
-        win->hFindStatusThread = NULL;
+    if (win->findStatusThread) {
+        SetEvent(win->findStatusThread);
+        CloseHandle(win->findStatusThread);
+        win->findStatusThread = NULL;
         ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
     }
 }
@@ -4322,7 +4322,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
 
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
     ShowWindow(win->hwndFindStatus, SW_SHOW);
-    win->bFindStatusVisible = true;
+    win->findStatusVisible = true;
 
     EnableWindow(win->hwndFindBox, false);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
@@ -4708,7 +4708,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         DrawLineSimple(hdc, rect.left, rect.top, rect.left, rect.bottom);
         DrawLineSimple(hdc, rect.right, rect.top, rect.right, rect.bottom);
         
-        int percent = win->nFindPercent;
+        int percent = win->findPercent;
         if (percent > 100)
             percent = 100;
         rect.top += 2;
@@ -5033,7 +5033,7 @@ void WindowInfo::FindStart()
 
 void WindowInfo::FindUpdateStatus(int current, int total)
 {
-    if (!bFindStatusVisible) {
+    if (!findStatusVisible) {
         WindowInfo_ShowFindStatus(this);
     }
 
@@ -5041,7 +5041,7 @@ void WindowInfo::FindUpdateStatus(int current, int total)
     swprintf(buf, L"Searching %d of %d...", current, total);
     SetWindowTextW(hwndFindStatus, buf);
 
-    nFindPercent = current * 100 / total;
+    findPercent = current * 100 / total;
 
     MSG msg = { 0 };
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
