@@ -1,82 +1,45 @@
-Short term todo (before next 0.8 release):
+Short term todo (before next 0.8.1 release):
+* add -lang option for changing language from cmd line
+* check for new version on-line
+
+Long term todo:
 * finish find
   * better/different buttons for next/prev find
 * crash reporting with breakpad
  - on startup check for crash dumps and tries to submit them. Delete crash file
    (even if submission failed)
-* check for new version on-line
 * remember and restore size and position of the window
 * finish TOC:
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
 * preserve fullScreen info per document and respect it when opening a PDF
-* the new icon is kinda big (286 kB) caused mostly by new high-res Vista
-  icon saved uncompressed (I think). Need to figure out if that's really
-  a program (rc.exe might be smart enough to compress it). If yes, need to
-  figure out how to save space (maybe save 32bit icons in vista format as PNGs
-  and standard XP icon as a standard *.ico format).
-* maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
-  and TransparentBlt). Instead, dynamically load the functions. Needed for
-  working on NT. On the other hand: is NT worth supporting?
 * useFitz should also be remembered per file and when switching rendering
   engine, we should only re-load current file.
-* bug: switching rendering engines causes draw corruption and moves a window
 * intelligent resizing so that the window takes as much space as possible on the
   screen (kind of like maximize, but doesn't actually maximizes the window but
   takes max dx or dy space available and proportional amount of the other axis)
 * don't use GWL_USERDATA to store WindowInfo pointer, use 
   WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
   of windows and WindowInfo structs)
-
-Long term todo:
 * handle links
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
 * show keybindings in help
 * better, animated about screen
-* a nicer way to show selected text
 * make dialog-boxes translatable
 * replace DString with something better (sstr ?) and provide C++ wrapper
   to make it easier to use in C++ code without all those annoying DStringInit()
   calls
-* move fitz code to a separate Google code project (fitz-kjk?) and link to it
-  via svn:externals, like we do for poppler. fitz should be trunk and fitz-head
-  should become branches/devel. Add standalone makefiles etc. so that it can
-  be tested and worked on independently of Sumatra. Preserving history of
-  changes for fitz code might be challenging - I'm not sure if google import
-  will handle 2 branches. In the worst case I can write a script to reply
-  checkins.
-* when resizing, when we already have a bitmap rendered at a different size, we
-  can use that bitmap stretched, instead of displaying "rendering" text
+* remove poppler, always use fitz
 
 Maybe:
 * use MultiByteToWideChar() 
   (http://msdn2.microsoft.com/en-us/library/ms776413.aspx) with CP_UTF8
   for utf8->utf16 conversion
-* update poppler to latest version
-* speedup poppler
-* improve fitz to handle more PDFs
 * DisplayState::visible could be removed. It was used when we were automatically
   reopening previously opened files, but we don't do it anymore, so we don't
   have to track it.
-
-Crashes that happened:
-1. B.Judson - Go It Alone.pdf
- 1      pdfbench.exe!fz_boundnode(fz_node_s * node=0x00000000, fz_matrix_s ctm={...}) 
- 2      pdfbench.exe!fz_boundmasknode(fz_masknode_s * node=0x010ccac8, fz_matrix_s ctm={...}) 
-*3      pdfbench.exe!fz_boundnode(fz_node_s * node=0x010ccac8, fz_matrix_s ctm={...})
- 4      pdfbench.exe!fitsinside(fz_node_s * node=0x010ccac8, fz_rect_s clip={...}) 
- 5      pdfbench.exe!cleanmasks(fz_node_s * node=0x041019a0) 
- 6      pdfbench.exe!cleanmasks(fz_node_s * node=0x011ce558) 
- 7      pdfbench.exe!fz_optimizetree(fz_tree_s * tree=0x02197198) 
- 8      pdfbench.exe!pdf_loadpage(pdf_page_s * * pagep=0x0012f9d0, pdf_xref_s * xref=0x01d3dae0, fz_obj_s * dict=0x02d0cfc0) 
- 9      pdfbench.exe!PdfEngineFitz::getPdfPage(int pageNo=3) 
- 10     pdfbench.exe!PdfEngineFitz::renderBitmap(int pageNo=3, double zoomReal=100.00000000000000, int rotation=0, int (void *)* abortCheckCbkA=0x00000000, void * abortCheckCbkDataA=0x00000000) 
- 11     pdfbench.exe!renderPdf(const char * fileName=0x0012fb28, RenderType renderType=renderFitz) 
- 12     pdfbench.exe!renderDirectory(char * path=0x00a63e68) 
- 13     pdfbench.exe!renderCmdLineArg(char * cmdLineArg=0x00000000) 
- 14     pdfbench.exe!main(int argc=8, char * * argv=0x00a62da8) 
- 15     pdfbench.exe!__tmainCRTStartup() 
- 16     kernel32.dll!_BaseProcessStart@4() 
-
+* maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
+  and TransparentBlt). Instead, dynamically load the functions. Needed for
+  working on NT. On the other hand: is NT worth supporting?
 
