@@ -14,7 +14,7 @@ enum {
 };
 
 /* Most of the global settings that we persist in preferences file. */
-typedef struct SerializableGlobalPrefs {
+typedef struct {
     BOOL m_showToolbar;
     BOOL m_useFitz;
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
@@ -26,11 +26,14 @@ typedef struct SerializableGlobalPrefs {
     int  m_bgColor;
     BOOL m_escToExit;
 
-    TCHAR m_inversesearch_cmdline[_MAX_PATH]; // pattern used to launch the editor when doing inverse search
+    /* pattern used to launch the editor when doing inverse search */
+    /* TODO: make it dynamically allocated string */
+    char m_inversesearch_cmdline[_MAX_PATH];
 
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
     DisplayMode m_defaultDisplayMode;
+    double m_defaultZoom;
     int  m_windowState;
     int  m_windowPosX;
     int  m_windowPosY;
@@ -43,8 +46,8 @@ extern SerializableGlobalPrefs gGlobalPrefs;
 struct FileHistoryList;
 bool        Prefs_DeserializeOld(const char *prefsTxt, FileHistoryList **fileHistoryRoot);
 
-const char *Prefs_SerializeNew(FileHistoryList **root, size_t* lenOut);
-bool        Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot);
+const char *Prefs_Serialize(FileHistoryList **root, size_t* lenOut);
+bool        Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot);
 
 #endif
 

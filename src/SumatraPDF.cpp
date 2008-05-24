@@ -379,12 +379,13 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_escToExit = FALSE;
     gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
     gGlobalPrefs.m_defaultDisplayMode = DM_SINGLE_PAGE;
+    gGlobalPrefs.m_defaultZoom = DEFAULT_ZOOM;
     gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
     gGlobalPrefs.m_windowPosX = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
-    
+
     tstr_copy(gGlobalPrefs.m_inversesearch_cmdline,
         dimof(gGlobalPrefs.m_inversesearch_cmdline),
         DEFAULT_INVERSE_SEARCH_COMMANDLINE);
@@ -969,7 +970,7 @@ static bool Prefs_LoadNew(void)
     uint64_t prefsFileLen;
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
-        ok = Prefs_DeserializeNew(prefsTxt, prefsFileLen, &gFileHistoryRoot);
+        ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
     }
 
@@ -1072,6 +1073,15 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId)
         CheckMenuItem(hmenu, gItemId[i], checkState);
     }
     assert(found);
+}
+
+static void MenuUpdateZoom(WindowInfo* win)
+{
+    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    if (win->dm)
+        zoomVirtual = win->dm->zoomVirtual();
+    UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
+    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
 }
 
 static void SeeLastError(void) {
@@ -1185,7 +1195,7 @@ static bool Prefs_Save(void)
     /* mark currently shown files as visible */
     UpdateCurrentFileDisplayState();
 
-    const char *data = Prefs_SerializeNew(&gFileHistoryRoot, &dataLen);
+    const char *data = Prefs_Serialize(&gFileHistoryRoot, &dataLen);
     if (!data)
         goto Exit;
 
@@ -1214,7 +1224,6 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     UpdateDisplayStateWindowPos(win, &ds);
     RefreshPdfDocument(fname, win, &ds, true, autorefresh, true);
 }
-
 
 static void WindowInfo_RefreshUpdatedFiles(bool autorefresh) {
     WindowInfo* curr = gWindowList;
@@ -1549,6 +1558,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateUseFitzStateForWindow(win);
     MenuUpdateLanguage(win);
     MenuUpdateDisplayMode(win);
+    MenuUpdateZoom(win);
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -1794,14 +1804,14 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     DisplayModel *previousmodel = win->dm;
 
     if (gGlobalPrefs.m_useFitz) {
-        win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
+        win->dm = DisplayModelFitz_CreateFromFileName(fileName,
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     } else {
-        win->dm = DisplayModelSplash_CreateFromFileName(fileName, 
+        win->dm = DisplayModelSplash_CreateFromFileName(fileName,
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     }
 
-    double zoomVirtual = DEFAULT_ZOOM;
+    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
     if (!win->dm) {
         if (!reuseExistingWindow && WindowInfoList_ExistsWithError()) {
@@ -1815,14 +1825,12 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
         // then fallback to the previous state
         if (autorefresh) {
             win->dm = previousmodel;
-        }
-        else {
+        } else {
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
             goto Exit;
         }
-    }
-    else {
+    } else {
         delete previousmodel;
         win->needrefresh = false;
     }
@@ -3510,11 +3518,12 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 */
 static void OnMenuZoom(WindowInfo *win, UINT menuId)
 {
-    if (!win->dm)
-        return;
-
     double zoom = ZoomMenuItemToZoom(menuId);
-    win->dm->zoomTo(zoom);
+    if (win->dm) {
+        win->dm->zoomTo(zoom);
+    } else {
+        gGlobalPrefs.m_defaultZoom = zoom;
+    }
     ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
 }
 
@@ -6436,9 +6445,9 @@ Exit:
 
 // Code for DLL interace
 static WindowInfo* CreateEmpty(HWND parentHandle) {
-    WindowInfo* pdfWin;
+    WindowInfo* win;
     HWND        hwndCanvas;
-    pdfWin = WindowInfo_New(parentHandle);
+    win = WindowInfo_New(parentHandle);
     hwndCanvas = CreateWindow(
         CANVAS_CLASS_NAME, NULL,
         WS_CHILD | WS_HSCROLL | WS_VSCROLL,
@@ -6447,8 +6456,8 @@ static WindowInfo* CreateEmpty(HWND parentHandle) {
         parentHandle, NULL,
         ghinst, NULL);
     if (hwndCanvas)
-        pdfWin->hwndCanvas = hwndCanvas;
-    return pdfWin;
+        win->hwndCanvas = hwndCanvas;
+    return win;
 }
 
 static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
@@ -6479,7 +6488,7 @@ static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
 
     pdfWin->dm->setAppData((void*)pdfWin);
     pdfWin->state = WS_SHOWING_PDF;
-    double zoomVirtual = DEFAULT_ZOOM;
+    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);

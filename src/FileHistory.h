@@ -28,6 +28,4 @@ BOOL              FileHistoryList_Node_RemoveAndFree(FileHistoryList **root, Fil
 
 BOOL              FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const char *filePath);
 
-bool              FileHistoryList_Serialize(FileHistoryList **root, DString *strOut);
-
 #endif

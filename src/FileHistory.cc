@@ -89,34 +89,6 @@ void FileHistoryList_Free(FileHistoryList **root)
     *root = NULL;
 }
 
-static BOOL FileHistoryList_Node_Serialize(FileHistoryList *node, DString *strOut)
-{
-    assert(node);
-    if (!node) return FALSE;
-    assert(strOut);
-    if (!strOut) return FALSE;
-
-    DStringSprintf(strOut, "%s:\n", FILE_HISTORY_STR);
-    DisplayState_Serialize(&(node->state), strOut);
-
-    return TRUE;
-}
-
-bool FileHistoryList_Serialize(FileHistoryList **root, DString *strOut)
-{
-    assert(root);
-    if (!root) return false;
-
-    FileHistoryList *curr = *root;
-    while (curr) {
-        int fOk = FileHistoryList_Node_Serialize(curr, strOut);
-        if (!fOk)
-            return false;
-        curr = curr->next;
-    }
-    return true;
-}
-
 void FileHistoryList_Node_InsertHead(FileHistoryList **root, FileHistoryList *node)
 {
     assert(root);

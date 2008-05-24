@@ -66,6 +66,11 @@ benc_dict* Prefs_SerializeGlobal(void)
     if (txt)
         DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
 
+    txt = str_printf("%.4f", gGlobalPrefs.m_defaultZoom);
+    if (txt) {
+        DICT_ADD_STR(prefs, ZOOM_VIRTUAL_STR, txt);
+        free((void*)txt);
+    }
     DICT_ADD_INT64(prefs, WINDOW_STATE_STR, gGlobalPrefs.m_windowState);
     DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_windowPosX);
     DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
@@ -91,7 +96,7 @@ static BOOL dict_get_str_dup(benc_dict* dict, const char* key, const char** valO
     return true;
 }
 
-bool DisplayState_Deserialize2(benc_dict* dict, DisplayState *ds)
+static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
 {
     DisplayState_Init(ds);
 
@@ -114,7 +119,7 @@ bool DisplayState_Deserialize2(benc_dict* dict, DisplayState *ds)
     return true;
 }
 
-benc_dict* DisplayState_SerializeNew(DisplayState *ds)
+static benc_dict* DisplayState_Serialize(DisplayState *ds)
 {
     BOOL  ok;
     const char * txt;
@@ -153,10 +158,10 @@ static benc_dict* FileHistoryList_Node_Serialize2(FileHistoryList *node)
     assert(node);
     if (!node) return NULL;
 
-    return DisplayState_SerializeNew(&(node->state));
+    return DisplayState_Serialize(&(node->state));
 }
 
-benc_array* FileHistoryList_Serialize2(FileHistoryList **root)
+benc_array* FileHistoryList_Serialize(FileHistoryList **root)
 {
     BOOL ok;
     assert(root);
@@ -183,7 +188,7 @@ Error:
     return NULL;      
 }
 
-const char *Prefs_SerializeNew(FileHistoryList **root, size_t* lenOut)
+const char *Prefs_Serialize(FileHistoryList **root, size_t* lenOut)
 {
     BOOL        ok;
     char *      data = NULL;
@@ -194,7 +199,7 @@ const char *Prefs_SerializeNew(FileHistoryList **root, size_t* lenOut)
     if (!global)
         goto Error;
     DICT_ADD_DICT(prefs, GLOBAL_PREFS_STR, global);
-    benc_array *fileHistory = FileHistoryList_Serialize2(root);
+    benc_array *fileHistory = FileHistoryList_Serialize(root);
     if (!fileHistory)
         goto Error;
     DICT_ADD_DICT(prefs, FILE_HISTORY_STR, fileHistory);
@@ -370,7 +375,7 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     fileHistoryNode = NULL;
 }
 
-bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
+bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {
     benc_obj * bobj;
     benc_str * bstr;
@@ -394,6 +399,7 @@ bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryL
     const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
     if (txt)
         DisplayModeEnumFromName(txt, &gGlobalPrefs.m_defaultDisplayMode);
+    dict_get_double_from_str(global, ZOOM_VIRTUAL_STR, &gGlobalPrefs.m_defaultZoom);
     dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
     dict_get_int(global, WINDOW_X_STR, &gGlobalPrefs.m_windowPosX);
     dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);
@@ -418,7 +424,7 @@ bool Prefs_DeserializeNew(const char *prefsTxt, size_t prefsTxtLen, FileHistoryL
         benc_dict *dict = benc_obj_as_dict(benc_array_get(fileHistory, i));
         assert(dict);
         if (!dict) continue;
-        DisplayState_Deserialize2(dict, &state);
+        DisplayState_Deserialize(dict, &state);
         if (state.filePath) {
             if (file_exists(state.filePath))
                 FileHistory_Add(fileHistoryRoot, &state);
