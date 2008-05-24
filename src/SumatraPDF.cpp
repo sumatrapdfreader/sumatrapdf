@@ -4838,10 +4838,10 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
-        	char buf[256];
-        	int newPageNo;
-        	GetWindowText(win->hwndPageBox, buf, sizeof(buf));
-        	newPageNo = atoi(buf);
+            char buf[256];
+            int newPageNo;
+            GetWindowText(win->hwndPageBox, buf, sizeof(buf));
+            newPageNo = atoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
                 win->dm->goToPage(newPageNo, 0);
                 SetFocus(win->hwndFrame);
@@ -4852,8 +4852,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             SetFocus(win->hwndFrame);
             return 1;
         }
-    }
-    else if (WM_ERASEBKGND == message) {
+    } else if (WM_ERASEBKGND == message) {
         RECT r;
         Edit_GetRect(hwnd, &r);
         if (r.left == 0 && r.top == 0) { // virgin box
@@ -4863,8 +4862,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             r.right -= 2;
             Edit_SetRectNoPaint(hwnd, &r);
         }
-    }
-    else if (WM_SETFOCUS == message) {
+    } else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
     }
 
