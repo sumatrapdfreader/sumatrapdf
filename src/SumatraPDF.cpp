@@ -666,28 +666,30 @@ static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
 static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 {
     HMENU m = CreateMenu();
-    if (NULL == m) return NULL;
+    if (NULL == m) 
+        return NULL;
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.m_title;
         int id = md.m_id;
-        if (str_eq(title, SEP_ITEM))
+        if (str_eq(title, SEP_ITEM)) {
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
-        else {
-            const WCHAR *wtitle = NULL;
-            bool freeWtitle = false;
-            if (menuDefs == menuDefLang) {
-                // special case: languages are not translated
-                wtitle = utf8_to_utf16(title);
-                freeWtitle = true;
-            } else {
-                wtitle = Translations_GetTranslationW(title);
-            }
-            if (wtitle) {
-                AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
-                if (freeWtitle)
-                    free((void*)wtitle);
-            }
+            continue;
+        }
+        const WCHAR *wtitle = NULL;
+        bool freeWtitle = false;
+        if (menuDefs == menuDefLang) {
+            // special case: languages are not translated
+            wtitle = utf8_to_utf16(title);
+            freeWtitle = true;
+        } else {
+            wtitle = Translations_GetTranslationW(title);
+        }
+
+        if (wtitle) {
+            AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
+            if (freeWtitle)
+                free((void*)wtitle);
         }
     }
     return m;
