@@ -3884,6 +3884,7 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
         win->dm->scrollXTo(si.nPos);
 }
 
+#if 0
 static void ViewWithAcrobat(WindowInfo *win)
 {
     if (!WindowInfo_PdfLoaded(win))
@@ -3893,6 +3894,7 @@ static void ViewWithAcrobat(WindowInfo *win)
     sprintf(params, "\"%s\"", win->dm->fileName());
     ShellExecute(GetDesktopWindow(), "open", "AcroRd32.exe", params, NULL, SW_NORMAL);
 }
+#endif
 
 static void OnMenuViewSinglePage(WindowInfo *win)
 {
