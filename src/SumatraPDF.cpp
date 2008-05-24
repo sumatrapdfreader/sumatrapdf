@@ -5136,18 +5136,18 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND spliter = CreateWindow("Spliter", "", WS_CHILDWINDOW, 0, 0, 0, 0,
+    HWND spliter = CreateWindowA("Spliter", "", WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
     win->hwndSpliter = spliter;
     
-    HWND closeToc = CreateWindow(WC_STATIC, "",
+    HWND closeToc = CreateWindowA(WC_STATIC, "",
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 5, 9, spliter, (HMENU)0, hInst, NULL);
     SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
     SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
 
-    win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, "TOC",
+    win->hwndTocBox = CreateWindowExA(WS_EX_STATICEDGE, WC_TREEVIEW, "TOC",
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD,
