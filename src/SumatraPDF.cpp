@@ -3048,26 +3048,24 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     UINT line, col;
     char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];
     UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcfilename,dimof(srcfilename),&line,&col); // record 101
-    if (err!=PDFSYNCERR_SUCCESS)
+    if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
-    else {
-        _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
-        char cmdline[_MAX_PATH];
-        if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
-          srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
-            //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
-            STARTUPINFO si;
-            PROCESS_INFORMATION pi;
-            ZeroMemory( &si, sizeof(si) );
-            si.cb = sizeof(si);
-            ZeroMemory( &pi, sizeof(pi) );
-            if (CreateProcess( NULL, cmdline, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi)) {
-                CloseHandle(pi.hProcess);
-                CloseHandle(pi.hThread);
-            }
-            else {
-                DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
-            }
+        return;
+    }
+
+    _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
+    char cmdline[_MAX_PATH];
+    if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
+      srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
+        //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
+        STARTUPINFO si = {0};
+        PROCESS_INFORMATION pi = {0};
+        si.cb = sizeof(si);
+        if (CreateProcess( NULL, cmdline, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi)) {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        } else {
+            DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
         }
     }
 }
