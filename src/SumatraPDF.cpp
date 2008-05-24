@@ -2120,7 +2120,7 @@ void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo)
     int displayDy = GetDeviceCaps(hdc, VERTRES);
 
     int  dx, dy;
-    if (win->IsFullScreen()) {
+    if (win->dm->_fullScreen) {
         /* TODO: fullscreen not yet supported */
         assert(0);
         dx = displayDx;
@@ -3965,7 +3965,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         rebBarDy = gReBarDy + gReBarDyFrame;
     }
     
-    if (win->_tocLoaded && win->dm->_showToc)
+    if (win->tocLoaded && win->dm->_showToc)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
@@ -4034,7 +4034,7 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     ReloadPdfDocument(win);
     win = gWindowList;
     while (win) {
-        if (win->_tocLoaded) {
+        if (win->tocLoaded) {
             win->ClearTocBox();
             if (win->dm->_showToc)
                 win->LoadTocTree();
@@ -4151,14 +4151,14 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
-void WindowInfo::EnterFullscreen()
+void WindowInfo_EnterFullscreen(WindowInfo *win)
 {
-    if (IsFullScreen() || !IsWindowVisible(hwndFrame)) return;
-    dm->_fullScreen = TRUE;
+    if (win->dm->_fullScreen || !IsWindowVisible(win->hwndFrame)) return;
+    win->dm->_fullScreen = TRUE;
 
     int x, y, w, h;
     MONITORINFOEX mi;
-    HMONITOR m = MonitorFromWindow(hwndFrame, MONITOR_DEFAULTTONEAREST);
+    HMONITOR m = MonitorFromWindow(win->hwndFrame, MONITOR_DEFAULTTONEAREST);
     if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi)) {
         x = 0;
         y = 0;
@@ -4171,36 +4171,36 @@ void WindowInfo::EnterFullscreen()
         w = rect_dx(&mi.rcMonitor);
         h = rect_dy(&mi.rcMonitor);
     }
-    long ws = m_stylePrev = GetWindowLong(hwndFrame, GWL_STYLE);
+    long ws = win->prevStyle = GetWindowLong(win->hwndFrame, GWL_STYLE);
     ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
-    m_menuPrev = GetMenu(hwndFrame);
-    GetWindowRect(hwndFrame, &m_frameRc);
+    win->prevMenu = GetMenu(win->hwndFrame);
+    GetWindowRect(win->hwndFrame, &win->frameRc);
 
-    SetMenu(hwndFrame, NULL);
-    ShowWindow(hwndReBar, SW_HIDE);
-    SetWindowLong(hwndFrame, GWL_STYLE, ws);
-    SetWindowPos(hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    if (_tocLoaded && dm->_showToc)
-        ShowTocBox();
+    SetMenu(win->hwndFrame, NULL);
+    ShowWindow(win->hwndReBar, SW_HIDE);
+    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
+    SetWindowPos(win->hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
+    if (win->tocLoaded && win->dm->_showToc)
+        win->ShowTocBox();
     else
-        SetWindowPos(hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+        SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
 }
 
-void WindowInfo::ExitFullscreen()
+void WindowInfo_ExitFullscreen(WindowInfo *win)
 {
-    if (!IsFullScreen()) 
+    if (!win->dm->_fullScreen) 
         return;
-    dm->_fullScreen = false;
+    win->dm->_fullScreen = false;
 
     if (gGlobalPrefs.m_showToolbar)
-        ShowWindow(hwndReBar, SW_SHOW);
-    SetMenu(hwndFrame, m_menuPrev);
-    SetWindowLong(hwndFrame, GWL_STYLE, m_stylePrev);
-    SetWindowPos(hwndFrame, HWND_NOTOPMOST,
-                 m_frameRc.left, m_frameRc.top,
-                 rect_dx(&m_frameRc), rect_dy(&m_frameRc),
+        ShowWindow(win->hwndReBar, SW_SHOW);
+    SetMenu(win->hwndFrame, win->prevMenu);
+    SetWindowLong(win->hwndFrame, GWL_STYLE, win->prevStyle);
+    SetWindowPos(win->hwndFrame, HWND_NOTOPMOST,
+                 win->frameRc.left, win->frameRc.top,
+                 rect_dx(&win->frameRc), rect_dy(&win->frameRc),
                  SWP_FRAMECHANGED|SWP_NOZORDER);
 }
 
@@ -4219,10 +4219,10 @@ static void OnMenuViewFullscreen(WindowInfo *win)
         return;
     }
 
-    if (win->IsFullScreen())
-        win->ExitFullscreen();
+    if (win->dm->_fullScreen)
+        WindowInfo_ExitFullscreen(win);
     else
-        win->EnterFullscreen();
+        WindowInfo_EnterFullscreen(win);
 }
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
@@ -4512,7 +4512,7 @@ static void OnChar(WindowInfo *win, int key)
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
     if (VK_ESCAPE == key) {
-        if (win->dm && win->IsFullScreen())
+        if (win->dm && win->dm->_fullScreen)
             OnMenuViewFullscreen(win);
         else if (gGlobalPrefs.m_escToExit)
             DestroyWindow(win->hwndFrame);
@@ -5036,7 +5036,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 int width = rect_dx(&r) - tw - SPLITTER_DX;
                 int height = rect_dy(&r);
 
-                if (gGlobalPrefs.m_showToolbar && !win->IsFullScreen()) {
+                if (gGlobalPrefs.m_showToolbar && !win->dm->_fullScreen) {
                     ty = gReBarDy + gReBarDyFrame;
                     height -= ty;
                 }
@@ -5077,9 +5077,9 @@ void WindowInfo::FindUpdateStatus(int current, int total)
         WindowInfo_ShowFindStatus(this);
     }
 
-    wchar_t buf[256];
-    swprintf(buf, L"Searching %d of %d...", current, total);
-    SetWindowTextW(hwndFindStatus, buf);
+    char buf[256];
+    sprintf(buf, "Searching %d of %d...", current, total);
+    SetWindowTextA(hwndFindStatus, buf);
 
     findPercent = current * 100 / total;
 
@@ -5206,7 +5206,7 @@ static void PopluateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent =
 
 void WindowInfo::LoadTocTree()
 {
-    if (_tocLoaded)
+    if (tocLoaded)
         return;
 
     PdfTocItem *toc = dm->getTocTree();
@@ -5214,7 +5214,7 @@ void WindowInfo::LoadTocTree()
         PopluateTocTreeView(hwndTocBox, toc);
         delete toc;
     }
-    _tocLoaded = true;
+    tocLoaded = true;
 }
 
 void WindowInfo::ToggleTocBox()
@@ -5239,7 +5239,7 @@ void WindowInfo::ShowTocBox()
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
-    if (gGlobalPrefs.m_showToolbar && !IsFullScreen())
+    if (gGlobalPrefs.m_showToolbar && !dm->_fullScreen)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
@@ -5265,7 +5265,7 @@ void WindowInfo::HideTocBox()
     int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
-    if (gGlobalPrefs.m_showToolbar && !IsFullScreen())
+    if (gGlobalPrefs.m_showToolbar && !dm->_fullScreen)
         cy = gReBarDy + gReBarDyFrame;
 
     SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
@@ -5277,9 +5277,9 @@ void WindowInfo::HideTocBox()
 
 void WindowInfo::ClearTocBox()
 {
-    if (!_tocLoaded) return;
+    if (!tocLoaded) return;
     TreeView_DeleteAllItems(hwndTocBox);
-    _tocLoaded = false;
+    tocLoaded = false;
 }
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

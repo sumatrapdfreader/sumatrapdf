@@ -94,7 +94,7 @@ public:
         linkOnLastButtonDown = NULL;
         url = NULL;
         selectionOnPage = NULL;
-        _tocLoaded = false;
+        tocLoaded = false;
         hwndFrame = NULL;
         hwndCanvas = NULL;
         hwndToolbar = NULL;
@@ -124,14 +124,14 @@ public:
     }
     
     void GetCanvasSize() { 
-        GetClientRect(hwndCanvas, &m_canvasRc);
+        GetClientRect(hwndCanvas, &canvasRc);
     }
 
-    int winDx() { return rect_dx(&m_canvasRc); }
+    int winDx() { return rect_dx(&canvasRc); }
 
-    int winDy() { return rect_dy(&m_canvasRc); }
+    int winDy() { return rect_dy(&canvasRc); }
 
-    SizeI winSize() { return SizeI(rect_dx(&m_canvasRc), rect_dy(&m_canvasRc)); }
+    SizeI winSize() { return SizeI(rect_dx(&canvasRc), rect_dy(&canvasRc)); }
 
     /* points to the next element in the list or the first element if
        this is the first element */
@@ -212,7 +212,12 @@ public:
     // synchronizer based on .pdfsync file
     Pdfsync         *pdfsync;
 
-    bool _tocLoaded;
+    bool            tocLoaded;
+
+    long            prevStyle;
+    HMENU           prevMenu;
+    RECT            frameRc;
+    RECT            canvasRc;
 
     void ShowTocBox();
     void HideTocBox();
@@ -224,14 +229,6 @@ public:
     void FindStart();
     virtual void FindUpdateStatus(int count, int total);
 
-    BOOL IsFullScreen() { return dm->_fullScreen; }
-    void EnterFullscreen();
-    void ExitFullscreen();
-private:
-    long m_stylePrev;
-    HMENU m_menuPrev;
-    RECT m_frameRc;
-    RECT m_canvasRc;
 };
 
 WindowInfo* WindowInfoList_Find(LPTSTR file);
