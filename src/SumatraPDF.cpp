@@ -4267,12 +4267,13 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *messag
 // hide the message
 static void WindowInfo_HideMessage(WindowInfo *win)
 {
-    if (win->findStatusThread) {
-        SetEvent(win->findStatusThread);
-        CloseHandle(win->findStatusThread);
-        win->findStatusThread = NULL;
-        ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
-    }
+    if (!win->findStatusThread) 
+        return;
+
+    SetEvent(win->findStatusThread);
+    CloseHandle(win->findStatusThread);
+    win->findStatusThread = NULL;
+    ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
