@@ -3193,7 +3193,6 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 static void OnSelectionStart(WindowInfo *win, int x, int y)
 {
     if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_IDLE) {
-        win->documentBlocked = true;
         DeleteOldSelectionInfo (win);
 
         win->selectionRect.x = x;
@@ -3212,7 +3211,6 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
     if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_SELECTING) {
         assert (win->dm);
         if (!win->dm) return;
-        win->documentBlocked = false;
 
         win->selectionRect.dx = abs (x - win->selectionRect.x);
         win->selectionRect.dy = abs (y - win->selectionRect.y);
@@ -3769,8 +3767,6 @@ static void RotateRight(WindowInfo *win)
 
 static void OnVScroll(WindowInfo *win, WPARAM wParam)
 {
-    if (win->documentBlocked) 
-        return;
     SCROLLINFO   si = {0};
     int          iVertPos;
     int          lineHeight = 16;
@@ -3834,8 +3830,6 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 
 static void OnHScroll(WindowInfo *win, WPARAM wParam)
 {
-    if (win->documentBlocked) 
-        return;
     SCROLLINFO   si = {0};
     int          iVertPos;
 
@@ -4402,8 +4396,6 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
 {
     if (!win->dm)
         return;
-    if (win->documentBlocked)
-        return;
 
     bool shiftPressed = WasShiftPressed();
     bool ctrlPressed = WasCtrlPressed();
@@ -4480,7 +4472,7 @@ static void OnChar(WindowInfo *win, int key)
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
     if (VK_ESCAPE == key) {
-        if (win->dm && !win->documentBlocked && win->IsFullScreen())
+        if (win->dm && win->IsFullScreen())
             OnMenuViewFullscreen(win);
         else if (gGlobalPrefs.m_escToExit)
             DestroyWindow(win->hwndFrame);
@@ -4488,7 +4480,7 @@ static void OnChar(WindowInfo *win, int key)
             ClearSearch(win);
     }
 
-    if (!win->dm || win->documentBlocked)
+    if (!win->dm)
         return;
 
     if (VK_BACK == key) {

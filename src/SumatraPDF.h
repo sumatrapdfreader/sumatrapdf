@@ -111,7 +111,6 @@ public:
         hdc = NULL;
         nFindPercent = 0;
         bFindStatusVisible = false;
-        documentBlocked = false;
         showSelection = false;
         showForwardSearchMark = false;
         mouseAction = MA_IDLE;
@@ -172,9 +171,6 @@ public:
 
     PdfLink *       linkOnLastButtonDown;
     const char *    url;
-
-    /* if true, page rotating, zooming, and scrolling is impossible */
-    bool            documentBlocked;
 
     MouseAction     mouseAction;
 
