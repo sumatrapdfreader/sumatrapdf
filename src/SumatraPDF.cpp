@@ -1300,11 +1300,11 @@ static void WindowInfo_Delete(WindowInfo *win)
       delete win->pdfsync;
       win->pdfsync = NULL;
     }
-    if (win->stopFindStatusThreadEvent) {
+    if(win->stopFindStatusThreadEvent) {
         CloseHandle(win->stopFindStatusThreadEvent);
         win->stopFindStatusThreadEvent = NULL;
     }
-    if (win->findStatusThread) {
+    if(win->findStatusThread) {
         CloseHandle(win->findStatusThread);
         win->findStatusThread = NULL;
     }
@@ -3053,7 +3053,7 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
     else {
         _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
         char cmdline[_MAX_PATH];
-        if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
+        if( win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
           srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
             //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
             STARTUPINFO si;
@@ -4163,7 +4163,8 @@ void WindowInfo::EnterFullscreen()
 
 void WindowInfo::ExitFullscreen()
 {
-    if (!IsFullScreen()) return;
+    if (!IsFullScreen()) 
+        return;
     dm->_fullScreen = false;
 
     if (gGlobalPrefs.m_showToolbar)
@@ -4176,15 +4177,15 @@ void WindowInfo::ExitFullscreen()
                  SWP_FRAMECHANGED|SWP_NOZORDER);
 }
 
-static void OnMenuViewFullscreen(WindowInfo *current)
+static void OnMenuViewFullscreen(WindowInfo *win)
 {
-    assert(current);
-    if (!current)
+    assert(win);
+    if (!win || !win->dm)
         return;
-    if (current->IsFullScreen())
-        current->ExitFullscreen();
+    if (win->IsFullScreen())
+        win->ExitFullscreen();
     else
-        current->EnterFullscreen();
+        win->EnterFullscreen();
 }
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
