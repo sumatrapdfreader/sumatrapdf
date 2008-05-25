@@ -15,12 +15,13 @@ const char *g_transLangs[] = {
   "en", "br", "bg", "de", "tr", "hu", "pl", "ja", "fa", "nl", "no", "sk", "vn", "lt", "my", "fi", "ca", "si", "sr-rs", "tw", "ml", "he", "sp-rs", "id", "mk", "ro", "kr", "bn", "cn", "fr", "ru", "gl", "es", "th", "ar", "uk", "eu", "gr", "by", "dk", "it", "ta", "hr", "sv", "cz", "pt"
 };
 
-int g_transTranslationsCount = 60;
+int g_transTranslationsCount = 61;
 
 const char *g_transTranslations[] = {
 
   /* Translations for language en */
   "&About",
+  "&Choose language",
   "&Close\tCtrl-W",
   "&File",
   "&Go To",
@@ -83,6 +84,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language br */
   "S&obre o SumatraPDF",
+  NULL,
   "&Fechar\tCtrl-W",
   "&Arquivo",
   "Ir &para",
@@ -145,6 +147,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language bg */
   "\320\236\321\202\320\275\320\276\321\201\320\275\320\276 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\260\321\202\320\260...",
+  NULL,
   "\320\227\320\260\321\202\320\262\320\276\321\200\320\270\tCtrl-W",
   "&\320\244\320\260\320\271\320\273",
   "\320\236\321\202\320\270\320\264\320\270 &\320\275\320\260",
@@ -207,6 +210,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language de */
   "&\303\234ber SumatraPDF",
+  NULL,
   "&Schlie\303\237en\tCtrl-W",
   "&Datei",
   "&Gehe zu",
@@ -269,6 +273,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language tr */
   "&Hakk\304\261nda",
+  NULL,
   "Kapa&t\tCtrl-W",
   "&Dosya",
   "&Git",
@@ -331,6 +336,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language hu */
   "N\303\251v&jegy",
+  NULL,
   "Be&z\303\241r\303\241s\tCtrl-W",
   "&F\303\241jl",
   "U&gr\303\241s",
@@ -393,6 +399,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language pl */
   "O programie",
+  NULL,
   "&Zamknij\tCtrl-W",
   "Plik",
   "Id\305\272 do",
@@ -455,6 +462,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ja */
   "\343\203\220\343\203\274\343\202\270\343\203\247\343\203\263\346\203\205\345\240\261(&A)",
+  NULL,
   "\351\226\211\343\201\230\343\202\213(&C)\tCtrl-W",
   "\343\203\225\343\202\241\343\202\244\343\203\253(&F)",
   "\347\247\273\345\213\225(&G)",
@@ -517,6 +525,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language fa */
   "\330\257\330\261\330\250\330\247\330\261\331\207",
+  NULL,
   "\330\250\330\263\330\252\331\206\tCtrl-W",
   "\331\201\330\247\331\212\331\204",
   "\330\250\330\261\331\210 \330\250\331\207",
@@ -579,6 +588,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language nl */
   "Over",
+  NULL,
   "&Sluiten\tCtrl-W",
   "&Bestand",
   "Ga naar",
@@ -641,6 +651,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language no */
   "&Om",
+  NULL,
   "&Lukk\tCtrl-W",
   "&Fil",
   "&G\303\245 til",
@@ -703,6 +714,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language sk */
   "&O programe...",
+  NULL,
   "Zatvori\305\245\tCtrl-W",
   "S\303\272bor",
   "\303\215s\305\245 na",
@@ -765,6 +777,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language vn */
   "Gi\341\273\233i thi\341\273\207u",
+  NULL,
   "&\304\220\303\263ng t\341\273\207p\tCtrl-W",
   "&T\341\273\207p tin",
   "&Nh\341\272\243y \304\221\341\272\277n",
@@ -827,6 +840,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language lt */
   "Apie",
+  NULL,
   "&U\305\276verti\tCtrl-W",
   "&Failas",
   "&Eiti",
@@ -889,6 +903,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language my */
   "&Mengenai",
+  NULL,
   "&Tutup\tCtrl-W",
   "&Fail ",
   "&Pergi Ke",
@@ -951,6 +966,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language fi */
   "&Tietoja",
+  NULL,
   "&Sulje\tCtrl-W",
   "&Tiedosto",
   "&Siirry",
@@ -1013,6 +1029,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ca */
   "&Quant a...",
+  NULL,
   "&Tanca\tCtrl-W",
   "&Fitxer",
   "&V\303\251s a",
@@ -1075,6 +1092,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language si */
   "O Progr&amu",
+  NULL,
   "&Zapri\tCtrl-W",
   "&Datoteka",
   "Po&jdi na",
@@ -1137,6 +1155,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language sr-rs */
   "\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203",
+  NULL,
   "\320\227\320\260\321\202\320\262\320\276\321\200\320\270\tCtrl-W",
   "\320\224\320\260\321\202\320\276\321\202\320\265\320\272\320\260",
   "\320\230\320\264\320\270 \320\275\320\260",
@@ -1199,6 +1218,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language tw */
   "\351\227\234\346\226\274(&A)",
+  NULL,
   "\351\227\234\351\226\211(&C)\tCtrl-W",
   " \346\252\224\346\241\210(&F)",
   "\347\247\273\350\207\263(&G)",
@@ -1261,6 +1281,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ml */
   "\340\264\252\340\264\261\340\265\215\340\264\261\340\264\277",
+  NULL,
   "\340\264\205\340\264\237\340\264\257\340\265\215\340\264\225\340\265\215\340\264\225\340\265\201\340\264\225\tCtrl-W",
   "\340\264\253\340\264\257\340\264\262\340\265\215\342\200\215",
   "\340\264\205\340\264\265\340\264\277\340\264\237\340\265\206 \340\264\270\340\264\250\340\265\215\340\264\246\340\264\260\340\265\215\342\200\215\340\264\266\340\264\277\340\264\225\340\265\215\340\264\225\340\265\201\340\264\225",
@@ -1323,6 +1344,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language he */
   "\327\220\327\225\327\223\327\225\327\252",
+  NULL,
   "&\327\241\327\222\327\225\327\250\tCtrl-W",
   "&\327\247\327\225\327\221\327\245",
   "\327\234\327\232 \327\234",
@@ -1385,6 +1407,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language sp-rs */
   "&O programu",
+  NULL,
   "&Zatvori\tCtrl-W",
   "&Datoteka",
   "&Idi na",
@@ -1447,6 +1470,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language id */
   "&Tentang",
+  NULL,
   "&Tutup\tCtrl-W",
   "&Berkas",
   "&Pergi ke",
@@ -1509,6 +1533,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language mk */
   "&\320\227\320\260 SumatraPDF...",
+  NULL,
   "&\320\227\320\260\321\202\320\262\320\276\321\200\320\270\tCtrl-W",
   "&\320\224\320\260\321\202\320\276\321\202\320\265\320\272\320\260",
   "\320\237&\320\276\321\230\320\264\320\270 \320\275\320\260",
@@ -1571,6 +1596,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ro */
   "&Despre",
+  NULL,
   "\303\216nc&hidere\tCtrl-W",
   "&Fi\305\237ier",
   "Sal&t la...",
@@ -1633,6 +1659,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language kr */
   "\354\240\225\353\263\264(&A)...",
+  NULL,
   "\353\213\253\352\270\260(&C)\tCtrl-W",
   "\355\214\214\354\235\274(&F)",
   "\354\235\264\353\217\231(&G)",
@@ -1695,6 +1722,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language bn */
   "&\340\246\206\340\246\256\340\246\276\340\246\246\340\247\207\340\246\260 \340\246\244\340\246\245\340\247\215\340\246\257",
+  NULL,
   "&\340\246\254\340\246\250\340\247\215\340\246\247 \340\246\225\340\246\260\340\247\201\340\246\250\tCtrl-W",
   "&\340\246\253\340\246\276\340\246\207\340\246\262",
   "\340\246\250\340\246\277\340\247\237\340\247\207 \340\246\232\340\246\262\340\247\201\340\246\250",
@@ -1757,6 +1785,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language cn */
   "\345\205\263\344\272\216(&A)",
+  NULL,
   "\345\205\263\351\227\255(&C)\tCtrl-W",
   " \346\226\207\344\273\266(&F)",
   "\350\275\254\345\210\260(&G)",
@@ -1819,6 +1848,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language fr */
   "A propos",
+  NULL,
   "&Fermer\tCtrl-W",
   "&Fichier",
   "Atteindre",
@@ -1881,6 +1911,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ru */
   "\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\274\320\265...",
+  NULL,
   "\320\227\320\260\320\272\321\200\321\213\321\202\321\214\tCtrl-W",
   "\320\244\320\260\320\271\320\273",
   "\320\237\320\265\321\200\320\265\320\271\321\202\320\270",
@@ -1943,6 +1974,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language gl */
   "Arred&or de",
+  NULL,
   "&Pechar\tCtrl-W",
   "&Arquivo",
   "Ir &a",
@@ -2005,6 +2037,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language es */
   "&Acerca de",
+  NULL,
   "&Cerrar\tCtrl-W",
   "&Archivo",
   "&Ir a",
@@ -2067,6 +2100,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language th */
   "\340\271\200\340\270\201\340\270\265\340\271\210\340\270\242\340\270\247\340\270\201\340\270\261\340\270\232",
+  NULL,
   "\340\270\233\340\270\264\340\270\224\tCtrl-W",
   "\340\271\201\340\270\237\340\271\211\340\270\241",
   "\340\271\204\340\270\233\340\270\227\340\270\265\340\271\210",
@@ -2129,6 +2163,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ar */
   "\330\255\331\210\331\204 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254",
+  NULL,
   "&\330\245\330\272\331\204\330\247\331\202\tCtrl-W",
   "\331\205\331\204\331\201",
   "&\330\247\331\204\330\260\331\207\330\247\330\250 \330\245\331\204\331\211",
@@ -2191,6 +2226,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language uk */
   "\320\237&\321\200\320\276 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203...",
+  NULL,
   "&\320\227\320\260\320\272\321\200\320\270\321\202\320\270\tCtrl-W",
   "&\320\244\320\260\320\271\320\273",
   "\320\237\320\265\321\200\320\265\320\271\321\202\320\270 &\320\264\320\276",
@@ -2253,6 +2289,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language eu */
   "Ho&Ni buruz...",
+  NULL,
   "&Itxi\tCtrl-W",
   "&Fitxategia",
   "...ra &Joan",
@@ -2315,6 +2352,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language gr */
   "&\316\243\317\207\316\265\317\204\316\271\316\272\316\254...",
+  NULL,
   "&\316\232\316\273\316\265\316\257\317\203\316\271\316\274\316\277\tCtrl-W",
   "&\316\221\317\201\317\207\316\265\316\257\316\277",
   "&\316\234\316\265\317\204\316\254\316\262\316\261\317\203\316\267",
@@ -2377,6 +2415,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language by */
   "\320\220\320\261 \320\277\321\200\320\260\320\263\321\200\320\260\320\274\320\265",
+  NULL,
   "\320\227\320\260\321\207\321\213\320\275\321\226\321\206\321\214\tCtrl-W",
   "\320\244\320\260\320\271\320\273",
   "\320\237\320\265\321\200\320\260\320\271\321\201\321\206\321\226 \320\264\320\260",
@@ -2439,6 +2478,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language dk */
   "&Om",
+  NULL,
   "&Luk\tCtrl-W",
   "&Filer",
   "&G\303\245 til",
@@ -2501,6 +2541,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language it */
   "&A proposito di",
+  NULL,
   "&Chiudi\tCtrl-W",
   "&File",
   "&Vai a",
@@ -2563,6 +2604,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language ta */
   "\340\256\252\340\256\261\340\257\215\340\256\261\340\256\277",
+  NULL,
   "\340\256\256\340\257\202\340\256\237\340\257\201\tCtrl-W",
   "\340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201",
   "\340\256\205\340\256\231\340\257\215\340\256\225\340\257\201 \340\256\232\340\257\206\340\256\262\340\257\215",
@@ -2625,6 +2667,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language hr */
   "&O...",
+  NULL,
   "&Zatvori\tCtrl-W",
   "&Datoteka",
   "Idi na",
@@ -2687,6 +2730,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language sv */
   "&Om",
+  NULL,
   "&St\303\244ng\tCtrl-W",
   "&Arkiv",
   "&G\303\245 till",
@@ -2749,6 +2793,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language cz */
   "&O programu",
+  NULL,
   "&Zav\305\231\303\255t\tCtrl-W",
   "&Soubor",
   "Jdi na",
@@ -2811,6 +2856,7 @@ const char *g_transTranslations[] = {
 
   /* Translations for language pt */
   "Acerca de...",
+  NULL,
   "&Fechar\tCtrl-W",
   "&Ficheiro",
   "Ir para",

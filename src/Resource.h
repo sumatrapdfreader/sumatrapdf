@@ -104,6 +104,7 @@
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_SET_INVERSESEARCH           552
+#define IDM_CHOOSE_LANGUAGE             553
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000
@@ -120,6 +121,7 @@
 #define IDC_REBAR                       1007
 #define IDC_DONT_ASK_ME_AGAIN           1008
 #define IDC_PDF_TOC_TREE                1009
+#define IDC_CHOOSE_LANG_LANG_LIST       1010
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001
 #define IDB_SILK_OPEN                   2002

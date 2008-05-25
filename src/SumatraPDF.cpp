@@ -645,6 +645,8 @@ MenuDef menuDefZoom[] = {
 
 MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE },
+    { _TRN("&Choose language"),            IDM_CHOOSE_LANGUAGE },
+    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION },
     { _TRN("&About"),                      IDM_ABOUT }
 };
 
@@ -4047,6 +4049,15 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     }
 }
 
+static void OnMenuChooseLanguage(WindowInfo *win)
+{
+    int langId = Dialog_ChangeLanguge(win->hwndFrame);
+    if (-1 == langId)
+        return;
+    /* TODO: compare to current lang.
+       if different, change languge */
+}
+
 static void OnMenuViewShowHideToolbar()
 {
     if (gGlobalPrefs.m_showToolbar)
@@ -5536,6 +5547,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_SHOW_HIDE_TOOLBAR:
                     OnMenuViewShowHideToolbar();
+                    break;
+
+                case IDM_CHOOSE_LANGUAGE:
+                    OnMenuChooseLanguage(win);
                     break;
 
                 case IDM_VIEW_BOOKMARKS:

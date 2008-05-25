@@ -1,6 +1,9 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
+#include <windows.h>
 #include <assert.h>
+
+#include "SumatraPDF.h"
 #include "SumatraDialogs.h"
 
 #include "DisplayModel.h"
@@ -8,6 +11,34 @@
 #include "Resource.h"
 #include "win_util.h"
 #include "dialogsizer.h"
+
+typedef struct {
+    const char *  in_cmdline;   /* current inverse search command line */
+    char *  out_cmdline;         /* inverse search command line selected by the user */
+} Dialog_InverseSearch_Data;
+
+/* For passing data to/from GetPassword dialog */
+typedef struct {
+    const char *  fileName;   /* name of the file for which we need the password */
+    char *        pwdOut;     /* password entered by the user */
+} Dialog_GetPassword_Data;
+
+/* For passing data to/from GoToPage dialog */
+typedef struct {
+    int     currPageNo;      /* currently shown page number */
+    int     pageCount;       /* total number of pages */
+    int     pageEnteredOut;  /* page number entered by user */
+} Dialog_GoToPage_Data;
+
+/* For passing data to/from AssociateWithPdf dialog */
+typedef struct {
+    BOOL    dontAskAgain;
+} Dialog_PdfAssociate_Data;
+
+/* For passing data to/from ChooseLanguage dialog */
+typedef struct {
+    int langId;
+} Dialog_ChooseLanguage_Data;
 
 #ifdef _PDFSYNC_GUI_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -146,14 +177,6 @@ char *Dialog_GetPassword(WindowInfo *win, const char *fileName)
     return NULL;
 }
 
-#if 0
-LTEXT           "Go to page:",IDC_STATIC,8,16,39,8
-EDITTEXT        IDC_GOTO_PAGE_EDIT,50,14,54,14,ES_AUTOHSCROLL
-DEFPUSHBUTTON   "Go to page",IDOK,7,36,64,14
-PUSHBUTTON      "Cancel",IDCANCEL,79,36,64,14
-LTEXT           "(of 99999)",IDC_GOTO_PAGE_LABEL_OF,107,17,36,8
-#endif
-
 static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
@@ -166,15 +189,6 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
     {
         case WM_INITDIALOG:
         {
-#if 0 // example of using DialogSizer
-            DIALOG_SIZER_START(sz)
-                DIALOG_SIZER_ENTRY(IDOK, DS_MoveY)
-                DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
-                DIALOG_SIZER_ENTRY(IDC_GOTO_PAGE_LABEL_OF, DS_MoveX)
-                DIALOG_SIZER_ENTRY(IDC_GOTO_PAGE_EDIT, DS_SizeX)
-            DIALOG_SIZER_END()
-            DialogSizer_Set(hDlg, sz, TRUE, NULL);
-#endif
             /* TODO: intelligently center the dialog within the parent window? */
             data = (Dialog_GoToPage_Data*)lParam;
             assert(NULL != data);
@@ -309,3 +323,90 @@ int Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
     return dialogResult;
 }
 
+static BOOL CALLBACK Dialog_ChooseLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    Dialog_ChooseLanguage_Data *  data;
+    HWND                          langList;
+
+    switch (message)
+    {
+        case WM_INITDIALOG:
+        {
+#if 0
+            DIALOG_SIZER_START(sz)
+                DIALOG_SIZER_ENTRY(IDOK, DS_MoveY)
+                DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
+                DIALOG_SIZER_ENTRY(IDC_CHOOSE_LANG_LANG_LIST, DS_SizeY)
+            DIALOG_SIZER_END()
+            DialogSizer_Set(hDlg, sz, TRUE, NULL);
+#endif
+            data = (Dialog_ChooseLanguage_Data*)lParam;
+            assert(NULL != data);
+            if (!data)
+                return FALSE;
+            SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+            langList = GetDlgItem(hDlg, IDC_CHOOSE_LANG_LANG_LIST);
+            TCHAR *langName;
+            langName = _T("foo");
+            lb_append_string_no_sort(langList, langName);
+            langName = _T("bar");
+            lb_append_string_no_sort(langList, langName);
+#if 0
+            assert(INVALID_PAGE_NO != data->currPageNo);
+            assert(data->pageCount >= 1);
+            DStringInit(&ds);
+            DStringSprintf(&ds, "%d", data->currPageNo);
+            win_set_text(editPageNo, ds.pString);
+            DStringFree(&ds);
+            DStringSprintf(&ds, "(of %d)", data->pageCount);
+            labelOfPages = GetDlgItem(hDlg, IDC_GOTO_PAGE_LABEL_OF);
+            win_set_text(labelOfPages, ds.pString);
+            DStringFree(&ds);
+            win_edit_select_all(editPageNo);
+            SetFocus(editPageNo);
+#endif
+            return FALSE;
+        }
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    data = (Dialog_ChooseLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+                    assert(data);
+                    if (!data)
+                        return TRUE;
+                    data->langId = -1;
+#if 0
+                    data->pageEnteredOut = INVALID_PAGE_NO;
+                    editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
+                    newPageNoTxt = win_get_text(editPageNo);
+                    if (newPageNoTxt) {
+                        data->pageEnteredOut = atoi(newPageNoTxt);
+                        free((void*)newPageNoTxt);
+                    }
+#endif
+                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+                    return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+/* Show "Choose Language" dialog.
+   Returns language id (as stored in g_langs[]._langId) or -1 if the user 
+   chose 'cancel' */
+int Dialog_ChangeLanguge(HWND hwnd)
+{
+    Dialog_ChooseLanguage_Data data;
+    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChooseLanguage_Proc, (LPARAM)&data);
+    if (DIALOG_CANCEL_PRESSED == dialogResult)
+        return -1;
+    return data.langId;
+}
