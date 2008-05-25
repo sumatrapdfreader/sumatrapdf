@@ -267,6 +267,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\LangMenuDef.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\PdfEngine.cc"
 				>
 			</File>

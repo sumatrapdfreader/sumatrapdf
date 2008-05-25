@@ -242,11 +242,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
 
 #define SEP_ITEM "-----"
 
-typedef struct MenuDef {
-    const char *m_title;
-    int         m_id;
-} MenuDef;
-
 /* according to http://wiki.snap.com/index.php/User_talk:Snap, Serbian (latin) should 
    be sp-rs and Serbian (Cyrillic) should be sr-rs */
 #include "LangMenuDef.h"
@@ -299,8 +294,6 @@ static const char *g_lcidLangMap[] = {
     "uk", NULL, NULL, // Ukrainian
     NULL
 };
-
-#define LANGS_COUNT dimof(g_langs)
 
 const char* CurrLangNameGet() {
     if (!g_currLangName)
@@ -643,10 +636,13 @@ MenuDef menuDefZoom[] = {
     { _TRN("8.33%"),                       IDM_ZOOM_8_33 },
 };
 
+MenuDef menuDefLang[] = {
+    { _TRN("Change language"),             IDM_CHANGE_LANGUAGE },
+    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION },
+};
+
 MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE },
-    { _TRN("&Choose language"),            IDM_CHOOSE_LANGUAGE },
-    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION },
     { _TRN("&About"),                      IDM_ABOUT }
 };
 
@@ -680,13 +676,8 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
         }
         const WCHAR *wtitle = NULL;
         bool freeWtitle = false;
-        if (menuDefs == menuDefLang) {
-            // special case: languages are not translated
-            wtitle = utf8_to_utf16(title);
-            freeWtitle = true;
-        } else {
-            wtitle = Translations_GetTranslationW(title);
-        }
+
+        wtitle = Translations_GetTranslationW(title);
 
         if (wtitle) {
             AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
@@ -4049,7 +4040,7 @@ static void OnMenuViewUseFitz(WindowInfo *win)
     }
 }
 
-static void OnMenuChooseLanguage(WindowInfo *win)
+static void OnMenuChangeLanguage(WindowInfo *win)
 {
     int langId = Dialog_ChangeLanguge(win->hwndFrame);
     if (-1 == langId)
@@ -5549,8 +5540,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuViewShowHideToolbar();
                     break;
 
-                case IDM_CHOOSE_LANGUAGE:
-                    OnMenuChooseLanguage(win);
+                case IDM_CHANGE_LANGUAGE:
+                    OnMenuChangeLanguage(win);
                     break;
 
                 case IDM_VIEW_BOOKMARKS:

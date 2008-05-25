@@ -104,7 +104,7 @@
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_SET_INVERSESEARCH           552
-#define IDM_CHOOSE_LANGUAGE             553
+#define IDM_CHANGE_LANGUAGE             553
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000

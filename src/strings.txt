@@ -2214,5 +2214,5 @@ eu:Lagun gaitzazu itzulpenekin
 Set inverse search command-line
 fr:Configurer la recherche inverse
 -
-&Choose language
+Change language
 

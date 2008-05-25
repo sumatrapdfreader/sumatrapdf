@@ -35,10 +35,10 @@ typedef struct {
     BOOL    dontAskAgain;
 } Dialog_PdfAssociate_Data;
 
-/* For passing data to/from ChooseLanguage dialog */
+/* For passing data to/from ChangeLanguage dialog */
 typedef struct {
     int langId;
-} Dialog_ChooseLanguage_Data;
+} Dialog_ChangeLanguage_Data;
 
 #ifdef _PDFSYNC_GUI_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -323,9 +323,9 @@ int Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
     return dialogResult;
 }
 
-static BOOL CALLBACK Dialog_ChooseLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    Dialog_ChooseLanguage_Data *  data;
+    Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
 
     switch (message)
@@ -340,7 +340,7 @@ static BOOL CALLBACK Dialog_ChooseLanguage_Proc(HWND hDlg, UINT message, WPARAM 
             DIALOG_SIZER_END()
             DialogSizer_Set(hDlg, sz, TRUE, NULL);
 #endif
-            data = (Dialog_ChooseLanguage_Data*)lParam;
+            data = (Dialog_ChangeLanguage_Data*)lParam;
             assert(NULL != data);
             if (!data)
                 return FALSE;
@@ -372,7 +372,7 @@ static BOOL CALLBACK Dialog_ChooseLanguage_Proc(HWND hDlg, UINT message, WPARAM 
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    data = (Dialog_ChooseLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+                    data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
                     assert(data);
                     if (!data)
                         return TRUE;
@@ -399,13 +399,13 @@ static BOOL CALLBACK Dialog_ChooseLanguage_Proc(HWND hDlg, UINT message, WPARAM 
     return FALSE;
 }
 
-/* Show "Choose Language" dialog.
+/* Show "Change Language" dialog.
    Returns language id (as stored in g_langs[]._langId) or -1 if the user 
    chose 'cancel' */
 int Dialog_ChangeLanguge(HWND hwnd)
 {
-    Dialog_ChooseLanguage_Data data;
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChooseLanguage_Proc, (LPARAM)&data);
+    Dialog_ChangeLanguage_Data data;
+    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (DIALOG_CANCEL_PRESSED == dialogResult)
         return -1;
     return data.langId;
