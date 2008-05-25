@@ -335,14 +335,12 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
     {
         case WM_INITDIALOG:
         {
-#if 0
             DIALOG_SIZER_START(sz)
                 DIALOG_SIZER_ENTRY(IDOK, DS_MoveY)
                 DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
-                DIALOG_SIZER_ENTRY(IDC_CHANGE_LANG_LANG_LIST, DS_SizeY)
+                DIALOG_SIZER_ENTRY(IDC_CHANGE_LANG_LANG_LIST, DS_SizeY | DS_SizeX)
             DIALOG_SIZER_END()
             DialogSizer_Set(hDlg, sz, TRUE, NULL);
-#endif
             data = (Dialog_ChangeLanguage_Data*)lParam;
             assert(NULL != data);
             if (!data)
