@@ -666,6 +666,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
     HMENU m = CreateMenu();
     if (NULL == m) 
         return NULL;
+
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
         const char *title = md.m_title;
@@ -674,15 +675,10 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
             AppendMenu(m, MF_SEPARATOR, 0, NULL);
             continue;
         }
-        const WCHAR *wtitle = NULL;
-        bool freeWtitle = false;
-
-        wtitle = Translations_GetTranslationW(title);
+        const WCHAR *wtitle =  Translations_GetTranslationW(title);
 
         if (wtitle) {
             AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
-            if (freeWtitle)
-                free((void*)wtitle);
         }
     }
     return m;
@@ -4000,6 +3996,16 @@ static void LanguageChanged(const char *langName)
     UpdateToolbarToolText();
 }
 
+static int LangIdFromName(const char *name)
+{
+    for (int i=0; i < LANGS_COUNT; i++) {
+        const char *langName = g_langs[i]._langName;
+        if (str_eq(name, langName))
+            return g_langs[i]._langId;
+    }
+    return -1;
+}
+
 static void OnMenuLanguage(int langId)
 {
     const char *langName = NULL;
@@ -4042,11 +4048,12 @@ static void OnMenuViewUseFitz(WindowInfo *win)
 
 static void OnMenuChangeLanguage(WindowInfo *win)
 {
-    int langId = Dialog_ChangeLanguge(win->hwndFrame);
-    if (-1 == langId)
+    int langId = LangIdFromName(CurrLangNameGet());
+    int newLangId = Dialog_ChangeLanguge(win->hwndFrame, langId);
+    if (-1 == newLangId)
         return;
-    /* TODO: compare to current lang.
-       if different, change languge */
+    if (langId != newLangId)
+        OnMenuLanguage(newLangId);
 }
 
 static void OnMenuViewShowHideToolbar()

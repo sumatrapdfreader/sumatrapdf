@@ -11,6 +11,8 @@
 #include "Resource.h"
 #include "win_util.h"
 #include "dialogsizer.h"
+#include "LangMenuDef.h"
+#include "utf_util.h"
 
 typedef struct {
     const char *  in_cmdline;   /* current inverse search command line */
@@ -327,6 +329,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
 {
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
+    int                           sel;
 
     switch (message)
     {
@@ -336,7 +339,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
             DIALOG_SIZER_START(sz)
                 DIALOG_SIZER_ENTRY(IDOK, DS_MoveY)
                 DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
-                DIALOG_SIZER_ENTRY(IDC_CHOOSE_LANG_LANG_LIST, DS_SizeY)
+                DIALOG_SIZER_ENTRY(IDC_CHANGE_LANG_LANG_LIST, DS_SizeY)
             DIALOG_SIZER_END()
             DialogSizer_Set(hDlg, sz, TRUE, NULL);
 #endif
@@ -345,30 +348,35 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
             if (!data)
                 return FALSE;
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
-            langList = GetDlgItem(hDlg, IDC_CHOOSE_LANG_LANG_LIST);
-            TCHAR *langName;
-            langName = _T("foo");
-            lb_append_string_no_sort(langList, langName);
-            langName = _T("bar");
-            lb_append_string_no_sort(langList, langName);
-#if 0
-            assert(INVALID_PAGE_NO != data->currPageNo);
-            assert(data->pageCount >= 1);
-            DStringInit(&ds);
-            DStringSprintf(&ds, "%d", data->currPageNo);
-            win_set_text(editPageNo, ds.pString);
-            DStringFree(&ds);
-            DStringSprintf(&ds, "(of %d)", data->pageCount);
-            labelOfPages = GetDlgItem(hDlg, IDC_GOTO_PAGE_LABEL_OF);
-            win_set_text(labelOfPages, ds.pString);
-            DStringFree(&ds);
-            win_edit_select_all(editPageNo);
-            SetFocus(editPageNo);
-#endif
+            langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
+            WCHAR *langName;
+            int idx = 0;
+            for (int i=0; i < LANGS_COUNT; i++) {
+                langName = utf8_to_utf16(g_menuDefLang[i].m_title);
+                lb_append_stringw_no_sort(langList, langName);
+                free(langName);
+                if (g_menuDefLang[i].m_id == data->langId)
+                    idx = i;
+            }
+            lb_set_selection(langList, idx);
+            SetFocus(langList);
             return FALSE;
         }
 
         case WM_COMMAND:
+            if (HIWORD(wParam) == LBN_DBLCLK) {
+                data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+                assert(data);
+                if (!data)
+                    return TRUE;
+                assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
+                langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
+                assert(langList == (HWND)lParam);
+                sel = lb_get_selection(langList);                    
+                data->langId = g_menuDefLang[sel].m_id;
+                EndDialog(hDlg, DIALOG_OK_PRESSED);
+                return FALSE;
+            }
             switch (LOWORD(wParam))
             {
                 case IDOK:
@@ -376,16 +384,10 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
                     assert(data);
                     if (!data)
                         return TRUE;
-                    data->langId = -1;
-#if 0
-                    data->pageEnteredOut = INVALID_PAGE_NO;
-                    editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    newPageNoTxt = win_get_text(editPageNo);
-                    if (newPageNoTxt) {
-                        data->pageEnteredOut = atoi(newPageNoTxt);
-                        free((void*)newPageNoTxt);
-                    }
-#endif
+
+                    langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
+                    sel = lb_get_selection(langList);                    
+                    data->langId = g_menuDefLang[sel].m_id;
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -402,9 +404,10 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
 /* Show "Change Language" dialog.
    Returns language id (as stored in g_langs[]._langId) or -1 if the user 
    chose 'cancel' */
-int Dialog_ChangeLanguge(HWND hwnd)
+int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
     Dialog_ChangeLanguage_Data data;
+    data.langId = currLangId;
     int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (DIALOG_CANCEL_PRESSED == dialogResult)
         return -1;

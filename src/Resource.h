@@ -121,7 +121,7 @@
 #define IDC_REBAR                       1007
 #define IDC_DONT_ASK_ME_AGAIN           1008
 #define IDC_PDF_TOC_TREE                1009
-#define IDC_CHOOSE_LANG_LANG_LIST       1010
+#define IDC_CHANGE_LANG_LANG_LIST       1010
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001
 #define IDB_SILK_OPEN                   2002
