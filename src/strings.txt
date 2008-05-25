@@ -2215,4 +2215,4 @@ Set inverse search command-line
 fr:Configurer la recherche inverse
 -
 Change language
-
+pl:Zmien język

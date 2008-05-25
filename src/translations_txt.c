@@ -426,7 +426,7 @@ const char *g_transTranslations[] = {
   "O programie",
   "Prawdziwy rozmiar\tCtrl-1",
   NULL,
-  NULL,
+  "Zmien j\304\231zyk",
   "Ci\304\205g\305\202y",
   "Ci\304\205g\305\202y na przeciwko",
   "Pom\303\263\305\274 przy translacji",

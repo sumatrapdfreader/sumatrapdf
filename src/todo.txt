@@ -1,5 +1,4 @@
 Short term todo (before next 0.8.1 release):
-* add -lang option for changing language from cmd line
 * check for new version on-line
 
 Long term todo:

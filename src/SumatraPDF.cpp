@@ -311,8 +311,8 @@ bool CurrLangNameSet(const char* langName) {
             break;
         }
     }
-    assert(validLang);
-    if (!validLang) return false;
+    if (!validLang) 
+        return false;
     free((void*)g_currLangName);
     g_currLangName = str_dup(langName);
 
@@ -1926,8 +1926,10 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
             return NULL;
     }
 
-// define THREAD_BASED_FILEWATCH in order to use the thread-based implementation of 
-// file change detection.
+    // TODO: fileName might not exist. PdfSync() should only be constructed
+    // after we've succesfully opened a PDF file
+    // define THREAD_BASED_FILEWATCH in order to use the thread-based implementation of 
+    // file change detection.
     TCHAR fullpath[_MAX_PATH];
     GetFullPathName(fileName, dimof(fullpath), fullpath, NULL);
 #ifdef THREAD_BASED_FILEWATCH
@@ -1937,7 +1939,7 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
     win->watcher.Init(fullpath);
 #endif
 
-   win->pdfsync = new Pdfsync(fullpath);
+    win->pdfsync = new Pdfsync(fullpath);
 
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     DisplayState *ds = NULL;
@@ -6351,6 +6353,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-esc-to-exit")) {
             currArg = currArg->next;
             gGlobalPrefs.m_escToExit = TRUE;
+            continue;
+        }
+
+        if (is_arg("-lang")) {
+            currArg = currArg->next;
+            if (currArg) {
+                CurrLangNameSet(currArg->str);
+                currArg = currArg->next;
+            }
             continue;
         }
 
