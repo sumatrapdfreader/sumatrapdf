@@ -40,6 +40,8 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
+#define CURR_VERSION "0.8.1"
+
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
@@ -2701,7 +2703,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 #define SUMATRA_TXT             "Sumatra PDF"
 #define SUMATRA_TXT_FONT        "Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   24
-#define BETA_TXT                "Beta v0.8"
+#define BETA_TXT                "Beta v" CURR_VERSION
 #define BETA_TXT_FONT           "Arial Black"
 #define BETA_TXT_FONT_SIZE      12
 #define LEFT_TXT_FONT           "Arial"
