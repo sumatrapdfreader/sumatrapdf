@@ -35,12 +35,13 @@
 
 #include "WinUtil.hpp"
 #include <windowsx.h>
+#include <Wininet.h>
 
 #ifdef CRASHHANDLER
 #include "client\windows\handler\exception_handler.h"
 #endif
 
-#define CURR_VERSION "0.8.1"
+#define CURR_VERSION "0.8.0"
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -93,6 +94,7 @@ static BOOL             gDebugShowLinks = FALSE;
 
 #define WM_APP_REPAINT_DELAYED (WM_APP + 10)
 #define WM_APP_REPAINT_NOW     (WM_APP + 11)
+#define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
 
 /* A caption is 4 white/blue 2 pixel line and a 3 pixel white line */
 #define CAPTION_DY 2*(2*4)+3
@@ -356,6 +358,325 @@ static void GuessLanguage()
     const char *lang = GetLangFromLcid((const char*)&langBuf[0]);
     if (NULL != lang)
         CurrLangNameSet(lang);
+}
+
+class MemSegment {
+private:
+    class MemSegment *next;
+
+public:
+    MemSegment(void *buf, DWORD size) {
+        next = NULL;
+        data = NULL;
+        add(buf, size);
+    };
+
+    MemSegment() {
+        next = NULL;
+        data = NULL;
+    }
+
+    bool add(void *buf, DWORD size) {
+        assert(size > 0);
+        if (!data) {
+            dataSize = size;
+            data = malloc(size);
+            if (!data)
+                return false;
+            memcpy(data, buf, size);
+        } else {
+            MemSegment *ms = new MemSegment(buf, size);
+            if (!ms)
+                return false;
+            if (!ms->data) {
+                delete ms;
+                return false;
+            }
+            ms->next = next;
+            next = ms;
+        }
+        return true;
+    }
+
+    void freeAll() {
+        free(data);
+        data = NULL;
+        // clever trick: each segment will delete the next segment
+        if (next) {
+            delete next;
+            next = NULL;
+        }
+    }
+    ~MemSegment() {
+        freeAll();
+    }
+    void *getData(DWORD *sizeOut);
+    void *data;
+    DWORD dataSize;
+};
+
+void *MemSegment::getData(DWORD *sizeOut)
+{
+    DWORD totalSize = dataSize;
+    MemSegment *curr = next;
+    while (curr) {
+        totalSize += curr->dataSize;
+        curr = curr->next;
+    }
+    if (0 == dataSize)
+        return NULL;
+    char *buf = (char*)malloc(totalSize + 1); // +1 for 0 termination
+    if (!buf)
+        return NULL;
+    buf[totalSize] = 0;
+    // the chunks are linked in reverse order, so we must reassemble them properly
+    char *end = buf + totalSize;
+    curr = next;
+    while (curr) {
+        end -= curr->dataSize;
+        memcpy(end, curr->data, curr->dataSize);
+        curr = curr->next;
+    }
+    end -= dataSize;
+    memcpy(end, data, dataSize);
+    assert(end == buf);
+    *sizeOut = totalSize;
+    return (void*)buf;
+}
+
+#ifdef DEBUG
+void u_testMemSegment()
+{
+    MemSegment *ms;
+    DWORD size;
+    char *data;
+
+    char buf[2] = {'a', '\0'};
+    ms = new MemSegment();
+    for (int i=0; i<7; i++) {
+        ms->add(buf, 1);
+        buf[0] = buf[0] + 1;
+    }
+    data = (char*)ms->getData(&size);
+    delete ms;
+    assert(str_eq("abcdefg", data));
+    assert(7 == size);
+    free(data);
+
+    ms = new MemSegment("a", 1);
+    data = (char*)ms->getData(&size);
+    ms->freeAll();
+    delete ms;
+    assert(str_eq("a", data));
+    assert(1 == size);
+    free(data);
+}
+#endif
+
+// based on information in http://www.codeproject.com/KB/IP/asyncwininet.aspx
+typedef struct {
+    // the window to which we'll send notification about completed download
+    HWND          hwndToNotify;
+    char *        url;
+    HINTERNET     httpFile;
+    MemSegment    data;
+} HttpReqCtx;
+
+class UrlDownloadedMsgData {
+public:
+    char *  url;
+    char *  data;
+    DWORD   dataSize;
+    UrlDownloadedMsgData(char *_url, char *_data, DWORD _dataSize) {
+        assert(_url);
+        assert(_data);
+        assert(_dataSize > 0);
+        url = strdup(_url);
+        data = _data;
+        dataSize = _dataSize;
+    }
+    ~UrlDownloadedMsgData() {
+        free(url);
+        free(data);
+    }
+};
+
+void __stdcall InternetCallbackProc(HINTERNET hInternet,
+                        DWORD_PTR dwContext,
+                        DWORD dwInternetStatus,
+                        LPVOID statusInfo,
+                        DWORD statusLen)
+{
+    char buf[256];
+    INTERNET_ASYNC_RESULT* res;
+    HttpReqCtx *ctx = (HttpReqCtx*)dwContext;
+
+    switch (dwInternetStatus)
+    {
+        case INTERNET_STATUS_HANDLE_CREATED:
+            res = (INTERNET_ASYNC_RESULT*)statusInfo;
+            ctx->httpFile = (HINTERNET)(res->dwResult);
+
+            StringCchPrintfA(buf, 256, "HANDLE_CREATED (%d)", statusLen );
+            break;
+
+        case INTERNET_STATUS_REQUEST_COMPLETE:
+        {
+            // Check for errors.
+            if (LPINTERNET_ASYNC_RESULT(statusInfo)->dwError != 0)
+            {
+                StringCchPrintfA(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
+                break;
+            }
+
+            // Set the resource handle to the HINTERNET handle returned in the callback.
+            HINTERNET hInt = HINTERNET(LPINTERNET_ASYNC_RESULT(statusInfo)->dwResult);
+            assert(hInt == ctx->httpFile);
+
+            StringCchPrintfA(buf, 256, "REQUEST_COMPLETE (%d)", statusLen);
+
+            INTERNET_BUFFERSA ib = {0};
+            ib.dwStructSize = sizeof(ib);
+            ib.lpvBuffer = malloc(1024);
+
+            // This is not exactly async, but we're assuming it'll complete quickly
+            // because the update file is small and we now that connection is working
+            // since we already got headers back
+            BOOL ok;
+            while (TRUE) {
+                ib.dwBufferLength = 1024;
+                ok = InternetReadFileExA(ctx->httpFile, &ib, IRF_ASYNC, (LPARAM)ctx);
+                if (ok || (!ok && GetLastError()==ERROR_IO_PENDING)) {
+                    DWORD readSize = ib.dwBufferLength;
+                    if (readSize > 0) {
+                        ctx->data.add(ib.lpvBuffer, readSize);
+                    }
+                }
+                if (ok || GetLastError()!=ERROR_IO_PENDING)
+                    break; // read the whole file or error
+            }
+            if (ok) {
+                // read the whole file
+                DWORD dataSize;
+                char *data = (char*)ctx->data.getData(&dataSize);
+                UrlDownloadedMsgData *msgData = new UrlDownloadedMsgData(ctx->url, data, dataSize);
+                PostMessage(ctx->hwndToNotify, WM_APP_URL_DOWNLOADED, (WPARAM) msgData, 0);
+            } else {
+                // error
+            }
+            free(ib.lpvBuffer);
+            ctx->data.freeAll();
+            InternetCloseHandle(ctx->httpFile);
+        }
+        break;
+
+#ifdef DEBUG
+        case INTERNET_STATUS_CLOSING_CONNECTION:
+            StringCchPrintfA(buf, 256, "CLOSING_CONNECTION (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_CONNECTED_TO_SERVER:
+            StringCchPrintfA(buf, 256, "CONNECTED_TO_SERVER (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_CONNECTING_TO_SERVER:
+            StringCchPrintfA(buf, 256, "CONNECTING_TO_SERVER (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_CONNECTION_CLOSED:
+            StringCchPrintfA(buf, 256, "CONNECTION_CLOSED (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_HANDLE_CLOSING:
+            StringCchPrintfA(buf, 256, "HANDLE_CLOSING (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_INTERMEDIATE_RESPONSE:
+            StringCchPrintfA(buf, 256, "INTERMEDIATE_RESPONSE (%d)", statusLen );
+            break;
+
+        case INTERNET_STATUS_NAME_RESOLVED:
+            StringCchPrintfA(buf, 256, "NAME_RESOLVED (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_RECEIVING_RESPONSE:
+            StringCchPrintfA(buf, 256, "RECEIVING_RESPONSE (%d)",statusLen);
+            break;
+
+        case INTERNET_STATUS_RESPONSE_RECEIVED:
+            StringCchPrintfA(buf, 256, "RESPONSE_RECEIVED (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_REDIRECT:
+            StringCchPrintfA(buf, 256, "REDIRECT (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_REQUEST_SENT:
+            StringCchPrintfA(buf, 256, "REQUEST_SENT (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_RESOLVING_NAME:
+            StringCchPrintfA(buf, 256, "RESOLVING_NAME (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_SENDING_REQUEST:
+            StringCchPrintfA(buf, 256, "SENDING_REQUEST (%d)", statusLen);
+            break;
+
+        case INTERNET_STATUS_STATE_CHANGE:
+            StringCchPrintfA(buf, 256, "STATE_CHANGE (%d)", statusLen);
+            break;
+
+        default:
+            StringCchPrintfA(buf, 256, "Unknown: Status %d Given", dwInternetStatus);
+            break;
+#endif
+    }
+
+    DBG_OUT(buf);
+    DBG_OUT("\n");
+}
+
+static HINTERNET g_hOpen = NULL;
+static HttpReqCtx g_SumatraUpdateContext;
+
+#define SUMATRA_UPDATE_INFO_URL "http://fastdl.org/sumpdf-latest.txt"
+
+bool WininetInit()
+{
+    if (!g_hOpen)
+        g_hOpen = InternetOpenA("SumatraPDF", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
+    if (NULL == g_hOpen) {
+        DBG_OUT("InternetOpenA() failed\n");
+        return false;
+    }
+    return true;
+}
+
+void WininetDeinit()
+{
+    if (g_hOpen)
+        InternetCloseHandle(g_hOpen);
+}
+
+void DownloadSumatraUpdateInfo()
+{
+    if (!WininetInit())
+        return;
+    assert(gWindowList);
+    HWND hwndToNotify = gWindowList->hwndFrame;
+    g_SumatraUpdateContext.hwndToNotify = hwndToNotify;
+    g_SumatraUpdateContext.url = SUMATRA_UPDATE_INFO_URL;
+    InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
+    HINTERNET urlHandle;
+    urlHandle = InternetOpenUrlA(g_hOpen, SUMATRA_UPDATE_INFO_URL, NULL, 0, 
+      INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE | 
+      INTERNET_FLAG_NO_CACHE_WRITE, (LPARAM)&g_SumatraUpdateContext);
+    /* MSDN says NULL result from InternetOpenUrlA() means an error, but in my testing
+       in async mode InternetOpenUrl() returns NULL and error is ERROR_IO_PENDING */
+    if (!urlHandle && (GetLastError() != ERROR_IO_PENDING)) {
+        DBG_OUT("InternetOpenUrlA() failed\n");
+    }
 }
 
 static DWORD GetSerialNumber()
@@ -2399,6 +2720,81 @@ static void OnBenchNextAction(WindowInfo *win)
 
     if (win->dm->goToNextPage(0))
         PostBenchNextAction(win->hwndFrame);
+}
+
+/* Given a string whose first line is a version number in the form: one or
+   more integers separated by '.' (e.g. 0, 0.1, 1.3.5 etc.)
+   return its numeric representation as integer, or -1 if invalid format.
+   Note: due to how we calculate numeric representation, each numer
+   must be < 10.
+   TODO: this requires me to always have the fraction part e.g. 0.8.0, which is
+   not human friendly. Probably should change the rules that number version is
+   x.y.z, or x.y in which case it's interprested as x.y.0, and releax the rules
+   on numbers so that x/y/z can be > 9
+   */
+int ParseSumatraVer(char *txt)
+{
+    int val = 0;
+    int numCount = 0;
+    char c;
+    int n;
+    for (;;) {
+        c = *txt++;
+        n = c - '0';
+        if ((n < 0) || (n > 9))
+            return -1;
+        val = (val * 10) + n;
+        ++numCount;
+        c = *txt++;
+        if (0 == c)
+            break;
+        if (c != '.')
+            return -1;
+    }
+    if (0 == numCount)
+        return -1;
+    return val;
+}
+
+void u_ParseSumatraVar()
+{
+    assert(0 == ParseSumatraVer("0"));
+    assert(0 == ParseSumatraVer("0.0"));
+    assert(1 == ParseSumatraVer("0.1"));
+    assert(10 == ParseSumatraVer("1.0"));
+    assert(543 == ParseSumatraVer("5.4.3"));
+    assert(81 == ParseSumatraVer("0.8.1"));
+    assert(-1 == ParseSumatraVer(""));
+    assert(-1 == ParseSumatraVer("."));
+    assert(-1 == ParseSumatraVer("a"));
+    assert(-1 == ParseSumatraVer("3.a"));
+    assert(-1 == ParseSumatraVer("3."));
+}
+
+static void OnUrlDownloaded(WindowInfo *win, UrlDownloadedMsgData *data)
+{
+    char *url = data->url;
+    if (str_eq(url, SUMATRA_UPDATE_INFO_URL)) {
+        char *verTxt = data->data;
+        /* TODO: too hackish */
+        char *tmp = str_normalize_newline(verTxt, "*");
+        char *tmp2 = (char*)str_find_char(tmp, '*');
+        if (tmp2)
+            *tmp2 = 0;
+        int currVer = ParseSumatraVer(CURR_VERSION);
+        assert(-1 != currVer);
+        int newVer = ParseSumatraVer(tmp);
+        assert(-1 != newVer);
+        if (newVer > currVer) {
+            // TODO: replace with a custom dialog
+            int res = MessageBox(win->hwndFrame, "New version available. Download?", "New version available", MB_ICONEXCLAMATION | MB_OKCANCEL);
+            if (res == IDOK) {
+                LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
+            }
+        }
+        free(tmp);
+    }
+    delete data;
 }
 
 static void DrawCenteredText(HDC hdc, RECT *r, char *txt)
@@ -5621,6 +6017,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
                     break;
 
+#if 0
                 case IDM_LANG_EN:
                 case IDM_LANG_PL:
                 case IDM_LANG_FR:
@@ -5669,9 +6066,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_LANG_EU:
                     OnMenuLanguage((int)wmId);
                     break;
+#endif
                 case IDM_CONTRIBUTE_TRANSLATION:
                     OnMenuContributeTranslation();
                     break;
+
                 case IDM_ABOUT:
                     OnMenuAbout();
                     break;
@@ -5759,16 +6158,22 @@ InitMouseWheelInfo:
             break;
 #endif
 
-      case WM_DDE_INITIATE:
-          return OnDDEInitiate(hwnd, wParam, lParam);
-      case WM_DDE_EXECUTE:
-          return OnDDExecute(hwnd, wParam, lParam);
-      case WM_DDE_TERMINATE:
-          return OnDDETerminate(hwnd, wParam, lParam);
+        case WM_DDE_INITIATE:
+            return OnDDEInitiate(hwnd, wParam, lParam);
+        case WM_DDE_EXECUTE:
+            return OnDDExecute(hwnd, wParam, lParam);
+        case WM_DDE_TERMINATE:
+            return OnDDETerminate(hwnd, wParam, lParam);
 
-      case MSG_BENCH_NEXT_ACTION:
+        case MSG_BENCH_NEXT_ACTION:
             if (win)
                 OnBenchNextAction(win);
+            break;
+
+        case WM_APP_URL_DOWNLOADED:
+            assert(win);
+            if (win)
+                OnUrlDownloaded(win, (UrlDownloadedMsgData*)wParam);
             break;
 
         case WM_NOTIFY:
@@ -5800,7 +6205,8 @@ InitMouseWheelInfo:
                     break;
                 }
             }
-           break;
+            break;
+
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
@@ -5957,8 +6363,10 @@ static StrList *StrList_FromCmdLine(char *cmdLine)
 static void u_DoAllTests(void)
 {
 #ifdef DEBUG
-    printf("Running tests\n");
+    DBG_OUT("Running tests\n");
+    u_ParseSumatraVar();
     u_RectI_Intersect();
+    u_testMemSegment();
 #else
     printf("Not running tests\n");
 #endif
@@ -6453,6 +6861,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (registerForPdfExtentions)
         RegisterForPdfExtentions(win ? win->hwndFrame : NULL);
 
+    DownloadSumatraUpdateInfo();
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
@@ -6461,7 +6870,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         }
     }
 #else
-    while(1){
+    while(1) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
             if (GetMessage(&msg, NULL, 0, 0)) {
                 if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
@@ -6470,9 +6879,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 }
             }
         }
-        else 
+        else {
             WindowInfo_RefreshUpdatedFiles();
-            Sleep(50);
+            Sleep(50); // TODO: why is it here?
+        }
     }
 #endif
     
@@ -6489,6 +6899,7 @@ Exit:
     StrList_Destroy(&argListRoot);
     Translations_FreeData();
     CurrLangNameFree();
+    WininetDeinit();
     //histDump();
     return (int) msg.wParam;
 }
@@ -6510,16 +6921,16 @@ static WindowInfo* CreateEmpty(HWND parentHandle) {
     return win;
 }
 
-static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
+static void OpenPdf(WindowInfo* win,const char *fileName,  HWND parentHandle)
 {
     assert(fileName);
     if (!fileName) return;
-    assert(pdfWin);
-    if (!pdfWin) return;
+    assert(win);
+    if (!win) return;
 
-    pdfWin->GetCanvasSize();
-    SizeI maxCanvasSize = GetMaxCanvasSize(pdfWin);
-    SizeD totalDrawAreaSize(pdfWin->winSize());
+    win->GetCanvasSize();
+    SizeI maxCanvasSize = GetMaxCanvasSize(win);
+    SizeD totalDrawAreaSize(win->winSize());
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int offsetX = 0;
     int offsetY = 0;
@@ -6528,187 +6939,187 @@ static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
     int scrollbarXDy = 0;
 
     if (gGlobalPrefs.m_useFitz) {
-        pdfWin->dm = DisplayModelFitz_CreateFromFileName(fileName, 
-            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, pdfWin);
+        win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
+            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     } 
     else {
-        pdfWin->dm = DisplayModelSplash_CreateFromFileName(fileName, 
-            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, pdfWin);
+        win->dm = DisplayModelSplash_CreateFromFileName(fileName, 
+            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     }
 
-    pdfWin->dm->setAppData((void*)pdfWin);
-    pdfWin->state = WS_SHOWING_PDF;
+    win->dm->setAppData((void*)win);
+    win->state = WS_SHOWING_PDF;
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(GetMenu(pdfWin->hwndFrame), menuId);
+    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
 
-    pdfWin->dm->relayout(zoomVirtual, rotation);
-    if (!pdfWin->dm->validPageNo(startPage))
+    win->dm->relayout(zoomVirtual, rotation);
+    if (!win->dm->validPageNo(startPage))
         startPage = 1;
     offsetY = 0;
-    pdfWin->dm->goToPage(startPage, offsetY, offsetX);
-    WindowInfo_ResizeToPage(pdfWin, startPage);
-    WindowInfoList_Add(pdfWin);
+    win->dm->goToPage(startPage, offsetY, offsetX);
+    WindowInfo_ResizeToPage(win, startPage);
+    WindowInfoList_Add(win);
 
     RECT rect;
-    if (GetWindowRect(pdfWin->hwndFrame , &rect) != 0)
+    if (GetWindowRect(win->hwndFrame , &rect) != 0)
     {
         int nWidth = rect_dx(&rect);
         int nHeight = rect_dy(&rect);
-        WinResizeClientArea(pdfWin->hwndCanvas, nWidth, nHeight);
+        WinResizeClientArea(win->hwndCanvas, nWidth, nHeight);
     }
 
-    ShowWindow(pdfWin->hwndFrame, SW_SHOW);
-    ShowWindow(pdfWin->hwndCanvas, SW_SHOW);
-    UpdateWindow(pdfWin->hwndFrame);
-    UpdateWindow(pdfWin->hwndCanvas);
+    ShowWindow(win->hwndFrame, SW_SHOW);
+    ShowWindow(win->hwndCanvas, SW_SHOW);
+    UpdateWindow(win->hwndFrame);
+    UpdateWindow(win->hwndCanvas);
 }
 
-void Sumatra_LoadPDF(WindowInfo* pdfWin, const char *pdfFile)
+void Sumatra_LoadPDF(WindowInfo* win, const char *pdfFile)
 {
     int  pdfOpened = 0;
-    OpenPdf(pdfWin, pdfFile, pdfWin->hwndFrame);
+    OpenPdf(win, pdfFile, win->hwndFrame);
     ++pdfOpened;
-    if (pdfWin)
-        ShowWindow(pdfWin->hwndFrame, SW_SHOWNORMAL);
+    if (win)
+        ShowWindow(win->hwndFrame, SW_SHOWNORMAL);
 }
 
-void Sumatra_PrintPDF(WindowInfo* pdfWin, const char *pdfFile, long showOptionWindow)
+void Sumatra_PrintPDF(WindowInfo* win, const char *pdfFile, long showOptionWindow)
 {
 }
 
-void Sumatra_Print(WindowInfo* pdfWin)
+void Sumatra_Print(WindowInfo* win)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
-        OnMenuPrint(pdfWin);
+    if (WindowInfo_PdfLoaded(win))
+        OnMenuPrint(win);
 }
 
-void Sumatra_ShowPrintDialog(WindowInfo* pdfWin)
+void Sumatra_ShowPrintDialog(WindowInfo* win)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
-        OnMenuPrint(pdfWin);
+    if (WindowInfo_PdfLoaded(win))
+        OnMenuPrint(win);
 }
 
-void Sumatra_SetDisplayMode(WindowInfo* pdfWin,long displayMode)
+void Sumatra_SetDisplayMode(WindowInfo* win,long displayMode)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
-        SwitchToDisplayMode(pdfWin, (DisplayMode)displayMode);
+    if (WindowInfo_PdfLoaded(win))
+        SwitchToDisplayMode(win, (DisplayMode)displayMode);
 }
 
-long Sumatra_GoToNextPage(WindowInfo* pdfWin)
+long Sumatra_GoToNextPage(WindowInfo* win)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    pdfWin->dm->goToNextPage(0);
-    return pdfWin->dm->currentPageNo();
+    win->dm->goToNextPage(0);
+    return win->dm->currentPageNo();
 }
 
-long Sumatra_GoToPreviousPage(WindowInfo* pdfWin)
+long Sumatra_GoToPreviousPage(WindowInfo* win)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    pdfWin->dm->goToPrevPage(0);
-    return pdfWin->dm->currentPageNo();
+    win->dm->goToPrevPage(0);
+    return win->dm->currentPageNo();
 }
 
-long Sumatra_GoToFirstPage(WindowInfo* pdfWin)
+long Sumatra_GoToFirstPage(WindowInfo* win)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    pdfWin->dm->goToFirstPage();
-    return pdfWin->dm->currentPageNo();
+    win->dm->goToFirstPage();
+    return win->dm->currentPageNo();
 }
 
-long Sumatra_GoToLastPage(WindowInfo* pdfWin)
+long Sumatra_GoToLastPage(WindowInfo* win)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    pdfWin->dm->goToLastPage();
-    return pdfWin->dm->currentPageNo();
+    win->dm->goToLastPage();
+    return win->dm->currentPageNo();
 }
 
-long Sumatra_GetNumberOfPages(WindowInfo* pdfWin)
+long Sumatra_GetNumberOfPages(WindowInfo* win)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    return pdfWin->dm->pageCount();
+    return win->dm->pageCount();
 }
 
-long Sumatra_GetCurrentPage(WindowInfo* pdfWin)
+long Sumatra_GetCurrentPage(WindowInfo* win)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    return pdfWin->dm->currentPageNo();
+    return win->dm->currentPageNo();
 }
 
-long Sumatra_GoToThisPage(WindowInfo* pdfWin,long pageNumber)
+long Sumatra_GoToThisPage(WindowInfo* win,long pageNumber)
 {
-    if (!WindowInfo_PdfLoaded(pdfWin))
+    if (!WindowInfo_PdfLoaded(win))
         return 0;
-    if (pdfWin->dm->validPageNo(pageNumber))
-        pdfWin->dm->goToPage(pageNumber, 0);
-    return pdfWin->dm->currentPageNo();
+    if (win->dm->validPageNo(pageNumber))
+        win->dm->goToPage(pageNumber, 0);
+    return win->dm->currentPageNo();
 }
 
-long Sumatra_ZoomIn(WindowInfo* pdfWin)
+long Sumatra_ZoomIn(WindowInfo* win)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
+    if (WindowInfo_PdfLoaded(win))
     {
-        long currentZoom = Sumatra_GetCurrentZoom(pdfWin);
+        long currentZoom = Sumatra_GetCurrentZoom(win);
         if (currentZoom < 500)
-            Sumatra_SetZoom(pdfWin,currentZoom+10);
+            Sumatra_SetZoom(win,currentZoom+10);
     }
-    return Sumatra_GetCurrentZoom(pdfWin);
+    return Sumatra_GetCurrentZoom(win);
 }
 
-long Sumatra_ZoomOut(WindowInfo* pdfWin)
+long Sumatra_ZoomOut(WindowInfo* win)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
+    if (WindowInfo_PdfLoaded(win))
     {
-        long currentZoom = Sumatra_GetCurrentZoom(pdfWin);
+        long currentZoom = Sumatra_GetCurrentZoom(win);
         if (currentZoom > 10)
-            Sumatra_SetZoom(pdfWin,currentZoom-10);
+            Sumatra_SetZoom(win,currentZoom-10);
     }
-    return Sumatra_GetCurrentZoom(pdfWin);
+    return Sumatra_GetCurrentZoom(win);
 }
 
-long Sumatra_SetZoom(WindowInfo* pdfWin,long zoomValue)
+long Sumatra_SetZoom(WindowInfo* win,long zoomValue)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
-        pdfWin->dm->zoomTo((double)zoomValue);
-    return Sumatra_GetCurrentZoom(pdfWin);
+    if (WindowInfo_PdfLoaded(win))
+        win->dm->zoomTo((double)zoomValue);
+    return Sumatra_GetCurrentZoom(win);
 }
 
-long Sumatra_GetCurrentZoom(WindowInfo* pdfWin)
+long Sumatra_GetCurrentZoom(WindowInfo* win)
 {
     double zoomLevel = 0;
-    if (WindowInfo_PdfLoaded(pdfWin))
-        zoomLevel = pdfWin->dm->zoomReal();
+    if (WindowInfo_PdfLoaded(win))
+        zoomLevel = win->dm->zoomReal();
     return (long)zoomLevel;
 } 
 
-void Sumatra_Resize(WindowInfo* pdfWin)
+void Sumatra_Resize(WindowInfo* win)
 {
     RECT rect;
-    if (GetWindowRect(pdfWin->hwndFrame , &rect) != 0)
+    if (GetWindowRect(win->hwndFrame , &rect) != 0)
     {
         int nWidth = rect_dx(&rect);
         int nHeight = rect_dy(&rect);
-        WinResizeClientArea(pdfWin->hwndCanvas, nWidth, nHeight);
+        WinResizeClientArea(win->hwndCanvas, nWidth, nHeight);
     }
 }
 
-void Sumatra_ClosePdf(WindowInfo* pdfWin)
+void Sumatra_ClosePdf(WindowInfo* win)
 {
-    if (WindowInfo_PdfLoaded(pdfWin))
-        CloseWindow(pdfWin, FALSE);
+    if (WindowInfo_PdfLoaded(win))
+        CloseWindow(win, FALSE);
 }
 
 WindowInfo* Sumatra_Init(HWND pHandle)
 {
-    WindowInfo* pdfWin;
+    WindowInfo* win;
     gRunningDLL = true;
     HINSTANCE hInstance = NULL;
     HINSTANCE hPrevInstance = NULL;
@@ -6749,9 +7160,9 @@ WindowInfo* Sumatra_Init(HWND pHandle)
     if (pHandle == 0 ) 
         pHandle = NULL;
 
-    pdfWin = CreateEmpty(pHandle);
+    win = CreateEmpty(pHandle);
 
-    return pdfWin;
+    return win;
 }
 
 void Sumatra_Exit()
