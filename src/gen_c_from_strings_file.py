@@ -208,9 +208,18 @@ def gen_lang_menu_def_c(langs, file_name):
 
 #include "Resource.h"
 #include "LangMenuDef.h"
+""")
+    lapp(l, "LangDef g_langs[LANGS_COUNT] = {")
+    for lang in langs:
+        lang_iso = lang[0]
+        lang_name = lang[1]
+        txt = '    {"' + lang_iso + '", ' + to_idm(lang_iso) + "},"
+        lapp(l, txt)
 
-MenuDef g_menuDefLang[LANGS_COUNT] = {""")
+    lapp(l, "};")
+    lapp(l, "")
 
+    lapp(l, "MenuDef g_menuDefLang[LANGS_COUNT] = {")
     for lang in langs:
         lang_iso = lang[0]
         lang_name = lang[1]
@@ -221,15 +230,7 @@ MenuDef g_menuDefLang[LANGS_COUNT] = {""")
 
     lapp(l, "};")
     lapp(l, "")
-    lapp(l, "LangDef g_langs[LANGS_COUNT] = {")
-    for lang in langs:
-        lang_iso = lang[0]
-        lang_name = lang[1]
-        txt = '    {"' + lang_iso + '", ' + to_idm(lang_iso) + "},"
-        lapp(l, txt)
 
-    lapp(l, "};")
-    lapp(l, "")
     write_lines_to_file(l, file_name)
 
 def gen_code(strings_dict, langs, h_file_name, c_file_name):
