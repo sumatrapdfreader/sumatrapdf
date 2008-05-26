@@ -477,9 +477,12 @@ class HttpReqCtx {
 public:
     // the window to which we'll send notification about completed download
     HWND          hwndToNotify;
+    // message to send when download is complete
     UINT          msg;
-    char *        url;
+    // handle for connection during request processing
     HINTERNET     httpFile;
+
+    char *        url;
     MemSegment    data;
     bool          notifyIfNoUpgrade;
 
