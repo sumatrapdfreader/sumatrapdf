@@ -2588,13 +2588,13 @@ static void AssociateExeWithPdfExtensions()
     free(exePath);
 }
 
-static void RegisterForPdfExtentions(HWND hwnd)
+static bool RegisterForPdfExtentions(HWND hwnd)
 {
     if (AlreadyRegisteredForPdfExtentions())
-        return;
+        return true;
 
     if (IsRunningInPortableMode())
-        return;
+        return false;
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
@@ -2608,8 +2608,11 @@ static void RegisterForPdfExtentions(HWND hwnd)
         }
     }
 
-    if (gGlobalPrefs.m_pdfAssociateShouldAssociate)
+    if (gGlobalPrefs.m_pdfAssociateShouldAssociate) {
         AssociateExeWithPdfExtensions();
+        return true;
+    }
+    return false;
 }
 
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
@@ -4326,10 +4329,11 @@ static void OnMenuViewFacing(WindowInfo *win)
     SwitchToDisplayMode(win, DM_FACING);
 }
 
-static void OneMenuMakeDefaultReader(void)
+static void OneMenuMakeDefaultReader(WindowInfo *win)
 {
-    AssociateExeWithPdfExtensions();
-    MessageBox(NULL, _TR("SumatraPDF is now a default reader for PDF files."), "Information", MB_OK);
+    bool registered = RegisterForPdfExtentions(win->hwndFrame);
+    if (registered)
+        MessageBox(NULL, _TR("SumatraPDF is now a default reader for PDF files."), "Information", MB_OK);
 }
 
 static void OnMove(WindowInfo *win, int x, int y)
@@ -5890,7 +5894,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_MAKE_DEFAULT_READER:
-                    OneMenuMakeDefaultReader();
+                    OneMenuMakeDefaultReader(win);
                     break;
 
                 case IDT_FILE_EXIT:

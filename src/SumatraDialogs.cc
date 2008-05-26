@@ -109,9 +109,6 @@ char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
 
 static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND                       edit;
-    HWND                       label;
-    const WCHAR *              title;
     DString                    ds;
     Dialog_GetPassword_Data *  data;
 
@@ -125,17 +122,14 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
                 return FALSE;
             assert(data->fileName);
             assert(!data->pwdOut);
-            title = _TRW("Enter password");
-            win_set_textw(hDlg, title);
+            win_set_textw(hDlg, _TRW("Enter password"));
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             DStringInit(&ds);
             DStringSprintf(&ds, _TRA("Enter password for %s"), data->fileName);
-            label = GetDlgItem(hDlg, IDC_GET_PASSWORD_LABEL);
-            win_set_text(label, ds.pString);
+            SetDlgItemTextA(hDlg, IDC_GET_PASSWORD_LABEL, ds.pString);
             DStringFree(&ds);
-            edit = GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT);
-            win_set_text(edit, "");
-            SetFocus(edit);
+            SetDlgItemTextA(hDlg, IDC_GET_PASSWORD_EDIT, "");
+            SetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
             return FALSE;
 
         case WM_COMMAND:
@@ -146,8 +140,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
                     assert(data);
                     if (!data)
                         return TRUE;
-                    edit = GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT);
-                    data->pwdOut = win_get_text(edit);
+                    data->pwdOut = win_get_text(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -186,11 +179,9 @@ char *Dialog_GetPassword(WindowInfo *win, const char *fileName)
 static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
-    HWND                    labelOfPages;
     DString                 ds;
     TCHAR *                 newPageNoTxt;
     Dialog_GoToPage_Data *  data;
-    const WCHAR *           title;
 
     switch (message)
     {
@@ -204,17 +195,15 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             assert(INVALID_PAGE_NO != data->currPageNo);
             assert(data->pageCount >= 1);
-            title = _TRW("Go to page");
-            win_set_textw(hDlg, title);
+            win_set_textw(hDlg, _TRW("Go to page"));
             DStringInit(&ds);
             DStringSprintf(&ds, "%d", data->currPageNo);
-            editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-            win_set_text(editPageNo, ds.pString);
+            SetDlgItemTextA(hDlg, IDC_GOTO_PAGE_EDIT, ds.pString);
             DStringFree(&ds);
             DStringSprintf(&ds, "(of %d)", data->pageCount);
-            labelOfPages = GetDlgItem(hDlg, IDC_GOTO_PAGE_LABEL_OF);
-            win_set_text(labelOfPages, ds.pString);
+            SetDlgItemTextA(hDlg, IDC_GOTO_PAGE_LABEL_OF, ds.pString);
             DStringFree(&ds);
+            editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
             win_edit_select_all(editPageNo);
             SetFocus(editPageNo);
             return FALSE;
@@ -280,6 +269,9 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
             data = (Dialog_PdfAssociate_Data*)lParam;
             assert(NULL != data);
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+            win_set_textw(hDlg, _TRW("Associate with PDF files?"));
+            SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Make SumatraPDF default application for PDF files?"));
+            SetDlgItemTextW(hDlg, IDC_DONT_ASK_ME_AGAIN, _TRW("Don't ask me again"));
             CheckDlgButton(hDlg, IDC_DONT_ASK_ME_AGAIN, BST_UNCHECKED);
             SetFocus(GetDlgItem(hDlg, IDOK));
             return FALSE;
@@ -337,7 +329,6 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
     int                           sel;
-    const WCHAR *                 title;
 
     switch (message)
     {
@@ -354,10 +345,9 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
             if (!data)
                 return FALSE;
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
-            langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-            title = _TRW("Change language");
-            win_set_textw(hDlg, title);
+            win_set_textw(hDlg, _TRW("Change language"));
             WCHAR *langName;
+            langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
             int idx = 0;
             for (int i=0; i < LANGS_COUNT; i++) {
                 langName = utf8_to_utf16(g_menuDefLang[i].m_title);

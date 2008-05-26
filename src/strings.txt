@@ -2222,3 +2222,9 @@ Enter password
 Enter password for %s
 -
 Go to page
+-
+Associate with PDF files?
+-
+Make SumatraPDF default application for PDF files?
+-
+Don't ask me again

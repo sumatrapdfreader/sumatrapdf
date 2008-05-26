@@ -85,12 +85,12 @@ END
 
 IDD_DIALOG_PDF_ASSOCIATE DIALOGEX 100, 100, 200, 62
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Associate with PDF files?"
+CAPTION "" // Associate with PDF files?
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "Make SumatraPDF default application for PDF files?",IDC_STATIC,8,10,184,8
-    CONTROL         "Don't ask me again",IDC_DONT_ASK_ME_AGAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,24,184,8
-    DEFPUSHBUTTON   "Yes",IDOK,7,40,32,14
+    LTEXT           "",IDC_STATIC,8,10,184,8 // Make SumatraPDF default application for PDF files?
+    CONTROL         "",IDC_DONT_ASK_ME_AGAIN, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,8,24,200-12,8 // Don't ask me again
+    DEFPUSHBUTTON   "Yes",IDOK,6,40,32,14
     PUSHBUTTON      "No",IDCANCEL,160,40,32,14
 END
 
