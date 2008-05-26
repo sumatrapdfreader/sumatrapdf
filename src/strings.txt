@@ -2216,3 +2216,9 @@ fr:Configurer la recherche inverse
 -
 Change language
 pl:Zmien język
+-
+Enter password
+-
+Enter password for %s
+-
+Go to page

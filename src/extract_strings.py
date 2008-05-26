@@ -1,6 +1,6 @@
 import codecs
 
-c_files_to_process = ["SumatraPDF.cpp"]
+c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
 strings_file = "strings.txt"
 
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
@@ -164,7 +164,8 @@ def extract_strings_from_line(l):
     strings2 = extract_strings_with_mark(l, '_TRN("', '")')
     strings3 = extract_strings_with_mark(l, '_TRW("', '")')
     strings4 = extract_strings_with_mark(l, '_TRWN("', '")')
-    return strings1 + strings2 + strings3 + strings4
+    strings5 = extract_strings_with_mark(l, '_TRA("', '")')
+    return strings1 + strings2 + strings3 + strings4 + strings5
 
 def extract_strings_from_c_file(f, strings):
     fo = open(f, "rb")

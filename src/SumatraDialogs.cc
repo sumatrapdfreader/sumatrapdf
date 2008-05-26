@@ -13,6 +13,7 @@
 #include "dialogsizer.h"
 #include "LangMenuDef.h"
 #include "utf_util.h"
+#include "translations.h"
 
 typedef struct {
     const char *  in_cmdline;   /* current inverse search command line */
@@ -110,6 +111,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
 {
     HWND                       edit;
     HWND                       label;
+    const WCHAR *              title;
     DString                    ds;
     Dialog_GetPassword_Data *  data;
 
@@ -123,9 +125,11 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
                 return FALSE;
             assert(data->fileName);
             assert(!data->pwdOut);
+            title = _TRW("Enter password");
+            win_set_textw(hDlg, title);
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             DStringInit(&ds);
-            DStringSprintf(&ds, "Enter password for %s", data->fileName);
+            DStringSprintf(&ds, _TRA("Enter password for %s"), data->fileName);
             label = GetDlgItem(hDlg, IDC_GET_PASSWORD_LABEL);
             win_set_text(label, ds.pString);
             DStringFree(&ds);
@@ -186,6 +190,7 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
     DString                 ds;
     TCHAR *                 newPageNoTxt;
     Dialog_GoToPage_Data *  data;
+    const WCHAR *           title;
 
     switch (message)
     {
@@ -199,6 +204,8 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             assert(INVALID_PAGE_NO != data->currPageNo);
             assert(data->pageCount >= 1);
+            title = _TRW("Go to page");
+            win_set_textw(hDlg, title);
             DStringInit(&ds);
             DStringSprintf(&ds, "%d", data->currPageNo);
             editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
@@ -330,6 +337,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
     int                           sel;
+    const WCHAR *                 title;
 
     switch (message)
     {
@@ -347,6 +355,8 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
                 return FALSE;
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
+            title = _TRW("Change language");
+            win_set_textw(hDlg, title);
             WCHAR *langName;
             int idx = 0;
             for (int i=0; i < LANGS_COUNT; i++) {
