@@ -20,29 +20,6 @@ typedef struct {
     char *  out_cmdline;         /* inverse search command line selected by the user */
 } Dialog_InverseSearch_Data;
 
-/* For passing data to/from GetPassword dialog */
-typedef struct {
-    const char *  fileName;   /* name of the file for which we need the password */
-    char *        pwdOut;     /* password entered by the user */
-} Dialog_GetPassword_Data;
-
-/* For passing data to/from GoToPage dialog */
-typedef struct {
-    int     currPageNo;      /* currently shown page number */
-    int     pageCount;       /* total number of pages */
-    int     pageEnteredOut;  /* page number entered by user */
-} Dialog_GoToPage_Data;
-
-/* For passing data to/from AssociateWithPdf dialog */
-typedef struct {
-    BOOL    dontAskAgain;
-} Dialog_PdfAssociate_Data;
-
-/* For passing data to/from ChangeLanguage dialog */
-typedef struct {
-    int langId;
-} Dialog_ChangeLanguage_Data;
-
 #ifdef _PDFSYNC_GUI_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -106,6 +83,12 @@ char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
     return NULL;
 }
 #endif
+
+/* For passing data to/from GetPassword dialog */
+typedef struct {
+    const char *  fileName;   /* name of the file for which we need the password */
+    char *        pwdOut;     /* password entered by the user */
+} Dialog_GetPassword_Data;
 
 static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -175,6 +158,13 @@ char *Dialog_GetPassword(WindowInfo *win, const char *fileName)
     free((void*)data.pwdOut);
     return NULL;
 }
+
+/* For passing data to/from GoToPage dialog */
+typedef struct {
+    int     currPageNo;      /* currently shown page number */
+    int     pageCount;       /* total number of pages */
+    int     pageEnteredOut;  /* page number entered by user */
+} Dialog_GoToPage_Data;
 
 static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -258,16 +248,21 @@ int Dialog_GoToPage(WindowInfo *win)
     return INVALID_PAGE_NO;
 }
 
+/* For passing data to/from AssociateWithPdf dialog */
+typedef struct {
+    BOOL    dontAskAgain;
+} Dialog_PdfAssociate_Data;
+
 static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_PdfAssociate_Data *  data;
+    data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+    assert(data);
 
     switch (message)
     {
         case WM_INITDIALOG:
             /* TODO: intelligently center the dialog within the parent window? */
-            data = (Dialog_PdfAssociate_Data*)lParam;
-            assert(NULL != data);
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             win_set_textw(hDlg, _TRW("Associate with PDF files?"));
             SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Make SumatraPDF default application for PDF files?"));
@@ -277,18 +272,10 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
             return FALSE;
 
         case WM_COMMAND:
-            data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
-            assert(data);
-            if (!data)
-                return TRUE;
             data->dontAskAgain = FALSE;
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
-                    assert(data);
-                    if (!data)
-                        return TRUE;
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN))
                         data->dontAskAgain = TRUE;
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
@@ -324,11 +311,19 @@ int Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
     return dialogResult;
 }
 
+/* For passing data to/from ChangeLanguage dialog */
+typedef struct {
+    int langId;
+} Dialog_ChangeLanguage_Data;
+
 static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
     int                           sel;
+
+    data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+    assert(data);
 
     switch (message)
     {
@@ -340,10 +335,6 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
                 DIALOG_SIZER_ENTRY(IDC_CHANGE_LANG_LANG_LIST, DS_SizeY | DS_SizeX)
             DIALOG_SIZER_END()
             DialogSizer_Set(hDlg, sz, TRUE, NULL);
-            data = (Dialog_ChangeLanguage_Data*)lParam;
-            assert(NULL != data);
-            if (!data)
-                return FALSE;
             SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
             win_set_textw(hDlg, _TRW("Change language"));
             WCHAR *langName;
@@ -363,10 +354,6 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
 
         case WM_COMMAND:
             if (HIWORD(wParam) == LBN_DBLCLK) {
-                data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
-                assert(data);
-                if (!data)
-                    return TRUE;
                 assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 assert(langList == (HWND)lParam);
@@ -378,11 +365,6 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
-                    assert(data);
-                    if (!data)
-                        return TRUE;
-
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                     sel = lb_get_selection(langList);                    
                     data->langId = g_menuDefLang[sel].m_id;
@@ -410,4 +392,58 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
     if (DIALOG_CANCEL_PRESSED == dialogResult)
         return -1;
     return data.langId;
+}
+
+static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    Dialog_NewVersion_Data *  data;
+
+    switch (message)
+    {
+        case WM_INITDIALOG:
+            /* TODO: intelligently center the dialog within the parent window? */
+            data = (Dialog_NewVersion_Data*)lParam;
+            assert(NULL != data);
+            SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+            win_set_textw(hDlg, _TRW("New version available."));
+            SetDlgItemTextW(hDlg, IDC_YOU_HAVE, _TRW("You have version %s"));
+            SetDlgItemTextW(hDlg, IDC_NEW_AVAILABLE, _TRW("New version %s is available. Download new version?"));
+            SetDlgItemTextW(hDlg, IDC_SKIP_THIS_VERSION, _TRW("Skip this version"));
+            CheckDlgButton(hDlg, IDC_SKIP_THIS_VERSION, BST_UNCHECKED);
+            SetFocus(GetDlgItem(hDlg, IDOK));
+            return FALSE;
+
+        case WM_COMMAND:
+            data = (Dialog_NewVersion_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            assert(data);
+            if (!data)
+                return TRUE;
+            data->skipThisVersion= FALSE;
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
+                        data->skipThisVersion= TRUE;
+                    EndDialog(hDlg, DIALOG_OK_PRESSED);
+                    return TRUE;
+
+                case IDCANCEL:
+                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
+                        data->skipThisVersion= TRUE;
+                    EndDialog(hDlg, DIALOG_NO_PRESSED);
+                    return TRUE;
+
+                case IDC_DONT_ASK_ME_AGAIN:
+                    data = NULL;
+                    return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}
+
+int Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
+{
+    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
+    return dialogResult;
 }

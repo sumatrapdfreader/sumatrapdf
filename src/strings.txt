@@ -2234,3 +2234,11 @@ Don't ask me again
 No new version available.
 -
 You have the latest version.
+-
+You have version %s
+-
+New version %s is available. Download new version?
+-
+New version available.
+-
+Skip this version

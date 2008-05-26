@@ -2771,6 +2771,14 @@ void u_ParseSumatraVar()
     assert(-1 == ParseSumatraVer("3."));
 }
 
+static BOOL ShowNewVersionDialog(WindowInfo *win)
+{
+    Dialog_NewVersion_Data data;
+    int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
+
+    return DIALOG_OK_PRESSED == res;
+}
+
 static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
     DWORD dataSize;
@@ -2789,8 +2797,8 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         assert(-1 != newVer);
         if (newVer > currVer) {
             // TODO: replace with a custom dialog
-            int res = MessageBoxA(win->hwndFrame, "New version available. Download?", "New version available", MB_ICONEXCLAMATION | MB_OKCANCEL);
-            if (res == IDOK) {
+            BOOL download = ShowNewVersionDialog(win);
+            if (download) {
                 LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
             }
         } else {
@@ -4433,7 +4441,8 @@ static void OnMenuLanguage(int langId)
 
 void OnMenuCheckUpdate(WindowInfo *win)
 {
-    DownloadSumatraUpdateInfo(win, true);
+    ShowNewVersionDialog(win);
+    //DownloadSumatraUpdateInfo(win, true);
 }
 
 static void OnMenuViewUseFitz(WindowInfo *win)

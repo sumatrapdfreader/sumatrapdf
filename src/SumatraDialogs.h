@@ -19,4 +19,14 @@ char *  Dialog_GetPassword(WindowInfo *win, const char *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 
+/* For passing data to/from 'new version available' dialog */
+typedef struct {
+    const char *currVersion;
+    const char *newVersion;
+    int langId;
+    BOOL skipThisVersion;
+} Dialog_NewVersion_Data;
+
+int     Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);
+
 #endif

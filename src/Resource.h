@@ -10,6 +10,7 @@
 #define IDC_CURSORDRAG                  132
 #define IDD_DIALOG_INVERSESEARCH        133
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
+#define IDD_DIALOG_NEW_VERSION          135
 
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
@@ -123,6 +124,10 @@
 #define IDC_DONT_ASK_ME_AGAIN           1008
 #define IDC_PDF_TOC_TREE                1009
 #define IDC_CHANGE_LANG_LANG_LIST       1010
+#define IDC_YOU_HAVE                    1011
+#define IDC_NEW_AVAILABLE               1012
+#define IDC_SKIP_THIS_VERSION           1013
+
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001
 #define IDB_SILK_OPEN                   2002

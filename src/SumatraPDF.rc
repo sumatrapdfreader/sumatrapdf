@@ -127,6 +127,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,135,236,60,14, WS_TABSTOP
 END
 
+IDD_DIALOG_NEW_VERSION DIALOGEX 100, 100, 240, 62+14
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "" // New version available
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "",IDC_YOU_HAVE,8,10,184,8 // You have version %s
+    LTEXT           "",IDC_NEW_AVAILABLE,8,10+14,184,8 // New version %s is available. Download new version?
+    CONTROL         "",IDC_SKIP_THIS_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,8,24+14,200-12,8 // Skip this version
+    DEFPUSHBUTTON   "Download",IDOK,6,40+14,40,14
+    PUSHBUTTON      "No, thanks",IDCANCEL,240-44-8,40+14,44,14
+END
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
