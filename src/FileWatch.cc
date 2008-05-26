@@ -176,8 +176,10 @@ void WINAPI FileWatcher::WatchingThread( void *param )
             // BUG!
             break;
         }
-        if (fw->ReadDir() && fw->pCallback)
+        if (fw->ReadDir() && fw->pCallback) { 
+            DBG_OUT("FILE %s CHANGED!\n", fw->szFilepath);
             fw->pCallback(fw->szFilepath, fw->callbackparam);
+        }
     }
 
     fw->Clean();
@@ -248,7 +250,27 @@ bool FileWatcher::ReadDir()
                 // compare the old and new time stamps
                 if (_tstat(szFilepath, &newstamp) == 0
                     && difftime(newstamp.st_mtime, timestamp.st_mtime) > 0) {
-                    timestamp = newstamp;
+                    // Wait until the file has finished beeing written
+
+                    // Try to open the file with write access and no write-sharing 
+                    // so that if the file is already opened for writing then the following call 
+                    // will fail.
+                    HANDLE hf = CreateFile(this->filepath(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+                    DWORD dw = GetLastError();
+                    while (hf == INVALID_HANDLE_VALUE && (dw==ERROR_SHARING_VIOLATION || dw==ERROR_LOCK_VIOLATION)) {
+                        hf = CreateFile(this->filepath(), GENERIC_WRITE,FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+                        Sleep(500); // the higher this value is the less likely it causes a 
+                                    // sharing violation for other processes (such as latex) trying to write in the file
+                        dw = GetLastError();
+                    }
+
+                    if (hf != INVALID_HANDLE_VALUE)
+                        CloseHandle(hf);
+
+                    //timestamp = newstamp;
+
+                    // reread the time stamp
+                    _tstat(szFilepath, &timestamp);
 
                     return true; // the file has changed!
                 }

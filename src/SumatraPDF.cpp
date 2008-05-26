@@ -4962,8 +4962,7 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('-' == key) {
             win->dm->zoomBy(ZOOM_OUT_FACTOR);
     } else if ('r' == key) {
-        //ReloadPdfDocument(win);
-        WindowInfo_Refresh(win, false);
+        WindowInfo_Refresh(win, true);
     } else if ('/' == key) {
         win->FindStart();
     }
