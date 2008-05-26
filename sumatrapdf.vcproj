@@ -95,6 +95,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+				HeapVerification="0"
+				HandleVerification="0"
+				LocksVerification="0"
 			/>
 			<Tool
 				Name="VCWebDeploymentTool"

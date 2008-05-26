@@ -1,5 +1,10 @@
 Short term todo (before next 0.8.1 release):
-* check for new version on-line
+* custom dialog for 'new version available'
+* remember last update date and only automatically check for update if at least 
+  a day passed
+* generate unique guid and remember it in preferences
+* remember number of open pdfs
+* send guid and number of open pdfs with version check
 
 Long term todo:
 * finish find

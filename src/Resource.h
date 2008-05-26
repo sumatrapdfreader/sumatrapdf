@@ -10,9 +10,7 @@
 #define IDC_CURSORDRAG                  132
 #define IDD_DIALOG_INVERSESEARCH        133
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
-#define IDR_MAINFRAME                   200
-#define IDD_XPDFWIN_DIALOG              300
-#define IDD_ABOUTBOX                    301
+
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
@@ -105,8 +103,11 @@
 #define IDM_ABOUT                       551
 #define IDM_SET_INVERSESEARCH           552
 #define IDM_CHANGE_LANGUAGE             553
+#define IDM_CHECK_UPDATE                554
+
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
+
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
 #define IDC_BUTTON2                     1002

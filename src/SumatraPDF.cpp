@@ -41,7 +41,7 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
-#define CURR_VERSION "0.8.0"
+#define CURR_VERSION "0.8.1"
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -107,18 +107,17 @@ static BOOL             gDebugShowLinks = FALSE;
 
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 
-#define FRAME_CLASS_NAME    _T("SUMATRA_PDF_FRAME")
-#define CANVAS_CLASS_NAME   _T("SUMATRA_PDF_CANVAS")
-#define ABOUT_CLASS_NAME    _T("SUMATRA_PDF_ABOUT")
-#define SPLITER_CLASS_NAME  _T("Spliter")
+#define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
+#define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
+#define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
+#define SPLITER_CLASS_NAME      _T("Spliter")
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
-#define APP_NAME            _T("SumatraPDF")
-#define APP_NAME_STR        "SumatraPDF"
-#define PDF_DOC_NAME        _T("Adobe PDF Document")
-#define ABOUT_WIN_TITLE     _TR("About SumatraPDF")
-#define PREFS_FILE_NAME     _T("sumatrapdfprefs.txt")
-#define PREFS_FILE_NAME_NEW _T("sumatrapdfprefs.dat")
-#define APP_SUB_DIR         _T("SumatraPDF")
+#define PDF_DOC_NAME            _T("Adobe PDF Document")
+#define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
+#define PREFS_FILE_NAME         _T("sumatrapdfprefs.txt")
+#define PREFS_FILE_NAME_NEW     _T("sumatrapdfprefs.dat")
+#define APP_SUB_DIR             _T("SumatraPDF")
+#define APP_NAME_STR            "SumatraPDF"
 
 #define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
 
@@ -474,30 +473,27 @@ void u_testMemSegment()
 #endif
 
 // based on information in http://www.codeproject.com/KB/IP/asyncwininet.aspx
-typedef struct {
+class HttpReqCtx {
+public:
     // the window to which we'll send notification about completed download
     HWND          hwndToNotify;
+    UINT          msg;
     char *        url;
     HINTERNET     httpFile;
     MemSegment    data;
-} HttpReqCtx;
+    bool          notifyIfNoUpgrade;
 
-class UrlDownloadedMsgData {
-public:
-    char *  url;
-    char *  data;
-    DWORD   dataSize;
-    UrlDownloadedMsgData(char *_url, char *_data, DWORD _dataSize) {
+    HttpReqCtx(char *_url, HWND _hwnd, UINT _msg) {
         assert(_url);
-        assert(_data);
-        assert(_dataSize > 0);
+        hwndToNotify = _hwnd;
         url = strdup(_url);
-        data = _data;
-        dataSize = _dataSize;
+        msg = _msg;
+        notifyIfNoUpgrade = false;
+        httpFile = 0;
     }
-    ~UrlDownloadedMsgData() {
+    ~HttpReqCtx() {
         free(url);
-        free(data);
+        data.freeAll();
     }
 };
 
@@ -555,18 +551,15 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
                 if (ok || GetLastError()!=ERROR_IO_PENDING)
                     break; // read the whole file or error
             }
+            free(ib.lpvBuffer);
+            InternetCloseHandle(ctx->httpFile);
+            ctx->httpFile = 0;
             if (ok) {
                 // read the whole file
-                DWORD dataSize;
-                char *data = (char*)ctx->data.getData(&dataSize);
-                UrlDownloadedMsgData *msgData = new UrlDownloadedMsgData(ctx->url, data, dataSize);
-                PostMessage(ctx->hwndToNotify, WM_APP_URL_DOWNLOADED, (WPARAM) msgData, 0);
+                PostMessage(ctx->hwndToNotify, ctx->msg, (WPARAM) ctx, 0);
             } else {
-                // error
+                delete ctx;
             }
-            free(ib.lpvBuffer);
-            ctx->data.freeAll();
-            InternetCloseHandle(ctx->httpFile);
         }
         break;
 
@@ -638,7 +631,6 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
 }
 
 static HINTERNET g_hOpen = NULL;
-static HttpReqCtx g_SumatraUpdateContext;
 
 #define SUMATRA_UPDATE_INFO_URL "http://fastdl.org/sumpdf-latest.txt"
 
@@ -659,23 +651,24 @@ void WininetDeinit()
         InternetCloseHandle(g_hOpen);
 }
 
-void DownloadSumatraUpdateInfo()
+void DownloadSumatraUpdateInfo(WindowInfo *win, bool notifyIfNoUpgrade)
 {
     if (!WininetInit())
         return;
-    assert(gWindowList);
-    HWND hwndToNotify = gWindowList->hwndFrame;
-    g_SumatraUpdateContext.hwndToNotify = hwndToNotify;
-    g_SumatraUpdateContext.url = SUMATRA_UPDATE_INFO_URL;
+    assert(win);
+    HWND hwndToNotify = win->hwndFrame;
+    HttpReqCtx *ctx = new HttpReqCtx(SUMATRA_UPDATE_INFO_URL, hwndToNotify, WM_APP_URL_DOWNLOADED);
+    ctx->notifyIfNoUpgrade = notifyIfNoUpgrade;
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
     urlHandle = InternetOpenUrlA(g_hOpen, SUMATRA_UPDATE_INFO_URL, NULL, 0, 
       INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE | 
-      INTERNET_FLAG_NO_CACHE_WRITE, (LPARAM)&g_SumatraUpdateContext);
+      INTERNET_FLAG_NO_CACHE_WRITE, (LPARAM)ctx);
     /* MSDN says NULL result from InternetOpenUrlA() means an error, but in my testing
        in async mode InternetOpenUrl() returns NULL and error is ERROR_IO_PENDING */
     if (!urlHandle && (GetLastError() != ERROR_IO_PENDING)) {
         DBG_OUT("InternetOpenUrlA() failed\n");
+        delete ctx;
     }
 }
 
@@ -966,6 +959,7 @@ MenuDef menuDefLang[] = {
 
 MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE },
+    { _TRN("&Check for new version"),      IDM_CHECK_UPDATE },
     { _TRN("&About"),                      IDM_ABOUT }
 };
 
@@ -1905,7 +1899,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     }
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-        win_set_text(win->hwndFrame, APP_NAME);
+        win_set_texta(win->hwndFrame, APP_NAME_STR);
     }
 }
 
@@ -2034,7 +2028,7 @@ static void GetCanvasDxDyDiff(WindowInfo *win, int *dxOut, int *dyOut)
     assert(gRunningDLL || *dyOut >= 0);
 }
 
-SizeI GetMaxCanvasSize(WindowInfo *win)
+static SizeI GetMaxCanvasSize(WindowInfo *win)
 {
     AppBarData abd;
     RECT r;
@@ -2209,8 +2203,8 @@ Exit:
     DragAcceptFiles(win->hwndFrame, TRUE);
     DragAcceptFiles(win->hwndCanvas, TRUE);
     if (showWin) {
-    ShowWindow(win->hwndFrame, SW_SHOW);
-    ShowWindow(win->hwndCanvas, SW_SHOW);
+        ShowWindow(win->hwndFrame, SW_SHOW);
+        ShowWindow(win->hwndCanvas, SW_SHOW);
     }
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
@@ -2226,7 +2220,7 @@ Exit:
         return true;
 }
 
-void on_file_change(PTSTR filename, LPARAM param)
+static void OnFileChange(PTSTR filename, LPARAM param)
 {
     WindowInfo_Refresh((WindowInfo *) param, true);
 }
@@ -2255,7 +2249,7 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
     GetFullPathName(fileName, dimof(fullpath), fullpath, NULL);
 #ifdef THREAD_BASED_FILEWATCH
     if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fullpath, &on_file_change, (LPARAM)win);
+        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
 #else
     win->watcher.Init(fullpath);
 #endif
@@ -2520,24 +2514,24 @@ static bool AlreadyRegisteredForPdfExtentions(void)
 {
     bool    registered = false;
     HKEY    key = NULL;
-    char    nameBuf[sizeof(APP_NAME)+8];
+    char    nameBuf[sizeof(APP_NAME_STR)+8];
     DWORD   cbNameBuf = sizeof(nameBuf);
     DWORD   keyType;
 
     /* HKEY_CLASSES_ROOT\.pdf */
-    if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_CLASSES_ROOT, ".pdf", 0, KEY_QUERY_VALUE, &key))
+    if (ERROR_SUCCESS != RegOpenKeyExA(HKEY_CLASSES_ROOT, ".pdf", 0, KEY_QUERY_VALUE, &key))
         return false;
 
-    if (ERROR_SUCCESS != RegQueryValueEx(key, NULL, NULL, &keyType, (LPBYTE)nameBuf, &cbNameBuf))
+    if (ERROR_SUCCESS != RegQueryValueExA(key, NULL, NULL, &keyType, (LPBYTE)nameBuf, &cbNameBuf))
         goto Exit;
 
     if (REG_SZ != keyType)
         goto Exit;
 
-    if (cbNameBuf != sizeof(APP_NAME))
+    if (cbNameBuf != sizeof(APP_NAME_STR))
         goto Exit;
 
-    if (0 == memcmp(APP_NAME, nameBuf, sizeof(APP_NAME)))
+    if (0 == memcmp(APP_NAME_STR, nameBuf, sizeof(APP_NAME_STR)))
         registered = true;
 
 Exit:
@@ -2774,11 +2768,13 @@ void u_ParseSumatraVar()
     assert(-1 == ParseSumatraVer("3."));
 }
 
-static void OnUrlDownloaded(WindowInfo *win, UrlDownloadedMsgData *data)
+static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
-    char *url = data->url;
+    DWORD dataSize;
+    char *txt = (char*)ctx->data.getData(&dataSize);
+    char *url = ctx->url;
     if (str_eq(url, SUMATRA_UPDATE_INFO_URL)) {
-        char *verTxt = data->data;
+        char *verTxt = txt;
         /* TODO: too hackish */
         char *tmp = str_normalize_newline(verTxt, "*");
         char *tmp2 = (char*)str_find_char(tmp, '*');
@@ -2790,14 +2786,19 @@ static void OnUrlDownloaded(WindowInfo *win, UrlDownloadedMsgData *data)
         assert(-1 != newVer);
         if (newVer > currVer) {
             // TODO: replace with a custom dialog
-            int res = MessageBox(win->hwndFrame, "New version available. Download?", "New version available", MB_ICONEXCLAMATION | MB_OKCANCEL);
+            int res = MessageBoxA(win->hwndFrame, "New version available. Download?", "New version available", MB_ICONEXCLAMATION | MB_OKCANCEL);
             if (res == IDOK) {
                 LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
+            }
+        } else {
+            if (ctx->notifyIfNoUpgrade) {
+                MessageBoxW(win->hwndFrame, _TRW("You have the latest version."), _TRW("No new version available."), MB_ICONEXCLAMATION | MB_OK);
             }
         }
         free(tmp);
     }
-    delete data;
+    free(txt);
+    delete ctx;
 }
 
 static void DrawCenteredText(HDC hdc, RECT *r, char *txt)
@@ -4427,6 +4428,11 @@ static void OnMenuLanguage(int langId)
     LanguageChanged(langName);
 }
 
+void OnMenuCheckUpdate(WindowInfo *win)
+{
+    DownloadSumatraUpdateInfo(win, true);
+}
+
 static void OnMenuViewUseFitz(WindowInfo *win)
 {
     assert(win);
@@ -4681,9 +4687,9 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 // Show a message for 3000 millisecond at most
 DWORD WINAPI ShowMessageThread(WindowInfo *win)
 {
-    ShowWindowAsync (win->hwndFindStatus, SW_SHOW);
+    ShowWindowAsync(win->hwndFindStatus, SW_SHOW);
     WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
-    ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
+    ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
     return 0;
 }
 
@@ -4725,7 +4731,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
     SetEvent(win->findStatusThread);
     CloseHandle(win->findStatusThread);
     win->findStatusThread = NULL;
-    ShowWindowAsync (win->hwndFindStatus, SW_HIDE);
+    ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
@@ -6077,6 +6083,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_ABOUT:
                     OnMenuAbout();
                     break;
+
+                case IDM_CHECK_UPDATE:
+                    OnMenuCheckUpdate(win);
+                    break;
+
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
@@ -6176,7 +6187,7 @@ InitMouseWheelInfo:
         case WM_APP_URL_DOWNLOADED:
             assert(win);
             if (win)
-                OnUrlDownloaded(win, (UrlDownloadedMsgData*)wParam);
+                OnUrlDownloaded(win, (HttpReqCtx*)wParam);
             break;
 
         case WM_NOTIFY:
@@ -6864,7 +6875,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (registerForPdfExtentions)
         RegisterForPdfExtentions(win ? win->hwndFrame : NULL);
 
-    DownloadSumatraUpdateInfo();
+    DownloadSumatraUpdateInfo(gWindowList, false);
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {

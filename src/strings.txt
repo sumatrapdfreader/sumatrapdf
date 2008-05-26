@@ -2228,3 +2228,9 @@ Associate with PDF files?
 Make SumatraPDF default application for PDF files?
 -
 Don't ask me again
+-
+&Check for new version
+-
+No new version available.
+-
+You have the latest version.
