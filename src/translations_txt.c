@@ -87,7 +87,7 @@ const char *g_transTranslations[] = {
   "Single page",
   "SumatraPDF is now a default reader for PDF files.",
   "Use MuPDF rendering engine",
-  "You have the latest version",
+  "You have the latest version.",
   "Zoom In",
   "Zoom Out",
 
