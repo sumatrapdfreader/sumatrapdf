@@ -484,14 +484,15 @@ public:
 
     char *        url;
     MemSegment    data;
-    bool          notifyIfNoUpgrade;
+    /* true for automated check, false for check triggered from menu */
+    bool          autoCheck;
 
     HttpReqCtx(char *_url, HWND _hwnd, UINT _msg) {
         assert(_url);
         hwndToNotify = _hwnd;
         url = strdup(_url);
         msg = _msg;
-        notifyIfNoUpgrade = false;
+        autoCheck = false;
         httpFile = 0;
     }
     ~HttpReqCtx() {
@@ -654,14 +655,14 @@ void WininetDeinit()
         InternetCloseHandle(g_hOpen);
 }
 
-void DownloadSumatraUpdateInfo(WindowInfo *win, bool notifyIfNoUpgrade)
+void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 {
     if (!WininetInit())
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
     HttpReqCtx *ctx = new HttpReqCtx(SUMATRA_UPDATE_INFO_URL, hwndToNotify, WM_APP_URL_DOWNLOADED);
-    ctx->notifyIfNoUpgrade = notifyIfNoUpgrade;
+    ctx->autoCheck = autoCheck;
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
     urlHandle = InternetOpenUrlA(g_hOpen, SUMATRA_UPDATE_INFO_URL, NULL, 0, 
@@ -698,10 +699,14 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+    gGlobalPrefs.m_versionToSkip = NULL;
+}
 
-    str_copy(gGlobalPrefs.m_inversesearch_cmdline,
-        dimof(gGlobalPrefs.m_inversesearch_cmdline),
-        DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+static void SerializableGlobalPrefs_Deinit()
+{
+    free(gGlobalPrefs.m_versionToSkip);
+    free(gGlobalPrefs.m_inverseSearchCmdLine);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -2779,8 +2784,8 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
     data.skipThisVersion = FALSE;
     int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
-        /* TODO: if data.skipThisVersion, remeber newVersion as something to skip */
-
+        free(gGlobalPrefs.m_versionToSkip);
+        gGlobalPrefs.m_versionToSkip = strdup(newVersion);
     }
     free((void*)data.currVersion);
     free((void*)data.newVersion);
@@ -2804,12 +2809,22 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         int newVer = ParseSumatraVer(tmp);
         assert(-1 != newVer);
         if (newVer > currVer) {
-            BOOL download = ShowNewVersionDialog(win, tmp);
-            if (download) {
-                LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
+            bool showDialog = true;
+            // if automated, respect gGlobalPrefs.m_versionToSkip
+            if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
+                if (str_eq(gGlobalPrefs.m_versionToSkip, tmp)) {
+                    showDialog = false;
+                }
+            }
+            if (showDialog) {
+                BOOL download = ShowNewVersionDialog(win, tmp);
+                if (download) {
+                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
+                }
             }
         } else {
-            if (ctx->notifyIfNoUpgrade) {
+            /* if automated => don't notify that there is no new version */
+            if (!ctx->autoCheck) {
                 MessageBoxW(win->hwndFrame, _TRW("You have the latest version."), _TRW("No new version available."), MB_ICONEXCLAMATION | MB_OK);
             }
         }
@@ -3494,7 +3509,7 @@ static void OnInverseSearch(WindowInfo *win, int x, int y)
 
     _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
     char cmdline[_MAX_PATH];
-    if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inversesearch_cmdline,
+    if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inverseSearchCmdLine,
       srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
         //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
         STARTUPINFO si = {0};
@@ -4448,7 +4463,7 @@ static void OnMenuLanguage(int langId)
 
 void OnMenuCheckUpdate(WindowInfo *win)
 {
-    DownloadSumatraUpdateInfo(win, true);
+    DownloadSumatraUpdateInfo(win, false);
 }
 
 static void OnMenuViewUseFitz(WindowInfo *win)
@@ -4571,11 +4586,12 @@ static void OnMenuGoToPage(WindowInfo *win)
 static void OnMenuSetInverseSearch(WindowInfo *win)
 {
     assert(win);
-    if (!win) return;
-    char *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inversesearch_cmdline);
+    if (!win) 
+        return;
+    char *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inverseSearchCmdLine);
     if (ret) {
-        str_copy(gGlobalPrefs.m_inversesearch_cmdline, dimof(gGlobalPrefs.m_inversesearch_cmdline), ret);
-        free(ret);
+        free(gGlobalPrefs.m_inverseSearchCmdLine);
+        gGlobalPrefs.m_inverseSearchCmdLine =  ret;
     }
 }
 #endif
@@ -6784,7 +6800,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-inverse-search")) {
             currArg = currArg->next;
             if (currArg) {
-                str_copy(gGlobalPrefs.m_inversesearch_cmdline, dimof(gGlobalPrefs.m_inversesearch_cmdline), currArg->str);
+                free(gGlobalPrefs.m_inverseSearchCmdLine);
+                gGlobalPrefs.m_inverseSearchCmdLine = strdup(currArg->str);
                 currArg = currArg->next;
             }
             continue;
@@ -6893,7 +6910,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (registerForPdfExtentions)
         RegisterForPdfExtentions(win ? win->hwndFrame : NULL);
 
-    DownloadSumatraUpdateInfo(gWindowList, false);
+    DownloadSumatraUpdateInfo(gWindowList, true);
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
@@ -6932,6 +6949,7 @@ Exit:
     Translations_FreeData();
     CurrLangNameFree();
     WininetDeinit();
+    SerializableGlobalPrefs_Deinit();
     //histDump();
     return (int) msg.wParam;
 }

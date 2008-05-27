@@ -77,7 +77,12 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
     DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
-    DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inversesearch_cmdline);
+    if (gGlobalPrefs.m_inverseSearchCmdLine)
+        DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
+
+    if (gGlobalPrefs.m_versionToSkip)
+        DICT_ADD_STR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
+
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -404,10 +409,16 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);
     dict_get_int(global, WINDOW_DX_STR, &gGlobalPrefs.m_windowDx);
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
-    const char* invsearch = dict_get_str(global, INVERSE_SEARCH_COMMANDLINE);
-    if (invsearch) {
-        str_copy(gGlobalPrefs.m_inversesearch_cmdline,
-            dimof(gGlobalPrefs.m_inversesearch_cmdline), invsearch);
+    txt = dict_get_str(global, INVERSE_SEARCH_COMMANDLINE);
+    if (txt) {
+        free(gGlobalPrefs.m_inverseSearchCmdLine);
+        gGlobalPrefs.m_inverseSearchCmdLine = strdup(txt);
+    }
+
+    txt = dict_get_str(global, VERSION_TO_SKIP_STR);
+    if (txt) {
+        free(gGlobalPrefs.m_versionToSkip);
+        gGlobalPrefs.m_versionToSkip = strdup(txt);
     }
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));

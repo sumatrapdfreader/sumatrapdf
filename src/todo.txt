@@ -1,5 +1,4 @@
 Short term todo (before next 0.8.1 release):
-* custom dialog for 'new version available'
 * remember last update date and only automatically check for update if at least 
   a day passed
 * generate unique guid and remember it in preferences

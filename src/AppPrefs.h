@@ -28,8 +28,12 @@ typedef struct {
     BOOL m_fullScreen;
 
     /* pattern used to launch the editor when doing inverse search */
-    /* TODO: make it dynamically allocated string */
-    char m_inversesearch_cmdline[_MAX_PATH];
+    char *m_inverseSearchCmdLine;
+
+    /* When we show 'new version available', user has an option to check
+       'skip this version'. This remembers which version is to be skipped.
+       If NULL - don't skip */
+    char *m_versionToSkip;
 
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
