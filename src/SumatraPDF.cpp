@@ -41,7 +41,7 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
-#define CURR_VERSION "0.8.1"
+#define CURR_VERSION "0.8.0"
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -516,7 +516,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
             res = (INTERNET_ASYNC_RESULT*)statusInfo;
             ctx->httpFile = (HINTERNET)(res->dwResult);
 
-            StringCchPrintfA(buf, 256, "HANDLE_CREATED (%d)", statusLen );
+            _snprintf(buf, 256, "HANDLE_CREATED (%d)", statusLen );
             break;
 
         case INTERNET_STATUS_REQUEST_COMPLETE:
@@ -524,7 +524,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
             // Check for errors.
             if (LPINTERNET_ASYNC_RESULT(statusInfo)->dwError != 0)
             {
-                StringCchPrintfA(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
+                _snprintf(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
                 break;
             }
 
@@ -532,7 +532,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
             HINTERNET hInt = HINTERNET(LPINTERNET_ASYNC_RESULT(statusInfo)->dwResult);
             assert(hInt == ctx->httpFile);
 
-            StringCchPrintfA(buf, 256, "REQUEST_COMPLETE (%d)", statusLen);
+            _snprintf(buf, 256, "REQUEST_COMPLETE (%d)", statusLen);
 
             INTERNET_BUFFERSA ib = {0};
             ib.dwStructSize = sizeof(ib);
@@ -568,63 +568,63 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
 
 #ifdef DEBUG
         case INTERNET_STATUS_CLOSING_CONNECTION:
-            StringCchPrintfA(buf, 256, "CLOSING_CONNECTION (%d)", statusLen);
+            _snprintf(buf, 256, "CLOSING_CONNECTION (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_CONNECTED_TO_SERVER:
-            StringCchPrintfA(buf, 256, "CONNECTED_TO_SERVER (%d)", statusLen);
+            _snprintf(buf, 256, "CONNECTED_TO_SERVER (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_CONNECTING_TO_SERVER:
-            StringCchPrintfA(buf, 256, "CONNECTING_TO_SERVER (%d)", statusLen);
+            _snprintf(buf, 256, "CONNECTING_TO_SERVER (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_CONNECTION_CLOSED:
-            StringCchPrintfA(buf, 256, "CONNECTION_CLOSED (%d)", statusLen);
+            _snprintf(buf, 256, "CONNECTION_CLOSED (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_HANDLE_CLOSING:
-            StringCchPrintfA(buf, 256, "HANDLE_CLOSING (%d)", statusLen);
+            _snprintf(buf, 256, "HANDLE_CLOSING (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_INTERMEDIATE_RESPONSE:
-            StringCchPrintfA(buf, 256, "INTERMEDIATE_RESPONSE (%d)", statusLen );
+            _snprintf(buf, 256, "INTERMEDIATE_RESPONSE (%d)", statusLen );
             break;
 
         case INTERNET_STATUS_NAME_RESOLVED:
-            StringCchPrintfA(buf, 256, "NAME_RESOLVED (%d)", statusLen);
+            _snprintf(buf, 256, "NAME_RESOLVED (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_RECEIVING_RESPONSE:
-            StringCchPrintfA(buf, 256, "RECEIVING_RESPONSE (%d)",statusLen);
+            _snprintf(buf, 256, "RECEIVING_RESPONSE (%d)",statusLen);
             break;
 
         case INTERNET_STATUS_RESPONSE_RECEIVED:
-            StringCchPrintfA(buf, 256, "RESPONSE_RECEIVED (%d)", statusLen);
+            _snprintf(buf, 256, "RESPONSE_RECEIVED (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_REDIRECT:
-            StringCchPrintfA(buf, 256, "REDIRECT (%d)", statusLen);
+            _snprintf(buf, 256, "REDIRECT (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_REQUEST_SENT:
-            StringCchPrintfA(buf, 256, "REQUEST_SENT (%d)", statusLen);
+            _snprintf(buf, 256, "REQUEST_SENT (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_RESOLVING_NAME:
-            StringCchPrintfA(buf, 256, "RESOLVING_NAME (%d)", statusLen);
+            _snprintf(buf, 256, "RESOLVING_NAME (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_SENDING_REQUEST:
-            StringCchPrintfA(buf, 256, "SENDING_REQUEST (%d)", statusLen);
+            _snprintf(buf, 256, "SENDING_REQUEST (%d)", statusLen);
             break;
 
         case INTERNET_STATUS_STATE_CHANGE:
-            StringCchPrintfA(buf, 256, "STATE_CHANGE (%d)", statusLen);
+            _snprintf(buf, 256, "STATE_CHANGE (%d)", statusLen);
             break;
 
         default:
-            StringCchPrintfA(buf, 256, "Unknown: Status %d Given", dwInternetStatus);
+            _snprintf(buf, 256, "Unknown: Status %d Given", dwInternetStatus);
             break;
 #endif
     }
@@ -2771,11 +2771,19 @@ void u_ParseSumatraVar()
     assert(-1 == ParseSumatraVer("3."));
 }
 
-static BOOL ShowNewVersionDialog(WindowInfo *win)
+static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
 {
-    Dialog_NewVersion_Data data;
+    Dialog_NewVersion_Data data = {0};
+    data.currVersion = utf8_to_utf16(CURR_VERSION);
+    data.newVersion = utf8_to_utf16(newVersion);
+    data.skipThisVersion = FALSE;
     int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
+    if (data.skipThisVersion) {
+        /* TODO: if data.skipThisVersion, remeber newVersion as something to skip */
 
+    }
+    free((void*)data.currVersion);
+    free((void*)data.newVersion);
     return DIALOG_OK_PRESSED == res;
 }
 
@@ -2796,8 +2804,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         int newVer = ParseSumatraVer(tmp);
         assert(-1 != newVer);
         if (newVer > currVer) {
-            // TODO: replace with a custom dialog
-            BOOL download = ShowNewVersionDialog(win);
+            BOOL download = ShowNewVersionDialog(win, tmp);
             if (download) {
                 LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
             }
@@ -4441,8 +4448,7 @@ static void OnMenuLanguage(int langId)
 
 void OnMenuCheckUpdate(WindowInfo *win)
 {
-    ShowNewVersionDialog(win);
-    //DownloadSumatraUpdateInfo(win, true);
+    DownloadSumatraUpdateInfo(win, true);
 }
 
 static void OnMenuViewUseFitz(WindowInfo *win)

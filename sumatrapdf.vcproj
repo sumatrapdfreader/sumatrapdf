@@ -333,6 +333,10 @@
 				RelativePath=".\baseutils\WinUtil.hpp"
 				>
 			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -409,6 +413,10 @@
 			</File>
 			<File
 				RelativePath=".\baseutils\win_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.h"
 				>
 			</File>
 		</Filter>

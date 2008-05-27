@@ -21,9 +21,8 @@ int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 
 /* For passing data to/from 'new version available' dialog */
 typedef struct {
-    const char *currVersion;
-    const char *newVersion;
-    int langId;
+    const WCHAR *currVersion;
+    const WCHAR *newVersion;
     BOOL skipThisVersion;
 } Dialog_NewVersion_Data;
 
