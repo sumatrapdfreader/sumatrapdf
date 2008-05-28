@@ -53,6 +53,7 @@ enum DisplayMode {
 #define VERSION_TO_SKIP_STR         "VersionToSkip"
 #define GUID_STR                    "Guid"
 #define PDFS_OPENED_STR             "PdfsOpened"
+#define LAST_UPDATE_STR             "LastUpdate"
 
 typedef struct DisplayState {
     const char *        filePath;

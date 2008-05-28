@@ -36,6 +36,7 @@ typedef struct {
     char *m_versionToSkip;
 
     char *m_guid;
+    char *m_lastUpdateTime;
 
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */

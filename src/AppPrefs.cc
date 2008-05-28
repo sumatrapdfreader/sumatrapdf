@@ -39,9 +39,11 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
         goto Error;
 
 #define DICT_ADD_STR(doname,name,val) \
-        ok = benc_dict_insert_str(doname,name,val); \
-        if (!ok) \
-            goto Error;
+        if (val) { \
+            ok = benc_dict_insert_str(doname,name,val); \
+            if (!ok) \
+                goto Error; \
+        }
 
 #define DICT_ADD_DICT(doname,name,val) \
         ok = benc_dict_insert2(doname,name,(benc_obj*)val); \
@@ -65,8 +67,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, PDFS_OPENED_STR, gGlobalPrefs.m_pdfsOpened);
 
     txt = DisplayModeNameFromEnum(gGlobalPrefs.m_defaultDisplayMode);
-    if (txt)
-        DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
+    DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
 
     txt = str_printf("%.4f", gGlobalPrefs.m_defaultZoom);
     if (txt) {
@@ -78,15 +79,11 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
     DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
-    if (gGlobalPrefs.m_inverseSearchCmdLine)
-        DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
 
-    if (gGlobalPrefs.m_versionToSkip)
-        DICT_ADD_STR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
-
-    if (gGlobalPrefs.m_guid)
-        DICT_ADD_STR(prefs, GUID_STR, gGlobalPrefs.m_guid);
-    
+    DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
+    DICT_ADD_STR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
+    DICT_ADD_STR(prefs, GUID_STR, gGlobalPrefs.m_guid);
+    DICT_ADD_STR(prefs, LAST_UPDATE_STR, gGlobalPrefs.m_lastUpdateTime);
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -431,6 +428,12 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     if (txt) {
         free(gGlobalPrefs.m_guid);
         gGlobalPrefs.m_guid = strdup(txt);
+    }
+
+    txt = dict_get_str(global, LAST_UPDATE_STR);
+    if (txt) {
+        free(gGlobalPrefs.m_lastUpdateTime);
+        gGlobalPrefs.m_lastUpdateTime = strdup(txt);
     }
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));

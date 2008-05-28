@@ -359,6 +359,47 @@ static void GuessLanguage()
         CurrLangNameSet(lang);
 }
 
+/* Convert FILETIME to a string.
+   Caller needs to free() the result. */
+char *FileTimeToStr(FILETIME* ft)
+{
+    return mem_to_hexstr((unsigned char*)ft, sizeof(*ft));
+}
+
+/* Reverse of FileTimeToStr: convert string <s> to <ft>. */
+void StrToFileTime(char *s, FILETIME* ft)
+{
+    hexstr_to_mem(s, (unsigned char*)ft, sizeof(*ft));
+}
+
+/* Get current UTS cystem time as string.
+   Caller needs to free() the result. */
+char *GetSystemTimeAsStr()
+{
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    return FileTimeToStr(&ft);
+}
+
+static void FileTimeToLargeInteger(FILETIME *ft, LARGE_INTEGER *lt)
+{
+    lt->LowPart = ft->dwLowDateTime;
+    lt->HighPart = ft->dwHighDateTime;
+}
+
+/* Return <ft1> - <ft2> in seconds */
+DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
+{
+    LARGE_INTEGER t1;
+    LARGE_INTEGER t2;
+    FileTimeToLargeInteger(ft1, &t1);
+    FileTimeToLargeInteger(ft2, &t2);
+    // diff is in 100 nanoseconds
+    LONGLONG diff = t1.QuadPart - t2.QuadPart;
+    diff = diff / (LONGLONG)10000000L;
+    return (DWORD)diff;
+}
+
 class MemSegment {
 private:
     class MemSegment *next;
@@ -444,6 +485,28 @@ void *MemSegment::getData(DWORD *sizeOut)
 }
 
 #ifdef DEBUG
+void u_hexstr()
+{
+    unsigned char buf[6] = {1, 2, 33, 255, 0, 18};
+    unsigned char buf2[6] = {0};
+    char *s = mem_to_hexstr(buf, sizeof(buf));
+    BOOL ok = hexstr_to_mem(s, buf2, sizeof(buf2));
+    assert(ok);
+    for (int i=0; i<sizeof(buf); i++) {
+        assert(buf[i] == buf2[i]);
+    }
+    free(s);
+    FILETIME ft1, ft2;
+    GetSystemTimeAsFileTime(&ft1);
+    s = FileTimeToStr(&ft1);
+    StrToFileTime(s, &ft2);
+    DWORD diff = FileTimeDiffInSecs(&ft1, &ft2);
+    assert(0 == diff);
+    assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
+    assert(ft1.dwHighDateTime == ft2.dwHighDateTime);
+    free(s);
+}
+
 void u_testMemSegment()
 {
     MemSegment *ms;
@@ -655,12 +718,28 @@ void WininetDeinit()
         InternetCloseHandle(g_hOpen);
 }
 
+#define SECS_IN_DAY 60*60*24
+
 void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 {
     if (!WininetInit())
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
+
+    /* For auto-check, only check if at least a day passed since last check */
+    if (autoCheck && gGlobalPrefs.m_lastUpdateTime) {
+        FILETIME lastUpdateTimeFt;
+        StrToFileTime(gGlobalPrefs.m_lastUpdateTime, &lastUpdateTimeFt);
+        FILETIME currentTimeFt;
+        GetSystemTimeAsFileTime(&currentTimeFt);
+        int secs = FileTimeDiffInSecs(&currentTimeFt, &lastUpdateTimeFt);
+        assert(secs >= 0);
+        // if secs < 0 => somethings wrong, so ignore that case
+        if ((secs > 0) && (secs < SECS_IN_DAY))
+            return;
+    }
+
     DString url;
     DStringInit(&url);
     DStringAppend(&url, SUMATRA_UPDATE_INFO_URL, sizeof(SUMATRA_UPDATE_INFO_URL)-1);
@@ -682,6 +761,8 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
         DBG_OUT("InternetOpenUrlA() failed\n");
         delete ctx;
     }
+    free(gGlobalPrefs.m_lastUpdateTime);
+    gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
 }
 
 #if 0
@@ -726,6 +807,7 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
     gGlobalPrefs.m_versionToSkip = NULL;
     gGlobalPrefs.m_guid = NULL;
+    gGlobalPrefs.m_lastUpdateTime = NULL;
 }
 
 static void SerializableGlobalPrefs_Deinit()
@@ -733,6 +815,7 @@ static void SerializableGlobalPrefs_Deinit()
     free(gGlobalPrefs.m_versionToSkip);
     free(gGlobalPrefs.m_inverseSearchCmdLine);
     free(gGlobalPrefs.m_guid);
+    free(gGlobalPrefs.m_lastUpdateTime);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -6443,6 +6526,7 @@ static void u_DoAllTests(void)
     u_ParseSumatraVar();
     u_RectI_Intersect();
     u_testMemSegment();
+    u_hexstr();
 #else
     printf("Not running tests\n");
 #endif
@@ -6673,31 +6757,6 @@ bool SumatraMinidumpCallback(const wchar_t *dump_path,
 }
 #endif
 
-static int HexToNum(char c)
-{
-    if ((c >= '0') && (c <= '9'))
-        return c - '0';
-    if ((c >= 'a') && (c <= 'f'))
-        return c - 'a' + 10;
-    if ((c >= 'A') && (c <= 'F'))
-        return c - 'A' + 10;
-    return -1;
-}
-
-static int ParseHexByte(const char ** txt)
-{
-    if (!txt) return -1;
-    const char *s = *txt;
-    int c1 = HexToNum(*s++);
-    if (-1 == c1)
-        return -1;
-    int c2 = HexToNum(*s++);
-    if (-1 == c2)
-        return -1;
-    *txt = s;
-    return (16 * c1) + c2;
-}
-
 /* Parse 'txt' as hex color and set it as background color */
 static void ParseBgColor(const char* txt)
 {
@@ -6705,13 +6764,13 @@ static void ParseBgColor(const char* txt)
         txt += 2;
     else if (str_startswith(txt, "#"))
         txt += 1;
-    int r = ParseHexByte(&txt);
+    int r = hex_str_decode_byte(&txt);
     if (-1 == r)
         return;
-    int g = ParseHexByte(&txt);
+    int g = hex_str_decode_byte(&txt);
     if (-1 == g)
         return;
-    int b = ParseHexByte(&txt);
+    int b = hex_str_decode_byte(&txt);
     if (-1 == b)
         return;
     if (*txt)

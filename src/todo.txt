@@ -1,6 +1,4 @@
 Short term todo (before next 0.8.1 release):
-* remember last update date and only automatically check for update if at least 
-  a day passed
 
 Long term todo:
 * finish find
