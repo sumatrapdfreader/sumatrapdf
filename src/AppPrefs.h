@@ -46,6 +46,7 @@ typedef struct {
     int  m_windowPosY;
     int  m_windowDx;
     int  m_windowDy;
+    int  m_pdfsOpened;
 } SerializableGlobalPrefs;
 
 extern SerializableGlobalPrefs gGlobalPrefs;

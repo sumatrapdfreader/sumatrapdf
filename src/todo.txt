@@ -1,8 +1,6 @@
 Short term todo (before next 0.8.1 release):
 * remember last update date and only automatically check for update if at least 
   a day passed
-* remember number of open pdfs
-* send number of open pdfs with version check
 
 Long term todo:
 * finish find

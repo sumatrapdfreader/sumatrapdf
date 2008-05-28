@@ -661,14 +661,15 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
-    char *url;
+    DString url;
+    DStringInit(&url);
+    DStringAppend(&url, SUMATRA_UPDATE_INFO_URL, sizeof(SUMATRA_UPDATE_INFO_URL)-1);
     if (gGlobalPrefs.m_guid) {
-        url = str_cat3(SUMATRA_UPDATE_INFO_URL, "?g=", gGlobalPrefs.m_guid);
-    } else {
-        url = strdup(SUMATRA_UPDATE_INFO_URL);
+        DStringSprintf(&url, "?g=%s&o=%d&v=%s", gGlobalPrefs.m_guid, gGlobalPrefs.m_pdfsOpened, CURR_VERSION);
+        gGlobalPrefs.m_pdfsOpened = 0;
     }
-    HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, WM_APP_URL_DOWNLOADED);
-    free(url);
+    HttpReqCtx *ctx = new HttpReqCtx(url.pString, hwndToNotify, WM_APP_URL_DOWNLOADED);
+    DStringFree(&url);
     ctx->autoCheck = autoCheck;
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
@@ -713,6 +714,7 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
     gGlobalPrefs.m_escToExit = FALSE;
     gGlobalPrefs.m_fullScreen = FALSE;
+    gGlobalPrefs.m_pdfsOpened = 0;
     gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
     gGlobalPrefs.m_defaultDisplayMode = DM_SINGLE_PAGE;
     gGlobalPrefs.m_defaultZoom = DEFAULT_ZOOM;
@@ -2293,15 +2295,17 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
     if (fileFromHistory)
         ds = &fileFromHistory->state;
 
-    if (RefreshPdfDocument(fileName, win, ds, reuseExistingWindow, false, showWin)) {
-        if (!fileFromHistory) {
-            AddFileToHistory(fileName);
-            RebuildProgramMenus();
-        }
-        return win;
+    if (!RefreshPdfDocument(fileName, win, ds, reuseExistingWindow, false, showWin)) {
+        /* failed to open */
+        return NULL;
     }
 
-    return NULL;
+    if (!fileFromHistory) {
+        AddFileToHistory(fileName);
+        RebuildProgramMenus();
+    }
+    gGlobalPrefs.m_pdfsOpened += 1;
+    return win;
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)

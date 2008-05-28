@@ -52,6 +52,7 @@ enum DisplayMode {
 #define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
 #define VERSION_TO_SKIP_STR         "VersionToSkip"
 #define GUID_STR                    "Guid"
+#define PDFS_OPENED_STR             "PdfsOpened"
 
 typedef struct DisplayState {
     const char *        filePath;
