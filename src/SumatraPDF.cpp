@@ -2107,6 +2107,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
             ghinst, NULL);
     if (!hwndCanvas)
         return NULL;
+    // hide scrollbars to avoid showing/hiding on empty window
+    ShowScrollBar(hwndCanvas, SB_BOTH, FALSE);
     WindowInfo_RebuildMenu(win);
     assert(win->hMenu);
     BOOL ok = SetMenu(hwndFrame, win->hMenu);
