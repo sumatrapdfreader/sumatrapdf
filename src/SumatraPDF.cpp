@@ -3240,10 +3240,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { "programming", "Krzysztof Kowalczyk", "http://blog.kowalczyk.info",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "pdf rendering 1", "poppler + xpdf", "http://poppler.freedesktop.org/",
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { "pdf rendering 2", "MuPDF", "http://ccxvii.net/apparition/",
+    { "pdf rendering", "MuPDF", "http://ccxvii.net/apparition/",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "website", "http://blog.kowalczyk.info/software/sumatra", "http://blog.kowalczyk.info/software/sumatrapdf",
