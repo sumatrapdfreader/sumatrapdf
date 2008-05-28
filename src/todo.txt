@@ -1,5 +1,6 @@
 Short term todo (before next 0.8.2 release):
 * get rid of poppler
+* get rid of dll code
 * update mupdf to the latest version
 * add handling of jbig images
 * drop project files and use makefile instead (well, there will be project file

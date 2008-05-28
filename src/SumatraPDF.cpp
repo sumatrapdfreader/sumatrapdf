@@ -15,14 +15,6 @@
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
 #include "AppPrefs.h"
-#include "DisplayModelSplash.h"
-#include "TextOutputDev.h"
-
-/* TODO: this and StandardSecurityHandler::getAuthData() and new GlobalParams
-   should be moved to another file (PopplerInit(), PopplerDeinit() */
-#include "PDFDoc.h"
-#include "SecurityHandler.h"
-#include "GlobalParams.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -41,7 +33,7 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
-#define CURR_VERSION "0.8.1"
+#define CURR_VERSION "0.8.2"
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -1280,24 +1272,11 @@ char *GetPasswordForFile(WindowInfo *win, const char *fileName)
     return Dialog_GetPassword(win, fileName);
 }
 
+/* TODO: remove when poppler is completely removed */
+#include "SecurityHandler.h"
 void *StandardSecurityHandler::getAuthData() 
 {
-    WindowInfo *        win;
-    const char *        pwd;
-    StandardAuthData *  authData;
-
-    win = (WindowInfo*)doc->getGUIData();
-    assert(win);
-    if (!win)
-        return NULL;
-
-    pwd = GetPasswordForFile(win, doc->getFileName()->getCString());
-    if (!pwd)
-        return NULL;
-
-    authData = new StandardAuthData(new GooString(pwd), new GooString(pwd));
-    free((void*)pwd);
-    return (void*)authData;
+    return NULL;
 }
 
 /* Return true if this program has been started from "Program Files" directory
@@ -2244,13 +2223,8 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
 
     DisplayModel *previousmodel = win->dm;
 
-    if (gGlobalPrefs.m_useFitz) {
-        win->dm = DisplayModelFitz_CreateFromFileName(fileName,
-            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
-    } else {
-        win->dm = DisplayModelSplash_CreateFromFileName(fileName,
-            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
-    }
+    win->dm = DisplayModelFitz_CreateFromFileName(fileName,
+        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
 
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
@@ -2432,11 +2406,6 @@ void DisplayModel::pageChanged()
     assert(win);
     if (!win) return;
 
-#if 0
-    if (!win->dmSplash->pdfDoc)
-        return;
-#endif
-
     int currPageNo = currentPageNo();
     int pageCount = win->dm->pageCount();
     const char *baseName = FilePath_GetBaseName(win->dm->fileName());
@@ -2598,10 +2567,6 @@ static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
     assert(win);
     if (!win) return FALSE;
     if (!win->dm) return FALSE;
-#if 0
-    assert(win->dmSplash->pdfDoc);
-    assert(win->dmSplash->pdfDoc->isOk());
-#endif
     return TRUE;
 }
 
@@ -6466,11 +6431,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
 
-    globalParams = new GlobalParams("");
-    if (!globalParams)
-        return FALSE;
-
-    SplashColorsInit();
     gCursorArrow = LoadCursor(NULL, IDC_ARROW);
     gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
     gCursorHand  = LoadCursor(NULL, IDC_HAND); // apparently only available if WINVER >= 0x0500
@@ -7035,7 +6995,6 @@ Exit:
     DeleteObject(gBrushShadow);
     DeleteObject(gBrushLinkDebug);
 
-    delete globalParams;
     StrList_Destroy(&argListRoot);
     Translations_FreeData();
     CurrLangNameFree();
@@ -7313,5 +7272,4 @@ void Sumatra_Exit()
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushShadow);
     DeleteObject(gBrushLinkDebug);
-    delete globalParams;
 }
