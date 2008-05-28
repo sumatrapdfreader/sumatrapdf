@@ -1,24 +1,27 @@
-Short term todo (before next 0.8.1 release):
+Short term todo (before next 0.8.2 release):
+* get rid of poppler
+* update mupdf to the latest version
+* add handling of jbig images
+* drop project files and use makefile instead (well, there will be project file
+  but it'll just wrap makefile)
+* don't use GWL_USERDATA to store WindowInfo pointer, use 
+  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
+  of windows and WindowInfo structs)
+* maybe: remember and restore size and position of the window
 
 Long term todo:
-* finish find
+* find improvements:
   * better/different buttons for next/prev find
 * crash reporting with breakpad
  - on startup check for crash dumps and tries to submit them. Delete crash file
    (even if submission failed)
-* remember and restore size and position of the window
-* finish TOC:
+* TOC improvements:
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
 * preserve fullScreen info per document and respect it when opening a PDF
-* useFitz should also be remembered per file and when switching rendering
-  engine, we should only re-load current file.
 * intelligent resizing so that the window takes as much space as possible on the
   screen (kind of like maximize, but doesn't actually maximizes the window but
   takes max dx or dy space available and proportional amount of the other axis)
-* don't use GWL_USERDATA to store WindowInfo pointer, use 
-  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
-  of windows and WindowInfo structs)
 * handle links
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
@@ -28,7 +31,7 @@ Long term todo:
 * replace DString with something better (sstr ?) and provide C++ wrapper
   to make it easier to use in C++ code without all those annoying DStringInit()
   calls
-* remove poppler, always use fitz
+* printing improvements
 
 Maybe:
 * use MultiByteToWideChar() 
