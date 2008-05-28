@@ -40,8 +40,8 @@
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
 # Jon Ivar F. Omland - Norwegian
-# Slovakian: (Slovakia)
-#   Radoslav Zelenák
+# Slovak republic
+#   Radoslav Zelenák (radoslav.zelenak@elkop.sk)
 #   Bernard Holý - TREVERT
 # Nguyen Luong Dong - Vietnamese
 # Viktoras Jakovlevas - Lithuania
@@ -812,7 +812,7 @@ ja:全画面表示\tCtrl-L
 fa:تمام‌صفحه\tCtrl-L
 nl:Volledig scherm\tCtrl-L
 no:Full skjerm\tCtrl-L
-sk:Na celú stránku\tCtrl-L
+sk:Na celú stranu\tCtrl-L
 vn:Toàn màn hình\tCtrl-L
 lt:Visame ekrane\tCtrl-L
 my:Mukasurat Penuh\tCtrl-L
@@ -1289,7 +1289,7 @@ gr:Ολόκληρη σελίδα\tCtrl-0
 th:พอดีหน้า\tCtrl-0
 pt:Ajustar &Página\tCtrl-0
 no:Tilpass &side\tCtrl-0
-sk:Prispôsobiť stránke\tCtrl-0
+sk:Prispôsobiť strane\tCtrl-0
 vn:Vừa &trang\tCtrl-0
 lt:Pritaikyti lange\tCtrl-0
 my:&Muatkan mukasurat\tCtrl-0
@@ -2213,32 +2213,47 @@ eu:Lagun gaitzazu itzulpenekin
 -
 Set inverse search command-line
 fr:Configurer la recherche inverse
+sk:Nastaviť inverzné vyhľadávanie
 -
 Change language
 pl:Zmien język
+sk:Zmeniť jazyk
 -
 Enter password
+sk:Zadať heslo
 -
 Enter password for %s
+sk:Zadať heslo pre %s
 -
 Go to page
+sk:Ísť na stranu
 -
 Associate with PDF files?
+sk:Asociovať s PDF súbormi?
 -
 Make SumatraPDF default application for PDF files?
+sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 -
 Don't ask me again
+sk:Nepýtať sa znova
 -
 &Check for new version
+sk:Skontrolovať novú verziu
 -
 No new version available.
+sk:Nie je k dispozícia nová verzia. 
 -
 You have the latest version.
+sk:Používate najnovšiu verziu.
 -
 You have version %s
+sk:Používate verziu %s
 -
 New version %s is available. Download new version?
+sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 -
 New version available.
+sk:Je k dispozícia nová verzia.
 -
 Skip this version
+sk:Preskočiť túto verziu.
