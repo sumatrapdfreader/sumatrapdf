@@ -160,11 +160,6 @@ static HPEN                         ghpenBlue;
 
 static HBITMAP                      gBitmapCloseToc;
 
-#ifdef _WINDLL
-static bool                         gRunningDLL = true;
-#else
-static bool                         gRunningDLL = false;
-#endif
 //static AppVisualStyle               gVisualStyle = VS_WINDOWS;
 
 static char *                       gBenchFileName;
@@ -1550,7 +1545,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     const char *    fileName = NULL;
     FileHistoryList*node = NULL;
 
-    if (gRunningDLL || !win)
+    if (!win)
         return;
     if (WS_SHOWING_PDF != win->state)
         return;
@@ -2113,10 +2108,10 @@ static void GetCanvasDxDyDiff(WindowInfo *win, int *dxOut, int *dyOut)
     GetWindowRect(win->hwndFrame, &totalRect);
     *dxOut = rect_dx(&totalRect) - rect_dx(&canvasRect);
     // TODO: should figure out why it fires in DLL
-    assert(gRunningDLL || *dxOut >= 0);
+    assert(*dxOut >= 0);
     *dyOut = rect_dy(&totalRect) - rect_dy(&canvasRect);
     // TODO: should figure out why it fires in DLL
-    assert(gRunningDLL || *dyOut >= 0);
+    assert(*dyOut >= 0);
 }
 
 static SizeI GetMaxCanvasSize(WindowInfo *win)
@@ -2832,6 +2827,7 @@ int ParseSumatraVer(char *txt)
     return val;
 }
 
+#ifdef DEBUG
 void u_ParseSumatraVar()
 {
     assert(0 == ParseSumatraVer("0"));
@@ -2846,6 +2842,7 @@ void u_ParseSumatraVar()
     assert(-1 == ParseSumatraVer("3.a"));
     assert(-1 == ParseSumatraVer("3."));
 }
+#endif
 
 static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
 {
@@ -2946,9 +2943,7 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWO
     bf.SourceConstantAlpha = 0x5f;
     bf.AlphaFormat = AC_SRC_ALPHA;
 
-    if (!AlphaBlend(hdc, rect->x, rect->y, rect->dx, rect->dy,
-        rectDC, 0, 0, rect->dx, rect->dy, bf))
-        DBG_OUT("AlphaBlending error\n");
+    AlphaBlend(hdc, rect->x, rect->y, rect->dx, rect->dy, rectDC, 0, 0, rect->dx, rect->dy, bf);
     DeleteObject (hbitmap);
     DeleteDC (rectDC);
 }
@@ -3020,10 +3015,6 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     DisplayModel* dm = win->dm;
     assert(dm);
     if (!dm) return;
-#if 0 // TODO: write the equivalent dm->isOk() ?
-    assert(dm->pdfDoc);
-    if (!dm->pdfDoc) return;
-#endif
 
     assert(win->hdcToDraw);
     hdc = win->hdcToDraw;
@@ -3971,17 +3962,13 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
     if (!win)  return;
 
     bool lastWindow = false;
-    if (gRunningDLL) {
+    if (1 == WindowInfoList_Len())
         lastWindow = true;
-    } else {
-        if (1 == WindowInfoList_Len())
-            lastWindow = true;
 
-        if (lastWindow)
-            Prefs_Save();
-        else
-            UpdateCurrentFileDisplayStateForWin(win);
-    }
+    if (lastWindow)
+        Prefs_Save();
+    else
+        UpdateCurrentFileDisplayStateForWin(win);
 
     win->state = WS_ABOUT;
 
@@ -4017,8 +4004,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         DeleteBitmap(gBitmapCloseToc);
         PostQuitMessage(0);
     } else {
-        if (!gRunningDLL)
-            MenuToolbarUpdateStateForAllWindows();
+        MenuToolbarUpdateStateForAllWindows();
     }
 }
 
@@ -6994,266 +6980,3 @@ Exit:
     return (int) msg.wParam;
 }
 
-// Code for DLL interace
-static WindowInfo* CreateEmpty(HWND parentHandle) {
-    WindowInfo* win;
-    HWND        hwndCanvas;
-    win = WindowInfo_New(parentHandle);
-    hwndCanvas = CreateWindow(
-        CANVAS_CLASS_NAME, NULL,
-        WS_CHILD | WS_HSCROLL | WS_VSCROLL,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        DEF_PAGE_DX, DEF_PAGE_DY,
-        parentHandle, NULL,
-        ghinst, NULL);
-    if (hwndCanvas)
-        win->hwndCanvas = hwndCanvas;
-    return win;
-}
-
-static void OpenPdf(WindowInfo* win,const char *fileName,  HWND parentHandle)
-{
-    assert(fileName);
-    if (!fileName) return;
-    assert(win);
-    if (!win) return;
-
-    win->GetCanvasSize();
-    SizeI maxCanvasSize = GetMaxCanvasSize(win);
-    SizeD totalDrawAreaSize(win->winSize());
-    DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
-    int offsetX = 0;
-    int offsetY = 0;
-    int startPage = 1;
-    int scrollbarYDx = 0;
-    int scrollbarXDy = 0;
-
-    win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
-            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
-
-    win->dm->setAppData((void*)win);
-    win->state = WS_SHOWING_PDF;
-    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
-    int rotation = DEFAULT_ROTATION;
-
-    UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
-
-    win->dm->relayout(zoomVirtual, rotation);
-    if (!win->dm->validPageNo(startPage))
-        startPage = 1;
-    offsetY = 0;
-    win->dm->goToPage(startPage, offsetY, offsetX);
-    WindowInfo_ResizeToPage(win, startPage);
-    WindowInfoList_Add(win);
-
-    RECT rect;
-    if (GetWindowRect(win->hwndFrame , &rect) != 0)
-    {
-        int nWidth = rect_dx(&rect);
-        int nHeight = rect_dy(&rect);
-        WinResizeClientArea(win->hwndCanvas, nWidth, nHeight);
-    }
-
-    ShowWindow(win->hwndFrame, SW_SHOW);
-    ShowWindow(win->hwndCanvas, SW_SHOW);
-    UpdateWindow(win->hwndFrame);
-    UpdateWindow(win->hwndCanvas);
-}
-
-void Sumatra_LoadPDF(WindowInfo* win, const char *pdfFile)
-{
-    int  pdfOpened = 0;
-    OpenPdf(win, pdfFile, win->hwndFrame);
-    ++pdfOpened;
-    if (win)
-        ShowWindow(win->hwndFrame, SW_SHOWNORMAL);
-}
-
-void Sumatra_PrintPDF(WindowInfo* win, const char *pdfFile, long showOptionWindow)
-{
-}
-
-void Sumatra_Print(WindowInfo* win)
-{
-    if (WindowInfo_PdfLoaded(win))
-        OnMenuPrint(win);
-}
-
-void Sumatra_ShowPrintDialog(WindowInfo* win)
-{
-    if (WindowInfo_PdfLoaded(win))
-        OnMenuPrint(win);
-}
-
-void Sumatra_SetDisplayMode(WindowInfo* win,long displayMode)
-{
-    if (WindowInfo_PdfLoaded(win))
-        SwitchToDisplayMode(win, (DisplayMode)displayMode);
-}
-
-long Sumatra_GoToNextPage(WindowInfo* win)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    win->dm->goToNextPage(0);
-    return win->dm->currentPageNo();
-}
-
-long Sumatra_GoToPreviousPage(WindowInfo* win)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    win->dm->goToPrevPage(0);
-    return win->dm->currentPageNo();
-}
-
-long Sumatra_GoToFirstPage(WindowInfo* win)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    win->dm->goToFirstPage();
-    return win->dm->currentPageNo();
-}
-
-long Sumatra_GoToLastPage(WindowInfo* win)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    win->dm->goToLastPage();
-    return win->dm->currentPageNo();
-}
-
-long Sumatra_GetNumberOfPages(WindowInfo* win)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    return win->dm->pageCount();
-}
-
-long Sumatra_GetCurrentPage(WindowInfo* win)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    return win->dm->currentPageNo();
-}
-
-long Sumatra_GoToThisPage(WindowInfo* win,long pageNumber)
-{
-    if (!WindowInfo_PdfLoaded(win))
-        return 0;
-    if (win->dm->validPageNo(pageNumber))
-        win->dm->goToPage(pageNumber, 0);
-    return win->dm->currentPageNo();
-}
-
-long Sumatra_ZoomIn(WindowInfo* win)
-{
-    if (WindowInfo_PdfLoaded(win))
-    {
-        long currentZoom = Sumatra_GetCurrentZoom(win);
-        if (currentZoom < 500)
-            Sumatra_SetZoom(win,currentZoom+10);
-    }
-    return Sumatra_GetCurrentZoom(win);
-}
-
-long Sumatra_ZoomOut(WindowInfo* win)
-{
-    if (WindowInfo_PdfLoaded(win))
-    {
-        long currentZoom = Sumatra_GetCurrentZoom(win);
-        if (currentZoom > 10)
-            Sumatra_SetZoom(win,currentZoom-10);
-    }
-    return Sumatra_GetCurrentZoom(win);
-}
-
-long Sumatra_SetZoom(WindowInfo* win,long zoomValue)
-{
-    if (WindowInfo_PdfLoaded(win))
-        win->dm->zoomTo((double)zoomValue);
-    return Sumatra_GetCurrentZoom(win);
-}
-
-long Sumatra_GetCurrentZoom(WindowInfo* win)
-{
-    double zoomLevel = 0;
-    if (WindowInfo_PdfLoaded(win))
-        zoomLevel = win->dm->zoomReal();
-    return (long)zoomLevel;
-} 
-
-void Sumatra_Resize(WindowInfo* win)
-{
-    RECT rect;
-    if (GetWindowRect(win->hwndFrame , &rect) != 0)
-    {
-        int nWidth = rect_dx(&rect);
-        int nHeight = rect_dy(&rect);
-        WinResizeClientArea(win->hwndCanvas, nWidth, nHeight);
-    }
-}
-
-void Sumatra_ClosePdf(WindowInfo* win)
-{
-    if (WindowInfo_PdfLoaded(win))
-        CloseWindow(win, FALSE);
-}
-
-WindowInfo* Sumatra_Init(HWND pHandle)
-{
-    WindowInfo* win;
-    gRunningDLL = true;
-    HINSTANCE hInstance = NULL;
-    HINSTANCE hPrevInstance = NULL;
-    int nCmdShow = 0;
-
-    StrList *           argListRoot = NULL;
-    StrList *           currArg = NULL;
-    MSG                 msg = {0};
-    bool                exitOnPrint = false;
-    bool                printToDefaultPrinter = false;
-
-    SerializableGlobalPrefs_Init();
-
-    UNREFERENCED_PARAMETER(hPrevInstance);
-
-    u_DoAllTests();
-
-    INITCOMMONCONTROLSEX cex;
-    cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;
-    InitCommonControlsEx(&cex);
-    argListRoot = NULL;
-
-    LoadString(hInstance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
-
-    if (!RegisterWinClass(hInstance))
-        Sumatra_Exit();
-
-    CaptionPens_Create();
-
-    if (!InstanceInit(hInstance, nCmdShow))
-        Sumatra_Exit();
-
-    CreatePageRenderThread();
-
-    bool reuseExistingWindow = false;
-
-    if (pHandle == 0 ) 
-        pHandle = NULL;
-
-    win = CreateEmpty(pHandle);
-
-    return win;
-}
-
-void Sumatra_Exit()
-{
-    CaptionPens_Destroy();
-    DeleteObject(gBrushBg);
-    DeleteObject(gBrushWhite);
-    DeleteObject(gBrushShadow);
-    DeleteObject(gBrushLinkDebug);
-}

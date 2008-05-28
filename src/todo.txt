@@ -1,6 +1,5 @@
 Short term todo (before next 0.8.2 release):
 * get rid of poppler
-* get rid of dll code
 * get rid of FITZ_HEAD conditional code
 * update mupdf to the latest version
 * add handling of jbig images
