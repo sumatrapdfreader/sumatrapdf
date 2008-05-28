@@ -9,13 +9,6 @@
 #include "PdfEngine.h"
 #include "PdfSearch.h"
 
-class GooString;
-class Link;
-class Links;
-class TextPage;
-class UGooString;
-class SplashBitmap;
-
 #define INVALID_ZOOM        -99
 #define INVALID_BIG_ZOOM    999999.0   /* arbitrary but big */
 
@@ -56,8 +49,6 @@ typedef struct DisplaySettings {
 /* Describes a link on PDF page. */
 typedef struct PdfLink {
     int             pageNo;     /* on which Pdf page the link exists. 1..pageCount */
-    // TODO: remove it from common code, only splash needs it
-    Link *          link;       /* a reference to a link; we don't own it */
     RectD           rectPage;   /* position of the link on the page */
     RectI           rectCanvas; /* position of the link on canvas */
 } PdfLink;
@@ -91,10 +82,6 @@ typedef struct PdfPageInfo {
     int             bitmapX, bitmapY, bitmapDx, bitmapDy;
     /* where it should be blitted on the screen */
     int             screenX, screenY;
-    
-    // TODO: remove it from common code, only splash needs it
-    Links *         links;
-    TextPage *      textPage;
 } PdfPageInfo;
 
 /* When searching, we can be in one of those states. The state determines what
@@ -130,8 +117,9 @@ enum SearchState {
 /* The current state of searching */
 typedef struct SearchStateData {
     /* String we search for, both regular and unicode versions */
-    GooString *     str;
-    UGooString *    strU;
+//TODO: make it not depend on poppler
+//    GooString *     str;
+//    UGooString *    strU;
     /* The page on which we started the search */
     int             startPage;
     /* did we wrap (crossed last page when searching forward or first page

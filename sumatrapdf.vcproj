@@ -242,10 +242,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DisplayModelSplash.cc"
-				>
-			</File>
-			<File
 				RelativePath=".\src\DisplayState.cc"
 				>
 			</File>

@@ -9,10 +9,6 @@ enum PdfSearchDirection {
     FIND_FORWARD  = true
 };
 
-class PDFDoc;
-class TextOutputDev;
-class TextPage;
-
 typedef struct {
     int page;
     int left;
@@ -80,24 +76,6 @@ protected:
             count = total - pageNo + 1;
         tracker->FindUpdateStatus(count, total);
     }
-};
-
-class PdfSearchPoppler : public PdfSearchEngine
-{
-private:
-    PdfEnginePoppler *engine;
-    TextOutputDev *dev;
-    TextPage *page;
-public:
-    PdfSearchPoppler(PdfEnginePoppler *engine);
-    virtual ~PdfSearchPoppler();
-
-    virtual void Reset();
-    virtual bool FindFirst(int page, wchar_t *text);
-    virtual bool FindNext();
-
-protected:
-    bool FindStartingAtPage(int page);
 };
 
 class PdfSearchFitz : public PdfSearchEngine

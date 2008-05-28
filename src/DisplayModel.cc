@@ -47,12 +47,6 @@
 
 #include "str_util.h"
 
-// TODO: get rid of the need for GooString and UGooString in common code
-#include "GooString.h"
-#include "UGooString.h"
-// TODO: get rid of the need for GooMutex.h ?
-#include "GooMutex.h"
-
 #include <assert.h>
 #include <stdlib.h>
 
@@ -61,11 +55,11 @@
 #endif
 
 #define MAX_BITMAPS_CACHED 256
-static GooMutex             cacheMutex;
+
+static CRITICAL_SECTION     cacheMutex;
+static int cacheMutexInitialized = 0;
 static BitmapCacheEntry *   gBitmapCache[MAX_BITMAPS_CACHED] = {0};
 static int                  gBitmapCacheCount = 0;
-
-static MutexAutoInitDestroy gAutoCacheMutex(&cacheMutex);
 
 DisplaySettings gDisplaySettings = {
   PADDING_PAGE_BORDER_TOP_DEF,
@@ -195,14 +189,16 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
 
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
-    searchState.str = new GooString();
-    searchState.strU = new UGooString();
+// TODO: fix to not use poppler
+//    searchState.str = new GooString();
+//    searchState.strU = new UGooString();
 }
 
 DisplayModel::~DisplayModel()
 {
-    delete searchState.str;
-    delete searchState.strU;
+// TODO: fix to not use poppler
+//    delete searchState.str;
+//    delete searchState.strU;
     free(_pagesInfo);    
     free(_links);
     delete _pdfSearchEngine;
@@ -251,8 +247,9 @@ bool DisplayModel::buildPagesInfo(void)
         pageInfo->pageDy = pageSize.dy();
         pageInfo->rotation = pdfEngine()->pageRotation(pageNo);
 
-        pageInfo->links = NULL;
-        pageInfo->textPage = NULL;
+// TODO: poppler removal. Do I need this at all?
+//        pageInfo->links = NULL;
+//        pageInfo->textPage = NULL;
 
         pageInfo->visible = false;
         pageInfo->shown = false;
@@ -1172,12 +1169,20 @@ void DisplayModel::showBusyCursor(void)
     SetCursor(LoadCursor(NULL, IDC_WAIT));
 }
 
+static inline void InitCacheMutext() {
+    if (!cacheMutexInitialized) {
+        InitializeCriticalSection(&cacheMutex);
+        cacheMutexInitialized = 1;
+    }
+}
+
 void LockCache(void) {
-    gLockMutex(&cacheMutex);
+    InitCacheMutext();
+    EnterCriticalSection(&cacheMutex);
 }
 
 void UnlockCache(void) {
-    gUnlockMutex(&cacheMutex);
+    LeaveCriticalSection(&cacheMutex);
 }
 
 static void BitmapCacheEntry_Free(BitmapCacheEntry *entry) {

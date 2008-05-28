@@ -12,12 +12,6 @@
 
 class WindowInfo;
 
-class GooList;
-class SplashBitmap;
-class SplashOutputDev;
-class PDFDoc;
-class Links;
-
 extern const char* const LINK_ACTION_GOTO;
 extern const char* const LINK_ACTION_GOTOR;
 extern const char* const LINK_ACTION_LAUNCH;
@@ -115,23 +109,6 @@ protected:
     fz_pixmap *_bitmap;
 };
 
-class RenderedBitmapSplash : public RenderedBitmap {
-public:
-    RenderedBitmapSplash(SplashBitmap *);
-    virtual ~RenderedBitmapSplash();
-
-    virtual int dx();
-    virtual int dy();
-    virtual int rowSize();
-    virtual unsigned char *data();
-
-    virtual HBITMAP createDIBitmap(HDC);
-    virtual void stretchDIBits(HDC, int, int, int, int);
-
-protected:
-    SplashBitmap *_bitmap;
-};
-
 class PdfEngine {
 public:
     PdfEngine() : 
@@ -183,34 +160,6 @@ protected:
     bool _enableEngineSwitch;
 };
 
-class PdfEnginePoppler : public PdfEngine {
-public:
-    PdfEnginePoppler();
-    virtual ~PdfEnginePoppler();
-    virtual bool load(const char *fileName, WindowInfo* windowInfo);
-    virtual int pageRotation(int pageNo);
-    virtual SizeD pageSize(int pageNo);
-    virtual RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
-                         BOOL (*abortCheckCbkA)(void *data),
-                         void *abortCheckCbkDataA);
-
-    virtual bool printingAllowed();
-    virtual int linkCount(int pageNo);
-    virtual const char* linkType(int pageNo, int linkNo);
-    virtual bool hasTocTree();
-    virtual PdfTocItem *getTocTree();
-
-    PDFDoc* pdfDoc() { return _pdfDoc; }
-    SplashOutputDev *   outputDevice();
-private:
-    Links* getLinksForPage(int pageNo);
-    PdfTocItem *buildTocTree(GooList *items);
-
-    PDFDoc *            _pdfDoc;
-    SplashOutputDev *   _outputDev;
-    Links **            _linksForPage;
-};
-
 class PdfEngineFitz : public  PdfEngine {
 public:
     PdfEngineFitz();
@@ -234,8 +183,6 @@ public:
     int        findPageNo(fz_obj *dest);
 
 private:
-    PdfEnginePoppler* _popplerEngine;
-
     HANDLE            _getPageSem;
 
     pdf_xref * xref() { return _xref; }

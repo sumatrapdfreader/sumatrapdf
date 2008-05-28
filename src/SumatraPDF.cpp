@@ -1272,13 +1272,6 @@ char *GetPasswordForFile(WindowInfo *win, const char *fileName)
     return Dialog_GetPassword(win, fileName);
 }
 
-/* TODO: remove when poppler is completely removed */
-#include "SecurityHandler.h"
-void *StandardSecurityHandler::getAuthData() 
-{
-    return NULL;
-}
-
 /* Return true if this program has been started from "Program Files" directory
    (which is an indicator that it has been installed */
 static bool runningFromProgramFiles(void)
@@ -7038,14 +7031,8 @@ static void OpenPdf(WindowInfo* win,const char *fileName,  HWND parentHandle)
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
 
-    if (gGlobalPrefs.m_useFitz) {
-        win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
+    win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
-    } 
-    else {
-        win->dm = DisplayModelSplash_CreateFromFileName(fileName, 
-            totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
-    }
 
     win->dm->setAppData((void*)win);
     win->state = WS_SHOWING_PDF;

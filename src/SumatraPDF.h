@@ -3,6 +3,7 @@
 #ifndef SUMATRAPDF_H_
 #define SUMATRAPDF_H_
 
+/* TODO: those should be set from the makefile */
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Refer to MSDN for the latest info on corresponding values for different platforms.
 #ifndef WINVER
@@ -36,7 +37,6 @@
 #include "resource.h"
 
 #include "win_util.h"
-#include "DisplayModelSplash.h"
 #include "DisplayModelFitz.h"
 #include "FileWatch.h"
 #include "PdfSync.h"

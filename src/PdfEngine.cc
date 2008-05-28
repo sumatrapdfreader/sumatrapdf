@@ -3,76 +3,19 @@
 #include "base_util.h"
 #include "PdfEngine.h"
 
-#include "ErrorCodes.h"
-#include "GooString.h"
-#include "GooList.h"
-#include "GlobalParams.h"
-#include "SplashBitmap.h"
-#include "Object.h" /* must be included before SplashOutputDev.h because of sloppiness in SplashOutputDev.h */
-#include "SplashOutputDev.h"
-#include "TextOutputDev.h"
-#include "PDFDoc.h"
-#include "SecurityHandler.h"
-#include "Outline.h"
-#include "Link.h"
 #include "str_util.h"
 #include "utf_util.h"
 
 // in SumatraPDF.cpp
 extern "C" char *GetPasswordForFile(WindowInfo *win, const char *fileName);
 
-const char* const LINK_ACTION_GOTO = "linkActionGoTo";
-const char* const LINK_ACTION_GOTOR = "linkActionGoToR";
-const char* const LINK_ACTION_LAUNCH = "linkActionLaunch";
-const char* const LINK_ACTION_URI = "linkActionUri";
-const char* const LINK_ACTION_NAMED = "linkActionNamed";
-const char* const LINK_ACTION_MOVIE = "linkActionMovie";
-const char* const LINK_ACTION_UNKNOWN = "linkActionUnknown";
-
-static SplashColorMode gSplashColorMode = splashModeBGR8;
-
-static SplashColor splashColRed;
-static SplashColor splashColGreen;
-static SplashColor splashColBlue;
-static SplashColor splashColWhite;
-static SplashColor splashColBlack;
-
-#define SPLASH_COL_RED_PTR (SplashColorPtr)&(splashColRed[0])
-#define SPLASH_COL_GREEN_PTR (SplashColorPtr)&(splashColGreen[0])
-#define SPLASH_COL_BLUE_PTR (SplashColorPtr)&(splashColBlue[0])
-#define SPLASH_COL_WHITE_PTR (SplashColorPtr)&(splashColWhite[0])
-#define SPLASH_COL_BLACK_PTR (SplashColorPtr)&(splashColBlack[0])
-
-static SplashColorPtr  gBgColor = SPLASH_COL_WHITE_PTR;
-
-static void splashColorSet(SplashColorPtr col, Guchar red, Guchar green, Guchar blue, Guchar alpha)
-{
-    switch (gSplashColorMode)
-    {
-        case splashModeBGR8:
-            col[0] = blue;
-            col[1] = green;
-            col[2] = red;
-            break;
-        case splashModeRGB8:
-            col[0] = red;
-            col[1] = green;
-            col[2] = blue;
-            break;
-        default:
-            assert(0);
-            break;
-    }
-}
-
-void SplashColorsInit(void)
-{
-    splashColorSet(SPLASH_COL_RED_PTR, 0xff, 0, 0, 0);
-    splashColorSet(SPLASH_COL_GREEN_PTR, 0, 0xff, 0, 0);
-    splashColorSet(SPLASH_COL_BLUE_PTR, 0, 0, 0xff, 0);
-    splashColorSet(SPLASH_COL_BLACK_PTR, 0, 0, 0, 0);
-    splashColorSet(SPLASH_COL_WHITE_PTR, 0xff, 0xff, 0xff, 0);
-}
+#define LINK_ACTION_GOTO "linkActionGoTo";
+#define LINK_ACTION_GOTOR "linkActionGoToR";
+#define LINK_ACTION_LAUNCH "linkActionLaunch";
+#define LINK_ACTION_URI "linkActionUri";
+#define LINK_ACTION_NAMED "linkActionNamed";
+#define LINK_ACTION_MOVIE "linkActionMovie";
+#define LINK_ACTION_UNKNOWN "linkActionUnknown";
 
 static HBITMAP createDIBitmapCommon(RenderedBitmap *bmp, HDC hdc)
 {
@@ -115,7 +58,7 @@ static void stretchDIBitsCommon(RenderedBitmap *bmp, HDC hdc, int leftMargin, in
     bmih.biSizeImage = bmpDy * bmpRowSize;;
     bmih.biXPelsPerMeter = bmih.biYPelsPerMeter = 0;
     bmih.biClrUsed = bmih.biClrImportant = 0;
-    SplashColorPtr bmpData = bmp->data();
+    unsigned char* bmpData = bmp->data();
 
     ::StretchDIBits(hdc,
         // destination rectangle
@@ -165,256 +108,6 @@ void RenderedBitmapFitz::stretchDIBits(HDC hdc, int leftMargin, int topMargin, i
     stretchDIBitsCommon(this, hdc, leftMargin, topMargin, pageDx, pageDy);
 }
 
-RenderedBitmapSplash::RenderedBitmapSplash(SplashBitmap *bitmap)
-{
-    _bitmap = bitmap;
-}
-
-RenderedBitmapSplash::~RenderedBitmapSplash() {
-    delete _bitmap;
-}
-
-int RenderedBitmapSplash::dx()
-{ 
-    return _bitmap->getWidth();
-}
-
-int RenderedBitmapSplash::dy()
-{ 
-    return _bitmap->getHeight();
-}
-
-int RenderedBitmapSplash::rowSize() 
-{ 
-    return _bitmap->getRowSize(); 
-}
-    
-unsigned char *RenderedBitmapSplash::data()
-{
-    return _bitmap->getDataPtr();
-}
-
-HBITMAP RenderedBitmapSplash::createDIBitmap(HDC hdc)
-{
-    return createDIBitmapCommon(this, hdc);
-}
-
-void RenderedBitmapSplash::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy)
-{
-    stretchDIBitsCommon(this, hdc, leftMargin, topMargin, pageDx, pageDy);
-}
-
-PdfEnginePoppler::PdfEnginePoppler() : 
-    PdfEngine()
-   , _pdfDoc(NULL)
-   , _outputDev(NULL)
-   , _linksForPage(NULL)
-{
-}
-
-PdfEnginePoppler::~PdfEnginePoppler()
-{
-    delete _outputDev;
-    delete _pdfDoc;
-    for (int i = 0; (i < _pageCount) && _linksForPage; i++)
-        delete _linksForPage[i];
-    free(_linksForPage);
-}
-
-bool PdfEnginePoppler::load(const char *fileName, WindowInfo *win)
-{
-    setFileName(fileName);
-    _windowInfo = win;
-    /* note: don't delete fileNameStr since PDFDoc takes ownership and deletes them itself */
-    GooString *fileNameStr = new GooString(fileName);
-    if (!fileNameStr) return false;
-
-    _pdfDoc = new PDFDoc(fileNameStr, NULL, NULL, (void*)win);
-    if (!_pdfDoc->isOk()) {
-        return false;
-    }
-    _pageCount = _pdfDoc->getNumPages();
-    _linksForPage = (Links**)malloc(_pageCount * sizeof(Links*));
-    if (!_linksForPage) return false;
-    for (int i=0; i < _pageCount; i++)
-        _linksForPage[i] = NULL;
-    return true;
-}
-
-PdfTocItem *PdfEnginePoppler::buildTocTree(GooList *items)
-{
-    PdfTocItem *entry = NULL;
-
-    for ( int i = 0; i < items->getLength(); ++i ) {
-        OutlineItem *item = (OutlineItem *)items->get( i );
-        int n, len = item->getTitleLength();
-        if (len == 0) continue;
-
-        Unicode *title = item->getTitle();
-        wchar_t *name = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
-        for (n = 0; n < len; n++)
-            name[n] = (wchar_t)title[n];
-        name[n] = 0;
-        
-        PdfTocItem *node = new PdfTocItem(name, item->getAction());
-        
-        if (!entry)
-            entry = node;
-        else
-            entry->AddSibling(node);
-
-        item->open();
-        GooList *kids = item->getKids();
-        if (kids) node->AddChild(buildTocTree(kids));
-    }
-
-    return entry;
-}
-
-bool PdfEnginePoppler::hasTocTree()
-{
-    Outline *outline = _pdfDoc->getOutline();
-    if (!outline)
-        return false;
-    if (!outline->getItems())
-        return false;
-    return true;
-}
-
-PdfTocItem *PdfEnginePoppler::getTocTree()
-{
-    Outline *outline = _pdfDoc->getOutline();
-    if (!outline)
-        return NULL;
-
-    GooList *items = outline->getItems();
-
-    if (!items)
-        return NULL;
-
-    return buildTocTree(items);
-}
-
-int PdfEnginePoppler::pageRotation(int pageNo)
-{
-    assert(validPageNo(pageNo));
-    return pdfDoc()->getPageRotate(pageNo);
-}
-
-SizeD PdfEnginePoppler::pageSize(int pageNo)
-{
-    double dx = pdfDoc()->getPageCropWidth(pageNo);
-    double dy = pdfDoc()->getPageCropHeight(pageNo);
-    return SizeD(dx, dy);
-}
-
-SplashOutputDev * PdfEnginePoppler::outputDevice() {
-    if (!_outputDev) {
-        GBool bitmapTopDown = gTrue;
-        _outputDev = new SplashOutputDev(gSplashColorMode, 4, gFalse, gBgColor, bitmapTopDown);
-        if (_outputDev)
-            _outputDev->startDoc(_pdfDoc->getXRef());
-    }
-    return _outputDev;
-}
-
-RenderedBitmap *PdfEnginePoppler::renderBitmap(
-                           int pageNo, double zoomReal, int rotation,
-                           BOOL (*abortCheckCbkA)(void *data),
-                           void *abortCheckCbkDataA)
-{
-    assert(outputDevice());
-    if (!outputDevice()) return NULL;
-
-    //DBG_OUT("PdfEnginePoppler::RenderBitmap(pageNo=%d) rotate=%d, zoomReal=%.2f%%\n", pageNo, rotation, zoomReal);
-
-    double hDPI = (double)PDF_FILE_DPI * zoomReal * 0.01;
-    double vDPI = (double)PDF_FILE_DPI * zoomReal * 0.01;
-    GBool  useMediaBox = gFalse;
-    GBool  crop        = gTrue;
-    GBool  doLinks     = gTrue;
-    _pdfDoc->displayPage(_outputDev, pageNo, hDPI, vDPI, rotation, useMediaBox, crop, doLinks,
-        abortCheckCbkA, abortCheckCbkDataA);
-
-#if 0
-    PdfPageInfo *pageInfo = getPageInfo(pageNo);
-    if (!pageInfo->links) {
-        /* displayPage calculates links for this page (if doLinks is true)
-           and puts inside pdfDoc */
-        pageInfo->links = pdfDoc->takeLinks();
-        if (pageInfo->links->getNumLinks() > 0)
-            RecalcLinks();
-    }
-#endif
-    SplashBitmap* bmp = _outputDev->takeBitmap();
-    if (bmp)
-        return new RenderedBitmapSplash(bmp);
-
-    return NULL;
-}
-
-bool PdfEnginePoppler::printingAllowed()
-{
-    if (_pdfDoc->okToPrint())
-        return true;
-    return false;
-}
-
-Links* PdfEnginePoppler::getLinksForPage(int pageNo)
-{
-    if (!_linksForPage)
-        return NULL;
-    if (_linksForPage[pageNo-1])
-        return NULL;
-
-    Object obj;
-    Catalog *catalog = _pdfDoc->getCatalog();
-    Page *page = catalog->getPage(pageNo);
-    Links *links = new Links(page->getAnnots(&obj), catalog->getBaseURI());
-    obj.free();
-    _linksForPage[pageNo-1] = links;
-    return _linksForPage[pageNo-1];
-}
-
-int PdfEnginePoppler::linkCount(int pageNo) {
-    Links *links = getLinksForPage(pageNo);
-    if (!links) return 0;
-    return links->getNumLinks();
-}
-
-const char* linkActionKindToLinkType(LinkActionKind kind) {
-    switch (kind) {
-        case (actionGoTo):
-            return LINK_ACTION_GOTO;
-        case actionGoToR:
-            return LINK_ACTION_GOTOR;
-        case actionLaunch:
-            return LINK_ACTION_LAUNCH;
-        case actionURI:
-            return LINK_ACTION_URI;
-        case actionNamed:
-            return LINK_ACTION_NAMED;
-        case actionMovie:
-            return LINK_ACTION_MOVIE;
-        case actionUnknown:
-            return LINK_ACTION_UNKNOWN;
-        default:
-            assert(0);
-            return LINK_ACTION_UNKNOWN;
-    }
-}
-
-const char* PdfEnginePoppler::linkType(int pageNo, int linkNo) {
-    Links *links = getLinksForPage(pageNo);
-    if (!links) return 0;
-    int linkCount = links->getNumLinks();
-    assert(linkNo < linkCount);
-    Link *link = links->getLink(linkNo-1);
-    LinkAction *    action = link->getAction();
-    LinkActionKind  actionKind = action->getKind();
-    return linkActionKindToLinkType(actionKind);
-}
-
 fz_matrix PdfEngineFitz::viewctm (pdf_page *page, float zoom, int rotate)
 {
     fz_matrix ctm;
@@ -428,7 +121,6 @@ fz_matrix PdfEngineFitz::viewctm (pdf_page *page, float zoom, int rotate)
 
 PdfEngineFitz::PdfEngineFitz() : 
         PdfEngine()
-        , _popplerEngine(NULL)
         , _xref(NULL)
         , _outline(NULL)
         , _pageTree(NULL)
@@ -470,13 +162,10 @@ PdfEngineFitz::~PdfEngineFitz()
     }
 
     CloseHandle(_getPageSem);
-
-    delete _popplerEngine;        
 }
 
 bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
 {
-    assert(!_popplerEngine);
     _windowInfo = win;
     setFileName(fileName);
     fz_error *error = pdf_newxref(&_xref);
@@ -489,7 +178,7 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
             goto Error;
         error = pdf_repairxref(_xref, (char*)fileName);
         if (error)
-            goto TryPoppler;
+            goto Error;
     }
 
     error = pdf_decryptxref(_xref);
@@ -551,22 +240,6 @@ DecryptedOk:
         _pages[i] = NULL;
     return true;
 Error:
-    return false;
-TryPoppler:
-    if (!_enableEngineSwitch)
-        return false;
-    _popplerEngine = new PdfEnginePoppler();
-    if (!_popplerEngine)
-        return false;
-    bool fok = _popplerEngine->load(fileName, win);
-    if (!fok)
-        goto ErrorPoppler;
-    _pageCount = _popplerEngine->pageCount();
-    return true;
-
-ErrorPoppler:
-    delete _popplerEngine;
-    _popplerEngine = NULL;
     return false;
 }
 
@@ -653,9 +326,6 @@ void PdfEngineFitz::dropPdfPage(int pageNo)
 
 int PdfEngineFitz::pageRotation(int pageNo)
 {
-    if (_popplerEngine)
-        return _popplerEngine->pageRotation(pageNo);
-
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
     int rotation;
@@ -667,9 +337,6 @@ int PdfEngineFitz::pageRotation(int pageNo)
 
 SizeD PdfEngineFitz::pageSize(int pageNo)
 {
-    if (_popplerEngine)
-        return _popplerEngine->pageSize(pageNo);
-
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
     fz_rect bbox;
@@ -730,9 +397,6 @@ RenderedBitmap *PdfEngineFitz::renderBitmap(
     fz_matrix ctm;
     fz_rect bbox;
 
-    if (_popplerEngine)
-        return _popplerEngine->renderBitmap(pageNo, zoomReal, rotation, abortCheckCbkA, abortCheckCbkDataA);
-
     if (!_rast) {
 #ifdef FITZ_HEAD
         error = fz_newgraphics(&_rast, 1024 * 512);
@@ -744,7 +408,7 @@ RenderedBitmap *PdfEngineFitz::renderBitmap(
     fz_pixmap* image = NULL;
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
-        goto TryPoppler;
+        goto Error;
     zoomReal = zoomReal / 100.0;
     ctm = viewctm(page, zoomReal, rotation);
     bbox = fz_transformaabb(ctm, page->mediabox);
@@ -757,23 +421,10 @@ RenderedBitmap *PdfEngineFitz::renderBitmap(
     dropPdfPage(pageNo);
 #endif
     if (error)
-        goto TryPoppler;
+        goto Error;
     ConvertPixmapForWindows(image);
     return new RenderedBitmapFitz(image);
-TryPoppler:
-    if (!_enableEngineSwitch)
-        return NULL;
-
-    _popplerEngine = new PdfEnginePoppler();
-    if (!_popplerEngine)
-        return false;
-    bool fok = _popplerEngine->load(fileName(), _windowInfo);
-    if (!fok)
-        goto ErrorPoppler;
-    return _popplerEngine->renderBitmap(pageNo, zoomReal, rotation, abortCheckCbkA, abortCheckCbkDataA);
-ErrorPoppler:
-    delete _popplerEngine;
-    _popplerEngine = NULL;
+Error:
     return NULL;
 }
 
