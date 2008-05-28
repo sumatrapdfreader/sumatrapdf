@@ -6996,8 +6996,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (0 == pdfOpened)
         MenuToolbarUpdateStateForAllWindows();
 
-    if (registerForPdfExtentions)
-        RegisterForPdfExtentions(win ? win->hwndFrame : NULL);
+    if (registerForPdfExtentions && win)
+        RegisterForPdfExtentions(win->hwndFrame);
 
     DownloadSumatraUpdateInfo(gWindowList, true);
 #ifdef THREAD_BASED_FILEWATCH
