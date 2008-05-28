@@ -2895,8 +2895,7 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
     data.skipThisVersion = FALSE;
     int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
-        free(gGlobalPrefs.m_versionToSkip);
-        gGlobalPrefs.m_versionToSkip = strdup(newVersion);
+        str_dup_replace(&gGlobalPrefs.m_versionToSkip, newVersion);
     }
     free((void*)data.currVersion);
     free((void*)data.newVersion);
@@ -6891,8 +6890,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-inverse-search")) {
             currArg = currArg->next;
             if (currArg) {
-                free(gGlobalPrefs.m_inverseSearchCmdLine);
-                gGlobalPrefs.m_inverseSearchCmdLine = strdup(currArg->str);
+                str_dup_replace(&gGlobalPrefs.m_inverseSearchCmdLine, currArg->str);
                 currArg = currArg->next;
             }
             continue;

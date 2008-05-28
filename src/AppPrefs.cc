@@ -379,6 +379,13 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     fileHistoryNode = NULL;
 }
 
+static void dict_get_str_helper(benc_dict *d, const char *key, char **val)
+{
+    const char *txt = dict_get_str(d, key);
+    if (txt)
+        str_dup_replace(val, txt);
+}
+
 bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {
     benc_obj * bobj;
@@ -412,29 +419,10 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);
     dict_get_int(global, WINDOW_DX_STR, &gGlobalPrefs.m_windowDx);
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
-    txt = dict_get_str(global, INVERSE_SEARCH_COMMANDLINE);
-    if (txt) {
-        free(gGlobalPrefs.m_inverseSearchCmdLine);
-        gGlobalPrefs.m_inverseSearchCmdLine = strdup(txt);
-    }
-
-    txt = dict_get_str(global, VERSION_TO_SKIP_STR);
-    if (txt) {
-        free(gGlobalPrefs.m_versionToSkip);
-        gGlobalPrefs.m_versionToSkip = strdup(txt);
-    }
-
-    txt = dict_get_str(global, GUID_STR);
-    if (txt) {
-        free(gGlobalPrefs.m_guid);
-        gGlobalPrefs.m_guid = strdup(txt);
-    }
-
-    txt = dict_get_str(global, LAST_UPDATE_STR);
-    if (txt) {
-        free(gGlobalPrefs.m_lastUpdateTime);
-        gGlobalPrefs.m_lastUpdateTime = strdup(txt);
-    }
+    dict_get_str_helper(global, INVERSE_SEARCH_COMMANDLINE, &gGlobalPrefs.m_inverseSearchCmdLine);
+    dict_get_str_helper(global, VERSION_TO_SKIP_STR, &gGlobalPrefs.m_versionToSkip);
+    dict_get_str_helper(global, GUID_STR, &gGlobalPrefs.m_guid);
+    dict_get_str_helper(global, LAST_UPDATE_STR, &gGlobalPrefs.m_lastUpdateTime);
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));
     if (bstr)
