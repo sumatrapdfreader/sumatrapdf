@@ -8,6 +8,7 @@ Short term todo (before next 0.8.2 release):
 * don't use GWL_USERDATA to store WindowInfo pointer, use 
   WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
   of windows and WindowInfo structs)
+* remember default bookmarks state
 * maybe: remember and restore size and position of the window
 
 Long term todo:

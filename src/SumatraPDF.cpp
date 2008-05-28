@@ -777,7 +777,6 @@ static char *CreateGuidAsHexString()
 
 static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_showToolbar = TRUE;
-    gGlobalPrefs.m_useFitz = TRUE;
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
     gGlobalPrefs.m_escToExit = FALSE;
@@ -1024,8 +1023,6 @@ MenuDef menuDefView[] = {
     { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN },
     { SEP_ITEM, 0 },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR },
-    { SEP_ITEM, 0 },
-    { _TRN("Use MuPDF rendering engine"),  IDM_VIEW_USE_FITZ },
 };
 
 MenuDef menuDefGoTo[] = {
@@ -1917,14 +1914,6 @@ static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
         CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
 }
 
-static void MenuUpdateUseFitzStateForWindow(WindowInfo *win) {
-    HMENU hmenu = GetMenu(win->hwndFrame);
-    if (gGlobalPrefs.m_useFitz)
-        CheckMenuItem(hmenu, IDM_VIEW_USE_FITZ, MF_BYCOMMAND | MF_CHECKED);
-    else
-        CheckMenuItem(hmenu, IDM_VIEW_USE_FITZ, MF_BYCOMMAND | MF_UNCHECKED);
-}
-
 // show which language is being used via check in Language/* menu
 static void MenuUpdateLanguage(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
@@ -1960,7 +1949,6 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 
     MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
-    MenuUpdateUseFitzStateForWindow(win);
     MenuUpdateLanguage(win);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
@@ -4519,29 +4507,6 @@ void OnMenuCheckUpdate(WindowInfo *win)
     DownloadSumatraUpdateInfo(win, false);
 }
 
-static void OnMenuViewUseFitz(WindowInfo *win)
-{
-    assert(win);
-    DBG_OUT("OnMenuViewUseFitz()\n");
-    if (gGlobalPrefs.m_useFitz)
-        gGlobalPrefs.m_useFitz = FALSE;
-    else
-        gGlobalPrefs.m_useFitz = TRUE;
-
-    ReloadPdfDocument(win);
-    win = gWindowList;
-    while (win) {
-        if (win->tocLoaded) {
-            win->ClearTocBox();
-            if (win->dm->_showToc)
-                win->LoadTocTree();
-        }
-        MenuUpdateUseFitzStateForWindow(win);
-        MenuUpdateBookmarksStateForWindow(win);
-        win = win->next;
-    }
-}
-
 static void OnMenuChangeLanguage(WindowInfo *win)
 {
     int langId = LangIdFromName(CurrLangNameGet());
@@ -6050,10 +6015,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_VIEW_BOOKMARKS:
                     if (win)
                         win->ToggleTocBox();
-                    break;
-
-                case IDM_VIEW_USE_FITZ:
-                    OnMenuViewUseFitz(win);
                     break;
 
                 case IDM_GOTO_NEXT_PAGE:

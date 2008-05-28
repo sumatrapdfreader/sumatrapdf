@@ -27,7 +27,6 @@
 #define IDM_VIEW_BOOKMARKS              417
 #define IDM_VIEW_FULLSCREEN             418
 #define IDM_VIEW_SHOW_HIDE_TOOLBAR      419
-#define IDM_VIEW_USE_FITZ               420
 #define IDM_GOTO_NEXT_PAGE              430
 #define IDM_GOTO_PREV_PAGE              431
 #define IDM_GOTO_FIRST_PAGE             432

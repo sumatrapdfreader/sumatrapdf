@@ -57,7 +57,6 @@ benc_dict* Prefs_SerializeGlobal(void)
 
     DICT_NEW(prefs);
     DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gGlobalPrefs.m_showToolbar);
-    DICT_ADD_INT64(prefs, USE_FITZ_STR, gGlobalPrefs.m_useFitz);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs.m_pdfAssociateDontAskAgain);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs.m_pdfAssociateShouldAssociate);
 
@@ -402,7 +401,6 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
         goto Error;
 
     dict_get_bool(global, SHOW_TOOLBAR_STR, &gGlobalPrefs.m_showToolbar);
-    dict_get_bool(global, USE_FITZ_STR, &gGlobalPrefs.m_useFitz);
     dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
     dict_get_bool(global, ESC_TO_EXIT_STR, &gGlobalPrefs.m_escToExit);
@@ -510,11 +508,6 @@ StartOver:
                 if (str_eq(SHOW_TOOLBAR_STR, key)) {
                     gGlobalPrefs.m_showToolbar = TRUE;
                     ParseBool(value, &gGlobalPrefs.m_showToolbar);
-                    break;
-                }
-                if (str_eq(USE_FITZ_STR, key)) {
-                    gGlobalPrefs.m_useFitz = TRUE;
-                    ParseBool(value, &gGlobalPrefs.m_useFitz);
                     break;
                 }
                 if (str_eq(PDF_ASSOCIATE_DONT_ASK_STR, key)) {

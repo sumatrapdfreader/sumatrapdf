@@ -16,7 +16,6 @@ enum {
 /* Most of the global settings that we persist in preferences file. */
 typedef struct {
     BOOL m_showToolbar;
-    BOOL m_useFitz;
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
     BOOL m_pdfAssociateDontAskAgain;
     /* If m_pdfAssociateDontAskAgain is TRUE, says whether we should 
