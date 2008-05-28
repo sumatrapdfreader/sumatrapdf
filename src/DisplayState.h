@@ -51,6 +51,7 @@ enum DisplayMode {
 #define ESC_TO_EXIT_STR             "EscToExit"
 #define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
 #define VERSION_TO_SKIP_STR         "VersionToSkip"
+#define GUID_STR                    "Guid"
 
 typedef struct DisplayState {
     const char *        filePath;

@@ -661,7 +661,14 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
-    HttpReqCtx *ctx = new HttpReqCtx(SUMATRA_UPDATE_INFO_URL, hwndToNotify, WM_APP_URL_DOWNLOADED);
+    char *url;
+    if (gGlobalPrefs.m_guid) {
+        url = str_cat3(SUMATRA_UPDATE_INFO_URL, "?g=", gGlobalPrefs.m_guid);
+    } else {
+        url = strdup(SUMATRA_UPDATE_INFO_URL);
+    }
+    HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, WM_APP_URL_DOWNLOADED);
+    free(url);
     ctx->autoCheck = autoCheck;
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
@@ -676,12 +683,27 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     }
 }
 
+#if 0
 static DWORD GetSerialNumber()
 {
     DWORD serialNumber = 0xFFFFFFFF;
     GetVolumeInformationA("c:\\", NULL, 0,
         &serialNumber, NULL, NULL, NULL, 0);
     return serialNumber;
+}
+#endif
+
+/* Create a GUID (likely globally unique, 16-byte value) and return it as
+   a hex string, or NULL if cannot be generated.
+   Caller has to free() the result. */
+static char *CreateGuidAsHexString()
+{
+    GUID g;
+    HRESULT hr = CoCreateGuid(&g);
+    if (!SUCCEEDED(hr)) {
+        return NULL; // what now?
+    }
+    return mem_to_hexstr((unsigned char*)&g, sizeof(g));
 }
 
 static void SerializableGlobalPrefs_Init() {
@@ -701,12 +723,14 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
     gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
     gGlobalPrefs.m_versionToSkip = NULL;
+    gGlobalPrefs.m_guid = NULL;
 }
 
 static void SerializableGlobalPrefs_Deinit()
 {
     free(gGlobalPrefs.m_versionToSkip);
     free(gGlobalPrefs.m_inverseSearchCmdLine);
+    free(gGlobalPrefs.m_guid);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -2797,7 +2821,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     DWORD dataSize;
     char *txt = (char*)ctx->data.getData(&dataSize);
     char *url = ctx->url;
-    if (str_eq(url, SUMATRA_UPDATE_INFO_URL)) {
+    if (str_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
         char *verTxt = txt;
         /* TODO: too hackish */
         char *tmp = str_normalize_newline(verTxt, "*");
@@ -6731,6 +6755,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         // the first time Sumatra is launched.
         GuessLanguage();
     }
+    if (!gGlobalPrefs.m_guid) {
+        gGlobalPrefs.m_guid = CreateGuidAsHexString();
+    }
+
     /* parse argument list. If -bench was given, then we're in benchmarking mode. Otherwise
     we assume that all arguments are PDF file names.
     -bench can be followed by file or directory name. If file, it can additionally be followed by

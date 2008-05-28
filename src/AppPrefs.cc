@@ -83,6 +83,9 @@ benc_dict* Prefs_SerializeGlobal(void)
     if (gGlobalPrefs.m_versionToSkip)
         DICT_ADD_STR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
 
+    if (gGlobalPrefs.m_guid)
+        DICT_ADD_STR(prefs, GUID_STR, gGlobalPrefs.m_guid);
+    
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
     return prefs;
 Error:
@@ -419,6 +422,12 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     if (txt) {
         free(gGlobalPrefs.m_versionToSkip);
         gGlobalPrefs.m_versionToSkip = strdup(txt);
+    }
+
+    txt = dict_get_str(global, GUID_STR);
+    if (txt) {
+        free(gGlobalPrefs.m_guid);
+        gGlobalPrefs.m_guid = strdup(txt);
     }
 
     bstr = benc_obj_as_str(benc_dict_find2(global, UI_LANGUAGE_STR));

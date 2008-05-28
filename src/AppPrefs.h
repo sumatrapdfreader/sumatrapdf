@@ -35,6 +35,8 @@ typedef struct {
        If NULL - don't skip */
     char *m_versionToSkip;
 
+    char *m_guid;
+
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
     DisplayMode m_defaultDisplayMode;
