@@ -625,7 +625,7 @@ ro:Continuu
 kr:한 장씩 연속
 bn:চলমান...
 gl:Contínuo
-uk:Тяглий
+uk:Протяжний
 eu:Jarraian
 -
 Continuous facing
@@ -672,7 +672,7 @@ ro:Pagină dublă continuu
 kr:여러 장씩 연속
 bn:চলমান এবং পাশাপাশি
 gl:Páxina dobre continua
-uk:Дві тяглі сторінки
+uk:Дві протяжні сторінки
 eu:Bi aldetatik jarraian
 -
 Rotate left
@@ -719,7 +719,7 @@ ro:Roteşte spre stânga
 kr:왼쪽으로 회전
 bn:বামে ঘুরিয়ে নিন
 gl:Xirar á esquerda
-uk:Обернути лівобіч
+uk:Повернути ліворуч
 eu:Ezkerrerantz biratu
 -
 Rotate right
@@ -766,7 +766,7 @@ ro:Roteşte spre dreapta
 kr:오른쪽으로 회전
 bn:ডানে ঘুরিয়ে নিন
 gl:Xirar á dereita
-uk:Обернути правобіч
+uk:Повернути праворуч
 eu:Eskubirantz biratu
 -
 Bookmarks
@@ -931,7 +931,7 @@ ro:Sal&t la...
 kr:이동(&G)
 bn:নিয়ে চলুন
 gl:Ir &a
-uk:Перейти &до
+uk:&Перейти
 eu:...ra &Joan
 -
 Next Page
@@ -1166,7 +1166,7 @@ ro:Pagina...\tCtrl-G
 kr:쪽...\tCtrl-G
 bn:…নং পাতায়
 br:Páxina...\tCtrl-G
-uk:Сторінка...\tCtrl-G
+uk:До сторінки...\tCtrl-G
 eu:...garren orria\tCtrl-G
 -
 &Zoom
@@ -1213,7 +1213,7 @@ ro:&Panoramare
 kr:확대(&Z)
 bn:পাতার আকার
 gl:&Zoom
-uk:Набли&ження
+uk:&Збільшення
 eu:&Zoom-a
 -
 Fit &Page\tCtrl-0
@@ -1521,7 +1521,7 @@ ro:&Vizitează website-ul
 kr:웹 사이트 방문(&V)
 bn:&আমাদের ওয়েবসাইট দেখুন
 gl:Visitar o &Website
-uk:Відвідати сайт
+uk:Відкрити сайт
 eu:&Web orria bisitatu
 -
 &About
@@ -2168,60 +2168,75 @@ Set inverse search command-line
 de:Befehlszeile Inverssuche setzen
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
+uk:Установити зворотній пошук.
 -
 Change language
 de:Sprache ändern
 pl:Zmien język
 sk:Zmeniť jazyk
+uk:Змінити мову
 -
 Enter password
 de:Bitte Passwort eingeben
 sk:Zadať heslo
+uk:Введіть пароль
 -
 Enter password for %s
 de: Bitte Passwort für %s eingeben
 sk:Zadať heslo pre %s
+uk:Введіть пароль для %s
 -
 Go to page
-de: Gehe zu Seite
+de:Gehe zu Seite
 sk:Ísť na stranu
+uk:Перейти на сторінку
 -
 Associate with PDF files?
 de:Mit PDF-Dateien verknüpfen?
 sk:Asociovať s PDF súbormi?
+uk:Асоціювати з PDF-файлами?
 -
 Make SumatraPDF default application for PDF files?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
+uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
 -
 Don't ask me again
 de:Nicht wieder fragen
 sk:Nepýtať sa znova
+uk:Не питати знову
 -
 &Check for new version
 de:Nach neuer Version suchen
 sk:Skontrolovať novú verziu
+uk:Перевірити, чи є нова версія
 -
 No new version available.
 de:Keine neuere Version vorhanden.
-sk:Nie je k dispozícia nová verzia. 
+sk:Nie je k dispozícia nová verzia.
+uk:Новішої версії немає.
 -
 You have the latest version.
 de:Sie haben die neuste Version installiert.
 sk:Používate najnovšiu verziu.
+uk:Ви вже маєте найновішу версію.
 -
 You have version %s
 de:Sie haben Version %s
 sk:Používate verziu %s
+uk:Ви використовуєте версію %s
 -
 New version %s is available. Download new version?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
+uk:Нова версія %s є доступною. Завантажити нову версію?
 -
 New version available.
 de:Neuere Version vorhanden.
 sk:Je k dispozícia nová verzia.
+uk:Доступна нова версія.
 -
 Skip this version
 de:Diese Version überspringen.
 sk:Preskočiť túto verziu.
+uk:Пропустити цю версію.
