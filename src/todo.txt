@@ -9,6 +9,8 @@ Short term todo (before next 0.8.2 release):
   WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
   of windows and WindowInfo structs)
 * remember default bookmarks state
+* option to not automatically check for update (some people still don't have 
+  broadband?)
 * maybe: remember and restore size and position of the window
 
 Long term todo:
