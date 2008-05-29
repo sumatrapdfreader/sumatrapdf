@@ -887,53 +887,6 @@ gl:Amosar barra de ferramentas
 uk:Показати пенал
 eu:Lanabes barra azaldu
 -
-Use MuPDF rendering engine
-bg:Използвай MuPDF за показване
-br:Usar motor de renderização MuPDF
-hu:MuPDF megjelenítő motor
-pl:Użyj MuPDF do renderowania
-de:MuPDF-Renderingengine benutzen
-fr:Utiliser le moteur de rendu MuPDF
-tr:MuPDF görüntüleme motorunu kullan
-by:Выкарыстоўваць MuPDF-магчымасці
-ja:MuPDF 描画エンジンを使用する
-fa:MuPDF استفاده از موتور رندر
-dk:Brug MuPDF renderingengine
-it:Usa MuPDF come Motore di Rendering
-nl:Gebruik de MuPDF render-enigine
-ta:MuPDF பதிப்பு வரை பொறியை தேர்
-es:Usar motor de renderizado MuPDF
-hr:Koristi MuPDF za prikaz PDF datoteka
-ru:Рендеринг с помощью движка MuPDF
-ar:التشغيلي Mupdf استخدام محرك 
-cn:使用 MuPDF 渲染引擎
-sv:Använd MuPDF renderingsmotor
-cz:Použít zobrazení pomocí MuPDF 
-gr:Χρήση μηχανής απόδοσης MuPDF
-th:ใช้ MuPDF rendering engine
-pt:Usar motor renderizador MuPDF
-no:Bruk MuPDF renderingsmotor
-sk:Použiť zobrazenie pomocou MuPDF
-vn:Dùng động cơ trình diễn MuPDF
-lt:Atvaizduoti naudojant MuPDF
-my:Guna MuPDF enjin
-fi:Käytä MuPDF renderöintimoottoria
-ca:Usa el motor de renderització MuPDF
-si:Uporabi MuPDF za prikaz PDF datotek
-sr-rs:Користи MuPDF за приказ PDF докумената
-tw:使用 MuPDF 渲染引擎
-ml:MuPDF പതിപ്പ് ഉപയോഗിക്കുക
-he:השתמש במנוע רינדור MuPDF
-sp-rs:Koristi MuPDF za prikaz PDF dokumenata
-id:Gunakan MuPDF rendering engine
-mk:Користи MuPDF за приказ на PDF документи
-ro:Utilizează MuPDF rendering engine
-kr:MuPDF 랜더링 앤진 사용
-bn:”MuPDF rendering engine” ব্যবহার করুন
-gl:Usar motor de renderizado MuPDF
-uk:Уживати MuPDF для відтворення PDF документів
-eu:MuPDF redender-erako motorra erabili
--
 &Go To
 bg:Отиди &на
 br:Ir &para
@@ -2212,48 +2165,63 @@ uk:Допоможіть перекласти
 eu:Lagun gaitzazu itzulpenekin
 -
 Set inverse search command-line
+de:Befehlszeile Inverssuche setzen
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
 -
 Change language
+de:Sprache ändern
 pl:Zmien język
 sk:Zmeniť jazyk
 -
 Enter password
+de:Bitte Passwort eingeben
 sk:Zadať heslo
 -
 Enter password for %s
+de: Bitte Passwort für %s eingeben
 sk:Zadať heslo pre %s
 -
 Go to page
+de: Gehe zu Seite
 sk:Ísť na stranu
 -
 Associate with PDF files?
+de:Mit PDF-Dateien verknüpfen?
 sk:Asociovať s PDF súbormi?
 -
 Make SumatraPDF default application for PDF files?
+de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 -
 Don't ask me again
+de:Nicht wieder fragen
 sk:Nepýtať sa znova
 -
 &Check for new version
+de:Nach neuer Version suchen
 sk:Skontrolovať novú verziu
 -
 No new version available.
+de:Keine neuere Version vorhanden.
 sk:Nie je k dispozícia nová verzia. 
 -
 You have the latest version.
+de:Sie haben die neuste Version installiert.
 sk:Používate najnovšiu verziu.
 -
 You have version %s
+de:Sie haben Version %s
 sk:Používate verziu %s
 -
 New version %s is available. Download new version?
+de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 -
 New version available.
+de:Neuere Version vorhanden.
 sk:Je k dispozícia nová verzia.
 -
 Skip this version
+de:Diese Version überspringen.
 sk:Preskočiť túto verziu.
