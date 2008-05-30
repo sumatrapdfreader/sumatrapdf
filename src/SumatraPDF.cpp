@@ -735,15 +735,15 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
         gGlobalPrefs.m_pdfsOpened = 0;
     }
     HttpReqCtx *ctx = new HttpReqCtx(url.pString, hwndToNotify, WM_APP_URL_DOWNLOADED);
-    DStringFree(&url);
     ctx->autoCheck = autoCheck;
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
-    urlHandle = InternetOpenUrlA(g_hOpen, SUMATRA_UPDATE_INFO_URL, NULL, 0, 
+    urlHandle = InternetOpenUrlA(g_hOpen, url.pString, NULL, 0, 
       INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE | 
       INTERNET_FLAG_NO_CACHE_WRITE, (LPARAM)ctx);
     /* MSDN says NULL result from InternetOpenUrlA() means an error, but in my testing
        in async mode InternetOpenUrl() returns NULL and error is ERROR_IO_PENDING */
+    DStringFree(&url);
     if (!urlHandle && (GetLastError() != ERROR_IO_PENDING)) {
         DBG_OUT("InternetOpenUrlA() failed\n");
         delete ctx;
