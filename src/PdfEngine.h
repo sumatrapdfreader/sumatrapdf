@@ -195,11 +195,7 @@ private:
     pdf_outline *   _outline;
     pdf_pagetree *  _pageTree;
     pdf_page **     _pages;
-#ifdef FITZ_HEAD
-    fz_graphics *   _rast;
-#else
     fz_renderer *   _rast;
-#endif
 };
 
 #endif

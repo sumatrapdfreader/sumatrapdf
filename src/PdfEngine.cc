@@ -90,11 +90,7 @@ int RenderedBitmapFitz::rowSize()
 
 unsigned char *RenderedBitmapFitz::data()
 {
-#ifdef FITZ_HEAD
-    unsigned char* bmpData = _bitmap->p;
-#else
     unsigned char* bmpData = _bitmap->samples;
-#endif
     return bmpData;
 }
 
@@ -154,11 +150,7 @@ PdfEngineFitz::~PdfEngineFitz()
     }
 
     if (_rast) {
-#ifdef FITZ_HEAD
-        fz_dropgraphics(_rast);
-#else
         fz_droprenderer(_rast);
-#endif
     }
 
     CloseHandle(_getPageSem);
@@ -186,7 +178,6 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
         goto Error;
 
     if (_xref->crypt) {
-#ifdef FITZ_HEAD
         int okay = pdf_setpassword(_xref->crypt, "");
         if (!okay)
             goto Error;
@@ -202,26 +193,6 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
                 goto DecryptedOk;
         }
         goto Error;
-#else
-        error = pdf_setpassword(_xref->crypt, "");
-        if (!error)
-            goto DecryptedOk;
-        if (!win) {
-            // win might not be given if called from pdfbench.cc
-            goto Error;
-        }
-        for (int i=0; i<3; i++) {
-            char *pwd = GetPasswordForFile(win, fileName);
-            // dialog box was cancelled
-            if (!pwd)
-                goto Error;
-            error = pdf_setpassword(_xref->crypt, pwd);
-            free(pwd);
-            if (!error)
-                goto DecryptedOk;
-        }
-        goto Error;
-#endif
     }
 
 DecryptedOk:
@@ -328,22 +299,30 @@ int PdfEngineFitz::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
+#if 0 // TODO: need support in mupdf
     int rotation;
     fz_error *error = pdf_getpageinfo(_xref, dict, NULL, &rotation);
     if (error)
         return INVALID_ROTATION;
     return rotation;
+#else
+    return 0;
+#endif
 }
 
 SizeD PdfEngineFitz::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
+#if 0 // TODO: need support in mupdf
     fz_rect bbox;
     fz_error *error = pdf_getpageinfo(_xref, dict, &bbox, NULL);
     if (error)
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
+#else
+    return SizeD(0,0);
+#endif
 }
 
 bool PdfEngineFitz::printingAllowed()
@@ -367,11 +346,7 @@ static void ConvertPixmapForWindows(fz_pixmap *image)
     for (int y = 0; y < image->h; y++)
     {
         unsigned char *p = bmpdata + y * bmpstride;
-#ifdef FITZ_HEAD
-        unsigned char *s = image->p + y * image->w * 4;
-#else
         unsigned char *s = image->samples + y * image->w * 4;
-#endif
         for (int x = 0; x < image->w; x++)
         {
             p[x * 3 + 0] = s[x * 4 + 3];
@@ -379,13 +354,8 @@ static void ConvertPixmapForWindows(fz_pixmap *image)
             p[x * 3 + 2] = s[x * 4 + 1];
         }
     }
-#ifdef FITZ_HEAD
-    fz_free(image->p);
-    image->p = bmpdata;
-#else
     fz_free(image->samples);
     image->samples = bmpdata;
-#endif
 }
 
 RenderedBitmap *PdfEngineFitz::renderBitmap(
@@ -398,11 +368,7 @@ RenderedBitmap *PdfEngineFitz::renderBitmap(
     fz_rect bbox;
 
     if (!_rast) {
-#ifdef FITZ_HEAD
-        error = fz_newgraphics(&_rast, 1024 * 512);
-#else
         error = fz_newrenderer(&_rast, pdf_devicergb, 0, 1024 * 512);
-#endif
     }
 
     fz_pixmap* image = NULL;
@@ -412,11 +378,7 @@ RenderedBitmap *PdfEngineFitz::renderBitmap(
     zoomReal = zoomReal / 100.0;
     ctm = viewctm(page, zoomReal, rotation);
     bbox = fz_transformaabb(ctm, page->mediabox);
-#ifdef FITZ_HEAD
-    error = fz_drawtree(&image, _rast, page->tree, ctm, pdf_devicergb, fz_roundrect(bbox), 1);
-#else
     error = fz_rendertree(&image, _rast, page->tree, ctm, fz_roundrect(bbox), 1);
-#endif
 #if CONSERVE_MEMORY
     dropPdfPage(pageNo);
 #endif

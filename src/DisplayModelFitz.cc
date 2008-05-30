@@ -124,7 +124,10 @@ void DisplayModelFitz::goToTocLink(void *link)
         case PDF_LURI:
             break;
         case PDF_LGOTO:
-        case PDF_LUNKNOWN: {
+#if 0 // TODO: need to add support to mupdf
+        case PDF_LUNKNOWN: 
+#endif
+        {
             int page = pdfEngineFitz()->findPageNo(((pdf_link *)link)->dest);
             if (page > 0) goToPage(page, 0);
         }
