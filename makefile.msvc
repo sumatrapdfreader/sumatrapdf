@@ -21,6 +21,8 @@ CFLAGS = $(CFLAGS) /D "_SCL_SECURE_NO_DEPRECATE" /D "_CRT_SECURE_NO_DEPRECATE"
 
 # disable "warning C4244: 'argument' : conversion from 'foo' to 'bar', possible loss of data"
 CFLAGS = $(CFLAGS) /wd4244 /wd4996
+# 4995 - 'sprintf': name was marked as #pragma deprecated
+CFLAGS = $(CFLAGS) /wd4995
 
 CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /GS /RTCu /RTCs
 
@@ -30,7 +32,7 @@ FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "__func__=\"\"" /D "isnan=_isnan"
 
 SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /Isrc /IDialogSizer
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "NDEBUG" /D "_WINDOWS"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "NDEBUG" /D "_WINDOWS" /D "__func__=\"\""
 
 #CFLAGS = $(CFLAGS) /showIncludes
 #CFLAGS = $(CFLAGS) /analyze

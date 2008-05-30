@@ -17,6 +17,51 @@ extern "C" char *GetPasswordForFile(WindowInfo *win, const char *fileName);
 #define LINK_ACTION_MOVIE "linkActionMovie";
 #define LINK_ACTION_UNKNOWN "linkActionUnknown";
 
+/* hack to make fz_throw work in C++ */
+#ifdef nil
+#undef nil
+#define nil ((fz_error*)0)
+#endif
+
+static fz_error *pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, int *rotatep)
+{
+    fz_rect bbox;
+    int rotate;
+    fz_obj *obj;
+    fz_error *error;
+
+    obj = fz_dictgets(dict, "CropBox");
+    if (!obj)
+        obj = fz_dictgets(dict, "MediaBox");
+
+    if (fz_isindirect(obj)) {
+        fz_obj* obj2;
+        error = pdf_loadindirect(&obj2, xref, obj);
+        if (error)
+            return error;
+        obj = obj2;
+    }
+
+    if (!fz_isarray(obj))
+        return fz_throw("syntaxerror: Page missing MediaBox");
+    bbox = pdf_torect(obj);
+
+    //pdf_logpage("bbox [%g %g %g %g]\n", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+
+    obj = fz_dictgets(dict, "Rotate");
+    rotate = 0;
+    if (fz_isint(obj))
+        rotate = fz_toint(obj);
+
+    //pdf_logpage("rotate %d\n", rotate);
+
+    if (bboxp)
+        *bboxp = bbox;
+    if (rotatep)
+        *rotatep = rotate;
+    return nil;
+}
+
 static HBITMAP createDIBitmapCommon(RenderedBitmap *bmp, HDC hdc)
 {
     int bmpDx = bmp->dx();
@@ -299,30 +344,22 @@ int PdfEngineFitz::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
-#if 0 // TODO: need support in mupdf
     int rotation;
     fz_error *error = pdf_getpageinfo(_xref, dict, NULL, &rotation);
     if (error)
         return INVALID_ROTATION;
     return rotation;
-#else
-    return 0;
-#endif
 }
 
 SizeD PdfEngineFitz::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
-#if 0 // TODO: need support in mupdf
     fz_rect bbox;
     fz_error *error = pdf_getpageinfo(_xref, dict, &bbox, NULL);
     if (error)
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
-#else
-    return SizeD(0,0);
-#endif
 }
 
 bool PdfEngineFitz::printingAllowed()
