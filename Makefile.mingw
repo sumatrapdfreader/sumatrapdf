@@ -21,18 +21,16 @@ LDLIBS = -lfreetype -ljpeg -lz
 
 INC_DIR += baseutils
 INC_DIR += src
-INC_DIR += poppler poppler/goo
-INC_DIR += poppler/poppler poppler/splash
 INC_DIR += fitz/include
 INC_DIR += DialogSizer
 LDFLAGS += -mwindows
 
 ifeq ($(BUILD), debug)
-    CPPFLAGS += -DDEBUG
+    CPPFLAGS += -D DEBUG
     CFLAGS += -O0
 endif
 ifeq ($(BUILD), release)
-    CPPFLAGS += -DNDEBUG
+    CPPFLAGS += -D NDEBUG
     CFLAGS += -Os -O2
     LDFLAGS += -s
 endif
@@ -46,16 +44,14 @@ CPPFLAGS += $(addprefix -I ,$(INC_DIR))
 RCFLAGS += $(addprefix --include-dir=,$(INC_DIR))
 CFLAGS += -Wall
 CFLAGS += -g
-CPPFLAGS += -DUSE_OWN_GET_AUTH_DATA
-CPPFLAGS += -D'POPPLER_DATADIR=""'
-CPPFLAGS += -DENABLE_ZLIB=1 -DENABLE_LIBJPEG=1
 LDFLAGS += $(addprefix -L ,$(LIB_DIR))
 LDLIBS += -lcomctl32
 LDLIBS += -lwinspool -lmsimg32
 LDLIBS += -lwininet -lole32
 
 # <winuser.h> missing some VK_OEM stuff unless _WIN32_WINNT >= 0x0500
-CPPFLAGS += -D_WIN32_WINNT=0x0500
+# I think this means we're building for Windows 5.0 aka Windows 2000
+CPPFLAGS += -D _WIN32_WINNT=0x0500
 
 all: fitz SumatraPDF.exe
 fitz:

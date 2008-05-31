@@ -19,7 +19,7 @@ ifeq ($(BUILD), debug)
     CFLAGS += -O0
 endif
 ifeq ($(BUILD), release)
-    CPPFLAGS += -DNDEBUG
+    CPPFLAGS += -D NDEBUG
     CFLAGS += -O2
 endif
 ifneq ($(BUILD), debug)
@@ -31,9 +31,9 @@ endif
 CPPFLAGS += $(addprefix -I ,$(INC_DIR))
 CFLAGS += -Wall
 CFLAGS += -g
-CPPFLAGS += -DNEED_STRLCAT -DNEED_STRLCPY -DNEED_STRSEP
+CPPFLAGS += -D NEED_STRLCAT -D NEED_STRLCPY -D NEED_STRSEP
 CFLAGS += -std=gnu99
-CPPFLAGS += -DHAVE_C99
+CPPFLAGS += -D HAVE_C99
 
 all: libfitz.a
 .PHONY: all
