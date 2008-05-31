@@ -1571,8 +1571,28 @@ gl:Arred&or de
 uk:П&ро програму...
 eu:Ho&Ni buruz...
 -
+Page:
+br:Página:
+hu:Oldal:
+pl:Strona:
+de:Seite:
+fr:Page:
+tr:Sayfa:
+dk:Side:
+it:Pagina:
+nl:Pagina:
+es:Página:
+hr:Stranica:
+sv:Sida:
+cz:Stránka:
+pt:Página:
+no:Side:
+sk:Strana:
+sp-rs:Strana:
+ro:Pagina:
+-
 Find:
-br:Localizar
+br:Localizar:
 bg:Търси:
 de:Suchen:
 tr:Bul:
@@ -1580,7 +1600,7 @@ hu:Keresés:
 pl:Szukaj:
 ja:検索:
 fa:جستجو:
-nl:Zoek
+nl:Zoek:
 sk:Hľadať:
 vn:Tìm kiếm:
 lt:Ieškoti:
@@ -1604,8 +1624,8 @@ gl:Procura:
 es:Buscar:
 ar:بحث
 uk:Знайти:
-eu:Bilatu
-gr:Αναζήτηση
+eu:Bilatu:
+gr:Αναζήτηση:
 -
 Find Previous
 br:Localizar anterior

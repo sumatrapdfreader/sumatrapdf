@@ -330,6 +330,9 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
         data = (Dialog_ChangeLanguage_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        /* TODO: for some reason this doesn't work well e.g. when using
+           russion translation, the russian part of window title is garbage (?)
+           not russian text. Maybe I need to change the font ? */
         win_set_textw(hDlg, _TRW("Change language"));
         WCHAR *langName;
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);

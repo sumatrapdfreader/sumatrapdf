@@ -197,6 +197,7 @@ typedef struct ToolbarButtonInfo {
 } ToolbarButtonInfo;
 
 #define IDB_SEPARATOR  -1
+#define IDB_SEPARATOR2 -2
 
 static ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"), 0 },
@@ -206,11 +207,11 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
     { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 },
     { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,		_TRN("Zoom In"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, -1 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, IDB_SEPARATOR },
     { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
     { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, IDB_SEPARATOR2 },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -224,6 +225,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
 static void UpdateToolbarFindText(WindowInfo *win);
+static void UpdateToolbarPageText(WindowInfo *win);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
 static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
@@ -1866,13 +1868,17 @@ static bool FileCloseMenuEnabled(void) {
     return false;
 }
 
+bool TbIsSepId(int cmdId) {
+    return (IDB_SEPARATOR == cmdId) || (IDB_SEPARATOR2 == cmdId);
+}
+ 
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     LPARAM enable = (LPARAM)MAKELONG(1,0);
     LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         int cmdId = gToolbarButtons[i].cmdId;
-        if (IDB_SEPARATOR == cmdId)
+        if (TbIsSepId(cmdId))
             continue;
         LPARAM buttonState = enable;
         if (IDM_OPEN != cmdId) {
@@ -5076,7 +5082,7 @@ static void OnMenuAbout() {
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
     TBBUTTON tbButton = {0};
-    if (IDB_SEPARATOR == gToolbarButtons[i].cmdId) {
+    if (TbIsSepId(gToolbarButtons[i].cmdId)) {
         tbButton.fsStyle = TBSTYLE_SEP;
     } else {
         tbButton.iBitmap = gToolbarButtons[i].index;
@@ -5121,6 +5127,7 @@ static void UpdateToolbarToolText(void)
     WindowInfo *win = gWindowList;
     while (win) {
         UpdateToolbarFindText(win);
+        UpdateToolbarPageText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
         MenuUpdateStateForWindow(win);
         win = win->next;
@@ -5238,23 +5245,35 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+SIZE TextSizeInHwnd(HWND hwnd, const WCHAR *txt)
+{
+    SIZE sz;
+    int txtLen = wcslen(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+       window's current font into dc */
+    HFONT f = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    HGDIOBJ prev = SelectObject(dc, f);
+    GetTextExtentPoint32W(dc, txt, txtLen, &sz);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    return sz;
+}
+
 #define FIND_TXT_POS_X 146
 #define FIND_BOX_WIDTH 160
 static void UpdateToolbarFindText(WindowInfo *win)
 {
     const WCHAR *text = _TRW("Find:");
-    int text_len = wcslen(text);
-    HDC dc = GetWindowDC(win->hwndFindText);
-    SIZE size;
-
     SetWindowTextW(win->hwndFindText, text);
-    GetTextExtentPoint32W(dc, text, text_len, &size);
-    ReleaseDC(win->hwndFindText, dc);
 
     RECT findWndRect;
     GetWindowRect(win->hwndFindBox, &findWndRect);
     int findWndDy = rect_dy(&findWndRect) + 1;
 
+    SIZE size = TextSizeInHwnd(win->hwndFindText, text);
+    size.cx += 6;
     MoveWindow(win->hwndFindText, FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
     MoveWindow(win->hwndFindBox, FIND_TXT_POS_X + size.cx, 1, FIND_BOX_WIDTH, 20, false);
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
@@ -5346,22 +5365,22 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 #define PAGE_TOTAL_WIDTH 40
 static void UpdateToolbarPageText(WindowInfo *win)
 {
-    const WCHAR *text = L"Page:";
-    int text_len = wcslen(text);
-    HDC dc = GetWindowDC(win->hwndPageText);
-    SIZE size;
-
+    const WCHAR *text = _TRW("Page:");
     SetWindowTextW(win->hwndPageText, text);
-    GetTextExtentPoint32W(dc, text, text_len, &size);
-    ReleaseDC(win->hwndPageText, dc);
+    SIZE size = TextSizeInHwnd(win->hwndPageText, text);
+    size.cx += 6;
+
+    RECT r;
+    SendMessage(win->hwndToolbar, TB_GETRECT, IDM_FIND_MATCH, (LPARAM)&r);
 
     RECT pageWndRect;
     GetWindowRect(win->hwndPageBox, &pageWndRect);
     int pageWndDy = rect_dy(&pageWndRect) + 1;
 
-    MoveWindow(win->hwndPageText, PAGE_TXT_POS_X, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
-    MoveWindow(win->hwndPageBox, PAGE_TXT_POS_X + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
-    MoveWindow(win->hwndPageTotal, PAGE_TXT_POS_X + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 3, PAGE_TOTAL_WIDTH, size.cy, false);
+    int PAGE_TXT_POS_X2 = r.right + 12;
+    MoveWindow(win->hwndPageText, PAGE_TXT_POS_X2, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
+    MoveWindow(win->hwndPageBox, PAGE_TXT_POS_X2 + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
+    MoveWindow(win->hwndPageTotal, PAGE_TXT_POS_X2 + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 3, PAGE_TOTAL_WIDTH, size.cy, false);
 }
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
@@ -5406,7 +5425,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
     for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        if (IDB_SEPARATOR != gToolbarButtons[i].bitmapResourceId) {
+        if (!TbIsSepId(gToolbarButtons[i].bitmapResourceId)) {
             HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(gToolbarButtons[i].bitmapResourceId));
             if (!himl) {
                 BITMAP bmp;
@@ -5419,7 +5438,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
             DeleteObject(hbmp);
             gToolbarButtons[i].index = index;
         }
-        else if (-1 == gToolbarButtons[i].index) {
+        else if (IDB_SEPARATOR == gToolbarButtons[i].index) {
             gToolbarSpacer = i;
         }
         tbButtons[i] = TbButtonFromButtonInfo(i);
