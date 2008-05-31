@@ -13,9 +13,16 @@ JPEG_DIR=ext\jpeg
 
 CC = cl.exe
 
+# Compilation flags from MSVC project
+# /D "_WIN32" /D "WIN32" /D "_WINDOWS" /D "_DEBUG" /D "DEBUG" /D "USE_OWN_GET_AUTH_DATA" 
+# /D "POPPLER_DATADIR=\"\"" /D "ENABLE_ZLIB=1" /D "ENABLE_LIBJPEG=1" 
+# /D "_MBCS" /Gm /RTC1 /MTd /GR- /Fo"Debug\\" /Fd"Debug\vc80.pdb" /W3 
+# /nologo /c /ZI /wd4996 /wd4244 /wd4267 /wd4995 /FC 
+
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
-CFLAGS = $(CFLAGS) /D "WIN32" /D "_WIN32_WINNT=0x0500"
+CFLAGS = $(CFLAGS) /D "WIN32" 
+#CFLAGS = $(CFLAGS) /D "_WIN32_WINNT=0x0500"
 #CFLAGS = $(CFLAGS) /D "WIN32_LEAN_AND_MEAN"
 CFLAGS = $(CFLAGS) /D "_SCL_SECURE_NO_DEPRECATE" /D "_CRT_SECURE_NO_DEPRECATE"
 
@@ -32,7 +39,8 @@ FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "__func__=\"\"" /D "isnan=_isnan"
 
 SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /Isrc /IDialogSizer
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "NDEBUG" /D "_WINDOWS" /D "__func__=\"\""
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "_WINDOWS" /D "__func__=\"\"" 
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
 
 #CFLAGS = $(CFLAGS) /showIncludes
 #CFLAGS = $(CFLAGS) /analyze
@@ -44,11 +52,13 @@ LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG
 
 !if "$(CFG)"=="dbg"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 LDFLAGS = $(LDFLAGS)
 LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "NDEBUG"
 LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(JPEG_DIR)\jpeg_s.lib $(ZLIB_DIR)\zlib_s.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
