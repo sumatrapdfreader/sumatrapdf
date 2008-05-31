@@ -40,6 +40,7 @@ all: libfitz.a
 
 # TODO: automatic header dependancies stuff
 
+# Grouped as "source files" in fitzlib.vcproj:
 SOURCES += fitz/base/base_cpudep.c
 SOURCES += fitz/base/base_error.c
 SOURCES += fitz/base/base_hash.c
@@ -143,6 +144,7 @@ SOURCES += fitz/base/util_strlcat.c
 SOURCES += fitz/base/util_strlcpy.c
 SOURCES += fitz/base/util_strsep.c
 
+# Grouped as "header files" in fitzlib.vcproj:
 HEADERS += fitz/include/mupdf/annot.h
 HEADERS += fitz/include/mupdf/base14.h
 HEADERS += fitz/include/fitz/base_cpudep.h
@@ -186,6 +188,7 @@ HEADERS += fitz/include/samus/xml.h
 HEADERS += fitz/include/mupdf/xref.h
 HEADERS += fitz/include/samus/zip.h
 
+# Grouped as "font files" in fitzlib.vcproj:
 FONTS += fitz/fonts/Dingbats.cff.c
 FONTS += fitz/fonts/NimbusMonL-Bold.cff.c
 FONTS += fitz/fonts/NimbusMonL-BoldObli.cff.c

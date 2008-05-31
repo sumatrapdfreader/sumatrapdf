@@ -31,6 +31,7 @@ Purpose:	Main functionality for sizeable dialogs
 ----------------------------------------------------------------------*/
 #include <windows.h>
 #include <assert.h>
+#include <prsht.h>
 #include "WinHelper.h"
 #include "DialogSizer.h"
 
@@ -243,7 +244,9 @@ void UpdateWindowSize(const int cx, const int cy, HWND hwnd)
 // the controls whilst the window sizes.
 static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    WNDPROC pOldProc = reinterpret_cast<WNDPROC>(GetProp(hwnd, pcszWindowProcPropertyName));
+    // Using C style cast instead of reinterpret_cast to work around data to
+    // function pointer cast error in GCC.
+    WNDPROC pOldProc = (WNDPROC)GetProp(hwnd, pcszWindowProcPropertyName);
     switch (msg)
     {
         case WM_ERASEBKGND:

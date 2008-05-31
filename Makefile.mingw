@@ -24,6 +24,7 @@ INC_DIR += src
 INC_DIR += poppler poppler/goo
 INC_DIR += poppler/poppler poppler/splash
 INC_DIR += fitz/include
+INC_DIR += DialogSizer
 LDFLAGS += -mwindows
 
 ifeq ($(BUILD), debug)
@@ -51,17 +52,17 @@ CPPFLAGS += -DENABLE_ZLIB=1 -DENABLE_LIBJPEG=1
 LDFLAGS += $(addprefix -L ,$(LIB_DIR))
 LDLIBS += -lcomctl32
 LDLIBS += -lwinspool -lmsimg32
+LDLIBS += -lwininet -lole32
 
 # <winuser.h> missing some VK_OEM stuff unless _WIN32_WINNT >= 0x0500
 CPPFLAGS += -D_WIN32_WINNT=0x0500
 
-all: fitz poppler SumatraPDF.exe
+all: fitz SumatraPDF.exe
 fitz:
 	$(MAKE) -f fitzlib.mk
-poppler:
-	$(MAKE) -f popplerlib.mk
-.PHONY: all fitz poppler
+.PHONY: all fitz
 
+# Grouped as "source files" in sumatrapdf.vcproj:
 SOURCES += src/AppPrefs.cc
 SOURCES += baseutils/base_util.c
 HEADERS += baseutils/base_util.h
@@ -69,20 +70,26 @@ SOURCES += baseutils/benc_util.c
 HEADERS += baseutils/benc_util.h
 SOURCES += src/DisplayModel.cc
 SOURCES += src/DisplayModelFitz.cc
-SOURCES += src/DisplayModelSplash.cc
 SOURCES += src/DisplayState.cc
 SOURCES += baseutils/dstring.c
 SOURCES += baseutils/file_util.c
 SOURCES += src/FileHistory.cc
 SOURCES += src/FileWatch.cc
 SOURCES += baseutils/geom_util.c
+SOURCES += src/LangMenuDef.cpp
 SOURCES += src/PdfEngine.cc
 SOURCES += src/PdfSearch.cc
 SOURCES += src/PdfSync.cpp
 SOURCES += baseutils/str_util.c
 SOURCES += baseutils/strlist_util.c
 SOURCES += src/SumatraDialogs.cc
+
 SOURCES += src/SumatraPDF.cpp
+
+# Mingw API is missing these symbols from <wininet.h>:
+CPPFLAGS_src/SumatraPDF.cpp += -D INTERNET_STATUS_INTERMEDIATE_RESPONSE=120
+CPPFLAGS_src/SumatraPDF.cpp += -D INTERNET_STATUS_STATE_CHANGE=200
+
 SOURCES += src/translations.cpp
 HEADERS += src/translations.h
 SOURCES += src/translations_txt.c
@@ -91,11 +98,12 @@ SOURCES += baseutils/utf_util.c
 SOURCES += baseutils/win_util.c
 SOURCES += baseutils/WinUtil.cpp
 HEADERS += baseutils/WinUtil.hpp
+SOURCES += baseutils/wstr_util.c
 
+# Grouped as "header files" in sumatrapdf.vcproj:
 HEADERS += src/AppPrefs.h
 HEADERS += src/DisplayModel.h
 HEADERS += src/DisplayModelFitz.h
-HEADERS += src/DisplayModelSplash.h
 HEADERS += src/DisplayState.h
 HEADERS += baseutils/dstring.h
 HEADERS += baseutils/file_util.h
@@ -110,10 +118,14 @@ HEADERS += baseutils/strlist_util.h
 HEADERS += src/SumatraDialogs.h
 HEADERS += src/SumatraPDF.h
 HEADERS += baseutils/win_util.h
+HEADERS += baseutils/wstr_util.h
 
+# Grouped as "resource files" in sumatrapdf.vcproj:
+RESOURCES += src/closetoc.bmp
 RESOURCES += src/cursordrag.png
 RESOURCES += src/dragcursor.cur
 RESOURCES += src/icons-silk/folder.bmp
+RESOURCES += src/icons-silk/matchcase.bmp
 RESOURCES += src/icons-silk/next.bmp
 RESOURCES += src/icons-silk/previous.bmp
 RESOURCES += src/SumatraPDf.ico
@@ -124,6 +136,7 @@ RESOURCES += src/toolbar.bmp
 RESOURCES += src/icons-silk/zoom_in.bmp
 RESOURCES += src/icons-silk/zoom_out.bmp
 
+# Grouped as "breakpad" in sumatrapdf.vcproj:
 BREAKPAD_SOURCES += breakpad/client/windows/sender/crash_report_sender.cc
 BREAKPAD_HEADERS += breakpad/client/windows/sender/crash_report_sender.h
 BREAKPAD_SOURCES += breakpad/client/windows/handler/exception_handler.cc # exception handling = 1
@@ -135,12 +148,17 @@ BREAKPAD_HEADERS += breakpad/common/windows/http_upload.h
 BREAKPAD_HEADERS += breakpad/common/windows/string_utils-inl.h
 BREAKPAD_SOURCES += breakpad/common/windows/string_utils.cc # exception handling = 1
 
+# Grouped as "dialog sizer" in sumatrapdf.vcproj:
+HEADERS += DialogSizer/dialogsizer.h
+SOURCES += DialogSizer/dialogsizer_set.cpp
+HEADERS += DialogSizer/WinHelper.h
+
 OBJECTS = $(addsuffix .o,$(SOURCES))
 RC_OBJECT = $(RC_SOURCE).o
 
 .SUFFIXES:
 
-SumatraPDF.exe: $(OBJECTS) $(RC_OBJECT) libfitz.a libpoppler.a
+SumatraPDF.exe: $(OBJECTS) $(RC_OBJECT) libfitz.a
 	@echo LD -o $@
 	@$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
@@ -153,7 +171,6 @@ $(RC_OBJECT): $(RC_SOURCE)
 
 clean:
 	$(MAKE) -f fitzlib.mk $@
-	$(MAKE) -f popplerlib.mk $@
 	@echo RM SumatraPDF.exe OBJECTS RC_OBJECT
 	@rm -f SumatraPDF.exe $(OBJECTS) $(RC_OBJECT)
 .PHONY: clean

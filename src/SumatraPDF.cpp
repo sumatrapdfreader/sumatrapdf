@@ -392,7 +392,7 @@ private:
     class MemSegment *next;
 
 public:
-    MemSegment(void *buf, DWORD size) {
+    MemSegment(const void *buf, DWORD size) {
         next = NULL;
         data = NULL;
         add(buf, size);
@@ -403,7 +403,7 @@ public:
         data = NULL;
     }
 
-    bool add(void *buf, DWORD size) {
+    bool add(const void *buf, DWORD size) {
         assert(size > 0);
         if (!data) {
             dataSize = size;
