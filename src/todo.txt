@@ -1,14 +1,12 @@
 Short term todo (before next 0.8.2 release):
 * update mupdf to the latest version
 * add handling of jbig images
-* drop project files and use makefile instead (well, there will be project file
-  but it'll just wrap makefile)
+* option to not automatically check for update (some people still don't have 
+  broadband?)
 * don't use GWL_USERDATA to store WindowInfo pointer, use 
   WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
   of windows and WindowInfo structs)
 * remember default bookmarks state
-* option to not automatically check for update (some people still don't have 
-  broadband?)
 * maybe: remember and restore size and position of the window
 
 Long term todo:

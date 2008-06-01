@@ -5457,8 +5457,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
     lres = SendMessageW(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
 
-    // TODO: rs is {22,24) in Visual Studio project build and {9,7} in makefile.msvc build
-    // Why???
     RECT rc;
     lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
 
@@ -5491,8 +5489,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
     SetWindowPos(win->hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
     GetWindowRect(win->hwndReBar, &rc);
-    // TODO: gReBarDy is 26 in Visual Studio project build and 11 in makefile.msvc build
-    // Why???
     gReBarDy = rc.bottom - rc.top;
     //TODO: this was inherited but doesn't seem to be right (makes toolbar
     // partially unpainted if using classic scheme on xp or vista

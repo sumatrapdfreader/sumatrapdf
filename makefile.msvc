@@ -64,6 +64,8 @@ LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
 !endif
 
+SUMATRA_RES = $(O)\sumtrapdf.res
+
 BASE_OBJS = \
 	$(O)\base_memory.obj $(O)\base_error.obj $(O)\base_hash.obj $(O)\base_matrix.obj \
 	$(O)\base_rect.obj $(O)\base_rune.obj $(O)\util_strlcat.obj $(O)\util_strlcpy.obj \
@@ -142,9 +144,12 @@ clean: force
 $(O): force
 	@if not exist $(O) mkdir $(O)
 
-$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
+$(SUMATRA_RES): src\SumatraPDF.rc
+	rc /r /fo$(SUMATRA_RES) src\SumatraPDF.rc
+
+$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES)
 	$(LD) $(LDFLAGS) /OUT:$(SUMATRA_APP) /PDB:$(SUMATRA_PDB) \
-	$(LIBS_OBJS) $(SUMATRA_OBJS) $(LIBS) \
+	$(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES) $(LIBS) \
 	/MAP:$(SUMATRA_MAP)
 
 $(PDFTOOL_APP): $(PDFTOOL_OBJS)
