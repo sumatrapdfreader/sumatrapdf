@@ -13,6 +13,9 @@ INC_DIR =
 LIB_DIR =
 LDLIBS = -lfreetype -ljpeg -lz
 
+# Python is optional, but use it if it is installed here:
+PYTHON = $(SYSTEMDRIVE)/Python25/python
+
 -include config.mk
 
 # TODO: precompiled headers?
@@ -53,10 +56,11 @@ LDLIBS += -lwininet -lole32
 # I think this means we're building for Windows 5.0 aka Windows 2000
 CPPFLAGS += -D _WIN32_WINNT=0x0500
 
-all: fitz SumatraPDF.exe
-fitz:
-	$(MAKE) -f fitzlib.mk
-.PHONY: all fitz
+all: SumatraPDF.exe
+.PHONY: all
+
+libfitz.a:
+	$(MAKE) -f fitzlib.mk $@
 
 # Grouped as "source files" in sumatrapdf.vcproj:
 SOURCES += src/AppPrefs.cc
@@ -170,3 +174,11 @@ clean:
 	@echo RM SumatraPDF.exe OBJECTS RC_OBJECT
 	@rm -f SumatraPDF.exe $(OBJECTS) $(RC_OBJECT)
 .PHONY: clean
+
+# Update string translations if possible (e.g. if Python installed)
+src/translations_txt.c: src/strings.txt src/gen_c_from_strings_file.py src/extract_strings.py
+	-cd src && $(PYTHON) gen_c_from_strings_file.py
+
+realclean: clean
+	rm -f src/extract_strings.pyc
+.PHONY: realclean
