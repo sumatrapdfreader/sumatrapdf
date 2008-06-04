@@ -107,7 +107,7 @@ static void stretchDIBitsCommon(RenderedBitmap *bmp, HDC hdc, int leftMargin, in
 
     ::StretchDIBits(hdc,
         // destination rectangle
-        -leftMargin, -topMargin, pageDx, pageDy,
+        leftMargin, topMargin, pageDx, pageDy,
         // source rectangle
         0, 0, bmpDx, bmpDy,
         bmpData,

@@ -4032,9 +4032,8 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 
 // TODO: make it run in a background thread by constructing new PdfEngine()
 // from a file name - this should be thread safe
-static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int fromPage, int toPage) {
+static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPageRanges, LPPRINTPAGERANGE pr) {
 
-    assert(toPage >= fromPage);
     assert(dm);
     if (!dm) return;
 
@@ -4051,59 +4050,56 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int from
     RenderQueue_RemoveForDisplayModel(dm);
     cancelRenderingForDisplayModel(dm);
 
+	SetMapMode(hdc, MM_TEXT);
+
+	int printAreaWidth = GetDeviceCaps(hdc, HORZRES);
+	int printAreaHeight = GetDeviceCaps(hdc, VERTRES);
+
+	int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+	int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+	// use pixel sizes for printer with non square pixels
+	float fLogPixelsx= (float)GetDeviceCaps(hdc, LOGPIXELSX); 
+	float fLogPixelsy= (float)GetDeviceCaps(hdc, LOGPIXELSY);
+
+	bool bPrintPortrait=fLogPixelsx*printAreaWidth<fLogPixelsy*printAreaHeight;
     // print all the pages the user requested unless
     // bContinue flags there is a problem.
-    for (int pageNo = fromPage; pageNo <= toPage; pageNo++) {
-        int rotation = pdfEngine->pageRotation(pageNo);
+	for (int i=0;i<nPageRanges;i++) {
+	    assert(pr->nFromPage <= pr->nToPage);
+		for (DWORD pageNo = pr->nFromPage; pageNo <= pr->nToPage; pageNo++) {
+//			int rotation = pdfEngine->pageRotation(pageNo);
 
-        DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
+			DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
 
-        StartPage(hdc);
-        // MM_TEXT: Each logical unit is mapped to one device pixel.
-        // Positive x is to the right; positive y is down.
-        SetMapMode(hdc, MM_TEXT);
+			StartPage(hdc);
+			// MM_TEXT: Each logical unit is mapped to one device pixel.
+			// Positive x is to the right; positive y is down.
 
-        int pageHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
-        int pageWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
+			// try to use a zoom that matches the size of the page in the
+			// printer
 
-        int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-        int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+			SizeD pSize = pdfEngine->pageSize(pageNo);
 
-        // try to use a zoom that matches the size of the page in the
-        // printer
+			int rotation=(pSize.dx()<pSize.dy()) == bPrintPortrait?0:90;
 
-        SizeD pSize = pdfEngine->pageSize(pageNo);
-        double pdfPageWidth = pSize.dx();
-        int realRotation = rotation + pdfEngine->pageRotation(pageNo);
-        normalizeRotation(&realRotation);
-        switch (realRotation)
-        {
-            case 90:
-            case 270:
-                pdfPageWidth = pSize.dy();
-            default:
-                ;
-        }
-        double zoom = 100.0 * (double)pageWidth / pdfPageWidth;
+			double zoom;
+			if (rotation==0)
+				zoom= 100.0 * min((double)printAreaWidth / pSize.dx(),(double)printAreaHeight / pSize.dy());
+			else
+				zoom= 100.0 * min((double)printAreaWidth / pSize.dy(),(double)printAreaHeight / pSize.dx());
+	
+			RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, NULL);
+			if (!bmp)
+				goto Error; /* most likely ran out of memory */
 
-        // ...but try not to use too much RAM
-        while (zoom > 450.0) { 
-            zoom = zoom / 2.0; 
-        }
-
-        if (DMORIENT_LANDSCAPE == devMode->dmOrientation)
-            swap_int(&topMargin, &leftMargin);
-
-        RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, NULL);
-        if (!bmp)
-            goto Error; /* most likely ran out of memory */
-
-        bmp->stretchDIBits(hdc, leftMargin, topMargin, pageWidth, pageHeight);
-        delete bmp;
-        if (EndPage(hdc) <= 0) {
-            AbortDoc(hdc);
-            return;
-        }
+			bmp->stretchDIBits(hdc, leftMargin, topMargin, printAreaWidth, printAreaHeight);
+			delete bmp;
+			if (EndPage(hdc) <= 0) {
+				AbortDoc(hdc);
+				return;
+			}
+		}
+		pr++;
     }
 
 Error:
@@ -4125,7 +4121,9 @@ So far have tested printing from XP to
 */
 static void OnMenuPrint(WindowInfo *win)
 {
-    PRINTDLG            pd;
+    PRINTDLGEX             pd;
+	LPPRINTPAGERANGE		ppr=NULL;	
+#define MAXPAGERANGES 10
 
     assert(win);
     if (!win) return;
@@ -4141,22 +4139,43 @@ static void OnMenuPrint(WindowInfo *win)
        way we only need to concern ourselves with one dm.
        TODO: don't re-use WindowInfo, use a different, synchronious
        way of creating a bitmap */
-    ZeroMemory(&pd, sizeof(pd));
-    pd.lStructSize = sizeof(pd);
+    ZeroMemory(&pd, sizeof(PRINTDLGEX));
+    pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win->hwndFrame;
     pd.hDevMode    = NULL;   
     pd.hDevNames   = NULL;   
-    pd.Flags       = PD_USEDEVMODECOPIESANDCOLLATE | PD_RETURNDC;
+    pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_NOSELECTION;
     pd.nCopies     = 1;
     /* by default print all pages */
-    pd.nFromPage   = 1;
-    pd.nToPage     = dm->pageCount();
+	pd.nPageRanges =1;
+	pd.nMaxPageRanges =MAXPAGERANGES;
+	ppr=(LPPRINTPAGERANGE)malloc(MAXPAGERANGES*sizeof(PRINTPAGERANGE));
+    pd.lpPageRanges= ppr;
+	ppr->nFromPage  = 1;
+	ppr->nToPage    = dm->pageCount();
     pd.nMinPage    = 1;
     pd.nMaxPage    = dm->pageCount();
+	pd.nStartPage = START_PAGE_GENERAL;
 
-    BOOL pressedOk = PrintDlg(&pd);
-    if (!pressedOk) {
-        if (CommDlgExtendedError()) {
+	if (PrintDlgEx(&pd)==S_OK) {
+		if (pd.dwResultAction==PD_RESULT_PRINT) {
+			if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
+				if (pd.Flags & PD_CURRENTPAGE){
+					pd.nPageRanges=1;
+					pd.lpPageRanges->nFromPage=dm->currentPageNo();
+					pd.lpPageRanges->nToPage  =dm->currentPageNo();
+				} else
+				if (!(pd.Flags & PD_PAGENUMS)){
+					pd.nPageRanges=1;
+					pd.lpPageRanges->nFromPage=1;
+					pd.lpPageRanges->nToPage  =dm->pageCount();
+				}
+				PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
+			}
+		}
+	}
+	else {
+        if (CommDlgExtendedError()) { 
             /* if PrintDlg was cancelled then
                CommDlgExtendedError is zero, otherwise it returns the
                error code, which we could look at here if we wanted.
@@ -4164,13 +4183,10 @@ static void OnMenuPrint(WindowInfo *win)
                becasue of an error */
             MessageBox(win->hwndFrame, "Cannot initialise printer", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
         }
-        return;
     }
 
-    if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC))
-        PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nFromPage, pd.nToPage);
-
-    DeleteDC(pd.hDC);
+	if (ppr != NULL) free(ppr);
+    if (pd.hDC != NULL) DeleteDC(pd.hDC);
     if (pd.hDevNames != NULL) GlobalFree(pd.hDevNames);
     if (pd.hDevMode != NULL) GlobalFree(pd.hDevMode);
 }
@@ -6605,9 +6621,11 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
         MessageBox(win->hwndFrame, "Couldn't initialize printer", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
-
+	PRINTPAGERANGE pr;
+	pr.nFromPage =1;
+	pr.nToPage =win->dm->pageCount();
     if (CheckPrinterStretchDibSupport(win->hwndFrame, hdcPrint))
-        PrintToDevice(win->dm, hdcPrint, devMode, 1, win->dm->pageCount());
+        PrintToDevice(win->dm, hdcPrint, devMode, 1, &pr );
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);
