@@ -145,10 +145,6 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     } else {
         ds->scrollY = (int)dm->areaOffset.y;
     }
-    ds->windowDx = dm->drawAreaSize.dxI();
-    ds->windowDy = dm->drawAreaSize.dyI();
-    ds->windowX = 0;
-    ds->windowY = 0;
     ds->showToc = dm->_showToc;
     return TRUE;
 }
@@ -303,9 +299,6 @@ double DisplayModel::zoomRealFromFirtualForPage(double zoomVirtual, int pageNo)
     int             areaForPageDxInt;
     int             columns;
 
-    assert(0 != drawAreaSize.dxI());
-    assert(0 != drawAreaSize.dy());
-
     pageSizeAfterRotation(getPageInfo(pageNo), rotation(), &pageDx, &pageDy);
 
     assert(0 != (int)pageDx);
@@ -319,8 +312,14 @@ double DisplayModel::zoomRealFromFirtualForPage(double zoomVirtual, int pageNo)
     areaForPageDy = drawAreaSize.dy() - PADDING_PAGE_BORDER_TOP - PADDING_PAGE_BORDER_BOTTOM;
     if (ZOOM_FIT_WIDTH == zoomVirtual) {
         /* TODO: should use gWinDx if we don't show scrollbarY */
+        if (areaForPageDx <= 0) {
+            return 0;
+        }
         _zoomReal = (areaForPageDx * 100.0) / (double)pageDx;
     } else if (ZOOM_FIT_PAGE == zoomVirtual) {
+        if (areaForPageDx <= 0 || areaForPageDy <= 0) {
+            return 0;
+        }
         zoomX = (areaForPageDx * 100.0) / (double)pageDx;
         zoomY = (areaForPageDy * 100.0) / (double)pageDy;
         if (zoomX < zoomY)
@@ -343,7 +342,8 @@ int DisplayModel::firstVisiblePageNo(void) const
         if (pageInfo->visible)
             return pageNo;
     }
-    assert(0);
+    
+    /* If no pages are visible */
     return INVALID_PAGE_NO;
 }
 
@@ -371,7 +371,6 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         for (pageNo = 1; pageNo <= pageCount(); pageNo++) {
             if (pageShown(pageNo)) {
                 thisPageZoom = zoomRealFromFirtualForPage(this->zoomVirtual(), pageNo);
-                assert(0 != thisPageZoom);
                 if (minZoom > thisPageZoom)
                     minZoom = thisPageZoom;
             }
@@ -587,7 +586,6 @@ void DisplayModel::recalcVisibleParts(void)
 
 //    DBG_OUT("DisplayModel::recalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
 //        drawAreaRect.x, drawAreaRect.y, drawAreaRect.dx, drawAreaRect.dy);
-    visibleCount = 0;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
@@ -601,7 +599,7 @@ void DisplayModel::recalcVisibleParts(void)
         pageInfo->visible = false;
         if (RectI_Intersect(&pageRect, &drawAreaRect, &intersect)) {
             pageInfo->visible = true;
-            visibleCount += 1;
+            
             pageInfo->bitmapX = (int) ((double)intersect.x - pageInfo->currPosX);
             assert(pageInfo->bitmapX >= 0);
             pageInfo->bitmapY = (int) ((double)intersect.y - pageInfo->currPosY);
@@ -620,8 +618,6 @@ void DisplayModel::recalcVisibleParts(void)
                           pageInfo->screenX, pageInfo->screenY); */
         }
     }
-
-    assert(visibleCount > 0);
 }
 
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
@@ -829,9 +825,9 @@ void DisplayModel::renderVisibleParts(void)
             lastVisible = pageNo;
         }
     }
-    assert(0 != lastVisible);
+    
 #ifdef PREDICTIVE_RENDER
-    if (lastVisible != pageCount())
+    if (0 != lastVisible && lastVisible != pageCount())
         startRenderingPage(lastVisible+1);
 #endif
 }

@@ -220,7 +220,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 static const char *g_currLangName;
 
-static void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo);
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
@@ -1159,53 +1158,6 @@ static char *ExePathGet(void)
     return str_parse_possibly_quoted(&cmdline);
 }
 
-/* Set the client area size of the window 'hwnd' to 'dx'/'dy'. */
-static void WinResizeClientArea(HWND hwnd, int dx, int dy)
-{
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    if ((rect_dx(&rc) == dx) && (rect_dy(&rc) == dy))
-        return;
-    RECT rw;
-    GetWindowRect(hwnd, &rw);
-    int win_dx = rect_dx(&rw) + (dx - rect_dx(&rc));
-    int win_dy = rect_dy(&rw) + (dy - rect_dy(&rc));
-    SetWindowPos(hwnd, NULL, 0, 0, win_dx, win_dy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE| SWP_NOZORDER);
-}
-
-static void SetCanvasSizeToDxDy(WindowInfo *win, int dx, int dy)
-{
-    RECT canvasRect, frameRect;
-    GetWindowRect(win->hwndCanvas, &canvasRect);
-    GetWindowRect(win->hwndFrame, &frameRect);
-    int frameDx = rect_dx(&frameRect);
-    int canvasDx = rect_dx(&canvasRect);
-    int diffDx = frameDx - canvasDx;
-    assert(diffDx > 0);
-    int newDx = dx + diffDx;
-
-    int frameDy = rect_dy(&frameRect);
-    int canvasDy = rect_dy(&canvasRect);
-    int diffDy = frameDy - canvasDy;
-    assert(diffDy > 0);
-    int newDy = dy + diffDy;
-    SetWindowPos(win->hwndFrame, NULL, 0, 0, newDx, newDy, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOMOVE | SWP_NOZORDER);
-}
-
-/* Set position of canvas window by apropriate change to frame window */
-static void WinSetCanvasPos(WindowInfo *win, int x, int y)
-{
-    RECT canvasRect, frameRect;
-    GetWindowRect(win->hwndCanvas, &canvasRect);
-    GetWindowRect(win->hwndFrame, &frameRect);
-
-    int newX = x + frameRect.left - canvasRect.left;
-    assert(newX < x);
-    int newY = y + frameRect.top - canvasRect.top;
-    assert(newY < y);
-    SetWindowPos(win->hwndFrame, NULL, newY, newY, 0, 0, SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOSIZE | SWP_NOZORDER);
-}
-
 static void CaptionPens_Create(void)
 {
     LOGPEN  pen;
@@ -1499,43 +1451,20 @@ static void SeeLastError(void) {
     LocalFree(msgBuf);
 }
 
-static void Win32_Win_GetSize(HWND hwnd, int *dxOut, int *dyOut)
+static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 {
-    RECT    r;
-    *dxOut = 0;
-    *dyOut = 0;
-
-    if (GetWindowRect(hwnd, &r)) {
-        *dxOut = (r.right - r.left);
-        *dyOut = (r.bottom - r.top);
+    RECT r;
+    if (GetWindowRect(win->hwndFrame, &r)) {
+        ds->windowX = r.left;
+        ds->windowY = r.top;
+        ds->windowDx = rect_dx(&r);
+        ds->windowDy = rect_dy(&r);
+    } else {
+        ds->windowX = 0;
+        ds->windowY = 0;
+        ds->windowDx = 0;
+        ds->windowDy = 0;
     }
-}
-
-static void Win32_Win_GetPos(HWND hwnd, int *xOut, int *yOut)
-{
-    RECT    r;
-    *xOut = 0;
-    *yOut = 0;
-
-    if (GetWindowRect(hwnd, &r)) {
-        *xOut = r.left;
-        *yOut = r.top;
-    }
-}
-
-static void Win32_Win_SetPos(HWND hwnd, int x, int y)
-{
-    SetWindowPos(hwnd, NULL, x, y, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE);
-}
-
-static void UpdateDisplayStateWindowPos(WindowInfo *win, DisplayState *ds)
-{
-    int posX, posY;
-
-    Win32_Win_GetPos(win->hwndCanvas, &posX, &posY);
-
-    ds->windowX = posX;
-    ds->windowY = posY;
 }
 
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
@@ -1565,7 +1494,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!displayStateFromDisplayModel(&ds, win->dm))
         return;
 
-    UpdateDisplayStateWindowPos(win, &ds);
+    UpdateDisplayStateWindowRect(win, &ds);
     DisplayState_Free(&(node->state));
     node->state = ds;
     node->state.visible = TRUE;
@@ -1625,7 +1554,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     DisplayState_Init(&ds);
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
         return;
-    UpdateDisplayStateWindowPos(win, &ds);
+    UpdateDisplayStateWindowRect(win, &ds);
     RefreshPdfDocument(fname, win, &ds, true, autorefresh, true);
 }
 
@@ -2018,6 +1947,20 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         }
     }
 
+    int winDx = DEF_PAGE_DX;
+    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDx) {
+        winDx = gGlobalPrefs.m_windowDx;
+        if (winDx < MIN_WIN_DX || winDx > MAX_WIN_DX)
+            winDx = DEF_PAGE_DX;
+    }
+    
+    int winDy = DEF_PAGE_DY;
+    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDy) {
+        winDy = gGlobalPrefs.m_windowDy;
+        if (winDy < MIN_WIN_DY || winDy > MAX_WIN_DY)
+            winDy = DEF_PAGE_DY;
+    }
+    
 #if FANCY_UI
     hwndFrame = CreateWindowEx(
 //            WS_EX_TOOLWINDOW,
@@ -2028,15 +1971,14 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         FRAME_CLASS_NAME, windowTitle,
         WS_POPUP,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        CW_USEDEFAULT, CW_USEDEFAULT,
+        winDx, winDy,
         NULL, NULL,
         ghinst, NULL);
 #else
     hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, windowTitle,
             WS_OVERLAPPEDWINDOW,
-            winPosX, winPosY,
-            CW_USEDEFAULT, CW_USEDEFAULT,
+            winPosX, winPosY, winDx, winDy,
             NULL, NULL,
             ghinst, NULL);
 #endif
@@ -2045,25 +1987,12 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         return NULL;
 
     win = WindowInfo_New(hwndFrame);
-    int winDx = DEF_PAGE_DX;
-    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDx) {
-        winDx = gGlobalPrefs.m_windowDx;
-        if (winDx < MIN_WIN_DX || winDx > MAX_WIN_DX)
-            winDx = DEF_PAGE_DX;
-    }
-    int winDy = DEF_PAGE_DY;
-    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDy) {
-        winDy = gGlobalPrefs.m_windowDy;
-        if (winDy < MIN_WIN_DY || winDy > MAX_WIN_DY)
-            winDy = DEF_PAGE_DY;
-    }
 
     hwndCanvas = CreateWindowEx(
             WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
+            0, 0, 0, 0, /* position and size determined in OnSize */
             hwndFrame, NULL,
             ghinst, NULL);
     if (!hwndCanvas)
@@ -2079,54 +2008,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     CreateTocBox(win, ghinst);
     WindowInfo_UpdateFindbox(win);
 
-    //WinResizeClientArea(win->hwndCanvas, winDx, winDy);
-    WinResizeClientArea(win->hwndFrame, winDx, winDy);
-
-    //SetCanvasSizeToDxDy(win, winDx, winDy);
-
     win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     return win;
-}
-
-BOOL GetDesktopWindowClientRect(RECT *r)
-{
-    HWND hwnd = GetDesktopWindow();
-    if (!hwnd) return FALSE;
-    return GetClientRect(hwnd, r);
-}
-
-static void GetCanvasDxDyDiff(WindowInfo *win, int *dxOut, int *dyOut)
-{
-    RECT canvasRect, totalRect;
-    GetWindowRect(win->hwndCanvas, &canvasRect);
-    GetWindowRect(win->hwndFrame, &totalRect);
-    *dxOut = rect_dx(&totalRect) - rect_dx(&canvasRect);
-    // TODO: should figure out why it fires in DLL
-    assert(*dxOut >= 0);
-    *dyOut = rect_dy(&totalRect) - rect_dy(&canvasRect);
-    // TODO: should figure out why it fires in DLL
-    assert(*dyOut >= 0);
-}
-
-static SizeI GetMaxCanvasSize(WindowInfo *win)
-{
-    AppBarData abd;
-    RECT r;
-    GetDesktopWindowClientRect(&r);
-    // substract the area of the window not used for canvas
-    int dx, dy;
-    GetCanvasDxDyDiff(win, &dx, &dy);  // TODO: lame name
-    int maxCanvasDx = rect_dx(&r) - dx;
-    int maxCanvasDy = rect_dy(&r) - dy;
-    if (abd.isHorizontal()) {
-        assert(maxCanvasDx >= abd.dx());
-        maxCanvasDx -= abd.dx();
-    } else {
-        assert(abd.isVertical());
-        assert(maxCanvasDy >= abd.dy());
-        maxCanvasDy -= abd.dy();
-    }
-    return SizeI(maxCanvasDx, maxCanvasDy);
 }
 
 static void RecalcSelectionPosition (WindowInfo *win) {
@@ -2161,27 +2044,27 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
     SizeD totalDrawAreaSize(win->winSize());
-    if (!reuseExistingWindow && state) {
-        SetCanvasSizeToDxDy(win, state->windowDx, state->windowDy);
-        totalDrawAreaSize = SizeD(state->windowDx, state->windowDy);
-        WinSetCanvasPos(win, state->windowX, state->windowY);
+    if (!reuseExistingWindow && state &&
+    0 != state->windowDx && 0 != state->windowDy) {
+        RECT rect;
+        rect.top = state->windowY;
+        rect.left = state->windowX;
+        rect.bottom = rect.top + state->windowDy;
+        rect.right = rect.left + state->windowDx;
+        
+        /* Make sure it doesn't have a stupid position like outside of the
+            screen etc. */
+        rect_shift_to_work_area(&rect);
+        
+        MoveWindow(win->hwndFrame,
+            rect.left, rect.top, rect_dx(&rect), rect_dy(&rect), TRUE);
+        /* No point in changing totalDrawAreaSize here because the canvas
+        window doesn't get resized until the frame gets a WM_SIZE message */
     }
 #if 0 // not ready yet
     else {
         IntelligentWindowResize(win);
     }
-#endif
-
-    /* TODO: make sure it doesn't have a stupid position like 
-       outside of the screen etc. */
-#if 0
-    SizeI maxCanvasSize = GetMaxCanvasSize(win);
-    if (totalDrawAreaSize.dxI() > maxCanvasSize.dx)
-        totalDrawAreaSize.setDx(maxCanvasSize.dx);
-    if (totalDrawAreaSize.dyI() > maxCanvasSize.dy)
-        totalDrawAreaSize.setDy(maxCanvasSize.dy);
-
-    WinResizeClientArea(win->hwndCanvas, totalDrawAreaSize.dxI(), totalDrawAreaSize.dyI());
 #endif
 
     /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
@@ -2259,10 +2142,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
         offsetY = 0;
     /* TODO: make sure offsetX isn't bogus */
     win->dm->goToPage(startPage, offsetY, offsetX);
-
-    /* only resize the window if it's a newly opened window */
-    if (!reuseExistingWindow ) //&& !fileFromHistory)
-        WindowInfo_ResizeToPage(win, startPage);
 
     if (reuseExistingWindow) {
         WindowInfo_RedrawAll(win);
@@ -2397,8 +2276,12 @@ void DisplayModel::pageChanged()
         char buf[256];
         HRESULT hr = StringCchPrintfA(buf, dimof(buf), " / %d", pageCount);
         SetWindowText(win->hwndPageTotal, buf);
-        hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
-        SetWindowText(win->hwndPageBox, buf);
+        
+        if (INVALID_PAGE_NO != currPageNo) {
+            hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
+            SetWindowText(win->hwndPageBox, buf);
+        }
+        
         if (win->needrefresh)
             hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", baseName);
         else
@@ -2486,45 +2369,6 @@ static void WindowInfo_ResizeToWindow(WindowInfo *win)
     if (!win->dm) return;
 
     win->dm->changeTotalDrawAreaSize(win->winSize());
-}
-
-void WindowInfo_ResizeToPage(WindowInfo *win, int pageNo)
-{
-    assert(win);
-    if (!win) return;
-    assert(win->dm);
-    if (!win->dm)
-        return;
-
-    /* TODO: should take current monitor into account? */
-    HDC hdc = GetDC(win->hwndCanvas);
-    int displayDx = GetDeviceCaps(hdc, HORZRES);
-    int displayDy = GetDeviceCaps(hdc, VERTRES);
-
-    int  dx, dy;
-    if (win->dm->_fullScreen) {
-        /* TODO: fullscreen not yet supported */
-        assert(0);
-        dx = displayDx;
-        dy = displayDy;
-    } else {
-        assert(win->dm->validPageNo(pageNo));
-        if (!win->dm->validPageNo(pageNo))
-            return;
-        PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-        assert(pageInfo);
-        if (!pageInfo)
-            return;
-        DisplaySettings *displaySettings = globalDisplaySettings();
-        dx = pageInfo->currDx + displaySettings->paddingPageBorderLeft + displaySettings->paddingPageBorderRight;
-        dy = pageInfo->currDy + displaySettings->paddingPageBorderTop + displaySettings->paddingPageBorderBottom;
-        if (dx > displayDx - 10)
-            dx = displayDx - 10;
-        if (dy > displayDy - 10)
-            dy = displayDy - 10;
-    }
-
-    WinResizeClientArea(win->hwndCanvas, dx, dy);
 }
 
 static void WindowInfo_ToggleZoom(WindowInfo *win)
