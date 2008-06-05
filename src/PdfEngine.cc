@@ -376,24 +376,32 @@ bool PdfEngineFitz::printingAllowed()
 
 static void ConvertPixmapForWindows(fz_pixmap *image)
 {
-    int bmpstride = ((image->w * 3 + 3) / 4) * 4;
-    unsigned char *bmpdata = (unsigned char*)fz_malloc(image->h * bmpstride);
-    if (!bmpdata)
-        return;
+   int bmpstride = ((image->w * 3 + 3) / 4) * 4;
+   int imageh = image->h;
+   int imagew = image->w;
+   unsigned char *bmpdata = (unsigned char*)fz_malloc(image->h * bmpstride);
+   if (!bmpdata)
+       return;
 
-    for (int y = 0; y < image->h; y++)
-    {
-        unsigned char *p = bmpdata + y * bmpstride;
-        unsigned char *s = image->samples + y * image->w * 4;
-        for (int x = 0; x < image->w; x++)
-        {
-            p[x * 3 + 0] = s[x * 4 + 3];
-            p[x * 3 + 1] = s[x * 4 + 2];
-            p[x * 3 + 2] = s[x * 4 + 1];
-        }
-    }
-    fz_free(image->samples);
-    image->samples = bmpdata;
+   unsigned char *p = bmpdata;
+   unsigned char *s = image->samples;
+   for (int y = 0; y < imageh; y++)
+   {
+       unsigned char *pl = p;
+       unsigned char *sl = s;
+       for (int x = 0; x < imagew; x++)
+       {
+           pl[0] = sl[3];
+           pl[1] = sl[2];
+           pl[2] = sl[1];
+           pl += 3;
+           sl += 4;
+       }
+       p += bmpstride;
+       s += imagew * 4;
+   }
+   fz_free(image->samples);
+   image->samples = bmpdata;
 }
 
 RenderedBitmap *PdfEngineFitz::renderBitmap(
