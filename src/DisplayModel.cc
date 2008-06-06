@@ -573,7 +573,6 @@ void DisplayModel::recalcVisibleParts(void)
     RectI           pageRect;
     RectI           intersect;
     PdfPageInfo*    pageInfo;
-    int             visibleCount;
 
     assert(_pagesInfo);
     if (!_pagesInfo)

@@ -2185,6 +2185,7 @@ uk:Допоможіть перекласти
 eu:Lagun gaitzazu itzulpenekin
 -
 Set inverse search command-line
+br:Configurar pesquisa inversa
 de:Befehlszeile Inverssuche setzen
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
@@ -2192,6 +2193,7 @@ uk:Установити зворотній пошук.
 ru:Инвертировать поиск
 -
 Change language
+br:Mudar o idioma
 de:Sprache ändern
 pl:Zmien język
 sk:Zmeniť jazyk
@@ -2199,78 +2201,91 @@ uk:Змінити мову
 ru:Изменить язык (Change language)
 -
 Enter password
+br:Digite a senha
 de:Bitte Passwort eingeben
 sk:Zadať heslo
 uk:Введіть пароль
 ru:Введите пароль
 -
 Enter password for %s
+br:Digite a senha de %s
 de: Bitte Passwort für %s eingeben
 sk:Zadať heslo pre %s
 uk:Введіть пароль для %s
 ru:Введите пароль для %s
 -
 Go to page
+br:Ir para a página
 de:Gehe zu Seite
 sk:Ísť na stranu
 uk:Перейти на сторінку
 ru:Перейти на страницу
 -
 Associate with PDF files?
+br:Associar arquivos PDF?
 de:Mit PDF-Dateien verknüpfen?
 sk:Asociovať s PDF súbormi?
 uk:Асоціювати з PDF-файлами?
 ru:Ассоциировать с PDF-файлами?
 -
 Make SumatraPDF default application for PDF files?
+br:Fazer do SumatraPDF o leitor PDF padrão?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
 ru:Сделать SumatraPDF стандартной программой открытия PDF-файлов?
 -
 Don't ask me again
+br:Não perguntar novamente
 de:Nicht wieder fragen
 sk:Nepýtať sa znova
 uk:Не питати знову
 ru:Больше не спрашивать
 -
 &Check for new version
+br:Procurar atualizações
 de:Nach neuer Version suchen
 sk:Skontrolovať novú verziu
 uk:Перевірити, чи є нова версія
 ru:Проверить наличие новой версии
 -
 No new version available.
+br:Não existe uma versão mais atual.
 de:Keine neuere Version vorhanden.
 sk:Nie je k dispozícia nová verzia.
 uk:Новішої версії немає.
 ru:Обновлений не обнаружено.
 -
 You have the latest version.
+br:Sua versão é a mais recente.
 de:Sie haben die neuste Version installiert.
 sk:Používate najnovšiu verziu.
 uk:Ви вже маєте найновішу версію.
 ru:Вы используете самую новую версию.
 -
 You have version %s
+br:Você tem a versão %s
 de:Sie haben Version %s
 sk:Používate verziu %s
 uk:Ви використовуєте версію %s
 ru:Вы используете версию %s
 -
 New version %s is available. Download new version?
+br:A versão %s está disponível. Baixar a nova versão?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 uk:Нова версія %s є доступною. Завантажити нову версію?
 ru:Доступна новая версия: %s. Хотите её загрузить?
 -
 New version available.
+br:Uma versão nova está disponível.
 de:Neuere Version vorhanden.
 sk:Je k dispozícia nová verzia.
 uk:Доступна нова версія.
 ru:Доступна новая версия.
 -
 Skip this version
+br:Pular esta versão.
 de:Diese Version überspringen.
 sk:Preskočiť túto verziu.
 uk:Пропустити цю версію.
