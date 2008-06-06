@@ -1,0 +1,18 @@
+SubDir TOP base ;
+
+Library libbase :
+	base_cpudep.c
+	base_error.c
+	base_hash.c
+	base_matrix.c
+	base_memory.c
+	base_rect.c
+	base_rune.c
+	base_cleanname.c
+	;
+
+if $(NEED_GETOPT)  = yes { Library libbase : util_getopt.c ; }
+if $(NEED_STRLCAT) = yes { Library libbase : util_strlcat.c ; }
+if $(NEED_STRLCPY) = yes { Library libbase : util_strlcpy.c ; }
+if $(NEED_STRSEP)  = yes { Library libbase : util_strsep.c ; }
+
