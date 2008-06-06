@@ -51,7 +51,6 @@ FILE *Pdfsync::opensyncfile()
 // read a line from a stream (exclude the end-of-line mark)
 LPTSTR ftgetline(LPTSTR dst, size_t cchDst, FILE *fp)
 {
-#if defined(__GNUC__) || !defined(_WIN32) || (_MSC_VER < 1400)
     if (!_fgetts(dst, cchDst, fp))
         return NULL;
 
@@ -59,9 +58,6 @@ LPTSTR ftgetline(LPTSTR dst, size_t cchDst, FILE *fp)
     while (*end == _T('\n') || *end == _T('\r'))
         *(end--) = 0;
     return dst;
-#else
-    return fscanf_s(fp, "%s\n", dst, cchDst) ? dst : NULL;
-#endif
 }
 
 
@@ -70,6 +66,11 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     TCHAR jobname[_MAX_PATH];
     
     ftgetline(jobname, dimof(jobname), fp); // get the job name from the first line
+    // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
+    for(PTSTR rep = jobname; *rep; rep++) {
+        if (*rep==_T('*'))
+            *rep=_T(' ');
+    }
     tstr_cat_s(jobname, dimof(jobname), _T(".tex")); 
 
     UINT versionNumber = 0;
@@ -102,7 +103,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     pdfsheet_index.clear();
 
 
-    CHAR filename[_MAX_PATH];
+    CHAR buff[_MAX_PATH];
     fpos_t linepos;
     fgetpos(fp, &linepos);
     char c;
@@ -122,17 +123,24 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         switch (c) {
         case '(': 
             {
-                ftgetline(filename, dimof(filename), fp);
-                
-                // if the file name has no extension then add .tex at the end
-                if( tstr_find_char(filename, '.') == NULL) {
-                     tstr_cat_s(filename, dimof(filename), _T(".tex"));
+                // read the filename
+                ftgetline(buff, dimof(buff), fp);
+                PTSTR pfilename = buff;
+                int len = tstr_len(buff);
+                // if the filename contains quotes then remove them
+                if( str_startswithi(buff, "\"") && str_endswith_char(buff,'"') ) {
+                    pfilename++;
+                    len-=2;
                 }
 
                 src_file s;
                 s.first_recordsection = -1;
                 s.last_recordsection = -1;
-                tstr_copy(s.filename, dimof(s.filename), filename);
+                tstr_copyn(s.filename, dimof(s.filename), pfilename, len);
+                // if the file name extension is not specified then add the suffix '.tex'
+                if( tstr_find_char(pfilename, '.') == NULL) {
+                     tstr_cat_s(s.filename, dimof(s.filename), _T(".tex"));
+                }
 #ifndef NDEBUG
                 s.openline_pos = linepos;
                 s.closeline_pos = -1;
