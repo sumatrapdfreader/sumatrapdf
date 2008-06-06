@@ -6,7 +6,13 @@ CFG=dbg
 # O is directory where object and binary files go
 O = obj-$(CFG)
 
-FITZ_DIR=..\mupdf
+# To over-ride location of fitz/mupdf sources, define FITZ_DIR
+# e.g.:
+#FITZ_DIR=..\mupdf
+
+!if "$(FITZ_DIR)"==""
+FITZ_DIR=fitz
+!endif
 ZLIB_DIR=ext\zlib
 FREETYPE_DIR=ext\freetype231
 JPEG_DIR=ext\jpeg
@@ -137,6 +143,8 @@ SUMATRA_MAP = $(O)\SumatraPDF.map
 all: $(O) $(PDFTOOL_APP) $(SUMATRA_APP)
 
 # $(PDFAPP_APP)
+
+rebuild: clean all
 
 clean: force
 	-rmdir /S /Q $(O)
