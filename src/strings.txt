@@ -2235,7 +2235,7 @@ ru:Ассоциировать с PDF-файлами?
 es:¿Asociar con archivos PDF?
 -
 Make SumatraPDF default application for PDF files?
-br:Fazer do SumatraPDF o leitor PDF padrão?
+br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
@@ -2259,7 +2259,7 @@ ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
 -
 No new version available.
-br:Não existe uma versão mais atual.
+br:Nenhuma atualização foi encontrada.
 de:Keine neuere Version vorhanden.
 sk:Nie je k dispozícia nová verzia.
 uk:Новішої версії немає.
@@ -2267,7 +2267,7 @@ ru:Обновлений не обнаружено.
 es:No hay nuevas versiones.
 -
 You have the latest version.
-br:Sua versão é a mais recente.
+br:Esta é a versão mais recente.
 de:Sie haben die neuste Version installiert.
 sk:Používate najnovšiu verziu.
 uk:Ви вже маєте найновішу версію.
