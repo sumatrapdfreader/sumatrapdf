@@ -2044,8 +2044,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
     SizeD totalDrawAreaSize(win->winSize());
-    if (!reuseExistingWindow && state &&
-    0 != state->windowDx && 0 != state->windowDy) {
+    if (!reuseExistingWindow && state && 0 != state->windowDx && 0 != state->windowDy) {
         RECT rect;
         rect.top = state->windowY;
         rect.left = state->windowX;
@@ -5953,56 +5952,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
                     break;
 
-#if 0
-                case IDM_LANG_EN:
-                case IDM_LANG_PL:
-                case IDM_LANG_FR:
-                case IDM_LANG_DE:
-                case IDM_LANG_TR:
-                case IDM_LANG_BY:
-                case IDM_LANG_JA:
-                case IDM_LANG_HU:
-                case IDM_LANG_FA:
-                case IDM_LANG_DK:
-                case IDM_LANG_IT:
-                case IDM_LANG_NL:
-                case IDM_LANG_TA:
-                case IDM_LANG_ES:
-                case IDM_LANG_HR:
-                case IDM_LANG_RU:
-                case IDM_LANG_AR:
-                case IDM_LANG_CN:
-                case IDM_LANG_SV:
-                case IDM_LANG_CZ:
-                case IDM_LANG_GR:
-                case IDM_LANG_TH:
-                case IDM_LANG_PT:
-                case IDM_LANG_BR:
-                case IDM_LANG_NO:
-                case IDM_LANG_SK:
-                case IDM_LANG_VN:
-                case IDM_LANG_LT:
-                case IDM_LANG_MY:
-                case IDM_LANG_FI:
-                case IDM_LANG_CA:
-                case IDM_LANG_SI:
-                case IDM_LANG_TW:
-                case IDM_LANG_ML:
-                case IDM_LANG_HE:
-                case IDM_LANG_SP_RS:
-                case IDM_LANG_ID:
-                case IDM_LANG_MK:
-                case IDM_LANG_RO:
-                case IDM_LANG_SR_RS:
-                case IDM_LANG_KR:
-                case IDM_LANG_BN:
-                case IDM_LANG_GL:
-                case IDM_LANG_BG:
-                case IDM_LANG_UK:
-                case IDM_LANG_EU:
-                    OnMenuLanguage((int)wmId);
-                    break;
-#endif
                 case IDM_CONTRIBUTE_TRANSLATION:
                     OnMenuContributeTranslation();
                     break;

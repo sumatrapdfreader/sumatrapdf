@@ -221,7 +221,6 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
     error = pdf_decryptxref(_xref);
     if (error)
         goto Error;
-#if 0
     if (_xref->crypt) {
         int okay = pdf_setpassword(_xref->crypt, "");
         if (!okay)
@@ -241,7 +240,6 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
     }
 
 DecryptedOk:
-#endif
     error = pdf_loadpagetree(&_pageTree, _xref);
     if (error)
         goto Error;
