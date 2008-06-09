@@ -315,7 +315,7 @@ it:&Stampa
 nl:&Print
 ta:அச்சிடு
 es:&Imprimir
-hr:&Ispiši
+hr:&Ispiši\tCtrl-P
 ru:Печать
 ar:&طباعة
 cn:打印(&P)
@@ -597,7 +597,7 @@ it:Scorrimento Pagina
 nl:Doorlopend
 ta:தொடர்
 es:Contínua
-hr:Sljedno
+hr:Slijedno
 ru:Непрерывно
 ar:صفحات متتالية
 cn:连续页面
@@ -800,6 +800,7 @@ th:ที่คั่น
 uk:Закладки
 eu:Markagailuak
 gr:Σελιδοδείκτες
+hr:Knjiške oznake
 -
 Fullscreen\tCtrl-L
 br:Tela cheia\tCtrl-L
@@ -839,6 +840,7 @@ ar:بحجم الشاشة
 uk:На цілий екран\tCtrl-L
 eu:Pantaila osoan\tCtrl-L
 gr:Πλήρης οθόνη\tCtrl-L
+hr:Cijeli ekran\tCtrl-L
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -1185,7 +1187,7 @@ it:&Ingrandisci
 nl:Vergroten
 ta:பெரிதாக்கு
 es:&Zoom
-hr:&Povećaj
+hr:&Uvećaj
 ru:Масштаб
 ar:التقريب
 cn:缩放(&Z)
@@ -1232,7 +1234,7 @@ it:Intera &Pagina\tCtrl-0
 nl:Aan pagina aanpassen\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
 es:Ajustar &Página\tCtrl-0
-hr:Podesi &stranicu\tCtrl-0
+hr:Prilagodi &stranici\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
 cn:适合页面\tCtrl-0
@@ -1540,7 +1542,7 @@ it:&A proposito di
 nl:Over
 ta:பற்றி
 es:&Acerca de
-hr:&O...
+hr:&O programu...
 ru:О программе...
 ar:حول البرنامج
 cn:关于(&A)
@@ -1626,6 +1628,7 @@ ar:بحث
 uk:Знайти:
 eu:Bilatu:
 gr:Αναζήτηση:
+hr:Pronađi:
 -
 Find Previous
 br:Localizar anterior
@@ -1660,6 +1663,7 @@ ar:البحث عن السابق
 uk:Знайти попереднє
 eu:Aurrekoa bilatu
 gr:Αναζήτηση προηγούμενου
+hr:Pronađi prethodno
 -
 Find Next
 br:Localizar seguinte
@@ -1693,6 +1697,7 @@ es:Buscar Siguiente
 uk:Знайти наступне
 eu:Hurrengoa bilatu
 gr:Αναζήτηση επόμενου
+hr:Pronađi sljedeće
 -
 Match case
 br:Diferenciar  minúsculas e Maiúsculas
@@ -1724,6 +1729,7 @@ ar:مناسبة الخط
 uk:Розрізняти малу й велику літери
 eu:Hizki handiak edo txikiak bereizi
 gr:Αντιστοίχιση πεζών-κεφαλαίων
+hr:Razlikuj velika/mala slova
 -
 Open
 bg:Отвори
@@ -1788,7 +1794,7 @@ it:Ingrandisci
 nl:Zoom in
 ta:பெரிதாக்கு
 es:Acercar Zoom
-hr:Povećaj
+hr:Uvećaj
 ru:Увеличить
 ar:تكبير
 cn:放大
@@ -1975,7 +1981,7 @@ it:Fallito il Salvataggio del File PDF.
 nl:Opslaan mislukt.
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
-hr:Spremanje datoteke je neuspjelo.
+hr:Spremanje datoteke nije uspjelo
 ru:Невозможно сохранить файл.
 ar:فشل حفظ الملف
 cn:保存文件失败
@@ -2192,6 +2198,7 @@ sk:Nastaviť inverzné vyhľadávanie
 uk:Установити зворотній пошук.
 ru:Инвертировать поиск
 es:Establecer búsqueda inversa
+hr:Omogući inverznu pretragu
 -
 Change language
 br:Mudar o idioma
@@ -2201,6 +2208,7 @@ sk:Zmeniť jazyk
 uk:Змінити мову
 ru:Изменить язык (Change language)
 es:Cambiar Idioma
+hr:Promijeni jezik
 -
 Enter password
 br:Digite a senha
@@ -2209,6 +2217,7 @@ sk:Zadať heslo
 uk:Введіть пароль
 ru:Введите пароль
 es:Introduzca contraseña
+hr:Unesite lozinku
 -
 Enter password for %s
 br:Digite a senha de %s
@@ -2217,6 +2226,7 @@ sk:Zadať heslo pre %s
 uk:Введіть пароль для %s
 ru:Введите пароль для %s
 es:Introduzca contraseña para %s
+hr:Unesite lozinku za %s
 -
 Go to page
 br:Ir para a página
@@ -2225,6 +2235,7 @@ sk:Ísť na stranu
 uk:Перейти на сторінку
 ru:Перейти на страницу
 es:Ir a la página
+hr:Idi na stranicu
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2233,6 +2244,7 @@ sk:Asociovať s PDF súbormi?
 uk:Асоціювати з PDF-файлами?
 ru:Ассоциировать с PDF-файлами?
 es:¿Asociar con archivos PDF?
+hr:Asocirati sa PDF datotekama?
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2241,6 +2253,7 @@ sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
 ru:Сделать SumatraPDF стандартной программой открытия PDF-файлов?
 es:¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
+hr:Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2249,6 +2262,7 @@ sk:Nepýtať sa znova
 uk:Не питати знову
 ru:Больше не спрашивать
 es:No volver a preguntar
+hr:Ubuduće nemoj pitati
 -
 &Check for new version
 br:Procurar atualizações
@@ -2257,6 +2271,7 @@ sk:Skontrolovať novú verziu
 uk:Перевірити, чи є нова версія
 ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
+hr:Provjeravaj dostupnost nove inačice
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2265,6 +2280,7 @@ sk:Nie je k dispozícia nová verzia.
 uk:Новішої версії немає.
 ru:Обновлений не обнаружено.
 es:No hay nuevas versiones.
+hr:Nema nove inačice.
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2273,6 +2289,7 @@ sk:Používate najnovšiu verziu.
 uk:Ви вже маєте найновішу версію.
 ru:Вы используете самую новую версию.
 es:Su versión es la más reciente.
+hr:Imate najnoviju inačicu.
 -
 You have version %s
 br:Você tem a versão %s
@@ -2281,6 +2298,7 @@ sk:Používate verziu %s
 uk:Ви використовуєте версію %s
 ru:Вы используете версию %s
 es:Tiene la versión %s
+hr:Imate inačicu %s
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2289,6 +2307,7 @@ sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 uk:Нова версія %s є доступною. Завантажити нову версію?
 ru:Доступна новая версия: %s. Хотите её загрузить?
 es:La nueva versión %s está disponible. ¿Desea descargarla?
+hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2297,6 +2316,7 @@ sk:Je k dispozícia nová verzia.
 uk:Доступна нова версія.
 ru:Доступна новая версия.
 es:Nueva versión disponible
+hr:Dostupna je nova inačica.
 -
 Skip this version
 br:Pular esta versão.
@@ -2305,3 +2325,4 @@ sk:Preskočiť túto verziu.
 uk:Пропустити цю версію.
 ru:Пропустить эту версию.
 es:Saltarse esta versión.
+hr:Propusti ovu inačicu.
