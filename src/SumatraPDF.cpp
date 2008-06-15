@@ -5727,7 +5727,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             } else if (win && MA_SCROLLING == win->mouseAction) {
                 SetCursor(gCursorScroll);
             }
-            break;
+            return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
             assert(win);
