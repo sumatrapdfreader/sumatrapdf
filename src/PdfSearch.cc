@@ -3,17 +3,10 @@
 #define NONE    MAXLONG
 
 #include "wstr_util.h"
+#include <ctype.h>
 
 void PdfSearchEngine::SetText(wchar_t *text)
 {
-#if 0 // TODO: figure out what to do with it when poppler is no longer in play
-    int n = wcslen(text) + 1;
-    Unicode *data = (Unicode *)malloc(n * sizeof(Unicode));
-
-    for (int i = 0; i < n; i++)
-        data[i] = text[i];
-#endif
-
     this->Clear();
     this->length = wcslen(text);
     this->text = wstr_dup(text);
@@ -74,21 +67,19 @@ bool inline PdfSearchFitz::MatchChars(int c1, int c2)
 {
     if (sensitive)
         return c1 == c2;
-// TODO: fix this
-//    return (c1 == c2) || (unicodeToUpper(c1) == unicodeToUpper(c2));
+    return (c1 == c2) || (towupper((wchar_t)c1) == towupper((wchar_t)c2));
     return false;
 }
 
 bool inline PdfSearchFitz::MatchAtPosition(int n)
 {
-#if 0 // TODO: fix this to not depend on poppler
-    Unicode *p = (Unicode *)text;
+    WCHAR *p = (WCHAR *)text;
     result.left = current->text[n].bbox.x0;
     result.top = current->text[n].bbox.y0;
     last = n;
 
     while (n < current->len && *p) {
-        if (!MatchChars(*p, current->text[n].c))
+        if (!MatchChars((int)*p, current->text[n].c))
             break;
         p++;
         n++;
@@ -103,7 +94,7 @@ bool inline PdfSearchFitz::MatchAtPosition(int n)
             last = last - 1;
         return true;
     }
-#endif
+    
     return false;
 }
 
@@ -111,11 +102,10 @@ bool inline PdfSearchFitz::MatchAtPosition(int n)
 // Apply Boyer-Moore algorithm here
 bool PdfSearchFitz::FindTextInPage(int page)
 {
-#if 0 // TODO: fix to not depend on poppler
     if (!text)
         return false;
 
-    Unicode p = *(Unicode *)text;
+    WCHAR p = *(WCHAR *)text;
     int start = last;
 
     if (forward) {
@@ -123,7 +113,7 @@ bool PdfSearchFitz::FindTextInPage(int page)
             start = 0;
         while (current) {
             for (int i = start; i < current->len; i++) {
-                if (MatchChars(p, current->text[i].c)) {
+                if (MatchChars((int)p, current->text[i].c)) {
                     if (MatchAtPosition(i))
                         goto Found;
                 }
@@ -136,7 +126,7 @@ bool PdfSearchFitz::FindTextInPage(int page)
             start = current->len - length;
         while (current) {
             for (int i = start; i >= 0; i--) {
-                if (MatchChars(p, current->text[i].c)) {
+                if (MatchChars((int)p, current->text[i].c)) {
                     if (MatchAtPosition(i))
                         goto Found;
                 }
@@ -152,13 +142,10 @@ Found:
     if (page > 0)
         result.page = page;
     return true;
-#endif
-    return false;
 }
 
 bool PdfSearchFitz::FindStartingAtPage(int pageNo)
 {
-#if 0 // TODO: fix to not depend on poppler
     if (!text)
         return false;
 
@@ -196,7 +183,7 @@ bool PdfSearchFitz::FindStartingAtPage(int pageNo)
     NextPage:
         pageNo += step;
     }
-#endif
+    
     return false;
 }
 
