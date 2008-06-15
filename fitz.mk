@@ -1,42 +1,40 @@
-# Makefile for Fitz, Mu PDF, pdftool and Apparition
+# GNU Make file for Fitz, Mu PDF, pdftool and Apparition
 
-FITZ_DIR = fitz
+FITZ_DIR ?= fitz
+-include $(FITZ_DIR)/config.mk
 
-FITZ_CONFIG = $(BUILD)
+# FITZ_BUILTIN_FONTS ?= yes
 
-# FITZ_BUILTIN_FONTS = yes
-
-FITZ_INC_DIR = $(INC_DIR)
-FITZ_LIB_DIR = $(LIB_DIR)
-FITZ_CC = $(CC)
-FITZ_CPPFLAGS = $(CPPFLAGS)
-FITZ_CFLAGS = $(CFLAGS)
-FITZ_LDFLAGS = $(LDFLAGS)
-FITZ_LDLIBS = $(LDLIBS)
+FITZ_CONFIG ?= $(BUILD)
+FITZ_INC_DIR ?= $(INC_DIR)
+FITZ_CPPFLAGS ?= $(CPPFLAGS)
+FITZ_CFLAGS ?= $(CFLAGS)
+FITZ_LDFLAGS ?= $(LDFLAGS)
+FITZ_LDLIBS ?= $(LDLIBS)
 
 FITZ_CONFIG_debug = yes
-APPARITION_LDFLAGS_debug = -mconsole
+APPARITION_LDFLAGS_debug ?= -mconsole
 
 FITZ_CONFIG_release = yes
-FITZ_CPPFLAGS_release = -D NDEBUG
-FITZ_CFLAGS_release = -O3
-FITZ_LDFLAGS_release = -static -s
-APPARITION_LDFLAGS_release = -mwindows
+FITZ_CPPFLAGS_release ?= -D NDEBUG
+FITZ_CFLAGS_release ?= -O3
+FITZ_LDFLAGS_release ?= -static -s
+APPARITION_LDFLAGS_release ?= -mwindows
 
--include config.mk
-
-# TODO: precompiled headers?
-
-FITZ_INC_DIR += $(FITZ_DIR)/include
-
+ifeq ($(FITZ_CONFIG), )
+    FITZ_CONFIG = release
+endif
 ifeq ($(FITZ_CONFIG_$(FITZ_CONFIG)), )
     $(warning FITZ_CONFIG should be "debug" or "release")
 endif
-
 FITZ_CPPFLAGS += $(FITZ_CPPFLAGS_$(FITZ_CONFIG))
 FITZ_CFLAGS += $(FITZ_CFLAGS_$(FITZ_CONFIG))
 FITZ_LDFLAGS += $(FITZ_LDFLAGS_$(FITZ_CONFIG))
 
+# TODO: precompiled headers?
+
+FITZ_INCLUDE = $(FITZ_DIR)/include
+FITZ_INC_DIR += $(FITZ_INCLUDE)
 FITZ_CPPFLAGS += $(addprefix -I ,$(FITZ_INC_DIR))
 FITZ_RCFLAGS += $(addprefix -I ,$(FITZ_INC_DIR))
 FITZ_CFLAGS += -Wall
@@ -46,18 +44,19 @@ FITZ_CPPFLAGS += -D NEED_STRLCAT -D NEED_STRLCPY -D NEED_STRSEP
 FITZ_CPPFLAGS += -D NEED_GETOPT
 FITZ_CFLAGS += -std=gnu99
 FITZ_CPPFLAGS += -D HAVE_C99
-# x86-specific stuff appears to not be working for GCC under win32
+# x86 processor detection stuff appears to not be working for GCC under win32
 # FITZ_CPPFLAGS += -D ARCH_X86
 # FITZ_CPPFLAGS += -D HAVE_JASPER
 # FITZ_CPPFLAGS += -D HAVE_JBIG2DEC
-FITZ_LDFLAGS += $(addprefix -L ,$(FITZ_LIB_DIR))
+FITZ_LDFLAGS += $(addprefix -L ,$(LIB_DIR))
 
 FITZ_BUILD = $(FITZ_DIR)/build/$(FITZ_CONFIG)
+$(warning Fitz build directory is $(FITZ_BUILD))
 
 # TODO: automatic header dependancies stuff
 
-all: pdftool apparition
-.PHONY: all
+fitz: pdftool apparition
+.PHONY: fitz
 
 FITZ_BASE_C += base_cpudep.c
 FITZ_BASE_C += base_error.c
@@ -263,7 +262,7 @@ MUPDF_LDLIBS = -lfreetype -lz -ljpeg
 
 PDFTOOL_OBJ = $(FITZ_BUILD)/apps/pdftool.o
 PDFTOOL_EXE = $(FITZ_BUILD)/apps/pdftool.exe
-LDLIBS_$(PDFTOOL_EXE) = $(MUPDF_LDLIBS) 
+LDLIBS_$(notdir $(PDFTOOL_EXE)) += $(MUPDF_LDLIBS) 
 FITZ_C_OBJ += $(PDFTOOL_OBJ)
 FITZ_PROD += $(PDFTOOL_OBJ) $(PDFTOOL_EXE)
 FITZ_SUBDIR += apps
@@ -280,8 +279,8 @@ APPARITION_C_OBJ = $(FITZ_BUILD)/apps/windows/winmain.o
 APPARITION_RES_OBJ = $(FITZ_BUILD)/apps/windows/winres.o
 APPARITION_OBJ = $(APPARITION_C_OBJ) $(APPARITION_RES_OBJ)
 APPARITION_EXE = $(FITZ_BUILD)/apps/windows/apparition.exe
-LDFLAGS_$(APPARITION_EXE) = $(APPARITION_LDFLAGS_$(FITZ_CONFIG))
-LDLIBS_$(APPARITION_EXE) = -lcomdlg32 -lgdi32 $(MUPDF_LDLIBS) 
+LDFLAGS_$(notdir $(APPARITION_EXE)) += $(APPARITION_LDFLAGS_$(FITZ_CONFIG))
+LDLIBS_$(notdir $(APPARITION_EXE)) += -lcomdlg32 -lgdi32 $(MUPDF_LDLIBS) 
 FITZ_C_OBJ += $(APPARITION_C_OBJ)
 FITZ_PROD += $(APPARITION_OBJ) $(APPARITION_EXE)
 FITZ_SUBDIR += apps/windows
@@ -293,9 +292,9 @@ apparition: $(APPARITION_EXE)
 .SUFFIXES:
 
 define FITZ_LD_CMD
-    @echo CC $(LDFLAGS_$@) -o $@ $(LDLIBS_$@)
-    @$(FITZ_CC) $(FITZ_LDFLAGS) $(LDFLAGS_$@) -o $@ $^ $(LDLIBS_$@) \
-        $(FITZ_LDLIBS)
+    @echo CC $(LDFLAGS_$(notdir $@)) -o $@ $(LDLIBS_$(notdir $@))
+    @$(CC) $(FITZ_LDFLAGS) $(LDFLAGS_$(notdir $@)) -o $@ $^ \
+        $(LDLIBS_$(notdir $@)) $(FITZ_LDLIBS)
 endef
 $(PDFTOOL_EXE): $(PDFTOOL_OBJ) $(MUPDF_LIBS)
 	$(FITZ_LD_CMD)
@@ -304,7 +303,7 @@ $(APPARITION_EXE): $(APPARITION_OBJ) $(APPARITION_LIB) $(MUPDF_LIBS)
 
 define FITZ_AR_CMD
     @echo AR r $@
-    @ar r $@ $?
+    @$(AR) r $@ $?
 endef
 $(FITZ_BASE_LIB): $(FITZ_BASE_OBJ)
 	$(FITZ_AR_CMD)
@@ -334,22 +333,22 @@ $(APPARITION_OBJ): $(FITZ_BUILD)/apps/windows
 $(MUPDF_FONTS_OBJ): $(FITZ_BUILD)/%.o: $(FITZ_DIR)/%
 	@echo XXD -i $< "|" SED "|" CC -c
 	@(cd $(FITZ_DIR) && xxd -i $*) | \
-    sed -e "s/unsigned/const unsigned/" | \
-    $(FITZ_CC) -c $(FITZ_CPPFLAGS) $(FITZ_CFLAGS) -o $@ -x c -
+	    sed -e "s/unsigned/const unsigned/" | \
+	    $(CC) -c $(FITZ_CPPFLAGS) $(FITZ_CFLAGS) -o $@ -x c -
 
 $(APPARITION_RES_OBJ): $(FITZ_BUILD)/%.o: $(FITZ_DIR)/%.rc
 	windres $(FITZ_RCFLAGS) -I $(dir $<) $< $@
 
 $(FITZ_C_OBJ): $(FITZ_BUILD)/%.o: $(FITZ_DIR)/%.c
 	@echo CC -c $<
-	@$(FITZ_CC) -c $(FITZ_CPPFLAGS) $(FITZ_CFLAGS) -o $@ $<
+	@$(CC) -c $(FITZ_CPPFLAGS) $(FITZ_CFLAGS) -o $@ $<
 
 $(addprefix $(FITZ_BUILD)/,$(FITZ_SUBDIR)):
 	mkdir -p $@
 
-clean:
-	@echo RM
+clean-fitz:
+	@echo CLEAN $(FITZ_BUILD)
 	@rm -f $(FITZ_PROD)
-realclean:
-	rm -rf $(FITZ_BUILD)
-.PHONY: clean realclean
+realclean-fitz:
+	rm -rf $(FITZ_BUILD) || rmdir $(FITZ_BUILD)
+.PHONY: clean-fitz realclean-fitz

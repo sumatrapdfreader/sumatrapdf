@@ -1,19 +1,14 @@
-# Configuration make file
-# The commented-out lines show the defaults
+# GNU make file configuration
 
-# Debug or release mode
-#BUILD = release
+# Build configuration name
+#BUILD = debug
+BUILD = release
 
 # Where to find zlib, JPEG library and Free Type
-# The pre-compiled libraries in subversion have MS Visual C dependencies
-#INC_DIR =
-#LIB_DIR =
-#LDLIBS = -lfreetype -ljpeg -lz
+# The pre-compiled libraries in subversion have Visual C dependencies
+INC_DIR =
+LIB_DIR =
 
-# Use static libraries even if DLLs / shared libraries available
-#LDFLAGS = -static
-
-# Don't use Microsoft's strsafe library
-#CPPFLAGS = -D DISABLE_STRSAFE
-
-#CFLAGS =
+# Python is optional, but use it if it is found:
+#SUMATRA_PYTHON =
+SUMATRA_PYTHON = $(SYSTEMDRIVE)/Python25/python

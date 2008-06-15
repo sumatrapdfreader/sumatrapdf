@@ -1,184 +1,158 @@
-# Makefile for SumatraPDF program
+# GNU Make file for Sumatra PDF
 
-BUILD = release
+SUMATRA_DIR = .
+-include $(SUMATRA_DIR)/config.mk
 
-CC = gcc
-CPPFLAGS = -D DISABLE_STRSAFE
-CFLAGS =
-RC = windres
-RCFLAGS =
-LD = g++
-LDFLAGS = -static
-INC_DIR =
-LIB_DIR =
-LDLIBS = -lfreetype -ljpeg -lz
+FITZ_DIR ?= $(SUMATRA_DIR)/fitz
+SUMATRA_CONFIG ?= $(BUILD)
+SUMATRA_INC_DIR ?= $(INC_DIR)
+SUMATRA_CPPFLAGS ?= $(CPPFLAGS)
+SUMATRA_CFLAGS ?= $(CFLAGS)
+SUMATRA_LDFLAGS ?= $(LDFLAGS)
+SUMATRA_LDLIBS ?= $(LDLIBS)
+# Python is optional, but use it if it is found:
+SUMATRA_PYTHON ?= $(SYSTEMDRIVE)/Python25/python
 
-# Python is optional, but use it if it is installed here:
-PYTHON = $(SYSTEMDRIVE)/Python25/python
+SUMATRA_CONFIG_debug = yes
+SUMATRA_FITZ_CONFIG_debug ?= debug
+SUMATRA_CPPFLAGS_debug ?= -D DEBUG
+SUMATRA_LDFLAGS_debug ?= -mconsole
 
--include config.mk
+SUMATRA_CONFIG_release ?= yes
+SUMATRA_FITZ_CONFIG_release ?= release
+SUMATRA_CPPFLAGS_release ?= -D NDEBUG
+SUMATRA_CFLAGS_release ?= -Os
+SUMATRA_LDFLAGS_release ?= -static -s -mwindows
+
+ifeq ($(SUMATRA_CONFIG), )
+    SUMATRA_CONFIG = release
+endif
+ifeq ($(SUMATRA_CONFIG_$(SUMATRA_CONFIG)), )
+    $(warning SUMATRA_CONFIG should be "debug" or "release")
+endif
+FITZ_CONFIG ?= $(SUMATRA_FITZ_CONFIG_$(SUMATRA_CONFIG))
+SUMATRA_CPPFLAGS += $(SUMATRA_CPPFLAGS_$(SUMATRA_CONFIG))
+SUMATRA_CFLAGS += $(SUMATRA_CFLAGS_$(SUMATRA_CONFIG))
+SUMATRA_LDFLAGS += $(SUMATRA_LDFLAGS_$(SUMATRA_CONFIG))
+
+SUMATRA_BUILD = $(SUMATRA_DIR)/build/$(SUMATRA_CONFIG)
+$(warning Sumatra build directory is $(SUMATRA_BUILD))
+
+sumatra: sumatrapdf
+.PHONY: sumatra
+
+include $(SUMATRA_DIR)/fitz.mk
 
 # TODO: precompiled headers?
-# TODO: output into specific build directory depending on configuration
 # TODO: auto header depenencies
 
-INC_DIR += baseutils
-INC_DIR += src
-INC_DIR += fitz/include
-INC_DIR += DialogSizer
-LDFLAGS += -mwindows
-
-ifeq ($(BUILD), debug)
-    CPPFLAGS += -D DEBUG
-    CFLAGS += -O0
-endif
-ifeq ($(BUILD), release)
-    CPPFLAGS += -D NDEBUG
-    CFLAGS += -Os -O2
-    LDFLAGS += -s
-endif
-ifneq ($(BUILD), debug)
-    ifneq ($(BUILD), release)
-        $(error BUILD should be "debug" or "release")
-    endif
-endif
-
-CPPFLAGS += $(addprefix -I ,$(INC_DIR))
-RCFLAGS += $(addprefix --include-dir=,$(INC_DIR))
-CFLAGS += -Wall
-CFLAGS += -g
-LDFLAGS += $(addprefix -L ,$(LIB_DIR))
-LDLIBS += -lcomctl32
-LDLIBS += -lwinspool -lmsimg32
-LDLIBS += -lwininet -lole32
+SUMATRA_INC_DIR += $(SUMATRA_DIR)/baseutils
+SUMATRA_INC_DIR += $(SUMATRA_DIR)/src
+SUMATRA_INC_DIR += $(FITZ_INCLUDE)
+SUMATRA_INC_DIR += $(SUMATRA_DIR)/DialogSizer
+SUMATRA_CPPFLAGS += $(addprefix -I ,$(SUMATRA_INC_DIR))
+SUMATRA_RCFLAGS += $(addprefix -I ,$(SUMATRA_INC_DIR))
+SUMATRA_CFLAGS += -Wall
+SUMATRA_CFLAGS += -g
+SUMATRA_CPPFLAGS += -D DISABLE_STRSAFE
+# Mingw API headers don't seem to take notice of MBCS
+# SUMATRA_CPPFLAGS += -D _MBCS
+SUMATRA_LDFLAGS += $(addprefix -L ,$(LIB_DIR))
 
 # <winuser.h> missing some VK_OEM stuff unless _WIN32_WINNT >= 0x0500
 # I think this means we're building for Windows 5.0 aka Windows 2000
-CPPFLAGS += -D _WIN32_WINNT=0x0500
-
-all: SumatraPDF.exe
-.PHONY: all
-
-libfitz.a:
-	$(MAKE) -f fitzlib.mk $@
-
-# Grouped as "source files" in sumatrapdf.vcproj:
-SOURCES += src/AppPrefs.cc
-SOURCES += baseutils/base_util.c
-HEADERS += baseutils/base_util.h
-SOURCES += baseutils/benc_util.c
-HEADERS += baseutils/benc_util.h
-SOURCES += src/DisplayModel.cc
-SOURCES += src/DisplayModelFitz.cc
-SOURCES += src/DisplayState.cc
-SOURCES += baseutils/dstring.c
-SOURCES += baseutils/file_util.c
-SOURCES += src/FileHistory.cc
-SOURCES += src/FileWatch.cc
-SOURCES += baseutils/geom_util.c
-SOURCES += src/LangMenuDef.cpp
-SOURCES += src/PdfEngine.cc
-SOURCES += src/PdfSearch.cc
-SOURCES += src/PdfSync.cpp
-SOURCES += baseutils/str_util.c
-SOURCES += baseutils/strlist_util.c
-SOURCES += src/SumatraDialogs.cc
-
-SOURCES += src/SumatraPDF.cpp
+# Also need Windows 2000 or Windows 98 for MonitorFromRect API
+SUMATRA_CPPFLAGS += -D WINVER=0x0500
+SUMATRA_CPPFLAGS += -D _WIN32_WINNT=0x0500
 
 # Mingw API is missing these symbols from <wininet.h>:
-CPPFLAGS_src/SumatraPDF.cpp += -D INTERNET_STATUS_INTERMEDIATE_RESPONSE=120
-CPPFLAGS_src/SumatraPDF.cpp += -D INTERNET_STATUS_STATE_CHANGE=200
+SUMATRA_CPPFLAGS += -D INTERNET_STATUS_INTERMEDIATE_RESPONSE=120
+SUMATRA_CPPFLAGS += -D INTERNET_STATUS_STATE_CHANGE=200
 
-SOURCES += src/translations.cpp
-HEADERS += src/translations.h
-SOURCES += src/translations_txt.c
-HEADERS += src/translations_txt.h
-SOURCES += baseutils/utf_util.c
-SOURCES += baseutils/win_util.c
-SOURCES += baseutils/WinUtil.cpp
-HEADERS += baseutils/WinUtil.hpp
-SOURCES += baseutils/wstr_util.c
+SUMATRAPDF_RES_OBJ = $(SUMATRA_BUILD)/src/SumatraPDF.rc.o
 
-# Grouped as "header files" in sumatrapdf.vcproj:
-HEADERS += src/AppPrefs.h
-HEADERS += src/DisplayModel.h
-HEADERS += src/DisplayModelFitz.h
-HEADERS += src/DisplayState.h
-HEADERS += baseutils/dstring.h
-HEADERS += baseutils/file_util.h
-HEADERS += src/FileHistory.h
-HEADERS += src/FileWatch.h
-HEADERS += baseutils/geom_util.h
-HEADERS += src/PdfEngine.h
-HEADERS += src/PdfSearch.h
-HEADERS += src/Resource.h
-HEADERS += baseutils/str_util.h
-HEADERS += baseutils/strlist_util.h
-HEADERS += src/SumatraDialogs.h
-HEADERS += src/SumatraPDF.h
-HEADERS += baseutils/win_util.h
-HEADERS += baseutils/wstr_util.h
+SUMATRAPDF_C += AppPrefs.cc
+BASEUTILS_C += base_util.c
+BASEUTILS_C += benc_util.c
+SUMATRAPDF_C += DisplayModel.cc
+SUMATRAPDF_C += DisplayModelFitz.cc
+SUMATRAPDF_C += DisplayState.cc
+BASEUTILS_C += dstring.c
+BASEUTILS_C += file_util.c
+SUMATRAPDF_C += FileHistory.cc
+BASEUTILS_C += geom_util.c
+SUMATRAPDF_C += PdfEngine.cc
+SUMATRAPDF_C += PdfSearch.cc
+BASEUTILS_C += str_util.c
+BASEUTILS_C += strlist_util.c
+SUMATRAPDF_C += SumatraDialogs.cc
+SUMATRAPDF_C += SumatraPDF.cpp
+SUMATRAPDF_C += translations.cpp
+SUMATRAPDF_C += translations_txt.c
+BASEUTILS_C += utf_util.c
+BASEUTILS_C += win_util.c
+BASEUTILS_C += WinUtil.cpp
+BASEUTILS_C += wstr_util.c
+SUMATRAPDF_C += LangMenuDef.cpp
+SUMATRAPDF_C += FileWatch.cc
+SUMATRAPDF_C += PdfSync.cpp
+DIALOGSIZER_C += dialogsizer_set.cpp
 
-# Grouped as "resource files" in sumatrapdf.vcproj:
-RESOURCES += src/closetoc.bmp
-RESOURCES += src/cursordrag.png
-RESOURCES += src/dragcursor.cur
-RESOURCES += src/icons-silk/folder.bmp
-RESOURCES += src/icons-silk/matchcase.bmp
-RESOURCES += src/icons-silk/next.bmp
-RESOURCES += src/icons-silk/previous.bmp
-RESOURCES += src/SumatraPDf.ico
-RC_SOURCE = src/SumatraPDF.rc
-RESOURCES += src/SumatraPDFSmall.ico
-RESOURCES += src/toolbar-disabled.bmp
-RESOURCES += src/toolbar.bmp
-RESOURCES += src/icons-silk/zoom_in.bmp
-RESOURCES += src/icons-silk/zoom_out.bmp
+BASEUTILS_OBJ = \
+    $(addprefix $(SUMATRA_BUILD)/baseutils/,$(addsuffix .o,$(BASEUTILS_C)))
+SUMATRAPDF_C_OBJ = \
+    $(addprefix $(SUMATRA_BUILD)/src/,$(addsuffix .o,$(SUMATRAPDF_C)))
+DIALOGSIZER_OBJ = $(addprefix \
+    $(SUMATRA_BUILD)/DialogSizer/,$(addsuffix .o,$(DIALOGSIZER_C)))
+SUMATRA_C_OBJ = $(BASEUTILS_OBJ) $(SUMATRAPDF_C_OBJ) $(DIALOGSIZER_OBJ)
+SUMATRAPDF_OBJ = $(SUMATRA_C_OBJ) $(SUMATRAPDF_RES_OBJ)
+SUMATRAPDF_EXE = $(SUMATRA_BUILD)/src/SumatraPDF.exe
+LDLIBS_$(notdir $(SUMATRAPDF_EXE)) += \
+    -lgdi32 -lmsimg32 -lcomdlg32 -lcomctl32 -lwinspool $(MUPDF_LDLIBS)
+LDLIBS_$(notdir $(SUMATRAPDF_EXE)) += -lwininet -lole32
+SUMATRA_PROD = $(SUMATRAPDF_OBJ) $(SUMATRAPDF_EXE)
+SUMATRA_SUBDIR = baseutils src DialogSizer
 
-# Grouped as "breakpad" in sumatrapdf.vcproj:
-BREAKPAD_SOURCES += breakpad/client/windows/sender/crash_report_sender.cc
-BREAKPAD_HEADERS += breakpad/client/windows/sender/crash_report_sender.h
-BREAKPAD_SOURCES += breakpad/client/windows/handler/exception_handler.cc # exception handling = 1
-BREAKPAD_HEADERS += breakpad/client/windows/handler/exception_handler.h
-BREAKPAD_SOURCES += breakpad/common/windows/guid_string.cc # exception handling = 1
-BREAKPAD_HEADERS += breakpad/common/windows/guid_string.h
-BREAKPAD_SOURCES += breakpad/common/windows/http_upload.cc
-BREAKPAD_HEADERS += breakpad/common/windows/http_upload.h
-BREAKPAD_HEADERS += breakpad/common/windows/string_utils-inl.h
-BREAKPAD_SOURCES += breakpad/common/windows/string_utils.cc # exception handling = 1
-
-# Grouped as "dialog sizer" in sumatrapdf.vcproj:
-HEADERS += DialogSizer/dialogsizer.h
-SOURCES += DialogSizer/dialogsizer_set.cpp
-HEADERS += DialogSizer/WinHelper.h
-
-OBJECTS = $(addsuffix .o,$(SOURCES))
-RC_OBJECT = $(RC_SOURCE).o
+sumatrapdf: $(SUMATRAPDF_EXE)
+.PHONY: sumatrapdf
 
 .SUFFIXES:
 
-SumatraPDF.exe: $(OBJECTS) $(RC_OBJECT) libfitz.a
-	@echo LD -o $@
-	@$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+define SUMATRA_LD_CMD
+    @echo CXX -o $@ $(LDLIBS_$(notdir $@))
+    @$(CXX) $(SUMATRA_LDFLAGS) -o $@ $^ $(LDLIBS_$(notdir $@)) \
+        $(SUMATRA_LDLIBS)
+endef
+$(SUMATRAPDF_EXE): $(SUMATRAPDF_OBJ) $(MUPDF_LIBS)
+	$(SUMATRA_LD_CMD)
 
-$(OBJECTS): %.o: %
-	@echo CC $(CPPFLAGS_$<) $(CFLAGS_$<) -c $<
-	@$(CC) $(CPPFLAGS) $(CFLAGS) $(CPPFLAGS_$<) $(CFLAGS_$<) -c -o $@ $<
+$(BASEUTILS_OBJ): $(SUMATRA_BUILD)/baseutils
+$(SUMATRAPDF_C_OBJ) $(SUMATRAPDF_RES_OBJ): $(SUMATRA_BUILD)/src
+$(DIALOGSIZER_OBJ): $(SUMATRA_BUILD)/DialogSizer
 
-$(RC_OBJECT): $(RC_SOURCE)
-	$(RC) $(RCFLAGS) $< $@
+$(SUMATRA_C_OBJ): $(SUMATRA_BUILD)/%.o: $(SUMATRA_DIR)/%
+	@echo CC -c $<
+	@$(CC) -c $(SUMATRA_CPPFLAGS) $(SUMATRA_CFLAGS) -o $@ $<
 
-clean:
-	$(MAKE) -f fitzlib.mk $@
-	@echo RM SumatraPDF.exe OBJECTS RC_OBJECT
-	@rm -f SumatraPDF.exe $(OBJECTS) $(RC_OBJECT)
-.PHONY: clean
+$(SUMATRAPDF_RES_OBJ): $(SUMATRA_BUILD)/%.o: $(SUMATRA_DIR)/%
+	windres $(SUMATRA_RCFLAGS) -I $(dir $<) $< $@
 
-# Update string translations if possible (e.g. if Python installed)
-src/translations_txt.c: src/strings.txt src/gen_c_from_strings_file.py src/extract_strings.py
-	-cd src && $(PYTHON) gen_c_from_strings_file.py
+$(addprefix $(SUMATRA_BUILD)/,$(SUMATRA_SUBDIR)):
+	mkdir -p $@
 
-realclean: clean
+# Update string translations if Python installed
+SUMATRA_XLATE_TARG = translations_txt.c LangMenuDef.cpp LangMenuDef.h
+SUMATRA_XLATE_DEP = strings.txt gen_c_from_strings_file.py extract_strings.py
+ifeq ($(shell test -e $(SUMATRA_PYTHON) && echo yes), yes)
+    $(addprefix $(SUMATRA_DIR)/src/,$(SUMATRA_XLATE_TARG)): \
+        $(addprefix $(SUMATRA_DIR)/src/,$(SUMATRA_XLATE_DEP))
+	cd src && $(SUMATRA_PYTHON) gen_c_from_strings_file.py
+endif
+
+clean-sumatra:
+	@echo CLEAN $(SUMATRA_BUILD)
+	@rm -f $(SUMATRA_PROD)
+realclean-sumatra:
+	rm -rf $(SUMATRA_BUILD) || rmdir $(SUMATRA_BUILD)
 	rm -f src/extract_strings.pyc
-.PHONY: realclean
+.PHONY: clean-sumatra realclean-sumatra
