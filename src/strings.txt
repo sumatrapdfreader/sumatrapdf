@@ -452,7 +452,7 @@ by:Выгляд
 ja:表示(&V)
 fa:نمايش
 dk:&Vis
-it:Mostra
+it:Visualizza
 nl:&Beeld
 ta:நோக்கு
 es:&Ver
@@ -779,6 +779,7 @@ lt:Žymės
 my:Penanda
 ja:ブックマーク
 fa:بوک‌مارک
+it:Segnalibri
 nl:Bladwijzers
 fi:Kirjainmerkit
 ca:Punts d'interés
@@ -811,6 +812,7 @@ hu:Teljes Képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
 fa:تمام‌صفحه\tCtrl-L
+it:Schermo intero\tCtrl-L
 nl:Volledig scherm\tCtrl-L
 no:Full skjerm\tCtrl-L
 sk:Na celú stranu\tCtrl-L
@@ -1397,7 +1399,7 @@ by:Мова
 ja:言語(&L)
 fa:زبان
 dk:&Sprog
-it:&Linguaggio
+it:&Lingua
 nl:&Taal
 ta:மொழி
 es:&Idioma
@@ -1538,7 +1540,7 @@ by:Аб праграме
 ja:バージョン情報(&A)
 fa:درباره
 dk:&Om
-it:&A proposito di
+it:&Informazioni
 nl:Over
 ta:பற்றி
 es:&Acerca de
@@ -1602,6 +1604,7 @@ hu:Keresés:
 pl:Szukaj:
 ja:検索:
 fa:جستجو:
+it:Trova:
 nl:Zoek:
 sk:Hľadať:
 vn:Tìm kiếm:
@@ -1640,6 +1643,7 @@ lt:Rasti kitą
 my:Cari sebelum
 ja:前を検索
 fa:قبلي
+it:Trova precedente
 nl:Vorig zoekresultaat
 fi:Etsi edellinen
 ca:Cerca anterior
@@ -1675,6 +1679,7 @@ lt:Rasti ankstesnį
 my:Cari selepas
 ja:次を検索
 fa:بعدي
+it:Trova successivo
 nl:Volgend zoekresultaat
 fi:Etsi seuraava
 ca:Cerca següent
@@ -1707,6 +1712,7 @@ tr:Büyük/Küçük harf eşleştir
 hu:Kis- és nagybetű megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字に一致する
+it:Sensibilità al carattere
 nl:Hoofdlettergevoelig
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
@@ -1884,7 +1890,7 @@ by:Аб SumatraPDF
 ja:SumatraPDF のバージョン情報
 fa:SumatraPDF درباره‌ي
 dk:Om SumatraPDF
-it:A proposito di SumatraPDF
+it:Informazioni su SumatraPDF
 nl:Over SumatraPDF
 ta:SumatraPDF பற்றி
 es:Acerca de SumatraPDF
@@ -1931,7 +1937,7 @@ by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчан
 ja:SumatraPDF は現在 PDF ファイル用の既定のリーダーです。
 fa:.شما خواهد بود PDF مرورگر پيش‌فرض اسناد  SumatraPDF از اين پس
 dk:SumatraPDF er nu din standardlæser for PDF filer.
-it:SumatraPDF è stato impostato come Lettore Predefinito di Files PDF.
+it:SumatraPDF è stato impostato come lettore predefinito di Files PDF.
 nl:SumatraPDF is nu de standaard PDF lezer.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
 es:SumatraPDF es ahora el lector PDF por defecto.
@@ -1977,7 +1983,7 @@ by:Немагчыма захаваць файл
 ja:ファイルの保存に失敗しました
 fa:ذخيره کردن فايل با مشکل روبرو شد
 dk:Kunne ikke gemme filen.
-it:Fallito il Salvataggio del File PDF.
+it:Salvataggio del File PDF fallito!
 nl:Opslaan mislukt.
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
@@ -2023,7 +2029,7 @@ by:Памылка пры адчыненні файла.
 ja:PDF ファイルの読み込みエラーです。
 fa:گشودن فايل با مشکل مواجه شد
 dk:Fejl ved åbning af PDF-fil
-it:Riscontrati Errori durante l'Apertura del File PDF
+it:Errore durante l'apertura del file PDF.
 nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
@@ -2157,6 +2163,7 @@ fr:Contribuer à la traduction
 tr:Çeviriye katkıda bulunun.
 pl:Pomóż przy translacji
 ja:翻訳の提供
+it:Contribuisci alla traduzione
 nl:Help met vertalen
 hr:Pomozi prijevodom ovog programa
 ru:Помочь с переводом
@@ -2209,6 +2216,7 @@ uk:Змінити мову
 ru:Изменить язык (Change language)
 es:Cambiar Idioma
 hr:Promijeni jezik
+it:Cambia lingua
 -
 Enter password
 br:Digite a senha
@@ -2218,6 +2226,7 @@ uk:Введіть пароль
 ru:Введите пароль
 es:Introduzca contraseña
 hr:Unesite lozinku
+it:Inserisci password
 -
 Enter password for %s
 br:Digite a senha de %s
@@ -2227,6 +2236,7 @@ uk:Введіть пароль для %s
 ru:Введите пароль для %s
 es:Introduzca contraseña para %s
 hr:Unesite lozinku za %s
+it:Inserisci password per %s
 -
 Go to page
 br:Ir para a página
@@ -2236,6 +2246,7 @@ uk:Перейти на сторінку
 ru:Перейти на страницу
 es:Ir a la página
 hr:Idi na stranicu
+it:Vai a pagina
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2245,6 +2256,7 @@ uk:Асоціювати з PDF-файлами?
 ru:Ассоциировать с PDF-файлами?
 es:¿Asociar con archivos PDF?
 hr:Asocirati sa PDF datotekama?
+it:Associare ai file PDF
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2254,6 +2266,7 @@ uk:Зробити SumatraPDF типовою програмою для PDF-фай
 ru:Сделать SumatraPDF стандартной программой открытия PDF-файлов?
 es:¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
 hr:Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
+it:Impostare SumatraPDF come programma predefinito per i file PDF? 
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2263,6 +2276,7 @@ uk:Не питати знову
 ru:Больше не спрашивать
 es:No volver a preguntar
 hr:Ubuduće nemoj pitati
+it:Non chiedermelo ancora
 -
 &Check for new version
 br:Procurar atualizações
@@ -2272,6 +2286,7 @@ uk:Перевірити, чи є нова версія
 ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
 hr:Provjeravaj dostupnost nove inačice
+it:Verifica aggiornamenti
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2281,6 +2296,7 @@ uk:Новішої версії немає.
 ru:Обновлений не обнаружено.
 es:No hay nuevas versiones.
 hr:Nema nove inačice.
+it:Nessun aggiornamento disponibile
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2290,6 +2306,7 @@ uk:Ви вже маєте найновішу версію.
 ru:Вы используете самую новую версию.
 es:Su versión es la más reciente.
 hr:Imate najnoviju inačicu.
+it:Hai già l'ultima versione disponibile
 -
 You have version %s
 br:Você tem a versão %s
@@ -2299,6 +2316,7 @@ uk:Ви використовуєте версію %s
 ru:Вы используете версию %s
 es:Tiene la versión %s
 hr:Imate inačicu %s
+it:La tua versione è la %s
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2308,6 +2326,7 @@ uk:Нова версія %s є доступною. Завантажити нов
 ru:Доступна новая версия: %s. Хотите её загрузить?
 es:La nueva versión %s está disponible. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
+it:E' disponibile la versione %s. Scaricare la nuova versione?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2317,6 +2336,7 @@ uk:Доступна нова версія.
 ru:Доступна новая версия.
 es:Nueva versión disponible
 hr:Dostupna je nova inačica.
+it:E' disponibile una nuova versione. 
 -
 Skip this version
 br:Pular esta versão.
@@ -2326,3 +2346,4 @@ uk:Пропустити цю версію.
 ru:Пропустить эту версию.
 es:Saltarse esta versión.
 hr:Propusti ovu inačicu.
+it:Salta questa versione
