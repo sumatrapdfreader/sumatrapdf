@@ -210,7 +210,7 @@ public:
     FileWatcher     watcher;
     
     // synchronizer based on .pdfsync file
-    Pdfsync         *pdfsync;
+    Synchronizer    *pdfsync;
 
     bool            tocLoaded;
 
@@ -233,7 +233,7 @@ public:
 
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const char *fileName, bool showWin=true);
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y);
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
 
 #endif
 

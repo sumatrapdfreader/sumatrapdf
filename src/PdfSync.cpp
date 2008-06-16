@@ -8,10 +8,91 @@
 //#include <tchar.h>
 #include "tstr_util.h"
 #include "str_util.h"
+#include <sys/stat.h>
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
 
+// convert a PDF coordinate into a sync file coordinate
+#define PDFCOORDINATE_TO_SYNCCOORDINATE(p)          (p*65781.76)
+
+
+// Test if the file 'filename' exists
+bool FileExists( LPCTSTR filename ) {
+    struct _stat buffer ;
+    return 0 == _tstat( filename, &buffer );
+}
+ 
+
+Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename)
+{
+    TCHAR syncfile[_MAX_PATH];
+    size_t n = _tcslen(pdffilename);
+    size_t u = dimof(PDF_EXTENSION)-1;
+    if (n>u && _tcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
+        // Check if a PDFSYNC file is present
+        tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+        tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
+        if (FileExists(syncfile))
+            return new Pdfsync(syncfile);
+
+        // otherwise check if a SYNCYTEX file is present
+        tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+        tstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
+
+        return new SyncTex(syncfile);
+    }
+    else {
+        DBG_OUT("Bad PDF filename! (%s)\n", pdffilename);
+        return NULL;
+    }
+}
+
+// Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
+// the result is stored in cmdline
+UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
+{
+    LPCTSTR perc;
+    size_t len = 0;
+    cmdline[0] = '\0';
+    LPTSTR out = cmdline;
+    size_t cchOut = cchCmdline;
+    while (perc = tstr_find_char(pattern, '%')) {
+        int u = perc-pattern;
+        
+        tstr_copyn(out, cchOut, pattern, u);
+        len = tstr_len(out);
+        out += len;
+        cchOut -= len;
+
+        perc++;
+        if (*perc == 'f') {
+            tstr_copy(out, cchOut, filename);
+        }
+        else if (*perc == 'l') {
+            _sntprintf(out, cchOut, "%d", line);
+        }
+        else if (*perc == 'c') {
+            _sntprintf(out, cchOut, "%d", col);
+        }
+        else {
+            tstr_copyn(out, cchOut, perc-1, 2);
+        }
+        len = tstr_len(out);
+        out += len;
+        cchOut -= len;
+
+        pattern = perc+1;
+    }
+    
+    tstr_cat_s(cmdline, cchCmdline, pattern);
+
+    return 1;
+}
+
+
+///////////////
+//// PDFSYNC synchronizer
 
 int Pdfsync::get_record_section(int record_index)
 {
@@ -42,7 +123,7 @@ FILE *Pdfsync::opensyncfile()
     FILE *fp;
     fp = fopen(syncfilename, "rb");
     if(NULL == fp) {
-        DBG_OUT("The file %s cannot be opened\n", syncfilename);
+        DBG_OUT("The syncfile %s cannot be opened\n", syncfilename);
         return NULL;
     }
     return fp;
@@ -244,13 +325,13 @@ int Pdfsync::rebuild_index()
 
     scan_and_build_index(fp);
     fclose(fp);
-    this->index_discarded = false;
-    return 0;
+    
+    return Synchronizer::rebuild_index();
 }
 
 UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col)
 {
-    if( this->index_discarded )
+    if( this->is_index_discarded() )
         rebuild_index();
 
     FILE *fp = opensyncfile();
@@ -429,7 +510,7 @@ read_linerecords:
 
 UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
-    if( this->index_discarded )
+    if( this->is_index_discarded() )
         rebuild_index();
 
     FILE *fp = opensyncfile();
@@ -485,49 +566,67 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
 }
 
 
-// Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
-// the result is stored in cmdline
-UINT Pdfsync::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
-{
-    LPCTSTR perc;
-    size_t len = 0;
-    cmdline[0] = '\0';
-    LPTSTR out = cmdline;
-    size_t cchOut = cchCmdline;
-    while (perc = tstr_find_char(pattern, '%')) {
-        int u = perc-pattern;
-        
-        tstr_copyn(out, cchOut, pattern, u);
-        len = tstr_len(out);
-        out += len;
-        cchOut -= len;
+///////////////
+//// SYNCTEX synchronizer
 
-        perc++;
-        if (*perc == 'f') {
-            tstr_copy(out, cchOut, filename);
-        }
-        else if (*perc == 'l') {
-            _sntprintf(out, cchOut, "%d", line);
-        }
-        else if (*perc == 'c') {
-            _sntprintf(out, cchOut, "%d", col);
-        }
-        else {
-            tstr_copyn(out, cchOut, perc-1, 2);
-        }
-        len = tstr_len(out);
-        out += len;
-        cchOut -= len;
-
-        pattern = perc+1;
-    }
-    
-    tstr_cat_s(cmdline, cchCmdline, pattern);
-
-    return 1;
+int SyncTex::rebuild_index() {
+#ifdef SYNCTEX_FEATURE
+    this->scanner = synctex_scanner_new_with_output_file(this->syncfilename);
+    if (scanner)
+        return Synchronizer::rebuild_index();
+    else
+        return 1; // cannot rebuild the index
+#else
+    return Synchronizer::rebuild_index();
+#endif
 }
 
-///// DDE commands handling
+UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col)
+{
+#ifdef SYNCTEX_FEATURE
+    if( this->is_index_discarded() )
+        if (rebuild_index())
+            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+    if(synctex_edit_query(this->scanner,sheet,x,y)>0) {
+        synctex_node_t node;
+        while(node = synctex_next_result(this->scanner)) {
+            *line = synctex_node_line(node);
+            *col = synctex_node_column(node);
+            str_copy( filename, cchFilename, synctex_scanner_get_name(this->scanner,synctex_node_tag(node)));
+            return PDFSYNCERR_SUCCESS;
+        }
+    }
+    return PDFSYNCERR_NO_SYNC_AT_LOCATION;
+#else
+    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+#endif
+}
+
+UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+{
+#ifdef SYNCTEX_FEATURE
+    if( this->is_index_discarded() )
+        if (rebuild_index())
+            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+
+     if(synctex_display_query(this->scanner,srcfilename,line,col)>0) {
+         synctex_node_t node;
+          while(node = synctex_next_result(this->scanner)) {
+              *page = synctex_node_page(node);
+              *x = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_h(node));
+              *y = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_v(node));
+              return PDFSYNCERR_SUCCESS;
+          }
+      }
+
+    return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+#else
+    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+#endif
+}
+
+///////////////
+//// DDE commands handling
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -598,13 +697,17 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if (!win || WS_SHOWING_PDF != win->state)
                 win = LoadPdf(pdffile);
             
-            if (win && WS_SHOWING_PDF == win->state) {
-                assert(win->dm);
-                UINT page, x, y;
-                UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
-                WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
+            if (win && WS_SHOWING_PDF == win->state ) {
+                if (!win->pdfsync)
+                    DBG_OUT("PdfSync: No sync file loaded!\n");
+                else {
+                    assert(win->dm);
+                    UINT page, x, y;
+                    UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
+                    WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
+                    ack.fAck = 1;
+                }
             }
-            ack.fAck = 1;
         }
     }
     GlobalUnlock((HGLOBAL)hi);

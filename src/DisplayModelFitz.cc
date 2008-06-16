@@ -23,7 +23,7 @@ DisplayModelFitz *DisplayModelFitz_CreateFromFileName(
   SizeD totalDrawAreaSize,
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,
-  WindowInfo *win)
+  WindowInfo *win, bool tryrepair)
 {
     DisplayModelFitz *    dm = NULL;
 
@@ -31,7 +31,7 @@ DisplayModelFitz *DisplayModelFitz_CreateFromFileName(
     if (!dm)
         goto Error;
 
-    if (!dm->load(fileName, startPage, win))
+    if (!dm->load(fileName, startPage, win, tryrepair))
         goto Error;
 
     dm->setScrollbarsSize(scrollbarXDy, scrollbarYDx);
@@ -90,7 +90,7 @@ void DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
 
     pdf_page *page = pdfEngineFitz()->getPdfPage(*pageNo);
 
-    PdfPageInfo *pageInfo = getPageInfo(*pageNo);
+    const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
 
     p.x = *x - 0.5 - pageInfo->screenX + pageInfo->bitmapX;
     p.y = *y - 0.5 - pageInfo->screenY + pageInfo->bitmapY;

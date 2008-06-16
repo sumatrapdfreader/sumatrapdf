@@ -2088,7 +2088,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     DisplayModel *previousmodel = win->dm;
 
     win->dm = DisplayModelFitz_CreateFromFileName(fileName,
-        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
+        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, !autorefresh);
 
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
@@ -2135,10 +2135,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     win->dm->relayout(zoomVirtual, rotation);
     if (!win->dm->validPageNo(startPage))
         startPage = 1;
-    /* TODO: need to calculate proper offsetY, currently giving large offsetY
-       remembered for continuous mode breaks things (makes all pages invisible) */
-    if (win->dm->displayMode() == DM_CONTINUOUS )
-        offsetY = 0;
     /* TODO: make sure offsetX isn't bogus */
     win->dm->goToPage(startPage, offsetY, offsetX);
 
@@ -2173,9 +2169,12 @@ Exit:
         return true;
 }
 
+// This function is executed within the watching thread
 static void OnFileChange(PTSTR filename, LPARAM param)
 {
-    WindowInfo_Refresh((WindowInfo *) param, true);
+    // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
+    // Instead we just post a message to the main thread to trigger a reload
+    PostMessage(((WindowInfo *)param)->hwndFrame, WM_CHAR, 'r', 0);
 }
 
 WindowInfo* LoadPdf(const char *fileName, bool showWin)
@@ -2194,20 +2193,9 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
             return NULL;
     }
 
-    // TODO: fileName might not exist. PdfSync() should only be constructed
-    // after we've succesfully opened a PDF file
-    // define THREAD_BASED_FILEWATCH in order to use the thread-based implementation of 
-    // file change detection.
+    // TODO: fileName might not exist.
     TCHAR fullpath[_MAX_PATH];
     GetFullPathName(fileName, dimof(fullpath), fullpath, NULL);
-#ifdef THREAD_BASED_FILEWATCH
-    if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
-#else
-    win->watcher.Init(fullpath);
-#endif
-
-    win->pdfsync = new Pdfsync(fullpath);
 
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     DisplayState *ds = NULL;
@@ -2218,6 +2206,16 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
         /* failed to open */
         return NULL;
     }
+
+// Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
+#ifdef THREAD_BASED_FILEWATCH
+    if (!win->watcher.IsThreadRunning())
+        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
+#else
+    win->watcher.Init(fullpath);
+#endif
+
+    win->pdfsync = CreateSyncrhonizer(fullpath);
 
     if (!fileFromHistory) {
         AddFileToHistory(fileName);
@@ -3382,21 +3380,28 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
-static void OnInverseSearch(WindowInfo *win, int x, int y)
+static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 {
     assert(win);
-    if (!win || !win->dm) return;
+    if (!win || !win->dm ) return;
+
+    if (!win->pdfsync) {
+        DBG_OUT("Pdfsync: No sync file loaded!\n");
+        return;
+    }
 
     int pageNo = POINT_OUT_OF_PAGE;
     double dblx = x, dbly = y;
-
     win->dm->cvtScreenToUser(&pageNo, &dblx, &dbly);
     if (pageNo == POINT_OUT_OF_PAGE) 
         return;
+    x = dblx; y = dbly;
 
+    const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
+    char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];    
+    win->pdfsync->convert_coord_to_internal(&x, &y, pageInfo->pageDy, BottomLeft);
     UINT line, col;
-    char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];
-    UINT err = win->pdfsync->pdf_to_source(pageNo, dblx, dbly, srcfilename,dimof(srcfilename),&line,&col); // record 101
+    UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilename,dimof(srcfilename),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
         return;
@@ -4652,26 +4657,30 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, int page, int x, int y)
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y)
 {
     if (ret == PDFSYNCERR_SUCCESS) {
-        WindowInfo_HideMessage(win);
-
         // remember the position of the search result for drawing the rect later on
-        win->fwdsearchmarkLoc.set(x,y);
-        win->fwdsearchmarkPage = page;
-        win->showForwardSearchMark = true;
+        const PdfPageInfo *pi = win->dm->getPageInfo(page);
+        if (pi) {
+            WindowInfo_HideMessage(win);
 
-        // Scroll to show the rectangle highlighting the forward search result
-        PdfSearchResult res;
-        res.page = page;
-        res.left = x - MARK_SIZE / 2;
-        res.top = y - MARK_SIZE / 2;
-        res.right = res.left + MARK_SIZE;
-        res.bottom = res.top + MARK_SIZE;
-        win->dm->goToPage(page, 0);
-        win->dm->MapResultRectToScreen(&res);
-        return;
+            win->pdfsync->convert_coord_from_internal(&x, &y, pi->pageDy, BottomLeft);
+            win->fwdsearchmarkLoc.set(x,y);
+            win->fwdsearchmarkPage = page;
+            win->showForwardSearchMark = true;
+
+            // Scroll to show the rectangle highlighting the forward search result
+            PdfSearchResult res;
+            res.page = page;
+            res.left = x - MARK_SIZE / 2;
+            res.top = y - MARK_SIZE / 2;
+            res.right = res.left + MARK_SIZE;
+            res.bottom = res.top + MARK_SIZE;
+            win->dm->goToPage(page, 0);
+            win->dm->MapResultRectToScreen(&res);
+            return;
+        }
     }
 
     wchar_t buf[_MAX_PATH];

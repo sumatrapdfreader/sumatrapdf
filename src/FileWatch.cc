@@ -176,10 +176,8 @@ void WINAPI FileWatcher::WatchingThread( void *param )
             // BUG!
             break;
         }
-        if (fw->ReadDir() && fw->pCallback) { 
-            DBG_OUT("FILE %s CHANGED!\n", fw->szFilepath);
+        if (fw->ReadDir() && fw->pCallback)
             fw->pCallback(fw->szFilepath, fw->callbackparam);
-        }
     }
 
     fw->Clean();
@@ -239,46 +237,50 @@ bool FileWatcher::ReadDir()
 
         // is it the file that is being watched?
         if (stricmp(pFilename, pszFilename) == 0) {
-            if (pFileNotify->Action != FILE_ACTION_MODIFIED) {
-                // file touched but not modified
-            }
-            else {
-                // Check that the timestamp has change (this is necessary because the ReadDirectory API 
-                // reports duplicates)
-                struct _stat newstamp;
+            // file modified?
+            if (pFileNotify->Action == FILE_ACTION_MODIFIED) {
+#if 0
+                // Check that the timestamp has changed to prevent spurious notifications to be reported
 
                 // compare the old and new time stamps
+                struct _stat newstamp;
                 if (_tstat(szFilepath, &newstamp) == 0
-                    && difftime(newstamp.st_mtime, timestamp.st_mtime) > 0) {
-                    // Wait until the file has finished beeing written
+                    && difftime(newstamp.st_mtime, timestamp.st_mtime) > 0
+                    ) {
+                    DBG_OUT("FileWatch:change notification in %s\n", pszFilename);
 
-                    // Try to open the file with write access and no write-sharing 
-                    // so that if the file is already opened for writing then the following call 
-                    // will fail.
+                    // Check that the file has not already been reopened for writing.
+                    // we try to open the file with write access and no write-sharing 
+                    // so that if the file is opened for writing then the call fails.
                     HANDLE hf = CreateFile(this->filepath(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
                     DWORD dw = GetLastError();
-                    while (hf == INVALID_HANDLE_VALUE && (dw==ERROR_SHARING_VIOLATION || dw==ERROR_LOCK_VIOLATION)) {
-                        hf = CreateFile(this->filepath(), GENERIC_WRITE,FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-                        Sleep(500); // the higher this value is the less likely it causes a 
-                                    // sharing violation for other processes (such as latex) trying to write in the file
-                        dw = GetLastError();
-                    }
+                    if (hf == INVALID_HANDLE_VALUE && (dw==ERROR_SHARING_VIOLATION || dw==ERROR_LOCK_VIOLATION))
+                        return false;
 
                     if (hf != INVALID_HANDLE_VALUE)
                         CloseHandle(hf);
-
-                    //timestamp = newstamp;
-
+                    
                     // reread the time stamp
-                    _tstat(szFilepath, &timestamp);
+                    //_tstat(szFilepath, &timestamp);
+
+                    timestamp = newstamp;
 
                     return true; // the file has changed!
                 }
                 else {
-                    // false positive: this file notification entry is a duplicate.
-                    ;
+                    // false positive: the time stamp has not changed
+                    DBG_OUT("FileWatch:spurious change notification in %s\n", pszFilename);
                 }
+#else 
+                // we do not check for timestamp difference because
+                // the granularity is so low that it would cause some file notifications to be ignored
+                // (this happens when compiling a small .tex document with pdftex)
+                DBG_OUT("FileWatch:change detected in %s\n", pszFilename);
+                return true;
+#endif
             }
+            //else {} // file touched but not modified.
+            
         }
 
         // step to the next entry if there is one

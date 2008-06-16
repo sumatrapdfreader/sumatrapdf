@@ -201,7 +201,7 @@ PdfEngineFitz::~PdfEngineFitz()
     CloseHandle(_getPageSem);
 }
 
-bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
+bool PdfEngineFitz::load(const char *fileName, WindowInfo *win, bool tryrepair)
 {
     _windowInfo = win;
     setFileName(fileName);
@@ -213,9 +213,11 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win)
     if (error) {
         if (!strncmp(error->msg, "ioerror", 7))
             goto Error;
-        error = pdf_repairxref(_xref, (char*)fileName);
-        if (error)
-            goto Error;
+        if (tryrepair) {
+            error = pdf_repairxref(_xref, (char*)fileName);
+            if (error)
+                goto Error;
+        }
     }
 
     error = pdf_decryptxref(_xref);

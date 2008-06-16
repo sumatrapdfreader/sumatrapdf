@@ -28,6 +28,6 @@ DisplayModelFitz *DisplayModelFitz_CreateFromFileName(
   SizeD totalDrawAreaSize,
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,
-  WindowInfo *win);
+  WindowInfo *win, bool tryrepair);
 
 #endif

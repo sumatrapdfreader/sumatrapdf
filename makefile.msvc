@@ -44,9 +44,11 @@ FITZ_CFLAGS = $(CFLAGS) /TC /I$(FITZ_DIR)\include /I$(FREETYPE_DIR)\include /I$(
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" /D "NEED_GETTIMEOFDAY"
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "__func__=\"\"" /D "isnan=_isnan"
 
-SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /Isrc /IDialogSizer
+SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /Isrc /IDialogSizer /I$(ZLIB_DIR)
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "_WINDOWS" /D "__func__=\"\"" 
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
+# Flag for TeX enhancements
+#SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_PDFSYNC_GUI_ENHANCEMENT" /D "SYNCTEX_FEATURE"
 
 #CFLAGS = $(CFLAGS) /showIncludes
 #CFLAGS = $(CFLAGS) /analyze
@@ -134,7 +136,7 @@ SUMATRA_OBJS = \
 	$(O)\SumatraDialogs.obj $(O)\SumatraPDF.obj $(O)\translations.obj \
 	$(O)\translations_txt.obj $(O)\utf_util.obj $(O)\win_util.obj $(O)\WinUtil.obj \
 	$(O)\wstr_util.obj $(O)\LangMenuDef.obj $(O)\FileWatch.obj $(O)\PdfSync.obj \
-	$(O)\dialogsizer_set.obj
+	$(O)\dialogsizer_set.obj $(O)\synctex_parser.obj
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_PDB = $(O)\SumatraPDF.pdb

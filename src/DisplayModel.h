@@ -151,7 +151,7 @@ public:
 
     /* number of pages in PDF document */
     int  pageCount() const { return _pdfEngine->pageCount(); }
-    bool load(const char *fileName, int startPage, WindowInfo *win);
+    bool load(const char *fileName, int startPage, WindowInfo *win, bool tryrepair);
     bool validPageNo(int pageNo) const { return _pdfEngine->validPageNo(pageNo); }
     bool hasTocTree() { return _pdfEngine->hasTocTree(); }
     PdfTocItem *getTocTree() { return _pdfEngine->getTocTree(); }

@@ -133,7 +133,7 @@ public:
 
     int pageCount(void) const { return _pageCount; }
 
-    virtual bool load(const char *fileName, WindowInfo *windowInfo) = 0;
+    virtual bool load(const char *fileName, WindowInfo *windowInfo, bool tryrepair) = 0;
     virtual int pageRotation(int pageNo) = 0;
     virtual SizeD pageSize(int pageNo) = 0;
     virtual RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
@@ -158,7 +158,7 @@ class PdfEngineFitz : public  PdfEngine {
 public:
     PdfEngineFitz();
     virtual ~PdfEngineFitz();
-    virtual bool load(const char *fileName, WindowInfo* windowInfo);
+    virtual bool load(const char *fileName, WindowInfo* windowInfo, bool tryrepair);
     virtual int pageRotation(int pageNo);
     virtual SizeD pageSize(int pageNo);
     virtual RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,

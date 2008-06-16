@@ -9,7 +9,9 @@
 #include "base_util.h"
 #include "str_util.h"
 #include "tstr_util.h"
-
+#ifdef SYNCTEX_FEATURE
+#include "synctex_parser.h"
+#endif
 
 #ifdef USE_STL
 #include <vector>
@@ -143,35 +145,118 @@ typedef struct {
 
 #define PDF_EXTENSION     ".PDF"
 #define PDFSYNC_EXTENSION ".PDFSYNC"
+#define SYNCTEX_EXTENSION ".SYNCTEX"
 
-class Pdfsync
+// System of point coordinates
+typedef enum { TopLeft,    // origin at the top-left corner
+       BottomLeft, // origin at the bottom-left corner
+} CoordSystem;
+
+class Synchronizer
 {
 public:
-    Pdfsync(LPCTSTR filename)
-    {
-        size_t n = _tcslen(filename);
-        size_t u = dimof(PDF_EXTENSION)-1;
-        if (n>u && _tcsicmp(filename+(n-u), PDF_EXTENSION) == 0 ) {
-            tstr_copyn(this->syncfilename, dimof(this->syncfilename),
-                filename, n-u);
-            tstr_cat_s(this->syncfilename, dimof(this->syncfilename),
-                PDFSYNC_EXTENSION);
-        }
-        else {
-            size_t u = dimof(PDFSYNC_EXTENSION)-1;
-            assert(n>u && _tcsicmp(filename+(n-u),PDFSYNC_EXTENSION) == 0 );
-        }
+    Synchronizer(LPCTSTR filename) {
         this->index_discarded = true;
+        this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
+    }
+
+    // conversion from one coordinate system to another
+    void convert_coord_to_internal(UINT *x, UINT *y, UINT pageHeight, CoordSystem src)
+    {
+        if (src==this->coordsys)
+            return;    
+        *y = pageHeight - *y;
+    }
+    void convert_coord_from_internal(UINT *x, UINT *y, UINT pageHeight, CoordSystem dst)
+    {
+        if (dst==this->coordsys)
+            return;    
+        *y = pageHeight - *y;
+    }
+    
+    // Inverse-search:
+    //  - sheet: page number in the PDF (starting from 1)
+    //  - x,y: user-specified PDF-coordinates. They must be given in the system used internally by the synchronizer.
+    //  - maxy: contains the height of the page. this is necessary to convert into the coordinate-system used internally by the syncrhonizer.
+    //    For an A4 paper it is approximately equal to maxy=842.
+    //  - cchFilename: size of the buffer 'filename'
+    // The result is returned in filename, line, col
+    //  - filename: receives the name of the source file
+    //  - line: receives the line number
+    //  - col: receives the column number
+    virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col) = 0;
+    
+    // Forward-search:
+    // The result is returned in (page,x,y). The coordinates x,y are specified in the internal 
+    // coordinate system.
+    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y) = 0;
+
+    void discard_index() { this->index_discarded = true; }
+    bool is_index_discarded() { return this->index_discarded; }
+    int rebuild_index() { this->index_discarded = false; return 0; }
+
+    UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
+
+private:
+    bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
+
+protected:
+    CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
+};
+
+// Synchronizer based on .synctex file generated with SyncTex
+class SyncTex : public Synchronizer
+{
+public:
+    SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    {
+        size_t n = _tcslen(_syncfilename);
+        size_t u = dimof(SYNCTEX_EXTENSION)-1;
+        assert(n>u && _tcsicmp(_syncfilename+(n-u),SYNCTEX_EXTENSION) == 0 );
+        tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
+#ifdef SYNCTEX_FEATURE
+        this->scanner = NULL;
+#endif
+        this->coordsys = TopLeft;
+    }
+    ~SyncTex()
+    {
+#ifdef SYNCTEX_FEATURE
+        if (scanner)
+          synctex_scanner_free(scanner);
+#endif
+    }
+    void discard_index() { Synchronizer::discard_index();}
+    bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
+
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
+    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
+    int rebuild_index();
+
+private:
+    TCHAR syncfilename[_MAX_PATH];
+#ifdef SYNCTEX_FEATURE
+    synctex_scanner_t scanner;
+#endif
+};
+
+
+// Synchronizer based on .sync file generated with the pdfsync tex package
+class Pdfsync : public Synchronizer
+{
+public:
+    Pdfsync(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    {
+        size_t n = _tcslen(_syncfilename);
+        size_t u = dimof(PDFSYNC_EXTENSION)-1;
+        assert(n>u && _tcsicmp(_syncfilename+(n-u),PDFSYNC_EXTENSION) == 0 );
+        tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
+        this->coordsys = BottomLeft;
     }
 
     int rebuild_index();
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
     UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
-
-    void discard_index() { this->index_discarded = true;}
-    bool is_index_discarded() { return this->index_discarded; }
-
-    UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
 
 private:
     int get_record_section(int record_index);
@@ -185,8 +270,11 @@ private:
     vector<record_section> record_sections;
     vector<src_file> srcfiles;
     TCHAR syncfilename[_MAX_PATH];
-    bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 };
+
+
+// create a synchronizer for the given PDF file
+Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename);
 
 
 #define PDFSYNC_DDE_SERVICE_A         "SUMATRA"

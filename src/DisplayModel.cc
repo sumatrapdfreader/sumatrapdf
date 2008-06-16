@@ -141,7 +141,12 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     ds->scrollX = (int)dm->areaOffset.x;
     if (displayModeContinuous(dm->displayMode())) {
         /* TODO: should be offset of top page */
-        ds->scrollY = 0;
+        PdfPageInfo *pageInfo = dm->getPageInfo(ds->pageNo);
+        if (pageInfo)                
+            ds->scrollY = dm->areaOffset.y + PADDING_PAGE_BORDER_TOP - pageInfo->currPosY;
+        else
+            ds->scrollY = 0;
+
     } else {
         ds->scrollY = (int)dm->areaOffset.y;
     }
@@ -178,6 +183,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
     _pdfEngine = NULL;
+    _pdfSearchEngine = NULL;
     _pagesInfo = NULL;
 
     _linkCount = 0;
@@ -209,11 +215,11 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
     return &(_pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win) 
+bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win, bool tryrepair)
 { 
     assert(fileName);
-    if (!_pdfEngine->load(fileName, win))
-        return false;
+    if (!_pdfEngine->load(fileName, win, tryrepair))
+          return false;
 
     if (validPageNo(startPage))
         _startPage = startPage;
