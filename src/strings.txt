@@ -2217,6 +2217,7 @@ ru:Изменить язык (Change language)
 es:Cambiar Idioma
 hr:Promijeni jezik
 it:Cambia lingua
+fr:Changer la langue
 -
 Enter password
 br:Digite a senha
@@ -2227,6 +2228,7 @@ ru:Введите пароль
 es:Introduzca contraseña
 hr:Unesite lozinku
 it:Inserisci password
+fr:Entrer le mot de passe
 -
 Enter password for %s
 br:Digite a senha de %s
@@ -2237,6 +2239,7 @@ ru:Введите пароль для %s
 es:Introduzca contraseña para %s
 hr:Unesite lozinku za %s
 it:Inserisci password per %s
+fr:Entrer le mot de passe pour %$
 -
 Go to page
 br:Ir para a página
@@ -2247,6 +2250,7 @@ ru:Перейти на страницу
 es:Ir a la página
 hr:Idi na stranicu
 it:Vai a pagina
+fr:Aller à la page
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2257,6 +2261,7 @@ ru:Ассоциировать с PDF-файлами?
 es:¿Asociar con archivos PDF?
 hr:Asocirati sa PDF datotekama?
 it:Associare ai file PDF
+fr:Associer aux fichiers PDF ?
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2267,6 +2272,7 @@ ru:Сделать SumatraPDF стандартной программой отк�
 es:¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
 hr:Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 it:Impostare SumatraPDF come programma predefinito per i file PDF? 
+fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2277,6 +2283,7 @@ ru:Больше не спрашивать
 es:No volver a preguntar
 hr:Ubuduće nemoj pitati
 it:Non chiedermelo ancora
+fr:Ne plus le demander
 -
 &Check for new version
 br:Procurar atualizações
@@ -2287,6 +2294,7 @@ ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
 hr:Provjeravaj dostupnost nove inačice
 it:Verifica aggiornamenti
+fr:Vérifier les mises à jour
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2297,6 +2305,7 @@ ru:Обновлений не обнаружено.
 es:No hay nuevas versiones.
 hr:Nema nove inačice.
 it:Nessun aggiornamento disponibile
+fr:Pas de nouvelle version disponible
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2307,6 +2316,7 @@ ru:Вы используете самую новую версию.
 es:Su versión es la más reciente.
 hr:Imate najnoviju inačicu.
 it:Hai già l'ultima versione disponibile
+fr:Vous avez la dernière version sortie
 -
 You have version %s
 br:Você tem a versão %s
@@ -2317,6 +2327,7 @@ ru:Вы используете версию %s
 es:Tiene la versión %s
 hr:Imate inačicu %s
 it:La tua versione è la %s
+fr:Votre version est la %$
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2327,6 +2338,7 @@ ru:Доступна новая версия: %s. Хотите её загруз�
 es:La nueva versión %s está disponible. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 it:E' disponibile la versione %s. Scaricare la nuova versione?
+fr:La version %$ est disponible. Télécharger la nouvelle version ?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2337,6 +2349,7 @@ ru:Доступна новая версия.
 es:Nueva versión disponible
 hr:Dostupna je nova inačica.
 it:E' disponibile una nuova versione. 
+fr:Une nouvelle version est disponible
 -
 Skip this version
 br:Pular esta versão.
@@ -2347,3 +2360,4 @@ ru:Пропустить эту версию.
 es:Saltarse esta versión.
 hr:Propusti ovu inačicu.
 it:Salta questa versione
+fr:Ignorer cette version
