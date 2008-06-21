@@ -648,11 +648,23 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     return 0;
 }
 
-// DDE command for forward-search
-// The command must be of the form:
-//   [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298)]
+// DDE commands
+
+// forward-search command
+//  format: [ForwardSearch("<pdffilepath>","<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
+//    if newwindow = 1 then a new window is created even if the file is already open
+//    if focus = 1 then the focus is set to the window
+//  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
 #define DDECOMMAND_SYNC_A         "ForwardSearch"
-#define DDECOMMAND_SYNC_W         L"ForwardSearch"
+#define DDECOMMAND_SYNC_W         L DDECOMMAND_SYNC_A
+
+// open file command
+//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>])]
+//    if newwindow = 1 then a new window is created even if the file is already open
+//    if focus = 1 then the focus is set to the window
+//  eg: [Open("c:\file.pdf", 1, 1)]
+#define DDECOMMAND_OPEN_A         "Open"
+#define DDECOMMAND_OPEN_W         L DDECOMMAND_OPEN_A
 
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -675,40 +687,69 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         // Parse the command
         char pdffile[_MAX_PATH];
         char srcfile[_MAX_PATH];
-        UINT line,col;
-        const char *pos = command;
+        UINT line,col, newwindow = 0, setfocus = 0;
+        const char *pos;
         
-        // format is [<DDECOMMAND_SYNC_A>("<pdffile>","srcfile",<line>,<col>)]
-        if (!(
+        // Synchronization command.
+        // format is [<DDECOMMAND_SYNC_A>("<pdffile>","<srcfile>",<line>,<col>)]
+        if ( (pos = command) &&
             str_skip(&pos, "[" DDECOMMAND_SYNC_A "(\"") &&
             str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
             str_skip(&pos, "\",\"") &&
             str_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
-            2 == sscanf(pos, "\",%u,%u)]", &line, &col)
-        ))
-            DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
-        else {
+            (4 == sscanf(pos, "\",%u,%u,%u,%u)]", &line, &col, &newwindow, &setfocus)
+            || 2 == sscanf(pos, "\",%u,%u)]", &line, &col))
+            )
+        {
             // Execute the command.
 
             // check if the PDF is already opened
             WindowInfo *win = WindowInfoList_Find(pdffile);
             
             // if not then open it
-            if (!win || WS_SHOWING_PDF != win->state)
+            if (newwindow || !win || WS_SHOWING_PDF != win->state)
                 win = LoadPdf(pdffile);
             
             if (win && WS_SHOWING_PDF == win->state ) {
                 if (!win->pdfsync)
                     DBG_OUT("PdfSync: No sync file loaded!\n");
                 else {
+                    ack.fAck = 1;
                     assert(win->dm);
                     UINT page, x, y;
                     UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
                     WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
-                    ack.fAck = 1;
+                    if (setfocus)
+                        SetFocus(win->hwndFrame);
+
                 }
             }
         }
+        // Open file DDE command.
+        // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>", <newwindow>, <setfocus>)
+        else if ( (pos = command) &&
+            str_skip(&pos, "[" DDECOMMAND_OPEN_A "(\"") &&
+            str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+            (2 == sscanf(pos, "\",%u,%u)]", &newwindow, &setfocus) || str_skip(&pos, "\")]")) 
+            )
+        {
+            // check if the PDF is already opened
+            WindowInfo *win = WindowInfoList_Find(pdffile);
+            
+            // if not then open it
+            if ( newwindow || !win || WS_SHOWING_PDF != win->state)
+                win = LoadPdf(pdffile);
+            
+            if (win && WS_SHOWING_PDF == win->state ) {
+                ack.fAck = 1;
+                if (setfocus)
+                    SetFocus(win->hwndFrame);
+            }
+            
+        }
+        else
+            DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
+
     }
     GlobalUnlock((HGLOBAL)hi);
 
