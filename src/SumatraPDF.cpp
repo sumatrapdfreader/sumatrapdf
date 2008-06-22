@@ -4501,6 +4501,7 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
 
     int x, y, w, h;
     MONITORINFOEX mi;
+    mi.cbSize = sizeof(mi);
     HMONITOR m = MonitorFromWindow(win->hwndFrame, MONITOR_DEFAULTTONEAREST);
     if (!GetMonitorInfo(m, (LPMONITORINFOEX)&mi)) {
         x = 0;
