@@ -40,6 +40,7 @@
 # Uthen Phutneam - Thai
 # Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
 # Jon Ivar F. Omland - Norwegian
+# Kjell A. A. Holm - Norwegian
 # Slovak republic
 #   Radoslav Zelenák (radoslav.zelenak@elkop.sk)
 #   Bernard Holý - TREVERT
@@ -2284,6 +2285,7 @@ es:No volver a preguntar
 hr:Ubuduće nemoj pitati
 it:Non chiedermelo ancora
 fr:Ne plus le demander
+no:Ikke spør meg igjen.
 -
 &Check for new version
 br:Procurar atualizações
@@ -2295,6 +2297,7 @@ es:Comprobar actualizaciones
 hr:Provjeravaj dostupnost nove inačice
 it:Verifica aggiornamenti
 fr:Vérifier les mises à jour
+no:Se etter oppdatering
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2306,6 +2309,7 @@ es:No hay nuevas versiones.
 hr:Nema nove inačice.
 it:Nessun aggiornamento disponibile
 fr:Pas de nouvelle version disponible
+no:Ingen ny versjon tilgjenglig.
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2317,6 +2321,7 @@ es:Su versión es la más reciente.
 hr:Imate najnoviju inačicu.
 it:Hai già l'ultima versione disponibile
 fr:Vous avez la dernière version sortie
+no:Du har den nyeste versjonen.
 -
 You have version %s
 br:Você tem a versão %s
@@ -2328,6 +2333,7 @@ es:Tiene la versión %s
 hr:Imate inačicu %s
 it:La tua versione è la %s
 fr:Votre version est la %$
+no:Du har versjon %s
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2339,6 +2345,7 @@ es:La nueva versión %s está disponible. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 it:E' disponibile la versione %s. Scaricare la nuova versione?
 fr:La version %$ est disponible. Télécharger la nouvelle version ?
+no: Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2350,6 +2357,7 @@ es:Nueva versión disponible
 hr:Dostupna je nova inačica.
 it:E' disponibile una nuova versione. 
 fr:Une nouvelle version est disponible
+no:Ny versjon tilgjenglig.
 -
 Skip this version
 br:Pular esta versão.
