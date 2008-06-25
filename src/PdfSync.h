@@ -282,6 +282,22 @@ Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename);
 #define PDFSYNC_DDE_TOPIC_A           "control"
 #define PDFSYNC_DDE_TOPIC_W           L"control"
 
+// forward-search command
+//  format: [ForwardSearch("<pdffilepath>","<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
+//    if newwindow = 1 then a new window is created even if the file is already open
+//    if focus = 1 then the focus is set to the window
+//  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
+#define DDECOMMAND_SYNC_A         "ForwardSearch"
+#define DDECOMMAND_SYNC_W         L DDECOMMAND_SYNC_A
+
+// open file command
+//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>])]
+//    if newwindow = 1 then a new window is created even if the file is already open
+//    if focus = 1 then the focus is set to the window
+//  eg: [Open("c:\file.pdf", 1, 1)]
+#define DDECOMMAND_OPEN_A         "Open"
+#define DDECOMMAND_OPEN_W         L DDECOMMAND_OPEN_A
+
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam);

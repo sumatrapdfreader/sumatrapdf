@@ -6517,6 +6517,62 @@ static void ParseBgColor(const char* txt)
     gGlobalPrefs.m_bgColor = col;
 }
 
+HDDEDATA CALLBACK DdeCallback(UINT uType,
+    UINT uFmt,
+    HCONV hconv,
+    HSZ hsz1,
+    HSZ hsz2,
+    HDDEDATA hdata,
+    ULONG_PTR dwData1,
+    ULONG_PTR dwData2)
+{
+  return (0);
+}
+
+void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
+{
+    DBG_OUT("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
+    unsigned long inst = 0;
+    HSZ hszServer = NULL, hszTopic = NULL;
+    HCONV hconv = NULL;
+    HDDEDATA hddedata = NULL;
+
+    UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
+    if (result != DMLERR_NO_ERROR) {
+        DBG_OUT("DDE communication could not be initiated %d.", result);
+        goto exit;
+    }
+    hszServer = DdeCreateStringHandle(inst, server, CP_WINANSI);
+    if (hszServer == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
+    }
+    hszTopic = DdeCreateStringHandle(inst, topic, CP_WINANSI);
+    if (hszTopic == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
+    }
+    hconv = DdeConnect(inst, hszServer, hszTopic, 0);
+    if (hconv == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
+    }
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, str_len(command) + 1, 0, 0, CF_TEXT, 0);  
+    if (hddedata == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+    }
+    if (DdeClientTransaction((BYTE*)hddedata, -1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0) == 0) {
+        DBG_OUT("DDE transaction failed %u.", DdeGetLastError(inst));
+    }
+exit:
+    DdeFreeDataHandle(hddedata);
+    DdeDisconnect(hconv);
+    DdeFreeStringHandle(inst, hszTopic);
+    DdeFreeStringHandle(inst, hszServer);
+    DdeUninitialize(inst);
+}
+
+
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
     StrList *           argListRoot;
@@ -6565,6 +6621,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     -bench can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
     bool registerForPdfExtentions = true;
+    bool reuse_instance = false;
     currArg = argListRoot->next;
     char *printerName = NULL;
     while (currArg) {
@@ -6641,6 +6698,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
+        if (is_arg("-reuse-instance")) {
+            currArg = currArg->next;
+            // find the window handle of a running instance of SumatraPDF
+            reuse_instance = FindWindow(FRAME_CLASS_NAME, 0)!=NULL;
+            continue;
+        }
+
         if (is_arg("-lang")) {
             currArg = currArg->next;
             if (currArg) {
@@ -6681,10 +6745,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 ++pdfOpened;
     } else {
         while (currArg) {
-            bool showWin = !exitOnPrint;
-            win = LoadPdf(currArg->str, showWin);
-            if (!win)
-                goto Exit;
+            if (reuse_instance) {
+                // delegate file opening to a previously running instance by sending a DDE message 
+                TCHAR command[_MAX_PATH+10];
+                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%s\", 1, 1)]", currArg->str);
+                DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
+            }
+            else {
+                bool showWin = !exitOnPrint;
+                win = LoadPdf(currArg->str, showWin);
+                if (!win)
+                    goto Exit;
+            }
 
             if (exitOnPrint)
                 ShowWindow(win->hwndFrame, SW_HIDE);
@@ -6706,7 +6778,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         }
     }
 
-    if ((printerName || printDialog) && exitOnPrint)
+    if (((printerName || printDialog) && exitOnPrint)
+          || reuse_instance)
         goto Exit;
  
     if (0 == pdfOpened) {
