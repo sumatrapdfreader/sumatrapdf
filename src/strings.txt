@@ -984,7 +984,7 @@ kr:다음 장
 bn:পরের পাতায়
 gl:Páxina seguinte
 uk:Наступна сторінка
-eu:Urrengo orria
+eu:Hurrengo orria
 -
 Previous Page
 bg:Предишна страница
@@ -2207,6 +2207,7 @@ uk:Установити зворотній пошук.
 ru:Инвертировать поиск
 es:Establecer búsqueda inversa
 hr:Omogući inverznu pretragu
+eu:Alderantzizko bilaketa ezarri
 -
 Change language
 br:Mudar o idioma
@@ -2219,6 +2220,7 @@ es:Cambiar Idioma
 hr:Promijeni jezik
 it:Cambia lingua
 fr:Changer la langue
+eu:Hizkuntza aldatu
 -
 Enter password
 br:Digite a senha
@@ -2230,10 +2232,11 @@ es:Introduzca contraseña
 hr:Unesite lozinku
 it:Inserisci password
 fr:Entrer le mot de passe
+eu:Pasahitza sartu
 -
 Enter password for %s
 br:Digite a senha de %s
-de: Bitte Passwort für %s eingeben
+de:Bitte Passwort für %s eingeben
 sk:Zadať heslo pre %s
 uk:Введіть пароль для %s
 ru:Введите пароль для %s
@@ -2241,6 +2244,7 @@ es:Introduzca contraseña para %s
 hr:Unesite lozinku za %s
 it:Inserisci password per %s
 fr:Entrer le mot de passe pour %$
+eu:%s-rentzat pasahitza sartu
 -
 Go to page
 br:Ir para a página
@@ -2252,6 +2256,7 @@ es:Ir a la página
 hr:Idi na stranicu
 it:Vai a pagina
 fr:Aller à la page
+eu:...garren orrira joan
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2263,6 +2268,7 @@ es:¿Asociar con archivos PDF?
 hr:Asocirati sa PDF datotekama?
 it:Associare ai file PDF
 fr:Associer aux fichiers PDF ?
+eu:PDF fitxategiekin lotu?
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2274,6 +2280,7 @@ es:¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
 hr:Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 it:Impostare SumatraPDF come programma predefinito per i file PDF? 
 fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
+eu:PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2286,6 +2293,7 @@ hr:Ubuduće nemoj pitati
 it:Non chiedermelo ancora
 fr:Ne plus le demander
 no:Ikke spør meg igjen.
+eu:Ez berriz galdetu
 -
 &Check for new version
 br:Procurar atualizações
@@ -2298,6 +2306,7 @@ hr:Provjeravaj dostupnost nove inačice
 it:Verifica aggiornamenti
 fr:Vérifier les mises à jour
 no:Se etter oppdatering
+eu:Bertsio berriagorik ba ote den begiratu
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2310,6 +2319,7 @@ hr:Nema nove inačice.
 it:Nessun aggiornamento disponibile
 fr:Pas de nouvelle version disponible
 no:Ingen ny versjon tilgjenglig.
+eu:Ez dago bertsio berririk.
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2322,6 +2332,7 @@ hr:Imate najnoviju inačicu.
 it:Hai già l'ultima versione disponibile
 fr:Vous avez la dernière version sortie
 no:Du har den nyeste versjonen.
+eu:Azkeneko bertsioa da daukazuna.
 -
 You have version %s
 br:Você tem a versão %s
@@ -2334,6 +2345,7 @@ hr:Imate inačicu %s
 it:La tua versione è la %s
 fr:Votre version est la %$
 no:Du har versjon %s
+eu:%s bertsioa daukazu.
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2345,7 +2357,8 @@ es:La nueva versión %s está disponible. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 it:E' disponibile la versione %s. Scaricare la nuova versione?
 fr:La version %$ est disponible. Télécharger la nouvelle version ?
-no: Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
+no:Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
+eu:%s bertsio berria eskuragarri dago. Jeisterik nahi?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2358,6 +2371,7 @@ hr:Dostupna je nova inačica.
 it:E' disponibile una nuova versione. 
 fr:Une nouvelle version est disponible
 no:Ny versjon tilgjenglig.
+eu:Bertsio berria eskuragarri duzu.
 -
 Skip this version
 br:Pular esta versão.
@@ -2369,3 +2383,4 @@ es:Saltarse esta versión.
 hr:Propusti ovu inačicu.
 it:Salta questa versione
 fr:Ignorer cette version
+eu:Bertsio berria saihestu
