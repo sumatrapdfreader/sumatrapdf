@@ -56,7 +56,7 @@
 # milanso (milanso@gmail.com) - Srpski/Latinica (Serbian/Latin)
 # Горан Обрадовић - Srpski/Latinica (Serbian/Cyrillic )
 # Yudi Wibisono (http://yudiwbs.wordpress.com) - Indonesia
-# Goce Mitevski (goce.mitevski@gmail.com) - Macedonian/Cyrillic 
+# Goce Mitevski - Macedonian 
 # Elly Câmpeanu - Romanian
 # Hong Seung-geol (hsgno5@hanmir.com) – Korean
 # Shabab Mustafa (shabab.mustafa@gmail.com) - Bengali/ বাংলা
@@ -480,7 +480,7 @@ ml:കാഴ്ച്ച
 he:&תצוגה
 sp-rs:Prikaz
 id:&Lihat
-mk:&Приказ
+mk:&Поглед
 ro:&Vizualizare
 kr:보기(&V)
 bn:দেখুন
@@ -1918,7 +1918,7 @@ ml:സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
 he:אודות סומטרהPDF
 sp-rs:O programu SumatraPDF
 id:Tentang SumatraPDF
-mk:За апликацијата SumatraPDF
+mk:За SumatraPDF
 ro:Despre SumatraPDF
 kr:SumatraPDF 정보
 bn:”SumatraPDF” সম্পর্কিত তথ্য
@@ -1964,7 +1964,7 @@ tw:已經把 SumatraPDF 設為預設的PDF閱讀工具
 ml:സുമാത്രാപിഡീഎഫ് ആണ് ഇപ്പൊള്‍ നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം
 sp-rs:SumatraPDF je sada podrazumevani čitač PDF dokumenata
 id:SumatraPDF sekarang menjadi pembaca-PDF utama.
-mk:Сега SumatraPDF е основен читач за PDF документи.
+mk:Сега SumatraPDF е твојот основен читач на PDF документи.
 ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
 kr:SumatraPDF를 기본 PDF 파일 뷰어로 지정합니다.
 bn:”SumatraPDF” এখন আপনার ডিফল্ট পিডিএফ রিডার
@@ -2208,6 +2208,7 @@ ru:Инвертировать поиск
 es:Establecer búsqueda inversa
 hr:Omogući inverznu pretragu
 eu:Alderantzizko bilaketa ezarri
+mk:Активирај инверзно пребарување
 -
 Change language
 br:Mudar o idioma
@@ -2221,6 +2222,7 @@ hr:Promijeni jezik
 it:Cambia lingua
 fr:Changer la langue
 eu:Hizkuntza aldatu
+mk:Смени јазик
 -
 Enter password
 br:Digite a senha
@@ -2233,6 +2235,7 @@ hr:Unesite lozinku
 it:Inserisci password
 fr:Entrer le mot de passe
 eu:Pasahitza sartu
+mk:Внеси лозинка
 -
 Enter password for %s
 br:Digite a senha de %s
@@ -2245,6 +2248,7 @@ hr:Unesite lozinku za %s
 it:Inserisci password per %s
 fr:Entrer le mot de passe pour %$
 eu:%s-rentzat pasahitza sartu
+mk:Внеси лозинка за %s
 -
 Go to page
 br:Ir para a página
@@ -2257,6 +2261,7 @@ hr:Idi na stranicu
 it:Vai a pagina
 fr:Aller à la page
 eu:...garren orrira joan
+mk:Појди на страница
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2269,6 +2274,7 @@ hr:Asocirati sa PDF datotekama?
 it:Associare ai file PDF
 fr:Associer aux fichiers PDF ?
 eu:PDF fitxategiekin lotu?
+mk:Да управувам со PDF датотеки?
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2281,6 +2287,7 @@ hr:Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 it:Impostare SumatraPDF come programma predefinito per i file PDF? 
 fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 eu:PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
+mk:Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2294,6 +2301,7 @@ it:Non chiedermelo ancora
 fr:Ne plus le demander
 no:Ikke spør meg igjen.
 eu:Ez berriz galdetu
+mk:Не ме прашувај повторно
 -
 &Check for new version
 br:Procurar atualizações
@@ -2307,6 +2315,7 @@ it:Verifica aggiornamenti
 fr:Vérifier les mises à jour
 no:Se etter oppdatering
 eu:Bertsio berriagorik ba ote den begiratu
+mk:&Провери за нова верзија
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2320,6 +2329,7 @@ it:Nessun aggiornamento disponibile
 fr:Pas de nouvelle version disponible
 no:Ingen ny versjon tilgjenglig.
 eu:Ez dago bertsio berririk.
+mk:Нема понова верзија.
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2333,6 +2343,7 @@ it:Hai già l'ultima versione disponibile
 fr:Vous avez la dernière version sortie
 no:Du har den nyeste versjonen.
 eu:Azkeneko bertsioa da daukazuna.
+mk:Ја имаш најновата верзија.
 -
 You have version %s
 br:Você tem a versão %s
@@ -2346,6 +2357,7 @@ it:La tua versione è la %s
 fr:Votre version est la %$
 no:Du har versjon %s
 eu:%s bertsioa daukazu.
+mk:Имаш верзија %s
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2359,6 +2371,7 @@ it:E' disponibile la versione %s. Scaricare la nuova versione?
 fr:La version %$ est disponible. Télécharger la nouvelle version ?
 no:Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 eu:%s bertsio berria eskuragarri dago. Jeisterik nahi?
+mk:Новата верзија %s е достапна. Сакаш да ја преземеш?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2372,6 +2385,7 @@ it:E' disponibile una nuova versione.
 fr:Une nouvelle version est disponible
 no:Ny versjon tilgjenglig.
 eu:Bertsio berria eskuragarri duzu.
+mk:Достапна е нова верзија.
 -
 Skip this version
 br:Pular esta versão.
@@ -2384,3 +2398,4 @@ hr:Propusti ovu inačicu.
 it:Salta questa versione
 fr:Ignorer cette version
 eu:Bertsio berria saihestu
+mk:Прескокни ја оваа верзија
