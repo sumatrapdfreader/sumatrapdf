@@ -4836,6 +4836,8 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         if (ctrlPressed) {
             win->FindStart();
         }
+    } else if (VK_F11 == key) {
+        OnMenuViewFullscreen(win);
     } else if (VK_F12 == key) {
         if (win)
             win->ToggleTocBox();
@@ -6424,9 +6426,9 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
         MessageBox(win->hwndFrame, "Couldn't initialize printer", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
-	PRINTPAGERANGE pr;
-	pr.nFromPage =1;
-	pr.nToPage =win->dm->pageCount();
+    PRINTPAGERANGE pr;
+    pr.nFromPage =1;
+    pr.nToPage =win->dm->pageCount();
     if (CheckPrinterStretchDibSupport(win->hwndFrame, hdcPrint))
         PrintToDevice(win->dm, hdcPrint, devMode, 1, &pr );
 Exit:
