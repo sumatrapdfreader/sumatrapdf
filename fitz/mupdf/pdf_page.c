@@ -186,6 +186,9 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "CropBox");
 	if (!obj)
 		obj = fz_dictgets(dict, "MediaBox");
+	error = pdf_resolve(&obj, xref);
+	if (error)
+		return fz_rethrow(error, "cannot resolve page bounds");
 	if (!fz_isarray(obj))
 		return fz_throw("cannot find page bounds");
 	bbox = pdf_torect(obj);
@@ -223,7 +226,12 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	obj = fz_dictgets(dict, "Resources");
 	if (!obj)
-		return fz_throw("cannot find page resources");
+	{
+		fz_warn("cannot find page resources, proceeding anyway.");
+		error = fz_newdict(&obj, 0);
+		if (error)
+			return fz_rethrow(error, "cannot create fake page resources");
+	}
 	error = pdf_resolve(&obj, xref);
 	if (error)
 		return fz_rethrow(error, "cannot resolve page resources");

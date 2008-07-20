@@ -1,37 +1,134 @@
 #include <fitz.h>
 #include <mupdf.h>
 
+static fz_error *
+pdf_loadcompsiteshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *funcdict, float t0, float t1)
+{
+	fz_error *error;
+	pdf_function *func;
+	int i;
+
+	error = pdf_loadfunction(&func, xref, funcdict);
+	if (error)
+		return fz_rethrow(error, "unable to evaluate shading function");
+
+	for (i = 0; i < 256; ++i)
+	{
+		float t = t0 + (i / 256.0) * (t1 - t0);
+
+		error = pdf_evalfunction(func, &t, 1, shade->function[i], shade->cs->n);
+		if (error)
+			return fz_rethrow(error, "unable to evaluate shading function at %g", t);
+	}
+
+	pdf_dropfunction(func);
+
+	return fz_okay;
+}
+
+static fz_error *
+pdf_loadcomponentshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *funcs, float t0, float t1)
+{
+	fz_error *error;
+	pdf_function **func = nil;
+	int i;
+
+	if (fz_arraylen(funcs) != shade->cs->n)
+	{
+		error = fz_throw("incorrect number of shading functions");
+		goto cleanup;
+	}
+
+	func = fz_malloc(fz_arraylen(funcs) * sizeof(pdf_function *));
+	if (!func)
+	{
+		error = fz_throw("outofmem: shading function"); 
+		goto cleanup;
+	}
+	memset(func, 0x00, fz_arraylen(funcs) * sizeof(pdf_function *));
+
+	for (i = 0; i < fz_arraylen(funcs); i++)
+	{
+		fz_obj *obj = nil;
+
+		obj = fz_arrayget(funcs, i);
+		if (!obj)
+		{
+			error = fz_throw("shading function component not found");
+			goto cleanup;
+		}
+
+		error = pdf_loadfunction(&func[i], xref, obj);
+		if (error)
+		{
+			error = fz_rethrow(error, "unable to evaluate shading function");
+			goto cleanup;
+		}
+	}
+
+	for (i = 0; i < 256; ++i)
+	{
+		float t = t0 + (i / 256.0) * (t1 - t0);
+		int k;
+
+		for (k = 0; k < fz_arraylen(funcs); k++)
+		{
+			error = pdf_evalfunction(func[k], &t, 1, &shade->function[i][k], 1);
+			if (error)
+			{
+				error = fz_rethrow(error, "unable to evaluate shading function at %g", t);
+				goto cleanup;
+			}
+		}
+	}
+
+	for (i = 0; i < fz_arraylen(funcs); i++)
+		pdf_dropfunction(func[i]);
+	fz_free(func);
+
+	return fz_okay;
+
+cleanup:
+	if (func)
+	{
+		for (i = 0; i < fz_arraylen(funcs); i++)
+			if (func[i])
+				pdf_dropfunction(func[i]);
+		fz_free(func);
+	}
+
+	return error;
+}
+
 fz_error *
 pdf_loadshadefunction(fz_shade *shade, pdf_xref *xref, fz_obj *shading, float t0, float t1)
 {
 	fz_error *error;
-	float t;
 	fz_obj *obj;
-	pdf_function *func;
-	int i;
 
 	obj = fz_dictgets(shading, "Function");
-	if (obj)
+	error = pdf_resolve(&obj, xref);
+	if (error)
+		return fz_rethrow(error, "couldn't resolve shading function");
+	if (!obj)
+		return fz_throw("shading function not found");
+	if (!fz_isdict(obj) && !fz_isarray(obj))
 	{
-		shade->usefunction = 1;
-
-		error = pdf_loadfunction(&func, xref, obj);
-		if (error)
-			return fz_rethrow(error, "unable to evaluate shading function");
-
-		for (i = 0; i < 256; ++i)
-		{
-			t = t0 + (i / 256.0) * (t1 - t0);
-			error = pdf_evalfunction(func, &t, 1, shade->function[i], shade->cs->n);
-			if (error)
-			{
-				pdf_dropfunction(func);
-				return fz_rethrow(error, "unable to evaluate shading function at point");
-			}
-		}
-
-		pdf_dropfunction(func);
+		fz_dropobj(obj);
+		return fz_throw("invalid shading function");
 	}
+
+	shade->usefunction = 1;
+
+	if (fz_isdict(obj))
+		error = pdf_loadcompsiteshadefunc(shade, xref, shading, obj, t0, t1);
+	else if (fz_isarray(obj))
+		error = pdf_loadcomponentshadefunc(shade, xref, shading, obj, t0, t1);
+
+	fz_dropobj(obj);
+
+	if (error)
+		return fz_rethrow(error, "couldn't load shading function");
 
 	return fz_okay;
 }

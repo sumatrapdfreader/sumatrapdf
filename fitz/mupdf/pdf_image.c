@@ -33,6 +33,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	pdf_logimage("load inline image %p {\n", img);
 
 	img->super.refs = 1;
+        img->super.cs = nil;
 	img->super.loadtile = pdf_loadtile;
 	img->super.drop = pdf_dropimage;
 	img->super.n = 0;
@@ -50,19 +51,8 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 	pdf_logimage("size %dx%d %d\n", img->super.w, img->super.h, img->bpc);
 
-	if (ismask)
-	{
-		pdf_logimage("is mask\n");
-		img->super.cs = nil;
-		img->super.n = 0;
-		img->super.a = 1;
-		img->bpc = 1;
-	}
-
 	if (cs)
 	{
-		img->super.cs = nil;
-
 		if (fz_isname(cs))
 		{
 			fz_obj *csd = fz_dictgets(rdb, "ColorSpace");
@@ -94,6 +84,23 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 		img->super.n = img->super.cs->n;
 		img->super.a = 0;
+	}
+
+	if (ismask)
+	{
+		pdf_logimage("is mask\n");
+		if (img->super.cs)
+		{
+			fz_warn("masks can not have colorspace, proceeding anyway.");
+			fz_dropcolorspace(img->super.cs);
+			img->super.cs = nil;
+		}
+		if (img->bpc != 1)
+			fz_warn("masks can only have one component, proceeding anyway.");
+
+		img->bpc = 1;
+		img->super.n = 0;
+		img->super.a = 1;
 	}
 
 	if (fz_isarray(d))
@@ -278,6 +285,15 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	if (ismask)
 	{
 		pdf_logimage("is mask\n");
+		if (cs)
+		{
+			fz_warn("masks can not have colorspace, proceeding anyway.");
+			fz_dropcolorspace(cs);
+			cs = nil;
+		}
+		if (bpc != 1)
+			fz_warn("masks can only have one component, proceeding anyway.");
+
 		bpc = 1;
 		n = 0;
 		a = 1;

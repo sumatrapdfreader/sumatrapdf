@@ -370,6 +370,8 @@ pdf_sortcmap(pdf_cmap *cmap)
 	pdf_range *a;			/* last written range on output */
 	pdf_range *b;			/* current range examined on input */
 
+	if (cmap->rlen == 0)
+		return fz_okay;
 	qsort(cmap->ranges, cmap->rlen, sizeof(pdf_range), cmprange);
 
 	a = cmap->ranges;
@@ -466,7 +468,6 @@ pdf_sortcmap(pdf_cmap *cmap)
 
 	cmap->rlen = a - cmap->ranges + 1;
 
-	assert(cmap->rlen > 0);
 
 	newranges = fz_realloc(cmap->ranges, cmap->rlen * sizeof(pdf_range));
 	if (!newranges)

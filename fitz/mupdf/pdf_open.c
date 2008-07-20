@@ -28,7 +28,7 @@ loadversion(pdf_xref *xref)
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		return fz_throw("cannot recognize version marker");
 
-	xref->version = (int) atof(buf + 5) * 10.0 + 0.5;
+	xref->version = (int) (atof(buf + 5) * 10.0 + 0.5);
 
 	pdf_logxref("version %d.%d\n", xref->version / 10, xref->version % 10);
 
@@ -91,7 +91,7 @@ readoldtrailer(pdf_xref *xref, char *buf, int cap)
 	error = fz_readline(xref->file, buf, cap);
 	if (error)
 		return fz_rethrow(error, "cannot read xref marker");
-	if (strcmp(buf, "xref") != 0)
+	if (strncmp(buf, "xref", 4) != 0)
 		return fz_throw("cannot find xref marker");
 
 	while (1)
@@ -215,7 +215,7 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	error = fz_readline(xref->file, buf, cap);
 	if (error)
 		return fz_rethrow(error, "cannot read xref marker");
-	if (strcmp(buf, "xref") != 0)
+	if (strncmp(buf, "xref", 4) != 0)
 		return fz_throw("cannot find xref marker");
 
 	while (1)

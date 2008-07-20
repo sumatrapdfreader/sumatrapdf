@@ -66,6 +66,8 @@ pdf_closexref(pdf_xref *xref)
 		fz_dropobj(xref->info);
 	if (xref->dests)
 		fz_dropobj(xref->dests);
+	if (xref->crypt)
+		pdf_dropcrypt(xref->crypt);
 
 	fz_free(xref);
 }
@@ -79,6 +81,8 @@ pdf_initxref(pdf_xref *xref)
 
 	xref->cap = 128;
 	xref->len = 1;
+
+	xref->crypt = nil;
 
 	xref->table[0].type = 'f';
 	xref->table[0].mark = 0;

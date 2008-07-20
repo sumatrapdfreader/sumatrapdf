@@ -747,6 +747,19 @@ pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 					return fz_rethrow(error, "cannot load pattern");
 			}
 
+			else if (!strcmp(fz_toname(name), "DeviceGray"))
+				*csp = pdf_devicegray;
+			else if (!strcmp(fz_toname(name), "DeviceRGB"))
+				*csp = pdf_devicergb;
+			else if (!strcmp(fz_toname(name), "DeviceCMYK"))
+				*csp = pdf_devicecmyk;
+			else if (!strcmp(fz_toname(name), "G"))
+				*csp = pdf_devicegray;
+			else if (!strcmp(fz_toname(name), "RGB"))
+				*csp = pdf_devicergb;
+			else if (!strcmp(fz_toname(name), "CMYK"))
+				*csp = pdf_devicecmyk;
+
 			else
 				return fz_throw("syntaxerror: unknown colorspace %s", fz_toname(name));
 

@@ -193,7 +193,7 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	if (xref->crypt)
 	{
-	    sprintf(buf, "Standard %d bit RC4", xref->crypt->n * 8);
+	    sprintf(buf, "Standard %d bit RC4", xref->crypt->len * 8);
 	    SetDlgItemTextA(hwnd, 0x12, buf);
 	    strcpy(buf, "");
 	    if (xref->crypt->p & (1 << 2))

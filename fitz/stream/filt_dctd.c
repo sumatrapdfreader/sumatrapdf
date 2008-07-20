@@ -57,11 +57,13 @@ fz_newdctd(fz_filter **fp, fz_obj *params)
 
 	FZ_NEWFILTER(fz_dctd, d, dctd);
 
-	colortransform = 1;
+	colortransform = -1; /* "unset" */
 
-	if (params) {
+	if (params)
+	{
 		obj = fz_dictgets(params, "ColorTransform");
-		if (obj) colortransform = fz_toint(obj);
+		if (obj)
+			colortransform = fz_toint(obj);
 	}
 
 	d->colortransform = colortransform;
@@ -149,23 +151,33 @@ fz_processdctd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			if (i == JPEG_SUSPENDED)
 				goto needinput;
 
-			/* FIXME: default value if ColorTransform is not set */
+			/* default value if ColorTransform is not set */
+			if (d->colortransform == -1)
+			{
+			    if (d->cinfo.num_components == 3)
+				d->colortransform = 1;
+			    else
+				d->colortransform = 0;
+			}
 
-			if (!d->cinfo.saw_Adobe_marker) {
-				switch (d->cinfo.num_components) {
-					case 3:
-						if (d->colortransform)
-							d->cinfo.jpeg_color_space = JCS_YCbCr;
-						else
-							d->cinfo.jpeg_color_space = JCS_RGB;
-						break;
-					case 4:
-						if (d->colortransform)
-							d->cinfo.jpeg_color_space = JCS_YCCK;
-						else
-							d->cinfo.jpeg_color_space = JCS_CMYK;
-						break;
-				}
+			if (d->cinfo.saw_Adobe_marker)
+				d->colortransform = d->cinfo.Adobe_transform;
+
+			/* Guess the input colorspace, and set output colorspace accordingly */
+			switch (d->cinfo.num_components)
+			{
+				case 3:
+					if (d->colortransform)
+						d->cinfo.jpeg_color_space = JCS_YCbCr;
+					else
+						d->cinfo.jpeg_color_space = JCS_RGB;
+					break;
+				case 4:
+					if (d->colortransform)
+						d->cinfo.jpeg_color_space = JCS_YCCK;
+					else
+						d->cinfo.jpeg_color_space = JCS_CMYK;
+					break;
 			}
 
 			/* fall through */

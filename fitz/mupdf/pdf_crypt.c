@@ -644,7 +644,7 @@ pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, int oid, int gid)
 	createobjkey(crypt, oid, gid, key);
 	error = fz_newarc4filter(fp, key, crypt->keylen);
 	if (error)
-	    return fz_rethrow(error, "cannot create crypt filter");
+		return fz_rethrow(error, "cannot create crypt filter");
 	return fz_okay;
 }
 

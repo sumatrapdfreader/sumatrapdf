@@ -56,7 +56,7 @@ switch $(OS)
 
 	case MACOSX :
 		FLAG_LDALL += -L/opt/local/lib -L/usr/X11R6/lib ;
-		FLAG_CCALL += -I/usr/X11R6/include -std=gnu99 -DHAVE_C99 -Wno-pointer-sign ;
+		FLAG_CCALL += -I/opt/local/include -I/usr/X11R6/include -std=gnu99 -DHAVE_C99 -Wno-pointer-sign ;
 		# FLAG_CCRELEASE = -DARCH_PPC -faltivec -fast ; # not true on intel macs
 		FLAG_CCRELEASE = -fast ;
 
