@@ -307,6 +307,7 @@ decodemicrosoftplatform(char* source, int sourcelen,char* dest, int destlen, int
 	{
 	case MS_ENC_SYMBOL:
 	case MS_ENC_UNI_BMP:
+	case MS_ENC_UNI_FULL_REPETOIRE:
 		err = decodeunicodeBMP(source,sourcelen,dest,destlen);
 		break;
 	default:
