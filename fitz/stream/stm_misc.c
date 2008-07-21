@@ -83,7 +83,10 @@ fz_readall(fz_buffer **bufp, fz_stream *stm)
 	{
 		if (len - pos == 0)
 		{
-			len += CHUNKSIZE;
+			if (len == 0)
+				len = CHUNKSIZE;
+			else
+				len *= 2;
 			newbuf = fz_realloc(buf, len);
 			if (!newbuf)
 			{
