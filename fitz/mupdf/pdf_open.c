@@ -660,8 +660,8 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 
 	assert(xref->table == nil);
 
-	xref->cap = fz_toint(size);
-	xref->len = fz_toint(size);
+	xref->cap = fz_toint(size) + 1;
+	xref->len = xref->cap;
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
 	if (!xref->table)
 	{
