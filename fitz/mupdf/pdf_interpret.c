@@ -351,7 +351,7 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 				}
 			}
 
-			puts("we encountered a blend mode");
+			/*puts("we encountered a blend mode");*/
 			if (gstate->blendmode == FZ_BNORMAL)
 			    error = fz_newovernode(&blend);
 			else
@@ -376,7 +376,7 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 				return error;
 			    /* TODO: we should do something here, like inserting a mask node */
 			    /* TODO: how to deal with the non-recursive nature of pdf soft masks? */
-			    puts("we encountered a soft mask");
+			    /*puts("we encountered a soft mask");*/
 			}
 			fz_dropobj(val);
 		}

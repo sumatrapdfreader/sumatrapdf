@@ -22,7 +22,7 @@ ifeq ($(WITH_JASPER),)
 WITH_JASPER=yes
 endif
 
-INCS = -I include
+INCS = -I include -I cmaps
 
 FREETYPE_CFLAGS  = `freetype-config --cflags`
 FREETYPE_LDFLAGS = `freetype-config --libs`
@@ -61,6 +61,8 @@ ifeq ($(WITH_JASPER),yes)
 CFLAGS += -DHAVE_JASPER
 LDFLAGS += -ljasper
 endif
+
+CFLAGS += -DUSE_STATIC_CMAPS
 
 OUTDIR=obj-$(CFG)
 

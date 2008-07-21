@@ -40,6 +40,7 @@ cmprange(const void *va, const void *vb)
 struct pdf_cmap_s
 {
 	int refs;
+	int staticdata;
 	char cmapname[32];
 
 	char usecmapname[32];
@@ -75,6 +76,7 @@ pdf_newcmap(pdf_cmap **cmapp)
 		return fz_throw("outofmem: cmap struct");
 
 	cmap->refs = 1;
+	cmap->staticdata = 0;
 	strcpy(cmap->cmapname, "");
 
 	strcpy(cmap->usecmapname, "");
@@ -109,8 +111,11 @@ pdf_dropcmap(pdf_cmap *cmap)
 	{
 		if (cmap->usecmap)
 			pdf_dropcmap(cmap->usecmap);
-		fz_free(cmap->ranges);
-		fz_free(cmap->table);
+		if (!cmap->staticdata)
+		{
+			fz_free(cmap->ranges);
+			fz_free(cmap->table);
+		}
 		fz_free(cmap);
 	}
 }
@@ -213,6 +218,8 @@ pdf_addcodespace(pdf_cmap *cmap, unsigned lo, unsigned hi, int n)
 {
 	int i;
 
+	assert(!cmap->staticdata);
+
 	if (cmap->ncspace + 1 == MAXCODESPACE)
 		return fz_throw("assert: too many code space ranges");
 
@@ -236,6 +243,7 @@ pdf_addcodespace(pdf_cmap *cmap, unsigned lo, unsigned hi, int n)
 static fz_error *
 addtable(pdf_cmap *cmap, int value)
 {
+	assert(!cmap->staticdata);
 	if (cmap->tlen + 1 > cmap->tcap)
 	{
 		int newcap = cmap->tcap == 0 ? 256 : cmap->tcap * 2;
@@ -257,6 +265,7 @@ addtable(pdf_cmap *cmap, int value)
 static fz_error *
 addrange(pdf_cmap *cmap, int low, int high, int flag, int offset)
 {
+	assert(!cmap->staticdata);
 	if (cmap->rlen + 1 > cmap->rcap)
 	{
 		pdf_range *newranges;
@@ -369,6 +378,8 @@ pdf_sortcmap(pdf_cmap *cmap)
 	int *newtable;
 	pdf_range *a;			/* last written range on output */
 	pdf_range *b;			/* current range examined on input */
+
+	assert(!cmap->staticdata);
 
 	if (cmap->rlen == 0)
 		return fz_okay;
@@ -1147,6 +1158,161 @@ cleanup:
 	return error; /* already rethrown */
 }
 
+#ifdef WIN32
+#define DIR_SEP_STR "\\"
+#else
+#define DIR_SEP_STR "/"
+#endif
+
+#include <ctype.h>
+
+static void filenamesanitze(char *name)
+{
+	char *tmp = &(name[0]);
+	while (*tmp) {
+		*tmp = tolower(*tmp);
+		if ('-' == *tmp)
+			*tmp = '_';
+		++tmp;
+	}
+}
+
+static fz_error*
+pdf_dumpcmapasccode(pdf_cmap *cmap, char *name)
+{
+	char filenamec[256];
+	char id[256];
+	char idupper[256];
+	char *tmp;
+	int i, j;
+	pdf_range *r;
+	int *t;
+	fz_stream *file;
+	fz_error *error;
+
+	strlcpy(filenamec, name, sizeof filenamec);
+	strlcat(filenamec, ".c", sizeof filenamec);
+	filenamesanitze(filenamec);
+
+	strlcpy(id, name, sizeof id);
+	filenamesanitze(id);
+
+	strlcpy(idupper, name, sizeof idupper);
+	tmp = &(idupper[0]);
+	while (*tmp) {
+		*tmp = toupper(*tmp);
+		if ('-' == *tmp)
+			*tmp = '_';
+		++tmp;
+	}
+
+	printf("\nCMAP: filenamec='%s'\n", filenamec);
+	error = fz_openwfile(&file, filenamec);
+	if (error)
+	{
+		return fz_rethrow(error, "cannot open file '%s'", filenamec);
+	}
+
+	fz_print(file, "#ifdef USE_%s\n", idupper);
+	fz_print(file, "\n");
+
+	fz_print(file, "#ifdef INCLUDE_CMAP_DATA\n");
+	fz_print(file, "\n");
+
+	/* generate table data */
+	t = cmap->table;
+	if (t && cmap->tlen) {
+		fz_print(file, "static const int g_cmap_%s_table[%d] = {\n", id, cmap->tlen);
+		for (i = 0; i < cmap->tlen-1; i++) {
+			fz_print(file, " %d, ", *t++);
+			if (0 == ((i + 1) % 8))
+				fz_print(file, "\n");
+		}
+		fz_print(file, " %d };\n\n", *t++);
+	}
+
+	/* generate ranges data */
+	r = cmap->ranges;
+	if (r && cmap->rlen) {
+		fz_print(file, "static const pdf_range g_cmap_%s_ranges[%d] = {\n", id, cmap->rlen);
+		for (i = 0; i < cmap->rlen-1; i++) {
+			fz_print(file, " {%d, %d, %d, %d},\n", r->low, r->high, r->flag, r->offset);
+			++r;
+		}
+		fz_print(file, " {%d, %d, %d, %d}\n};\n", r->low, r->high, r->flag, r->offset);
+	}
+	fz_print(file, "\n");
+
+	/* generate new function */
+	fz_print(file, "static fz_error *new_%s(pdf_cmap **out)\n", id);
+	fz_print(file, "{\n");
+	fz_print(file, "\tfz_error *error;\n");
+	fz_print(file, "\tpdf_cmap *cmap;\n");
+	fz_print(file, "\terror = pdf_newcmap(&cmap);\n");
+	fz_print(file, "\tif (error)\n");
+	fz_print(file, "\t\treturn error;\n");
+	fz_print(file, "\tcmap->staticdata = 1;\n");
+	fz_print(file, "\tcmap->ranges = (pdf_range*)&g_cmap_%s_ranges[0];\n", id);
+	fz_print(file, "\tcmap->table = (int*)&g_cmap_%s_table[0];\n", id);
+	fz_print(file, "\tstrcpy(cmap->cmapname, \"%s\");\n", cmap->cmapname);
+	fz_print(file, "\tstrcpy(cmap->usecmapname, \"%s\");\n", cmap->usecmapname);
+	fz_print(file, "\tcmap->wmode = %d;\n", cmap->wmode);
+	fz_print(file, "\tcmap->ncspace = %d;\n", cmap->ncspace);
+	for (i = 0; i < cmap->ncspace; i++)
+	{
+		fz_print(file, "\tcmap->cspace[%d].n = %d;\n", i, cmap->cspace[i].n);
+		for (j = 0; j < 4; j++)
+		{
+			fz_print(file, "\tcmap->cspace[%d].lo[%d] = %d;\n", i, j, (int)cmap->cspace[i].lo[j]);
+			fz_print(file, "\tcmap->cspace[%d].hi[%d] = %d;\n", i, j, (int)cmap->cspace[i].hi[j]);
+		}
+	}
+	fz_print(file, "\t\n");
+	fz_print(file, "\tcmap->rlen = %d;\n", cmap->rlen);
+	fz_print(file, "\tcmap->rcap = %d;\n", cmap->rcap);
+	fz_print(file, "\tcmap->tlen = %d;\n", cmap->tlen);
+	fz_print(file, "\tcmap->tcap = %d;\n", cmap->tcap);
+	fz_print(file, "\t*out = cmap;\n");
+	fz_print(file, "\n");
+	fz_print(file, "\treturn fz_okay;\n");
+	fz_print(file, "}\n");
+
+	fz_print(file, "\n");
+
+	/* generate part that constructs this cmap if name matches */
+	fz_print(file, "#else\n");
+	fz_print(file, "\n");
+	fz_print(file, "\tif (!strcmp(name, \"%s\"))\n", name);
+	fz_print(file, "\t\treturn new_%s(cmapp);\n", id);
+	fz_print(file, "\n");
+	fz_print(file, "#endif\n");
+	fz_print(file, "#endif\n");
+	fz_dropstream(file);
+	return fz_okay;
+}
+
+#ifdef USE_STATIC_CMAPS
+#define USE_ADOBE_JAPAN1_UCS2
+#define USE_90MSP_RKSJ_H
+
+#define INCLUDE_CMAP_DATA
+#include "adobe_japan1_ucs2.c"
+#include "90msp_rksj_h.c"
+
+static fz_error *getstaticcmap(char *name, pdf_cmap **cmapp)
+{
+#undef INCLUDE_CMAP_DATA
+#include "adobe_japan1_ucs2.c"
+#include "90msp_rksj_h.c"
+	return fz_okay;
+}
+#else
+static fz_error *getstaticcmap(char *name, pdf_cmap **cmapp)
+{
+	return fz_okay;
+}
+#endif
+
 /*
  * Load predefined CMap from system
  */
@@ -1165,13 +1331,20 @@ pdf_loadsystemcmap(pdf_cmap **cmapp, char *name)
 	file = nil;
 
 	pdf_logfont("load system cmap %s {\n", name);
+	error = getstaticcmap(name, &cmap);
+	if (!error && cmap) {
+		*cmapp = cmap;
+		return fz_okay;
+	}
+	if (error)
+		fz_droperror(error);
 
 	cmapdir = getenv("CMAPDIR");
 	if (!cmapdir)
 		return fz_throw("ioerror: CMAPDIR environment not set");
 
 	strlcpy(path, cmapdir, sizeof path);
-	strlcat(path, "/", sizeof path);
+	strlcat(path, DIR_SEP_STR, sizeof path);
 	strlcat(path, name, sizeof path);
 
 	error = fz_openrfile(&file, path);
@@ -1189,6 +1362,10 @@ pdf_loadsystemcmap(pdf_cmap **cmapp, char *name)
 	}
 
 	fz_dropstream(file);
+
+#ifdef DUMP_STATIC_CMAPS
+	pdf_dumpcmapasccode(cmap, name);
+#endif
 
 	usecmapname = cmap->usecmapname;
 	if (usecmapname[0])
