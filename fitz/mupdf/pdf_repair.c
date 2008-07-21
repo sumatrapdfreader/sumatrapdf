@@ -367,6 +367,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 
 cleanup:
 	fz_dropstream(file);
+	xref->file = nil;
 	fz_free(list);
 	return error; /* already rethrown */
 }

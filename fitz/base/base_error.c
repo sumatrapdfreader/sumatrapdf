@@ -78,11 +78,7 @@ fz_throwimp(fz_error *cause, const char *func, const char *file, int line, char 
     strlcpy(eo->file, file, sizeof eo->file);
     eo->line = line;
 
-    if (cause)
-        eo->cause = fz_keeperror(cause);
-    else
-        eo->cause = nil;
-
+    eo->cause = cause;
     return eo;
 }
 

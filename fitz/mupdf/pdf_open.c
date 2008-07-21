@@ -623,23 +623,38 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 
 	error = fz_openrfile(&xref->file, filename);
 	if (error)
-		return fz_rethrow(error, "cannot open file: '%s'", filename);
+	{
+		error = fz_rethrow(error, "cannot open file: '%s'", filename);
+		goto cleanup;
+	}
 
 	error = loadversion(xref);
 	if (error)
-		return fz_rethrow(error, "cannot read version marker");
+	{
+		error = fz_rethrow(error, "cannot read version marker");
+		goto cleanup;
+	}
 
 	error = readstartxref(xref);
 	if (error)
-		return fz_rethrow(error, "cannot read startxref");
+	{
+		error = fz_rethrow(error, "cannot read startxref");
+		goto cleanup;
+	}
 
 	error = readtrailer(xref, buf, sizeof buf);
 	if (error)
-		return fz_rethrow(error, "cannot read trailer");
+	{
+		error = fz_rethrow(error, "cannot read trailer");
+		goto cleanup;
+	}
 
 	size = fz_dictgets(xref->trailer, "Size");
 	if (!size)
-		return fz_throw("trailer missing Size entry");
+	{
+		error = fz_throw("trailer missing Size entry");
+		goto cleanup;
+	}
 
 	pdf_logxref("  size %d\n", fz_toint(size));
 
@@ -649,7 +664,10 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	xref->len = fz_toint(size);
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
 	if (!xref->table)
-		return fz_throw("outofmem: xref table");
+	{
+		error = fz_throw("outofmem: xref table");
+		goto cleanup;
+	}
 
 	for (i = 0; i < xref->len; i++)
 	{
@@ -664,8 +682,18 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 
 	error = readxrefsections(xref, xref->startxref, buf, sizeof buf);
 	if (error)
-		return fz_rethrow(error, "cannot read xref");
+	{
+		error =  fz_rethrow(error, "cannot read xref");
+		goto cleanup;
+	}
 
 	return fz_okay;
+
+cleanup:
+	fz_dropstream(xref->file);
+	xref->file = nil;
+	free(xref->table);
+	xref->table = nil;
+	return error;
 }
 
