@@ -65,10 +65,18 @@ void PdfSearchFitz::SetDirection(bool forward)
 
 bool inline PdfSearchFitz::MatchChars(int c1, int c2)
 {
+    wchar_t s1[2], s2[2];
+    if (c1 == c2)
+        return true;
     if (sensitive)
-        return c1 == c2;
-    return (c1 == c2) || (towupper((wchar_t)c1) == towupper((wchar_t)c2));
-    return false;
+        return false;
+    s1[0] = (wchar_t)c1;
+    s1[1] = 0;
+    CharUpperW(s1);
+    s2[0] = (wchar_t)c2;
+    s2[2] = 0;
+    CharUpperW(s2);
+    return s1[0] == s2[0];
 }
 
 bool inline PdfSearchFitz::MatchAtPosition(int n)
