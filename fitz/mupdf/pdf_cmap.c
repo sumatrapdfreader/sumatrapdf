@@ -1294,16 +1294,22 @@ pdf_dumpcmapasccode(pdf_cmap *cmap, char *name)
 #ifdef USE_STATIC_CMAPS
 #define USE_ADOBE_JAPAN1_UCS2
 #define USE_90MSP_RKSJ_H
+#define USE_GBK_EUC_H
+#define USE_ADOBE_GB1_UCS2
 
 #define INCLUDE_CMAP_DATA
 #include "adobe_japan1_ucs2.c"
 #include "90msp_rksj_h.c"
+#include "adobe_gb1_ucs2.c"
+#include "gbk_euc_h.c"
 
 static fz_error *getstaticcmap(char *name, pdf_cmap **cmapp)
 {
 #undef INCLUDE_CMAP_DATA
 #include "adobe_japan1_ucs2.c"
 #include "90msp_rksj_h.c"
+#include "adobe_gb1_ucs2.c"
+#include "gbk_euc_h.c"
 	return fz_okay;
 }
 #else
