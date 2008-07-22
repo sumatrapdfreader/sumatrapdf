@@ -209,7 +209,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	crypt->strmethod = nil;
 	crypt->strlength = 0;
 	crypt->encryptedmeta = 0;
-
+	crypt->algo = ALGO_UNKNOWN;
 	crypt->encrypt = fz_keepobj(enc);
 	crypt->id = nil;
 
@@ -228,6 +228,11 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 		char *handler = crypt->handler;
 		pdf_dropcrypt(crypt);
 		return fz_throw("unsupported security handler: %s\n", handler);
+	}
+
+	if (crypt->v == 1 || crypt->v == 2)
+	{
+		crypt->algo = ALGO_RC4;
 	}
 
 	if (crypt->v == 4)
