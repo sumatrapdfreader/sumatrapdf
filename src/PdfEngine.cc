@@ -225,8 +225,8 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win, bool tryrepair)
         goto Error;
     if (_xref->crypt) {
         int okay = pdf_setpassword(_xref->crypt, "");
-        if (!okay)
-            goto Error;
+        if (okay)
+            goto DecryptedOk;
         if (!win) {
             // win might not be given if called from pdfbench.cc
             goto Error;
