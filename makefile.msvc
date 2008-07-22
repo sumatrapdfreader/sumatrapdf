@@ -82,7 +82,8 @@ BASE_OBJS = \
 	$(O)\base_cpudep.obj
 
 STREAM_OBJS = \
-	$(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj $(O)\filt_a85d.obj \
+	$(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj \
+	$(O)\filt_aes.obj $(O)\filt_a85d.obj \
 	$(O)\filt_a85e.obj $(O)\filt_ahxd.obj $(O)\filt_ahxe.obj $(O)\filt_arc4.obj \
 	$(O)\filt_faxd.obj $(O)\filt_faxdtab.obj $(O)\filt_faxe.obj $(O)\filt_faxetab.obj \
 	$(O)\filt_flate.obj $(O)\filt_lzwd.obj $(O)\filt_lzwe.obj $(O)\filt_null.obj \
