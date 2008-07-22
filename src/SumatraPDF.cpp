@@ -1000,7 +1000,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Open\tCtrl-O"),       IDM_OPEN },
     { _TRN("&Close\tCtrl-W"),      IDM_CLOSE  },
     { _TRN("&Save as"),            IDM_SAVEAS },
-    { _TRN("&Print"),              IDM_PRINT },
+    { _TRN("&Print\tCtrl-P"),              IDM_PRINT },
     { SEP_ITEM,              0 },
     { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER },
 #ifdef _PDFSYNC_GUI_ENHANCEMENT

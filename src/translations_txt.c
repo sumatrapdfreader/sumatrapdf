@@ -28,7 +28,7 @@ const char *g_transTranslations[] = {
   "&Help",
   "&Language",
   "&Open\tCtrl-O",
-  "&Print",
+  "&Print\tCtrl-P",
   "&Save as",
   "&View",
   "&Visit website",

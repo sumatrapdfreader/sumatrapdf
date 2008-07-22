@@ -46,6 +46,7 @@ BEGIN
     "1",            IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
     "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
     "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
+    "P",            IDM_PRINT,              VIRTKEY, CONTROL
 END
 
 

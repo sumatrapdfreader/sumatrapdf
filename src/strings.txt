@@ -300,7 +300,7 @@ gl:&Salvar como...
 uk:Зб&ерегти як...
 eu:... bezala &Gorde
 -
-&Print
+&Print\tCtrl-P
 bg:От&печатай
 br:&Imprimir
 hu:Nyomt&atás
