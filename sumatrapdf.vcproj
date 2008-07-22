@@ -222,11 +222,27 @@
 					>
 				</File>
 				<File
+					RelativePath=".\fitz\include\fitz\base_cpudep.h"
+					>
+				</File>
+				<File
 					RelativePath=".\fitz\base\base_error.c"
 					>
 				</File>
 				<File
+					RelativePath=".\fitz\include\fitz\base_geom.h"
+					>
+				</File>
+				<File
 					RelativePath=".\fitz\base\base_hash.c"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\base_hash.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\base_math.h"
 					>
 				</File>
 				<File
@@ -238,11 +254,51 @@
 					>
 				</File>
 				<File
+					RelativePath=".\fitz\include\fitz\base_pixmap.h"
+					>
+				</File>
+				<File
 					RelativePath=".\fitz\base\base_rect.c"
 					>
 				</File>
 				<File
 					RelativePath=".\fitz\base\base_rune.c"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\base_runtime.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\base_sysdep.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\draw_misc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\draw_path.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\stm_buffer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\stm_crypt.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\stm_filter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\stm_object.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\stm_stream.h"
 					>
 				</File>
 				<File
@@ -265,10 +321,50 @@
 					RelativePath=".\fitz\base\util_strsep.c"
 					>
 				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_color.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_font.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_image.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_path.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_shade.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_text.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\fitz\wld_tree.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="include"
 				>
+				<File
+					RelativePath=".\fitz\include\mupdf\annot.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\mupdf\base14.h"
+					>
+				</File>
+				<File
+					RelativePath=".\fitz\include\mupdf\content.h"
+					>
+				</File>
 				<File
 					RelativePath=".\fitz\include\fitz-base.h"
 					>
@@ -294,129 +390,25 @@
 					>
 				</File>
 				<File
+					RelativePath=".\fitz\include\mupdf\page.h"
+					>
+				</File>
+				<File
 					RelativePath=".\fitz\include\pdfapp.h"
 					>
 				</File>
-				<Filter
-					Name="mupdf"
+				<File
+					RelativePath=".\fitz\include\mupdf\rsrc.h"
 					>
-					<File
-						RelativePath=".\fitz\include\mupdf\annot.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\mupdf\base14.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\mupdf\content.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\mupdf\page.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\mupdf\rsrc.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\mupdf\syntax.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\mupdf\xref.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="fitz"
+				</File>
+				<File
+					RelativePath=".\fitz\include\mupdf\syntax.h"
 					>
-					<File
-						RelativePath=".\fitz\include\fitz\base_cpudep.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\base_geom.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\base_hash.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\base_math.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\base_pixmap.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\base_runtime.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\base_sysdep.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\draw_misc.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\draw_path.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\stm_buffer.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\stm_crypt.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\stm_filter.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\stm_object.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\stm_stream.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_color.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_font.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_image.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_path.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_shade.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_text.h"
-						>
-					</File>
-					<File
-						RelativePath=".\fitz\include\fitz\wld_tree.h"
-						>
-					</File>
-				</Filter>
+				</File>
+				<File
+					RelativePath=".\fitz\include\mupdf\xref.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="mupdf"
