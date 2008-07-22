@@ -73,6 +73,7 @@ void fz_unchainpipeline(fz_filter *pipe, fz_filter **oldfp, fz_buffer **oldbp);
 void fz_pushbackahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out, int n);
 
 fz_error *fz_newnullfilter(fz_filter **fp, int len);
+fz_error *fz_newaesfilter(fz_filter **fp, unsigned char *key, unsigned keylen);
 fz_error *fz_newarc4filter(fz_filter **fp, unsigned char *key, unsigned keylen);
 fz_error *fz_newa85d(fz_filter **filterp, fz_obj *param);
 fz_error *fz_newa85e(fz_filter **filterp, fz_obj *param);

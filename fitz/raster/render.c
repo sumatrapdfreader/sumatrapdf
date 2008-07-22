@@ -411,6 +411,9 @@ DEBUG("image %dx%d %d+%d %s\n{\n", image->w, image->h, image->n, image->a, image
 	if (fz_isemptyrect(clip))
 		return fz_okay;
 
+	if (image->n + image->a == 0)
+		return fz_okay;
+
 	calcimagescale(ctm, image->w, image->h, &dx, &dy);
 
 	/* try to fit tile into a typical L2 cachce */

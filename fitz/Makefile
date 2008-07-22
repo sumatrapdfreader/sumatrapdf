@@ -82,17 +82,17 @@ BASE_SRC += \
 CFLAGS += -DNEED_STRLCPY
 endif
 
-# ./base/util_strsep.c \
-#./base/util_getopt.c
 #./base/base_cleanname.c
 #./base/base_cpudep.c
 
 STREAM_SRC = \
+	crypt_aes.c \
 	crypt_arc4.c \
 	crypt_crc32.c \
 	crypt_md5.c \
 	filt_a85d.c \
 	filt_a85e.c \
+	filt_aes.c \
 	filt_ahxd.c \
 	filt_ahxe.c \
 	filt_arc4.c \
@@ -195,32 +195,45 @@ MUPDF_SRC = \
 	pdf_xref.c \
 	pdf_fontfilefc.c \
 
-# pdf_fontfile.c \  # Built-in fonts
-# pdf_fontfilems.c \ # windows fonts
-
 LIBS_SRC = \
 	${BASE_SRC} \
 	${STREAM_SRC} \
 	${RASTER_SRC} \
 	${WORLD_SRC} \
-	${MUPDF_SRC} \
+	${MUPDF_SRC}
+
+LIBS_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${LIBS_SRC})
+LIBS_DEP = $(patsubst %.o, %.d, $(LIBS_OBJ))
 
 PDFTOOL_SRC = \
-	${LIBS_SRC} \
 	pdftool.c
 PDFTOOL_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFTOOL_SRC})
+PDFTOOL_DEP = $(patsubst %.o, %.d, $(PDFTOOL_OBJ))
 PDFTOOL_APP = ${OUTDIR}/pdftool
 
-all: inform ${OUTDIR} ${PDFTOOL_APP}
+PDFBENCH_SRC = \
+	pdfbench.c
+PDFBENCH_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFBENCH_SRC})
+PDFBENCH_DEP = $(patsubst %.o, %.d, $(PDFBENCH_OBJ))
+PDFBENCH_APP = ${OUTDIR}/pdfbench
+
+all: inform ${OUTDIR} ${PDFTOOL_APP} ${PDFBENCH_APP}
 
 $(OUTDIR):
 	@mkdir -p $(OUTDIR)
 
-$(PDFTOOL_APP): ${PDFTOOL_OBJ}
+$(PDFTOOL_APP): ${LIBS_OBJ} ${PDFTOOL_OBJ}
+	$(CC) -g -o $@ $^ ${LDFLAGS}
+
+$(PDFBENCH_APP): ${LIBS_OBJ} ${PDFBENCH_OBJ}
 	$(CC) -g -o $@ $^ ${LDFLAGS}
 
 $(OUTDIR)/FITZ_%.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+-include $(LIBS_DEP)
+-include $(PDFTOOL_DEP)
+-include $(PDFBENCH_DEP)
 
 inform:
 ifneq ($(CFG),rel)
@@ -242,4 +255,3 @@ cleanall:
 #./apps/mozilla/npunix.c
 #./apps/unix/x11pdf.c
 #./apps/unix/ximage.c
-#./apps/windows/winmain.c

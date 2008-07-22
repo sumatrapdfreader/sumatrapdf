@@ -168,6 +168,19 @@ cleanup:
 	return fz_throw("corrupt encryption dictionary");
 }
 
+static pdf_crypt_algo_e algofromname(char* name)
+{
+	if (!name)
+		return ALGO_RC4;
+
+	if (strcmp(name, "V2") == 0)
+		return ALGO_RC4;
+
+	if (strcmp(name, "AESV2") == 0)
+		return ALGO_AES;
+
+	return ALGO_UNKNOWN;
+}
 
 /*
  * Create crypt object for decrypting given the
@@ -219,18 +232,29 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 
 	if (crypt->v == 4)
 	{
-		if (crypt->stmmethod && strcmp(crypt->stmmethod, "V2") != 0)
+		pdf_crypt_algo_e stmalgo, stralgo;
+		char *stmmethod, *strmethod;
+
+		stmmethod = crypt->stmmethod;
+		stmalgo = algofromname(stmmethod);
+		if (stmalgo == ALGO_UNKNOWN)
 		{
-			char *method = crypt->stmmethod;
 			pdf_dropcrypt(crypt);
-			return fz_throw("unsupported stream encryption method: %s\n", method);
+			return fz_throw("unsupported stream encryption method: %s\n", stmmethod);
 		}
 
-		if (crypt->strmethod && strcmp(crypt->strmethod, "V2") != 0)
+		strmethod = crypt->strmethod;
+		stralgo = algofromname(strmethod);
+		if (stralgo == ALGO_UNKNOWN)
 		{
-			char *method = crypt->strmethod;
 			pdf_dropcrypt(crypt);
-			return fz_throw("unsupported string encryption: %s\n", method);
+			return fz_throw("unsupported string encryption: %s\n", strmethod);
+		}
+
+		if (stmalgo != stralgo)
+		{
+			pdf_dropcrypt(crypt);
+			return fz_throw("stream encryption algorithm (%s) != string encryption algorithm(%s)\n", stmmethod, strmethod);
 		}
 
 		if (crypt->stmlength != crypt->strlength)
@@ -244,6 +268,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 		crypt->len = crypt->stmlength;
 
 		crypt->v = 2;
+		crypt->algo = stmalgo;
 	}
 
 	if (crypt->len % 8 != 0)
@@ -294,6 +319,7 @@ static void
 createobjkey(pdf_crypt *crypt, unsigned oid, unsigned gid, unsigned char *key)
 {
 	unsigned char message[5];
+	unsigned char aesSalt[4] = {0x73, 0x41, 0x6c, 0x54}; /* 'aAlT' */
 	fz_md5 md5;
 
 	/* Algorithm 3.1 Encryption of data using an encryption key */
@@ -310,6 +336,10 @@ createobjkey(pdf_crypt *crypt, unsigned oid, unsigned gid, unsigned char *key)
 	message[4] = (gid >> 8) & 0xFF;
 
 	fz_md5update(&md5, message, 5);
+
+	/* PDF 1.6 spec doesn't mention that but poppler is doing it */
+	if (crypt->algo == ALGO_AES)
+		fz_md5update(&md5, aesSalt, 4);
 
 	fz_md5final(&md5, key);
 }
@@ -601,6 +631,7 @@ void
 pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gid)
 {
 	fz_arc4 arc4;
+	fz_aes aes;
 	unsigned char key[16];
 	unsigned char *s;
 	int i, n;
@@ -610,8 +641,21 @@ pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gid)
 		s = (unsigned char *) fz_tostrbuf(obj);
 		n = fz_tostrlen(obj);
 		createobjkey(crypt, oid, gid, key);
-		fz_arc4init(&arc4, key, crypt->keylen);
-		fz_arc4encrypt(&arc4, s, s, n);
+		if (crypt->algo == ALGO_RC4)
+		{
+			fz_arc4init(&arc4, key, crypt->keylen);
+			fz_arc4encrypt(&arc4, s, s, n);
+		} else if (crypt->algo == ALGO_AES)
+		{
+			fz_aesinit(&aes, key, crypt->keylen);
+			/* first 16 bytes are IV for cbc mode of aes decryption */
+			assert(n > 16);
+			if (n > 16) {
+				fz_setiv(&aes, s);
+				fz_aesdecrypt(&aes, s, s+16, n-16);
+				s[n-16-1] = 0;
+			}
+		}
 	}
 
 	else if (fz_isarray(obj))
@@ -642,7 +686,16 @@ pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, int oid, int gid)
 	fz_error *error;
 	unsigned char key[16];
 	createobjkey(crypt, oid, gid, key);
-	error = fz_newarc4filter(fp, key, crypt->keylen);
+	if (crypt->algo == ALGO_RC4)
+	{
+		error = fz_newarc4filter(fp, key, crypt->keylen);
+	} else if (crypt->algo == ALGO_AES)
+	{
+		error = fz_newaesfilter(fp, key, crypt->keylen);
+	} else
+	{
+		return fz_throw("unknown crypt algorithm");
+	}
 	if (error)
 		return fz_rethrow(error, "cannot create crypt filter");
 	return fz_okay;

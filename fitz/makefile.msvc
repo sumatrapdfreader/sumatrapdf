@@ -62,8 +62,8 @@ BASE_OBJS = \
 	$(O)\base_cpudep.obj
 
 STREAM_OBJS = \
-	$(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj $(O)\filt_a85d.obj \
-	$(O)\filt_a85e.obj $(O)\filt_ahxd.obj $(O)\filt_ahxe.obj $(O)\filt_arc4.obj \
+	$(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj $(O)\filt_a85d.obj \
+	$(O)\filt_a85e.obj $(O)\filt_aes.obj $(O)\filt_ahxd.obj $(O)\filt_ahxe.obj $(O)\filt_arc4.obj \
 	$(O)\filt_faxd.obj $(O)\filt_faxdtab.obj $(O)\filt_faxe.obj $(O)\filt_faxetab.obj \
 	$(O)\filt_flate.obj $(O)\filt_lzwd.obj $(O)\filt_lzwe.obj $(O)\filt_null.obj \
 	$(O)\filt_pipeline.obj $(O)\filt_predict.obj $(O)\filt_rld.obj $(O)\filt_rle.obj \
@@ -72,7 +72,7 @@ STREAM_OBJS = \
 	$(O)\stm_open.obj $(O)\stm_read.obj $(O)\stm_write.obj $(O)\filt_dctd.obj $(O)\filt_dcte.obj
 
 RASTER_OBJS = \
-	$(O)\archx86.obj $(O)\imagescale.obj $(O)\pathfill.obj $(O)\pixmap.obj \
+	$(O)\archx86.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\pathfill.obj $(O)\pixmap.obj \
 	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
 	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\render.obj
 
@@ -111,7 +111,12 @@ PDFAPP_APP = $(O)\pdfapp.exe
 PDFAPP_PDB = $(O)\pdfapp.pdb
 PDFAPP_MAP = $(O)\pdfapp.map
 
-all: $(O) $(PDFTOOL_APP) $(PDFAPP_APP)
+PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdfbench.obj
+PDFBENCH_APP = $(O)\pdfbench.exe
+PDFBENCH_PDB = $(O)\pdfbench.pdb
+PDFBENCH_MAP = $(O)\pdfbench.map
+
+all: $(O) $(PDFTOOL_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -126,6 +131,12 @@ $(PDFTOOL_APP): $(PDFTOOL_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFTOOL_APP) /PDB:$(PDFTOOL_PDB) \
 	$(PDFTOOL_OBJS) $(LIBS) \
 	/MAP:$(PDFTOOL_MAP) \
+	/SUBSYSTEM:CONSOLE
+
+$(PDFBENCH_APP): $(PDFBENCH_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(PDFBENCH_APP) /PDB:$(PDFBENCH_PDB) \
+	$(PDFBENCH_OBJS) $(LIBS) \
+	/MAP:$(PDFBENCH_MAP) \
 	/SUBSYSTEM:CONSOLE
 
 $(PDFAPP_APP): $(PDFAPP_OBJS)

@@ -47,6 +47,11 @@ fz_error *pdf_toucs2(unsigned short **dstp, fz_obj *src);
 
 typedef struct pdf_crypt_s pdf_crypt;
 
+typedef enum pdf_crypt_algo_e
+{
+	ALGO_UNKNOWN, ALGO_RC4, ALGO_AES
+} pdf_crypt_algo_e;
+
 struct pdf_crypt_s
 {
 	unsigned char o[32];
@@ -61,6 +66,7 @@ struct pdf_crypt_s
 	char *strmethod;
 	int strlength;
 	int encryptedmeta;
+	pdf_crypt_algo_e algo;
 
 	fz_obj *encrypt;
 	fz_obj *id;
