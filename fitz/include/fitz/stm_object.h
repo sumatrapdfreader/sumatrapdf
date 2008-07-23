@@ -30,11 +30,7 @@ struct fz_keyval_s
 struct fz_obj_s
 {
 	unsigned short refs;
-#ifdef DEBUG
 	fz_objkind kind;
-#else
-	char kind;				/* fz_objkind takes 4 bytes :( */
-#endif
 	union
 	{
 		int b;

@@ -16,6 +16,8 @@ FITZ_DIR=fitz
 ZLIB_DIR=ext\zlib
 FREETYPE_DIR=ext\freetype231
 JPEG_DIR=ext\jpeg
+JASPER_DIR=ext\jasper
+JBIG2_DIR=ext\jbig2dec
 
 CC = cl.exe
 
@@ -27,7 +29,7 @@ CC = cl.exe
 
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
-CFLAGS = $(CFLAGS) /D "WIN32" 
+CFLAGS = $(CFLAGS) /D "WIN32"  /D "_WIN32"
 #CFLAGS = $(CFLAGS) /D "_WIN32_WINNT=0x0500"
 #CFLAGS = $(CFLAGS) /D "WIN32_LEAN_AND_MEAN"
 CFLAGS = $(CFLAGS) /D "_SCL_SECURE_NO_DEPRECATE" /D "_CRT_SECURE_NO_DEPRECATE"
@@ -39,14 +41,19 @@ CFLAGS = $(CFLAGS) /wd4995
 
 CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /GS /RTCu /RTCs
 
+JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
+
 # Flags specific to fitz
 FITZ_CFLAGS = $(CFLAGS) /TC /I$(FITZ_DIR)\include /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR)
+FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(JASPER_DIR) /I$(JBIG2_DIR)
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" /D "NEED_GETTIMEOFDAY"
+FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_JASPER" /D "HAVE_JBIG2DEC"
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "__func__=\"\"" /D "isnan=_isnan"
-FITZ_CFLAGS = $(FITZ_CFLAGS) /D "USE_STATIC_CMAPS" /I$(FITZ_DIR)\cmaps
+FITZ_CFLAGS = $(FITZ_CFLAGS) /D "USE_STATIC_CMAPS" /I$(FITZ_DIR)\cmaps 
 
-SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /Isrc /IDialogSizer /I$(ZLIB_DIR)
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WIN32" /D "_WINDOWS" /D "__func__=\"\"" 
+SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /Isrc \
+	/IDialogSizer /I$(ZLIB_DIR) 
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS" /D "__func__=\"\"" 
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
 # Flag for TeX enhancements
 #SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_PDFSYNC_GUI_ENHANCEMENT" /D "SYNCTEX_FEATURE"
@@ -63,17 +70,24 @@ LDFLAGS = $(LDFLAGS) /nologo /DEBUG
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 LDFLAGS = $(LDFLAGS)
-LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
+LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib $(JASPER_DIR)\libjasper.lib
 !endif
 
 !if "$(CFG)"=="rel"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "NDEBUG"
-LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(JPEG_DIR)\jpeg_s.lib $(ZLIB_DIR)\zlib_s.lib
+LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(JPEG_DIR)\jpeg_s.lib $(ZLIB_DIR)\zlib_s.lib $(JASPER_DIR)\libjasper.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
 !endif
 
 SUMATRA_RES = $(O)\sumtrapdf.res
+
+JBIG2_OBJS = \
+	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
+	$(O)\jbig2_arith_iaid.obj $(O)\jbig2_arith_int.obj $(O)\jbig2_huffman.obj \
+	$(O)\jbig2_generic.obj $(O)\jbig2_refinement.obj $(O)\jbig2_image.obj \
+	$(O)\jbig2_segment.obj $(O)\jbig2_symbol_dict.obj $(O)\jbig2_text.obj \
+	$(O)\jbig2_mmr.obj $(O)\jbig2_page.obj $(O)\jbig2_metadata.obj
 
 BASE_OBJS = \
 	$(O)\base_memory.obj $(O)\base_error.obj $(O)\base_hash.obj $(O)\base_matrix.obj \
@@ -90,7 +104,8 @@ STREAM_OBJS = \
 	$(O)\filt_pipeline.obj $(O)\filt_predict.obj $(O)\filt_rld.obj $(O)\filt_rle.obj \
 	$(O)\obj_array.obj $(O)\obj_dict.obj $(O)\obj_parse.obj $(O)\obj_print.obj \
 	$(O)\obj_simple.obj $(O)\stm_buffer.obj $(O)\stm_filter.obj $(O)\stm_misc.obj \
-	$(O)\stm_open.obj $(O)\stm_read.obj $(O)\stm_write.obj $(O)\filt_dctd.obj $(O)\filt_dcte.obj
+	$(O)\stm_open.obj $(O)\stm_read.obj $(O)\stm_write.obj $(O)\filt_dctd.obj \
+	$(O)\filt_dcte.obj $(O)\filt_jpxd.obj $(O)\filt_jbig2d.obj
 
 RASTER_OBJS = \
 	$(O)\archx86.obj $(O)\imagescale.obj $(O)\pathfill.obj $(O)\pixmap.obj \
@@ -114,6 +129,7 @@ MUPDF_OBJS = \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfilems.obj
 
 LIBS_OBJS = \
+	$(JBIG2_OBJS) \
 	$(BASE_OBJS) \
 	$(STREAM_OBJS) \
 	$(RASTER_OBJS) \
@@ -175,6 +191,9 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(PDFAPP_OBJS) $(LIBS) \
 	/MAP:$(PDFAPP_MAP) \
 	/SUBSYSTEM:CONSOLE
+
+{$(JBIG2_DIR)\}.c{$(O)}.obj::
+	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\apps\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
