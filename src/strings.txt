@@ -1529,6 +1529,9 @@ gl:Visitar o &Website
 uk:Відкрити сайт
 eu:&Web orria bisitatu
 -
+&Manual
+pl:Instrukcja obslugi
+-
 &About
 bg:Относно програмата...
 br:S&obre o SumatraPDF

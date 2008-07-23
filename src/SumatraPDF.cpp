@@ -1061,6 +1061,7 @@ MenuDef menuDefLang[] = {
 
 MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE },
+    { _TRN("&Manual"),                     IDM_MANUAL },
     { _TRN("&Check for new version"),      IDM_CHECK_UPDATE },
     { _TRN("&About"),                      IDM_ABOUT }
 };
@@ -5964,6 +5965,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
                     break;
 
+                case IDM_MANUAL:
+                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html"));
+                    break;
+                    
                 case IDM_CONTRIBUTE_TRANSLATION:
                     OnMenuContributeTranslation();
                     break;
