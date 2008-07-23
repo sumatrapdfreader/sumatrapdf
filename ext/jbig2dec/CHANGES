@@ -1,0 +1,65 @@
+Version 0.10 (unreleased)
+
+ * no changes yet
+
+Version 0.9 (2006 July 27)
+
+ * striped page support
+ * successfully decodes ubc test streams 042_9, 042_20
+
+Version 0.8 (2005 April 6)
+
+ * Fix an allocation error in the page array
+ * properly handle non-OR image composition operators
+ * Fix a UMR bug in the compositor
+ * successfully decodes ubc test streams 042_12,15,16,17,18
+ * various memory leak fixes
+
+Version 0.7 (2004 December 8)
+
+ * properly initialize page buffers
+ * refinement region handling
+ * successfully decodes ubc test streams 042_21, 042_22 and 042_23
+ * generic region template 3 handling with arbitrary AT locations
+ * successfully decodes ubc test streams 042_6 and 042_7
+ 
+Version 0.6 (2003 December 31)
+
+ * minor portability fix for cygwin
+
+Version 0.5 (2003 December 4)
+
+ * compiler warning fixes
+ * Properly handle the export specification for symbol
+   dictionaries.
+ * successfully decodes multipage documents from the
+   Adobe encoder.
+
+Version 0.4 (released 2003 August 1)
+
+ * redid license header to simplify relabelling for commercial 
+   distribution, borrowing from Ghostscript.
+
+Version 0.3 (released 2003 May 20)
+
+ * win32 portability fixes related to ghostscript integration
+ * generic mmr region support
+ * successfully decodes ubc test stream 042_3
+
+Version 0.2 (released 2003 April 17)
+
+ * portability fixes
+ * support for metadata extension segments (latin-1 only)
+ * decodes single-page documents from the Adobe encoder
+ * various other bugfixes
+
+Version 0.1 (released 2002 August 6)
+
+ * decodes artithmetic and huffman-coded generic regions
+    - some templates not working
+ * decodes arithmetic symbol dictionaries
+ * decodes artithmetic text regions
+ * successfully decodes ubc test streams 042_1,2,4,5 and 10.
+ * successfully decodes CVision embedded bitstream str-p39
+ * regression testing harness based on SHA-1 hashes of known files
+

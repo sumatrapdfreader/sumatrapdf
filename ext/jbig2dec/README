@@ -1,0 +1,25 @@
+jbig2dec is a decoder library and example utility implementing the JBIG2
+bi-level image compression spec. Also known as ITU T.88 and ISO IEC
+14492, and now included by reference in Adobe's PDF 1.4.
+
+The basic invocation is:
+
+    jbig2dec [-o <output file>] file.jbig2
+
+It also supports separate 'global' and 'page' streams, generally
+extracted from some embedded format:
+
+    jbig2dec [-o <output file>] <global_stream> <page_stream>
+
+The program is only partially functional at this time, but should be
+useful in some limited contexts. We welcome files that the decoder can't
+handle, or renders incorrectly.
+
+A set of example files is available from
+http://www.ece.ubc.ca/spmg/jbig2/bitstreams/main.html
+
+More information about this project and updated versions are available
+from http://jbig2dec.sf.net/ Development source code is kept in a 
+subversion repository at svn.ghostscript.com.
+
+The contact address for the project is <jbig2-dev@ghostscript.com>.
