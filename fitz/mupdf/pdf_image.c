@@ -238,7 +238,12 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	 */
 
 	w = fz_toint(fz_dictgets(dict, "Width"));
-	h = fz_toint(fz_dictgets(dict, "Height"));
+	obj = fz_dictgets(dict, "Height");
+	error = pdf_resolve(&obj, xref);
+	if (error)
+		return error;
+	h = fz_toint(obj);
+	fz_dropobj(obj);
 	bpc = fz_toint(fz_dictgets(dict, "BitsPerComponent"));
 
 	pdf_logimage("size %dx%d %d\n", w, h, bpc);
