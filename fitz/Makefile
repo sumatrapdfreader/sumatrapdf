@@ -2,6 +2,7 @@
 # Valid option to make:
 # CFG=[rel|dbg] - dbg if not given
 # WITH_JASPER=[yes|no] -default: yes
+# JBIG2_DIR=
 
 # Symbolic names for HOST variable
 HOST_LINUX := Linux
@@ -11,7 +12,7 @@ HOST_CYGWIN := CYGWIN_NT-6.0
 # HOST can be: Linux, Darwin, CYGWIN_NT-6.0
 HOST := $(shell uname -s)
 
-VPATH=base:raster:world:stream:mupdf:apps
+VPATH=base:raster:world:stream:mupdf:apps:$(JBIG2_DIR)
 
 # make dbg default target if none provided
 ifeq ($(CFG),)
@@ -23,6 +24,11 @@ WITH_JASPER=yes
 endif
 
 INCS = -I include -I cmaps
+
+ifneq ($(JBIG2_DIR),)
+INCS += -I $(JBIG2_DIR)
+CFLAGS += -DHAVE_JBIG2DEC
+endif
 
 FREETYPE_CFLAGS  = `freetype-config --cflags`
 FREETYPE_LDFLAGS = `freetype-config --libs`
@@ -53,6 +59,10 @@ ifeq ($(HOST),$(HOST_MAC))
 CFLAGS += -std=gnu99 -DHAVE_C99
 endif
 
+JBIG2_CFLAGS = $(CFLAGS) -DHAVE_STDINT_H
+
+#-DHAVE_CONFIG_H
+
 CFLAGS += ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS}
 
 LDFLAGS += ${FREETYPE_LDFLAGS} ${FONTCONFIG_LDFLAGS} -lm -ljpeg
@@ -63,8 +73,16 @@ LDFLAGS += -ljasper
 endif
 
 CFLAGS += -DUSE_STATIC_CMAPS
+CFLAGS += -DDUMP_STATIC_CMAPS
 
 OUTDIR=obj-$(CFG)
+
+JBIG2_SRC = \
+	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
+	jbig2_huffman.c jbig2_segment.c jbig2_page.c \
+	jbig2_symbol_dict.c jbig2_text.c \
+	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
+	jbig2_image.c jbig2_metadata.c
 
 BASE_SRC = \
 	base_memory.c \
@@ -126,7 +144,9 @@ ifeq ($(WITH_JASPER),yes)
 STREAM_SRC += filt_jpxd.c
 endif
 
-#filt_jbig2d.c \
+ifneq ($(JBIG2_DIR),)
+STREAM_SRC += filt_jbig2d.c
+endif
 
 RASTER_SRC = \
 	archx86.c \
@@ -155,8 +175,6 @@ WORLD_SRC = \
 	res_font.c \
 	res_image.c \
 	res_shade.c \
-
-#node_tolisp.c \
 
 MUPDF_SRC = \
 	pdf_annot.c \
@@ -202,19 +220,27 @@ LIBS_SRC = \
 	${WORLD_SRC} \
 	${MUPDF_SRC}
 
+JBIG2_OBJ = $(patsubst %.c, $(OUTDIR)/JBIG_%.o, ${JBIG2_SRC})
+JBIG2_DEP = $(patsubst %.o, %.d, $(JBIG2_OBJ))
+
 LIBS_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${LIBS_SRC})
 LIBS_DEP = $(patsubst %.o, %.d, $(LIBS_OBJ))
 
-PDFTOOL_SRC = \
-	pdftool.c
+PDFTOOL_SRC = pdftool.c
 PDFTOOL_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFTOOL_SRC})
 PDFTOOL_DEP = $(patsubst %.o, %.d, $(PDFTOOL_OBJ))
-PDFTOOL_APP = ${OUTDIR}/pdftool
 
-PDFBENCH_SRC = \
-	pdfbench.c
+PDFBENCH_SRC = pdfbench.c
 PDFBENCH_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFBENCH_SRC})
 PDFBENCH_DEP = $(patsubst %.o, %.d, $(PDFBENCH_OBJ))
+
+ifneq ($(JBIG2_DIR),)
+PDFTOOL_OBJ += $(JBIG2_OBJ)
+PDFBENCH_OBJ += $(JBIG2_OBJ)
+endif
+
+PDFTOOL_APP = ${OUTDIR}/pdftool
+
 PDFBENCH_APP = ${OUTDIR}/pdfbench
 
 all: inform ${OUTDIR} ${PDFTOOL_APP} ${PDFBENCH_APP}
@@ -231,7 +257,11 @@ $(PDFBENCH_APP): ${LIBS_OBJ} ${PDFBENCH_OBJ}
 $(OUTDIR)/FITZ_%.o: %.c
 	$(CC) -MD -c $(CFLAGS) -o $@ $<
 
+$(OUTDIR)/JBIG_%.o: %.c
+	$(CC) -MD -c $(JBIG2_CFLAGS) -o $@ $<
+
 -include $(LIBS_DEP)
+-include $(JBIG2_DEP)
 -include $(PDFTOOL_DEP)
 -include $(PDFBENCH_DEP)
 
