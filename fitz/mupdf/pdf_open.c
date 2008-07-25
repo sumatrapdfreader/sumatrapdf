@@ -690,8 +690,11 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	return fz_okay;
 
 cleanup:
-	fz_dropstream(xref->file);
-	xref->file = nil;
+	if (xref->file) 
+	{
+		fz_dropstream(xref->file);
+		xref->file = nil;
+	}
 	free(xref->table);
 	xref->table = nil;
 	return error;
