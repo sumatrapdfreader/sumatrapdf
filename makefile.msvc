@@ -21,12 +21,6 @@ JBIG2_DIR=ext\jbig2dec
 
 CC = cl.exe
 
-# Compilation flags from MSVC project
-# /D "_WIN32" /D "WIN32" /D "_WINDOWS" /D "_DEBUG" /D "DEBUG" /D "USE_OWN_GET_AUTH_DATA" 
-# /D "POPPLER_DATADIR=\"\"" /D "ENABLE_ZLIB=1" /D "ENABLE_LIBJPEG=1" 
-# /D "_MBCS" /Gm /RTC1 /MTd /GR- /Fo"Debug\\" /Fd"Debug\vc80.pdb" /W3 
-# /nologo /c /ZI /wd4996 /wd4244 /wd4267 /wd4995 /FC 
-
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
 CFLAGS = $(CFLAGS) /D "WIN32"  /D "_WIN32"
