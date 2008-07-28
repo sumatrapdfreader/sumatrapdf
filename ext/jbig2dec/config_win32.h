@@ -34,7 +34,10 @@
   typedef unsigned int              uint32_t;
   /* no uint64_t */
 
+/* this doesn't work on vc2008 */
+#if _MSC_VER < 1500
 #  define vsnprintf _vsnprintf
 #  define snprintf _snprintf
+#endif
 
 #endif /* _MSC_VER */
