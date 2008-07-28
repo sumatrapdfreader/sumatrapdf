@@ -223,6 +223,7 @@ bool PdfEngineFitz::load(const char *fileName, WindowInfo *win, bool tryrepair)
     error = pdf_decryptxref(_xref);
     if (error)
         goto Error;
+
     if (_xref->crypt) {
         int okay = pdf_setpassword(_xref->crypt, "");
         if (okay)
@@ -246,8 +247,34 @@ DecryptedOk:
     if (error)
         goto Error;
 
+    /*
+     * Load meta information
+     * TODO: move this into mupdf library
+     * TODO: more descriptive errors?
+     */
+
+    fz_obj *obj;
+    obj = fz_dictgets(_xref->trailer, "Root");
+    if (!obj)
+        goto Error;
+
+    error = pdf_loadindirect(&_xref->root, _xref, obj);
+    if (error)
+        goto Error;
+
+    obj = fz_dictgets(_xref->trailer, "Info");
+    if (obj)
+    {
+        error = pdf_loadindirect(&_xref->info, _xref, obj);
+        if (error)
+            goto Error;
+    }
+
+    error = pdf_loadnametrees(_xref);
+    if (error)
+        goto Error;
+
     error = pdf_loadoutline(&_outline, _xref);
-    // TODO: can I ignore this error?
     if (error)
         goto Error;
 
