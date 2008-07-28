@@ -34,7 +34,6 @@ typedef struct {
        If NULL - don't skip */
     char *m_versionToSkip;
 
-    char *m_guid;
     char *m_lastUpdateTime;
 
     /* Default state of Sumatra window */

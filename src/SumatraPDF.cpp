@@ -728,52 +728,23 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
             return;
     }
 
-    DString url;
-    DStringInit(&url);
-    DStringAppend(&url, SUMATRA_UPDATE_INFO_URL, sizeof(SUMATRA_UPDATE_INFO_URL)-1);
-    if (gGlobalPrefs.m_guid) {
-        DStringSprintf(&url, "?g=%s&o=%d&v=%s", gGlobalPrefs.m_guid, gGlobalPrefs.m_pdfsOpened, CURR_VERSION);
-        gGlobalPrefs.m_pdfsOpened = 0;
-    }
-    HttpReqCtx *ctx = new HttpReqCtx(url.pString, hwndToNotify, WM_APP_URL_DOWNLOADED);
+    char *url = SUMATRA_UPDATE_INFO_URL "?v=" CURR_VERSION;
+    HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, WM_APP_URL_DOWNLOADED);
     ctx->autoCheck = autoCheck;
+
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
-    urlHandle = InternetOpenUrlA(g_hOpen, url.pString, NULL, 0, 
+    urlHandle = InternetOpenUrlA(g_hOpen, url, NULL, 0, 
       INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE | 
       INTERNET_FLAG_NO_CACHE_WRITE, (LPARAM)ctx);
     /* MSDN says NULL result from InternetOpenUrlA() means an error, but in my testing
        in async mode InternetOpenUrl() returns NULL and error is ERROR_IO_PENDING */
-    DStringFree(&url);
     if (!urlHandle && (GetLastError() != ERROR_IO_PENDING)) {
         DBG_OUT("InternetOpenUrlA() failed\n");
         delete ctx;
     }
     free(gGlobalPrefs.m_lastUpdateTime);
     gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
-}
-
-#if 0
-static DWORD GetSerialNumber()
-{
-    DWORD serialNumber = 0xFFFFFFFF;
-    GetVolumeInformationA("c:\\", NULL, 0,
-        &serialNumber, NULL, NULL, NULL, 0);
-    return serialNumber;
-}
-#endif
-
-/* Create a GUID (likely globally unique, 16-byte value) and return it as
-   a hex string, or NULL if cannot be generated.
-   Caller has to free() the result. */
-static char *CreateGuidAsHexString()
-{
-    GUID g;
-    HRESULT hr = CoCreateGuid(&g);
-    if (!SUCCEEDED(hr)) {
-        return NULL; // what now?
-    }
-    return mem_to_hexstr((unsigned char*)&g, sizeof(g));
 }
 
 static void SerializableGlobalPrefs_Init() {
@@ -793,7 +764,6 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
     gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
     gGlobalPrefs.m_versionToSkip = NULL;
-    gGlobalPrefs.m_guid = NULL;
     gGlobalPrefs.m_lastUpdateTime = NULL;
 }
 
@@ -801,7 +771,6 @@ static void SerializableGlobalPrefs_Deinit()
 {
     free(gGlobalPrefs.m_versionToSkip);
     free(gGlobalPrefs.m_inverseSearchCmdLine);
-    free(gGlobalPrefs.m_guid);
     free(gGlobalPrefs.m_lastUpdateTime);
 }
 
@@ -6618,9 +6587,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         // assume that this is because prefs file didn't exist i.e. this is
         // the first time Sumatra is launched.
         GuessLanguage();
-    }
-    if (!gGlobalPrefs.m_guid) {
-        gGlobalPrefs.m_guid = CreateGuidAsHexString();
     }
 
     /* parse argument list. If -bench was given, then we're in benchmarking mode. Otherwise
