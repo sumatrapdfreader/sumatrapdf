@@ -1,12 +1,12 @@
 Short term todo (before next 0.8.2 release):
-* update mupdf to the latest version
-* add handling of jbig images
-* option to not automatically check for update (some people still don't have 
-  broadband?)
-* don't use GWL_USERDATA to store WindowInfo pointer, use 
-  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
-  of windows and WindowInfo structs)
-* remember default bookmarks state
+* ability to do pre-release builds
+* test jbig images work
+* src version of jasper
+* try jasper from ghostscript to see if can decode failing images
+* src version of libjpeg
+* src version of freetype and update to latest freetype
+* maybe: option to disable update check (some people still don't have broadband?)
+* maybe: remember default bookmarks state
 * maybe: remember and restore size and position of the window
 
 Long term todo:
@@ -32,6 +32,10 @@ Long term todo:
   to make it easier to use in C++ code without all those annoying DStringInit()
   calls
 * printing improvements
+* add lemmings
+* don't use GWL_USERDATA to store WindowInfo pointer, use 
+  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
+  of windows and WindowInfo structs)
 
 Maybe:
 * use MultiByteToWideChar() 
