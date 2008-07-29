@@ -1,3 +1,7 @@
+# Arguments:
+# CFG=dbg|rel (default: dbg)
+# EXTCFLAGS=$CFLAGS
+
 # Set default configuration
 !if "$(CFG)"==""
 CFG=dbg
@@ -49,6 +53,7 @@ SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc /I$(FITZ_DIR)\include /I
 	/IDialogSizer /I$(ZLIB_DIR) 
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS" /D "__func__=\"\"" 
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
 #SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_PDFSYNC_GUI_ENHANCEMENT" /D "SYNCTEX_FEATURE"
 

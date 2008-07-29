@@ -97,7 +97,11 @@ static BOOL             gDebugShowLinks = FALSE;
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW RGB(0x40, 0x40, 0x40)
 
+#ifdef SVN_PRE_RELEASE_VER
+#define ABOUT_BG_COLOR          RGB(255,0,0)
+#else
 #define ABOUT_BG_COLOR          RGB(255,242,0)
+#endif
 
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
@@ -687,7 +691,12 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
 
 static HINTERNET g_hOpen = NULL;
 
+#ifdef SVN_PRE_RELEASE_VER
+/* TODO: this needs to be changed!!!! */
+#define SUMATRA_UPDATE_INFO_URL "http://fastdl.org/sumpdf-prerelease-latest.txt"
+#else
 #define SUMATRA_UPDATE_INFO_URL "http://fastdl.org/sumpdf-latest.txt"
+#endif
 
 bool WininetInit()
 {
@@ -3004,7 +3013,13 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 #define SUMATRA_TXT             "Sumatra PDF"
 #define SUMATRA_TXT_FONT        "Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   24
+#define TXTFY(val) #val
+
+#ifdef SVN_PRE_RELEASE_VER
+#define BETA_TXT                "Pre-Release"
+#else
 #define BETA_TXT                "Beta v" CURR_VERSION
+#endif
 #define BETA_TXT_FONT           "Arial Black"
 #define BETA_TXT_FONT_SIZE      12
 #define LEFT_TXT_FONT           "Arial"
@@ -3033,6 +3048,10 @@ typedef struct AboutLayoutInfoEl {
 } AboutLayoutInfoEl;
 
 AboutLayoutInfoEl gAboutLayoutInfo[] = {
+#ifdef SVN_PRE_RELEASE_VER
+    { "a note", "Pre-release version, for testing only!", NULL,
+    0, 0, 0, 0, 0, 0, 0, 0 },
+#endif
     { "programming", "Krzysztof Kowalczyk", "http://blog.kowalczyk.info",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
@@ -3080,7 +3099,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     int             leftDy, rightDy;
     int             leftLargestDx, rightLargestDx;
     int             sumatraPdfTxtDx, sumatraPdfTxtDy;
-    int             betaTxtDx, betaTxtDy;
     int             linePosX, linePosY, lineDy;
     int             currY;
     int             fontDyDiff;
@@ -3119,10 +3137,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     sumatraPdfTxtDy = txtSize.cy;
 
     boxDy = sumatraPdfTxtDy + ABOUT_BOX_MARGIN_DY * 2;
-    txt = BETA_TXT;
-    GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
-    betaTxtDx = txtSize.cx;
-    betaTxtDy = txtSize.cy;
 
     (HFONT)SelectObject(hdc, fontLeftTxt);
     leftLargestDx = 0;
@@ -3196,6 +3210,16 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = BETA_TXT;
     TextOut(hdc, x, y, txt, strlen(txt));
+
+#ifdef SVN_PRE_RELEASE_VER
+    GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
+    y += (int)txtSize.cy + 2;
+
+    char buf[128];
+    _snprintf(buf, dimof(buf), "v%s svn %d", CURR_VERSION, SVN_PRE_RELEASE_VER);
+    txt = &(buf[0]);
+    TextOutA(hdc, x, y, txt, strlen(txt));
+#endif
     SetTextColor(hdc, ABOUT_BORDER_COL);
 
     offY += boxDy;
