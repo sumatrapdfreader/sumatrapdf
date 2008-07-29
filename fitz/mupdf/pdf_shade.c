@@ -6,9 +6,13 @@ pdf_loadcompsiteshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_o
 {
 	fz_error *error;
 	pdf_function *func;
+	fz_obj *obj;
 	int i;
 
-	error = pdf_loadfunction(&func, xref, funcdict);
+	obj = fz_dictgets(shading, "Function");
+	if (!obj)
+		return fz_throw("unable to evaluate shading function");
+	error = pdf_loadfunction(&func, xref, obj);
 	if (error)
 		return fz_rethrow(error, "unable to evaluate shading function");
 
