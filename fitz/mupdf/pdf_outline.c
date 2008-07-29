@@ -1,6 +1,7 @@
 #include <fitz.h>
 #include <mupdf.h>
 
+/* TODO: we leak node on errors */
 static fz_error *
 loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 {
@@ -9,7 +10,7 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	fz_obj *obj;
 
 	node = fz_malloc(sizeof(pdf_outline));
-	node->title = "<unknown>";
+	node->title = nil;
 	node->link = nil;
 	node->child = nil;
 	node->next = nil;
@@ -19,11 +20,16 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Title");
 	if (obj)
 	{
+		error = pdf_resolve(&obj, xref);
+		if (error)
+			return fz_rethrow(error, "cannot resolve /Title");
 		error = pdf_toutf8(&node->title, obj);
 		if (error)
 			return fz_rethrow(error, "cannot convert Title to UTF-8");
-		pdf_logpage("title %s\n", node->title);
+		pdf_logpage("title %s\n", node->title ? node->title : "<unknown>");
 	}
+	if (!node->title)
+		node->title = fz_strdup("<unknown>");
 
 	if (fz_dictgets(dict, "Dest") || fz_dictgets(dict, "A"))
 	{
