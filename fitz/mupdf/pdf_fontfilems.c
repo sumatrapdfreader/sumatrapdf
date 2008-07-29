@@ -623,8 +623,8 @@ pdf_destoryfontlistMS()
 	fontlistMS.cap = 0;
 }
 
-fz_error *
-pdf_lookupfontMS(char *fontname, char **fontpath, int *index)
+static fz_error *
+pdf_lookupfontMS2(char *fontname, char **fontpath, int *index, int *didfind)
 {
     pdf_fontmapMS fontmap;
     pdf_fontmapMS *found = nil;
@@ -663,6 +663,9 @@ pdf_lookupfontMS(char *fontname, char **fontpath, int *index)
         *index = fontlistMS.fontmap[0].index;
     }
 
+    *didfind = 0;
+    if (found)
+    	*didfind = 1;
 	return fz_okay;
 }
 
@@ -692,6 +695,29 @@ static fz_error *initfontlibs(void)
 	return fz_okay;
 }
 
+static fz_error *
+pdf_lookupfontMS(pdf_font *font, char *fontname, char **fontpath, int *index)
+{
+	fz_error  *error;
+	int found;
+	char *fontname2 = font->super.name;
+
+	error = initfontlibs();
+	if (error)
+		return error;
+	error = pdf_lookupfontMS2(fontname, fontpath, index, &found);
+	if (error)
+		return error;
+
+    if (!found && fontname2)
+	{
+		error = pdf_lookupfontMS2(fontname2, fontpath, index, &found);
+		if (error)
+			return error;
+	}
+	return fz_okay;
+}
+
 fz_error *
 pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 {
@@ -702,12 +728,8 @@ pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 	char *file;
 	int index;
 
-	error = initfontlibs();
+	error = pdf_lookupfontMS(font, basefont,&file,&index);
 	if (error)
-		return error;
-
-	error = pdf_lookupfontMS(basefont,&file,&index);
-	if(error)
 		return error;
 
 	fterr = FT_New_Face(ftlib, file, index, &face);
@@ -728,12 +750,8 @@ pdf_loadsystemfont(pdf_font *font, char *basefont, char *collection)
 	char *file;
 	int index;
 
-	error = initfontlibs();
+	error = pdf_lookupfontMS(font, basefont,&file,&index);
 	if (error)
-		return error;
-
-	error = pdf_lookupfontMS(basefont,&file,&index);
-	if(error)
 		goto cleanup;
 
 	fterr = FT_New_Face(ftlib, file, index, &face);
