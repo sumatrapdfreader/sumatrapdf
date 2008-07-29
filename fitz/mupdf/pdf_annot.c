@@ -88,6 +88,7 @@ pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict)
 
 	link = nil;
 	dest = nil;
+	kind = PDF_LUNKNOWN;
 
 	obj = fz_dictgets(dict, "Rect");
 	if (obj)
@@ -109,9 +110,9 @@ pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict)
 		dest = resolvedest(xref, obj);
 		pdf_logpage("dest %d %d R\n", fz_tonum(dest), fz_togen(dest));
 		fz_dropobj(obj);
+		kind = PDF_LGOTO;
 	}
 
-	kind = PDF_LUNKNOWN;
 	action = fz_dictgets(dict, "A");
 	if (action)
 	{
