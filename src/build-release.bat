@@ -13,18 +13,18 @@
 devenv ..\sumatrapdf.sln /Rebuild "Release|Win32"
 @IF ERRORLEVEL 1 goto BUILD_FAILED
 echo Compilation ok!
-copy ..\Release\SumatraPDF.exe ..\Release\SumatraPDF-uncomp.exe
-@rem upx --best ..\Release\SumatraPDF.exe
-upx300 --ultra-brute ..\Release\SumatraPDF.exe
+copy ..\obj-rel\SumatraPDF.exe ..\obj-rel\SumatraPDF-uncomp.exe
+@rem upx --best ..\obj-rel\SumatraPDF.exe
+upx --ultra-brute ..\obj-rel\SumatraPDF.exe
 @IF ERRORLEVEL 1 goto PACK_FAILED
 
 @makensis installer
 @IF ERRORLEVEL 1 goto INSTALLER_FAILED
 
-move SumatraPDF-install.exe ..\Release\SumatraPDF-%VERSION%-install.exe
-copy ..\Release\SumatraPDF-%VERSION%-install.exe %FASTDL_PATH%\SumatraPDF-%VERSION%-install.exe
+move SumatraPDF-install.exe ..\obj-rel\SumatraPDF-%VERSION%-install.exe
+copy ..\obj-rel\SumatraPDF-%VERSION%-install.exe %FASTDL_PATH%\SumatraPDF-%VERSION%-install.exe
 
-@cd ..\Release
+@cd ..\obj-rel
 @rem don't bother compressing since our *.exe has already been packed
 zip -0 SumatraPDF-%VERSION%.zip SumatraPDF.exe
 copy SumatraPDF-%VERSION%.zip %FASTDL_PATH%\SumatraPDF-%VERSION%.zip

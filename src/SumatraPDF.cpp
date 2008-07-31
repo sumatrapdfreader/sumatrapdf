@@ -2255,7 +2255,7 @@ void DisplayModel::pageChanged()
         
         if (INVALID_PAGE_NO != currPageNo) {
             hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
-            SetWindowText(win->hwndPageBox, buf);
+            SetWindowTextA(win->hwndPageBox, buf);
         }
         
         if (win->needrefresh)
