@@ -180,7 +180,6 @@ public:
 private:
     HANDLE            _getPageSem;
 
-    pdf_xref * xref() { return _xref; }
     pdf_pagetree * pages() { return _pageTree; }
 
     void dropPdfPage(int pageNo);
