@@ -254,6 +254,7 @@ public:
     PdfLink *       linkAtPosition(int x, int y);
 
     virtual void    handleLink(PdfLink *pdfLink) = 0;
+    virtual void    goToNamedDest(const char *name) = 0;
 
     virtual void    cvtUserToScreen(int pageNo, double *x, double *y) = 0;
     virtual void    cvtScreenToUser(int *pageNo, double *x, double *y) = 0;

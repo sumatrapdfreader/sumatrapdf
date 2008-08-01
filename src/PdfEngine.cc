@@ -329,6 +329,14 @@ int PdfEngineFitz::findPageNo(fz_obj *dest)
     return 0;
 }
 
+fz_obj *PdfEngineFitz::getNamedDest(const char *name)
+{
+    fz_obj *obj = fz_dictgets(xref()->dests, (char*)name);
+    if (obj)
+        pdf_resolve(&obj, xref());
+    return resolvedest(xref(), obj);
+}
+
 pdf_page *PdfEngineFitz::getPdfPage(int pageNo)
 {
     if (!_pages)

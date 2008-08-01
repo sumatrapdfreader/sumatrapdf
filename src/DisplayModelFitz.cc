@@ -135,6 +135,19 @@ void DisplayModelFitz::goToTocLink(void *link)
     }
 }
 
+void DisplayModelFitz::goToNamedDest(const char *name)
+{
+    fz_obj *dest = pdfEngineFitz()->getNamedDest(name);
+    if (!dest)
+    {
+        goToPage(1, 0);
+        return;
+    }
+    int page = pdfEngineFitz()->findPageNo(dest);
+    if (page > 0)
+        goToPage(page, 0);
+}
+
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * to <buf>. Returnes number of copied characters */
 int DisplayModelFitz::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)

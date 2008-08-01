@@ -298,6 +298,12 @@ Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename);
 #define DDECOMMAND_OPEN_A         "Open"
 #define DDECOMMAND_OPEN_W         L DDECOMMAND_OPEN_A
 
+// jump to named destination command
+//  format: [GoToNamedDest("<pdffilepath>","<destination name>")]
+//  eg: [GoToNamedDest("c:\file.pdf", "chapter.1")]. pdf file must be already opened
+#define DDECOMMAND_GOTO_A         "GotoNamedDest"
+#define DDECOMMAND_GOTO_W         L DDECOMMAND_GOTO_A
+
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam);

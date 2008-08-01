@@ -37,7 +37,7 @@ pdf_droplink(pdf_link *link)
 	fz_free(link);
 }
 
-static fz_obj *
+fz_obj *
 resolvedest(pdf_xref *xref, fz_obj *dest)
 {
 	if (fz_isname(dest))

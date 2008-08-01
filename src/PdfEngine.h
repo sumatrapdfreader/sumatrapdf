@@ -175,6 +175,7 @@ public:
 
     pdf_page * getPdfPage(int pageNo);
     int        findPageNo(fz_obj *dest);
+    fz_obj    *getNamedDest(const char *name);
 
 private:
     HANDLE            _getPageSem;

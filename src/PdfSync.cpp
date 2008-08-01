@@ -16,13 +16,11 @@
 // convert a PDF coordinate into a sync file coordinate
 #define PDFCOORDINATE_TO_SYNCCOORDINATE(p)          (p*65781.76)
 
-
 // Test if the file 'filename' exists
 bool FileExists( LPCTSTR filename ) {
     struct _stat buffer ;
     return 0 == _tstat( filename, &buffer );
 }
- 
 
 Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename)
 {
@@ -671,6 +669,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         // Parse the command
         char pdffile[_MAX_PATH];
         char srcfile[_MAX_PATH];
+        char destname[_MAX_PATH];
         UINT line,col, newwindow = 0, setfocus = 0;
         const char *pos;
         
@@ -710,7 +709,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             }
         }
         // Open file DDE command.
-        // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>", <newwindow>, <setfocus>)
+        // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>", <newwindow>, <setfocus>)]
         else if ( (pos = command) &&
             str_skip(&pos, "[" DDECOMMAND_OPEN_A "(\"") &&
             str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
@@ -728,6 +727,26 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 ack.fAck = 1;
                 if (setfocus)
                     SetFocus(win->hwndFrame);
+            }
+            
+        }
+        // Jump to named destination DDE command.
+        // format is [<DDECOMMAND_GOTO_A>("<pdffilepath>", "<destination name>")]
+        else if ( (pos = command) &&
+            str_skip(&pos, "[" DDECOMMAND_GOTO_A "(\"") &&
+            str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+            str_skip(&pos, "\",\"") &&
+            str_copy_skip_until(&pos, destname, dimof(destname), '"') &&
+            str_skip(&pos, "\")]") 
+            )
+        {
+            // check if the PDF is already opened
+            WindowInfo *win = WindowInfoList_Find(pdffile);
+            
+            if (win && WS_SHOWING_PDF == win->state) {
+                win->dm->goToNamedDest(destname);
+                ack.fAck = 1;
+                SetFocus(win->hwndFrame);
             }
             
         }

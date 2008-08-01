@@ -65,6 +65,7 @@ void pdf_droplink(pdf_link *link);
 fz_error *pdf_loadoutline(pdf_outline **outlinep, pdf_xref *xref);
 void pdf_debugoutline(pdf_outline *outline, int level);
 void pdf_dropoutline(pdf_outline *outline);
+fz_obj *resolvedest(pdf_xref *xref, fz_obj *dest);
 
 fz_error *pdf_loadannots(pdf_comment **, pdf_link **, pdf_xref *, fz_obj *annots);
 

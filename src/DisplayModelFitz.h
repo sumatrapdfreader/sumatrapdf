@@ -14,6 +14,7 @@ public:
     PdfEngineFitz * pdfEngineFitz(void) { return (PdfEngineFitz*)_pdfEngine; }
     virtual void    handleLink(PdfLink *pdfLink);
     virtual void    goToTocLink(void *link);
+    virtual void    goToNamedDest(const char *name);
 
     virtual int     getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen);
 
