@@ -34,6 +34,16 @@
 #endif
 
 #define CURR_VERSION "0.8.2"
+/* #define SVN_PRE_RELEASE_VER 800 */
+
+#define _QUOTEME(x) #x
+#define QM(x) _QUOTEME(x)
+
+#ifdef SVN_PRE_RELEASE_VER
+#define UPDATE_CHECK_VER QM(SVN_PRE_RELEASE_VER)
+#else
+#define UPDATE_CHECK_VER CURR_VERSION
+#endif
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -736,7 +746,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
             return;
     }
 
-    char *url = SUMATRA_UPDATE_INFO_URL "?v=" CURR_VERSION;
+    char *url = SUMATRA_UPDATE_INFO_URL "?v=" UPDATE_CHECK_VER;
     HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, WM_APP_URL_DOWNLOADED);
     ctx->autoCheck = autoCheck;
 
@@ -2606,6 +2616,12 @@ static void OnBenchNextAction(WindowInfo *win)
         PostBenchNextAction(win->hwndFrame);
 }
 
+#ifdef SVN_PRE_RELEASE_VER
+int ParseSumatraVer(char *txt)
+{
+    return atoi(txt);
+}
+#else
 /* Given a string whose first line is a version number in the form: one or
    more integers separated by '.' (e.g. 0, 0.1, 1.3.5 etc.)
    return its numeric representation as integer, or -1 if invalid format.
@@ -2639,11 +2655,22 @@ int ParseSumatraVer(char *txt)
         return -1;
     return val;
 }
+#endif
 
 #ifdef DEBUG
+#ifdef SVN_PRE_RELEASE_VER
 void u_ParseSumatraVar()
 {
     assert(0 == ParseSumatraVer("0"));
+    assert(3 == ParseSumatraVer("3"));
+    assert(45 == ParseSumatraVer("45"));
+}
+#else
+void u_ParseSumatraVar()
+{
+    assert(0 == ParseSumatraVer("0"));
+    assert(3 == ParseSumatraVer("3"));
+    assert(-1 == ParseSumatraVer("30"));
     assert(0 == ParseSumatraVer("0.0"));
     assert(1 == ParseSumatraVer("0.1"));
     assert(10 == ParseSumatraVer("1.0"));
@@ -2656,11 +2683,12 @@ void u_ParseSumatraVar()
     assert(-1 == ParseSumatraVer("3."));
 }
 #endif
+#endif
 
 static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
 {
     Dialog_NewVersion_Data data = {0};
-    data.currVersion = utf8_to_utf16(CURR_VERSION);
+    data.currVersion = utf8_to_utf16(UPDATE_CHECK_VER);
     data.newVersion = utf8_to_utf16(newVersion);
     data.skipThisVersion = FALSE;
     int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
@@ -2684,7 +2712,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         char *tmp2 = (char*)str_find_char(tmp, '*');
         if (tmp2)
             *tmp2 = 0;
-        int currVer = ParseSumatraVer(CURR_VERSION);
+        int currVer = ParseSumatraVer(UPDATE_CHECK_VER);
         assert(-1 != currVer);
         int newVer = ParseSumatraVer(tmp);
         assert(-1 != newVer);
@@ -2699,7 +2727,11 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
             if (showDialog) {
                 BOOL download = ShowNewVersionDialog(win, tmp);
                 if (download) {
+#ifdef SVN_PRE_RELEASE_VER
+                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html"));
+#else
                     LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
+#endif
                 }
             }
         } else {
