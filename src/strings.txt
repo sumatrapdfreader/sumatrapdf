@@ -256,7 +256,7 @@ eu:&Itxi\tCtrl-W
 &Save as
 bg:&Запиши като...
 br:&Salvar como...
-hu:Ment&és másként
+hu:Ment&és másként...
 de:Speichern &unter...
 pl:Zapisz jako
 fr:&Enregistrer sous
@@ -303,7 +303,7 @@ eu:... bezala &Gorde
 &Print\tCtrl-P
 bg:От&печатай
 br:&Imprimir
-hu:Nyomt&atás
+hu:Nyomt&atás\tCtrl-P
 pl:Drukuj
 de:&Drucken...
 fr:&Imprimer
@@ -809,7 +809,7 @@ br:Tela cheia\tCtrl-L
 bg:Цял Екран\tCtrl-L
 de:Vollbild
 tr:Tam Ekran\tCtrl-L
-hu:Teljes Képernyő\tCtrl+L
+hu:Teljes képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
 ja:全画面表示\tCtrl-L
 fa:تمام‌صفحه\tCtrl-L
@@ -1130,7 +1130,7 @@ eu:Azken orria\tEnd
 Page...\tCtrl-G
 bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
-hu:Oldal...\tCtrl-G
+hu:Megadott oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
 de:Seite...
 fr:Page...\tCtrl-G
@@ -1224,7 +1224,7 @@ eu:&Zoom-a
 Fit &Page\tCtrl-0
 bg:Оразмери страницата\tCtrl-0
 br:&Página inteira\tCtrl-0
-hu:&Teljes Oldal\tCtrl-0
+hu:&Teljes oldal\tCtrl-0
 pl:Dopasuj do strony\tCtrl-0
 de:An Seite anpassen\tCtrl-0
 fr:Page entière\tCtrl-0
@@ -1271,7 +1271,7 @@ eu:Orriaren neurria egokitu\tCtrl-O
 Act&ual Size\tCtrl-1
 bg:Едно към едно\tCtrl-1
 br:&Tamanho real\tCtrl-1
-hu:&Eredeti Méret\tCtrl-1
+hu:&Eredeti méret\tCtrl-1
 pl:Prawdziwy rozmiar\tCtrl-1
 de:Tat&sächliche Größe\tCtrl-1
 fr:Taille réelle\tCtrl-1
@@ -1642,7 +1642,7 @@ br:Localizar anterior
 bg:Намери предишното
 de:Rückwärts suchen
 tr:Öncekini bul
-hu:Előző Keresése
+hu:Előző keresése
 lt:Rasti kitą
 my:Cari sebelum
 ja:前を検索
@@ -1678,7 +1678,7 @@ br:Localizar seguinte
 bg:Намери следващото
 de:Weitersuchen
 tr:Sonrakini Bul
-hu:Következő Keresése
+hu:Következő keresése
 lt:Rasti ankstesnį
 my:Cari selepas
 ja:次を検索
@@ -1713,7 +1713,7 @@ br:Diferenciar  minúsculas e Maiúsculas
 bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
-hu:Kis- és nagybetű megkülönböztetése
+hu:Kis- és nagybetűk megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字に一致する
 it:Sensibilità al carattere
@@ -1933,7 +1933,7 @@ SumatraPDF is now a default reader for PDF files.
 bg:SumatraPDF е четеца по подразбиране на PDF файлове.
 br:SumatraPDF tornou-se o leitor PDF padrão.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
-hu:A SumatraPDF az alapértelmezett PDF olvasó.
+hu:A SumatraPDF lett az alapértelmezett PDF olvasó.
 pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
 fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
 tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
@@ -1979,7 +1979,7 @@ Failed to save a file
 bg:Грешка при записване на файла
 br:Erro ao salvar o arquivo.
 de:Fehler beim Speichern der Datei!
-hu:Nem lehet menteni a fájlt.
+hu:A fájl mentése sikertelen
 pl:Problem przy zapisywaniu pliku.
 fr:Echec d'enregistrement du fichier
 tr:Dosya kaydedilirken hata çıktı.
@@ -2071,7 +2071,7 @@ Could not open Printer
 bg:Принтера не е достъпен
 br:Erro ao acessar a impressora.
 de:Konnte den Drucker nicht ansprechen.
-hu:Nem lehet megnyitni a Nyomtatót.
+hu:Nem lehet megnyitni a nyomtatót.
 pl:Drukarka niedostępna.
 fr:Impossible d'accéder à l'imprimante
 tr:Yazıcıya erişilemiyor.
@@ -2161,7 +2161,7 @@ eu:Arazoak inprimatze lanetan
 -
 Contribute translation
 bg:Допринеси за превода
-hu:Járulj hozzá a fordításhoz
+hu:&Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
 fr:Contribuer à la traduction
 tr:Çeviriye katkıda bulunun.
@@ -2214,19 +2214,20 @@ eu:Alderantzizko bilaketa ezarri
 mk:Активирај инверзно пребарување
 -
 Change language
-br:Mudar o idioma
-de:Sprache ändern
-pl:Zmien język
-sk:Zmeniť jazyk
-uk:Змінити мову
+br:Mudar o idioma (Change language)
+de:Sprache ändern (Change language)
+pl:Zmien język (Change language)
+sk:Zmeniť jazyk (Change language)
+uk:Змінити мову (Change language)
 ru:Изменить язык (Change language)
-es:Cambiar Idioma
-hr:Promijeni jezik
-it:Cambia lingua
-nl:Taal kiezen
-fr:Changer la langue
-eu:Hizkuntza aldatu
-mk:Смени јазик
+es:Cambiar Idioma (Change language)
+hr:Promijeni jezik (Change language)
+it:Cambia lingua (Change language)
+nl:Taal kiezen (Change language)
+fr:Changer la langue (Change language)
+eu:Hizkuntza aldatu (Change language)
+mk:Смени јазик (Change language)
+hu:Nyelv kiválasztása (Change language)
 -
 Enter password
 br:Digite a senha
@@ -2241,6 +2242,7 @@ nl:Wachtwoord invoeren
 fr:Entrer le mot de passe
 eu:Pasahitza sartu
 mk:Внеси лозинка
+hu:Írja be a jelszót
 -
 Enter password for %s
 br:Digite a senha de %s
@@ -2255,6 +2257,7 @@ nl:Wachtwoord invoeren voor %s
 fr:Entrer le mot de passe pour %s
 eu:%s-rentzat pasahitza sartu
 mk:Внеси лозинка за %s
+hu:Írja be a(z) %s jelszavát
 -
 Go to page
 br:Ir para a página
@@ -2269,6 +2272,7 @@ nl:Ga naar pagina
 fr:Aller à la page
 eu:...garren orrira joan
 mk:Појди на страница
+hu:Ugrás adott oldalra
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2283,6 +2287,7 @@ nl:Associëren met PDF-bestanden?
 fr:Associer aux fichiers PDF ?
 eu:PDF fitxategiekin lotu?
 mk:Да управувам со PDF датотеки?
+hu:Társítsuk a PDF fájlokkal?
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2297,6 +2302,7 @@ nl:SumatraPDF als standaardlezer van PDF-bestanden instellen?
 fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 eu:PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
 mk:Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
+hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2312,6 +2318,7 @@ fr:Ne plus le demander
 no:Ikke spør meg igjen.
 eu:Ez berriz galdetu
 mk:Не ме прашувај повторно
+hu:Ne kérdezze meg többé
 -
 &Check for new version
 br:Procurar atualizações
@@ -2327,6 +2334,7 @@ fr:Vérifier les mises à jour
 no:Se etter oppdatering
 eu:Bertsio berriagorik ba ote den begiratu
 mk:&Провери за нова верзија
+hu:Újabb &verzió keresése
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2342,6 +2350,7 @@ fr:Pas de nouvelle version disponible
 no:Ingen ny versjon tilgjenglig.
 eu:Ez dago bertsio berririk.
 mk:Нема понова верзија.
+hu:Nincs újabb verzió.
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2357,6 +2366,7 @@ fr:Vous avez la dernière version sortie
 no:Du har den nyeste versjonen.
 eu:Azkeneko bertsioa da daukazuna.
 mk:Ја имаш најновата верзија.
+hu:Önnél a legfrissebb verzió van telepítve.
 -
 You have version %s
 br:Você tem a versão %s
@@ -2372,6 +2382,7 @@ fr:Votre version est la %s
 no:Du har versjon %s
 eu:%s bertsioa daukazu.
 mk:Имаш верзија %s
+hu:Jelenlegi verzió: %s
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2387,6 +2398,7 @@ fr:La version %s est disponible. Télécharger la nouvelle version ?
 no:Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 eu:%s bertsio berria eskuragarri dago. Jeisterik nahi?
 mk:Новата верзија %s е достапна. Сакаш да ја преземеш?
+hu:Új verzió érhető el (%s). Kívánja letölteni?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2402,6 +2414,7 @@ fr:Une nouvelle version est disponible
 no:Ny versjon tilgjenglig.
 eu:Bertsio berria eskuragarri duzu.
 mk:Достапна е нова верзија.
+hu:Új verzió érhető el.
 -
 Skip this version
 br:Pular esta versão.
@@ -2416,3 +2429,4 @@ nl:Deze versie overslaan
 fr:Ignorer cette version
 eu:Bertsio berria saihestu
 mk:Прескокни ја оваа верзија
+hu:Verzió kihagyása
