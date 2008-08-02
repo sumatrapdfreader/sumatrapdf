@@ -45,12 +45,15 @@ Error:
     return NULL;
 }
 
-void DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
+bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
 {
     pdf_page *page = pdfEngineFitz()->getPdfPage(pageNo);
     double zoom = zoomReal();
     int rot = rotation();
     fz_point p;
+    assert(page);
+    if(!page)
+        return false;
 
     normalizeRotation (&rot);
     zoom *= 0.01;
@@ -72,10 +75,10 @@ void DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
 
     *x = tp.x + 0.5 + pageInfo->screenX - pageInfo->bitmapX + vx;
     *y = tp.y + 0.5 + pageInfo->screenY - pageInfo->bitmapY + vy;
-
+    return true;
 }
 
-void DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
+bool DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
 {
     double zoom = zoomReal();
     int rot = rotation();
@@ -86,7 +89,7 @@ void DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
 
     *pageNo = getPageNoByPoint(*x, *y);
     if (*pageNo == POINT_OUT_OF_PAGE) 
-        return;
+        return false;
 
     pdf_page *page = pdfEngineFitz()->getPdfPage(*pageNo);
 
@@ -108,6 +111,7 @@ void DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
 
     *x = tp.x + vx;
     *y = tp.y + vy;
+    return true;
 }
 
 void DisplayModelFitz::handleLink(PdfLink *pdfLink)

@@ -2836,7 +2836,8 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     recD.y = win->fwdsearchmarkLoc.y-MARK_SIZE/2;
     recD.dx = MARK_SIZE;
     recD.dy = MARK_SIZE;
-    win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
+    if(!win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD))
+        return;
     RectI_FromRectD (&recI, &recD);
     PaintTransparentRectangle(win, hdc, &recI, selectionColorRed);
 
@@ -3411,8 +3412,12 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     if (!win || !win->dm ) return;
 
     if (!win->pdfsync) {
-        DBG_OUT("Pdfsync: No sync file loaded!\n");
-        return;
+        win->pdfsync = CreateSyncrhonizer(win->watcher.filepath());
+        if (!win->pdfsync) {
+            DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
+            WindowInfo_ShowMessage_Asynch(win, L"Synchronization file cannot be opened", true);
+            return;
+        }
     }
 
     int pageNo = POINT_OUT_OF_PAGE;
@@ -3429,6 +3434,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilename,dimof(srcfilename),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
+        WindowInfo_ShowMessage_Asynch(win, L"No synchronization info at this position.", true);
         return;
     }
 
@@ -4712,7 +4718,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
     wchar_t buf[_MAX_PATH];
     wchar_t *txt = &buf[0];
     if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        txt = L"Snchronization file cannot be opened";
+        txt = L"Synchronization file cannot be opened";
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
         _snwprintf(buf, dimof(buf), L"Page number %u inexistant", page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)

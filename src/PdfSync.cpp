@@ -287,10 +287,10 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         case 's':
             {
                 fscanf(fp, " %u\n", &cur_sheetNumber);
-                size_t nsheet = pdfsheet_index.size();
-                if(cur_sheetNumber>=nsheet) {
+                size_t maxsheet = pdfsheet_index.size();
+                if(cur_sheetNumber>=maxsheet) {
                     pdfsheet_index.resize(cur_sheetNumber+1);
-                    for(size_t s=nsheet;s<cur_sheetNumber;s++)
+                    for(size_t s=maxsheet;s<=cur_sheetNumber;s++)
                         pdfsheet_index[s] = -1;
                 }
                 break;

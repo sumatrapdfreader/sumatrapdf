@@ -18,8 +18,8 @@ public:
 
     virtual int     getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen);
 
-    virtual void    cvtUserToScreen(int pageNo, double *x, double *y);
-    virtual void    cvtScreenToUser(int *pageNo ,double *x, double *y);
+    virtual bool    cvtUserToScreen(int pageNo, double *x, double *y);
+    virtual bool    cvtScreenToUser(int *pageNo ,double *x, double *y);
 
     virtual void MapResultRectToScreen(PdfSearchResult *rect);
 };

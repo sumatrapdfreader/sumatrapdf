@@ -625,8 +625,9 @@ void DisplayModel::recalcVisibleParts(void)
     }
 }
 
+
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
-void DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
+bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
 {
     double          sx, sy, ex, ey;
 
@@ -635,13 +636,13 @@ void DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
     ex = r->x + r->dx;
     ey = r->y + r->dy;
 
-    cvtUserToScreen(pageNo, &sx, &sy);
-    cvtUserToScreen(pageNo, &ex, &ey);
-    RectD_FromXY(r, sx, ex, sy, ey);
+    return cvtUserToScreen(pageNo, &sx, &sy)
+        && cvtUserToScreen(pageNo, &ex, &ey)
+        && RectD_FromXY(r, sx, ex, sy, ey);
 }
 
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
-void DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
+bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
 {
     double          sx, sy, ex, ey;
 
@@ -650,9 +651,9 @@ void DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
     ex = r->x + r->dx;
     ey = r->y + r->dy;
 
-    cvtScreenToUser(pageNo, &sx, &sy);
-    cvtScreenToUser(pageNo, &ex, &ey);
-    RectD_FromXY(r, sx, ex, sy, ey);
+    return cvtScreenToUser(pageNo, &sx, &sy)
+        && cvtScreenToUser(pageNo, &ex, &ey)
+        && RectD_FromXY(r, sx, ex, sy, ey);
 }
 
 int DisplayModel::getPageNoByPoint (double x, double y) 

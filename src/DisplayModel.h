@@ -256,10 +256,10 @@ public:
     virtual void    handleLink(PdfLink *pdfLink) = 0;
     virtual void    goToNamedDest(const char *name) = 0;
 
-    virtual void    cvtUserToScreen(int pageNo, double *x, double *y) = 0;
-    virtual void    cvtScreenToUser(int *pageNo, double *x, double *y) = 0;
-    void            rectCvtUserToScreen(int pageNo, RectD *r);
-    void            rectCvtScreenToUser(int *pageNo, RectD *r);
+    virtual bool    cvtUserToScreen(int pageNo, double *x, double *y) = 0;
+    virtual bool    cvtScreenToUser(int *pageNo, double *x, double *y) = 0;
+    bool            rectCvtUserToScreen(int pageNo, RectD *r);
+    bool            rectCvtScreenToUser(int *pageNo, RectD *r);
 
     void            SetFindMatchCase(bool match) { _pdfSearchEngine->SetSensitive(match); }
     PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, wchar_t *text = NULL);
