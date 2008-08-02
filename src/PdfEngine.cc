@@ -316,14 +316,19 @@ PdfTocItem *PdfEngineFitz::getTocTree()
 int PdfEngineFitz::findPageNo(fz_obj *dest)
 {
     int p = 0;
-    int n = fz_tonum(dest), g = fz_togen(dest);
+    if (fz_isint(dest)) {
+        p = fz_toint(dest);
+        return p+1;
+    }
+    int n = fz_tonum(dest);
+    int g = fz_togen(dest);
 
-    while (p < _pageCount) {
-        if (n == fz_tonum(_pageTree->pref[p]) &&
-            g == fz_togen(_pageTree->pref[p]))
+    while (p++ < _pageCount) {
+        fz_obj *page = _pageTree->pref[p];
+        int np = fz_tonum(page);
+        int gp = fz_togen(page);
+        if (n == np && g == gp)
             return p + 1;
-
-        p++;
     }
 
     return 0;

@@ -119,12 +119,13 @@ void DisplayModelFitz::handleLink(PdfLink *pdfLink)
     // TODO: implement me
 }
 
-void DisplayModelFitz::goToTocLink(void *link)
+void DisplayModelFitz::goToTocLink(void *linktmp)
 {
-    if (!link)
+    if (!linktmp)
         return;
 
-    switch (((pdf_link *)link)->kind) {
+    pdf_link *link = (pdf_link*)linktmp;
+    switch (link->kind) {
         case PDF_LURI:
             break;
         case PDF_LGOTO:
@@ -132,8 +133,9 @@ void DisplayModelFitz::goToTocLink(void *link)
         case PDF_LUNKNOWN: 
 #endif
         {
-            int page = pdfEngineFitz()->findPageNo(((pdf_link *)link)->dest);
-            if (page > 0) goToPage(page, 0);
+            int page = pdfEngineFitz()->findPageNo(link->dest);
+            if (page > 0) 
+                goToPage(page, 0);
         }
         break;
     }

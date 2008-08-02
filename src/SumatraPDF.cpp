@@ -3610,7 +3610,6 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
     }
 }
 
-
 static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
 {
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
@@ -3619,7 +3618,6 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
 
     OnInverseSearch(win, x, y);
 }
-
 
 static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
 {
@@ -5576,7 +5574,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tvinsert.itemex.lParam = (LPARAM)entry->link;
     tvinsert.itemex.pszText = entry->title;
     
-    /* Mu PDF seems to add a left-to-right embedding U+202A character at the
+    /* mupdf seems to add a left-to-right embedding U+202A character at the
     start of every entry which shows up as a box on some Windows installs, so
     skip it. */
     if (NULL != tvinsert.itemex.pszText && 0x202A == tvinsert.itemex.pszText[0]) {
@@ -6116,20 +6114,23 @@ InitMouseWheelInfo:
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
                 LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
-                switch (pnmtv->hdr.code) {
-                    case TVN_SELCHANGEDW: {
+                switch (pnmtv->hdr.code) 
+                {
+                    case TVN_SELCHANGEDW: 
+                    {
                         // When the focus is set to the toc window the first item in the treeview is automatically
                         // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
                         // We have to ignore this message to prevent the current page to be changed.
-                        if (pnmtv->action==TVC_UNKNOWN || pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) {
-                        TV_ITEMW tvi;
-                        tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
-                        tvi.cchTextMax = 0;
-                        tvi.pszText = NULL;
-                        tvi.mask = TVIF_PARAM;
+                        if (pnmtv->action==TVC_UNKNOWN || pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) 
+                        {
+                            TV_ITEMW tvi;
+                            tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
+                            tvi.cchTextMax = 0;
+                            tvi.pszText = NULL;
+                            tvi.mask = TVIF_PARAM;
                             if (TreeView_GetItemW(win->hwndTocBox, &tvi) && win->dm)
-                            win->dm->goToTocLink((void *)tvi.lParam);
-                    }
+                                win->dm->goToTocLink((void *)tvi.lParam);
+                        }
                     }
                     break;
                     case TVN_KEYDOWN: {
