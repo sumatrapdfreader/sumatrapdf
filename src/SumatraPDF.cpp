@@ -6623,6 +6623,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
     bool                printDialog = false;
+    char                *destName = 0;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
@@ -6749,6 +6750,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
+        if (is_arg("-nameddest")) {
+            currArg = currArg->next;
+            if (currArg) {
+                destName = currArg->str;
+                currArg = currArg->next;
+            }
+            continue;
+        }
+
         // we assume that switches come first and file names to open later
         // TODO: it would probably be better to collect all non-switches
         // in a separate list so that file names can be interspersed with
@@ -6782,15 +6792,22 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         while (currArg) {
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
-                TCHAR command[_MAX_PATH+10];
+                TCHAR command[2 * _MAX_PATH + 20];
                 sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%s\", 1, 1)]", currArg->str);
                 DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
+                if (destName && pdfOpened == 0)
+                {
+                    sprintf(command, "[" DDECOMMAND_GOTO_A "(\"%s\", \"%s\")]", currArg->str, destName);
+                    DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
+                }
             }
             else {
                 bool showWin = !exitOnPrint;
                 win = LoadPdf(currArg->str, showWin);
                 if (!win)
                     goto Exit;
+                if (destName && pdfOpened == 0)
+                    win->dm->goToNamedDest(destName);
             }
 
             if (exitOnPrint)
