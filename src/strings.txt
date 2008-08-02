@@ -317,7 +317,7 @@ nl:&Afdrukken
 ta:அச்சிடு
 es:&Imprimir
 hr:&Ispiši\tCtrl-P
-ru:Печать
+ru:Печать\tCtrl-P
 ar:&طباعة
 cn:打印(&P)
 sv:Skriv &ut\tCtrl-P
@@ -1531,6 +1531,7 @@ eu:&Web orria bisitatu
 -
 &Manual
 pl:Instrukcja obslugi
+ru:Руководство
 -
 &About
 bg:Относно програмата...
@@ -1598,6 +1599,7 @@ no:Side:
 sk:Strana:
 sp-rs:Strana:
 ro:Pagina:
+ru:Страница:
 -
 Find:
 br:Localizar:
@@ -2084,7 +2086,7 @@ nl:Printer niet gevonden
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
 hr:Nije moguće otvoriti pisač
-ru:Невозможно найти принтер
+ru:Невозможно найти принтер.
 ar:تعذر فتح الطابعة
 cn:无法打开打印机
 sv:Kan inte anropa skrivaren.
@@ -2207,7 +2209,7 @@ de:Befehlszeile Inverssuche setzen
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
 uk:Установити зворотній пошук.
-ru:Инвертировать поиск
+ru:Задать команду обратного поиска
 es:Establecer búsqueda inversa
 hr:Omogući inverznu pretragu
 eu:Alderantzizko bilaketa ezarri
