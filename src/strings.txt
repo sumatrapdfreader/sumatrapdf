@@ -23,8 +23,10 @@
 # Italian:
 #   Angelo Contardi
 #   iBlawgger
-# Barry Haveman (webstek.info) - Dutch
+# Dutch:
+#   Barry Haveman (webstek.info) 
 #   Kristof Bal 
+#   Stephan Paternotte
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
@@ -266,7 +268,7 @@ ja:名前を付けて保存(&S)
 fa:ذخيره به
 dk:&Gem som
 it:&Salva come
-nl:&Opslaan als
+nl:&Opslaan als...
 ta:எனச் சேமி
 es:&Guardar como
 hr:&Spremi kao...
@@ -313,7 +315,7 @@ ja:印刷(&P)
 fa:چاپ\tCtrl-P
 dk:&Udskriv
 it:&Stampa
-nl:&Afdrukken
+nl:&Afdrukken\tCtrl-P
 ta:அச்சிடு
 es:&Imprimir
 hr:&Ispiši\tCtrl-P
@@ -360,7 +362,7 @@ ja:SumatraPDF を既定の PDF リーダーにする
 fa:PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
 dk:Gør SumatraPDF til din standard PDF læser
 it:Imposta SumatraPDF come Lettore Predefinito di Files PDF
-nl:Stel SumatraPDF in als de standaard PDF lezer
+nl:SumatraPDF instellen als standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
@@ -858,7 +860,7 @@ ja:ツール バーの表示
 fa:نمايش نوار ابزار
 dk:Vis værktøjslinie
 it:Mostra la Barra degli Strumenti
-nl:Toon werkbalk
+nl:Werkbalk tonen
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
 hr:Pokaži alatnu traku
@@ -1234,7 +1236,7 @@ ja:ページに合わせる(&P)\tCtrl-0
 fa:متناسب با پنجره\tCtrl-0
 dk:Hele &siden\tCtrl-0
 it:Intera &Pagina\tCtrl-0
-nl:Aan &Pagina aanpassen\tCtrl-0
+nl:Hele &Pagina\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
 es:Ajustar &Página\tCtrl-0
 hr:Prilagodi &stranici\tCtrl-0
@@ -1281,7 +1283,7 @@ ja:実際のサイズ(&U)\tCtrl-1
 fa:اندازه‌ي واقعی\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
 it:Dimensione Reale\tCtrl-1
-nl:Normale grootte\tCtrl-1
+nl:Ware grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
 es:Tamaño Real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
@@ -1533,6 +1535,7 @@ eu:&Web orria bisitatu
 pl:Instrukcja obslugi
 ru:Руководство
 ja:マニュアル(&M)
+nl:Handleiding
 -
 &About
 bg:Относно програмата...
@@ -1805,7 +1808,7 @@ ja:拡大
 fa:بزرگ‌نمايي
 dk:Zoom ind
 it:Ingrandisci
-nl:Zoom in
+nl:Inzoomen
 ta:பெரிதாக்கு
 es:Acercar Zoom
 hr:Uvećaj
@@ -1852,7 +1855,7 @@ ja:縮小
 fa:کوچک‌نمايي
 dk:Zoom ud
 it:Diminuisci
-nl:Zoom uit
+nl:Uitzoomen
 ta:சிறிதாக்கு
 es:Alejar Zoom
 hr:Umanji
@@ -1946,7 +1949,7 @@ ja:SumatraPDF は現在 PDF ファイルの既定のリーダーです。
 fa:.شما خواهد بود PDF مرورگر پيش‌فرض اسناد  SumatraPDF از اين پس
 dk:SumatraPDF er nu din standardlæser for PDF filer.
 it:SumatraPDF è stato impostato come lettore predefinito di Files PDF.
-nl:SumatraPDF is de standaardlezer voor PDF-bestanden.
+nl:SumatraPDF is nu de standaardlezer voor PDF-bestanden.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
 es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
@@ -1992,7 +1995,7 @@ ja:ファイルの保存に失敗しました
 fa:ذخيره کردن فايل با مشکل روبرو شد
 dk:Kunne ikke gemme filen.
 it:Salvataggio del File PDF fallito!
-nl:Opslaan mislukt.
+nl:Fout bij opslaan bestand
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
 hr:Spremanje datoteke nije uspjelo
@@ -2128,7 +2131,7 @@ tr:Yazdırma problemi.
 by:Памылка з друкаваннем.
 dk:Printer problem
 ta:அச்சுப்பொறி சிக்கல்
-nl:Probleem bij het printen.
+nl:Probleem bij het afdrukken.
 ja:印刷の問題です。
 fa:مشکل در چاپ
 it:Problemi di Stampa
@@ -2214,6 +2217,7 @@ uk:Установити зворотній пошук.
 ru:Задать команду обратного поиска
 es:Establecer búsqueda inversa
 hr:Omogući inverznu pretragu
+nl:Omgekeerde zoekrichting instellen
 eu:Alderantzizko bilaketa ezarri
 mk:Активирај инверзно пребарување
 ja:逆検索コマンドラインの設定
