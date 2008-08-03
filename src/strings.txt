@@ -66,7 +66,7 @@
 # Igor G. Olaizola - Basque
 
 Lang: en English
-Lang: ar Arabic (الْعَرَبيّة )
+Lang: ar Arabic (الْعَرَبيّة)
 Lang: by Belarusian (Беларуская)
 Lang: bg Bulgarian (Български)
 Lang: bn Bengali (বাংলা)
@@ -84,8 +84,8 @@ Lang: de German (Deutsch)
 Lang: gr Greek (Ελληνικά)
 Lang: he Hebrew (עברית)
 Lang: hu Hungarian (Magyar)
-Lang: id Indonesian
-Lang: ja Japanese (日本語 )
+Lang: id Indonesian (Bahasa Indonesia)
+Lang: ja Japanese (日本語)
 Lang: it Italian (Italiano)
 Lang: kr Korean (한국어)
 Lang: lt Lithuanian (Lietuvių)
@@ -93,7 +93,7 @@ Lang: ml Malayalam (മലയാളം)
 Lang: my Malaysian (Bahasa Melayu)
 Lang: mk Macedonian (Македонски)
 Lang: no Norwegian (Norsk)
-Lang: fa Persian (فارسی )
+Lang: fa Persian (فارسی)
 Lang: pl Polish (Polski)
 Lang: br Portuguese - Brazil (Português)
 Lang: pt Portuguese - Portugal (Português)
@@ -497,7 +497,7 @@ de:Einzelne Seite
 fr:Une seule page
 tr:Tek sayfa
 by:Адна старонка
-ja:単一ページ
+ja:単一のページ
 fa:نمايش تک‌صفحه‌اي
 dk:Enkelt side
 it:Pagina Singola
@@ -1277,7 +1277,7 @@ de:Tat&sächliche Größe\tCtrl-1
 fr:Taille réelle\tCtrl-1
 tr:Gerçek Boyut\tCtrl-1
 by:Рэальны памер\tCtrl-1
-ja:実際のサイズ\tCtrl-1
+ja:実際のサイズ(&U)\tCtrl-1
 fa:اندازه‌ي واقعی\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
 it:Dimensione Reale\tCtrl-1
@@ -1532,6 +1532,7 @@ eu:&Web orria bisitatu
 &Manual
 pl:Instrukcja obslugi
 ru:Руководство
+ja:マニュアル(&M)
 -
 &About
 bg:Относно програмата...
@@ -1600,6 +1601,7 @@ sk:Strana:
 sp-rs:Strana:
 ro:Pagina:
 ru:Страница:
+ja:ページ:
 -
 Find:
 br:Localizar:
@@ -1717,7 +1719,7 @@ de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
 hu:Kis- és nagybetűk megkülönböztetése
 my:Hampir sama
-ja:大文字と小文字に一致する
+ja:大文字と小文字を区別する
 it:Sensibilità al carattere
 nl:Hoofdlettergevoelig
 fi:Sama kirjainkoko
@@ -1940,7 +1942,7 @@ pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
 fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
 tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
 by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчанні.
-ja:SumatraPDF は現在 PDF ファイル用の既定のリーダーです。
+ja:SumatraPDF は現在 PDF ファイルの既定のリーダーです。
 fa:.شما خواهد بود PDF مرورگر پيش‌فرض اسناد  SumatraPDF از اين پس
 dk:SumatraPDF er nu din standardlæser for PDF filer.
 it:SumatraPDF è stato impostato come lettore predefinito di Files PDF.
@@ -2078,7 +2080,7 @@ pl:Drukarka niedostępna.
 fr:Impossible d'accéder à l'imprimante
 tr:Yazıcıya erişilemiyor.
 by:Немагчыма адчыніць друкарку
-ja:プリンタを開くことができませんでした
+ja:プリンタを開けませんでした
 fa:برنامه قادر به يافتن چاپگر نيست
 dk:Kunne ikke åbne printeren
 it:Stampante non accessibile
@@ -2214,6 +2216,7 @@ es:Establecer búsqueda inversa
 hr:Omogući inverznu pretragu
 eu:Alderantzizko bilaketa ezarri
 mk:Активирај инверзно пребарување
+ja:逆検索コマンドラインの設定
 -
 Change language
 br:Mudar o idioma (Change language)
@@ -2230,6 +2233,7 @@ fr:Changer la langue (Change language)
 eu:Hizkuntza aldatu (Change language)
 mk:Смени јазик (Change language)
 hu:Nyelv kiválasztása (Change language)
+ja:言語の変更 (Change language)
 -
 Enter password
 br:Digite a senha
@@ -2245,6 +2249,7 @@ fr:Entrer le mot de passe
 eu:Pasahitza sartu
 mk:Внеси лозинка
 hu:Írja be a jelszót
+ja:パスワードの入力
 -
 Enter password for %s
 br:Digite a senha de %s
@@ -2260,6 +2265,7 @@ fr:Entrer le mot de passe pour %s
 eu:%s-rentzat pasahitza sartu
 mk:Внеси лозинка за %s
 hu:Írja be a(z) %s jelszavát
+ja:%s のパスワードを入力します
 -
 Go to page
 br:Ir para a página
@@ -2275,6 +2281,7 @@ fr:Aller à la page
 eu:...garren orrira joan
 mk:Појди на страница
 hu:Ugrás adott oldalra
+ja:ページへ移動
 -
 Associate with PDF files?
 br:Associar arquivos PDF?
@@ -2290,6 +2297,7 @@ fr:Associer aux fichiers PDF ?
 eu:PDF fitxategiekin lotu?
 mk:Да управувам со PDF датотеки?
 hu:Társítsuk a PDF fájlokkal?
+ja:PDF ファイルと関連付けますか?
 -
 Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
@@ -2305,6 +2313,7 @@ fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 eu:PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
 mk:Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
 hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
+ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
 -
 Don't ask me again
 br:Não perguntar novamente
@@ -2321,6 +2330,7 @@ no:Ikke spør meg igjen.
 eu:Ez berriz galdetu
 mk:Не ме прашувај повторно
 hu:Ne kérdezze meg többé
+ja:再び質問しない
 -
 &Check for new version
 br:Procurar atualizações
@@ -2337,6 +2347,7 @@ no:Se etter oppdatering
 eu:Bertsio berriagorik ba ote den begiratu
 mk:&Провери за нова верзија
 hu:Újabb &verzió keresése
+ja:新しいバージョンのチェック(&C)
 -
 No new version available.
 br:Nenhuma atualização foi encontrada.
@@ -2353,6 +2364,7 @@ no:Ingen ny versjon tilgjenglig.
 eu:Ez dago bertsio berririk.
 mk:Нема понова верзија.
 hu:Nincs újabb verzió.
+ja:新しいバージョンが利用できません。
 -
 You have the latest version.
 br:Esta é a versão mais recente.
@@ -2369,6 +2381,7 @@ no:Du har den nyeste versjonen.
 eu:Azkeneko bertsioa da daukazuna.
 mk:Ја имаш најновата верзија.
 hu:Önnél a legfrissebb verzió van telepítve.
+ja:最新のバージョンです。
 -
 You have version %s
 br:Você tem a versão %s
@@ -2385,6 +2398,7 @@ no:Du har versjon %s
 eu:%s bertsioa daukazu.
 mk:Имаш верзија %s
 hu:Jelenlegi verzió: %s
+ja:バージョン %s です
 -
 New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
@@ -2401,6 +2415,7 @@ no:Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 eu:%s bertsio berria eskuragarri dago. Jeisterik nahi?
 mk:Новата верзија %s е достапна. Сакаш да ја преземеш?
 hu:Új verzió érhető el (%s). Kívánja letölteni?
+ja:新しいバージョン %s は利用可能です。新しいバージョンをダウンロードしますか?
 -
 New version available.
 br:Uma versão nova está disponível.
@@ -2417,6 +2432,7 @@ no:Ny versjon tilgjenglig.
 eu:Bertsio berria eskuragarri duzu.
 mk:Достапна е нова верзија.
 hu:Új verzió érhető el.
+ja:新しいバージョンが利用可能です。
 -
 Skip this version
 br:Pular esta versão.
@@ -2432,3 +2448,4 @@ fr:Ignorer cette version
 eu:Bertsio berria saihestu
 mk:Прескокни ја оваа верзија
 hu:Verzió kihagyása
+ja:このバージョンをスキップ
