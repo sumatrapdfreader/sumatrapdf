@@ -845,7 +845,7 @@ ar:بحجم الشاشة
 uk:На цілий екран\tCtrl-L
 eu:Pantaila osoan\tCtrl-L
 gr:Πλήρης οθόνη\tCtrl-L
-hr:Cijeli ekran\tCtrl-L
+hr:Cijeli zaslon\tCtrl-L
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -1536,6 +1536,7 @@ pl:Instrukcja obslugi
 ru:Руководство
 ja:マニュアル(&M)
 nl:Handleiding
+hr:Korisnički priručnik
 -
 &About
 bg:Относно програмата...
