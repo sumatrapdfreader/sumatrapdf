@@ -46,7 +46,7 @@
 # Slovak republic
 #   Radoslav Zelenák (radoslav.zelenak@elkop.sk)
 #   Bernard Holý - TREVERT
-# Nguyen Luong Dong - Vietnamese
+# Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong) - Việt Nam (Vietnamese)
 # Viktoras Jakovlevas - Lithuania
 # Masley b. Mastil - Bahasa Melayu (Malaysian)
 # Pekka Halmela - Finnish
@@ -110,7 +110,7 @@ Lang: sv Swedish (Svenska)
 Lang: ta Tamil (தமிழ்)
 Lang: th Thai (ภาษาไทย)
 Lang: tr Turkish (Türkçe)
-Lang: vn Vietnamese (Việt)
+Lang: vn Vietnamese (Việt Nam)
 Lang: uk Ukrainian (Українська)
 Lang: eu Basque (Euskara)
 -
@@ -470,7 +470,7 @@ th:มุมมอง
 pt:&Ver
 no:&Vis
 sk:&Zobraziť
-vn:&Xem
+vn:&Khung nhìn
 lt:Peržiūra
 my:&Lihat
 fi:&Näytä
@@ -793,6 +793,7 @@ sp-rs:Beleške
 mk:Обележувачи
 ro:Marcaje
 sk:Záložky
+vn:Chỉ dấu sách
 kr:책갈피
 bn:বুকমার্কসমূহ
 cn:书签
@@ -1464,7 +1465,7 @@ th:ช่วยเหลือ
 pt:&Ajuda
 no:&Hjelp
 sk:Nápoveda
-vn:G&iúp đỡ
+vn:Trợ giú&p
 lt:&Pagalba
 my:&Bantuan
 fi:&Ohje
@@ -1511,7 +1512,7 @@ th:เยี่ยมเว็บไชด์
 pt:Visitar a página Web
 no:Besøk &hjemmeside
 sk:&Navštíviť webovú stránku
-vn:Thăm website
+vn:Thăm &website
 lt:Aplankyti svetainę
 my:&Lawat lamanweb
 fi:Vieraile ohjelman kotisivuilla
@@ -1537,6 +1538,7 @@ ru:Руководство
 ja:マニュアル(&M)
 nl:Handleiding
 hr:Korisnički priručnik
+vn:&Hướng dẫn sử dụng
 -
 &About
 bg:Относно програмата...
@@ -1565,7 +1567,7 @@ th:เกี่ยวกับ
 pt:Acerca de...
 no:&Om
 sk:&O programe...
-vn:Giới thiệu
+vn:&Giới thiệu
 lt:Apie
 my:&Mengenai
 fi:&Tietoja
@@ -1602,6 +1604,7 @@ cz:Stránka:
 pt:Página:
 no:Side:
 sk:Strana:
+vn:Trang:
 sp-rs:Strana:
 ro:Pagina:
 ru:Страница:
@@ -1668,6 +1671,7 @@ id:Temukan Sebelum
 mk:Најди претходно
 ro:Caută înapoi
 sk:Hľadať predchádzajúce
+vn:Tìm phía trước
 kr:이전 찾기
 bn:এর আগে খুঁজুন
 cn:上一个
@@ -1704,6 +1708,7 @@ id:Temukan Sesudah
 mk:Најди следно
 ro:Caută înainte
 sk:Hľadať ďalšie
+vn:Tìm phía sau
 kr:다음 찾기
 bn:এর পরে খুঁজুন
 cn:下一个
@@ -1735,6 +1740,7 @@ id:Cocokkan Huruf Besar-Kecilnya
 mk:Разликувај мали и големи букви
 ro:Potrivire litere mari şi mici
 sk:Rozlišovať veľké/malé písmená
+vn:Phân biệt chữ Hoa
 kr:대/소문자 구분
 bn:অক্ষর মেলান
 cn:大小写匹配
@@ -1964,7 +1970,7 @@ th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป�
 pt:SumatraPDF é agora o leitor de PDF por defeito.
 no:SumatraPDF er nå standard PDF-leser.
 sk:SumatraPDF je teraz nastavený ako predvolený prehliadač PDF súborov.
-vn:Hiện giờ SumatraPDF là trình đọc PDF mặc định của bạn.
+vn:SumatraPDF hiện giờ là trình đọc PDF mặc định.
 lt:SumatraPDF dabar yra numatytasis PDF dokumentų skaitytuvas
 my:SumatraPDF adalah pembaca utama fail PDF sekarang
 fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
@@ -2188,7 +2194,7 @@ th:ร่วมช่วยเหลือในการแปลภาษา
 pt:Contribuir na tradução.
 no:Bidra med oversetting
 sk:Prispieť k prekladu programu
-vn:Đóng góp dịch
+vn:Đóng góp dịch thuật
 lt:Pasiklydę vertime
 my:Menyumbangkan alihbahasa
 ca:Contribuïu en la traducció
@@ -2214,6 +2220,7 @@ br:Configurar pesquisa inversa
 de:Befehlszeile Inverssuche setzen
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
+vn:Đặt dòng lệnh tìm kiếm ngược
 uk:Установити зворотній пошук.
 ru:Задать команду обратного поиска
 es:Establecer búsqueda inversa
@@ -2228,6 +2235,7 @@ br:Mudar o idioma (Change language)
 de:Sprache ändern (Change language)
 pl:Zmien język (Change language)
 sk:Zmeniť jazyk (Change language)
+vn:Đổi ngôn ngữ (Change language)
 uk:Змінити мову (Change language)
 ru:Изменить язык (Change language)
 es:Cambiar Idioma (Change language)
@@ -2244,6 +2252,7 @@ Enter password
 br:Digite a senha
 de:Bitte Passwort eingeben
 sk:Zadať heslo
+vn:Nhập mật khẩu
 uk:Введіть пароль
 ru:Введите пароль
 es:Introduzca contraseña
@@ -2260,6 +2269,7 @@ Enter password for %s
 br:Digite a senha de %s
 de:Bitte Passwort für %s eingeben
 sk:Zadať heslo pre %s
+vn:Nhật mật khẩu cho %s
 uk:Введіть пароль для %s
 ru:Введите пароль для %s
 es:Introduzca contraseña para %s
@@ -2276,6 +2286,7 @@ Go to page
 br:Ir para a página
 de:Gehe zu Seite
 sk:Ísť na stranu
+vn:Nhảy đến trang
 uk:Перейти на сторінку
 ru:Перейти на страницу
 es:Ir a la página
@@ -2292,6 +2303,7 @@ Associate with PDF files?
 br:Associar arquivos PDF?
 de:Mit PDF-Dateien verknüpfen?
 sk:Asociovať s PDF súbormi?
+vn:Liên kết với file PDF?
 uk:Асоціювати з PDF-файлами?
 ru:Ассоциировать с PDF-файлами?
 es:¿Asociar con archivos PDF?
@@ -2308,6 +2320,7 @@ Make SumatraPDF default application for PDF files?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
+vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
 ru:Сделать SumatraPDF стандартной программой открытия PDF-файлов?
 es:¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
@@ -2324,6 +2337,7 @@ Don't ask me again
 br:Não perguntar novamente
 de:Nicht wieder fragen
 sk:Nepýtať sa znova
+vn:Không hỏi lại
 uk:Не питати знову
 ru:Больше не спрашивать
 es:No volver a preguntar
@@ -2341,6 +2355,7 @@ ja:再び質問しない
 br:Procurar atualizações
 de:Nach neuer Version suchen
 sk:Skontrolovať novú verziu
+vn:Kiểm tra có phiên bản mới
 uk:Перевірити, чи є нова версія
 ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
@@ -2358,6 +2373,7 @@ No new version available.
 br:Nenhuma atualização foi encontrada.
 de:Keine neuere Version vorhanden.
 sk:Nie je k dispozícia nová verzia.
+vn:Không có phiên bản mới.
 uk:Новішої версії немає.
 ru:Обновлений не обнаружено.
 es:No hay nuevas versiones.
@@ -2375,6 +2391,7 @@ You have the latest version.
 br:Esta é a versão mais recente.
 de:Sie haben die neuste Version installiert.
 sk:Používate najnovšiu verziu.
+vn:Bạn đang dùng phiên bản mới nhất.
 uk:Ви вже маєте найновішу версію.
 ru:Вы используете самую новую версию.
 es:Su versión es la más reciente.
@@ -2392,6 +2409,7 @@ You have version %s
 br:Você tem a versão %s
 de:Sie haben Version %s
 sk:Používate verziu %s
+vn:Bạn đang dùng phiên bản %s
 uk:Ви використовуєте версію %s
 ru:Вы используете версию %s
 es:Tiene la versión %s
@@ -2409,6 +2427,7 @@ New version %s is available. Download new version?
 br:A versão %s está disponível. Baixar a nova versão?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
+vn:Đã có phiên bản mới %s. Download phiên bản mới?
 uk:Нова версія %s є доступною. Завантажити нову версію?
 ru:Доступна новая версия: %s. Хотите её загрузить?
 es:La nueva versión %s está disponible. ¿Desea descargarla?
@@ -2426,6 +2445,7 @@ New version available.
 br:Uma versão nova está disponível.
 de:Neuere Version vorhanden.
 sk:Je k dispozícia nová verzia.
+vn:Đã có phiên bản mới.
 uk:Доступна нова версія.
 ru:Доступна новая версия.
 es:Nueva versión disponible
@@ -2443,6 +2463,7 @@ Skip this version
 br:Pular esta versão.
 de:Diese Version überspringen.
 sk:Preskočiť túto verziu.
+vn:Bỏ qua phiên bản này.
 uk:Пропустити цю версію.
 ru:Пропустить эту версию.
 es:Saltarse esta versión.

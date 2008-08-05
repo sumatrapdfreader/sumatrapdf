@@ -100,5 +100,5 @@ MenuDef g_menuDefLang[LANGS_COUNT] = {
     { "Thai (\340\270\240\340\270\262\340\270\251\340\270\262\340\271\204\340\270\227\340\270\242)", IDM_LANG_TH },
     { "Turkish (T\303\274rk\303\247e)", IDM_LANG_TR },
     { "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)", IDM_LANG_UK },
-    { "Vietnamese (Vi\341\273\207t)", IDM_LANG_VN },
+    { "Vietnamese (Vi\341\273\207t Nam)", IDM_LANG_VN },
 };
