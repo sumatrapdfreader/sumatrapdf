@@ -4707,6 +4707,8 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             res.bottom = res.top + MARK_SIZE;
             win->dm->goToPage(page, 0);
             win->dm->MapResultRectToScreen(&res);
+            if( IsIconic(win->hwndFrame) )
+                ShowWindowAsync(win->hwndFrame, SW_RESTORE);
             return;
         }
     }
@@ -6119,16 +6121,13 @@ InitMouseWheelInfo:
                         // When the focus is set to the toc window the first item in the treeview is automatically
                         // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
                         // We have to ignore this message to prevent the current page to be changed.
-                        if (pnmtv->action==TVC_UNKNOWN || pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) 
-                        {
-                            TV_ITEMW tvi;
-                            tvi.hItem = TreeView_GetSelection(win->hwndTocBox);
-                            tvi.cchTextMax = 0;
-                            tvi.pszText = NULL;
-                            tvi.mask = TVIF_PARAM;
-                            if (TreeView_GetItemW(win->hwndTocBox, &tvi) && win->dm)
-                                win->dm->goToTocLink((void *)tvi.lParam);
+                        if (pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) {
+                            if (win->dm && pnmtv->itemNew.lParam)
+                                win->dm->goToTocLink((void *)pnmtv->itemNew.lParam);
                         }
+                        // The case pnmtv->action==TVC_UNKNOWN is ignored because 
+                        // it corresponds to a notification sent by
+                        // the function TreeView_DeleteAllItems after deletion of the item.
                     }
                     break;
                     case TVN_KEYDOWN: {
