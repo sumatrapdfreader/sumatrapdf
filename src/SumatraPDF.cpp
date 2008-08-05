@@ -2133,8 +2133,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     WindowInfo_UpdateFindbox(win);
 
 Exit:
-    if (!reuseExistingWindow)
-            WindowInfoList_Add(win);
     MenuToolbarUpdateStateForAllWindows();
     assert(win);
     DragAcceptFiles(win->hwndFrame, TRUE);
@@ -2153,8 +2151,7 @@ Exit:
         WindowInfo_RedrawAll(win);
         return false;
     }
-    else
-        return true;
+    return true;
 }
 
 // This function is executed within the watching thread
@@ -2179,6 +2176,7 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
         win = WindowInfo_CreateEmpty();
         if (!win)
             return NULL;
+        WindowInfoList_Add(win);
     }
 
     // TODO: fileName might not exist.
