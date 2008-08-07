@@ -14,7 +14,7 @@ O = obj-$(CFG)-win
 ZLIB_DIR=$(EXTLIBSDIR)ext\zlib
 FREETYPE_DIR=$(EXTLIBSDIR)ext\freetype231
 JPEG_DIR=$(EXTLIBSDIR)ext\jpeg
-JASPER_DIR=$(EXTLIBSDIR)ext\jasper
+JASPER_DIR=$(EXTLIBSDIR)ext\jasper\src\libjasper
 JBIG2_DIR=$(EXTLIBSDIR)ext\jbig2dec
 
 CC = cl.exe
@@ -39,6 +39,9 @@ CFLAGS = $(CFLAGS) /D "NDEBUG"
 
 JBIG2_CFLAGS = $(CFLAGS) /D "HAVE_STRING_H=1" /I$(JBIG2_DIR)
 
+JASPER_CFLAGS = $(CFLAGS) /I$(JASPER_DIR)/include /D "EXCLUDE_MIF_SUPPORT" /D "EXCLUDE_PNM_SUPPORT"
+JASPER_CFLAGS = $(JASPER_CFLAGS) /D "EXCLUDE_BMP_SUPPORT" /D "EXCLUDE_RAS_SUPPORT" /D "EXCLUDE_JPG_SUPPORT"
+
 CFLAGS = $(CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" /D "NEED_GETTIMEOFDAY"
 CFLAGS = $(CFLAGS) /D "HAVE_JASPER" /D "HAVE_JBIG2DEC"
 
@@ -50,8 +53,7 @@ CFLAGS = $(CFLAGS) /D "USE_STATIC_CMAPS" /Icmaps
 CFLAGS = $(CFLAGS) /D "DUMP_STATIC_CMAPS"
 
 CFLAGS = $(CFLAGS) /Iinclude /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR) 
-CFLAGS = $(CFLAGS) /I$(JASPER_DIR) /I$(JBIG2_DIR)
-
+CFLAGS = $(CFLAGS) /I$(JASPER_DIR)/include /I$(JBIG2_DIR)
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib
 
@@ -61,12 +63,12 @@ LDFLAGS = $(LDFLAGS) /nologo /DEBUG
 !if "$(CFG)"=="dbg"
 LDFLAGS = $(LDFLAGS)
 LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib \
-	$(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib $(JASPER_DIR)\libjasper.lib
+	$(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"
 LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(JPEG_DIR)\jpeg_s.lib \
-	$(ZLIB_DIR)\zlib_s.lib $(JASPER_DIR)\libjasper.lib
+	$(ZLIB_DIR)\zlib_s.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
 !endif
@@ -77,9 +79,21 @@ JBIG2_OBJS = \
   $(O)\jbig2_generic.obj $(O)\jbig2_refinement.obj $(O)\jbig2_image.obj \
   $(O)\jbig2_segment.obj $(O)\jbig2_symbol_dict.obj $(O)\jbig2_text.obj \
   $(O)\jbig2_mmr.obj $(O)\jbig2_page.obj $(O)\jbig2_metadata.obj
-  
 # jbig2_image_pbm$(OBJ) jbig2dec$(OBJ) sha1$(OBJ)
- 
+
+JASPER_OBJS = \
+  $(O)\jas_cm.obj $(O)\jas_debug.obj $(O)\jas_icc.obj \
+  $(O)\jas_iccdata.obj $(O)\jas_image.obj $(O)\jas_init.obj $(O)\jas_malloc.obj \
+  $(O)\jas_seq.obj $(O)\jas_stream.obj $(O)\jas_string.obj $(O)\jas_tvp.obj \
+  $(O)\jas_version.obj \
+  $(O)\jp2_cod.obj $(O)\jp2_dec.obj $(O)\jp2_enc.obj \
+  $(O)\jpc_bs.obj $(O)\jpc_cs.obj $(O)\jpc_dec.obj $(O)\jpc_enc.obj \
+  $(O)\jpc_math.obj $(O)\jpc_mct.obj $(O)\jpc_mqcod.obj $(O)\jpc_mqdec.obj \
+  $(O)\jpc_mqenc.obj $(O)\jpc_qmfb.obj $(O)\jpc_t1cod.obj $(O)\jpc_t1dec.obj \
+  $(O)\jpc_t1enc.obj $(O)\jpc_t2cod.obj $(O)\jpc_t2dec.obj $(O)\jpc_t2enc.obj \
+  $(O)\jpc_tagtree.obj $(O)\jpc_tsfb.obj $(O)\jpc_util.obj \
+  $(O)\pgx_cod.obj $(O)\pgx_dec.obj $(O)\pgx_enc.obj
+
 BASE_OBJS = \
 	$(O)\base_memory.obj $(O)\base_error.obj $(O)\base_hash.obj $(O)\base_matrix.obj \
 	$(O)\base_rect.obj $(O)\base_rune.obj $(O)\util_strlcat.obj $(O)\util_strlcpy.obj \
@@ -119,7 +133,8 @@ MUPDF_OBJS = \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfilems.obj
 
 LIBS_OBJS = \
-  $(JBIG2_OBJS) \
+	$(JASPER_OBJS) \
+	$(JBIG2_OBJS) \
 	$(BASE_OBJS) \
 	$(STREAM_OBJS) \
 	$(RASTER_OBJS) \
@@ -171,6 +186,19 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(PDFAPP_OBJS) $(LIBS) \
 	/MAP:$(PDFAPP_MAP) \
 	/SUBSYSTEM:CONSOLE
+
+{$(JASPER_DIR)\base}.c{$(O)}.obj::
+	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(JASPER_DIR)\jp2}.c{$(O)}.obj::
+	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(JASPER_DIR)\jpc}.c{$(O)}.obj::
+	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(JASPER_DIR)\pgx}.c{$(O)}.obj::
+	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
 {$(JBIG2_DIR)\}.c{$(O)}.obj::
 	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
