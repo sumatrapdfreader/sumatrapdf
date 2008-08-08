@@ -3088,7 +3088,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { "pdf rendering", "MuPDF", "http://ccxvii.net/apparition/",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "website", "http://blog.kowalczyk.info/software/sumatra", "http://blog.kowalczyk.info/software/sumatrapdf",
+    { "website", "http://blog.kowalczyk.info/software/sumatrapdf", "http://blog.kowalczyk.info/software/sumatrapdf",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "forums", "http://blog.kowalczyk.info/forum_sumatra", "http://blog.kowalczyk.info/forum_sumatra",
@@ -3101,6 +3101,9 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "translations", "The Translators", "http://blog.kowalczyk.info/software/sumatrapdf/translators.html",
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
+    { "generous?", "donate", "http://blog.kowalczyk.info/software/sumatrapdf/donate.html",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { NULL, NULL, NULL,
