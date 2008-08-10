@@ -26,7 +26,7 @@ Section "SumatraPDF"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
-  File /oname=SumatraPDF.exe "..\Release\SumatraPDF.exe"
+  File /oname=SumatraPDF.exe "..\obj-rel\SumatraPDF.exe"
 
   SectionIn RO
   
