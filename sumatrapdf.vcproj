@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCNMakeTool"
 				BuildCommandLine="nmake -f makefile.msvc CFG=rel"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg rebuild"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG"
