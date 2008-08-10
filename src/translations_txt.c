@@ -258,7 +258,7 @@ const char *g_transTranslations[] = {
   "&Gehe zu",
   "&Hilfe",
   "Sprache",
-  NULL,
+  "Anleitung",
   "\303\226&ffnen...\tCtrl-O",
   "&Drucken...",
   "Speichern &unter...",

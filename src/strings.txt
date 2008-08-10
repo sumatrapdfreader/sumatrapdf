@@ -1533,6 +1533,7 @@ uk:Відкрити сайт
 eu:&Web orria bisitatu
 -
 &Manual
+de:Anleitung
 pl:Instrukcja obslugi
 ru:Руководство
 ja:マニュアル(&M)
