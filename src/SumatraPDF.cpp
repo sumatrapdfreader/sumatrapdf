@@ -1638,11 +1638,11 @@ static void WindowInfo_Delete(WindowInfo *win)
       delete win->pdfsync;
       win->pdfsync = NULL;
     }
-    if(win->stopFindStatusThreadEvent) {
+    if (win->stopFindStatusThreadEvent) {
         CloseHandle(win->stopFindStatusThreadEvent);
         win->stopFindStatusThreadEvent = NULL;
     }
-    if(win->findStatusThread) {
+    if (win->findStatusThread) {
         CloseHandle(win->findStatusThread);
         win->findStatusThread = NULL;
     }
@@ -2834,7 +2834,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     recD.y = win->fwdsearchmarkLoc.y-MARK_SIZE/2;
     recD.dx = MARK_SIZE;
     recD.dy = MARK_SIZE;
-    if(!win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD))
+    if (!win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD))
         return;
     RectI_FromRectD (&recI, &recD);
     PaintTransparentRectangle(win, hdc, &recI, selectionColorRed);
@@ -4710,7 +4710,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             res.bottom = res.top + MARK_SIZE;
             win->dm->goToPage(page, 0);
             win->dm->MapResultRectToScreen(&res);
-            if( IsIconic(win->hwndFrame) )
+            if (IsIconic(win->hwndFrame))
                 ShowWindowAsync(win->hwndFrame, SW_RESTORE);
             return;
         }

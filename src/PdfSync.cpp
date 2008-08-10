@@ -5,7 +5,6 @@
 #include "PdfSync.h"
 #include <assert.h>
 #include <stdio.h>
-//#include <tchar.h>
 #include "tstr_util.h"
 #include "str_util.h"
 #include <sys/stat.h>
@@ -88,17 +87,14 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
     return 1;
 }
 
-
-///////////////
-//// PDFSYNC synchronizer
-
+// PDFSYNC synchronizer
 int Pdfsync::get_record_section(int record_index)
 {
     int leftsection = 0,
         rightsection = record_sections.size()-1;
-    if(rightsection < 0)
+    if (rightsection < 0)
         return -1; // no section in the table
-    while(1){
+    while (1) {
         int n = rightsection-leftsection+1;
         // a single section?
         if (n == 1)
@@ -120,7 +116,7 @@ FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
     fp = fopen(syncfilename, "rb");
-    if(NULL == fp) {
+    if (NULL == fp) {
         DBG_OUT("The syncfile %s cannot be opened\n", syncfilename);
         return NULL;
     }
@@ -138,7 +134,6 @@ LPTSTR ftgetline(LPTSTR dst, size_t cchDst, FILE *fp)
         *(end--) = 0;
     return dst;
 }
-
 
 int Pdfsync::scan_and_build_index(FILE *fp)
 {
@@ -207,7 +202,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 PTSTR pfilename = buff;
                 int len = tstr_len(buff);
                 // if the filename contains quotes then remove them
-                if( str_startswithi(buff, "\"") && str_endswith_char(buff,'"') ) {
+                if (str_startswithi(buff, "\"") && str_endswith_char(buff,'"')) {
                     pfilename++;
                     len-=2;
                 }
@@ -217,7 +212,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 s.last_recordsection = -1;
                 tstr_copyn(s.filename, dimof(s.filename), pfilename, len);
                 // if the file name extension is not specified then add the suffix '.tex'
-                if( tstr_find_char(pfilename, '.') == NULL) {
+                if (tstr_find_char(pfilename, '.') == NULL) {
                      tstr_cat_s(s.filename, dimof(s.filename), _T(".tex"));
                 }
 #ifndef NDEBUG
@@ -255,7 +250,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                     record_sections[cur_recordsec].highestrecord = recordNumber;
 #endif
                     assert(incstack.top()!=-1);
-                    if( this->srcfiles[incstack.top()].first_recordsection == -1 )
+                    if (this->srcfiles[incstack.top()].first_recordsection == -1)
                         this->srcfiles[incstack.top()].first_recordsection = cur_recordsec;
                     
                     this->srcfiles[incstack.top()].last_recordsection = cur_recordsec;
@@ -288,7 +283,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
             {
                 fscanf(fp, " %u\n", &cur_sheetNumber);
                 size_t maxsheet = pdfsheet_index.size();
-                if(cur_sheetNumber>=maxsheet) {
+                if (cur_sheetNumber>=maxsheet) {
                     pdfsheet_index.resize(cur_sheetNumber+1);
                     for(size_t s=maxsheet;s<=cur_sheetNumber;s++)
                         pdfsheet_index[s] = -1;
@@ -313,12 +308,10 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     return 0;
 }
 
-
-
 int Pdfsync::rebuild_index()
 {
     FILE *fp = opensyncfile();
-    if(!fp)
+    if (!fp)
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     scan_and_build_index(fp);
@@ -329,11 +322,11 @@ int Pdfsync::rebuild_index()
 
 UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col)
 {
-    if( this->is_index_discarded() )
+    if (this->is_index_discarded())
         rebuild_index();
 
     FILE *fp = opensyncfile();
-    if(!fp)
+    if (!fp)
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // distance to the closest pdf location (in the range <PDFSYNC_EPSILON_SQUARE)
@@ -348,7 +341,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
         closest_ydist_record=-1; // vertically-closest record
 
     // find the entry in the index corresponding to this page
-    if(sheet>=pdfsheet_index.size()) {
+    if (sheet>=pdfsheet_index.size()) {
         fclose(fp);
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
     }
@@ -452,7 +445,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
 
     src_file srcfile=this->srcfiles[isrc];
 
-    if( srcfile.first_recordsection == -1 )
+    if (srcfile.first_recordsection == -1)
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
 
     // look for sections belonging to the specified file
@@ -508,7 +501,7 @@ read_linerecords:
 
 UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
-    if( this->is_index_discarded() )
+    if (this->is_index_discarded())
         rebuild_index();
 
     FILE *fp = opensyncfile();
@@ -563,9 +556,7 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
-
-///////////////
-//// SYNCTEX synchronizer
+// SYNCTEX synchronizer
 
 int SyncTex::rebuild_index() {
 #ifdef SYNCTEX_FEATURE
@@ -582,10 +573,10 @@ int SyncTex::rebuild_index() {
 UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col)
 {
 #ifdef SYNCTEX_FEATURE
-    if( this->is_index_discarded() )
+    if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-    if(synctex_edit_query(this->scanner,sheet,x,y)>0) {
+    if (synctex_edit_query(this->scanner,sheet,x,y)>0) {
         synctex_node_t node;
         while(node = synctex_next_result(this->scanner)) {
             *line = synctex_node_line(node);
@@ -603,11 +594,11 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
 UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
 #ifdef SYNCTEX_FEATURE
-    if( this->is_index_discarded() )
+    if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
-     if(synctex_display_query(this->scanner,srcfilename,line,col)>0) {
+     if (synctex_display_query(this->scanner,srcfilename,line,col)>0) {
          synctex_node_t node;
           while(node = synctex_next_result(this->scanner)) {
               *page = synctex_node_page(node);
@@ -623,8 +614,7 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
 #endif
 }
 
-///////////////
-//// DDE commands handling
+// DDE commands handling
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
@@ -634,7 +624,7 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     ATOM aTopic = GlobalAddAtomW(PDFSYNC_DDE_TOPIC_W);
 
     if (LOWORD(lparam) == aServer && HIWORD(lparam) == aTopic) {
-        if(IsWindowUnicode((HWND)wparam))
+        if (IsWindowUnicode((HWND)wparam))
             DBG_OUT("The client window is ANSI!\n");
         DBG_OUT("Sending WM_DDE_ACK to %p\n", (HWND)wparam);
         SendMessageW((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
@@ -762,7 +752,6 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     PostMessageW((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
     return 0;
 }
-
 
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
