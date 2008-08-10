@@ -1,13 +1,20 @@
-Short term todo (before next 0.8.2 release):
-* ability to do pre-release builds
-* test jbig images work
-* src version of jasper
-* try jasper from ghostscript to see if can decode failing images
+Short term todo (before next 0.9.1 release):
+* handle links
 * src version of libjpeg
 * src version of freetype and update to latest freetype
-* maybe: option to disable update check (some people still don't have broadband?)
 * maybe: remember default bookmarks state
 * maybe: remember and restore size and position of the window
+
+Things to do before 1.0 release:
+* test search more and make sure it works better (currently mupdf seems to have
+  problems converting some text to their real value)
+* intelligent resizing so that the window takes as much space as possible on the
+  screen (kind of like maximize, but doesn't actually maximizes the window but
+  takes max dx or dy space available and proportional amount of the other axis)
+* TOC improvements:
+  * an easy way to close TOC (I like the header with close button like in
+    e editor http://www.e-texteditor.com/wiki/index.php/Projects)
+* maybe: option to disable update check (some people still don't have broadband?)
 
 Long term todo:
 * find improvements:
@@ -15,17 +22,9 @@ Long term todo:
 * crash reporting with breakpad
  - on startup check for crash dumps and tries to submit them. Delete crash file
    (even if submission failed)
-* TOC improvements:
-  * an easy way to close TOC (I like the header with close button like in
-    e editor http://www.e-texteditor.com/wiki/index.php/Projects)
 * preserve fullScreen info per document and respect it when opening a PDF
-* intelligent resizing so that the window takes as much space as possible on the
-  screen (kind of like maximize, but doesn't actually maximizes the window but
-  takes max dx or dy space available and proportional amount of the other axis)
-* handle links
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
-* show keybindings in help
 * better, animated about screen
 * make dialog-boxes translatable
 * replace DString with something better (sstr ?) and provide C++ wrapper
@@ -47,4 +46,5 @@ Maybe:
 * maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
   and TransparentBlt). Instead, dynamically load the functions. Needed for
   working on NT. On the other hand: is NT worth supporting?
+* show keybindings in help
 
