@@ -17,9 +17,10 @@ O = obj-$(CFG)
 !if "$(FITZ_DIR)"==""
 FITZ_DIR=fitz
 !endif
+
 ZLIB_DIR=ext\zlib
 FREETYPE_DIR=ext\freetype231
-JPEG_DIR=ext\jpeg
+JPEG_DIR=ext\jpeg6b
 JASPER_DIR=ext\jasper\src\libjasper
 JBIG2_DIR=ext\jbig2dec
 
@@ -51,6 +52,9 @@ JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 JASPER_CFLAGS = $(CFLAGS) /I$(JASPER_DIR)/include /D "EXCLUDE_MIF_SUPPORT" /D "EXCLUDE_PNM_SUPPORT"
 JASPER_CFLAGS = $(JASPER_CFLAGS) /D "EXCLUDE_BMP_SUPPORT" /D "EXCLUDE_RAS_SUPPORT" /D "EXCLUDE_JPG_SUPPORT"
 
+# Flags specific to libjpeg
+JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
+
 # Flags specific to fitz
 FITZ_CFLAGS = $(CFLAGS) /TC /I$(FITZ_DIR)\include /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR)
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(JASPER_DIR)/include /I$(JBIG2_DIR)
@@ -79,17 +83,28 @@ LDFLAGS = $(LDFLAGS) /nologo /DEBUG
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 LDFLAGS = $(LDFLAGS)
-LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
+LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "NDEBUG"
-LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(JPEG_DIR)\jpeg_s.lib $(ZLIB_DIR)\zlib_s.lib
+LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(ZLIB_DIR)\zlib_s.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
 !endif
 
 SUMATRA_RES = $(O)\sumtrapdf.res
+
+JPEG_OBJS = \
+	$(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jccoefct.obj $(O)\jccolor.obj $(O)\jcdctmgr.obj $(O)\jchuff.obj \
+	$(O)\jcinit.obj $(O)\jcmainct.obj $(O)\jcmarker.obj $(O)\jcmaster.obj $(O)\jcomapi.obj $(O)\jcparam.obj \
+	$(O)\jcphuff.obj $(O)\jcprepct.obj $(O)\jcsample.obj $(O)\jctrans.obj $(O)\jdapimin.obj $(O)\jdapistd.obj \
+	$(O)\jdatadst.obj $(O)\jdatasrc.obj $(O)\jdcoefct.obj $(O)\jdcolor.obj $(O)\jddctmgr.obj $(O)\jdhuff.obj \
+	$(O)\jdinput.obj $(O)\jdmainct.obj $(O)\jdmarker.obj $(O)\jdmaster.obj $(O)\jdmerge.obj $(O)\jdphuff.obj \
+	$(O)\jdpostct.obj $(O)\jdsample.obj $(O)\jdtrans.obj $(O)\jerror.obj $(O)\jfdctflt.obj $(O)\jfdctfst.obj \
+	$(O)\jfdctint.obj $(O)\jidctflt.obj $(O)\jidctfst.obj $(O)\jidctint.obj $(O)\jidctred.obj $(O)\jquant1.obj \
+	$(O)\jquant2.obj $(O)\jutils.obj $(O)\jmemmgr.obj \
+	$(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
 
 JBIG2_OBJS = \
 	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
@@ -151,6 +166,7 @@ MUPDF_OBJS = \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfilems.obj
 
 LIBS_OBJS = \
+	$(JPEG_OBJS) \
 	$(JASPER_OBJS) \
 	$(JBIG2_OBJS) \
 	$(BASE_OBJS) \
@@ -214,6 +230,9 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(PDFAPP_OBJS) $(LIBS) \
 	/MAP:$(PDFAPP_MAP) \
 	/SUBSYSTEM:CONSOLE
+
+{$(JPEG_DIR)}.c{$(O)}.obj::
+	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(JASPER_DIR)\base}.c{$(O)}.obj::
 	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<

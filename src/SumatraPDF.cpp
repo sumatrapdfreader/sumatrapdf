@@ -6737,6 +6737,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-reuse-instance")) {
             currArg = currArg->next;
             // find the window handle of a running instance of SumatraPDF
+            // TODO: there should be a mutex here to reduce possibility of
+            // race condition and having more than one copy launch because
+            // FindWindow() in one process is called before a window is created
+            // in another process
             reuse_instance = FindWindow(FRAME_CLASS_NAME, 0)!=NULL;
             continue;
         }
