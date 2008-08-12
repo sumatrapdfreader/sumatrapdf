@@ -5283,7 +5283,7 @@ static void UpdateToolbarPageText(WindowInfo *win)
     int PAGE_TXT_POS_X2 = r.right + 12;
     MoveWindow(win->hwndPageText, PAGE_TXT_POS_X2, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
     MoveWindow(win->hwndPageBox, PAGE_TXT_POS_X2 + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
-    MoveWindow(win->hwndPageTotal, PAGE_TXT_POS_X2 + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 3, PAGE_TOTAL_WIDTH, size.cy, false);
+    MoveWindow(win->hwndPageTotal, PAGE_TXT_POS_X2 + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 1, PAGE_TOTAL_WIDTH, size.cy, false);
 }
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
