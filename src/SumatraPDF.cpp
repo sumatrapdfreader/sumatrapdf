@@ -200,32 +200,43 @@ static int                          gReBarDyFrame;
 static int                          gToolbarSpacer = -1;
 static HWND                         gHwndAbout;
 
+static bool                         gRestrictedUse = false;
+
+#ifdef BUILD_RM_VERSION
+    static bool                         gDeleteFileOnClose = false; // Delete the file which was passed into the program by command line.
+#endif
+
 typedef struct ToolbarButtonInfo {
     /* information provided at compile time */
     int           bitmapResourceId;
     int           cmdId;
     const char *  toolTip;
+    int           flags;
 
     /* information calculated at runtime */
     int           index;
 } ToolbarButtonInfo;
 
+enum ToolbarButtonFlag {
+    TBF_RESTRICTED = 0x1 
+};
+
 #define IDB_SEPARATOR  -1
 #define IDB_SEPARATOR2 -2
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
-    { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"), 0 },
-    { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, 0 },
-    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"), 0 },
-    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,		_TRN("Zoom In"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, IDB_SEPARATOR },
-    { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"), 0 },
-    { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"), 0 },
-    { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"), 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL, IDB_SEPARATOR2 },
+    { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"),           TBF_RESTRICTED, 0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   TBF_RESTRICTED, 0 },
+    { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,              0 },
+    { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,              0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              0 },
+    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,              0 },
+    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,		_TRN("Zoom In"),        0,              0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              IDB_SEPARATOR },
+    { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"),  0,              0 },
+    { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"),      0,              0 },
+    { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"),     0,              0 },
+    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              IDB_SEPARATOR2 },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -244,6 +255,8 @@ static void OnMenuFindMatchCase(WindowInfo *win);
 static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
     DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
     bool showWin);
+
+void Find( HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD );
 
 #define SEP_ITEM "-----"
 
@@ -773,7 +786,13 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_fullScreen = FALSE;
     gGlobalPrefs.m_pdfsOpened = 0;
     gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
+
+#ifdef BUILD_RM_VERSION
+    gGlobalPrefs.m_defaultDisplayMode = DM_CONTINUOUS;
+#else
     gGlobalPrefs.m_defaultDisplayMode = DM_SINGLE_PAGE;
+#endif
+
     gGlobalPrefs.m_defaultZoom = DEFAULT_ZOOM;
     gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
     gGlobalPrefs.m_windowPosX = DEFAULT_WIN_POS;
@@ -983,74 +1002,80 @@ static UINT AllocNewMenuId(void)
     return firstId;
 }
 
+enum menuFlags {
+    MF_RESTRICTED = 0x1 
+};
+
 MenuDef menuDefFile[] = {
-    { _TRN("&Open\tCtrl-O"),       IDM_OPEN },
-    { _TRN("&Close\tCtrl-W"),      IDM_CLOSE  },
-    { _TRN("&Save as"),            IDM_SAVEAS },
-    { _TRN("&Print\tCtrl-P"),              IDM_PRINT },
-    { SEP_ITEM,              0 },
-    { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER },
+    { _TRN("&Open\tCtrl-O"),                        IDM_OPEN ,                  MF_RESTRICTED },
+    { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_RESTRICTED },
+    { _TRN("&Save as"),                             IDM_SAVEAS,                 MF_RESTRICTED },
+    { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_RESTRICTED },
+    { SEP_ITEM,                                     0,                          MF_RESTRICTED },
+    { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER,    MF_RESTRICTED },
 #ifdef _PDFSYNC_GUI_ENHANCEMENT
-    { _TRN("Set inverse search command-line"), IDM_SET_INVERSESEARCH },
+    { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      0 },
 #endif
-    { SEP_ITEM ,             0 },
-    { _TRN("E&xit\tCtrl-Q"),       IDM_EXIT }
+    { SEP_ITEM ,                                    0,                          MF_RESTRICTED },
+    { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
 };
 
 MenuDef menuDefView[] = {
-    { _TRN("Single page"),                 IDM_VIEW_SINGLE_PAGE },
-    { _TRN("Facing"),                      IDM_VIEW_FACING },
-    { _TRN("Continuous"),                  IDM_VIEW_CONTINUOUS },
-    { _TRN("Continuous facing"),           IDM_VIEW_CONTINUOUS_FACING },
-    { SEP_ITEM, 0 },
-    { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT },
-    { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT },
-    { SEP_ITEM, 0 },
-    { _TRN("Bookmarks"),                   IDM_VIEW_BOOKMARKS },
-    { SEP_ITEM, 0 },
-    { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN },
-    { SEP_ITEM, 0 },
-    { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR },
+    { _TRN("Single page"),                 IDM_VIEW_SINGLE_PAGE,        0  },
+    { _TRN("Facing"),                      IDM_VIEW_FACING,             0  },
+    { _TRN("Continuous"),                  IDM_VIEW_CONTINUOUS,         0  },
+    { _TRN("Continuous facing"),           IDM_VIEW_CONTINUOUS_FACING,  0  },
+    { SEP_ITEM, 0, 0  },
+    { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT,        0  },
+    { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT,       0  },
+    { SEP_ITEM, 0, 0  },
+    { _TRN("Bookmarks"),                   IDM_VIEW_BOOKMARKS,          0  },
+    { SEP_ITEM, 0, 0  },
+    { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN,         0  },
+    { SEP_ITEM, 0, 0  },
+    { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR,  0  },
 };
 
 MenuDef menuDefGoTo[] = {
-    { _TRN("Next Page"),                   IDM_GOTO_NEXT_PAGE },
-    { _TRN("Previous Page"),               IDM_GOTO_PREV_PAGE },
-    { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE },
-    { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE },
-    { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE },
+    { _TRN("Next Page"),                   IDM_GOTO_NEXT_PAGE,          0  },
+    { _TRN("Previous Page"),               IDM_GOTO_PREV_PAGE,          0  },
+    { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE,         0  },
+    { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
+    { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
 };
 
 MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl-0"),           IDM_ZOOM_FIT_PAGE },
-    { _TRN("Act&ual Size\tCtrl-1"),        IDM_ZOOM_ACTUAL_SIZE },
-    { _TRN("Fit Widt&h\tCtrl-2"),          IDM_ZOOM_FIT_WIDTH },
+    { _TRN("Fit &Page\tCtrl-0"),           IDM_ZOOM_FIT_PAGE,           0  },
+    { _TRN("Act&ual Size\tCtrl-1"),        IDM_ZOOM_ACTUAL_SIZE,        0  },
+    { _TRN("Fit Widt&h\tCtrl-2"),          IDM_ZOOM_FIT_WIDTH,          0  },
     { SEP_ITEM },
-    { _TRN("6400%"),                       IDM_ZOOM_6400 },
-    { _TRN("3200%"),                       IDM_ZOOM_3200 },
-    { _TRN("1600%"),                       IDM_ZOOM_1600 },
-    { _TRN("800%"),                        IDM_ZOOM_800 },
-    { _TRN("400%"),                        IDM_ZOOM_400 },
-    { _TRN("200%"),                        IDM_ZOOM_200 },
-    { _TRN("150%"),                        IDM_ZOOM_150 },
-    { _TRN("125%"),                        IDM_ZOOM_125 },
-    { _TRN("100%"),                        IDM_ZOOM_100 },
-    { _TRN("50%"),                         IDM_ZOOM_50 },
-    { _TRN("25%"),                         IDM_ZOOM_25 },
-    { _TRN("12.5%"),                       IDM_ZOOM_12_5 },
-    { _TRN("8.33%"),                       IDM_ZOOM_8_33 },
+#ifndef BUILD_RM_VERSION
+    { _TRN("6400%"),                       IDM_ZOOM_6400,               0  },
+    { _TRN("3200%"),                       IDM_ZOOM_3200,               0  },
+    { _TRN("1600%"),                       IDM_ZOOM_1600,               0  },
+    { _TRN("800%"),                        IDM_ZOOM_800,                0  },
+#endif
+    { _TRN("400%"),                        IDM_ZOOM_400,                0  },
+    { _TRN("200%"),                        IDM_ZOOM_200,                0  },
+    { _TRN("150%"),                        IDM_ZOOM_150,                0  },
+    { _TRN("125%"),                        IDM_ZOOM_125,                0  },
+    { _TRN("100%"),                        IDM_ZOOM_100,                0  },
+    { _TRN("50%"),                         IDM_ZOOM_50,                 0  },
+    { _TRN("25%"),                         IDM_ZOOM_25,                 0  },
+    { _TRN("12.5%"),                       IDM_ZOOM_12_5,               0  },
+    { _TRN("8.33%"),                       IDM_ZOOM_8_33,               0  },
 };
 
 MenuDef menuDefLang[] = {
-    { _TRN("Change language"),             IDM_CHANGE_LANGUAGE },
-    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION },
+    { _TRN("Change language"),             IDM_CHANGE_LANGUAGE,         0  },
+    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  0  },
 };
 
 MenuDef menuDefHelp[] = {
-    { _TRN("&Visit website"),              IDM_VISIT_WEBSITE },
-    { _TRN("&Manual"),                     IDM_MANUAL },
-    { _TRN("&Check for new version"),      IDM_CHECK_UPDATE },
-    { _TRN("&About"),                      IDM_ABOUT }
+    { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       0  },
+    { _TRN("&Manual"),                     IDM_MANUAL,              0  },
+    { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_RESTRICTED },
+    { _TRN("&About"),                      IDM_ABOUT,               0  }
 };
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
@@ -1076,16 +1101,18 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
-        const char *title = md.m_title;
-        int id = md.m_id;
-        if (str_eq(title, SEP_ITEM)) {
-            AppendMenu(m, MF_SEPARATOR, 0, NULL);
-            continue;
-        }
-        const WCHAR *wtitle =  Translations_GetTranslationW(title);
+        if( !gRestrictedUse || ~md.m_flags & MF_RESTRICTED ) {
+            const char *title = md.m_title;
+            int id = md.m_id;
+            if (str_eq(title, SEP_ITEM)) {
+                AppendMenu(m, MF_SEPARATOR, 0, NULL);
+                continue;
+            }
+            const WCHAR *wtitle =  Translations_GetTranslationW(title);
 
-        if (wtitle) {
-            AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
+            if (wtitle) {
+                AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
+            }
         }
     }
     return m;
@@ -1123,7 +1150,8 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     
     HMENU mainMenu = CreateMenu();
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
-    AppendRecentFilesToMenu(tmp);
+    if( !gRestrictedUse )
+        AppendRecentFilesToMenu(tmp);
     AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&File"));
     tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
     AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&View"));
@@ -1649,6 +1677,12 @@ static void WindowInfo_Delete(WindowInfo *win)
     win->dm = NULL;
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
+
+    if( win->title ) {
+        free( win->title );
+        win->title = NULL;
+    }
+
     delete win;
 }
 
@@ -1677,7 +1711,7 @@ static WindowInfo *WindowInfo_New(HWND hwndFrame) {
     WindowInfo * win = WindowInfo_FindByHwnd(hwndFrame);
     assert(!win);
 
-    win = new WindowInfo();;
+    win = new WindowInfo();
     if (!win)
         return NULL;
 
@@ -1790,18 +1824,46 @@ bool TbIsSepId(int cmdId) {
 }
  
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
-    LPARAM enable = (LPARAM)MAKELONG(1,0);
-    LPARAM disable = (LPARAM)MAKELONG(0,0);
+    const LPARAM enable = (LPARAM)MAKELONG(1,0);
+    const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         int cmdId = gToolbarButtons[i].cmdId;
         if (TbIsSepId(cmdId))
             continue;
+
         LPARAM buttonState = enable;
-        if (IDM_OPEN != cmdId) {
-            if (WS_SHOWING_PDF != win->state)
-                buttonState = disable;
+
+        wchar_t findBoxText[2];
+        GetWindowTextW(win->hwndFindBox, findBoxText, 2);
+
+        if (gRestrictedUse && gToolbarButtons[i].flags & TBF_RESTRICTED) // If restricted, disable
+            buttonState = disable;
+        else if (WS_SHOWING_PDF != win->state) // If no file open, only enable open button.
+            buttonState = (IDM_OPEN == cmdId) ? enable : disable;
+        else // Figure out what to show.
+        {
+            switch( cmdId )
+            {
+                case IDM_FIND_NEXT:
+                case IDM_FIND_PREV:
+                    // TODO: Update on whether there's more to find.
+                    buttonState = (findBoxText[0] != '\0') ? enable : disable;
+                    break;
+
+                case IDM_GOTO_NEXT_PAGE:
+                    buttonState = (win->dm->currentPageNo() != win->dm->pageCount() ) ? enable : disable;
+                    break;
+                case IDM_GOTO_PREV_PAGE:
+                    buttonState = (win->dm->currentPageNo() != 1) ? enable : disable;
+                    break;
+
+                default:
+                    buttonState = enable;
+                    break;
+            }
         }
+  
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, cmdId, buttonState);
     }
 }
@@ -2162,7 +2224,7 @@ static void OnFileChange(PTSTR filename, LPARAM param)
     PostMessage(((WindowInfo *)param)->hwndFrame, WM_CHAR, 'r', 0);
 }
 
-WindowInfo* LoadPdf(const char *fileName, bool showWin)
+WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -2178,6 +2240,9 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin)
             return NULL;
         WindowInfoList_Add(win);
     }
+
+    if( windowTitle )
+        win->title = windowTitle;
 
     // TODO: fileName might not exist.
     TCHAR fullpath[_MAX_PATH];
@@ -2263,12 +2328,18 @@ void DisplayModel::pageChanged()
         if (INVALID_PAGE_NO != currPageNo) {
             hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
             SetWindowTextA(win->hwndPageBox, buf);
+            ToolbarUpdateStateForWindow(win);
         }
         
+        const CHAR *title = baseName;
+
+        if( win->title )
+            title = win->title;
+
         if (win->needrefresh)
-            hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", baseName);
-        else
-            hr = StringCchPrintfA(buf, dimof(buf), "%s", baseName);
+            hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", title);
+         else
+            hr = StringCchPrintfA(buf, dimof(buf), "%s", title);
         win_set_text(win->hwndFrame, buf);
     }
 }
@@ -3244,6 +3315,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     txt = BETA_TXT;
     TextOut(hdc, x, y, txt, strlen(txt));
 
+#ifdef BUILD_RM_VERSION
+    txt = "Adapted by RM";
+    TextOut(hdc, x, y + 16, txt, strlen(txt));
+#endif
+
 #ifdef SVN_PRE_RELEASE_VER
     GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
     y += (int)txtSize.cy + 2;
@@ -3275,7 +3351,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         currY += rightDy + ABOUT_TXT_DY;
     }
 
-    /* render text on the rigth */
+    /* render text on the right */
     currY = linePosY;
     (HFONT)SelectObject(hdc, fontRightTxt);
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
@@ -4529,6 +4605,13 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
     if (win->dm->_fullScreen || !IsWindowVisible(win->hwndFrame)) return;
     win->dm->_fullScreen = TRUE;
 
+#ifdef BUILD_RM_VERSION
+    // This code removes the TOC from full screen, it adds it back on later on exit fullscreen
+    win->dm->_tocBeforeFullScreen = win->dm->_showToc;
+    if( win->dm->_showToc )
+        win->HideTocBox();
+#endif
+
     int x, y, w, h;
     MONITORINFOEX mi;
     mi.cbSize = sizeof(mi);
@@ -4567,6 +4650,11 @@ void WindowInfo_ExitFullscreen(WindowInfo *win)
     if (!win->dm->_fullScreen) 
         return;
     win->dm->_fullScreen = false;
+
+#ifdef BUILD_RM_VERSION
+    if( win->dm->_tocBeforeFullScreen )
+        win->ShowTocBox();
+#endif
 
     if (gGlobalPrefs.m_showToolbar)
         ShowWindow(win->hwndReBar, SW_SHOW);
@@ -4640,7 +4728,7 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 // Show a message for 3000 millisecond at most
 DWORD WINAPI ShowMessageThread(WindowInfo *win)
 {
-    ShowWindowAsync(win->hwndFindStatus, SW_SHOW);
+    ShowWindowAsync(win->hwndFindStatus, SW_SHOWNA);
     WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
     ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
     return 0;
@@ -4741,7 +4829,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
     LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
-    ShowWindow(win->hwndFindStatus, SW_SHOW);
+    ShowWindow(win->hwndFindStatus, SW_SHOWNA);
     win->findStatusVisible = true;
 
     EnableWindow(win->hwndFindBox, false);
@@ -4770,18 +4858,12 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
 
 static void OnMenuFindNext(WindowInfo *win)
 {
-    PdfSearchResult *rect = win->dm->Find();
-    if (rect)
-        WindowInfo_ShowSearchResult(win, rect);
-    WindowInfo_HideFindStatus(win);
+    Find( win->hwndFindBox, win, FIND_FORWARD );
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
-    PdfSearchResult *rect = win->dm->Find(FIND_BACKWARD);
-    if (rect)
-        WindowInfo_ShowSearchResult(win, rect);
-    WindowInfo_HideFindStatus(win);
+    Find( win->hwndFindBox, win, FIND_BACKWARD );
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -5045,29 +5127,20 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_CHAR == message) {
-        if (VK_RETURN == wParam) {
-            PdfSearchResult *rect = NULL;
-    
-            if (!Edit_GetModify(hwnd))
-                rect = win->dm->Find();
-            if (!rect) {
-                wchar_t text[256];
-                GetWindowTextW(hwnd, text, sizeof(text));
-                if (wcslen(text) > 0)
-                    rect = win->dm->Find(FIND_FORWARD, text);
-            }
-            if (rect)
-                WindowInfo_ShowSearchResult(win, rect);
-            WindowInfo_HideFindStatus(win);
-
-            Edit_SetModify(hwnd, FALSE);
-            return 1;
-        }
-        else if (VK_ESCAPE == wParam || VK_TAB == wParam) {
+        if (VK_ESCAPE == wParam || VK_TAB == wParam)
+        {
             SetFocus(win->hwndFrame);
             return 1;
+        } 
+
+        if (VK_RETURN == wParam)
+        {
+            Find( hwnd, win );
+            SetFocus(hwnd); // Set focus back to Text box so return can be pressed again to find next one.
+            return 1;
         }
-    } else if (WM_ERASEBKGND == message) {
+    }
+    else if (WM_ERASEBKGND == message) {
         RECT r;
         Edit_GetRect(hwnd, &r);
         if (r.left == 0 && r.top == 0) { // virgin box
@@ -5082,7 +5155,45 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         win->hwndTracker = NULL;
     }
 
-    return CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
+    int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
+
+    if (WM_CHAR == message) {
+        if( VK_ESCAPE != wParam && 
+            VK_TAB    != wParam &&
+            VK_RETURN != wParam     ) {
+            ToolbarUpdateStateForWindow(win);
+        }
+    } 
+    else if (WM_PASTE == message ||
+             WM_CUT   == message ||
+             WM_CLEAR == message ||
+             WM_UNDO  == message     ) {
+        ToolbarUpdateStateForWindow(win);
+    }
+
+    return ret;
+}
+
+void Find( HWND hwnd, WindowInfo *win, PdfSearchDirection direction )
+{
+    PdfSearchResult *rect = NULL;
+
+    if (!Edit_GetModify(hwnd))
+        rect = win->dm->Find(direction);
+
+    if (!rect)
+    {
+        wchar_t text[256];
+        GetWindowTextW(hwnd, text, sizeof(text));
+        if (wcslen(text) > 0)
+            rect = win->dm->Find(direction, text);
+    }
+
+    if (rect)
+        WindowInfo_ShowSearchResult(win, rect);
+    WindowInfo_HideFindStatus(win);
+
+    Edit_SetModify(hwnd, FALSE);
 }
 
 static WNDPROC DefWndProcToolbar = NULL;
@@ -5861,19 +5972,23 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             {
                 case IDM_OPEN:
                 case IDT_FILE_OPEN:
-                    OnMenuOpen(win);
+                    if( !gRestrictedUse )
+                        OnMenuOpen(win);
                     break;
                 case IDM_SAVEAS:
-                    OnMenuSaveAs(win);
+                    if( !gRestrictedUse )
+                        OnMenuSaveAs(win);
                     break;
 
                 case IDT_FILE_PRINT:
                 case IDM_PRINT:
-                    OnMenuPrint(win);
+                    if( !gRestrictedUse )
+                        OnMenuPrint(win);
                     break;
 
                 case IDM_MAKE_DEFAULT_READER:
-                    OneMenuMakeDefaultReader(win);
+                    if( !gRestrictedUse )
+                        OneMenuMakeDefaultReader(win);
                     break;
 
                 case IDT_FILE_EXIT:
@@ -6645,7 +6760,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (!argListRoot)
         return 0;
 
+#ifdef BUILD_RM_VERSION
+    bool prefsLoaded = false;
+#else
     bool prefsLoaded = Prefs_Load();
+#endif
+
     if (!prefsLoaded) {
         // assume that this is because prefs file didn't exist i.e. this is
         // the first time Sumatra is launched.
@@ -6656,10 +6776,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     we assume that all arguments are PDF file names.
     -bench can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
+#ifdef BUILD_RM_VERSION
+    bool registerForPdfExtentions = false;
+#else
     bool registerForPdfExtentions = true;
+#endif
+
     bool reuse_instance = false;
     currArg = argListRoot->next;
     char *printerName = NULL;
+    char *newWindowTitle = NULL;
     while (currArg) {
         if (is_arg("-enum-printers")) {
             EnumeratePrinters();
@@ -6763,6 +6889,30 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             continue;
         }
 
+        if (is_arg("-restrict")) {
+            currArg = currArg->next;
+            gRestrictedUse = true;
+            continue;
+        }
+
+
+        if (is_arg("-title")) {
+            currArg = currArg->next;
+            if(currArg) {
+                newWindowTitle = str_dup(currArg->str); 
+                currArg = currArg->next;
+            }
+            continue;
+        }
+
+#ifdef BUILD_RM_VERSION
+        if (is_arg("-delete-these-on-close")) {
+            currArg = currArg->next;
+            gDeleteFileOnClose = true;
+            continue;
+        }
+#endif
+
         // we assume that switches come first and file names to open later
         // TODO: it would probably be better to collect all non-switches
         // in a separate list so that file names can be interspersed with
@@ -6788,6 +6938,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     CreatePageRenderThread();
     /* remaining arguments are names of PDF files */
+    StrList *currArgFileNames = currArg;
     if (NULL != gBenchFileName) {
             win = LoadPdf(gBenchFileName);
             if (win)
@@ -6807,7 +6958,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             }
             else {
                 bool showWin = !exitOnPrint;
-                win = LoadPdf(currArg->str, showWin);
+                win = LoadPdf(currArg->str, showWin, newWindowTitle);
                 if (!win)
                     goto Exit;
                 if (destName && pdfOpened == 0)
@@ -6867,7 +7018,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (registerForPdfExtentions && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
+#ifndef BUILD_RM_VERSION
     DownloadSumatraUpdateInfo(gWindowList, true);
+#endif
+
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
@@ -6901,11 +7055,40 @@ Exit:
     DeleteObject(gBrushShadow);
     DeleteObject(gBrushLinkDebug);
 
-    StrList_Destroy(&argListRoot);
     Translations_FreeData();
     CurrLangNameFree();
     WininetDeinit();
     SerializableGlobalPrefs_Deinit();
+
+#ifdef BUILD_RM_VERSION
+    if( gDeleteFileOnClose )
+    {
+        // Delete the files which where passed to the command line.
+        // This only really makes sense if we are in restricted use.
+        while( currArgFileNames )
+        {
+            TCHAR fullpath[_MAX_PATH];
+            GetFullPathName( currArgFileNames->str, dimof(fullpath), fullpath, NULL );
+
+            int error = remove( fullpath );
+
+            // Sumatra holds the lock on the file (open stream), it should have lost it by the time
+            // we reach here, but sometimes it's a little slow, so loop around till we can do it.
+            while( error != 0 )
+            {
+                error = GetLastError();
+                if( error == 32 )
+                    error = remove( fullpath );
+                else
+                    error = 0;
+            }
+
+            currArgFileNames = currArgFileNames->next;
+        }
+    }
+#endif
+
+    StrList_Destroy(&argListRoot);
     //histDump();
     return (int) msg.wParam;
 }

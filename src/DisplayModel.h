@@ -267,6 +267,7 @@ public:
 
     BOOL            _showToc;
     BOOL            _fullScreen;
+    BOOL            _tocBeforeFullScreen;
 
     int             getPageNoByPoint (double x, double y);
 

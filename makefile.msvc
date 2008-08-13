@@ -1,5 +1,6 @@
 # Arguments:
 # CFG=dbg|rel (default: dbg)
+# EXB=rm (default: no setting) This is an EXternal Build, i.e. not base SumatraPDF.
 # EXTCFLAGS=$CFLAGS
 
 # Set default configuration
@@ -8,7 +9,12 @@ CFG=dbg
 !endif
 
 # O is directory where object and binary files go
+!if "$(EXB)"=="rm"
+O = obj-rm-$(CFG)
+!else
 O = obj-$(CFG)
+!endif
+
 
 # To over-ride location of fitz/mupdf sources, define FITZ_DIR
 # e.g.:
@@ -47,6 +53,11 @@ LDFLAGS = $(LDFLAGS) /LTCG
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu 
 !endif
 
+#External build settings not part of core SumatraPDF
+!if "$(EXB)"=="rm"
+CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
+!endif
+
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
 JASPER_CFLAGS = $(CFLAGS) /I$(JASPER_DIR)/include /D "EXCLUDE_MIF_SUPPORT" /D "EXCLUDE_PNM_SUPPORT"
@@ -78,11 +89,11 @@ LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib \
 	shell32.lib comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib
 
 LD = link.exe
-LDFLAGS = $(LDFLAGS) /nologo /DEBUG
+LDFLAGS = $(LDFLAGS) /nologo
 
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
-LDFLAGS = $(LDFLAGS)
+LDFLAGS = $(LDFLAGS) /DEBUG
 LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
@@ -91,6 +102,11 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "NDEBUG"
 LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(ZLIB_DIR)\zlib_s.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
+!if "$(EXB)"=="rm"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /GL /MT /O2
+!else
+LDFLAGS = $(LDFLAGS) /DEBUG
+!endif
 !endif
 
 SUMATRA_RES = $(O)\sumtrapdf.res

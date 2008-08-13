@@ -55,6 +55,46 @@
 				CompileAsManaged=""
 			/>
 		</Configuration>
+		<Configuration
+			Name="RM Debug|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="obj-rm-dbg"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake -f makefile.msvc CFG=dbg EXB=rm"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg EXB=rm rebuild"
+				CleanCommandLine="nmake -f makefile.msvc CFG=dbg EXB=rm clean"
+				Output="$(IntDir)\SumatraPDF.exe"
+				PreprocessorDefinitions="WIN32;_DEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="RM Release|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="obj-rm-rel"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake -f makefile.msvc CFG=rel EXB=rm"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel EXB=rm rebuild"
+				CleanCommandLine="nmake -f makefile.msvc CFG=rel EXB=rm clean"
+				Output="$(IntDir)\SumatraPDF.exe"
+				PreprocessorDefinitions="WIN32;NDEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>

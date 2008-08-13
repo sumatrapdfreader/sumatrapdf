@@ -121,6 +121,7 @@ public:
         pdfsync = NULL;
         findStatusThread = NULL;
         stopFindStatusThreadEvent = NULL;
+        title = NULL;
     }
     
     void GetCanvasSize() { 
@@ -219,6 +220,8 @@ public:
     RECT            frameRc;
     RECT            canvasRc;
 
+    CHAR *          title;
+
     void ShowTocBox();
     void HideTocBox();
     void ClearTocBox();
@@ -232,7 +235,7 @@ public:
 };
 
 WindowInfo* WindowInfoList_Find(LPTSTR file);
-WindowInfo* LoadPdf(const char *fileName, bool showWin=true);
+WindowInfo* LoadPdf(const char *fileName, bool showWin=true, char* windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize);
 
