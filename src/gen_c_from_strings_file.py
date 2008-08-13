@@ -186,6 +186,7 @@ def gen_lang_menu_def_h(langs, file_name):
 typedef struct MenuDef {
     const char *m_title;
     int         m_id;
+    int         m_flags;
 } MenuDef;
 
 typedef struct LangDef {
