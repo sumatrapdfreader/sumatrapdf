@@ -783,7 +783,6 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
     gGlobalPrefs.m_escToExit = FALSE;
-    gGlobalPrefs.m_fullScreen = FALSE;
     gGlobalPrefs.m_pdfsOpened = 0;
     gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
 
@@ -799,6 +798,11 @@ static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
     gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_tmpWindowPosX = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_tmpWindowPosY = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_tmpWindowDx = DEFAULT_WIN_POS;
+    gGlobalPrefs.m_tmpWindowDy = DEFAULT_WIN_POS;
+
     gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
     gGlobalPrefs.m_versionToSkip = NULL;
     gGlobalPrefs.m_lastUpdateTime = NULL;
@@ -1451,7 +1455,7 @@ static void MenuUpdateFullscreen(WindowInfo* win)
     /* show default state */
     HMENU menu = GetMenu(win->hwndFrame);
     UINT state = MF_BYCOMMAND | MF_UNCHECKED;
-    if (gGlobalPrefs.m_fullScreen)
+    if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
         state = MF_BYCOMMAND | MF_CHECKED;
     CheckMenuItem(menu, IDM_VIEW_FULLSCREEN, state);
 }
@@ -1491,6 +1495,11 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
 
     if (!win)
         return;
+
+    gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+    if (IsZoomed(win->hwndFrame))
+        gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+
     if (WS_SHOWING_PDF != win->state)
         return;
     if (!win->dm)
@@ -1507,6 +1516,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
         return;
 
     DisplayState_Init(&ds);
+    ds.windowState = gGlobalPrefs.m_windowState;
     if (!displayStateFromDisplayModel(&ds, win->dm))
         return;
 
@@ -2128,11 +2138,18 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     int startPage = 1;
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
+    int showType = SW_NORMAL;
+    if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
+        showType = SW_MAXIMIZE;
     if (state) {
         startPage = state->pageNo;
         displayMode = state->displayMode;
         offsetX = state->scrollX;
         offsetY = state->scrollY;
+        if (state->windowState == WIN_STATE_NORMAL)
+            showType = SW_NORMAL;
+        else if (state->windowState == WIN_STATE_MAXIMIZED)
+            showType = SW_MAXIMIZE;
     }
 
     DisplayModel *previousmodel = win->dm;
@@ -2200,7 +2217,7 @@ Exit:
     DragAcceptFiles(win->hwndFrame, TRUE);
     DragAcceptFiles(win->hwndCanvas, TRUE);
     if (showWin) {
-        ShowWindow(win->hwndFrame, SW_SHOW);
+        ShowWindow(win->hwndFrame, showType);
         ShowWindow(win->hwndCanvas, SW_SHOW);
     }
     UpdateWindow(win->hwndFrame);
@@ -2222,6 +2239,24 @@ static void OnFileChange(PTSTR filename, LPARAM param)
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
     PostMessage(((WindowInfo *)param)->hwndFrame, WM_CHAR, 'r', 0);
+}
+
+static void CheckPositionAndSize(DisplayState* ds)
+{
+    if (!ds)
+        return;
+
+    if (ds->windowX < 0)
+        ds->windowX = CW_USEDEFAULT;
+
+    if (ds->windowY < 0)
+        ds->windowY = CW_USEDEFAULT;
+
+    if (ds->windowDx < MIN_WIN_DX || ds->windowDx > MAX_WIN_DX)
+        ds->windowDx = DEF_PAGE_DX;
+
+    if (ds->windowDy < MIN_WIN_DY || ds->windowDy > MAX_WIN_DY)
+        ds->windowDy = DEF_PAGE_DY;
 }
 
 WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
@@ -2253,6 +2288,7 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
     if (fileFromHistory)
         ds = &fileFromHistory->state;
 
+    CheckPositionAndSize(ds);
     if (!RefreshPdfDocument(fileName, win, ds, reuseExistingWindow, false, showWin)) {
         /* failed to open */
         return NULL;
@@ -4401,6 +4437,8 @@ static void OnMove(WindowInfo *win, int x, int y)
     GetWindowRect(win->hwndFrame, &rc);
     gGlobalPrefs.m_windowPosX = rc.left;
     gGlobalPrefs.m_windowPosY = rc.top;
+    gGlobalPrefs.m_windowDx = rect_dx(&rc);
+    gGlobalPrefs.m_windowDy = rect_dy(&rc);
 }
 
 static void OnSize(WindowInfo *win, int dx, int dy)
@@ -4415,6 +4453,13 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
+    RECT rc;
+
+   GetWindowRect(win->hwndFrame, &rc);
+   gGlobalPrefs.m_windowPosX = rc.left;
+   gGlobalPrefs.m_windowPosY = rc.top;
+   gGlobalPrefs.m_windowDx = rect_dx(&rc);
+   gGlobalPrefs.m_windowDy = rect_dy(&rc);
 }
 
 static void ReloadPdfDocument(WindowInfo *win)
@@ -4602,7 +4647,8 @@ static void OnMenuViewRotateRight(WindowInfo *win)
 
 void WindowInfo_EnterFullscreen(WindowInfo *win)
 {
-    if (win->dm->_fullScreen || !IsWindowVisible(win->hwndFrame)) return;
+    if (win->dm->_fullScreen || !IsWindowVisible(win->hwndFrame)) 
+        return;
     win->dm->_fullScreen = TRUE;
 
 #ifdef BUILD_RM_VERSION
@@ -4673,10 +4719,15 @@ static void OnMenuViewFullscreen(WindowInfo *win)
         return;
 
     if (!win->dm) {
-        if (gGlobalPrefs.m_fullScreen)
-            gGlobalPrefs.m_fullScreen = FALSE;
+        /* not showing a PDF document */
+        if (gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN) {
+            if (IsZoomed(win->hwndFrame))
+                gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+            else
+                gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+        }
         else
-            gGlobalPrefs.m_fullScreen = TRUE;
+            gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
         MenuUpdateFullscreen(win);
         return;
     }
@@ -7001,7 +7052,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         DragAcceptFiles(win->hwndFrame, TRUE);
         ShowWindow(win->hwndCanvas, SW_SHOW);
         UpdateWindow(win->hwndCanvas);
-        ShowWindow(win->hwndFrame, SW_SHOW);
+        if (gGlobalPrefs.m_windowState == WIN_STATE_NORMAL)
+            ShowWindow(win->hwndFrame, SW_SHOW);
+        else
+            ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         UpdateWindow(win->hwndFrame);
     }
 

@@ -9,8 +9,9 @@
 
 /* enum from m_windowState */
 enum {
-    WIN_STATE_NORMAL = 1, /* use remebered position and size */
-    WIN_STATE_MAXIMIZED /* ignore position and size, maximize the window */
+    WIN_STATE_NORMAL = 1 /* use remebered position and size */
+    ,WIN_STATE_MAXIMIZED /* ignore position and size, maximize the window */    
+    ,WIN_STATE_FULLSCREEN
 };
 
 /* Most of the global settings that we persist in preferences file. */
@@ -24,7 +25,6 @@ typedef struct {
 
     int  m_bgColor;
     BOOL m_escToExit;
-    BOOL m_fullScreen;
 
     /* pattern used to launch the editor when doing inverse search */
     char *m_inverseSearchCmdLine;
@@ -45,6 +45,13 @@ typedef struct {
     int  m_windowPosY;
     int  m_windowDx;
     int  m_windowDy;
+
+    /* temporary original values */
+    int  m_tmpWindowPosX;
+    int  m_tmpWindowPosY;
+    int  m_tmpWindowDx;
+    int  m_tmpWindowDy;
+
     int  m_pdfsOpened;
 } SerializableGlobalPrefs;
 

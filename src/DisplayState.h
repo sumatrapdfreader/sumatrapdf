@@ -33,7 +33,6 @@ enum DisplayMode {
 #define PAGE_NO_STR                 "Page"
 #define ZOOM_VIRTUAL_STR            "ZoomVirtual"
 #define ROTATION_STR                "Rotation"
-#define FULLSCREEN_STR              "Fullscreen"
 #define SCROLL_X_STR                "Scroll X"
 #define SCROLL_Y_STR                "Scroll Y"
 #define WINDOW_STATE_STR            "Window State"
@@ -63,7 +62,7 @@ typedef struct DisplayState {
     int                 pageNo;
     double              zoomVirtual;
     int                 rotation;
-    BOOL                fullScreen;
+    int                 windowState;
     int                 windowX;
     int                 windowY;
     int                 windowDx;

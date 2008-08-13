@@ -72,7 +72,6 @@ void DisplayState_Init(DisplayState *ds)
     memzero(ds, sizeof(DisplayState));
     ds->displayMode = DM_SINGLE_PAGE;
     ds->visible = FALSE;
-    ds->fullScreen = FALSE;
     ds->pageNo = 1;
     ds->zoomVirtual = 100.0;
     ds->rotation = 0;
@@ -101,7 +100,6 @@ bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
     DStringSprintf(strOut, "  %s: %d\n",   PAGE_NO_STR, ds->pageNo);
     DStringSprintf(strOut, "  %s: %.4f\n", ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     DStringSprintf(strOut, "  %s: %d\n",   ROTATION_STR, ds->rotation);
-    DStringSprintf(strOut, "  %s: %d\n",   FULLSCREEN_STR, (int)ds->fullScreen);
 
     DStringSprintf(strOut, "  %s: %d\n",   SCROLL_X_STR, ds->scrollX);
     DStringSprintf(strOut, "  %s: %d\n",   SCROLL_Y_STR, ds->scrollY);
