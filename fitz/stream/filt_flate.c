@@ -130,7 +130,7 @@ fz_newflatee(fz_filter **fp, fz_obj *params)
 		obj = fz_dictgets(params, "Effort");
 		if (obj) effort = fz_toint(obj);
 		obj = fz_dictgets(params, "ZIP");
-		if (obj) effort = fz_tobool(obj);
+		if (obj) zipfmt = fz_tobool(obj);
 	}
 
 	f->z.zalloc = zmalloc;

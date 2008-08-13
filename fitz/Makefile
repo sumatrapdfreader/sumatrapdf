@@ -1,8 +1,8 @@
 # Makefile for building mupdf and related stuff
 # Valid option to make:
 # CFG=[rel|dbg] - dbg if not given
-# WITH_JASPER=[yes|no] -default: yes
 # JBIG2_DIR=
+# JASPER_DIR=
 
 # Symbolic names for HOST variable
 HOST_LINUX := Linux
@@ -13,14 +13,13 @@ HOST_CYGWIN := CYGWIN_NT-6.0
 HOST := $(shell uname -s)
 
 VPATH=base:raster:world:stream:mupdf:apps:$(JBIG2_DIR)
+ifneq ($(JASPER_DIR),)
+VPATH+=$(JASPER_DIR)/base:$(JASPER_DIR)/jp2:$(JASPER_DIR)/pgx:$(JASPER_DIR)/jpc
+endif
 
 # make dbg default target if none provided
 ifeq ($(CFG),)
 CFG=dbg
-endif
-
-ifeq ($(WITH_JASPER),)
-WITH_JASPER=yes
 endif
 
 INCS = -I include -I cmaps
@@ -28,6 +27,11 @@ INCS = -I include -I cmaps
 ifneq ($(JBIG2_DIR),)
 INCS += -I $(JBIG2_DIR)
 CFLAGS += -DHAVE_JBIG2DEC
+endif
+
+ifneq ($(JASPER_DIR),)
+INCS += -I $(JASPER_DIR)/include
+CFLAGS += -DHAVE_JASPER -DJAS_CONFIGURE
 endif
 
 FREETYPE_CFLAGS  = `freetype-config --cflags`
@@ -60,17 +64,13 @@ CFLAGS += -std=gnu99 -DHAVE_C99
 endif
 
 JBIG2_CFLAGS = $(CFLAGS) -DHAVE_STDINT_H
+JASPER_CFLAGS = $(CFLAGS) -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_PNM_SUPPORT -DEXCLUDE_BMP_SUPPORT -DEXCLUDE_RAS_SUPPORT -DEXCLUDE_JPG_SUPPORT
 
 #-DHAVE_CONFIG_H
 
 CFLAGS += ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS}
 
 LDFLAGS += ${FREETYPE_LDFLAGS} ${FONTCONFIG_LDFLAGS} -lm -ljpeg
-
-ifeq ($(WITH_JASPER),yes)
-CFLAGS += -DHAVE_JASPER
-LDFLAGS += -ljasper
-endif
 
 CFLAGS += -DUSE_STATIC_CMAPS
 CFLAGS += -DDUMP_STATIC_CMAPS
@@ -83,6 +83,19 @@ JBIG2_SRC = \
 	jbig2_symbol_dict.c jbig2_text.c \
 	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
 	jbig2_image.c jbig2_metadata.c
+
+JASPER_SRC = \
+	jas_cm.c jas_debug.c jas_icc.c \
+	jas_iccdata.c jas_image.c jas_init.c jas_malloc.c \
+	jas_seq.c jas_stream.c jas_string.c jas_tvp.c \
+	jas_version.c \
+	jp2_cod.c jp2_dec.c jp2_enc.c \
+	jpc_bs.c jpc_cs.c jpc_dec.c jpc_enc.c \
+	jpc_math.c jpc_mct.c jpc_mqcod.c jpc_mqdec.c \
+	jpc_mqenc.c jpc_qmfb.c jpc_t1cod.c jpc_t1dec.c \
+	jpc_t1enc.c jpc_t2cod.c jpc_t2dec.c jpc_t2enc.c \
+	jpc_tagtree.c jpc_tsfb.c jpc_util.c \
+	pgx_cod.c pgx_dec.c pgx_enc.c
 
 BASE_SRC = \
 	base_memory.c \
@@ -140,7 +153,7 @@ STREAM_SRC = \
 	filt_dctd.c \
 	filt_dcte.c \
 
-ifeq ($(WITH_JASPER),yes)
+ifneq ($(JASPER_DIR),)
 STREAM_SRC += filt_jpxd.c
 endif
 
@@ -220,6 +233,9 @@ LIBS_SRC = \
 	${WORLD_SRC} \
 	${MUPDF_SRC}
 
+JASPER_OBJ = $(patsubst %.c, $(OUTDIR)/JASPER_%.o, ${JASPER_SRC})
+JASPER_DEP = $(patsubst %.o, %.d, $(JASPER_OBJ))
+
 JBIG2_OBJ = $(patsubst %.c, $(OUTDIR)/JBIG_%.o, ${JBIG2_SRC})
 JBIG2_DEP = $(patsubst %.o, %.d, $(JBIG2_OBJ))
 
@@ -233,6 +249,11 @@ PDFTOOL_DEP = $(patsubst %.o, %.d, $(PDFTOOL_OBJ))
 PDFBENCH_SRC = pdfbench.c
 PDFBENCH_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFBENCH_SRC})
 PDFBENCH_DEP = $(patsubst %.o, %.d, $(PDFBENCH_OBJ))
+
+ifneq ($(JASPER_DIR),)
+PDFTOOL_OBJ += $(JASPER_OBJ)
+PDFBENCH_OBJ += $(JASPER_OBJ)
+endif
 
 ifneq ($(JBIG2_DIR),)
 PDFTOOL_OBJ += $(JBIG2_OBJ)
@@ -260,7 +281,11 @@ $(OUTDIR)/FITZ_%.o: %.c
 $(OUTDIR)/JBIG_%.o: %.c
 	$(CC) -MD -c $(JBIG2_CFLAGS) -o $@ $<
 
+$(OUTDIR)/JASPER_%.o: %.c
+	$(CC) -MD -c $(JASPER_CFLAGS) -o $@ $<
+
 -include $(LIBS_DEP)
+-include $(JASPER_DEP)
 -include $(JBIG2_DEP)
 -include $(PDFTOOL_DEP)
 -include $(PDFBENCH_DEP)

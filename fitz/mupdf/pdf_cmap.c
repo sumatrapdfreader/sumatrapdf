@@ -353,7 +353,7 @@ pdf_maponetomany(pdf_cmap *cmap, int low, int *values, int len)
 
 	for (i = 0; i < len; i++)
 	{
-		addtable(cmap, values[i]);
+		error = addtable(cmap, values[i]);
 		if (error)
 			return fz_rethrow(error, "cannot add one-to-many table index");
 	}

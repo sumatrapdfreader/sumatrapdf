@@ -71,7 +71,7 @@ runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 
 		fz_dropbuffer(one);
 
-		fz_printstr(file, " ");
+		error = fz_printstr(file, " ");
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot write to content buffer");

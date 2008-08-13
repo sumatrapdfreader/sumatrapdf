@@ -62,14 +62,17 @@ fz_clearpixmap(fz_pixmap *pix)
 void
 fz_gammapixmap(fz_pixmap *pix, float gamma)
 {
-	unsigned char table[255];
+	unsigned char table[256];
 	int n = pix->w * pix->h * pix->n;
 	unsigned char *p = pix->samples;
 	int i;
 	for (i = 0; i < 256; i++)
 		table[i] = CLAMP(pow(i / 255.0, gamma) * 255.0, 0, 255);
 	while (n--)
-		*p = table[*p]; p++;
+	{
+		*p = table[*p];
+		p++;
+	}
 }
 
 #ifdef _MSC_VER
@@ -84,43 +87,39 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 void
 fz_debugpixmap(fz_pixmap *pix, char *prefix)
 {
-	int hasalpha = pix->n > 1;
-	FILE *image = NULL;
+	static int counter = 0;
+	char colorname[40];
+	char alphaname[40];
+	FILE *color = NULL;
 	FILE *alpha = NULL;
-	int i = 0;
-	int x;
-	int y;
+	int x, y;
 
-	do
+	sprintf(alphaname, "%s-%04d-alpha.pgm", prefix, counter);
+	alpha = fopen(alphaname, "wb");
+	if (!alpha)
+		goto cleanup;
+	if (pix->n > 1)
 	{
-		char imagename[40];
-		char alphaname[40];
+		if (pix->n > 2)
+			sprintf(colorname, "%s-%04d-color.ppm", prefix, counter);
 
-		if (pix->n == 1 || pix->n == 2)
-			sprintf(imagename, "%s-%04d-image.pgm", prefix, i);
 		else
-			sprintf(imagename, "%s-%04d-image.ppm", prefix, i);
-		if (hasalpha)
-			sprintf(alphaname, "%s-%04d-alpha.pgm", prefix, i);
+			sprintf(colorname, "%s-%04d-color.pgm", prefix, counter);
 
-		if (access(imagename, F_OK) == 0 ||
-				(hasalpha && access(alphaname, F_OK) == 0))
-		{
-			i++;
-			continue;
-		}
+		color = fopen(colorname, "wb");
+		if (!color)
+			goto cleanup;
+	}
 
-		image = fopen(imagename, "wb");
-		if (hasalpha)
-			alpha = fopen(alphaname, "wb");
-	} while (image == NULL || (hasalpha && alpha == NULL));
+	counter ++;
 
 	if (pix->n == 5)
 	{
-		fprintf(image, "P6\n%d %d\n255\n", pix->w, pix->h);
 		fprintf(alpha, "P5\n%d %d\n255\n", pix->w, pix->h);
+		fprintf(color, "P6\n%d %d\n255\n", pix->w, pix->h);
 
 		for (y = 0; y < pix->h; y++)
+		{
 			for (x = 0; x < pix->w; x++)
 			{
 				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
@@ -132,18 +131,20 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 				int g = 255 - MIN(mm + kk, 255);
 				int b = 255 - MIN(yy + kk, 255);
 				fputc(a, alpha);
-				fputc(r, image);
-				fputc(g, image);
-				fputc(b, image);
+				fputc(r, color);
+				fputc(g, color);
+				fputc(b, color);
 			}
+		}
 	}
 
 	else if (pix->n == 4)
 	{
-		fprintf(image, "P6\n%d %d\n255\n", pix->w, pix->h);
 		fprintf(alpha, "P5\n%d %d\n255\n", pix->w, pix->h);
+		fprintf(color, "P6\n%d %d\n255\n", pix->w, pix->h);
 
 		for (y = 0; y < pix->h; y++)
+		{
 			for (x = 0; x < pix->w; x++)
 			{
 				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
@@ -151,41 +152,46 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 2];
 				int b = pix->samples[x * pix->n + y * pix->w * pix->n + 3];
 				fputc(a, alpha);
-				fputc(r, image);
-				fputc(g, image);
-				fputc(b, image);
+				fputc(r, color);
+				fputc(g, color);
+				fputc(b, color);
 			}
+		}
 	}
 
 	else if (pix->n == 2)
 	{
-		fprintf(image, "P5\n%d %d\n255\n", pix->w, pix->h);
 		fprintf(alpha, "P5\n%d %d\n255\n", pix->w, pix->h);
+		fprintf(color, "P5\n%d %d\n255\n", pix->w, pix->h);
 
 		for (y = 0; y < pix->h; y++)
+		{
 			for (x = 0; x < pix->w; x++)
 			{
 				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
 				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
 				fputc(a, alpha);
-				fputc(g, image);
+				fputc(g, color);
 			}
+		}
 	}
 
 	else if (pix->n == 1)
 	{
-		fprintf(image, "P5\n%d %d\n255\n", pix->w, pix->h);
+		fprintf(alpha, "P5\n%d %d\n255\n", pix->w, pix->h);
 
 		for (y = 0; y < pix->h; y++)
+		{
 			for (x = 0; x < pix->w; x++)
 			{
-				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
-				fputc(g, image);
+				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
+				fputc(g, alpha);
 			}
+		}
 	}
 
-	if (hasalpha)
-		fclose(alpha);
-	fclose(image);
+cleanup:
+	if (alpha) fclose(alpha);
+	if (color) fclose(color);
 }
 #endif

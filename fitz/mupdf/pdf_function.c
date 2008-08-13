@@ -1575,6 +1575,7 @@ fz_error *
 pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outlen)
 {
 	fz_error *error;
+	float r;
 	int i;
 
 	if (func->m != inlen || func->n != outlen)
@@ -1614,8 +1615,8 @@ pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outle
 
 			for (i = func->n - 1; i >= 0; --i)
 			{
-				SAFE_POPNUM(&st, out+i);
-				out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
+				SAFE_POPNUM(&st, &r);
+				out[i] = CLAMP(r, func->range[i][0], func->range[i][1]);
 			}
 		}
 		break;

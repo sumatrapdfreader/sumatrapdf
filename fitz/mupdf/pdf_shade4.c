@@ -303,7 +303,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 
 	shade->meshcap = 0;
 	shade->mesh = fz_malloc(sizeof(float) * 1024);
-	if (!shade) {
+	if (!shade->mesh) {
 		error = fz_outofmem;
 		goto cleanup;
 	}
