@@ -819,7 +819,7 @@ fa:تمام‌صفحه\tCtrl-L
 it:Schermo intero\tCtrl-L
 nl:Volledig scherm\tCtrl-L
 no:Full skjerm\tCtrl-L
-sk:Na celú stranu\tCtrl-L
+sk:Na celú obrazovku\tCtrl-L
 vn:Toàn màn hình\tCtrl-L
 lt:Visame ekrane\tCtrl-L
 my:Mukasurat Penuh\tCtrl-L
@@ -1540,6 +1540,7 @@ ja:マニュアル(&M)
 nl:Handleiding
 hr:Korisnički priručnik
 vn:&Hướng dẫn sử dụng
+sk:Príručka
 -
 &About
 bg:Относно програмата...
@@ -2062,7 +2063,7 @@ gr:Σφάλμα κατά τη φόρτωση του αρχείου
 th:การเปิดไฟล์ผิดพลาด
 pt:Erro a carregar ficheiro PDF.
 no:Feil ved åpning av PDF-fil.
-sk:Chyba pri načítaní PDF súboru.
+sk:Chyba pri pokuse načítať PDF súbor.
 vn:Lỗi nạp tệp PDF.
 lt:Klaida įkeliant PDF dokumentą
 my:Masalah memuatkan fail PDF

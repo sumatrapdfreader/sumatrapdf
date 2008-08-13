@@ -11,7 +11,6 @@
 typedef struct MenuDef {
     const char *m_title;
     int         m_id;
-    int         m_flags;
 } MenuDef;
 
 typedef struct LangDef {
