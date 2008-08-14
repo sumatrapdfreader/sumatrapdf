@@ -120,8 +120,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define PDF_DOC_NAME            _T("Adobe PDF Document")
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
-#define PREFS_FILE_NAME         _T("sumatrapdfprefs.txt")
-#define PREFS_FILE_NAME_NEW     _T("sumatrapdfprefs.dat")
+#define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR             _T("SumatraPDF")
 #define APP_NAME_STR            "SumatraPDF"
 
@@ -1301,22 +1300,16 @@ static void AppGenDataFilename(char* pFilename, DString* pDs)
     DStringAppend(pDs, pFilename, -1);
 }
 
-static void Prefs_GetFileNameOld(DString* pDs)
+static void Prefs_GetFileName(DString* pDs)
 {
     assert(0 == pDs->length);
     AppGenDataFilename(PREFS_FILE_NAME, pDs);
 }
 
-static void Prefs_GetFileNameNew(DString* pDs)
-{
-    assert(0 == pDs->length);
-    AppGenDataFilename(PREFS_FILE_NAME_NEW, pDs);
-}
-
 /* Load preferences from the preferences file.
    Returns true if preferences file was loaded, false if there was an error.
 */
-static bool Prefs_LoadNew(void)
+static bool Prefs_Load(void)
 {
     char *          prefsTxt;
     bool            ok = false;
@@ -1329,7 +1322,7 @@ static bool Prefs_LoadNew(void)
 
     DString         path;
     DStringInit(&path);
-    Prefs_GetFileNameNew(&path);
+    Prefs_GetFileName(&path);
     uint64_t prefsFileLen;
     prefsTxt = file_read_all(path.pString, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
@@ -1340,57 +1333,6 @@ static bool Prefs_LoadNew(void)
     DStringFree(&path);
     free((void*)prefsTxt);
     return ok;
-}
-
-/* Load preferences from the preferences file.
-   Returns true if preferences file was loaded, false if it didn't exist.
-*/
-static bool Prefs_LoadOld(void)
-{
-    DString         path;
-    char *          prefsTxt = NULL;
-    uint64_t        prefsFileLen;
-    bool            ok = false;
-
-#ifdef DEBUG
-    static bool     loaded = false;
-    assert(!loaded);
-    loaded = true;
-#endif
-
-    DBG_OUT("Prefs_Load()\n");
-
-    /* TODO: temporary, try to load preferences in old format. This is only for the
-       transitional period. In some future release I'll nuke all the code
-       related to old preferences format. */
-    DStringInit(&path);
-    Prefs_GetFileNameOld(&path);
-
-    prefsTxt = file_read_all(path.pString, &prefsFileLen);
-    if (str_empty(prefsTxt)) {
-        DBG_OUT("  no prefs file or is empty\n");
-        goto Exit;
-    }
-    DBG_OUT("Prefs file %s:\n%s\n", path.pString, prefsTxt);
-
-    ok = Prefs_DeserializeOld(prefsTxt, &gFileHistoryRoot);
-    assert(ok);
-
-Exit:
-    DStringFree(&path);
-    free((void*)prefsTxt);
-    return ok;
-}
-
-static bool Prefs_Load(void)
-{
-    bool ok = Prefs_LoadNew();
-    // TODO: loading old prefs is only temporary, for one revision, so that we
-    // silently migrate old prefs to new format. We'll ditch the code for old
-    // prefs in the future
-    if (!ok)
-        Prefs_LoadOld();
-    return true;
 }
 
 unsigned short gItemId[] = {
@@ -1559,7 +1501,7 @@ static bool Prefs_Save(void)
         goto Exit;
 
     assert(dataLen > 0);
-    Prefs_GetFileNameNew(&path);
+    Prefs_GetFileName(&path);
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */

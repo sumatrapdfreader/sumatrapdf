@@ -58,7 +58,6 @@ typedef struct {
 extern SerializableGlobalPrefs gGlobalPrefs;
 
 struct FileHistoryList;
-bool        Prefs_DeserializeOld(const char *prefsTxt, FileHistoryList **fileHistoryRoot);
 
 const char *Prefs_Serialize(FileHistoryList **root, size_t* lenOut);
 bool        Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot);
