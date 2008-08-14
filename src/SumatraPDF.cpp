@@ -256,7 +256,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
     bool showWin);
 
-void Find( HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD );
+void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 
 #define SEP_ITEM "-----"
 
@@ -1105,7 +1105,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
-        if( !gRestrictedUse || ~md.m_flags & MF_RESTRICTED ) {
+        if (!gRestrictedUse || ~md.m_flags & MF_RESTRICTED) {
             const char *title = md.m_title;
             int id = md.m_id;
             if (str_eq(title, SEP_ITEM)) {
@@ -1154,7 +1154,7 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     
     HMENU mainMenu = CreateMenu();
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
-    if( !gRestrictedUse )
+    if (!gRestrictedUse)
         AppendRecentFilesToMenu(tmp);
     AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&File"));
     tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
@@ -1688,10 +1688,8 @@ static void WindowInfo_Delete(WindowInfo *win)
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
 
-    if( win->title ) {
-        free( win->title );
-        win->title = NULL;
-    }
+    free(win->title);
+    win->title = NULL;
 
     delete win;
 }
@@ -1842,34 +1840,36 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
         if (TbIsSepId(cmdId))
             continue;
 
+        // Assume the button is enabled.
         LPARAM buttonState = enable;
-
-        wchar_t findBoxText[2];
-        GetWindowTextW(win->hwndFindBox, findBoxText, 2);
 
         if (gRestrictedUse && gToolbarButtons[i].flags & TBF_RESTRICTED) // If restricted, disable
             buttonState = disable;
-        else if (WS_SHOWING_PDF != win->state) // If no file open, only enable open button.
-            buttonState = (IDM_OPEN == cmdId) ? enable : disable;
+        else if (WS_SHOWING_PDF != win->state) { // If no file open, only enable open button.
+            if (IDM_OPEN != cmdId)
+                buttonState = disable;
+        }
         else // Figure out what to show.
         {
             switch( cmdId )
             {
                 case IDM_FIND_NEXT:
-                case IDM_FIND_PREV:
-                    // TODO: Update on whether there's more to find.
-                    buttonState = (findBoxText[0] != '\0') ? enable : disable;
+                case IDM_FIND_PREV: 
+                    // TODO: Update on whether there's more to find, not just on whether there is text.
+                    wchar_t findBoxText[2];
+                    GetWindowTextW(win->hwndFindBox, findBoxText, 2);
+
+                    if (findBoxText[0] == '\0')
+                        buttonState = disable;
                     break;
 
                 case IDM_GOTO_NEXT_PAGE:
-                    buttonState = (win->dm->currentPageNo() != win->dm->pageCount() ) ? enable : disable;
+                    if (win->dm->currentPageNo() == win->dm->pageCount())
+                         buttonState = disable;
                     break;
                 case IDM_GOTO_PREV_PAGE:
-                    buttonState = (win->dm->currentPageNo() != 1) ? enable : disable;
-                    break;
-
-                default:
-                    buttonState = enable;
+                    if (win->dm->currentPageNo() == 1)
+                        buttonState = disable;
                     break;
             }
         }
@@ -2369,12 +2369,12 @@ void DisplayModel::pageChanged()
         
         const CHAR *title = baseName;
 
-        if( win->title )
+        if (win->title)
             title = win->title;
 
         if (win->needrefresh)
             hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", title);
-         else
+        else
             hr = StringCchPrintfA(buf, dimof(buf), "%s", title);
         win_set_text(win->hwndFrame, buf);
     }
@@ -4651,12 +4651,10 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
         return;
     win->dm->_fullScreen = TRUE;
 
-#ifdef BUILD_RM_VERSION
-    // This code removes the TOC from full screen, it adds it back on later on exit fullscreen
+    // Remove TOC from full screen, add back later on exit fullscreen
     win->dm->_tocBeforeFullScreen = win->dm->_showToc;
-    if( win->dm->_showToc )
+    if (win->dm->_showToc)
         win->HideTocBox();
-#endif
 
     int x, y, w, h;
     MONITORINFOEX mi;
@@ -4697,10 +4695,8 @@ void WindowInfo_ExitFullscreen(WindowInfo *win)
         return;
     win->dm->_fullScreen = false;
 
-#ifdef BUILD_RM_VERSION
-    if( win->dm->_tocBeforeFullScreen )
+    if (win->dm->_tocBeforeFullScreen)
         win->ShowTocBox();
-#endif
 
     if (gGlobalPrefs.m_showToolbar)
         ShowWindow(win->hwndReBar, SW_SHOW);
@@ -4909,12 +4905,12 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
 
 static void OnMenuFindNext(WindowInfo *win)
 {
-    Find( win->hwndFindBox, win, FIND_FORWARD );
+    Find(win->hwndFindBox, win, FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
-    Find( win->hwndFindBox, win, FIND_BACKWARD );
+    Find(win->hwndFindBox, win, FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -5186,7 +5182,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
         if (VK_RETURN == wParam)
         {
-            Find( hwnd, win );
+            Find(hwnd, win);
             SetFocus(hwnd); // Set focus back to Text box so return can be pressed again to find next one.
             return 1;
         }
@@ -5208,24 +5204,18 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
     int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
 
-    if (WM_CHAR == message) {
-        if( VK_ESCAPE != wParam && 
-            VK_TAB    != wParam &&
-            VK_RETURN != wParam     ) {
-            ToolbarUpdateStateForWindow(win);
-        }
-    } 
-    else if (WM_PASTE == message ||
-             WM_CUT   == message ||
-             WM_CLEAR == message ||
-             WM_UNDO  == message     ) {
+    if (WM_CHAR  == message ||
+        WM_PASTE == message ||
+        WM_CUT   == message ||
+        WM_CLEAR == message ||
+        WM_UNDO  == message     ) {
         ToolbarUpdateStateForWindow(win);
     }
 
     return ret;
 }
 
-void Find( HWND hwnd, WindowInfo *win, PdfSearchDirection direction )
+void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
 {
     PdfSearchResult *rect = NULL;
 
@@ -6023,22 +6013,22 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             {
                 case IDM_OPEN:
                 case IDT_FILE_OPEN:
-                    if( !gRestrictedUse )
+                    if (!gRestrictedUse)
                         OnMenuOpen(win);
                     break;
                 case IDM_SAVEAS:
-                    if( !gRestrictedUse )
+                    if (!gRestrictedUse)
                         OnMenuSaveAs(win);
                     break;
 
                 case IDT_FILE_PRINT:
                 case IDM_PRINT:
-                    if( !gRestrictedUse )
+                    if (!gRestrictedUse)
                         OnMenuPrint(win);
                     break;
 
                 case IDM_MAKE_DEFAULT_READER:
-                    if( !gRestrictedUse )
+                    if (!gRestrictedUse)
                         OneMenuMakeDefaultReader(win);
                     break;
 
@@ -7115,24 +7105,24 @@ Exit:
     SerializableGlobalPrefs_Deinit();
 
 #ifdef BUILD_RM_VERSION
-    if( gDeleteFileOnClose )
+    if (gDeleteFileOnClose)
     {
         // Delete the files which where passed to the command line.
         // This only really makes sense if we are in restricted use.
-        while( currArgFileNames )
+        while (currArgFileNames)
         {
             TCHAR fullpath[_MAX_PATH];
-            GetFullPathName( currArgFileNames->str, dimof(fullpath), fullpath, NULL );
+            GetFullPathName(currArgFileNames->str, dimof(fullpath), fullpath, NULL);
 
-            int error = remove( fullpath );
+            int error = remove(fullpath);
 
             // Sumatra holds the lock on the file (open stream), it should have lost it by the time
             // we reach here, but sometimes it's a little slow, so loop around till we can do it.
-            while( error != 0 )
+            while (error != 0)
             {
                 error = GetLastError();
-                if( error == 32 )
-                    error = remove( fullpath );
+                if (error == 32)
+                    error = remove(fullpath);
                 else
                     error = 0;
             }
@@ -7140,7 +7130,7 @@ Exit:
             currArgFileNames = currArgFileNames->next;
         }
     }
-#endif
+#endif // BUILD_RM_VERSION
 
     StrList_Destroy(&argListRoot);
     //histDump();
