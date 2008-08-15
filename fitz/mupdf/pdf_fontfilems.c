@@ -588,12 +588,12 @@ pdf_createfontlistMS()
 			if (szFile[strlen(szFile)-1] == 'c' || szFile[strlen(szFile)-1] == 'C')
 			{
 				err = parseTTCs(szFile);
-                // ignore error parsing a given font file
+				// ignore error parsing a given font file
 			}
 			else if (szFile[strlen(szFile)-1] == 'f'|| szFile[strlen(szFile)-1] == 'F')
 			{
 				err = parseTTFs(szFile);
-                // ignore error parsing a given font file
+				// ignore error parsing a given font file
 			}
 		}
 
@@ -626,42 +626,42 @@ pdf_destoryfontlistMS()
 static fz_error *
 pdf_lookupfontMS2(char *fontname, char **fontpath, int *index, int *didfind)
 {
-    pdf_fontmapMS fontmap;
-    pdf_fontmapMS *found = nil;
-    char *pattern;
-    int i;
+	pdf_fontmapMS fontmap;
+	pdf_fontmapMS *found = nil;
+	char *pattern;
+	int i;
 
-    if (fontlistMS.len == 0)
-        return fz_throw("fonterror : no fonts in the system");
+	if (fontlistMS.len == 0)
+		return fz_throw("fonterror : no fonts in the system");
 
-    pattern = fontname;
-    for (i = 0; i < ARRAY_SIZE(basenames); i++)
-    {
-        if (0 == strcmp(fontname, basenames[i]))
-        {
-            pattern = basepatterns[i];
-            break;
-        }
-    }
+	pattern = fontname;
+	for (i = 0; i < ARRAY_SIZE(basenames); i++)
+	{
+		if (0 == strcmp(fontname, basenames[i]))
+		{
+			pattern = basepatterns[i];
+			break;
+		}
+	}
 
-    strlcpy(fontmap.fontface,pattern,sizeof(fontmap.fontface));
-    found = localbsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS),compare);
+	strlcpy(fontmap.fontface,pattern,sizeof(fontmap.fontface));
+	found = localbsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS),compare);
 
 #if 0
-    if (!found)
-        found = findlinear(&fontlistMS, &fontmap);
+	if (!found)
+		found = findlinear(&fontlistMS, &fontmap);
 #endif
 
-    if (found)
-    {
-        *fontpath = found->fontpath;
-        *index = found->index;
-    }
-    else
-    {
-        *fontpath = fontlistMS.fontmap[0].fontpath;
-        *index = fontlistMS.fontmap[0].index;
-    }
+	if (found)
+	{
+		*fontpath = found->fontpath;
+		*index = found->index;
+	}
+	else
+	{
+		*fontpath = fontlistMS.fontmap[0].fontpath;
+		*index = fontlistMS.fontmap[0].index;
+	}
 
     *didfind = 0;
     if (found)
@@ -675,14 +675,14 @@ static fz_error *initfontlibs(void)
 {
 	int fterr;
 	int maj, min, pat;
-	fz_error  *err;
+	fz_error *err;
 
 	if (ftlib)
 		return fz_okay;
 
 	fterr = FT_Init_FreeType(&ftlib);
 	if (fterr)
-		return fz_throw("freetype failed initialisation: 0x%x", fterr);
+		return fz_throw("freetype failed initialisation: %s", ft_errstr(fterr));
 
 	FT_Library_Version(ftlib, &maj, &min, &pat);
 	if (maj == 2 && min == 1 && pat < 7)
@@ -734,7 +734,7 @@ pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 
 	fterr = FT_New_Face(ftlib, file, index, &face);
 	if (fterr)
-		return fz_throw("freetype could not load font file '%s': 0x%x", file, fterr);
+		return fz_throw("freetype could not load font file '%s': %s", file, ft_errstr(fterr));
 
 	font->ftface = face;
 
@@ -756,7 +756,7 @@ pdf_loadsystemfont(pdf_font *font, char *basefont, char *collection)
 
 	fterr = FT_New_Face(ftlib, file, index, &face);
 	if (fterr) {
-		return fz_throw("freetype could not load font file '%s': 0x%x", file, fterr);
+		return fz_throw("freetype could not load font file '%s': %s", file, ft_errstr(fterr));
 	}
 
 	font->ftface = face;
@@ -787,7 +787,7 @@ pdf_loadembeddedfont(pdf_font *font, pdf_xref *xref, fz_obj *stmref)
 
 	if (fterr) {
 		fz_free(buf);
-		return fz_throw("freetype could not load embedded font: 0x%x", fterr);
+		return fz_throw("freetype could not load embedded font: %s", ft_errstr(fterr));
 	}
 
 	font->ftface = face;

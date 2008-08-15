@@ -130,7 +130,10 @@ pdf_debugoutline(pdf_outline *outline, int level)
 		for (i = 0; i < level; i++)
 			putchar(' ');
 
-		printf("%s ", outline->title);
+		if (outline->title)
+		    printf("%s ", outline->title);
+		else
+		    printf("<nil> ");
 
 		if (outline->link)
 			fz_debugobj(outline->link->dest);

@@ -301,15 +301,62 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 }
 
 static fz_error *
+readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, int w1, int w2)
+{
+	fz_error *error;
+	int i, n;
+
+	if (i0 < 0 || i0 + i1 > xref->len)
+		return fz_throw("xref stream has too many entries");
+
+	for (i = i0; i < i0 + i1; i++)
+	{
+		int a = 0;
+		int b = 0;
+		int c = 0;
+
+		if (fz_peekbyte(stm) == EOF)
+		{
+			error = fz_readerror(stm);
+			if (error)
+				return fz_rethrow(error, "truncated xref stream");
+			return fz_throw("truncated xref stream");
+		}
+
+		for (n = 0; n < w0; n++)
+			a = (a << 8) + fz_readbyte(stm);
+		for (n = 0; n < w1; n++)
+			b = (b << 8) + fz_readbyte(stm);
+		for (n = 0; n < w2; n++)
+			c = (c << 8) + fz_readbyte(stm);
+
+		error = fz_readerror(stm);
+		if (error)
+			return fz_rethrow(error, "truncated xref stream");
+
+		if (!xref->table[i].type)
+		{
+			int t = w0 ? a : 1;
+			xref->table[i].type = t == 0 ? 'f' : t == 1 ? 'n' : t == 2 ? 'o' : 0;
+			xref->table[i].ofs = w2 ? b : 0;
+			xref->table[i].gen = w1 ? c : 0;
+		}
+	}
+
+	return fz_okay;
+}
+
+static fz_error *
 readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 {
 	fz_error *error;
 	fz_stream *stm;
 	fz_obj *trailer;
+	fz_obj *index;
 	fz_obj *obj;
 	int oid, gen, stmofs;
-	int size, w0, w1, w2, i0, i1;
-	int i, n;
+	int size, w0, w1, w2;
+	int t;
 
 	pdf_logxref("load new xref format\n");
 
@@ -319,8 +366,17 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 	if (oid < 0 || oid >= xref->len)
 	{
-		fz_dropobj(trailer);
-		return fz_throw("object id out of range");
+		if (oid == xref->len && oid < xref->cap)
+		{
+		    /* allow broken pdf files that have off-by-one errors in the xref */
+		    fz_warn("object id (%d) out of range (0..%d)", oid, xref->len - 1);
+		    xref->len ++;
+		}
+		else
+		{
+		    fz_dropobj(trailer);
+		    return fz_throw("object id (%d) out of range (0..%d)", oid, xref->len - 1);
+		}
 	}
 
 	xref->table[oid].type = 'n';
@@ -345,20 +401,7 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	w1 = fz_toint(fz_arrayget(obj, 1));
 	w2 = fz_toint(fz_arrayget(obj, 2));
 
-	obj = fz_dictgets(trailer, "Index");
-	if (obj) {
-		i0 = fz_toint(fz_arrayget(obj, 0));
-		i1 = fz_toint(fz_arrayget(obj, 1));
-	}
-	else {
-		i0 = 0;
-		i1 = size;
-	}
-
-	if (i0 < 0 || i1 > xref->len) {
-		fz_dropobj(trailer);
-		return fz_throw("xref stream has too many entries");
-	}
+	index = fz_dictgets(trailer, "Index");
 
 	error = pdf_openstream(&stm, xref, oid, gen);
 	if (error)
@@ -367,43 +410,29 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		return fz_rethrow(error, "cannot open compressed xref stream");
 	}
 
-	for (i = i0; i < i0 + i1; i++)
+	if (!index)
 	{
-		int a = 0;
-		int b = 0;
-		int c = 0;
-
-		if (fz_peekbyte(stm) == EOF)
-		{
-			fz_dropstream(stm);
-			fz_dropobj(trailer);
-			error = fz_readerror(stm);
-			if (error)
-				return fz_rethrow(error, "truncated xref stream");
-			return fz_throw("truncated xref stream");
-		}
-
-		for (n = 0; n < w0; n++)
-			a = (a << 8) + fz_readbyte(stm);
-		for (n = 0; n < w1; n++)
-			b = (b << 8) + fz_readbyte(stm);
-		for (n = 0; n < w2; n++)
-			c = (c << 8) + fz_readbyte(stm);
-
-		error = fz_readerror(stm);
+		error = readnewxrefsection(xref, stm, 0, size, w0, w1, w2);
 		if (error)
 		{
 			fz_dropstream(stm);
 			fz_dropobj(trailer);
-			return fz_rethrow(error, "truncated xref stream");
+			return fz_rethrow(error, "cannot read xref stream");
 		}
-
-		if (!xref->table[i].type)
+	}
+	else
+	{
+		for (t = 0; t < fz_arraylen(index); t += 2)
 		{
-			int t = w0 ? a : 1;
-			xref->table[i].type = t == 0 ? 'f' : t == 1 ? 'n' : t == 2 ? 'o' : 0;
-			xref->table[i].ofs = w2 ? b : 0;
-			xref->table[i].gen = w1 ? c : 0;
+			int i0 = fz_toint(fz_arrayget(index, t + 0));
+			int i1 = fz_toint(fz_arrayget(index, t + 1));
+			error = readnewxrefsection(xref, stm, i0, i1, w0, w1, w2);
+			if (error)
+			{
+				fz_dropstream(stm);
+				fz_dropobj(trailer);
+				return fz_rethrow(error, "cannot read xref stream section");
+			}
 		}
 	}
 
@@ -580,7 +609,7 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 
 		if (oidbuf[i] < 1 || oidbuf[i] >= xref->len)
 		{
-			error = fz_throw("object id out of range (%d)", oidbuf[i]);
+			error = fz_throw("object id (%d) out of range (0..%d)", oidbuf[i], xref->len - 1);
 			goto cleanupstm;
 		}
 
@@ -624,8 +653,7 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	error = fz_openrfile(&xref->file, filename);
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot open file: '%s'", filename);
-		goto cleanup;
+		return fz_rethrow(error, "cannot open file: '%s'", filename);
 	}
 
 	error = loadversion(xref);
@@ -660,8 +688,8 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 
 	assert(xref->table == nil);
 
-	xref->cap = fz_toint(size) + 1;
-	xref->len = xref->cap;
+	xref->len = fz_toint(size);
+	xref->cap = xref->len + 1; /* for hack to allow broken pdf generators with off-by-one errors */
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
 	if (!xref->table)
 	{
@@ -683,18 +711,15 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	error = readxrefsections(xref, xref->startxref, buf, sizeof buf);
 	if (error)
 	{
-		error =  fz_rethrow(error, "cannot read xref");
+		error = fz_rethrow(error, "cannot read xref");
 		goto cleanup;
 	}
 
 	return fz_okay;
 
 cleanup:
-	if (xref->file) 
-	{
-		fz_dropstream(xref->file);
-		xref->file = nil;
-	}
+	fz_dropstream(xref->file);
+	xref->file = nil;
 	free(xref->table);
 	xref->table = nil;
 	return error;

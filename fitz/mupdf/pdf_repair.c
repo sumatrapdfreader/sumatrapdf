@@ -367,7 +367,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 
 cleanup:
 	fz_dropstream(file);
-	xref->file = nil;
+	xref->file = nil; /* don't keep the stale pointer */
 	fz_free(list);
 	return error; /* already rethrown */
 }

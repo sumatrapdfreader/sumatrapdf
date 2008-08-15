@@ -239,6 +239,7 @@ fz_error *pdf_loadsubstitutefont(pdf_font *font, int fdflags, char *collection);
 fz_error *pdf_loadtype3font(pdf_font **fontp, pdf_xref *xref, fz_obj *obj, fz_obj *ref);
 
 /* font.c */
+char *ft_errstr(int err);
 fz_error *pdf_loadfontdescriptor(pdf_font *font, pdf_xref *xref, fz_obj *desc, char *collection);
 fz_error *pdf_loadfont(pdf_font **fontp, pdf_xref *xref, fz_obj *obj, fz_obj *ref);
 void pdf_dropfont(pdf_font *font);

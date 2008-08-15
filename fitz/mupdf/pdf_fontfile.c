@@ -120,7 +120,7 @@ static fz_error *initfontlibs(void)
 
 	fterr = FT_Init_FreeType(&ftlib);
 	if (fterr)
-		return fz_throw("freetype failed initialisation: 0x%x", fterr);
+		return fz_throw("freetype failed initialisation: %s", ft_errstr(fterr));
 
 	FT_Library_Version(ftlib, &maj, &min, &pat);
 	if (maj == 2 && min == 1 && pat < 7)
@@ -135,7 +135,7 @@ pdf_loadbuiltinfont(pdf_font *font, char *fontname)
 	fz_error *error;
 	unsigned char *data;
 	unsigned int len;
-	FT_Error e;
+	int fterr;
 	int i;
 
 	error = initfontlibs();
@@ -154,9 +154,9 @@ found:
 	data = (unsigned char *) basefonts[i].cff;
 	len = *basefonts[i].len;
 
-	e = FT_New_Memory_Face(ftlib, data, len, 0, (FT_Face*)&font->ftface);
-	if (e)
-		return fz_throw("freetype: cannot load font: 0x%x", e);
+	fterr = FT_New_Memory_Face(ftlib, data, len, 0, (FT_Face*)&font->ftface);
+	if (fterr)
+		return fz_throw("freetype: cannot load font: %s", ft_errstr(fterr));
 
 	return fz_okay;
 }
@@ -232,7 +232,7 @@ static fz_error *
 loadcidfont(pdf_font *font, int csi, int kind)
 {
 	char path[1024];
-	int e;
+	int fterr;
 	int i;
 
 	for (i = 0; i < nelem(fontsubs); i++)
@@ -242,9 +242,9 @@ loadcidfont(pdf_font *font, int csi, int kind)
 			if (findcidfont(fontsubs[i].name, path, sizeof path))
 			{
 				pdf_logfont("load system font '%s'\n", fontsubs[i].name);
-				e = FT_New_Face(ftlib, path, 0, (FT_Face*)&font->ftface);
-				if (e)
-					return fz_throw("freetype: cannot load font: 0x%x", e);
+				fterr = FT_New_Face(ftlib, path, 0, (FT_Face*)&font->ftface);
+				if (fterr)
+					return fz_throw("freetype: cannot load font: %s", ft_errstr(fterr));
 				return fz_okay;
 			}
 		}
@@ -383,7 +383,7 @@ pdf_loadembeddedfont(pdf_font *font, pdf_xref *xref, fz_obj *stmref)
 	if (fterr)
 	{
 		fz_dropbuffer(buf);
-		return fz_throw("freetype: cannot load embedded font: 0x%x", fterr);
+		return fz_throw("freetype: cannot load embedded font: %s", ft_errstr(fterr));
 	}
 
 	font->ftface = face;

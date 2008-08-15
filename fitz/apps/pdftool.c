@@ -18,7 +18,10 @@
 #include <sys/time.h>
 #endif
 
+/* put these up here so we can clean up in die() */
 fz_renderer *drawgc = nil;
+void closesrc(void);
+
 /*
  * Common operations.
  * Parse page selectors.
@@ -30,6 +33,18 @@ char *srcname = "(null)";
 pdf_xref *src = nil;
 pdf_outline *srcoutline = nil;
 pdf_pagetree *srcpages = nil;
+
+void die(fz_error *eo)
+{
+	fflush(stdout);
+	fz_printerror(eo);
+	fz_droperror(eo);
+	fflush(stderr);
+	if (drawgc)
+		fz_droprenderer(drawgc);
+	closesrc();
+	abort();
+}
 
 void closesrc(void)
 {
@@ -51,18 +66,6 @@ void closesrc(void)
 	}
 
 	srcname = nil;
-}
-
-void die(fz_error *eo)
-{
-	fflush(stdout);
-	fz_printerror(eo);
-	fflush(stderr);
-	fz_droperror(eo);
-	if (drawgc)
-		fz_droprenderer(drawgc);
-	closesrc();
-	abort();
 }
 
 void opensrc(char *filename, char *password, int loadpages)

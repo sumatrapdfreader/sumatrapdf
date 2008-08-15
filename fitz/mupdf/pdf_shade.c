@@ -2,17 +2,14 @@
 #include <mupdf.h>
 
 static fz_error *
-pdf_loadcompsiteshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *funcdict, float t0, float t1)
+pdf_loadcompositeshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *funcref, float t0, float t1)
 {
 	fz_error *error;
 	pdf_function *func;
 	fz_obj *obj;
 	int i;
 
-	obj = fz_dictgets(shading, "Function");
-	if (!obj)
-		return fz_throw("unable to evaluate shading function");
-	error = pdf_loadfunction(&func, xref, obj);
+	error = pdf_loadfunction(&func, xref, funcref);
 	if (error)
 		return fz_rethrow(error, "unable to evaluate shading function");
 
@@ -108,26 +105,29 @@ fz_error *
 pdf_loadshadefunction(fz_shade *shade, pdf_xref *xref, fz_obj *shading, float t0, float t1)
 {
 	fz_error *error;
+	fz_obj *ref;
 	fz_obj *obj;
 
-	obj = fz_dictgets(shading, "Function");
+	ref = fz_dictgets(shading, "Function");
+	if (!ref)
+		return fz_throw("shading function not found");
+
+	obj = ref;
 	error = pdf_resolve(&obj, xref);
 	if (error)
 		return fz_rethrow(error, "couldn't resolve shading function");
-	if (!obj)
-		return fz_throw("shading function not found");
-	if (!fz_isdict(obj) && !fz_isarray(obj))
-	{
-		fz_dropobj(obj);
-		return fz_throw("invalid shading function");
-	}
 
 	shade->usefunction = 1;
 
 	if (fz_isdict(obj))
-		error = pdf_loadcompsiteshadefunc(shade, xref, shading, obj, t0, t1);
+	{
+		/* dictionary is probably a stream, send the reference instead */
+		error = pdf_loadcompositeshadefunc(shade, xref, shading, ref, t0, t1);
+	}
 	else if (fz_isarray(obj))
 		error = pdf_loadcomponentshadefunc(shade, xref, shading, obj, t0, t1);
+	else
+		error = fz_throw("invalid shading function");
 
 	fz_dropobj(obj);
 

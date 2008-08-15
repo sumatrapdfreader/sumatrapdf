@@ -8,7 +8,7 @@ typedef struct pdf_widget_s pdf_widget;
 typedef struct pdf_outline_s pdf_outline;
 
 /* TODO: more kinds should be supported */
-typedef enum pdf_linkkind_e
+typedef enum pdf_linkkind_e 
 {
 	PDF_LGOTO,
 	PDF_LURI,

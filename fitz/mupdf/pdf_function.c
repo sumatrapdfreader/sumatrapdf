@@ -1026,7 +1026,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int ge
 
 		for (i = 0; i < samplecount; ++i)
 		{
-			if (fz_peekbyte(stream) == EOF)
+			if (fz_peekbyte(stream) == EOF && bits == 0)
 			{
 				fz_dropstream(stream);
 				error = fz_readerror(stream);

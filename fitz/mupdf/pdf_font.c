@@ -43,19 +43,46 @@ static char *basefontnames[14][7] =
 
 enum { UNKNOWN, TYPE1, TRUETYPE, CID };
 
+#undef __FTERRORS_H__
+#define FT_ERRORDEF(e, v, s)	{ (e), (s) },
+#define FT_ERROR_START_LIST
+#define FT_ERROR_END_LIST	{ 0, NULL }
+
+struct ft_error
+{
+	int err;
+	char *str;
+};
+
+const struct ft_error ft_errors[] =
+{
+#include FT_ERRORS_H
+};
+
+char *ft_errstr(int err)
+{
+	const struct ft_error *e;
+
+	for (e = ft_errors; e->str != NULL; e++)
+		if (e->err == err)
+			return e->str;
+
+	return "Unknown error";
+}
+
 static int ftkind(FT_Face face)
 {
-    const char *kind = FT_Get_X11_Font_Format(face);
-    pdf_logfont("ft font format %s\n", kind);
-    if (!strcmp(kind, "TrueType"))
-	return TRUETYPE;
-    if (!strcmp(kind, "Type 1"))
-	return TYPE1;
-    if (!strcmp(kind, "CFF"))
-	return TYPE1;
-    if (!strcmp(kind, "CID Type 1"))
-	return TYPE1;
-    return UNKNOWN;
+	const char *kind = FT_Get_X11_Font_Format(face);
+	pdf_logfont("ft font format %s\n", kind);
+	if (!strcmp(kind, "TrueType"))
+		return TRUETYPE;
+	if (!strcmp(kind, "Type 1"))
+		return TYPE1;
+	if (!strcmp(kind, "CFF"))
+		return TYPE1;
+	if (!strcmp(kind, "CID Type 1"))
+		return TYPE1;
+	return UNKNOWN;
 }
 
 static inline int ftcidtogid(pdf_font *font, int cid)
@@ -109,7 +136,7 @@ ftrender(fz_glyph *glyph, fz_font *fzfont, int cid, fz_matrix trm)
 		fterr = FT_Load_Glyph(font->ftface, gid,
 				FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
 		if (fterr)
-			return fz_throw("freetype failed to load glyph: 0x%x", fterr);
+			return fz_throw("freetype failed to load glyph: %s", ft_errstr(fterr));
 
 		realw = ((FT_Face)font->ftface)->glyph->advance.x;
 		subw = fz_gethmtx(fzfont, cid);
@@ -148,7 +175,7 @@ ftrender(fz_glyph *glyph, fz_font *fzfont, int cid, fz_matrix trm)
 
 	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
 	if (fterr)
-		fz_warn("freetype load glyph: 0x%x", fterr);
+		fz_warn("freetype load glyph: %s", ft_errstr(fterr));
 
 #else
 
@@ -164,13 +191,13 @@ ftrender(fz_glyph *glyph, fz_font *fzfont, int cid, fz_matrix trm)
 
 	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
 	if (fterr)
-		fz_warn("freetype load glyph: 0x%x", fterr);
+		fz_warn("freetype load glyph: %s", ft_errstr(fterr));
 
 #endif
 
 	fterr = FT_Render_Glyph(face->glyph, ft_render_mode_normal);
 	if (fterr)
-		fz_warn("freetype render glyph: 0x%x", fterr);
+		fz_warn("freetype render glyph: %s", ft_errstr(fterr));
 
 	glyph->w = face->glyph->bitmap.width;
 	glyph->h = face->glyph->bitmap.rows;
@@ -302,7 +329,8 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	char *fontname;
 	char *estrings[256];
 	char ebuffer[256][32];
-	int i, k, n, e;
+	int i, k, n;
+	int fterr;
 
 	basefont = fz_toname(fz_dictgets(dict, "BaseFont"));
 	fontname = cleanfontname(basefont);
@@ -376,10 +404,10 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 	if (cmap)
 	{
-		e = FT_Set_Charmap(face, cmap);
-		if (e)
+		fterr = FT_Set_Charmap(face, cmap);
+		if (fterr)
 		{
-			error = fz_throw("freetype could not set cmap: 0x%x", e);
+			error = fz_throw("freetype could not set cmap: %s", ft_errstr(fterr));
 			goto cleanup;
 		}
 	}
