@@ -1533,6 +1533,7 @@ uk:Відкрити сайт
 eu:&Web orria bisitatu
 -
 &Manual
+bg:Ръководство
 de:Anleitung
 pl:Instrukcja obslugi
 ru:Руководство
@@ -1591,6 +1592,7 @@ uk:П&ро програму...
 eu:Ho&Ni buruz...
 -
 Page:
+bg:Страница:
 br:Página:
 hu:Oldal:
 pl:Strona:
@@ -2219,6 +2221,7 @@ uk:Допоможіть перекласти
 eu:Lagun gaitzazu itzulpenekin
 -
 Set inverse search command-line
+bg:Активирай обратно търсене
 br:Configurar pesquisa inversa
 de:Befehlszeile Inverssuche setzen
 fr:Configurer la recherche inverse
@@ -2235,6 +2238,7 @@ ja:逆検索コマンドラインの設定
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 -
 Change language
+bg:Смени езика (Change language)
 br:Mudar o idioma (Change language)
 de:Sprache ändern (Change language)
 pl:Zmien język (Change language)
@@ -2254,6 +2258,7 @@ ja:言語の変更 (Change language)
 th:เปลี่ยนภาษา
 -
 Enter password
+bg:Въведете парола
 br:Digite a senha
 de:Bitte Passwort eingeben
 sk:Zadať heslo
@@ -2272,6 +2277,7 @@ ja:パスワードの入力
 th:ป้อนรหัสผ่าน
 -
 Enter password for %s
+bg:Въведете парола за %s
 br:Digite a senha de %s
 de:Bitte Passwort für %s eingeben
 sk:Zadať heslo pre %s
@@ -2290,6 +2296,7 @@ ja:%s のパスワードを入力します
 th:ป้อนรหัสผ่านสำหรับ %s
 -
 Go to page
+bg:Към страница
 br:Ir para a página
 de:Gehe zu Seite
 sk:Ísť na stranu
@@ -2308,6 +2315,7 @@ ja:ページへ移動
 th:ไปที่หน้า
 -
 Associate with PDF files?
+bg:Асоцииране с PDF файлове?
 br:Associar arquivos PDF?
 de:Mit PDF-Dateien verknüpfen?
 sk:Asociovať s PDF súbormi?
@@ -2326,6 +2334,7 @@ ja:PDF ファイルと関連付けますか?
 th:เชื่อมกับไฟล์ PDF
 -
 Make SumatraPDF default application for PDF files?
+bg:Направи SumatraPDF основно приложение за PDF файлове?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
@@ -2344,6 +2353,7 @@ ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしま�
 th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF
 -
 Don't ask me again
+bg:Не питай отново
 br:Não perguntar novamente
 de:Nicht wieder fragen
 sk:Nepýtať sa znova
@@ -2363,6 +2373,7 @@ ja:再び質問しない
 th:ไม่ต้องถามอีกครั้ง
 -
 &Check for new version
+bg:Проверка за нова версия
 br:Procurar atualizações
 de:Nach neuer Version suchen
 sk:Skontrolovať novú verziu
@@ -2382,6 +2393,7 @@ ja:新しいバージョンのチェック(&C)
 th:&ตรวจสำหรับสอบเวอร์ชั่นใหม่
 -
 No new version available.
+bg:Няма нова версия.
 br:Nenhuma atualização foi encontrada.
 de:Keine neuere Version vorhanden.
 sk:Nie je k dispozícia nová verzia.
@@ -2401,6 +2413,7 @@ ja:新しいバージョンが利用できません。
 th:ไม่มีเวอร์ชั่นใหม่
 -
 You have the latest version.
+bg:Имате последната версия.
 br:Esta é a versão mais recente.
 de:Sie haben die neuste Version installiert.
 sk:Používate najnovšiu verziu.
@@ -2420,6 +2433,7 @@ ja:最新のバージョンです。
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 -
 You have version %s
+bg:Вашата версия е %s
 br:Você tem a versão %s
 de:Sie haben Version %s
 sk:Používate verziu %s
@@ -2439,6 +2453,7 @@ ja:バージョン %s です
 th:ของคุณเป็นเวอร์ชั่น
 -
 New version %s is available. Download new version?
+bg:Достъпна е нова версия %s. Искате ли да я свалите?
 br:A versão %s está disponível. Baixar a nova versão?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
@@ -2458,6 +2473,7 @@ ja:新しいバージョン %s は利用可能です。新しいバージョン�
 th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
 -
 New version available.
+bg:Има нова версия.
 br:Uma versão nova está disponível.
 de:Neuere Version vorhanden.
 sk:Je k dispozícia nová verzia.
@@ -2477,6 +2493,7 @@ ja:新しいバージョンが利用可能です。
 th:เวอร์ชั่นใหม่ออกแล้ว
 -
 Skip this version
+bg:Пропусни тази версия.
 br:Pular esta versão.
 de:Diese Version überspringen.
 sk:Preskočiť túto verziu.
