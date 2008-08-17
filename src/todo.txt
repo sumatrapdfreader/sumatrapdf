@@ -1,6 +1,6 @@
 Short term todo (before next 0.9.1 release):
 * handle links
-* src version of freetype and update to latest freetype
+* fix 
 * src version of zlib
 * maybe: remember default bookmarks state
 * maybe: remember and restore size and position of the window

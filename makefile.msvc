@@ -25,7 +25,7 @@ FITZ_DIR=fitz
 !endif
 
 ZLIB_DIR=ext\zlib
-FREETYPE_DIR=ext\freetype231
+FREETYPE_DIR=ext\freetype-2.3.7
 JPEG_DIR=ext\jpeg6b
 JASPER_DIR=ext\jasper\src\libjasper
 JBIG2_DIR=ext\jbig2dec
@@ -53,20 +53,23 @@ LDFLAGS = $(LDFLAGS) /LTCG
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu 
 !endif
 
-#External build settings not part of core SumatraPDF
+# external build settings not part of core SumatraPDF
 !if "$(EXB)"=="rm"
 CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
 !endif
+
+# freetype flags
+FT_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/include /D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
 
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
 JASPER_CFLAGS = $(CFLAGS) /I$(JASPER_DIR)/include /D "EXCLUDE_MIF_SUPPORT" /D "EXCLUDE_PNM_SUPPORT"
 JASPER_CFLAGS = $(JASPER_CFLAGS) /D "EXCLUDE_BMP_SUPPORT" /D "EXCLUDE_RAS_SUPPORT" /D "EXCLUDE_JPG_SUPPORT"
 
-# Flags specific to libjpeg
+# libjpeg Flags
 JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 
-# Flags specific to fitz
+# fitz flags
 FITZ_CFLAGS = $(CFLAGS) /TC /I$(FITZ_DIR)\include /I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR)
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(JASPER_DIR)/include /I$(JBIG2_DIR)
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" /D "NEED_GETTIMEOFDAY"
@@ -94,12 +97,12 @@ LDFLAGS = $(LDFLAGS) /nologo
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 LDFLAGS = $(LDFLAGS) /DEBUG
-LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(ZLIB_DIR)\zlib_ds.lib
+LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "NDEBUG"
-LIBS = $(LIBS) $(FREETYPE_DIR)\freetype231mt.lib $(ZLIB_DIR)\zlib_s.lib
+LIBS = $(LIBS) $(ZLIB_DIR)\zlib_s.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
 !if "$(EXB)"=="rm"
@@ -110,6 +113,33 @@ LDFLAGS = $(LDFLAGS) /DEBUG
 !endif
 
 SUMATRA_RES = $(O)\sumtrapdf.res
+
+FT_OBJS = \
+	$(O)\ftdebug.obj $(O)\ftsystem.obj $(O)\ftglyph.obj $(O)\ftbitmap.obj $(O)\ftinit.obj $(O)\ftxf86.obj \
+	$(O)\autofit.obj \
+	$(O)\ftbase.obj \
+	$(O)\bdf.obj \
+	$(O)\ftcache.obj \
+	$(O)\cff.obj \
+	$(O)\cffparse.obj \
+	$(O)\type1cid.obj \
+	$(O)\gxvalid.obj \
+#	$(O)\ftgzip.obj  \
+#	$(O)\ftlzw.obj \
+	$(O)\otvalid.obj \
+	$(O)\pcf.obj \
+	$(O)\pfr.obj \
+	$(O)\pfrsbit.obj \
+	$(O)\psaux.obj \
+	$(O)\pshinter.obj \
+	$(O)\psnames.obj \
+	$(O)\raster.obj \
+	$(O)\sfnt.obj \
+	$(O)\smooth.obj \
+	$(O)\truetype.obj \
+	$(O)\type1.obj \
+	$(O)\type42.obj \
+	$(O)\winfnt.obj
 
 JPEG_OBJS = \
 	$(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jccoefct.obj $(O)\jccolor.obj $(O)\jcdctmgr.obj $(O)\jchuff.obj \
@@ -182,6 +212,7 @@ MUPDF_OBJS = \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfilems.obj
 
 LIBS_OBJS = \
+	$(FT_OBJS) \
 	$(JPEG_OBJS) \
 	$(JASPER_OBJS) \
 	$(JBIG2_OBJS) \
@@ -247,9 +278,84 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	/MAP:$(PDFAPP_MAP) \
 	/SUBSYSTEM:CONSOLE
 
+# freetype directories
+{$(FREETYPE_DIR)\builds\win32}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\builds\unix}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\autofit}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\base}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\bdf}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\cache}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\cff}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\cid}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\gxvalid}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\gzip}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\lzw}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\otvalid}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\pcf}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\pfr}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\psaux}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\pshinter}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\psnames}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\raster}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\sfnt}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\smooth}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\truetype}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\type1}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\type42}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FREETYPE_DIR)\src\winfonts}.c{$(O)}.obj::
+	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+# libjpeg directories
 {$(JPEG_DIR)}.c{$(O)}.obj::
 	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
+# jasper directories
 {$(JASPER_DIR)\base}.c{$(O)}.obj::
 	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
@@ -262,9 +368,11 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 {$(JASPER_DIR)\pgx}.c{$(O)}.obj::
 	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
+# jbig2 directories
 {$(JBIG2_DIR)\}.c{$(O)}.obj::
 	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
+# fitz directories
 {$(FITZ_DIR)\apps\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
@@ -289,6 +397,7 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 {$(FITZ_DIR)\world\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
+# sumatra directories
 {baseutils\}.c{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
