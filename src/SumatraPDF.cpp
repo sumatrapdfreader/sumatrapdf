@@ -833,7 +833,7 @@ void RenderQueue_RemoveForDisplayModel(DisplayModel *dm) {
     LockCache();
     int reqCount = gPageRenderRequestsCount;
     int curPos = 0;
-    for(int i = 0; i < reqCount; i++) {
+    for (int i = 0; i < reqCount; i++) {
         PageRenderRequest *req = &(gPageRenderRequests[i]);
         bool shouldRemove = (req->dm == dm);
         if (i != curPos)
@@ -2238,7 +2238,7 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
         WindowInfoList_Add(win);
     }
 
-    if( windowTitle )
+    if (windowTitle)
         win->title = windowTitle;
 
     // TODO: fileName might not exist.
@@ -6884,7 +6884,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
         if (is_arg("-title")) {
             currArg = currArg->next;
-            if(currArg) {
+            if (currArg) {
                 newWindowTitle = str_dup(currArg->str); 
                 currArg = currArg->next;
             }
@@ -7019,7 +7019,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         }
     }
 #else
-    while(1) {
+    while (1) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
             if (GetMessage(&msg, NULL, 0, 0)) {
                 if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
