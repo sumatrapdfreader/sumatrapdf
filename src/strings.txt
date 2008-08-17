@@ -1173,7 +1173,7 @@ mk:Страница...\tCtrl-G
 ro:Pagina...\tCtrl-G
 kr:쪽...\tCtrl-G
 bn:…নং পাতায়
-br:Páxina...\tCtrl-G
+gl:Páxina...\tCtrl-G
 uk:До сторінки...\tCtrl-G
 eu:...garren orria\tCtrl-G
 -
