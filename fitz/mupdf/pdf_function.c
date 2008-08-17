@@ -1310,7 +1310,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 				return fz_throw("malformed /Bounds (item not number)");
 			}
 			func->u.st.bounds[i] = fz_toreal(num);
-			if (i && func->u.st.bounds[i-1] >= func->u.st.bounds[i])
+			if (i && func->u.st.bounds[i-1] > func->u.st.bounds[i])
 			{
 				fz_dropobj(obj);
 				return fz_throw("malformed /Bounds (item not monotonic)");
