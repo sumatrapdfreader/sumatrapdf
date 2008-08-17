@@ -98,11 +98,11 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 	alpha = fopen(alphaname, "wb");
 	if (!alpha)
 		goto cleanup;
+
 	if (pix->n > 1)
 	{
 		if (pix->n > 2)
 			sprintf(colorname, "%s-%04d-color.ppm", prefix, counter);
-
 		else
 			sprintf(colorname, "%s-%04d-color.pgm", prefix, counter);
 

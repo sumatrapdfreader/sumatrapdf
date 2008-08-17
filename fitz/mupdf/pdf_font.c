@@ -317,6 +317,7 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	fz_obj *descriptor = nil;
 	fz_obj *encoding = nil;
 	fz_obj *widths = nil;
+	fz_obj *basefontobj = nil;
 	unsigned short *etable = nil;
 	pdf_font *font;
 	fz_irect bbox;
@@ -332,7 +333,11 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	int i, k, n;
 	int fterr;
 
-	basefont = fz_toname(fz_dictgets(dict, "BaseFont"));
+	basefontobj = fz_dictgets(dict, "BaseFont");
+	error = pdf_resolve(&basefontobj, xref);
+	if (error)
+		return fz_rethrow(error, "cannot load simple font");
+	basefont = fz_toname(basefontobj);
 	fontname = cleanfontname(basefont);
 
 	/*
@@ -531,6 +536,8 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		for (i = 0; i < 256; i++)
 		{
 			etable[i] = FT_Get_Char_Index(face, i);
+			if (etable[i] == 0)
+				etable[i] = FT_Get_Char_Index(face, 0xf000 + i);
 			FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 			if (ebuffer[i][0])
 				estrings[i] = ebuffer[i];
@@ -983,7 +990,10 @@ pdf_loadfontdescriptor(pdf_font *font, pdf_xref *xref, fz_obj *desc, char *colle
 
 	pdf_logfont("load fontdescriptor {\n");
 
-	fontname = fz_toname(fz_dictgets(desc, "FontName"));
+	obj = fz_dictgets(desc, "FontName");
+	if (error)
+		return fz_rethrow(error, "cannot resolve FontName");
+	fontname = fz_toname(obj);
 
 	pdf_logfont("fontname %s\n", fontname);
 

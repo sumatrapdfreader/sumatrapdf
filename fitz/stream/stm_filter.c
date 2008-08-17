@@ -1,9 +1,9 @@
 #include "fitz-base.h"
 #include "fitz-stream.h"
 
-fz_error fz_kioneedin = { -1, "<ioneedin>", "<internal>", "<internal>", 0, 0 };
-fz_error fz_kioneedout = { -1, "<ioneedout>", "<internal>", "<internal>", 0, 0 };
-fz_error fz_kiodone = { -1, "<iodone>", "<internal>", "<internal>", 0, 0 };
+fz_error fz_kioneedin = { "<ioneedin>", "<internal>", "<internal>", 0, nil };
+fz_error fz_kioneedout = { "<ioneedout>", "<internal>", "<internal>", 0, nil };
+fz_error fz_kiodone = { "<iodone>", "<internal>", "<internal>", 0, nil };
 
 fz_error *
 fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out)

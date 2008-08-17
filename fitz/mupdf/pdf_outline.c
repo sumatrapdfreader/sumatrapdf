@@ -138,9 +138,7 @@ pdf_debugoutline(pdf_outline *outline, int level)
 		if (outline->link)
 			fz_debugobj(outline->link->dest);
 		else
-			printf("<nil>");
-
-		printf("\n");
+			printf("<nil>\n");
 
 		if (outline->child)
 			pdf_debugoutline(outline->child, level + 2);

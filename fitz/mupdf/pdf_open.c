@@ -491,7 +491,7 @@ readxrefsections(pdf_xref *xref, int ofs, char *buf, int cap)
 		return fz_rethrow(error, "cannot read xref section");
 
 	/* FIXME: do we overwrite free entries properly? */
-	xrefstm = fz_dictgets(trailer, "XrefStm");
+	xrefstm = fz_dictgets(trailer, "XRefStm");
 	if (xrefstm)
 	{
 		pdf_logxref("load xrefstm\n");
@@ -499,7 +499,7 @@ readxrefsections(pdf_xref *xref, int ofs, char *buf, int cap)
 		if (error)
 		{
 			fz_dropobj(trailer);
-			return fz_rethrow(error, "cannot read /XrefStm xref section");
+			return fz_rethrow(error, "cannot read /XRefStm xref section");
 		}
 	}
 
@@ -697,7 +697,7 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 		goto cleanup;
 	}
 
-	for (i = 0; i < xref->len; i++)
+	for (i = 0; i < xref->cap; i++)
 	{
 		xref->table[i].ofs = 0;
 		xref->table[i].gen = 0;

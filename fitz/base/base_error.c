@@ -55,7 +55,6 @@ fz_throwimp(fz_error *cause, const char *func, const char *file, int line, char 
     if (!eo)
         return fz_outofmem; /* oops. we're *really* out of memory here. */
 
-
     va_start(ap, fmt);
     vsnprintf(eo->msg, sizeof eo->msg, fmt, ap);
     eo->msg[sizeof(eo->msg) - 1] = '\0';
@@ -66,6 +65,7 @@ fz_throwimp(fz_error *cause, const char *func, const char *file, int line, char 
     eo->line = line;
 
     eo->cause = cause;
+
     return eo;
 }
 

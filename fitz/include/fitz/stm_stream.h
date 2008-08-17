@@ -58,7 +58,7 @@ fz_error * fz_rseek(fz_stream *stm, int offset, int whence);
 
 fz_error * fz_readimp(fz_stream *stm);
 fz_error * fz_read(int *np, fz_stream *stm, unsigned char *buf, int len);
-fz_error * fz_readall(fz_buffer **bufp, fz_stream *stm);
+fz_error * fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint);
 fz_error * fz_readline(fz_stream *stm, char *buf, int max);
 
 /*

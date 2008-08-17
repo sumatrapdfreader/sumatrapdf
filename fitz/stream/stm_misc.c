@@ -59,83 +59,39 @@ fz_readline(fz_stream *stm, char *mem, int n)
 
 /*
  * Utility function to consume all the contents of an input stream into
- * a freshly allocated buffer; realloced and trimmed to size.
+ * a freshly allocated buffer.
  */
 
-enum { CHUNKSIZE = 1024 * 4 };
-
 fz_error *
-fz_readall(fz_buffer **bufp, fz_stream *stm)
+fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint)
 {
 	fz_error *error;
-	fz_buffer *real;
-	unsigned char *newbuf;
-	unsigned char *buf;
-	int len;
-	int pos;
-	int n;
+	fz_buffer *buf;
+	int c;
 
-	len = 0;
-	pos = 0;
-	buf = nil;
+	if (sizehint == 0)
+	    sizehint = 4 * 1024;
 
-	while (1)
+	error = fz_newbuffer(&buf, sizehint);
+	if (error)
+	    return fz_rethrow(error, "cannot create scratch buffer");
+
+	for (c = fz_readbyte(stm); c != EOF; c = fz_readbyte(stm))
 	{
-		if (len - pos == 0)
+		if (buf->wp == buf->ep)
 		{
-			if (len == 0)
-				len = CHUNKSIZE;
-			else
-				len = len * 2;
-			newbuf = fz_realloc(buf, len);
-			if (!newbuf)
-			{
-				fz_free(buf);
-				return fz_throw("outofmem: scratch buffer");
-			}
-			buf = newbuf;
+		    error = fz_growbuffer(buf);
+		    if (error)
+		    {
+			fz_dropbuffer(buf);
+			return fz_rethrow(error, "cannot resize scratch buffer");
+		    }
 		}
 
-		error = fz_read(&n, stm, buf + pos, len - pos);
-		if (error)
-		{
-			fz_free(buf);
-			return fz_rethrow(error, "cannot read data");
-		}
-
-		pos += n;
-
-		if (n < CHUNKSIZE)
-		{
-			if (pos > 0)
-			{
-				newbuf = fz_realloc(buf, pos);
-				if (!newbuf)
-				{
-					fz_free(buf);
-					return fz_throw("outofmem: scratch buffer");
-				}
-			}
-			else newbuf = buf;
-
-			real = fz_malloc(sizeof(fz_buffer));
-			if (!real)
-			{
-				fz_free(newbuf);
-				return fz_throw("outofmem: buffer struct");
-			}
-
-			real->refs = 1;
-			real->ownsdata = 1;
-			real->bp = newbuf;
-			real->rp = newbuf;
-			real->wp = newbuf + pos;
-			real->ep = newbuf + pos;
-			real->eof = 1;
-
-			*bufp = real;
-			return fz_okay;
-		}
+		*buf->wp++ = c;
 	}
+
+	*bufp = buf;
+	return fz_okay;
 }
 

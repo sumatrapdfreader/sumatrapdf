@@ -143,7 +143,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		if (error)
 			return error;
 
-		error = fz_readall(&img->samples, tempfile);
+		error = fz_readall(&img->samples, tempfile, img->stride * img->super.h);
 		if (error)
 			return error;
 

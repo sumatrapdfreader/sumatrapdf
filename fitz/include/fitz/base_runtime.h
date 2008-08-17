@@ -50,7 +50,6 @@ typedef struct fz_error_s fz_error;
 
 struct fz_error_s
 {
-    int refs; /* TODO: not needed anymore but can't drop without changing static fz_error variables */
 	char msg[184];
 	char file[32];
 	char func[32];

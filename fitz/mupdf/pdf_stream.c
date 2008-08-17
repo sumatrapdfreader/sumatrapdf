@@ -484,7 +484,7 @@ pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen)
 	if (error)
 		return fz_rethrow(error, "cannot open raw stream (%d)", oid);
 
-	error = fz_readall(bufp, stm);
+	error = fz_readall(bufp, stm, 0);
 	fz_dropstream(stm);
 	if (error)
 		return fz_rethrow(error, "cannot load stream into buffer (%d)", oid);
@@ -504,7 +504,7 @@ pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen)
 	if (error)
 		return fz_rethrow(error, "cannot open stream (%d)", oid);
 
-	error = fz_readall(bufp, stm);
+	error = fz_readall(bufp, stm, 0);
 	fz_dropstream(stm);
 	if (error)
 		return fz_rethrow(error, "cannot load stream into buffer (%d)", oid);

@@ -21,11 +21,11 @@ static fz_memorycontext defmem = { stdmalloc, stdrealloc, stdfree };
 static fz_memorycontext *curmem = &defmem;
 
 fz_error fz_koutofmem = {
-	-1,
 	{"out of memory"},
 	{"<internal>"},
 	{"<internal>"},
-	0, 0
+	0,
+	nil
 };
 
 fz_memorycontext *

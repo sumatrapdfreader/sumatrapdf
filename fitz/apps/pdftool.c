@@ -177,7 +177,7 @@ void showtrailer(void)
 		die(fz_throw("no file specified"));
 	printf("trailer\n");
 	fz_debugobj(src->trailer);
-	printf("\n\n");
+	printf("\n");
 }
 
 void showxref(void)
@@ -257,7 +257,6 @@ void showobject(int num, int gen)
 
 	printf("%d %d obj\n", num, gen);
 	fz_debugobj(obj);
-	printf("\n");
 
 	if (pdf_isstream(src, num, gen))
 	{
