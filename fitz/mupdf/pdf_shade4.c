@@ -512,8 +512,8 @@ triangulatepatch(pdf_tensorpatch p, fz_shade *shade, int ptr, int ncomp)
 	ptr = setvertex(shade->mesh, p.pole[3][3], p.color[2], ptr, ncomp);
 	ptr = setvertex(shade->mesh, p.pole[0][3], p.color[3], ptr, ncomp);
 
-	if (shade->meshcap - 1024 < ptr) {
-		error = growshademesh(shade, 1024);
+	if (shade->meshcap - 8*1024 < ptr) {
+		error = growshademesh(shade, 8*1024);
 		if (error) goto cleanup;
 	}
 
