@@ -2154,6 +2154,26 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     WindowInfo_UpdateFindbox(win);
 
 Exit:
+    int pageCount = win->dm->pageCount();
+    const char *baseName = FilePath_GetBaseName(win->dm->fileName());
+    if (pageCount <= 0)
+        win_set_text(win->hwndFrame, baseName);
+    else {
+        char buf[256];
+        HRESULT hr = StringCchPrintfA(buf, dimof(buf), " / %d", pageCount);
+        SetWindowText(win->hwndPageTotal, buf);
+
+        const CHAR *title = baseName;
+
+        if (win->title)
+            title = win->title;
+
+        if (win->needrefresh)
+            hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", title);
+        else
+            hr = StringCchPrintfA(buf, dimof(buf), "%s", title);
+        win_set_text(win->hwndFrame, buf);
+    }
     MenuToolbarUpdateStateForAllWindows();
     assert(win);
     DragAcceptFiles(win->hwndFrame, TRUE);
@@ -2286,7 +2306,7 @@ static void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
-// The 'status' string is appended to the title of the window.
+// The current page edit box is updated with the current page number
 void DisplayModel::pageChanged()
 {
     WindowInfo *win = (WindowInfo*)appData();
@@ -2295,30 +2315,13 @@ void DisplayModel::pageChanged()
 
     int currPageNo = currentPageNo();
     int pageCount = win->dm->pageCount();
-    const char *baseName = FilePath_GetBaseName(win->dm->fileName());
-    if (pageCount <= 0)
-        win_set_text(win->hwndFrame, baseName);
-    else {
+    if (pageCount > 0) {
         char buf[256];
-        HRESULT hr = StringCchPrintfA(buf, dimof(buf), " / %d", pageCount);
-        SetWindowText(win->hwndPageTotal, buf);
-        
         if (INVALID_PAGE_NO != currPageNo) {
-            hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
+            HRESULT hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
             SetWindowTextA(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
-        
-        const CHAR *title = baseName;
-
-        if (win->title)
-            title = win->title;
-
-        if (win->needrefresh)
-            hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", title);
-        else
-            hr = StringCchPrintfA(buf, dimof(buf), "%s", title);
-        win_set_text(win->hwndFrame, buf);
     }
 }
 
