@@ -76,8 +76,6 @@ private:
     }
 };
 
-void SplashColorsInit(void);
-
 /* Abstract class representing cached bitmap. Allows different implementations
    on different platforms. */
 class RenderedBitmap {
@@ -88,7 +86,6 @@ public:
     virtual int rowSize() = 0;
     virtual unsigned char *data() = 0;
 
-    // TODO: this is for WINDOWS only
     virtual HBITMAP createDIBitmap(HDC) = 0;
     virtual void stretchDIBits(HDC, int, int, int, int) = 0;
 };
