@@ -2116,7 +2116,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
         } else {
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
-            goto Exit;
+            goto Error;
         }
     } else {
         delete previousmodel;
@@ -2153,7 +2153,6 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     }
     WindowInfo_UpdateFindbox(win);
 
-Exit:
     int pageCount = win->dm->pageCount();
     const char *baseName = FilePath_GetBaseName(win->dm->fileName());
     if (pageCount <= 0)
@@ -2174,6 +2173,7 @@ Exit:
             hr = StringCchPrintfA(buf, dimof(buf), "%s", title);
         win_set_text(win->hwndFrame, buf);
     }
+Error:
     MenuToolbarUpdateStateForAllWindows();
     assert(win);
     DragAcceptFiles(win->hwndFrame, TRUE);
