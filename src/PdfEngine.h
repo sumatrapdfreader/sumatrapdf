@@ -12,16 +12,6 @@
 
 class WindowInfo;
 
-extern const char* const LINK_ACTION_GOTO;
-extern const char* const LINK_ACTION_GOTOR;
-extern const char* const LINK_ACTION_LAUNCH;
-extern const char* const LINK_ACTION_URI;
-extern const char* const LINK_ACTION_NAMED;
-extern const char* const LINK_ACTION_MOVIE;
-
-/* For simplicity, all in one file. Would be cleaner if they were
-   in separate files PdfEngineFitz.h and PdfEnginePoppler.h */
-
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
 /* It seems that PDF documents are encoded assuming DPI of 72.0 */
@@ -139,7 +129,7 @@ public:
 
     virtual bool printingAllowed() = 0;
     virtual int linkCount(int pageNo) = 0;
-    virtual const char* linkType(int pageNo, int linkNo) = 0;
+    virtual pdf_linkkind linkType(int pageNo, int linkNo) = 0;
 
     virtual bool hasTocTree() = 0;
     virtual PdfTocItem *getTocTree() = 0;
@@ -164,7 +154,7 @@ public:
 
     virtual bool printingAllowed();
     virtual int linkCount(int pageNo);
-    virtual const char* linkType(int pageNo, int linkNo);
+    virtual pdf_linkkind linkType(int pageNo, int linkNo);
     virtual bool hasTocTree() { return _outline != NULL; }
     virtual PdfTocItem *getTocTree();
 

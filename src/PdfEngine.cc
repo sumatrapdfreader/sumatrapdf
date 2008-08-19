@@ -9,14 +9,6 @@
 // in SumatraPDF.cpp
 extern "C" char *GetPasswordForFile(WindowInfo *win, const char *fileName);
 
-#define LINK_ACTION_GOTO "linkActionGoTo";
-#define LINK_ACTION_GOTOR "linkActionGoToR";
-#define LINK_ACTION_LAUNCH "linkActionLaunch";
-#define LINK_ACTION_URI "linkActionUri";
-#define LINK_ACTION_NAMED "linkActionNamed";
-#define LINK_ACTION_MOVIE "linkActionMovie";
-#define LINK_ACTION_UNKNOWN "linkActionUnknown";
-
 /* hack to make fz_throw work in C++ */
 #ifdef nil
 #undef nil
@@ -494,25 +486,15 @@ int PdfEngineFitz::linkCount(int pageNo) {
     return getLinkCount(page->links);
 }
 
-static const char *linkToLinkType(pdf_link *link) {
-    switch (link->kind) {
-        case PDF_LGOTO:
-            return LINK_ACTION_GOTO;
-        case PDF_LURI:
-            return LINK_ACTION_URI;
-    }
-    return LINK_ACTION_UNKNOWN;
-}
-
-const char* PdfEngineFitz::linkType(int pageNo, int linkNo) {
+pdf_linkkind PdfEngineFitz::linkType(int pageNo, int linkNo) {
     pdf_page* page = getPdfPage(pageNo);
     pdf_link* currLink = page->links;
     for (int i = 0; i < linkNo; i++) {
         assert(currLink);
         if (!currLink)
-            return NULL;
+            return PDF_LUNKNOWN;
         currLink = currLink->next;
     }
-    return linkToLinkType(currLink);
+    return currLink->kind;
 }
 
