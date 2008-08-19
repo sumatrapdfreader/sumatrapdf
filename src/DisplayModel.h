@@ -249,7 +249,7 @@ public:
     void            setSearchHit(int pageNo, RectD *hitRect);
     void            recalcLinksCanvasPos(void);
 
-    int             linkCount(void) const { return _linkCount; }
+    virtual int     getLinkCount(void) = 0;
     PdfLink *       link(int linkNo) const { return &(_links[linkNo]); }
     PdfLink *       linkAtPosition(int x, int y);
 
@@ -320,8 +320,6 @@ protected:
     double          _zoomVirtual;
     int             _rotation;
 
-    /* total number of links */
-    int             _linkCount;
     /* an array of 'totalLinksCount' size, each entry describing a link */
     PdfLink *       _links;
 };

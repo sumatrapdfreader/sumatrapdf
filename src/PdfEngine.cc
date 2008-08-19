@@ -349,7 +349,6 @@ pdf_page *PdfEngineFitz::getPdfPage(int pageNo)
     // TODO: should check for error from pdf_getpageobject?
     fz_obj * obj = pdf_getpageobject(_pageTree, pageNo - 1);
     fz_error * error = pdf_loadpage(&page, _xref, obj);
-    //assert (!error);
     if (error) {
         if (!ReleaseSemaphore(_getPageSem, 1, NULL))
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");

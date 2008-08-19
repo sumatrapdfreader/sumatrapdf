@@ -185,7 +185,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _pdfSearchEngine = NULL;
     _pagesInfo = NULL;
 
-    _linkCount = 0;
     _links = NULL;
 
     searchHitPageNo = INVALID_PAGE_NO;
@@ -250,7 +249,6 @@ bool DisplayModel::buildPagesInfo(void)
 
 // TODO: poppler removal. Do I need this at all?
 //        pageInfo->links = NULL;
-//        pageInfo->textPage = NULL;
 
         pageInfo->visible = false;
         pageInfo->shown = false;
@@ -705,19 +703,19 @@ void DisplayModel::recalcLinksCanvasPos(void)
     PdfPageInfo *   pageInfo;
     int             linkNo;
     RectD           rect;
-
+    int             linkCount = getLinkCount();
     // TODO: calling it here is a bit of a hack
     recalcSearchHitCanvasPos();
 
-    DBG_OUT("DisplayModel::recalcLinksCanvasPos() linkCount=%d\n", _linkCount);
+    DBG_OUT("DisplayModel::recalcLinksCanvasPos() linkCount=%d\n", linkCount);
 
-    if (0 == _linkCount)
+    if (0 == linkCount)
         return;
     assert(_links);
     if (!_links)
         return;
 
-    for (linkNo = 0; linkNo < _linkCount; linkNo++) {
+    for (linkNo = 0; linkNo < linkCount; linkNo++) {
         pdfLink = link(linkNo);
         pageInfo = getPageInfo(pdfLink->pageNo);
         if (!pageInfo->visible) {
@@ -794,13 +792,14 @@ void DisplayModel::setSearchHit(int pageNo, RectD *hitRect)
    */
 PdfLink *DisplayModel::linkAtPosition(int x, int y)
 {
-    if (0 == _linkCount) return NULL;
+    int linkCount = getLinkCount();
+    if (0 == linkCount) return NULL;
     assert(_links);
     if (!_links) return NULL;
 
     int canvasPosX = x + (int)areaOffset.x;
     int canvasPosY = y + (int)areaOffset.y;
-    for (int i = 0; i < _linkCount; i++) {
+    for (int i = 0; i < linkCount; i++) {
         PdfLink *currLink = link(i);
 
         if (RectI_Inside(&(currLink->rectCanvas), canvasPosX, canvasPosY))

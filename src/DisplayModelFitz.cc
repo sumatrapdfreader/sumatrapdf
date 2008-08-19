@@ -127,11 +127,9 @@ void DisplayModelFitz::goToTocLink(void *linktmp)
     pdf_link *link = (pdf_link*)linktmp;
     switch (link->kind) {
         case PDF_LURI:
+            // TODO: implement me
             break;
         case PDF_LGOTO:
-#if 0 // TODO: need to add support to mupdf
-        case PDF_LUNKNOWN: 
-#endif
         {
             int page = pdfEngineFitz()->findPageNo(link->dest);
             if (page > 0) 
@@ -273,3 +271,10 @@ void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
         rect->bottom -= sy;
     }
 }
+
+int DisplayModelFitz::getLinkCount()
+{
+    /* TODO: implement me. This should go to the engine */
+    return 0;
+}
+

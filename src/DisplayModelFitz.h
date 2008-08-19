@@ -12,6 +12,7 @@ public:
     virtual ~DisplayModelFitz();
 
     PdfEngineFitz * pdfEngineFitz(void) { return (PdfEngineFitz*)_pdfEngine; }
+    virtual int     getLinkCount();
     virtual void    handleLink(PdfLink *pdfLink);
     virtual void    goToTocLink(void *link);
     virtual void    goToNamedDest(const char *name);
@@ -22,6 +23,7 @@ public:
     virtual bool    cvtScreenToUser(int *pageNo ,double *x, double *y);
 
     virtual void MapResultRectToScreen(PdfSearchResult *rect);
+
 };
 
 DisplayModelFitz *DisplayModelFitz_CreateFromFileName(
