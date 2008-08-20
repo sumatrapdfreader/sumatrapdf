@@ -3054,7 +3054,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     drawAreaRect.dx = dm->drawAreaSize.dxI();
     drawAreaRect.dy = dm->drawAreaSize.dyI();
 
-    for (int linkNo = 0; linkNo < dm->getLinkCount(); ++linkNo) {
+    // TODO: DisplayMode::link() doesn't work just yet
+    int linkCount = 0; // dm->getLinkCount()
+    for (int linkNo = 0; linkNo < linkCount; ++linkNo) {
         PdfLink *pdfLink = dm->link(linkNo);
 
         RectI rectLink, intersect;

@@ -711,6 +711,8 @@ void DisplayModel::recalcLinksCanvasPos(void)
 
     if (0 == linkCount)
         return;
+    // TODO: we don't have _links just yet
+    return;
     assert(_links);
     if (!_links)
         return;
@@ -794,6 +796,8 @@ PdfLink *DisplayModel::linkAtPosition(int x, int y)
 {
     int linkCount = getLinkCount();
     if (0 == linkCount) return NULL;
+    // TODO: we don't have _links just yet
+    return NULL;
     assert(_links);
     if (!_links) return NULL;
 

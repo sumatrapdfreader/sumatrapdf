@@ -128,7 +128,7 @@ public:
                          void *abortCheckCbkDataA) = 0;
 
     virtual bool printingAllowed() = 0;
-    virtual int linkCount(int pageNo) = 0;
+    virtual int linkCount() = 0;
     virtual pdf_linkkind linkType(int pageNo, int linkNo) = 0;
 
     virtual bool hasTocTree() = 0;
@@ -153,7 +153,7 @@ public:
                          void *abortCheckCbkDataA);
 
     virtual bool printingAllowed();
-    virtual int linkCount(int pageNo);
+    virtual int linkCount();
     virtual pdf_linkkind linkType(int pageNo, int linkNo);
     virtual bool hasTocTree() { return _outline != NULL; }
     virtual PdfTocItem *getTocTree();

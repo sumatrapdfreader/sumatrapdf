@@ -274,7 +274,7 @@ void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
 
 int DisplayModelFitz::getLinkCount()
 {
-    /* TODO: implement me. This should go to the engine */
-    return 0;
+    int count = _pdfEngine->linkCount();
+    return count;
 }
 

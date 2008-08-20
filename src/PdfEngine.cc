@@ -464,7 +464,7 @@ Error:
     return NULL;
 }
 
-static int getLinkCount(pdf_link *currLink) {
+static int linksLinkCount(pdf_link *currLink) {
     if (!currLink)
         return 0;
     int count = 1;
@@ -475,11 +475,19 @@ static int getLinkCount(pdf_link *currLink) {
     return count;
 }
 
-int PdfEngineFitz::linkCount(int pageNo) {
-    pdf_page* page = getPdfPage(pageNo);
-    if (!page)
+/* Return number of all links in all loaded pages */
+int PdfEngineFitz::linkCount() {
+    if (!_pages)
         return 0;
-    return getLinkCount(page->links);
+    int count = 0;
+
+    for (int i=0; i < _pageCount; i++)
+    {
+        pdf_page* page = _pages[i];
+        if (page)
+            count += linksLinkCount(page->links);
+    }
+    return count;
 }
 
 pdf_linkkind PdfEngineFitz::linkType(int pageNo, int linkNo) {
