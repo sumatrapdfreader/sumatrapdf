@@ -3054,7 +3054,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     drawAreaRect.dx = dm->drawAreaSize.dxI();
     drawAreaRect.dy = dm->drawAreaSize.dyI();
 
-    for (int linkNo = 0; linkNo < dm->linkCount(); ++linkNo) {
+    for (int linkNo = 0; linkNo < dm->getLinkCount(); ++linkNo) {
         PdfLink *pdfLink = dm->link(linkNo);
 
         RectI rectLink, intersect;
@@ -5673,13 +5673,6 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
     tvinsert.itemex.lParam = (LPARAM)entry->link;
     tvinsert.itemex.pszText = entry->title;
-    
-    /* mupdf seems to add a left-to-right embedding U+202A character at the
-    start of every entry which shows up as a box on some Windows installs, so
-    skip it. */
-    if (NULL != tvinsert.itemex.pszText && 0x202A == tvinsert.itemex.pszText[0]) {
-        ++tvinsert.itemex.pszText;
-    }
     
     return TreeView_InsertItemW(hwnd, &tvinsert);
 }
