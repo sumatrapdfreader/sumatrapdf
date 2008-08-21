@@ -67,31 +67,48 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint)
 {
 	fz_error *error;
 	fz_buffer *buf;
-	int c;
+	fz_buffer *tmpbuf;
+	int bytesread;
+	int leftinbuf;
 
 	if (sizehint == 0)
 	    sizehint = 4 * 1024;
 
-	error = fz_newbuffer(&buf, sizehint);
+	error = fz_newbuffer(&tmpbuf, sizehint);
 	if (error)
-	    return fz_rethrow(error, "cannot create scratch buffer");
+		return fz_rethrow(error, "cannot create scratch buffer");
 
-	for (c = fz_readbyte(stm); c != EOF; c = fz_readbyte(stm))
+	buf = stm->buffer;
+	while (!buf->eof)
 	{
-		if (buf->wp == buf->ep)
+		error = fz_readimp(stm);
+		if (error)
 		{
-		    error = fz_growbuffer(buf);
-		    if (error)
-		    {
-			fz_dropbuffer(buf);
-			return fz_rethrow(error, "cannot resize scratch buffer");
-		    }
+			error = fz_rethrow(error, "cannot read data");
+			goto cleanup;
 		}
-
-		*buf->wp++ = c;
+		bytesread = buf->wp - buf->rp;
+		assert(bytesread > 0);
+		leftinbuf = tmpbuf->ep - tmpbuf->wp;
+		while (leftinbuf < bytesread)
+		{
+			error = fz_growbuffer(tmpbuf);
+			if (error)
+			{
+				error = fz_rethrow(error, "cannot resize scratch buffer");
+				goto cleanup;
+			}
+			leftinbuf = tmpbuf->ep - tmpbuf->wp;
+		}
+		memcpy(tmpbuf->wp, buf->rp, bytesread);
+		buf->rp += bytesread;
+		tmpbuf->wp += bytesread;
 	}
 
-	*bufp = buf;
+	*bufp = tmpbuf;
 	return fz_okay;
+cleanup:
+	fz_dropbuffer(tmpbuf);
+	return error;
 }
 
