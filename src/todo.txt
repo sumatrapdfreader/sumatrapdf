@@ -1,5 +1,6 @@
 Short term todo (before next 0.9.1 release):
-* handle links
+* http://code.google.com/p/sumatrapdf/issues/detail?id=157
+* test url links
 * src version of zlib
 * maybe: remember default bookmarks state
 * maybe: remember and restore size and position of the window
