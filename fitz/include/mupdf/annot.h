@@ -12,6 +12,7 @@ typedef enum pdf_linkkind_e
 {
 	PDF_LGOTO,
 	PDF_LURI,
+	PDF_LGOTOR,
 	PDF_LUNKNOWN
 } pdf_linkkind;
 

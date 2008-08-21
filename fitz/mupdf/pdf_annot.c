@@ -133,6 +133,12 @@ pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict)
 			dest = fz_dictgets(action, "URI");
 			pdf_logpage("action uri %s\n", fz_tostrbuf(dest));
 		}
+		else if (!strcmp(fz_toname(obj), "GoToR"))
+		{
+			kind = PDF_LGOTOR;
+			dest = fz_dictgets(action, "D");
+			pdf_logpage("action goto remote %s\n", fz_tostrbuf(dest));
+		}
 		else
 			pdf_logpage("action ... ?\n");
 
