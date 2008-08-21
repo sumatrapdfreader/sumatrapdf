@@ -2,7 +2,9 @@
 // PDF-source synchronizer based on .pdfsync file
 // License: GPLv2
 
-#pragma once
+#ifndef _PDF_SYNC_H__
+#define _PDF_SYNC_H__
+
 #include <windows.h>
 #include <assert.h>
 
@@ -307,3 +309,5 @@ Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename);
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam);
+
+#endif
