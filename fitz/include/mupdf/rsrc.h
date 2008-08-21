@@ -224,6 +224,8 @@ struct pdf_font_s
 	/* Type3 data */
 	fz_matrix matrix;
 	fz_tree *charprocs[256];
+
+	int hint;
 };
 
 /* unicode.c */

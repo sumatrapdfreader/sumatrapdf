@@ -123,6 +123,7 @@ ftrender(fz_glyph *glyph, fz_font *fzfont, int cid, fz_matrix trm)
 	float scale;
 	int gid;
 	int x, y;
+	int hint = font->hint;
 
 	gid = ftcidtogid(font, cid);
 
@@ -162,38 +163,42 @@ ftrender(fz_glyph *glyph, fz_font *fzfont, int cid, fz_matrix trm)
 	 */
 
 #ifdef HINT
-	scale = fz_matrixexpansion(trm);
-	m.xx = trm.a * 65536 / scale;
-	m.yx = trm.b * 65536 / scale;
-	m.xy = trm.c * 65536 / scale;
-	m.yy = trm.d * 65536 / scale;
-	v.x = 0;
-	v.y = 0;
-
-	FT_Set_Char_Size(face, 64 * scale, 64 * scale, 72, 72);
-	FT_Set_Transform(face, &m, &v);
-
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
-	if (fterr)
-		fz_warn("freetype load glyph: %s", ft_errstr(fterr));
-
-#else
-
-	m.xx = trm.a * 64;	/* should be 65536 */
-	m.yx = trm.b * 64;
-	m.xy = trm.c * 64;
-	m.yy = trm.d * 64;
-	v.x = trm.e * 64;
-	v.y = trm.f * 64;
-
-	FT_Set_Char_Size(face, 65536, 65536, 72, 72); /* should be 64, 64 */
-	FT_Set_Transform(face, &m, &v);
-
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
-	if (fterr)
-		fz_warn("freetype load glyph: %s", ft_errstr(fterr));
-
+	hint = 1;
 #endif
+
+	if (hint)
+	{
+		scale = fz_matrixexpansion(trm);
+		m.xx = trm.a * 65536 / scale;
+		m.yx = trm.b * 65536 / scale;
+		m.xy = trm.c * 65536 / scale;
+		m.yy = trm.d * 65536 / scale;
+		v.x = 0;
+		v.y = 0;
+
+		FT_Set_Char_Size(face, 64 * scale, 64 * scale, 72, 72);
+		FT_Set_Transform(face, &m, &v);
+
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
+		if (fterr)
+			fz_warn("freetype load glyph: %s", ft_errstr(fterr));
+	}
+	else
+	{
+		m.xx = trm.a * 64;	/* should be 65536 */
+		m.yx = trm.b * 64;
+		m.xy = trm.c * 64;
+		m.yy = trm.d * 64;
+		v.x = trm.e * 64;
+		v.y = trm.f * 64;
+
+		FT_Set_Char_Size(face, 65536, 65536, 72, 72); /* should be 64, 64 */
+		FT_Set_Transform(face, &m, &v);
+
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+		if (fterr)
+			fz_warn("freetype load glyph: %s", ft_errstr(fterr));
+	}
 
 	fterr = FT_Render_Glyph(face->glyph, ft_render_mode_normal);
 	if (fterr)
@@ -303,6 +308,14 @@ pdf_newfont(char *name)
 	for (i = 0; i < 256; i++)
 		font->charprocs[i] = nil;
 
+	font->hint = 0;
+	/* Force hinting for PMingLiU font because it's a popular
+	   Traditional Chinese font and it doesn't render properly
+	   without hinting */
+	if (strstr(name, "PMingLiU"))
+	{
+		font->hint = 1;
+	}
 	return font;
 }
 
