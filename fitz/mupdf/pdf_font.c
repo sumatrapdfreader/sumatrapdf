@@ -306,6 +306,14 @@ pdf_newfont(char *name)
 	return font;
 }
 
+static int ftcharindex(FT_Face face, int i)
+{
+	unsigned short idx = FT_Get_Char_Index(face, i);
+	if (idx == 0)
+		idx = FT_Get_Char_Index(face, 0xf000 + i);
+	return idx;
+}
+
 /*
  * Simple fonts (Type1 and TrueType)
  */
@@ -478,7 +486,7 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		if (kind == TRUETYPE)
 		{
 			/* Unicode cmap */
-			if (face->charmap->platform_id == 3)
+			if (face->charmap && face->charmap->platform_id == 3)
 			{
 				pdf_logfont("encode truetype via unicode\n");
 				for (i = 0; i < 256; i++)
@@ -490,14 +498,14 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 						if (aglnum != 1)
 							etable[i] = FT_Get_Name_Index(face, estrings[i]);
 						else
-							etable[i] = FT_Get_Char_Index(face, aglbuf[0]);
+							etable[i] = ftcharindex(face, aglbuf[0]);
 					}
 					else
-						etable[i] = FT_Get_Char_Index(face, i);
+						etable[i] = ftcharindex(face, i);
 			}
 
 			/* MacRoman cmap */
-			else if (face->charmap->platform_id == 1)
+			else if (face->charmap && face->charmap->platform_id == 1)
 			{
 				pdf_logfont("encode truetype via macroman\n");
 				for (i = 0; i < 256; i++)
@@ -507,10 +515,10 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 						if (k <= 0)
 							etable[i] = FT_Get_Name_Index(face, estrings[i]);
 						else
-							etable[i] = FT_Get_Char_Index(face, k);
+							etable[i] = ftcharindex(face, k);
 					}
 					else
-						etable[i] = FT_Get_Char_Index(face, i);
+						etable[i] = ftcharindex(face, i);
 			}
 
 			/* Symbolic cmap */
@@ -519,7 +527,7 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 				pdf_logfont("encode truetype symbolic\n");
 				for (i = 0; i < 256; i++)
 				{
-					etable[i] = FT_Get_Char_Index(face, i);
+					etable[i] = ftcharindex(face, i);
 					FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 					if (ebuffer[i][0])
 						estrings[i] = ebuffer[i];
@@ -535,9 +543,7 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		pdf_logfont("encode builtin\n");
 		for (i = 0; i < 256; i++)
 		{
-			etable[i] = FT_Get_Char_Index(face, i);
-			if (etable[i] == 0)
-				etable[i] = FT_Get_Char_Index(face, 0xf000 + i);
+			etable[i] = ftcharindex(face, i);
 			FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 			if (ebuffer[i][0])
 				estrings[i] = ebuffer[i];
