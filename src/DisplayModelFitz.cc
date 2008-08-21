@@ -116,19 +116,38 @@ bool DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
     return true;
 }
 
+void launch_url_a(const char *url)
+{
+    SHELLEXECUTEINFOA sei;
+    BOOL              res;
+
+    ZeroMemory(&sei, sizeof(sei));
+    sei.cbSize  = sizeof(sei);
+    sei.fMask   = SEE_MASK_FLAG_NO_UI;
+    sei.lpVerb  = "open";
+    sei.lpFile  = url;
+    sei.nShow   = SW_SHOWNORMAL;
+
+    ShellExecuteExA(&sei);
+}
+
 void DisplayModelFitz::handleLink2(pdf_link* link)
 {
-    switch (link->kind) {
-        case PDF_LURI:
-            // TODO: implement me
-            break;
-        case PDF_LGOTO:
+    if (PDF_LURI == link->kind)
+    {
+        char *uri = fz_tostrbuf(link->dest);
+        if (!str_startswithi(uri, "http"))
         {
-            int page = pdfEngineFitz()->findPageNo(link->dest);
-            if (page > 0) 
-                goToPage(page, 0);
+            /* unsupported uri type */
+            return;
         }
-        break;
+        launch_url_a(uri);
+
+    } else if (PDF_LGOTO == link->kind)
+    {
+        int page = pdfEngineFitz()->findPageNo(link->dest);
+        if (page > 0) 
+            goToPage(page, 0);
     }
 }
 

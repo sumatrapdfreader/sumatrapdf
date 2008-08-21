@@ -1,6 +1,7 @@
 Short term todo (before next 0.9.1 release):
 * http://code.google.com/p/sumatrapdf/issues/detail?id=157
-* test url links
+* better visualization of links in debug builds (alpha-blended so that we can 
+  see text underneath)
 * src version of zlib
 * maybe: remember default bookmarks state
 * maybe: remember and restore size and position of the window
