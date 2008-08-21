@@ -46,13 +46,6 @@ typedef struct DisplaySettings {
 
 #define POINT_OUT_OF_PAGE			0
 
-/* Describes a link on PDF page. */
-typedef struct PdfLink {
-    int             pageNo;     /* on which Pdf page the link exists. 1..pageCount */
-    RectD           rectPage;   /* position of the link on the page */
-    RectI           rectCanvas; /* position of the link on canvas */
-} PdfLink;
-
 /* Describes many attributes of one page in one, convenient place */
 typedef struct PdfPageInfo {
     /* data that is constant for a given page. page size and rotation
@@ -250,7 +243,6 @@ public:
     void            recalcLinksCanvasPos(void);
 
     virtual int     getLinkCount(void) = 0;
-    PdfLink *       link(int linkNo) const { return &(_links[linkNo]); }
     PdfLink *       linkAtPosition(int x, int y);
 
     virtual void    handleLink(PdfLink *pdfLink) = 0;
@@ -320,8 +312,10 @@ protected:
     double          _zoomVirtual;
     int             _rotation;
 
+public:
     /* an array of 'totalLinksCount' size, each entry describing a link */
     PdfLink *       _links;
+    int             _linksCount;
 };
 
 bool                validZoomReal(double zoomReal);

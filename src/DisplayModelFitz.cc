@@ -45,6 +45,7 @@ Error:
     return NULL;
 }
 
+// TODO: this is broken
 bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
 {
     pdf_page *page = pdfEngineFitz()->getPdfPage(pageNo);
@@ -55,7 +56,7 @@ bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
     if(!page)
         return false;
 
-    normalizeRotation (&rot);
+    normalizeRotation(&rot);
     zoom *= 0.01;
 
     p.x = *x;
@@ -63,10 +64,11 @@ bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
 
     fz_matrix ctm = pdfEngineFitz()->viewctm(page, zoom, rot);
 
-    fz_point tp = fz_transformpoint (ctm, p);
+    fz_point tp = fz_transformpoint(ctm, p);
 
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
 
+    rot += pageInfo->rotation;
     double vx = 0, vy = 0;
     if (rot == 90 || rot == 180)
         vx += pageInfo->currDx;
@@ -114,17 +116,8 @@ bool DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
     return true;
 }
 
-void DisplayModelFitz::handleLink(PdfLink *pdfLink)
+void DisplayModelFitz::handleLink2(pdf_link* link)
 {
-    // TODO: implement me
-}
-
-void DisplayModelFitz::goToTocLink(void *linktmp)
-{
-    if (!linktmp)
-        return;
-
-    pdf_link *link = (pdf_link*)linktmp;
     switch (link->kind) {
         case PDF_LURI:
             // TODO: implement me
@@ -137,6 +130,20 @@ void DisplayModelFitz::goToTocLink(void *linktmp)
         }
         break;
     }
+}
+
+void DisplayModelFitz::handleLink(PdfLink *link)
+{
+    handleLink2(link->link);
+}
+
+void DisplayModelFitz::goToTocLink(void *linktmp)
+{
+    if (!linktmp)
+        return;
+
+    pdf_link *link = (pdf_link*)linktmp;
+    handleLink2(link);
 }
 
 void DisplayModelFitz::goToNamedDest(const char *name)
@@ -271,10 +278,28 @@ void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
         rect->bottom -= sy;
     }
 }
+void DisplayModelFitz::rebuildLinks()
+{
+    int count = _pdfEngine->linkCount();
+    assert(count > _linksCount);
+    free(_links);
+    _links = (PdfLink*)malloc(count * sizeof(PdfLink));
+    _linksCount = count;
+    _pdfEngine->fillPdfLinks(_links, _linksCount);
+    recalcLinksCanvasPos();
+}
 
 int DisplayModelFitz::getLinkCount()
 {
+    /* TODO: let's hope it's not too expensive. An alternative would be
+       to update link count only when it could have changed i.e. after
+       loading a page */
     int count = _pdfEngine->linkCount();
+    if (count != _linksCount)
+    {
+        assert(count > _linksCount);
+        rebuildLinks();
+    }
     return count;
 }
 

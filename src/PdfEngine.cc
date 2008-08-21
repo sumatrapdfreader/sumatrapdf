@@ -141,14 +141,16 @@ void RenderedBitmapFitz::stretchDIBits(HDC hdc, int leftMargin, int topMargin, i
     stretchDIBitsCommon(this, hdc, leftMargin, topMargin, pageDx, pageDy);
 }
 
-fz_matrix PdfEngineFitz::viewctm (pdf_page *page, float zoom, int rotate)
+fz_matrix PdfEngineFitz::viewctm(pdf_page *page, float zoom, int rotate)
 {
     fz_matrix ctm;
     ctm = fz_identity();
     //ctm = fz_concat(ctm, fz_translate(0, -page->mediabox.y1));
     ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    ctm = fz_concat(ctm, fz_rotate(rotate + page->rotate));
+    rotate += page->rotate;
+    if (rotate != 0)
+        ctm = fz_concat(ctm, fz_rotate(rotate));
     return ctm;
 }
 
@@ -490,15 +492,37 @@ int PdfEngineFitz::linkCount() {
     return count;
 }
 
-pdf_linkkind PdfEngineFitz::linkType(int pageNo, int linkNo) {
-    pdf_page* page = getPdfPage(pageNo);
-    pdf_link* currLink = page->links;
-    for (int i = 0; i < linkNo; i++) {
-        assert(currLink);
-        if (!currLink)
-            return PDF_LUNKNOWN;
-        currLink = currLink->next;
+void PdfEngineFitz::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
+{
+    pdf_link *link = 0;
+    int pageNo;
+    PdfLink *pdfLink = pdfLinks;
+    int linkNo = 0;
+
+    for (pageNo=0; pageNo < _pageCount; pageNo++)
+    {
+        pdf_page* page = _pages[pageNo];
+        if (!page)
+            continue;
+        link = page->links;
+        while (link)
+        {
+            assert(link);
+            pdfLink->pageNo = pageNo + 1;
+            pdfLink->link = link;
+            pdfLink->rectPage.x = link->rect.x0;
+            pdfLink->rectPage.y = link->rect.y0;
+            assert(link->rect.x1 >= link->rect.x0);
+            pdfLink->rectPage.dx = link->rect.x1 - link->rect.x0;
+            assert(pdfLink->rectPage.dx >= 0);
+            assert(link->rect.y1 >= link->rect.y0);
+            pdfLink->rectPage.dy = link->rect.y1 - link->rect.y0;
+            assert(pdfLink->rectPage.dy >= 0);
+            link = link->next;
+            linkNo++;
+            pdfLink++;
+        }
     }
-    return currLink->kind;
+    assert(linkCount == linkNo);
 }
 

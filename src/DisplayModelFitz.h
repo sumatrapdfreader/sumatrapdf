@@ -24,6 +24,9 @@ public:
 
     virtual void MapResultRectToScreen(PdfSearchResult *rect);
 
+    void rebuildLinks();
+    void handleLink2(pdf_link* link);
+
 };
 
 DisplayModelFitz *DisplayModelFitz_CreateFromFileName(

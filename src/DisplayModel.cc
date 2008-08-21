@@ -186,6 +186,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _pagesInfo = NULL;
 
     _links = NULL;
+    _linksCount = 0;
 
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
@@ -633,9 +634,10 @@ bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
     ex = r->x + r->dx;
     ey = r->y + r->dy;
 
-    return cvtUserToScreen(pageNo, &sx, &sy)
-        && cvtUserToScreen(pageNo, &ex, &ey)
-        && RectD_FromXY(r, sx, ex, sy, ey);
+    bool ok = cvtUserToScreen(pageNo, &sx, &sy);
+    ok = ok && cvtUserToScreen(pageNo, &ex, &ey);
+    ok = ok && RectD_FromXY(r, sx, ex, sy, ey);
+    return ok;
 }
 
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
@@ -711,14 +713,9 @@ void DisplayModel::recalcLinksCanvasPos(void)
 
     if (0 == linkCount)
         return;
-    // TODO: we don't have _links just yet
-    return;
-    assert(_links);
-    if (!_links)
-        return;
 
     for (linkNo = 0; linkNo < linkCount; linkNo++) {
-        pdfLink = link(linkNo);
+        pdfLink = &_links[linkNo];
         pageInfo = getPageInfo(pdfLink->pageNo);
         if (!pageInfo->visible) {
             /* hack: make the links on pages that are not shown invisible by
@@ -753,16 +750,16 @@ void DisplayModel::recalcLinksCanvasPos(void)
         pdfLink->rectCanvas.x = (int)rect.x;
         pdfLink->rectCanvas.y = (int)rect.y;
         pdfLink->rectCanvas.dx = (int)rect.dx;
+        assert(pdfLink->rectCanvas.dx >= 0);
         pdfLink->rectCanvas.dy = (int)rect.dy;
+        assert(pdfLink->rectCanvas.dy >= 0);
 #endif
-#if 0
         DBG_OUT("  link on page (x=%d, y=%d, dx=%d, dy=%d),\n",
             (int)pdfLink->rectPage.x, (int)pdfLink->rectPage.y,
             (int)pdfLink->rectPage.dx, (int)pdfLink->rectPage.dy);
         DBG_OUT("        screen (x=%d, y=%d, dx=%d, dy=%d)\n",
                 (int)rect.x, (int)rect.y,
                 (int)rect.dx, (int)rect.dy);
-#endif
     }
 }
 
@@ -796,15 +793,11 @@ PdfLink *DisplayModel::linkAtPosition(int x, int y)
 {
     int linkCount = getLinkCount();
     if (0 == linkCount) return NULL;
-    // TODO: we don't have _links just yet
-    return NULL;
-    assert(_links);
-    if (!_links) return NULL;
 
     int canvasPosX = x + (int)areaOffset.x;
     int canvasPosY = y + (int)areaOffset.y;
     for (int i = 0; i < linkCount; i++) {
-        PdfLink *currLink = link(i);
+        PdfLink *currLink = &_links[i];
 
         if (RectI_Inside(&(currLink->rectCanvas), canvasPosX, canvasPosY))
             return currLink;

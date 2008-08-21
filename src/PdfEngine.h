@@ -10,6 +10,14 @@
 #include <mupdf.h>
 #endif
 
+/* Describes a link on PDF page. */
+typedef struct PdfLink {
+    int             pageNo;     /* on which Pdf page the link exists. 1..pageCount */
+    RectD           rectPage;   /* position of the link on the page */
+    RectI           rectCanvas; /* position of the link on canvas */
+    pdf_link *      link;
+} PdfLink;
+
 class WindowInfo;
 
 #define INVALID_PAGE_NO     -1
@@ -129,8 +137,7 @@ public:
 
     virtual bool printingAllowed() = 0;
     virtual int linkCount() = 0;
-    virtual pdf_linkkind linkType(int pageNo, int linkNo) = 0;
-
+    virtual void fillPdfLinks(PdfLink *pdfLinks, int linkCount) = 0;
     virtual bool hasTocTree() = 0;
     virtual PdfTocItem *getTocTree() = 0;
 
@@ -154,7 +161,7 @@ public:
 
     virtual bool printingAllowed();
     virtual int linkCount();
-    virtual pdf_linkkind linkType(int pageNo, int linkNo);
+    virtual void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
     virtual bool hasTocTree() { return _outline != NULL; }
     virtual PdfTocItem *getTocTree();
 
