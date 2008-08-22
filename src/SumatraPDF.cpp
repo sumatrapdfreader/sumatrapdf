@@ -3691,7 +3691,7 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
         return;
     }
 
-    if ((key & MK_CONTROL) != 0)
+    if (!gRestrictedUse && (key & MK_CONTROL) != 0)
         OnSelectionStart(win, x, y);
     else
         OnDraggingStart(win, x, y);
@@ -3710,7 +3710,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         return;
     }
 
-    if ((key & MK_CONTROL) != 0)
+    if (!gRestrictedUse && (key & MK_CONTROL) != 0)
         OnSelectionStop(win, x, y);
     else
         OnDraggingStop(win, x, y);
