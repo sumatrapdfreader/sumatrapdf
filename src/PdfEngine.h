@@ -74,32 +74,18 @@ private:
     }
 };
 
-/* Abstract class representing cached bitmap. Allows different implementations
-   on different platforms. */
 class RenderedBitmap {
 public:
-    virtual ~RenderedBitmap() {};
-    virtual int dx() = 0;
-    virtual int dy() = 0;
-    virtual int rowSize() = 0;
-    virtual unsigned char *data() = 0;
+    RenderedBitmap(fz_pixmap *);
+    ~RenderedBitmap();
 
-    virtual HBITMAP createDIBitmap(HDC) = 0;
-    virtual void stretchDIBits(HDC, int, int, int, int) = 0;
-};
+    int dx() { return _bitmap->w; }
+    int dy() { return _bitmap->h; }
+    int rowSize();
+    unsigned char *data();
 
-class RenderedBitmapFitz : public RenderedBitmap {
-public:
-    RenderedBitmapFitz(fz_pixmap *);
-    virtual ~RenderedBitmapFitz();
-
-    virtual int dx() { return _bitmap->w; }
-    virtual int dy() { return _bitmap->h; }
-    virtual int rowSize();
-    virtual unsigned char *data();
-
-    virtual HBITMAP createDIBitmap(HDC);
-    virtual void stretchDIBits(HDC, int, int, int, int);
+    HBITMAP createDIBitmap(HDC);
+    void stretchDIBits(HDC, int, int, int, int);
 protected:
     fz_pixmap *_bitmap;
 };

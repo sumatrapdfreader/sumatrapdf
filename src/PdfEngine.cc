@@ -108,35 +108,35 @@ static void stretchDIBitsCommon(RenderedBitmap *bmp, HDC hdc, int leftMargin, in
         SRCCOPY);
 }
 
-RenderedBitmapFitz::RenderedBitmapFitz(fz_pixmap *bitmap)
+RenderedBitmap::RenderedBitmap(fz_pixmap *bitmap)
 {
     _bitmap = bitmap;
 }
 
-RenderedBitmapFitz::~RenderedBitmapFitz()
+RenderedBitmap::~RenderedBitmap()
 {
     if (_bitmap)
         fz_droppixmap(_bitmap);
 }
 
-int RenderedBitmapFitz::rowSize()
+int RenderedBitmap::rowSize()
 {
     int rowSize = ((_bitmap->w * 3 + 3) / 4) * 4;
     return rowSize;
 }
 
-unsigned char *RenderedBitmapFitz::data()
+unsigned char *RenderedBitmap::data()
 {
     unsigned char* bmpData = _bitmap->samples;
     return bmpData;
 }
 
-HBITMAP RenderedBitmapFitz::createDIBitmap(HDC hdc)
+HBITMAP RenderedBitmap::createDIBitmap(HDC hdc)
 {
     return createDIBitmapCommon(this, hdc);
 }
 
-void RenderedBitmapFitz::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy)
+void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy)
 {
     stretchDIBitsCommon(this, hdc, leftMargin, topMargin, pageDx, pageDy);
 }
@@ -463,7 +463,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
     if (error)
         goto Error;
     ConvertPixmapForWindows(image);
-    return new RenderedBitmapFitz(image);
+    return new RenderedBitmap(image);
 Error:
     return NULL;
 }
