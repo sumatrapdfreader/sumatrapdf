@@ -23,6 +23,8 @@ typedef struct {
        silently associate or not */
     BOOL m_pdfAssociateShouldAssociate;
 
+    BOOL m_enableAutoUpdate;
+
     int  m_bgColor;
     BOOL m_escToExit;
 

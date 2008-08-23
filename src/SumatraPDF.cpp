@@ -779,6 +779,11 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 
 static void SerializableGlobalPrefs_Init() {
     gGlobalPrefs.m_showToolbar = TRUE;
+#ifdef BUILD_RM_VERSION
+    gGlobalPrefs.m_enableAutoUpdate = FALSE;
+#else
+    gGlobalPrefs.m_enableAutoUpdate = TRUE;
+#endif
     gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
     gGlobalPrefs.m_escToExit = FALSE;
@@ -1078,7 +1083,9 @@ MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       0  },
     { _TRN("&Manual"),                     IDM_MANUAL,              0  },
     { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_RESTRICTED },
-    { _TRN("&About"),                      IDM_ABOUT,               0  }
+    { _TRN("&About"),                      IDM_ABOUT,               0  },
+    { SEP_ITEM ,                           0,                       MF_RESTRICTED },
+    { _TRN("Enable auto-update"),         IDM_ENABLE_AUTO_UPDATE,  MF_RESTRICTED }
 };
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
@@ -1851,6 +1858,14 @@ static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
         CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
 }
 
+static void MenuUpdateEnableAutoUpdateStateForWindow(WindowInfo *win) {
+    HMENU hmenu = GetMenu(win->hwndFrame);
+    if (gGlobalPrefs.m_enableAutoUpdate)
+        CheckMenuItem(hmenu, IDM_ENABLE_AUTO_UPDATE, MF_BYCOMMAND | MF_CHECKED);
+    else
+        CheckMenuItem(hmenu, IDM_ENABLE_AUTO_UPDATE, MF_BYCOMMAND | MF_UNCHECKED);
+}
+
 // show which language is being used via check in Language/* menu
 static void MenuUpdateLanguage(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
@@ -1890,6 +1905,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
     MenuUpdateFullscreen(win);
+    MenuUpdateEnableAutoUpdateStateForWindow(win);
 
     for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -4509,6 +4525,20 @@ static void OnMenuViewShowHideToolbar()
     }
 }
 
+static void OnMenuEnableAutoUpdate()
+{
+    if (gGlobalPrefs.m_enableAutoUpdate)
+        gGlobalPrefs.m_enableAutoUpdate = FALSE;
+    else
+        gGlobalPrefs.m_enableAutoUpdate = TRUE;
+
+    WindowInfo* win = gWindowList;
+    while (win) {
+        MenuUpdateEnableAutoUpdateStateForWindow(win);
+        win = win->next;
+    }
+}
+
 static void OnMenuViewContinuous(WindowInfo *win)
 {
     assert(win);
@@ -6029,6 +6059,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuViewShowHideToolbar();
                     break;
 
+                case IDM_ENABLE_AUTO_UPDATE:
+                    OnMenuEnableAutoUpdate();
+                    break;
+
                 case IDM_CHANGE_LANGUAGE:
                     OnMenuChangeLanguage(win);
                     break;
@@ -7005,9 +7039,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (registerForPdfExtentions && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
-#ifndef BUILD_RM_VERSION
-    DownloadSumatraUpdateInfo(gWindowList, true);
-#endif
+    if (gGlobalPrefs.m_enableAutoUpdate)
+        DownloadSumatraUpdateInfo(gWindowList, true);
 
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {

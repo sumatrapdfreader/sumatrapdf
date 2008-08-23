@@ -2527,3 +2527,5 @@ hu:Verzió kihagyása
 ja:このバージョンをスキップ
 th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
+-
+Enable auto-update

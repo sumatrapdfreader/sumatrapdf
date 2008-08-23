@@ -52,6 +52,7 @@ enum DisplayMode {
 #define GUID_STR                    "Guid"
 #define PDFS_OPENED_STR             "PdfsOpened"
 #define LAST_UPDATE_STR             "LastUpdate"
+#define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"
 
 typedef struct DisplayState {
     const char *        filePath;

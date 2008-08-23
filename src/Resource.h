@@ -105,6 +105,7 @@
 #define IDM_CHANGE_LANGUAGE             553
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
+#define IDM_ENABLE_AUTO_UPDATE          556
 
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
