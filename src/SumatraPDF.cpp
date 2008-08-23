@@ -1011,20 +1011,20 @@ static UINT AllocNewMenuId(void)
 }
 
 enum menuFlags {
-    MF_RESTRICTED = 0x1 
+    MF_NOT_IN_RESTRICTED = 0x1 
 };
 
 MenuDef menuDefFile[] = {
-    { _TRN("&Open\tCtrl-O"),                        IDM_OPEN ,                  MF_RESTRICTED },
-    { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_RESTRICTED },
-    { _TRN("&Save as"),                             IDM_SAVEAS,                 MF_RESTRICTED },
-    { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_RESTRICTED },
-    { SEP_ITEM,                                     0,                          MF_RESTRICTED },
-    { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER,    MF_RESTRICTED },
+    { _TRN("&Open\tCtrl-O"),                        IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
+    { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
+    { _TRN("&Save as"),                             IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
+    { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER,    MF_NOT_IN_RESTRICTED },
 #ifdef _PDFSYNC_GUI_ENHANCEMENT
     { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      0 },
 #endif
-    { SEP_ITEM ,                                    0,                          MF_RESTRICTED },
+    { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
 };
 
@@ -1082,10 +1082,10 @@ MenuDef menuDefLang[] = {
 MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       0  },
     { _TRN("&Manual"),                     IDM_MANUAL,              0  },
-    { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_RESTRICTED },
+    { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_NOT_IN_RESTRICTED },
     { _TRN("&About"),                      IDM_ABOUT,               0  },
-    { SEP_ITEM ,                           0,                       MF_RESTRICTED },
-    { _TRN("Enable auto-update"),         IDM_ENABLE_AUTO_UPDATE,  MF_RESTRICTED }
+    { SEP_ITEM ,                           0,                       MF_NOT_IN_RESTRICTED },
+    { _TRN("Enable auto-update"),          IDM_ENABLE_AUTO_UPDATE,  MF_NOT_IN_RESTRICTED }
 };
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
@@ -1111,7 +1111,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 
     for (int i=0; i < menuItems; i++) {
         MenuDef md = menuDefs[i];
-        if (!gRestrictedUse || ~md.m_flags & MF_RESTRICTED) {
+        if (!gRestrictedUse || ~md.m_flags & MF_NOT_IN_RESTRICTED) {
             const char *title = md.m_title;
             int id = md.m_id;
             if (str_eq(title, SEP_ITEM)) {
