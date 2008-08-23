@@ -190,6 +190,10 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
 
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
+
+    _pdfEngine = new PdfEngine();
+    _pdfSearchEngine = new PdfSearchFitz((PdfEngine *)_pdfEngine);
+
 // TODO: fix to not use poppler
 //    searchState.str = new GooString();
 //    searchState.strU = new UGooString();
@@ -204,6 +208,9 @@ DisplayModel::~DisplayModel()
     free(_links);
     delete _pdfSearchEngine;
     delete _pdfEngine;
+    RenderQueue_RemoveForDisplayModel(this);
+    BitmapCache_FreeForDisplayModel(this);
+    cancelRenderingForDisplayModel(this);
 }
 
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const

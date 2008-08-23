@@ -33,7 +33,7 @@
 #include "resource.h"
 
 #include "win_util.h"
-#include "DisplayModelFitz.h"
+#include "DisplayModel.h"
 #include "FileWatch.h"
 #include "PdfSync.h"
 

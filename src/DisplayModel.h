@@ -131,7 +131,7 @@ class DisplayModel
 {
 public:
     DisplayModel(DisplayMode displayMode);
-    virtual ~DisplayModel();
+    ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
                          BOOL (*abortCheckCbkA)(void *data),
@@ -167,7 +167,6 @@ public:
 
     int startPage(void) const { return _startPage; }
 
-    /* TODO: should become non-virtual */
     int currentPageNo(void) const;
 
     /* an arbitrary pointer that can be used by an app e.g. a multi-window GUI
@@ -223,7 +222,7 @@ public:
     bool            goToNextPage(int scrollY);
     bool            goToFirstPage(void);
     bool            goToLastPage(void);
-    virtual void    goToTocLink(void *link) = 0;
+    void            goToTocLink(void *link);
 
     void            scrollXTo(int xOff);
     void            scrollXBy(int dx);
@@ -236,20 +235,20 @@ public:
     void            zoomBy(double zoomFactor);
     void            rotateBy(int rotation);
 
-    virtual int     getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen) = 0;
+    int             getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen);
 
     void            clearSearchHit(void);
     void            setSearchHit(int pageNo, RectD *hitRect);
     void            recalcLinksCanvasPos(void);
 
-    virtual int     getLinkCount(void) = 0;
+    int             getLinkCount(void);
     PdfLink *       linkAtPosition(int x, int y);
 
-    virtual void    handleLink(PdfLink *pdfLink) = 0;
-    virtual void    goToNamedDest(const char *name) = 0;
+    void            handleLink(PdfLink *pdfLink);
+    void            goToNamedDest(const char *name);
 
-    virtual bool    cvtUserToScreen(int pageNo, double *x, double *y) = 0;
-    virtual bool    cvtScreenToUser(int *pageNo, double *x, double *y) = 0;
+    bool            cvtUserToScreen(int pageNo, double *x, double *y);
+    bool            cvtScreenToUser(int *pageNo, double *x, double *y);
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
 
@@ -263,7 +262,13 @@ public:
 
     int             getPageNoByPoint (double x, double y);
 
-    virtual void    MapResultRectToScreen(PdfSearchResult *rect) = 0;
+    void            MapResultRectToScreen(PdfSearchResult *rect);
+
+    void            rebuildLinks();
+    void            handleLink2(pdf_link* link);
+    PdfEngine *     pdfEngineFitz(void) { 
+        return _pdfEngine; 
+    }
 
 protected:
 
@@ -325,6 +330,13 @@ DisplaySettings *   globalDisplaySettings(void);
 int                 columnsFromDisplayMode(DisplayMode displayMode);
 void                pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation, double *pageDxOut, double *pageDyOut);
 bool                displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm);
+
+DisplayModel *DisplayModel_CreateFromFileName(
+  const char *fileName,
+  SizeD totalDrawAreaSize,
+  int scrollbarXDy, int scrollbarYDx,
+  DisplayMode displayMode, int startPage,
+  WindowInfo *win, bool tryrepair);
 
 extern DisplaySettings gDisplaySettings;
 

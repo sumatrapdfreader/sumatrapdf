@@ -2096,7 +2096,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
 
     DisplayModel *previousmodel = win->dm;
 
-    win->dm = DisplayModelFitz_CreateFromFileName(fileName,
+    win->dm = DisplayModel_CreateFromFileName(fileName,
         totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, !autorefresh);
 
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;

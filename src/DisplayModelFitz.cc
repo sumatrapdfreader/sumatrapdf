@@ -1,33 +1,19 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
-#include "DisplayModelFitz.h"
+#include "DisplayModel.h"
 
 #include "str_util.h"
 
-DisplayModelFitz::DisplayModelFitz(DisplayMode displayMode) :
-    DisplayModel(displayMode)
-{
-    _pdfEngine = new PdfEngine();
-    _pdfSearchEngine = new PdfSearchFitz((PdfEngine *)_pdfEngine);
-}
-
-DisplayModelFitz::~DisplayModelFitz()
-{
-    RenderQueue_RemoveForDisplayModel(this);
-    BitmapCache_FreeForDisplayModel(this);
-    cancelRenderingForDisplayModel(this);
-}
-
-DisplayModelFitz *DisplayModelFitz_CreateFromFileName(
+DisplayModel *DisplayModel_CreateFromFileName(
   const char *fileName,
   SizeD totalDrawAreaSize,
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,
   WindowInfo *win, bool tryrepair)
 {
-    DisplayModelFitz *    dm = NULL;
+    DisplayModel *    dm = NULL;
 
-    dm = new DisplayModelFitz(displayMode);
+    dm = new DisplayModel(displayMode);
     if (!dm)
         goto Error;
 
@@ -37,7 +23,7 @@ DisplayModelFitz *DisplayModelFitz_CreateFromFileName(
     dm->setScrollbarsSize(scrollbarXDy, scrollbarYDx);
     dm->setTotalDrawAreaSize(totalDrawAreaSize);
 
-//    DBG_OUT("DisplayModelFitz_CreateFromPageTree() pageCount = %d, startPage=%d, displayMode=%d\n",
+//    DBG_OUT("DisplayModel_CreateFromPageTree() pageCount = %d, startPage=%d, displayMode=%d\n",
 //        dm->pageCount(), (int)dm->startPage, (int)displayMode);
     return dm;
 Error:
@@ -45,7 +31,7 @@ Error:
     return NULL;
 }
 
-bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
+bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
 {
     pdf_page *page = pdfEngineFitz()->getPdfPage(pageNo);
     double zoom = zoomReal();
@@ -79,7 +65,7 @@ bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
     return true;
 }
 
-bool DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
+bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
 {
     double zoom = zoomReal();
     int rot = rotation();
@@ -115,7 +101,7 @@ bool DisplayModelFitz::cvtScreenToUser(int *pageNo, double *x, double *y)
     return true;
 }
 
-void launch_url_a(const char *url)
+static void launch_url_a(const char *url)
 {
     SHELLEXECUTEINFOA sei;
     BOOL              res;
@@ -130,7 +116,7 @@ void launch_url_a(const char *url)
     ShellExecuteExA(&sei);
 }
 
-void DisplayModelFitz::handleLink2(pdf_link* link)
+void DisplayModel::handleLink2(pdf_link* link)
 {
     if (PDF_LURI == link->kind)
     {
@@ -150,12 +136,12 @@ void DisplayModelFitz::handleLink2(pdf_link* link)
     }
 }
 
-void DisplayModelFitz::handleLink(PdfLink *link)
+void DisplayModel::handleLink(PdfLink *link)
 {
     handleLink2(link->link);
 }
 
-void DisplayModelFitz::goToTocLink(void *linktmp)
+void DisplayModel::goToTocLink(void *linktmp)
 {
     if (!linktmp)
         return;
@@ -164,7 +150,7 @@ void DisplayModelFitz::goToTocLink(void *linktmp)
     handleLink2(link);
 }
 
-void DisplayModelFitz::goToNamedDest(const char *name)
+void DisplayModel::goToNamedDest(const char *name)
 {
     fz_obj *dest = pdfEngineFitz()->getNamedDest(name);
     if (!dest)
@@ -179,7 +165,7 @@ void DisplayModelFitz::goToNamedDest(const char *name)
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * to <buf>. Returnes number of copied characters */
-int DisplayModelFitz::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)
+int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)
 {
     int             bxMin, bxMax, byMin, byMax;
     int             xMin, xMax, yMin, yMax;
@@ -233,7 +219,7 @@ int DisplayModelFitz::getTextInRegion(int pageNo, RectD *region, unsigned short 
     return p;
 }
 
-void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
+void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
 {
     PdfPageInfo *pageInfo = getPageInfo(rect->page);
     pdf_page *page = pdfEngineFitz()->getPdfPage(rect->page);
@@ -296,7 +282,7 @@ void DisplayModelFitz::MapResultRectToScreen(PdfSearchResult *rect)
         rect->bottom -= sy;
     }
 }
-void DisplayModelFitz::rebuildLinks()
+void DisplayModel::rebuildLinks()
 {
     int count = _pdfEngine->linkCount();
     assert(count > _linksCount);
@@ -307,7 +293,7 @@ void DisplayModelFitz::rebuildLinks()
     recalcLinksCanvasPos();
 }
 
-int DisplayModelFitz::getLinkCount()
+int DisplayModel::getLinkCount()
 {
     /* TODO: let's hope it's not too expensive. An alternative would be
        to update link count only when it could have changed i.e. after
