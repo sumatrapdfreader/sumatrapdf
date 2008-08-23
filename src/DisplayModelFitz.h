@@ -11,7 +11,7 @@ public:
     DisplayModelFitz(DisplayMode displayMode);
     virtual ~DisplayModelFitz();
 
-    PdfEngineFitz * pdfEngineFitz(void) { return (PdfEngineFitz*)_pdfEngine; }
+    PdfEngine * pdfEngineFitz(void) { return (PdfEngine*)_pdfEngine; }
     virtual int     getLinkCount();
     virtual void    handleLink(PdfLink *pdfLink);
     virtual void    goToTocLink(void *link);

@@ -7,8 +7,8 @@
 DisplayModelFitz::DisplayModelFitz(DisplayMode displayMode) :
     DisplayModel(displayMode)
 {
-    _pdfEngine = new PdfEngineFitz();
-    _pdfSearchEngine = new PdfSearchFitz((PdfEngineFitz *)_pdfEngine);
+    _pdfEngine = new PdfEngine();
+    _pdfSearchEngine = new PdfSearchFitz((PdfEngine *)_pdfEngine);
 }
 
 DisplayModelFitz::~DisplayModelFitz()
@@ -45,7 +45,6 @@ Error:
     return NULL;
 }
 
-// TODO: this is broken
 bool DisplayModelFitz::cvtUserToScreen(int pageNo, double *x, double *y)
 {
     pdf_page *page = pdfEngineFitz()->getPdfPage(pageNo);

@@ -81,12 +81,12 @@ protected:
 class PdfSearchFitz : public PdfSearchEngine
 {
 private:
-    PdfEngineFitz *engine;
+    PdfEngine *engine;
     pdf_textline *line;
     pdf_textline *current;
     long last;
 public:
-    PdfSearchFitz(PdfEngineFitz *engine);
+    PdfSearchFitz(PdfEngine *engine);
     virtual ~PdfSearchFitz();
 
     virtual void Reset();

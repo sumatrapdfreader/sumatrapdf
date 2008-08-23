@@ -13,7 +13,7 @@ void PdfSearchEngine::SetText(wchar_t *text)
 }
 
 // Fitz
-PdfSearchFitz::PdfSearchFitz(PdfEngineFitz *engine) : PdfSearchEngine()
+PdfSearchFitz::PdfSearchFitz(PdfEngine *engine) : PdfSearchEngine()
 {
     this->engine = engine;
     this->line = NULL;

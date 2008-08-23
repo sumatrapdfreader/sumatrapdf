@@ -141,7 +141,7 @@ void RenderedBitmapFitz::stretchDIBits(HDC hdc, int leftMargin, int topMargin, i
     stretchDIBitsCommon(this, hdc, leftMargin, topMargin, pageDx, pageDy);
 }
 
-fz_matrix PdfEngineFitz::viewctm(pdf_page *page, float zoom, int rotate)
+fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 {
     fz_matrix ctm;
     ctm = fz_identity();
@@ -154,8 +154,9 @@ fz_matrix PdfEngineFitz::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
-PdfEngineFitz::PdfEngineFitz() : 
-        PdfEngine()
+PdfEngine::PdfEngine() : 
+        _fileName(0)
+        , _pageCount(INVALID_PAGE_NO) 
         , _xref(NULL)
         , _outline(NULL)
         , _pageTree(NULL)
@@ -165,7 +166,7 @@ PdfEngineFitz::PdfEngineFitz() :
     _getPageSem = CreateSemaphore(NULL, 1, 1, NULL);
 }
 
-PdfEngineFitz::~PdfEngineFitz()
+PdfEngine::~PdfEngine()
 {
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
@@ -188,14 +189,15 @@ PdfEngineFitz::~PdfEngineFitz()
         pdf_closexref(_xref);
     }
 
-    if (_rast) {
+    if (_rast)
         fz_droprenderer(_rast);
-    }
 
     CloseHandle(_getPageSem);
+
+    free((void*)_fileName);
 }
 
-bool PdfEngineFitz::load(const char *fileName, WindowInfo *win, bool tryrepair)
+bool PdfEngine::load(const char *fileName, WindowInfo *win, bool tryrepair)
 {
     _windowInfo = win;
     setFileName(fileName);
@@ -281,7 +283,7 @@ Error:
     return false;
 }
 
-PdfTocItem *PdfEngineFitz::buildTocTree(pdf_outline *entry)
+PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 {
     wchar_t *name = utf8_to_utf16(entry->title);
 
@@ -296,7 +298,7 @@ PdfTocItem *PdfEngineFitz::buildTocTree(pdf_outline *entry)
     return node;
 }
 
-PdfTocItem *PdfEngineFitz::getTocTree()
+PdfTocItem *PdfEngine::getTocTree()
 {
     if (!hasTocTree())
         return NULL;
@@ -304,7 +306,7 @@ PdfTocItem *PdfEngineFitz::getTocTree()
     return buildTocTree(_outline);
 }
 
-int PdfEngineFitz::findPageNo(fz_obj *dest)
+int PdfEngine::findPageNo(fz_obj *dest)
 {
     int p = 0;
     if (fz_isint(dest)) {
@@ -325,7 +327,7 @@ int PdfEngineFitz::findPageNo(fz_obj *dest)
     return 0;
 }
 
-fz_obj *PdfEngineFitz::getNamedDest(const char *name)
+fz_obj *PdfEngine::getNamedDest(const char *name)
 {
     fz_obj *obj = fz_dictgets(_xref->dests, (char*)name);
     if (obj)
@@ -333,7 +335,7 @@ fz_obj *PdfEngineFitz::getNamedDest(const char *name)
     return resolvedest(_xref, obj);
 }
 
-pdf_page *PdfEngineFitz::getPdfPage(int pageNo)
+pdf_page *PdfEngine::getPdfPage(int pageNo)
 {
     if (!_pages)
         return NULL;
@@ -360,7 +362,7 @@ pdf_page *PdfEngineFitz::getPdfPage(int pageNo)
     return page;
 }
 
-void PdfEngineFitz::dropPdfPage(int pageNo)
+void PdfEngine::dropPdfPage(int pageNo)
 {
     assert(_pages);
     if (!_pages) return;
@@ -371,7 +373,7 @@ void PdfEngineFitz::dropPdfPage(int pageNo)
     _pages[pageNo-1] = NULL;
 }
 
-int PdfEngineFitz::pageRotation(int pageNo)
+int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
@@ -382,7 +384,7 @@ int PdfEngineFitz::pageRotation(int pageNo)
     return rotation;
 }
 
-SizeD PdfEngineFitz::pageSize(int pageNo)
+SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
@@ -393,7 +395,7 @@ SizeD PdfEngineFitz::pageSize(int pageNo)
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }
 
-bool PdfEngineFitz::printingAllowed()
+bool PdfEngine::printingAllowed()
 {
     assert(_xref);
     int permissionFlags = PDF_DEFAULT_PERM_FLAGS;
@@ -434,7 +436,7 @@ static void ConvertPixmapForWindows(fz_pixmap *image)
    image->samples = bmpdata;
 }
 
-RenderedBitmap *PdfEngineFitz::renderBitmap(
+RenderedBitmap *PdfEngine::renderBitmap(
                            int pageNo, double zoomReal, int rotation,
                            BOOL (*abortCheckCbkA)(void *data),
                            void *abortCheckCbkDataA)
@@ -478,7 +480,7 @@ static int linksLinkCount(pdf_link *currLink) {
 }
 
 /* Return number of all links in all loaded pages */
-int PdfEngineFitz::linkCount() {
+int PdfEngine::linkCount() {
     if (!_pages)
         return 0;
     int count = 0;
@@ -492,7 +494,7 @@ int PdfEngineFitz::linkCount() {
     return count;
 }
 
-void PdfEngineFitz::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
+void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
 {
     pdf_link *link = 0;
     int pageNo;

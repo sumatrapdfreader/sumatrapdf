@@ -106,13 +106,8 @@ protected:
 
 class PdfEngine {
 public:
-    PdfEngine() : 
-        _fileName(0)
-        , _pageCount(INVALID_PAGE_NO) 
-    { }
-
-    virtual ~PdfEngine() { free((void*)_fileName); }
-
+    PdfEngine();
+    ~PdfEngine();
     const char *fileName(void) const { return _fileName; };
 
     void setFileName(const char *fileName) {
@@ -126,50 +121,34 @@ public:
         return false;
     }
 
-    int pageCount(void) const { return _pageCount; }
+    int pageCount(void) const { 
+        return _pageCount; 
+    }
 
-    virtual bool load(const char *fileName, WindowInfo *windowInfo, bool tryrepair) = 0;
-    virtual int pageRotation(int pageNo) = 0;
-    virtual SizeD pageSize(int pageNo) = 0;
-    virtual RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
-                         BOOL (*abortCheckCbkA)(void *data),
-                         void *abortCheckCbkDataA) = 0;
-
-    virtual bool printingAllowed() = 0;
-    virtual int linkCount() = 0;
-    virtual void fillPdfLinks(PdfLink *pdfLinks, int linkCount) = 0;
-    virtual bool hasTocTree() = 0;
-    virtual PdfTocItem *getTocTree() = 0;
-
-protected:
-    const char *_fileName;
-    int _pageCount;
-    WindowInfo *_windowInfo;
-
-};
-
-class PdfEngineFitz : public  PdfEngine {
-public:
-    PdfEngineFitz();
-    virtual ~PdfEngineFitz();
-    virtual bool load(const char *fileName, WindowInfo* windowInfo, bool tryrepair);
-    virtual int pageRotation(int pageNo);
-    virtual SizeD pageSize(int pageNo);
-    virtual RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
+    bool load(const char *fileName, WindowInfo *windowInfo, bool tryrepair);
+    int pageRotation(int pageNo);
+    SizeD pageSize(int pageNo);
+    RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA);
 
-    virtual bool printingAllowed();
-    virtual int linkCount();
-    virtual void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
-    virtual bool hasTocTree() { return _outline != NULL; }
-    virtual PdfTocItem *getTocTree();
-
+    bool printingAllowed();
+    int linkCount();
+    void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
+    bool hasTocTree() { 
+        return _outline != NULL; 
+    }
+    PdfTocItem *getTocTree();
     fz_matrix viewctm (pdf_page *page, float zoom, int rotate);
 
     pdf_page * getPdfPage(int pageNo);
     int        findPageNo(fz_obj *dest);
     fz_obj    *getNamedDest(const char *name);
+
+protected:
+    const char *_fileName;
+    int _pageCount;
+    WindowInfo *_windowInfo;
 
 private:
     HANDLE            _getPageSem;
@@ -177,7 +156,7 @@ private:
     pdf_pagetree * pages() { return _pageTree; }
 
     void dropPdfPage(int pageNo);
-    PdfTocItem *buildTocTree(pdf_outline *entry);
+    PdfTocItem * buildTocTree(pdf_outline *entry);
 
     pdf_xref *      _xref;
     pdf_outline *   _outline;
