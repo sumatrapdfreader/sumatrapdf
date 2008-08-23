@@ -26,7 +26,7 @@ void PdfSearch::Reset()
     if (line)
         pdf_droptextline(line);
     line = current = NULL;
-    last = NONE;
+    last = 0;
 }
 
 void PdfSearch::ReverseLineList()

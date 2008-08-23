@@ -53,6 +53,9 @@ public:
     {
         tracker = NULL;
         text = NULL;
+        line = NULL;
+        current = NULL;
+        last = 0;
         sensitive = false;
         forward = true;
         result.page = 1;
@@ -71,6 +74,7 @@ protected:
     void Clear()
     {
         free(text);
+        text = NULL;
         Reset();
     }
     
