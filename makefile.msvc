@@ -47,7 +47,7 @@ CFLAGS = $(CFLAGS) /wd4995
 CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /GS /Gy
 
 !if "$(CFG)"=="rel"
-CFLAGS = $(CFLAGS) /Os /Ox /GL
+CFLAGS = $(CFLAGS) /Os /Ox /GL /D "NDEBUG"
 LDFLAGS = $(LDFLAGS) /LTCG
 !else
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu 
@@ -102,7 +102,7 @@ LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "NDEBUG"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS)
 LIBS = $(LIBS) $(ZLIB_DIR)\zlib_s.lib
 LDFLAGS = $(LDFLAGS) /opt:nowin98
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
