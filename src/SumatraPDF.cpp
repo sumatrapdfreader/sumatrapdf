@@ -33,7 +33,7 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
-#define CURR_VERSION "0.9.1"
+#define CURR_VERSION "0.9.2"
 /* #define SVN_PRE_RELEASE_VER 800 */
 
 #define _QUOTEME(x) #x
