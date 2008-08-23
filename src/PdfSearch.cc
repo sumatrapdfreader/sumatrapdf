@@ -5,15 +5,17 @@
 #include "wstr_util.h"
 #include <ctype.h>
 
-void PdfSearch::SetText(wchar_t *text)
+PdfSearch::PdfSearch(PdfEngine *engine)
 {
-    this->Clear();
-    this->length = wcslen(text);
-    this->text = wstr_dup(text);
+    tracker = NULL;
+    text = NULL;
+    line = NULL;
+    current = NULL;
+    last = 0;
+    sensitive = false;
+    forward = true;
+    result.page = 1;
     this->engine = engine;
-    this->line = NULL;
-    this->current = NULL;
-    this->last = NONE;
 }
 
 PdfSearch::~PdfSearch()
@@ -27,6 +29,17 @@ void PdfSearch::Reset()
         pdf_droptextline(line);
     line = current = NULL;
     last = 0;
+}
+
+void PdfSearch::SetText(wchar_t *text)
+{
+    this->Clear();
+    this->length = wcslen(text);
+    this->text = wstr_dup(text);
+    this->engine = engine;
+    this->line = NULL;
+    this->current = NULL;
+    this->last = NONE;
 }
 
 void PdfSearch::ReverseLineList()
@@ -168,7 +181,6 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
         if (!page)
             goto NextPage;
 
-        pdf_textline *line;
         if (pdf_loadtextfromtree(&line, page->tree, fz_identity())) // if error
             goto NextPage;
 

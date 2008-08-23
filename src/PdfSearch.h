@@ -49,18 +49,7 @@ protected:
     bool FindStartingAtPage(int page);
 
 public:
-    PdfSearch(PdfEngine *engine)
-    {
-        tracker = NULL;
-        text = NULL;
-        line = NULL;
-        current = NULL;
-        last = 0;
-        sensitive = false;
-        forward = true;
-        result.page = 1;
-        this->engine = engine;
-    }
+    PdfSearch(PdfEngine *engine);
     ~PdfSearch();
 
     void Reset();
