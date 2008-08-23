@@ -323,8 +323,8 @@ growfontlist(pdf_fontlistMS *fl)
 	int newcap;
 	pdf_fontmapMS *newitems;
 
-	if(fl->cap == 0)
-		newcap = 32;
+	if (fl->cap == 0)
+		newcap = 1024;
 	else
 		newcap = fl->cap * 2;
 
