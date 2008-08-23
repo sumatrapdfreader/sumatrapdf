@@ -3099,10 +3099,15 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 #define TXTFY(val) #val
 
 #ifdef SVN_PRE_RELEASE_VER
-#define BETA_TXT                "Pre-Release"
+ #define BETA_TXT                "Pre-Release"
 #else
-#define BETA_TXT                "Beta v" CURR_VERSION
+ #ifdef DEBUG
+ #define BETA_TXT                "Beta v" CURR_VERSION " (dbg)"
+ #else
+ #define BETA_TXT                "Beta v" CURR_VERSION
+ #endif
 #endif
+
 #define BETA_TXT_FONT           "Arial Black"
 #define BETA_TXT_FONT_SIZE      12
 #define LEFT_TXT_FONT           "Arial"
