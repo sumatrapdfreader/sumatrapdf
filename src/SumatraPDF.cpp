@@ -3991,56 +3991,56 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
     RenderQueue_RemoveForDisplayModel(dm);
     cancelRenderingForDisplayModel(dm);
 
-	SetMapMode(hdc, MM_TEXT);
+    SetMapMode(hdc, MM_TEXT);
 
-	int printAreaWidth = GetDeviceCaps(hdc, HORZRES);
-	int printAreaHeight = GetDeviceCaps(hdc, VERTRES);
+    int printAreaWidth = GetDeviceCaps(hdc, HORZRES);
+    int printAreaHeight = GetDeviceCaps(hdc, VERTRES);
 
-	int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-	int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-	// use pixel sizes for printer with non square pixels
-	float fLogPixelsx= (float)GetDeviceCaps(hdc, LOGPIXELSX); 
-	float fLogPixelsy= (float)GetDeviceCaps(hdc, LOGPIXELSY);
+    int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+    // use pixel sizes for printer with non square pixels
+    float fLogPixelsx= (float)GetDeviceCaps(hdc, LOGPIXELSX); 
+    float fLogPixelsy= (float)GetDeviceCaps(hdc, LOGPIXELSY);
 
-	bool bPrintPortrait=fLogPixelsx*printAreaWidth<fLogPixelsy*printAreaHeight;
+    bool bPrintPortrait=fLogPixelsx*printAreaWidth<fLogPixelsy*printAreaHeight;
     // print all the pages the user requested unless
     // bContinue flags there is a problem.
-	for (int i=0;i<nPageRanges;i++) {
-	    assert(pr->nFromPage <= pr->nToPage);
-		for (DWORD pageNo = pr->nFromPage; pageNo <= pr->nToPage; pageNo++) {
-//			int rotation = pdfEngine->pageRotation(pageNo);
+    for (int i=0; i < nPageRanges; i++) {
+        assert(pr->nFromPage <= pr->nToPage);
+        for (DWORD pageNo = pr->nFromPage; pageNo <= pr->nToPage; pageNo++) {
+            // int rotation = pdfEngine->pageRotation(pageNo);
 
-			DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
+            DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
 
-			StartPage(hdc);
-			// MM_TEXT: Each logical unit is mapped to one device pixel.
-			// Positive x is to the right; positive y is down.
+            StartPage(hdc);
+            // MM_TEXT: Each logical unit is mapped to one device pixel.
+            // Positive x is to the right; positive y is down.
 
-			// try to use a zoom that matches the size of the page in the
-			// printer
+            // try to use a zoom that matches the size of the page in the
+            // printer
 
-			SizeD pSize = pdfEngine->pageSize(pageNo);
+            SizeD pSize = pdfEngine->pageSize(pageNo);
 
-			int rotation=(pSize.dx()<pSize.dy()) == bPrintPortrait?0:90;
+            int rotation=(pSize.dx()<pSize.dy()) == bPrintPortrait?0:90;
 
-			double zoom;
-			if (rotation==0)
-				zoom= 100.0 * min((double)printAreaWidth / pSize.dx(),(double)printAreaHeight / pSize.dy());
-			else
-				zoom= 100.0 * min((double)printAreaWidth / pSize.dy(),(double)printAreaHeight / pSize.dx());
-	
-			RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, NULL);
-			if (!bmp)
-				goto Error; /* most likely ran out of memory */
+            double zoom;
+            if (rotation==0)
+                zoom= 100.0 * min((double)printAreaWidth / pSize.dx(),(double)printAreaHeight / pSize.dy());
+            else
+                zoom= 100.0 * min((double)printAreaWidth / pSize.dy(),(double)printAreaHeight / pSize.dx());
 
-			bmp->stretchDIBits(hdc, leftMargin, topMargin, printAreaWidth, printAreaHeight);
-			delete bmp;
-			if (EndPage(hdc) <= 0) {
-				AbortDoc(hdc);
-				return;
-			}
-		}
-		pr++;
+            RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, NULL);
+            if (!bmp)
+                goto Error; /* most likely ran out of memory */
+
+            bmp->stretchDIBits(hdc, leftMargin, topMargin, printAreaWidth, printAreaHeight);
+            delete bmp;
+            if (EndPage(hdc) <= 0) {
+                AbortDoc(hdc);
+                return;
+            }
+        }
+        pr++;
     }
 
 Error:
@@ -4060,11 +4060,11 @@ So far have tested printing from XP to
  - HP Deskjet D4160
  - Lexmark Z515 inkjet, which should cover most bases.
 */
+#define MAXPAGERANGES 10
 static void OnMenuPrint(WindowInfo *win)
 {
-    PRINTDLGEX             pd;
-	LPPRINTPAGERANGE		ppr=NULL;	
-#define MAXPAGERANGES 10
+    PRINTDLGEX              pd;
+    LPPRINTPAGERANGE        ppr=NULL;
 
     assert(win);
     if (!win) return;
@@ -4088,34 +4088,33 @@ static void OnMenuPrint(WindowInfo *win)
     pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_NOSELECTION;
     pd.nCopies     = 1;
     /* by default print all pages */
-	pd.nPageRanges =1;
-	pd.nMaxPageRanges =MAXPAGERANGES;
-	ppr=(LPPRINTPAGERANGE)malloc(MAXPAGERANGES*sizeof(PRINTPAGERANGE));
-    pd.lpPageRanges= ppr;
-	ppr->nFromPage  = 1;
-	ppr->nToPage    = dm->pageCount();
-    pd.nMinPage    = 1;
-    pd.nMaxPage    = dm->pageCount();
-	pd.nStartPage = START_PAGE_GENERAL;
+    pd.nPageRanges =1;
+    pd.nMaxPageRanges = MAXPAGERANGES;
+    ppr = (LPPRINTPAGERANGE)malloc(MAXPAGERANGES*sizeof(PRINTPAGERANGE));
+    pd.lpPageRanges = ppr;
+    ppr->nFromPage = 1;
+    ppr->nToPage = dm->pageCount();
+    pd.nMinPage = 1;
+    pd.nMaxPage = dm->pageCount();
+    pd.nStartPage = START_PAGE_GENERAL;
 
-	if (PrintDlgEx(&pd)==S_OK) {
-		if (pd.dwResultAction==PD_RESULT_PRINT) {
-			if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
-				if (pd.Flags & PD_CURRENTPAGE){
-					pd.nPageRanges=1;
-					pd.lpPageRanges->nFromPage=dm->currentPageNo();
-					pd.lpPageRanges->nToPage  =dm->currentPageNo();
-				} else
-				if (!(pd.Flags & PD_PAGENUMS)){
-					pd.nPageRanges=1;
-					pd.lpPageRanges->nFromPage=1;
-					pd.lpPageRanges->nToPage  =dm->pageCount();
-				}
-				PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
-			}
-		}
-	}
-	else {
+    if (PrintDlgEx(&pd) == S_OK) {
+        if (pd.dwResultAction==PD_RESULT_PRINT) {
+            if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
+                if (pd.Flags & PD_CURRENTPAGE) {
+                    pd.nPageRanges=1;
+                    pd.lpPageRanges->nFromPage=dm->currentPageNo();
+                    pd.lpPageRanges->nToPage  =dm->currentPageNo();
+                } else if (!(pd.Flags & PD_PAGENUMS)) {
+                    pd.nPageRanges=1;
+                    pd.lpPageRanges->nFromPage=1;
+                    pd.lpPageRanges->nToPage  =dm->pageCount();
+                }
+                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
+            }
+        }
+    }
+    else {
         if (CommDlgExtendedError()) { 
             /* if PrintDlg was cancelled then
                CommDlgExtendedError is zero, otherwise it returns the
@@ -4126,7 +4125,7 @@ static void OnMenuPrint(WindowInfo *win)
         }
     }
 
-	if (ppr != NULL) free(ppr);
+    free(ppr);
     if (pd.hDC != NULL) DeleteDC(pd.hDC);
     if (pd.hDevNames != NULL) GlobalFree(pd.hDevNames);
     if (pd.hDevMode != NULL) GlobalFree(pd.hDevMode);
