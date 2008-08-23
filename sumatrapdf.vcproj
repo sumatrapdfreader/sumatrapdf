@@ -125,14 +125,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\DisplayModelFitz.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\src\DisplayModelFitz.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\DisplayState.cc"
 				>
 			</File>
