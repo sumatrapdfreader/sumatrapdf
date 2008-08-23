@@ -1544,6 +1544,7 @@ vn:&Hướng dẫn sử dụng
 sk:Príručka
 th:คู่มือการใช้งาน
 gl:Manual de Instruccións
+mk:Прирачник за употреба
 -
 &About
 bg:Относно програмата...
@@ -1616,6 +1617,7 @@ ro:Pagina:
 ru:Страница:
 ja:ページ:
 gl:Páxina:
+mk:Страница:
 -
 Find:
 br:Localizar:
@@ -2034,7 +2036,7 @@ tw:檔案儲存失敗
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
 sp-rs:Greška pri snimanju PDF dokumenta
 id:Gagal menyimpan berkas
-mk:Грешка при зачувување на PDF документот
+mk:Зачувување на PDF документот не успеа
 ro:Eroare la salvarea unui fişier
 kr:파일을 저장할 수 없습니다.
 bn:ফাইল সংরক্ষণে ব্যর্থ
@@ -2460,7 +2462,7 @@ nl:U heeft versie %s
 fr:Votre version est la %s
 no:Du har versjon %s
 eu:%s bertsioa daukazu.
-mk:Имаш верзија %s
+mk:Ја имаш верзијата %s
 hu:Jelenlegi verzió: %s
 ja:バージョン %s です
 th:ของคุณเป็นเวอร์ชั่น
@@ -2529,3 +2531,4 @@ th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
 -
 Enable auto-update
+mk:Овозможи автоматско ажурирање
