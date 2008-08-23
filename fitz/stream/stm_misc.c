@@ -88,7 +88,12 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint)
 			goto cleanup;
 		}
 		bytesread = buf->wp - buf->rp;
-		assert(bytesread > 0);
+		if (0 == bytesread)
+		{
+			if (buf->eof)
+				break;
+			assert(0);
+		}
 		leftinbuf = tmpbuf->ep - tmpbuf->wp;
 		while (leftinbuf < bytesread)
 		{
