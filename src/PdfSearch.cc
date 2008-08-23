@@ -5,27 +5,23 @@
 #include "wstr_util.h"
 #include <ctype.h>
 
-void PdfSearchEngine::SetText(wchar_t *text)
+void PdfSearch::SetText(wchar_t *text)
 {
     this->Clear();
     this->length = wcslen(text);
     this->text = wstr_dup(text);
-}
-
-// Fitz
-PdfSearchFitz::PdfSearchFitz(PdfEngine *engine) : PdfSearchEngine()
-{
     this->engine = engine;
     this->line = NULL;
     this->current = NULL;
     this->last = NONE;
 }
 
-PdfSearchFitz::~PdfSearchFitz()
+PdfSearch::~PdfSearch()
 {
+    Clear();
 }
 
-void PdfSearchFitz::Reset()
+void PdfSearch::Reset()
 {
     if (line)
         pdf_droptextline(line);
@@ -33,7 +29,7 @@ void PdfSearchFitz::Reset()
     last = NONE;
 }
 
-void PdfSearchFitz::ReverseLineList()
+void PdfSearch::ReverseLineList()
 {
     if (!line)
         return;
@@ -49,7 +45,7 @@ void PdfSearchFitz::ReverseLineList()
     line = prev;
 }
 
-void PdfSearchFitz::SetDirection(bool forward)
+void PdfSearch::SetDirection(bool forward)
 {
     if (forward == this->forward)
         return;
@@ -65,7 +61,7 @@ void PdfSearchFitz::SetDirection(bool forward)
 
 #define CHR(x) (WCHAR)(x)
 
-bool inline PdfSearchFitz::MatchChars(int c1, int c2)
+bool PdfSearch::MatchChars(int c1, int c2)
 {
     if (c1 == c2)
         return true;
@@ -76,7 +72,7 @@ bool inline PdfSearchFitz::MatchChars(int c1, int c2)
     return false;
 }
 
-bool inline PdfSearchFitz::MatchAtPosition(int n)
+bool PdfSearch::MatchAtPosition(int n)
 {
     WCHAR *p = (WCHAR *)text;
     result.left = current->text[n].bbox.x0;
@@ -103,9 +99,8 @@ bool inline PdfSearchFitz::MatchAtPosition(int n)
     return false;
 }
 
-// TODO:
-// Apply Boyer-Moore algorithm here
-bool PdfSearchFitz::FindTextInPage(int page)
+// TODO: use Boyer-Moore algorithm here (if it proves to be faster)
+bool PdfSearch::FindTextInPage(int page)
 {
     if (!text)
         return false;
@@ -149,7 +144,7 @@ Found:
     return true;
 }
 
-bool PdfSearchFitz::FindStartingAtPage(int pageNo)
+bool PdfSearch::FindStartingAtPage(int pageNo)
 {
     if (!text)
         return false;
@@ -192,14 +187,14 @@ bool PdfSearchFitz::FindStartingAtPage(int pageNo)
     return false;
 }
 
-bool PdfSearchFitz::FindFirst(int page, wchar_t *text)
+bool PdfSearch::FindFirst(int page, wchar_t *text)
 {
     SetText(text);
 
     return FindStartingAtPage(page);
 }
 
-bool PdfSearchFitz::FindNext()
+bool PdfSearch::FindNext()
 {
     if (FindTextInPage())
         return true;

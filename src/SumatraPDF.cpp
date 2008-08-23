@@ -1877,7 +1877,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 
     bool filePrintEnabled = false;
-    if (win->dm && win->dm->pdfEngine() && win->dm->pdfEngine()->printingAllowed())
+    if (win->dm && win->dm->pdfEngine && win->dm->pdfEngine->printingAllowed())
         filePrintEnabled = true;
     if (filePrintEnabled)
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
@@ -3978,7 +3978,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
     assert(dm);
     if (!dm) return;
 
-    PdfEngine *pdfEngine = dm->pdfEngine();
+    PdfEngine *pdfEngine = dm->pdfEngine;
     DOCINFO di = {0};
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = (LPCSTR)pdfEngine->fileName();
@@ -6483,7 +6483,7 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
     LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
 
-    if (!win->dm->pdfEngine()->printingAllowed()) {
+    if (!win->dm->pdfEngine->printingAllowed()) {
         MessageBox(win->hwndFrame, "Cannot print this file", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
         return;
     }

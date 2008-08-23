@@ -23,7 +23,7 @@ public:
     virtual void FindUpdateStatus(int count, int total) = 0;
 };
 
-class PdfSearchEngine
+class PdfSearch
 {
 protected:
     void *text;
@@ -35,27 +35,37 @@ public:
     PdfSearchResult result;
     PdfSearchTracker *tracker;
 
+private:
+    PdfEngine *engine;
+    pdf_textline *line;
+    pdf_textline *current;
+    long last;
+
+protected:
+    void ReverseLineList();
+    bool MatchChars(int c1, int c2);
+    bool MatchAtPosition(int n);
+    bool FindTextInPage(int page = 0);
+    bool FindStartingAtPage(int page);
+
 public:
-    PdfSearchEngine()
+    PdfSearch(PdfEngine *engine)
     {
         tracker = NULL;
         text = NULL;
         sensitive = false;
         forward = true;
         result.page = 1;
+        this->engine = engine;
     }
+    ~PdfSearch();
 
-    virtual ~PdfSearchEngine()
-    {
-        Clear();
-    }
-    
-    virtual void Reset() {}
-    virtual void SetText(wchar_t *text);
+    void Reset();
+    void SetText(wchar_t *text);
     void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
-    virtual void SetDirection(bool forward) { this->forward = forward; }
-    virtual bool FindFirst(int page, wchar_t *text) = 0;
-    virtual bool FindNext() = 0;
+    void SetDirection(bool forward);
+    bool FindFirst(int page, wchar_t *text);
+    bool FindNext();
 
 protected:
     void Clear()
@@ -76,30 +86,6 @@ protected:
             count = total - pageNo + 1;
         tracker->FindUpdateStatus(count, total);
     }
-};
-
-class PdfSearchFitz : public PdfSearchEngine
-{
-private:
-    PdfEngine *engine;
-    pdf_textline *line;
-    pdf_textline *current;
-    long last;
-public:
-    PdfSearchFitz(PdfEngine *engine);
-    virtual ~PdfSearchFitz();
-
-    virtual void Reset();
-    virtual void SetDirection(bool forward);
-    virtual bool FindFirst(int page, wchar_t *text);
-    virtual bool FindNext();
-
-protected:
-    void inline ReverseLineList();
-    bool inline MatchChars(int c1, int c2);
-    bool inline MatchAtPosition(int n);
-    bool FindTextInPage(int page = 0);
-    bool FindStartingAtPage(int page);
 };
 
 #endif // _PDF_SEARCH_H

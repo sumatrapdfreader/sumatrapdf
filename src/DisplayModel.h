@@ -136,18 +136,16 @@ public:
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA) {
-        if (!_pdfEngine) return NULL;
-        return _pdfEngine->renderBitmap(pageNo, zoomReal, rotation, abortCheckCbkA, abortCheckCbkDataA);
+        if (!pdfEngine) return NULL;
+        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, abortCheckCbkA, abortCheckCbkDataA);
     }
 
-    PdfEngine *pdfEngine() { return _pdfEngine; }
-
     /* number of pages in PDF document */
-    int  pageCount() const { return _pdfEngine->pageCount(); }
+    int  pageCount() const { return pdfEngine->pageCount(); }
     bool load(const char *fileName, int startPage, WindowInfo *win, bool tryrepair);
-    bool validPageNo(int pageNo) const { return _pdfEngine->validPageNo(pageNo); }
-    bool hasTocTree() { return _pdfEngine->hasTocTree(); }
-    PdfTocItem *getTocTree() { return _pdfEngine->getTocTree(); }
+    bool validPageNo(int pageNo) const { return pdfEngine->validPageNo(pageNo); }
+    bool hasTocTree() { return pdfEngine->hasTocTree(); }
+    PdfTocItem *getTocTree() { return pdfEngine->getTocTree(); }
 
     /* current rotation selected by user */
     int rotation(void) const { return _rotation; }
@@ -155,7 +153,7 @@ public:
     DisplayMode displayMode() const { return _displayMode; }
 
     void changeDisplayMode(DisplayMode displayMode);
-    const char *fileName(void) const { return _pdfEngine->fileName(); }
+    const char *fileName(void) const { return pdfEngine->fileName(); }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE
@@ -168,6 +166,8 @@ public:
     int startPage(void) const { return _startPage; }
 
     int currentPageNo(void) const;
+
+    PdfEngine *     pdfEngine;
 
     /* an arbitrary pointer that can be used by an app e.g. a multi-window GUI
        could link this to a data describing window displaying  this document */
@@ -252,7 +252,7 @@ public:
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
 
-    void            SetFindMatchCase(bool match) { _pdfSearchEngine->SetSensitive(match); }
+    void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
     PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, wchar_t *text = NULL);
     BOOL            bFoundText;
 
@@ -266,9 +266,6 @@ public:
 
     void            rebuildLinks();
     void            handleLink2(pdf_link* link);
-    PdfEngine *     pdfEngineFitz(void) { 
-        return _pdfEngine; 
-    }
 
 protected:
 
@@ -291,8 +288,7 @@ protected:
     void            showBusyCursor();
     void            showNormalCursor();
 
-    PdfEngine *     _pdfEngine;
-    PdfSearchEngine *_pdfSearchEngine;
+    PdfSearch *     _pdfSearch;
     DisplayMode     _displayMode; /* TODO: not used yet */
     /* In non-continuous mode is the first page from a PDF file that we're
        displaying.

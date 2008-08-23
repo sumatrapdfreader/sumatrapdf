@@ -181,8 +181,8 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
-    _pdfEngine = NULL;
-    _pdfSearchEngine = NULL;
+    pdfEngine = NULL;
+    _pdfSearch = NULL;
     _pagesInfo = NULL;
 
     _links = NULL;
@@ -191,23 +191,17 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
 
-    _pdfEngine = new PdfEngine();
-    _pdfSearchEngine = new PdfSearchFitz((PdfEngine *)_pdfEngine);
+    pdfEngine = new PdfEngine();
+    _pdfSearch = new PdfSearch(pdfEngine);
 
-// TODO: fix to not use poppler
-//    searchState.str = new GooString();
-//    searchState.strU = new UGooString();
 }
 
 DisplayModel::~DisplayModel()
 {
-// TODO: fix to not use poppler
-//    delete searchState.str;
-//    delete searchState.strU;
     free(_pagesInfo);    
     free(_links);
-    delete _pdfSearchEngine;
-    delete _pdfEngine;
+    delete _pdfSearch;
+    delete pdfEngine;
     RenderQueue_RemoveForDisplayModel(this);
     BitmapCache_FreeForDisplayModel(this);
     cancelRenderingForDisplayModel(this);
@@ -224,7 +218,7 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win, bool tryrepair)
 { 
     assert(fileName);
-    if (!_pdfEngine->load(fileName, win, tryrepair))
+    if (!pdfEngine->load(fileName, win, tryrepair))
           return false;
 
     if (validPageNo(startPage))
@@ -235,7 +229,7 @@ bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win, bo
     if (!buildPagesInfo())
         return false;
 
-    _pdfSearchEngine->tracker = (PdfSearchTracker *)win;
+    _pdfSearch->tracker = (PdfSearchTracker *)win;
     return true;
 }
 
@@ -250,10 +244,10 @@ bool DisplayModel::buildPagesInfo(void)
 
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        SizeD pageSize = pdfEngine()->pageSize(pageNo);
+        SizeD pageSize = pdfEngine->pageSize(pageNo);
         pageInfo->pageDx = pageSize.dx();
         pageInfo->pageDy = pageSize.dy();
-        pageInfo->rotation = pdfEngine()->pageRotation(pageNo);
+        pageInfo->rotation = pdfEngine->pageRotation(pageNo);
 
 // TODO: poppler removal. Do I need this at all?
 //        pageInfo->links = NULL;
@@ -1378,14 +1372,14 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, wchar_t *text)
     showBusyCursor();
 
     bool forward = (direction == FIND_FORWARD);
-    _pdfSearchEngine->SetDirection(forward);
+    _pdfSearch->SetDirection(forward);
     if (text != NULL)
-        bFoundText = _pdfSearchEngine->FindFirst(currentPageNo(), text);
+        bFoundText = _pdfSearch->FindFirst(currentPageNo(), text);
     else
-        bFoundText = _pdfSearchEngine->FindNext();
+        bFoundText = _pdfSearch->FindNext();
 
     if (bFoundText) {
-        PdfSearchResult &rect = _pdfSearchEngine->result;
+        PdfSearchResult &rect = _pdfSearch->result;
 
         goToPage(rect.page, 0);
         MapResultRectToScreen(&rect);
@@ -1426,7 +1420,7 @@ Error:
 
 bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
 {
-    pdf_page *page = pdfEngineFitz()->getPdfPage(pageNo);
+    pdf_page *page = pdfEngine->getPdfPage(pageNo);
     double zoom = zoomReal();
     int rot = rotation();
     fz_point p;
@@ -1440,7 +1434,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
     p.x = *x;
     p.y = *y;
 
-    fz_matrix ctm = pdfEngineFitz()->viewctm(page, zoom, rot);
+    fz_matrix ctm = pdfEngine->viewctm(page, zoom, rot);
 
     fz_point tp = fz_transformpoint(ctm, p);
 
@@ -1471,14 +1465,14 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
     if (*pageNo == POINT_OUT_OF_PAGE) 
         return false;
 
-    pdf_page *page = pdfEngineFitz()->getPdfPage(*pageNo);
+    pdf_page *page = pdfEngine->getPdfPage(*pageNo);
 
     const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
 
     p.x = *x - 0.5 - pageInfo->screenX + pageInfo->bitmapX;
     p.y = *y - 0.5 - pageInfo->screenY + pageInfo->bitmapY;
 
-    fz_matrix ctm = pdfEngineFitz()->viewctm(page, zoom, rot);
+    fz_matrix ctm = pdfEngine->viewctm(page, zoom, rot);
     fz_matrix invCtm = fz_invertmatrix(ctm);
 
     fz_point tp = fz_transformpoint(invCtm, p);
@@ -1497,7 +1491,6 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
 static void launch_url_a(const char *url)
 {
     SHELLEXECUTEINFOA sei;
-    BOOL              res;
 
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize  = sizeof(sei);
@@ -1523,7 +1516,7 @@ void DisplayModel::handleLink2(pdf_link* link)
 
     } else if (PDF_LGOTO == link->kind)
     {
-        int page = pdfEngineFitz()->findPageNo(link->dest);
+        int page = pdfEngine->findPageNo(link->dest);
         if (page > 0) 
             goToPage(page, 0);
     }
@@ -1545,13 +1538,13 @@ void DisplayModel::goToTocLink(void *linktmp)
 
 void DisplayModel::goToNamedDest(const char *name)
 {
-    fz_obj *dest = pdfEngineFitz()->getNamedDest(name);
+    fz_obj *dest = pdfEngine->getNamedDest(name);
     if (!dest)
     {
         goToPage(1, 0);
         return;
     }
-    int page = pdfEngineFitz()->findPageNo(dest);
+    int page = pdfEngine->findPageNo(dest);
     if (page > 0)
         goToPage(page, 0);
 }
@@ -1564,7 +1557,7 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
     int             xMin, xMax, yMin, yMax;
     pdf_textline *  line, *ln;
     fz_error *      error;
-    pdf_page *      page = pdfEngineFitz()->getPdfPage(pageNo);
+    pdf_page *      page = pdfEngine->getPdfPage(pageNo);
     fz_tree *       tree = page->tree;
     double          rot = 0;
     double          zoom = 1;
@@ -1615,7 +1608,7 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
 {
     PdfPageInfo *pageInfo = getPageInfo(rect->page);
-    pdf_page *page = pdfEngineFitz()->getPdfPage(rect->page);
+    pdf_page *page = pdfEngine->getPdfPage(rect->page);
     int rot = rotation();
     normalizeRotation (&rot);
 
@@ -1627,7 +1620,7 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
         vy += pageInfo->currDy;
 
     double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
-    fz_matrix ctm = pdfEngineFitz()->viewctm(page, zoomReal() * 0.01, rot);
+    fz_matrix ctm = pdfEngine->viewctm(page, zoomReal() * 0.01, rot);
     fz_point tp, p1 = {left, top}, p2 = {right, bottom};
 
     tp = fz_transformpoint(ctm, p1);
@@ -1678,12 +1671,12 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
 
 void DisplayModel::rebuildLinks()
 {
-    int count = _pdfEngine->linkCount();
+    int count = pdfEngine->linkCount();
     assert(count > _linksCount);
     free(_links);
     _links = (PdfLink*)malloc(count * sizeof(PdfLink));
     _linksCount = count;
-    _pdfEngine->fillPdfLinks(_links, _linksCount);
+    pdfEngine->fillPdfLinks(_links, _linksCount);
     recalcLinksCanvasPos();
 }
 
@@ -1692,7 +1685,7 @@ int DisplayModel::getLinkCount()
     /* TODO: let's hope it's not too expensive. An alternative would be
        to update link count only when it could have changed i.e. after
        loading a page */
-    int count = _pdfEngine->linkCount();
+    int count = pdfEngine->linkCount();
     if (count != _linksCount)
     {
         assert(count > _linksCount);
