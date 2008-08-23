@@ -178,8 +178,6 @@ static HBITMAP                      gBitmapCloseToc;
 static char *                       gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
 
-SerializableGlobalPrefs             gGlobalPrefs;
-
 #ifdef DOUBLE_BUFFER
 static bool                         gUseDoubleBuffer = true;
 #else
@@ -204,6 +202,38 @@ static bool                         gRestrictedUse = false;
 #ifdef BUILD_RM_VERSION
     static bool                         gDeleteFileOnClose = false; // Delete the file which was passed into the program by command line.
 #endif
+
+SerializableGlobalPrefs             gGlobalPrefs = {
+    TRUE, // BOOL m_showToolbar
+    FALSE, // BOOL m_pdfAssociateDontAskAgain
+    TRUE, // BOOL m_pdfAssociateShouldAssociate
+#ifdef BUILD_RM_VERSION
+    FALSE, // BOOL m_enableAutoUpdate
+#else
+    TRUE,
+#endif
+    ABOUT_BG_COLOR, // int  m_bgColor
+    FALSE, // BOOL m_escToExit
+    NULL, // char *m_inverseSearchCmdLine
+    NULL, // char *m_versionToSkip
+    NULL, // char *m_lastUpdateTime
+#ifdef BUILD_RM_VERSION
+    DM_CONTINUOUS, // DisplayMode m_defaultDisplayMode
+#else
+    DM_SINGLE_PAGE,
+#endif
+    DEFAULT_ZOOM, // double m_defaultZoom
+    WIN_STATE_NORMAL, // int  m_windowState
+    DEFAULT_WIN_POS, // int  m_windowPosX
+    DEFAULT_WIN_POS, // int  m_windowPosY
+    DEFAULT_WIN_POS, // int  m_windowDx
+    DEFAULT_WIN_POS, // int  m_windowDy
+    DEFAULT_WIN_POS, // int  m_tmpWindowPosX
+    DEFAULT_WIN_POS, // int  m_tmpWindowPosY
+    DEFAULT_WIN_POS, // int  m_tmpWindowDx
+    DEFAULT_WIN_POS, // int  m_tmpWindowDy
+    0 // int  m_pdfsOpened
+};
 
 typedef struct ToolbarButtonInfo {
     /* information provided at compile time */
@@ -778,38 +808,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 }
 
 static void SerializableGlobalPrefs_Init() {
-    gGlobalPrefs.m_showToolbar = TRUE;
-#ifdef BUILD_RM_VERSION
-    gGlobalPrefs.m_enableAutoUpdate = FALSE;
-#else
-    gGlobalPrefs.m_enableAutoUpdate = TRUE;
-#endif
-    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
-    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
-    gGlobalPrefs.m_escToExit = FALSE;
-    gGlobalPrefs.m_pdfsOpened = 0;
-    gGlobalPrefs.m_bgColor = ABOUT_BG_COLOR;
-
-#ifdef BUILD_RM_VERSION
-    gGlobalPrefs.m_defaultDisplayMode = DM_CONTINUOUS;
-#else
-    gGlobalPrefs.m_defaultDisplayMode = DM_SINGLE_PAGE;
-#endif
-
-    gGlobalPrefs.m_defaultZoom = DEFAULT_ZOOM;
-    gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-    gGlobalPrefs.m_windowPosX = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_windowPosY = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_windowDx = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_windowDy = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_tmpWindowPosX = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_tmpWindowPosY = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_tmpWindowDx = DEFAULT_WIN_POS;
-    gGlobalPrefs.m_tmpWindowDy = DEFAULT_WIN_POS;
-
     gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
-    gGlobalPrefs.m_versionToSkip = NULL;
-    gGlobalPrefs.m_lastUpdateTime = NULL;
 }
 
 static void SerializableGlobalPrefs_Deinit()

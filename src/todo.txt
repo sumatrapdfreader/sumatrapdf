@@ -5,7 +5,6 @@ Short term todo (before next 0.9.2 release):
 * src version of zlib
 * maybe: remember default bookmarks state
 * maybe: remember and restore size and position of the window
-* maybe: option to disable update check (some people still don't have broadband?)
 
 Things to do before 1.0 release:
 * test search more and make sure it works better (currently mupdf seems to have
