@@ -2532,3 +2532,4 @@ gl:Ignorar esta versión
 -
 Enable auto-update
 mk:Овозможи автоматско ажурирање
+ru:Включить автообновление
