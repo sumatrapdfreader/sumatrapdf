@@ -268,6 +268,19 @@ static void ftdropfont(fz_font *font)
 		fz_dropbuffer(pfont->fontdata);
 }
 
+/* List of fonts that don't render properly without hinting. This list comes
+   freetype */
+static const char* const force_hinting[] =
+{
+  "DFKaiSho-SB",	 /* dfkaisb.ttf */
+  "DFKai-SB",		 /* kaiu.ttf */
+  "HuaTianSongTi?",  /* htst3.ttf */
+  "MingLiU",		 /* mingliu.ttf & mingliu.ttc */
+  "PMingLiU",		 /* mingliu.ttc */
+  "MingLi43",		 /* mingli.ttf */
+  NULL
+};
+
 pdf_font *
 pdf_newfont(char *name)
 {
@@ -309,12 +322,14 @@ pdf_newfont(char *name)
 		font->charprocs[i] = nil;
 
 	font->hint = 0;
-	/* Force hinting for PMingLiU font because it's a popular
-	   Traditional Chinese font and it doesn't render properly
-	   without hinting */
-	if (strstr(name, "PMingLiU"))
+	for (i = 0; force_hinting[i]; i++)
 	{
-		font->hint = 1;
+		char *pos = strstr(name, force_hinting[i]);
+		if (pos && (pos == name || pos[-1] == '+'))
+		{
+			font->hint = 1;
+			break;
+		}
 	}
 	return font;
 }
