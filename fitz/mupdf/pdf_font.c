@@ -556,7 +556,30 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 				for (i = 0; i < 256; i++)
 				{
 					etable[i] = ftcharindex(face, i);
-					FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
+					if (etable[i])
+						FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
+					else
+						FT_Get_Glyph_Name(face, i, ebuffer[i], 32);
+				}
+
+				/* map encoding to gid via glyph names */
+				for (i = 0; i < 256; i++)
+				{
+					char *s = estrings[i];
+					if (!etable[i] && s)
+					{
+						int j;
+						/* TODO: this is horribly slow */
+						for (j = 0; j < 256; j++)
+						{
+							if (ebuffer[j][0] && !strcmp(s, ebuffer[j]))
+							{
+								etable[i] = j;
+								break;
+							}
+						}
+					}
+					/* TODO: should this really be here? */
 					if (ebuffer[i][0])
 						estrings[i] = ebuffer[i];
 				}
