@@ -316,7 +316,8 @@ int PdfEngine::findPageNo(fz_obj *dest)
     int n = fz_tonum(dest);
     int g = fz_togen(dest);
 
-    while (p++ < _pageCount) {
+    for (p = 0; p < _pageCount; p++)
+    {
         fz_obj *page = _pageTree->pref[p];
         int np = fz_tonum(page);
         int gp = fz_togen(page);
