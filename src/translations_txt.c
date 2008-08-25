@@ -292,7 +292,7 @@ const char *g_transTranslations[] = {
   "Konnte den Drucker nicht ansprechen.",
   "Nicht wieder fragen",
   "&Beenden\tCtrl-Q",
-  NULL,
+  "Automatisches Update aktivieren",
   "Bitte Passwort eingeben",
   "Bitte Passwort f\303\274r %s eingeben",
   "Fehler beim \303\226ffnen der Datei!",

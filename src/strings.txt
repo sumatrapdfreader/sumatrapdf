@@ -2531,5 +2531,6 @@ th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
 -
 Enable auto-update
+de:Automatisches Update aktivieren
 mk:Овозможи автоматско ажурирање
 ru:Включить автообновление
