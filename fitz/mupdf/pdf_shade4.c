@@ -9,6 +9,23 @@ struct pdf_tensorpatch_s {
     float color[4][FZ_MAXCOLORS];
 };
 
+static fz_error *
+growshademesh(fz_shade *shade, int amount)
+{
+	float *newmesh;
+	int newcap;
+
+	newcap = shade->meshcap + amount;
+	newmesh = fz_realloc(shade->mesh, sizeof(float) * newcap);
+	if (!newmesh)
+		return fz_outofmem;
+
+	shade->mesh = newmesh;
+	shade->meshcap = newcap;
+
+	return fz_okay;
+}
+
 fz_error *
 pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref)
 {
@@ -78,23 +95,23 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 
 	n = 2 + shade->cs->n;
 	j = 0;
-	for (z = 0; z < (buf->ep - buf->bp) / bytepervertex; ++z)
+	for (z = 0; z < (buf->wp - buf->bp) / bytepervertex; ++z)
 	{
 		flag = *buf->rp++;
 
 		t = *buf->rp++;
-		t = (t << 8) + *buf->rp++;
-		t = (t << 8) + *buf->rp++;
+		t = (t << 8) | *buf->rp++;
+		t = (t << 8) | *buf->rp++;
 		x = x0 + (t * (x1 - x0) / (pow(2, 24) - 1));
 
 		t = *buf->rp++;
-		t = (t << 8) + *buf->rp++;
-		t = (t << 8) + *buf->rp++;
+		t = (t << 8) | *buf->rp++;
+		t = (t << 8) | *buf->rp++;
 		y = y0 + (t * (y1 - y0) / (pow(2, 24) - 1));
 
 		for (i=0; i < ncomp; ++i) {
 			t = *buf->rp++;
-			t = (t << 8) + *buf->rp++;
+			t = (t << 8) | *buf->rp++;
 		}
 
 		if (flag == 0) {
@@ -109,7 +126,7 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 	shade->mesh = (float*) malloc(sizeof(float) * j);
 	/* 8, 24, 16 only */
 	j = 0;
-	for (z = 0; z < (buf->ep - buf->bp) / bytepervertex; ++z)
+	for (z = 0; z < (buf->wp - buf->bp) / bytepervertex; ++z)
 	{
 		flag = *buf->rp++;
 
@@ -292,17 +309,24 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 #define ADD_VERTEX(idx) \
 			{\
 				int z;\
+				if (shade->meshlen + 2 + shade->cs->n >= shade->meshcap) \
+				{ \
+					error = growshademesh(shade, shade->meshcap + 1024); \
+					if (error) \
+						goto cleanup; \
+				} \
 				shade->mesh[j++] = x[idx];\
 				shade->mesh[j++] = y[idx];\
-				for (z = 0; z < shade->cs->n; ++z) {\
+				for (z = 0; z < shade->cs->n; ++z) \
 					shade->mesh[j++] = c[z][idx];\
-				}\
+				shade->meshlen += 2 + shade->cs->n; \
 			}\
 
 	vpc = q;
 
-	shade->meshcap = 0;
-	shade->mesh = fz_malloc(sizeof(float) * 1024);
+	shade->meshlen = 0;
+	shade->meshcap = 1024;
+	shade->mesh = fz_malloc(sizeof(float) * shade->meshcap);
 	if (!shade->mesh) {
 		error = fz_outofmem;
 		goto cleanup;
@@ -321,7 +345,8 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		}
 	}
 
-	shade->meshlen = j / n / 3;
+	shade->meshlen /= n;
+	shade->meshlen /= 3;
 
 	fz_free(x);
 	fz_free(y);
@@ -468,23 +493,6 @@ split_stripe(pdf_tensorpatch *s0, pdf_tensorpatch *s1, const pdf_tensorpatch *p)
 	copycolor(s1->color[1], s0->color[2]);
 	copycolor(s1->color[2], p->color[2]);
 	copycolor(s1->color[3], p->color[3]);
-}
-
-static fz_error *
-growshademesh(fz_shade *shade, int amount)
-{
-	float *newmesh;
-	int newcap;
-
-	newcap = shade->meshcap + amount;
-	newmesh = fz_realloc(shade->mesh, sizeof(float) * newcap);
-	if (!newmesh)
-		return fz_outofmem;
-
-	shade->mesh = newmesh;
-	shade->meshcap = newcap;
-
-	return fz_okay;
 }
 
 static inline int setvertex(float *mesh, fz_point pt, float *color, int ptr, int ncomp)

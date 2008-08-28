@@ -408,7 +408,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 			return fz_rethrow(error, "cannot parse object %d", oid);;
 
 		if (roid != oid || rgen != gen)
-			return fz_throw("found object %d instead of %d", roid, oid);
+			return fz_throw("found object %d %d instead of %d %d", roid, rgen, oid, gen);
 
 		if (xref->crypt)
 			pdf_cryptobj(xref->crypt, x->obj, oid, gen);

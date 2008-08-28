@@ -296,6 +296,9 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		pdf_logimage("colorspace %s\n", cs->name);
 	}
 
+	if (!cs)
+		return fz_throw("colorspace missing for image");
+
 	/*
 	 * ImageMask, Mask and SoftMask
 	 */

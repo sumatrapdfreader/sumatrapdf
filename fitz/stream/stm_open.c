@@ -43,8 +43,11 @@ fz_dropstream(fz_stream *stm)
 	{
 		if (stm->error)
 		{
-			fz_warn("dropping unhandled ioerror");
+			fflush(stdout);
+			fz_printerror(stm->error);
 			fz_droperror(stm->error);
+			fflush(stderr);
+			fz_warn("dropped unhandled ioerror");
 		}
 
 		if (stm->mode == FZ_SWRITE)

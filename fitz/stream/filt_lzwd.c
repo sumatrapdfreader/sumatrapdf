@@ -176,14 +176,17 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 				return fz_iodone;
 			}
 
-			if (out->wp + 1 > out->ep)
-				return fz_ioneedout;
-
-			*out->wp++ = lzw->code;
+			eatbits(lzw, oldcodebits + MINBITS);
 
 			lzw->oldcode = lzw->code;
 
-			eatbits(lzw, oldcodebits + MINBITS);
+			if (out->wp + 1 > out->ep)
+			{
+				lzw->resume = 1;
+				return fz_ioneedout;
+			}
+
+			*out->wp++ = lzw->code;
 
 			continue;
 		}

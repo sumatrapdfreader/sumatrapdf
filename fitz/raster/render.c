@@ -410,6 +410,8 @@ DEBUG("image %dx%d %d+%d %s\n{\n", image->w, image->h, image->n, image->a, image
 
 	if (fz_isemptyrect(clip))
 		return fz_okay;
+        if (image->w == 0 || image->h == 0)
+                return fz_okay;
 
 	if (image->n + image->a == 0)
 		return fz_okay;
