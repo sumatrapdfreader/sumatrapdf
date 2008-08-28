@@ -838,7 +838,7 @@ const char *g_transTranslations[] = {
   "Printer niet gevonden",
   "Niet meer vragen",
   "&Afsluiten\tCtrl-Q",
-  NULL,
+  "Updates automatisch downloaden",
   "Wachtwoord invoeren",
   "Wachtwoord invoeren voor %s",
   "Fout bij laden PDF bestand.",

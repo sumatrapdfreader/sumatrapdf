@@ -2532,5 +2532,6 @@ gl:Ignorar esta versión
 -
 Enable auto-update
 de:Automatisches Update aktivieren
+nl:Updates automatisch downloaden
 mk:Овозможи автоматско ажурирање
 ru:Включить автообновление
