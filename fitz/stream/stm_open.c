@@ -88,7 +88,14 @@ openfile(fz_stream **stmp, char *path, int mode, int realmode)
 		return fz_rethrow(error, "cannot create buffer");
 	}
 
+#ifdef WIN32_UNICODE_HACK
+	/* On Windows some files cannot be opened when using ansi filenames
+	   so if this is defined, we assume that path is actually a win32
+	   unicode string */
+	stm->file = _wopen((const wchar_t *)path, realmode, 0666);
+#else
 	stm->file = open(path, realmode, 0666);
+#endif
 	if (stm->file < 0)
 	{
 		fz_dropbuffer(stm->buffer);
