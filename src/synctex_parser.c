@@ -67,14 +67,14 @@ Thu Jul 17 09:28:13 UTC 2008
 #       endif
 #   endif
 
-#include "stddef.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "limits.h"
-#include "time.h"
-#include "math.h"
-#include "errno.h"
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+#include <time.h>
+#include <math.h>
+#include <errno.h>
 
 #if defined(HAVE_LOCALE_H)
 #include <locale.h>
