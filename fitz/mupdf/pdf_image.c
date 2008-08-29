@@ -296,8 +296,12 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		pdf_logimage("colorspace %s\n", cs->name);
 	}
 
+#if 0
+	/* technically this might be correct, but it results in not rendering pages
+	   that could have been rendered, which is not good */
 	if (!cs)
 		return fz_throw("colorspace missing for image");
+#endif
 
 	/*
 	 * ImageMask, Mask and SoftMask
