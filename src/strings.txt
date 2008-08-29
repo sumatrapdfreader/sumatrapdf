@@ -66,6 +66,7 @@
 # Христо Бенев (http://hbcom.info) - Bulgarian/Български
 # Daniel Bohdan - Ukrainian	
 # Igor G. Olaizola - Basque
+# Mark Angelo F. Racca - Tagalog
 
 Lang: en English
 Lang: ar Arabic (الْعَرَبيّة)
@@ -113,6 +114,7 @@ Lang: tr Turkish (Türkçe)
 Lang: vn Vietnamese (Việt Nam)
 Lang: uk Ukrainian (Українська)
 Lang: eu Basque (Euskara)
+Lang: tl Tagalog (Tagalog)
 -
 &File
 bg:&Файл
@@ -160,6 +162,7 @@ bn:&ফাইল
 gl:&Arquivo
 uk:&Файл
 eu:&Fitxategia
+tl:Salansan
 -
 &Open\tCtrl-O
 bg:&Отвори\tCttl-O
@@ -207,6 +210,7 @@ bn:&খুলুন\tCtrl-O
 gl:A&brir\tCtrl-O
 uk:Відкрити\tCtrl-O
 eu:Ireki\tCtrl-O
+tl:Buksan\tCtrl-O
 -
 &Close\tCtrl-W
 bg:Затвори\tCtrl-W
@@ -254,6 +258,7 @@ bn:&বন্ধ করুন\tCtrl-W
 gl:&Pechar\tCtrl-W
 uk:&Закрити\tCtrl-W
 eu:&Itxi\tCtrl-W
+tl:Sarhan\tCtrl-W
 -
 &Save as
 bg:&Запиши като...
@@ -301,6 +306,7 @@ bn:&ভিন্ন নামে সংরক্ষণ করুন
 gl:&Salvar como...
 uk:Зб&ерегти як...
 eu:... bezala &Gorde
+tl:Iligtas Bilang...
 -
 &Print\tCtrl-P
 bg:От&печатай
@@ -348,6 +354,7 @@ bn:&প্রিন্ট করুন
 gl:&Imprimir
 uk:&Друкувати
 eu:&Inprimatu
+tl:Ilimbag\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 bg:Направи SumatraPDF четец на PDF по подразбиране
@@ -395,6 +402,7 @@ bn:SumatraPDF-কে ডিফল্ট রিডার হিসেবে ন�
 gl:Facer do SumatraPDF o leitor PDF por defecto
 uk:Зробити SumatraPDF типовим переглядачем PDF
 eu:Sumatra PDF erabili besterik ezean PDFak irakurtzeko
+tl:Gawin na SumatraPDF ang Likas na Gagamitin sa Pangbasa ng PDF
 -
 E&xit\tCtrl-Q
 bg:&Изход\tCtrl-Q
@@ -442,6 +450,7 @@ bn:&বেরিয়ে আসুন
 gl:Sai&r\tCtrl-Q
 uk:&Вийти\tCtrl-Q
 eu:&Irten\tCtrl-Q
+tl:Labasan\tCtrl-Q
 -
 &View
 bg:&Виж
@@ -489,6 +498,7 @@ bn:দেখুন
 gl:&Ver
 uk:Ви&гляд
 eu:I&kusi
+tl:Masdan
 -
 Single page
 bg:Единична страница
@@ -536,6 +546,8 @@ bn:একটি পাতা
 gl:Unha soa páxina
 uk:Одна сторінка
 eu:Orri bakarra
+tl: Isang Pahina
+
 -
 Facing
 bg:Две страници
@@ -583,6 +595,8 @@ bn:পাশাপাশি দুটি পাতা
 gl:Páxina dobre
 uk:Дві сторінки
 eu:Bi aldetatik
+tl:Harapan
+
 -
 Continuous
 bg:Непрекъснати
@@ -630,6 +644,7 @@ bn:চলমান...
 gl:Contínuo
 uk:Протяжний
 eu:Jarraian
+tl:Tuloy-tuloy
 -
 Continuous facing
 bg:Две непрекъснати
@@ -677,6 +692,7 @@ bn:চলমান এবং পাশাপাশি
 gl:Páxina dobre continua
 uk:Дві протяжні сторінки
 eu:Bi aldetatik jarraian
+tl:Tuloy-tuloy na Harapan
 -
 Rotate left
 bg:Завърти наляво
@@ -724,6 +740,7 @@ bn:বামে ঘুরিয়ে নিন
 gl:Xirar á esquerda
 uk:Повернути ліворуч
 eu:Ezkerrerantz biratu
+tl:Iikot Pakaliwa
 -
 Rotate right
 bg:Завърти надясно
@@ -771,6 +788,7 @@ bn:ডানে ঘুরিয়ে নিন
 gl:Xirar á dereita
 uk:Повернути праворуч
 eu:Eskubirantz biratu
+tl:Iikot Pakanan
 -
 Bookmarks
 br:Marcadores
@@ -806,6 +824,7 @@ uk:Закладки
 eu:Markagailuak
 gr:Σελιδοδείκτες
 hr:Knjiške oznake
+tl:Pananda ng Aklat
 -
 Fullscreen\tCtrl-L
 br:Tela cheia\tCtrl-L
@@ -847,6 +866,7 @@ uk:На цілий екран\tCtrl-L
 eu:Pantaila osoan\tCtrl-L
 gr:Πλήρης οθόνη\tCtrl-L
 hr:Cijeli zaslon\tCtrl-L
+tl:BuongTabing\tCtrl-L
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -894,6 +914,8 @@ bn:টুলবার দেখুন
 gl:Amosar barra de ferramentas
 uk:Показати пенал
 eu:Lanabes barra azaldu
+tl:Ipakita ang Bareta ng Kagamitan
+
 -
 &Go To
 bg:Отиди &на
@@ -941,6 +963,7 @@ bn:নিয়ে চলুন
 gl:Ir &a
 uk:&Перейти
 eu:...ra &Joan
+tl:Punta Sa...
 -
 Next Page
 bg:Следваща страница
@@ -988,6 +1011,7 @@ bn:পরের পাতায়
 gl:Páxina seguinte
 uk:Наступна сторінка
 eu:Hurrengo orria
+tl:Sunod na Pahina
 -
 Previous Page
 bg:Предишна страница
@@ -1035,6 +1059,7 @@ bn:আগের পাতায়
 gl:Páxina anterior
 uk:Попередня сторінка
 eu:Aurreko orria
+tl:Nakaraan na Pahina
 -
 First Page\tHome
 bg:Начална страница\tHome
@@ -1082,6 +1107,7 @@ bn:প্রথম পাতায়\tHome
 gl:Primeira páxina\tHome
 uk:Перша сторінка\tHome
 eu:Lehendabiziko orria \tHome
+tl:Unang Pahina\tTahanan
 -
 Last Page\tEnd
 bg:Последна страница\tEnd
@@ -1129,6 +1155,7 @@ bn: শেষ পাতায়\tEnd
 gl:Última páxina\tEnd
 uk:Остання сторінка\tEnd
 eu:Azken orria\tEnd
+tl:Huling Pahina\tDulo
 -
 Page...\tCtrl-G
 bg:Страница...\tCtrl-G
@@ -1176,6 +1203,7 @@ bn:…নং পাতায়
 gl:Páxina...\tCtrl-G
 uk:До сторінки...\tCtrl-G
 eu:...garren orria\tCtrl-G
+tl:Pahina...\tCtrl-G
 -
 &Zoom
 bg:&Мащаб
@@ -1223,6 +1251,8 @@ bn:পাতার আকার
 gl:&Zoom
 uk:&Збільшення
 eu:&Zoom-a
+tl:Zoom
+
 -
 Fit &Page\tCtrl-0
 bg:Оразмери страницата\tCtrl-0
@@ -1270,6 +1300,7 @@ bn:পুরো পাতা\tCtrl-0
 gl:&Páxina enteira\tCtrl-0
 uk:Припа&сувати сторінку\tCtrl-0
 eu:Orriaren neurria egokitu\tCtrl-O
+tl:Ihusto ang Pahina\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 bg:Едно към едно\tCtrl-1
@@ -1317,6 +1348,7 @@ bn:আসল আকারে\tCtrl-1
 gl:&Tamaño real\tCtrl-1
 uk:Справжній розмір\tCtrl-1
 eu:&Berezko neurria\tCtrl-1
+tl:Tunay na Laki\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 bg:Оразмери по ширина\tCtrl-2
@@ -1364,6 +1396,8 @@ bn:উইন্ডোর সমান\tCtrl-2
 gl:Axustar ao ancho\tCtrl-2
 uk:Припасувати до &ширини\tCtrl-2
 eu:Orriaren zabalera egokitu\tCtrl-2
+tl:Husto na Lapad\tCtrl-2
+
 -
 6400%
 -
@@ -1437,6 +1471,8 @@ bn:ভাষা
 gl:&Lingua
 uk:&Мова
 eu:&Hizkuntza
+tl:Wika
+
 -
 &Help
 bg:Помо&щ
@@ -1484,6 +1520,7 @@ bn:&সাহায্য
 gl:A&xuda
 uk:&Допомога
 eu:&Laguntza
+tl:Saklolo
 -
 &Visit website
 bg:Посетете сайта
@@ -1531,6 +1568,7 @@ bn:&আমাদের ওয়েবসাইট দেখুন
 gl:Visitar o &Website
 uk:Відкрити сайт
 eu:&Web orria bisitatu
+tl:Dalawin ang PookSapot
 -
 &Manual
 bg:Ръководство
@@ -1545,6 +1583,7 @@ sk:Príručka
 th:คู่มือการใช้งาน
 gl:Manual de Instruccións
 mk:Прирачник за употреба
+tl:Gabay
 -
 &About
 bg:Относно програмата...
@@ -1592,6 +1631,7 @@ bn:&আমাদের তথ্য
 gl:Arred&or de
 uk:П&ро програму...
 eu:Ho&Ni buruz...
+tl:Tungkol Sa...
 -
 Page:
 bg:Страница:
@@ -1618,6 +1658,7 @@ ru:Страница:
 ja:ページ:
 gl:Páxina:
 mk:Страница:
+tl:Pahina:
 -
 Find:
 br:Localizar:
@@ -1656,6 +1697,7 @@ uk:Знайти:
 eu:Bilatu:
 gr:Αναζήτηση:
 hr:Pronađi:
+tl:Hanapin:
 -
 Find Previous
 br:Localizar anterior
@@ -1693,6 +1735,7 @@ uk:Знайти попереднє
 eu:Aurrekoa bilatu
 gr:Αναζήτηση προηγούμενου
 hr:Pronađi prethodno
+tl:Hanapin ang Nakaraan
 -
 Find Next
 br:Localizar seguinte
@@ -1729,6 +1772,7 @@ uk:Знайти наступне
 eu:Hurrengoa bilatu
 gr:Αναζήτηση επόμενου
 hr:Pronađi sljedeće
+tl:Hanapin ang Susunod
 -
 Match case
 br:Diferenciar  minúsculas e Maiúsculas
@@ -1763,6 +1807,7 @@ uk:Розрізняти малу й велику літери
 eu:Hizki handiak edo txikiak bereizi
 gr:Αντιστοίχιση πεζών-κεφαλαίων
 hr:Razlikuj velika/mala slova
+tl:Ipantay ang Laki ng Titik
 -
 Open
 bg:Отвори
@@ -1810,6 +1855,7 @@ bn:খুলুন
 gl:Abrir
 uk:Відкрити
 eu:Ireki
+tl:Buksan
 -
 Zoom In
 bg:Увеличи
@@ -1857,6 +1903,7 @@ bn:বড় করে দেখুন
 gl:Achegar zoom
 uk:Збільшити
 eu:Zoom-a hurbildu
+tl:Palakihin
 -
 Zoom Out
 bg:Намали
@@ -1904,6 +1951,7 @@ bn:ছোট করে দেখুন
 gl:Afastar zoom
 uk:Зменшити
 eu:Zoom-a urruneratu
+tl:Paliitin
 -
 About SumatraPDF
 bg:Относно SumatraPDF
@@ -1951,6 +1999,7 @@ bn:”SumatraPDF” সম্পর্কিত তথ্য
 gl:Arredor do SumatraPDF
 uk:Про програму SumatraPDF
 eu:SumatraPDF-taz
+tl:Tungkol sa SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 bg:SumatraPDF е четеца по подразбиране на PDF файлове.
@@ -1997,6 +2046,7 @@ bn:”SumatraPDF” এখন আপনার ডিফল্ট পিডিএ
 gl:SumatraPDF é o lector PDF por defecto agora.
 uk:Тепер SumatraPDF є типовим переглядачем файлів PDF.
 eu:Sumatra orain berezko PDF irakur tresna bihurtu da.
+tl:SumatraPDF na ang Likas na Pangbasa sa mga Salansan ng PDF.
 -
 Failed to save a file
 bg:Грешка при записване на файла
@@ -2043,6 +2093,7 @@ bn:ফাইল সংরক্ষণে ব্যর্থ
 gl:Erro ao salvar o arquivo.
 uk:Не можна зберегти файл.
 eu:Fitxategia ezin izan da gorde
+tl:Nabigo na iligtas ang salansan
 -
 Error loading PDF file.
 bg:Грешка при зареждане на файла.
@@ -2089,6 +2140,7 @@ bn:ERROR: ফাইলটি লোড করা যাচ্ছে না
 gl:Erro ao abrir o arquivo PDF.
 uk:Помилка відкриття документу.
 eu:PDF fitxategia kargargatzerakoan errorea suertatu da
+tl:Nagkamali sa Paglulan ng Salansan na PDF
 -
 Could not open Printer
 bg:Принтера не е достъпен
@@ -2135,6 +2187,7 @@ bn:প্রিন্টার খুলছে না
 gl:Erro ao aceder á impressora.
 uk:Принтер недоступний.
 eu:Ezin da inprimagailua ireki
+tl:Hindi Mabuksan ang Panglimbag
 -
 Printing problem.
 bg:Проблем при печатане.
@@ -2181,6 +2234,7 @@ bn:প্রিন্ট করতে সমস্যা হয়েছে
 gl:Problema de impresión.
 uk:Помилка друкування.
 eu:Arazoak inprimatze lanetan
+tl:Suliranin sa Paglilimbag.
 -
 Contribute translation
 bg:Допринеси за превода
@@ -2223,6 +2277,7 @@ gl:Contribuir na traducción
 es:Contribuir en la traducción
 uk:Допоможіть перекласти
 eu:Lagun gaitzazu itzulpenekin
+tl:Mag-ambag sa Pagsasaling-wika
 -
 Set inverse search command-line
 bg:Активирай обратно търсене
@@ -2241,6 +2296,7 @@ mk:Активирај инверзно пребарување
 ja:逆検索コマンドラインの設定
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 gl:Establecer procura inversa
+tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 -
 Change language
 bg:Смени езика (Change language)
@@ -2260,8 +2316,9 @@ eu:Hizkuntza aldatu (Change language)
 mk:Смени јазик (Change language)
 hu:Nyelv kiválasztása (Change language)
 ja:言語の変更 (Change language)
-th:เปลี่ยนภาษา
-gl: Cambiar lingua (Change language))
+th:เปลี่ยนภาษา (Change language)
+gl: Cambiar lingua (Change language)
+tl:Ibahin ang Wika (Change language)
 -
 Enter password
 bg:Въведете парола
@@ -2282,6 +2339,7 @@ hu:Írja be a jelszót
 ja:パスワードの入力
 th:ป้อนรหัสผ่าน
 gl:Introduza o contrasinal
+tl:Ipasok ang Sikretong Salita
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2302,6 +2360,7 @@ hu:Írja be a(z) %s jelszavát
 ja:%s のパスワードを入力します
 th:ป้อนรหัสผ่านสำหรับ %s
 gl:Introduza contrasinal para %s
+tl:Ipasok ang Sikretong Salita para kay %s
 -
 Go to page
 bg:Към страница
@@ -2322,6 +2381,7 @@ hu:Ugrás adott oldalra
 ja:ページへ移動
 th:ไปที่หน้า
 gl:Ir a páxina
+tl:Pumunta sa Pahina
 -
 Associate with PDF files?
 bg:Асоцииране с PDF файлове?
@@ -2342,6 +2402,7 @@ hu:Társítsuk a PDF fájlokkal?
 ja:PDF ファイルと関連付けますか?
 th:เชื่อมกับไฟล์ PDF
 gl:Asociar con arquivos PDF?
+tl:Isanib sa Salansan na PDF?
 -
 Make SumatraPDF default application for PDF files?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
@@ -2362,6 +2423,7 @@ hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
 th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF
 gl:Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
+tl:Gawin SumatraPDF ang Likas na Pambasa ng mga Salansan na PDF?
 -
 Don't ask me again
 bg:Не питай отново
@@ -2383,6 +2445,7 @@ hu:Ne kérdezze meg többé
 ja:再び質問しない
 th:ไม่ต้องถามอีกครั้ง
 gl:Non preguntar de novo
+tl:Huwag na ako muling tanungin
 -
 &Check for new version
 bg:Проверка за нова версия
@@ -2404,6 +2467,7 @@ hu:Újabb &verzió keresése
 ja:新しいバージョンのチェック(&C)
 th:&ตรวจสำหรับสอบเวอร์ชั่นใหม่
 gl:&Comprobar nova versión
+tl:Siyasatin kung may bago na bersyon
 -
 No new version available.
 bg:Няма нова версия.
@@ -2425,6 +2489,7 @@ hu:Nincs újabb verzió.
 ja:新しいバージョンが利用できません。
 th:ไม่มีเวอร์ชั่นใหม่
 gl:Non hai nova versión dispoñible
+tl:Walang bago na bersyon na makukuha.
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2446,6 +2511,7 @@ hu:Önnél a legfrissebb verzió van telepítve.
 ja:最新のバージョンです。
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 gl:Ten vostede a última versión
+tl:Nasa iyo na ang bagong bersyon.
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2467,6 +2533,7 @@ hu:Jelenlegi verzió: %s
 ja:バージョン %s です
 th:ของคุณเป็นเวอร์ชั่น
 gl:A súa versión é %s
+tl:Ang bersyon na nsa iyo ay %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2488,6 +2555,7 @@ hu:Új verzió érhető el (%s). Kívánja letölteni?
 ja:新しいバージョン %s は利用可能です。新しいバージョンをダウンロードしますか?
 th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
 gl:A nova versión %s está dispoñible. ¿Desexa obtela?
+tl:May bagong bersyon %s. Kukuhanin ang bagong bersyon?
 -
 New version available.
 bg:Има нова версия.
@@ -2509,6 +2577,7 @@ hu:Új verzió érhető el.
 ja:新しいバージョンが利用可能です。
 th:เวอร์ชั่นใหม่ออกแล้ว
 gl:Nova versión dispoñible
+tl:May bagong bersyon.
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2529,9 +2598,11 @@ hu:Verzió kihagyása
 ja:このバージョンをスキップ
 th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
+tl:Laktawan ang bersyon na ito
 -
 Enable auto-update
 de:Automatisches Update aktivieren
 nl:Updates automatisch downloaden
 mk:Овозможи автоматско ажурирање
 ru:Включить автообновление
+tl:Paubrahin ang kusang pagtataas-petsa
