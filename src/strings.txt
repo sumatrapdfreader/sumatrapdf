@@ -1573,6 +1573,7 @@ tl:Dalawin ang PookSapot
 &Manual
 bg:Ръководство
 de:Anleitung
+fr:Manuel
 pl:Instrukcja obslugi
 ru:Руководство
 ja:マニュアル(&M)
@@ -2602,6 +2603,7 @@ tl:Laktawan ang bersyon na ito
 -
 Enable auto-update
 de:Automatisches Update aktivieren
+fr:Activer la mise-à-jour automatique
 nl:Updates automatisch downloaden
 mk:Овозможи автоматско ажурирање
 ru:Включить автообновление
