@@ -541,7 +541,7 @@ vn:Trang đơn
 lt:Vienas puslapis
 my:Satu Mukasurat
 fi:Yksittäinen sivu
-ca:Una única pàgina
+ca:Pàgina única
 si:Enostransko
 sr-rs:Приказ једне стране
 tw:單一頁面
@@ -1688,6 +1688,7 @@ gl:Páxina:
 mk:Страница:
 tl:Pahina:
 va:Pàgina:
+ca:Pàgina:
 -
 Find:
 br:Localizar:
@@ -2341,6 +2342,7 @@ th:ตั้งค่าตรงกันข้ามในการค้น�
 gl:Establecer procura inversa
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 va:Establir busca inversa
+ca:Cerca cap enrere
 -
 Change language
 bg:Смени езика (Change language)
@@ -2364,6 +2366,7 @@ th:เปลี่ยนภาษา (Change language)
 gl: Cambiar lingua (Change language)
 tl:Ibahin ang Wika (Change language)
 va:Canviar Idioma (Change language)
+ca:Canvia la llengua (Changue language)
 -
 Enter password
 bg:Въведете парола
@@ -2386,6 +2389,7 @@ th:ป้อนรหัสผ่าน
 gl:Introduza o contrasinal
 tl:Ipasok ang Sikretong Salita
 va:Posar contrasenya
+ca:Introduiu la contrasenya
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2408,6 +2412,7 @@ th:ป้อนรหัสผ่านสำหรับ %s
 gl:Introduza contrasinal para %s
 tl:Ipasok ang Sikretong Salita para kay %s
 va:Posar contrasenya per a %s
+ca:Introduiu la constrasenya per a %s
 -
 Go to page
 bg:Към страница
@@ -2430,6 +2435,7 @@ th:ไปที่หน้า
 gl:Ir a páxina
 tl:Pumunta sa Pahina
 va:Anar a la pàgina
+ca:Vés a la pàgina
 -
 Associate with PDF files?
 bg:Асоцииране с PDF файлове?
@@ -2452,6 +2458,7 @@ th:เชื่อมกับไฟล์ PDF
 gl:Asociar con arquivos PDF?
 tl:Isanib sa Salansan na PDF?
 va:¿Associar en archius PDF?
+ca:Voleu associar-lo amb els fitxers PDF?
 -
 Make SumatraPDF default application for PDF files?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
@@ -2474,6 +2481,7 @@ th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐา�
 gl:Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
 tl:Gawin SumatraPDF ang Likas na Pambasa ng mga Salansan na PDF?
 va:¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
+ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 -
 Don't ask me again
 bg:Не питай отново
@@ -2497,6 +2505,7 @@ th:ไม่ต้องถามอีกครั้ง
 gl:Non preguntar de novo
 tl:Huwag na ako muling tanungin
 va:No tornar a preguntar
+ca:No ho tornis a preguntar
 -
 &Check for new version
 bg:Проверка за нова версия
@@ -2520,6 +2529,7 @@ th:&ตรวจสำหรับสอบเวอร์ชั่นใหม�
 gl:&Comprobar nova versión
 tl:Siyasatin kung may bago na bersyon
 va:&Comprovar actualisacions
+ca:&Comprova si hi ha una versió nova
 -
 No new version available.
 bg:Няма нова версия.
@@ -2543,6 +2553,7 @@ th:ไม่มีเวอร์ชั่นใหม่
 gl:Non hai nova versión dispoñible
 tl:Walang bago na bersyon na makukuha.
 va:No hi han noves versions.
+ca:No hi ha cap versió nova.
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2566,6 +2577,7 @@ th:โปรแกรมของคุณเป็นเวอร์ชั่�
 gl:Ten vostede a última versión
 tl:Nasa iyo na ang bagong bersyon.
 va:Està es l'última versió.
+ca:Teniu la darrera versió.
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2589,6 +2601,7 @@ th:ของคุณเป็นเวอร์ชั่น
 gl:A súa versión é %s
 tl:Ang bersyon na nsa iyo ay %s
 va:Te la versió %s
+ca:Teniu la versió %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2612,6 +2625,7 @@ th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้อง
 gl:A nova versión %s está dispoñible. ¿Desexa obtela?
 tl:May bagong bersyon %s. Kukuhanin ang bagong bersyon?
 va:Una nova versió %s está disponible. ¿Vols descarregar-la?
+ca:Hi ha disponible una versió nova. Voleu descarregar-la?
 -
 New version available.
 bg:Има нова версия.
@@ -2635,6 +2649,7 @@ th:เวอร์ชั่นใหม่ออกแล้ว
 gl:Nova versión dispoñible
 tl:May bagong bersyon.
 va:Nova versió disponible.
+ca:Hi ha una versió nova.
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2657,6 +2672,7 @@ th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
 tl:Laktawan ang bersyon na ito
 va:Botar-se esta versió.
+ca:Omet aquesta versió
 -
 Enable auto-update
 de:Automatisches Update aktivieren
@@ -2666,4 +2682,4 @@ mk:Овозможи автоматско ажурирање
 ru:Включить автообновление
 tl:Paubrahin ang kusang pagtataas-petsa
 va:Activar l'actualisació automàtica
-
+ca:Actualitza automàticament
