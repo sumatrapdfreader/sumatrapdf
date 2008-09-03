@@ -2675,6 +2675,7 @@ va:Botar-se esta versió.
 ca:Omet aquesta versió
 -
 Enable auto-update
+bg:Включи автоматичното обновяване
 de:Automatisches Update aktivieren
 fr:Activer la mise-à-jour automatique
 nl:Updates automatisch downloaden
