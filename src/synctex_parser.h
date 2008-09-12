@@ -3,6 +3,9 @@ Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
+Version: 1.4
+See synctex_parser_readme.txt for more details
+
 License:
 --------
 Permission is hereby granted, free of charge, to any person
@@ -31,19 +34,6 @@ shall not be used in advertising or otherwise to promote the sale,
 use or other dealings in this Software without prior written  
 authorization from the copyright holder.
 
-Acknowledgments:
-----------------
-The author received useful remarks from the pdfTeX developers, especially Hahn The Thanh,
-and significant help from XeTeX developer Jonathan Kew
-
-Nota Bene:
-----------
-If you include or use a significant part of the synctex package into a software,
-I would appreciate to be listed as contributor and see "SyncTeX" highlighted.
-
-Version 1
-Thu Jul 17 09:28:13 UTC 2008
-
 */
 
 #ifndef __SYNCTEX_PARSER__
@@ -60,9 +50,9 @@ typedef struct _synctex_node * synctex_node_t;
 /* The main synctex object is a scanner
  * Its implementation is considered private.
  * The basic workflow is
- * - create a scanner with a file
- * - perform actions on that scanner
- * - free the scanner
+ * - create a "synctex scanner" with the contents of a file
+ * - perform actions on that scanner like display or edit queries
+ * - free the scanner when the work is done
  */
 typedef struct __synctex_scanner_t _synctex_scanner_t;
 typedef _synctex_scanner_t * synctex_scanner_t;
@@ -71,6 +61,11 @@ typedef _synctex_scanner_t * synctex_scanner_t;
  * output is the pdf/dvi/xdv file associated to the synctex file.
  * If necessary, it can be the tex file that originated the synctex file
  * but this might cause problems if the \jobname has a custom value.
+ * Despite this method can accept a relative path in practice,
+ * you should only pass a full path name.
+ * The path should be encoded by the underlying file system,
+ * assuming that it is based on 8 bits characters, including UTF8,
+ * not 16 bits nor 32 bits.
  * The last file extension is removed and replaced by the proper extension.
  * Then the private method _synctex_scanner_new_with_contents_of_file is called.
  * NULL is returned in case of an error or non existent file.
@@ -96,8 +91,8 @@ void synctex_scanner_free(synctex_scanner_t scanner);
  *     }
  *
  * For example, one can
- * - highlight each resulting node in the output,
- * - highlight all the rectangles enclosing those nodes
+ * - highlight each resulting node in the output, using synctex_node_h and synctex_node_v
+ * - highlight all the rectangles enclosing those nodes, using synctex_box_... functions
  * - highlight just the character using that information
  *
  * Given the page and the position in the page, synctex_edit_query returns the number of nodes
@@ -123,6 +118,9 @@ void synctex_scanner_free(synctex_scanner_t scanner);
  *
  * Both methods are conservative, in the sense that matching is weak.
  * If the exact column number is not found, there will be an answer with the whole line.
+ *
+ * Sumatra-PDF, Skim, iTeXMac2 and Texworks are examples of open source software that use this library.
+ * You can browse their code for a concrete implementation.
  */
 int synctex_display_query(synctex_scanner_t scanner,const char * name,int line,int column);
 int synctex_edit_query(synctex_scanner_t scanner,int page,float h,float v);
@@ -203,6 +201,7 @@ synctex_node_t synctex_sheet_content(synctex_scanner_t scanner,int page);
 /* These are the types of the synctex nodes */
 typedef enum {
 	synctex_node_type_error = 0,
+	synctex_node_type_input,
 	synctex_node_type_sheet,
 	synctex_node_type_vbox,
 	synctex_node_type_void_vbox,
@@ -211,7 +210,7 @@ typedef enum {
 	synctex_node_type_kern,
 	synctex_node_type_glue,
 	synctex_node_type_math,
-	synctex_node_type_input,
+	synctex_node_type_boundary,
 	synctex_node_number_of_types
 } synctex_node_type_t;
 
