@@ -75,7 +75,6 @@ SUMATRAPDF_C += AppPrefs.cc
 BASEUTILS_C += base_util.c
 BASEUTILS_C += benc_util.c
 SUMATRAPDF_C += DisplayModel.cc
-SUMATRAPDF_C += DisplayModelFitz.cc
 SUMATRAPDF_C += DisplayState.cc
 BASEUTILS_C += dstring.c
 BASEUTILS_C += file_util.c

@@ -80,6 +80,7 @@ FITZ_C_OBJ += $(FITZ_BASE_OBJ)
 FITZ_PROD += $(FITZ_BASE_OBJ) $(FITZ_BASE_LIB)
 FITZ_SUBDIR += base
 
+FITZ_STREAM_C += crypt_aes.c
 FITZ_STREAM_C += crypt_arc4.c
 FITZ_STREAM_C += crypt_crc32.c
 FITZ_STREAM_C += crypt_md5.c
@@ -103,6 +104,7 @@ FITZ_STREAM_C += filt_null.c
 
 FITZ_STREAM_C += filt_a85d.c
 FITZ_STREAM_C += filt_a85e.c
+FITZ_STREAM_C += filt_aes.c
 FITZ_STREAM_C += filt_ahxd.c
 FITZ_STREAM_C += filt_ahxe.c
 FITZ_STREAM_C += filt_dctd.c
