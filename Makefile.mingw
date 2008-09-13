@@ -4,6 +4,9 @@ SUMATRA_DIR = .
 -include $(SUMATRA_DIR)/config.mk
 
 FITZ_DIR ?= $(SUMATRA_DIR)/fitz
+# SUMATRA_PDFSYNC_GUI ?= yes
+SUMATRA_SYNCTEX ?= yes
+
 SUMATRA_CONFIG ?= $(BUILD)
 SUMATRA_INC_DIR ?= $(INC_DIR)
 SUMATRA_CPPFLAGS ?= $(CPPFLAGS)
@@ -55,6 +58,16 @@ SUMATRA_RCFLAGS += $(addprefix -I ,$(SUMATRA_INC_DIR))
 SUMATRA_CFLAGS += -Wall
 SUMATRA_CFLAGS += -g
 SUMATRA_CPPFLAGS += -D DISABLE_STRSAFE
+# SUMATRA_CPPFLAGS += -D BUILD_RM_VERSION
+
+ifeq ($(SUMATRA_PDFSYNC_GUI), yes)
+    SUMATRA_CPPFLAGS += -D _PDFSYNC_GUI_ENHANCEMENT
+endif
+
+ifeq ($(SUMATRA_SYNCTEX), yes)
+    SUMATRA_CPPFLAGS += -D SYNCTEX_FEATURE
+endif
+
 # Mingw API headers don't seem to take notice of MBCS
 # SUMATRA_CPPFLAGS += -D _MBCS
 SUMATRA_LDFLAGS += $(addprefix -L ,$(LIB_DIR))
@@ -96,6 +109,10 @@ SUMATRAPDF_C += LangMenuDef.cpp
 SUMATRAPDF_C += FileWatch.cc
 SUMATRAPDF_C += PdfSync.cpp
 DIALOGSIZER_C += dialogsizer_set.cpp
+
+ifeq ($(SUMATRA_SYNCTEX), yes)
+    SUMATRAPDF_C += synctex_parser.c
+endif
 
 BASEUTILS_OBJ = \
     $(addprefix $(SUMATRA_BUILD)/baseutils/,$(addsuffix .o,$(BASEUTILS_C)))

@@ -1,9 +1,12 @@
-# GNU Make file for Fitz, Mu PDF, pdftool and Apparition
+# GNU Make file for Fitz, Mu PDF, pdftool, pdfbench and Apparition
 
 FITZ_DIR ?= fitz
 -include $(FITZ_DIR)/config.mk
 
 # FITZ_BUILTIN_FONTS ?= yes
+FITZ_JASPER ?= yes
+FITZ_JBIG2DEC ?= yes
+FITZ_STATIC_CMAPS ?= yes
 
 FITZ_CONFIG ?= $(BUILD)
 FITZ_INC_DIR ?= $(INC_DIR)
@@ -33,8 +36,25 @@ FITZ_LDFLAGS += $(FITZ_LDFLAGS_$(FITZ_CONFIG))
 
 # TODO: precompiled headers?
 
+# Fitz library include directory
 FITZ_INCLUDE = $(FITZ_DIR)/include
 FITZ_INC_DIR += $(FITZ_INCLUDE)
+
+ifeq ($(FITZ_STATIC_CMAPS), yes)
+    FITZ_CPPFLAGS += -D USE_STATIC_CMAPS
+    # FITZ_CPPFLAGS += -D DUMP_STATIC_CMAPS
+    FITZ_INC_DIR += $(FITZ_DIR)/cmaps
+endif
+
+ifeq ($(FITZ_JASPER), yes)
+    FITZ_CPPFLAGS += -D HAVE_JASPER
+    FITZ_CPPFLAGS += -D JAS_CONFIGURE
+endif
+
+ifeq ($(FITZ_JBIG2DEC), yes)
+    FITZ_CPPFLAGS += -D HAVE_JBIG2DEC
+endif
+
 FITZ_CPPFLAGS += $(addprefix -I ,$(FITZ_INC_DIR))
 FITZ_RCFLAGS += $(addprefix -I ,$(FITZ_INC_DIR))
 FITZ_CFLAGS += -Wall
@@ -46,8 +66,6 @@ FITZ_CFLAGS += -std=gnu99
 FITZ_CPPFLAGS += -D HAVE_C99
 # x86 processor detection stuff appears to not be working for GCC under win32
 # FITZ_CPPFLAGS += -D ARCH_X86
-# FITZ_CPPFLAGS += -D HAVE_JASPER
-# FITZ_CPPFLAGS += -D HAVE_JBIG2DEC
 FITZ_LDFLAGS += $(addprefix -L ,$(LIB_DIR))
 
 FITZ_BUILD = $(FITZ_DIR)/build/$(FITZ_CONFIG)
@@ -55,7 +73,7 @@ $(warning Fitz build directory is $(FITZ_BUILD))
 
 # TODO: automatic header dependancies stuff
 
-fitz: pdftool apparition
+fitz: pdftool pdfbench apparition
 .PHONY: fitz
 
 FITZ_BASE_C += base_cpudep.c
@@ -119,10 +137,14 @@ FITZ_STREAM_C += filt_lzwe.c
 FITZ_STREAM_C += filt_predict.c
 FITZ_STREAM_C += filt_rld.c
 FITZ_STREAM_C += filt_rle.c
-# Jasper:
-# FITZ_STREAM_C += filt_jpxd.c
-# jbig2dec:
-# FITZ_STREAM_C += filt_jbig2d.c
+
+ifeq ($(FITZ_JASPER), yes)
+    FITZ_STREAM_C += filt_jpxd.c
+endif
+
+ifeq ($(FITZ_JBIG2DEC), yes)
+    FITZ_STREAM_C += filt_jbig2d.c
+endif
 
 FITZ_STREAM_OBJ = $(addprefix $(FITZ_BUILD)/stream/,$(FITZ_STREAM_C:.c=.o))
 FITZ_STREAM_LIB = $(FITZ_BUILD)/stream/libstream.a
@@ -262,11 +284,26 @@ ifeq ($(FITZ_BUILTIN_FONTS), yes)
 endif
 MUPDF_LDLIBS = -lfreetype -lz -ljpeg
 
+ifeq ($(FITZ_JASPER), yes)
+    MUPDF_LDLIBS += -ljasper
+endif
+
+ifeq ($(FITZ_JBIG2DEC), yes)
+    MUPDF_LDLIBS += -ljbig2dec
+endif
+
 PDFTOOL_OBJ = $(FITZ_BUILD)/apps/pdftool.o
 PDFTOOL_EXE = $(FITZ_BUILD)/apps/pdftool.exe
 LDLIBS_$(notdir $(PDFTOOL_EXE)) += $(MUPDF_LDLIBS) 
 FITZ_C_OBJ += $(PDFTOOL_OBJ)
 FITZ_PROD += $(PDFTOOL_OBJ) $(PDFTOOL_EXE)
+
+PDFBENCH_OBJ = $(FITZ_BUILD)/apps/pdfbench.o
+PDFBENCH_EXE = $(FITZ_BUILD)/apps/pdfbench.exe
+LDLIBS_$(notdir $(PDFBENCH_EXE)) += $(MUPDF_LDLIBS) 
+FITZ_C_OBJ += $(PDFBENCH_OBJ)
+FITZ_PROD += $(PDFBENCH_OBJ) $(PDFBENCH_EXE)
+
 FITZ_SUBDIR += apps
 
 APPARITION_LIB_C += pdfapp.c
@@ -288,8 +325,9 @@ FITZ_PROD += $(APPARITION_OBJ) $(APPARITION_EXE)
 FITZ_SUBDIR += apps/windows
 
 pdftool: $(PDFTOOL_EXE)
+pdfbench: $(PDFBENCH_EXE)
 apparition: $(APPARITION_EXE)
-.PHONY: pdftool apparition
+.PHONY: pdftool pdfbench apparition
 
 .SUFFIXES:
 
@@ -299,6 +337,8 @@ define FITZ_LD_CMD
         $(LDLIBS_$(notdir $@)) $(FITZ_LDLIBS)
 endef
 $(PDFTOOL_EXE): $(PDFTOOL_OBJ) $(MUPDF_LIBS)
+	$(FITZ_LD_CMD)
+$(PDFBENCH_EXE): $(PDFBENCH_OBJ) $(MUPDF_LIBS)
 	$(FITZ_LD_CMD)
 $(APPARITION_EXE): $(APPARITION_OBJ) $(APPARITION_LIB) $(MUPDF_LIBS)
 	$(FITZ_LD_CMD)
@@ -330,6 +370,7 @@ $(MUPDF_OBJ): $(FITZ_BUILD)/mupdf
 $(MUPDF_FONTS_OBJ): $(FITZ_BUILD)/fonts
 $(APPARITION_LIB_OBJ): $(FITZ_BUILD)/apps/common
 $(PDFTOOL_OBJ): $(FITZ_BUILD)/apps
+$(PDFBENCH_OBJ): $(FITZ_BUILD)/apps
 $(APPARITION_OBJ): $(FITZ_BUILD)/apps/windows
 
 $(MUPDF_FONTS_OBJ): $(FITZ_BUILD)/%.o: $(FITZ_DIR)/%
