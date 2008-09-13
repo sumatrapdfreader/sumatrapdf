@@ -286,6 +286,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     bool showWin);
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
+void WindowInfo_EnterFullscreen(WindowInfo *win);
 
 #define SEP_ITEM "-----"
 
@@ -1444,9 +1445,13 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!win)
         return;
 
-    gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-    if (IsZoomed(win->hwndFrame))
-        gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+    if (WS_SHOWING_PDF != win->state || !win->dm)
+    {
+        // update global windowState for next default launch when no pdf opened
+        gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+        if (IsZoomed(win->hwndFrame))
+            gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+    }
 
     if (WS_SHOWING_PDF != win->state)
         return;
@@ -1464,7 +1469,14 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
         return;
 
     DisplayState_Init(&ds);
-    ds.windowState = gGlobalPrefs.m_windowState;
+
+    // Update pdf-specific windowState
+    ds.windowState = WIN_STATE_NORMAL;
+    if (IsZoomed(win->hwndFrame))
+        ds.windowState = WIN_STATE_MAXIMIZED;
+    if (win->dm->_fullScreen)
+        ds.windowState = WIN_STATE_FULLSCREEN;
+
     if (!displayStateFromDisplayModel(&ds, win->dm))
         return;
 
@@ -2096,6 +2108,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
     int showType = SW_NORMAL;
+    bool showAsFullScreen = false;
     if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
         showType = SW_MAXIMIZE;
     if (state) {
@@ -2107,6 +2120,8 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
             showType = SW_NORMAL;
         else if (state->windowState == WIN_STATE_MAXIMIZED)
             showType = SW_MAXIMIZE;
+        else if (state->windowState == WIN_STATE_FULLSCREEN)
+            showAsFullScreen = true;
     }
 
     DisplayModel *previousmodel = win->dm;
@@ -2196,6 +2211,8 @@ Error:
     if (showWin) {
         ShowWindow(win->hwndFrame, showType);
         ShowWindow(win->hwndCanvas, SW_SHOW);
+        if (showAsFullScreen)
+            WindowInfo_EnterFullscreen(win);
     }
     UpdateWindow(win->hwndFrame);
     UpdateWindow(win->hwndCanvas);
