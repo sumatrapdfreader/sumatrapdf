@@ -138,8 +138,8 @@ namespace WinHelper
 	{
 	public:
 		CWindowDC( HWND hwnd )
-			: m_hdc( ::GetDC( hwnd ) )
-			, m_hwnd( hwnd )
+			: m_hwnd( hwnd )
+			, m_hdc( ::GetDC( hwnd ) )
 			{}
 
 		~CWindowDC() { ::ReleaseDC( m_hwnd, m_hdc ); }
@@ -154,8 +154,8 @@ namespace WinHelper
 	{
 	public:
 		CSaveDCObject( HDC hdc, HGDIOBJ h )
-			: m_hOld( SelectObject( hdc, h ) )
-			, m_hdc( hdc )
+			: m_hdc( hdc )
+			, m_hOld( SelectObject( hdc, h ) )
 			{}
 		~CSaveDCObject()
 		{

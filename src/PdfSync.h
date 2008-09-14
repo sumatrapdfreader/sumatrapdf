@@ -135,7 +135,7 @@ typedef struct {
 
 // a section of consecutive records declarations in the syncfile ('l' lines)
 typedef struct {
-    int srcfile;           // index of the `scoping' source file 
+    size_t srcfile;           // index of the `scoping' source file 
     fpos_t startpos;       // start position in the sync file
     UINT firstrecord;      // number of the first record in the section
 #ifndef NDEBUG

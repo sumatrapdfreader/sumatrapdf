@@ -157,7 +157,8 @@ $(addprefix $(SUMATRA_BUILD)/,$(SUMATRA_SUBDIR)):
 	mkdir -p $@
 
 # Update string translations if Python installed
-SUMATRA_XLATE_TARG = translations_txt.c LangMenuDef.cpp LangMenuDef.h
+SUMATRA_XLATE_TARG = \
+    translations_txt.c translations_txt.h LangMenuDef.cpp LangMenuDef.h
 SUMATRA_XLATE_DEP = strings.txt gen_c_from_strings_file.py extract_strings.py
 ifeq ($(shell test -e $(SUMATRA_PYTHON) && echo yes), yes)
     $(addprefix $(SUMATRA_DIR)/src/,$(SUMATRA_XLATE_TARG)): \

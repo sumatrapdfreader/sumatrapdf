@@ -158,8 +158,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 
     // add the initial tex file to the file stack
     src_file s;
-    s.first_recordsection = -1;
-    s.last_recordsection = -1;
+    s.first_recordsection = (size_t)-1;
+    s.last_recordsection = (size_t)-1;
     tstr_copy(s.filename, dimof(s.filename), jobname);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
@@ -167,10 +167,10 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 #endif
     srcfiles.push_back(s);
 
-    stack<int> incstack; // stack of included files
+    stack<size_t> incstack; // stack of included files
     incstack.push(srcfiles.size()-1);
 
-    UINT cur_sheetNumber = -1;
+    UINT cur_sheetNumber = (UINT)-1;
     int cur_plinesec = -1; // index of the p-line-section currently being created.
     int cur_recordsec=-1; // l-line-section currenlty created
     record_sections.clear();
@@ -208,8 +208,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 }
 
                 src_file s;
-                s.first_recordsection = -1;
-                s.last_recordsection = -1;
+                s.first_recordsection = (size_t)-1;
+                s.last_recordsection = (size_t)-1;
                 tstr_copyn(s.filename, dimof(s.filename), pfilename, len);
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (tstr_find_char(pfilename, '.') == NULL) {
@@ -226,7 +226,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 
         case ')':
 #ifndef NDEBUG
-            if (incstack.top()!=-1)
+            if (incstack.top() != (size_t)-1)
                 this->srcfiles[incstack.top()].closeline_pos = linepos;
 #endif
             incstack.pop();
@@ -249,8 +249,8 @@ int Pdfsync::scan_and_build_index(FILE *fp)
 #ifndef NDEBUG
                     record_sections[cur_recordsec].highestrecord = recordNumber;
 #endif
-                    assert(incstack.top()!=-1);
-                    if (this->srcfiles[incstack.top()].first_recordsection == -1)
+                    assert(incstack.top() != (size_t)-1);
+                    if (this->srcfiles[incstack.top()].first_recordsection == (size_t)-1)
                         this->srcfiles[incstack.top()].first_recordsection = cur_recordsec;
                     
                     this->srcfiles[incstack.top()].last_recordsection = cur_recordsec;
@@ -274,7 +274,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                     pline_sections.push_back(sec);
                     cur_plinesec = pline_sections.size()-1;
 
-                    assert(cur_sheetNumber!=-1);
+                    assert(cur_sheetNumber != (UINT)-1);
                     pdfsheet_index[cur_sheetNumber] = cur_plinesec;
                 }
             }
@@ -286,7 +286,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 if (cur_sheetNumber>=maxsheet) {
                     pdfsheet_index.resize(cur_sheetNumber+1);
                     for(size_t s=maxsheet;s<=cur_sheetNumber;s++)
-                        pdfsheet_index[s] = -1;
+                        pdfsheet_index[s] = (size_t)-1;
                 }
                 break;
             }
@@ -330,15 +330,15 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // distance to the closest pdf location (in the range <PDFSYNC_EPSILON_SQUARE)
-    UINT closest_xydist=-1, 
-         closest_xydist_record=-1;
+    UINT closest_xydist = (UINT)-1,
+        closest_xydist_record = (UINT)-1;
 
     // If no record is found within a distance^2 of PDFSYNC_EPSILON_SQUARE
     // (closest_xydist_record==-1) then we pick up the record that is closest 
     // vertically to the hit-point.
-    UINT closest_ydist=-1, // vertical distance between the hit point and the vertically-closest record
-        closest_xdist=-1, // horizontal distance between the hit point and the vertically-closest record
-        closest_ydist_record=-1; // vertically-closest record
+    UINT closest_ydist = (UINT)-1, // vertical distance between the hit point and the vertically-closest record
+        closest_xdist = (UINT)-1, // horizontal distance between the hit point and the vertically-closest record
+        closest_ydist_record = (UINT)-1; // vertically-closest record
 
     // find the entry in the index corresponding to this page
     if (sheet>=pdfsheet_index.size()) {
@@ -372,8 +372,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
                 closest_xydist_record = recordNumber;
                 closest_xydist = dist;
             }
-            else if ((closest_xydist == -1 )&& ( dy < PDFSYNC_EPSILON_Y ) && (dy < closest_ydist || (dy==closest_ydist && dx<closest_xdist))) {
-                closest_ydist_record = recordNumber;
+            else if ((closest_xydist == (UINT)-1) && ( dy < PDFSYNC_EPSILON_Y ) && (dy < closest_ydist || (dy==closest_ydist && dx<closest_xdist))) {                closest_ydist_record = recordNumber;
                 closest_ydist = dy;
                 closest_xdist = dx;
             }
@@ -382,8 +381,8 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
         assert(linepos == this->pline_sections[cur_psection].endpos);
     }
 
-    int selected_record = closest_xydist_record!=-1 ? closest_xydist_record : closest_ydist_record;
-    if (selected_record==-1) {
+    UINT selected_record = closest_xydist_record!=(UINT)-1 ? closest_xydist_record : closest_ydist_record;
+    if (selected_record == (UINT)-1) {
         fclose(fp);
         return PDFSYNCERR_NO_SYNC_AT_LOCATION; // no record was found close enough to the hit point
     }
@@ -433,26 +432,26 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
 UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
 {
     // find the source file entry
-    size_t isrc=-1;
+    size_t isrc = (size_t)-1;
     for(size_t i=0; i<this->srcfiles.size();i++) {
         if (tstr_ieq(srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }
     }
-    if (isrc==-1)
+    if (isrc == (size_t)-1)
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
     src_file srcfile=this->srcfiles[isrc];
 
-    if (srcfile.first_recordsection == -1)
+    if (srcfile.first_recordsection == (size_t)-1)
         return PDFSYNCERR_NORECORD_IN_SOURCEFILE; // there is not any record declaration for that particular source file
 
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
-    UINT min_distance = -1, // distance to the closest record
-         closestrec = -1, // closest record
-         closestrecline = -1; // closest record-line
+    UINT min_distance = (UINT)-1, // distance to the closest record
+         closestrec = (UINT)-1, // closest record
+         closestrecline = (UINT)-1; // closest record-line
     fpos_t closestrecline_filepos = -1; // position of the closest record-line in the file
     int c;
     for(size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
@@ -481,7 +480,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
 #endif
         }
     }
-    if (closestrec ==-1)
+    if (closestrec == (UINT)-1)
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
 
 read_linerecords:
@@ -522,7 +521,7 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     for(size_t irecord=0;irecord<found_records.size();irecord++) {
         size_t record = found_records[irecord];
         for(size_t sheet=0;sheet<this->pdfsheet_index.size();sheet++) {
-            if (this->pdfsheet_index[sheet]!=-1) {
+            if (this->pdfsheet_index[sheet] != (size_t)-1) {
                 fsetpos(fp, &this->pline_sections[this->pdfsheet_index[sheet]].startpos);
                 int c;
                 while ((c = fgetc(fp))=='p' && !feof(fp)) {
@@ -534,8 +533,8 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
                     fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
                     if (recordNumber == record) {
                         *page = sheet;
-                        *x = SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
-                        *y = SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
+                        *x = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
+                        *y = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
                         DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n", srcfilename, line, record, sheet, *x, *y);
                         fclose(fp);
                         return PDFSYNCERR_SUCCESS;

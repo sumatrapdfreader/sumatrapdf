@@ -29,7 +29,7 @@ public:
         // create the event used to abort the "watching" thread
         hEvtStopWatching = CreateEvent(NULL,TRUE,FALSE,NULL);
         pCallback = NULL;
-        callbackparam = NULL;
+        callbackparam = 0;
         szFilepath[0]='0';
     }
 

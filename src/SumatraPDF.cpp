@@ -284,6 +284,7 @@ static void OnMenuFindMatchCase(WindowInfo *win);
 static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
     DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
     bool showWin);
+static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize);
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 void WindowInfo_EnterFullscreen(WindowInfo *win);
@@ -879,7 +880,6 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     if (!dm) goto Exit;
 
     LockCache();
-    PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
     int rotation = dm->rotation();
     normalizeRotation(&rotation);
     double zoomLevel = dm->zoomReal();
@@ -1353,7 +1353,7 @@ double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0,
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
-    for (int i=0; i < dimof(gItemZoom); i++) {
+    for (size_t i=0; i < dimof(gItemZoom); i++) {
         if (virtualZoom == gItemZoom[i])
             return gItemId[i];
     }
@@ -1362,7 +1362,7 @@ static UINT MenuIdFromVirtualZoom(double virtualZoom)
 
 static double ZoomMenuItemToZoom(UINT menuItemId)
 {
-    for (int i=0; i<dimof(gItemId); i++) {
+    for (size_t i=0; i<dimof(gItemId); i++) {
         if (menuItemId == gItemId[i]) {
             return gItemZoom[i];
         }
@@ -1375,7 +1375,7 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId)
 {
     BOOL    found = FALSE;
 
-    for (int i=0; i<dimof(gItemId); i++) {
+    for (size_t i=0; i<dimof(gItemId); i++) {
         UINT checkState = MF_BYCOMMAND | MF_UNCHECKED;
         if (menuItemId == gItemId[i]) {
             assert(!found);
@@ -1544,6 +1544,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     RefreshPdfDocument(fname, win, &ds, true, autorefresh, true);
 }
 
+#ifndef THREAD_BASED_FILEWATCH
 static void WindowInfo_RefreshUpdatedFiles(bool autorefresh) {
     WindowInfo* curr = gWindowList;
     while (curr) {
@@ -1552,6 +1553,7 @@ static void WindowInfo_RefreshUpdatedFiles(bool autorefresh) {
         curr = curr->next;
     }
 }
+#endif
 
 static bool WindowInfo_Dib_Init(WindowInfo *win) {
     assert(NULL == win->dibInfo);
@@ -1795,7 +1797,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     const LPARAM enable = (LPARAM)MAKELONG(1,0);
     const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
-    for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+    for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         int cmdId = gToolbarButtons[i].cmdId;
         if (TbIsSepId(cmdId))
             continue;
@@ -1918,7 +1920,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateFullscreen(win);
     MenuUpdateEnableAutoUpdateStateForWindow(win);
 
-    for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
+    for (size_t i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
         if (WS_SHOWING_PDF == win->state)
             EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_ENABLED);
@@ -3008,8 +3010,8 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         int renderedBmpDx = renderedBmp->dx();
         int renderedBmpDy = renderedBmp->dy();
-        int currPageDx = pageInfo->currDx;
-        int currPageDy = pageInfo->currDy;
+        int currPageDx = (int)pageInfo->currDx;
+        int currPageDy = (int)pageInfo->currDy;
         HBITMAP hbmp = renderedBmp->createDIBitmap(hdc);
         UnlockCache();
         if (!hbmp)
@@ -3521,11 +3523,11 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     win->dm->cvtScreenToUser(&pageNo, &dblx, &dbly);
     if (pageNo == POINT_OUT_OF_PAGE) 
         return;
-    x = dblx; y = dbly;
+    x = (UINT)dblx; y = (UINT)dbly;
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
     char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];    
-    win->pdfsync->convert_coord_to_internal(&x, &y, pageInfo->pageDy, BottomLeft);
+    win->pdfsync->convert_coord_to_internal(&x, &y, (UINT)pageInfo->pageDy, BottomLeft);
     UINT line, col;
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilename,dimof(srcfilename),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
@@ -3542,7 +3544,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         STARTUPINFO si = {0};
         PROCESS_INFORMATION pi = {0};
         si.cb = sizeof(si);
-        if (CreateProcess( NULL, cmdline, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi)) {
+        if (CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         } else {
@@ -4827,7 +4829,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
         if (pi) {
             WindowInfo_HideMessage(win);
 
-            win->pdfsync->convert_coord_from_internal(&x, &y, pi->pageDy, BottomLeft);
+            win->pdfsync->convert_coord_from_internal(&x, &y, (int)pi->pageDy, BottomLeft);
             win->fwdsearchmarkLoc.set(x,y);
             win->fwdsearchmarkPage = page;
             win->showForwardSearchMark = true;
@@ -5138,8 +5140,8 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
     TBBUTTONINFOW buttonInfo;
     HWND hwnd = win->hwndToolbar;
     LRESULT res;
-    for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        WPARAM buttonId = i;
+    for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+        WPARAM buttonId = (WPARAM)i;
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
             continue;
@@ -5475,7 +5477,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     ShowWindow(hwndToolbar, SW_SHOW);
     HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
-    for (int i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+    for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         if (!TbIsSepId(gToolbarButtons[i].bitmapResourceId)) {
             HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(gToolbarButtons[i].bitmapResourceId));
             if (!himl) {
@@ -6636,7 +6638,7 @@ static void EnumeratePrinters()
         return;
     assert(fOk);
     if (!fOk) return;
-    printf("Printers: %d\n", printersCount);
+    printf("Printers: %ld\n", printersCount);
     for (DWORD i=0; i < printersCount; i++) {
         const char *printerName = info5Arr[i].pPrinterName;
         const char *printerPort = info5Arr[i].pPortName;
@@ -6748,7 +6750,7 @@ void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
     if (hddedata == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     }
-    if (DdeClientTransaction((BYTE*)hddedata, -1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0) == 0) {
+    if (DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0) == 0) {
         DBG_OUT("DDE transaction failed %u.", DdeGetLastError(inst));
     }
 exit:
@@ -6972,7 +6974,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     CreatePageRenderThread();
     /* remaining arguments are names of PDF files */
+#ifdef BUILD_RM_VERSION
     StrList *currArgFileNames = currArg;
+#endif
     if (NULL != gBenchFileName) {
             win = LoadPdf(gBenchFileName);
             if (win)

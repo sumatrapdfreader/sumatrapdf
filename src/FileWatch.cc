@@ -111,9 +111,9 @@ void FileWatcher::Init(LPCTSTR filefullpath)
     pszFilename = FilePath_GetBaseName(szFilepath);
     GetDirectory(filefullpath, szDir, dimof(szDir));
     
-    int res = _tstat(filefullpath, &timestamp);
+    _tstat(filefullpath, &timestamp);
 
-    callbackparam = NULL;
+    callbackparam = 0;
     pCallback = NULL;
 
     hDir = CreateFile(
@@ -166,7 +166,6 @@ void WINAPI FileWatcher::WatchingThread( void *param )
     // Main loop
     HANDLE hp[2] = { fw->hEvtStopWatching, fw->overl.hEvent};
     while (1) {
-        DWORD dwRet = 0;
         DWORD dwObj = WaitForMultipleObjects(dimof(hp), hp, FALSE, INFINITE ) - WAIT_OBJECT_0;
         assert( dwObj >= 0 && dwObj <= dimof(hp) );
         if (dwObj == 0) { // the user asked to quit the program

@@ -142,7 +142,7 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
         /* TODO: should be offset of top page */
         PdfPageInfo *pageInfo = dm->getPageInfo(ds->pageNo);
         if (pageInfo)                
-            ds->scrollY = dm->areaOffset.y + PADDING_PAGE_BORDER_TOP - pageInfo->currPosY;
+            ds->scrollY = (int)(dm->areaOffset.y + PADDING_PAGE_BORDER_TOP - pageInfo->currPosY);
         else
             ds->scrollY = 0;
 
@@ -672,7 +672,7 @@ int DisplayModel::getPageNoByPoint (double x, double y)
         pageOnScreen.dx = pageInfo->bitmapDx;
         pageOnScreen.dy = pageInfo->bitmapDy;
 
-        if (RectI_Inside (&pageOnScreen, x, y))
+        if (RectI_Inside (&pageOnScreen, (int)x, (int)y))
             return pageNo;
     }
     return POINT_OUT_OF_PAGE;
@@ -1564,12 +1564,12 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
 
     error = pdf_loadtextfromtree(&line, tree, fz_identity());
     if (error)
-        return NULL;
+        return 0;
 
-    xMin = region->x;
-    xMax = xMin + region->dx;
-    yMin = region->y;
-    yMax = yMin + region->dy;
+    xMin = (int)region->x;
+    xMax = xMin + (int)region->dx;
+    yMin = (int)region->y;
+    yMax = yMin + (int)region->dy;
 
     int p = 0;
     for (ln = line; ln; ln = ln->next) {
