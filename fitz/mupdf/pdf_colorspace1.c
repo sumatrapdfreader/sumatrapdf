@@ -1,5 +1,5 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
 
 #define noUSECAL
 
@@ -201,7 +201,7 @@ static fz_colorspace kdevicecmyk =
 
 static struct cielab kdevicelab =
 {
-	{ -1, "Lab", 3, fz_stdconvpixmap, fz_stdconvcolor, labtoxyz, xyztolab, nil },
+	{ -1, "Lab", 3, pdf_convpixmap, fz_stdconvcolor, labtoxyz, xyztolab, nil },
 	{ 1.0000, 1.0000, 1.0000 },
 	{ 0.0000, 0.0000, 0.0000 },
 	{ -100, 100, -100, 100 },

@@ -432,7 +432,7 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 						unsigned char *argb, int over)
 {
 	unsigned char *dst;
-	int cov;
+	unsigned char cov;
 
 	dst = pix->samples + ( (y - pix->y) * pix->w + (x - pix->x) ) * pix->n;
 	cov = 0;

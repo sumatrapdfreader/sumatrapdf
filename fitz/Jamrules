@@ -1,190 +1,156 @@
-# -------------------------------------------------------------------------
 #
-# Jamrules -- the build flags for Fitz and GhostPDF
-# This file is sourced by Jamfile when making
-# Put all configuration stuff here
+# Jamrules -- build configurations
+#
+# JBIG2 and JPEG2000 support is optional. To compile with this,
+# add the following to the jam command line:
+#
+#   -sHAVE_JBIG2DEC=true
+#   -sHAVE_JASPER=true
+#
+# Windows builds assume that third party headers and
+# libraries are in c:/local/include and c:/local/lib.
+#
+# MacOS X builds assume that you have third party libraries installed
+# from MacPorts in /opt/local.
+#
+# Linux builds assume that you have freetype-config to find the paths
+# to the freetype library.
+#
+# To override these defaults, please supply the paths on the jam
+# command line with -sTHIRDPARTINC and -sTHIRDPARTYLIB.
+#
+#   -sTHIRDPARTYINC="-Ic:/wherever/include"
+#   -sTHIRDPARTYLIB="-Lc:/wherever/lib"
 #
 
-OPTIM = ; # disable jam's built-in optimization flags 
+# Workaround for different OS/OSPLAT settings on FTJam and plain jam
+if $(JAM_TOOLSET) = MINGW   { OS = MINGW ; }
+if $(JAM_TOOLSET) = VISUALC { OS = NT ; }
+
+# Place all build products here:
+ALL_LOCATE_TARGET ?= [ FDirName $(TOP) build $(OS)-$(OSPLAT) ] ;
+
+# Add compile time defines for JBIG2 and JPEG2000 support.
+if $(HAVE_JBIG2DEC) { DEFINES += HAVE_JBIG2DEC ; }
+if $(HAVE_JASPER)   { DEFINES += HAVE_JASPER ; }
+
+# NEED_STRLCPY = true ;
+# NEED_STRSEP = true ;
+# NEED_GETOPT = true ;
+
+if $(OS) = LINUX
+{
+    Echo Building for LINUX ;
+
+    THIRDPARTYINC ?= "`freetype-config --cflags`" ;
+    THIRDPARTYLIB ?= "`freetype-config --libs`" -L/usr/X11R6/lib ;
+
+    NEED_STRLCPY = true ;
+    NEED_STRSEP = true ;
+    NEED_GETOPT = true ;
+
+    BUILD_X11APP = true ;
+
+    CCFLAGS = -Wall -std=c99 $(THIRDPARTYINC) ;
+    LINKFLAGS = $(THIRDPARTYLIB) ;
+    LINKLIBS = -lfreetype -ljpeg -lz -lm ;
+    APPLINKLIBS = -lX11 -lXext ;
+
+    if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
+    if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
+}
+
+if $(OS) = MACOSX
+{
+    Echo Building for MACOSX ;
+
+    BUILD_X11APP = true ;
+
+    THIRDPARTYINC ?= -I/opt/local/include -I/opt/local/include/freetype2 -I/usr/X11R6/include ;
+    THIRDPARTYLIB ?= -L/opt/local/lib -L/usr/X11R6/lib ;
+
+    CCFLAGS = -Wall -std=c99 $(THIRDPARTYINC) ;
+    LINKFLAGS = $(THIRDPARTYLIB) ;
+    LINKLIBS = -lfreetype -ljpeg -lz -lm ;
+    APPLINKLIBS = -lX11 -lXext ;
+
+    if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
+    if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
+}
+
 if $(OS) = MINGW
 {
-	FREETYPECC ?= -Ic:/msys/1.0/local/include -Ic:/msys/1.0/local/include/freetype2 ;
-	FREETYPELD ?= -Lc:/msys/1.0/local/lib -lfreetype ;
+    Echo Building for MINGW ;
+
+    NOARSCAN = true ;
+
+    BUILD_WINAPP = true ;
+    BUILD_PLUGIN = true ;
+
+    THIRDPARTYINC ?= -Ic:/local/include ;
+    THIRDPARTYLIB ?= -Lc:/local/lib ;
+
+    NEED_STRLCPY = true ;
+    NEED_STRSEP = true ;
+    NEED_GETOPT = true ;
+
+    CCFLAGS = -Wall -std=c99 $(THIRDPARTYINC) ;
+    LINKFLAGS = $(THIRDPARTYLIB) ;
+    LINKLIBS = -lfreetype -ljpeg -lz ;
+    APPLINKLIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows ;
+
+    if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
+    if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
+
+    actions WindRes { windres -i $(>) -o $(<) --include-dir=$(>:D) }
 }
 
-FREETYPECC ?= "`freetype-config --cflags`" ;
-FREETYPELD ?= "`freetype-config --libs`" ;
-
-# Optional modules:
-
-HAVE_JBIG2DEC ?= no ;
-HAVE_JASPER ?= no ;
-
-# -------------------------------------------------------------------------
-
-# Default optimize/profile/debug compiler/linker switches
-# Basic system should be mostly SUSv3 compliant
-# These are good for GCC
-
-# FLAG_CCALL = -Wall -D_XOPEN_SOURCE=600 $(FREETYPECC) ;
-FLAG_CCALL = -Wall $(FREETYPECC) ;
-FLAG_CCDEBUG = -g ;
-FLAG_CCRELEASE = -O3 ;
-FLAG_CCPROFILE = -g -pg ;
-FLAG_LDPROFILE = -pg ;
-
-# Now it gets hairy...
-
-switch $(OS)
+if $(OS) = NT
 {
-	case LINUX :
-		HAVE_X11 = yes ;
-		NEED_STRLCPY = yes ;
-		NEED_STRLCAT = yes ;
-		FLAG_CCALL += -std=gnu99 -DHAVE_C99 ;
-		FLAG_LDALL += -L/opt/local/lib -L/usr/X11R6/lib ;
+    Echo Building for MSVC ;
 
-		switch $(CC)-$(OSPLAT)
-		{
-		case icc-X86 :
-			FLAG_CCRELEASE = -DARCH_X86 -O3 -ip -tpp6 -xM ;
-			FLAG_CCPROFILE = -g -qp ;
-		case gcc-X86 :
-			# add -msse -msse2 when such functions exist...
-			FLAG_CCRELEASE = -DARCH_X86 -O3 -g -march=k8 -mmmx -std=gnu99 -ftree-vectorize -ftree-vectorizer-verbose=2 ;
-		}
+    DEFINES += MSVC ;
 
-	case MACOSX :
-		FLAG_LDALL += -L/opt/local/lib -L/usr/X11R6/lib ;
-		FLAG_CCALL += -I/opt/local/include -I/usr/X11R6/include -std=gnu99 -DHAVE_C99 -Wno-pointer-sign ;
-		# FLAG_CCRELEASE = -DARCH_PPC -faltivec -fast ; # not true on intel macs
-		FLAG_CCRELEASE = -fast ;
+    BUILD_WINAPP = true ;
 
-	case MINGW :
-		NEED_GETOPT = yes ;
-		NEED_STRSEP = yes ;
-		NEED_STRLCAT = yes ;
-		NEED_STRLCPY = yes ;
-		FLAG_CCALL += -std=gnu99 -DHAVE_C99 -DWIN32 ;
-		NOARSCAN = yes ;
+    THIRDPARTYINC ?= /Ic:/local/include ;
+    THIRDPARTYLIB ?= /LIBPATH:c:/local/lib ;
 
-	case SOLARIS :
-		HAVE_X11 = yes ;
-		NEED_STRSEP = yes ;
-		FLAG_CCALL += -std=c89 ;
-		FLAG_CCRELEASE += -DARCH_SPARC ;
+    NEED_STRLCPY = true ;
+    NEED_STRSEP = true ;
+    NEED_GETOPT = true ;
 
-	# Additional platforms go here
+    CCFLAGS = $(THIRDPARTYINC) ;
+    LINKFLAGS = $(THIRDPARTYLIB) ;
+    LINKLIBS = freetype.lib jpeg.lib z.lib ;
+    APPLINKLIBS = gdi32.lib comdlg32.lib user32.lib advapi32.lib shell32.lib ;
 
-	case * :
-		Echo "OS '$(OS)' not known by build system." ;
-		Echo "If you get errors, please edit Jamrules." ;
-		FLAG_CCALL += -std=c89 ;
+    if $(HAVE_JBIG2DEC) { LINKLIBS += jbig2dec.lib ; }
+    if $(HAVE_JASPER)	{ LINKLIBS += jasper.lib ; }
+
+    actions WindRes { rc /fo $(<) $(>) }
 }
 
-# -------------------------------------------------------------------------
-#
-# Switch on BUILD type (profile, debug or release)
-#
+# Set some DEFINES based on missing platform features
 
-BUILD ?= debug ;
+if $(NEED_STRLCPY)  { DEFINES += NEED_STRLCPY ; }
+if $(NEED_STRSEP)   { DEFINES += NEED_STRSEP ; }
+if $(NEED_GETOPT)   { DEFINES += NEED_GETOPT ; }
 
-switch $(BUILD)
-{
-	case debug :
-		Echo "Building DEBUG target" ;
-		CCFLAGS = $(FLAG_CCALL) $(FLAG_CCDEBUG) ;
-		LINKFLAGS = $(FLAG_LDALL) $(FLAG_LDDEBUG) ;
-	case release :
-		Echo "Building RELEASE target" ;
-		CCFLAGS = $(FLAG_CCALL) $(FLAG_CCRELEASE) ;
-		LINKFLAGS = $(FLAG_LDALL) $(FLAG_LDRELEASE) ;
-	case profile :
-		Echo "Building PROFILE target" ;
-		CCFLAGS = $(FLAG_CCALL) $(FLAG_CCPROFILE) ;
-		LINKFLAGS = $(FLAG_LDALL) $(FLAG_LDPROFILE) ;
-	case * :
-		Exit "Unknown BUILD target:" $(BUILD) ;
-}
-
-# -------------------------------------------------------------------------
-#
-# Fitz specific rules
-#
-
-ALL_LOCATE_TARGET = [ FDirName $(TOP) build $(BUILD) ] ;
-
-HDRS = [ FDirName $(TOP) include ] ;
-
-BINDIR = [ FDirName $(TOP) dist ] ;
-
-LINKLIBS = $(FREETYPELD) -ljpeg -lz -lm ;
-FITZLIBS =
-	libmupdf libfonts
-	libraster
-	libworld
-	libstream
-	libbase
-;
-
-if $(HAVE_JASPER) = yes
-{
-	DEFINES += HAVE_JASPER ;
-	LINKLIBS += -ljasper ;
-}
-
-if $(HAVE_JBIG2DEC) = yes
-{
-	DEFINES += HAVE_JBIG2DEC ;
-	LINKLIBS += -ljbig2dec ;
-}
-
-if $(NEED_GETOPT)  = yes { DEFINES += NEED_GETOPT ; }
-if $(NEED_STRLCAT) = yes { DEFINES += NEED_STRLCAT ; }
-if $(NEED_STRLCPY) = yes { DEFINES += NEED_STRLCPY ; }
-if $(NEED_STRSEP)  = yes { DEFINES += NEED_STRSEP ; }
+# WindRes rule for compiling the windows viewer and plugin
 
 rule UserObject
 {
-	switch $(>)
-	{
-	case *.rc :
-		WindRes $(<) : $(>) ;
-
-	case *.cff :
-		Cc $(<) : $(<:S=.c) ;
-		HexDump $(<:S=.c) : $(>) ;
-
-	case * :
-		Echo "unknown suffix on" $(>) ;
-	}
-}
-
-rule HexDump
-{
-	Depends $(<) : $(>) ;
-	MakeLocate $(<) : $(LOCATE_SOURCE) ;
-	Clean clean : $(<) ;
+    switch $(>)
+    {
+	case *.rc : WindRes $(<) : $(>) ;
+	case * : Echo "unknown suffix on" $(>) ;
+    }
 }
 
 rule WindRes
 {
-	Depends $(<) : $(>) ;
-	Clean clean : $(<) ;
-}
-
-actions HexDump { xxd -i $(>) | sed -e 's/unsigned/const unsigned/' > $(<) }
-actions WindRes { windres -i $(>) -o $(<) --include-dir=$(>:D) }
-
-rule XCopy
-{
-	for i in $(<)
-	{
-		local d = [ FDirName $(ALL_LOCATE_TARGET) $(i:D) ] ;
-		LOCATE on $(i:G=xcopy) = $(ALL_LOCATE_TARGET) ;
-		Depends $(i:G=xcopy) : $(d:G=dir) ;
-		MkDir $(d:G=dir) ;
-		File $(i:G=xcopy) : $(i) ;
-	}
+    Depends $(<) : $(>) ;
+    Clean clean : $(<) ;
 }
 

@@ -1,5 +1,5 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
 
 #include <windows.h>
 
@@ -561,6 +561,7 @@ parseTTCs(char *path)
 		goto cleanup;
 	}
 
+
 cleanup:
 	if (file)
 		fz_dropstream(file);
@@ -640,7 +641,6 @@ findsubstitute(char *fontname, char **fontpath, int *index)
 	*fontpath = defaultSubstitute.fontpath;
 	*index = defaultSubstitute.index;
 }
-
 void
 pdf_destoryfontlistMS()
 {

@@ -1,5 +1,5 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
 
 /* this mess is jeong's */
 
@@ -138,8 +138,8 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		t0 = fz_toreal(fz_arrayget(obj, 0));
 		t1 = fz_toreal(fz_arrayget(obj, 1));
 	} else {
-		t0 = 0.;
-		t1 = 1.;
+		t0 = 0.0;
+		t1 = 1.0;
 	}
 
 	obj = fz_dictgets(dict, "Extend");

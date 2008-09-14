@@ -342,10 +342,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\fitz\base\util_strlcat.c"
-					>
-				</File>
-				<File
 					RelativePath=".\fitz\base\util_strlcpy.c"
 					>
 				</File>

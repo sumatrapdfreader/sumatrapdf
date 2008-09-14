@@ -33,7 +33,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	pdf_logimage("load inline image %p {\n", img);
 
 	img->super.refs = 1;
-        img->super.cs = nil;
+	img->super.cs = nil;
 	img->super.loadtile = pdf_loadtile;
 	img->super.drop = pdf_dropimage;
 	img->super.n = 0;
@@ -240,14 +240,14 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	obj = fz_dictgets(dict, "Width");
 	error = pdf_resolve(&obj, xref);
 	if (error)
-	    return fz_rethrow(error, "cannot parse image dictionary");
+		return fz_rethrow(error, "cannot parse image dictionary");
 	w = fz_toint(obj);
 	fz_dropobj(obj);
 
 	obj = fz_dictgets(dict, "Height");
 	error = pdf_resolve(&obj, xref);
 	if (error)
-	    return fz_rethrow(error, "cannot parse image dictionary");
+		return fz_rethrow(error, "cannot parse image dictionary");
 	h = fz_toint(obj);
 	fz_dropobj(obj);
 
@@ -255,11 +255,11 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	obj = fz_dictgets(dict, "BitsPerComponent");
 	if (obj)
 	{
-	    error = pdf_resolve(&obj, xref);
-	    if (error)
-		return fz_rethrow(error, "cannot parse image dictionary");
-	    bpc = fz_toint(obj);
-	    fz_dropobj(obj);
+		error = pdf_resolve(&obj, xref);
+		if (error)
+			return fz_rethrow(error, "cannot parse image dictionary");
+		bpc = fz_toint(obj);
+		fz_dropobj(obj);
 	}
 
 	pdf_logimage("size %dx%d %d\n", w, h, bpc);
@@ -296,13 +296,6 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		pdf_logimage("colorspace %s\n", cs->name);
 	}
 
-#if 0
-	/* technically this might be correct, but it results in not rendering pages
-	   that could have been rendered, which is not good */
-	if (!cs)
-		return fz_throw("colorspace missing for image");
-#endif
-
 	/*
 	 * ImageMask, Mask and SoftMask
 	 */
@@ -326,6 +319,8 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		n = 0;
 		a = 1;
 	}
+	else if (!cs)
+		return fz_throw("colorspace missing for image");
 
 	obj = fz_dictgets(dict, "SMask");
 	if (fz_isindirect(obj))

@@ -13,7 +13,7 @@
 #include "mupdf.h"
 
 #ifdef _MSC_VER
-#include <Winsock2.h>
+#include <winsock2.h>
 #else
 #include <sys/time.h>
 #endif
@@ -587,7 +587,7 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 	char namebuf[256];
 	char buf[256];
 	int x, y, w, h, b, bh;
-	int fd;
+	int fd = -1;
 	long start;
 	long end;
 	long elapsed;

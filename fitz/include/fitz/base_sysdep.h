@@ -2,7 +2,9 @@
  * Include the basic standard libc headers.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -14,58 +16,21 @@
 #include <errno.h>
 #include <fcntl.h>	/* O_RDONLY & co */
 
-#ifdef HAVE_C99
-#	define FZ_FLEX
-#else
-#	define FZ_FLEX 1
-#	define restrict
-#ifdef _MSC_VER
-#	define inline __inline
-#else
-#	define inline __inline__
-#endif
-#endif
-
-#ifdef WIN32
-#if _MSC_VER < 1500
-#	define vsnprintf _vsnprintf
-#endif
-#	include <io.h>
-#else
-#	include <unistd.h>
-#endif
-
-#ifndef va_copy
-#define va_copy(a,b) (a) = (b)
-#endif
+/* Stupid macros that don't exist everywhere */
 
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
 
-/*
- * Extras! Extras! Get them while they're hot!
- */
-
-/* not supposed to be here, but printf debugging sorta needs it */
-#include <stdio.h>
-
-#ifdef NEED_MATH
-#define M_E 2.71828182845904523536
-#define M_LOG2E 1.44269504088896340736
-#define M_LOG10E 0.434294481903251827651
-#define M_LN2 0.693147180559945309417
-#define M_LN10 2.30258509299404568402
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
-#define M_PI_2 1.57079632679489661923
-#define M_PI_4 0.785398163397448309616
-#define M_1_PI 0.318309886183790671538
-#define M_2_PI 0.636619772367581343076
-#define M_1_SQRTPI 0.564189583547756286948
-#define M_2_SQRTPI 1.12837916709551257390
-#define M_SQRT2 1.41421356237309504880
-#define M_SQRT_2 0.707106781186547524401
 #endif
+
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
+#endif
+
+/* Some useful semi-standard functions */
 
 #ifdef NEED_STRLCPY
 extern int strlcpy(char *dst, const char *src, int n);
@@ -82,6 +47,49 @@ extern int opterr, optind, optopt;
 extern char *optarg;
 #endif
 
-#ifdef NEED_GETTIMEOFDAY
+/*
+ * MSVC section
+ */
+
+#ifdef _MSC_VER
+
+#include <io.h>
+
 extern int gettimeofday(struct timeval *tv, struct timezone *tz);
+
+#define FZ_FLEX 1
+#define restrict
+
+#ifdef _MSC_VER
+#define inline __inline
+#else
+#define inline __inline__
 #endif
+
+#if _MSC_VER < 1500
+#define vsnprintf _vsnprintf
+#endif
+
+#ifndef isnan
+#define isnan _isnan
+#endif
+
+#ifndef va_copy
+#define va_copy(a,b) (a) = (b)
+#endif
+
+#ifndef R_OK
+#define R_OK 4
+#endif
+
+/*
+ * C99 section
+ */
+
+#else
+
+#include <unistd.h>
+#define FZ_FLEX
+
+#endif
+

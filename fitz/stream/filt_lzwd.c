@@ -69,7 +69,7 @@ fz_newlzwd(fz_filter **fp, fz_obj *params)
 		lzw->table[i].prev = -1;
 	}
 
-	for (i = LZW_FIRST; i < NUMCODES; i++)
+	for (i = 256; i < NUMCODES; i++)
 	{
 		lzw->table[i].value = 0;
 		lzw->table[i].firstchar = 0;

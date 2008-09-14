@@ -238,7 +238,7 @@ static void duff_4i1o4(byte * restrict sp0, int sw, byte * restrict mp0, int mw,
  * Path and text masks
  */
 
-static void path_1c1(byte * restrict src, int cov, int len, byte * restrict dst)
+static void path_1c1(byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	while (len--)
 	{
@@ -247,7 +247,7 @@ static void path_1c1(byte * restrict src, int cov, int len, byte * restrict dst)
 	}
 }
 
-static void path_1o1(byte * restrict src, int cov, int len, byte * restrict dst)
+static void path_1o1(byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	while (len--)
 	{
@@ -258,7 +258,7 @@ static void path_1o1(byte * restrict src, int cov, int len, byte * restrict dst)
 }
 
 // With 4 In 1 Over 4
-static void path_w4i1o4(byte * restrict argb, byte * restrict src, int cov, int len, byte * restrict dst)
+static void path_w4i1o4(byte * restrict argb, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	byte alpha = argb[0];
 	byte r = argb[4];
@@ -351,9 +351,9 @@ void (*fz_duff_4i1c4)(byte*,int,byte*,int,byte*,int,int,int) = duff_4i1c4;
 void (*fz_duff_1i1o1)(byte*,int,byte*,int,byte*,int,int,int) = duff_1i1o1;
 void (*fz_duff_4i1o4)(byte*,int,byte*,int,byte*,int,int,int) = duff_4i1o4;
 
-void (*fz_path_1c1)(byte*,int,int,byte*) = path_1c1;
-void (*fz_path_1o1)(byte*,int,int,byte*) = path_1o1;
-void (*fz_path_w4i1o4)(byte*,byte*,int,int,byte*) = path_w4i1o4;
+void (*fz_path_1c1)(byte*,byte,int,byte*) = path_1c1;
+void (*fz_path_1o1)(byte*,byte,int,byte*) = path_1o1;
+void (*fz_path_w4i1o4)(byte*,byte*,byte,int,byte*) = path_w4i1o4;
 
 void (*fz_text_1c1)(byte*,int,byte*,int,int,int) = text_1c1;
 void (*fz_text_1o1)(byte*,int,byte*,int,int,int) = text_1o1;

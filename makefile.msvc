@@ -175,7 +175,7 @@ JASPER_OBJS = \
 
 BASE_OBJS = \
 	$(O)\base_memory.obj $(O)\base_error.obj $(O)\base_hash.obj $(O)\base_matrix.obj \
-	$(O)\base_rect.obj $(O)\base_rune.obj $(O)\util_strlcat.obj $(O)\util_strlcpy.obj \
+	$(O)\base_rect.obj $(O)\base_rune.obj $(O)\util_strlcpy.obj \
 	$(O)\util_strsep.obj $(O)\util_getopt.obj $(O)\util_gettimeofday.obj \
 	$(O)\base_cpudep.obj
 

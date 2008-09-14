@@ -27,7 +27,7 @@ static int justcopied = 0;
 static pdfapp_t gapp;
 
 /*
- * Associate Apparition with PDF files.
+ * Associate PDFView with PDF files.
  */
 
 void associate(char *argv0)
@@ -44,22 +44,22 @@ void associate(char *argv0)
 		KEY_WRITE, NULL, &key, &disp))
 	return;
 
-    if (RegSetValueEx(key, "", 0, REG_SZ, "Apparition", strlen("Apparition")+1))
+    if (RegSetValueEx(key, "", 0, REG_SZ, "MuPDF", strlen("MuPDF")+1))
 	return;
 
     RegCloseKey(key);
 
-    /* HKEY_CLASSES_ROOT\Apparition */
+    /* HKEY_CLASSES_ROOT\MuPDF */
 
     if (RegCreateKeyEx(HKEY_CLASSES_ROOT,
-		"Apparition", 0, NULL, REG_OPTION_NON_VOLATILE,
+		"MuPDF", 0, NULL, REG_OPTION_NON_VOLATILE,
 		KEY_WRITE, NULL, &key, &disp))
 	return;
 
     if (RegSetValueEx(key, "", 0, REG_SZ, name, strlen(name)+1))
 	return;
 
-    /* HKEY_CLASSES_ROOT\Apparition\DefaultIcon */
+    /* HKEY_CLASSES_ROOT\MuPDF\DefaultIcon */
 
     if (RegCreateKeyEx(key,
 		"DefaultIcon", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -72,7 +72,7 @@ void associate(char *argv0)
 
     RegCloseKey(kicon);
 
-    /* HKEY_CLASSES_ROOT\Apparition\Shell\Open\Command */
+    /* HKEY_CLASSES_ROOT\MuPDF\Shell\Open\Command */
 
     if (RegCreateKeyEx(key,
 		"shell", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -104,12 +104,12 @@ void associate(char *argv0)
 
 void winwarn(pdfapp_t *app, char *msg)
 {
-    MessageBoxA(hwndframe, msg, "Apparition: Warning", MB_ICONWARNING);
+    MessageBoxA(hwndframe, msg, "MuPDF: Warning", MB_ICONWARNING);
 }
 
 void winerror(pdfapp_t *app, fz_error *error)
 {
-    MessageBoxA(hwndframe, error->msg, "Apparition: Error", MB_ICONERROR);
+    MessageBoxA(hwndframe, error->msg, "MuPDF: Error", MB_ICONERROR);
     exit(1);
 }
 
@@ -123,7 +123,7 @@ int winfilename(char *buf, int len)
     ofn.lpstrFile = buf;
     ofn.nMaxFile = len;
     ofn.lpstrInitialDir = NULL;
-    ofn.lpstrTitle = "Apparition: Open PDF file";
+    ofn.lpstrTitle = "MuPDF: Open PDF file";
     ofn.lpstrFilter = "PDF Files (*.pdf)\0*.pdf\0All Files\0*\0\0";
     ofn.Flags = OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
     return GetOpenFileName(&ofn);
@@ -261,7 +261,7 @@ dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
 	SetDlgItemTextA(hwnd, 0x10, gapp.filename);
-	SetDlgItemTextA(hwnd, 2, "Apparition is Copyright (C) 2006 artofcode, LLC");
+	SetDlgItemTextA(hwnd, 2, "MuPDF is Copyright (C) 2006-2008 artofcode, LLC");
 	SetDlgItemTextA(hwnd, 3, pdfapp_usage(&gapp));
 	return TRUE;
     case WM_COMMAND:
@@ -360,11 +360,11 @@ void winopen()
 
     hdc = NULL;
 
-    SetWindowTextA(hwndframe, "Apparition");
+    SetWindowTextA(hwndframe, "MuPDF");
 
     menu = GetSystemMenu(hwndframe, 0);
     AppendMenu(menu, MF_SEPARATOR, 0, NULL);
-    AppendMenu(menu, MF_STRING, ID_ABOUT, "About Apparition...");
+    AppendMenu(menu, MF_STRING, ID_ABOUT, "About MuPDF...");
     AppendMenu(menu, MF_STRING, ID_DOCINFO, "Document Properties...");
 
     SetCursor(arrowcurs);
@@ -787,7 +787,7 @@ int main(int argc, char **argv)
     winopen();
 
     if (argc == 2)
-	filename = strdup(argv[1]);
+	filename = fz_strdup(argv[1]);
     else
     {
 	if (!winfilename(buf, sizeof buf))

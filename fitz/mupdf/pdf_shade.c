@@ -1,12 +1,11 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
 
 static fz_error *
 pdf_loadcompositeshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *funcref, float t0, float t1)
 {
 	fz_error *error;
 	pdf_function *func;
-	fz_obj *obj;
 	int i;
 
 	error = pdf_loadfunction(&func, xref, funcref);

@@ -1,113 +1,37 @@
-# --------------------------------------------------------------------------
 #
-# Build simple portable apps
-#
+
+FITZLIBS = libmupdf libbase libstream libworld libraster libfonts ;
 
 SubDir TOP apps ;
-
-APPLIST =
-	pdftool
-	;
-
-for APP in $(APPLIST)
-{
-	Main $(APP) : $(APP).c ;
-	LinkLibraries $(APP) : $(FITZLIBS) ;
-	InstallBin $(BINDIR) : $(APP)$(SUFEXE) ;
-}
-
-# --------------------------------------------------------------------------
-#
-# Build non-portable GUI frontend apps
-#
+Main pdftool : pdftool.c ;
+LinkLibraries pdftool : $(FITZLIBS) ;
 
 SubDir TOP apps common ;
+Library libpdfapp : pdfapp.c ;
 
-Library libpdfapp :
-	pdfapp.c
-	;
-
-if $(OS) = MINGW
+if $(BUILD_WINAPP)
 {
-	SubDir TOP apps windows ;
-
-	Main apparition :
-		winmain.c
-		winres.rc
-	;
-
-	WINLIBS = -lgdi32 -lcomdlg32 ;
-	if $(BUILD) = release { WINLIBS += -mwindows ; }
-
-	LinkLibraries apparition : libpdfapp $(FITZLIBS) ;
-
-	LINKLIBS on apparition$(SUFEXE) = $(LINKLIBS) $(WINLIBS) ;
-
-	InstallBin $(BINDIR) : apparition$(SUFEXE) ;
+    SubDir TOP apps windows ;
+    Main pdfview : winmain.c winres.rc ;
+    LinkLibraries pdfview : libpdfapp $(FITZLIBS) ;
+    LINKLIBS on pdfview$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
 }
 
-if $(HAVE_X11) = yes
+if $(BUILD_X11APP)
 {
-	SubDir TOP apps unix ;
-	Main apparition : x11pdf.c ximage.c ;
-	LinkLibraries apparition : libpdfapp $(FITZLIBS) ;
-	LINKLIBS on apparition$(SUFEXE) = $(LINKLIBS) -lX11 -lXext ;
+    SubDir TOP apps unix ;
+    Main pdfview : x11pdf.c ximage.c ;
+    LinkLibraries pdfview : libpdfapp $(FITZLIBS) ;
+    LINKLIBS on pdfview$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
 }
 
-if $(HAVE_GLX) = yes
+if $(BUILD_PLUGIN)
 {
-        SubDir TOP apps unix ;
-        Main glxview : glxpdf.c ;
-        LinkLibraries glxview : libpdfapp $(FITZLIBS) ;
-        LINKLIBS on glxview$(SUFEXE) = $(LINKLIBS) -lX11 -lGL ;
-}
-
-if $(OS) = noMACOSX
-{
-	SubDir TOP apps macosx ;
-
-	MACBUNDLE = FzView.app ;
-
-	XCopy 
-		$(MACBUNDLE)/Contents/Info.plist
-		$(MACBUNDLE)/Contents/PkgInfo
-		;
-	XCopy 
-		$(MACBUNDLE)/Contents/Resources/English.lproj/InfoPlist.strings
-		$(MACBUNDLE)/Contents/Resources/English.lproj/main.nib/classes.nib
-		$(MACBUNDLE)/Contents/Resources/English.lproj/main.nib/info.nib
-		$(MACBUNDLE)/Contents/Resources/English.lproj/main.nib/objects.xib
-		$(MACBUNDLE)/Contents/Resources/macpdf.icns
-		;
-	
-	MACPDF = $(MACBUNDLE)/Contents/MacOS/fzview ;
-	MkDir $(ALL_LOCATE_TARGET)/$(MACPDF:D) ;
-	Depends $(MACPDF) : $(ALL_LOCATE_TARGET)/$(MACPDF:D) ;
-	Main $(MACPDF) : macpdf.c ;
-	LinkLibraries $(MACPDF) : libpdfapp $(FITZLIBS) ;
-	LINKLIBS on $(MACPDF) = $(LINKLIBS) -framework Carbon ;
-}
-
-# --------------------------------------------------------------------------
-#
-# Mozilla plugins
-#
-
-SubDir TOP apps mozilla ;
-
-if $(OS) = MINGW
-{
-	SUFEXE on npmupdf.dll = ;
-	LINKFLAGS on npmupdf.dll = -shared -Wl,--kill-at ;
-	LINKLIBS on npmupdf.dll = $(LINKLIBS) -lgdi32 ;
-
-	Main npmupdf.dll :
-		npwin.c
-		moz_winres.rc
-		moz_main.c
-		;
-
-	LinkLibraries npmupdf.dll : $(FITZLIBS) ;
-	InstallBin $(BINDIR) : npmupdf.dll ;
+    SubDir TOP apps mozilla ;
+    SUFEXE on npmupdf.dll = ;
+    LINKFLAGS on npmupdf.dll = $(LINKFLAGS) -shared -Wl,--kill-at ;
+    LINKLIBS on npmupdf.dll = $(LINKLIBS) $(APPLINKLIBS) ;
+    Main npmupdf.dll : npwin.c moz_winres.rc moz_main.c ;
+    LinkLibraries npmupdf.dll : $(FITZLIBS) ;
 }
 

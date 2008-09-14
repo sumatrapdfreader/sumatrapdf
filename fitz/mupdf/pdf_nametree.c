@@ -1,5 +1,5 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
 
 static fz_error *
 loadnametreenode(fz_obj *tree, pdf_xref *xref, fz_obj *node)

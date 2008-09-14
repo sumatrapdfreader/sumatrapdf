@@ -23,9 +23,9 @@ extern void (*fz_duff_4i1c4)(FZ_BYTE*,int,FZ_BYTE*,int,FZ_BYTE*,int,int,int);
 extern void (*fz_duff_1i1o1)(FZ_BYTE*,int,FZ_BYTE*,int,FZ_BYTE*,int,int,int);
 extern void (*fz_duff_4i1o4)(FZ_BYTE*,int,FZ_BYTE*,int,FZ_BYTE*,int,int,int);
 
-extern void (*fz_path_1c1)(FZ_BYTE*,int,int,FZ_BYTE*);
-extern void (*fz_path_1o1)(FZ_BYTE*,int,int,FZ_BYTE*);
-extern void (*fz_path_w4i1o4)(FZ_BYTE*,FZ_BYTE*,int,int,FZ_BYTE*);
+extern void (*fz_path_1c1)(FZ_BYTE*,unsigned char,int,FZ_BYTE*);
+extern void (*fz_path_1o1)(FZ_BYTE*,unsigned char,int,FZ_BYTE*);
+extern void (*fz_path_w4i1o4)(FZ_BYTE*,FZ_BYTE*,unsigned char,int,FZ_BYTE*);
 
 extern void (*fz_text_1c1)(FZ_BYTE*,int,FZ_BYTE*,int,int,int);
 extern void (*fz_text_1o1)(FZ_BYTE*,int,FZ_BYTE*,int,int,int);

@@ -42,6 +42,6 @@ Library libstream :
 
 	;
 
-if $(HAVE_JASPER)   = yes { Library libstream : filt_jpxd.c ; }
-if $(HAVE_JBIG2DEC) = yes { Library libstream : filt_jbig2d.c ; }
+if $(HAVE_JASPER)   { Library libstream : filt_jpxd.c ; }
+if $(HAVE_JBIG2DEC) { Library libstream : filt_jbig2d.c ; }
 

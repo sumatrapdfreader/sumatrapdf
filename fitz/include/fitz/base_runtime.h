@@ -12,26 +12,33 @@
 #endif
 #endif
 
-#undef nil
+#ifndef nil
 #define nil ((void*)0)
+#endif
 
-#undef offsetof
+#ifndef offsetof
 #define offsetof(s, m) (unsigned long)(&(((s*)0)->m))
+#endif
 
-#undef nelem
+#ifndef nelem
 #define nelem(x) (sizeof(x)/sizeof((x)[0]))
+#endif
 
-#undef ABS
+#ifndef ABS
 #define ABS(x) ( (x) < 0 ? -(x) : (x) )
+#endif
 
-#undef MAX
+#ifndef MAX
 #define MAX(a,b) ( (a) > (b) ? (a) : (b) )
+#endif
 
-#undef MIN
+#ifndef MIN
 #define MIN(a,b) ( (a) < (b) ? (a) : (b) )
+#endif
 
-#undef CLAMP
+#ifndef CLAMP
 #define CLAMP(x,a,b) ( (x) > (b) ? (b) : ( (x) < (a) ? (a) : (x) ) )
+#endif
 
 #define MAX4(a,b,c,d) MAX(MAX(a,b), MAX(c,d))
 #define MIN4(a,b,c,d) MIN(MIN(a,b), MIN(c,d))

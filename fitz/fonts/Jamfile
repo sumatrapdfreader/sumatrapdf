@@ -1,20 +1,36 @@
 SubDir TOP fonts ;
 
+GenFile font_dingbats.c	: hexdump Dingbats.cff ;
+GenFile font_symbol.c	: hexdump StandardSymL.cff ;
+GenFile font_script.c	: hexdump URWChanceryL-MediItal.cff ;
+GenFile font_mono_r.c	: hexdump NimbusMonL-Regu.cff ;
+GenFile font_mono_i.c	: hexdump NimbusMonL-ReguObli.cff ;
+GenFile font_mono_b.c	: hexdump NimbusMonL-Bold.cff ;
+GenFile font_mono_bi.c	: hexdump NimbusMonL-BoldObli.cff ;
+GenFile font_serif_r.c	: hexdump NimbusRomNo9L-Regu.cff ;
+GenFile font_serif_ri.c	: hexdump NimbusRomNo9L-ReguItal.cff ;
+GenFile font_serif_b.c	: hexdump NimbusRomNo9L-Medi.cff ;
+GenFile font_serif_bi.c	: hexdump NimbusRomNo9L-MediItal.cff ;
+GenFile font_sans_b.c	: hexdump NimbusSanL-Bold.cff ;
+GenFile font_sans_bi.c	: hexdump NimbusSanL-BoldItal.cff ;
+GenFile font_sans_r.c	: hexdump NimbusSanL-Regu.cff ;
+GenFile font_sans_ri.c	: hexdump NimbusSanL-ReguItal.cff ;
+
 Library libfonts :
-	Dingbats.cff
-	StandardSymL.cff
-	URWChanceryL-MediItal.cff
-	NimbusMonL-Bold.cff
-	NimbusMonL-BoldObli.cff
-	NimbusMonL-Regu.cff
-	NimbusMonL-ReguObli.cff
-	NimbusRomNo9L-Medi.cff
-	NimbusRomNo9L-MediItal.cff
-	NimbusRomNo9L-Regu.cff
-	NimbusRomNo9L-ReguItal.cff
-	NimbusSanL-Bold.cff
-	NimbusSanL-BoldItal.cff
-	NimbusSanL-Regu.cff
-	NimbusSanL-ReguItal.cff
-	;
+    font_dingbats.c
+    font_symbol.c
+    font_script.c
+    font_mono_r.c
+    font_mono_i.c
+    font_mono_b.c
+    font_mono_bi.c
+    font_serif_r.c
+    font_serif_ri.c
+    font_serif_b.c
+    font_serif_bi.c
+    font_sans_b.c
+    font_sans_bi.c
+    font_sans_r.c
+    font_sans_ri.c
+    ;
 

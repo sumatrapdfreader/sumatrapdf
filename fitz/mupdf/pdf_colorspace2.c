@@ -108,6 +108,8 @@ static void fastcmyktorgb(fz_pixmap *src, fz_pixmap *dst)
 
 void pdf_convpixmap(fz_colorspace *ss, fz_pixmap *sp, fz_colorspace *ds, fz_pixmap *dp)
 {
+	pdf_logimage("convert pixmap from %s to %s\n", ss->name, ds->name);
+
 	if (ss == pdf_devicegray)
 	{
 		if (ds == pdf_devicergb) fastgraytorgb(sp, dp);

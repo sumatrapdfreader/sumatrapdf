@@ -1,5 +1,5 @@
-#include <fitz.h>
-#include <mupdf.h>
+#include "fitz.h"
+#include "mupdf.h"
 
 fz_error *
 pdf_newcsi(pdf_csi **csip, int maskonly)
