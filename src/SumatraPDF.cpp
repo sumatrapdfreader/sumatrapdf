@@ -3081,10 +3081,11 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     if (!gDebugShowLinks)
         return;
 
+    dm->recalcLinksCanvasPos();
     RectI drawAreaRect;
     /* debug code to visualize links */
-    drawAreaRect.x = (int)dm->areaOffset.x;
-    drawAreaRect.y = (int)dm->areaOffset.y;
+    drawAreaRect.x = 0;
+    drawAreaRect.y = 0;
     drawAreaRect.dx = dm->drawAreaSize.dxI();
     drawAreaRect.dy = dm->drawAreaSize.dyI();
 
@@ -3100,14 +3101,22 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         if (RectI_Intersect(&rectLink, &drawAreaRect, &intersect)) {
             RECT rectScreen;
-            rectScreen.left = (LONG) ((double)intersect.x - dm->areaOffset.x);
-            rectScreen.top = (LONG) ((double)intersect.y - dm->areaOffset.y);
-            rectScreen.right = rectScreen.left + rectLink.dx;
-            rectScreen.bottom = rectScreen.top + rectLink.dy;
-            FillRect(hdc, &rectScreen, gBrushLinkDebug);
-            DBG_OUT("  link on screen rotate=%d, (x=%d, y=%d, dx=%d, dy=%d)\n",
-                dm->rotation() + dm->_pagesInfo[pdfLink->pageNo-1].rotation,
-                rectScreen.left, rectScreen.top, rect_dx(&rectScreen), rect_dy(&rectScreen));
+            rectScreen.left = (LONG) ((double)intersect.x);
+            rectScreen.top = (LONG) ((double)intersect.y);
+            rectScreen.right = rectScreen.left + (LONG) ((double)intersect.dx);
+            rectScreen.bottom = rectScreen.top + (LONG) ((double)intersect.dy);
+
+            HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
+            SelectObject(hdc, pe);
+            DrawLineSimple(hdc, rectScreen.left+1, rectScreen.top+1, 
+            rectScreen.right, rectScreen.top+1);
+            DrawLineSimple(hdc, rectScreen.left+1, rectScreen.top+1, 
+            rectScreen.left+1, rectScreen.bottom);
+            DrawLineSimple(hdc, rectScreen.right, rectScreen.top+1, 
+            rectScreen.right, rectScreen.bottom);
+            DrawLineSimple(hdc, rectScreen.left+1, rectScreen.bottom, 
+            rectScreen.right, rectScreen.bottom);
+            DeletePen(pe);
         }
     }
 }

@@ -795,8 +795,8 @@ PdfLink *DisplayModel::linkAtPosition(int x, int y)
     int linkCount = getLinkCount();
     if (0 == linkCount) return NULL;
 
-    int canvasPosX = x + (int)areaOffset.x;
-    int canvasPosY = y + (int)areaOffset.y;
+    int canvasPosX = x;
+    int canvasPosY = y;
     for (int i = 0; i < linkCount; i++) {
         PdfLink *currLink = &_links[i];
 
