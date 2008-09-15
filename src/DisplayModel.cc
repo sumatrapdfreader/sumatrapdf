@@ -1609,6 +1609,8 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
 {
     PdfPageInfo *pageInfo = getPageInfo(rect->page);
     pdf_page *page = pdfEngine->getPdfPage(rect->page);
+    if(!page)
+        return;
     int rot = rotation();
     normalizeRotation (&rot);
 
