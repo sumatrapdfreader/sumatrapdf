@@ -83,14 +83,14 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS" /D "__func__=\"\""
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
-#SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_PDFSYNC_GUI_ENHANCEMENT" /D "SYNCTEX_FEATURE"
+#SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_PDFSYNC_GUI_ENHANCEMENT"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
 
 #CFLAGS = $(CFLAGS) /showIncludes
 #CFLAGS = $(CFLAGS) /analyze
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib \
-	shell32.lib comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib
+	shell32.lib comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo
@@ -99,6 +99,8 @@ LDFLAGS = $(LDFLAGS) /nologo
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 LDFLAGS = $(LDFLAGS) /DEBUG
 LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(ZLIB_DIR)\zlib_ds.lib
+# for testing with STL
+#LIBS = /NODEFAULTLIB:libcmt LIBCMTD.lib $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"

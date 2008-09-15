@@ -8,6 +8,7 @@
 #include "tstr_util.h"
 #include "str_util.h"
 #include <sys/stat.h>
+#include <shlwapi.h>
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
@@ -569,7 +570,7 @@ int SyncTex::rebuild_index() {
 #endif
 }
 
-UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col)
+UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
 #ifdef SYNCTEX_FEATURE
     if (this->is_index_discarded())
@@ -577,10 +578,18 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     if (synctex_edit_query(this->scanner,sheet,x,y)>0) {
         synctex_node_t node;
-        while(node = synctex_next_result(this->scanner)) {
+        char srcfilename[_MAX_PATH];
+        while (node = synctex_next_result(this->scanner)) {
             *line = synctex_node_line(node);
             *col = synctex_node_column(node);
-            str_copy( filename, cchFilename, synctex_scanner_get_name(this->scanner,synctex_node_tag(node)));
+            str_copy( srcfilename, dimof(srcfilename), synctex_scanner_get_name(this->scanner,synctex_node_tag(node)));
+
+            // Convert the source filepath to an absolute path
+            if (PathIsRelative(srcfilename))
+                _snprintf(srcfilepath, cchFilepath, "%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+            else
+                str_copy(srcfilepath, cchFilepath, srcfilename);
+
             return PDFSYNCERR_SUCCESS;
         }
     }
@@ -597,17 +606,28 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
-     if (synctex_display_query(this->scanner,srcfilename,line,col)>0) {
-         synctex_node_t node;
-          while(node = synctex_next_result(this->scanner)) {
-              *page = synctex_node_page(node);
-              *x = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_h(node));
-              *y = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_v(node));
-              return PDFSYNCERR_SUCCESS;
-          }
-      }
+    // convert the source file to an absolute path
+    char srcfilepath[_MAX_PATH];
+    if (PathIsRelative(srcfilename))
+        _snprintf(srcfilepath, dimof(srcfilepath), "%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+    else
+        str_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 
-    return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+    switch (synctex_display_query(this->scanner,srcfilepath,line,col)) {
+        case -1:
+            return PDFSYNCERR_UNKNOWN_SOURCEFILE;    
+        case 0:
+            return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+        default:
+            synctex_node_t node;
+            while (node = synctex_next_result(this->scanner)) {
+                *page = synctex_node_page(node);
+                *x = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_h(node));
+                *y = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_v(node));
+                return PDFSYNCERR_SUCCESS;
+            }
+            return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+    }
 #else
     return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 #endif

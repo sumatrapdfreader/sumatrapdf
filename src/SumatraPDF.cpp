@@ -3535,17 +3535,16 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     x = (UINT)dblx; y = (UINT)dbly;
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-    char srcfilepath[_MAX_PATH], srcfilename[_MAX_PATH];    
+    char srcfilepath[_MAX_PATH];    
     win->pdfsync->convert_coord_to_internal(&x, &y, (UINT)pageInfo->pageDy, BottomLeft);
     UINT line, col;
-    UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilename,dimof(srcfilename),&line,&col); // record 101
+    UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
         WindowInfo_ShowMessage_Asynch(win, L"No synchronization info at this position.", true);
         return;
     }
 
-    _snprintf(srcfilepath, dimof(srcfilepath), "%s%s", win->watcher.szDir, srcfilename, dimof(srcfilename));
     char cmdline[_MAX_PATH];
     if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inverseSearchCmdLine,
       srcfilepath, line, col, cmdline, dimof(cmdline)) ) {

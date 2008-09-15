@@ -2777,6 +2777,36 @@ const char * synctex_scanner_get_name(synctex_scanner_t scanner,int tag) {
 	} while((input = SYNCTEX_SIBLING(input)) != NULL);
 	return NULL;
 }
+
+// convert the Windows path separator into Unix path separator
+void UnixifyPath(char *p)
+{
+    while(*(p++))
+        if (*p == '\\')
+            *p = '/';
+}
+
+
+// compare two tag names
+int tag_name_equal(const char *t1, const char *t2)
+{
+#if _WIN32
+    // On Windows, filename should be compared case insensitive, and the symbols / and \ are both valid path separators.    
+    unsigned char l, r;
+    do {
+        l = *(t1++);
+        r = *(t2++); 
+        if (l == '\\') l = '/';
+        if (r == '\\') r = '/';
+    }
+    while (l && toupper(l) == toupper(r));
+
+    return l==r ? 1 : 0;
+#else
+    return 0 == strcmp(t1, t2);
+#endif
+}
+
 int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name);
 int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 	synctex_node_t input = NULL;
@@ -2785,20 +2815,27 @@ int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 	}
 	input = scanner->input;
 	do {
-		if((strlen(name) == strlen((SYNCTEX_NAME(input)))) &&
-				(0 == strncmp(name,(SYNCTEX_NAME(input)),strlen(name)))) {
+		if(tag_name_equal(name, SYNCTEX_NAME(input)))
 			return SYNCTEX_TAG(input);
-		}
 	} while((input = SYNCTEX_SIBLING(input)) != NULL);
 	return 0;
 }
+
+_inline int is_dir_sep_char(char c)
+{
+#ifdef _WIN32
+    return '/' == c || '\\' == c;
+#else
+    return '\\' == c;
+#endif
+}
+
 int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 	size_t char_index = strlen(name);
 	if((NULL != scanner) && (0 < char_index)) {
 		/*  the name is not void */
 		char_index -= 1;
-#		define SYNCTEX_PATH_SEPARATOR '/'
-		if(SYNCTEX_PATH_SEPARATOR != name[char_index]) {
+		if(!is_dir_sep_char(name[char_index])) {
 			/*  the last character of name is not a path separator */
 			int result = _synctex_scanner_get_tag(scanner,name);
 			if(result) {
@@ -2815,7 +2852,7 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 				}
 				/*  Find the last path separator before relative */
 				while(relative > name) {
-					if(SYNCTEX_PATH_SEPARATOR == *(relative-1)) {
+					if(is_dir_sep_char(*(relative-1))) {
 						break;
 					}
 					relative -= 1;
@@ -2823,12 +2860,12 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 				if((relative > name) && (result = _synctex_scanner_get_tag(scanner,relative))) {
 					return result;
 				}
-				if(SYNCTEX_PATH_SEPARATOR == name[0]) {
+				if(is_dir_sep_char(name[0])) {
 					/*  No tag found for the given absolute name,
 					 *  Try each relative path starting from the shortest one */
 					while(0<char_index) {
 						char_index -= 1;
-						if(SYNCTEX_PATH_SEPARATOR == name[char_index]
+						if(is_dir_sep_char(name[char_index])
 								&& (result = _synctex_scanner_get_tag(scanner,name+char_index+1))) {
 							return result;
 						}

@@ -11,6 +11,7 @@
 #include "base_util.h"
 #include "str_util.h"
 #include "tstr_util.h"
+#include "file_util.h"
 #ifdef SYNCTEX_FEATURE
 #include "synctex_parser.h"
 #endif
@@ -216,6 +217,8 @@ public:
         size_t u = dimof(SYNCTEX_EXTENSION)-1;
         assert(n>u && _tcsicmp(_syncfilename+(n-u),SYNCTEX_EXTENSION) == 0 );
         tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
+        this->dir = FilePath_GetDir(_syncfilename);
+
 #ifdef SYNCTEX_FEATURE
         this->scanner = NULL;
 #endif
@@ -227,16 +230,19 @@ public:
         if (scanner)
           synctex_scanner_free(scanner);
 #endif
+        if (dir)
+            free(dir);
     }
     void discard_index() { Synchronizer::discard_index();}
     bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
 
-    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
     UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
     int rebuild_index();
 
 private:
     TCHAR syncfilename[_MAX_PATH];
+    PTSTR dir;
 #ifdef SYNCTEX_FEATURE
     synctex_scanner_t scanner;
 #endif
