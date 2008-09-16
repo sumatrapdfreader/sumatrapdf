@@ -230,6 +230,10 @@ bool PdfEngine::load(const char *fileName, WindowInfo *win, bool tryrepair)
         }
         for (int i=0; i<3; i++) {
             char *pwd = GetPasswordForFile(win, fileName);
+            if (!pwd) {
+                // password not given
+                goto Error;
+            }
             okay = pdf_setpassword(_xref->crypt, pwd);
             free(pwd);
             if (okay)
