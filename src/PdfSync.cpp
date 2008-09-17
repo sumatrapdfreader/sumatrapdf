@@ -560,6 +560,8 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
 
 int SyncTex::rebuild_index() {
 #ifdef SYNCTEX_FEATURE
+    if (this->scanner)
+        synctex_scanner_free(this->scanner);
     this->scanner = synctex_scanner_new_with_output_file(this->syncfilename);
     if (scanner)
         return Synchronizer::rebuild_index();
