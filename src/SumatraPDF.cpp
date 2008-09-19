@@ -748,7 +748,7 @@ static HINTERNET g_hOpen = NULL;
 #ifdef SVN_PRE_RELEASE_VER
 #define SUMATRA_UPDATE_INFO_URL "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt"
 #else
-#define SUMATRA_UPDATE_INFO_URL "http://fastdl.org/sumpdf-latest.txt"
+#define SUMATRA_UPDATE_INFO_URL "http://blog.kowalczyk.info/software/sumatrapdf/sumpdf-latest.txt"
 #endif
 
 bool WininetInit()
