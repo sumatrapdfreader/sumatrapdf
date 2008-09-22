@@ -61,7 +61,9 @@
 # Goce Mitevski - Macedonian 
 # Elly Câmpeanu - Romanian
 # Hong Seung-geol (hsgno5@hanmir.com) – Korean
-# Shabab Mustafa (shabab.mustafa@gmail.com) - Bengali/ বাংলা
+# Bengali/বাংলা:
+#  Soham Chatterjee (soham.chatterjee@gmail.com)
+#  Shabab Mustafa (shabab.mustafa@gmail.com)
 # Xulio Gómez Díaz - Galego (Galician)
 # Христо Бенев (http://hbcom.info) - Bulgarian/Български
 # Daniel Bohdan - Ukrainian	
@@ -162,7 +164,7 @@ id:&Berkas
 mk:&Датотека
 ro:&Fişier
 kr:파일(&F)
-bn:&ফাইল
+bn:&সঞ্চিকা
 gl:&Arquivo
 uk:&Файл
 eu:&Fitxategia
@@ -212,7 +214,7 @@ id:&Buka\tCtrl-O
 mk:&Отвори\tCtrl-O
 ro:&Deschidere\tCtrl-O
 kr:열기(&O)...\tCtrl-O
-bn:&খুলুন\tCtrl-O
+bn:&উন্মীলন\tCtrl-O
 gl:A&brir\tCtrl-O
 uk:Відкрити\tCtrl-O
 eu:Ireki\tCtrl-O
@@ -262,7 +264,7 @@ id:&Tutup\tCtrl-W
 mk:&Затвори\tCtrl-W
 ro:Înc&hidere\tCtrl-W
 kr:닫기(&C)\tCtrl-W
-bn:&বন্ধ করুন\tCtrl-W
+bn:&বন্ধ\tCtrl-W
 gl:&Pechar\tCtrl-W
 uk:&Закрити\tCtrl-W
 eu:&Itxi\tCtrl-W
@@ -312,7 +314,7 @@ id:&Simpan sebagai
 mk:&Зачувај како...
 ro:Salvare c&a...
 kr:다른 이름으로 저장(&S)...
-bn:&ভিন্ন নামে সংরক্ষণ করুন
+bn:&সংরক্ষণ এই রূপে...
 gl:&Salvar como...
 uk:Зб&ерегти як...
 eu:... bezala &Gorde
@@ -362,7 +364,7 @@ id:&Cetak\tCtrl-P
 mk:&Печати
 ro:I&mprimare
 kr:인쇄(&P)...\tCtrl-P
-bn:&প্রিন্ট করুন
+bn:&মুদ্রন
 gl:&Imprimir
 uk:&Друкувати
 eu:&Inprimatu
@@ -419,6 +421,7 @@ eu:Sumatra PDF erabili besterik ezean PDFak irakurtzeko
 tl:Gawin na SumatraPDF ang Likas na Gagamitin sa Pangbasa ng PDF
 va:Convertir SumatraPDF en llector PDF per defecte
 sn:Ita SumatraPDF igovhura maPDF ese
+bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ 
 -
 E&xit\tCtrl-Q
 bg:&Изход\tCtrl-Q
@@ -462,7 +465,7 @@ id:&Keluar\tCtrl-Q
 mk:&Излез\tCtrl-Q
 ro:&Ieşire\tCtrl-Q
 kr:끝내기(&X)\tCtrl-Q
-bn:&বেরিয়ে আসুন
+bn:&প্রস্থান\tCtrl-Q
 gl:Sai&r\tCtrl-Q
 uk:&Вийти\tCtrl-Q
 eu:&Irten\tCtrl-Q
@@ -512,7 +515,7 @@ id:&Lihat
 mk:&Поглед
 ro:&Vizualizare
 kr:보기(&V)
-bn:দেখুন
+bn:দর্শন
 gl:&Ver
 uk:Ви&гляд
 eu:I&kusi
@@ -562,7 +565,7 @@ id:Satu Halaman
 mk:Една страница
 ro:O singură pagină
 kr:한 장씩
-bn:একটি পাতা
+bn:একটি পৃষ্ঠায়
 gl:Unha soa páxina
 uk:Одна сторінка
 eu:Orri bakarra
@@ -612,7 +615,7 @@ id:Dua Halaman
 mk:Две страници
 ro:Două pagini
 kr:여러 장씩
-bn:পাশাপাশি দুটি পাতা
+bn:দুটি পৃষ্ঠায়
 gl:Páxina dobre
 uk:Дві сторінки
 eu:Bi aldetatik
@@ -662,7 +665,7 @@ id:Bersambung
 mk:Непрекинат приказ
 ro:Continuu
 kr:한 장씩 연속
-bn:চলমান...
+bn:ক্রমাগত...
 gl:Contínuo
 uk:Протяжний
 eu:Jarraian
@@ -712,7 +715,7 @@ id:Dua Halaman Bersambung
 mk:Непрекинат приказ со две страници
 ro:Pagină dublă continuu
 kr:여러 장씩 연속
-bn:চলমান এবং পাশাপাশি
+bn:ক্রমাগত দুটি পৃষ্ঠায়
 gl:Páxina dobre continua
 uk:Дві протяжні сторінки
 eu:Bi aldetatik jarraian
@@ -762,7 +765,7 @@ id:Putar ke kiri
 mk:Ротирај на лево
 ro:Roteşte spre stânga
 kr:왼쪽으로 회전
-bn:বামে ঘুরিয়ে নিন
+bn:বামদিকে বিবর্তন
 gl:Xirar á esquerda
 uk:Повернути ліворуч
 eu:Ezkerrerantz biratu
@@ -812,7 +815,7 @@ id:Putar ke Kanan
 mk:Ротирај на десно
 ro:Roteşte spre dreapta
 kr:오른쪽으로 회전
-bn:ডানে ঘুরিয়ে নিন
+bn:ডানদিকে বিবর্তন
 gl:Xirar á dereita
 uk:Повернути праворуч
 eu:Eskubirantz biratu
@@ -843,7 +846,7 @@ ro:Marcaje
 sk:Záložky
 vn:Chỉ dấu sách
 kr:책갈피
-bn:বুকমার্কসমূহ
+bn:পৃষ্ঠাস্মারকসমূহ
 cn:书签
 fr:Signets
 ru:Закладки
@@ -886,7 +889,7 @@ id:Selayar Penuh\tCtrl-L
 mk:На цел екран\tCtrl-L
 ro:Ecran complet
 kr:전체 화면\tCtrl-L
-bn:পুরো পর্দা জুড়ে
+bn:পূর্ণ পর্দা\tCtrl-L
 cn:全屏\tCtrl-L
 fr:Plein écran
 ru:Полный экран
@@ -944,7 +947,7 @@ id:Perlihatkan toolbar
 mk:Прикажи алатник
 ro:Arată bara de instrumente
 kr:도구 모음 보기
-bn:টুলবার দেখুন
+bn:উপকরণপট্টি প্রদর্শন
 gl:Amosar barra de ferramentas
 uk:Показати пенал
 eu:Lanabes barra azaldu
@@ -994,7 +997,7 @@ id:&Pergi ke
 mk:П&ојди на
 ro:Sal&t la...
 kr:이동(&G)
-bn:নিয়ে চলুন
+bn:এতে চলুন...
 gl:Ir &a
 uk:&Перейти
 eu:...ra &Joan
@@ -1044,7 +1047,7 @@ id:Halaman Berikutnya
 mk:Следна страница
 ro:Pagina următoare
 kr:다음 장
-bn:পরের পাতায়
+bn:পরবর্তী পৃষ্ঠা
 gl:Páxina seguinte
 uk:Наступна сторінка
 eu:Hurrengo orria
@@ -1094,7 +1097,7 @@ id:Halaman Sebelumnya
 mk:Претходна страница
 ro:Pagina anterioară
 kr:이전 장
-bn:আগের পাতায়
+bn:পূর্ববর্তী পৃষ্ঠা
 gl:Páxina anterior
 uk:Попередня сторінка
 eu:Aurreko orria
@@ -1144,7 +1147,7 @@ id:Halaman Pertama\tHome
 mk:Прва страница\tHome
 ro:Prima pagină\tHome
 kr:첫 장\tHome
-bn:প্রথম পাতায়\tHome
+bn:প্রথম পৃষ্ঠা\tHome
 gl:Primeira páxina\tHome
 uk:Перша сторінка\tHome
 eu:Lehendabiziko orria \tHome
@@ -1194,7 +1197,7 @@ id:Halaman Terakhir\tEnd
 mk:Последна страница\tEnd
 ro:Ultima pagină\tEnd
 kr:마지막 장\tEnd
-bn: শেষ পাতায়\tEnd
+bn:শেষ পৃষ্ঠা\tEnd
 gl:Última páxina\tEnd
 uk:Остання сторінка\tEnd
 eu:Azken orria\tEnd
@@ -1244,7 +1247,7 @@ id:Halaman...\tCtrl-G
 mk:Страница...\tCtrl-G
 ro:Pagina...\tCtrl-G
 kr:쪽...\tCtrl-G
-bn:…নং পাতায়
+bn:পৃষ্ঠা সংখ্যা...\tCtrl-G
 gl:Páxina...\tCtrl-G
 uk:До сторінки...\tCtrl-G
 eu:...garren orria\tCtrl-G
@@ -1294,7 +1297,7 @@ id:&Ukuran
 mk:&Зголемување
 ro:&Panoramare
 kr:확대(&Z)
-bn:পাতার আকার
+bn:&বিবর্ধন
 gl:&Zoom
 uk:&Збільшення
 eu:&Zoom-a
@@ -1344,7 +1347,7 @@ id:&Sesuaikan\tCtrl-0
 mk:Прилагоди на &страница\tCtrl-0
 ro:&Pagină întreagă\tCtrl-0
 kr:창 크기에 맞춤(&P)\tCtrl-0
-bn:পুরো পাতা\tCtrl-0
+bn:পৃষ্ঠা অনুরূপ\tCtrl-0
 gl:&Páxina enteira\tCtrl-0
 uk:Припа&сувати сторінку\tCtrl-0
 eu:Orriaren neurria egokitu\tCtrl-O
@@ -1394,7 +1397,7 @@ id:&Ukuran Sebenarnya\tCtrl-1
 mk:Ре&ална големина\tCtrl-1
 ro:Mărime &actuală\tCtrl-1
 kr:본래 크기(&U)\tCtrl-1
-bn:আসল আকারে\tCtrl-1
+bn:বাস্তবিক আকার\tCtrl-1
 gl:&Tamaño real\tCtrl-1
 uk:Справжній розмір\tCtrl-1
 eu:&Berezko neurria\tCtrl-1
@@ -1444,7 +1447,7 @@ id:Sesuaikan dengan &Lebar\tCtrl-2
 mk:Прилагоди на &ширина\tCtrl-2
 ro:Lăţime pagină
 kr:꽉 찬 화면(&H)\tCtrl-2
-bn:উইন্ডোর সমান\tCtrl-2
+bn:প্রস্থ অনুরূপ\tCtrl-2
 gl:Axustar ao ancho\tCtrl-2
 uk:Припасувати до &ширини\tCtrl-2
 eu:Orriaren zabalera egokitu\tCtrl-2
@@ -1620,7 +1623,7 @@ id:&Kunjungi Halaman Web
 mk:Посети веб-сајт
 ro:&Vizitează website-ul
 kr:웹 사이트 방문(&V)
-bn:&আমাদের ওয়েবসাইট দেখুন
+bn:&আমাদের অন্তর্জালস্থান দর্শন করুন
 gl:Visitar o &Website
 uk:Відкрити сайт
 eu:&Web orria bisitatu
@@ -1643,6 +1646,7 @@ th:คู่มือการใช้งาน
 gl:Manual de Instruccións
 mk:Прирачник за употреба
 tl:Gabay
+bn:নির্দেশ নথিপত্র
 -
 &About
 bg:Относно програмата...
@@ -1686,7 +1690,7 @@ id:&Tentang
 mk:&За SumatraPDF...
 ro:&Despre
 kr:정보(&A)...
-bn:&আমাদের তথ্য
+bn:&আমাদের সম্পর্কে
 gl:Arred&or de
 uk:П&ро програму...
 eu:Ho&Ni buruz...
@@ -1723,6 +1727,7 @@ tl:Pahina:
 va:Pàgina:
 ca:Pàgina:
 sn:Peji:
+bn:পৃষ্ঠা:
 -
 Find:
 br:Localizar:
@@ -1750,7 +1755,7 @@ id:Temukan:
 mk:Најди:
 ro:Caută:
 kr:찾기:
-bn:খুঁজে নিন:
+bn:অনুসন্ধান:
 cn:查找:
 fr:Rechercher:
 ru:Найти:
@@ -1790,7 +1795,7 @@ ro:Caută înapoi
 sk:Hľadať predchádzajúce
 vn:Tìm phía trước
 kr:이전 찾기
-bn:এর আগে খুঁজুন
+bn:পূর্ববর্তী অনুসন্ধান
 cn:上一个
 fr:Occurrence précédente
 ru:Найти предыдущее
@@ -1830,7 +1835,7 @@ ro:Caută înainte
 sk:Hľadať ďalšie
 vn:Tìm phía sau
 kr:다음 찾기
-bn:এর পরে খুঁজুন
+bn:পরবর্তী অনুসন্ধান
 cn:下一个
 fr:Occurrence suivante
 ru:Найти следующее
@@ -1865,7 +1870,7 @@ ro:Potrivire litere mari şi mici
 sk:Rozlišovať veľké/malé písmená
 vn:Phân biệt chữ Hoa
 kr:대/소문자 구분
-bn:অক্ষর মেলান
+bn:অক্ষরের আকার মেলান
 cn:大小写匹配
 fa:تاثير کوچکي و بزرگي حروف
 fr:Respecter la casse
@@ -1923,7 +1928,7 @@ id:Buka
 mk:Отвори
 ro:Deschide
 kr:열기
-bn:খুলুন
+bn:উন্মীলন
 gl:Abrir
 uk:Відкрити
 eu:Ireki
@@ -1973,7 +1978,7 @@ id:Perbesar
 mk:Зголеми
 ro:Măreşte
 kr:확대
-bn:বড় করে দেখুন
+bn:বৃহৎ বিবর্ধন
 gl:Achegar zoom
 uk:Збільшити
 eu:Zoom-a hurbildu
@@ -2023,7 +2028,7 @@ id:Perkecil
 mk:Намали
 ro:Micşorează
 kr:축소
-bn:ছোট করে দেখুন
+bn:ক্ষুদ্র বিবর্ধন
 gl:Afastar zoom
 uk:Зменшити
 eu:Zoom-a urruneratu
@@ -2073,7 +2078,7 @@ id:Tentang SumatraPDF
 mk:За SumatraPDF
 ro:Despre SumatraPDF
 kr:SumatraPDF 정보
-bn:”SumatraPDF” সম্পর্কিত তথ্য
+bn:সুমাত্রাপিডিএফ-এর সম্পর্কে
 gl:Arredor do SumatraPDF
 uk:Про програму SumatraPDF
 eu:SumatraPDF-taz
@@ -2122,7 +2127,7 @@ id:SumatraPDF sekarang menjadi pembaca-PDF utama.
 mk:Сега SumatraPDF е твојот основен читач на PDF документи.
 ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
 kr:SumatraPDF를 기본 PDF 파일 뷰어로 지정합니다.
-bn:”SumatraPDF” এখন আপনার ডিফল্ট পিডিএফ রিডার
+bn:সুমাত্রাপিডিএফ এখন আপনার পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক পঠক
 gl:SumatraPDF é o lector PDF por defecto agora.
 uk:Тепер SumatraPDF є типовим переглядачем файлів PDF.
 eu:Sumatra orain berezko PDF irakur tresna bihurtu da.
@@ -2171,7 +2176,7 @@ id:Gagal menyimpan berkas
 mk:Зачувување на PDF документот не успеа
 ro:Eroare la salvarea unui fişier
 kr:파일을 저장할 수 없습니다.
-bn:ফাইল সংরক্ষণে ব্যর্থ
+bn:সঞ্চিকা সংরক্ষণে ব্যর্থ
 gl:Erro ao salvar o arquivo.
 uk:Не можна зберегти файл.
 eu:Fitxategia ezin izan da gorde
@@ -2220,7 +2225,7 @@ id:Kesalahan dalam memanggil berkas PDF.
 mk:Грешка при вчитување на PDF документот.
 ro:Erroare la încărcarea unui fişier PDF.
 kr:PDF 파일 읽을 수 없습니다.
-bn:ERROR: ফাইলটি লোড করা যাচ্ছে না
+bn:পিডিএফ সঞ্চিকা ভরণে ত্রুটি
 gl:Erro ao abrir o arquivo PDF.
 uk:Помилка відкриття документу.
 eu:PDF fitxategia kargargatzerakoan errorea suertatu da
@@ -2269,7 +2274,7 @@ id:Tidak dapat membuka printer
 mk:Пристапот до печатачот не е можен
 ro:Imprimantă inaccesibilă
 kr:프린터를 열 수 없습니다.
-bn:প্রিন্টার খুলছে না
+bn:মুদ্রক কার্যকরী করা যাচ্ছে না
 gl:Erro ao aceder á impressora.
 uk:Принтер недоступний.
 eu:Ezin da inprimagailua ireki
@@ -2318,7 +2323,7 @@ id:Masalahan Pencetakkan.
 mk:Проблем при печатење.
 ro:Problemă la imprimare.
 kr:인쇄를 할 수 없습니다.
-bn:প্রিন্ট করতে সমস্যা হয়েছে
+bn:মুদ্রণ করতে সমস্যা হয়েছে
 gl:Problema de impresión.
 uk:Помилка друкування.
 eu:Arazoak inprimatze lanetan
@@ -2362,7 +2367,7 @@ id:Membantu alihbahasa
 mk:Учествувај во преведувањето на оваа апликација
 ro:Contribuie la traducere
 kr:번역 제공
-bn:নতুন ভাষা যোগ করুন
+bn:অনুবাদ প্রদান করুন
 gl:Contribuir na traducción
 es:Contribuir en la traducción
 uk:Допоможіть перекласти
@@ -2391,6 +2396,7 @@ gl:Establecer procura inversa
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 va:Establir busca inversa
 ca:Cerca cap enrere
+bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 -
 Change language
 bg:Смени езика (Change language)
@@ -2416,6 +2422,7 @@ tl:Ibahin ang Wika (Change language)
 va:Canviar Idioma (Change language)
 ca:Canvia la llengua (Changue language)
 sn:Chinja mutauro (Change language)
+bn:ভাষা পরিবর্তন (Change language)
 -
 Enter password
 bg:Въведете парола
@@ -2440,6 +2447,7 @@ tl:Ipasok ang Sikretong Salita
 va:Posar contrasenya
 ca:Introduiu la contrasenya
 sn:Isa password
+bn:শব্দকূট প্রবেশ করুন
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2464,6 +2472,7 @@ tl:Ipasok ang Sikretong Salita para kay %s
 va:Posar contrasenya per a %s
 ca:Introduiu la constrasenya per a %s
 sn:Isa password ya %s
+bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 -
 Go to page
 bg:Към страница
@@ -2488,6 +2497,7 @@ tl:Pumunta sa Pahina
 va:Anar a la pàgina
 ca:Vés a la pàgina
 sn:Enda kupeji
+bn:এর পৃষ্ঠায় চলুন
 -
 Associate with PDF files?
 bg:Асоцииране с PDF файлове?
@@ -2512,6 +2522,7 @@ tl:Isanib sa Salansan na PDF?
 va:¿Associar en archius PDF?
 ca:Voleu associar-lo amb els fitxers PDF?
 sn:Ita zvifambidzane ne PDF
+bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 -
 Make SumatraPDF default application for PDF files?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
@@ -2535,6 +2546,7 @@ gl:Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
 tl:Gawin SumatraPDF ang Likas na Pambasa ng mga Salansan na PDF?
 va:¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
+bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 -
 Don't ask me again
 bg:Не питай отново
@@ -2560,6 +2572,7 @@ tl:Huwag na ako muling tanungin
 va:No tornar a preguntar
 ca:No ho tornis a preguntar
 sn:Usandivhunze futi
+bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
 -
 &Check for new version
 bg:Проверка за нова версия
@@ -2585,6 +2598,7 @@ tl:Siyasatin kung may bago na bersyon
 va:&Comprovar actualisacions
 ca:&Comprova si hi ha una versió nova
 sn:&Tsvaga version idzva
+bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
 -
 No new version available.
 bg:Няма нова версия.
@@ -2610,6 +2624,7 @@ tl:Walang bago na bersyon na makukuha.
 va:No hi han noves versions.
 ca:No hi ha cap versió nova.
 sn:Hapana version idzva.
+bn:নতুন সংস্করণ অনুপলব্ধ
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2635,6 +2650,7 @@ tl:Nasa iyo na ang bagong bersyon.
 va:Està es l'última versió.
 ca:Teniu la darrera versió.
 sn:Pane version idzva.
+bn:আপনার এই সংস্করণটি সর্বাধুনিক।
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2660,6 +2676,7 @@ tl:Ang bersyon na nsa iyo ay %s
 va:Te la versió %s
 ca:Teniu la versió %s
 sn:Pane version %s
+bn:আপনার সংস্করণটি হল %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2685,6 +2702,7 @@ tl:May bagong bersyon %s. Kukuhanin ang bagong bersyon?
 va:Una nova versió %s está disponible. ¿Vols descarregar-la?
 ca:Hi ha disponible una versió nova. Voleu descarregar-la?
 sn:Version %s ririkuwanika. Unoda here version idzva?
+bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 -
 New version available.
 bg:Има нова версия.
@@ -2710,6 +2728,7 @@ tl:May bagong bersyon.
 va:Nova versió disponible.
 ca:Hi ha una versió nova.
 sn:Version idzva ririkuwanika
+bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2734,6 +2753,7 @@ tl:Laktawan ang bersyon na ito
 va:Botar-se esta versió.
 ca:Omet aquesta versió
 sn:Siyana neversion irori.
+bn:এই সংস্করণটি পরিহার করুন
 -
 Enable auto-update
 bg:Включи автоматичното обновяване
@@ -2746,3 +2766,4 @@ tl:Paubrahin ang kusang pagtataas-petsa
 va:Activar l'actualisació automàtica
 ca:Actualitza automàticament
 sn:Rega iite auto-update
+bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রিয় করুন
