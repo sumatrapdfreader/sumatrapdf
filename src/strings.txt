@@ -282,7 +282,7 @@ fr:&Enregistrer sous
 tr:&Farklı kaydet
 by:Захаваць як
 ja:名前を付けて保存(&S)
-fa:ذخيره به
+fa:...ذخيره به نام دیگر
 dk:&Gem som
 it:&Salva come
 nl:&Opslaan als...
@@ -433,7 +433,7 @@ fr:Quitter\tCtrl-Q
 tr:Çı&kış\tCtrl-O
 by:Выйсце\tCtrl-Q
 ja:終了(&X)\tCtrl-Q
-fa:بستن\tCtrl-Q
+fa:بستن برنامه\tCtrl-Q
 dk:&Slut\tCtrl-Q
 it:&Esci\tCtrl-Q
 nl:&Afsluiten\tCtrl-Q
@@ -832,7 +832,7 @@ hu:Könyvjelzők
 lt:Žymės
 my:Penanda
 ja:ブックマーク
-fa:بوک‌مارک
+fa:نشان یادگاری سرکتاب
 it:Segnalibri
 nl:Bladwijzers
 fi:Kirjainmerkit
@@ -1015,7 +1015,7 @@ fr:Page suivante
 tr:Sonraki Sayfa
 by:Наступная старонка
 ja:次のページ
-fa:صفحه‌ي بعد
+fa:صفحه بعدی
 dk:Næste side
 it:Pagina Successiva
 nl:Volgende pagina
@@ -1065,7 +1065,7 @@ fr:Page précédente
 tr:Önceki Sayfa
 by:Папярэдняя старонка
 ja:前のページ
-fa:صفحه‌ي قبل
+fa:صفحه قبلی
 dk:Forrige side
 it:Pagina Precedente
 nl:Vorige pagina
@@ -1115,7 +1115,7 @@ fr:Première page\tHome
 tr:İlk Sayfa\tHome
 by:Першая старонка\tHome
 ja:最初のページ\tHome
-fa:صفحه‌ي اول\tHome
+fa:صفحه نخست\tHome
 dk:Første side\tHome
 it:Prima Pagina\tHome
 nl:Eerste pagina\tHome
@@ -1165,7 +1165,7 @@ fr:Dernière page\tEnd
 tr:Son Sayfa\tEnd
 by:Апошняя старонка\tEnd
 ja:最後のページ\tEnd
-fa:صفحه‌ي آخر\tEnd
+fa:صفحه پایانی\tEnd
 dk:Sidste side\tEnd
 it:Ultima Pagina\tEnd
 nl:Laatste pagina\tEnd
@@ -1215,7 +1215,7 @@ fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
 ja:ページ...\tCtrl-G
-fa:...صفحه‌ي\tCtrl-G
+fa:...صفحه\tCtrl-G
 dk:Side...\tCtrl-G
 it:Pagina...\tCtrl-G
 nl:Pagina...\tCtrl-G
@@ -1265,7 +1265,7 @@ fr:Zoom
 tr:&Yakınlaştırma
 by:Памер
 ja:拡大と縮小(&Z)
-fa:تغيير اندازه
+fa:تغيير بزرگی
 dk:&Zoom
 it:&Ingrandisci
 nl:&Zoom
@@ -1315,7 +1315,7 @@ fr:Page entière\tCtrl-0
 tr:&Sayfaya sığdır\tCtrl-0
 by:Змясціць старонку\tCtrl-0
 ja:ページに合わせる(&P)\tCtrl-0
-fa:متناسب با پنجره\tCtrl-0
+fa:به بزرگی پنجره\tCtrl-0
 dk:Hele &siden\tCtrl-0
 it:Intera &Pagina\tCtrl-0
 nl:Hele &Pagina\tCtrl-0
@@ -1365,7 +1365,7 @@ fr:Taille réelle\tCtrl-1
 tr:Gerçek Boyut\tCtrl-1
 by:Рэальны памер\tCtrl-1
 ja:実際のサイズ(&U)\tCtrl-1
-fa:اندازه‌ي واقعی\tCtrl-1
+fa:بزرگی خودش\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
 it:Dimensione Reale\tCtrl-1
 nl:Ware grootte\tCtrl-1
@@ -1415,7 +1415,7 @@ fr:Pleine largeur
 tr:Genişliğe &sığdır\tCtrl-2
 by:Змясціць па шырыне
 ja:幅に合わせる(&H)\tCtrl-2
-fa:متناسب با عرض پنجره\tCtrl-2
+fa:به بزرگی پهنای پنجره\tCtrl-2
 dk:Tilpas &bredde\tCtrl-2
 it:&Larghezza Pagina\tCtrl-2
 nl:Passend in &breedte\tCtrl-2
@@ -1637,6 +1637,7 @@ de:Anleitung
 fr:Manuel
 pl:Instrukcja obslugi
 ru:Руководство
+fa:کتابچه راهنما در اینترنت
 ja:マニュアル(&M)
 nl:Handleiding
 hr:Korisnički priručnik
@@ -1711,6 +1712,7 @@ it:Pagina:
 nl:Pagina:
 es:Página:
 hr:Stranica:
+fa:صفحه:
 sv:Sida:
 cz:Stránka:
 pt:Página:
@@ -1779,7 +1781,7 @@ hu:Előző keresése
 lt:Rasti kitą
 my:Cari sebelum
 ja:前を検索
-fa:قبلي
+fa:جستجو روبه عقب
 it:Trova precedente
 nl:Vorige
 fi:Etsi edellinen
@@ -1819,7 +1821,7 @@ hu:Következő keresése
 lt:Rasti ankstesnį
 my:Cari selepas
 ja:次を検索
-fa:بعدي
+fa:جستجو روبه جلو
 it:Trova successivo
 nl:Volgende
 fi:Etsi seuraava
@@ -1872,7 +1874,7 @@ vn:Phân biệt chữ Hoa
 kr:대/소문자 구분
 bn:অক্ষরের আকার মেলান
 cn:大小写匹配
-fa:تاثير کوچکي و بزرگي حروف
+fa:با توجه به کوچکي و بزرگي حروف 
 fr:Respecter la casse
 ru:Учитывать размер
 gl:Coincidir maiúsculas e minúsculas
@@ -2046,7 +2048,7 @@ fr:A propos de SumatraPDF
 tr:SumatraPDF hakkında
 by:Аб SumatraPDF
 ja:SumatraPDF のバージョン情報
-fa:SumatraPDF درباره‌ي
+fa:SumatraPDF دربارۀ برنامۀ
 dk:Om SumatraPDF
 it:Informazioni su SumatraPDF
 nl:Over SumatraPDF
@@ -2359,7 +2361,7 @@ ca:Contribuïu en la traducció
 si:Prispevaj prevod
 sr-rs:Помози у превођењу овог програма
 tw:翻譯提供
-fa:در ترجمه‌ي اين برنامه کمک کنيد
+fa:در ترجمۀ اين برنامه کمک کنيد
 ml:മാക്സിന്‍ ബി ജൊണ്‍
 he:עזור לתרגם
 sp-rs:Pomozi u prevođenju ovog programa
@@ -2386,6 +2388,7 @@ vn:Đặt dòng lệnh tìm kiếm ngược
 uk:Установити зворотній пошук.
 ru:Задать команду обратного поиска
 es:Establecer búsqueda inversa
+fa:تنظیم وارانه جستجو
 hr:Omogući inverznu pretragu
 nl:Omgekeerde zoekrichting instellen
 eu:Alderantzizko bilaketa ezarri
@@ -2413,6 +2416,7 @@ it:Cambia lingua (Change language)
 nl:Taal kiezen (Change language)
 fr:Changer la langue (Change language)
 eu:Hizkuntza aldatu (Change language)
+fa:تغییر زبان (Change language)
 mk:Смени јазик (Change language)
 hu:Nyelv kiválasztása (Change language)
 ja:言語の変更 (Change language)
@@ -2439,6 +2443,7 @@ nl:Wachtwoord invoeren
 fr:Entrer le mot de passe
 eu:Pasahitza sartu
 mk:Внеси лозинка
+fa:اسم رمز را وارد کنید
 hu:Írja be a jelszót
 ja:パスワードの入力
 th:ป้อนรหัสผ่าน
@@ -2459,6 +2464,7 @@ uk:Введіть пароль для %s
 ru:Введите пароль для %s
 es:Introduzca contraseña para %s
 hr:Unesite lozinku za %s
+fa:%s اسم رمز را وارد کنید برای
 it:Inserisci password per %s
 nl:Wachtwoord invoeren voor %s
 fr:Entrer le mot de passe pour %s
@@ -2489,6 +2495,7 @@ nl:Ga naar pagina
 fr:Aller à la page
 eu:...garren orrira joan
 mk:Појди на страница
+fa:برو به صفحه
 hu:Ugrás adott oldalra
 ja:ページへ移動
 th:ไปที่หน้า
@@ -2510,6 +2517,7 @@ ru:Ассоциировать с PDF-файлами?
 es:¿Asociar con archivos PDF?
 hr:Asocirati sa PDF datotekama?
 it:Associare ai file PDF?
+fa:قرار بدهیم ؟ PDF ایا این برنامه را نمایشگر همیشگی فایل های
 nl:Associëren met PDF-bestanden?
 fr:Associer aux fichiers PDF ?
 eu:PDF fitxategiekin lotu?
@@ -2539,6 +2547,7 @@ nl:SumatraPDF als standaardlezer van PDF-bestanden instellen?
 fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 eu:PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
 mk:Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
+fa:قرار بدهیم ؟ PDF ایا این برنامه را مجری استاندارد فایل های
 hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
 th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF
@@ -2564,6 +2573,7 @@ fr:Ne plus le demander
 no:Ikke spør meg igjen.
 eu:Ez berriz galdetu
 mk:Не ме прашувај повторно
+fa:این پاسخ را به یاد بسپار و دوباره از من نپرس
 hu:Ne kérdezze meg többé
 ja:再び質問しない
 th:ไม่ต้องถามอีกครั้ง
@@ -2590,6 +2600,7 @@ fr:Vérifier les mises à jour
 no:Se etter oppdatering
 eu:Bertsio berriagorik ba ote den begiratu
 mk:&Провери за нова верзија
+fa:چک کردن نسخه تازه تر
 hu:Újabb &verzió keresése
 ja:新しいバージョンのチェック(&C)
 th:&ตรวจสำหรับสอบเวอร์ชั่นใหม่
@@ -2616,6 +2627,7 @@ fr:Pas de nouvelle version disponible
 no:Ingen ny versjon tilgjenglig.
 eu:Ez dago bertsio berririk.
 mk:Нема понова верзија.
+fa: نسخه تازه دردسترس نمی باشد
 hu:Nincs újabb verzió.
 ja:新しいバージョンが利用できません。
 th:ไม่มีเวอร์ชั่นใหม่
@@ -2642,6 +2654,7 @@ fr:Vous avez la dernière version sortie
 no:Du har den nyeste versjonen.
 eu:Azkeneko bertsioa da daukazuna.
 mk:Ја имаш најновата верзија.
+fa:نسخۀ شما تازه ترین نسخه می باشد
 hu:Önnél a legfrissebb verzió van telepítve.
 ja:最新のバージョンです。
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
@@ -2668,6 +2681,7 @@ fr:Votre version est la %s
 no:Du har versjon %s
 eu:%s bertsioa daukazu.
 mk:Ја имаш верзијата %s
+fa:شماره نسخه شما %s
 hu:Jelenlegi verzió: %s
 ja:バージョン %s です
 th:ของคุณเป็นเวอร์ชั่น
@@ -2694,6 +2708,7 @@ fr:La version %s est disponible. Télécharger la nouvelle version ?
 no:Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 eu:%s bertsio berria eskuragarri dago. Jeisterik nahi?
 mk:Новата верзија %s е достапна. Сакаш да ја преземеш?
+fa:نسخۀ تازه تری پیدا شده است ، ایا می خواهید آنرا پیاده کنید ؟
 hu:Új verzió érhető el (%s). Kívánja letölteni?
 ja:新しいバージョン %s は利用可能です。新しいバージョンをダウンロードしますか?
 th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
@@ -2720,6 +2735,7 @@ fr:Une nouvelle version est disponible
 no:Ny versjon tilgjenglig.
 eu:Bertsio berria eskuragarri duzu.
 mk:Достапна е нова верзија.
+fa:نسخه تازه یافت شده
 hu:Új verzió érhető el.
 ja:新しいバージョンが利用可能です。
 th:เวอร์ชั่นใหม่ออกแล้ว
@@ -2745,6 +2761,7 @@ nl:Deze versie overslaan
 fr:Ignorer cette version
 eu:Bertsio berria saihestu
 mk:Прескокни ја оваа верзија
+fa:از این نسخه چشم پوشی کن
 hu:Verzió kihagyása
 ja:このバージョンをスキップ
 th:ช้ามเวอร์ชั่นนี้ไป
@@ -2767,3 +2784,4 @@ va:Activar l'actualisació automàtica
 ca:Actualitza automàticament
 sn:Rega iite auto-update
 bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রিয় করুন
+fa:به روز رسانی اتوماتیک
