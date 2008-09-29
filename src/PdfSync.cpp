@@ -681,18 +681,23 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         char pdffile[_MAX_PATH];
         char srcfile[_MAX_PATH];
         char destname[_MAX_PATH];
+        char dump[_MAX_PATH];
         UINT line,col, newwindow = 0, setfocus = 0;
         const char *pos;
         
+        pos = command;
+        while (pos < (command + strlen(command))) {
         // Synchronization command.
         // format is [<DDECOMMAND_SYNC_A>("<pdffile>","<srcfile>",<line>,<col>)]
-        if ( (pos = command) &&
+        if (
             str_skip(&pos, "[" DDECOMMAND_SYNC_A "(\"") &&
             str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
             str_skip(&pos, "\",\"") &&
             str_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
             (4 == sscanf(pos, "\",%u,%u,%u,%u)]", &line, &col, &newwindow, &setfocus)
-            || 2 == sscanf(pos, "\",%u,%u)]", &line, &col))
+            || 2 == sscanf(pos, "\",%u,%u)]", &line, &col)) &&
+            str_copy_skip_until(&pos, dump, dimof(dump), ']') &&
+            str_skip(&pos, "]")
             )
         {
             // Execute the command.
@@ -721,10 +726,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         // Open file DDE command.
         // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>", <newwindow>, <setfocus>)]
-        else if ( (pos = command) &&
+        else if (
             str_skip(&pos, "[" DDECOMMAND_OPEN_A "(\"") &&
             str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-            (2 == sscanf(pos, "\",%u,%u)]", &newwindow, &setfocus) || str_skip(&pos, "\")]")) 
+            (2 == sscanf(pos, "\",%u,%u)]", &newwindow, &setfocus) || str_skip(&pos, "\")]")) &&
+            str_copy_skip_until(&pos, dump, dimof(dump), ']') &&
+            str_skip(&pos, "]")
             )
         {
             // check if the PDF is already opened
@@ -736,6 +743,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             
             if (win && WS_SHOWING_PDF == win->state ) {
                 ack.fAck = 1;
+                PostMessage(win->hwndFrame, WM_CHAR, 'r', 0);
                 if (setfocus)
                     SetFocus(win->hwndFrame);
             }
@@ -743,7 +751,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         // Jump to named destination DDE command.
         // format is [<DDECOMMAND_GOTO_A>("<pdffilepath>", "<destination name>")]
-        else if ( (pos = command) &&
+        else if (
             str_skip(&pos, "[" DDECOMMAND_GOTO_A "(\"") &&
             str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
             str_skip(&pos, "\",\"") &&
@@ -763,7 +771,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         else
             DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
-
+        }
     }
     GlobalUnlock((HGLOBAL)hi);
 
