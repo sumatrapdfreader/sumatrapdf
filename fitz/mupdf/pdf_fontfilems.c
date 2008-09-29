@@ -147,6 +147,18 @@ static pdf_fontlistMS fontlistMS =
 };
 
 struct pdf_fontmapMS_s defaultSubstitute;
+enum
+{
+	FD_FIXED = 1 << 0,
+	FD_SERIF = 1 << 1,
+	FD_SYMBOLIC = 1 << 2,
+	FD_SCRIPT = 1 << 3,
+	FD_NONSYMBOLIC = 1 << 5,
+	FD_ITALIC = 1 << 6,
+	FD_ALLCAP = 1 << 16,
+	FD_SMALLCAP = 1 << 17,
+	FD_FORCEBOLD = 1 << 18
+};
 
 static int
 compare(const void *elem1, const void *elem2)
@@ -723,7 +735,7 @@ static fz_error *initfontlibs(void)
 }
 
 static fz_error *
-pdf_lookupfontMS(pdf_font *font, char *fontname, char **fontpath, int *index)
+pdf_lookupfontMS(pdf_font *font, char *fontname, char *collection, char **fontpath, int *index)
 {
 	fz_error  *error;
 	int found;
@@ -742,6 +754,55 @@ pdf_lookupfontMS(pdf_font *font, char *fontname, char **fontpath, int *index)
 		if (error)
 			return error;
 	}
+	if (!found && collection)
+	{
+		if ((!strcmp(collection, "Adobe-Japan1")) || (!strcmp(collection, "Adobe-Japan2")))
+		{
+			if (!strcmp(fontname, "GothicBBB-Medium"))
+			{
+				error = pdf_lookupfontMS2("MS-Gothic", fontpath, index, &found);
+				if (error)
+					return error;
+			}
+			else if (!strcmp(fontname, "Ryumin-Light"))
+			{
+				error = pdf_lookupfontMS2("MS-Mincho", fontpath, index, &found);
+				if (error)
+					return error;
+			}
+			else if (font->flags & FD_FIXED)
+			{
+				if (font->flags & FD_SERIF)
+				{
+					error = pdf_lookupfontMS2("MS-Mincho", fontpath, index, &found);
+					if (error)
+						return error;
+				}
+				else
+				{
+					error = pdf_lookupfontMS2("MS-Gothic", fontpath, index, &found);
+					if (error)
+						return error;
+				}
+			}
+			else
+			{
+				if (font->flags & FD_SERIF)
+				{
+					error = pdf_lookupfontMS2("MS-PMincho", fontpath, index, &found);
+					if (error)
+						return error;
+				}
+				else
+				{
+					error = pdf_lookupfontMS2("MS-PGothic", fontpath, index, &found);
+					if (error)
+						return error;
+				}
+			}
+			font->substitute = 1;
+		}
+	}
 	return fz_okay;
 }
 
@@ -755,7 +816,7 @@ pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 	char *file;
 	int index;
 
-	error = pdf_lookupfontMS(font, basefont,&file,&index);
+	error = pdf_lookupfontMS(font, basefont, NULL, &file, &index);
 	if (error)
 		return error;
 
@@ -777,7 +838,7 @@ pdf_loadsystemfont(pdf_font *font, char *basefont, char *collection)
 	char *file;
 	int index;
 
-	error = pdf_lookupfontMS(font, basefont,&file,&index);
+	error = pdf_lookupfontMS(font, basefont, collection, &file, &index);
 	if (error)
 		goto cleanup;
 
