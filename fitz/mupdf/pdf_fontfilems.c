@@ -1,6 +1,17 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+/* we use built-in fonts in addition to those installed on windows
+   because the metric for Times-Roman in windows fonts seems wrong
+   and we end up with over-lapping text if this font is used.
+   poppler doesn't have this problem even when using windows fonts
+   so maybe there's a better fix. */
+#define USE_BUILTIN_FONTS 1
+
+#ifdef USE_BUILTIN_FONTS
+#include "mupdf/base14.h"
+#endif
+
 #include <windows.h>
 
 #include <ft2build.h>
@@ -573,7 +584,6 @@ parseTTCs(char *path)
 		goto cleanup;
 	}
 
-
 cleanup:
 	if (file)
 		fz_dropstream(file);
@@ -653,6 +663,7 @@ findsubstitute(char *fontname, char **fontpath, int *index)
 	*fontpath = defaultSubstitute.fontpath;
 	*index = defaultSubstitute.index;
 }
+
 void
 pdf_destoryfontlistMS()
 {
@@ -806,6 +817,62 @@ pdf_lookupfontMS(pdf_font *font, char *fontname, char *collection, char **fontpa
 	return fz_okay;
 }
 
+#ifdef USE_BUILTIN_FONTS
+/* based on (and duplicates lots of) pdf_fontfile.c */
+static const struct
+{
+	const char *name;
+	const unsigned char *cff;
+	const unsigned int *len;
+} basefonts[15] = {
+	{ "Courier",
+		fonts_NimbusMonL_Regu_cff,
+		&fonts_NimbusMonL_Regu_cff_len },
+	{ "Courier-Bold",
+		fonts_NimbusMonL_Bold_cff,
+		&fonts_NimbusMonL_Bold_cff_len },
+	{ "Courier-Oblique",
+		fonts_NimbusMonL_ReguObli_cff,
+		&fonts_NimbusMonL_ReguObli_cff_len },
+	{ "Courier-BoldOblique",
+		fonts_NimbusMonL_BoldObli_cff,
+		&fonts_NimbusMonL_BoldObli_cff_len },
+	{ "Helvetica",
+		fonts_NimbusSanL_Regu_cff,
+		&fonts_NimbusSanL_Regu_cff_len },
+	{ "Helvetica-Bold",
+		fonts_NimbusSanL_Bold_cff,
+		&fonts_NimbusSanL_Bold_cff_len },
+	{ "Helvetica-Oblique",
+		fonts_NimbusSanL_ReguItal_cff,
+		&fonts_NimbusSanL_ReguItal_cff_len },
+	{ "Helvetica-BoldOblique",
+		fonts_NimbusSanL_BoldItal_cff,
+		&fonts_NimbusSanL_BoldItal_cff_len },
+	{ "Times-Roman",
+		fonts_NimbusRomNo9L_Regu_cff,
+		&fonts_NimbusRomNo9L_Regu_cff_len },
+	{ "Times-Bold",
+		fonts_NimbusRomNo9L_Medi_cff,
+		&fonts_NimbusRomNo9L_Medi_cff_len },
+	{ "Times-Italic",
+		fonts_NimbusRomNo9L_ReguItal_cff,
+		&fonts_NimbusRomNo9L_ReguItal_cff_len },
+	{ "Times-BoldItalic",
+		fonts_NimbusRomNo9L_MediItal_cff,
+		&fonts_NimbusRomNo9L_MediItal_cff_len },
+	{ "Symbol",
+		fonts_StandardSymL_cff,
+		&fonts_StandardSymL_cff_len },
+	{ "ZapfDingbats",
+		fonts_Dingbats_cff,
+		&fonts_Dingbats_cff_len },
+	{ "Chancery",
+		fonts_URWChanceryL_MediItal_cff,
+		&fonts_URWChanceryL_MediItal_cff_len }
+};
+#endif
+
 fz_error *
 pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 {
@@ -815,6 +882,34 @@ pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 	FT_Face face;
 	char *file;
 	int index;
+
+#ifdef USE_BUILTIN_FONTS
+	/* try built-in fonts first */
+	int i;
+	unsigned char *data;
+	unsigned int len;
+	int found = 0;
+
+	for (i = 0; i < 15; i++) {
+		if (!strcmp(basefont, basefonts[i].name)) {
+			found = 1;
+			break;
+		}
+	}
+
+	if (found) {
+		pdf_logfont("load builtin font %s\n", basefont);
+
+		data = (unsigned char *) basefonts[i].cff;
+		len = *basefonts[i].len;
+
+		fterr = FT_New_Memory_Face(ftlib, data, len, 0, (FT_Face*)&font->ftface);
+		if (fterr)
+			return fz_throw("freetype: cannot load font: %s", ft_errstr(fterr));
+
+		return fz_okay;
+	}
+#endif
 
 	error = pdf_lookupfontMS(font, basefont, NULL, &file, &index);
 	if (error)

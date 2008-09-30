@@ -203,6 +203,23 @@ WORLD_OBJS = \
 	$(O)\node_text.obj $(O)\node_toxml.obj $(O)\node_tree.obj $(O)\res_colorspace.obj \
 	$(O)\res_font.obj $(O)\res_image.obj $(O)\res_shade.obj
 
+FONTS_OBJS = \
+	$(O)\Dingbats.cff.obj \
+	$(O)\NimbusMonL-Bold.cff.obj \
+	$(O)\NimbusMonL-BoldObli.cff.obj \
+	$(O)\NimbusMonL-Regu.cff.obj \
+	$(O)\NimbusMonL-ReguObli.cff.obj \
+	$(O)\NimbusRomNo9L-Medi.cff.obj \
+	$(O)\NimbusRomNo9L-MediItal.cff.obj \
+	$(O)\NimbusRomNo9L-Regu.cff.obj \
+	$(O)\NimbusRomNo9L-ReguItal.cff.obj \
+	$(O)\NimbusSanL-Bold.cff.obj \
+	$(O)\NimbusSanL-BoldItal.cff.obj \
+	$(O)\NimbusSanL-Regu.cff.obj \
+	$(O)\NimbusSanL-ReguItal.cff.obj \
+	$(O)\StandardSymL.cff.obj \
+	$(O)\URWChanceryL-MediItal.cff.obj
+
 MUPDF_OBJS = \
 	$(O)\pdf_annot.obj $(O)\pdf_build.obj $(O)\pdf_cmap.obj $(O)\pdf_colorspace1.obj \
 	$(O)\pdf_colorspace2.obj $(O)\pdf_crypt.obj $(O)\pdf_debug.obj $(O)\pdf_doctor.obj \
@@ -219,6 +236,7 @@ LIBS_OBJS = \
 	$(JPEG_OBJS) \
 	$(JASPER_OBJS) \
 	$(JBIG2_OBJS) \
+	$(FONTS_OBJS) \
 	$(BASE_OBJS) \
 	$(STREAM_OBJS) \
 	$(RASTER_OBJS) \
@@ -398,6 +416,9 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\world\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FITZ_DIR)\fonts\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # sumatra directories
