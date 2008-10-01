@@ -282,7 +282,7 @@ private:
 
 
 // create a synchronizer for the given PDF file
-Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename);
+Synchronizer *CreateSynchronizer(LPCTSTR pdffilename);
 
 
 #define PDFSYNC_DDE_SERVICE_A         "SUMATRA"

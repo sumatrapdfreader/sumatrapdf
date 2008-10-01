@@ -376,11 +376,17 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
 void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
 {
     FileHistoryList *   fileHistoryNode = NULL;
+    // TODO: add a check if a file exists, to filter out deleted files
+    // but only if a file is on a non-network drive (because
+    // accessing network drives can be slow and unnecessarily spin
+    // the drives. Also, the filePath is utf8, so convert to unicode
+    // first.
+#if 0
     if (!file_exists(state->filePath)) {
         DBG_OUT("FileHistory_Add() file '%s' doesn't exist anymore\n", state->filePath);
         return;
     }
-
+#endif
     fileHistoryNode = FileHistoryList_Node_Create();
     fileHistoryNode->state = *state;
     FileHistoryList_Node_Append(fileHistoryRoot, fileHistoryNode);
@@ -451,8 +457,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
         if (!dict) continue;
         DisplayState_Deserialize(dict, &state);
         if (state.filePath) {
-            if (file_exists(state.filePath))
-                FileHistory_Add(fileHistoryRoot, &state);
+            FileHistory_Add(fileHistoryRoot, &state);
         }
     }
     benc_obj_delete(bobj);

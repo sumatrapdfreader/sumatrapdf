@@ -216,7 +216,7 @@ public:
     RECT            frameRc;
     RECT            canvasRc;
 
-    CHAR *          title;
+    WCHAR *         title;
 
     void ShowTocBox();
     void HideTocBox();
@@ -231,31 +231,8 @@ public:
 };
 
 WindowInfo* WindowInfoList_Find(LPTSTR file);
-WindowInfo* LoadPdf(const char *fileName, bool showWin=true, char* windowTitle=NULL);
+WindowInfo* LoadPdf(const char *fileName, bool showWin=true, char *windowTitle=NULL);
+WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin=true, WCHAR *windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
 
 #endif
-
-#define SUMATRAPDF_API __declspec(dllexport)
-extern "C" {
-    SUMATRAPDF_API void Sumatra_LoadPDF(WindowInfo* pdfWin, const char *pdfFile);
-    SUMATRAPDF_API void Sumatra_Print(WindowInfo* pdfWin);
-    SUMATRAPDF_API void Sumatra_PrintPDF(WindowInfo* pdfWin, const char *pdfFile, long showOptionWindow);
-    SUMATRAPDF_API void Sumatra_SetDisplayMode(WindowInfo* pdfWin, long displayMode);
-    SUMATRAPDF_API long Sumatra_GoToNextPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToPreviousPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToFirstPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToLastPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToThisPage(WindowInfo* pdfWin, long pageNumber);
-    SUMATRAPDF_API long Sumatra_GetNumberOfPages(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GetCurrentPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_ZoomIn(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_ZoomOut(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_SetZoom(WindowInfo* pdfWin, long zoomValue); 
-    SUMATRAPDF_API long Sumatra_GetCurrentZoom(WindowInfo* pdfWin); 
-    SUMATRAPDF_API void Sumatra_Resize(WindowInfo* pdfWin);
-    SUMATRAPDF_API void Sumatra_ClosePdf(WindowInfo* pdfWin);
-    SUMATRAPDF_API void Sumatra_ShowPrintDialog(WindowInfo* pdfWin);
-    SUMATRAPDF_API WindowInfo* Sumatra_Init(HWND parentHandle);
-    SUMATRAPDF_API void Sumatra_Exit();
-}

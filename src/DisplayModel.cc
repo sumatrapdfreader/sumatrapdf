@@ -46,6 +46,7 @@
 #include "DisplayModel.h"
 
 #include "str_util.h"
+#include "wstr_util.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -130,7 +131,8 @@ bool rotationFlipped(int rotation)
 
 bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
 {
-    ds->filePath = str_escape(dm->fileName());
+    const char *fileNameUtf8 = wstr_to_utf8(dm->fileName());
+    ds->filePath = str_escape(fileNameUtf8);
     if (!ds->filePath)
         return FALSE;
     ds->displayMode = dm->displayMode();
@@ -215,7 +217,7 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
     return &(_pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::load(const char *fileName, int startPage, WindowInfo *win, bool tryrepair)
+bool DisplayModel::load(const WCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair)
 { 
     assert(fileName);
     if (!pdfEngine->load(fileName, win, tryrepair))
@@ -1392,7 +1394,7 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, wchar_t *text)
 }
 
 DisplayModel *DisplayModel_CreateFromFileName(
-  const char *fileName,
+  const WCHAR *fileName,
   SizeD totalDrawAreaSize,
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,

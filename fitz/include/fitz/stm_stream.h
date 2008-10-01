@@ -30,6 +30,11 @@ fz_error *fz_openrfile(fz_stream **stmp, char *filename);
 fz_error *fz_openwfile(fz_stream **stmp, char *filename);
 fz_error *fz_openafile(fz_stream **stmp, char *filename);
 
+#ifdef WIN32_UNICODE_HACK
+#include <wchar.h>
+fz_error * fz_openrfilew(fz_stream **stmp, const wchar_t *path);
+#endif
+
 /* write to memory buffers! */
 fz_error *fz_openrmemory(fz_stream **stmp, char *mem, int len);
 fz_error *fz_openrbuffer(fz_stream **stmp, fz_buffer *buf);

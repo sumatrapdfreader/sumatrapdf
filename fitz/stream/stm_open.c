@@ -74,6 +74,37 @@ fz_dropstream(fz_stream *stm)
 	}
 }
 
+#ifdef WIN32_UNICODE_HACK
+static fz_error *
+openfilew(fz_stream **stmp, const wchar_t *path, int mode, int realmode)
+{
+	fz_error *error;
+	fz_stream *stm;
+
+	stm = newstm(FZ_SFILE, mode);
+	if (!stm)
+		return fz_throw("outofmem: stream struct");
+
+	error = fz_newbuffer(&stm->buffer, FZ_BUFSIZE);
+	if (error)
+	{
+		fz_free(stm);
+		return fz_rethrow(error, "cannot create buffer");
+	}
+
+	stm->file = _wopen(path, realmode, 0666);
+	if (stm->file < 0)
+	{
+		fz_dropbuffer(stm->buffer);
+		fz_free(stm);
+		return fz_throw("syserr: open %s", strerror(errno));
+	}
+
+	*stmp = stm;
+	return fz_okay;
+}
+#endif
+
 static fz_error *
 openfile(fz_stream **stmp, char *path, int mode, int realmode)
 {
@@ -91,14 +122,7 @@ openfile(fz_stream **stmp, char *path, int mode, int realmode)
 		return fz_rethrow(error, "cannot create buffer");
 	}
 
-#ifdef WIN32_UNICODE_HACK
-	/* On Windows some files cannot be opened when using ansi filenames
-	   so if this is defined, we assume that path is actually a win32
-	   unicode string */
-	stm->file = _wopen((const wchar_t *)path, realmode, 0666);
-#else
 	stm->file = open(path, realmode, 0666);
-#endif
 	if (stm->file < 0)
 	{
 		fz_dropbuffer(stm->buffer);
@@ -151,6 +175,17 @@ openbuffer(fz_stream **stmp, fz_buffer *buf, int mode)
 	*stmp = stm;
 	return fz_okay;
 }
+
+#ifdef WIN32_UNICODE_HACK
+fz_error * fz_openrfilew(fz_stream **stmp, const wchar_t *path)
+{
+	fz_error *error;
+	error = openfilew(stmp, path, FZ_SREAD, O_BINARY | O_RDONLY);
+	if (error)
+		return fz_rethrow(error, "cannot open file for reading: '%s'", path);
+	return fz_okay;
+}
+#endif
 
 fz_error * fz_openrfile(fz_stream **stmp, char *path)
 {

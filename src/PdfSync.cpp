@@ -22,7 +22,7 @@ bool FileExists( LPCTSTR filename ) {
     return 0 == _tstat( filename, &buffer );
 }
 
-Synchronizer *CreateSyncrhonizer(LPCTSTR pdffilename)
+Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
 {
     TCHAR syncfile[_MAX_PATH];
     size_t n = _tcslen(pdffilename);

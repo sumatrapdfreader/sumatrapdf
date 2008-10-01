@@ -639,22 +639,14 @@ cleanupobj:
  * open and load xref tables from pdf
  */
 
-fz_error *
-pdf_loadxref(pdf_xref *xref, char *filename)
+static fz_error *
+pdf_loadxref2(pdf_xref *xref)
 {
 	fz_error *error;
 	fz_obj *size;
 	int i;
 
 	char buf[65536];	/* yeowch! */
-
-	pdf_logxref("loadxref '%s' %p\n", filename, xref);
-
-	error = fz_openrfile(&xref->file, filename);
-	if (error)
-	{
-		return fz_rethrow(error, "cannot open file: '%s'", filename);
-	}
 
 	error = loadversion(xref);
 	if (error)
@@ -724,4 +716,31 @@ cleanup:
 	xref->table = nil;
 	return error;
 }
+
+fz_error *
+pdf_loadxref(pdf_xref *xref, char *filename)
+{
+	fz_error * error;    
+	pdf_logxref("loadxref '%s' %p\n", filename, xref);
+
+	error = fz_openrfile(&xref->file, filename);
+	if (error)
+	{
+		return fz_rethrow(error, "cannot open file: '%s'", filename);
+	}
+	return pdf_loadxref2(xref);
+}
+
+#ifdef WIN32_UNICODE_HACK
+fz_error *
+pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename)
+{
+	fz_error * error = fz_openrfilew(&xref->file, filename);
+	if (error)
+	{
+		return fz_rethrow(error, "cannot open file");
+	}
+	return pdf_loadxref2(xref);
+}
+#endif
 

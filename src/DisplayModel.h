@@ -142,7 +142,7 @@ public:
 
     /* number of pages in PDF document */
     int  pageCount() const { return pdfEngine->pageCount(); }
-    bool load(const char *fileName, int startPage, WindowInfo *win, bool tryrepair);
+    bool load(const WCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair);
     bool validPageNo(int pageNo) const { return pdfEngine->validPageNo(pageNo); }
     bool hasTocTree() { return pdfEngine->hasTocTree(); }
     PdfTocItem *getTocTree() { return pdfEngine->getTocTree(); }
@@ -153,7 +153,7 @@ public:
     DisplayMode displayMode() const { return _displayMode; }
 
     void changeDisplayMode(DisplayMode displayMode);
-    const char *fileName(void) const { return pdfEngine->fileName(); }
+    const WCHAR *fileName(void) const { return pdfEngine->fileName(); }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE
@@ -328,7 +328,7 @@ void                pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation, d
 bool                displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm);
 
 DisplayModel *DisplayModel_CreateFromFileName(
-  const char *fileName,
+  const WCHAR *fileName,
   SizeD totalDrawAreaSize,
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,

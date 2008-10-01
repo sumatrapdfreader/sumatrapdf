@@ -4,6 +4,7 @@
 #define _PDF_ENGINE_H_
 
 #include "geom_util.h"
+#include "wstr_util.h"
 
 #ifndef _FITZ_H_
 #include <fitz.h>
@@ -94,11 +95,11 @@ class PdfEngine {
 public:
     PdfEngine();
     ~PdfEngine();
-    const char *fileName(void) const { return _fileName; };
+    const WCHAR *fileName(void) const { return _fileName; };
 
-    void setFileName(const char *fileName) {
+    void setFileName(const WCHAR *fileName) {
         assert(!_fileName);
-        _fileName = (const char*)strdup(fileName);
+        _fileName = (const WCHAR*)wstr_dup(fileName);
     }
 
     bool validPageNo(int pageNo) const {
@@ -111,7 +112,7 @@ public:
         return _pageCount; 
     }
 
-    bool load(const char *fileName, WindowInfo *windowInfo, bool tryrepair);
+    bool load(const WCHAR *fileName, WindowInfo *windowInfo, bool tryrepair);
     int pageRotation(int pageNo);
     SizeD pageSize(int pageNo);
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
@@ -132,7 +133,7 @@ public:
     fz_obj    *getNamedDest(const char *name);
 
 protected:
-    const char *_fileName;
+    const WCHAR *_fileName;
     int _pageCount;
     WindowInfo *_windowInfo;
 

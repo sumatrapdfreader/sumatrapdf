@@ -42,6 +42,11 @@ fz_error *pdf_repairxref(pdf_xref *, char *filename);
 fz_error *pdf_loadxref(pdf_xref *, char *filename);
 fz_error *pdf_initxref(pdf_xref *);
 
+#ifdef WIN32_UNICODE_HACK
+#include <wchar.h>
+fz_error *pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename);
+#endif
+
 fz_error *pdf_openpdf(pdf_xref **, char *filename);
 fz_error *pdf_updatexref(pdf_xref *, char *filename);
 fz_error *pdf_savexref(pdf_xref *, char *filename, pdf_crypt *encrypt);

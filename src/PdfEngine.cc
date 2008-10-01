@@ -7,7 +7,7 @@
 #include "utf_util.h"
 
 // in SumatraPDF.cpp
-extern "C" char *GetPasswordForFile(WindowInfo *win, const char *fileName);
+extern "C" char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName);
 
 /* hack to make fz_throw work in C++ */
 #ifdef nil
@@ -197,7 +197,7 @@ PdfEngine::~PdfEngine()
     free((void*)_fileName);
 }
 
-bool PdfEngine::load(const char *fileName, WindowInfo *win, bool tryrepair)
+bool PdfEngine::load(const WCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
     _windowInfo = win;
     setFileName(fileName);
@@ -205,7 +205,7 @@ bool PdfEngine::load(const char *fileName, WindowInfo *win, bool tryrepair)
     if (error)
         goto Error;
 
-    error = pdf_loadxref(_xref, (char*)fileName);
+    error = pdf_loadxrefw(_xref, fileName);
     if (error) {
         if (!strncmp(error->msg, "ioerror", 7))
             goto Error;

@@ -86,13 +86,12 @@ char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
 
 /* For passing data to/from GetPassword dialog */
 typedef struct {
-    const char *  fileName;   /* name of the file for which we need the password */
-    char *        pwdOut;     /* password entered by the user */
+    const WCHAR *  fileName;   /* name of the file for which we need the password */
+    char *         pwdOut;     /* password entered by the user */
 } Dialog_GetPassword_Data;
 
 static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    DString                    ds;
     Dialog_GetPassword_Data *  data;
 
     if (WM_INITDIALOG == message)
@@ -104,10 +103,9 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
         assert(!data->pwdOut);
         win_set_textw(hDlg, _TRW("Enter password"));
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
-        DStringInit(&ds);
-        DStringSprintf(&ds, _TRA("Enter password for %s"), data->fileName);
-        SetDlgItemTextA(hDlg, IDC_GET_PASSWORD_LABEL, ds.pString);
-        DStringFree(&ds);
+        WCHAR *txt = wstr_printf(_TRW("Enter password for %s"), data->fileName);
+        SetDlgItemTextW(hDlg, IDC_GET_PASSWORD_LABEL, txt);
+        free(txt);
         SetDlgItemTextA(hDlg, IDC_GET_PASSWORD_EDIT, "");
         SetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
         return FALSE;
@@ -139,7 +137,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
    NULL if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-char *Dialog_GetPassword(WindowInfo *win, const char *fileName)
+char *Dialog_GetPassword(WindowInfo *win, const WCHAR *fileName)
 {
     int                     dialogResult;
     Dialog_GetPassword_Data data;

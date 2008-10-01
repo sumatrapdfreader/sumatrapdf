@@ -281,7 +281,7 @@ static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarPageText(WindowInfo *win);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
-static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
+static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win, 
     DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
     bool showWin);
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize);
@@ -1098,8 +1098,10 @@ static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
     UINT newId = node->menuId;
     if (INVALID_MENU_ID == node->menuId)
         newId = AllocNewMenuId();
-    const char* txt = FilePath_GetBaseName(node->state.filePath);
-    AppendMenu(menuFile, MF_ENABLED | MF_STRING, newId, txt);
+    const char* utf8 = FilePath_GetBaseName(node->state.filePath);
+    WCHAR *uni = utf8_to_wstr(utf8);
+    AppendMenuW(menuFile, MF_ENABLED | MF_STRING, newId, uni);
+    free((void*)uni);
     node->menuId = newId;
 }
 
@@ -1233,14 +1235,14 @@ static void AddFileToHistory(const char *filePath)
     FileHistoryList_Node_InsertHead(&gFileHistoryRoot, node);
 }
 
-extern "C" char *GetPasswordForFile(WindowInfo *win, const char *fileName);
+extern "C" char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName);
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box.
    Caller needs to free() the result. */
-char *GetPasswordForFile(WindowInfo *win, const char *fileName)
+char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName)
 {
-    fileName = FilePath_GetBaseName(fileName);
+    fileName = FilePathW_GetBaseName(fileName);
     return Dialog_GetPassword(win, fileName);
 }
 
@@ -1438,9 +1440,9 @@ static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
 {
-    DisplayState    ds;
-    const char *    fileName = NULL;
-    FileHistoryList*node = NULL;
+    DisplayState     ds;
+    const WCHAR *    fileName = NULL;
+    FileHistoryList* node = NULL;
 
     if (!win)
         return;
@@ -1463,7 +1465,9 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!fileName)
         return;
 
-    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    const char *fileNameUtf8 = wstr_to_utf8(fileName);
+    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileNameUtf8);
+    free((void*)fileNameUtf8);
     assert(node);
     if (!node)
         return;
@@ -1533,7 +1537,6 @@ Exit:
 }
 
 static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
-    LPCTSTR fname = win->watcher.filepath();
     if (win->pdfsync)
         win->pdfsync->discard_index();
     DisplayState ds;
@@ -1541,7 +1544,10 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
         return;
     UpdateDisplayStateWindowRect(win, &ds);
-    RefreshPdfDocument(fname, win, &ds, true, autorefresh, true);
+	const char *fileNameUtf8 =  win->watcher.filepath();
+    WCHAR* fileName = utf8_to_wstr(fileNameUtf8);
+    RefreshPdfDocument(fileName, win, &ds, true, autorefresh, true);
+	free((void*)fileName);
 }
 
 #ifndef THREAD_BASED_FILEWATCH
@@ -1754,7 +1760,7 @@ static int WindowInfoList_Len(void) {
 WindowInfo* WindowInfoList_Find(LPTSTR file) {
     WindowInfo* curr = gWindowList;
     while (curr) {
-        if (_tcsicmp(curr->watcher.szFilepath, file) == 0)
+        if (str_eq(curr->watcher.filepath(), file) == 0)
             return curr;
         curr = curr->next;
     }
@@ -2066,7 +2072,7 @@ static void RecalcSelectionPosition (WindowInfo *win) {
     }
 }
 
-static bool RefreshPdfDocument(const char *fileName, WindowInfo *win, 
+static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win, 
     DisplayState *state, bool reuseExistingWindow, bool autorefresh,
     bool showWin)
 {
@@ -2139,7 +2145,7 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
                 WindowInfo_Delete(win);
                 return false;
         }
-        DBG_OUT("failed to load file %s\n", fileName);
+        //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
         win->needrefresh = true;
         // it is an automatic refresh and there is an error while reading the pdf
         // then fallback to the previous state
@@ -2186,24 +2192,26 @@ static bool RefreshPdfDocument(const char *fileName, WindowInfo *win,
     WindowInfo_UpdateFindbox(win);
 
     int pageCount = win->dm->pageCount();
-    const char *baseName = FilePath_GetBaseName(win->dm->fileName());
+    const WCHAR *baseName = FilePathW_GetBaseName(win->dm->fileName());
     if (pageCount <= 0)
-        win_set_text(win->hwndFrame, baseName);
+        win_set_textw(win->hwndFrame, baseName);
     else {
-        char buf[256];
-        HRESULT hr = StringCchPrintfA(buf, dimof(buf), " / %d", pageCount);
-        SetWindowText(win->hwndPageTotal, buf);
+        WCHAR buf[256];
+        HRESULT hr = StringCchPrintfW(buf, dimof(buf), L" / %d", pageCount);
+        SetWindowTextW(win->hwndPageTotal, buf);
 
-        const CHAR *title = baseName;
+        const WCHAR *title = baseName;
 
+        // TODO: change win->title to unicode
         if (win->title)
             title = win->title;
 
-        if (win->needrefresh)
-            hr = StringCchPrintfA(buf, dimof(buf), "(Changes detected - will refresh when file is unlocked) %s", title);
+        if (win->needrefresh) {
+            hr = StringCchPrintfW(buf, dimof(buf), L"(Changes detected - will refresh when file is unlocked) %s", title);
+            win_set_textw(win->hwndFrame, buf);
+        }
         else
-            hr = StringCchPrintfA(buf, dimof(buf), "%s", title);
-        win_set_text(win->hwndFrame, buf);
+            win_set_textw(win->hwndFrame, title);
     }
 Error:
     MenuToolbarUpdateStateForAllWindows();
@@ -2255,7 +2263,7 @@ static void CheckPositionAndSize(DisplayState* ds)
         ds->windowDy = DEF_PAGE_DY;
 }
 
-WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
+WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -2276,10 +2284,11 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
         win->title = windowTitle;
 
     // TODO: fileName might not exist.
-    TCHAR fullpath[_MAX_PATH];
-    GetFullPathName(fileName, dimof(fullpath), fullpath, NULL);
+    WCHAR fullpath[_MAX_PATH];
+    GetFullPathNameW(fileName, dimof(fullpath), fullpath, NULL);
+    char *fileNameUtf8 = wstr_to_utf8(fileName);
 
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileNameUtf8);
     DisplayState *ds = NULL;
     if (fileFromHistory)
         ds = &fileFromHistory->state;
@@ -2290,22 +2299,41 @@ WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
         return NULL;
     }
 
-// Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
+    char *fullPathUtf8 = wstr_to_utf8(fullpath);
+    // Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
 #ifdef THREAD_BASED_FILEWATCH
+    // TODO: passing fullPathUtf8 won't work for non-ascii files. First,
+    // it should be converted to filesystem encoding. Second, even then it won't
+    // work for unicode files names. We use utf8 so that we can safely
+    // round-trip the string.
+    // The right fix is to convert FileWatcher and PdfSync to handle Unicode
+    // file names
     if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
+        win->watcher.StartWatchThread(fullPathUtf8, &OnFileChange, (LPARAM)win);
 #else
-    win->watcher.Init(fullpath);
+        win->watcher.Init(fullPathUtf8);
 #endif
 
-    win->pdfsync = CreateSyncrhonizer(fullpath);
+    win->pdfsync = CreateSynchronizer(fullPathUtf8);
 
     if (!fileFromHistory) {
-        AddFileToHistory(fileName);
+        AddFileToHistory(fileNameUtf8);
         RebuildProgramMenus();
     }
+
     gGlobalPrefs.m_pdfsOpened += 1;
+    free((void*)fileNameUtf8);
+    free((void*)fullPathUtf8);
     return win;
+}
+
+/* A band-aid, accept fileName in non-unicode form until all callers are
+   fixed. */
+WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
+{
+    WCHAR *fileNameW = str_to_wstr_simplistic(fileName);
+    WCHAR *windowTitleW = str_to_wstr_simplistic(windowTitle);
+    return LoadPdf(fileNameW, showWin, windowTitleW);
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
@@ -2593,12 +2621,12 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
 {
     int         i;
-    char        filename[MAX_PATH];
-    const int   files_count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
+    WCHAR       filename[MAX_PATH];
+    const int   files_count = DragQueryFileW(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
     for (i = 0; i < files_count; i++)
     {
-        DragQueryFile(hDrop, i, filename, MAX_PATH);
+        DragQueryFileW(hDrop, i, filename, MAX_PATH);
         LoadPdf(filename);
     }
     DragFinish(hDrop);
@@ -3519,7 +3547,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     if (!win || !win->dm ) return;
 
     if (!win->pdfsync) {
-        win->pdfsync = CreateSyncrhonizer(win->watcher.filepath());
+        win->pdfsync = CreateSynchronizer(win->watcher.filepath());
         if (!win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             WindowInfo_ShowMessage_Asynch(win, L"Synchronization file cannot be opened", true);
@@ -4175,9 +4203,9 @@ static void OnMenuPrint(WindowInfo *win)
 
 static void OnMenuSaveAs(WindowInfo *win)
 {
-    OPENFILENAME ofn = {0};
-    char         dstFileName[MAX_PATH] = {0};
-    const char*  srcFileName = NULL;
+    OPENFILENAMEW  ofn = {0};
+    WCHAR          dstFileName[MAX_PATH] = {0};
+    const WCHAR*   srcFileName = NULL;
 
     assert(win);
     if (!win) return;
@@ -4190,25 +4218,25 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    strcpy(dstFileName, FilePath_GetBaseName(srcFileName));
+    wstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = "PDF\0*.pdf\0All\0*.*\0";
+    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_SHOWHELP | OFN_OVERWRITEPROMPT;
 
-    if (FALSE == GetSaveFileName(&ofn))
+    if (FALSE == GetSaveFileNameW(&ofn))
         return;
 
-    char* realDstFileName = dstFileName;
-    if (!str_endswithi(dstFileName, ".pdf")) {
-        realDstFileName = str_cat(dstFileName, ".pdf");
+    WCHAR* realDstFileName = dstFileName;
+    if (!wstr_endswithi(dstFileName, L".pdf")) {
+        realDstFileName = wstr_cat_s(dstFileName, dimof(dstFileName), L".pdf");
     }
     BOOL cancelled = FALSE;
-    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
+    BOOL ok = CopyFileExW(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
     if (!ok) {
         SeeLastError();
         MessageBox(win->hwndFrame, _TR("Failed to save a file"), "Information", MB_OK);
@@ -4219,8 +4247,8 @@ static void OnMenuSaveAs(WindowInfo *win)
 
 static void OnMenuOpen(WindowInfo *win)
 {
-    OPENFILENAME ofn = {0};
-    char         fileName[260];
+    OPENFILENAMEW ofn = {0};
+    WCHAR         fileName[260];
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
@@ -4228,23 +4256,22 @@ static void OnMenuOpen(WindowInfo *win)
 
     // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
     // use the contents of szFile to initialize itself.
-    ofn.lpstrFile[0] = '\0';
-    ofn.nMaxFile = sizeof(fileName);
-    ofn.lpstrFilter = "PDF\0*.pdf\0All\0*.*\0";
+    ofn.lpstrFile[0] = L'\0';
+    ofn.nMaxFile = dimof(fileName);
+    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-    if (FALSE == GetOpenFileName(&ofn))
+    if (FALSE == GetOpenFileNameW(&ofn))
         return;
 
     win = LoadPdf(fileName);
     if (!win)
         return;
 }
-
 static void RotateLeft(WindowInfo *win)
 {
     assert(win);
@@ -4458,9 +4485,9 @@ static void ReloadPdfDocument(WindowInfo *win)
 {
     if (WS_SHOWING_PDF != win->state)
         return;
-    const char *fileName = NULL;
+    const WCHAR *fileName = NULL;
     if (win->dm)
-        fileName = (const char*)str_dup(win->dm->fileName());
+        fileName = (const WCHAR*)wstr_dup(win->dm->fileName());
     CloseWindow(win, false);
     if (fileName) {
         LoadPdf(fileName);
@@ -5091,6 +5118,15 @@ static const char *RecentFileNameFromMenuItemId(UINT  menuId) {
         curr = curr->next;
     }
     return NULL;
+}
+
+static const WCHAR *RecentFileNameWFromMenuItemId(UINT  menuId) {
+	const char *fileName = RecentFileNameFromMenuItemId(menuId);
+	if (!fileName)
+		return NULL;
+	const WCHAR *ret = utf8_to_wstr(fileName);
+	free((void*)fileName);
+	return ret;
 }
 
 static void OnMenuContributeTranslation()
@@ -5973,7 +6009,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     int             wmId, wmEvent;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
-    const char *    fileName;
+    const WCHAR *   fileName;
 
     win = WindowInfo_FindByHwnd(hwnd);
 
@@ -6001,7 +6037,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             wmId    = LOWORD(wParam);
             wmEvent = HIWORD(wParam);
 
-            fileName = RecentFileNameFromMenuItemId(wmId);
+            fileName = RecentFileNameWFromMenuItemId(wmId);
             if (fileName) {
                 LoadPdf(fileName);
                 free((void*)fileName);
