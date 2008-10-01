@@ -1713,7 +1713,7 @@
     FT_Error     error;
     FT_Driver    driver;
     FT_Memory    memory;
-    FT_Stream    stream;
+    FT_Stream    stream = 0;
     FT_Face      face = 0;
     FT_ListNode  node = 0;
     FT_Bool      external_stream;
