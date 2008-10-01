@@ -125,8 +125,9 @@ void FileWatcher::Init(LPCTSTR filefullpath)
         FILE_FLAG_BACKUP_SEMANTICS  | FILE_FLAG_OVERLAPPED , // file attributes
         NULL // file with attributes to copy 
       );
-  
+
     memset(&overl, 0, sizeof(overl));
+    memset(buffer, 0, sizeof(buffer));
     overl.hEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
     curBuffer = 0;
 
