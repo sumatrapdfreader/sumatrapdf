@@ -284,7 +284,7 @@ by:Захаваць як
 ja:名前を付けて保存(&S)
 fa:...ذخيره به نام دیگر
 dk:&Gem som
-it:&Salva come
+it:&Salva con nome...
 nl:&Opslaan als...
 ta:எனச் சேமி
 es:&Guardar como
@@ -334,7 +334,7 @@ by:Друкаваць\tCtrl-P
 ja:印刷(&P)
 fa:چاپ\tCtrl-P
 dk:&Udskriv
-it:&Stampa
+it:S&tampa
 nl:&Afdrukken\tCtrl-P
 ta:அச்சிடு
 es:&Imprimir
@@ -384,7 +384,7 @@ by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ja:SumatraPDF を既定の PDF リーダーにする
 fa:PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
 dk:Gør SumatraPDF til din standard PDF læser
-it:Imposta SumatraPDF come Lettore Predefinito di Files PDF
+it:&Imposta SumatraPDF come lettore predefinito per i file PDF
 nl:SumatraPDF instellen als standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
@@ -485,7 +485,7 @@ by:Выгляд
 ja:表示(&V)
 fa:نمايش
 dk:&Vis
-it:Visualizza
+it:&Visualizza
 nl:&Beeld
 ta:நோக்கு
 es:&Ver
@@ -535,7 +535,7 @@ by:Адна старонка
 ja:単一のページ
 fa:نمايش تک‌صفحه‌اي
 dk:Enkelt side
-it:Pagina Singola
+it:Pagina singola
 nl:Enkele pagina
 ta:ஒற்றைப் பக்கம்
 es:Página Única
@@ -585,7 +585,7 @@ by:Дзьве старонкі
 ja:見返し
 fa:نمايش دوصفحه‌اي
 dk:Modstående
-it:Pagine Affiancate
+it:Pagine affiancate
 nl:Dubbele pagina
 ta:முகப்பு
 es:Página Doble
@@ -635,7 +635,7 @@ by:Працягла
 ja:連続
 fa:نمايش پيوسته
 dk:Fortløbende
-it:Scorrimento Pagina
+it:Pagina singola continua
 nl:Doorlopend
 ta:தொடர்
 es:Contínua
@@ -685,7 +685,7 @@ by:Працягла дзьве старонкі
 ja:連続の見返し
 fa:نمايش دوصفحه‌اي پيوسته
 dk:Fortløbende modstående
-it:Scorrimento Pagine Affiancate
+it:Pagine affiancate continue
 nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
 es:Página Doble Contínua
@@ -735,7 +735,7 @@ by:Павярнуць налева
 ja:左に回転
 fa:چرخاندن به چپ
 dk:Drej venstre
-it:Ruota a Sinistra
+it:Ruota a sinistra
 nl:Linksom draaien
 ta:இடதுப்புறம் சுழற்று
 es:Girar a la izquierda
@@ -785,7 +785,7 @@ by:Павярнуць направа
 ja:右に回転
 fa:چرخاندن به راست
 dk:Drej højre
-it:Ruota a Destra
+it:Ruota a destra
 nl:Rechtsom draaien
 ta:வலப்புறம் சுழற்று
 es:Girar a la derecha
@@ -917,7 +917,7 @@ by:Паказаль панэль прыладаў
 ja:ツール バーの表示
 fa:نمايش نوار ابزار
 dk:Vis værktøjslinie
-it:Mostra la Barra degli Strumenti
+it:Mostra la barra degli strumenti
 nl:Werkbalk tonen
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
@@ -967,7 +967,7 @@ by:Перайсці да
 ja:移動(&G)
 fa:برو به
 dk:&Gå til
-it:&Vai a
+it:Va&i a
 nl:&Ga naar
 ta:அங்கு செல்
 es:&Ir a
@@ -1017,7 +1017,7 @@ by:Наступная старонка
 ja:次のページ
 fa:صفحه بعدی
 dk:Næste side
-it:Pagina Successiva
+it:Pagina successiva
 nl:Volgende pagina
 ta:அடுத்த பக்கம்
 es:Página Siguiente
@@ -1067,7 +1067,7 @@ by:Папярэдняя старонка
 ja:前のページ
 fa:صفحه قبلی
 dk:Forrige side
-it:Pagina Precedente
+it:Pagina precedente
 nl:Vorige pagina
 ta:முந்தைய பக்கம்
 es:Página Anterior
@@ -1117,7 +1117,7 @@ by:Першая старонка\tHome
 ja:最初のページ\tHome
 fa:صفحه نخست\tHome
 dk:Første side\tHome
-it:Prima Pagina\tHome
+it:Prima pagina\tHome
 nl:Eerste pagina\tHome
 ta:முதல் பக்கம்\tHome
 es:Primera Página\tHome
@@ -1167,7 +1167,7 @@ by:Апошняя старонка\tEnd
 ja:最後のページ\tEnd
 fa:صفحه پایانی\tEnd
 dk:Sidste side\tEnd
-it:Ultima Pagina\tEnd
+it:Ultima pagina\tEnd
 nl:Laatste pagina\tEnd
 ta:இறுதி பக்கம்\tEnd
 es:Última Página\tEnd
@@ -1267,7 +1267,7 @@ by:Памер
 ja:拡大と縮小(&Z)
 fa:تغيير بزرگی
 dk:&Zoom
-it:&Ingrandisci
+it:&Zoom
 nl:&Zoom
 ta:பெரிதாக்கு
 es:&Zoom
@@ -1317,7 +1317,7 @@ by:Змясціць старонку\tCtrl-0
 ja:ページに合わせる(&P)\tCtrl-0
 fa:به بزرگی پنجره\tCtrl-0
 dk:Hele &siden\tCtrl-0
-it:Intera &Pagina\tCtrl-0
+it:&Pagina intera\tCtrl-0
 nl:Hele &Pagina\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
 es:Ajustar &Página\tCtrl-0
@@ -1367,7 +1367,7 @@ by:Рэальны памер\tCtrl-1
 ja:実際のサイズ(&U)\tCtrl-1
 fa:بزرگی خودش\tCtrl-1
 dk:Akt&ual størrelse\tCtrl-1
-it:Dimensione Reale\tCtrl-1
+it:&Dimensioni reali\tCtrl-1
 nl:Ware grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
 es:Tamaño Real\tCtrl-1
@@ -1417,7 +1417,7 @@ by:Змясціць па шырыне
 ja:幅に合わせる(&H)\tCtrl-2
 fa:به بزرگی پهنای پنجره\tCtrl-2
 dk:Tilpas &bredde\tCtrl-2
-it:&Larghezza Pagina\tCtrl-2
+it:&Larghezza pagina\tCtrl-2
 nl:Passend in &breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
 es:&Ancho de Página\tCtrl-2
@@ -1543,7 +1543,7 @@ by:Дапамога
 ja:ヘルプ(&H)
 fa:راهنما
 dk:&Hjælp
-it:Aiuto
+it:&Aiuto
 nl:&Help
 ta:உதவி
 es:&Ayuda
@@ -1593,7 +1593,7 @@ by:Наведаць сайт
 ja:ウェブサイトの訪問(&V)
 fa:بازديد از وب‌سايت
 dk:Besøg &webside
-it:&Visita il Sito WEB
+it:&Visita il sito Internet
 nl:Bezoek de &website
 ta:வலைத்தளம் செல்
 es:&Visitar Sitio Web
@@ -1648,6 +1648,7 @@ gl:Manual de Instruccións
 mk:Прирачник за употреба
 tl:Gabay
 bn:নির্দেশ নথিপত্র
+it:&Guida
 -
 &About
 bg:Относно програмата...
@@ -1859,7 +1860,7 @@ tr:Büyük/Küçük harf eşleştir
 hu:Kis- és nagybetűk megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字を区別する
-it:Sensibilità al carattere
+it:Maiuscole/minuscole
 nl:Hoofdlettergevoelig
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
@@ -2000,7 +2001,7 @@ by:Паменьшыць
 ja:縮小
 fa:کوچک‌نمايي
 dk:Zoom ud
-it:Diminuisci
+it:Riduci
 nl:Uitzoomen
 ta:சிறிதாக்கு
 es:Alejar Zoom
@@ -2100,7 +2101,7 @@ by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчан
 ja:SumatraPDF は現在 PDF ファイルの既定のリーダーです。
 fa:.شما خواهد بود PDF مرورگر پيش‌فرض اسناد  SumatraPDF از اين پس
 dk:SumatraPDF er nu din standardlæser for PDF filer.
-it:SumatraPDF è stato impostato come lettore predefinito di Files PDF.
+it:SumatraPDF è stato impostato come lettore predefinito per i file PDF.
 nl:SumatraPDF is nu de standaardlezer voor PDF-bestanden.
 ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
 es:SumatraPDF es ahora el lector PDF por defecto.
@@ -2149,7 +2150,7 @@ by:Немагчыма захаваць файл
 ja:ファイルの保存に失敗しました
 fa:ذخيره کردن فايل با مشکل روبرو شد
 dk:Kunne ikke gemme filen.
-it:Salvataggio del File PDF fallito!
+it:Salvataggio del file PDF fallito!
 nl:Fout bij opslaan bestand
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
@@ -2298,7 +2299,7 @@ ta:அச்சுப்பொறி சிக்கல்
 nl:Probleem bij het afdrukken.
 ja:印刷の問題です。
 fa:مشکل در چاپ
-it:Problemi di Stampa
+it:Problema di stampa.
 es:Error de impresión.
 hr:Problem kod ispisivanja.
 ru:Ошибка при печати.
@@ -2400,6 +2401,7 @@ tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 va:Establir busca inversa
 ca:Cerca cap enrere
 bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
+it:Imposta comando di ricerca inversa
 -
 Change language
 bg:Смени езика (Change language)
@@ -2594,7 +2596,7 @@ uk:Перевірити, чи є нова версія
 ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
 hr:Provjeravaj dostupnost nove inačice
-it:Verifica aggiornamenti
+it:V&erifica aggiornamenti
 nl:&Controleren op updates
 fr:Vérifier les mises à jour
 no:Se etter oppdatering
@@ -2702,7 +2704,7 @@ uk:Нова версія %s є доступною. Завантажити нов
 ru:Доступна новая версия: %s. Хотите её загрузить?
 es:La nueva versión %s está disponible. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
-it:E' disponibile la versione %s. Scaricare la nuova versione?
+it:È disponibile la versione %s. Scaricare la nuova versione?
 nl:Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?
 fr:La version %s est disponible. Télécharger la nouvelle version ?
 no:Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
@@ -2729,7 +2731,7 @@ uk:Доступна нова версія.
 ru:Доступна новая версия.
 es:Nueva versión disponible
 hr:Dostupna je nova inačica.
-it:E' disponibile una nuova versione. 
+it:È disponibile una nuova versione. 
 nl:Nieuwe versie beschikbaar.
 fr:Une nouvelle version est disponible
 no:Ny versjon tilgjenglig.
@@ -2785,3 +2787,4 @@ ca:Actualitza automàticament
 sn:Rega iite auto-update
 bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রিয় করুন
 fa:به روز رسانی اتوماتیک
+it:Aggiornamento automatico
