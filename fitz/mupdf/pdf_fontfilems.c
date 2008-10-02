@@ -904,10 +904,16 @@ pdf_loadbuiltinfont(pdf_font *font, char *basefont)
 		len = *basefonts[i].len;
 
 		fterr = FT_New_Memory_Face(ftlib, data, len, 0, (FT_Face*)&font->ftface);
+		/* TODO: fails on "Helvetica" */
+#if 0
 		if (fterr)
 			return fz_throw("freetype: cannot load font: %s", ft_errstr(fterr));
 
 		return fz_okay;
+#else
+		if (!fterr)
+			return fz_okay;
+#endif
 	}
 #endif
 
