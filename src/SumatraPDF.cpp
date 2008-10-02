@@ -5262,18 +5262,18 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
 {
-    PdfSearchResult *rect = NULL;
+    wchar_t text[256];
+    GetWindowTextW(hwnd, text, sizeof(text));
+    bool hasText = wcslen(text) > 0;
+    if (!hasText)
+        return;
 
-    if (!Edit_GetModify(hwnd))
+    bool wasModified = Edit_GetModify(hwnd);
+    PdfSearchResult *rect;
+    if (wasModified)
+        rect = win->dm->Find(direction, text);
+    else
         rect = win->dm->Find(direction);
-
-    if (!rect)
-    {
-        wchar_t text[256];
-        GetWindowTextW(hwnd, text, sizeof(text));
-        if (wcslen(text) > 0)
-            rect = win->dm->Find(direction, text);
-    }
 
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
