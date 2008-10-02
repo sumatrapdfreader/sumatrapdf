@@ -1307,6 +1307,7 @@ pdf_dumpcmapasccode(pdf_cmap *cmap, char *name)
 #define USE_ETENMS_B5_H
 #define USE_KSCMS_UHC_H
 #define USE_UNIJIS_UCS2_H
+#define USE_90MS_RKSJ_H
 
 #define INCLUDE_CMAP_DATA
 #include "adobe_japan1_ucs2.c"
@@ -1319,6 +1320,7 @@ pdf_dumpcmapasccode(pdf_cmap *cmap, char *name)
 #include "etenms_b5_h.c"
 #include "kscms_uhc_h.c"
 #include "unijis_ucs2_h.c"
+#include "90ms_rksj_h.c"
 
 static fz_error *getstaticcmap(char *name, pdf_cmap **cmapp)
 {
@@ -1333,6 +1335,7 @@ static fz_error *getstaticcmap(char *name, pdf_cmap **cmapp)
 #include "etenms_b5_h.c"
 #include "kscms_uhc_h.c"
 #include "unijis_ucs2_h.c"
+#include "90ms_rksj_h.c"
 	return fz_okay;
 }
 #else
