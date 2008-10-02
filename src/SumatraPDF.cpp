@@ -2332,7 +2332,9 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
 WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
 {
     WCHAR *fileNameW = str_to_wstr_simplistic(fileName);
-    WCHAR *windowTitleW = str_to_wstr_simplistic(windowTitle);
+    WCHAR *windowTitleW = NULL;
+    if (windowTitle)
+        windowTitleW = str_to_wstr_simplistic(windowTitle);
     return LoadPdf(fileNameW, showWin, windowTitleW);
 }
 
