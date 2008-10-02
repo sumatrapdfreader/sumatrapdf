@@ -3751,7 +3751,6 @@ static void OnMouseLeftButtonDblClk(WindowInfo *win, int x, int y, int key)
     //DBG_OUT("Right button clicked on %d %d\n", x, y);
     assert (win);
     if (!win) return;
-
     OnInverseSearch(win, x, y);
 }
 
@@ -3767,6 +3766,8 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
         win->url = AboutGetLink(win, x, y);
         return;
     }
+
+    SetFocus(win->hwndFrame);
 
     if (!gRestrictedUse && (key & MK_CONTROL) != 0)
         OnSelectionStart(win, x, y);
