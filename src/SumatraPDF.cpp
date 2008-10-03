@@ -5018,11 +5018,13 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         if (ctrlPressed)
             OnMenuGoToPage(win);
 #endif
-    } else if (VK_OEM_PLUS == key) {
+    } else if (((VkKeyScan('+') & 0xFF) == key) ||
+        (VK_ADD == key)) {
         // Emulate acrobat: "Shift Ctrl +" is rotate clockwise
         if (shiftPressed & ctrlPressed)
             RotateRight(win);
-    } else if (VK_OEM_MINUS == key) {
+    } else if (((VkKeyScan('-') & 0xFF) == key) ||
+        (VK_SUBTRACT == key)) {
         // Emulate acrobat: "Shift Ctrl -" is rotate counter-clockwise
         if (shiftPressed & ctrlPressed)
             RotateLeft(win);
@@ -7033,7 +7035,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * _MAX_PATH + 20];
-                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%s\", 1, 1)]", currArg->str);
+                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%s\", 1, 1, 0)]", currArg->str);
                 DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
                 if (destName && pdfOpened == 0)
                 {
