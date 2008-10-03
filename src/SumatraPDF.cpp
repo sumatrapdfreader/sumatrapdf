@@ -1760,7 +1760,7 @@ static int WindowInfoList_Len(void) {
 WindowInfo* WindowInfoList_Find(LPTSTR file) {
     WindowInfo* curr = gWindowList;
     while (curr) {
-        if (str_eq(curr->watcher.filepath(), file) == 0)
+        if (str_eq(curr->watcher.filepath(), file))
             return curr;
         curr = curr->next;
     }
