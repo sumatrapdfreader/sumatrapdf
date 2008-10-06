@@ -3216,7 +3216,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { "programming", "Krzysztof Kowalczyk", "http://blog.kowalczyk.info",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "pdf rendering", "MuPDF", "http://ccxvii.net/apparition/",
+    { "pdf rendering", "MuPDF", "http://ccxvii.net/fitz/",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "website", "http://blog.kowalczyk.info/software/sumatrapdf", "http://blog.kowalczyk.info/software/sumatrapdf",
@@ -3232,9 +3232,6 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { "translations", "The Translators", "http://blog.kowalczyk.info/software/sumatrapdf/translators.html",
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { "generous?", "donate", "http://blog.kowalczyk.info/software/sumatrapdf/donate.html",
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { NULL, NULL, NULL,
