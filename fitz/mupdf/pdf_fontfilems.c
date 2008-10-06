@@ -171,8 +171,50 @@ enum
 	FD_FORCEBOLD = 1 << 18
 };
 
+/* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
+   matches "EurostileExtended-Roman" */
 static int
-compare(const void *elem1, const void *elem2)
+fontnamematches(const char *s1, const char *s2)
+{
+	const char *rest;
+	int c1, c2;
+	while (*s1 && *s2)
+	{
+		c1 = tolower(*s1++);
+		c2 = tolower(*s2++);
+		if (c1 != c2)
+			return 0;
+	}
+	if (!*s1 && !*s2)
+		return 1;
+	rest = s2;
+	if (*s1)
+		rest = s1;
+
+	if (0 == stricmp(rest, "-roman"))
+		return 1;
+	return 0;
+}
+
+static int
+lookupcompare(const void *elem1, const void *elem2)
+{
+	pdf_fontmapMS *val1 = (pdf_fontmapMS *)elem1;
+	pdf_fontmapMS *val2 = (pdf_fontmapMS *)elem2;
+
+	if (val1->fontface[0] == 0)
+		return 1;
+	if (val2->fontface[0] == 0)
+		return -1;
+
+	if (fontnamematches(val1->fontface, val2->fontface))
+		return 0;
+
+	return stricmp(val1->fontface, val2->fontface);
+}
+
+static int
+sortcompare(const void *elem1, const void *elem2)
 {
 	pdf_fontmapMS *val1 = (pdf_fontmapMS *)elem1;
 	pdf_fontmapMS *val2 = (pdf_fontmapMS *)elem2;
@@ -226,7 +268,7 @@ removeredundancy(pdf_fontlistMS *fl)
 	int roffset = 0;
 	int redundancy_count = 0;
 
-	qsort(fl->fontmap,fl->len,sizeof(pdf_fontmapMS),compare);
+	qsort(fl->fontmap, fl->len, sizeof(pdf_fontmapMS), sortcompare);
 	for (i = 0; i < fl->len - 1; ++i)
 	{
 		if (strcmp(fl->fontmap[i].fontface,fl->fontmap[i+1].fontface) == 0)
@@ -235,9 +277,9 @@ removeredundancy(pdf_fontlistMS *fl)
 			++redundancy_count;
 		}
 	}
-	qsort(fl->fontmap,fl->len,sizeof(pdf_fontmapMS),compare);
+	qsort(fl->fontmap, fl->len, sizeof(pdf_fontmapMS), sortcompare);
 	fl->len -= redundancy_count;
-#if 0
+#if 1
 	for (i = 0; i < fl->len; ++i)
 		fprintf(stdout,"%s , %s , %d\n",fl->fontmap[i].fontface,
 			fl->fontmap[i].fontpath,fl->fontmap[i].index);
@@ -696,7 +738,7 @@ pdf_lookupfontMS2(char *fontname, char **fontpath, int *index, int *didfind)
 	}
 
 	strlcpy(fontmap.fontface,pattern, sizeof(fontmap.fontface));
-	found = localbsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS),compare);
+	found = localbsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
 
 #if 0
 	if (!found)
