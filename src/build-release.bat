@@ -12,13 +12,18 @@ mkdir %OUT_PATH%
 @IF NOT DEFINED VERSION GOTO VERSION_NEEDED
 
 @rem check if makensis exists
-@makensis /version
+@makensis /version >nul
 @IF ERRORLEVEL 1 goto NSIS_NEEDED
+
+@rem check if zip exists
+@zip >nul
+@IF ERRORLEVEL 1 goto ZIP_NEEDED
 
 devenv ..\sumatrapdf.sln /Rebuild "Release|Win32"
 @IF ERRORLEVEL 1 goto BUILD_FAILED
 echo Compilation ok!
 copy ..\obj-rel\SumatraPDF.exe ..\obj-rel\SumatraPDF-uncomp.exe
+copy ..\obj-rel\SumatraPDF.pdb %OUT_PATH%\SumatraPDF-%VERSION%.pdb
 @rem upx --best ..\obj-rel\SumatraPDF.exe
 upx --ultra-brute ..\obj-rel\SumatraPDF.exe
 @IF ERRORLEVEL 1 goto PACK_FAILED
@@ -53,6 +58,10 @@ echo Need to provide version number e.g. build-release.bat 1.0
 
 :NSIS_NEEDED
 echo NSIS doesn't seem to be installed. Get it from http://nsis.sourceforge.net/Download
+@goto END
+
+:ZIP_NEEDED
+echo zip.exe doesn't seem to be available in PATH
 @goto END
 
 :END
