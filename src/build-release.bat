@@ -1,6 +1,11 @@
 @set PATH=%PATH%;%ProgramFiles%\Microsoft Visual Studio 8\Common7\IDE
 @set PATH=%PATH%;%ProgramFiles%\NSIS
-@set FASTDL_PATH=C:\kjk\src\web\fastdl\www
+@set OUT_PATH=C:\kjk\src\sumatrapdf\builds
+
+@rem create OUT_PATH if doesn't exist
+@IF EXIST %OUT_PATH% GOTO DONT_CREATE_OUT_PATH
+mkdir %OUT_PATH%
+:DONT_CREATE_OUT_PATH
 
 @pushd .
 @set VERSION=%1
@@ -22,12 +27,12 @@ upx --ultra-brute ..\obj-rel\SumatraPDF.exe
 @IF ERRORLEVEL 1 goto INSTALLER_FAILED
 
 move SumatraPDF-install.exe ..\obj-rel\SumatraPDF-%VERSION%-install.exe
-copy ..\obj-rel\SumatraPDF-%VERSION%-install.exe %FASTDL_PATH%\SumatraPDF-%VERSION%-install.exe
+copy ..\obj-rel\SumatraPDF-%VERSION%-install.exe %OUT_PATH%\SumatraPDF-%VERSION%-install.exe
 
 @cd ..\obj-rel
 @rem don't bother compressing since our *.exe has already been packed
 zip -0 SumatraPDF-%VERSION%.zip SumatraPDF.exe
-copy SumatraPDF-%VERSION%.zip %FASTDL_PATH%\SumatraPDF-%VERSION%.zip
+copy SumatraPDF-%VERSION%.zip %OUT_PATH%\SumatraPDF-%VERSION%.zip
 @goto END
 
 :INSTALLER_FAILED
