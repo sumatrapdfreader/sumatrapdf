@@ -82,7 +82,7 @@ loop:
 
 	if (reason == fz_ioneedin)
 	{
-		if (buf->rp > buf->ep)
+		if (buf->rp > buf->wp)
 		{
 			error = fz_rewindbuffer(buf);
 			if (error)
