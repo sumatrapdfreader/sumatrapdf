@@ -173,7 +173,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	fz_obj *rdb;
 	pdf_comment *comments = nil;
 	pdf_link *links = nil;
-	fz_tree *tree;
+	fz_tree *tree = nil;
 	fz_rect bbox;
 	int rotate;
 

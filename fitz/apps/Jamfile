@@ -3,8 +3,8 @@
 FITZLIBS = libmupdf libbase libstream libworld libraster libfonts ;
 
 SubDir TOP apps ;
-Main pdftool : pdftool.c ;
-LinkLibraries pdftool : $(FITZLIBS) ;
+Main mupdftool : pdftool.c ;
+LinkLibraries mupdftool : $(FITZLIBS) ;
 
 SubDir TOP apps common ;
 Library libpdfapp : pdfapp.c ;
@@ -12,17 +12,17 @@ Library libpdfapp : pdfapp.c ;
 if $(BUILD_WINAPP)
 {
     SubDir TOP apps windows ;
-    Main pdfview : winmain.c winres.rc ;
-    LinkLibraries pdfview : libpdfapp $(FITZLIBS) ;
-    LINKLIBS on pdfview$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
+    Main mupdf : winmain.c winres.rc ;
+    LinkLibraries mupdf : libpdfapp $(FITZLIBS) ;
+    LINKLIBS on mupdf$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
 }
 
 if $(BUILD_X11APP)
 {
     SubDir TOP apps unix ;
-    Main pdfview : x11pdf.c ximage.c ;
-    LinkLibraries pdfview : libpdfapp $(FITZLIBS) ;
-    LINKLIBS on pdfview$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
+    Main mupdf : x11pdf.c ximage.c ;
+    LinkLibraries mupdf : libpdfapp $(FITZLIBS) ;
+    LINKLIBS on mupdf$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
 }
 
 if $(BUILD_PLUGIN)

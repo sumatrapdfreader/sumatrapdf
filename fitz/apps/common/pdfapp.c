@@ -654,6 +654,8 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	p = 0;
 	for (ln = line; ln; ln = ln->next)
 	{
+		if (ln->len > 0)
+		{
 		y = y0 - 1;
 		for (i = 0; i < ln->len; i++)
 		{
@@ -677,6 +679,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 #endif
 			if (p < ucslen - 1)
 				ucsbuf[p++] = '\n';
+			}
 		}
 	}
 

@@ -2,6 +2,14 @@
  * Blit ARGB images to X with X(Shm)Images
  */
 
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 1
+#endif
+
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 1
+#endif
+
 #include <fitz.h>
 
 #include <X11/Xlib.h>

@@ -17,7 +17,7 @@ typedef enum pdf_token_e
 } pdf_token_e;
 
 /* lex.c */
-fz_error *pdf_lex(pdf_token_e *tok, fz_stream *f, unsigned char *buf, int n, int *len);
+fz_error *pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *len);
 
 /* parse.c */
 fz_error *pdf_parsearray(fz_obj **op, fz_stream *f, char *buf, int cap);

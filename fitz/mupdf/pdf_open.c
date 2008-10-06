@@ -39,7 +39,7 @@ static fz_error *
 readstartxref(pdf_xref *xref)
 {
 	fz_error *error;
-	char buf[1024];
+	unsigned char buf[1024];
 	int t, n;
 	int i;
 
@@ -63,7 +63,7 @@ readstartxref(pdf_xref *xref)
 			i += 9;
 			while (iswhite(buf[i]) && i < n)
 				i ++;
-			xref->startxref = atoi(buf + i);
+			xref->startxref = atoi((char*)(buf + i));
 			return fz_okay;
 		}
 	}
@@ -269,7 +269,7 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 		for (i = 0; i < len; i++)
 		{
-			error = fz_read(&n, xref->file, buf, 20);
+			error = fz_read(&n, xref->file, (unsigned char *) buf, 20);
 			if (error)
 				return fz_rethrow(error, "cannot read xref table");
 			if (!xref->table[ofs + i].type)

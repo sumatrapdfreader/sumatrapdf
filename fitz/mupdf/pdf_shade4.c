@@ -325,12 +325,10 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 	vpc = q;
 
 	shade->meshlen = 0;
-	shade->meshcap = 1024;
-	shade->mesh = fz_malloc(sizeof(float) * shade->meshcap);
-	if (!shade->mesh) {
-		error = fz_outofmem;
-		goto cleanup;
-	}
+	shade->meshcap = 0;
+	shade->mesh = nil;
+	error = growshademesh(shade, 1024);
+	if (error) goto cleanup;
 
 	j = 0;
 	for (p = 0; p < vpr-1; ++p) {

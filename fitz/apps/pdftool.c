@@ -165,7 +165,7 @@ int showcolumn;
 
 void showusage(void)
 {
-	fprintf(stderr, "usage: pdftool show [-bd] <file> [xref] [trailer] [object numbers]\n");
+	fprintf(stderr, "usage: mupdftool show [-bd] <file> [xref] [trailer] [object numbers]\n");
 	fprintf(stderr, "  -b  \tprint streams as raw binary data\n");
 	fprintf(stderr, "  -d  \tdecode streams\n");
 	exit(1);
@@ -321,7 +321,7 @@ void
 cleanusage(void)
 {
 	fprintf(stderr,
-			"usage: pdftool clean [options] input.pdf [outfile.pdf]\n"
+			"usage: mupdftool clean [options] input.pdf [outfile.pdf]\n"
 			"  -d -\tpassword for decryption\n"
 			"  -g  \tgarbage collect unused objects\n"
 			"  -x  \texpand compressed streams\n"
@@ -497,7 +497,7 @@ void
 drawusage(void)
 {
 	fprintf(stderr,
-			"usage: pdftool draw [options] [file.pdf pages ... ]\n"
+			"usage: mupdftool draw [options] [file.pdf pages ... ]\n"
 			"  -b -\tdraw page in N bands\n"
 			"  -d -\tpassword for decryption\n"
 			"  -o -\tpattern (%%d for page number) for output file\n"
@@ -506,7 +506,7 @@ drawusage(void)
 			"  -x  \txml dump of display tree\n"
 			"  -m  \tprint benchmark results\n"
 			"  example:\n"
-			"    pdftool draw -o out%%03d.pnm a.pdf 1-3,5,9-\n");
+			"    mupdftool draw -o out%%03d.pnm a.pdf 1-3,5,9-\n");
 	exit(1);
 }
 
@@ -584,8 +584,8 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 	fz_matrix ctm;
 	fz_irect bbox;
 	fz_pixmap *pix;
-	char namebuf[256];
-	char buf[256];
+	char name[256];
+	char pnmhdr[256];
 	int x, y, w, h, b, bh;
 	int fd = -1;
 	long start;
@@ -609,13 +609,13 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 
 	if (drawpattern)
 	{
-		sprintf(namebuf, drawpattern, drawcount++);
-		fd = open(namebuf, O_BINARY|O_WRONLY|O_CREAT|O_TRUNC, 0666);
+		sprintf(name, drawpattern, drawcount++);
+		fd = open(name, O_BINARY|O_WRONLY|O_CREAT|O_TRUNC, 0666);
 		if (fd < 0)
-			die(fz_throw("ioerror: could not open file '%s'", namebuf));
+			die(fz_throw("ioerror: could not open file '%s'", name));
 
-		sprintf(buf, "P6\n%d %d\n255\n", w, h);
-		write(fd, buf, strlen(buf));
+		sprintf(pnmhdr, "P6\n%d %d\n255\n", w, h);
+		write(fd, pnmhdr, strlen(pnmhdr));
 	}
 
 	error = fz_newpixmap(&pix, bbox.x0, bbox.y0, w, bh, 4);
@@ -879,11 +879,11 @@ int editmode = COPY;
 void
 editusage(void)
 {
-	fprintf(stderr, "usage: pdftool edit [-o file.pdf] [mode file.pdf pages ... ]\n");
+	fprintf(stderr, "usage: mupdftool edit [-o file.pdf] [mode file.pdf pages ... ]\n");
 	fprintf(stderr, "  mode is one of: copy over 2up 4up 8up\n");
 	fprintf(stderr, "  pages is a comma separated list of ranges\n");
 	fprintf(stderr, "  example:\n");
-	fprintf(stderr, "    pdftool edit -o output.pdf copy one.pdf 1-3,5,9 two.pdf 1-\n");
+	fprintf(stderr, "    mupdftool edit -o output.pdf copy one.pdf 1-3,5,9 two.pdf 1-\n");
 	exit(1);
 }
 
@@ -1157,7 +1157,7 @@ editmain(int argc, char **argv)
 void
 mainusage(void)
 {
-	fprintf(stderr, "usage: pdftool <command> [options...]\n");
+	fprintf(stderr, "usage: mupdftool <command> [options...]\n");
 	fprintf(stderr, "  command is one of: show, draw, clean, edit\n");
 	exit(1);
 }

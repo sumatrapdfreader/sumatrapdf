@@ -140,7 +140,6 @@ pdf_dropcsi(pdf_csi *csi)
 		fz_dropcolorspace(csi->gstate[csi->gtop].stroke.cs);
 
 	if (csi->path) fz_dropnode((fz_node*)csi->path);
-	if (csi->clip) fz_dropnode((fz_node*)csi->clip);
 	if (csi->textclip) fz_dropnode((fz_node*)csi->textclip);
 	if (csi->text) fz_dropnode((fz_node*)csi->text);
 	if (csi->array) fz_dropobj(csi->array);
@@ -239,7 +238,7 @@ runinlineimage(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file, fz_ob
 	if (error)
 		return fz_rethrow(error, "cannot load inline image");
 
-	error = pdf_lex(&tok, file, (unsigned char *)buf, sizeof buf, &len);
+	error = pdf_lex(&tok, file, buf, sizeof buf, &len);
 	if (error)
 	{
 		fz_dropimage((fz_image*)img);
@@ -369,12 +368,11 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 				return error;
 			if (fz_isdict(val))
 			{
-			    fz_obj *s = fz_dictgets(val, "S");
 			    fz_obj *g = fz_dictgets(val, "G");
 			    error = pdf_resolve(&g, xref);
 			    if (error)
 				return error;
-			    /* TODO: we should do something here, like inserting a mask node */
+			    /* TODO: we should do something here, like inserting a mask node for the S key in val */
 			    /* TODO: how to deal with the non-recursive nature of pdf soft masks? */
 			    /*puts("we encountered a soft mask");*/
 			}
@@ -968,7 +966,7 @@ Lsetcolor:
 		{
 			/* don't fail on unknown keywords if braced by BX/EX */
 			if (!csi->xbalance)
-				goto syntaxerror;
+				fz_warn("unknown keyword: %s", buf);
 		}
 	}
 
@@ -1228,7 +1226,7 @@ Lsetcolor:
 	default:
 		/* don't fail on unknown keywords if braced by BX/EX */
 		if (!csi->xbalance)
-			goto syntaxerror;
+			fz_warn("unknown keyword: %s", buf);
 	}
 
 	return fz_okay;
@@ -1251,7 +1249,7 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 		if (csi->top == 31)
 			return fz_throw("stack overflow");
 
-		error = pdf_lex(&tok, file, (unsigned char *)buf, sizeof buf, &len);
+		error = pdf_lex(&tok, file, buf, sizeof buf, &len);
 		if (error)
 			return fz_rethrow(error, "lexical error in content stream");
 

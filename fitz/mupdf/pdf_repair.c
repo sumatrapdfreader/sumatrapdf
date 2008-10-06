@@ -101,7 +101,7 @@ parseobj(fz_stream *file, char *buf, int cap, int *stmofs, int *stmlen,
 				return fz_rethrow(error, "cannot seek in file");
 		}
 
-		error = fz_read(&n, file, buf, 9);
+		error = fz_read(&n, file, (unsigned char *) buf, 9);
 		if (error)
 			return fz_rethrow(error, "cannot read from file");
 
@@ -152,7 +152,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 	int tmpofs, oidofs = 0, genofs = 0;
 	int isroot, rootoid = 0, rootgen = 0;
 	int isinfo, infooid = 0, infogen = 0;
-	int stmofs, stmlen;
+	int stmlen, stmofs = 0;
 	pdf_token_e tok;
 	int len;
 	int next;

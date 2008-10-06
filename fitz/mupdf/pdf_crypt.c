@@ -462,7 +462,7 @@ createuser(pdf_crypt *crypt, unsigned char *userpw, int pwlen)
 
 		/* Step 2 */
 		fz_md5init(&md5);
-		fz_md5update(&md5, (unsigned char *) padding, 32);
+		fz_md5update(&md5, padding, 32);
 
 		/* Step 3 */
 		fz_md5update(&md5, (unsigned char *) fz_tostrbuf(crypt->id),

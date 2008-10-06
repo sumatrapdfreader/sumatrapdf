@@ -35,9 +35,9 @@ enum
 	S41 = 6, S42 = 10, S43 = 15, S44 = 21
 };
 
-static void encode(unsigned char *, unsigned long *, unsigned);
-static void decode(unsigned long *, unsigned char *, unsigned);
-static void transform(unsigned long state[4], unsigned char block[64]);
+static void encode(unsigned char *, const unsigned long *, const unsigned);
+static void decode(unsigned long *, const unsigned char *, const unsigned);
+static void transform(unsigned long state[4], const unsigned char block[64]);
 
 static unsigned char padding[64] =
 {
@@ -79,7 +79,7 @@ static unsigned char padding[64] =
 	(a) += (b); \
 	}
 
-static void encode(unsigned char *output, unsigned long *input, unsigned len)
+static void encode(unsigned char *output, const unsigned long *input, const unsigned len)
 {
 	unsigned i, j;
 
@@ -92,7 +92,7 @@ static void encode(unsigned char *output, unsigned long *input, unsigned len)
 	}
 }
 
-static void decode(unsigned long *output, unsigned char *input, unsigned len)
+static void decode(unsigned long *output, const unsigned char *input, const unsigned len)
 {
 	unsigned i, j;
 
@@ -105,7 +105,7 @@ static void decode(unsigned long *output, unsigned char *input, unsigned len)
 	}
 }
 
-static void transform(unsigned long state[4], unsigned char block[64])
+static void transform(unsigned long state[4], const unsigned char block[64])
 {
 	unsigned long a = state[0];
 	unsigned long b = state[1];
@@ -211,7 +211,7 @@ void fz_md5init(fz_md5 *context)
 /* MD5 block update operation. Continues an MD5 message-digest operation,
  * processing another message block, and updating the context.
  */
-void fz_md5update(fz_md5 *context, unsigned char *input, unsigned inlen)
+void fz_md5update(fz_md5 *context, const unsigned char *input, const unsigned inlen)
 {
 	unsigned i, index, partlen;
 

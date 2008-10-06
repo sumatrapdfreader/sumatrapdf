@@ -1,13 +1,6 @@
-In implementing the Metro parser on top of Fitz, and with the new
-road map, I am facing the task of designing the API for managing
-resources in Fitz. Up till now I have punted on making any final
-decisions, exploring as I go.  Now I feel that I cannot do so much longer.
-Therefore I would like to hear your opinions and ideas on this.
-Please brainstorm and point out any missing pieces.
+FITZ DISPLAY TREE DESIGN DOCUMENT
 
-First, a ten mile high overview of the Fitz architecture and
-nomenclature, for those of you who are not in the loop or need
-a refresher :)
+--------------------------------------------------------------------
 
 The Fitz world is a set of resources. There are many kinds of resources.
 Resources can depend on other resources, but no circular dependencies.
@@ -28,10 +21,7 @@ and do something unspecified with it.
 
 The resource API is what I need help fleshing out. Keep in mind
 that a Fitz world should be able to be serialized to disk, so having
-callbacks and other hooks into the front-end is a no no. If it weren't
-for this, my life would be a lot simpler :)
-
-Both creation, querying, and on-disk format.
+callbacks and other hooks into the front-end is a no no.
 
 --------------------------------------------------------------------
 
@@ -43,7 +33,13 @@ nodes. Leaf nodes produce images, branch nodes combine
 or change images. An image here is a two-dimensional
 region of color and shape (alpha).
 
+The display tree consists of three basic node types.
+Some nodes provide shape, other nodes provide color,
+and some nodes combine other nodes.
+
 LEAF NODES
+
+Leaf nodes provide only shape and/or color.
 
 SOLID.
 A constant color or shape that stretches out to infinity.
@@ -55,7 +51,7 @@ Outside this rectangle is transparent.
 References an image resource.
 
 SHADE.
-A mesh of patches that define a region of interpolated colors.
+A mesh of patches that defines a region of interpolated colors.
 Outside the mesh is transparent.
 References a shade resource.
 
@@ -63,20 +59,21 @@ PATH.
 A path defines only shape.
 Moveto, lineto, curveto and closepath.
 Stroke, fill, even-odd-fill.
-Dash patterns.
+Stroke parameters (line width, line caps, line joins)
+Dash pattern.
 
 TEXT.
-A text node is an optimization, space-effectively combining
+A text node is an optimization, efficiently combining
 a transform matrix and references to glyph shapes.
 Text nodes define only shape.
 
-Text nodes have a b c d coefficients and a reference to a font.
-Then an array of glyph index and e and f coefficient tuples.
+Text nodes have a b c d matrix coefficients and a reference to a font,
+then an array of tuples with a glyph index and e and f coefficients.
 
 Text nodes may also have a separate unicode array,
 associating the (glyph,e,f) tuples with unicode character codes.
 One-to-many and many-to-one mappings are allowed.
-For text search and copy.
+This is for text extractions, search and copy.
 
 BRANCH NODES
 
@@ -106,51 +103,22 @@ It also sets the blend mode for its children.
 LINK.
 This is a dummy node that grafts in another
 tree resource. The effect is as if the other
-tree was copied here instead.
+tree was copied here instead. This is used
+for XObject forms and similar cases.
 References a tree resource.
 
-META.
-A way to insert application specific data.
-Transparent to the rasterizer, but can be
-useful to preserve some non-Fitz semantics
-that may be of use to specific producers/consumers
-of Fitz trees. For example, tiling patterns
-would be represented as an over node with
-many transform and link nodes stamping out
-the pattern to fill the page. Putting these
-under an appropriate Meta node would allow
-a PDF or Postscript backend to detect and
-recreate the tiling pattern.
-
-(meta 'pattern "...tiling pattern info..."
-	(over
-		(transform 1 0 0 1 0 0 (link 'pat1))
-		(transform 1 0 0 1 0 1 (link 'pat1))
-		(transform 1 0 0 1 1 0 (link 'pat1))
-		(transform 1 0 0 1 1 1 (link 'pat1))))
+TILE.
+Similar to a link node, but this node
+will tile its child to cover the page.
 
 --------------------------------------------------------------------
 
 COLORSPACES.
 
 A colorspace needs the capability to transform colors into
-and out of any other colorspace. I suggest that this happens
-by going either through a standard colorspace (CIE XYZ),
-or by having an optional A-to-B shortcut transform.
-
-I am thinking of three sub-classes:
-
-	Device colors. Fast and dirty: Gray, RGB, CMYK only.
-
-	ICC Profiles. I am not very familiar with this.
-	Use Argyll? Are they easy to create programmatically
-	to represent the Cal* and L*a*b colorspaces?
-
-	Separation. For Separation and DeviceN.
-	This is a list of named colors, with backend
-	specific tailoring required to make sense of it. Also has
-	an alternate colorspace (Device or ICC) with a transform.
-	How do we represent the transform function?
+and out of any other colorspace. All colorspaces resources
+referenced from the display tree are in the
+form of ICC input profiles.
 
 SHADES.
 
@@ -165,35 +133,58 @@ path) or render to an image.
 
 FONTS.
 
-There need to be four types of font resources.
+There need to be a few types of font resources.
 For now I am going to use FreeType, but that should not be a necessity.
 The resource format for fonts should be independent.
 
- * Fake fonts for substituted fonts. Refer to another fall-back
-	font resource and override the metrics.
-	Could possibly be represented as a type 3 font,
-	but knowing that it is a substitute may be useful.
+ * Substitute fonts.
+	Refer to another fall-back font resource and override the metrics.
 
- * Type 3 fonts where each glyph is represented as a Fitz tree resource.
+ * Type 3 fonts.
+	Each glyph is represented as a Fitz tree resource.
 
- * Postscript fonts, in CFF format.
+ * CFF fonts
 	Type 1 and Type 1 CID fonts are losslessly convertible to CFF.
 	OpenType fonts can have CFF glyph data.
 
  * TrueType fonts
 
+An option would be to just use an FT_Face for normal font files and
+not worry about the exact format.
+
 IMAGES.
 
-This is the tricky one. Raph, I forgot what we decided on the tiling.
-What size, planar or chunky, etc. Which bit depths do we allow?
-Image data should be chopped into tiles to allow for independent
+Image data could be chopped into tiles to allow for independent
 and random access and more CPU-cache friendly image scaling and
 color transforms.
 
  * JPEG encoded images.
 	Save byte+bit offsets to allow random access to groups of eight scanlines.
  * Monochrome images.
+	Chop into tiles. flate encoding.
  * Contone images.
+	Chop into tiles. flate encoding.
 
-The End
+--------------------------------------------------------------------
+
+Future considerations
+
+Reduce the number of node types. Over, mask and blend can be combined
+into one node type. Link and tile nodes can be combined. Remove the
+transform node type and put a transform matrix in the leaf nodes.
+
+If we remove the transform node, the display tree is in essence
+a very flat display list which only branches for clipping
+and masking parts of the display list.
+
+Representation
+
+The display tree can be represented ...
+
+As an in-memory tree.
+As a serialized list of objects, with the structure implicit.
+As a serialized list of objects, with the structure explicit by push/pop commands.
+
+On disk, as a serialized stream of resources, which have to be
+defined before they are referenced.
 

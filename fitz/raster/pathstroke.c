@@ -482,6 +482,8 @@ fz_strokepath(fz_gel *gel, fz_pathnode *path, fz_matrix ctm, float flatness, flo
 	if (path->len > 0 && path->els[0].k != FZ_MOVETO)
 	    return fz_throw("path must begin with moveto");
 
+	p0.x = p0.y = 0; /* FZ_MOVETO guarantees p0 to be set, silence compiler */
+
 	while (i < path->len)
 	{
 		switch (path->els[i++].k)
@@ -684,6 +686,8 @@ fz_dashpath(fz_gel *gel, fz_pathnode *path, fz_matrix ctm, float flatness, float
 
 	if (path->len > 0 && path->els[0].k != FZ_MOVETO)
 	    return fz_throw("path must begin with moveto");
+
+	p0.x = p0.y = 0; /* FZ_MOVETO guarantees p0 to be set, silence compiler */
 
 	while (i < path->len)
 	{

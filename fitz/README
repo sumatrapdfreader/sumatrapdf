@@ -37,11 +37,6 @@ binary for your system, you can find the Jam homepage here:
 
 	http://www.perforce.com/jam/jam.html
 
-The build also uses 'xxd', a hexdump tool that ships with Vim.
-Here's a copy of the source if it's not on your system:
-
-	http://ghostscript.com/~tor/download/xxd.c
-
 I use Mingw and MSYS to compile for Windows. If you use anything
 else, you are on your own.
 

@@ -84,7 +84,7 @@ lexcomment(fz_stream *f)
 }
 
 static void
-lexnumber(fz_stream *f, unsigned char *s, int n)
+lexnumber(fz_stream *f, char *s, int n)
 {
 	while (n > 1)
 	{
@@ -97,10 +97,10 @@ lexnumber(fz_stream *f, unsigned char *s, int n)
 }
 
 static void
-lexname(fz_stream *f, unsigned char *s, int n)
+lexname(fz_stream *f, char *s, int n)
 {
-	unsigned char *p = s;
-	unsigned char *q = s;
+	char *p = s;
+	char *q = s;
 
 	while (n > 1)
 	{
@@ -125,10 +125,10 @@ lexname(fz_stream *f, unsigned char *s, int n)
 }
 
 static int
-lexstring(fz_stream *f, unsigned char *buf, int n)
+lexstring(fz_stream *f, char *buf, int n)
 {
-	unsigned char *s = buf;
-	unsigned char *e = buf + n;
+	char *s = buf;
+	char *e = buf + n;
 	int bal = 1;
 	int oct;
 	int c;
@@ -198,10 +198,10 @@ lexstring(fz_stream *f, unsigned char *buf, int n)
 }
 
 static int
-lexhexstring(fz_stream *f, unsigned char *buf, int n)
+lexhexstring(fz_stream *f, char *buf, int n)
 {
-	unsigned char *s = buf;
-	unsigned char *e = buf + n;
+	char *s = buf;
+	char *e = buf + n;
 	int a = 0, x = 0;
 	int c;
 
@@ -253,7 +253,7 @@ tokenfromkeyword(char *key)
 }
 
 fz_error *
-pdf_lex(pdf_token_e *tok, fz_stream *f, unsigned char *buf, int n, int *sl)
+pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 {
 	fz_error *error;
 	int c;

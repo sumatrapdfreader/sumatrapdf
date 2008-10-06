@@ -30,7 +30,7 @@ fz_matrix pdf_tomatrix(fz_obj *array)
 fz_error *
 pdf_toutf8(char **dstp, fz_obj *src)
 {
-	unsigned char *srcptr = fz_tostrbuf(src);
+	unsigned char *srcptr = (unsigned char *) fz_tostrbuf(src);
 	char *dstptr;
 	int srclen = fz_tostrlen(src);
 	int dstlen = 0;
@@ -79,7 +79,7 @@ pdf_toutf8(char **dstp, fz_obj *src)
 fz_error *
 pdf_toucs2(unsigned short **dstp, fz_obj *src)
 {
-	unsigned char *srcptr = fz_tostrbuf(src);
+	unsigned char *srcptr = (unsigned char *) fz_tostrbuf(src);
 	unsigned short *dstptr;
 	int srclen = fz_tostrlen(src);
 	int i;
