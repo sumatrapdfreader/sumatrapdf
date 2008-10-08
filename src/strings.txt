@@ -2765,7 +2765,7 @@ eu:Bertsio berria saihestu
 mk:Прескокни ја оваа верзија
 fa:از این نسخه چشم پوشی کن
 hu:Verzió kihagyása
-ja:このバージョンをスキップ
+ja:このバージョンをスキップする
 th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
 tl:Laktawan ang bersyon na ito
@@ -2776,6 +2776,7 @@ bn:এই সংস্করণটি পরিহার করুন
 -
 Enable auto-update
 bg:Включи автоматичното обновяване
+br:Ativar atualização automática
 de:Automatisches Update aktivieren
 fr:Activer la mise-à-jour automatique
 nl:Updates automatisch downloaden
@@ -2788,3 +2789,4 @@ sn:Rega iite auto-update
 bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রিয় করুন
 fa:به روز رسانی اتوماتیک
 it:Aggiornamento automatico
+ja:自動更新を有効にする
