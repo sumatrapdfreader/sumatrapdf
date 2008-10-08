@@ -33,7 +33,7 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
-#define CURR_VERSION "0.9.2"
+#define CURR_VERSION "0.9.3"
 /* #define SVN_PRE_RELEASE_VER 800 */
 
 #define _QUOTEME(x) #x
@@ -175,7 +175,7 @@ static HBITMAP                      gBitmapCloseToc;
 
 //static AppVisualStyle               gVisualStyle = VS_WINDOWS;
 
-static char *                       gBenchFileName;
+static WCHAR *                      gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
 
 #ifdef DOUBLE_BUFFER
@@ -1184,6 +1184,12 @@ static char *ExePathGet(void)
 {
     char *cmdline = GetCommandLineA();
     return str_parse_possibly_quoted(&cmdline);
+}
+
+static WCHAR *ExePathGetW(void)
+{
+    WCHAR *cmdline = GetCommandLineW();
+    return wstr_parse_possibly_quoted(&cmdline);
 }
 
 static void CaptionPens_Create(void)
@@ -6458,35 +6464,38 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static StrList *StrList_FromCmdLine(char *cmdLine)
+static WStrList *WStrList_FromCmdLine(WCHAR *cmdLine, bool addExe=false)
 {
-    char *     exePath;
-    StrList *   strList = NULL;
-    char *      txt;
+    WCHAR *     exePath;
+    WStrList *   strList = NULL;
+    WCHAR *      txt;
 
     assert(cmdLine);
 
     if (!cmdLine)
         return NULL;
 
-    exePath = ExePathGet();
-    if (!exePath)
-        return NULL;
-    if (!StrList_InsertAndOwn(&strList, exePath)) {
-        free((void*)exePath);
-        return NULL;
+    if (addExe)
+    {
+        exePath = ExePathGetW();
+        if (!exePath)
+            return NULL;
+        if (!WStrList_InsertAndOwn(&strList, exePath)) {
+            free((void*)exePath);
+            return NULL;
+        }
     }
 
     for (;;) {
-        txt = str_parse_possibly_quoted(&cmdLine);
+        txt = wstr_parse_possibly_quoted(&cmdLine);
         if (!txt)
             break;
-        if (!StrList_InsertAndOwn(&strList, txt)) {
+        if (!WStrList_InsertAndOwn(&strList, txt)) {
             free((void*)txt);
             break;
         }
     }
-    StrList_Reverse(&strList);
+    WStrList_Reverse(&strList);
     return strList;
 }
 
@@ -6574,7 +6583,7 @@ static void CreatePageRenderThread(void)
     assert(NULL != gPageRenderThreadHandle);
 }
 
-static void PrintFile(WindowInfo *win, const char *fileName, const char *printerName)
+static void PrintFile(WindowInfo *win, const char *printerName)
 {
     char        devstring[256];      // array for WIN.INI data 
     HANDLE      printer;
@@ -6714,7 +6723,7 @@ char *GetDefaultPrinterName()
     return NULL;
 }
 
-#define is_arg(txt) str_ieq(txt, currArg->str)
+#define is_arg(txt) wstr_ieq(L##txt, currArg->str)
 #ifdef CRASHHANDLER
 using google_breakpad::ExceptionHandler;
 
@@ -6731,19 +6740,19 @@ bool SumatraMinidumpCallback(const wchar_t *dump_path,
 #endif
 
 /* Parse 'txt' as hex color and set it as background color */
-static void ParseBgColor(const char* txt)
+static void ParseBgColor(const WCHAR* txt)
 {
-    if (str_startswith(txt, "0x"))
+    if (wstr_startswith(txt, L"0x"))
         txt += 2;
-    else if (str_startswith(txt, "#"))
+    else if (wstr_startswith(txt, L"#"))
         txt += 1;
-    int r = hex_str_decode_byte(&txt);
+    int r = hex_wstr_decode_byte(&txt);
     if (-1 == r)
         return;
-    int g = hex_str_decode_byte(&txt);
+    int g = hex_wstr_decode_byte(&txt);
     if (-1 == g)
         return;
-    int b = hex_str_decode_byte(&txt);
+    int b = hex_wstr_decode_byte(&txt);
     if (-1 == b)
         return;
     if (*txt)
@@ -6807,12 +6816,11 @@ exit:
     DdeUninitialize(inst);
 }
 
-
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
-    StrList *           argListRoot;
-    StrList *           currArg;
-    char *              benchPageNumStr = NULL;
+    WStrList *          argListRoot;
+    WStrList *          currArg;
+    WCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
     WindowInfo*         win;
@@ -6820,8 +6828,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
     bool                printDialog = false;
-    char                *destName = 0;
-
+    char *              destName = 0;
+    char *              s;
+    WCHAR *             cmdLine;
     UNREFERENCED_PARAMETER(hPrevInstance);
 
     u_DoAllTests();
@@ -6837,7 +6846,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     InitCommonControlsEx(&cex);
 
     SerializableGlobalPrefs_Init();
-    argListRoot = StrList_FromCmdLine(lpCmdLine);
+
+    cmdLine  = GetCommandLineW();
+
+    argListRoot = WStrList_FromCmdLine(cmdLine);
     assert(argListRoot);
     if (!argListRoot)
         return 0;
@@ -6867,7 +6879,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     bool reuse_instance = false;
     currArg = argListRoot->next;
     char *printerName = NULL;
-    char *newWindowTitle = NULL;
+    WCHAR *newWindowTitle = NULL;
     while (currArg) {
         if (is_arg("-enum-printers")) {
             EnumeratePrinters();
@@ -6906,7 +6918,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-print-to")) {
             currArg = currArg->next;
             if (currArg) {
-                printerName = currArg->str;
+                printerName = wstr_to_utf8(currArg->str);
                 currArg = currArg->next;
             }
             continue;
@@ -6930,7 +6942,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-inverse-search")) {
             currArg = currArg->next;
             if (currArg) {
-                str_dup_replace(&gGlobalPrefs.m_inverseSearchCmdLine, currArg->str);
+                free(gGlobalPrefs.m_inverseSearchCmdLine);
+                // TODO: this should really be "to char using a current locale"
+                gGlobalPrefs.m_inverseSearchCmdLine = wstr_to_utf8(currArg->str);
                 currArg = currArg->next;
             }
             continue;
@@ -6956,7 +6970,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-lang")) {
             currArg = currArg->next;
             if (currArg) {
-                CurrLangNameSet(currArg->str);
+                s = wstr_to_utf8(currArg->str);
+                CurrLangNameSet(s);
+                free(s);
                 currArg = currArg->next;
             }
             continue;
@@ -6965,7 +6981,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-nameddest")) {
             currArg = currArg->next;
             if (currArg) {
-                destName = currArg->str;
+                destName = wstr_to_utf8(currArg->str);
                 currArg = currArg->next;
             }
             continue;
@@ -6981,7 +6997,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-title")) {
             currArg = currArg->next;
             if (currArg) {
-                newWindowTitle = str_dup(currArg->str); 
+                newWindowTitle = wstr_dup(currArg->str); 
                 currArg = currArg->next;
             }
             continue;
@@ -7003,7 +7019,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     }
 
     if (benchPageNumStr) {
-        gBenchPageNum = atoi(benchPageNumStr);
+        gBenchPageNum = _wtoi(benchPageNumStr);
         if (gBenchPageNum < 1)
             gBenchPageNum = INVALID_PAGE_NO;
     }
@@ -7055,12 +7071,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (printToDefaultPrinter) {
                 printerName = GetDefaultPrinterName();
                 if (printerName)
-                    PrintFile(win, currArg->str, printerName);
+                    PrintFile(win, printerName);
                 free(printerName);
             } else if (printerName) {
                 // note: this prints all of PDF files. Another option would be to
                 // print only the first one
-                PrintFile(win, currArg->str, printerName);
+                PrintFile(win, printerName);
             } else if (printDialog) {
                 OnMenuPrint(win);
             }
@@ -7133,6 +7149,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 #endif
     
 Exit:
+    free(destName);
+    free(printerName);
+
     WindowInfoList_DeleteAll();
     FileHistoryList_Free(&gFileHistoryRoot);
     CaptionPens_Destroy();
@@ -7174,7 +7193,7 @@ Exit:
     }
 #endif // BUILD_RM_VERSION
 
-    StrList_Destroy(&argListRoot);
+    WStrList_Destroy(&argListRoot);
     //histDump();
     return (int) msg.wParam;
 }
