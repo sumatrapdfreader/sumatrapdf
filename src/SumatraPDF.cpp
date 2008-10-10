@@ -1182,14 +1182,20 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
    Caller needs to free() the result. */
 static char *ExePathGet(void)
 {
-    char *cmdline = GetCommandLineA();
-    return str_parse_possibly_quoted(&cmdline);
+    char buf[_MAX_PATH];
+    buf[0] = 0;
+    GetModuleFileNameA(NULL, buf, dimof(buf));
+    return str_dup(buf);
 }
 
+/* Return the full exe path of my own executable.
+   Caller needs to free() the result. */
 static WCHAR *ExePathGetW(void)
 {
-    WCHAR *cmdline = GetCommandLineW();
-    return wstr_parse_possibly_quoted(&cmdline);
+    WCHAR buf[_MAX_PATH];
+    buf[0] = 0;
+    GetModuleFileNameW(NULL, buf, dimof(buf));
+    return wstr_dup(buf);
 }
 
 static void CaptionPens_Create(void)
