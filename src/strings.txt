@@ -79,7 +79,7 @@ Lang: bg Bulgarian (Български)
 Lang: bn Bengali (বাংলা)
 Lang: ca Catalan (Català)
 Lang: cn Chinese Simplified (简体中文)
-Lang: tw Chinese Traditional (簡體中文)
+Lang: tw Chinese Traditional (繁體中文)
 Lang: hr Croatian (Hrvatski)
 Lang: cz Czech (Čeština)
 Lang: dk Danish (Dansk)
@@ -1615,7 +1615,7 @@ fi:Vieraile ohjelman kotisivuilla
 ca:Visiteu el lloc &web
 si:Ob&išči domačo stran
 sr-rs:Посети Интернет страну
-tw:連結網站(&V)
+tw:瀏覽官網(&V)
 ml:വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 he:בקר באתר
 sp-rs:&Poseti Internet stranu
@@ -1649,6 +1649,7 @@ mk:Прирачник за употреба
 tl:Gabay
 bn:নির্দেশ নথিপত্র
 it:&Guida
+tw:說明文件
 -
 &About
 bg:Относно програмата...
@@ -1731,6 +1732,7 @@ va:Pàgina:
 ca:Pàgina:
 sn:Peji:
 bn:পৃষ্ঠা:
+tw:頁數
 -
 Find:
 br:Localizar:
@@ -1772,6 +1774,7 @@ hr:Pronađi:
 tl:Hanapin:
 va:Buscar:
 sn:Wana:
+tw:尋找
 -
 Find Previous
 br:Localizar anterior
@@ -1812,6 +1815,7 @@ hr:Pronađi prethodno
 tl:Hanapin ang Nakaraan
 va:Busca Anterior
 sn:Wana pashure
+tw:向上尋找
 -
 Find Next
 br:Localizar seguinte
@@ -1851,6 +1855,7 @@ hr:Pronađi sljedeće
 tl:Hanapin ang Susunod
 va:Busca Següent
 sn:Wana pamberi
+tw:向下尋找
 -
 Match case
 br:Diferenciar  minúsculas e Maiúsculas
@@ -1888,6 +1893,7 @@ hr:Razlikuj velika/mala slova
 tl:Ipantay ang Laki ng Titik
 va:Distinguir MAYÚSCULES i minúscules
 sn:Fananidza kesi
+tw:符合大小寫
 -
 Open
 bg:Отвори
@@ -2402,6 +2408,7 @@ va:Establir busca inversa
 ca:Cerca cap enrere
 bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 it:Imposta comando di ricerca inversa
+tw:設定反搜尋命令列
 -
 Change language
 bg:Смени езика (Change language)
@@ -2429,6 +2436,7 @@ va:Canviar Idioma (Change language)
 ca:Canvia la llengua (Changue language)
 sn:Chinja mutauro (Change language)
 bn:ভাষা পরিবর্তন (Change language)
+tw:變更語系 (Change language)
 -
 Enter password
 bg:Въведете парола
@@ -2455,6 +2463,7 @@ va:Posar contrasenya
 ca:Introduiu la contrasenya
 sn:Isa password
 bn:শব্দকূট প্রবেশ করুন
+tw:輸入密碼
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2481,6 +2490,7 @@ va:Posar contrasenya per a %s
 ca:Introduiu la constrasenya per a %s
 sn:Isa password ya %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
+tw:輸入 %s 的密碼
 -
 Go to page
 bg:Към страница
@@ -2507,6 +2517,7 @@ va:Anar a la pàgina
 ca:Vés a la pàgina
 sn:Enda kupeji
 bn:এর পৃষ্ঠায় চলুন
+tw:移至頁面
 -
 Associate with PDF files?
 bg:Асоцииране с PDF файлове?
@@ -2533,6 +2544,7 @@ va:¿Associar en archius PDF?
 ca:Voleu associar-lo amb els fitxers PDF?
 sn:Ita zvifambidzane ne PDF
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
+tw:與 PDF 檔進行關聯?
 -
 Make SumatraPDF default application for PDF files?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
@@ -2558,6 +2570,7 @@ tl:Gawin SumatraPDF ang Likas na Pambasa ng mga Salansan na PDF?
 va:¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
+tw:把 SumatraPDF 作為預設的PDF閱讀器?
 -
 Don't ask me again
 bg:Не питай отново
@@ -2585,6 +2598,7 @@ va:No tornar a preguntar
 ca:No ho tornis a preguntar
 sn:Usandivhunze futi
 bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
+tw:不要再問我
 -
 &Check for new version
 bg:Проверка за нова версия
@@ -2612,6 +2626,7 @@ va:&Comprovar actualisacions
 ca:&Comprova si hi ha una versió nova
 sn:&Tsvaga version idzva
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
+tw:檢查是否有新版本
 -
 No new version available.
 bg:Няма нова версия.
@@ -2639,6 +2654,7 @@ va:No hi han noves versions.
 ca:No hi ha cap versió nova.
 sn:Hapana version idzva.
 bn:নতুন সংস্করণ অনুপলব্ধ
+tw:沒有新版本
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2666,6 +2682,7 @@ va:Està es l'última versió.
 ca:Teniu la darrera versió.
 sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
+tw:目前使用的版本為最新版
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2693,6 +2710,7 @@ va:Te la versió %s
 ca:Teniu la versió %s
 sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
+tw:目前版本 %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2720,6 +2738,7 @@ va:Una nova versió %s está disponible. ¿Vols descarregar-la?
 ca:Hi ha disponible una versió nova. Voleu descarregar-la?
 sn:Version %s ririkuwanika. Unoda here version idzva?
 bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
+tw:最新版本 %s。 是否下載?
 -
 New version available.
 bg:Има нова версия.
@@ -2747,6 +2766,7 @@ va:Nova versió disponible.
 ca:Hi ha una versió nova.
 sn:Version idzva ririkuwanika
 bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
+tw:新的可用版本。
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2773,6 +2793,7 @@ va:Botar-se esta versió.
 ca:Omet aquesta versió
 sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
+tw:略過這個版本。
 -
 Enable auto-update
 bg:Включи автоматичното обновяване
@@ -2790,3 +2811,4 @@ bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রি
 fa:به روز رسانی اتوماتیک
 it:Aggiornamento automatico
 ja:自動更新を有効にする
+tw:啟用自動更新

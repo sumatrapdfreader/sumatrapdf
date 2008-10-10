@@ -66,7 +66,7 @@ MenuDef g_menuDefLang[LANGS_COUNT] = {
     { "Bulgarian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)", IDM_LANG_BG },
     { "Catalan (Catal\303\240)", IDM_LANG_CA },
     { "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", IDM_LANG_CN },
-    { "Chinese Traditional (\347\260\241\351\253\224\344\270\255\346\226\207)", IDM_LANG_TW },
+    { "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)", IDM_LANG_TW },
     { "Croatian (Hrvatski)", IDM_LANG_HR },
     { "Czech (\304\214e\305\241tina)", IDM_LANG_CZ },
     { "Danish (Dansk)", IDM_LANG_DK },
