@@ -396,7 +396,7 @@ sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
 gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη PDF
 th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
-pt:Fazer de SumatraPDF o leitor de PDF pedefenido
+pt:Fazer de SumatraPDF o leitor de PDF pré-definido
 no:Bruk SumatraPDF som standard PDF-leser
 sk:Nastaviť SumatraPDF ako predvolený PDF prehliadač
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định
@@ -2119,7 +2119,7 @@ sv:SumatraPDF är nu standardläsare för PDF-filer.
 cz:SumatraPDF je nyní nastaven jako defaultní čtečka PDF souborů.
 gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγραμμα ανάγνωσης PDF
 th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
-pt:SumatraPDF é agora o leitor de PDF por defeito.
+pt:SumatraPDF é agora o leitor de PDF pré-definido.
 no:SumatraPDF er nå standard PDF-leser.
 sk:SumatraPDF je teraz nastavený ako predvolený prehliadač PDF súborov.
 vn:SumatraPDF hiện giờ là trình đọc PDF mặc định.
@@ -2266,7 +2266,7 @@ sv:Kan inte anropa skrivaren.
 cz:Není možné otevřít tiskárnu
 gr:Δε μπορεί να ανοίξει ο εκτυπωτής
 th:ไม่สามารถเปิดเครื่องพิมพ์ได้
-pt:Não foi possivel abrir a impressora.
+pt:Não foi possível abrir a impressora.
 no:Kan ikke finne skriveren.
 sk:Nie je možné otvoriť tlačiareň.
 vn:Không mở được máy in.
@@ -2437,6 +2437,7 @@ ca:Canvia la llengua (Changue language)
 sn:Chinja mutauro (Change language)
 bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
+pt:Mudar de idioma (Change language)
 -
 Enter password
 bg:Въведете парола
@@ -2464,6 +2465,7 @@ ca:Introduiu la contrasenya
 sn:Isa password
 bn:শব্দকূট প্রবেশ করুন
 tw:輸入密碼
+pt:Introduzir password
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2491,6 +2493,7 @@ ca:Introduiu la constrasenya per a %s
 sn:Isa password ya %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 tw:輸入 %s 的密碼
+pt:Introduzir password para
 -
 Go to page
 bg:Към страница
@@ -2627,6 +2630,7 @@ ca:&Comprova si hi ha una versió nova
 sn:&Tsvaga version idzva
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
 tw:檢查是否有新版本
+pt:Procurar actualizações
 -
 No new version available.
 bg:Няма нова версия.
@@ -2655,6 +2659,7 @@ ca:No hi ha cap versió nova.
 sn:Hapana version idzva.
 bn:নতুন সংস্করণ অনুপলব্ধ
 tw:沒有新版本
+pt:Nenhuma actualização encontrada.
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2683,6 +2688,7 @@ ca:Teniu la darrera versió.
 sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
 tw:目前使用的版本為最新版
+pt:Esta é a versão mais recente.
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2711,6 +2717,7 @@ ca:Teniu la versió %s
 sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
+pt:Tem a versão %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2739,6 +2746,7 @@ ca:Hi ha disponible una versió nova. Voleu descarregar-la?
 sn:Version %s ririkuwanika. Unoda here version idzva?
 bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 tw:最新版本 %s。 是否下載?
+pt:A versão %s está disponível. Fazer download agora?
 -
 New version available.
 bg:Има нова версия.
@@ -2767,6 +2775,7 @@ ca:Hi ha una versió nova.
 sn:Version idzva ririkuwanika
 bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
 tw:新的可用版本。
+pt:Há uma nova versão disponível.
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2812,3 +2821,4 @@ fa:به روز رسانی اتوماتیک
 it:Aggiornamento automatico
 ja:自動更新を有効にする
 tw:啟用自動更新
+pt:Activar actualização automática
