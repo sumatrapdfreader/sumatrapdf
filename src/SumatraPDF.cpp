@@ -190,6 +190,8 @@ static int                          gPageRenderRequestsCount = 0;
 
 static HANDLE                       gPageRenderThreadHandle;
 static HANDLE                       gPageRenderSem;
+static HANDLE                       gPageRenderClearQueue;
+static HANDLE                       gPageRenderQueueCleared;
 static PageRenderRequest *          gCurPageRenderReq;
 
 static int                          gReBarDy;
@@ -963,6 +965,13 @@ void RenderQueue_Pop(PageRenderRequest *req)
     --gPageRenderRequestsCount;
     *req = gPageRenderRequests[gPageRenderRequestsCount];
     assert(gPageRenderRequestsCount >= 0);
+    UnlockCache();
+}
+
+void RenderQueue_Clear()
+{
+    LockCache();
+    gPageRenderRequestsCount = 0;
     UnlockCache();
 }
 
@@ -2083,6 +2092,12 @@ static void RecalcSelectionPosition (WindowInfo *win) {
         selOnPage = selOnPage->next;
     }
 }
+// Clear all the requests from the PageRender queue.
+static void ClearPageRenderRequests()
+{
+    SetEvent(gPageRenderClearQueue);
+    WaitForSingleObject(gPageRenderQueueCleared, INFINITE);
+}
 
 static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win, 
     DisplayState *state, bool reuseExistingWindow, bool autorefresh,
@@ -2164,11 +2179,13 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
         if (autorefresh) {
             win->dm = previousmodel;
         } else {
+            ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
             goto Error;
         }
     } else {
+        ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
         delete previousmodel;
         win->needrefresh = false;
     }
@@ -6533,8 +6550,18 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         int count = gPageRenderRequestsCount;
         UnlockCache();
         if (0 == count) {
-            DWORD waitResult = WaitForSingleObject(gPageRenderSem, INFINITE);
-            if (WAIT_OBJECT_0 != waitResult) {
+            HANDLE handles[2] = { gPageRenderSem, gPageRenderClearQueue };
+            DWORD waitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+            // Is it a page render request?
+            if (WAIT_OBJECT_0 == waitResult) {
+            }
+            // is it a 'clear requests' request?
+            else if (WAIT_OBJECT_0+1 == waitResult) {
+                RenderQueue_Clear();
+                // Signal that the queue is cleared
+                SetEvent(gPageRenderQueueCleared);
+            }
+            else {
                 DBG_OUT("  WaitForSingleObject() failed\n");
                 continue;
             }
@@ -6585,8 +6612,18 @@ static void CreatePageRenderThread(void)
     assert(NULL == gPageRenderThreadHandle);
 
     gPageRenderSem = CreateSemaphore(NULL, 0, semMaxCount, NULL);
+    gPageRenderClearQueue = CreateEvent(NULL, FALSE, FALSE, NULL);
+    gPageRenderQueueCleared = CreateEvent(NULL, FALSE, FALSE, NULL);
     gPageRenderThreadHandle = CreateThread(NULL, 0, PageRenderThread, (void*)NULL, 0, &dwThread1ID);
     assert(NULL != gPageRenderThreadHandle);
+}
+
+static void FreePageRenderThread(void)
+{
+    CloseHandle(gPageRenderThreadHandle);
+    CloseHandle(gPageRenderQueueCleared);
+    CloseHandle(gPageRenderClearQueue);
+    CloseHandle(gPageRenderSem);
 }
 
 static void PrintFile(WindowInfo *win, const char *printerName)
@@ -7157,6 +7194,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 Exit:
     free(destName);
     free(printerName);
+  
+    FreePageRenderThread();
 
     WindowInfoList_DeleteAll();
     FileHistoryList_Free(&gFileHistoryRoot);
