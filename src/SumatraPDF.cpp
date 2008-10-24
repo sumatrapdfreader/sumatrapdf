@@ -2169,6 +2169,7 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
     if (!win->dm) {
         if (!reuseExistingWindow && WindowInfoList_ExistsWithError()) {
                 /* don't create more than one window with errors */
+                win->dm = previousmodel;
                 WindowInfo_Delete(win);
                 return false;
         }
@@ -6874,6 +6875,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     char *              destName = 0;
     char *              s;
     WCHAR *             cmdLine;
+    // Memory leak detection
+    //_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+    //_CrtSetBreakAlloc(17475);
     UNREFERENCED_PARAMETER(hPrevInstance);
 
     u_DoAllTests();
@@ -7091,11 +7095,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * _MAX_PATH + 20];
-                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%s\", 1, 1, 0)]", currArg->str);
+                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%S\", 1, 1, 0)]", currArg->str);
                 DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
                 if (destName && pdfOpened == 0)
                 {
-                    sprintf(command, "[" DDECOMMAND_GOTO_A "(\"%s\", \"%s\")]", currArg->str, destName);
+                    sprintf(command, "[" DDECOMMAND_GOTO_A "(\"%S\", \"%s\")]", currArg->str, destName);
                     DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
                 }
             }
