@@ -12,7 +12,7 @@ class WindowInfo;
 
 /* For passing data to/from SetInverseSearch dialog */
 int     Dialog_GoToPage(WindowInfo *win);
-#ifdef _PDFSYNC_GUI_ENHANCEMENT
+#ifdef _TEX_ENHANCEMENT
 char *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline);
 #endif
 char *  Dialog_GetPassword(WindowInfo *win, const WCHAR *fileName);

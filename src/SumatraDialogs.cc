@@ -21,7 +21,7 @@ typedef struct {
     char *  out_cmdline;         /* inverse search command line selected by the user */
 } Dialog_InverseSearch_Data;
 
-#ifdef _PDFSYNC_GUI_ENHANCEMENT
+#ifdef _TEX_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                       edit;

@@ -148,7 +148,6 @@ typedef struct {
 
 #define PDF_EXTENSION     ".PDF"
 #define PDFSYNC_EXTENSION ".PDFSYNC"
-#define SYNCTEX_EXTENSION ".SYNCTEX"
 
 // System of point coordinates
 typedef enum { TopLeft,    // origin at the top-left corner
@@ -158,9 +157,14 @@ typedef enum { TopLeft,    // origin at the top-left corner
 class Synchronizer
 {
 public:
-    Synchronizer(LPCTSTR filename) {
+    Synchronizer(LPCTSTR _syncfilename) {
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
+        this->dir = FilePath_GetDir(_syncfilename);
+    }
+    ~Synchronizer() {
+        if (dir)
+            free(dir);
     }
 
     // conversion from one coordinate system to another
@@ -205,7 +209,13 @@ private:
 
 protected:
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
+    PTSTR dir;            // directory where the syncfile lies
 };
+
+#ifdef SYNCTEX_FEATURE
+
+#define SYNCTEX_EXTENSION ".synctex"
+#define SYNCTEXGZ_EXTENSION ".synctex.gz"
 
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer
@@ -214,24 +224,20 @@ public:
     SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
     {
         size_t n = _tcslen(_syncfilename);
-        size_t u = dimof(SYNCTEX_EXTENSION)-1;
-        assert(n>u && _tcsicmp(_syncfilename+(n-u),SYNCTEX_EXTENSION) == 0 );
+        size_t u1 = dimof(SYNCTEX_EXTENSION)-1,
+               u2 = dimof(SYNCTEXGZ_EXTENSION)-1;
+        assert((n>u1 && _tcsicmp(_syncfilename+(n-u1),SYNCTEX_EXTENSION)==0)
+               ||(n>u2 && _tcsicmp(_syncfilename+(n-u2),SYNCTEXGZ_EXTENSION)==0));
         tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
-        this->dir = FilePath_GetDir(_syncfilename);
-
-#ifdef SYNCTEX_FEATURE
+        
         this->scanner = NULL;
-#endif
         this->coordsys = TopLeft;
     }
     ~SyncTex()
     {
-#ifdef SYNCTEX_FEATURE
         if (scanner)
           synctex_scanner_free(scanner);
-#endif
-        if (dir)
-            free(dir);
+
     }
     void discard_index() { Synchronizer::discard_index();}
     bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
@@ -242,11 +248,10 @@ public:
 
 private:
     TCHAR syncfilename[_MAX_PATH];
-    PTSTR dir;
-#ifdef SYNCTEX_FEATURE
     synctex_scanner_t scanner;
-#endif
 };
+#endif
+
 
 
 // Synchronizer based on .sync file generated with the pdfsync tex package
@@ -263,7 +268,7 @@ public:
     }
 
     int rebuild_index();
-    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col);
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
     UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
 
 private:
@@ -299,7 +304,7 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename);
 #define DDECOMMAND_SYNC_W         L DDECOMMAND_SYNC_A
 
 // open file command
-//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>])]
+//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
 //    if newwindow = 1 then a new window is created even if the file is already open
 //    if focus = 1 then the focus is set to the window
 //  eg: [Open("c:\file.pdf", 1, 1)]

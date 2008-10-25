@@ -31,14 +31,25 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
         // Check if a PDFSYNC file is present
         tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
         tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
-        if (FileExists(syncfile))
+        if (FileExists(syncfile)) 
             return new Pdfsync(syncfile);
 
-        // otherwise check if a SYNCYTEX file is present
-        tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-        tstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
+        #ifdef SYNCTEX_FEATURE
+            // check if a compressed SYNCTEX file is present
+            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEXGZ_EXTENSION);
+            bool exist = FileExists(syncfile);
 
-        return new SyncTex(syncfile);
+            // check if a SYNCTEX file is present
+            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
+            exist |= FileExists(syncfile);
+
+            if(exist)
+                return new SyncTex(syncfile); // due to a bug with synctex_parser.c, this must always be 
+                                              // the path to the .synctex file (even if a .synctex.gz file is used instead)
+        #endif
+        return NULL;
     }
     else {
         DBG_OUT("Bad PDF filename! (%s)\n", pdffilename);
@@ -321,7 +332,7 @@ int Pdfsync::rebuild_index()
     return Synchronizer::rebuild_index();
 }
 
-UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col)
+UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -394,7 +405,14 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cch
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    tstr_copy(filename, cchFilename, this->srcfiles[record_sections[sec].srcfile].filename);
+    char srcfilename[_MAX_PATH];
+    tstr_copy(srcfilename, dimof(srcfilename), this->srcfiles[record_sections[sec].srcfile].filename);
+
+    // Convert the source filepath to an absolute path
+    if (PathIsRelative(srcfilename))
+        _snprintf(srcfilepath, cchFilepath, "%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+    else
+        str_copy(srcfilepath, cchFilepath, srcfilename);
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -556,25 +574,23 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
+
 // SYNCTEX synchronizer
 
-int SyncTex::rebuild_index() {
 #ifdef SYNCTEX_FEATURE
+
+int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
-    this->scanner = synctex_scanner_new_with_output_file(this->syncfilename);
+    this->scanner = synctex_scanner_new_with_output_file(this->syncfilename, NULL, 1);
     if (scanner)
         return Synchronizer::rebuild_index();
     else
         return 1; // cannot rebuild the index
-#else
-    return Synchronizer::rebuild_index();
-#endif
 }
 
 UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
-#ifdef SYNCTEX_FEATURE
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -596,14 +612,11 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         }
     }
     return PDFSYNCERR_NO_SYNC_AT_LOCATION;
-#else
-    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-#endif
+//    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 }
 
 UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
-#ifdef SYNCTEX_FEATURE
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -630,10 +643,12 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
             }
             return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
-#else
-    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-#endif
+//#else
+    //return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+//#endif
 }
+#endif
+
 
 // DDE commands handling
 

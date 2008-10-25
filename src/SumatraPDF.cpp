@@ -33,7 +33,9 @@
 #include "client\windows\handler\exception_handler.h"
 #endif
 
+#ifndef CURR_VERSION
 #define CURR_VERSION "0.9.3"
+#endif
 /* #define SVN_PRE_RELEASE_VER 800 */
 
 #define _QUOTEME(x) #x
@@ -747,11 +749,22 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
 
 static HINTERNET g_hOpen = NULL;
 
+#ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
 #define SUMATRA_UPDATE_INFO_URL "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt"
 #else
 #define SUMATRA_UPDATE_INFO_URL "http://blog.kowalczyk.info/software/sumatrapdf/sumpdf-latest.txt"
 #endif
+#endif
+
+#ifndef SVN_UPDATE_LINK
+#ifdef SVN_PRE_RELEASE_VER
+#define SVN_UPDATE_LINK             "http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html"
+#else
+#define SVN_UPDATE_LINK             "http://blog.kowalczyk.info/software/sumatrapdf"
+#endif
+#endif
+
 
 bool WininetInit()
 {
@@ -1030,7 +1043,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER,    MF_NOT_IN_RESTRICTED },
-#ifdef _PDFSYNC_GUI_ENHANCEMENT
+#ifdef _TEX_ENHANCEMENT
     { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      0 },
 #endif
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
@@ -2799,6 +2812,48 @@ int ParseSumatraVer(char *txt)
         return -1;
     return val;
 }
+// extract the next (positive) number from the string *txt
+int nextnumber(char **txt)
+{
+    // skip non numeric characters
+    int val = -1;
+    while(**txt && ((val < 0) || (val > 9)))
+        val = *((*txt)++) - '0';
+    if( val == -1 )
+        return -1;
+
+    char c;
+    int n;
+    while(**txt){
+        c = *((*txt)++);
+        n = c - '0';
+        if ((n < 0) || (n > 9))
+            break;
+        val = 10 * val + n;
+    }
+    return val;
+}
+// compare two version string. Return 0 if they are the same, 1 if the first is greater than the second and
+// -1 otherwise.
+// e.g. 
+//   0.9.3.900 is greater than 0.9.3
+//   1/|09@300 is greater than 1/|09@3 which is greater than 1$%9)1
+int CompareVersion(char *txt1, char *txt2)
+{
+    int v1, v2;
+    while(1) {
+        v1 = nextnumber(&txt1);
+        v2 = nextnumber(&txt2);
+        if (v1 == v2) {
+            if(v1==-1)
+                return 0;
+        }
+        else if( v1 > v2 )
+            return 1;
+        else
+            return -1;
+    }
+}
 #endif
 
 #ifdef DEBUG
@@ -2856,11 +2911,13 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         char *tmp2 = (char*)str_find_char(tmp, '*');
         if (tmp2)
             *tmp2 = 0;
+        /*
         int currVer = ParseSumatraVer(UPDATE_CHECK_VER);
         assert(-1 != currVer);
         int newVer = ParseSumatraVer(tmp);
         assert(-1 != newVer);
-        if (newVer > currVer) {
+        if (newVer > currVer)*/
+        if (CompareVersion(tmp,UPDATE_CHECK_VER)>0){
             bool showDialog = true;
             // if automated, respect gGlobalPrefs.m_versionToSkip
             if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
@@ -2871,11 +2928,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
             if (showDialog) {
                 BOOL download = ShowNewVersionDialog(win, tmp);
                 if (download) {
-#ifdef SVN_PRE_RELEASE_VER
-                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html"));
-#else
-                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf"));
-#endif
+                    LaunchBrowser(_T(SVN_UPDATE_LINK));
                 }
             }
         } else {
@@ -3196,7 +3249,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
 #define ABOUT_BORDER_COL            COL_BLACK
 
+#ifndef SUMATRA_TXT
 #define SUMATRA_TXT             "Sumatra PDF"
+#endif
 #define SUMATRA_TXT_FONT        "Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   24
 #define TXTFY(val) #val
@@ -3239,6 +3294,10 @@ typedef struct AboutLayoutInfoEl {
 } AboutLayoutInfoEl;
 
 AboutLayoutInfoEl gAboutLayoutInfo[] = {
+#ifdef _TEX_ENHANCEMENT
+    { "note", "TeX build", "http://william.famille-blum.org/software/sumatra/index.html",
+    0, 0, 0, 0, 0, 0, 0, 0 },
+#endif 
 #ifdef SVN_PRE_RELEASE_VER
     { "a note", "Pre-release version, for testing only!", NULL,
     0, 0, 0, 0, 0, 0, 0, 0 },
@@ -3263,6 +3322,13 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
 
     { "translations", "The Translators", "http://blog.kowalczyk.info/software/sumatrapdf/translators.html",
     0, 0, 0, 0, 0, 0, 0, 0 },
+
+#ifdef _TEX_ENHANCEMENT
+    { "TeX enhancements", "William Blum", "http://william.famille-blum.org/",
+    0, 0, 0, 0, 0, 0, 0, 0 },
+    { "SyncTeX", "Jérome Laurens", "http://itexmac.sourceforge.net/SyncTeX.html",
+    0, 0, 0, 0, 0, 0, 0, 0 },
+#endif 
 
     { NULL, NULL, NULL,
     0, 0, 0, 0, 0, 0, 0, 0 }
@@ -4684,7 +4750,7 @@ static void OnMenuGoToPage(WindowInfo *win)
         win->dm->goToPage(newPageNo, 0);
 }
 
-#ifdef _PDFSYNC_GUI_ENHANCEMENT
+#ifdef _TEX_ENHANCEMENT
 static void OnMenuSetInverseSearch(WindowInfo *win)
 {
     assert(win);
@@ -6186,7 +6252,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuGoToPage(win);
                     break;
 
-#ifdef _PDFSYNC_GUI_ENHANCEMENT
+#ifdef _TEX_ENHANCEMENT
                 case IDM_SET_INVERSESEARCH:
                     OnMenuSetInverseSearch(win);
                     break;
@@ -6875,9 +6941,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     char *              destName = 0;
     char *              s;
     WCHAR *             cmdLine;
+
+#ifdef _DEBUG
     // Memory leak detection
-    //_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-    //_CrtSetBreakAlloc(17475);
+    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+    _CrtSetBreakAlloc(17475);
+#endif
+
     UNREFERENCED_PARAMETER(hPrevInstance);
 
     u_DoAllTests();
@@ -7095,7 +7165,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * _MAX_PATH + 20];
-                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%S\", 1, 1, 0)]", currArg->str);
+                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%S\", 0, 1, 0)]", currArg->str);
                 DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
                 if (destName && pdfOpened == 0)
                 {

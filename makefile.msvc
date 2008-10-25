@@ -44,13 +44,16 @@ CFLAGS = $(CFLAGS) /wd4244 /wd4996
 # 4995 - 'sprintf': name was marked as #pragma deprecated
 CFLAGS = $(CFLAGS) /wd4995
 
-CFLAGS = $(CFLAGS) /W3 /GR- /EHs-c- /Zi /GS /Gy
+CFLAGS = $(CFLAGS) /W3 /GR- /Zi /GS /Gy
 
 !if "$(CFG)"=="rel"
 CFLAGS = $(CFLAGS) /Os /Ox /GL /D "NDEBUG"
 LDFLAGS = $(LDFLAGS) /LTCG
+CFLAGS = $(CFLAGS) /EHs-c- 
 !else
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu 
+# exception handling must be activated to enable memory leak detection
+CFLAGS = $(CFLAGS) /MDd /EHsc
 !endif
 
 # external build settings not part of core SumatraPDF
@@ -84,9 +87,11 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS" /D "__func__=\"\""
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
-#SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_PDFSYNC_GUI_ENHANCEMENT"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "WIN32_UNICODE_HACK"
+!if "$(TEXBUILD)"=="1"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\"" /D "SVN_UPDATE_LINK=\"http://william.famille-blum.org/software/sumatra/\"" /D "CURR_VERSION=\"$(VERSION)\""
+!endif
 
 #CFLAGS = $(CFLAGS) /showIncludes
 #CFLAGS = $(CFLAGS) /analyze
@@ -102,7 +107,7 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 LDFLAGS = $(LDFLAGS) /DEBUG
 LIBS = /NODEFAULTLIB:libcmtd $(LIBS) $(ZLIB_DIR)\zlib_ds.lib
 # for testing with STL
-#LIBS = /NODEFAULTLIB:libcmt LIBCMTD.lib $(LIBS) $(FREETYPE_DIR)\freetype231mt_d.lib $(JPEG_DIR)\jpeg_ds.lib $(ZLIB_DIR)\zlib_ds.lib
+#LIBS = /NODEFAULTLIB:libcmt LIBCMTD.lib $(LIBS) $(ZLIB_DIR)\zlib_ds.lib
 !endif
 
 !if "$(CFG)"=="rel"
@@ -263,7 +268,7 @@ SUMATRA_OBJS = \
 	$(O)\SumatraDialogs.obj $(O)\SumatraPDF.obj $(O)\translations.obj \
 	$(O)\translations_txt.obj $(O)\utf_util.obj $(O)\win_util.obj $(O)\WinUtil.obj \
 	$(O)\wstr_util.obj $(O)\LangMenuDef.obj $(O)\FileWatch.obj $(O)\PdfSync.obj \
-	$(O)\dialogsizer_set.obj $(O)\synctex_parser.obj
+	$(O)\dialogsizer_set.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_PDB = $(O)\SumatraPDF.pdb
