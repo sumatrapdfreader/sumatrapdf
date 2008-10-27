@@ -60,7 +60,9 @@
 # Yudi Wibisono (http://yudiwbs.wordpress.com) - Indonesia
 # Goce Mitevski - Macedonian 
 # Elly Câmpeanu - Romanian
-# Hong Seung-geol (hsgno5@hanmir.com) – Korean
+# Korean/한국어:
+#  Hong Seung-geol (hsgno5@hanmir.com)
+#  Karnes Kim (karnes@gmail.com)
 # Bengali/বাংলা:
 #  Soham Chatterjee (soham.chatterjee@gmail.com)
 #  Shabab Mustafa (shabab.mustafa@gmail.com)
@@ -1572,7 +1574,7 @@ sp-rs:&Pomoć
 id:Ban&tuan
 mk:&Помош
 ro:A&jutor
-kr:도움(&H)
+kr:도움말(&H)
 bn:&সাহায্য
 gl:A&xuda
 uk:&Допомога
@@ -1639,6 +1641,7 @@ pl:Instrukcja obslugi
 ru:Руководство
 fa:کتابچه راهنما در اینترنت
 ja:マニュアル(&M)
+kr:사용설명서
 nl:Handleiding
 hr:Korisnički priručnik
 vn:&Hướng dẫn sử dụng
@@ -1725,6 +1728,7 @@ sp-rs:Strana:
 ro:Pagina:
 ru:Страница:
 ja:ページ:
+kr:페이지:
 gl:Páxina:
 mk:Страница:
 tl:Pahina:
@@ -2135,7 +2139,7 @@ sp-rs:SumatraPDF je sada podrazumevani čitač PDF dokumenata
 id:SumatraPDF sekarang menjadi pembaca-PDF utama.
 mk:Сега SumatraPDF е твојот основен читач на PDF документи.
 ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
-kr:SumatraPDF를 기본 PDF 파일 뷰어로 지정합니다.
+kr:SumatraPDF가 기본 PDF 파일 뷰어로 지정되었습니다.
 bn:সুমাত্রাপিডিএফ এখন আপনার পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক পঠক
 gl:SumatraPDF é o lector PDF por defecto agora.
 uk:Тепер SumatraPDF є типовим переглядачем файлів PDF.
@@ -2233,7 +2237,7 @@ sp-rs:Greška pri učitavanju PDF dokumenta
 id:Kesalahan dalam memanggil berkas PDF.
 mk:Грешка при вчитување на PDF документот.
 ro:Erroare la încărcarea unui fişier PDF.
-kr:PDF 파일 읽을 수 없습니다.
+kr:PDF 파일을 읽을 수 없습니다.
 bn:পিডিএফ সঞ্চিকা ভরণে ত্রুটি
 gl:Erro ao abrir o arquivo PDF.
 uk:Помилка відкриття документу.
@@ -2375,7 +2379,7 @@ sp-rs:Pomozi u prevođenju ovog programa
 id:Membantu alihbahasa
 mk:Учествувај во преведувањето на оваа апликација
 ro:Contribuie la traducere
-kr:번역 제공
+kr:번역 기여
 bn:অনুবাদ প্রদান করুন
 gl:Contribuir na traducción
 es:Contribuir en la traducción
@@ -2401,6 +2405,7 @@ nl:Omgekeerde zoekrichting instellen
 eu:Alderantzizko bilaketa ezarri
 mk:Активирај инверзно пребарување
 ja:逆検索コマンドラインの設定
+kr:역탐색 명령 설정
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 gl:Establecer procura inversa
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
@@ -2429,6 +2434,7 @@ fa:تغییر زبان (Change language)
 mk:Смени јазик (Change language)
 hu:Nyelv kiválasztása (Change language)
 ja:言語の変更 (Change language)
+kr:언어 변경 (Change language)
 th:เปลี่ยนภาษา (Change language)
 gl: Cambiar lingua (Change language)
 tl:Ibahin ang Wika (Change language)
@@ -2457,6 +2463,7 @@ mk:Внеси лозинка
 fa:اسم رمز را وارد کنید
 hu:Írja be a jelszót
 ja:パスワードの入力
+kr:패스워드 입력
 th:ป้อนรหัสผ่าน
 gl:Introduza o contrasinal
 tl:Ipasok ang Sikretong Salita
@@ -2485,6 +2492,7 @@ eu:%s-rentzat pasahitza sartu
 mk:Внеси лозинка за %s
 hu:Írja be a(z) %s jelszavát
 ja:%s のパスワードを入力します
+kr:%s의 패스워드를 입력하십시오
 th:ป้อนรหัสผ่านสำหรับ %s
 gl:Introduza contrasinal para %s
 tl:Ipasok ang Sikretong Salita para kay %s
@@ -2513,6 +2521,7 @@ mk:Појди на страница
 fa:برو به صفحه
 hu:Ugrás adott oldalra
 ja:ページへ移動
+kr:페이지로 가기
 th:ไปที่หน้า
 gl:Ir a páxina
 tl:Pumunta sa Pahina
@@ -2540,6 +2549,7 @@ eu:PDF fitxategiekin lotu?
 mk:Да управувам со PDF датотеки?
 hu:Társítsuk a PDF fájlokkal?
 ja:PDF ファイルと関連付けますか?
+kr:PDF 파일 연결을 설정할까요?
 th:เชื่อมกับไฟล์ PDF
 gl:Asociar con arquivos PDF?
 tl:Isanib sa Salansan na PDF?
@@ -2567,6 +2577,7 @@ mk:Дали да ја направам SumatraPDF основна апликац�
 fa:قرار بدهیم ؟ PDF ایا این برنامه را مجری استاندارد فایل های
 hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
+kr:SumatraPDF를 기본 PDF 뷰어로 설정할까요?
 th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF
 gl:Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
 tl:Gawin SumatraPDF ang Likas na Pambasa ng mga Salansan na PDF?
@@ -2594,6 +2605,7 @@ mk:Не ме прашувај повторно
 fa:این پاسخ را به یاد بسپار و دوباره از من نپرس
 hu:Ne kérdezze meg többé
 ja:再び質問しない
+kr:다시 묻지 않음
 th:ไม่ต้องถามอีกครั้ง
 gl:Non preguntar de novo
 tl:Huwag na ako muling tanungin
@@ -2622,6 +2634,7 @@ mk:&Провери за нова верзија
 fa:چک کردن نسخه تازه تر
 hu:Újabb &verzió keresése
 ja:新しいバージョンのチェック(&C)
+kr:새 버전 확인
 th:&ตรวจสำหรับสอบเวอร์ชั่นใหม่
 gl:&Comprobar nova versión
 tl:Siyasatin kung may bago na bersyon
@@ -2651,6 +2664,7 @@ mk:Нема понова верзија.
 fa: نسخه تازه دردسترس نمی باشد
 hu:Nincs újabb verzió.
 ja:新しいバージョンが利用できません。
+kr:새로운 버전이 없습니다.
 th:ไม่มีเวอร์ชั่นใหม่
 gl:Non hai nova versión dispoñible
 tl:Walang bago na bersyon na makukuha.
@@ -2680,6 +2694,7 @@ mk:Ја имаш најновата верзија.
 fa:نسخۀ شما تازه ترین نسخه می باشد
 hu:Önnél a legfrissebb verzió van telepítve.
 ja:最新のバージョンです。
+kr:최신 버전입니다.
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 gl:Ten vostede a última versión
 tl:Nasa iyo na ang bagong bersyon.
@@ -2709,6 +2724,7 @@ mk:Ја имаш верзијата %s
 fa:شماره نسخه شما %s
 hu:Jelenlegi verzió: %s
 ja:バージョン %s です
+kr:현재 버전은 %s 입니다. 
 th:ของคุณเป็นเวอร์ชั่น
 gl:A súa versión é %s
 tl:Ang bersyon na nsa iyo ay %s
@@ -2738,6 +2754,7 @@ mk:Новата верзија %s е достапна. Сакаш да ја пр
 fa:نسخۀ تازه تری پیدا شده است ، ایا می خواهید آنرا پیاده کنید ؟
 hu:Új verzió érhető el (%s). Kívánja letölteni?
 ja:新しいバージョン %s は利用可能です。新しいバージョンをダウンロードしますか?
+kr:새 버전 %s 이 나왔습니다. 다운로드하시겠습니까? 
 th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
 gl:A nova versión %s está dispoñible. ¿Desexa obtela?
 tl:May bagong bersyon %s. Kukuhanin ang bagong bersyon?
@@ -2767,6 +2784,7 @@ mk:Достапна е нова верзија.
 fa:نسخه تازه یافت شده
 hu:Új verzió érhető el.
 ja:新しいバージョンが利用可能です。
+kr:새로운 버전이 나왔습니다.
 th:เวอร์ชั่นใหม่ออกแล้ว
 gl:Nova versión dispoñible
 tl:May bagong bersyon.
@@ -2795,6 +2813,7 @@ mk:Прескокни ја оваа верзија
 fa:از این نسخه چشم پوشی کن
 hu:Verzió kihagyása
 ja:このバージョンをスキップする
+kr:이 버전 무시
 th:ช้ามเวอร์ชั่นนี้ไป
 gl:Ignorar esta versión
 tl:Laktawan ang bersyon na ito
@@ -2820,5 +2839,6 @@ bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রি
 fa:به روز رسانی اتوماتیک
 it:Aggiornamento automatico
 ja:自動更新を有効にする
+kr:자동업데이트 활성화
 tw:啟用自動更新
 pt:Activar actualização automática
