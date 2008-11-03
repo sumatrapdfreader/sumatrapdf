@@ -36,7 +36,8 @@
 #ifndef CURR_VERSION
 #define CURR_VERSION "0.9.3"
 #endif
-/* #define SVN_PRE_RELEASE_VER 800 */
+
+// #define SVN_PRE_RELEASE_VER 994
 
 #define _QUOTEME(x) #x
 #define QM(x) _QUOTEME(x)
@@ -2774,46 +2775,19 @@ static void OnBenchNextAction(WindowInfo *win)
 }
 
 #ifdef SVN_PRE_RELEASE_VER
-int ParseSumatraVer(char *txt)
+int CompareVersion(char *txt1, char *txt2)
 {
-    return atoi(txt);
+	int num1 = atoi(txt1);
+	int num2 = atoi(txt2);
+	if (num1 > num2)
+		return 1;
+	if (num1 == num2)
+		return 0;
+	return -1;
 }
 #else
-/* Given a string whose first line is a version number in the form: one or
-   more integers separated by '.' (e.g. 0, 0.1, 1.3.5 etc.)
-   return its numeric representation as integer, or -1 if invalid format.
-   Note: due to how we calculate numeric representation, each numer
-   must be < 10.
-   TODO: this requires me to always have the fraction part e.g. 0.8.0, which is
-   not human friendly. Probably should change the rules that number version is
-   x.y.z, or x.y in which case it's interprested as x.y.0, and releax the rules
-   on numbers so that x/y/z can be > 9
-   */
-int ParseSumatraVer(char *txt)
-{
-    int val = 0;
-    int numCount = 0;
-    char c;
-    int n;
-    for (;;) {
-        c = *txt++;
-        n = c - '0';
-        if ((n < 0) || (n > 9))
-            return -1;
-        val = (val * 10) + n;
-        ++numCount;
-        c = *txt++;
-        if (0 == c)
-            break;
-        if (c != '.')
-            return -1;
-    }
-    if (0 == numCount)
-        return -1;
-    return val;
-}
 // extract the next (positive) number from the string *txt
-int nextnumber(char **txt)
+static int ExtractNextNumber(char **txt)
 {
     // skip non numeric characters
     int val = -1;
@@ -2842,46 +2816,18 @@ int CompareVersion(char *txt1, char *txt2)
 {
     int v1, v2;
     while(1) {
-        v1 = nextnumber(&txt1);
-        v2 = nextnumber(&txt2);
+        v1 = ExtractNextNumber(&txt1);
+        v2 = ExtractNextNumber(&txt2);
         if (v1 == v2) {
-            if(v1==-1)
+            if (v1==-1)
                 return 0;
         }
-        else if( v1 > v2 )
+        else if (v1 > v2)
             return 1;
         else
             return -1;
     }
 }
-#endif
-
-#ifdef DEBUG
-#ifdef SVN_PRE_RELEASE_VER
-void u_ParseSumatraVar()
-{
-    assert(0 == ParseSumatraVer("0"));
-    assert(3 == ParseSumatraVer("3"));
-    assert(45 == ParseSumatraVer("45"));
-}
-#else
-void u_ParseSumatraVar()
-{
-    assert(0 == ParseSumatraVer("0"));
-    assert(3 == ParseSumatraVer("3"));
-    assert(-1 == ParseSumatraVer("30"));
-    assert(0 == ParseSumatraVer("0.0"));
-    assert(1 == ParseSumatraVer("0.1"));
-    assert(10 == ParseSumatraVer("1.0"));
-    assert(543 == ParseSumatraVer("5.4.3"));
-    assert(81 == ParseSumatraVer("0.8.1"));
-    assert(-1 == ParseSumatraVer(""));
-    assert(-1 == ParseSumatraVer("."));
-    assert(-1 == ParseSumatraVer("a"));
-    assert(-1 == ParseSumatraVer("3.a"));
-    assert(-1 == ParseSumatraVer("3."));
-}
-#endif
 #endif
 
 static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
@@ -2911,13 +2857,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         char *tmp2 = (char*)str_find_char(tmp, '*');
         if (tmp2)
             *tmp2 = 0;
-        /*
-        int currVer = ParseSumatraVer(UPDATE_CHECK_VER);
-        assert(-1 != currVer);
-        int newVer = ParseSumatraVer(tmp);
-        assert(-1 != newVer);
-        if (newVer > currVer)*/
-        if (CompareVersion(tmp,UPDATE_CHECK_VER)>0){
+        if (CompareVersion(tmp, UPDATE_CHECK_VER)>0){
             bool showDialog = true;
             // if automated, respect gGlobalPrefs.m_versionToSkip
             if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
@@ -5363,7 +5303,7 @@ void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
     if (!hasText)
         return;
 
-    bool wasModified = Edit_GetModify(hwnd);
+    BOOL wasModified = Edit_GetModify(hwnd);
     PdfSearchResult *rect;
     if (wasModified)
         rect = win->dm->Find(direction, text);
@@ -6593,7 +6533,6 @@ static void u_DoAllTests(void)
 {
 #ifdef DEBUG
     DBG_OUT("Running tests\n");
-    u_ParseSumatraVar();
     u_RectI_Intersect();
     u_testMemSegment();
     u_hexstr();
