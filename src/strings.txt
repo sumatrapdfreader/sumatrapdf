@@ -143,7 +143,7 @@ es:&Archivo
 hr:&Datoteka
 ru:Файл
 ar:ملف
-cn: 文件(&F)
+cn:文件(&F)
 sv:&Arkiv
 cz:&Soubor
 gr:&Αρχείο
@@ -1653,6 +1653,7 @@ tl:Gabay
 bn:নির্দেশ নথিপত্র
 it:&Guida
 tw:說明文件
+cn:使用手册(&M)
 -
 &About
 bg:Относно програмата...
@@ -1737,6 +1738,7 @@ ca:Pàgina:
 sn:Peji:
 bn:পৃষ্ঠা:
 tw:頁數
+cn:页数
 -
 Find:
 br:Localizar:
@@ -2118,7 +2120,7 @@ es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
 ru:Теперь PDF-файлы будут по умолчанию открываться с помощью SumatraPDF.
 ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
-cn:已将 SumatraPDF 设置为默认 PDF 阅读器
+cn:已将 SumatraPDF 设置为默认 PDF 阅读器。
 sv:SumatraPDF är nu standardläsare för PDF-filer.
 cz:SumatraPDF je nyní nastaven jako defaultní čtečka PDF souborů.
 gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγραμμα ανάγνωσης PDF
@@ -2414,6 +2416,7 @@ ca:Cerca cap enrere
 bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 it:Imposta comando di ricerca inversa
 tw:設定反搜尋命令列
+cn:设置反向搜索命令行
 -
 Change language
 bg:Смени езика (Change language)
@@ -2444,6 +2447,7 @@ sn:Chinja mutauro (Change language)
 bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
 pt:Mudar de idioma (Change language)
+cn:改变语言 (Change language)
 -
 Enter password
 bg:Въведете парола
@@ -2473,6 +2477,7 @@ sn:Isa password
 bn:শব্দকূট প্রবেশ করুন
 tw:輸入密碼
 pt:Introduzir password
+cn:输入密码
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2502,6 +2507,7 @@ sn:Isa password ya %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 tw:輸入 %s 的密碼
 pt:Introduzir password para
+cn:输入 %s 的密码
 -
 Go to page
 bg:Към страница
@@ -2530,6 +2536,7 @@ ca:Vés a la pàgina
 sn:Enda kupeji
 bn:এর পৃষ্ঠায় চলুন
 tw:移至頁面
+cn:转到页面
 -
 Associate with PDF files?
 bg:Асоцииране с PDF файлове?
@@ -2558,6 +2565,7 @@ ca:Voleu associar-lo amb els fitxers PDF?
 sn:Ita zvifambidzane ne PDF
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 tw:與 PDF 檔進行關聯?
+cn:是否关联 PDF 文件？
 -
 Make SumatraPDF default application for PDF files?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
@@ -2585,6 +2593,7 @@ va:¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 tw:把 SumatraPDF 作為預設的PDF閱讀器?
+cn:将 SumatraPDF 设置为默认 PDF 阅读器？
 -
 Don't ask me again
 bg:Не питай отново
@@ -2614,6 +2623,7 @@ ca:No ho tornis a preguntar
 sn:Usandivhunze futi
 bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
 tw:不要再問我
+cn:以后不再询问
 -
 &Check for new version
 bg:Проверка за нова версия
@@ -2644,6 +2654,7 @@ sn:&Tsvaga version idzva
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
 tw:檢查是否有新版本
 pt:Procurar actualizações
+cn:检查是否有新版本(&C)
 -
 No new version available.
 bg:Няма нова версия.
@@ -2674,6 +2685,7 @@ sn:Hapana version idzva.
 bn:নতুন সংস্করণ অনুপলব্ধ
 tw:沒有新版本
 pt:Nenhuma actualização encontrada.
+cn:未发现新版本。
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2704,6 +2716,7 @@ sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
 tw:目前使用的版本為最新版
 pt:Esta é a versão mais recente.
+cn:您的版本为最新版。
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2734,6 +2747,7 @@ sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
 pt:Tem a versão %s
+cn:当前版本为 %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2764,6 +2778,7 @@ sn:Version %s ririkuwanika. Unoda here version idzva?
 bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 tw:最新版本 %s。 是否下載?
 pt:A versão %s está disponível. Fazer download agora?
+cn:发现新版本 %s。是否下载？
 -
 New version available.
 bg:Има нова версия.
@@ -2794,6 +2809,7 @@ sn:Version idzva ririkuwanika
 bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
 tw:新的可用版本。
 pt:Há uma nova versão disponível.
+cn:发现新版本。
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2822,6 +2838,7 @@ ca:Omet aquesta versió
 sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
 tw:略過這個版本。
+cn:跳过此版本。
 -
 Enable auto-update
 bg:Включи автоматичното обновяване
@@ -2842,3 +2859,4 @@ ja:自動更新を有効にする
 kr:자동업데이트 활성화
 tw:啟用自動更新
 pt:Activar actualização automática
+cn:启用自动更新
