@@ -1654,6 +1654,7 @@ bn:নির্দেশ নথিপত্র
 it:&Guida
 tw:說明文件(&M)
 cn:使用手册(&M)
+es:&Manual de instrucciones
 -
 &About
 bg:Относно програмата...
@@ -2860,3 +2861,4 @@ kr:자동업데이트 활성화
 tw:啟用自動更新
 pt:Activar actualização automática
 cn:启用自动更新
+es:Activar actualización automática.
