@@ -158,7 +158,7 @@ fi:&Tiedosto
 ca:&Fitxer
 si:&Datoteka
 sr-rs:Датотека
-tw: 檔案(&F)
+tw:檔案(&F)
 ml:ഫയല്‍
 he:&קובץ
 sp-rs:&Datoteka
@@ -393,7 +393,7 @@ es:Convertir SumatraPDF en lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Ассоциировать SumatraPDF с файлами PDF
 ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
-cn:设置 SumatraPDF 为默认 PDF 阅读器
+cn:将 SumatraPDF 设置为默认的 PDF 阅读器
 sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
 gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη PDF
@@ -1326,7 +1326,7 @@ es:Ajustar &Página\tCtrl-0
 hr:Prilagodi &stranici\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
-cn:适合页面\tCtrl-0
+cn:适合页面(&P)\tCtrl-0
 sv:Anpa&ssa efter helsida\tCtrl-0
 cz:Přizpůsobit stránce\tCtrl-0
 gr:Ολόκληρη σελίδα\tCtrl-0
@@ -1341,7 +1341,7 @@ fi:Sovita sivu pystysuunnassa\tCtrl-0
 ca:Ajusta a la pàgina\tCtrl-0
 si:&Prilagodi strani\tCtrl-0
 sr-rs:Прилагоди страни\tCtrl-0
-tw:適合頁面\tCtrl-0
+tw:適合頁面(&P)\tCtrl-0
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl-0
 he:התאם דף\tCtrl-0
 sp-rs:Prilagodi &strani\tCtrl-0
@@ -1376,7 +1376,7 @@ es:Tamaño Real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
-cn:实际大小\tCtrl-1
+cn:实际大小(&U)\tCtrl-1
 sv:Normal storlek\tCtrl-1
 cz:Skutečná velikost\tCtrl-1
 gr:Πραγματικό μέγεθος\tCtrl-1
@@ -1391,7 +1391,7 @@ fi:&Todellinen koko\tCtrl-1
 ca:Mida &real\tCtrl-1
 si:&Dejanska velikost\tCtrl-1
 sr-rs:Страна величина\tCtrl-1
-tw:實際大小\tCtrl-1
+tw:實際大小(&U)\tCtrl-1
 ml:ശരിയായ വലിപ്പം\tCtrl-1
 he:גודל מקור\tCtrl-1
 sp-rs:Stvarna veličina\tCtrl-1
@@ -1426,7 +1426,7 @@ es:&Ancho de Página\tCtrl-2
 hr:&Podesi po širini\tCtrl-2
 ru:Заполнение по ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
-cn:适合宽度\tCtrl-2
+cn:适合宽度(&H)\tCtrl-2
 sv:Anpassa efter bredd\tCtrl-2
 cz:Podle šířky\tCtrl-2
 gr:Στο πλάτος παραθύρου\tCtrl-2
@@ -1441,7 +1441,7 @@ fi:&Sovita sivu vaakasuunnassa\tCtrl-2
 ca:Ajusta a l'am&plada\tCtrl-2
 si:P&rilagodi po širini\tCtrl-2
 sr-rs:Подеси по ширини\tCtrl-2
-tw:適合寬度\tCtrl-2
+tw:適合寬度(&H)\tCtrl-2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
 he:התאם רוחב\tCtrl-2
 sp-rs:&Podesi po širini\tCtrl-2
@@ -1652,7 +1652,7 @@ mk:Прирачник за употреба
 tl:Gabay
 bn:নির্দেশ নথিপত্র
 it:&Guida
-tw:說明文件
+tw:說明文件(&M)
 cn:使用手册(&M)
 -
 &About
@@ -1737,8 +1737,8 @@ va:Pàgina:
 ca:Pàgina:
 sn:Peji:
 bn:পৃষ্ঠা:
-tw:頁數
-cn:页数
+tw:頁數：
+cn:页数：
 -
 Find:
 br:Localizar:
@@ -1767,7 +1767,7 @@ mk:Најди:
 ro:Caută:
 kr:찾기:
 bn:অনুসন্ধান:
-cn:查找:
+cn:查找：
 fr:Rechercher:
 ru:Найти:
 gl:Procura:
@@ -1780,7 +1780,7 @@ hr:Pronađi:
 tl:Hanapin:
 va:Buscar:
 sn:Wana:
-tw:尋找
+tw:尋找：
 -
 Find Previous
 br:Localizar anterior
@@ -2120,7 +2120,7 @@ es:SumatraPDF es ahora el lector PDF por defecto.
 hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
 ru:Теперь PDF-файлы будут по умолчанию открываться с помощью SumatraPDF.
 ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
-cn:已将 SumatraPDF 设置为默认 PDF 阅读器。
+cn:已将 SumatraPDF 设置为默认的 PDF 阅读器。
 sv:SumatraPDF är nu standardläsare för PDF-filer.
 cz:SumatraPDF je nyní nastaven jako defaultní čtečka PDF souborů.
 gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγραμμα ανάγνωσης PDF
@@ -2135,7 +2135,7 @@ fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
 ca:Ara el SumatraPDF és el visor de PDF predeterminat.
 si:SumatraPFD je privzeti pregledovalnik PDF datotek.
 sr-rs:SumatraPDF је сада подразумевани читач PDF докумената
-tw:已經把 SumatraPDF 設為預設的PDF閱讀工具
+tw:已經把 SumatraPDF 設為預設的PDF閱讀工具。
 ml:സുമാത്രാപിഡീഎഫ് ആണ് ഇപ്പൊള്‍ നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം
 sp-rs:SumatraPDF je sada podrazumevani čitač PDF dokumenata
 id:SumatraPDF sekarang menjadi pembaca-PDF utama.
@@ -2218,7 +2218,7 @@ es:Error al Cargar el Archivo PDF.
 hr:Greška kod učitavanja PDF datoteke.
 ru:Невозможно загрузить PDF-файл.
 ar:هناك خطأ في تشغيل الملف
-cn:载入 PDF 文件时发生错误
+cn:载入 PDF 文件时发生错误。
 sv:Kan inte öppna PDF-filen.
 cz:Chyba při načítání PDF souboru.
 gr:Σφάλμα κατά τη φόρτωση του αρχείου
@@ -2233,7 +2233,7 @@ fi:Tiedoston avaus epäonnistui
 ca:S'ha produït un error en carregar el fitxer.
 si:Napaka pri branju PDF datoteke.
 sr-rs:Грешка при учитавању PDF документа
-tw:讀取PDF檔案時發失錯誤
+tw:讀取PDF檔案時發失錯誤。
 ml:PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
 sp-rs:Greška pri učitavanju PDF dokumenta
 id:Kesalahan dalam memanggil berkas PDF.
@@ -2282,7 +2282,7 @@ fi:Tulostinta ei löydy
 ca:No s'ha pogut accedir a la impressora.
 si:Ne morem najti tiskalnika.
 sr-rs:Штампач није пронађен
-tw:無法開啟印表機
+tw:無法開啟印表機。
 ml:അച്ചടിയന്ത്രം തുറക്കാന്‍ സാധിച്ചില്ല
 sp-rs:Štampač nije pronađen
 id:Tidak dapat membuka printer
@@ -2593,7 +2593,7 @@ va:¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 tw:把 SumatraPDF 作為預設的PDF閱讀器?
-cn:将 SumatraPDF 设置为默认 PDF 阅读器？
+cn:将 SumatraPDF 设置为默认的 PDF 阅读器？
 -
 Don't ask me again
 bg:Не питай отново
@@ -2652,7 +2652,7 @@ va:&Comprovar actualisacions
 ca:&Comprova si hi ha una versió nova
 sn:&Tsvaga version idzva
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
-tw:檢查是否有新版本
+tw:檢查是否有新版本(&C)
 pt:Procurar actualizações
 cn:检查是否有新版本(&C)
 -
@@ -2714,7 +2714,7 @@ va:Està es l'última versió.
 ca:Teniu la darrera versió.
 sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
-tw:目前使用的版本為最新版
+tw:目前使用的版本為最新版。
 pt:Esta é a versão mais recente.
 cn:您的版本为最新版。
 -
@@ -2747,7 +2747,7 @@ sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
 pt:Tem a versão %s
-cn:当前版本为 %s
+cn:您的版本为 %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2837,8 +2837,8 @@ va:Botar-se esta versió.
 ca:Omet aquesta versió
 sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
-tw:略過這個版本。
-cn:跳过此版本。
+tw:略過這個版本
+cn:跳过此版本
 -
 Enable auto-update
 bg:Включи автоматичното обновяване

@@ -759,7 +759,7 @@ static HINTERNET g_hOpen = NULL;
 #endif
 
 #ifndef SVN_UPDATE_LINK
-#ifdef SVN_PRE_RELEASE_VER
+#ifdef SVN_PRE_RELEASE_VERi
 #define SVN_UPDATE_LINK             "http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html"
 #else
 #define SVN_UPDATE_LINK             "http://blog.kowalczyk.info/software/sumatrapdf"
