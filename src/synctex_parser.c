@@ -43,6 +43,10 @@ authorization from the copyright holder.
  *  In particular, the HAVE_LOCALE_H and HAVE_SETLOCALE macros should be properly defined.
  *  With this design, you should not need to edit this file. */
 
+#   define synctex_bool_t int
+#   define synctex_YES -1
+#   define synctex_NO 0
+
 #   if defined(SYNCTEX_USE_LOCAL_HEADER)
 #       include "synctex_parser_local.h"
 #   else
@@ -1026,7 +1030,7 @@ typedef int synctex_status_t;
 #   define SYNCTEX_FILE (scanner->file)
 
 /*  Actually, the minimum buffer size is driven by integer and float parsing.
- *  ¬±0.123456789e123
+ *  ¬¨¬±0.123456789e123
  */
 #   define SYNCTEX_BUFFER_MIN_SIZE 16
 #   define SYNCTEX_BUFFER_SIZE 32768
@@ -2583,7 +2587,7 @@ return_on_error:
 				free(quoteless);
 				quoteless = NULL;
 			}
-			if(NULL == (the_file = gzopen(synctex_name,"r"))) {
+			if(NULL == (the_file = gzopen(synctex_name,mode))) {
 				/*  Could not open this file */
 				if(errno != ENOENT) {
 					/*  The file does exist, this is a lower lever error, I can't do anything. */
@@ -2599,7 +2603,7 @@ return_on_error:
 			if(rename(synctex_name,quoteless)) {
 				_synctex_error("!  __synctex_scanner_open_with_output_file: could not rename %s to %s, error %i\n",synctex_name,quoteless,errno);
 				/*	Reopen the file. */
-				if(NULL == (the_file = gzopen(synctex_name,"r"))) {
+				if(NULL == (the_file = gzopen(synctex_name,mode))) {
 					/*  Could not open this file */
 					if(errno != ENOENT) {
 						/*  The file does exist, this is a lower lever error, I can't do anything. */
@@ -2608,7 +2612,7 @@ return_on_error:
 					goto return_on_error;
 				}
 			} else {
-				if(NULL == (the_file = gzopen(quoteless,"r"))) {
+				if(NULL == (the_file = gzopen(quoteless,mode))) {
 					/*  Could not open this file */
 					if(errno != ENOENT) {
 						/*  The file does exist, this is a lower lever error, I can't do anything. */
@@ -2633,14 +2637,14 @@ return_on_error:
 int _synctex_scanner_open_with_output_file(const char *  output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, int add_quotes) {
 #	define synctex_name (*synctex_name_ref)
 #	define the_file (*file_ref)
-	int result = __synctex_scanner_open_with_output_file(output,synctex_name_ref,file_ref,add_quotes);
-	if((result || !*file_ref) && build_directory && strlen(build_directory)) {
   char * build_output, *lpc;
   size_t size;
   int is_absolute;
-		size = strlen(build_directory)+strlen(lpc)+2;
-		build_output = NULL;
+	int result = __synctex_scanner_open_with_output_file(output,synctex_name_ref,file_ref,add_quotes);
+	if((result || !*file_ref) && build_directory && strlen(build_directory)) {
+		build_output = NULL;;
 		lpc = _synctex_last_path_component(output);
+		size = strlen(build_directory)+strlen(lpc)+2;
 		is_absolute = _synctex_path_is_absolute(build_directory);
 		if(!is_absolute) {
 			size += strlen(output);
