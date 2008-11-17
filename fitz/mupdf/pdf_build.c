@@ -778,7 +778,7 @@ cleanup:
 cleanupclip:
 	if (clip) fz_dropnode((fz_node *)clip);
 
-	return fz_rethrow(error, reason);
+	return fz_rethrow(error, "%s", reason);
 }
 
 /*

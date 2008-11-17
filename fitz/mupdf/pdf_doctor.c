@@ -46,12 +46,13 @@ sweepref(pdf_xref *xref, fz_obj *ref)
 {
 	fz_error *error;
 	fz_obj *obj;
-	int oid;
+	int oid, gid;
 
 	oid = fz_tonum(ref);
+	gid = fz_tonum(ref);
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object out of range %d", oid);
+		return fz_throw("object out of range (%d %d R)", oid, gid);
 
 	if (xref->table[oid].mark)
 		return fz_okay;

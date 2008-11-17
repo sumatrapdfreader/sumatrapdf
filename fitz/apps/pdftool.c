@@ -530,7 +530,15 @@ drawloadpage(int pagenum, struct benchmark *loadtimes)
 	long end;
 	long elapsed;
 
-	fprintf(stderr, "draw %s page %d ", srcname, pagenum);
+	char *basename;
+
+	basename = strrchr(srcname, '/');
+	if (!basename)
+	    basename = srcname;
+	else
+	    basename ++;
+
+	fprintf(stderr, "draw %s:%03d ", basename, pagenum);
 	if (benchmark && loadtimes)
 	{
 		fflush(stderr);
@@ -561,11 +569,6 @@ drawloadpage(int pagenum, struct benchmark *loadtimes)
 	    loadtimes->pages++;
 	}
 
-	fprintf(stderr, "mediabox [ %g %g %g %g ] rotate %d%s",
-			drawpage->mediabox.x0, drawpage->mediabox.y0,
-			drawpage->mediabox.x1, drawpage->mediabox.y1,
-			drawpage->rotate,
-			benchmark ? "" : "\n");
 	if (benchmark)
 		fflush(stderr);
 }
@@ -575,6 +578,16 @@ drawfreepage(void)
 {
 	pdf_droppage(drawpage);
 	drawpage = nil;
+
+	/* Flush resources between pages.
+	 * TODO: should check memory usage before deciding to do this.
+	 */
+	if (src && src->store)
+	{
+		fflush(stderr);
+		/* pdf_debugstore(src->store); */
+		pdf_emptystore(src->store);
+	}
 }
 
 void
@@ -586,11 +599,15 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 	fz_pixmap *pix;
 	char name[256];
 	char pnmhdr[256];
-	int x, y, w, h, b, bh;
+	int i, x, y, w, h, b, bh;
 	int fd = -1;
 	long start;
 	long end;
 	long elapsed;
+
+	fz_md5 digest;
+
+	fz_md5init(&digest);
 
 	drawloadpage(pagenum, loadtimes);
 
@@ -653,12 +670,21 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 			}
 		}
 
+		fz_md5update(&digest, pix->samples, pix->h * pix->w * 4);
+
 		pix->y += bh;
 		if (pix->y + pix->h > bbox.y1)
 			pix->h = bbox.y1 - pix->y;
 	}
 
 	fz_droppixmap(pix);
+
+	{
+	    unsigned char buf[16];
+	    fz_md5final(&digest, buf);
+	    for (i = 0; i < 16; i++)
+		fprintf(stderr, "%02x", buf[i]);
+	}
 
 	if (drawpattern)
 		close(fd);
@@ -683,9 +709,11 @@ drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 	    drawtimes->avg += elapsed;
 	    drawtimes->pages++;
 
-	    fprintf(stderr, " time %.3fs\n",
+	    fprintf(stderr, " time %.3fs",
 		    elapsed / 1000000.0);
 	}
+
+	fprintf(stderr, "\n");
 }
 
 void
@@ -758,12 +786,14 @@ drawpages(char *pagelist)
 		if (spage > epage)
 			page = spage, spage = epage, epage = page;
 
+		if (spage < 1)
+			spage = 1;
+		if (epage > pdf_getpagecount(srcpages))
+			epage = pdf_getpagecount(srcpages);
+
 		printf("Drawing pages %d-%d...\n", spage, epage);
 		for (page = spage; page <= epage; page++)
 		{
-			if (page < 1 || page > pdf_getpagecount(srcpages))
-				continue;
-
 			switch (drawmode)
 			{
 			case DRAWPNM: drawpnm(page, &loadtimes, &drawtimes); break;

@@ -141,7 +141,6 @@ output:
 		d->offset ++;
 	}
 
-	out->eof = 1;
 	return fz_iodone;
 }
 

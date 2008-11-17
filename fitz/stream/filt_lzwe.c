@@ -239,7 +239,6 @@ eof:
 	putcode(lzw, out, lzw->oldcode);
 	putcode(lzw, out, LZW_EOD);
 
-	out->eof = 1;
 	return fz_iodone;
 }
 

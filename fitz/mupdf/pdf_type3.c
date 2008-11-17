@@ -123,7 +123,7 @@ pdf_loadtype3font(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	if (!font)
 		return fz_throw("outofmem: font struct");
 
-	pdf_logfont("load type3 font %d %d (%p) {\n", fz_tonum(ref), fz_togen(ref), font);
+	pdf_logfont("load type3 font (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), font);
 	pdf_logfont("name %s\n", buf);
 
 	font->super.render = t3render;

@@ -105,7 +105,6 @@ fz_processa85e(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 			*out->wp++ = '~';
 			*out->wp++ = '>';
-			out->eof = 1;
 			return fz_iodone;
 		}
 
@@ -120,7 +119,6 @@ needinput:
 			return fz_ioneedout;
 		*out->wp++ = '~';
 		*out->wp++ = '>';
-		out->eof = 1;
 		return fz_iodone;
 	}
 	return fz_ioneedin;

@@ -147,12 +147,8 @@ fz_closepath(fz_pathnode *path)
 fz_error *
 fz_endpath(fz_pathnode *path, fz_pathkind paint, fz_stroke *stroke, fz_dash *dash)
 {
-	fz_pathel *newels;
-
-	newels = fz_realloc(path->els, path->len * sizeof(fz_pathel));
-	if (!newels)
-		return fz_outofmem;
-	path->els = newels;
+	if (path->len == 0)
+		fz_warn("creating an empty path");
 
 	path->paint = paint;
 	path->dash = dash;

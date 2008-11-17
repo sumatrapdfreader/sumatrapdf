@@ -119,7 +119,7 @@ pdf_updatexref(pdf_xref *xref, char *path)
 {
 	fz_error *error;
 	fz_stream *out;
-	int oid;
+	int oid, gid;
 	int i, n;
 	int startxref;
 	fz_obj *obj;
@@ -134,14 +134,15 @@ pdf_updatexref(pdf_xref *xref, char *path)
 
 	for (oid = 0; oid < xref->len; oid++)
 	{
+		gid = xref->table[oid].gen;
 		if (xref->table[oid].type == 'a')
 		{
 			xref->table[oid].ofs = fz_tell(out);
-			error = writeobject(out, xref, xref->crypt, oid, xref->table[oid].gen);
+			error = writeobject(out, xref, xref->crypt, oid, gid);
 			if (error)
 			{
 				fz_dropstream(out);
-				return fz_rethrow(error, "cannot write object (oid=%d)", oid);
+				return fz_rethrow(error, "cannot write object (%d %d R)", oid, gid);
 			}
 		}
 	}
@@ -223,7 +224,7 @@ pdf_savexref(pdf_xref *xref, char *path, pdf_crypt *encrypt)
 {
 	fz_error *error;
 	fz_stream *out;
-	int oid;
+	int oid, gid;
 	int startxref;
 	int *ofsbuf;
 	fz_obj *obj;
@@ -267,12 +268,13 @@ pdf_savexref(pdf_xref *xref, char *path, pdf_crypt *encrypt)
 		if (x->type == 'n' || x->type == 'o' || x->type == 'a')
 		{
 			ofsbuf[oid] = fz_tell(out);
-			error = writeobject(out, xref, encrypt, oid, x->type == 'o' ? 0 : x->gen);
+			gid = x->type == 'o' ? 0 : x->gen;
+			error = writeobject(out, xref, encrypt, oid, gid);
 			if (error)
 			{
 				if (ofsbuf) fz_free(ofsbuf);
 				fz_dropstream(out);
-				return fz_rethrow(error, "cannot write object (oid=%d)", oid);
+				return fz_rethrow(error, "cannot write object (%d %d R)", oid, gid);
 			}
 		}
 		else

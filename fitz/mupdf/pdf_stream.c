@@ -362,13 +362,13 @@ pdf_openrawstream(fz_stream **stmp, pdf_xref *xref, int oid, int gen)
 	fz_filter *filter;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object id out of range (%d)", oid);
+		return fz_throw("object id out of range (%d %d R)", oid, gen);
 
 	x = xref->table + oid;
 
 	error = pdf_cacheobject(xref, oid, gen);
 	if (error)
-		return fz_rethrow(error, "cannot load stream object (%d)", oid);
+		return fz_rethrow(error, "cannot load stream object (%d %d R)", oid, gen);
 
 	if (x->stmbuf)
 	{
@@ -418,13 +418,13 @@ pdf_openstream(fz_stream **stmp, pdf_xref *xref, int oid, int gen)
 	fz_filter *filter;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object id out of range (%d)", oid);
+		return fz_throw("object id out of range (%d %d R)", oid, gen);
 
 	x = xref->table + oid;
 
 	error = pdf_cacheobject(xref, oid, gen);
 	if (error)
-		return fz_rethrow(error, "cannot load stream object (%d)", oid);
+		return fz_rethrow(error, "cannot load stream object (%d %d R)", oid, gen);
 
 	if (x->stmbuf)
 	{
@@ -482,12 +482,12 @@ pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen)
 
 	error = pdf_openrawstream(&stm, xref, oid, gen);
 	if (error)
-		return fz_rethrow(error, "cannot open raw stream (%d)", oid);
+		return fz_rethrow(error, "cannot open raw stream (%d %d R)", oid, gen);
 
 	error = fz_readall(bufp, stm, 0);
 	fz_dropstream(stm);
 	if (error)
-		return fz_rethrow(error, "cannot load stream into buffer (%d)", oid);
+		return fz_rethrow(error, "cannot load stream into buffer (%d %d R)", oid, gen);
 	return fz_okay;
 }
 
@@ -502,12 +502,12 @@ pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen)
 
 	error = pdf_openstream(&stm, xref, oid, gen);
 	if (error)
-		return fz_rethrow(error, "cannot open stream (%d)", oid);
+		return fz_rethrow(error, "cannot open stream (%d %d R)", oid, gen);
 
 	error = fz_readall(bufp, stm, 0);
 	fz_dropstream(stm);
 	if (error)
-		return fz_rethrow(error, "cannot load stream into buffer (%d)", oid);
+		return fz_rethrow(error, "cannot load stream into buffer (%d %d R)", oid, gen);
 	return fz_okay;
 }
 

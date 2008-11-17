@@ -384,7 +384,6 @@ rtc:
 
 	if (fax->bidx)
 		out->wp ++;
-	out->eof = 1;
 
 	return fz_iodone;
 }

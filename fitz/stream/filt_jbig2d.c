@@ -106,7 +106,6 @@ fz_processjbig2d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 			if (d->idx == d->page->height * d->page->stride) {
 				jbig2_release_page(d->ctx, d->page);
-				out->eof = 1;
 				return fz_iodone;
 			}
 		}

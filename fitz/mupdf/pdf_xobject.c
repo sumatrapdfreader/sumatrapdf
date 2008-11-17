@@ -31,7 +31,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		return fz_rethrow(error, "cannot store xobject resource");
 	}
 
-	pdf_logrsrc("load xobject %d %d (%p) {\n", fz_tonum(ref), fz_togen(ref), form);
+	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), form);
 
 	obj = fz_dictgets(dict, "BBox");
 	form->bbox = pdf_torect(obj);

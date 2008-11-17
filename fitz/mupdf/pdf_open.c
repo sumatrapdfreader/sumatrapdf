@@ -369,13 +369,13 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		if (oid == xref->len && oid < xref->cap)
 		{
 		    /* allow broken pdf files that have off-by-one errors in the xref */
-		    fz_warn("object id (%d) out of range (0..%d)", oid, xref->len - 1);
+		    fz_warn("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
 		    xref->len ++;
 		}
 		else
 		{
 		    fz_dropobj(trailer);
-		    return fz_throw("object id (%d) out of range (0..%d)", oid, xref->len - 1);
+		    return fz_throw("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
 		}
 	}
 
@@ -538,7 +538,7 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 	int i, n;
 	pdf_token_e tok;
 
-	pdf_logxref("loadobjstm %d %d\n", oid, gen);
+	pdf_logxref("loadobjstm (%d %d R)\n", oid, gen);
 
 	error = pdf_loadobject(&objstm, xref, oid, gen);
 	if (error)
@@ -609,7 +609,7 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 
 		if (oidbuf[i] < 1 || oidbuf[i] >= xref->len)
 		{
-			error = fz_throw("object id (%d) out of range (0..%d)", oidbuf[i], xref->len - 1);
+			error = fz_throw("object id (%d 0 R) out of range (0..%d)", oidbuf[i], xref->len - 1);
 			goto cleanupstm;
 		}
 

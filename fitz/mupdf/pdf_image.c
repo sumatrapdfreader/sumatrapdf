@@ -231,7 +231,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	if (!img)
 		return fz_throw("outofmem: image struct");
 
-	pdf_logimage("load image %d %d (%p) {\n", fz_tonum(ref), fz_togen(ref), img);
+	pdf_logimage("load image (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), img);
 
 	/*
 	 * Dimensions, BPC and ColorSpace

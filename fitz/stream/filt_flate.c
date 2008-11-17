@@ -94,7 +94,6 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 
 	if (err == Z_STREAM_END || err == Z_BUF_ERROR)
 	{
-		out->eof = 1;
 		return fz_iodone;
 	}
 	else if (err == Z_OK)
@@ -191,7 +190,6 @@ fz_processflatee(fz_filter *f, fz_buffer *in, fz_buffer *out)
 
 	if (err == Z_STREAM_END)
 	{
-		out->eof = 1;
 		return fz_iodone;
 	}
 	else if (err == Z_OK)

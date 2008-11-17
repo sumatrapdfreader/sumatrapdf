@@ -17,6 +17,9 @@ fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	oldrp = in->rp;
 	oldwp = out->wp;
 
+	if (f->done)
+	    return fz_iodone;
+
 	reason = f->process(f, in, out);
 
 	assert(in->rp <= in->wp);
@@ -26,11 +29,13 @@ fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	f->produced = out->wp > oldwp;
 	f->count += out->wp - oldwp;
 
+	/* iodone or error */
 	if (reason != fz_ioneedin && reason != fz_ioneedout)
 	{
 		if (reason != fz_iodone)
 			reason = fz_rethrow(reason, "cannot process filter");
 		out->eof = 1;
+		f->done = 1;
 	}
 
 	return reason;

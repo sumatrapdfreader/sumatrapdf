@@ -83,7 +83,6 @@ fz_processahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		else if (c == '>') {
 			if (f->odd)
 				*out->wp++ = (f->a << 4);
-			out->eof = 1;
 			return fz_iodone;
 		}
 

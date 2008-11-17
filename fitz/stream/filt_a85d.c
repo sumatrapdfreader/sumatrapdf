@@ -117,7 +117,6 @@ o1:				*(out->wp+0) = f->word >> 24;
 				out->wp += f->count - 1;
 				break;
 			}
-			out->eof = 1;
 			return fz_iodone;
 		}
 

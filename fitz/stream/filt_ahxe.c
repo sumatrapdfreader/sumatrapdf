@@ -57,7 +57,6 @@ needinput:
 		if (out->wp == out->ep)
 			return fz_ioneedout;
 		*out->wp++ = '>';
-		out->eof = 1;
 		return fz_iodone;
 	}
 	return fz_ioneedin;

@@ -18,13 +18,32 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 	fz_obj *kids;
 	fz_obj *kref, *kobj;
 	fz_obj *inh;
+	char *typestr;
 	int i;
 
 	type = fz_dictgets(obj, "Type");
-
-	if (strcmp(fz_toname(type), "Page") == 0)
+	if (!type)
 	{
-		pdf_logpage("page %d, %d %d\n", *pagenum, ref->u.r.oid, ref->u.r.gid);
+		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(ref), fz_togen(ref));
+
+		kids = fz_dictgets(obj, "Kids");
+		if (kids)
+		{
+			fz_warn("guessing it may be a pagetree node, continuing...");
+			typestr = "Pages";
+		}
+		else
+		{
+			fz_warn("guessing it may be a page, continuing...");
+			typestr = "Page";
+		}
+	}
+	else
+		typestr = fz_toname(type);
+
+	if (strcmp(typestr, "Page") == 0)
+	{
+		pdf_logpage("page %d (%d %d R)\n", *pagenum, ref->u.r.oid, ref->u.r.gid);
 		(*pagenum)++;
 
 		if (inherit.resources && !fz_dictgets(obj, "Resources"))
@@ -60,7 +79,7 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 		pages->cursor ++;
 	}
 
-	else if (strcmp(fz_toname(type), "Pages") == 0)
+	else if (strcmp(typestr, "Pages") == 0)
 	{
 		inh = fz_dictgets(obj, "Resources");
 		if (inh) inherit.resources = inh;
@@ -79,7 +98,7 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 		if (error)
 			return fz_rethrow(error, "cannot resolve /Kids");
 
-		pdf_logpage("subtree %d pages, %d %d {\n",
+		pdf_logpage("subtree %d pages (%d %d R) {\n",
 				fz_arraylen(kids), ref->u.r.oid, ref->u.r.gid);
 
 		for (i = 0; i < fz_arraylen(kids); i++)
@@ -98,16 +117,13 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 
 			error = loadpagetree(xref, pages, inherit, kobj, kref, pagenum);
 			fz_dropobj(kobj);
-			if (error) { fz_dropobj(kids); return fz_rethrow(error, "cannot load subtree"); }
+			if (error) { fz_dropobj(kids); return fz_rethrow(error, "cannot load pagesubtree (%d %d R)", fz_tonum(kref), fz_togen(kref)); }
 		}
 
 		fz_dropobj(kids);
 
 		pdf_logpage("}\n");
 	}
-
-	else
-		return fz_throw("pagetree node has unexpected type %s", fz_toname(type));
 
 	return fz_okay;
 }
@@ -160,7 +176,7 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 	p = fz_malloc(sizeof(pdf_pagetree));
 	if (!p) { error = fz_throw("outofmem: page tree struct"); goto cleanup; }
 
-	pdf_logpage("load pagetree %d pages, %d %d (%p) {\n", count, treeref->u.r.oid, treeref->u.r.gid, p);
+	pdf_logpage("load pagetree %d pages (%d %d R) ptr=%p {\n", count, treeref->u.r.oid, treeref->u.r.gid, p);
 
 	p->pref = nil;
 	p->pobj = nil;
@@ -174,7 +190,7 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 	if (!p->pobj) { error = fz_throw("outofmem: page tree object array"); goto cleanup; }
 
 	error = loadpagetree(xref, p, inherit, pages, treeref, &pagenum);
-	if (error) { error = fz_rethrow(error, "cannot load pagetree"); goto cleanup; }
+	if (error) { error = fz_rethrow(error, "cannot load pagetree (%d %d R)", fz_tonum(treeref), fz_togen(treeref)); goto cleanup; }
 
 	fz_dropobj(pages);
 	fz_dropobj(catalog);

@@ -14,6 +14,7 @@
  *    produced -- if we actually produced any new data
  *    consumed -- like above
  *    count -- number of bytes produced in total since the beginning
+ *    done -- remember if we've ever returned fz_iodone
  *
  * Most filters take fz_obj as a way to specify parameters.
  * In most cases, this is a dictionary that contains the same keys
@@ -49,6 +50,7 @@ extern fz_error fz_kiodone;
 	(*fp)->consumed = 0;                                                \
 	(*fp)->produced = 0;                                                \
 	(*fp)->count = 0;                                                   \
+	(*fp)->done = 0;                                                    \
 	VAR = (TYPE*) *fp
 
 struct fz_filter_s
@@ -59,6 +61,7 @@ struct fz_filter_s
 	int consumed;
 	int produced;
 	int count;
+	int done;
 };
 
 fz_error *fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out);

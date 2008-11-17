@@ -465,7 +465,6 @@ rtc:
 	while (i-- && in->rp > in->bp)
 		in->rp --;
 
-	out->eof = 1;
 	return fz_iodone;
 }
 

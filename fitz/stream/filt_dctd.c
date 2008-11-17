@@ -217,7 +217,6 @@ fz_processdctd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			if (b == FALSE)
 				goto needinput;
 			d->stage = 4;
-			out->eof = 1;
 			in->rp = in->wp - d->src.super.bytes_in_buffer;
 			return fz_iodone;
 	}

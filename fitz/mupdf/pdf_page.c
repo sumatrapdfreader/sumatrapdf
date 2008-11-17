@@ -11,14 +11,14 @@ runone(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *stmref)
 
 	error = pdf_openstream(&stm, xref, fz_tonum(stmref), fz_togen(stmref));
 	if (error)
-		return fz_rethrow(error, "cannot open content stream %d", fz_tonum(stmref));
+		return fz_rethrow(error, "cannot open content stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 
 	error = pdf_runcsi(csi, xref, rdb, stm);
 
 	fz_dropstream(stm);
 
 	if (error)
-		return fz_rethrow(error, "cannot interpret content stream %d", fz_tonum(stmref));
+		return fz_rethrow(error, "cannot interpret content stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 
 	return fz_okay;
 }
@@ -57,7 +57,7 @@ runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 		error = pdf_loadstream(&one, xref, fz_tonum(stm), fz_togen(stm));
 		if (error)
 		{
-			error = fz_rethrow(error, "cannot load content stream");
+			error = fz_rethrow(error, "cannot load content stream part %d/%d", i + 1, fz_arraylen(list));
 			goto cleanupstm;
 		}
 
@@ -121,7 +121,7 @@ loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
 	{
 		error = pdf_loadindirect(&obj, xref, ref);
 		if (error)
-			return fz_rethrow(error, "cannot load page contents (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot load page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
 
 		if (fz_isarray(obj))
 		{
@@ -138,7 +138,7 @@ loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropcsi(csi);
-			return fz_rethrow(error, "cannot interpret page contents (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot interpret page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 	}
 
@@ -152,7 +152,7 @@ loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropcsi(csi);
-			return fz_rethrow(error, "cannot interpret page contents (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot interpret page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 	}
 

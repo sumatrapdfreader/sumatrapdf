@@ -211,13 +211,13 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 			}
 
 			if (isroot) {
-				pdf_logxref("found catalog: %d %d\n", oid, gen);
+				pdf_logxref("found catalog: (%d %d R)\n", oid, gen);
 				rootoid = oid;
 				rootgen = gen;
 			}
 
 			if (isinfo) {
-				pdf_logxref("found info: %d %d\n", oid, gen);
+				pdf_logxref("found info: (%d %d R)\n", oid, gen);
 				infooid = oid;
 				infogen = gen;
 			}

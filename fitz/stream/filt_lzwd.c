@@ -138,7 +138,6 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			{
 				if (lzw->bidx > 32 - lzw->codebits)
 				{
-					out->eof = 1;
 					unstuff(lzw, in);
 					return fz_iodone;
 				}
@@ -154,7 +153,6 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		if (lzw->code == LZW_EOD)
 		{
 			eatbits(lzw, lzw->codebits);
-			out->eof = 1;
 			unstuff(lzw, in);
 			return fz_iodone;
 		}
@@ -171,7 +169,6 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			if (lzw->code == LZW_EOD)
 			{
 				eatbits(lzw, oldcodebits + MINBITS);
-				out->eof = 1;
 				unstuff(lzw, in);
 				return fz_iodone;
 			}

@@ -656,29 +656,30 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	{
 		if (ln->len > 0)
 		{
-		y = y0 - 1;
-		for (i = 0; i < ln->len; i++)
-		{
-			bx0 = ln->text[i].bbox.x0;
-			bx1 = ln->text[i].bbox.x1;
-			by0 = ln->text[i].bbox.y0;
-			by1 = ln->text[i].bbox.y1;
-			c = ln->text[i].c;
-			if (c < 32)
-				c = '?';
-			if (bx1 >= x0 && bx0 <= x1 && by1 >= y0 && by0 <= y1)
-				if (p < ucslen - 1)
-					ucsbuf[p++] = c;
-		}
+			y = y0 - 1;
 
-		if (by1 >= y0 && by0 <= y1)
-		{
+			for (i = 0; i < ln->len; i++)
+			{
+				bx0 = ln->text[i].bbox.x0;
+				bx1 = ln->text[i].bbox.x1;
+				by0 = ln->text[i].bbox.y0;
+				by1 = ln->text[i].bbox.y1;
+				c = ln->text[i].c;
+				if (c < 32)
+					c = '?';
+				if (bx1 >= x0 && bx0 <= x1 && by1 >= y0 && by0 <= y1)
+					if (p < ucslen - 1)
+						ucsbuf[p++] = c;
+			}
+
+			if (by1 >= y0 && by0 <= y1)
+			{
 #ifdef WIN32
-			if (p < ucslen - 1)
-				ucsbuf[p++] = '\r';
+				if (p < ucslen - 1)
+					ucsbuf[p++] = '\r';
 #endif
-			if (p < ucslen - 1)
-				ucsbuf[p++] = '\n';
+				if (p < ucslen - 1)
+					ucsbuf[p++] = '\n';
 			}
 		}
 	}

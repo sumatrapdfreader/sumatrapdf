@@ -109,7 +109,7 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 	{
 		struct refkey item;
 
-		pdf_logrsrc("store item %d: %d %d R = %p\n", kind, fz_tonum(key), fz_togen(key), val);
+		pdf_logrsrc("store item %d (%d %d R) ptr=%p\n", kind, fz_tonum(key), fz_togen(key), val);
 
 		item.kind = kind;
 		item.oid = fz_tonum(key);
@@ -241,3 +241,34 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 	return fz_okay;
 }
 
+void
+pdf_debugstore(pdf_store *store)
+{
+	pdf_item *item;
+	pdf_item *next;
+	struct refkey *key;
+	void *val;
+	int i;
+
+	printf("-- resource store contents --\n");
+
+	for (i = 0; i < fz_hashlen(store->hash); i++)
+	{
+		key = fz_hashgetkey(store->hash, i);
+		val = fz_hashgetval(store->hash, i);
+		if (key && val)
+		{
+			printf("store[%d] (%d %d R) = %p\n", i, key->oid, key->gen, val);
+		}
+	}
+
+	for (item = store->root; item; item = next)
+	{
+		next = item->next;
+		printf("store[*] ");
+		fz_debugobj(item->key);
+		printf(" = %p\n", item->val);
+	}
+
+	store->root = nil;
+}

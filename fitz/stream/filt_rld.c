@@ -25,7 +25,6 @@ fz_processrld(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		{
 			if (in->eof)
 			{
-				out->eof = 1;
 				return fz_iodone;
 			}
 			return fz_ioneedin;
@@ -36,8 +35,8 @@ fz_processrld(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 		run = *in->rp++;
 
-		if (run == 128) {
-			out->eof = 1;
+		if (run == 128)
+		{
 			return fz_iodone;
 		}
 

@@ -35,7 +35,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 		return fz_okay;
 	}
 
-	pdf_logrsrc("load pattern %d %d {\n", fz_tonum(stmref), fz_togen(stmref));
+	pdf_logrsrc("load pattern (%d %d R) {\n", fz_tonum(stmref), fz_togen(stmref));
 
 	pat = fz_malloc(sizeof(pdf_pattern));
 	if (!pat)
@@ -120,7 +120,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	error = pdf_openstream(&stm, xref, fz_tonum(stmref), fz_togen(stmref));
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot open pattern stream %d", fz_tonum(stmref));
+		error = fz_rethrow(error, "cannot open pattern stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 		goto cleanupcsi;
 	}
 
@@ -130,7 +130,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot interpret pattern stream %d", fz_tonum(stmref));
+		error = fz_rethrow(error, "cannot interpret pattern stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 		goto cleanupcsi;
 	}
 

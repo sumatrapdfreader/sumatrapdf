@@ -295,7 +295,7 @@ pdf_deleteobject(pdf_xref *xref, int oid, int gen)
 	int prev;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("assert: object out of range: %d", oid);
+		return fz_throw("assert: object out of range (%d %d R)", oid, gen);
 
 	pdf_logxref("deleteobj %d %d\n", oid, gen);
 
@@ -326,7 +326,7 @@ pdf_updateobject(pdf_xref *xref, int oid, int gen, fz_obj *obj)
 	pdf_xrefentry *x;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("assert: object out of range: %d", oid);
+		return fz_throw("assert: object out of range (%d %d R)", oid, gen);
 
 	pdf_logxref("updateobj %d %d (%p)\n", oid, gen, obj);
 
@@ -355,7 +355,7 @@ pdf_updatestream(pdf_xref *xref, int oid, int gen, fz_buffer *stm)
 	pdf_xrefentry *x;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("assert: object out of range: %d", oid);
+		return fz_throw("assert: object out of range (%d %d R)", oid, gen);
 
 	pdf_logxref("updatestm %d %d (%p)\n", oid, gen, stm);
 
@@ -382,7 +382,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 	int roid, rgen;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object out of range: %d", oid);
+		return fz_throw("object out of range (%d %d R)", oid, gen);
 
 	x = &xref->table[oid];
 
@@ -401,14 +401,14 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 	{
 		error = fz_seek(xref->file, x->ofs, 0);
 		if (error)
-			return fz_rethrow(error, "cannot seek to object %d (ofs=%d)", oid, x->ofs);
+			return fz_rethrow(error, "cannot seek to object (%d %d R) offset %d", oid, gen, x->ofs);
 
 		error = pdf_parseindobj(&x->obj, xref->file, buf, sizeof buf, &roid, &rgen, &x->stmofs);
 		if (error)
-			return fz_rethrow(error, "cannot parse object %d", oid);;
+			return fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
 
 		if (roid != oid || rgen != gen)
-			return fz_throw("found object %d %d instead of %d %d", roid, rgen, oid, gen);
+			return fz_throw("found object (%d %d R) instead of (%d %d R)", roid, rgen, oid, gen);
 
 		if (xref->crypt)
 			pdf_cryptobj(xref->crypt, x->obj, oid, gen);
@@ -420,7 +420,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 		{
 			error = pdf_loadobjstm(xref, x->ofs, 0, buf, sizeof buf);
 			if (error)
-				return fz_rethrow(error, "cannot load object stream containing object %d", oid);
+				return fz_rethrow(error, "cannot load object stream containing object (%d %d R)", oid, gen);
 		}
 	}
 
@@ -434,7 +434,7 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int oid, int gen)
 
 	error = pdf_cacheobject(xref, oid, gen);
 	if (error)
-		return fz_rethrow(error, "cannot load object %d into cache", oid);
+		return fz_rethrow(error, "cannot load object (%d %d R) into cache", oid, gen);
 
 	*objp = fz_keepobj(xref->table[oid].obj);
 
@@ -451,7 +451,7 @@ pdf_loadindirect(fz_obj **objp, pdf_xref *xref, fz_obj *ref)
 
 	error = pdf_loadobject(objp, xref, fz_tonum(ref), fz_togen(ref));
 	if (error)
-		return fz_rethrow(error, "cannot load indirect object %d", fz_tonum(ref));
+		return fz_rethrow(error, "cannot load indirect object (%d %d R)", fz_tonum(ref), fz_togen(ref));
 
 	return fz_okay;
 }
@@ -465,7 +465,7 @@ pdf_resolve(fz_obj **objp, pdf_xref *xref)
 	{
 		error = pdf_loadindirect(objp, xref, *objp);
 		if (error)
-			return fz_rethrow(error, "cannot load indirect object %d", fz_tonum(*objp));
+			return fz_rethrow(error, "cannot load indirect object (%d %d R)", fz_tonum(*objp), fz_togen(*objp));
 		return fz_okay;
 	}
 

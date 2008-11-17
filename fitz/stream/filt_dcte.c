@@ -239,7 +239,6 @@ fz_processdcte(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			jpeg_finish_compress(&e->cinfo);
 
 			e->stage = 3;
-			out->eof = 1;
 			out->wp = out->ep - e->dst.super.free_in_buffer;
 			return fz_iodone;
 	}

@@ -85,12 +85,20 @@ static int ftkind(FT_Face face)
 	return UNKNOWN;
 }
 
+static int ftcharindex(FT_Face face, int cid)
+{
+	int gid = FT_Get_Char_Index(face, cid);
+	if (gid == 0)
+		gid = FT_Get_Char_Index(face, 0xf000 + cid);
+	return gid;
+}
+
 static inline int ftcidtogid(pdf_font *font, int cid)
 {
 	if (font->tottfcmap)
 	{
 		cid = pdf_lookupcmap(font->tottfcmap, cid);
-		return FT_Get_Char_Index(font->ftface, cid);
+		return ftcharindex(font->ftface, cid);
 	}
 
 	if (font->cidtogid)
@@ -334,14 +342,6 @@ pdf_newfont(char *name)
 	return font;
 }
 
-static int ftcharindex(FT_Face face, int i)
-{
-	unsigned short idx = FT_Get_Char_Index(face, i);
-	if (idx == 0)
-		idx = FT_Get_Char_Index(face, 0xf000 + i);
-	return idx;
-}
-
 /*
  * Simple fonts (Type1 and TrueType)
  */
@@ -384,7 +384,7 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	if (!font)
 		return fz_outofmem;
 
-	pdf_logfont("load simple font %d %d (%p) {\n", fz_tonum(ref), fz_togen(ref), font);
+	pdf_logfont("load simple font (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), font);
 	pdf_logfont("basefont0 %s\n", basefont);
 	pdf_logfont("basefont1 %s\n", fontname);
 
@@ -508,7 +508,7 @@ loadsimplefont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 				if (estrings[i])
 					etable[i] = FT_Get_Name_Index(face, estrings[i]);
 				else
-					etable[i] = FT_Get_Char_Index(face, i);
+					etable[i] = ftcharindex(face, i);
 		}
 
 		if (kind == TRUETYPE)
@@ -733,7 +733,7 @@ loadcidfont(pdf_font **fontp, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_obj 
 	if (!font)
 		return fz_outofmem;
 
-	pdf_logfont("load cid font %d %d (%p) {\n", fz_tonum(ref), fz_togen(ref), font);
+	pdf_logfont("load cid font (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), font);
 	pdf_logfont("basefont %s\n", basefont);
 	pdf_logfont("collection %s\n", collection);
 

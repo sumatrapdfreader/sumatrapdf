@@ -89,7 +89,7 @@ static char *psopnames[] =
 	"false", "floor", "ge", "gt", "idiv", "index", "le", "ln",
 	"log", "lt", "mod", "mul", "ne", "neg", "not", "or", "pop",
 	"roll", "round", "sin", "sqrt", "sub", "true", "truncate",
-	"xor", /* "if", "ifelse", "return" */
+	"xor", "if", "ifelse", "return"
 };
 
 struct psobj_s
@@ -245,9 +245,9 @@ pscopy(psstack *st, int n)
 	if (!pscheckoverflow(st, n))
 		return fz_stackoverflow;
 
-	for (i = st->sp + n - 1; i <= st->sp; ++i)
+	for (i = 0; i < n; i++)
 	{
-		st->stack[i - n] = st->stack[i];
+		st->stack[st->sp - n + i] = st->stack[st->sp + i];
 	}
 	st->sp -= n;
 
@@ -478,7 +478,7 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, in
 	fz_stream *stream;
 	int codeptr;
 
-	pdf_logrsrc("load postscript function %d %d\n", oid, gen);
+	pdf_logrsrc("load postscript function (%d %d R)\n", oid, gen);
 
 	error = pdf_openstream(&stream, xref, oid, gen);
 	if (error)
@@ -941,7 +941,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int ge
 	int bps;
 	int i;
 
-	pdf_logrsrc("sampled function {\n", oid, gen);
+	pdf_logrsrc("sampled function {\n");
 
 	func->u.sa.samples = nil;
 
@@ -1318,8 +1318,8 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		}
 
 		if (k != 1 &&
-				(func->domain[0][0] >= func->u.st.bounds[0] ||
-				 func->domain[0][1] <= func->u.st.bounds[k-2]))
+				(func->domain[0][0] > func->u.st.bounds[0] ||
+				 func->domain[0][1] < func->u.st.bounds[k-2]))
 			fz_warn("malformed shading function bounds (domain mismatch), proceeding anyway.");
 
 		fz_dropobj(obj);
@@ -1449,7 +1449,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		return fz_okay;
 	}
 
-	pdf_logrsrc("load function %d %d {\n", fz_tonum(ref), fz_togen(ref));
+	pdf_logrsrc("load function (%d %d R) {\n", fz_tonum(ref), fz_togen(ref));
 
 	func = fz_malloc(sizeof(pdf_function));
 	if (!func)
@@ -1515,7 +1515,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		{
 			pdf_dropfunction(func);
 			fz_dropobj(dict);
-			return fz_rethrow(error, "cannot load sampled function (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot load sampled function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
 
@@ -1525,7 +1525,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		{
 			pdf_dropfunction(func);
 			fz_dropobj(dict);
-			return fz_rethrow(error, "cannot load exponential function (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot load exponential function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
 
@@ -1535,7 +1535,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		{
 			pdf_dropfunction(func);
 			fz_dropobj(dict);
-			return fz_rethrow(error, "cannot load stitching function (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot load stitching function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
 
@@ -1545,14 +1545,14 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		{
 			pdf_dropfunction(func);
 			fz_dropobj(dict);
-			return fz_rethrow(error, "cannot load calculator function (%d)", fz_tonum(ref));
+			return fz_rethrow(error, "cannot load calculator function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
 
 	default:
 		fz_free(func);
 		fz_dropobj(dict);
-		return fz_throw("unknown function type %d (function %d)", func->type, fz_tonum(ref));
+		return fz_throw("unknown function type %d (%d %d R)", func->type, fz_tonum(ref), fz_togen(ref));
 	}
 
 	fz_dropobj(dict);

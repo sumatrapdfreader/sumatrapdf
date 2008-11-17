@@ -432,7 +432,7 @@ skip:
 		{
 			c = fz_peekbyte(file);
 			if (c != '\n')
-				fz_warn("syntaxerror: corrupt pdf stream (%d %d)\n", oid, gid);
+				fz_warn("syntaxerror: corrupt pdf stream (%d %d R)\n", oid, gid);
 			else
 				c = fz_readbyte(file);
 		}
@@ -444,7 +444,10 @@ skip:
 	else if (tok == PDF_TENDOBJ)
 		stmofs = 0;
 	else
+	{
+		error = fz_throw("expected endobj or stream keyword");
 		goto cleanup;
+	}
 
 	if (ooid) *ooid = oid;
 	if (ogid) *ogid = gid;
@@ -456,7 +459,7 @@ cleanup:
 	if (obj)
 		fz_dropobj(obj);
 	if (error)
-		return fz_rethrow(error, "cannot parse indirect object (%d %d)", oid, gid);
-	return fz_throw("cannot parse indirect object (%d %d)", oid, gid);
+		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", oid, gid);
+	return fz_throw("cannot parse indirect object (%d %d R)", oid, gid);
 }
 

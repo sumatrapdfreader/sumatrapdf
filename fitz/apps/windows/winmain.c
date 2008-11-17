@@ -109,7 +109,19 @@ void winwarn(pdfapp_t *app, char *msg)
 
 void winerror(pdfapp_t *app, fz_error *error)
 {
-    MessageBoxA(hwndframe, error->msg, "MuPDF: Error", MB_ICONERROR);
+    char msg[4096];
+    char buf[200];
+
+    msg[0] = 0;
+
+    while (error)
+    {
+	sprintf(buf, "%s:%d: %s(): %s\n", error->file, error->line, error->func, error->msg);
+	strcat(msg, buf);
+	error = error->cause;
+    }
+
+    MessageBoxA(hwndframe, msg, "MuPDF: Error", MB_ICONERROR);
     exit(1);
 }
 
