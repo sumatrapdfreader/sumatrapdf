@@ -73,6 +73,7 @@
 # Mark Angelo F. Racca - Tagalog
 # Vicent Adam - Valencian
 # Brian Musarurwa
+# Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
 
 Lang: en English
 Lang: ar Arabic (الْعَرَبيّة)
@@ -83,6 +84,7 @@ Lang: ca Catalan (Català)
 Lang: cn Chinese Simplified (简体中文)
 Lang: tw Chinese Traditional (繁體中文)
 Lang: hr Croatian (Hrvatski)
+Lang: cy Welsh (Cymraeg)
 Lang: cz Czech (Čeština)
 Lang: dk Danish (Dansk)
 Lang: nl Dutch (Nederlands)
@@ -173,6 +175,7 @@ eu:&Fitxategia
 tl:Salansan
 va:&Archiu
 sn:&Faira
+cy:%Ffeil
 -
 &Open\tCtrl-O
 bg:&Отвори\tCttl-O
@@ -223,6 +226,7 @@ eu:Ireki\tCtrl-O
 tl:Buksan\tCtrl-O
 va:Obrir\tCtrl-O
 sn:Vhura\tCtrl-0
+cy:&Agor\tCtrl-O
 -
 &Close\tCtrl-W
 bg:Затвори\tCtrl-W
@@ -273,6 +277,7 @@ eu:&Itxi\tCtrl-W
 tl:Sarhan\tCtrl-W
 va:&Tancar\tCtrl-W
 sn:&Vhara\tCtrl-0
+cy:&Cau\tCtrl-W
 -
 &Save as
 bg:&Запиши като...
@@ -323,6 +328,7 @@ eu:... bezala &Gorde
 tl:Iligtas Bilang...
 va:&Guardar com...
 sn:&Sevha se...
+cy:&Cadw fel...
 -
 &Print\tCtrl-P
 bg:От&печатай
@@ -373,6 +379,7 @@ eu:&Inprimatu
 tl:Ilimbag\tCtrl-P
 va:&Imprimir
 sn:&Printa\tCtrl-P
+cy:&Argraffu\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 bg:Направи SumatraPDF четец на PDF по подразбиране
@@ -424,6 +431,7 @@ tl:Gawin na SumatraPDF ang Likas na Gagamitin sa Pangbasa ng PDF
 va:Convertir SumatraPDF en llector PDF per defecte
 sn:Ita SumatraPDF igovhura maPDF ese
 bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ 
+cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 -
 E&xit\tCtrl-Q
 bg:&Изход\tCtrl-Q
@@ -474,6 +482,7 @@ eu:&Irten\tCtrl-Q
 tl:Labasan\tCtrl-Q
 va:E&ixir\tCtrl-Q
 sn:&Siyana Nazvo\tCtrl-Q
+cy:&Gadael\tCtrl-Q
 -
 &View
 bg:&Виж
@@ -524,6 +533,7 @@ eu:I&kusi
 tl:Masdan
 va:&Vore
 sn:&Maonero
+cy:G&olwg
 -
 Single page
 bg:Единична страница
@@ -574,6 +584,7 @@ eu:Orri bakarra
 tl: Isang Pahina
 va:Pàgina Única
 sn:Peji imwechete
+cy:Tudalen unigol
 -
 Facing
 bg:Две страници
@@ -624,6 +635,7 @@ eu:Bi aldetatik
 tl:Harapan
 va:Pàgina Doble
 sn:Facing
+cy:Gwynebu
 -
 Continuous
 bg:Непрекъснати
@@ -674,6 +686,7 @@ eu:Jarraian
 tl:Tuloy-tuloy
 va:Contínua
 sn:Continuous
+cy:Di-dor
 -
 Continuous facing
 bg:Две непрекъснати
@@ -724,6 +737,7 @@ eu:Bi aldetatik jarraian
 tl:Tuloy-tuloy na Harapan
 va:Pàgina Doble Contínua
 sn:Facing iriContinous
+cy:Parhaus di-dor
 -
 Rotate left
 bg:Завърти наляво
@@ -774,6 +788,7 @@ eu:Ezkerrerantz biratu
 tl:Iikot Pakaliwa
 va:Girar a l'esquerra
 sn:Tenderedza kuruboshwe
+cy:Troi i'r chwith
 -
 Rotate right
 bg:Завърти надясно
@@ -824,6 +839,7 @@ eu:Eskubirantz biratu
 tl:Iikot Pakanan
 va:Girar a la dreta
 sn:Tenderedza kurudyi
+cy:Troi i'r dde
 -
 Bookmarks
 br:Marcadores
@@ -862,6 +878,7 @@ hr:Knjiške oznake
 tl:Pananda ng Aklat
 va:Marcadors
 sn:Mabhukumaki
+cy:Nodau tudalen
 -
 Fullscreen\tCtrl-L
 br:Tela cheia\tCtrl-L
@@ -906,6 +923,7 @@ hr:Cijeli zaslon\tCtrl-L
 tl:BuongTabing\tCtrl-L
 va:Pantalla Completa\tCtrl-L
 sn:Zadza Screen\tCtrl-L
+cy:Sgrin lawn\tCtrl-L
 -
 Show toolbar
 bg:Покажи лентата с инструменти
@@ -956,6 +974,7 @@ eu:Lanabes barra azaldu
 tl:Ipakita ang Bareta ng Kagamitan
 va:Mostrar barra de ferramentes
 sn:Ratidza Toolbar
+cy:Dangos y bar offer
 -
 &Go To
 bg:Отиди &на
@@ -1006,6 +1025,7 @@ eu:...ra &Joan
 tl:Punta Sa...
 va:&Anar a
 sn:Enda ku...
+cy:Mynd i...
 -
 Next Page
 bg:Следваща страница
@@ -1056,6 +1076,7 @@ eu:Hurrengo orria
 tl:Sunod na Pahina
 va:Pàgina Següent
 sn:Peji yemberi
+cy:Tudalen Nesaf
 -
 Previous Page
 bg:Предишна страница
@@ -1106,6 +1127,7 @@ eu:Aurreko orria
 tl:Nakaraan na Pahina
 va:Pàgina Anterior
 sn:Peji yesure
+cy:Tudalen Flaenorol
 -
 First Page\tHome
 bg:Начална страница\tHome
@@ -1156,6 +1178,7 @@ eu:Lehendabiziko orria \tHome
 tl:Unang Pahina\tTahanan
 va:Primera Pàgina\tInici
 sn:Peji yekutanga\tHome
+cy:Tudalen Gyntaf\tHome
 -
 Last Page\tEnd
 bg:Последна страница\tEnd
@@ -1206,6 +1229,7 @@ eu:Azken orria\tEnd
 tl:Huling Pahina\tDulo
 va:Última Pàgina\tFi
 sn:Peji yekupedzisira\tEnd
+cy:Tudalen Olaf\tEnd
 -
 Page...\tCtrl-G
 bg:Страница...\tCtrl-G
@@ -1256,6 +1280,7 @@ eu:...garren orria\tCtrl-G
 tl:Pahina...\tCtrl-G
 va:Pàgina...\tCtrl-G
 sn:Peji...\tCtrl-G
+cy:Tudalen...\tCtrl-G
 -
 &Zoom
 bg:&Мащаб
@@ -1306,6 +1331,7 @@ eu:&Zoom-a
 tl:Zoom
 va:&Zoom
 sn:&Zuma
+cy:&Chwyddo
 -
 Fit &Page\tCtrl-0
 bg:Оразмери страницата\tCtrl-0
@@ -1356,6 +1382,7 @@ eu:Orriaren neurria egokitu\tCtrl-O
 tl:Ihusto ang Pahina\tCtrl-0
 va:Ajustar &Pàgina\tCtrl-0
 sn:Kwanisa &Peji\tCtrl-0
+cy:&Ffitio'r Dudalen\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 bg:Едно към едно\tCtrl-1
@@ -1406,6 +1433,7 @@ eu:&Berezko neurria\tCtrl-1
 tl:Tunay na Laki\tCtrl-1
 va:Tam&any Real\tCtrl-1
 sn:Saizi chaiyo\tCtrl-1
+cy:Gwir Faint\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 bg:Оразмери по ширина\tCtrl-2
@@ -1456,6 +1484,7 @@ eu:Orriaren zabalera egokitu\tCtrl-2
 tl:Husto na Lapad\tCtrl-2
 va:&Amplària de la Pàgina\tCtrl-2
 sn:Kwanisa hupamhu\tCtrl-2
+cy:Fitio'r &Lled\tCtrl-2
 -
 6400%
 -
@@ -1532,6 +1561,7 @@ eu:&Hizkuntza
 tl:Wika
 va:&Idioma
 sn:&Mutauro
+cy:&Iaith
 -
 &Help
 bg:Помо&щ
@@ -1582,6 +1612,7 @@ eu:&Laguntza
 tl:Saklolo
 va:&Ajuda
 sn:&Rubatsiro
+cy:C&ymorth
 -
 &Visit website
 bg:Посетете сайта
@@ -1632,6 +1663,7 @@ eu:&Web orria bisitatu
 tl:Dalawin ang PookSapot
 va:&Visitar Lloc Web
 sn:&Shanyira dande-mtande
+cy:&Ymweld â'r wefan
 -
 &Manual
 bg:Ръководство
@@ -1655,6 +1687,7 @@ it:&Guida
 tw:說明文件(&M)
 cn:使用手册(&M)
 es:&Manual de instrucciones
+cy:&Llawlyfr
 -
 &About
 bg:Относно програмата...
@@ -1705,6 +1738,7 @@ eu:Ho&Ni buruz...
 tl:Tungkol Sa...
 va:Al voltant de
 sn:&Nezve...
+cy:Ynghylch...
 -
 Page:
 bg:Страница:
@@ -1740,6 +1774,7 @@ sn:Peji:
 bn:পৃষ্ঠা:
 tw:頁數：
 cn:页数：
+cy:Tudalen:
 -
 Find:
 br:Localizar:
@@ -1782,6 +1817,7 @@ tl:Hanapin:
 va:Buscar:
 sn:Wana:
 tw:尋找：
+cy:Canfod:
 -
 Find Previous
 br:Localizar anterior
@@ -1823,6 +1859,7 @@ tl:Hanapin ang Nakaraan
 va:Busca Anterior
 sn:Wana pashure
 tw:向上尋找
+cy:Canfod Blaenorol
 -
 Find Next
 br:Localizar seguinte
@@ -1863,6 +1900,7 @@ tl:Hanapin ang Susunod
 va:Busca Següent
 sn:Wana pamberi
 tw:向下尋找
+cy:Canfod Nesaf
 -
 Match case
 br:Diferenciar  minúsculas e Maiúsculas
@@ -1901,6 +1939,7 @@ tl:Ipantay ang Laki ng Titik
 va:Distinguir MAYÚSCULES i minúscules
 sn:Fananidza kesi
 tw:符合大小寫
+cy:Maint Bach/Mawr
 -
 Open
 bg:Отвори
@@ -1951,6 +1990,7 @@ eu:Ireki
 tl:Buksan
 va:Obrir
 sn:Vhura
+cy:Agor
 -
 Zoom In
 bg:Увеличи
@@ -2001,6 +2041,7 @@ eu:Zoom-a hurbildu
 tl:Palakihin
 va:Arrimar
 sn:Kudza
+cy:Chwyddo Mewn
 -
 Zoom Out
 bg:Намали
@@ -2051,6 +2092,7 @@ eu:Zoom-a urruneratu
 tl:Paliitin
 va:Alluntar
 sn:Duputsa
+cy:Chwyddo Allan
 -
 About SumatraPDF
 bg:Относно SumatraPDF
@@ -2101,6 +2143,7 @@ eu:SumatraPDF-taz
 tl:Tungkol sa SumatraPDF
 va:Al voltant de SumatraPDF
 sn:NezveSumatraPDF
+cy:Ynghylch SumatraPDF
 -
 SumatraPDF is now a default reader for PDF files.
 bg:SumatraPDF е четеца по подразбиране на PDF файлове.
@@ -2150,6 +2193,7 @@ eu:Sumatra orain berezko PDF irakur tresna bihurtu da.
 tl:SumatraPDF na ang Likas na Pangbasa sa mga Salansan ng PDF.
 va:SumatraPDF es ara el llector PDF per defecte.
 sn:SumatraPDF ndiyo yaakuvhura maPDF ese.
+cy:SumatraPDF yw'r darllenydd ffeiliau PDF rhagosodedig.
 -
 Failed to save a file
 bg:Грешка при записване на файла
@@ -2199,6 +2243,7 @@ eu:Fitxategia ezin izan da gorde
 tl:Nabigo na iligtas ang salansan
 va:Erro al Guardar l'Archiu
 sn:Tatadza kuseva faira
+cy:Methwyd cadw ffeil
 -
 Error loading PDF file.
 bg:Грешка при зареждане на файла.
@@ -2248,6 +2293,7 @@ eu:PDF fitxategia kargargatzerakoan errorea suertatu da
 tl:Nagkamali sa Paglulan ng Salansan na PDF
 va:Erro al Carregar l'Archiu PDF.
 sn:Tatadza kulodha faira rePDF
+cy:Gwall wrth lwytho ffeil
 -
 Could not open Printer
 bg:Принтера не е достъпен
@@ -2297,6 +2343,7 @@ eu:Ezin da inprimagailua ireki
 tl:Hindi Mabuksan ang Panglimbag
 va:No s'ha pogut obrir l'impressora.
 sn:Tatadza kuvhura Printer
+cy:Methu agor Argraffydd
 -
 Printing problem.
 bg:Проблем при печатане.
@@ -2346,6 +2393,7 @@ eu:Arazoak inprimatze lanetan
 tl:Suliranin sa Paglilimbag.
 va:Erro d'impressió.
 sn:Dambudziko pakuprinta
+cy:Anhawster argraffu
 -
 Contribute translation
 bg:Допринеси за превода
@@ -2391,6 +2439,7 @@ eu:Lagun gaitzazu itzulpenekin
 tl:Mag-ambag sa Pagsasaling-wika
 va:Contribuir en la traducció
 sn:Batsira kuturikira
+cy:Cyfrannu cyfieithiad.
 -
 Set inverse search command-line
 bg:Активирай обратно търсене
@@ -2418,6 +2467,7 @@ bn:সমাদেশ-পংক্তিতে বিলোম অনুসন�
 it:Imposta comando di ricerca inversa
 tw:設定反搜尋命令列
 cn:设置反向搜索命令行
+cy:Gosod llinell orchymyn chwilio gwrthdro
 -
 Change language
 bg:Смени езика (Change language)
@@ -2449,6 +2499,7 @@ bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
 pt:Mudar de idioma (Change language)
 cn:改变语言 (Change language)
+cy:Newid iaith (Change language)
 -
 Enter password
 bg:Въведете парола
@@ -2479,6 +2530,7 @@ bn:শব্দকূট প্রবেশ করুন
 tw:輸入密碼
 pt:Introduzir password
 cn:输入密码
+cy:Rhoi cyfrinair
 -
 Enter password for %s
 bg:Въведете парола за %s
@@ -2509,6 +2561,7 @@ bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 tw:輸入 %s 的密碼
 pt:Introduzir password para
 cn:输入 %s 的密码
+cy:Rhoi cyfrinair ar gyfer %s
 -
 Go to page
 bg:Към страница
@@ -2538,6 +2591,7 @@ sn:Enda kupeji
 bn:এর পৃষ্ঠায় চলুন
 tw:移至頁面
 cn:转到页面
+cy:Mynd i dudalen
 -
 Associate with PDF files?
 bg:Асоцииране с PDF файлове?
@@ -2567,6 +2621,7 @@ sn:Ita zvifambidzane ne PDF
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 tw:與 PDF 檔進行關聯?
 cn:是否关联 PDF 文件？
+cy:Cysylltu gyda ffeiliau PDF?
 -
 Make SumatraPDF default application for PDF files?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
@@ -2595,6 +2650,7 @@ ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 tw:把 SumatraPDF 作為預設的PDF閱讀器?
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器？
+cy:Gosod SumatraPDF fel y rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 -
 Don't ask me again
 bg:Не питай отново
@@ -2625,6 +2681,7 @@ sn:Usandivhunze futi
 bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
 tw:不要再問我
 cn:以后不再询问
+cy:Peidio gofyn i mi eto
 -
 &Check for new version
 bg:Проверка за нова версия
@@ -2656,6 +2713,7 @@ bn:নতুন সংস্করণের জন্য নিরীক্ষ�
 tw:檢查是否有新版本(&C)
 pt:Procurar actualizações
 cn:检查是否有新版本(&C)
+cy:&Gwirio am fersiwn newydd
 -
 No new version available.
 bg:Няма нова версия.
@@ -2687,6 +2745,7 @@ bn:নতুন সংস্করণ অনুপলব্ধ
 tw:沒有新版本
 pt:Nenhuma actualização encontrada.
 cn:未发现新版本。
+cy:Dim fersiwn newydd ar gael.
 -
 You have the latest version.
 bg:Имате последната версия.
@@ -2718,6 +2777,7 @@ bn:আপনার এই সংস্করণটি সর্বাধুন�
 tw:目前使用的版本為最新版。
 pt:Esta é a versão mais recente.
 cn:您的版本为最新版。
+cy:Mae'r fersiwn diweddaraf gennych
 -
 You have version %s
 bg:Вашата версия е %s
@@ -2749,6 +2809,7 @@ bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
 pt:Tem a versão %s
 cn:您的版本为 %s
+cy:Mae gennych fersiwn %s
 -
 New version %s is available. Download new version?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
@@ -2780,6 +2841,7 @@ bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। �
 tw:最新版本 %s。 是否下載?
 pt:A versão %s está disponível. Fazer download agora?
 cn:发现新版本 %s。是否下载？
+cy:Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr?
 -
 New version available.
 bg:Има нова версия.
@@ -2811,6 +2873,7 @@ bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
 tw:新的可用版本。
 pt:Há uma nova versão disponível.
 cn:发现新版本。
+cy:Mae fersiwn newydd ar gael.
 -
 Skip this version
 bg:Пропусни тази версия.
@@ -2840,6 +2903,7 @@ sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
 tw:略過這個版本
 cn:跳过此版本
+cy:Hepgor y fersiwn yma.
 -
 Enable auto-update
 bg:Включи автоматичното обновяване
@@ -2862,3 +2926,4 @@ tw:啟用自動更新
 pt:Activar actualização automática
 cn:启用自动更新
 es:Activar actualización automática.
+cy:Caniatáu awto-ddiweddaru

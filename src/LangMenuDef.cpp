@@ -55,6 +55,7 @@ LangDef g_langs[LANGS_COUNT] = {
     {"uk", IDM_LANG_UK},
     {"va", IDM_LANG_VA},
     {"vn", IDM_LANG_VN},
+    {"cy", IDM_LANG_CY},
 };
 
 MenuDef g_menuDefLang[LANGS_COUNT] = {
@@ -107,4 +108,5 @@ MenuDef g_menuDefLang[LANGS_COUNT] = {
     { "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)", IDM_LANG_UK },
     { "Valencian (Valenci\303\240)", IDM_LANG_VA },
     { "Vietnamese (Vi\341\273\207t Nam)", IDM_LANG_VN },
+    { "Welsh (Cymraeg)", IDM_LANG_CY },
 };
