@@ -172,7 +172,7 @@ bn:&সঞ্চিকা
 gl:&Arquivo
 uk:&Файл
 eu:&Fitxategia
-tl:Salansan
+tl:&File
 va:&Archiu
 sn:&Faira
 cy:%Ffeil
@@ -223,7 +223,7 @@ bn:&উন্মীলন\tCtrl-O
 gl:A&brir\tCtrl-O
 uk:Відкрити\tCtrl-O
 eu:Ireki\tCtrl-O
-tl:Buksan\tCtrl-O
+tl:Magbuka&s\tCtrl-O
 va:Obrir\tCtrl-O
 sn:Vhura\tCtrl-0
 cy:&Agor\tCtrl-O
@@ -274,7 +274,7 @@ bn:&বন্ধ\tCtrl-W
 gl:&Pechar\tCtrl-W
 uk:&Закрити\tCtrl-W
 eu:&Itxi\tCtrl-W
-tl:Sarhan\tCtrl-W
+tl:Isara\tCtrl-W
 va:&Tancar\tCtrl-W
 sn:&Vhara\tCtrl-0
 cy:&Cau\tCtrl-W
@@ -325,7 +325,7 @@ bn:&সংরক্ষণ এই রূপে...
 gl:&Salvar como...
 uk:Зб&ерегти як...
 eu:... bezala &Gorde
-tl:Iligtas Bilang...
+tl:Isara Bilang...
 va:&Guardar com...
 sn:&Sevha se...
 cy:&Cadw fel...
@@ -376,7 +376,7 @@ bn:&মুদ্রন
 gl:&Imprimir
 uk:&Друкувати
 eu:&Inprimatu
-tl:Ilimbag\tCtrl-P
+tl:I-&print\tCtrl-P
 va:&Imprimir
 sn:&Printa\tCtrl-P
 cy:&Argraffu\tCtrl-P
@@ -427,7 +427,7 @@ bn:SumatraPDF-কে ডিফল্ট রিডার হিসেবে ন�
 gl:Facer do SumatraPDF o leitor PDF por defecto
 uk:Зробити SumatraPDF типовим переглядачем PDF
 eu:Sumatra PDF erabili besterik ezean PDFak irakurtzeko
-tl:Gawin na SumatraPDF ang Likas na Gagamitin sa Pangbasa ng PDF
+tl:Gawing Pangunahing PDF reader and SumatraPDF
 va:Convertir SumatraPDF en llector PDF per defecte
 sn:Ita SumatraPDF igovhura maPDF ese
 bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ 
@@ -479,7 +479,7 @@ bn:&প্রস্থান\tCtrl-Q
 gl:Sai&r\tCtrl-Q
 uk:&Вийти\tCtrl-Q
 eu:&Irten\tCtrl-Q
-tl:Labasan\tCtrl-Q
+tl:Lumabas\tCtrl-Q
 va:E&ixir\tCtrl-Q
 sn:&Siyana Nazvo\tCtrl-Q
 cy:&Gadael\tCtrl-Q
@@ -530,7 +530,7 @@ bn:দর্শন
 gl:&Ver
 uk:Ви&гляд
 eu:I&kusi
-tl:Masdan
+tl:Tignan
 va:&Vore
 sn:&Maonero
 cy:G&olwg
@@ -581,7 +581,7 @@ bn:একটি পৃষ্ঠায়
 gl:Unha soa páxina
 uk:Одна сторінка
 eu:Orri bakarra
-tl: Isang Pahina
+tl:Iisang Pahina
 va:Pàgina Única
 sn:Peji imwechete
 cy:Tudalen unigol
@@ -632,7 +632,7 @@ bn:দুটি পৃষ্ঠায়
 gl:Páxina dobre
 uk:Дві сторінки
 eu:Bi aldetatik
-tl:Harapan
+tl:Pagkaharap
 va:Pàgina Doble
 sn:Facing
 cy:Gwynebu
@@ -734,7 +734,7 @@ bn:ক্রমাগত দুটি পৃষ্ঠায়
 gl:Páxina dobre continua
 uk:Дві протяжні сторінки
 eu:Bi aldetatik jarraian
-tl:Tuloy-tuloy na Harapan
+tl:Tuloy-tuloy na Magkaharap
 va:Pàgina Doble Contínua
 sn:Facing iriContinous
 cy:Parhaus di-dor
@@ -875,7 +875,7 @@ uk:Закладки
 eu:Markagailuak
 gr:Σελιδοδείκτες
 hr:Knjiške oznake
-tl:Pananda ng Aklat
+tl:Mga Pananda
 va:Marcadors
 sn:Mabhukumaki
 cy:Nodau tudalen
@@ -920,7 +920,7 @@ uk:На цілий екран\tCtrl-L
 eu:Pantaila osoan\tCtrl-L
 gr:Πλήρης οθόνη\tCtrl-L
 hr:Cijeli zaslon\tCtrl-L
-tl:BuongTabing\tCtrl-L
+tl:Takpan ang buong screen\tCtrl-L
 va:Pantalla Completa\tCtrl-L
 sn:Zadza Screen\tCtrl-L
 cy:Sgrin lawn\tCtrl-L
@@ -971,7 +971,7 @@ bn:উপকরণপট্টি প্রদর্শন
 gl:Amosar barra de ferramentas
 uk:Показати пенал
 eu:Lanabes barra azaldu
-tl:Ipakita ang Bareta ng Kagamitan
+tl:Ipakita ang toolbar
 va:Mostrar barra de ferramentes
 sn:Ratidza Toolbar
 cy:Dangos y bar offer
@@ -1022,7 +1022,7 @@ bn:এতে চলুন...
 gl:Ir &a
 uk:&Перейти
 eu:...ra &Joan
-tl:Punta Sa...
+tl:Pumun&ta Sa...
 va:&Anar a
 sn:Enda ku...
 cy:Mynd i...
@@ -1175,7 +1175,7 @@ bn:প্রথম পৃষ্ঠা\tHome
 gl:Primeira páxina\tHome
 uk:Перша сторінка\tHome
 eu:Lehendabiziko orria \tHome
-tl:Unang Pahina\tTahanan
+tl:Unang Pahina\tHome
 va:Primera Pàgina\tInici
 sn:Peji yekutanga\tHome
 cy:Tudalen Gyntaf\tHome
@@ -1226,7 +1226,7 @@ bn:শেষ পৃষ্ঠা\tEnd
 gl:Última páxina\tEnd
 uk:Остання сторінка\tEnd
 eu:Azken orria\tEnd
-tl:Huling Pahina\tDulo
+tl:Huling Pahina\tEnd
 va:Última Pàgina\tFi
 sn:Peji yekupedzisira\tEnd
 cy:Tudalen Olaf\tEnd
@@ -1328,7 +1328,7 @@ bn:&বিবর্ধন
 gl:&Zoom
 uk:&Збільшення
 eu:&Zoom-a
-tl:Zoom
+tl:I-&zoom
 va:&Zoom
 sn:&Zuma
 cy:&Chwyddo
@@ -1379,7 +1379,7 @@ bn:পৃষ্ঠা অনুরূপ\tCtrl-0
 gl:&Páxina enteira\tCtrl-0
 uk:Припа&сувати сторінку\tCtrl-0
 eu:Orriaren neurria egokitu\tCtrl-O
-tl:Ihusto ang Pahina\tCtrl-0
+tl:Ipagkasya ang &Pahina\tCtrl-0
 va:Ajustar &Pàgina\tCtrl-0
 sn:Kwanisa &Peji\tCtrl-0
 cy:&Ffitio'r Dudalen\tCtrl-0
@@ -1481,7 +1481,7 @@ bn:প্রস্থ অনুরূপ\tCtrl-2
 gl:Axustar ao ancho\tCtrl-2
 uk:Припасувати до &ширини\tCtrl-2
 eu:Orriaren zabalera egokitu\tCtrl-2
-tl:Husto na Lapad\tCtrl-2
+tl:&Hustong Lapad\tCtrl-2
 va:&Amplària de la Pàgina\tCtrl-2
 sn:Kwanisa hupamhu\tCtrl-2
 cy:Fitio'r &Lled\tCtrl-2
@@ -1558,7 +1558,7 @@ bn:ভাষা
 gl:&Lingua
 uk:&Мова
 eu:&Hizkuntza
-tl:Wika
+tl:Wika/&lenguahe
 va:&Idioma
 sn:&Mutauro
 cy:&Iaith
@@ -1609,7 +1609,7 @@ bn:&সাহায্য
 gl:A&xuda
 uk:&Допомога
 eu:&Laguntza
-tl:Saklolo
+tl:Sa&klolo
 va:&Ajuda
 sn:&Rubatsiro
 cy:C&ymorth
@@ -1660,7 +1660,7 @@ bn:&আমাদের অন্তর্জালস্থান দর্শ�
 gl:Visitar o &Website
 uk:Відкрити сайт
 eu:&Web orria bisitatu
-tl:Dalawin ang PookSapot
+tl:Puntahan ang Websa&yt
 va:&Visitar Lloc Web
 sn:&Shanyira dande-mtande
 cy:&Ymweld â'r wefan
@@ -1735,7 +1735,7 @@ bn:&আমাদের সম্পর্কে
 gl:Arred&or de
 uk:П&ро програму...
 eu:Ho&Ni buruz...
-tl:Tungkol Sa...
+tl:Tungkol S&a...
 va:Al voltant de
 sn:&Nezve...
 cy:Ynghylch...
@@ -2038,7 +2038,7 @@ bn:বৃহৎ বিবর্ধন
 gl:Achegar zoom
 uk:Збільшити
 eu:Zoom-a hurbildu
-tl:Palakihin
+tl:Palakihin/Lumapit
 va:Arrimar
 sn:Kudza
 cy:Chwyddo Mewn
@@ -2089,7 +2089,7 @@ bn:ক্ষুদ্র বিবর্ধন
 gl:Afastar zoom
 uk:Зменшити
 eu:Zoom-a urruneratu
-tl:Paliitin
+tl:Paliitin/Lumayo
 va:Alluntar
 sn:Duputsa
 cy:Chwyddo Allan
@@ -2190,7 +2190,7 @@ bn:সুমাত্রাপিডিএফ এখন আপনার পি�
 gl:SumatraPDF é o lector PDF por defecto agora.
 uk:Тепер SumatraPDF є типовим переглядачем файлів PDF.
 eu:Sumatra orain berezko PDF irakur tresna bihurtu da.
-tl:SumatraPDF na ang Likas na Pangbasa sa mga Salansan ng PDF.
+tl:SumatraPDF ay ang Pangunahing reader na sa mga PDF.
 va:SumatraPDF es ara el llector PDF per defecte.
 sn:SumatraPDF ndiyo yaakuvhura maPDF ese.
 cy:SumatraPDF yw'r darllenydd ffeiliau PDF rhagosodedig.
@@ -2240,7 +2240,7 @@ bn:সঞ্চিকা সংরক্ষণে ব্যর্থ
 gl:Erro ao salvar o arquivo.
 uk:Не можна зберегти файл.
 eu:Fitxategia ezin izan da gorde
-tl:Nabigo na iligtas ang salansan
+tl:Nabigo ang pagsasave ng file
 va:Erro al Guardar l'Archiu
 sn:Tatadza kuseva faira
 cy:Methwyd cadw ffeil
@@ -2290,7 +2290,7 @@ bn:পিডিএফ সঞ্চিকা ভরণে ত্রুটি
 gl:Erro ao abrir o arquivo PDF.
 uk:Помилка відкриття документу.
 eu:PDF fitxategia kargargatzerakoan errorea suertatu da
-tl:Nagkamali sa Paglulan ng Salansan na PDF
+tl:May problema sa pagbukas ng PDF File.
 va:Erro al Carregar l'Archiu PDF.
 sn:Tatadza kulodha faira rePDF
 cy:Gwall wrth lwytho ffeil
@@ -2340,7 +2340,7 @@ bn:মুদ্রক কার্যকরী করা যাচ্ছে ন�
 gl:Erro ao aceder á impressora.
 uk:Принтер недоступний.
 eu:Ezin da inprimagailua ireki
-tl:Hindi Mabuksan ang Panglimbag
+tl:Hindi Mabuksan ang Printer
 va:No s'ha pogut obrir l'impressora.
 sn:Tatadza kuvhura Printer
 cy:Methu agor Argraffydd
@@ -2390,7 +2390,7 @@ bn:মুদ্রণ করতে সমস্যা হয়েছে
 gl:Problema de impresión.
 uk:Помилка друкування.
 eu:Arazoak inprimatze lanetan
-tl:Suliranin sa Paglilimbag.
+tl:May Problema sa Pagpi-print.
 va:Erro d'impressió.
 sn:Dambudziko pakuprinta
 cy:Anhawster argraffu
@@ -2674,7 +2674,7 @@ ja:再び質問しない
 kr:다시 묻지 않음
 th:ไม่ต้องถามอีกครั้ง
 gl:Non preguntar de novo
-tl:Huwag na ako muling tanungin
+tl:Huwag mo na akong tatanungin ulit
 va:No tornar a preguntar
 ca:No ho tornis a preguntar
 sn:Usandivhunze futi
@@ -2705,7 +2705,7 @@ ja:新しいバージョンのチェック(&C)
 kr:새 버전 확인
 th:&ตรวจสำหรับสอบเวอร์ชั่นใหม่
 gl:&Comprobar nova versión
-tl:Siyasatin kung may bago na bersyon
+tl:Tignan kung may bagong &bersyon
 va:&Comprovar actualisacions
 ca:&Comprova si hi ha una versió nova
 sn:&Tsvaga version idzva
@@ -2737,7 +2737,7 @@ ja:新しいバージョンが利用できません。
 kr:새로운 버전이 없습니다.
 th:ไม่มีเวอร์ชั่นใหม่
 gl:Non hai nova versión dispoñible
-tl:Walang bago na bersyon na makukuha.
+tl:Walang bagong bersyon na makita.
 va:No hi han noves versions.
 ca:No hi ha cap versió nova.
 sn:Hapana version idzva.
@@ -2769,7 +2769,7 @@ ja:最新のバージョンです。
 kr:최신 버전입니다.
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 gl:Ten vostede a última versión
-tl:Nasa iyo na ang bagong bersyon.
+tl:Nasa iyo na ang pinakabagong bersyon.
 va:Està es l'última versió.
 ca:Teniu la darrera versió.
 sn:Pane version idzva.
@@ -2801,7 +2801,7 @@ ja:バージョン %s です
 kr:현재 버전은 %s 입니다. 
 th:ของคุณเป็นเวอร์ชั่น
 gl:A súa versión é %s
-tl:Ang bersyon na nsa iyo ay %s
+tl:Ang bersyonng nasa iyo ay %s
 va:Te la versió %s
 ca:Teniu la versió %s
 sn:Pane version %s
@@ -2833,7 +2833,7 @@ ja:新しいバージョン %s は利用可能です。新しいバージョン�
 kr:새 버전 %s 이 나왔습니다. 다운로드하시겠습니까? 
 th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
 gl:A nova versión %s está dispoñible. ¿Desexa obtela?
-tl:May bagong bersyon %s. Kukuhanin ang bagong bersyon?
+tl:May bagong bersyon %s. Kunin ang bagong bersyon?
 va:Una nova versió %s está disponible. ¿Vols descarregar-la?
 ca:Hi ha disponible una versió nova. Voleu descarregar-la?
 sn:Version %s ririkuwanika. Unoda here version idzva?
@@ -2865,7 +2865,7 @@ ja:新しいバージョンが利用可能です。
 kr:새로운 버전이 나왔습니다.
 th:เวอร์ชั่นใหม่ออกแล้ว
 gl:Nova versión dispoñible
-tl:May bagong bersyon.
+tl:Merong nang bagong bersyon.
 va:Nova versió disponible.
 ca:Hi ha una versió nova.
 sn:Version idzva ririkuwanika
@@ -2913,7 +2913,7 @@ fr:Activer la mise-à-jour automatique
 nl:Updates automatisch downloaden
 mk:Овозможи автоматско ажурирање
 ru:Включить автообновление
-tl:Paubrahin ang kusang pagtataas-petsa
+tl:Bukasan ang auto-update
 va:Activar l'actualisació automàtica
 ca:Actualitza automàticament
 sn:Rega iite auto-update
