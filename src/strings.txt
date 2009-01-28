@@ -405,7 +405,7 @@ sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
 gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη PDF
 th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
-pt:Fazer de SumatraPDF o leitor de PDF pré-definido
+pt:Tornar o SumatraPDF no leitor de PDF por defeito
 no:Bruk SumatraPDF som standard PDF-leser
 sk:Nastaviť SumatraPDF ako predvolený PDF prehliadač
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định
@@ -508,7 +508,7 @@ sv:&Visa
 cz:&Zobrazit
 gr:&Προβολή
 th:มุมมอง
-pt:&Ver
+pt:&Visualização
 no:&Vis
 sk:&Zobraziť
 vn:&Khung nhìn
@@ -881,6 +881,7 @@ sn:Mabhukumaki
 cy:Nodau tudalen
 -
 Fullscreen\tCtrl-L
+pt:Ecrâ completo\tCtrl-L
 br:Tela cheia\tCtrl-L
 bg:Цял Екран\tCtrl-L
 de:Vollbild
@@ -1638,7 +1639,7 @@ sv:Besök webbplats
 cz:&Navštívit webovou stránku
 gr:&Ιστοσελίδα προγράμματος
 th:เยี่ยมเว็บไชด์
-pt:Visitar a página Web
+pt:Visitar a página web
 no:Besøk &hjemmeside
 sk:&Navštíviť webovú stránku
 vn:Thăm &website
@@ -1777,6 +1778,7 @@ cn:页数：
 cy:Tudalen:
 -
 Find:
+pt:Procurar:
 br:Localizar:
 bg:Търси:
 de:Suchen:
@@ -1820,6 +1822,7 @@ tw:尋找：
 cy:Canfod:
 -
 Find Previous
+pt:Encontrar anterior
 br:Localizar anterior
 bg:Намери предишното
 de:Rückwärts suchen
@@ -1862,6 +1865,7 @@ tw:向上尋找
 cy:Canfod Blaenorol
 -
 Find Next
+pt:Encontrar próximo
 br:Localizar seguinte
 bg:Намери следващото
 de:Weitersuchen
@@ -2413,7 +2417,7 @@ sv:Bidra med översättning
 cz:Zašli překlad
 gr:Βοήθησε στη μετάφραση
 th:ร่วมช่วยเหลือในการแปลภาษา
-pt:Contribuir na tradução.
+pt:Contribuir na tradução
 no:Bidra med oversetting
 sk:Prispieť k prekladu programu
 vn:Đóng góp dịch thuật
@@ -2497,7 +2501,7 @@ ca:Canvia la llengua (Changue language)
 sn:Chinja mutauro (Change language)
 bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
-pt:Mudar de idioma (Change language)
+pt:Alterar o idioma (Change language)
 cn:改变语言 (Change language)
 cy:Newid iaith (Change language)
 -
@@ -2559,11 +2563,12 @@ ca:Introduiu la constrasenya per a %s
 sn:Isa password ya %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 tw:輸入 %s 的密碼
-pt:Introduzir password para
+pt:Introduzir password para %s
 cn:输入 %s 的密码
 cy:Rhoi cyfrinair ar gyfer %s
 -
 Go to page
+pt:Ir para a página
 bg:Към страница
 br:Ir para a página
 de:Gehe zu Seite
@@ -2594,6 +2599,7 @@ cn:转到页面
 cy:Mynd i dudalen
 -
 Associate with PDF files?
+pt:Associar a ficheiros PDF?
 bg:Асоцииране с PDF файлове?
 br:Associar arquivos PDF?
 de:Mit PDF-Dateien verknüpfen?
@@ -2711,7 +2717,7 @@ ca:&Comprova si hi ha una versió nova
 sn:&Tsvaga version idzva
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
 tw:檢查是否有新版本(&C)
-pt:Procurar actualizações
+pt:Procurar atualizações
 cn:检查是否有新版本(&C)
 cy:&Gwirio am fersiwn newydd
 -
@@ -2743,7 +2749,7 @@ ca:No hi ha cap versió nova.
 sn:Hapana version idzva.
 bn:নতুন সংস্করণ অনুপলব্ধ
 tw:沒有新版本
-pt:Nenhuma actualização encontrada.
+pt:Nenhuma atualização encontrada.
 cn:未发现新版本。
 cy:Dim fersiwn newydd ar gael.
 -
@@ -2775,7 +2781,7 @@ ca:Teniu la darrera versió.
 sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
 tw:目前使用的版本為最新版。
-pt:Esta é a versão mais recente.
+pt:Já possui a versão mais recente.
 cn:您的版本为最新版。
 cy:Mae'r fersiwn diweddaraf gennych
 -
@@ -2839,7 +2845,7 @@ ca:Hi ha disponible una versió nova. Voleu descarregar-la?
 sn:Version %s ririkuwanika. Unoda here version idzva?
 bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 tw:最新版本 %s。 是否下載?
-pt:A versão %s está disponível. Fazer download agora?
+pt:A nova versão %s encontra-se disponível. Deseja fazer o download?
 cn:发现新版本 %s。是否下载？
 cy:Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr?
 -
@@ -2871,7 +2877,7 @@ ca:Hi ha una versió nova.
 sn:Version idzva ririkuwanika
 bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
 tw:新的可用版本。
-pt:Há uma nova versão disponível.
+pt:Nova versão disponível.
 cn:发现新版本。
 cy:Mae fersiwn newydd ar gael.
 -
@@ -2923,7 +2929,7 @@ it:Aggiornamento automatico
 ja:自動更新を有効にする
 kr:자동업데이트 활성화
 tw:啟用自動更新
-pt:Activar actualização automática
+pt:Ativar atualização automática
 cn:启用自动更新
 es:Activar actualización automática.
 cy:Caniatáu awto-ddiweddaru
