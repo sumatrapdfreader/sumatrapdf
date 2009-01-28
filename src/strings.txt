@@ -359,7 +359,7 @@ sv:Skriv &ut\tCtrl-P
 cz:&Tisk
 gr:&Εκτύπωση
 th:พิมพ์
-pt:&Imprimir
+pt:&Imprimir\tCtrl-P
 no:Skriv &ut\tCtrl-P
 sk:Tlačiť\tCtrl-P
 vn:&In\tCtrl-P
@@ -857,6 +857,7 @@ cy:Troi i'r dde
 ga:Rothlaigh Deiseal
 -
 Bookmarks
+pt:Marcadores
 br:Marcadores
 bg:Етикети
 de:Lesezeichen
@@ -1019,7 +1020,7 @@ sv:&Gå till
 cz:Jdi na
 gr:&Μετάβαση
 th:ไปที่
-pt:Ir para
+pt:&Ir para
 no:&Gå til
 sk:Ísť na
 vn:&Nhảy đến
@@ -1944,6 +1945,7 @@ cy:Canfod Nesaf
 ga:Aimsigh Ar Aghaidh
 -
 Match case
+pt:Correspondência entre maiúsculas e minúsculas
 br:Diferenciar  minúsculas e Maiúsculas
 bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
@@ -2266,7 +2268,7 @@ sv:Kan inte spara filen.
 cz:Uložení souboru selhalo
 gr:Αποτυχία αποθήκευσης αρχείου
 th:การบันทึกไฟล์ล้มเหลว
-pt:Erro ao guardar arquivo.
+pt:Erro ao guardar ficheiro
 no:Kan ikke lagre filen.
 sk:Zlyhanie pri ukladaní súboru.
 vn:Không lưu được tệp.
@@ -2368,7 +2370,7 @@ sv:Kan inte anropa skrivaren.
 cz:Není možné otevřít tiskárnu
 gr:Δε μπορεί να ανοίξει ο εκτυπωτής
 th:ไม่สามารถเปิดเครื่องพิมพ์ได้
-pt:Não foi possível abrir a impressora.
+pt:Não foi possível abrir a Impressora.
 no:Kan ikke finne skriveren.
 sk:Nie je možné otvoriť tlačiareň.
 vn:Không mở được máy in.
@@ -2494,6 +2496,7 @@ cy:Cyfrannu cyfieithiad.
 ga:Aistrigh É Seo
 -
 Set inverse search command-line
+pt:Configurar pesquisa inversa
 bg:Активирай обратно търсене
 br:Configurar pesquisa inversa
 de:Befehlszeile Inverssuche setzen
@@ -2714,6 +2717,7 @@ cy:Gosod SumatraPDF fel y rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
 -
 Don't ask me again
+pt:Não perguntar novamente
 bg:Не питай отново
 br:Não perguntar novamente
 de:Nicht wieder fragen
@@ -2944,6 +2948,7 @@ cy:Mae fersiwn newydd ar gael.
 ga:Tá leagan nua ar fáil.
 -
 Skip this version
+pt:Ignorar esta versão
 bg:Пропусни тази версия.
 br:Pular esta versão.
 de:Diese Version überspringen.
