@@ -3068,3 +3068,4 @@ es:Activar actualización automática.
 cy:Caniatáu awto-ddiweddaru
 ga:Cumasaigh nuashonrú as féin
 mm:အော်တိုမစ်တစ် အမျိးအစားသစ် ကိုရှာနိုင်ရန်
+hu:Automatikus frissítés

@@ -526,7 +526,7 @@ const char *g_transTranslations[] = {
   "Nem lehet megnyitni a nyomtat\303\263t.",
   "Ne k\303\251rdezze meg t\303\266bb\303\251",
   "&Kil\303\251p\303\251s\tCtrl-Q",
-  NULL,
+  "Automatikus friss\303\255t\303\251s",
   "\303\215rja be a jelsz\303\263t",
   "\303\215rja be a(z) %s jelszav\303\241t",
   "Hiba a PDF bet\303\266lt\303\251se k\303\266zben.",
