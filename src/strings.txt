@@ -40,7 +40,9 @@
 # Kristian Vrhel - Czech
 # Giorgos Dimopoulos (geodimo1985@gmail.com) - Greek (Hellenic)
 # Uthen Phutneam - Thai
-# Ricardo Santos[bogas](http://www.meta-morf.pt.vu) - Português(Portugal)
+# Português(Portugal):
+# 	Ricardo Santos[bogas](http://www.meta-morf.pt.vu)
+# 	Bruno Rodrigues
 # Jon Ivar F. Omland - Norwegian
 # Kjell A. A. Holm - Norwegian
 # Slovak republic
@@ -312,7 +314,7 @@ sv:Spara so&m...
 cz:&Uložit jako
 gr:Α&ποθήκευση ως
 th:บันทึกเป็น
-pt:Guardar como
+pt:Guardar como...
 no:Lagre &som
 sk:Uložiť ako...
 vn:&Sao lưu
@@ -365,7 +367,7 @@ sv:Skriv &ut\tCtrl-P
 cz:&Tisk
 gr:&Εκτύπωση
 th:พิมพ์
-pt:&Imprimir\tCtrl-P
+pt:&Imprimir...\tCtrl-P
 no:Skriv &ut\tCtrl-P
 sk:Tlačiť\tCtrl-P
 vn:&In\tCtrl-P
@@ -2048,7 +2050,7 @@ sv:Öppna
 cz:Otevřít
 gr:Άνοιγμα
 th:เปิด
-pt:Abrir
+pt:Abrir...
 no:Åpne
 sk:Otvoriť
 vn:Mở tệp
