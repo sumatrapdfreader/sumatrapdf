@@ -208,7 +208,7 @@ sv:&Öppna\tCtrl-O
 cz:&Otevřít\tCtrl-O
 gr:Ά&νοιγμα\tCtrl-O
 th:เปิด\tCtrl-O
-pt:&Abrir\tCtrl-O
+pt:&Abrir...\tCtrl-O
 no:&Åpne\tCtrl-O
 sk:Otvoriť\tCtrl-O
 vn:&Mở tệp\tCtrl-O

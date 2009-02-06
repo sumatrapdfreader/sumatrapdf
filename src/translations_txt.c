@@ -106,7 +106,7 @@ const char *g_transTranslations[] = {
   "&Ajuda",
   "&Linguagem",
   NULL,
-  "&Abrir\tCtrl-O",
+  "&Abrir...\tCtrl-O",
   "&Imprimir...\tCtrl-P",
   "Guardar como...",
   "&Visualiza\303\247\303\243o",
