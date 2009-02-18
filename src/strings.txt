@@ -5,6 +5,7 @@
 # What follows below is a line listing all languages supported
 # in this file followed by translations themselves
 # Contributors:
+# Pieter Kotzé - Afrikaans
 # Francisco Fuchs (pontocinza.blogspot.com) - Brazilian Portuguese
 # German:
 #   Lars Wohlfahrt (www.eviltux.de)
@@ -79,6 +80,7 @@
 # Mohammed Ottama - Burmese - Unicode 5.1 encoding.
 
 Lang: en English
+Lang: af Afrikaans
 Lang: ar Arabic (الْعَرَبيّة)
 Lang: by Belarusian (Беларуская)
 Lang: bg Bulgarian (Български)
@@ -132,6 +134,7 @@ Lang: ga Irish (Gaeilge)
 Lang: mm Burmese (ဗမာ စာ)
 -
 &File
+af:&Lêer
 bg:&Файл
 br:&Arquivo
 hu:&Fájl
@@ -185,6 +188,7 @@ ga:&Comhad
 mm:&ဖိုင်
 -
 &Open\tCtrl-O
+af:&Maak Oop\tCttl-O
 bg:&Отвори\tCttl-O
 br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
@@ -238,6 +242,7 @@ ga:&Oscail\tCtrl-O
 mm:&ဖွင့်ပါ\tCtrl-O
 -
 &Close\tCtrl-W
+af:Maak Toe\tCtrl-W
 bg:Затвори\tCtrl-W
 br:&Fechar\tCtrl-W
 hu:Be&zárás\tCtrl-W
@@ -291,6 +296,7 @@ ga:&Dún\tCtrl-W
 mm:&ပိတ်ပါ\tCtrl-W
 -
 &Save as
+af:&Stoor As
 bg:&Запиши като...
 br:&Salvar como...
 hu:Ment&és másként...
@@ -344,6 +350,7 @@ ga:Cuir i dtaisce mar...
 mm:&ကဲ့သို့ သိမ်းပါ.....
 -
 &Print\tCtrl-P
+af:&Druk\tCtrl-P
 bg:От&печатай
 br:&Imprimir
 hu:Nyomt&atás\tCtrl-P
@@ -397,6 +404,7 @@ ga:Clóbhuail\tCtrl-P
 mm:&ပုံနှိပ်ပါ\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
+af:Maak Sumatra Die Automatiese PDF Leser
 bg:Направи SumatraPDF четец на PDF по подразбиране
 br:Fazer do SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -451,6 +459,7 @@ ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
 -
 E&xit\tCtrl-Q
+af:&Gaan Uit-Q
 bg:&Изход\tCtrl-Q
 br:Sai&r\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
@@ -504,6 +513,7 @@ ga:Scoir\tCtrl-Q
 mm:&ထွက်ပါ\tCtrl-Q
 -
 &View
+af:&Vertoon
 bg:&Виж
 br:&Ver
 hu:&Nézet
@@ -557,6 +567,7 @@ ga:Amharc
 mm:&မြင်ကွင်း
 -
 Single page
+af:Enkele Bladsy
 bg:Единична страница
 br:Página única
 hu:Egy oldalas
@@ -610,6 +621,7 @@ ga:Leathanach Amháin
 mm: တ မျက်နှာ
 -
 Facing
+af:Teenoor
 bg:Две страници
 br:Página dupla
 hu:Oldalpár
@@ -663,6 +675,7 @@ ga:Dhá Leathanach
 mm: အရှေ့မျက်နှာ
 -
 Continuous
+af:Aanmekaar
 bg:Непрекъснати
 br:Contínuo
 hu:Folyamatos
@@ -716,6 +729,7 @@ ga:Ar Leanúint
 mm:ဆက်တိုက်
 -
 Continuous facing
+af:Vertoon Aanmekaar
 bg:Две непрекъснати
 br:Página dupla contínua
 hu:Folyamatos oldalpár
@@ -769,6 +783,7 @@ ga:Dhá Leathanach Ar Leanúint
 mm:ဆက်တိုက် မျက်နှာ
 -
 Rotate left
+af:Draai Links
 bg:Завърти наляво
 br:Girar à esquerda
 hu:Forgatás balra
@@ -822,6 +837,7 @@ ga:Rothlaigh Tuathalach
 mm:ဘယ်သို့ လှဲ့
 -
 Rotate right
+af:Draai Regs
 bg:Завърти надясно
 br:Girar à direita
 hu:Forgatás jobbra
@@ -875,6 +891,7 @@ ga:Rothlaigh Deiseal
 mm:ညာသို့ လှဲ့
 -
 Bookmarks
+af:Boekmerke
 pt:Marcadores
 br:Marcadores
 bg:Етикети
@@ -917,6 +934,7 @@ ga:Astail
 mm:စာမျက်နှာ မှတ်သား
 -
 Fullscreen\tCtrl-L
+af:Volskerm
 pt:Ecrâ completo\tCtrl-L
 br:Tela cheia\tCtrl-L
 bg:Цял Екран\tCtrl-L
@@ -965,6 +983,7 @@ ga:Lánscáileán\tCtrl-L
 mm:မြင်ကွင်း ပြည့်
 -
 Show toolbar
+af:Vertoon Toolbar
 bg:Покажи лентата с инструменти
 br:Mostrar barra de ferramentas
 hu:Eszköztár
@@ -1018,6 +1037,7 @@ ga:Taispeáin an Barra Uirlisí
 mm:တူးလ်ဘား ပြပါ
 -
 &Go To
+af:&Gaan Na
 bg:Отиди &на
 br:Ir &para
 hu:U&grás
@@ -1071,6 +1091,7 @@ ga:Téigh Chuig...
 mm:သို့ သွား
 -
 Next Page
+af:Volgende Bladsy
 bg:Следваща страница
 br:Página seguinte
 hu:Következő oldal
@@ -1124,6 +1145,7 @@ ga:Leathanach Ar Aghaidh
 mm:နောက် တမျက်နှာ
 -
 Previous Page
+af:Vorige Bladsy
 bg:Предишна страница
 br:Página anterior
 hu:Előző oldal
@@ -1177,6 +1199,7 @@ ga:Leathanach Roimhe
 mm:ပြီးတဲ့ စာမျက်နှာ
 -
 First Page\tHome
+af:Eerste Bladsy\tHome
 bg:Начална страница\tHome
 br:Primeira página\tHome
 hu:Első oldal\tHome
@@ -1230,6 +1253,7 @@ ga:An Chéad Leathanach\tHome
 mm:ပထမ စာမျက်နှာ\tHome
 -
 Last Page\tEnd
+af:Laaste Bladsy\tEnd
 bg:Последна страница\tEnd
 br:Última página\tEnd
 hu:Utolsó oldal\tEnd
@@ -1283,6 +1307,7 @@ ga:An Leathanach Deiridh\tEnd
 mm:နောက်ဆုံး စာမျက်နှာ\tEnd
 -
 Page...\tCtrl-G
+af:Bladsy...\tCtrl-G
 bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
 hu:Megadott oldal...\tCtrl-G
@@ -1336,6 +1361,7 @@ ga:Leathanach...\tCtrl-G
 mm:စာမျက်နှာ...\tCtrl-G
 -
 &Zoom
+af:&Zoem
 bg:&Мащаб
 br:&Zoom
 hu:&Nagyítás
@@ -1389,6 +1415,7 @@ ga:Féithigh
 mm:ချဲ့ထွင်
 -
 Fit &Page\tCtrl-0
+af:&Pas Blad In\tCtrl-0
 bg:Оразмери страницата\tCtrl-0
 br:&Página inteira\tCtrl-0
 hu:&Teljes oldal\tCtrl-0
@@ -1442,6 +1469,7 @@ ga:Oiriúnaigh don Lch\tCtrl-0
 mm:စာမျက်နှာ ပြည့်\tCtrl-O
 -
 Act&ual Size\tCtrl-1
+af:&Gewone Grootte\tCtrl-1
 bg:Едно към едно\tCtrl-1
 br:&Tamanho real\tCtrl-1
 hu:&Eredeti méret\tCtrl-1
@@ -1495,6 +1523,7 @@ ga:Fíormhéid\tCtrl-1
 mm:ပုံမှန် အရွယ်\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
+af:Pas In Breedte\tCtrl-2
 bg:Оразмери по ширина\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
@@ -1574,6 +1603,7 @@ mm:အလျားနှင့်အမြင့် အပြည့်
 8.33%
 -
 &Language
+af:&Taal
 bg:Език
 br:I&dioma
 hu:&Nyelv
@@ -1627,6 +1657,7 @@ ga:&Teanga
 mm:& စာ စကား
 -
 &Help
+af:Hulp
 bg:Помо&щ
 br:A&juda
 hu:&Súgó
@@ -1680,6 +1711,7 @@ ga:C&abhair
 mm:&အကူအညီ
 -
 &Visit website
+af:&Besoek Webtuiste
 bg:Посетете сайта
 br:Visitar o SumatraPDF na W&eb
 hu:&Weboldal
@@ -1733,6 +1765,7 @@ ga:Tabhair cuairt ar an suíomh idirlín
 mm:&ဝဘ်ဌာနေ သို့
 -
 &Manual
+af:Handleiding
 bg:Ръководство
 de:Anleitung
 fr:Manuel
@@ -1759,6 +1792,7 @@ ga:Lámhleabhar
 mm:&ကိုယ်တိုင်
 -
 &About
+af:&Omtrent
 bg:Относно програмата...
 br:S&obre o SumatraPDF
 hu:Név&jegy
@@ -1812,6 +1846,7 @@ ga:Maidir le
 mm:အကြောင်း
 -
 Page:
+af:Bladsy:
 bg:Страница:
 br:Página:
 hu:Oldal:
@@ -1850,6 +1885,7 @@ ga:Leathanach:
 mm:စာ မျက်နှာ
 -
 Find:
+af:Soek:
 pt:Procurar:
 br:Localizar:
 bg:Търси:
@@ -1896,6 +1932,7 @@ ga:Aimsigh:
 mm:ရှာပါ
 -
 Find Previous
+af:Soek Vorige
 pt:Encontrar anterior
 br:Localizar anterior
 bg:Намери предишното
@@ -1941,6 +1978,7 @@ ga:Aimsigh Roimhe
 mm:ပြီးခဲ့တာ ရှာပါ
 -
 Find Next
+af:Soek Volgende
 pt:Encontrar próximo
 br:Localizar seguinte
 bg:Намери следващото
@@ -1985,6 +2023,7 @@ ga:Aimsigh Ar Aghaidh
 mm:နောက်တခု ရှာပါ
 -
 Match case
+af:Vind Bypassende Klein Letters / Hoofletters
 pt:Correspondência entre maiúsculas e minúsculas
 br:Diferenciar  minúsculas e Maiúsculas
 bg:Точно същите букви
@@ -2027,6 +2066,7 @@ ga:Comhoiriúnaigh an cás
 mm:တူညီ သော
 -
 Open
+af:Maak Oop
 bg:Отвори
 br:Abrir
 hu:Megny&itás
@@ -2080,6 +2120,7 @@ ga:Oscail
 mm:ဖွင့်ပါ
 -
 Zoom In
+af:Zoem In
 bg:Увеличи
 br:Aumentar Zoom
 de:Reinzoomen
@@ -2133,6 +2174,7 @@ ga:Féithigh Isteach
 mm:ကျဉ်းပါ
 -
 Zoom Out
+af:Zoem Uit
 bg:Намали
 br:Diminuir Zoom
 de:Rauszoomen
@@ -2186,6 +2228,7 @@ ga:Féithigh Amach
 mm:ချဲ့ပါ
 -
 About SumatraPDF
+af:Omtrent SumatraPDF
 bg:Относно SumatraPDF
 br:Sobre o SumatraPDF
 de:Über SumatraPDF
@@ -2239,6 +2282,7 @@ ga:Maidir le SumatraPDF
 mm:စူမာတရာ အကြောင်း
 -
 SumatraPDF is now a default reader for PDF files.
+af:SumatraPDF is nou die automatiese leser vir PDF lêers.
 bg:SumatraPDF е четеца по подразбиране на PDF файлове.
 br:SumatraPDF tornou-se o leitor PDF padrão.
 de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
@@ -2291,6 +2335,7 @@ ga:Sé SumatraPDF an léitheoir réamhshocruithe do chomhaid PDF.
 mm:စူမာတရာPDF သည် PDF ဖိုင်များတွက် အဓိက ကြည့်ရာဖြစ်ပြီ။
 -
 Failed to save a file
+af:Kon nie die lêer stoor nie!
 bg:Грешка при записване на файла
 br:Erro ao salvar o arquivo.
 de:Fehler beim Speichern der Datei!
@@ -2343,6 +2388,7 @@ ga:Theip air comhad a chur i dtaisce
 mm:ဖိုင် သိမ်းမရပါ
 -
 Error loading PDF file.
+af:Daar was ñ fout terwyl die PDF lêer gelaai is.
 bg:Грешка при зареждане на файла.
 br:Erro ao abrir o arquivo PDF.
 de:Fehler beim Öffnen der Datei!
@@ -2395,6 +2441,7 @@ ga:Tharla botún ag luchtú comhad PDF.
 mm:ဖိုင် ဖွင့်ရာ အမှားအယွင်းရှိ
 -
 Could not open Printer
+af:Kon nie drukker oopmaak nie.
 bg:Принтера не е достъпен
 br:Erro ao acessar a impressora.
 de:Konnte den Drucker nicht ansprechen.
@@ -2447,6 +2494,7 @@ ga:Níorbh fhéidir an Clóire a oscailt
 mm:ပုံနှိပ်ကရိယာ ဖွင့်မရပါ
 -
 Printing problem.
+af:Druk Probleem.
 bg:Проблем при печатане.
 br:Problema de impressão.
 de:Druckerproblem
@@ -2499,6 +2547,7 @@ ga:Botún Clóbhuailte
 mm:ပုံနှိပ် ကရိယာ ပြသာနာ
 -
 Contribute translation
+af:Dra By Tot Ñ Vertaling.
 bg:Допринеси за превода
 hu:&Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
@@ -2546,6 +2595,7 @@ cy:Cyfrannu cyfieithiad.
 ga:Aistrigh É Seo
 -
 Set inverse search command-line
+af:Stel Die Teenoorgestelde Soek Command-Line
 pt:Configurar pesquisa inversa
 bg:Активирай обратно търсене
 br:Configurar pesquisa inversa
@@ -2577,6 +2627,7 @@ ga:Socruigh líne na n-orduithe cuardaigh inbhéarta
 mm:command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
 -
 Change language
+af:Verander Taal (Change language)
 bg:Смени езика (Change language)
 br:Mudar o idioma (Change language)
 de:Sprache ändern (Change language)
@@ -2611,6 +2662,7 @@ ga:Athraigh an Teanga (Change language)
 mm:စာ စကား ပြောင်းရန်
 -
 Enter password
+af:Tik Wagwoord In
 bg:Въведете парола
 br:Digite a senha
 de:Bitte Passwort eingeben
@@ -2644,6 +2696,7 @@ ga:Cuir isteach focal faire
 mm:လျှို့ဝှက် ထည့်သွင်းရန်
 -
 Enter password for %s
+af:Tik Wagwoord In Vir %s
 bg:Въведете парола за %s
 br:Digite a senha de %s
 de:Bitte Passwort für %s eingeben
@@ -2677,6 +2730,7 @@ ga:Cuir isteach focal faire le haghaidh %s
 mm:လျှို့ဝှက် ထည့်သွင်း %s
 -
 Go to page
+af:Gaan Na Bladsy
 pt:Ir para a página
 bg:Към страница
 br:Ir para a página
@@ -2710,6 +2764,7 @@ ga:Téigh chuig lch
 mm:သွားရန် စာမျက်နှာ
 -
 Associate with PDF files?
+af:Assosieer Met PDF lêers?
 pt:Associar a ficheiros PDF?
 bg:Асоцииране с PDF файлове?
 br:Associar arquivos PDF?
@@ -2743,6 +2798,7 @@ ga:Comhthiomsaigh le comhaid PDF?
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 -
 Make SumatraPDF default application for PDF files?
+af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
@@ -2774,6 +2830,7 @@ ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
 mm:SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
 -
 Don't ask me again
+af:Moet My Nie Weer Vra Nie
 pt:Não perguntar novamente
 bg:Не питай отново
 br:Não perguntar novamente
@@ -2808,6 +2865,7 @@ ga:Ná fiafraigh dom arís
 mm:ထပ်မမေးပါနှင့်။
 -
 &Check for new version
+af:Kyk Vir Nuwe Uitgawe
 bg:Проверка за нова версия
 br:Procurar atualizações
 de:Nach neuer Version suchen
@@ -2842,6 +2900,7 @@ ga:Téigh ar thóir leagan nua
 mm:အမျိုးအစား သစ်စုံစမ်းရန်
 -
 No new version available.
+af:Geen Nuwe Weergawe Is Beskikbaar Nie.
 bg:Няма нова версия.
 br:Nenhuma atualização foi encontrada.
 de:Keine neuere Version vorhanden.
@@ -2876,6 +2935,7 @@ ga:Níl leagan nua ar fáil.
 mm:အမျိုးအစားသစ် မရှိပါ
 -
 You have the latest version.
+af:Jy Het Die Nuutste Uitgawe.
 bg:Имате последната версия.
 br:Esta é a versão mais recente.
 de:Sie haben die neuste Version installiert.
@@ -2910,6 +2970,7 @@ ga:Tá an leagan is úire agat
 mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
 -
 You have version %s
+af:Jy Het Weergawe %s
 bg:Вашата версия е %s
 br:Você tem a versão %s
 de:Sie haben Version %s
@@ -2944,6 +3005,7 @@ ga:Tá leagan %s agat.
 mm:သင့်အမျိုးအစားသည် %s
 -
 New version %s is available. Download new version?
+af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
 br:A versão %s está disponível. Baixar a nova versão?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
@@ -2978,6 +3040,7 @@ ga:Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 mm:အမျိုးအစားသစ်ရှိသည်။ယူမလား။
 -
 New version available.
+af:Nuwe Weergawe Beskikbaar.
 bg:Има нова версия.
 br:Uma versão nova está disponível.
 de:Neuere Version vorhanden.
@@ -3012,6 +3075,7 @@ ga:Tá leagan nua ar fáil.
 mm:အမျိုးအစား သစ်ရှိသည်
 -
 Skip this version
+af:Slaan Dié Weergawe Oor.
 pt:Ignorar esta versão
 bg:Пропусни тази версия.
 br:Pular esta versão.
@@ -3045,6 +3109,7 @@ ga:Ná bac leis an leagan seo.
 mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 -
 Enable auto-update
+af:Stel In Staat Om Automatiese Opdatering Te Doen.
 bg:Включи автоматичното обновяване
 br:Ativar atualização automática
 de:Automatisches Update aktivieren

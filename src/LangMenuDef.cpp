@@ -7,6 +7,7 @@
 
 LangDef g_langs[LANGS_COUNT] = {
     {"en", IDM_LANG_EN},
+    {"af", IDM_LANG_AF},
     {"ar", IDM_LANG_AR},
     {"eu", IDM_LANG_EU},
     {"by", IDM_LANG_BY},
@@ -62,6 +63,7 @@ LangDef g_langs[LANGS_COUNT] = {
 
 MenuDef g_menuDefLang[LANGS_COUNT] = {
     { "English", IDM_LANG_EN },
+    { "Afrikaans", IDM_LANG_AF },
     { "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)", IDM_LANG_AR },
     { "Basque (Euskara)", IDM_LANG_EU },
     { "Belarusian (\320\221\320\265\320\273\320\260\321\200\321\203\321\201\320\272\320\260\321\217)", IDM_LANG_BY },
