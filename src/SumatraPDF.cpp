@@ -1795,7 +1795,7 @@ static int WindowInfoList_Len(void) {
 WindowInfo* WindowInfoList_Find(LPTSTR file) {
     WindowInfo* curr = gWindowList;
     while (curr) {
-        if (str_eq(curr->watcher.filepath(), file))
+        if (str_ieq(curr->watcher.filepath(), file))
             return curr;
         curr = curr->next;
     }
@@ -6884,7 +6884,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 #ifdef _DEBUG
     // Memory leak detection
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-    _CrtSetBreakAlloc(17475);
 #endif
 
     UNREFERENCED_PARAMETER(hPrevInstance);
