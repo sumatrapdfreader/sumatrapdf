@@ -3,7 +3,7 @@ Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.6
+Version: 1.7
 See synctex_parser_readme.txt for more details
 
 License:
@@ -42,10 +42,6 @@ authorization from the copyright holder.
  *  when building. You also have to create and customize synctex_parser_local.h to fit your system.
  *  In particular, the HAVE_LOCALE_H and HAVE_SETLOCALE macros should be properly defined.
  *  With this design, you should not need to edit this file. */
-
-#   define synctex_bool_t int
-#   define synctex_YES -1
-#   define synctex_NO 0
 
 #   if defined(SYNCTEX_USE_LOCAL_HEADER)
 #       include "synctex_parser_local.h"
@@ -1030,7 +1026,7 @@ typedef int synctex_status_t;
 #   define SYNCTEX_FILE (scanner->file)
 
 /*  Actually, the minimum buffer size is driven by integer and float parsing.
- *  ¬¨¬±0.123456789e123
+ *  ¬±0.123456789e123
  */
 #   define SYNCTEX_BUFFER_MIN_SIZE 16
 #   define SYNCTEX_BUFFER_SIZE 32768
@@ -2637,14 +2633,14 @@ return_on_error:
 int _synctex_scanner_open_with_output_file(const char *  output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, int add_quotes) {
 #	define synctex_name (*synctex_name_ref)
 #	define the_file (*file_ref)
+	int result = __synctex_scanner_open_with_output_file(output,synctex_name_ref,file_ref,add_quotes);
+	if((result || !*file_ref) && build_directory && strlen(build_directory)) {
   char * build_output, *lpc;
   size_t size;
   int is_absolute;
-	int result = __synctex_scanner_open_with_output_file(output,synctex_name_ref,file_ref,add_quotes);
-	if((result || !*file_ref) && build_directory && strlen(build_directory)) {
-		build_output = NULL;;
-		lpc = _synctex_last_path_component(output);
 		size = strlen(build_directory)+strlen(lpc)+2;
+		build_output = NULL;
+		lpc = _synctex_last_path_component(output);
 		is_absolute = _synctex_path_is_absolute(build_directory);
 		if(!is_absolute) {
 			size += strlen(output);
@@ -2857,29 +2853,29 @@ const char *  synctex_scanner_get_name(synctex_scanner_t scanner,int tag) {
 	return NULL;
 }
 
-int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name);
-int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name) {
+int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name, synctex_bool_t append_tex_extension);
+int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name, synctex_bool_t append_tex_extension) {
 	synctex_node_t input = NULL;
 	if(NULL == scanner) {
 		return 0;
 	}
 	input = scanner->input;
 	do {
-		if(_synctex_is_equivalent_file_name(name,(SYNCTEX_NAME(input)))) {
+		if(_synctex_is_equivalent_file_name(name,(SYNCTEX_NAME(input)),append_tex_extension)) {
 			return SYNCTEX_TAG(input);
 		}
 	} while((input = SYNCTEX_SIBLING(input)) != NULL);
 	return 0;
 }
 
-int synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name) {
+int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name, synctex_bool_t append_tex_extension) {
 	size_t char_index = strlen(name);
 	if((scanner = synctex_scanner_parse(scanner)) && (0 < char_index)) {
 		/*  the name is not void */
 		char_index -= 1;
 		if(!SYNCTEX_IS_PATH_SEPARATOR(name[char_index])) {
 			/*  the last character of name is not a path separator */
-			int result = _synctex_scanner_get_tag(scanner,name);
+			int result = _synctex_scanner_get_tag(scanner,name,append_tex_extension);
 			if(result) {
 				return result;
 			} else {
@@ -2899,7 +2895,7 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name) {
 					}
 					relative -= 1;
 				}
-				if((relative > name) && (result = _synctex_scanner_get_tag(scanner,relative))) {
+				if((relative > name) && (result = _synctex_scanner_get_tag(scanner,relative,append_tex_extension))) {
 					return result;
 				}
 				if(SYNCTEX_IS_PATH_SEPARATOR(name[0])) {
@@ -2908,13 +2904,17 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name) {
 					while(0<char_index) {
 						char_index -= 1;
 						if(SYNCTEX_IS_PATH_SEPARATOR(name[char_index])
-								&& (result = _synctex_scanner_get_tag(scanner,name+char_index+1))) {
+								&& (result = _synctex_scanner_get_tag(scanner,name+char_index+1,append_tex_extension))) {
 							return result;
 						}
 					}
 				}
 			}
+			if(result)
 			return result;
+			if(append_tex_extension)
+				/*  Workaround for the MikTeX bug https://sourceforge.net/tracker2/?func=detail&atid=110783&aid=2419953&group_id=10783 */
+				return synctex_scanner_get_tag(scanner, name, synctex_NO);
 		}
 	}
 	return 0;
@@ -3189,7 +3189,7 @@ int synctex_display_query(synctex_scanner_t scanner,const char *  name,int line,
 #	ifdef __DARWIN_UNIX03
 #       pragma unused(column)
 #   endif
-	int tag = synctex_scanner_get_tag(scanner,name);
+	int tag = synctex_scanner_get_tag(scanner,name,synctex_YES);
 	size_t size = 0;
 	int friend_index = 0;
 	int max_line = 0;

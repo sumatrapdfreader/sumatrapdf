@@ -3,7 +3,7 @@ Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.6
+Version: 1.7
 See synctex_parser_readme.txt for more details
 
 License:
@@ -76,8 +76,13 @@ void _synctex_strip_last_path_extension(char * string);
  *  The given strings may differ stricto sensu, but represent the same file name.
  *  It might not be the real way of doing things.
  *  The return value is an undefined non 0 value when the two file names are equivalent.
- *  It is 0 otherwise. */
-synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs);
+ *  It is 0 otherwise.
+ *  In order to workaround a bug in MiKTeX, we added a append_tex_extension flag.
+ *  It happens that MiKTeX sometimes does not record a ".tex" file extension when it was expected to
+ *  according to the documentation of TeX in tex.web.
+ *  if append_tex_extension is YES, lhs and rhs are equivalent when lhs is equivalent to rhs+".tex".
+ */
+synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs, synctex_bool_t append_tex_extension);
 
 /*	Description forthcoming.*/
 synctex_bool_t _synctex_path_is_absolute(const char * name);

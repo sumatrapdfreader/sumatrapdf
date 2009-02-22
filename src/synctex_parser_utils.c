@@ -3,7 +3,7 @@ Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.6
+Version: 1.7
 See synctex_parser_readme.txt for more details
 
 License:
@@ -124,7 +124,7 @@ void _synctex_strip_last_path_extension(char * string) {
 }
 
 /*  Compare two file names, windows is sometimes case insensitive... */
-synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs) {
+synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs, synctex_bool_t append_tex_extension) {
 #	if _WIN32
     /*  On Windows, filename should be compared case insensitive.
 	 *  The characters '/' and '\' are both valid path separators.
@@ -132,7 +132,12 @@ synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs
 	 *  not all the characters must be toupper...
 	 *  I would like to have URL's instead of filenames. */
 next_character:
-	if(SYNCTEX_IS_PATH_SEPARATOR(*lhs)) {/*  lhs points to a path separator */
+  if (!*lhs) {/*  lhs is at the end of the string */
+		return *rhs ? synctex_NO : synctex_YES;
+	} else if(!*rhs) {/*  rhs is at the end of the string but not lhs */
+		return append_tex_extension? _synctex_is_equivalent_file_name(lhs,".tex",synctex_NO): synctex_NO;
+	}
+	else if(SYNCTEX_IS_PATH_SEPARATOR(*lhs)) {/*  lhs points to a path separator */
 		if(!SYNCTEX_IS_PATH_SEPARATOR(*rhs)) {/*  but not rhs */
 			return synctex_NO;
 		}
@@ -140,16 +145,29 @@ next_character:
 		return synctex_NO;
 	} else if(toupper(*lhs) != toupper(*rhs)){/*  uppercase do not match */
 		return synctex_NO;
-	} else if (!*lhs) {/*  lhs is at the end of the string */
-		return *rhs ? synctex_NO : synctex_YES;
-	} else if(!*rhs) {/*  rhs is at the end of the string but not lhs */
-		return synctex_NO;
 	}
 	++lhs;
 	++rhs;
 	goto next_character;
+#	elif __EMULATE_W32__
+	/*  We should use here some OS specific test because unicode strings are used. */
+	size_t len = strlen(lhs);
+	if(len==strlen(rhs)) {
+		if(strncmp(lhs,rhs,len)) {
+			return synctex_NO;
+		}
+	} else if(len==strlen(rhs)+4){
+		len -= 4;
+		if(strncmp(lhs,rhs,len)) {
+			return synctex_NO;
+		}
+		return 0 == strncmp(lhs+len,".tex",4) || strncmp(lhs+len,".TEX",4)? synctex_YES:synctex_NO;
+	}
+    return synctex_YES;
 #	else
-    return 0 == strcmp(lhs,rhs)?synctex_YES:synctex_NO;
+	/*  We should use here some OS specific test because unicode strings might be used. */
+	size_t len = strlen(lhs);
+	return (len==strlen(rhs))&&(0 == strncmp(lhs,rhs,len))?synctex_YES:synctex_NO;
 #	endif
 }
 
@@ -184,10 +202,8 @@ char * _synctex_last_path_component(const char * name) {
 }
 
 int _synctex_copy_with_quoting_last_path_component(const char * src, char ** dest_ref, size_t size) {
-  char * lpc;
   if(src && dest_ref) {
-#		define dest (*dest_ref)
-		dest = NULL;	/*	Default behavior: no change and sucess. */
+		char * lpc = NULL;
 		lpc = _synctex_last_path_component(src);
 		if(strlen(lpc)) {
 			if(strchr(lpc,' ') && lpc[0]!='"' && lpc[strlen(lpc)-1]!='"') {
@@ -196,6 +212,8 @@ int _synctex_copy_with_quoting_last_path_component(const char * src, char ** des
 				/*  Consistency test: we must have dest+size>dest+strlen(dest)+2
 				 *	or equivalently: strlen(dest)+2<size (see below) */
 				if(strlen(src)<size) {
+#					define dest (*dest_ref)
+					dest = NULL;	/*	Default behavior: no change and sucess. */
 					if((dest = (char *)malloc(size+2))) {
 						if(dest != strncpy(dest,src,size)) {
 							_synctex_error("!  _synctex_copy_with_quoting_last_path_component: Copy problem");

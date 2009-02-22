@@ -3,7 +3,7 @@ Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.6
+Version: 1.7
 See synctex_parser_readme.txt for more details
 
 License:
@@ -38,6 +38,8 @@ authorization from the copyright holder.
 
 #ifndef __SYNCTEX_PARSER__
 #   define __SYNCTEX_PARSER__
+
+#include "synctex_parser_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -186,7 +188,7 @@ float synctex_scanner_magnification(synctex_scanner_t scanner);
  *  it was obtained from output by setting the proper file extension.
  */
 const char *  synctex_scanner_get_name(synctex_scanner_t scanner,int tag);
-int synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name);
+int synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name, synctex_bool_t append_tex_extension);
 synctex_node_t synctex_scanner_input(synctex_scanner_t scanner);
 const char *  synctex_scanner_get_output(synctex_scanner_t scanner);
 const char *  synctex_scanner_get_synctex(synctex_scanner_t scanner);
