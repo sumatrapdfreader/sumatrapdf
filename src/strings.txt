@@ -133,6 +133,7 @@ Lang: sn Shona (Shona)
 Lang: ga Irish (Gaeilge)
 Lang: mm Burmese (ဗမာ စာ)
 Lang: pa Punjabi (ਪੰਜਾਬੀ)
+Lang: hi Hindi (हिंदी)
 -
 &File
 af:&Lêer
@@ -188,6 +189,7 @@ cy:%Ffeil
 ga:&Comhad
 mm:&ဖိုင်
 pa:ਫਾਇਲ(&F)
+hi:फाईल(&F)
 -
 &Open\tCtrl-O
 af:&Maak Oop\tCttl-O
@@ -243,6 +245,7 @@ cy:&Agor\tCtrl-O
 ga:&Oscail\tCtrl-O
 mm:&ဖွင့်ပါ\tCtrl-O
 pa:ਫਾਇਲ ਖੋਲੋ(&O)\tCtrl-O
+hi:फाईल खोलें(&O)\tCtrl-O
 -
 &Close\tCtrl-W
 af:Maak Toe\tCtrl-W
@@ -298,6 +301,7 @@ cy:&Cau\tCtrl-W
 ga:&Dún\tCtrl-W
 mm:&ပိတ်ပါ\tCtrl-W
 pa:ਬੰਦ ਕਰੋ(&C)\tCtrl-W
+hi:बंद करें(&C)\tCtrl-W
 -
 &Save as
 af:&Stoor As
@@ -353,6 +357,7 @@ cy:&Cadw fel...
 ga:Cuir i dtaisce mar...
 mm:&ကဲ့သို့ သိမ်းပါ.....
 pa:ਇੰਝ ਸੰਬਾਲੋ(&S)
+hi:इस तरह संभालें(&S)
 -
 &Print\tCtrl-P
 af:&Druk\tCtrl-P
@@ -408,6 +413,7 @@ cy:&Argraffu\tCtrl-P
 ga:Clóbhuail\tCtrl-P
 mm:&ပုံနှိပ်ပါ\tCtrl-P
 pa:ਪਰਿੰਟ ਕਰੋ(&P)\tCtrl-P
+hi:परिंट करें(&P)\tCtrl-P
 -
 Make SumatraPDF a default PDF reader
 af:Maak Sumatra Die Automatiese PDF Leser
@@ -464,6 +470,7 @@ cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
 pa:ਸਾਰੀਂਆ  PDF ਫਾਈਲਾ SumatraPDF ਵਿਚ ਖੋਲੋ
+hi:सभी PDF फाईलें SumatraPDF में खोलें
 -
 E&xit\tCtrl-Q
 af:&Gaan Uit-Q
@@ -519,6 +526,7 @@ cy:&Gadael\tCtrl-Q
 ga:Scoir\tCtrl-Q
 mm:&ထွက်ပါ\tCtrl-Q
 pa:ਬੰਦ ਕਰੋ(&x)\tCtrl-Q
+hi:बाहर निकलें(&x)\tCtrl-Q
 -
 &View
 af:&Vertoon
@@ -574,6 +582,7 @@ cy:G&olwg
 ga:Amharc
 mm:&မြင်ကွင်း
 pa:ਵੇਖੋ(&V)
+hi:देखें(&V)
 -
 Single page
 af:Enkele Bladsy
@@ -629,6 +638,7 @@ cy:Tudalen unigol
 ga:Leathanach Amháin
 mm: တ မျက်နှာ
 pa:ਇਕ ਪੰਨਾ
+hi:एक पृष्ठ
 -
 Facing
 af:Teenoor
@@ -684,6 +694,7 @@ cy:Gwynebu
 ga:Dhá Leathanach
 mm: အရှေ့မျက်နှာ
 pa:ਕਿਤਾਬ
+hi:पुस्तक
 -
 Continuous
 af:Aanmekaar
@@ -739,6 +750,7 @@ cy:Di-dor
 ga:Ar Leanúint
 mm:ဆက်တိုက်
 pa:ਲਗਾਤਾਰ
+hi:निरन्तर
 -
 Continuous facing
 af:Vertoon Aanmekaar
@@ -794,6 +806,7 @@ cy:Parhaus di-dor
 ga:Dhá Leathanach Ar Leanúint
 mm:ဆက်တိုက် မျက်နှာ
 pa:ਲਗਾਤਾਰ ਕਿਤਾਬ
+hi:निरन्तर पुस्तक
 -
 Rotate left
 af:Draai Links
@@ -849,6 +862,7 @@ cy:Troi i'r chwith
 ga:Rothlaigh Tuathalach
 mm:ဘယ်သို့ လှဲ့
 pa:ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ
+hi:बांयी ओर घूमाओ
 -
 Rotate right
 af:Draai Regs
@@ -904,6 +918,7 @@ cy:Troi i'r dde
 ga:Rothlaigh Deiseal
 mm:ညာသို့ လှဲ့
 pa:ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ
+hi:दांयी ओर घूमाओ
 -
 Bookmarks
 af:Boekmerke
@@ -948,6 +963,7 @@ cy:Nodau tudalen
 ga:Astail
 mm:စာမျက်နှာ မှတ်သား
 pa:ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ
+hi:संभाले हुए चिह्न
 -
 Fullscreen\tCtrl-L
 af:Volskerm
@@ -998,6 +1014,7 @@ cy:Sgrin lawn\tCtrl-L
 ga:Lánscáileán\tCtrl-L
 mm:မြင်ကွင်း ပြည့်
 pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl-L
+hi:पूरा परदा\tCtrl-L
 -
 Show toolbar
 af:Vertoon Toolbar
@@ -1053,6 +1070,7 @@ cy:Dangos y bar offer
 ga:Taispeáin an Barra Uirlisí
 mm:တူးလ်ဘား ပြပါ
 pa:ਸੰਦ ਵਾਲੀ ਫੱਟੀ ਵਖਾਓ
+hi:औजार वाली पट्टी दिखाओ
 -
 &Go To
 af:&Gaan Na
@@ -1108,6 +1126,7 @@ cy:Mynd i...
 ga:Téigh Chuig...
 mm:သို့ သွား
 pa:ਜਾਵੋ(&G)
+hi:जाए(&G)
 -
 Next Page
 af:Volgende Bladsy
@@ -1163,6 +1182,7 @@ cy:Tudalen Nesaf
 ga:Leathanach Ar Aghaidh
 mm:နောက် တမျက်နှာ
 pa:ਅਗਲੇ ਪੰਨੇ ਤੇ
+hi:अगले पृष्ठ पर
 -
 Previous Page
 af:Vorige Bladsy
@@ -1218,6 +1238,7 @@ cy:Tudalen Flaenorol
 ga:Leathanach Roimhe
 mm:ပြီးတဲ့ စာမျက်နှာ
 pa:ਪਿਛਲੇ ਪੰਨੇ ਤੇ
+hi:पिछले पृष्ठ पर
 -
 First Page\tHome
 af:Eerste Bladsy\tHome
@@ -1273,6 +1294,7 @@ cy:Tudalen Gyntaf\tHome
 ga:An Chéad Leathanach\tHome
 mm:ပထမ စာမျက်နှာ\tHome
 pa:ਪਹਿਲੇ ਪੰਨੇ ਤੇ\tHome
+hi:पहले पृष्ठ पर\tHome
 -
 Last Page\tEnd
 af:Laaste Bladsy\tEnd
@@ -1328,6 +1350,7 @@ cy:Tudalen Olaf\tEnd
 ga:An Leathanach Deiridh\tEnd
 mm:နောက်ဆုံး စာမျက်နှာ\tEnd
 pa:ਆਖਰੀ ਪੰਨੇ ਤੇ\tEnd
+hi:अन्तिम पृष्ठ पर\tHome
 -
 Page...\tCtrl-G
 af:Bladsy...\tCtrl-G
@@ -1383,6 +1406,7 @@ cy:Tudalen...\tCtrl-G
 ga:Leathanach...\tCtrl-G
 mm:စာမျက်နှာ...\tCtrl-G
 pa:ਪੰਨਾ ਨੰਬਰ ਤੇ\tCtrl-G
+hi:पृष्ठ संख्या पर\tCtrl-G
 -
 &Zoom
 af:&Zoem
@@ -1438,6 +1462,7 @@ cy:&Chwyddo
 ga:Féithigh
 mm:ချဲ့ထွင်
 pa:ਵੱਡਾ ਕਰੋ(&Z)
+hi:बडा करें(&Z)
 -
 Fit &Page\tCtrl-0
 af:&Pas Blad In\tCtrl-0
@@ -1493,6 +1518,7 @@ cy:&Ffitio'r Dudalen\tCtrl-0
 ga:Oiriúnaigh don Lch\tCtrl-0
 mm:စာမျက်နှာ ပြည့်\tCtrl-O
 pa:ਫਿਟ ਕਰੋ(&P)\tCtrl-0
+hi:अनुरूप करें(&P)\tCtrl-0
 -
 Act&ual Size\tCtrl-1
 af:&Gewone Grootte\tCtrl-1
@@ -1548,6 +1574,7 @@ cy:Gwir Faint\tCtrl-1
 ga:Fíormhéid\tCtrl-1
 mm:ပုံမှန် အရွယ်\tCtrl-1
 pa:ਸਹੀ ਅਕਾਰ(&u)\tCtrl-1
+hi:सही आकार(&u)\tCtrl-1
 -
 Fit Widt&h\tCtrl-2
 af:Pas In Breedte\tCtrl-2
@@ -1603,6 +1630,7 @@ cy:Fitio'r &Lled\tCtrl-2
 ga:Oiriúnaigh don Leithead\tCtrl-2
 mm:အလျားနှင့်အမြင့် အပြည့်
 pa:ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ(&h)\tCtrl-2
+hi:चौड़ाई के अनुसार(&h)\tCtrl-2
 -
 6400%
 -
@@ -1684,6 +1712,7 @@ cy:&Iaith
 ga:&Teanga
 mm:& စာ စကား
 pa:ਭਾਸ਼ਾ(&L)
+hi:भाषा(&L)
 -
 &Help
 af:Hulp
@@ -1739,6 +1768,7 @@ cy:C&ymorth
 ga:C&abhair
 mm:&အကူအညီ
 pa:ਸਹਾਇਤਾ(&H)
+hi:सहायता(&H)
 -
 &Visit website
 af:&Besoek Webtuiste
@@ -1794,6 +1824,7 @@ cy:&Ymweld â'r wefan
 ga:Tabhair cuairt ar an suíomh idirlín
 mm:&ဝဘ်ဌာနေ သို့
 pa:ਵੇਬਸਾਇਟ ਵੇਥੋ(&V)
+hi:वेबसाइट देखें(&V)
 -
 &Manual
 af:Handleiding
@@ -1822,6 +1853,7 @@ cy:&Llawlyfr
 ga:Lámhleabhar
 mm:&ကိုယ်တိုင်
 pa:ਮਦੱਦ ਕਤਾਬ(&M)
+hi:नियम-पुस्तक(&M)
 -
 &About
 af:&Omtrent
@@ -1877,6 +1909,7 @@ cy:Ynghylch...
 ga:Maidir le
 mm:အကြောင်း
 pa:Sumatra ਬਾਰੇ(&A)
+hi:Sumatra के बारे में(&A)
 -
 Page:
 af:Bladsy:
@@ -1917,6 +1950,7 @@ cy:Tudalen:
 ga:Leathanach:
 mm:စာ မျက်နှာ
 pa:ਪੰਨਾ ਨੰਬਰ:
+hi:पृष्ठ संख्या:
 -
 Find:
 af:Soek:
@@ -1965,6 +1999,7 @@ cy:Canfod:
 ga:Aimsigh:
 mm:ရှာပါ
 pa:ਲੱਭੋ:
+hi:खोज:
 -
 Find Previous
 af:Soek Vorige
@@ -2012,6 +2047,7 @@ cy:Canfod Blaenorol
 ga:Aimsigh Roimhe
 mm:ပြီးခဲ့တာ ရှာပါ
 pa:ਪਿਛਲਾ ਲੱਭੋ
+hi:पुराना खोजें
 -
 Find Next
 af:Soek Volgende
@@ -2058,6 +2094,7 @@ cy:Canfod Nesaf
 ga:Aimsigh Ar Aghaidh
 mm:နောက်တခု ရှာပါ
 pa:ਅਗਲਾ ਲੱਭੋ
+hi:अगला खोजें
 -
 Match case
 af:Vind Bypassende Klein Letters / Hoofletters
@@ -2102,6 +2139,7 @@ cy:Maint Bach/Mawr
 ga:Comhoiriúnaigh an cás
 mm:တူညီ သော
 pa:ਅੱਖਰ ਅਕਾਰ ਮਿਲਾਓ
+hi:अक्षर आकार मिलाएं
 -
 Open
 af:Maak Oop
@@ -2157,6 +2195,7 @@ cy:Agor
 ga:Oscail
 mm:ဖွင့်ပါ
 pa:ਖੋਲੋ
+hi:खोलें
 -
 Zoom In
 af:Zoem In
@@ -2212,6 +2251,7 @@ cy:Chwyddo Mewn
 ga:Féithigh Isteach
 mm:ကျဉ်းပါ
 pa:ਵੱਡਾ ਕਰੋ
+hi:बडा करें
 -
 Zoom Out
 af:Zoem Uit
@@ -2267,6 +2307,7 @@ cy:Chwyddo Allan
 ga:Féithigh Amach
 mm:ချဲ့ပါ
 pa:ਛੋਟਾ ਕਰੋ
+hi:छोटा करें
 -
 About SumatraPDF
 af:Omtrent SumatraPDF
@@ -2322,6 +2363,7 @@ cy:Ynghylch SumatraPDF
 ga:Maidir le SumatraPDF
 mm:စူမာတရာ အကြောင်း
 pa:Sumatra ਬਾਰੇ
+hi:Sumatra के बारे में
 -
 SumatraPDF is now a default reader for PDF files.
 af:SumatraPDF is nou die automatiese leser vir PDF lêers.
@@ -2376,6 +2418,7 @@ cy:SumatraPDF yw'r darllenydd ffeiliau PDF rhagosodedig.
 ga:Sé SumatraPDF an léitheoir réamhshocruithe do chomhaid PDF.
 mm:စူမာတရာPDF သည် PDF ဖိုင်များတွက် အဓိက ကြည့်ရာဖြစ်ပြီ။
 pa:ਹੁਣ ਤੌਂ  PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੁਲਣਗੀਆਂ ।
+hi:अब से PDF फाईलें SumatraPDF मे खुलेंगी
 -
 Failed to save a file
 af:Kon nie die lêer stoor nie!
@@ -2430,6 +2473,7 @@ cy:Methwyd cadw ffeil
 ga:Theip air comhad a chur i dtaisce
 mm:ဖိုင် သိမ်းမရပါ
 pa:ਫਾਈਲ ਸੰਭਾਲੀ ਨਹੀ ਜਾ ਸਕੀ
+hi:फाईल संभाली नहीं जा सकी
 -
 Error loading PDF file.
 af:Daar was ñ fout terwyl die PDF lêer gelaai is.
@@ -2484,6 +2528,7 @@ cy:Gwall wrth lwytho ffeil
 ga:Tharla botún ag luchtú comhad PDF.
 mm:ဖိုင် ဖွင့်ရာ အမှားအယွင်းရှိ
 pa:PDF ਫਾਈਲ ਖੋਲੀ ਨਹੀ ਜਾ ਸਕੀ ।
+hi:फाईल खोली नहीं जा सकी
 -
 Could not open Printer
 af:Kon nie drukker oopmaak nie.
@@ -2538,6 +2583,7 @@ cy:Methu agor Argraffydd
 ga:Níorbh fhéidir an Clóire a oscailt
 mm:ပုံနှိပ်ကရိယာ ဖွင့်မရပါ
 pa:ਪਰਿੰਟ ਖੋਲਿਆ ਨਹੀ ਜਾ ਸਕਿਆ
+hi:परिंटर खोला नहीं जा सका
 -
 Printing problem.
 af:Druk Probleem.
@@ -2592,6 +2638,7 @@ cy:Anhawster argraffu
 ga:Botún Clóbhuailte
 mm:ပုံနှိပ် ကရိယာ ပြသာနာ
 pa:ਪਰਿਨਟ ਕਰਨ ਵਿੱਚ ਗਲਤੀ
+hi:परिंट करने में गलती
 -
 Contribute translation
 af:Dra By Tot Ñ Vertaling.
@@ -2641,6 +2688,7 @@ sn:Batsira kuturikira
 cy:Cyfrannu cyfieithiad.
 ga:Aistrigh É Seo
 pa:ਅਨੁਵਾਦ ਕਰਨ ਵਿੱਚ ਮਦੱਦ ਕਰੋ
+hi:अनुवाद करने में मदद करें
 -
 Set inverse search command-line
 af:Stel Die Teenoorgestelde Soek Command-Line
@@ -2674,6 +2722,7 @@ cy:Gosod llinell orchymyn chwilio gwrthdro
 ga:Socruigh líne na n-orduithe cuardaigh inbhéarta
 mm:command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
 pa:ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
+hi:उलटी command-line खोज सैट करें
 -
 Change language
 af:Verander Taal (Change language)
@@ -2710,6 +2759,7 @@ cy:Newid iaith (Change language)
 ga:Athraigh an Teanga (Change language)
 mm:စာ စကား ပြောင်းရန် (Change language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
+hi:भाषा बदलें(Change language)
 -
 Enter password
 af:Tik Wagwoord In
@@ -2745,6 +2795,7 @@ cy:Rhoi cyfrinair
 ga:Cuir isteach focal faire
 mm:လျှို့ဝှက် ထည့်သွင်းရန်
 pa:ਪਾਸਵਰਡ ਭਰੋ
+hi:पहचान शब्द भरें
 -
 Enter password for %s
 af:Tik Wagwoord In Vir %s
@@ -2780,6 +2831,7 @@ cy:Rhoi cyfrinair ar gyfer %s
 ga:Cuir isteach focal faire le haghaidh %s
 mm:လျှို့ဝှက် ထည့်သွင်း %s
 pa:%s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
+hi:%s के लिए पहचान शब्द भरें
 -
 Go to page
 af:Gaan Na Bladsy
@@ -2815,6 +2867,7 @@ cy:Mynd i dudalen
 ga:Téigh chuig lch
 mm:သွားရန် စာမျက်နှာ
 pa:ਪੰਨੇ ਤੇ ਜਾਓ
+hi:पृष्ठ संख्या पर जाए(&G)
 -
 Associate with PDF files?
 af:Assosieer Met PDF lêers?
@@ -2850,6 +2903,7 @@ cy:Cysylltu gyda ffeiliau PDF?
 ga:Comhthiomsaigh le comhaid PDF?
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 pa:PDF ਫਾਈਲਾਂ ਨਾਲ ਸੰਬੰਦ ਬਣਾਓ ?
+hi: PDF फाईलों से संबंध बनाइए?
 -
 Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
@@ -2883,6 +2937,7 @@ cy:Gosod SumatraPDF fel y rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
 mm:SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
 pa:PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
+hi:सभी PDF फाईलें SumatraPDF में खोलें ?
 -
 Don't ask me again
 af:Moet My Nie Weer Vra Nie
@@ -2919,6 +2974,7 @@ cy:Peidio gofyn i mi eto
 ga:Ná fiafraigh dom arís
 mm:ထပ်မမေးပါနှင့်။
 pa:ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
+hi:फिर मत पूछिए
 -
 &Check for new version
 af:Kyk Vir Nuwe Uitgawe
@@ -2955,6 +3011,7 @@ cy:&Gwirio am fersiwn newydd
 ga:Téigh ar thóir leagan nua
 mm:အမျိုးအစား သစ်စုံစမ်းရန်
 pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
+hi:नए संसकरण के लिए जांच करें(&C)
 -
 No new version available.
 af:Geen Nuwe Weergawe Is Beskikbaar Nie.
@@ -2991,6 +3048,7 @@ cy:Dim fersiwn newydd ar gael.
 ga:Níl leagan nua ar fáil.
 mm:အမျိုးအစားသစ် မရှိပါ
 pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
+hi:नया संसकरण उपलब्ध है
 -
 You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
@@ -3027,6 +3085,7 @@ cy:Mae'r fersiwn diweddaraf gennych
 ga:Tá an leagan is úire agat
 mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
 pa:ਤੋਹਾਡੇ ਕੋਲ ਪਿਹਲਾਂ ਤੌਂ ਹੀ ਨਵਾਂ ਵਰਜਨ ਹੈ
+hi:आपके पास पहले से ही नया संसकरण है
 -
 You have version %s
 af:Jy Het Weergawe %s
@@ -3063,6 +3122,7 @@ cy:Mae gennych fersiwn %s
 ga:Tá leagan %s agat.
 mm:သင့်အမျိုးအစားသည် %s
 pa:ਤੋਹਾਡੇ ਕੋਲ %s ਵਰਜਨ ਹੈ
+hi:आपके पास  %s संसकरण है
 -
 New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
@@ -3099,6 +3159,7 @@ cy:Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr?
 ga:Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 mm:အမျိုးအစားသစ်ရှိသည်။ယူမလား။
 pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
+hi:संसकरण %s उपलब्ध है । डाउनलोड करूँ ?
 -
 New version available.
 af:Nuwe Weergawe Beskikbaar.
@@ -3135,6 +3196,7 @@ cy:Mae fersiwn newydd ar gael.
 ga:Tá leagan nua ar fáil.
 mm:အမျိုးအစား သစ်ရှိသည်
 pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਹੈ ।
+hi:नया संसकरण उपलब्ध है । 
 -
 Skip this version
 af:Slaan Dié Weergawe Oor.
@@ -3170,6 +3232,7 @@ cy:Hepgor y fersiwn yma.
 ga:Ná bac leis an leagan seo.
 mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 pa:ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
+hi:इस संसकरण को छोडो
 -
 Enable auto-update
 af:Stel In Staat Om Automatiese Opdatering Te Doen.
@@ -3198,3 +3261,4 @@ ga:Cumasaigh nuashonrú as féin
 mm:အော်တိုမစ်တစ် အမျိးအစားသစ် ကိုရှာနိုင်ရန်
 hu:Automatikus frissítés
 pa:ਨਵਾ ਵਰਜਨ ਡਾਓਨਲੋਡ ਕਰਨ ਨੂੰ ਜਕੀਨੀ ਬਣਾਓ
+hi:नया संसकरण अपने आप डाउनलोड करो
