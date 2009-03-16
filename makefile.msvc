@@ -1,5 +1,8 @@
+# nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
+# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live in ext dir> (default: empty)
+#  e.g. ..\sumatrapdf\
 # EXB=rm (default: no setting) This is an EXternal Build, i.e. not base SumatraPDF.
 # EXTCFLAGS=$CFLAGS
 
@@ -15,7 +18,6 @@ O = obj-rm-$(CFG)
 O = obj-$(CFG)
 !endif
 
-
 # To over-ride location of fitz/mupdf sources, define FITZ_DIR
 # e.g.:
 #FITZ_DIR=..\mupdf
@@ -24,13 +26,16 @@ O = obj-$(CFG)
 FITZ_DIR=fitz
 !endif
 
-ZLIB_DIR=ext\zlib
-FREETYPE_DIR=ext\freetype-2.3.7
-JPEG_DIR=ext\jpeg6b
-JASPER_DIR=ext\jasper\src\libjasper
-JBIG2_DIR=ext\jbig2dec
+ZLIB_DIR=$(EXTLIBSDIR)ext\zlib
+FREETYPE_DIR=$(EXTLIBSDIR)ext\freetype-2.3.7
+JPEG_DIR=$(EXTLIBSDIR)ext\jpeg6b
+JASPER_DIR=$(EXTLIBSDIR)ext\jasper\src\libjasper
+JBIG2_DIR=$(EXTLIBSDIR)ext\jbig2dec
 
 CC = cl.exe
+
+#CFLAGS = $(CFLAGS) /showIncludes
+#CFLAGS = $(CFLAGS) /analyze
 
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
@@ -92,9 +97,6 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "WIN32_UNICODE_HACK"
 !if "$(TEXBUILD)"=="1"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\"" /D "SVN_UPDATE_LINK=\"http://william.famille-blum.org/software/sumatra/\"" /D "CURR_VERSION=\"$(VERSION)\""
 !endif
-
-#CFLAGS = $(CFLAGS) /showIncludes
-#CFLAGS = $(CFLAGS) /analyze
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib \
 	shell32.lib comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib
