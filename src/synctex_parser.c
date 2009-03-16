@@ -2638,7 +2638,8 @@ int _synctex_scanner_open_with_output_file(const char *  output, const char * bu
   char * build_output, *lpc;
   size_t size;
   int is_absolute;
-		size = strlen(build_directory)+strlen(lpc)+2;
+		//size = strlen(build_directory)+strlen(lpc)+2;
+		size = strlen(build_directory)+256+2;
 		build_output = NULL;
 		lpc = _synctex_last_path_component(output);
 		is_absolute = _synctex_path_is_absolute(build_directory);
