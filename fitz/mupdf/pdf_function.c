@@ -1250,15 +1250,16 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 			return fz_rethrow(error, "cannot resolve /Functions");
 
 		k = fz_arraylen(obj);
-		func->u.st.k = k;
 
-		pdf_logrsrc("k %d\n", func->u.st.k);
+		pdf_logrsrc("k %d\n", k);
 
 		if (k >= MAXK)
 		{
 			fz_dropobj(obj);
 			return fz_throw("assert: /K too big (%d)", k);
 		}
+
+		func->u.st.k = k;
 
 		for (i = 0; i < k; ++i)
 		{
