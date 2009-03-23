@@ -286,9 +286,9 @@ static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarPageText(WindowInfo *win);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
-static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win, 
-    DisplayState *state, bool reuseExistingWindow, bool autorefresh, 
-    bool showWin);
+static bool LoadPdfIntoWindow(const WCHAR *fileName, WindowInfo *win, 
+    const DisplayState *state, bool is_new_window, bool tryrepair, 
+    bool showWin, bool placeWindow);
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize);
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
@@ -1579,9 +1579,22 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
         return;
     UpdateDisplayStateWindowRect(win, &ds);
+    // Set the windows state based on the actual window's placement
+    WINDOWPLACEMENT wndpl;
+    GetWindowPlacement(win->hwndFrame, &wndpl);
+    ds.windowState =  win->dm->_fullScreen ? WIN_STATE_FULLSCREEN
+                    : wndpl.showCmd == SW_MAXIMIZE ? WIN_STATE_MAXIMIZED 
+                    : wndpl.showCmd == SW_MINIMIZE ? WIN_STATE_MINIMIZED
+                    : WIN_STATE_NORMAL ;
 	const char *fileNameUtf8 =  win->watcher.filepath();
     WCHAR* fileName = utf8_to_wstr(fileNameUtf8);
-    RefreshPdfDocument(fileName, win, &ds, true, autorefresh, true);
+    LoadPdfIntoWindow(fileName, win, &ds, false,
+                        !autorefresh, // We don't allow PDF-repair if it is an autorefresh because
+                                      // a refresh event can occur before the file is finished being written,
+                                      // in which case the repair could fail. Instead, if the file is broken, 
+                                      // we postpone the reload until the next autorefresh event
+                        true,
+                        false);
 	free((void*)fileName);
 }
 
@@ -2113,16 +2126,21 @@ static void ClearPageRenderRequests()
     WaitForSingleObject(gPageRenderQueueCleared, INFINITE);
 }
 
-static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win, 
-    DisplayState *state, bool reuseExistingWindow, bool autorefresh,
-    bool showWin)
+static bool LoadPdfIntoWindow(
+    const WCHAR *fileName, // path to the PDF
+    WindowInfo *win,       // destination window
+    const DisplayState *state,   // state
+    bool is_new_window,    // if true then 'win' refers to a newly created window that needs to be resized and placed
+    bool tryrepair,        // if true then try to repair the PDF if it is broken
+    bool showWin,          // window visible or not
+    bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (is_new_window=false)
 {
     /* TODO: need to get rid of that, but not sure if that won't break something
        i.e. GetCanvasSize() caches size of canvas and some code might depend
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
     SizeD totalDrawAreaSize(win->winSize());
-    if (!reuseExistingWindow && state && 0 != state->windowDx && 0 != state->windowDy) {
+    if (is_new_window && state && 0 != state->windowDx && 0 != state->windowDy) {
         RECT rect;
         rect.top = state->windowY;
         rect.left = state->windowX;
@@ -2156,10 +2174,8 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
     int startPage = 1;
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
-    int showType = SW_NORMAL;
     bool showAsFullScreen = false;
-    if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
-        showType = SW_MAXIMIZE;
+    int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED ? SW_MAXIMIZE : SW_NORMAL;
     if (state) {
         startPage = state->pageNo;
         displayMode = state->displayMode;
@@ -2169,6 +2185,8 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
             showType = SW_NORMAL;
         else if (state->windowState == WIN_STATE_MAXIMIZED)
             showType = SW_MAXIMIZE;
+        else if (state->windowState == WIN_STATE_MINIMIZED)
+            showType = SW_MINIMIZE;
         else if (state->windowState == WIN_STATE_FULLSCREEN)
             showAsFullScreen = true;
     }
@@ -2176,12 +2194,12 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
     DisplayModel *previousmodel = win->dm;
 
     win->dm = DisplayModel_CreateFromFileName(fileName,
-        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, !autorefresh);
+        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
 
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
     if (!win->dm) {
-        if (!reuseExistingWindow && WindowInfoList_ExistsWithError()) {
+        if (is_new_window && WindowInfoList_ExistsWithError()) {
                 /* don't create more than one window with errors */
                 win->dm = previousmodel;
                 WindowInfo_Delete(win);
@@ -2189,9 +2207,9 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
         }
         //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
         win->needrefresh = true;
-        // it is an automatic refresh and there is an error while reading the pdf
+        // if there is an error while reading the pdf and pdfrepair is not requested
         // then fallback to the previous state
-        if (autorefresh) {
+        if (!tryrepair) {
             win->dm = previousmodel;
         } else {
             ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
@@ -2207,10 +2225,6 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
 
     win->dm->setAppData((void*)win);
 
-    RECT rect;
-    GetClientRect(win->hwndFrame, &rect);
-    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
-
     /* TODO: if fileFromHistory, set the state based on gFileHistoryList node for
        this entry */
     win->state = WS_SHOWING_PDF;
@@ -2218,7 +2232,17 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
+        win->dm->_fullScreen = state->windowState == WIN_STATE_FULLSCREEN;
     }
+
+    // Review needed: Is the following block really necessary?
+    /*
+    // The WM_SIZE message must be sent *after* updating win->dm->_showToc
+    // otherwise the bookmark window reappear even if state->showToc=false.
+    RECT rect;
+    GetClientRect(win->hwndFrame, &rect);
+    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
+    */
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
     ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
@@ -2229,7 +2253,7 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
     /* TODO: make sure offsetX isn't bogus */
     win->dm->goToPage(startPage, offsetY, offsetX);
 
-    if (reuseExistingWindow) {
+    if (!is_new_window) {
         WindowInfo_RedrawAll(win);
         OnMenuFindMatchCase(win); 
     }
@@ -2259,17 +2283,19 @@ static bool RefreshPdfDocument(const WCHAR *fileName, WindowInfo *win,
     }
 Error:
     MenuToolbarUpdateStateForAllWindows();
-    assert(win);
-    DragAcceptFiles(win->hwndFrame, TRUE);
-    DragAcceptFiles(win->hwndCanvas, TRUE);
-    if (showWin) {
-        ShowWindow(win->hwndFrame, showType);
-        ShowWindow(win->hwndCanvas, SW_SHOW);
-        if (showAsFullScreen)
-            WindowInfo_EnterFullscreen(win);
+    if (is_new_window || placeWindow) {
+        assert(win);
+        DragAcceptFiles(win->hwndFrame, TRUE);
+        DragAcceptFiles(win->hwndCanvas, TRUE);
+        if (showWin) {
+            ShowWindow(win->hwndFrame, showType);
+            ShowWindow(win->hwndCanvas, SW_SHOW);
+            if (showAsFullScreen)
+                WindowInfo_EnterFullscreen(win);
+        }
+        UpdateWindow(win->hwndFrame);
+        UpdateWindow(win->hwndCanvas);
     }
-    UpdateWindow(win->hwndFrame);
-    UpdateWindow(win->hwndCanvas);
     if (win->dm && win->dm->_showToc) {
         win->ClearTocBox();
         win->ShowTocBox();
@@ -2313,12 +2339,13 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
     if (!fileName) return NULL;
 
     WindowInfo *        win;
-    bool reuseExistingWindow = false;
+    bool                is_new_window;
     if ((1 == WindowInfoList_Len()) && (WS_SHOWING_PDF != gWindowList->state)) {
         win = gWindowList;
-        reuseExistingWindow = true;
+        is_new_window = false;
     } else {
         win = WindowInfo_CreateEmpty();
+        is_new_window = true;
         if (!win)
             return NULL;
         WindowInfoList_Add(win);
@@ -2338,7 +2365,7 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
         ds = &fileFromHistory->state;
 
     CheckPositionAndSize(ds);
-    if (!RefreshPdfDocument(fileName, win, ds, reuseExistingWindow, false, showWin)) {
+    if (!LoadPdfIntoWindow(fileName, win, ds, is_new_window, true, showWin, true)) {
         /* failed to open */
         return NULL;
     }
@@ -7156,10 +7183,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         DragAcceptFiles(win->hwndFrame, TRUE);
         ShowWindow(win->hwndCanvas, SW_SHOW);
         UpdateWindow(win->hwndCanvas);
-        if (gGlobalPrefs.m_windowState == WIN_STATE_NORMAL)
-            ShowWindow(win->hwndFrame, SW_SHOW);
-        else
+        if (gGlobalPrefs.m_windowState == WIN_STATE_MINIMIZED)
+            ShowWindow(win->hwndFrame, SW_MINIMIZE);
+        else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
+        else
+            ShowWindow(win->hwndFrame, SW_SHOW);
         UpdateWindow(win->hwndFrame);
     }
 

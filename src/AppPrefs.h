@@ -12,6 +12,7 @@ enum {
     WIN_STATE_NORMAL = 1 /* use remebered position and size */
     ,WIN_STATE_MAXIMIZED /* ignore position and size, maximize the window */    
     ,WIN_STATE_FULLSCREEN
+    ,WIN_STATE_MINIMIZED
 };
 
 /* Most of the global settings that we persist in preferences file. */
