@@ -5,7 +5,7 @@
 #include "PdfSync.h"
 #include <assert.h>
 #include <stdio.h>
-#include "tstr_util.h"
+#include "wstr_util.h"
 #include "str_util.h"
 #include <sys/stat.h>
 #include <shlwapi.h>
@@ -17,33 +17,33 @@
 #define PDFCOORDINATE_TO_SYNCCOORDINATE(p)          (p*65781.76)
 
 // Test if the file 'filename' exists
-bool FileExists( LPCTSTR filename ) {
+bool FileExistsW( LPCWSTR filename ) {
     struct _stat buffer ;
-    return 0 == _tstat( filename, &buffer );
+    return 0 == _wstat( filename, &buffer );
 }
 
-Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
+Synchronizer *CreateSynchronizer(LPCWSTR pdffilename)
 {
-    TCHAR syncfile[_MAX_PATH];
-    size_t n = _tcslen(pdffilename);
+    WCHAR syncfile[_MAX_PATH];
+    size_t n = wcslen(pdffilename);
     size_t u = dimof(PDF_EXTENSION)-1;
-    if (n>u && _tcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
+    if (n>u && _wcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
         // Check if a PDFSYNC file is present
-        tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-        tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
-        if (FileExists(syncfile)) 
+        wstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+        wstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
+        if (FileExistsW(syncfile)) 
             return new Pdfsync(syncfile);
 
         #ifdef SYNCTEX_FEATURE
             // check if a compressed SYNCTEX file is present
-            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEXGZ_EXTENSION);
-            bool exist = FileExists(syncfile);
+            wstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+            wstr_cat_s(syncfile, dimof(syncfile), SYNCTEXGZ_EXTENSION);
+            bool exist = FileExistsW(syncfile);
 
             // check if a SYNCTEX file is present
-            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
-            exist |= FileExists(syncfile);
+            wstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+            wstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
+            exist |= FileExistsW(syncfile);
 
             if(exist)
                 return new SyncTex(syncfile); // due to a bug with synctex_parser.c, this must always be 
@@ -59,42 +59,42 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the result is stored in cmdline
-UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
+UINT Synchronizer::prepare_commandline(LPCWSTR pattern, LPCWSTR filename, UINT line, UINT col, PWSTR cmdline, UINT cchCmdline)
 {
-    LPCTSTR perc;
+    LPCWSTR perc;
     size_t len = 0;
     cmdline[0] = '\0';
-    LPTSTR out = cmdline;
+    LPWSTR out = cmdline;
     size_t cchOut = cchCmdline;
-    while (perc = tstr_find_char(pattern, '%')) {
+    while (perc = wstr_find_char(pattern, '%')) {
         int u = perc-pattern;
         
-        tstr_copyn(out, cchOut, pattern, u);
-        len = tstr_len(out);
+        wstr_copyn(out, cchOut, pattern, u);
+        len = wstr_len(out);
         out += len;
         cchOut -= len;
 
         perc++;
         if (*perc == 'f') {
-            tstr_copy(out, cchOut, filename);
+            wstr_copy(out, cchOut, filename);
         }
         else if (*perc == 'l') {
-            _sntprintf(out, cchOut, "%d", line);
+            _snwprintf(out, cchOut, L"%d", line);
         }
         else if (*perc == 'c') {
-            _sntprintf(out, cchOut, "%d", col);
+            _snwprintf(out, cchOut, L"%d", col);
         }
         else {
-            tstr_copyn(out, cchOut, perc-1, 2);
+            wstr_copyn(out, cchOut, perc-1, 2);
         }
-        len = tstr_len(out);
+        len = wstr_len(out);
         out += len;
         cchOut -= len;
 
         pattern = perc+1;
     }
     
-    tstr_cat_s(cmdline, cchCmdline, pattern);
+    wstr_cat_s(cmdline, cchCmdline, pattern);
 
     return 1;
 }
@@ -127,7 +127,7 @@ int Pdfsync::get_record_section(int record_index)
 FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
-    fp = fopen(syncfilename, "rb");
+    fp = _wfopen(syncfilename, L"rb");
     if (NULL == fp) {
         DBG_OUT("The syncfile %s cannot be opened\n", syncfilename);
         return NULL;
@@ -136,28 +136,28 @@ FILE *Pdfsync::opensyncfile()
 }
 
 // read a line from a stream (exclude the end-of-line mark)
-LPTSTR ftgetline(LPTSTR dst, size_t cchDst, FILE *fp)
+LPSTR fgetline(LPSTR dst, size_t cchDst, FILE *fp)
 {
-    if (!_fgetts(dst, cchDst, fp))
+    if (!fgets(dst, cchDst, fp))
         return NULL;
 
-    LPTSTR end =  dst+tstr_len(dst)-1;
-    while (*end == _T('\n') || *end == _T('\r'))
+    LPTSTR end =  dst+str_len(dst)-1;
+    while (*end == '\n' || *end == '\r')
         *(end--) = 0;
     return dst;
 }
 
 int Pdfsync::scan_and_build_index(FILE *fp)
 {
-    TCHAR jobname[_MAX_PATH];
+    char jobname[_MAX_PATH];
     
-    ftgetline(jobname, dimof(jobname), fp); // get the job name from the first line
+    fgetline(jobname, dimof(jobname), fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    for(PTSTR rep = jobname; *rep; rep++) {
+    for(PSTR rep = jobname; *rep; rep++) {
         if (*rep==_T('*'))
             *rep=_T(' ');
     }
-    tstr_cat_s(jobname, dimof(jobname), _T(".tex")); 
+    str_cat_s(jobname, dimof(jobname), _T(".tex")); 
 
     UINT versionNumber = 0;
     int ret = _ftscanf(fp, "version %u\n", &versionNumber);
@@ -210,9 +210,9 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         case '(': 
             {
                 // read the filename
-                ftgetline(buff, dimof(buff), fp);
-                PTSTR pfilename = buff;
-                int len = tstr_len(buff);
+                fgetline(buff, dimof(buff), fp);
+                PSTR pfilename = buff;
+                int len = str_len(buff);
                 // if the filename contains quotes then remove them
                 if (str_startswithi(buff, "\"") && str_endswith_char(buff,'"')) {
                     pfilename++;
@@ -222,10 +222,10 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 src_file s;
                 s.first_recordsection = (size_t)-1;
                 s.last_recordsection = (size_t)-1;
-                tstr_copyn(s.filename, dimof(s.filename), pfilename, len);
+                str_copyn(s.filename, dimof(s.filename), pfilename, len);
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (tstr_find_char(pfilename, '.') == NULL) {
-                     tstr_cat_s(s.filename, dimof(s.filename), _T(".tex"));
+                if (str_find_char(pfilename, '.') == NULL) {
+                     str_cat_s(s.filename, dimof(s.filename), ".tex");
                 }
 #ifndef NDEBUG
                 s.openline_pos = linepos;
@@ -332,7 +332,7 @@ int Pdfsync::rebuild_index()
     return Synchronizer::rebuild_index();
 }
 
-UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
+UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -405,14 +405,13 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    char srcfilename[_MAX_PATH];
-    tstr_copy(srcfilename, dimof(srcfilename), this->srcfiles[record_sections[sec].srcfile].filename);
+    PSTR srcFilename = this->srcfiles[record_sections[sec].srcfile].filename;
 
     // Convert the source filepath to an absolute path
-    if (PathIsRelative(srcfilename))
-        _snprintf(srcfilepath, cchFilepath, "%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+    if (PathIsRelativeA(srcFilename))
+        _snwprintf(srcfilepath, cchFilepath, L"%s\\%S", this->dir, srcFilename, dimof(srcFilename));
     else
-        str_copy(srcfilepath, cchFilepath, srcfilename);
+        _snwprintf(srcfilepath, cchFilepath, L"%S", srcFilename, dimof(srcFilename));
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -448,16 +447,24 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
 //
-UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
+UINT Pdfsync::source_to_record(FILE *fp, LPCWSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
 {
+    if (!srcfilename)
+        return PDFSYNCERR_INVALID_ARGUMENT;
+
+    char *utf8_srcfilename = wstr_to_utf8(srcfilename);
+    if (!utf8_srcfilename)
+        return PDFSYNCERR_OUTOFMEMORY;
+
     // find the source file entry
     size_t isrc = (size_t)-1;
     for(size_t i=0; i<this->srcfiles.size();i++) {
-        if (tstr_ieq(srcfilename, this->srcfiles[i].filename)) {
+        if (str_ieq(utf8_srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }
     }
+    free(utf8_srcfilename);
     if (isrc == (size_t)-1)
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
@@ -517,7 +524,7 @@ read_linerecords:
 
 }
 
-UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT Pdfsync::source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -582,31 +589,42 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
 int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
-    this->scanner = synctex_scanner_new_with_output_file(this->syncfilename, NULL, 1);
+
+    char *utf8_syncfname = wstr_to_utf8(this->syncfilename);
+    if (utf8_syncfname==NULL)
+        return PDFSYNCERR_OUTOFMEMORY;
+
+    this->scanner = synctex_scanner_new_with_output_file(utf8_syncfname, NULL, 1);
+    free(utf8_syncfname);
+
     if (scanner)
         return Synchronizer::rebuild_index();
     else
         return 1; // cannot rebuild the index
 }
 
-UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
+UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     if (synctex_edit_query(this->scanner,sheet,x,y)>0) {
         synctex_node_t node;
-        char srcfilename[_MAX_PATH];
         while (node = synctex_next_result(this->scanner)) {
             *line = synctex_node_line(node);
             *col = synctex_node_column(node);
-            str_copy( srcfilename, dimof(srcfilename), synctex_scanner_get_name(this->scanner,synctex_node_tag(node)));
+            const char *utf8name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
+            WCHAR *srcfilename = utf8_to_wstr(utf8name);
+            if (srcfilename==NULL)
+                return PDFSYNCERR_OUTOFMEMORY;
 
             // Convert the source filepath to an absolute path
-            if (PathIsRelative(srcfilename))
-                _snprintf(srcfilepath, cchFilepath, "%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+            if (PathIsRelativeW(srcfilename))                 
+                _snwprintf(srcfilepath, cchFilepath, L"%s\\%s", this->dir, srcfilename, dimof(srcfilename));
             else
-                str_copy(srcfilepath, cchFilepath, srcfilename);
+                wstr_copy(srcfilepath, cchFilepath, srcfilename);
+
+            free(srcfilename);
 
             return PDFSYNCERR_SUCCESS;
         }
@@ -615,20 +633,25 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 //    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 }
 
-UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT SyncTex::source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // convert the source file to an absolute path
-    char srcfilepath[_MAX_PATH];
-    if (PathIsRelative(srcfilename))
-        _snprintf(srcfilepath, dimof(srcfilepath), "%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+    WCHAR srcfilepath[_MAX_PATH];
+    if (PathIsRelativeW(srcfilename))
+        _snwprintf(srcfilepath, dimof(srcfilepath), L"%s\\%s", this->dir, srcfilename, dimof(srcfilename));
     else
-        str_copy(srcfilepath, dimof(srcfilepath), srcfilename);
+        wstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 
-    switch (synctex_display_query(this->scanner,srcfilepath,line,col)) {
+    char *utf8_srcfilepath = wstr_to_utf8(srcfilepath);
+    if (!utf8_srcfilepath)
+        return PDFSYNCERR_OUTOFMEMORY;
+    int ret = synctex_display_query(this->scanner,utf8_srcfilepath,line,col);
+    free(utf8_srcfilepath);
+    switch (ret) {
         case -1:
             return PDFSYNCERR_UNKNOWN_SOURCEFILE;    
         case 0:
@@ -716,7 +739,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             // Execute the command.
 
             // check if the PDF is already opened
-            WindowInfo *win = WindowInfoList_Find(pdffile);
+            WindowInfo *win = NULL;
+            WCHAR *wstr_pdffile = utf8_to_wstr(pdffile);
+            if (wstr_pdffile) {
+                win = WindowInfoList_Find(wstr_pdffile);
+                free(wstr_pdffile);
+            }
             
             // if not then open it
             if (newwindow || !win || WS_SHOWING_PDF != win->state)
@@ -729,11 +757,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     ack.fAck = 1;
                     assert(win->dm);
                     UINT page, x, y;
-                    UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
-                    WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
-                    if (setfocus)
-                        SetFocus(win->hwndFrame);
-
+                    WCHAR *wstr_srcfile = utf8_to_wstr(srcfile);
+                    if (wstr_srcfile) {
+                        UINT ret = win->pdfsync->source_to_pdf(wstr_srcfile, line, col, &page, &x, &y);
+                        WindowInfo_ShowForwardSearchResult(win, wstr_srcfile, line, col, ret, page, x, y);
+                        if (setfocus)
+                            SetFocus(win->hwndFrame);
+                        free(wstr_srcfile);
+                    }
                 }
             }
         }
@@ -746,7 +777,13 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             )
         {
             // check if the PDF is already opened
-            WindowInfo *win = WindowInfoList_Find(pdffile);
+            WindowInfo *win = NULL;
+            WCHAR *wstr_pdffile = utf8_to_wstr(pdffile);
+            if (wstr_pdffile) {
+                win = WindowInfoList_Find(wstr_pdffile);
+                free(wstr_pdffile);
+            }
+
             
             // if not then open it
             if ( newwindow || !win || WS_SHOWING_PDF != win->state)
@@ -770,9 +807,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             str_copy_skip_until(&pos, destname, dimof(destname), '"')
             )
         {
-            // check if the PDF is already opened
-            WindowInfo *win = WindowInfoList_Find(pdffile);
-            
+           // check if the PDF is already opened
+            WindowInfo *win = NULL;
+            WCHAR *wstr_pdffile = utf8_to_wstr(pdffile);
+            if (wstr_pdffile) {
+                win = WindowInfoList_Find(wstr_pdffile);
+                free(wstr_pdffile);
+            }
+
             if (win && WS_SHOWING_PDF == win->state) {
                 win->dm->goToNamedDest(destname);
                 ack.fAck = 1;

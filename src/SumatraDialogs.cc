@@ -17,8 +17,8 @@
 #include "wstr_util.h"
 
 typedef struct {
-    const char *  in_cmdline;   /* current inverse search command line */
-    char *  out_cmdline;         /* inverse search command line selected by the user */
+    const WCHAR *  in_cmdline;   /* current inverse search command line */
+    WCHAR *  out_cmdline;         /* inverse search command line selected by the user */
 } Dialog_InverseSearch_Data;
 
 #ifdef _TEX_ENHANCEMENT
@@ -33,7 +33,7 @@ static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM w
         assert(data);
         assert(data->in_cmdline);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
-        SetDlgItemText(hDlg, IDC_CMDLINE, data->in_cmdline);
+        SetDlgItemTextW(hDlg, IDC_CMDLINE, data->in_cmdline);
         edit = GetDlgItem(hDlg, IDC_CMDLINE);
         SetFocus(edit);
         return FALSE;
@@ -49,7 +49,7 @@ static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM w
                     data = (Dialog_InverseSearch_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
                     assert(data);
                     edit = GetDlgItem(hDlg, IDC_CMDLINE);
-                    data->out_cmdline = win_get_text(edit);
+                    data->out_cmdline = win_get_textw(edit);
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -67,7 +67,7 @@ static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM w
    NULL if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-char *Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline)
+WCHAR *Dialog_SetInverseSearchCmdline(WindowInfo *win, const WCHAR *cmdline)
 {
     int                     dialogResult;
     Dialog_InverseSearch_Data data;

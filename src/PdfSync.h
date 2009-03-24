@@ -112,10 +112,12 @@ enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
         PDFSYNCERR_NORECORD_IN_SOURCEFILE,    // there is not any record declaration for that particular source file
         PDFSYNCERR_NORECORD_FOR_THATLINE,     // no record found for the requested line
         PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD,// a record is found for the given source line but there is not point in the PDF that corresponds to it
+        PDFSYNCERR_OUTOFMEMORY,
+        PDFSYNCERR_INVALID_ARGUMENT
 };
 
 typedef struct {
-    TCHAR filename[_MAX_PATH]; // source file name
+    char filename[_MAX_PATH]; // source file name
 #ifndef NDEBUG
     fpos_t openline_pos;    // start of the scope in the sync file
     fpos_t closeline_pos;   // end of the scope
@@ -146,21 +148,21 @@ typedef struct {
 } record_section;
 
 
-#define PDF_EXTENSION     ".PDF"
-#define PDFSYNC_EXTENSION ".PDFSYNC"
+#define PDF_EXTENSION     L".PDF"
+#define PDFSYNC_EXTENSION L".PDFSYNC"
 
 // System of point coordinates
 typedef enum { TopLeft,    // origin at the top-left corner
-       BottomLeft, // origin at the bottom-left corner
+               BottomLeft, // origin at the bottom-left corner
 } CoordSystem;
 
 class Synchronizer
 {
 public:
-    Synchronizer(LPCTSTR _syncfilename) {
+    Synchronizer(LPCWSTR _syncfilename) {
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
-        this->dir = FilePath_GetDir(_syncfilename);
+        this->dir = FilePathW_GetDir(_syncfilename);
     }
     ~Synchronizer() {
         if (dir)
@@ -191,44 +193,44 @@ public:
     //  - filename: receives the name of the source file
     //  - line: receives the line number
     //  - col: receives the column number
-    virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR filename, UINT cchFilename, UINT *line, UINT *col) = 0;
+    virtual UINT pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR filename, UINT cchFilename, UINT *line, UINT *col) = 0;
     
     // Forward-search:
     // The result is returned in (page,x,y). The coordinates x,y are specified in the internal 
     // coordinate system.
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y) = 0;
+    virtual UINT source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y) = 0;
 
     void discard_index() { this->index_discarded = true; }
     bool is_index_discarded() { return this->index_discarded; }
     int rebuild_index() { this->index_discarded = false; return 0; }
 
-    UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
+    UINT prepare_commandline(LPCWSTR pattern, LPCWSTR filename, UINT line, UINT col, PWSTR cmdline, UINT cchCmdline);
 
 private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
 
 protected:
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
-    PTSTR dir;            // directory where the syncfile lies
+    PWSTR dir;            // directory where the syncfile lies
 };
 
 #ifdef SYNCTEX_FEATURE
 
-#define SYNCTEX_EXTENSION ".synctex"
-#define SYNCTEXGZ_EXTENSION ".synctex.gz"
+#define SYNCTEX_EXTENSION       L".synctex"
+#define SYNCTEXGZ_EXTENSION     L".synctex.gz"
 
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    SyncTex(LPCWSTR _syncfilename) : Synchronizer(_syncfilename)
     {
-        size_t n = _tcslen(_syncfilename);
+        size_t n = wcslen(_syncfilename);
         size_t u1 = dimof(SYNCTEX_EXTENSION)-1,
                u2 = dimof(SYNCTEXGZ_EXTENSION)-1;
-        assert((n>u1 && _tcsicmp(_syncfilename+(n-u1),SYNCTEX_EXTENSION)==0)
-               ||(n>u2 && _tcsicmp(_syncfilename+(n-u2),SYNCTEXGZ_EXTENSION)==0));
-        tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
+        assert((n>u1 && _wcsicmp(_syncfilename+(n-u1),SYNCTEX_EXTENSION)==0)
+               ||(n>u2 && _wcsicmp(_syncfilename+(n-u2),SYNCTEXGZ_EXTENSION)==0));
+        wstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
         
         this->scanner = NULL;
         this->coordsys = TopLeft;
@@ -242,12 +244,12 @@ public:
     void discard_index() { Synchronizer::discard_index();}
     bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
 
-    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
+    UINT source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
     int rebuild_index();
 
 private:
-    TCHAR syncfilename[_MAX_PATH];
+    WCHAR syncfilename[_MAX_PATH];
     synctex_scanner_t scanner;
 };
 #endif
@@ -258,23 +260,23 @@ private:
 class Pdfsync : public Synchronizer
 {
 public:
-    Pdfsync(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    Pdfsync(LPCWSTR _syncfilename) : Synchronizer(_syncfilename)
     {
-        size_t n = _tcslen(_syncfilename);
+        size_t n = wcslen(_syncfilename);
         size_t u = dimof(PDFSYNC_EXTENSION)-1;
-        assert(n>u && _tcsicmp(_syncfilename+(n-u),PDFSYNC_EXTENSION) == 0 );
-        tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
+        assert(n>u && wcsicmp(_syncfilename+(n-u), PDFSYNC_EXTENSION) == 0 );
+        wstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
         this->coordsys = BottomLeft;
     }
 
     int rebuild_index();
-    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
+    UINT source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
 
 private:
     int get_record_section(int record_index);
     int scan_and_build_index(FILE *fp);
-    UINT source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records);
+    UINT source_to_record(FILE *fp, LPCWSTR srcfilename, UINT line, UINT col, vector<size_t> &records);
     FILE *opensyncfile();
 
 private:
@@ -282,12 +284,12 @@ private:
     vector<plines_section> pline_sections;
     vector<record_section> record_sections;
     vector<src_file> srcfiles;
-    TCHAR syncfilename[_MAX_PATH];
+    WCHAR syncfilename[_MAX_PATH];
 };
 
 
 // create a synchronizer for the given PDF file
-Synchronizer *CreateSynchronizer(LPCTSTR pdffilename);
+Synchronizer *CreateSynchronizer(LPCWSTR pdffilename);
 
 
 #define PDFSYNC_DDE_SERVICE_A         "SUMATRA"

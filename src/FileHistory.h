@@ -15,7 +15,7 @@ typedef struct FileHistoryList {
 } FileHistoryList;
 
 FileHistoryList * FileHistoryList_Node_Create(void);
-FileHistoryList * FileHistoryList_Node_CreateFromFilePath(const char *filePath);
+FileHistoryList * FileHistoryList_Node_CreateFromFilePath(const WCHAR *filePath);
 
 void              FileHistoryList_Node_Free(FileHistoryList *node);
 void              FileHistoryList_Free(FileHistoryList **root);
@@ -23,9 +23,9 @@ void              FileHistoryList_Free(FileHistoryList **root);
 void              FileHistoryList_Node_InsertHead(FileHistoryList **root, FileHistoryList *node);
 void              FileHistoryList_Node_Append(FileHistoryList **root, FileHistoryList *node);
 
-FileHistoryList * FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const char *filePath);
+FileHistoryList * FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const WCHAR *filePath);
 BOOL              FileHistoryList_Node_RemoveAndFree(FileHistoryList **root, FileHistoryList *node);
 
-BOOL              FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const char *filePath);
+BOOL              FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const WCHAR *filePath);
 
 #endif

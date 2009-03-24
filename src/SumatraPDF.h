@@ -236,9 +236,9 @@ public:
 
 };
 
-WindowInfo* WindowInfoList_Find(LPTSTR file);
+WindowInfo* WindowInfoList_Find(LPWSTR file);
 WindowInfo* LoadPdf(const char *fileName, bool showWin=true, char *windowTitle=NULL);
 WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin=true, WCHAR *windowTitle=NULL);
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCWSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
 
 #endif

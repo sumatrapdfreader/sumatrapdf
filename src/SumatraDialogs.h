@@ -13,7 +13,7 @@ class WindowInfo;
 /* For passing data to/from SetInverseSearch dialog */
 int     Dialog_GoToPage(WindowInfo *win);
 #ifdef _TEX_ENHANCEMENT
-char *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const char *cmdline);
+WCHAR *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const WCHAR *cmdline);
 #endif
 char *  Dialog_GetPassword(WindowInfo *win, const WCHAR *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);

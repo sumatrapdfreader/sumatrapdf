@@ -4,6 +4,7 @@
 #include "base_util.h"
 #include "benc_util.h"
 #include "str_util.h"
+#include "wstr_util.h"
 #include "file_util.h"
 #include "dstring.h"
 
@@ -41,6 +42,13 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
 #define DICT_ADD_STR(doname,name,val) \
         if (val) { \
             ok = benc_dict_insert_str(doname,name,val); \
+            if (!ok) \
+                goto Error; \
+        }
+
+#define DICT_ADD_WSTR(doname,name,val) \
+        if (val) { \
+            ok = benc_dict_insert_wstr(doname,name,val); \
             if (!ok) \
                 goto Error; \
         }
@@ -87,7 +95,7 @@ benc_dict* Prefs_SerializeGlobal(void)
         DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_tmpWindowDy);
     }
 
-    DICT_ADD_STR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
+    DICT_ADD_WSTR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
     DICT_ADD_STR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
     DICT_ADD_STR(prefs, LAST_UPDATE_STR, gGlobalPrefs.m_lastUpdateTime);
     DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
@@ -98,11 +106,11 @@ Error:
 }
 
 /* TODO: move to benc_util.c ? */
-static BOOL dict_get_str_dup(benc_dict* dict, const char* key, const char** valOut)
+static BOOL dict_get_wstr_dup(benc_dict* dict, const char* key, const WCHAR** valOut)
 {
-    const char *str = dict_get_str(dict, key);
+    const WCHAR *str = dict_get_wstr(dict, key);
     if (!str) return FALSE;
-    *valOut = str_dup(str);
+    *valOut = wstr_dup(str);
     return true;
 }
 
@@ -110,7 +118,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
 {
     DisplayState_Init(ds);
 
-    dict_get_str_dup(dict, FILE_STR, &ds->filePath);
+    dict_get_wstr_dup(dict, FILE_STR, &ds->filePath);
     const char* txt = dict_get_str(dict, DISPLAY_MODE_STR);
     if (txt)
         DisplayModeEnumFromName(txt, &ds->displayMode);
@@ -135,7 +143,7 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     const char * txt;
     
     DICT_NEW(prefs);
-    DICT_ADD_STR(prefs, FILE_STR, ds->filePath);
+    DICT_ADD_WSTR(prefs, FILE_STR, ds->filePath);
     txt = DisplayModeNameFromEnum(ds->displayMode);
     if (txt)
         DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
@@ -286,7 +294,7 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
         if (!value) return;
         assert(!dsOut->filePath);
         free((void*)dsOut->filePath);
-        dsOut->filePath = str_dup(value);
+        dsOut->filePath = utf8_to_wstr(value);
         return;
     }
 
@@ -400,6 +408,14 @@ static void dict_get_str_helper(benc_dict *d, const char *key, char **val)
         str_dup_replace(val, txt);
 }
 
+static void dict_get_wstr_helper(benc_dict *d, const char *key, WCHAR **val)
+{
+    const WCHAR *txt = dict_get_wstr(d, key);
+    if (txt)
+        wstr_dup_replace(val, txt);
+}
+
+
 bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {
     benc_obj * bobj;
@@ -438,7 +454,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
     gGlobalPrefs.m_tmpWindowDy = gGlobalPrefs.m_windowDy;
 
-    dict_get_str_helper(global, INVERSE_SEARCH_COMMANDLINE, &gGlobalPrefs.m_inverseSearchCmdLine);
+    dict_get_wstr_helper(global, INVERSE_SEARCH_COMMANDLINE, &gGlobalPrefs.m_inverseSearchCmdLine);
     dict_get_str_helper(global, VERSION_TO_SKIP_STR, &gGlobalPrefs.m_versionToSkip);
     dict_get_str_helper(global, LAST_UPDATE_STR, &gGlobalPrefs.m_lastUpdateTime);
 

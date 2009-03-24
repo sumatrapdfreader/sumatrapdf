@@ -1,6 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2007
    License: GPLv2 */
 #include "FileHistory.h"
+#include "wstr_util.h"
 #include "str_util.h"
 
 #include <string.h>
@@ -46,7 +47,7 @@ FileHistoryList *FileHistoryList_Node_Create(void)
     return node;
 }
 
-FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const char *filePath)
+FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const WCHAR *filePath)
 {
     FileHistoryList *node;
 
@@ -55,7 +56,7 @@ FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const char *filePath)
     if (!node)
         return NULL;
 
-    node->state.filePath = (const char*)str_dup(filePath);
+    node->state.filePath = (const WCHAR*)wstr_dup(filePath);
     if (!node->state.filePath)
         goto Error;
     return node;
@@ -115,7 +116,7 @@ void FileHistoryList_Node_Append(FileHistoryList **root, FileHistoryList *node)
     curr->next = node;
 }
 
-FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const char *filePath)
+FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const WCHAR *filePath)
 {
     FileHistoryList *curr;
 
@@ -127,7 +128,7 @@ FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, con
     curr = *root;
     while (curr) {
         assert(curr->state.filePath);
-        if (str_eq(filePath, curr->state.filePath))
+        if (wstr_eq(filePath, curr->state.filePath))
             return curr;
         curr = curr->next;
     }
@@ -135,7 +136,7 @@ FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, con
     return NULL;
 }
 
-BOOL FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const char *filePath)
+BOOL FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const WCHAR *filePath)
 {
     FileHistoryList *node;
 

@@ -131,8 +131,7 @@ bool rotationFlipped(int rotation)
 
 bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
 {
-    const char *fileNameUtf8 = wstr_to_utf8(dm->fileName());
-    ds->filePath = str_escape(fileNameUtf8);
+    ds->filePath = wstr_escape(dm->fileName());
     if (!ds->filePath)
         return FALSE;
     ds->displayMode = dm->displayMode();

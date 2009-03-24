@@ -10,14 +10,14 @@
 #include "base_util.h"
 
 // Get the directory name from a full file path and copy it to pszDir
-bool GetDirectory (LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
+bool GetDirectoryW(LPCWSTR pszFile, PWSTR pszDir, size_t cchDir)
 {
-    LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
+    LPCWSTR pszBaseName = FilePathW_GetBaseName(pszFile);
 
     if (0 == pszDir || 0 == pszFile) {
         return false;
     }
-    if (!tstr_copyn(pszDir, cchDir, pszFile, pszBaseName-pszFile)) {
+    if (!wstr_copyn(pszDir, cchDir, pszFile, pszBaseName-pszFile)) {
         return false;
     }
 
@@ -101,22 +101,22 @@ void FileWatcher::Clean()
     }
 }
 
-void FileWatcher::Init(LPCTSTR filefullpath)
+void FileWatcher::Init(LPCWSTR filefullpath)
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
         SynchronousAbort();
 
-    tstr_copy(szFilepath, dimof(szFilepath), filefullpath);
-    pszFilename = FilePath_GetBaseName(szFilepath);
-    GetDirectory(filefullpath, szDir, dimof(szDir));
+    wstr_copy(szFilepath, dimof(szFilepath), filefullpath);
+    pszFilename = FilePathW_GetBaseName(szFilepath);
+    GetDirectoryW(filefullpath, szDir, dimof(szDir));
     
-    _tstat(filefullpath, &timestamp);
+    _wstat(filefullpath, &timestamp);
 
     callbackparam = 0;
     pCallback = NULL;
 
-    hDir = CreateFile(
+    hDir = CreateFileW(
         szDir, // pointer to the directory containing the tex files
         FILE_LIST_DIRECTORY,                // access (read-write) mode
         FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,  // share mode
@@ -146,7 +146,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
 }
 
 // Start watching a file for changes
-void FileWatcher::StartWatchThread(LPCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param)
+void FileWatcher::StartWatchThread(LPCWSTR filefullpath, WATCHCALLBACK cb, LPARAM param)
 {
     Init(filefullpath);
    
@@ -225,18 +225,8 @@ bool FileWatcher::ReadDir()
     while (pFileNotify) {
         pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(WCHAR), _MAX_FNAME-1)] = 0;
 
-        PTSTR pFilename;
-        #ifdef _UNICODE
-        pFilename = pFileNotify->FileName;
-        #else
-        // Convert the filename from unicode string to oem string
-        TCHAR oemfilename[_MAX_FNAME];
-        wcstombs( oemfilename, pFileNotify->FileName, _MAX_FNAME );
-        pFilename = oemfilename;
-        #endif
-
         // is it the file that is being watched?
-        if (stricmp(pFilename, pszFilename) == 0) {
+        if (_wcsicmp(pFileNotify->FileName, pszFilename) == 0) {
             // file modified?
             if (pFileNotify->Action == FILE_ACTION_MODIFIED) {
 #if 0

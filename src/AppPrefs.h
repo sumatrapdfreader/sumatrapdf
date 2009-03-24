@@ -30,7 +30,7 @@ typedef struct {
     BOOL m_escToExit;
 
     /* pattern used to launch the editor when doing inverse search */
-    char *m_inverseSearchCmdLine;
+    WCHAR *m_inverseSearchCmdLine;
 
     /* When we show 'new version available', user has an option to check
        'skip this version'. This remembers which version is to be skipped.

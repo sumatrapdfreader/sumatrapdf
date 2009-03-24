@@ -55,7 +55,7 @@ enum DisplayMode {
 #define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"
 
 typedef struct DisplayState {
-    const char *        filePath;
+    const WCHAR *       filePath;
     enum DisplayMode    displayMode;
     BOOL                visible;     /* if TRUE, currently shown on the screen */
     int                 scrollX;

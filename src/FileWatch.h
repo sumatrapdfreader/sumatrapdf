@@ -2,22 +2,22 @@
 #ifndef _FILE_WATCH_H__
 #define _FILE_WATCH_H__
 
-typedef void (__cdecl *WATCHCALLBACK) (PTSTR filename, LPARAM param);
+typedef void (__cdecl *WATCHCALLBACK) (PCWSTR filename, LPARAM param);
 
 // information concerning a directory being watched
 class FileWatcher {
 public:
     // Watching file modifications using a loop
-    void Init(LPCTSTR filefullpath);
+    void Init(LPCWSTR filefullpath);
     bool HasChanged(DWORD waittime = 0);
     void Clean();
 
     // Watching file modification via a thread
-    void StartWatchThread(LPCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
+    void StartWatchThread(LPCWSTR filefullpath, WATCHCALLBACK cb, LPARAM param);
     bool IsThreadRunning();
     void SynchronousAbort();
 
-    LPCTSTR filepath() { return szFilepath; }
+    LPCWSTR filepath() { return szFilepath; }
 
     FileWatcher() {
         hDir = NULL;
@@ -54,9 +54,9 @@ private:
 
 public:
     HANDLE  hDir; // handle of the directory to watch
-    TCHAR   szFilepath[_MAX_PATH]; // path to the file watched
-    LPCTSTR  pszFilename; // pointer in szFilepath to the file part of the path
-    TCHAR   szDir[_MAX_PATH]; // path to the directory
+    WCHAR   szFilepath[_MAX_PATH]; // path to the file watched
+    LPCWSTR  pszFilename; // pointer in szFilepath to the file part of the path
+    WCHAR   szDir[_MAX_PATH]; // path to the directory
     OVERLAPPED overl; // object used for asynchronous API calls
     BYTE buffer [2][512*sizeof(FILE_NOTIFY_INFORMATION )]; 
         // a double buffer where the Windows API ReadDirectory will store the list

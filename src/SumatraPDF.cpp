@@ -127,7 +127,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define APP_SUB_DIR             _T("SumatraPDF")
 #define APP_NAME_STR            "SumatraPDF"
 
-#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
+#define DEFAULT_INVERSE_SEARCH_COMMANDLINE L"C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\""
 
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
@@ -826,7 +826,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 }
 
 static void SerializableGlobalPrefs_Init() {
-    gGlobalPrefs.m_inverseSearchCmdLine = strdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+    gGlobalPrefs.m_inverseSearchCmdLine = wcsdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
 }
 
 static void SerializableGlobalPrefs_Deinit()
@@ -1121,10 +1121,7 @@ static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
     UINT newId = node->menuId;
     if (INVALID_MENU_ID == node->menuId)
         newId = AllocNewMenuId();
-    const char* utf8 = FilePath_GetBaseName(node->state.filePath);
-    WCHAR *uni = utf8_to_wstr(utf8);
-    AppendMenuW(menuFile, MF_ENABLED | MF_STRING, newId, uni);
-    free((void*)uni);
+    AppendMenuW(menuFile, MF_ENABLED | MF_STRING, newId, FilePathW_GetBaseName(node->state.filePath));
     node->menuId = newId;
 }
 
@@ -1248,7 +1245,7 @@ static void CaptionPens_Destroy(void)
     }
 }
 
-static void AddFileToHistory(const char *filePath)
+static void AddFileToHistory(const WCHAR *filePath)
 {
     FileHistoryList *   node;
     uint32_t            oldMenuId = INVALID_MENU_ID;
@@ -1500,9 +1497,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!fileName)
         return;
 
-    const char *fileNameUtf8 = wstr_to_utf8(fileName);
-    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileNameUtf8);
-    free((void*)fileNameUtf8);
+    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     assert(node);
     if (!node)
         return;
@@ -1586,16 +1581,13 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
                     : wndpl.showCmd == SW_MAXIMIZE ? WIN_STATE_MAXIMIZED 
                     : wndpl.showCmd == SW_MINIMIZE ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
-	const char *fileNameUtf8 =  win->watcher.filepath();
-    WCHAR* fileName = utf8_to_wstr(fileNameUtf8);
-    LoadPdfIntoWindow(fileName, win, &ds, false,
+    LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false,
                         !autorefresh, // We don't allow PDF-repair if it is an autorefresh because
                                       // a refresh event can occur before the file is finished being written,
                                       // in which case the repair could fail. Instead, if the file is broken, 
                                       // we postpone the reload until the next autorefresh event
                         true,
                         false);
-	free((void*)fileName);
 }
 
 #ifndef THREAD_BASED_FILEWATCH
@@ -1805,10 +1797,10 @@ static int WindowInfoList_Len(void) {
 }
 
 // Find the first windows showing a given PDF file 
-WindowInfo* WindowInfoList_Find(LPTSTR file) {
+WindowInfo* WindowInfoList_Find(LPWSTR file) {
     WindowInfo* curr = gWindowList;
     while (curr) {
-        if (str_ieq(curr->watcher.filepath(), file))
+        if (wstr_ieq(curr->watcher.filepath(), file))
             return curr;
         curr = curr->next;
     }
@@ -2308,7 +2300,7 @@ Error:
 }
 
 // This function is executed within the watching thread
-static void OnFileChange(PTSTR filename, LPARAM param)
+static void OnFileChange(PCWSTR filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
@@ -2357,9 +2349,8 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
     // TODO: fileName might not exist.
     WCHAR fullpath[_MAX_PATH];
     GetFullPathNameW(fileName, dimof(fullpath), fullpath, NULL);
-    char *fileNameUtf8 = wstr_to_utf8(fileName);
 
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileNameUtf8);
+    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     DisplayState *ds = NULL;
     if (fileFromHistory)
         ds = &fileFromHistory->state;
@@ -2370,7 +2361,6 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
         return NULL;
     }
 
-    char *fullPathUtf8 = wstr_to_utf8(fullpath);
     // Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
 #ifdef THREAD_BASED_FILEWATCH
     // TODO: passing fullPathUtf8 won't work for non-ascii files. First,
@@ -2380,21 +2370,19 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
     // The right fix is to convert FileWatcher and PdfSync to handle Unicode
     // file names
     if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fullPathUtf8, &OnFileChange, (LPARAM)win);
+        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
 #else
-        win->watcher.Init(fullPathUtf8);
+        win->watcher.Init(fullpath);
 #endif
 
-    win->pdfsync = CreateSynchronizer(fullPathUtf8);
+    win->pdfsync = CreateSynchronizer(fullpath);
 
     if (!fileFromHistory) {
-        AddFileToHistory(fileNameUtf8);
+        AddFileToHistory(fileName);
         RebuildProgramMenus();
     }
 
     gGlobalPrefs.m_pdfsOpened += 1;
-    free((void*)fileNameUtf8);
-    free((void*)fullPathUtf8);
     return win;
 }
 
@@ -3625,7 +3613,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     x = (UINT)dblx; y = (UINT)dbly;
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-    char srcfilepath[_MAX_PATH];    
+    WCHAR srcfilepath[_MAX_PATH];
     win->pdfsync->convert_coord_to_internal(&x, &y, (UINT)pageInfo->pageDy, BottomLeft);
     UINT line, col;
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
@@ -3635,14 +3623,14 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         return;
     }
 
-    char cmdline[_MAX_PATH];
+    WCHAR cmdline[_MAX_PATH];
     if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inverseSearchCmdLine,
       srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
         //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
-        STARTUPINFO si = {0};
+        STARTUPINFOW si = {0};
         PROCESS_INFORMATION pi = {0};
         si.cb = sizeof(si);
-        if (CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        if (CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         } else {
@@ -4723,7 +4711,7 @@ static void OnMenuSetInverseSearch(WindowInfo *win)
     assert(win);
     if (!win) 
         return;
-    char *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inverseSearchCmdLine);
+    WCHAR *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inverseSearchCmdLine);
     if (ret) {
         free(gGlobalPrefs.m_inverseSearchCmdLine);
         gGlobalPrefs.m_inverseSearchCmdLine =  ret;
@@ -4919,7 +4907,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y)
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCWSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y)
 {
     if (ret == PDFSYNCERR_SUCCESS) {
         // remember the position of the search result for drawing the rect later on
@@ -5175,23 +5163,14 @@ static bool IsBenchMode(void)
    is one of the "recent files" menu items in File menu.
    Caller needs to free() the memory.
    */
-static const char *RecentFileNameFromMenuItemId(UINT  menuId) {
+static const WCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
     FileHistoryList* curr = gFileHistoryRoot;
     while (curr) {
         if (curr->menuId == menuId)
-            return str_dup(curr->state.filePath);
+            return wstr_dup(curr->state.filePath);
         curr = curr->next;
     }
     return NULL;
-}
-
-static const WCHAR *RecentFileNameWFromMenuItemId(UINT  menuId) {
-	const char *fileName = RecentFileNameFromMenuItemId(menuId);
-	if (!fileName)
-		return NULL;
-	const WCHAR *ret = utf8_to_wstr(fileName);
-	free((void*)fileName);
-	return ret;
 }
 
 static void OnMenuContributeTranslation()
@@ -6102,7 +6081,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             wmId    = LOWORD(wParam);
             wmEvent = HIWORD(wParam);
 
-            fileName = RecentFileNameWFromMenuItemId(wmId);
+            fileName = RecentFileNameFromMenuItemId(wmId);
             if (fileName) {
                 LoadPdf(fileName);
                 free((void*)fileName);
@@ -7026,7 +7005,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (currArg) {
                 free(gGlobalPrefs.m_inverseSearchCmdLine);
                 // TODO: this should really be "to char using a current locale"
-                gGlobalPrefs.m_inverseSearchCmdLine = wstr_to_utf8(currArg->str);
+                gGlobalPrefs.m_inverseSearchCmdLine = currArg->str;
                 currArg = currArg->next;
             }
             continue;
