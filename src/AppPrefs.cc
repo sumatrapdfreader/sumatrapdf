@@ -108,11 +108,12 @@ Error:
 /* TODO: move to benc_util.c ? */
 static BOOL dict_get_wstr_dup(benc_dict* dict, const char* key, const WCHAR** valOut)
 {
-    const WCHAR *str = dict_get_wstr(dict, key);
+    const char *str = dict_get_str(dict, key);
     if (!str) return FALSE;
-    *valOut = wstr_dup(str);
+    *valOut = utf8_to_wstr(str);    
     return true;
 }
+
 
 static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
 {
@@ -410,9 +411,14 @@ static void dict_get_str_helper(benc_dict *d, const char *key, char **val)
 
 static void dict_get_wstr_helper(benc_dict *d, const char *key, WCHAR **val)
 {
-    const WCHAR *txt = dict_get_wstr(d, key);
-    if (txt)
-        wstr_dup_replace(val, txt);
+    const char *txt = dict_get_str(d, key);
+    if (txt) {
+        WCHAR *dup = (WCHAR *)utf8_to_wstr(txt);
+        if (dup) {
+            free(*val);
+            *val = dup;
+        }
+    }
 }
 
 
