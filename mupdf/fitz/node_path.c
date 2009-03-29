@@ -84,7 +84,7 @@ growpath(fz_pathnode *path, int n)
 fz_error
 fz_moveto(fz_pathnode *path, float x, float y)
 {
-	if (growpath(path, 3) != nil)
+	if (growpath(path, 3) != fz_okay)
 		return fz_rethrow(-1, "out of memory");
 	path->els[path->len++].k = FZ_MOVETO;
 	path->els[path->len++].v = x;
@@ -95,7 +95,7 @@ fz_moveto(fz_pathnode *path, float x, float y)
 fz_error
 fz_lineto(fz_pathnode *path, float x, float y)
 {
-	if (growpath(path, 3) != nil)
+	if (growpath(path, 3) != fz_okay)
 		return fz_rethrow(-1, "out of memory");
 	path->els[path->len++].k = FZ_LINETO;
 	path->els[path->len++].v = x;
@@ -109,7 +109,7 @@ fz_curveto(fz_pathnode *path,
 		float x2, float y2,
 		float x3, float y3)
 {
-	if (growpath(path, 7) != nil)
+	if (growpath(path, 7) != fz_okay)
 		return fz_rethrow(-1, "out of memory");
 	path->els[path->len++].k = FZ_CURVETO;
 	path->els[path->len++].v = x1;
@@ -138,7 +138,7 @@ fz_curvetoy(fz_pathnode *path, float x1, float y1, float x3, float y3)
 fz_error
 fz_closepath(fz_pathnode *path)
 {
-	if (growpath(path, 1) != nil)
+	if (growpath(path, 1) != fz_okay)
 		return fz_rethrow(-1, "out of memory");
 	path->els[path->len++].k = FZ_CLOSEPATH;
 	return fz_okay;

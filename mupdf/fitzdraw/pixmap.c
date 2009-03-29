@@ -75,15 +75,6 @@ fz_gammapixmap(fz_pixmap *pix, float gamma)
 	}
 }
 
-#ifdef _MSC_VER
-/* TODO: quick hack to fix msvc compilation problem due to F_OK not being
-   defined. A proper fix would be to implement file_exists() functions
-   in a portable way. */
-void
-fz_debugpixmap(fz_pixmap *pix, char *prefix)
-{
-}
-#else
 void
 fz_debugpixmap(fz_pixmap *pix, char *prefix)
 {
@@ -194,4 +185,4 @@ cleanup:
 	if (alpha) fclose(alpha);
 	if (color) fclose(color);
 }
-#endif
+

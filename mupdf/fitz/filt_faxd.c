@@ -323,7 +323,7 @@ fz_processfaxd(fz_filter *f, fz_buffer *in, fz_buffer *out)
 {
 	fz_faxd *fax = (fz_faxd*)f;
 	fz_error error;
-	int i;
+	unsigned i;
 	unsigned char *tmp;
 
 	if (fax->stage == SEOL)

@@ -89,7 +89,7 @@ head:
 	{
 		if (p->tailneedsin && !p->head->produced)
 		{
-			fz_error be = nil;
+			fz_error be = fz_okay;
 			if (p->buffer->rp > p->buffer->bp)
 				be = fz_rewindbuffer(p->buffer);
 			else

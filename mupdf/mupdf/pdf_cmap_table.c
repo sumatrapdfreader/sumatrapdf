@@ -35,6 +35,7 @@ extern pdf_cmap pdf_cmap_CNS_EUC_V;
 extern pdf_cmap pdf_cmap_ETen_B5_H;
 extern pdf_cmap pdf_cmap_ETen_B5_UCS2;
 extern pdf_cmap pdf_cmap_ETen_B5_V;
+extern pdf_cmap pdf_cmap_ETenms_B5_H;
 extern pdf_cmap pdf_cmap_HKscs_B5_H;
 extern pdf_cmap pdf_cmap_HKscs_B5_V;
 extern pdf_cmap pdf_cmap_UniCNS_UCS2_H;
@@ -110,6 +111,7 @@ pdf_cmap *pdf_cmaptable[] =
     &pdf_cmap_ETen_B5_H,
     &pdf_cmap_ETen_B5_UCS2,
     &pdf_cmap_ETen_B5_V,
+    &pdf_cmap_ETenms_B5_H,
     &pdf_cmap_HKscs_B5_H,
     &pdf_cmap_HKscs_B5_V,
     &pdf_cmap_UniCNS_UCS2_H,

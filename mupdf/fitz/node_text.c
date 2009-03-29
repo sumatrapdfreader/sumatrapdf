@@ -131,7 +131,7 @@ growtext(fz_textnode *text, int n)
 fz_error
 fz_addtext(fz_textnode *text, int gid, int ucs, float x, float y)
 {
-	if (growtext(text, 1) != nil)
+	if (growtext(text, 1) != fz_okay)
 		return fz_rethrow(-1, "out of memory");
 	text->els[text->len].ucs = ucs;
 	text->els[text->len].gid = gid;

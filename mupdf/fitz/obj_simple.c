@@ -233,7 +233,7 @@ fz_topointer(fz_obj *obj)
 {
 	if (fz_ispointer(obj))
 		return obj->u.p;
-	return fz_okay;
+	return nil;
 }
 
 fz_error

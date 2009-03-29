@@ -207,7 +207,7 @@ def main():
         return
 
     for p in failed:
-        print("%s has %d errors" % (p.path, p.errors))
+        print("%s has %d errors" % (p.path, len(p.errors)))
         print(p.txt)
 
 
