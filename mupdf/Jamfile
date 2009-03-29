@@ -1,0 +1,20 @@
+# --------------------------------------------------------------------------
+#
+# This is the Jamfile used for building Fitz and MuPDF.
+# Put paths and other options in Jamrules, not here.
+#
+#   http://public.perforce.com/public/jam/src/Jam.html
+#
+
+SubDir TOP ;
+
+HDRS += [ FDirName $(TOP) fitz ] ;
+HDRS += [ FDirName $(TOP) mupdf ] ;
+HDRS += [ FDirName $(TOP) apps ] ;
+
+SubInclude TOP fitz ;
+SubInclude TOP fitzdraw ;
+SubInclude TOP mupdf ;
+
+SubInclude TOP apps ;
+

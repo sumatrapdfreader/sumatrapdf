@@ -1,0 +1,21 @@
+SubDir TOP fitzdraw ;
+
+Library libfitzdraw :
+	glyphcache.c
+	pixmap.c
+	porterduff.c
+	meshdraw.c
+	imagedraw.c
+	imageunpack.c
+	imagescale.c
+	pathscan.c
+	pathfill.c
+	pathstroke.c
+	render.c
+	blendmodes.c
+	;
+
+if $(OSPLAT) = PPC     { Library libfitzdraw : archppc.c ; }
+if $(OSPLAT) = SPARC   { Library libfitzdraw : archsparc.c ; }
+if $(OSPLAT) = X86     { Library libfitzdraw : archx86.c ; }
+

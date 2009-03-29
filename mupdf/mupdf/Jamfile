@@ -1,0 +1,209 @@
+#
+#
+#
+
+SubDir TOP mupdf ;
+
+Main fontdump : fontdump.c ;
+
+Main cmapdump : cmapdump.c ;
+LinkLibraries cmapdump : libfitz ;
+
+Library libmupdf :
+
+	# syntax layer
+	pdf_crypt.c
+	pdf_debug.c
+	pdf_lex.c
+	pdf_nametree.c
+	pdf_open.c
+	pdf_parse.c
+	pdf_repair.c
+	pdf_stream.c
+	pdf_xref.c
+
+	# metadata layer
+	pdf_annot.c
+	pdf_outline.c
+
+	# fonts
+	pdf_cmap.c
+	pdf_cmap_parse.c
+	pdf_cmap_load.c
+	pdf_cmap_table.c
+
+	pdf_fontagl.c
+	pdf_fontenc.c
+	pdf_unicode.c
+	pdf_font.c
+	pdf_type3.c
+	pdf_fontmtx.c
+	pdf_fontfile.c
+
+	# other resources
+	pdf_function.c
+	pdf_colorspace1.c
+	pdf_colorspace2.c
+	pdf_image.c
+	pdf_pattern.c
+	pdf_shade.c
+	pdf_shade1.c
+	pdf_shade4.c
+	pdf_xobject.c
+
+	# pages, resource dictionaries, ...
+	pdf_build.c
+	pdf_interpret.c
+	pdf_page.c
+	pdf_pagetree.c
+	pdf_resources.c
+	pdf_store.c
+
+	;
+
+#
+# The CMaps come from http://www.adobe.com/devnet/font/#pcfi
+#
+
+SubDir TOP cmaps ;
+
+SubDir TOP cmaps chinese_s ;
+GenFile cmap_chinese_s.c : cmapdump
+    Adobe-GB1-4
+    Adobe-GB1-UCS2
+    GB-EUC-H
+    GB-EUC-V
+    GBK-EUC-H
+    GBK-EUC-UCS2
+    GBK-EUC-V
+    GBK2K-H
+    GBK2K-V
+    GBKp-EUC-H
+    GBKp-EUC-V
+    GBT-EUC-H
+    GBT-EUC-V
+    GBpc-EUC-H
+    GBpc-EUC-UCS2
+    GBpc-EUC-UCS2C
+    GBpc-EUC-V
+    UniGB-UCS2-H
+    UniGB-UCS2-V
+    ;
+Library libcmaps : cmap_chinese_s.c ;
+
+SubDir TOP cmaps chinese_t ;
+GenFile cmap_chinese_t.c : cmapdump
+    Adobe-CNS1-3
+    Adobe-CNS1-UCS2
+    B5pc-H
+    B5pc-UCS2
+    B5pc-UCS2C
+    B5pc-V
+    CNS-EUC-H
+    CNS-EUC-V
+    ETen-B5-H
+    ETen-B5-UCS2
+    ETen-B5-V
+    HKscs-B5-H
+    HKscs-B5-V
+    UniCNS-UCS2-H
+    UniCNS-UCS2-V
+    ;
+Library libcmaps : cmap_chinese_t.c ;
+
+SubDir TOP cmaps japanese ;
+GenFile cmap_japanese.c : cmapdump
+    83pv-RKSJ-H
+    90ms-RKSJ-H
+    90ms-RKSJ-UCS2
+    90ms-RKSJ-V
+    90msp-RKSJ-H
+    90msp-RKSJ-V
+    90pv-RKSJ-H
+    90pv-RKSJ-UCS2
+    90pv-RKSJ-UCS2C
+    Add-RKSJ-H
+    Add-RKSJ-V
+    Adobe-Japan1-4
+    Adobe-Japan1-UCS2
+    EUC-H
+    EUC-V
+    Ext-RKSJ-H
+    Ext-RKSJ-V
+    H
+    UniJIS-UCS2-H
+    UniJIS-UCS2-HW-H
+    UniJIS-UCS2-HW-V
+    UniJIS-UCS2-V
+    V
+    ;
+Library libcmaps : cmap_japanese.c ;
+
+SubDir TOP cmaps korean ;
+GenFile cmap_korean.c : cmapdump
+    Adobe-Korea1-2
+    Adobe-Korea1-UCS2
+    KSC-EUC-H
+    KSC-EUC-V
+    KSCms-UHC-H
+    KSCms-UHC-HW-H
+    KSCms-UHC-HW-V
+    KSCms-UHC-UCS2
+    KSCms-UHC-V
+    KSCpc-EUC-H
+    KSCpc-EUC-UCS2
+    KSCpc-EUC-UCS2C
+    UniKS-UCS2-H
+    UniKS-UCS2-V
+    ;
+Library libcmaps : cmap_korean.c ;
+
+#
+# The base 14 fonts are the Type1 URW fonts converted to raw CFF format.
+# DroidSansFallback.ttf is a compact CJK font from Google's Android project.
+#
+
+SubDir TOP fonts ;
+
+GenFile font_misc.c : fontdump
+    Dingbats.cff
+    StandardSymL.cff
+    URWChanceryL-MediItal.cff
+    ;
+
+GenFile font_mono.c : fontdump
+    NimbusMonL-Regu.cff
+    NimbusMonL-ReguObli.cff
+    NimbusMonL-Bold.cff
+    NimbusMonL-BoldObli.cff
+    ;
+
+GenFile font_serif.c : fontdump
+    NimbusRomNo9L-Regu.cff
+    NimbusRomNo9L-ReguItal.cff
+    NimbusRomNo9L-Medi.cff
+    NimbusRomNo9L-MediItal.cff
+    ;
+
+GenFile font_sans.c : fontdump
+    NimbusSanL-Bold.cff
+    NimbusSanL-BoldItal.cff
+    NimbusSanL-Regu.cff
+    NimbusSanL-ReguItal.cff
+    ;
+
+Library libfonts :
+    font_misc.c
+    font_mono.c
+    font_serif.c
+    font_sans.c
+    ;
+
+if ! ( NOCJK in $(DEFINES) )
+{
+    SubDir TOP fonts droid ;
+    GenFile font_cjk.c : fontdump DroidSansFallback.ttf ;
+    Library libfonts : font_cjk.c ;
+}
+
+

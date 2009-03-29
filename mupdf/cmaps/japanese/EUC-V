@@ -1,0 +1,87 @@
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: ProcSet (CIDInit)
+%%DocumentNeededResources: CMap (EUC-H)
+%%IncludeResource: ProcSet (CIDInit)
+%%IncludeResource: CMap (EUC-H)
+%%BeginResource: CMap (EUC-V)
+%%Title: (EUC-V Adobe Japan1 0)
+%%Version: 10.001
+%%Copyright: -----------------------------------------------------------
+%%Copyright: Copyright 1990-1998 Adobe Systems Incorporated.
+%%Copyright: All Rights Reserved.
+%%Copyright:
+%%Copyright: Patents Pending
+%%Copyright:
+%%Copyright: NOTICE: All information contained herein is the property
+%%Copyright: of Adobe Systems Incorporated.
+%%Copyright:
+%%Copyright: Permission is granted for redistribution of this file
+%%Copyright: provided this copyright notice is maintained intact and
+%%Copyright: that the contents of this file are not altered in any
+%%Copyright: way from its original form.
+%%Copyright:
+%%Copyright: PostScript and Display PostScript are trademarks of
+%%Copyright: Adobe Systems Incorporated which may be registered in
+%%Copyright: certain jurisdictions.
+%%Copyright: -----------------------------------------------------------
+%%EndComments
+
+/CIDInit /ProcSet findresource begin
+
+12 dict begin
+
+begincmap
+
+/EUC-H usecmap
+
+/CIDSystemInfo 3 dict dup begin
+  /Registry (Adobe) def
+  /Ordering (Japan1) def
+  /Supplement 0 def
+end def
+
+/CMapName /EUC-V def
+/CMapVersion 10.001 def
+/CMapType 1 def
+
+/UIDOffset 800 def
+/XUID [1 10 25330] def
+
+/WMode 1 def
+
+27 begincidrange
+<a1a2> <a1a3> 7887
+<a1b1> <a1b2> 7889
+<a1bc> <a1be> 7891
+<a1c1> <a1c5> 7894
+<a1ca> <a1db> 7899
+<a1e1> <a1e1> 7917
+<a4a1> <a4a1> 7918
+<a4a3> <a4a3> 7919
+<a4a5> <a4a5> 7920
+<a4a7> <a4a7> 7921
+<a4a9> <a4a9> 7922
+<a4c3> <a4c3> 7923
+<a4e3> <a4e3> 7924
+<a4e5> <a4e5> 7925
+<a4e7> <a4e7> 7926
+<a4ee> <a4ee> 7927
+<a5a1> <a5a1> 7928
+<a5a3> <a5a3> 7929
+<a5a5> <a5a5> 7930
+<a5a7> <a5a7> 7931
+<a5a9> <a5a9> 7932
+<a5c3> <a5c3> 7933
+<a5e3> <a5e3> 7934
+<a5e5> <a5e5> 7935
+<a5e7> <a5e7> 7936
+<a5ee> <a5ee> 7937
+<a5f5> <a5f6> 7938
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+
+%%EndResource
+%%EOF

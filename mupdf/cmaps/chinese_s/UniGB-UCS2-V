@@ -1,0 +1,83 @@
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: ProcSet (CIDInit)
+%%DocumentNeededResources: CMap (UniGB-UCS2-H)
+%%IncludeResource: ProcSet (CIDInit)
+%%IncludeResource: CMap (UniGB-UCS2-H)
+%%BeginResource: CMap (UniGB-UCS2-V)
+%%Title: (UniGB-UCS2-V Adobe GB1 1)
+%%Version: 10.001
+%%Copyright: -----------------------------------------------------------
+%%Copyright: Copyright 1990-1998 Adobe Systems Incorporated.
+%%Copyright: All Rights Reserved.
+%%Copyright:
+%%Copyright: Patents Pending
+%%Copyright:
+%%Copyright: NOTICE: All information contained herein is the property
+%%Copyright: of Adobe Systems Incorporated.
+%%Copyright:
+%%Copyright: Permission is granted for redistribution of this file
+%%Copyright: provided this copyright notice is maintained intact and
+%%Copyright: that the contents of this file are not altered in any
+%%Copyright: way from its original form.
+%%Copyright:
+%%Copyright: PostScript and Display PostScript are trademarks of
+%%Copyright: Adobe Systems Incorporated which may be registered in
+%%Copyright: certain jurisdictions.
+%%Copyright: -----------------------------------------------------------
+%%EndComments
+
+/CIDInit /ProcSet findresource begin
+
+12 dict begin
+
+begincmap
+
+/UniGB-UCS2-H usecmap
+
+/CIDSystemInfo 3 dict dup begin
+  /Registry (Adobe) def
+  /Ordering (GB1) def
+  /Supplement 1 def
+end def
+
+/CMapName /UniGB-UCS2-V def
+/CMapVersion 10.001 def
+/CMapType 1 def
+
+/XUID [1 10 25367] def
+
+/WMode 1 def
+
+24 begincidrange
+<2014> <2014> 598
+<2026> <2026> 599
+<2225> <2225> 7708
+<3001> <3001> 575
+<3002> <3002> 574
+<3008> <300f> 584
+<3010> <3011> 594
+<3013> <3013> 7706
+<3014> <3015> 582
+<3016> <3017> 592
+<ff01> <ff01> 578
+<ff08> <ff09> 580
+<ff0c> <ff0c> 573
+<ff0e> <ff0e> 7707
+<ff1a> <ff1b> 576
+<ff1d> <ff1d> 7708
+<ff1f> <ff1f> 579
+<ff3b> <ff3b> 7709
+<ff3d> <ff3d> 7710
+<ff3f> <ff3f> 600
+<ff5b> <ff5b> 596
+<ff5d> <ff5d> 597
+<ff5e> <ff5e> 7704
+<ffe3> <ffe3> 7711
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+
+%%EndResource
+%%EOF

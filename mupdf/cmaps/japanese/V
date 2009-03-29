@@ -1,0 +1,87 @@
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: ProcSet (CIDInit)
+%%DocumentNeededResources: CMap (H)
+%%IncludeResource: ProcSet (CIDInit)
+%%IncludeResource: CMap (H)
+%%BeginResource: CMap (V)
+%%Title: (V Adobe Japan1 0)
+%%Version: 10.001
+%%Copyright: -----------------------------------------------------------
+%%Copyright: Copyright 1990-1998 Adobe Systems Incorporated.
+%%Copyright: All Rights Reserved.
+%%Copyright:
+%%Copyright: Patents Pending
+%%Copyright:
+%%Copyright: NOTICE: All information contained herein is the property
+%%Copyright: of Adobe Systems Incorporated.
+%%Copyright:
+%%Copyright: Permission is granted for redistribution of this file
+%%Copyright: provided this copyright notice is maintained intact and
+%%Copyright: that the contents of this file are not altered in any
+%%Copyright: way from its original form.
+%%Copyright:
+%%Copyright: PostScript and Display PostScript are trademarks of
+%%Copyright: Adobe Systems Incorporated which may be registered in
+%%Copyright: certain jurisdictions.
+%%Copyright: -----------------------------------------------------------
+%%EndComments
+
+/CIDInit /ProcSet findresource begin
+
+12 dict begin
+
+begincmap
+
+/H usecmap
+
+/CIDSystemInfo 3 dict dup begin
+  /Registry (Adobe) def
+  /Ordering (Japan1) def
+  /Supplement 0 def
+end def
+
+/CMapName /V def
+/CMapVersion 10.001 def
+/CMapType 1 def
+
+/UIDOffset 850 def
+/XUID [1 10 25340] def
+
+/WMode 1 def
+
+27 begincidrange
+<2122> <2123> 7887
+<2131> <2132> 7889
+<213c> <213e> 7891
+<2141> <2145> 7894
+<214a> <215b> 7899
+<2161> <2161> 7917
+<2421> <2421> 7918
+<2423> <2423> 7919
+<2425> <2425> 7920
+<2427> <2427> 7921
+<2429> <2429> 7922
+<2443> <2443> 7923
+<2463> <2463> 7924
+<2465> <2465> 7925
+<2467> <2467> 7926
+<246e> <246e> 7927
+<2521> <2521> 7928
+<2523> <2523> 7929
+<2525> <2525> 7930
+<2527> <2527> 7931
+<2529> <2529> 7932
+<2543> <2543> 7933
+<2563> <2563> 7934
+<2565> <2565> 7935
+<2567> <2567> 7936
+<256e> <256e> 7937
+<2575> <2576> 7938
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+
+%%EndResource
+%%EOF
