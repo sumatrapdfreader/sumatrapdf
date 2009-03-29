@@ -9,18 +9,12 @@
 // in SumatraPDF.cpp
 extern "C" char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName);
 
-/* hack to make fz_throw work in C++ */
-#ifdef nil
-#undef nil
-#define nil ((fz_error*)0)
-#endif
-
-static fz_error *pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, int *rotatep)
+static fz_error pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, int *rotatep)
 {
     fz_rect bbox;
     int rotate;
     fz_obj *obj;
-    fz_error *error;
+    fz_error error;
 
     obj = fz_dictgets(dict, "CropBox");
     if (!obj)
@@ -51,7 +45,7 @@ static fz_error *pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, i
         *bboxp = bbox;
     if (rotatep)
         *rotatep = rotate;
-    return nil;
+    return fz_okay;
 }
 
 static HBITMAP createDIBitmapCommon(RenderedBitmap *bmp, HDC hdc)
@@ -201,14 +195,12 @@ bool PdfEngine::load(const WCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
     _windowInfo = win;
     setFileName(fileName);
-    fz_error *error = pdf_newxref(&_xref);
+    fz_error error = pdf_newxref(&_xref);
     if (error)
         goto Error;
 
     error = pdf_loadxrefw(_xref, fileName);
     if (error) {
-        if (!strncmp(error->msg, "ioerror", 7))
-            goto Error;
         if (tryrepair) {
             error = pdf_repairxref(_xref, (char*)fileName);
             if (error)
@@ -354,11 +346,10 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     }
     // TODO: should check for error from pdf_getpageobject?
     fz_obj * obj = pdf_getpageobject(_pageTree, pageNo - 1);
-    fz_error * error = pdf_loadpage(&page, _xref, obj);
+    fz_error error = pdf_loadpage(&page, _xref, obj);
     if (error) {
         if (!ReleaseSemaphore(_getPageSem, 1, NULL))
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
-        fz_droperror(error);
         return NULL;
     }
     _pages[pageNo-1] = page;
@@ -383,7 +374,7 @@ int PdfEngine::pageRotation(int pageNo)
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
     int rotation;
-    fz_error *error = pdf_getpageinfo(_xref, dict, NULL, &rotation);
+    fz_error error = pdf_getpageinfo(_xref, dict, NULL, &rotation);
     if (error)
         return INVALID_ROTATION;
     return rotation;
@@ -394,7 +385,7 @@ SizeD PdfEngine::pageSize(int pageNo)
     assert(validPageNo(pageNo));
     fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
     fz_rect bbox;
-    fz_error *error = pdf_getpageinfo(_xref, dict, &bbox, NULL);
+    fz_error error = pdf_getpageinfo(_xref, dict, &bbox, NULL);
     if (error)
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
@@ -446,7 +437,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
                            BOOL (*abortCheckCbkA)(void *data),
                            void *abortCheckCbkDataA)
 {
-    fz_error* error;
+    fz_error error;
     fz_matrix ctm;
     fz_rect bbox;
 

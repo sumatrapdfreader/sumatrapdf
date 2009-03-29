@@ -25,8 +25,10 @@ PdfSearch::~PdfSearch()
 
 void PdfSearch::Reset()
 {
+#if 0 // TODO: not yet available in new mupdf code
     if (line)
         pdf_droptextline(line);
+#endif
     line = current = NULL;
     last = 0;
 }
@@ -181,9 +183,12 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
         if (!page)
             goto NextPage;
 
+#if 0 // TODO: not yet available in new mupdf code
         if (pdf_loadtextfromtree(&line, page->tree, fz_identity())) // if error
             goto NextPage;
-
+#else
+        goto NextPage;
+#endif
         this->line = line;
         if (!forward)
             ReverseLineList();

@@ -1557,15 +1557,18 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
     int             bxMin, bxMax, byMin, byMax;
     int             xMin, xMax, yMin, yMax;
     pdf_textline *  line, *ln;
-    fz_error *      error;
     pdf_page *      page = pdfEngine->getPdfPage(pageNo);
     fz_tree *       tree = page->tree;
     double          rot = 0;
     double          zoom = 1;
 
-    error = pdf_loadtextfromtree(&line, tree, fz_identity());
+#if 0 // not yet available in new mupdf code
+    fz_error error = pdf_loadtextfromtree(&line, tree, fz_identity());
     if (error)
         return 0;
+#else
+    return 0;
+#endif
 
     xMin = (int)region->x;
     xMax = xMin + (int)region->dx;
@@ -1601,7 +1604,9 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
         }
     }
 
+#if 0
     pdf_droptextline(line);
+#endif
 
     return p;
 }
