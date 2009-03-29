@@ -5,6 +5,10 @@
 #error "fitz.h must be included before mupdf.h"
 #endif
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 void pdf_logxref(char *fmt, ...);
 void pdf_logrsrc(char *fmt, ...);
 void pdf_logfont(char *fmt, ...);
@@ -142,6 +146,10 @@ struct pdf_xrefentry_s
 fz_error pdf_newxref(pdf_xref **);
 fz_error pdf_repairxref(pdf_xref *, char *filename);
 fz_error pdf_loadxref(pdf_xref *, char *filename);
+#ifdef WIN32_UNICODE_HACK
+#include <wchar.h>
+fz_error pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename);
+#endif
 fz_error pdf_initxref(pdf_xref *);
 
 void pdf_debugxref(pdf_xref *);
@@ -554,6 +562,7 @@ void pdf_droplink(pdf_link *link);
 fz_error pdf_loadoutline(pdf_outline **outlinep, pdf_xref *xref);
 void pdf_debugoutline(pdf_outline *outline, int level);
 void pdf_dropoutline(pdf_outline *outline);
+fz_obj *resolvedest(pdf_xref *xref, fz_obj *dest);
 
 fz_error pdf_loadannots(pdf_comment **, pdf_link **, pdf_xref *, fz_obj *annots);
 
@@ -609,11 +618,21 @@ void pdf_droppagetree(pdf_pagetree *pages);
 fz_error pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *ref);
 void pdf_droppage(pdf_page *page);
 
-/* unicode.c */
+/* pdf_unicode.c */
+
+/*
+ * Extract lines of text from display tree.
+ *
+ * This extraction needs to be rewritten for the new tree
+ * architecture where glyph index and unicode characters are both stored
+ * in the text objects.
+ */
+#if 0
 fz_error pdf_loadtextfromtree(pdf_textline **linep, fz_tree *tree, fz_matrix ctm);
 void pdf_debugtextline(pdf_textline *line);
 fz_error pdf_newtextline(pdf_textline **linep);
 void pdf_droptextline(pdf_textline *line);
+#endif
 
 /*
  * content stream parsing
@@ -728,6 +747,10 @@ fz_error pdf_showimage(pdf_csi*, pdf_image *img);
 fz_error pdf_newcsi(pdf_csi **csip, int maskonly);
 fz_error pdf_runcsi(pdf_csi *, pdf_xref *xref, fz_obj *rdb, fz_stream *);
 void pdf_dropcsi(pdf_csi *csi);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif
 
