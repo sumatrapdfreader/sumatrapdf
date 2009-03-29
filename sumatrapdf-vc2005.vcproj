@@ -23,9 +23,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=dbg clean"
+				BuildCommandLine="nmake -f makefile-old.msvc CFG=dbg"
+				ReBuildCommandLine="nmake -f makefile-old.msvc CFG=dbg rebuild"
+				CleanCommandLine="nmake -f makefile-old.msvc CFG=dbg clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				IncludeSearchPath=""
@@ -43,9 +43,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=rel clean"
+				BuildCommandLine="nmake -f makefile-old.msvc CFG=rel"
+				ReBuildCommandLine="nmake -f makefile-old.msvc CFG=rel rebuild"
+				CleanCommandLine="nmake -f makefile-old.msvc CFG=rel clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				IncludeSearchPath=""
@@ -63,9 +63,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg EXB=rm"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg EXB=rm rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=dbg EXB=rm clean"
+				BuildCommandLine="nmake -f makefile-old.msvc CFG=dbg EXB=rm"
+				ReBuildCommandLine="nmake -f makefile-old.msvc CFG=dbg EXB=rm rebuild"
+				CleanCommandLine="nmake -f makefile-old.msvc CFG=dbg EXB=rm clean"
 				Output="$(IntDir)\SumatraPDF.exe"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				IncludeSearchPath=""
@@ -83,9 +83,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel EXB=rm"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel EXB=rm rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=rel EXB=rm clean"
+				BuildCommandLine="nmake -f makefile-old.msvc CFG=rel EXB=rm"
+				ReBuildCommandLine="nmake -f makefile-old.msvc CFG=rel EXB=rm rebuild"
+				CleanCommandLine="nmake -f makefile-old.msvc CFG=rel EXB=rm clean"
 				Output="$(IntDir)\SumatraPDF.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				IncludeSearchPath=""

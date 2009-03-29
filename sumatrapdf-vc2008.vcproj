@@ -24,9 +24,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=dbg clean"
+				BuildCommandLine="nmake -f makefile-old.msvc CFG=dbg"
+				ReBuildCommandLine="nmake -f makefile-old.msvc CFG=dbg rebuild"
+				CleanCommandLine="nmake -f makefile-old.msvc CFG=dbg clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;_DEBUG;SYNCTEX_FEATURE"
 				IncludeSearchPath=""
@@ -44,9 +44,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=rel clean"
+				BuildCommandLine="nmake -f makefile-old.msvc CFG=rel"
+				ReBuildCommandLine="nmake -f makefile-old.msvc CFG=rel rebuild"
+				CleanCommandLine="nmake -f makefile-old.msvc CFG=rel clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;SYNCTEX_FEATURE"
 				IncludeSearchPath=""
