@@ -1,0 +1,46 @@
+Short term todo (before next 0.9.2 release):
+* better visualization of links in debug builds (alpha-blended so that we can 
+  see text underneath)
+* src version of zlib
+* maybe: remember default bookmarks state
+* maybe: remember and restore size and position of the window
+
+Things to do before 1.0 release:
+* test search more and make sure it works better (currently mupdf seems to have
+  problems converting some text to their real value)
+* intelligent resizing so that the window takes as much space as possible on the
+  screen (kind of like maximize, but doesn't actually maximizes the window but
+  takes max dx or dy space available and proportional amount of the other axis)
+* TOC improvements:
+  * an easy way to close TOC (I like the header with close button like in
+    e editor http://www.e-texteditor.com/wiki/index.php/Projects)
+
+Long term todo:
+* find improvements:
+  * better/different buttons for next/prev find
+* crash reporting with breakpad
+ - on startup check for crash dumps and tries to submit them. Delete crash file
+   (even if submission failed)
+* preserve fullScreen info per document and respect it when opening a PDF
+* move DisplayState into DisplayModel and use it directly, instead of 
+  duplicating the fields in DisplayModel. Rename to SerializedState.
+* better, animated about screen
+* make dialog-boxes translatable
+* replace DString with something better (sstr ?) and provide C++ wrapper
+  to make it easier to use in C++ code without all those annoying DStringInit()
+  calls
+* printing improvements
+* add lemmings
+* don't use GWL_USERDATA to store WindowInfo pointer, use 
+  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
+  of windows and WindowInfo structs)
+
+Maybe:
+* DisplayState::visible could be removed. It was used when we were automatically
+  reopening previously opened files, but we don't do it anymore, so we don't
+  have to track it.
+* maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
+  and TransparentBlt). Instead, dynamically load the functions. Needed for
+  working on NT. On the other hand: is NT worth supporting?
+* show keybindings in help
+
