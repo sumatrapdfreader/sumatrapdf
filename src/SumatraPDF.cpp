@@ -34,7 +34,7 @@
 #endif
 
 #ifndef CURR_VERSION
-#define CURR_VERSION "0.9.3"
+#define CURR_VERSION "0.9.4"
 #endif
 
 // #define SVN_PRE_RELEASE_VER 994
