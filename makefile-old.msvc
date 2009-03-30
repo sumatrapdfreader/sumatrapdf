@@ -437,16 +437,16 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 {baseutils\}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{src\}.cc{$(O)}.obj::
+{src-old\}.cc{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{src\}.cpp{$(O)}.obj::
+{src-old\}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {DialogSizer\}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{src\}.c{$(O)}.obj::
+{src-old\}.c{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 force: ;
