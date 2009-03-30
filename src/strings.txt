@@ -192,8 +192,8 @@ pa:ਫਾਇਲ(&F)
 hi:फाईल(&F)
 -
 &Open\tCtrl-O
-af:&Maak Oop\tCttl-O
-bg:&Отвори\tCttl-O
+af:&Maak Oop\tCtrl-O
+bg:&Отвори\tCtrl-O
 br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
