@@ -29,10 +29,6 @@
 #include <windowsx.h>
 #include <Wininet.h>
 
-#ifdef CRASHHANDLER
-#include "client\windows\handler\exception_handler.h"
-#endif
-
 #ifndef CURR_VERSION
 #define CURR_VERSION "0.9.4"
 #endif
@@ -6779,20 +6775,6 @@ char *GetDefaultPrinterName()
 }
 
 #define is_arg(txt) wstr_ieq(L##txt, currArg->str)
-#ifdef CRASHHANDLER
-using google_breakpad::ExceptionHandler;
-
-// Return false so that the exception is also handled by Windows
-bool SumatraMinidumpCallback(const wchar_t *dump_path,
-                       const wchar_t *minidump_id,
-                       void *context,
-                       EXCEPTION_POINTERS *exinfo,
-                       MDRawAssertionInfo *assertion,
-                       bool succeeded)
-{
-    return false;
-}
-#endif
 
 /* Parse 'txt' as hex color and set it as background color */
 static void ParseBgColor(const WCHAR* txt)
@@ -6895,11 +6877,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     UNREFERENCED_PARAMETER(hPrevInstance);
 
     u_DoAllTests();
-
-#ifdef CRASHHANDLER
-    std::wstring dump_path = L".";
-    ExceptionHandler exceptionHandler(dump_path, NULL, SumatraMinidumpCallback, NULL, ExceptionHandler::HANDLER_ALL);
-#endif
 
     INITCOMMONCONTROLSEX cex;
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
