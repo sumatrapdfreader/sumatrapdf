@@ -202,7 +202,7 @@ bool PdfEngine::load(const WCHAR *fileName, WindowInfo *win, bool tryrepair)
     error = pdf_loadxrefw(_xref, fileName);
     if (error) {
         if (tryrepair) {
-            error = pdf_repairxref(_xref, (char*)fileName);
+            error = pdf_repairxrefw(_xref, fileName);
             if (error)
                 goto Error;
         }

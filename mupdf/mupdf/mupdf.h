@@ -149,6 +149,7 @@ fz_error pdf_loadxref(pdf_xref *, char *filename);
 #ifdef WIN32_UNICODE_HACK
 #include <wchar.h>
 fz_error pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename);
+fz_error pdf_repairxrefw(pdf_xref *xref, const wchar_t *filename);
 #endif
 fz_error pdf_initxref(pdf_xref *);
 
