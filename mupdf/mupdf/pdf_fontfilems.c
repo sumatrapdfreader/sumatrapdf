@@ -822,7 +822,9 @@ pdf_lookupfontMS(pdf_fontdesc *font, char *fontname, char *collection, char **fo
 {
 	fz_error error;
 	int found;
-	char *fontname2 = font->font->name;
+	char *fontname2 = NULL;
+	if (font->font)
+		fontname2 = font->font->name;
 
 	error = initfontlibs();
 	if (error)
