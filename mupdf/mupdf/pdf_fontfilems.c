@@ -43,9 +43,7 @@ extern const unsigned int  pdf_font_URWChanceryL_MediItal_cff_len;
 
 #include <windows.h>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
+/* TODO: make this a function */
 #define SAFE_FZ_READ(file, buf, size)\
 	err = fz_read(&byteread, (file), (char*)(buf), (size)); \
 	if (err) goto cleanup; \
@@ -791,49 +789,22 @@ pdf_lookupfontMS2(char *fontname, char **fontpath, int *index, int *didfind)
 	return fz_okay;
 }
 
-static FT_Library ftlib = nil;
-
-static fz_error initfontlibs(void)
-{
-	int fterr;
-	int maj, min, pat;
-	fz_error err;
-
-	if (ftlib)
-		return fz_okay;
-
-	fterr = FT_Init_FreeType(&ftlib);
-	if (fterr)
-		return fz_throw("freetype failed initialisation: %s", ft_errorstring(fterr));
-
-	FT_Library_Version(ftlib, &maj, &min, &pat);
-	if (maj == 2 && min == 1 && pat < 7)
-		return fz_throw("freetype version too old: %d.%d.%d", maj, min, pat);
-
-	err = pdf_createfontlistMS();
-	if (err)
-		return err;
-
-	return fz_okay;
-}
-
 static fz_error
 pdf_lookupfontMS(pdf_fontdesc *font, char *fontname, char *collection, char **fontpath, int *index)
 {
 	fz_error error;
 	int found;
+	/* TODO: font->font->name doesn't make any sense anymore since it only exists if
+	   a font file has already been loaded by freetype. Clean this up. */
 	char *fontname2 = NULL;
 	if (font->font)
 		fontname2 = font->font->name;
 
-	error = initfontlibs();
-	if (error)
-		return error;
 	error = pdf_lookupfontMS2(fontname, fontpath, index, &found);
 	if (error)
 		return error;
 
-    if (!found && fontname2)
+	if (!found && fontname2)
 	{
 		error = pdf_lookupfontMS2(fontname2, fontpath, index, &found);
 		if (error)
@@ -981,9 +952,7 @@ fz_error
 pdf_loadbuiltinfont(pdf_fontdesc *font, char *basefont)
 {
 	fz_error error;
-	int fterr;
 
-	FT_Face face;
 	char *file;
 	int index;
 
@@ -997,11 +966,9 @@ pdf_loadbuiltinfont(pdf_fontdesc *font, char *basefont)
 	if (error)
 		return error;
 
-	fterr = FT_New_Face(ftlib, file, index, &face);
-	if (fterr)
-		return fz_throw("freetype could not load font file '%s': %s", file, ft_errorstring(fterr));
-
-	font->font->ftface = face;
+	error = fz_newfontfromfile(&font->font, file, index);
+	if (error)
+		return fz_rethrow(error, "cannot load freetype font from a file");
 
 	return fz_okay;
 }
@@ -1010,8 +977,6 @@ fz_error
 pdf_loadsystemfont(pdf_fontdesc *font, char *basefont, char *collection)
 {
 	fz_error error;
-	int fterr;
-	FT_Face face;
 	char *file;
 	int index;
 
@@ -1019,12 +984,9 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *basefont, char *collection)
 	if (error)
 		goto cleanup;
 
-	fterr = FT_New_Face(ftlib, file, index, &face);
-	if (fterr) {
-		return fz_throw("freetype could not load font file '%s': %s", file, ft_errorstring(fterr));
-	}
-
-	font->font->ftface = face;
+	error = fz_newfontfromfile(&font->font, file, index);
+	if (error)
+		return fz_rethrow(error, "cannot load freetype font from a file");
 
 	return fz_okay;
 
