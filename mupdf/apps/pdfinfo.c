@@ -205,7 +205,7 @@ infousage(void)
 void
 gatherglobalinfo()
 {
-	info = malloc(sizeof (struct info));
+	info = fz_malloc(sizeof (struct info));
 	if (!info)
 		die(fz_throw("out of memory"));
 
@@ -254,15 +254,15 @@ gatherdimensions(int page, fz_obj *pageref, fz_obj *pageobj)
 
 	dims++;
 
-	dim = realloc(dim, dims * sizeof (struct info *));
+	dim = fz_realloc(dim, dims * sizeof (struct info *));
 	if (!dim)
 		return fz_throw("out of memory");
 
-	dim[dims - 1] = malloc(sizeof (struct info));
+	dim[dims - 1] = fz_malloc(sizeof (struct info));
 	if (!dim[dims - 1])
 		return fz_throw("out of memory");
 
-	dim[dims - 1]->u.dim.bbox = malloc(sizeof (fz_rect));
+	dim[dims - 1]->u.dim.bbox = fz_malloc(sizeof (fz_rect));
 	if (!dim[dims - 1]->u.dim.bbox)
 		return fz_throw("out of memory");
 
@@ -341,11 +341,11 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		fonts++;
 
-		font = realloc(font, fonts * sizeof (struct info *));
+		font = fz_realloc(font, fonts * sizeof (struct info *));
 		if (!font)
 			return fz_throw("out of memory");
 
-		font[fonts - 1] = malloc(sizeof (struct info));
+		font[fonts - 1] = fz_malloc(sizeof (struct info));
 		if (!font[fonts - 1])
 			return fz_throw("out of memory");
 
@@ -529,11 +529,11 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		images++;
 
-		image = realloc(image, images * sizeof (struct info *));
+		image = fz_realloc(image, images * sizeof (struct info *));
 		if (!image)
 			return fz_throw("out of memory");
 
-		image[images - 1] = malloc(sizeof (struct info));
+		image[images - 1] = fz_malloc(sizeof (struct info));
 		if (!image[images - 1])
 			return fz_throw("out of memory");
 
@@ -631,11 +631,11 @@ gatherforms(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		forms++;
 
-		form = realloc(form, forms * sizeof (struct info *));
+		form = fz_realloc(form, forms * sizeof (struct info *));
 		if (!form)
 			return fz_throw("out of memory");
 
-		form[forms - 1] = malloc(sizeof (struct info));
+		form[forms - 1] = fz_malloc(sizeof (struct info));
 		if (!form[forms - 1])
 			return fz_throw("out of memory");
 
@@ -708,11 +708,11 @@ gatherpsobjs(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		psobjs++;
 
-		psobj = realloc(psobj, psobjs * sizeof (struct info *));
+		psobj = fz_realloc(psobj, psobjs * sizeof (struct info *));
 		if (!psobj)
 			return fz_throw("out of memory");
 
-		psobj[psobjs - 1] = malloc(sizeof (struct info));
+		psobj[psobjs - 1] = fz_malloc(sizeof (struct info));
 		if (!psobj[psobjs - 1])
 			return fz_throw("out of memory");
 
@@ -767,11 +767,11 @@ gathershadings(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		shadings++;
 
-		shading = realloc(shading, shadings * sizeof (struct info *));
+		shading = fz_realloc(shading, shadings * sizeof (struct info *));
 		if (!shading)
 			return fz_throw("out of memory");
 
-		shading[shadings - 1] = malloc(sizeof (struct info));
+		shading[shadings - 1] = fz_malloc(sizeof (struct info));
 		if (!shading[shadings - 1])
 			return fz_throw("out of memory");
 
@@ -861,11 +861,11 @@ gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 
 		patterns++;
 
-		pattern = realloc(pattern, patterns * sizeof (struct info *));
+		pattern = fz_realloc(pattern, patterns * sizeof (struct info *));
 		if (!pattern)
 			return fz_throw("out of memory");
 
-		pattern[patterns - 1] = malloc(sizeof (struct info));
+		pattern[patterns - 1] = fz_malloc(sizeof (struct info));
 		if (!pattern[patterns - 1])
 			return fz_throw("out of memory");
 
@@ -1019,10 +1019,10 @@ printinfo(char *filename, int show, int page)
 
 		for (i = 0; i < dims; i++)
 		{
-			free(dim[i]->u.dim.bbox);
-			free(dim[i]);
+			fz_free(dim[i]->u.dim.bbox);
+			fz_free(dim[i]);
 		}
-		free(dim);
+		fz_free(dim);
 		dim = nil;
 		dims = 0;
 	}
@@ -1042,8 +1042,8 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < fonts; i++)
-			free(font[i]);
-		free(font);
+			fz_free(font[i]);
+		fz_free(font);
 		font = nil;
 		fonts = 0;
 	}
@@ -1079,8 +1079,8 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < images; i++)
-			free(image[i]);
-		free(image);
+			fz_free(image[i]);
+		fz_free(image);
 		image = nil;
 		images = 0;
 	}
@@ -1111,8 +1111,8 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < shadings; i++)
-			free(shading[i]);
-		free(shading);
+			fz_free(shading[i]);
+		fz_free(shading);
 		shading = nil;
 		shadings = 0;
 	}
@@ -1153,8 +1153,8 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < patterns; i++)
-			free(pattern[i]);
-		free(pattern);
+			fz_free(pattern[i]);
+		fz_free(pattern);
 		pattern = nil;
 		patterns = 0;
 	}
@@ -1174,8 +1174,8 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < forms; i++)
-			free(form[i]);
-		free(form);
+			fz_free(form[i]);
+		fz_free(form);
 		form = nil;
 		forms = 0;
 	}
@@ -1193,8 +1193,8 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < psobjs; i++)
-			free(psobj[i]);
-		free(psobj);
+			fz_free(psobj[i]);
+		fz_free(psobj);
 		psobj = nil;
 		psobjs = 0;
 	}

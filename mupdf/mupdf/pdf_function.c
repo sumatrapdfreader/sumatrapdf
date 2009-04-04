@@ -7,7 +7,6 @@ enum
 {
 	MAXN = FZ_MAXCOLORS,
 	MAXM = FZ_MAXCOLORS,
-	MAXK = 32
 };
 
 typedef struct psobj_s psobj;
@@ -48,9 +47,9 @@ struct pdf_function_s
 
 		struct {
 			int k;
-			pdf_function *funcs[MAXK];
-			float bounds[MAXK-1];
-			float encode[MAXK][2];
+			pdf_function **funcs; /* k */
+			float *bounds; /* k - 1 */
+			float *encode; /* k * 2 */
 		} st;
 
 		struct {
@@ -1228,7 +1227,7 @@ evalexponentialfunc(pdf_function *func, float in, float *out)
 static fz_error
 loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 {
-	pdf_function **funcs = func->u.st.funcs;
+	pdf_function **funcs;
 	fz_error error;
 	fz_obj *obj;
 	fz_obj *sub;
@@ -1250,20 +1249,39 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 			return fz_rethrow(error, "cannot resolve /Functions");
 
 		k = fz_arraylen(obj);
+		func->u.st.k = k;
 
-		pdf_logrsrc("k %d\n", k);
+		pdf_logrsrc("k %d\n", func->u.st.k);
 
-		if (k >= MAXK)
+		func->u.st.funcs = fz_malloc(func->u.st.k * sizeof (pdf_function));
+		if (!func->u.st.funcs)
 		{
 			fz_dropobj(obj);
-			return fz_throw("assert: /K too big (%d)", k);
+			return fz_throw("out of memory");
+		}
+		funcs = func->u.st.funcs;
+
+		func->u.st.bounds = fz_malloc((func->u.st.k - 1) * sizeof (float));
+		if (!func->u.st.bounds)
+		{
+			fz_free(func->u.st.funcs);
+			fz_dropobj(obj);
+			return fz_throw("out of memory");
 		}
 
-		func->u.st.k = k;
+		func->u.st.encode = fz_malloc(func->u.st.k * 2 * sizeof (float));
+		if (!func->u.st.encode)
+		{
+			fz_free(func->u.st.funcs);
+			fz_free(func->u.st.bounds);
+			fz_dropobj(obj);
+			return fz_throw("out of memory");
+		}
+
 		for (i = 0; i < k; ++i)
 		{
 			sub = fz_arrayget(obj, i);
-			error = pdf_loadfunction(funcs + i, xref, sub);
+			error = pdf_loadfunction(&func->u.st.funcs[i], xref, sub);
 			if (error)
 			{
 				fz_dropobj(obj);
@@ -1339,8 +1357,8 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 
 		for (i = 0; i < k; ++i)
 		{
-			func->u.st.encode[i][0] = fz_toreal(fz_arrayget(obj, i*2+0));
-			func->u.st.encode[i][1] = fz_toreal(fz_arrayget(obj, i*2+1));
+			func->u.st.encode[i*2+0] = fz_toreal(fz_arrayget(obj, i*2+0));
+			func->u.st.encode[i*2+1] = fz_toreal(fz_arrayget(obj, i*2+1));
 		}
 
 		fz_dropobj(obj);
@@ -1389,7 +1407,7 @@ evalstitchingfunc(pdf_function *func, float in, float *out)
 		high = bounds[i];
 	}
 
-	in = LERP(in, low, high, func->u.st.encode[i][0], func->u.st.encode[i][1]);
+	in = LERP(in, low, high, func->u.st.encode[i*2+0], func->u.st.encode[i*2+1]);
 
 	error = pdf_evalfunction(func->u.st.funcs[i], &in, 1, out, func->n);
 	if (error)
@@ -1425,6 +1443,9 @@ pdf_dropfunction(pdf_function *func)
 		case STITCHING:
 			for (i = 0; i < func->u.st.k; ++i)
 				pdf_dropfunction(func->u.st.funcs[i]);
+			fz_free(func->u.st.funcs);
+			fz_free(func->u.st.bounds);
+			fz_free(func->u.st.encode);
 			break;
 		case POSTSCRIPT:
 			fz_free(func->u.p.code);
