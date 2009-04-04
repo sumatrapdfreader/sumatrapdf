@@ -1,6 +1,8 @@
 # Makefile for building mupdf and related stuff
 # Valid option to make:
-# CFG=[rel|dbg] - dbg if not given
+# CFG=[rel|dbg|rel64|dbg64] - dbg if not given
+# ZLIB_DIR=
+# JPEG_DIR=
 # JBIG2_DIR=
 # JASPER_DIR=
 
@@ -23,6 +25,15 @@ HOST = $(HOST_CYGWIN)
 endif
 
 VPATH=fitzdraw:fitz:mupdf:fonts:cmaps:apps:$(JBIG2_DIR)
+
+ifneq ($(ZLIB_DIR),)
+VPATH+=$(ZLIB_DIR)
+endif
+
+ifneq ($(JPEG_DIR),)
+VPATH+=$(JPEG_DIR)
+endif
+
 ifneq ($(JASPER_DIR),)
 VPATH+=$(JASPER_DIR)/base:$(JASPER_DIR)/jp2:$(JASPER_DIR)/pgx:$(JASPER_DIR)/jpc
 endif
@@ -33,6 +44,14 @@ CFG=dbg
 endif
 
 INCS = -I fitz -I mupdf -I cmaps
+
+ifneq ($(JPEG_DIR),)
+INCS += -I $(JPEG_DIR)
+endif
+
+ifneq ($(ZLIB_DIR),)
+INCS += -I $(ZLIB_DIR)
+endif
 
 ifneq ($(JBIG2_DIR),)
 INCS += -I $(JBIG2_DIR)
@@ -45,7 +64,8 @@ CFLAGS += -DHAVE_JASPER -DJAS_CONFIGURE
 endif
 
 FREETYPE_CFLAGS  = `freetype-config --cflags`
-FREETYPE_LDFLAGS = `freetype-config --libs`
+#FREETYPE_LDFLAGS = `freetype-config --libs`
+FREETYPE_LDFLAGS = -L/usr/X11/lib -lfreetype --Wl,-framework,CoreServices -Wl,-framework,ApplicationServices
 
 # cc-option
 # Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)
@@ -58,12 +78,24 @@ CFLAGS += $(call cc-option, -Wno-pointer-sign, "")
 
 ifeq ($(CFG),dbg)
 CFLAGS += -O0 -fno-inline ${INCS}
-else
+endif
+
+ifeq ($(CFG),dbg64)
+CFLAGS += -m64 -O0 -fno-inline ${INCS}
+endif
+
+ifeq ($(CFG),rel)
 CFLAGS += -O3 ${INCS} -DNDEBUG
+endif
+
+ifeq ($(CFG),rel64)
+CFLAGS += -m64 -O3 ${INCS} -DNDEBUG
 endif
 
 CFLAGS += -std=c99 -DHAVE_C99 -DNEED_STRLCPY -DNEED_STRSEP
 
+ZLIB_CFLAGS = $(CFLAGS)
+JPEG_CFLAGS = $(CFLAGS)
 JBIG2_CFLAGS = $(CFLAGS) -DHAVE_STDINT_H
 JASPER_CFLAGS = $(CFLAGS) -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_PNM_SUPPORT -DEXCLUDE_BMP_SUPPORT \
 	-DEXCLUDE_RAS_SUPPORT -DEXCLUDE_JPG_SUPPORT
@@ -72,11 +104,43 @@ JASPER_CFLAGS = $(CFLAGS) -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_PNM_SUPPORT -DEXCLUDE_
 
 CFLAGS += ${FREETYPE_CFLAGS}
 
-LDFLAGS += ${FREETYPE_LDFLAGS} -lm -ljpeg
+LDFLAGS += ${FREETYPE_LDFLAGS} -lm
+
+#ifeq ($(JPEG_DIR),)
+#LDFLAGS += -ljpeg
+#endif
+
+ifeq ($(CFG), rel64)
+LDFLAGS += -m64
+endif
+
+ifeq ($(CFG), dbg64)
+LDFLAGS += -m64
+endif
+
+ifeq ($(ZLIB_DIR),)
+LDFLAGS += -lz
+endif
 
 OUTDIR=obj-$(CFG)
 
 VPATH+=$(OUTDIR)
+
+ZLIB_SRC = \
+	adler32.c crc32.c inflate.c zutil.c \
+	inffast.c inftrees.c deflate.c compress.c \
+	trees.c \
+	gzio.c
+
+JPEG_SRC = \
+	jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c \
+	jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c \
+	jcphuff.c jcprepct.c jcsample.c jctrans.c jdapimin.c jdapistd.c \
+	jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c jddctmgr.c jdhuff.c \
+	jdinput.c jdmainct.c jdmarker.c jdmaster.c jdmerge.c jdphuff.c \
+	jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c jfdctfst.c \
+	jfdctint.c jidctflt.c jidctfst.c jidctint.c jidctred.c jquant1.c \
+	jquant2.c jutils.c jmemmgr.c jmemnobs.c
 
 JBIG2_SRC = \
 	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
@@ -101,7 +165,7 @@ JASPER_SRC = \
 FITZ_DRAW_SRC = \
 	archx86.c blendmodes.c imagescale.c pathfill.c pixmap.c \
 	glyphcache.c imageunpack.c pathscan.c porterduff.c imagedraw.c \
-	meshdraw.c pathstroke.c render.c \
+	meshdraw.c pathstroke.c render.c
 
 FITZ_SRC = \
 	base_memory.c base_error.c base_hash.c base_matrix.c base_rect.c \
@@ -113,7 +177,7 @@ FITZ_SRC = \
 	filt_flate.c filt_lzwd.c filt_lzwe.c filt_null.c filt_pipeline.c \
 	filt_predict.c filt_rld.c filt_rle.c obj_array.c obj_dict.c \
 	obj_parse.c obj_print.c obj_simple.c stm_buffer.c stm_filter.c \
-	stm_misc.c stm_open.c stm_read.c filt_dctd.c filt_dcte.c \
+	stm_misc.c stm_open.c stm_read.c filt_dctd.c filt_dcte.c
 
 ifneq ($(JASPER_DIR),)
 FITZ_SRC += filt_jpxd.c
@@ -142,7 +206,7 @@ MUPDF_SRC = \
 	pdf_nametree.c pdf_open.c pdf_outline.c pdf_page.c pdf_pagetree.c \
 	pdf_parse.c pdf_pattern.c pdf_repair.c pdf_resources.c pdf_shade.c \
 	pdf_shade1.c pdf_shade4.c pdf_store.c pdf_stream.c pdf_type3.c \
-	pdf_unicode.c pdf_xobject.c pdf_xref.c \
+	pdf_unicode.c pdf_xobject.c pdf_xref.c
 
 FONTS_SRC = font_misc.c font_mono.c font_serif.c font_sans.c font_cjk.c
 
@@ -153,7 +217,13 @@ LIBS_SRC = \
 	${FONTS_SRC} \
 	${FITZ_DRAW_SRC} \
 	${FITZ_SRC} \
-	${MUPDF_SRC} \
+	${MUPDF_SRC}
+
+JPEG_OBJ = $(patsubst %.c, $(OUTDIR)/JPEG_%.o, ${JPEG_SRC})
+JPEG_DEP = $(patsubst %.o, %.d, $(JPEG_OBJ))
+
+ZLIB_OBJ = $(patsubst %.c, $(OUTDIR)/ZLIB_%.o, ${ZLIB_SRC})
+ZLIB_DEP = $(patsubst %.o, %.d, $(ZLIB_OBJ))
 
 JASPER_OBJ = $(patsubst %.c, $(OUTDIR)/JASPER_%.o, ${JASPER_SRC})
 JASPER_DEP = $(patsubst %.o, %.d, $(JASPER_OBJ))
@@ -192,6 +262,22 @@ CMAPDUMP_SRC = cmapdump.c base_error.c base_memory.c \
 	stm_open.c base_string.c
 
 CMAPDUMP_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${CMAPDUMP_SRC})
+
+ifneq ($(ZLIB_DIR),)
+PDFBENCH_OBJ += $(ZLIB_OBJ)
+PDFCLEAN_OBJ += $(ZLIB_OBJ)
+PDFDRAW_OBJ  += $(ZLIB_OBJ)
+PDFINFO_OBJ  += $(ZLIB_OBJ)
+PDFSHOW_OBJ  += $(ZLIB_OBJ)
+endif
+
+ifneq ($(JPEG_DIR),)
+PDFBENCH_OBJ += $(JPEG_OBJ)
+PDFCLEAN_OBJ += $(JPEG_OBJ)
+PDFDRAW_OBJ  += $(JPEG_OBJ)
+PDFINFO_OBJ  += $(JPEG_OBJ)
+PDFSHOW_OBJ  += $(JPEG_OBJ)
+endif
 
 ifneq ($(JASPER_DIR),)
 PDFBENCH_OBJ += $(JASPER_OBJ)
@@ -245,6 +331,12 @@ $(CMAPDUMP_APP): ${CMAPDUMP_OBJ}
 
 $(OUTDIR)/FITZ_%.o: %.c
 	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/ZLIB_%.o: %.c
+	$(CC) -MD -c $(ZLIB_CFLAGS) -o $@ $<
+
+$(OUTDIR)/JPEG_%.o: %.c
+	$(CC) -MD -c $(JPEG_CFLAGS) -o $@ $<
 
 $(OUTDIR)/JBIG_%.o: %.c
 	$(CC) -MD -c $(JBIG2_CFLAGS) -o $@ $<
@@ -316,18 +408,35 @@ $(OUTDIR)/cmap_korean.c: $(CMAPDUMP_APP)
 fontsources: $(OUTDIR)/font_misc.c $(OUTDIR)/font_mono.c $(OUTDIR)/font_serif.c $(OUTDIR)/font_sans.c $(OUTDIR)/font_cjk.c
 	@echo "building font sources"
 
--include $(LIBS_DEP)
+ifneq ($(ZLIB_DIR),)
+-include $(ZLIB_DEP)
+endif
+
+ifneq ($(JPEG_DIR),)
+-include $(JPEG_DEP)
+endif
+
+ifneq ($(JASPER_DIR),)
 -include $(JASPER_DEP)
+endif
+
+ifneq ($(JBIG2_DIR),)
 -include $(JBIG2_DEP)
+endif
+
 -include $(PDFCLEAN_DEP)
 -include $(PDFBENCH_DEP)
 
 inform:
 ifneq ($(CFG),rel)
 ifneq ($(CFG),dbg)
+ifneq ($(CFG),rel64)
+ifneq ($(CFG),dbg64)
 	@echo "Invalid configuration: '"$(CFG)"'"
 	@echo "Valid configurations: rel, dbg (e.g. make CFG=dbg)"
 	@exit 1
+endif
+endif
 endif
 endif
 

@@ -35,9 +35,9 @@ enum
 	S41 = 6, S42 = 10, S43 = 15, S44 = 21
 };
 
-static void encode(unsigned char *, const unsigned long *, const unsigned);
-static void decode(unsigned long *, const unsigned char *, const unsigned);
-static void transform(unsigned long state[4], const unsigned char block[64]);
+static void encode(unsigned char *, const unsigned int *, const unsigned);
+static void decode(unsigned int *, const unsigned char *, const unsigned);
+static void transform(unsigned int state[4], const unsigned char block[64]);
 
 static unsigned char padding[64] =
 {
@@ -59,27 +59,27 @@ static unsigned char padding[64] =
  * Rotation is separate from addition to prevent recomputation.
  */
 #define FF(a, b, c, d, x, s, ac) { \
-	(a) += F ((b), (c), (d)) + (x) + (unsigned long)(ac); \
+	(a) += F ((b), (c), (d)) + (x) + (unsigned int)(ac); \
 	(a) = ROTATE ((a), (s)); \
 	(a) += (b); \
 	}
 #define GG(a, b, c, d, x, s, ac) { \
-	(a) += G ((b), (c), (d)) + (x) + (unsigned long)(ac); \
+	(a) += G ((b), (c), (d)) + (x) + (unsigned int)(ac); \
 	(a) = ROTATE ((a), (s)); \
 	(a) += (b); \
 	}
 #define HH(a, b, c, d, x, s, ac) { \
-	(a) += H ((b), (c), (d)) + (x) + (unsigned long)(ac); \
+	(a) += H ((b), (c), (d)) + (x) + (unsigned int)(ac); \
 	(a) = ROTATE ((a), (s)); \
 	(a) += (b); \
 	}
 #define II(a, b, c, d, x, s, ac) { \
-	(a) += I ((b), (c), (d)) + (x) + (unsigned long)(ac); \
+	(a) += I ((b), (c), (d)) + (x) + (unsigned int)(ac); \
 	(a) = ROTATE ((a), (s)); \
 	(a) += (b); \
 	}
 
-static void encode(unsigned char *output, const unsigned long *input, const unsigned len)
+static void encode(unsigned char *output, const unsigned int *input, const unsigned len)
 {
 	unsigned i, j;
 
@@ -92,26 +92,26 @@ static void encode(unsigned char *output, const unsigned long *input, const unsi
 	}
 }
 
-static void decode(unsigned long *output, const unsigned char *input, const unsigned len)
+static void decode(unsigned int *output, const unsigned char *input, const unsigned len)
 {
 	unsigned i, j;
 
 	for (i = 0, j = 0; j < len; i++, j += 4)
 	{
-		output[i] = ((unsigned long)input[j]) |
-			(((unsigned long)input[j+1]) << 8) |
-			(((unsigned long)input[j+2]) << 16) |
-			(((unsigned long)input[j+3]) << 24);
+		output[i] = ((unsigned int)input[j]) |
+			(((unsigned int)input[j+1]) << 8) |
+			(((unsigned int)input[j+2]) << 16) |
+			(((unsigned int)input[j+3]) << 24);
 	}
 }
 
-static void transform(unsigned long state[4], const unsigned char block[64])
+static void transform(unsigned int state[4], const unsigned char block[64])
 {
-	unsigned long a = state[0];
-	unsigned long b = state[1];
-	unsigned long c = state[2];
-	unsigned long d = state[3];
-	unsigned long x[16];
+	unsigned int a = state[0];
+	unsigned int b = state[1];
+	unsigned int c = state[2];
+	unsigned int d = state[3];
+	unsigned int x[16];
 
 	decode(x, block, 64);
 
@@ -219,10 +219,10 @@ void fz_md5update(fz_md5 *context, const unsigned char *input, const unsigned in
 	index = (unsigned)((context->count[0] >> 3) & 0x3F);
 
 	/* Update number of bits */
-	context->count[0] += (unsigned long) inlen << 3;
-	if (context->count[0] < (unsigned long) inlen << 3)
+	context->count[0] += (unsigned int) inlen << 3;
+	if (context->count[0] < (unsigned int) inlen << 3)
 		context->count[1] ++;
-	context->count[1] += (unsigned long) inlen >> 29;
+	context->count[1] += (unsigned int) inlen >> 29;
 
 	partlen = 64 - index;
 

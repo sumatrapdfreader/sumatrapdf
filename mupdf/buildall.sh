@@ -1,2 +1,4 @@
-#make JBIG2_DIR=../sumatrapdf/ext/jbig2dec JASPER_DIR=../sumatrapdf/ext/jasper/src/libjasper -j4
-make JBIG2_DIR=../sumatrapdf/ext/jbig2dec JASPER_DIR=../sumatrapdf/ext/jasper/src/libjasper -j4 CFG=rel
+EXT=../sumatrapdf/ext
+#make ZLIB_DIR=$EXT/zlib-1.2.3 JPEG_DIR=$EXT/jpeg6b JBIG2_DIR=$EXT/jbig2dec JASPER_DIR=$EXT/jasper/src/libjasper CFG=dbg64 -j2
+#make ZLIB_DIR=$EXT/zlib-1.2.3 JPEG_DIR=$EXT/jpeg6b JBIG2_DIR=$EXT/jbig2dec JASPER_DIR=$EXT/jasper/src/libjasper CFG=dbg -j2
+make ZLIB_DIR=$EXT/zlib-1.2.3 JPEG_DIR=$EXT/jpeg6b JBIG2_DIR=$EXT/jbig2dec JASPER_DIR=$EXT/jasper/src/libjasper CFG=rel -j4
