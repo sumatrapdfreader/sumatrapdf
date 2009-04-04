@@ -367,7 +367,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 	return pdf_repairxref2(xref, file);
 }
 
-#ifdef WIN32_UNICODE_HACK
+#ifdef WIN32
 fz_error
 pdf_repairxrefw(pdf_xref *xref, wchar_t *filename)
 {

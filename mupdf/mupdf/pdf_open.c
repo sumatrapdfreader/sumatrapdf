@@ -727,7 +727,7 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 	return pdf_loadxref2(xref);
 }
 
-#ifdef WIN32_UNICODE_HACK
+#ifdef WIN32
 fz_error
 pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename)
 {

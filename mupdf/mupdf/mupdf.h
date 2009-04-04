@@ -146,7 +146,7 @@ struct pdf_xrefentry_s
 fz_error pdf_newxref(pdf_xref **);
 fz_error pdf_repairxref(pdf_xref *, char *filename);
 fz_error pdf_loadxref(pdf_xref *, char *filename);
-#ifdef WIN32_UNICODE_HACK
+#ifdef WIN32
 #include <wchar.h>
 fz_error pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename);
 fz_error pdf_repairxrefw(pdf_xref *xref, const wchar_t *filename);

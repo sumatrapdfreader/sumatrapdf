@@ -64,7 +64,7 @@ fz_dropstream(fz_stream *stm)
 	}
 }
 
-#ifdef WIN32_UNICODE_HACK
+#ifdef WIN32
 fz_error fz_openrfilew(fz_stream **stmp, const wchar_t *path)
 {
 	fz_error error;

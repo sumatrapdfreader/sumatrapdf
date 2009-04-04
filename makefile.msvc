@@ -93,7 +93,7 @@ FITZ_CFLAGS = $(CFLAGS) /TC \
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
 	/I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
-	/I$(JASPER_DIR)/include /I$(JBIG2_DIR) /D "WIN32_UNICODE_HACK"
+	/I$(JASPER_DIR)/include /I$(JBIG2_DIR)
 
 SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc \
 	/I$(FITZ_DIR)\fitz /I$(FITZ_DIR)\mupdf \
@@ -104,7 +104,6 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_MBCS"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "WIN32_UNICODE_HACK"
 !if "$(TEXBUILD)"=="1"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\"" /D "SVN_UPDATE_LINK=\"http://william.famille-blum.org/software/sumatra/\"" /D "CURR_VERSION=\"$(VERSION)\""
 !endif

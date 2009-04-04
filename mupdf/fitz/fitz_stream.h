@@ -389,7 +389,7 @@ struct fz_stream_s
  */
 
 fz_error fz_openrfile(fz_stream **stmp, char *filename);
-#ifdef WIN32_UNICODE_HACK
+#ifdef WIN32
 #include <wchar.h>
 fz_error fz_openrfilew(fz_stream **stmp, const wchar_t *path);
 #endif
