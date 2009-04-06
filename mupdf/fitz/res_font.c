@@ -125,6 +125,15 @@ fz_initfreetype(void)
 	return fz_okay;
 }
 
+void fz_destroyfreetype(void)
+{
+	if (fz_ftlib)
+	{
+		FT_Done_FreeType(fz_ftlib);
+		fz_ftlib = 0;
+	}
+}
+
 fz_error
 fz_newfontfromfile(fz_font **fontp, char *path, int index)
 {
