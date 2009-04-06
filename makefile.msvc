@@ -115,6 +115,7 @@ LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib \
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG
+LDFLAGS = $(LDFLAGS) /STACK:2097152
 
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
