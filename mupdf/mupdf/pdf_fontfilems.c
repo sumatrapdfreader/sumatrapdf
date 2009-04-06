@@ -185,6 +185,8 @@ static pdf_fontlistMS fontlistMS =
 };
 
 struct pdf_fontmapMS_s defaultSubstitute;
+
+/* copied from pdf_fontfile.c */
 enum
 {
 	FD_FIXED = 1 << 0,
@@ -197,6 +199,14 @@ enum
 	FD_SMALLCAP = 1 << 17,
 	FD_FORCEBOLD = 1 << 18
 };
+
+enum { CNS, GB, Japan, Korea };
+enum { MINCHO, GOTHIC };
+
+static int streq(const char *s1, const char *s2)
+{
+	return strcmp(s1,s2) == 0;
+}
 
 /* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
    matches "EurostileExtended-Roman" */
@@ -726,14 +736,6 @@ pdf_createfontlistMS()
 	return fz_okay;
 }
 
-static void
-findsubstitute(char *fontname, char **fontpath, int *index)
-{
-	// TODO: do something more clever
-	*fontpath = defaultSubstitute.fontpath;
-	*index = defaultSubstitute.index;
-}
-
 void
 pdf_destoryfontlistMS()
 {
@@ -742,126 +744,6 @@ pdf_destoryfontlistMS()
 
 	fontlistMS.len = 0;
 	fontlistMS.cap = 0;
-}
-
-static fz_error
-pdf_lookupfontMS2(char *fontname, char **fontpath, int *index, int *didfind)
-{
-	pdf_fontmapMS fontmap;
-	pdf_fontmapMS *found = nil;
-	char *pattern;
-	int i;
-
-	pdf_createfontlistMS();
-	if (fontlistMS.len == 0)
-		return fz_throw("fonterror : no fonts in the system");
-
-	pattern = fontname;
-	for (i = 0; i < ARRAY_SIZE(basenames); i++)
-	{
-		if (0 == strcmp(fontname, basenames[i]))
-		{
-			pattern = basepatterns[i];
-			break;
-		}
-	}
-
-	strlcpy(fontmap.fontface,pattern, sizeof(fontmap.fontface));
-	found = localbsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
-
-#if 0
-	if (!found)
-		found = findlinear(&fontlistMS, &fontmap);
-#endif
-
-	if (found)
-	{
-		*fontpath = found->fontpath;
-		*index = found->index;
-	}
-	else
-	{
-		findsubstitute(fontname, fontpath, index);
-	}
-
-	*didfind = 0;
-	if (found)
-		*didfind = 1;
-	return fz_okay;
-}
-
-static fz_error
-pdf_lookupfontMS(pdf_fontdesc *font, char *fontname, char *collection, char **fontpath, int *index)
-{
-	fz_error error;
-	int found;
-	/* TODO: font->font->name doesn't make any sense anymore since it only exists if
-	   a font file has already been loaded by freetype. Clean this up. */
-	char *fontname2 = NULL;
-	if (font->font)
-		fontname2 = font->font->name;
-
-	error = pdf_lookupfontMS2(fontname, fontpath, index, &found);
-	if (error)
-		return error;
-
-	if (!found && fontname2)
-	{
-		error = pdf_lookupfontMS2(fontname2, fontpath, index, &found);
-		if (error)
-			return error;
-	}
-
-	if (!found && collection)
-	{
-		if ((!strcmp(collection, "Adobe-Japan1")) || (!strcmp(collection, "Adobe-Japan2")))
-		{
-			if (!strcmp(fontname, "GothicBBB-Medium"))
-			{
-				error = pdf_lookupfontMS2("MS-Gothic", fontpath, index, &found);
-				if (error)
-					return error;
-			}
-			else if (!strcmp(fontname, "Ryumin-Light"))
-			{
-				error = pdf_lookupfontMS2("MS-Mincho", fontpath, index, &found);
-				if (error)
-					return error;
-			}
-			else if (font->flags & FD_FIXED)
-			{
-				if (font->flags & FD_SERIF)
-				{
-					error = pdf_lookupfontMS2("MS-Mincho", fontpath, index, &found);
-					if (error)
-						return error;
-				}
-				else
-				{
-					error = pdf_lookupfontMS2("MS-Gothic", fontpath, index, &found);
-					if (error)
-						return error;
-				}
-			}
-			else
-			{
-				if (font->flags & FD_SERIF)
-				{
-					error = pdf_lookupfontMS2("MS-PMincho", fontpath, index, &found);
-					if (error)
-						return error;
-				}
-				else
-				{
-					error = pdf_lookupfontMS2("MS-PGothic", fontpath, index, &found);
-					if (error)
-						return error;
-				}
-			}
-			font->font->ftsubstitute = 1;
-		}
-	}
-	return fz_okay;
 }
 
 #ifdef USE_BUILTIN_FONTS
@@ -949,50 +831,279 @@ found:
 }
 #endif
 
-fz_error
-pdf_loadbuiltinfont(pdf_fontdesc *font, char *basefont)
+static fz_error
+lookupwindowsfont(char *fontname, char **fontpath, int *index)
+{
+	pdf_fontmapMS fontmap;
+	pdf_fontmapMS *found;
+	char *pattern;
+	int i;
+
+	pdf_createfontlistMS();
+	if (fontlistMS.len == 0)
+		return fz_throw("fonterror : no fonts in the system");
+
+	pattern = fontname;
+	for (i = 0; i < ARRAY_SIZE(basenames); i++)
+	{
+		if (0 == strcmp(fontname, basenames[i]))
+		{
+			pattern = basepatterns[i];
+			break;
+		}
+	}
+
+	strlcpy(fontmap.fontface,pattern, sizeof(fontmap.fontface));
+	found = localbsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+
+#if 0
+	if (!found)
+		found = findlinear(&fontlistMS, &fontmap);
+#endif
+
+	if (found)
+	{
+		*fontpath = found->fontpath;
+		*index = found->index;
+		return fz_okay;
+	}
+	return 1;
+}
+
+static fz_error
+lookupcidfont(pdf_fontdesc *font, int csi, int kind, char **fontpath, int *index)
+{
+	if (MINCHO == kind)
+		return lookupwindowsfont("MS-Mincho", fontpath, index);
+	if (GOTHIC == kind)
+		return lookupwindowsfont("MS-Gothic", fontpath, index);
+	return fz_throw("Unknown cid kind %d", kind);
+}
+
+#if 0
+/* TODO: those rules conflict with lookupsubstitutefont() logic. */
+static fz_error
+lookupjapansubstitute(pdf_fontdesc *font, char *fontname, char **fontpath, int *index)
+{
+	if (streq(fontname, "GothicBBB-Medium"))
+		return lookupwindowsfont("MS-Gothic", fontpath, index);
+
+	if (streq(fontname, "Ryumin-Light"))
+		return lookupwindowsfont("MS-Mincho", fontpath, index);
+
+	if (font->flags & FD_FIXED)
+	{
+		if (font->flags & FD_SERIF)
+			return lookupwindowsfont("MS-Mincho", fontpath, index);
+
+		return lookupwindowsfont("MS-Gothic", fontpath, index);
+	}
+
+	if (font->flags & FD_SERIF)
+			return lookupwindowsfont("MS-PMincho", fontpath, index);
+
+	return lookupwindowsfont("MS-PGothic", fontpath, index);
+}
+#endif
+
+/* based on pdf_loadsystemfont() from pdf_fontfile.c */
+static fz_error
+lookupsystemsubstitutefont(pdf_fontdesc *font, char *fontname, char *collection, char **fontpath, int *index)
+{
+	int isbold = 0;
+	int isitalic = 0;
+	int isserif = 0;
+	int isscript = 0;
+	int isfixed = 0;
+
+	if (strstr(fontname, "Bold"))
+		isbold = 1;
+	if (strstr(fontname, "Italic"))
+		isitalic = 1;
+	if (strstr(fontname, "Oblique"))
+		isitalic = 1;
+
+	if (font->flags & FD_FIXED)
+		isfixed = 1;
+	if (font->flags & FD_SERIF)
+		isserif = 1;
+	if (font->flags & FD_ITALIC)
+		isitalic = 1;
+	if (font->flags & FD_SCRIPT)
+		isscript = 1;
+	if (font->flags & FD_FORCEBOLD)
+		isbold = 1;
+
+	pdf_logfont("fixed-%d serif-%d italic-%d script-%d bold-%d\n",
+			isfixed, isserif, isitalic, isscript, isbold);	
+	
+	if (collection)
+	{
+		int kind;
+
+		if (isserif)
+			kind = MINCHO;
+		else
+			kind = GOTHIC;
+
+		if (streq(collection, "Adobe-CNS1"))
+			return lookupcidfont(font, CNS, kind, fontpath, index);
+		else if (streq(collection, "Adobe-GB1"))
+			return lookupcidfont(font, GB, kind, fontpath, index);
+		else if (streq(collection, "Adobe-Japan1"))
+			return lookupcidfont(font, Japan, kind, fontpath, index);
+		else if (streq(collection, "Adobe-Japan2"))
+			return lookupcidfont(font, Japan, kind, fontpath, index);
+		else if (streq(collection, "Adobe-Korea1"))
+			return lookupcidfont(font, Korea, kind, fontpath, index);
+
+		fz_warn("unknown cid collection: %s", collection);
+	}
+
+	return fz_throw("no system substitute font");
+}
+
+/* based on pdf_loadsystemfont() from pdf_fontfile.c */
+static fz_error
+loadbuiltinsubstitutefont(pdf_fontdesc *font, char *fontname)
 {
 	fz_error error;
+	char *name;
 
+	int isbold = 0;
+	int isitalic = 0;
+	int isserif = 0;
+	int isscript = 0;
+	int isfixed = 0;
+
+	if (strstr(fontname, "Bold"))
+		isbold = 1;
+	if (strstr(fontname, "Italic"))
+		isitalic = 1;
+	if (strstr(fontname, "Oblique"))
+		isitalic = 1;
+
+	if (font->flags & FD_FIXED)
+		isfixed = 1;
+	if (font->flags & FD_SERIF)
+		isserif = 1;
+	if (font->flags & FD_ITALIC)
+		isitalic = 1;
+	if (font->flags & FD_SCRIPT)
+		isscript = 1;
+	if (font->flags & FD_FORCEBOLD)
+		isbold = 1;
+
+	pdf_logfont("fixed-%d serif-%d italic-%d script-%d bold-%d\n",
+			isfixed, isserif, isitalic, isscript, isbold);	
+
+	if (isscript)
+		name = "Chancery";
+
+	else if (isfixed)
+	{
+		if (isitalic) {
+			if (isbold) name = "Courier-BoldOblique";
+			else name = "Courier-Oblique";
+		}
+		else {
+			if (isbold) name = "Courier-Bold";
+			else name = "Courier";
+		}
+	}
+
+	else if (isserif)
+	{
+		if (isitalic) {
+			if (isbold) name = "Times-BoldItalic";
+			else name = "Times-Italic";
+		}
+		else {
+			if (isbold) name = "Times-Bold";
+			else name = "Times-Roman";
+		}
+	}
+
+	else
+	{
+		if (isitalic) {
+			if (isbold) name = "Helvetica-BoldOblique";
+			else name = "Helvetica-Oblique";
+		}
+		else {
+			if (isbold) name = "Helvetica-Bold";
+			else name = "Helvetica";
+		}
+	}
+
+	error = pdf_loadbuiltinfont(font, name);
+	if (error)
+		return fz_throw("cannot load builtin substitute font: %s", name);
+
+	/* it's a substitute font: override the metrics */
+	font->font->ftsubstitute = 1;
+
+	return fz_okay;
+}
+
+static fz_error loadsubstitutefont(pdf_fontdesc *font, char *fontname, char *collection)
+{
+	fz_error error;
 	char *file;
 	int index;
 
-#ifdef USE_BUILTIN_FONTS
-	error = pdf_loadbuiltinfont2(font, basefont);
-	if (error)
-		return error;
-#endif
+	error = lookupsystemsubstitutefont(font, fontname, collection, &file, &index);
+	if (fz_okay == error) {
+		error = fz_newfontfromfile(&font->font, file, index);
+		if (error)
+			return fz_rethrow(error, "cannot load freetype font from a file %s", file);
+		font->font->ftsubstitute = 1;
+		return fz_okay;
+	}
 
-	error = pdf_lookupfontMS(font, basefont, NULL, &file, &index);
+	return loadbuiltinsubstitutefont(font, fontname);
+}
+
+static fz_error loadwindowsfont(pdf_fontdesc *font, char *fontname)
+{
+	fz_error error;
+	char *file;
+	int index;
+
+	error = lookupwindowsfont(fontname, &file, &index);
 	if (error)
 		return error;
 
 	error = fz_newfontfromfile(&font->font, file, index);
 	if (error)
-		return fz_rethrow(error, "cannot load freetype font from a file");
-
+		return fz_rethrow(error, "cannot load freetype font from a file %s", file);
 	return fz_okay;
+}
+
+fz_error
+pdf_loadbuiltinfont(pdf_fontdesc *font, char *basefont)
+{
+#ifdef USE_BUILTIN_FONTS
+	fz_error error = pdf_loadbuiltinfont2(font, basefont);
+	if (fz_okay == error)
+		return fz_okay;
+#endif
+
+	return loadwindowsfont(font, basefont);
 }
 
 fz_error
 pdf_loadsystemfont(pdf_fontdesc *font, char *basefont, char *collection)
 {
 	fz_error error;
-	char *file;
-	int index;
+	error = loadwindowsfont(font, basefont);
+	if (fz_okay == error)
+		return fz_okay;
 
-	error = pdf_lookupfontMS(font, basefont, collection, &file, &index);
+	error = loadsubstitutefont(font, basefont, collection);
 	if (error)
-		goto cleanup;
-
-	error = fz_newfontfromfile(&font->font, file, index);
-	if (error)
-		return fz_rethrow(error, "cannot load freetype font from a file");
-
+		return fz_throw("cannot load system font %s from collection %s", basefont, collection);
 	return fz_okay;
-
-cleanup:
-	return error;
 }
 
 /* TODO: copied from pdf_fontfile.c */
