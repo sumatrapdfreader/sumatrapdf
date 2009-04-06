@@ -479,7 +479,7 @@ fz_strokepath(fz_gel *gel, fz_pathnode *path, fz_matrix ctm, float flatness, flo
 
 	i = 0;
 
-	if (path->len > 0 && path->els[0].k != FZ_MOVETO)
+	if (path->len > 0 && (path->els[0].k != FZ_MOVETO) && (path->els[0].k != FZ_CLOSEPATH))
 		return fz_throw("path must begin with moveto");
 
 	p0.x = p0.y = 0; /* FZ_MOVETO guarantees p0 to be set, silence compiler */
