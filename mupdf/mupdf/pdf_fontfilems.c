@@ -752,6 +752,7 @@ pdf_lookupfontMS2(char *fontname, char **fontpath, int *index, int *didfind)
 	char *pattern;
 	int i;
 
+	pdf_createfontlistMS();
 	if (fontlistMS.len == 0)
 		return fz_throw("fonterror : no fonts in the system");
 
