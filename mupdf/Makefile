@@ -287,17 +287,17 @@ endif
 ifneq ($(JASPER_DIR),)
 PDFBENCH_OBJ += $(JASPER_OBJ)
 PDFCLEAN_OBJ += $(JASPER_OBJ)
-PDFDRAW_OBJ += $(JASPER_OBJ)
-PDFINFO_OBJ += $(JASPER_OBJ)
-PDFSHOW_OBJ += $(JASPER_OBJ)
+PDFDRAW_OBJ  += $(JASPER_OBJ)
+PDFINFO_OBJ  += $(JASPER_OBJ)
+PDFSHOW_OBJ  += $(JASPER_OBJ)
 endif
 
 ifneq ($(JBIG2_DIR),)
 PDFBENCH_OBJ += $(JBIG2_OBJ)
 PDFCLEAN_OBJ += $(JBIG2_OBJ)
-PDFDRAW_OBJ += $(JBIG2_OBJ)
-PDFINFO_OBJ += $(JBIG2_OBJ)
-PDFSHOW_OBJ += $(JBIG2_OBJ)
+PDFDRAW_OBJ  += $(JBIG2_OBJ)
+PDFINFO_OBJ  += $(JBIG2_OBJ)
+PDFSHOW_OBJ  += $(JBIG2_OBJ)
 endif
 
 PDFBENCH_APP = ${OUTDIR}/pdfbench
@@ -370,45 +370,45 @@ $(OUTDIR)/cmap_chinese_s.c: $(CMAPDUMP_APP)
 	cmaps/chinese_s/GB-EUC-V cmaps/chinese_s/GBK-EUC-H \
 	cmaps/chinese_s/GBK-EUC-UCS2 cmaps/chinese_s/GBK-EUC-V \
 	cmaps/chinese_s/GBK2K-H cmaps/chinese_s/GBK2K-V cmaps/chinese_s/GBKp-EUC-H \
-    cmaps/chinese_s/GBKp-EUC-V cmaps/chinese_s/GBT-EUC-H cmaps/chinese_s/GBT-EUC-V \
-    cmaps/chinese_s/GBpc-EUC-H cmaps/chinese_s/GBpc-EUC-UCS2 \
-    cmaps/chinese_s/GBpc-EUC-UCS2C cmaps/chinese_s/GBpc-EUC-V \
-    cmaps/chinese_s/UniGB-UCS2-H cmaps/chinese_s/UniGB-UCS2-V
+	cmaps/chinese_s/GBKp-EUC-V cmaps/chinese_s/GBT-EUC-H cmaps/chinese_s/GBT-EUC-V \
+	cmaps/chinese_s/GBpc-EUC-H cmaps/chinese_s/GBpc-EUC-UCS2 \
+	cmaps/chinese_s/GBpc-EUC-UCS2C cmaps/chinese_s/GBpc-EUC-V \
+	cmaps/chinese_s/UniGB-UCS2-H cmaps/chinese_s/UniGB-UCS2-V
 
 $(OUTDIR)/cmap_chinese_t.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(OUTDIR)/cmap_chinese_t.c cmaps/chinese_t/Adobe-CNS1-3 \
-    cmaps/chinese_t/Adobe-CNS1-UCS2 cmaps/chinese_t/B5pc-H \
-    cmaps/chinese_t/B5pc-UCS2 cmaps/chinese_t/B5pc-UCS2C \
-    cmaps/chinese_t/B5pc-V cmaps/chinese_t/CNS-EUC-H \
-    cmaps/chinese_t/CNS-EUC-V cmaps/chinese_t/ETen-B5-H \
-    cmaps/chinese_t/ETen-B5-UCS2 cmaps/chinese_t/ETen-B5-V \
-    cmaps/chinese_t/ETenms-B5-H \
-    cmaps/chinese_t/HKscs-B5-H cmaps/chinese_t/HKscs-B5-V \
-    cmaps/chinese_t/UniCNS-UCS2-H cmaps/chinese_t/UniCNS-UCS2-V
+	cmaps/chinese_t/Adobe-CNS1-UCS2 cmaps/chinese_t/B5pc-H \
+	cmaps/chinese_t/B5pc-UCS2 cmaps/chinese_t/B5pc-UCS2C \
+	cmaps/chinese_t/B5pc-V cmaps/chinese_t/CNS-EUC-H \
+	cmaps/chinese_t/CNS-EUC-V cmaps/chinese_t/ETen-B5-H \
+	cmaps/chinese_t/ETen-B5-UCS2 cmaps/chinese_t/ETen-B5-V \
+	cmaps/chinese_t/ETenms-B5-H \
+	cmaps/chinese_t/HKscs-B5-H cmaps/chinese_t/HKscs-B5-V \
+	cmaps/chinese_t/UniCNS-UCS2-H cmaps/chinese_t/UniCNS-UCS2-V
 
 $(OUTDIR)/cmap_japanese.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(OUTDIR)/cmap_japanese.c cmaps/japanese/83pv-RKSJ-H \
-    cmaps/japanese/90ms-RKSJ-H cmaps/japanese/90ms-RKSJ-UCS2 \
-    cmaps/japanese/90ms-RKSJ-V cmaps/japanese/90msp-RKSJ-H \
-    cmaps/japanese/90msp-RKSJ-V cmaps/japanese/90pv-RKSJ-H \
-    cmaps/japanese/90pv-RKSJ-UCS2 cmaps/japanese/90pv-RKSJ-UCS2C \
-    cmaps/japanese/Add-RKSJ-H cmaps/japanese/Add-RKSJ-V \
-    cmaps/japanese/Adobe-Japan1-4 cmaps/japanese/Adobe-Japan1-UCS2 \
-    cmaps/japanese/EUC-H cmaps/japanese/EUC-V \
-    cmaps/japanese/Ext-RKSJ-H cmaps/japanese/Ext-RKSJ-V \
-    cmaps/japanese/H cmaps/japanese/UniJIS-UCS2-H \
-    cmaps/japanese/UniJIS-UCS2-HW-H cmaps/japanese/UniJIS-UCS2-HW-V \
-    cmaps/japanese/UniJIS-UCS2-V cmaps/japanese/V
+	cmaps/japanese/90ms-RKSJ-H cmaps/japanese/90ms-RKSJ-UCS2 \
+	cmaps/japanese/90ms-RKSJ-V cmaps/japanese/90msp-RKSJ-H \
+	cmaps/japanese/90msp-RKSJ-V cmaps/japanese/90pv-RKSJ-H \
+	cmaps/japanese/90pv-RKSJ-UCS2 cmaps/japanese/90pv-RKSJ-UCS2C \
+	cmaps/japanese/Add-RKSJ-H cmaps/japanese/Add-RKSJ-V \
+	cmaps/japanese/Adobe-Japan1-4 cmaps/japanese/Adobe-Japan1-UCS2 \
+	cmaps/japanese/EUC-H cmaps/japanese/EUC-V \
+	cmaps/japanese/Ext-RKSJ-H cmaps/japanese/Ext-RKSJ-V \
+	cmaps/japanese/H cmaps/japanese/UniJIS-UCS2-H \
+	cmaps/japanese/UniJIS-UCS2-HW-H cmaps/japanese/UniJIS-UCS2-HW-V \
+	cmaps/japanese/UniJIS-UCS2-V cmaps/japanese/V
 
 $(OUTDIR)/cmap_korean.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(OUTDIR)/cmap_korean.c cmaps/korean/Adobe-Korea1-2 \
-    cmaps/korean/Adobe-Korea1-UCS2 cmaps/korean/KSC-EUC-H \
-    cmaps/korean/KSC-EUC-V cmaps/korean/KSCms-UHC-H \
-    cmaps/korean/KSCms-UHC-HW-H cmaps/korean/KSCms-UHC-HW-V \
-    cmaps/korean/KSCms-UHC-UCS2 cmaps/korean/KSCms-UHC-V \
-    cmaps/korean/KSCpc-EUC-H cmaps/korean/KSCpc-EUC-UCS2 \
-    cmaps/korean/KSCpc-EUC-UCS2C cmaps/korean/UniKS-UCS2-H \
-    cmaps/korean/UniKS-UCS2-V
+	cmaps/korean/Adobe-Korea1-UCS2 cmaps/korean/KSC-EUC-H \
+	cmaps/korean/KSC-EUC-V cmaps/korean/KSCms-UHC-H \
+	cmaps/korean/KSCms-UHC-HW-H cmaps/korean/KSCms-UHC-HW-V \
+	cmaps/korean/KSCms-UHC-UCS2 cmaps/korean/KSCms-UHC-V \
+	cmaps/korean/KSCpc-EUC-H cmaps/korean/KSCpc-EUC-UCS2 \
+	cmaps/korean/KSCpc-EUC-UCS2C cmaps/korean/UniKS-UCS2-H \
+	cmaps/korean/UniKS-UCS2-V
 
 fontsources: $(OUTDIR)/font_misc.c $(OUTDIR)/font_mono.c $(OUTDIR)/font_serif.c $(OUTDIR)/font_sans.c $(OUTDIR)/font_cjk.c
 	@echo "building font sources"
