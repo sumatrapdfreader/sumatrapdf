@@ -112,13 +112,13 @@ static BOOL             gDebugShowLinks = FALSE;
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
 
-#define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
-#define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
-#define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
-#define SPLITER_CLASS_NAME      _T("Spliter")
-#define FINDSTATUS_CLASS_NAME   _T("FindStatus")
+#define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
+#define CANVAS_CLASS_NAME       L"SUMATRA_PDF_CANVAS"
+#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
+#define SPLITER_CLASS_NAME      L"Spliter"
+#define FINDSTATUS_CLASS_NAME   L"FindStatus"
 #define PDF_DOC_NAME            _T("Adobe PDF Document")
-#define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
+#define ABOUT_WIN_TITLE         _TRW("About SumatraPDF")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR             _T("SumatraPDF")
 #define APP_NAME_STR            "SumatraPDF"
@@ -153,7 +153,7 @@ static BOOL             gDebugShowLinks = FALSE;
 static FileHistoryList *            gFileHistoryRoot = NULL;
 
 static HINSTANCE                    ghinst = NULL;
-TCHAR                               windowTitle[MAX_LOADSTRING];
+WCHAR                               windowTitle[MAX_LOADSTRING];
 
 static WindowInfo*                  gWindowList;
 
@@ -2048,7 +2048,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         NULL, NULL,
         ghinst, NULL);
 #else
-    hwndFrame = CreateWindow(
+    hwndFrame = CreateWindowW(
             FRAME_CLASS_NAME, windowTitle,
             WS_OVERLAPPEDWINDOW,
             winPosX, winPosY, winDx, winDy,
@@ -2061,7 +2061,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
 
     win = WindowInfo_New(hwndFrame);
 
-    hwndCanvas = CreateWindowEx(
+    hwndCanvas = CreateWindowExW(
             WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
@@ -5182,7 +5182,7 @@ static void OnMenuAbout() {
         SetActiveWindow(gHwndAbout);
         return;
     }
-    gHwndAbout = CreateWindow(
+    gHwndAbout = CreateWindowW(
             ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
@@ -5425,7 +5425,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND find = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "",
+    HWND find = CreateWindowExW(WS_EX_STATICEDGE, WC_EDITW, L"",
                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
                             FIND_TXT_POS_X, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
@@ -5433,7 +5433,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
                             FIND_TXT_POS_X, 1, 0, 0,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HWND status = CreateWindowEx(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, "", WS_CHILD|SS_CENTER,
+    HWND status = CreateWindowExW(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, L"", WS_CHILD|SS_CENTER,
                             0, 0, 0, 0, win->hwndCanvas, (HMENU)0, hInst, NULL);
 
     HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
@@ -5762,18 +5762,18 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND spliter = CreateWindowA("Spliter", "", WS_CHILDWINDOW, 0, 0, 0, 0,
+    HWND spliter = CreateWindowW(L"Spliter", L"", WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
     win->hwndSpliter = spliter;
     
-    HWND closeToc = CreateWindowA(WC_STATIC, "",
+    HWND closeToc = CreateWindowW(WC_STATICW, L"",
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 5, 9, spliter, (HMENU)0, hInst, NULL);
     SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
     SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
 
-    win->hwndTocBox = CreateWindowExA(WS_EX_STATICEDGE, WC_TREEVIEW, "TOC",
+    win->hwndTocBox = CreateWindowExW(WS_EX_STATICEDGE, WC_TREEVIEWW, L"TOC",
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD,
@@ -6388,7 +6388,7 @@ InitMouseWheelInfo:
 
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
-    WNDCLASSEX  wcex;
+    WNDCLASSEXW  wcex;
     ATOM        atom;
 
     wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -6403,7 +6403,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = FRAME_CLASS_NAME;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-    atom = RegisterClassEx(&wcex);
+    atom = RegisterClassExW(&wcex);
     if (!atom)
         return FALSE;
 
@@ -6419,7 +6419,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = CANVAS_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassEx(&wcex);
+    atom = RegisterClassExW(&wcex);
     if (!atom)
         return FALSE;
 
@@ -6435,7 +6435,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = ABOUT_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassEx(&wcex);
+    atom = RegisterClassExW(&wcex);
     if (!atom)
         return FALSE;
 
@@ -6451,7 +6451,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = SPLITER_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassEx(&wcex);
+    atom = RegisterClassExW(&wcex);
     if (!atom)
         return FALSE;
 
@@ -6467,7 +6467,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = FINDSTATUS_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassEx(&wcex);
+    atom = RegisterClassExW(&wcex);
     if (!atom)
         return FALSE;
 
@@ -7004,7 +7004,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             // race condition and having more than one copy launch because
             // FindWindow() in one process is called before a window is created
             // in another process
-            reuse_instance = FindWindow(FRAME_CLASS_NAME, 0)!=NULL;
+            reuse_instance = FindWindowW(FRAME_CLASS_NAME, 0) != NULL;
             continue;
         }
 
@@ -7065,7 +7065,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             gBenchPageNum = INVALID_PAGE_NO;
     }
 
-    LoadString(hInstance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
     if (!RegisterWinClass(hInstance))
         goto Exit;
 

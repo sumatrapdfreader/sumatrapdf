@@ -327,6 +327,8 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
         DialogSizer_Set(hDlg, sz, TRUE, NULL);
         data = (Dialog_ChangeLanguage_Data*)lParam;
         assert(data);
+		// TODO: figure out how to make it unicode. Is it because resource template is ansi?
+		bool isUni = IsWindowUnicode(hDlg);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
         /* TODO: for some reason this doesn't work well e.g. when using
            russion translation, the russian part of window title is garbage (?)
@@ -387,7 +389,7 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
     Dialog_ChangeLanguage_Data data;
     data.langId = currLangId;
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
+    int dialogResult = DialogBoxParamW(NULL, MAKEINTRESOURCEW(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (DIALOG_CANCEL_PRESSED == dialogResult)
         return -1;
     return data.langId;
