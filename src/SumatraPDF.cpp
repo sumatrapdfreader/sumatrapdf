@@ -5182,13 +5182,19 @@ static void OnMenuAbout() {
         SetActiveWindow(gHwndAbout);
         return;
     }
+    const WCHAR *title = ABOUT_WIN_TITLE;
     gHwndAbout = CreateWindowW(
-            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
+            ABOUT_CLASS_NAME, title,
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
             ABOUT_WIN_DX, ABOUT_WIN_DY,
             NULL, NULL,
             ghinst, NULL);
+
+    // TODO: why is returning only "A"?
+    WCHAR *t = win_get_textw(gHwndAbout);
+    BOOL isUni = IsWindowUnicode(gHwndAbout);
+    win_set_textw(gHwndAbout, title);
     if (!gHwndAbout)
         return;
     ShowWindow(gHwndAbout, SW_SHOW);
@@ -6429,7 +6435,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = 0;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground  = NULL;
     wcex.lpszMenuName   = NULL;
