@@ -54,7 +54,7 @@ extern int opterr, optind, optopt;
 extern char *optarg;
 #endif
 
-#ifdef _MSC_VER
+#ifdef _MSC_VER /* stupid stone-age compiler */
 
 #include <io.h>
 
@@ -62,6 +62,7 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define FZ_FLEX 1
 #define restrict
+
 #define inline __inline
 
 #define __func__ __FUNCTION__

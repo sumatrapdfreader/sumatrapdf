@@ -382,7 +382,7 @@ $(OUTDIR)/cmap_chinese_t.c: $(CMAPDUMP_APP)
 	cmaps/chinese_t/B5pc-V cmaps/chinese_t/CNS-EUC-H \
 	cmaps/chinese_t/CNS-EUC-V cmaps/chinese_t/ETen-B5-H \
 	cmaps/chinese_t/ETen-B5-UCS2 cmaps/chinese_t/ETen-B5-V \
-	cmaps/chinese_t/ETenms-B5-H \
+	cmaps/chinese_t/ETenms-B5-H cmaps/chinese_t/ETenms-B5-V \
 	cmaps/chinese_t/HKscs-B5-H cmaps/chinese_t/HKscs-B5-V \
 	cmaps/chinese_t/UniCNS-UCS2-H cmaps/chinese_t/UniCNS-UCS2-V
 

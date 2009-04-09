@@ -157,6 +157,8 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 	int next;
 	int i;
 
+
+
 	xref->file = file;
 
 	/* TODO: extract version */

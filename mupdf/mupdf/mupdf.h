@@ -5,10 +5,6 @@
 #error "fitz.h must be included before mupdf.h"
 #endif
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 void pdf_logxref(char *fmt, ...);
 void pdf_logrsrc(char *fmt, ...);
 void pdf_logfont(char *fmt, ...);
@@ -748,10 +744,6 @@ fz_error pdf_showimage(pdf_csi*, pdf_image *img);
 fz_error pdf_newcsi(pdf_csi **csip, int maskonly);
 fz_error pdf_runcsi(pdf_csi *, pdf_xref *xref, fz_obj *rdb, fz_stream *);
 void pdf_dropcsi(pdf_csi *csi);
-
-#ifdef  __cplusplus
-}
-#endif
 
 #endif
 

@@ -105,6 +105,7 @@ GenFile cmap_chinese_t.c : cmapdump
     ETen-B5-UCS2
     ETen-B5-V
     ETenms-B5-H
+    ETenms-B5-V
     HKscs-B5-H
     HKscs-B5-V
     UniCNS-UCS2-H

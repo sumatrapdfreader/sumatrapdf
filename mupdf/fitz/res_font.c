@@ -366,7 +366,6 @@ fz_rendert3glyph(fz_glyph *glyph, fz_font *font, int gid, fz_matrix trm)
 	return fz_okay;
     }
 
-
     ctm = fz_concat(font->t3matrix, trm);
     bbox = fz_roundrect(fz_boundtree(tree, ctm));
 

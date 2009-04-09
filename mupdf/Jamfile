@@ -15,6 +15,5 @@ HDRS += [ FDirName $(TOP) apps ] ;
 SubInclude TOP fitz ;
 SubInclude TOP fitzdraw ;
 SubInclude TOP mupdf ;
-
 SubInclude TOP apps ;
 

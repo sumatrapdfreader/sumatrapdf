@@ -441,7 +441,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 				for (i = 0; i < 256; i++)
 				{
 					etable[i] = ftcharindex(face, i);
-						FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
+					FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 					if (ebuffer[i][0])
 						estrings[i] = ebuffer[i];
 				}

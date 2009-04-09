@@ -31,15 +31,25 @@ loadnametreenode(fz_obj *tree, pdf_xref *xref, fz_obj *node)
 		{
 			key = fz_arrayget(names, i * 2 + 0);
 			val = fz_arrayget(names, i * 2 + 1);
+
 			error = pdf_resolve(&key, xref);
-			if (!error)
-				error = fz_dictput(tree, key, val);
 			if (error)
 			{
 				fz_dropobj(names);
 				fz_dropobj(node);
+				return fz_rethrow(error, "cannot resolve name tree key");
+			}
+
+			error = fz_dictput(tree, key, val);
+			if (error)
+			{
+				fz_dropobj(key);
+				fz_dropobj(names);
+				fz_dropobj(node);
 				return fz_rethrow(error, "cannot insert name tree entry");
 			}
+
+			fz_dropobj(key);
 		}
 
 		fz_dropobj(names);

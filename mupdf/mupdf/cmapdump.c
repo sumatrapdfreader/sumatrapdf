@@ -104,27 +104,20 @@ main(int argc, char **argv)
 
 	fprintf(fo, "/*\n * %s\n */\n\n", cmap->cmapname);
 
+	fprintf(fo, "static const pdf_range pdf_cmap_%s_ranges[] =\n{\n", name);
 	if (cmap->rlen == 0)
 	{
-		/* a dummy entry to satisfy Visual C compiler */
-		fprintf(fo, "static const pdf_range pdf_cmap_%s_ranges[1] =\n{\n", name);
-		fprintf(fo, "	 { 0x0, 0x0, PDF_CMAP_RANGE, 0 },\n");
-		fprintf(fo, "};\n\n");
+	    fprintf(fo, "    /* dummy entry for non-c99 compilers */\n");
+	    fprintf(fo, "    { 0x0, 0x0, PDF_CMAP_RANGE, 0 }\n");
 	}
-	else
+	for (k = 0; k < cmap->rlen; k++)
 	{
-		fprintf(fo, "static const pdf_range pdf_cmap_%s_ranges[%d] =\n{\n",
-			name, cmap->rlen);
-
-		for (k = 0; k < cmap->rlen; k++)
-		{
-		    fprintf(fo, "    { 0x%04x, 0x%04x, %s %d },\n",
-			    cmap->ranges[k].low, cmap->ranges[k].high,
-			    flagtoname(cmap->ranges[k].flag),
-			    cmap->ranges[k].offset);
-		}
-		fprintf(fo, "};\n\n");
+	    fprintf(fo, "    { 0x%04x, 0x%04x, %s %d },\n",
+		    cmap->ranges[k].low, cmap->ranges[k].high,
+		    flagtoname(cmap->ranges[k].flag),
+		    cmap->ranges[k].offset);
 	}
+	fprintf(fo, "};\n\n");
 
 	if (cmap->tlen == 0)
 	{
@@ -153,18 +146,15 @@ main(int argc, char **argv)
 	fprintf(fo, "    %d, /* codespace table */\n", cmap->ncspace);
 	fprintf(fo, "    {\n");
 
-	if (cmap->ncspace == 0) 
+	if (cmap->ncspace == 0)
 	{
-		/* dummy entry to satisfy Visual C compiler */
-		fprintf(fo, "\t{ 0, 0x0, 0x0 },\n");
+	    fprintf(fo, "    /* dummy entry for non-c99 compilers */\n");
+	    fprintf(fo, "    { 0, 0x0, 0x0 },\n");
 	}
-	else 
+	for (k = 0; k < cmap->ncspace; k++)
 	{
-		for (k = 0; k < cmap->ncspace; k++)
-		{
-		    fprintf(fo, "\t{ %d, 0x%04x, 0x%04x },\n",
-			    cmap->cspace[k].n, cmap->cspace[k].low, cmap->cspace[k].high);
-		}
+	    fprintf(fo, "\t{ %d, 0x%04x, 0x%04x },\n",
+		    cmap->cspace[k].n, cmap->cspace[k].low, cmap->cspace[k].high);
 	}
 	fprintf(fo, "    },\n");
 
