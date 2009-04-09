@@ -8,12 +8,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2_text.c 420 2005-07-27 23:55:54Z giles $
 */
 
 /* JBIG2 Pattern Dictionary and Halftone Region decoding */

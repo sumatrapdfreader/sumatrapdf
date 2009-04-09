@@ -11,12 +11,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2_generic.c 465 2008-05-16 23:48:20Z giles $
 */
 
 /**
@@ -540,7 +537,7 @@ jbig2_decode_generic_region(Jbig2Ctx *ctx,
   return -1;
 }
 
-/** 
+/**
  * Handler for immediate generic region segments
  */
 int
@@ -633,4 +630,3 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
   return code;
 }
-

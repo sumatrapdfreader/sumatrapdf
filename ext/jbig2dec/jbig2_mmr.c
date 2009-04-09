@@ -1,19 +1,24 @@
 /*
-jbig2dec
+    jbig2dec
 
-Copyright (C) 2001-2002 Artifex Software, Inc.
+    Copyright (C) 2001-2002 Artifex Software, Inc.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+    This software is provided AS-IS with no warranty,
+    either express or implied.
 
-$Id: jbig2_mmr.c 465 2008-05-16 23:48:20Z giles $
+    This software is distributed under license and may not
+    be copied, modified or distributed except as expressly
+    authorized under the terms of the license contained in
+    the file LICENSE in this distribution.
+
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
+    San Rafael, CA  94903, U.S.A., +1(415)492-9861.
 */
 
-/*
-An implementation of MMR decoding. This is based on the implementation
-in Fitz, which in turn is based on the one in Ghostscript.
+/* An implementation of MMR decoding. This is based on the
+   implementation in Fitz, which in turn is based on the one
+   in Ghostscript.
 */
 
 #ifdef HAVE_CONFIG_H

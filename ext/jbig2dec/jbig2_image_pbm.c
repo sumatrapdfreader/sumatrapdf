@@ -1,24 +1,21 @@
 /*
     jbig2dec
-    
+
     Copyright (C) 2002 Artifex Software, Inc.
-    
+
     This software is distributed under license and may not
     be copied, modified or distributed except as expressly
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
-                                                                                
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
-    San Rafael, CA  94903, U.S.A., +1(415)492-9861.
 
-    $Id: jbig2_image_pbm.c 461 2008-05-07 21:37:02Z giles $
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
+    San Rafael, CA  94903, U.S.A., +1(415)492-9861.
 */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif 
+#endif
 #include "os_types.h"
 
 #include <stdio.h>
@@ -33,14 +30,14 @@ int jbig2_image_write_pbm_file(Jbig2Image *image, char *filename)
 {
     FILE *out;
     int	error;
-    
+
     if ((out = fopen(filename, "wb")) == NULL) {
         fprintf(stderr, "unable to open '%s' for writing", filename);
         return 1;
     }
-    
+
     error = jbig2_image_write_pbm(image, out);
-    
+
     fclose(out);
     return (error);
 }
@@ -51,12 +48,12 @@ int jbig2_image_write_pbm(Jbig2Image *image, FILE *out)
 {
         /* pbm header */
         fprintf(out, "P4\n%d %d\n", image->width, image->height);
-        
+
         /* pbm format pads to a byte boundary, so we can
            just write out the whole data buffer
            NB: this assumes minimal stride for the width */
         fwrite(image->data, 1, image->height*image->stride, out);
-        
+
         /* success */
 	return 0;
 }
@@ -66,14 +63,16 @@ Jbig2Image *jbig2_image_read_pbm_file(Jbig2Ctx *ctx, char *filename)
 {
     FILE *in;
     Jbig2Image *image;
-    
+
     if ((in = fopen(filename, "rb")) == NULL) {
 		fprintf(stderr, "unable to open '%s' for reading\n", filename);
 		return NULL;
     }
-    
+
     image = jbig2_image_read_pbm(ctx, in);
-    
+
+    fclose(in);
+
     return (image);
 }
 
@@ -85,7 +84,7 @@ Jbig2Image *jbig2_image_read_pbm(Jbig2Ctx *ctx, FILE *in)
     Jbig2Image *image;
     int c;
     char buf[32];
-    
+
     /* look for 'P4' magic */
     while ((c = fgetc(in)) != 'P') {
         if (feof(in)) return NULL;
@@ -136,7 +135,7 @@ Jbig2Image *jbig2_image_read_pbm(Jbig2Ctx *ctx, FILE *in)
         fprintf(stderr, "unexpected end of pbm file.\n");
         jbig2_image_release(ctx, image);
         return NULL;
-    }    
+    }
     /* success */
     return image;
 }

@@ -8,12 +8,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2_image.c 465 2008-05-16 23:48:20Z giles $
 */
 
 #ifdef HAVE_CONFIG_H
@@ -205,7 +202,7 @@ int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src,
     h = (y + h < dst->height) ? h : dst->height - y;
 #ifdef JBIG2_DEBUG
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1,
-      "composting %dx%d at (%d, %d) afer clipping\n",
+      "composting %dx%d at (%d, %d) after clipping\n",
         w, h, x, y);
 #endif
 

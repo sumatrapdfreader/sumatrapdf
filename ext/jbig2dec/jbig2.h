@@ -1,19 +1,16 @@
 /*
     jbig2dec
-    
+
     Copyright (C) 2002-2005 Artifex Software, Inc.
-    
+
     This software is distributed under license and may not
     be copied, modified or distributed except as expressly
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
-                                                                                
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-        
-    $Id: jbig2.h 461 2008-05-07 21:37:02Z giles $
 */
 
 #ifdef __cplusplus
@@ -70,7 +67,7 @@ Jbig2Image	*jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image,
 /* errors are returned from the library via a callback. If no callback
    is provided (a NULL argument is passed ot jbig2_ctx_new) a default
    handler is used which prints fatal errors to the stderr stream. */
-   
+
 /* error callback */
 typedef int (*Jbig2ErrorCallback) (void *data,
 				  const char *msg, Jbig2Severity severity,
@@ -80,7 +77,7 @@ typedef int (*Jbig2ErrorCallback) (void *data,
    clients can better control memory usage. If a NULL is passed for
    this argumennt of jbig2_ctx_new, a default allocator based on malloc()
    is used. */
-   
+
 /* dynamic memory callbacks */
 struct _Jbig2Allocator {
   void *(*alloc) (Jbig2Allocator *allocator, size_t size);

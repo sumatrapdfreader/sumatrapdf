@@ -8,12 +8,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2_text.c 466 2008-05-16 23:58:59Z giles $
 */
 
 #ifdef HAVE_CONFIG_H
@@ -293,7 +290,7 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 		Jbig2RefinementRegionParams rparams;
 		Jbig2Image *IBO;
 		int32_t RDW, RDH, RDX, RDY;
-		Jbig2Image *image;
+		Jbig2Image *refimage;
 		int BMSIZE = 0;
 
 		/* 6.4.11 (1, 2, 3, 4) */
@@ -313,8 +310,8 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
 		/* 6.4.11 (6) */
 		IBO = IB;
-		image = jbig2_image_new(ctx, IBO->width + RDW,
-					     IBO->height + RDH);
+		refimage = jbig2_image_new(ctx, IBO->width + RDW,
+						IBO->height + RDH);
 
 		/* Table 12 */
 		rparams.GRTEMPLATE = params->SBRTEMPLATE;
@@ -324,8 +321,8 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 		rparams.TPGRON = 0;
 		memcpy(rparams.grat, params->sbrat, 4);
 		jbig2_decode_refinement_region(ctx, segment,
-		    &rparams, as, image, GR_stats);
-		IB = image;
+		    &rparams, as, refimage, GR_stats);
+		IB = refimage;
 
 		jbig2_image_release(ctx, IBO);
 
@@ -366,7 +363,7 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 	    /* (3c.ix) */
 #ifdef JBIG2_DEBUG
 	    jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
-			"composing glyph id %d: %dx%d @ (%d,%d) symbol %d/%d", 
+			"composing glyph id %d: %dx%d @ (%d,%d) symbol %d/%d",
 			ID, IB->width, IB->height, x, y, NINSTANCES + 1,
 			params->SBNUMINSTANCES);
 #endif
@@ -465,6 +462,9 @@ jbig2_parse_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segmen
             params.sbrat[2] = segment_data[offset + 2];
             params.sbrat[3] = segment_data[offset + 3];
             offset += 4;
+	  } else {
+	    /* zero these for the sake of later debug messages */
+	    memset(params.sbrat, 0, sizeof(params.sbrat));
 	  }
       }
 

@@ -8,12 +8,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2_huffman.c 467 2008-05-17 00:08:26Z giles $
 */
 
 /* Huffman table decoding procedures
@@ -25,6 +22,7 @@
 #include "os_types.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef JBIG2_DEBUG
 #include <stdio.h>
@@ -287,8 +285,9 @@ if (RANGELEN)
 Jbig2HuffmanTable *
 jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
 {
-  int LENCOUNT[1 << LOG_TABLE_SIZE_MAX];
+  int *LENCOUNT;
   int LENMAX = -1;
+  const int lencountsize = 256 * sizeof(*LENCOUNT);
   const Jbig2HuffmanLine *lines = params->lines;
   int n_lines = params->n_lines;
   int i, j;
@@ -300,6 +299,14 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
   int firstcode = 0;
   int CURCODE;
   int CURTEMP;
+
+  LENCOUNT = jbig2_alloc(ctx->allocator, lencountsize);
+  if (LENCOUNT == NULL) {
+    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+      "couldn't allocate storage for huffman histogram");
+    return NULL;
+  }
+  memset(LENCOUNT, 0, lencountsize);
 
   /* B.3, 1. */
   for (i = 0; i < params->n_lines; i++)
@@ -356,6 +363,7 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
 		  end_j, max_j);
 		jbig2_free(ctx->allocator, result->entries);
 		jbig2_free(ctx->allocator, result);
+		jbig2_free(ctx->allocator, LENCOUNT);
 		return NULL;
 	      }
 	      /* todo: build extension tables */
@@ -389,6 +397,8 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
 	    }
 	}
     }
+
+  jbig2_free(ctx->allocator, LENCOUNT);
 
   return result;
 }

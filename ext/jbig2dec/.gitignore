@@ -1,0 +1,6 @@
+# ignore normal build products
+jbig2dec
+libjbig2dec.a
+
+# ignore object files
+*.o

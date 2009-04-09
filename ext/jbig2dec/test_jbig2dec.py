@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 # this is the testtest script for jbig2dec
-# $Id: test_jbig2dec.py 452 2007-02-05 22:59:10Z giles $
 
 import os, re
 import sys, time

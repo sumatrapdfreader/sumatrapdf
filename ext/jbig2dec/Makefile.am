@@ -1,4 +1,3 @@
-# $Id: Makefile.am 407 2005-05-24 03:49:47Z giles $
 ## process this file with automake to generate Makefile.in
 
 # require automake 1.7

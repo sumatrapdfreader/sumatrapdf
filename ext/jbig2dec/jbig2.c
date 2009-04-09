@@ -11,12 +11,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2.c 465 2008-05-16 23:48:20Z giles $
 */
 
 #ifdef HAVE_CONFIG_H
@@ -31,9 +28,6 @@
 
 #include "jbig2.h"
 #include "jbig2_priv.h"
-#include "jbig2_arith.h"
-#include "jbig2_generic.h"
-#include "jbig2_symbol_dict.h"
 
 static void *
 jbig2_default_alloc (Jbig2Allocator *allocator, size_t size)
@@ -430,4 +424,3 @@ jbig2_word_stream_buf_free(Jbig2Ctx *ctx, Jbig2WordStream *ws)
 {
   jbig2_free(ctx->allocator, ws);
 }
-

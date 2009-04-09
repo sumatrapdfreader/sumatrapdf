@@ -1,24 +1,21 @@
 /*
     jbig2dec
-    
+
     Copyright (C) 2002 Artifex Software, Inc.
-    
+
     This software is distributed under license and may not
     be copied, modified or distributed except as expressly
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
-                                                                                
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
-    San Rafael, CA  94903, U.S.A., +1(415)492-9861.
 
-    $Id: jbig2_image_png.c 461 2008-05-07 21:37:02Z giles $
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
+    San Rafael, CA  94903, U.S.A., +1(415)492-9861.
 */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif 
+#endif
 #include "os_types.h"
 
 #include <stdio.h>
@@ -55,14 +52,14 @@ int jbig2_image_write_png_file(Jbig2Image *image, char *filename)
 {
     FILE *out;
     int	error;
-    
+
     if ((out = fopen(filename, "wb")) == NULL) {
 		fprintf(stderr, "unable to open '%s' for writing\n", filename);
 		return 1;
     }
-    
+
     error = jbig2_image_write_png(image, out);
-    
+
     fclose(out);
     return (error);
 }
@@ -75,14 +72,14 @@ int jbig2_image_write_png(Jbig2Image *image, FILE *out)
 	png_structp	png;
 	png_infop	info;
 	png_bytep	rowpointer;
-	
+
 	png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 		NULL, NULL, NULL);
 	if (png == NULL) {
 		fprintf(stderr, "unable to create png structure\n");
 		return 2;
 	}
-	
+
 	info = png_create_info_struct(png);
 	if (info == NULL) {
             fprintf(stderr, "unable to create png info structure\n");
@@ -104,7 +101,7 @@ int jbig2_image_write_png(Jbig2Image *image, FILE *out)
 	/* png_init_io(png, out); */
         png_set_write_fn(png, (png_voidp)out, jbig2_png_write_data,
             jbig2_png_flush);
-        
+
 	/* now we fill out the info structure with our format data */
 	png_set_IHDR(png, info, image->width, image->height,
 		1, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
@@ -113,17 +110,17 @@ int jbig2_image_write_png(Jbig2Image *image, FILE *out)
 
 	/* png natively treates 0 as black. This will convert for us */
 	png_set_invert_mono(png);
-	
+
 	/* write out each row in turn */
 	rowpointer = (png_bytep)image->data;
 	for(i = 0; i < image->height; i++) {
 		png_write_row(png, rowpointer);
 		rowpointer += image->stride;
 	}
-	
+
 	/* finish and clean up */
 	png_write_end(png, info);
 	png_destroy_write_struct(&png, &info);
-		
+
 	return 0;
 }

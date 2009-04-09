@@ -11,12 +11,9 @@
     authorized under the terms of the license contained in
     the file LICENSE in this distribution.
 
-    For information on commercial licensing, go to
-    http://www.artifex.com/licensing/ or contact
-    Artifex Software, Inc.,  101 Lucas Valley Road #110,
+    For further licensing information refer to http://artifex.com/ or
+    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
     San Rafael, CA  94903, U.S.A., +1(415)492-9861.
-
-    $Id: jbig2_refinement.c 465 2008-05-16 23:48:20Z giles $
 */
 
 /**
@@ -37,7 +34,6 @@
 #include "jbig2_priv.h"
 #include "jbig2_arith.h"
 #include "jbig2_generic.h"
-#include "jbig2_mmr.h"
 #include "jbig2_image.h"
 
 static int
@@ -91,7 +87,7 @@ jbig2_decode_refinement_template0_unopt(Jbig2Ctx *ctx,
       jbig2_image_set_pixel(image, x, y, bit);
     }
   }
-#ifdef JBIG2_DEBUG
+#ifdef JBIG2_DEBUG_DUMP
   {
     static count = 0;
     char name[32];
@@ -142,7 +138,7 @@ jbig2_decode_refinement_template1_unopt(Jbig2Ctx *ctx,
     }
   }
 
-#ifdef JBIG2_DEBUG
+#ifdef JBIG2_DEBUG_DUMP
   {
     static count = 0;
     char name[32];
