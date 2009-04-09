@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2007
+/* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv2 */
 #ifndef _DISPLAY_MODEL_H_
 #define _DISPLAY_MODEL_H_

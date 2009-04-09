@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2007
+/* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv2 */
 #ifndef _PDF_ENGINE_H_
 #define _PDF_ENGINE_H_
