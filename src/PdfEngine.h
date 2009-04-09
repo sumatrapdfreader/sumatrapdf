@@ -7,8 +7,10 @@
 #include "wstr_util.h"
 
 #ifndef _FITZ_H_
+extern "C" {
 #include <fitz.h>
 #include <mupdf.h>
+}
 #endif
 
 /* Describes a link on PDF page. */

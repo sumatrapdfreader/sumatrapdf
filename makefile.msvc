@@ -339,7 +339,7 @@ $(O)\cmap_chinese_t.c: $(CMAPDUMP_APP)
 	$(FITZ_DIR)\cmaps\chinese_t\B5pc-V $(FITZ_DIR)\cmaps\chinese_t\CNS-EUC-H \
 	$(FITZ_DIR)\cmaps\chinese_t\CNS-EUC-V $(FITZ_DIR)\cmaps\chinese_t\ETen-B5-H \
 	$(FITZ_DIR)\cmaps\chinese_t\ETen-B5-UCS2 $(FITZ_DIR)\cmaps\chinese_t\ETen-B5-V \
-	$(FITZ_DIR)\cmaps\chinese_t\ETenms-B5-H \
+	$(FITZ_DIR)\cmaps\chinese_t\ETenms-B5-H $(FITZ_DIR)\cmaps\chinese_t\ETenms-B5-V \
 	$(FITZ_DIR)\cmaps\chinese_t\HKscs-B5-H $(FITZ_DIR)\cmaps\chinese_t\HKscs-B5-V \
 	$(FITZ_DIR)\cmaps\chinese_t\UniCNS-UCS2-H $(FITZ_DIR)\cmaps\chinese_t\UniCNS-UCS2-V
 
