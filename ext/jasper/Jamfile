@@ -1,0 +1,61 @@
+# $Id: Jamfile $
+#
+# You still need to run configure to generate config.h
+# 
+
+include $(HOME)/.jamrules ;
+
+# HDRS = src/libjasper/include ;
+CCFLAGS += -Isrc/libjasper/include ;
+LINKLIBS += -ljpeg -lm ;
+
+INCDIR = $(LIBDIR)/../include ;
+
+BASE_SRCS = 
+	jas_cm.c jas_debug.c jas_getopt.c jas_icc.c jas_iccdata.c
+	jas_image.c jas_init.c jas_malloc.c jas_seq.c jas_stream.c
+	jas_string.c jas_tvp.c jas_version.c ;
+
+JPC_SRCS =
+	jpc_bs.c jpc_cs.c jpc_dec.c jpc_enc.c jpc_math.c jpc_mct.c
+	jpc_mqcod.c jpc_mqdec.c jpc_mqenc.c jpc_qmfb.c jpc_t1cod.c
+	jpc_t1dec.c jpc_t1enc.c jpc_t2cod.c jpc_t2dec.c jpc_t2enc.c
+	jpc_tagtree.c jpc_tsfb.c jpc_util.c ;
+
+JP2_SRCS = jp2_cod.c jp2_dec.c jp2_enc.c ;
+
+PGX_SRCS = pgx_cod.c pgx_dec.c pgx_enc.c ;
+PNM_SRCS = pnm_cod.c pnm_dec.c pnm_enc.c ;
+BMP_SRCS = bmp_cod.c bmp_dec.c bmp_enc.c ;
+JPG_SRCS = jpg_dec.c jpg_enc.c jpg_val.c ;
+MIF_SRCS = mif_cod.c ;
+RAS_SRCS = ras_cod.c ras_dec.c ras_enc.c ;
+
+JASPER_HDRS =
+	jasper.h jas_config.h jas_config2.h jas_cm.h jas_fix.h
+	jas_debug.h jas_getopt.h jas_icc.h jas_image.h jas_init.h
+	jas_malloc.h jas_math.h jas_seq.h jas_stream.h jas_string.h
+	jas_tvp.h jas_types.h jas_version.h ;
+
+Library libjasper :
+	src/libjasper/base/$(BASE_SRCS)
+	src/libjasper/jpc/$(JPC_SRCS)
+	src/libjasper/jp2/$(JP2_SRCS)
+	src/libjasper/pgx/$(PGX_SRCS)
+	src/libjasper/pnm/$(PNM_SRCS)
+	src/libjasper/bmp/$(BMP_SRCS)
+	src/libjasper/jpg/$(JPG_SRCS)
+	src/libjasper/mif/$(MIF_SRCS)
+	src/libjasper/ras/$(RAS_SRCS)
+	;
+
+Main jasper : src/appl/jasper.c ;
+Main imgcmp : src/appl/imgcmp.c ;
+Main imginfo : src/appl/imginfo.c ;
+
+LinkLibraries jasper imgcmp imginfo : libjasper ;
+
+InstallBin $(BINDIR) : jasper$(SUFEXE) imgcmp$(SUFEXE) imginfo$(SUFEXE) ;
+InstallLib $(LIBDIR) : libjasper$(SUFLIB) ;
+# Bulk $(INCDIR)/jasper : src/libjasper/include/jasper/$(JASPER_HDRS) ;
+
