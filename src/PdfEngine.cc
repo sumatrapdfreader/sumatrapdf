@@ -267,8 +267,10 @@ DecryptedOk:
         goto Error;
 
     error = pdf_loadoutline(&_outline, _xref);
-    if (error)
-        goto Error;
+	// silently ignore errors from pdf_loadoutline()
+	// this information is not critical and checking the
+	// error might prevent loading some pdfs that would
+	// otherwise get displayed
 
     _pageCount = _pageTree->count;
     _pages = (pdf_page**)malloc(sizeof(pdf_page*) * _pageCount);

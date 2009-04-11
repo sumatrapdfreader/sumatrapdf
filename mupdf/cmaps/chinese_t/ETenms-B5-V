@@ -1,0 +1,81 @@
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: ProcSet (CIDInit)
+%%DocumentNeededResources: CMap (ETenms-B5-H)
+%%IncludeResource: ProcSet (CIDInit)
+%%IncludeResource: CMap (ETenms-B5-H)
+%%BeginResource: CMap (ETenms-B5-V)
+%%Title: (ETenms-B5-V Adobe CNS1 0)
+%%Version: 10.000
+%%Copyright: -----------------------------------------------------------
+%%Copyright: Copyright 1990-2001 Adobe Systems Incorporated.
+%%Copyright: All Rights Reserved.
+%%Copyright:
+%%Copyright: Patents Pending
+%%Copyright:
+%%Copyright: NOTICE: All information contained herein is the property
+%%Copyright: of Adobe Systems Incorporated.
+%%Copyright:
+%%Copyright: Permission is granted for redistribution of this file
+%%Copyright: provided this copyright notice is maintained intact and
+%%Copyright: that the contents of this file are not altered in any
+%%Copyright: way from its original form.
+%%Copyright:
+%%Copyright: PostScript and Display PostScript are trademarks of
+%%Copyright: Adobe Systems Incorporated which may be registered in
+%%Copyright: certain jurisdictions.
+%%Copyright: -----------------------------------------------------------
+%%EndComments
+
+/CIDInit /ProcSet findresource begin
+
+12 dict begin
+
+begincmap
+
+/ETenms-B5-H usecmap
+
+/CIDSystemInfo 3 dict dup begin
+  /Registry (Adobe) def
+  /Ordering (CNS1) def
+  /Supplement 0 def
+end def
+
+/CMapName /ETenms-B5-V def
+/CMapVersion 10.000 def
+/CMapType 1 def
+
+/XUID [1 10 25597] def
+
+/WMode 1 def
+
+6 begincidchar
+<a14b> 13646
+<a14c> 109
+<a156> 312
+<a158> 122
+<a15a> 13743
+<a15c> 13745
+endcidchar
+
+12 begincidrange
+<a15d> <a15e> 130
+<a161> <a162> 134
+<a165> <a166> 138
+<a169> <a16a> 142
+<a16d> <a16e> 146
+<a171> <a172> 150
+<a175> <a176> 154
+<a179> <a17a> 158
+<a17d> <a17e> 130
+<a1a1> <a1a2> 134
+<a1a3> <a1a4> 138
+<c6e4> <c6e5> 14097
+endcidrange
+
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+
+%%EndResource
+%%EOF
