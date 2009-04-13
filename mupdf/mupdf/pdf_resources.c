@@ -187,6 +187,7 @@ preloadfont(pdf_xref *xref, fz_obj *ref)
 		return fz_rethrow(error, "cannot resolve font resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 	error = pdf_loadfont(&font, xref, obj, ref);
 	pdf_dropfont(font); /* we did this just to fill the store, no need to hold on to it */
+	fz_dropobj(obj);
 	if (error)
 		return fz_rethrow(error, "cannot load font resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 	return fz_okay;

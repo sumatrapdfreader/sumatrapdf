@@ -65,12 +65,12 @@ endif
 
 FREETYPE_CFLAGS  = `freetype-config --cflags`
 
-ifeq ($(HOST),$(HOST_MAC))
+#ifeq ($(HOST),$(HOST_MAC))
 # don't depend on freetype being installed properly on mac
-FREETYPE_LDFLAGS = -L/usr/X11/lib -lfreetype --Wl,-framework,CoreServices -Wl,-framework,ApplicationServices
-else
+#FREETYPE_LDFLAGS = -L/usr/X11/lib -lfreetype --Wl,-framework,CoreServices -Wl,-framework,ApplicationServices
+#else
 FREETYPE_LDFLAGS = `freetype-config --libs`
-endif
+#endif
 
 # cc-option
 # Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)

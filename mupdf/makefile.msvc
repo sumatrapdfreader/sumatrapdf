@@ -78,7 +78,8 @@ JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 FITZ_CFLAGS = $(CFLAGS) /TC \
 	/D "NEED_STRLCPY" /D "NEED_STRSEP" /D "NEED_MATH" /D "NEED_GETOPT" \
 	/D "NEED_GETTIMEOFDAY" \
-	/D "HAVE_JASPER" /D "HAVE_JBIG2DEC"
+	/D "HAVE_JASPER" /D "HAVE_JBIG2DEC" \
+	/D "USE_HINTING"
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
 	/I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
@@ -120,25 +121,25 @@ JPEG_OBJS = \
 	$(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
 
 JBIG2_OBJS = \
-  $(O)\jbig2.obj $(O)\jbig2_arith.obj \
-  $(O)\jbig2_arith_iaid.obj $(O)\jbig2_arith_int.obj $(O)\jbig2_huffman.obj \
-  $(O)\jbig2_generic.obj $(O)\jbig2_refinement.obj $(O)\jbig2_image.obj \
-  $(O)\jbig2_segment.obj $(O)\jbig2_symbol_dict.obj $(O)\jbig2_text.obj \
-  $(O)\jbig2_mmr.obj $(O)\jbig2_page.obj $(O)\jbig2_metadata.obj
+	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
+	$(O)\jbig2_arith_iaid.obj $(O)\jbig2_arith_int.obj $(O)\jbig2_huffman.obj \
+	$(O)\jbig2_generic.obj $(O)\jbig2_refinement.obj $(O)\jbig2_image.obj \
+	$(O)\jbig2_segment.obj $(O)\jbig2_symbol_dict.obj $(O)\jbig2_text.obj \
+	$(O)\jbig2_mmr.obj $(O)\jbig2_page.obj $(O)\jbig2_metadata.obj
 # jbig2_image_pbm$(OBJ) jbig2dec$(OBJ) sha1$(OBJ)
 
 JASPER_OBJS = \
-  $(O)\jas_cm.obj $(O)\jas_debug.obj $(O)\jas_icc.obj \
-  $(O)\jas_iccdata.obj $(O)\jas_image.obj $(O)\jas_init.obj $(O)\jas_malloc.obj \
-  $(O)\jas_seq.obj $(O)\jas_stream.obj $(O)\jas_string.obj $(O)\jas_tvp.obj \
-  $(O)\jas_version.obj \
-  $(O)\jp2_cod.obj $(O)\jp2_dec.obj $(O)\jp2_enc.obj \
-  $(O)\jpc_bs.obj $(O)\jpc_cs.obj $(O)\jpc_dec.obj $(O)\jpc_enc.obj \
-  $(O)\jpc_math.obj $(O)\jpc_mct.obj $(O)\jpc_mqcod.obj $(O)\jpc_mqdec.obj \
-  $(O)\jpc_mqenc.obj $(O)\jpc_qmfb.obj $(O)\jpc_t1cod.obj $(O)\jpc_t1dec.obj \
-  $(O)\jpc_t1enc.obj $(O)\jpc_t2cod.obj $(O)\jpc_t2dec.obj $(O)\jpc_t2enc.obj \
-  $(O)\jpc_tagtree.obj $(O)\jpc_tsfb.obj $(O)\jpc_util.obj \
-  $(O)\pgx_cod.obj $(O)\pgx_dec.obj $(O)\pgx_enc.obj
+	$(O)\jas_cm.obj $(O)\jas_debug.obj $(O)\jas_icc.obj \
+	$(O)\jas_iccdata.obj $(O)\jas_image.obj $(O)\jas_init.obj $(O)\jas_malloc.obj \
+	$(O)\jas_seq.obj $(O)\jas_stream.obj $(O)\jas_string.obj $(O)\jas_tvp.obj \
+	$(O)\jas_version.obj \
+	$(O)\jp2_cod.obj $(O)\jp2_dec.obj $(O)\jp2_enc.obj \
+	$(O)\jpc_bs.obj $(O)\jpc_cs.obj $(O)\jpc_dec.obj $(O)\jpc_enc.obj \
+	$(O)\jpc_math.obj $(O)\jpc_mct.obj $(O)\jpc_mqcod.obj $(O)\jpc_mqdec.obj \
+	$(O)\jpc_mqenc.obj $(O)\jpc_qmfb.obj $(O)\jpc_t1cod.obj $(O)\jpc_t1dec.obj \
+	$(O)\jpc_t1enc.obj $(O)\jpc_t2cod.obj $(O)\jpc_t2dec.obj $(O)\jpc_t2enc.obj \
+	$(O)\jpc_tagtree.obj $(O)\jpc_tsfb.obj $(O)\jpc_util.obj \
+	$(O)\pgx_cod.obj $(O)\pgx_dec.obj $(O)\pgx_enc.obj
 
 FITZ_DRAW_OBJS = \
 	$(O)\archx86.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\pathfill.obj $(O)\pixmap.obj \

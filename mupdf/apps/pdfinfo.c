@@ -239,6 +239,7 @@ gatherdimensions(int page, fz_obj *pageref, fz_obj *pageobj)
 		error = pdf_resolve(&obj, src);
 		if (error)
 			return error;
+		fz_dropobj(obj);
 	}
 	if (!fz_isarray(obj))
 		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -295,6 +296,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&fontdict, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect font dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(fontdict);
 		}
 		if (!fz_isdict(fontdict))
 			return fz_throw("not a font dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -305,6 +307,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&subtype, src);
 			if (error)
 				return fz_rethrow(error, "cannot find font dict subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(subtype);
 		}
 		if (!fz_isname(subtype))
 			return fz_throw("not a font dict subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -315,6 +318,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		    error = pdf_resolve(&basefont, src);
 		    if (error)
 			return fz_rethrow(error, "cannot find font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		    fz_dropobj(basefont);
 		    if (!fz_isname(basefont))
 			return fz_throw("not a font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
@@ -385,6 +389,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&imagedict, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(imagedict);
 		}
 		if (!fz_isdict(imagedict))
 			return fz_throw("not an image dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -395,6 +400,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&type, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(type);
 		}
 		if (!fz_isname(type))
 			return fz_throw("not an image subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -423,6 +429,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&mask, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image mask (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(mask);
 		}
 
 		altcs = nil;
@@ -432,6 +439,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&cs, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(cs);
 		}
 		if (fz_isarray(cs))
 		{
@@ -443,6 +451,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 				error = pdf_resolve(&cs, src);
 				if (error)
 					return fz_rethrow(error, "cannot resolve indirect image colorspace name (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				fz_dropobj(cs);
 			}
 
 			if (fz_isname(cs) && (!strcmp(fz_toname(cs), "DeviceN") || !strcmp(fz_toname(cs), "Separation")))
@@ -453,6 +462,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 					error = pdf_resolve(&altcs, src);
 					if (error)
 						return fz_rethrow(error, "cannot resolve indirect image alternate colorspace name (%d %d R)", fz_tonum(ref), fz_togen(ref));
+					fz_dropobj(altcs);
 				}
 
 				if (fz_isarray(altcs))
@@ -463,6 +473,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 						error = pdf_resolve(&altcs, src);
 						if (error)
 							return fz_rethrow(error, "cannot resolve indirect image alternate colorspace name (%d %d R)", fz_tonum(ref), fz_togen(ref));
+						fz_dropobj(altcs);
 					}
 				}
 			}
@@ -472,6 +483,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		{
 			if (cs)
 				fz_warn("image mask (%d %d R) may not have colorspace", fz_tonum(ref), fz_togen(ref));
+			/* TODO: leaks cs created here */
 			error = fz_newname(&cs, "ImageMask");
 			if (error)
 				return fz_rethrow(error, "cannot create fake image mask colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -484,9 +496,10 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		width = fz_dictgets(imagedict, "Width");
 		if (width)
 		{
-			error = pdf_resolve(&type, src);
+			error = pdf_resolve(&width, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image width (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(width);
 		}
 		if (!fz_isint(width))
 			return fz_throw("not an image width (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -497,6 +510,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&height, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image height (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(height);
 		}
 		if (!fz_isint(height))
 			return fz_throw("not an image height (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -507,6 +521,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			error = pdf_resolve(&bpc, src);
 			if (error)
 				return fz_rethrow(error, "cannot resolve indirect image bits per component (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_dropobj(bpc);
 		}
 		if (!fz_tobool(mask) && !fz_isint(bpc))
 			return fz_throw("not an image bits per component (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -540,15 +555,33 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		image[images - 1]->page = page;
 		image[images - 1]->pageref = pageref;
 		image[images - 1]->ref = ref;
-		image[images - 1]->u.image.width = width;
-		image[images - 1]->u.image.height = height;
-		image[images - 1]->u.image.bpc = bpc;
+		image[images - 1]->u.image.width = width ? fz_keepobj(width) : nil;
+		image[images - 1]->u.image.height = height ? fz_keepobj(height) : nil;
+		image[images - 1]->u.image.bpc = bpc ? fz_keepobj(bpc) : nil;
+		/* filter doesn't need to be refed */
 		image[images - 1]->u.image.filter = filter;
-		image[images - 1]->u.image.cs = cs;
-		image[images - 1]->u.image.altcs = altcs;
+		image[images - 1]->u.image.cs = cs ? fz_keepobj(cs) : nil;
+		image[images - 1]->u.image.altcs = altcs ? fz_keepobj(altcs) : nil;
 	}
 
 	return fz_okay;
+}
+
+void dropimage(struct info* image)
+{
+	if (image->u.image.width)
+		fz_dropobj(image->u.image.width);
+	if (image->u.image.height)
+		fz_dropobj(image->u.image.height);
+	if (image->u.image.bpc)
+		fz_dropobj(image->u.image.bpc);
+	if (image->u.image.filter)
+		fz_dropobj(image->u.image.filter);
+	if (image->u.image.cs)
+		fz_dropobj(image->u.image.cs);
+	if (image->u.image.altcs)
+		fz_dropobj(image->u.image.altcs);
+	fz_free(image);
 }
 
 fz_error
@@ -1079,7 +1112,9 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < images; i++)
-			fz_free(image[i]);
+		{
+			dropimage(image[i]);
+		}
 		fz_free(image);
 		image = nil;
 		images = 0;

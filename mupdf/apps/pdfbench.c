@@ -271,6 +271,7 @@ Exit:
 	logbench("Finished: %s\n", pdffilename);
 	if (drawgc)
 		fz_droprenderer(drawgc);
+	closesrc();
 }
 
 void usage(void)

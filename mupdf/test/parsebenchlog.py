@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import string
+import os.path
 
 # TODO: show slowest pages to load (in addition to slowest pdfs to load)
 
@@ -184,6 +185,22 @@ def show_failing(pdfs, failed, crashed):
         failures += len(p.errors)
     t[3] = "failures: %d" % failures
     print("\n".join(t))
+
+def cp_failing(failed, crashed):
+    failpath = os.path.join("/Volumes", "Drobo1", "pdffail")
+    crashdir = os.path.join(failpath, "crash")
+    faildir = os.path.join(failpath, "fail")
+    for p in crashed:
+        pdf_src_path = p.path
+        pdf_name = os.path.basename(pdf_src_path)
+        pdf_dst_path = os.path.join(crashdir, pdf_name)
+        print("cp %s %s" % (pdf_src_path, pdf_dst_path))
+    for p in failed:
+        pdf_src_path = p.path
+        pdf_name = os.path.basename(pdf_src_path)
+        pdf_dst_path = os.path.join(faildir, pdf_name)
+        print("cp %s %s" % (pdf_src_path, pdf_dst_path))
+
 
 def main():
     idx = find(sys.argv, "-dump-failing")
