@@ -1,4 +1,4 @@
-/* hexdump.c -- an "xxd -i" workalike */
+/* fontdump.c -- an "xxd -i" workalike */
 
 #include <stdio.h>
 #include <string.h>
@@ -34,14 +34,14 @@ main(int argc, char **argv)
 
     if (argc < 3)
     {
-	fprintf(stderr, "usage: hexdump output.c input.dat\n");
+	fprintf(stderr, "usage: fontdump output.c input.dat\n");
 	return 1;
     }
 
     fo = fopen(argv[1], "wb");
     if (!fo)
     {
-	fprintf(stderr, "hexdump: could not open output file\n");
+	fprintf(stderr, "fontdump: could not open output file\n");
 	return 1;
     }
 
@@ -50,7 +50,7 @@ main(int argc, char **argv)
 	fi = fopen(argv[i], "rb");
 	if (!fi)
 	{
-	    fprintf(stderr, "hexdump: could not open input file %s\n", argv[i]);
+	    fprintf(stderr, "fontdump: could not open input file %s\n", argv[i]);
 	    return 1;
 	}
 
