@@ -288,6 +288,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		if (!strcmp(cs->name, "Indexed"))
 		{
 			pdf_logimage("indexed\n");
+			fz_dropcolorspace(cs);
 			indexed = (pdf_indexed*)cs;
 			cs = indexed->base;
 			fz_keepcolorspace(cs);
