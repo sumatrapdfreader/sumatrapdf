@@ -52,7 +52,9 @@
 #include <stdlib.h>
 
 #ifdef _WIN32
+#ifndef DEBUG
 #define PREDICTIVE_RENDER 1
+#endif
 #endif
 
 #define MAX_BITMAPS_CACHED 256
