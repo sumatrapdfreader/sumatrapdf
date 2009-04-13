@@ -1,0 +1,95 @@
+OUTDIR=obj-dummy
+CC=cl.exe
+
+VALID_TARGET=no
+
+CFLAGS = $(CFLAGS) /D "_CRT_SECURE_NO_WARNINGS=1" /D "_CRT_SECURE_NO_DEPRECATE=1" /D "_SECURE_CSL=0"
+
+!if "$(TARGET)"=="rel"
+OUTDIR=obj-win-rel
+CFLAGS = $(CFLAGS) /D "NDEBUG" /MD /Ox
+LDFLAGS = $(LDFLAGS) /OPT:NOWIN98
+VALID_TARGET=yes
+!endif
+
+!if "$(TARGET)"=="rel-unicode"
+OUTDIR=obj-win-rel-unicode
+CFLAGS = $(CFLAGS) /D "NDEBUG" /D "_SECURE_CSL=0" /D "UNICODE" /MD /Ox
+LDFLAGS = $(LDFLAGS) /OPT:NOWIN98
+VALID_TARGET=yes
+!endif
+
+!if "$(TARGET)"=="dbg"
+OUTDIR=obj-win-dbg
+CFLAGS = $(CFLAGS) /D "_SECURE_CSL=0" /MDd /Od
+VALID_TARGET=yes
+!endif
+
+!if "$(TARGET)"=="dbg-unicode"
+OUTDIR=obj-win-dbg-unicode
+CFLAGS = $(CFLAGS) /D "_SECURE_CSL=0" /D "UNICODE" /MDd /Od
+VALID_TARGET=yes
+!endif
+
+O=$(OUTDIR)
+CFLAGS = $(CFLAGS) /nologo /c
+CFLAGS = $(CFLAGS) /D "WIN32" /D "_WIN32_WINNT=0x0500"
+CFLAGS = $(CFLAGS) /W3 /Zc:forScope /Zc:wchar_t /GR /Zi
+CFLAGS = $(CFLAGS) /I. /Imsvc
+CFLAGS = $(CFLAGS) /Fd$(O)\vc80.pdb /FAsc
+
+LIBS = $(LIBS) kernel32.lib advapi32.lib comctl32.lib comdlg32.lib \
+	shell32.lib user32.lib gdi32.lib
+
+LD = link.exe
+LDFLAGS = $(LDFLAGS) /nologo /DEBUG
+
+TEST_FILE_UTIL_OBJS=$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj \
+	$(O)\geom_util.obj $(O)\prefs_util.obj $(O)\netstr.obj $(O)\str_util.obj \
+	$(O)\WinUtil.obj $(O)\win_util.obj $(O)\wstr_util.obj $(O)\strlist_util.obj \
+	$(O)\utf_util.obj $(O)\test_file_util.obj
+TEST_FILE_UTIL_EXE=$(O)\test_file_util.exe
+TEST_FILE_UTIL_PDB=$(O)\test_file_util.pdb
+TEST_FILE_UTIL_MAP=$(O)\test_file_util.map
+
+TEST_BENC_OBJS=$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj \
+	$(O)\geom_util.obj $(O)\prefs_util.obj $(O)\netstr.obj $(O)\str_util.obj \
+	$(O)\WinUtil.obj $(O)\win_util.obj $(O)\wstr_util.obj $(O)\strlist_util.obj \
+	$(O)\utf_util.obj $(O)\test_benc.obj
+TEST_BENC_EXE=$(O)\test_benc.exe
+TEST_BENC_PDB=$(O)\test_benc.pdb
+TEST_BENC_MAP=$(O)\test_benc.map
+
+!if "$(VALID_TARGET)"=="yes"
+all: $(OUTDIR) $(TEST_FILE_UTIL_EXE) $(TEST_BENC_EXE)
+
+$(OUTDIR): force
+        @if not exist $(OUTDIR) mkdir $(OUTDIR)
+
+clean: force
+        -rmdir /S /Q $(OUTDIR)
+!else
+all clean: force
+        @echo TARGET must be set to: rel, dbg, rel-unicode or dbg-unicode
+!endif
+
+$(TEST_FILE_UTIL_EXE): $(TEST_FILE_UTIL_OBJS)
+        $(LD) $(LDFLAGS) /OUT:$@ \
+        /PDB:$(TEST_FILE_UTIL_PDB) \
+        /MAP:$(TEST_FILE_UTIL_MAP) /MAPINFO:EXPORTS\
+        $** $(LIBS) /SUBSYSTEM:CONSOLE /MACHINE:X86
+
+$(TEST_BENC_EXE): $(TEST_BENC_OBJS)
+        $(LD) $(LDFLAGS) /OUT:$@ \
+        /PDB:$(TEST_BENC_PDB) \
+        /MAP:$(TEST_BENC_MAP) /MAPINFO:EXPORTS\
+        $** $(LIBS) /SUBSYSTEM:CONSOLE /MACHINE:X86
+
+.cpp{$(OUTDIR)}.obj::
+        $(CC) $(CFLAGS) /Fo$(OUTDIR)\ /Fa$(OUTDIR)\ $<
+
+.c{$(OUTDIR)}.obj::
+        $(CC) $(CFLAGS) /Fo$(OUTDIR)\ /Fa$(OUTDIR)\ $<
+
+force: ;
+
