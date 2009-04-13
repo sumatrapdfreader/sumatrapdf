@@ -22,6 +22,7 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 		error = pdf_resolve(&obj, xref);
 		if (error)
 			return fz_rethrow(error, "cannot resolve /Title");
+		fz_dropobj(obj);
 		error = pdf_toutf8(&node->title, obj);
 		if (error)
 			return fz_rethrow(error, "cannot convert Title to UTF-8");
