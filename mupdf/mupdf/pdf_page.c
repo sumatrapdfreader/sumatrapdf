@@ -176,6 +176,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	error = pdf_resolve(&obj, xref);
 	if (error)
 		return fz_rethrow(error, "cannot resolve page bounds");
+	fz_dropobj(obj);
 	if (!fz_isarray(obj))
 		return fz_throw("cannot find page bounds");
 	bbox = pdf_torect(obj);
