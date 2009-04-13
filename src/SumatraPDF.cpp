@@ -677,7 +677,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
         }
         break;
 
-#ifdef DEBUG
+#if 0
         case INTERNET_STATUS_CLOSING_CONNECTION:
             _snprintf(buf, 256, "CLOSING_CONNECTION (%d)", statusLen);
             break;
