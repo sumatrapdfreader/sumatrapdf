@@ -371,7 +371,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 
 #ifdef WIN32
 fz_error
-pdf_repairxrefw(pdf_xref *xref, wchar_t *filename)
+pdf_repairxrefw(pdf_xref *xref, const wchar_t *filename)
 {
 	fz_error error;
 	fz_stream *file;
