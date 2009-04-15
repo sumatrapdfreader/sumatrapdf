@@ -834,6 +834,8 @@ static void SerializableGlobalPrefs_Deinit()
 
 void LaunchBrowser(const TCHAR *url)
 {
+    if (gRestrictedUse)
+        return;
     launch_url(url);
 }
 
