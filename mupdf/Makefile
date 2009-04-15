@@ -304,6 +304,8 @@ CMAPDUMP_APP = ${OUTDIR}/cmapdump
 
 all: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP} ${PDFCLEAN_APP} ${PDFDRAW_APP} ${PDFINFO_APP} ${PDFSHOW_APP}
 
+pdfbench: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP}
+
 $(OUTDIR):
 	@mkdir -p $(OUTDIR)
 
