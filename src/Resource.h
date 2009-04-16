@@ -108,6 +108,7 @@
 #define IDM_LANG_AF                     513
 #define IDM_LANG_PA                     514
 #define IDM_LANG_HI                     515
+#define IDM_LANG_NN                     516
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
