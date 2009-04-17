@@ -80,7 +80,7 @@ MenuDef g_menuDefLang[LANGS_COUNT] = {
     { "Czech (\304\214e\305\241tina)", IDM_LANG_CZ },
     { "Danish (Dansk)", IDM_LANG_DK },
     { "Dutch (Nederlands)", IDM_LANG_NL },
-    { "Finnish (Suomen)", IDM_LANG_FI },
+    { "Finnish (Suomi)", IDM_LANG_FI },
     { "French (Fran\303\247ais)", IDM_LANG_FR },
     { "Galician (Galego)", IDM_LANG_GL },
     { "German (Deutsch)", IDM_LANG_DE },

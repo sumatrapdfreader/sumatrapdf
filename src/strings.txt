@@ -94,7 +94,7 @@ Lang: cy Welsh (Cymraeg)
 Lang: cz Czech (Čeština)
 Lang: dk Danish (Dansk)
 Lang: nl Dutch (Nederlands)
-Lang: fi Finnish (Suomen)
+Lang: fi Finnish (Suomi)
 Lang: fr French (Français)
 Lang: gl Galician (Galego)
 Lang: de German (Deutsch)
@@ -1886,6 +1886,7 @@ ga:Lámhleabhar
 mm:&ကိုယ်တိုင်
 pa:ਮਦੱਦ ਕਤਾਬ(&M)
 hi:नियम-पुस्तक(&M)
+fi:Käyttöohje
 -
 &About
 af:&Omtrent
@@ -1985,6 +1986,7 @@ mm:စာ မျက်နှာ
 pa:ਪੰਨਾ ਨੰਬਰ:
 hi:पृष्ठ संख्या:
 nn:Side:
+fi:Sivu:
 -
 Find:
 af:Soek:
@@ -2737,6 +2739,7 @@ ga:Aistrigh É Seo
 pa:ਅਨੁਵਾਦ ਕਰਨ ਵਿੱਚ ਮਦੱਦ ਕਰੋ
 hi:अनुवाद करने में मदद करें
 nn:Delta med omsetjing
+fi:Osallistu suomennosprojektiin
 -
 Set inverse search command-line
 af:Stel Die Teenoorgestelde Soek Command-Line
@@ -2810,6 +2813,7 @@ mm:စာ စကား ပြောင်းရန် (Change language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
 hi:भाषा बदलें(Change language)
 nn:Byt språk (Change language)
+fi:Valitse kieli (Change language)
 -
 Enter password
 af:Tik Wagwoord In
@@ -2847,6 +2851,7 @@ mm:လျှို့ဝှက် ထည့်သွင်းရန်
 pa:ਪਾਸਵਰਡ ਭਰੋ
 hi:पहचान शब्द भरें
 nn:Skriv inn passord
+fi:Kirjoita salasana
 -
 Enter password for %s
 af:Tik Wagwoord In Vir %s
@@ -2884,6 +2889,7 @@ mm:လျှို့ဝှက် ထည့်သွင်း %s
 pa:%s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
 hi:%s के लिए पहचान शब्द भरें
 nn:Skriv inn passord for %s
+fi:Kirjoita salasana tiedostolle %s
 -
 Go to page
 af:Gaan Na Bladsy
@@ -2921,6 +2927,7 @@ mm:သွားရန် စာမျက်နှာ
 pa:ਪੰਨੇ ਤੇ ਜਾਓ
 hi:पृष्ठ संख्या पर जाए(&G)
 nn:Gå til side
+fi:Siirry sivulle
 -
 Associate with PDF files?
 af:Assosieer Met PDF lêers?
@@ -2958,6 +2965,7 @@ mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 pa:PDF ਫਾਈਲਾਂ ਨਾਲ ਸੰਬੰਦ ਬਣਾਓ ?
 hi: PDF फाईलों से संबंध बनाइए?
 nn:Tilknytte PDF-filer?
+fi:Tiedostosidos PDF-tiedostoihin?
 -
 Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
@@ -2993,6 +3001,7 @@ mm:SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် 
 pa:PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
 hi:सभी PDF फाईलें SumatraPDF में खोलें ?
 nn:Gjere SumatraPDF til standardprogram for PDF-filer?
+fi:Laita SumatraPDF PDF-tiedostojen oletusohjelmaksi?
 -
 Don't ask me again
 af:Moet My Nie Weer Vra Nie
@@ -3031,6 +3040,7 @@ mm:ထပ်မမေးပါနှင့်။
 pa:ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
 hi:फिर मत पूछिए
 nn:Ikkje spør meg igjen
+fi:Älä kysy uudestaan
 -
 &Check for new version
 af:Kyk Vir Nuwe Uitgawe
@@ -3069,6 +3079,7 @@ mm:အမျိုးအစား သစ်စုံစမ်းရန်
 pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
 hi:नए संसकरण के लिए जांच करें(&C)
 nn:&Sjå etter ny versjon
+fi:Tarkista onko päivityksiä saatavilla
 -
 No new version available.
 af:Geen Nuwe Weergawe Is Beskikbaar Nie.
@@ -3107,6 +3118,7 @@ mm:အမျိုးအစားသစ် မရှိပါ
 pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
 hi:नया संसकरण उपलब्ध है
 nn:Ingen nye versjonar.
+fi:Ei uudempia versioita saatavilla.
 -
 You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
@@ -3145,6 +3157,7 @@ mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ�
 pa:ਤੋਹਾਡੇ ਕੋਲ ਪਿਹਲਾਂ ਤੌਂ ਹੀ ਨਵਾਂ ਵਰਜਨ ਹੈ
 hi:आपके पास पहले से ही नया संसकरण है
 nn:Du har den siste versjonen.
+fi:Sinulla on uusin versio.
 -
 You have version %s
 af:Jy Het Weergawe %s
@@ -3183,6 +3196,7 @@ mm:သင့်အမျိုးအစားသည် %s
 pa:ਤੋਹਾਡੇ ਕੋਲ %s ਵਰਜਨ ਹੈ
 hi:आपके पास  %s संसकरण है
 nn:Du har versjon %s
+fi:Sinulla on versio %s
 -
 New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
@@ -3221,6 +3235,7 @@ mm:အမျိုးအစားသစ်ရှိသည်။ယူမလာ�
 pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
 hi:संसकरण %s उपलब्ध है । डाउनलोड करूँ ?
 nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
+fi:Uudempi versio %s saatavilla. Ladataanko uudempi versio?
 -
 New version available.
 af:Nuwe Weergawe Beskikbaar.
@@ -3259,6 +3274,7 @@ mm:အမျိုးအစား သစ်ရှိသည်
 pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਹੈ ।
 hi:नया संसकरण उपलब्ध है । 
 nn:Ny versjon tilgjengeleg.
+fi:Uusi versio saatavilla.
 -
 Skip this version
 af:Slaan Dié Weergawe Oor.
@@ -3296,6 +3312,7 @@ mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 pa:ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
 hi:इस संसकरण को छोडो
 nn:Hopp over denne versjonen
+fi:Ohita tämä versio
 -
 Enable auto-update
 af:Stel In Staat Om Automatiese Opdatering Te Doen.
@@ -3326,3 +3343,4 @@ hu:Automatikus frissítés
 pa:ਨਵਾ ਵਰਜਨ ਡਾਓਨਲੋਡ ਕਰਨ ਨੂੰ ਜਕੀਨੀ ਬਣਾਓ
 hi:नया संसकरण अपने आप डाउनलोड करो
 nn:Aktivèr auto-oppdatering
+fi:Automaattinen päivitys
