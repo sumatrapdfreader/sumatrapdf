@@ -26,7 +26,7 @@
 #include "jbig2_priv.h"
 #include "jbig2_arith.h"
 #include "jbig2_generic.h"
-
+#include "jbig2_mmr.h"
 
 typedef struct {
   int n_patterns;
