@@ -25,7 +25,7 @@ char * fz_strdup(char *s)
 {
     char *ns = strdup(s);
     if (!ns)
-	fz_throw("cannot strdup %d bytes", strlen(s) + 1);
+	fz_throw("cannot strdup %lu bytes", (unsigned long)strlen(s) + 1);
     return ns;
 }
 
