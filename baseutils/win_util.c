@@ -81,7 +81,7 @@ WCHAR *win_get_textw(HWND hwnd)
     if (NULL == txt)
         return NULL;
 
-    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
+    SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     return txt;
 }
