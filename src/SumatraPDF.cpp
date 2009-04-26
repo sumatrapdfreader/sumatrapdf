@@ -1,5 +1,6 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv2 */
+   
 #include "SumatraPDF.h"
 
 #include "file_util.h"
@@ -5261,7 +5262,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        return DefWindowProcW(hwnd, message, wParam, lParam);
 
     if (WM_CHAR == message) {
         if (VK_ESCAPE == wParam || VK_TAB == wParam)
@@ -5342,7 +5343,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        return DefWindowProcW(hwnd, message, wParam, lParam);
 
     if (WM_ERASEBKGND == message) {
         RECT rect;
@@ -5387,7 +5388,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
     } else if (WM_SETTEXT == message) {
         InvalidateRect(hwnd, NULL, true);
     }
-    return DefWindowProc(hwnd, message, wParam, lParam);
+    return DefWindowProcW(hwnd, message, wParam, lParam);
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
@@ -5470,7 +5471,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        return DefWindowProcW(hwnd, message, wParam, lParam);
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
@@ -5695,7 +5696,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 win->ToggleTocBox();
             break;
     }
-    return DefWindowProc(hwnd, message, wParam, lParam);
+    return DefWindowProcW(hwnd, message, wParam, lParam);
 }
 
 void WindowInfo::FindStart()
@@ -5933,7 +5934,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
         /* TODO: handle mouse move/down/up so that links work */
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -6006,7 +6007,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             } else if (win && MA_SCROLLING == win->mouseAction) {
                 SetCursor(gCursorScroll);
             }
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
             assert(win);
@@ -6047,7 +6048,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -6256,7 +6257,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 default:
-                    return DefWindowProc(hwnd, message, wParam, lParam);
+                    return DefWindowProcW(hwnd, message, wParam, lParam);
             }
             break;
 
@@ -6389,7 +6390,7 @@ InitMouseWheelInfo:
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -6399,7 +6400,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     WNDCLASSEXW  wcex;
     ATOM        atom;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.cbSize         = sizeof(WNDCLASSEXW);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcFrame;
     wcex.cbClsExtra     = 0;
@@ -6415,7 +6416,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.cbSize         = sizeof(WNDCLASSEXW);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc    = WndProcCanvas;
     wcex.cbClsExtra     = 0;
@@ -6431,7 +6432,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.cbSize         = sizeof(WNDCLASSEXW);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcAbout;
     wcex.cbClsExtra     = 0;
@@ -6447,7 +6448,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.cbSize         = sizeof(WNDCLASSEXW);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcSpliter;
     wcex.cbClsExtra     = 0;
@@ -6463,7 +6464,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.cbSize         = sizeof(WNDCLASSEXW);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcFindStatus;
     wcex.cbClsExtra     = 0;
@@ -6883,6 +6884,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 #ifdef _DEBUG
     // Memory leak detection
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+    //_CrtSetBreakAlloc(421);
 #endif
 
     UNREFERENCED_PARAMETER(hPrevInstance);
