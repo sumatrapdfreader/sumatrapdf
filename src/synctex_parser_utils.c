@@ -143,6 +143,13 @@ next_character:
 		}
 	} else if(SYNCTEX_IS_PATH_SEPARATOR(*rhs)) {/*  rhs points to a path separator but not lhs */
 		return synctex_NO;
+	}
+	else if(SYNCTEX_IS_PATH_SPACE(*lhs)) {/*  lhs points to a path space */
+		if(!SYNCTEX_IS_PATH_SPACE(*rhs)) {/*  but not rhs */
+			return synctex_NO;
+		}
+	} else if(SYNCTEX_IS_PATH_SPACE(*rhs)) {/*  rhs points to a path space but not lhs */
+		return synctex_NO;
 	} else if(toupper(*lhs) != toupper(*rhs)){/*  uppercase do not match */
 		return synctex_NO;
 	}

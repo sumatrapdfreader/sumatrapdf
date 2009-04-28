@@ -33,9 +33,12 @@ WCHAR * wstr_printf(const WCHAR *format, ...);
 const WCHAR *wstr_find_char(const WCHAR *txt, WCHAR c);
 BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src);
 
+char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage);
 char *wstr_to_utf8(const WCHAR *txt);
+WCHAR *multibyte_to_wstr(const char *src, UINT CodePage);
 WCHAR *utf8_to_wstr(const char *utf8);
 WCHAR *str_to_wstr_simplistic(const char *s);
+
 
 WCHAR *wstr_parse_possibly_quoted(WCHAR **txt);
 int hex_wstr_decode_byte(const WCHAR **txt);

@@ -452,19 +452,19 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCWSTR srcfilename, UINT line, UINT co
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *utf8_srcfilename = wstr_to_utf8(srcfilename);
-    if (!utf8_srcfilename)
+    char *mb_srcfilename = wstr_to_multibyte(srcfilename, CP_ACP);
+    if (!mb_srcfilename)
         return PDFSYNCERR_OUTOFMEMORY;
 
     // find the source file entry
     size_t isrc = (size_t)-1;
     for(size_t i=0; i<this->srcfiles.size();i++) {
-        if (str_ieq(utf8_srcfilename, this->srcfiles[i].filename)) {
+        if (str_ieq(mb_srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
         }
     }
-    free(utf8_srcfilename);
+    free(mb_srcfilename);
     if (isrc == (size_t)-1)
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
@@ -590,12 +590,12 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *utf8_syncfname = wstr_to_utf8(this->syncfilename);
-    if (utf8_syncfname==NULL)
+    char *mb_syncfname = wstr_to_multibyte(this->syncfilename, CP_ACP);
+    if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 
-    this->scanner = synctex_scanner_new_with_output_file(utf8_syncfname, NULL, 1);
-    free(utf8_syncfname);
+    this->scanner = synctex_scanner_new_with_output_file(mb_syncfname, NULL, 1);
+    free(mb_syncfname);
 
     if (scanner)
         return Synchronizer::rebuild_index();
@@ -613,13 +613,21 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
         while (node = synctex_next_result(this->scanner)) {
             *line = synctex_node_line(node);
             *col = synctex_node_column(node);
-            const char *utf8name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-            WCHAR *srcfilename = utf8_to_wstr(utf8name);
-            if (srcfilename==NULL)
+            const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
+            WCHAR *srcfilename = multibyte_to_wstr(name, CP_ACP);
+			if (srcfilename==NULL)
                 return PDFSYNCERR_OUTOFMEMORY;
 
+			// undecorate the filepath: replace * by space and / by \ 
+			WCHAR *p = srcfilename;
+			while(*p) {
+				if(*p=='*') *p=' ';
+			    else if(*p=='/') *p='\\';
+				p++;
+			}
+
             // Convert the source filepath to an absolute path
-            if (PathIsRelativeW(srcfilename))                 
+            if (PathIsRelativeW(srcfilename))
                 _snwprintf(srcfilepath, cchFilepath, L"%s\\%s", this->dir, srcfilename, dimof(srcfilename));
             else
                 wstr_copy(srcfilepath, cchFilepath, srcfilename);
@@ -646,11 +654,11 @@ UINT SyncTex::source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page
     else
         wstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 
-    char *utf8_srcfilepath = wstr_to_utf8(srcfilepath);
-    if (!utf8_srcfilepath)
+    char *mb_srcfilepath = wstr_to_multibyte(srcfilepath, CP_ACP);
+    if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
-    int ret = synctex_display_query(this->scanner,utf8_srcfilepath,line,col);
-    free(utf8_srcfilepath);
+    int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
+    free(mb_srcfilepath);
     switch (ret) {
         case -1:
             return PDFSYNCERR_UNKNOWN_SOURCEFILE;    
@@ -740,7 +748,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
             // check if the PDF is already opened
             WindowInfo *win = NULL;
-            WCHAR *wstr_pdffile = utf8_to_wstr(pdffile);
+            WCHAR *wstr_pdffile = multibyte_to_wstr(pdffile, CP_ACP);
             if (wstr_pdffile) {
                 win = WindowInfoList_Find(wstr_pdffile);
                 free(wstr_pdffile);
@@ -757,7 +765,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     ack.fAck = 1;
                     assert(win->dm);
                     UINT page, x, y;
-                    WCHAR *wstr_srcfile = utf8_to_wstr(srcfile);
+                    WCHAR *wstr_srcfile = multibyte_to_wstr(srcfile, CP_ACP);
                     if (wstr_srcfile) {
                         UINT ret = win->pdfsync->source_to_pdf(wstr_srcfile, line, col, &page, &x, &y);
                         WindowInfo_ShowForwardSearchResult(win, wstr_srcfile, line, col, ret, page, x, y);
@@ -778,7 +786,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         {
             // check if the PDF is already opened
             WindowInfo *win = NULL;
-            WCHAR *wstr_pdffile = utf8_to_wstr(pdffile);
+            WCHAR *wstr_pdffile = multibyte_to_wstr(pdffile, CP_ACP);
             if (wstr_pdffile) {
                 win = WindowInfoList_Find(wstr_pdffile);
                 free(wstr_pdffile);
@@ -809,7 +817,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         {
            // check if the PDF is already opened
             WindowInfo *win = NULL;
-            WCHAR *wstr_pdffile = utf8_to_wstr(pdffile);
+            WCHAR *wstr_pdffile = multibyte_to_wstr(pdffile, CP_ACP);
             if (wstr_pdffile) {
                 win = WindowInfoList_Find(wstr_pdffile);
                 free(wstr_pdffile);

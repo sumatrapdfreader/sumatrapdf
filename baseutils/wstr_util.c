@@ -408,27 +408,39 @@ WCHAR *str_to_wstr_simplistic(const char *s)
 }
 
 /* Caller needs to free() the result */
-char *wstr_to_utf8(const WCHAR *txt)
+char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage)
 {
     char *res;
-    int requiredBufSize = WideCharToMultiByte(CP_UTF8, 0, txt, -1, NULL, 0, NULL, NULL);
+    int requiredBufSize = WideCharToMultiByte(CodePage, 0, txt, -1, NULL, 0, NULL, NULL);
     res = (char*)malloc(requiredBufSize);
     if (!res)
         return NULL;
-    WideCharToMultiByte(CP_UTF8, 0, txt, -1, res, requiredBufSize, NULL, NULL);
+    WideCharToMultiByte(CodePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
+    return res;
+}
+
+/* Caller needs to free() the result */
+char *wstr_to_utf8(const WCHAR *txt)
+{
+    return wstr_to_multibyte(txt, CP_UTF8);
+}
+
+/* Caller needs to free() the result */
+WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
+{
+    WCHAR *res;
+    int requiredBufSize = MultiByteToWideChar(CodePage, 0, src, -1, NULL, 0);
+    res = (WCHAR*)malloc(requiredBufSize * sizeof(WCHAR));
+    if (!res)
+        return NULL;
+    MultiByteToWideChar(CodePage, 0, src, -1, res, requiredBufSize);
     return res;
 }
 
 /* Caller needs to free() the result */
 WCHAR *utf8_to_wstr(const char *utf8)
 {
-    WCHAR *res;
-    int requiredBufSize = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
-    res = (WCHAR*)malloc(requiredBufSize * sizeof(WCHAR));
-    if (!res)
-        return NULL;
-    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, res, requiredBufSize);
-    return res;
+    return multibyte_to_wstr(utf8, CP_UTF8);
 }
 
 static WCHAR *wstr_parse_quoted(WCHAR **txt)

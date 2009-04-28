@@ -6969,7 +6969,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-print-to")) {
             currArg = currArg->next;
             if (currArg) {
-                printerName = wstr_to_utf8(currArg->str);
+                printerName = wstr_to_multibyte(currArg->str, CP_ACP);
                 currArg = currArg->next;
             }
             continue;
@@ -7021,7 +7021,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-lang")) {
             currArg = currArg->next;
             if (currArg) {
-                s = wstr_to_utf8(currArg->str);
+                s = wstr_to_multibyte(currArg->str, CP_ACP);
                 CurrLangNameSet(s);
                 free(s);
                 currArg = currArg->next;
@@ -7032,7 +7032,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-nameddest")) {
             currArg = currArg->next;
             if (currArg) {
-                destName = wstr_to_utf8(currArg->str);
+                destName = wstr_to_multibyte(currArg->str, CP_ACP);
                 currArg = currArg->next;
             }
             continue;

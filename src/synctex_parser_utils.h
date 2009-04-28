@@ -54,8 +54,11 @@ extern "C" {
 
 #	if _WIN32
 #		define SYNCTEX_IS_PATH_SEPARATOR(c) ('/' == c || '\\' == c)
+// TeX sometimes replaces spaces by * in file names
+#		define SYNCTEX_IS_PATH_SPACE(c) (' ' == c || '*' == c)
 #	else
 #		define SYNCTEX_IS_PATH_SEPARATOR(c) ('/' == c)
+#		define SYNCTEX_IS_PATH_SPACE(c) (' ' == c)
 #	endif
 
 /*  This custom malloc functions initializes to 0 the newly allocated memory.
