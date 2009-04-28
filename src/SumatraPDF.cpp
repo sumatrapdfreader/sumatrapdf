@@ -4943,13 +4943,13 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCWSTR srcfilename, UI
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
         txt = L"No synchronization found at this location";
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        _snwprintf(buf, dimof(buf), L"Unknown source file (%S)", srcfilename);
+        _snwprintf(buf, dimof(buf), L"Unknown source file (%s)", srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        _snwprintf(buf, dimof(buf), L"Source file %S has no synchronization point", srcfilename);
+        _snwprintf(buf, dimof(buf), L"Source file %s has no synchronization point", srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
+        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %s", line, srcfilename);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %S", line, srcfilename);
+        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %s", line, srcfilename);
 
     WindowInfo_ShowMessage_Asynch(win, txt, true);
 }

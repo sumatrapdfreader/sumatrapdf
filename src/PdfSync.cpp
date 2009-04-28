@@ -683,7 +683,7 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     ATOM aTopic = GlobalAddAtomW(PDFSYNC_DDE_TOPIC_W);
 
     if (LOWORD(lparam) == aServer && HIWORD(lparam) == aTopic) {
-        if (IsWindowUnicode((HWND)wparam))
+        if (!IsWindowUnicode((HWND)wparam))
             DBG_OUT("The client window is ANSI!\n");
         DBG_OUT("Sending WM_DDE_ACK to %p\n", (HWND)wparam);
         SendMessageW((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
@@ -845,6 +845,6 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     DBG_OUT("Received WM_DDE_TERMINATE from %p with %08lx\n", (HWND)wparam, lparam);
 
     // Respond with another WM_DDE_TERMINATE message
-    PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
+    PostMessageW((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }
