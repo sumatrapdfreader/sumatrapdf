@@ -262,7 +262,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,              0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              0 },
     { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,              0 },
-    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,		_TRN("Zoom In"),        0,              0 },
+    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,              0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              IDB_SEPARATOR },
     { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"),  0,              0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"),      0,              0 },
@@ -1797,12 +1797,19 @@ static int WindowInfoList_Len(void) {
 
 // Find the first windows showing a given PDF file 
 WindowInfo* WindowInfoList_Find(LPWSTR file) {
+    LPWSTR normFile = FilePathW_Normalize(file);
+    if(!normFile)
+        return NULL;
+
     WindowInfo* curr = gWindowList;
     while (curr) {
-        if (wstr_ieq(curr->watcher.filepath(), file))
+        if (wstr_ieq(curr->watcher.filepath(), normFile)) {
+            free(normFile);
             return curr;
+        }
         curr = curr->next;
     }
+    free(normFile);
     return NULL;
 }
 
@@ -2007,19 +2014,17 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     WindowInfo* win;
 
     /* TODO: maybe adjustement of size and position should be outside of this function */
-    int winPosX = CW_USEDEFAULT;
-    int winPosY = CW_USEDEFAULT;
+    POINT winPos;
+    winPos.x = CW_USEDEFAULT;
+    winPos.y = CW_USEDEFAULT;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowPosX) {
-        winPosX = gGlobalPrefs.m_windowPosX;
-        if (winPosX < 0) {
-            winPosX = CW_USEDEFAULT;
-            winPosY = CW_USEDEFAULT;
-        } else {
-            winPosY = gGlobalPrefs.m_windowPosY;
-            if (winPosY < 0) {
-                winPosX = CW_USEDEFAULT;
-                winPosY = CW_USEDEFAULT;
-            }
+        winPos.x = gGlobalPrefs.m_windowPosX;
+        winPos.y = gGlobalPrefs.m_windowPosY;
+
+        // make sure the left-hand corner is inside the visible area (supports multiple monitors)
+        if (NULL == MonitorFromPoint(winPos, MONITOR_DEFAULTTONULL)) {
+            winPos.x = CW_USEDEFAULT;
+            winPos.y = CW_USEDEFAULT;
         }
     }
 
@@ -2054,7 +2059,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     hwndFrame = CreateWindowW(
             FRAME_CLASS_NAME, windowTitle,
             WS_OVERLAPPEDWINDOW,
-            winPosX, winPosY, winDx, winDy,
+            winPos.x, winPos.y, winDx, winDy,
             NULL, NULL,
             ghinst, NULL);
 #endif
@@ -2346,18 +2351,21 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
         win->title = windowTitle;
 
     // TODO: fileName might not exist.
-    WCHAR fullpath[_MAX_PATH];
-    GetFullPathNameW(fileName, dimof(fullpath), fullpath, NULL);
+    // Normalize the file path    
+    WCHAR *pFullpath = FilePathW_Normalize(fileName);
+    if (!pFullpath)
+        goto exit;
 
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, pFullpath);
     DisplayState *ds = NULL;
     if (fileFromHistory)
         ds = &fileFromHistory->state;
 
     CheckPositionAndSize(ds);
-    if (!LoadPdfIntoWindow(fileName, win, ds, is_new_window, true, showWin, true)) {
+    if (!LoadPdfIntoWindow(pFullpath, win, ds, is_new_window, true, showWin, true)) {
         /* failed to open */
-        return NULL;
+        win = NULL;
+        goto exit;
     }
 
     // Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
@@ -2369,19 +2377,23 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
     // The right fix is to convert FileWatcher and PdfSync to handle Unicode
     // file names
     if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
+        win->watcher.StartWatchThread(pFullpath, &OnFileChange, (LPARAM)win);
 #else
-        win->watcher.Init(fullpath);
+        win->watcher.Init(pFullpath);
 #endif
 
-    win->pdfsync = CreateSynchronizer(fullpath);
+    win->pdfsync = CreateSynchronizer(pFullpath);
 
     if (!fileFromHistory) {
-        AddFileToHistory(fileName);
+        AddFileToHistory(pFullpath);
         RebuildProgramMenus();
     }
 
     gGlobalPrefs.m_pdfsOpened += 1;
+
+exit:
+    if (pFullpath)
+        free(pFullpath);
     return win;
 }
 
@@ -2791,13 +2803,13 @@ static void OnBenchNextAction(WindowInfo *win)
 #ifdef SVN_PRE_RELEASE_VER
 int CompareVersion(char *txt1, char *txt2)
 {
-	int num1 = atoi(txt1);
-	int num2 = atoi(txt2);
-	if (num1 > num2)
-		return 1;
-	if (num1 == num2)
-		return 0;
-	return -1;
+    int num1 = atoi(txt1);
+    int num2 = atoi(txt2);
+    if (num1 > num2)
+        return 1;
+    if (num1 == num2)
+        return 0;
+    return -1;
 }
 #else
 // extract the next (positive) number from the string *txt
@@ -7248,8 +7260,8 @@ Exit:
     }
 #endif // BUILD_RM_VERSION
 
-	pdf_destoryfontlistMS();
-	fz_destroyfreetype();
+    pdf_destoryfontlistMS();
+    fz_destroyfreetype();
 
     WStrList_Destroy(&argListRoot);
     //histDump();

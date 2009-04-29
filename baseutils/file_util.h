@@ -51,6 +51,8 @@ const char *    FilePath_GetBaseName(const char *path);
 const WCHAR *   FilePathW_GetBaseName(const WCHAR *path);
 char *          FilePath_GetDir(const char *path);
 WCHAR *         FilePathW_GetDir(const WCHAR *path);
+WCHAR *         FilePathW_Normalize(const WCHAR *f);
+int             FilePathW_Compare(const WCHAR *lhs, const WCHAR *rhs);
 
 char *          file_read_all(const char *file_path, uint64_t *file_size_out);
 uint64_t        file_size_get(const char *file_path);

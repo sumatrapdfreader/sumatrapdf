@@ -67,6 +67,68 @@ WCHAR *FilePathW_GetDir(const WCHAR *path)
     return dir;
 }
 
+// Normalize a file path:
+//  remove relative path component (..\ and .\),
+//  replace slashes by backslashes,
+//  conver to long form,
+//  convert to lowercase.
+WCHAR *FilePathW_Normalize(const WCHAR *f)
+{
+    WCHAR * pBuff, * pBuff2;
+    DWORD cb;
+
+    // convert to absolute path, change slashes into backslashes
+    cb = GetFullPathNameW(f, 0, NULL, NULL);
+    if (!cb)
+        return NULL;
+    pBuff = (WCHAR *) malloc(sizeof(WCHAR)*cb);
+    if(!pBuff)
+        return NULL;
+    GetFullPathNameW(f, cb, pBuff, NULL);
+
+    // convert to long form
+    cb = GetLongPathNameW(pBuff, NULL, 0);
+    if (!cb)
+        return pBuff;
+    pBuff2 = (WCHAR *) realloc(pBuff, sizeof(WCHAR)*cb);
+    if (!pBuff2)
+        return pBuff;
+
+    GetLongPathNameW(pBuff2, pBuff2, cb);
+
+    // convert to lower case
+    pBuff = pBuff2;
+    while (*pBuff)
+        *(pBuff++) = tolower(*pBuff);
+
+    return pBuff2;
+}
+
+// Compare two file path.
+// Returns 0 if the paths lhs and rhs point to the same file.
+//         1 if the paths point to different files
+//         -1 if an error occured
+int FilePathW_Compare(const WCHAR *lhs, const WCHAR *rhs)
+{
+    LPWSTR nl, nr;
+    int ret;
+
+    nl = FilePathW_Normalize(lhs);
+    if (!nl)
+        return -1;
+
+    nr = FilePathW_Normalize(rhs);
+    if (!nr)
+        return -1;
+
+    ret = wstr_ieq(nl, nr) ? 0 : 1;
+
+    free(nr);
+    free(nl);
+    return ret;
+}
+
+
 /* TODO: handle TCHAR (UNICODE) properly by converting to path to unicode
    if UNICODE or _UNICODE symbols are defined */
 /* Start iteration of all files 'path'. 'path' should be a directory
