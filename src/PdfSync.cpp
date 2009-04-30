@@ -615,16 +615,16 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
             *col = synctex_node_column(node);
             const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
             WCHAR *srcfilename = multibyte_to_wstr(name, CP_ACP);
-			if (srcfilename==NULL)
+            if (srcfilename==NULL)
                 return PDFSYNCERR_OUTOFMEMORY;
 
-			// undecorate the filepath: replace * by space and / by \ 
-			WCHAR *p = srcfilename;
-			while(*p) {
-				if(*p=='*') *p=' ';
-			    else if(*p=='/') *p='\\';
-				p++;
-			}
+            // undecorate the filepath: replace * by space and / by \ 
+            WCHAR *p = srcfilename;
+            while(*p) {
+                if(*p=='*') *p=' ';
+                else if(*p=='/') *p='\\';
+                p++;
+            }
 
             // Convert the source filepath to an absolute path
             if (PathIsRelativeW(srcfilename))
@@ -717,127 +717,126 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     ack.bAppReturnCode = 0;
     ack.reserved = 0;
     ack.fBusy = 0;
+    
+    BOOL bUnicodeSender = IsWindowUnicode((HWND)wparam);
 
-    PCSTR command = (LPCSTR)GlobalLock((HGLOBAL)hi);
+    LPVOID command = GlobalLock((HGLOBAL)hi);
     ack.fAck = 0;
     if (!command)
         DBG_OUT("WM_DDE_EXECUTE: No command specified\n");
     else {
-        // Parse the command
-        char pdffile[_MAX_PATH];
-        char srcfile[_MAX_PATH];
-        char destname[_MAX_PATH];
-        char dump[_MAX_PATH];
-        UINT line,col, newwindow = 0, setfocus = 0, forcerefresh = 0;
-        const char *pos;
-        
-        pos = command;
-        while (pos < (command + strlen(command))) {
-        // Synchronization command.
-        // format is [<DDECOMMAND_SYNC_A>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
-        if ( (pos = command) &&
-            str_skip(&pos, "[" DDECOMMAND_SYNC_A "(\"") &&
-            str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-            str_skip(&pos, "\",\"") &&
-            str_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
-            (4 == sscanf(pos, "\",%u,%u,%u,%u)]", &line, &col, &newwindow, &setfocus)
-            || 2 == sscanf(pos, "\",%u,%u)]", &line, &col))
-            )
-        {
-            // Execute the command.
+        LPWSTR pwCommand;
+        if (bUnicodeSender) {
+            DBG_OUT("The client window is UNICODE!\n");
+            pwCommand = wcsdup((LPCWSTR)command);
+        }
+        else {
+            DBG_OUT("The client window is ANSI!\n");
+            pwCommand = multibyte_to_wstr((LPCSTR)command, CP_ACP);
+        }
 
-            // check if the PDF is already opened
-            WindowInfo *win = NULL;
-            WCHAR *wstr_pdffile = multibyte_to_wstr(pdffile, CP_ACP);
-            if (wstr_pdffile) {
-                win = WindowInfoList_Find(wstr_pdffile);
-                free(wstr_pdffile);
-            }
-            
-            // if not then open it
-            if (newwindow || !win || WS_SHOWING_PDF != win->state)
-                win = LoadPdf(pdffile);
-            
-            if (win && WS_SHOWING_PDF == win->state ) {
-                if (!win->pdfsync)
-                    DBG_OUT("PdfSync: No sync file loaded!\n");
-                else {
-                    ack.fAck = 1;
-                    assert(win->dm);
-                    UINT page, x, y;
-                    WCHAR *wstr_srcfile = multibyte_to_wstr(srcfile, CP_ACP);
-                    if (wstr_srcfile) {
-                        UINT ret = win->pdfsync->source_to_pdf(wstr_srcfile, line, col, &page, &x, &y);
-                        WindowInfo_ShowForwardSearchResult(win, wstr_srcfile, line, col, ret, page, x, y);
-                        if (setfocus)
-                            SetFocus(win->hwndFrame);
-                        free(wstr_srcfile);
+        // Parse the command
+        WCHAR pdffile[_MAX_PATH];
+        WCHAR srcfile[_MAX_PATH];
+        WCHAR destname[_MAX_PATH];
+        WCHAR dump[_MAX_PATH];
+        UINT line,col, newwindow = 0, setfocus = 0, forcerefresh = 0;
+        const WCHAR *pos, *curCommand;
+        
+        curCommand = pos = pwCommand;
+        while (pos < (curCommand + wcslen(curCommand))) {
+            // Synchronization command.
+            // format is [<DDECOMMAND_SYNC_A>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
+            if ( (pos = curCommand) &&
+                wstr_skip(&pos, L"[" DDECOMMAND_SYNC_W L"(\"") &&
+                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+                wstr_skip(&pos, L"\",\"") &&
+                wstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
+                (4 == swscanf(pos, L"\",%u,%u,%u,%u)]", &line, &col, &newwindow, &setfocus)
+                || 2 == swscanf(pos, L"\",%u,%u)]", &line, &col))
+                )
+            {
+                // Execute the command.
+
+                // check if the PDF is already opened
+                WindowInfo *win = NULL;
+                win = WindowInfoList_Find(pdffile);
+                
+                // if not then open it
+                if (newwindow || !win || WS_SHOWING_PDF != win->state)
+                    win = LoadPdf(pdffile);
+                
+                if (win && WS_SHOWING_PDF == win->state ) {
+                    if (!win->pdfsync)
+                        DBG_OUT("PdfSync: No sync file loaded!\n");
+                    else {
+                        ack.fAck = 1;
+                        assert(win->dm);
+                        UINT page, x, y;
+                            UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
+                            WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
+                            if (setfocus)
+                                SetFocus(win->hwndFrame);
                     }
                 }
             }
-        }
-        // Open file DDE command.
-        // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
-        else if ( (pos = command) &&
-            str_skip(&pos, "[" DDECOMMAND_OPEN_A "(\"") &&
-            str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-            (3 == sscanf(pos, "\",%u,%u,%u)]", &newwindow, &setfocus, &forcerefresh) || str_skip(&pos, "\")"))
-            )
-        {
-            // check if the PDF is already opened
-            WindowInfo *win = NULL;
-            WCHAR *wstr_pdffile = multibyte_to_wstr(pdffile, CP_ACP);
-            if (wstr_pdffile) {
-                win = WindowInfoList_Find(wstr_pdffile);
-                free(wstr_pdffile);
+            // Open file DDE command.
+            // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
+            else if ( (pos = curCommand) &&
+                wstr_skip(&pos, L"[" DDECOMMAND_OPEN_W L"(\"") &&
+                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+                (3 == swscanf(pos, L"\",%u,%u,%u)]", &newwindow, &setfocus, &forcerefresh) || wstr_skip(&pos, L"\")"))
+                )
+            {
+                // check if the PDF is already opened
+                WindowInfo *win = NULL;
+                win = WindowInfoList_Find(pdffile);
+                
+                // if not then open it
+                if ( newwindow || !win || WS_SHOWING_PDF != win->state)
+                    win = LoadPdf(pdffile);
+                
+                if (win && WS_SHOWING_PDF == win->state ) {
+                    ack.fAck = 1;
+                    if (forcerefresh)
+                        PostMessage(win->hwndFrame, WM_CHAR, 'r', 0);
+                    if (setfocus)
+                        SetFocus(win->hwndFrame);
+                }
+                
             }
+            // Jump to named destination DDE command.
+            // format is [<DDECOMMAND_GOTO_A>("<pdffilepath>", "<destination name>")]
+            else if ( (pos = curCommand) &&
+                wstr_skip(&pos, L"[" DDECOMMAND_GOTO_W L"(\"") &&
+                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), L'"') &&
+                wstr_skip(&pos, L"\",\"") &&
+                wstr_copy_skip_until(&pos, destname, dimof(destname), L'"')
+                )
+            {
+               // check if the PDF is already opened
+                WindowInfo *win = NULL;
+                win = WindowInfoList_Find(pdffile);
+                if (win && WS_SHOWING_PDF == win->state) {
+                    LPSTR destname_ansi = wstr_to_multibyte(destname, CP_ACP);
+                    if (destname_ansi) {
+                        win->dm->goToNamedDest(destname_ansi);
+                        ack.fAck = 1;
+                        SetFocus(win->hwndFrame);
+                        free(destname_ansi);
+                    }
+                }
+                
+            }
+            else
+                DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
 
-            
-            // if not then open it
-            if ( newwindow || !win || WS_SHOWING_PDF != win->state)
-                win = LoadPdf(pdffile);
-            
-            if (win && WS_SHOWING_PDF == win->state ) {
-                ack.fAck = 1;
-                if (forcerefresh)
-                    PostMessage(win->hwndFrame, WM_CHAR, 'r', 0);
-                if (setfocus)
-                    SetFocus(win->hwndFrame);
-            }
-            
+            // next command
+            wstr_copy_skip_until(&pos, dump, dimof(dump), ']');
+            wstr_skip(&pos, L"]");
+            curCommand = pos;
         }
-        // Jump to named destination DDE command.
-        // format is [<DDECOMMAND_GOTO_A>("<pdffilepath>", "<destination name>")]
-        else if ( (pos = command) &&
-            str_skip(&pos, "[" DDECOMMAND_GOTO_A "(\"") &&
-            str_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-            str_skip(&pos, "\",\"") &&
-            str_copy_skip_until(&pos, destname, dimof(destname), '"')
-            )
-        {
-           // check if the PDF is already opened
-            WindowInfo *win = NULL;
-            WCHAR *wstr_pdffile = multibyte_to_wstr(pdffile, CP_ACP);
-            if (wstr_pdffile) {
-                win = WindowInfoList_Find(wstr_pdffile);
-                free(wstr_pdffile);
-            }
-
-            if (win && WS_SHOWING_PDF == win->state) {
-                win->dm->goToNamedDest(destname);
-                ack.fAck = 1;
-                SetFocus(win->hwndFrame);
-            }
-            
-        }
-        else
-            DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
-
-        // next command
-        str_copy_skip_until(&pos, dump, dimof(dump), ']');
-        str_skip(&pos, "]");
-        command = pos;
-        }
+        free(pwCommand);
     }
     GlobalUnlock((HGLOBAL)hi);
 

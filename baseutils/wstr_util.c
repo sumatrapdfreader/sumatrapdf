@@ -237,6 +237,40 @@ static int wchar_is_ws(char c)
     return FALSE;
 }
 
+/* If the string at <*strp> starts with string at <expect>, skip <*strp> past
+    it and return TRUE; otherwise return FALSE. */
+int wstr_skip(const WCHAR **strp, const WCHAR *expect)
+{
+    size_t len = wstr_len(expect);
+    if (0 == wcsncmp(*strp, expect, len)) {
+        *strp += len;
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
+
+/* Copy the string from <*strp> into <dst> until <stop> is found, and point
+    <*strp> at the end. Returns TRUE unless <dst_size> isn't big enough, in
+    which case <*strp> is still updated, but FALE is returned and <dst> is
+    truncated. If <delim> is not found, <*strp> will point to the end of the
+    string and FALSE is returned. */
+int
+wstr_copy_skip_until(const WCHAR **strp, WCHAR *dst, size_t dst_size, WCHAR stop)
+{
+    const WCHAR *const str = *strp;
+    size_t len = wstr_len(str);
+    *strp = wmemchr(str, stop, len);
+    if (NULL==*strp) {
+        *strp = str+len;
+        return FALSE;
+    }
+    else
+        return wstr_copyn(dst, dst_size, str, *strp - str);
+}
+
+
 /* Given a pointer to a string in '*txt', skip past whitespace in the string
    and put the result in '*txt' */
 void wstr_skip_ws(WCHAR **txtInOut)

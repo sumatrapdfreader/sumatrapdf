@@ -291,6 +291,9 @@ private:
 // create a synchronizer for the given PDF file
 Synchronizer *CreateSynchronizer(LPCWSTR pdffilename);
 
+#define __W(x)      L ## x
+#define _W(x)       __W(x)
+
 
 #define PDFSYNC_DDE_SERVICE_A         "SUMATRA"
 #define PDFSYNC_DDE_SERVICE_W         L"SUMATRA"
@@ -303,7 +306,7 @@ Synchronizer *CreateSynchronizer(LPCWSTR pdffilename);
 //    if focus = 1 then the focus is set to the window
 //  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
 #define DDECOMMAND_SYNC_A         "ForwardSearch"
-#define DDECOMMAND_SYNC_W         L DDECOMMAND_SYNC_A
+#define DDECOMMAND_SYNC_W         _W(DDECOMMAND_SYNC_A)
 
 // open file command
 //  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
@@ -311,13 +314,13 @@ Synchronizer *CreateSynchronizer(LPCWSTR pdffilename);
 //    if focus = 1 then the focus is set to the window
 //  eg: [Open("c:\file.pdf", 1, 1)]
 #define DDECOMMAND_OPEN_A         "Open"
-#define DDECOMMAND_OPEN_W         L DDECOMMAND_OPEN_A
+#define DDECOMMAND_OPEN_W         _W(DDECOMMAND_OPEN_A)
 
 // jump to named destination command
 //  format: [GoToNamedDest("<pdffilepath>","<destination name>")]
 //  eg: [GoToNamedDest("c:\file.pdf", "chapter.1")]. pdf file must be already opened
 #define DDECOMMAND_GOTO_A         "GotoNamedDest"
-#define DDECOMMAND_GOTO_W         L DDECOMMAND_GOTO_A
+#define DDECOMMAND_GOTO_W         _W(DDECOMMAND_GOTO_A)
 
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);

@@ -18,6 +18,8 @@ int     wstr_endswithi(const WCHAR *str, const WCHAR *end);
 int     wstr_empty(const WCHAR *str);
 int     wstr_copy(WCHAR *dst, int dst_cch_size, const WCHAR *src);
 int     wstr_copyn(WCHAR *dst, int dst_cch_size, const WCHAR *src, int src_cch_size);
+int     wstr_skip(const WCHAR **strp, const WCHAR *expect);
+int     wstr_copy_skip_until(const WCHAR **strp, WCHAR *dst, size_t dst_size, WCHAR stop);
 WCHAR * wstr_dup(const WCHAR *str);
 WCHAR * wstr_dupn(const WCHAR *str, int str_len_cch);
 WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
