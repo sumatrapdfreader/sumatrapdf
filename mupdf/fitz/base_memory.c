@@ -23,9 +23,10 @@ void fz_free(void *p)
 
 char * fz_strdup(char *s)
 {
-    char *ns = strdup(s);
+    char *ns = malloc(strlen(s) + 1);
     if (!ns)
 	fz_throw("cannot strdup %lu bytes", (unsigned long)strlen(s) + 1);
+    memcpy(ns, s, strlen(s) + 1);
     return ns;
 }
 

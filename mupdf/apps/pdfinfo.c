@@ -315,24 +315,24 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		basefont = fz_dictgets(fontdict, "BaseFont");
 		if (basefont)
 		{
-		    error = pdf_resolve(&basefont, src);
-		    if (error)
-			return fz_rethrow(error, "cannot find font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			error = pdf_resolve(&basefont, src);
+			if (error)
+				return fz_rethrow(error, "cannot find font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		    fz_dropobj(basefont);
-		    if (!fz_isname(basefont))
-			return fz_throw("not a font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			if (!fz_isname(basefont))
+				return fz_throw("not a font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		else
 		{
-		    name = fz_dictgets(fontdict, "Name");
-		    if (name)
-			error = pdf_resolve(&name, src);
-		    else
-			error = fz_newnull(&name);
-		    if (error)
-			return fz_rethrow(error, "cannot find font dict name (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		    if (!fz_isnull(name) && !fz_isname(name))
-			return fz_throw("not a font dict name (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			name = fz_dictgets(fontdict, "Name");
+			if (name)
+				error = pdf_resolve(&name, src);
+			else
+				error = fz_newnull(&name);
+			if (error)
+				return fz_rethrow(error, "cannot find font dict name (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			if (!fz_isnull(name) && !fz_isname(name))
+				return fz_throw("not a font dict name (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 
 		for (k = 0; k < fonts; k++)
@@ -1279,16 +1279,16 @@ showinfo(char *filename, int show, char *pagelist)
 			printf("Retrieving info from pages %d-%d...\n", spage, epage);
 		if (spage >= 1)
 		{
-		    for (page = spage; page <= epage; page++)
-		    {
-			gatherinfo(show, page);
-			if (!allpages)
+			for (page = spage; page <= epage; page++)
 			{
-			    printf("Page %05d:\n", page);
-			    printinfo(filename, show, page);
-			    printf("\n");
+				gatherinfo(show, page);
+				if (!allpages)
+				{
+					printf("Page %05d:\n", page);
+					printinfo(filename, show, page);
+					printf("\n");
+				}
 			}
-		    }
 		}
 
 		spec = strsep(&pagelist, ",");
@@ -1318,8 +1318,8 @@ int main(int argc, char **argv)
 			case 'x': if (show == ALL) show = XOBJS; else show |= XOBJS; break;
 			case 'd': password = optarg; break;
 			default:
-				  infousage();
-				  break;
+				infousage();
+				break;
 		}
 	}
 
