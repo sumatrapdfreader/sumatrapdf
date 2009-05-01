@@ -416,6 +416,9 @@ pdf_parseindobj(fz_obj **op, fz_stream *file, char *buf, int cap,
 				}
 			}
 			goto cleanup;
+	case PDF_TENDOBJ:
+			error = fz_newnull(&obj);
+			goto skip;
 	default:
 			goto cleanup;
 	}
