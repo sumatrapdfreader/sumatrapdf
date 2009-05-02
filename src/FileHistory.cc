@@ -128,7 +128,7 @@ FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, con
     curr = *root;
     while (curr) {
         assert(curr->state.filePath);
-        if (wstr_eq(filePath, curr->state.filePath))
+        if (wstr_ieq(filePath, curr->state.filePath))
             return curr;
         curr = curr->next;
     }

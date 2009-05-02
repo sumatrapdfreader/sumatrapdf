@@ -1797,7 +1797,7 @@ static int WindowInfoList_Len(void) {
 
 // Find the first windows showing a given PDF file 
 WindowInfo* WindowInfoList_Find(LPWSTR file) {
-    LPWSTR normFile = FilePathW_Normalize(file);
+    LPWSTR normFile = FilePathW_Normalize(file, FALSE);
     if(!normFile)
         return NULL;
 
@@ -2352,7 +2352,7 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
 
     // TODO: fileName might not exist.
     // Normalize the file path    
-    WCHAR *pFullpath = FilePathW_Normalize(fileName);
+    WCHAR *pFullpath = FilePathW_Normalize(fileName, FALSE);
     if (!pFullpath)
         goto exit;
 

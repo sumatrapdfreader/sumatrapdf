@@ -67,12 +67,26 @@ WCHAR *FilePathW_GetDir(const WCHAR *path)
     return dir;
 }
 
-// Normalize a file path:
+// Normalize a file path.
 //  remove relative path component (..\ and .\),
 //  replace slashes by backslashes,
 //  conver to long form,
-//  convert to lowercase.
-WCHAR *FilePathW_Normalize(const WCHAR *f)
+//  convert to lowercase (if bLowerCase=TRUE).
+//
+// Returns a pointer to a memory allocated block containing the normalized string.
+//   The caller is responsible for freeing the block.
+//   Returns NULL if the file does not exist or if a memory allocation fails.
+//
+// Precondition: the file must exist on the file system.
+//
+// Note: if bLowerCase=FALSE then the case is changed as follows:
+//   - the case of the root component is preserved
+//   - the case of rest is set to the wayt it is stored on the file system
+//
+// e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
+//    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
+//    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
+WCHAR *FilePathW_Normalize(const WCHAR *f, BOOL bLowerCase)
 {
     WCHAR * pBuff, * pBuff2;
     DWORD cb;
@@ -97,9 +111,11 @@ WCHAR *FilePathW_Normalize(const WCHAR *f)
     GetLongPathNameW(pBuff2, pBuff2, cb);
 
     // convert to lower case
-    pBuff = pBuff2;
-    while (*pBuff)
-        *(pBuff++) = tolower(*pBuff);
+    if (bLowerCase) {
+        pBuff = pBuff2;
+        while (*pBuff)
+            *(pBuff++) = tolower(*pBuff);
+    }
 
     return pBuff2;
 }
@@ -113,15 +129,15 @@ int FilePathW_Compare(const WCHAR *lhs, const WCHAR *rhs)
     LPWSTR nl, nr;
     int ret;
 
-    nl = FilePathW_Normalize(lhs);
+    nl = FilePathW_Normalize(lhs, TRUE);
     if (!nl)
         return -1;
 
-    nr = FilePathW_Normalize(rhs);
+    nr = FilePathW_Normalize(rhs, TRUE);
     if (!nr)
         return -1;
 
-    ret = wstr_ieq(nl, nr) ? 0 : 1;
+    ret = wstr_eq(nl, nr) ? 0 : 1;
 
     free(nr);
     free(nl);
