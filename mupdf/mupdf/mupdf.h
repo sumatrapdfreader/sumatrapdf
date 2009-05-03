@@ -194,6 +194,9 @@ fz_error pdf_newstore(pdf_store **storep);
 void pdf_emptystore(pdf_store *store);
 void pdf_dropstore(pdf_store *store);
 
+void pdf_agestoreditems(pdf_store *store);
+fz_error pdf_evictageditems(pdf_store *store);
+
 fz_error pdf_storeitem(pdf_store *store, pdf_itemkind tag, fz_obj *key, void *val);
 void *pdf_finditem(pdf_store *store, pdf_itemkind tag, fz_obj *key);
 fz_error pdf_removeitem(pdf_store *store, pdf_itemkind tag, fz_obj *key);

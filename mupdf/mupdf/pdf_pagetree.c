@@ -77,6 +77,17 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 			if (error) return fz_rethrow(error, "cannot inherit page tree rotate");
 		}
 
+		if (pages->cursor >= pages->count)
+		{
+			fz_warn("initial page tree size too small, enlarging");
+
+			pages->count = pages->cursor + 10;
+			pages->pref = fz_realloc(pages->pref, sizeof(fz_obj*) * pages->count);
+			pages->pobj = fz_realloc(pages->pobj, sizeof(fz_obj*) * pages->count);
+			if (!pages->pref || !pages->pobj)
+				return fz_throw("error allocating enlarged page tree");
+		}
+
 		pages->pref[pages->cursor] = fz_keepobj(ref);
 		pages->pobj[pages->cursor] = fz_keepobj(obj);
 		pages->cursor ++;
@@ -97,9 +108,14 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 		if (inh) inherit.rotate = inh;
 
 		kids = fz_dictgets(obj, "Kids");
-		error = pdf_resolve(&kids, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Kids");
+		if (kids)
+		{
+			error = pdf_resolve(&kids, xref);
+			if (error)
+				return fz_rethrow(error, "cannot resolve /Kids");
+		}
+		if (!fz_isarray(kids))
+			return fz_throw("page tree contains no pages");
 
 		pdf_logpage("subtree %d pages (%d %d R) {\n",
 				fz_arraylen(kids), ref->u.r.oid, ref->u.r.gid);

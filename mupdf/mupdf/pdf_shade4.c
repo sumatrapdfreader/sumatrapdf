@@ -71,7 +71,7 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		}
 	}
 	else {
-		error = fz_throw("syntaxerror: No Decode key in Type 4 Shade");
+		error = fz_throw("shading is missing vertex color decoding");
 		goto cleanup;
 	}
 
@@ -253,7 +253,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		}
 	}
 	else {
-		error = fz_throw("syntaxerror: No Decode key in Type 4 Shade");
+		error = fz_throw("shading is missing vertex color decoding");
 		goto cleanup;
 	}
 
@@ -619,7 +619,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		}
 	}
 	else {
-		error = fz_throw("syntaxerror: No Decode key in Type 6 Shade");
+		error = fz_throw("shading is missing vertex color decoding");
 		goto cleanup;
 	}
 
@@ -739,7 +739,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		}
 	}
 	else {
-		error = fz_throw("syntaxerror: No Decode key in Type 6 Shade");
+		error = fz_throw("shading is missing vertex color decoding");
 		goto cleanup;
 	}
 

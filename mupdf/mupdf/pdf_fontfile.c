@@ -119,7 +119,7 @@ pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
 		if (!strcmp(fontname, basefonts[i].name))
 			goto found;
 
-	return fz_throw("cannot find font: %s", fontname);
+	return fz_throw("cannot find font: '%s'", fontname);
 
 found:
 	pdf_logfont("load builtin font %s\n", fontname);

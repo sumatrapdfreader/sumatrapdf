@@ -169,6 +169,8 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_m
 	shade->meshcap = 0;
 	shade->mesh = nil;
 
+	shade->cs = nil;
+
 	obj = fz_dictgets(dict, "ShadingType");
 	type = fz_toint(obj);
 	pdf_logshade("type %d\n", type);
@@ -191,6 +193,9 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_m
 			fz_dropobj(obj);
 		}
 	}
+
+	if (!shade->cs)
+		return fz_throw("shading is missing colorspace");
 	pdf_logshade("colorspace %s\n", shade->cs->name);
 
 	obj = fz_dictgets(dict, "Background");

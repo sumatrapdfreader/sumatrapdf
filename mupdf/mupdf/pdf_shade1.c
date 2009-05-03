@@ -51,6 +51,8 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		matrix = fz_identity();
 
 	obj = fz_dictgets(dict, "Function");
+	if (!obj)
+		return fz_throw("shading function not found");
 	error = pdf_loadfunction(&func, xref, obj);
 	if (error)
 		return fz_rethrow(error, "could not load shading function");

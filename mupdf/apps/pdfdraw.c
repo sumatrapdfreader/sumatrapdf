@@ -189,9 +189,10 @@ void drawfreepage(void)
      */
     if (xref && xref->store)
     {
-	fflush(stderr);
 	/* pdf_debugstore(xref->store); */
-	pdf_emptystore(xref->store);
+	pdf_agestoreditems(xref->store);
+	pdf_evictageditems(xref->store);
+	fflush(stderr);
     }
 }
 

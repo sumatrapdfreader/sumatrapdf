@@ -173,10 +173,12 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "CropBox");
 	if (!obj)
 		obj = fz_dictgets(dict, "MediaBox");
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve page bounds");
-	fz_dropobj(obj);
+	if (obj)
+	{
+		error = pdf_resolve(&obj, xref);
+		if (error)
+			return fz_rethrow(error, "cannot resolve page bounds");
+	}
 	if (!fz_isarray(obj))
 		return fz_throw("cannot find page bounds");
 	bbox = pdf_torect(obj);

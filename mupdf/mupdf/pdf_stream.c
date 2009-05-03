@@ -192,9 +192,14 @@ buildrawfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, int
 	int len;
 
 	stmlen = fz_dictgets(stmobj, "Length");
-	error = pdf_resolve(&stmlen, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve stream /Length");
+	if (stmlen)
+	{
+		error = pdf_resolve(&stmlen, xref);
+		if (error)
+			return fz_rethrow(error, "cannot resolve stream /Length");
+	}
+	if (!fz_isint(stmlen))
+		return fz_throw("corrupt stream length");
 	len = fz_toint(stmlen);
 	fz_dropobj(stmlen);
 

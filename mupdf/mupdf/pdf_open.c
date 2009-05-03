@@ -170,6 +170,9 @@ readtrailer(pdf_xref *xref, char *buf, int cap)
 	if (error)
 		return fz_rethrow(error, "cannot seek to startxref");
 
+	while (iswhite(fz_peekbyte(xref->file)))
+		fz_readbyte(xref->file);
+
 	c = fz_peekbyte(xref->file);
 	error = fz_readerror(xref->file);
 	if (error)
@@ -189,7 +192,7 @@ readtrailer(pdf_xref *xref, char *buf, int cap)
 	}
 	else
 	{
-		return fz_throw("cannot recognize xref format");
+		return fz_throw("cannot recognize xref format: '%c'", c);
 	}
 
 	return fz_okay;
@@ -451,6 +454,9 @@ readxref(fz_obj **trailerp, pdf_xref *xref, int ofs, char *buf, int cap)
 	if (error)
 		return fz_rethrow(error, "cannot seek to xref");
 
+	while (iswhite(fz_peekbyte(xref->file)))
+		fz_readbyte(xref->file);
+
 	c = fz_peekbyte(xref->file);
 	error = fz_readerror(xref->file);
 	if (error)
@@ -504,7 +510,7 @@ readxrefsections(pdf_xref *xref, int ofs, char *buf, int cap)
 	prev = fz_dictgets(trailer, "Prev");
 	if (prev)
 	{
-		pdf_logxref("load prev\n");
+		pdf_logxref("load prev at 0x%x\n", fz_toint(prev));
 		error = readxrefsections(xref, fz_toint(prev), buf, cap);
 		if (error)
 		{
@@ -674,7 +680,7 @@ pdf_loadxref2(pdf_xref *xref)
 		goto cleanup;
 	}
 
-	pdf_logxref("  size %d\n", fz_toint(size));
+	pdf_logxref("  size %d at 0x%x\n", fz_toint(size), xref->startxref);
 
 	assert(xref->table == nil);
 

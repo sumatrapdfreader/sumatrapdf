@@ -138,7 +138,7 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	{
 		error = pdf_loadindirect(&app->xref->info, app->xref, obj);
 		if (error)
-			pdfapp_error(app, error);
+			pdfapp_warn(app, "Could not load PDF meta information.");
 	}
 
 	error = pdf_loadnametrees(app->xref);

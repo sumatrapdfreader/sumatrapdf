@@ -48,6 +48,10 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	ismask = fz_tobool(fz_dictgetsa(dict, "ImageMask", "IM"));
 	d = fz_dictgetsa(dict, "Decode", "D");
 	cs = fz_dictgetsa(dict, "ColorSpace", "CS");
+	if (img->super.w == 0)
+		fz_warn("inline image width is zero or undefined");
+	if (img->super.h == 0)
+		fz_warn("inline image height is zero or undefined");
 
 	pdf_logimage("size %dx%d %d\n", img->super.w, img->super.h, img->bpc);
 
@@ -103,6 +107,8 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		img->super.n = 0;
 		img->super.a = 1;
 	}
+        else if (!cs)
+		return fz_throw("image is missing colorspace");
 
 	if (fz_isarray(d))
 	{
@@ -238,21 +244,33 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	 * Dimensions, BPC and ColorSpace
 	 */
 
+	w = 0;
 	obj = fz_dictgets(dict, "Width");
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot parse image dictionary");
-	w = fz_toint(obj);
-	fz_dropobj(obj);
+	if (obj)
+	{
+		error = pdf_resolve(&obj, xref);
+		if (error)
+			return fz_rethrow(error, "cannot parse image dictionary");
+		w = fz_toint(obj);
+		fz_dropobj(obj);
+	}
+	if (w == 0)
+		fz_warn("image width is zero or undefined");
 
+	h = 0;
 	obj = fz_dictgets(dict, "Height");
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot parse image dictionary");
-	h = fz_toint(obj);
-	fz_dropobj(obj);
+	if (obj)
+	{
+		error = pdf_resolve(&obj, xref);
+		if (error)
+			return fz_rethrow(error, "cannot parse image dictionary");
+		h = fz_toint(obj);
+		fz_dropobj(obj);
+	}
+	if (h == 0)
+		fz_warn("image height is zero or undefined");
 
-	bpc = 1; /* TODO: should check that ImageMask is true before using default */
+	bpc = 0;
 	obj = fz_dictgets(dict, "BitsPerComponent");
 	if (obj)
 	{
@@ -314,15 +332,20 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 			fz_dropcolorspace(cs);
 			cs = nil;
 		}
-		if (bpc != 1)
+		if (bpc != 0 && bpc != 1)
 			fz_warn("masks can only have one component, proceeding anyway.");
 
 		bpc = 1;
 		n = 0;
 		a = 1;
 	}
-	else if (!cs)
-		return fz_throw("colorspace missing for image");
+	else
+        {
+		if (!cs)
+			return fz_throw("colorspace missing for image");
+		if (bpc == 0)
+			return fz_throw("image has no bits per component");
+        }
 
 	obj = fz_dictgets(dict, "SMask");
 	if (fz_isindirect(obj))

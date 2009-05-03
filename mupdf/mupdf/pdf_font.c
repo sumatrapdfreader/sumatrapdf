@@ -565,6 +565,8 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 		int tmplen;
 
 		cidinfo = fz_dictgets(dict, "CIDSystemInfo");
+		if (!cidinfo)
+			return fz_throw("cid font is missing info");
 
 		error = pdf_resolve(&cidinfo, xref);
 		if (error)
@@ -868,6 +870,8 @@ loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	fz_obj *tounicode;
 
 	dfonts = fz_dictgets(dict, "DescendantFonts");
+	if (!dfonts)
+		return fz_throw("cid font is missing descendant fonts");
 	error = pdf_resolve(&dfonts, xref);
 	if (error)
 		return fz_rethrow(error, "cannot find DescendantFonts");
@@ -998,12 +1002,12 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 	else
         {
 		fz_obj *dfonts;
-		fz_obj *rsrc;
+		fz_obj *charprocs;
 
 		dfonts = fz_dictgets(dict, "DescendantFonts");
-		rsrc = fz_dictgets(dict, "Resources");
+		charprocs = fz_dictgets(dict, "CharProcs");
 
-		if (rsrc)
+		if (charprocs)
 		{
 			fz_warn("cannot recognize font format '%s', guessing type3...", subtype);
 			error = pdf_loadtype3font(fontdescp, xref, dict, ref);
@@ -1013,7 +1017,7 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 			fz_warn("cannot recognize font format '%s', guessing type0...", subtype);
 			error = loadtype0(fontdescp, xref, dict, ref);
 		}
-		if (!rsrc && !dfonts)
+		if (!charprocs && !dfonts)
 		{
 			fz_warn("cannot recognize font format '%s', guessing type1, mmtype1 or truetype...", subtype);
 			error = loadsimplefont(fontdescp, xref, dict, ref);

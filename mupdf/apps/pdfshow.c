@@ -145,6 +145,137 @@ void showstream(int num, int gen)
     fz_dropstream(stm);
 }
 
+int isimage(fz_obj *obj)
+{
+    fz_obj *type = fz_dictgets(obj, "Subtype");
+    return fz_isname(type) && !strcmp(fz_toname(type), "Image");
+}
+
+void showimage(fz_obj *img)
+{
+    fz_error error;
+    fz_obj *obj;
+    int mask = 0;
+    char *cs = "";
+    int bpc;
+    int w;
+    int h;
+    int n;
+
+    obj = fz_dictgets(img, "BitsPerComponent");
+    if (!obj)
+	die(fz_throw("No bits per component"));
+    error = pdf_resolve(&obj, xref);
+    if (error)
+	die(error);
+    bpc = fz_toint(obj);
+
+    obj = fz_dictgets(img, "Width");
+    if (!obj)
+	die(fz_throw("No width"));
+    error = pdf_resolve(&obj, xref);
+    if (error)
+	die(error);
+    w = fz_toint(obj);
+
+    obj = fz_dictgets(img, "Height");
+    if (!obj)
+	die(fz_throw("No height"));
+    error = pdf_resolve(&obj, xref);
+    if (error)
+	die(error);
+    h = fz_toint(obj);
+
+    obj = fz_dictgets(img, "ImageMask");
+    if (obj)
+    {
+	error = pdf_resolve(&obj, xref);
+	if (error)
+	    die(error);
+	mask = fz_tobool(obj);
+    }
+
+    obj = fz_dictgets(img, "ColorSpace");
+    if (!mask && !obj)
+	die(fz_throw("No colorspace"));
+    if (obj)
+    {
+	error = pdf_resolve(&obj, xref);
+	if (error)
+	    die(error);
+	if (fz_isname(obj))
+	{
+	    cs = fz_toname(obj);
+
+	    if (!strcmp(cs, "DeviceGray"))
+		n = 1;
+	    else if (!strcmp(cs, "DeviceRGB"))
+		n = 3;
+	}
+	else if (fz_isarray(obj))
+	{
+	    fz_obj *csarray = obj;
+
+	    obj = fz_arrayget(csarray, 0);
+	    if (!obj)
+		die(fz_throw("No colorspace"));
+	    error = pdf_resolve(&obj, xref);
+	    if (error)
+		die(error);
+	    if (!fz_isname(obj))
+		die(fz_throw("Not a colorspace name"));
+	    cs = fz_toname(obj);
+
+	    if (!strcmp(cs, "ICCBased"))
+	    {
+		obj = fz_arrayget(csarray, 1);
+		if (!obj)
+		    die(fz_throw("No colorspace dict"));
+		error = pdf_resolve(&obj, xref);
+		if (error)
+		    die(error);
+		if (!fz_isdict(obj))
+		    die(fz_throw("Not a colorspace dict"));
+
+		obj = fz_dictgets(obj, "N");
+		if (!obj)
+		    die(fz_throw("No number of components"));
+		error = pdf_resolve(&obj, xref);
+		if (error)
+		    die(error);
+		if (!fz_isint(obj))
+		    die(fz_throw("Not a number of components"));
+		n = fz_toint(obj);
+	    }
+	    else if (!strcmp(cs, "CalGray"))
+	    {
+		n = 1;
+	    }
+	    else if (!strcmp(cs, "CalRGB"))
+	    {
+		n = 3;
+	    }
+	}
+    }
+
+    if (!mask)
+    {
+	if (n == 1 && bpc == 1)
+	    printf("P4\n%d %d\n", w, h);
+	else if (n == 1 && bpc == 8)
+	    printf("P5\n%d %d\n%d\n", w, h, (1 << bpc) - 1);
+	else if (n == 3)
+	    printf("P6\n%d %d\n%d\n", w, h, (1 << bpc) - 1);
+    }
+    else
+    {
+	if (bpc == 1)
+	    printf("P4\n%d %d\n", w, h);
+	else if (bpc == 8)
+	    printf("P5\n%d %d\n%d\n", w, h, (1 << bpc) - 1);
+    }
+}
+
 void showobject(int num, int gen)
 {
     fz_error error;
@@ -157,17 +288,26 @@ void showobject(int num, int gen)
     if (error)
 	die(error);
 
-    printf("%d %d obj\n", num, gen);
-    fz_debugobj(obj);
-
-    if (pdf_isstream(xref, num, gen))
+    if (showbinary && showdecode && isimage(obj))
     {
+	showimage(obj);
+	showstream(num, gen);
+    }
+    else if (pdf_isstream(xref, num, gen))
+    {
+	printf("%d %d obj\n", num, gen);
+	fz_debugobj(obj);
 	printf("stream\n");
 	showstream(num, gen);
 	printf("endstream\n");
+	printf("endobj\n\n");
     }
-
-    printf("endobj\n\n");
+    else
+    {
+	printf("%d %d obj\n", num, gen);
+	fz_debugobj(obj);
+	printf("endobj\n\n");
+    }
 
     fz_dropobj(obj);
 }

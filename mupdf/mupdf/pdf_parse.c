@@ -302,6 +302,7 @@ skip:
 			}
 			goto cleanup;
 		default:
+			error = fz_throw("unknown token in dict");
 			goto cleanup;
 		}
 

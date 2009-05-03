@@ -319,7 +319,7 @@ fz_fprintobj(FILE *fp, fz_obj *obj, int tight)
 	int n;
 
 	n = fz_sprintobj(nil, 0, obj, tight);
-	if (n < sizeof buf)
+	if ((n + 1) < sizeof buf)
 	{
 		fz_sprintobj(buf, sizeof buf, obj, tight);
 		fputs(buf, fp);
@@ -327,10 +327,10 @@ fz_fprintobj(FILE *fp, fz_obj *obj, int tight)
 	}
 	else
 	{
-		ptr = fz_malloc(n);
+		ptr = fz_malloc(n + 1);
 		if (!ptr)
 			return -1;
-		fz_sprintobj(ptr, n, obj, tight);
+		fz_sprintobj(ptr, n + 1, obj, tight);
 		fputs(ptr, fp);
 		fputc('\n', fp);
 		fz_free(ptr);

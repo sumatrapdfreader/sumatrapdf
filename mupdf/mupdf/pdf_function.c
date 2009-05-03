@@ -1243,10 +1243,15 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		return fz_throw("/Domain must be one dimension (%d)", func->m);
 
 	obj = fz_dictgets(dict, "Functions");
+	if (obj)
 	{
 		error = pdf_resolve(&obj, xref);
 		if (error)
 			return fz_rethrow(error, "cannot resolve /Functions");
+	}
+	if (!fz_isarray(obj))
+		return fz_throw("stitching function has no input functions");
+	{
 
 		k = fz_arraylen(obj);
 		func->u.st.k = k;
@@ -1308,10 +1313,15 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 	}
 
 	obj = fz_dictgets(dict, "Bounds");
+	if (obj)
 	{
 		error = pdf_resolve(&obj, xref);
 		if (error)
 			return fz_rethrow(error, "cannot resolve /Bounds");
+	}
+	if (!fz_isarray(obj))
+		return fz_throw("stitching function has no bounds");
+	{
 
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k - 1)
 		{
@@ -1344,10 +1354,15 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 	}
 
 	obj = fz_dictgets(dict, "Encode");
+	if (obj)
 	{
 		error = pdf_resolve(&obj, xref);
 		if (error)
 			return fz_rethrow(error, "cannot resolve /Encode");
+	}
+	if (!fz_isarray(obj))
+		return fz_throw("stitching function is missing encoding");
+	{
 
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k * 2)
 		{
