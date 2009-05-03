@@ -996,7 +996,32 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 	else if (!strcmp(subtype, "Type3"))
 		error = pdf_loadtype3font(fontdescp, xref, dict, ref);
 	else
-		return fz_throw("cannot recognize font format %s", subtype);
+        {
+		fz_obj *dfonts;
+		fz_obj *rsrc;
+
+		dfonts = fz_dictgets(dict, "DescendantFonts");
+		rsrc = fz_dictgets(dict, "Resources");
+
+		if (rsrc)
+		{
+			fz_warn("cannot recognize font format '%s', guessing type3...", subtype);
+			error = pdf_loadtype3font(fontdescp, xref, dict, ref);
+		}
+		if (dfonts)
+		{
+			fz_warn("cannot recognize font format '%s', guessing type0...", subtype);
+			error = loadtype0(fontdescp, xref, dict, ref);
+		}
+		if (!rsrc && !dfonts)
+		{
+			fz_warn("cannot recognize font format '%s', guessing type1, mmtype1 or truetype...", subtype);
+			error = loadsimplefont(fontdescp, xref, dict, ref);
+		}
+
+		if (error)
+			return fz_throw("cannot recognize font format '%s', guessing is impossible", subtype);
+	}
 
 	if (error)
 		return fz_rethrow(error, "cannot load font");
