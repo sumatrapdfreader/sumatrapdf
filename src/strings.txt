@@ -37,7 +37,9 @@
 #   Mohammed Al-Foulad (http://www.mbsee.info)
 #   Boubker Talibi
 # WangKing(http://wkismet.spaces.live.com) - Chinese Simplified
-# Linus Persson - Swedish
+# Swedish:
+#   Linus Persson
+#   Cecilia B
 # Kristian Vrhel - Czech
 # Giorgos Dimopoulos (geodimo1985@gmail.com) - Greek (Hellenic)
 # Uthen Phutneam - Thai
@@ -981,6 +983,7 @@ mm:စာမျက်နှာ မှတ်သား
 pa:ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ
 hi:संभाले हुए चिह्न
 nn:Bokmerker
+sv:Bokmärken
 -
 Fullscreen\tCtrl-L
 af:Volskerm
@@ -1033,6 +1036,7 @@ mm:မြင်ကွင်း ပြည့်
 pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl-L
 hi:पूरा परदा\tCtrl-L
 nn:Full skjerm\tCtrl-L
+sv:Fullskärm\tCtrl-L
 -
 Show toolbar
 af:Vertoon Toolbar
@@ -2037,6 +2041,7 @@ mm:ရှာပါ
 pa:ਲੱਭੋ:
 hi:खोज:
 nn:Finn
+sv:Sök
 -
 Find Previous
 af:Soek Vorige
@@ -2086,6 +2091,7 @@ mm:ပြီးခဲ့တာ ရှာပါ
 pa:ਪਿਛਲਾ ਲੱਭੋ
 hi:पुराना खोजें
 nn:Finn førre
+sv:Sök föregående
 -
 Find Next
 af:Soek Volgende
@@ -2134,6 +2140,7 @@ mm:နောက်တခု ရှာပါ
 pa:ਅਗਲਾ ਲੱਭੋ
 hi:अगला खोजें
 nn:Finn neste
+sv:Sök nästa
 -
 Match case
 af:Vind Bypassende Klein Letters / Hoofletters
@@ -2180,6 +2187,7 @@ mm:တူညီ သော
 pa:ਅੱਖਰ ਅਕਾਰ ਮਿਲਾਓ
 hi:अक्षर आकार मिलाएं
 nn:Skil mellom store/små bokstavar
+sv:Matcha stora/små bokstäver
 -
 Open
 af:Maak Oop
@@ -2775,6 +2783,7 @@ mm:command line ဗြောင်းပြန်ရှာကို သတ်မ
 pa:ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
 hi:उलटी command-line खोज सैट करें
 nn:Velg motsatt søk-kommandolinje
+sv:Sätt motsatt sök-kommandorad
 -
 Change language
 af:Verander Taal (Change language)
@@ -2814,6 +2823,7 @@ pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
 hi:भाषा बदलें(Change language)
 nn:Byt språk (Change language)
 fi:Valitse kieli (Change language)
+sv:Byt språk (Change language)
 -
 Enter password
 af:Tik Wagwoord In
@@ -2852,6 +2862,7 @@ pa:ਪਾਸਵਰਡ ਭਰੋ
 hi:पहचान शब्द भरें
 nn:Skriv inn passord
 fi:Kirjoita salasana
+sv:Ange lösenord
 -
 Enter password for %s
 af:Tik Wagwoord In Vir %s
@@ -2890,6 +2901,7 @@ pa:%s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
 hi:%s के लिए पहचान शब्द भरें
 nn:Skriv inn passord for %s
 fi:Kirjoita salasana tiedostolle %s
+sv:Ange lösenord för %s
 -
 Go to page
 af:Gaan Na Bladsy
@@ -2928,6 +2940,7 @@ pa:ਪੰਨੇ ਤੇ ਜਾਓ
 hi:पृष्ठ संख्या पर जाए(&G)
 nn:Gå til side
 fi:Siirry sivulle
+sv:Gå till sida
 -
 Associate with PDF files?
 af:Assosieer Met PDF lêers?
@@ -2966,6 +2979,7 @@ pa:PDF ਫਾਈਲਾਂ ਨਾਲ ਸੰਬੰਦ ਬਣਾਓ ?
 hi: PDF फाईलों से संबंध बनाइए?
 nn:Tilknytte PDF-filer?
 fi:Tiedostosidos PDF-tiedostoihin?
+sv:Koppla ihop med PDF-filer?
 -
 Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
@@ -3002,6 +3016,7 @@ pa:PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
 hi:सभी PDF फाईलें SumatraPDF में खोलें ?
 nn:Gjere SumatraPDF til standardprogram for PDF-filer?
 fi:Laita SumatraPDF PDF-tiedostojen oletusohjelmaksi?
+sv:Ställa in SumatraPDF som standardprogram för PDF-filer?
 -
 Don't ask me again
 af:Moet My Nie Weer Vra Nie
@@ -3041,6 +3056,7 @@ pa:ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
 hi:फिर मत पूछिए
 nn:Ikkje spør meg igjen
 fi:Älä kysy uudestaan
+sv:Fråga mig inte igen
 -
 &Check for new version
 af:Kyk Vir Nuwe Uitgawe
@@ -3080,6 +3096,7 @@ pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
 hi:नए संसकरण के लिए जांच करें(&C)
 nn:&Sjå etter ny versjon
 fi:Tarkista onko päivityksiä saatavilla
+sv:&Sök efter ny version
 -
 No new version available.
 af:Geen Nuwe Weergawe Is Beskikbaar Nie.
@@ -3119,6 +3136,7 @@ pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
 hi:नया संसकरण उपलब्ध है
 nn:Ingen nye versjonar.
 fi:Ei uudempia versioita saatavilla.
+sv:Ingen ny version.
 -
 You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
@@ -3158,6 +3176,7 @@ pa:ਤੋਹਾਡੇ ਕੋਲ ਪਿਹਲਾਂ ਤੌਂ ਹੀ ਨਵਾਂ
 hi:आपके पास पहले से ही नया संसकरण है
 nn:Du har den siste versjonen.
 fi:Sinulla on uusin versio.
+sv:Du har den senaste versionen.
 -
 You have version %s
 af:Jy Het Weergawe %s
@@ -3197,6 +3216,7 @@ pa:ਤੋਹਾਡੇ ਕੋਲ %s ਵਰਜਨ ਹੈ
 hi:आपके पास  %s संसकरण है
 nn:Du har versjon %s
 fi:Sinulla on versio %s
+sv:Du har version %s
 -
 New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
@@ -3236,6 +3256,7 @@ pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋ
 hi:संसकरण %s उपलब्ध है । डाउनलोड करूँ ?
 nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
 fi:Uudempi versio %s saatavilla. Ladataanko uudempi versio?
+sv:Nyare version %s finns. Ladda ner den?
 -
 New version available.
 af:Nuwe Weergawe Beskikbaar.
@@ -3275,6 +3296,7 @@ pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਹੈ ।
 hi:नया संसकरण उपलब्ध है । 
 nn:Ny versjon tilgjengeleg.
 fi:Uusi versio saatavilla.
+sv:Nyare version finns.
 -
 Skip this version
 af:Slaan Dié Weergawe Oor.
@@ -3313,6 +3335,7 @@ pa:ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
 hi:इस संसकरण को छोडो
 nn:Hopp over denne versjonen
 fi:Ohita tämä versio
+sv:Hoppa över denna version
 -
 Enable auto-update
 af:Stel In Staat Om Automatiese Opdatering Te Doen.
@@ -3344,3 +3367,4 @@ pa:ਨਵਾ ਵਰਜਨ ਡਾਓਨਲੋਡ ਕਰਨ ਨੂੰ ਜਕੀਨ
 hi:नया संसकरण अपने आप डाउनलोड करो
 nn:Aktivèr auto-oppdatering
 fi:Automaattinen päivitys
+sv:Aktivera automatisk uppdatering
