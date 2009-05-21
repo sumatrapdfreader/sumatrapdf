@@ -471,7 +471,7 @@ const char *g_transTranslations[] = {
   "N\303\244chste Seite",
   "Keine neuere Version vorhanden.",
   "\303\226&ffnen...",
-  "Seite...",
+  "Seite...\tCtrl-G",
   "Seite:",
   "Vorherige Seite",
   "Druckerproblem",

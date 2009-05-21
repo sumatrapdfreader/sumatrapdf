@@ -1386,7 +1386,7 @@ bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
 hu:Megadott oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
-de:Seite...
+de:Seite...\tCtrl-G
 fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
