@@ -898,11 +898,11 @@ Lsetcolor:
 
 			dict = fz_dictgets(rdb, "XObject");
 			if (!dict)
-				return fz_throw("cannot find XObject dictionary");
+				return fz_throw("cannot find XObject dictionary when looking for: '%s'", fz_toname(csi->stack[0]));
 
 			obj = fz_dictget(dict, csi->stack[0]);
 			if (!obj)
-				return fz_throw("cannot find xobject resource: %s", fz_toname(csi->stack[0]));
+				return fz_throw("cannot find xobject resource: '%s'", fz_toname(csi->stack[0]));
 
 			img = pdf_finditem(xref->store, PDF_KIMAGE, obj);
 			xobj = pdf_finditem(xref->store, PDF_KXOBJECT, obj);

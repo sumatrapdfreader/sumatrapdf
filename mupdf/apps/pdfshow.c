@@ -60,6 +60,12 @@ void openxref(char *filename, char *password)
     }
 }
 
+void closexref()
+{
+    pdf_closexref(xref);
+    xref = nil;
+}
+
 int showbinary = 0;
 int showdecode = 0;
 int showcolumn;
@@ -348,5 +354,7 @@ int main(int argc, char **argv)
 	    showobject(atoi(argv[optind]), 0);
 	optind++;
     }
+
+    closexref();
 }
 
