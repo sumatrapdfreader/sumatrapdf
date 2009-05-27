@@ -27,7 +27,7 @@ FITZ_DIR=mupdf
 !endif
 
 ZLIB_DIR=$(EXTLIBSDIR)ext\zlib-1.2.3
-FREETYPE_DIR=$(EXTLIBSDIR)ext\freetype-2.3.7
+FREETYPE_DIR=$(EXTLIBSDIR)ext\freetype-2.3.9
 JPEG_DIR=$(EXTLIBSDIR)ext\jpeg6b
 JASPER_DIR=$(EXTLIBSDIR)ext\jasper\src\libjasper
 JBIG2_DIR=$(EXTLIBSDIR)ext\jbig2dec
