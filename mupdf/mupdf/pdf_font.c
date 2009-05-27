@@ -154,18 +154,6 @@ pdf_dropfont(pdf_fontdesc *fontdesc)
 	fz_free(fontdesc);
     }
 }
-/* List of fonts that don't render properly without hinting. This list comes
-   freetype */
-static const char* const force_hinting[] =
-{
-  "DFKaiSho-SB",	 /* dfkaisb.ttf */
-  "DFKai-SB",		 /* kaiu.ttf */
-  "HuaTianSongTi?",  /* htst3.ttf */
-  "MingLiU",		 /* mingliu.ttf & mingliu.ttc */
-  "PMingLiU",		 /* mingliu.ttc */
-  "MingLi43",		 /* mingli.ttf */
-  NULL
-};
 
 pdf_fontdesc *
 pdf_newfontdesc(void)
@@ -217,18 +205,6 @@ pdf_newfontdesc(void)
 	fontdesc->dvmtx.y = 880;
 	fontdesc->dvmtx.w = -1000;
 
-#if 0
-	fontdesc->hint = 0;
-	for (i = 0; force_hinting[i]; i++)
-	{
-		char *pos = strstr(name, force_hinting[i]);
-		if (pos && (pos == name || pos[-1] == '+'))
-		{
-			font->hint = 1;
-			break;
-		}
-	}
-#endif
 	return fontdesc;
 }
 
@@ -728,7 +704,8 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 		goto cleanup;
 
 	/* Rudimentary check for DynaLab fonts */
-	if (kind == TRUETYPE && strstr(collection, "Adobe-"))
+	/* ... not really necessary since freetype 2.3.9 */
+	if (kind == TRUETYPE && FT_IS_TRICKY(((FT_Face)fontdesc->font->ftface)))
 	    fontdesc->font->fthint = 1;
 
 	/*

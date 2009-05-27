@@ -251,7 +251,10 @@ dec2d(fz_faxd *fax)
 
 		case P:
 			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			b2 = findchanging(fax->ref, b1, fax->columns);
+			if (b1 >= fax->columns)
+				b2 = fax->columns - 1;
+			else
+				b2 = findchanging(fax->ref, b1, fax->columns);
 			if (fax->c) setbits(fax->dst, fax->a, b2);
 			fax->a = b2;
 			break;
@@ -264,44 +267,50 @@ dec2d(fz_faxd *fax)
 			break;
 
 		case VR1:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1 + 1);
-			fax->a = b1 + 1;
+			b1 = 1 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+			if (b1 >= fax->columns) b1 = fax->columns - 1;
+			if (fax->c) setbits(fax->dst, fax->a, b1);
+			fax->a = b1;
 			fax->c = !fax->c;
 			break;
 
 		case VR2:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1 + 2);
-			fax->a = b1 + 2;
+			b1 = 2 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+			if (b1 >= fax->columns) b1 = fax->columns - 1;
+			if (fax->c) setbits(fax->dst, fax->a, b1);
+			fax->a = b1;
 			fax->c = !fax->c;
 			break;
 
 		case VR3:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1 + 3);
-			fax->a = b1 + 3;
+			b1 = 3 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+			if (b1 >= fax->columns) b1 = fax->columns - 1;
+			if (fax->c) setbits(fax->dst, fax->a, b1);
+			fax->a = b1;
 			fax->c = !fax->c;
 			break;
 
 		case VL1:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1 - 1);
-			fax->a = b1 - 1;
+			b1 = -1 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+			if (b1 < 0) b1 = 0;
+			if (fax->c) setbits(fax->dst, fax->a, b1);
+			fax->a = b1;
 			fax->c = !fax->c;
 			break;
 
 		case VL2:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1 - 2);
-			fax->a = b1 - 2;
+			b1 = -2 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+			if (b1 < 0) b1 = 0;
+			if (fax->c) setbits(fax->dst, fax->a, b1);
+			fax->a = b1;
 			fax->c = !fax->c;
 			break;
 
 		case VL3:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1 - 3);
-			fax->a = b1 - 3;
+			b1 = -3 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+			if (b1 < 0) b1 = 0;
+			if (fax->c) setbits(fax->dst, fax->a, b1);
+			fax->a = b1;
 			fax->c = !fax->c;
 			break;
 

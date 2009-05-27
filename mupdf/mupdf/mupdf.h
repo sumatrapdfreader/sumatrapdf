@@ -577,6 +577,7 @@ typedef struct pdf_textchar_s pdf_textchar;
 
 struct pdf_pagetree_s
 {
+	int cap;
 	int count;
 	int cursor;
 	fz_obj **pref;

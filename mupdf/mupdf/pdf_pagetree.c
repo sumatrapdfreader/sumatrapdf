@@ -77,13 +77,14 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 			if (error) return fz_rethrow(error, "cannot inherit page tree rotate");
 		}
 
-		if (pages->cursor >= pages->count)
+		if (pages->cursor >= pages->cap)
 		{
 			fz_warn("initial page tree size too small, enlarging");
 
-			pages->count = pages->cursor + 10;
-			pages->pref = fz_realloc(pages->pref, sizeof(fz_obj*) * pages->count);
-			pages->pobj = fz_realloc(pages->pobj, sizeof(fz_obj*) * pages->count);
+			pages->cap += 10;
+			pages->count = pages->cursor + 1;
+			pages->pref = fz_realloc(pages->pref, sizeof(fz_obj*) * pages->cap);
+			pages->pobj = fz_realloc(pages->pobj, sizeof(fz_obj*) * pages->cap);
 			if (!pages->pref || !pages->pobj)
 				return fz_throw("error allocating enlarged page tree");
 		}
@@ -199,13 +200,14 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 
 	p->pref = nil;
 	p->pobj = nil;
+	p->cap = count;
 	p->count = count;
 	p->cursor = 0;
 
-	p->pref = fz_malloc(sizeof(fz_obj*) * count);
+	p->pref = fz_malloc(sizeof(fz_obj*) * p->cap);
 	if (!p->pref) { error = fz_rethrow(-1, "out of memory: page tree reference array"); goto cleanup; }
 
-	p->pobj = fz_malloc(sizeof(fz_obj*) * count);
+	p->pobj = fz_malloc(sizeof(fz_obj*) * p->cap);
 	if (!p->pobj) { error = fz_rethrow(-1, "out of memory: page tree object array"); goto cleanup; }
 
 	error = loadpagetree(xref, p, inherit, pages, treeref, &pagenum);
