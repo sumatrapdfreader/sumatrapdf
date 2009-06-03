@@ -11,12 +11,13 @@ libjbig2dec_a_SOURCES = jbig2.c \
 	jbig2_segment.c jbig2_page.c \
 	jbig2_symbol_dict.c jbig2_text.c \
 	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
+	jbig2_halftone.c \
 	jbig2_image.c jbig2_image_pbm.c \
 	os_types.h config_types.h config_win32.h \
 	jbig2.h jbig2_priv.h jbig2_image.h \
 	jbig2_arith.h jbig2_arith_iaid.h jbig2_arith_int.h \
 	jbig2_huffman.h jbig2_hufftab.h jbig2_mmr.h \
-	jbig2_generic.h jbig2_symbol_dict.h \
+	jbig2_generic.h jbig2_symbol_dict.h jbig2_text.h \
 	jbig2_metadata.c jbig2_metadata.h
 
 bin_PROGRAMS = jbig2dec

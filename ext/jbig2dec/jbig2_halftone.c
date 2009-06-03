@@ -200,7 +200,7 @@ jbig2_pattern_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   Jbig2PatternDictParams params;
   Jbig2ArithCx *GB_stats = NULL;
   byte flags;
-  int offset;
+  int offset = 0;
 
   /* 7.4.4.1 - Data header */
   if (segment->data_length < 7) {

@@ -5,7 +5,12 @@
 
 include $(HOME)/.jamrules ;
 
-CCFLAGS += -DHAVE_CONFIG_H ;
+# assume stdint.h and libpng are available, except on win32
+if $(OS) != NT {
+  CCFLAGS += -DHAVE_STDINT_H -DHAVE_LIBPNG ;
+  LINKLIBS += -lpng -lz ;
+  Library libjbig2dec : jbig2_image_png.c ;
+}
 
 Library libjbig2dec :
 	jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c jbig2_huffman.c
@@ -13,7 +18,7 @@ Library libjbig2dec :
 	jbig2_symbol_dict.c jbig2_text.c
 	jbig2_halftone.c
 	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c
-	jbig2_image.c jbig2_image_pbm.c
+	jbig2_image.c jbig2_image_pbm.c # jbig2_image_png.c
 	jbig2_metadata.c 
 	jbig2.c
 	;

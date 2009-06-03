@@ -1,7 +1,7 @@
 /*
     jbig2dec
 
-    Copyright (C) 2001-2003 Artifex Software, Inc.
+    Copyright (C) 2001-2009 Artifex Software, Inc.
 
     This software is distributed under license and may not
     be copied, modified or distributed except as expressly
@@ -15,6 +15,13 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#ifndef PACKAGE
+#define PACKAGE "jbig2dec"
+#endif
+#ifndef VERSION
+#define VERSION "unknown-version"
 #endif
 
 #include <stdio.h>
