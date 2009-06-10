@@ -116,9 +116,8 @@ void winerror(pdfapp_t *app, fz_error error)
 
     while (error)
     {
-	sprintf(buf, "%s:%d: %s(): %s\n", error->file, error->line, error->func, error->msg);
+	sprintf(buf, "%d\n", error);
 	strcat(msg, buf);
-	error = error->cause;
     }
 
     MessageBoxA(hwndframe, msg, "MuPDF: Error", MB_ICONERROR);

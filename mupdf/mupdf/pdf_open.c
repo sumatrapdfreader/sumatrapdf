@@ -106,6 +106,8 @@ readoldtrailer(pdf_xref *xref, char *buf, int cap)
 
 		s = buf;
 		ofs = atoi(strsep(&s, " "));
+		if (!s)
+			return fz_throw("invalid range marker in xref");
 		len = atoi(strsep(&s, " "));
 
 		/* broken pdfs where the section is not on a separate line */
