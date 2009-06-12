@@ -355,11 +355,11 @@ struct fz_font_s
 	int ftsubstitute; /* ... substitute metrics */
 	int fthint; /* ... force hinting for DynaLab fonts */
 
-	struct fz_tree_s **t3procs; /* has 256 entries if used */
 	fz_matrix t3matrix;
+	struct fz_tree_s **t3procs; /* has 256 entries if used */
+	float *t3widths; /* has 256 entries if used */
 
 	fz_irect bbox;
-
 };
 
 struct fz_glyph_s

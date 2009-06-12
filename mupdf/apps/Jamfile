@@ -16,6 +16,9 @@ LinkLibraries pdfdraw : $(FITZLIBS) ;
 Main pdfinfo : pdfinfo.c ;
 LinkLibraries pdfinfo : $(FITZLIBS) ;
 
+Main pdfextract : pdfextract.c ;
+LinkLibraries pdfextract : $(FITZLIBS) ;
+
 SubDir TOP apps common ;
 Library libpdfapp : pdfapp.c ;
 

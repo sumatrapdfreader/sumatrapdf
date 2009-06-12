@@ -25,10 +25,8 @@ PdfSearch::~PdfSearch()
 
 void PdfSearch::Reset()
 {
-#if 0 // TODO: not yet available in new mupdf code
     if (line)
         pdf_droptextline(line);
-#endif
     line = current = NULL;
     last = 0;
 }
@@ -89,7 +87,8 @@ bool PdfSearch::MatchChars(int c1, int c2)
 
 bool PdfSearch::MatchAtPosition(int n)
 {
-    WCHAR *p = (WCHAR *)text;
+#if 0 // TODO: no bounding box in pdf_textchar_s
+	WCHAR *p = (WCHAR *)text;
     result.left = current->text[n].bbox.x0;
     result.top = current->text[n].bbox.y0;
     last = n;
@@ -101,7 +100,8 @@ bool PdfSearch::MatchAtPosition(int n)
         n++;
     }
 
-    if (*p == 0) { // Found
+    if (*p == 0) {
+		// Found
         result.right = current->text[n-1].bbox.x1;
         result.bottom = current->text[n-1].bbox.y1;
         if (forward)
@@ -110,7 +110,7 @@ bool PdfSearch::MatchAtPosition(int n)
             last = last - 1;
         return true;
     }
-    
+#endif
     return false;
 }
 
@@ -183,12 +183,8 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
         if (!page)
             goto NextPage;
 
-#if 0 // TODO: not yet available in new mupdf code
         if (pdf_loadtextfromtree(&line, page->tree, fz_identity())) // if error
             goto NextPage;
-#else
-        goto NextPage;
-#endif
         this->line = line;
         if (!forward)
             ReverseLineList();

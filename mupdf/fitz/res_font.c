@@ -325,9 +325,20 @@ fz_newtype3font(fz_font **fontp, char *name, fz_matrix matrix)
 		return fz_rethrow(-1, "out of memory: type3 font charproc array");
 	}
 
+	font->t3widths = fz_malloc(sizeof(float) * 256);
+	if (!font->t3widths)
+	{
+		fz_free(font->t3procs);
+		fz_free(font);
+		return fz_rethrow(-1, "out of memory: type3 font widths array");
+	}
+
 	font->t3matrix = matrix;
 	for (i = 0; i < 256; i++)
+	{
 		font->t3procs[i] = nil;
+		font->t3widths[i] = 0;
+	}
 
 	strlcpy(font->name, name, sizeof(font->name));
 

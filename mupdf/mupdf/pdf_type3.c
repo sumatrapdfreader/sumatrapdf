@@ -175,6 +175,8 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	{
 		float w = fz_toreal(fz_arrayget(widths, i - first));
 		w = fontdesc->font->t3matrix.a * w * 1000.0;
+		fontdesc->font->t3widths[i] = w * 0.001;
+
 		error = pdf_addhmtx(fontdesc, i, i, w);
 		if (error) {
 			fz_dropobj(widths);

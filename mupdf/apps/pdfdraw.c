@@ -323,7 +323,6 @@ void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtim
 
 void drawtxt(int pagenum)
 {
-#if 0 /* removed temporarily pending rewrite of pdf_loadtextfromtree */
     fz_error error;
     pdf_textline *line;
     fz_matrix ctm;
@@ -342,7 +341,6 @@ void drawtxt(int pagenum)
     pdf_droptextline(line);
 
     drawfreepage();
-#endif
 }
 
 void drawxml(int pagenum)

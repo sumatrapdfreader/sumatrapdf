@@ -596,7 +596,7 @@ struct pdf_page_s
 
 struct pdf_textchar_s
 {
-	fz_irect bbox;
+	int x, y;
 	int c;
 };
 
@@ -619,21 +619,11 @@ void pdf_droppagetree(pdf_pagetree *pages);
 fz_error pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *ref);
 void pdf_droppage(pdf_page *page);
 
-/* pdf_unicode.c */
-
-/*
- * Extract lines of text from display tree.
- *
- * This extraction needs to be rewritten for the new tree
- * architecture where glyph index and unicode characters are both stored
- * in the text objects.
- */
-#if 0
+/* unicode.c */
 fz_error pdf_loadtextfromtree(pdf_textline **linep, fz_tree *tree, fz_matrix ctm);
 void pdf_debugtextline(pdf_textline *line);
 fz_error pdf_newtextline(pdf_textline **linep);
 void pdf_droptextline(pdf_textline *line);
-#endif
 
 /*
  * content stream parsing

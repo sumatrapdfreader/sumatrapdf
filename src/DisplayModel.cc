@@ -1556,29 +1556,30 @@ void DisplayModel::goToNamedDest(const char *name)
  * to <buf>. Returnes number of copied characters */
 int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)
 {
+#if 0  // TODO: no bbox in pdf_textchar_s
     int             bxMin, bxMax, byMin, byMax;
     int             xMin, xMax, yMin, yMax;
-    pdf_textline *  line, *ln;
+	pdf_textline **	ln;
+#endif
+	pdf_textline *  line;
     pdf_page *      page = pdfEngine->getPdfPage(pageNo);
     fz_tree *       tree = page->tree;
     double          rot = 0;
     double          zoom = 1;
 
-#if 0 // not yet available in new mupdf code
     fz_error error = pdf_loadtextfromtree(&line, tree, fz_identity());
     if (error)
         return 0;
-#else
-    return 0;
-#endif
 
+    int p = 0;
+
+#if 0  // TODO: no bbox in pdf_textchar_s
     xMin = (int)region->x;
     xMax = xMin + (int)region->dx;
     yMin = (int)region->y;
     yMax = yMin + (int)region->dy;
 
-    int p = 0;
-    for (ln = line; ln; ln = ln->next) {
+	for (ln = line; ln; ln = ln->next) {
         int oldP = p;
         for (int i = 0; i < ln->len; i++) {
             bxMin = ln->text[i].bbox.x0;
@@ -1605,10 +1606,8 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
 #endif
         }
     }
-
-#if 0
-    pdf_droptextline(line);
 #endif
+    pdf_droptextline(line);
 
     return p;
 }

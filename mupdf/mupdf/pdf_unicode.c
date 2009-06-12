@@ -1,6 +1,10 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_ADVANCES_H
+
 /*
  * ToUnicode map for fonts
  */
@@ -128,8 +132,6 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
  * in the text objects.
  */
 
-#if 0
-
 fz_error
 pdf_newtextline(pdf_textline **linep)
 {
@@ -154,7 +156,7 @@ pdf_droptextline(pdf_textline *line)
 }
 
 static fz_error
-addtextchar(pdf_textline *line, fz_irect bbox, int c)
+addtextchar(pdf_textline *line, int x, int y, int c)
 {
 	pdf_textchar *newtext;
 	int newcap;
@@ -169,43 +171,36 @@ addtextchar(pdf_textline *line, fz_irect bbox, int c)
 		line->text = newtext;
 	}
 
-	line->text[line->len].bbox = bbox;
+	line->text[line->len].x = x;
+	line->text[line->len].y = y;
 	line->text[line->len].c = c;
 	line->len ++;
 
 	return fz_okay;
 }
 
-/* XXX global! not reentrant! */
-static fz_point oldpt = { 0, 0 };
-
 static fz_error
-extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm)
+extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 {
 	fz_error error;
 
 	if (fz_istextnode(node))
 	{
 		fz_textnode *text = (fz_textnode*)node;
-		pdf_fontdesc *font = (pdf_fontdesc*)text->font;
-		fz_matrix inv = fz_invertmatrix(text->trm);
+		fz_font *font = text->font;
 		fz_matrix tm = text->trm;
+		fz_matrix inv = fz_invertmatrix(text->trm);
 		fz_matrix trm;
-		float dx, dy, t;
+		float dx, dy;
 		fz_point p;
-		fz_point vx;
-		fz_point vy;
-		_vmtx v;
-		fz_hmtx h;
-		int i, g;
-		int x, y;
-		fz_irect box;
-		int c;
+		float adv;
+		int i, x, y;
+
+		FT_Set_Transform(font->ftface, NULL, NULL);
+		FT_Set_Char_Size(font->ftface, 64, 64, 72, 72);
 
 		for (i = 0; i < text->len; i++)
 		{
-			g = text->els[i].cid;
-
 			tm.e = text->els[i].x;
 			tm.f = text->els[i].y;
 			trm = fz_concat(tm, ctm);
@@ -217,26 +212,25 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm)
 			p.x = text->els[i].x;
 			p.y = text->els[i].y;
 			p = fz_transformpoint(inv, p);
-			dx = oldpt.x - p.x;
-			dy = oldpt.y - p.y;
-			oldpt = p;
+			dx = oldpt->x - p.x;
+			dy = oldpt->y - p.y;
+			*oldpt = p;
 
-			if (text->font->wmode == 0)
+			/* TODO: flip advance and test for vertical writing */
+
+			if (font->ftface)
 			{
-				h = fz_gethmtx(text->font, g);
-				oldpt.x += h.w * 0.001;
-
-				vx.x = h.w * 0.001; vx.y = 0;
-				vy.x = 0; vy.y = 1;
+				FT_Fixed ftadv;
+				FT_Get_Advance(font->ftface, text->els[i].gid,
+					FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING,
+					&ftadv);
+				adv = ftadv / 65536.0;
+				oldpt->x += adv;
 			}
 			else
 			{
-				v = fz_getvmtx(text->font, g);
-				oldpt.y += v.w * 0.001;
-				t = dy; dy = dx; dx = t;
-
-				vx.x = 0.5; vx.y = 0;
-				vy.x = 0; vy.y = v.w * 0.001;
+				adv = font->t3widths[text->els[i].gid];
+				oldpt->x += adv;
 			}
 
 			if (fabs(dy) > 0.2)
@@ -250,28 +244,12 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm)
 			}
 			else if (fabs(dx) > 0.2)
 			{
-				box.x0 = x; box.x1 = x;
-				box.y0 = y; box.y1 = y;
-				error = addtextchar(*line, box, ' ');
+				error = addtextchar(*line, x, y, ' ');
 				if (error)
 					return fz_rethrow(error, "cannot add character to text line");
 			}
 
-			vx = fz_transformpoint(trm, vx);
-			vy = fz_transformpoint(trm, vy);
-			box.x0 = MIN(0, MIN(vx.x, vy.x)) + x;
-			box.x1 = MAX(0, MAX(vx.x, vy.x)) + x;
-			box.y0 = MIN(0, MIN(vx.y, vy.y)) + y;
-			box.y1 = MAX(0, MAX(vx.y, vy.y)) + y;
-
-			if (font->tounicode)
-				c = pdf_lookupcmap(font->tounicode, g);
-			else if (g < font->ncidtoucs)
-				c = font->cidtoucs[g];
-			else
-				c = g;
-
-			error = addtextchar(*line, box, c);
+			error = addtextchar(*line, x, y, text->els[i].ucs);
 			if (error)
 				return fz_rethrow(error, "cannot add character to text line");
 		}
@@ -282,7 +260,7 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm)
 
 	for (node = node->first; node; node = node->next)
 	{
-		error = extracttext(line, node, ctm);
+		error = extracttext(line, node, ctm, oldpt);
 		if (error)
 			return fz_rethrow(error, "cannot extract text from display node");
 	}
@@ -296,6 +274,7 @@ pdf_loadtextfromtree(pdf_textline **outp, fz_tree *tree, fz_matrix ctm)
 	pdf_textline *root;
 	pdf_textline *line;
 	fz_error error;
+	fz_point oldpt;
 
 	oldpt.x = -1;
 	oldpt.y = -1;
@@ -306,7 +285,7 @@ pdf_loadtextfromtree(pdf_textline **outp, fz_tree *tree, fz_matrix ctm)
 
 	line = root;
 
-	error = extracttext(&line, tree->root, ctm);
+	error = extracttext(&line, tree->root, ctm, &oldpt);
 	if (error)
 	{
 		pdf_droptextline(root);
@@ -340,6 +319,4 @@ pdf_debugtextline(pdf_textline *line)
 	if (line->next)
 		pdf_debugtextline(line->next);
 }
-
-#endif
 
