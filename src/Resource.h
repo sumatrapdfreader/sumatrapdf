@@ -3,6 +3,7 @@
 // Used by SumatraPDF.rc
 //
 #define IDI_SUMATRAPDF                  1
+#define IDI_PDFDOC			2
 #define IDS_APP_TITLE                   100
 #define IDD_DIALOG_GOTO_PAGE            129
 #define IDD_DIALOG_GET_PASSWORD         130

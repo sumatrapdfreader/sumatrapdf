@@ -3385,3 +3385,7 @@ hi:नया संसकरण अपने आप डाउनलोड कर
 nn:Aktivèr auto-oppdatering
 fi:Automaattinen päivitys
 sv:Aktivera automatisk uppdatering
+-
+Warning
+-
+This option is not available in portable mode.

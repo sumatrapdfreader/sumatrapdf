@@ -2651,8 +2651,7 @@ static void AssociateExeWithPdfExtensions()
 
     WriteRegStrA(hkeyToUse, "Software\\Classes\\.pdf", NULL, APP_NAME_STR);
 
-    /* Note: I don't understand why icon index has to be 0, but it just has to */
-    hr = StringCchPrintfA(tmp, dimof(tmp), "%s,0", exePath);
+    hr = StringCchPrintfA(tmp, dimof(tmp), "%s,1", exePath);
     WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR _T("\\DefaultIcon"), NULL, tmp);
 
     hr = StringCchPrintfA(tmp,  dimof(tmp), "\"%s\" \"%%1\"", exePath);
@@ -2668,8 +2667,10 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     if (AlreadyRegisteredForPdfExtentions())
         return true;
 
-    if (IsRunningInPortableMode())
+    if (IsRunningInPortableMode()) {
+        MessageBoxW(hwnd, _TRW("This option is not available in portable mode."), _TRW("Warning"), MB_ICONEXCLAMATION | MB_OK);
         return false;
+    }
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
@@ -6937,6 +6938,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     bool registerForPdfExtentions = false;
 #else
     bool registerForPdfExtentions = true;
+    if (IsRunningInPortableMode())
+	registerForPdfExtentions = false;
 #endif
 
     bool reuse_instance = false;
