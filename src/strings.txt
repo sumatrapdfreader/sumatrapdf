@@ -447,7 +447,7 @@ ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器
 sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
-gr:Ορισμός SumatraPDF ως προεπιλεγμένο αναγνώστη PDF
+gr:Ορισμός SumatraPDF ως προεπιλεγμένου αναγνώστη PDF
 th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 pt:Tornar o SumatraPDF no leitor de PDF por defeito
 no:Bruk SumatraPDF som standard PDF-leser
@@ -1866,6 +1866,7 @@ nn:Vitj &heimeside
 af:Handleiding
 bg:Ръководство
 de:Anleitung
+gr:Οδηγίες χρήσης
 fr:Manuel
 pl:Instrukcja obslugi
 ru:Руководство
@@ -1956,6 +1957,7 @@ br:Página:
 hu:Oldal:
 pl:Strona:
 de:Seite:
+gr:Σελίδα
 fr:Page:
 tr:Sayfa:
 dk:Side:
@@ -2029,7 +2031,7 @@ es:Buscar:
 ar:بحث
 uk:Знайти:
 eu:Bilatu:
-gr:Αναζήτηση:
+gr:Εύρεση:
 hr:Pronađi:
 tl:Hanapin:
 va:Buscar:
@@ -2079,7 +2081,7 @@ es:Buscar Anterior
 ar:البحث عن السابق
 uk:Знайти попереднє
 eu:Aurrekoa bilatu
-gr:Αναζήτηση προηγούμενου
+gr:Εύρεση προηγούμενου
 hr:Pronađi prethodno
 tl:Hanapin ang Nakaraan
 va:Busca Anterior
@@ -2128,7 +2130,7 @@ gl:Atopar Seguinte
 es:Buscar Siguiente
 uk:Знайти наступне
 eu:Hurrengoa bilatu
-gr:Αναζήτηση επόμενου
+gr:Εύρεση επόμενου
 hr:Pronađi sljedeće
 tl:Hanapin ang Susunod
 va:Busca Següent
@@ -2790,6 +2792,7 @@ af:Verander Taal (Change language)
 bg:Смени езика (Change language)
 br:Mudar o idioma (Change language)
 de:Sprache ändern (Change language)
+gr:Αλλαγή γλώσσας (Change language)
 pl:Zmien język (Change language)
 sk:Zmeniť jazyk (Change language)
 vn:Đổi ngôn ngữ (Change language)
@@ -2830,6 +2833,7 @@ af:Tik Wagwoord In
 bg:Въведете парола
 br:Digite a senha
 de:Bitte Passwort eingeben
+gr:Εισάγετε κωδικό
 sk:Zadať heslo
 vn:Nhập mật khẩu
 uk:Введіть пароль
@@ -2869,6 +2873,7 @@ af:Tik Wagwoord In Vir %s
 bg:Въведете парола за %s
 br:Digite a senha de %s
 de:Bitte Passwort für %s eingeben
+gr:Εισάγετε κωδικό για το  %s
 sk:Zadať heslo pre %s
 vn:Nhật mật khẩu cho %s
 uk:Введіть пароль для %s
@@ -2909,6 +2914,7 @@ pt:Ir para a página
 bg:Към страница
 br:Ir para a página
 de:Gehe zu Seite
+gr:Μετάβαση στη σελίδα
 sk:Ísť na stranu
 vn:Nhảy đến trang
 uk:Перейти на сторінку
@@ -2948,6 +2954,7 @@ pt:Associar a ficheiros PDF?
 bg:Асоцииране с PDF файлове?
 br:Associar arquivos PDF?
 de:Mit PDF-Dateien verknüpfen?
+gr:Να γίνει συσχετισμός με τα αρχεία PDF;
 sk:Asociovať s PDF súbormi?
 vn:Liên kết với file PDF?
 uk:Асоціювати з PDF-файлами?
@@ -2986,6 +2993,7 @@ af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
+gr:Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα ανάγνωσης αρχείων PDF;
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
@@ -3024,6 +3032,7 @@ pt:Não perguntar novamente
 bg:Не питай отново
 br:Não perguntar novamente
 de:Nicht wieder fragen
+gr:Να μην ερωτηθώ ξανά
 sk:Nepýtať sa znova
 vn:Không hỏi lại
 uk:Не питати знову
@@ -3063,6 +3072,7 @@ af:Kyk Vir Nuwe Uitgawe
 bg:Проверка за нова версия
 br:Procurar atualizações
 de:Nach neuer Version suchen
+gr:Έλεγχος για νέα έκδοση
 sk:Skontrolovať novú verziu
 vn:Kiểm tra có phiên bản mới
 uk:Перевірити, чи є нова версія
@@ -3103,6 +3113,7 @@ af:Geen Nuwe Weergawe Is Beskikbaar Nie.
 bg:Няма нова версия.
 br:Nenhuma atualização foi encontrada.
 de:Keine neuere Version vorhanden.
+gr:Νέα έκδοση διαθέσιμη
 sk:Nie je k dispozícia nová verzia.
 vn:Không có phiên bản mới.
 uk:Новішої версії немає.
@@ -3143,6 +3154,7 @@ af:Jy Het Die Nuutste Uitgawe.
 bg:Имате последната версия.
 br:Esta é a versão mais recente.
 de:Sie haben die neuste Version installiert.
+gr:Έχετε την τελευταία έκδοση.
 sk:Používate najnovšiu verziu.
 vn:Bạn đang dùng phiên bản mới nhất.
 uk:Ви вже маєте найновішу версію.
@@ -3183,6 +3195,7 @@ af:Jy Het Weergawe %s
 bg:Вашата версия е %s
 br:Você tem a versão %s
 de:Sie haben Version %s
+gr:Έχετε την έκδοση %s 
 sk:Používate verziu %s
 vn:Bạn đang dùng phiên bản %s
 uk:Ви використовуєте версію %s
@@ -3223,6 +3236,7 @@ af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
 br:A versão %s está disponível. Baixar a nova versão?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
+gr:Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 vn:Đã có phiên bản mới %s. Download phiên bản mới?
 uk:Нова версія %s є доступною. Завантажити нову версію?
@@ -3263,6 +3277,7 @@ af:Nuwe Weergawe Beskikbaar.
 bg:Има нова версия.
 br:Uma versão nova está disponível.
 de:Neuere Version vorhanden.
+gr:Νέα ένδοση διαθέσιμη
 sk:Je k dispozícia nová verzia.
 vn:Đã có phiên bản mới.
 uk:Доступна нова версія.
@@ -3304,6 +3319,7 @@ pt:Ignorar esta versão
 bg:Пропусни тази версия.
 br:Pular esta versão.
 de:Diese Version überspringen.
+gr:Παράβλεψη αυτής της έκδοσης
 sk:Preskočiť túto verziu.
 vn:Bỏ qua phiên bản này.
 uk:Пропустити цю версію.
@@ -3342,6 +3358,7 @@ af:Stel In Staat Om Automatiese Opdatering Te Doen.
 bg:Включи автоматичното обновяване
 br:Ativar atualização automática
 de:Automatisches Update aktivieren
+gr:Αυτόματες ενημερώσεις
 fr:Activer la mise-à-jour automatique
 nl:Updates automatisch downloaden
 mk:Овозможи автоматско ажурирање
