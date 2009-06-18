@@ -7,10 +7,21 @@ AC_CONFIG_SRCDIR([jbig2dec.c])
 AM_INIT_AUTOMAKE([-Wall])
 AM_CONFIG_HEADER(config.h)
 
+dnl Library versioning - Adapted from the libtool info page
+dnl
+dnl 1. If source has changed at all: increment revision
+dnl 2. If the ABI changed: increment current, reset revision to 0
+dnl 3. If interfaces have been added since last public release: increment age
+dnl 4. If interfaces have been removed: reset age to 0
+
+AC_SUBST([JBIG2DEC_LT_CURRENT], [0])
+AC_SUBST([JBIG2DEC_LT_REVISION], [0])
+AC_SUBST([JBIG2DEC_LT_AGE], [0])
+
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 
 # platform specific compiler flags
 if test "x$GCC" = xyes; then
