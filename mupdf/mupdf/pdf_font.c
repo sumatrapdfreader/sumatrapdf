@@ -345,6 +345,13 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 				pdf_loadencoding(estrings, fz_toname(base));
 
 			diff = fz_dictgets(encoding, "Differences");
+			if (diff)
+			{
+				error = pdf_resolve(&diff, xref);
+				if (error)
+					goto cleanup;
+			}
+
 			if (fz_isarray(diff))
 			{
 				n = fz_arraylen(diff);

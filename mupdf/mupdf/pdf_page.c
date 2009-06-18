@@ -186,6 +186,9 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	pdf_logpage("bbox [%g %g %g %g]\n",
 			bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
+	if (bbox.x1 - bbox.x0 < 1 || bbox.y1 - bbox.y0 < 1)
+	    return fz_throw("invalid page size");
+
 	obj = fz_dictgets(dict, "Rotate");
 	if (fz_isint(obj))
 		rotate = fz_toint(obj);
