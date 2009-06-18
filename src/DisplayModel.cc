@@ -1576,8 +1576,8 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
             // TODO: would be better to have bbox and test for intersect with
             // region, to catch characters that are only partially inside 
             // the region
-            x = ln->text[i].x;
-            y = ln->text[i].y;
+            x = ln->text[i].bbox.x0;
+            y = ln->text[i].bbox.y0;
             int c = ln->text[i].c;
             if (c < 32)
                 c = '?';

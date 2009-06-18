@@ -87,8 +87,7 @@ bool PdfSearch::MatchChars(int c1, int c2)
 
 bool PdfSearch::MatchAtPosition(int n)
 {
-#if 0 // TODO: no bounding box in pdf_textchar_s
-	WCHAR *p = (WCHAR *)text;
+    WCHAR *p = (WCHAR *)text;
     result.left = current->text[n].bbox.x0;
     result.top = current->text[n].bbox.y0;
     last = n;
@@ -101,8 +100,12 @@ bool PdfSearch::MatchAtPosition(int n)
     }
 
     if (*p == 0) {
-		// Found
+        // Found
         result.right = current->text[n-1].bbox.x1;
+        if (current->len > n) {
+            if (result.right > current->text[n].bbox.x0)
+                result.right = current->text[n].bbox.x0;
+        }
         result.bottom = current->text[n-1].bbox.y1;
         if (forward)
             last = last + 1;
@@ -110,7 +113,6 @@ bool PdfSearch::MatchAtPosition(int n)
             last = last - 1;
         return true;
     }
-#endif
     return false;
 }
 

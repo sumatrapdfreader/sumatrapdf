@@ -21,10 +21,11 @@ typedef struct RectD {
 int    RectI_Intersect(RectI *r1, RectI *r2, RectI *rIntersectOut);
 void   RectI_FromXY(RectI *rOut, int xs, int xe, int ys, int ye);
 int    RectI_Inside(RectI *r, int x, int y);
-int   RectD_FromXY(RectD *rOut, double xs, double xe,  double ys, double ye);
+int    RectD_FromXY(RectD *rOut, double xs, double xe,  double ys, double ye);
 void   RectD_FromRectI(RectD *rOut, const RectI *rIn);
 void   RectI_FromRectD(RectI *rOut, const RectD *rIn);
 void   RectD_Copy(RectD *rOut, const RectD *rIn);
+int    RectD_Inside(RectD *r, double x, double y);
 void   u_RectI_Intersect(void);
 
 #ifdef __cplusplus

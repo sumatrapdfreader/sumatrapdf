@@ -152,6 +152,19 @@ int RectI_Inside(RectI *r, int x, int y)
     return TRUE;
 }
 
+int RectD_Inside(RectD *r, double x, double y)
+{
+    if (x < r->x)
+        return FALSE;
+    if (x > r->x + r->dx)
+        return FALSE;
+    if (y < r->y)
+        return FALSE;
+    if (y > r->y + r->dy)
+        return FALSE;
+    return TRUE;
+}
+
 #ifndef NDEBUG
 void RectI_AssertEqual(RectI *rIntersect, RectI *rExpected)
 {
