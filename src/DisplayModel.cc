@@ -1556,12 +1556,9 @@ void DisplayModel::goToNamedDest(const char *name)
  * to <buf>. Returnes number of copied characters */
 int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)
 {
-#if 0  // TODO: no bbox in pdf_textchar_s
-    int             bxMin, bxMax, byMin, byMax;
-    int             xMin, xMax, yMin, yMax;
-	pdf_textline **	ln;
-#endif
-	pdf_textline *  line;
+    double          x, y;
+    pdf_textline *  ln;
+    pdf_textline *  line;
     pdf_page *      page = pdfEngine->getPdfPage(pageNo);
     fz_tree *       tree = page->tree;
     double          rot = 0;
@@ -1571,45 +1568,39 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf
     if (error)
         return 0;
 
-    int p = 0;
+    int len = 0;
 
-#if 0  // TODO: no bbox in pdf_textchar_s
-    xMin = (int)region->x;
-    xMax = xMin + (int)region->dx;
-    yMin = (int)region->y;
-    yMax = yMin + (int)region->dy;
-
-	for (ln = line; ln; ln = ln->next) {
-        int oldP = p;
+    for (ln = line; ln; ln = ln->next) {
+        int prevLen = len;
         for (int i = 0; i < ln->len; i++) {
-            bxMin = ln->text[i].bbox.x0;
-            bxMax = ln->text[i].bbox.x1;
-            byMin = ln->text[i].bbox.y0;
-            byMax = ln->text[i].bbox.y1;
+            // TODO: would be better to have bbox and test for intersect with
+            // region, to catch characters that are only partially inside 
+            // the region
+            x = ln->text[i].x;
+            y = ln->text[i].y;
             int c = ln->text[i].c;
             if (c < 32)
                 c = '?';
-            if (bxMax >= xMin && bxMin <= xMax && byMax >= yMin && byMin <= yMax 
-                    && p < buflen) {
-                buf[p++] = c;
+            if (RectD_Inside(region, x, y) && (len < buflen)) {
+                buf[len++] = c;
                 //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)c, (int)c, (unsigned short)c);
                 //DBG_OUT("Found char: %c : %hu; real %c : %hu\n", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
             }
         }
 
-        if (p > oldP && p < buflen - 1) {
+        if ((len > prevLen) && (len < buflen - 2)) {
 #ifdef WIN32
-            buf[p++] = '\r'; buf[p++] = 10;
+            buf[len++] = DOS_NEWLINE[0];
+            buf[len++] = DOS_NEWLINE[1];
             //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
 #else
-            buf[p++] = '\n';
+            buf[len++] = UNIX_NEWLINE_C;
 #endif
         }
     }
-#endif
     pdf_droptextline(line);
 
-    return p;
+    return len;
 }
 
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)

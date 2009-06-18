@@ -3557,7 +3557,9 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
 
     GlobalUnlock(handle);
 
-    SetClipboardData(CF_UNICODETEXT, handle);
+    HANDLE ret = SetClipboardData(CF_UNICODETEXT, handle);
+    if (NULL == ret)
+	SeeLastError();
     CloseClipboard();
 }
 
