@@ -135,7 +135,7 @@ FT_OBJS = \
 	$(O)\autofit.obj $(O)\ftbase.obj $(O)\bdf.obj $(O)\ftcache.obj $(O)\cff.obj $(O)\cffparse.obj \
 	$(O)\type1cid.obj $(O)\gxvalid.obj $(O)\otvalid.obj $(O)\pcf.obj $(O)\pfr.obj $(O)\pfrsbit.obj \
 	$(O)\psaux.obj $(O)\pshinter.obj $(O)\psnames.obj $(O)\raster.obj $(O)\sfnt.obj \
-	$(O)\smooth.obj $(O)\truetype.obj $(O)\type1.obj $(O)\type42.obj $(O)\winfnt.obj $(O)\ftadvanc.obj
+	$(O)\smooth.obj $(O)\truetype.obj $(O)\type1.obj $(O)\type42.obj $(O)\winfnt.obj
 
 ZLIB_OBJS = \
 	$(O)\adler32.obj $(O)\crc32.obj $(O)\inflate.obj $(O)\zutil.obj \
@@ -297,7 +297,7 @@ SUMATRA_MAP = $(O)\SumatraPDF.map
 
 all: $(O) $(CMAPDUMP_APP) $(PDFBENCH_APP) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(SUMATRA_APP)
 
-rebuild: clean all
+rebuild: cleanall all
 
 clean: force
 	-rmdir /S /Q $(O)
