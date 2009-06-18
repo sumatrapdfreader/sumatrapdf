@@ -156,7 +156,7 @@ pdf_droptextline(pdf_textline *line)
 }
 
 static fz_error
-addtextchar(pdf_textline *line, int x, int y, int c)
+addtextchar(pdf_textline *line, fz_irect bbox, int c)
 {
 	pdf_textchar *newtext;
 	int newcap;
@@ -171,8 +171,7 @@ addtextchar(pdf_textline *line, int x, int y, int c)
 		line->text = newtext;
 	}
 
-	line->text[line->len].x = x;
-	line->text[line->len].y = y;
+	line->text[line->len].bbox = bbox;
 	line->text[line->len].c = c;
 	line->len ++;
 
@@ -195,6 +194,32 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 		fz_point p;
 		float adv;
 		int i, x, y;
+
+		// TODO: this is supposed to calculate font bbox, but doesn't seem
+		// to be right at all
+		fz_irect bbox;
+		int fontdx, fontdy;
+		fz_point fontp1, fontp2;
+		fz_matrix fontmtx;
+		fz_irect fontbbox;
+
+		fontmtx = inv;
+		fontbbox = font->bbox;
+		fontdx = fontbbox.x1 - fontbbox.x0;
+		fontdy = fontbbox.y1 - fontbbox.y0;
+		fontp1.x = fontbbox.x0;
+		fontp1.y = fontbbox.y0;
+		fontp1 = fz_transformpoint(fontmtx, fontp1);
+		fontp2.x = fontbbox.x1;
+		fontp2.y = fontbbox.y1;
+		fontp2 = fz_transformpoint(fontmtx, fontp2);
+		fontdx = fontp2.x - fontp1.x;
+		fontdy = fontp2.y - fontp1.y;
+
+		// TODO: magically divide by 10 because that's what it looks like
+		// we should be doing. Doesn't work well for all fonts
+		fontdx = fontdx / 10;
+		fontdy = fontdy / 10;
 
 		FT_Set_Transform(font->ftface, NULL, NULL);
 		FT_Set_Char_Size(font->ftface, 64, 64, 72, 72);
@@ -233,6 +258,11 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 				oldpt->x += adv;
 			}
 
+			bbox.x0 = x;
+			bbox.x1 = x + fontdx;
+			bbox.y0 = y;
+			bbox.y1 = y + fontdy;
+
 			if (fabs(dy) > 0.2)
 			{
 				pdf_textline *newline;
@@ -244,12 +274,12 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 			}
 			else if (fabs(dx) > 0.2)
 			{
-				error = addtextchar(*line, x, y, ' ');
+				error = addtextchar(*line, bbox, ' ');
 				if (error)
 					return fz_rethrow(error, "cannot add character to text line");
 			}
 
-			error = addtextchar(*line, x, y, text->els[i].ucs);
+			error = addtextchar(*line, bbox, text->els[i].ucs);
 			if (error)
 				return fz_rethrow(error, "cannot add character to text line");
 		}

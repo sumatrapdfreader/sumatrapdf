@@ -596,7 +596,7 @@ struct pdf_page_s
 
 struct pdf_textchar_s
 {
-	int x, y;
+	fz_irect bbox;
 	int c;
 };
 
