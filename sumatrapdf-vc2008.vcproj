@@ -836,6 +836,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\src\todo.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

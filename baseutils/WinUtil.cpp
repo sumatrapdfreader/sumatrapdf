@@ -122,4 +122,29 @@ WinProcess::WinProcess(PROCESS_INFORMATION *pi)
     memcpy(&m_processInfo, pi, sizeof(PROCESS_INFORMATION));
 }
 
+static int WindowsVerMajor()
+{
+    DWORD version = GetVersion();
+    return (int)(version & 0xFF);
+}
+
+static int WindowsVerMinor()
+{
+    DWORD version = GetVersion();
+    return (int)((version & 0xFF00) >> 8);    
+}
+
+bool WindowsVer2000OrGreater()
+{
+    if (WindowsVerMajor() >= 5)
+        return true;
+    return false;
+}
+
+bool WindowsVerVistaOrGreater()
+{
+    if (WindowsVerMajor() >= 6)
+        return true;
+    return false;
+}
 

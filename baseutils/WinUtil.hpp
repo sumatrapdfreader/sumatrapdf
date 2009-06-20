@@ -28,5 +28,7 @@ private:
 };
 
 bool IsAppThemed(void);
+bool WindowsVerVistaOrGreater();
+bool WindowsVer2000OrGreater();
 
 #endif

@@ -2565,32 +2565,6 @@ static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
     return TRUE;
 }
 
-int WindowsVerMajor()
-{
-    DWORD version = GetVersion();
-    return (int)(version & 0xFF);
-}
-
-int WindowsVerMinor()
-{
-    DWORD version = GetVersion();
-    return (int)((version & 0xFF00) >> 8);    
-}
-
-bool WindowsVer2000OrGreater()
-{
-    if (WindowsVerMajor() >= 5)
-        return true;
-    return false;
-}
-
-bool WindowsVerVistaOrGreater()
-{
-    if (WindowsVerMajor() >= 6)
-        return true;
-    return false;
-}
-
 static bool AlreadyRegisteredForPdfExtentions(void)
 {
     bool    registered = false;
@@ -2634,6 +2608,21 @@ static void WriteRegStrA(HKEY keySub, char *keyName, char *valName, char *value)
 Exit:
     if (NULL != keyTmp)
         RegCloseKey(keyTmp);
+}
+
+static BOOL RunMyselfAsAdmin(WCHAR *cmdline)
+{
+    assert(WindowsVerVistaOrGreater());
+    WCHAR *exePath = ExePathGetW();
+    SHELLEXECUTEINFOW sei = {0};
+    sei.cbSize = sizeof(sei);
+    sei.lpVerb = L"runas";
+    sei.lpFile = exePath;
+    sei.lpParameters = cmdline;
+    sei.nShow = SW_SHOWNORMAL;
+    sei.fMask = SEE_MASK_FLAG_NO_UI;
+    BOOL ok = ShellExecuteExW(&sei);
+    return ok;
 }
 
 static void AssociateExeWithPdfExtensions()
@@ -2684,11 +2673,16 @@ static bool RegisterForPdfExtentions(HWND hwnd)
         }
     }
 
-    if (gGlobalPrefs.m_pdfAssociateShouldAssociate) {
-        AssociateExeWithPdfExtensions();
+    if (!gGlobalPrefs.m_pdfAssociateShouldAssociate)
+        return false;
+
+    if (WindowsVerVistaOrGreater()) {
+        RunMyselfAsAdmin(L"-register-for-pdf");
         return true;
     }
-    return false;
+
+    AssociateExeWithPdfExtensions();
+    return true;
 }
 
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
@@ -6941,7 +6935,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 #else
     bool registerForPdfExtentions = true;
     if (IsRunningInPortableMode())
-	registerForPdfExtentions = false;
+        registerForPdfExtentions = false;
 #endif
 
     bool reuse_instance = false;
@@ -6949,6 +6943,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     char *printerName = NULL;
     WCHAR *newWindowTitle = NULL;
     while (currArg) {
+        if (is_arg("-register-for-pdf")) {
+            AssociateExeWithPdfExtensions();
+            return 0;
+        }
+
         if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
@@ -7058,6 +7057,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-restrict")) {
             currArg = currArg->next;
             gRestrictedUse = true;
+            registerForPdfExtentions = false;
             continue;
         }
 
