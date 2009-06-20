@@ -1,8 +1,5 @@
-Short term todo (before next 0.9.2 release):
-* better visualization of links in debug builds (alpha-blended so that we can 
-  see text underneath)
-* maybe: remember default bookmarks state
-* maybe: remember and restore size and position of the window
+Short term todo (before next 0.9.4 release):
+* make .pdf registration work in vista/win7
 
 Things to do before 1.0 release:
 * test search more and make sure it works better (currently mupdf seems to have
@@ -13,6 +10,8 @@ Things to do before 1.0 release:
 * TOC improvements:
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
+* maybe: remember default bookmarks state
+* maybe: remember and restore size and position of the window
 
 Long term todo:
 * find improvements:
@@ -42,4 +41,3 @@ Maybe:
   and TransparentBlt). Instead, dynamically load the functions. Needed for
   working on NT. On the other hand: is NT worth supporting?
 * show keybindings in help
-
