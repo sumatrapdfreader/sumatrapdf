@@ -362,7 +362,7 @@ pdf_parseindobj(fz_obj **op, fz_stream *file, char *buf, int cap,
 {
 	fz_error error = fz_okay;
 	fz_obj *obj = nil;
-	int oid = 0, gid = 0, stmofs;
+	int oid = 0, gid = 0, stmofs = 0;
 	pdf_token_e tok;
 	int len;
 	int a, b;
