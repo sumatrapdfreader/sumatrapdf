@@ -142,7 +142,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	{
 		fz_stream *tempfile;
 
-		error = pdf_buildinlinefilter(&filter, dict);
+		error = pdf_buildinlinefilter(&filter, xref, dict);
 		if (error)
 			return error;
 

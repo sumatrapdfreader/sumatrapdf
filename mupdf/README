@@ -1,10 +1,31 @@
-README for the Fitz distribution.
+ABOUT
 
-Fitz is a graphics library.
 MuPDF is a PDF parsing library and viewer.
+Fitz is the graphics library it uses.
+The viewer has ports for X11 and Windows.
 For Windows, there is also a Mozilla plugin version of the viewer.
 
-The Viewer has two ports: X11 and Windows.
+The latest source can be found
+at http://ccxvii.net/mupdf/
+
+COPYRIGHT
+
+MuPDF and Fitz -- PDF parsing, rendering and viewing toolkit.
+
+Copyright (C) 2009 Artifex Software, Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,7 +34,7 @@ the Free Software Foundation, either version 2 of the License, or
 
 PREREQUISITES
 
-Before compiling Fitz you need to install thirdy party dependencies.
+Before compiling MuPDF you need to install thirdy party dependencies.
 
 	zlib
 	libjpeg
@@ -25,7 +46,7 @@ You will probably want the versions that Ghostscript maintains.
 	jbig2dec
 	jasper
 
-Fitz uses the Perforce Jam build tool. You need the Perforce version 2.5
+MuPDF uses the Perforce Jam build tool. You need the Perforce version 2.5
 or later. FTJam will also work. If you do not have a compiled
 binary for your system, you can find the Jam and FTJam web sites here:
 
@@ -38,7 +59,7 @@ else, you are on your own.
 COMPILING
 
 If all of that is installed, compiling should be a cinch.
-Issue the command 'jam' in the root of the Fitz directory.
+Issue the command 'jam' in the root of the project directory.
 Add a parameter '-sBUILD=release' or '-sBUILD=profile' to
 build release or profile versions.
 

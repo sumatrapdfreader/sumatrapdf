@@ -159,7 +159,7 @@ fz_error pdf_loadindirect(fz_obj **objp, pdf_xref *, fz_obj *ref);
 fz_error pdf_resolve(fz_obj **reforobj, pdf_xref *);
 
 int pdf_isstream(pdf_xref *xref, int oid, int gen);
-fz_error pdf_buildinlinefilter(fz_filter **filterp, fz_obj *stmobj);
+fz_error pdf_buildinlinefilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj);
 fz_error pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen);
 fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen);
 fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int oid, int gen);
@@ -288,6 +288,7 @@ struct pdf_xobject_s
 	fz_rect bbox;
 	int isolated;
 	int knockout;
+	int transparency;
 	fz_obj *resources;
 	fz_buffer *contents;
 };

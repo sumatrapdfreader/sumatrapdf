@@ -155,7 +155,7 @@ pdf_dropcsi(pdf_csi *csi)
  */
 
 static fz_error
-runxobject(pdf_csi *csi, pdf_xref *xref, pdf_xobject *xobj, int istransparency)
+runxobject(pdf_csi *csi, pdf_xref *xref, pdf_xobject *xobj)
 {
 	fz_error error;
 	fz_node *transform;
@@ -174,7 +174,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, pdf_xobject *xobj, int istransparency)
 	gstate->fill.parentalpha = gstate->fill.alpha;
 
 	/* reset alpha to 1.0 when starting a new Transparency group */
-	if (istransparency)
+	if (xobj->transparency)
 	{
 	    gstate->stroke.alpha = gstate->stroke.parentalpha;
 	    gstate->fill.alpha = gstate->fill.parentalpha;
@@ -919,23 +919,12 @@ Lsetcolor:
 
 			if (xobj)
 			{
-				int istransparency = 0;
-
 				/* Inherit parent resources, in case this one was empty */
 				if (!xobj->resources)
 					xobj->resources = fz_keepobj(rdb);
 
 				clearstack(csi);
-				/* check if it is a Transparency group */
-				obj = fz_dictgets(dict, "Group");
-				if (obj) {
-					obj = fz_dictgets(obj, "S");
-
-					if (!strcmp(fz_toname(obj), "Transparency"))
-						istransparency = 1;
-				}
-
-				error = runxobject(csi, xref, xobj, istransparency);
+				error = runxobject(csi, xref, xobj);
 				if (error)
 					return fz_rethrow(error, "cannot draw xobject");
 			}

@@ -273,6 +273,8 @@ fz_error fz_newpredicte(fz_filter **filterp, fz_obj *param);
 fz_error fz_newjbig2d(fz_filter **filterp, fz_obj *param);
 fz_error fz_newjpxd(fz_filter **filterp, fz_obj *param);
 
+fz_error fz_setjbig2dglobalstream(fz_filter *filter, unsigned char *buf, int len);
+
 /*
  * Basic crypto functions.
  * Independent of the rest of fitz.

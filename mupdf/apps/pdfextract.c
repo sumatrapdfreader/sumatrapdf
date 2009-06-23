@@ -199,12 +199,12 @@ void savefont(fz_obj *dict, int num, int gen)
     char name[1024];
     char *subtype;
     fz_buffer *buf;
-    fz_obj *stream;
+    fz_obj *stream = nil;
     fz_obj *obj;
-    char *ext;
+    char *ext = "";
     FILE *f;
     unsigned char *p;
-    char *fontname;
+    char *fontname = "font";
 
     obj = fz_dictgets(dict, "FontName");
     if (obj)

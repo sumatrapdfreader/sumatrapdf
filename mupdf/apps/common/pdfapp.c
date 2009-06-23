@@ -172,8 +172,10 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	app->shrinkwrap = 1;
 	if (app->pageno < 1)
 		app->pageno = 1;
-	if (app->zoom <= 0.0)
-		app->zoom = 1.0;
+	if (app->zoom < 0.1)
+		app->zoom = 0.1;
+	if (app->zoom > 3.0)
+		app->zoom = 3.0;
 	app->rotate = 0;
 	app->panx = 0;
 	app->pany = 0;

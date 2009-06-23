@@ -51,13 +51,40 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 			form->matrix.c, form->matrix.d,
 			form->matrix.e, form->matrix.f);
 
-	obj = fz_dictgets(dict, "I");
-	form->isolated = fz_tobool(obj);
-	obj = fz_dictgets(dict, "K");
-	form->knockout = fz_tobool(obj);
+	form->isolated = 0;
+	form->knockout = 0;
+	form->transparency = 0;
+
+	obj = fz_dictgets(dict, "Group");
+	if (obj)
+	{
+		fz_obj *attrs = obj;
+
+		error = pdf_resolve(&attrs, xref);
+		if (error)
+		{
+			fz_dropobj(attrs);
+			error = fz_rethrow(error, "cannot resolve xobject group attributes");
+			goto cleanup;
+		}
+
+		obj = fz_dictgets(attrs, "I");
+		form->isolated = fz_tobool(obj);
+		obj = fz_dictgets(attrs, "K");
+		form->knockout = fz_tobool(obj);
+
+		obj = fz_dictgets(attrs, "S");
+		if (!strcmp(fz_toname(obj), "Transparency"))
+		{
+			form->transparency = 1;
+		}
+
+		fz_dropobj(attrs);
+	}
 
 	pdf_logrsrc("isolated %d\n", form->isolated);
 	pdf_logrsrc("knockout %d\n", form->knockout);
+	pdf_logrsrc("transparency %d\n", form->transparency);
 
 	obj = fz_dictgets(dict, "Resources");
 	if (obj)

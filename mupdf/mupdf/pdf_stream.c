@@ -26,7 +26,7 @@ pdf_isstream(pdf_xref *xref, int oid, int gen)
  * Create a filter given a name and param dictionary.
  */
 static fz_error
-buildonefilter(fz_filter **fp, fz_obj *f, fz_obj *p)
+buildonefilter(fz_filter **fp, pdf_xref *xref, fz_obj *f, fz_obj *p)
 {
 	fz_filter *decompress;
 	fz_filter *predict;
@@ -111,7 +111,31 @@ buildonefilter(fz_filter **fp, fz_obj *f, fz_obj *p)
 #ifdef HAVE_JBIG2DEC
 	else if (!strcmp(s, "JBIG2Decode"))
 	{
-		/* TODO: extract and feed JBIG2Global */
+		if (fz_isdict(p))
+		{
+			fz_obj *obj = fz_dictgets(p, "JBIG2Globals");
+			if (obj)
+			{
+				fz_buffer *globals;
+
+				error = fz_newjbig2d(fp, p);
+				if (error)
+					return fz_rethrow(error, "cannot create jbig2 filter");
+
+				error = pdf_loadstream(&globals, xref, fz_tonum(obj), fz_togen(obj));
+				if (error)
+					return fz_rethrow(error, "cannot load jbig2 global segments");
+
+				error = fz_setjbig2dglobalstream(*fp, globals->rp, globals->wp - globals->rp);
+				if (error)
+					return fz_rethrow(error, "cannot apply jbig2 global segments");
+
+				fz_dropbuffer(globals);
+
+				return fz_okay;
+			}
+		}
+
 		error = fz_newjbig2d(fp, p);
 	}
 #endif
@@ -137,7 +161,7 @@ buildonefilter(fz_filter **fp, fz_obj *f, fz_obj *p)
  * Assume ownership of head.
  */
 static fz_error
-buildfilterchain(fz_filter **filterp, fz_filter *head, fz_obj *fs, fz_obj *ps)
+buildfilterchain(fz_filter **filterp, pdf_xref *xref, fz_filter *head, fz_obj *fs, fz_obj *ps)
 {
 	fz_error error;
 	fz_filter *newhead;
@@ -154,7 +178,7 @@ buildfilterchain(fz_filter **filterp, fz_filter *head, fz_obj *fs, fz_obj *ps)
 		else
 			p = nil;
 
-		error = buildonefilter(&tail, f, p);
+		error = buildonefilter(&tail, xref, f, p);
 		if (error)
 			return fz_rethrow(error, "cannot create filter");
 
@@ -240,7 +264,7 @@ buildrawfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, int
  * constraining to stream length, and without decryption.
  */
 fz_error
-pdf_buildinlinefilter(fz_filter **filterp, fz_obj *stmobj)
+pdf_buildinlinefilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj)
 {
 	fz_error error;
 	fz_obj *filters;
@@ -252,9 +276,9 @@ pdf_buildinlinefilter(fz_filter **filterp, fz_obj *stmobj)
 	if (filters)
 	{
 		if (fz_isname(filters))
-			error = buildonefilter(filterp, filters, params);
+			error = buildonefilter(filterp, xref, filters, params);
 		else
-			error = buildfilterchain(filterp, nil, filters, params);
+			error = buildfilterchain(filterp, xref, nil, filters, params);
 	}
 	else
 		error = fz_newnullfilter(filterp, -1);
@@ -304,7 +328,7 @@ pdf_buildfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, in
 
 		if (fz_isname(filters))
 		{
-			error = buildonefilter(&tmp, filters, params);
+			error = buildonefilter(&tmp, xref, filters, params);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot create filter");
@@ -322,7 +346,7 @@ pdf_buildfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, in
 		}
 		else
 		{
-			error = buildfilterchain(&pipe, base, filters, params);
+			error = buildfilterchain(&pipe, xref, base, filters, params);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot create filter chain");

@@ -1163,6 +1163,8 @@ loadexponentialfunc(pdf_function *func, fz_obj *dict)
 	if (fz_isarray(obj))
 	{
 		func->n = fz_arraylen(obj);
+		if (func->n >= MAXN)
+			return fz_throw("exponential function result array out of range");
 		for (i = 0; i < func->n; ++i)
 			func->u.e.c0[i] = fz_toreal(fz_arrayget(obj, i));
 		pdf_logrsrc("c0 %d\n", func->n);

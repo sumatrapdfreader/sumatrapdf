@@ -362,7 +362,7 @@ pdf_parseindobj(fz_obj **op, fz_stream *file, char *buf, int cap,
 {
 	fz_error error = fz_okay;
 	fz_obj *obj = nil;
-	int oid = 0, gid = 0, stmofs = 0;
+	int oid = 0, gid = 0, stmofs;
 	pdf_token_e tok;
 	int len;
 	int a, b;
@@ -387,46 +387,70 @@ pdf_parseindobj(fz_obj **op, fz_stream *file, char *buf, int cap,
 
 	switch (tok)
 	{
-	case PDF_TOARRAY:	error = pdf_parsearray(&obj, file, buf, cap); break;
-	case PDF_TODICT:	error = pdf_parsedict(&obj, file, buf, cap); break;
-	case PDF_TNAME:	error = fz_newname(&obj, buf); break;
-	case PDF_TREAL:	error = fz_newreal(&obj, atof(buf)); break;
-	case PDF_TSTRING:	error = fz_newstring(&obj, buf, len); break;
-	case PDF_TTRUE:	error = fz_newbool(&obj, 1); break;
-	case PDF_TFALSE:	error = fz_newbool(&obj, 0); break;
-	case PDF_TNULL:	error = fz_newnull(&obj); break;
+	case PDF_TOARRAY:
+		error = pdf_parsearray(&obj, file, buf, cap);
+		break;
+	case PDF_TODICT:
+		error = pdf_parsedict(&obj, file, buf, cap);
+		break;
+	case PDF_TNAME:
+		error = fz_newname(&obj, buf);
+		break;
+	case PDF_TREAL:
+		error = fz_newreal(&obj, atof(buf));
+		break;
+	case PDF_TSTRING:
+		error = fz_newstring(&obj, buf, len);
+		break;
+	case PDF_TTRUE:
+		error = fz_newbool(&obj, 1);
+		break;
+	case PDF_TFALSE:
+		error = fz_newbool(&obj, 0);
+		break;
+	case PDF_TNULL:
+		error = fz_newnull(&obj);
+		break;
+
 	case PDF_TINT:
-			a = atoi(buf);
-			error = pdf_lex(&tok, file, buf, cap, &len);
-			if (error) goto cleanup;
-			if (tok == PDF_TSTREAM || tok == PDF_TENDOBJ)
-			{
-				error = fz_newint(&obj, a);
-				if (error) goto cleanup;
-				goto skip;
-			}
-			if (tok == PDF_TINT)
-			{
-				b = atoi(buf);
-				error = pdf_lex(&tok, file, buf, cap, &len);
-				if (error) goto cleanup;
-				if (tok == PDF_TR)
-				{
-					error = fz_newindirect(&obj, a, b);
-					break;
-				}
-			}
+		a = atoi(buf);
+		error = pdf_lex(&tok, file, buf, cap, &len);
+		if (error)
 			goto cleanup;
-	case PDF_TENDOBJ:
-			error = fz_newnull(&obj);
+		if (tok == PDF_TSTREAM || tok == PDF_TENDOBJ)
+		{
+			error = fz_newint(&obj, a);
+			if (error)
+				goto cleanup;
 			goto skip;
+		}
+		if (tok == PDF_TINT)
+		{
+			b = atoi(buf);
+			error = pdf_lex(&tok, file, buf, cap, &len);
+			if (error)
+				goto cleanup;
+			if (tok == PDF_TR)
+			{
+				error = fz_newindirect(&obj, a, b);
+				break;
+			}
+		}
+		goto cleanup;
+
+	case PDF_TENDOBJ:
+		error = fz_newnull(&obj);
+		goto skip;
+
 	default:
-			goto cleanup;
+		goto cleanup;
 	}
-	if (error) goto cleanup;
+	if (error)
+		goto cleanup;
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
-	if (error) goto cleanup;
+	if (error)
+		goto cleanup;
 
 skip:
 	if (tok == PDF_TSTREAM)
@@ -446,10 +470,13 @@ skip:
 		stmofs = fz_tell(file);
 	}
 	else if (tok == PDF_TENDOBJ)
+	{
 		stmofs = 0;
+	}
 	else
 	{
 		fz_warn("expected endobj or stream keyword (%d %d R)", oid, gid);
+		stmofs = 0;
 	}
 
 	if (ooid) *ooid = oid;
