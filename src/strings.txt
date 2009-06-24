@@ -3388,6 +3388,10 @@ fi:Automaattinen päivitys
 sv:Aktivera automatisk uppdatering
 -
 Warning
+de:Warnung
+pl:Uwaga
 -
 This option is not available in portable mode.
+de:Diese Option ist nicht im portablen Modus verfügbar
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
+pl:Opcja niedostepna w trybie przenosnym.
