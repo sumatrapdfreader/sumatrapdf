@@ -233,6 +233,7 @@ public:
     void TrackMouse(HWND hwnd=NULL);
     void FindStart();
     virtual void FindUpdateStatus(int count, int total);
+    void FocusPageNoEdit();
 
 };
 

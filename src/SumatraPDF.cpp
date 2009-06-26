@@ -4701,12 +4701,25 @@ static void OnMenuGoToFirstPage(WindowInfo *win)
     win->dm->goToFirstPage();
 }
 
+void WindowInfo::FocusPageNoEdit()
+{
+    hwndTracker = NULL;
+    SendMessage(hwndPageBox, EM_SETSEL, 0, -1);
+    SetFocus(hwndPageBox);
+}
+
 static void OnMenuGoToPage(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
+
+    // Don't show a dialog if we don't have to - use the Toolbar instead
+    if (gGlobalPrefs.m_showToolbar) {
+        win->FocusPageNoEdit();
+        return;
+    }
 
     int newPageNo = Dialog_GoToPage(win);
     if (win->dm->validPageNo(newPageNo))
