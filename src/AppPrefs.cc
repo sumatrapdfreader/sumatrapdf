@@ -65,6 +65,7 @@ benc_dict* Prefs_SerializeGlobal(void)
 
     DICT_NEW(prefs);
     DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gGlobalPrefs.m_showToolbar);
+    DICT_ADD_INT64(prefs, SHOW_TOC_STR, gGlobalPrefs.m_showToc);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs.m_pdfAssociateDontAskAgain);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs.m_pdfAssociateShouldAssociate);
 
@@ -438,6 +439,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
         goto Error;
 
     dict_get_bool(global, SHOW_TOOLBAR_STR, &gGlobalPrefs.m_showToolbar);
+    dict_get_bool(global, SHOW_TOC_STR, &gGlobalPrefs.m_showToc);
     dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
     dict_get_bool(global, ESC_TO_EXIT_STR, &gGlobalPrefs.m_escToExit);

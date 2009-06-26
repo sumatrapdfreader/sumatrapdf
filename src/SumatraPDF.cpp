@@ -234,7 +234,8 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_WIN_POS, // int  m_tmpWindowPosY
     DEFAULT_WIN_POS, // int  m_tmpWindowDx
     DEFAULT_WIN_POS, // int  m_tmpWindowDy
-    0 // int  m_pdfsOpened
+    0, // int  m_pdfsOpened
+    1 // int  m_showToc
 };
 
 typedef struct ToolbarButtonInfo {
@@ -1892,15 +1893,18 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
+static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return FALSE;
+    if (!win->dm) return FALSE;
+    return TRUE;
+}
+
 static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
-    bool enabled = true;
-    if (WS_SHOWING_PDF != win->state) {
-        enabled = false;
-    } else {
-        if (!win->dm || !win->dm->hasTocTree())
-            enabled = false;
-    }
+    BOOL documentSpecific = WindowInfo_PdfLoaded(win);
+    BOOL enabled = !documentSpecific || WS_SHOWING_PDF == win->state && win->dm->hasTocTree();
 
     if (!enabled) {
         EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
@@ -1909,7 +1913,7 @@ static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
 
     EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
 
-    if (win->dm->_showToc)
+    if (documentSpecific ? win->dm->_showToc : gGlobalPrefs.m_showToc)
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
@@ -2229,6 +2233,9 @@ static bool LoadPdfIntoWindow(
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
         win->dm->_fullScreen = state->windowState == WIN_STATE_FULLSCREEN;
+    }
+    else {
+        win->dm->_showToc = gGlobalPrefs.m_showToc;
     }
 
     // Review needed: Is the following block really necessary?
@@ -2555,14 +2562,6 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
         dm->setZoomVirtual(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == dm->zoomVirtual())
         dm->setZoomVirtual(ZOOM_FIT_PAGE);
-}
-
-static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return FALSE;
-    if (!win->dm) return FALSE;
-    return TRUE;
 }
 
 static bool AlreadyRegisteredForPdfExtentions(void)
@@ -5875,7 +5874,9 @@ void WindowInfo::LoadTocTree()
 
 void WindowInfo::ToggleTocBox()
 {
-    if (!dm->_showToc)
+    if (!dm) // If no document is loaded, just toggle the pref
+        gGlobalPrefs.m_showToc = !gGlobalPrefs.m_showToc;
+    else if (!dm->_showToc)
         ShowTocBox();
     else
         HideTocBox();

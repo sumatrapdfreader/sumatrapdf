@@ -56,6 +56,8 @@ typedef struct {
     int  m_tmpWindowDy;
 
     int  m_pdfsOpened;
+
+    int  m_showToc;
 } SerializableGlobalPrefs;
 
 extern SerializableGlobalPrefs gGlobalPrefs;
