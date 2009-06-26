@@ -10,7 +10,10 @@
 # add the following to the jam command line:
 #
 #   -sHAVE_JBIG2DEC=true
+#
 #   -sHAVE_JASPER=true
+#	-- or --
+#   -sHAVE_OPENJPEG=true
 #
 # Windows builds assume that third party headers and
 # libraries are in c:/local/include and c:/local/lib.
@@ -45,6 +48,7 @@ ALL_LOCATE_TARGET ?= [ FDirName $(TOP) build $(OS:L)-$(OSPLAT:L)-$(BUILD:L) ] ;
 # Add compile time defines for JBIG2 and JPEG2000 support.
 if $(HAVE_JBIG2DEC) { DEFINES += HAVE_JBIG2DEC ; }
 if $(HAVE_JASPER)   { DEFINES += HAVE_JASPER ; }
+if $(HAVE_OPENJPEG) { DEFINES += HAVE_OPENJPEG ; }
 
 # NEED_STRLCPY = true ;
 # NEED_STRSEP = true ;
@@ -73,6 +77,7 @@ if $(OS) = LINUX
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
     if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
+    if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 }
 
 if $(OS) = MACOSX
@@ -94,6 +99,7 @@ if $(OS) = MACOSX
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
     if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
+    if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 }
 
 if $(OS) = MINGW
@@ -122,6 +128,7 @@ if $(OS) = MINGW
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
     if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
+    if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 
     actions WindRes { windres -i $(>) -o $(<) --include-dir=$(>:D) }
 }

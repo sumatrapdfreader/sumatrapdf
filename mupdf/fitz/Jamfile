@@ -73,8 +73,9 @@ Library libfitz :
 
 	;
 
-if $(HAVE_JASPER)   { Library libfitz : filt_jpxd.c ; }
 if $(HAVE_JBIG2DEC) { Library libfitz : filt_jbig2d.c ; }
+if $(HAVE_JASPER)   { Library libfitz : filt_jpxd_jas.c ; }
+if $(HAVE_OPENJPEG) { Library libfitz : filt_jpxd_opj.c ; }
 
 #
 # Resources and display tree.

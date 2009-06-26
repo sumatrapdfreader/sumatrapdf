@@ -144,6 +144,10 @@ buildonefilter(fz_filter **fp, pdf_xref *xref, fz_obj *f, fz_obj *p)
 	else if (!strcmp(s, "JPXDecode"))
 		error = fz_newjpxd(fp, p);
 #endif
+#ifdef HAVE_OPENJPEG
+	else if (!strcmp(s, "JPXDecode"))
+		error = fz_newjpxd(fp, p);
+#endif
 
 	else
 	{

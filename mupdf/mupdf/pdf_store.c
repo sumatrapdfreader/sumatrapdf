@@ -167,6 +167,7 @@ pdf_evictageditems(pdf_store *store)
 	fz_error error;
 	pdf_item *item;
 	pdf_item *next;
+	pdf_item *prev;
 	struct refkey *key;
 	int i;
 
@@ -184,12 +185,21 @@ pdf_evictageditems(pdf_store *store)
 		}
 	}
 
+	prev = nil;
 	for (item = store->root; item; item = next)
 	{
 		next = item->next;
 
 		if (item->age > itemmaxage(item->kind))
+		{
 			evictitem(item);
+			if (!prev)
+				store->root = item->next;
+			else
+				prev->next = item->next;
+		}
+
+		prev = item;
 	}
 
 	return fz_okay;

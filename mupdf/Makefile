@@ -179,7 +179,7 @@ FITZ_SRC = \
 	stm_misc.c stm_open.c stm_read.c filt_dctd.c filt_dcte.c
 
 ifneq ($(JASPER_DIR),)
-FITZ_SRC += filt_jpxd.c
+FITZ_SRC += filt_jpxd_jas.c
 endif
 
 ifneq ($(JBIG2_DIR),)
