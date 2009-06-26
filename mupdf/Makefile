@@ -5,6 +5,7 @@
 # JPEG_DIR=
 # JBIG2_DIR=
 # JASPER_DIR=
+# OPENJPEG_DIR=
 
 # Symbolic names for HOST variable
 HOST_LINUX := Linux
@@ -38,6 +39,10 @@ ifneq ($(JASPER_DIR),)
 VPATH+=$(JASPER_DIR)/base:$(JASPER_DIR)/jp2:$(JASPER_DIR)/pgx:$(JASPER_DIR)/jpc
 endif
 
+ifneq ($(OPENJPEG_DIR),)
+VPATH+=$(OPENJPEG_DIR)
+endif
+
 # make dbg default target if none provided
 ifeq ($(CFG),)
 CFG=dbg
@@ -61,6 +66,11 @@ endif
 ifneq ($(JASPER_DIR),)
 INCS += -I $(JASPER_DIR)/include
 CFLAGS += -DHAVE_JASPER -DJAS_CONFIGURE
+endif
+
+ifneq ($(OPENJPEG_DIR),)
+INCS += -I $(OPENJPEG_DIR)
+CFLAGS += -DHAVE_OPENJPEG
 endif
 
 FREETYPE_CFLAGS  = `freetype-config --cflags`
@@ -98,6 +108,7 @@ JPEG_CFLAGS = $(CFLAGS)
 JBIG2_CFLAGS = $(CFLAGS) -DHAVE_STDINT_H
 JASPER_CFLAGS = $(CFLAGS) -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_PNM_SUPPORT -DEXCLUDE_BMP_SUPPORT \
 	-DEXCLUDE_RAS_SUPPORT -DEXCLUDE_JPG_SUPPORT
+OPENJPEG_CFLAGS = $(CFLAGS)
 
 #-DHAVE_CONFIG_H
 
@@ -161,6 +172,12 @@ JASPER_SRC = \
 	jpc_tagtree.c jpc_tsfb.c jpc_util.c \
 	pgx_cod.c pgx_dec.c pgx_enc.c
 
+OPENJPEG_SRC = \
+	bio.c cio.c dwt.c event.c image.c \
+	j2k.c j2k_lib.c jp2.c jpt.c mct.c \
+	mqc.c openjpeg.c pi.c raw.c t1.c \
+	t2.c tcd.c tgt.c
+
 FITZ_DRAW_SRC = \
 	archx86.c blendmodes.c imagescale.c pathfill.c pixmap.c \
 	glyphcache.c imageunpack.c pathscan.c porterduff.c imagedraw.c \
@@ -180,6 +197,10 @@ FITZ_SRC = \
 
 ifneq ($(JASPER_DIR),)
 FITZ_SRC += filt_jpxd_jas.c
+endif
+
+ifneq ($(OPENJPEG_DIR),)
+FITZ_SRC += filt_jpxd_opj.c
 endif
 
 ifneq ($(JBIG2_DIR),)
@@ -226,6 +247,9 @@ ZLIB_DEP = $(patsubst %.o, %.d, $(ZLIB_OBJ))
 
 JASPER_OBJ = $(patsubst %.c, $(OUTDIR)/JASPER_%.o, ${JASPER_SRC})
 JASPER_DEP = $(patsubst %.o, %.d, $(JASPER_OBJ))
+
+OPENJPEG_OBJ = $(patsubst %.c, $(OUTDIR)/OPENJPEG_%.o, ${OPENJPEG_SRC})
+OPENJPEG_DEP = $(patsubst %.o, %.d, $(OPENJPEG_OBJ))
 
 JBIG2_OBJ = $(patsubst %.c, $(OUTDIR)/JBIG_%.o, ${JBIG2_SRC})
 JBIG2_DEP = $(patsubst %.o, %.d, $(JBIG2_OBJ))
@@ -286,6 +310,14 @@ PDFINFO_OBJ  += $(JASPER_OBJ)
 PDFSHOW_OBJ  += $(JASPER_OBJ)
 endif
 
+ifneq ($(OPENJPEG_DIR),)
+PDFBENCH_OBJ += $(OPENJPEG_OBJ)
+PDFCLEAN_OBJ += $(OPENJPEG_OBJ)
+PDFDRAW_OBJ  += $(OPENJPEG_OBJ)
+PDFINFO_OBJ  += $(OPENJPEG_OBJ)
+PDFSHOW_OBJ  += $(OPENJPEG_OBJ)
+endif
+
 ifneq ($(JBIG2_DIR),)
 PDFBENCH_OBJ += $(JBIG2_OBJ)
 PDFCLEAN_OBJ += $(JBIG2_OBJ)
@@ -344,6 +376,9 @@ $(OUTDIR)/JBIG_%.o: %.c
 
 $(OUTDIR)/JASPER_%.o: %.c
 	$(CC) -MD -c $(JASPER_CFLAGS) -o $@ $<
+
+$(OUTDIR)/OPENJPEG_%.o: %.c
+	$(CC) -MD -c $(OPENJPEG_CFLAGS) -o $@ $<
 
 $(OUTDIR)/font_misc.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $@ fonts/Dingbats.cff fonts/StandardSymL.cff fonts/URWChanceryL-MediItal.cff
@@ -419,6 +454,10 @@ endif
 
 ifneq ($(JASPER_DIR),)
 -include $(JASPER_DEP)
+endif
+
+ifneq ($(OPENJPEG_DIR),)
+-include $(OPENJPEG_DEP)
 endif
 
 ifneq ($(JBIG2_DIR),)
