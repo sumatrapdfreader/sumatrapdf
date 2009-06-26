@@ -5097,7 +5097,10 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         // Emulate acrobat: "Shift Ctrl -" is rotate counter-clockwise
         if (shiftPressed & ctrlPressed)
             RotateLeft(win);
-    } else if ('L' == key) {
+    }
+    // TODO: Turn the following into proper accelerators, so that other
+    //       windows don't have to call OnKeydown so that shortcuts work
+    else if ('L' == key) {
         if (ctrlPressed)
             OnMenuViewFullscreen(win);
     } else if ('F' == key) {
@@ -5314,6 +5317,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
     }
+    else if (WM_KEYDOWN == message) {
+        OnKeydown(win, wParam, lParam);
+    }
 
     int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
 
@@ -5523,6 +5529,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         }
     } else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
+    } else if (WM_KEYDOWN == message) {
+        OnKeydown(win, wParam, lParam);
     }
 
     return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
@@ -5782,10 +5790,8 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         case WM_KEYDOWN:
-            if (wParam < VK_PRIOR && wParam > VK_DOWN) {
-                if (win)
-                    OnKeydown(win, wParam, lParam);
-            }
+            if (win)
+                OnKeydown(win, wParam, lParam);
             break;
     }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
@@ -7209,7 +7215,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+        if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
@@ -7218,7 +7224,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     while (1) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
             if (GetMessage(&msg, NULL, 0, 0)) {
-                if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+                if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
                 }
