@@ -249,3 +249,4 @@ END
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "SumatraPDF.exe.manifest"
