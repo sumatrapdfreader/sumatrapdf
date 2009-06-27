@@ -10,6 +10,7 @@
 # German:
 #   Lars Wohlfahrt (www.eviltux.de)
 #   Christopher Amann
+#   Simon Bünzli (zeniko@gmail.com)
 # Hakan ATAC - Turkish
 # Яўген Змачынскі - Belarusian
 # French:
@@ -203,7 +204,7 @@ bg:&Отвори\tCtrl-O
 br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
-de:Ö&ffnen...\tCtrl-O
+de:Ö&ffnen...\tStrg+O
 fr:&Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
@@ -260,7 +261,7 @@ bg:Затвори\tCtrl-W
 br:&Fechar\tCtrl-W
 hu:Be&zárás\tCtrl-W
 pl:&Zamknij\tCtrl-W
-de:&Schließen\tCtrl-W
+de:&Schließen\tStrg+W
 fr:&Fermer\tCtrl-W
 tr:Kapa&t\tCtrl-W
 by:Зачыніць\tCtrl-W
@@ -312,87 +313,87 @@ hi:बंद करें(&C)\tCtrl-W
 nn:&Lukk\tCtrl-W
 -
 &Save as\tCtrl-S
-af:&Stoor As
-bg:&Запиши като...
-br:&Salvar como...
-hu:Ment&és másként...
-de:Speichern &unter...
-pl:Zapisz jako
-fr:&Enregistrer sous
-tr:&Farklı kaydet
-by:Захаваць як
-ja:名前を付けて保存(&S)
-fa:...ذخيره به نام دیگر
-dk:&Gem som
-it:&Salva con nome...
-nl:&Opslaan als...
-ta:எனச் சேமி
-es:&Guardar como
-hr:&Spremi kao...
-ru:Сохранить как...
-ar:&حفظ كـ
-cn:另存为(&S)
-sv:Spara so&m...
-cz:&Uložit jako
-gr:Α&ποθήκευση ως
-th:บันทึกเป็น
-pt:Guardar como...
-no:Lagre &som
-sk:Uložiť ako...
-vn:&Sao lưu
-lt:&Įrašyti kaip...
-my:&Simpan sebagai
-fi:&Tallenna nimellä
-ca:Anomena i de&sa...
-si:&Shrani kot
-sr-rs:Сачувај као...
-tw:另存新檔(&S)
-ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക
-he:שמירה בשם
-sp-rs:&Sačuvaj kao...
-id:&Simpan sebagai
-mk:&Зачувај како...
-ro:Salvare c&a...
-kr:다른 이름으로 저장(&S)...
-bn:&সংরক্ষণ এই রূপে...
-gl:&Salvar como...
-uk:Зб&ерегти як...
-eu:... bezala &Gorde
-tl:Isara Bilang...
-va:&Guardar com...
-sn:&Sevha se...
-cy:&Cadw fel...
-ga:Cuir i dtaisce mar...
-mm:&ကဲ့သို့ သိမ်းပါ.....
-pa:ਇੰਝ ਸੰਬਾਲੋ(&S)
-hi:इस तरह संभालें(&S)
-nn:Lagre &som
+af:&Stoor As\tCtrl-S
+bg:&Запиши като...\tCtrl-S
+br:&Salvar como...\tCtrl-S
+hu:Ment&és másként...\tCtrl-S
+de:Speichern &unter...\tStrg+S
+pl:Zapisz jako\tCtrl-S
+fr:&Enregistrer sous\tCtrl-S
+tr:&Farklı kaydet\tCtrl-S
+by:Захаваць як\tCtrl-S
+ja:名前を付けて保存(&S)\tCtrl-S
+fa:...ذخيره به نام دیگر\tCtrl-S
+dk:&Gem som\tCtrl-S
+it:&Salva con nome...\tCtrl-S
+nl:&Opslaan als...\tCtrl-S
+ta:எனச் சேமி\tCtrl-S
+es:&Guardar como\tCtrl-S
+hr:&Spremi kao...\tCtrl-S
+ru:Сохранить как...\tCtrl-S
+ar:&حفظ كـ\tCtrl-S
+cn:另存为(&S)\tCtrl-S
+sv:Spara so&m...\tCtrl-S
+cz:&Uložit jako\tCtrl-S
+gr:Α&ποθήκευση ως\tCtrl-S
+th:บันทึกเป็น\tCtrl-S
+pt:Guardar como...\tCtrl-S
+no:Lagre &som\tCtrl-S
+sk:Uložiť ako...\tCtrl-S
+vn:&Sao lưu\tCtrl-S
+lt:&Įrašyti kaip...\tCtrl-S
+my:&Simpan sebagai\tCtrl-S
+fi:&Tallenna nimellä\tCtrl-S
+ca:Anomena i de&sa...\tCtrl-S
+si:&Shrani kot\tCtrl-S
+sr-rs:Сачувај као...\tCtrl-S
+tw:另存新檔(&S)\tCtrl-S
+ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക\tCtrl-S
+he:שמירה בשם\tCtrl-S
+sp-rs:&Sačuvaj kao...\tCtrl-S
+id:&Simpan sebagai\tCtrl-S
+mk:&Зачувај како...\tCtrl-S
+ro:Salvare c&a...\tCtrl-S
+kr:다른 이름으로 저장(&S)...\tCtrl-S
+bn:&সংরক্ষণ এই রূপে...\tCtrl-S
+gl:&Salvar como...\tCtrl-S
+uk:Зб&ерегти як...\tCtrl-S
+eu:... bezala &Gorde\tCtrl-S
+tl:Isara Bilang...\tCtrl-S
+va:&Guardar com...\tCtrl-S
+sn:&Sevha se...\tCtrl-S
+cy:&Cadw fel...\tCtrl-S
+ga:Cuir i dtaisce mar...\tCtrl-S
+mm:&ကဲ့သို့ သိမ်းပါ.....\tCtrl-S
+pa:ਇੰਝ ਸੰਬਾਲੋ(&S)\tCtrl-S
+hi:इस तरह संभालें(&S)\tCtrl-S
+nn:Lagre &som\tCtrl-S
 -
 &Print\tCtrl-P
 af:&Druk\tCtrl-P
-bg:От&печатай
-br:&Imprimir
+bg:От&печатай\tCtrl-P
+br:&Imprimir\tCtrl-P
 hu:Nyomt&atás\tCtrl-P
-pl:Drukuj
-de:&Drucken...
-fr:&Imprimer
+pl:Drukuj\tCtrl-P
+de:&Drucken...\tStrg+P
+fr:&Imprimer\tCtrl-P
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
-ja:印刷(&P)
+ja:印刷(&P)\tCtrl-P
 fa:چاپ\tCtrl-P
-dk:&Udskriv
-it:S&tampa
+dk:&Udskriv\tCtrl-P
+it:S&tampa\tCtrl-P
 nl:&Afdrukken\tCtrl-P
-ta:அச்சிடு
-es:&Imprimir
+ta:அச்சிடு\tCtrl-P
+es:&Imprimir\tCtrl-P
 hr:&Ispiši\tCtrl-P
 ru:Печать\tCtrl-P
-ar:&طباعة
-cn:打印(&P)
+ar:&طباعة\tCtrl-P
+cn:打印(&P)\tCtrl-P
 sv:Skriv &ut\tCtrl-P
-cz:&Tisk
-gr:&Εκτύπωση
-th:พิมพ์
+cz:&Tisk\tCtrl-P
+gr:&Εκτύπωση\tCtrl-P
+th:พิมพ์\tCtrl-P
 pt:&Imprimir...\tCtrl-P
 no:Skriv &ut\tCtrl-P
 sk:Tlačiť\tCtrl-P
@@ -402,21 +403,21 @@ my:&Cetak\tCtrl-P
 fi:&Tulosta\tCtrl-P
 ca:&Imprimeix...\tCtrl-P
 si:&Natisni\tCtrl-P
-sr-rs:Штампај
-tw:列印(&P)
+sr-rs:Штампај\tCtrl-P
+tw:列印(&P)\tCtrl-P
 ml:അച്ചടി\tCtrl-P
-he:הדפס\tCtrl-p
-sp-rs:&Štampaj
+he:הדפס\tCtrl-P
+sp-rs:&Štampaj\tCtrl-P
 id:&Cetak\tCtrl-P
-mk:&Печати
-ro:I&mprimare
+mk:&Печати\tCtrl-P
+ro:I&mprimare\tCtrl-P
 kr:인쇄(&P)...\tCtrl-P
-bn:&মুদ্রন
-gl:&Imprimir
-uk:&Друкувати
-eu:&Inprimatu
+bn:&মুদ্রন\tCtrl-P
+gl:&Imprimir\tCtrl-P
+uk:&Друкувати\tCtrl-P
+eu:&Inprimatu\tCtrl-P
 tl:I-&print\tCtrl-P
-va:&Imprimir
+va:&Imprimir\tCtrl-P
 sn:&Printa\tCtrl-P
 cy:&Argraffu\tCtrl-P
 ga:Clóbhuail\tCtrl-P
@@ -431,7 +432,7 @@ bg:Направи SumatraPDF четец на PDF по подразбиране
 br:Fazer do SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
-de:Standardmäßig pdf-Dateien mit SumatraPDF öffnen
+de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
 fr:Définir SumatraPDF comme lecteur PDF par défaut
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
@@ -489,7 +490,7 @@ bg:&Изход\tCtrl-Q
 br:Sai&r\tCtrl-Q
 hu:&Kilépés\tCtrl-Q
 pl:Wyjdź\tCtrl-Q
-de:&Beenden\tCtrl-Q
+de:&Beenden\tStrg+Q
 fr:Quitter\tCtrl-Q
 tr:Çı&kış\tCtrl-O
 by:Выйсце\tCtrl-Q
@@ -826,172 +827,172 @@ hi:निरन्तर पुस्तक
 nn:Kontunuerleg motståande
 -
 Rotate left\tCtrl-Shift--
-af:Draai Links
-bg:Завърти наляво
-br:Girar à esquerda
-hu:Forgatás balra
-pl:Obróć w lewo
-de:Drehung links
-fr:Rotation antihoraire
-tr:Sola çevir
-by:Павярнуць налева
-ja:左に回転
-fa:چرخاندن به چپ
-dk:Drej venstre
-it:Ruota a sinistra
-nl:Linksom draaien
-ta:இடதுப்புறம் சுழற்று
-es:Girar a la izquierda
-hr:Zaokreni nalijevo
-ru:Повернуть влево
-ar:دوران لليسار
-cn:向左旋转
-sv:Rotera åt vänster
-cz:Otočit zobrazení doleva
-gr:Περιστροφή αριστερά
-th:หมุนซ้าย
-pt:Rodar à esquerda
-no:Roter til venstre
-sk:Otočiť vľavo
-vn:Quay trái
-lt:Pasukti kairėn
-my:Ubah ke kiri
-fi:Kierrä vasempaan
-ca:Gira a l'esquerra
-si:Obrni v levo
-sr-rs:Ротирај лево
-tw:頁面左旋
-ml: ഇടത്തേക്കു ചരിക്കുക
-he:סובב שמאלה
-sp-rs:Rotiraj levo
-id:Putar ke kiri
-mk:Ротирај на лево
-ro:Roteşte spre stânga
-kr:왼쪽으로 회전
-bn:বামদিকে বিবর্তন
-gl:Xirar á esquerda
-uk:Повернути ліворуч
-eu:Ezkerrerantz biratu
-tl:Iikot Pakaliwa
-va:Girar a l'esquerra
-sn:Tenderedza kuruboshwe
-cy:Cylchdrowch i'r chwith
-ga:Rothlaigh Tuathalach
-mm:ဘယ်သို့ လှဲ့
-pa:ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ
-hi:बांयी ओर घूमाओ
-nn:Roter til venstre
+af:Draai Links\tCtrl-Shift--
+bg:Завърти наляво\tCtrl-Shift--
+br:Girar à esquerda\tCtrl-Shift--
+hu:Forgatás balra\tCtrl-Shift--
+pl:Obróć w lewo\tCtrl-Shift--
+de:Drehung links\tStrg+Umschalt+-
+fr:Rotation antihoraire\tCtrl-Shift--
+tr:Sola çevir\tCtrl-Shift--
+by:Павярнуць налева\tCtrl-Shift--
+ja:左に回転\tCtrl-Shift--
+fa:چرخاندن به چپ\tCtrl-Shift--
+dk:Drej venstre\tCtrl-Shift--
+it:Ruota a sinistra\tCtrl-Shift--
+nl:Linksom draaien\tCtrl-Shift--
+ta:இடதுப்புறம் சுழற்று\tCtrl-Shift--
+es:Girar a la izquierda\tCtrl-Shift--
+hr:Zaokreni nalijevo\tCtrl-Shift--
+ru:Повернуть влево\tCtrl-Shift--
+ar:دوران لليسار\tCtrl-Shift--
+cn:向左旋转\tCtrl-Shift--
+sv:Rotera åt vänster\tCtrl-Shift--
+cz:Otočit zobrazení doleva\tCtrl-Shift--
+gr:Περιστροφή αριστερά\tCtrl-Shift--
+th:หมุนซ้าย\tCtrl-Shift--
+pt:Rodar à esquerda\tCtrl-Shift--
+no:Roter til venstre\tCtrl-Shift--
+sk:Otočiť vľavo\tCtrl-Shift--
+vn:Quay trái\tCtrl-Shift--
+lt:Pasukti kairėn\tCtrl-Shift--
+my:Ubah ke kiri\tCtrl-Shift--
+fi:Kierrä vasempaan\tCtrl-Shift--
+ca:Gira a l'esquerra\tCtrl-Shift--
+si:Obrni v levo\tCtrl-Shift--
+sr-rs:Ротирај лево\tCtrl-Shift--
+tw:頁面左旋\tCtrl-Shift--
+ml: ഇടത്തേക്കു ചരിക്കുക\tCtrl-Shift--
+he:סובב שמאלה\tCtrl-Shift--
+sp-rs:Rotiraj levo\tCtrl-Shift--
+id:Putar ke kiri\tCtrl-Shift--
+mk:Ротирај на лево\tCtrl-Shift--
+ro:Roteşte spre stânga\tCtrl-Shift--
+kr:왼쪽으로 회전\tCtrl-Shift--
+bn:বামদিকে বিবর্তন\tCtrl-Shift--
+gl:Xirar á esquerda\tCtrl-Shift--
+uk:Повернути ліворуч\tCtrl-Shift--
+eu:Ezkerrerantz biratu\tCtrl-Shift--
+tl:Iikot Pakaliwa\tCtrl-Shift--
+va:Girar a l'esquerra\tCtrl-Shift--
+sn:Tenderedza kuruboshwe\tCtrl-Shift--
+cy:Cylchdrowch i'r chwith\tCtrl-Shift--
+ga:Rothlaigh Tuathalach\tCtrl-Shift--
+mm:ဘယ်သို့ လှဲ့\tCtrl-Shift--
+pa:ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift--
+hi:बांयी ओर घूमाओ\tCtrl-Shift--
+nn:Roter til venstre\tCtrl-Shift--
 -
 Rotate right\tCtrl-Shift-+
-af:Draai Regs
-bg:Завърти надясно
-br:Girar à direita
-hu:Forgatás jobbra
-pl:Obróć w prawo
-de:Drehung rechts
-fr:Rotation horaire
-tr:Sağa çevir
-by:Павярнуць направа
-ja:右に回転
-fa:چرخاندن به راست
-dk:Drej højre
-it:Ruota a destra
-nl:Rechtsom draaien
-ta:வலப்புறம் சுழற்று
-es:Girar a la derecha
-hr:Zaokreni nadesno
-ru:Повернуть вправо
-ar:دوران لليمين
-cn:向右旋转
-sv:Rotera åt höger
-cz:Otočit zobrazení doprava
-gr:Περιστροφή δεξιά
-th:หมุนขวา
-pt:Rodar à direita
-no:Roter til høyre
-sk:Otočiť vpravo
-vn:Quay phải
-lt:Pasukti dešinėn
-my:Ubah ke kanan
-fi:Kierrä oikeaan
-ca:Gira a la dreta
-si:Obrni v desno
-sr-rs:Ротирај десно
-tw:頁面右旋
-ml:വലത്തേക്കു ചരിക്കുക
-he:סובב ימינה
-sp-rs:Rotiraj desno
-id:Putar ke Kanan
-mk:Ротирај на десно
-ro:Roteşte spre dreapta
-kr:오른쪽으로 회전
-bn:ডানদিকে বিবর্তন
-gl:Xirar á dereita
-uk:Повернути праворуч
-eu:Eskubirantz biratu
-tl:Iikot Pakanan
-va:Girar a la dreta
-sn:Tenderedza kurudyi
-cy:Cylchdrowch i'r dde
-ga:Rothlaigh Deiseal
-mm:ညာသို့ လှဲ့
-pa:ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ
-hi:दांयी ओर घूमाओ
-nn:Roter til høgre
+af:Draai Regs\tCtrl-Shift-+
+bg:Завърти надясно\tCtrl-Shift-+
+br:Girar à direita\tCtrl-Shift-+
+hu:Forgatás jobbra\tCtrl-Shift-+
+pl:Obróć w prawo\tCtrl-Shift-+
+de:Drehung rechts\tStrg+Umschalt++
+fr:Rotation horaire\tCtrl-Shift-+
+tr:Sağa çevir\tCtrl-Shift-+
+by:Павярнуць направа\tCtrl-Shift-+
+ja:右に回転\tCtrl-Shift-+
+fa:چرخاندن به راست\tCtrl-Shift-+
+dk:Drej højre\tCtrl-Shift-+
+it:Ruota a destra\tCtrl-Shift-+
+nl:Rechtsom draaien\tCtrl-Shift-+
+ta:வலப்புறம் சுழற்று\tCtrl-Shift-+
+es:Girar a la derecha\tCtrl-Shift-+
+hr:Zaokreni nadesno\tCtrl-Shift-+
+ru:Повернуть вправо\tCtrl-Shift-+
+ar:دوران لليمين\tCtrl-Shift-+
+cn:向右旋转\tCtrl-Shift-+
+sv:Rotera åt höger\tCtrl-Shift-+
+cz:Otočit zobrazení doprava\tCtrl-Shift-+
+gr:Περιστροφή δεξιά\tCtrl-Shift-+
+th:หมุนขวา\tCtrl-Shift-+
+pt:Rodar à direita\tCtrl-Shift-+
+no:Roter til høyre\tCtrl-Shift-+
+sk:Otočiť vpravo\tCtrl-Shift-+
+vn:Quay phải\tCtrl-Shift-+
+lt:Pasukti dešinėn\tCtrl-Shift-+
+my:Ubah ke kanan\tCtrl-Shift-+
+fi:Kierrä oikeaan\tCtrl-Shift-+
+ca:Gira a la dreta\tCtrl-Shift-+
+si:Obrni v desno\tCtrl-Shift-+
+sr-rs:Ротирај десно\tCtrl-Shift-+
+tw:頁面右旋\tCtrl-Shift-+
+ml:വലത്തേക്കു ചരിക്കുക\tCtrl-Shift-+
+he:סובב ימינה\tCtrl-Shift-+
+sp-rs:Rotiraj desno\tCtrl-Shift-+
+id:Putar ke Kanan\tCtrl-Shift-+
+mk:Ротирај на десно\tCtrl-Shift-+
+ro:Roteşte spre dreapta\tCtrl-Shift-+
+kr:오른쪽으로 회전\tCtrl-Shift-+
+bn:ডানদিকে বিবর্তন\tCtrl-Shift-+
+gl:Xirar á dereita\tCtrl-Shift-+
+uk:Повернути праворуч\tCtrl-Shift-+
+eu:Eskubirantz biratu\tCtrl-Shift-+
+tl:Iikot Pakanan\tCtrl-Shift-+
+va:Girar a la dreta\tCtrl-Shift-+
+sn:Tenderedza kurudyi\tCtrl-Shift-+
+cy:Cylchdrowch i'r dde\tCtrl-Shift-+
+ga:Rothlaigh Deiseal\tCtrl-Shift-+
+mm:ညာသို့ လှဲ့\tCtrl-Shift-+
+pa:ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift-+
+hi:दांयी ओर घूमाओ\tCtrl-Shift-+
+nn:Roter til høgre\tCtrl-Shift-+
 -
 Bookmarks\tF12
-af:Boekmerke
-pt:Marcadores
-br:Marcadores
-bg:Етикети
-de:Lesezeichen
-tr:Yer imleri
-hu:Könyvjelzők
-lt:Žymės
-my:Penanda
-ja:ブックマーク
-fa:نشان یادگاری سرکتاب
-it:Segnalibri
-nl:Bladwijzers
-fi:Kirjainmerkit
-ca:Punts d'interés
-si:Zaznamki
-sr-rs:Белешке
-tw:書籤
-sp-rs:Beleške
-mk:Обележувачи
-ro:Marcaje
-sk:Záložky
-vn:Chỉ dấu sách
-kr:책갈피
-bn:পৃষ্ঠাস্মারকসমূহ
-cn:书签
-fr:Signets
-ru:Закладки
-gl:Preferidos
-es:Marcadores
-th:ที่คั่น
-uk:Закладки
-eu:Markagailuak
-gr:Σελιδοδείκτες
-hr:Knjiške oznake
-tl:Mga Pananda
-va:Marcadors
-sn:Mabhukumaki
-cy:Llyfrnodau
-ga:Astail
-mm:စာမျက်နှာ မှတ်သား
-pa:ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ
-hi:संभाले हुए चिह्न
-nn:Bokmerker
-sv:Bokmärken
+af:Boekmerke\tF12
+pt:Marcadores\tF12
+br:Marcadores\tF12
+bg:Етикети\tF12
+de:Lesezeichen\tF12
+tr:Yer imleri\tF12
+hu:Könyvjelzők\tF12
+lt:Žymės\tF12
+my:Penanda\tF12
+ja:ブックマーク\tF12
+fa:نشان یادگاری سرکتاب\tF12
+it:Segnalibri\tF12
+nl:Bladwijzers\tF12
+fi:Kirjainmerkit\tF12
+ca:Punts d'interés\tF12
+si:Zaznamki\tF12
+sr-rs:Белешке\tF12
+tw:書籤\tF12
+sp-rs:Beleške\tF12
+mk:Обележувачи\tF12
+ro:Marcaje\tF12
+sk:Záložky\tF12
+vn:Chỉ dấu sách\tF12
+kr:책갈피\tF12
+bn:পৃষ্ঠাস্মারকসমূহ\tF12
+cn:书签\tF12
+fr:Signets\tF12
+ru:Закладки\tF12
+gl:Preferidos\tF12
+es:Marcadores\tF12
+th:ที่คั่น\tF12
+uk:Закладки\tF12
+eu:Markagailuak\tF12
+gr:Σελιδοδείκτες\tF12
+hr:Knjiške oznake\tF12
+tl:Mga Pananda\tF12
+va:Marcadors\tF12
+sn:Mabhukumaki\tF12
+cy:Llyfrnodau\tF12
+ga:Astail\tF12
+mm:စာမျက်နှာ မှတ်သား\tF12
+pa:ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ\tF12
+hi:संभाले हुए चिह्न\tF12
+nn:Bokmerker\tF12
+sv:Bokmärken\tF12
 -
 Fullscreen\tCtrl-L
-af:Volskerm
+af:Volskerm\tCtrl-L
 pt:Ecrâ completo\tCtrl-L
 br:Tela cheia\tCtrl-L
 bg:Цял Екран\tCtrl-L
-de:Vollbild
+de:Vollbild\tStrg+L
 tr:Tam Ekran\tCtrl-L
 hu:Teljes képernyő\tCtrl+L
 pl:Na cały ekran\tCtrl-L
@@ -1008,22 +1009,22 @@ fi:Koko näyttö\tCtrl-L
 ca:Pantalla completa\tCtrl-L
 si:Celozaslonsko\tCtrl-L
 sr-rs:Цео екран\tCtrl-L
-tw:全螢幕顯示(按Ctrl+L切換)
+tw:全螢幕顯示(按Ctrl+L切換)\tCtrl-L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl-L
 he:מסך מלא\tCtrl-L
 sp-rs:Ceo ekran\tCtrl-L
 id:Selayar Penuh\tCtrl-L
 mk:На цел екран\tCtrl-L
-ro:Ecran complet
+ro:Ecran complet\tCtrl-L
 kr:전체 화면\tCtrl-L
 bn:পূর্ণ পর্দা\tCtrl-L
 cn:全屏\tCtrl-L
-fr:Plein écran
-ru:Полный экран
+fr:Plein écran\tCtrl-L
+ru:Полный экран\tCtrl-L
 gl:A toda pantalla\tCtrl-L
 es:Pantalla Completa\tCtrl-L
-th:เต็มจอภาพ
-ar:بحجم الشاشة
+th:เต็มจอภาพ\tCtrl-L
+ar:بحجم الشاشة\tCtrl-L
 uk:На цілий екран\tCtrl-L
 eu:Pantaila osoan\tCtrl-L
 gr:Πλήρης οθόνη\tCtrl-L
@@ -1033,7 +1034,7 @@ va:Pantalla Completa\tCtrl-L
 sn:Zadza Screen\tCtrl-L
 cy:Sgrîn Lawn\tCtrl-L
 ga:Lánscáileán\tCtrl-L
-mm:မြင်ကွင်း ပြည့်
+mm:မြင်ကွင်း ပြည့်\tCtrl-L
 pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl-L
 hi:पूरा परदा\tCtrl-L
 nn:Full skjerm\tCtrl-L
@@ -1273,7 +1274,7 @@ bg:Начална страница\tHome
 br:Primeira página\tHome
 hu:Első oldal\tHome
 pl:Pierwsza strona\tHome
-de:Erste Seite\tHome
+de:Erste Seite\tPos1
 fr:Première page\tHome
 tr:İlk Sayfa\tHome
 by:Першая старонка\tHome
@@ -1330,7 +1331,7 @@ bg:Последна страница\tEnd
 br:Última página\tEnd
 hu:Utolsó oldal\tEnd
 pl:Ostatnia strona\tEnd
-de:Letzte Seite\tEnd
+de:Letzte Seite\tEnde
 fr:Dernière page\tEnd
 tr:Son Sayfa\tEnd
 by:Апошняя старонка\tEnd
@@ -1387,7 +1388,7 @@ bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
 hu:Megadott oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
-de:Seite...\tCtrl-G
+de:Seite...\tStrg+G
 fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
@@ -1501,7 +1502,7 @@ bg:Оразмери страницата\tCtrl-0
 br:&Página inteira\tCtrl-0
 hu:&Teljes oldal\tCtrl-0
 pl:Dopasuj do strony\tCtrl-0
-de:An Seite anpassen\tCtrl-0
+de:An &Seite anpassen\tStrg+0
 fr:Page entière\tCtrl-0
 tr:&Sayfaya sığdır\tCtrl-0
 by:Змясціць старонку\tCtrl-0
@@ -1558,7 +1559,7 @@ bg:Едно към едно\tCtrl-1
 br:&Tamanho real\tCtrl-1
 hu:&Eredeti méret\tCtrl-1
 pl:Prawdziwy rozmiar\tCtrl-1
-de:Tat&sächliche Größe\tCtrl-1
+de:&Tatsächliche Größe\tStrg+1
 fr:Taille réelle\tCtrl-1
 tr:Gerçek Boyut\tCtrl-1
 by:Рэальны памер\tCtrl-1
@@ -1615,7 +1616,7 @@ bg:Оразмери по ширина\tCtrl-2
 br:Ajustar pela l&argura\tCtrl-2
 hu:Oldal&szélesség\tCtrl-2
 pl:Dopasuj do szerokości\tCtrl-2
-de:An Breite anpassen\tCtrl-2
+de:An &Breite anpassen\tStrg+2
 fr:Pleine largeur
 tr:Genişliğe &sığdır\tCtrl-2
 by:Змясціць па шырыне
@@ -1699,7 +1700,7 @@ br:I&dioma
 hu:&Nyelv
 pl:&Język
 fr:&Langue
-de:Sprache
+de:&Sprache
 tr:Dil
 by:Мова
 ja:言語(&L)
@@ -1866,7 +1867,7 @@ nn:Vitj &heimeside
 &Manual
 af:Handleiding
 bg:Ръководство
-de:Anleitung
+de:&Anleitung
 gr:Οδηγίες χρήσης
 fr:Manuel
 pl:Instrukcja obslugi
@@ -3123,7 +3124,7 @@ sv:Fråga mig inte igen
 af:Kyk Vir Nuwe Uitgawe
 bg:Проверка за нова версия
 br:Procurar atualizações
-de:Nach neuer Version suchen
+de:Nach &neuer Version suchen
 gr:Έλεγχος για νέα έκδοση
 sk:Skontrolovať novú verziu
 vn:Kiểm tra có phiên bản mới
@@ -3287,7 +3288,7 @@ New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
 br:A versão %s está disponível. Baixar a nova versão?
-de:Es ist eine neue Version vorhanden. Möchten Sie diese laden?
+de:Es ist eine neue Version vorhanden. Möchten Sie diese herunterladen?
 gr:Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 vn:Đã có phiên bản mới %s. Download phiên bản mới?
@@ -3443,6 +3444,6 @@ de:Warnung
 pl:Uwaga
 -
 This option is not available in portable mode.
-de:Diese Option ist nicht im portablen Modus verfügbar
+de:Diese Option ist im portablen Modus nicht verfügbar
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
