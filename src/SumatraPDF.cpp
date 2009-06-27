@@ -5392,7 +5392,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
-    int pos_x = r.right + 6;
+    int pos_x = r.right + 10;
 
     RECT findWndRect;
     GetWindowRect(win->hwndFindBox, &findWndRect);
@@ -5407,7 +5407,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = size.cx + FIND_BOX_WIDTH + 7;
+    bi.cx = size.cx + FIND_BOX_WIDTH + 12;
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
 }
 
@@ -5494,7 +5494,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDM_OPEN, (LPARAM)&r);
-    int pos_x = r.right + 6;
+    int pos_x = r.right + 10;
 
     RECT pageWndRect;
     GetWindowRect(win->hwndPageBox, &pageWndRect);
@@ -5519,7 +5519,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = size.cx + PAGE_BOX_WIDTH + size2.cx + 7;
+    bi.cx = size.cx + PAGE_BOX_WIDTH + size2.cx + 12;
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
 }
 
