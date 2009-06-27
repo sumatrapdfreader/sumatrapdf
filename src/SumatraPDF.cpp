@@ -1097,12 +1097,12 @@ MenuDef menuDefZoom[] = {
 
 MenuDef menuDefLang[] = {
     { _TRN("Change language"),             IDM_CHANGE_LANGUAGE,         0  },
-    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  0  },
+    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  MF_NOT_IN_RESTRICTED  },
 };
 
 MenuDef menuDefHelp[] = {
-    { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       0  },
-    { _TRN("&Manual"),                     IDM_MANUAL,              0  },
+    { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       MF_NOT_IN_RESTRICTED },
+    { _TRN("&Manual"),                     IDM_MANUAL,              MF_NOT_IN_RESTRICTED },
     { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_NOT_IN_RESTRICTED },
     { _TRN("&About"),                      IDM_ABOUT,               0  },
     { SEP_ITEM ,                           0,                       MF_NOT_IN_RESTRICTED },
