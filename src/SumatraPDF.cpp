@@ -1040,7 +1040,7 @@ enum menuFlags {
 MenuDef menuDefFile[] = {
     { _TRN("&Open\tCtrl-O"),                        IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
     { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
-    { _TRN("&Save as"),                             IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
+    { _TRN("&Save as\tCtrl-S"),                     IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER,    MF_NOT_IN_RESTRICTED },
@@ -1057,10 +1057,10 @@ MenuDef menuDefView[] = {
     { _TRN("Continuous"),                  IDM_VIEW_CONTINUOUS,         0  },
     { _TRN("Continuous facing"),           IDM_VIEW_CONTINUOUS_FACING,  0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Rotate left"),                 IDM_VIEW_ROTATE_LEFT,        0  },
-    { _TRN("Rotate right"),                IDM_VIEW_ROTATE_RIGHT,       0  },
+    { _TRN("Rotate left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,        0  },
+    { _TRN("Rotate right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,       0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Bookmarks"),                   IDM_VIEW_BOOKMARKS,          0  },
+    { _TRN("Bookmarks\tF12"),              IDM_VIEW_BOOKMARKS,          0  },
     { SEP_ITEM, 0, 0  },
     { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN,         0  },
     { SEP_ITEM, 0, 0  },
@@ -1073,6 +1073,7 @@ MenuDef menuDefGoTo[] = {
     { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE,         0  },
     { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
     { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
+    { _TRN("Find...\tCtrl-F"),             IDM_FIND_FIRST,              0  },
 };
 
 MenuDef menuDefZoom[] = {
@@ -1951,7 +1952,7 @@ static void MenuUpdateLanguage(WindowInfo *win) {
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
-        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_SAVEAS };
+        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     HMENU hmenu = GetMenu(win->hwndFrame);
@@ -5040,19 +5041,12 @@ static bool WasShiftPressed()
     return WasKeyDown(VK_LSHIFT) || WasKeyDown(VK_RSHIFT);
 }
 
-static bool WasCtrlPressed()
-{
-    return WasKeyDown(VK_LCONTROL) || WasKeyDown(VK_RCONTROL);
-}
-
 static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
 {
     if (!win->dm)
         return;
-
-    bool shiftPressed = WasShiftPressed();
-    bool ctrlPressed = WasCtrlPressed();
-    //DBG_OUT("key=%d,%c,shift=%d,ctrl=%d\n", key, (char)key, (int)shiftPressed, (int)ctrlPressed);
+    
+    //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasShiftPressed());
 
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
@@ -5073,51 +5067,12 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
     } else if (VK_RIGHT == key) {
         SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEDOWN, 0);
     } else if (VK_SPACE == key) {
-        if (shiftPressed)
-            win->dm->scrollYByAreaDy(false, true);
-        else
-            win->dm->scrollYByAreaDy(true, true);
+        bool forward = !WasShiftPressed();
+        win->dm->scrollYByAreaDy(forward, true);
     } else if (VK_HOME == key) {
         win->dm->goToFirstPage();
     } else if (VK_END == key) {
         win->dm->goToLastPage();    
-#if 0 // we do it via accelerators
-    } else if ('G' == key) {
-        if (ctrlPressed)
-            OnMenuGoToPage(win);
-#endif
-    } else if (((VkKeyScan('+') & 0xFF) == key) ||
-        (VK_ADD == key)) {
-        // Emulate acrobat: "Shift Ctrl +" is rotate clockwise
-        if (shiftPressed & ctrlPressed)
-            RotateRight(win);
-    } else if (((VkKeyScan('-') & 0xFF) == key) ||
-        (VK_SUBTRACT == key)) {
-        // Emulate acrobat: "Shift Ctrl -" is rotate counter-clockwise
-        if (shiftPressed & ctrlPressed)
-            RotateLeft(win);
-    }
-    // TODO: Turn the following into proper accelerators, so that other
-    //       windows don't have to call OnKeydown so that shortcuts work
-    else if ('L' == key) {
-        if (ctrlPressed)
-            OnMenuViewFullscreen(win);
-    } else if ('F' == key) {
-        if (ctrlPressed) {
-            win->FindStart();
-        }
-    } else if (VK_F11 == key) {
-        OnMenuViewFullscreen(win);
-    } else if (VK_F12 == key) {
-        if (win)
-            win->ToggleTocBox();
-    } else if (VK_F3 == key || (ctrlPressed && 'G' == key)) {
-        if (win) {
-            if (shiftPressed)
-                OnMenuFindPrev(win);
-            else
-                OnMenuFindNext(win);
-        }
     }
 }
 
@@ -5315,9 +5270,6 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     }
     else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
-    }
-    else if (WM_KEYDOWN == message) {
-        OnKeydown(win, wParam, lParam);
     }
 
     int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
@@ -5528,8 +5480,6 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         }
     } else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
-    } else if (WM_KEYDOWN == message) {
-        OnKeydown(win, wParam, lParam);
     }
 
     return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
@@ -5784,13 +5734,8 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             win->TrackMouse(hwnd);
             break;
         case WM_CHAR:
-            if (win)
-                OnChar(win, wParam);
-            break;
-
-        case WM_KEYDOWN:
-            if (win)
-                OnKeydown(win, wParam, lParam);
+            if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
+                DestroyWindow(win->hwndFrame);
             break;
     }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
@@ -6251,6 +6196,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_ROTATE_RIGHT:
                     OnMenuViewRotateRight(win);
+                    break;
+
+                case IDM_FIND_FIRST:
+                    win->FindStart();
                     break;
 
                 case IDM_FIND_NEXT:

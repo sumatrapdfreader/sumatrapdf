@@ -42,12 +42,25 @@ IDC_SUMATRAPDF ACCELERATORS
 BEGIN
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "W",            IDM_CLOSE,              VIRTKEY, CONTROL
+    "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
+    "P",            IDM_PRINT,              VIRTKEY, CONTROL
     "Q",            IDM_EXIT,               VIRTKEY, CONTROL
+    // Emulate acrobat: "Ctrl Shift +" is rotate clockwise and "Ctrl Shift -" counter-clockwise
+    VK_ADD,         IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, CONTROL, SHIFT
+    VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, CONTROL, SHIFT
+    VK_SUBTRACT,    IDM_VIEW_ROTATE_LEFT,   VIRTKEY, CONTROL, SHIFT
+    VK_OEM_MINUS,   IDM_VIEW_ROTATE_LEFT,   VIRTKEY, CONTROL, SHIFT
+
+    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY
+    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY
+    "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, CONTROL
+    "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
+    "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL
+    VK_F3,          IDM_FIND_NEXT,          VIRTKEY
+    VK_F3,          IDM_FIND_PREV,          VIRTKEY, SHIFT
     "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
     "1",            IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
     "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
-    "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
-    "P",            IDM_PRINT,              VIRTKEY, CONTROL
 END
 
 
