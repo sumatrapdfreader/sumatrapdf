@@ -196,7 +196,6 @@ static PageRenderRequest *          gCurPageRenderReq;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
-static int                          gToolbarSpacer = -1;
 static HWND                         gHwndAbout;
 
 static bool                         gRestrictedUse = false;
@@ -254,21 +253,19 @@ enum ToolbarButtonFlag {
 };
 
 #define IDB_SEPARATOR  -1
-#define IDB_SEPARATOR2 -2
 
 static ToolbarButtonInfo gToolbarButtons[] = {
     { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"),           TBF_RESTRICTED, 0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   TBF_RESTRICTED, 0 },
+    { IDB_SEPARATOR,     IDM_GOTO_PAGE,         NULL,                   0,              0 },
     { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,              0 },
     { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,              0 },
     { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              0 },
     { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,              0 },
     { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,              0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              IDB_SEPARATOR },
+    { IDB_SEPARATOR,     IDM_FIND_FIRST,        NULL,                   0,              0 },
     { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"),  0,              0 },
     { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"),      0,              0 },
     { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"),     0,              0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              IDB_SEPARATOR2 },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -281,7 +278,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
 static void UpdateToolbarFindText(WindowInfo *win);
-static void UpdateToolbarPageText(WindowInfo *win);
+static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
 static bool LoadPdfIntoWindow(const WCHAR *fileName, WindowInfo *win, 
@@ -1843,8 +1840,8 @@ static bool FileCloseMenuEnabled(void) {
     return false;
 }
 
-bool TbIsSepId(int cmdId) {
-    return (IDB_SEPARATOR == cmdId) || (IDB_SEPARATOR2 == cmdId);
+bool TbIsSepId(int bitmapResourceId) {
+    return IDB_SEPARATOR == bitmapResourceId;
 }
  
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
@@ -1852,10 +1849,10 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        int cmdId = gToolbarButtons[i].cmdId;
-        if (TbIsSepId(cmdId))
+        if (TbIsSepId(gToolbarButtons[i].bitmapResourceId))
             continue;
 
+        int cmdId = gToolbarButtons[i].cmdId;
         // Assume the button is enabled.
         LPARAM buttonState = enable;
 
@@ -2268,9 +2265,8 @@ static bool LoadPdfIntoWindow(
     if (pageCount <= 0)
         win_set_textw(win->hwndFrame, baseName);
     else {
-        WCHAR buf[256];
-        HRESULT hr = StringCchPrintfW(buf, dimof(buf), L" / %d", pageCount);
-        SetWindowTextW(win->hwndPageTotal, buf);
+        UpdateToolbarPageText(win, pageCount);
+        UpdateToolbarFindText(win);
 
         const WCHAR *title = baseName;
 
@@ -2279,7 +2275,8 @@ static bool LoadPdfIntoWindow(
             title = win->title;
 
         if (win->needrefresh) {
-            hr = StringCchPrintfW(buf, dimof(buf), L"(Changes detected - will refresh when file is unlocked) %s", title);
+            WCHAR buf[256];
+            HRESULT hr = StringCchPrintfW(buf, dimof(buf), L"(Changes detected - will refresh when file is unlocked) %s", title);
             win_set_textw(win->hwndFrame, buf);
         }
         else
@@ -4051,7 +4048,8 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         win->ClearTocBox();
         delete win->dm;
         win->dm = NULL;
-        SetWindowText(win->hwndPageTotal, "");
+        UpdateToolbarPageText(win, 0);
+        UpdateToolbarFindText(win);
         WindowInfo_RedrawAll(win);
         WindowInfo_UpdateFindbox(win);
         DeleteOldSelectionInfo(win);
@@ -5184,11 +5182,11 @@ static void OnMenuAbout() {
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
     TBBUTTON tbButton = {0};
-    if (TbIsSepId(gToolbarButtons[i].cmdId)) {
+    tbButton.idCommand = gToolbarButtons[i].cmdId;
+    if (TbIsSepId(gToolbarButtons[i].bitmapResourceId)) {
         tbButton.fsStyle = TBSTYLE_SEP;
     } else {
         tbButton.iBitmap = gToolbarButtons[i].index;
-        tbButton.idCommand = gToolbarButtons[i].cmdId;
         tbButton.fsState = TBSTATE_ENABLED;
         tbButton.fsStyle = TBSTYLE_BUTTON;
         tbButton.iString = (INT_PTR)Translations_GetTranslationW(gToolbarButtons[i].toolTip);
@@ -5228,8 +5226,8 @@ static void UpdateToolbarToolText(void)
 {
     WindowInfo *win = gWindowList;
     while (win) {
+        UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
-        UpdateToolbarPageText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
         MenuUpdateStateForWindow(win);
         win = win->next;
@@ -5386,12 +5384,15 @@ SIZE TextSizeInHwnd(HWND hwnd, const WCHAR *txt)
     return sz;
 }
 
-#define FIND_TXT_POS_X 146
 #define FIND_BOX_WIDTH 160
 static void UpdateToolbarFindText(WindowInfo *win)
 {
     const WCHAR *text = _TRW("Find:");
     SetWindowTextW(win->hwndFindText, text);
+
+    RECT r;
+    SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
+    int pos_x = r.right + 6;
 
     RECT findWndRect;
     GetWindowRect(win->hwndFindBox, &findWndRect);
@@ -5399,27 +5400,25 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     SIZE size = TextSizeInHwnd(win->hwndFindText, text);
     size.cx += 6;
-    MoveWindow(win->hwndFindText, FIND_TXT_POS_X, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
-    MoveWindow(win->hwndFindBox, FIND_TXT_POS_X + size.cx, 1, FIND_BOX_WIDTH, 20, false);
+    MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
+    MoveWindow(win->hwndFindBox, pos_x + size.cx, 1, FIND_BOX_WIDTH, 20, false);
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_BYINDEX|TBIF_SIZE;
-    SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, gToolbarSpacer, (LPARAM)&bi);
-    bi.cx = size.cx + rect_dx(&findWndRect) + 15;
-    SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, gToolbarSpacer, (LPARAM)&bi);
+    bi.dwMask = TBIF_SIZE;
+    bi.cx = size.cx + FIND_BOX_WIDTH + 7;
+    SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
 }
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND find = CreateWindowExW(WS_EX_STATICEDGE, WC_EDITW, L"",
                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
-                            FIND_TXT_POS_X, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
-                            FIND_TXT_POS_X, 1, 0, 0,
-                            win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND status = CreateWindowExW(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, L"", WS_CHILD|SS_CENTER,
                             0, 0, 0, 0, win->hwndCanvas, (HMENU)0, hInst, NULL);
@@ -5485,10 +5484,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
 }
 
-#define PAGE_TXT_POS_X 426
 #define PAGE_BOX_WIDTH 40
-#define PAGE_TOTAL_WIDTH 40
-static void UpdateToolbarPageText(WindowInfo *win)
+static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 {
     const WCHAR *text = _TRW("Page:");
     SetWindowTextW(win->hwndPageText, text);
@@ -5496,31 +5493,47 @@ static void UpdateToolbarPageText(WindowInfo *win)
     size.cx += 6;
 
     RECT r;
-    SendMessage(win->hwndToolbar, TB_GETRECT, IDM_FIND_MATCH, (LPARAM)&r);
+    SendMessage(win->hwndToolbar, TB_GETRECT, IDM_OPEN, (LPARAM)&r);
+    int pos_x = r.right + 6;
 
     RECT pageWndRect;
     GetWindowRect(win->hwndPageBox, &pageWndRect);
     int pageWndDy = rect_dy(&pageWndRect) + 1;
 
-    int PAGE_TXT_POS_X2 = r.right + 12;
-    MoveWindow(win->hwndPageText, PAGE_TXT_POS_X2, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
-    MoveWindow(win->hwndPageBox, PAGE_TXT_POS_X2 + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
-    MoveWindow(win->hwndPageTotal, PAGE_TXT_POS_X2 + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 1, PAGE_TOTAL_WIDTH, size.cy, false);
+    WCHAR buf[256];
+    if (0 == pageCount) {
+        buf[0] = 0;
+    } else if (-1 == pageCount) {
+        GetWindowTextW(win->hwndPageTotal, buf, sizeof(buf));
+    } else {
+        StringCchPrintfW(buf, dimof(buf), L" / %d", pageCount);
+    }
+    SetWindowTextW(win->hwndPageTotal, buf);
+    SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
+    size2.cx += 6;
+
+    MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
+    MoveWindow(win->hwndPageBox, pos_x + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
+    MoveWindow(win->hwndPageTotal, pos_x + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 1, size2.cx, size.cy, false);
+
+    TBBUTTONINFO bi;
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_SIZE;
+    bi.cx = size.cx + PAGE_BOX_WIDTH + size2.cx + 7;
+    SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
 }
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND page = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "0",
                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            PAGE_TXT_POS_X, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
-                            PAGE_TXT_POS_X, 1, 0, 0,
-                            win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND total = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
-                            PAGE_TXT_POS_X, 1, 0, 0,
-                            win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
     SetWindowFont(label, fnt, true);
@@ -5536,7 +5549,7 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     win->hwndPageBox = page;
     win->hwndPageTotal = total;
 
-    UpdateToolbarPageText(win);
+    UpdateToolbarPageText(win, -1);
 }
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
@@ -5562,9 +5575,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
             int index = ImageList_AddMasked(himl, hbmp, RGB(255,0,255));
             DeleteObject(hbmp);
             gToolbarButtons[i].index = index;
-        }
-        else if (IDB_SEPARATOR == gToolbarButtons[i].index) {
-            gToolbarSpacer = i;
         }
         tbButtons[i] = TbButtonFromButtonInfo(i);
         if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
@@ -5620,8 +5630,8 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     //gReBarDyFrame = bIsAppThemed ? 0 : 2;
     gReBarDyFrame = 0;
     
-    CreateFindBox(win, hInst);
     CreatePageBox(win, hInst);
+    CreateFindBox(win, hInst);
 }
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
