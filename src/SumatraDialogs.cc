@@ -59,8 +59,11 @@ static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM w
         assert(data->in_cmdline);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
         SetDlgItemTextW(hDlg, IDC_CMDLINE, data->in_cmdline);
-        edit = GetDlgItem(hDlg, IDC_CMDLINE);
-        SetFocus(edit);
+        SetDlgItemTextW(hDlg, IDOK, _TRW("OK"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
+        
+        CenterDialog(hDlg);
+        SetFocus(GetDlgItem(hDlg, IDC_CMDLINE));
         return FALSE;
     }
 
@@ -121,7 +124,6 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
 
     if (WM_INITDIALOG == message)
     {
-        /* TODO: intelligently center the dialog within the parent window? */
         data = (Dialog_GetPassword_Data*)lParam;
         assert(data);
         assert(data->fileName);
@@ -132,6 +134,10 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
         SetDlgItemTextW(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         free(txt);
         SetDlgItemTextA(hDlg, IDC_GET_PASSWORD_EDIT, "");
+        SetDlgItemTextW(hDlg, IDOK, _TRW("OK"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
+
+        CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
         return FALSE;
     }
@@ -196,7 +202,6 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
 
     if (WM_INITDIALOG == message)
     {
-        /* TODO: intelligently center the dialog within the parent window? */
         data = (Dialog_GoToPage_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
@@ -212,6 +217,11 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
         DStringFree(&ds);
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
         win_edit_select_all(editPageNo);
+        // SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Go to page:"));
+        SetDlgItemTextW(hDlg, IDOK, _TRW("Go to page"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
+
+        CenterDialog(hDlg);
         SetFocus(editPageNo);
         return FALSE;
     }
@@ -276,7 +286,6 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
 
     if (WM_INITDIALOG == message)
     {
-        /* TODO: intelligently center the dialog within the parent window? */
         data = (Dialog_PdfAssociate_Data*)lParam;
         assert(data);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
@@ -284,6 +293,10 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
         SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Make SumatraPDF default application for PDF files?"));
         SetDlgItemTextW(hDlg, IDC_DONT_ASK_ME_AGAIN, _TRW("Don't ask me again"));
         CheckDlgButton(hDlg, IDC_DONT_ASK_ME_AGAIN, BST_UNCHECKED);
+        // SetDlgItemTextW(hDlg, IDOK, _TRW("Yes"));
+        // SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No"));
+
+        CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDOK));
         return FALSE;
     }
@@ -370,6 +383,10 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
                 idx = i;
         }
         lb_set_selection(langList, idx);
+        SetDlgItemTextW(hDlg, IDOK, _TRW("OK"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
+
+        CenterDialog(hDlg);
         SetFocus(langList);
         return FALSE;
     }
@@ -427,7 +444,6 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
 
     if (WM_INITDIALOG == message)
     {
-        /* TODO: intelligently center the dialog within the parent window? */
         data = (Dialog_NewVersion_Data*)lParam;
         assert(NULL != data);
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
@@ -443,6 +459,10 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
 
         SetDlgItemTextW(hDlg, IDC_SKIP_THIS_VERSION, _TRW("Skip this version"));
         CheckDlgButton(hDlg, IDC_SKIP_THIS_VERSION, BST_UNCHECKED);
+        // SetDlgItemTextW(hDlg, IDOK, _TRW("Download"));
+        // SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No, thanks"));
+
+        CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDOK));
         return FALSE;
     }
@@ -530,7 +550,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
 
-        SetWindowTextW(hDlg, _TRW("SumatraPDF Options"));
+        win_set_textw(hDlg, _TRW("SumatraPDF Options"));
         SetDlgItemTextW(hDlg, IDC_SECTION_VIEW, _TRW("View"));
         SetDlgItemTextW(hDlg, IDC_DEFAULT_LAYOUT_LABEL, _TRW("Default &Layout:"));
         SetDlgItemTextW(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TRW("Default &Zoom:"));
