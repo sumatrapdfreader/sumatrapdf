@@ -530,10 +530,9 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
 
+        SetWindowTextW(hDlg, _TRW("SumatraPDF Options"));
         SetDlgItemTextW(hDlg, IDC_SECTION_VIEW, _TRW("View"));
-        SetDlgItemTextW(hDlg, IDC_DEFAULT_LAYOUT, _TRW("Single Page"));
         SetDlgItemTextW(hDlg, IDC_DEFAULT_LAYOUT_LABEL, _TRW("Default &Layout:"));
-        SetDlgItemTextW(hDlg, IDC_DEFAULT_ZOOM, _TRW("Page width"));
         SetDlgItemTextW(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TRW("Default &Zoom:"));
         SetDlgItemTextW(hDlg, IDC_DEFAULT_SHOW_TOC, _TRW("Show the &bookmarks sidebar when available"));
         SetDlgItemTextW(hDlg, IDC_GLOBAL_PREFS_ONLY, _TRW("&Remember these settings for each document"));

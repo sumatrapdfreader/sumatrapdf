@@ -1693,63 +1693,6 @@ nn:Tilpass &breidde\tCtrl-2
 -
 8.33%
 -
-&Language
-af:&Taal
-bg:Език
-br:I&dioma
-hu:&Nyelv
-pl:&Język
-fr:&Langue
-de:&Sprache
-tr:Dil
-by:Мова
-ja:言語(&L)
-fa:زبان
-dk:&Sprog
-it:&Lingua
-nl:&Taal
-ta:மொழி
-es:&Idioma
-hr:&Jezik
-ru:Язык
-ar:&اللغة
-cn:语言(&L)
-sv:&Språk
-cz:Jazyk
-gr:&Γλώσσα
-th:ภาษา
-pt:&Linguagem
-no:&Språk
-sk:Jazyk
-vn:N&gôn ngữ
-lt:Kalba
-my:&Bahasa
-fi:Kieli
-ca:&Llengua
-si:&Jezik
-sr-rs:Језик
-tw:語言(&L)
-ml:ഭാഷ
-he:שפה
-sp-rs:&Jezik
-id:Ba&hasa
-mk:&Јазик
-ro:&Limbă
-kr:언어(&L)
-bn:ভাষা
-gl:&Lingua
-uk:&Мова
-eu:&Hizkuntza
-tl:Wika/&lenguahe
-va:&Idioma
-sn:&Mutauro
-cy:&Iaith
-ga:&Teanga
-mm:& စာ စကား
-pa:ਭਾਸ਼ਾ(&L)
-hi:भाषा(&L)
-nn:&Språk
--
 &Help
 af:Hulp
 bg:Помо&щ
@@ -2872,7 +2815,7 @@ bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
 pt:Alterar o idioma (Change language)
 cn:改变语言 (Change language)
-cy:Newidiwch iaith
+cy:Newidiwch iaith (Change language)
 ga:Athraigh an Teanga (Change language)
 mm:စာ စကား ပြောင်းရန် (Change language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
@@ -3406,39 +3349,6 @@ nn:Hopp over denne versjonen
 fi:Ohita tämä versio
 sv:Hoppa över denna version
 -
-Enable auto-update
-af:Stel In Staat Om Automatiese Opdatering Te Doen.
-bg:Включи автоматичното обновяване
-br:Ativar atualização automática
-de:Automatisches Update aktivieren
-gr:Αυτόματες ενημερώσεις
-fr:Activer la mise-à-jour automatique
-nl:Updates automatisch downloaden
-mk:Овозможи автоматско ажурирање
-ru:Включить автообновление
-tl:Bukasan ang auto-update
-va:Activar l'actualisació automàtica
-ca:Actualitza automàticament
-sn:Rega iite auto-update
-bn:স্বয়ংক্রিয় আধুনিকীকরণ সক্রিয় করুন
-fa:به روز رسانی اتوماتیک
-it:Aggiornamento automatico
-ja:自動更新を有効にする
-kr:자동업데이트 활성화
-tw:啟用自動更新
-pt:Ativar atualização automática
-cn:启用自动更新
-es:Activar actualización automática.
-cy:Caniatewch awto-ddiweddaru
-ga:Cumasaigh nuashonrú as féin
-mm:အော်တိုမစ်တစ် အမျိးအစားသစ် ကိုရှာနိုင်ရန်
-hu:Automatikus frissítés
-pa:ਨਵਾ ਵਰਜਨ ਡਾਓਨਲੋਡ ਕਰਨ ਨੂੰ ਜਕੀਨੀ ਬਣਾਓ
-hi:नया संसकरण अपने आप डाउनलोड करो
-nn:Aktivèr auto-oppdatering
-fi:Automaattinen päivitys
-sv:Aktivera automatisk uppdatering
--
 Warning
 de:Warnung
 pl:Uwaga
@@ -3448,34 +3358,262 @@ de:Diese Option ist im portablen Modus nicht verfügbar
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
 -
+SumatraPDF Options
+de:SumatraPDF Optionen
+-
 Fit Width
+af:Pas In Breedte
+bg:Оразмери по ширина
+br:Ajustar pela largura
+hu:Oldalszélesség
+pl:Dopasuj do szerokości
+de:An Breite anpassen
+fr:Pleine largeur
+tr:Genişliğe sığdır
+by:Змясціць па шырыне
+ja:幅に合わせる
+fa:به بزرگی پهنای پنجره
+dk:Tilpas bredde
+it:Larghezza pagina
+nl:Passend in breedte
+ta:அகலம் பொருந்தவை
+es:Ancho de Página
+hr:Podesi po širini
+ru:Заполнение по ширине
+ar:مناسب لعرض الشاشة
+cn:适合宽度
+sv:Anpassa efter bredd
+cz:Podle šířky
+gr:Στο πλάτος παραθύρου
+th:พอดีความกว้าง
+pt:Largura de página
+no:Tilpass bredde
+sk:Na šírku obrazovky
+vn:Vừa chiều rộng
+lt:Pritaikyti plotį
+my:Muatkan lebar
+fi:Sovita sivu vaakasuunnassa
+ca:Ajusta a l'amplada
+si:Prilagodi po širini
+sr-rs:Подеси по ширини
+tw:適合寬度
+ml:അകലം പൊരുത്തപ്പെടുത്തുക
+he:התאם רוחב
+sp-rs:Podesi po širini
+id:Sesuaikan dengan Lebar
+mk:Прилагоди на ширина
+ro:Lăţime pagină
+kr:꽉 찬 화면
+bn:প্রস্থ অনুরূপ
+gl:Axustar ao ancho
+uk:Припасувати до ширини
+eu:Orriaren zabalera egokitu
+tl:Hustong Lapad
+va:Amplària de la Pàgina
+sn:Kwanisa hupamhu
+cy:Fitio'r Lled
+ga:Oiriúnaigh don Leithead
+mm:အလျားနှင့်အမြင့် အပြည့်
+pa:ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ
+hi:चौड़ाई के अनुसार
+nn:Tilpass breidde
 -
 Actual Size
+af:Gewone Grootte
+bg:Едно към едно
+br:Tamanho real
+hu:Eredeti méret
+pl:Prawdziwy rozmiar
+de:Tatsächliche Größe
+fr:Taille réelle
+tr:Gerçek Boyut
+by:Рэальны памер
+ja:実際のサイズ
+fa:بزرگی خودش
+dk:Aktual størrelse
+it:Dimensioni reali
+nl:Ware grootte
+ta:மெய் அளவு
+es:Tamaño Real
+hr:Stvarna veličina
+ru:Реальный размер
+ar:الحجم الحقيقي
+cn:实际大小
+sv:Normal storlek
+cz:Skutečná velikost
+gr:Πραγματικό μέγεθος
+th:ขนาดจริง
+pt:Tamanho real
+no:Faktisk størrelse
+sk:Skutočná veľkosť
+vn:Kích thước thật
+lt:Tikrasis dydis
+my:Saiz sebenar
+fi:Todellinen koko
+ca:Mida real
+si:Dejanska velikost
+sr-rs:Страна величина
+tw:實際大小
+ml:ശരിയായ വലിപ്പം
+he:גודל מקור
+sp-rs:Stvarna veličina
+id:Ukuran Sebenarnya
+mk:Реална големина
+ro:Mărime actuală
+kr:본래 크기
+bn:বাস্তবিক আকার
+gl:Tamaño real
+uk:Справжній розмір
+eu:Berezko neurria
+tl:Tunay na Laki
+va:Tamany Real
+sn:Saizi chaiyo
+cy:Maint Gwirioneddol
+ga:Fíormhéid
+mm:ပုံမှန် အရွယ်
+pa:ਸਹੀ ਅਕਾਰ
+hi:सही आकार
+nn:Faktisk storleik
 -
 &Settings
+de:&Einstellungen
 -
 Fit Page
+af:Pas Blad In
+bg:Оразмери страницата
+br:Página inteira
+hu:Teljes oldal
+pl:Dopasuj do strony
+de:An Seite anpassen
+fr:Page entière
+tr:Sayfaya sığdır
+by:Змясціць старонку
+ja:ページに合わせる
+fa:به بزرگی پنجره
+dk:Hele siden
+it:Pagina intera
+nl:Hele Pagina
+ta:பக்கம் பொருந்தவை
+es:Ajustar Página
+hr:Prilagodi stranici
+ru:По размеру страницы
+ar:مناسب للشاشة
+cn:适合页面
+sv:Anpassa efter helsida
+cz:Přizpůsobit stránce
+gr:Ολόκληρη σελίδα
+th:พอดีหน้า
+pt:Ajustar Página
+no:Tilpass side
+sk:Prispôsobiť strane
+vn:Vừa trang
+lt:Pritaikyti lange
+my:Muatkan mukasurat
+fi:Sovita sivu pystysuunnassa
+ca:Ajusta a la pàgina
+si:Prilagodi strani
+sr-rs:Прилагоди страни
+tw:適合頁面
+ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക
+he:התאם דף
+sp-rs:Prilagodi strani
+id:Sesuaikan
+mk:Прилагоди на страница
+ro:Pagină întreagă
+kr:창 크기에 맞춤
+bn:পৃষ্ঠা অনুরূপ
+gl:Páxina enteira
+uk:Припасувати сторінку
+eu:Orriaren neurria egokitu
+tl:Ipagkasya ang Pahina
+va:Ajustar Pàgina
+sn:Kwanisa Peji
+cy:Ffitio'r Dudalen
+ga:Oiriúnaigh don Lch
+mm:စာမျက်နှာ ပြည့်
+pa:ਫਿਟ ਕਰੋ
+hi:अनुरूप करें
+nn:Tilpass side
 -
 &Options...
+de:&Optionen...
 -
 Default &Layout:
+de:&Standardlayout:
 -
 Default &Zoom:
+de:Standard&vergrößerung:
 -
 OK
 -
-Page width
--
 Advanced
--
-Single Page
+de:Weiteres
 -
 Show the &bookmarks sidebar when available
+de:&Lesezeichen beim Start anzeigen
 -
 Cancel
+de:Abbrechen
 -
 Automatically check for &updates
+de:&Automatisch nach Updates suchen
 -
 &Remember these settings for each document
+de:&Diese Einstellungen für jedes Dokument merken
 -
 View
+af:Vertoon
+bg:Виж
+br:Ver
+hu:Nézet
+pl:Widok
+de:Ansicht
+fr:Affichage
+tr:Göster
+by:Выгляд
+ja:表示
+fa:نمايش
+dk:Vis
+it:Visualizza
+nl:Beeld
+ta:நோக்கு
+es:Ver
+hr:Pogled
+ru:Вид
+ar:العرض
+cn:查看
+sv:Visa
+cz:Zobrazit
+gr:Προβολή
+th:มุมมอง
+pt:Visualização
+no:Vis
+sk:Zobraziť
+vn:Khung nhìn
+lt:Peržiūra
+my:Lihat
+fi:Näytä
+ca:Visualitza
+si:Pogled
+sr-rs:Приказ
+tw:檢視
+ml:കാഴ്ച്ച
+he:תצוגה
+sp-rs:Prikaz
+id:Lihat
+mk:Поглед
+ro:Vizualizare
+kr:보기
+bn:দর্শন
+gl:Ver
+uk:Вигляд
+eu:Ikusi
+tl:Tignan
+va:Vore
+sn:Maonero
+cy:Gweld
+ga:Amharc
+mm:မြင်ကွင်း
+pa:ਵੇਖੋ
+hi:देखें
+nn:Vis
