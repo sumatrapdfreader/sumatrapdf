@@ -11,7 +11,7 @@
 #include "translations.h"
 #include "utf_util.h"
 #include "win_util.h"
-#include "tstr_util.h"
+#include "wstr_util.h"
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
@@ -2681,6 +2681,37 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
+static bool ResolveLnk(LPWSTR path)
+{
+    CoInitialize(NULL);
+
+    IShellLinkW *lnk;
+    HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                                    IID_IShellLinkW, (LPVOID *)&lnk);
+    if (SUCCEEDED(hRes)) {
+        IPersistFile *file;
+        hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
+        if (SUCCEEDED(hRes)) {
+            hRes = file->Load(path, STGM_READ);
+            if (SUCCEEDED(hRes)) {
+                hRes = lnk->Resolve(NULL, SLR_UPDATE);
+                if (SUCCEEDED(hRes)) {
+                    WCHAR newPath[MAX_PATH];
+                    hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
+                    if (SUCCEEDED(hRes)) {
+                        lstrcpynW(path, newPath, MAX_PATH);
+                    }
+                }
+            }
+            file->Release();
+        }
+        lnk->Release();
+    }
+    CoUninitialize();
+
+    return S_OK == hRes;
+}
+
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
 {
     int         i;
@@ -2690,6 +2721,8 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
     for (i = 0; i < files_count; i++)
     {
         DragQueryFileW(hDrop, i, filename, MAX_PATH);
+        if (wstr_endswithi(filename, L".lnk"))
+            ResolveLnk(filename);
         LoadPdf(filename);
     }
     DragFinish(hDrop);
