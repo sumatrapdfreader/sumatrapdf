@@ -1071,6 +1071,7 @@ MenuDef menuDefGoTo[] = {
     { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE,         0  },
     { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
     { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
+    { SEP_ITEM ,                           0,                           0  },
     { _TRN("Find...\tCtrl-F"),             IDM_FIND_FIRST,              0  },
 };
 
@@ -1906,19 +1907,17 @@ static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
 static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
     BOOL documentSpecific = WindowInfo_PdfLoaded(win);
-    BOOL enabled = WS_SHOWING_PDF == win->state && win->dm->hasTocTree();
-
-    if (!enabled) {
-        EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
-        return;
-    }
-
-    EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
+    BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
 
     if (documentSpecific ? win->dm->_showToc : gGlobalPrefs.m_showToc)
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_UNCHECKED);
+    
+    if (enabled)
+        EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_ENABLED);
+    else
+        EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
 }
 
 static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
@@ -4743,7 +4742,7 @@ static void OnMenuGoToPage(WindowInfo *win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.m_showToolbar) {
+    if (gGlobalPrefs.m_showToolbar && (!win->dm || !win->dm->_fullScreen)) {
         win->FocusPageNoEdit();
         return;
     }
