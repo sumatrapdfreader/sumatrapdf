@@ -4019,7 +4019,7 @@ static void OnPaint(WindowInfo *win)
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, "Tahoma", 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         FillRect(hdc, &ps.rcPaint, gBrushBg);
-        DrawText(hdc, _TR("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
+        DrawTextW(hdc, _TRW("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
         if (origFont)
             SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
@@ -4326,7 +4326,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     BOOL ok = CopyFileExW(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
     if (!ok) {
         SeeLastError();
-        MessageBox(win->hwndFrame, _TR("Failed to save a file"), "Information", MB_OK);
+        MessageBoxW(win->hwndFrame, _TRW("Failed to save a file"), _TRW("Warning"), MB_OK | MB_ICONEXCLAMATION);
     }
     if (realDstFileName != dstFileName)
         free(realDstFileName);
@@ -4526,7 +4526,7 @@ static void OneMenuMakeDefaultReader(WindowInfo *win)
 {
     bool registered = RegisterForPdfExtentions(win->hwndFrame);
     if (registered)
-        MessageBox(NULL, _TR("SumatraPDF is now a default reader for PDF files."), "Information", MB_OK);
+        MessageBoxW(NULL, _TRW("SumatraPDF is now a default reader for PDF files."), _TRW("Information"), MB_OK | MB_ICONINFORMATION);
 }
 
 static void OnMove(WindowInfo *win, int x, int y)
@@ -6667,6 +6667,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
     LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
 
+    // TODO: Translate all printing related MessageBoxes
     if (!win->dm->pdfEngine->printingAllowed()) {
         MessageBox(win->hwndFrame, "Cannot print this file", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
         return;
@@ -6689,7 +6690,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
     
     BOOL fOk = OpenPrinter((LPSTR)printerName, &printer, NULL);
     if (!fOk) {
-        MessageBox(win->hwndFrame, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBoxW(win->hwndFrame, _TRW("Could not open Printer"), _TRW("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
 
