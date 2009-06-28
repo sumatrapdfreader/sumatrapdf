@@ -28,4 +28,6 @@ typedef struct {
 
 int     Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);
 
+int     Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
+
 #endif

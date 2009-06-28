@@ -13,9 +13,9 @@
 #include "win_util.h"
 #include "tstr_util.h"
 
+#include "AppPrefs.h"
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
-#include "AppPrefs.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -234,7 +234,8 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_WIN_POS, // int  m_tmpWindowDx
     DEFAULT_WIN_POS, // int  m_tmpWindowDy
     0, // int  m_pdfsOpened
-    1 // int  m_showToc
+    1, // int  m_showToc
+    0, // int  m_globalPrefsOnly
 };
 
 typedef struct ToolbarButtonInfo {
@@ -993,10 +994,11 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
         displayMode = win->dm->displayMode();
 
     HMENU menuMain = GetMenu(win->hwndFrame);
-    CheckMenuItem(menuMain, IDM_VIEW_SINGLE_PAGE, MF_BYCOMMAND | MF_UNCHECKED);
-    CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_UNCHECKED);
-    CheckMenuItem(menuMain, IDM_VIEW_FACING, MF_BYCOMMAND | MF_UNCHECKED);
-    CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS_FACING, MF_BYCOMMAND | MF_UNCHECKED);
+    UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
+    for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
+        CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_UNCHECKED);
+        EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
+    }
 
     UINT    id;
     if (DM_SINGLE_PAGE == displayMode) {
@@ -1015,11 +1017,10 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
 
 static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
 {
-    if (win->dm)
-        win->dm->changeDisplayMode(displayMode);
-    else {
-        gGlobalPrefs.m_defaultDisplayMode = displayMode;
-    }
+    if (!win->dm)
+        return;
+
+    win->dm->changeDisplayMode(displayMode);
     MenuUpdateDisplayMode(win);
 }
 
@@ -1097,16 +1098,17 @@ MenuDef menuDefZoom[] = {
 
 MenuDef menuDefLang[] = {
     { _TRN("Change language"),             IDM_CHANGE_LANGUAGE,         0  },
-    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  MF_NOT_IN_RESTRICTED  },
+    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM ,                           0,                           MF_NOT_IN_RESTRICTED },
+    { _TRN("&Options..."),                 IDM_SETTINGS,                MF_NOT_IN_RESTRICTED }
 };
 
 MenuDef menuDefHelp[] = {
     { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       MF_NOT_IN_RESTRICTED },
     { _TRN("&Manual"),                     IDM_MANUAL,              MF_NOT_IN_RESTRICTED },
     { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_NOT_IN_RESTRICTED },
-    { _TRN("&About"),                      IDM_ABOUT,               0  },
     { SEP_ITEM ,                           0,                       MF_NOT_IN_RESTRICTED },
-    { _TRN("Enable auto-update"),          IDM_ENABLE_AUTO_UPDATE,  MF_NOT_IN_RESTRICTED }
+    { _TRN("&About"),                      IDM_ABOUT,               0  }
 };
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
@@ -1190,7 +1192,7 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     tmp = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom));
     AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Zoom"));
     tmp = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang));
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Language"));
+    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Settings"));
     tmp = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
     AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Help"));
     win->hMenu = mainMenu;
@@ -1403,7 +1405,7 @@ static double ZoomMenuItemToZoom(UINT menuItemId)
     return 100.0;
 }
 
-static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId)
+static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
 {
     BOOL    found = FALSE;
 
@@ -1415,6 +1417,8 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId)
             checkState = MF_BYCOMMAND | MF_CHECKED;
         }
         CheckMenuItem(hmenu, gItemId[i], checkState);
+        UINT enableState = canZoom ? MF_ENABLED : MF_GRAYED;
+        EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | enableState);
     }
     assert(found);
 }
@@ -1425,7 +1429,7 @@ static void MenuUpdateZoom(WindowInfo* win)
     if (win->dm)
         zoomVirtual = win->dm->zoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
+    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId, NULL != win->dm);
 }
 
 static void MenuUpdateFullscreen(WindowInfo* win)
@@ -1902,7 +1906,7 @@ static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
 static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
     HMENU hmenu = GetMenu(win->hwndFrame);
     BOOL documentSpecific = WindowInfo_PdfLoaded(win);
-    BOOL enabled = !documentSpecific || WS_SHOWING_PDF == win->state && win->dm->hasTocTree();
+    BOOL enabled = WS_SHOWING_PDF == win->state && win->dm->hasTocTree();
 
     if (!enabled) {
         EnableMenuItem(hmenu, IDM_VIEW_BOOKMARKS, MF_BYCOMMAND | MF_GRAYED);
@@ -1923,14 +1927,6 @@ static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
         CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
     else
         CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
-}
-
-static void MenuUpdateEnableAutoUpdateStateForWindow(WindowInfo *win) {
-    HMENU hmenu = GetMenu(win->hwndFrame);
-    if (gGlobalPrefs.m_enableAutoUpdate)
-        CheckMenuItem(hmenu, IDM_ENABLE_AUTO_UPDATE, MF_BYCOMMAND | MF_CHECKED);
-    else
-        CheckMenuItem(hmenu, IDM_ENABLE_AUTO_UPDATE, MF_BYCOMMAND | MF_UNCHECKED);
 }
 
 // show which language is being used via check in Language/* menu
@@ -1972,7 +1968,6 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
     MenuUpdateFullscreen(win);
-    MenuUpdateEnableAutoUpdateStateForWindow(win);
 
     for (size_t i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -2133,6 +2128,10 @@ static bool LoadPdfIntoWindow(
     bool showWin,          // window visible or not
     bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (is_new_window=false)
 {
+    // Never load settings from a preexisting state if the user doesn't wish to
+    if (gGlobalPrefs.m_globalPrefsOnly)
+        state = NULL;
+
     /* TODO: need to get rid of that, but not sure if that won't break something
        i.e. GetCanvasSize() caches size of canvas and some code might depend
        on this being a cached value, not the real value at the time of calling */
@@ -2246,7 +2245,7 @@ static bool LoadPdfIntoWindow(
     */
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
+    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId, TRUE);
 
     win->dm->relayout(zoomVirtual, rotation);
     if (!win->dm->validPageNo(startPage))
@@ -4075,13 +4074,12 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 */
 static void OnMenuZoom(WindowInfo *win, UINT menuId)
 {
+    if (!win->dm)
+        return;
+
     double zoom = ZoomMenuItemToZoom(menuId);
-    if (win->dm) {
-        win->dm->zoomTo(zoom);
-    } else {
-        gGlobalPrefs.m_defaultZoom = zoom;
-    }
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId);
+    win->dm->zoomTo(zoom);
+    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId, TRUE);
 }
 
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
@@ -4635,17 +4633,15 @@ static void OnMenuViewShowHideToolbar()
     }
 }
 
-static void OnMenuEnableAutoUpdate()
+static void OnMenuSettings(WindowInfo *win)
 {
-    if (gGlobalPrefs.m_enableAutoUpdate)
-        gGlobalPrefs.m_enableAutoUpdate = FALSE;
-    else
-        gGlobalPrefs.m_enableAutoUpdate = TRUE;
+    if (DIALOG_OK_PRESSED != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
+        return;
 
-    WindowInfo* win = gWindowList;
-    while (win) {
-        MenuUpdateEnableAutoUpdateStateForWindow(win);
-        win = win->next;
+    for (win = gWindowList; win; win = win->next) {
+        MenuUpdateBookmarksStateForWindow(win);
+        MenuUpdateDisplayMode(win);
+        MenuUpdateZoom(win);
     }
 }
 
@@ -5829,9 +5825,9 @@ void WindowInfo::LoadTocTree()
 
 void WindowInfo::ToggleTocBox()
 {
-    if (!dm) // If no document is loaded, just toggle the pref
-        gGlobalPrefs.m_showToc = !gGlobalPrefs.m_showToc;
-    else if (!dm->_showToc)
+    if (!dm)
+        return;
+    if (!dm->_showToc)
         ShowTocBox();
     else
         HideTocBox();
@@ -6154,10 +6150,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuViewShowHideToolbar();
                     break;
 
-                case IDM_ENABLE_AUTO_UPDATE:
-                    OnMenuEnableAutoUpdate();
-                    break;
-
                 case IDM_CHANGE_LANGUAGE:
                     OnMenuChangeLanguage(win);
                     break;
@@ -6242,6 +6234,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_CHECK_UPDATE:
                     OnMenuCheckUpdate(win);
+                    break;
+
+                case IDM_SETTINGS:
+                    if (!gRestrictedUse)
+                        OnMenuSettings(win);
                     break;
 
                 default:

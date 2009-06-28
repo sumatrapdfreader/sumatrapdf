@@ -12,6 +12,7 @@
 #define IDD_DIALOG_INVERSESEARCH        133
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
 #define IDD_DIALOG_NEW_VERSION          135
+#define IDD_DIALOG_SETTINGS             136
 
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
@@ -23,6 +24,8 @@
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_CONTINUOUS             412
 #define IDM_VIEW_CONTINUOUS_FACING      413
+#define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
+#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS_FACING
 #define IDM_VIEW_ROTATE_LEFT            414
 #define IDM_VIEW_ROTATE_RIGHT           415
 #define IDM_VIEW_BOOKMARKS              417
@@ -110,6 +113,7 @@
 #define IDM_LANG_PA                     514
 #define IDM_LANG_HI                     515
 #define IDM_LANG_NN                     516
+#define IDM_SETTINGS                    517
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
@@ -140,6 +144,15 @@
 #define IDC_YOU_HAVE                    1011
 #define IDC_NEW_AVAILABLE               1012
 #define IDC_SKIP_THIS_VERSION           1013
+#define IDC_SECTION_VIEW                1014
+#define IDC_DEFAULT_LAYOUT_LABEL        1015
+#define IDC_DEFAULT_LAYOUT              1016
+#define IDC_DEFAULT_ZOOM_LABEL          1017
+#define IDC_DEFAULT_ZOOM                1018
+#define IDC_DEFAULT_SHOW_TOC            1019
+#define IDC_GLOBAL_PREFS_ONLY           1020
+#define IDC_SECTION_ADVANCED            1021
+#define IDC_AUTO_UPDATE_CHECKS          1022
 
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001

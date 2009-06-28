@@ -73,6 +73,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, ESC_TO_EXIT_STR, gGlobalPrefs.m_escToExit);
     DICT_ADD_INT64(prefs, PDFS_OPENED_STR, gGlobalPrefs.m_pdfsOpened);
     DICT_ADD_INT64(prefs, ENABLE_AUTO_UPDATE_STR, gGlobalPrefs.m_enableAutoUpdate);
+    DICT_ADD_INT64(prefs, GLOBAL_PREFS_ONLY_STR, gGlobalPrefs.m_globalPrefsOnly);
 
     txt = DisplayModeNameFromEnum(gGlobalPrefs.m_defaultDisplayMode);
     DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
@@ -146,6 +147,9 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     
     DICT_NEW(prefs);
     DICT_ADD_WSTR(prefs, FILE_STR, ds->filePath);
+    if (gGlobalPrefs.m_globalPrefsOnly)
+        return prefs;
+
     txt = DisplayModeNameFromEnum(ds->displayMode);
     if (txt)
         DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
@@ -446,6 +450,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, BG_COLOR_STR, &gGlobalPrefs.m_bgColor);
     dict_get_int(global, PDFS_OPENED_STR, &gGlobalPrefs.m_pdfsOpened);
     dict_get_bool(global, ENABLE_AUTO_UPDATE_STR, &gGlobalPrefs.m_enableAutoUpdate);
+    dict_get_bool(global, GLOBAL_PREFS_ONLY_STR, &gGlobalPrefs.m_globalPrefsOnly);
 
     const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
     if (txt)

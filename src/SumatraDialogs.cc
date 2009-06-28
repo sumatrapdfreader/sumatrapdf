@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "SumatraPDF.h"
+#include "AppPrefs.h"
 #include "SumatraDialogs.h"
 
 #include "DisplayModel.h"
@@ -20,6 +21,30 @@ typedef struct {
     const WCHAR *  in_cmdline;   /* current inverse search command line */
     WCHAR *  out_cmdline;         /* inverse search command line selected by the user */
 } Dialog_InverseSearch_Data;
+
+static void CenterDialog(HWND hDlg)
+{
+    RECT rcDialog, rcOwner, rcRect;
+    HWND hParent;
+
+    if (!(hParent = GetParent(hDlg)))
+    {
+        hParent = GetDesktopWindow();
+    }
+
+    GetWindowRect(hDlg, &rcDialog);
+    OffsetRect(&rcDialog, -rcDialog.left, -rcDialog.top);
+
+    GetWindowRect(hParent, &rcOwner);
+    CopyRect(&rcRect, &rcOwner);
+    OffsetRect(&rcRect, -rcRect.left, -rcRect.top);
+
+    OffsetRect(&rcDialog, rcOwner.left + (rcRect.right - rcDialog.right) / 2, rcOwner.top + (rcRect.bottom - rcDialog.bottom) / 2);
+    OffsetRect(&rcDialog, min(GetSystemMetrics(SM_CXSCREEN) - rcDialog.right, 0), min(GetSystemMetrics(SM_CYSCREEN) - rcDialog.bottom, 0));
+    OffsetRect(&rcDialog, -min(rcDialog.left, 0), -min(rcDialog.top, 0));
+
+    SetWindowPos(hDlg, 0, rcDialog.left, rcDialog.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
 
 #ifdef _TEX_ENHANCEMENT
 static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -453,5 +478,117 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
 int Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
 {
     int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
+    return dialogResult;
+}
+
+static double gItemZoom[] = { ZOOM_FIT_PAGE, IDM_ZOOM_ACTUAL_SIZE, ZOOM_FIT_WIDTH, 0,
+    6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 125.0, 100.0, 50.0, 25.0, 12.5, 8.33 };
+
+static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    SerializableGlobalPrefs *prefs;
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        prefs = (SerializableGlobalPrefs *)lParam;
+        assert(prefs);
+        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)prefs);
+
+        // Fill the page layouts into the select box
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TRW("Single page"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TRW("Facing"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TRW("Continuous"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TRW("Continuous facing"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->m_defaultDisplayMode - 1, 0);
+
+        // Fill the possible zoom settings into the select box
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("Fit Page"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("Actual Size"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("Fit Width"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)L"-");
+#ifndef BUILD_RM_VERSION
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("6400%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("3200%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("1600%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("800%"));
+#endif
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("400%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("200%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("150%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("125%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("100%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("50%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("25%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("12.5%"));
+        SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TRW("8.33%"));
+        for (int i = 0; i < dimof(gItemZoom); i++)
+            if (gItemZoom[i] == gGlobalPrefs.m_defaultZoom)
+                SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_SETCURSEL, i, 0);
+
+        CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->m_showToc ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
+
+	SetDlgItemTextW(hDlg, IDC_SECTION_VIEW, _TRW("View"));
+	SetDlgItemTextW(hDlg, IDC_DEFAULT_LAYOUT, _TRW("Single Page"));
+	SetDlgItemTextW(hDlg, IDC_DEFAULT_LAYOUT_LABEL, _TRW("Default &Layout:"));
+	SetDlgItemTextW(hDlg, IDC_DEFAULT_ZOOM, _TRW("Page width"));
+	SetDlgItemTextW(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TRW("Default &Zoom:"));
+	SetDlgItemTextW(hDlg, IDC_DEFAULT_SHOW_TOC, _TRW("Show the &bookmarks sidebar when available"));
+	SetDlgItemTextW(hDlg, IDC_GLOBAL_PREFS_ONLY, _TRW("&Remember these settings for each document"));
+	SetDlgItemTextW(hDlg, IDC_SECTION_ADVANCED, _TRW("Advanced"));
+	SetDlgItemTextW(hDlg, IDC_AUTO_UPDATE_CHECKS, _TRW("Automatically check for &updates"));
+	SetDlgItemTextW(hDlg, IDOK, _TRW("OK"));
+	SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
+
+        CenterDialog(hDlg);
+        SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
+        return FALSE;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            assert(prefs);
+
+            switch (SendDlgItemMessageW(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + 1)
+            {
+            case DM_SINGLE_PAGE: prefs->m_defaultDisplayMode = DM_SINGLE_PAGE; break;
+            case DM_FACING: prefs->m_defaultDisplayMode = DM_FACING; break;
+            case DM_CONTINUOUS: prefs->m_defaultDisplayMode = DM_CONTINUOUS; break;
+            case DM_CONTINUOUS_FACING: prefs->m_defaultDisplayMode = DM_CONTINUOUS_FACING; break;
+            default: assert(FALSE);
+            }
+            {
+                double newZoom = gItemZoom[SendDlgItemMessageW(hDlg, IDC_DEFAULT_ZOOM, CB_GETCURSEL, 0, 0)];
+                if (0 != newZoom)
+                    prefs->m_defaultZoom = newZoom;
+            }
+
+            prefs->m_showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
+            prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
+            prefs->m_enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
+            
+            EndDialog(hDlg, DIALOG_OK_PRESSED);
+            return TRUE;
+
+        case IDCANCEL:
+            EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+            return TRUE;
+
+        case IDC_DEFAULT_SHOW_TOC:
+        case IDC_GLOBAL_PREFS_ONLY:
+        case IDC_AUTO_UPDATE_CHECKS:
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+int Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
+{
+    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_SETTINGS), hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
     return dialogResult;
 }

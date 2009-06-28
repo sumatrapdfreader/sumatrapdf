@@ -58,6 +58,7 @@ typedef struct {
     int  m_pdfsOpened;
 
     int  m_showToc;
+    int  m_globalPrefsOnly;
 } SerializableGlobalPrefs;
 
 extern SerializableGlobalPrefs gGlobalPrefs;

@@ -3447,3 +3447,35 @@ This option is not available in portable mode.
 de:Diese Option ist im portablen Modus nicht verfügbar
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
+-
+Fit Width
+-
+Actual Size
+-
+&Settings
+-
+Fit Page
+-
+&Options...
+-
+Default &Layout:
+-
+Default &Zoom:
+-
+OK
+-
+Page width
+-
+Advanced
+-
+Single Page
+-
+Show the &bookmarks sidebar when available
+-
+Cancel
+-
+Automatically check for &updates
+-
+&Remember these settings for each document
+-
+View
