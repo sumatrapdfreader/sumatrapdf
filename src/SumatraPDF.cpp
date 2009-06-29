@@ -72,7 +72,8 @@ static BOOL             gDebugShowLinks = FALSE;
 
 /* default UI settings */
 
-//#define DEFAULT_ZOOM            ZOOM_FIT_WIDTH
+// Note: Only make changes to these values #ifndef BUILD_RM_VERSION
+#define DEFAULT_DISPLAY_MODE    DM_CONTINUOUS
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
 
@@ -218,11 +219,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     NULL, // char *m_inverseSearchCmdLine
     NULL, // char *m_versionToSkip
     NULL, // char *m_lastUpdateTime
-#ifdef BUILD_RM_VERSION
-    DM_CONTINUOUS, // DisplayMode m_defaultDisplayMode
-#else
-    DM_SINGLE_PAGE,
-#endif
+    DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
     DEFAULT_ZOOM, // double m_defaultZoom
     WIN_STATE_NORMAL, // int  m_windowState
     DEFAULT_WIN_POS, // int  m_windowPosX
