@@ -2389,6 +2389,9 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
     }
 
     gGlobalPrefs.m_pdfsOpened += 1;
+    // Add the file also to Windows' recently used documents (this doesn't
+    // happen automatically on drag&drop, reopening from history, etc.)
+    SHAddToRecentDocs(SHARD_PATHW, pFullpath);
 
 exit:
     if (pFullpath)
