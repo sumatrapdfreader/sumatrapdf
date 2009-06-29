@@ -3545,6 +3545,7 @@ Default &Zoom:
 de:Standard&vergrößerung:
 -
 OK
+de:OK
 -
 Advanced
 de:Weiteres
@@ -3619,3 +3620,40 @@ hi:देखें
 nn:Vis
 -
 Information
+de:Hinweis
+-
+&Go to page:
+de:&Gehe zu Seite:
+-
+(of %d)
+de:(von %d)
+-
+Download
+de:Herunterladen
+-
+Yes
+de:Ja
+-
+No
+de:Nein
+-
+No, thanks
+de:Nein, danke
+-
+Please wait - rendering...
+de:Bitte einen Moment Geduld...
+-
+Couldn't render the page
+de:Diese Seite kann leider nicht angezeigt werden
+-
+PDF\0*.pdf\0All\0*.*\0
+de:PDF Dokumente (*.pdf)\0*.pdf\0Alle Dateien (*.*)\0*.*\0
+-
+No matches were found
+de:Das Dokument wurde durchsucht
+-
+Found text at page %d
+de:Text auf Seite %d gefunden
+-
+Searching %d of %d...
+de:Suche auf Seite %d von %d...

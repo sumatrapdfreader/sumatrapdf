@@ -2271,6 +2271,7 @@ static bool LoadPdfIntoWindow(
 
         if (win->needrefresh) {
             WCHAR buf[256];
+            // TODO: Translate me
             HRESULT hr = StringCchPrintfW(buf, dimof(buf), L"(Changes detected - will refresh when file is unlocked) %s", title);
             win_set_textw(win->hwndFrame, buf);
         }
@@ -3085,7 +3086,8 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
-            DrawCenteredText(hdc, &bounds, "Please wait - rendering...");
+            // TODO: Make this call Unicode
+            DrawCenteredText(hdc, &bounds, (char *)_TRA("Please wait - rendering..."));
             DBG_OUT("drawing empty %d ", pageNo);
             if (origFont)
                 SelectObject(hdc, origFont);
@@ -3100,7 +3102,8 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
-            DrawCenteredText(hdc, &bounds, "Couldn't render the page");
+            // TODO: Make this call Unicode
+            DrawCenteredText(hdc, &bounds, (char *)_TRA("Couldn't render the page"));
             UnlockCache();
             continue;
         }
@@ -3633,6 +3636,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         win->pdfsync = CreateSynchronizer(win->watcher.filepath());
         if (!win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
+            // TODO: Translate this string
             WindowInfo_ShowMessage_Asynch(win, L"Synchronization file cannot be opened", true);
             return;
         }
@@ -3652,6 +3656,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
+        // TODO: Tranlate this string
         WindowInfo_ShowMessage_Asynch(win, L"No synchronization info at this position.", true);
         return;
     }
@@ -4305,7 +4310,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     wstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
+    ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -4342,7 +4347,7 @@ static void OnMenuOpen(WindowInfo *win)
     // use the contents of szFile to initialize itself.
     ofn.lpstrFile[0] = L'\0';
     ofn.nMaxFile = dimof(fileName);
-    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
+    ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -4979,6 +4984,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCWSTR srcfilename, UI
         }
     }
 
+    // TODO: Translate these strings
     wchar_t buf[_MAX_PATH];
     wchar_t *txt = &buf[0];
     if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
@@ -5023,10 +5029,10 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
     if (!win->dm->bFoundText)
-        WindowInfo_ShowMessage_Asynch(win, L"No matches were found", false);
+        WindowInfo_ShowMessage_Asynch(win, _TRW("No matches were found"), false);
     else {
         wchar_t buf[256];
-        swprintf(buf, L"Found text at page %d", win->dm->currentPageNo());
+        swprintf(buf, _TRW("Found text at page %d"), win->dm->currentPageNo());
         WindowInfo_ShowMessage_Asynch(win, buf, false);
     }    
 }
@@ -5726,9 +5732,9 @@ void WindowInfo::FindUpdateStatus(int current, int total)
         WindowInfo_ShowFindStatus(this);
     }
 
-    char buf[256];
-    sprintf(buf, "Searching %d of %d...", current, total);
-    SetWindowTextA(hwndFindStatus, buf);
+    WCHAR buf[256];
+    wsprintfW(buf, _TRW("Searching %d of %d..."), current, total);
+    SetWindowTextW(hwndFindStatus, buf);
 
     findPercent = current * 100 / total;
 

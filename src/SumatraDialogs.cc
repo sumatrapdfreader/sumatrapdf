@@ -212,12 +212,12 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
         DStringSprintf(&ds, "%d", data->currPageNo);
         SetDlgItemTextA(hDlg, IDC_GOTO_PAGE_EDIT, ds.pString);
         DStringFree(&ds);
-        DStringSprintf(&ds, "(of %d)", data->pageCount);
+        DStringSprintf(&ds, _TRA("(of %d)"), data->pageCount);
         SetDlgItemTextA(hDlg, IDC_GOTO_PAGE_LABEL_OF, ds.pString);
         DStringFree(&ds);
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
         win_edit_select_all(editPageNo);
-        // SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Go to page:"));
+        SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("&Go to page:"));
         SetDlgItemTextW(hDlg, IDOK, _TRW("Go to page"));
         SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
 
@@ -293,8 +293,8 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
         SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Make SumatraPDF default application for PDF files?"));
         SetDlgItemTextW(hDlg, IDC_DONT_ASK_ME_AGAIN, _TRW("Don't ask me again"));
         CheckDlgButton(hDlg, IDC_DONT_ASK_ME_AGAIN, BST_UNCHECKED);
-        // SetDlgItemTextW(hDlg, IDOK, _TRW("Yes"));
-        // SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No"));
+        SetDlgItemTextW(hDlg, IDOK, _TRW("Yes"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No"));
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDOK));
@@ -459,8 +459,8 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
 
         SetDlgItemTextW(hDlg, IDC_SKIP_THIS_VERSION, _TRW("Skip this version"));
         CheckDlgButton(hDlg, IDC_SKIP_THIS_VERSION, BST_UNCHECKED);
-        // SetDlgItemTextW(hDlg, IDOK, _TRW("Download"));
-        // SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No, thanks"));
+        SetDlgItemTextW(hDlg, IDOK, _TRW("Download"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No, thanks"));
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDOK));
