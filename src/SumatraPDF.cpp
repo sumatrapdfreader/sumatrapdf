@@ -7208,6 +7208,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 #ifdef THREAD_BASED_FILEWATCH
     while (GetMessage(&msg, NULL, 0, 0)) {
+        // Make sure to dispatch the accelerator to the correct window
+        win = WindowInfo_FindByHwnd(msg.hwnd);
         if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -7217,6 +7219,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     while (1) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
             if (GetMessage(&msg, NULL, 0, 0)) {
+                // Make sure to dispatch the accelerator to the correct window
+                win = WindowInfo_FindByHwnd(msg.hwnd);
                 if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
