@@ -7,6 +7,9 @@
 
 #define DEFAULT_WIN_POS (int)-1
 
+// TODO: Move this somewhere more appropriate?
+#define MAX_RECENT_FILES_IN_MENU 15
+
 /* enum from m_windowState */
 enum {
     WIN_STATE_NORMAL = 1 /* use remebered position and size */

@@ -150,8 +150,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-#define MAX_RECENT_FILES_IN_MENU 15
-
 static FileHistoryList *            gFileHistoryRoot = NULL;
 
 static HINSTANCE                    ghinst = NULL;

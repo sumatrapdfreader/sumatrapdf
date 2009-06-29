@@ -204,8 +204,10 @@ benc_array* FileHistoryList_Serialize(FileHistoryList **root)
     if (!arr)
         goto Error;
 
+    // Don't save more file entries than will be useful
+    int restCount = gGlobalPrefs.m_globalPrefsOnly ? MAX_RECENT_FILES_IN_MENU : INT_MAX;
     FileHistoryList *curr = *root;
-    while (curr) {
+    while (curr && restCount > 0) {
         benc_obj* bobj = (benc_obj*) FileHistoryList_Node_Serialize2(curr);
         if (!bobj)
             goto Error;
@@ -213,6 +215,7 @@ benc_array* FileHistoryList_Serialize(FileHistoryList **root)
         if (!ok)
             goto Error;
         curr = curr->next;
+        restCount--;
     }
     return arr;
 Error:
