@@ -3027,7 +3027,7 @@ af:Moet My Nie Weer Vra Nie
 pt:Não perguntar novamente
 bg:Не питай отново
 br:Não perguntar novamente
-de:Nicht wieder fragen
+de:&Nicht wieder fragen.
 gr:Να μην ερωτηθώ ξανά
 sk:Nepýtať sa znova
 vn:Không hỏi lại
@@ -3314,7 +3314,7 @@ af:Slaan Dié Weergawe Oor.
 pt:Ignorar esta versão
 bg:Пропусни тази версия.
 br:Pular esta versão.
-de:Diese Version überspringen.
+de:&Diese Version überspringen.
 gr:Παράβλεψη αυτής της έκδοσης
 sk:Preskočiť túto verziu.
 vn:Bỏ qua phiên bản này.
@@ -3647,15 +3647,15 @@ de:Herunterladen
 ru:Загрузка
 -
 Yes
-de:Ja
+de:&Ja
 ru:Да
 -
 No
-de:Nein
+de:&Nein
 ru:Нет
 -
 No, thanks
-de:Nein, danke
+de:&Nein, danke
 ru:Спасибо, нет
 -
 Please wait - rendering...

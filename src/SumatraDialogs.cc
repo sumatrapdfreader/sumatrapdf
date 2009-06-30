@@ -358,7 +358,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
     if (WM_INITDIALOG == message)
     {
         DIALOG_SIZER_START(sz)
-            DIALOG_SIZER_ENTRY(IDOK, DS_MoveY)
+            DIALOG_SIZER_ENTRY(IDOK, DS_MoveX | DS_MoveY)
             DIALOG_SIZER_ENTRY(IDCANCEL, DS_MoveX | DS_MoveY)
             DIALOG_SIZER_ENTRY(IDC_CHANGE_LANG_LANG_LIST, DS_SizeY | DS_SizeX)
         DIALOG_SIZER_END()
