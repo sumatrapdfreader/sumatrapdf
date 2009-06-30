@@ -224,10 +224,6 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_WIN_POS, // int  m_windowPosY
     DEFAULT_WIN_POS, // int  m_windowDx
     DEFAULT_WIN_POS, // int  m_windowDy
-    DEFAULT_WIN_POS, // int  m_tmpWindowPosX
-    DEFAULT_WIN_POS, // int  m_tmpWindowPosY
-    DEFAULT_WIN_POS, // int  m_tmpWindowDx
-    DEFAULT_WIN_POS, // int  m_tmpWindowDy
     0, // int  m_pdfsOpened
     1, // int  m_showToc
     0, // int  m_globalPrefsOnly
@@ -284,6 +280,7 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *messag
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 void WindowInfo_EnterFullscreen(WindowInfo *win);
+void WindowInfo_ExitFullscreen(WindowInfo *win);
 
 #define SEP_ITEM "-----"
 
@@ -1479,9 +1476,12 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (WS_SHOWING_PDF != win->state || !win->dm)
     {
         // update global windowState for next default launch when no pdf opened
-        gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-        if (IsZoomed(win->hwndFrame))
-            gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+        if (gGlobalPrefs.m_windowState != WIN_STATE_FULLSCREEN) {
+            if (IsZoomed(win->hwndFrame))
+                gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+            else
+                gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+        }
     }
 
     if (WS_SHOWING_PDF != win->state)
@@ -1502,11 +1502,12 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     DisplayState_Init(&ds);
 
     // Update pdf-specific windowState
-    ds.windowState = WIN_STATE_NORMAL;
-    if (IsZoomed(win->hwndFrame))
-        ds.windowState = WIN_STATE_MAXIMIZED;
     if (win->dm->_fullScreen)
         ds.windowState = WIN_STATE_FULLSCREEN;
+    else if (IsZoomed(win->hwndFrame))
+        ds.windowState = WIN_STATE_MAXIMIZED;
+    else
+        ds.windowState = WIN_STATE_NORMAL;
 
     if (!displayStateFromDisplayModel(&ds, win->dm))
         return;
@@ -2174,21 +2175,20 @@ static bool LoadPdfIntoWindow(
     int startPage = 1;
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
-    bool showAsFullScreen = false;
-    int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED ? SW_MAXIMIZE : SW_NORMAL;
+    bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
+    int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
     if (state) {
         startPage = state->pageNo;
         displayMode = state->displayMode;
         offsetX = state->scrollX;
         offsetY = state->scrollY;
+        showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL)
             showType = SW_NORMAL;
-        else if (state->windowState == WIN_STATE_MAXIMIZED)
+        else if (state->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
             showType = SW_MAXIMIZE;
         else if (state->windowState == WIN_STATE_MINIMIZED)
             showType = SW_MINIMIZE;
-        else if (state->windowState == WIN_STATE_FULLSCREEN)
-            showAsFullScreen = true;
     }
 
     DisplayModel *previousmodel = win->dm;
@@ -2232,7 +2232,6 @@ static bool LoadPdfIntoWindow(
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
-        win->dm->_fullScreen = state->windowState == WIN_STATE_FULLSCREEN;
     }
     else {
         win->dm->_showToc = gGlobalPrefs.m_showToc;
@@ -2294,8 +2293,6 @@ Error:
         if (showWin) {
             ShowWindow(win->hwndFrame, showType);
             ShowWindow(win->hwndCanvas, SW_SHOW);
-            if (showAsFullScreen)
-                WindowInfo_EnterFullscreen(win);
         }
         UpdateWindow(win->hwndFrame);
         UpdateWindow(win->hwndCanvas);
@@ -2308,6 +2305,9 @@ Error:
         WindowInfo_RedrawAll(win);
         return false;
     }
+    // This should only happen after everything else is ready
+    if ((is_new_window || placeWindow) && showWin && showAsFullScreen)
+        WindowInfo_EnterFullscreen(win);
     return true;
 }
 
@@ -4081,6 +4081,8 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
+        if (win->dm->_fullScreen)
+            WindowInfo_ExitFullscreen(win);
         if (win->dm->_showToc) {
             win->HideTocBox();
             MenuUpdateBookmarksStateForWindow(win);
@@ -4556,16 +4558,19 @@ static void OneMenuMakeDefaultReader(WindowInfo *win)
         MessageBoxW(NULL, _TRW("SumatraPDF is now a default reader for PDF files."), _TRW("Information"), MB_OK | MB_ICONINFORMATION);
 }
 
-static void OnMove(WindowInfo *win, int x, int y)
+static void RememberWindowPosition(WindowInfo *win)
 {
-    /* If the window being moved doesn't show PDF document, remember
-       its position so that it can be persisted (we assume that position
-       of this window is what the user wants to be a position of all
-       new windows */
+    /* If the window being moved or resized doesn't show a PDF document,
+       remember its position so that it can be persisted (we assume that
+       position of this window is what the user wants to be a position
+       of all new windows) */
     if (win->state != WS_ABOUT)
         return;
-    /* x,y is the coordinates of client area, but we need to remember
-       the position of window on screen */
+    
+    /* don't update the window's dimensions if it is maximized or mimimized */
+    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame))
+        return;
+
     RECT rc;
     GetWindowRect(win->hwndFrame, &rc);
     gGlobalPrefs.m_windowPosX = rc.left;
@@ -4586,13 +4591,6 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
-    RECT rc;
-
-   GetWindowRect(win->hwndFrame, &rc);
-   gGlobalPrefs.m_windowPosX = rc.left;
-   gGlobalPrefs.m_windowPosY = rc.top;
-   gGlobalPrefs.m_windowDx = rect_dx(&rc);
-   gGlobalPrefs.m_windowDy = rect_dy(&rc);
 }
 
 static void ReloadPdfDocument(WindowInfo *win)
@@ -4875,14 +4873,12 @@ static void OnMenuViewFullscreen(WindowInfo *win)
 
     if (!win->dm) {
         /* not showing a PDF document */
-        if (gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN) {
-            if (IsZoomed(win->hwndFrame))
-                gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
-            else
-                gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-        }
-        else
+        if (gGlobalPrefs.m_windowState != WIN_STATE_FULLSCREEN)
             gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
+        else if (IsZoomed(win->hwndFrame))
+            gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+        else
+            gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
         MenuUpdateFullscreen(win);
         return;
     }
@@ -6114,14 +6110,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
                 OnSize(win, dx, dy);
+
+                RememberWindowPosition(win);
             }
             break;
         case WM_MOVE:
-            if (win) {
-                int x = LOWORD(lParam);
-                int y = HIWORD(lParam);
-                OnMove(win, x, y);
-            }
+            if (win)
+                RememberWindowPosition(win);
+            break;
 
         case WM_COMMAND:
             wmId    = LOWORD(wParam);
@@ -7210,6 +7206,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (gGlobalPrefs.m_windowState == WIN_STATE_MINIMIZED)
             ShowWindow(win->hwndFrame, SW_MINIMIZE);
         else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
+            ShowWindow(win->hwndFrame, SW_MAXIMIZE);
+        else if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else
             ShowWindow(win->hwndFrame, SW_SHOW);

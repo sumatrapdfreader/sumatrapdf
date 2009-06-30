@@ -84,18 +84,10 @@ benc_dict* Prefs_SerializeGlobal(void)
         free((void*)txt);
     }
     DICT_ADD_INT64(prefs, WINDOW_STATE_STR, gGlobalPrefs.m_windowState);
-    if (gGlobalPrefs.m_windowState == WIN_STATE_NORMAL) {
-        DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_windowPosX);
-        DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
-        DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
-        DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
-    }
-    else {
-        DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_tmpWindowPosX);
-        DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_tmpWindowPosY);
-        DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_tmpWindowDx);
-        DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_tmpWindowDy);
-    }
+    DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_windowPosX);
+    DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_windowPosY);
+    DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_windowDx);
+    DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_windowDy);
 
     DICT_ADD_WSTR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
     DICT_ADD_STR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
@@ -158,19 +150,12 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     DICT_ADD_INT64(prefs, ROTATION_STR, ds->rotation);
     DICT_ADD_INT64(prefs, SCROLL_X_STR, ds->scrollX);
 
-   DICT_ADD_INT64(prefs, SCROLL_Y_STR, ds->scrollY);
-   DICT_ADD_INT64(prefs, WINDOW_STATE_STR, ds->windowState);
-    if (ds->windowState == WIN_STATE_NORMAL) {
-        DICT_ADD_INT64(prefs, WINDOW_X_STR, ds->windowX);
-        DICT_ADD_INT64(prefs, WINDOW_Y_STR, ds->windowY);
-        DICT_ADD_INT64(prefs, WINDOW_DX_STR, ds->windowDx);
-        DICT_ADD_INT64(prefs, WINDOW_DY_STR, ds->windowDy);
-    } else {
-        DICT_ADD_INT64(prefs, WINDOW_X_STR, gGlobalPrefs.m_tmpWindowPosX);
-        DICT_ADD_INT64(prefs, WINDOW_Y_STR, gGlobalPrefs.m_tmpWindowPosY);
-        DICT_ADD_INT64(prefs, WINDOW_DX_STR, gGlobalPrefs.m_tmpWindowDx);
-        DICT_ADD_INT64(prefs, WINDOW_DY_STR, gGlobalPrefs.m_tmpWindowDy);
-    }
+    DICT_ADD_INT64(prefs, SCROLL_Y_STR, ds->scrollY);
+    DICT_ADD_INT64(prefs, WINDOW_STATE_STR, ds->windowState);
+    DICT_ADD_INT64(prefs, WINDOW_X_STR, ds->windowX);
+    DICT_ADD_INT64(prefs, WINDOW_Y_STR, ds->windowY);
+    DICT_ADD_INT64(prefs, WINDOW_DX_STR, ds->windowDx);
+    DICT_ADD_INT64(prefs, WINDOW_DY_STR, ds->windowDy);
 
     DICT_ADD_INT64(prefs, SHOW_TOC_STR, ds->showToc);
 
@@ -462,13 +447,9 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
 
     dict_get_int(global, WINDOW_X_STR, &gGlobalPrefs.m_windowPosX);
-    gGlobalPrefs.m_tmpWindowPosX = gGlobalPrefs.m_windowPosX;
     dict_get_int(global, WINDOW_Y_STR, &gGlobalPrefs.m_windowPosY);
-    gGlobalPrefs.m_tmpWindowPosY = gGlobalPrefs.m_windowPosY;
     dict_get_int(global, WINDOW_DX_STR, &gGlobalPrefs.m_windowDx);
-    gGlobalPrefs.m_tmpWindowDx = gGlobalPrefs.m_windowDx;
     dict_get_int(global, WINDOW_DY_STR, &gGlobalPrefs.m_windowDy);
-    gGlobalPrefs.m_tmpWindowDy = gGlobalPrefs.m_windowDy;
 
     dict_get_wstr_helper(global, INVERSE_SEARCH_COMMANDLINE, &gGlobalPrefs.m_inverseSearchCmdLine);
     dict_get_str_helper(global, VERSION_TO_SKIP_STR, &gGlobalPrefs.m_versionToSkip);
