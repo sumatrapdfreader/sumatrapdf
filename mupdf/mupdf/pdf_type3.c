@@ -53,7 +53,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	fz_matrix matrix;
 
 	obj = fz_dictgets(dict, "Name");
-	if (obj)
+	if (fz_isname(obj))
 		strlcpy(buf, fz_toname(obj), sizeof buf);
 	else
 		sprintf(buf, "Unnamed-T3");

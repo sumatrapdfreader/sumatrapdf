@@ -280,6 +280,8 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 		fz_obj *key = fz_dictgetkey(extgstate, i);
 		fz_obj *val = fz_dictgetval(extgstate, i);
 		char *s = fz_toname(key);
+		if (!s)
+			fz_throw("malformed /ExtGState dictionary");
 
 		if (!strcmp(s, "Font"))
 		{
@@ -291,7 +293,7 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 				gstate->size = fz_toreal(fz_arrayget(val, 1));
 			}
 			else
-				return fz_throw("malformed /Font");
+				return fz_throw("malformed /Font dictionary");
 		}
 
 		else if (!strcmp(s, "LW"))
@@ -343,7 +345,10 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 				{ "Color", FZ_BCOLOR },
 				{ "Luminosity", FZ_BLUMINOSITY }
 			};
+
 			char *n = fz_toname(val);
+			if (!fz_isname(val))
+				return fz_throw("malformed BM");
 
 			gstate->blendmode = FZ_BNORMAL;
 			for (k = 0; k < nelem(bm); k++) {

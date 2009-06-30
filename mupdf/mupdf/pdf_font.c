@@ -824,9 +824,9 @@ loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	encoding = fz_dictgets(dict, "Encoding");
 	tounicode = fz_dictgets(dict, "ToUnicode");
 
-	if (!strcmp(fz_toname(subtype), "CIDFontType0"))
+	if (fz_isname(subtype) && !strcmp(fz_toname(subtype), "CIDFontType0"))
 		error = loadcidfont(fontdescp, xref, dfont, ref, encoding, tounicode);
-	else if (!strcmp(fz_toname(subtype), "CIDFontType2"))
+	else if (fz_isname(subtype) && !strcmp(fz_toname(subtype), "CIDFontType2"))
 		error = loadcidfont(fontdescp, xref, dfont, ref, encoding, tounicode);
 	else
 		error = fz_throw("syntaxerror: unknown cid font type");
@@ -914,13 +914,15 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 	}
 
 	subtype = fz_toname(fz_dictgets(dict, "Subtype"));
-	if (!strcmp(subtype, "Type0"))
+	if (subtype && !strcmp(subtype, "Type0"))
 		error = loadtype0(fontdescp, xref, dict, ref);
-	else if (!strcmp(subtype, "Type1") || !strcmp(subtype, "MMType1"))
+	else if (subtype && !strcmp(subtype, "Type1"))
 		error = loadsimplefont(fontdescp, xref, dict, ref);
-	else if (!strcmp(subtype, "TrueType"))
+	else if (subtype && !strcmp(subtype, "MMType1"))
 		error = loadsimplefont(fontdescp, xref, dict, ref);
-	else if (!strcmp(subtype, "Type3"))
+	else if (subtype && !strcmp(subtype, "TrueType"))
+		error = loadsimplefont(fontdescp, xref, dict, ref);
+	else if (subtype && !strcmp(subtype, "Type3"))
 		error = pdf_loadtype3font(fontdescp, xref, dict, ref);
 	else
         {

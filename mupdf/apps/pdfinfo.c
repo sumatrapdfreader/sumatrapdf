@@ -130,6 +130,9 @@ struct info
 			fz_obj *obj;
 		} info;
 		struct {
+			fz_obj *obj;
+		} crypt;
+		struct {
 			fz_rect *bbox;
 		} dim;
 		struct {
@@ -160,6 +163,7 @@ struct info
 };
 
 struct info *info = nil;
+struct info *cryptinfo = nil;
 struct info **dim = nil;
 int dims = 0;
 struct info **font = nil;
@@ -201,17 +205,33 @@ gatherglobalinfo()
 
 	info->page = -1;
 	info->pageref = nil;
-	info->ref = fz_dictgets(src->trailer, "Info");
-
+	info->ref = nil;
 	info->u.info.obj = nil;
 
-	if (!info->ref)
-		return;
+	if (src->info)
+	{
+		info->ref = fz_dictgets(src->trailer, "Info");
+		if (!fz_isdict(info->ref) && !fz_isindirect(info->ref))
+			die(fz_throw("not an indirect info object"));
 
-	if (!fz_isdict(info->ref) && !fz_isindirect(info->ref))
-		die(fz_throw("not an indirect info object"));
+		info->u.info.obj = src->info;
+	}
 
-	info->u.info.obj = src->info;
+	cryptinfo = fz_malloc(sizeof (struct info));
+
+	cryptinfo->page = -1;
+	cryptinfo->pageref = nil;
+	cryptinfo->ref = nil;
+	cryptinfo->u.crypt.obj = nil;
+
+	if (src->crypt)
+	{
+		cryptinfo->ref = fz_dictgets(src->trailer, "Encrypt");
+		if (!fz_isdict(cryptinfo->ref) && !fz_isindirect(cryptinfo->ref))
+			die(fz_throw("not an indirect crypt object"));
+
+		cryptinfo->u.crypt.obj = src->crypt->encrypt;
+	}
 }
 
 fz_error
@@ -794,6 +814,12 @@ printglobalinfo(char *filename)
 	{
 		printf("Info object (%d %d R):\n", fz_tonum(info->ref), fz_togen(info->ref));
 		fz_debugobj(info->u.info.obj);
+	}
+
+	if (cryptinfo->u.crypt.obj)
+	{
+		printf("\nEncryption object (%d %d R):\n", fz_tonum(cryptinfo->ref), fz_togen(cryptinfo->ref));
+		fz_debugobj(cryptinfo->u.crypt.obj);
 	}
 
 	printf("\nPages: %d\n\n", pdf_getpagecount(srcpages));
