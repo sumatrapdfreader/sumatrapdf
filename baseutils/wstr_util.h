@@ -34,6 +34,7 @@ WCHAR  *wstr_escape(const WCHAR *txt);
 WCHAR * wstr_printf(const WCHAR *format, ...);
 const WCHAR *wstr_find_char(const WCHAR *txt, WCHAR c);
 BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src);
+int     wstr_trans_chars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);
 
 char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage);
 char *wstr_to_utf8(const WCHAR *txt);

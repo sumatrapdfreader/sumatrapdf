@@ -3677,3 +3677,9 @@ ru:Текст найден на стр. %d
 Searching %d of %d...
 de:Suche auf Seite %d von %d...
 ru:Обработка страницы %d из %d...
+-
+PDF documents
+de:PDF Dokumente
+-
+All files
+de:Alle Dateien

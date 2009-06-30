@@ -609,6 +609,25 @@ BOOL str_dup_replace(char **dst, const char *src)
     return TRUE;
 }
 
+/* replace in <str> the chars from <oldChars> with their equivalents
+   from <newChars> (similar to UNIX's tr command)
+   Returns the number of replaced characters. */
+int str_trans_chars(char *str, const char *oldChars, const char *newChars)
+{
+    int findCount = 0;
+    char *c = str;
+    while (*c) {
+        char *found = wstr_find_char(oldChars, *c);
+        if (found) {
+            *c = newChars[found - oldChars];
+            findCount++;
+        }
+        c++;
+    }
+
+    return findCount;
+}
+
 /* Reverse of mem_to_hexstr. Convert a 0-terminatd hex-encoded string <s> to
    binary data pointed by <buf> of max sisze bufLen.
    Returns FALSE if size of <s> doesn't match <bufLen>. */

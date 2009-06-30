@@ -598,6 +598,25 @@ BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src)
     return TRUE;
 }
 
+/* replace in <str> the chars from <oldChars> with their equivalents
+   from <newChars> (similar to UNIX's tr command)
+   Returns the number of replaced characters. */
+int wstr_trans_chars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
+{
+    int findCount = 0;
+    WCHAR *c = str;
+    while (*c) {
+        WCHAR *found = wstr_find_char(oldChars, *c);
+        if (found) {
+            *c = newChars[found - oldChars];
+            findCount++;
+        }
+        c++;
+    }
+
+    return findCount;
+}
+
 
 /* 'txt' is path that can be:
   - escaped, in which case it starts with '"', ends with '"' and each '"' that is part of the name is escaped

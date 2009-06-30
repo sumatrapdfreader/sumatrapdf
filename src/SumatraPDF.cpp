@@ -4304,16 +4304,21 @@ static void OnMenuSaveAs(WindowInfo *win)
     assert(srcFileName);
     if (!srcFileName) return;
 
+    // Prepare the file filters (slightly hacky because
+    // translations can't contain the \0 character)
+    WCHAR fileFilter[256] = {0};
+    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("PDF documents"));
+    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.pdf\1");
+    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("All files"));
+    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.*\1");
+    wstr_trans_chars(fileFilter, L"\1", L"\0");
+
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     wstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    //TODO: this translation doesn't work because \0 in C string is a 0, while
-    //in translation it's a string "\0", so the filter doesn't work the
-    //way it's supposed to
-    //ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
-    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
+    ofn.lpstrFilter = fileFilter;
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -4342,6 +4347,15 @@ static void OnMenuOpen(WindowInfo *win)
     OPENFILENAMEW ofn = {0};
     WCHAR         fileName[260];
 
+    // Prepare the file filters (slightly hacky because
+    // translations can't contain the \0 character)
+    WCHAR fileFilter[256] = {0};
+    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("PDF documents"));
+    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.pdf\1");
+    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("All files"));
+    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.*\1");
+    wstr_trans_chars(fileFilter, L"\1", L"\0");
+
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = fileName;
@@ -4350,11 +4364,7 @@ static void OnMenuOpen(WindowInfo *win)
     // use the contents of szFile to initialize itself.
     ofn.lpstrFile[0] = L'\0';
     ofn.nMaxFile = dimof(fileName);
-    //TODO: this translation doesn't work because \0 in C string is a 0, while
-    //in translation it's a string "\0", so the filter doesn't work the
-    //way it's supposed to
-    //ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
-    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
+    ofn.lpstrFilter = fileFilter;
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;

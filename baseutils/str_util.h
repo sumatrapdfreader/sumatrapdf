@@ -93,6 +93,7 @@ char *  mem_to_hexstr(const unsigned char *buf, int len);
 BOOL    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
 int     hex_str_decode_byte(const char **txt);
 BOOL    str_dup_replace(char **dst, const char *src);
+int     str_trans_chars(char *str, const char *oldChars, const char *newChars);
 
 size_t  digits_for_number(int64_t num);
 
