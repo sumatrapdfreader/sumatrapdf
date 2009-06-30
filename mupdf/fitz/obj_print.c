@@ -275,7 +275,7 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 		fmtdict(fmt, obj);
 		break;
 	case FZ_INDIRECT:
-		sprintf(buf, "%d %d R", obj->u.r.oid, obj->u.r.gid);
+		sprintf(buf, "%d %d R", obj->u.r.num, obj->u.r.gen);
 		fmtputs(fmt, buf);
 		break;
 	default:

@@ -143,7 +143,7 @@ readoldtrailer(pdf_xref *xref, char *buf, int cap)
 	if (tok != PDF_TODICT)
 		return fz_throw("expected trailer dictionary");
 
-	error = pdf_parsedict(&xref->trailer, xref->file, buf, cap);
+	error = pdf_parsedict(&xref->trailer, xref, xref->file, buf, cap);
 	if (error)
 		return fz_rethrow(error, "cannot parse trailer");
 	return fz_okay;
@@ -156,7 +156,7 @@ readnewtrailer(pdf_xref *xref, char *buf, int cap)
 
 	pdf_logxref("load new xref format trailer\n");
 
-	error = pdf_parseindobj(&xref->trailer, xref->file, buf, cap, nil, nil, nil);
+	error = pdf_parseindobj(&xref->trailer, xref, xref->file, buf, cap, nil, nil, nil);
 	if (error)
 		return fz_rethrow(error, "cannot parse trailer (compressed)");
 	return fz_okay;
@@ -297,7 +297,7 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	if (tok != PDF_TODICT)
 		return fz_throw("expected trailer dictionary");
 
-	error = pdf_parsedict(trailerp, xref->file, buf, cap);
+	error = pdf_parsedict(trailerp, xref, xref->file, buf, cap);
 	if (error)
 		return fz_rethrow(error, "cannot parse trailer");
 	return fz_okay;
@@ -363,7 +363,7 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 	pdf_logxref("load new xref format\n");
 
-	error = pdf_parseindobj(&trailer, xref->file, buf, cap, &oid, &gen, &stmofs);
+	error = pdf_parseindobj(&trailer, xref, xref->file, buf, cap, &oid, &gen, &stmofs);
 	if (error)
 		return fz_rethrow(error, "cannot parse compressed xref stream object");
 
@@ -606,7 +606,7 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 	{
 		/* FIXME: seek to first + ofsbuf[i] */
 
-		error = pdf_parsestmobj(&obj, stm, buf, cap);
+		error = pdf_parsestmobj(&obj, xref, stm, buf, cap);
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot parse object %d in stream", i);

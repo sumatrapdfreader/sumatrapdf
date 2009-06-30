@@ -329,10 +329,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 	encoding = fz_dictgets(dict, "Encoding");
 	if (encoding && !(kind == TRUETYPE && symbolic))
 	{
-		error = pdf_resolve(&encoding, xref);
-		if (error)
-			goto cleanup;
-
 		if (fz_isname(encoding))
 			pdf_loadencoding(estrings, fz_toname(encoding));
 
@@ -345,13 +341,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 				pdf_loadencoding(estrings, fz_toname(base));
 
 			diff = fz_dictgets(encoding, "Differences");
-			if (diff)
-			{
-				error = pdf_resolve(&diff, xref);
-				if (error)
-					goto cleanup;
-			}
-
 			if (fz_isarray(diff))
 			{
 				n = fz_arraylen(diff);
@@ -430,8 +419,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 				}
 			}
 		}
-
-		fz_dropobj(encoding);
 	}
 
 	else
@@ -468,10 +455,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 	{
 		int first, last;
 
-		error = pdf_resolve(&widths, xref);
-		if (error)
-			goto cleanup;
-
 		first = fz_toint(fz_dictgets(dict, "FirstChar"));
 		last = fz_toint(fz_dictgets(dict, "LastChar"));
 
@@ -485,8 +468,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 			if (error)
 				goto cleanup;
 		}
-
-		fz_dropobj(widths);
 	}
 	else
 	{
@@ -510,8 +491,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 
 cleanup:
 	fz_free(etable);
-	if (widths)
-		fz_dropobj(widths);
 	fz_dropfont(fontdesc->font);
 	fz_free(fontdesc);
 	return fz_rethrow(error, "cannot load simple font");
@@ -551,10 +530,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 		if (!cidinfo)
 			return fz_throw("cid font is missing info");
 
-		error = pdf_resolve(&cidinfo, xref);
-		if (error)
-			return fz_rethrow(error, "cannot find CIDSystemInfo");
-
 		obj = fz_dictgets(cidinfo, "Registry");
 		tmplen = MIN(sizeof tmpstr - 1, fz_tostrlen(obj));
 		memcpy(tmpstr, fz_tostrbuf(obj), tmplen);
@@ -568,8 +543,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 		memcpy(tmpstr, fz_tostrbuf(obj), tmplen);
 		tmpstr[tmplen] = '\0';
 		strlcat(collection, tmpstr, sizeof collection);
-
-		fz_dropobj(cidinfo);
 	}
 
 	/*
@@ -727,10 +700,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 		int c0, c1, w;
 		fz_obj *obj;
 
-		error = pdf_resolve(&widths, xref);
-		if (error)
-			goto cleanup;
-
 		for (i = 0; i < fz_arraylen(widths); )
 		{
 			c0 = fz_toint(fz_arrayget(widths, i));
@@ -756,8 +725,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 				i += 3;
 			}
 		}
-
-		fz_dropobj(widths);
 	}
 
 	error = pdf_endhmtx(fontdesc);
@@ -788,10 +755,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 		{
 			int c0, c1, w, x, y, k;
 
-			error = pdf_resolve(&widths, xref);
-			if (error)
-				goto cleanup;
-
 			for (i = 0; i < fz_arraylen(widths); )
 			{
 				c0 = fz_toint(fz_arrayget(widths, i));
@@ -821,8 +784,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 					i += 5;
 				}
 			}
-
-			fz_dropobj(widths);
 		}
 
 		error = pdf_endvmtx(fontdesc);
@@ -856,17 +817,8 @@ loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	dfonts = fz_dictgets(dict, "DescendantFonts");
 	if (!dfonts)
 		return fz_throw("cid font is missing descendant fonts");
-	error = pdf_resolve(&dfonts, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find DescendantFonts");
 
 	dfont = fz_arrayget(dfonts, 0);
-	error = pdf_resolve(&dfont, xref);
-	if (error)
-	{
-		fz_dropobj(dfonts);
-		return fz_rethrow(error, "cannot find descendant font");
-	}
 
 	subtype = fz_dictgets(dfont, "Subtype");
 	encoding = fz_dictgets(dict, "Encoding");
@@ -878,10 +830,6 @@ loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		error = loadcidfont(fontdescp, xref, dfont, ref, encoding, tounicode);
 	else
 		error = fz_throw("syntaxerror: unknown cid font type");
-
-	fz_dropobj(dfont);
-	fz_dropobj(dfonts);
-
 	if (error)
 		return fz_rethrow(error, "cannot load descendant font");
 
@@ -899,10 +847,6 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 	fz_obj *obj1, *obj2, *obj3, *obj;
 	fz_rect bbox;
 	char *fontname;
-
-	error = pdf_resolve(&dict, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find font descriptor");
 
 	pdf_logfont("load fontdescriptor {\n");
 
@@ -941,25 +885,20 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 			fz_catch(error, "ignored error when loading embedded font, attempting to load system font");
                         error = pdf_loadsystemfont(fontdesc, fontname, collection);
                         if (error)
-                                goto cleanup;
+				return fz_rethrow(error, "cannot load font descriptor");
                 }
 	}
 	else
 	{
 		error = pdf_loadsystemfont(fontdesc, fontname, collection);
 		if (error)
-			goto cleanup;
+			return fz_rethrow(error, "cannot load font descriptor");
 	}
-
-	fz_dropobj(dict);
 
 	pdf_logfont("}\n");
 
 	return fz_okay;
 
-cleanup:
-	fz_dropobj(dict);
-	return fz_rethrow(error, "cannot load font descriptor");
 }
 
 fz_error

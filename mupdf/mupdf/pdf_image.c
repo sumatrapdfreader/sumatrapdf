@@ -71,7 +71,6 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 		if (!img->super.cs)
 		{
-			/* XXX danger! danger! does this resolve? */
 			error = pdf_loadcolorspace(&img->super.cs, xref, cs);
 			if (error)
 				return error;
@@ -244,42 +243,15 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	 * Dimensions, BPC and ColorSpace
 	 */
 
-	w = 0;
-	obj = fz_dictgets(dict, "Width");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot parse image dictionary");
-		w = fz_toint(obj);
-		fz_dropobj(obj);
-	}
+	w = fz_toint(fz_dictgets(dict, "Width"));
 	if (w == 0)
 		fz_warn("image width is zero or undefined");
 
-	h = 0;
-	obj = fz_dictgets(dict, "Height");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot parse image dictionary");
-		h = fz_toint(obj);
-		fz_dropobj(obj);
-	}
+	h = fz_toint(fz_dictgets(dict, "Height"));
 	if (h == 0)
 		fz_warn("image height is zero or undefined");
 
-	bpc = 0;
-	obj = fz_dictgets(dict, "BitsPerComponent");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot parse image dictionary");
-		bpc = fz_toint(obj);
-		fz_dropobj(obj);
-	}
+	bpc = fz_toint(fz_dictgets(dict, "BitsPerComponent"));
 
 	pdf_logimage("size %dx%d %d\n", w, h, bpc);
 
@@ -292,15 +264,9 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 			fz_keepcolorspace(cs);
 		else
 		{
-			error = pdf_resolve(&obj, xref);
-			if (error)
-				return error;
-
 			error = pdf_loadcolorspace(&cs, xref, obj);
 			if (error)
 				return error;
-
-			fz_dropobj(obj);
 		}
 
 		if (!strcmp(cs->name, "Indexed"))
@@ -352,9 +318,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	{
 		pdf_logimage("has soft mask\n");
 
-		error = pdf_loadindirect(&sub, xref, obj);
-		if (error)
-			return error;
+		sub = fz_resolveindirect(obj);
 
 		error = pdf_loadimage(&mask, xref, sub, obj);
 		if (error)
@@ -366,16 +330,12 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		mask->super.cs = 0;
 		mask->super.n = 0;
 		mask->super.a = 1;
-
-		fz_dropobj(sub);
 	}
 
 	obj = fz_dictgets(dict, "Mask");
 	if (fz_isindirect(obj))
 	{
-		error = pdf_loadindirect(&sub, xref, obj);
-		if (error)
-			return error;
+		sub = fz_resolveindirect(obj);
 		if (fz_isarray(sub))
 		{
 			usecolorkey = 1;
@@ -388,7 +348,6 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 			if (error)
 				return error;
 		}
-		fz_dropobj(sub);
 	}
 	else if (fz_isarray(obj))
 	{

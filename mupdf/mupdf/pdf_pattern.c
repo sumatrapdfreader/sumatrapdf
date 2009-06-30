@@ -87,17 +87,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 		goto cleanup;
 	}
 
-	error = pdf_resolve(&obj, xref);
-	if (error)
-	{
-		error = fz_rethrow(error, "cannot resolve resource dictionary");
-		goto cleanup;
-	}
-
 	error = pdf_loadresources(&resources, xref, obj);
-
-	fz_dropobj(obj);
-
 	if (error)
 	{
 		error = fz_rethrow(error, "cannot load resources");

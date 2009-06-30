@@ -19,10 +19,6 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Title");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Title");
-		fz_dropobj(obj);
 		error = pdf_toutf8(&node->title, obj);
 		if (error)
 			return fz_rethrow(error, "cannot convert Title to UTF-8");
@@ -39,11 +35,7 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "First");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /First");
 		error = loadoutline(&node->child, xref, obj);
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load outline");
 	}
@@ -53,11 +45,7 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Next");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Next");
 		error = loadoutline(&node->next, xref, obj);
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load outline");
 	}
@@ -81,24 +69,13 @@ pdf_loadoutline(pdf_outline **nodep, pdf_xref *xref)
 	obj = fz_dictgets(xref->root, "Outlines");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Outlines");
-
 		first = fz_dictgets(obj, "First");
 		if (first)
 		{
-			error = pdf_resolve(&first, xref);
-			fz_dropobj(obj);
-			if (error)
-				return fz_rethrow(error, "cannot resolve /First");
 			error = loadoutline(&node, xref, first);
-			fz_dropobj(first);
 			if (error)
 				return fz_rethrow(error, "cannot load outline");
 		}
-		else
-			fz_dropobj(obj);
 	}
 
 	pdf_logpage("}\n");

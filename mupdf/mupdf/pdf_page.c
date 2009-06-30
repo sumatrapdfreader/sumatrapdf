@@ -106,9 +106,7 @@ loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
 
 	if (fz_isindirect(ref))
 	{
-		error = pdf_loadindirect(&obj, xref, ref);
-		if (error)
-			return fz_rethrow(error, "cannot load page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		obj = fz_resolveindirect(ref);
 
 		if (fz_isarray(obj))
 		{
@@ -119,8 +117,6 @@ loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
 		}
 		else
 			error = runone(csi, xref, rdb, ref);
-
-		fz_dropobj(obj);
 
 		if (error)
 		{
@@ -175,12 +171,6 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "CropBox");
 	if (!obj)
 		obj = fz_dictgets(dict, "MediaBox");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve page bounds");
-	}
 	if (!fz_isarray(obj))
 		return fz_throw("cannot find page bounds");
 	bbox = pdf_torect(obj);
@@ -206,11 +196,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Annots");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve annotations");
 		error = pdf_loadannots(&comments, &links, xref, obj);
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load annotations");
 	}
@@ -227,11 +213,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 		if (error)
 			return fz_rethrow(error, "cannot create fake page resources");
 	}
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve page resources");
 	error = pdf_loadresources(&rdb, xref, obj);
-	fz_dropobj(obj);
 	if (error)
 		return fz_rethrow(error, "cannot load page resources");
 
@@ -243,18 +225,12 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	error = loadpagecontents(&tree, xref, rdb, obj);
 	if (error)
-	{
-		fz_dropobj(rdb);
 		return fz_rethrow(error, "cannot load page contents");
-	}
 
 	pdf_logpage("optimize tree\n");
 	error = fz_optimizetree(tree);
 	if (error)
-	{
-		fz_dropobj(rdb);
 		return fz_rethrow(error, "cannot optimize page display tree");
-	}
 
 	/*
 	 * Create page object

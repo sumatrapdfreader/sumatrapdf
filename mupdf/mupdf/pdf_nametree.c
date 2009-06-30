@@ -11,20 +11,9 @@ loadnametreenode(fz_obj *tree, pdf_xref *xref, fz_obj *node)
 	fz_obj *val;
 	int i, len;
 
-	error = pdf_resolve(&node, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve name tree");
-
 	names = fz_dictgets(node, "Names");
 	if (names)
 	{
-		error = pdf_resolve(&names, xref);
-		if (error)
-		{
-			fz_dropobj(node);
-			return fz_rethrow(error, "cannot resolve /Names");
-		}
-
 		len = fz_arraylen(names) / 2;
 
 		for (i = 0; i < len; ++i)
@@ -32,57 +21,26 @@ loadnametreenode(fz_obj *tree, pdf_xref *xref, fz_obj *node)
 			key = fz_arrayget(names, i * 2 + 0);
 			val = fz_arrayget(names, i * 2 + 1);
 
-			error = pdf_resolve(&key, xref);
-			if (error)
-			{
-				fz_dropobj(names);
-				fz_dropobj(node);
-				return fz_rethrow(error, "cannot resolve name tree key");
-			}
-
 			error = fz_dictput(tree, key, val);
 			if (error)
-			{
-				fz_dropobj(key);
-				fz_dropobj(names);
-				fz_dropobj(node);
 				return fz_rethrow(error, "cannot insert name tree entry");
-			}
 
 			fz_sortdict(tree);
-
-			fz_dropobj(key);
 		}
-
-		fz_dropobj(names);
 	}
 
 	kids = fz_dictgets(node, "Kids");
 	if (kids)
 	{
-		error = pdf_resolve(&kids, xref);
-		if (error)
-		{
-			fz_dropobj(node);
-			return fz_rethrow(error, "cannot resolve /Kids");
-		}
-
 		len = fz_arraylen(kids);
 		for (i = 0; i < len; ++i)
 		{
 			error = loadnametreenode(tree, xref, fz_arrayget(kids, i));
 			if (error)
-			{
-				fz_dropobj(kids);
-				fz_dropobj(node);
 				return fz_rethrow(error, "cannot load name tree node");
-			}
 		}
-
-		fz_dropobj(kids);
 	}
 
-	fz_dropobj(node);
 	return fz_okay;
 }
 
@@ -120,9 +78,6 @@ pdf_loadnametrees(pdf_xref *xref)
 	dests = fz_dictgets(xref->root, "Dests");
 	if (dests)
 	{
-		error = pdf_resolve(&dests, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Dests");
 		xref->dests = dests;
 		return fz_okay;
 	}
@@ -131,20 +86,13 @@ pdf_loadnametrees(pdf_xref *xref)
 	names = fz_dictgets(xref->root, "Names");
 	if (names)
 	{
-		error = pdf_resolve(&names, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Names");
 		dests = fz_dictgets(names, "Dests");
 		if (dests)
 		{
 			error = pdf_loadnametree(&xref->dests, xref, dests);
 			if (error)
-			{
-				fz_dropobj(names);
 				return fz_rethrow(error, "cannot load name tree");
-			}
 		}
-		fz_dropobj(names);
 	}
 
 	return fz_okay;

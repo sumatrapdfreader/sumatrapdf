@@ -509,7 +509,7 @@ pdf_newencrypt(pdf_crypt **cp, char *userpw, char *ownerpw, int p, int n, fz_obj
 	createuser(crypt,
 		(unsigned char *) userpw, strlen(userpw));
 
-	error = fz_packobj(&crypt->encrypt,
+	error = fz_packobj(&crypt->encrypt, nil,
 			"<< /Filter /Standard "
 			"/V %i /R %i "
 			"/O %# /U %# "

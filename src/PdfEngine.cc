@@ -14,19 +14,10 @@ static fz_error pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, in
     fz_rect bbox;
     int rotate;
     fz_obj *obj;
-    fz_error error;
 
     obj = fz_dictgets(dict, "CropBox");
     if (!obj)
         obj = fz_dictgets(dict, "MediaBox");
-
-    if (fz_isindirect(obj)) {
-        fz_obj* obj2;
-        error = pdf_loadindirect(&obj2, xref, obj);
-        if (error)
-            return error;
-        obj = obj2;
-    }
 
     if (!fz_isarray(obj))
         return fz_throw("syntaxerror: Page missing MediaBox");
@@ -250,27 +241,19 @@ DecryptedOk:
     if (!obj)
         goto Error;
 
-    error = pdf_loadindirect(&_xref->root, _xref, obj);
-    if (error)
-        goto Error;
-
     obj = fz_dictgets(_xref->trailer, "Info");
-    if (obj)
-    {
-        error = pdf_loadindirect(&_xref->info, _xref, obj);
-        if (error)
-            goto Error;
-    }
+    if (!obj)
+	goto Error;
 
     error = pdf_loadnametrees(_xref);
     if (error)
         goto Error;
 
     error = pdf_loadoutline(&_outline, _xref);
-	// silently ignore errors from pdf_loadoutline()
-	// this information is not critical and checking the
-	// error might prevent loading some pdfs that would
-	// otherwise get displayed
+    // silently ignore errors from pdf_loadoutline()
+    // this information is not critical and checking the
+    // error might prevent loading some pdfs that would
+    // otherwise get displayed
 
     _pageCount = _pageTree->count;
     _pages = (pdf_page**)malloc(sizeof(pdf_page*) * _pageCount);
@@ -329,9 +312,7 @@ int PdfEngine::findPageNo(fz_obj *dest)
 fz_obj *PdfEngine::getNamedDest(const char *name)
 {
     fz_obj *obj = fz_dictgets(_xref->dests, (char*)name);
-    if (obj)
-        pdf_resolve(&obj, _xref);
-    return resolvedest(_xref, obj);
+    return obj;
 }
 
 pdf_page *PdfEngine::getPdfPage(int pageNo)

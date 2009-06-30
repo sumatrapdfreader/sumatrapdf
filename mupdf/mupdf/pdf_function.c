@@ -1245,16 +1245,9 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		return fz_throw("/Domain must be one dimension (%d)", func->m);
 
 	obj = fz_dictgets(dict, "Functions");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Functions");
-	}
 	if (!fz_isarray(obj))
 		return fz_throw("stitching function has no input functions");
 	{
-
 		k = fz_arraylen(obj);
 		func->u.st.k = k;
 
@@ -1262,17 +1255,13 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 
 		func->u.st.funcs = fz_malloc(func->u.st.k * sizeof (pdf_function));
 		if (!func->u.st.funcs)
-		{
-			fz_dropobj(obj);
 			return fz_throw("out of memory");
-		}
 		funcs = func->u.st.funcs;
 
 		func->u.st.bounds = fz_malloc((func->u.st.k - 1) * sizeof (float));
 		if (!func->u.st.bounds)
 		{
 			fz_free(func->u.st.funcs);
-			fz_dropobj(obj);
 			return fz_throw("out of memory");
 		}
 
@@ -1281,7 +1270,6 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		{
 			fz_free(func->u.st.funcs);
 			fz_free(func->u.st.bounds);
-			fz_dropobj(obj);
 			return fz_throw("out of memory");
 		}
 
@@ -1290,95 +1278,51 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 			sub = fz_arrayget(obj, i);
 			error = pdf_loadfunction(&func->u.st.funcs[i], xref, sub);
 			if (error)
-			{
-				fz_dropobj(obj);
 				return fz_rethrow(error, "cannot load sub function %d", i);
-			}
 			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
-			{
-				fz_dropobj(obj);
 				return fz_rethrow(error, "sub function %d /Domain or /Range mismatch", i);
-			}
 		}
 
 		if (!func->n)
-		{
 			func->n = funcs[0]->n;
-		}
 		else if (func->n != funcs[0]->n)
-		{
-			fz_dropobj(obj);
 			return fz_rethrow(error, "sub function /Domain or /Range mismatch");
-		}
-
-		fz_dropobj(obj);
 	}
 
 	obj = fz_dictgets(dict, "Bounds");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Bounds");
-	}
 	if (!fz_isarray(obj))
 		return fz_throw("stitching function has no bounds");
 	{
-
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k - 1)
-		{
-			fz_dropobj(obj);
 			return fz_throw("malformed /Bounds (not array or wrong length)");
-		}
 
 		for (i = 0; i < k-1; ++i)
 		{
 			num = fz_arrayget(obj, i);
 			if (!fz_isint(num) && !fz_isreal(num))
-			{
-				fz_dropobj(obj);
 				return fz_throw("malformed /Bounds (item not number)");
-			}
 			func->u.st.bounds[i] = fz_toreal(num);
 			if (i && func->u.st.bounds[i-1] > func->u.st.bounds[i])
-			{
-				fz_dropobj(obj);
 				return fz_throw("malformed /Bounds (item not monotonic)");
-			}
 		}
 
-		if (k != 1 &&
-				(func->domain[0][0] > func->u.st.bounds[0] ||
-				 func->domain[0][1] < func->u.st.bounds[k-2]))
+		if (k != 1 && (func->domain[0][0] > func->u.st.bounds[0] ||
+					func->domain[0][1] < func->u.st.bounds[k-2]))
 			fz_warn("malformed shading function bounds (domain mismatch), proceeding anyway.");
-
-		fz_dropobj(obj);
 	}
 
 	obj = fz_dictgets(dict, "Encode");
-	if (obj)
-	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Encode");
-	}
 	if (!fz_isarray(obj))
 		return fz_throw("stitching function is missing encoding");
 	{
-
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k * 2)
-		{
-			fz_dropobj(obj);
 			return fz_throw("malformed /Encode");
-		}
 
 		for (i = 0; i < k; ++i)
 		{
 			func->u.st.encode[i*2+0] = fz_toreal(fz_arrayget(obj, i*2+0));
 			func->u.st.encode[i*2+1] = fz_toreal(fz_arrayget(obj, i*2+1));
 		}
-
-		fz_dropobj(obj);
 	}
 
 	pdf_logrsrc("}\n");
@@ -1496,13 +1440,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 	memset(func, 0, sizeof(pdf_function));
 	func->refs = 1;
 
-	dict = ref;
-	error = pdf_resolve(&dict, xref);
-	if (error)
-	{
-		fz_free(func);
-		return fz_rethrow(error, "cannot resolve function object");
-	}
+	dict = fz_resolveindirect(ref);
 
 	obj = fz_dictgets(dict, "FunctionType");
 	func->type = fz_toint(obj);

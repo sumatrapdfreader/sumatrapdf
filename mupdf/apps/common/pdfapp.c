@@ -126,20 +126,14 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	 */
 
 	obj = fz_dictgets(app->xref->trailer, "Root");
-	if (!obj)
+	app->xref->root = fz_resolveindirect(obj);
+	if (!app->xref->root)
 		pdfapp_error(app, fz_throw("syntaxerror: missing Root object"));
 
-	error = pdf_loadindirect(&app->xref->root, app->xref, obj);
-	if (error)
-		pdfapp_error(app, error);
-
 	obj = fz_dictgets(app->xref->trailer, "Info");
-	if (obj)
-	{
-		error = pdf_loadindirect(&app->xref->info, app->xref, obj);
-		if (error)
-			pdfapp_warn(app, "Could not load PDF meta information.");
-	}
+	app->xref->info = fz_resolveindirect(obj);
+	if (!app->xref->info)
+		pdfapp_warn(app, "Could not load PDF meta information.");
 
 	error = pdf_loadnametrees(app->xref);
 	if (error)

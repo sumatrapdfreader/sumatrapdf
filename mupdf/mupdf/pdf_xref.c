@@ -150,26 +150,10 @@ pdf_decryptxref(pdf_xref *xref)
 
 	if (encrypt && id)
 	{
-		error = pdf_resolve(&encrypt, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Encrypt object");
-
 		if (fz_isnull(encrypt))
-		{
-			fz_dropobj(encrypt);
 			return fz_okay;
-		}
-
-		error = pdf_resolve(&id, xref);
-		if (error)
-		{
-			fz_dropobj(encrypt);
-			return fz_rethrow(error, "cannot resolve /ID object");
-		}
 
 		error = pdf_newdecrypt(&xref->crypt, encrypt, id);
-		fz_dropobj(encrypt);
-		fz_dropobj(id);
 		if (error)
 			return fz_rethrow(error, "cannot create decrypter");
 	}
@@ -191,7 +175,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 	int roid, rgen;
 
 	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object out of range (%d %d R)", oid, gen);
+		return fz_throw("object out of range (%d %d R); xref size %d", oid, gen, xref->len);
 
 	x = &xref->table[oid];
 
@@ -212,7 +196,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 		if (error)
 			return fz_rethrow(error, "cannot seek to object (%d %d R) offset %d", oid, gen, x->ofs);
 
-		error = pdf_parseindobj(&x->obj, xref->file, buf, sizeof buf, &roid, &rgen, &x->stmofs);
+		error = pdf_parseindobj(&x->obj, xref, xref->file, buf, sizeof buf, &roid, &rgen, &x->stmofs);
 		if (error)
 			return fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
 
@@ -247,38 +231,6 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int oid, int gen)
 
 	*objp = fz_keepobj(xref->table[oid].obj);
 
-	return fz_okay;
-}
-
-fz_error
-pdf_loadindirect(fz_obj **objp, pdf_xref *xref, fz_obj *ref)
-{
-	fz_error error;
-
-	if (ref == nil)
-		return fz_throw("assert: dereference null indirect reference");
-
-	error = pdf_loadobject(objp, xref, fz_tonum(ref), fz_togen(ref));
-	if (error)
-		return fz_rethrow(error, "cannot load indirect object (%d %d R)", fz_tonum(ref), fz_togen(ref));
-
-	return fz_okay;
-}
-
-fz_error
-pdf_resolve(fz_obj **objp, pdf_xref *xref)
-{
-	fz_error error;
-
-	if (fz_isindirect(*objp))
-	{
-		error = pdf_loadindirect(objp, xref, *objp);
-		if (error)
-			return fz_rethrow(error, "cannot load indirect object (%d %d R)", fz_tonum(*objp), fz_togen(*objp));
-		return fz_okay;
-	}
-
-	fz_keepobj(*objp);
 	return fz_okay;
 }
 

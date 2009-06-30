@@ -46,7 +46,8 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 
 	if (strcmp(typestr, "Page") == 0)
 	{
-		pdf_logpage("page %d (%d %d R)\n", *pagenum, ref->u.r.oid, ref->u.r.gid);
+		pdf_logpage("page %d (%d %d R)\n", *pagenum, fz_tonum(ref), fz_togen(ref));
+
 		(*pagenum)++;
 
 		if (inherit.resources && !fz_dictgets(obj, "Resources"))
@@ -109,38 +110,26 @@ loadpagetree(pdf_xref *xref, pdf_pagetree *pages,
 		if (inh) inherit.rotate = inh;
 
 		kids = fz_dictgets(obj, "Kids");
-		if (kids)
-		{
-			error = pdf_resolve(&kids, xref);
-			if (error)
-				return fz_rethrow(error, "cannot resolve /Kids");
-		}
 		if (!fz_isarray(kids))
 			return fz_throw("page tree contains no pages");
 
-		pdf_logpage("subtree %d pages (%d %d R) {\n",
-				fz_arraylen(kids), ref->u.r.oid, ref->u.r.gid);
+		pdf_logpage("subtree %d pages (%d %d R) {\n", fz_arraylen(kids), fz_tonum(ref), fz_togen(ref));
 
 		for (i = 0; i < fz_arraylen(kids); i++)
 		{
 			kref = fz_arrayget(kids, i);
 
-			error = pdf_loadindirect(&kobj, xref, kref);
-			if (error) { fz_dropobj(kids); return fz_rethrow(error, "cannot load kid"); }
-
+			kobj = fz_resolveindirect(kref);
 			if (kobj == obj)
 			{
 				/* prevent infinite recursion possible in maliciously crafted PDFs */
-				fz_dropobj(kids);
 				return fz_throw("corrupted pdf file");
 			}
 
 			error = loadpagetree(xref, pages, inherit, kobj, kref, pagenum);
-			fz_dropobj(kobj);
-			if (error) { fz_dropobj(kids); return fz_rethrow(error, "cannot load pagesubtree (%d %d R)", fz_tonum(kref), fz_togen(kref)); }
+			if (error) 
+				return fz_rethrow(error, "cannot load pagesubtree (%d %d R)", fz_tonum(kref), fz_togen(kref));
 		}
-
-		fz_dropobj(kids);
 
 		pdf_logpage("}\n");
 	}
@@ -183,12 +172,10 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 	trailer = xref->trailer;
 
 	ref = fz_dictgets(trailer, "Root");
-	error = pdf_loadindirect(&catalog, xref, ref);
-	if (error) { error = fz_rethrow(error, "cannot load Root object"); goto cleanup; }
+	catalog = fz_resolveindirect(ref);
 
 	treeref = fz_dictgets(catalog, "Pages");
-	error = pdf_loadindirect(&pages, xref, treeref);
-	if (error) { error = fz_rethrow(error, "cannot load Pages object"); goto cleanup; }
+	pages = fz_resolveindirect(treeref);
 
 	ref = fz_dictgets(pages, "Count");
 	count = fz_toint(ref);
@@ -196,7 +183,7 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 	p = fz_malloc(sizeof(pdf_pagetree));
 	if (!p) { error = fz_rethrow(-1, "out of memory: page tree struct"); goto cleanup; }
 
-	pdf_logpage("load pagetree %d pages (%d %d R) ptr=%p {\n", count, treeref->u.r.oid, treeref->u.r.gid, p);
+	pdf_logpage("load pagetree %d pages (%d %d R) ptr=%p {\n", count, fz_tonum(treeref), fz_togen(treeref), p);
 
 	p->pref = nil;
 	p->pobj = nil;

@@ -60,26 +60,12 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	{
 		fz_obj *attrs = obj;
 
-		error = pdf_resolve(&attrs, xref);
-		if (error)
-		{
-			fz_dropobj(attrs);
-			error = fz_rethrow(error, "cannot resolve xobject group attributes");
-			goto cleanup;
-		}
-
-		obj = fz_dictgets(attrs, "I");
-		form->isolated = fz_tobool(obj);
-		obj = fz_dictgets(attrs, "K");
-		form->knockout = fz_tobool(obj);
+		form->isolated = fz_tobool(fz_dictgets(attrs, "I"));
+		form->knockout = fz_tobool(fz_dictgets(attrs, "K"));
 
 		obj = fz_dictgets(attrs, "S");
-		if (!strcmp(fz_toname(obj), "Transparency"))
-		{
+		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Transparency"))
 			form->transparency = 1;
-		}
-
-		fz_dropobj(attrs);
 	}
 
 	pdf_logrsrc("isolated %d\n", form->isolated);
@@ -89,15 +75,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	obj = fz_dictgets(dict, "Resources");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-		{
-			fz_dropobj(obj);
-			error = fz_rethrow(error, "cannot resolve xobject resources");
-			goto cleanup;
-		}
 		error = pdf_loadresources(&form->resources, xref, obj);
-		fz_dropobj(obj);
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot load xobject resources");
@@ -118,6 +96,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 	*formp = form;
 	return fz_okay;
+
 cleanup:
 	pdf_removeitem(xref->store, PDF_KXOBJECT, ref);
 	pdf_dropxobject(form);

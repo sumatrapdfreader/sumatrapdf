@@ -43,16 +43,12 @@ resolvedest(pdf_xref *xref, fz_obj *dest)
 	if (fz_isname(dest))
 	{
 		dest = fz_dictget(xref->dests, dest);
-		if (dest)
-			pdf_resolve(&dest, xref); /* XXX */
 		return resolvedest(xref, dest);
 	}
 
 	else if (fz_isstring(dest))
 	{
 		dest = fz_dictget(xref->dests, dest);
-		if (dest)
-			pdf_resolve(&dest, xref); /* XXX */
 		return resolvedest(xref, dest);
 	}
 
@@ -104,22 +100,14 @@ pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Dest");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /Dest");
 		dest = resolvedest(xref, obj);
 		pdf_logpage("dest (%d %d R)\n", fz_tonum(dest), fz_togen(dest));
-		fz_dropobj(obj);
 		kind = PDF_LGOTO;
 	}
 
 	action = fz_dictgets(dict, "A");
 	if (action)
 	{
-		error = pdf_resolve(&action, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve /A");
-
 		obj = fz_dictgets(action, "S");
 		if (!strcmp(fz_toname(obj), "GoTo"))
 		{
@@ -141,8 +129,6 @@ pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict)
 		}
 		else
 			pdf_logpage("action ... ?\n");
-
-		fz_dropobj(action);
 	}
 
 	pdf_logpage("}\n");
@@ -176,13 +162,6 @@ pdf_loadannots(pdf_comment **cp, pdf_link **lp, pdf_xref *xref, fz_obj *annots)
 	for (i = 0; i < fz_arraylen(annots); i++)
 	{
 		obj = fz_arrayget(annots, i);
-		error = pdf_resolve(&obj, xref);
-		if (error)
-		{
-			if (link)
-				pdf_droplink(link);
-			return fz_rethrow(error, "cannot resolve annotation");
-		}
 
 		subtype = fz_dictgets(obj, "Subtype");
 		if (!strcmp(fz_toname(subtype), "Link"))
@@ -190,7 +169,6 @@ pdf_loadannots(pdf_comment **cp, pdf_link **lp, pdf_xref *xref, fz_obj *annots)
 			pdf_link *temp = nil;
 
 			error = pdf_loadlink(&temp, xref, obj);
-			fz_dropobj(obj);
 			if (error)
 			{
 				if (link)
@@ -207,7 +185,6 @@ pdf_loadannots(pdf_comment **cp, pdf_link **lp, pdf_xref *xref, fz_obj *annots)
 		else
 		{
 			error = loadcomment(&comment, xref, obj);
-			fz_dropobj(obj);
 			if (error)
 			{
 				if (link)

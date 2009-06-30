@@ -34,10 +34,10 @@ typedef enum pdf_token_e
 fz_error pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *len);
 
 /* parse.c */
-fz_error pdf_parsearray(fz_obj **op, fz_stream *f, char *buf, int cap);
-fz_error pdf_parsedict(fz_obj **op, fz_stream *f, char *buf, int cap);
-fz_error pdf_parsestmobj(fz_obj **op, fz_stream *f, char *buf, int cap);
-fz_error pdf_parseindobj(fz_obj **op, fz_stream *f, char *buf, int cap, int *oid, int *gen, int *stmofs);
+fz_error pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
+fz_error pdf_parsedict(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
+fz_error pdf_parsestmobj(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
+fz_error pdf_parseindobj(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap, int *oid, int *gen, int *stmofs);
 
 fz_rect pdf_torect(fz_obj *array);
 fz_matrix pdf_tomatrix(fz_obj *array);
@@ -107,7 +107,7 @@ void pdf_dropcrypt(pdf_crypt *crypt);
  */
 
 typedef struct pdf_xrefentry_s pdf_xrefentry;
-typedef struct pdf_xref_s pdf_xref;
+/* typedef struct pdf_xref_s pdf_xref; -- already defined in fitz_stream.h */
 
 struct pdf_xref_s
 {
@@ -155,8 +155,6 @@ void pdf_closexref(pdf_xref *);
 
 fz_error pdf_cacheobject(pdf_xref *, int oid, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int oid, int gen);
-fz_error pdf_loadindirect(fz_obj **objp, pdf_xref *, fz_obj *ref);
-fz_error pdf_resolve(fz_obj **reforobj, pdf_xref *);
 
 int pdf_isstream(pdf_xref *xref, int oid, int gen);
 fz_error pdf_buildinlinefilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj);

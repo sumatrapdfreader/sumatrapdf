@@ -1,8 +1,8 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
+#include "mupdf.h"
 
-extern void fz_droparray(fz_obj *array);
-extern void fz_dropdict(fz_obj *dict);
+extern void fz_freearray(fz_obj *array);
+extern void fz_freedict(fz_obj *dict);
 
 #define NEWOBJ(KIND,SIZE) \
 	fz_obj *o; \
@@ -61,11 +61,13 @@ fz_newname(fz_obj **op, char *str)
 }
 
 fz_error
-fz_newindirect(fz_obj **op, int objid, int genid)
+fz_newindirect(fz_obj **op, int num, int gen, pdf_xref *xref)
 {
 	NEWOBJ(FZ_INDIRECT, sizeof (fz_obj));
-	o->u.r.oid = objid;
-	o->u.r.gid = genid;
+	o->u.r.num = num;
+	o->u.r.gen = gen;
+	o->u.r.xref = xref;
+	o->u.r.obj = nil;
 	return fz_okay;
 }
 
@@ -84,79 +86,90 @@ fz_dropobj(fz_obj *o)
 	if (--o->refs == 0)
 	{
 		if (o->kind == FZ_ARRAY)
-			fz_droparray(o);
+		{
+			fz_freearray(o);
+		}
 		else if (o->kind == FZ_DICT)
-			fz_dropdict(o);
-		else
+		{
+			fz_freedict(o);
+		}
+		else if (o->kind == FZ_INDIRECT)
+		{
+			if (o->u.r.obj)
+				fz_dropobj(o->u.r.obj);
 			fz_free(o);
+		}
+		else
+		{
+			fz_free(o);
+		}
 	}
 }
 
-int
-fz_isnull(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_NULL : 0;
-}
-
-int
-fz_isbool(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_BOOL : 0;
-}
-
-int
-fz_isint(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_INT : 0;
-}
-
-int
-fz_isreal(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_REAL : 0;
-}
-
-int
-fz_isstring(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_STRING : 0;
-}
-
-int
-fz_isname(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_NAME : 0;
-}
-
-int
-fz_isarray(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_ARRAY : 0;
-}
-
-int
-fz_isdict(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_DICT : 0;
-}
-
-int
-fz_isindirect(fz_obj *obj)
+int fz_isindirect(fz_obj *obj)
 {
 	return obj ? obj->kind == FZ_INDIRECT : 0;
 }
 
-int
-fz_tobool(fz_obj *obj)
+int fz_isnull(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_NULL : 0;
+}
+
+int fz_isbool(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_BOOL : 0;
+}
+
+int fz_isint(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_INT : 0;
+}
+
+int fz_isreal(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_REAL : 0;
+}
+
+int fz_isstring(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_STRING : 0;
+}
+
+int fz_isname(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_NAME : 0;
+}
+
+int fz_isarray(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_ARRAY : 0;
+}
+
+int fz_isdict(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
+	return obj ? obj->kind == FZ_DICT : 0;
+}
+
+int fz_tobool(fz_obj *obj)
+{
+	obj = fz_resolveindirect(obj);
 	if (fz_isbool(obj))
 		return obj->u.b;
 	return 0;
 }
 
-int
-fz_toint(fz_obj *obj)
+int fz_toint(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
 	if (fz_isint(obj))
 		return obj->u.i;
 	if (fz_isreal(obj))
@@ -164,9 +177,9 @@ fz_toint(fz_obj *obj)
 	return 0;
 }
 
-float
-fz_toreal(fz_obj *obj)
+float fz_toreal(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
 	if (fz_isreal(obj))
 		return obj->u.f;
 	if (fz_isint(obj))
@@ -174,54 +187,63 @@ fz_toreal(fz_obj *obj)
 	return 0;
 }
 
-char *
-fz_toname(fz_obj *obj)
+char *fz_toname(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
 	if (fz_isname(obj))
 		return obj->u.n;
 	return "";
 }
 
-char *
-fz_tostrbuf(fz_obj *obj)
+char *fz_tostrbuf(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
 	if (fz_isstring(obj))
 		return obj->u.s.buf;
 	return "";
 }
 
-int
-fz_tostrlen(fz_obj *obj)
+int fz_tostrlen(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
 	if (fz_isstring(obj))
 		return obj->u.s.len;
 	return 0;
 }
 
-int
-fz_tonum(fz_obj *obj)
+int fz_tonum(fz_obj *obj)
 {
 	if (fz_isindirect(obj))
-		return obj->u.r.oid;
+		return obj->u.r.num;
 	return 0;
 }
 
-int
-fz_togen(fz_obj *obj)
+int fz_togen(fz_obj *obj)
 {
 	if (fz_isindirect(obj))
-		return obj->u.r.gid;
+		return obj->u.r.gen;
 	return 0;
 }
 
-
-fz_error
-fz_newnamefromstring(fz_obj **op, fz_obj *str)
+fz_obj *fz_resolveindirect(fz_obj *ref)
 {
-	NEWOBJ(FZ_NAME, offsetof(fz_obj, u.n) + fz_tostrlen(str) + 1);
-	memcpy(o->u.n, fz_tostrbuf(str), fz_tostrlen(str));
-	o->u.n[fz_tostrlen(str)] = '\0';
-	return fz_okay;
+	int error;
+
+	if (fz_isindirect(ref))
+	{
+		if (!ref->u.r.obj && ref->u.r.xref)
+		{
+			error = pdf_loadobject(&ref->u.r.obj, ref->u.r.xref, fz_tonum(ref), fz_togen(ref));
+			if (error)
+			{
+				fz_catch(error, "cannot resolve reference (%d %d R); ignoring error", fz_tonum(ref), fz_togen(ref));
+				ref->u.r.obj = fz_keepobj(ref);
+			}
+		}
+		return ref->u.r.obj;
+	}
+
+	return ref;
 }
 
 int
@@ -250,9 +272,9 @@ fz_objcmp(fz_obj *a, fz_obj *b)
 		return strcmp(a->u.n, b->u.n);
 
 	case FZ_INDIRECT:
-		if (a->u.r.oid == b->u.r.oid)
-			return a->u.r.gid - b->u.r.gid;
-		return a->u.r.oid - b->u.r.oid;
+		if (a->u.r.num == b->u.r.num)
+			return a->u.r.gen - b->u.r.gen;
+		return a->u.r.num - b->u.r.num;
 
 	case FZ_ARRAY:
 		if (a->u.a.len != b->u.a.len)

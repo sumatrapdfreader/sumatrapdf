@@ -55,11 +55,7 @@ preloadcolorspace(pdf_xref *xref, fz_obj *ref)
 	if (pdf_finditem(xref->store, PDF_KCOLORSPACE, ref))
 		return fz_okay;
 
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve colorspace resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 	error = pdf_loadcolorspace(&colorspace, xref, obj);
-	fz_dropobj(obj);
 	if (error)
 		return fz_rethrow(error, "cannot load colorspace resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 
@@ -82,17 +78,12 @@ preloadpattern(pdf_xref *xref, fz_obj *ref)
 	fz_obj *type;
 	fz_obj *obj = ref;
 
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve pattern/shade resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
-
 	type = fz_dictgets(obj, "PatternType");
 
 	if (fz_toint(type) == 1)
 	{
 		error = pdf_loadpattern(&pattern, xref, obj, ref);
 		pdf_droppattern(pattern); /* we did this just to fill the store, no need to hold on to it */
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load pattern resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		return fz_okay;
@@ -102,7 +93,6 @@ preloadpattern(pdf_xref *xref, fz_obj *ref)
 	{
 		error = pdf_loadshade(&shade, xref, obj, ref);
 		fz_dropshade(shade); /* we did this just to fill the store, no need to hold on to it */
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load shade resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		return fz_okay;
@@ -110,7 +100,6 @@ preloadpattern(pdf_xref *xref, fz_obj *ref)
 
 	else
 	{
-		fz_dropobj(obj);
 		return fz_throw("unknown pattern resource type");
 	}
 }
@@ -120,15 +109,11 @@ preloadshading(pdf_xref *xref, fz_obj *ref)
 {
 	fz_error error;
 	fz_shade *shade;
+	fz_obj *obj;
 
-	fz_obj *obj = ref;
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve shade resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
-
+	obj = fz_resolveindirect(ref);
 	error = pdf_loadshade(&shade, xref, obj, ref);
 	fz_dropshade(shade); /* we did this just to fill the store, no need to hold on to it */
-	fz_dropobj(obj);
 	if (error)
 		return fz_rethrow(error, "cannot load shade resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 	return fz_okay;
@@ -140,12 +125,10 @@ preloadxobject(pdf_xref *xref, fz_obj *ref)
 	fz_error error;
 	pdf_xobject *xobject;
 	pdf_image *image;
-	fz_obj *obj = ref;
+	fz_obj *obj;
 	fz_obj *subtype;
 
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve xobject/image resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
+	obj = fz_resolveindirect(ref);
 
 	subtype = fz_dictgets(obj, "Subtype");
 
@@ -153,7 +136,6 @@ preloadxobject(pdf_xref *xref, fz_obj *ref)
 	{
 		error = pdf_loadxobject(&xobject, xref, obj, ref);
 		pdf_dropxobject(xobject); /* we did this just to fill the store, no need to hold on to it */
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load xobject resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		return fz_okay;
@@ -163,7 +145,6 @@ preloadxobject(pdf_xref *xref, fz_obj *ref)
 	{
 		error = pdf_loadimage(&image, xref, obj, ref);
 		fz_dropimage((fz_image*)image); /* we did this just to fill the store, no need to hold on to it */
-		fz_dropobj(obj);
 		if (error)
 			return fz_rethrow(error, "cannot load image resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		return fz_okay;
@@ -171,7 +152,6 @@ preloadxobject(pdf_xref *xref, fz_obj *ref)
 
 	else
 	{
-		fz_dropobj(obj);
 		return fz_throw("unknown type '%s' for xobject resource (%d %d R)", fz_toname(subtype), fz_tonum(ref), fz_togen(ref));
 	}
 }
@@ -181,13 +161,12 @@ preloadfont(pdf_xref *xref, fz_obj *ref)
 {
 	fz_error error;
 	pdf_fontdesc *font;
-	fz_obj *obj = ref;
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve font resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
+	fz_obj *obj;
+
+	obj = fz_resolveindirect(ref);
+
 	error = pdf_loadfont(&font, xref, obj, ref);
 	pdf_dropfont(font); /* we did this just to fill the store, no need to hold on to it */
-	fz_dropobj(obj);
 	if (error)
 		return fz_rethrow(error, "cannot load font resource (%d %d R)", fz_tonum(ref), fz_togen(ref));
 	return fz_okay;
@@ -197,11 +176,10 @@ static fz_error
 preloadmask(pdf_xref *xref, fz_obj *ref)
 {
 	fz_error error;
-	fz_obj *obj = ref;
+	fz_obj *obj;
 	fz_obj *grp;
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot resolve mask dictionary (%d %d R)", fz_tonum(ref), fz_togen(ref));
+
+	obj = fz_resolveindirect(ref);
 
 	if (fz_isdict(obj))
 	{
@@ -283,31 +261,13 @@ copyresolved(fz_obj **outp, pdf_xref *xref, fz_obj *dict)
 	{
 		key = fz_dictgetkey(dict, i);
 		val = fz_dictgetval(dict, i);
+		obj = fz_resolveindirect(val);
 
-		if (fz_isindirect(val))
+		error = fz_dictput(copy, key, obj);
+		if (error)
 		{
-			error = pdf_loadindirect(&obj, xref, val);
-			if (error)
-			{
-				fz_dropobj(copy);
-				return fz_rethrow(error, "cannot load object");
-			}
-			error = fz_dictput(copy, key, obj);
-			fz_dropobj(obj);
-			if (error)
-			{
-				fz_dropobj(copy);
-				return fz_rethrow(error, "cannot save object");
-			}
-		}
-		else
-		{
-			error = fz_dictput(copy, key, val);
-			if (error)
-			{
-				fz_dropobj(copy);
-				return fz_rethrow(error, "cannot copy object");
-			}
+		    fz_dropobj(copy);
+		    return fz_rethrow(error, "cannot copy object");
 		}
 	}
 
@@ -340,7 +300,7 @@ pdf_loadresources(fz_obj **rdbp, pdf_xref *xref, fz_obj *orig)
 	pdf_logrsrc("load resources {\n");
 
 	/*
-	 * Resolve indirect objects
+	 * Resolve indirect objects // XXX is this still necessary?
 	 */
 
 	error = copyresolved(&copy, xref, orig);

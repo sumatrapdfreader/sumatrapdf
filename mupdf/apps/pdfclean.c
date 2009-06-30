@@ -61,20 +61,10 @@ void openxref(char *filename, char *password)
 
     /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
     obj = fz_dictgets(xref->trailer, "Root");
-    if (!obj)
-	die(error);
-
-    error = pdf_loadindirect(&xref->root, xref, obj);
-    if (error)
-	die(error);
+    xref->root = fz_resolveindirect(obj);
 
     obj = fz_dictgets(xref->trailer, "Info");
-    if (obj)
-    {
-	error = pdf_loadindirect(&xref->info, xref, obj);
-	if (error)
-	    die(error);
-    }
+    xref->info = fz_resolveindirect(obj);
 }
 
 /*
@@ -132,9 +122,7 @@ static fz_error sweepref(pdf_xref *xref, fz_obj *ref)
 
     uselist[oid] = 1;
 
-    error = pdf_loadindirect(&obj, xref, ref);
-    if (error)
-	return fz_rethrow(error, "cannot load indirect object");
+    obj = fz_resolveindirect(ref);
 
     /* Bake in /Length in stream objects */
     if (xref->table[oid].stmofs)
@@ -142,7 +130,7 @@ static fz_error sweepref(pdf_xref *xref, fz_obj *ref)
 	len = fz_dictgets(obj, "Length");
 	if (fz_isindirect(len))
 	{
-	    pdf_loadindirect(&len, xref, len);
+	    len = fz_resolveindirect(len);
 	    fz_dictputs(obj, "Length", len);
 	}
     }
@@ -154,7 +142,6 @@ static fz_error sweepref(pdf_xref *xref, fz_obj *ref)
 	return error; /* too deeply nested for rethrow */
     }
 
-    fz_dropobj(obj);
     return fz_okay;
 }
 
@@ -323,7 +310,7 @@ void savexref(void)
 
     if (doencrypt)
     {
-	fz_newindirect(&obj, xref->len, 0);
+	fz_newindirect(&obj, xref->len, 0, xref);
 	fz_dictputs(trailer, "Encrypt", obj);
 	fz_dropobj(obj);
     }
@@ -405,7 +392,7 @@ int main(int argc, char **argv)
     id = fz_dictgets(xref->trailer, "ID");
     if (!id)
     {
-	error = fz_packobj(&id, "[(ABCDEFGHIJKLMNOP)(ABCDEFGHIJKLMNOP)]");
+	error = fz_packobj(&id, xref, "[(ABCDEFGHIJKLMNOP)(ABCDEFGHIJKLMNOP)]");
 	if (error)
 	    die(error);
     }

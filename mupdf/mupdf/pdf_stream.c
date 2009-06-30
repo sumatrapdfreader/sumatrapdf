@@ -220,16 +220,9 @@ buildrawfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, int
 	int len;
 
 	stmlen = fz_dictgets(stmobj, "Length");
-	if (stmlen)
-	{
-		error = pdf_resolve(&stmlen, xref);
-		if (error)
-			return fz_rethrow(error, "cannot resolve stream /Length");
-	}
 	if (!fz_isint(stmlen))
 		return fz_throw("corrupt stream length");
 	len = fz_toint(stmlen);
-	fz_dropobj(stmlen);
 
 	error = fz_newnullfilter(&base, len);
 	if (error)
@@ -313,55 +306,36 @@ pdf_buildfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, in
 
 	if (filters)
 	{
-		error = pdf_resolve(&filters, xref);
-		if (error)
-		{
-			error = fz_rethrow(error, "cannot resolve stream /Filter");
-			goto cleanup0;
-		}
-
-		if (params)
-		{
-			error = pdf_resolve(&params, xref);
-			if (error)
-			{
-				error = fz_rethrow(error, "cannot resolve stream /DecodeParms");
-				goto cleanup1;
-			}
-		}
-
 		if (fz_isname(filters))
 		{
 			error = buildonefilter(&tmp, xref, filters, params);
 			if (error)
 			{
-				error = fz_rethrow(error, "cannot create filter");
-				goto cleanup2;
+				fz_dropfilter(base);
+				return fz_rethrow(error, "cannot create filter");
 			}
 
 			error = fz_newpipeline(&pipe, base, tmp);
-			fz_dropfilter(base);
-			fz_dropfilter(tmp);
 			if (error)
 			{
-				error = fz_rethrow(error, "cannot create filter pipeline");
-				goto cleanup2;
+				fz_dropfilter(base);
+				fz_dropfilter(tmp);
+				return fz_rethrow(error, "cannot create filter pipeline");
 			}
+
+			fz_dropfilter(base);
+			fz_dropfilter(tmp);
 		}
 		else
 		{
 			error = buildfilterchain(&pipe, xref, base, filters, params);
 			if (error)
 			{
-				error = fz_rethrow(error, "cannot create filter chain");
-				goto cleanup2;
+				fz_dropfilter(base);
+				return fz_rethrow(error, "cannot create filter chain");
 			}
+			fz_dropfilter(base);
 		}
-
-		if (params)
-			fz_dropobj(params);
-
-		fz_dropobj(filters);
 
 		*filterp = pipe;
 	}
@@ -371,15 +345,6 @@ pdf_buildfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, in
 	}
 
 	return fz_okay;
-
-cleanup2:
-	if (params)
-		fz_dropobj(params);
-cleanup1:
-	fz_dropobj(filters);
-cleanup0:
-	fz_dropfilter(base);
-	return error; /* already rethrown */
 }
 
 /*

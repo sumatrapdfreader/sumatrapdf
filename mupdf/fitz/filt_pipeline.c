@@ -44,9 +44,6 @@ fz_newpipeline(fz_filter **fp, fz_filter *head, fz_filter *tail)
 	fz_error error;
 
 	FZ_NEWFILTER(fz_pipeline, p, pipeline);
-	p->head = fz_keepfilter(head);
-	p->tail = fz_keepfilter(tail);
-	p->tailneedsin = 1;
 
 	error = fz_newbuffer(&p->buffer, FZ_BUFSIZE);
 	if (error)
@@ -54,6 +51,10 @@ fz_newpipeline(fz_filter **fp, fz_filter *head, fz_filter *tail)
 	    fz_free(p);
 	    return fz_rethrow(error, "cannot create buffer");
 	}
+
+	p->head = fz_keepfilter(head);
+	p->tail = fz_keepfilter(tail);
+	p->tailneedsin = 1;
 
 	return fz_okay;
 }

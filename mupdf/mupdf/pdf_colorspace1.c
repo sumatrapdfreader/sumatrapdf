@@ -231,10 +231,6 @@ loadcalgray(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 	struct calgray *cs;
 	fz_obj *tmp;
 
-	error = pdf_resolve(&dict, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find colorspace");
-
 	cs = fz_malloc(sizeof(struct calgray));
 	if (!cs)
 		return fz_rethrow(-1, "out of memory: gray colorspace struct");
@@ -273,8 +269,6 @@ loadcalgray(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 	if (fz_isreal(tmp))
 		cs->gamma = fz_toreal(tmp);
 
-	fz_dropobj(dict);
-
 	*csp = (fz_colorspace*) cs;
 	return fz_okay;
 }
@@ -286,10 +280,6 @@ loadcalrgb(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 	struct calrgb *cs;
 	fz_obj *tmp;
 	int i;
-
-	error = pdf_resolve(&dict, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find colorspace");
 
 	cs = fz_malloc(sizeof(struct calrgb));
 	if (!cs)
@@ -348,8 +338,6 @@ loadcalrgb(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 
 	fz_invert3x3(cs->invmat, cs->matrix);
 
-	fz_dropobj(dict);
-
 	*csp = (fz_colorspace*) cs;
 	return fz_okay;
 }
@@ -360,10 +348,6 @@ loadlab(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 	fz_error error;
 	struct cielab *cs;
 	fz_obj *tmp;
-
-	error = pdf_resolve(&dict, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find colorspace");
 
 	cs = fz_malloc(sizeof(struct cielab));
 	if (!cs)
@@ -411,8 +395,6 @@ loadlab(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 		cs->range[3] = fz_toreal(fz_arrayget(tmp, 3));
 	}
 
-	fz_dropobj(dict);
-
 	*csp = (fz_colorspace*) cs;
 	return fz_okay;
 }
@@ -426,19 +408,14 @@ loadlab(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 static fz_error
 loadiccbased(fz_colorspace **csp, pdf_xref *xref, fz_obj *ref)
 {
-	fz_error error;
 	fz_obj *dict;
 	int n;
 
 	pdf_logrsrc("load ICCBased\n");
 
-	error = pdf_loadindirect(&dict, xref, ref);
-	if (error)
-		return fz_rethrow(error, "cannot find colorspace");
+	dict = fz_resolveindirect(ref);
 
 	n = fz_toint(fz_dictgets(dict, "N"));
-
-	fz_dropobj(dict);
 
 	switch (n)
 	{
@@ -509,12 +486,7 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 	pdf_logrsrc("n = %d\n", n);
 
-	error = pdf_resolve(&baseobj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find colorspace");
-
 	error = pdf_loadcolorspace(&base, xref, baseobj);
-	fz_dropobj(baseobj);
 	if (error)
 		return fz_rethrow(error, "cannot load base colorspace");
 	fz_keepcolorspace(base);
@@ -587,12 +559,7 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 	pdf_logrsrc("load Indexed {\n");
 
-	error = pdf_resolve(&baseobj, xref);
-	if (error)
-		return fz_rethrow(error, "cannot find colorspace");
-
 	error = pdf_loadcolorspace(&base, xref, baseobj);
-	fz_dropobj(baseobj);
 	if (error)
 		return fz_rethrow(error, "cannot load base colorspace");
 	fz_keepcolorspace(base);
@@ -738,12 +705,7 @@ pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 					return fz_okay;
 				}
 
-				error = pdf_resolve(&obj, xref);
-				if (error)
-					return fz_rethrow(error, "cannot find pattern");
-
 				error = pdf_loadcolorspace(csp, xref, obj);
-				fz_dropobj(obj);
 				if (error)
 					return fz_rethrow(error, "cannot load pattern");
 			}

@@ -111,10 +111,7 @@ pdf_loadshadefunction(fz_shade *shade, pdf_xref *xref, fz_obj *shading, float t0
 	if (!ref)
 		return fz_throw("shading function not found");
 
-	obj = ref;
-	error = pdf_resolve(&obj, xref);
-	if (error)
-		return fz_rethrow(error, "couldn't resolve shading function");
+	obj = fz_resolveindirect(ref);
 
 	shade->usefunction = 1;
 
@@ -127,8 +124,6 @@ pdf_loadshadefunction(fz_shade *shade, pdf_xref *xref, fz_obj *shading, float t0
 		error = pdf_loadcomponentshadefunc(shade, xref, shading, obj, t0, t1);
 	else
 		error = fz_throw("invalid shading function");
-
-	fz_dropobj(obj);
 
 	if (error)
 		return fz_rethrow(error, "couldn't load shading function");
@@ -184,13 +179,9 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_m
 			fz_keepcolorspace(shade->cs);
 		else
 		{
-			error = pdf_resolve(&obj, xref);
-			if (error)
-				return fz_rethrow(error, "couldn't resolve colorspace");
 			error = pdf_loadcolorspace(&shade->cs, xref, obj);
 			if (error)
 				return fz_rethrow(error, "could not load colorspace");
-			fz_dropobj(obj);
 		}
 	}
 
@@ -304,12 +295,8 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		if (!obj)
 			return fz_throw("syntaxerror: missing shading dictionary");
 
-		shd = obj;
-		error = pdf_resolve(&shd, xref);
-		if (error)
-			return fz_rethrow(error, "could not resolve shading dictionary");
+		shd = fz_resolveindirect(obj);
 		error = loadshadedict(shadep, xref, shd, obj, mat);
-		fz_dropobj(shd);
 		if (error)
 			return fz_rethrow(error, "could not load shading dictionary");
 

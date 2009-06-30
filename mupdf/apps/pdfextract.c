@@ -44,20 +44,10 @@ void openxref(char *filename, char *password)
 
     /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
     obj = fz_dictgets(xref->trailer, "Root");
-    if (!obj)
-	die(error);
-
-    error = pdf_loadindirect(&xref->root, xref, obj);
-    if (error)
-	die(error);
+    xref->root = fz_resolveindirect(obj);
 
     obj = fz_dictgets(xref->trailer, "Info");
-    if (obj)
-    {
-	error = pdf_loadindirect(&xref->info, xref, obj);
-	if (error)
-	    die(error);
-    }
+    xref->info = fz_resolveindirect(obj);
 }
 
 void closexref()
@@ -102,7 +92,7 @@ void saveimage(fz_obj *obj, int num, int gen)
     int x;
     int y;
 
-    error = fz_newindirect(&ref, num, gen);
+    error = fz_newindirect(&ref, num, gen, xref);
     if (error)
         die(error);
 
@@ -227,12 +217,7 @@ void savefont(fz_obj *dict, int num, int gen)
     obj = fz_dictgets(dict, "FontFile3");
     if (obj)
     {
-
         stream = obj;
-
-        error = pdf_resolve(&obj, xref);
-        if (error)
-            die(error);
 
         obj = fz_dictgets(obj, "Subtype");
         if (obj && !fz_isname(obj))

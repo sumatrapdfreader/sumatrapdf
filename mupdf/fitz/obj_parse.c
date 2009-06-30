@@ -3,6 +3,8 @@
 
 struct vap { va_list ap; };
 
+static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v);
+
 static inline int iswhite(int ch)
 {
 	return
@@ -29,8 +31,6 @@ static inline int isregular(int ch)
 {
 	return !isdelim(ch) && !iswhite(ch) && ch != EOF;
 }
-
-static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v);
 
 static inline int fromhex(char ch)
 {
@@ -106,7 +106,7 @@ static fz_error parsenumber(fz_obj **obj, char **sp)
 	return fz_okay;
 }
 
-static fz_error parsedict(fz_obj **obj, char **sp, struct vap *v)
+static fz_error parsedict(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 {
 	fz_error error = fz_okay;
 	fz_obj *dict = nil;
@@ -153,7 +153,7 @@ static fz_error parsedict(fz_obj **obj, char **sp, struct vap *v)
 
 		skipwhite(&s);
 
-		error = parseobj(&val, &s, v);
+		error = parseobj(&val, xref, &s, v);
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot parse value");
@@ -184,7 +184,7 @@ cleanup:
 	return error; /* already rethrown */
 }
 
-static fz_error parsearray(fz_obj **obj, char **sp, struct vap *v)
+static fz_error parsearray(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 {
 	fz_error error;
 	fz_obj *a;
@@ -207,7 +207,7 @@ static fz_error parsearray(fz_obj **obj, char **sp, struct vap *v)
 			break;
 		}
 
-		error = parseobj(&o, &s, v);
+		error = parseobj(&o, xref, &s, v);
 		if (error)
 		{
 			fz_dropobj(a);
@@ -336,11 +336,11 @@ static fz_error parsehexstring(fz_obj **obj, char **sp)
 	return fz_okay;
 }
 
-static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v)
+static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 {
 	fz_error error;
 	char buf[32];
-	int oid, gid, len;
+	int num, gen, len;
 	char *tmp;
 	char *s = *sp;
 
@@ -363,9 +363,9 @@ static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v)
 		case 'f': error = fz_newreal(obj, (float)va_arg(v->ap, double)); break;
 		case 'n': error = fz_newname(obj, va_arg(v->ap, char*)); break;
 		case 'r':
-			  oid = va_arg(v->ap, int);
-			  gid = va_arg(v->ap, int);
-			  error = fz_newindirect(obj, oid, gid);
+			  num = va_arg(v->ap, int);
+			  gen = va_arg(v->ap, int);
+			  error = fz_newindirect(obj, num, gen, xref);
 			  break;
 		case 's':
 			  tmp = va_arg(v->ap, char*);
@@ -405,7 +405,7 @@ static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v)
 	{
 		if (s[1] == '<')
 		{
-			error = parsedict(obj, &s, v);
+			error = parsedict(obj, xref, &s, v);
 			if (error)
 				error = fz_rethrow(error, "cannot parse dict");
 		}
@@ -419,7 +419,7 @@ static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v)
 
 	else if (*s == '[')
 	{
-		error = parsearray(obj, &s, v);
+		error = parsearray(obj, xref, &s, v);
 		if (error)
 			error = fz_rethrow(error, "cannot parse array");
 	}
@@ -464,8 +464,7 @@ static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v)
 	return error; /* already rethrown */
 }
 
-fz_error
-fz_packobj(fz_obj **op, char *fmt, ...)
+fz_error fz_packobj(fz_obj **op, pdf_xref *xref, char *fmt, ...)
 {
 	fz_error error;
 	struct vap v;
@@ -474,7 +473,7 @@ fz_packobj(fz_obj **op, char *fmt, ...)
 	va_start(ap, fmt);
 	va_copy(v.ap, ap);
 
-	error = parseobj(op, &fmt, &v);
+	error = parseobj(op, xref, &fmt, &v);
 
 	va_end(ap);
 
@@ -483,9 +482,8 @@ fz_packobj(fz_obj **op, char *fmt, ...)
 	return fz_okay;
 }
 
-fz_error
-fz_parseobj(fz_obj **op, char *str)
+fz_error fz_parseobj(fz_obj **op, pdf_xref *xref, char *str)
 {
-	return parseobj(op, &str, nil);
+	return parseobj(op, xref, &str, nil);
 }
 

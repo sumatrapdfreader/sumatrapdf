@@ -8,7 +8,7 @@ fz_error
 pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
 {
     fz_error error = fz_okay;
-    fz_obj *stmobj = stmref;
+    fz_obj *stmobj;
     fz_stream *file = nil;
     pdf_cmap *cmap = nil;
     pdf_cmap *usecmap;
@@ -23,9 +23,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
 
     pdf_logfont("load embedded cmap (%d %d R) {\n", fz_tonum(stmref), fz_togen(stmref));
 
-    error = pdf_resolve(&stmobj, xref);
-    if (error)
-	return fz_rethrow(error, "cannot resolve cmap object");
+    stmobj = fz_resolveindirect(stmref);
 
     error = pdf_openstream(&file, xref, fz_tonum(stmref), fz_togen(stmref));
     if (error)
@@ -85,8 +83,6 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
 	goto cleanup;
     }
 
-    fz_dropobj(stmobj);
-
     *cmapp = cmap;
     return fz_okay;
 
@@ -95,7 +91,6 @@ cleanup:
 	fz_dropstream(file);
     if (cmap)
 	pdf_dropcmap(cmap);
-    fz_dropobj(stmobj);
     return error; /* already rethrown */
 }
 

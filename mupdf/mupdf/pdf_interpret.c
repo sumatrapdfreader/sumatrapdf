@@ -366,20 +366,13 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 
 		else if (!strcmp(s, "SMask"))
 		{
-			fz_error error = pdf_resolve(&val, xref);
-			if (error)
-				return error;
 			if (fz_isdict(val))
 			{
 			    fz_obj *g = fz_dictgets(val, "G");
-			    error = pdf_resolve(&g, xref);
-			    if (error)
-				return error;
 			    /* TODO: we should do something here, like inserting a mask node for the S key in val */
 			    /* TODO: how to deal with the non-recursive nature of pdf soft masks? */
 			    /*puts("we encountered a soft mask");*/
 			}
-			fz_dropobj(val);
 		}
 		
 		else if (!strcmp(s, "TR"))
@@ -1308,7 +1301,7 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 			break;
 
 		case PDF_TODICT:
-			error = pdf_parsedict(&csi->stack[csi->top], file, buf, sizeof buf);
+			error = pdf_parsedict(&csi->stack[csi->top], xref, file, buf, sizeof buf);
 			if (error) return fz_rethrow(error, "cannot parse dictionary");
 			csi->top ++;
 			break;
@@ -1360,7 +1353,7 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 			{
 				fz_obj *obj;
 
-				error = pdf_parsedict(&obj, file, buf, sizeof buf);
+				error = pdf_parsedict(&obj, xref, file, buf, sizeof buf);
 				if (error)
 					return fz_rethrow(error, "cannot parse inline image dictionary");
 

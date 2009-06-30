@@ -1,7 +1,7 @@
 #include "fitz_base.h"
 #include "fitz_stream.h"
 
-void fz_droparray(fz_obj *obj);
+void fz_freearray(fz_obj *obj);
 
 fz_error
 fz_newarray(fz_obj **op, int initialcap)
@@ -51,7 +51,7 @@ fz_copyarray(fz_obj **op, fz_obj *obj)
 		error = fz_arraypush(new, fz_arrayget(obj, i));
 		if (error)
 		{
-		    fz_droparray(new);
+		    fz_freearray(new);
 		    return fz_rethrow(error, "cannot add item to array");
 		}
 	}
@@ -85,7 +85,7 @@ fz_deepcopyarray(fz_obj **op, fz_obj *obj)
 			error = fz_deepcopyarray(&val, val);
 			if (error)
 			{
-			    fz_droparray(new);
+			    fz_freearray(new);
 			    return fz_rethrow(error, "cannot deep copy item");
 			}
 
@@ -93,7 +93,7 @@ fz_deepcopyarray(fz_obj **op, fz_obj *obj)
 			if (error)
 			{
 			    fz_dropobj(val);
-			    fz_droparray(new);
+			    fz_freearray(new);
 			    return fz_rethrow(error, "cannot add copied item to array");
 			}
 
@@ -105,7 +105,7 @@ fz_deepcopyarray(fz_obj **op, fz_obj *obj)
 			error = fz_deepcopydict(&val, val);
 			if (error)
 			{
-			    fz_droparray(new);
+			    fz_freearray(new);
 			    return fz_rethrow(error, "cannot deep copy item");
 			}
 
@@ -113,7 +113,7 @@ fz_deepcopyarray(fz_obj **op, fz_obj *obj)
 			if (error)
 			{
 			    fz_dropobj(val);
-			    fz_droparray(new);
+			    fz_freearray(new);
 			    return fz_rethrow(error, "cannot add copied item to array");
 			}
 			fz_dropobj(val);
@@ -124,7 +124,7 @@ fz_deepcopyarray(fz_obj **op, fz_obj *obj)
 			error = fz_arraypush(new, val);
 			if (error)
 			{
-			    fz_droparray(new);
+			    fz_freearray(new);
 			    return fz_rethrow(error, "cannot add copied item to array");
 			}
 		}
@@ -138,6 +138,7 @@ fz_deepcopyarray(fz_obj **op, fz_obj *obj)
 int
 fz_arraylen(fz_obj *obj)
 {
+	obj = fz_resolveindirect(obj);
 	if (!fz_isarray(obj))
 		return 0;
 	return obj->u.a.len;
@@ -146,6 +147,8 @@ fz_arraylen(fz_obj *obj)
 fz_obj *
 fz_arrayget(fz_obj *obj, int i)
 {
+	obj = fz_resolveindirect(obj);
+
 	if (!fz_isarray(obj))
 		return nil;
 
@@ -158,6 +161,8 @@ fz_arrayget(fz_obj *obj, int i)
 fz_error
 fz_arrayput(fz_obj *obj, int i, fz_obj *item)
 {
+	obj = fz_resolveindirect(obj);
+
 	if (!fz_isarray(obj))
 		return fz_throw("assert: not an array (%s)", fz_objkindstr(obj));
 	if (i < 0)
@@ -197,6 +202,8 @@ fz_arraypush(fz_obj *obj, fz_obj *item)
 {
 	fz_error error;
 
+	obj = fz_resolveindirect(obj);
+
 	if (!fz_isarray(obj))
 		return fz_throw("assert: not an array (%s)", fz_objkindstr(obj));
 
@@ -214,7 +221,7 @@ fz_arraypush(fz_obj *obj, fz_obj *item)
 }
 
 void
-fz_droparray(fz_obj *obj)
+fz_freearray(fz_obj *obj)
 {
 	int i;
 

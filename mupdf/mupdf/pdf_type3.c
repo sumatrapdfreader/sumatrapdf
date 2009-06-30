@@ -103,14 +103,11 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 		estrings[i] = nil;
 
 	encoding = fz_dictgets(dict, "Encoding");
-	if (!encoding) {
+	if (!encoding)
+	{
 		error = fz_throw("syntaxerror: Type3 font missing Encoding");
 		goto cleanup;
 	}
-
-	error = pdf_resolve(&encoding, xref);
-	if (error)
-		goto cleanup;
 
 	if (fz_isname(obj))
 		pdf_loadencoding(estrings, fz_toname(encoding));
@@ -141,8 +138,6 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 		}
 	}
 
-	fz_dropobj(encoding);
-
 	error = pdf_newidentitycmap(&fontdesc->encoding, 0, 1);
 	if (error)
 		goto cleanup;
@@ -162,14 +157,11 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	last = fz_toint(fz_dictgets(dict, "LastChar"));
 
 	widths = fz_dictgets(dict, "Widths");
-	if (!widths) {
+	if (!widths)
+	{
 		error = fz_throw("syntaxerror: Type3 font missing Widths");
 		goto cleanup;
 	}
-
-	error = pdf_resolve(&widths, xref);
-	if (error)
-		goto cleanup;
 
 	for (i = first; i <= last; i++)
 	{
@@ -178,13 +170,9 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 		fontdesc->font->t3widths[i] = w * 0.001;
 
 		error = pdf_addhmtx(fontdesc, i, i, w);
-		if (error) {
-			fz_dropobj(widths);
+		if (error)
 			goto cleanup;
-		}
 	}
-
-	fz_dropobj(widths);
 
 	error = pdf_endhmtx(fontdesc);
 	if (error)
@@ -199,14 +187,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	obj = fz_dictgets(dict, "Resources");
 	if (obj)
 	{
-		error = pdf_resolve(&obj, xref);
-		if (error)
-			goto cleanup;
-
 		error = pdf_loadresources(&resources, xref, obj);
-
-		fz_dropobj(obj);
-
 		if (error)
 			goto cleanup;
 	}
@@ -221,12 +202,8 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	if (!charprocs)
 	{
 		error = fz_throw("syntaxerror: Type3 font missing CharProcs");
-		goto cleanup2;
+		goto cleanup;
 	}
-
-	error = pdf_resolve(&charprocs, xref);
-	if (error)
-		goto cleanup2;
 
 	for (i = 0; i < 256; i++)
 	{
@@ -238,29 +215,22 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 				pdf_logfont("load charproc %s {\n", estrings[i]);
 				error = loadcharproc(&fontdesc->font->t3procs[i], xref, resources, obj);
 				if (error)
-					goto cleanup2;
+					goto cleanup;
 
 				error = fz_optimizetree(fontdesc->font->t3procs[i]);
 				if (error)
-					goto cleanup2;
+					goto cleanup;
 
 				pdf_logfont("}\n");
 			}
 		}
 	}
 
-	fz_dropobj(charprocs);
-	if (resources)
-		fz_dropobj(resources);
-
 	pdf_logfont("}\n");
 
 	*fontdescp = fontdesc;
 	return fz_okay;
 
-cleanup2:
-	if (resources)
-		fz_dropobj(resources);
 cleanup:
 	fz_dropfont(fontdesc->font);
 	fz_free(fontdesc);

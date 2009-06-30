@@ -4,6 +4,8 @@
  * Used by the filter library and the mupdf parser.
  */
 
+typedef struct pdf_xref_s pdf_xref; /* this file is about to be merged with mupdf */
+
 typedef struct fz_obj_s fz_obj;
 typedef struct fz_keyval_s fz_keyval;
 
@@ -28,12 +30,8 @@ struct fz_keyval_s
 
 struct fz_obj_s
 {
-	unsigned short refs;
-#ifdef DEBUG
+	int refs;
 	fz_objkind kind;
-#else
-	char kind;				/* fz_objkind takes 4 bytes :( */
-#endif
 	union
 	{
 		int b;
@@ -56,8 +54,10 @@ struct fz_obj_s
 			fz_keyval *items;
 		} d;
 		struct {
-			int oid;
-			int gid;
+			int num;
+			int gen;
+			pdf_xref *xref;
+			fz_obj *obj;
 		} r;
 	} u;
 };
@@ -68,7 +68,7 @@ fz_error fz_newint(fz_obj **op, int i);
 fz_error fz_newreal(fz_obj **op, float f);
 fz_error fz_newname(fz_obj **op, char *str);
 fz_error fz_newstring(fz_obj **op, char *str, int len);
-fz_error fz_newindirect(fz_obj **op, int oid, int gid);
+fz_error fz_newindirect(fz_obj **op, int num, int gen, pdf_xref *xref);
 
 fz_error fz_newarray(fz_obj **op, int initialcap);
 fz_error fz_newdict(fz_obj **op, int initialcap);
@@ -92,6 +92,8 @@ int fz_isdict(fz_obj *obj);
 int fz_isindirect(fz_obj *obj);
 
 int fz_objcmp(fz_obj *a, fz_obj *b);
+
+fz_obj *fz_resolveindirect(fz_obj *obj);
 
 /* silent failure, no error reporting */
 int fz_tobool(fz_obj *obj);
@@ -126,9 +128,8 @@ int fz_sprintobj(char *s, int n, fz_obj *obj, int tight);
 int fz_fprintobj(FILE *fp, fz_obj *obj, int tight);
 void fz_debugobj(fz_obj *obj);
 
-fz_error fz_parseobj(fz_obj **objp, char *s);
-fz_error fz_packobj(fz_obj **objp, char *fmt, ...);
-fz_error fz_unpackobj(fz_obj *obj, char *fmt, ...);
+fz_error fz_parseobj(fz_obj **objp, pdf_xref *xref, char *s);
+fz_error fz_packobj(fz_obj **objp, pdf_xref *xref, char *fmt, ...);
 
 char *fz_objkindstr(fz_obj *obj);
 
