@@ -1,32 +1,32 @@
 ﻿SumatraPDF contains code by
 
-* Krzysztof J. Kowalczyk (original author) <kkowalczyk@gmail.com>
-* <mrchuoi@gmail.com>
+* Krzysztof J. Kowalczyk (original author) (kkowalczyk at gmail.com)
+* Củ Văn Chuối (mrchuoi at gmail.com)
 * Tom Clegg
-* <vadmium@gmail.com>
+* vadmium at gmail.com
 * Nathan Jhaveri
-* William Blum <william.blum@gmail.com>
+* William Blum (william.blum at gmail.com)
 * Peter Astrand
 * Ludo Brands
 * Alexander Klenin
-* Matthew Wilcoxson <matthew.wilcoxson@gmail.com>
+* Matthew Wilcoxson (matthew.wilcoxson at gmail.com)
 * Robert Liu
 * David Lopez
 * Victor Kozyakin
 * Danilo Roascio
-* Simon Bünzli <zeniko@gmail.com>
+* Simon Bünzli (zeniko at gmail.com)
 
 Icons by Zenon, Sonke Tesch, George Georgiou and FAMFAMFAM
 
-Translations by various translators; see src/strings.txt
+Translations by various translators (see src/strings.txt)
 
 External projects are by their various authors:
 
-* Dialog sizer  see http://gipsysoft.com/articles/dialogsizer/
+* MuPDF         see http://ccxvii.net/mupdf/
 * FreeType      see http://www.freetype.org/
+* OpenJPEG      see http://www.openjpeg.org/
 * JasPer        see http://www.ece.uvic.ca/~mdadams/jasper/
 * jbig2dec      see http://jbig2dec.sf.net/
 * jpeg6b        see http://www.ijg.org/
-* OpenJPEG      see http://www.openjpeg.org/
-* MuPDF         see http://ccxvii.net/mupdf/
 * zlib          see http://www.zlib.net/
+* Dialog sizer  see http://gipsysoft.com/articles/dialogsizer/
