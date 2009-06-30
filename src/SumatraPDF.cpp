@@ -1268,7 +1268,11 @@ extern "C" char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName);
 char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName)
 {
     fileName = FilePathW_GetBaseName(fileName);
-    return Dialog_GetPassword(win, fileName);
+    WCHAR *passW = Dialog_GetPassword(win, fileName);
+    // TODO: Can we make GetPasswordForFile return a (TCHAR *)?
+    char *passA = wstr_to_multibyte(passW, CP_ACP);
+    free(passW);
+    return passA;
 }
 
 /* Return true if this program has been started from "Program Files" directory

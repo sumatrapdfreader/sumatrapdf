@@ -15,7 +15,7 @@ int     Dialog_GoToPage(WindowInfo *win);
 #ifdef _TEX_ENHANCEMENT
 WCHAR *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const WCHAR *cmdline);
 #endif
-char *  Dialog_GetPassword(WindowInfo *win, const WCHAR *fileName);
+WCHAR * Dialog_GetPassword(WindowInfo *win, const WCHAR *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 

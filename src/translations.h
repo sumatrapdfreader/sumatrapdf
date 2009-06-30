@@ -15,7 +15,7 @@ void Translations_FreeData();
 
 #ifdef UNICODE
 #define Translations_GetTranslation Translations_GetTranslationW
-#define _TR(x) Translatations_GetTranslationW(x)
+#define _TR(x) Translations_GetTranslationW(x)
 #else
 #define Translations_GetTranslation Translations_GetTranslationA
 #define _TR(x) Translations_GetTranslationA(x)
