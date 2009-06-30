@@ -988,7 +988,7 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
     if (win->dm)
         displayMode = win->dm->displayMode();
 
-    HMENU menuMain = GetMenu(win->hwndFrame);
+    HMENU menuMain = win->hMenu;
     UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
         CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_UNCHECKED);
@@ -1425,7 +1425,7 @@ static void MenuUpdateZoom(WindowInfo* win)
     if (win->dm)
         zoomVirtual = win->dm->zoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId, NULL != win->dm);
+    ZoomMenuItemCheck(win->hMenu, menuId, NULL != win->dm);
 }
 
 static void MenuUpdateFullscreen(WindowInfo* win)
@@ -1434,11 +1434,10 @@ static void MenuUpdateFullscreen(WindowInfo* win)
         return; // don't bother for windows with PDF
 
     /* show default state */
-    HMENU menu = GetMenu(win->hwndFrame);
     UINT state = MF_BYCOMMAND | MF_UNCHECKED;
     if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
         state = MF_BYCOMMAND | MF_CHECKED;
-    CheckMenuItem(menu, IDM_VIEW_FULLSCREEN, state);
+    CheckMenuItem(win->hMenu, IDM_VIEW_FULLSCREEN, state);
 }
 
 static void SeeLastError(void) {
@@ -1900,7 +1899,7 @@ static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
 }
 
 static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
-    HMENU hmenu = GetMenu(win->hwndFrame);
+    HMENU hmenu = win->hMenu;
     BOOL documentSpecific = WindowInfo_PdfLoaded(win);
     BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
 
@@ -1916,16 +1915,15 @@ static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
 }
 
 static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
-    HMENU hmenu = GetMenu(win->hwndFrame);
     if (gGlobalPrefs.m_showToolbar)
-        CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(win->hMenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
     else
-        CheckMenuItem(hmenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
+        CheckMenuItem(win->hMenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
 }
 
 // show which language is being used via check in Language/* menu
 static void MenuUpdateLanguage(WindowInfo *win) {
-    HMENU hmenu = GetMenu(win->hwndFrame);
+    HMENU hmenu = win->hMenu;
     for (int i = 0; i < LANGS_COUNT; i++) {
         const char *langName = g_langs[i]._langName;
         int langMenuId = g_langs[i]._langId;
@@ -1942,7 +1940,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
-    HMENU hmenu = GetMenu(win->hwndFrame);
+    HMENU hmenu = win->hMenu;
     if (fileCloseEnabled)
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_ENABLED);
     else
@@ -2239,7 +2237,7 @@ static bool LoadPdfIntoWindow(
     */
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId, TRUE);
+    ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 
     win->dm->relayout(zoomVirtual, rotation);
     if (!win->dm->validPageNo(startPage))
@@ -4112,7 +4110,7 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
 
     double zoom = ZoomMenuItemToZoom(menuId);
     win->dm->zoomTo(zoom);
-    ZoomMenuItemCheck(GetMenu(win->hwndFrame), menuId, TRUE);
+    ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 }
 
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
@@ -4606,7 +4604,9 @@ static void RebuildProgramMenus(void)
     WindowInfo *win = gWindowList;
     while (win) {
         WindowInfo_RebuildMenu(win);
-        SetMenu(win->hwndFrame, win->hMenu);
+        // Setting the menu for a full screen window messes things up
+        if (!win->dm || !win->dm->_fullScreen)
+            SetMenu(win->hwndFrame, win->hMenu);
         MenuUpdateStateForWindow(win);
         win = win->next;
     }
@@ -4826,7 +4826,6 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
     ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
-    win->prevMenu = GetMenu(win->hwndFrame);
     GetWindowRect(win->hwndFrame, &win->frameRc);
 
     SetMenu(win->hwndFrame, NULL);
@@ -4850,7 +4849,7 @@ void WindowInfo_ExitFullscreen(WindowInfo *win)
 
     if (gGlobalPrefs.m_showToolbar)
         ShowWindow(win->hwndReBar, SW_SHOW);
-    SetMenu(win->hwndFrame, win->prevMenu);
+    SetMenu(win->hwndFrame, win->hMenu);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->prevStyle);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST,
                  win->frameRc.left, win->frameRc.top,

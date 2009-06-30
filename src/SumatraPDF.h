@@ -218,7 +218,6 @@ public:
     bool            tocLoaded;
 
     long            prevStyle;
-    HMENU           prevMenu;
     RECT            frameRc;
     RECT            canvasRc;
 
