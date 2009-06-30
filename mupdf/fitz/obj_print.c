@@ -278,10 +278,6 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 		sprintf(buf, "%d %d R", obj->u.r.oid, obj->u.r.gid);
 		fmtputs(fmt, buf);
 		break;
-	case FZ_POINTER:
-		sprintf(buf, "$%p", obj->u.p);
-		fmtputs(fmt, buf);
-		break;
 	default:
 		sprintf(buf, "<unknown object type %d>", obj->kind);
 		fmtputs(fmt, buf);

@@ -49,6 +49,8 @@ loadnametreenode(fz_obj *tree, pdf_xref *xref, fz_obj *node)
 				return fz_rethrow(error, "cannot insert name tree entry");
 			}
 
+			fz_sortdict(tree);
+
 			fz_dropobj(key);
 		}
 

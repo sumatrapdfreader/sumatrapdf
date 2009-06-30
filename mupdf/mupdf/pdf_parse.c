@@ -253,7 +253,10 @@ skip:
 		}
 
 		if (tok != PDF_TNAME)
+		{
+			error = fz_throw("invalid key in dict");
 			goto cleanup;
+		}
 
 		error = fz_newname(&key, buf);
 		if (error)
@@ -300,6 +303,7 @@ skip:
 					break;
 				}
 			}
+			error = fz_throw("invalid indirect reference in dict");
 			goto cleanup;
 		default:
 			error = fz_throw("unknown token in dict");

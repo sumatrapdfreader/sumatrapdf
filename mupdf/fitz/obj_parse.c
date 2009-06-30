@@ -357,7 +357,6 @@ static fz_error parseobj(fz_obj **obj, char **sp, struct vap *v)
 
 		switch (*s)
 		{
-		case 'p': error = fz_newpointer(obj, va_arg(v->ap, void*)); break;
 		case 'o': *obj = fz_keepobj(va_arg(v->ap, fz_obj*)); break;
 		case 'b': error = fz_newbool(obj, va_arg(v->ap, int)); break;
 		case 'i': error = fz_newint(obj, va_arg(v->ap, int)); break;

@@ -83,7 +83,7 @@ void opensrc(char *filename, char *password, int loadpages)
 	{
 		int okay = pdf_setpassword(src->crypt, password);
 		if (!okay)
-			die(fz_throw("invalid password"));
+			fz_warn("invalid password, attemping to continue.");
 	}
 
 	if (loadpages)
@@ -189,7 +189,7 @@ void
 infousage(void)
 {
 	fprintf(stderr,
-			"usage: mupdftool info [options] [file.pdf ... ]\n"
+			"usage: pdfinfo [options] [file.pdf ... ]\n"
 			"  -d -\tpassword for decryption\n"
 			"  -f -\tlist fonts\n"
 			"  -i -\tlist images\n"
@@ -198,7 +198,7 @@ infousage(void)
 			"  -s -\tlist shadings\n"
 			"  -x -\tlist form and postscript xobjects\n"
 			"  example:\n"
-			"    mupdftool info -p mypassword a.pdf\n");
+			"    pdfinfo -p mypassword a.pdf\n");
 	exit(1);
 }
 

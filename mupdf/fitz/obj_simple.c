@@ -69,14 +69,6 @@ fz_newindirect(fz_obj **op, int objid, int genid)
 	return fz_okay;
 }
 
-fz_error
-fz_newpointer(fz_obj **op, void *p)
-{
-	NEWOBJ(FZ_POINTER, sizeof (fz_obj));
-	o->u.p = p;
-	return fz_okay;
-}
-
 fz_obj *
 fz_keepobj(fz_obj *o)
 {
@@ -155,12 +147,6 @@ fz_isindirect(fz_obj *obj)
 }
 
 int
-fz_ispointer(fz_obj *obj)
-{
-	return obj ? obj->kind == FZ_POINTER : 0;
-}
-
-int
 fz_tobool(fz_obj *obj)
 {
 	if (fz_isbool(obj))
@@ -228,13 +214,6 @@ fz_togen(fz_obj *obj)
 	return 0;
 }
 
-void *
-fz_topointer(fz_obj *obj)
-{
-	if (fz_ispointer(obj))
-		return obj->u.p;
-	return nil;
-}
 
 fz_error
 fz_newnamefromstring(fz_obj **op, fz_obj *str)
@@ -295,8 +274,6 @@ fz_objcmp(fz_obj *a, fz_obj *b)
 		}
 		return 0;
 
-	case FZ_POINTER:
-		return (char *) a->u.p - (char *) b->u.p;
 	}
 	return 1;
 }
@@ -316,7 +293,6 @@ char *fz_objkindstr(fz_obj *obj)
 	case FZ_ARRAY: return "array";
 	case FZ_DICT: return "dictionary";
 	case FZ_INDIRECT: return "reference";
-	case FZ_POINTER: return "pointer";
 	}
 	return "<unknown>";
 }

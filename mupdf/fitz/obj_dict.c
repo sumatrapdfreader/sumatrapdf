@@ -292,6 +292,9 @@ fz_dictput(fz_obj *obj, fz_obj *key, fz_obj *val)
 	else
 		return fz_throw("assert: key is not string or name (%s)", fz_objkindstr(obj));
 
+	if (!val)
+		return fz_throw("assert: val does not exist for key (%s)", s);
+
 	i = dictfinds(obj, s);
 	if (i >= 0)
 	{

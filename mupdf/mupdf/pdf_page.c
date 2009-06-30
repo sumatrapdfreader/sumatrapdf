@@ -142,6 +142,8 @@ loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
 			return fz_rethrow(error, "cannot interpret page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 	}
+	else
+		fz_warn("page contents missing, leaving page blank");
 
 	*treep = csi->tree;
 	csi->tree = nil;

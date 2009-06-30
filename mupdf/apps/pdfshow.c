@@ -39,7 +39,7 @@ void openxref(char *filename, char *password)
     {
 	int okay = pdf_setpassword(xref->crypt, password);
 	if (!okay)
-	    die(fz_throw("invalid password"));
+	    fz_warn("invalid password, attempting to continue.");
     }
 
     /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */

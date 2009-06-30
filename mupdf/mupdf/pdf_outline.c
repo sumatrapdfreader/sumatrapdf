@@ -114,7 +114,8 @@ pdf_dropoutline(pdf_outline *outline)
 		pdf_dropoutline(outline->child);
 	if (outline->next)
 		pdf_dropoutline(outline->next);
-	pdf_droplink(outline->link);
+	if (outline->link)
+		pdf_droplink(outline->link);
 	fz_free(outline->title);
 	fz_free(outline);
 }

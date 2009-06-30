@@ -381,6 +381,11 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 			}
 			fz_dropobj(val);
 		}
+		
+		else if (!strcmp(s, "TR"))
+		{
+			fz_warn("ignoring transfer function");
+		}
 	}
 
 	return fz_okay;
