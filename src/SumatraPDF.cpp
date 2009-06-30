@@ -1998,23 +1998,27 @@ static void MenuToolbarUpdateStateForAllWindows(void) {
 #define MIN_WIN_DY 50
 #define MAX_WIN_DY 4096
 
+static bool IsWindowVisibleOnAMonitor(int x, int y, int dx, int dy)
+{
+    // check whether the lower half of the window's title bar is
+    // inside a visible area (supports multiple monitors)
+    RECT caption;
+    int captionDy = GetSystemMetrics(SM_CYCAPTION);
+    SetRect(&caption, x, y + captionDy / 2, x + dx, y + captionDy);
+
+    return NULL != MonitorFromRect(&caption, MONITOR_DEFAULTTONULL);
+}
+
 static WindowInfo* WindowInfo_CreateEmpty(void) {
     HWND        hwndFrame, hwndCanvas;
     WindowInfo* win;
 
     /* TODO: maybe adjustement of size and position should be outside of this function */
-    POINT winPos;
-    winPos.x = CW_USEDEFAULT;
-    winPos.y = CW_USEDEFAULT;
+    int winX = CW_USEDEFAULT;
+    int winY = CW_USEDEFAULT;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowPosX) {
-        winPos.x = gGlobalPrefs.m_windowPosX;
-        winPos.y = gGlobalPrefs.m_windowPosY;
-
-        // make sure the left-hand corner is inside the visible area (supports multiple monitors)
-        if (NULL == MonitorFromPoint(winPos, MONITOR_DEFAULTTONULL)) {
-            winPos.x = CW_USEDEFAULT;
-            winPos.y = CW_USEDEFAULT;
-        }
+        winX = gGlobalPrefs.m_windowPosX;
+        winY = gGlobalPrefs.m_windowPosY;
     }
 
     int winDx = DEF_PAGE_DX;
@@ -2031,6 +2035,13 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
             winDy = DEF_PAGE_DY;
     }
     
+    if (winX != CW_USEDEFAULT && winY != CW_USEDEFAULT) {
+        if (!IsWindowVisibleOnAMonitor(winX, winY, winDx, winDy)) {
+            winX = CW_USEDEFAULT;
+            winY = CW_USEDEFAULT;
+        }
+    }
+
 #if FANCY_UI
     hwndFrame = CreateWindowEx(
 //            WS_EX_TOOLWINDOW,
@@ -2048,7 +2059,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     hwndFrame = CreateWindowW(
             FRAME_CLASS_NAME, windowTitle,
             WS_OVERLAPPEDWINDOW,
-            winPos.x, winPos.y, winDx, winDy,
+            winX, winY, winDx, winDy,
             NULL, NULL,
             ghinst, NULL);
 #endif
@@ -2313,17 +2324,16 @@ static void CheckPositionAndSize(DisplayState* ds)
     if (!ds)
         return;
 
-    if (ds->windowX < 0)
-        ds->windowX = CW_USEDEFAULT;
-
-    if (ds->windowY < 0)
-        ds->windowY = CW_USEDEFAULT;
-
     if (ds->windowDx < MIN_WIN_DX || ds->windowDx > MAX_WIN_DX)
         ds->windowDx = DEF_PAGE_DX;
 
     if (ds->windowDy < MIN_WIN_DY || ds->windowDy > MAX_WIN_DY)
         ds->windowDy = DEF_PAGE_DY;
+    
+    if (!IsWindowVisibleOnAMonitor(ds->windowX, ds->windowY, ds->windowDx, ds->windowDy)) {
+        ds->windowX = CW_USEDEFAULT;
+        ds->windowY = CW_USEDEFAULT;
+    }
 }
 
 WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
