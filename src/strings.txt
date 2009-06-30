@@ -3351,15 +3351,18 @@ sv:Hoppa över denna version
 -
 Warning
 de:Warnung
+ru:Предупреждение
 pl:Uwaga
 -
 This option is not available in portable mode.
 de:Diese Option ist im portablen Modus nicht verfügbar
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
+ru:Эта опция недоступна в мобильном режиме.
 -
 SumatraPDF Options
 de:SumatraPDF Optionen
+ru:Параметры SumatraPDF
 -
 Fit Width
 af:Pas In Breedte
@@ -3477,6 +3480,7 @@ nn:Faktisk storleik
 -
 &Settings
 de:&Einstellungen
+ru:Настройки
 -
 Fit Page
 af:Pas Blad In
@@ -3537,30 +3541,37 @@ nn:Tilpass side
 -
 &Options...
 de:&Optionen...
+ru:&Параметры...
 -
 Default &Layout:
 de:&Standardlayout:
+ru:&Компоновка по умолчанию
 -
 Default &Zoom:
 de:Standard&vergrößerung:
+ru:&Масштаб по умолчанию
 -
 OK
-de:OK
 -
 Advanced
 de:Weiteres
+ru:Расширенные
 -
 Show the &bookmarks sidebar when available
 de:&Lesezeichen beim Start anzeigen
+ru:Показывать панель &закладок (при возможности)
 -
 Cancel
 de:Abbrechen
+ru:Отмена
 -
 Automatically check for &updates
 de:&Automatisch nach Updates suchen
+ru:&Автоматическая проверка обновлений
 -
 &Remember these settings for each document
 de:&Diese Einstellungen für jedes Dokument merken
+ru:Запомнить эти параметры для &каждого документа
 -
 View
 af:Vertoon
@@ -3621,6 +3632,7 @@ nn:Vis
 -
 Information
 de:Hinweis
+ru:Информация
 -
 &Go to page:
 de:&Gehe zu Seite:
