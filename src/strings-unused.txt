@@ -1,0 +1,5 @@
+# Archive translations that are no longer used, just in case
+# they'll be used in the future
+PDF\0*.pdf\0All\0*.*\0
+de:PDF Dokumente (*.pdf)\0*.pdf\0Alle Dateien (*.*)\0*.*\0
+ru:PDF\0*.pdf\0???\0*.*\0

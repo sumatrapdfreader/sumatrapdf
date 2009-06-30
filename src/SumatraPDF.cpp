@@ -4309,7 +4309,11 @@ static void OnMenuSaveAs(WindowInfo *win)
     wstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
+    //TODO: this translation doesn't work because \0 in C string is a 0, while
+    //in translation it's a string "\0", so the filter doesn't work the
+    //way it's supposed to
+    //ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
+    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -4346,7 +4350,11 @@ static void OnMenuOpen(WindowInfo *win)
     // use the contents of szFile to initialize itself.
     ofn.lpstrFile[0] = L'\0';
     ofn.nMaxFile = dimof(fileName);
-    ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
+    //TODO: this translation doesn't work because \0 in C string is a 0, while
+    //in translation it's a string "\0", so the filter doesn't work the
+    //way it's supposed to
+    //ofn.lpstrFilter = _TRW("PDF\0*.pdf\0All\0*.*\0");
+    ofn.lpstrFilter = L"PDF\0*.pdf\0All\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;

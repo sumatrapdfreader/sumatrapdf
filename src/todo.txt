@@ -1,5 +1,4 @@
 Short term todo (before next 0.9.4 release):
-* make .pdf registration work in vista/win7
 
 Things to do before 1.0 release:
 * test search more and make sure it works better (currently mupdf seems to have

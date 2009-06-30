@@ -3666,10 +3666,6 @@ Couldn't render the page
 de:Diese Seite kann leider nicht angezeigt werden
 ru:Не удалось сформировать изображение страницы
 -
-PDF\0*.pdf\0All\0*.*\0
-de:PDF Dokumente (*.pdf)\0*.pdf\0Alle Dateien (*.*)\0*.*\0
-ru:PDF\0*.pdf\0Все\0*.*\0
--
 No matches were found
 de:Das Dokument wurde durchsucht
 ru:Образец не найден
