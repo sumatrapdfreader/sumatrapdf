@@ -114,6 +114,11 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     DisplayState_Init(ds);
 
     dict_get_wstr_dup(dict, FILE_STR, &ds->filePath);
+    if (gGlobalPrefs.m_globalPrefsOnly) {
+        ds->useGlobalValues = TRUE;
+        return true;
+    }
+
     const char* txt = dict_get_str(dict, DISPLAY_MODE_STR);
     if (txt)
         DisplayModeEnumFromName(txt, &ds->displayMode);
@@ -129,6 +134,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     dict_get_int(dict, WINDOW_DY_STR, &ds->windowDy);
     dict_get_bool(dict, SHOW_TOC_STR, &ds->showToc);
     dict_get_double_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
+    dict_get_bool(dict, USE_GLOBAL_VALUES_STR, &ds->useGlobalValues);
     return true;
 }
 
@@ -139,8 +145,11 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     
     DICT_NEW(prefs);
     DICT_ADD_WSTR(prefs, FILE_STR, ds->filePath);
-    if (gGlobalPrefs.m_globalPrefsOnly)
+
+    if (gGlobalPrefs.m_globalPrefsOnly || ds->useGlobalValues) {
+        DICT_ADD_INT64(prefs, USE_GLOBAL_VALUES_STR, TRUE);
         return prefs;
+    }
 
     txt = DisplayModeNameFromEnum(ds->displayMode);
     if (txt)

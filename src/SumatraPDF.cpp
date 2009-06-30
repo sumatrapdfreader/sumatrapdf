@@ -1500,6 +1500,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
         return;
 
     DisplayState_Init(&ds);
+    ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
 
     // Update pdf-specific windowState
     if (win->dm->_fullScreen)
@@ -1569,6 +1570,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
         win->pdfsync->discard_index();
     DisplayState ds;
     DisplayState_Init(&ds);
+    ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
     if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
         return;
     UpdateDisplayStateWindowRect(win, &ds);
@@ -2133,7 +2135,7 @@ static bool LoadPdfIntoWindow(
     bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (is_new_window=false)
 {
     // Never load settings from a preexisting state if the user doesn't wish to
-    if (gGlobalPrefs.m_globalPrefsOnly)
+    if (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues)
         state = NULL;
 
     /* TODO: need to get rid of that, but not sure if that won't break something
@@ -4702,6 +4704,7 @@ static void OnMenuSettings(WindowInfo *win)
         MenuUpdateDisplayMode(win);
         MenuUpdateZoom(win);
     }
+    Prefs_Save();
 }
 
 static void OnMenuViewContinuous(WindowInfo *win)

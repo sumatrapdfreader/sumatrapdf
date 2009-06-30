@@ -54,6 +54,7 @@ enum DisplayMode {
 #define LAST_UPDATE_STR             "LastUpdate"
 #define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"
 #define GLOBAL_PREFS_ONLY_STR       "GlobalPrefsOnly"
+#define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 
 typedef struct DisplayState {
     const WCHAR *       filePath;
@@ -70,6 +71,7 @@ typedef struct DisplayState {
     int                 windowDx;
     int                 windowDy;
     BOOL                showToc;
+    BOOL                useGlobalValues;
 } DisplayState;
 
 void    normalizeRotation(int *rotation);
