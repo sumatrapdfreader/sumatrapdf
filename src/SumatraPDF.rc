@@ -94,13 +94,14 @@ IDB_FIND_MATCH          BITMAP                  "icons-silk\\matchcase.bmp"
 // * Static labels are up to 50% too big for English text
 // * Buttons are 50 DU wide (non-standard ones: 70 DU), 14 DU high and right aligned
 // * Elements inside the dialog share the same alignment, if reasonably possible
+// * All checkboxes and buttons should have an accelerator (except for OK/Cancel)
 
 IDD_DIALOG_GOTO_PAGE DIALOGEX 0, 0, 158, 45
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION ""  // Go to page
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "Go to page:",IDC_STATIC,6,8,60,9
+    LTEXT           "&Go to page:",IDC_STATIC,6,8,60,9
     // Note: the edit control is right-aligned above IDOK,
     //       the following text is left-aligned above IDCANCEL
     EDITTEXT        IDC_GOTO_PAGE_EDIT,6+60,6,30,13,ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT
@@ -116,8 +117,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC,6,6,250-6-6,9 // Make SumatraPDF default application for PDF files?
     CONTROL         "",IDC_DONT_ASK_ME_AGAIN, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,6,20,250-6-6,9 // Don't ask me again
-    DEFPUSHBUTTON   "Yes",IDOK,250-6-50-6-50,55-6-14,50,14
-    PUSHBUTTON      "No",IDCANCEL,250-6-50,55-6-14,50,14
+    DEFPUSHBUTTON   "&Yes",IDOK,250-6-50-6-50,55-6-14,50,14
+    PUSHBUTTON      "&No",IDCANCEL,250-6-50,55-6-14,50,14
 END
 
 IDD_DIALOG_INVERSESEARCH DIALOGEX 0, 0, 221, 65
@@ -137,7 +138,7 @@ CAPTION "" // Enter password
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Enter password for test.pdf",IDC_GET_PASSWORD_LABEL,6,6,170,9
-    LTEXT           "Password:",IDC_STATIC,6,22,64,9
+    LTEXT           "&Password:",IDC_STATIC,6,22,64,9
     // Note: the password box spans exactly over both buttons
     EDITTEXT        IDC_GET_PASSWORD_EDIT,70,20,106,13,ES_AUTOHSCROLL|ES_PASSWORD
     DEFPUSHBUTTON   "OK",IDOK,182-6-50-6-50,59-6-14,50,14
@@ -163,7 +164,7 @@ BEGIN
     LTEXT           "",IDC_NEW_AVAILABLE,6,20,240-6-6,9 // New version %s is available. Download new version?
     CONTROL         "",IDC_SKIP_THIS_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP,6,34,240-6-6,9 // Skip this version
     DEFPUSHBUTTON   "Download",IDOK,240-6-70-6-70,69-6-14,70,14
-    PUSHBUTTON      "No, thanks",IDCANCEL,240-6-70,69-6-14,70,14
+    PUSHBUTTON      "&No, thanks",IDCANCEL,240-6-70,69-6-14,70,14
 END
 
 IDD_DIALOG_SETTINGS DIALOGEX 0, 0, 240, 142

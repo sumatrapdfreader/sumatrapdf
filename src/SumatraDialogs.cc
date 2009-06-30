@@ -134,6 +134,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
         SetDlgItemTextW(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         free(txt);
         SetDlgItemTextA(hDlg, IDC_GET_PASSWORD_EDIT, "");
+        SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("&Password:"));
         SetDlgItemTextW(hDlg, IDOK, _TRW("OK"));
         SetDlgItemTextW(hDlg, IDCANCEL, _TRW("Cancel"));
 
@@ -291,10 +292,10 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
         win_set_textw(hDlg, _TRW("Associate with PDF files?"));
         SetDlgItemTextW(hDlg, IDC_STATIC, _TRW("Make SumatraPDF default application for PDF files?"));
-        SetDlgItemTextW(hDlg, IDC_DONT_ASK_ME_AGAIN, _TRW("Don't ask me again"));
+        SetDlgItemTextW(hDlg, IDC_DONT_ASK_ME_AGAIN, _TRW("&Don't ask me again"));
         CheckDlgButton(hDlg, IDC_DONT_ASK_ME_AGAIN, BST_UNCHECKED);
-        SetDlgItemTextW(hDlg, IDOK, _TRW("Yes"));
-        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No"));
+        SetDlgItemTextW(hDlg, IDOK, _TRW("&Yes"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("&No"));
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDOK));
@@ -457,10 +458,10 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
         SetDlgItemTextW(hDlg, IDC_NEW_AVAILABLE, txt);
         free(txt);
 
-        SetDlgItemTextW(hDlg, IDC_SKIP_THIS_VERSION, _TRW("Skip this version"));
+        SetDlgItemTextW(hDlg, IDC_SKIP_THIS_VERSION, _TRW("&Skip this version"));
         CheckDlgButton(hDlg, IDC_SKIP_THIS_VERSION, BST_UNCHECKED);
         SetDlgItemTextW(hDlg, IDOK, _TRW("Download"));
-        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("No, thanks"));
+        SetDlgItemTextW(hDlg, IDCANCEL, _TRW("&No, thanks"));
 
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDOK));

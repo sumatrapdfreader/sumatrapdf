@@ -3022,12 +3022,12 @@ nn:Gjere SumatraPDF til standardprogram for PDF-filer?
 fi:Laita SumatraPDF PDF-tiedostojen oletusohjelmaksi?
 sv:Ställa in SumatraPDF som standardprogram för PDF-filer?
 -
-Don't ask me again
+&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 pt:Não perguntar novamente
 bg:Не питай отново
 br:Não perguntar novamente
-de:&Nicht wieder fragen.
+de:Nicht &wieder fragen.
 gr:Να μην ερωτηθώ ξανά
 sk:Nepýtať sa znova
 vn:Không hỏi lại
@@ -3309,7 +3309,7 @@ nn:Ny versjon tilgjengeleg.
 fi:Uusi versio saatavilla.
 sv:Nyare version finns.
 -
-Skip this version
+&Skip this version
 af:Slaan Dié Weergawe Oor.
 pt:Ignorar esta versão
 bg:Пропусни тази версия.
@@ -3646,15 +3646,15 @@ Download
 de:Herunterladen
 ru:Загрузка
 -
-Yes
+&Yes
 de:&Ja
 ru:Да
 -
-No
+&No
 de:&Nein
 ru:Нет
 -
-No, thanks
+&No, thanks
 de:&Nein, danke
 ru:Спасибо, нет
 -
@@ -3683,3 +3683,6 @@ de:PDF Dokumente
 -
 All files
 de:Alle Dateien
+-
+&Password:
+de:&Passwort:
