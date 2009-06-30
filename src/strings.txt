@@ -3636,36 +3636,48 @@ ru:Информация
 -
 &Go to page:
 de:&Gehe zu Seite:
+ru:&Перейти к странице
 -
 (of %d)
 de:(von %d)
+ru: (из %d)
 -
 Download
 de:Herunterladen
+ru:Загрузка
 -
 Yes
 de:Ja
+ru:Да
 -
 No
 de:Nein
+ru:Нет
 -
 No, thanks
 de:Nein, danke
+ru:Спасибо, нет
 -
 Please wait - rendering...
 de:Bitte einen Moment Geduld...
+ru:Подождите - формируется изображение...
 -
 Couldn't render the page
 de:Diese Seite kann leider nicht angezeigt werden
+ru:Не удалось сформировать изображение страницы
 -
 PDF\0*.pdf\0All\0*.*\0
 de:PDF Dokumente (*.pdf)\0*.pdf\0Alle Dateien (*.*)\0*.*\0
+ru:PDF\0*.pdf\0Все\0*.*\0
 -
 No matches were found
 de:Das Dokument wurde durchsucht
+ru:Образец не найден
 -
 Found text at page %d
 de:Text auf Seite %d gefunden
+ru:Текст найден на стр. %d
 -
 Searching %d of %d...
 de:Suche auf Seite %d von %d...
+ru:Обработка страницы %d из %d...
