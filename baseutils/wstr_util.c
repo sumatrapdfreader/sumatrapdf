@@ -606,7 +606,7 @@ int wstr_trans_chars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     int findCount = 0;
     WCHAR *c = str;
     while (*c) {
-        WCHAR *found = wstr_find_char(oldChars, *c);
+        const WCHAR *found = wstr_find_char(oldChars, *c);
         if (found) {
             *c = newChars[found - oldChars];
             findCount++;

@@ -617,7 +617,7 @@ int str_trans_chars(char *str, const char *oldChars, const char *newChars)
     int findCount = 0;
     char *c = str;
     while (*c) {
-        char *found = wstr_find_char(oldChars, *c);
+        const char *found = str_find_char(oldChars, *c);
         if (found) {
             *c = newChars[found - oldChars];
             findCount++;
