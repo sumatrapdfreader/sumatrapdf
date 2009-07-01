@@ -1,7 +1,12 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv2 */
+
+#define UNICODE
+#define _UNICODE
+
 #include "FileHistory.h"
-#include "wstr_util.h"
+#include "tstr_util.h"
+// TODO: Move DBG_OUT out of str_util.h
 #include "str_util.h"
 
 #include <string.h>
@@ -47,7 +52,7 @@ FileHistoryList *FileHistoryList_Node_Create(void)
     return node;
 }
 
-FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const WCHAR *filePath)
+FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const TCHAR *filePath)
 {
     FileHistoryList *node;
 
@@ -56,7 +61,7 @@ FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const WCHAR *filePath)
     if (!node)
         return NULL;
 
-    node->state.filePath = (const WCHAR*)wstr_dup(filePath);
+    node->state.filePath = (const TCHAR*)tstr_dup(filePath);
     if (!node->state.filePath)
         goto Error;
     return node;
@@ -116,7 +121,7 @@ void FileHistoryList_Node_Append(FileHistoryList **root, FileHistoryList *node)
     curr->next = node;
 }
 
-FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const WCHAR *filePath)
+FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, const TCHAR *filePath)
 {
     FileHistoryList *curr;
 
@@ -128,7 +133,7 @@ FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, con
     curr = *root;
     while (curr) {
         assert(curr->state.filePath);
-        if (wstr_ieq(filePath, curr->state.filePath))
+        if (tstr_ieq(filePath, curr->state.filePath))
             return curr;
         curr = curr->next;
     }
@@ -136,7 +141,7 @@ FileHistoryList *FileHistoryList_Node_FindByFilePath(FileHistoryList **root, con
     return NULL;
 }
 
-BOOL FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const WCHAR *filePath)
+BOOL FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const TCHAR *filePath)
 {
     FileHistoryList *node;
 

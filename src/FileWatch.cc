@@ -1,4 +1,8 @@
 // By william blum, 2008
+
+#define UNICODE
+#define _UNICODE
+
 #include "SumatraPDF.h"
 #include "FileWatch.h"
 #include "file_util.h"
@@ -10,14 +14,14 @@
 #include "base_util.h"
 
 // Get the directory name from a full file path and copy it to pszDir
-bool GetDirectoryW(LPCWSTR pszFile, PWSTR pszDir, size_t cchDir)
+bool GetDirectory(LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
 {
-    LPCWSTR pszBaseName = FilePathW_GetBaseName(pszFile);
+    LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
 
     if (0 == pszDir || 0 == pszFile) {
         return false;
     }
-    if (!wstr_copyn(pszDir, cchDir, pszFile, pszBaseName-pszFile)) {
+    if (!tstr_copyn(pszDir, cchDir, pszFile, pszBaseName-pszFile)) {
         return false;
     }
 
@@ -107,16 +111,16 @@ void FileWatcher::Init(LPCWSTR filefullpath)
     if (IsThreadRunning())
         SynchronousAbort();
 
-    wstr_copy(szFilepath, dimof(szFilepath), filefullpath);
-    pszFilename = FilePathW_GetBaseName(szFilepath);
-    GetDirectoryW(filefullpath, szDir, dimof(szDir));
+    tstr_copy(szFilepath, dimof(szFilepath), filefullpath);
+    pszFilename = FilePath_GetBaseName(szFilepath);
+    GetDirectory(filefullpath, szDir, dimof(szDir));
     
-    _wstat(filefullpath, &timestamp);
+    _tstat(filefullpath, &timestamp);
 
     callbackparam = 0;
     pCallback = NULL;
 
-    hDir = CreateFileW(
+    hDir = CreateFile(
         szDir, // pointer to the directory containing the tex files
         FILE_LIST_DIRECTORY,                // access (read-write) mode
         FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,  // share mode
@@ -223,10 +227,10 @@ bool FileWatcher::ReadDir()
     FILE_NOTIFY_INFORMATION *pFileNotify;
     pFileNotify = (PFILE_NOTIFY_INFORMATION)&buffer[1-curBuffer];
     while (pFileNotify) {
-        pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(WCHAR), _MAX_FNAME-1)] = 0;
+        pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(TCHAR), _MAX_FNAME-1)] = 0;
 
         // is it the file that is being watched?
-        if (_wcsicmp(pFileNotify->FileName, pszFilename) == 0) {
+        if (_tcsicmp(pFileNotify->FileName, pszFilename) == 0) {
             // file modified?
             if (pFileNotify->Action == FILE_ACTION_MODIFIED) {
 #if 0

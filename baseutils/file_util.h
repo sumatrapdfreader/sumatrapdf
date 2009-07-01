@@ -47,7 +47,7 @@ void            FileList_Delete(FileList *fl);
 int             FileList_Len(FileList *fl);
 FileInfo *      FileList_GetFileInfo(FileList *fl, int file_no);
 
-const char *    FilePath_GetBaseName(const char *path);
+const TCHAR *   FilePath_GetBaseName(const TCHAR *path);
 const WCHAR *   FilePathW_GetBaseName(const WCHAR *path);
 char *          FilePath_GetDir(const char *path);
 WCHAR *         FilePathW_GetDir(const WCHAR *path);
