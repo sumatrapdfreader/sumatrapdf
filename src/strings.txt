@@ -449,7 +449,7 @@ ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器
 sv:Använd SumatraPDF som standardläsare för PDF
 cz:Nastavit SumatraPDF jako výchozí PDF čtečku
-gr:Ορισμός SumatraPDF ως προεπιλεγμένου αναγνώστη PDF
+gr:Συσχετισμός SumatraPDF με αρχεία PDF
 th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
 pt:Tornar o SumatraPDF no leitor de PDF por defeito
 no:Bruk SumatraPDF som standard PDF-leser
@@ -621,7 +621,7 @@ ar:صفحة واحدة
 cn:单个页面
 sv:Enkel sida
 cz:Jedna stránka
-gr:Μονή σελίδα
+gr:Μία σελίδα
 th:หน้าเดี่ยว
 pt:Página Única
 no:Enkel side
@@ -678,7 +678,7 @@ ar:صفحتان متقابلتان
 cn:平铺页面
 sv:Uppslag
 cz:Protilehlé
-gr:Αντικριστά
+gr:Δύο σελίδες
 th:เป็นหน้า
 pt:Página Dupla
 no:Motstående
@@ -735,7 +735,7 @@ ar:صفحات متتالية
 cn:连续页面
 sv:Fortlöpande
 cz:Průběžně
-gr:Συνεχόμενα
+gr:Μια σελίδα, συνεχόμενα
 th:ต่อเนื่อง
 pt:Contínua
 no:Kontinuerlig
@@ -792,7 +792,7 @@ ar:صفحات متقابلة متتالية
 cn:连续平铺页面
 sv:Fortlöpande uppslag
 cz:Průběžně protilehlé
-gr:Αντικριστά και συνεχόμενα
+gr:Δύο σελίδες, συνεχόμενα
 th:เป็นหน้าต่อเนื่อง
 pt:Página Dupla Contínua
 no:Kontinuerlig motstående
@@ -1462,7 +1462,7 @@ ar:التقريب
 cn:缩放(&Z)
 sv:&Zoom
 cz:&Zvětšení
-gr:&Εστίαση
+gr:&Ζουμ
 th:ขยาย
 pt:&Zoom
 no:&Zoom
@@ -1902,7 +1902,7 @@ br:Página:
 hu:Oldal:
 pl:Strona:
 de:Seite:
-gr:Σελίδα
+gr:Σελίδα:
 fr:Page:
 tr:Sayfa:
 dk:Side:
@@ -2712,7 +2712,7 @@ ar:ساهم في ترجمة البرنامج
 cn:提供翻译
 sv:Bidra med översättning
 cz:Zašli překlad
-gr:Βοήθησε στη μετάφραση
+gr:Βοηθήστε στη μετάφραση
 th:ร่วมช่วยเหลือในการแปลภาษา
 pt:Contribuir na tradução
 no:Bidra med oversetting
@@ -2753,6 +2753,7 @@ pt:Configurar pesquisa inversa
 bg:Активирай обратно търсене
 br:Configurar pesquisa inversa
 de:Befehlszeile Inverssuche setzen
+gr:Ενφάνιση γραμμής αντίστροφης αναζήτησης
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
 vn:Đặt dòng lệnh tìm kiếm ngược
@@ -3354,17 +3355,20 @@ de:Warnung
 ru:Предупреждение
 pl:Uwaga
 cy:Rhybudd
+gr:Προειδοποίηση
 -
 This option is not available in portable mode.
 de:Diese Option ist im portablen Modus nicht verfügbar
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
 ru:Эта опция недоступна в мобильном режиме.
+gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
 -
 SumatraPDF Options
 de:SumatraPDF Optionen
 ru:Параметры SumatraPDF
 cy:Dewisiadau SumatraPDF
+gr:Επιλογές SumatraPDF
 -
 Fit Width
 af:Pas In Breedte
@@ -3389,7 +3393,7 @@ ar:مناسب لعرض الشاشة
 cn:适合宽度
 sv:Anpassa efter bredd
 cz:Podle šířky
-gr:Στο πλάτος παραθύρου
+gr:Πλάτος παραθύρου
 th:พอดีความกว้าง
 pt:Largura de página
 no:Tilpass bredde
@@ -3484,6 +3488,7 @@ nn:Faktisk storleik
 de:&Einstellungen
 ru:Настройки
 cy:&Gosodiadau
+gr:Ρυθμίσεις
 -
 Fit Page
 af:Pas Blad In
@@ -3546,44 +3551,53 @@ nn:Tilpass side
 de:&Optionen...
 ru:&Параметры...
 cy:&Dewisiadau...
+gr:Επιλ&ογές
 -
 Default &Layout:
 de:&Standardlayout:
 ru:&Компоновка по умолчанию
 cy:&Cynllun Rhagosodedig:
+gr:Προκαθορισμένη διαμόρφωση:
 -
 Default &Zoom:
 de:Standard&vergrößerung:
 ru:&Масштаб по умолчанию
 cy:C&hwyddo Rhagosodedig:
+gr:Προκαθορισμένο ζουμ:
 -
 OK
 cy:Iawn
+gr:ΟΚ
 -
 Advanced
 de:Weiteres
 ru:Расширенные
 cy:Uwch
+gr:Προχωρημένα
 -
 Show the &bookmarks sidebar when available
 de:&Lesezeichen beim Start anzeigen
 ru:Показывать панель &закладок (при возможности)
 cy:Dangos bar ochr y nodau tudalen pan yw ar gael
+gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 -
 Cancel
 de:Abbrechen
 ru:Отмена
 cy:Diddymu
+gr:Άκυρο
 -
 Automatically check for &updates
 de:&Automatisch nach Updates suchen
 ru:&Автоматическая проверка обновлений
 cy:Gwirio'n awtomatig am &ddiweddariadau
+gr:Αυτόματος έλεγχος για ενημερώσεις
 -
 &Remember these settings for each document
 de:&Diese Einstellungen für jedes Dokument merken
 ru:Запомнить эти параметры для &каждого документа
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
+gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 -
 View
 af:Vertoon
@@ -3646,69 +3660,84 @@ Information
 de:Hinweis
 ru:Информация
 cy:Gwybodaeth
+gr:Πληροφορίες
 -
 &Go to page:
 de:&Gehe zu Seite:
 ru:&Перейти к странице
 cy:Mynd i dudalen:
+gr:Μετάβαση στη σελίδα:
 -
 (of %d)
 de:(von %d)
 ru: (из %d)
 cy:(o %d)
+gr:(από %d) 
 -
 Download
 de:Herunterladen
 ru:Загрузка
 cy:Llwytho i Lawr
+gr:Λήψη
 -
 &Yes
 de:&Ja
 ru:Да
 cy:Iawn
+gr:&Ναι
 -
 &No
 de:&Nein
 ru:Нет
 cy:Na
+gr:Ό&χι
 -
 &No, thanks
 de:&Nein, danke
 ru:Спасибо, нет
 cy:Dim diolch
+gr:Όχι, ευχαριστώ
 -
 Please wait - rendering...
 de:Bitte einen Moment Geduld...
 ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
+gr:Φόρτωση, παρακαλώ περιμένετε... 
 -
 Couldn't render the page
 de:Diese Seite kann leider nicht angezeigt werden
 ru:Не удалось сформировать изображение страницы
 cy:Methu cyflwyno'r dudalen
+gr:Δε μπορεί να φορτωθεί η σελίδα
 -
 No matches were found
 de:Das Dokument wurde durchsucht
 ru:Образец не найден
 cy:Heb ganfod cyfatebiad
+gr:Δε βρέθηκε το κείμενο
 -
 Found text at page %d
 de:Text auf Seite %d gefunden
 ru:Текст найден на стр. %d
 cy:Canfod testun ar dudalen %d
+gr:Το κείμενο βρέθηκε στη σελίδα %d
 -
 Searching %d of %d...
 de:Suche auf Seite %d von %d...
 ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
+gr:Αναζήτηση %d από %d...
 -
 PDF documents
 de:PDF Dokumente
 cy:Dogfennau PDF
+gr:Αρχεία PDF
 -
 All files
 de:Alle Dateien
 cy:Pob ffeil
+gr:Όλα τα αρχεία
 -
 &Password:
 de:&Passwort:
+gr:Κωδικός:
