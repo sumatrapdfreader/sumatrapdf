@@ -4,7 +4,6 @@
 #define DISPLAY_STATE_H_
 
 #include "base_util.h"
-#include "dstring.h"
 
 enum DisplayMode {
     DM_FIRST = 1,
@@ -83,7 +82,9 @@ bool              DisplayModeEnumFromName(const char *txt, DisplayMode *resOut);
 
 void    DisplayState_Init(DisplayState *ds);
 void    DisplayState_Free(DisplayState *ds);
+#if 0
 bool    DisplayState_Serialize(DisplayState *ds, DString *strOut);
+#endif
 
 #endif
 

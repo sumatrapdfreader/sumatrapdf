@@ -6,7 +6,6 @@
 #include "str_util.h"
 #include "wstr_util.h"
 #include "file_util.h"
-#include "dstring.h"
 
 #include "AppPrefs.h"
 #include "DisplayState.h"

@@ -12,6 +12,7 @@
 #include "utf_util.h"
 #include "win_util.h"
 #include "wstr_util.h"
+#include "tstr_util.h"
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
@@ -1193,12 +1194,12 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
-static char *ExePathGet(void)
+static TCHAR *ExePathGet(void)
 {
-    char buf[_MAX_PATH];
+    TCHAR buf[MAX_PATH];
     buf[0] = 0;
-    GetModuleFileNameA(NULL, buf, dimof(buf));
-    return str_dup(buf);
+    GetModuleFileName(NULL, buf, dimof(buf));
+    return tstr_dup(buf);
 }
 
 /* Return the full exe path of my own executable.
@@ -1279,13 +1280,13 @@ char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName)
    (which is an indicator that it has been installed */
 static bool runningFromProgramFiles(void)
 {
-    char programFilesDir[MAX_PATH];
+    TCHAR programFilesDir[MAX_PATH];
     BOOL fOk = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
-    char *exePath = ExePathGet();
+    TCHAR *exePath = ExePathGet();
     if (!exePath) return true; // again, assume it is
     bool fromProgramFiles = false;
     if (fOk) {
-        if (str_startswithi(exePath, programFilesDir))
+        if (tstr_startswithi(exePath, programFilesDir))
             fromProgramFiles = true;
     } else {
         // SHGetSpecialFolderPath() might fail on win95/98 so need a different check
@@ -1301,47 +1302,54 @@ static bool IsRunningInPortableMode(void)
     return !runningFromProgramFiles();
 }
 
-static void AppGetAppDir(DString* pDs)
+/* Caller needs to free() the result. */
+static TCHAR * AppGetAppDir(void)
 {
-    char        dir[MAX_PATH];
+    TCHAR dir[MAX_PATH];
+    TCHAR * appDir;
 
     SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-    DStringSprintf(pDs, "%s/%s", dir, APP_SUB_DIR);
-    _mkdir(pDs->pString);
+    appDir = tstr_printf(_T("%s/%s"), dir, APP_SUB_DIR);
+    if (appDir)
+        _tmkdir(appDir);
+
+    return appDir;
 }
 
 /* Generate the full path for a filename used by the app in the userdata path. */
-static void AppGenDataFilename(char* pFilename, DString* pDs)
+/* Caller needs to free() the result. */
+static TCHAR * AppGenDataFilename(TCHAR *pFilename)
 {
-    assert(0 == pDs->length);
     assert(pFilename);
-    if (!pFilename) return;
-    assert(pDs);
-    if (!pDs) return;
+    if (!pFilename) return NULL;
 
+    TCHAR * path = NULL;
     bool portable = IsRunningInPortableMode();
     if (portable) {
         /* Use the same path as the binary */
-        char *exePath = ExePathGet();
-        if (!exePath) return;
-        char *dir = FilePath_GetDir(exePath);
-        if (dir)
-            DStringSprintf(pDs, "%s", dir);
-        free((void*)exePath);
-        free((void*)dir);
+        TCHAR *exePath = ExePathGet();
+        if (exePath) {
+            assert(exePath[0]);
+            path = FilePath_GetDir(exePath);
+            free(exePath);
+        }
     } else {
-        AppGetAppDir(pDs);
+        path = AppGetAppDir();
     }
-    if (!char_is_dir_sep(pDs->pString[strlen(pDs->pString)]) && !char_is_dir_sep(pFilename[0])) {
-        DStringAppend(pDs, DIR_SEP_STR, -1);
-    }
-    DStringAppend(pDs, pFilename, -1);
+    if (!path)
+        return NULL;
+
+    bool needsSep = !char_is_dir_sep(path[lstrlen(path) - 1]) && !char_is_dir_sep(pFilename[0]);
+    TCHAR * filename = tstr_printf(_T("%s%s%s"), path, needsSep ? _T(DIR_SEP_STR) : _T(""), pFilename);
+    free(path);
+
+    return filename;
 }
 
-static void Prefs_GetFileName(DString* pDs)
+/* Caller needs to free() the result. */
+static TCHAR * Prefs_GetFileName()
 {
-    assert(0 == pDs->length);
-    AppGenDataFilename(PREFS_FILE_NAME, pDs);
+    return AppGenDataFilename(PREFS_FILE_NAME);
 }
 
 /* Load preferences from the preferences file.
@@ -1358,18 +1366,17 @@ static bool Prefs_Load(void)
     loaded = true;
 #endif
 
-    DString         path;
-    DStringInit(&path);
-    Prefs_GetFileName(&path);
+    TCHAR * prefsFilename = Prefs_GetFileName();
+    assert(prefsFilename);
     uint64_t prefsFileLen;
-    prefsTxt = file_read_all(path.pString, &prefsFileLen);
+    prefsTxt = file_read_all(prefsFilename, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
     }
 
-    DStringFree(&path);
-    free((void*)prefsTxt);
+    free(prefsFilename);
+    free(prefsTxt);
     return ok;
 }
 
@@ -1543,11 +1550,10 @@ static void UpdateCurrentFileDisplayState(void)
 
 static bool Prefs_Save(void)
 {
-    DString     path;
+    TCHAR *     path;
     size_t      dataLen;
     bool        ok = false;
 
-    DStringInit(&path);
     /* mark currently shown files as visible */
     UpdateCurrentFileDisplayState();
 
@@ -1556,16 +1562,17 @@ static bool Prefs_Save(void)
         goto Exit;
 
     assert(dataLen > 0);
-    Prefs_GetFileName(&path);
+    path = Prefs_GetFileName();
+    assert(path);
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */
-    if (write_to_file(path.pString, (void*)data, dataLen))
+    if (write_to_file(path, (void*)data, dataLen))
         ok = true;
 
 Exit:
     free((void*)data);
-    DStringFree(&path);
+    free(path);
     return ok;
 }
 
@@ -3365,9 +3372,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     int             x, y;
     int             boxDy;
 
-    DString         str;
-    DStringInit(&str);
-
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
     HPEN penRectBorder = CreatePen(PS_SOLID, ABOUT_RECT_BORDER_DX_DY, COL_BLACK);
@@ -3946,7 +3950,6 @@ static void AnimState_AnimStart(AnimState *state, HWND hwnd, UINT freqInMs)
 static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
     AnimState *     state = &(win->animState);
-    DString         txt;
     RECT            rc;
     HFONT           fontArial24 = NULL;
     HFONT           origFont = NULL;
@@ -3956,8 +3959,6 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     static int      curDir = SCROLL_SPEED;
 
     GetClientRect(win->hwndCanvas, &rc);
-
-    DStringInit(&txt);
 
     if (-1 == curTxtPosX)
         curTxtPosX = 40;
@@ -3991,9 +3992,9 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     SetBkMode(hdc, TRANSPARENT);
     FillRect(hdc, &rc, gBrushBg);
     //DStringSprintf(&txt, "Welcome to animation %d", state->frame);
-    DStringSprintf(&txt, "Welcome to animation");
     //DrawText (hdc, txt.pString, -1, &rc, DT_SINGLELINE);
-    TextOut(hdc, curTxtPosX, curTxtPosY, txt.pString, txt.length);
+    char * txt = "Welcome to animation";
+    TextOut(hdc, curTxtPosX, curTxtPosY, txt, strlen(txt));
     WindowInfo_DoubleBuffer_Show(win, hdc);
     if (state->frame > 99)
         state->frame = 0;

@@ -12,7 +12,6 @@
 #include "SumatraDialogs.h"
 
 #include "DisplayModel.h"
-#include "dstring.h"
 #include "Resource.h"
 #include "win_util.h"
 #include "dialogsizer.h"
@@ -201,8 +200,6 @@ typedef struct {
 static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
-    // TODO: Replace DString with something Unicode aware
-    DString                 ds;
     TCHAR *                 newPageNoTxt;
     Dialog_GoToPage_Data *  data;
 
@@ -214,13 +211,14 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
         assert(INVALID_PAGE_NO != data->currPageNo);
         assert(data->pageCount >= 1);
         win_set_text(hDlg, _TR("Go to page"));
-        DStringInit(&ds);
-        DStringSprintf(&ds, "%d", data->currPageNo);
-        SetDlgItemTextA(hDlg, IDC_GOTO_PAGE_EDIT, ds.pString);
-        DStringFree(&ds);
-        DStringSprintf(&ds, _TRA("(of %d)"), data->pageCount);
-        SetDlgItemTextA(hDlg, IDC_GOTO_PAGE_LABEL_OF, ds.pString);
-        DStringFree(&ds);
+
+        newPageNoTxt = tstr_printf(_T("%d"), data->currPageNo);
+        SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, newPageNoTxt);
+        free(newPageNoTxt);
+        newPageNoTxt = tstr_printf(_TR("(of %d)"), data->pageCount);
+        SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, newPageNoTxt);
+        free(newPageNoTxt);
+
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
         win_edit_select_all(editPageNo);
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Go to page:"));

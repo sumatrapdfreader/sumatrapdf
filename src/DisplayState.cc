@@ -2,7 +2,6 @@
    License: GPLv2 */
 #include "DisplayState.h"
 #include "str_util.h"
-#include "dstring.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -84,6 +83,7 @@ void DisplayState_Free(DisplayState *ds)
     DisplayState_Init(ds);
 }
 
+#if 0
 bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
 {
     const char *        displayModeName = NULL;
@@ -110,4 +110,4 @@ bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
     DStringSprintf(strOut, "  %s: %d\n",   WINDOW_DY_STR, ds->windowDy);
     return TRUE;
 }
-
+#endif

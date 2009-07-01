@@ -4,7 +4,6 @@
 #define FILE_HISTORY_H_
 
 #include "DisplayState.h"
-#include "dstring.h"
 
 #define INVALID_MENU_ID (unsigned int)-1
 
