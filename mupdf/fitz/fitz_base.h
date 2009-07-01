@@ -36,17 +36,12 @@ extern char *fz_strsep(char **stringp, const char *delim);
 extern int fz_strlcpy(char *dst, const char *src, int n);
 extern int fz_strlcat(char *dst, const char *src, int n);
 
-#ifdef NEED_STRSEP
 #undef strsep
 #define strsep fz_strsep
-#endif
-
-#ifdef NEED_STRLCPY
 #undef strlcpy
 #define strlcpy fz_strlcpy
 #undef strlcat
 #define strlcat fz_strlcat
-#endif
 
 #ifdef NEED_GETOPT
 extern int getopt(int nargc, char * const * nargv, const char *ostr);

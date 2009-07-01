@@ -62,6 +62,7 @@ void pdfapp_init(pdfapp_t *app)
 
 	app->scrw = 640;
 	app->scrh = 480;
+	app->zoom = 1.0;
 }
 
 void pdfapp_open(pdfapp_t *app, char *filename)

@@ -683,11 +683,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref,
 	if (error)
 		goto cleanup;
 
-	/* Rudimentary check for DynaLab fonts */
-	/* ... not really necessary since freetype 2.3.9 */
-	if (kind == TRUETYPE && FT_IS_TRICKY(((FT_Face)fontdesc->font->ftface)))
-	    fontdesc->font->fthint = 1;
-
 	/*
 	 * Horizontal
 	 */
@@ -906,6 +901,8 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 {
 	fz_error error;
 	char *subtype;
+	fz_obj *dfonts;
+	fz_obj *charprocs;
 
 	if ((*fontdescp = pdf_finditem(xref->store, PDF_KFONT, ref)))
 	{
@@ -914,6 +911,9 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 	}
 
 	subtype = fz_toname(fz_dictgets(dict, "Subtype"));
+	dfonts = fz_dictgets(dict, "DescendantFonts");
+	charprocs = fz_dictgets(dict, "CharProcs");
+
 	if (subtype && !strcmp(subtype, "Type0"))
 		error = loadtype0(fontdescp, xref, dict, ref);
 	else if (subtype && !strcmp(subtype, "Type1"))
@@ -924,36 +924,23 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref
 		error = loadsimplefont(fontdescp, xref, dict, ref);
 	else if (subtype && !strcmp(subtype, "Type3"))
 		error = pdf_loadtype3font(fontdescp, xref, dict, ref);
-	else
-        {
-		fz_obj *dfonts;
-		fz_obj *charprocs;
-
-		dfonts = fz_dictgets(dict, "DescendantFonts");
-		charprocs = fz_dictgets(dict, "CharProcs");
-
-		if (charprocs)
-		{
-			fz_warn("cannot recognize font format '%s', guessing type3...", subtype);
-			error = pdf_loadtype3font(fontdescp, xref, dict, ref);
-		}
-		if (dfonts)
-		{
-			fz_warn("cannot recognize font format '%s', guessing type0...", subtype);
-			error = loadtype0(fontdescp, xref, dict, ref);
-		}
-		if (!charprocs && !dfonts)
-		{
-			fz_warn("cannot recognize font format '%s', guessing type1, mmtype1 or truetype...", subtype);
-			error = loadsimplefont(fontdescp, xref, dict, ref);
-		}
-
-		if (error)
-			return fz_throw("cannot recognize font format '%s', guessing is impossible", subtype);
+	else if (charprocs)
+	{
+		fz_warn("unknown font format, guessing type3.");
+		error = pdf_loadtype3font(fontdescp, xref, dict, ref);
 	}
-
+	else if (dfonts)
+	{
+		fz_warn("unknown font format, guessing type0.");
+		error = loadtype0(fontdescp, xref, dict, ref);
+	}
+	else
+	{
+		fz_warn("unknown font format, guessing type1 or truetype.");
+		error = loadsimplefont(fontdescp, xref, dict, ref);
+	}
 	if (error)
-		return fz_rethrow(error, "cannot load font");
+	    return fz_rethrow(error, "cannot load font");
 
 	error = pdf_storeitem(xref->store, PDF_KFONT, ref, *fontdescp);
 	if (error)

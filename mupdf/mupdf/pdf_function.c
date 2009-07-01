@@ -1286,7 +1286,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		if (!func->n)
 			func->n = funcs[0]->n;
 		else if (func->n != funcs[0]->n)
-			return fz_rethrow(error, "sub function /Domain or /Range mismatch");
+			return fz_throw("sub function /Domain or /Range mismatch");
 	}
 
 	obj = fz_dictgets(dict, "Bounds");

@@ -3,7 +3,25 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#if ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 2)) || \
+    ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 3) && (FREETYPE_PATCH < 9))
+
+int FT_Get_Advance(FT_Face face, int gid, int masks, FT_Fixed *out)
+{
+    int code;
+    code = FT_Load_Glyph(face, gid, masks | FT_LOAD_IGNORE_TRANSFORM);
+    if (code)
+	return code;
+    *out = face->glyph->advance.x * 1024;
+    return 0;
+}
+
+#else
+
 #include FT_ADVANCES_H
+
+#endif
 
 /*
  * ToUnicode map for fonts

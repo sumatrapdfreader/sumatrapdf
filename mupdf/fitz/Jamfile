@@ -20,7 +20,7 @@ Library libfitz :
 	base_unicode.c
 	;
 
-if $(NEED_GETOPT) { Library libfitz : util_getopt.c ; }
+Library libfitz : util_getopt.c ;
 
 # MSVC does not have gettimeofday()
 if $(OS) = NT

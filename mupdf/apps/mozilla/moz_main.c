@@ -63,9 +63,9 @@ void pdfmoz_warn(pdfmoz_t *moz, const char *fmt, ...)
 
 void pdfmoz_error(pdfmoz_t *moz, fz_error error)
 {
-    strcpy(moz->error, error->msg);
+    fz_catch(error, "unhandled error");
     InvalidateRect(moz->hwnd, NULL, FALSE);
-    NPN_Status(moz->inst, moz->error);
+    NPN_Status(moz->inst, "mupdf error");
 }
 
 void pdfmoz_open(pdfmoz_t *moz, char *filename)
@@ -98,8 +98,6 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
     error = pdf_loadxref(moz->xref, filename);
     if (error)
     {
-	if (!strncmp(error->msg, "ioerror", 7))
-	    pdfmoz_error(moz, error);
 	error = pdf_repairxref(moz->xref, filename);
 	if (error)
 	    pdfmoz_error(moz, error);
@@ -164,20 +162,13 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
      */
 
     obj = fz_dictgets(moz->xref->trailer, "Root");
-    if (!obj)
-	pdfmoz_error(moz, fz_throw("syntaxerror: missing Root object"));
-
-    error = pdf_loadindirect(&moz->xref->root, moz->xref, obj);
-    if (error)
-	pdfmoz_error(moz, error);
+    moz->xref->trailer = fz_resolveindirect(obj);
 
     obj = fz_dictgets(moz->xref->trailer, "Info");
-    if (obj)
-    {
-	error = pdf_loadindirect(&moz->xref->info, moz->xref, obj);
-	if (error)
-	    pdfmoz_error(moz, error);
-    }
+    moz->xref->info = fz_resolveindirect(obj);
+
+    if (!moz->xref->trailer)
+	pdfmoz_error(moz, fz_throw("syntaxerror: missing Root object"));
 
     error = pdf_loadnametrees(moz->xref);
     if (error)
@@ -400,7 +391,7 @@ void pdfmoz_onmouse(pdfmoz_t *moz, int x, int y, int click)
 static void drawimage(HDC hdc, pdfmoz_t *moz, fz_pixmap *image, int yofs)
 {
     int bmpstride = ((image->w * 3 + 3) / 4) * 4;
-    char *bmpdata = fz_malloc(image->h * bmpstride);
+    unsigned char *bmpdata = fz_malloc(image->h * bmpstride);
     int x, y;
 
     if (!bmpdata)

@@ -6,6 +6,18 @@
 # a custom build you can use any name you want instead of release
 # or debug.
 #
+# Windows builds assume that third party headers and
+# libraries are in c:/local/include and c:/local/lib.
+#
+# MacOS X builds assume that you have third party libraries installed
+# in /usr/local or some other system known location.
+#
+# Linux builds assume that you have the freetype2 headers installed
+# in /usr/include/freetype2.
+#
+# If the above assumptions are incorrect, please edit the relevant
+# sections of this Jamrules file.
+#
 # JBIG2 and JPEG2000 support is optional. To compile with this,
 # add the following to the jam command line:
 #
@@ -14,21 +26,6 @@
 #   -sHAVE_JASPER=true
 #	-- or --
 #   -sHAVE_OPENJPEG=true
-#
-# Windows builds assume that third party headers and
-# libraries are in c:/local/include and c:/local/lib.
-#
-# MacOS X builds assume that you have third party libraries installed
-# in /usr/local or some other system known location.
-#
-# Linux builds assume that you have freetype-config to find the paths
-# to the freetype library.
-#
-# To override these defaults, please supply the paths on the jam
-# command line with -sTHIRDPARTINC and -sTHIRDPARTYLIB.
-#
-#   -sTHIRDPARTYINC="-Ic:/wherever/include"
-#   -sTHIRDPARTYLIB="-Lc:/wherever/lib"
 #
 # To compile without builtin CJK CMap and font support, and save a few
 # megabytes of executable space:
@@ -50,32 +47,22 @@ if $(HAVE_JBIG2DEC) { DEFINES += HAVE_JBIG2DEC ; }
 if $(HAVE_JASPER)   { DEFINES += HAVE_JASPER ; }
 if $(HAVE_OPENJPEG) { DEFINES += HAVE_OPENJPEG ; }
 
-# NEED_STRLCPY = true ;
-# NEED_STRSEP = true ;
-# NEED_GETOPT = true ;
-
 if $(OS) = LINUX
 {
     Echo Building for LINUX ;
 
-    THIRDPARTYINC ?= "`freetype-config --cflags`" ;
-    THIRDPARTYLIB ?= "`freetype-config --libs`" -L/usr/X11R6/lib ;
-
-    NEED_STRLCPY = true ;
-    NEED_STRSEP = true ;
-    NEED_GETOPT = true ;
-
     BUILD_X11APP = true ;
 
-    CCFLAGS = -Wall -std=c99 $(THIRDPARTYINC) ;
-    LINKFLAGS = $(THIRDPARTYLIB) ;
+    #CCFLAGS = -Wall -std=gnu99 -I/usr/X11R6/include -I/usr/include/freetype2 ;
+    CCFLAGS = -Wall -std=gnu99 -I/usr/include/freetype2 ;
+    LINKFLAGS = -L/usr/X11R6/lib ;
     LINKLIBS = -lfreetype -ljpeg -lz -lm ;
-    APPLINKLIBS = -lX11 -lXext ;
+    APPLINKLIBS = -lX11 -lXext -lpthread ;
 
     if $(BUILD) = debug   { OPTIM = -g -O0 -fno-inline ; }
     if $(BUILD) = release { OPTIM = -O3 ; }
 
-    if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
+    if $(HAVE_JBIG2DEC)	{ LINKLIBS += -ljbig2dec ; }
     if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 }
@@ -86,11 +73,8 @@ if $(OS) = MACOSX
 
     BUILD_X11APP = true ;
 
-    THIRDPARTYINC ?= -I/usr/X11R6/include ;
-    THIRDPARTYLIB ?= -L/usr/X11R6/lib ;
-
-    CCFLAGS = -Wall -std=c99 $(THIRDPARTYINC) ;
-    LINKFLAGS = $(THIRDPARTYLIB) ;
+    CCFLAGS = -Wall -std=gnu99 -I/usr/X11R6/include ;
+    LINKFLAGS = -L/usr/X11R6/lib ;
     LINKLIBS = -lfreetype -ljpeg -lz -lm ;
     APPLINKLIBS = -lX11 -lXext ;
 
@@ -111,16 +95,9 @@ if $(OS) = MINGW
     BUILD_WINAPP = true ;
     BUILD_PLUGIN = true ;
 
-    THIRDPARTYINC ?= -Ic:/local/include ;
-    THIRDPARTYLIB ?= -Lc:/local/lib ;
-
-    NEED_STRLCPY = true ;
-    NEED_STRSEP = true ;
-    NEED_GETOPT = true ;
-
-    CCFLAGS = -Wall -std=c99 $(THIRDPARTYINC) ;
-    LINKFLAGS = $(THIRDPARTYLIB) ;
-    LINKLIBS = -lfreetype -ljpeg -lz ;
+    CCFLAGS = -Wall -std=gnu99 -Ic:/local/include ;
+    LINKFLAGS = -Lc:/local/lib ;
+    LINKLIBS = -lfreetype -ljpeg -lz -lm ;
     APPLINKLIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows ;
 
     if $(BUILD) = debug   { OPTIM = -g -O0 -fno-inline ; }
@@ -141,15 +118,8 @@ if $(OS) = NT
 
     BUILD_WINAPP = true ;
 
-    THIRDPARTYINC ?= /Ic:/local/include ;
-    THIRDPARTYLIB ?= /LIBPATH:c:/local/lib ;
-
-    NEED_STRLCPY = true ;
-    NEED_STRSEP = true ;
-    NEED_GETOPT = true ;
-
-    CCFLAGS = $(THIRDPARTYINC) ;
-    LINKFLAGS = $(THIRDPARTYLIB) ;
+    CCFLAGS = /Ic:/local/include ;
+    LINKFLAGS = /LIBPATH:c:/local/lib ;
     LINKLIBS = freetype.lib jpeg.lib z.lib ;
     APPLINKLIBS = gdi32.lib comdlg32.lib user32.lib advapi32.lib shell32.lib ;
 
@@ -158,15 +128,10 @@ if $(OS) = NT
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += jbig2dec.lib ; }
     if $(HAVE_JASPER)	{ LINKLIBS += jasper.lib ; }
+    if $(HAVE_OPENJPEG)	{ LINKLIBS += openjpeg.lib ; }
 
     actions WindRes { rc /fo $(<) $(>) }
 }
-
-# Set some DEFINES based on missing platform features
-
-if $(NEED_STRLCPY)  { DEFINES += NEED_STRLCPY ; }
-if $(NEED_STRSEP)   { DEFINES += NEED_STRSEP ; }
-if $(NEED_GETOPT)   { DEFINES += NEED_GETOPT ; }
 
 # WindRes rule for compiling the windows viewer and plugin
 
