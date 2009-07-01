@@ -200,9 +200,6 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 	error = loadpagetree(xref, p, inherit, pages, treeref, &pagenum);
 	if (error) { error = fz_rethrow(error, "cannot load pagetree (%d %d R)", fz_tonum(treeref), fz_togen(treeref)); goto cleanup; }
 
-	fz_dropobj(pages);
-	fz_dropobj(catalog);
-
 	pdf_logpage("}\n", count);
 
 	*pp = p;
