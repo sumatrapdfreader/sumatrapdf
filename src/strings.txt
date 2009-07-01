@@ -477,7 +477,7 @@ tl:Gawing Pangunahing PDF reader and SumatraPDF
 va:Convertir SumatraPDF en llector PDF per defecte
 sn:Ita SumatraPDF igovhura maPDF ese
 bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ 
-cy:Gosodwch SumatraPDF fel y darllenydd PDF rhagosodedig
+cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
 pa:ਸਾਰੀਂਆ  PDF ਫਾਈਲਾ SumatraPDF ਵਿਚ ਖੋਲੋ
@@ -534,7 +534,7 @@ eu:&Irten\tCtrl-Q
 tl:Lumabas\tCtrl-Q
 va:E&ixir\tCtrl-Q
 sn:&Siyana Nazvo\tCtrl-Q
-cy:&Allanu\tCtrl-Q
+cy:&Gadael\tCtrl-Q
 ga:Scoir\tCtrl-Q
 mm:&ထွက်ပါ\tCtrl-Q
 pa:ਬੰਦ ਕਰੋ(&x)\tCtrl-Q
@@ -762,7 +762,7 @@ eu:Jarraian
 tl:Tuloy-tuloy
 va:Contínua
 sn:Continuous
-cy:Parhaol
+cy:Didor
 ga:Ar Leanúint
 mm:ဆက်တိုက်
 pa:ਲਗਾਤਾਰ
@@ -819,7 +819,7 @@ eu:Bi aldetatik jarraian
 tl:Tuloy-tuloy na Magkaharap
 va:Pàgina Doble Contínua
 sn:Facing iriContinous
-cy:Wynebiad Parhaol
+cy:Gwynebu'n Ddidor
 ga:Dhá Leathanach Ar Leanúint
 mm:ဆက်တိုက် မျက်နှာ
 pa:ਲਗਾਤਾਰ ਕਿਤਾਬ
@@ -876,7 +876,7 @@ eu:Ezkerrerantz biratu\tCtrl-Shift--
 tl:Iikot Pakaliwa\tCtrl-Shift--
 va:Girar a l'esquerra\tCtrl-Shift--
 sn:Tenderedza kuruboshwe\tCtrl-Shift--
-cy:Cylchdrowch i'r chwith\tCtrl-Shift--
+cy:Troi i'r chwith\tCtrl-Shift--
 ga:Rothlaigh Tuathalach\tCtrl-Shift--
 mm:ဘယ်သို့ လှဲ့\tCtrl-Shift--
 pa:ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift--
@@ -933,7 +933,7 @@ eu:Eskubirantz biratu\tCtrl-Shift-+
 tl:Iikot Pakanan\tCtrl-Shift-+
 va:Girar a la dreta\tCtrl-Shift-+
 sn:Tenderedza kurudyi\tCtrl-Shift-+
-cy:Cylchdrowch i'r dde\tCtrl-Shift-+
+cy:Troi i'r dde\tCtrl-Shift-+
 ga:Rothlaigh Deiseal\tCtrl-Shift-+
 mm:ညာသို့ လှဲ့\tCtrl-Shift-+
 pa:ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift-+
@@ -979,7 +979,7 @@ hr:Knjiške oznake\tF12
 tl:Mga Pananda\tF12
 va:Marcadors\tF12
 sn:Mabhukumaki\tF12
-cy:Llyfrnodau\tF12
+cy:Nodau Tudalen\tF12
 ga:Astail\tF12
 mm:စာမျက်နှာ မှတ်သား\tF12
 pa:ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ\tF12
@@ -1032,7 +1032,7 @@ hr:Cijeli zaslon\tCtrl-L
 tl:Takpan ang buong screen\tCtrl-L
 va:Pantalla Completa\tCtrl-L
 sn:Zadza Screen\tCtrl-L
-cy:Sgrîn Lawn\tCtrl-L
+cy:Sgrin Lawn\tCtrl-L
 ga:Lánscáileán\tCtrl-L
 mm:မြင်ကွင်း ပြည့်\tCtrl-L
 pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl-L
@@ -1090,7 +1090,7 @@ eu:Lanabes barra azaldu
 tl:Ipakita ang toolbar
 va:Mostrar barra de ferramentes
 sn:Ratidza Toolbar
-cy:Dangoswch y bar offer
+cy:Dangos y bar offer
 ga:Taispeáin an Barra Uirlisí
 mm:တူးလ်ဘား ပြပါ
 pa:ਸੰਦ ਵਾਲੀ ਫੱਟੀ ਵਖਾਓ
@@ -1147,7 +1147,7 @@ eu:...ra &Joan
 tl:Pumun&ta Sa...
 va:&Anar a
 sn:Enda ku...
-cy:&Mordwyo i...
+cy:&Mynd i...
 ga:Téigh Chuig...
 mm:သို့ သွား
 pa:ਜਾਵੋ(&G)
@@ -1603,7 +1603,7 @@ eu:&Berezko neurria\tCtrl-1
 tl:Tunay na Laki\tCtrl-1
 va:Tam&any Real\tCtrl-1
 sn:Saizi chaiyo\tCtrl-1
-cy:&Maint Gwirioneddol\tCtrl-1
+cy:&Gwir Faint\tCtrl-1
 ga:Fíormhéid\tCtrl-1
 mm:ပုံမှန် အရွယ်\tCtrl-1
 pa:ਸਹੀ ਅਕਾਰ(&u)\tCtrl-1
@@ -1800,7 +1800,7 @@ eu:&Web orria bisitatu
 tl:Puntahan ang Websa&yt
 va:&Visitar Lloc Web
 sn:&Shanyira dande-mtande
-cy:&Ymwelwch â'r Wefan
+cy:&Ymweld â'r Wefan
 ga:Tabhair cuairt ar an suíomh idirlín
 mm:&ဝဘ်ဌာနေ သို့
 pa:ਵੇਬਸਾਇਟ ਵੇਥੋ(&V)
@@ -2083,7 +2083,7 @@ tl:Hanapin ang Nakaraan
 va:Busca Anterior
 sn:Wana pashure
 tw:向上尋找
-cy:Canfod Blaenorol
+cy:Canfod y Blaenorol
 ga:Aimsigh Roimhe
 mm:ပြီးခဲ့တာ ရှာပါ
 pa:ਪਿਛਲਾ ਲੱਭੋ
@@ -2132,7 +2132,7 @@ tl:Hanapin ang Susunod
 va:Busca Següent
 sn:Wana pamberi
 tw:向下尋找
-cy:Canfod Nesaf
+cy:Canfod y Nesaf
 ga:Aimsigh Ar Aghaidh
 mm:နောက်တခု ရှာပါ
 pa:ਅਗਲਾ ਲੱਭੋ
@@ -2464,7 +2464,7 @@ eu:Sumatra orain berezko PDF irakur tresna bihurtu da.
 tl:SumatraPDF ay ang Pangunahing reader na sa mga PDF.
 va:SumatraPDF es ara el llector PDF per defecte.
 sn:SumatraPDF ndiyo yaakuvhura maPDF ese.
-cy:Mae SumatraPDF yn awr yn ddarllenydd diofyn ar gyfer ffeiliau PDF.
+cy:SumatraPDF yw'r darllenydd ffeiliau PDF rhagosodedig.
 ga:Sé SumatraPDF an léitheoir réamhshocruithe do chomhaid PDF.
 mm:စူမာတရာPDF သည် PDF ဖိုင်များတွက် အဓိက ကြည့်ရာဖြစ်ပြီ။
 pa:ਹੁਣ ਤੌਂ  PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੁਲਣਗੀਆਂ ।
@@ -2520,7 +2520,7 @@ eu:Fitxategia ezin izan da gorde
 tl:Nabigo ang pagsasave ng file
 va:Erro al Guardar l'Archiu
 sn:Tatadza kuseva faira
-cy:Methu cadw ffeil
+cy:Methwyd cadw ffeil
 ga:Theip air comhad a chur i dtaisce
 mm:ဖိုင် သိမ်းမရပါ
 pa:ਫਾਈਲ ਸੰਭਾਲੀ ਨਹੀ ਜਾ ਸਕੀ
@@ -2688,7 +2688,7 @@ eu:Arazoak inprimatze lanetan
 tl:May Problema sa Pagpi-print.
 va:Erro d'impressió.
 sn:Dambudziko pakuprinta
-cy:Problem argraffu
+cy:Anhawster argraffu
 ga:Botún Clóbhuailte
 mm:ပုံနှိပ် ကရိယာ ပြသာနာ
 pa:ਪਰਿਨਟ ਕਰਨ ਵਿੱਚ ਗਲਤੀ
@@ -2740,7 +2740,7 @@ eu:Lagun gaitzazu itzulpenekin
 tl:Mag-ambag sa Pagsasaling-wika
 va:Contribuir en la traducció
 sn:Batsira kuturikira
-cy:Cyfrannwch gyfieithiad
+cy:Cyfrannu cyfieithiad.
 ga:Aistrigh É Seo
 pa:ਅਨੁਵਾਦ ਕਰਨ ਵਿੱਚ ਮਦੱਦ ਕਰੋ
 hi:अनुवाद करने में मदद करें
@@ -2775,7 +2775,7 @@ bn:সমাদেশ-পংক্তিতে বিলোম অনুসন�
 it:Imposta comando di ricerca inversa
 tw:設定反搜尋命令列
 cn:设置反向搜索命令行
-cy:Gosodwch linell-orchymyn chwilio gwrthdro
+cy:Gosod linell-orchymyn chwilio gwrthdro
 ga:Socruigh líne na n-orduithe cuardaigh inbhéarta
 mm:command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
 pa:ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
@@ -2815,7 +2815,7 @@ bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
 pt:Alterar o idioma (Change language)
 cn:改变语言 (Change language)
-cy:Newidiwch iaith (Change language)
+cy:Newid iaith (Change language)
 ga:Athraigh an Teanga (Change language)
 mm:စာ စကား ပြောင်းရန် (Change language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
@@ -2855,7 +2855,7 @@ bn:শব্দকূট প্রবেশ করুন
 tw:輸入密碼
 pt:Introduzir password
 cn:输入密码
-cy:Rhowch gyfrinair
+cy:Rhoi cyfrinair
 ga:Cuir isteach focal faire
 mm:လျှို့ဝှက် ထည့်သွင်းရန်
 pa:ਪਾਸਵਰਡ ਭਰੋ
@@ -2895,7 +2895,7 @@ bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 tw:輸入 %s 的密碼
 pt:Introduzir password para %s
 cn:输入 %s 的密码
-cy:Rhowch gyfrinair ar gyfer %s
+cy:Rhoi cyfrinair ar gyfer %s
 ga:Cuir isteach focal faire le haghaidh %s
 mm:လျှို့ဝှက် ထည့်သွင်း %s
 pa:%s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
@@ -2975,7 +2975,7 @@ sn:Ita zvifambidzane ne PDF
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 tw:與 PDF 檔進行關聯?
 cn:是否关联 PDF 文件？
-cy:Cymdeithasu â ffeiliau PDF?
+cy:Cysylltu gyda ffeiliau PDF?
 ga:Comhthiomsaigh le comhaid PDF?
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 pa:PDF ਫਾਈਲਾਂ ਨਾਲ ਸੰਬੰਦ ਬਣਾਓ ?
@@ -3013,7 +3013,7 @@ ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 tw:把 SumatraPDF 作為預設的PDF閱讀器?
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器？
-cy:Gosodwch SumatraPDF fel rhaglen ddiofyn ar gyfer ffeiliau PDF?
+cy:Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
 mm:SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
 pa:PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
@@ -3054,7 +3054,7 @@ sn:Usandivhunze futi
 bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
 tw:不要再問我
 cn:以后不再询问
-cy:Peidiwch â gofyn eto
+cy:Peidio gofyn eto
 ga:Ná fiafraigh dom arís
 mm:ထပ်မမေးပါနှင့်။
 pa:ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
@@ -3136,7 +3136,7 @@ bn:নতুন সংস্করণ অনুপলব্ধ
 tw:沒有新版本
 pt:Nenhuma atualização encontrada.
 cn:未发现新版本。
-cy:Does dim fersiwn newydd ar gael.
+cy:Dim fersiwn newydd ar gael.
 ga:Níl leagan nua ar fáil.
 mm:အမျိုးအစားသစ် မရှိပါ
 pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
@@ -3177,7 +3177,7 @@ bn:আপনার এই সংস্করণটি সর্বাধুন�
 tw:目前使用的版本為最新版。
 pt:Já possui a versão mais recente.
 cn:您的版本为最新版。
-cy:Mae gennych y fersiwn diweddaraf.
+cy:Mae'r fersiwn diweddaraf gennych.
 ga:Tá an leagan is úire agat
 mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
 pa:ਤੋਹਾਡੇ ਕੋਲ ਪਿਹਲਾਂ ਤੌਂ ਹੀ ਨਵਾਂ ਵਰਜਨ ਹੈ
@@ -3218,7 +3218,7 @@ bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
 pt:Tem a versão %s
 cn:您的版本为 %s
-cy:Mae gennych fersiwn %s
+cy:Mae fersiwn %s gennych
 ga:Tá leagan %s agat.
 mm:သင့်အမျိုးအစားသည် %s
 pa:ਤੋਹਾਡੇ ਕੋਲ %s ਵਰਜਨ ਹੈ
@@ -3259,7 +3259,7 @@ bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। �
 tw:最新版本 %s。 是否下載?
 pt:A nova versão %s encontra-se disponível. Deseja fazer o download?
 cn:发现新版本 %s。是否下载？
-cy:Mae fersiwn newydd %s ar gael. Lawrlwytho'r fersiwn newydd?
+cy:Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr??
 ga:Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 mm:အမျိုးအစားသစ်ရှိသည်။ယူမလား။
 pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
@@ -3340,7 +3340,7 @@ sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
 tw:略過這個版本
 cn:跳过此版本
-cy:Neidio'r fersiwn hwn.
+cy:Hepgor y fersiwn yma.
 ga:Ná bac leis an leagan seo.
 mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 pa:ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
@@ -3353,6 +3353,7 @@ Warning
 de:Warnung
 ru:Предупреждение
 pl:Uwaga
+cy:Rhybudd
 -
 This option is not available in portable mode.
 de:Diese Option ist im portablen Modus nicht verfügbar
@@ -3363,6 +3364,7 @@ ru:Эта опция недоступна в мобильном режиме.
 SumatraPDF Options
 de:SumatraPDF Optionen
 ru:Параметры SumatraPDF
+cy:Dewisiadau SumatraPDF
 -
 Fit Width
 af:Pas In Breedte
@@ -3471,7 +3473,7 @@ eu:Berezko neurria
 tl:Tunay na Laki
 va:Tamany Real
 sn:Saizi chaiyo
-cy:Maint Gwirioneddol
+cy:Gwir Faint
 ga:Fíormhéid
 mm:ပုံမှန် အရွယ်
 pa:ਸਹੀ ਅਕਾਰ
@@ -3481,6 +3483,7 @@ nn:Faktisk storleik
 &Settings
 de:&Einstellungen
 ru:Настройки
+cy:&Gosodiadau
 -
 Fit Page
 af:Pas Blad In
@@ -3542,36 +3545,45 @@ nn:Tilpass side
 &Options...
 de:&Optionen...
 ru:&Параметры...
+cy:&Dewisiadau...
 -
 Default &Layout:
 de:&Standardlayout:
 ru:&Компоновка по умолчанию
+cy:&Cynllun Rhagosodedig:
 -
 Default &Zoom:
 de:Standard&vergrößerung:
 ru:&Масштаб по умолчанию
+cy:C&hwyddo Rhagosodedig:
 -
 OK
+cy:Iawn
 -
 Advanced
 de:Weiteres
 ru:Расширенные
+cy:Uwch
 -
 Show the &bookmarks sidebar when available
 de:&Lesezeichen beim Start anzeigen
 ru:Показывать панель &закладок (при возможности)
+cy:Dangos bar ochr y nodau tudalen pan yw ar gael
 -
 Cancel
 de:Abbrechen
 ru:Отмена
+cy:Diddymu
 -
 Automatically check for &updates
 de:&Automatisch nach Updates suchen
 ru:&Автоматическая проверка обновлений
+cy:Gwirio'n awtomatig am &ddiweddariadau
 -
 &Remember these settings for each document
 de:&Diese Einstellungen für jedes Dokument merken
 ru:Запомнить эти параметры для &каждого документа
+cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 -
 View
 af:Vertoon
@@ -3633,56 +3645,70 @@ nn:Vis
 Information
 de:Hinweis
 ru:Информация
+cy:Gwybodaeth
 -
 &Go to page:
 de:&Gehe zu Seite:
 ru:&Перейти к странице
+cy:Mynd i dudalen:
 -
 (of %d)
 de:(von %d)
 ru: (из %d)
+cy:(o %d)
 -
 Download
 de:Herunterladen
 ru:Загрузка
+cy:Llwytho i Lawr
 -
 &Yes
 de:&Ja
 ru:Да
+cy:Iawn
 -
 &No
 de:&Nein
 ru:Нет
+cy:Na
 -
 &No, thanks
 de:&Nein, danke
 ru:Спасибо, нет
+cy:Dim diolch
 -
 Please wait - rendering...
 de:Bitte einen Moment Geduld...
 ru:Подождите - формируется изображение...
+cy:Arhoswch, wrthi'n cyflwyno...
 -
 Couldn't render the page
 de:Diese Seite kann leider nicht angezeigt werden
 ru:Не удалось сформировать изображение страницы
+cy:Methu cyflwyno'r dudalen
 -
 No matches were found
 de:Das Dokument wurde durchsucht
 ru:Образец не найден
+cy:Heb ganfod cyfatebiad
 -
 Found text at page %d
 de:Text auf Seite %d gefunden
 ru:Текст найден на стр. %d
+cy:Canfod testun ar dudalen %d
 -
 Searching %d of %d...
 de:Suche auf Seite %d von %d...
 ru:Обработка страницы %d из %d...
+cy:Chwilio am %d o %d...
 -
 PDF documents
 de:PDF Dokumente
+cy:Dogfennau PDF
 -
 All files
 de:Alle Dateien
+cy:Pob ffeil
 -
 &Password:
 de:&Passwort:
