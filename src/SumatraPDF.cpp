@@ -1285,14 +1285,9 @@ static bool runningFromProgramFiles(void)
     TCHAR *exePath = ExePathGet();
     if (!exePath) return true; // again, assume it is
     bool fromProgramFiles = false;
-    if (fOk) {
+    if (fOk)
         if (tstr_startswithi(exePath, programFilesDir))
             fromProgramFiles = true;
-    } else {
-        // SHGetSpecialFolderPath() might fail on win95/98 so need a different check
-        if (strstr(exePath, "Program Files"))
-            fromProgramFiles = true;
-    }
     free(exePath);
     return fromProgramFiles;
 }
@@ -2950,10 +2945,10 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     delete ctx;
 }
 
-static void DrawCenteredText(HDC hdc, RECT *r, char *txt)
+static void DrawCenteredText(HDC hdc, RECT *r, const WCHAR *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, strlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextW(hdc, txt, lstrlenW(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor) {
@@ -3106,8 +3101,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
-            // TODO: Make this call Unicode
-            DrawCenteredText(hdc, &bounds, (char *)_TRA("Please wait - rendering..."));
+            DrawCenteredText(hdc, &bounds, _TRW("Please wait - rendering..."));
             DBG_OUT("drawing empty %d ", pageNo);
             if (origFont)
                 SelectObject(hdc, origFont);
@@ -3122,8 +3116,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
-            // TODO: Make this call Unicode
-            DrawCenteredText(hdc, &bounds, (char *)_TRA("Couldn't render the page"));
+            DrawCenteredText(hdc, &bounds, _TRW("Couldn't render the page"));
             UnlockCache();
             continue;
         }

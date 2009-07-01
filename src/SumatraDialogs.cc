@@ -376,11 +376,10 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
            russion translation, the russian part of window title is garbage (?)
            not russian text. Maybe I need to change the font ? */
         win_set_text(hDlg, _TR("Change language"));
-        TCHAR *langName;
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int idx = 0;
         for (int i=0; i < LANGS_COUNT; i++) {
-            langName = utf8_to_utf16(g_menuDefLang[i].m_title);
+            WCHAR *langName = utf8_to_utf16(g_menuDefLang[i].m_title);
             lb_append_stringw_no_sort(langList, langName);
             free(langName);
             if (g_menuDefLang[i].m_id == data->langId)
