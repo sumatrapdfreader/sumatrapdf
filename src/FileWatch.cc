@@ -16,7 +16,8 @@
 // Get the directory name from a full file path and copy it to pszDir
 bool GetDirectory(LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
 {
-    LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
+    // TODO: Compile file_util.c as UNICODE
+    LPCTSTR pszBaseName = FilePathW_GetBaseName(pszFile);
 
     if (0 == pszDir || 0 == pszFile) {
         return false;
@@ -112,7 +113,7 @@ void FileWatcher::Init(LPCWSTR filefullpath)
         SynchronousAbort();
 
     tstr_copy(szFilepath, dimof(szFilepath), filefullpath);
-    pszFilename = FilePath_GetBaseName(szFilepath);
+    pszFilename = FilePathW_GetBaseName(szFilepath);
     GetDirectory(filefullpath, szDir, dimof(szDir));
     
     _tstat(filefullpath, &timestamp);
