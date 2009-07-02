@@ -1877,10 +1877,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
                 case IDM_FIND_NEXT:
                 case IDM_FIND_PREV: 
                     // TODO: Update on whether there's more to find, not just on whether there is text.
-                    wchar_t findBoxText[2];
-                    GetWindowTextW(win->hwndFindBox, findBoxText, 2);
-
-                    if (findBoxText[0] == '\0')
+                    if (win_get_text_len(win->hwndFindBox) == 0)
                         buttonState = disable;
                     break;
 
@@ -4902,16 +4899,13 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     RectI rect = {
         result->left,
         result->top,
-        result->right - result->left,
-        0
+        abs(result->right - result->left),
+        abs(result->bottom - result->top)
     };
     // TODO: this should really be fixed by the upper layer and here
     // bottom should always be >= top
     // assert(result->bottom >= result->top);
-    if (result->top > result->bottom)
-        rect.dy = result->top - result->bottom;
-    else
-        rect.dy = result->bottom - result->top;
+    // assert(result->right >= result->left);
     RectI intersect;
     DeleteOldSelectionInfo(win);
     if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {

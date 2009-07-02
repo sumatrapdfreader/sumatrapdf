@@ -169,7 +169,7 @@ void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
     *pageDxOut = pageInfo->pageDx;
     *pageDyOut = pageInfo->pageDy;
 
-    rotation = rotation + pageInfo->rotation;
+    rotation += pageInfo->rotation;
     normalizeRotation(&rotation);
     if (rotationFlipped(rotation))
         swap_double(pageDxOut, pageDyOut);
@@ -1444,6 +1444,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
 
     rot += pageInfo->rotation;
+    normalizeRotation(&rot);
     double vx = 0, vy = 0;
     if (rot == 90 || rot == 180)
         vx += pageInfo->currDx;
@@ -1480,6 +1481,8 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
 
     fz_point tp = fz_transformpoint(invCtm, p);
 
+    rot += pageInfo->rotation;
+    normalizeRotation(&rot);
     double vx = 0, vy = 0;
     if (rot == 90 || rot == 180)
         vy -= pageInfo->pageDy;
@@ -1612,11 +1615,13 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
     int rot = rotation();
     normalizeRotation (&rot);
 
+    int dispRot = rot + pageInfo->rotation;
+    normalizeRotation(&dispRot);
     double vx = pageInfo->screenX - pageInfo->bitmapX,
            vy = pageInfo->screenY - pageInfo->bitmapY;
-    if (rot == 90 || rot == 180)
+    if (dispRot == 90 || dispRot == 180)
         vx += pageInfo->currDx;
-    if (rot == 180 || rot == 270)
+    if (dispRot == 180 || dispRot == 270)
         vy += pageInfo->currDy;
 
     double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
