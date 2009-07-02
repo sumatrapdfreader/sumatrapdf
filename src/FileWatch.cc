@@ -103,7 +103,7 @@ void FileWatcher::Clean()
     }
 }
 
-void FileWatcher::Init(LPCWSTR filefullpath)
+void FileWatcher::Init(LPCTSTR filefullpath)
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
@@ -148,7 +148,7 @@ void FileWatcher::Init(LPCWSTR filefullpath)
 }
 
 // Start watching a file for changes
-void FileWatcher::StartWatchThread(LPCWSTR filefullpath, WATCHCALLBACK cb, LPARAM param)
+void FileWatcher::StartWatchThread(LPCTSTR filefullpath, WATCHCALLBACK cb, LPARAM param)
 {
     Init(filefullpath);
    

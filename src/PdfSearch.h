@@ -53,10 +53,10 @@ public:
     ~PdfSearch();
 
     void Reset();
-    void SetText(wchar_t *text);
+    void SetText(TCHAR *text);
     void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
     void SetDirection(bool forward);
-    bool FindFirst(int page, wchar_t *text);
+    bool FindFirst(int page, TCHAR *text);
     bool FindNext();
 
 protected:

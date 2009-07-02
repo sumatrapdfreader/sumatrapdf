@@ -5,7 +5,7 @@
 #include "PdfSync.h"
 #include <assert.h>
 #include <stdio.h>
-#include "wstr_util.h"
+#include "tstr_util.h"
 #include "str_util.h"
 #include <sys/stat.h>
 #include <shlwapi.h>
@@ -17,33 +17,33 @@
 #define PDFCOORDINATE_TO_SYNCCOORDINATE(p)          (p*65781.76)
 
 // Test if the file 'filename' exists
-bool FileExistsW( LPCWSTR filename ) {
+bool FileExists( LPCTSTR filename ) {
     struct _stat buffer ;
-    return 0 == _wstat( filename, &buffer );
+    return 0 == _tstat( filename, &buffer );
 }
 
-Synchronizer *CreateSynchronizer(LPCWSTR pdffilename)
+Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
 {
-    WCHAR syncfile[_MAX_PATH];
-    size_t n = wcslen(pdffilename);
+    TCHAR syncfile[MAX_PATH];
+    size_t n = lstrlen(pdffilename);
     size_t u = dimof(PDF_EXTENSION)-1;
     if (n>u && _wcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
         // Check if a PDFSYNC file is present
-        wstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-        wstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
-        if (FileExistsW(syncfile)) 
+        tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+        tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
+        if (FileExists(syncfile)) 
             return new Pdfsync(syncfile);
 
         #ifdef SYNCTEX_FEATURE
             // check if a compressed SYNCTEX file is present
-            wstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-            wstr_cat_s(syncfile, dimof(syncfile), SYNCTEXGZ_EXTENSION);
-            bool exist = FileExistsW(syncfile);
+            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEXGZ_EXTENSION);
+            bool exist = FileExists(syncfile);
 
             // check if a SYNCTEX file is present
-            wstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-            wstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
-            exist |= FileExistsW(syncfile);
+            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
+            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
+            exist |= FileExists(syncfile);
 
             if(exist)
                 return new SyncTex(syncfile); // due to a bug with synctex_parser.c, this must always be 
@@ -59,42 +59,42 @@ Synchronizer *CreateSynchronizer(LPCWSTR pdffilename)
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the result is stored in cmdline
-UINT Synchronizer::prepare_commandline(LPCWSTR pattern, LPCWSTR filename, UINT line, UINT col, PWSTR cmdline, UINT cchCmdline)
+UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline)
 {
-    LPCWSTR perc;
+    LPCTSTR perc;
     size_t len = 0;
     cmdline[0] = '\0';
-    LPWSTR out = cmdline;
+    LPTSTR out = cmdline;
     size_t cchOut = cchCmdline;
-    while (perc = wstr_find_char(pattern, '%')) {
+    while (perc = tstr_find_char(pattern, '%')) {
         int u = perc-pattern;
         
-        wstr_copyn(out, cchOut, pattern, u);
-        len = wstr_len(out);
+        tstr_copyn(out, cchOut, pattern, u);
+        len = tstr_len(out);
         out += len;
         cchOut -= len;
 
         perc++;
         if (*perc == 'f') {
-            wstr_copy(out, cchOut, filename);
+            tstr_copy(out, cchOut, filename);
         }
         else if (*perc == 'l') {
-            _snwprintf(out, cchOut, L"%d", line);
+            _sntprintf(out, cchOut, _T("%d"), line);
         }
         else if (*perc == 'c') {
-            _snwprintf(out, cchOut, L"%d", col);
+            _sntprintf(out, cchOut, _T("%d"), col);
         }
         else {
-            wstr_copyn(out, cchOut, perc-1, 2);
+            tstr_copyn(out, cchOut, perc-1, 2);
         }
-        len = wstr_len(out);
+        len = tstr_len(out);
         out += len;
         cchOut -= len;
 
         pattern = perc+1;
     }
     
-    wstr_cat_s(cmdline, cchCmdline, pattern);
+    tstr_cat_s(cmdline, cchCmdline, pattern);
 
     return 1;
 }
@@ -127,7 +127,7 @@ int Pdfsync::get_record_section(int record_index)
 FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
-    fp = _wfopen(syncfilename, L"rb");
+    fp = _tfopen(syncfilename, _T("rb"));
     if (NULL == fp) {
         DBG_OUT("The syncfile %s cannot be opened\n", syncfilename);
         return NULL;
@@ -332,7 +332,7 @@ int Pdfsync::rebuild_index()
     return Synchronizer::rebuild_index();
 }
 
-UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
+UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -409,9 +409,9 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
 
     // Convert the source filepath to an absolute path
     if (PathIsRelativeA(srcFilename))
-        _snwprintf(srcfilepath, cchFilepath, L"%s\\%S", this->dir, srcFilename, dimof(srcFilename));
+        _sntprintf(srcfilepath, cchFilepath, _T("%s\\%S"), this->dir, srcFilename, dimof(srcFilename));
     else
-        _snwprintf(srcfilepath, cchFilepath, L"%S", srcFilename, dimof(srcFilename));
+        _sntprintf(srcfilepath, cchFilepath, _T("%S"), srcFilename, dimof(srcFilename));
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -447,7 +447,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
 //
-UINT Pdfsync::source_to_record(FILE *fp, LPCWSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
+UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT col, vector<size_t> &records)
 {
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -524,7 +524,7 @@ read_linerecords:
 
 }
 
-UINT Pdfsync::source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -603,7 +603,7 @@ int SyncTex::rebuild_index() {
         return 1; // cannot rebuild the index
 }
 
-UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
+UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col)
 {
     if (this->is_index_discarded())
         if (rebuild_index())
@@ -619,7 +619,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
                 return PDFSYNCERR_OUTOFMEMORY;
 
             // undecorate the filepath: replace * by space and / by \ 
-            WCHAR *p = srcfilename;
+            TCHAR *p = srcfilename;
             while(*p) {
                 if(*p=='*') *p=' ';
                 else if(*p=='/') *p='\\';
@@ -627,10 +627,10 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
             }
 
             // Convert the source filepath to an absolute path
-            if (PathIsRelativeW(srcfilename))
-                _snwprintf(srcfilepath, cchFilepath, L"%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+            if (PathIsRelative(srcfilename))
+                _sntprintf(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcfilename, dimof(srcfilename));
             else
-                wstr_copy(srcfilepath, cchFilepath, srcfilename);
+                tstr_copy(srcfilepath, cchFilepath, srcfilename);
 
             free(srcfilename);
 
@@ -641,18 +641,18 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PWSTR srcfilepath, UINT 
 //    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 }
 
-UINT SyncTex::source_to_pdf(LPCWSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
 {
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // convert the source file to an absolute path
-    WCHAR srcfilepath[_MAX_PATH];
-    if (PathIsRelativeW(srcfilename))
-        _snwprintf(srcfilepath, dimof(srcfilepath), L"%s\\%s", this->dir, srcfilename, dimof(srcfilename));
+    TCHAR srcfilepath[MAX_PATH];
+    if (PathIsRelative(srcfilename))
+        _sntprintf(srcfilepath, dimof(srcfilepath), _T("%s\\%s"), this->dir, srcfilename, dimof(srcfilename));
     else
-        wstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
+        tstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 
     char *mb_srcfilepath = wstr_to_multibyte(srcfilepath, CP_ACP);
     if (!mb_srcfilepath)
@@ -687,14 +687,14 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     DBG_OUT("received WM_DDE_INITIATE from %p with %08lx\n", (HWND)wparam, lparam);
 
-    ATOM aServer = GlobalAddAtomW(PDFSYNC_DDE_SERVICE_W);
-    ATOM aTopic = GlobalAddAtomW(PDFSYNC_DDE_TOPIC_W);
+    ATOM aServer = GlobalAddAtom(PDFSYNC_DDE_SERVICE);
+    ATOM aTopic = GlobalAddAtom(PDFSYNC_DDE_TOPIC);
 
     if (LOWORD(lparam) == aServer && HIWORD(lparam) == aTopic) {
         if (!IsWindowUnicode((HWND)wparam))
             DBG_OUT("The client window is ANSI!\n");
         DBG_OUT("Sending WM_DDE_ACK to %p\n", (HWND)wparam);
-        SendMessageW((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
+        SendMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
     }
     else {
         GlobalDeleteAtom(aServer);
@@ -725,10 +725,10 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     if (!command)
         DBG_OUT("WM_DDE_EXECUTE: No command specified\n");
     else {
-        LPWSTR pwCommand;
+        LPTSTR pwCommand;
         if (bUnicodeSender) {
             DBG_OUT("The client window is UNICODE!\n");
-            pwCommand = wcsdup((LPCWSTR)command);
+            pwCommand = tstr_dup((LPCTSTR)command);
         }
         else {
             DBG_OUT("The client window is ANSI!\n");
@@ -736,24 +736,24 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
 
         // Parse the command
-        WCHAR pdffile[_MAX_PATH];
-        WCHAR srcfile[_MAX_PATH];
-        WCHAR destname[_MAX_PATH];
-        WCHAR dump[_MAX_PATH];
+        TCHAR pdffile[MAX_PATH];
+        TCHAR srcfile[MAX_PATH];
+        TCHAR destname[MAX_PATH];
+        TCHAR dump[MAX_PATH];
         UINT line,col, newwindow = 0, setfocus = 0, forcerefresh = 0;
-        const WCHAR *pos, *curCommand;
+        const TCHAR *pos, *curCommand;
         
         curCommand = pos = pwCommand;
-        while (pos < (curCommand + wcslen(curCommand))) {
+        while (pos < (curCommand + lstrlen(curCommand))) {
             // Synchronization command.
-            // format is [<DDECOMMAND_SYNC_A>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
+            // format is [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
             if ( (pos = curCommand) &&
-                wstr_skip(&pos, L"[" DDECOMMAND_SYNC_W L"(\"") &&
+                wstr_skip(&pos, _T("[") DDECOMMAND_SYNC _T("(\"")) &&
                 wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                wstr_skip(&pos, L"\",\"") &&
+                wstr_skip(&pos, _T("\",\"")) &&
                 wstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
-                (4 == swscanf(pos, L"\",%u,%u,%u,%u)]", &line, &col, &newwindow, &setfocus)
-                || 2 == swscanf(pos, L"\",%u,%u)]", &line, &col))
+                (4 == _stscanf(pos, _T("\",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus)
+                || 2 == _stscanf(pos, _T("\",%u,%u)]"), &line, &col))
                 )
             {
                 // Execute the command.
@@ -781,11 +781,11 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 }
             }
             // Open file DDE command.
-            // format is [<DDECOMMAND_OPEN_A>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
+            // format is [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
             else if ( (pos = curCommand) &&
-                wstr_skip(&pos, L"[" DDECOMMAND_OPEN_W L"(\"") &&
+                wstr_skip(&pos, _T("[") DDECOMMAND_OPEN _T("(\"")) &&
                 wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                (3 == swscanf(pos, L"\",%u,%u,%u)]", &newwindow, &setfocus, &forcerefresh) || wstr_skip(&pos, L"\")"))
+                (3 == _stscanf(pos, _T("\",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || wstr_skip(&pos, _T("\")")))
                 )
             {
                 // check if the PDF is already opened
@@ -806,12 +806,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 
             }
             // Jump to named destination DDE command.
-            // format is [<DDECOMMAND_GOTO_A>("<pdffilepath>", "<destination name>")]
+            // format is [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
             else if ( (pos = curCommand) &&
-                wstr_skip(&pos, L"[" DDECOMMAND_GOTO_W L"(\"") &&
-                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), L'"') &&
-                wstr_skip(&pos, L"\",\"") &&
-                wstr_copy_skip_until(&pos, destname, dimof(destname), L'"')
+                wstr_skip(&pos, _T("[") DDECOMMAND_GOTO _T("(\"")) &&
+                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
+                wstr_skip(&pos, _T("\",\"")) &&
+                wstr_copy_skip_until(&pos, destname, dimof(destname), _T('"'))
                 )
             {
                // check if the PDF is already opened
@@ -833,7 +833,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
             // next command
             wstr_copy_skip_until(&pos, dump, dimof(dump), ']');
-            wstr_skip(&pos, L"]");
+            wstr_skip(&pos, _T("]"));
             curCommand = pos;
         }
         free(pwCommand);

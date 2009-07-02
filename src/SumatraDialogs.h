@@ -13,16 +13,16 @@ class WindowInfo;
 /* For passing data to/from SetInverseSearch dialog */
 int     Dialog_GoToPage(WindowInfo *win);
 #ifdef _TEX_ENHANCEMENT
-WCHAR *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const WCHAR *cmdline);
+TCHAR *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const TCHAR *cmdline);
 #endif
-WCHAR * Dialog_GetPassword(WindowInfo *win, const WCHAR *fileName);
+TCHAR * Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 
 /* For passing data to/from 'new version available' dialog */
 typedef struct {
-    const WCHAR *currVersion;
-    const WCHAR *newVersion;
+    const TCHAR *currVersion;
+    const TCHAR *newVersion;
     BOOL skipThisVersion;
 } Dialog_NewVersion_Data;
 

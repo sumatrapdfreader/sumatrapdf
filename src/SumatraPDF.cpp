@@ -4954,7 +4954,7 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCWSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y)
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y)
 {
     if (ret == PDFSYNCERR_SUCCESS) {
         // remember the position of the search result for drawing the rect later on
@@ -5316,7 +5316,7 @@ void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
 {
     TCHAR text[256];
     GetWindowText(hwnd, text, sizeof(text));
-    bool hasText = wcslen(text) > 0;
+    bool hasText = lstrlen(text) > 0;
     if (!hasText)
         return;
 
@@ -5401,13 +5401,13 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
 SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 {
     SIZE sz;
-    int txtLen = wcslen(txt);
+    int txtLen = lstrlen(txt);
     HDC dc = GetWindowDC(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
     HFONT f = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
     HGDIOBJ prev = SelectObject(dc, f);
-    GetTextExtentPoint32W(dc, txt, txtLen, &sz);
+    GetTextExtentPoint32(dc, txt, txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
     return sz;
@@ -7126,12 +7126,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * MAX_PATH + 20];
-                wsprintf(command, _T("[") _T(DDECOMMAND_OPEN_A) _T("(\"%S\", 0, 1, 0)]"), currArg->str);
-                DDEExecute(_T(PDFSYNC_DDE_SERVICE_A), _T(PDFSYNC_DDE_TOPIC_A), command);
+                wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%S\", 0, 1, 0)]"), currArg->str);
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 if (destName && pdfOpened == 0)
                 {
-                    wsprintf(command, _T("[") _T(DDECOMMAND_GOTO_A) _T("(\"%S\", \"%s\")]"), currArg->str, destName);
-                    DDEExecute(_T(PDFSYNC_DDE_SERVICE_A), _T(PDFSYNC_DDE_TOPIC_A), command);
+                    wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%S\", \"%s\")]"), currArg->str, destName);
+                    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 }
             }
             else {

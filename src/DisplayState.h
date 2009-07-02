@@ -56,7 +56,7 @@ enum DisplayMode {
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 
 typedef struct DisplayState {
-    const WCHAR *       filePath;
+    const TCHAR *       filePath;
     enum DisplayMode    displayMode;
     BOOL                visible;     /* if TRUE, currently shown on the screen */
     int                 scrollX;

@@ -2,7 +2,7 @@
 
 #define NONE    MAXLONG
 
-#include "wstr_util.h"
+#include "tstr_util.h"
 #include <ctype.h>
 
 PdfSearch::PdfSearch(PdfEngine *engine)
@@ -31,11 +31,11 @@ void PdfSearch::Reset()
     last = 0;
 }
 
-void PdfSearch::SetText(wchar_t *text)
+void PdfSearch::SetText(TCHAR *text)
 {
     this->Clear();
-    this->length = wcslen(text);
-    this->text = wstr_dup(text);
+    this->length = lstrlen(text);
+    this->text = tstr_dup(text);
     this->engine = engine;
     this->line = NULL;
     this->current = NULL;
@@ -72,7 +72,7 @@ void PdfSearch::SetDirection(bool forward)
     ReverseLineList();
 }
 
-#define CHR(x) (WCHAR)(x)
+#define CHR(x) (TCHAR)(x)
 
 bool PdfSearch::MatchChars(int c1, int c2)
 {
@@ -80,14 +80,14 @@ bool PdfSearch::MatchChars(int c1, int c2)
         return true;
     if (sensitive)
         return false;
-    if (CharUpperW((LPWSTR)MAKELONG(CHR(c1),0)) == CharUpperW((LPWSTR)MAKELONG(CHR(c2),0)))
+    if (CharUpper((LPTSTR)MAKELONG(CHR(c1),0)) == CharUpper((LPTSTR)MAKELONG(CHR(c2),0)))
         return true;
     return false;
 }
 
 bool PdfSearch::MatchAtPosition(int n)
 {
-    WCHAR *p = (WCHAR *)text;
+    TCHAR *p = (TCHAR *)text;
     result.left = current->text[n].bbox.x0;
     result.top = current->text[n].bbox.y0;
     last = n;
@@ -122,7 +122,7 @@ bool PdfSearch::FindTextInPage(int page)
     if (!text)
         return false;
 
-    WCHAR p = *(WCHAR *)text;
+    TCHAR p = *(TCHAR *)text;
     int start = last;
 
     if (forward) {
@@ -202,7 +202,7 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     return false;
 }
 
-bool PdfSearch::FindFirst(int page, wchar_t *text)
+bool PdfSearch::FindFirst(int page, TCHAR *text)
 {
     SetText(text);
 

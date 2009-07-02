@@ -46,7 +46,7 @@
 #include "DisplayModel.h"
 
 #include "str_util.h"
-#include "wstr_util.h"
+#include "tstr_util.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -133,7 +133,7 @@ bool rotationFlipped(int rotation)
 
 bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
 {
-    ds->filePath = wstr_escape(dm->fileName());
+    ds->filePath = tstr_dup(dm->fileName()); // tstr_escape?
     if (!ds->filePath)
         return FALSE;
     ds->displayMode = dm->displayMode();
@@ -218,7 +218,7 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
     return &(_pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::load(const WCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair)
+bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair)
 { 
     assert(fileName);
     if (!pdfEngine->load(fileName, win, tryrepair))
@@ -1370,7 +1370,7 @@ bool BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rota
     return false;
 }
 
-PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, wchar_t *text)
+PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text)
 {
     showBusyCursor();
 
@@ -1395,7 +1395,7 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, wchar_t *text)
 }
 
 DisplayModel *DisplayModel_CreateFromFileName(
-  const WCHAR *fileName,
+  const TCHAR *fileName,
   SizeD totalDrawAreaSize,
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,

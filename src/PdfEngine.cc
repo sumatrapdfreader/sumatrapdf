@@ -7,7 +7,7 @@
 #include "utf_util.h"
 
 // in SumatraPDF.cpp
-extern "C" char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName);
+extern "C" char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
 static fz_error pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, int *rotatep)
 {
@@ -182,7 +182,7 @@ PdfEngine::~PdfEngine()
     free((void*)_fileName);
 }
 
-bool PdfEngine::load(const WCHAR *fileName, WindowInfo *win, bool tryrepair)
+bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
     _windowInfo = win;
     setFileName(fileName);
@@ -266,7 +266,7 @@ Error:
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 {
-    wchar_t *name = utf8_to_utf16(entry->title);
+    TCHAR *name = utf8_to_utf16(entry->title);
 
     PdfTocItem *node = new PdfTocItem(name, entry->link);
 

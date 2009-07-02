@@ -4,7 +4,7 @@
 #define _PDF_ENGINE_H_
 
 #include "geom_util.h"
-#include "wstr_util.h"
+#include "tstr_util.h"
 
 #ifndef _FITZ_H_
 extern "C" {
@@ -30,13 +30,13 @@ class WindowInfo;
 
 class PdfTocItem {
 public:
-    wchar_t *title;
+    TCHAR *title;
     void *link;
 
     PdfTocItem *child;
     PdfTocItem *next;
 
-    PdfTocItem(wchar_t *title, void *link)
+    PdfTocItem(TCHAR *title, void *link)
     {
         this->title = title;
         this->link = link;
@@ -97,11 +97,11 @@ class PdfEngine {
 public:
     PdfEngine();
     ~PdfEngine();
-    const WCHAR *fileName(void) const { return _fileName; };
+    const TCHAR *fileName(void) const { return _fileName; };
 
-    void setFileName(const WCHAR *fileName) {
+    void setFileName(const TCHAR *fileName) {
         assert(!_fileName);
-        _fileName = (const WCHAR*)wstr_dup(fileName);
+        _fileName = (const TCHAR*)tstr_dup(fileName);
     }
 
     bool validPageNo(int pageNo) const {
@@ -114,7 +114,7 @@ public:
         return _pageCount; 
     }
 
-    bool load(const WCHAR *fileName, WindowInfo *windowInfo, bool tryrepair);
+    bool load(const TCHAR *fileName, WindowInfo *windowInfo, bool tryrepair);
     int pageRotation(int pageNo);
     SizeD pageSize(int pageNo);
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
@@ -135,7 +135,7 @@ public:
     fz_obj    *getNamedDest(const char *name);
 
 protected:
-    const WCHAR *_fileName;
+    const TCHAR *_fileName;
     int _pageCount;
     WindowInfo *_windowInfo;
 
