@@ -295,6 +295,11 @@ PDFINFO_APP = $(O)\pdfinfo.exe
 PDFINFO_PDB = $(O)\pdfinfo.pdb
 PDFINFO_MAP = $(O)\pdfinfo.map
 
+PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
+PDFEXTRACT_APP = $(O)\pdfextract.exe
+PDFEXTRACT_PDB = $(O)\pdfextract.pdb
+PDFEXTRACT_MAP = $(O)\pdfextract.map
+
 CMAPDUMP_OBJS = $(O)\base_error.obj $(O)\base_memory.obj \
 	$(O)\stm_read.obj $(O)\stm_buffer.obj $(O)\stm_filter.obj \
 	$(O)\stm_open.obj $(O)\base_string.obj \
@@ -323,7 +328,7 @@ SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_PDB = $(O)\SumatraPDF.pdb
 SUMATRA_MAP = $(O)\SumatraPDF.map
 
-all: $(O) $(CMAPDUMP_APP) $(PDFBENCH_APP) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(SUMATRA_APP)
+all: $(O) $(CMAPDUMP_APP) $(PDFBENCH_APP) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(SUMATRA_APP)
 
 rebuild: cleanall all
 
@@ -462,6 +467,12 @@ $(PDFINFO_APP): $(PDFINFO_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFINFO_APP) /PDB:$(PDFINFO_PDB) \
 	$(PDFINFO_OBJS) $(LIBS) \
 	/MAP:$(PDFINFO_MAP) \
+	/SUBSYSTEM:CONSOLE
+
+$(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(PDFEXTRACT_APP) /PDB:$(PDFEXTRACT_PDB) \
+	$(PDFEXTRACT_OBJS) $(LIBS) \
+	/MAP:$(PDFEXTRACT_MAP) \
 	/SUBSYSTEM:CONSOLE
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES)
