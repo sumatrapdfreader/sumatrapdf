@@ -80,7 +80,7 @@ static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM w
                     data = (Dialog_InverseSearch_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
                     assert(data);
                     edit = GetDlgItem(hDlg, IDC_CMDLINE);
-                    data->out_cmdline = win_get_text(edit);
+                    data->out_cmdline = win_get_textw(edit);
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -154,7 +154,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
                     assert(data);
-                    data->pwdOut = win_get_text(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    data->pwdOut = win_get_textw(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -240,7 +240,7 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
                     assert(data);
                     data->pageEnteredOut = INVALID_PAGE_NO;
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    newPageNoTxt = win_get_text(editPageNo);
+                    newPageNoTxt = win_get_textw(editPageNo);
                     if (newPageNoTxt) {
                         data->pageEnteredOut = _ttoi(newPageNoTxt);
                         free((void*)newPageNoTxt);
@@ -268,7 +268,7 @@ int Dialog_GoToPage(WindowInfo *win)
     assert(win);
     if (!win) return INVALID_PAGE_NO;
 
-    data.currPageNo = win->dm->startPage();
+    data.currPageNo = win->dm->currentPageNo();
     data.pageCount = win->dm->pageCount();
     dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), win->hwndFrame, Dialog_GoToPage_Proc, (LPARAM)&data);
     if (DIALOG_OK_PRESSED == dialogResult) {
