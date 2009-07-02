@@ -28,7 +28,7 @@ void PdfSearch::Reset()
     if (line)
         pdf_droptextline(line);
     line = current = NULL;
-    last = 0;
+    last = NONE;
 }
 
 void PdfSearch::SetText(TCHAR *text)
@@ -166,18 +166,13 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     if (!text)
         return false;
 
-    int pageEnd, step;
-    int total = engine->pageCount();
-
-    if (forward) {
-        pageEnd = total + 1;
+    int step, total = engine->pageCount();
+    if (forward)
         step = 1;
-    } else {
-        pageEnd = 0;
+    else
         step = -1;
-    }
 
-    while (pageNo != pageEnd) {
+    while (1 <= pageNo && pageNo <= total) {
         UpdateTracker(pageNo, total);
         Reset();
 
@@ -199,6 +194,9 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
         pageNo += step;
     }
     
+    // allow for the first/last page to be included in the next search
+    result.page = forward ? total + 1 : 0;
+
     return false;
 }
 

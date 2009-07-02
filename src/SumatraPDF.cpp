@@ -279,6 +279,7 @@ static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win,
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize);
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
+static void ClearSearch(WindowInfo *win);
 void WindowInfo_EnterFullscreen(WindowInfo *win);
 void WindowInfo_ExitFullscreen(WindowInfo *win);
 
@@ -3714,10 +3715,8 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
         /* if we had a selection and this was just a click, hide selection */
         if (win->showSelection) {
             bool hideSelection = (x == win->dragStartX) && (y == win->dragStartY);
-            if (hideSelection) {
-                win->showSelection = false;
-                triggerRepaintDisplayNow(win);
-            }
+            if (hideSelection)
+                ClearSearch(win);
         }
         return;
     }
@@ -5328,6 +5327,8 @@ void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
 
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
+    else
+        ClearSearch(win);
     WindowInfo_HideFindStatus(win);
 
     Edit_SetModify(hwnd, FALSE);
