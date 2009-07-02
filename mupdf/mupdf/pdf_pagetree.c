@@ -206,9 +206,8 @@ pdf_loadpagetree(pdf_pagetree **pp, pdf_xref *xref)
 	return fz_okay;
 
 cleanup:
-	if (pages) fz_dropobj(pages);
-	if (catalog) fz_dropobj(catalog);
-	if (p) {
+	if (p)
+	{
 		fz_free(p->pref);
 		fz_free(p->pobj);
 		fz_free(p);
