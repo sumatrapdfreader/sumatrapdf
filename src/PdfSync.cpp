@@ -725,10 +725,10 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     if (!command)
         DBG_OUT("WM_DDE_EXECUTE: No command specified\n");
     else {
-        LPTSTR pwCommand;
+        LPWSTR pwCommand;
         if (bUnicodeSender) {
             DBG_OUT("The client window is UNICODE!\n");
-            pwCommand = tstr_dup((LPCTSTR)command);
+            pwCommand = wstr_dup((LPCWSTR)command);
         }
         else {
             DBG_OUT("The client window is ANSI!\n");

@@ -1435,13 +1435,13 @@ static void MenuUpdateFullscreen(WindowInfo* win)
 }
 
 static void SeeLastError(void) {
-    char *msgBuf = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    TCHAR *msgBuf = NULL;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR) &msgBuf, 0, NULL);
+        (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    printf("SeeLastError(): %s\n", msgBuf);
-    OutputDebugStringA(msgBuf);
+    _tprintf(_T("SeeLastError(): %s\n"), msgBuf);
+    OutputDebugString(msgBuf);
     LocalFree(msgBuf);
 }
 
@@ -2441,10 +2441,10 @@ void DisplayModel::pageChanged()
     int currPageNo = currentPageNo();
     int pageCount = win->dm->pageCount();
     if (pageCount > 0) {
-        char buf[256];
+        TCHAR buf[256];
         if (INVALID_PAGE_NO != currPageNo) {
-            HRESULT hr = StringCchPrintfA(buf, dimof(buf), "%d", currPageNo);
-            SetWindowTextA(win->hwndPageBox, buf);
+            HRESULT hr = StringCchPrintf(buf, dimof(buf), _T("%d"), currPageNo);
+            SetWindowText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
     }
@@ -3649,11 +3649,11 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     TCHAR cmdline[MAX_PATH];
     if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inverseSearchCmdLine,
       srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
-        //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
-        STARTUPINFOW si = {0};
+        //ShellExecute(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
+        STARTUPINFO si = {0};
         PROCESS_INFORMATION pi = {0};
         si.cb = sizeof(si);
-        if (CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        if (CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         } else {
@@ -3964,8 +3964,8 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     FillRect(hdc, &rc, gBrushBg);
     //DStringSprintf(&txt, "Welcome to animation %d", state->frame);
     //DrawText (hdc, txt.pString, -1, &rc, DT_SINGLELINE);
-    char * txt = "Welcome to animation";
-    TextOutA(hdc, curTxtPosX, curTxtPosY, txt, strlen(txt));
+    TCHAR * txt = _T("Welcome to animation");
+    TextOut(hdc, curTxtPosX, curTxtPosY, txt, lstrlen(txt));
     WindowInfo_DoubleBuffer_Show(win, hdc);
     if (state->frame > 99)
         state->frame = 0;
@@ -5200,12 +5200,11 @@ static void OnMenuAbout() {
             NULL, NULL,
             ghinst, NULL);
 
-    // TODO: why is returning only "A"?
-    TCHAR *t = win_get_textw(gHwndAbout);
-    BOOL isUni = IsWindowUnicode(gHwndAbout);
-    win_set_text(gHwndAbout, title);
     if (!gHwndAbout)
         return;
+
+    TCHAR *t = win_get_textw(gHwndAbout);
+    win_set_text(gHwndAbout, title);
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
@@ -5482,10 +5481,10 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
-            char buf[256];
+            TCHAR buf[256];
             int newPageNo;
-            GetWindowTextA(win->hwndPageBox, buf, sizeof(buf));
-            newPageNo = atoi(buf);
+            GetWindowText(win->hwndPageBox, buf, dimof(buf));
+            newPageNo = _ttoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
                 win->dm->goToPage(newPageNo, 0);
                 SetFocus(win->hwndFrame);

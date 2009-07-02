@@ -13,7 +13,6 @@
 // Get the directory name from a full file path and copy it to pszDir
 bool GetDirectory(LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
 {
-    // TODO: Compile file_util.c as UNICODE
     LPCTSTR pszBaseName = FilePathW_GetBaseName(pszFile);
 
     if (0 == pszDir || 0 == pszFile) {

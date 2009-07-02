@@ -109,10 +109,6 @@ enum SearchState {
 
 /* The current state of searching */
 typedef struct SearchStateData {
-    /* String we search for, both regular and unicode versions */
-//TODO: make it not depend on poppler
-//    GooString *     str;
-//    UGooString *    strU;
     /* The page on which we started the search */
     int             startPage;
     /* did we wrap (crossed last page when searching forward or first page
