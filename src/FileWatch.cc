@@ -1,8 +1,5 @@
 // By william blum, 2008
 
-#define UNICODE
-#define _UNICODE
-
 #include "SumatraPDF.h"
 #include "FileWatch.h"
 #include "file_util.h"

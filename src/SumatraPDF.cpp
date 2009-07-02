@@ -1325,7 +1325,7 @@ static TCHAR * AppGenDataFilename(TCHAR *pFilename)
         TCHAR *exePath = ExePathGet();
         if (exePath) {
             assert(exePath[0]);
-            path = FilePath_GetDir(exePath);
+            path = FilePathW_GetDir(exePath);
             free(exePath);
         }
     } else {
@@ -1363,13 +1363,16 @@ static bool Prefs_Load(void)
 
     TCHAR * prefsFilename = Prefs_GetFileName();
     assert(prefsFilename);
+    const char * prefsFilenameA = wstr_to_multibyte(prefsFilename, CP_ACP);
+    assert(prefsFilenameA);
     uint64_t prefsFileLen;
-    prefsTxt = file_read_all(prefsFilename, &prefsFileLen);
+    prefsTxt = file_read_all(prefsFilenameA, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
     }
 
+    free((void *)prefsFilenameA);
     free(prefsFilename);
     free(prefsTxt);
     return ok;
@@ -2425,10 +2428,10 @@ static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
 {
     HFONT       font_dc;
     HFONT       font;
-    LOGFONT     lf = {0};
+    LOGFONTA    lf = {0};
 
     font_dc = (HFONT)GetStockObject(SYSTEM_FONT);
-    if (!GetObject(font_dc, sizeof(LOGFONT), &lf))
+    if (!GetObjectA(font_dc, sizeof(LOGFONT), &lf))
         return NULL;
 
     lf.lfHeight = (LONG)-fontSize;
@@ -2444,7 +2447,7 @@ static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
     strcpy_s(lf.lfFaceName, LF_FACESIZE, fontName);
     lf.lfWeight = FW_DONTCARE;
-    font = CreateFontIndirect(&lf);
+    font = CreateFontIndirectA(&lf);
     return font;
 }
 
@@ -2599,15 +2602,15 @@ Exit:
     return registered;
 }
 
-static void WriteRegStrA(HKEY keySub, char *keyName, char *valName, char *value)
+static void WriteRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *value)
 {
     HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyExA(keySub, keyName, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &keyTmp, NULL);
+    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &keyTmp, NULL);
     if (ERROR_SUCCESS != res) {
         SeeLastError();
         goto Exit;
     }
-    res = RegSetValueExA(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, strlen(value)+1);
+    res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
     if (ERROR_SUCCESS != res)
         SeeLastError();
 Exit:
@@ -2632,10 +2635,10 @@ static BOOL RunMyselfAsAdmin(WCHAR *cmdline)
 
 static void AssociateExeWithPdfExtensions()
 {
-    char        tmp[512];
+    TCHAR       tmp[512];
     HRESULT     hr;
 
-    char * exePath = ExePathGet();
+    TCHAR * exePath = ExePathGet();
     assert(exePath);
     if (!exePath) return;
 
@@ -2643,14 +2646,14 @@ static void AssociateExeWithPdfExtensions()
     if (WindowsVer2000OrGreater())
         hkeyToUse = HKEY_LOCAL_MACHINE;
 
-    WriteRegStrA(hkeyToUse, "Software\\Classes\\.pdf", NULL, APP_NAME_STR);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\.pdf"), NULL, _T(APP_NAME_STR));
 
-    hr = StringCchPrintfA(tmp, dimof(tmp), "%s,1", exePath);
-    WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR _T("\\DefaultIcon"), NULL, tmp);
+    hr = StringCchPrintf(tmp, dimof(tmp), _T("%s,1"), exePath);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\DefaultIcon"), NULL, tmp);
 
-    hr = StringCchPrintfA(tmp,  dimof(tmp), "\"%s\" \"%%1\"", exePath);
-    WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR "\\shell\\open\\command", NULL, tmp);
-    WriteRegStrA(hkeyToUse, "Software\\Classes\\" APP_NAME_STR "\\shell", NULL, "open");
+    hr = StringCchPrintf(tmp,  dimof(tmp), _T("\"%s\" \"%%1\""), exePath);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell\\open\\command"), NULL, tmp);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell"), NULL, _T("open"));
 
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
     free(exePath);
@@ -3385,7 +3388,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
 
     /* Layout stuff */
     const char *txt = SUMATRA_TXT;
-    GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
+    GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
     sumatraPdfTxtDx = txtSize.cx;
     sumatraPdfTxtDy = txtSize.cy;
 
@@ -3396,7 +3399,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     leftDy = 0;
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
         txt = gAboutLayoutInfo[i].leftTxt;
-        GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
+        GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
         gAboutLayoutInfo[i].leftTxtDx = (int)txtSize.cx;
         gAboutLayoutInfo[i].leftTxtDy = (int)txtSize.cy;
         if (0 == i)
@@ -3412,7 +3415,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     rightDy = 0;
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
         txt = gAboutLayoutInfo[i].rightTxt;
-        GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
+        GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
         gAboutLayoutInfo[i].rightTxtDx = (int)txtSize.cx;
         gAboutLayoutInfo[i].rightTxtDy = (int)txtSize.cy;
         if (0 == i)
@@ -3456,21 +3459,21 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     x = offX + (totalDx - sumatraPdfTxtDx) / 2;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = SUMATRA_TXT;
-    TextOut(hdc, x, y, txt, strlen(txt));
+    TextOutA(hdc, x, y, txt, strlen(txt));
 
     (HFONT)SelectObject(hdc, fontBetaTxt);
     x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = BETA_TXT;
-    TextOut(hdc, x, y, txt, strlen(txt));
+    TextOutA(hdc, x, y, txt, strlen(txt));
 
 #ifdef BUILD_RM_VERSION
     txt = "Adapted by RM";
-    TextOut(hdc, x, y + 16, txt, strlen(txt));
+    TextOutA(hdc, x, y + 16, txt, strlen(txt));
 #endif
 
 #ifdef SVN_PRE_RELEASE_VER
-    GetTextExtentPoint32(hdc, txt, strlen(txt), &txtSize);
+    GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
     y += (int)txtSize.cy + 2;
 
     char buf[128];
@@ -3496,7 +3499,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         y = currY + fontDyDiff + offY;
         gAboutLayoutInfo[i].leftTxtPosX = x;
         gAboutLayoutInfo[i].leftTxtPosY = y;
-        TextOut(hdc, x, y, txt, strlen(txt));
+        TextOutA(hdc, x, y, txt, strlen(txt));
         currY += rightDy + ABOUT_TXT_DY;
     }
 
@@ -3509,7 +3512,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         y = currY + offY;
         gAboutLayoutInfo[i].rightTxtPosX = x;
         gAboutLayoutInfo[i].rightTxtPosY = y;
-        TextOut(hdc, x, y, txt, strlen(txt));
+        TextOutA(hdc, x, y, txt, strlen(txt));
         currY += rightDy + ABOUT_TXT_DY;
     }
 
@@ -3875,8 +3878,11 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
 
     if (WS_ABOUT == win->state) {
         const char* url = AboutGetLink(win, x, y);
-        if (url == win->url)
-            LaunchBrowser(url);
+        if (url == win->url) {
+            WCHAR * url_w = multibyte_to_wstr(url, CP_ACP);
+            LaunchBrowser(url_w);
+            free(url_w);
+        }
         win->url = NULL;
         return;
     }
@@ -3984,7 +3990,7 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     //DStringSprintf(&txt, "Welcome to animation %d", state->frame);
     //DrawText (hdc, txt.pString, -1, &rc, DT_SINGLELINE);
     char * txt = "Welcome to animation";
-    TextOut(hdc, curTxtPosX, curTxtPosY, txt, strlen(txt));
+    TextOutA(hdc, curTxtPosX, curTxtPosY, txt, strlen(txt));
     WindowInfo_DoubleBuffer_Show(win, hdc);
     if (state->frame > 99)
         state->frame = 0;
@@ -4132,23 +4138,23 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
     if (supportsStretchDib)
         return true;
 
-    MessageBox(hwndForMsgBox, "This printer doesn't support StretchDIBits function", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
+    MessageBox(hwndForMsgBox, _T("This printer doesn't support StretchDIBits function"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
     return false;
 }
 
 // TODO: make it run in a background thread by constructing new PdfEngine()
 // from a file name - this should be thread safe
-static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPageRanges, LPPRINTPAGERANGE pr) {
+static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODEA devMode, int nPageRanges, LPPRINTPAGERANGE pr) {
 
     assert(dm);
     if (!dm) return;
 
     PdfEngine *pdfEngine = dm->pdfEngine;
-    DOCINFO di = {0};
+    DOCINFOA di = {0};
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = (LPCSTR)pdfEngine->fileName();
 
-    if (StartDoc(hdc, &di) <= 0)
+    if (StartDocA(hdc, &di) <= 0)
         return;
 
     // rendering for the same DisplayModel is not thread-safe
@@ -4228,7 +4234,7 @@ So far have tested printing from XP to
 #define MAXPAGERANGES 10
 static void OnMenuPrint(WindowInfo *win)
 {
-    PRINTDLGEX              pd;
+    PRINTDLGEXA             pd;
     LPPRINTPAGERANGE        ppr=NULL;
 
     assert(win);
@@ -4263,7 +4269,7 @@ static void OnMenuPrint(WindowInfo *win)
     pd.nMaxPage = dm->pageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
-    if (PrintDlgEx(&pd) == S_OK) {
+    if (PrintDlgExA(&pd) == S_OK) {
         if (pd.dwResultAction==PD_RESULT_PRINT) {
             if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
                 if (pd.Flags & PD_CURRENTPAGE) {
@@ -4275,7 +4281,7 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nFromPage=1;
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
-                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
+                PrintToDevice(dm, pd.hDC, (LPDEVMODEA)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
             }
         }
     }
@@ -4286,7 +4292,7 @@ static void OnMenuPrint(WindowInfo *win)
                error code, which we could look at here if we wanted.
                for now just warn the user that printing has stopped
                becasue of an error */
-            MessageBox(win->hwndFrame, "Cannot initialise printer", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(win->hwndFrame, _T("Cannot initialise printer"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         }
     }
 
@@ -5503,7 +5509,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         if (VK_RETURN == wParam) {
             char buf[256];
             int newPageNo;
-            GetWindowText(win->hwndPageBox, buf, sizeof(buf));
+            GetWindowTextA(win->hwndPageBox, buf, sizeof(buf));
             newPageNo = atoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
                 win->dm->goToPage(newPageNo, 0);
@@ -5573,7 +5579,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND page = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, "0",
+    HWND page = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, _T("0"),
                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
                             0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
@@ -5663,7 +5669,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     if (IsAppThemed())
         rbBand.fStyle |= RBBS_CHILDEDGE;
     rbBand.hbmBack = NULL;
-    rbBand.lpText     = "Toolbar";
+    rbBand.lpText     = _T("Toolbar");
     rbBand.hwndChild  = hwndToolbar;
     rbBand.cxMinChild = (rc.right - rc.left) * TOOLBAR_BUTTONS_COUNT;
     rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;
@@ -6684,18 +6690,18 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 {
     char        devstring[256];      // array for WIN.INI data 
     HANDLE      printer;
-    LPDEVMODE   devMode = NULL;
+    LPDEVMODEA  devMode = NULL;
     DWORD       structSize, returnCode;
 
     // TODO: Translate all printing related MessageBoxes
     if (!win->dm->pdfEngine->printingAllowed()) {
-        MessageBox(win->hwndFrame, "Cannot print this file", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _T("Cannot print this file"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
 
     // Retrieve the printer, printer driver, and 
     // output-port names from WIN.INI. 
-    GetProfileString("Devices", printerName, "", devstring, sizeof(devstring));
+    GetProfileStringA("Devices", printerName, "", devstring, sizeof(devstring));
 
     // Parse the string of names, setting ptrs as required 
     // If the string contains the required names, use them to 
@@ -6704,28 +6710,28 @@ static void PrintFile(WindowInfo *win, const char *printerName)
     char *port = strtok((char *) NULL, (const char *) ",");
 
     if (!driver || !port) {
-        MessageBox(win->hwndFrame, "Printer with given name doesn't exist", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _T("Printer with given name doesn't exist"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
     
-    BOOL fOk = OpenPrinter((LPSTR)printerName, &printer, NULL);
+    BOOL fOk = OpenPrinterA((LPSTR)printerName, &printer, NULL);
     if (!fOk) {
         MessageBoxW(win->hwndFrame, _TRW("Could not open Printer"), _TRW("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
 
     HDC  hdcPrint = NULL;
-    structSize = DocumentProperties(NULL,
+    structSize = DocumentPropertiesA(NULL,
         printer,                /* Handle to our printer. */ 
         (LPSTR) printerName,    /* Name of the printer. */ 
         NULL,                   /* Asking for size, so */ 
         NULL,                   /* these are not used. */ 
         0);                     /* Zero returns buffer size. */ 
-    devMode = (LPDEVMODE)malloc(structSize);
+    devMode = (LPDEVMODEA)malloc(structSize);
     if (!devMode) goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
-    returnCode = DocumentProperties(NULL,
+    returnCode = DocumentPropertiesA(NULL,
         printer,
         (LPSTR) printerName,
         devMode,        /* The address of the buffer to fill. */ 
@@ -6734,7 +6740,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
-        MessageBox(win->hwndFrame, "Could not obtain Printer properties", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _T("Could not obtain Printer properties"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
 
@@ -6751,7 +6757,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
      * This gives the driver an opportunity to update any private
      * portions of the DevMode structure.
      */ 
-     DocumentProperties(NULL,
+     DocumentPropertiesA(NULL,
         printer,
         (LPSTR) printerName,
         devMode,        /* Reuse our buffer for output. */ 
@@ -6761,9 +6767,9 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 
     ClosePrinter(printer);
 
-    hdcPrint = CreateDC(driver, printerName, port, devMode); 
+    hdcPrint = CreateDCA(driver, printerName, port, devMode); 
     if (!hdcPrint) {
-        MessageBox(win->hwndFrame, "Couldn't initialize printer", "Printing problem.", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _T("Couldn't initialize printer"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
     PRINTPAGERANGE pr;
@@ -6778,13 +6784,13 @@ Exit:
 
 static void EnumeratePrinters()
 {
-    PRINTER_INFO_5 *info5Arr = NULL;
+    PRINTER_INFO_5A *info5Arr = NULL;
     DWORD bufSize = 0, printersCount;
-    BOOL fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+    BOOL fOk = EnumPrintersA(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     if (!fOk) {
-        info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
-        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+        info5Arr = (PRINTER_INFO_5A*)malloc(bufSize);
+        fOk = EnumPrintersA(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
     if (!info5Arr)
@@ -6800,9 +6806,9 @@ static void EnumeratePrinters()
             fDefault = true;
         printf("Name: %s, port: %s, default: %d\n", printerName, printerPort, (int)fDefault);
     }
-    TCHAR buf[512];
+    char buf[512];
     bufSize = sizeof(buf);
-    fOk = GetDefaultPrinter(buf, &bufSize);
+    fOk = GetDefaultPrinterA(buf, &bufSize);
     if (!fOk) {
         if (ERROR_FILE_NOT_FOUND == GetLastError())
             printf("No default printer\n");
@@ -6885,7 +6891,7 @@ void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, str_len(command) + 1, 0, 0, CF_TEXT, 0);  
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, tstr_len(command) + 1, 0, 0, CF_TEXT, 0);  
     if (hddedata == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     }
@@ -7145,12 +7151,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * _MAX_PATH + 20];
-                sprintf(command, "[" DDECOMMAND_OPEN_A "(\"%S\", 0, 1, 0)]", currArg->str);
-                DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
+                wsprintf(command, _T("[") _T(DDECOMMAND_OPEN_A) _T("(\"%S\", 0, 1, 0)]"), currArg->str);
+                DDEExecute(_T(PDFSYNC_DDE_SERVICE_A), _T(PDFSYNC_DDE_TOPIC_A), command);
                 if (destName && pdfOpened == 0)
                 {
-                    sprintf(command, "[" DDECOMMAND_GOTO_A "(\"%S\", \"%s\")]", currArg->str, destName);
-                    DDEExecute(PDFSYNC_DDE_SERVICE_A, PDFSYNC_DDE_TOPIC_A, command);
+                    wsprintf(command, _T("[") _T(DDECOMMAND_GOTO_A) _T("(\"%S\", \"%s\")]"), currArg->str, destName);
+                    DDEExecute(_T(PDFSYNC_DDE_SERVICE_A), _T(PDFSYNC_DDE_TOPIC_A), command);
                 }
             }
             else {

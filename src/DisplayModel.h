@@ -336,9 +336,6 @@ DisplayModel *DisplayModel_CreateFromFileName(
 
 extern DisplaySettings gDisplaySettings;
 
-/* must be implemented somewhere else */
-extern void         LaunchBrowser(const char *uri);
-
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoomReal)
    and corresponding rendered bitmap.

@@ -71,12 +71,12 @@ int _synctex_error(char * reason,...) {
 	{/*	This code is contributed by William Blum */
 		char *buff;
 		size_t len;
-		OutputDebugString("SyncTeX ERROR: ");
+		OutputDebugStringA("SyncTeX ERROR: ");
 		len = _vscprintf(reason, arg) + 1;
 		buff = (char*)malloc( len * sizeof(char) );
 		result = vsprintf(buff, reason, arg) +strlen("SyncTeX ERROR: ");
-		OutputDebugString(buff);
-		OutputDebugString("\n");
+		OutputDebugStringA(buff);
+		OutputDebugStringA("\n");
 		free(buff);
 	}
 #else

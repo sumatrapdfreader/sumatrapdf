@@ -141,7 +141,7 @@ LPSTR fgetline(LPSTR dst, size_t cchDst, FILE *fp)
     if (!fgets(dst, cchDst, fp))
         return NULL;
 
-    LPTSTR end =  dst+str_len(dst)-1;
+    LPSTR end =  dst+str_len(dst)-1;
     while (*end == '\n' || *end == '\r')
         *(end--) = 0;
     return dst;
@@ -157,10 +157,10 @@ int Pdfsync::scan_and_build_index(FILE *fp)
         if (*rep==_T('*'))
             *rep=_T(' ');
     }
-    str_cat_s(jobname, dimof(jobname), _T(".tex")); 
+    str_cat_s(jobname, dimof(jobname), ".tex");
 
     UINT versionNumber = 0;
-    int ret = _ftscanf(fp, "version %u\n", &versionNumber);
+    int ret = fscanf(fp, "version %u\n", &versionNumber);
     if (ret==EOF)
         return 1; // bad line format
     else if (versionNumber != 1)
@@ -172,7 +172,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     src_file s;
     s.first_recordsection = (size_t)-1;
     s.last_recordsection = (size_t)-1;
-    tstr_copy(s.filename, dimof(s.filename), jobname);
+    str_copy(s.filename, dimof(s.filename), jobname);
 #ifndef NDEBUG    
     s.closeline_pos = -1;
     fgetpos(fp, &s.openline_pos);

@@ -679,19 +679,19 @@ pdf_createfontlistMS()
 	char szFile[MAX_PATH*2];
 	BOOL fFinished;
 	HANDLE hList;
-	WIN32_FIND_DATA FileData;
+	WIN32_FIND_DATAA FileData;
 	fz_error err;
 
 	if (fontlistMS.len != 0)
 		return fz_okay;
 
-	GetWindowsDirectory(szFontDir, sizeof(szFontDir));
+	GetWindowsDirectoryA(szFontDir, sizeof(szFontDir));
 
 	// Get the proper directory path
 	strcat(szFontDir,"\\Fonts\\");
 	sprintf(szSearch,"%s*.tt?",szFontDir);
 	// Get the first file
-	hList = FindFirstFile(szSearch, &FileData);
+	hList = FindFirstFileA(szSearch, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
 	{
 		/* Don't complain about missing directories */
@@ -719,7 +719,7 @@ pdf_createfontlistMS()
 			}
 		}
 
-		if (!FindNextFile(hList, &FileData))
+		if (!FindNextFileA(hList, &FileData))
 		{
 			if (GetLastError() == ERROR_NO_MORE_FILES)
 			{

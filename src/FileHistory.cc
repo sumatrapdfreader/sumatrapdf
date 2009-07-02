@@ -1,9 +1,6 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv2 */
 
-#define UNICODE
-#define _UNICODE
-
 #include "FileHistory.h"
 #include "tstr_util.h"
 // TODO: Move DBG_OUT out of str_util.h

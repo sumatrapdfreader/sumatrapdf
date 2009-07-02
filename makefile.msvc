@@ -70,6 +70,8 @@ CFLAGS = $(CFLAGS) /MDd /EHsc
 CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
 !endif
 
+CFLAGS = $(CFLAGS) /D "UNICODE" /D "_UNICODE"
+
 # zlib flags
 ZLIB_CFLAGS = $(CFLAGS)
 

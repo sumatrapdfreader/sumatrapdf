@@ -21,9 +21,9 @@ char *FilePath_ConcatA(const char *path, const char *name)
         return str_cat3(path, DIR_SEP_STR, name);
 }
 
-const TCHAR *FilePath_GetBaseName(const TCHAR *path)
+const char *FilePath_GetBaseName(const char *path)
 {
-    const TCHAR *fileBaseName = path + lstrlen(path);
+    const char *fileBaseName = path + strlen(path);
     while (fileBaseName > path) {
         if (char_is_dir_sep(fileBaseName[-1])) {
             return fileBaseName;
