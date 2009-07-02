@@ -1470,7 +1470,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!win)
         return;
 
-    if (WS_SHOWING_PDF != win->state || !win->dm)
+    if (WS_ABOUT == win->state || gGlobalPrefs.m_globalPrefsOnly)
     {
         // update global windowState for next default launch when no pdf opened
         if (gGlobalPrefs.m_windowState != WIN_STATE_FULLSCREEN) {
@@ -2280,7 +2280,7 @@ static bool LoadPdfIntoWindow(
     }
 Error:
     MenuToolbarUpdateStateForAllWindows();
-    if (is_new_window || placeWindow) {
+    if (is_new_window || placeWindow && state) {
         assert(win);
         DragAcceptFiles(win->hwndFrame, TRUE);
         DragAcceptFiles(win->hwndCanvas, TRUE);
@@ -4542,11 +4542,11 @@ static void RememberWindowPosition(WindowInfo *win)
        remember its position so that it can be persisted (we assume that
        position of this window is what the user wants to be a position
        of all new windows) */
-    if (win->state != WS_ABOUT)
+    if (win->state != WS_ABOUT && !gGlobalPrefs.m_globalPrefsOnly)
         return;
     
     /* don't update the window's dimensions if it is maximized or mimimized */
-    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame))
+    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->dm && win->dm->_fullScreen)
         return;
 
     RECT rc;

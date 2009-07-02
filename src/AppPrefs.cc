@@ -14,10 +14,12 @@
 extern bool CurrLangNameSet(const char* langName);
 extern const char* CurrLangNameGet();
 
+#if 0
 #define DEFAULT_WINDOW_X     40
 #define DEFAULT_WINDOW_Y     20
 #define DEFAULT_WINDOW_DX    640
 #define DEFAULT_WINDOW_DY    480
+#endif
 
 static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
 {
@@ -239,6 +241,7 @@ Error:
     return (const char*)data;
 }
 
+#if 0
 static BOOL ParseInt(const char *txt, int *resOut)
 {
     assert(txt);
@@ -382,6 +385,7 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
 
     assert(0);
 }
+#endif
 
 void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
 {
