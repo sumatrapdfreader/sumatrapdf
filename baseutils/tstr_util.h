@@ -16,6 +16,7 @@
   #define tstr_copy     wstr_copy
   #define tstr_copyn    wstr_copyn
   #define tstr_startswith wstr_startswith
+  #define tstr_endswithi wstr_endswithi
   #define tstr_startswithi wstr_startswithi
   #define tstr_url_encode wstr_url_encode
   #define tchar_needs_url_escape wchar_needs_url_escape
@@ -24,6 +25,7 @@
   #define tstr_ieq      wstr_ieq
   #define tstr_empty    wstr_empty
   #define tstr_find_char wstr_find_char
+  #define tstr_trans_chars wstr_trans_chars
 #else
   #include "str_util.h"
   #define tstr_len      strlen
@@ -37,6 +39,7 @@
   #define tstr_copy     str_copy
   #define tstr_copyn    str_copyn
   #define tstr_startswith str_startswith
+  #define tstr_endswithi str_endswithi
   #define tstr_startswithi str_startswithi
   #define tstr_url_encode str_url_encode
   #define tchar_needs_url_escape char_needs_url_escape
@@ -45,6 +48,7 @@
   #define tstr_ieq      str_ieq
   #define tstr_empty    str_empty
   #define tstr_find_char  str_find_char
+  #define tstr_trans_chars str_trans_chars
 #endif
 
 #endif

@@ -11,7 +11,6 @@
 #include "translations.h"
 #include "utf_util.h"
 #include "win_util.h"
-#include "wstr_util.h"
 #include "tstr_util.h"
 
 #include "AppPrefs.h"
@@ -115,18 +114,18 @@ static BOOL             gDebugShowLinks = FALSE;
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
 
-#define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
-#define CANVAS_CLASS_NAME       L"SUMATRA_PDF_CANVAS"
-#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
-#define SPLITER_CLASS_NAME      L"Spliter"
-#define FINDSTATUS_CLASS_NAME   L"FindStatus"
+#define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
+#define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
+#define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
+#define SPLITER_CLASS_NAME      _T("Spliter")
+#define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define PDF_DOC_NAME            _T("Adobe PDF Document")
-#define ABOUT_WIN_TITLE         _TRW("About SumatraPDF")
+#define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR             _T("SumatraPDF")
 #define APP_NAME_STR            "SumatraPDF"
 
-#define DEFAULT_INVERSE_SEARCH_COMMANDLINE L"C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\""
+#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
 
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
@@ -154,7 +153,7 @@ static BOOL             gDebugShowLinks = FALSE;
 static FileHistoryList *            gFileHistoryRoot = NULL;
 
 static HINSTANCE                    ghinst = NULL;
-WCHAR                               windowTitle[MAX_LOADSTRING];
+TCHAR                               windowTitle[MAX_LOADSTRING];
 
 static WindowInfo*                  gWindowList;
 
@@ -175,7 +174,7 @@ static HBITMAP                      gBitmapCloseToc;
 
 //static AppVisualStyle               gVisualStyle = VS_WINDOWS;
 
-static WCHAR *                      gBenchFileName;
+static TCHAR *                      gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
 
 #ifdef DOUBLE_BUFFER
@@ -274,10 +273,10 @@ static void UpdateToolbarFindText(WindowInfo *win);
 static void UpdateToolbarPageText(WindowInfo *win, int pageCount);
 static void UpdateToolbarToolText(void);
 static void OnMenuFindMatchCase(WindowInfo *win);
-static bool LoadPdfIntoWindow(const WCHAR *fileName, WindowInfo *win, 
+static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win, 
     const DisplayState *state, bool is_new_window, bool tryrepair, 
     bool showWin, bool placeWindow);
-static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize);
+static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize);
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 void WindowInfo_EnterFullscreen(WindowInfo *win);
@@ -1115,7 +1114,7 @@ static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
     UINT newId = node->menuId;
     if (INVALID_MENU_ID == node->menuId)
         newId = AllocNewMenuId();
-    AppendMenuW(menuFile, MF_ENABLED | MF_STRING, newId, FilePathW_GetBaseName(node->state.filePath));
+    AppendMenu(menuFile, MF_ENABLED | MF_STRING, newId, FilePathW_GetBaseName(node->state.filePath));
     node->menuId = newId;
 }
 
@@ -1134,10 +1133,9 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
                 AppendMenu(m, MF_SEPARATOR, 0, NULL);
                 continue;
             }
-            const WCHAR *wtitle =  Translations_GetTranslationW(title);
-
-            if (wtitle) {
-                AppendMenuW(m, MF_STRING, (UINT_PTR)id, wtitle);
+            const TCHAR *ttitle =  Translations_GetTranslation(title);
+            if (ttitle) {
+                AppendMenu(m, MF_STRING, (UINT_PTR)id, ttitle);
             }
         }
     }
@@ -1178,17 +1176,17 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
     if (!gRestrictedUse)
         AppendRecentFilesToMenu(tmp);
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&File"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&File"));
     tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&View"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&View"));
     tmp = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo));
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Go To"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Go To"));
     tmp = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom));
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Zoom"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Zoom"));
     tmp = BuildMenuFromMenuDef(menuDefLang, dimof(menuDefLang));
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Settings"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Settings"));
     tmp = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp));
-    AppendMenuW(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TRW("&Help"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&Help"));
     win->hMenu = mainMenu;
 }
 
@@ -1200,16 +1198,6 @@ static TCHAR *ExePathGet(void)
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
     return tstr_dup(buf);
-}
-
-/* Return the full exe path of my own executable.
-   Caller needs to free() the result. */
-static WCHAR *ExePathGetW(void)
-{
-    WCHAR buf[_MAX_PATH];
-    buf[0] = 0;
-    GetModuleFileNameW(NULL, buf, dimof(buf));
-    return wstr_dup(buf);
 }
 
 static void CaptionPens_Create(void)
@@ -1239,7 +1227,7 @@ static void CaptionPens_Destroy(void)
     }
 }
 
-static void AddFileToHistory(const WCHAR *filePath)
+static void AddFileToHistory(const TCHAR *filePath)
 {
     FileHistoryList *   node;
     uint32_t            oldMenuId = INVALID_MENU_ID;
@@ -1261,18 +1249,18 @@ static void AddFileToHistory(const WCHAR *filePath)
     FileHistoryList_Node_InsertHead(&gFileHistoryRoot, node);
 }
 
-extern "C" char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName);
+extern "C" char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box.
    Caller needs to free() the result. */
-char *GetPasswordForFile(WindowInfo *win, const WCHAR *fileName)
+char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName)
 {
     fileName = FilePathW_GetBaseName(fileName);
-    WCHAR *passW = Dialog_GetPassword(win, fileName);
+    TCHAR *pass = Dialog_GetPassword(win, fileName);
     // TODO: Can we make GetPasswordForFile return a (TCHAR *)?
-    char *passA = wstr_to_multibyte(passW, CP_ACP);
-    free(passW);
+    char *passA = wstr_to_multibyte(pass, CP_ACP);
+    free(pass);
     return passA;
 }
 
@@ -1476,7 +1464,7 @@ static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
 {
     DisplayState     ds;
-    const WCHAR *    fileName = NULL;
+    const TCHAR *    fileName = NULL;
     FileHistoryList* node = NULL;
 
     if (!win)
@@ -1806,14 +1794,14 @@ static int WindowInfoList_Len(void) {
 }
 
 // Find the first windows showing a given PDF file 
-WindowInfo* WindowInfoList_Find(LPWSTR file) {
-    LPWSTR normFile = FilePathW_Normalize(file, FALSE);
+WindowInfo* WindowInfoList_Find(TCHAR * file) {
+    TCHAR * normFile = FilePathW_Normalize(file, FALSE);
     if(!normFile)
         return NULL;
 
     WindowInfo* curr = gWindowList;
     while (curr) {
-        if (wstr_ieq(curr->watcher.filepath(), normFile)) {
+        if (tstr_ieq(curr->watcher.filepath(), normFile)) {
             free(normFile);
             return curr;
         }
@@ -1987,7 +1975,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     }
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-        win_set_texta(win->hwndFrame, APP_NAME_STR);
+        win_set_text(win->hwndFrame, _T(APP_NAME_STR));
     }
 }
 
@@ -2065,7 +2053,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         NULL, NULL,
         ghinst, NULL);
 #else
-    hwndFrame = CreateWindowW(
+    hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, windowTitle,
             WS_OVERLAPPEDWINDOW,
             winX, winY, winDx, winDy,
@@ -2078,7 +2066,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
 
     win = WindowInfo_New(hwndFrame);
 
-    hwndCanvas = CreateWindowExW(
+    hwndCanvas = CreateWindowEx(
             WS_EX_STATICEDGE, 
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
@@ -2132,7 +2120,7 @@ static void ClearPageRenderRequests()
 }
 
 static bool LoadPdfIntoWindow(
-    const WCHAR *fileName, // path to the PDF
+    const TCHAR *fileName, // path to the PDF
     WindowInfo *win,       // destination window
     const DisplayState *state,   // state
     bool is_new_window,    // if true then 'win' refers to a newly created window that needs to be resized and placed
@@ -2270,27 +2258,25 @@ static bool LoadPdfIntoWindow(
     WindowInfo_UpdateFindbox(win);
 
     int pageCount = win->dm->pageCount();
-    const WCHAR *baseName = FilePathW_GetBaseName(win->dm->fileName());
+    const TCHAR *baseName = FilePathW_GetBaseName(win->dm->fileName());
     if (pageCount <= 0)
-        win_set_textw(win->hwndFrame, baseName);
+        win_set_text(win->hwndFrame, baseName);
     else {
         UpdateToolbarPageText(win, pageCount);
         UpdateToolbarFindText(win);
 
-        const WCHAR *title = baseName;
-
-        // TODO: change win->title to unicode
+        const TCHAR *title = baseName;
         if (win->title)
             title = win->title;
 
         if (win->needrefresh) {
-            WCHAR buf[256];
+            TCHAR buf[256];
             // TODO: Translate me
-            HRESULT hr = StringCchPrintfW(buf, dimof(buf), L"(Changes detected - will refresh when file is unlocked) %s", title);
-            win_set_textw(win->hwndFrame, buf);
+            HRESULT hr = StringCchPrintf(buf, dimof(buf), _T("(Changes detected - will refresh when file is unlocked) %s"), title);
+            win_set_text(win->hwndFrame, buf);
         }
         else
-            win_set_textw(win->hwndFrame, title);
+            win_set_text(win->hwndFrame, title);
     }
 Error:
     MenuToolbarUpdateStateForAllWindows();
@@ -2320,7 +2306,7 @@ Error:
 }
 
 // This function is executed within the watching thread
-static void OnFileChange(PCWSTR filename, LPARAM param)
+static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
@@ -2344,7 +2330,7 @@ static void CheckPositionAndSize(DisplayState* ds)
     }
 }
 
-WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
+WindowInfo* LoadPdf(const TCHAR *fileName, bool showWin, TCHAR *windowTitle)
 {
     assert(fileName);
     if (!fileName) return NULL;
@@ -2367,7 +2353,7 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
 
     // TODO: fileName might not exist.
     // Normalize the file path    
-    WCHAR *pFullpath = FilePathW_Normalize(fileName, FALSE);
+    TCHAR *pFullpath = FilePathW_Normalize(fileName, FALSE);
     if (!pFullpath)
         goto exit;
 
@@ -2405,23 +2391,12 @@ WindowInfo* LoadPdf(const WCHAR *fileName, bool showWin, WCHAR *windowTitle)
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    SHAddToRecentDocs(SHARD_PATHW, pFullpath);
+    SHAddToRecentDocs(SHARD_PATH, pFullpath);
 
 exit:
     if (pFullpath)
         free(pFullpath);
     return win;
-}
-
-/* A band-aid, accept fileName in non-unicode form until all callers are
-   fixed. */
-WindowInfo* LoadPdf(const char *fileName, bool showWin, char *windowTitle)
-{
-    WCHAR *fileNameW = str_to_wstr_simplistic(fileName);
-    WCHAR *windowTitleW = NULL;
-    if (windowTitle)
-        windowTitleW = str_to_wstr_simplistic(windowTitle);
-    return LoadPdf(fileNameW, showWin, windowTitleW);
 }
 
 static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
@@ -2618,18 +2593,18 @@ Exit:
         RegCloseKey(keyTmp);
 }
 
-static BOOL RunMyselfAsAdmin(WCHAR *cmdline)
+static BOOL RunMyselfAsAdmin(TCHAR *cmdline)
 {
     assert(WindowsVerVistaOrGreater());
-    WCHAR *exePath = ExePathGetW();
-    SHELLEXECUTEINFOW sei = {0};
+    TCHAR *exePath = ExePathGet();
+    SHELLEXECUTEINFO sei = {0};
     sei.cbSize = sizeof(sei);
-    sei.lpVerb = L"runas";
+    sei.lpVerb = _T("runas");
     sei.lpFile = exePath;
     sei.lpParameters = cmdline;
     sei.nShow = SW_SHOWNORMAL;
     sei.fMask = SEE_MASK_FLAG_NO_UI;
-    BOOL ok = ShellExecuteExW(&sei);
+    BOOL ok = ShellExecuteEx(&sei);
     return ok;
 }
 
@@ -2665,7 +2640,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
         return true;
 
     if (IsRunningInPortableMode()) {
-        MessageBoxW(hwnd, _TRW("This option is not available in portable mode."), _TRW("Warning"), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(hwnd, _TR("This option is not available in portable mode."), _TR("Warning"), MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
 
@@ -2685,7 +2660,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
         return false;
 
     if (WindowsVerVistaOrGreater()) {
-        RunMyselfAsAdmin(L"-register-for-pdf");
+        RunMyselfAsAdmin(_T("-register-for-pdf"));
         return true;
     }
 
@@ -2693,13 +2668,13 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-static bool ResolveLnk(LPWSTR path)
+static bool ResolveLnk(TCHAR * path)
 {
     CoInitialize(NULL);
 
-    IShellLinkW *lnk;
+    IShellLink *lnk;
     HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                                    IID_IShellLinkW, (LPVOID *)&lnk);
+                                    IID_IShellLink, (LPVOID *)&lnk);
     if (SUCCEEDED(hRes)) {
         IPersistFile *file;
         hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
@@ -2708,10 +2683,10 @@ static bool ResolveLnk(LPWSTR path)
             if (SUCCEEDED(hRes)) {
                 hRes = lnk->Resolve(NULL, SLR_UPDATE);
                 if (SUCCEEDED(hRes)) {
-                    WCHAR newPath[MAX_PATH];
+                    TCHAR newPath[MAX_PATH];
                     hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
                     if (SUCCEEDED(hRes)) {
-                        lstrcpynW(path, newPath, MAX_PATH);
+                        lstrcpyn(path, newPath, MAX_PATH);
                     }
                 }
             }
@@ -2727,13 +2702,13 @@ static bool ResolveLnk(LPWSTR path)
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
 {
     int         i;
-    WCHAR       filename[MAX_PATH];
-    const int   files_count = DragQueryFileW(hDrop, DRAGQUERY_NUMFILES, 0, 0);
+    TCHAR       filename[MAX_PATH];
+    const int   files_count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
     for (i = 0; i < files_count; i++)
     {
-        DragQueryFileW(hDrop, i, filename, MAX_PATH);
-        if (wstr_endswithi(filename, L".lnk"))
+        DragQueryFile(hDrop, i, filename, MAX_PATH);
+        if (tstr_endswithi(filename, _T(".lnk")))
             ResolveLnk(filename);
         LoadPdf(filename);
     }
@@ -2936,7 +2911,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         } else {
             /* if automated => don't notify that there is no new version */
             if (!ctx->autoCheck) {
-                MessageBoxW(win->hwndFrame, _TRW("You have the latest version."), _TRW("No new version available."), MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("No new version available."), MB_ICONEXCLAMATION | MB_OK);
             }
         }
         free(tmp);
@@ -2945,10 +2920,10 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     delete ctx;
 }
 
-static void DrawCenteredText(HDC hdc, RECT *r, const WCHAR *txt)
+static void DrawCenteredText(HDC hdc, RECT *r, const TCHAR *txt)
 {    
     SetBkMode(hdc, TRANSPARENT);
-    DrawTextW(hdc, txt, lstrlenW(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor) {
@@ -3101,7 +3076,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
-            DrawCenteredText(hdc, &bounds, _TRW("Please wait - rendering..."));
+            DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
             DBG_OUT("drawing empty %d ", pageNo);
             if (origFont)
                 SelectObject(hdc, origFont);
@@ -3116,7 +3091,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
-            DrawCenteredText(hdc, &bounds, _TRW("Couldn't render the page"));
+            DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
             UnlockCache();
             continue;
         }
@@ -3647,7 +3622,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         if (!win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             // TODO: Translate this string
-            WindowInfo_ShowMessage_Asynch(win, L"Synchronization file cannot be opened", true);
+            WindowInfo_ShowMessage_Asynch(win, _T("Synchronization file cannot be opened"), true);
             return;
         }
     }
@@ -3660,18 +3635,18 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     x = (UINT)dblx; y = (UINT)dbly;
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-    WCHAR srcfilepath[_MAX_PATH];
+    TCHAR srcfilepath[MAX_PATH];
     win->pdfsync->convert_coord_to_internal(&x, &y, (UINT)pageInfo->pageDy, BottomLeft);
     UINT line, col;
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
         // TODO: Tranlate this string
-        WindowInfo_ShowMessage_Asynch(win, L"No synchronization info at this position.", true);
+        WindowInfo_ShowMessage_Asynch(win, _T("No synchronization info at this position."), true);
         return;
     }
 
-    WCHAR cmdline[_MAX_PATH];
+    TCHAR cmdline[MAX_PATH];
     if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inverseSearchCmdLine,
       srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
         //ShellExecuteA(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
@@ -3879,9 +3854,9 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
     if (WS_ABOUT == win->state) {
         const char* url = AboutGetLink(win, x, y);
         if (url == win->url) {
-            WCHAR * url_w = multibyte_to_wstr(url, CP_ACP);
-            LaunchBrowser(url_w);
-            free(url_w);
+            TCHAR * url_t = multibyte_to_wstr(url, CP_ACP);
+            LaunchBrowser(url_t);
+            free(url_t);
         }
         win->url = NULL;
         return;
@@ -4031,7 +4006,7 @@ static void OnPaint(WindowInfo *win)
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, "Tahoma", 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         FillRect(hdc, &ps.rcPaint, gBrushBg);
-        DrawTextW(hdc, _TRW("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
+        DrawText(hdc, _TR("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
         if (origFont)
             SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
@@ -4304,9 +4279,9 @@ static void OnMenuPrint(WindowInfo *win)
 
 static void OnMenuSaveAs(WindowInfo *win)
 {
-    OPENFILENAMEW  ofn = {0};
-    WCHAR          dstFileName[MAX_PATH] = {0};
-    const WCHAR*   srcFileName = NULL;
+    OPENFILENAME   ofn = {0};
+    TCHAR          dstFileName[MAX_PATH] = {0};
+    const TCHAR *  srcFileName = NULL;
 
     assert(win);
     if (!win) return;
@@ -4319,16 +4294,16 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
-    WCHAR fileFilter[256] = {0};
-    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("PDF documents"));
-    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.pdf\1");
-    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("All files"));
-    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.*\1");
-    wstr_trans_chars(fileFilter, L"\1", L"\0");
+    TCHAR fileFilter[256] = {0};
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("PDF documents"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.pdf\1"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
+    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    wstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
+    tstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -4338,18 +4313,18 @@ static void OnMenuSaveAs(WindowInfo *win)
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_SHOWHELP | OFN_OVERWRITEPROMPT;
 
-    if (FALSE == GetSaveFileNameW(&ofn))
+    if (FALSE == GetSaveFileName(&ofn))
         return;
 
-    WCHAR* realDstFileName = dstFileName;
-    if (!wstr_endswithi(dstFileName, L".pdf")) {
-        realDstFileName = wstr_cat_s(dstFileName, dimof(dstFileName), L".pdf");
+    TCHAR * realDstFileName = dstFileName;
+    if (!tstr_endswithi(dstFileName, _T(".pdf"))) {
+        realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), _T(".pdf"));
     }
     BOOL cancelled = FALSE;
     BOOL ok = CopyFileExW(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
     if (!ok) {
         SeeLastError();
-        MessageBoxW(win->hwndFrame, _TRW("Failed to save a file"), _TRW("Warning"), MB_OK | MB_ICONEXCLAMATION);
+        MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
     }
     if (realDstFileName != dstFileName)
         free(realDstFileName);
@@ -4358,16 +4333,16 @@ static void OnMenuSaveAs(WindowInfo *win)
 static void OnMenuOpen(WindowInfo *win)
 {
     OPENFILENAMEW ofn = {0};
-    WCHAR         fileName[260];
+    TCHAR         fileName[260];
 
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
-    WCHAR fileFilter[256] = {0};
-    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("PDF documents"));
-    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.pdf\1");
-    wstr_cat_s(fileFilter, sizeof(fileFilter), _TRW("All files"));
-    wstr_cat_s(fileFilter, sizeof(fileFilter), L"\1*.*\1");
-    wstr_trans_chars(fileFilter, L"\1", L"\0");
+    TCHAR fileFilter[256] = {0};
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("PDF documents"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.pdf\1"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
+    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
@@ -4535,8 +4510,8 @@ static void ViewWithAcrobat(WindowInfo *win)
         return;
 
     char params[MAX_PATH];
-    sprintf(params, "\"%s\"", win->dm->fileName());
-    ShellExecute(GetDesktopWindow(), "open", "AcroRd32.exe", params, NULL, SW_NORMAL);
+    _tsprintf(params, _T("\"%s\""), win->dm->fileName());
+    ShellExecute(GetDesktopWindow(), _T("open"), _T("AcroRd32.exe"), params, NULL, SW_NORMAL);
 }
 #endif
 
@@ -4558,7 +4533,7 @@ static void OneMenuMakeDefaultReader(WindowInfo *win)
 {
     bool registered = RegisterForPdfExtentions(win->hwndFrame);
     if (registered)
-        MessageBoxW(NULL, _TRW("SumatraPDF is now a default reader for PDF files."), _TRW("Information"), MB_OK | MB_ICONINFORMATION);
+        MessageBox(NULL, _TR("SumatraPDF is now a default reader for PDF files."), _TR("Information"), MB_OK | MB_ICONINFORMATION);
 }
 
 static void RememberWindowPosition(WindowInfo *win)
@@ -4600,9 +4575,9 @@ static void ReloadPdfDocument(WindowInfo *win)
 {
     if (WS_SHOWING_PDF != win->state)
         return;
-    const WCHAR *fileName = NULL;
+    const TCHAR *fileName = NULL;
     if (win->dm)
-        fileName = (const WCHAR*)wstr_dup(win->dm->fileName());
+        fileName = (const TCHAR*)tstr_dup(win->dm->fileName());
     CloseWindow(win, false);
     if (fileName) {
         LoadPdf(fileName);
@@ -4789,7 +4764,7 @@ static void OnMenuSetInverseSearch(WindowInfo *win)
     assert(win);
     if (!win) 
         return;
-    WCHAR *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inverseSearchCmdLine);
+    TCHAR *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inverseSearchCmdLine);
     if (ret) {
         free(gGlobalPrefs.m_inverseSearchCmdLine);
         gGlobalPrefs.m_inverseSearchCmdLine =  ret;
@@ -4939,15 +4914,15 @@ DWORD WINAPI ShowMessageThread(WindowInfo *win)
 
 // Display the message 'message' asynchronously
 // If resize = true then the window width is adjusted to the length of the text
-static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const wchar_t *message, bool resize)
+static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize)
 {
-    SetWindowTextW(win->hwndFindStatus, message);
+    win_set_text(win->hwndFindStatus, message);
     if (resize) {
         // compute the length of the message
         RECT rc = {0,0,FIND_STATUS_WIDTH,0};
         HDC hdc = GetDC(win->hwndFindStatus);
         HGDIOBJ oldFont = SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
-        DrawTextW(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE );
+        DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
         SelectObject(hdc, oldFont);
         ReleaseDC(win->hwndFindStatus, hdc);
         rc.right += 15;
@@ -5008,22 +4983,22 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCWSTR srcfilename, UI
     }
 
     // TODO: Translate these strings
-    wchar_t buf[_MAX_PATH];
-    wchar_t *txt = &buf[0];
+    TCHAR buf[MAX_PATH];
+    TCHAR *txt = &buf[0];
     if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        txt = L"Synchronization file cannot be opened";
+        txt = _T("Synchronization file cannot be opened");
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-        _snwprintf(buf, dimof(buf), L"Page number %u inexistant", page);
+        _sntprintf(buf, dimof(buf), _T("Page number %u inexistant"), page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        txt = L"No synchronization found at this location";
+        txt = _T("No synchronization found at this location");
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        _snwprintf(buf, dimof(buf), L"Unknown source file (%s)", srcfilename);
+        _sntprintf(buf, dimof(buf), _T("Unknown source file (%s)"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        _snwprintf(buf, dimof(buf), L"Source file %s has no synchronization point", srcfilename);
+        _sntprintf(buf, dimof(buf), _T("Source file %s has no synchronization point"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %s", line, srcfilename);
+        _sntprintf(buf, dimof(buf), _T("No result found around line %u in file %s"), line, srcfilename);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        _snwprintf(buf, dimof(buf), L"No result found around line %u in file %s", line, srcfilename);
+        _sntprintf(buf, dimof(buf), _T("No result found around line %u in file %s"), line, srcfilename);
 
     WindowInfo_ShowMessage_Asynch(win, txt, true);
 }
@@ -5052,10 +5027,10 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
     if (!win->dm->bFoundText)
-        WindowInfo_ShowMessage_Asynch(win, _TRW("No matches were found"), false);
+        WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
     else {
-        wchar_t buf[256];
-        swprintf(buf, _TRW("Found text at page %d"), win->dm->currentPageNo());
+        TCHAR buf[256];
+        swprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
         WindowInfo_ShowMessage_Asynch(win, buf, false);
     }    
 }
@@ -5193,11 +5168,11 @@ static bool IsBenchMode(void)
    is one of the "recent files" menu items in File menu.
    Caller needs to free() the memory.
    */
-static const WCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
+static const TCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
     FileHistoryList* curr = gFileHistoryRoot;
     while (curr) {
         if (curr->menuId == menuId)
-            return wstr_dup(curr->state.filePath);
+            return tstr_dup(curr->state.filePath);
         curr = curr->next;
     }
     return NULL;
@@ -5216,8 +5191,8 @@ static void OnMenuAbout() {
         SetActiveWindow(gHwndAbout);
         return;
     }
-    const WCHAR *title = ABOUT_WIN_TITLE;
-    gHwndAbout = CreateWindowW(
+    const TCHAR *title = ABOUT_WIN_TITLE;
+    gHwndAbout = CreateWindow(
             ABOUT_CLASS_NAME, title,
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
@@ -5226,9 +5201,9 @@ static void OnMenuAbout() {
             ghinst, NULL);
 
     // TODO: why is returning only "A"?
-    WCHAR *t = win_get_textw(gHwndAbout);
+    TCHAR *t = win_get_textw(gHwndAbout);
     BOOL isUni = IsWindowUnicode(gHwndAbout);
-    win_set_textw(gHwndAbout, title);
+    win_set_text(gHwndAbout, title);
     if (!gHwndAbout)
         return;
     ShowWindow(gHwndAbout, SW_SHOW);
@@ -5243,7 +5218,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
         tbButton.iBitmap = gToolbarButtons[i].index;
         tbButton.fsState = TBSTATE_ENABLED;
         tbButton.fsStyle = TBSTYLE_BUTTON;
-        tbButton.iString = (INT_PTR)Translations_GetTranslationW(gToolbarButtons[i].toolTip);
+        tbButton.iString = (INT_PTR)Translations_GetTranslation(gToolbarButtons[i].toolTip);
     }
     return tbButton;
 }
@@ -5252,8 +5227,8 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN )
 
-static void BuildTBBUTTONINFO(TBBUTTONINFOW& info, WCHAR *txt) {
-    info.cbSize = sizeof(TBBUTTONINFOW);
+static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt) {
+    info.cbSize = sizeof(TBBUTTONINFO);
     info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
     info.pszText = txt;
 }
@@ -5269,9 +5244,9 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
             continue;
-        const WCHAR *translation = Translations_GetTranslationW(txt);
-        BuildTBBUTTONINFO(buttonInfo, (WCHAR*)translation);
-        res = ::SendMessage(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)&buttonInfo);
+        const TCHAR *translation = Translations_GetTranslation(txt);
+        BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
+        res = SendMessage(hwnd, TB_SETBUTTONINFOW, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
     }
 }
@@ -5339,8 +5314,8 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
 void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
 {
-    wchar_t text[256];
-    GetWindowTextW(hwnd, text, sizeof(text));
+    TCHAR text[256];
+    GetWindowText(hwnd, text, sizeof(text));
     bool hasText = wcslen(text) > 0;
     if (!hasText)
         return;
@@ -5386,15 +5361,15 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
         HFONT oldfnt = SelectFont(hdc, (HFONT)GetStockObject(DEFAULT_GUI_FONT));
-        wchar_t text[256];
+        TCHAR text[256];
 
         GetClientRect(hwnd, &rect);
-        GetWindowTextW(hwnd, text, 256);
+        GetWindowText(hwnd, text, 256);
 
         SetBkMode(hdc, TRANSPARENT);
         rect.left += 10;
         rect.top += 4;
-        DrawTextW(hdc, text, wcslen(text), &rect, DT_LEFT);
+        DrawText(hdc, text, lstrlen(text), &rect, DT_LEFT);
         
         rect.top += 20;
         rect.bottom = rect.top + 5;
@@ -5423,7 +5398,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SIZE TextSizeInHwnd(HWND hwnd, const WCHAR *txt)
+SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 {
     SIZE sz;
     int txtLen = wcslen(txt);
@@ -5441,8 +5416,8 @@ SIZE TextSizeInHwnd(HWND hwnd, const WCHAR *txt)
 #define FIND_BOX_WIDTH 160
 static void UpdateToolbarFindText(WindowInfo *win)
 {
-    const WCHAR *text = _TRW("Find:");
-    SetWindowTextW(win->hwndFindText, text);
+    const TCHAR *text = _TR("Find:");
+    win_set_text(win->hwndFindText, text);
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
@@ -5467,14 +5442,14 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND find = CreateWindowExW(WS_EX_STATICEDGE, WC_EDITW, L"",
+    HWND find = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, _T(""),
                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
                             0, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HWND label = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
+    HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HWND status = CreateWindowExW(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, L"", WS_CHILD|SS_CENTER,
+    HWND status = CreateWindowEx(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, _T(""), WS_CHILD|SS_CENTER,
                             0, 0, 0, 0, win->hwndCanvas, (HMENU)0, hInst, NULL);
 
     HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
@@ -5541,8 +5516,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 #define PAGE_BOX_WIDTH 40
 static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 {
-    const WCHAR *text = _TRW("Page:");
-    SetWindowTextW(win->hwndPageText, text);
+    const TCHAR *text = _TR("Page:");
+    win_set_text(win->hwndPageText, text);
     SIZE size = TextSizeInHwnd(win->hwndPageText, text);
     size.cx += 6;
 
@@ -5554,15 +5529,15 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     GetWindowRect(win->hwndPageBox, &pageWndRect);
     int pageWndDy = rect_dy(&pageWndRect) + 1;
 
-    WCHAR buf[256];
+    TCHAR buf[256];
     if (0 == pageCount) {
         buf[0] = 0;
     } else if (-1 == pageCount) {
-        GetWindowTextW(win->hwndPageTotal, buf, sizeof(buf));
+        GetWindowText(win->hwndPageTotal, buf, sizeof(buf));
     } else {
-        StringCchPrintfW(buf, dimof(buf), L" / %d", pageCount);
+        StringCchPrintf(buf, dimof(buf), _T(" / %d"), pageCount);
     }
-    SetWindowTextW(win->hwndPageTotal, buf);
+    win_set_text(win->hwndPageTotal, buf);
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     size2.cx += 6;
 
@@ -5583,10 +5558,10 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
                             0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HWND label = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
+    HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HWND total = CreateWindowExW(0, WC_STATICW, L"", WS_VISIBLE | WS_CHILD,
+    HWND total = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
@@ -5755,9 +5730,9 @@ void WindowInfo::FindUpdateStatus(int current, int total)
         WindowInfo_ShowFindStatus(this);
     }
 
-    WCHAR buf[256];
-    wsprintfW(buf, _TRW("Searching %d of %d..."), current, total);
-    SetWindowTextW(hwndFindStatus, buf);
+    TCHAR buf[256];
+    wsprintf(buf, _TR("Searching %d of %d..."), current, total);
+    win_set_text(hwndFindStatus, buf);
 
     findPercent = current * 100 / total;
 
@@ -5807,18 +5782,18 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND spliter = CreateWindowW(L"Spliter", L"", WS_CHILDWINDOW, 0, 0, 0, 0,
+    HWND spliter = CreateWindow(_T("Spliter"), _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
     win->hwndSpliter = spliter;
     
-    HWND closeToc = CreateWindowW(WC_STATICW, L"",
+    HWND closeToc = CreateWindow(WC_STATIC, _T(""),
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 5, 9, spliter, (HMENU)0, hInst, NULL);
     SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
     SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
 
-    win->hwndTocBox = CreateWindowExW(WS_EX_STATICEDGE, WC_TREEVIEWW, L"TOC",
+    win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD,
@@ -6096,7 +6071,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     int             wmId, wmEvent;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
-    const WCHAR *   fileName;
+    const TCHAR *   fileName;
 
     win = WindowInfo_FindByHwnd(hwnd);
 
@@ -6548,11 +6523,11 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static WStrList *WStrList_FromCmdLine(WCHAR *cmdLine, bool addExe=false)
+static WStrList *WStrList_FromCmdLine(TCHAR *cmdLine, bool addExe=false)
 {
-    WCHAR *     exePath;
+    TCHAR *      exePath;
     WStrList *   strList = NULL;
-    WCHAR *      txt;
+    TCHAR *      txt;
 
     assert(cmdLine);
 
@@ -6561,7 +6536,7 @@ static WStrList *WStrList_FromCmdLine(WCHAR *cmdLine, bool addExe=false)
 
     if (addExe)
     {
-        exePath = ExePathGetW();
+        exePath = ExePathGet();
         if (!exePath)
             return NULL;
         if (!WStrList_InsertAndOwn(&strList, exePath)) {
@@ -6716,7 +6691,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
     
     BOOL fOk = OpenPrinterA((LPSTR)printerName, &printer, NULL);
     if (!fOk) {
-        MessageBoxW(win->hwndFrame, _TRW("Could not open Printer"), _TRW("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
 
@@ -6827,14 +6802,14 @@ char *GetDefaultPrinterName()
     return NULL;
 }
 
-#define is_arg(txt) wstr_ieq(L##txt, currArg->str)
+#define is_arg(txt) tstr_ieq(_T(##txt), currArg->str)
 
 /* Parse 'txt' as hex color and set it as background color */
-static void ParseBgColor(const WCHAR* txt)
+static void ParseBgColor(const TCHAR* txt)
 {
-    if (wstr_startswith(txt, L"0x"))
+    if (tstr_startswith(txt, _T("0x")))
         txt += 2;
-    else if (wstr_startswith(txt, L"#"))
+    else if (tstr_startswith(txt, _T("#")))
         txt += 1;
     int r = hex_wstr_decode_byte(&txt);
     if (-1 == r)
@@ -6913,7 +6888,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 {
     WStrList *          argListRoot;
     WStrList *          currArg;
-    WCHAR *             benchPageNumStr = NULL;
+    TCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
     WindowInfo*         win;
@@ -6923,7 +6898,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     bool                printDialog = false;
     char *              destName = 0;
     char *              s;
-    WCHAR *             cmdLine;
+    TCHAR *             cmdLine;
 
 #ifdef _DEBUG
     // Memory leak detection
@@ -6976,7 +6951,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     bool reuse_instance = false;
     currArg = argListRoot->next;
     char *printerName = NULL;
-    WCHAR *newWindowTitle = NULL;
+    TCHAR *newWindowTitle = NULL;
     while (currArg) {
         if (is_arg("-register-for-pdf")) {
             AssociateExeWithPdfExtensions();
@@ -7100,7 +7075,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-title")) {
             currArg = currArg->next;
             if (currArg) {
-                newWindowTitle = wstr_dup(currArg->str); 
+                newWindowTitle = tstr_dup(currArg->str); 
                 currArg = currArg->next;
             }
             continue;
@@ -7150,7 +7125,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         while (currArg) {
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
-                TCHAR command[2 * _MAX_PATH + 20];
+                TCHAR command[2 * MAX_PATH + 20];
                 wsprintf(command, _T("[") _T(DDECOMMAND_OPEN_A) _T("(\"%S\", 0, 1, 0)]"), currArg->str);
                 DDEExecute(_T(PDFSYNC_DDE_SERVICE_A), _T(PDFSYNC_DDE_TOPIC_A), command);
                 if (destName && pdfOpened == 0)
@@ -7285,7 +7260,7 @@ Exit:
         // This only really makes sense if we are in restricted use.
         while (currArgFileNames)
         {
-            TCHAR fullpath[_MAX_PATH];
+            TCHAR fullpath[MAX_PATH];
             GetFullPathName(currArgFileNames->str, dimof(fullpath), fullpath, NULL);
 
             int error = remove(fullpath);
