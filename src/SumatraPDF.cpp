@@ -1033,9 +1033,9 @@ MenuDef menuDefFile[] = {
     { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
     { _TRN("&Save as\tCtrl-S"),                     IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Make SumatraPDF a default PDF reader"), IDM_MAKE_DEFAULT_READER,    MF_NOT_IN_RESTRICTED },
 #ifdef _TEX_ENHANCEMENT
+    // TODO: merge the dialog invoked by this item into the Options dialog
+    { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      0 },
 #endif
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
@@ -1281,7 +1281,7 @@ static bool runningFromProgramFiles(void)
     return fromProgramFiles;
 }
 
-static bool IsRunningInPortableMode(void)
+bool IsRunningInPortableMode(void)
 {
     return !runningFromProgramFiles();
 }
@@ -2533,39 +2533,28 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
         dm->setZoomVirtual(ZOOM_FIT_PAGE);
 }
 
-static bool AlreadyRegisteredForPdfExtentions(void)
-{
-    bool    registered = false;
-    HKEY    key = NULL;
-    char    nameBuf[sizeof(APP_NAME_STR)+8];
-    DWORD   cbNameBuf = sizeof(nameBuf);
-    DWORD   keyType;
-
-    /* HKEY_CLASSES_ROOT\.pdf */
-    if (ERROR_SUCCESS != RegOpenKeyExA(HKEY_CLASSES_ROOT, ".pdf", 0, KEY_QUERY_VALUE, &key))
-        return false;
-
-    if (ERROR_SUCCESS != RegQueryValueExA(key, NULL, NULL, &keyType, (LPBYTE)nameBuf, &cbNameBuf))
-        goto Exit;
-
-    if (REG_SZ != keyType)
-        goto Exit;
-
-    if (cbNameBuf != sizeof(APP_NAME_STR))
-        goto Exit;
-
-    if (0 == memcmp(APP_NAME_STR, nameBuf, sizeof(APP_NAME_STR)))
-        registered = true;
-
-Exit:
-    RegCloseKey(key);
-    return registered;
-}
-
-static void WriteRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *value)
+static bool ReadRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *buffer, DWORD bufLen)
 {
     HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &keyTmp, NULL);
+    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_READ, NULL, &keyTmp, NULL);
+    if (ERROR_SUCCESS != res) {
+        SeeLastError();
+        goto Exit;
+    }
+    res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
+    if (ERROR_SUCCESS != res)
+        SeeLastError();
+Exit:
+    if (NULL != keyTmp)
+        RegCloseKey(keyTmp);
+
+    return ERROR_SUCCESS == res;
+}
+
+static bool WriteRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *value)
+{
+    HKEY keyTmp = NULL;
+    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
     if (ERROR_SUCCESS != res) {
         SeeLastError();
         goto Exit;
@@ -2576,11 +2565,72 @@ static void WriteRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *valu
 Exit:
     if (NULL != keyTmp)
         RegCloseKey(keyTmp);
+
+    return ERROR_SUCCESS == res;
+}
+
+static bool DoAssociateExeWithPdfExtension(bool associateGlobally)
+{
+    TCHAR exePath[MAX_PATH], tmp[MAX_PATH + 8];
+    bool success;
+
+    HKEY hkeyToUse = HKEY_CURRENT_USER;
+    if (associateGlobally)
+        hkeyToUse = HKEY_LOCAL_MACHINE;
+
+    success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\.pdf"), NULL, _T(APP_NAME_STR));
+    if (!success) {
+        // At least register for the user if we can't do so for the whole machine
+        if (associateGlobally)
+            return DoAssociateExeWithPdfExtension(false);
+        return false;
+    }
+
+    GetModuleFileName(NULL, exePath, dimof(exePath));
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR), NULL, (TCHAR *)_TR("PDF Document"));
+    _sntprintf(tmp, dimof(tmp), _T("%s,1"), exePath);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\DefaultIcon"), NULL, tmp);
+    _sntprintf(tmp, dimof(tmp), _T("\"%s\" \"%%1\""), exePath);
+    success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell\\open\\command"), NULL, tmp);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell"), NULL, _T("open"));
+
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
+    return success;
+}
+
+bool IsExeAssociatedWithPdfExtension(void)
+{
+    TCHAR keyName[MAX_PATH + 2], tmp[MAX_PATH + 8];
+    bool success;
+
+    // Get the document name for PDFs (don't trust it to be APP_NAME_STR,
+    // in case the user has manually associated PDFs with SumatraPDF)
+    success = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, sizeof(tmp));
+    if (!success)
+        return false;
+    lstrcpyn(keyName, tmp, dimof(keyName) - 19); // 19 = lstrlen(_T("\\Shell\\open\\command"))
+    
+    // Make sure that "open" is the default verb for PDFs
+    lstrcat(keyName, _T("\\Shell"));
+    success = ReadRegStr(HKEY_CLASSES_ROOT, keyName, NULL, tmp, sizeof(tmp));
+    if (success && !tstr_ieq(tmp, _T("open")))
+        return false;
+    
+    // Finally, SumatraPDF should be the handler for the "open" verb
+    lstrcat(keyName, _T("\\open\\command"));
+    success = ReadRegStr(HKEY_CLASSES_ROOT, keyName, NULL, tmp, sizeof(tmp));
+    lstrcpy(keyName, _T("\""));
+    GetModuleFileName(NULL, keyName + 1, MAX_PATH);
+    lstrcat(keyName, _T("\""));
+    if (success && tstr_startswith(tmp, keyName))
+        return true;
+    
+    return false;
 }
 
 static BOOL RunMyselfAsAdmin(TCHAR *cmdline)
 {
-    assert(WindowsVerVistaOrGreater());
+    assert(WindowsVer2000OrGreater());
     TCHAR *exePath = ExePathGet();
     SHELLEXECUTEINFO sei = {0};
     sei.cbSize = sizeof(sei);
@@ -2593,35 +2643,17 @@ static BOOL RunMyselfAsAdmin(TCHAR *cmdline)
     return ok;
 }
 
-static void AssociateExeWithPdfExtensions()
+void AssociateExeWithPdfExtension(void)
 {
-    TCHAR       tmp[512];
-    HRESULT     hr;
-
-    TCHAR * exePath = ExePathGet();
-    assert(exePath);
-    if (!exePath) return;
-
-    HKEY    hkeyToUse = HKEY_CURRENT_USER;
-    if (WindowsVer2000OrGreater())
-        hkeyToUse = HKEY_LOCAL_MACHINE;
-
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\.pdf"), NULL, _T(APP_NAME_STR));
-
-    hr = StringCchPrintf(tmp, dimof(tmp), _T("%s,1"), exePath);
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\DefaultIcon"), NULL, tmp);
-
-    hr = StringCchPrintf(tmp,  dimof(tmp), _T("\"%s\" \"%%1\""), exePath);
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell\\open\\command"), NULL, tmp);
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell"), NULL, _T("open"));
-
-    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
-    free(exePath);
+    if (WindowsVerVistaOrGreater())
+        RunMyselfAsAdmin(_T("-register-for-pdf"));
+    else
+        DoAssociateExeWithPdfExtension(true);
 }
 
 static bool RegisterForPdfExtentions(HWND hwnd)
 {
-    if (AlreadyRegisteredForPdfExtentions())
+    if (IsExeAssociatedWithPdfExtension())
         return true;
 
     if (IsRunningInPortableMode()) {
@@ -2644,12 +2676,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     if (!gGlobalPrefs.m_pdfAssociateShouldAssociate)
         return false;
 
-    if (WindowsVerVistaOrGreater()) {
-        RunMyselfAsAdmin(_T("-register-for-pdf"));
-        return true;
-    }
-
-    AssociateExeWithPdfExtensions();
+    AssociateExeWithPdfExtension();
     return true;
 }
 
@@ -4508,13 +4535,6 @@ static void OnMenuViewFacing(WindowInfo *win)
     SwitchToDisplayMode(win, DM_FACING);
 }
 
-static void OneMenuMakeDefaultReader(WindowInfo *win)
-{
-    bool registered = RegisterForPdfExtentions(win->hwndFrame);
-    if (registered)
-        MessageBox(NULL, _TR("SumatraPDF is now a default reader for PDF files."), _TR("Information"), MB_OK | MB_ICONINFORMATION);
-}
-
 static void RememberWindowPosition(WindowInfo *win)
 {
     /* If the window being moved or resized doesn't show a PDF document,
@@ -6142,11 +6162,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                         OnMenuPrint(win);
                     break;
 
-                case IDM_MAKE_DEFAULT_READER:
-                    if (!gRestrictedUse)
-                        OneMenuMakeDefaultReader(win);
-                    break;
-
                 case IDT_FILE_EXIT:
                 case IDM_CLOSE:
                     CloseWindow(win, FALSE);
@@ -6971,7 +6986,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     TCHAR *newWindowTitle = NULL;
     while (currArg) {
         if (is_arg("-register-for-pdf")) {
-            AssociateExeWithPdfExtensions();
+            DoAssociateExeWithPdfExtension(true);
             return 0;
         }
 

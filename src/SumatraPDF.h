@@ -33,8 +33,6 @@
 #endif
 
 #include <windows.h>
-#include <malloc.h>
-#include <memory.h>
 #include <tchar.h>
 #include "resource.h"
 
@@ -240,5 +238,9 @@ public:
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const TCHAR *fileName, bool showWin=true, TCHAR *windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
+
+bool IsRunningInPortableMode(void);
+bool IsExeAssociatedWithPdfExtension(void);
+void AssociateExeWithPdfExtension();
 
 #endif

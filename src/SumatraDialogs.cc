@@ -617,6 +617,16 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
 
+        if (IsExeAssociatedWithPdfExtension()) {
+            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your main PDF reader"));
+            EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
+        } else if (IsRunningInPortableMode()) {
+            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Main PDF reader can't be changed in portable mode"));
+            EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
+        } else {
+            SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("Make SumatraPDF my main PDF reader"));
+        }
+
         win_set_text(hDlg, _TR("SumatraPDF Options"));
         SetDlgItemText(hDlg, IDC_SECTION_VIEW, _TR("View"));
         SetDlgItemText(hDlg, IDC_DEFAULT_LAYOUT_LABEL, _TR("Default &Layout:"));
@@ -666,6 +676,18 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         case IDC_DEFAULT_SHOW_TOC:
         case IDC_GLOBAL_PREFS_ONLY:
         case IDC_AUTO_UPDATE_CHECKS:
+            return TRUE;
+
+        case IDC_SET_DEFAULT_READER:
+            AssociateExeWithPdfExtension();
+            if (IsExeAssociatedWithPdfExtension()) {
+                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your main PDF reader"));
+                EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
+                SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg, IDOK), TRUE);
+            }
+            else {
+                SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF should now be your main PDF reader"));
+            }
             return TRUE;
         }
         break;

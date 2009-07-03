@@ -426,7 +426,7 @@ pa:ਪਰਿੰਟ ਕਰੋ(&P)\tCtrl-P
 hi:परिंट करें(&P)\tCtrl-P
 nn:Skriv &ut\tCtrl-P
 -
-Make SumatraPDF a default PDF reader
+Make SumatraPDF my main PDF reader
 af:Maak Sumatra Die Automatiese PDF Leser
 bg:Направи SumatraPDF четец на PDF по подразбиране
 br:Fazer do SumatraPDF o leitor PDF padrão
@@ -2415,62 +2415,6 @@ pa:Sumatra ਬਾਰੇ
 hi:Sumatra के बारे में
 nn:Om SumatraPDF
 -
-SumatraPDF is now a default reader for PDF files.
-af:SumatraPDF is nou die automatiese leser vir PDF lêers.
-bg:SumatraPDF е четеца по подразбиране на PDF файлове.
-br:SumatraPDF tornou-se o leitor PDF padrão.
-de:SumatraPDF öffnet nun standardmäßig alle PDF-Dateien.
-hu:A SumatraPDF lett az alapértelmezett PDF olvasó.
-pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
-fr:SumatraPDF est maintenant le lecteur de fichiers PDF par défaut.
-tr:SumatraPDF varsayılan PDF okuyucusu olarak atandı.
-by:SumatraPDF зараз чытальнік PDF-файлаў па-змаўчанні.
-ja:SumatraPDF は現在 PDF ファイルの既定のリーダーです。
-fa:.شما خواهد بود PDF مرورگر پيش‌فرض اسناد  SumatraPDF از اين پس
-dk:SumatraPDF er nu din standardlæser for PDF filer.
-it:SumatraPDF è stato impostato come lettore predefinito per i file PDF.
-nl:SumatraPDF is nu de standaardlezer voor PDF-bestanden.
-ta:SumatraPDF இப்போது உங்கள் முன்னிருப்பு PDF படிப்பி
-es:SumatraPDF es ahora el lector PDF por defecto.
-hr:SumatraPDF je sada pretpostavljeni preglednik PDF datoteka.
-ru:Теперь PDF-файлы будут по умолчанию открываться с помощью SumatraPDF.
-ar:هذا البرنامج هو القارىء التلقائي لملفاتك الآن  
-cn:已将 SumatraPDF 设置为默认的 PDF 阅读器。
-sv:SumatraPDF är nu standardläsare för PDF-filer.
-cz:SumatraPDF je nyní nastaven jako defaultní čtečka PDF souborů.
-gr:Το SumatraPDF είναι τώρα το προεπιλεγμένο πρόγραμμα ανάγνωσης PDF
-th:ตอนนี้ SumatraPDF ได้ถูกตั้งให้เป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
-pt:SumatraPDF é agora o leitor de PDF pré-definido.
-no:SumatraPDF er nå standard PDF-leser.
-sk:SumatraPDF je teraz nastavený ako predvolený prehliadač PDF súborov.
-vn:SumatraPDF hiện giờ là trình đọc PDF mặc định.
-lt:SumatraPDF dabar yra numatytasis PDF dokumentų skaitytuvas
-my:SumatraPDF adalah pembaca utama fail PDF sekarang
-fi:SumatraPDF on nyt PDF-tiedostojen oletuslukija
-ca:Ara el SumatraPDF és el visor de PDF predeterminat.
-si:SumatraPFD je privzeti pregledovalnik PDF datotek.
-sr-rs:SumatraPDF је сада подразумевани читач PDF докумената
-tw:已經把 SumatraPDF 設為預設的PDF閱讀工具。
-ml:സുമാത്രാപിഡീഎഫ് ആണ് ഇപ്പൊള്‍ നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം
-sp-rs:SumatraPDF je sada podrazumevani čitač PDF dokumenata
-id:SumatraPDF sekarang menjadi pembaca-PDF utama.
-mk:Сега SumatraPDF е твојот основен читач на PDF документи.
-ro:SumatraPDF este acum cititorul implicit de fişiere PDF.
-kr:SumatraPDF가 기본 PDF 파일 뷰어로 지정되었습니다.
-bn:সুমাত্রাপিডিএফ এখন আপনার পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক পঠক
-gl:SumatraPDF é o lector PDF por defecto agora.
-uk:Тепер SumatraPDF є типовим переглядачем файлів PDF.
-eu:Sumatra orain berezko PDF irakur tresna bihurtu da.
-tl:SumatraPDF ay ang Pangunahing reader na sa mga PDF.
-va:SumatraPDF es ara el llector PDF per defecte.
-sn:SumatraPDF ndiyo yaakuvhura maPDF ese.
-cy:SumatraPDF yw'r darllenydd ffeiliau PDF rhagosodedig.
-ga:Sé SumatraPDF an léitheoir réamhshocruithe do chomhaid PDF.
-mm:စူမာတရာPDF သည် PDF ဖိုင်များတွက် အဓိက ကြည့်ရာဖြစ်ပြီ။
-pa:ਹੁਣ ਤੌਂ  PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੁਲਣਗੀਆਂ ।
-hi:अब से PDF फाईलें SumatraPDF मे खुलेंगी
-nn:SumatraPDF er no standarlesaren for PDF-filer
--
 Failed to save a file
 af:Kon nie die lêer stoor nie!
 bg:Грешка при записване на файла
@@ -3656,12 +3600,6 @@ pa:ਵੇਖੋ
 hi:देखें
 nn:Vis
 -
-Information
-de:Hinweis
-ru:Информация
-cy:Gwybodaeth
-gr:Πληροφορίες
--
 &Go to page:
 de:&Gehe zu Seite:
 ru:&Перейти к странице
@@ -3780,3 +3718,15 @@ de:Unbekannte Datei (%s)
 -
 Cannot print this file
 de:Diese Datei darf nicht gedruckt werden
+-
+PDF Document
+de:PDF Dokument
+-
+SumatraPDF is your main PDF reader
+de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
+-
+SumatraPDF should now be your main PDF reader
+de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
+-
+Main PDF reader can't be changed in portable mode
+de:Standardanwendung im portablen Modus nicht möglich

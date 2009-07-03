@@ -19,7 +19,6 @@
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
 #define IDM_PRINT                       403
-#define IDM_MAKE_DEFAULT_READER         404
 #define IDM_EXIT                        405
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
@@ -154,6 +153,7 @@
 #define IDC_GLOBAL_PREFS_ONLY           1020
 #define IDC_SECTION_ADVANCED            1021
 #define IDC_AUTO_UPDATE_CHECKS          1022
+#define IDC_SET_DEFAULT_READER          1023
 #define IDC_FIND_EDIT                   1030
 #define IDC_MATCH_CASE                  1031
 #define IDC_FIND_NEXT_HINT              1032
