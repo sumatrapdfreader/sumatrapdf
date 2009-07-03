@@ -97,6 +97,7 @@ public:
         url = NULL;
         selectionOnPage = NULL;
         tocLoaded = false;
+        fullScreen = false;
         hwndFrame = NULL;
         hwndCanvas = NULL;
         hwndToolbar = NULL;
@@ -140,7 +141,6 @@ public:
        this is the first element */
     WindowInfo *    next;
     WinState        state;
-    WinState        prevState;
     bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
 
     DisplayModel *  dm;
@@ -216,6 +216,7 @@ public:
     Synchronizer    *pdfsync;
 
     bool            tocLoaded;
+    bool            fullScreen;
 
     long            prevStyle;
     RECT            frameRc;

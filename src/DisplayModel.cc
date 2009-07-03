@@ -180,7 +180,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode)
     _displayMode = displayMode;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
-    _fullScreen = FALSE;
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;

@@ -1423,18 +1423,6 @@ static void MenuUpdateZoom(WindowInfo* win)
     ZoomMenuItemCheck(win->hMenu, menuId, NULL != win->dm);
 }
 
-static void MenuUpdateFullscreen(WindowInfo* win)
-{
-    if (win->dm)
-        return; // don't bother for windows with PDF
-
-    /* show default state */
-    UINT state = MF_BYCOMMAND | MF_UNCHECKED;
-    if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
-        state = MF_BYCOMMAND | MF_CHECKED;
-    CheckMenuItem(win->hMenu, IDM_VIEW_FULLSCREEN, state);
-}
-
 static void SeeLastError(void) {
     TCHAR *msgBuf = NULL;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -1501,7 +1489,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
 
     // Update pdf-specific windowState
-    if (win->dm->_fullScreen)
+    if (win->fullScreen)
         ds.windowState = WIN_STATE_FULLSCREEN;
     else if (IsZoomed(win->hwndFrame))
         ds.windowState = WIN_STATE_MAXIMIZED;
@@ -1573,11 +1561,9 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
         return;
     UpdateDisplayStateWindowRect(win, &ds);
     // Set the windows state based on the actual window's placement
-    WINDOWPLACEMENT wndpl;
-    GetWindowPlacement(win->hwndFrame, &wndpl);
-    ds.windowState =  win->dm->_fullScreen ? WIN_STATE_FULLSCREEN
-                    : wndpl.showCmd == SW_MAXIMIZE ? WIN_STATE_MAXIMIZED 
-                    : wndpl.showCmd == SW_MINIMIZE ? WIN_STATE_MINIMIZED
+    ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
+                    : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
+                    : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
     LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false,
                         !autorefresh, // We don't allow PDF-repair if it is an autorefresh because
@@ -1957,7 +1943,6 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateLanguage(win);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
-    MenuUpdateFullscreen(win);
 
     for (size_t i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
@@ -4058,8 +4043,6 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        if (win->dm->_fullScreen)
-            WindowInfo_ExitFullscreen(win);
         if (win->dm->_showToc) {
             win->HideTocBox();
             MenuUpdateBookmarksStateForWindow(win);
@@ -4545,7 +4528,7 @@ static void RememberWindowPosition(WindowInfo *win)
         return;
     
     /* don't update the window's dimensions if it is maximized or mimimized */
-    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->dm && win->dm->_fullScreen)
+    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen)
         return;
 
     RECT rc;
@@ -4590,7 +4573,7 @@ static void RebuildProgramMenus(void)
     while (win) {
         WindowInfo_RebuildMenu(win);
         // Setting the menu for a full screen window messes things up
-        if (!win->dm || !win->dm->_fullScreen)
+        if (!win->fullScreen)
             SetMenu(win->hwndFrame, win->hMenu);
         MenuUpdateStateForWindow(win);
         win = win->next;
@@ -4747,7 +4730,7 @@ static void OnMenuGoToPage(WindowInfo *win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.m_showToolbar && (!win->dm || !win->dm->_fullScreen)) {
+    if (gGlobalPrefs.m_showToolbar && !win->fullScreen) {
         win->FocusPageNoEdit();
         return;
     }
@@ -4783,14 +4766,16 @@ static void OnMenuViewRotateRight(WindowInfo *win)
 
 void WindowInfo_EnterFullscreen(WindowInfo *win)
 {
-    if (win->dm->_fullScreen || !IsWindowVisible(win->hwndFrame)) 
+    if (win->fullScreen || !IsWindowVisible(win->hwndFrame)) 
         return;
-    win->dm->_fullScreen = TRUE;
+    win->fullScreen = true;
 
-    // Remove TOC from full screen, add back later on exit fullscreen
-    win->dm->_tocBeforeFullScreen = win->dm->_showToc;
-    if (win->dm->_showToc)
-        win->HideTocBox();
+    if (win->dm) {
+        // Remove TOC from full screen, add back later on exit fullscreen
+        win->dm->_tocBeforeFullScreen = win->dm->_showToc;
+        if (win->dm->_showToc)
+            win->HideTocBox();
+    }
 
     int x, y, w, h;
     MONITORINFOEX mi;
@@ -4818,19 +4803,16 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
     ShowWindow(win->hwndReBar, SW_HIDE);
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
-    if (win->tocLoaded && win->dm->_showToc)
-        win->ShowTocBox();
-    else
-        SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+    SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
 }
 
 void WindowInfo_ExitFullscreen(WindowInfo *win)
 {
-    if (!win->dm->_fullScreen) 
+    if (!win->fullScreen) 
         return;
-    win->dm->_fullScreen = false;
+    win->fullScreen = false;
 
-    if (win->dm->_tocBeforeFullScreen)
+    if (win->dm && win->dm->_tocBeforeFullScreen)
         win->ShowTocBox();
 
     if (gGlobalPrefs.m_showToolbar)
@@ -4849,7 +4831,7 @@ static void OnMenuViewFullscreen(WindowInfo *win)
     if (!win)
         return;
 
-    if (!win->dm) {
+    if (!win->dm || gGlobalPrefs.m_globalPrefsOnly) {
         /* not showing a PDF document */
         if (gGlobalPrefs.m_windowState != WIN_STATE_FULLSCREEN)
             gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
@@ -4857,11 +4839,9 @@ static void OnMenuViewFullscreen(WindowInfo *win)
             gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
         else
             gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-        MenuUpdateFullscreen(win);
-        return;
     }
 
-    if (win->dm->_fullScreen)
+    if (win->fullScreen)
         WindowInfo_ExitFullscreen(win);
     else
         WindowInfo_EnterFullscreen(win);
@@ -5113,7 +5093,7 @@ static void OnChar(WindowInfo *win, int key)
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
     if (VK_ESCAPE == key) {
-        if (win->dm && win->dm->_fullScreen)
+        if (win->fullScreen)
             OnMenuViewFullscreen(win);
         else if (gGlobalPrefs.m_escToExit)
             DestroyWindow(win->hwndFrame);
@@ -5689,7 +5669,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 int width = rect_dx(&r) - tw - SPLITTER_DX;
                 int height = rect_dy(&r);
 
-                if (gGlobalPrefs.m_showToolbar && !win->dm->_fullScreen) {
+                if (gGlobalPrefs.m_showToolbar && !win->fullScreen) {
                     ty = gReBarDy + gReBarDyFrame;
                     height -= ty;
                 }
@@ -5880,7 +5860,7 @@ void WindowInfo::ShowTocBox()
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
-    if (gGlobalPrefs.m_showToolbar && !dm->_fullScreen)
+    if (gGlobalPrefs.m_showToolbar && !fullScreen)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
@@ -5906,7 +5886,7 @@ void WindowInfo::HideTocBox()
     int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
-    if (gGlobalPrefs.m_showToolbar && !dm->_fullScreen)
+    if (gGlobalPrefs.m_showToolbar && !fullScreen)
         cy = gReBarDy + gReBarDyFrame;
 
     SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
@@ -7181,13 +7161,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         UpdateWindow(win->hwndCanvas);
         if (gGlobalPrefs.m_windowState == WIN_STATE_MINIMIZED)
             ShowWindow(win->hwndFrame, SW_MINIMIZE);
-        else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
-            ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
+            ShowWindow(win->hwndFrame, SW_MAXIMIZE);
+        else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else
             ShowWindow(win->hwndFrame, SW_SHOW);
         UpdateWindow(win->hwndFrame);
+
+        if (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState)
+            WindowInfo_EnterFullscreen(win);
     }
 
     if (IsBenchMode()) {
