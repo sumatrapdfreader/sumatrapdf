@@ -80,6 +80,26 @@ void openxref(char *filename, char *password)
 	fz_keepobj(xref->info);
 }
 
+void closexref(void)
+{
+	if (pagetree)
+	{
+		pdf_droppagetree(pagetree);
+		pagetree = nil;
+	}
+
+	if (xref)
+	{
+		if (xref->store)
+		{
+			pdf_dropstore(xref->store);
+			xref->store = nil;
+		}
+		pdf_closexref(xref);
+		xref = nil;
+	}
+}
+
 /*
  */
 
@@ -474,5 +494,6 @@ int main(int argc, char **argv)
 	drawpages("1-");
 
     fz_droprenderer(drawgc);
+    closexref();
 }
 
