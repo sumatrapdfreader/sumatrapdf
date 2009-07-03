@@ -125,12 +125,8 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 				else
 					font->cidtoucs[i] = '?';
 			}
-			else {
-				/*font->cidtoucs[i] = '?'; */
-				/* TODO: this is probably not correct but sometimes
-				   better than '?' */
-				font->cidtoucs[i] = i;
-			}
+			else
+				font->cidtoucs[i] = '?';
 		}
 
 		return fz_okay;

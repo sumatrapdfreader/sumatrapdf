@@ -78,7 +78,7 @@ pdf_loadnametrees(pdf_xref *xref)
 	dests = fz_dictgets(xref->root, "Dests");
 	if (dests)
 	{
-		xref->dests = dests;
+		xref->dests = fz_keepobj(dests);
 		return fz_okay;
 	}
 

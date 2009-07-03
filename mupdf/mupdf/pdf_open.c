@@ -615,6 +615,7 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 
 		if (oidbuf[i] < 1 || oidbuf[i] >= xref->len)
 		{
+			fz_dropobj(obj);
 			error = fz_throw("object id (%d 0 R) out of range (0..%d)", oidbuf[i], xref->len - 1);
 			goto cleanupstm;
 		}

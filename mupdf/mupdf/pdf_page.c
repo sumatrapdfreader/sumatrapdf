@@ -225,12 +225,19 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	error = loadpagecontents(&tree, xref, rdb, obj);
 	if (error)
+	{
+		fz_dropobj(rdb);
 		return fz_rethrow(error, "cannot load page contents");
+	}
 
 	pdf_logpage("optimize tree\n");
 	error = fz_optimizetree(tree);
 	if (error)
+	{
+		fz_droptree(tree);
+		fz_dropobj(rdb);
 		return fz_rethrow(error, "cannot optimize page display tree");
+	}
 
 	/*
 	 * Create page object

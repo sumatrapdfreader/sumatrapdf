@@ -128,9 +128,13 @@ linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	dy1 = c.y - b.y;
 
 	if (dx0 * dx0 + dy0 * dy0 < FLT_EPSILON)
-		return fz_okay;
+	{
+		linejoin = BEVEL;
+	}
 	if (dx1 * dx1 + dy1 * dy1 < FLT_EPSILON)
-		return fz_okay;
+	{
+		linejoin = BEVEL;
+	}
 
 	scale = linewidth / sqrt(dx0 * dx0 + dy0 * dy0);
 	dlx0 = dy0 * scale;
@@ -342,7 +346,7 @@ strokelineto(struct sctx *s, fz_point cur)
 	float dx = cur.x - s->seg[s->sn-1].x;
 	float dy = cur.y - s->seg[s->sn-1].y;
 
-	if (dx * dx + dy * dy < s->flatness * s->flatness * 0.25)
+	if (dx * dx + dy * dy < FLT_EPSILON)
 	{
 		s->dot = 1;
 		return fz_okay;

@@ -219,14 +219,14 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	error = pdf_parseencdict(crypt, enc);
 	if (error)
 	{
-		pdf_dropcrypt(crypt);
+		pdf_freecrypt(crypt);
 		return fz_rethrow(error, "unable to to create decryptor");
 	}
 
 	if (strcmp(crypt->handler, "Standard") != 0)
 	{
 		char *handler = crypt->handler;
-		pdf_dropcrypt(crypt);
+		pdf_freecrypt(crypt);
 		return fz_throw("unsupported security handler: %s", handler);
 	}
 
@@ -244,7 +244,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 		stmalgo = algofromname(stmmethod);
 		if (stmalgo == ALGO_UNKNOWN)
 		{
-			pdf_dropcrypt(crypt);
+			pdf_freecrypt(crypt);
 			return fz_throw("unsupported stream encryption method: %s", stmmethod);
 		}
 
@@ -252,13 +252,13 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 		stralgo = algofromname(strmethod);
 		if (stralgo == ALGO_UNKNOWN)
 		{
-			pdf_dropcrypt(crypt);
+			pdf_freecrypt(crypt);
 			return fz_throw("unsupported string encryption: %s", strmethod);
 		}
 
 		if (stmalgo != stralgo)
 		{
-			pdf_dropcrypt(crypt);
+			pdf_freecrypt(crypt);
 			return fz_throw("stream encryption algorithm (%s) != string encryption algorithm(%s)\n", stmmethod, strmethod);
 		}
 
@@ -266,7 +266,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 		{
 			int stmlength = crypt->stmlength;
 			int strlength = crypt->strlength;
-			pdf_dropcrypt(crypt);
+			pdf_freecrypt(crypt);
 			return fz_throw("unsupport encryption key lengths: %d vs. %d", stmlength, strlength);
 		}
 
@@ -287,7 +287,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 
 	if (crypt->v != 1 && crypt->v != 2)
 	{
-		pdf_dropcrypt(crypt);
+		pdf_freecrypt(crypt);
 		return fz_throw("unsupported encryption algorithm: %d", crypt->v);
 	}
 
@@ -308,12 +308,12 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	return fz_okay;
 
 cleanup:
-	pdf_dropcrypt(crypt);
+	pdf_freecrypt(crypt);
 	return fz_throw("corrupt encryption dictionary");
 }
 
 void
-pdf_dropcrypt(pdf_crypt *crypt)
+pdf_freecrypt(pdf_crypt *crypt)
 {
 	if (crypt->encrypt) fz_dropobj(crypt->encrypt);
 	if (crypt->id) fz_dropobj(crypt->id);
@@ -523,7 +523,7 @@ pdf_newencrypt(pdf_crypt **cp, char *userpw, char *ownerpw, int p, int n, fz_obj
 			crypt->len * 8);
 	if (error)
 	{
-		pdf_dropcrypt(crypt);
+		pdf_freecrypt(crypt);
 		return fz_rethrow(error, "cannot create encryption dictionary");
 	}
 

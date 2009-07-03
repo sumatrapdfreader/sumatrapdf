@@ -575,6 +575,9 @@ Lsetcolorspace:
 
 			obj = csi->stack[0];
 
+			if (!fz_isname(obj))
+				return fz_throw("malformed CS");
+
 			if (!strcmp(fz_toname(obj), "Pattern"))
 			{
 				error = pdf_setpattern(csi, what, nil, nil);

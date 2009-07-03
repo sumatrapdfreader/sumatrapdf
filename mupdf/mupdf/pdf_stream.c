@@ -328,13 +328,10 @@ pdf_buildfilter(fz_filter **filterp, pdf_xref *xref, fz_obj *stmobj, int oid, in
 		}
 		else
 		{
+			/* The pipeline chain takes ownership of base */
 			error = buildfilterchain(&pipe, xref, base, filters, params);
 			if (error)
-			{
-				fz_dropfilter(base);
 				return fz_rethrow(error, "cannot create filter chain");
-			}
-			fz_dropfilter(base);
 		}
 
 		*filterp = pipe;

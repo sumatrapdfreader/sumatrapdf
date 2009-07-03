@@ -100,7 +100,7 @@ int pdf_setownerpassword(pdf_crypt *crypt, char *pw, int pwlen);
 fz_error pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, int oid, int gen);
 void pdf_cryptbuffer(pdf_crypt *crypt, fz_buffer *buf, int oid, int gen);
 void pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gen);
-void pdf_dropcrypt(pdf_crypt *crypt);
+void pdf_freecrypt(pdf_crypt *crypt);
 
 /*
  * xref and object / stream api
@@ -459,6 +459,8 @@ struct pdf_fontdesc_s
 	int nvmtx, vmtxcap;
 	pdf_vmtx dvmtx;
 	pdf_vmtx *vmtx;
+
+	int isembedded;
 };
 
 /* fontmtx.c */

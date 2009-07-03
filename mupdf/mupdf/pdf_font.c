@@ -205,6 +205,8 @@ pdf_newfontdesc(void)
 	fontdesc->dvmtx.y = 880;
 	fontdesc->dvmtx.w = -1000;
 
+	fontdesc->isembedded = 0;
+
 	return fontdesc;
 }
 
@@ -339,6 +341,8 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 			base = fz_dictgets(encoding, "BaseEncoding");
 			if (fz_isname(base))
 				pdf_loadencoding(estrings, fz_toname(base));
+			else if (!fontdesc->isembedded)
+				pdf_loadencoding(estrings, "StandardEncoding");
 
 			diff = fz_dictgets(encoding, "Differences");
 			if (fz_isarray(diff))

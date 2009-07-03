@@ -238,7 +238,6 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 	item->age = 0;
 	item->next = nil;
 
-
 	if (fz_isindirect(key))
 	{
 		struct refkey refkey;
@@ -307,24 +306,25 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 	fz_error error;
 	pdf_item *item, *prev;
 	struct refkey refkey;
-	void *val;
 
 	if (key == nil)
 		return fz_okay;
-
-	val = nil;
 
 	if (fz_isindirect(key))
 	{
 		refkey.kind = kind;
 		refkey.oid = fz_tonum(key);
 		refkey.gen = fz_togen(key);
+
 		item = fz_hashfind(store->hash, &refkey);
-		if (item)
-			val = item->val;
+		if (!item)
+			return fz_throw("cannot remove non-existent item from store");
 		error = fz_hashremove(store->hash, &refkey);
 		if (error)
-			return error;
+			return fz_rethrow(error, "cannot remove item from store");
+		dropitem(kind, item->val);
+		fz_dropobj(item->key);
+		fz_free(item);
 	}
 
 	else
@@ -338,26 +338,12 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 					store->root = item->next;
 				else
 					prev->next = item->next;
-				val = item->val;
+				dropitem(kind, item->val);
+				fz_dropobj(item->key);
 				fz_free(item);
 				break;
 			}
 			prev = item;
-		}
-	}
-
-	if (val)
-	{
-		switch (kind)
-		{
-			case PDF_KCOLORSPACE: fz_dropcolorspace(val); break;
-			case PDF_KFUNCTION: pdf_dropfunction(val); break;
-			case PDF_KXOBJECT: pdf_dropxobject(val); break;
-			case PDF_KIMAGE: fz_dropimage(val); break;
-			case PDF_KPATTERN: pdf_droppattern(val); break;
-			case PDF_KSHADE: fz_dropshade(val); break;
-			case PDF_KCMAP: pdf_dropcmap(val); break;
-			case PDF_KFONT: pdf_dropfont(val); break;
 		}
 	}
 

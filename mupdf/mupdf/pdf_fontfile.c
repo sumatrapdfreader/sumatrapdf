@@ -282,6 +282,8 @@ pdf_loadembeddedfont(pdf_fontdesc *font, pdf_xref *xref, fz_obj *stmref)
 	font->buffer = buf->rp; /* save the buffer so we can free it later */
 	fz_free(buf); /* only free the fz_buffer struct, not the contained data */
 
+	font->isembedded = 1;
+
 	return fz_okay;
 }
 

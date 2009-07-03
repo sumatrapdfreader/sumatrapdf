@@ -203,9 +203,8 @@ renderpath(fz_renderer *gc, fz_pathnode *path, fz_matrix ctm)
 	{
 		float lw = path->linewidth;
 		/* Check for hairline */
-		if (lw * expansion < 0.1) {
+		if (lw * expansion < 0.1)
 			lw = 1.0f / expansion;
-		}
 		if (path->dash)
 			error = fz_dashpath(gc->gel, path, ctm, flatness, lw);
 		else

@@ -18,6 +18,8 @@ void pdf_loadencoding(char **estrings, char *encoding)
 		bstrings = (char**) pdf_macexpert;
 	if (!strcmp(encoding, "WinAnsiEncoding"))
 		bstrings = (char**) pdf_winansi;
+	if (!strcmp(encoding, "StandardEncoding"))
+		bstrings = (char**) pdf_standard;
 
 	if (bstrings)
 		for (i = 0; i < 256; i++)
@@ -194,8 +196,6 @@ const char * const pdf_winansi[256] = { _notdef, _notdef, _notdef,
 	"divide", "oslash", "ugrave", "uacute", "ucircumflex", "udieresis",
 	"yacute", "thorn", "ydieresis" };
 
-#if 0
-
 const char * const pdf_standard[256] = { _notdef, _notdef,
 	_notdef, _notdef, _notdef, _notdef, _notdef, _notdef,
 	_notdef, _notdef, _notdef, _notdef, _notdef, _notdef,
@@ -235,6 +235,8 @@ const char * const pdf_standard[256] = { _notdef, _notdef,
 	_notdef, _notdef, _notdef, "ae", _notdef, _notdef,
 	_notdef, "dotlessi", _notdef, _notdef, "lslash", "oslash",
 	"oe", "germandbls", _notdef, _notdef, _notdef, _notdef };
+
+#if 0
 
 const char * const pdf_expert[256] = { _notdef, _notdef, _notdef,
 	_notdef, _notdef, _notdef, _notdef, _notdef, _notdef,

@@ -516,21 +516,21 @@ int main(int argc, char **argv)
 	int wasshowingpage;
 	struct timeval tmo, tmo_at;
 
-	while ((c = getopt(argc, argv, "d:z:p:")) != -1)
+	while ((c = fz_getopt(argc, argv, "d:z:p:")) != -1)
 	{
 		switch (c)
 		{
-		case 'd': password = optarg; break;
-		case 'z': zoom = atof(optarg); break;
-		case 'p': pageno = atoi(optarg); break;
+		case 'd': password = fz_optarg; break;
+		case 'z': zoom = atof(fz_optarg); break;
+		case 'p': pageno = atoi(fz_optarg); break;
 		default: usage();
 		}
 	}
 
-	if (argc - optind == 0)
+	if (argc - fz_optind == 0)
 		usage();
 
-	filename = argv[optind++];
+	filename = argv[fz_optind++];
 
 	fz_cpudetect();
 	fz_accelerate();

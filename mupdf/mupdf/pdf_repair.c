@@ -15,46 +15,52 @@ struct entry
 };
 
 static fz_error parseobj(fz_stream *file, char *buf, int cap,
-	int *stmofs, int *stmlen, int *isroot, int *isinfo)
+	int *stmofsp, int *stmlenp, int *isroot, int *isinfo)
 {
 	fz_error error;
-	fz_obj *dict = nil;
-	fz_obj *length;
-	fz_obj *filter;
-	fz_obj *type;
 	pdf_token_e tok;
+	int stmlen;
 	int len;
 	int n;
 
-	*stmlen = -1;
+	*stmofsp = 0;
+	*stmlenp = -1;
 	*isroot = 0;
 	*isinfo = 0;
+
+	stmlen = 0;
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (tok == PDF_TODICT)
 	{
+		fz_obj *dict, *obj;
+
+		/* Send nil xref so we don't try to resolve references */
 		error = pdf_parsedict(&dict, nil, file, buf, cap);
 		if (error)
 			return fz_rethrow(error, "cannot parse object");
-	}
 
-	if (fz_isdict(dict))
-	{
-		type = fz_dictgets(dict, "Type");
-		if (fz_isname(type) && !strcmp(fz_toname(type), "Catalog"))
+		obj = fz_dictgets(dict, "Type");
+		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Catalog"))
 			*isroot = 1;
-
-		filter = fz_dictgets(dict, "Filter");
-		if (fz_isname(filter) && !strcmp(fz_toname(filter), "Standard"))
-		{
-			fz_dropobj(dict);
-			return fz_throw("cannot repair encrypted files");
-		}
 
 		if (fz_dictgets(dict, "Producer"))
 			if (fz_dictgets(dict, "Creator"))
 				if (fz_dictgets(dict, "Title"))
 					*isinfo = 1;
+
+		obj = fz_dictgets(dict, "Length");
+		if (fz_isint(obj))
+			stmlen = fz_toint(obj);
+
+		obj = fz_dictgets(dict, "Filter");
+		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Standard"))
+		{
+			fz_dropobj(dict);
+			return fz_throw("cannot repair encrypted files");
+		}
+
+		fz_dropobj(dict);
 	}
 
 	while ( tok != PDF_TSTREAM &&
@@ -80,14 +86,13 @@ static fz_error parseobj(fz_stream *file, char *buf, int cap,
 		if (error)
 			return fz_rethrow(error, "cannot read from file");
 
-		*stmofs = fz_tell(file);
-		if (*stmofs < 0)
+		*stmofsp = fz_tell(file);
+		if (*stmofsp < 0)
 			return fz_throw("cannot seek in file");
 
-		length = fz_dictgets(dict, "Length");
-		if (fz_isint(length))
+		if (stmlen > 0)
 		{
-			error = fz_seek(file, *stmofs + fz_toint(length), 0);
+			error = fz_seek(file, *stmofsp + stmlen, 0);
 			if (error)
 				return fz_rethrow(error, "cannot seek in file");
 			error = pdf_lex(&tok, file, buf, cap, &len);
@@ -95,7 +100,7 @@ static fz_error parseobj(fz_stream *file, char *buf, int cap,
 				return fz_rethrow(error, "cannot scan for endstream token");
 			if (tok == PDF_TENDSTREAM)
 				goto atobjend;
-			error = fz_seek(file, *stmofs, 0);
+			error = fz_seek(file, *stmofsp, 0);
 			if (error)
 				return fz_rethrow(error, "cannot seek in file");
 		}
@@ -117,7 +122,7 @@ static fz_error parseobj(fz_stream *file, char *buf, int cap,
 		if (error)
 			return fz_rethrow(error, "cannot read from file");
 
-		*stmlen = fz_tell(file) - *stmofs - 9;
+		*stmlenp = fz_tell(file) - *stmofsp - 9;
 
 atobjend:
 		error = pdf_lex(&tok, file, buf, cap, &len);
@@ -126,9 +131,6 @@ atobjend:
 		if (tok == PDF_TENDOBJ)
 			;
 	}
-
-	if (dict)
-		fz_dropobj(dict);
 
 	return fz_okay;
 }

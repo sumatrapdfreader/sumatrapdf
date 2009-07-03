@@ -67,7 +67,7 @@ pdf_closexref(pdf_xref *xref)
 	if (xref->dests)
 		fz_dropobj(xref->dests);
 	if (xref->crypt)
-		pdf_dropcrypt(xref->crypt);
+		pdf_freecrypt(xref->crypt);
 
 	fz_free(xref);
 }

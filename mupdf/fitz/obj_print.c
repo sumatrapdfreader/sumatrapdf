@@ -204,11 +204,11 @@ static void fmtdict(struct fmt *fmt, fz_obj *obj)
 			fmtindent(fmt);
 			fmtobj(fmt, key);
 			fmtputc(fmt, ' ');
-			if (fz_isarray(val))
+			if (!fz_isindirect(val) && fz_isarray(val))
 				fmt->indent ++;
 			fmtobj(fmt, val);
 			fmtputc(fmt, '\n');
-			if (fz_isarray(val))
+			if (!fz_isindirect(val) && fz_isarray(val))
 				fmt->indent --;
 		}
 		fmt->indent --;

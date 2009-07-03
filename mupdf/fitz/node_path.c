@@ -172,9 +172,6 @@ fz_endpath(fz_pathnode *path, fz_pathkind paint, fz_stroke *stroke, fz_dash *das
 		path->miterlimit = stroke->miterlimit;
 	}
 
-	if (path->linewidth < 0.01)
-		path->linewidth = 0.01;
-
 	return fz_okay;
 }
 

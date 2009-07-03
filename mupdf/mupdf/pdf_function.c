@@ -1479,7 +1479,6 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 	if (func->m >= MAXM || func->n >= MAXN)
 	{
 		fz_free(func);
-		fz_dropobj(dict);
 		return fz_throw("assert: /Domain or /Range too big");
 	}
 
@@ -1490,7 +1489,6 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropfunction(func);
-			fz_dropobj(dict);
 			return fz_rethrow(error, "cannot load sampled function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
@@ -1500,7 +1498,6 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropfunction(func);
-			fz_dropobj(dict);
 			return fz_rethrow(error, "cannot load exponential function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
@@ -1510,7 +1507,6 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropfunction(func);
-			fz_dropobj(dict);
 			return fz_rethrow(error, "cannot load stitching function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
@@ -1520,18 +1516,14 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropfunction(func);
-			fz_dropobj(dict);
 			return fz_rethrow(error, "cannot load calculator function (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 		break;
 
 	default:
 		fz_free(func);
-		fz_dropobj(dict);
 		return fz_throw("unknown function type (%d %d R)", fz_tonum(ref), fz_togen(ref));
 	}
-
-	fz_dropobj(dict);
 
 	pdf_logrsrc("}\n");
 
@@ -1539,7 +1531,6 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 	if (error)
 	{
 		pdf_dropfunction(func);
-		fz_dropobj(dict);
 		return fz_rethrow(error, "cannot store function resource");
 	}
 
