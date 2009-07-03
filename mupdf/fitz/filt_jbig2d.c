@@ -85,7 +85,7 @@ fz_processjbig2d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 				jbig2_complete_page(d->ctx);
 				d->page = jbig2_page_out(d->ctx);
 				if (!d->page)
-					return fz_throw("fz_processjbig2d: jbig2_page_out()");
+					return fz_throw("jbig2_page_out failed");
 			}
 
 			if (out->wp == out->ep)

@@ -39,6 +39,11 @@ static char sccsid[] = "@(#)getopt.c	4.13 (Berkeley) 2/23/91";
 #include <stdlib.h>
 #include <string.h>
 
+#define opterr fz_opterr
+#define optind fz_optind
+#define optopt fz_optopt
+#define optarg fz_optarg
+
 /*
  * get option letter from argument vector
  */
@@ -50,7 +55,7 @@ char	*optarg;		/* argument associated with option */
 #define	BADCH	(int)'?'
 #define	EMSG	""
 
-int getopt(int nargc, char * const * nargv, const char *ostr)
+int fz_getopt(int nargc, char * const * nargv, const char *ostr)
 {
 	static char *place = EMSG;		/* option letter processing */
 	register char *oli;			/* option letter list index */

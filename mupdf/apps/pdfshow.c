@@ -45,9 +45,13 @@ void openxref(char *filename, char *password)
     /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
     obj = fz_dictgets(xref->trailer, "Root");
     xref->root = fz_resolveindirect(obj);
+    if (xref->root)
+	fz_keepobj(xref->root);
 
     obj = fz_dictgets(xref->trailer, "Info");
     xref->info = fz_resolveindirect(obj);
+    if (xref->info)
+	fz_keepobj(xref->info);
 }
 
 void closexref()
@@ -177,11 +181,11 @@ int main(int argc, char **argv)
     char *password = "";
     int c;
 
-    while ((c = getopt(argc, argv, "d:bx")) != -1)
+    while ((c = fz_getopt(argc, argv, "d:bx")) != -1)
     {
 	switch (c)
 	{
-	    case 'd': password = optarg; break;
+	    case 'd': password = fz_optarg; break;
 	    case 'b': showbinary ++; break;
 	    case 'x': showdecode ++; break;
 	    default:
@@ -190,23 +194,23 @@ int main(int argc, char **argv)
 	}
     }
 
-    if (optind == argc)
+    if (fz_optind == argc)
 	showusage();
 
-    openxref(argv[optind++], password);
+    openxref(argv[fz_optind++], password);
 
-    if (optind == argc)
+    if (fz_optind == argc)
 	showtrailer();
 
-    while (optind < argc)
+    while (fz_optind < argc)
     {
-	if (!strcmp(argv[optind], "trailer"))
+	if (!strcmp(argv[fz_optind], "trailer"))
 	    showtrailer();
-	else if (!strcmp(argv[optind], "xref"))
+	else if (!strcmp(argv[fz_optind], "xref"))
 	    showxref();
 	else
-	    showobject(atoi(argv[optind]), 0);
-	optind++;
+	    showobject(atoi(argv[fz_optind]), 0);
+	fz_optind++;
     }
 
     closexref();

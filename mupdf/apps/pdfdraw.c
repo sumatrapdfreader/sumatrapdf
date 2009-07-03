@@ -71,9 +71,13 @@ void openxref(char *filename, char *password)
     /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
     obj = fz_dictgets(xref->trailer, "Root");
     xref->root = fz_resolveindirect(obj);
+    if (xref->root)
+	fz_keepobj(xref->root);
 
     obj = fz_dictgets(xref->trailer, "Info");
     xref->info = fz_resolveindirect(obj);
+    if (xref->info)
+	fz_keepobj(xref->info);
 }
 
 /*
@@ -423,14 +427,14 @@ int main(int argc, char **argv)
     int c;
     enum { NO_FILE_OPENED, NO_PAGES_DRAWN, DREW_PAGES } state;
 
-    while ((c = getopt(argc, argv, "b:d:o:r:txm")) != -1)
+    while ((c = fz_getopt(argc, argv, "b:d:o:r:txm")) != -1)
     {
 	switch (c)
 	{
-	    case 'b': drawbands = atoi(optarg); break;
-	    case 'd': password = optarg; break;
-	    case 'o': drawpattern = optarg; break;
-	    case 'r': drawzoom = atof(optarg) / 72.0; break;
+	    case 'b': drawbands = atoi(fz_optarg); break;
+	    case 'd': password = fz_optarg; break;
+	    case 'o': drawpattern = fz_optarg; break;
+	    case 'r': drawzoom = atof(fz_optarg) / 72.0; break;
 	    case 't': drawmode = DRAWTXT; break;
 	    case 'x': drawmode = DRAWXML; break;
 	    case 'm': benchmark = 1; break;
@@ -440,7 +444,7 @@ int main(int argc, char **argv)
 	}
     }
 
-    if (optind == argc)
+    if (fz_optind == argc)
 	drawusage();
 
     error = fz_newrenderer(&drawgc, pdf_devicergb, 0, 1024 * 512);
@@ -448,22 +452,22 @@ int main(int argc, char **argv)
 	die(error);
 
     state = NO_FILE_OPENED;
-    while (optind < argc)
+    while (fz_optind < argc)
     {
-	if (strstr(argv[optind], ".pdf") || strstr(argv[optind], ".PDF"))
+	if (strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF"))
 	{
 	    if (state == NO_PAGES_DRAWN)
 		drawpages("1-");
 
-	    openxref(argv[optind], password);
+	    openxref(argv[fz_optind], password);
 	    state = NO_PAGES_DRAWN;
 	}
 	else
 	{
-	    drawpages(argv[optind]);
+	    drawpages(argv[fz_optind]);
 	    state = DREW_PAGES;
 	}
-	optind++;
+	fz_optind++;
     }
 
     if (state == NO_PAGES_DRAWN)

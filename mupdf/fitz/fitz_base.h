@@ -43,11 +43,9 @@ extern int fz_strlcat(char *dst, const char *src, int n);
 #undef strlcat
 #define strlcat fz_strlcat
 
-#ifdef NEED_GETOPT
-extern int getopt(int nargc, char * const * nargv, const char *ostr);
-extern int opterr, optind, optopt;
-extern char *optarg;
-#endif
+extern int fz_getopt(int nargc, char * const * nargv, const char *ostr);
+extern int fz_opterr, fz_optind, fz_optopt;
+extern char *fz_optarg;
 
 #ifdef _MSC_VER /* stupid stone-age compiler */
 

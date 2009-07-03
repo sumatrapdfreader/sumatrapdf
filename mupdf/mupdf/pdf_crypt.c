@@ -641,6 +641,9 @@ pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gen)
 	unsigned char *s;
 	int i, n;
 
+	if (fz_isindirect(obj))
+		return;
+
 	if (fz_isstring(obj))
 	{
 		s = (unsigned char *) fz_tostrbuf(obj);

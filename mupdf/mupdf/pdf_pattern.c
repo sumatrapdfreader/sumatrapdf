@@ -73,8 +73,8 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	error = pdf_storeitem(xref->store, PDF_KPATTERN, stmref, pat);
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot store pattern resource");
-		goto cleanupstore;
+		pdf_droppattern(pat);
+		return fz_rethrow(error, "cannot store pattern resource");
 	}
 
 	/*
@@ -103,6 +103,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	error = pdf_newcsi(&csi, pat->ismask);
 	if (error)
 	{
+		fz_dropobj(resources);
 		error = fz_rethrow(error, "cannot create interpreter");
 		goto cleanup;
 	}
@@ -110,25 +111,31 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	error = pdf_openstream(&stm, xref, fz_tonum(stmref), fz_togen(stmref));
 	if (error)
 	{
+		pdf_dropcsi(csi);
+		fz_dropobj(resources);
 		error = fz_rethrow(error, "cannot open pattern stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
-		goto cleanupcsi;
+		goto cleanup;
 	}
 
 	error = pdf_runcsi(csi, xref, resources, stm);
-
-	fz_dropstream(stm);
-
 	if (error)
 	{
+		fz_dropstream(stm);
+		pdf_dropcsi(csi);
+		fz_dropobj(resources);
 		error = fz_rethrow(error, "cannot interpret pattern stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
-		goto cleanupcsi;
+		goto cleanup;
 	}
+
+	/*
+	 *  Move display list to pattern struct
+	 */
 
 	pat->tree = csi->tree;
 	csi->tree = nil;
 
+	fz_dropstream(stm);
 	pdf_dropcsi(csi);
-
 	fz_dropobj(resources);
 
 	pdf_logrsrc("optimize tree\n");
@@ -144,11 +151,8 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	*patp = pat;
 	return fz_okay;
 
-cleanupcsi:
-	pdf_dropcsi(csi);
 cleanup:
 	pdf_removeitem(xref->store, PDF_KPATTERN, stmref);
-cleanupstore:
 	pdf_droppattern(pat);
 	return error; /* already rethrown */
 }

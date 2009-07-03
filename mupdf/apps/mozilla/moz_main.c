@@ -162,13 +162,17 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
      */
 
     obj = fz_dictgets(moz->xref->trailer, "Root");
-    moz->xref->trailer = fz_resolveindirect(obj);
+    moz->xref->root = fz_resolveindirect(obj);
+    if (!moz->xref->root)
+	pdfmoz_error(moz, fz_throw("syntaxerror: missing Root object"));
+    if (moz->xref->root)
+	fz_keepobj(moz->xref->root);
 
     obj = fz_dictgets(moz->xref->trailer, "Info");
     moz->xref->info = fz_resolveindirect(obj);
+    if (moz->xref->info)
+	fz_keepobj(moz->xref->info);
 
-    if (!moz->xref->trailer)
-	pdfmoz_error(moz, fz_throw("syntaxerror: missing Root object"));
 
     error = pdf_loadnametrees(moz->xref);
     if (error)
@@ -399,8 +403,8 @@ static void drawimage(HDC hdc, pdfmoz_t *moz, fz_pixmap *image, int yofs)
 
     for (y = 0; y < image->h; y++)
     {
-	char *p = bmpdata + y * bmpstride;
-	char *s = image->samples + y * image->w * 4;
+	unsigned char *p = bmpdata + y * bmpstride;
+	unsigned char *s = image->samples + y * image->w * 4;
 	for (x = 0; x < image->w; x++)
 	{
 	    p[x * 3 + 0] = s[x * 4 + 3];

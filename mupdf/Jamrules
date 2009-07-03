@@ -53,7 +53,6 @@ if $(OS) = LINUX
 
     BUILD_X11APP = true ;
 
-    #CCFLAGS = -Wall -std=gnu99 -I/usr/X11R6/include -I/usr/include/freetype2 ;
     CCFLAGS = -Wall -std=gnu99 -I/usr/include/freetype2 ;
     LINKFLAGS = -L/usr/X11R6/lib ;
     LINKLIBS = -lfreetype -ljpeg -lz -lm ;
@@ -73,7 +72,7 @@ if $(OS) = MACOSX
 
     BUILD_X11APP = true ;
 
-    CCFLAGS = -Wall -std=gnu99 -I/usr/X11R6/include ;
+    CCFLAGS = -Wall -std=gnu99 ;
     LINKFLAGS = -L/usr/X11R6/lib ;
     LINKLIBS = -lfreetype -ljpeg -lz -lm ;
     APPLINKLIBS = -lX11 -lXext ;

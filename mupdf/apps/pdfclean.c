@@ -62,9 +62,13 @@ void openxref(char *filename, char *password)
     /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
     obj = fz_dictgets(xref->trailer, "Root");
     xref->root = fz_resolveindirect(obj);
+    if (xref->root)
+	fz_keepobj(xref->root);
 
     obj = fz_dictgets(xref->trailer, "Info");
     xref->info = fz_resolveindirect(obj);
+    if (xref->info)
+	fz_keepobj(xref->info);
 }
 
 /*
@@ -353,39 +357,39 @@ int main(int argc, char **argv)
     int lastfree;
 
 
-    while ((c = getopt(argc, argv, "d:egn:o:p:u:x")) != -1)
+    while ((c = fz_getopt(argc, argv, "d:egn:o:p:u:x")) != -1)
     {
 	switch (c)
 	{
 	    case 'p':
 		/* see TABLE 3.15 User access permissions */
 		perms = 0xfffff0c0;
-		if (strchr(optarg, 'p')) /* print */
+		if (strchr(fz_optarg, 'p')) /* print */
 		    perms |= (1 << 2) | (1 << 11);
-		if (strchr(optarg, 'm')) /* modify */
+		if (strchr(fz_optarg, 'm')) /* modify */
 		    perms |= (1 << 3) | (1 << 10);
-		if (strchr(optarg, 'c')) /* copy */
+		if (strchr(fz_optarg, 'c')) /* copy */
 		    perms |= (1 << 4) | (1 << 9);
-		if (strchr(optarg, 'a')) /* annotate / forms */
+		if (strchr(fz_optarg, 'a')) /* annotate / forms */
 		    perms |= (1 << 5) | (1 << 8);
 		break;
-	    case 'd': password = optarg; break;
+	    case 'd': password = fz_optarg; break;
 	    case 'e': doencrypt ++; break;
 	    case 'g': dogarbage ++; break;
-	    case 'n': keylen = atoi(optarg); break;
-	    case 'o': ownerpw = optarg; break;
-	    case 'u': userpw = optarg; break;
+	    case 'n': keylen = atoi(fz_optarg); break;
+	    case 'o': ownerpw = fz_optarg; break;
+	    case 'u': userpw = fz_optarg; break;
 	    case 'x': doexpand ++; break;
 	    default: cleanusage(); break;
 	}
     }
 
-    if (argc - optind < 1)
+    if (argc - fz_optind < 1)
 	cleanusage();
 
-    infile = argv[optind++];
-    if (argc - optind > 0)
-	outfile = argv[optind++];
+    infile = argv[fz_optind++];
+    if (argc - fz_optind > 0)
+	outfile = argv[fz_optind++];
 
     openxref(infile, password);
 

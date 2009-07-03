@@ -1,4 +1,4 @@
-/* fontdump.c -- an "xxd -i" workalike */
+/* fontdump.c -- an "xxd -i" workalike for dumping binary fonts as source code */
 
 #include <stdio.h>
 #include <string.h>
@@ -41,7 +41,7 @@ main(int argc, char **argv)
     fo = fopen(argv[1], "wb");
     if (!fo)
     {
-	fprintf(stderr, "fontdump: could not open output file\n");
+	fprintf(stderr, "fontdump: could not open output file '%s'\n", argv[1]);
 	return 1;
     }
 
@@ -50,7 +50,7 @@ main(int argc, char **argv)
 	fi = fopen(argv[i], "rb");
 	if (!fi)
 	{
-	    fprintf(stderr, "fontdump: could not open input file %s\n", argv[i]);
+	    fprintf(stderr, "fontdump: could not open input file '%s'\n", argv[i]);
 	    return 1;
 	}
 

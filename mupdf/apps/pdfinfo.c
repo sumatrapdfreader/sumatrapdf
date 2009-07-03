@@ -96,9 +96,13 @@ void opensrc(char *filename, char *password, int loadpages)
 	/* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
 	obj = fz_dictgets(src->trailer, "Root");
 	src->root = fz_resolveindirect(obj);
+	if (src->root)
+		fz_keepobj(src->root);
 
 	obj = fz_dictgets(src->trailer, "Info");
 	src->info = fz_resolveindirect(obj);
+	if (src->info)
+		fz_keepobj(src->info);
 
 	error = pdf_loadnametrees(src);
 	if (error)
@@ -404,7 +408,6 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		{
 			if (cs)
 				fz_warn("image mask (%d %d R) may not have colorspace", fz_tonum(ref), fz_togen(ref));
-			/* TODO: leaks cs created here */
 			error = fz_newname(&cs, "ImageMask");
 			if (error)
 				return fz_rethrow(error, "cannot create fake image mask colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -455,33 +458,15 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		image[images - 1]->page = page;
 		image[images - 1]->pageref = pageref;
 		image[images - 1]->ref = ref;
-		image[images - 1]->u.image.width = width ? fz_keepobj(width) : nil;
-		image[images - 1]->u.image.height = height ? fz_keepobj(height) : nil;
-		image[images - 1]->u.image.bpc = bpc ? fz_keepobj(bpc) : nil;
-		/* filter doesn't need to be refed */
+		image[images - 1]->u.image.width = width;
+		image[images - 1]->u.image.height = height;
+		image[images - 1]->u.image.bpc = bpc;
 		image[images - 1]->u.image.filter = filter;
-		image[images - 1]->u.image.cs = cs ? fz_keepobj(cs) : nil;
-		image[images - 1]->u.image.altcs = altcs ? fz_keepobj(altcs) : nil;
+		image[images - 1]->u.image.cs = cs;
+		image[images - 1]->u.image.altcs = altcs;
 	}
 
 	return fz_okay;
-}
-
-void dropimage(struct info* image)
-{
-	if (image->u.image.width)
-		fz_dropobj(image->u.image.width);
-	if (image->u.image.height)
-		fz_dropobj(image->u.image.height);
-	if (image->u.image.bpc)
-		fz_dropobj(image->u.image.bpc);
-	if (image->u.image.filter)
-		fz_dropobj(image->u.image.filter);
-	if (image->u.image.cs)
-		fz_dropobj(image->u.image.cs);
-	if (image->u.image.altcs)
-		fz_dropobj(image->u.image.altcs);
-	fz_free(image);
 }
 
 fz_error
@@ -909,9 +894,7 @@ printinfo(char *filename, int show, int page)
 		printf("\n");
 
 		for (i = 0; i < images; i++)
-		{
-			dropimage(image[i]);
-		}
+			fz_free(image[i]);
 		fz_free(image);
 		image = nil;
 		images = 0;
@@ -1103,7 +1086,7 @@ int main(int argc, char **argv)
 	int show = ALL;
 	int c;
 
-	while ((c = getopt(argc, argv, "mfispxd:")) != -1)
+	while ((c = fz_getopt(argc, argv, "mfispxd:")) != -1)
 	{
 		switch (c)
 		{
@@ -1113,20 +1096,20 @@ int main(int argc, char **argv)
 			case 's': if (show == ALL) show = SHADINGS; else show |= SHADINGS; break;
 			case 'p': if (show == ALL) show = PATTERNS; else show |= PATTERNS; break;
 			case 'x': if (show == ALL) show = XOBJS; else show |= XOBJS; break;
-			case 'd': password = optarg; break;
+			case 'd': password = fz_optarg; break;
 			default:
 				infousage();
 				break;
 		}
 	}
 
-	if (optind == argc)
+	if (fz_optind == argc)
 		infousage();
 
 	state = NO_FILE_OPENED;
-	while (optind < argc)
+	while (fz_optind < argc)
 	{
-		if (strstr(argv[optind], ".pdf") || strstr(argv[optind], ".PDF"))
+		if (strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF"))
 		{
 			if (state == NO_INFO_GATHERED)
 			{
@@ -1134,7 +1117,7 @@ int main(int argc, char **argv)
 				showinfo(filename, show, "1-");
 			}
 
-			filename = argv[optind];
+			filename = argv[fz_optind];
 			opensrc(filename, password, 1);
 			gatherglobalinfo();
 			state = NO_INFO_GATHERED;
@@ -1143,11 +1126,11 @@ int main(int argc, char **argv)
 		{
 			if (state == NO_INFO_GATHERED)
 			printglobalinfo(filename);
-			showinfo(filename, show, argv[optind]);
+			showinfo(filename, show, argv[fz_optind]);
 			state = INFO_SHOWN;
 		}
 
-		optind++;
+		fz_optind++;
 	}
 
 	if (state == NO_INFO_GATHERED)

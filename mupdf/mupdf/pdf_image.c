@@ -523,7 +523,7 @@ pdf_loadtile(fz_image *img, fz_pixmap *tile)
 	{
 		fz_pixmap *tmp;
 		int x, y, k, i;
-		int bpcfact = 1<<16;
+		int bpcfact = 1;
 
 		error = fz_newpixmap(&tmp, tile->x, tile->y, tile->w, tile->h, 1);
 		if (error)
