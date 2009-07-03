@@ -2257,8 +2257,7 @@ static bool LoadPdfIntoWindow(
 
         if (win->needrefresh) {
             TCHAR buf[256];
-            // TODO: Translate me
-            HRESULT hr = StringCchPrintf(buf, dimof(buf), _T("(Changes detected - will refresh when file is unlocked) %s"), title);
+            StringCchPrintf(buf, dimof(buf), _TR("[Changes detected; refreshing] %s"), title);
             win_set_text(win->hwndFrame, buf);
         }
         else
@@ -3607,8 +3606,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         win->pdfsync = CreateSynchronizer(win->watcher.filepath());
         if (!win->pdfsync) {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
-            // TODO: Translate this string
-            WindowInfo_ShowMessage_Asynch(win, _T("Synchronization file cannot be opened"), true);
+            WindowInfo_ShowMessage_Asynch(win, _TR("Synchronization file cannot be opened"), true);
             return;
         }
     }
@@ -3627,8 +3625,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
         DBG_OUT("cannot sync from pdf to source!\n");
-        // TODO: Tranlate this string
-        WindowInfo_ShowMessage_Asynch(win, _T("No synchronization info at this position."), true);
+        WindowInfo_ShowMessage_Asynch(win, _TR("No synchronization info at this position"), true);
         return;
     }
 
@@ -4095,7 +4092,7 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
     if (supportsStretchDib)
         return true;
 
-    MessageBox(hwndForMsgBox, _T("This printer doesn't support StretchDIBits function"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+    MessageBox(hwndForMsgBox, _T("This printer doesn't support the StretchDIBits function"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
     return false;
 }
 
@@ -4249,7 +4246,7 @@ static void OnMenuPrint(WindowInfo *win)
                error code, which we could look at here if we wanted.
                for now just warn the user that printing has stopped
                becasue of an error */
-            MessageBox(win->hwndFrame, _T("Cannot initialise printer"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         }
     }
 
@@ -4999,25 +4996,23 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
         }
     }
 
-    // TODO: Translate these strings
     TCHAR buf[MAX_PATH];
-    TCHAR *txt = &buf[0];
     if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        txt = _T("Synchronization file cannot be opened");
+        _sntprintf(buf, dimof(buf), _TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-        _sntprintf(buf, dimof(buf), _T("Page number %u inexistant"), page);
+        _sntprintf(buf, dimof(buf), _TR("Page number %u inexistant"), page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        txt = _T("No synchronization found at this location");
+        _sntprintf(buf, dimof(buf), _TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        _sntprintf(buf, dimof(buf), _T("Unknown source file (%s)"), srcfilename);
+        _sntprintf(buf, dimof(buf), _TR("Unknown source file (%s)"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        _sntprintf(buf, dimof(buf), _T("Source file %s has no synchronization point"), srcfilename);
+        _sntprintf(buf, dimof(buf), _TR("Source file %s has no synchronization point"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        _sntprintf(buf, dimof(buf), _T("No result found around line %u in file %s"), line, srcfilename);
+        _sntprintf(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        _sntprintf(buf, dimof(buf), _T("No result found around line %u in file %s"), line, srcfilename);
+        _sntprintf(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
 
-    WindowInfo_ShowMessage_Asynch(win, txt, true);
+    WindowInfo_ShowMessage_Asynch(win, buf, true);
 }
 
 static void WindowInfo_ShowFindStatus(WindowInfo *win)
@@ -5798,7 +5793,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND spliter = CreateWindow(_T("Spliter"), _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
+    HWND spliter = CreateWindow(_T("Splitter"), _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
     win->hwndSpliter = spliter;
@@ -6684,9 +6679,8 @@ static void PrintFile(WindowInfo *win, const char *printerName)
     LPDEVMODEA  devMode = NULL;
     DWORD       structSize, returnCode;
 
-    // TODO: Translate all printing related MessageBoxes
     if (!win->dm->pdfEngine->printingAllowed()) {
-        MessageBox(win->hwndFrame, _T("Cannot print this file"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
 
@@ -6701,7 +6695,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
     char *port = strtok((char *) NULL, (const char *) ",");
 
     if (!driver || !port) {
-        MessageBox(win->hwndFrame, _T("Printer with given name doesn't exist"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
     
@@ -6731,7 +6725,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
-        MessageBox(win->hwndFrame, _T("Could not obtain Printer properties"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _T("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
 
@@ -6760,7 +6754,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 
     hdcPrint = CreateDCA(driver, printerName, port, devMode); 
     if (!hdcPrint) {
-        MessageBox(win->hwndFrame, _T("Couldn't initialize printer"), _T("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
     PRINTPAGERANGE pr;

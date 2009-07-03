@@ -3753,3 +3753,30 @@ de:&Groß-/Kleinschreibung beachten
 -
 Hint: Use the F3 key for finding again
 de:Tipp: F3 Taste verwenden, um weiterzusuchen
+-
+Couldn't initialize printer
+de:Der Drucker konnte nicht initialisiert werden
+-
+No synchronization info at this position
+de:Keine Synchronisations-Informationen an diesem Ort
+-
+Synchronization file cannot be opened
+de:Die Synchronisations-Datei kann nicht geöffnet werden
+-
+Page number %u inexistant
+de:Es gibt keine Seite %u
+-
+No result found around line %u in file %s
+de:Kein Resultat gefunden nahe der Zeile %u in der Datei %s
+-
+Source file %s has no synchronization point
+de:%s hat keinen Synchronisations-Punkt
+-
+[Changes detected; refreshing] %s
+de:[Datei wurde geändert; aktualisiere...] %s
+-
+Unknown source file (%s)
+de:Unbekannte Datei (%s)
+-
+Cannot print this file
+de:Diese Datei darf nicht gedruckt werden
