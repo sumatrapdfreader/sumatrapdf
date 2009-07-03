@@ -10,10 +10,10 @@ Checkout sumatra sources at the same level as mupdf sources:
 
   svn checkout http://sumatrapdf.googlecode.com/svn/trunk/ sumatrapdf
 
-If you have Visual Studio 2005, run buildwin.bat
+If you have Visual Studio 2008, run buildwin.bat
 
-If you have Visual Studio 2008, edit buildwin.bat to setup env for
-VS 2008 and then run it.
+If you have Visual Studio 2005, edit buildwin.bat to setup env for
+VS 2005 and then run it.
 
 You end up with several executables:
  * pdfbench
@@ -21,6 +21,7 @@ You end up with several executables:
  * pdfdraw
  * pdfinfo
  * pdfshow
+ * pdfextract
 in obj-rel-win and obj-dbg-win directories. Those are sample programs
 using mpudf.
 
@@ -29,17 +30,17 @@ Longer version.
 
 Mupdf depends on several libraries that are not easily available on Windows:
  * freetype
- * libjpeg
- * zlib
- * jasper
- * jbig2dec
+ * libjpeg for jpeg image format decoding
+ * zlib for zlib decompression
+ * openjpeg or jasper for jpeg2000 image format decoding 
+ * jbig2dec for jbig2 image format decoding
 
 They're part of SumatraPDF sources so you need to checkout Sumatra sources
 as described above.
 
 Build is done via native msvc makefile (makefile.msvc) and can be done from
 command line as e.g.:
-  nmake -f makefile.msvc EXTLIBSDIR=..\sumatrapdf\ CFG=rel
+  nmake -f makefile.msvc EXTLIBSDIR=..\ CFG=rel
 
 But first you need setup environment for VS cmd-line builds, which is what
 buildwin.bat does by calling apropriate scripts.
