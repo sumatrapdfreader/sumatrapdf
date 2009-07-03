@@ -4740,6 +4740,43 @@ static void OnMenuGoToPage(WindowInfo *win)
         win->dm->goToPage(newPageNo, 0);
 }
 
+static void OnMenuFind(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return;
+    if (!WindowInfo_PdfLoaded(win))
+        return;
+
+    // Don't show a dialog if we don't have to - use the Toolbar instead
+    if (gGlobalPrefs.m_showToolbar && !win->fullScreen) {
+        win->FindStart();
+        return;
+    }
+
+    const TCHAR * previousFind = win_get_textw(win->hwndFindBox);
+    DWORD state = SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
+    bool matchCase = (state & TBSTATE_CHECKED) != 0;
+    
+    TCHAR * findString = Dialog_Find(win->hwndFrame, previousFind, &matchCase);
+    if (findString) {
+        win_set_text(win->hwndFindBox, findString);
+        bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
+        if (matchCaseChanged) {
+            if (matchCase)
+                state |= TBSTATE_CHECKED;
+            else
+                state &= ~TBSTATE_CHECKED;
+            SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
+            Edit_SetModify(win->hwndFindBox, TRUE);
+            win->dm->SetFindMatchCase(matchCase);
+        }
+        free(findString);
+
+        Find(win->hwndFindBox, win, FIND_FORWARD);
+    }
+    free((void *)previousFind);
+}
+
 #ifdef _TEX_ENHANCEMENT
 static void OnMenuSetInverseSearch(WindowInfo *win)
 {
@@ -5026,11 +5063,9 @@ static void OnMenuFindPrev(WindowInfo *win)
 
 static void OnMenuFindMatchCase(WindowInfo *win)
 {
-    TBBUTTONINFO bi;
-    bi.cbSize = sizeof(bi);
-    bi.dwMask = TBIF_BYINDEX|TBIF_STATE;
-    SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, 10, (LPARAM)&bi);
-    win->dm->SetFindMatchCase((bi.fsState & TBSTATE_CHECKED) != 0);
+    DWORD state = SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
+    win->dm->SetFindMatchCase((state & TBSTATE_CHECKED) != 0);
+    Edit_SetModify(win->hwndFindBox, TRUE);
 }
 
 #define KEY_PRESSED_MASK 0x8000
@@ -5130,7 +5165,7 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('r' == key) {
         WindowInfo_Refresh(win, true);
     } else if ('/' == key) {
-        win->FindStart();
+        OnMenuFind(win);
     }
 }
 
@@ -6214,7 +6249,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_FIND_FIRST:
-                    win->FindStart();
+                    OnMenuFind(win);
                     break;
 
                 case IDM_FIND_NEXT:

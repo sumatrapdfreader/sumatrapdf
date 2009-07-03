@@ -10,8 +10,8 @@
 
 class WindowInfo;
 
-/* For passing data to/from SetInverseSearch dialog */
 int     Dialog_GoToPage(WindowInfo *win);
+TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
 #ifdef _TEX_ENHANCEMENT
 TCHAR *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const TCHAR *cmdline);
 #endif

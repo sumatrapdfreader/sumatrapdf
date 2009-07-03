@@ -13,6 +13,7 @@
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
 #define IDD_DIALOG_NEW_VERSION          135
 #define IDD_DIALOG_SETTINGS             136
+#define IDD_DIALOG_FIND                 137
 
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
@@ -153,6 +154,8 @@
 #define IDC_GLOBAL_PREFS_ONLY           1020
 #define IDC_SECTION_ADVANCED            1021
 #define IDC_AUTO_UPDATE_CHECKS          1022
+#define IDC_FIND_EDIT                   1030
+#define IDC_MATCH_CASE                  1031
 
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001

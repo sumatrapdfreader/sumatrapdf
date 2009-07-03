@@ -3741,3 +3741,12 @@ gr:Όλα τα αρχεία
 &Password:
 de:&Passwort:
 gr:Κωδικός:
+-
+&Find what:
+de:&Suchen nach:
+-
+Find
+de:Suchen
+-
+&Match case
+de:&Groß-/Kleinschreibung beachten

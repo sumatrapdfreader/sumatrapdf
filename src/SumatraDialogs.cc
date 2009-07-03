@@ -276,6 +276,74 @@ int Dialog_GoToPage(WindowInfo *win)
     return INVALID_PAGE_NO;
 }
 
+/* For passing data to/from Find dialog */
+typedef struct {
+    TCHAR * searchTerm;
+    bool    matchCase;
+} Dialog_Find_Data;
+
+static BOOL CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    Dialog_Find_Data * data;
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        data = (Dialog_Find_Data*)lParam;
+        assert(data);
+        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+
+        win_set_text(hDlg, _TR("Find"));
+        SetDlgItemText(hDlg, IDC_STATIC, _TR("&Find what:"));
+        SetDlgItemText(hDlg, IDC_MATCH_CASE, _TR("&Match case"));
+        SetDlgItemText(hDlg, IDOK, _TR("Find"));
+        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+        if (data->searchTerm)
+            SetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
+        CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
+        win_edit_select_all(GetDlgItem(hDlg, IDC_FIND_EDIT));
+
+        CenterDialog(hDlg);
+        SetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
+        return FALSE;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            assert(data);
+            data->searchTerm = win_get_textw(GetDlgItem(hDlg, IDC_FIND_EDIT));
+            data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
+            EndDialog(hDlg, DIALOG_OK_PRESSED);
+            return TRUE;
+
+        case IDCANCEL:
+            EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+/* Shows a 'Find' dialog and returns the new search term entered by the user
+   or NULL if the search was canceled. previousSearch is the search term to
+   be displayed as default. */
+TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
+{
+    Dialog_Find_Data data;
+    data.searchTerm = (TCHAR *)previousSearch;
+    data.matchCase = matchCase ? *matchCase : false;
+
+    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_FIND), hwnd, Dialog_Find_Proc, (LPARAM)&data);
+    if (dialogResult != DIALOG_OK_PRESSED)
+        return NULL;
+
+    if (matchCase)
+        *matchCase = data.matchCase;
+    return data.searchTerm;
+}
+
 /* For passing data to/from AssociateWithPdf dialog */
 typedef struct {
     BOOL    dontAskAgain;
