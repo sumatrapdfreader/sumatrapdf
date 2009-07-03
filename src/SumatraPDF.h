@@ -171,7 +171,7 @@ public:
     HBITMAP         bmpDoubleBuffer;
 
     PdfLink *       linkOnLastButtonDown;
-    const char *    url;
+    const TCHAR *   url;
 
     MouseAction     mouseAction;
 

@@ -123,7 +123,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 #define APP_SUB_DIR             _T("SumatraPDF")
-#define APP_NAME_STR            "SumatraPDF"
+#define APP_NAME_STR            _T("SumatraPDF")
 
 #define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
 
@@ -1961,7 +1961,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     }
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-        win_set_text(win->hwndFrame, _T(APP_NAME_STR));
+        win_set_text(win->hwndFrame, APP_NAME_STR);
     }
 }
 
@@ -2384,14 +2384,14 @@ exit:
     return win;
 }
 
-static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
+static HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 {
     HFONT       font_dc;
     HFONT       font;
-    LOGFONTA    lf = {0};
+    LOGFONT     lf = {0};
 
     font_dc = (HFONT)GetStockObject(SYSTEM_FONT);
-    if (!GetObjectA(font_dc, sizeof(LOGFONT), &lf))
+    if (!GetObject(font_dc, sizeof(LOGFONT), &lf))
         return NULL;
 
     lf.lfHeight = (LONG)-fontSize;
@@ -2405,9 +2405,9 @@ static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
     lf.lfQuality = DEFAULT_QUALITY;
     //lf.lfQuality = CLEARTYPE_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    strcpy_s(lf.lfFaceName, LF_FACESIZE, fontName);
+    _tcscpy_s(lf.lfFaceName, LF_FACESIZE, fontName);
     lf.lfWeight = FW_DONTCARE;
-    font = CreateFontIndirectA(&lf);
+    font = CreateFontIndirect(&lf);
     return font;
 }
 
@@ -2578,7 +2578,7 @@ static bool DoAssociateExeWithPdfExtension(bool associateGlobally)
     if (associateGlobally)
         hkeyToUse = HKEY_LOCAL_MACHINE;
 
-    success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\.pdf"), NULL, _T(APP_NAME_STR));
+    success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\.pdf"), NULL, APP_NAME_STR);
     if (!success) {
         // At least register for the user if we can't do so for the whole machine
         if (associateGlobally)
@@ -2587,12 +2587,12 @@ static bool DoAssociateExeWithPdfExtension(bool associateGlobally)
     }
 
     GetModuleFileName(NULL, exePath, dimof(exePath));
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR), NULL, (TCHAR *)_TR("PDF Document"));
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR, NULL, (TCHAR *)_TR("PDF Document"));
     _sntprintf(tmp, dimof(tmp), _T("%s,1"), exePath);
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\DefaultIcon"), NULL, tmp);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR _T("\\DefaultIcon"), NULL, tmp);
     _sntprintf(tmp, dimof(tmp), _T("\"%s\" \"%%1\""), exePath);
-    success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell\\open\\command"), NULL, tmp);
-    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") _T(APP_NAME_STR) _T("\\shell"), NULL, _T("open"));
+    success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, tmp);
+    WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
     return success;
@@ -3081,7 +3081,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         if (!entry) {
             /* TODO: assert is queued for rendering ? */
-            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, "Tahoma", 14);
+            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("Tahoma"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             bounds.left = xDest;
             bounds.top = yDest;
@@ -3239,36 +3239,36 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 #define ABOUT_BORDER_COL            COL_BLACK
 
 #ifndef SUMATRA_TXT
-#define SUMATRA_TXT             "Sumatra PDF"
+#define SUMATRA_TXT             _T("Sumatra PDF")
 #endif
-#define SUMATRA_TXT_FONT        "Arial Black"
+#define SUMATRA_TXT_FONT        _T("Arial Black")
 #define SUMATRA_TXT_FONT_SIZE   24
 #define TXTFY(val) #val
 
 #ifdef SVN_PRE_RELEASE_VER
- #define BETA_TXT                "Pre-Release"
+ #define BETA_TXT                _T("Pre-Release")
 #else
  #ifdef DEBUG
- #define BETA_TXT                "Beta v" CURR_VERSION " (dbg)"
+ #define BETA_TXT                _T("Beta v") _T(CURR_VERSION) _T(" (dbg)")
  #else
- #define BETA_TXT                "Beta v" CURR_VERSION
+ #define BETA_TXT                _T("Beta v") _T(CURR_VERSION)
  #endif
 #endif
 
-#define BETA_TXT_FONT           "Arial Black"
+#define BETA_TXT_FONT           _T("Arial Black")
 #define BETA_TXT_FONT_SIZE      12
-#define LEFT_TXT_FONT           "Arial"
+#define LEFT_TXT_FONT           _T("Arial")
 #define LEFT_TXT_FONT_SIZE      12
-#define RIGHT_TXT_FONT          "Arial Black"
+#define RIGHT_TXT_FONT          _T("Arial Black")
 #define RIGHT_TXT_FONT_SIZE     12
 
 #define ABOUT_TXT_DY            6
 
 typedef struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const char *    leftTxt;
-    const char *    rightTxt;
-    const char *    url;
+    const TCHAR *   leftTxt;
+    const TCHAR *   rightTxt;
+    const TCHAR *   url;
 
     /* data calculated by the layout */
     int             leftTxtPosX;
@@ -3284,38 +3284,38 @@ typedef struct AboutLayoutInfoEl {
 
 AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #ifdef _TEX_ENHANCEMENT
-    { "note", "TeX build", "http://william.famille-blum.org/software/sumatra/index.html",
+    { _T("note"), _T("TeX build"), _T("http://william.famille-blum.org/software/sumatra/index.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif 
 #ifdef SVN_PRE_RELEASE_VER
-    { "a note", "Pre-release version, for testing only!", NULL,
+    { _T("a note"), _T("Pre-release version, for testing only!"), NULL,
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif
-    { "programming", "Krzysztof Kowalczyk", "http://blog.kowalczyk.info",
+    { _T("programming"), _T("Krzysztof Kowalczyk"), _T("http://blog.kowalczyk.info"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "pdf rendering", "MuPDF", "http://ccxvii.net/fitz/",
+    { _T("pdf rendering"), _T("MuPDF"), _T("http://ccxvii.net/fitz/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "website", "http://blog.kowalczyk.info/software/sumatrapdf", "http://blog.kowalczyk.info/software/sumatrapdf",
+    { _T("website"), _T("http://blog.kowalczyk.info/software/sumatrapdf"), _T("http://blog.kowalczyk.info/software/sumatrapdf"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "forums", "http://blog.kowalczyk.info/forum_sumatra", "http://blog.kowalczyk.info/forum_sumatra",
+    { _T("forums"), _T("http://blog.kowalczyk.info/forum_sumatra"), _T("http://blog.kowalczyk.info/forum_sumatra"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "program icon", "Zenon", "http://www.flashvidz.tk/",
+    { _T("program icon"), _T("Zenon"), _T("http://www.flashvidz.tk/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "toolbar icons", "Mark James", "http://www.famfamfam.com/lab/icons/silk/",
+    { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { "translations", "The Translators", "http://blog.kowalczyk.info/software/sumatrapdf/translators.html",
+    { _T("translations"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
 #ifdef _TEX_ENHANCEMENT
-    { "TeX enhancements", "William Blum", "http://william.famille-blum.org/",
+    { _T("TeX enhancements"), _T("William Blum"), _T("http://william.famille-blum.org/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
-    { "SyncTeX", "Jérome Laurens", "http://itexmac.sourceforge.net/SyncTeX.html",
+    { _T("SyncTeX"), _T("Jérome Laurens"), _T("http://itexmac.sourceforge.net/SyncTeX.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif 
 
@@ -3323,7 +3323,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
-static const char *AboutGetLink(WindowInfo *win, int x, int y)
+static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
 {
     for (int i = 0; gAboutLayoutInfo[i].leftTxt; i++) {
         if ((x < gAboutLayoutInfo[i].rightTxtPosX) ||
@@ -3374,8 +3374,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     SetBkMode(hdc, TRANSPARENT);
 
     /* Layout stuff */
-    const char *txt = SUMATRA_TXT;
-    GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
+    const TCHAR *txt = SUMATRA_TXT;
+    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
     sumatraPdfTxtDx = txtSize.cx;
     sumatraPdfTxtDy = txtSize.cy;
 
@@ -3386,7 +3386,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     leftDy = 0;
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
         txt = gAboutLayoutInfo[i].leftTxt;
-        GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
         gAboutLayoutInfo[i].leftTxtDx = (int)txtSize.cx;
         gAboutLayoutInfo[i].leftTxtDy = (int)txtSize.cy;
         if (0 == i)
@@ -3402,7 +3402,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     rightDy = 0;
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
         txt = gAboutLayoutInfo[i].rightTxt;
-        GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
         gAboutLayoutInfo[i].rightTxtDx = (int)txtSize.cx;
         gAboutLayoutInfo[i].rightTxtDy = (int)txtSize.cy;
         if (0 == i)
@@ -3446,27 +3446,27 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     x = offX + (totalDx - sumatraPdfTxtDx) / 2;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = SUMATRA_TXT;
-    TextOutA(hdc, x, y, txt, strlen(txt));
+    TextOut(hdc, x, y, txt, lstrlen(txt));
 
     (HFONT)SelectObject(hdc, fontBetaTxt);
     x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
     txt = BETA_TXT;
-    TextOutA(hdc, x, y, txt, strlen(txt));
+    TextOut(hdc, x, y, txt, lstrlen(txt));
 
 #ifdef BUILD_RM_VERSION
-    txt = "Adapted by RM";
-    TextOutA(hdc, x, y + 16, txt, strlen(txt));
+    txt = _T("Adapted by RM");
+    TextOut(hdc, x, y + 16, txt, lstrlen(txt));
 #endif
 
 #ifdef SVN_PRE_RELEASE_VER
-    GetTextExtentPoint32A(hdc, txt, strlen(txt), &txtSize);
+    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
     y += (int)txtSize.cy + 2;
 
-    char buf[128];
-    _snprintf(buf, dimof(buf), "v%s svn %d", CURR_VERSION, SVN_PRE_RELEASE_VER);
+    TCHAR buf[128];
+    _sntprintf(buf, dimof(buf), _T("v%s svn %d"), _T(CURR_VERSION), _T(SVN_PRE_RELEASE_VER));
     txt = &(buf[0]);
-    TextOutA(hdc, x, y, txt, strlen(txt));
+    TextOut(hdc, x, y, txt, lstrlen(txt));
 #endif
     SetTextColor(hdc, ABOUT_BORDER_COL);
 
@@ -3486,7 +3486,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         y = currY + fontDyDiff + offY;
         gAboutLayoutInfo[i].leftTxtPosX = x;
         gAboutLayoutInfo[i].leftTxtPosY = y;
-        TextOutA(hdc, x, y, txt, strlen(txt));
+        TextOut(hdc, x, y, txt, lstrlen(txt));
         currY += rightDy + ABOUT_TXT_DY;
     }
 
@@ -3499,7 +3499,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         y = currY + offY;
         gAboutLayoutInfo[i].rightTxtPosX = x;
         gAboutLayoutInfo[i].rightTxtPosY = y;
-        TextOutA(hdc, x, y, txt, strlen(txt));
+        TextOut(hdc, x, y, txt, lstrlen(txt));
         currY += rightDy + ABOUT_TXT_DY;
     }
 
@@ -3742,7 +3742,7 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
 static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 {
     PdfLink *       link;
-    const char *    url;
+    const TCHAR *   url;
     int             dragDx, dragDy;
 
     assert(win);
@@ -3860,12 +3860,9 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
     if (!win) return;
 
     if (WS_ABOUT == win->state) {
-        const char* url = AboutGetLink(win, x, y);
-        if (url == win->url) {
-            TCHAR * url_t = multibyte_to_wstr(url, CP_ACP);
-            LaunchBrowser(url_t);
-            free(url_t);
-        }
+        const TCHAR * url = AboutGetLink(win, x, y);
+        if (url == win->url)
+            LaunchBrowser(url);
         win->url = NULL;
         return;
     }
@@ -3898,6 +3895,7 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y)
     }
 }
 
+#if 0
 #define ABOUT_ANIM_TIMER_ID 15
 
 static void AnimState_AnimStop(AnimState *state)
@@ -3922,7 +3920,7 @@ static void AnimState_AnimStart(AnimState *state, HWND hwnd, UINT freqInMs)
     AnimState_NextFrame(state);
 }
 
-#define ANIM_FONT_NAME "Georgia"
+#define ANIM_FONT_NAME _T("Georgia")
 #define ANIM_FONT_SIZE_START 20
 #define SCROLL_SPEED 3
 
@@ -3982,6 +3980,7 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         SelectObject(hdc, origFont);
     Win32_Font_Delete(fontArial24);
 }
+#endif
 
 static void WindowInfo_DoubleBuffer_Resize_IfNeeded(WindowInfo *win)
 {
@@ -4011,7 +4010,7 @@ static void OnPaint(WindowInfo *win)
         DrawAbout(win->hwndCanvas, win->hdcToDraw, &ps);
         WindowInfo_DoubleBuffer_Show(win, hdc);
     } else if (WS_ERROR_LOADING_PDF == win->state) {
-        HFONT fontRightTxt = Win32_Font_GetSimple(hdc, "Tahoma", 14);
+        HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("Tahoma"), 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         FillRect(hdc, &ps.rcPaint, gBrushBg);
         DrawText(hdc, _TR("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
