@@ -83,7 +83,7 @@ JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 
 # fitz flags
 FITZ_CFLAGS = $(CFLAGS) /TC \
-	/D "NEED_MATH" /D "NEED_GETOPT" \
+	/D "NEED_MATH" \
 	/D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
 !if "$(JPEG2)"=="openjpeg"

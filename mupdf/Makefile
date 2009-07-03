@@ -193,7 +193,7 @@ FITZ_SRC = \
 	filt_flate.c filt_lzwd.c filt_lzwe.c filt_null.c filt_pipeline.c \
 	filt_predict.c filt_rld.c filt_rle.c obj_array.c obj_dict.c \
 	obj_parse.c obj_print.c obj_simple.c stm_buffer.c stm_filter.c \
-	stm_misc.c stm_open.c stm_read.c filt_dctd.c filt_dcte.c
+	stm_misc.c stm_open.c stm_read.c filt_dctd.c filt_dcte.c util_getopt.c
 
 ifneq ($(JASPER_DIR),)
 FITZ_SRC += filt_jpxd_jas.c
@@ -205,17 +205,6 @@ endif
 
 ifneq ($(JBIG2_DIR),)
 FITZ_SRC += filt_jbig2d.c
-endif
-
-ifeq ($(HOST),$(HOST_LINUX))
-FITZ_SRC += \
-	util_getopt.c
-
-CFLAGS += -DNEED_STRLCPY
-endif
-
-ifeq ($(HOST),$(HOST_CYGWIN))
-FITZ_SRC += util_getopt.c
 endif
 
 MUPDF_SRC = \
