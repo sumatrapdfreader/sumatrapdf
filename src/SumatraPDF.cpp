@@ -4628,14 +4628,19 @@ static void OnMenuChangeLanguage(WindowInfo *win)
         OnMenuLanguage(newLangId);
 }
 
-static void OnMenuViewShowHideToolbar()
+static void OnMenuViewShowHideToolbar(WindowInfo *win)
 {
     if (gGlobalPrefs.m_showToolbar)
         gGlobalPrefs.m_showToolbar = FALSE;
     else
         gGlobalPrefs.m_showToolbar = TRUE;
 
-    WindowInfo* win = gWindowList;
+    // Move the focus out of the toolbar
+    // TODO: do this for all windows
+    if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+        SetFocus(win->hwndFrame);
+
+    win = gWindowList;
     while (win) {
         if (gGlobalPrefs.m_showToolbar)
             ShowWindow(win->hwndReBar, SW_SHOW);
@@ -4839,6 +4844,8 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
     SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+    // Make sure that no toolbar/sidebar keeps the focus
+    SetFocus(win->hwndFrame);
 }
 
 void WindowInfo_ExitFullscreen(WindowInfo *win)
@@ -6191,7 +6198,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_VIEW_SHOW_HIDE_TOOLBAR:
-                    OnMenuViewShowHideToolbar();
+                    OnMenuViewShowHideToolbar(win);
                     break;
 
                 case IDM_CHANGE_LANGUAGE:
