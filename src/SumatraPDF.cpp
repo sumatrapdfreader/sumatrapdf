@@ -3895,7 +3895,6 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y)
     }
 }
 
-#if 0
 #define ABOUT_ANIM_TIMER_ID 15
 
 static void AnimState_AnimStop(AnimState *state)
@@ -3980,7 +3979,6 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         SelectObject(hdc, origFont);
     Win32_Font_Delete(fontArial24);
 }
-#endif
 
 static void WindowInfo_DoubleBuffer_Resize_IfNeeded(WindowInfo *win)
 {
