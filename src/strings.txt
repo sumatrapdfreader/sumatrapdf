@@ -3750,3 +3750,6 @@ de:Suchen
 -
 &Match case
 de:&Groß-/Kleinschreibung beachten
+-
+Hint: Use the F3 key for finding again
+de:Tipp: F3 Taste verwenden, um weiterzusuchen

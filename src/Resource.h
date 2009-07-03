@@ -156,6 +156,7 @@
 #define IDC_AUTO_UPDATE_CHECKS          1022
 #define IDC_FIND_EDIT                   1030
 #define IDC_MATCH_CASE                  1031
+#define IDC_FIND_NEXT_HINT              1032
 
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001

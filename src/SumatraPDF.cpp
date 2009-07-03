@@ -4760,6 +4760,8 @@ static void OnMenuFind(WindowInfo *win)
     TCHAR * findString = Dialog_Find(win->hwndFrame, previousFind, &matchCase);
     if (findString) {
         win_set_text(win->hwndFindBox, findString);
+        Edit_SetModify(win->hwndFindBox, TRUE);
+
         bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
         if (matchCaseChanged) {
             if (matchCase)
@@ -4767,7 +4769,6 @@ static void OnMenuFind(WindowInfo *win)
             else
                 state &= ~TBSTATE_CHECKED;
             SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
-            Edit_SetModify(win->hwndFindBox, TRUE);
             win->dm->SetFindMatchCase(matchCase);
         }
         free(findString);

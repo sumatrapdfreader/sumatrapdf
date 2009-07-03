@@ -296,6 +296,7 @@ static BOOL CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LP
         win_set_text(hDlg, _TR("Find"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Find what:"));
         SetDlgItemText(hDlg, IDC_MATCH_CASE, _TR("&Match case"));
+        SetDlgItemText(hDlg, IDC_FIND_NEXT_HINT, _TR("Hint: Use the F3 key for finding again"));
         SetDlgItemText(hDlg, IDOK, _TR("Find"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->searchTerm)
