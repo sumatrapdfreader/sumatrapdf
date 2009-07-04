@@ -20,6 +20,7 @@
 #define IDM_SAVEAS                      402
 #define IDM_PRINT                       403
 #define IDM_EXIT                        405
+#define IDM_REFRESH                     406
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_CONTINUOUS             412

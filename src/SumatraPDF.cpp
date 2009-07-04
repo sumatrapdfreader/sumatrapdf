@@ -2295,7 +2295,7 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
-    PostMessage(((WindowInfo *)param)->hwndFrame, WM_CHAR, 'r', 0);
+    PostMessage(((WindowInfo *)param)->hwndFrame, WM_COMMAND, IDM_REFRESH, 0);
 }
 
 static void CheckPositionAndSize(DisplayState* ds)
@@ -6166,6 +6166,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_EXIT:
                     OnMenuExit();
+                    break;
+
+                case IDM_REFRESH:
+                    WindowInfo_Refresh(win, true);
                     break;
 
                 case IDT_VIEW_ZOOMIN:

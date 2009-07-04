@@ -64,6 +64,15 @@ BEGIN
     VK_NUMPAD1,     IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
     "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
     VK_NUMPAD2,     IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
+
+    // TODO: Back/Forward should behave differently once we allow to
+    //       navigate back after having clicked an in-document link 
+    VK_BROWSER_BACK,    IDM_GOTO_PREV_PAGE,     VIRTKEY
+    VK_BROWSER_FORWARD, IDM_GOTO_NEXT_PAGE,     VIRTKEY
+    VK_BROWSER_HOME,    IDM_GOTO_FIRST_PAGE,    VIRTKEY
+    VK_BROWSER_REFRESH, IDM_REFRESH,            VIRTKEY
+    VK_BROWSER_FAVORITES, IDM_VIEW_BOOKMARKS,   VIRTKEY
+    VK_BROWSER_SEARCH,  IDM_FIND_FIRST,         VIRTKEY
 END
 
 
