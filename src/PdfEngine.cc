@@ -241,10 +241,6 @@ DecryptedOk:
     if (!obj)
         goto Error;
 
-    obj = fz_dictgets(_xref->trailer, "Info");
-    if (!obj)
-	goto Error;
-
     error = pdf_loadnametrees(_xref);
     if (error)
         goto Error;
