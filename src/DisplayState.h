@@ -52,6 +52,7 @@ enum DisplayMode {
 #define PDFS_OPENED_STR             "PdfsOpened"
 #define LAST_UPDATE_STR             "LastUpdate"
 #define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"
+#define REMEMBER_OPENED_FILES_STR   "RememberOpenedFiles"
 #define GLOBAL_PREFS_ONLY_STR       "GlobalPrefsOnly"
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 

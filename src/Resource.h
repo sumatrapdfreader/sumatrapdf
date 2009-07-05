@@ -3,7 +3,7 @@
 // Used by SumatraPDF.rc
 //
 #define IDI_SUMATRAPDF                  1
-#define IDI_PDFDOC			2
+#define IDI_PDFDOC                      2
 #define IDS_APP_TITLE                   100
 #define IDD_DIALOG_GOTO_PAGE            129
 #define IDD_DIALOG_GET_PASSWORD         130
@@ -14,7 +14,6 @@
 #define IDD_DIALOG_NEW_VERSION          135
 #define IDD_DIALOG_SETTINGS             136
 #define IDD_DIALOG_FIND                 137
-
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
@@ -25,8 +24,6 @@
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_CONTINUOUS             412
 #define IDM_VIEW_CONTINUOUS_FACING      413
-#define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
-#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS_FACING
 #define IDM_VIEW_ROTATE_LEFT            414
 #define IDM_VIEW_ROTATE_RIGHT           415
 #define IDM_VIEW_BOOKMARKS              417
@@ -115,7 +112,6 @@
 #define IDM_LANG_HI                     515
 #define IDM_LANG_NN                     516
 #define IDM_SETTINGS                    517
-
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_SET_INVERSESEARCH           552
@@ -123,10 +119,8 @@
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
 #define IDM_ENABLE_AUTO_UPDATE          556
-
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
-
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
 #define IDC_BUTTON2                     1002
@@ -155,10 +149,10 @@
 #define IDC_SECTION_ADVANCED            1021
 #define IDC_AUTO_UPDATE_CHECKS          1022
 #define IDC_SET_DEFAULT_READER          1023
+#define IDC_REMEMBER_OPENED_FILES       1025
 #define IDC_FIND_EDIT                   1030
 #define IDC_MATCH_CASE                  1031
 #define IDC_FIND_NEXT_HINT              1032
-
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001
 #define IDB_SILK_OPEN                   2002

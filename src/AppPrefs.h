@@ -30,6 +30,9 @@ typedef struct {
 
     BOOL m_enableAutoUpdate;
 
+    /* if true, we remember which files we opened and their settings */
+    BOOL m_rememberOpenedFiles;
+
     int  m_bgColor;
     BOOL m_escToExit;
 

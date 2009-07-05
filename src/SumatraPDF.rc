@@ -31,7 +31,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SUMATRAPDF          ICON                    "SumatraPDF.ico"
-IDI_PDFDOC		ICON			"PdfDoc.ico"
+IDI_PDFDOC              ICON                    "PdfDoc.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -45,18 +45,16 @@ BEGIN
     "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
     "P",            IDM_PRINT,              VIRTKEY, CONTROL
     "Q",            IDM_EXIT,               VIRTKEY, CONTROL
-    // Emulate acrobat: "Ctrl Shift +" is rotate clockwise and "Ctrl Shift -" counter-clockwise
-    VK_ADD,         IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, CONTROL, SHIFT
-    VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, CONTROL, SHIFT
-    VK_SUBTRACT,    IDM_VIEW_ROTATE_LEFT,   VIRTKEY, CONTROL, SHIFT
-    VK_OEM_MINUS,   IDM_VIEW_ROTATE_LEFT,   VIRTKEY, CONTROL, SHIFT
-
-    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY
-    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY
+    VK_ADD,         IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL
+    VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL
+    VK_SUBTRACT,    IDM_VIEW_ROTATE_LEFT,   VIRTKEY, SHIFT, CONTROL
+    VK_OEM_MINUS,   IDM_VIEW_ROTATE_LEFT,   VIRTKEY, SHIFT, CONTROL
+    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY 
+    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY 
     "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, CONTROL
     "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
     "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL
-    VK_F3,          IDM_FIND_NEXT,          VIRTKEY
+    VK_F3,          IDM_FIND_NEXT,          VIRTKEY 
     VK_F3,          IDM_FIND_PREV,          VIRTKEY, SHIFT
     "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
     VK_NUMPAD0,     IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
@@ -64,15 +62,12 @@ BEGIN
     VK_NUMPAD1,     IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
     "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
     VK_NUMPAD2,     IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
-
-    // TODO: Back/Forward should behave differently once we allow to
-    //       navigate back after having clicked an in-document link 
-    VK_BROWSER_BACK,    IDM_GOTO_PREV_PAGE,     VIRTKEY
-    VK_BROWSER_FORWARD, IDM_GOTO_NEXT_PAGE,     VIRTKEY
-    VK_BROWSER_HOME,    IDM_GOTO_FIRST_PAGE,    VIRTKEY
-    VK_BROWSER_REFRESH, IDM_REFRESH,            VIRTKEY
-    VK_BROWSER_FAVORITES, IDM_VIEW_BOOKMARKS,   VIRTKEY
-    VK_BROWSER_SEARCH,  IDM_FIND_FIRST,         VIRTKEY
+    VK_BROWSER_BACK, IDM_GOTO_PREV_PAGE,    VIRTKEY 
+    VK_BROWSER_FORWARD, IDM_GOTO_NEXT_PAGE, VIRTKEY 
+    VK_BROWSER_HOME, IDM_GOTO_FIRST_PAGE,   VIRTKEY 
+    VK_BROWSER_REFRESH, IDM_REFRESH,        VIRTKEY 
+    VK_BROWSER_FAVORITES, IDM_VIEW_BOOKMARKS, VIRTKEY 
+    VK_BROWSER_SEARCH, IDM_FIND_FIRST,      VIRTKEY 
 END
 
 
@@ -98,25 +93,16 @@ IDB_FIND_MATCH          BITMAP                  "icons-silk\\matchcase.bmp"
 // Dialog
 //
 
-// Layout principles (for consistency):
-// * Dialogs have a border of 6 DU
-// * Static labels are up to 50% too big for English text
-// * Buttons are 50 DU wide (non-standard ones: 70 DU), 14 DU high and right aligned
-// * Elements inside the dialog share the same alignment, if reasonably possible
-// * All checkboxes and buttons should have an accelerator (except for OK/Cancel)
-
 IDD_DIALOG_GOTO_PAGE DIALOGEX 0, 0, 158, 45
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Go to page"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "&Go to page:",IDC_STATIC,6,8,60,9
-    // Note: the edit control is right-aligned above IDOK,
-    //       the following text is left-aligned above IDCANCEL
-    EDITTEXT        IDC_GOTO_PAGE_EDIT,6+60,6,30,13,ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT
-    LTEXT           "(of 99999)",IDC_GOTO_PAGE_LABEL_OF,6+60+30+6,8,50,9
-    DEFPUSHBUTTON   "Go to page",IDOK,158-6-50-5-70,45-6-14,70,14
-    PUSHBUTTON      "Cancel",IDCANCEL,158-6-50,45-6-14,50,14
+    EDITTEXT        IDC_GOTO_PAGE_EDIT,66,6,30,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "(of 99999)",IDC_GOTO_PAGE_LABEL_OF,102,8,50,9
+    DEFPUSHBUTTON   "Go to page",IDOK,27,25,70,14
+    PUSHBUTTON      "Cancel",IDCANCEL,102,25,50,14
 END
 
 IDD_DIALOG_FIND DIALOGEX 0, 0, 247, 52
@@ -125,11 +111,11 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "&Find what:",IDC_STATIC,6,8,60,9
-    EDITTEXT        IDC_FIND_EDIT,6+60,6,120,13,ES_AUTOHSCROLL
-    CONTROL         "&Match case",IDC_MATCH_CASE, BUTTON, BS_AUTOCHECKBOX | WS_TABSTOP,6,6+14+4,60+120,9
-    LTEXT           "Hint: Use the F3 key for finding again",IDC_FIND_NEXT_HINT,6,6+14+4+9+4,60+120,9,WS_DISABLED
-    DEFPUSHBUTTON   "Find",IDOK,247-6-50,6,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,247-6-50,6+14+4,50,14
+    EDITTEXT        IDC_FIND_EDIT,66,6,120,13,ES_AUTOHSCROLL
+    CONTROL         "&Match case",IDC_MATCH_CASE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,24,180,9
+    LTEXT           "Hint: Use the F3 key for finding again",IDC_FIND_NEXT_HINT,6,37,180,9,WS_DISABLED
+    DEFPUSHBUTTON   "Find",IDOK,191,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,191,24,50,14
 END
 
 IDD_DIALOG_PDF_ASSOCIATE DIALOGEX 0, 0, 250, 55
@@ -137,24 +123,11 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Associate with PDF files?"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "",IDC_STATIC,6,6,250-6-6,9 // Make SumatraPDF default application for PDF files?
-    CONTROL         "",IDC_DONT_ASK_ME_AGAIN, BUTTON, BS_AUTOCHECKBOX | WS_TABSTOP,6,20,250-6-6,9 // Don't ask me again
-    DEFPUSHBUTTON   "&Yes",IDOK,250-6-50-6-50,55-6-14,50,14
-    PUSHBUTTON      "&No",IDCANCEL,250-6-50,55-6-14,50,14
+    LTEXT           "",IDC_STATIC,6,6,238,9
+    CONTROL         "",IDC_DONT_ASK_ME_AGAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,20,238,9
+    DEFPUSHBUTTON   "&Yes",IDOK,138,35,50,14
+    PUSHBUTTON      "&No",IDCANCEL,194,35,50,14
 END
-
-#ifdef _TEX_ENHANCEMENT
-IDD_DIALOG_INVERSESEARCH DIALOGEX 0, 0, 221, 65
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Inverse search command-line:"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LTEXT           "Enter the command-line to invoke when you double-click on the PDF document:",IDC_GET_PASSWORD_LABEL,6,6,221-6-6,18
-    EDITTEXT        IDC_CMDLINE,6,26,221-6-6,13,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,221-6-50-6-50,65-6-14,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,221-6-50,65-6-14,50,14
-END
-#endif
 
 IDD_DIALOG_GET_PASSWORD DIALOGEX 0, 0, 182, 59
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -163,10 +136,9 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Enter password for test.pdf",IDC_GET_PASSWORD_LABEL,6,6,170,9
     LTEXT           "&Password:",IDC_STATIC,6,22,64,9
-    // Note: the password box spans exactly over both buttons
-    EDITTEXT        IDC_GET_PASSWORD_EDIT,70,20,106,13,ES_AUTOHSCROLL|ES_PASSWORD
-    DEFPUSHBUTTON   "OK",IDOK,182-6-50-6-50,59-6-14,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,182-6-50,59-6-14,50,14
+    EDITTEXT        IDC_GET_PASSWORD_EDIT,70,20,106,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,70,39,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,126,39,50,14
 END
 
 IDD_DIALOG_CHANGE_LANGUAGE DIALOGEX 0, 0, 200, 259
@@ -174,9 +146,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICK
 CAPTION "Change language"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LISTBOX         IDC_CHANGE_LANG_LANG_LIST,6,6,200-6-6,259-6-14-6-6, WS_VSCROLL | WS_TABSTOP | LBS_NOINTEGRALHEIGHT
-    DEFPUSHBUTTON   "OK",IDOK,200-6-50-6-50,259-6-14,50,14, WS_TABSTOP
-    PUSHBUTTON      "Cancel",IDCANCEL,200-6-50,259-6-14,50,14, WS_TABSTOP
+    LISTBOX         IDC_CHANGE_LANG_LANG_LIST,6,6,188,227,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,88,239,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,144,239,50,14
 END
 
 IDD_DIALOG_NEW_VERSION DIALOGEX 0, 0, 240, 69
@@ -184,32 +156,36 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "New version available"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "",IDC_YOU_HAVE,6,6,240-6-6,9 // You have version %s
-    LTEXT           "",IDC_NEW_AVAILABLE,6,20,240-6-6,9 // New version %s is available. Download new version?
-    CONTROL         "",IDC_SKIP_THIS_VERSION, BUTTON, BS_AUTOCHECKBOX | WS_TABSTOP,6,34,240-6-6,9 // Skip this version
-    DEFPUSHBUTTON   "Download",IDOK,240-6-70-6-70,69-6-14,70,14
-    PUSHBUTTON      "&No, thanks",IDCANCEL,240-6-70,69-6-14,70,14
+    LTEXT           "",IDC_YOU_HAVE,6,6,228,9
+    LTEXT           "",IDC_NEW_AVAILABLE,6,20,228,9
+    CONTROL         "",IDC_SKIP_THIS_VERSION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,34,228,9
+    DEFPUSHBUTTON   "Download",IDOK,88,49,70,14
+    PUSHBUTTON      "&No, thanks",IDCANCEL,164,49,70,14
 END
 
-IDD_DIALOG_SETTINGS DIALOGEX 0, 0, 240, 157
-STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "SumatraPDF Options"
+IDD_DIALOG_SETTINGS DIALOGEX 0, 0, 240, 170
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Settings"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-   // Note: elements inside a groupbox are either half or just as wide as possible
-   CONTROL "View", IDC_SECTION_VIEW, BUTTON, BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 6, 6, 240-6-6, 75 
-   CONTROL "Default &Layout:", IDC_DEFAULT_LAYOUT_LABEL, STATIC, SS_LEFT | WS_CHILD | WS_VISIBLE | WS_GROUP, 12, 19, 108, 9 
-   CONTROL "Single page", IDC_DEFAULT_LAYOUT, COMBOBOX, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 120, 17, 108, 13 
-   CONTROL "Default &Zoom:", IDC_DEFAULT_ZOOM_LABEL, STATIC, SS_LEFT | WS_CHILD | WS_VISIBLE | WS_GROUP, 12, 36, 108, 9 
-   CONTROL "Fit Page", IDC_DEFAULT_ZOOM, COMBOBOX, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 120, 34, 108, 13 
-   CONTROL "Show the &bookmarks sidebar when available", IDC_DEFAULT_SHOW_TOC, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 53, 216, 9 
-   CONTROL "&Remember these settings for each document", IDC_GLOBAL_PREFS_ONLY, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 66, 216, 9 
-   CONTROL "Advanced", IDC_SECTION_ADVANCED, BUTTON, BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 6, 87, 240-6-6, 45
-   CONTROL "Automatically check for &updates", IDC_AUTO_UPDATE_CHECKS, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 97, 216, 9
-   CONTROL "Make SumatraPDF a default PDF reader", IDC_SET_DEFAULT_READER, BUTTON, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 97+9+6, 216, 14
-   CONTROL "OK", IDOK, BUTTON, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240-6-50-6-50, 157-6-14, 50, 14
-   CONTROL "Cancel", IDCANCEL, BUTTON, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240-6-50, 157-6-14, 50, 14
+    GROUPBOX        "View",IDC_SECTION_VIEW,6,6,228,75
+    LTEXT           "Default &Layout:",IDC_DEFAULT_LAYOUT_LABEL,12,19,108,9
+    COMBOBOX        IDC_DEFAULT_LAYOUT,120,17,108,13,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Default &Zoom:",IDC_DEFAULT_ZOOM_LABEL,12,36,108,9
+    COMBOBOX        IDC_DEFAULT_ZOOM,120,34,108,13,CBS_DROPDOWNLIST | WS_TABSTOP
+    CONTROL         "Show the &bookmarks sidebar when available",IDC_DEFAULT_SHOW_TOC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,53,216,9
+    CONTROL         "&Remember these settings for each document",IDC_GLOBAL_PREFS_ONLY,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,66,216,9
+    GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,87,228,57
+    CONTROL         "Automatically check for &updates",IDC_AUTO_UPDATE_CHECKS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
+    PUSHBUTTON      "Make SumatraPDF a default PDF reader",IDC_SET_DEFAULT_READER,12,125,216,14
+    DEFPUSHBUTTON   "OK",IDOK,128,151,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,184,151,50,14
+    CONTROL         "Remeber &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,111,216,9
 END
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -252,15 +228,6 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 143
         TOPMARGIN, 6
-        BOTTOMMARGIN, 50
-    END
-
-    IDD_DIALOG_INVERSESEARCH, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 214
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 57
     END
 
     IDD_DIALOG_GET_PASSWORD, DIALOG
@@ -268,7 +235,11 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 169
         TOPMARGIN, 7
-        BOTTOMMARGIN, 63
+    END
+
+    IDD_DIALOG_SETTINGS, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 157
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -280,6 +251,13 @@ END
 //
 
 IDC_CURSORDRAG          CURSOR                  "dragcursor.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "SumatraPDF.exe.manifest"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -306,4 +284,3 @@ END
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "SumatraPDF.exe.manifest"

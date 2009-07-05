@@ -196,7 +196,55 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\src\closetoc.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\dragcursor.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\src\icons-silk\folder.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\icons-silk\matchcase.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\icons-silk\next.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PdfDoc.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\src\icons-silk\previous.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraPDF.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SumatraPDF.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\toolbar-disabled.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\toolbar.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\icons-silk\zoom_in.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\icons-silk\zoom_out.bmp"
 				>
 			</File>
 		</Filter>
@@ -836,6 +884,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\src\SumatraPDF.exe.manifest"
+			>
+		</File>
 		<File
 			RelativePath=".\src\todo.txt"
 			>

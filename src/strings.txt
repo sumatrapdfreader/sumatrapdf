@@ -3542,6 +3542,8 @@ ru:Запомнить эти параметры для &каждого доку�
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 -
+Remember &opened files
+-
 View
 af:Vertoon
 bg:Виж

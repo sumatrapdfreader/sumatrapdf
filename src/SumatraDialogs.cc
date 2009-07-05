@@ -616,7 +616,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->m_showToc ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
-
+        CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->m_rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
         if (IsExeAssociatedWithPdfExtension()) {
             SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your main PDF reader"));
             EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
@@ -635,6 +635,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         SetDlgItemText(hDlg, IDC_GLOBAL_PREFS_ONLY, _TR("&Remember these settings for each document"));
         SetDlgItemText(hDlg, IDC_SECTION_ADVANCED, _TR("Advanced"));
         SetDlgItemText(hDlg, IDC_AUTO_UPDATE_CHECKS, _TR("Automatically check for &updates"));
+        SetDlgItemText(hDlg, IDC_REMEMBER_OPENED_FILES, _TR("Remember &opened files"));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
@@ -665,7 +666,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             prefs->m_showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
             prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
             prefs->m_enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
-            
+            prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;
 
@@ -676,6 +677,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         case IDC_DEFAULT_SHOW_TOC:
         case IDC_GLOBAL_PREFS_ONLY:
         case IDC_AUTO_UPDATE_CHECKS:
+        case IDC_REMEMBER_OPENED_FILES:
             return TRUE;
 
         case IDC_SET_DEFAULT_READER:

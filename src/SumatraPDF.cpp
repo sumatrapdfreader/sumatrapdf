@@ -30,6 +30,11 @@
 #include <windowsx.h>
 #include <Wininet.h>
 
+// those are defined here instead of resource.h to avoid
+// having them overwritten by dialog editor
+#define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
+#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS_FACING
+
 #ifndef CURR_VERSION
 #define CURR_VERSION "0.9.4"
 #endif
@@ -210,6 +215,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
 #else
     TRUE,
 #endif
+    TRUE, // BOOL m_rememberOpenedFiles
     ABOUT_BG_COLOR, // int  m_bgColor
     FALSE, // BOOL m_escToExit
     NULL, // char *m_inverseSearchCmdLine
@@ -1479,7 +1485,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
         return;
 
     node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
-    assert(node);
+    assert(node || !gGlobalPrefs.m_rememberOpenedFiles);
     if (!node)
         return;
 
@@ -2353,8 +2359,10 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 
     win->pdfsync = CreateSynchronizer(pFullpath);
 
-    AddFileToHistory(pFullpath);
-    RebuildProgramMenus();
+    if (gGlobalPrefs.m_rememberOpenedFiles) {
+        AddFileToHistory(pFullpath);
+        RebuildProgramMenus();
+    }
     gGlobalPrefs.m_pdfsOpened += 1;
 
     // Add the file also to Windows' recently used documents (this doesn't
@@ -4617,7 +4625,11 @@ static void OnMenuSettings(WindowInfo *win)
     if (DIALOG_OK_PRESSED != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
         return;
 
+    if (!gGlobalPrefs.m_rememberOpenedFiles)
+        FileHistoryList_Free(&gFileHistoryRoot);
+
     for (win = gWindowList; win; win = win->next) {
+        RebuildProgramMenus();
         MenuUpdateBookmarksStateForWindow(win);
         MenuUpdateDisplayMode(win);
         MenuUpdateZoom(win);
