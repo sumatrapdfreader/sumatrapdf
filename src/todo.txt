@@ -15,14 +15,9 @@ Things to do before 1.0 release:
 Long term todo:
 * find improvements:
   * better/different buttons for next/prev find
-* crash reporting with breakpad
- - on startup check for crash dumps and tries to submit them. Delete crash file
-   (even if submission failed)
-* preserve fullScreen info per document and respect it when opening a PDF
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
 * better, animated about screen
-* make dialog-boxes translatable
 * replace DString with something better (sstr ?) and provide C++ wrapper
   to make it easier to use in C++ code without all those annoying DStringInit()
   calls
