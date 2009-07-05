@@ -41,13 +41,6 @@
 #include "FileWatch.h"
 #include "PdfSync.h"
 
-/* TODO: Currently not used. The idea is to be able to switch between different
-   visual styles. Because I can. */
-enum AppVisualStyle {
-    VS_WINDOWS = 1,
-    VS_AMIGA
-};
-
 /* Current state of a window:
   - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF
   - WS_SHOWING_PDF - showing a PDF file

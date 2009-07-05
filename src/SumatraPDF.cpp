@@ -172,8 +172,6 @@ static HPEN                         ghpenBlue;
 
 static HBITMAP                      gBitmapCloseToc;
 
-//static AppVisualStyle               gVisualStyle = VS_WINDOWS;
-
 static TCHAR *                      gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
 
@@ -2718,60 +2716,6 @@ static void DrawLineSimple(HDC hdc, int sx, int sy, int ex, int ey)
     LineTo(hdc, ex, ey);
 }
 
-#if 0
-/* Draw caption area for a given window 'win' in the classic AmigaOS style */
-static void AmigaCaptionDraw(WindowInfo *win)
-{
-    HGDIOBJ prevPen;
-    HDC     hdc = win->hdc;
-
-    assert(VS_AMIGA == gVisualStyle);
-
-    prevPen = SelectObject(hdc, ghpenWhite);
-
-    /* white */
-    DrawLineSimple(hdc, 0, 0, win->winDx, 0);
-    DrawLineSimple(hdc, 0, 1, win->winDx, 1);
-
-    /* white */
-    DrawLineSimple(hdc, 0, 4, win->winDx, 4);
-    DrawLineSimple(hdc, 0, 5, win->winDx, 5);
-
-    /* white */
-    DrawLineSimple(hdc, 0, 8, win->winDx, 8);
-    DrawLineSimple(hdc, 0, 9, win->winDx, 9);
-
-    /* white */
-    DrawLineSimple(hdc, 0, 12, win->winDx, 12);
-    DrawLineSimple(hdc, 0, 13, win->winDx, 13);
-
-    /* white */
-    DrawLineSimple(hdc, 0, 16, win->winDx, 16);
-    DrawLineSimple(hdc, 0, 17, win->winDx, 17);
-    DrawLineSimple(hdc, 0, 18, win->winDx, 18);
-
-    SelectObject(hdc, ghpenBlue);
-
-    /* blue */
-    DrawLineSimple(hdc, 0, 2, win->winDx, 2);
-    DrawLineSimple(hdc, 0, 3, win->winDx, 3);
-
-    /* blue */
-    DrawLineSimple(hdc, 0, 6, win->winDx, 6);
-    DrawLineSimple(hdc, 0, 7, win->winDx, 7);
-
-    /* blue */
-    DrawLineSimple(hdc, 0, 10, win->winDx, 10);
-    DrawLineSimple(hdc, 0, 11, win->winDx, 11);
-
-    /* blue */
-    DrawLineSimple(hdc, 0, 14, win->winDx, 14);
-    DrawLineSimple(hdc, 0, 15, win->winDx, 15);
-
-    SelectObject(hdc, prevPen);
-}
-#endif
-
 static void WinResizeIfNeeded(WindowInfo *win, bool resizeWindow=true)
 {
     RECT    rc;
@@ -4001,10 +3945,6 @@ static void OnPaint(WindowInfo *win)
         //TODO: it might cause infinite loop due to showing/hiding scrollbars
         WinResizeIfNeeded(win);
         WindowInfo_Paint(win, hdc, &ps);
-#if 0
-        if (VS_AMIGA == gVisualStyle)
-            AmigaCaptionDraw(win);
-#endif
         WindowInfo_DoubleBuffer_Show(win, hdc);
     } else
         assert(0);
