@@ -19,7 +19,7 @@ mkdir %OUT_PATH%
 @zip >nul
 @IF ERRORLEVEL 1 goto ZIP_NEEDED
 
-devenv ..\sumatrapdf.sln /Rebuild "Release|Win32"
+devenv ..\sumatrapdf-vc2008.sln /Rebuild "Release|Win32"
 @IF ERRORLEVEL 1 goto BUILD_FAILED
 echo Compilation ok!
 copy ..\obj-rel\SumatraPDF.exe ..\obj-rel\SumatraPDF-uncomp.exe

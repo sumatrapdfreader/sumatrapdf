@@ -5,6 +5,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+static void fz_finalizefreetype(void);
+
 static fz_font *
 fz_newfont(void)
 {
@@ -57,6 +59,7 @@ fz_dropfont(fz_font *font)
 		if (font->ftface)
 		{
 			FT_Done_Face((FT_Face)font->ftface);
+			fz_finalizefreetype();
 		}
 
 		fz_free(font);
@@ -77,6 +80,7 @@ fz_setfontbbox(fz_font *font, int xmin, int ymin, int xmax, int ymax)
  */
 
 static FT_Library fz_ftlib = nil;
+static int fz_ftlib_refs = 0;
 
 #undef __FTERRORS_H__
 #define FT_ERRORDEF(e, v, s)	{ (e), (s) },
@@ -112,7 +116,10 @@ fz_initfreetype(void)
 	int maj, min, pat;
 
 	if (fz_ftlib)
+	{
+		fz_ftlib_refs++;
 		return fz_okay;
+	}
 
 	code = FT_Init_FreeType(&fz_ftlib);
 	if (code)
@@ -120,18 +127,23 @@ fz_initfreetype(void)
 
 	FT_Library_Version(fz_ftlib, &maj, &min, &pat);
 	if (maj == 2 && min == 1 && pat < 7)
+	{
+		FT_Done_FreeType(fz_ftlib);
 		return fz_throw("freetype version too old: %d.%d.%d", maj, min, pat);
+	}
 
+	fz_ftlib_refs++;
 	return fz_okay;
 }
 
-void fz_destroyfreetype(void)
+static void
+fz_finalizefreetype(void)
 {
-	if (fz_ftlib)
-	{
-		FT_Done_FreeType(fz_ftlib);
-		fz_ftlib = 0;
-	}
+        if (--fz_ftlib_refs == 0)
+        {
+                FT_Done_FreeType(fz_ftlib);
+                fz_ftlib = nil;
+        }
 }
 
 fz_error

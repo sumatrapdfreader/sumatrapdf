@@ -3,115 +3,7 @@
  * Print information about the input pdf.
  */
 
-#include "fitz.h"
-#include "mupdf.h"
-
-/* put these up here so we can clean up in die() */
-fz_renderer *drawgc = nil;
-void closesrc(void);
-
-/*
- * Common operations.
- * Parse page selectors.
- * Load and decrypt a PDF file.
- * Select pages.
- */
-
-char *srcname = "(null)";
-pdf_xref *src = nil;
-pdf_outline *srcoutline = nil;
-pdf_pagetree *srcpages = nil;
-
-void die(fz_error eo)
-{
-    fz_catch(eo, "aborting");
-    if (drawgc)
-	fz_droprenderer(drawgc);
-    closesrc();
-    exit(-1);
-}
-
-void closesrc(void)
-{
-	if (srcpages)
-	{
-		pdf_droppagetree(srcpages);
-		srcpages = nil;
-	}
-
-	if (src)
-	{
-		if (src->store)
-		{
-			pdf_dropstore(src->store);
-			src->store = nil;
-		}
-		pdf_closexref(src);
-		src = nil;
-	}
-
-	srcname = nil;
-}
-
-void opensrc(char *filename, char *password, int loadpages)
-{
-	fz_error error;
-	fz_obj *obj;
-
-	closesrc();
-
-	srcname = filename;
-
-	error = pdf_newxref(&src);
-	if (error)
-		die(error);
-
-	error = pdf_loadxref(src, filename);
-	if (error)
-	{
-		fz_catch(error, "trying to repair");
-		error = pdf_repairxref(src, filename);
-		if (error)
-			die(error);
-	}
-
-	error = pdf_decryptxref(src);
-	if (error)
-		die(error);
-
-	if (src->crypt)
-	{
-		int okay = pdf_setpassword(src->crypt, password);
-		if (!okay)
-			fz_warn("invalid password, attemping to continue.");
-	}
-
-	if (loadpages)
-	{
-		error = pdf_loadpagetree(&srcpages, src);
-		if (error)
-			die(error);
-	}
-
-	/* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
-	obj = fz_dictgets(src->trailer, "Root");
-	src->root = fz_resolveindirect(obj);
-	if (src->root)
-		fz_keepobj(src->root);
-
-	obj = fz_dictgets(src->trailer, "Info");
-	src->info = fz_resolveindirect(obj);
-	if (src->info)
-		fz_keepobj(src->info);
-
-	error = pdf_loadnametrees(src);
-	if (error)
-		die(error);
-
-	error = pdf_loadoutline(&srcoutline, src);
-	if (error)
-		die(error);
-}
+#include "pdftool.h"
 
 enum
 {
@@ -183,6 +75,79 @@ int forms = 0;
 struct info **psobj = nil;
 int psobjs = 0;
 
+void local_cleanup(void)
+{
+	int i;
+
+	if (info)
+	{
+		free(info);
+		info = nil;
+	}
+
+	if (dim)
+	{
+		for (i = 0; i < dims; i++)
+			free(dim[i]);
+		free(dim);
+		dim = nil;
+	}
+
+	if (font)
+	{
+		for (i = 0; i < fonts; i++)
+			free(font[i]);
+		free(font);
+		font = nil;
+	}
+
+	if (image)
+	{
+		for (i = 0; i < images; i++)
+			free(image[i]);
+		free(image);
+		image = nil;
+	}
+
+	if (shading)
+	{
+		for (i = 0; i < shadings; i++)
+			free(shading[i]);
+		free(shading);
+		shading = nil;
+	}
+
+	if (pattern)
+	{
+		for (i = 0; i < patterns; i++)
+			free(pattern[i]);
+		free(pattern);
+		pattern = nil;
+	}
+
+	if (form)
+	{
+		for (i = 0; i < forms; i++)
+			free(form[i]);
+		free(form);
+		form = nil;
+	}
+
+	if (psobj)
+	{
+		for (i = 0; i < psobjs; i++)
+			free(psobj[i]);
+		free(psobj);
+		psobj = nil;
+	}
+
+	if (xref && xref->store)
+	{
+		pdf_dropstore(xref->store);
+		xref->store = nil;
+	}
+}
+
 void
 infousage(void)
 {
@@ -212,13 +177,13 @@ gatherglobalinfo()
 	info->ref = nil;
 	info->u.info.obj = nil;
 
-	if (src->info)
+	if (xref->info)
 	{
-		info->ref = fz_dictgets(src->trailer, "Info");
+		info->ref = fz_dictgets(xref->trailer, "Info");
 		if (!fz_isdict(info->ref) && !fz_isindirect(info->ref))
 			die(fz_throw("not an indirect info object"));
 
-		info->u.info.obj = src->info;
+		info->u.info.obj = xref->info;
 	}
 
 	cryptinfo = fz_malloc(sizeof (struct info));
@@ -228,13 +193,13 @@ gatherglobalinfo()
 	cryptinfo->ref = nil;
 	cryptinfo->u.crypt.obj = nil;
 
-	if (src->crypt)
+	if (xref->crypt)
 	{
-		cryptinfo->ref = fz_dictgets(src->trailer, "Encrypt");
+		cryptinfo->ref = fz_dictgets(xref->trailer, "Encrypt");
 		if (!fz_isdict(cryptinfo->ref) && !fz_isindirect(cryptinfo->ref))
 			die(fz_throw("not an indirect crypt object"));
 
-		cryptinfo->u.crypt.obj = src->crypt->encrypt;
+		cryptinfo->u.crypt.obj = xref->crypt->encrypt;
 	}
 }
 
@@ -284,7 +249,6 @@ gatherdimensions(int page, fz_obj *pageref, fz_obj *pageobj)
 fz_error
 gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
-	fz_error error;
 	int i;
 
 	for (i = 0; i < fz_dictlen(dict); i++)
@@ -313,9 +277,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		else
 		{
 			name = fz_dictgets(fontdict, "Name");
-			if (!name)
-				error = fz_newnull(&name);
-			if (!fz_isnull(name) && !fz_isname(name))
+			if (name && !fz_isname(name))
 				return fz_throw("not a font dict name (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
 
@@ -350,7 +312,6 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 fz_error
 gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
-	fz_error error;
 	int i;
 
 	for (i = 0; i < fz_dictlen(dict); i++)
@@ -360,10 +321,10 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		fz_obj *type;
 		fz_obj *width;
 		fz_obj *height;
-		fz_obj *bpc;
-		fz_obj *filter;
+		fz_obj *bpc = nil;
+		fz_obj *filter = nil;
 		fz_obj *mask;
-		fz_obj *cs;
+		fz_obj *cs = nil;
 		fz_obj *altcs;
 		int k;
 
@@ -378,13 +339,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			continue;
 
 		filter = fz_dictgets(imagedict, "Filter");
-		if (!filter)
-		{
-			error = fz_newname(&filter, "Raw");
-			if (error)
-				return fz_rethrow(error, "cannot create fake raw image filter (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		}
-		if (!fz_isname(filter) && !fz_isarray(filter))
+		if (filter && !fz_isname(filter) && !fz_isarray(filter))
 			return fz_throw("not an image filter (%d %d R)", fz_tonum(ref), fz_togen(ref));
 
 		mask = fz_dictgets(imagedict, "ImageMask");
@@ -408,11 +363,8 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		{
 			if (cs)
 				fz_warn("image mask (%d %d R) may not have colorspace", fz_tonum(ref), fz_togen(ref));
-			error = fz_newname(&cs, "ImageMask");
-			if (error)
-				return fz_rethrow(error, "cannot create fake image mask colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		}
-		if (!fz_isname(cs))
+		if (cs && !fz_isname(cs))
 			return fz_throw("not an image colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (altcs && !fz_isname(altcs))
 			return fz_throw("not an image alternate colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
@@ -430,12 +382,6 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			return fz_throw("not an image bits per component (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (fz_tobool(mask) && fz_isint(bpc) && fz_toint(bpc) != 1)
 			return fz_throw("not an image mask bits per component (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		if (fz_tobool(mask) && !bpc)
-		{
-			error = fz_newint(&bpc, 1);
-			if (error)
-				return fz_rethrow(error, "cannot create fake image mask bits per components (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		}
 
 		for (k = 0; k < images; k++)
 			if (fz_tonum(image[k]->ref) == fz_tonum(ref) &&
@@ -642,7 +588,6 @@ gathershadings(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 fz_error
 gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
-	fz_error error;
 	int i;
 
 	for (i = 0; i < fz_dictlen(dict); i++)
@@ -650,8 +595,8 @@ gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		fz_obj *ref;
 		fz_obj *patterndict;
 		fz_obj *type;
-		fz_obj *paint;
-		fz_obj *tiling;
+		fz_obj *paint = nil;
+		fz_obj *tiling = nil;
 		int k;
 
 		patterndict = ref = fz_dictgetval(dict, i);
@@ -671,15 +616,6 @@ gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			tiling = fz_dictgets(patterndict, "TilingType");
 			if (!fz_isint(tiling) || fz_toint(tiling) < 1 || fz_toint(tiling) > 3)
 				return fz_throw("not a pattern tiling type (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		}
-		else
-		{
-			error = fz_newint(&paint, 0);
-			if (error)
-				return fz_throw("cannot create fake pattern paint type");
-			error = fz_newint(&tiling, 0);
-			if (error)
-				return fz_throw("cannot create fake pattern tiling type");
 		}
 
 		for (k = 0; k < patterns; k++)
@@ -723,8 +659,8 @@ gatherinfo(int show, int page)
 	fz_obj *shade;
 	fz_obj *pattern;
 
-	pageref = pdf_getpagereference(srcpages, page - 1);
-	pageobj = pdf_getpageobject(srcpages, page - 1);
+	pageref = pdf_getpagereference(pagetree, page - 1);
+	pageobj = pdf_getpageobject(pagetree, page - 1);
 
 	if (!pageref || !pageobj)
 		die(fz_throw("cannot retrieve info from page %d", page));
@@ -790,10 +726,9 @@ gatherinfo(int show, int page)
 }
 
 void
-printglobalinfo(char *filename)
+printglobalinfo(void)
 {
-	printf("%s:\n\n", filename);
-	printf("PDF-%d.%d\n\n", src->version / 10, src->version % 10);
+	printf("\nPDF-%d.%d\n", xref->version / 10, xref->version % 10);
 
 	if (info->u.info.obj)
 	{
@@ -807,7 +742,7 @@ printglobalinfo(char *filename)
 		fz_debugobj(cryptinfo->u.crypt.obj);
 	}
 
-	printf("\nPages: %d\n\n", pdf_getpagecount(srcpages));
+	printf("\nPages: %d\n\n", pdf_getpagecount(pagetree));
 }
 
 void
@@ -847,7 +782,7 @@ printinfo(char *filename, int show, int page)
 		printf("Fonts (%d):\n", fonts);
 		for (i = 0; i < fonts; i++)
 		{
-			printf(PAGE_FMT "%s %s (%d %d R)\n",
+			printf(PAGE_FMT "%s '%s' (%d %d R)\n",
 					font[i]->page,
 					fz_tonum(font[i]->pageref), fz_togen(font[i]->pageref),
 					fz_toname(font[i]->u.font.subtype),
@@ -879,14 +814,16 @@ printinfo(char *filename, int show, int page)
 							fz_toname(fz_arrayget(image[i]->u.image.filter, j)),
 							j == fz_arraylen(image[i]->u.image.filter) - 1 ? "" : " ");
 				}
-			else
+			else if (image[i]->u.image.filter)
 				printf("%s", fz_toname(image[i]->u.image.filter));
+			else
+				printf("Raw");
 
 			printf(" ] %dx%d %dbpc %s%s%s (%d %d R)\n",
 					fz_toint(image[i]->u.image.width),
 					fz_toint(image[i]->u.image.height),
-					fz_toint(image[i]->u.image.bpc),
-					fz_toname(image[i]->u.image.cs),
+					image[i]->u.image.bpc ? fz_toint(image[i]->u.image.bpc) : 1,
+					image[i]->u.image.cs ? fz_toname(image[i]->u.image.cs) : "ImageMask",
 					image[i]->u.image.altcs ? " " : "",
 					image[i]->u.image.altcs ? fz_toname(image[i]->u.image.altcs) : "",
 					fz_tonum(image[i]->ref), fz_togen(image[i]->ref));
@@ -1022,7 +959,7 @@ showinfo(char *filename, int show, char *pagelist)
 	char *spec, *dash;
 	int allpages;
 
-	if (!src)
+	if (!xref)
 		infousage();
 
 	allpages = !strcmp(pagelist, "1-");
@@ -1042,7 +979,7 @@ showinfo(char *filename, int show, char *pagelist)
 			if (strlen(dash) > 1)
 				epage = atoi(dash + 1);
 			else
-				epage = pdf_getpagecount(srcpages);
+				epage = pdf_getpagecount(pagetree);
 		}
 
 		if (spage > epage)
@@ -1050,10 +987,10 @@ showinfo(char *filename, int show, char *pagelist)
 
 		if (spage < 1)
 			spage = 1;
-		if (epage > pdf_getpagecount(srcpages))
-			epage = pdf_getpagecount(srcpages);
-		if (spage > pdf_getpagecount(srcpages))
-			spage = pdf_getpagecount(srcpages);
+		if (epage > pdf_getpagecount(pagetree))
+			epage = pdf_getpagecount(pagetree);
+		if (spage > pdf_getpagecount(pagetree))
+			spage = pdf_getpagecount(pagetree);
 
 		if (allpages)
 			printf("Retrieving info from pages %d-%d...\n", spage, epage);
@@ -1106,6 +1043,8 @@ int main(int argc, char **argv)
 	if (fz_optind == argc)
 		infousage();
 
+	setcleanup(local_cleanup);
+
 	state = NO_FILE_OPENED;
 	while (fz_optind < argc)
 	{
@@ -1113,19 +1052,22 @@ int main(int argc, char **argv)
 		{
 			if (state == NO_INFO_GATHERED)
 			{
-				printglobalinfo(filename);
+				printglobalinfo();
 				showinfo(filename, show, "1-");
+				closexref();
 			}
 
+			closexref();
 			filename = argv[fz_optind];
-			opensrc(filename, password, 1);
+			openxref(filename, password, 0);
+			loadpagetree();
 			gatherglobalinfo();
 			state = NO_INFO_GATHERED;
 		}
 		else
 		{
 			if (state == NO_INFO_GATHERED)
-			printglobalinfo(filename);
+				printglobalinfo();
 			showinfo(filename, show, argv[fz_optind]);
 			state = INFO_SHOWN;
 		}
@@ -1135,10 +1077,10 @@ int main(int argc, char **argv)
 
 	if (state == NO_INFO_GATHERED)
 	{
-		printglobalinfo(filename);
+		printglobalinfo();
 		showinfo(filename, show, "1-");
 	}
 
-	closesrc();
+	closexref();
 }
 

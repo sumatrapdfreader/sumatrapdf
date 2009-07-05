@@ -6933,7 +6933,6 @@ exit:
 }
 
 extern "C" void pdf_destoryfontlistMS(); // in pdf_fontfilems.c
-extern "C" void fz_destroyfreetype(); // in res_font.c
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -7336,7 +7335,6 @@ Exit:
 #endif // BUILD_RM_VERSION
 
     pdf_destoryfontlistMS();
-    fz_destroyfreetype();
 
     WStrList_Destroy(&argListRoot);
     //histDump();

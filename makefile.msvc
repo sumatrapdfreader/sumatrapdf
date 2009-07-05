@@ -106,7 +106,8 @@ FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_JASPER" /I$(JASPER_DIR)/include
 !endif
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
-	/I$(FREETYPE_DIR)\include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
+	/I$(FITZ_DIR)/apps \
+	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
 SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc \
@@ -272,32 +273,32 @@ PDFAPP_APP = $(O)\pdfapp.exe
 PDFAPP_PDB = $(O)\pdfapp.pdb
 PDFAPP_MAP = $(O)\pdfapp.map
 
-PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdfbench.obj
+PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
 PDFBENCH_PDB = $(O)\pdfbench.pdb
 PDFBENCH_MAP = $(O)\pdfbench.map
 
-PDFDRAW_OBJS = $(LIBS_OBJS) $(O)\pdfdraw.obj
+PDFDRAW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfdraw.obj
 PDFDRAW_APP = $(O)\pdfdraw.exe
 PDFDRAW_PDB = $(O)\pdfdraw.pdb
 PDFDRAW_MAP = $(O)\pdfdraw.map
 
-PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdfshow.obj
+PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
 PDFSHOW_PDB = $(O)\pdfshow.pdb
 PDFSHOW_MAP = $(O)\pdfshow.map
 
-PDFCLEAN_OBJS = $(LIBS_OBJS) $(O)\pdfclean.obj
+PDFCLEAN_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfclean.obj
 PDFCLEAN_APP = $(O)\pdfclean.exe
 PDFCLEAN_PDB = $(O)\pdfclean.pdb
 PDFCLEAN_MAP = $(O)\pdfclean.map
 
-PDFINFO_OBJS = $(LIBS_OBJS) $(O)\pdfinfo.obj
+PDFINFO_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfinfo.obj
 PDFINFO_APP = $(O)\pdfinfo.exe
 PDFINFO_PDB = $(O)\pdfinfo.pdb
 PDFINFO_MAP = $(O)\pdfinfo.map
 
-PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
+PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 PDFEXTRACT_PDB = $(O)\pdfextract.pdb
 PDFEXTRACT_MAP = $(O)\pdfextract.map
@@ -330,7 +331,9 @@ SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_PDB = $(O)\SumatraPDF.pdb
 SUMATRA_MAP = $(O)\SumatraPDF.map
 
-all: $(O) $(CMAPDUMP_APP) $(PDFBENCH_APP) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(SUMATRA_APP)
+all: $(O) $(CMAPDUMP_APP) $(SUMATRA_APP)
+
+# $(PDFBENCH_APP) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) 
 
 rebuild: cleanall all
 
@@ -471,12 +474,6 @@ $(PDFINFO_APP): $(PDFINFO_OBJS)
 	/MAP:$(PDFINFO_MAP) \
 	/SUBSYSTEM:CONSOLE
 
-$(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFEXTRACT_APP) /PDB:$(PDFEXTRACT_PDB) \
-	$(PDFEXTRACT_OBJS) $(LIBS) \
-	/MAP:$(PDFEXTRACT_MAP) \
-	/SUBSYSTEM:CONSOLE
-
 $(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES)
 	$(LD) $(LDFLAGS) /OUT:$(SUMATRA_APP) /PDB:$(SUMATRA_PDB) \
 	$(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES) $(LIBS) \
@@ -486,6 +483,12 @@ $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFAPP_APP) /PDB:$(PDFAPP_PDB) \
 	$(PDFAPP_OBJS) $(LIBS) \
 	/MAP:$(PDFAPP_MAP) \
+	/SUBSYSTEM:CONSOLE
+
+$(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(PDFEXTRACT_APP) /PDB:$(PDFEXTRACT_PDB) \
+	$(PDFEXTRACT_OBJS) $(LIBS) \
+	/MAP:$(PDFEXTRACT_MAP) \
 	/SUBSYSTEM:CONSOLE
 
 # freetype directories

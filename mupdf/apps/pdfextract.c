@@ -2,63 +2,7 @@
  * pdfextract -- the ultimate way to extract images and fonts from pdfs
  */
 
-#include "fitz.h"
-#include "mupdf.h"
-
-pdf_xref *xref = NULL;
-
-void die(fz_error eo)
-{
-    fz_catch(eo, "aborting");
-    exit(1);
-}
-
-void openxref(char *filename, char *password)
-{
-    fz_error error;
-    fz_obj *obj;
-
-    error = pdf_newxref(&xref);
-    if (error)
-	die(error);
-
-    error = pdf_loadxref(xref, filename);
-    if (error)
-    {
-	fz_catch(error, "trying to repair");
-	error = pdf_repairxref(xref, filename);
-	if (error)
-	    die(error);
-    }
-
-    error = pdf_decryptxref(xref);
-    if (error)
-	die(error);
-
-    if (xref->crypt)
-    {
-	int okay = pdf_setpassword(xref->crypt, password);
-	if (!okay)
-	    die(fz_throw("invalid password"));
-    }
-
-    /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
-    obj = fz_dictgets(xref->trailer, "Root");
-    xref->root = fz_resolveindirect(obj);
-    if (xref->root)
-	fz_keepobj(xref->root);
-
-    obj = fz_dictgets(xref->trailer, "Info");
-    xref->info = fz_resolveindirect(obj);
-    if (xref->info)
-	fz_keepobj(xref->info);
-}
-
-void closexref()
-{
-    pdf_closexref(xref);
-    xref = nil;
-}
+#include "pdftool.h"
 
 int showcolumn;
 
@@ -304,7 +248,7 @@ int main(int argc, char **argv)
     if (fz_optind == argc)
 	showusage();
 
-    openxref(argv[fz_optind++], password);
+    openxref(argv[fz_optind++], password, 0);
 
     if (fz_optind == argc)
         for (o = 0; o < xref->len; o++)

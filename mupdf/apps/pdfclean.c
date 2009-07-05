@@ -7,10 +7,8 @@
  * Encrypt output.
  */
 
-#include "fitz.h"
-#include "mupdf.h"
+#include "pdftool.h"
 
-static pdf_xref *xref = NULL;
 static fz_obj *id = NULL;
 
 static pdf_crypt *outcrypt = NULL;
@@ -23,53 +21,6 @@ static int *genlist = NULL;
 int doencrypt = 0;
 int dogarbage = 0;
 int doexpand = 0;
-
-void die(fz_error error)
-{
-    fz_catch(error, "aborting");
-    exit(1);
-}
-
-void openxref(char *filename, char *password)
-{
-    fz_error error;
-    fz_obj *obj;
-
-    error = pdf_newxref(&xref);
-    if (error)
-	die(error);
-
-    error = pdf_loadxref(xref, filename);
-    if (error)
-    {
-	fz_catch(error, "trying to repair");
-	error = pdf_repairxref(xref, filename);
-	if (error)
-	    die(error);
-    }
-
-    error = pdf_decryptxref(xref);
-    if (error)
-	die(error);
-
-    if (xref->crypt)
-    {
-	int okay = pdf_setpassword(xref->crypt, password);
-	if (!okay)
-	    die(fz_throw("invalid password"));
-    }
-
-    /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
-    obj = fz_dictgets(xref->trailer, "Root");
-    xref->root = fz_resolveindirect(obj);
-    if (xref->root)
-	fz_keepobj(xref->root);
-
-    obj = fz_dictgets(xref->trailer, "Info");
-    xref->info = fz_resolveindirect(obj);
-    if (xref->info)
-	fz_keepobj(xref->info);
-}
 
 /*
  * Garbage collect objects not reachable from the trailer.
@@ -356,7 +307,6 @@ int main(int argc, char **argv)
     int c, oid;
     int lastfree;
 
-
     while ((c = fz_getopt(argc, argv, "d:egn:o:p:u:x")) != -1)
     {
 	switch (c)
@@ -391,7 +341,7 @@ int main(int argc, char **argv)
     if (argc - fz_optind > 0)
 	outfile = argv[fz_optind++];
 
-    openxref(infile, password);
+    openxref(infile, password, 0);
 
     id = fz_dictgets(xref->trailer, "ID");
     if (!id)
@@ -485,6 +435,6 @@ int main(int argc, char **argv)
 
     savexref();
 
-    pdf_closexref(xref);
+    closexref();
 }
 

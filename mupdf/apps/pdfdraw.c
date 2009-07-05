@@ -6,8 +6,7 @@
  *   Benchmark rendering speed.
  */
 
-#include "fitz.h"
-#include "mupdf.h"
+#include "pdftool.h"
 
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -16,92 +15,6 @@
 #endif
 
 fz_renderer *drawgc = nil;
-
-char *basename;
-pdf_xref *xref = nil;
-pdf_pagetree *pagetree = nil;
-
-void die(fz_error eo)
-{
-    fz_catch(eo, "aborting");
-    if (drawgc)
-	fz_droprenderer(drawgc);
-    exit(1);
-}
-
-void openxref(char *filename, char *password)
-{
-    fz_error error;
-    fz_obj *obj;
-
-    basename = strrchr(filename, '/');
-    if (!basename)
-	basename = filename;
-    else
-	basename ++;
-
-    error = pdf_newxref(&xref);
-    if (error)
-	die(error);
-
-    error = pdf_loadxref(xref, filename);
-    if (error)
-    {
-	fz_catch(error, "trying to repair");
-	error = pdf_repairxref(xref, filename);
-	if (error)
-	    die(error);
-    }
-
-    error = pdf_decryptxref(xref);
-    if (error)
-	die(error);
-
-    if (xref->crypt)
-    {
-	int okay = pdf_setpassword(xref->crypt, password);
-	if (!okay)
-	    die(fz_throw("invalid password"));
-    }
-
-    error = pdf_loadpagetree(&pagetree, xref);
-    if (error)
-	die(error);
-
-    /* TODO: move into mupdf lib, see pdfapp_open in pdfapp.c */
-    obj = fz_dictgets(xref->trailer, "Root");
-    xref->root = fz_resolveindirect(obj);
-    if (xref->root)
-	fz_keepobj(xref->root);
-
-    obj = fz_dictgets(xref->trailer, "Info");
-    xref->info = fz_resolveindirect(obj);
-    if (xref->info)
-	fz_keepobj(xref->info);
-}
-
-void closexref(void)
-{
-	if (pagetree)
-	{
-		pdf_droppagetree(pagetree);
-		pagetree = nil;
-	}
-
-	if (xref)
-	{
-		if (xref->store)
-		{
-			pdf_dropstore(xref->store);
-			xref->store = nil;
-		}
-		pdf_closexref(xref);
-		xref = nil;
-	}
-}
-
-/*
- */
 
 enum { DRAWPNM, DRAWTXT, DRAWXML };
 
@@ -123,6 +36,21 @@ int drawrotate = 0;
 int drawbands = 1;
 int drawcount = 0;
 int benchmark = 0;
+
+void local_cleanup(void)
+{
+    if (xref && xref->store)
+    {
+        pdf_dropstore(xref->store);
+        xref->store = nil;
+    }
+
+    if (drawgc)
+    {
+        fz_droprenderer(drawgc);
+        drawgc = nil;
+    }
+}
 
 void drawusage(void)
 {
@@ -467,9 +395,7 @@ int main(int argc, char **argv)
     if (fz_optind == argc)
 	drawusage();
 
-    error = fz_newrenderer(&drawgc, pdf_devicergb, 0, 1024 * 512);
-    if (error)
-	die(error);
+    setcleanup(local_cleanup);
 
     state = NO_FILE_OPENED;
     while (fz_optind < argc)
@@ -479,7 +405,14 @@ int main(int argc, char **argv)
 	    if (state == NO_PAGES_DRAWN)
 		drawpages("1-");
 
-	    openxref(argv[fz_optind], password);
+	    closexref();
+
+	    error = fz_newrenderer(&drawgc, pdf_devicergb, 0, 1024 * 512);
+	    if (error)
+		die(error);
+
+	    openxref(argv[fz_optind], password, 0);
+	    loadpagetree();
 	    state = NO_PAGES_DRAWN;
 	}
 	else
@@ -493,7 +426,6 @@ int main(int argc, char **argv)
     if (state == NO_PAGES_DRAWN)
 	drawpages("1-");
 
-    fz_droprenderer(drawgc);
     closexref();
 }
 

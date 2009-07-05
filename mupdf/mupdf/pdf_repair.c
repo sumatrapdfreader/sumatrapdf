@@ -265,7 +265,6 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 		goto cleanup;
 	}
 
-
 	xref->len = maxoid + 1;
 	xref->cap = xref->len;
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
@@ -329,8 +328,6 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 				error = fz_rethrow(error, "cannot update stream length");
 				goto cleanup;
 			}
-
-			xref->table[list[i].oid].obj = fz_keepobj(dict);
 
 			fz_dropobj(length);
 			fz_dropobj(dict);

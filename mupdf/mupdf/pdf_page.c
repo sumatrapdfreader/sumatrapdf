@@ -276,7 +276,8 @@ pdf_droppage(pdf_page *page)
 	if (page->links)
 		pdf_droplink(page->links);
 	fz_dropobj(page->resources);
-	fz_droptree(page->tree);
+	if (page->tree)
+		fz_droptree(page->tree);
 	fz_free(page);
 }
 

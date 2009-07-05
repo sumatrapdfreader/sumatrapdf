@@ -25,7 +25,7 @@ ifeq ($(HOST),$(HOST_CYGWIN_5))
 HOST = $(HOST_CYGWIN)
 endif
 
-VPATH=fitzdraw:fitz:mupdf:fonts:cmaps:apps:$(JBIG2_DIR)
+VPATH=fitzdraw:fitz:mupdf:fonts:cmaps:apps:apps/common:$(JBIG2_DIR)
 
 ifneq ($(ZLIB_DIR),)
 VPATH+=$(ZLIB_DIR)
@@ -48,7 +48,7 @@ ifeq ($(CFG),)
 CFG=dbg
 endif
 
-INCS = -I fitz -I mupdf -I cmaps
+INCS = -I fitz -I mupdf -I cmaps -Iapps
 
 ifneq ($(JPEG_DIR),)
 INCS += -I $(JPEG_DIR)
@@ -250,23 +250,23 @@ PDFBENCH_SRC = pdfbench.c
 PDFBENCH_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFBENCH_SRC})
 PDFBENCH_DEP = $(patsubst %.o, %.d, $(PDFBENCH_OBJ))
 
-PDFCLEAN_SRC = pdfclean.c
+PDFCLEAN_SRC = pdftool.c pdfclean.c
 PDFCLEAN_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFCLEAN_SRC})
 PDFCLEAN_DEP = $(patsubst %.o, %.d, $(PDFCLEAN_OBJ))
 
-PDFDRAW_SRC = pdfdraw.c
+PDFDRAW_SRC = pdftool.c pdfdraw.c
 PDFDRAW_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFDRAW_SRC})
 PDFDRAW_DEP = $(patsubst %.o, %.d, $(PDFDRAW_OBJ))
 
-PDFINFO_SRC = pdfinfo.c
+PDFINFO_SRC = pdftool.c pdfinfo.c
 PDFINFO_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFINFO_SRC})
 PDFINFO_DEP = $(patsubst %.o, %.d, $(PDFINFO_OBJ))
 
-PDFSHOW_SRC = pdfshow.c
+PDFSHOW_SRC = pdftool.c pdfshow.c
 PDFSHOW_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFSHOW_SRC})
 PDFSHOW_DEP = $(patsubst %.o, %.d, $(PDFSHOW_OBJ))
 
-PDFEXTRACT_SRC = pdfextract.c
+PDFEXTRACT_SRC = pdftool.c pdfextract.c
 PDFEXTRACT_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFEXTRACT_SRC})
 PDFEXTRACT_DEP = $(patsubst %.o, %.d, $(PDFEXTRACT_OBJ))
 
