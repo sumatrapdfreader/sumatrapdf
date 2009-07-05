@@ -3511,7 +3511,6 @@ gr:Προκαθορισμένο ζουμ:
 -
 OK
 cy:Iawn
-gr:ΟΚ
 -
 Advanced
 de:Weiteres
@@ -3667,7 +3666,7 @@ cy:Chwilio am %d o %d...
 gr:Αναζήτηση %d από %d...
 -
 PDF documents
-de:PDF Dokumente
+de:PDF-Dokumente
 cy:Dogfennau PDF
 gr:Αρχεία PDF
 -
@@ -3690,22 +3689,22 @@ de:Suchen
 de:&Groß-/Kleinschreibung beachten
 -
 Hint: Use the F3 key for finding again
-de:Tipp: F3 Taste verwenden, um weiterzusuchen
+de:Tipp: F3-Taste verwenden, um weiterzusuchen
 -
 Couldn't initialize printer
 de:Der Drucker konnte nicht initialisiert werden
 -
 No synchronization info at this position
-de:Keine Synchronisations-Informationen an diesem Ort
+de:Keine Synchronisationsinformationen an diesem Ort
 -
 Synchronization file cannot be opened
-de:Die Synchronisations-Datei kann nicht geöffnet werden
+de:Die Synchronisationsdatei kann nicht geöffnet werden
 -
 Page number %u inexistant
 de:Es gibt keine Seite %u
 -
 No result found around line %u in file %s
-de:Kein Resultat gefunden nahe der Zeile %u in der Datei %s
+de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 -
 Source file %s has no synchronization point
 de:%s hat keinen Synchronisations-Punkt
@@ -3720,7 +3719,7 @@ Cannot print this file
 de:Diese Datei darf nicht gedruckt werden
 -
 PDF Document
-de:PDF Dokument
+de:PDF-Dokument
 -
 SumatraPDF is your main PDF reader
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
@@ -3729,4 +3728,4 @@ SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 -
 Main PDF reader can't be changed in portable mode
-de:Standardanwendung im portablen Modus nicht möglich
+de:Die Standardanwendung kann im portablen Modus nicht verändert werden
