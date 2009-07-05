@@ -4063,7 +4063,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        if (win->dm->_showToc) {
+        if (win->dm && win->dm->_showToc) {
             win->HideTocBox();
             MenuUpdateBookmarksStateForWindow(win);
         }
