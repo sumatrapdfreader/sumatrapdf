@@ -23,9 +23,6 @@ Long term todo:
   calls
 * printing improvements
 * add lemmings
-* don't use GWL_USERDATA to store WindowInfo pointer, use 
-  WindowInfo_FindByHwnd() instead (to avoid crashes due to lifetime issues
-  of windows and WindowInfo structs)
 
 Maybe:
 * DisplayState::visible could be removed. It was used when we were automatically

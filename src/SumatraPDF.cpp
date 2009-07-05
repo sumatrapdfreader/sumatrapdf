@@ -1700,6 +1700,10 @@ static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
             return win;
         if (hwnd == win->hwndPageBox)
             return win;
+        if (hwnd == win->hwndTocBox)
+            return win;
+        if (hwnd == win->hwndSpliter)
+            return win;
         win = win->next;
     }
     return NULL;
@@ -5433,7 +5437,6 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     if (!DefWndProcFindBox)
         DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
     SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
-    SetWindowLong(find, GWL_USERDATA, (LONG)win);
 
     win->hwndFindText = label;
     win->hwndFindBox = find;
@@ -5541,7 +5544,6 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     if (!DefWndProcPageBox)
         DefWndProcPageBox = (WNDPROC)GetWindowLong(page, GWL_WNDPROC);
     SetWindowLong(page, GWL_WNDPROC, (LONG)WndProcPageBox);
-    SetWindowLong(page, GWL_USERDATA, (LONG)win);
 
     win->hwndPageText = label;
     win->hwndPageBox = page;
@@ -5636,7 +5638,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
 {
     static POINT cur;
     static bool resizing = false;
-    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
 
     switch (message)
     {
@@ -5733,7 +5735,7 @@ void WindowInfo::TrackMouse(HWND tracker)
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = (WindowInfo *)GetWindowLong(hwnd, GWL_USERDATA);
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     switch (message) {
         case WM_MOUSELEAVE:
             win->hwndTracker = NULL;
@@ -5753,7 +5755,6 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND spliter = CreateWindow(_T("Splitter"), _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
-    SetWindowLong(spliter, GWL_USERDATA, (LONG)win);
     win->hwndSpliter = spliter;
     
     HWND closeToc = CreateWindow(WC_STATIC, _T(""),
@@ -5767,7 +5768,6 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
                         WS_TABSTOP|WS_CHILD,
                         0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
-    SetWindowLong(win->hwndTocBox, GWL_USERDATA, (LONG)win);
 
     assert(win->hwndTocBox);
     if (!win->hwndTocBox)
