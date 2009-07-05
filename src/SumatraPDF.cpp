@@ -2350,7 +2350,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, bool showWin, TCHAR *windowTitle)
     CheckPositionAndSize(ds);
     if (!LoadPdfIntoWindow(pFullpath, win, ds, is_new_window, true, showWin, true)) {
         /* failed to open */
-        win = NULL;
         goto exit;
     }
 
@@ -4335,7 +4334,7 @@ static void OnMenuSaveAs(WindowInfo *win)
 
 static void OnMenuOpen(WindowInfo *win)
 {
-    OPENFILENAMEW ofn = {0};
+    OPENFILENAME  ofn = {0};
     TCHAR         fileName[260];
 
     // Prepare the file filters (slightly hacky because
@@ -4362,12 +4361,8 @@ static void OnMenuOpen(WindowInfo *win)
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-    if (FALSE == GetOpenFileNameW(&ofn))
-        return;
-
-    win = LoadPdf(fileName);
-    if (!win)
-        return;
+    if (FALSE != GetOpenFileName(&ofn))
+        LoadPdf(fileName);
 }
 static void RotateLeft(WindowInfo *win)
 {
@@ -7130,12 +7125,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     }
 
     if (benchPageNumStr) {
-        gBenchPageNum = _wtoi(benchPageNumStr);
+        gBenchPageNum = _ttoi(benchPageNumStr);
         if (gBenchPageNum < 1)
             gBenchPageNum = INVALID_PAGE_NO;
     }
 
-    LoadStringW(hInstance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
     if (!RegisterWinClass(hInstance))
         goto Exit;
 
@@ -7152,7 +7147,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 #endif
     if (NULL != gBenchFileName) {
             win = LoadPdf(gBenchFileName);
-            if (win)
+            if (win && WS_SHOWING_PDF == win->state)
                 ++pdfOpened;
     } else {
         while (currArg) {
