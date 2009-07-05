@@ -9,8 +9,6 @@ Things to do before 1.0 release:
 * TOC improvements:
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
-* maybe: remember default bookmarks state
-* maybe: remember and restore size and position of the window
 
 Long term todo:
 * find improvements:
@@ -18,9 +16,6 @@ Long term todo:
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
 * better, animated about screen
-* replace DString with something better (sstr ?) and provide C++ wrapper
-  to make it easier to use in C++ code without all those annoying DStringInit()
-  calls
 * printing improvements
 * add lemmings
 
