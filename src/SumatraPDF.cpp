@@ -4548,6 +4548,25 @@ static void RememberWindowPosition(WindowInfo *win)
     gGlobalPrefs.m_windowDy = rect_dy(&rc);
 }
 
+static void AdjustWindowEdge(WindowInfo *win)
+{
+    DWORD exStyle = GetWindowLong(win->hwndCanvas, GWL_EXSTYLE);
+    DWORD newStyle = exStyle;
+
+    // Remove the canvas' edge in the cases where the vertical scrollbar
+    // would otherwise touch the screen's edge, making the scrollbar much
+    // easier to hit with the mouse (cf. Fitts' law)
+    if (IsZoomed(win->hwndFrame) || win->fullScreen)
+        newStyle &= ~WS_EX_STATICEDGE;
+    else
+        newStyle |= WS_EX_STATICEDGE;
+
+    if (newStyle != exStyle) {
+        SetWindowLong(win->hwndCanvas, GWL_EXSTYLE, newStyle);
+        SetWindowPos(win->hwndCanvas, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    }
+}
+
 static void OnSize(WindowInfo *win, int dx, int dy)
 {
     int rebBarDy = 0;
@@ -6118,11 +6137,15 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 OnSize(win, dx, dy);
 
                 RememberWindowPosition(win);
+                AdjustWindowEdge(win);
             }
             break;
+
         case WM_MOVE:
-            if (win)
+            if (win) {
                 RememberWindowPosition(win);
+                AdjustWindowEdge(win);
+            }
             break;
 
         case WM_COMMAND:
