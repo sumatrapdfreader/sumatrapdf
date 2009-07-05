@@ -764,7 +764,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 
                 // if not then open it
                 if (newwindow || !win || WS_SHOWING_PDF != win->state)
-                    win = LoadPdf(pdffile);
+                    win = LoadPdf(pdffile, !newwindow ? win : NULL);
                 
                 if (win && WS_SHOWING_PDF == win->state ) {
                     if (!win->pdfsync)
@@ -794,12 +794,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 
                 // if not then open it
                 if ( newwindow || !win || WS_SHOWING_PDF != win->state)
-                    win = LoadPdf(pdffile);
+                    win = LoadPdf(pdffile, !newwindow ? win : NULL);
                 
                 if (win && WS_SHOWING_PDF == win->state ) {
                     ack.fAck = 1;
                     if (forcerefresh)
-                        PostMessage(win->hwndFrame, WM_CHAR, 'r', 0);
+                        PostMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, 0);
                     if (setfocus)
                         SetFocus(win->hwndFrame);
                 }

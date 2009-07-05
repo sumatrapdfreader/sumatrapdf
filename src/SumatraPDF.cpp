@@ -153,7 +153,7 @@ static BOOL             gDebugShowLinks = FALSE;
 static FileHistoryList *            gFileHistoryRoot = NULL;
 
 static HINSTANCE                    ghinst = NULL;
-TCHAR                               windowTitle[MAX_LOADSTRING];
+TCHAR                               gWindowTitle[MAX_LOADSTRING];
 
 static WindowInfo*                  gWindowList;
 
@@ -1732,16 +1732,6 @@ static void WindowInfoList_Add(WindowInfo *win) {
     gWindowList = win;
 }
 
-static bool WindowInfoList_ExistsWithError(void) {
-    WindowInfo *cur = gWindowList;
-    while (cur) {
-        if (WS_ERROR_LOADING_PDF == cur->state)
-            return true;
-        cur = cur->next;
-    }
-    return false;
-}
-
 static void WindowInfoList_Remove(WindowInfo *to_remove) {
     assert(to_remove);
     if (!to_remove)
@@ -1819,7 +1809,7 @@ static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
 static bool FileCloseMenuEnabled(void) {
     WindowInfo* win = gWindowList;
     while (win) {
-        if (win->state == WS_SHOWING_PDF)
+        if (win->state != WS_ABOUT)
             return true;
         win = win->next;
     }
@@ -1961,7 +1951,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     }
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-        win_set_text(win->hwndFrame, APP_NAME_STR);
+        if (WS_ABOUT == win->state)
+            win_set_text(win->hwndFrame, gWindowTitle);
     }
 }
 
@@ -2032,7 +2023,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
 //            WS_OVERLAPPEDWINDOW,
 //            WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE,
         //WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_HSCROLL | WS_VSCROLL,
-        FRAME_CLASS_NAME, windowTitle,
+        FRAME_CLASS_NAME, gWindowTitle,
         WS_POPUP,
         CW_USEDEFAULT, CW_USEDEFAULT,
         winDx, winDy,
@@ -2040,7 +2031,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         ghinst, NULL);
 #else
     hwndFrame = CreateWindow(
-            FRAME_CLASS_NAME, windowTitle,
+            FRAME_CLASS_NAME, gWindowTitle,
             WS_OVERLAPPEDWINDOW,
             winX, winY, winDx, winDy,
             NULL, NULL,
@@ -2181,12 +2172,6 @@ static bool LoadPdfIntoWindow(
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
     if (!win->dm) {
-        if (is_new_window && WindowInfoList_ExistsWithError()) {
-                /* don't create more than one window with errors */
-                win->dm = previousmodel;
-                WindowInfo_Delete(win);
-                return false;
-        }
         //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
         win->needrefresh = true;
         // if there is an error while reading the pdf and pdfrepair is not requested
@@ -2197,6 +2182,7 @@ static bool LoadPdfIntoWindow(
             ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
+            win_set_text(win->hwndFrame, FilePathW_GetBaseName(fileName));
             goto Error;
         }
     } else {
@@ -2315,19 +2301,15 @@ static void CheckPositionAndSize(DisplayState* ds)
     }
 }
 
-WindowInfo* LoadPdf(const TCHAR *fileName, bool showWin, TCHAR *windowTitle)
+WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
 {
     assert(fileName);
     if (!fileName) return NULL;
 
-    WindowInfo *        win;
-    bool                is_new_window;
-    if ((1 == WindowInfoList_Len()) && (WS_SHOWING_PDF != gWindowList->state)) {
-        win = gWindowList;
-        is_new_window = false;
-    } else {
-        win = WindowInfo_CreateEmpty();
+    bool is_new_window = false;
+    if (!win || WS_SHOWING_PDF == win->state) {
         is_new_window = true;
+        win = WindowInfo_CreateEmpty();
         if (!win)
             return NULL;
         WindowInfoList_Add(win);
@@ -2721,7 +2703,8 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         DragQueryFile(hDrop, i, filename, MAX_PATH);
         if (tstr_endswithi(filename, _T(".lnk")))
             ResolveLnk(filename);
-        LoadPdf(filename);
+        // The first dropped document may override the current window
+        LoadPdf(filename, i == 0 ? win : NULL);
     }
     DragFinish(hDrop);
 
@@ -4362,7 +4345,7 @@ static void OnMenuOpen(WindowInfo *win)
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
     if (FALSE != GetOpenFileName(&ofn))
-        LoadPdf(fileName);
+        LoadPdf(fileName, win);
 }
 static void RotateLeft(WindowInfo *win)
 {
@@ -4590,7 +4573,7 @@ static void ReloadPdfDocument(WindowInfo *win)
         fileName = (const TCHAR*)tstr_dup(win->dm->fileName());
     CloseWindow(win, false);
     if (fileName) {
-        LoadPdf(fileName);
+        LoadPdf(fileName, win);
         free((void*)fileName);
     }
 }
@@ -5239,20 +5222,17 @@ static void OnMenuAbout() {
         SetActiveWindow(gHwndAbout);
         return;
     }
-    const TCHAR *title = ABOUT_WIN_TITLE;
+
     gHwndAbout = CreateWindow(
-            ABOUT_CLASS_NAME, title,
+            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
             ABOUT_WIN_DX, ABOUT_WIN_DY,
             NULL, NULL,
             ghinst, NULL);
-
     if (!gHwndAbout)
         return;
 
-    TCHAR *t = win_get_textw(gHwndAbout);
-    win_set_text(gHwndAbout, title);
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
@@ -6154,7 +6134,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
             fileName = RecentFileNameFromMenuItemId(wmId);
             if (fileName) {
-                LoadPdf(fileName);
+                LoadPdf(fileName, win);
                 free((void*)fileName);
                 break;
             }
@@ -6467,10 +6447,10 @@ InitMouseWheelInfo:
 
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW  wcex;
+    WNDCLASSEX  wcex;
     ATOM        atom;
 
-    wcex.cbSize         = sizeof(WNDCLASSEXW);
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcFrame;
     wcex.cbClsExtra     = 0;
@@ -6482,11 +6462,11 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = FRAME_CLASS_NAME;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-    atom = RegisterClassExW(&wcex);
+    atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEXW);
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc    = WndProcCanvas;
     wcex.cbClsExtra     = 0;
@@ -6498,11 +6478,11 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = CANVAS_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassExW(&wcex);
+    atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEXW);
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcAbout;
     wcex.cbClsExtra     = 0;
@@ -6514,11 +6494,11 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = ABOUT_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassExW(&wcex);
+    atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEXW);
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcSpliter;
     wcex.cbClsExtra     = 0;
@@ -6530,11 +6510,11 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = SPLITER_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassExW(&wcex);
+    atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEXW);
+    wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProcFindStatus;
     wcex.cbClsExtra     = 0;
@@ -6546,7 +6526,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = FINDSTATUS_CLASS_NAME;
     wcex.hIconSm        = 0;
-    atom = RegisterClassExW(&wcex);
+    atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
@@ -7152,7 +7132,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             gBenchPageNum = INVALID_PAGE_NO;
     }
 
-    LoadString(hInstance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDS_APP_TITLE, gWindowTitle, MAX_LOADSTRING);
     if (!RegisterWinClass(hInstance))
         goto Exit;
 
@@ -7186,7 +7166,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             }
             else {
                 bool showWin = !exitOnPrint;
-                win = LoadPdf(currArg->str, showWin, newWindowTitle);
+                win = LoadPdf(currArg->str, NULL, showWin, newWindowTitle);
                 if (!win)
                     goto Exit;
                 if (destName && pdfOpened == 0)
