@@ -85,7 +85,7 @@ def load_strings_file(file_name):
             continue
         #print state_name(state)
         if is_comment_line(l):
-            assert ST_NONE == state
+            assert ST_NONE == state or ST_BEFORE_ORIG == state
             continue
         if is_lang_line(l):
             assert ST_NONE == state

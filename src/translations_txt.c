@@ -720,7 +720,7 @@ const char *g_transTranslations[] = {
   "Gehe zu Seite",
   "Tipp: F3-Taste verwenden, um weiterzusuchen",
   "Letzte Seite\tEnde",
-  "Die Standardanwendung kann im portablen Modus nicht ver\303\244ndert werden",
+  "Standardanwendung im portablen Modus nicht ver\303\244nderbar",
   "SumatraPDF als Standardanwendung f\303\274r PDF-Dateien registrieren?",
   "Standardm\303\244\303\237ig PDF-Dateien mit SumatraPDF \303\266ffnen",
   "Gro\303\237-/Kleinschreibung beachten",

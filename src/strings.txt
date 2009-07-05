@@ -3727,5 +3727,6 @@ de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 -
+# Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
-de:Die Standardanwendung kann im portablen Modus nicht verändert werden
+de:Standardanwendung im portablen Modus nicht veränderbar
