@@ -238,8 +238,15 @@ DecryptedOk:
 
     fz_obj *obj;
     obj = fz_dictgets(_xref->trailer, "Root");
-    if (!obj)
+    _xref->root = fz_resolveindirect(obj);
+    if (!_xref->root)
         goto Error;
+    fz_keepobj(_xref->root);
+
+    obj = fz_dictgets(_xref->trailer, "Info");
+    _xref->info = fz_resolveindirect(obj);
+    if (_xref->info)
+        fz_keepobj(_xref->info);
 
     error = pdf_loadnametrees(_xref);
     if (error)
