@@ -3367,8 +3367,18 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
+static void OnPaintAbout(HWND hwnd);
+static void OnPaint(WindowInfo *win);
+
 static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
 {
+    // TODO: Get rid of the flickering by making at least rightTxtPosX/Y
+    //       window-specific instead of global
+    if (win)
+        OnPaint(win);
+    else
+        OnPaintAbout(gHwndAbout);
+
     for (int i = 0; gAboutLayoutInfo[i].leftTxt; i++) {
         if ((x < gAboutLayoutInfo[i].rightTxtPosX) ||
             (x > gAboutLayoutInfo[i].rightTxtPosX + gAboutLayoutInfo[i].rightTxtDx))
@@ -3550,11 +3560,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
 
         currY += rightDy + ABOUT_TXT_DY;
-
-        int underlineY = y + txtSize.cy - 3;
-        SelectObject(hdc, penLinkLine);
-        MoveToEx(hdc, x, underlineY, NULL);
-        LineTo(hdc, x + txtSize.cx, underlineY);
     }
 
     SelectObject(hdc, penDivideLine);
@@ -6023,6 +6028,8 @@ void WindowInfo::ClearTocBox()
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    const TCHAR * url;
+
     switch (message)
     {
         case WM_CREATE:
@@ -6035,6 +6042,27 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_PAINT:
             OnPaintAbout(hwnd);
+            break;
+
+        case WM_MOUSEMOVE:
+            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            if (url) {
+                SetCursor(gCursorHand);
+            } else {
+                SetCursor(gCursorArrow);
+            }
+            break;
+
+        case WM_LBUTTONDOWN:
+            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            SetWindowLong(hwnd, GWL_USERDATA, (LONG)url);
+            break;
+
+        case WM_LBUTTONUP:
+            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            if (url == (const TCHAR *)GetWindowLong(hwnd, GWL_USERDATA))
+                LaunchBrowser(url);
+            SetWindowLong(hwnd, GWL_USERDATA, 0);
             break;
 
         case WM_DESTROY:
