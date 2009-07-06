@@ -293,6 +293,67 @@ void WindowInfo_ExitFullscreen(WindowInfo *win);
    be sp-rs and Serbian (Cyrillic) should be sr-rs */
 #include "LangMenuDef.h"
 
+//#define NEW_LANG_DETECTION
+
+#ifdef NEW_LANG_DETECTION
+// based on http://msdn.microsoft.com/en-us/library/dd318693%28VS.85%29.aspx
+static struct {
+    const char *lang;
+    WORD primaryLangId;
+    WORD subLangId;
+} g_lcidLangMap[] = {
+    { "ar", LANG_ARABIC, 0 },
+    { "ca", LANG_CATALAN, 0 },
+    { "fr", LANG_FRENCH, 0 },
+    { "de", LANG_GERMAN, 0 },
+    { "hu", LANG_HUNGARIAN, 0 },
+    { "pl", LANG_POLISH, 0 },
+    { "cy", LANG_WELSH, 0 },
+    { "en", LANG_ENGLISH, 0 },
+    { NULL, 0, 0 }
+
+/*
+    "cn", NULL, // Chinese Simplified
+    "tr", "041f", NULL, // Turkish
+    "by", "0423", NULL, // Belarusian
+    "ja", "0411", NULL, // Japanese
+    "fa", "0429", NULL, // Persian
+    "dk", "0406", NULL, // Danish
+    "it", "0410", NULL, // Italian
+    "nl", "0813", "0413", NULL, // Dutch
+    "ta", "0449", NULL, // Tamil
+    "es", "0c0a", "040a", "500a", "280a", "3c0a", "180a", "080a", "2c0a", NULL, // Spanish
+    "hr", "101a", "041a", NULL, // Croatian
+    "ru", "0419", NULL, // Russian
+    "sv", "081d", "041d", NULL, // Swedish
+    "cz", "0405", NULL, // Czech
+    "gr", "0408", NULL, // Greek
+    "th", "041e", NULL, // Thai
+    "pt", "0816", NULL, // Portuguese (Portugal)
+    "br", "0416", NULL, // Portuguese (Brazillian)
+    "no", "0414", "0814", NULL, // Norwegian
+    "sk", "041b", NULL, // Slovak
+    "vn", "042a", NULL, // Vietnamese
+    "lt", NULL, NULL, // Lithuanian
+    "my", NULL, NULL, // Malaysian
+    "fi", NULL, NULL, // Finnish
+    "si", NULL, NULL, // Slovenian
+    "tw", NULL, NULL, // Chinese Traditional
+    "ml", NULL, NULL, // Malayalam
+    "he", NULL, NULL, // Hebrew
+    "sp-rs", NULL, NULL, // Serbian (Latin)
+    "id", NULL, NULL, // Indonesian
+    "mk", NULL, NULL, // Macedonian
+    "ro", NULL, NULL, // Romanian
+    "sr-rs", NULL, NULL, // Serbian (Cyrillic)
+    "kr", NULL, NULL, // Korean
+    "gl", NULL, NULL, // Galician
+    "bg", NULL, NULL, // Bulgarian
+    "uk", NULL, NULL, // Ukrainian
+    NULL
+*/
+};
+#else
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
 static const char *g_lcidLangMap[] = {
     "en", "0409", NULL, // English
@@ -341,6 +402,7 @@ static const char *g_lcidLangMap[] = {
     "uk", NULL, NULL, // Ukrainian
     NULL
 };
+#endif
 
 const char* CurrLangNameGet() {
     if (!g_currLangName)
@@ -371,6 +433,38 @@ static void CurrLangNameFree() {
     g_currLangName = NULL;
 }
 
+#ifdef NEW_LANG_DETECTION
+static const char *GetLangNameFromLang(WORD primaryLangId, WORD subLangId)
+{
+    int i = 0;
+    while (g_lcidLangMap[i].lang) {
+        if (primaryLangId == g_lcidLangMap[i].primaryLangId)
+            break;
+        ++i;
+    }
+    if (!g_lcidLangMap[i].lang)
+        return NULL;
+
+    // either find the exact primary/sub lang id match, or return the
+    // first entry where primary lang matches
+    int firstPrimaryLangMatch = i;
+    for (;;) {
+        if (g_lcidLangMap[i].subLangId == subLangId)
+            return g_lcidLangMap[i].lang;
+        ++i;
+        if (!g_lcidLangMap[i].lang || (g_lcidLangMap[i].primaryLangId != primaryLangId))
+            return g_lcidLangMap[firstPrimaryLangMatch].lang;
+    }
+}
+
+static void GuessLanguage()
+{
+    LANGID lang = GetUserDefaultUILanguage();
+    const char *langName = GetLangNameFromLang(PRIMARYLANGID(lang), SUBLANGID(lang));
+    if (NULL != langName)
+        CurrLangNameSet(langName);
+}
+#else
 static const char *GetLangFromLcid(const char *lcid)
 {
     const char *lang;
@@ -402,6 +496,8 @@ static void GuessLanguage()
     if (NULL != lang)
         CurrLangNameSet(lang);
 }
+
+#endif
 
 /* Convert FILETIME to a string.
    Caller needs to free() the result. */
