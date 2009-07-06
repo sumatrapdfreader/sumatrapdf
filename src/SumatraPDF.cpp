@@ -1764,8 +1764,12 @@ static void WindowInfo_DoubleBuffer_Show(WindowInfo *win, HDC hdc)
     }
 }
 
+static void WindowInfoList_Remove(WindowInfo *to_remove);
+
 static void WindowInfo_Delete(WindowInfo *win)
 {
+    WindowInfoList_Remove(win);
+
     if (win->dm) {
         RenderQueue_RemoveForDisplayModel(win->dm);
         cancelRenderingForDisplayModel(win->dm);
@@ -1786,6 +1790,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     win->dm = NULL;
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
+    DragAcceptFiles(win->hwndFrame, FALSE);
 
     free(win->title);
     win->title = NULL;
@@ -2169,12 +2174,18 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     assert(win->hMenu);
     BOOL ok = SetMenu(hwndFrame, win->hMenu);
     assert(ok);
+
     win->hwndCanvas = hwndCanvas;
+    ShowWindow(win->hwndCanvas, SW_SHOW);
+    UpdateWindow(win->hwndCanvas);
+
     CreateToolbar(win, ghinst);
     CreateTocBox(win, ghinst);
     WindowInfo_UpdateFindbox(win);
+    DragAcceptFiles(win->hwndFrame, TRUE);
 
     win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    WindowInfoList_Add(win);
     return win;
 }
 
@@ -2343,7 +2354,6 @@ Error:
     MenuToolbarUpdateStateForAllWindows();
     if (is_new_window || placeWindow && state) {
         assert(win);
-        DragAcceptFiles(win->hwndFrame, TRUE);
         if (is_new_window && state && 0 != state->windowDx && 0 != state->windowDy) {
             RECT rect;
             rect.top = state->windowY;
@@ -2366,10 +2376,8 @@ Error:
 #endif
         if (showWin) {
             ShowWindow(win->hwndFrame, showType);
-            ShowWindow(win->hwndCanvas, SW_SHOW);
         }
         UpdateWindow(win->hwndFrame);
-        UpdateWindow(win->hwndCanvas);
     }
     if (win->dm && win->dm->_showToc) {
         win->ClearTocBox();
@@ -2427,7 +2435,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
         win = WindowInfo_CreateEmpty();
         if (!win)
             return NULL;
-        WindowInfoList_Add(win);
     }
 
     if (windowTitle)
@@ -4137,9 +4144,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         DeleteOldSelectionInfo(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
-        WindowInfoList_Remove(win);
         WindowInfo_Delete(win);
-        DragAcceptFiles(hwndToDestroy, FALSE);
         DestroyWindow(hwndToDestroy);
     }
 
@@ -7311,12 +7316,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         win = WindowInfo_CreateEmpty();
         if (!win)
             goto Exit;
-        WindowInfoList_Add(win);
 
-        /* TODO: should this be part of WindowInfo_CreateEmpty() ? */
-        DragAcceptFiles(win->hwndFrame, TRUE);
-        ShowWindow(win->hwndCanvas, SW_SHOW);
-        UpdateWindow(win->hwndCanvas);
         if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
