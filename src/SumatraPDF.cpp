@@ -2228,7 +2228,8 @@ static bool LoadPdfIntoWindow(
     bool placeWindow)      // if true then the Window will be moved/sized according to the 'state' information even if the window was already placed before (is_new_window=false)
 {
     // Never load settings from a preexisting state if the user doesn't wish to
-    if (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues)
+    // (unless we're just refreshing the document, i.e. only if placeWindow == true)
+    if (placeWindow && (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues))
         state = NULL;
 
     /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
