@@ -880,13 +880,8 @@ void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPosY in RecalcPagesInfo. So we shouldn't
        scroll (adjust areaOffset.y) there because it defeats the purpose.
-       TODO: is there a better way of y-centering?
-       TODO: it probably doesn't work in continuous mode (but that's a corner
-             case, I hope) */
-    if (!displayModeContinuous(displayMode()))
-        areaOffset.y = (double)scrollY;
-    else
-        areaOffset.y = pageInfo->currPosY - PADDING_PAGE_BORDER_TOP + (double)scrollY;
+       TODO: is there a better way of y-centering? */
+    areaOffset.y = (double)scrollY;
     /* TODO: prevent scrolling too far */
 
     recalcVisibleParts();
