@@ -882,6 +882,9 @@ void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
        scroll (adjust areaOffset.y) there because it defeats the purpose.
        TODO: is there a better way of y-centering? */
     areaOffset.y = (double)scrollY;
+    // Move the next page to the top, if all pages don't fit onto a single screen
+    if (displayModeContinuous(displayMode()) && _canvasSize.dy() > drawAreaSize.dy())
+        areaOffset.y = pageInfo->currPosY - PADDING_PAGE_BORDER_TOP + (double)scrollY;
     /* TODO: prevent scrolling too far */
 
     recalcVisibleParts();
