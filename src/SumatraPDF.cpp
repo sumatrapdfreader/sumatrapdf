@@ -1037,6 +1037,10 @@ MenuDef menuDefFile[] = {
     { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
     { _TRN("&Save as\tCtrl-S"),                     IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
+#if 0
+    { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      0 },
+#endif
 #ifdef _TEX_ENHANCEMENT
     // TODO: merge the dialog invoked by this item into the Options dialog
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },

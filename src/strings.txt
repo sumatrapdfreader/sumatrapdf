@@ -204,7 +204,7 @@ bg:&Отвори\tCtrl-O
 br:A&brir\tCtrl-O
 hu:Megny&itás\tCtrl-O
 pl:Otwórz\tCtrl-O
-de:Ö&ffnen...\tStrg+O
+de:Ö&ffnen…\tStrg+O
 fr:&Ouvrir\tCtrl-O
 tr:&Aç\tCtrl-O
 by:Адчыніць\tCtrl-O
@@ -317,7 +317,7 @@ af:&Stoor As\tCtrl-S
 bg:&Запиши като...\tCtrl-S
 br:&Salvar como...\tCtrl-S
 hu:Ment&és másként...\tCtrl-S
-de:Speichern &unter...\tStrg+S
+de:Speichern &unter…\tStrg+S
 pl:Zapisz jako\tCtrl-S
 fr:&Enregistrer sous\tCtrl-S
 tr:&Farklı kaydet\tCtrl-S
@@ -375,7 +375,7 @@ bg:От&печатай\tCtrl-P
 br:&Imprimir\tCtrl-P
 hu:Nyomt&atás\tCtrl-P
 pl:Drukuj\tCtrl-P
-de:&Drucken...\tStrg+P
+de:&Drucken…\tStrg+P
 fr:&Imprimer\tCtrl-P
 tr:&Yazdır\tCtrl-P
 by:Друкаваць\tCtrl-P
@@ -1388,7 +1388,7 @@ bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
 hu:Megadott oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
-de:Seite...\tStrg+G
+de:Seite…\tStrg+G
 fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
@@ -1995,7 +1995,7 @@ af:Soek...\tCtrl-F
 pt:Procurar...\tCtrl-F
 br:Localizar...\tCtrl-F
 bg:Търси...\tCtrl-F
-de:Suchen...\tStrg+F
+de:Suchen…\tStrg+F
 tr:Bul...\tCtrl-F
 hu:Keresés...\tCtrl-F
 pl:Szukaj...\tCtrl-F
@@ -2193,7 +2193,7 @@ bg:Отвори
 br:Abrir
 hu:Megny&itás
 pl:Otwórz
-de:Ö&ffnen...
+de:Ö&ffnen…
 fr:Ouvrir
 tr:&Aç
 by:Адчыніць
@@ -2732,7 +2732,7 @@ Change language
 af:Verander Taal (Change language)
 bg:Смени езика (Change language)
 br:Mudar o idioma (Change language)
-de:Sprache ändern (Change language)
+de:Sprache ändern… (Change language)
 gr:Αλλαγή γλώσσας (Change language)
 pl:Zmien język (Change language)
 sk:Zmeniť jazyk (Change language)
@@ -2754,7 +2754,7 @@ th:เปลี่ยนภาษา (Change language)
 gl: Cambiar lingua (Change language)
 tl:Ibahin ang Wika (Change language)
 va:Canviar Idioma (Change language)
-ca:Canvia la llengua (Changue language)
+ca:Canvia la llengua (Change language)
 sn:Chinja mutauro (Change language)
 bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
@@ -2764,7 +2764,7 @@ cy:Newid iaith (Change language)
 ga:Athraigh an Teanga (Change language)
 mm:စာ စကား ပြောင်းရန် (Change language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
-hi:भाषा बदलें(Change language)
+hi:भाषा बदलें (Change language)
 nn:Byt språk (Change language)
 fi:Valitse kieli (Change language)
 sv:Byt språk (Change language)
@@ -3492,7 +3492,7 @@ hi:अनुरूप करें
 nn:Tilpass side
 -
 &Options...
-de:&Optionen...
+de:&Optionen…
 ru:&Параметры...
 cy:&Dewisiadau...
 gr:Επιλ&ογές
@@ -3639,7 +3639,7 @@ cy:Dim diolch
 gr:Όχι, ευχαριστώ
 -
 Please wait - rendering...
-de:Bitte einen Moment Geduld...
+de:Bitte einen Moment Geduld…
 ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
 gr:Φόρτωση, παρακαλώ περιμένετε... 
@@ -3663,7 +3663,7 @@ cy:Canfod testun ar dudalen %d
 gr:Το κείμενο βρέθηκε στη σελίδα %d
 -
 Searching %d of %d...
-de:Suche auf Seite %d von %d...
+de:Suche auf Seite %d von %d…
 ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
 gr:Αναζήτηση %d από %d...
@@ -3713,7 +3713,7 @@ Source file %s has no synchronization point
 de:%s hat keinen Synchronisations-Punkt
 -
 [Changes detected; refreshing] %s
-de:[Datei wurde geändert; aktualisiere...] %s
+de:[Datei wurde geändert; aktualisiere…] %s
 -
 Unknown source file (%s)
 de:Unbekannte Datei (%s)
@@ -3733,3 +3733,6 @@ de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 de:Standardanwendung im portablen Modus nicht veränderbar
+-
+Open in &Adobe Reader
+de:Mit &Adobe Reader öffnen
