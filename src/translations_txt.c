@@ -746,7 +746,7 @@ const char *g_transTranslations[] = {
   "Bitte einen Moment Geduld...",
   "Vorherige Seite",
   "Druckerproblem",
-  NULL,
+  "&Eine Liste der ge\303\266ffneten Dokumente f\303\274hren",
   "Drehung links\tStrg+Umschalt+-",
   "Drehung rechts\tStrg+Umschalt++",
   "Suche auf Seite %d von %d...",

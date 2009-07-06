@@ -3543,6 +3543,7 @@ cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 -
 Remember &opened files
+de:&Eine Liste der geöffneten Dokumente führen
 -
 View
 af:Vertoon
