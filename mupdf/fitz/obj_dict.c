@@ -15,13 +15,31 @@ static int keyvalcmp(const void *ap, const void *bp)
 	return -1;
 }
 
+static inline int cmpstr(char *s1, int s1len, char *s2)
+{
+	while ((s1len > 0) && *s2)
+	{
+		unsigned char c1 = *(unsigned char*)s1++;
+		unsigned char c2 = *(unsigned char*)s2++;
+		--s1len;
+		if (c1 > c2)
+			return 1;
+		if (c2 > c1)
+			return -1;
+	}
+	if (s1len > 0)
+		return 1;
+	if (*s2)
+		return -1;
+	return 0;
+}
+
 static inline int keystrcmp(fz_obj *key, char *s)
 {
 	if (fz_isname(key))
 		return strcmp(fz_toname(key), s);
 	if (fz_isstring(key))
-		if (strlen(s) == fz_tostrlen(key))
-			return memcmp(fz_tostrbuf(key), s, fz_tostrlen(key));
+		return cmpstr(fz_tostrbuf(key), fz_tostrlen(key), s);
 	return -1;
 }
 
