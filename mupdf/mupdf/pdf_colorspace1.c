@@ -587,6 +587,39 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		return fz_rethrow(-1, "out of memory: indexed colorspace lookup table (%d entries)", n);
 	}
 
+	if (fz_isindirect(lookup))
+	{
+		const int oid = fz_tonum(lookup);
+		const int gen = fz_togen(lookup);
+		if (oid < 0 || oid >= xref->len)
+			return fz_throw("object id out of range (%d)", oid);
+		error = pdf_cacheobject(xref, oid, gen);
+		if (error)
+			return fz_rethrow(error, "cannot load stream object (%d)", oid);
+		if (fz_isstring(xref->table[oid].obj))
+		{
+			lookup = xref->table[oid].obj;
+		}
+		else
+		{
+			fz_buffer *buf;
+			int i;
+
+			pdf_logrsrc("stream lookup\n");
+			error = pdf_loadstream(&buf, xref, fz_tonum(lookup), fz_togen(lookup));
+			if (error)
+			{
+				fz_dropcolorspace((fz_colorspace*)cs);
+				return fz_rethrow(error, "cannot load colorpsace lookup table");
+			}
+
+			for (i = 0; i < n && i < (buf->wp - buf->rp); i++)
+				cs->lookup[i] = buf->rp[i];
+
+			fz_dropbuffer(buf);
+		}
+	}
+
 	if (fz_isstring(lookup) && fz_tostrlen(lookup) == n)
 	{
 		unsigned char *buf;
@@ -597,26 +630,6 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		buf = (unsigned char *) fz_tostrbuf(lookup);
 		for (i = 0; i < n; i++)
 			cs->lookup[i] = buf[i];
-	}
-
-	if (fz_isindirect(lookup))
-	{
-		fz_buffer *buf;
-		int i;
-
-		pdf_logrsrc("stream lookup\n");
-
-		error = pdf_loadstream(&buf, xref, fz_tonum(lookup), fz_togen(lookup));
-		if (error)
-		{
-			fz_dropcolorspace((fz_colorspace*)cs);
-			return fz_rethrow(error, "cannot load colorpsace lookup table");
-		}
-
-		for (i = 0; i < n && i < (buf->wp - buf->rp); i++)
-			cs->lookup[i] = buf->rp[i];
-
-		fz_dropbuffer(buf);
 	}
 
 	pdf_logrsrc("}\n");
