@@ -56,9 +56,6 @@ typedef struct {
     int  m_windowDx;
     int  m_windowDy;
 
-    // TODO: What's this value needed for? Can it be removed?
-    int  m_pdfsOpened;
-
     int  m_showToc;
     int  m_globalPrefsOnly;
 } SerializableGlobalPrefs;

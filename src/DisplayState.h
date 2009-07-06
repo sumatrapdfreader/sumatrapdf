@@ -48,8 +48,6 @@ enum DisplayMode {
 #define ESC_TO_EXIT_STR             "EscToExit"
 #define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
 #define VERSION_TO_SKIP_STR         "VersionToSkip"
-#define GUID_STR                    "Guid"
-#define PDFS_OPENED_STR             "PdfsOpened"
 #define LAST_UPDATE_STR             "LastUpdate"
 #define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"
 #define REMEMBER_OPENED_FILES_STR   "RememberOpenedFiles"

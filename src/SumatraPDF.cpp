@@ -229,7 +229,6 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_WIN_POS, // int  m_windowPosY
     DEFAULT_WIN_POS, // int  m_windowDx
     DEFAULT_WIN_POS, // int  m_windowDy
-    0, // int  m_pdfsOpened
     1, // int  m_showToc
     0, // int  m_globalPrefsOnly
 };
@@ -2466,7 +2465,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
         AddFileToHistory(pFullpath);
         RebuildProgramMenus();
     }
-    gGlobalPrefs.m_pdfsOpened += 1;
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
