@@ -1542,18 +1542,19 @@ static void SeeLastError(void) {
 
 static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 {
+    // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
+    //       the non-maximized dimensions for proper restoration)
+    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen)
+        return;
+
     RECT r;
-    if (GetWindowRect(win->hwndFrame, &r)) {
-        ds->windowX = r.left;
-        ds->windowY = r.top;
-        ds->windowDx = rect_dx(&r);
-        ds->windowDy = rect_dy(&r);
-    } else {
-        ds->windowX = 0;
-        ds->windowY = 0;
-        ds->windowDx = 0;
-        ds->windowDy = 0;
-    }
+    if (!GetWindowRect(win->hwndFrame, &r))
+        return;
+
+    ds->windowX = r.left;
+    ds->windowY = r.top;
+    ds->windowDx = rect_dx(&r);
+    ds->windowDy = rect_dy(&r);
 }
 
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
@@ -1568,12 +1569,12 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (WS_ABOUT == win->state || gGlobalPrefs.m_globalPrefsOnly)
     {
         // update global windowState for next default launch when no pdf opened
-        if (gGlobalPrefs.m_windowState != WIN_STATE_FULLSCREEN) {
-            if (IsZoomed(win->hwndFrame))
-                gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
-            else
-                gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-        }
+        if (win->fullScreen)
+            gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
+        else if (IsZoomed(win->hwndFrame))
+            gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+        else
+            gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
     }
 
     if (WS_SHOWING_PDF != win->state)
@@ -2219,33 +2220,6 @@ static bool LoadPdfIntoWindow(
     if (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues)
         state = NULL;
 
-    /* TODO: need to get rid of that, but not sure if that won't break something
-       i.e. GetCanvasSize() caches size of canvas and some code might depend
-       on this being a cached value, not the real value at the time of calling */
-    win->GetCanvasSize();
-    SizeD totalDrawAreaSize(win->winSize());
-    if (is_new_window && state && 0 != state->windowDx && 0 != state->windowDy) {
-        RECT rect;
-        rect.top = state->windowY;
-        rect.left = state->windowX;
-        rect.bottom = rect.top + state->windowDy;
-        rect.right = rect.left + state->windowDx;
-        
-        /* Make sure it doesn't have a stupid position like outside of the
-            screen etc. */
-        rect_shift_to_work_area(&rect);
-        
-        MoveWindow(win->hwndFrame,
-            rect.left, rect.top, rect_dx(&rect), rect_dy(&rect), TRUE);
-        /* No point in changing totalDrawAreaSize here because the canvas
-        window doesn't get resized until the frame gets a WM_SIZE message */
-    }
-#if 0 // not ready yet
-    else {
-        IntelligentWindowResize(win);
-    }
-#endif
-
     /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
        but scrollbars are not part of the client area on windows so it's better
        not to have them taken into account by DisplayModelSplash code.
@@ -2253,18 +2227,15 @@ static bool LoadPdfIntoWindow(
              scrollbars are part of client area in order to accomodate windows
              UI properly */
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
-    int offsetX = 0;
-    int offsetY = 0;
     int startPage = 1;
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
     int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
+
     if (state) {
         startPage = state->pageNo;
         displayMode = state->displayMode;
-        offsetX = state->scrollX;
-        offsetY = state->scrollY;
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL)
             showType = SW_NORMAL;
@@ -2274,13 +2245,17 @@ static bool LoadPdfIntoWindow(
             showType = SW_MINIMIZE;
     }
 
+    /* TODO: need to get rid of that, but not sure if that won't break something
+       i.e. GetCanvasSize() caches size of canvas and some code might depend
+       on this being a cached value, not the real value at the time of calling */
+    win->GetCanvasSize();
+    SizeD totalDrawAreaSize(win->winSize());
+
     DisplayModel *previousmodel = win->dm;
 
     win->dm = DisplayModel_CreateFromFileName(fileName,
         totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
 
-    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
-    int rotation = DEFAULT_ROTATION;
     if (!win->dm) {
         //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
         win->needrefresh = true;
@@ -2303,10 +2278,15 @@ static bool LoadPdfIntoWindow(
 
     win->dm->setAppData((void*)win);
 
-    /* TODO: if fileFromHistory, set the state based on gFileHistoryList node for
-       this entry */
+    int offsetX = 0;
+    int offsetY = 0;
+    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    int rotation = DEFAULT_ROTATION;
+
     win->state = WS_SHOWING_PDF;
     if (state) {
+        offsetX = state->scrollX;
+        offsetY = state->scrollY;
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
@@ -2364,7 +2344,26 @@ Error:
     if (is_new_window || placeWindow && state) {
         assert(win);
         DragAcceptFiles(win->hwndFrame, TRUE);
-        DragAcceptFiles(win->hwndCanvas, TRUE);
+        if (is_new_window && state && 0 != state->windowDx && 0 != state->windowDy) {
+            RECT rect;
+            rect.top = state->windowY;
+            rect.left = state->windowX;
+            rect.bottom = rect.top + state->windowDy;
+            rect.right = rect.left + state->windowDx;
+            
+            // Make sure it doesn't have a position like outside of the screen etc.
+            rect_shift_to_work_area(&rect);
+            
+            // This shouldn't happen until win->state != WS_ABOUT, so that we don't
+            // accidentally update gGlobalState with this window's dimensions
+            MoveWindow(win->hwndFrame,
+                rect.left, rect.top, rect_dx(&rect), rect_dy(&rect), TRUE);
+        }
+#if 0 // not ready yet
+        else {
+            IntelligentWindowResize(win);
+        }
+#endif
         if (showWin) {
             ShowWindow(win->hwndFrame, showType);
             ShowWindow(win->hwndCanvas, SW_SHOW);
@@ -2399,9 +2398,15 @@ static void CheckPositionAndSize(DisplayState* ds)
     if (!ds)
         return;
 
+    if (0 == ds->windowDx && 0 == ds->windowDy) {
+        ds->windowX = gGlobalPrefs.m_windowPosX;
+        ds->windowY = gGlobalPrefs.m_windowPosY;
+        ds->windowDx = gGlobalPrefs.m_windowDx;
+        ds->windowDy = gGlobalPrefs.m_windowDy;
+    }
+
     if (ds->windowDx < MIN_WIN_DX || ds->windowDx > MAX_WIN_DX)
         ds->windowDx = DEF_PAGE_DX;
-
     if (ds->windowDy < MIN_WIN_DY || ds->windowDy > MAX_WIN_DY)
         ds->windowDy = DEF_PAGE_DY;
     
@@ -4591,8 +4596,16 @@ static void RememberWindowPosition(WindowInfo *win)
     if (win->state != WS_ABOUT && !gGlobalPrefs.m_globalPrefsOnly)
         return;
     
-    /* don't update the window's dimensions if it is maximized or mimimized */
-    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen)
+    // update global windowState for next default launch when no pdf opened
+    if (win->fullScreen)
+        gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
+    else if (IsZoomed(win->hwndFrame))
+        gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+    else if (!IsIconic(win->hwndFrame))
+        gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+
+    /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
+    if (WIN_STATE_NORMAL != gGlobalPrefs.m_windowState || IsIconic(win->hwndFrame))
         return;
 
     RECT rc;
@@ -7304,9 +7317,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         DragAcceptFiles(win->hwndFrame, TRUE);
         ShowWindow(win->hwndCanvas, SW_SHOW);
         UpdateWindow(win->hwndCanvas);
-        if (gGlobalPrefs.m_windowState == WIN_STATE_MINIMIZED)
-            ShowWindow(win->hwndFrame, SW_MINIMIZE);
-        else if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
+        if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
