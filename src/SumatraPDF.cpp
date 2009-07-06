@@ -1039,12 +1039,12 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
 #if 0
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      0 },
+    { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
 #endif
 #ifdef _TEX_ENHANCEMENT
     // TODO: merge the dialog invoked by this item into the Options dialog
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      0 },
+    { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      MF_NOT_IN_RESTRICTED },
 #endif
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
@@ -5769,7 +5769,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND spliter = CreateWindow(_T("Splitter"), _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
+    HWND spliter = CreateWindow(SPLITER_CLASS_NAME, _T(""), WS_CHILDWINDOW, 0, 0, 0, 0,
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     win->hwndSpliter = spliter;
     
