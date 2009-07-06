@@ -110,6 +110,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define COL_CAPTION_BLUE RGB(0,0x50,0xa0)
 #define COL_WHITE RGB(0xff,0xff,0xff)
 #define COL_BLACK RGB(0,0,0)
+#define COL_BLUE_LINK RGB(0,0x20,0xa0)
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW RGB(0x40, 0x40, 0x40)
 
@@ -3395,6 +3396,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     HPEN penRectBorder = CreatePen(PS_SOLID, ABOUT_RECT_BORDER_DX_DY, COL_BLACK);
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
     HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLACK);
+    HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
 
     RECT rc;
     GetClientRect(hwnd, &rc);
@@ -3528,6 +3530,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         currY += rightDy + ABOUT_TXT_DY;
     }
 
+    SetTextColor(hdc, COL_BLUE_LINK);
     /* render text on the right */
     currY = linePosY;
     (HFONT)SelectObject(hdc, fontRightTxt);
@@ -3538,7 +3541,15 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         gAboutLayoutInfo[i].rightTxtPosX = x;
         gAboutLayoutInfo[i].rightTxtPosY = y;
         TextOut(hdc, x, y, txt, lstrlen(txt));
+
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+
         currY += rightDy + ABOUT_TXT_DY;
+
+        int underlineY = y + txtSize.cy - 3;
+        SelectObject(hdc, penLinkLine);
+        MoveToEx(hdc, x, underlineY, NULL);
+        LineTo(hdc, x + txtSize.cx, underlineY);
     }
 
     SelectObject(hdc, penDivideLine);
@@ -3557,6 +3568,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     DeleteObject(penBorder);
     DeleteObject(penDivideLine);
     DeleteObject(penRectBorder);
+    DeleteObject(penLinkLine);
 }
 
 static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
