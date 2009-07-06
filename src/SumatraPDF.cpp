@@ -1197,8 +1197,10 @@ MenuDef menuDefZoom[] = {
 
 MenuDef menuDefLang[] = {
     { _TRN("Change language"),             IDM_CHANGE_LANGUAGE,         0  },
+#if 0
     { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM ,                           0,                           MF_NOT_IN_RESTRICTED },
+#endif
     { _TRN("&Options..."),                 IDM_SETTINGS,                MF_NOT_IN_RESTRICTED }
 };
 
@@ -3348,7 +3350,10 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { _T("translations"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
+    { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
+    { _T("translations"), _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
 #ifdef _TEX_ENHANCEMENT
