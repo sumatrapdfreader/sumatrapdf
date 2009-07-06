@@ -3402,7 +3402,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     y += (int)txtSize.cy + 2;
 
     TCHAR buf[128];
-    _sntprintf(buf, dimof(buf), _T("v%s svn %d"), _T(CURR_VERSION), _T(SVN_PRE_RELEASE_VER));
+    _sntprintf(buf, dimof(buf), _T("v%s svn %d"), _T(CURR_VERSION), SVN_PRE_RELEASE_VER);
     txt = &(buf[0]);
     TextOut(hdc, x, y, txt, lstrlen(txt));
 #endif
