@@ -661,7 +661,14 @@ pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gen)
 			if (n > 16) {
 				fz_setiv(&aes, s);
 				fz_aesdecrypt(&aes, s, s+16, n-16);
-				s[n-16-1] = 0;
+				/* TODO: this is not entirely correct. In AES encryption the size of
+				   encrypted data must be multiply of 16 so it seems like like strings
+				   whose size are of different lenght have garbage at the end and I
+				   don't know how to recover the right lenght of decrypted string.
+				   Example of a problem is PDF from http://code.google.com/p/sumatrapdf/issues/detail?id=284
+				   which has outline (bookmarks) 'Title' strings corrupted. */
+				memset(s + n - 16, 0, 16);
+				obj->u.s.len = n-16;
 			}
 		}
 	}
