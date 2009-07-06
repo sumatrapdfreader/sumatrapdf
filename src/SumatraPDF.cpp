@@ -4389,7 +4389,7 @@ static void OnMenuSaveAs(WindowInfo *win)
         realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), _T(".pdf"));
     }
     BOOL cancelled = FALSE;
-    BOOL ok = CopyFileExW(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
+    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
     if (!ok) {
         SeeLastError();
         MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
@@ -5390,7 +5390,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
-        return DefWindowProcW(hwnd, message, wParam, lParam);
+        return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_CHAR == message) {
         if (VK_ESCAPE == wParam || VK_TAB == wParam)
@@ -5473,7 +5473,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
-        return DefWindowProcW(hwnd, message, wParam, lParam);
+        return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_ERASEBKGND == message) {
         RECT rect;
@@ -5518,7 +5518,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
     } else if (WM_SETTEXT == message) {
         InvalidateRect(hwnd, NULL, true);
     }
-    return DefWindowProcW(hwnd, message, wParam, lParam);
+    return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
@@ -5601,7 +5601,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     if (!win || !win->dm)
-        return DefWindowProcW(hwnd, message, wParam, lParam);
+        return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
@@ -5741,7 +5741,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     lres = SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
 
-    lres = SendMessageW(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+    lres = SendMessage(hwndToolbar, TB_ADDBUTTONSW, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
 
     RECT rc;
     lres = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
@@ -5836,7 +5836,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 win->ToggleTocBox();
             break;
     }
-    return DefWindowProcW(hwnd, message, wParam, lParam);
+    return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 void WindowInfo::FindStart()
@@ -5931,12 +5931,9 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     SetWindowLong(win->hwndTocBox, GWL_WNDPROC, (LONG)WndProcTocBox);
 }
 
-#define TreeView_InsertItemW(w,i)   (HTREEITEM)SendMessageW((w),TVM_INSERTITEMW,0,(LPARAM)(i))
-#define TreeView_GetItemW(w,i)      (BOOL)SendMessageW((w),TVM_GETITEMW,0,(LPARAM)(i))
-
 static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent)
 {
-    TV_INSERTSTRUCTW tvinsert;
+    TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = (HTREEITEM)parent;
     tvinsert.hInsertAfter = TVI_LAST;
     if (parent == NULL) {
@@ -5949,9 +5946,11 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     }
     tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
     tvinsert.itemex.lParam = (LPARAM)entry->link;
+    // Replace unprintable whitespace with regular spaces
+    tstr_trans_chars(entry->title, _T("\t\n\v\f\r"), _T("     "));
     tvinsert.itemex.pszText = entry->title;
     
-    return TreeView_InsertItemW(hwnd, &tvinsert);
+    return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
 static void PopluateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
@@ -6090,7 +6089,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
         /* TODO: handle mouse move/down/up so that links work */
 
         default:
-            return DefWindowProcW(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -6163,7 +6162,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             } else if (win && MA_SCROLLING == win->mouseAction) {
                 SetCursor(gCursorScroll);
             }
-            return DefWindowProcW(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
             assert(win);
@@ -6204,7 +6203,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 
         default:
-            return DefWindowProcW(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -6421,7 +6420,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 default:
-                    return DefWindowProcW(hwnd, message, wParam, lParam);
+                    return DefWindowProc(hwnd, message, wParam, lParam);
             }
             break;
 
@@ -6554,7 +6553,7 @@ InitMouseWheelInfo:
             break;
 
         default:
-            return DefWindowProcW(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -7061,7 +7060,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     SerializableGlobalPrefs_Init();
 
-    cmdLine  = GetCommandLineW();
+    cmdLine  = GetCommandLine();
 
     argListRoot = WStrList_FromCmdLine(cmdLine);
     assert(argListRoot);
@@ -7184,7 +7183,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             // race condition and having more than one copy launch because
             // FindWindow() in one process is called before a window is created
             // in another process
-            reuse_instance = FindWindowW(FRAME_CLASS_NAME, 0) != NULL;
+            reuse_instance = FindWindow(FRAME_CLASS_NAME, 0) != NULL;
             continue;
         }
 
