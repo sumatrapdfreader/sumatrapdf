@@ -270,6 +270,9 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 static const char *g_currLangName;
 
+static bool ReadRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *buffer, DWORD bufLen);
+static bool WriteRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *value);
+
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
 static void RebuildProgramMenus(void);
@@ -286,6 +289,7 @@ void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWAR
 static void ClearSearch(WindowInfo *win);
 void WindowInfo_EnterFullscreen(WindowInfo *win);
 void WindowInfo_ExitFullscreen(WindowInfo *win);
+static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=0);
 
 #define SEP_ITEM "-----"
 
@@ -1133,10 +1137,8 @@ MenuDef menuDefFile[] = {
     { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
     { _TRN("&Save as\tCtrl-S"),                     IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
-#if 0
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
-#endif
 #ifdef _TEX_ENHANCEMENT
     // TODO: merge the dialog invoked by this item into the Options dialog
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
@@ -1235,15 +1237,14 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
         MenuDef md = menuDefs[i];
         if (!gRestrictedUse || ~md.m_flags & MF_NOT_IN_RESTRICTED) {
             const char *title = md.m_title;
-            int id = md.m_id;
+            if (!title)
+                continue; // the menu item was dynamically removed
             if (str_eq(title, SEP_ITEM)) {
                 AppendMenu(m, MF_SEPARATOR, 0, NULL);
                 continue;
             }
             const TCHAR *ttitle =  Translations_GetTranslation(title);
-            if (ttitle) {
-                AppendMenu(m, MF_STRING, (UINT_PTR)id, ttitle);
-            }
+            AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, ttitle);
         }
     }
     return m;
@@ -1280,6 +1281,12 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     }
     
     HMENU mainMenu = CreateMenu();
+    // Don't display the Acrobat option, if the program couldn't be found
+    if (!GetAcrobatPath())
+        for (int i = 0; i < dimof(menuDefFile); i++)
+            if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id)
+                menuDefFile[i].m_title = menuDefFile[i - 1].m_title = NULL;
+
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
     if (!gRestrictedUse)
         AppendRecentFilesToMenu(tmp);
@@ -2027,7 +2034,8 @@ static void MenuUpdateLanguage(WindowInfo *win) {
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
-        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS };
+        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS,
+        IDM_VIEW_WITH_ACROBAT };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     HMENU hmenu = win->hMenu;
@@ -4567,17 +4575,30 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
         win->dm->scrollXTo(si.nPos);
 }
 
-#if 0
+static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
+{
+    TCHAR path[MAX_PATH];
+
+    bool foundAcrobat = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path));
+    if (foundAcrobat && buffer)
+        lstrcpyn(buffer, path, bufSize);
+
+    return foundAcrobat;
+}
+
 static void ViewWithAcrobat(WindowInfo *win)
 {
     if (!WindowInfo_PdfLoaded(win))
         return;
 
-    char params[MAX_PATH];
-    _tsprintf(params, _T("\"%s\""), win->dm->fileName());
-    ShellExecute(GetDesktopWindow(), _T("open"), _T("AcroRd32.exe"), params, NULL, SW_NORMAL);
+    TCHAR acrobatPath[MAX_PATH];
+    if (!GetAcrobatPath(acrobatPath, dimof(acrobatPath)))
+        return;
+
+    TCHAR params[MAX_PATH + 2];
+    wsprintf(params, _T("\"%s\""), win->dm->fileName());
+    ShellExecute(NULL, _T("open"), acrobatPath, params, NULL, SW_NORMAL);
 }
-#endif
 
 static void OnMenuViewSinglePage(WindowInfo *win)
 {
@@ -6419,6 +6440,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                         OnMenuSettings(win);
                     break;
 
+                case IDM_VIEW_WITH_ACROBAT:
+                    if (!gRestrictedUse)
+                        ViewWithAcrobat(win);
+                    break;
+
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
@@ -6495,13 +6521,6 @@ InitMouseWheelInfo:
             if (win)
                 CloseWindow(win, TRUE);
             break;
-
-#if 0
-        case IDM_VIEW_WITH_ACROBAT:
-            if (win)
-                ViewWithAcrobat(win);
-            break;
-#endif
 
         case WM_DDE_INITIATE:
             return OnDDEInitiate(hwnd, wParam, lParam);
