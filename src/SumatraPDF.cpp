@@ -5283,7 +5283,7 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('-' == key) {
             win->dm->zoomBy(ZOOM_OUT_FACTOR);
     } else if ('r' == key) {
-        WindowInfo_Refresh(win, true);
+        WindowInfo_Refresh(win, false);
     } else if ('/' == key) {
         OnMenuFind(win);
     }

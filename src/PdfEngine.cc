@@ -192,11 +192,10 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 
     error = pdf_loadxrefw(_xref, fileName);
     if (error) {
-        if (tryrepair) {
+        if (tryrepair)
             error = pdf_repairxrefw(_xref, fileName);
-            if (error)
-                goto Error;
-        }
+        if (error)
+            goto Error;
     }
 
     error = pdf_decryptxref(_xref);
