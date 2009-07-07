@@ -686,7 +686,6 @@ jbig2_parse_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segmen
 	}
 
 	as = jbig2_arith_new(ctx, ws);
-	ws = 0;
 
         params.IADT = jbig2_arith_int_ctx_new(ctx);
         params.IAFS = jbig2_arith_int_ctx_new(ctx);
@@ -733,8 +732,8 @@ jbig2_parse_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segmen
 	jbig2_arith_int_ctx_free(ctx, params.IARDX);
 	jbig2_arith_int_ctx_free(ctx, params.IARDY);
 	jbig2_free(ctx->allocator, as);
-	jbig2_word_stream_buf_free(ctx, ws);
     }
+    jbig2_word_stream_buf_free(ctx, ws);
 
     jbig2_free(ctx->allocator, dicts);
 
