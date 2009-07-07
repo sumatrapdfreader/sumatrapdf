@@ -46,6 +46,7 @@ fz_newjbig2d(fz_filter **fp, fz_obj *params)
 {
 	FZ_NEWFILTER(fz_jbig2d, d, jbig2d);
 	d->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, nil, nil, nil);
+	d->gctx = nil;
 	d->page = nil;
 	d->idx = 0;
 	return fz_okay;
@@ -56,6 +57,8 @@ fz_dropjbig2d(fz_filter *filter)
 {
 	fz_jbig2d *d = (fz_jbig2d*)filter;
 	jbig2_ctx_free(d->ctx);
+	if (d->gctx)
+		jbig2_global_ctx_free(d->gctx);
 }
 
 fz_error
