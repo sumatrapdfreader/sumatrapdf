@@ -1482,7 +1482,7 @@ unsigned short gItemId[] = {
     IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE };
 
 double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 
-    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE };
+    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 100.0 };
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
@@ -1506,13 +1506,18 @@ static double ZoomMenuItemToZoom(UINT menuItemId)
 
 static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
 {
-    BOOL    found = FALSE;
+    BOOL found = FALSE;
+    if (IDM_ZOOM_100 == menuItemId)
+        menuItemId = IDM_ZOOM_ACTUAL_SIZE;
 
     for (size_t i=0; i<dimof(gItemId); i++) {
         UINT checkState = MF_BYCOMMAND | MF_UNCHECKED;
         if (menuItemId == gItemId[i]) {
             assert(!found);
             found = TRUE;
+            checkState = MF_BYCOMMAND | MF_CHECKED;
+        }
+        else if (IDM_ZOOM_ACTUAL_SIZE == menuItemId && IDM_ZOOM_100 == gItemId[i]) {
             checkState = MF_BYCOMMAND | MF_CHECKED;
         }
         CheckMenuItem(hmenu, gItemId[i], checkState);
