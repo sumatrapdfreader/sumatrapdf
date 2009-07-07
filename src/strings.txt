@@ -1400,7 +1400,7 @@ nl:Pagina...\tCtrl-G
 ta:பக்கம்...\tCtrl-G
 es:Página...\tCtrl-G
 hr:Stranica...\tCtrl-G
-ru:Указанная страница...\tCtrl-G
+ru:Страница...\tCtrl-G
 ar:صفحة محددة\tCtrl-G
 cn:页面...\tCtrl-G
 sv:Sida...\tCtrl-G
@@ -2167,7 +2167,7 @@ bn:অক্ষরের আকার মেলান
 cn:大小写匹配
 fa:با توجه به کوچکي و بزرگي حروف 
 fr:Respecter la casse
-ru:Учитывать размер
+ru:Учитывать регистр
 gl:Coincidir maiúsculas e minúsculas
 es:Coincidir mayúsculas y minúsculas
 ar:مناسبة الخط
@@ -2433,7 +2433,7 @@ nl:Fout bij opslaan bestand
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
 hr:Spremanje datoteke nije uspjelo
-ru:Невозможно сохранить файл.
+ru:Ошибка сохранения файла
 ar:فشل حفظ الملف
 cn:保存文件失败
 sv:Kan inte spara filen.
@@ -2489,7 +2489,7 @@ nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
 hr:Greška kod učitavanja PDF datoteke.
-ru:Невозможно загрузить PDF-файл.
+ru:Ошибка открытия PDF-файла.
 ar:هناك خطأ في تشغيل الملف
 cn:载入 PDF 文件时发生错误。
 sv:Kan inte öppna PDF-filen.
@@ -2545,7 +2545,7 @@ nl:Printer niet gevonden
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
 hr:Nije moguće otvoriti pisač
-ru:Невозможно найти принтер.
+ru:Принтер не доступен
 ar:تعذر فتح الطابعة
 cn:无法打开打印机
 sv:Kan inte anropa skrivaren.
@@ -2938,7 +2938,7 @@ gr:Να γίνει το SumatraPDF το προεπιλεγμένο πρόγρα�
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
-ru:Сделать SumatraPDF стандартной программой открытия PDF-файлов?
+ru:Сделать SumatraPDF стандартной программой просмотра PDF-файлов?
 es:¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
 hr:Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 it:Impostare SumatraPDF come programma predefinito per i file PDF? 
@@ -3099,7 +3099,7 @@ gr:Έχετε την τελευταία έκδοση.
 sk:Používate najnovšiu verziu.
 vn:Bạn đang dùng phiên bản mới nhất.
 uk:Ви вже маєте найновішу версію.
-ru:Вы используете самую новую версию.
+ru:Вы используете последнюю версию.
 es:Su versión es la más reciente.
 hr:Imate najnoviju inačicu.
 it:Hai già l'ultima versione disponibile
@@ -3181,7 +3181,7 @@ gr:Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψ�
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 vn:Đã có phiên bản mới %s. Download phiên bản mới?
 uk:Нова версія %s є доступною. Завантажити нову версію?
-ru:Доступна новая версия: %s. Хотите её загрузить?
+ru:Доступна новая версия: %s. Загрузить ее?
 es:La nueva versión %s está disponible. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 it:È disponibile la versione %s. Scaricare la nuova versione?
@@ -3544,6 +3544,7 @@ gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 -
 Remember &opened files
 de:&Eine Liste der geöffneten Dokumente führen
+ru:&Запомнить открытые файлы
 -
 View
 af:Vertoon
@@ -3672,67 +3673,88 @@ PDF documents
 de:PDF-Dokumente
 cy:Dogfennau PDF
 gr:Αρχεία PDF
+ru:PDF-документ
 -
 All files
 de:Alle Dateien
 cy:Pob ffeil
 gr:Όλα τα αρχεία
+ru:Все файлы
 -
 &Password:
 de:&Passwort:
 gr:Κωδικός:
+ru:&Пароль:
 -
 &Find what:
 de:&Suchen nach:
+ru:&Образец:
 -
 Find
 de:Suchen
+ru:Поиск
 -
 &Match case
 de:&Groß-/Kleinschreibung beachten
+ru:&Учитывать регистр
 -
 Hint: Use the F3 key for finding again
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
+ru:Для повторного поиска используйте клавишу F3
 -
 Couldn't initialize printer
 de:Der Drucker konnte nicht initialisiert werden
+ru:Не удалось инициализировать принтер
 -
 No synchronization info at this position
 de:Keine Synchronisationsinformationen an diesem Ort
+ru:В этой позиции отсутствует информация для синхронизации
 -
 Synchronization file cannot be opened
 de:Die Synchronisationsdatei kann nicht geöffnet werden
+ru:Файл с информацией для синхронизации не может быть открыт
 -
 Page number %u inexistant
 de:Es gibt keine Seite %u
+ru:Страница %u не существует
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
+ru:Результат вокруг строки %u в файле %s не найден
 -
 Source file %s has no synchronization point
 de:%s hat keinen Synchronisations-Punkt
+ru:Отсутствует точка синхронизации в исходном файле %s
 -
 [Changes detected; refreshing] %s
 de:[Datei wurde geändert; aktualisiere…] %s
+ru:[Обнаружены изменения; происходит обновление] %s
 -
 Unknown source file (%s)
 de:Unbekannte Datei (%s)
+ru:Неизвестный исходный файл (%s)
 -
 Cannot print this file
 de:Diese Datei darf nicht gedruckt werden
+ru:Не удалось распечатать этот файл
 -
 PDF Document
 de:PDF-Dokument
+ru:PDF-документ
 -
 SumatraPDF is your main PDF reader
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
+ru:SumatraPDF - программа просмотра файлов PDF по умолчанию
 -
 SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
+ru:SumatraPDF теперь будет программой просмотра файлов PDF по умолчанию
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 de:Standardanwendung im portablen Modus nicht veränderbar
+ru:В мобильном режиме изменить PDF-вьюер нельзя
 -
 Open in &Adobe Reader
 de:Mit &Adobe Reader öffnen
+ru:Открыть в &Adobe Reader
