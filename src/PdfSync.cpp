@@ -3,11 +3,8 @@
 // License: GPLv2
 #include "SumatraPDF.h"
 #include "PdfSync.h"
-#include <assert.h>
-#include <stdio.h>
 #include "tstr_util.h"
 #include "str_util.h"
-#include <sys/stat.h>
 #include <shlwapi.h>
 
 // convert a coordinate from the sync file into a PDF coordinate
@@ -740,7 +737,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         TCHAR srcfile[MAX_PATH];
         TCHAR destname[MAX_PATH];
         TCHAR dump[MAX_PATH];
-        UINT line,col, newwindow = 0, setfocus = 0, forcerefresh = 0;
+        UINT line, col, newwindow = 0, setfocus = 0, forcerefresh = 0, page = 0;
         const TCHAR *pos, *curCommand;
         
         curCommand = pos = pwCommand;
@@ -750,7 +747,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if ( (pos = curCommand) &&
                 wstr_skip(&pos, _T("[") DDECOMMAND_SYNC _T("(\"")) &&
                 wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                wstr_skip(&pos, _T("\",\"")) &&
+                (wstr_skip(&pos, _T("\",\"")) || wstr_skip(&pos, _T("\", \""))) &&
                 wstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
                 (4 == _stscanf(pos, _T("\",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus)
                 || 2 == _stscanf(pos, _T("\",%u,%u)]"), &line, &col))
@@ -810,7 +807,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             else if ( (pos = curCommand) &&
                 wstr_skip(&pos, _T("[") DDECOMMAND_GOTO _T("(\"")) &&
                 wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-                wstr_skip(&pos, _T("\",\"")) &&
+                (wstr_skip(&pos, _T("\",\"")) || wstr_skip(&pos, _T("\", \""))) &&
                 wstr_copy_skip_until(&pos, destname, dimof(destname), _T('"'))
                 )
             {
@@ -824,6 +821,25 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                         ack.fAck = 1;
                         SetFocus(win->hwndFrame);
                         free(destname_ansi);
+                    }
+                }
+                
+            }
+            // Jump to page DDE command.
+            // format is [<DDECOMMAND_GOTO>("<pdffilepath>", <page number>)]
+            else if ( (pos = curCommand) &&
+                wstr_skip(&pos, _T("[") DDECOMMAND_PAGE _T("(\"")) &&
+                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
+                1 == _stscanf(pos, _T("\",%u)]"), &page)
+                )
+            {
+               // check if the PDF is already opened
+                WindowInfo *win = WindowInfoList_Find(pdffile);
+                if (win && WS_SHOWING_PDF == win->state) {
+                    if (win->dm->validPageNo(page)) {
+                        win->dm->goToPage(page, 0);
+                        ack.fAck = 1;
+                        SetFocus(win->hwndFrame);
                     }
                 }
                 
@@ -843,7 +859,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     DBG_OUT("Posting %s WM_DDE_ACK to %p\n", ack.fAck ? "ACCEPT" : "REJECT", (HWND)wparam);
     WORD status = * (WORD *) & ack;
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, status, hi);
-    PostMessageW((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
+    PostMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
     return 0;
 }
 
@@ -852,6 +868,6 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     DBG_OUT("Received WM_DDE_TERMINATE from %p with %08lx\n", (HWND)wparam, lparam);
 
     // Respond with another WM_DDE_TERMINATE message
-    PostMessageW((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
+    PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }

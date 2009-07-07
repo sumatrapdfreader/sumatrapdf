@@ -4674,6 +4674,9 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         win->ShowTocBox();
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
+    // Need this here, so that -page and -nameddest work correctly in continuous mode
+    if (WS_SHOWING_PDF == win->state)
+        WinResizeIfNeeded(win);
 }
 
 static void ReloadPdfDocument(WindowInfo *win)
@@ -6246,12 +6249,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_SIZE:
             if (win) {
+                RememberWindowPosition(win);
+                AdjustWindowEdge(win);
+
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
                 OnSize(win, dx, dy);
-
-                RememberWindowPosition(win);
-                AdjustWindowEdge(win);
             }
             break;
 
@@ -7008,18 +7011,25 @@ void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
     HDDEDATA hddedata = NULL;
+#ifdef UNICODE
+    int codepage = CP_WINUNICODE;
+    int dataFormat = CF_UNICODETEXT;
+#else
+    int codepage = CP_WINANSI;
+    int dataFormat = CF_TEXT;
+#endif
 
     UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR) {
         DBG_OUT("DDE communication could not be initiated %d.", result);
         goto exit;
     }
-    hszServer = DdeCreateStringHandle(inst, server, CP_WINANSI);
+    hszServer = DdeCreateStringHandle(inst, server, codepage);
     if (hszServer == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
-    hszTopic = DdeCreateStringHandle(inst, topic, CP_WINANSI);
+    hszTopic = DdeCreateStringHandle(inst, topic, codepage);
     if (hszTopic == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
@@ -7029,7 +7039,7 @@ void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, tstr_len(command) + 1, 0, 0, CF_TEXT, 0);  
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (tstr_len(command) + 1) * sizeof(TCHAR), 0, 0, dataFormat, 0);
     if (hddedata == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     }
@@ -7046,7 +7056,7 @@ exit:
 
 extern "C" void pdf_destoryfontlistMS(); // in pdf_fontfilems.c
 
-int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     WStrList *          argListRoot;
     WStrList *          currArg;
@@ -7054,13 +7064,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     MSG                 msg = {0};
     HACCEL              hAccelTable;
     WindowInfo*         win;
-    int                 pdfOpened = 0;
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
     bool                printDialog = false;
-    char *              destName = 0;
-    char *              s;
+    TCHAR *             destName = NULL;
+    int                 pageNumber = 0;
     TCHAR *             cmdLine;
+    bool                firstDocLoaded = false;
 
 #ifdef _DEBUG
     // Memory leak detection
@@ -7209,7 +7219,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-lang")) {
             currArg = currArg->next;
             if (currArg) {
-                s = wstr_to_multibyte(currArg->str, CP_ACP);
+                char * s = wstr_to_multibyte(currArg->str, CP_ACP);
                 CurrLangNameSet(s);
                 free(s);
                 currArg = currArg->next;
@@ -7220,7 +7230,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         if (is_arg("-nameddest")) {
             currArg = currArg->next;
             if (currArg) {
-                destName = wstr_to_multibyte(currArg->str, CP_ACP);
+                destName = tstr_dup(currArg->str);
+                currArg = currArg->next;
+            }
+            continue;
+        }
+
+        if (is_arg("-page")) {
+            currArg = currArg->next;
+            if (currArg) {
+                pageNumber = _ttoi(currArg->str);
                 currArg = currArg->next;
             }
             continue;
@@ -7282,17 +7301,20 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     if (NULL != gBenchFileName) {
             win = LoadPdf(gBenchFileName);
             if (win && WS_SHOWING_PDF == win->state)
-                ++pdfOpened;
+                firstDocLoaded = true;
     } else {
         while (currArg) {
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * MAX_PATH + 20];
-                wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%S\", 0, 1, 0)]"), currArg->str);
+                wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), currArg->str);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
-                if (destName && pdfOpened == 0)
-                {
-                    wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%S\", \"%s\")]"), currArg->str, destName);
+                if (destName && !firstDocLoaded) {
+                    wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), currArg->str, destName);
+                    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+                }
+                else if (pageNumber > 0 && !firstDocLoaded) {
+                    wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), currArg->str, pageNumber);
                     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 }
             }
@@ -7301,8 +7323,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
                 win = LoadPdf(currArg->str, NULL, showWin, newWindowTitle);
                 if (!win)
                     goto Exit;
-                if (destName && pdfOpened == 0)
-                    win->dm->goToNamedDest(destName);
+                if (WS_SHOWING_PDF != win->state) {
+                    // cancel printing, if there was a load error
+                    exitOnPrint = printToDefaultPrinter = printDialog = FALSE;
+                    if (printerName) {
+                        free(printerName);
+                        printerName = NULL;
+                    }
+                }
+                else if (destName && !firstDocLoaded) {
+                    char * destNameA = wstr_to_multibyte(destName, CP_ACP);
+                    win->dm->goToNamedDest(destNameA);
+                    free(destNameA);
+                }
+                else if (pageNumber > 0 && !firstDocLoaded) {
+                    if (win->dm->validPageNo(pageNumber))
+                        win->dm->goToPage(pageNumber, 0);
+                }
             }
 
             if (exitOnPrint)
@@ -7320,7 +7357,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
             } else if (printDialog) {
                 OnMenuPrint(win);
             }
-           ++pdfOpened;
+            firstDocLoaded = true;
             currArg = currArg->next;
         }
     }
@@ -7329,7 +7366,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
           || reuse_instance)
         goto Exit;
  
-    if (0 == pdfOpened) {
+    if (!firstDocLoaded) {
         /* disable benchmark mode if we couldn't open file to benchmark */
         gBenchFileName = 0;
         win = WindowInfo_CreateEmpty();
@@ -7350,12 +7387,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     if (IsBenchMode()) {
         assert(win);
-        assert(pdfOpened > 0);
+        assert(firstDocLoaded);
         if (win)
             PostBenchNextAction(win->hwndFrame);
     }
 
-    if (0 == pdfOpened)
+    if (!firstDocLoaded)
         MenuToolbarUpdateStateForAllWindows();
 
     if (registerForPdfExtentions && win)

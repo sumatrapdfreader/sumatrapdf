@@ -313,6 +313,11 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename);
 //  eg: [GoToNamedDest("c:\file.pdf", "chapter.1")]. pdf file must be already opened
 #define DDECOMMAND_GOTO       _T("GotoNamedDest")
 
+// jump to page command
+//  format: [GoToPage("<pdffilepath>",<page number>)]
+//  eg: [GoToPage("c:\file.pdf", 37)]. pdf file must be already opened
+#define DDECOMMAND_PAGE       _T("GotoPage")
+
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam);

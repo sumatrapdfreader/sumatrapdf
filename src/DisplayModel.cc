@@ -851,8 +851,13 @@ void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
     renderVisibleParts();
     setScrollbarsState();
     newPageNo = currentPageNo();
-    if (newPageNo != currPageNo)
-        pageChanged();
+    if (newPageNo != currPageNo) {
+        // TODO: Try to even better keep the current position during resizing
+        if (currPageNo != -1)
+            goToPage(currPageNo, 0);
+        else
+            pageChanged();
+    }
     repaintDisplay(true);
 }
 

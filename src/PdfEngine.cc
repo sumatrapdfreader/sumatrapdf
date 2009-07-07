@@ -297,6 +297,12 @@ int PdfEngine::findPageNo(fz_obj *dest)
         p = fz_toint(dest);
         return p+1;
     }
+    if (fz_isdict(dest)) {
+        // The destination is linked from a Go-To action's D array
+        fz_obj * D = fz_dictgets(dest, "D");
+        if (D && fz_isarray(D))
+            dest = fz_arrayget(D, 0);
+    }
     int n = fz_tonum(dest);
     int g = fz_togen(dest);
 
