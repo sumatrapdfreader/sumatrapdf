@@ -2439,7 +2439,10 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     if (!fileName) return NULL;
 
     bool is_new_window = false;
-    if (!win || WS_SHOWING_PDF == win->state) {
+    if (!win && 1 == WindowInfoList_Len() && WS_ABOUT == gWindowList->state) {
+        win = gWindowList;
+    }
+    else if (!win || WS_SHOWING_PDF == win->state) {
         is_new_window = true;
         win = WindowInfo_CreateEmpty();
         if (!win)
