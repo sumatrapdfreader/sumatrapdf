@@ -42,7 +42,7 @@ typedef struct {
     /* When we show 'new version available', user has an option to check
        'skip this version'. This remembers which version is to be skipped.
        If NULL - don't skip */
-    char *m_versionToSkip;
+    TCHAR *m_versionToSkip;
 
     char *m_lastUpdateTime;
 

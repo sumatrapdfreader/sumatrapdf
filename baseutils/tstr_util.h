@@ -26,6 +26,7 @@
   #define tstr_empty    wstr_empty
   #define tstr_find_char wstr_find_char
   #define tstr_trans_chars wstr_trans_chars
+  #define tstr_dup_replace wstr_dup_replace
 #else
   #include "str_util.h"
   #define tstr_len      strlen
@@ -49,6 +50,7 @@
   #define tstr_empty    str_empty
   #define tstr_find_char  str_find_char
   #define tstr_trans_chars str_trans_chars
+  #define tstr_dup_replace str_dup_replace
 #endif
 
 #endif

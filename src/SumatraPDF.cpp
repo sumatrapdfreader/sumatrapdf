@@ -45,9 +45,9 @@
 #define QM(x) _QUOTEME(x)
 
 #ifdef SVN_PRE_RELEASE_VER
-#define UPDATE_CHECK_VER QM(SVN_PRE_RELEASE_VER)
+#define UPDATE_CHECK_VER _T(QM(SVN_PRE_RELEASE_VER))
 #else
-#define UPDATE_CHECK_VER CURR_VERSION
+#define UPDATE_CHECK_VER _T(CURR_VERSION)
 #endif
 
 // this sucks but I don't know any other way
@@ -220,7 +220,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     ABOUT_BG_COLOR, // int  m_bgColor
     FALSE, // BOOL m_escToExit
     NULL, // TCHAR *m_inverseSearchCmdLine
-    NULL, // char *m_versionToSkip
+    NULL, // TCHAR *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
     DEFAULT_ZOOM, // double m_defaultZoom
@@ -689,15 +689,15 @@ public:
     // handle for connection during request processing
     HINTERNET     httpFile;
 
-    char *        url;
+    TCHAR *       url;
     MemSegment    data;
     /* true for automated check, false for check triggered from menu */
     bool          autoCheck;
 
-    HttpReqCtx(char *_url, HWND _hwnd, UINT _msg) {
+    HttpReqCtx(TCHAR *_url, HWND _hwnd, UINT _msg) {
         assert(_url);
         hwndToNotify = _hwnd;
-        url = strdup(_url);
+        url = tstr_dup(_url);
         msg = _msg;
         autoCheck = false;
         httpFile = 0;
@@ -742,7 +742,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
 
             _snprintf(buf, 256, "REQUEST_COMPLETE (%d)", statusLen);
 
-            INTERNET_BUFFERSA ib = {0};
+            INTERNET_BUFFERS ib = {0};
             ib.dwStructSize = sizeof(ib);
             ib.lpvBuffer = malloc(1024);
 
@@ -752,7 +752,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
             BOOL ok;
             while (TRUE) {
                 ib.dwBufferLength = 1024;
-                ok = InternetReadFileExA(ctx->httpFile, &ib, IRF_ASYNC, (LPARAM)ctx);
+                ok = InternetReadFileEx(ctx->httpFile, &ib, IRF_ASYNC, (LPARAM)ctx);
                 if (ok || (!ok && GetLastError()==ERROR_IO_PENDING)) {
                     DWORD readSize = ib.dwBufferLength;
                     if (readSize > 0) {
@@ -845,17 +845,17 @@ static HINTERNET g_hOpen = NULL;
 
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SUMATRA_UPDATE_INFO_URL "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt"
+#define SUMATRA_UPDATE_INFO_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt")
 #else
-#define SUMATRA_UPDATE_INFO_URL "http://blog.kowalczyk.info/software/sumatrapdf/sumpdf-latest.txt"
+#define SUMATRA_UPDATE_INFO_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/sumpdf-latest.txt")
 #endif
 #endif
 
 #ifndef SVN_UPDATE_LINK
 #ifdef SVN_PRE_RELEASE_VER
-#define SVN_UPDATE_LINK             "http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html"
+#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html")
 #else
-#define SVN_UPDATE_LINK             "http://blog.kowalczyk.info/software/sumatrapdf"
+#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf")
 #endif
 #endif
 
@@ -863,9 +863,9 @@ static HINTERNET g_hOpen = NULL;
 bool WininetInit()
 {
     if (!g_hOpen)
-        g_hOpen = InternetOpenA("SumatraPDF", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
+        g_hOpen = InternetOpen(_T("SumatraPDF"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
     if (NULL == g_hOpen) {
-        DBG_OUT("InternetOpenA() failed\n");
+        DBG_OUT("InternetOpen() failed\n");
         return false;
     }
     return true;
@@ -899,19 +899,19 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
             return;
     }
 
-    char *url = SUMATRA_UPDATE_INFO_URL "?v=" UPDATE_CHECK_VER;
+    TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
     HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, WM_APP_URL_DOWNLOADED);
     ctx->autoCheck = autoCheck;
 
     InternetSetStatusCallback(g_hOpen, (INTERNET_STATUS_CALLBACK)InternetCallbackProc);
     HINTERNET urlHandle;
-    urlHandle = InternetOpenUrlA(g_hOpen, url, NULL, 0, 
+    urlHandle = InternetOpenUrl(g_hOpen, url, NULL, 0, 
       INTERNET_FLAG_RELOAD | INTERNET_FLAG_PRAGMA_NOCACHE | 
       INTERNET_FLAG_NO_CACHE_WRITE, (LPARAM)ctx);
-    /* MSDN says NULL result from InternetOpenUrlA() means an error, but in my testing
+    /* MSDN says NULL result from InternetOpenUrl() means an error, but in my testing
        in async mode InternetOpenUrl() returns NULL and error is ERROR_IO_PENDING */
     if (!urlHandle && (GetLastError() != ERROR_IO_PENDING)) {
-        DBG_OUT("InternetOpenUrlA() failed\n");
+        DBG_OUT("InternetOpenUrl() failed\n");
         delete ctx;
     }
     free(gGlobalPrefs.m_lastUpdateTime);
@@ -2882,10 +2882,10 @@ static void OnBenchNextAction(WindowInfo *win)
 }
 
 #ifdef SVN_PRE_RELEASE_VER
-int CompareVersion(char *txt1, char *txt2)
+int CompareVersion(TCHAR *txt1, TCHAR *txt2)
 {
-    int num1 = atoi(txt1);
-    int num2 = atoi(txt2);
+    int num1 = _ttoi(txt1);
+    int num2 = _ttoi(txt2);
     if (num1 > num2)
         return 1;
     if (num1 == num2)
@@ -2894,7 +2894,7 @@ int CompareVersion(char *txt1, char *txt2)
 }
 #else
 // extract the next (positive) number from the string *txt
-static int ExtractNextNumber(char **txt)
+static int ExtractNextNumber(TCHAR **txt)
 {
     // skip non numeric characters
     int val = -1;
@@ -2903,7 +2903,7 @@ static int ExtractNextNumber(char **txt)
     if( val == -1 )
         return -1;
 
-    char c;
+    TCHAR c;
     int n;
     while(**txt){
         c = *((*txt)++);
@@ -2919,7 +2919,7 @@ static int ExtractNextNumber(char **txt)
 // e.g. 
 //   0.9.3.900 is greater than 0.9.3
 //   1/|09@300 is greater than 1/|09@3 which is greater than 1$%9)1
-int CompareVersion(char *txt1, char *txt2)
+int CompareVersion(TCHAR *txt1, TCHAR *txt2)
 {
     int v1, v2;
     while(1) {
@@ -2937,18 +2937,16 @@ int CompareVersion(char *txt1, char *txt2)
 }
 #endif
 
-static BOOL ShowNewVersionDialog(WindowInfo *win, const char *newVersion)
+static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
 {
     Dialog_NewVersion_Data data = {0};
-    data.currVersion = utf8_to_utf16(UPDATE_CHECK_VER);
-    data.newVersion = utf8_to_utf16(newVersion);
+    data.currVersion = UPDATE_CHECK_VER;
+    data.newVersion = newVersion;
     data.skipThisVersion = FALSE;
     int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
-        str_dup_replace(&gGlobalPrefs.m_versionToSkip, newVersion);
+        tstr_dup_replace(&gGlobalPrefs.m_versionToSkip, newVersion);
     }
-    free((void*)data.currVersion);
-    free((void*)data.newVersion);
     return DIALOG_OK_PRESSED == res;
 }
 
@@ -2956,26 +2954,23 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
     DWORD dataSize;
     char *txt = (char*)ctx->data.getData(&dataSize);
-    char *url = ctx->url;
-    if (str_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
-        char *verTxt = txt;
+    TCHAR *url = ctx->url;
+    if (tstr_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
+        TCHAR *verTxt = multibyte_to_wstr(txt, CP_ACP);
         /* TODO: too hackish */
-        char *tmp = str_normalize_newline(verTxt, "*");
-        char *tmp2 = (char*)str_find_char(tmp, '*');
-        if (tmp2)
-            *tmp2 = 0;
-        if (CompareVersion(tmp, UPDATE_CHECK_VER)>0){
+        tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
+        if (CompareVersion(verTxt, UPDATE_CHECK_VER)>0){
             bool showDialog = true;
             // if automated, respect gGlobalPrefs.m_versionToSkip
             if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
-                if (str_eq(gGlobalPrefs.m_versionToSkip, tmp)) {
+                if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt)) {
                     showDialog = false;
                 }
             }
             if (showDialog) {
-                BOOL download = ShowNewVersionDialog(win, tmp);
+                BOOL download = ShowNewVersionDialog(win, verTxt);
                 if (download) {
-                    LaunchBrowser(_T(SVN_UPDATE_LINK));
+                    LaunchBrowser(SVN_UPDATE_LINK);
                 }
             }
         } else {
@@ -2984,7 +2979,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
                 MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("No new version available."), MB_ICONEXCLAMATION | MB_OK);
             }
         }
-        free(tmp);
+        free(verTxt);
     }
     free(txt);
     delete ctx;
@@ -4193,17 +4188,17 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 
 // TODO: make it run in a background thread by constructing new PdfEngine()
 // from a file name - this should be thread safe
-static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODEA devMode, int nPageRanges, LPPRINTPAGERANGE pr) {
+static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPageRanges, LPPRINTPAGERANGE pr) {
 
     assert(dm);
     if (!dm) return;
 
     PdfEngine *pdfEngine = dm->pdfEngine;
-    DOCINFOA di = {0};
+    DOCINFO di = {0};
     di.cbSize = sizeof (DOCINFO);
-    di.lpszDocName = (LPCSTR)pdfEngine->fileName();
+    di.lpszDocName = pdfEngine->fileName();
 
-    if (StartDocA(hdc, &di) <= 0)
+    if (StartDoc(hdc, &di) <= 0)
         return;
 
     // rendering for the same DisplayModel is not thread-safe
@@ -4283,8 +4278,8 @@ So far have tested printing from XP to
 #define MAXPAGERANGES 10
 static void OnMenuPrint(WindowInfo *win)
 {
-    PRINTDLGEXA             pd;
-    LPPRINTPAGERANGE        ppr=NULL;
+    PRINTDLGEX       pd;
+    LPPRINTPAGERANGE ppr = NULL;
 
     assert(win);
     if (!win) return;
@@ -4318,7 +4313,7 @@ static void OnMenuPrint(WindowInfo *win)
     pd.nMaxPage = dm->pageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
-    if (PrintDlgExA(&pd) == S_OK) {
+    if (PrintDlgEx(&pd) == S_OK) {
         if (pd.dwResultAction==PD_RESULT_PRINT) {
             if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
                 if (pd.Flags & PD_CURRENTPAGE) {
@@ -4330,7 +4325,7 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nFromPage=1;
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
-                PrintToDevice(dm, pd.hDC, (LPDEVMODEA)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
+                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
             }
         }
     }
@@ -4385,7 +4380,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_SHOWHELP | OFN_OVERWRITEPROMPT;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     if (FALSE == GetSaveFileName(&ofn))
         return;
@@ -4431,7 +4426,7 @@ static void OnMenuOpen(WindowInfo *win)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
     if (FALSE != GetOpenFileName(&ofn))
         LoadPdf(fileName, win);
@@ -5279,9 +5274,9 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('q' == key) {
         DestroyWindow(win->hwndFrame);
     } else if ('+' == key) {
-            win->dm->zoomBy(ZOOM_IN_FACTOR);
+        win->dm->zoomBy(ZOOM_IN_FACTOR);
     } else if ('-' == key) {
-            win->dm->zoomBy(ZOOM_OUT_FACTOR);
+        win->dm->zoomBy(ZOOM_OUT_FACTOR);
     } else if ('r' == key) {
         WindowInfo_Refresh(win, false);
     } else if ('/' == key) {
@@ -6807,11 +6802,11 @@ static void FreePageRenderThread(void)
     CloseHandle(gPageRenderSem);
 }
 
-static void PrintFile(WindowInfo *win, const char *printerName)
+static void PrintFile(WindowInfo *win, const TCHAR *printerName)
 {
-    char        devstring[256];      // array for WIN.INI data 
+    TCHAR       devstring[256];      // array for WIN.INI data 
     HANDLE      printer;
-    LPDEVMODEA  devMode = NULL;
+    LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
 
     if (!win->dm->pdfEngine->printingAllowed()) {
@@ -6821,39 +6816,39 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 
     // Retrieve the printer, printer driver, and 
     // output-port names from WIN.INI. 
-    GetProfileStringA("Devices", printerName, "", devstring, sizeof(devstring));
+    GetProfileString(_T("Devices"), printerName, _T(""), devstring, dimof(devstring));
 
     // Parse the string of names, setting ptrs as required 
     // If the string contains the required names, use them to 
     // create a device context. 
-    char *driver = strtok (devstring, (const char *) ",");
-    char *port = strtok((char *) NULL, (const char *) ",");
+    TCHAR *driver = _tcstok (devstring, (const TCHAR *)_T(","));
+    TCHAR *port = _tcstok((TCHAR *) NULL, (const TCHAR *)_T(","));
 
     if (!driver || !port) {
         MessageBox(win->hwndFrame, _T("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
     
-    BOOL fOk = OpenPrinterA((LPSTR)printerName, &printer, NULL);
+    BOOL fOk = OpenPrinter((LPTSTR)printerName, &printer, NULL);
     if (!fOk) {
         MessageBox(win->hwndFrame, _TR("Could not open Printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
 
     HDC  hdcPrint = NULL;
-    structSize = DocumentPropertiesA(NULL,
+    structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */ 
-        (LPSTR) printerName,    /* Name of the printer. */ 
+        (LPTSTR)printerName,    /* Name of the printer. */ 
         NULL,                   /* Asking for size, so */ 
         NULL,                   /* these are not used. */ 
         0);                     /* Zero returns buffer size. */ 
-    devMode = (LPDEVMODEA)malloc(structSize);
+    devMode = (LPDEVMODE)malloc(structSize);
     if (!devMode) goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
-    returnCode = DocumentPropertiesA(NULL,
+    returnCode = DocumentProperties(NULL,
         printer,
-        (LPSTR) printerName,
+        (LPTSTR)printerName,
         devMode,        /* The address of the buffer to fill. */ 
         NULL,           /* Not using the input buffer. */ 
         DM_OUT_BUFFER); /* Have the output buffer filled. */ 
@@ -6877,9 +6872,9 @@ static void PrintFile(WindowInfo *win, const char *printerName)
      * This gives the driver an opportunity to update any private
      * portions of the DevMode structure.
      */ 
-     DocumentPropertiesA(NULL,
+     DocumentProperties(NULL,
         printer,
-        (LPSTR) printerName,
+        (LPTSTR)printerName,
         devMode,        /* Reuse our buffer for output. */ 
         devMode,        /* Pass the driver our changes. */ 
         DM_IN_BUFFER |  /* Commands to Merge our changes and */ 
@@ -6887,7 +6882,7 @@ static void PrintFile(WindowInfo *win, const char *printerName)
 
     ClosePrinter(printer);
 
-    hdcPrint = CreateDCA(driver, printerName, port, devMode); 
+    hdcPrint = CreateDC(driver, printerName, port, devMode); 
     if (!hdcPrint) {
         MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
@@ -6904,13 +6899,13 @@ Exit:
 
 static void EnumeratePrinters()
 {
-    PRINTER_INFO_5A *info5Arr = NULL;
+    PRINTER_INFO_5 *info5Arr = NULL;
     DWORD bufSize = 0, printersCount;
-    BOOL fOk = EnumPrintersA(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+    BOOL fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     if (!fOk) {
-        info5Arr = (PRINTER_INFO_5A*)malloc(bufSize);
-        fOk = EnumPrintersA(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+        info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
+        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
     if (!info5Arr)
@@ -6919,16 +6914,16 @@ static void EnumeratePrinters()
     if (!fOk) return;
     printf("Printers: %ld\n", printersCount);
     for (DWORD i=0; i < printersCount; i++) {
-        const char *printerName = info5Arr[i].pPrinterName;
-        const char *printerPort = info5Arr[i].pPortName;
+        const TCHAR *printerName = info5Arr[i].pPrinterName;
+        const TCHAR *printerPort = info5Arr[i].pPortName;
         bool fDefault = false;
         if (info5Arr[i].Attributes & PRINTER_ATTRIBUTE_DEFAULT)
             fDefault = true;
-        printf("Name: %s, port: %s, default: %d\n", printerName, printerPort, (int)fDefault);
+        _tprintf(_T("Name: %s, port: %s, default: %d\n"), printerName, printerPort, (int)fDefault);
     }
-    char buf[512];
-    bufSize = sizeof(buf);
-    fOk = GetDefaultPrinterA(buf, &bufSize);
+    TCHAR buf[512];
+    bufSize = dimof(buf);
+    fOk = GetDefaultPrinter(buf, &bufSize);
     if (!fOk) {
         if (ERROR_FILE_NOT_FOUND == GetLastError())
             printf("No default printer\n");
@@ -6938,12 +6933,12 @@ static void EnumeratePrinters()
 
 /* Get the name of default printer or NULL if not exists.
    The caller needs to free() the result */
-char *GetDefaultPrinterName()
+TCHAR *GetDefaultPrinterName()
 {
-    char buf[512];
-    DWORD bufSize = sizeof(buf);
-    if (GetDefaultPrinterA(buf, &bufSize))
-        return str_dup(buf);
+    TCHAR buf[512];
+    DWORD bufSize = dimof(buf);
+    if (GetDefaultPrinter(buf, &bufSize))
+        return tstr_dup(buf);
     return NULL;
 }
 
@@ -7101,7 +7096,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     bool reuse_instance = false;
     currArg = argListRoot->next;
-    char *printerName = NULL;
+    TCHAR *printerName = NULL;
     TCHAR *newWindowTitle = NULL;
     while (currArg) {
         if (is_arg("-register-for-pdf")) {
@@ -7146,7 +7141,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (is_arg("-print-to")) {
             currArg = currArg->next;
             if (currArg) {
-                printerName = wstr_to_multibyte(currArg->str, CP_ACP);
+                printerName = tstr_dup(currArg->str);
                 currArg = currArg->next;
             }
             continue;
