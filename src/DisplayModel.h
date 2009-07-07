@@ -307,6 +307,9 @@ protected:
     double          _zoomReal;
     double          _zoomVirtual;
     int             _rotation;
+    /* dpi correction factor by which _zoomVirtual has to be multiplied in
+       order to get _zoomReal */
+    double          _dpiFactor;
 
 public:
     /* an array of 'totalLinksCount' size, each entry describing a link */

@@ -175,11 +175,22 @@ void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
         swap_double(pageDxOut, pageDyOut);
 }
 
+double calculateDpiFactor(void)
+{
+    HDC hDc = GetDC(NULL);
+    int dpi = GetDeviceCaps(hDc, LOGPIXELSX);
+    ReleaseDC(NULL, hDc);
+    
+    // 1 PDF user space unit equals 1/72 inch
+    return dpi * 1.0 / 72.0;
+}
+
 DisplayModel::DisplayModel(DisplayMode displayMode)
 {
     _displayMode = displayMode;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
+    _dpiFactor = calculateDpiFactor();
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
@@ -334,7 +345,7 @@ double DisplayModel::zoomRealFromFirtualForPage(double zoomVirtual, int pageNo)
         else
             _zoomReal= zoomY;
     } else
-        _zoomReal = zoomVirtual;
+        _zoomReal = zoomVirtual * this->_dpiFactor;
 
     return _zoomReal;
 }
@@ -385,7 +396,7 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         assert(minZoom != INVALID_BIG_ZOOM);
         this->_zoomReal = minZoom;
     } else
-        this->_zoomReal = zoomVirtual;
+        this->_zoomReal = zoomVirtual * this->_dpiFactor;
 }
 
 /* Given pdf info and zoom/rotation, calculate the position of each page on a
@@ -1131,7 +1142,7 @@ void DisplayModel::zoomTo(double zoomVirtual)
 
 void DisplayModel::zoomBy(double zoomFactor)
 {
-    double newZoom = _zoomReal * zoomFactor;
+    double newZoom = _zoomVirtual * zoomFactor;
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     if (newZoom > ZOOM_MAX)
         return;
