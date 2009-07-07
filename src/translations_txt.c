@@ -4512,7 +4512,7 @@ const char *g_transTranslations[] = {
   "Azken orria\tEnd",
   NULL,
   "PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?",
-  "Sumatra PDF erabili besterik ezean PDFak irakurtzeko",
+  "SumatraPDF erabili besterik ezean PDFak irakurtzeko",
   "Hizki handiak edo txikiak bereizi",
   "%s bertsio berria eskuragarri dago. Jeisterik nahi?",
   "Bertsio berria eskuragarri duzu.",

@@ -426,64 +426,6 @@ pa:ਪਰਿੰਟ ਕਰੋ(&P)\tCtrl-P
 hi:परिंट करें(&P)\tCtrl-P
 nn:Skriv &ut\tCtrl-P
 -
-Make SumatraPDF my main PDF reader
-af:Maak Sumatra Die Automatiese PDF Leser
-bg:Направи SumatraPDF четец на PDF по подразбиране
-br:Fazer do SumatraPDF o leitor PDF padrão
-hu:SumatraPDF mint alapértelmezett PDF olvasó
-pl:Zrób domyślnym programem dla PDF
-de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
-fr:Définir SumatraPDF comme lecteur PDF par défaut
-tr:&Varsayılan PDF okuyucusu yap
-by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
-ja:SumatraPDF を既定の PDF リーダーにする
-fa:PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
-dk:Gør SumatraPDF til din standard PDF læser
-it:&Imposta SumatraPDF come lettore predefinito per i file PDF
-nl:SumatraPDF instellen als standaard PDF lezer
-ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
-es:Convertir SumatraPDF en lector PDF por defecto
-hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
-ru:Ассоциировать SumatraPDF с файлами PDF
-ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
-cn:将 SumatraPDF 设置为默认的 PDF 阅读器
-sv:Använd SumatraPDF som standardläsare för PDF
-cz:Nastavit SumatraPDF jako výchozí PDF čtečku
-gr:Συσχετισμός SumatraPDF με αρχεία PDF
-th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
-pt:Tornar o SumatraPDF no leitor de PDF por defeito
-no:Bruk SumatraPDF som standard PDF-leser
-sk:Nastaviť SumatraPDF ako predvolený PDF prehliadač
-vn:Đặt SumatraPDF làm trình đọc PDF mặc định
-lt:Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
-my:Jadikan SumatraPDF pembaca utama PDF
-fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
-ca:Fes el SumatraPDF el lector de PDF predeterminat
-si:Nastavi SumatraPDF kot privzeti PDF pregledovalnik
-sr-rs:Нека SumatraPFD буде стандардни PDF читач
-tw:把 SumatraPDF 作為預設的PDF閱讀工具
-ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
-he:הפוך את סומטרה לברירת מחדל עבור קבצי PDF
-sp-rs:Neka SumatraPDF bude standardni PDF čitač
-id:Jadikan SumatraPDF sebagai pembaca-PDF utama
-mk:Направи го SumatraPDF основен PDF читач
-ro:Fă SumatraPDF un cititor implicit de PDF
-kr:SumatraPDF를 기본 PDF 뷰어로 설정
-bn:SumatraPDF-কে ডিফল্ট রিডার হিসেবে নির্বাচন করুন
-gl:Facer do SumatraPDF o leitor PDF por defecto
-uk:Зробити SumatraPDF типовим переглядачем PDF
-eu:Sumatra PDF erabili besterik ezean PDFak irakurtzeko
-tl:Gawing Pangunahing PDF reader and SumatraPDF
-va:Convertir SumatraPDF en llector PDF per defecte
-sn:Ita SumatraPDF igovhura maPDF ese
-bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ 
-cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
-ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
-mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
-pa:ਸਾਰੀਂਆ  PDF ਫਾਈਲਾ SumatraPDF ਵਿਚ ਖੋਲੋ
-hi:सभी PDF फाईलें SumatraPDF में खोलें
-nn:Bruk SumatraPDF som standard PDF-lesar
--
 E&xit\tCtrl-Q
 af:&Gaan Uit-Q
 bg:&Изход\tCtrl-Q
@@ -3742,10 +3684,71 @@ PDF Document
 de:PDF-Dokument
 ru:PDF-документ
 -
+# Please keep this string as short as possible!
+Make SumatraPDF my main PDF reader
+af:Maak Sumatra Die Automatiese PDF Leser
+bg:Направи SumatraPDF четец на PDF по подразбиране
+br:Fazer do SumatraPDF o leitor PDF padrão
+hu:SumatraPDF mint alapértelmezett PDF olvasó
+pl:Zrób domyślnym programem dla PDF
+de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
+fr:Définir SumatraPDF comme lecteur PDF par défaut
+tr:&Varsayılan PDF okuyucusu yap
+by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
+ja:SumatraPDF を既定の PDF リーダーにする
+fa:PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
+dk:Gør SumatraPDF til din standard PDF læser
+it:&Imposta SumatraPDF come lettore predefinito per i file PDF
+nl:SumatraPDF instellen als standaard PDF lezer
+ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
+es:Convertir SumatraPDF en lector PDF por defecto
+hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
+ru:Ассоциировать SumatraPDF с файлами PDF
+ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
+cn:将 SumatraPDF 设置为默认的 PDF 阅读器
+sv:Använd SumatraPDF som standardläsare för PDF
+cz:Nastavit SumatraPDF jako výchozí PDF čtečku
+gr:Συσχετισμός SumatraPDF με αρχεία PDF
+th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
+pt:Tornar o SumatraPDF no leitor de PDF por defeito
+no:Bruk SumatraPDF som standard PDF-leser
+sk:Nastaviť SumatraPDF ako predvolený PDF prehliadač
+vn:Đặt SumatraPDF làm trình đọc PDF mặc định
+lt:Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
+my:Jadikan SumatraPDF pembaca utama PDF
+fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
+ca:Fes el SumatraPDF el lector de PDF predeterminat
+si:Nastavi SumatraPDF kot privzeti PDF pregledovalnik
+sr-rs:Нека SumatraPFD буде стандардни PDF читач
+tw:把 SumatraPDF 作為預設的PDF閱讀工具
+ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
+he:הפוך את סומטרה לברירת מחדל עבור קבצי PDF
+sp-rs:Neka SumatraPDF bude standardni PDF čitač
+id:Jadikan SumatraPDF sebagai pembaca-PDF utama
+mk:Направи го SumatraPDF основен PDF читач
+ro:Fă SumatraPDF un cititor implicit de PDF
+kr:SumatraPDF를 기본 PDF 뷰어로 설정
+bn:SumatraPDF-কে ডিফল্ট রিডার হিসেবে নির্বাচন করুন
+gl:Facer do SumatraPDF o leitor PDF por defecto
+uk:Зробити SumatraPDF типовим переглядачем PDF
+eu:SumatraPDF erabili besterik ezean PDFak irakurtzeko
+tl:Gawing Pangunahing PDF reader and SumatraPDF
+va:Convertir SumatraPDF en llector PDF per defecte
+sn:Ita SumatraPDF igovhura maPDF ese
+bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ 
+cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
+ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
+mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
+pa:ਸਾਰੀਂਆ  PDF ਫਾਈਲਾ SumatraPDF ਵਿਚ ਖੋਲੋ
+hi:सभी PDF फाईलें SumatraPDF में खोलें
+nn:Bruk SumatraPDF som standard PDF-lesar
+-
+# Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 ru:SumatraPDF - программа просмотра файлов PDF по умолчанию
 -
+# Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 ru:SumatraPDF теперь будет программой просмотра файлов PDF по умолчанию
