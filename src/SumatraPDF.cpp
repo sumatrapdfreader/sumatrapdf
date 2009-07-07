@@ -219,7 +219,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     TRUE, // BOOL m_rememberOpenedFiles
     ABOUT_BG_COLOR, // int  m_bgColor
     FALSE, // BOOL m_escToExit
-    NULL, // char *m_inverseSearchCmdLine
+    NULL, // TCHAR *m_inverseSearchCmdLine
     NULL, // char *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
@@ -919,7 +919,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 }
 
 static void SerializableGlobalPrefs_Init() {
-    gGlobalPrefs.m_inverseSearchCmdLine = wcsdup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+    gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
 }
 
 static void SerializableGlobalPrefs_Deinit()
@@ -1139,11 +1139,6 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
-#ifdef _TEX_ENHANCEMENT
-    // TODO: merge the dialog invoked by this item into the Options dialog
-    { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Set inverse search command-line"),      IDM_SET_INVERSESEARCH,      MF_NOT_IN_RESTRICTED },
-#endif
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
 };
@@ -4916,20 +4911,6 @@ static void OnMenuFind(WindowInfo *win)
     free((void *)previousFind);
 }
 
-#ifdef _TEX_ENHANCEMENT
-static void OnMenuSetInverseSearch(WindowInfo *win)
-{
-    assert(win);
-    if (!win) 
-        return;
-    TCHAR *ret= Dialog_SetInverseSearchCmdline(win, gGlobalPrefs.m_inverseSearchCmdLine);
-    if (ret) {
-        free(gGlobalPrefs.m_inverseSearchCmdLine);
-        gGlobalPrefs.m_inverseSearchCmdLine =  ret;
-    }
-}
-#endif
-
 static void OnMenuViewRotateLeft(WindowInfo *win)
 {
     RotateLeft(win);
@@ -6384,11 +6365,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuGoToPage(win);
                     break;
 
-#ifdef _TEX_ENHANCEMENT
-                case IDM_SET_INVERSESEARCH:
-                    OnMenuSetInverseSearch(win);
-                    break;
-#endif
                 case IDM_VIEW_FULLSCREEN:
                     OnMenuViewFullscreen(win);
                     break;
@@ -7195,8 +7171,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             currArg = currArg->next;
             if (currArg) {
                 free(gGlobalPrefs.m_inverseSearchCmdLine);
-                // TODO: this should really be "to char using a current locale"
-                gGlobalPrefs.m_inverseSearchCmdLine = currArg->str;
+                gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(currArg->str);
                 currArg = currArg->next;
             }
             continue;
@@ -7299,7 +7274,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CreatePageRenderThread();
     /* remaining arguments are names of PDF files */
 #ifdef BUILD_RM_VERSION
-    StrList *currArgFileNames = currArg;
+    WStrList *currArgFileNames = currArg;
 #endif
     if (NULL != gBenchFileName) {
             win = LoadPdf(gBenchFileName);
@@ -7461,7 +7436,7 @@ Exit:
             TCHAR fullpath[MAX_PATH];
             GetFullPathName(currArgFileNames->str, dimof(fullpath), fullpath, NULL);
 
-            int error = remove(fullpath);
+            int error = DeleteFile(fullpath);
 
             // Sumatra holds the lock on the file (open stream), it should have lost it by the time
             // we reach here, but sometimes it's a little slow, so loop around till we can do it.
@@ -7469,7 +7444,7 @@ Exit:
             {
                 error = GetLastError();
                 if (error == 32)
-                    error = remove(fullpath);
+                    error = DeleteFile(fullpath);
                 else
                     error = 0;
             }

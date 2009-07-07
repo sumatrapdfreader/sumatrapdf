@@ -12,9 +12,6 @@ class WindowInfo;
 
 int     Dialog_GoToPage(WindowInfo *win);
 TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
-#ifdef _TEX_ENHANCEMENT
-TCHAR *  Dialog_SetInverseSearchCmdline(WindowInfo *win, const TCHAR *cmdline);
-#endif
 TCHAR * Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);

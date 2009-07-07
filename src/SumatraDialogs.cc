@@ -17,11 +17,6 @@
 #include "translations.h"
 #include "tstr_util.h"
 
-typedef struct {
-    const TCHAR * in_cmdline;  /* current inverse search command line */
-    TCHAR *       out_cmdline; /* inverse search command line selected by the user */
-} Dialog_InverseSearch_Data;
-
 static void CenterDialog(HWND hDlg)
 {
     RECT rcDialog, rcOwner, rcRect;
@@ -45,72 +40,6 @@ static void CenterDialog(HWND hDlg)
 
     SetWindowPos(hDlg, 0, rcDialog.left, rcDialog.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
-
-#ifdef _TEX_ENHANCEMENT
-static BOOL CALLBACK Dialog_InverseSearch_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    HWND                       edit;
-    Dialog_InverseSearch_Data *  data;
-
-    if (WM_INITDIALOG == message)
-    {
-        data = (Dialog_InverseSearch_Data*)lParam;
-        assert(data);
-        assert(data->in_cmdline);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
-        SetDlgItemText(hDlg, IDC_CMDLINE, data->in_cmdline);
-        SetDlgItemText(hDlg, IDOK, _TR("OK"));
-        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
-        
-        CenterDialog(hDlg);
-        SetFocus(GetDlgItem(hDlg, IDC_CMDLINE));
-        return FALSE;
-    }
-
-
-    switch (message)
-    {
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                    data = (Dialog_InverseSearch_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
-                    assert(data);
-                    edit = GetDlgItem(hDlg, IDC_CMDLINE);
-                    data->out_cmdline = win_get_textw(edit);
-                    EndDialog(hDlg, DIALOG_OK_PRESSED);
-                    return TRUE;
-
-                case IDCANCEL:
-                    EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
-                    return TRUE;
-            }
-            break;
-    }
-    return FALSE;
-}
-
-/* Shows a dialog that let the user configure the inverser search command line
-   Returns the command line as a newly allocated string or
-   NULL if user cancelled the dialog or there was an error.
-   Caller needs to free() the result.
-*/
-TCHAR *Dialog_SetInverseSearchCmdline(WindowInfo *win, const TCHAR *cmdline)
-{
-    int                     dialogResult;
-    Dialog_InverseSearch_Data data;
-    
-    assert(cmdline);
-    if (!cmdline) return NULL;
-
-    data.in_cmdline = cmdline;
-    dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_INVERSESEARCH), win->hwndFrame, Dialog_InverseSearch_Proc, (LPARAM)&data);
-    if (DIALOG_OK_PRESSED == dialogResult) {
-        return data.out_cmdline;
-    }
-    return NULL;
-}
-#endif
 
 /* For passing data to/from GetPassword dialog */
 typedef struct {
@@ -639,6 +568,33 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
+#ifdef _TEX_ENHANCEMENT
+        {
+            // Fit the additional section into the dialog
+            // (this should rather happen in SumatraPDF.rc, but the resource
+            // editor tends to overwrite conditional stuff which isn't its own)
+            RECT rc;
+            GetWindowRect(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), &rc);
+            UINT addHeight = rect_dy(&rc) + 8;
+            GetWindowRect(hDlg, &rc);
+            MoveWindow(hDlg, rc.left, rc.top, rect_dx(&rc), rect_dy(&rc) + addHeight, TRUE);
+
+            GetClientRect(GetDlgItem(hDlg, IDOK), &rc);
+            MapWindowPoints(GetDlgItem(hDlg, IDOK), hDlg, (LPPOINT)&rc, 2);
+            MoveWindow(GetDlgItem(hDlg, IDOK), rc.left, rc.top + addHeight, rect_dx(&rc), rect_dy(&rc), TRUE);
+            GetClientRect(GetDlgItem(hDlg, IDCANCEL), &rc);
+            MapWindowPoints(GetDlgItem(hDlg, IDCANCEL), hDlg, (LPPOINT)&rc, 2);
+            MoveWindow(GetDlgItem(hDlg, IDCANCEL), rc.left, rc.top + addHeight, rect_dx(&rc), rect_dy(&rc), TRUE);
+        }
+
+        SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
+        SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
+#else
+        ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE_LABEL), SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE), SW_HIDE);
+#endif
+
         CenterDialog(hDlg);
         SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
         return FALSE;
@@ -667,6 +623,10 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));
             prefs->m_enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
             prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
+#ifdef _TEX_ENHANCEMENT
+            free(prefs->m_inverseSearchCmdLine);
+            prefs->m_inverseSearchCmdLine = win_get_textw(GetDlgItem(hDlg, IDC_CMDLINE));
+#endif
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;
 

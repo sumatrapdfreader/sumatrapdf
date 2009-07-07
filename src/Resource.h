@@ -9,7 +9,6 @@
 #define IDD_DIALOG_GET_PASSWORD         130
 #define IDD_DIALOG_PDF_ASSOCIATE        131
 #define IDC_CURSORDRAG                  132
-#define IDD_DIALOG_INVERSESEARCH        133
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
 #define IDD_DIALOG_NEW_VERSION          135
 #define IDD_DIALOG_SETTINGS             136
@@ -115,7 +114,6 @@
 #define IDM_SETTINGS                    517
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
-#define IDM_SET_INVERSESEARCH           552
 #define IDM_CHANGE_LANGUAGE             553
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
@@ -132,7 +130,6 @@
 #define IDC_GET_PASSWORD_EDIT           1004
 #define IDC_GET_PASSWORD_LABEL          1005
 #define IDC_TOOLBAR                     1006
-#define IDC_CMDLINE                     1006
 #define IDC_REBAR                       1007
 #define IDC_DONT_ASK_ME_AGAIN           1008
 #define IDC_PDF_TOC_TREE                1009
@@ -154,6 +151,9 @@
 #define IDC_FIND_EDIT                   1030
 #define IDC_MATCH_CASE                  1031
 #define IDC_FIND_NEXT_HINT              1032
+#define IDC_SECTION_INVERSESEARCH       1040
+#define IDC_CMDLINE_LABEL               1041
+#define IDC_CMDLINE                     1042
 #define IDB_TOOLBAR                     2000
 #define IDB_TOOLBAR_DISABLED            2001
 #define IDB_SILK_OPEN                   2002

@@ -182,6 +182,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
     CONTROL         "Remeber &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,110,216,9
     PUSHBUTTON      "Make SumatraPDF a default PDF reader",IDC_SET_DEFAULT_READER,12,124,216,14
+    GROUPBOX        "Set inverse search command-line",IDC_SECTION_INVERSESEARCH,6,150,228,52
+    LTEXT           "Enter the command-line to invoke when you double-click on the PDF document:",IDC_CMDLINE_LABEL,12,162,216,18
+    EDITTEXT        IDC_CMDLINE,12,182,216,13,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,128,150,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,184,150,50,14
 END
