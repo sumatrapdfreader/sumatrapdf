@@ -3575,8 +3575,12 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         TextOut(hdc, x, y, txt, lstrlen(txt));
 
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-
         currY += rightDy + ABOUT_TXT_DY;
+
+	int underlineY = y + txtSize.cy - 3;
+	SelectObject(hdc, penLinkLine);
+	MoveToEx(hdc, x, underlineY, NULL);
+	LineTo(hdc, x + txtSize.cx, underlineY);    
     }
 
     SelectObject(hdc, penDivideLine);
