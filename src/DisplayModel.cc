@@ -1142,7 +1142,8 @@ void DisplayModel::zoomTo(double zoomVirtual)
 
 void DisplayModel::zoomBy(double zoomFactor)
 {
-    double newZoom = _zoomVirtual * zoomFactor;
+    // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
+    double newZoom = _zoomReal / _dpiFactor * zoomFactor;
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     if (newZoom > ZOOM_MAX)
         return;

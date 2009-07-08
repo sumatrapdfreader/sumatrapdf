@@ -2644,9 +2644,9 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
     if (!dm) return;
 
     if (ZOOM_FIT_PAGE == dm->zoomVirtual())
-        dm->setZoomVirtual(ZOOM_FIT_WIDTH);
+        dm->zoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == dm->zoomVirtual())
-        dm->setZoomVirtual(ZOOM_FIT_PAGE);
+        dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
 static bool ReadRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *buffer, DWORD bufLen)
@@ -5251,6 +5251,9 @@ static void OnChar(WindowInfo *win, int key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
+    if (IsCharUpper((TCHAR)key))
+        key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
+
     if (VK_ESCAPE == key) {
         if (win->fullScreen)
             OnMenuViewFullscreen(win);
@@ -5258,13 +5261,16 @@ static void OnChar(WindowInfo *win, int key)
             DestroyWindow(win->hwndFrame);
         else
             ClearSearch(win);
+    } else if ('q' == key) {
+        DestroyWindow(win->hwndFrame);
     }
 
     if (!win->dm)
         return;
 
     if (VK_BACK == key) {
-        win->dm->scrollYByAreaDy(false, true);
+        bool forward = !WasShiftPressed();
+        win->dm->scrollYByAreaDy(!forward, true);
     } else if ('g' == key) {
         OnMenuGoToPage(win);
     } else if ('j' == key) {
@@ -5274,14 +5280,14 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('n' == key) {
         win->dm->goToNextPage(0);
     } else if ('c' == key) {
-        // TODO: probably should preserve facing vs. non-facing
-        win->dm->changeDisplayMode(DM_CONTINUOUS);
+        DisplayMode newMode = DM_CONTINUOUS;
+        if (displayModeFacing(win->dm->displayMode()))
+            newMode = DM_CONTINUOUS_FACING;
+        SwitchToDisplayMode(win, newMode);
     } else if ('p' == key) {
         win->dm->goToPrevPage(0);
     } else if ('z' == key) {
         WindowInfo_ToggleZoom(win);
-    } else if ('q' == key) {
-        DestroyWindow(win->hwndFrame);
     } else if ('+' == key) {
         win->dm->zoomBy(ZOOM_IN_FACTOR);
     } else if ('-' == key) {
