@@ -917,7 +917,7 @@ th:ที่คั่น\tF12
 uk:Закладки\tF12
 eu:Markagailuak\tF12
 gr:Σελιδοδείκτες\tF12
-hr:Knjiške oznake\tF12
+hr:Straničnik\tF12
 tl:Mga Pananda\tF12
 va:Marcadors\tF12
 sn:Mabhukumaki\tF12
@@ -999,7 +999,7 @@ it:Mostra la barra degli strumenti
 nl:Werkbalk tonen
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
-hr:Pokaži alatnu traku
+hr:Prikaži alatnu traku
 ru:Показ панели инструментов
 ar:عرض شريط الأدوات
 cn:显示工具栏
@@ -1569,7 +1569,7 @@ it:&Larghezza pagina\tCtrl-2
 nl:Passend in &breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
 es:&Ancho de Página\tCtrl-2
-hr:&Podesi po širini\tCtrl-2
+hr:&Prilagodi širini\tCtrl-2
 ru:Заполнение по ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
 cn:适合宽度(&H)\tCtrl-2
@@ -1709,7 +1709,7 @@ it:&Visita il sito Internet
 nl:Bezoek de &website
 ta:வலைத்தளம் செல்
 es:&Visitar Sitio Web
-hr:&Posjeti Internet stranicu
+hr:&Posjeti internetsku stranicu
 ru:Посетить веб-сайт программы
 ar:&زيارة موقع البرنامج
 cn:访问网站(&V)
@@ -2116,7 +2116,7 @@ ar:مناسبة الخط
 uk:Розрізняти малу й велику літери
 eu:Hizki handiak edo txikiak bereizi
 gr:Αντιστοίχιση πεζών-κεφαλαίων
-hr:Razlikuj velika/mala slova
+hr:Razlikuj velika i mala slova
 tl:Ipantay ang Laki ng Titik
 va:Distinguir MAYÚSCULES i minúscules
 sn:Fananidza kesi
@@ -2317,7 +2317,7 @@ it:Informazioni su SumatraPDF
 nl:Over SumatraPDF
 ta:SumatraPDF பற்றி
 es:Acerca de SumatraPDF
-hr:O programu SumatraPDF
+hr:O SumatriPDF
 ru:О программе SumatraPDF
 ar:SumatraPDF حول برنامج 
 cn:关于 SumatraPDF
@@ -2430,7 +2430,7 @@ it:Errore durante l'apertura del file PDF.
 nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
-hr:Greška kod učitavanja PDF datoteke.
+hr:Greška prilikom učitavanja PDF datoteke.
 ru:Ошибка открытия PDF-файла.
 ar:هناك خطأ في تشغيل الملف
 cn:载入 PDF 文件时发生错误。
@@ -2486,7 +2486,7 @@ it:Stampante non accessibile
 nl:Printer niet gevonden
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
-hr:Nije moguće otvoriti pisač
+hr:Nije moguće pristupiti pisaču
 ru:Принтер не доступен
 ar:تعذر فتح الطابعة
 cn:无法打开打印机
@@ -2542,7 +2542,7 @@ ja:印刷の問題です。
 fa:مشکل در چاپ
 it:Problema di stampa.
 es:Error de impresión.
-hr:Problem kod ispisivanja.
+hr:Problem prilikom ispisivanja.
 ru:Ошибка при печати.
 ar:يوجد مشكلة في الطباعة
 cn:打印问题。
@@ -2592,7 +2592,7 @@ pl:Pomóż przy translacji
 ja:翻訳の提供
 it:Contribuisci alla traduzione
 nl:Help met vertalen
-hr:Pomozi prijevodom ovog programa
+hr:Pomozite prijevodom
 ru:Помочь с переводом
 ar:ساهم في ترجمة البرنامج 
 cn:提供翻译
@@ -2647,7 +2647,7 @@ uk:Установити зворотній пошук.
 ru:Задать команду обратного поиска
 es:Establecer búsqueda inversa
 fa:تنظیم وارانه جستجو
-hr:Omogući inverznu pretragu
+hr:Omogući unazadnu pretragu
 nl:Omgekeerde zoekrichting instellen
 eu:Alderantzizko bilaketa ezarri
 mk:Активирај инверзно пребарување
@@ -2961,7 +2961,7 @@ vn:Kiểm tra có phiên bản mới
 uk:Перевірити, чи є нова версія
 ru:Проверить наличие новой версии
 es:Comprobar actualizaciones
-hr:Provjeravaj dostupnost nove inačice
+hr:Provjeri dostupnost nove inačice
 it:V&erifica aggiornamenti
 nl:&Controleren op updates
 fr:Vérifier les mises à jour
@@ -3208,7 +3208,7 @@ vn:Bỏ qua phiên bản này.
 uk:Пропустити цю версію.
 ru:Пропустить эту версию.
 es:Saltarse esta versión.
-hr:Propusti ovu inačicu.
+hr:&Propusti ovu inačicu.
 it:Salta questa versione
 nl:Deze versie overslaan
 fr:Ignorer cette version
@@ -3243,6 +3243,7 @@ pl:Uwaga
 cy:Rhybudd
 gr:Προειδοποίηση
 mk:Предупредување
+hr:Upozorenje
 -
 This option is not available in portable mode.
 de:Diese Option ist im portablen Modus nicht verfügbar
@@ -3251,6 +3252,7 @@ pl:Opcja niedostepna w trybie przenosnym.
 ru:Эта опция недоступна в мобильном режиме.
 gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
 mk:Оваа опција не е достапна во мобилен режим на работа.
+hr:Ova mogućnost nije dostupna u prenosivom načinu rada.
 -
 SumatraPDF Options
 de:SumatraPDF Optionen
@@ -3258,6 +3260,7 @@ ru:Параметры SumatraPDF
 cy:Dewisiadau SumatraPDF
 gr:Επιλογές SumatraPDF
 mk:Опции на SumatraPDF
+hr:Mogućnosti programa
 -
 Fit Width
 af:Pas In Breedte
@@ -3379,6 +3382,7 @@ ru:Настройки
 cy:&Gosodiadau
 gr:Ρυθμίσεις
 mk:&Нагодувања
+hr:&Postavke
 -
 Fit Page
 af:Pas Blad In
@@ -3443,6 +3447,7 @@ ru:&Параметры...
 cy:&Dewisiadau...
 gr:Επιλ&ογές
 mk:&Опции...
+hr:Mogućnosti...
 -
 Default &Layout:
 de:&Standardlayout:
@@ -3450,6 +3455,7 @@ ru:&Компоновка по умолчанию
 cy:&Cynllun Rhagosodedig:
 gr:Προκαθορισμένη διαμόρφωση:
 mk:Основен &изглед:
+hr:Pretpostavljeni &izgled:
 -
 Default &Zoom:
 de:Standard&vergrößerung:
@@ -3457,10 +3463,12 @@ ru:&Масштаб по умолчанию
 cy:C&hwyddo Rhagosodedig:
 gr:Προκαθορισμένο ζουμ:
 mk:Основно &зголемување:
+hr:Pretpostavljeno &uvećanje:
 -
 OK
 cy:Iawn
 mk:Во ред
+hr:U redu
 -
 Advanced
 de:Weiteres
@@ -3468,6 +3476,7 @@ ru:Расширенные
 cy:Uwch
 gr:Προχωρημένα
 mk:Напредно
+hr:Napredno
 -
 Show the &bookmarks sidebar when available
 de:&Lesezeichen beim Start anzeigen
@@ -3475,6 +3484,7 @@ ru:Показывать панель &закладок (при возможно�
 cy:Dangos bar ochr y nodau tudalen pan yw ar gael
 gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 mk:Прикажи го алатникот со &обележувачи кога е достапен
+hr:Prikaži traku &straničnika kada je dostupna
 -
 Cancel
 de:Abbrechen
@@ -3482,6 +3492,7 @@ ru:Отмена
 cy:Diddymu
 gr:Άκυρο
 mk:Откажи
+hr:Odustani
 -
 Automatically check for &updates
 de:&Automatisch nach Updates suchen
@@ -3489,6 +3500,7 @@ ru:&Автоматическая проверка обновлений
 cy:Gwirio'n awtomatig am &ddiweddariadau
 gr:Αυτόματος έλεγχος για ενημερώσεις
 mk:Проверувај за &надградби автоматски
+hr:Provjeravaj &nadogradnje automatski
 -
 &Remember these settings for each document
 de:&Diese Einstellungen für jedes Dokument merken
@@ -3496,11 +3508,13 @@ ru:Запомнить эти параметры для &каждого доку�
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 mk:&Запомни ги овие нагодувања за секој документ
+hr:&Upamti ove postavke za svaki pojedini dokument
 -
 Remember &opened files
 de:&Eine Liste der geöffneten Dokumente führen
 ru:&Запомнить открытые файлы
 mk: Запомни ги &отворените датотеки
+hr:Upamti &otvorene datoteke
 -
 View
 af:Vertoon
@@ -3565,6 +3579,7 @@ ru:&Перейти к странице
 cy:Mynd i dudalen:
 gr:Μετάβαση στη σελίδα:
 mk:&Појди на страница:
+hr:&Idi na stranicu:
 -
 (of %d)
 de:(von %d)
@@ -3572,6 +3587,7 @@ ru: (из %d)
 cy:(o %d)
 gr:(από %d) 
 mk:(од %d)
+hr:(od %d)
 -
 Download
 de:Herunterladen
@@ -3579,6 +3595,7 @@ ru:Загрузка
 cy:Llwytho i Lawr
 gr:Λήψη
 mk:Преземи
+hr:Preuzmi
 -
 &Yes
 de:&Ja
@@ -3586,6 +3603,7 @@ ru:Да
 cy:Iawn
 gr:&Ναι
 mk:&Да
+hr:&Da
 -
 &No
 de:&Nein
@@ -3593,6 +3611,7 @@ ru:Нет
 cy:Na
 gr:Ό&χι
 mk:&Не
+hr:&Ne
 -
 &No, thanks
 de:&Nein, danke
@@ -3600,6 +3619,7 @@ ru:Спасибо, нет
 cy:Dim diolch
 gr:Όχι, ευχαριστώ
 mk:&Не, благодарам
+hr:&Ne, hvala
 -
 Please wait - rendering...
 de:Bitte einen Moment Geduld…
@@ -3607,6 +3627,7 @@ ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
 gr:Φόρτωση, παρακαλώ περιμένετε... 
 mk:Ве молам почекајте - создавам приказ...
+hr:Molim pričekajte, iscrtavam...
 -
 Couldn't render the page
 de:Diese Seite kann leider nicht angezeigt werden
@@ -3614,6 +3635,7 @@ ru:Не удалось сформировать изображение стра�
 cy:Methu cyflwyno'r dudalen
 gr:Δε μπορεί να φορτωθεί η σελίδα
 mk:Не можам да ја прикажам страницата
+hr:Nije moguće iscrtati stranicu
 -
 No matches were found
 de:Das Dokument wurde durchsucht
@@ -3621,6 +3643,7 @@ ru:Образец не найден
 cy:Heb ganfod cyfatebiad
 gr:Δε βρέθηκε το κείμενο
 mk:Не се пронајдени совпаѓања
+hr:Pojam nije pronađen
 -
 Found text at page %d
 de:Text auf Seite %d gefunden
@@ -3628,6 +3651,7 @@ ru:Текст найден на стр. %d
 cy:Canfod testun ar dudalen %d
 gr:Το κείμενο βρέθηκε στη σελίδα %d
 mk:Пронајдов текст на страница %d
+hr:Tekst je pronađen na stranici %d
 -
 Searching %d of %d...
 de:Suche auf Seite %d von %d…
@@ -3635,6 +3659,7 @@ ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
 gr:Αναζήτηση %d από %d...
 mk:Пребарувам %d од %d страници...
+hr:Pretražujem stranicu %d od %d...
 -
 PDF documents
 de:PDF-Dokumente
@@ -3642,6 +3667,7 @@ cy:Dogfennau PDF
 gr:Αρχεία PDF
 ru:PDF-документ
 mk:PDF документи
+hr:PDF dokumenti
 -
 All files
 de:Alle Dateien
@@ -3649,82 +3675,98 @@ cy:Pob ffeil
 gr:Όλα τα αρχεία
 ru:Все файлы
 mk:Сите датотеки
+hr:Sve datoteke
 -
 &Password:
 de:&Passwort:
 gr:Κωδικός:
 ru:&Пароль:
 mk:&Лозинка:
+hr:&Lozinka:
 -
 &Find what:
 de:&Suchen nach:
 ru:&Образец:
 mk:&Најди што:
+hr:&Što tražiti:
 -
 Find
 de:Suchen
 ru:Поиск
 mk:Најди
+hr:Pronađi
 -
 &Match case
 de:&Groß-/Kleinschreibung beachten
 ru:&Учитывать регистр
 mk:&Разликувај мали и големи букви
+hr:Razlikuj velika i mala slova
 -
 Hint: Use the F3 key for finding again
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
 ru:Для повторного поиска используйте клавишу F3
 mk:За повторно пребарување користи F3 од тастатурата
+hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 -
 Couldn't initialize printer
 de:Der Drucker konnte nicht initialisiert werden
 ru:Не удалось инициализировать принтер
 mk:Не можам да го подготвам печатачот
+hr:Ne mogu inicijalizirati pisač
 -
 No synchronization info at this position
 de:Keine Synchronisationsinformationen an diesem Ort
 ru:В этой позиции отсутствует информация для синхронизации
 mk:Нема информации за синхронизација на оваа позиција
+hr:Nema podatka o usklađenosti na ovom položaju
 -
 Synchronization file cannot be opened
 de:Die Synchronisationsdatei kann nicht geöffnet werden
 ru:Файл с информацией для синхронизации не может быть открыт
 mk:Синхронизациската датотека не може да се отвори
+hr:Datoteka usklađenja ne nože biti otvorena
 -
 Page number %u inexistant
 de:Es gibt keine Seite %u
 ru:Страница %u не существует
 mk:Страница со број %u не постои
+hr:Stranica %u ne postoji
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 ru:Результат вокруг строки %u в файле %s не найден
 mk:Не најдов резултати околу линијата %u во датотеката %s
+hr:Nema rezultata oko retka %u u datoteci %s
 -
 Source file %s has no synchronization point
 de:%s hat keinen Synchronisations-Punkt
 ru:Отсутствует точка синхронизации в исходном файле %s
 mk:Изворната датотека %s нема синхронизациска точка
+hr:Izvorna datoteka %s nema točke usklađivanja
 -
 [Changes detected; refreshing] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 ru:[Обнаружены изменения; происходит обновление] %s
 mk:[Забележани се промени; освежувам...] %s
+hr:[Dogodila se promjena - osvježavam] %s
 -
 Unknown source file (%s)
 de:Unbekannte Datei (%s)
 ru:Неизвестный исходный файл (%s)
 mk:Непозната изворна датотека (%s)
+hr:Nepoznata izvorna datoteka (%s)
 -
 Cannot print this file
 de:Diese Datei darf nicht gedruckt werden
 ru:Не удалось распечатать этот файл
 mk:Не можам да ја печатам оваа датотека
+hr:Ne mogu ispisati ovu datoteku
 -
 PDF Document
 de:PDF-Dokument
 ru:PDF-документ
 mk:PDF документ
+hr:PDF dokument
 -
 # Please keep this string as short as possible!
 Make SumatraPDF my main PDF reader
@@ -3744,7 +3786,7 @@ it:&Imposta SumatraPDF come lettore predefinito per i file PDF
 nl:SumatraPDF instellen als standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
-hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
+hr:Neka SumatraPDF bude moj glavni PDF preglednik
 ru:Ассоциировать SumatraPDF с файлами PDF
 ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器
@@ -3790,20 +3832,24 @@ SumatraPDF is your main PDF reader
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 ru:SumatraPDF - программа просмотра файлов PDF по умолчанию
 mk:SumatraPDF е твојот основен PDF читач
+hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 ru:SumatraPDF теперь будет программой просмотра файлов PDF по умолчанию
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
+hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 de:Standardanwendung im portablen Modus nicht veränderbar
 ru:В мобильном режиме изменить PDF-вьюер нельзя
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
+hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 -
 Open in &Adobe Reader
 de:Mit &Adobe Reader öffnen
 ru:Открыть в &Adobe Reader
 mk:Отвори со &Adobe Reader
+hr:Otvori u programu &Adobe Reader
