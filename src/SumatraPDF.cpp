@@ -234,34 +234,29 @@ SerializableGlobalPrefs             gGlobalPrefs = {
 };
 
 typedef struct ToolbarButtonInfo {
-    /* information provided at compile time */
-    int           bitmapResourceId;
+    /* index in the toolbar bitmap (-1 for separators) */
+    int           bmpIndex;
     int           cmdId;
     const char *  toolTip;
     int           flags;
-
-    /* information calculated at runtime */
-    int           index;
 } ToolbarButtonInfo;
 
 enum ToolbarButtonFlag {
     TBF_RESTRICTED = 0x1 
 };
 
-#define IDB_SEPARATOR  -1
-
 static ToolbarButtonInfo gToolbarButtons[] = {
-    { IDB_SILK_OPEN,     IDM_OPEN,              _TRN("Open"),           TBF_RESTRICTED, 0 },
-    { IDB_SEPARATOR,     IDM_GOTO_PAGE,         NULL,                   0,              0 },
-    { IDB_SILK_PREV,     IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,              0 },
-    { IDB_SILK_NEXT,     IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,              0 },
-    { IDB_SEPARATOR,     IDB_SEPARATOR,         NULL,                   0,              0 },
-    { IDB_SILK_ZOOM_OUT, IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,              0 },
-    { IDB_SILK_ZOOM_IN,  IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,              0 },
-    { IDB_SEPARATOR,     IDM_FIND_FIRST,        NULL,                   0,              0 },
-    { IDB_FIND_PREV,     IDM_FIND_PREV,         _TRN("Find Previous"),  0,              0 },
-    { IDB_FIND_NEXT,     IDM_FIND_NEXT,         _TRN("Find Next"),      0,              0 },
-    { IDB_FIND_MATCH,    IDM_FIND_MATCH,        _TRN("Match case"),     0,              0 },
+    { 0,   IDM_OPEN,              _TRN("Open"),           TBF_RESTRICTED },
+    { -1,  IDM_GOTO_PAGE,         NULL,                   0,             },
+    { 1,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,             },
+    { 2,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,             },
+    { -1,  NULL,                  NULL,                   0,             },
+    { 3,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,             },
+    { 4,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,             },
+    { -1,  IDM_FIND_FIRST,        NULL,                   0,             },
+    { 5,   IDM_FIND_PREV,         _TRN("Find Previous"),  0,             },
+    { 6,   IDM_FIND_NEXT,         _TRN("Find Next"),      0,             },
+    { 7,   IDM_FIND_MATCH,        _TRN("Match case"),     0,             },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -1939,8 +1934,8 @@ static bool FileCloseMenuEnabled(void) {
     return false;
 }
 
-bool TbIsSepId(int bitmapResourceId) {
-    return IDB_SEPARATOR == bitmapResourceId;
+bool TbIsSepId(int bmpIndex) {
+    return bmpIndex < 0;
 }
  
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
@@ -1948,7 +1943,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        if (TbIsSepId(gToolbarButtons[i].bitmapResourceId))
+        if (TbIsSepId(gToolbarButtons[i].bmpIndex))
             continue;
 
         int cmdId = gToolbarButtons[i].cmdId;
@@ -5352,10 +5347,10 @@ static void OnMenuAbout() {
 static TBBUTTON TbButtonFromButtonInfo(int i) {
     TBBUTTON tbButton = {0};
     tbButton.idCommand = gToolbarButtons[i].cmdId;
-    if (TbIsSepId(gToolbarButtons[i].bitmapResourceId)) {
+    if (TbIsSepId(gToolbarButtons[i].bmpIndex)) {
         tbButton.fsStyle = TBSTYLE_SEP;
     } else {
-        tbButton.iBitmap = gToolbarButtons[i].index;
+        tbButton.iBitmap = gToolbarButtons[i].bmpIndex;
         tbButton.fsState = TBSTATE_ENABLED;
         tbButton.fsStyle = TBSTYLE_BUTTON;
         tbButton.iString = (INT_PTR)Translations_GetTranslation(gToolbarButtons[i].toolTip);
@@ -5561,18 +5556,20 @@ static void UpdateToolbarFindText(WindowInfo *win)
     const TCHAR *text = _TR("Find:");
     win_set_text(win->hwndFindText, text);
 
+    RECT findWndRect;
+    GetWindowRect(win->hwndFindBox, &findWndRect);
+    int findWndDy = rect_dy(&findWndRect);
+
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
     int pos_x = r.right + 10;
-
-    RECT findWndRect;
-    GetWindowRect(win->hwndFindBox, &findWndRect);
-    int findWndDy = rect_dy(&findWndRect) + 1;
+    int pos_y = (r.bottom - findWndDy) / 2;
 
     SIZE size = TextSizeInHwnd(win->hwndFindText, text);
     size.cx += 6;
-    MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
-    MoveWindow(win->hwndFindBox, pos_x + size.cx, 1, FIND_BOX_WIDTH, 20, false);
+
+    MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
+    MoveWindow(win->hwndFindBox, pos_x + size.cx, pos_y, FIND_BOX_WIDTH, findWndDy, false);
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
 
     TBBUTTONINFO bi;
@@ -5662,13 +5659,14 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     SIZE size = TextSizeInHwnd(win->hwndPageText, text);
     size.cx += 6;
 
+    RECT pageWndRect;
+    GetWindowRect(win->hwndPageBox, &pageWndRect);
+    int pageWndDy = rect_dy(&pageWndRect);
+
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDM_OPEN, (LPARAM)&r);
     int pos_x = r.right + 10;
-
-    RECT pageWndRect;
-    GetWindowRect(win->hwndPageBox, &pageWndRect);
-    int pageWndDy = rect_dy(&pageWndRect) + 1;
+    int pos_y = (r.bottom - pageWndDy) / 2;
 
     TCHAR buf[256];
     if (0 == pageCount) {
@@ -5682,9 +5680,9 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     size2.cx += 6;
 
-    MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy) / 2 + 1, size.cx, size.cy, true);
-    MoveWindow(win->hwndPageBox, pos_x + size.cx, 1, PAGE_BOX_WIDTH, 20, false);
-    MoveWindow(win->hwndPageTotal, pos_x + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy) / 2 + 1, size2.cx, size.cy, false);
+    MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
+    MoveWindow(win->hwndPageBox, pos_x + size.cx, pos_y, PAGE_BOX_WIDTH, pageWndDy, false);
+    MoveWindow(win->hwndPageTotal, pos_x + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
@@ -5721,6 +5719,18 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     UpdateToolbarPageText(win, -1);
 }
 
+static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
+{
+    TCHAR * path = AppGenDataFilename(filename);
+    
+    HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    if (!hBmp)
+        hBmp = LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
+
+    free(path);
+    return hBmp;
+}
+
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HWND hwndOwner = win->hwndFrame;
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
@@ -5731,20 +5741,16 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     ShowWindow(hwndToolbar, SW_SHOW);
     HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
+
+    HBITMAP hbmp = LoadExternalBitmap(hInst, _T("toolbar_8.bmp"), IDB_TOOLBAR);
+    BITMAP bmp;
+    GetObject(hbmp, sizeof(BITMAP), &bmp);
+    // Assume square icons
+    himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
+    ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
+    DeleteObject(hbmp);
+
     for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        if (!TbIsSepId(gToolbarButtons[i].bitmapResourceId)) {
-            HBITMAP hbmp = LoadBitmap(hInst, MAKEINTRESOURCE(gToolbarButtons[i].bitmapResourceId));
-            if (!himl) {
-                BITMAP bmp;
-                GetObject(hbmp, sizeof(BITMAP), &bmp);
-                int dx = bmp.bmWidth;
-                int dy = bmp.bmHeight;
-                himl = ImageList_Create(dx, dy, ILC_COLORDDB | ILC_MASK, 0, 0);
-            }
-            int index = ImageList_AddMasked(himl, hbmp, RGB(255,0,255));
-            DeleteObject(hbmp);
-            gToolbarButtons[i].index = index;
-        }
         tbButtons[i] = TbButtonFromButtonInfo(i);
         if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
             tbButtons[i].fsStyle = BTNS_CHECK;
@@ -5793,7 +5799,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
     SetWindowPos(win->hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
     GetWindowRect(win->hwndReBar, &rc);
-    gReBarDy = rc.bottom - rc.top;
+    gReBarDy = rect_dy(&rc);
     //TODO: this was inherited but doesn't seem to be right (makes toolbar
     // partially unpainted if using classic scheme on xp or vista
     //gReBarDyFrame = bIsAppThemed ? 0 : 2;

@@ -155,16 +155,7 @@
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
 #define IDB_TOOLBAR                     2000
-#define IDB_TOOLBAR_DISABLED            2001
-#define IDB_SILK_OPEN                   2002
-#define IDB_SILK_NEXT                   2003
-#define IDB_SILK_PREV                   2004
-#define IDB_SILK_ZOOM_IN                2005
-#define IDB_SILK_ZOOM_OUT               2006
 #define IDB_CLOSE_TOC                   2007
-#define IDB_FIND_NEXT                   2008
-#define IDB_FIND_PREV                   2009
-#define IDB_FIND_MATCH                  2010
 #define IDT_FILE_NEW                    3000
 #define IDT_FILE_OPEN                   3001
 #define IDT_FILE_METAPATH               3002
