@@ -3472,7 +3472,7 @@ hr:U redu
 -
 Advanced
 de:Weiteres
-ru:Расширенные
+ru:Дополнительно
 cy:Uwch
 gr:Προχωρημένα
 mk:Напредно
@@ -3665,7 +3665,7 @@ PDF documents
 de:PDF-Dokumente
 cy:Dogfennau PDF
 gr:Αρχεία PDF
-ru:PDF-документ
+ru:PDF-документы
 mk:PDF документи
 hr:PDF dokumenti
 -
@@ -3692,7 +3692,7 @@ hr:&Što tražiti:
 -
 Find
 de:Suchen
-ru:Поиск
+ru:Найти
 mk:Најди
 hr:Pronađi
 -
@@ -3722,7 +3722,7 @@ hr:Nema podatka o usklađenosti na ovom položaju
 -
 Synchronization file cannot be opened
 de:Die Synchronisationsdatei kann nicht geöffnet werden
-ru:Файл с информацией для синхронизации не может быть открыт
+ru:Не удалось открыть файл с информацией для синхронизации
 mk:Синхронизациската датотека не може да се отвори
 hr:Datoteka usklađenja ne nože biti otvorena
 -
@@ -3734,7 +3734,7 @@ hr:Stranica %u ne postoji
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
-ru:Результат вокруг строки %u в файле %s не найден
+ru:Результат, соответствующий строке %u в файле %s, не найден
 mk:Не најдов резултати околу линијата %u во датотеката %s
 hr:Nema rezultata oko retka %u u datoteci %s
 -
@@ -3786,7 +3786,7 @@ it:&Imposta SumatraPDF come lettore predefinito per i file PDF
 nl:SumatraPDF instellen als standaard PDF lezer
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Convertir SumatraPDF en lector PDF por defecto
-hr:Neka SumatraPDF bude moj glavni PDF preglednik
+hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Ассоциировать SumatraPDF с файлами PDF
 ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器
@@ -3830,14 +3830,14 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 # Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
-ru:SumatraPDF - программа просмотра файлов PDF по умолчанию
+ru:SumatraPDF ассоциирована с файлами PDF
 mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
-ru:SumatraPDF теперь будет программой просмотра файлов PDF по умолчанию
+ru:Теперь SumatraPDF ассоциирована с файлами PDF
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 -
