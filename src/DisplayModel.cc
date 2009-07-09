@@ -843,14 +843,17 @@ void DisplayModel::renderVisibleParts(void)
 
 void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
 {
-    int     newPageNo;
-    int     currPageNo;
     ScrollState ss;
 
-    getScrollState(&ss);
+    bool isDocLoaded = getScrollState(&ss);
     setTotalDrawAreaSize(totalDrawAreaSize);
     relayout(zoomVirtual(), rotation());
-    setScrollState(&ss);
+    if (isDocLoaded) {
+        setScrollState(&ss);
+    } else {
+        recalcVisibleParts();
+        setScrollbarsState();
+    }
 }
 
 void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
@@ -1698,6 +1701,9 @@ int DisplayModel::getLinkCount()
 bool DisplayModel::getScrollState(ScrollState *state)
 {
     state->page = currentPageNo();
+    if (state->page <= 0)
+        return false;
+
     PdfPageInfo *pageInfo = getPageInfo(state->page);
     state->x = max(pageInfo->screenX - pageInfo->bitmapX, 0);
     state->y = max(pageInfo->screenY - pageInfo->bitmapY, 0);
