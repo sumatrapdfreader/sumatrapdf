@@ -3134,7 +3134,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         if (!entry) {
             /* TODO: assert is queued for rendering ? */
-            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("Tahoma"), 14);
+            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             bounds.left = xDest;
             bounds.top = yDest;
@@ -3151,12 +3151,17 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         }
 
         if (BITMAP_CANNOT_RENDER == renderedBmp) {
+            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
+            HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             bounds.left = xDest;
             bounds.top = yDest;
             bounds.right = xDest + bmpDx;
             bounds.bottom = yDest + bmpDy;
             FillRect(hdc, &bounds, gBrushWhite);
             DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
+            if (origFont)
+                SelectObject(hdc, origFont);
+            Win32_Font_Delete(fontRightTxt);
             UnlockCache();
             continue;
         }
@@ -3572,10 +3577,10 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
         currY += rightDy + ABOUT_TXT_DY;
 
-	int underlineY = y + txtSize.cy - 3;
-	SelectObject(hdc, penLinkLine);
-	MoveToEx(hdc, x, underlineY, NULL);
-	LineTo(hdc, x + txtSize.cx, underlineY);    
+        int underlineY = y + txtSize.cy - 3;
+        SelectObject(hdc, penLinkLine);
+        MoveToEx(hdc, x, underlineY, NULL);
+        LineTo(hdc, x + txtSize.cx, underlineY);    
     }
 
     SelectObject(hdc, penDivideLine);
@@ -4084,7 +4089,7 @@ static void OnPaint(WindowInfo *win)
         DrawAbout(win->hwndCanvas, win->hdcToDraw, &ps);
         WindowInfo_DoubleBuffer_Show(win, hdc);
     } else if (WS_ERROR_LOADING_PDF == win->state) {
-        HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("Tahoma"), 14);
+        HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
         FillRect(hdc, &ps.rcPaint, gBrushBg);
         DrawText(hdc, _TR("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
