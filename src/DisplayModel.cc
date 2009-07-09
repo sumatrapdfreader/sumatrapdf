@@ -137,22 +137,16 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     if (!ds->filePath)
         return FALSE;
     ds->displayMode = dm->displayMode();
-    ds->pageNo = dm->currentPageNo();
     ds->rotation = dm->rotation();
     ds->zoomVirtual = dm->zoomVirtual();
-    ds->scrollX = (int)dm->areaOffset.x;
-    if (displayModeContinuous(dm->displayMode())) {
-        /* TODO: should be offset of top page */
-        PdfPageInfo *pageInfo = dm->getPageInfo(ds->pageNo);
-        if (pageInfo)                
-            ds->scrollY = (int)(dm->areaOffset.y + PADDING_PAGE_BORDER_TOP - pageInfo->currPosY);
-        else
-            ds->scrollY = 0;
-
-    } else {
-        ds->scrollY = (int)dm->areaOffset.y;
-    }
     ds->showToc = dm->_showToc;
+
+    ScrollState ss;
+    dm->getScrollState(&ss);
+    ds->pageNo = ss.page;
+    ds->scrollX = (int)ss.x;
+    ds->scrollY = (int)ss.y;
+
     return TRUE;
 }
 
@@ -851,25 +845,12 @@ void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
 {
     int     newPageNo;
     int     currPageNo;
+    ScrollState ss;
 
-    currPageNo = currentPageNo();
-
+    getScrollState(&ss);
     setTotalDrawAreaSize(totalDrawAreaSize);
-
     relayout(zoomVirtual(), rotation());
-    recalcVisibleParts();
-    recalcLinksCanvasPos();
-    renderVisibleParts();
-    setScrollbarsState();
-    newPageNo = currentPageNo();
-    if (newPageNo != currPageNo) {
-        // TODO: Try to even better keep the current position during resizing
-        if (currPageNo != -1)
-            goToPage(currPageNo, 0);
-        else
-            pageChanged();
-    }
-    repaintDisplay(true);
+    setScrollState(&ss);
 }
 
 void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
@@ -1134,10 +1115,11 @@ void DisplayModel::scrollYByAreaDy(bool forward, bool changePage)
 
 void DisplayModel::zoomTo(double zoomVirtual)
 {
+    ScrollState ss;
+    getScrollState(&ss);
     //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
-    int currPageNo = currentPageNo();
     relayout(zoomVirtual, rotation());
-    goToPage(currPageNo, 0);
+    setScrollState(&ss);
 }
 
 void DisplayModel::zoomBy(double zoomFactor)
@@ -1713,3 +1695,34 @@ int DisplayModel::getLinkCount()
     return count;
 }
 
+bool DisplayModel::getScrollState(ScrollState *state)
+{
+    state->page = currentPageNo();
+    PdfPageInfo *pageInfo = getPageInfo(state->page);
+    state->x = max(pageInfo->screenX - pageInfo->bitmapX, 0);
+    state->y = max(pageInfo->screenY - pageInfo->bitmapY, 0);
+    
+    return cvtScreenToUser(&state->page, &state->x, &state->y);
+}
+
+void DisplayModel::setScrollState(ScrollState *state)
+{
+    // Update the internal metrics first
+    goToPage(state->page, 0);
+    // Bail out, if the page wasn't scrolled
+    if (0 == state->x && 0 == state->y)
+        return;
+
+    PdfPageInfo *pageInfo = getPageInfo(state->page);
+    double x = max(pageInfo->screenX - pageInfo->bitmapX, 0);
+    double y = max(pageInfo->screenY - pageInfo->bitmapY, 0);
+
+    double newX = state->x;
+    double newY = state->y;
+    cvtUserToScreen(state->page, &newX, &newY);
+    // TODO: why is this needed?
+    if (abs(newY - y) > 1)
+        newY += PADDING_PAGE_BORDER_TOP;
+
+    goToPage(state->page, newY - y, areaOffset.x + newX - x);
+}

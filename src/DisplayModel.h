@@ -119,6 +119,13 @@ typedef struct SearchStateData {
     int             currPage; /* page for the last hit */
 } SearchStateData;
 
+/* The current scroll state (needed for saving/restoring the scroll position) */
+typedef struct ScrollState {
+    int page;
+    double x; /* in user space units (per page) */
+    double y; /* in user space units (per page) */
+} ScrollState;
+
 /* Information needed to drive the display of a given PDF document on a screen.
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
@@ -261,6 +268,9 @@ public:
 
     void            rebuildLinks();
     void            handleLink2(pdf_link* link);
+
+    bool            getScrollState(ScrollState *state);
+    void            setScrollState(ScrollState *state);
 
 protected:
 

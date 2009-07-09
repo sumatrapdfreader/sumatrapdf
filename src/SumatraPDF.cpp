@@ -2243,6 +2243,7 @@ static bool LoadPdfIntoWindow(
              UI properly */
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int startPage = 1;
+    ScrollState ss = { 1, 0.0, 0.0 };
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
@@ -2293,15 +2294,17 @@ static bool LoadPdfIntoWindow(
 
     win->dm->setAppData((void*)win);
 
-    int offsetX = 0;
-    int offsetY = 0;
     double zoomVirtual = gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
     win->state = WS_SHOWING_PDF;
     if (state) {
-        offsetX = state->scrollX;
-        offsetY = state->scrollY;
+        if (win->dm->validPageNo(startPage)) {
+            ss.page = startPage;
+            /* TODO: make sure scrollX isn't bogus */
+            ss.x = state->scrollX;
+            ss.y = state->scrollY;
+        }
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
@@ -2323,10 +2326,7 @@ static bool LoadPdfIntoWindow(
     ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 
     win->dm->relayout(zoomVirtual, rotation);
-    if (!win->dm->validPageNo(startPage))
-        startPage = 1;
-    /* TODO: make sure offsetX isn't bogus */
-    win->dm->goToPage(startPage, offsetY, offsetX);
+    win->dm->setScrollState(&ss);
 
     if (!is_new_window) {
         WindowInfo_RedrawAll(win);
