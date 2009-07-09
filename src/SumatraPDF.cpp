@@ -6443,6 +6443,13 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                         ViewWithAcrobat(win);
                     break;
 
+                case IDM_MOVE_FRAME_FOCUS:
+                    if (win->hwndFrame != GetFocus())
+                        SetFocus(win->hwndFrame);
+                    else if (win->dm && win->dm->_showToc)
+                        SetFocus(win->hwndTocBox);
+                    break;
+
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }

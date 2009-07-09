@@ -117,7 +117,7 @@
 #define IDM_CHANGE_LANGUAGE             553
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
-#define IDM_ENABLE_AUTO_UPDATE          556
+#define IDM_MOVE_FRAME_FOCUS            557
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000
