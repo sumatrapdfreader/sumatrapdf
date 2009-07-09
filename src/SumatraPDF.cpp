@@ -1792,7 +1792,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     win->dm = NULL;
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
-    DragAcceptFiles(win->hwndFrame, FALSE);
+    DragAcceptFiles(win->hwndCanvas, FALSE);
 
     free(win->title);
     win->title = NULL;
@@ -2185,7 +2185,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     CreateToolbar(win, ghinst);
     CreateTocBox(win, ghinst);
     WindowInfo_UpdateFindbox(win);
-    DragAcceptFiles(win->hwndFrame, TRUE);
+    DragAcceptFiles(win->hwndCanvas, TRUE);
 
     win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     WindowInfoList_Add(win);
@@ -5201,7 +5201,7 @@ static bool WasShiftPressed()
     return WasKeyDown(VK_LSHIFT) || WasKeyDown(VK_RSHIFT);
 }
 
-static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
+static void OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=false)
 {
     if (!win->dm)
         return;
@@ -5222,6 +5222,8 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
         SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
     } else if (VK_DOWN == key) {
         SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+    } else if (inTextfield) {
+        // The remaining keys have a different meaning
     } else if (VK_LEFT == key) {
         SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEUP, 0);
     } else if (VK_RIGHT == key) {
@@ -5432,6 +5434,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     }
     else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
+    }
+    else if (WM_KEYDOWN == message) {
+        OnKeydown(win, wParam, lParam, true);
     }
 
     int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
@@ -5646,6 +5651,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         }
     } else if (WM_SETFOCUS == message) {
         win->hwndTracker = NULL;
+    } else if (WM_KEYDOWN == message) {
+        OnKeydown(win, wParam, lParam, true);
     }
 
     return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
@@ -6515,11 +6522,6 @@ InitMouseWheelInfo:
                 gAccumDelta += gDeltaPerLine;
             }
             return 0;
-
-        case WM_DROPFILES:
-            if (win)
-                OnDropFiles(win, (HDROP)wParam);
-            break;
 
         case WM_DESTROY:
             /* WM_DESTROY might be sent as a result of File\Close, in which case CloseWindow() has already been called */
