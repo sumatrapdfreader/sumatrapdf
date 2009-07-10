@@ -4218,6 +4218,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
     float fLogPixelsy= (float)GetDeviceCaps(hdc, LOGPIXELSY);
 
     bool bPrintPortrait=fLogPixelsx*printAreaWidth<fLogPixelsy*printAreaHeight;
+    if (devMode->dmFields & DM_ORIENTATION)
+        bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
     // print all the pages the user requested unless
     // bContinue flags there is a problem.
     for (int i=0; i < nPageRanges; i++) {
@@ -4235,8 +4237,15 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             // printer
 
             SizeD pSize = pdfEngine->pageSize(pageNo);
+            int rotation = pdfEngine->pageRotation(pageNo);
+            // Further rotate the page, so that 0° and 180° mean Portrait orientation
+            if (pSize.dx() > pSize.dy())
+                rotation += 90;
 
-            int rotation=(pSize.dx()<pSize.dy()) == bPrintPortrait?0:90;
+            if (90 == rotation || 270 == rotation)
+                rotation = bPrintPortrait ? 270 : 0;
+            else
+                rotation = bPrintPortrait ? 0 : 90;
 
             double zoom;
             if (rotation==0)
