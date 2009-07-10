@@ -3833,8 +3833,6 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
 
 static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 {
-    int             dragDx, dragDy;
-
     assert(win);
     if (!win || WS_SHOWING_PDF != win->state)
         return;
@@ -3850,10 +3848,10 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         win->selectionRect.dy = y - win->selectionRect.y;
         triggerRepaintDisplayNow(win);
     } else if (MA_DRAGGING == win->mouseAction) {
-        dragDx = -(x - win->dragPrevPosX);
-        dragDy = -(y - win->dragPrevPosY);
+        int dragDx = win->dragPrevPosX - x;
+        int dragDy = win->dragPrevPosY - y;
         DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
-        WinMoveDocBy(win, dragDx, dragDy*2);
+        WinMoveDocBy(win, dragDx, dragDy);
         win->dragPrevPosX = x;
         win->dragPrevPosY = y;
         return;
