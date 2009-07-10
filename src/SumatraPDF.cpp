@@ -2350,7 +2350,6 @@ static bool LoadPdfIntoWindow(
             win_set_text(win->hwndFrame, title);
     }
 Error:
-    MenuToolbarUpdateStateForAllWindows();
     if (is_new_window || placeWindow && state) {
         assert(win);
         if (is_new_window && state && 0 != state->windowDx && 0 != state->windowDy) {
@@ -2379,9 +2378,18 @@ Error:
         UpdateWindow(win->hwndFrame);
     }
     if (win->dm && win->dm->_showToc) {
-        win->ClearTocBox();
-        win->ShowTocBox();
+        if (win->dm->hasTocTree()) {
+            win->ClearTocBox();
+            win->ShowTocBox();
+        }
+        else
+        {
+            // Hide the now useless ToC sidebar and force an update afterwards
+            win->HideTocBox();
+            WindowInfo_RedrawAll(win, true);
+        }
     }
+    MenuToolbarUpdateStateForAllWindows();
     if (win->state == WS_ERROR_LOADING_PDF) {
         WindowInfo_RedrawAll(win);
         return false;
@@ -6099,7 +6107,7 @@ void WindowInfo::HideTocBox()
     if (gGlobalPrefs.m_showToolbar && !fullScreen)
         cy = gReBarDy + gReBarDyFrame;
 
-    SetWindowPos(hwndCanvas, HWND_BOTTOM, 0, cy, cw, ch - cy, SWP_NOZORDER);
+    SetWindowPos(hwndCanvas, NULL, 0, cy, cw, ch - cy, SWP_NOZORDER);
     ShowWindow(hwndTocBox, SW_HIDE);
     ShowWindow(hwndSpliter, SW_HIDE);
 
@@ -6183,7 +6191,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
     {
         case WM_APP_REPAINT_DELAYED:
             if (win)
-                SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, REPAINT_DELAY_IN_MS, NULL);
+                SetTimer(hwnd, REPAINT_TIMER_ID, REPAINT_DELAY_IN_MS, NULL);
             break;
 
         case WM_APP_REPAINT_NOW:
@@ -6294,7 +6302,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             /* it might happen that we get WM_PAINT after destroying a window */
             if (win) {
                 /* blindly kill the timer, just in case it's there */
-                KillTimer(win->hwndCanvas, REPAINT_TIMER_ID);
+                KillTimer(hwnd, REPAINT_TIMER_ID);
                 OnPaint(win);
             }
             break;
