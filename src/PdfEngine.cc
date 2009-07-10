@@ -425,6 +425,7 @@ static void ConvertPixmapForWindows(fz_pixmap *image)
 
 RenderedBitmap *PdfEngine::renderBitmap(
                            int pageNo, double zoomReal, int rotation,
+                           fz_rect *pageRect,
                            BOOL (*abortCheckCbkA)(void *data),
                            void *abortCheckCbkDataA)
 {
@@ -442,7 +443,9 @@ RenderedBitmap *PdfEngine::renderBitmap(
         goto Error;
     zoomReal = zoomReal / 100.0;
     ctm = viewctm(page, zoomReal, rotation);
-    bbox = fz_transformaabb(ctm, page->mediabox);
+    if (!pageRect)
+        pageRect = &page->mediabox;
+    bbox = fz_transformaabb(ctm, *pageRect);
     error = fz_rendertree(&image, _rast, page->tree, ctm, fz_roundrect(bbox), 1);
 #if CONSERVE_MEMORY
     dropPdfPage(pageNo);

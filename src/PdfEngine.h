@@ -118,6 +118,7 @@ public:
     int pageRotation(int pageNo);
     SizeD pageSize(int pageNo);
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
+                         fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA);
 

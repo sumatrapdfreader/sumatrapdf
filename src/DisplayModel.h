@@ -137,10 +137,11 @@ public:
     ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
+                         fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA) {
         if (!pdfEngine) return NULL;
-        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, abortCheckCbkA, abortCheckCbkDataA);
+        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect, abortCheckCbkA, abortCheckCbkDataA);
     }
 
     /* number of pages in PDF document */

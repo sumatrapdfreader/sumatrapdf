@@ -4188,7 +4188,7 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 
 // TODO: make it run in a background thread by constructing new PdfEngine()
 // from a file name - this should be thread safe
-static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPageRanges, LPPRINTPAGERANGE pr) {
+static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPageRanges, LPPRINTPAGERANGE pr, SelectionOnPage *sel=NULL) {
 
     assert(dm);
     if (!dm) return;
@@ -4223,10 +4223,44 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
     // print all the pages the user requested unless
     // bContinue flags there is a problem.
     for (int i=0; i < nPageRanges; i++) {
+        if (-1 == pr->nToPage && 0 < pr->nFromPage) {
+            assert(1 == nPageRanges && sel && !sel->next);
+            DBG_OUT(" printing:  drawing bitmap for selection\n");
+            StartPage(hdc);
+
+            RectD * r = &sel->selectionPage;
+            fz_rect clipRegion;
+            clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
+            clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
+
+            int rotation = pdfEngine->pageRotation(pr->nFromPage) + dm->rotation();
+            double zoom;
+            int printAreaDx, printAreaDy;
+            if ((rotation % 180) == 0) {
+                zoom = min((double)printAreaWidth / r->dx, (double)printAreaHeight / r->dy);
+                printAreaDx = zoom * r->dx; printAreaDy = zoom * r->dy;
+            } else {
+                zoom = min((double)printAreaWidth / r->dy, (double)printAreaHeight / r->dx);
+                printAreaDx = zoom * r->dy; printAreaDy = zoom * r->dx;
+            }
+
+            RenderedBitmap *bmp = pdfEngine->renderBitmap(pr->nFromPage, 100.0 * zoom, 0, &clipRegion, NULL, NULL);
+            if (!bmp)
+                goto Error; /* most likely ran out of memory */
+
+            bmp->stretchDIBits(hdc, leftMargin + (printAreaWidth - printAreaDx) / 2,
+                topMargin + (printAreaHeight - printAreaDy) / 2, printAreaDx, printAreaDy);
+            delete bmp;
+            if (EndPage(hdc) <= 0) {
+                AbortDoc(hdc);
+                return;
+            }
+
+            continue;
+        }
+
         assert(pr->nFromPage <= pr->nToPage);
         for (DWORD pageNo = pr->nFromPage; pageNo <= pr->nToPage; pageNo++) {
-            // int rotation = pdfEngine->pageRotation(pageNo);
-
             DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
 
             StartPage(hdc);
@@ -4248,16 +4282,21 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
                 rotation = bPrintPortrait ? 0 : 90;
 
             double zoom;
-            if (rotation==0)
-                zoom= 100.0 * min((double)printAreaWidth / pSize.dx(),(double)printAreaHeight / pSize.dy());
-            else
-                zoom= 100.0 * min((double)printAreaWidth / pSize.dy(),(double)printAreaHeight / pSize.dx());
+            int printAreaDx, printAreaDy;
+            if (0 == rotation) {
+                zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
+                printAreaDx = zoom * pSize.dx(); printAreaDy = zoom * pSize.dy();
+            } else {
+                zoom = min((double)printAreaWidth / pSize.dy(), (double)printAreaHeight / pSize.dx());
+                printAreaDx = zoom * pSize.dy(); printAreaDy = zoom * pSize.dx();
+            }
 
-            RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, zoom, rotation, NULL, NULL);
+            RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
             if (!bmp)
                 goto Error; /* most likely ran out of memory */
 
-            bmp->stretchDIBits(hdc, leftMargin, topMargin, printAreaWidth, printAreaHeight);
+            bmp->stretchDIBits(hdc, leftMargin + (printAreaWidth - printAreaDx) / 2,
+                topMargin + (printAreaHeight - printAreaDy) / 2, printAreaDx, printAreaDy);
             delete bmp;
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
@@ -4297,6 +4336,8 @@ static void OnMenuPrint(WindowInfo *win)
     assert(dm);
     if (!dm) return;
 
+    bool hasSelection = win->selectionOnPage && !win->selectionOnPage->next;
+
     /* printing uses the WindowInfo win that is created for the
        screen, it may be possible to create a new WindowInfo
        for printing to so we don't mess with the screen one,
@@ -4309,7 +4350,9 @@ static void OnMenuPrint(WindowInfo *win)
     pd.hwndOwner   = win->hwndFrame;
     pd.hDevMode    = NULL;   
     pd.hDevNames   = NULL;   
-    pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_NOSELECTION;
+    pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE;
+    if (!hasSelection)
+        pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
     /* by default print all pages */
     pd.nPageRanges =1;
@@ -4329,12 +4372,17 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.nPageRanges=1;
                     pd.lpPageRanges->nFromPage=dm->currentPageNo();
                     pd.lpPageRanges->nToPage  =dm->currentPageNo();
+                } else if (hasSelection && (pd.Flags & PD_SELECTION)) {
+                    // TODO: Implement printing multiple selections?
+                    pd.nPageRanges=1;
+                    pd.lpPageRanges->nFromPage=dm->currentPageNo();
+                    pd.lpPageRanges->nToPage  =-1; // hint for PrintToDevice
                 } else if (!(pd.Flags & PD_PAGENUMS)) {
                     pd.nPageRanges=1;
                     pd.lpPageRanges->nFromPage=1;
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
-                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges);
+                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges, win->selectionOnPage);
             }
         }
     }
@@ -6833,7 +6881,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         }
         assert(!req.abort);
         MsTimer renderTimer;
-        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, pageRenderAbortCb, (void*)&req);
+        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req);
         renderTimer.stop();
         LockCache();
         gCurPageRenderReq = NULL;
