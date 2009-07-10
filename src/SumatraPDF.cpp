@@ -3367,6 +3367,9 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
+    { _T("ui polishing"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
     { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
@@ -3562,11 +3565,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
         currY += rightDy + ABOUT_TXT_DY;
     }
 
-    SetTextColor(hdc, COL_BLUE_LINK);
     /* render text on the right */
     currY = linePosY;
     (HFONT)SelectObject(hdc, fontRightTxt);
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
+        SetTextColor(hdc, gAboutLayoutInfo[i].url ? COL_BLUE_LINK : ABOUT_BORDER_COL);
         txt = gAboutLayoutInfo[i].rightTxt;
         x = linePosX + offX + ABOUT_LEFT_RIGHT_SPACE_DX;
         y = currY + offY;
@@ -3576,6 +3579,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
 
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
         currY += rightDy + ABOUT_TXT_DY;
+
+        if (!gAboutLayoutInfo[i].url)
+            continue;
 
         int underlineY = y + txtSize.cy - 3;
         SelectObject(hdc, penLinkLine);
