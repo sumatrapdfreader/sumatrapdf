@@ -129,7 +129,17 @@ tail:
 	}
 
 	else if (e == fz_iodone)
+	{
+		if (!p->head->done)
+		{
+			// TODO: Should this ever be allowed to happen?
+			// If tail was done but head wasn't, there must have been a (small?)
+			// trailer left in the queue - let the head read over it
+			e = fz_process(p->head, in, p->buffer);
+			assert(e == fz_iodone);
+		}
 		return fz_iodone;
+	}
 
 	else if (e)
 		return fz_rethrow(e, "cannot process tail filter");

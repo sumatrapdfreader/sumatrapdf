@@ -799,6 +799,8 @@ Lsetcolor:
 				return fz_throw("cannot find Font dictionary");
 
 			obj = fz_dictget(dict, csi->stack[0]);
+			if (!obj && dict->u.d.len > 0)
+				obj = dict->u.d.items[0].v; // Just fall back to any font, so that we can go on
 			if (!obj)
 				return fz_throw("cannot find font resource: %s", fz_toname(csi->stack[0]));
 

@@ -1426,7 +1426,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
     double zoom = zoomReal();
     int rot = rotation();
     fz_point p;
-    assert(page);
+    // assert(page);
     if(!page)
         return false;
 
@@ -1469,6 +1469,8 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
         return false;
 
     pdf_page *page = pdfEngine->getPdfPage(*pageNo);
+    if (!page)
+        return false;
 
     const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
 

@@ -343,6 +343,8 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 				pdf_loadencoding(estrings, fz_toname(base));
 			else if (!fontdesc->isembedded)
 				pdf_loadencoding(estrings, "StandardEncoding");
+			else if (!fontdesc->encoding)
+				pdf_loadencoding(estrings, "StandardEncoding");
 
 			diff = fz_dictgets(encoding, "Differences");
 			if (fz_isarray(diff))
@@ -437,13 +439,37 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 		{
 			etable[i] = ftcharindex(face, i);
 			fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
-			if (fterr)
+			// Without glyph names, we can still display the font, even if we don't know what the text says
+			if (fterr && FT_HAS_GLYPH_NAMES(face))
 			{
 				error = fz_throw("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
 				goto cleanup;
 			}
 			if (ebuffer[i][0])
 				estrings[i] = ebuffer[i];
+		}
+
+		/* Load encoding Differences nonetheless, when they're available */
+		if (fz_isdict(encoding))
+		{
+			fz_obj *diff, *item;
+
+			diff = fz_dictgets(encoding, "Differences");
+			if (fz_isarray(diff))
+			{
+				n = fz_arraylen(diff);
+				k = 0;
+				for (i = 0; i < n; i++)
+				{
+					item = fz_arrayget(diff, i);
+					if (fz_isint(item))
+						k = fz_toint(item);
+					if (fz_isname(item))
+						estrings[k++] = fz_toname(item);
+					if (k < 0) k = 0;
+					if (k > 255) k = 255;
+				}
+			}
 		}
 	}
 
