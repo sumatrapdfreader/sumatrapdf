@@ -95,9 +95,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WM_VSCROLL_HANDLED 0
 #define WM_HSCROLL_HANDLED 0
 
-#define ABOUT_WIN_DX 440
-#define ABOUT_WIN_DY 328
-
 #define WM_APP_REPAINT_DELAYED (WM_APP + 10)
 #define WM_APP_REPAINT_NOW     (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
@@ -3284,9 +3281,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
 #define ABOUT_RECT_PADDING          8
-#define ABOUT_RECT_BORDER_DX_DY     4
 #define ABOUT_LINE_OUTER_SIZE       2
-#define ABOUT_LINE_RECT_SIZE        5
 #define ABOUT_LINE_SEP_SIZE         1
 #define ABOUT_LEFT_RIGHT_SPACE_DX   8
 #define ABOUT_MARGIN_DX            10
@@ -3385,15 +3380,17 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
+static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect);
 static void OnPaintAbout(HWND hwnd);
-static void OnPaint(WindowInfo *win);
 
 static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
 {
-    // TODO: Get rid of the flickering by making at least rightTxtPosX/Y
-    //       window-specific instead of global
+    if (gRestrictedUse)
+        return NULL;
+
+    // Update the link location information
     if (win)
-        OnPaint(win);
+        UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, NULL);
     else
         OnPaintAbout(gHwndAbout);
 
@@ -3409,33 +3406,120 @@ static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
     return NULL;
 }
 
-static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
+static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 {
-    RECT            rcTmp;
     SIZE            txtSize;
     int             totalDx, totalDy;
     int             leftDy, rightDy;
     int             leftLargestDx, rightLargestDx;
+    int             linePosX, linePosY;
+    int             currY;
+    int             offX, offY;
+    int             boxDy;
+
+    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    HFONT origFont = (HFONT)SelectObject(hdc, fontSumatraTxt);
+
+    /* calculate top box height */
+    const TCHAR *txt = SUMATRA_TXT;
+    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+    boxDy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
+
+    /* calculate left text dimensions */
+    (HFONT)SelectObject(hdc, fontLeftTxt);
+    leftLargestDx = 0;
+    leftDy = 0;
+    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
+        txt = gAboutLayoutInfo[i].leftTxt;
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+        gAboutLayoutInfo[i].leftTxtDx = (int)txtSize.cx;
+        gAboutLayoutInfo[i].leftTxtDy = (int)txtSize.cy;
+
+        if (0 == i)
+            leftDy = gAboutLayoutInfo[i].leftTxtDy;
+        else
+            assert(leftDy == gAboutLayoutInfo[i].leftTxtDy);
+        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
+            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
+    }
+
+    /* calculate right text dimensions */
+    (HFONT)SelectObject(hdc, fontRightTxt);
+    rightLargestDx = 0;
+    rightDy = 0;
+    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
+        txt = gAboutLayoutInfo[i].rightTxt;
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+        gAboutLayoutInfo[i].rightTxtDx = (int)txtSize.cx;
+        gAboutLayoutInfo[i].rightTxtDy = (int)txtSize.cy;
+
+        if (0 == i)
+            rightDy = gAboutLayoutInfo[i].rightTxtDy;
+        else
+            assert(rightDy == gAboutLayoutInfo[i].rightTxtDy);
+        if (rightLargestDx < gAboutLayoutInfo[i].rightTxtDx)
+            rightLargestDx = gAboutLayoutInfo[i].rightTxtDx;
+    }
+
+    /* calculate total dimension and position */
+    totalDx  = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx;
+    totalDx += ABOUT_LEFT_RIGHT_SPACE_DX + ABOUT_LINE_SEP_SIZE + ABOUT_LEFT_RIGHT_SPACE_DX;
+    totalDx += rightLargestDx + ABOUT_MARGIN_DX + ABOUT_LINE_OUTER_SIZE;
+
+    totalDy  = boxDy;
+    totalDy += ABOUT_LINE_OUTER_SIZE;
+    totalDy += (dimof(gAboutLayoutInfo)-1) * (rightDy + ABOUT_TXT_DY);
+    totalDy += ABOUT_LINE_OUTER_SIZE + 4;
+
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    offX = (rect_dx(&rc) - totalDx) / 2;
+    offY = (rect_dy(&rc) - totalDy) / 2;
+
+    if (rect) {
+        rect->left = offX;
+        rect->top = offY;
+        rect->right = offX + totalDx;
+        rect->bottom = offY + totalDy;
+    }
+
+    /* calculate text positions */
+    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    linePosY = 4;
+
+    currY = offY + boxDy + linePosY;
+    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
+        gAboutLayoutInfo[i].leftTxtPosX = offX + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - gAboutLayoutInfo[i].leftTxtDx;
+        gAboutLayoutInfo[i].leftTxtPosY = currY + (rightDy - leftDy) / 2;
+        gAboutLayoutInfo[i].rightTxtPosX = offX + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
+        gAboutLayoutInfo[i].rightTxtPosY = currY;
+        currY += rightDy + ABOUT_TXT_DY;
+    }
+
+    SelectObject(hdc, origFont);
+    Win32_Font_Delete(fontSumatraTxt);
+    Win32_Font_Delete(fontLeftTxt);
+    Win32_Font_Delete(fontRightTxt);
+}
+
+static void DrawAbout(HWND hwnd, HDC hdc, RECT * rect)
+{
+    SIZE            txtSize;
+    int             totalDx, totalDy;
+    int             leftLargestDx;
     int             sumatraPdfTxtDx, sumatraPdfTxtDy;
     int             linePosX, linePosY, lineDy;
-    int             currY;
-    int             fontDyDiff;
     int             offX, offY;
     int             x, y;
     int             boxDy;
 
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
-    HPEN penRectBorder = CreatePen(PS_SOLID, ABOUT_RECT_BORDER_DX_DY, COL_BLACK);
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
     HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-
-    int areaDx = rect_dx(&rc);
-    int areaDy = rect_dy(&rc);
 
     HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
     HFONT fontBetaTxt = Win32_Font_GetSimple(hdc, BETA_TXT_FONT, BETA_TXT_FONT_SIZE);
@@ -3446,71 +3530,25 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
 
     SetBkMode(hdc, TRANSPARENT);
 
-    /* Layout stuff */
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    FillRect(hdc, &rc, brushBg);
+
+    SelectObject(hdc, brushBg);
+    SelectObject(hdc, penBorder);
+
+    offX = rect->left;
+    offY = rect->top;
+    totalDx = rect_dx(rect);
+    totalDy = rect_dy(rect);
+
+    /* render title */
     const TCHAR *txt = SUMATRA_TXT;
     GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
     sumatraPdfTxtDx = txtSize.cx;
     sumatraPdfTxtDy = txtSize.cy;
 
     boxDy = sumatraPdfTxtDy + ABOUT_BOX_MARGIN_DY * 2;
-
-    (HFONT)SelectObject(hdc, fontLeftTxt);
-    leftLargestDx = 0;
-    leftDy = 0;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].leftTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        gAboutLayoutInfo[i].leftTxtDx = (int)txtSize.cx;
-        gAboutLayoutInfo[i].leftTxtDy = (int)txtSize.cy;
-        if (0 == i)
-            leftDy = gAboutLayoutInfo[i].leftTxtDy;
-        else
-            assert(leftDy == gAboutLayoutInfo[i].leftTxtDy);
-        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
-            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
-    }
-
-    (HFONT)SelectObject(hdc, fontRightTxt);
-    rightLargestDx = 0;
-    rightDy = 0;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].rightTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        gAboutLayoutInfo[i].rightTxtDx = (int)txtSize.cx;
-        gAboutLayoutInfo[i].rightTxtDy = (int)txtSize.cy;
-        if (0 == i)
-            rightDy = gAboutLayoutInfo[i].rightTxtDy;
-        else
-            assert(rightDy == gAboutLayoutInfo[i].rightTxtDy);
-        if (rightLargestDx < gAboutLayoutInfo[i].rightTxtDx)
-            rightLargestDx = gAboutLayoutInfo[i].rightTxtDx;
-    }
-
-    fontDyDiff = (rightDy - leftDy) / 2;
-
-    /* in the x order */
-    totalDx  = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx;
-    totalDx += ABOUT_LEFT_RIGHT_SPACE_DX + ABOUT_LINE_SEP_SIZE + ABOUT_LEFT_RIGHT_SPACE_DX;
-    totalDx += rightLargestDx + ABOUT_MARGIN_DX + ABOUT_LINE_OUTER_SIZE;
-
-    totalDy = 0;
-    totalDy += boxDy;
-    totalDy += ABOUT_LINE_OUTER_SIZE;
-    totalDy += (dimof(gAboutLayoutInfo)-1) * (rightDy + ABOUT_TXT_DY);
-    totalDy += ABOUT_LINE_OUTER_SIZE + 4;
-
-    offX = (areaDx - totalDx) / 2;
-    offY = (areaDy - totalDy) / 2;
-
-    rcTmp.left = offX;
-    rcTmp.top = offY;
-    rcTmp.right = totalDx + offX;
-    rcTmp.bottom = totalDy + offY;
-
-    FillRect(hdc, &rc, brushBg);
-
-    SelectObject(hdc, brushBg);
-    SelectObject(hdc, penBorder);
 
     Rectangle(hdc, offX, offY + ABOUT_LINE_OUTER_SIZE, offX + totalDx, offY + boxDy + ABOUT_LINE_OUTER_SIZE);
 
@@ -3546,54 +3584,48 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     offY += boxDy;
     Rectangle(hdc, offX, offY, offX + totalDx, offY + totalDy - boxDy);
 
-    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-    linePosY = 4;
-    lineDy = (dimof(gAboutLayoutInfo)-1) * (rightDy + ABOUT_TXT_DY);
-
     /* render text on the left*/
-    currY = linePosY;
+    leftLargestDx = 0;
     (HFONT)SelectObject(hdc, fontLeftTxt);
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
         txt = gAboutLayoutInfo[i].leftTxt;
-        x = linePosX + offX - ABOUT_LEFT_RIGHT_SPACE_DX - gAboutLayoutInfo[i].leftTxtDx;
-        y = currY + fontDyDiff + offY;
-        gAboutLayoutInfo[i].leftTxtPosX = x;
-        gAboutLayoutInfo[i].leftTxtPosY = y;
+        x = gAboutLayoutInfo[i].leftTxtPosX;
+        y = gAboutLayoutInfo[i].leftTxtPosY;
         TextOut(hdc, x, y, txt, lstrlen(txt));
-        currY += rightDy + ABOUT_TXT_DY;
+
+        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
+            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
     }
 
     /* render text on the right */
-    currY = linePosY;
     (HFONT)SelectObject(hdc, fontRightTxt);
     for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        SetTextColor(hdc, gAboutLayoutInfo[i].url ? COL_BLUE_LINK : ABOUT_BORDER_COL);
+        bool hasUrl = !gRestrictedUse && gAboutLayoutInfo[i].url;
+        SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
+
         txt = gAboutLayoutInfo[i].rightTxt;
-        x = linePosX + offX + ABOUT_LEFT_RIGHT_SPACE_DX;
-        y = currY + offY;
-        gAboutLayoutInfo[i].rightTxtPosX = x;
-        gAboutLayoutInfo[i].rightTxtPosY = y;
+        x = gAboutLayoutInfo[i].rightTxtPosX;
+        y = gAboutLayoutInfo[i].rightTxtPosY;
         TextOut(hdc, x, y, txt, lstrlen(txt));
 
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        currY += rightDy + ABOUT_TXT_DY;
-
-        if (!gAboutLayoutInfo[i].url)
+        if (!hasUrl)
             continue;
 
-        int underlineY = y + txtSize.cy - 3;
+        int underlineY = y + gAboutLayoutInfo[i].rightTxtDy - 3;
         SelectObject(hdc, penLinkLine);
         MoveToEx(hdc, x, underlineY, NULL);
-        LineTo(hdc, x + txtSize.cx, underlineY);    
+        LineTo(hdc, x + gAboutLayoutInfo[i].rightTxtDx, underlineY);    
     }
+
+    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    linePosY = 4;
+    lineDy = (dimof(gAboutLayoutInfo)-1) * (gAboutLayoutInfo[0].rightTxtDy + ABOUT_TXT_DY);
 
     SelectObject(hdc, penDivideLine);
     MoveToEx(hdc, linePosX + offX, linePosY + offY, NULL);
     LineTo(hdc, linePosX + offX, linePosY + lineDy + offY);
 
-    if (origFont)
-        SelectObject(hdc, origFont);
-
+    SelectObject(hdc, origFont);
     Win32_Font_Delete(fontSumatraTxt);
     Win32_Font_Delete(fontBetaTxt);
     Win32_Font_Delete(fontLeftTxt);
@@ -3602,7 +3634,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
     DeleteObject(brushBg);
     DeleteObject(penBorder);
     DeleteObject(penDivideLine);
-    DeleteObject(penRectBorder);
     DeleteObject(penLinkLine);
 }
 
@@ -4055,9 +4086,10 @@ static void WindowInfo_DoubleBuffer_Resize_IfNeeded(WindowInfo *win)
 static void OnPaintAbout(HWND hwnd)
 {
     PAINTSTRUCT ps;
+    RECT rc;
     HDC hdc = BeginPaint(hwnd, &ps);
-    SetBkMode(hdc, TRANSPARENT);
-    DrawAbout(hwnd, hdc, &ps);
+    UpdateAboutLayoutInfo(hwnd, hdc, &rc);
+    DrawAbout(hwnd, hdc, &rc);
     EndPaint(hwnd, &ps);
 }
 
@@ -4066,17 +4098,18 @@ static void OnPaint(WindowInfo *win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    SetBkMode(hdc, TRANSPARENT);
     RECT rc;
     GetClientRect(win->hwndCanvas, &rc);
 
     if (WS_ABOUT == win->state) {
         WindowInfo_DoubleBuffer_Resize_IfNeeded(win);
-        DrawAbout(win->hwndCanvas, win->hdcToDraw, &ps);
+        UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
+        DrawAbout(win->hwndCanvas, win->hdcToDraw, &rc);
         WindowInfo_DoubleBuffer_Show(win, hdc);
     } else if (WS_ERROR_LOADING_PDF == win->state) {
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
+        SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushBg);
         DrawText(hdc, _TR("Error loading PDF file."), -1, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
         if (origFont)
@@ -5326,13 +5359,29 @@ static void OnMenuAbout() {
 
     gHwndAbout = CreateWindow(
             ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
-            WS_OVERLAPPEDWINDOW,
+            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            ABOUT_WIN_DX, ABOUT_WIN_DY,
+            CW_USEDEFAULT, CW_USEDEFAULT,
             NULL, NULL,
             ghinst, NULL);
     if (!gHwndAbout)
         return;
+
+    // get the dimensions required for the about box's content
+    RECT rc;
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(gHwndAbout, &ps);
+    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
+    EndPaint(gHwndAbout, &ps);
+    InflateRect(&rc, ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
+
+    // resize the new window to just match these dimensions
+    RECT wRc, cRc;
+    GetWindowRect(gHwndAbout, &wRc);
+    GetClientRect(gHwndAbout, &cRc);
+    wRc.right += rect_dx(&rc) - rect_dx(&cRc);
+    wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
+    MoveWindow(gHwndAbout, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
 
     ShowWindow(gHwndAbout, SW_SHOW);
 }
