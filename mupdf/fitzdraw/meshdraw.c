@@ -218,7 +218,7 @@ stepedge(int *ael, int *del, int n)
 		ael[k] += del[k];
 }
 
-void
+static void
 fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n)
 {
 	float poly[MAXV][MAXN];

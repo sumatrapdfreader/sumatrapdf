@@ -9,12 +9,12 @@
 
 int FT_Get_Advance(FT_Face face, int gid, int masks, FT_Fixed *out)
 {
-    int code;
-    code = FT_Load_Glyph(face, gid, masks | FT_LOAD_IGNORE_TRANSFORM);
-    if (code)
-	return code;
-    *out = face->glyph->advance.x * 1024;
-    return 0;
+	int fterr;
+	fterr = FT_Load_Glyph(face, gid, masks | FT_LOAD_IGNORE_TRANSFORM);
+	if (fterr)
+		return fterr;
+	*out = face->glyph->advance.x * 1024;
+	return 0;
 }
 
 #else
@@ -211,7 +211,7 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 		float dx, dy;
 		fz_point p;
 		float adv;
-		int i, x, y;
+		int i, x, y, fterr;
 
 		// TODO: this is supposed to calculate font bbox, but doesn't seem
 		// to be right at all
@@ -240,7 +240,9 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 		fontdy = fontdy / 10;
 
 		FT_Set_Transform(font->ftface, NULL, NULL);
-		FT_Set_Char_Size(font->ftface, 64, 64, 72, 72);
+		fterr = FT_Set_Char_Size(font->ftface, 64, 64, 72, 72);
+		if (fterr)
+			return fz_throw("freetype set character size: %s", ft_errorstring(fterr));
 
 		for (i = 0; i < text->len; i++)
 		{
@@ -264,9 +266,11 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 			if (font->ftface)
 			{
 				FT_Fixed ftadv;
-				FT_Get_Advance(font->ftface, text->els[i].gid,
+				fterr = FT_Get_Advance(font->ftface, text->els[i].gid,
 					FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING,
 					&ftadv);
+				if (fterr)
+					return fz_throw("freetype get advance (gid %d): %s", text->els[i].gid, ft_errorstring(fterr));
 				adv = ftadv / 65536.0;
 				oldpt->x += adv;
 			}

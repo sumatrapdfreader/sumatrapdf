@@ -41,6 +41,32 @@ fz_readline(fz_stream *stm, char *mem, int n)
 	return fz_okay;
 }
 
+static inline int fz_fillbuf(fz_stream *stm, fz_buffer *buf)
+{
+	int remaining = buf->ep - buf->wp;
+	int available = stm->buffer->wp - stm->buffer->rp;
+
+	if (available == 0)
+	{
+		int c = fz_readbytex(stm);
+		if (c == EOF)
+			return EOF;
+
+		*buf->wp++ = c;
+
+		remaining = buf->ep - buf->wp;
+		available = stm->buffer->wp - stm->buffer->rp;
+	}
+
+	memmove(buf->wp, stm->buffer->rp, MIN(remaining, available));
+	buf->wp += MIN(remaining, available);
+	stm->buffer->rp += MIN(remaining, available);
+
+	if (buf->rp == buf->wp && stm->buffer->eof)
+		return EOF;
+	return 0;
+}
+
 /*
  * Utility function to consume all the contents of an input stream into
  * a freshly allocated buffer.
@@ -51,53 +77,28 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint)
 {
 	fz_error error;
 	fz_buffer *buf;
-	fz_buffer *tmpbuf;
-	int bytesread;
-	int leftinbuf;
 
 	if (sizehint == 0)
 	    sizehint = 4 * 1024;
 
-	error = fz_newbuffer(&tmpbuf, sizehint);
+	error = fz_newbuffer(&buf, sizehint);
 	if (error)
-		return fz_rethrow(error, "cannot create scratch buffer");
+	    return fz_rethrow(error, "cannot create scratch buffer");
 
-	buf = stm->buffer;
-	while (!buf->eof)
+	while (fz_fillbuf(stm, buf) != EOF)
 	{
-		error = fz_readimp(stm);
-		if (error)
+		if (buf->wp == buf->ep)
 		{
-			error = fz_rethrow(error, "cannot read data");
-			goto cleanup;
+		    error = fz_growbuffer(buf);
+		    if (error)
+		    {
+			fz_dropbuffer(buf);
+			return fz_rethrow(error, "cannot resize scratch buffer");
+		    }
 		}
-		bytesread = buf->wp - buf->rp;
-		if (0 == bytesread)
-		{
-			if (buf->eof)
-				break;
-			assert(0);
-		}
-		leftinbuf = tmpbuf->ep - tmpbuf->wp;
-		while (leftinbuf < bytesread)
-		{
-			error = fz_growbuffer(tmpbuf);
-			if (error)
-			{
-				error = fz_rethrow(error, "cannot resize scratch buffer");
-				goto cleanup;
-			}
-			leftinbuf = tmpbuf->ep - tmpbuf->wp;
-		}
-		memcpy(tmpbuf->wp, buf->rp, bytesread);
-		buf->rp += bytesread;
-		tmpbuf->wp += bytesread;
 	}
 
-	*bufp = tmpbuf;
+	*bufp = buf;
 	return fz_okay;
-cleanup:
-	fz_dropbuffer(tmpbuf);
-	return error;
 }
 

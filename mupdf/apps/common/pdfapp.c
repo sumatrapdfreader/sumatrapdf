@@ -9,9 +9,9 @@ enum panning
 	PAN_TO_BOTTOM
 };
 
-void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage);
+static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage);
 
-void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
+static void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
 {
 	char buf[1024];
 	va_list ap;
@@ -21,7 +21,7 @@ void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
 	winwarn(app, buf);
 }
 
-void pdfapp_error(pdfapp_t *app, fz_error error)
+static void pdfapp_error(pdfapp_t *app, fz_error error)
 {
 	winerror(app, error);
 }
@@ -207,7 +207,7 @@ void pdfapp_close(pdfapp_t *app)
 	app->xref = nil;
 }
 
-fz_matrix pdfapp_viewctm(pdfapp_t *app)
+static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 {
 	fz_matrix ctm;
 	ctm = fz_identity();
@@ -217,7 +217,7 @@ fz_matrix pdfapp_viewctm(pdfapp_t *app)
 	return ctm;
 }
 
-void pdfapp_panview(pdfapp_t *app, int newx, int newy)
+static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 {
 	if (newx > 0)
 		newx = 0;
@@ -241,7 +241,7 @@ void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 	app->pany = newy;
 }
 
-void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
+static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 {
 	char buf[256];
 	fz_error error;
@@ -311,7 +311,7 @@ void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 }
 
 
-void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
+static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
 {
 	char buf[2048];
 	memcpy(buf, fz_tostrbuf(uri), fz_tostrlen(uri));
@@ -319,7 +319,7 @@ void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
 	winopenuri(app, buf);
 }
 
-void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)
+static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)
 {
 	int oid = fz_tonum(obj);
 	int i;

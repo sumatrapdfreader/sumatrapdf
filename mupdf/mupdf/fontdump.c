@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int
+static int
 hexdump(FILE *fo, FILE *fi)
 {
     int c, n;

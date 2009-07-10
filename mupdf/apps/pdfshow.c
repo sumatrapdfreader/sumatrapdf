@@ -4,11 +4,11 @@
 
 #include "pdftool.h"
 
-int showbinary = 0;
-int showdecode = 0;
-int showcolumn;
+static int showbinary = 0;
+static int showdecode = 0;
+static int showcolumn;
 
-void showusage(void)
+static void showusage(void)
 {
     fprintf(stderr, "usage: pdfshow [-bx] [-d password] <file> [xref] [trailer] [object numbers]\n");
     fprintf(stderr, "  -b  \tprint streams as raw binary data\n");
@@ -17,7 +17,7 @@ void showusage(void)
     exit(1);
 }
 
-void showtrailer(void)
+static void showtrailer(void)
 {
     if (!xref)
 	die(fz_throw("no file specified"));
@@ -26,7 +26,7 @@ void showtrailer(void)
     printf("\n");
 }
 
-void showxref(void)
+static void showxref(void)
 {
     if (!xref)
 	die(fz_throw("no file specified"));
@@ -34,7 +34,7 @@ void showxref(void)
     printf("\n");
 }
 
-void showsafe(unsigned char *buf, int n)
+static void showsafe(unsigned char *buf, int n)
 {
     int i;
     for (i = 0; i < n; i++) {
@@ -57,7 +57,7 @@ void showsafe(unsigned char *buf, int n)
     }
 }
 
-void showstream(int num, int gen)
+static void showstream(int num, int gen)
 {
     fz_error error;
     fz_stream *stm;
@@ -89,7 +89,7 @@ void showstream(int num, int gen)
     fz_dropstream(stm);
 }
 
-void showobject(int num, int gen)
+static void showobject(int num, int gen)
 {
     fz_error error;
     fz_obj *obj;

@@ -129,7 +129,7 @@ struct fz_renderer_s
 	int flag;
 };
 
-extern void fz_accelerate();
+extern void fz_accelerate(void);
 
 fz_error fz_newrenderer(fz_renderer **gcp, fz_colorspace *pcm, int maskonly, int gcmem);
 void fz_droprenderer(fz_renderer *gc);

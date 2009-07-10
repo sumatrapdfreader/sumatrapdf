@@ -14,8 +14,6 @@
 #include <sys/time.h>
 #endif
 
-fz_renderer *drawgc = nil;
-
 enum { DRAWPNM, DRAWTXT, DRAWXML };
 
 struct benchmark
@@ -28,16 +26,18 @@ struct benchmark
     int maxpage;
 };
 
-int drawmode = DRAWPNM;
-char *drawpattern = nil;
-pdf_page *drawpage = nil;
-float drawzoom = 1.0;
-int drawrotate = 0;
-int drawbands = 1;
-int drawcount = 0;
-int benchmark = 0;
+static fz_renderer *drawgc = nil;
 
-void local_cleanup(void)
+static int drawmode = DRAWPNM;
+static char *drawpattern = nil;
+static pdf_page *drawpage = nil;
+static float drawzoom = 1.0;
+static int drawrotate = 0;
+static int drawbands = 1;
+static int drawcount = 0;
+static int benchmark = 0;
+
+static void local_cleanup(void)
 {
     if (xref && xref->store)
     {
@@ -52,7 +52,7 @@ void local_cleanup(void)
     }
 }
 
-void drawusage(void)
+static void drawusage(void)
 {
     fprintf(stderr,
 	    "usage: pdfdraw [options] [file.pdf pages ... ]\n"
@@ -68,7 +68,7 @@ void drawusage(void)
     exit(1);
 }
 
-void gettime(long *time_)
+static void gettime(long *time_)
 {
     struct timeval tv;
 
@@ -78,7 +78,7 @@ void gettime(long *time_)
     *time_ = tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-void drawloadpage(int pagenum, struct benchmark *loadtimes)
+static void drawloadpage(int pagenum, struct benchmark *loadtimes)
 {
     fz_error error;
     fz_obj *pageobj;
@@ -121,7 +121,7 @@ void drawloadpage(int pagenum, struct benchmark *loadtimes)
 	fflush(stderr);
 }
 
-void drawfreepage(void)
+static void drawfreepage(void)
 {
     pdf_droppage(drawpage);
     drawpage = nil;
@@ -138,7 +138,7 @@ void drawfreepage(void)
     }
 }
 
-void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
+static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
 {
     fz_error error;
     fz_matrix ctm;
@@ -263,7 +263,7 @@ void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtim
     fprintf(stderr, "\n");
 }
 
-void drawtxt(int pagenum)
+static void drawtxt(int pagenum)
 {
     fz_error error;
     pdf_textline *line;
@@ -285,14 +285,14 @@ void drawtxt(int pagenum)
     drawfreepage();
 }
 
-void drawxml(int pagenum)
+static void drawxml(int pagenum)
 {
     drawloadpage(pagenum, NULL);
     fz_debugtree(drawpage->tree);
     drawfreepage();
 }
 
-void drawpages(char *pagelist)
+static void drawpages(char *pagelist)
 {
     int page, spage, epage;
     char *spec, *dash;

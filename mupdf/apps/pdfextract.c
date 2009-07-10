@@ -4,28 +4,26 @@
 
 #include "pdftool.h"
 
-int showcolumn;
-
-void showusage(void)
+static void showusage(void)
 {
     fprintf(stderr, "usage: pdfextract [-d password] <file> [object numbers]\n");
     fprintf(stderr, "  -d  \tdecrypt password\n");
     exit(1);
 }
 
-int isimage(fz_obj *obj)
+static int isimage(fz_obj *obj)
 {
     fz_obj *type = fz_dictgets(obj, "Subtype");
     return fz_isname(type) && !strcmp(fz_toname(type), "Image");
 }
 
-int isfontdesc(fz_obj *obj)
+static int isfontdesc(fz_obj *obj)
 {
     fz_obj *type = fz_dictgets(obj, "Type");
     return fz_isname(type) && !strcmp(fz_toname(type), "FontDescriptor");
 }
 
-void saveimage(fz_obj *obj, int num, int gen)
+static void saveimage(fz_obj *obj, int num, int gen)
 {
     pdf_image *img = nil;
     fz_obj *ref;
@@ -131,7 +129,7 @@ void saveimage(fz_obj *obj, int num, int gen)
     fz_dropobj(ref);
 }
 
-void savefont(fz_obj *dict, int num, int gen)
+static void savefont(fz_obj *dict, int num, int gen)
 {
     fz_error error;
     char name[1024];
@@ -209,7 +207,7 @@ void savefont(fz_obj *dict, int num, int gen)
     fz_dropbuffer(buf);
 }
 
-void showobject(int num, int gen)
+static void showobject(int num, int gen)
 {
     fz_error error;
     fz_obj *obj;

@@ -67,7 +67,7 @@ static inline void pdflog(int tag, char *name, char *fmt, va_list ap)
 	if (strchr(fmt, '{'))
 		level ++;
 
-	push = strchr(fmt, '\n') != 0;
+	push = !!strchr(fmt, '\n');
 
 	fflush(stdout);
 }

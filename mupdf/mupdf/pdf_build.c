@@ -44,7 +44,7 @@ pdf_initgstate(pdf_gstate *gs)
 	gs->head = nil;
 }
 
-fz_error
+static fz_error
 pdf_newovernode(fz_node **nodep, pdf_gstate *gs)
 {
     if (gs->blendmode == FZ_BNORMAL)
@@ -849,7 +849,7 @@ pdf_flushtext(pdf_csi *csi)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 showglyph(pdf_csi *csi, int cid)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
@@ -933,7 +933,7 @@ showglyph(pdf_csi *csi, int cid)
 	return fz_okay;
 }
 
-void
+static void
 showspace(pdf_csi *csi, float tadj)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;

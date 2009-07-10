@@ -250,7 +250,7 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 			int i, c;
 			for (i = 0; i < obj->u.s.len; i++) {
 				c = (unsigned char)obj->u.s.buf[i];
-				if (strchr("()\\\n\r\t\b\f", c) != 0)
+				if (strchr("()\\\n\r\t\b\f", c))
 					added ++;
 				else if (c < 8)
 					added ++;

@@ -52,7 +52,7 @@ findchanging(const unsigned char *line, int x, int w)
 {
 	int a, b;
 
-	if (line == 0)
+	if (line)
 		return w;
 
 	if (x == -1)
@@ -80,7 +80,7 @@ findchanging(const unsigned char *line, int x, int w)
 static inline int
 findchangingcolor(const unsigned char *line, int x, int w, int color)
 {
-	if (line == 0)
+	if (line)
 		return w;
 
 	x = findchanging(line, x, w);

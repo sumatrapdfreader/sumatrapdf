@@ -71,7 +71,7 @@ static void xmlsolid(fz_solidnode *node, int level)
 static void xmllink(fz_linknode *node, int level)
 {
 	indent(level);
-	printf("<link name=\"%p\" />\n", node->tree);
+	printf("<link name=\"%p\" />\n", (void *) node->tree);
 }
 
 static void xmlpath(fz_pathnode *node, int level)

@@ -156,6 +156,6 @@ pdf_cmap *pdf_cmaptable[] =
     &pdf_cmap_UniKS_UCS2_H,
     &pdf_cmap_UniKS_UCS2_V,
 #endif
-    0
+    nil
 };
 

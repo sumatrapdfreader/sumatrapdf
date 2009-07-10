@@ -98,7 +98,7 @@ char *winpassword(pdfapp_t *app, char *filename)
  * X11 magic
  */
 
-void winopen(void)
+static void winopen(void)
 {
 	XWMHints *hints;
 
@@ -178,9 +178,9 @@ void wincursor(pdfapp_t *app, int curs)
 void wintitle(pdfapp_t *app, char *s)
 {
 #ifdef X_HAVE_UTF8_STRING
-	Xutf8SetWMProperties(xdpy, xwin, s, s, 0, 0, 0, 0, 0);
+	Xutf8SetWMProperties(xdpy, xwin, s, s, nil, 0, nil, nil, nil);
 #else
-	XmbSetWMProperties(xdpy, xwin, s, s, 0, 0, 0, 0, 0);
+	XmbSetWMProperties(xdpy, xwin, s, s, nil, 0, nil, nil, nil);
 #endif
 }
 
@@ -259,7 +259,7 @@ static void invertcopyrect()
 	justcopied = 1;
 }
 
-void winblit(pdfapp_t *app)
+static void winblit(pdfapp_t *app)
 {
 	int x0 = gapp.panx;
 	int y0 = gapp.pany;
@@ -296,7 +296,7 @@ void winrepaint(pdfapp_t *app)
 	dirty = 1;
 }
 
-void windrawstring(pdfapp_t *app, char *s, int x, int y)
+static void windrawstring(pdfapp_t *app, char *s, int x, int y)
 {
 	int prevfunction;
 	XGCValues xgcv;
@@ -316,7 +316,7 @@ void windrawstring(pdfapp_t *app, char *s, int x, int y)
 	XChangeGC(xdpy, xgc, GCFunction, &xgcv);
 }
 
-void windrawpageno(pdfapp_t *app)
+static void windrawpageno(pdfapp_t *app)
 {
 	char s[100];
 
@@ -427,7 +427,7 @@ void winopenuri(pdfapp_t *app, char *buf)
 	system(cmd);
 }
 
-void onkey(int c)
+static void onkey(int c)
 {
 	if (justcopied)
 	{
@@ -443,7 +443,7 @@ void onkey(int c)
 		pdfapp_onkey(&gapp, c);
 }
 
-void onmouse(int x, int y, int btn, int modifiers, int state)
+static void onmouse(int x, int y, int btn, int modifiers, int state)
 {
 	if (state != 0 && justcopied)
 	{
@@ -454,13 +454,13 @@ void onmouse(int x, int y, int btn, int modifiers, int state)
 	pdfapp_onmouse(&gapp, x, y, btn, modifiers, state);
 }
 
-void usage(void)
+static void usage(void)
 {
 	fprintf(stderr, "usage: mupdf [-d password] [-z zoom] [-p pagenumber] file.pdf\n");
 	exit(1);
 }
 
-void winawaitevent(struct timeval *tmo, struct timeval *tmo_at)
+static void winawaitevent(struct timeval *tmo, struct timeval *tmo_at)
 {
 	if (tmo_at->tv_sec == 0 && tmo_at->tv_usec == 0 &&
 		tmo->tv_sec == 0 && tmo->tv_usec == 0)
@@ -473,27 +473,27 @@ void winawaitevent(struct timeval *tmo, struct timeval *tmo_at)
 		FD_ZERO(&fds);
 		FD_SET(x11fd, &fds);
 
-		if (select(x11fd + 1, &fds, 0, 0, tmo))
+		if (select(x11fd + 1, &fds, nil, nil, tmo))
 		{
-			gettimeofday(&now, 0);
+			gettimeofday(&now, nil);
 			timersub(tmo_at, &now, tmo);
 			XNextEvent(xdpy, &xevt);
 		}
 	}
 }
 
-void winsettmo(struct timeval *tmo, struct timeval *tmo_at)
+static void winsettmo(struct timeval *tmo, struct timeval *tmo_at)
 {
 	struct timeval now;
 
 	tmo->tv_sec = 2;
 	tmo->tv_usec = 0;
 
-	gettimeofday(&now, 0);
+	gettimeofday(&now, nil);
 	timeradd(&now, tmo, tmo_at);
 }
 
-void winresettmo(struct timeval *tmo, struct timeval *tmo_at)
+static void winresettmo(struct timeval *tmo, struct timeval *tmo_at)
 {
 	tmo->tv_sec = 0;
 	tmo->tv_usec = 0;
@@ -584,7 +584,7 @@ int main(int argc, char **argv)
 			case KeyPress:
 				wasshowingpage = isshowingpage;
 
-				len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, 0);
+				len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, nil);
 				if (len)
 					onkey(buf[0]);
 				onmouse(oldx, oldy, 0, 0, 0);

@@ -155,7 +155,7 @@ pdf_dropcsi(pdf_csi *csi)
  */
 
 static fz_error
-runxobject(pdf_csi *csi, pdf_xref *xref, pdf_xobject *xobj)
+runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 {
 	fz_error error;
 	fz_node *transform;
@@ -209,6 +209,9 @@ runxobject(pdf_csi *csi, pdf_xref *xref, pdf_xobject *xobj)
 	error = fz_openrbuffer(&file, xobj->contents);
 	if (error)
 		return fz_rethrow(error, "cannot open XObject stream");
+
+	if (xobj->resources)
+		rdb = xobj->resources;
 
 	error = pdf_runcsi(csi, xref, xobj->resources, file);
 
@@ -930,7 +933,7 @@ Lsetcolor:
 					xobj->resources = fz_keepobj(rdb);
 
 				clearstack(csi);
-				error = runxobject(csi, xref, xobj);
+				error = runxobject(csi, xref, rdb, xobj);
 				if (error)
 					return fz_rethrow(error, "cannot draw xobject");
 			}

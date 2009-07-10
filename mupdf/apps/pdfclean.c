@@ -18,9 +18,9 @@ static char *uselist = NULL;
 static int *ofslist = NULL;
 static int *genlist = NULL;
 
-int doencrypt = 0;
-int dogarbage = 0;
-int doexpand = 0;
+static int doencrypt = 0;
+static int dogarbage = 0;
+static int doexpand = 0;
 
 /*
  * Garbage collect objects not reachable from the trailer.
@@ -32,6 +32,9 @@ static fz_error sweepobj(pdf_xref *xref, fz_obj *obj)
 {
     fz_error error;
     int i;
+
+    if (fz_isindirect(obj))
+	return sweepref(xref, obj);
 
     if (fz_isdict(obj))
     {
@@ -52,9 +55,6 @@ static fz_error sweepobj(pdf_xref *xref, fz_obj *obj)
 		return error; /* too deeply nested for rethrow */
 	}
     }
-
-    if (fz_isindirect(obj))
-	return sweepref(xref, obj);
 
     return fz_okay;
 }
@@ -100,7 +100,7 @@ static fz_error sweepref(pdf_xref *xref, fz_obj *ref)
     return fz_okay;
 }
 
-void preloadobjstms(void)
+static void preloadobjstms(void)
 {
     fz_error error;
     fz_obj *obj;
@@ -118,7 +118,7 @@ void preloadobjstms(void)
     }
 }
 
-void copystream(fz_obj *obj, int oid, int gen)
+static void copystream(fz_obj *obj, int oid, int gen)
 {
     fz_error error;
     fz_buffer *buf;
@@ -143,7 +143,7 @@ void copystream(fz_obj *obj, int oid, int gen)
     fz_dropbuffer(buf);
 }
 
-void expandstream(fz_obj *obj, int oid, int gen)
+static void expandstream(fz_obj *obj, int oid, int gen)
 {
     fz_error error;
     fz_buffer *buf;
@@ -179,7 +179,7 @@ void expandstream(fz_obj *obj, int oid, int gen)
     fz_dropbuffer(buf);
 }
 
-void saveobject(int oid, int gen)
+static void saveobject(int oid, int gen)
 {
     fz_error error;
     fz_obj *obj;
@@ -230,7 +230,7 @@ void saveobject(int oid, int gen)
     fz_dropobj(obj);
 }
 
-void savexref(void)
+static void savexref(void)
 {
     fz_obj *trailer;
     fz_obj *obj;
@@ -279,7 +279,7 @@ void savexref(void)
     fprintf(out, "startxref\n%d\n%%%%EOF\n", startxref);
 }
 
-void cleanusage(void)
+static void cleanusage(void)
 {
     fprintf(stderr,
 	    "usage: pdfclean [options] input.pdf [outfile.pdf]\n"

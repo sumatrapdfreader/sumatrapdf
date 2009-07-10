@@ -58,24 +58,24 @@ struct info
 	} u;
 };
 
-struct info *info = nil;
-struct info *cryptinfo = nil;
-struct info **dim = nil;
-int dims = 0;
-struct info **font = nil;
-int fonts = 0;
-struct info **image = nil;
-int images = 0;
-struct info **shading = nil;
-int shadings = 0;
-struct info **pattern = nil;
-int patterns = 0;
-struct info **form = nil;
-int forms = 0;
-struct info **psobj = nil;
-int psobjs = 0;
+static struct info *info = nil;
+static struct info *cryptinfo = nil;
+static struct info **dim = nil;
+static int dims = 0;
+static struct info **font = nil;
+static int fonts = 0;
+static struct info **image = nil;
+static int images = 0;
+static struct info **shading = nil;
+static int shadings = 0;
+static struct info **pattern = nil;
+static int patterns = 0;
+static struct info **form = nil;
+static int forms = 0;
+static struct info **psobj = nil;
+static int psobjs = 0;
 
-void local_cleanup(void)
+static void local_cleanup(void)
 {
 	int i;
 
@@ -148,7 +148,7 @@ void local_cleanup(void)
 	}
 }
 
-void
+static void
 infousage(void)
 {
 	fprintf(stderr,
@@ -157,7 +157,7 @@ infousage(void)
 			"  -f -\tlist fonts\n"
 			"  -i -\tlist images\n"
 			"  -m -\tlist dimensions\n"
-			"  -p -\tlist pattners\n"
+			"  -p -\tlist patterns\n"
 			"  -s -\tlist shadings\n"
 			"  -x -\tlist form and postscript xobjects\n"
 			"  example:\n"
@@ -165,8 +165,8 @@ infousage(void)
 	exit(1);
 }
 
-void
-gatherglobalinfo()
+static void
+gatherglobalinfo(void)
 {
 	info = fz_malloc(sizeof (struct info));
 	if (!info)
@@ -203,7 +203,7 @@ gatherglobalinfo()
 	}
 }
 
-fz_error
+static fz_error
 gatherdimensions(int page, fz_obj *pageref, fz_obj *pageobj)
 {
 	fz_obj *ref;
@@ -246,7 +246,7 @@ gatherdimensions(int page, fz_obj *pageref, fz_obj *pageobj)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
 	int i;
@@ -287,7 +287,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 				break;
 
 		if (k < fonts)
-			return fz_okay;
+			continue;
 
 		fonts++;
 
@@ -309,7 +309,7 @@ gatherfonts(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
 	int i;
@@ -415,7 +415,7 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 gatherforms(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
 	int i;
@@ -438,13 +438,13 @@ gatherforms(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		if (!fz_isname(type))
 			return fz_throw("not a xobject type (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (strcmp(fz_toname(type), "Form"))
-			return fz_okay;
+			continue;
 
 		subtype = fz_dictgets(xobjdict, "Subtype2");
 		if (subtype && !fz_isname(subtype))
 			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (strcmp(fz_toname(subtype), "PS"))
-			return fz_okay;
+			continue;
 
 		group = fz_dictgets(xobjdict, "Group");
 		if (group && !fz_isdict(group))
@@ -460,7 +460,7 @@ gatherforms(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 				break;
 
 		if (k < forms)
-			return fz_okay;
+			continue;
 
 		forms++;
 
@@ -482,7 +482,7 @@ gatherforms(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 gatherpsobjs(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
 	int i;
@@ -503,14 +503,14 @@ gatherpsobjs(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		if (!fz_isname(type))
 			return fz_throw("not a xobject type (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (strcmp(fz_toname(type), "Form"))
-			return fz_okay;
+			continue;
 
 		subtype = fz_dictgets(xobjdict, "Subtype2");
 		if (subtype && !fz_isname(subtype))
 			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (strcmp(fz_toname(type), "PS") &&
 				(strcmp(fz_toname(type), "Form") || strcmp(fz_toname(subtype), "PS")))
-			return fz_okay;
+			continue;
 
 		for (k = 0; k < psobjs; k++)
 			if (fz_tonum(psobj[k]->ref) == fz_tonum(ref) &&
@@ -518,7 +518,7 @@ gatherpsobjs(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 				break;
 
 		if (k < psobjs)
-			return fz_okay;
+			continue;
 
 		psobjs++;
 
@@ -538,7 +538,7 @@ gatherpsobjs(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 gathershadings(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
 	int i;
@@ -564,7 +564,7 @@ gathershadings(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 				break;
 
 		if (k < shadings)
-			return fz_okay;
+			continue;
 
 		shadings++;
 
@@ -585,7 +585,7 @@ gathershadings(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 	return fz_okay;
 }
 
-fz_error
+static fz_error
 gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 {
 	int i;
@@ -624,7 +624,7 @@ gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 				break;
 
 		if (k < patterns)
-			return fz_okay;
+			continue;
 
 		patterns++;
 
@@ -647,7 +647,7 @@ gatherpatterns(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 	return fz_okay;
 }
 
-void
+static void
 gatherinfo(int show, int page)
 {
 	fz_error error;
@@ -718,14 +718,14 @@ gatherinfo(int show, int page)
 		pattern = fz_dictgets(rsrc, "Pattern");
 		if (pattern)
 		{
-			error = gathershadings(page, pageref, pageobj, shade);
+			error = gatherpatterns(page, pageref, pageobj, shade);
 			if (error)
 				die(fz_rethrow(error, "gathering shadings at page %d (%d %d R)", page, fz_tonum(pageref), fz_togen(pageref)));
 		}
 	}
 }
 
-void
+static void
 printglobalinfo(void)
 {
 	printf("\nPDF-%d.%d\n", xref->version / 10, xref->version % 10);
@@ -745,7 +745,7 @@ printglobalinfo(void)
 	printf("\nPages: %d\n\n", pdf_getpagecount(pagetree));
 }
 
-void
+static void
 printinfo(char *filename, int show, int page)
 {
 	int i;
@@ -952,7 +952,7 @@ printinfo(char *filename, int show, int page)
 	}
 }
 
-void
+static void
 showinfo(char *filename, int show, char *pagelist)
 {
 	int page, spage, epage;

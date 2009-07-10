@@ -113,7 +113,7 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 		goto fallback;
 	}
 
-	img->data = xsi->shmaddr = shmat(xsi->shmid, 0, 0);
+	img->data = xsi->shmaddr = shmat(xsi->shmid, nil, 0);
 	if (img->data == (char*)-1)
 	{
 		XDestroyImage(img);
@@ -133,14 +133,14 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 
 	XSync(dpy, False);
 
-	shmctl(xsi->shmid, IPC_RMID, 0);
+	shmctl(xsi->shmid, IPC_RMID, nil);
 
 	return img;
 
 fallback:
 	info.useshm = 0;
 
-	img = XCreateImage(dpy, vis, depth, ZPixmap, 0, 0, w, h, 32, 0);
+	img = XCreateImage(dpy, vis, depth, ZPixmap, 0, nil, w, h, 32, 0);
 	if (!img)
 	{
 		fprintf(stderr, "fail: could not XCreateImage");

@@ -104,7 +104,7 @@ static const struct
     { "Chancery",
 	pdf_font_URWChanceryL_MediItal_cff_buf,
 	&pdf_font_URWChanceryL_MediItal_cff_len },
-    { 0, 0, 0 }
+    { nil, nil, nil }
 };
 
 fz_error

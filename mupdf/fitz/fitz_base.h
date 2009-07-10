@@ -108,7 +108,7 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 
 /* call this before using fitz */
-extern void fz_cpudetect();
+extern void fz_cpudetect(void);
 
 /* treat as constant! */
 extern unsigned fz_cpuflags;

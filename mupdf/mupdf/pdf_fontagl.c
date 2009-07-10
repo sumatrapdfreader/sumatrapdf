@@ -4629,13 +4629,13 @@ int pdf_lookupagl(char *name, int *ucsbuf, int ucscap)
             while (s[0])
             {
                 strlcpy(tmp, s, 5);
-                ucsbuf[ucslen++] = strtol(tmp, 0, 16);
+                ucsbuf[ucslen++] = strtol(tmp, nil, 16);
                 s += MIN(strlen(s), 4);
             }
         }
 
         else if (strstr(s, "u") == s)
-            ucsbuf[ucslen++] = strtol(s + 1, 0, 16);
+            ucsbuf[ucslen++] = strtol(s + 1, nil, 16);
 
 next:
         s = strsep(&p, "_");

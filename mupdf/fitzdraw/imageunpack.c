@@ -98,7 +98,7 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 static byte t1pad0[256][8];
 static byte t1pad1[256][16];
 
-static void init1()
+static void init1(void)
 {
 	static int inited = 0;
 	byte bits[1];

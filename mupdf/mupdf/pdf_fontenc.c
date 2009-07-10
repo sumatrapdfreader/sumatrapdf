@@ -5,7 +5,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-#define _notdef 0
+#define _notdef nil
 
 void pdf_loadencoding(char **estrings, char *encoding)
 {
