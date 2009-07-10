@@ -99,10 +99,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WM_APP_REPAINT_NOW     (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
 
-/* A caption is 4 white/blue 2 pixel line and a 3 pixel white line */
-#define CAPTION_DY 2*(2*4)+3
-
-#define COL_CAPTION_BLUE RGB(0,0x50,0xa0)
 #define COL_WHITE RGB(0xff,0xff,0xff)
 #define COL_BLACK RGB(0,0,0)
 #define COL_BLUE_LINK RGB(0,0x20,0xa0)
@@ -126,7 +122,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define APP_SUB_DIR             _T("SumatraPDF")
 #define APP_NAME_STR            _T("SumatraPDF")
 
-#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
+#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
 
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
@@ -168,9 +164,6 @@ static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushShadow;
 static HBRUSH                       gBrushLinkDebug;
 
-static HPEN                         ghpenWhite;
-static HPEN                         ghpenBlue;
-
 static HBITMAP                      gBitmapCloseToc;
 
 static TCHAR *                      gBenchFileName;
@@ -199,17 +192,17 @@ static HWND                         gHwndAbout;
 static bool                         gRestrictedUse = false;
 
 #ifdef BUILD_RM_VERSION
-    static bool                         gDeleteFileOnClose = false; // Delete the file which was passed into the program by command line.
+static bool                         gDeleteFileOnClose = false; // Delete the file which was passed into the program by command line.
 #endif
 
 SerializableGlobalPrefs             gGlobalPrefs = {
     TRUE, // BOOL m_showToolbar
     FALSE, // BOOL m_pdfAssociateDontAskAgain
     TRUE, // BOOL m_pdfAssociateShouldAssociate
-#ifdef BUILD_RM_VERSION
-    FALSE, // BOOL m_enableAutoUpdate
+#ifndef BUILD_RM_VERSION
+    TRUE, // BOOL m_enableAutoUpdate
 #else
-    TRUE,
+    FALSE,
 #endif
     TRUE, // BOOL m_rememberOpenedFiles
     ABOUT_BG_COLOR, // int  m_bgColor
@@ -1297,33 +1290,6 @@ static TCHAR *ExePathGet(void)
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
     return tstr_dup(buf);
-}
-
-static void CaptionPens_Create(void)
-{
-    LOGPEN  pen;
-
-    assert(!ghpenWhite);
-    pen.lopnStyle = PS_SOLID;
-    pen.lopnWidth.x = 1;
-    pen.lopnWidth.y = 1;
-    pen.lopnColor = COL_WHITE;
-    ghpenWhite = CreatePenIndirect(&pen);
-    pen.lopnColor = COL_CAPTION_BLUE;
-    ghpenBlue = CreatePenIndirect(&pen);
-}
-
-static void CaptionPens_Destroy(void)
-{
-    if (ghpenWhite) {
-        DeleteObject(ghpenWhite);
-        ghpenWhite = NULL;
-    }
-
-    if (ghpenBlue) {
-        DeleteObject(ghpenBlue);
-        ghpenBlue = NULL;
-    }
 }
 
 static void AddFileToHistory(const TCHAR *filePath)
@@ -7364,7 +7330,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!RegisterWinClass(hInstance))
         goto Exit;
 
-    CaptionPens_Create();
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
@@ -7514,7 +7479,6 @@ Exit:
 
     WindowInfoList_DeleteAll();
     FileHistoryList_Free(&gFileHistoryRoot);
-    CaptionPens_Destroy();
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushShadow);
