@@ -1158,17 +1158,6 @@ void DisplayModel::rotateBy(int newRotation)
     goToPage(currPageNo, 0);
 }
 
-void DisplayModel::showNormalCursor(void)
-{
-    SetCursor(LoadCursor(NULL, IDC_ARROW));
-}
-
-void DisplayModel::showBusyCursor(void)
-{
-    // TODO: can I set it per-window only?
-    SetCursor(LoadCursor(NULL, IDC_WAIT));
-}
-
 static inline void InitCacheMutext() {
     if (!cacheMutexInitialized) {
         InitializeCriticalSection(&cacheMutex);
@@ -1371,8 +1360,6 @@ bool BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rota
 
 PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text)
 {
-    showBusyCursor();
-
     bool forward = (direction == FIND_FORWARD);
     _pdfSearch->SetDirection(forward);
     if (text != NULL)
@@ -1385,11 +1372,9 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text)
 
         goToPage(rect.page, 0);
         MapResultRectToScreen(&rect);
-        showNormalCursor();
         return &rect;
     }
 
-    showNormalCursor();
     return NULL;
 }
 

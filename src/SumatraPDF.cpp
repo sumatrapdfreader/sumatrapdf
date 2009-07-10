@@ -82,8 +82,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
 
-//#define START_WITH_ABOUT        1
-
 /* define if want to use double-buffering for rendering the PDF. Takes more memory!. */
 #define DOUBLE_BUFFER 1
 
@@ -3821,57 +3819,39 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
         return;
 
     link = win->dm->linkAtPosition(x, y);
-    if (link && (link == win->linkOnLastButtonDown))
+    if (link && (link == win->linkOnLastButtonDown)) {
         win->dm->handleLink(link);
+        SetCursor(gCursorArrow);
+    }
     win->linkOnLastButtonDown = NULL;
 }
 
 static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 {
-    PdfLink *       link;
-    const TCHAR *   url;
     int             dragDx, dragDy;
 
     assert(win);
-    if (!win) return;
+    if (!win || WS_SHOWING_PDF != win->state)
+        return;
 
-    if (WS_SHOWING_PDF == win->state) {
-        assert(win->dm);
-        if (!win->dm) return;
-        if (MA_SCROLLING == win->mouseAction) {
-            win->yScrollSpeed = (y - win->dragPrevPosY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-            win->xScrollSpeed = (x - win->dragPrevPosX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-        } else if (win->mouseAction == MA_SELECTING) {
-            SetCursor(gCursorArrow);
-            win->selectionRect.dx = x - win->selectionRect.x;
-            win->selectionRect.dy = y - win->selectionRect.y;
-            triggerRepaintDisplayNow(win);
-        } else {
-            if (win->mouseAction == MA_DRAGGING) {
-                dragDx = -(x - win->dragPrevPosX);
-                dragDy = -(y - win->dragPrevPosY);
-                DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
-                WinMoveDocBy(win, dragDx, dragDy*2);
-                win->dragPrevPosX = x;
-                win->dragPrevPosY = y;
-                return;
-            }
-            link = win->dm->linkAtPosition(x, y);
-            if (link)
-                SetCursor(gCursorHand);
-            else
-                SetCursor(gCursorArrow);
-        }
-    } else if (WS_ABOUT == win->state) {
-        url = AboutGetLink(win, x, y);
-        if (url) {
-            SetCursor(gCursorHand);
-        } else {
-            SetCursor(gCursorArrow);
-        }
-    } else {
-        // TODO: be more efficient, this only needs to be set once (I think)
-        SetCursor(gCursorArrow);
+    assert(win->dm);
+    if (!win->dm) return;
+
+    if (MA_SCROLLING == win->mouseAction) {
+        win->yScrollSpeed = (y - win->dragPrevPosY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        win->xScrollSpeed = (x - win->dragPrevPosX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+    } else if (MA_SELECTING == win->mouseAction) {
+        win->selectionRect.dx = x - win->selectionRect.x;
+        win->selectionRect.dy = y - win->selectionRect.y;
+        triggerRepaintDisplayNow(win);
+    } else if (MA_DRAGGING == win->mouseAction) {
+        dragDx = -(x - win->dragPrevPosX);
+        dragDy = -(y - win->dragPrevPosY);
+        DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
+        WinMoveDocBy(win, dragDx, dragDy*2);
+        win->dragPrevPosX = x;
+        win->dragPrevPosY = y;
+        return;
     }
 }
 
@@ -3948,7 +3928,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
 
     if (WS_ABOUT == win->state) {
         const TCHAR * url = AboutGetLink(win, x, y);
-        if (url == win->url)
+        if (url && url == win->url)
             LaunchBrowser(url);
         win->url = NULL;
         return;
@@ -6087,6 +6067,7 @@ void WindowInfo::ClearTocBox()
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     const TCHAR * url;
+    POINT pt;
 
     switch (message)
     {
@@ -6102,14 +6083,15 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
             OnPaintAbout(hwnd);
             break;
 
-        case WM_MOUSEMOVE:
-            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url) {
-                SetCursor(gCursorHand);
-            } else {
-                SetCursor(gCursorArrow);
+        case WM_SETCURSOR:
+            if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+                url = AboutGetLink(NULL, pt.x, pt.y);
+                if (url) {
+                    SetCursor(gCursorHand);
+                    return TRUE;
+                }
             }
-            break;
+            return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_LBUTTONDOWN:
             url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -6118,9 +6100,14 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_LBUTTONUP:
             url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url == (const TCHAR *)GetWindowLong(hwnd, GWL_USERDATA))
+            if (url && url == (const TCHAR *)GetWindowLong(hwnd, GWL_USERDATA))
                 LaunchBrowser(url);
             SetWindowLong(hwnd, GWL_USERDATA, 0);
+            break;
+
+        case WM_CHAR:
+            if (VK_ESCAPE == wParam)
+                DestroyWindow(hwnd);
             break;
 
         case WM_DESTROY:
@@ -6198,11 +6185,30 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return 0;
 
         case WM_SETCURSOR:
-            if (win && win->mouseAction == MA_DRAGGING) {
+            if (win && WS_ABOUT == win->state) {
+                POINT pt;
+                if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+                    const TCHAR * url = AboutGetLink(win, pt.x, pt.y);
+                    if (url) {
+                        SetCursor(gCursorHand);
+                        return TRUE;
+                    }
+                }
+            } else if (win && MA_DRAGGING == win->mouseAction) {
                 SetCursor(gCursorDrag);
                 return TRUE;
             } else if (win && MA_SCROLLING == win->mouseAction) {
                 SetCursor(gCursorScroll);
+                return TRUE;
+            } else if (win && WS_SHOWING_PDF == win->state) {
+                POINT pt;
+                if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
+                    PdfLink * link = win->dm->linkAtPosition(pt.x, pt.y);
+                    if (link) {
+                        SetCursor(gCursorHand);
+                        return TRUE;
+                    }
+                }
             }
             return DefWindowProc(hwnd, message, wParam, lParam);
 
