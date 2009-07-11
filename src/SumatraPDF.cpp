@@ -2287,7 +2287,10 @@ static bool LoadPdfIntoWindow(
     ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 
     win->dm->relayout(zoomVirtual, rotation);
-    win->dm->setScrollState(&ss);
+    // Only restore the scroll state when everything is visible
+    // (otherwise we might have to relayout twice, which can take
+    //  a while for longer documents)
+    // win->dm->setScrollState(&ss);
 
     if (!is_new_window) {
         WindowInfo_RedrawAll(win);
@@ -2343,6 +2346,8 @@ Error:
         }
         UpdateWindow(win->hwndFrame);
     }
+    if (win->dm)
+        win->dm->setScrollState(&ss);
     if (win->dm && win->dm->_showToc) {
         if (win->dm->hasTocTree()) {
             win->ClearTocBox();

@@ -852,6 +852,7 @@ void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
         setScrollState(&ss);
     } else {
         recalcVisibleParts();
+        renderVisibleParts();
         setScrollbarsState();
     }
 }
@@ -1119,10 +1120,11 @@ void DisplayModel::scrollYByAreaDy(bool forward, bool changePage)
 void DisplayModel::zoomTo(double zoomVirtual)
 {
     ScrollState ss;
-    getScrollState(&ss);
-    //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
-    relayout(zoomVirtual, rotation());
-    setScrollState(&ss);
+    if (getScrollState(&ss)) {
+        //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
+        relayout(zoomVirtual, rotation());
+        setScrollState(&ss);
+    }
 }
 
 void DisplayModel::zoomBy(double zoomFactor)
@@ -1694,6 +1696,12 @@ bool DisplayModel::getScrollState(ScrollState *state)
     PdfPageInfo *pageInfo = getPageInfo(state->page);
     state->x = max(pageInfo->screenX - pageInfo->bitmapX, 0);
     state->y = max(pageInfo->screenY - pageInfo->bitmapY, 0);
+    // Shortcut: don't calculate precise positions, if the
+    // page wasn't scrolled right/down at all
+    if (0 == pageInfo->bitmapX && 0 == pageInfo->bitmapY) {
+        state->x = state->y = 0;
+        return true;
+    }
     
     return cvtScreenToUser(&state->page, &state->x, &state->y);
 }
