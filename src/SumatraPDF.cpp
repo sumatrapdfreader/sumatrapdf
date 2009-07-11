@@ -3668,7 +3668,28 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
 
     HANDLE ret = SetClipboardData(CF_UNICODETEXT, handle);
     if (NULL == ret)
-	SeeLastError();
+        SeeLastError();
+
+    /* also copy a screenshot of the current selection to the clipboard */
+    selOnPage = win->selectionOnPage;
+    RectD * r = &selOnPage->selectionPage;
+    fz_rect clipRegion;
+    clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
+    clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
+
+    RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
+        win->dm->rotation(), &clipRegion, NULL, NULL);
+    if (bmp) {
+        HDC hDC = GetDC(NULL);
+        HBITMAP hBmp = bmp->createDIBitmap(hDC);
+        if (hBmp) {
+            SetClipboardData(CF_BITMAP, hBmp);
+            DeleteObject(hBmp);
+        }
+        ReleaseDC(NULL, hDC);
+        free(bmp);
+    }
+
     CloseClipboard();
 }
 
