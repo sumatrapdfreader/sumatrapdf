@@ -3637,26 +3637,26 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
     if (!win->selectionOnPage) return;
 
     HGLOBAL handle;
-    unsigned short *ucsbuf;
+    TCHAR *ucsbuf;
     int ucsbuflen = 4096;
 
     if (!OpenClipboard(NULL)) return;
 
     EmptyClipboard();
 
-    handle = GlobalAlloc(GMEM_MOVEABLE, ucsbuflen * sizeof(unsigned short));
+    handle = GlobalAlloc(GMEM_MOVEABLE, ucsbuflen * sizeof(TCHAR));
     if (!handle) {
         CloseClipboard();
         return;
     }
-    ucsbuf = (unsigned short *) GlobalLock(handle);
+    ucsbuf = (TCHAR *) GlobalLock(handle);
 
     selOnPage = win->selectionOnPage;
 
     int copied = 0;
     while (selOnPage != NULL) {
         int charCopied = win->dm->getTextInRegion(selOnPage->pageNo, 
-            &selOnPage->selectionPage, ucsbuf + copied, ucsbuflen - copied - 1);
+            &selOnPage->selectionPage, (unsigned short *)ucsbuf + copied, ucsbuflen - copied - 1);
         copied += charCopied;
         if (ucsbuflen - copied == 1) 
             break;
@@ -3666,9 +3666,9 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
 
     GlobalUnlock(handle);
 
-    HANDLE ret = SetClipboardData(CF_UNICODETEXT, handle);
-    if (NULL == ret)
-        SeeLastError();
+    if (copied > 0)
+        if (!SetClipboardData(CF_UNICODETEXT, handle))
+            SeeLastError();
 
     /* also copy a screenshot of the current selection to the clipboard */
     selOnPage = win->selectionOnPage;
@@ -3683,7 +3683,8 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
         HDC hDC = GetDC(NULL);
         HBITMAP hBmp = bmp->createDIBitmap(hDC);
         if (hBmp) {
-            SetClipboardData(CF_BITMAP, hBmp);
+            if (!SetClipboardData(CF_BITMAP, hBmp))
+                SeeLastError();
             DeleteObject(hBmp);
         }
         ReleaseDC(NULL, hDC);
