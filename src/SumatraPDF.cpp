@@ -3064,6 +3064,55 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue);
 }
 
+#define BORDER_SIZE   1
+#define SHADOW_OFFSET 4
+static void PaintPageBorderAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * bounds)
+{
+    int xDest = pageInfo->screenX;
+    int yDest = pageInfo->screenY;
+    int bmpDx = pageInfo->bitmapDx;
+    int bmpDy = pageInfo->bitmapDy;
+
+    rect_set(bounds, xDest, yDest, bmpDx, bmpDy);
+
+    // Frame info
+    int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
+    int fw = bmpDx + 2 * BORDER_SIZE, fh = bmpDy + 2 * BORDER_SIZE;
+
+    // Shadow info
+    int sx = fx + SHADOW_OFFSET, sy = fy + SHADOW_OFFSET, sw = fw, sh = fh;
+    if (xDest <= 0) {
+        // the left of the page isn't visible, so start the shadow at the left
+        sx -= SHADOW_OFFSET;
+        sw += SHADOW_OFFSET;
+    }
+    if (yDest <= 0) {
+        // the top of the page isn't visible, so start the shadow at the top
+        sy -= SHADOW_OFFSET;
+        sh += SHADOW_OFFSET;
+    }
+
+    // Draw shadow
+    RECT rc;
+    HBRUSH br = CreateSolidBrush(RGB(0x44, 0x44, 0x44));
+    rect_set(&rc, sx, sy, sw, sh);
+    FillRect(hdc, &rc, br);
+    DeleteBrush(br);
+
+    // Draw frame border
+    HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x88, 0x88, 0x88));
+    SelectObject(hdc, pe);
+    MoveToEx(hdc, fx, fy, NULL);
+    LineTo(hdc, fx + fw - 1, fy);
+    LineTo(hdc, fx + fw - 1, fy + fh - 1);
+    LineTo(hdc, fx, fy + fh - 1);
+    LineTo(hdc, fx, fy);
+    DeletePen(pe);
+
+    // Fill frame
+    FillRect(hdc, bounds, gBrushWhite);
+}
+
 static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
     RECT                bounds;
@@ -3092,49 +3141,24 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         LockCache();
         //BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
         BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo);
-
         if (entry)
             renderedBmp = entry->bitmap;
 
-        if (!renderedBmp)
-            DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
+        PaintPageBorderAndShadow(hdc, pageInfo, &bounds);
 
-        int xSrc = (int)pageInfo->bitmapX;
-        int ySrc = (int)pageInfo->bitmapY;
-        int bmpDx = (int)pageInfo->bitmapDx;
-        int bmpDy = (int)pageInfo->bitmapDy;
-        int xDest = (int)pageInfo->screenX;
-        int yDest = (int)pageInfo->screenY;
-
-        if (!entry) {
-            /* TODO: assert is queued for rendering ? */
+        if (!entry || BITMAP_CANNOT_RENDER == renderedBmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
-            bounds.left = xDest;
-            bounds.top = yDest;
-            bounds.right = xDest + bmpDx;
-            bounds.bottom = yDest + bmpDy;
-            FillRect(hdc, &bounds, gBrushWhite);
-            DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
-            DBG_OUT("drawing empty %d ", pageNo);
-            if (origFont)
-                SelectObject(hdc, origFont);
-            Win32_Font_Delete(fontRightTxt);
-            UnlockCache();
-            continue;
-        }
-
-        if (BITMAP_CANNOT_RENDER == renderedBmp) {
-            HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
-            HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
-            bounds.left = xDest;
-            bounds.top = yDest;
-            bounds.right = xDest + bmpDx;
-            bounds.bottom = yDest + bmpDy;
-            FillRect(hdc, &bounds, gBrushWhite);
-            DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
-            if (origFont)
-                SelectObject(hdc, origFont);
+            SetTextColor(hdc, COL_BLACK);
+            if (!entry) {
+                /* TODO: assert is queued for rendering ? */
+                DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
+                DBG_OUT("drawing empty %d ", pageNo);
+            } else {
+                DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
+                DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
+            }
+            SelectObject(hdc, origFont);
             Win32_Font_Delete(fontRightTxt);
             UnlockCache();
             continue;
@@ -3142,64 +3166,25 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         DBG_OUT("page %d ", pageNo);
 
-        int renderedBmpDx = renderedBmp->dx();
-        int renderedBmpDy = renderedBmp->dy();
-        int currPageDx = (int)pageInfo->currDx;
-        int currPageDy = (int)pageInfo->currDy;
         HBITMAP hbmp = renderedBmp->createDIBitmap(hdc);
         UnlockCache();
         if (!hbmp)
             continue;
 
-        // Frame info
-        int fx = xDest, fy = yDest, fw = bmpDx - 4, fh = bmpDy - 4;
-        // Shadow info
-        int sx = fx + 4, sy = fy + 4, sw = fw, sh = fh;
-        // Adjust frame/shadow info base on page/bitmap size
-        if (bmpDy < currPageDy) {
-            if (yDest <= 0) {
-                sy = fy;
-                sh = sh + 4;
-                fy = fy - 1;
-                if (yDest + bmpDy < currPageDy) {
-                    sh = sh + 5;
-                    fh = fh + 6;
-                }
-            }
-            else {
-                sh = sh + 4;
-                fh = fh + 6;
-            }
-        }
-        if (bmpDx < currPageDx) {
-            fw = sw = bmpDx + 1;
-            if (xDest <= 0) {
-                fx = fx - 1;
-            }
-        }
-        // Draw shadow
-        RECT rc;
-        HBRUSH br = CreateSolidBrush(RGB(0x44, 0x44, 0x44));
-        rect_set(&rc, sx, sy, sw, sh);
-        FillRect(hdc, &rc, br);
-        DeleteBrush(br);
-
-        // Draw frame
-        HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x88, 0x88, 0x88));
-        SelectObject(hdc, pe);
-        DrawLineSimple(hdc, fx, fy, fx+fw-1, fy);
-        DrawLineSimple(hdc, fx, fy, fx, fy+fh-1);
-        DrawLineSimple(hdc, fx+fw-1, fy, fx+fw-1, fy+fh-1);
-        DrawLineSimple(hdc, fx, fy+fh-1, fx+fw-1, fy+fh-1);
-        DeletePen(pe);
-
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
+            int xSrc = (int)pageInfo->bitmapX;
+            int ySrc = (int)pageInfo->bitmapY;
+            int renderedBmpDx = renderedBmp->dx();
+            int renderedBmpDy = renderedBmp->dy();
+
             SelectObject(bmpDC, hbmp);
-            if ((renderedBmpDx < currPageDx) || (renderedBmpDy < currPageDy))
-                StretchBlt(hdc, fx+1, fy+1, fw-2, fh-2, bmpDC, xSrc, ySrc, renderedBmpDx, renderedBmpDy, SRCCOPY);
+            if ((renderedBmpDx < pageInfo->currDx) || (renderedBmpDy < pageInfo->currDy))
+                StretchBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
+                    bmpDC, xSrc, ySrc, renderedBmpDx, renderedBmpDy, SRCCOPY);
             else
-                BitBlt(hdc, fx+1, fy+1, fw-2, fh-2, bmpDC, xSrc, ySrc, SRCCOPY);
+                BitBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
+                    bmpDC, xSrc, ySrc, SRCCOPY);
             DeleteDC(bmpDC);
         }
         DeleteObject(hbmp);

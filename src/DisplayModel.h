@@ -22,14 +22,10 @@ typedef struct DisplaySettings {
 } DisplaySettings;
 
 /* the default distance between a page and window border edges, in pixels */
-#ifdef _WIN32
-  #define PADDING_PAGE_BORDER_TOP_DEF      6
-#else
-  #define PADDING_PAGE_BORDER_TOP_DEF      4
-#endif
-#define PADDING_PAGE_BORDER_BOTTOM_DEF   PADDING_PAGE_BORDER_TOP_DEF
-#define PADDING_PAGE_BORDER_LEFT_DEF     2
-#define PADDING_PAGE_BORDER_RIGHT_DEF    2
+#define PADDING_PAGE_BORDER_TOP_DEF      5
+#define PADDING_PAGE_BORDER_BOTTOM_DEF   7
+#define PADDING_PAGE_BORDER_LEFT_DEF     5
+#define PADDING_PAGE_BORDER_RIGHT_DEF    7
 /* the distance between pages in x axis, in pixels. Only applicable if
    columns > 1 */
 #define PADDING_BETWEEN_PAGES_X_DEF      4
