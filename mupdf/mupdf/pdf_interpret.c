@@ -162,6 +162,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	fz_node *blend;
 	fz_stream *file;
 	pdf_gstate *gstate;
+	float x, y, w, h;
 
 	/* gsave */
 	error = gsave(csi);
@@ -201,6 +202,24 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	    fz_insertnodelast(gstate->head, blend);
 	    gstate->head = blend;
 	}
+
+	/* clip the xobject */
+	
+	x = xobj->bbox.x0; w = xobj->bbox.x1 - x;
+	y = xobj->bbox.y0; h = xobj->bbox.y1 - y;
+	error = fz_moveto(csi->path, x, y);
+	if (error) return fz_rethrow(error, "cannot clip xobject");
+	error = fz_lineto(csi->path, x + w, y);
+	if (error) return fz_rethrow(error, "cannot clip xobject");
+	error = fz_lineto(csi->path, x + w, y + h);
+	if (error) return fz_rethrow(error, "cannot clip xobject");
+	error = fz_lineto(csi->path, x, y + h);
+	if (error) return fz_rethrow(error, "cannot clip xobject");
+	error = fz_closepath(csi->path);
+	if (error) return fz_rethrow(error, "cannot clip xobject");
+	csi->clip = 1;
+	error = pdf_showpath(csi, 0, 0, 0, 0);
+	if (error) return fz_rethrow(error, "cannot clip xobject");
 
 	/* run contents */
 
