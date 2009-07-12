@@ -143,14 +143,11 @@ protected:
 private:
     HANDLE            _getPageSem;
 
-    pdf_pagetree * pages() { return _pageTree; }
-
     void dropPdfPage(int pageNo);
     PdfTocItem * buildTocTree(pdf_outline *entry);
 
     pdf_xref *      _xref;
     pdf_outline *   _outline;
-    pdf_pagetree *  _pageTree;
     pdf_page **     _pages;
     fz_renderer *   _rast;
 };

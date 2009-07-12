@@ -114,14 +114,6 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	}
 
 	/*
-	 * Load page tree
-	 */
-
-	error = pdf_loadpagetree(&app->pages, app->xref);
-	if (error)
-		pdfapp_error(app, error);
-
-	/*
 	 * Load meta information
 	 * TODO: move this into mupdf library
 	 */
@@ -167,6 +159,7 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	 * Start at first page
 	 */
 
+	app->pagecount = app->xref->pagecount;
 	app->shrinkwrap = 1;
 	if (app->pageno < 1)
 		app->pageno = 1;
@@ -183,10 +176,6 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 
 void pdfapp_close(pdfapp_t *app)
 {
-	if (app->pages)
-		pdf_droppagetree(app->pages);
-	app->pages = nil;
-
 	if (app->page)
 		pdf_droppage(app->page);
 	app->page = nil;
@@ -257,14 +246,16 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 			pdf_droppage(app->page);
 		app->page = nil;
 
-		obj = pdf_getpageobject(app->pages, app->pageno - 1);
+		error = pdf_getpageobject(app->xref, app->pageno, &obj);
+		if (error)
+			pdfapp_error(app, error);
 
 		error = pdf_loadpage(&app->page, app->xref, obj);
 		if (error)
 			pdfapp_error(app, error);
 
 		sprintf(buf, "%s - %d/%d", app->doctitle,
-				app->pageno, pdf_getpagecount(app->pages));
+				app->pageno, app->xref->pagecount);
 		wintitle(app, buf);
 	}
 
@@ -321,24 +312,21 @@ static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
 
 static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)
 {
-	int oid = fz_tonum(obj);
-	int i;
+	fz_error error;
+	int page;
 
-	for (i = 0; i < pdf_getpagecount(app->pages); i++)
+	error = pdf_findpageobject(app->xref, obj, &page);
+	if (error)
+		pdfapp_error(app, error);
+
+	if (app->histlen + 1 == 256)
 	{
-		if (fz_tonum(app->pages->pref[i]) == oid)
-		{
-			if (app->histlen + 1 == 256)
-			{
-				memmove(app->hist, app->hist + 1, sizeof(int) * 255);
-				app->histlen --;
-			}
-			app->hist[app->histlen++] = app->pageno;
-			app->pageno = i + 1;
-			pdfapp_showpage(app, 1, 1);
-			return;
-		}
+		memmove(app->hist, app->hist + 1, sizeof(int) * 255);
+		app->histlen --;
 	}
+	app->hist[app->histlen++] = app->pageno;
+	app->pageno = page;
+	pdfapp_showpage(app, 1, 1);
 }
 
 void pdfapp_onresize(pdfapp_t *app, int w, int h)
@@ -453,7 +441,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		break;
 
 	case 'G':
-		app->pageno = pdf_getpagecount(app->pages);
+		app->pageno = app->xref->pagecount;
 		break;
 
 	case 'm':
@@ -494,8 +482,8 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 
 	if (app->pageno < 1)
 		app->pageno = 1;
-	if (app->pageno > pdf_getpagecount(app->pages))
-		app->pageno = pdf_getpagecount(app->pages);
+	if (app->pageno > app->xref->pagecount)
+		app->pageno = app->xref->pagecount;
 
 	if (app->pageno != oldpage)
 	{

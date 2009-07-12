@@ -404,7 +404,8 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 		
 		else if (!strcmp(s, "TR"))
 		{
-			fz_warn("ignoring transfer function");
+			if (fz_isname(val) && strcmp(fz_toname(val), "Identity"))
+				fz_warn("ignoring transfer function");
 		}
 	}
 

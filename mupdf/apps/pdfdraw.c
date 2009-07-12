@@ -93,7 +93,9 @@ static void drawloadpage(int pagenum, struct benchmark *loadtimes)
 	gettime(&start);
     }
 
-    pageobj = pdf_getpageobject(pagetree, pagenum - 1);
+    error = pdf_getpageobject(xref, pagenum, &pageobj);
+    if (error)
+	die(error);
     error = pdf_loadpage(&drawpage, xref, pageobj);
     if (error)
 	die(error);
@@ -324,7 +326,7 @@ static void drawpages(char *pagelist)
 	    if (strlen(dash) > 1)
 		epage = atoi(dash + 1);
 	    else
-		epage = pdf_getpagecount(pagetree);
+		epage = xref->pagecount;
 	}
 
 	if (spage > epage)
@@ -332,8 +334,8 @@ static void drawpages(char *pagelist)
 
 	if (spage < 1)
 	    spage = 1;
-	if (epage > pdf_getpagecount(pagetree))
-	    epage = pdf_getpagecount(pagetree);
+	if (epage > xref->pagecount)
+	    epage = xref->pagecount;
 
 	printf("Drawing pages %d-%d...\n", spage, epage);
 	for (page = spage; page <= epage; page++)
@@ -412,7 +414,6 @@ int main(int argc, char **argv)
 		die(error);
 
 	    openxref(argv[fz_optind], password, 0);
-	    loadpagetree();
 	    state = NO_PAGES_DRAWN;
 	}
 	else

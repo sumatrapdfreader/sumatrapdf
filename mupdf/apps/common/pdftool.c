@@ -2,8 +2,7 @@
 
 char *basename = nil;
 pdf_xref *xref = nil;
-pdf_pagetree *pagetree = nil;
-void (*cleanup)(void) = nil;
+static void (*cleanup)(void) = nil;
 
 void closexref(void);
 
@@ -75,12 +74,6 @@ void closexref(void)
 	if (cleanup)
 		cleanup();
 
-	if (pagetree)
-	{
-		pdf_droppagetree(pagetree);
-		pagetree = nil;
-	}
-
 	if (xref)
 	{
 		pdf_closexref(xref);
@@ -88,14 +81,5 @@ void closexref(void)
 	}
 
 	basename = nil;
-}
-
-void loadpagetree(void)
-{
-	fz_error error;
-
-	error = pdf_loadpagetree(&pagetree, xref);
-	if (error)
-		die(error);
 }
 

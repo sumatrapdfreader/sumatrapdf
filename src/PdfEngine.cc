@@ -144,7 +144,6 @@ PdfEngine::PdfEngine() :
         , _pageCount(INVALID_PAGE_NO) 
         , _xref(NULL)
         , _outline(NULL)
-        , _pageTree(NULL)
         , _pages(NULL)
         , _rast(NULL)
 {
@@ -160,9 +159,6 @@ PdfEngine::~PdfEngine()
         }
         free(_pages);
     }
-
-    if (_pageTree)
-        pdf_droppagetree(_pageTree);
 
     if (_outline)
         pdf_dropoutline(_outline);
@@ -225,10 +221,6 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     }
 
 DecryptedOk:
-    error = pdf_loadpagetree(&_pageTree, _xref);
-    if (error)
-        goto Error;
-
     /*
      * Load meta information
      * TODO: move this into mupdf library
@@ -257,7 +249,7 @@ DecryptedOk:
     // error might prevent loading some pdfs that would
     // otherwise get displayed
 
-    _pageCount = _pageTree->count;
+    _pageCount = _xref->pagecount;
     _pages = (pdf_page**)malloc(sizeof(pdf_page*) * _pageCount);
     for (int i = 0; i < _pageCount; i++)
         _pages[i] = NULL;
@@ -307,7 +299,10 @@ int PdfEngine::findPageNo(fz_obj *dest)
 
     for (p = 0; p < _pageCount; p++)
     {
-        fz_obj *page = _pageTree->pref[p];
+	fz_obj *page;
+	fz_error error = pdf_getpageobject(_xref, p, &page);
+	if (error)
+	    continue;
         int np = fz_tonum(page);
         int gp = fz_togen(page);
         if (n == np && g == gp)
@@ -335,9 +330,11 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
         return page;
     }
-    // TODO: should check for error from pdf_getpageobject?
-    fz_obj * obj = pdf_getpageobject(_pageTree, pageNo - 1);
-    fz_error error = pdf_loadpage(&page, _xref, obj);
+    fz_obj * obj;
+    fz_error error = pdf_getpageobject(_xref, pageNo -1, &obj);
+    if (!error) {
+        error = pdf_loadpage(&page, _xref, obj);
+    }
     if (error) {
         if (!ReleaseSemaphore(_getPageSem, 1, NULL))
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
@@ -363,20 +360,24 @@ void PdfEngine::dropPdfPage(int pageNo)
 int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
-    int rotation;
-    fz_error error = pdf_getpageinfo(_xref, dict, NULL, &rotation);
-    if (error)
-        return INVALID_ROTATION;
+    fz_obj *page;
+    int rotation = INVALID_ROTATION;
+    fz_error error = pdf_getpageobject(_xref, pageNo - 1, &page);
+    if (!error) {
+	fz_error error = pdf_getpageinfo(_xref, page, NULL, &rotation);
+    }
     return rotation;
 }
 
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_obj *dict = pdf_getpageobject(pages(), pageNo - 1);
+    fz_obj *page;
     fz_rect bbox;
-    fz_error error = pdf_getpageinfo(_xref, dict, &bbox, NULL);
+    fz_error error = pdf_getpageobject(_xref, pageNo - 1, &page);
+    if (!error) {
+	error = pdf_getpageinfo(_xref, page, &bbox, NULL);
+    }
     if (error)
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));

@@ -43,7 +43,6 @@ main(int argc, char **argv)
     FILE *fo;
     char name[256];
     char *realname;
-    char *p;
     int i, k;
 
     if (argc < 3)
@@ -80,13 +79,7 @@ main(int argc, char **argv)
 	}
 
 	strcpy(name, realname);
-	p = name;
-	while (*p)
-	{
-	    if ((*p == '/') || (*p == '.') || (*p == '\\') || (*p == '-'))
-		*p = '_';
-	    p ++;
-	}
+	clean(name);
 
 	error = fz_openrfile(&fi, argv[i]);
 	if (error)

@@ -1,3 +1,4 @@
+#include "fitz_base.h"
 #include <string.h>
 
 char *fz_strsep(char **stringp, const char *delim)
