@@ -5412,6 +5412,19 @@ static void OnMenuAbout() {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
+static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL)
+{
+    if (!hItem)
+        hItem = TreeView_GetSelection(hTV);
+
+    TVITEM item;
+    item.hItem = hItem;
+    item.mask = TVIF_PARAM;
+    TreeView_GetItem(hTV, &item);
+    if (win->dm && item.lParam)
+        win->dm->goToTocLink((void *)item.lParam);
+}
+
 static TBBUTTON TbButtonFromButtonInfo(int i) {
     TBBUTTON tbButton = {0};
     tbButton.idCommand = gToolbarButtons[i].cmdId;
@@ -6641,28 +6654,40 @@ InitMouseWheelInfo:
                 LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
                 switch (pnmtv->hdr.code) 
                 {
-                    case TVN_SELCHANGEDW: 
-                    {
+                    case TVN_SELCHANGED: 
                         // When the focus is set to the toc window the first item in the treeview is automatically
                         // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
                         // We have to ignore this message to prevent the current page to be changed.
-                        if (pnmtv->action==TVC_BYKEYBOARD || pnmtv->action==TVC_BYMOUSE) {
-                            if (win->dm && pnmtv->itemNew.lParam)
-                                win->dm->goToTocLink((void *)pnmtv->itemNew.lParam);
-                        }
+                        if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
+                            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem);
                         // The case pnmtv->action==TVC_UNKNOWN is ignored because 
                         // it corresponds to a notification sent by
                         // the function TreeView_DeleteAllItems after deletion of the item.
-                    }
-                    break;
+                        break;
                     case TVN_KEYDOWN: {
                         TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
                         if (VK_TAB == ptvkd->wVKey) {
                             SetFocus(win->hwndFrame);
                             return 1;
                         }
+                        break;
                     }
-                    break;
+                    case NM_CLICK: {
+                        // Determine which item has been clicked (if any)
+                        TVHITTESTINFO ht = {0};
+                        DWORD pos = GetMessagePos();
+                        ht.pt.x = GET_X_LPARAM(pos);
+                        ht.pt.y = GET_Y_LPARAM(pos);
+                        MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
+                        TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
+
+                        if (ht.flags & TVHT_ONITEM)
+                            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+                        break;
+                    }
+                    case NM_RETURN:
+                        GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
+                        break;
                 }
             }
             break;
