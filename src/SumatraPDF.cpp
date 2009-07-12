@@ -162,7 +162,6 @@ static HCURSOR                      gCursorScroll;
 static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushShadow;
-static HBRUSH                       gBrushLinkDebug;
 
 static HBITMAP                      gBitmapCloseToc;
 
@@ -2816,10 +2815,13 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
         WindowInfo_RedrawAll(win);
 }
 
-static void DrawLineSimple(HDC hdc, int sx, int sy, int ex, int ey)
+static void PaintRectangle(HDC hdc, RECT * rect)
 {
-    MoveToEx(hdc, sx, sy, NULL);
-    LineTo(hdc, ex, ey);
+    MoveToEx(hdc, rect->left, rect->top, NULL);
+    LineTo(hdc, rect->right - 1, rect->top);
+    LineTo(hdc, rect->right - 1, rect->bottom - 1);
+    LineTo(hdc, rect->left, rect->bottom - 1);
+    LineTo(hdc, rect->left, rect->top);
 }
 
 static void WinResizeIfNeeded(WindowInfo *win, bool resizeWindow=true)
@@ -3099,18 +3101,12 @@ static void PaintPageBorderAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * bou
     FillRect(hdc, &rc, br);
     DeleteBrush(br);
 
-    // Draw frame border
+    // Draw frame
     HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x88, 0x88, 0x88));
     SelectObject(hdc, pe);
-    MoveToEx(hdc, fx, fy, NULL);
-    LineTo(hdc, fx + fw - 1, fy);
-    LineTo(hdc, fx + fw - 1, fy + fh - 1);
-    LineTo(hdc, fx, fy + fh - 1);
-    LineTo(hdc, fx, fy);
+    SelectObject(hdc, gBrushWhite);
+    Rectangle(hdc, fx, fy, fx + fw, fy + fh);
     DeletePen(pe);
-
-    // Fill frame
-    FillRect(hdc, bounds, gBrushWhite);
 }
 
 static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
@@ -3220,21 +3216,10 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         if (RectI_Intersect(&rectLink, &drawAreaRect, &intersect)) {
             RECT rectScreen;
-            rectScreen.left = (LONG) ((double)intersect.x);
-            rectScreen.top = (LONG) ((double)intersect.y);
-            rectScreen.right = rectScreen.left + (LONG) ((double)intersect.dx);
-            rectScreen.bottom = rectScreen.top + (LONG) ((double)intersect.dy);
-
+            rect_set(&rectScreen, intersect.x, intersect.y, intersect.dx, intersect.dy);
             HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
             SelectObject(hdc, pe);
-            DrawLineSimple(hdc, rectScreen.left+1, rectScreen.top+1, 
-            rectScreen.right, rectScreen.top+1);
-            DrawLineSimple(hdc, rectScreen.left+1, rectScreen.top+1, 
-            rectScreen.left+1, rectScreen.bottom);
-            DrawLineSimple(hdc, rectScreen.right, rectScreen.top+1, 
-            rectScreen.right, rectScreen.bottom);
-            DrawLineSimple(hdc, rectScreen.left+1, rectScreen.bottom, 
-            rectScreen.right, rectScreen.bottom);
+            PaintRectangle(hdc, &rectScreen);
             DeletePen(pe);
         }
     }
@@ -5597,10 +5582,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.top += 20;
         rect.bottom = rect.top + 5;
         rect.right = rect.left + FIND_STATUS_WIDTH - 20;
-        DrawLineSimple(hdc, rect.left, rect.top, rect.right, rect.top);
-        DrawLineSimple(hdc, rect.left, rect.bottom, rect.right, rect.bottom);
-        DrawLineSimple(hdc, rect.left, rect.top, rect.left, rect.bottom);
-        DrawLineSimple(hdc, rect.right, rect.top, rect.right, rect.bottom);
+        PaintRectangle(hdc, &rect);
         
         int percent = win->findPercent;
         if (percent > 100)
@@ -6794,7 +6776,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gBrushBg     = CreateSolidBrush(COL_WINDOW_BG);
     gBrushWhite  = CreateSolidBrush(COL_WHITE);
     gBrushShadow = CreateSolidBrush(COL_WINDOW_SHADOW);
-    gBrushLinkDebug = CreateSolidBrush(RGB(0x00,0x00,0xff));
     
     gBitmapCloseToc = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_CLOSE_TOC));
 
@@ -7549,7 +7530,6 @@ Exit:
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushShadow);
-    DeleteObject(gBrushLinkDebug);
 
     Translations_FreeData();
     CurrLangNameFree();
