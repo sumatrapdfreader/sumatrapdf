@@ -28,10 +28,10 @@ typedef struct DisplaySettings {
 #define PADDING_PAGE_BORDER_RIGHT_DEF    7
 /* the distance between pages in x axis, in pixels. Only applicable if
    columns > 1 */
-#define PADDING_BETWEEN_PAGES_X_DEF      4
+#define PADDING_BETWEEN_PAGES_X_DEF      8
 /* the distance between pages in y axis, in pixels. Only applicable if
    more than one page in y axis (continuous mode) */
-#define PADDING_BETWEEN_PAGES_Y_DEF      PADDING_PAGE_BORDER_TOP_DEF * 2
+#define PADDING_BETWEEN_PAGES_Y_DEF      PADDING_PAGE_BORDER_TOP_DEF + PADDING_PAGE_BORDER_BOTTOM_DEF
 
 #define PADDING_PAGE_BORDER_TOP      gDisplaySettings.paddingPageBorderTop
 #define PADDING_PAGE_BORDER_BOTTOM   gDisplaySettings.paddingPageBorderBottom
