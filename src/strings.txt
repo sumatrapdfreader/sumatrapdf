@@ -3238,6 +3238,7 @@ sv:Hoppa över denna version
 -
 Warning
 de:Warnung
+fr:Avertissement
 ru:Предупреждение
 pl:Uwaga
 cy:Rhybudd
@@ -3248,6 +3249,7 @@ cn:警告
 -
 This option is not available in portable mode.
 de:Diese Option ist im portablen Modus nicht verfügbar
+fr:Cette option n'est pas disponible en mode portable.
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
 ru:Эта опция недоступна в мобильном режиме.
@@ -3258,6 +3260,7 @@ cn:此选项不适用于便携模式
 -
 SumatraPDF Options
 de:SumatraPDF Optionen
+fr:SumatraPDF Options
 ru:Параметры SumatraPDF
 cy:Dewisiadau SumatraPDF
 gr:Επιλογές SumatraPDF
@@ -3381,6 +3384,7 @@ nn:Faktisk storleik
 -
 &Settings
 de:&Einstellungen
+fr:&Préférences
 ru:Настройки
 cy:&Gosodiadau
 gr:Ρυθμίσεις
@@ -3447,6 +3451,7 @@ nn:Tilpass side
 -
 &Options...
 de:&Optionen…
+fr:&Options...
 ru:&Параметры...
 cy:&Dewisiadau...
 gr:Επιλ&ογές
@@ -3456,6 +3461,7 @@ cn:选项(&O)...
 -
 Default &Layout:
 de:&Standardlayout:
+fr:Mise en page par défaut
 ru:&Компоновка по умолчанию
 cy:&Cynllun Rhagosodedig:
 gr:Προκαθορισμένη διαμόρφωση:
@@ -3465,6 +3471,7 @@ cn:缺省样式(&L)
 -
 Default &Zoom:
 de:Standard&vergrößerung:
+fr:&Zoom par défaut
 ru:&Масштаб по умолчанию
 cy:C&hwyddo Rhagosodedig:
 gr:Προκαθορισμένο ζουμ:
@@ -3474,11 +3481,13 @@ cn:缺省缩放(&Z)
 -
 OK
 cy:Iawn
+fr:OK
 mk:Во ред
 hr:U redu
 -
 Advanced
 de:Weiteres
+fr:Avancé
 ru:Дополнительно
 cy:Uwch
 gr:Προχωρημένα
@@ -3488,6 +3497,7 @@ cn:高级
 -
 Show the &bookmarks sidebar when available
 de:&Lesezeichen beim Start anzeigen
+fr:Voir la barre latérale des signets quand elle est disponible
 ru:Показывать панель &закладок (при возможности)
 cy:Dangos bar ochr y nodau tudalen pan yw ar gael
 gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
@@ -3497,6 +3507,7 @@ cn:若可用则显示书签侧边栏(&b)
 -
 Cancel
 de:Abbrechen
+fr:Annuler
 ru:Отмена
 cy:Diddymu
 gr:Άκυρο
@@ -3506,6 +3517,7 @@ cn:取消
 -
 Automatically check for &updates
 de:&Automatisch nach Updates suchen
+fr:Vérifier &automatiquement les mises à jour
 ru:&Автоматическая проверка обновлений
 cy:Gwirio'n awtomatig am &ddiweddariadau
 gr:Αυτόματος έλεγχος για ενημερώσεις
@@ -3515,6 +3527,7 @@ cn:自动检查更新(&u)
 -
 &Remember these settings for each document
 de:&Diese Einstellungen für jedes Dokument merken
+fr:Se rappeler de ces paramètres pour chaque document
 ru:Запомнить эти параметры для &каждого документа
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
@@ -3524,6 +3537,7 @@ cn:为每一个文档记住这些设置(&R)
 -
 Remember &opened files
 de:&Eine Liste der geöffneten Dokumente führen
+fr:Se rappeler des fichiers ouverts
 ru:&Запомнить открытые файлы
 mk: Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
@@ -3588,6 +3602,7 @@ nn:Vis
 -
 &Go to page:
 de:&Gehe zu Seite:
+fr:Aller à la page:
 ru:&Перейти к странице
 cy:Mynd i dudalen:
 gr:Μετάβαση στη σελίδα:
@@ -3597,6 +3612,7 @@ cn:转到页面
 -
 (of %d)
 de:(von %d)
+fr:(de %d)
 ru: (из %d)
 cy:(o %d)
 gr:(από %d) 
@@ -3606,6 +3622,7 @@ cn:(%d中的)
 -
 Download
 de:Herunterladen
+fr:Télécharger
 ru:Загрузка
 cy:Llwytho i Lawr
 gr:Λήψη
@@ -3615,6 +3632,7 @@ cn:下载
 -
 &Yes
 de:&Ja
+fr:&Oui
 ru:Да
 cy:Iawn
 gr:&Ναι
@@ -3624,6 +3642,7 @@ cn:是(&Y)
 -
 &No
 de:&Nein
+fr:&Non
 ru:Нет
 cy:Na
 gr:Ό&χι
@@ -3633,6 +3652,7 @@ cn:否(&N)
 -
 &No, thanks
 de:&Nein, danke
+fr:Non, merci
 ru:Спасибо, нет
 cy:Dim diolch
 gr:Όχι, ευχαριστώ
@@ -3642,6 +3662,7 @@ cn:不，谢谢(&N)
 -
 Please wait - rendering...
 de:Bitte einen Moment Geduld…
+fr:S'il vous plaît attendez - génération...
 ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
 gr:Φόρτωση, παρακαλώ περιμένετε... 
@@ -3651,6 +3672,7 @@ cn:请耐心等待－正在渲染中...
 -
 Couldn't render the page
 de:Diese Seite kann leider nicht angezeigt werden
+fr:Impossible de générer la page
 ru:Не удалось сформировать изображение страницы
 cy:Methu cyflwyno'r dudalen
 gr:Δε μπορεί να φορτωθεί η σελίδα
@@ -3660,6 +3682,7 @@ cn:不能渲染该页面
 -
 No matches were found
 de:Das Dokument wurde durchsucht
+fr:Aucun résultat n'a été trouvé
 ru:Образец не найден
 cy:Heb ganfod cyfatebiad
 gr:Δε βρέθηκε το κείμενο
@@ -3669,6 +3692,7 @@ cn:没有找到匹配项
 -
 Found text at page %d
 de:Text auf Seite %d gefunden
+fr:Texte trouvé à la page %d
 ru:Текст найден на стр. %d
 cy:Canfod testun ar dudalen %d
 gr:Το κείμενο βρέθηκε στη σελίδα %d
@@ -3678,6 +3702,7 @@ cn:在第%d页找到文本
 -
 Searching %d of %d...
 de:Suche auf Seite %d von %d…
+fr:Recherche de %d à %d...
 ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
 gr:Αναζήτηση %d από %d...
@@ -3687,6 +3712,7 @@ cn:正在搜索全部%d的%d
 -
 PDF documents
 de:PDF-Dokumente
+fr:Documents PDF
 cy:Dogfennau PDF
 gr:Αρχεία PDF
 ru:PDF-документы
@@ -3696,6 +3722,7 @@ cn:PDF文档
 -
 All files
 de:Alle Dateien
+fr:Tous les fichiers
 cy:Pob ffeil
 gr:Όλα τα αρχεία
 ru:Все файлы
@@ -3705,6 +3732,7 @@ cn:所有文件
 -
 &Password:
 de:&Passwort:
+fr:Mot de passe:
 gr:Κωδικός:
 ru:&Пароль:
 mk:&Лозинка:
@@ -3713,6 +3741,7 @@ cn:密码(&P)
 -
 &Find what:
 de:&Suchen nach:
+fr:Rechercher quoi: 
 ru:&Образец:
 mk:&Најди што:
 hr:&Što tražiti:
@@ -3720,6 +3749,7 @@ cn:查找(&F):
 -
 Find
 de:Suchen
+fr:Rechercher
 ru:Найти
 mk:Најди
 hr:Pronađi
@@ -3727,6 +3757,7 @@ cn:查找
 -
 &Match case
 de:&Groß-/Kleinschreibung beachten
+fr:Respecter la casse:
 ru:&Учитывать регистр
 mk:&Разликувај мали и големи букви
 hr:Razlikuj velika i mala slova
@@ -3734,6 +3765,7 @@ cn:匹配大小写(&M)
 -
 Hint: Use the F3 key for finding again
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
+fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 ru:Для повторного поиска используйте клавишу F3
 mk:За повторно пребарување користи F3 од тастатурата
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
@@ -3741,6 +3773,7 @@ cn:提示：按F3再次查找
 -
 Couldn't initialize printer
 de:Der Drucker konnte nicht initialisiert werden
+fr:Impossible d'initialiser l'imprimante
 ru:Не удалось инициализировать принтер
 mk:Не можам да го подготвам печатачот
 hr:Ne mogu inicijalizirati pisač
@@ -3748,6 +3781,7 @@ cn:不能初始化打印机
 -
 No synchronization info at this position
 de:Keine Synchronisationsinformationen an diesem Ort
+fr:Pas de synchronisation des informations à cette position
 ru:В этой позиции отсутствует информация для синхронизации
 mk:Нема информации за синхронизација на оваа позиција
 hr:Nema podatka o usklađenosti na ovom položaju
@@ -3755,6 +3789,7 @@ cn:此位置没有同步信息
 -
 Synchronization file cannot be opened
 de:Die Synchronisationsdatei kann nicht geöffnet werden
+fr:Le fichier de synchronisation ne peut pas être ouvert
 ru:Не удалось открыть файл с информацией для синхронизации
 mk:Синхронизациската датотека не може да се отвори
 hr:Datoteka usklađenja ne nože biti otvorena
@@ -3762,6 +3797,7 @@ cn:不能打开同步文件
 -
 Page number %u inexistant
 de:Es gibt keine Seite %u
+fr:La page %u n'existe pas
 ru:Страница %u не существует
 mk:Страница со број %u не постои
 hr:Stranica %u ne postoji
@@ -3769,6 +3805,7 @@ cn:页号%u不存在
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
+fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 ru:Результат, соответствующий строке %u в файле %s, не найден
 mk:Не најдов резултати околу линијата %u во датотеката %s
 hr:Nema rezultata oko retka %u u datoteci %s
@@ -3776,6 +3813,7 @@ cn:文件%s的第%u行附近没有找到结果
 -
 Source file %s has no synchronization point
 de:%s hat keinen Synchronisations-Punkt
+fr:Le fichier source %s n'a pas de point de synchronisation
 ru:Отсутствует точка синхронизации в исходном файле %s
 mk:Изворната датотека %s нема синхронизациска точка
 hr:Izvorna datoteka %s nema točke usklađivanja
@@ -3783,6 +3821,7 @@ cn:源文件%s没有同步点
 -
 [Changes detected; refreshing] %s
 de:[Datei wurde geändert; aktualisiere…] %s
+fr:[Modifications détectées; actualisation] %s
 ru:[Обнаружены изменения; происходит обновление] %s
 mk:[Забележани се промени; освежувам...] %s
 hr:[Dogodila se promjena - osvježavam] %s
@@ -3790,6 +3829,7 @@ cn:[检测到改动；刷新中] %s
 -
 Unknown source file (%s)
 de:Unbekannte Datei (%s)
+fr:Fichier source unconnu (%s)
 ru:Неизвестный исходный файл (%s)
 mk:Непозната изворна датотека (%s)
 hr:Nepoznata izvorna datoteka (%s)
@@ -3797,6 +3837,7 @@ cn:未知的原文件(%s)
 -
 Cannot print this file
 de:Diese Datei darf nicht gedruckt werden
+fr:Impossible d'imprimer ce fichier
 ru:Не удалось распечатать этот файл
 mk:Не можам да ја печатам оваа датотека
 hr:Ne mogu ispisati ovu datoteku
@@ -3804,6 +3845,7 @@ cn:不能打印此文件
 -
 PDF Document
 de:PDF-Dokument
+fr:Document PDF
 ru:PDF-документ
 mk:PDF документ
 hr:PDF dokument
@@ -3871,6 +3913,7 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 # Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
+fr:SumatraPDF est votre lecteur de PDF
 ru:SumatraPDF ассоциирована с файлами PDF
 mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
@@ -3879,6 +3922,7 @@ cn:SumatraPDF是你的主要PDF阅读器
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
+fr:SumatraPDF doit maintenant être votre lecteur de PDF
 ru:Теперь SumatraPDF ассоциирована с файлами PDF
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
@@ -3887,6 +3931,7 @@ cn:现在SumatraPDF应该是你的主要PDF阅读器了
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 de:Standardanwendung im portablen Modus nicht veränderbar
+fr:Le lecteur de PDF ne peut être changer en mode portable
 ru:В мобильном режиме изменить PDF-вьюер нельзя
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
@@ -3894,6 +3939,7 @@ cn:便携模式不能改变主要阅读器
 -
 Open in &Adobe Reader
 de:Mit &Adobe Reader öffnen
+fr:Ouvrir dans &Adobe Reader
 ru:Открыть в &Adobe Reader
 mk:Отвори со &Adobe Reader
 hr:Otvori u programu &Adobe Reader
