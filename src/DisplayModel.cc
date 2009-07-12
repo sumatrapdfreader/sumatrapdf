@@ -179,6 +179,16 @@ double calculateDpiFactor(void)
     return dpi * 1.0 / 72.0;
 }
 
+double limitValue(double val, double min, double max)
+{
+    assert(max >= min);
+    if (val < min)
+        return min;
+    if (val > max)
+        return max;
+    return val;
+}
+
 DisplayModel::DisplayModel(DisplayMode displayMode)
 {
     _displayMode = displayMode;
@@ -883,10 +893,12 @@ void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
        scroll (adjust areaOffset.y) there because it defeats the purpose.
        TODO: is there a better way of y-centering? */
     areaOffset.y = (double)scrollY;
-    // Move the next page to the top, if all pages don't fit onto a single screen
-    if (displayModeContinuous(displayMode()) && _canvasSize.dy() > drawAreaSize.dy())
+    // Move the next page to the top (unless the remaining pages fit onto a single screen)
+    if (displayModeContinuous(displayMode()))
         areaOffset.y = pageInfo->currPosY - PADDING_PAGE_BORDER_TOP + (double)scrollY;
-    /* TODO: prevent scrolling too far */
+
+    areaOffset.x = limitValue(areaOffset.x, 0, _canvasSize.dx() - drawAreaSize.dx());
+    areaOffset.y = limitValue(areaOffset.y, 0, _canvasSize.dy() - drawAreaSize.dy());
 
     recalcVisibleParts();
     recalcLinksCanvasPos();
@@ -1015,20 +1027,9 @@ void DisplayModel::scrollXBy(int dx)
 {
     DBG_OUT("DisplayModel::scrollXBy(dx=%d)\n", dx);
 
-    double maxX = _canvasSize.dx() - drawAreaSize.dx();
-    assert(maxX >= 0.0);
-    double prevX = areaOffset.x;
-    double newX = prevX + (double)dx;
-    if (newX < 0.0)
-        newX = 0.0;
-    else
-        if (newX > maxX)
-            newX = maxX;
-
-    if (newX == prevX)
-        return;
-
-    scrollXTo((int)newX);
+    double newOffX = limitValue(areaOffset.x + dx, 0, _canvasSize.dx() - drawAreaSize.dx());
+    if (newOffX != areaOffset.x)
+        scrollXTo((int)newOffX);
 }
 
 void DisplayModel::scrollYTo(int yOff)
@@ -1087,12 +1088,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     }
 
     newYOff += dy;
-    if (newYOff < 0) {
-        newYOff = 0;
-    } else if (newYOff + drawAreaSize.dyI() > _canvasSize.dyI()) {
-        newYOff = _canvasSize.dyI() - drawAreaSize.dyI();
-    }
-
+    newYOff = limitValue(newYOff, 0, _canvasSize.dy() - drawAreaSize.dy());
     if (newYOff == currYOff)
         return;
 

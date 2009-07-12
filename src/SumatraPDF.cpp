@@ -2261,7 +2261,6 @@ static bool LoadPdfIntoWindow(
     if (state) {
         if (win->dm->validPageNo(startPage)) {
             ss.page = startPage;
-            /* TODO: make sure these values aren't bogus */
             ss.x = state->scrollX;
             ss.y = state->scrollY;
         }
