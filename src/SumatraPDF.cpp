@@ -2203,7 +2203,7 @@ static bool LoadPdfIntoWindow(
              UI properly */
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int startPage = 1;
-    ScrollState ss = { 1, 0.0, 0.0 };
+    ScrollState ss = { 1, -1, -1 };
     int scrollbarYDx = 0;
     int scrollbarXDy = 0;
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
@@ -2261,7 +2261,7 @@ static bool LoadPdfIntoWindow(
     if (state) {
         if (win->dm->validPageNo(startPage)) {
             ss.page = startPage;
-            /* TODO: make sure scrollX isn't bogus */
+            /* TODO: make sure these values aren't bogus */
             ss.x = state->scrollX;
             ss.y = state->scrollY;
         }
@@ -3068,7 +3068,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageBorderAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
@@ -3085,13 +3085,13 @@ static void PaintPageBorderAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * bou
     int sx = fx + SHADOW_OFFSET, sy = fy + SHADOW_OFFSET, sw = fw, sh = fh;
     if (xDest <= 0) {
         // the left of the page isn't visible, so start the shadow at the left
-        sx -= SHADOW_OFFSET;
-        sw += SHADOW_OFFSET;
+        int diff = min(pageInfo->bitmapX, SHADOW_OFFSET);
+        sx -= diff; sw += diff;
     }
     if (yDest <= 0) {
         // the top of the page isn't visible, so start the shadow at the top
-        sy -= SHADOW_OFFSET;
-        sh += SHADOW_OFFSET;
+        int diff = min(pageInfo->bitmapY, SHADOW_OFFSET);
+        sy -= diff; sh += diff;
     }
 
     // Draw shadow
@@ -3140,7 +3140,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (entry)
             renderedBmp = entry->bitmap;
 
-        PaintPageBorderAndShadow(hdc, pageInfo, &bounds);
+        PaintPageFrameAndShadow(hdc, pageInfo, &bounds);
 
         if (!entry || BITMAP_CANNOT_RENDER == renderedBmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);

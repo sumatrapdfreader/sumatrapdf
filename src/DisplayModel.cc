@@ -144,8 +144,8 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     ScrollState ss;
     dm->getScrollState(&ss);
     ds->pageNo = ss.page;
-    ds->scrollX = (int)ss.x;
-    ds->scrollY = (int)ss.y;
+    ds->scrollX = floor(ss.x + 0.5);
+    ds->scrollY = floor(ss.y + 0.5);
 
     return TRUE;
 }
@@ -1698,12 +1698,18 @@ bool DisplayModel::getScrollState(ScrollState *state)
     state->y = max(pageInfo->screenY - pageInfo->bitmapY, 0);
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
-    if (0 == pageInfo->bitmapX && 0 == pageInfo->bitmapY) {
-        state->x = state->y = 0;
+    if (pageInfo->screenX > 0 && pageInfo->screenY > 0) {
+        state->x = state->y = -1;
         return true;
     }
     
-    return cvtScreenToUser(&state->page, &state->x, &state->y);
+    bool result = cvtScreenToUser(&state->page, &state->x, &state->y);
+    // Remember to show the margin, if it's currently visible
+    if (pageInfo->screenX > 0)
+        state->x = -1;
+    if (pageInfo->screenY > 0)
+        state->y = -1;
+    return result;
 }
 
 void DisplayModel::setScrollState(ScrollState *state)
@@ -1711,19 +1717,19 @@ void DisplayModel::setScrollState(ScrollState *state)
     // Update the internal metrics first
     goToPage(state->page, 0);
     // Bail out, if the page wasn't scrolled
-    if (0 == state->x && 0 == state->y)
+    if (state->x < 0 && state->y < 0)
         return;
 
-    PdfPageInfo *pageInfo = getPageInfo(state->page);
-    double x = max(pageInfo->screenX - pageInfo->bitmapX, 0);
-    double y = max(pageInfo->screenY - pageInfo->bitmapY, 0);
-
-    double newX = state->x;
-    double newY = state->y;
+    double newX = max(state->x, 0);
+    double newY = max(state->y, 0);
     cvtUserToScreen(state->page, &newX, &newY);
-    // TODO: why is this needed?
-    if (abs(newY - y) > 1)
-        newY += PADDING_PAGE_BORDER_TOP;
 
-    goToPage(state->page, newY - y, areaOffset.x + newX - x);
+    // Also show the margins, if this has been requested
+    if (state->x < 0)
+        newX = -1;
+    else
+        newX += areaOffset.x;
+    if (state->y < 0)
+        newY = 0;
+    goToPage(state->page, newY, newX);
 }
