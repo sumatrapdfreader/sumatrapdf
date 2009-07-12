@@ -6357,7 +6357,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             goto InitMouseWheelInfo;
 
         case WM_SIZE:
-            if (win) {
+            if (win && SIZE_MINIMIZED != wParam) {
                 RememberWindowPosition(win);
                 AdjustWindowEdge(win);
 
