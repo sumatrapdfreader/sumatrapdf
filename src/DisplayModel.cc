@@ -971,6 +971,13 @@ bool DisplayModel::goToPrevPage(int scrollY)
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = currentPageNo();
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
+
+    PdfPageInfo * pageInfo = getPageInfo(currPageNo);
+    if (pageInfo->bitmapY > scrollY && displayModeContinuous(displayMode())) {
+        /* the current page isn't fully visible, so show it first */
+        goToPage(currPageNo, scrollY);
+        return true;
+    }
     if (currPageNo <= columns) {
         /* we're on a first page, can't go back */
         return FALSE;
