@@ -1,7 +1,7 @@
 #include "base_util.h"
 #include "translations.h"
 #include "translations_txt.h"
-#include "str_util.h"
+#include "tstr_util.h"
 #include "utf_util.h"
 
 /*

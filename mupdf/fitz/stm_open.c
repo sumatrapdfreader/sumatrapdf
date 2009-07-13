@@ -65,7 +65,7 @@ fz_dropstream(fz_stream *stm)
 }
 
 #ifdef WIN32
-fz_error fz_openrfilew(fz_stream **stmp, const wchar_t *path)
+fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path)
 {
 	fz_error error;
 	fz_stream *stm;

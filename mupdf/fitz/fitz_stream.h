@@ -392,7 +392,7 @@ struct fz_stream_s
 fz_error fz_openrfile(fz_stream **stmp, char *filename);
 #ifdef WIN32
 #include <wchar.h>
-fz_error fz_openrfilew(fz_stream **stmp, const wchar_t *path);
+fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path);
 #endif
 
 /* write to memory buffers! */

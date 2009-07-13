@@ -6,7 +6,6 @@
 #include "file_util.h"
 #include "geom_util.h"
 #include "str_strsafe.h"
-#include "str_util.h"
 #include "strlist_util.h"
 #include "translations.h"
 #include "utf_util.h"
@@ -1313,19 +1312,15 @@ static void AddFileToHistory(const TCHAR *filePath)
     FileHistoryList_Node_InsertHead(&gFileHistoryRoot, node);
 }
 
-extern "C" char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
+extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box.
    Caller needs to free() the result. */
-char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName)
+TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName)
 {
     fileName = FilePath_GetBaseName(fileName);
-    TCHAR *pass = Dialog_GetPassword(win, fileName);
-    // TODO: Can we make GetPasswordForFile return a (TCHAR *)?
-    char *passA = tstr_to_multibyte(pass, CP_ACP);
-    free(pass);
-    return passA;
+    return Dialog_GetPassword(win, fileName);
 }
 
 /* Return true if this program has been started from "Program Files" directory
@@ -2775,6 +2770,10 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
 static bool ResolveLnk(TCHAR * path)
 {
+    LPCOLESTR olePath = tstr_to_wstr(path);
+    if (!olePath)
+        return false;
+
     CoInitialize(NULL);
 
     IShellLink *lnk;
@@ -2784,7 +2783,7 @@ static bool ResolveLnk(TCHAR * path)
         IPersistFile *file;
         hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
         if (SUCCEEDED(hRes)) {
-            hRes = file->Load(path, STGM_READ);
+            hRes = file->Load(olePath, STGM_READ);
             if (SUCCEEDED(hRes)) {
                 hRes = lnk->Resolve(NULL, SLR_UPDATE);
                 if (SUCCEEDED(hRes)) {
@@ -2800,6 +2799,7 @@ static bool ResolveLnk(TCHAR * path)
         lnk->Release();
     }
     CoUninitialize();
+    free((void *)olePath);
 
     return S_OK == hRes;
 }
@@ -2941,7 +2941,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     char *txt = (char*)ctx->data.getData(&dataSize);
     TCHAR *url = ctx->url;
     if (tstr_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
-        TCHAR *verTxt = multibyte_to_wstr(txt, CP_ACP);
+        TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
         /* TODO: too hackish */
         tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
         if (CompareVersion(verTxt, UPDATE_CHECK_VER)>0){
@@ -4944,7 +4944,7 @@ static void OnMenuFind(WindowInfo *win)
         return;
     }
 
-    const TCHAR * previousFind = win_get_textw(win->hwndFindBox);
+    const TCHAR * previousFind = win_get_text(win->hwndFindBox);
     DWORD state = SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
     
@@ -5224,7 +5224,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
         WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
     else {
         TCHAR buf[256];
-        swprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
+        _stprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
         WindowInfo_ShowMessage_Asynch(win, buf, false);
     }    
 }
@@ -5461,7 +5461,7 @@ static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt) {
 // Set toolbar button tooltips taking current language into account.
 static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
 {
-    TBBUTTONINFOW buttonInfo;
+    TBBUTTONINFO buttonInfo;
     HWND hwnd = win->hwndToolbar;
     LRESULT res;
     for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {

@@ -2,12 +2,10 @@
    License: GPLv2 */
 #include "base_util.h"
 #include "PdfEngine.h"
-
-#include "str_util.h"
 #include "utf_util.h"
 
 // in SumatraPDF.cpp
-extern "C" char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
+extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
 static fz_error pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, int *rotatep)
 {
@@ -186,10 +184,10 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     if (error)
         goto Error;
 
-    error = pdf_loadxrefw(_xref, fileName);
+    error = pdf_loadxreft(_xref, (TCHAR *)fileName);
     if (error) {
         if (tryrepair)
-            error = pdf_repairxrefw(_xref, fileName);
+            error = pdf_repairxreft(_xref, (TCHAR *)fileName);
         if (error)
             goto Error;
     }
@@ -207,12 +205,18 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             goto Error;
         }
         for (int i=0; i<3; i++) {
-            char *pwd = GetPasswordForFile(win, fileName);
+            TCHAR *pwd = GetPasswordForFile(win, fileName);
             if (!pwd) {
                 // password not given
                 goto Error;
             }
-            okay = pdf_setpassword(_xref->crypt, pwd);
+            char *pwd_utf8 = tstr_to_multibyte(pwd, CP_UTF8);
+            if (pwd_utf8) {
+                okay = pdf_setpassword(_xref->crypt, pwd_utf8);
+                free(pwd_utf8);
+            }
+            else
+                okay = 0;
             free(pwd);
             if (okay)
                 goto DecryptedOk;
@@ -260,8 +264,7 @@ Error:
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 {
-    TCHAR *name = utf8_to_utf16(entry->title);
-
+    TCHAR *name = multibyte_to_tstr(entry->title, CP_UTF8);
     PdfTocItem *node = new PdfTocItem(name, entry->link);
 
     if (entry->child)

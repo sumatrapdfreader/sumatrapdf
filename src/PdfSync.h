@@ -9,7 +9,6 @@
 #include <assert.h>
 
 #include "base_util.h"
-#include "str_util.h"
 #include "tstr_util.h"
 #include "file_util.h"
 #ifdef SYNCTEX_FEATURE
@@ -228,8 +227,8 @@ public:
         size_t n = lstrlen(_syncfilename);
         size_t u1 = dimof(SYNCTEX_EXTENSION)-1,
                u2 = dimof(SYNCTEXGZ_EXTENSION)-1;
-        assert((n>u1 && _wcsicmp(_syncfilename+(n-u1),SYNCTEX_EXTENSION)==0)
-               ||(n>u2 && _wcsicmp(_syncfilename+(n-u2),SYNCTEXGZ_EXTENSION)==0));
+        assert((n>u1 && _tcsicmp(_syncfilename+(n-u1),SYNCTEX_EXTENSION)==0)
+               ||(n>u2 && _tcsicmp(_syncfilename+(n-u2),SYNCTEXGZ_EXTENSION)==0));
         tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
         
         this->scanner = NULL;
@@ -264,7 +263,7 @@ public:
     {
         size_t n = lstrlen(_syncfilename);
         size_t u = dimof(PDFSYNC_EXTENSION)-1;
-        assert(n>u && wcsicmp(_syncfilename+(n-u), PDFSYNC_EXTENSION) == 0 );
+        assert(n>u && _tcsicmp(_syncfilename+(n-u), PDFSYNC_EXTENSION) == 0 );
         tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
         this->coordsys = BottomLeft;
     }

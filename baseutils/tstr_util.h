@@ -3,8 +3,13 @@
 #ifndef TSTR_UTIL_H_
 #define TSTR_UTIL_H_
 
+/* currently, we always need both of these:
+ * - str_util.h for DBG_OUT and
+ * - wstr_util.h for multibyte_to_wstr and wstr_to_multibyte */
+#include "str_util.h"
+#include "wstr_util.h"
+
 #ifdef _UNICODE
-  #include "wstr_util.h"
   #define tstr_len      wcslen
   #define tstr_dup      wstr_dup
   #define tstr_dupn     wstr_dupn
@@ -31,11 +36,11 @@
   #define tstr_trans_chars wstr_trans_chars
   #define tstr_dup_replace wstr_dup_replace
   #define multibyte_to_tstr(src,CodePage)             multibyte_to_wstr((src), (CodePage))
-  #define wstr_to_tstr(src)                           wstr_dup((LPCWSTR)src);
   #define tstr_to_multibyte(src,CodePage)             wstr_to_multibyte((src), (CodePage))
+  #define wstr_to_tstr(src)                           wstr_dup((LPCWSTR)src);
+  #define tstr_to_wstr(src)                           wstr_dup((LPCWSTR)src);
   #define hex_tstr_decode_byte                        hex_wstr_decode_byte
 #else
-  #include "str_util.h"
   #define tstr_len      strlen
   #define tstr_dup      str_dup
   #define tstr_dupn     str_dupn
@@ -62,8 +67,9 @@
   #define tstr_trans_chars str_trans_chars
   #define tstr_dup_replace str_dup_replace  
   #define multibyte_to_tstr(src,CodePage)             str_dup(src)
-  #define wstr_to_tstr(src)                           wstr_to_multibyte((str), CP_ACP)
   #define tstr_to_multibyte(src,CodePage)             str_dup(src)
+  #define wstr_to_tstr(src)                           wstr_to_multibyte((src), CP_ACP)
+  #define tstr_to_wstr(src)                           multibyte_to_wstr((src), CP_ACP)
   #define hex_tstr_decode_byte                        hex_str_decode_byte
 #endif
 

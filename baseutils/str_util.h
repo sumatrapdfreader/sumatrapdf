@@ -3,6 +3,10 @@
 #ifndef STR_UTIL_H_
 #define STR_UTIL_H_
 
+#ifdef _MSC_VER
+#include "stdint.h"
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {

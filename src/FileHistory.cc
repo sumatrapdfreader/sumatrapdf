@@ -3,8 +3,6 @@
 
 #include "FileHistory.h"
 #include "tstr_util.h"
-// TODO: Move DBG_OUT out of str_util.h
-#include "str_util.h"
 
 #include <string.h>
 #include <assert.h>

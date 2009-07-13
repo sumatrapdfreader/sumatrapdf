@@ -4,8 +4,8 @@
 #include "SumatraPDF.h"
 #include "PdfSync.h"
 #include "tstr_util.h"
-#include "str_util.h"
 #include <shlwapi.h>
+#include <sys/stat.h>
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
@@ -24,7 +24,7 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
     TCHAR syncfile[MAX_PATH];
     size_t n = lstrlen(pdffilename);
     size_t u = dimof(PDF_EXTENSION)-1;
-    if (n>u && _wcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
+    if (n>u && _tcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
         // Check if a PDFSYNC file is present
         tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
         tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);

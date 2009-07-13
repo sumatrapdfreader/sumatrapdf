@@ -80,7 +80,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
                     assert(data);
-                    data->pwdOut = win_get_textw(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    data->pwdOut = win_get_text(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -166,7 +166,7 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
                     assert(data);
                     data->pageEnteredOut = INVALID_PAGE_NO;
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    newPageNoTxt = win_get_textw(editPageNo);
+                    newPageNoTxt = win_get_text(editPageNo);
                     if (newPageNoTxt) {
                         data->pageEnteredOut = _ttoi(newPageNoTxt);
                         free((void*)newPageNoTxt);
@@ -242,7 +242,7 @@ static BOOL CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LP
         case IDOK:
             data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
             assert(data);
-            data->searchTerm = win_get_textw(GetDlgItem(hDlg, IDC_FIND_EDIT));
+            data->searchTerm = win_get_text(GetDlgItem(hDlg, IDC_FIND_EDIT));
             data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;
@@ -625,7 +625,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             prefs->m_rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
 #ifdef _TEX_ENHANCEMENT
             free(prefs->m_inverseSearchCmdLine);
-            prefs->m_inverseSearchCmdLine = win_get_textw(GetDlgItem(hDlg, IDC_CMDLINE));
+            prefs->m_inverseSearchCmdLine = win_get_text(GetDlgItem(hDlg, IDC_CMDLINE));
 #endif
             EndDialog(hDlg, DIALOG_OK_PRESSED);
             return TRUE;

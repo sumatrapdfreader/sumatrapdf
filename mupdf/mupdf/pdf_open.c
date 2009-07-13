@@ -745,7 +745,7 @@ pdf_loadxref(pdf_xref *xref, char *filename)
 
 #ifdef WIN32
 fz_error
-pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename)
+pdf_loadxrefw(pdf_xref *xref, wchar_t *filename)
 {
 	fz_error error = fz_openrfilew(&xref->file, filename);
 	if (error)

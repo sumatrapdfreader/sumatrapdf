@@ -44,8 +44,6 @@
 */
 
 #include "DisplayModel.h"
-
-#include "str_util.h"
 #include "tstr_util.h"
 
 #include <assert.h>

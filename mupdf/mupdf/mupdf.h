@@ -144,8 +144,15 @@ fz_error pdf_repairxref(pdf_xref *, char *filename);
 fz_error pdf_loadxref(pdf_xref *, char *filename);
 #ifdef WIN32
 #include <wchar.h>
-fz_error pdf_loadxrefw(pdf_xref *xref, const wchar_t *filename);
-fz_error pdf_repairxrefw(pdf_xref *xref, const wchar_t *filename);
+fz_error pdf_loadxrefw(pdf_xref *xref, wchar_t *filename);
+fz_error pdf_repairxrefw(pdf_xref *xref, wchar_t *filename);
+#ifdef _UNICODE
+#define pdf_loadxreft pdf_loadxrefw
+#define pdf_repairxreft pdf_repairxrefw
+#else
+#define pdf_loadxreft pdf_loadxref
+#define pdf_repairxreft pdf_repairxref
+#endif
 #endif
 fz_error pdf_initxref(pdf_xref *);
 
