@@ -261,7 +261,7 @@ fz_objcmp(fz_obj *a, fz_obj *b)
 	case FZ_NULL: return 0;
 	case FZ_BOOL: return a->u.b - b->u.b;
 	case FZ_INT: return a->u.i - b->u.i;
-	case FZ_REAL: return a->u.f - b->u.f;
+	case FZ_REAL: return a->u.f > b->u.f ? 1 : a->u.f < b->u.f ? -1 : 0;
 
 	case FZ_STRING:
 		if (a->u.s.len != b->u.s.len)
