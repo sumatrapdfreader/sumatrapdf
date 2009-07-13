@@ -25,8 +25,15 @@
   #define tstr_ieq      wstr_ieq
   #define tstr_empty    wstr_empty
   #define tstr_find_char wstr_find_char
+  #define tstr_skip     wstr_skip
+  #define tstr_copy_skip_until     wstr_copy_skip_until
+  #define tstr_parse_possibly_quoted  wstr_parse_possibly_quoted
   #define tstr_trans_chars wstr_trans_chars
   #define tstr_dup_replace wstr_dup_replace
+  #define multibyte_to_tstr(src,CodePage)             multibyte_to_wstr((src), (CodePage))
+  #define wstr_to_tstr(src)                           wstr_dup((LPCWSTR)src);
+  #define tstr_to_multibyte(src,CodePage)             wstr_to_multibyte((src), (CodePage))
+  #define hex_tstr_decode_byte                        hex_wstr_decode_byte
 #else
   #include "str_util.h"
   #define tstr_len      strlen
@@ -49,8 +56,15 @@
   #define tstr_ieq      str_ieq
   #define tstr_empty    str_empty
   #define tstr_find_char  str_find_char
+  #define tstr_skip     str_skip
+  #define tstr_copy_skip_until     str_copy_skip_until
+  #define tstr_parse_possibly_quoted  str_parse_possibly_quoted
   #define tstr_trans_chars str_trans_chars
-  #define tstr_dup_replace str_dup_replace
+  #define tstr_dup_replace str_dup_replace  
+  #define multibyte_to_tstr(src,CodePage)             str_dup(src)
+  #define wstr_to_tstr(src)                           wstr_to_multibyte((str), CP_ACP)
+  #define tstr_to_multibyte(src,CodePage)             str_dup(src)
+  #define hex_tstr_decode_byte                        hex_str_decode_byte
 #endif
 
 #endif

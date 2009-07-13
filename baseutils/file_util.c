@@ -21,7 +21,7 @@ char *FilePath_ConcatA(const char *path, const char *name)
         return str_cat3(path, DIR_SEP_STR, name);
 }
 
-const char *FilePath_GetBaseName(const char *path)
+const char *FilePath_GetBaseNameA(const char *path)
 {
     const char *fileBaseName = path + strlen(path);
     while (fileBaseName > path) {
@@ -33,7 +33,7 @@ const char *FilePath_GetBaseName(const char *path)
     return fileBaseName;
 }
 
-const WCHAR *FilePathW_GetBaseName(const WCHAR *path)
+const WCHAR *FilePath_GetBaseNameW(const WCHAR *path)
 {
     const WCHAR *fileBaseName = path + wstrlen(path);
     while (fileBaseName > path) {
@@ -45,23 +45,23 @@ const WCHAR *FilePathW_GetBaseName(const WCHAR *path)
     return fileBaseName;
 }
 
-char *FilePath_GetDir(const char *path)
+char *FilePath_GetDirA(const char *path)
 {
     char *baseName;
     char *dir = str_dup(path);
     if (!dir) return NULL;
-    baseName = (char*)FilePath_GetBaseName(dir);
+    baseName = (char*)FilePath_GetBaseNameA(dir);
     if (baseName > dir)
         baseName[-1] = 0;
     return dir;
 }
 
-WCHAR *FilePathW_GetDir(const WCHAR *path)
+WCHAR *FilePath_GetDirW(const WCHAR *path)
 {
     WCHAR *baseName;
     WCHAR *dir = wstr_dup(path);
     if (!dir) return NULL;
-    baseName = (WCHAR*)FilePathW_GetBaseName(dir);
+    baseName = (WCHAR*)FilePath_GetBaseNameW(dir);
     if (baseName > dir)
         baseName[-1] = 0;
     return dir;
@@ -86,7 +86,7 @@ WCHAR *FilePathW_GetDir(const WCHAR *path)
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
-WCHAR *FilePathW_Normalize(const WCHAR *f, BOOL bLowerCase)
+WCHAR *FilePath_NormalizeW(const WCHAR *f, BOOL bLowerCase)
 {
     WCHAR * pBuff, * pBuff2;
     DWORD cb;
@@ -124,20 +124,77 @@ WCHAR *FilePathW_Normalize(const WCHAR *f, BOOL bLowerCase)
 // Returns 0 if the paths lhs and rhs point to the same file.
 //         1 if the paths point to different files
 //         -1 if an error occured
-int FilePathW_Compare(const WCHAR *lhs, const WCHAR *rhs)
+int FilePath_CompareW(const WCHAR *lhs, const WCHAR *rhs)
 {
     LPWSTR nl, nr;
     int ret;
 
-    nl = FilePathW_Normalize(lhs, TRUE);
+    nl = FilePath_NormalizeW(lhs, TRUE);
     if (!nl)
         return -1;
 
-    nr = FilePathW_Normalize(rhs, TRUE);
+    nr = FilePath_NormalizeW(rhs, TRUE);
     if (!nr)
         return -1;
 
     ret = wstr_eq(nl, nr) ? 0 : 1;
+
+    free(nr);
+    free(nl);
+    return ret;
+}
+
+
+// ANSI version of FilePath_NormalizeW
+char *FilePath_NormalizeA(const char *f, BOOL bLowerCase)
+{
+    char * pBuff, * pBuff2;
+    DWORD cb;
+
+    // convert to absolute path, change slashes into backslashes
+    cb = GetFullPathNameA(f, 0, NULL, NULL);
+    if (!cb)
+        return NULL;
+    pBuff = (char *) malloc(sizeof(char)*cb);
+    if(!pBuff)
+        return NULL;
+    GetFullPathNameA(f, cb, pBuff, NULL);
+
+    // convert to long form
+    cb = GetLongPathNameA(pBuff, NULL, 0);
+    if (!cb)
+        return pBuff;
+    pBuff2 = (char *) realloc(pBuff, sizeof(char)*cb);
+    if (!pBuff2)
+        return pBuff;
+
+    GetLongPathNameA(pBuff2, pBuff2, cb);
+
+    // convert to lower case
+    if (bLowerCase) {
+        pBuff = pBuff2;
+        while (*pBuff)
+            *(pBuff++) = tolower(*pBuff);
+    }
+
+    return pBuff2;
+}
+
+// ANSI version of FilePath_CompareW
+int FilePath_CompareA(const char *lhs, const char *rhs)
+{
+    LPSTR nl, nr;
+    int ret;
+
+    nl = FilePath_NormalizeA(lhs, TRUE);
+    if (!nl)
+        return -1;
+
+    nr = FilePath_NormalizeA(rhs, TRUE);
+    if (!nr)
+        return -1;
+
+    ret = str_eq(nl, nr) ? 0 : 1;
 
     free(nr);
     free(nl);

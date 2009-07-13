@@ -47,12 +47,37 @@ void            FileList_Delete(FileList *fl);
 int             FileList_Len(FileList *fl);
 FileInfo *      FileList_GetFileInfo(FileList *fl, int file_no);
 
-const char *    FilePath_GetBaseName(const char *path);
-const WCHAR *   FilePathW_GetBaseName(const WCHAR *path);
-char *          FilePath_GetDir(const char *path);
-WCHAR *         FilePathW_GetDir(const WCHAR *path);
-WCHAR *         FilePathW_Normalize(const WCHAR *f, BOOL bLowerCase);
-int             FilePathW_Compare(const WCHAR *lhs, const WCHAR *rhs);
+const char *    FilePath_GetBaseNameA(const char *path);
+const WCHAR *   FilePath_GetBaseNameW(const WCHAR *path);
+#ifdef _UNICODE
+#define FilePath_GetBaseName   FilePath_GetBaseNameW
+#else
+#define FilePath_GetBaseName   FilePath_GetBaseNameA
+#endif
+
+char *          FilePath_GetDirA(const char *path);
+WCHAR *         FilePath_GetDirW(const WCHAR *path);
+#ifdef _UNICODE
+#define FilePath_GetDir   FilePath_GetDirW
+#else
+#define FilePath_GetDir   FilePath_GetDirA
+#endif
+
+WCHAR *         FilePath_NormalizeW(const WCHAR *f, BOOL bLowerCase);
+char *         FilePath_NormalizeA(const char *f, BOOL bLowerCase);
+#ifdef _UNICODE
+#define FilePath_Normalize   FilePath_NormalizeW
+#else
+#define FilePath_Normalize   FilePath_NormalizeA
+#endif
+
+int             FilePath_CompareW(const WCHAR *lhs, const WCHAR *rhs);
+int             FilePath_CompareA(const char *lhs, const char *rhs);
+#ifdef _UNICODE
+#define FilePath_Compare   FilePath_CompareW
+#else
+#define FilePath_Compare   FilePath_CompareA
+#endif
 
 char *          file_read_all(const char *file_path, uint64_t *file_size_out);
 uint64_t        file_size_get(const char *file_path);
