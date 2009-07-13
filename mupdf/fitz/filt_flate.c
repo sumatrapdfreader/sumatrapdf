@@ -108,7 +108,7 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 			return fz_ioneedin;
 		if (out->wp == out->ep)
 			return fz_ioneedout;
-		return fz_ioneedin; /* hmm, what's going on here? */
+		return fz_iodone; /* hmm, what's going on here? */
 	}
 	else
 	{
