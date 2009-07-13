@@ -15,8 +15,7 @@
 
 int pagetobench = -1;
 int loadonly = 0;
-pdf_xref *src = nil;
-pdf_pagetree *srcpages = nil;
+pdf_xref *xref = nil;
 fz_renderer *drawgc = nil;
 pdf_page *drawpage = nil;
 
@@ -93,39 +92,33 @@ double timeinms(mstimer *timer)
 }
 #endif
 
-void closesrc(void)
+void closexref(void)
 {
-	if (srcpages)
-	{
-		pdf_droppagetree(srcpages);
-		srcpages = nil;
-	}
+	if (!xref)
+                return;
 
-	if (src)
+	if (xref->store)
 	{
-		if (src->store)
-		{
-			pdf_dropstore(src->store);
-			src->store = nil;
-		}
-		pdf_closexref(src);
-		src = nil;
+		pdf_dropstore(xref->store);
+		xref->store = nil;
 	}
+	pdf_closexref(xref);
+	xref = nil;
 }
 
-fz_error opensrc(char *filename, char *password)
+fz_error openxref(char *filename, char *password)
 {
 	fz_error error;
 
-	error = pdf_newxref(&src);
+	error = pdf_newxref(&xref);
 	if (error)
 		return error;
 
-	error = pdf_loadxref(src, filename);
+	error = pdf_loadxref(xref, filename);
 	if (error)
 	{
 		logbench("Warning: pdf_loadxref() failed, trying to repair\n");
-		error = pdf_repairxref(src, filename);
+		error = pdf_repairxref(xref, filename);
 		if (error)
 		{
 			logbench("Error: pdf_repairxref() failed\n");
@@ -133,16 +126,16 @@ fz_error opensrc(char *filename, char *password)
 		}
 	}
 
-	error = pdf_decryptxref(src);
+	error = pdf_decryptxref(xref);
 	if (error)
 	{
 		logbench("Error: pdf_decryptxref() failed\n");
 		return error;
 	}
 
-	if (src->crypt)
+	if (xref->crypt)
 	{
-		int okay = pdf_setpassword(src->crypt, password);
+		int okay = pdf_setpassword(xref->crypt, password);
 		if (!okay)
 		{
 			logbench("Warning: pdf_setpassword() failed, incorrect password\n");
@@ -150,12 +143,7 @@ fz_error opensrc(char *filename, char *password)
 		}
 	}
 
-	error = pdf_loadpagetree(&srcpages, src);
-	if (error)
-	{
-		logbench("Error: pdf_loadpagetree() failed\n");
-	}
-	return error;
+	return fz_okay;
 }
 
 fz_error benchloadpage(int pagenum)
@@ -166,9 +154,14 @@ fz_error benchloadpage(int pagenum)
 	double timems;
 
 	timerstart(&timer);
-	pageobj = pdf_getpageobject(srcpages, pagenum - 1);
+	error = pdf_getpageobject(xref, pagenum - 1, &pageobj);
+	if (error)
+	{
+		logbench("Error: failed to load page %d\n", pagenum);
+		return error;
+	}
 	drawpage = nil;
-	error = pdf_loadpage(&drawpage, src, pageobj);
+	error = pdf_loadpage(&drawpage, xref, pageobj);
 	timerstop(&timer);
 	if (error)
 	{
@@ -245,14 +238,14 @@ void benchfile(char *pdffilename)
 
 	logbench("Starting: %s\n", pdffilename);
 	timerstart(&timer);
-	error = opensrc(pdffilename, "");
+	error = openxref(pdffilename, "");
 	timerstop(&timer);
 	if (error)
 		goto Exit;
 	timems = timeinms(&timer);
 	logbench("load: %.2f ms\n", timems);
 
-	pages = pdf_getpagecount(srcpages);
+	pages = xref->pagecount;
 	logbench("page count: %d\n", pages);
 
 	if (loadonly)
@@ -271,7 +264,7 @@ Exit:
 	logbench("Finished: %s\n", pdffilename);
 	if (drawgc)
 		fz_droprenderer(drawgc);
-	closesrc();
+	closexref();
 }
 
 void usage(void)
