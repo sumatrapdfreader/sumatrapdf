@@ -55,7 +55,7 @@ private:
 public:
     HANDLE  hDir; // handle of the directory to watch
     TCHAR   szFilepath[MAX_PATH]; // path to the file watched
-    const TCHAR * pszFilename; // pointer in szFilepath to the file part of the path
+    const   TCHAR * pszFilename; // pointer in szFilepath to the file part of the path
     TCHAR   szDir[MAX_PATH]; // path to the directory
     OVERLAPPED overl; // object used for asynchronous API calls
     BYTE buffer [2][512*sizeof(FILE_NOTIFY_INFORMATION )]; 

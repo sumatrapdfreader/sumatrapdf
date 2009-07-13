@@ -1,5 +1,4 @@
 // By william blum, 2008
-
 #include "SumatraPDF.h"
 #include "FileWatch.h"
 #include "file_util.h"
@@ -13,7 +12,7 @@
 // Get the directory name from a full file path and copy it to pszDir
 bool GetDirectory(LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
 {
-    LPCTSTR pszBaseName = FilePathW_GetBaseName(pszFile);
+    LPCTSTR pszBaseName = FilePath_GetBaseName(pszFile);
 
     if (0 == pszDir || 0 == pszFile) {
         return false;
@@ -109,7 +108,7 @@ void FileWatcher::Init(LPCTSTR filefullpath)
         SynchronousAbort();
 
     tstr_copy(szFilepath, dimof(szFilepath), filefullpath);
-    pszFilename = FilePathW_GetBaseName(szFilepath);
+    pszFilename = FilePath_GetBaseName(szFilepath);
     GetDirectory(filefullpath, szDir, dimof(szDir));
     
     _tstat(filefullpath, &timestamp);
@@ -224,31 +223,66 @@ bool FileWatcher::ReadDir()
     FILE_NOTIFY_INFORMATION *pFileNotify;
     pFileNotify = (PFILE_NOTIFY_INFORMATION)&buffer[1-curBuffer];
     while (pFileNotify) {
-        pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(TCHAR), _MAX_FNAME-1)] = 0;
+        // Note: the ReadDirectoryChangesW API fills the buffer with
+        // WCHAR strings.
+        pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(WCHAR), _MAX_FNAME-1)] = 0;
+        TCHAR *ptNotifyFilename = wstr_to_tstr(pFileNotify->FileName);
 
         // is it the file that is being watched?
-        if (_tcsicmp(pFileNotify->FileName, pszFilename) == 0) {
+        if (_tcsicmp(ptNotifyFilename, pszFilename) == 0) {
             // file modified?
             if (pFileNotify->Action == FILE_ACTION_MODIFIED) {
-                // Check that the file is not still been opened for writing.
-                // we try to open the file with write access and no write-sharing 
-                // so that if the file is opened for writing then the call fails.
-                HANDLE f = CreateFile(filepath(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-                DWORD dw = GetLastError();
-                if (INVALID_HANDLE_VALUE == f && (ERROR_SHARING_VIOLATION == dw || ERROR_LOCK_VIOLATION == dw))
-                    return false;
 
-                if (f != INVALID_HANDLE_VALUE)
-                    CloseHandle(f);
+// NOTE: It is not recommanded to check that the timestamp has changed because the time granularity 
+// is so big that this can cause genuine file notifications to be ignored.
+// (This happens for instance for PDF files produced by pdftex from small.tex document.)
+//
+#ifdef   CHECK_TIMESTAMP_ON_FILENOTIFICATION
+                // Check if the timestamp has changed to prevent spurious notifications to be reported.
 
-                // we do not check for timestamp difference because
-                // the granularity is so low that it would cause some file notifications to be ignored
-                // (this happens when compiling a small .tex document with pdftex)
+                // compare the old and new time stamps
+                struct _stat newstamp;
+                if (_tstat(szFilepath, &newstamp) == 0
+                    && difftime(newstamp.st_mtime, timestamp.st_mtime) > 0
+                    ) {
+                    DBG_OUT("FileWatch:change notification in %s\n", pszFilename);
+
+                    // Check that the file has not already been reopened for writing.
+                    // We try to open the file with write access and no write-sharing 
+                    // so that if the file is opened for writing then the call fails.
+                    // WARNING: the following code locks the file for a short moment. This may cause 
+                    // problems if another process tries to write to the file at the same time.
+                    HANDLE f = CreateFile(filepath(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+                    DWORD dw = GetLastError();
+                    if (f == INVALID_HANDLE_VALUE && (dw==ERROR_SHARING_VIOLATION || dw==ERROR_LOCK_VIOLATION))
+                        return false;
+
+                    if (f != INVALID_HANDLE_VALUE)
+                        CloseHandle(f);
+                    
+                    // reread the time stamp
+                    //_tstat(szFilepath, &timestamp);
+                    timestamp = newstamp;
+
+                    return true; // the file has changed!
+                }
+                else {
+                    // false positive: the time stamp has not changed
+                    DBG_OUT("FileWatch:spurious change notification in %s\n", pszFilename);
+                }
+#else 
+                ////
+                // We do not check for timestamp change: all notifications are reported.
+                //
                 DBG_OUT("FileWatch:change detected in %s\n", pszFilename);
-                return true;
+                return true; // report the notification.
+#endif
             }
-            // else {} // file touched but not modified.
+            //else {} // file touched but not modified.
+            
         }
+
+        free(ptNotifyFilename);
 
         // step to the next entry if there is one
         if (pFileNotify->NextEntryOffset)

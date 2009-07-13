@@ -676,7 +676,7 @@ public:
     /* true for automated check, false for check triggered from menu */
     bool          autoCheck;
 
-    HttpReqCtx(TCHAR *_url, HWND _hwnd, UINT _msg) {
+    HttpReqCtx(const TCHAR *_url, HWND _hwnd, UINT _msg) {
         assert(_url);
         hwndToNotify = _hwnd;
         url = tstr_dup(_url);
@@ -881,7 +881,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
             return;
     }
 
-    TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
+    const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
     HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, WM_APP_URL_DOWNLOADED);
     ctx->autoCheck = autoCheck;
 
@@ -1200,7 +1200,7 @@ static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
     UINT newId = node->menuId;
     if (INVALID_MENU_ID == node->menuId)
         newId = AllocNewMenuId();
-    AppendMenu(menuFile, MF_ENABLED | MF_STRING, newId, FilePathW_GetBaseName(node->state.filePath));
+    AppendMenu(menuFile, MF_ENABLED | MF_STRING, newId, FilePath_GetBaseName(node->state.filePath));
     node->menuId = newId;
 }
 
@@ -1320,10 +1320,10 @@ extern "C" char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
    Caller needs to free() the result. */
 char *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName)
 {
-    fileName = FilePathW_GetBaseName(fileName);
+    fileName = FilePath_GetBaseName(fileName);
     TCHAR *pass = Dialog_GetPassword(win, fileName);
     // TODO: Can we make GetPasswordForFile return a (TCHAR *)?
-    char *passA = wstr_to_multibyte(pass, CP_ACP);
+    char *passA = tstr_to_multibyte(pass, CP_ACP);
     free(pass);
     return passA;
 }
@@ -1377,7 +1377,7 @@ static TCHAR * AppGenDataFilename(TCHAR *pFilename)
         TCHAR *exePath = ExePathGet();
         if (exePath) {
             assert(exePath[0]);
-            path = FilePathW_GetDir(exePath);
+            path = FilePath_GetDir(exePath);
             free(exePath);
         }
     } else {
@@ -1415,7 +1415,7 @@ static bool Prefs_Load(void)
 
     TCHAR * prefsFilename = Prefs_GetFileName();
     assert(prefsFilename);
-    const char * prefsFilenameA = wstr_to_multibyte(prefsFilename, CP_ACP);
+    const char * prefsFilenameA = tstr_to_multibyte(prefsFilename, CP_ACP);
     assert(prefsFilenameA);
     uint64_t prefsFileLen;
     prefsTxt = file_read_all(prefsFilenameA, &prefsFileLen);
@@ -1850,7 +1850,7 @@ static int WindowInfoList_Len(void) {
 
 // Find the first windows showing a given PDF file 
 WindowInfo* WindowInfoList_Find(TCHAR * file) {
-    TCHAR * normFile = FilePathW_Normalize(file, FALSE);
+    TCHAR * normFile = FilePath_Normalize(file, FALSE);
     if(!normFile)
         return NULL;
 
@@ -2090,8 +2090,18 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     
     if (winX != CW_USEDEFAULT && winY != CW_USEDEFAULT) {
         if (!IsWindowVisibleOnAMonitor(winX, winY, winDx, winDy)) {
-            winX = CW_USEDEFAULT;
-            winY = CW_USEDEFAULT;
+            RECT rc;
+            rc.left = winX;
+            rc.top = winY;
+            rc.right = rc.left+ winDx;
+            rc.bottom = rc.top + winDy;
+            
+            MONITORINFO mi;
+            mi.cbSize = sizeof(mi);
+            GetMonitorInfo(MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST), &mi);
+            
+            winX = mi.rcMonitor.left + CW_USEDEFAULT;
+            winY = mi.rcMonitor.top + CW_USEDEFAULT;
         }
     }
 
@@ -2243,7 +2253,7 @@ static bool LoadPdfIntoWindow(
             ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
-            win_set_text(win->hwndFrame, FilePathW_GetBaseName(fileName));
+            win_set_text(win->hwndFrame, FilePath_GetBaseName(fileName));
             goto Error;
         }
     } else {
@@ -2297,7 +2307,7 @@ static bool LoadPdfIntoWindow(
     WindowInfo_UpdateFindbox(win);
 
     int pageCount = win->dm->pageCount();
-    const TCHAR *baseName = FilePathW_GetBaseName(win->dm->fileName());
+    const TCHAR *baseName = FilePath_GetBaseName(win->dm->fileName());
     if (pageCount <= 0)
         win_set_text(win->hwndFrame, baseName);
     else {
@@ -2421,7 +2431,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 
     // TODO: fileName might not exist.
     // Normalize the file path    
-    TCHAR *pFullpath = FilePathW_Normalize(fileName, FALSE);
+    TCHAR *pFullpath = FilePath_Normalize(fileName, FALSE);
     if (!pFullpath)
         goto exit;
 
@@ -4425,7 +4435,7 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    tstr_copy(dstFileName, dimof(dstFileName), FilePathW_GetBaseName(srcFileName));
+    tstr_copy(dstFileName, dimof(dstFileName), FilePath_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -6806,10 +6816,10 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static WStrList *WStrList_FromCmdLine(TCHAR *cmdLine, bool addExe=false)
+static TStrList *TStrList_FromCmdLine(TCHAR *cmdLine, bool addExe=false)
 {
     TCHAR *      exePath;
-    WStrList *   strList = NULL;
+    TStrList *   strList = NULL;
     TCHAR *      txt;
 
     assert(cmdLine);
@@ -6822,22 +6832,22 @@ static WStrList *WStrList_FromCmdLine(TCHAR *cmdLine, bool addExe=false)
         exePath = ExePathGet();
         if (!exePath)
             return NULL;
-        if (!WStrList_InsertAndOwn(&strList, exePath)) {
+        if (!TStrList_InsertAndOwn(&strList, exePath)) {
             free((void*)exePath);
             return NULL;
         }
     }
 
     for (;;) {
-        txt = wstr_parse_possibly_quoted(&cmdLine);
+        txt = tstr_parse_possibly_quoted(&cmdLine);
         if (!txt)
             break;
-        if (!WStrList_InsertAndOwn(&strList, txt)) {
+        if (!TStrList_InsertAndOwn(&strList, txt)) {
             free((void*)txt);
             break;
         }
     }
-    WStrList_Reverse(&strList);
+    TStrList_Reverse(&strList);
     return strList;
 }
 
@@ -7093,13 +7103,13 @@ static void ParseBgColor(const TCHAR* txt)
         txt += 2;
     else if (tstr_startswith(txt, _T("#")))
         txt += 1;
-    int r = hex_wstr_decode_byte(&txt);
+    int r = hex_tstr_decode_byte(&txt);
     if (-1 == r)
         return;
-    int g = hex_wstr_decode_byte(&txt);
+    int g = hex_tstr_decode_byte(&txt);
     if (-1 == g)
         return;
-    int b = hex_wstr_decode_byte(&txt);
+    int b = hex_tstr_decode_byte(&txt);
     if (-1 == b)
         return;
     if (*txt)
@@ -7174,8 +7184,8 @@ extern "C" void pdf_destoryfontlistMS(); // in pdf_fontfilems.c
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    WStrList *          argListRoot;
-    WStrList *          currArg;
+    TStrList *          argListRoot;
+    TStrList *          currArg;
     TCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
@@ -7207,7 +7217,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     cmdLine  = GetCommandLine();
 
-    argListRoot = WStrList_FromCmdLine(cmdLine);
+    argListRoot = TStrList_FromCmdLine(cmdLine);
     assert(argListRoot);
     if (!argListRoot)
         return 0;
@@ -7334,7 +7344,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (is_arg("-lang")) {
             currArg = currArg->next;
             if (currArg) {
-                char * s = wstr_to_multibyte(currArg->str, CP_ACP);
+                char * s = tstr_to_multibyte(currArg->str, CP_ACP);
                 CurrLangNameSet(s);
                 free(s);
                 currArg = currArg->next;
@@ -7410,7 +7420,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CreatePageRenderThread();
     /* remaining arguments are names of PDF files */
 #ifdef BUILD_RM_VERSION
-    WStrList *currArgFileNames = currArg;
+    TStrList *currArgFileNames = currArg;
 #endif
     if (NULL != gBenchFileName) {
             win = LoadPdf(gBenchFileName);
@@ -7446,7 +7456,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     }
                 }
                 else if (destName && !firstDocLoaded) {
-                    char * destNameA = wstr_to_multibyte(destName, CP_ACP);
+                    char * destNameA = tstr_to_multibyte(destName, CP_ACP);
                     win->dm->goToNamedDest(destNameA);
                     free(destNameA);
                 }
@@ -7590,7 +7600,7 @@ Exit:
 
     pdf_destoryfontlistMS();
 
-    WStrList_Destroy(&argListRoot);
+    TStrList_Destroy(&argListRoot);
     //histDump();
     return (int) msg.wParam;
 }

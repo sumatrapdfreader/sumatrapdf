@@ -162,7 +162,7 @@ public:
     Synchronizer(LPCTSTR _syncfilename) {
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
-        this->dir = FilePathW_GetDir(_syncfilename);
+        this->dir = FilePath_GetDir(_syncfilename);
     }
     ~Synchronizer() {
         if (dir)

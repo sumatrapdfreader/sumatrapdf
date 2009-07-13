@@ -449,7 +449,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *mb_srcfilename = wstr_to_multibyte(srcfilename, CP_ACP);
+    char *mb_srcfilename = tstr_to_multibyte(srcfilename, CP_ACP);
     if (!mb_srcfilename)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -587,7 +587,7 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = wstr_to_multibyte(this->syncfilename, CP_ACP);
+    char *mb_syncfname = tstr_to_multibyte(this->syncfilename, CP_ACP);
     if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -611,7 +611,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
             *line = synctex_node_line(node);
             *col = synctex_node_column(node);
             const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-            WCHAR *srcfilename = multibyte_to_wstr(name, CP_ACP);
+            TCHAR *srcfilename = multibyte_to_tstr(name, CP_ACP);
             if (srcfilename==NULL)
                 return PDFSYNCERR_OUTOFMEMORY;
 
@@ -651,7 +651,7 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     else
         tstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 
-    char *mb_srcfilepath = wstr_to_multibyte(srcfilepath, CP_ACP);
+    char *mb_srcfilepath = tstr_to_multibyte(srcfilepath, CP_ACP);
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
@@ -722,14 +722,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     if (!command)
         DBG_OUT("WM_DDE_EXECUTE: No command specified\n");
     else {
-        LPWSTR pwCommand;
+        LPTSTR pwCommand;
         if (bUnicodeSender) {
             DBG_OUT("The client window is UNICODE!\n");
-            pwCommand = wstr_dup((LPCWSTR)command);
+            pwCommand = wstr_to_tstr((LPCWSTR)command);
         }
         else {
             DBG_OUT("The client window is ANSI!\n");
-            pwCommand = multibyte_to_wstr((LPCSTR)command, CP_ACP);
+            pwCommand = multibyte_to_tstr((LPCSTR)command, CP_ACP);
         }
 
         // Parse the command
@@ -745,10 +745,10 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             // Synchronization command.
             // format is [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
             if ( (pos = curCommand) &&
-                wstr_skip(&pos, _T("[") DDECOMMAND_SYNC _T("(\"")) &&
-                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                (wstr_skip(&pos, _T("\",\"")) || wstr_skip(&pos, _T("\", \""))) &&
-                wstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
+                tstr_skip(&pos, _T("[") DDECOMMAND_SYNC _T("(\"")) &&
+                tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+                (tstr_skip(&pos, _T("\",\"")) || tstr_skip(&pos, _T("\", \""))) &&
+                tstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
                 (4 == _stscanf(pos, _T("\",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus)
                 || 2 == _stscanf(pos, _T("\",%u,%u)]"), &line, &col))
                 )
@@ -780,9 +780,9 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             // Open file DDE command.
             // format is [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
             else if ( (pos = curCommand) &&
-                wstr_skip(&pos, _T("[") DDECOMMAND_OPEN _T("(\"")) &&
-                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                (3 == _stscanf(pos, _T("\",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || wstr_skip(&pos, _T("\")")))
+                tstr_skip(&pos, _T("[") DDECOMMAND_OPEN _T("(\"")) &&
+                tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
+                (3 == _stscanf(pos, _T("\",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || tstr_skip(&pos, _T("\")")))
                 )
             {
                 // check if the PDF is already opened
@@ -805,17 +805,17 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             // Jump to named destination DDE command.
             // format is [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
             else if ( (pos = curCommand) &&
-                wstr_skip(&pos, _T("[") DDECOMMAND_GOTO _T("(\"")) &&
-                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-                (wstr_skip(&pos, _T("\",\"")) || wstr_skip(&pos, _T("\", \""))) &&
-                wstr_copy_skip_until(&pos, destname, dimof(destname), _T('"'))
+                tstr_skip(&pos, _T("[") DDECOMMAND_GOTO _T("(\"")) &&
+                tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
+                (tstr_skip(&pos, _T("\",\"")) || tstr_skip(&pos, _T("\", \""))) &&
+                tstr_copy_skip_until(&pos, destname, dimof(destname), _T('"'))
                 )
             {
                // check if the PDF is already opened
                 WindowInfo *win = NULL;
                 win = WindowInfoList_Find(pdffile);
                 if (win && WS_SHOWING_PDF == win->state) {
-                    LPSTR destname_ansi = wstr_to_multibyte(destname, CP_ACP);
+                    LPSTR destname_ansi = tstr_to_multibyte(destname, CP_ACP);
                     if (destname_ansi) {
                         win->dm->goToNamedDest(destname_ansi);
                         ack.fAck = 1;
@@ -828,8 +828,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             // Jump to page DDE command.
             // format is [<DDECOMMAND_GOTO>("<pdffilepath>", <page number>)]
             else if ( (pos = curCommand) &&
-                wstr_skip(&pos, _T("[") DDECOMMAND_PAGE _T("(\"")) &&
-                wstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
+                tstr_skip(&pos, _T("[") DDECOMMAND_PAGE _T("(\"")) &&
+                tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
                 1 == _stscanf(pos, _T("\",%u)]"), &page)
                 )
             {
@@ -848,8 +848,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");
 
             // next command
-            wstr_copy_skip_until(&pos, dump, dimof(dump), ']');
-            wstr_skip(&pos, _T("]"));
+            tstr_copy_skip_until(&pos, dump, dimof(dump), ']');
+            tstr_skip(&pos, _T("]"));
             curCommand = pos;
         }
         free(pwCommand);
