@@ -271,7 +271,7 @@ PDFAPP_APP = $(O)\pdfapp.exe
 PDFAPP_PDB = $(O)\pdfapp.pdb
 PDFAPP_MAP = $(O)\pdfapp.map
 
-PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfbench.obj
+PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
 PDFBENCH_PDB = $(O)\pdfbench.pdb
 PDFBENCH_MAP = $(O)\pdfbench.map
