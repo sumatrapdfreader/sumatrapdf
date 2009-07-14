@@ -712,7 +712,8 @@ pdf_loadxref2(pdf_xref *xref)
 		goto cleanup;
 	}
 
-	error = pdf_getpagecount(xref, &xref->pagecount);
+	// TODO: this fails for encrypted documents, so leave it to callers for now
+	// error = pdf_getpagecount(xref, &xref->pagecount);
 	if (error)
 	{
 		error = fz_rethrow(error, "cannot determine page count");
