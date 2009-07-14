@@ -1,6 +1,7 @@
-import codecs
+import codecs, re
 
 c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
+translation_pattern = r'_TRN?\("(.*?)"\)'
 strings_file = "strings.txt"
 
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
@@ -16,35 +17,22 @@ LANG_TXT = "Lang:"
 
 def is_lang_line(l): return l.startswith(LANG_TXT)
 def is_separator_line(l): return l == "-"
-def is_newline_char(c): return c == '\n' or c == '\r'
+def is_comment_line(l): return l.startswith("#")
 
-def is_comment_line(l): 
-    if 0 == len(l): return False
-    return l[0] == '#'
-
-def line_strip_newline(l):
+def line_strip_newline(l, newline_chars="\r\n"):
     while True:
         if 0  == len(l): return l
-        if not is_newline_char(l[-1]): return l
+        if l[-1] not in newline_chars: return l
         l = l[:-1]
 
 def line_with_translation(l):
-    if len(l) < 3: return False
-    if ':' == l[2]: return True
-    if len(l) < 6: return False
-    if ':' == l[5]: return True
+    if len(l) > 2 and ':' == l[2]: return True
+    if len(l) > 5 and ':' == l[5]: return True
     return False
 
 def parse_line_with_translation(l):
-    if ':' == l[2]:
-        idx = 2
-    elif ':' == l[5]:
-        idx = 5
-    else:
-        assert 0
-    lang = l[:idx]
-    txt = l[idx+1:]
-    return (lang, txt)
+    lang, translation = l.split(':', 1)
+    return lang, translation
 
 def parse_lang_line(l):
     assert is_lang_line(l)
@@ -144,41 +132,11 @@ def get_lang_list(strings_dict):
                 langs.append(lang)
     return langs
 
-def extract_strings_with_mark(l, mark_start, mark_end):
-    strings = []
-    start_pos = 0
-    while True:
-        tr_start = l.find(mark_start, start_pos)
-        if -1 == tr_start:
-            return strings
-        tr_start = tr_start + len(mark_start)
-        tr_end = l.find(mark_end, tr_start)
-        if -1 == tr_end:
-            print l
-            assert tr_end != -1 # if it is, it's suspicious
-        strings.append(l[tr_start:tr_end])
-        start_pos = tr_end
-
-def extract_strings_from_line(l):
-    strings1 = extract_strings_with_mark(l, '_TR("', '")')
-    strings2 = extract_strings_with_mark(l, '_TRN("', '")')
-    strings3 = extract_strings_with_mark(l, '_TRW("', '")')
-    strings4 = extract_strings_with_mark(l, '_TRWN("', '")')
-    strings5 = extract_strings_with_mark(l, '_TRA("', '")')
-    return strings1 + strings2 + strings3 + strings4 + strings5
-
-def extract_strings_from_c_file(f, strings):
-    fo = open(f, "rb")
-    for l in fo.readlines():
-        strs = extract_strings_from_line(l)
-        for s in strs:
-            strings.append(s)
-    fo.close()
-    
 def extract_strings_from_c_files(files):
     strings = []
     for f in files:
-        extract_strings_from_c_file(f, strings)
+        file_content = file(f, "rb").read()
+        strings += re.findall(translation_pattern, file_content)
     return strings
 
 (SS_ONLY_IN_C, SS_ONLY_IN_TXT, SS_IN_BOTH) = range(3)
