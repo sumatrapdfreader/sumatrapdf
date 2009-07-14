@@ -94,6 +94,9 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	zp->avail_out = out->ep - out->wp;
 
 	err = inflate(zp, Z_NO_FLUSH);
+	if (err == Z_OK && in->eof && zp->avail_in == 0 && zp->avail_out > 0)
+		/* call it right again, if there are only some few bytes left */
+		err = inflate(zp, Z_FINISH);
 
 	in->rp = in->wp - zp->avail_in;
 	out->wp = out->ep - zp->avail_out;
