@@ -66,11 +66,14 @@
   #define tstr_parse_possibly_quoted  str_parse_possibly_quoted
   #define tstr_trans_chars str_trans_chars
   #define tstr_dup_replace str_dup_replace  
-  #define multibyte_to_tstr(src,CodePage)             str_dup(src)
-  #define tstr_to_multibyte(src,CodePage)             str_dup(src)
+  #define multibyte_to_tstr(src,CodePage)             multibyte_to_str((src), (CodePage))
+  #define tstr_to_multibyte(src,CodePage)             str_to_multibyte((src), (CodePage))
   #define wstr_to_tstr(src)                           wstr_to_multibyte((src), CP_ACP)
   #define tstr_to_wstr(src)                           multibyte_to_wstr((src), CP_ACP)
   #define hex_tstr_decode_byte                        hex_str_decode_byte
 #endif
+
+#define utf8_to_tstr(src) multibyte_to_tstr((src), CP_UTF8)
+#define tstr_to_utf8(src) tstr_to_multibyte((src), CP_UTF8)
 
 #endif

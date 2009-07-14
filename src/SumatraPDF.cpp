@@ -8,7 +8,6 @@
 #include "str_strsafe.h"
 #include "strlist_util.h"
 #include "translations.h"
-#include "utf_util.h"
 #include "win_util.h"
 #include "tstr_util.h"
 

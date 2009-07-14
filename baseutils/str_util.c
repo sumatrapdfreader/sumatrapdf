@@ -628,6 +628,38 @@ int str_trans_chars(char *str, const char *oldChars, const char *newChars)
     return findCount;
 }
 
+/* Caller needs to free() the result */
+static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePage2)
+{
+    char *res = NULL;
+    WCHAR *tmp;
+    int requiredBufSize = MultiByteToWideChar(CodePage1, 0, src, -1, NULL, 0);
+    tmp = malloc(requiredBufSize * sizeof(WCHAR));
+    if (!tmp) goto Error_OOM;
+    MultiByteToWideChar(CodePage1, 0, src, -1, tmp, requiredBufSize);
+
+    requiredBufSize = WideCharToMultiByte(CodePage2, 0, tmp, -1, NULL, 0, NULL, NULL);
+    res = malloc(requiredBufSize);
+    if (!res) goto Error_OOM;
+    WideCharToMultiByte(CodePage2, 0, tmp, -1, res, requiredBufSize, NULL, NULL);
+    free(tmp);
+
+Error_OOM:
+    return res;
+}
+
+/* Caller needs to free() the result */
+char *str_to_multibyte(const char *src, UINT CodePage)
+{
+    return multibyte_to_multibyte(src, CP_ACP, CodePage);
+}
+
+/* Caller needs to free() the result */
+char *multibyte_to_str(const char *src, UINT CodePage)
+{
+    return multibyte_to_multibyte(src, CodePage, CP_ACP);
+}
+
 /* Reverse of mem_to_hexstr. Convert a 0-terminatd hex-encoded string <s> to
    binary data pointed by <buf> of max sisze bufLen.
    Returns FALSE if size of <s> doesn't match <bufLen>. */

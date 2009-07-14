@@ -8,8 +8,7 @@
 */
 #include "base_util.h"
 #include "benc_util.h"
-#include "str_util.h"
-#include "wstr_util.h"
+#include "tstr_util.h"
 
 #define IVALID_LEN (size_t)-1
 
@@ -411,6 +410,17 @@ BOOL benc_dict_insert_wstr(benc_dict* dict, const char* key, const WCHAR *str)
 {
     BOOL ret;
     char *utf8_str = wstr_to_utf8(str);
+    if (!utf8_str)
+        return FALSE;
+    ret = benc_dict_insert_str(dict, key, utf8_str);
+    free(utf8_str);
+    return ret;
+}
+
+BOOL benc_dict_insert_tstr(benc_dict* dict, const char* key, const TCHAR *str)
+{
+    BOOL ret;
+    char *utf8_str = tstr_to_utf8(str);
     if (!utf8_str)
         return FALSE;
     ret = benc_dict_insert_str(dict, key, utf8_str);

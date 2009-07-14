@@ -46,18 +46,12 @@ static bool ParseDisplayMode(const char *txt, DisplayMode *resOut)
                 goto Error; \
         }
 
-#define DICT_ADD_WSTR(doname,name,val) \
+#define DICT_ADD_TSTR(doname,name,val) \
         if (val) { \
-            ok = benc_dict_insert_wstr(doname,name,val); \
+            ok = benc_dict_insert_tstr(doname,name,val); \
             if (!ok) \
                 goto Error; \
         }
-
-#ifdef UNICODE
-#define DICT_ADD_TSTR DICT_ADD_WSTR
-#else
-#define DICT_ADD_TSTR DICT_ADD_STR
-#endif
 
 #define DICT_ADD_DICT(doname,name,val) \
         ok = benc_dict_insert2(doname,name,(benc_obj*)val); \
@@ -111,11 +105,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
 
     const char *filePath = dict_get_str(dict, FILE_STR);
     if (filePath)
-#ifdef UNICODE
-        ds->filePath = utf8_to_wstr(filePath);
-#else
-        ds->filePath = filePath;
-#endif
+        ds->filePath = utf8_to_tstr(filePath);
     if (gGlobalPrefs.m_globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
         return true;
@@ -415,23 +405,17 @@ static void dict_get_str_helper(benc_dict *d, const char *key, char **val)
         str_dup_replace(val, txt);
 }
 
-static void dict_get_wstr_helper(benc_dict *d, const char *key, WCHAR **val)
+static void dict_get_tstr_helper(benc_dict *d, const char *key, TCHAR **val)
 {
     const char *txt = dict_get_str(d, key);
     if (txt) {
-        WCHAR *dup = (WCHAR *)utf8_to_wstr(txt);
-        if (dup) {
+        TCHAR *tmp = utf8_to_tstr(txt);
+        if (tmp) {
             free(*val);
-            *val = dup;
+            *val = tmp;
         }
     }
 }
-
-#ifdef UNICODE
-#define dict_get_tstr_helper dict_get_wstr_helper
-#else
-#define dict_get_tstr_helper dict_get_str_helper
-#endif
 
 bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList **fileHistoryRoot)
 {

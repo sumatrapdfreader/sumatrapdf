@@ -2,7 +2,6 @@
    License: GPLv2 */
 #include "base_util.h"
 #include "PdfEngine.h"
-#include "utf_util.h"
 
 // in SumatraPDF.cpp
 extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
@@ -210,7 +209,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
                 // password not given
                 goto Error;
             }
-            char *pwd_utf8 = tstr_to_multibyte(pwd, CP_UTF8);
+            char *pwd_utf8 = tstr_to_utf8(pwd);
             if (pwd_utf8) {
                 okay = pdf_setpassword(_xref->crypt, pwd_utf8);
                 free(pwd_utf8);
@@ -264,7 +263,7 @@ Error:
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 {
-    TCHAR *name = multibyte_to_tstr(entry->title, CP_UTF8);
+    TCHAR *name = utf8_to_tstr(entry->title);
     PdfTocItem *node = new PdfTocItem(name, entry->link);
 
     if (entry->child)

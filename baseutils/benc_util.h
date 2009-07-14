@@ -86,6 +86,7 @@ BOOL        benc_dict_insert(benc_dict* dict, const char* key, size_t keyLen, be
 BOOL        benc_dict_insert2(benc_dict* dict, const char* key, benc_obj* val);
 BOOL        benc_dict_insert_str(benc_dict* dict, const char* key, const char *str);
 BOOL        benc_dict_insert_wstr(benc_dict* dict, const char* key, const WCHAR *str);
+BOOL        benc_dict_insert_tstr(benc_dict* dict, const char* key, const TCHAR *str);
 BOOL        benc_dict_insert_int64(benc_dict* dict, const char* key, int64_t val);
 benc_obj*   benc_dict_find(benc_dict* dict, const char* key, size_t keyLen);
 benc_obj*   benc_dict_find2(benc_dict* dict, const char* key);

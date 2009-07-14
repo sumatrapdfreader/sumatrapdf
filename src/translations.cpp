@@ -2,7 +2,6 @@
 #include "translations.h"
 #include "translations_txt.h"
 #include "tstr_util.h"
-#include "utf_util.h"
 
 /*
 This code relies on the following variables that must be defined in a 
@@ -20,7 +19,7 @@ const char **g_transLangs;
 // total number of translated strings
 int g_transTranslationsCount;
 
-// array of translated strings. 
+// array of UTF-8 encoded translated strings. 
 // it has g_transLangsCount * g_translationsCount elements
 // (for simplicity). Translation i for language n is at position
 // (n * g_transTranslationsCount) + i
@@ -29,7 +28,7 @@ const char **g_transTranslations;
 
 // numeric index of the current language. 0 ... g_transLangsCount-1
 static int currLangIdx = 0;
-static WCHAR **g_translationsUnicode = NULL;  // cached unicode translations
+static TCHAR **g_translations = NULL;  // cached translations
 
 /* 'data'/'data_len' is a text describing all texts we translate.
    It builds data structures need for quick lookup of translations
@@ -57,73 +56,59 @@ bool Translations_SetCurrentLanguage(const char* lang)
     return false;
 }
 
-const char* Translations_GetTranslationAndIndexA(const char* txt, int& idx)
+static int cmpCharPtrs(const void *a, const void *b)
+{
+    return strcmp(*(char **)a, *(char **)b);
+}
+
+static const char* Translations_GetTranslationAndIndex(const char* txt, int& idx)
 {
     assert(currLangIdx < g_transLangsCount);
-    for (int i=0; i < g_transTranslationsCount; i++) {
-        // TODO: translations are sorted so can use binary search
-        const char *tmp =  g_transTranslations[i];
-        int cmp_res = strcmp(txt, tmp);
-        if (0 == cmp_res) {
-            idx = i;
-            tmp = g_transTranslations[(currLangIdx * g_transTranslationsCount) + i];
-            if (NULL == tmp)
-                return txt;
-            return tmp;
-        } else if (cmp_res < 0) {
-            // bad - didn't find a translation
-            break;
-        }
-    }
-    // bad - didn't find a translation
-    assert(0);
-    idx = -1;
-    return txt;
-}
-
-const char* Translations_GetTranslationA(const char* txt)
-{
-    // perf shortcut: don't bother translating if we use default lanuage
-    if (0 == currLangIdx)
+    const char **res = (const char **)bsearch(&txt, &g_transTranslations, g_transTranslationsCount, sizeof(g_transTranslations[0]), cmpCharPtrs);
+    assert(res);
+    if (!res) {
+        // bad - didn't find a translation
+        idx = -1;
         return txt;
-    int idx;
-    return Translations_GetTranslationAndIndexA(txt, idx);
+    }
+
+    idx = res - g_transTranslations;
+    const char *translation = g_transTranslations[(currLangIdx * g_transTranslationsCount) + idx];
+    return translation ? translation : txt;
 }
 
-// Return a utf16 version of a translation for 'txt'.
-// Memory for the string needs to be allocated and is cached in g_translationsUnicode
+// Return a properly encoded version of a translation for 'txt'.
+// Memory for the string needs to be allocated and is cached in g_translations
 // array. That way the client doesn't have to worry about the lifetime of the string.
 // All allocated strings can be freed with Translations_FreeData(), which should be
 // done at program exit so that we're guaranteed no-one is using the data
-const WCHAR* Translations_GetTranslationW(const char* txt)
+const TCHAR* Translations_GetTranslation(const char* txt)
 {
-    if (!g_translationsUnicode) {
-        g_translationsUnicode = (WCHAR**)zmalloc(sizeof(WCHAR*) * g_transTranslationsCount * g_transLangsCount);
-        if (!g_translationsUnicode)
+    if (!g_translations) {
+        g_translations = (TCHAR**)zmalloc(sizeof(TCHAR*) * g_transTranslationsCount * g_transLangsCount);
+        if (!g_translations)
             return NULL;
     }
     int idx;
-    txt = Translations_GetTranslationAndIndexA(txt, idx);
+    txt = Translations_GetTranslationAndIndex(txt, idx);
     if (!txt || (-1 == idx)) return NULL;
     int transIdx = (currLangIdx * g_transTranslationsCount) + idx;
-    WCHAR *trans = g_translationsUnicode[transIdx];
-    if (!trans) {
-        g_translationsUnicode[transIdx] = utf8_to_utf16(txt);
-        trans = g_translationsUnicode[transIdx];
-    }
-    return (const WCHAR*)trans;
+    TCHAR *trans = g_translations[transIdx];
+    if (!trans)
+        trans = g_translations[transIdx] = utf8_to_tstr(txt);
+    return (const TCHAR*)trans;
 }
 
 // Call at program exit to free all memory related to traslations functionality.
 void Translations_FreeData()
 {
     // TODO: will be more when we implement Translations_FromData
-    if (!g_translationsUnicode)
+    if (!g_translations)
         return;
     for (int i=0; i < (g_transTranslationsCount * g_transLangsCount); i++) {
-        free(g_translationsUnicode[i]);
+        free(g_translations[i]);
     }
-    free(g_translationsUnicode);
-    g_translationsUnicode = NULL;
+    free(g_translations);
+    g_translations = NULL;
 }
 

@@ -99,7 +99,10 @@ int     hex_str_decode_byte(const char **txt);
 BOOL    str_dup_replace(char **dst, const char *src);
 int     str_trans_chars(char *str, const char *oldChars, const char *newChars);
 
-char    *str_parse_possibly_quoted(char  **txt);
+char *  str_to_multibyte(const char *src, UINT CodePage);
+char *  multibyte_to_str(const char *src, UINT CodePage);
+
+char *  str_parse_possibly_quoted(char  **txt);
 int     hex_str_decode_byte(const char **txt);
 
 size_t  digits_for_number(int64_t num);

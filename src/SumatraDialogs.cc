@@ -13,7 +13,6 @@
 #include "win_util.h"
 #include "dialogsizer.h"
 #include "LangMenuDef.h"
-#include "utf_util.h"
 #include "translations.h"
 #include "tstr_util.h"
 
@@ -372,7 +371,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int idx = 0;
         for (int i=0; i < LANGS_COUNT; i++) {
-            WCHAR *langName = utf8_to_utf16(g_menuDefLang[i].m_title);
+            WCHAR *langName = utf8_to_wstr(g_menuDefLang[i].m_title);
             lb_append_stringw_no_sort(langList, langName);
             free(langName);
             if (g_menuDefLang[i].m_id == data->langId)
