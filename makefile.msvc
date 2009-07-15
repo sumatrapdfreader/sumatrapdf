@@ -118,7 +118,7 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
 !if "$(TEXBUILD)"=="1"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\"" /D "SVN_UPDATE_LINK=\"http://william.famille-blum.org/software/sumatra/\"" /D "CURR_VERSION=\"$(VERSION)\""
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=_T(\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\")" /D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")" /D "CURR_VERSION=\"$(VERSION)\""
 !endif
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib \
@@ -333,11 +333,12 @@ all: $(O) $(CMAPDUMP_APP) $(SUMATRA_APP)
 
 # $(PDFBENCH_APP) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) 
 
-rebuild: cleanall all
+rebuild: clean all
 
 clean: force
 	-rmdir /S /Q $(O)
 
+## Note: the following command does not work on Windows
 cleanall: force
 	-rmdir /S /Q obj-*
 
