@@ -17,7 +17,9 @@
 #   fiuzzy
 #   laclasse
 # Nardog (nardog.takoweb.com) - Japanese
-# Richard Magyar (magyar_richard@yahoo.com)- Hungarian
+# Hungarian:
+#   Richard Magyar (magyar_richard@yahoo.com)- Hungarian
+#   Lázár Viktor - Hungarian (0.94)
 # Persian: 
 #   Adham Beyki (odinay@gmail.com)
 #   Mardi Az Pansad Dastgah Artesh
@@ -1750,6 +1752,7 @@ hi:वेबसाइट देखें(&V)
 nn:Vitj &heimeside
 -
 &Manual
+hu:Útmutató(web)
 af:Handleiding
 bg:Ръководство
 de:&Anleitung
@@ -3237,6 +3240,7 @@ fi:Ohita tämä versio
 sv:Hoppa över denna version
 -
 Warning
+hu:Figyelmeztetés
 de:Warnung
 fr:Avertissement
 ru:Предупреждение
@@ -3248,6 +3252,7 @@ hr:Upozorenje
 cn:警告
 -
 This option is not available in portable mode.
+hu:Ez a beállítás nem elérhető hordozható módban
 de:Diese Option ist im portablen Modus nicht verfügbar
 fr:Cette option n'est pas disponible en mode portable.
 cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
@@ -3259,6 +3264,7 @@ hr:Ova mogućnost nije dostupna u prenosivom načinu rada.
 cn:此选项不适用于便携模式
 -
 SumatraPDF Options
+hu:A SumatraPDF beállításai
 de:SumatraPDF Optionen
 fr:SumatraPDF Options
 ru:Параметры SumatraPDF
@@ -3383,6 +3389,7 @@ hi:सही आकार
 nn:Faktisk storleik
 -
 &Settings
+hu:&Beállítások
 de:&Einstellungen
 fr:&Préférences
 ru:Настройки
@@ -3450,6 +3457,7 @@ hi:अनुरूप करें
 nn:Tilpass side
 -
 &Options...
+hu:&Beállítások
 de:&Optionen…
 fr:&Options...
 ru:&Параметры...
@@ -3460,6 +3468,7 @@ hr:Mogućnosti...
 cn:选项(&O)...
 -
 Default &Layout:
+hu:Alapértelmezett megjelenítési mód:
 de:&Standardlayout:
 fr:Mise en page par défaut
 ru:&Компоновка по умолчанию
@@ -3470,6 +3479,7 @@ hr:Pretpostavljeni &izgled:
 cn:缺省样式(&L)
 -
 Default &Zoom:
+hu:Alap nagyítás:
 de:Standard&vergrößerung:
 fr:&Zoom par défaut
 ru:&Масштаб по умолчанию
@@ -3480,12 +3490,14 @@ hr:Pretpostavljeno &uvećanje:
 cn:缺省缩放(&Z)
 -
 OK
+hu:OK
 cy:Iawn
 fr:OK
 mk:Во ред
 hr:U redu
 -
 Advanced
+hu:További programbeállítások
 de:Weiteres
 fr:Avancé
 ru:Дополнительно
@@ -3496,6 +3508,7 @@ hr:Napredno
 cn:高级
 -
 Show the &bookmarks sidebar when available
+hu:Dokumentumba ágyazott könyvjelzők mutatása
 de:&Lesezeichen beim Start anzeigen
 fr:Voir la barre latérale des signets quand elle est disponible
 ru:Показывать панель &закладок (при возможности)
@@ -3506,6 +3519,7 @@ hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
 -
 Cancel
+hu:Mégse
 de:Abbrechen
 fr:Annuler
 ru:Отмена
@@ -3516,6 +3530,7 @@ hr:Odustani
 cn:取消
 -
 Automatically check for &updates
+hu:&Program&frissítések automatikus keresése bekapcsoláskor
 de:&Automatisch nach Updates suchen
 fr:Vérifier &automatiquement les mises à jour
 ru:&Автоматическая проверка обновлений
@@ -3526,6 +3541,7 @@ hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
 -
 &Remember these settings for each document
+hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
 de:&Diese Einstellungen für jedes Dokument merken
 fr:Se rappeler de ces paramètres pour chaque document
 ru:Запомнить эти параметры для &каждого документа
@@ -3536,6 +3552,7 @@ hr:&Upamti ove postavke za svaki pojedini dokument
 cn:为每一个文档记住这些设置(&R)
 -
 Remember &opened files
+hu:Korábban megnyitott file-ok listájának tárolása
 de:&Eine Liste der geöffneten Dokumente führen
 fr:Se rappeler des fichiers ouverts
 ru:&Запомнить открытые файлы
@@ -3601,6 +3618,7 @@ hi:देखें
 nn:Vis
 -
 &Go to page:
+hu:&Ugrás oldal:
 de:&Gehe zu Seite:
 fr:Aller à la page:
 ru:&Перейти к странице
@@ -3611,6 +3629,7 @@ hr:&Idi na stranicu:
 cn:转到页面
 -
 (of %d)
+hu:(a %d-ból)
 de:(von %d)
 fr:(de %d)
 ru: (из %d)
@@ -3621,6 +3640,7 @@ hr:(od %d)
 cn:(%d中的)
 -
 Download
+hu:Letöltés
 de:Herunterladen
 fr:Télécharger
 ru:Загрузка
@@ -3631,6 +3651,7 @@ hr:Preuzmi
 cn:下载
 -
 &Yes
+hu:&Igen
 de:&Ja
 fr:&Oui
 ru:Да
@@ -3641,6 +3662,7 @@ hr:&Da
 cn:是(&Y)
 -
 &No
+hu:&Nem
 de:&Nein
 fr:&Non
 ru:Нет
@@ -3651,6 +3673,7 @@ hr:&Ne
 cn:否(&N)
 -
 &No, thanks
+hu:Köszönöm,&nem
 de:&Nein, danke
 fr:Non, merci
 ru:Спасибо, нет
@@ -3661,6 +3684,7 @@ hr:&Ne, hvala
 cn:不，谢谢(&N)
 -
 Please wait - rendering...
+hu:Feldolgozás, kérem várjon
 de:Bitte einen Moment Geduld…
 fr:S'il vous plaît attendez - génération...
 ru:Подождите - формируется изображение...
@@ -3671,6 +3695,7 @@ hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待－正在渲染中...
 -
 Couldn't render the page
+hu:Oldalfeldolgozási hiba
 de:Diese Seite kann leider nicht angezeigt werden
 fr:Impossible de générer la page
 ru:Не удалось сформировать изображение страницы
@@ -3681,6 +3706,7 @@ hr:Nije moguće iscrtati stranicu
 cn:不能渲染该页面
 -
 No matches were found
+hu:Nem található a dokumentumban
 de:Das Dokument wurde durchsucht
 fr:Aucun résultat n'a été trouvé
 ru:Образец не найден
@@ -3691,6 +3717,7 @@ hr:Pojam nije pronađen
 cn:没有找到匹配项
 -
 Found text at page %d
+hu:Találat a(z) %d. oldalon
 de:Text auf Seite %d gefunden
 fr:Texte trouvé à la page %d
 ru:Текст найден на стр. %d
@@ -3701,6 +3728,7 @@ hr:Tekst je pronađen na stranici %d
 cn:在第%d页找到文本
 -
 Searching %d of %d...
+hu:Keresés a(z) %d./%d oldalon
 de:Suche auf Seite %d von %d…
 fr:Recherche de %d à %d...
 ru:Обработка страницы %d из %d...
@@ -3711,6 +3739,7 @@ hr:Pretražujem stranicu %d od %d...
 cn:正在搜索全部%d的%d
 -
 PDF documents
+hu:PDF dokumentumok
 de:PDF-Dokumente
 fr:Documents PDF
 cy:Dogfennau PDF
@@ -3721,6 +3750,7 @@ hr:PDF dokumenti
 cn:PDF文档
 -
 All files
+hu:Minden fájl
 de:Alle Dateien
 fr:Tous les fichiers
 cy:Pob ffeil
@@ -3731,6 +3761,7 @@ hr:Sve datoteke
 cn:所有文件
 -
 &Password:
+hu:&Jelszó:
 de:&Passwort:
 fr:Mot de passe:
 gr:Κωδικός:
@@ -3740,6 +3771,7 @@ hr:&Lozinka:
 cn:密码(&P)
 -
 &Find what:
+hu:Mit keres:
 de:&Suchen nach:
 fr:Rechercher quoi: 
 ru:&Образец:
@@ -3748,6 +3780,7 @@ hr:&Što tražiti:
 cn:查找(&F):
 -
 Find
+hu:Keresés
 de:Suchen
 fr:Rechercher
 ru:Найти
@@ -3756,6 +3789,7 @@ hr:Pronađi
 cn:查找
 -
 &Match case
+hu:Kis- és nagybetűk megkülönböztetése
 de:&Groß-/Kleinschreibung beachten
 fr:Respecter la casse:
 ru:&Учитывать регистр
@@ -3764,6 +3798,7 @@ hr:Razlikuj velika i mala slova
 cn:匹配大小写(&M)
 -
 Hint: Use the F3 key for finding again
+hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
 fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 ru:Для повторного поиска используйте клавишу F3
@@ -3772,6 +3807,7 @@ hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 cn:提示：按F3再次查找
 -
 Couldn't initialize printer
+hu:A nyomtató inicializálása nem sikerült
 de:Der Drucker konnte nicht initialisiert werden
 fr:Impossible d'initialiser l'imprimante
 ru:Не удалось инициализировать принтер
@@ -3780,6 +3816,7 @@ hr:Ne mogu inicijalizirati pisač
 cn:不能初始化打印机
 -
 No synchronization info at this position
+hu:Nem található szinkronizálási információ az adott pozícióhoz
 de:Keine Synchronisationsinformationen an diesem Ort
 fr:Pas de synchronisation des informations à cette position
 ru:В этой позиции отсутствует информация для синхронизации
@@ -3788,6 +3825,7 @@ hr:Nema podatka o usklađenosti na ovom položaju
 cn:此位置没有同步信息
 -
 Synchronization file cannot be opened
+hu:Nem sikerült megnyitni a szinkronizációs fájlt
 de:Die Synchronisationsdatei kann nicht geöffnet werden
 fr:Le fichier de synchronisation ne peut pas être ouvert
 ru:Не удалось открыть файл с информацией для синхронизации
@@ -3796,6 +3834,7 @@ hr:Datoteka usklađenja ne nože biti otvorena
 cn:不能打开同步文件
 -
 Page number %u inexistant
+hu:A(z) %u oldalszám nem létezik
 de:Es gibt keine Seite %u
 fr:La page %u n'existe pas
 ru:Страница %u не существует
@@ -3812,6 +3851,7 @@ hr:Nema rezultata oko retka %u u datoteci %s
 cn:文件%s的第%u行附近没有找到结果
 -
 Source file %s has no synchronization point
+hu:A '%s' forrásfájlban nincs szinkronizációs hely
 de:%s hat keinen Synchronisations-Punkt
 fr:Le fichier source %s n'a pas de point de synchronisation
 ru:Отсутствует точка синхронизации в исходном файле %s
@@ -3820,6 +3860,7 @@ hr:Izvorna datoteka %s nema točke usklađivanja
 cn:源文件%s没有同步点
 -
 [Changes detected; refreshing] %s
+hu:[a file megváltozott; frissítés] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 fr:[Modifications détectées; actualisation] %s
 ru:[Обнаружены изменения; происходит обновление] %s
@@ -3828,6 +3869,7 @@ hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
 -
 Unknown source file (%s)
+hu:Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
 fr:Fichier source unconnu (%s)
 ru:Неизвестный исходный файл (%s)
@@ -3836,6 +3878,7 @@ hr:Nepoznata izvorna datoteka (%s)
 cn:未知的原文件(%s)
 -
 Cannot print this file
+hu:Ez a file nem nyomtatható
 de:Diese Datei darf nicht gedruckt werden
 fr:Impossible d'imprimer ce fichier
 ru:Не удалось распечатать этот файл
@@ -3844,6 +3887,7 @@ hr:Ne mogu ispisati ovu datoteku
 cn:不能打印此文件
 -
 PDF Document
+hu:PDF dokumentum
 de:PDF-Dokument
 fr:Document PDF
 ru:PDF-документ
@@ -3912,6 +3956,7 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 -
 # Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
+hu:A Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 fr:SumatraPDF est votre lecteur de PDF
 ru:SumatraPDF ассоциирована с файлами PDF
@@ -3921,6 +3966,7 @@ cn:SumatraPDF是你的主要PDF阅读器
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
+hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 fr:SumatraPDF doit maintenant être votre lecteur de PDF
 ru:Теперь SumatraPDF ассоциирована с файлами PDF
@@ -3930,6 +3976,7 @@ cn:现在SumatraPDF应该是你的主要PDF阅读器了
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
+hu:Az alapértelmezett PDF-olvasó nem módosítható hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
 fr:Le lecteur de PDF ne peut être changer en mode portable
 ru:В мобильном режиме изменить PDF-вьюер нельзя
@@ -3938,6 +3985,7 @@ hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变主要阅读器
 -
 Open in &Adobe Reader
+hu:Megnyitás &Adobe Acrobat-ban
 de:Mit &Adobe Reader öffnen
 fr:Ouvrir dans &Adobe Reader
 ru:Открыть в &Adobe Reader
