@@ -4636,6 +4636,8 @@ int pdf_lookupagl(char *name, int *ucsbuf, int ucscap)
 
         else if (strstr(s, "u") == s)
             ucsbuf[ucslen++] = strtol(s + 1, nil, 16);
+        else if (strstr(s, "a") == s)
+            ucsbuf[ucslen++] = strtol(s + 1, nil, 10);
 
 next:
         s = strsep(&p, "_");
