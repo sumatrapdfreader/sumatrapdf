@@ -3468,7 +3468,7 @@ hr:Mogućnosti...
 cn:选项(&O)...
 -
 Default &Layout:
-hu:Alapértelmezett megjelenítési mód:
+hu:Oldalmegjelenítési mód:
 de:&Standardlayout:
 fr:Mise en page par défaut
 ru:&Компоновка по умолчанию
@@ -3541,7 +3541,7 @@ hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
 -
 &Remember these settings for each document
-hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
+hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
 de:&Diese Einstellungen für jedes Dokument merken
 fr:Se rappeler de ces paramètres pour chaque document
 ru:Запомнить эти параметры для &каждого документа
@@ -3564,7 +3564,7 @@ View
 af:Vertoon
 bg:Виж
 br:Ver
-hu:Nézet
+hu:Alapértelmezett nézet
 pl:Widok
 de:Ansicht
 fr:Affichage
@@ -3869,7 +3869,7 @@ hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
 -
 Unknown source file (%s)
-hu:Ismeretlen forrásfájl (%s)
+hu: Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
 fr:Fichier source unconnu (%s)
 ru:Неизвестный исходный файл (%s)
@@ -3976,7 +3976,7 @@ cn:现在SumatraPDF应该是你的主要PDF阅读器了
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
-hu:Az alapértelmezett PDF-olvasó nem módosítható hordozható módban
+hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
 fr:Le lecteur de PDF ne peut être changer en mode portable
 ru:В мобильном режиме изменить PDF-вьюер нельзя
