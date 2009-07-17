@@ -4,7 +4,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#if ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 2)) || \
+#if ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 1)) || \
+    ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 2)) || \
     ((FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 3) && (FREETYPE_PATCH < 8))
 
 int FT_Get_Advance(FT_Face face, int gid, int masks, FT_Fixed *out)
