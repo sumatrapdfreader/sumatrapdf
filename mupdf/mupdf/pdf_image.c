@@ -324,7 +324,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		if (error)
 			return error;
 
-		if (mask->super.cs != pdf_devicegray)
+		if (mask->super.cs && mask->super.cs != pdf_devicegray)
 			return fz_throw("syntaxerror: SMask must be DeviceGray");
 
 		mask->super.cs = nil;
