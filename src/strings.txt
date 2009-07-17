@@ -2944,7 +2944,7 @@ sn:Usandivhunze futi
 bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
 tw:不要再問我
 cn:以后不再询问
-cy:Peidio gofyn eto
+cy:&Peidio gofyn eto
 ga:Ná fiafraigh dom arís
 mm:ထပ်မမေးပါနှင့်။
 pa:ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
@@ -3230,7 +3230,7 @@ sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
 tw:略過這個版本
 cn:跳过此版本
-cy:Hepgor y fersiwn yma.
+cy:&Hepgor y fersiwn yma.
 ga:Ná bac leis an leagan seo.
 mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 pa:ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
@@ -3255,7 +3255,7 @@ This option is not available in portable mode.
 hu:Ez a beállítás nem elérhető hordozható módban
 de:Diese Option ist im portablen Modus nicht verfügbar
 fr:Cette option n'est pas disponible en mode portable.
-cy:Rhybudd - Nid yw'r dewis hwn ar gael mewn modd cludadwy.
+cy:Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
 ru:Эта опция недоступна в мобильном режиме.
 gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
@@ -3468,7 +3468,7 @@ hr:Mogućnosti...
 cn:选项(&O)...
 -
 Default &Layout:
-hu:Oldalmegjelenítési mód:
+hu:Alapértelmezett megjelenítési mód:
 de:&Standardlayout:
 fr:Mise en page par défaut
 ru:&Компоновка по умолчанию
@@ -3512,7 +3512,7 @@ hu:Dokumentumba ágyazott könyvjelzők mutatása
 de:&Lesezeichen beim Start anzeigen
 fr:Voir la barre latérale des signets quand elle est disponible
 ru:Показывать панель &закладок (при возможности)
-cy:Dangos bar ochr y nodau tudalen pan yw ar gael
+cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 hr:Prikaži traku &straničnika kada je dostupna
@@ -3541,7 +3541,7 @@ hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
 -
 &Remember these settings for each document
-hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
+hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
 de:&Diese Einstellungen für jedes Dokument merken
 fr:Se rappeler de ces paramètres pour chaque document
 ru:Запомнить эти параметры для &каждого документа
@@ -3559,12 +3559,13 @@ ru:&Запомнить открытые файлы
 mk: Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
+cy:Co&fio ffeiliau ar agor
 -
 View
 af:Vertoon
 bg:Виж
 br:Ver
-hu:Alapértelmezett nézet
+hu:Nézet
 pl:Widok
 de:Ansicht
 fr:Affichage
@@ -3622,7 +3623,7 @@ hu:&Ugrás oldal:
 de:&Gehe zu Seite:
 fr:Aller à la page:
 ru:&Перейти к странице
-cy:Mynd i dudalen:
+cy:&Mynd i dudalen:
 gr:Μετάβαση στη σελίδα:
 mk:&Појди на страница:
 hr:&Idi na stranicu:
@@ -3655,7 +3656,7 @@ hu:&Igen
 de:&Ja
 fr:&Oui
 ru:Да
-cy:Iawn
+cy:&Iawn
 gr:&Ναι
 mk:&Да
 hr:&Da
@@ -3666,7 +3667,7 @@ hu:&Nem
 de:&Nein
 fr:&Non
 ru:Нет
-cy:Na
+cy:&Na
 gr:Ό&χι
 mk:&Не
 hr:&Ne
@@ -3677,7 +3678,7 @@ hu:Köszönöm,&nem
 de:&Nein, danke
 fr:Non, merci
 ru:Спасибо, нет
-cy:Dim diolch
+cy:&Dim diolch
 gr:Όχι, ευχαριστώ
 mk:&Не, благодарам
 hr:&Ne, hvala
@@ -3769,6 +3770,7 @@ ru:&Пароль:
 mk:&Лозинка:
 hr:&Lozinka:
 cn:密码(&P)
+cy:&Cyfrinair:
 -
 &Find what:
 hu:Mit keres:
@@ -3778,6 +3780,7 @@ ru:&Образец:
 mk:&Најди што:
 hr:&Što tražiti:
 cn:查找(&F):
+cy:&Canfod beth:
 -
 Find
 hu:Keresés
@@ -3787,6 +3790,7 @@ ru:Найти
 mk:Најди
 hr:Pronađi
 cn:查找
+cy:Canfod
 -
 &Match case
 hu:Kis- és nagybetűk megkülönböztetése
@@ -3796,6 +3800,7 @@ ru:&Учитывать регистр
 mk:&Разликувај мали и големи букви
 hr:Razlikuj velika i mala slova
 cn:匹配大小写(&M)
+cy:&Cydweddu maint
 -
 Hint: Use the F3 key for finding again
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
@@ -3805,6 +3810,7 @@ ru:Для повторного поиска используйте клавиш�
 mk:За повторно пребарување користи F3 од тастатурата
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 cn:提示：按F3再次查找
+cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 -
 Couldn't initialize printer
 hu:A nyomtató inicializálása nem sikerült
@@ -3814,6 +3820,7 @@ ru:Не удалось инициализировать принтер
 mk:Не можам да го подготвам печатачот
 hr:Ne mogu inicijalizirati pisač
 cn:不能初始化打印机
+cy:Methu cychwyn yr argraffydd
 -
 No synchronization info at this position
 hu:Nem található szinkronizálási információ az adott pozícióhoz
@@ -3823,6 +3830,7 @@ ru:В этой позиции отсутствует информация для
 mk:Нема информации за синхронизација на оваа позиција
 hr:Nema podatka o usklađenosti na ovom položaju
 cn:此位置没有同步信息
+cy:Dim gwybodaeth cydweddu yn y fan hon
 -
 Synchronization file cannot be opened
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
@@ -3832,6 +3840,7 @@ ru:Не удалось открыть файл с информацией для 
 mk:Синхронизациската датотека не може да се отвори
 hr:Datoteka usklađenja ne nože biti otvorena
 cn:不能打开同步文件
+cy:Methu agor ffeil cydweddu
 -
 Page number %u inexistant
 hu:A(z) %u oldalszám nem létezik
@@ -3841,6 +3850,7 @@ ru:Страница %u не существует
 mk:Страница со број %u не постои
 hr:Stranica %u ne postoji
 cn:页号%u不存在
+cy:Nid yw tudalen rhif %u yn bodoli
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
@@ -3849,6 +3859,7 @@ ru:Результат, соответствующий строке %u в фай�
 mk:Не најдов резултати околу линијата %u во датотеката %s
 hr:Nema rezultata oko retka %u u datoteci %s
 cn:文件%s的第%u行附近没有找到结果
+cy:Dim canlyniad o liell %u yn ffeil %s
 -
 Source file %s has no synchronization point
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
@@ -3858,6 +3869,7 @@ ru:Отсутствует точка синхронизации в исходн�
 mk:Изворната датотека %s нема синхронизациска точка
 hr:Izvorna datoteka %s nema točke usklađivanja
 cn:源文件%s没有同步点
+cy:Does dim pwynt cydweddu yn ffeil %s
 -
 [Changes detected; refreshing] %s
 hu:[a file megváltozott; frissítés] %s
@@ -3867,15 +3879,17 @@ ru:[Обнаружены изменения; происходит обновле
 mk:[Забележани се промени; освежувам...] %s
 hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
+cy:[Newidiadau wedi eu canfod; adnewyddu]
 -
 Unknown source file (%s)
-hu: Ismeretlen forrásfájl (%s)
+hu:Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
 fr:Fichier source unconnu (%s)
 ru:Неизвестный исходный файл (%s)
 mk:Непозната изворна датотека (%s)
 hr:Nepoznata izvorna datoteka (%s)
 cn:未知的原文件(%s)
+cy:Ffeil ffynhonnell anhysbys (%s)
 -
 Cannot print this file
 hu:Ez a file nem nyomtatható
@@ -3885,6 +3899,7 @@ ru:Не удалось распечатать этот файл
 mk:Не можам да ја печатам оваа датотека
 hr:Ne mogu ispisati ovu datoteku
 cn:不能打印此文件
+cy:Methu argraffu'r ffeil
 -
 PDF Document
 hu:PDF dokumentum
@@ -3894,6 +3909,7 @@ ru:PDF-документ
 mk:PDF документ
 hr:PDF dokument
 cn:PDF文档
+cy:Dogfen PDF
 -
 # Please keep this string as short as possible!
 Make SumatraPDF my main PDF reader
@@ -3963,6 +3979,7 @@ ru:SumatraPDF ассоциирована с файлами PDF
 mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 cn:SumatraPDF是你的主要PDF阅读器
+cy:SumatraPDF yw eich prif ddarllenydd PDF
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
@@ -3973,16 +3990,18 @@ ru:Теперь SumatraPDF ассоциирована с файлами PDF
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 cn:现在SumatraPDF应该是你的主要PDF阅读器了
+cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
-hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
+hu:Az alapértelmezett PDF-olvasó nem módosítható hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
 fr:Le lecteur de PDF ne peut être changer en mode portable
 ru:В мобильном режиме изменить PDF-вьюер нельзя
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变主要阅读器
+cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 -
 Open in &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
@@ -3992,3 +4011,4 @@ ru:Открыть в &Adobe Reader
 mk:Отвори со &Adobe Reader
 hr:Otvori u programu &Adobe Reader
 cn:在&Adobe Reader中打开
+cy:Agor yn &Adobe Reader
