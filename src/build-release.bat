@@ -1,4 +1,4 @@
-@set PATH=%PATH%;%ProgramFiles%\Microsoft Visual Studio 8\Common7\IDE
+call "C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
 @set PATH=%PATH%;%ProgramFiles%\NSIS
 @set OUT_PATH=C:\kjk\src\sumatrapdf\builds
 

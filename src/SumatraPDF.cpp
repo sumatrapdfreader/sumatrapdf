@@ -1,7 +1,18 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv2 */
-   
+
 #include "SumatraPDF.h"
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <direct.h> /* for _mkdir() */
+
+#include <windowsx.h>
+#include <shellapi.h>
+#include <shlobj.h>
+#include <Wininet.h>
 
 #include "file_util.h"
 #include "geom_util.h"
@@ -10,23 +21,13 @@
 #include "translations.h"
 #include "win_util.h"
 #include "tstr_util.h"
+#include "MemSegment.h"
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <direct.h> /* for _mkdir() */
-
-#include <shellapi.h>
-#include <shlobj.h>
-
 #include "WinUtil.hpp"
-#include <windowsx.h>
-#include <Wininet.h>
 
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
@@ -522,90 +523,6 @@ DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
     LONGLONG diff = t1.QuadPart - t2.QuadPart;
     diff = diff / (LONGLONG)10000000L;
     return (DWORD)diff;
-}
-
-class MemSegment {
-private:
-    class MemSegment *next;
-
-public:
-    MemSegment(const void *buf, DWORD size) {
-        next = NULL;
-        data = NULL;
-        add(buf, size);
-    };
-
-    MemSegment() {
-        next = NULL;
-        data = NULL;
-    }
-
-    bool add(const void *buf, DWORD size) {
-        assert(size > 0);
-        if (!data) {
-            dataSize = size;
-            data = malloc(size);
-            if (!data)
-                return false;
-            memcpy(data, buf, size);
-        } else {
-            MemSegment *ms = new MemSegment(buf, size);
-            if (!ms)
-                return false;
-            if (!ms->data) {
-                delete ms;
-                return false;
-            }
-            ms->next = next;
-            next = ms;
-        }
-        return true;
-    }
-
-    void freeAll() {
-        free(data);
-        data = NULL;
-        // clever trick: each segment will delete the next segment
-        if (next) {
-            delete next;
-            next = NULL;
-        }
-    }
-    ~MemSegment() {
-        freeAll();
-    }
-    void *getData(DWORD *sizeOut);
-    void *data;
-    DWORD dataSize;
-};
-
-void *MemSegment::getData(DWORD *sizeOut)
-{
-    DWORD totalSize = dataSize;
-    MemSegment *curr = next;
-    while (curr) {
-        totalSize += curr->dataSize;
-        curr = curr->next;
-    }
-    if (0 == dataSize)
-        return NULL;
-    char *buf = (char*)malloc(totalSize + 1); // +1 for 0 termination
-    if (!buf)
-        return NULL;
-    buf[totalSize] = 0;
-    // the chunks are linked in reverse order, so we must reassemble them properly
-    char *end = buf + totalSize;
-    curr = next;
-    while (curr) {
-        end -= curr->dataSize;
-        memcpy(end, curr->data, curr->dataSize);
-        curr = curr->next;
-    }
-    end -= dataSize;
-    memcpy(end, data, dataSize);
-    assert(end == buf);
-    *sizeOut = totalSize;
-    return (void*)buf;
 }
 
 #ifdef DEBUG
