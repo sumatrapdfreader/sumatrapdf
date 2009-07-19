@@ -44,7 +44,9 @@
 #   Linus Persson
 #   Cecilia B
 # Kristian Vrhel - Czech
-# Giorgos Dimopoulos (geodimo1985@gmail.com) - Greek (Hellenic)
+# Greek (Hellenic):
+# Giorgos Dimopoulos (geodimo1985@gmail.com)
+# George Georgiou (geonetor@yahoo.gr)
 # Uthen Phutneam - Thai
 # Português(Portugal):
 # 	Ricardo Santos[bogas](http://www.meta-morf.pt.vu)
@@ -2879,7 +2881,7 @@ af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
-gr:Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα ανάγνωσης αρχείων PDF;
+gr:Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα  αρχείων PDF;
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
@@ -3242,6 +3244,7 @@ sv:Hoppa över denna version
 Warning
 hu:Figyelmeztetés
 de:Warnung
+gr:Προσοχή
 fr:Avertissement
 ru:Предупреждение
 pl:Uwaga
@@ -3254,6 +3257,7 @@ cn:警告
 This option is not available in portable mode.
 hu:Ez a beállítás nem elérhető hordozható módban
 de:Diese Option ist im portablen Modus nicht verfügbar
+gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
 fr:Cette option n'est pas disponible en mode portable.
 cy:Nid yw'r dewis hwn ar gael mewn modd cludadwy.
 pl:Opcja niedostepna w trybie przenosnym.
@@ -3266,6 +3270,7 @@ cn:此选项不适用于便携模式
 SumatraPDF Options
 hu:A SumatraPDF beállításai
 de:SumatraPDF Optionen
+gr:Επολογές SumatraPDF
 fr:SumatraPDF Options
 ru:Параметры SumatraPDF
 cy:Dewisiadau SumatraPDF
@@ -3391,6 +3396,7 @@ nn:Faktisk storleik
 &Settings
 hu:&Beállítások
 de:&Einstellungen
+gr:Ρυθμίσεις
 fr:&Préférences
 ru:Настройки
 cy:&Gosodiadau
@@ -3459,6 +3465,7 @@ nn:Tilpass side
 &Options...
 hu:&Beállítások
 de:&Optionen…
+gr:Επιλογές…
 fr:&Options...
 ru:&Параметры...
 cy:&Dewisiadau...
@@ -3470,6 +3477,7 @@ cn:选项(&O)...
 Default &Layout:
 hu:Alapértelmezett megjelenítési mód:
 de:&Standardlayout:
+gr:Προκαθορισμένη διαμόρφωση σελίδας
 fr:Mise en page par défaut
 ru:&Компоновка по умолчанию
 cy:&Cynllun Rhagosodedig:
@@ -3481,6 +3489,7 @@ cn:缺省样式(&L)
 Default &Zoom:
 hu:Alap nagyítás:
 de:Standard&vergrößerung:
+gr:Προκαθορισμένο ζουμ:
 fr:&Zoom par défaut
 ru:&Масштаб по умолчанию
 cy:C&hwyddo Rhagosodedig:
@@ -3491,6 +3500,7 @@ cn:缺省缩放(&Z)
 -
 OK
 hu:OK
+gr:ΟΚ
 cy:Iawn
 fr:OK
 mk:Во ред
@@ -3499,6 +3509,7 @@ hr:U redu
 Advanced
 hu:További programbeállítások
 de:Weiteres
+gr:Προχωρημένα
 fr:Avancé
 ru:Дополнительно
 cy:Uwch
@@ -3510,6 +3521,7 @@ cn:高级
 Show the &bookmarks sidebar when available
 hu:Dokumentumba ágyazott könyvjelzők mutatása
 de:&Lesezeichen beim Start anzeigen
+gr:Εμφάνιση Πλευρικής μπάρας σελιδοδεικτών όπου είναι διαθέσιμοι
 fr:Voir la barre latérale des signets quand elle est disponible
 ru:Показывать панель &закладок (при возможности)
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
@@ -3521,6 +3533,7 @@ cn:若可用则显示书签侧边栏(&b)
 Cancel
 hu:Mégse
 de:Abbrechen
+gr:Άκυρο
 fr:Annuler
 ru:Отмена
 cy:Diddymu
@@ -3532,6 +3545,7 @@ cn:取消
 Automatically check for &updates
 hu:&Program&frissítések automatikus keresése bekapcsoláskor
 de:&Automatisch nach Updates suchen
+gr:Αυτόματος έλεγχος για ενημερώσεις
 fr:Vérifier &automatiquement les mises à jour
 ru:&Автоматическая проверка обновлений
 cy:Gwirio'n awtomatig am &ddiweddariadau
@@ -3543,6 +3557,7 @@ cn:自动检查更新(&u)
 &Remember these settings for each document
 hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
 de:&Diese Einstellungen für jedes Dokument merken
+gr:Απομνημόνευση των ρυθμίσεων για κάθε έγγραφο
 fr:Se rappeler de ces paramètres pour chaque document
 ru:Запомнить эти параметры для &каждого документа
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
@@ -3553,6 +3568,7 @@ cn:为每一个文档记住这些设置(&R)
 -
 Remember &opened files
 hu:Korábban megnyitott file-ok listájának tárolása
+gr:Απομνημόνευη πρόσφατων αρχείων
 de:&Eine Liste der geöffneten Dokumente führen
 fr:Se rappeler des fichiers ouverts
 ru:&Запомнить открытые файлы
@@ -3621,6 +3637,7 @@ nn:Vis
 &Go to page:
 hu:&Ugrás oldal:
 de:&Gehe zu Seite:
+gr:Μετάβαση στη σελίδα:
 fr:Aller à la page:
 ru:&Перейти к странице
 cy:&Mynd i dudalen:
@@ -3643,6 +3660,7 @@ cn:(%d中的)
 Download
 hu:Letöltés
 de:Herunterladen
+gr:Λήψη
 fr:Télécharger
 ru:Загрузка
 cy:Llwytho i Lawr
@@ -3654,6 +3672,7 @@ cn:下载
 &Yes
 hu:&Igen
 de:&Ja
+gr:&Ναι
 fr:&Oui
 ru:Да
 cy:&Iawn
@@ -3665,6 +3684,7 @@ cn:是(&Y)
 &No
 hu:&Nem
 de:&Nein
+gr:Ό&χι
 fr:&Non
 ru:Нет
 cy:&Na
@@ -3676,6 +3696,7 @@ cn:否(&N)
 &No, thanks
 hu:Köszönöm,&nem
 de:&Nein, danke
+gr:Όχι, ευχαριστώ
 fr:Non, merci
 ru:Спасибо, нет
 cy:&Dim diolch
@@ -3687,6 +3708,7 @@ cn:不，谢谢(&N)
 Please wait - rendering...
 hu:Feldolgozás, kérem várjon
 de:Bitte einen Moment Geduld…
+gr:Παρακαλώ περιμένετε - Φόρτωση…
 fr:S'il vous plaît attendez - génération...
 ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
@@ -3731,6 +3753,7 @@ cn:在第%d页找到文本
 Searching %d of %d...
 hu:Keresés a(z) %d./%d oldalon
 de:Suche auf Seite %d von %d…
+gr:Αναζήτηση %d από %d...
 fr:Recherche de %d à %d...
 ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
@@ -3753,6 +3776,7 @@ cn:PDF文档
 All files
 hu:Minden fájl
 de:Alle Dateien
+gr:Όλα τα αρχεία
 fr:Tous les fichiers
 cy:Pob ffeil
 gr:Όλα τα αρχεία
@@ -3764,6 +3788,7 @@ cn:所有文件
 &Password:
 hu:&Jelszó:
 de:&Passwort:
+gr:Κωδικός:
 fr:Mot de passe:
 gr:Κωδικός:
 ru:&Пароль:
@@ -3775,6 +3800,7 @@ cy:&Cyfrinair:
 &Find what:
 hu:Mit keres:
 de:&Suchen nach:
+gr:Εύρεση του:
 fr:Rechercher quoi: 
 ru:&Образец:
 mk:&Најди што:
@@ -3785,6 +3811,7 @@ cy:&Canfod beth:
 Find
 hu:Keresés
 de:Suchen
+gr:Εύρεση
 fr:Rechercher
 ru:Найти
 mk:Најди
@@ -3795,6 +3822,7 @@ cy:Canfod
 &Match case
 hu:Kis- és nagybetűk megkülönböztetése
 de:&Groß-/Kleinschreibung beachten
+gr:Ταίριασμα πεζών/κεφαλαίων
 fr:Respecter la casse:
 ru:&Учитывать регистр
 mk:&Разликувај мали и големи букви
@@ -3805,6 +3833,7 @@ cy:&Cydweddu maint
 Hint: Use the F3 key for finding again
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
+gr:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
 fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 ru:Для повторного поиска используйте клавишу F3
 mk:За повторно пребарување користи F3 од тастатурата
@@ -3815,6 +3844,7 @@ cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 Couldn't initialize printer
 hu:A nyomtató inicializálása nem sikerült
 de:Der Drucker konnte nicht initialisiert werden
+gr:Απέτυχε η αρχικοποίηση του εκτυπωτή
 fr:Impossible d'initialiser l'imprimante
 ru:Не удалось инициализировать принтер
 mk:Не можам да го подготвам печатачот
@@ -3825,6 +3855,7 @@ cy:Methu cychwyn yr argraffydd
 No synchronization info at this position
 hu:Nem található szinkronizálási információ az adott pozícióhoz
 de:Keine Synchronisationsinformationen an diesem Ort
+gr:Δε βρέθηκαν πληροφορίες συγχρονισμού στη θέση αυτή
 fr:Pas de synchronisation des informations à cette position
 ru:В этой позиции отсутствует информация для синхронизации
 mk:Нема информации за синхронизација на оваа позиција
@@ -3835,6 +3866,7 @@ cy:Dim gwybodaeth cydweddu yn y fan hon
 Synchronization file cannot be opened
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
 de:Die Synchronisationsdatei kann nicht geöffnet werden
+gr:Το αρχείο συγχρονισμού δε μπορεί να ανοιχθεί
 fr:Le fichier de synchronisation ne peut pas être ouvert
 ru:Не удалось открыть файл с информацией для синхронизации
 mk:Синхронизациската датотека не може да се отвори
@@ -3845,6 +3877,7 @@ cy:Methu agor ffeil cydweddu
 Page number %u inexistant
 hu:A(z) %u oldalszám nem létezik
 de:Es gibt keine Seite %u
+gr:Δεν υπάρχει σελίδα με αριθμό %u
 fr:La page %u n'existe pas
 ru:Страница %u не существует
 mk:Страница со број %u не постои
@@ -3854,6 +3887,7 @@ cy:Nid yw tudalen rhif %u yn bodoli
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
+gr:Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s 
 fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 ru:Результат, соответствующий строке %u в файле %s, не найден
 mk:Не најдов резултати околу линијата %u во датотеката %s
@@ -3864,6 +3898,7 @@ cy:Dim canlyniad o liell %u yn ffeil %s
 Source file %s has no synchronization point
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
 de:%s hat keinen Synchronisations-Punkt
+gr:Το αρχείο προέλευσης %s δεν λεχει σημείο συγχρονισμού
 fr:Le fichier source %s n'a pas de point de synchronisation
 ru:Отсутствует точка синхронизации в исходном файле %s
 mk:Изворната датотека %s нема синхронизациска точка
@@ -3874,6 +3909,7 @@ cy:Does dim pwynt cydweddu yn ffeil %s
 [Changes detected; refreshing] %s
 hu:[a file megváltozott; frissítés] %s
 de:[Datei wurde geändert; aktualisiere…] %s
+gr:[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
 fr:[Modifications détectées; actualisation] %s
 ru:[Обнаружены изменения; происходит обновление] %s
 mk:[Забележани се промени; освежувам...] %s
@@ -3884,6 +3920,7 @@ cy:[Newidiadau wedi eu canfod; adnewyddu]
 Unknown source file (%s)
 hu:Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
+gr:Άγνωστο αρχείο προέλευσης (%s)
 fr:Fichier source unconnu (%s)
 ru:Неизвестный исходный файл (%s)
 mk:Непозната изворна датотека (%s)
@@ -3894,6 +3931,7 @@ cy:Ffeil ffynhonnell anhysbys (%s)
 Cannot print this file
 hu:Ez a file nem nyomtatható
 de:Diese Datei darf nicht gedruckt werden
+gr:Δε μπορεί να γίνει εκτύπωση του αρχείου
 fr:Impossible d'imprimer ce fichier
 ru:Не удалось распечатать этот файл
 mk:Не можам да ја печатам оваа датотека
@@ -3904,6 +3942,7 @@ cy:Methu argraffu'r ffeil
 PDF Document
 hu:PDF dokumentum
 de:PDF-Dokument
+gr:Αρχείο PDF
 fr:Document PDF
 ru:PDF-документ
 mk:PDF документ
@@ -3974,6 +4013,7 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 SumatraPDF is your main PDF reader
 hu:A Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
+gr:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
 fr:SumatraPDF est votre lecteur de PDF
 ru:SumatraPDF ассоциирована с файлами PDF
 mk:SumatraPDF е твојот основен PDF читач
@@ -3985,6 +4025,7 @@ cy:SumatraPDF yw eich prif ddarllenydd PDF
 SumatraPDF should now be your main PDF reader
 hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
+gr:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
 fr:SumatraPDF doit maintenant être votre lecteur de PDF
 ru:Теперь SumatraPDF ассоциирована с файлами PDF
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
@@ -3996,6 +4037,7 @@ cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 Main PDF reader can't be changed in portable mode
 hu:Az alapértelmezett PDF-olvasó nem módosítható hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
+gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
 fr:Le lecteur de PDF ne peut être changer en mode portable
 ru:В мобильном режиме изменить PDF-вьюер нельзя
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
@@ -4006,6 +4048,7 @@ cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 Open in &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
 de:Mit &Adobe Reader öffnen
+gr:Άνοιγμα με &Adobe Reader
 fr:Ouvrir dans &Adobe Reader
 ru:Открыть в &Adobe Reader
 mk:Отвори со &Adobe Reader
