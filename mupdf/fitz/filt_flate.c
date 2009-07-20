@@ -94,8 +94,9 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	zp->avail_out = out->ep - out->wp;
 
 	err = inflate(zp, Z_NO_FLUSH);
+
+	/* Make sure we call it with Z_FINISH at the end of input */
 	if (err == Z_OK && in->eof && zp->avail_in == 0 && zp->avail_out > 0)
-		/* call it right again, if there are only some few bytes left */
 		err = inflate(zp, Z_FINISH);
 
 	in->rp = in->wp - zp->avail_in;
@@ -111,6 +112,8 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 			return fz_ioneedin;
 		if (out->wp == out->ep)
 			return fz_ioneedout;
+        /* TODO: should we return fz_ioneedin like mupdf
+           or is it a bugfix ? */
 		return fz_iodone; /* hmm, what's going on here? */
 	}
 	else

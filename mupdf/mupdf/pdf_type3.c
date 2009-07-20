@@ -109,7 +109,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 		goto cleanup;
 	}
 
-	if (fz_isname(obj))
+	if (fz_isname(encoding))
 		pdf_loadencoding(estrings, fz_toname(encoding));
 
 	if (fz_isdict(encoding))

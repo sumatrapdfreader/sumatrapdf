@@ -326,7 +326,7 @@ static void drawpages(char *pagelist)
 	    if (strlen(dash) > 1)
 		epage = atoi(dash + 1);
 	    else
-		epage = xref->pagecount;
+		epage = pagecount;
 	}
 
 	if (spage > epage)
@@ -334,8 +334,8 @@ static void drawpages(char *pagelist)
 
 	if (spage < 1)
 	    spage = 1;
-	if (epage > xref->pagecount)
-	    epage = xref->pagecount;
+	if (epage > pagecount)
+	    epage = pagecount;
 
 	printf("Drawing pages %d-%d...\n", spage, epage);
 	for (page = spage; page <= epage; page++)

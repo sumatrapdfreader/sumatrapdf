@@ -3,7 +3,7 @@
 
 extern char *basename;
 extern pdf_xref *xref;
-extern int pages;
+extern int pagecount;
 
 void die(fz_error error);
 void setcleanup(void (*cleanup)(void));

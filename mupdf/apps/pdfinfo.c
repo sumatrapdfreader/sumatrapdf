@@ -262,11 +262,14 @@ gatherfonts(int page, fz_obj *pageobj, fz_obj *dict)
 
 		fontdict = ref = fz_dictgetval(dict, i);
 		if (!fz_isdict(fontdict))
-			return fz_throw("not a font dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		{
+			fz_warn("not a font dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			continue;
+		}
 
 		subtype = fz_dictgets(fontdict, "Subtype");
 		if (!fz_isname(subtype))
-			return fz_throw("not a font dict subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_warn("not a font dict subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
 
 		basefont = fz_dictgets(fontdict, "BaseFont");
 		if (basefont)
@@ -556,11 +559,14 @@ gathershadings(int page, fz_obj *pageobj, fz_obj *dict)
 
 		type = fz_dictgets(shade, "ShadingType");
 		if (!fz_isint(type) || fz_toint(type) < 1 || fz_toint(type) > 7)
-			return fz_throw("not a shading type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		{
+			fz_warn("not a shading type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			type = nil;
+		}
 
 		for (k = 0; k < shadings; k++)
 			if (fz_tonum(shading[k]->ref) == fz_tonum(ref) &&
-					fz_togen(shading[k]->ref) == fz_togen(ref))
+			    fz_togen(shading[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < shadings)
@@ -605,22 +611,31 @@ gatherpatterns(int page, fz_obj *pageobj, fz_obj *dict)
 
 		type = fz_dictgets(patterndict, "PatternType");
 		if (!fz_isint(type) || fz_toint(type) < 1 || fz_toint(type) > 2)
-			return fz_throw("not a pattern type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		{
+			fz_warn("not a pattern type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			type = nil;
+		}
 
 		if (fz_toint(type) == 1)
 		{
 			paint = fz_dictgets(patterndict, "PaintType");
 			if (!fz_isint(paint) || fz_toint(paint) < 1 || fz_toint(paint) > 2)
-				return fz_throw("not a pattern paint type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			{
+				fz_warn("not a pattern paint type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				paint = nil;
+			}
 
 			tiling = fz_dictgets(patterndict, "TilingType");
 			if (!fz_isint(tiling) || fz_toint(tiling) < 1 || fz_toint(tiling) > 3)
-				return fz_throw("not a pattern tiling type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			{
+				fz_warn("not a pattern tiling type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				tiling = nil;
+			}
 		}
 
 		for (k = 0; k < patterns; k++)
 			if (fz_tonum(pattern[k]->ref) == fz_tonum(ref) &&
-					fz_togen(pattern[k]->ref) == fz_togen(ref))
+			    fz_togen(pattern[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < patterns)
@@ -742,7 +757,7 @@ printglobalinfo(void)
 		fz_debugobj(cryptinfo->u.crypt.obj);
 	}
 
-	printf("\nPages: %d\n\n", xref->pagecount);
+	printf("\nPages: %d\n\n", pagecount);
 }
 
 static void
@@ -979,7 +994,7 @@ showinfo(char *filename, int show, char *pagelist)
 			if (strlen(dash) > 1)
 				epage = atoi(dash + 1);
 			else
-				epage = xref->pagecount;
+				epage = pagecount;
 		}
 
 		if (spage > epage)
@@ -987,10 +1002,10 @@ showinfo(char *filename, int show, char *pagelist)
 
 		if (spage < 1)
 			spage = 1;
-		if (epage > xref->pagecount)
-			epage = xref->pagecount;
-		if (spage > xref->pagecount)
-			spage = xref->pagecount;
+		if (epage > pagecount)
+			epage = pagecount;
+		if (spage > pagecount)
+			spage = pagecount;
 
 		if (allpages)
 			printf("Retrieving info from pages %d-%d...\n", spage, epage);
@@ -1059,6 +1074,7 @@ int main(int argc, char **argv)
 
 			closexref();
 			filename = argv[fz_optind];
+			printf("%s:\n", filename);
 			openxref(filename, password, 0);
 			gatherglobalinfo();
 			state = NO_INFO_GATHERED;

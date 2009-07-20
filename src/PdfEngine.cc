@@ -242,9 +242,7 @@ DecryptedOk:
     if (_xref->info)
         fz_keepobj(_xref->info);
 
-    // TODO: MuPDF would like to call this from pdf_loadxref and pdf_repairxref,
-    //       but currently fails for encrypted documents
-    error = pdf_getpagecount(_xref, &_xref->pagecount);
+    error = pdf_getpagecount(_xref, &_pageCount);
     if (error)
         goto Error;
 
@@ -258,7 +256,6 @@ DecryptedOk:
     // error might prevent loading some pdfs that would
     // otherwise get displayed
 
-    _pageCount = _xref->pagecount;
     _pages = (pdf_page**)malloc(sizeof(pdf_page*) * _pageCount);
     for (int i = 0; i < _pageCount; i++)
         _pages[i] = NULL;

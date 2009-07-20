@@ -386,6 +386,7 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	xref->table[oid].gen = gen;
 	xref->table[oid].obj = fz_keepobj(trailer);
 	xref->table[oid].stmofs = stmofs;
+	xref->table[oid].ofs = 0;
 
 	obj = fz_dictgets(trailer, "Size");
 	if (!obj)
@@ -709,14 +710,6 @@ pdf_loadxref2(pdf_xref *xref)
 	if (error)
 	{
 		error = fz_rethrow(error, "cannot read xref");
-		goto cleanup;
-	}
-
-	// TODO: this fails for encrypted documents, so leave it to callers for now
-	// error = pdf_getpagecount(xref, &xref->pagecount);
-	if (error)
-	{
-		error = fz_rethrow(error, "cannot determine page count");
 		goto cleanup;
 	}
 

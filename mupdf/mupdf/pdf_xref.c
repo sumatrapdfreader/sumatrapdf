@@ -148,7 +148,7 @@ pdf_decryptxref(pdf_xref *xref)
 	encrypt = fz_dictgets(xref->trailer, "Encrypt");
 	id = fz_dictgets(xref->trailer, "ID");
 
-	if (encrypt && id)
+	if (encrypt)
 	{
 		if (fz_isnull(encrypt))
 			return fz_okay;
@@ -200,7 +200,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 		if (error)
 			return fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
 
-		if (roid != oid || rgen != gen)
+		if (roid != oid)
 			return fz_throw("found object (%d %d R) instead of (%d %d R)", roid, rgen, oid, gen);
 
 		if (xref->crypt)

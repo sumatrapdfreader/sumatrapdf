@@ -2,6 +2,7 @@
 
 char *basename = nil;
 pdf_xref *xref = nil;
+int pagecount = 0;
 static void (*cleanup)(void) = nil;
 
 void closexref(void);
@@ -67,6 +68,10 @@ void openxref(char *filename, char *password, int dieonbadpass)
 	xref->info = fz_resolveindirect(obj);
 	if (xref->info)
 		fz_keepobj(xref->info);
+
+	error = pdf_getpagecount(xref, &pagecount);
+	if (error)
+		die(error);
 }
 
 void closexref(void)

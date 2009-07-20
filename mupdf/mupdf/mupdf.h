@@ -127,7 +127,6 @@ struct pdf_xref_s
 
 	struct pdf_store_s *store;
 	struct pdf_outline_s *outlines;
-	int pagecount;
 };
 
 struct pdf_xrefentry_s

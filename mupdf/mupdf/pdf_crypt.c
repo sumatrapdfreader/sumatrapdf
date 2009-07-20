@@ -291,12 +291,12 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 		return fz_throw("unsupported encryption algorithm: %d", crypt->v);
 	}
 
-	if (!fz_isarray(id) || fz_arraylen(id) != 2)
-		goto cleanup;
-	obj = fz_arrayget(id, 0);
-	if (!fz_isstring(obj))
-		goto cleanup;
-	crypt->id = fz_keepobj(obj);
+	if (fz_isarray(id) && fz_arraylen(id) == 2)
+	{
+		obj = fz_arrayget(id, 0);
+		if (!fz_isstring(obj))
+			crypt->id = fz_keepobj(obj);
+	}
 
 	crypt->keylen = crypt->len + 5;
 	if (crypt->keylen > 16)

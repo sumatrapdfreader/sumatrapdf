@@ -376,7 +376,8 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 			for (k = 0; k < nelem(bm); k++) {
 				if (!strcmp(bm[k].name, n)) {
 					gstate->blendmode = bm[k].mode;
-					/* printf("blend mode %s:%d\n", n, gstate->blendmode); */
+					if (gstate->blendmode != FZ_BNORMAL)
+						fz_warn("ignoring blend mode %s", n);
 					break;
 				}
 			}
