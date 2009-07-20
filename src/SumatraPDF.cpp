@@ -1174,10 +1174,13 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     
     HMENU mainMenu = CreateMenu();
     // Don't display the Acrobat option, if the program couldn't be found
-    if (!GetAcrobatPath())
-        for (int i = 0; i < dimof(menuDefFile); i++)
-            if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id)
+    if (!GetAcrobatPath()) {
+        for (int i = 0; i < dimof(menuDefFile); i++) {
+            if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
                 menuDefFile[i].m_title = menuDefFile[i - 1].m_title = NULL;
+            }
+        }
+    }
 
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
     if (!gRestrictedUse)
