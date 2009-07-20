@@ -596,6 +596,9 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
   memcpy (params.gbat, gbat, gbat_bytes);
 
   image = jbig2_image_new(ctx, rsi.width, rsi.height);
+  if (image == NULL)
+    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "unable to allocate generic image");
   jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
     "allocated %d x %d image buffer for region decode results",
         rsi.width, rsi.height);

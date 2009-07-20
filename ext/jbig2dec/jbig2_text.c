@@ -312,6 +312,15 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 		IBO = IB;
 		refimage = jbig2_image_new(ctx, IBO->width + RDW,
 						IBO->height + RDH);
+		if (refimage == NULL) {
+		  jbig2_image_release(ctx, IBO);
+		  if (params->SBHUFF) {
+		    jbig2_release_huffman_table(ctx, SBSYMCODES);
+		  }
+		  return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, 
+			segment->number,
+			"couldn't allocate reference image");
+	        }
 
 		/* Table 12 */
 		rparams.GRTEMPLATE = params->SBRTEMPLATE;
@@ -676,6 +685,22 @@ jbig2_parse_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segmen
     }
 
     image = jbig2_image_new(ctx, region_info.width, region_info.height);
+    if (image == NULL) {
+      if (!params.SBHUFF && params.SBREFINE) {
+	jbig2_free(ctx->allocator, GR_stats);
+      } else if (params.SBHUFF) {
+	jbig2_release_huffman_table(ctx, params.SBHUFFFS);
+	jbig2_release_huffman_table(ctx, params.SBHUFFDS);
+	jbig2_release_huffman_table(ctx, params.SBHUFFDT);
+	jbig2_release_huffman_table(ctx, params.SBHUFFRDX);
+	jbig2_release_huffman_table(ctx, params.SBHUFFRDY);
+	jbig2_release_huffman_table(ctx, params.SBHUFFRDW);
+	jbig2_release_huffman_table(ctx, params.SBHUFFRDH);
+	jbig2_release_huffman_table(ctx, params.SBHUFFRSIZE);
+      }
+      return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+		"couldn't allocate text region image");
+    }
 
     ws = jbig2_word_stream_buf_new(ctx, segment_data + offset, segment->data_length - offset);
     if (!params.SBHUFF) {

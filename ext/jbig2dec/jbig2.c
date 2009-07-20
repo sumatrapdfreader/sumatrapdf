@@ -183,6 +183,8 @@ jbig2_get_int16 (const byte *buf)
  * to (continue to) parse it as part of a jbig2 data stream.
  *
  * Return code: 0 on success
+ *             -1 if there is a parsing error, or whatever
+ *                the error handling callback returns
  **/
 int
 jbig2_data_in (Jbig2Ctx *ctx, const unsigned char *data, size_t size)

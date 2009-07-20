@@ -91,6 +91,15 @@ jbig2_hd_new(Jbig2Ctx *ctx,
     /* 6.7.5(4) - copy out the individual pattern images */
     for (i = 0; i < N; i++) {
       new->patterns[i] = jbig2_image_new(ctx, HPW, HPH);
+      if (new->patterns[i] == NULL) {
+        int j;
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+            "failed to allocate pattern element image");
+        for (j = 0; j < i; j++)
+          jbig2_free(ctx->allocator, new->patterns[j]);
+        jbig2_free(ctx->allocator, new);
+        return NULL;
+      }
       /* compose with the REPLACE operator; the source
          will be clipped to the destintion, selecting the
          proper sub image */
@@ -150,7 +159,7 @@ jbig2_decode_pattern_dict(Jbig2Ctx *ctx, Jbig2Segment *segment,
 	params->HDPW * (params->GRAYMAX + 1), params->HDPH);
   if (image == NULL) {
     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-	"failed to allocate collective bitmap for halftone dict!\n");
+	"failed to allocate collective bitmap for halftone dict!");
     return NULL;
   }
 
@@ -343,6 +352,9 @@ jbig2_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_
   }
 
   image = jbig2_image_new(ctx, region_info.width, region_info.height);
+  if (image == NULL)
+    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "unable to allocate halftone image");
 
   code = jbig2_decode_halftone_region(ctx, segment, &params,
 		segment_data + offset, segment->data_length - offset,

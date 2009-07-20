@@ -445,7 +445,8 @@ main (int argc, char **argv)
       int n_bytes = fread(buf, 1, sizeof(buf), f);
       if (n_bytes <= 0)
 	break;
-      jbig2_data_in(ctx, buf, n_bytes);
+      if (jbig2_data_in(ctx, buf, n_bytes))
+	break;
     }
   fclose(f);
 
@@ -460,7 +461,8 @@ main (int argc, char **argv)
 	  int n_bytes = fread(buf, 1, sizeof(buf), f_page);
 	  if (n_bytes <= 0)
 	    break;
-	  jbig2_data_in(ctx, buf, n_bytes);
+	  if (jbig2_data_in(ctx, buf, n_bytes))
+	    break;
 	}
       fclose(f_page);
       jbig2_global_ctx_free(global_ctx);

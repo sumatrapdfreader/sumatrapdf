@@ -134,7 +134,8 @@ jbig2_free_segment (Jbig2Ctx *ctx, Jbig2Segment *segment)
      brittle special casing */
     switch (segment->flags & 63) {
 	case 0:  /* symbol dictionary */
-	  jbig2_sd_release(ctx, segment->result);
+	  if (segment->result != NULL)
+	    jbig2_sd_release(ctx, segment->result);
 	  break;
 	case 4:  /* intermediate text region */
 	case 40: /* intermediate refinement region */
@@ -142,7 +143,8 @@ jbig2_free_segment (Jbig2Ctx *ctx, Jbig2Segment *segment)
 	    jbig2_image_release(ctx, segment->result);
 	  break;
 	case 62:
-	  jbig2_metadata_free(ctx, segment->result);
+	  if (segment->result != NULL)
+	    jbig2_metadata_free(ctx, segment->result);
 	  break;
 	default:
 	  /* anything else is probably an undefined pointer */
