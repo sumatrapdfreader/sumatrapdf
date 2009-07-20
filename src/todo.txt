@@ -1,4 +1,4 @@
-Short term todo (before next 0.9.4 release):
+Short term todo (before next 0.9.5 release):
 
 Things to do before 1.0 release:
 * test search more and make sure it works better (currently mupdf seems to have
@@ -15,15 +15,11 @@ Long term todo:
   * better/different buttons for next/prev find
 * move DisplayState into DisplayModel and use it directly, instead of 
   duplicating the fields in DisplayModel. Rename to SerializedState.
-* better, animated about screen
 * printing improvements
-* add lemmings
 
 Maybe:
 * DisplayState::visible could be removed. It was used when we were automatically
   reopening previously opened files, but we don't do it anymore, so we don't
   have to track it.
-* maybe: remove link-time dependency on msimg32.dll (has AlphaBlend, GradientFill
-  and TransparentBlt). Instead, dynamically load the functions. Needed for
-  working on NT. On the other hand: is NT worth supporting?
 * show keybindings in help
+

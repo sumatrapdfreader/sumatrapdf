@@ -35,7 +35,7 @@
 #define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS_FACING
 
 #ifndef CURR_VERSION
-#define CURR_VERSION "0.9.4"
+#define CURR_VERSION "0.9.5"
 #endif
 
 // #define SVN_PRE_RELEASE_VER 994
