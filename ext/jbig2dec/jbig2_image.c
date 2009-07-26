@@ -202,7 +202,7 @@ int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src,
     h = (y + h < dst->height) ? h : dst->height - y;
 #ifdef JBIG2_DEBUG
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1,
-      "composting %dx%d at (%d, %d) after clipping\n",
+      "compositing %dx%d at (%d, %d) after clipping\n",
         w, h, x, y);
 #endif
 
