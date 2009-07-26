@@ -11,7 +11,7 @@
 #   Lars Wohlfahrt (www.eviltux.de)
 #   Christopher Amann
 #   Simon Bünzli (zeniko@gmail.com)
-# Hakan ATAC - Turkish
+# Hakan ATAÇ - Turkish
 # Яўген Змачынскі - Belarusian
 # French:
 #   fiuzzy
@@ -34,8 +34,10 @@
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
 # Jose Virgili - Spanish
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
-# Zero-8 - Russian
-# Dmitry Yerokhin (erodim@mail.ru) - Russian
+# Russian:
+#  Zero-8
+#  Dmitry Yerokhin (erodim@mail.ru)
+#  Victor Kozyakin
 # Arabic:
 #   Mohammed Al-Foulad (http://www.mbsee.info)
 #   Boubker Talibi
@@ -45,12 +47,12 @@
 #   Cecilia B
 # Kristian Vrhel - Czech
 # Greek (Hellenic):
-# Giorgos Dimopoulos (geodimo1985@gmail.com)
-# George Georgiou (geonetor@yahoo.gr)
+#   Giorgos Dimopoulos (geodimo1985@gmail.com)
+#   George Georgiou (geonetor@yahoo.gr)
 # Uthen Phutneam - Thai
-# Português(Portugal):
-# 	Ricardo Santos[bogas](http://www.meta-morf.pt.vu)
-# 	Bruno Rodrigues
+# Português (Portugal):
+#  Ricardo Santos[bogas](http://www.meta-morf.pt.vu)
+#  Bruno Rodrigues
 # Jon Ivar F. Omland - Norwegian
 # Kjell A. A. Holm - Norwegian
 # Jon Stødle - Norwegian Neo-Norwegian
@@ -84,7 +86,8 @@
 # Mark Angelo F. Racca - Tagalog
 # Vicent Adam - Valencian
 # Brian Musarurwa
-# Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
+# Welsh:
+#  Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
 #  Glenn Wall
 # Mohammed Ottama - Burmese - Unicode 5.1 encoding.
 
@@ -3473,6 +3476,7 @@ gr:Επιλ&ογές
 mk:&Опции...
 hr:Mogućnosti...
 cn:选项(&O)...
+es:&Opciones...
 -
 Default &Layout:
 hu:Alapértelmezett megjelenítési mód:
@@ -3485,6 +3489,7 @@ gr:Προκαθορισμένη διαμόρφωση:
 mk:Основен &изглед:
 hr:Pretpostavljeni &izgled:
 cn:缺省样式(&L)
+es:&Vista predeterminada:
 -
 Default &Zoom:
 hu:Alap nagyítás:
@@ -3497,6 +3502,7 @@ gr:Προκαθορισμένο ζουμ:
 mk:Основно &зголемување:
 hr:Pretpostavljeno &uvećanje:
 cn:缺省缩放(&Z)
+es:&Zoom predeterminado:
 -
 OK
 hu:OK
@@ -3505,6 +3511,7 @@ cy:Iawn
 fr:OK
 mk:Во ред
 hr:U redu
+es:Aceptar
 -
 Advanced
 hu:További programbeállítások
@@ -3517,6 +3524,7 @@ gr:Προχωρημένα
 mk:Напредно
 hr:Napredno
 cn:高级
+es:Avanzado
 -
 Show the &bookmarks sidebar when available
 hu:Dokumentumba ágyazott könyvjelzők mutatása
@@ -3529,6 +3537,7 @@ gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών �
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
+es:Mostrar la barra de marcadores cuando esté disponible
 -
 Cancel
 hu:Mégse
@@ -3541,6 +3550,7 @@ gr:Άκυρο
 mk:Откажи
 hr:Odustani
 cn:取消
+es:Cancelar
 -
 Automatically check for &updates
 hu:&Program&frissítések automatikus keresése bekapcsoláskor
@@ -3553,6 +3563,7 @@ gr:Αυτόματος έλεγχος για ενημερώσεις
 mk:Проверувај за &надградби автоматски
 hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
+es:Revisar actualizaciones periódicamente
 -
 &Remember these settings for each document
 hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
@@ -3565,6 +3576,7 @@ gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 mk:&Запомни ги овие нагодувања за секој документ
 hr:&Upamti ove postavke za svaki pojedini dokument
 cn:为每一个文档记住这些设置(&R)
+es:&Recordar esta configuración para cada documento
 -
 Remember &opened files
 hu:Korábban megnyitott file-ok listájának tárolása
@@ -3576,6 +3588,7 @@ mk: Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
 cy:Co&fio ffeiliau ar agor
+es:Recordar archiv&os abiertos
 -
 View
 af:Vertoon
@@ -3646,6 +3659,7 @@ gr:Μετάβαση στη σελίδα:
 mk:&Појди на страница:
 hr:&Idi na stranicu:
 cn:转到页面
+es:&Ir a la página:
 -
 (of %d)
 hu:(a %d-ból)
@@ -3658,6 +3672,7 @@ gr:(από %d)
 mk:(од %d)
 hr:(od %d)
 cn:(%d中的)
+es:(de &d)
 -
 Download
 hu:Letöltés
@@ -3671,6 +3686,7 @@ gr:Λήψη
 mk:Преземи
 hr:Preuzmi
 cn:下载
+es:Descargar
 -
 &Yes
 hu:&Igen
@@ -3684,6 +3700,7 @@ gr:&Ναι
 mk:&Да
 hr:&Da
 cn:是(&Y)
+es:Si
 -
 &No
 hu:&Nem
@@ -3697,6 +3714,7 @@ gr:Ό&χι
 mk:&Не
 hr:&Ne
 cn:否(&N)
+es:No
 -
 &No, thanks
 hu:Köszönöm,&nem
@@ -3710,6 +3728,7 @@ gr:Όχι, ευχαριστώ
 mk:&Не, благодарам
 hr:&Ne, hvala
 cn:不，谢谢(&N)
+es:No, gracias
 -
 Please wait - rendering...
 hu:Feldolgozás, kérem várjon
@@ -3723,6 +3742,7 @@ gr:Φόρτωση, παρακαλώ περιμένετε...
 mk:Ве молам почекајте - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待－正在渲染中...
+es:Espere por favor - renderizando...
 -
 Couldn't render the page
 hu:Oldalfeldolgozási hiba
@@ -3735,6 +3755,7 @@ gr:Δε μπορεί να φορτωθεί η σελίδα
 mk:Не можам да ја прикажам страницата
 hr:Nije moguće iscrtati stranicu
 cn:不能渲染该页面
+es:No se pudo renderizar la página
 -
 No matches were found
 hu:Nem található a dokumentumban
@@ -3747,6 +3768,7 @@ gr:Δε βρέθηκε το κείμενο
 mk:Не се пронајдени совпаѓања
 hr:Pojam nije pronađen
 cn:没有找到匹配项
+es:No se encontraron coincidencias
 -
 Found text at page %d
 hu:Találat a(z) %d. oldalon
@@ -3759,6 +3781,7 @@ gr:Το κείμενο βρέθηκε στη σελίδα %d
 mk:Пронајдов текст на страница %d
 hr:Tekst je pronađen na stranici %d
 cn:在第%d页找到文本
+es:Se encontró el texto en la página %d
 -
 Searching %d of %d...
 hu:Keresés a(z) %d./%d oldalon
@@ -3772,6 +3795,7 @@ gr:Αναζήτηση %d από %d...
 mk:Пребарувам %d од %d страници...
 hr:Pretražujem stranicu %d od %d...
 cn:正在搜索全部%d的%d
+es:Buscando %d de %d...
 -
 PDF documents
 hu:PDF dokumentumok
@@ -3784,6 +3808,7 @@ ru:PDF-документы
 mk:PDF документи
 hr:PDF dokumenti
 cn:PDF文档
+es:Documentos PDF
 -
 All files
 hu:Minden fájl
@@ -3797,6 +3822,7 @@ ru:Все файлы
 mk:Сите датотеки
 hr:Sve datoteke
 cn:所有文件
+es:Todos los archivos
 -
 &Password:
 hu:&Jelszó:
@@ -3810,6 +3836,7 @@ mk:&Лозинка:
 hr:&Lozinka:
 cn:密码(&P)
 cy:&Cyfrinair:
+es:&Contraseña:
 -
 &Find what:
 hu:Mit keres:
@@ -3822,6 +3849,7 @@ mk:&Најди што:
 hr:&Što tražiti:
 cn:查找(&F):
 cy:&Canfod beth:
+es:&Buscar qué
 -
 Find
 hu:Keresés
@@ -3834,6 +3862,7 @@ mk:Најди
 hr:Pronađi
 cn:查找
 cy:Canfod
+es:Buscar
 -
 &Match case
 hu:Kis- és nagybetűk megkülönböztetése
@@ -3846,6 +3875,7 @@ mk:&Разликувај мали и големи букви
 hr:Razlikuj velika i mala slova
 cn:匹配大小写(&M)
 cy:&Cydweddu maint
+es:&Coincidir mayúsculas y minúsculas
 -
 Hint: Use the F3 key for finding again
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
@@ -3858,6 +3888,7 @@ mk:За повторно пребарување користи F3 од таст�
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 cn:提示：按F3再次查找
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
+es:Utilize la tecla F3 ir al siguiente resultado
 -
 Couldn't initialize printer
 hu:A nyomtató inicializálása nem sikerült
@@ -3870,6 +3901,7 @@ mk:Не можам да го подготвам печатачот
 hr:Ne mogu inicijalizirati pisač
 cn:不能初始化打印机
 cy:Methu cychwyn yr argraffydd
+es:No se puede inicializar la impresora
 -
 No synchronization info at this position
 hu:Nem található szinkronizálási információ az adott pozícióhoz
@@ -3882,6 +3914,7 @@ mk:Нема информации за синхронизација на оваа
 hr:Nema podatka o usklađenosti na ovom položaju
 cn:此位置没有同步信息
 cy:Dim gwybodaeth cydweddu yn y fan hon
+es:No hay información de sincronización en esta posición
 -
 Synchronization file cannot be opened
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
@@ -3894,6 +3927,7 @@ mk:Синхронизациската датотека не може да се �
 hr:Datoteka usklađenja ne nože biti otvorena
 cn:不能打开同步文件
 cy:Methu agor ffeil cydweddu
+es:No se pudo abrir el archivo de sincronización
 -
 Page number %u inexistant
 hu:A(z) %u oldalszám nem létezik
@@ -3906,6 +3940,7 @@ mk:Страница со број %u не постои
 hr:Stranica %u ne postoji
 cn:页号%u不存在
 cy:Nid yw tudalen rhif %u yn bodoli
+es:El número de página &u es inexistente
 -
 No result found around line %u in file %s
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
@@ -3929,6 +3964,7 @@ mk:Изворната датотека %s нема синхронизациск�
 hr:Izvorna datoteka %s nema točke usklađivanja
 cn:源文件%s没有同步点
 cy:Does dim pwynt cydweddu yn ffeil %s
+es:El archivo fuente %s no posee un punto de sincronización
 -
 [Changes detected; refreshing] %s
 hu:[a file megváltozott; frissítés] %s
@@ -3941,6 +3977,7 @@ mk:[Забележани се промени; освежувам...] %s
 hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
 cy:[Newidiadau wedi eu canfod; adnewyddu]
+es:[El archivo ha cambiado; actualizando] %s
 -
 Unknown source file (%s)
 hu:Ismeretlen forrásfájl (%s)
@@ -3953,6 +3990,7 @@ mk:Непозната изворна датотека (%s)
 hr:Nepoznata izvorna datoteka (%s)
 cn:未知的原文件(%s)
 cy:Ffeil ffynhonnell anhysbys (%s)
+es:Archivo fuente desconocido (%s)
 -
 Cannot print this file
 hu:Ez a file nem nyomtatható
@@ -3965,6 +4003,7 @@ mk:Не можам да ја печатам оваа датотека
 hr:Ne mogu ispisati ovu datoteku
 cn:不能打印此文件
 cy:Methu argraffu'r ffeil
+es:No se puede imprimir este archivo
 -
 PDF Document
 hu:PDF dokumentum
@@ -3977,6 +4016,7 @@ mk:PDF документ
 hr:PDF dokument
 cn:PDF文档
 cy:Dogfen PDF
+es:Documento PDF
 -
 # Please keep this string as short as possible!
 Make SumatraPDF my main PDF reader
@@ -4049,6 +4089,7 @@ mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 cn:SumatraPDF是你的主要PDF阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
+es:SumatraPDF es su lector PDF por defecto
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
@@ -4062,6 +4103,7 @@ mk:Сега SumatraPDF би требало да е твојот основен P
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 cn:现在SumatraPDF应该是你的主要PDF阅读器了
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
+es:SumatraPDF debería ser ahora tu lector PDF por defecto
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
@@ -4075,6 +4117,7 @@ mk:Основниот PDF читач не може да се промени во
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变主要阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
+es:El lector PDF por defecto no puede ser cambiado en modo portátil
 -
 Open in &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
@@ -4087,3 +4130,4 @@ mk:Отвори со &Adobe Reader
 hr:Otvori u programu &Adobe Reader
 cn:在&Adobe Reader中打开
 cy:Agor yn &Adobe Reader
+es:Abrir en &Adobe Reader
