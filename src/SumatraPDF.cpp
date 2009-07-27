@@ -3249,7 +3249,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #ifdef _TEX_ENHANCEMENT
     { _T("TeX enhancements"), _T("William Blum"), _T("http://william.famille-blum.org/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
-    { _T("SyncTeX"), _T("Jérome Laurens"), _T("http://itexmac.sourceforge.net/SyncTeX.html"),
+    { _T("SyncTeX"), _T("J\xE9rome Laurens"), _T("http://itexmac.sourceforge.net/SyncTeX.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif 
 

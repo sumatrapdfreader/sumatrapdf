@@ -543,6 +543,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
 
         CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->m_showToc ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
+        EnableWindow(GetDlgItem(hDlg, IDC_GLOBAL_PREFS_ONLY), prefs->m_rememberOpenedFiles);
         CheckDlgButton(hDlg, IDC_AUTO_UPDATE_CHECKS, prefs->m_enableAutoUpdate ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->m_rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
         if (IsExeAssociatedWithPdfExtension()) {
@@ -633,10 +634,16 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
             return TRUE;
 
+        case IDC_REMEMBER_OPENED_FILES:
+            {
+                bool rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
+                EnableWindow(GetDlgItem(hDlg, IDC_GLOBAL_PREFS_ONLY), rememberOpenedFiles);
+            }
+            return TRUE;
+
         case IDC_DEFAULT_SHOW_TOC:
         case IDC_GLOBAL_PREFS_ONLY:
         case IDC_AUTO_UPDATE_CHECKS:
-        case IDC_REMEMBER_OPENED_FILES:
             return TRUE;
 
         case IDC_SET_DEFAULT_READER:
