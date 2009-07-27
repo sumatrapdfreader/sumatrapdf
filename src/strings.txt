@@ -565,7 +565,7 @@ dk:Enkelt side
 it:Pagina singola
 nl:Enkele pagina
 ta:ஒற்றைப் பக்கம்
-es:Página Única
+es:Página única
 hr:Jedna stranica
 ru:Одна страница
 ar:صفحة واحدة
@@ -622,7 +622,7 @@ dk:Modstående
 it:Pagine affiancate
 nl:Dubbele pagina
 ta:முகப்பு
-es:Página Doble
+es:Página doble
 hr:Dvije stranice
 ru:Две страницы
 ar:صفحتان متقابلتان
@@ -736,7 +736,7 @@ dk:Fortløbende modstående
 it:Pagine affiancate continue
 nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
-es:Página Doble Contínua
+es:Página doble contínua
 hr:Dvije stranice sljedno
 ru:Непрерывно по две страницы
 ar:صفحات متقابلة متتالية
@@ -975,7 +975,7 @@ cn:全屏\tCtrl-L
 fr:Plein écran\tCtrl-L
 ru:Полный экран\tCtrl-L
 gl:A toda pantalla\tCtrl-L
-es:Pantalla Completa\tCtrl-L
+es:Pantalla completa\tCtrl-L
 th:เต็มจอภาพ\tCtrl-L
 ar:بحجم الشاشة\tCtrl-L
 uk:На цілий екран\tCtrl-L
@@ -1123,7 +1123,7 @@ dk:Næste side
 it:Pagina successiva
 nl:Volgende pagina
 ta:அடுத்த பக்கம்
-es:Página Siguiente
+es:Página siguiente
 hr:Sljedeća stranica
 ru:Следующая страница
 ar:الصفحة التالية
@@ -1180,7 +1180,7 @@ dk:Forrige side
 it:Pagina precedente
 nl:Vorige pagina
 ta:முந்தைய பக்கம்
-es:Página Anterior
+es:Página anterior
 hr:Prethodna stranica
 ru:Предыдущая страница
 ar:الصفحة السابقة
@@ -1237,7 +1237,7 @@ dk:Første side\tHome
 it:Prima pagina\tHome
 nl:Eerste pagina\tHome
 ta:முதல் பக்கம்\tHome
-es:Primera Página\tHome
+es:Primera página\tHome
 hr:Prva stranica\tHome
 ru:Первая страница\tHome
 ar:الصفحة الأولى\tHome
@@ -1294,7 +1294,7 @@ dk:Sidste side\tEnd
 it:Ultima pagina\tEnd
 nl:Laatste pagina\tEnd
 ta:இறுதி பக்கம்\tEnd
-es:Última Página\tEnd
+es:Última página\tEnd
 hr:Posljednja stranica\tEnd
 ru:Последняя страница\tEnd
 ar:الصفحة الأخيرة\tEnd
@@ -1465,7 +1465,7 @@ dk:Hele &siden\tCtrl-0
 it:&Pagina intera\tCtrl-0
 nl:Hele &Pagina\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
-es:Ajustar &Página\tCtrl-0
+es:Ajustar &página\tCtrl-0
 hr:Prilagodi &stranici\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
@@ -1522,7 +1522,7 @@ dk:Akt&ual størrelse\tCtrl-1
 it:&Dimensioni reali\tCtrl-1
 nl:Ware grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
-es:Tamaño Real\tCtrl-1
+es:Tamaño real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
@@ -1579,7 +1579,7 @@ dk:Tilpas &bredde\tCtrl-2
 it:&Larghezza pagina\tCtrl-2
 nl:Passend in &breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
-es:&Ancho de Página\tCtrl-2
+es:&Ancho de página\tCtrl-2
 hr:&Prilagodi širini\tCtrl-2
 ru:Заполнение по ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
@@ -3438,6 +3438,7 @@ gr:Ρυθμίσεις
 mk:&Нагодувања
 hr:&Postavke
 cn:设置(&S)
+es:&Configuración
 -
 Fit Page
 af:Pas Blad In
@@ -4159,7 +4160,7 @@ mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 cn:SumatraPDF是你的主要PDF阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
-es:SumatraPDF es su lector PDF por defecto
+es:SumatraPDF es el lector PDF por defecto
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
@@ -4189,7 +4190,7 @@ mk:Основниот PDF читач не може да се промени во
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变主要阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
-es:El lector PDF por defecto no puede ser cambiado en modo portátil
+es:No se puede cambiar el lector PDF por defecto en modo portátil
 -
 Open in &Adobe Reader
 by:Адкрыць у &Adobe Reader
