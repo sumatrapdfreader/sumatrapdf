@@ -294,7 +294,7 @@ pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
 	if (fz_isarray(id) && fz_arraylen(id) == 2)
 	{
 		obj = fz_arrayget(id, 0);
-		if (!fz_isstring(obj))
+		if (fz_isstring(obj))
 			crypt->id = fz_keepobj(obj);
 	}
 
