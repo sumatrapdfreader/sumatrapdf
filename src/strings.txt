@@ -12,7 +12,9 @@
 #   Christopher Amann
 #   Simon Bünzli (zeniko@gmail.com)
 # Hakan ATAÇ - Turkish
-# Яўген Змачынскі - Belarusian
+# Belarusian :
+#  Яўген Змачынскі
+#  Drive DRKA (drka2003@mail.ru)
 # French:
 #   fiuzzy
 #   laclasse
@@ -896,6 +898,7 @@ br:Marcadores\tF12
 bg:Етикети\tF12
 de:Lesezeichen\tF12
 tr:Yer imleri\tF12
+by:Закладкі\tF12
 hu:Könyvjelzők\tF12
 lt:Žymės\tF12
 my:Penanda\tF12
@@ -941,6 +944,7 @@ af:Volskerm\tCtrl-L
 pt:Ecrâ completo\tCtrl-L
 br:Tela cheia\tCtrl-L
 bg:Цял Екран\tCtrl-L
+by:Поўны экран\tCtrl-L
 de:Vollbild\tStrg+L
 tr:Tam Ekran\tCtrl-L
 hu:Teljes képernyő\tCtrl+L
@@ -998,7 +1002,7 @@ pl:Pokaż toolbar
 de:Werkzeugleiste anzeigen
 fr:Afficher la barre d'outils
 tr:Araç kutusunu göster
-by:Паказаль панэль прыладаў
+by:Паказ панэлі прылад
 ja:ツール バーの表示
 fa:نمايش نوار ابزار
 dk:Vis værktøjslinie
@@ -1855,6 +1859,7 @@ de:Seite:
 gr:Σελίδα:
 fr:Page:
 tr:Sayfa:
+by:Старонка:
 dk:Side:
 it:Pagina:
 nl:Pagina:
@@ -1896,6 +1901,7 @@ br:Localizar:
 bg:Търси:
 de:Suchen:
 tr:Bul:
+by:Знайсці:
 hu:Keresés:
 pl:Szukaj:
 ja:検索:
@@ -1944,6 +1950,7 @@ Find...\tCtrl-F
 af:Soek...\tCtrl-F
 pt:Procurar...\tCtrl-F
 br:Localizar...\tCtrl-F
+by:Знайсці...\tCtrl-F
 bg:Търси...\tCtrl-F
 de:Suchen…\tStrg+F
 tr:Bul...\tCtrl-F
@@ -1998,6 +2005,7 @@ br:Localizar anterior
 bg:Намери предишното
 de:Rückwärts suchen
 tr:Öncekini bul
+by:Знайсці папярэдняе
 hu:Előző keresése
 lt:Rasti kitą
 my:Cari sebelum
@@ -2048,6 +2056,7 @@ br:Localizar seguinte
 bg:Намери следващото
 de:Weitersuchen
 tr:Sonrakini Bul
+by:Найти следующее
 hu:Következő keresése
 lt:Rasti ankstesnį
 my:Cari selepas
@@ -2097,6 +2106,7 @@ br:Diferenciar  minúsculas e Maiúsculas
 bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
+by:Улічваць рэгістр
 hu:Kis- és nagybetűk megkülönböztetése
 my:Hampir sama
 ja:大文字と小文字を区別する
@@ -2596,6 +2606,7 @@ hu:&Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
 fr:Contribuer à la traduction
 tr:Çeviriye katkıda bulunun.
+by:Дапамагчы з перакладам
 pl:Pomóż przy translacji
 ja:翻訳の提供
 it:Contribuisci alla traduzione
@@ -2645,6 +2656,7 @@ Set inverse search command-line
 af:Stel Die Teenoorgestelde Soek Command-Line
 pt:Configurar pesquisa inversa
 bg:Активирай обратно търсене
+by:Задаць каманду зваротнага пошуку
 br:Configurar pesquisa inversa
 de:Befehlszeile Inverssuche setzen
 gr:Ενφάνιση γραμμής αντίστροφης αναζήτησης
@@ -2682,6 +2694,7 @@ Change language
 af:Verander Taal (Change language)
 bg:Смени езика (Change language)
 br:Mudar o idioma (Change language)
+by:Змяніць мову (Change language)
 de:Sprache ändern… (Change language)
 gr:Αλλαγή γλώσσας (Change language)
 pl:Zmien język (Change language)
@@ -2722,6 +2735,7 @@ sv:Byt språk (Change language)
 Enter password
 af:Tik Wagwoord In
 bg:Въведете парола
+by:Увядзіце пароль
 br:Digite a senha
 de:Bitte Passwort eingeben
 gr:Εισάγετε κωδικό
@@ -2762,6 +2776,7 @@ sv:Ange lösenord
 Enter password for %s
 af:Tik Wagwoord In Vir %s
 bg:Въведете парола за %s
+by:Увядзіце пароль для %s
 br:Digite a senha de %s
 de:Bitte Passwort für %s eingeben
 gr:Εισάγετε κωδικό για το  %s
@@ -2803,6 +2818,7 @@ Go to page
 af:Gaan Na Bladsy
 pt:Ir para a página
 bg:Към страница
+by:Перайсці на старонку
 br:Ir para a página
 de:Gehe zu Seite
 gr:Μετάβαση στη σελίδα
@@ -2843,6 +2859,7 @@ Associate with PDF files?
 af:Assosieer Met PDF lêers?
 pt:Associar a ficheiros PDF?
 bg:Асоцииране с PDF файлове?
+by:Асацыяваць з PDF-файламі?
 br:Associar arquivos PDF?
 de:Mit PDF-Dateien verknüpfen?
 gr:Να γίνει συσχετισμός με τα αρχεία PDF;
@@ -2882,6 +2899,7 @@ sv:Koppla ihop med PDF-filer?
 Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 bg:Направи SumatraPDF основно приложение за PDF файлове?
+by:Зрабіць SumatraPDF стандартнай праграмай прагляду PDF-файлаў?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 gr:Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα  αρχείων PDF;
@@ -2921,6 +2939,7 @@ sv:Ställa in SumatraPDF som standardprogram för PDF-filer?
 af:Moet My Nie Weer Vra Nie
 pt:Não perguntar novamente
 bg:Не питай отново
+by:Больш не пытаць
 br:Não perguntar novamente
 de:Nicht &wieder fragen.
 gr:Να μην ερωτηθώ ξανά
@@ -2961,6 +2980,7 @@ sv:Fråga mig inte igen
 &Check for new version
 af:Kyk Vir Nuwe Uitgawe
 bg:Проверка за нова версия
+by:Праверыць наяўнасць новай версіі
 br:Procurar atualizações
 de:Nach &neuer Version suchen
 gr:Έλεγχος για νέα έκδοση
@@ -3002,6 +3022,7 @@ sv:&Sök efter ny version
 No new version available.
 af:Geen Nuwe Weergawe Is Beskikbaar Nie.
 bg:Няма нова версия.
+by:Абнаўленняў не выяўлена.
 br:Nenhuma atualização foi encontrada.
 de:Keine neuere Version vorhanden.
 gr:Νέα έκδοση διαθέσιμη
@@ -3043,6 +3064,7 @@ sv:Ingen ny version.
 You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
 bg:Имате последната версия.
+by:Вы выкарыстоўваеце апошнюю версію.
 br:Esta é a versão mais recente.
 de:Sie haben die neuste Version installiert.
 gr:Έχετε την τελευταία έκδοση.
@@ -3084,6 +3106,7 @@ sv:Du har den senaste versionen.
 You have version %s
 af:Jy Het Weergawe %s
 bg:Вашата версия е %s
+by:Вы выкарыстоўваеце версію %s
 br:Você tem a versão %s
 de:Sie haben Version %s
 gr:Έχετε την έκδοση %s 
@@ -3125,6 +3148,7 @@ sv:Du har version %s
 New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 bg:Достъпна е нова версия %s. Искате ли да я свалите?
+by:Даступная новая версія: %s. Загрузіць яе?
 br:A versão %s está disponível. Baixar a nova versão?
 de:Es ist eine neue Version vorhanden. Möchten Sie diese herunterladen?
 gr:Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
@@ -3166,6 +3190,7 @@ sv:Nyare version %s finns. Ladda ner den?
 New version available.
 af:Nuwe Weergawe Beskikbaar.
 bg:Има нова версия.
+by:Даступная новая версія.
 br:Uma versão nova está disponível.
 de:Neuere Version vorhanden.
 gr:Νέα ένδοση διαθέσιμη
@@ -3208,6 +3233,7 @@ sv:Nyare version finns.
 af:Slaan Dié Weergawe Oor.
 pt:Ignorar esta versão
 bg:Пропусни тази версия.
+by:Прапусціць гэту версію.
 br:Pular esta versão.
 de:&Diese Version überspringen.
 gr:Παράβλεψη αυτής της έκδοσης
@@ -3245,6 +3271,7 @@ fi:Ohita tämä versio
 sv:Hoppa över denna version
 -
 Warning
+by:Папярэджанне
 hu:Figyelmeztetés
 de:Warnung
 gr:Προσοχή
@@ -3258,6 +3285,7 @@ hr:Upozorenje
 cn:警告
 -
 This option is not available in portable mode.
+by:Гэта опцыя недаступная ў мабільным рэжыме.
 hu:Ez a beállítás nem elérhető hordozható módban
 de:Diese Option ist im portablen Modus nicht verfügbar
 gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
@@ -3271,6 +3299,7 @@ hr:Ova mogućnost nije dostupna u prenosivom načinu rada.
 cn:此选项不适用于便携模式
 -
 SumatraPDF Options
+by:Параметры SumatraPDF
 hu:A SumatraPDF beállításai
 de:SumatraPDF Optionen
 gr:Επολογές SumatraPDF
@@ -3285,6 +3314,7 @@ cn:SumatraPDF选项
 Fit Width
 af:Pas In Breedte
 bg:Оразмери по ширина
+by:Запаўненне па шырыні
 br:Ajustar pela largura
 hu:Oldalszélesség
 pl:Dopasuj do szerokości
@@ -3397,6 +3427,7 @@ hi:सही आकार
 nn:Faktisk storleik
 -
 &Settings
+by:Налады
 hu:&Beállítások
 de:&Einstellungen
 gr:Ρυθμίσεις
@@ -3466,6 +3497,7 @@ hi:अनुरूप करें
 nn:Tilpass side
 -
 &Options...
+by:&Параметры...
 hu:&Beállítások
 de:&Optionen…
 gr:Επιλογές…
@@ -3479,6 +3511,7 @@ cn:选项(&O)...
 es:&Opciones...
 -
 Default &Layout:
+by:&Кампаноўка па змаўчанні
 hu:Alapértelmezett megjelenítési mód:
 de:&Standardlayout:
 gr:Προκαθορισμένη διαμόρφωση σελίδας
@@ -3492,6 +3525,7 @@ cn:缺省样式(&L)
 es:&Vista predeterminada:
 -
 Default &Zoom:
+by:&Маштаб па змаўчанні
 hu:Alap nagyítás:
 de:Standard&vergrößerung:
 gr:Προκαθορισμένο ζουμ:
@@ -3505,6 +3539,7 @@ cn:缺省缩放(&Z)
 es:&Zoom predeterminado:
 -
 OK
+by:ДА
 hu:OK
 gr:ΟΚ
 cy:Iawn
@@ -3514,6 +3549,7 @@ hr:U redu
 es:Aceptar
 -
 Advanced
+by:Дадаткова
 hu:További programbeállítások
 de:Weiteres
 gr:Προχωρημένα
@@ -3527,6 +3563,7 @@ cn:高级
 es:Avanzado
 -
 Show the &bookmarks sidebar when available
+by:Паказваць панэль &закладак (пры магчымасці)
 hu:Dokumentumba ágyazott könyvjelzők mutatása
 de:&Lesezeichen beim Start anzeigen
 gr:Εμφάνιση Πλευρικής μπάρας σελιδοδεικτών όπου είναι διαθέσιμοι
@@ -3540,6 +3577,7 @@ cn:若可用则显示书签侧边栏(&b)
 es:Mostrar la barra de marcadores cuando esté disponible
 -
 Cancel
+by:Адмена
 hu:Mégse
 de:Abbrechen
 gr:Άκυρο
@@ -3553,6 +3591,7 @@ cn:取消
 es:Cancelar
 -
 Automatically check for &updates
+by:&Аўтаматычная праверка абнаўленняў
 hu:&Program&frissítések automatikus keresése bekapcsoláskor
 de:&Automatisch nach Updates suchen
 gr:Αυτόματος έλεγχος για ενημερώσεις
@@ -3566,6 +3605,7 @@ cn:自动检查更新(&u)
 es:Revisar actualizaciones periódicamente
 -
 &Remember these settings for each document
+by:Запомніць гэтыя параметры для &кожнага дакумента
 hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
 de:&Diese Einstellungen für jedes Dokument merken
 gr:Απομνημόνευση των ρυθμίσεων για κάθε έγγραφο
@@ -3579,6 +3619,7 @@ cn:为每一个文档记住这些设置(&R)
 es:&Recordar esta configuración para cada documento
 -
 Remember &opened files
+by:&Запомніць адкрытыя файлы
 hu:Korábban megnyitott file-ok listájának tárolása
 gr:Απομνημόνευη πρόσφατων αρχείων
 de:&Eine Liste der geöffneten Dokumente führen
@@ -3648,6 +3689,7 @@ hi:देखें
 nn:Vis
 -
 &Go to page:
+by:&Перайсці да старонкі
 hu:&Ugrás oldal:
 de:&Gehe zu Seite:
 gr:Μετάβαση στη σελίδα:
@@ -3662,6 +3704,7 @@ cn:转到页面
 es:&Ir a la página:
 -
 (of %d)
+by: (з %d)
 hu:(a %d-ból)
 de:(von %d)
 fr:(de %d)
@@ -3675,6 +3718,7 @@ cn:(%d中的)
 es:(de &d)
 -
 Download
+by:Загрузка
 hu:Letöltés
 de:Herunterladen
 gr:Λήψη
@@ -3689,6 +3733,7 @@ cn:下载
 es:Descargar
 -
 &Yes
+by:Да
 hu:&Igen
 de:&Ja
 gr:&Ναι
@@ -3703,6 +3748,7 @@ cn:是(&Y)
 es:Si
 -
 &No
+by:Нет
 hu:&Nem
 de:&Nein
 gr:Ό&χι
@@ -3717,6 +3763,7 @@ cn:否(&N)
 es:No
 -
 &No, thanks
+by:Дзякуй, не
 hu:Köszönöm,&nem
 de:&Nein, danke
 gr:Όχι, ευχαριστώ
@@ -3731,6 +3778,7 @@ cn:不，谢谢(&N)
 es:No, gracias
 -
 Please wait - rendering...
+by:Пачакайце - фармуецца малюнак...
 hu:Feldolgozás, kérem várjon
 de:Bitte einen Moment Geduld…
 gr:Παρακαλώ περιμένετε - Φόρτωση…
@@ -3745,6 +3793,7 @@ cn:请耐心等待－正在渲染中...
 es:Espere por favor - renderizando...
 -
 Couldn't render the page
+by:Не атрымаўся сфармаваць малюнак старонкі
 hu:Oldalfeldolgozási hiba
 de:Diese Seite kann leider nicht angezeigt werden
 fr:Impossible de générer la page
@@ -3758,6 +3807,7 @@ cn:不能渲染该页面
 es:No se pudo renderizar la página
 -
 No matches were found
+by:Узор не знойдзены
 hu:Nem található a dokumentumban
 de:Das Dokument wurde durchsucht
 fr:Aucun résultat n'a été trouvé
@@ -3771,6 +3821,7 @@ cn:没有找到匹配项
 es:No se encontraron coincidencias
 -
 Found text at page %d
+by:Тэкст знойдзены на стар. %d
 hu:Találat a(z) %d. oldalon
 de:Text auf Seite %d gefunden
 fr:Texte trouvé à la page %d
@@ -3784,6 +3835,7 @@ cn:在第%d页找到文本
 es:Se encontró el texto en la página %d
 -
 Searching %d of %d...
+by:Апрацоўка старонкі %d з %d...
 hu:Keresés a(z) %d./%d oldalon
 de:Suche auf Seite %d von %d…
 gr:Αναζήτηση %d από %d...
@@ -3798,6 +3850,7 @@ cn:正在搜索全部%d的%d
 es:Buscando %d de %d...
 -
 PDF documents
+by:PDF-дакументы
 hu:PDF dokumentumok
 de:PDF-Dokumente
 fr:Documents PDF
@@ -3811,6 +3864,7 @@ cn:PDF文档
 es:Documentos PDF
 -
 All files
+by:Усе файлы
 hu:Minden fájl
 de:Alle Dateien
 gr:Όλα τα αρχεία
@@ -3825,6 +3879,7 @@ cn:所有文件
 es:Todos los archivos
 -
 &Password:
+by:&Пароль:
 hu:&Jelszó:
 de:&Passwort:
 gr:Κωδικός:
@@ -3839,6 +3894,7 @@ cy:&Cyfrinair:
 es:&Contraseña:
 -
 &Find what:
+by:&Узор:
 hu:Mit keres:
 de:&Suchen nach:
 gr:Εύρεση του:
@@ -3852,6 +3908,7 @@ cy:&Canfod beth:
 es:&Buscar qué
 -
 Find
+by:Знайсці
 hu:Keresés
 de:Suchen
 gr:Εύρεση
@@ -3865,6 +3922,7 @@ cy:Canfod
 es:Buscar
 -
 &Match case
+by:&Улічваць рэгістр
 hu:Kis- és nagybetűk megkülönböztetése
 de:&Groß-/Kleinschreibung beachten
 gr:Ταίριασμα πεζών/κεφαλαίων
@@ -3878,6 +3936,7 @@ cy:&Cydweddu maint
 es:&Coincidir mayúsculas y minúsculas
 -
 Hint: Use the F3 key for finding again
+ru:Для паўторнага пошуку выкарыстоўвайце клавішу F3
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
 gr:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
@@ -3891,6 +3950,7 @@ cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 es:Utilize la tecla F3 ir al siguiente resultado
 -
 Couldn't initialize printer
+ru:Не атрымалася ініцыялізаваць друкарку
 hu:A nyomtató inicializálása nem sikerült
 de:Der Drucker konnte nicht initialisiert werden
 gr:Απέτυχε η αρχικοποίηση του εκτυπωτή
@@ -3904,6 +3964,7 @@ cy:Methu cychwyn yr argraffydd
 es:No se puede inicializar la impresora
 -
 No synchronization info at this position
+by:У гэтай пазіцыі адсутнічае інфармацыя для сінхранізацыі
 hu:Nem található szinkronizálási információ az adott pozícióhoz
 de:Keine Synchronisationsinformationen an diesem Ort
 gr:Δε βρέθηκαν πληροφορίες συγχρονισμού στη θέση αυτή
@@ -3917,6 +3978,7 @@ cy:Dim gwybodaeth cydweddu yn y fan hon
 es:No hay información de sincronización en esta posición
 -
 Synchronization file cannot be opened
+by:Не атрымалася адкрыць файл з інфармацыяй для сінхранізацыі
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
 de:Die Synchronisationsdatei kann nicht geöffnet werden
 gr:Το αρχείο συγχρονισμού δε μπορεί να ανοιχθεί
@@ -3930,6 +3992,7 @@ cy:Methu agor ffeil cydweddu
 es:No se pudo abrir el archivo de sincronización
 -
 Page number %u inexistant
+by:Старонка %u не існуе
 hu:A(z) %u oldalszám nem létezik
 de:Es gibt keine Seite %u
 gr:Δεν υπάρχει σελίδα με αριθμό %u
@@ -3943,6 +4006,7 @@ cy:Nid yw tudalen rhif %u yn bodoli
 es:El número de página &u es inexistente
 -
 No result found around line %u in file %s
+by:Вынік, які адпавядае радку %u у файле %s, не знойдзены
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 gr:Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s 
 fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
@@ -3954,6 +4018,7 @@ cn:文件%s的第%u行附近没有找到结果
 cy:Dim canlyniad o liell %u yn ffeil %s
 -
 Source file %s has no synchronization point
+by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
 de:%s hat keinen Synchronisations-Punkt
 gr:Το αρχείο προέλευσης %s δεν λεχει σημείο συγχρονισμού
@@ -3967,6 +4032,7 @@ cy:Does dim pwynt cydweddu yn ffeil %s
 es:El archivo fuente %s no posee un punto de sincronización
 -
 [Changes detected; refreshing] %s
+by:[Выяўлены змены; адбываецца абнаўленне] %s
 hu:[a file megváltozott; frissítés] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 gr:[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
@@ -3980,6 +4046,7 @@ cy:[Newidiadau wedi eu canfod; adnewyddu]
 es:[El archivo ha cambiado; actualizando] %s
 -
 Unknown source file (%s)
+by:Невядомы зыходны файл (%s)
 hu:Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
 gr:Άγνωστο αρχείο προέλευσης (%s)
@@ -3993,6 +4060,7 @@ cy:Ffeil ffynhonnell anhysbys (%s)
 es:Archivo fuente desconocido (%s)
 -
 Cannot print this file
+by:Не атрымалася раздрукаваць гэты файл
 hu:Ez a file nem nyomtatható
 de:Diese Datei darf nicht gedruckt werden
 gr:Δε μπορεί να γίνει εκτύπωση του αρχείου
@@ -4006,6 +4074,7 @@ cy:Methu argraffu'r ffeil
 es:No se puede imprimir este archivo
 -
 PDF Document
+by:PDF-дaкумент
 hu:PDF dokumentum
 de:PDF-Dokument
 gr:Αρχείο PDF
@@ -4079,6 +4148,7 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 -
 # Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
+by:SumatraPDF асацыявана з файламі PDF
 hu:A Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 gr:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
@@ -4093,6 +4163,7 @@ es:SumatraPDF es su lector PDF por defecto
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
+by:Зараз SumatraPDF асацыявана з файламі PDF
 hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 gr:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
@@ -4107,6 +4178,7 @@ es:SumatraPDF debería ser ahora tu lector PDF por defecto
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
+by:У мабільным рэжыме змяніць PDF-в'юер нельга
 hu:Az alapértelmezett PDF-olvasó nem módosítható hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
 gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
@@ -4120,6 +4192,7 @@ cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 es:El lector PDF por defecto no puede ser cambiado en modo portátil
 -
 Open in &Adobe Reader
+by:Адкрыць у &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
 de:Mit &Adobe Reader öffnen
 gr:Άνοιγμα με &Adobe Reader
