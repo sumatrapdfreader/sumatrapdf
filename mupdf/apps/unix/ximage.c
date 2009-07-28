@@ -81,6 +81,7 @@ static struct
 	ximage_convert_func_t convert_func;
 
 	int useshm;
+	int shmcode;
 	XImage *pool[POOLSIZE];
 	/* MUST exist during the lifetime of the shared ximage according to the
 	   xc/doc/hardcopy/Xext/mit-shm.PS.gz */
@@ -295,6 +296,23 @@ next_pool_image(void)
 	return info.pool[info.lastused ++];
 }
 
+static int
+ximage_error_handler(Display *display, XErrorEvent *event)
+{
+	/* Turn off shared memory images if we get an error from the MIT-SHM extension */
+	if (event->request_code == info.shmcode)
+	{
+		char buf[80];
+		XGetErrorText(display, event->error_code, buf, sizeof buf);
+		printf("ximage: disabling shared memory extension: %s\n", buf);
+		info.useshm = 0;
+		return 0;
+	}
+
+	XSetErrorHandler(NULL);
+	return (XSetErrorHandler(ximage_error_handler))(display, event);
+}
+
 int
 ximage_init(Display *display, int screen, Visual *visual)
 {
@@ -305,6 +323,9 @@ ximage_init(Display *display, int screen, Visual *visual)
 	int nformats;
 	int ok;
 	int i;
+	int major;
+	int event;
+	int error;
 
 	info.display = display;
 	info.screen = screen;
@@ -340,6 +361,14 @@ ximage_init(Display *display, int screen, Visual *visual)
 
 	/* prepare colormap */
 	make_colormap();
+
+	/* identify code for MIT-SHM extension */
+	if (XQueryExtension(display, "MIT-SHM", &major, &event, &error) &&
+			XShmQueryExtension(display))
+		info.shmcode = major;
+
+	/* intercept errors looking for SHM code */
+	XSetErrorHandler(ximage_error_handler);
 
 	/* prepare pool of XImages */
 	info.useshm = 1;

@@ -100,7 +100,8 @@ char *winpassword(pdfapp_t *app, char *filename)
 
 static void winopen(void)
 {
-	XWMHints *hints;
+	XWMHints *wmhints;
+	XClassHint *classhint;
 
 	xdpy = XOpenDisplay(nil);
 	if (!xdpy)
@@ -148,17 +149,26 @@ static void winopen(void)
 
 	XDefineCursor(xdpy, xwin, xcarrow);
 
-	hints = XAllocWMHints();
-	if (hints)
+	wmhints = XAllocWMHints();
+	if (wmhints)
 	{
-		hints->flags = IconPixmapHint;
-		hints->icon_pixmap = XCreateBitmapFromData(xdpy, xwin,
+		wmhints->flags = IconPixmapHint;
+		wmhints->icon_pixmap = XCreateBitmapFromData(xdpy, xwin,
 				(char *) gs_l_xbm_bits, gs_l_xbm_width, gs_l_xbm_height);
-		if (hints->icon_pixmap)
+		if (wmhints->icon_pixmap)
 		{
-			XSetWMHints(xdpy, xwin, hints);
+			XSetWMHints(xdpy, xwin, wmhints);
 		}
-		XFree(hints);
+		XFree(wmhints);
+	}
+
+	classhint = XAllocClassHint();
+	if (classhint)
+	{
+		classhint->res_name = "mupdf";
+		classhint->res_class = "MuPDF";
+		XSetClassHint(xdpy, xwin, classhint);
+		XFree(classhint);
 	}
 
 	x11fd = ConnectionNumber(xdpy);
