@@ -16,6 +16,7 @@
 int pagetobench = -1;
 int loadonly = 0;
 pdf_xref *xref = nil;
+int pagecount = 0;
 fz_renderer *drawgc = nil;
 pdf_page *drawpage = nil;
 
@@ -143,6 +144,10 @@ fz_error openxref(char *filename, char *password)
 		}
 	}
 
+	error = pdf_getpagecount(xref, &pagecount);
+	if (error)
+		return error;
+
 	return fz_okay;
 }
 
@@ -245,7 +250,7 @@ void benchfile(char *pdffilename)
 	timems = timeinms(&timer);
 	logbench("load: %.2f ms\n", timems);
 
-	pages = xref->pagecount;
+	pages = pagecount;
 	logbench("page count: %d\n", pages);
 
 	if (loadonly)
