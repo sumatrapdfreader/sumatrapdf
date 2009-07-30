@@ -98,6 +98,10 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	/* Make sure we call it with Z_FINISH at the end of input */
 	if (err == Z_OK && in->eof && zp->avail_in == 0 && zp->avail_out > 0)
 		err = inflate(zp, Z_FINISH);
+	/* Ignore data check errors at EOS */
+	else if (err == Z_DATA_ERROR && in->eof && zp->avail_in == 0 &&
+		zp->avail_out > 0 && !strcmp(zp->msg, "incorrect data check"))
+		err = Z_BUF_ERROR;
 
 	in->rp = in->wp - zp->avail_in;
 	out->wp = out->ep - zp->avail_out;
