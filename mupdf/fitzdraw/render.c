@@ -498,6 +498,9 @@ DEBUG("  convert from %s to %s\n", image->cs->name, gc->model->name);
 	imgmat.f = 1.0;
 	invmat = fz_invertmatrix(fz_concat(imgmat, ctm));
 
+	invmat.e -= 0.5;
+	invmat.f -= 0.5;
+
 	w = clip.x1 - clip.x0;
 	h = clip.y1 - clip.y0;
 	x0 = clip.x0;

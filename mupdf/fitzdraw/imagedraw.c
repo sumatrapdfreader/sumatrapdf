@@ -8,8 +8,10 @@ typedef unsigned char byte;
 
 static inline byte getcomp(byte *s, int w, int h, int u, int v, int n, int k)
 {
-	if (u < 0 || u >= w) return 0;
-	if (v < 0 || v >= h) return 0;
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
 	return s[(w * v + u) * n + k];
 }
 
@@ -30,8 +32,10 @@ static inline int samplecomp(byte *s, int w, int h, int u, int v, int n, int k)
 
 static inline byte getmask(byte *s, int w, int h, int u, int v)
 {
-	if (u < 0 || u >= w) return 0;
-	if (v < 0 || v >= h) return 0;
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
 	return s[w * v + u];
 }
 
@@ -60,9 +64,10 @@ static inline void lerpargb(byte *dst, byte *a, byte *b, int t)
 
 static inline byte *getargb(byte *s, int w, int h, int u, int v)
 {
-	static byte zero[4] = { 0, 0, 0, 0 };
-	if (u < 0 || u >= w) return zero;
-	if (v < 0 || v >= h) return zero;
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
 	return s + ((w * v + u) << 2);
 }
 
