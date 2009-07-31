@@ -1105,18 +1105,18 @@ MenuDef menuDefHelp[] = {
     { _TRN("&About"),                      IDM_ABOUT,               0  }
 };
 
-static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node)
+static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node, UINT index)
 {
     assert(node);
     if (!node) return;
     assert(menuFile);
     if (!menuFile) return;
 
-    UINT newId = node->menuId;
+    TCHAR menuString[MAX_PATH + 4];
+    wsprintf(menuString, _T("&%d) %s"), (index + 1) % 10, FilePath_GetBaseName(node->state.filePath));
     if (INVALID_MENU_ID == node->menuId)
-        newId = AllocNewMenuId();
-    AppendMenu(menuFile, MF_ENABLED | MF_STRING, newId, FilePath_GetBaseName(node->state.filePath));
-    node->menuId = newId;
+        node->menuId = AllocNewMenuId();
+    InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, node->menuId, menuString);
 }
 
 static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
@@ -1146,23 +1146,22 @@ static void AppendRecentFilesToMenu(HMENU m)
 {
     if (!gFileHistoryRoot) return;
 
-    AppendMenu(m, MF_SEPARATOR, 0, NULL);
-
-    int  itemsAdded = 0;
+    int itemsAdded = 0;
     FileHistoryList *curr = gFileHistoryRoot;
-    while (curr) {
+    while (curr && itemsAdded < MAX_RECENT_FILES_IN_MENU) {
         assert(curr->state.filePath);
         if (curr->state.filePath) {
-            AddFileMenuItem(m, curr);
+            AddFileMenuItem(m, curr, itemsAdded);
             assert(curr->menuId != INVALID_MENU_ID);
             ++itemsAdded;
-            if (itemsAdded >= MAX_RECENT_FILES_IN_MENU) {
-                DBG_OUT("  not adding, reached max %d items\n", MAX_RECENT_FILES_IN_MENU);
-                return;
-            }
         }
         curr = curr->next;
     }
+    if (curr) {
+        DBG_OUT("  not adding, reached max %d items\n", MAX_RECENT_FILES_IN_MENU);
+    }
+
+    InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
 static void WindowInfo_RebuildMenu(WindowInfo *win)
