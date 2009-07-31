@@ -196,7 +196,7 @@ static bool                         gDeleteFileOnClose = false; // Delete the fi
 SerializableGlobalPrefs             gGlobalPrefs = {
     TRUE, // BOOL m_showToolbar
     FALSE, // BOOL m_pdfAssociateDontAskAgain
-    TRUE, // BOOL m_pdfAssociateShouldAssociate
+    FALSE, // BOOL m_pdfAssociateShouldAssociate
 #ifndef BUILD_RM_VERSION
     TRUE, // BOOL m_enableAutoUpdate
 #else
@@ -2547,6 +2547,8 @@ static bool ReadRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *buffe
         SeeLastError();
         goto Exit;
     }
+    // we need the buffer size in bytes not TCHARs
+    bufLen *= sizeof(TCHAR);
     res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
     if (ERROR_SUCCESS != res)
         SeeLastError();
@@ -2584,6 +2586,10 @@ static bool DoAssociateExeWithPdfExtension(bool associateGlobally)
     if (associateGlobally)
         hkeyToUse = HKEY_LOCAL_MACHINE;
 
+    // Remember the previous default app for the Uninstaller
+    if (!ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, dimof(tmp)) || tstr_eq(tmp, APP_NAME_STR))
+        *tmp = 0;
+
     success = WriteRegStr(hkeyToUse, _T("Software\\Classes\\.pdf"), NULL, APP_NAME_STR);
     if (!success) {
         // At least register for the user if we can't do so for the whole machine
@@ -2591,6 +2597,8 @@ static bool DoAssociateExeWithPdfExtension(bool associateGlobally)
             return DoAssociateExeWithPdfExtension(false);
         return false;
     }
+    if (*tmp)
+        WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), tmp);
 
     GetModuleFileName(NULL, exePath, dimof(exePath));
     WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR, NULL, (TCHAR *)_TR("PDF Document"));
@@ -2601,6 +2609,10 @@ static bool DoAssociateExeWithPdfExtension(bool associateGlobally)
     WriteRegStr(hkeyToUse, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
+
+    // Remind the user, when a different application takes over
+    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
+    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
     return success;
 }
 
@@ -2611,20 +2623,20 @@ bool IsExeAssociatedWithPdfExtension(void)
 
     // Get the document name for PDFs (don't trust it to be APP_NAME_STR,
     // in case the user has manually associated PDFs with SumatraPDF)
-    success = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, sizeof(tmp));
+    success = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, tmp, dimof(tmp));
     if (!success)
         return false;
     lstrcpyn(keyName, tmp, dimof(keyName) - 19); // 19 = lstrlen(_T("\\Shell\\open\\command"))
     
     // Make sure that "open" is the default verb for PDFs
     lstrcat(keyName, _T("\\Shell"));
-    success = ReadRegStr(HKEY_CLASSES_ROOT, keyName, NULL, tmp, sizeof(tmp));
+    success = ReadRegStr(HKEY_CLASSES_ROOT, keyName, NULL, tmp, dimof(tmp));
     if (success && !tstr_ieq(tmp, _T("open")))
         return false;
     
     // Finally, SumatraPDF should be the handler for the "open" verb
     lstrcat(keyName, _T("\\open\\command"));
-    success = ReadRegStr(HKEY_CLASSES_ROOT, keyName, NULL, tmp, sizeof(tmp));
+    success = ReadRegStr(HKEY_CLASSES_ROOT, keyName, NULL, tmp, dimof(tmp));
     lstrcpy(keyName, _T("\""));
     GetModuleFileName(NULL, keyName + 1, MAX_PATH);
     lstrcat(keyName, _T("\""));
@@ -2657,15 +2669,15 @@ void AssociateExeWithPdfExtension(void)
         DoAssociateExeWithPdfExtension(true);
 }
 
+// Registering happens either through the Installer or the Options dialog;
+// here we just make sure that we're still registered
 static bool RegisterForPdfExtentions(HWND hwnd)
 {
+    if (IsRunningInPortableMode() || gRestrictedUse)
+        return false;
+
     if (IsExeAssociatedWithPdfExtension())
         return true;
-
-    if (IsRunningInPortableMode()) {
-        MessageBox(hwnd, _TR("This option is not available in portable mode."), _TR("Warning"), MB_ICONEXCLAMATION | MB_OK);
-        return false;
-    }
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
@@ -7156,14 +7168,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     we assume that all arguments are PDF file names.
     -bench can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
-#ifdef BUILD_RM_VERSION
-    bool registerForPdfExtentions = false;
-#else
-    bool registerForPdfExtentions = true;
-    if (IsRunningInPortableMode())
-        registerForPdfExtentions = false;
-#endif
-
     bool reuse_instance = false;
     currArg = argListRoot->next;
     TCHAR *printerName = NULL;
@@ -7178,12 +7182,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             goto Exit;
-        }
-
-        if (is_arg( "-no-register-ext")) {
-            currArg = currArg->next;
-            registerForPdfExtentions = false;
-            continue;
         }
 
         if (is_arg("-bench")) {
@@ -7291,7 +7289,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (is_arg("-restrict")) {
             currArg = currArg->next;
             gRestrictedUse = true;
-            registerForPdfExtentions = false;
             continue;
         }
 
@@ -7437,7 +7434,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!firstDocLoaded)
         MenuToolbarUpdateStateForAllWindows();
 
-    if (registerForPdfExtentions && win)
+    // Make sure that we're still registered as default,
+    // if the user has explicitly told us to be
+    if (gGlobalPrefs.m_pdfAssociateShouldAssociate && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (gGlobalPrefs.m_enableAutoUpdate)

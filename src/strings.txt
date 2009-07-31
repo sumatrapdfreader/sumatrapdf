@@ -3284,20 +3284,6 @@ mk:Предупредување
 hr:Upozorenje
 cn:警告
 -
-This option is not available in portable mode.
-by:Гэта опцыя недаступная ў мабільным рэжыме.
-hu:Ez a beállítás nem elérhető hordozható módban
-de:Diese Option ist im portablen Modus nicht verfügbar
-gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
-fr:Cette option n'est pas disponible en mode portable.
-cy:Nid yw'r dewis hwn ar gael mewn modd cludadwy.
-pl:Opcja niedostepna w trybie przenosnym.
-ru:Эта опция недоступна в мобильном режиме.
-gr:Η επιλογή αυτή δεν είναι διαθέσιμη σε portable mode.
-mk:Оваа опција не е достапна во мобилен режим на работа.
-hr:Ova mogućnost nije dostupna u prenosivom načinu rada.
-cn:此选项不适用于便携模式
--
 SumatraPDF Options
 by:Параметры SumatraPDF
 hu:A SumatraPDF beállításai
