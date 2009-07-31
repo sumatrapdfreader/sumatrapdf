@@ -343,6 +343,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 				pdf_loadencoding(estrings, fz_toname(base));
 			else if (!fontdesc->isembedded)
 				pdf_loadencoding(estrings, "StandardEncoding");
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690615 */
 			else if (!fontdesc->encoding && !symbolic)
 				pdf_loadencoding(estrings, "StandardEncoding");
 
@@ -455,6 +456,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *r
 		}
 
 		/* Load encoding Differences nonetheless, when they're available */
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=115 */
 		if (fz_isdict(encoding))
 		{
 			fz_obj *diff, *item;

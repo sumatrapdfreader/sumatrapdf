@@ -203,7 +203,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	    gstate->head = blend;
 	}
 
-	/* clip the xobject */
+	/* clip the xobject; cf. http://bugs.ghostscript.com/show_bug.cgi?id=690622 */
 	
 	x = xobj->bbox.x0; w = xobj->bbox.x1 - x;
 	y = xobj->bbox.y0; h = xobj->bbox.y1 - y;
@@ -820,6 +820,7 @@ Lsetcolor:
 				return fz_throw("cannot find Font dictionary");
 
 			obj = fz_dictget(dict, csi->stack[0]);
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=424 */
 			if (!obj && dict->u.d.len > 0)
 				obj = dict->u.d.items[0].v; // Just fall back to any font, so that we can go on
 			if (!obj)

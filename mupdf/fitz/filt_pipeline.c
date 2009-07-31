@@ -132,6 +132,7 @@ tail:
 	{
 		if (!p->head->done)
 		{
+			// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=344
 			// TODO: Should this ever be allowed to happen?
 			// If tail was done but head wasn't, there must have been a (small?)
 			// trailer left in the queue - let the head read over it

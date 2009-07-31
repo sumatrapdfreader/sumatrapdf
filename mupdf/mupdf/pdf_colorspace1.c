@@ -587,6 +587,7 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		return fz_rethrow(-1, "out of memory: indexed colorspace lookup table (%d entries)", n);
 	}
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=396 */
 	if (fz_isindirect(lookup))
 	{
 		const int oid = fz_tonum(lookup);
