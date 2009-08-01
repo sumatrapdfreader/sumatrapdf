@@ -57,14 +57,6 @@ SectionEnd
 
 ; Optional section (unselected by default)
 Section /o "Use SumatraPDF as my default PDF reader" SecDefault
-	ClearErrors
-	; Preserve the name of the original PDF reader
-	ReadRegStr $0 HKCR ".pdf" ""
-	${IfNot} ${Errors}
-	${AndIf} $0 != "SumatraPDF"
-		WriteRegStr HKCR "SumatraPDF" "previous.pdf" $0
-	${EndIf}
-	; Register as default PDF reader
 	Exec '"$INSTDIR\SumatraPDF.exe" -register-for-pdf'
 SectionEnd
 

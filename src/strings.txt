@@ -3622,7 +3622,7 @@ View
 af:Vertoon
 bg:Виж
 br:Ver
-hu:Nézet
+hu:Alapértelmezett nézet
 pl:Widok
 de:Ansicht
 fr:Affichage

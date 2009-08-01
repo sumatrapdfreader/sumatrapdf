@@ -1136,7 +1136,7 @@ const char *g_transTranslations[] = {
   "Mostant\303\263l a Sumatra az alap\303\251rtelmezett PDF-olvas\303\263ja",
   "Nem siker\303\274lt megnyitni a szinkroniz\303\241ci\303\263s f\303\241jlt",
   "Ismeretlen forr\303\241sf\303\241jl (%s)",
-  "N\303\251zet",
+  "Alap\303\251rtelmezett n\303\251zet",
   "Figyelmeztet\303\251s",
   "\303\226nn\303\251l a legfrissebb verzi\303\263 van telep\303\255tve.",
   "Jelenlegi verzi\303\263: %s",
