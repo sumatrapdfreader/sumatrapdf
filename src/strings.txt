@@ -20,7 +20,7 @@
 #   laclasse
 # Nardog (nardog.takoweb.com) - Japanese
 # Hungarian:
-#   Richard Magyar (magyar_richard@yahoo.com)- Hungarian
+#   Richard Magyar (magyar_richard@yahoo.com)
 #   Lázár Viktor - Hungarian (0.94)
 # Persian: 
 #   Adham Beyki (odinay@gmail.com)
@@ -3499,7 +3499,7 @@ es:&Opciones...
 -
 Default &Layout:
 by:&Кампаноўка па змаўчанні
-hu:Alapértelmezett megjelenítési mód:
+hu:Oldalmegjelenítési mód:
 de:&Standardlayout:
 gr:Προκαθορισμένη διαμόρφωση σελίδας
 fr:Mise en page par défaut
@@ -3593,7 +3593,7 @@ es:Revisar actualizaciones periódicamente
 -
 &Remember these settings for each document
 by:Запомніць гэтыя параметры для &кожнага дакумента
-hu:Eltérő Nagyítás/Megjelenítési mód megjegyzése adott dokumentumhoz
+hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
 de:&Diese Einstellungen für jedes Dokument merken
 gr:Απομνημόνευση των ρυθμίσεων για κάθε έγγραφο
 fr:Se rappeler de ces paramètres pour chaque document
@@ -4166,7 +4166,7 @@ es:SumatraPDF debería ser ahora tu lector PDF por defecto
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 by:У мабільным рэжыме змяніць PDF-в'юер нельга
-hu:Az alapértelmezett PDF-olvasó nem módosítható hordozható módban
+hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
 gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
 fr:Le lecteur de PDF ne peut être changer en mode portable
