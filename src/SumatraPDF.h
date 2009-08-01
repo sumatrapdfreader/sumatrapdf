@@ -103,6 +103,7 @@ public:
         hwndTracker = NULL;
         hMenu = NULL;
         hdc = NULL;
+        dpi = 96;
         findPercent = 0;
         findStatusVisible = false;
         showSelection = false;
@@ -155,6 +156,7 @@ public:
 
     HDC             hdc;
     BITMAPINFO *    dibInfo;
+    int             dpi;
 
     int             findPercent;
     bool            findStatusVisible;    

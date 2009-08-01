@@ -138,6 +138,7 @@ static BOOL             gDebugShowLinks = FALSE;
 
 #define FIND_STATUS_WIDTH       200 // Default width for the find status window
 #define FIND_STATUS_MARGIN      8
+#define FIND_STATUS_PROGRESS_HEIGHT 5
 
 /* A special "pointer" vlaue indicating that we tried to render this bitmap
    but couldn't (e.g. due to lack of memory) */
@@ -1712,6 +1713,11 @@ static WindowInfo *WindowInfo_New(HWND hwndFrame) {
     win->state = WS_ABOUT;
     win->hwndFrame = hwndFrame;
     win->mouseAction = MA_IDLE;
+    
+    HDC hdc = GetDC(hwndFrame);
+    win->dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+    ReleaseDC(hwndFrame, hdc);
+
     return win;
 Error:
     WindowInfo_Delete(win);
@@ -5051,8 +5057,9 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
         SelectObject(hdc, oldFont);
         ReleaseDC(win->hwndFindStatus, hdc);
-        rc.right += 15;
-        rc.bottom += 12;
+        rc.right += MulDiv(15, win->dpi, 96);
+        // TODO: Reduce the height so that the progress bar isn't visible
+        rc.bottom = MulDiv(31, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT;
         AdjustWindowRectEx(&rc, GetWindowLong(win->hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win->hwndFindStatus, GWL_EXSTYLE));
         MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right-rc.left, rc.bottom-rc.top, FALSE);
     }
@@ -5131,7 +5138,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
 {
     LPARAM disable = (LPARAM)MAKELONG(0,0);
 
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(31, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT, false);
     ShowWindow(win->hwndFindStatus, SW_SHOWNA);
     win->findStatusVisible = true;
 
@@ -5150,6 +5157,8 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
+    // resize the window, in case another message has been displayed in the meantime
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(31, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT, false);
     if (!win->dm->bFoundText)
         WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
     else {
@@ -5531,9 +5540,10 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.top += 4;
         DrawText(hdc, text, lstrlen(text), &rect, DT_LEFT);
         
-        rect.top += 20;
-        rect.bottom = rect.top + 5;
-        rect.right = rect.left + FIND_STATUS_WIDTH - 20;
+        int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, 96) - 20;
+        rect.top += MulDiv(20, win->dpi, 96);
+        rect.bottom = rect.top + FIND_STATUS_PROGRESS_HEIGHT;
+        rect.right = rect.left + width;
         PaintRectangle(hdc, &rect);
         
         int percent = win->findPercent;
@@ -5541,7 +5551,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
             percent = 100;
         rect.top += 2;
         rect.left += 2;
-        rect.right = rect.left + (FIND_STATUS_WIDTH - 20) * percent / 100 - 3;
+        rect.right = rect.left + width * percent / 100 - 3;
         rect.bottom -= 1;
         FillRect(hdc, &rect, gBrushShadow);
 
@@ -5590,7 +5600,6 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
     MoveWindow(win->hwndFindBox, pos_x + size.cx, pos_y, FIND_BOX_WIDTH, findWndDy, false);
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, FIND_STATUS_WIDTH, 36, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
