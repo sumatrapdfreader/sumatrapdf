@@ -27,6 +27,7 @@
   #define tchar_needs_url_escape wchar_needs_url_escape
   #define tstr_contains wstr_contains
   #define tstr_printf   wstr_printf
+  #define tstr_eq       wstr_eq
   #define tstr_ieq      wstr_ieq
   #define tstr_empty    wstr_empty
   #define tstr_find_char wstr_find_char
@@ -58,6 +59,7 @@
   #define tchar_needs_url_escape char_needs_url_escape
   #define tstr_contains str_contains
   #define tstr_printf   str_printf
+  #define tstr_eq       str_eq
   #define tstr_ieq      str_ieq
   #define tstr_empty    str_empty
   #define tstr_find_char  str_find_char
