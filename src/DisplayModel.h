@@ -129,7 +129,7 @@ typedef struct ScrollState {
 class DisplayModel
 {
 public:
-    DisplayModel(DisplayMode displayMode);
+    DisplayModel(DisplayMode displayMode, int dpi=96);
     ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,

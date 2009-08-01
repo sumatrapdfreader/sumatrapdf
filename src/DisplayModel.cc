@@ -43,6 +43,7 @@
   those pages to a bitmap and display those bitmaps.
 */
 
+#include "SumatraPDF.h"
 #include "DisplayModel.h"
 #include "tstr_util.h"
 
@@ -167,16 +168,6 @@ void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
         swap_double(pageDxOut, pageDyOut);
 }
 
-double calculateDpiFactor(void)
-{
-    HDC hDc = GetDC(NULL);
-    int dpi = GetDeviceCaps(hDc, LOGPIXELSX);
-    ReleaseDC(NULL, hDc);
-    
-    // 1 PDF user space unit equals 1/72 inch
-    return dpi * 1.0 / 72.0;
-}
-
 double limitValue(double val, double min, double max)
 {
     assert(max >= min);
@@ -187,12 +178,13 @@ double limitValue(double val, double min, double max)
     return val;
 }
 
-DisplayModel::DisplayModel(DisplayMode displayMode)
+DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
 {
     _displayMode = displayMode;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
-    _dpiFactor = calculateDpiFactor();
+    // 1 PDF user space unit equals 1/72 inch
+    _dpiFactor = dpi * 1.0 / 72.0;
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
@@ -1390,7 +1382,7 @@ DisplayModel *DisplayModel_CreateFromFileName(
 {
     DisplayModel *    dm = NULL;
 
-    dm = new DisplayModel(displayMode);
+    dm = new DisplayModel(displayMode, win->dpi);
     if (!dm)
         goto Error;
 
