@@ -141,6 +141,7 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /GL /MT /O2
 !endif
 
 SUMATRA_RES = $(O)\sumtrapdf.res
+SUMATRA_MANIFEST = $(O)\sumtrapdf.manifest.res
 
 FT_OBJS = \
 	$(O)\ftdebug.obj $(O)\ftsystem.obj $(O)\ftglyph.obj $(O)\ftbitmap.obj $(O)\ftinit.obj $(O)\ftxf86.obj \
@@ -323,7 +324,13 @@ SUMATRA_OBJS = \
 	$(O)\SumatraDialogs.obj $(O)\SumatraPDF.obj $(O)\translations.obj \
 	$(O)\translations_txt.obj $(O)\utf_util.obj $(O)\win_util.obj $(O)\WinUtil.obj \
 	$(O)\wstr_util.obj $(O)\LangMenuDef.obj $(O)\FileWatch.obj $(O)\PdfSync.obj \
-	$(O)\dialogsizer_set.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj 
+	$(O)\dialogsizer_set.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
+	$(SUMATRA_RES)
+
+# Don't include a manifest in Debug builds (it could override the external manifest)
+!if "$(CFG)"=="rel"
+SUMATRA_OBJS = $(SUMATRA_OBJS) $(SUMATRA_MANIFEST)
+!endif
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_PDB = $(O)\SumatraPDF.pdb
@@ -347,6 +354,9 @@ $(O): force
 
 $(SUMATRA_RES): src\SumatraPDF.rc
 	rc /r /fo$(SUMATRA_RES) src\SumatraPDF.rc
+
+$(SUMATRA_MANIFEST): src\SumatraPDF.manifest.rc
+	rc /r /fo$(SUMATRA_MANIFEST) src\SumatraPDF.manifest.rc
 
 $(O)\font_misc.obj: $(O)\font_misc.c
 $(O)\font_mono.obj: $(O)\font_mono.c
@@ -473,9 +483,9 @@ $(PDFINFO_APP): $(PDFINFO_OBJS)
 	/MAP:$(PDFINFO_MAP) \
 	/SUBSYSTEM:CONSOLE
 
-$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES)
+$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(SUMATRA_APP) /PDB:$(SUMATRA_PDB) \
-	$(LIBS_OBJS) $(SUMATRA_OBJS) $(SUMATRA_RES) $(LIBS) \
+	$(LIBS_OBJS) $(SUMATRA_OBJS) $(LIBS) \
 	/MAP:$(SUMATRA_MAP)
 
 $(PDFAPP_APP): $(PDFAPP_OBJS)

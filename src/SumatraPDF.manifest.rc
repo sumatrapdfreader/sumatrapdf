@@ -1,0 +1,8 @@
+#include "windows.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "SumatraPDF.exe.manifest"
