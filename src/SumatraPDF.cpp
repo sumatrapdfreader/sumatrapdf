@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <direct.h> /* for _mkdir() */
 
 #include <windowsx.h>
 #include <shellapi.h>
@@ -4869,8 +4868,10 @@ static void OnMenuGoToPage(WindowInfo *win)
     }
 
     int newPageNo = Dialog_GoToPage(win);
-    if (win->dm->validPageNo(newPageNo))
+    if (win->dm->validPageNo(newPageNo)) {
+        win->dm->addNavPoint();
         win->dm->goToPage(newPageNo, 0);
+    }
 }
 
 static void OnMenuFind(WindowInfo *win)
@@ -5113,6 +5114,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             res.top = y - MARK_SIZE / 2;
             res.right = res.left + MARK_SIZE;
             res.bottom = res.top + MARK_SIZE;
+            win->dm->addNavPoint();
             win->dm->goToPage(page, 0);
             win->dm->MapResultRectToScreen(&res);
             if (IsIconic(win->hwndFrame))
@@ -5660,6 +5662,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             GetWindowText(win->hwndPageBox, buf, dimof(buf));
             newPageNo = _ttoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
+                win->dm->addNavPoint();
                 win->dm->goToPage(newPageNo, 0);
                 SetFocus(win->hwndFrame);
             }
@@ -6512,6 +6515,16 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                         SetFocus(win->hwndFrame);
                     else if (win->dm && win->dm->_showToc)
                         SetFocus(win->hwndTocBox);
+                    break;
+
+                case IDM_GOTO_NAV_BACK:
+                    if (win->dm)
+                        win->dm->navigate(-1);
+                    break;
+                    
+                case IDM_GOTO_NAV_FORWARD:
+                    if (win->dm)
+                        win->dm->navigate(1);
                     break;
 
                 default:

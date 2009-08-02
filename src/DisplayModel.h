@@ -40,7 +40,9 @@ typedef struct DisplaySettings {
 #define PADDING_BETWEEN_PAGES_X      gDisplaySettings.paddingBetweenPagesX
 #define PADDING_BETWEEN_PAGES_Y      gDisplaySettings.paddingBetweenPagesY
 
-#define POINT_OUT_OF_PAGE			0
+#define POINT_OUT_OF_PAGE           0
+
+#define NAV_HISTORY_LEN             50
 
 /* Describes many attributes of one page in one, convenient place */
 typedef struct PdfPageInfo {
@@ -273,6 +275,9 @@ public:
     bool            getScrollState(ScrollState *state);
     void            setScrollState(ScrollState *state);
 
+    bool            addNavPoint(bool keepForward=false);
+    void            navigate(int dir);
+
 protected:
 
     void            startRenderingPage(int pageNo);
@@ -320,6 +325,10 @@ protected:
     double          _dpiFactor;
     /* display odd pages on the right? */
     bool            _showCover;
+
+    ScrollState   * _navHistory;
+    int             _navHistoryIx;
+    int             _navHistoryEnd;
 
 public:
     /* an array of 'totalLinksCount' size, each entry describing a link */

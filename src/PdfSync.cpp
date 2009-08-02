@@ -837,6 +837,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 WindowInfo *win = WindowInfoList_Find(pdffile);
                 if (win && WS_SHOWING_PDF == win->state) {
                     if (win->dm->validPageNo(page)) {
+                        win->dm->addNavPoint();
                         win->dm->goToPage(page, 0);
                         ack.fAck = 1;
                         SetFocus(win->hwndFrame);

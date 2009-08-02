@@ -118,6 +118,8 @@
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
 #define IDM_MOVE_FRAME_FOCUS            557
+#define IDM_GOTO_NAV_BACK               558
+#define IDM_GOTO_NAV_FORWARD            559
 #define IDC_SUMATRAPDF                  600
 #define IDI_SMALL                       601
 #define IDC_GOTO_PAGE_EDIT              1000

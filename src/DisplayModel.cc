@@ -174,6 +174,10 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _links = NULL;
     _linksCount = 0;
 
+    _navHistory = (ScrollState *)malloc(NAV_HISTORY_LEN * sizeof(ScrollState));
+    _navHistoryIx = 0;
+    _navHistoryEnd = 0;
+    
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
 
@@ -187,6 +191,7 @@ DisplayModel::~DisplayModel()
         free(_pagesInfo);
     if (_links)
         free(_links);
+    free(_navHistory);
     delete _pdfSearch;
     delete pdfEngine;
     RenderQueue_RemoveForDisplayModel(this);
@@ -994,11 +999,11 @@ bool DisplayModel::goToLastPage(void)
     int newPageNo = pageCount();
     int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns, _showCover);
 
-    if (currPageNo != firstPageInLastRow) { /* are we on the last page already ? */
-        goToPage(firstPageInLastRow, 0);
-        return TRUE;
-    }
-    return FALSE;
+    if (currPageNo == firstPageInLastRow) /* are we on the last page already ? */
+        return FALSE;
+    addNavPoint();
+    goToPage(firstPageInLastRow, 0);
+    return TRUE;
 }
 
 bool DisplayModel::goToFirstPage(void)
@@ -1016,6 +1021,7 @@ bool DisplayModel::goToFirstPage(void)
             return FALSE;
         }
     }
+    addNavPoint();
     goToPage(1, 0);
     return TRUE;
 }
@@ -1375,6 +1381,8 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text)
     if (bFoundText) {
         PdfSearchResult &rect = _pdfSearch->result;
 
+        if (text != NULL)
+            addNavPoint();
         goToPage(rect.page, 0);
         MapResultRectToScreen(&rect);
         return &rect;
@@ -1499,8 +1507,10 @@ void DisplayModel::handleLink2(pdf_link* link)
         /* else: unsupported uri type */
     } else if (PDF_LGOTO == link->kind) {
         int page = pdfEngine->findPageNo(link->dest);
-        if (page > 0) 
+        if (page > 0) {
+            addNavPoint();
             goToPage(page, 0);
+        }
     }
 }
 
@@ -1523,12 +1533,15 @@ void DisplayModel::goToNamedDest(const char *name)
     fz_obj *dest = pdfEngine->getNamedDest(name);
     if (!dest)
     {
+        addNavPoint();
         goToPage(1, 0);
         return;
     }
     int page = pdfEngine->findPageNo(dest);
-    if (page > 0)
+    if (page > 0) {
+        addNavPoint();
         goToPage(page, 0);
+    }
 }
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
@@ -1720,4 +1733,34 @@ void DisplayModel::setScrollState(ScrollState *state)
     if (state->y < 0)
         newY = 0;
     goToPage(state->page, newY, newX);
+}
+
+/* Records the current scroll state for later navigating back to. */
+bool DisplayModel::addNavPoint(bool keepForward)
+{
+    ScrollState ss;
+    if (!getScrollState(&ss))
+        ss.page = 0; // invalid nav point
+
+    if (NAV_HISTORY_LEN == _navHistoryIx) {
+        memmove(&_navHistory[0], &_navHistory[1], (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
+        _navHistoryIx--;
+    }
+    memcpy(&_navHistory[_navHistoryIx], &ss, sizeof(ss));
+    _navHistoryIx++;
+    if (!keepForward || _navHistoryIx > _navHistoryEnd)
+        _navHistoryEnd = _navHistoryIx;
+
+    return ss.page != 0;
+}
+
+/* Navigates |dir| steps forward or backwards. */
+void DisplayModel::navigate(int dir)
+{
+    if (_navHistoryIx + dir < 0 || _navHistoryIx + dir >= _navHistoryEnd || (_navHistoryIx == NAV_HISTORY_LEN && _navHistoryIx + dir == 0))
+        return;
+    addNavPoint(true);
+    _navHistoryIx += dir - 1; // -1 because adding a nav point increases the index
+    if (dir != 0 && _navHistory[_navHistoryIx].page != 0)
+        setScrollState(&_navHistory[_navHistoryIx]);
 }
