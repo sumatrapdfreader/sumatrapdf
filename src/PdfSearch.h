@@ -26,7 +26,7 @@ public:
 class PdfSearch
 {
 protected:
-    void *text;
+    WCHAR *text;
     int   length;
     bool  forward;
     bool sensitive;
@@ -43,7 +43,7 @@ private:
 
 protected:
     void ReverseLineList();
-    bool MatchChars(int c1, int c2);
+    bool MatchChars(WCHAR c1, WCHAR c2);
     bool MatchAtPosition(int n);
     bool FindTextInPage(int page = 0);
     bool FindStartingAtPage(int page);

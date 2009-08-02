@@ -190,6 +190,23 @@ addtextchar(pdf_textline *line, fz_irect bbox, int c)
 		line->text = newtext;
 	}
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=400 */
+	/* copy ligatures as individual characters */
+	switch (c)
+	{
+	case 0xFB00: /* ff */
+		addtextchar(line, bbox, 'f'); c = 'f'; break;
+	case 0xFB03: /* ffi */
+		addtextchar(line, bbox, 'f');
+	case 0xFB01: /* fi */
+		addtextchar(line, bbox, 'f'); c = 'i'; break;
+	case 0xFB04: /* ffl */
+		addtextchar(line, bbox, 'f');
+	case 0xFB02: /* fl */
+		addtextchar(line, bbox, 'f'); c = 'l'; break;
+	case 0xFB05: case 0xFB06: /* st */
+		addtextchar(line, bbox, 's'); c = 't'; break;
+	}
 	line->text[line->len].bbox = bbox;
 	line->text[line->len].c = c;
 	line->len ++;

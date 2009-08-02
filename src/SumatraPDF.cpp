@@ -3557,7 +3557,7 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
     if (!win->selectionOnPage) return;
 
     HGLOBAL handle;
-    TCHAR *ucsbuf;
+    WCHAR *ucsbuf;
     int ucsbuflen = 4096;
 
     if (!OpenClipboard(NULL)) return;
@@ -3569,14 +3569,14 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
         CloseClipboard();
         return;
     }
-    ucsbuf = (TCHAR *) GlobalLock(handle);
+    ucsbuf = (WCHAR *)GlobalLock(handle);
 
     selOnPage = win->selectionOnPage;
 
     int copied = 0;
     while (selOnPage != NULL) {
         int charCopied = win->dm->getTextInRegion(selOnPage->pageNo, 
-            &selOnPage->selectionPage, (unsigned short *)ucsbuf + copied, ucsbuflen - copied - 1);
+            &selOnPage->selectionPage, ucsbuf + copied, ucsbuflen - copied - 1);
         copied += charCopied;
         if (ucsbuflen - copied == 1) 
             break;

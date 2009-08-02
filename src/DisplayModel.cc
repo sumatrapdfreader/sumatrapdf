@@ -1538,7 +1538,7 @@ void DisplayModel::goToNamedDest(const char *name)
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * to <buf>. Returnes number of copied characters */
-int DisplayModel::getTextInRegion(int pageNo, RectD *region, unsigned short *buf, int buflen)
+int DisplayModel::getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buflen)
 {
     double          x, y;
     pdf_textline *  ln;

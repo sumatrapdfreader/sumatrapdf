@@ -35,7 +35,7 @@ void PdfSearch::SetText(TCHAR *text)
 {
     this->Clear();
     this->length = lstrlen(text);
-    this->text = tstr_dup(text);
+    this->text = tstr_to_wstr(text);
     this->engine = engine;
     this->line = NULL;
     this->current = NULL;
@@ -72,28 +72,28 @@ void PdfSearch::SetDirection(bool forward)
     ReverseLineList();
 }
 
-#define CHR(x) (TCHAR)(x)
+#define CHR(x) (WORD)(x)
 
-bool PdfSearch::MatchChars(int c1, int c2)
+bool PdfSearch::MatchChars(WCHAR c1, WCHAR c2)
 {
     if (c1 == c2)
         return true;
     if (sensitive)
         return false;
-    if (CharUpper((LPTSTR)MAKELONG(CHR(c1),0)) == CharUpper((LPTSTR)MAKELONG(CHR(c2),0)))
+    if (CharUpper((LPTSTR)CHR(c1)) == CharUpper((LPTSTR)CHR(c2)))
         return true;
     return false;
 }
 
 bool PdfSearch::MatchAtPosition(int n)
 {
-    TCHAR *p = (TCHAR *)text;
+    WCHAR *p = text;
     result.left = current->text[n].bbox.x0;
     result.top = current->text[n].bbox.y0;
     last = n;
 
     while (n < current->len && *p) {
-        if (!MatchChars((int)*p, current->text[n].c))
+        if (!MatchChars(*p, current->text[n].c))
             break;
         p++;
         n++;
@@ -122,7 +122,7 @@ bool PdfSearch::FindTextInPage(int page)
     if (!text)
         return false;
 
-    TCHAR p = *(TCHAR *)text;
+    WCHAR p = *text;
     int start = last;
 
     if (forward) {
@@ -130,7 +130,7 @@ bool PdfSearch::FindTextInPage(int page)
             start = 0;
         while (current) {
             for (int i = start; i < current->len; i++) {
-                if (MatchChars((int)p, current->text[i].c)) {
+                if (MatchChars(p, current->text[i].c)) {
                     if (MatchAtPosition(i))
                         goto Found;
                 }
@@ -143,7 +143,7 @@ bool PdfSearch::FindTextInPage(int page)
             start = current->len - length;
         while (current) {
             for (int i = start; i >= 0; i--) {
-                if (MatchChars((int)p, current->text[i].c)) {
+                if (MatchChars(p, current->text[i].c)) {
                     if (MatchAtPosition(i))
                         goto Found;
                 }
