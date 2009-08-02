@@ -1357,7 +1357,7 @@ static UINT MenuIdFromVirtualZoom(double virtualZoom)
         if (virtualZoom == gItemZoom[i])
             return gItemId[i];
     }
-    return IDM_ZOOM_ACTUAL_SIZE;
+    return 0;
 }
 
 static double ZoomMenuItemToZoom(UINT menuItemId)
@@ -1391,7 +1391,7 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
         UINT enableState = canZoom ? MF_ENABLED : MF_GRAYED;
         EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | enableState);
     }
-    assert(found);
+    assert(!menuItemId || found);
 }
 
 static void MenuUpdateZoom(WindowInfo* win)
@@ -5162,7 +5162,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
         WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
     else {
         TCHAR buf[256];
-        _stprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
+        wsprintf(buf, _TR("Found text at page %d"), win->dm->currentPageNo());
         WindowInfo_ShowMessage_Asynch(win, buf, false);
     }    
 }

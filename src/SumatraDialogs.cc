@@ -540,6 +540,11 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         for (int i = 0; i < dimof(gItemZoom); i++)
             if (gItemZoom[i] == gGlobalPrefs.m_defaultZoom)
                 SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_SETCURSEL, i, 0);
+        if (SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_GETCURSEL, 0, 0) == -1) {
+            TCHAR *customZoom = tstr_printf(_T("%.0f%%"), gGlobalPrefs.m_defaultZoom);
+            SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM, customZoom);
+            free(customZoom);
+        }
 
         CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->m_showToc ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
@@ -615,9 +620,15 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             default: assert(FALSE);
             }
             {
-                double newZoom = gItemZoom[SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_GETCURSEL, 0, 0)];
-                if (0 != newZoom)
-                    prefs->m_defaultZoom = newZoom;
+                int ix = SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_GETCURSEL, 0, 0);
+                if (ix == -1) {
+                    TCHAR *customZoom = win_get_text(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
+                    double zoom = _tstof(customZoom);
+                    if (zoom >= ZOOM_MIN && zoom <= ZOOM_MAX)
+                        prefs->m_defaultZoom = zoom;
+                    free(customZoom);
+                } else if (0 != gItemZoom[ix])
+                    prefs->m_defaultZoom = gItemZoom[ix];
             }
 
             prefs->m_showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
