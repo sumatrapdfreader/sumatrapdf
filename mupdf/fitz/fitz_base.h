@@ -2,6 +2,12 @@
  * Include the basic standard libc headers.
  */
 
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
