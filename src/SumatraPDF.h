@@ -97,8 +97,10 @@ public:
         hwndReBar = NULL;
         hwndFindText = NULL;
         hwndFindBox = NULL;
+        hwndFindBg = NULL;
         hwndPageText = NULL;
         hwndPageBox = NULL;
+        hwndPageBg = NULL;
         hwndPageTotal = NULL;
         hwndTocBox = NULL;
         hwndSpliter = NULL;
@@ -147,9 +149,11 @@ public:
     HWND            hwndReBar;
     HWND            hwndFindText;
     HWND            hwndFindBox;
+    HWND            hwndFindBg;
     HWND            hwndFindStatus;
     HWND            hwndPageText;
     HWND            hwndPageBox;
+    HWND            hwndPageBg;
     HWND            hwndPageTotal;
     HWND            hwndTocBox;
     HWND            hwndSpliter;

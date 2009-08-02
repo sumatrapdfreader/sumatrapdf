@@ -5150,7 +5150,6 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
     ShowWindow(win->hwndFindStatus, SW_SHOWNA);
     win->findStatusVisible = true;
 
-    EnableWindow(win->hwndFindBox, false);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
@@ -5160,7 +5159,6 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
 {
     LPARAM enable = (LPARAM)MAKELONG(1,0);
 
-    EnableWindow(win->hwndFindBox, true);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
@@ -5207,10 +5205,10 @@ static bool WasShiftPressed()
     return WasKeyDown(VK_LSHIFT) || WasKeyDown(VK_RSHIFT);
 }
 
-static void OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=false)
+static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=false)
 {
     if (!win->dm)
-        return;
+        return false;
     
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasShiftPressed());
 
@@ -5230,6 +5228,7 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
     } else if (inTextfield) {
         // The remaining keys have a different meaning
+        return false;
     } else if (VK_LEFT == key) {
         SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEUP, 0);
     } else if (VK_RIGHT == key) {
@@ -5241,7 +5240,11 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         win->dm->goToFirstPage();
     } else if (VK_END == key) {
         win->dm->goToLastPage();    
+    } else {
+        return false;
     }
+
+    return true;
 }
 
 static void ClearSearch(WindowInfo *win)
@@ -5471,7 +5474,8 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         win->hwndTracker = NULL;
     }
     else if (WM_KEYDOWN == message) {
-        OnKeydown(win, wParam, lParam, true);
+        if (OnKeydown(win, wParam, lParam, true))
+            return 0;
     }
 
     int ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
@@ -5589,13 +5593,14 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 }
 
 #define FIND_BOX_WIDTH 160
+#define FIND_BOX_PADDING 3
 static void UpdateToolbarFindText(WindowInfo *win)
 {
     const TCHAR *text = _TR("Find:");
     win_set_text(win->hwndFindText, text);
 
     RECT findWndRect;
-    GetWindowRect(win->hwndFindBox, &findWndRect);
+    GetWindowRect(win->hwndFindBg, &findWndRect);
     int findWndDy = rect_dy(&findWndRect);
 
     RECT r;
@@ -5607,7 +5612,9 @@ static void UpdateToolbarFindText(WindowInfo *win)
     size.cx += 6;
 
     MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
-    MoveWindow(win->hwndFindBox, pos_x + size.cx, pos_y, FIND_BOX_WIDTH, findWndDy, false);
+    MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, FIND_BOX_WIDTH, findWndDy, false);
+    MoveWindow(win->hwndFindBox, pos_x + size.cx + FIND_BOX_PADDING, pos_y + FIND_BOX_PADDING,
+        FIND_BOX_WIDTH - 2 * FIND_BOX_PADDING, findWndDy - 2 * FIND_BOX_PADDING, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
@@ -5618,9 +5625,13 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND find = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, _T(""),
-                            WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL,
+    // TODO: Paint this background white while the edit control is enabled
+    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
+                            0, 1, FIND_BOX_WIDTH - 2 * FIND_BOX_PADDING, 20 - 2 * FIND_BOX_PADDING,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
@@ -5643,6 +5654,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 
     win->hwndFindText = label;
     win->hwndFindBox = find;
+    win->hwndFindBg = findBg;
     win->hwndFindStatus = status;
 
     UpdateToolbarFindText(win);
@@ -5686,7 +5698,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         Edit_SetSel(hwnd, 0, -1);
         win->hwndTracker = NULL;
     } else if (WM_KEYDOWN == message) {
-        OnKeydown(win, wParam, lParam, true);
+        if (OnKeydown(win, wParam, lParam, true))
+            return 0;
     }
 
     return CallWindowProc(DefWndProcPageBox, hwnd, message, wParam, lParam);
@@ -5701,7 +5714,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     size.cx += 6;
 
     RECT pageWndRect;
-    GetWindowRect(win->hwndPageBox, &pageWndRect);
+    GetWindowRect(win->hwndPageBg, &pageWndRect);
     int pageWndDy = rect_dy(&pageWndRect);
 
     RECT r;
@@ -5722,7 +5735,9 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     size2.cx += 6;
 
     MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
-    MoveWindow(win->hwndPageBox, pos_x + size.cx, pos_y, PAGE_BOX_WIDTH, pageWndDy, false);
+    MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, PAGE_BOX_WIDTH, pageWndDy, false);
+    MoveWindow(win->hwndPageBox, pos_x + size.cx + FIND_BOX_PADDING, pos_y + FIND_BOX_PADDING,
+        PAGE_BOX_WIDTH - 2 * FIND_BOX_PADDING, pageWndDy - 2 * FIND_BOX_PADDING, false);
     MoveWindow(win->hwndPageTotal, pos_x + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
 
     TBBUTTONINFO bi;
@@ -5734,9 +5749,13 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 {
-    HWND page = CreateWindowEx(WS_EX_STATICEDGE, WC_EDIT, _T("0"),
-                            WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
+    // TODO: Paint this background white while the edit control is enabled
+    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+
+    HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
+                            0, 1, PAGE_BOX_WIDTH - 2 * FIND_BOX_PADDING, 20 - 2 * FIND_BOX_PADDING,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
@@ -5755,6 +5774,7 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 
     win->hwndPageText = label;
     win->hwndPageBox = page;
+    win->hwndPageBg = pageBg;
     win->hwndPageTotal = total;
 
     UpdateToolbarPageText(win, -1);
