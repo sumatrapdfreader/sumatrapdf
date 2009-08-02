@@ -123,12 +123,12 @@ def c_escape(txt):
 def get_trans_for_lang(strings_dict, keys, lang_arg):
     trans = []
     for k in keys:
-        vals = strings_dict[k]
         txt = None
-        for v in vals:
-            (lang, tr) = v
+        for (lang, tr) in strings_dict[k]:
             if lang_arg == lang:
-                txt = tr
+                # don't include a translation, if it's the same as the default
+                if tr != k: txt = tr
+                break
         trans.append(txt)
     return trans
 

@@ -157,27 +157,27 @@ def gen_diff(strings_dict, strings):
 
 def dump_diffs(strings_dict, strings):
     strings_all = gen_diff(strings_dict, strings)
-    print "Only in C code:"
-    for (s, str_state) in strings_all.items():
-        if SS_ONLY_IN_C == str_state:
-            print "%s" % s
-    print
-    print "Only in %s file:" % strings_file
-    for (s, str_state) in strings_all.items():
-        if SS_ONLY_IN_TXT == str_state:
-            print "'%s'" % s
+    only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C]
+    if only_in_c:
+        print "\nOnly in C code:"
+        print "\n".join(only_in_c) + "\n"
+    only_in_txt = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_TXT]
+    if only_in_txt:
+        print "\nOnly in %s file:" % strings_file
+        print "\n".join(only_in_txt) + "\n"
 
 def langs_sort_func(x,y):
     return cmp(len(y[1]),len(x[1]))
 
+# strings that don't need to be translated
+translation_exceptions = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%"]
+
 def dump_missing_per_language(strings_dict, dump_strings=False):
     untranslated_dict = {}
-    # strings that don't need to be translated
-    exceptions = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%"]
     for lang in get_lang_list(strings_dict):
         untranslated = []
         for txt in strings_dict.keys():
-            if txt in exceptions: continue
+            if txt in translation_exceptions: continue
             translations = strings_dict[txt]
             found_translation = False
             for tr in translations:
@@ -195,14 +195,24 @@ def dump_missing_per_language(strings_dict, dump_strings=False):
         if not dump_strings: continue
         for u in untranslated:
             print "  " + u
-                
+
+def dump_missing_for_language(strings_dict, lang):
+    print "Untranslated strings for '%s':" % lang
+    for k in strings_dict:
+        is_translated = len([item[1] for item in strings_dict[k] if item[0] == lang]) == 1
+        if not is_translated and not k in translation_exceptions:
+            print k
+
 
 def main():
+    import sys
     (strings_dict, langs) = load_strings_file(strings_file)
     strings = extract_strings_from_c_files(c_files_to_process)
-    dump_missing_per_language(strings_dict)
-    print
-    dump_diffs(strings_dict, strings)
+    if len(sys.argv) == 1:
+        dump_missing_per_language(strings_dict)
+        dump_diffs(strings_dict, strings)
+    else:
+        dump_missing_for_language(strings_dict, sys.argv[1])
 
 if __name__ == "__main__":
     main()

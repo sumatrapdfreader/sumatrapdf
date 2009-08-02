@@ -3472,6 +3472,7 @@ cn:缺省缩放(&Z)
 es:&Zoom predeterminado:
 -
 OK
+de:OK
 by:ДА
 hu:OK
 gr:ΟΚ
