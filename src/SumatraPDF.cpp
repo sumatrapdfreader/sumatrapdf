@@ -1942,7 +1942,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     if (WS_SHOWING_PDF == win->state) {
         if (win->dm->needHScroll())
             ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
-        if (win->dm->needVScroll() || (DM_SINGLE_PAGE == win->dm->displayMode() && win->dm->pageCount() > 1))
+        if (win->dm->needVScroll() || (!displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
             ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
     }
     else {
@@ -2500,6 +2500,11 @@ void DisplayModel::setScrollbarsState(void)
         if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
             si.nPos = win->dm->currentPageNo() - 1;
             si.nMax = win->dm->pageCount() - 1;
+            si.nPage = 1;
+        }
+        else if (DM_FACING == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
+            si.nPos = (win->dm->currentPageNo() + (win->dm->showCover() ? 2 : 1)) / 2 - 1;
+            si.nMax = (win->dm->pageCount() + (win->dm->showCover() ? 2 : 1)) / 2 - 1;
             si.nPage = 1;
         }
         else {
@@ -4457,7 +4462,7 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
 
     iVertPos = si.nPos;
-    if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
+    if (!displayModeContinuous(win->dm->displayMode()) && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
         lineHeight = 1;
 
     switch (LOWORD(wParam))
@@ -4504,6 +4509,8 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
     if (win->dm && (si.nPos != iVertPos)) {
         if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
             win->dm->goToPage(si.nPos + 1, 0);
+        else if (DM_FACING == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
+            win->dm->goToPage(si.nPos * 2 + (win->dm->showCover() && si.nPos > 0 ? 0 : 1), 0);
         else
             win->dm->scrollYTo(si.nPos);
     }
@@ -6550,7 +6557,7 @@ InitMouseWheelInfo:
             if (gDeltaPerLine == 0)
                break;
 
-            if (DM_SINGLE_PAGE == win->dm->displayMode()) {
+            if (!displayModeContinuous(win->dm->displayMode())) {
                 if ((short) HIWORD (wParam) > 0)
                     win->dm->goToPrevPage(0);
                 else
