@@ -213,7 +213,14 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
     else
         _startPage = 1;
 
-    _showCover = !!str_endswith(pdfEngine->getPageLayoutName(), "Right");
+    const char *pageLayoutName = pdfEngine->getPageLayoutName();
+    if (DM_AUTOMATIC == _displayMode) {
+        if (!str_startswith(pageLayoutName, "Two"))
+            _displayMode = DM_CONTINUOUS;
+        else
+            _displayMode = DM_CONTINUOUS_FACING;
+    }
+    _showCover = !!str_endswith(pageLayoutName, "Right");
 
     if (!buildPagesInfo())
         return false;
@@ -507,6 +514,9 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
             if (_showCover && pageNo == 1 && columns > 1)
                 pageInARow++;
             pageOffX = (pageInARow * (PADDING_BETWEEN_PAGES_X + areaPerPageDx));
+            // center the cover page in non-continuous mode
+            if (_showCover && pageNo == 1 && columns > 1 && !displayModeContinuous(displayMode()))
+                pageOffX /= 2;
             pageOffX += (areaPerPageDx - pageInfo->currDx) / 2;
             assert(pageOffX >= 0.0);
             pageInfo->currPosX = pageOffX + offX;

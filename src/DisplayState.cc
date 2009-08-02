@@ -43,6 +43,7 @@ BOOL ValidZoomVirtual(double zoomVirtual)
 
 const char *DisplayModeNameFromEnum(DisplayMode var)
 {
+    STR_FROM_ENUM(DM_AUTOMATIC)
     STR_FROM_ENUM(DM_SINGLE_PAGE)
     STR_FROM_ENUM(DM_FACING)
     STR_FROM_ENUM(DM_CONTINUOUS)
@@ -58,6 +59,7 @@ const char *DisplayModeNameFromEnum(DisplayMode var)
 
 bool DisplayModeEnumFromName(const char *txt, DisplayMode *resOut)
 {
+    IS_STR_ENUM(DM_AUTOMATIC)
     IS_STR_ENUM(DM_SINGLE_PAGE)
     IS_STR_ENUM(DM_FACING)
     IS_STR_ENUM(DM_CONTINUOUS)
@@ -69,7 +71,7 @@ bool DisplayModeEnumFromName(const char *txt, DisplayMode *resOut)
 void DisplayState_Init(DisplayState *ds)
 {
     memzero(ds, sizeof(DisplayState));
-    ds->displayMode = DM_SINGLE_PAGE;
+    ds->displayMode = DM_AUTOMATIC;
     ds->visible = FALSE;
     ds->pageNo = 1;
     ds->zoomVirtual = 100.0;
@@ -94,7 +96,7 @@ bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
     if (displayModeName)
         DStringSprintf(strOut, "  %s: %s\n", DISPLAY_MODE_STR, displayModeName);
     else
-        DStringSprintf(strOut, "  %s: %s\n", DISPLAY_MODE_STR, DisplayModeNameFromEnum(DM_SINGLE_PAGE));
+        DStringSprintf(strOut, "  %s: %s\n", DISPLAY_MODE_STR, DisplayModeNameFromEnum(DM_AUTOMATIC));
 
     DStringSprintf(strOut, "  %s: %d\n",   VISIBLE_STR, ds->visible);
     DStringSprintf(strOut, "  %s: %d\n",   PAGE_NO_STR, ds->pageNo);

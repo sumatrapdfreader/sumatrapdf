@@ -496,7 +496,7 @@ int Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
     return dialogResult;
 }
 
-static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_ACTUAL_SIZE, ZOOM_FIT_WIDTH, 0,
+static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 0,
     6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 125.0, 100.0, 50.0, 25.0, 12.5, 8.33 };
 
 static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -511,15 +511,15 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)prefs);
 
         // Fill the page layouts into the select box
+        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Automatic"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Single page"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Facing"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous facing"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->m_defaultDisplayMode - 1, 0);
+        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->m_defaultDisplayMode - DM_FIRST, 0);
 
         // Fill the possible zoom settings into the select box
         SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Page"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("Actual Size"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)L"-");
 #ifndef BUILD_RM_VERSION
@@ -605,8 +605,9 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWL_USERDATA);
             assert(prefs);
 
-            switch (SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + 1)
+            switch (SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST)
             {
+            case DM_AUTOMATIC: prefs->m_defaultDisplayMode = DM_AUTOMATIC; break;
             case DM_SINGLE_PAGE: prefs->m_defaultDisplayMode = DM_SINGLE_PAGE; break;
             case DM_FACING: prefs->m_defaultDisplayMode = DM_FACING; break;
             case DM_CONTINUOUS: prefs->m_defaultDisplayMode = DM_CONTINUOUS; break;

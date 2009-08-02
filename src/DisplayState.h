@@ -6,8 +6,11 @@
 #include "base_util.h"
 
 enum DisplayMode {
-    DM_FIRST = 1,
-    DM_SINGLE_PAGE = DM_FIRST,
+    DM_FIRST = 0,
+    // automatic means: continuous or continuous facing,
+    // depending on the document's desired PageLayout
+    DM_AUTOMATIC = DM_FIRST,
+    DM_SINGLE_PAGE,
     DM_FACING,
     DM_CONTINUOUS,
     DM_CONTINUOUS_FACING,
@@ -20,6 +23,7 @@ enum DisplayMode {
 #define ZOOM_MAX            6401.0  /* max zoom in % */
 #define ZOOM_MIN            8.0    /* min zoom in % */
 
+#define DM_AUTOMATIC_STR            "automatic"
 #define DM_SINGLE_PAGE_STR          "single page"
 #define DM_FACING_STR               "facing"
 #define DM_CONTINUOUS_STR           "continuous"

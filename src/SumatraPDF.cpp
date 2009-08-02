@@ -77,7 +77,7 @@ static BOOL             gDebugShowLinks = FALSE;
 /* default UI settings */
 
 // Note: Only make changes to these values #ifndef BUILD_RM_VERSION
-#define DEFAULT_DISPLAY_MODE    DM_CONTINUOUS
+#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
 
@@ -995,19 +995,17 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
         EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
     }
 
-    UINT    id;
-    if (DM_SINGLE_PAGE == displayMode) {
-        id = IDM_VIEW_SINGLE_PAGE;
-    } else if (DM_FACING == displayMode) {
-        id =  IDM_VIEW_FACING;
-    } else if (DM_CONTINUOUS == displayMode) {
-        id =  IDM_VIEW_CONTINUOUS;
-    } else if (DM_CONTINUOUS_FACING == displayMode) {
-        id =  IDM_VIEW_CONTINUOUS_FACING;
-    } else
-        assert(0);
+    UINT id = 0;
+    switch (displayMode) {
+    case DM_SINGLE_PAGE: id = IDM_VIEW_SINGLE_PAGE; break;
+    case DM_FACING: id = IDM_VIEW_FACING; break;
+    case DM_CONTINUOUS: id = IDM_VIEW_CONTINUOUS; break;
+    case DM_CONTINUOUS_FACING: id = IDM_VIEW_CONTINUOUS_FACING; break;
+    default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
+    }
 
-    CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_CHECKED);
+    if (id)
+        CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_CHECKED);
 }
 
 static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)

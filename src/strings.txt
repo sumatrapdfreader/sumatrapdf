@@ -549,6 +549,9 @@ pa:ਵੇਖੋ(&V)
 hi:देखें(&V)
 nn:&Vis
 -
+Automatic
+de:Automatisch
+-
 Single page
 af:Enkele Bladsy
 bg:Единична страница
@@ -3354,63 +3357,6 @@ mm:အလျားနှင့်အမြင့် အပြည့်
 pa:ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ
 hi:चौड़ाई के अनुसार
 nn:Tilpass breidde
--
-Actual Size
-af:Gewone Grootte
-bg:Едно към едно
-br:Tamanho real
-hu:Eredeti méret
-pl:Prawdziwy rozmiar
-de:Tatsächliche Größe
-fr:Taille réelle
-tr:Gerçek Boyut
-by:Рэальны памер
-ja:実際のサイズ
-fa:بزرگی خودش
-dk:Aktual størrelse
-it:Dimensioni reali
-nl:Ware grootte
-ta:மெய் அளவு
-es:Tamaño Real
-hr:Stvarna veličina
-ru:Реальный размер
-ar:الحجم الحقيقي
-cn:实际大小
-sv:Normal storlek
-cz:Skutečná velikost
-gr:Πραγματικό μέγεθος
-th:ขนาดจริง
-pt:Tamanho real
-no:Faktisk størrelse
-sk:Skutočná veľkosť
-vn:Kích thước thật
-lt:Tikrasis dydis
-my:Saiz sebenar
-fi:Todellinen koko
-ca:Mida real
-si:Dejanska velikost
-sr-rs:Страна величина
-tw:實際大小
-ml:ശരിയായ വലിപ്പം
-he:גודל מקור
-sp-rs:Stvarna veličina
-id:Ukuran Sebenarnya
-mk:Реална големина
-ro:Mărime actuală
-kr:본래 크기
-bn:বাস্তবিক আকার
-gl:Tamaño real
-uk:Справжній розмір
-eu:Berezko neurria
-tl:Tunay na Laki
-va:Tamany Real
-sn:Saizi chaiyo
-cy:Gwir Faint
-ga:Fíormhéid
-mm:ပုံမှန် အရွယ်
-pa:ਸਹੀ ਅਕਾਰ
-hi:सही आकार
-nn:Faktisk storleik
 -
 &Settings
 by:Налады
