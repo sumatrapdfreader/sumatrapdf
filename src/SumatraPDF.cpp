@@ -1782,7 +1782,20 @@ WindowInfo* WindowInfoList_Find(TCHAR * file) {
     return NULL;
 }
 
+static void UpdateToolbarBg(HWND hwnd, BOOL enabled)
+{
+    DWORD newStyle = GetWindowLong(hwnd, GWL_STYLE);
+    if (enabled)
+        newStyle |= SS_WHITERECT;
+    else
+        newStyle &= ~SS_WHITERECT;
+    SetWindowLong(hwnd, GWL_STYLE, newStyle);
+}
+
 static void WindowInfo_UpdateFindbox(WindowInfo *win) {
+    UpdateToolbarBg(win->hwndFindBg, !!win->dm);
+    UpdateToolbarBg(win->hwndPageBg, !!win->dm);
+
     InvalidateRect(win->hwndToolbar, NULL, true);
     if (!win->dm) {  // Avoid focus on Find box
         SetClassLong(win->hwndFindBox, GCL_HCURSOR, (LONG)gCursorArrow);
@@ -5593,7 +5606,7 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 }
 
 #define FIND_BOX_WIDTH 160
-#define FIND_BOX_PADDING 3
+#define FIND_BOX_PADDING 4
 static void UpdateToolbarFindText(WindowInfo *win)
 {
     const TCHAR *text = _TR("Find:");
@@ -5614,7 +5627,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
     MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
     MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, FIND_BOX_WIDTH, findWndDy, false);
     MoveWindow(win->hwndFindBox, pos_x + size.cx + FIND_BOX_PADDING, pos_y + FIND_BOX_PADDING,
-        FIND_BOX_WIDTH - 2 * FIND_BOX_PADDING, findWndDy - 2 * FIND_BOX_PADDING, false);
+        FIND_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, findWndDy - FIND_BOX_PADDING, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
@@ -5625,12 +5638,11 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
-    // TODO: Paint this background white while the edit control is enabled
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
-                            0, 1, FIND_BOX_WIDTH - 2 * FIND_BOX_PADDING, 20 - 2 * FIND_BOX_PADDING,
+                            0, 1, FIND_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, 20 - FIND_BOX_PADDING,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
@@ -5737,7 +5749,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
     MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, PAGE_BOX_WIDTH, pageWndDy, false);
     MoveWindow(win->hwndPageBox, pos_x + size.cx + FIND_BOX_PADDING, pos_y + FIND_BOX_PADDING,
-        PAGE_BOX_WIDTH - 2 * FIND_BOX_PADDING, pageWndDy - 2 * FIND_BOX_PADDING, false);
+        PAGE_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, pageWndDy - FIND_BOX_PADDING, false);
     MoveWindow(win->hwndPageTotal, pos_x + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
 
     TBBUTTONINFO bi;
@@ -5749,12 +5761,11 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 {
-    // TODO: Paint this background white while the edit control is enabled
     HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, PAGE_BOX_WIDTH - 2 * FIND_BOX_PADDING, 20 - 2 * FIND_BOX_PADDING,
+                            0, 1, PAGE_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, 20 - FIND_BOX_PADDING,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
