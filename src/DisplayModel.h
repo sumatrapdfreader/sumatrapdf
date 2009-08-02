@@ -314,6 +314,8 @@ protected:
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     double          _dpiFactor;
+    /* display odd pages on the right? */
+    bool            _showCover;
 
 public:
     /* an array of 'totalLinksCount' size, each entry describing a link */
