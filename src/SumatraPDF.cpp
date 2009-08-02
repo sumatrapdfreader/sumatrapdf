@@ -4844,9 +4844,10 @@ static void OnMenuGoToFirstPage(WindowInfo *win)
 
 void WindowInfo::FocusPageNoEdit()
 {
-    hwndTracker = NULL;
-    SendMessage(hwndPageBox, EM_SETSEL, 0, -1);
-    SetFocus(hwndPageBox);
+    if (GetFocus() == hwndPageBox)
+        SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
+    else
+        SetFocus(hwndPageBox);
 }
 
 static void OnMenuGoToPage(WindowInfo *win)
@@ -5674,6 +5675,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_SETFOCUS == message) {
+        Edit_SetSel(hwnd, 0, -1);
         win->hwndTracker = NULL;
     } else if (WM_KEYDOWN == message) {
         OnKeydown(win, wParam, lParam, true);
