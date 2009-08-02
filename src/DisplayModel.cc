@@ -72,47 +72,26 @@ DisplaySettings gDisplaySettings = {
   PADDING_BETWEEN_PAGES_Y_DEF
 };
 
-bool validZoomReal(double zoomReal)
-{
-    if ((zoomReal < ZOOM_MIN) || (zoomReal > ZOOM_MAX)) {
-        DBG_OUT("validZoomReal() invalid zoom: %.4f\n", zoomReal);
-        return false;
-    }
-    return true;
-}
-
 bool displayModeFacing(DisplayMode displayMode)
 {
-    if ((DM_SINGLE_PAGE == displayMode) || (DM_CONTINUOUS == displayMode))
-        return false;
-    else if ((DM_FACING == displayMode) || (DM_CONTINUOUS_FACING == displayMode))
+    if (DM_FACING == displayMode || DM_CONTINUOUS_FACING == displayMode)
         return true;
-    assert(0);
+    assert(DM_SINGLE_PAGE == displayMode || DM_CONTINUOUS == displayMode);
     return false;
 }
 
 bool displayModeContinuous(DisplayMode displayMode)
 {
-    if ((DM_SINGLE_PAGE == displayMode) || (DM_FACING == displayMode))
-        return false;
-    else if ((DM_CONTINUOUS == displayMode) || (DM_CONTINUOUS_FACING == displayMode))
+    if (DM_CONTINUOUS == displayMode || DM_CONTINUOUS_FACING == displayMode)
         return true;
-    assert(0);
+    assert(DM_SINGLE_PAGE == displayMode || DM_FACING == displayMode);
     return false;
 }
 
 int columnsFromDisplayMode(DisplayMode displayMode)
 {
-    if (DM_SINGLE_PAGE == displayMode) {
-        return 1;
-    } else if (DM_FACING == displayMode) {
+    if (displayModeFacing(displayMode))
         return 2;
-    } else if (DM_CONTINUOUS == displayMode) {
-        return 1;
-    } else if (DM_CONTINUOUS_FACING == displayMode) {
-        return 2;
-    } else
-        assert(0);
     return 1;
 }
 
@@ -123,18 +102,18 @@ DisplaySettings *globalDisplaySettings(void)
 
 bool rotationFlipped(int rotation)
 {
-    assert(validRotation(rotation));
     normalizeRotation(&rotation);
-    if ((90 == rotation) || (270 == rotation))
+    assert(validRotation(rotation));
+    if (90 == rotation || 270 == rotation)
         return true;
     return false;
 }
 
 bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
 {
-    ds->filePath = tstr_dup(dm->fileName()); // tstr_escape?
+    ds->filePath = tstr_dup(dm->fileName());
     if (!ds->filePath)
-        return FALSE;
+        return false;
     ds->displayMode = dm->displayMode();
     ds->rotation = dm->rotation();
     ds->zoomVirtual = dm->zoomVirtual();
@@ -146,7 +125,7 @@ bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
     ds->scrollX = floor(ss.x + 0.5);
     ds->scrollY = floor(ss.y + 0.5);
 
-    return TRUE;
+    return true;
 }
 
 /* Given 'pageInfo', which should contain correct information about
@@ -163,7 +142,6 @@ void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
     *pageDyOut = pageInfo->pageDy;
 
     rotation += pageInfo->rotation;
-    normalizeRotation(&rotation);
     if (rotationFlipped(rotation))
         swap_double(pageDxOut, pageDyOut);
 }
@@ -200,13 +178,14 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
 
     pdfEngine = new PdfEngine();
     _pdfSearch = new PdfSearch(pdfEngine);
-
 }
 
 DisplayModel::~DisplayModel()
 {
-    free(_pagesInfo);    
-    free(_links);
+    if (_pagesInfo)
+        free(_pagesInfo);
+    if (_links)
+        free(_links);
     delete _pdfSearch;
     delete pdfEngine;
     RenderQueue_RemoveForDisplayModel(this);
@@ -249,25 +228,20 @@ bool DisplayModel::buildPagesInfo(void)
     if (!_pagesInfo)
         return false;
 
+    int columns = columnsFromDisplayMode(_displayMode);
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
         SizeD pageSize = pdfEngine->pageSize(pageNo);
         pageInfo->pageDx = pageSize.dx();
         pageInfo->pageDy = pageSize.dy();
         pageInfo->rotation = pdfEngine->pageRotation(pageNo);
-
-// TODO: poppler removal. Do I need this at all?
-//        pageInfo->links = NULL;
-
         pageInfo->visible = false;
         pageInfo->shown = false;
         if (displayModeContinuous(_displayMode)) {
             pageInfo->shown = true;
-        } else {
-            if ((pageNo >= _startPage) && (pageNo < _startPage + columnsFromDisplayMode(_displayMode))) {
-                DBG_OUT("DisplayModelSplash::CreateFromPdfDoc() set page %d as shown\n", pageNo);
-                pageInfo->shown = true;
-            }
+        } else if (pageNo >= _startPage && pageNo < _startPage + columns) {
+            DBG_OUT("DisplayModelSplash::CreateFromPdfDoc() set page %d as shown\n", pageNo);
+            pageInfo->shown = true;
         }
     }
     return true;
@@ -304,7 +278,7 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
 
 /* Given a zoom level that can include a "virtual" zoom levels like ZOOM_FIT_WIDTH
    and ZOOM_FIT_PAGE, calculate an absolute zoom level */
-double DisplayModel::zoomRealFromFirtualForPage(double zoomVirtual, int pageNo)
+double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
 {
     double          _zoomReal, zoomX, zoomY, pageDx, pageDy;
     double          areaForPageDx, areaForPageDy;
@@ -363,8 +337,7 @@ int DisplayModel::currentPageNo(void) const
 {
     if (displayModeContinuous(displayMode()))
         return firstVisiblePageNo();
-    else
-        return _startPage;
+    return _startPage;
 }
 
 void DisplayModel::setZoomVirtual(double zoomVirtual)
@@ -382,7 +355,7 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
            pages are the same size anyway */
         for (pageNo = 1; pageNo <= pageCount(); pageNo++) {
             if (pageShown(pageNo)) {
-                thisPageZoom = zoomRealFromFirtualForPage(this->zoomVirtual(), pageNo);
+                thisPageZoom = zoomRealFromVirtualForPage(this->zoomVirtual(), pageNo);
                 if (minZoom > thisPageZoom)
                     minZoom = thisPageZoom;
             }
@@ -408,7 +381,6 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     int         currDxInt, currDyInt;
     double      totalAreaDx, totalAreaDy;
     double      areaPerPageDx;
-    int         areaPerPageDxInt;
     double      thisRowDx;
     double      rowMaxPageDy;
     double      offX, offY;
@@ -501,8 +473,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
         assert(offX >= 0.0);
         areaPerPageDx = totalAreaDx - PADDING_PAGE_BORDER_LEFT - PADDING_PAGE_BORDER_RIGHT;
         areaPerPageDx = areaPerPageDx - (PADDING_BETWEEN_PAGES_X * (columns - 1));
-        areaPerPageDxInt = (int)(areaPerPageDx / (double)columns);
-        areaPerPageDx = (double)areaPerPageDxInt;
+        areaPerPageDx = floor(areaPerPageDx / columns);
         totalAreaDx = drawAreaSize.dx();
         pageInARow = 0;
         for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
@@ -563,12 +534,11 @@ void DisplayModel::changeStartPage(int startPage)
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
         if (displayModeContinuous(displayMode()))
             pageInfo->shown = true;
-        else
-            pageInfo->shown = false;
-        if ((pageNo >= startPage) && (pageNo < startPage + columns)) {
+        else if (pageNo >= startPage && pageNo < startPage + columns) {
             //DBG_OUT("DisplayModel::changeStartPage() set page %d as shown\n", pageNo);
             pageInfo->shown = true;
-        }
+        } else
+            pageInfo->shown = false;
         pageInfo->visible = false;
     }
     relayout(zoomVirtual(), rotation());
@@ -857,6 +827,21 @@ void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
     }
 }
 
+/* given 'columns' and an absolute 'pageNo', return the number of the first
+   page in a row to which a 'pageNo' belongs e.g. if 'columns' is 2 and we
+   have 5 pages in 3 rows:
+
+   Pages   Result
+   (1,2)   1
+   (3,4)   3
+   (5)     5
+ */
+static int FirstPageInARowNo(int pageNo, int columns)
+{
+    int firstPageNo = pageNo - ((pageNo - 1) % columns);
+    return firstPageNo;
+}
+
 void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
 {
     assert(validPageNo(pageNo));
@@ -866,7 +851,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
     if (displayModeFacing(displayMode()))
-      pageNo = ((pageNo-1) & ~1) + 1;
+        pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(displayMode()));
 
     if (!displayModeContinuous(displayMode())) {
         /* in single page mode going to another page involves recalculating
@@ -920,21 +905,6 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
     goToPage(currPageNo, 0);
 }
 
-/* given 'columns' and an absolute 'pageNo', return the number of the first
-   page in a row to which a 'pageNo' belongs e.g. if 'columns' is 2 and we
-   have 5 pages in 3 rows:
-   (1,2)
-   (3,4)
-   (5)
-   then, we return 1 for pages (1,2), 3 for (3,4) and 5 for (5).
-   This is 1-based index, not 0-based. */
-static int FirstPageInARowNo(int pageNo, int columns)
-{
-    int row = ((pageNo - 1) / columns); /* 0-based row number */
-    int firstPageNo = row * columns + 1; /* 1-based page in a row */
-    return firstPageNo;
-}
-
 /* In continuous mode just scrolls to the next page. In single page mode
    rebuilds the display model for the next page.
    Returns true if advanced to the next page or false if couldn't advance
@@ -942,13 +912,11 @@ static int FirstPageInARowNo(int pageNo, int columns)
 bool DisplayModel::goToNextPage(int scrollY)
 {
     int columns = columnsFromDisplayMode(displayMode());
-    int currPageNo = currentPageNo();
-    int firstPageInCurrRow = FirstPageInARowNo(currPageNo, columns);
-    int newPageNo = currPageNo + columns;
+    int newPageNo = currentPageNo() + columns;
     int firstPageInNewRow = FirstPageInARowNo(newPageNo, columns);
 
 //    DBG_OUT("DisplayModel::goToNextPage(scrollY=%d), currPageNo=%d, firstPageInNewRow=%d\n", scrollY, currPageNo, firstPageInNewRow);
-    if ((firstPageInNewRow > pageCount()) || (firstPageInCurrRow == firstPageInNewRow)) {
+    if (firstPageInNewRow > pageCount()) {
         /* we're on a last row or after it, can't go any further */
         return FALSE;
     }
@@ -968,11 +936,12 @@ bool DisplayModel::goToPrevPage(int scrollY)
         goToPage(currPageNo, scrollY);
         return true;
     }
-    if (currPageNo <= columns) {
+    int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns);
+    if (firstPageInNewRow < 1) {
         /* we're on a first page, can't go back */
         return FALSE;
     }
-    goToPage(currPageNo - columns, scrollY);
+    goToPage(firstPageInNewRow, scrollY);
     return TRUE;
 }
 
@@ -982,7 +951,8 @@ bool DisplayModel::goToLastPage(void)
 
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = currentPageNo();
-    int firstPageInLastRow = FirstPageInARowNo(pageCount(), columns);
+    int newPageNo = pageCount();
+    int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns);
 
     if (currPageNo != firstPageInLastRow) { /* are we on the last page already ? */
         goToPage(firstPageInLastRow, 0);
@@ -1477,32 +1447,17 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
 
 static void launch_url_a(const char *url)
 {
-    SHELLEXECUTEINFOA sei;
-
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize  = sizeof(sei);
-    sei.fMask   = SEE_MASK_FLAG_NO_UI;
-    sei.lpVerb  = "open";
-    sei.lpFile  = url;
-    sei.nShow   = SW_SHOWNORMAL;
-
-    ShellExecuteExA(&sei);
+    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 }
 
 void DisplayModel::handleLink2(pdf_link* link)
 {
-    if (PDF_LURI == link->kind)
-    {
+    if (PDF_LURI == link->kind) {
         char *uri = fz_tostrbuf(link->dest);
-        if (!str_startswithi(uri, "http"))
-        {
-            /* unsupported uri type */
-            return;
-        }
-        launch_url_a(uri);
-
-    } else if (PDF_LGOTO == link->kind)
-    {
+        if (str_startswithi(uri, "http"))
+            launch_url_a(uri);
+        /* else: unsupported uri type */
+    } else if (PDF_LGOTO == link->kind) {
         int page = pdfEngine->findPageNo(link->dest);
         if (page > 0) 
             goToPage(page, 0);

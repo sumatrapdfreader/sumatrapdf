@@ -274,7 +274,7 @@ protected:
     void            startRenderingPage(int pageNo);
 
     bool            buildPagesInfo(void);
-    double          zoomRealFromFirtualForPage(double zoomVirtual, int pageNo);
+    double          zoomRealFromVirtualForPage(double zoomVirtual, int pageNo);
     int             firstVisiblePageNo(void) const;
     void            changeStartPage(int startPage);
     void            recalcVisibleParts(void);
