@@ -63,8 +63,6 @@ static int cacheMutexInitialized = 0;
 static BitmapCacheEntry *   gBitmapCache[MAX_BITMAPS_CACHED] = {0};
 static int                  gBitmapCacheCount = 0;
 
-static bool bookMode = true;
-
 DisplaySettings gDisplaySettings = {
   PADDING_PAGE_BORDER_TOP_DEF,
   PADDING_PAGE_BORDER_BOTTOM_DEF,
