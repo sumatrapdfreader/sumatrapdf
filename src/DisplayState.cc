@@ -28,7 +28,7 @@ BOOL validRotation(int rotation)
 
 BOOL ValidZoomVirtual(double zoomVirtual)
 {
-    if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual))
+    if ((ZOOM_FIT_PAGE == zoomVirtual) || (ZOOM_FIT_WIDTH == zoomVirtual) || (ZOOM_ACTUAL_SIZE == zoomVirtual))
         return TRUE;
     if ((zoomVirtual < ZOOM_MIN) || (zoomVirtual > ZOOM_MAX)) {
         DBG_OUT("ValidZoomVirtual() invalid zoom: %.4f\n", zoomVirtual);
