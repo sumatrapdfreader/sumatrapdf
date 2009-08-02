@@ -213,6 +213,8 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
     else
         _startPage = 1;
 
+    _showCover = !!str_endswith(pdfEngine->getPageLayoutName(), "Right");
+
     if (!buildPagesInfo())
         return false;
 
@@ -368,6 +370,15 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         this->_zoomReal = minZoom;
     } else
         this->_zoomReal = zoomVirtual * this->_dpiFactor;
+}
+
+void DisplayModel::setShowCover(bool showCover)
+{
+    this->_showCover = showCover;
+    
+    ScrollState ss;
+    if (displayModeFacing(displayMode()) && getScrollState(&ss))
+        setScrollState(&ss);
 }
 
 /* Given pdf info and zoom/rotation, calculate the position of each page on a

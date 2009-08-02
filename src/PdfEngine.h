@@ -132,6 +132,7 @@ public:
     pdf_page * getPdfPage(int pageNo);
     int        findPageNo(fz_obj *dest);
     fz_obj    *getNamedDest(const char *name);
+    char     * getPageLayoutName(void);
 
 protected:
     const TCHAR *_fileName;

@@ -524,3 +524,7 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
     assert(linkCount == linkNo);
 }
 
+char *PdfEngine::getPageLayoutName(void)
+{
+    return fz_toname(fz_dictgets(_xref->root, "PageLayout"));
+}
