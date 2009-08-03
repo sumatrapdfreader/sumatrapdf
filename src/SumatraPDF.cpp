@@ -248,7 +248,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
 
-static const char *g_currLangName;
+static const char *g_currLangName = NULL;
 
 static bool ReadRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *buffer, DWORD bufLen);
 static bool WriteRegStr(HKEY keySub, TCHAR *keyName, TCHAR *valName, TCHAR *value);
@@ -277,7 +277,7 @@ static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=0);
    be sp-rs and Serbian (Cyrillic) should be sr-rs */
 #include "LangMenuDef.h"
 
-//#define NEW_LANG_DETECTION
+#define NEW_LANG_DETECTION
 
 #ifdef NEW_LANG_DETECTION
 // based on http://msdn.microsoft.com/en-us/library/dd318693%28VS.85%29.aspx
@@ -286,56 +286,64 @@ static struct {
     WORD primaryLangId;
     WORD subLangId;
 } g_lcidLangMap[] = {
-    { "ar", LANG_ARABIC, 0 },
-    { "ca", LANG_CATALAN, 0 },
-    { "fr", LANG_FRENCH, 0 },
-    { "de", LANG_GERMAN, 0 },
-    { "hu", LANG_HUNGARIAN, 0 },
-    { "pl", LANG_POLISH, 0 },
-    { "cy", LANG_WELSH, 0 },
-    { "en", LANG_ENGLISH, 0 },
+// Note: List neutral sublanguages after specific ones for the same language
+    { "en", LANG_ENGLISH, SUBLANG_NEUTRAL },
+    { "af", LANG_AFRIKAANS, SUBLANG_NEUTRAL },
+    { "ar", LANG_ARABIC, SUBLANG_NEUTRAL },
+    { "eu", LANG_BASQUE, SUBLANG_NEUTRAL },
+    { "by", LANG_BELARUSIAN, SUBLANG_NEUTRAL },
+    { "bn", LANG_BENGALI, SUBLANG_NEUTRAL },
+    { "bg", LANG_BULGARIAN, SUBLANG_NEUTRAL },
+// mm Burmese
+    { "ca", LANG_CATALAN, SUBLANG_NEUTRAL },
+    { "cn", LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED },
+    { "tw", LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL },
+    { "hr", LANG_CROATIAN, SUBLANG_NEUTRAL },
+    { "cz", LANG_CZECH, SUBLANG_NEUTRAL },
+    { "dk", LANG_DANISH, SUBLANG_NEUTRAL },
+    { "nl", LANG_DUTCH, SUBLANG_NEUTRAL },
+    { "fi", LANG_FINNISH, SUBLANG_NEUTRAL },
+    { "fr", LANG_FRENCH, SUBLANG_NEUTRAL },
+    { "gl", LANG_GALICIAN, SUBLANG_NEUTRAL },
+    { "de", LANG_GERMAN, SUBLANG_NEUTRAL },
+    { "gr", LANG_GREEK, SUBLANG_NEUTRAL },
+    { "he", LANG_HEBREW, SUBLANG_NEUTRAL },
+    { "hi", LANG_HINDI, SUBLANG_NEUTRAL },
+    { "hu", LANG_HUNGARIAN, SUBLANG_NEUTRAL },
+    { "id", LANG_INDONESIAN, SUBLANG_NEUTRAL },
+    { "ga", LANG_IRISH, SUBLANG_NEUTRAL },
+    { "it", LANG_ITALIAN, SUBLANG_NEUTRAL },
+    { "ja", LANG_JAPANESE, SUBLANG_NEUTRAL },
+    { "kr", LANG_KOREAN, SUBLANG_NEUTRAL },
+    { "lt", LANG_LITHUANIAN, SUBLANG_NEUTRAL },
+    { "mk", LANG_MACEDONIAN, SUBLANG_NEUTRAL },
+    { "ml", LANG_MALAYALAM, SUBLANG_NEUTRAL },
+    { "my", LANG_MALAY, SUBLANG_NEUTRAL },
+    { "no", LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL },
+    { "nn", LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NYNORSK },
+    { "fa", LANG_FARSI, SUBLANG_NEUTRAL },
+    { "pl", LANG_POLISH, SUBLANG_NEUTRAL },
+    { "br", LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN },
+    { "pt", LANG_PORTUGUESE, SUBLANG_NEUTRAL }, // SUBLANG_PORTUGUESE
+    { "pa", LANG_PUNJABI, SUBLANG_NEUTRAL },
+    { "ro", LANG_ROMANIAN, SUBLANG_NEUTRAL },
+    { "ru", LANG_RUSSIAN, SUBLANG_NEUTRAL },
+    { "sp-rs", LANG_SERBIAN, SUBLANG_SERBIAN_LATIN },
+    { "sr-rs", LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC },
+    { "sk", LANG_SLOVAK, SUBLANG_NEUTRAL },
+    { "si", LANG_SLOVENIAN, SUBLANG_NEUTRAL },
+// sn Shona
+    { "es", LANG_SPANISH, SUBLANG_NEUTRAL },
+    { "sv", LANG_SWEDISH, SUBLANG_NEUTRAL },
+// tl Tagalog
+    { "ta", LANG_TAMIL, SUBLANG_NEUTRAL },
+    { "th", LANG_THAI, SUBLANG_NEUTRAL },
+    { "tr", LANG_TURKISH, SUBLANG_NEUTRAL },
+    { "uk", LANG_UKRAINIAN, SUBLANG_NEUTRAL },
+// va Valencian
+    { "vn", LANG_VIETNAMESE, SUBLANG_NEUTRAL },
+    { "cy", LANG_WELSH, SUBLANG_NEUTRAL },
     { NULL, 0, 0 }
-
-/*
-    "cn", NULL, // Chinese Simplified
-    "tr", "041f", NULL, // Turkish
-    "by", "0423", NULL, // Belarusian
-    "ja", "0411", NULL, // Japanese
-    "fa", "0429", NULL, // Persian
-    "dk", "0406", NULL, // Danish
-    "it", "0410", NULL, // Italian
-    "nl", "0813", "0413", NULL, // Dutch
-    "ta", "0449", NULL, // Tamil
-    "es", "0c0a", "040a", "500a", "280a", "3c0a", "180a", "080a", "2c0a", NULL, // Spanish
-    "hr", "101a", "041a", NULL, // Croatian
-    "ru", "0419", NULL, // Russian
-    "sv", "081d", "041d", NULL, // Swedish
-    "cz", "0405", NULL, // Czech
-    "gr", "0408", NULL, // Greek
-    "th", "041e", NULL, // Thai
-    "pt", "0816", NULL, // Portuguese (Portugal)
-    "br", "0416", NULL, // Portuguese (Brazillian)
-    "no", "0414", "0814", NULL, // Norwegian
-    "sk", "041b", NULL, // Slovak
-    "vn", "042a", NULL, // Vietnamese
-    "lt", NULL, NULL, // Lithuanian
-    "my", NULL, NULL, // Malaysian
-    "fi", NULL, NULL, // Finnish
-    "si", NULL, NULL, // Slovenian
-    "tw", NULL, NULL, // Chinese Traditional
-    "ml", NULL, NULL, // Malayalam
-    "he", NULL, NULL, // Hebrew
-    "sp-rs", NULL, NULL, // Serbian (Latin)
-    "id", NULL, NULL, // Indonesian
-    "mk", NULL, NULL, // Macedonian
-    "ro", NULL, NULL, // Romanian
-    "sr-rs", NULL, NULL, // Serbian (Cyrillic)
-    "kr", NULL, NULL, // Korean
-    "gl", NULL, NULL, // Galician
-    "bg", NULL, NULL, // Bulgarian
-    "uk", NULL, NULL, // Ukrainian
-    NULL
-*/
 };
 #else
 // based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
@@ -420,25 +428,17 @@ static void CurrLangNameFree() {
 #ifdef NEW_LANG_DETECTION
 static const char *GetLangNameFromLang(WORD primaryLangId, WORD subLangId)
 {
-    int i = 0;
-    while (g_lcidLangMap[i].lang) {
-        if (primaryLangId == g_lcidLangMap[i].primaryLangId)
-            break;
-        ++i;
-    }
-    if (!g_lcidLangMap[i].lang)
-        return NULL;
-
-    // either find the exact primary/sub lang id match, or return the
-    // first entry where primary lang matches
-    int firstPrimaryLangMatch = i;
-    for (;;) {
-        if (g_lcidLangMap[i].subLangId == subLangId)
+    // either find the exact primary/sub lang id match, or a neutral sublang if it exists
+    // (don't return any sublang for a given language, it might be too different)
+    for (int i = 0; g_lcidLangMap[i].lang; i++) {
+        if (primaryLangId != g_lcidLangMap[i].primaryLangId)
+            continue;
+        if (subLangId == g_lcidLangMap[i].subLangId)
             return g_lcidLangMap[i].lang;
-        ++i;
-        if (!g_lcidLangMap[i].lang || (g_lcidLangMap[i].primaryLangId != primaryLangId))
-            return g_lcidLangMap[firstPrimaryLangMatch].lang;
+        if (SUBLANG_NEUTRAL == g_lcidLangMap[i].subLangId)
+            return g_lcidLangMap[i].lang;
     }
+    return NULL;
 }
 
 static void GuessLanguage()
@@ -452,21 +452,14 @@ static void GuessLanguage()
 static const char *GetLangFromLcid(const char *lcid)
 {
     const char *lang;
-    const char *langLcid;
     int i = 0;
-    for (;;) {
-        lang = g_lcidLangMap[i++];
-        if (NULL == lang)
-            return NULL;
-        for (;;) {
-            langLcid = g_lcidLangMap[i++];
-            if (NULL == langLcid)
-                break;
+    while ((lang = g_lcidLangMap[i++])) {
+        const char *langLcid;
+        while ((langLcid = g_lcidLangMap[i++])) {
             if (str_eq(lcid, langLcid))
                 return lang;
         }
     }
-    assert(0);
     return NULL;
 }
 
