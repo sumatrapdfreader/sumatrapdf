@@ -188,10 +188,6 @@ static HWND                         gHwndAbout;
 
 static bool                         gRestrictedUse = false;
 
-#ifdef BUILD_RM_VERSION
-static bool                         gDeleteFileOnClose = false; // Delete the file which was passed into the program by command line.
-#endif
-
 SerializableGlobalPrefs             gGlobalPrefs = {
     TRUE, // BOOL m_showToolbar
     FALSE, // BOOL m_pdfAssociateDontAskAgain
@@ -7019,7 +7015,7 @@ TCHAR *GetDefaultPrinterName()
     return NULL;
 }
 
-#define is_arg(txt) tstr_ieq(_T(##txt), currArg->str)
+#define is_arg(txt) tstr_ieq(_T(txt), currArg->str)
 
 /* Parse 'txt' as hex color and set it as background color */
 static void ParseBgColor(const TCHAR* txt)
@@ -7110,7 +7106,7 @@ extern "C" void pdf_destoryfontlistMS(); // in pdf_fontfilems.c
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TStrList *          argListRoot;
-    TStrList *          currArg;
+    TStrList *          fileNames = NULL;
     TCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
@@ -7122,6 +7118,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     int                 pageNumber = 0;
     TCHAR *             cmdLine;
     bool                firstDocLoaded = false;
+#ifdef BUILD_RM_VERSION
+    bool                deleteFilesOnClose = false; // Delete the files which were passed into the program by command line.
+#endif
 
 #ifdef _DEBUG
     // Memory leak detection
@@ -7141,16 +7140,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SerializableGlobalPrefs_Init();
 
     cmdLine  = GetCommandLine();
-
     argListRoot = TStrList_FromCmdLine(cmdLine);
     assert(argListRoot);
     if (!argListRoot)
         return 0;
 
-#ifdef BUILD_RM_VERSION
-    bool prefsLoaded = false;
-#else
+#ifndef BUILD_RM_VERSION
     bool prefsLoaded = Prefs_Load();
+#else
+    bool prefsLoaded = false;
 #endif
 
     if (!prefsLoaded) {
@@ -7166,158 +7164,99 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     -bench can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
     bool reuse_instance = false;
-    currArg = argListRoot->next;
     TCHAR *printerName = NULL;
     TCHAR *newWindowTitle = NULL;
-    while (currArg) {
+    for (TStrList *currArg = argListRoot->next; currArg; currArg = currArg->next) {
         if (is_arg("-register-for-pdf")) {
             DoAssociateExeWithPdfExtension(true);
             return 0;
         }
-
-        if (is_arg("-enum-printers")) {
+        else if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             goto Exit;
         }
-
-        if (is_arg("-bench")) {
+        else if (is_arg("-bench") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                gBenchFileName = currArg->str;
-                if (currArg->next)
-                    benchPageNumStr = currArg->next->str;
+            gBenchFileName = tstr_dup(currArg->str);
+            if (currArg->next) {
+                currArg = currArg->next;
+                benchPageNumStr = tstr_dup(currArg->str);
             }
             break;
         }
-
-        if (is_arg("-exit-on-print")) {
-            currArg = currArg->next;
+        else if (is_arg("-exit-on-print")) {
             exitOnPrint = true;
-            continue;
         }
-
-        if (is_arg("-print-to-default")) {
-            currArg = currArg->next;
+        else if (is_arg("-print-to-default")) {
             printToDefaultPrinter = true;
-            continue;
         }
-
-        if (is_arg("-print-to")) {
+        else if (is_arg("-print-to") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                printerName = tstr_dup(currArg->str);
-                currArg = currArg->next;
-            }
-            continue;
+            printerName = tstr_dup(currArg->str);
         }
-
-        if (is_arg("-print-dialog")) {
-            currArg = currArg->next;
+        else if (is_arg("-print-dialog")) {
             printDialog = true;
-            continue;
         }
-
-        if (is_arg("-bgcolor")) {
+        else if (is_arg("-bgcolor") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                ParseBgColor(currArg->str);
-                currArg = currArg->next;
-            }
-            continue;
+            ParseBgColor(currArg->str);
         }
-
-        if (is_arg("-inverse-search")) {
+        else if (is_arg("-inverse-search") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                free(gGlobalPrefs.m_inverseSearchCmdLine);
-                gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(currArg->str);
-                currArg = currArg->next;
-            }
-            continue;
+            free(gGlobalPrefs.m_inverseSearchCmdLine);
+            gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(currArg->str);
         }
-
-        if (is_arg("-esc-to-exit")) {
-            currArg = currArg->next;
+        else if (is_arg("-esc-to-exit")) {
             gGlobalPrefs.m_escToExit = TRUE;
-            continue;
         }
-
-        if (is_arg("-reuse-instance")) {
-            currArg = currArg->next;
+        else if (is_arg("-reuse-instance")) {
             // find the window handle of a running instance of SumatraPDF
             // TODO: there should be a mutex here to reduce possibility of
             // race condition and having more than one copy launch because
             // FindWindow() in one process is called before a window is created
             // in another process
             reuse_instance = FindWindow(FRAME_CLASS_NAME, 0) != NULL;
-            continue;
         }
-
-        if (is_arg("-lang")) {
+        else if (is_arg("-lang") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                char * s = tstr_to_multibyte(currArg->str, CP_ACP);
-                CurrLangNameSet(s);
-                free(s);
-                currArg = currArg->next;
-            }
-            continue;
+            char * s = tstr_to_multibyte(currArg->str, CP_ACP);
+            CurrLangNameSet(s);
+            free(s);
         }
-
-        if (is_arg("-nameddest")) {
+        else if (is_arg("-nameddest") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                destName = tstr_dup(currArg->str);
-                currArg = currArg->next;
-            }
-            continue;
+            destName = tstr_dup(currArg->str);
         }
-
-        if (is_arg("-page")) {
+        else if (is_arg("-page") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                pageNumber = _ttoi(currArg->str);
-                currArg = currArg->next;
-            }
-            continue;
+            pageNumber = _ttoi(currArg->str);
         }
-
-        if (is_arg("-restrict")) {
-            currArg = currArg->next;
+        else if (is_arg("-restrict")) {
             gRestrictedUse = true;
-            continue;
         }
-
-
-        if (is_arg("-title")) {
+        else if (is_arg("-title") && currArg->next) {
             currArg = currArg->next;
-            if (currArg) {
-                newWindowTitle = tstr_dup(currArg->str); 
-                currArg = currArg->next;
-            }
-            continue;
+            newWindowTitle = tstr_dup(currArg->str); 
         }
-
 #ifdef BUILD_RM_VERSION
-        if (is_arg("-delete-these-on-close")) {
-            currArg = currArg->next;
-            gDeleteFileOnClose = true;
-            continue;
+        else if (is_arg("-delete-these-on-close")) {
+            deleteFilesOnClose = true;
         }
 #endif
-
-        // we assume that switches come first and file names to open later
-        // TODO: it would probably be better to collect all non-switches
-        // in a separate list so that file names can be interspersed with
-        // switches
-        break;
+        else {
+            // Remember this argument as a filename to open
+            TStrList_InsertAndOwn(&fileNames, tstr_dup(currArg->str));
+        }
     }
+    TStrList_Destroy(&argListRoot);
+    TStrList_Reverse(&fileNames);
 
     if (benchPageNumStr) {
         gBenchPageNum = _ttoi(benchPageNumStr);
         if (gBenchPageNum < 1)
             gBenchPageNum = INVALID_PAGE_NO;
+        free(benchPageNumStr);
     }
 
     LoadString(hInstance, IDS_APP_TITLE, gWindowTitle, MAX_LOADSTRING);
@@ -7330,16 +7269,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
     CreatePageRenderThread();
-    /* remaining arguments are names of PDF files */
-#ifdef BUILD_RM_VERSION
-    TStrList *currArgFileNames = currArg;
-#endif
     if (NULL != gBenchFileName) {
-            win = LoadPdf(gBenchFileName);
-            if (win && WS_SHOWING_PDF == win->state)
-                firstDocLoaded = true;
+        win = LoadPdf(gBenchFileName);
+        if (win && WS_SHOWING_PDF == win->state)
+            firstDocLoaded = true;
     } else {
-        while (currArg) {
+        for (TStrList *currArg = fileNames; currArg; currArg = currArg->next) {
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR command[2 * MAX_PATH + 20];
@@ -7394,11 +7329,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 OnMenuPrint(win);
             }
             firstDocLoaded = true;
-            currArg = currArg->next;
         }
     }
-
-    TStrList_Destroy(&argListRoot);
 
     if (((printerName || printDialog) && exitOnPrint)
           || reuse_instance)
@@ -7406,7 +7338,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
  
     if (!firstDocLoaded) {
         /* disable benchmark mode if we couldn't open file to benchmark */
-        gBenchFileName = 0;
+        if (gBenchFileName)
+            free(gBenchFileName);
+        gBenchFileName = NULL;
         win = WindowInfo_CreateEmpty();
         if (!win)
             goto Exit;
@@ -7472,7 +7406,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 Exit:
     free(destName);
     free(printerName);
-  
+    if (gBenchFileName)
+        free(gBenchFileName);
+
     FreePageRenderThread();
 
     WindowInfoList_DeleteAll();
@@ -7487,14 +7423,14 @@ Exit:
     SerializableGlobalPrefs_Deinit();
 
 #ifdef BUILD_RM_VERSION
-    if (gDeleteFileOnClose)
+    if (deleteFilesOnClose)
     {
         // Delete the files which where passed to the command line.
         // This only really makes sense if we are in restricted use.
-        while (currArgFileNames)
+        for (TStrList *currArg = fileNames; currArg; currArg = currArg->next)
         {
             TCHAR fullpath[MAX_PATH];
-            GetFullPathName(currArgFileNames->str, dimof(fullpath), fullpath, NULL);
+            GetFullPathName(currArg->str, dimof(fullpath), fullpath, NULL);
 
             int error = DeleteFile(fullpath);
 
@@ -7508,15 +7444,14 @@ Exit:
                 else
                     error = 0;
             }
-
-            currArgFileNames = currArgFileNames->next;
         }
     }
 #endif // BUILD_RM_VERSION
+    TStrList_Destroy(&fileNames);
 
     pdf_destoryfontlistMS();
 
     //histDump();
-    return (int) msg.wParam;
+    return msg.wParam;
 }
 
