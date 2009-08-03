@@ -117,7 +117,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PDF_DOC_NAME            _T("Adobe PDF Document")
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
-#define APP_SUB_DIR             _T("SumatraPDF")
 #define APP_NAME_STR            _T("SumatraPDF")
 
 #define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("winedt.exe \"[Open(|%f|);SelPar(%l,8)]\"")
@@ -760,7 +759,7 @@ static HINTERNET g_hOpen = NULL;
 bool WininetInit()
 {
     if (!g_hOpen)
-        g_hOpen = InternetOpen(_T("SumatraPDF"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
+        g_hOpen = InternetOpen(APP_NAME_STR, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, INTERNET_FLAG_ASYNC);
     if (NULL == g_hOpen) {
         DBG_OUT("InternetOpen() failed\n");
         return false;
@@ -1267,7 +1266,7 @@ static TCHAR * AppGetAppDir(void)
     TCHAR * appDir;
 
     SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-    appDir = tstr_printf(_T("%s/%s"), dir, APP_SUB_DIR);
+    appDir = tstr_printf(_T("%s/%s"), dir, APP_NAME_STR);
     if (appDir)
         _tmkdir(appDir);
 
@@ -1482,25 +1481,12 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     UpdateDisplayStateWindowRect(win, &ds);
     DisplayState_Free(&(node->state));
     node->state = ds;
-    node->state.visible = TRUE;
 }
 
 static void UpdateCurrentFileDisplayState(void)
 {
-    WindowInfo *        currWin;
-    FileHistoryList *   currFile;
-
-    currFile = gFileHistoryRoot;
-    while (currFile) {
-        currFile->state.visible = FALSE;
-        currFile = currFile->next;
-    }
-
-    currWin = gWindowList;
-    while (currWin) {
+    for (WindowInfo *currWin = gWindowList; currWin; currWin = currWin->next)
         UpdateCurrentFileDisplayStateForWin(currWin);
-        currWin = currWin->next;
-    }
 }
 
 static bool Prefs_Save(void)
@@ -1556,11 +1542,9 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
 
 #ifndef THREAD_BASED_FILEWATCH
 static void WindowInfo_RefreshUpdatedFiles(bool autorefresh) {
-    WindowInfo* curr = gWindowList;
-    while (curr) {
+    for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
         if (curr->watcher.HasChanged())
             WindowInfo_Refresh(curr, autorefresh);
-        curr = curr->next;
     }
 }
 #endif
@@ -1673,8 +1657,7 @@ static void WindowInfo_Delete(WindowInfo *win)
 
 static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
 {
-    WindowInfo  *win = gWindowList;
-    while (win) {
+    for (WindowInfo *win = gWindowList; win; win = win->next) {
         if (hwnd == win->hwndFrame)
             return win;
         if (hwnd == win->hwndCanvas)
@@ -1691,7 +1674,6 @@ static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
             return win;
         if (hwnd == win->hwndSpliter)
             return win;
-        win = win->next;
     }
     return NULL;
 }
@@ -1734,13 +1716,11 @@ static void WindowInfoList_Remove(WindowInfo *to_remove) {
         gWindowList = to_remove->next;
         return;
     }
-    WindowInfo* curr = gWindowList;
-    while (curr) {
+    for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
         if (to_remove == curr->next) {
             curr->next = to_remove->next;
             return;
         }
-        curr = curr->next;
     }
 }
 
@@ -1756,11 +1736,8 @@ static void WindowInfoList_DeleteAll(void) {
 
 static int WindowInfoList_Len(void) {
     int len = 0;
-    WindowInfo* curr = gWindowList;
-    while (curr) {
+    for (WindowInfo* curr = gWindowList; curr; curr = curr->next)
         ++len;
-        curr = curr->next;
-    }
     return len;
 }
 
@@ -1770,13 +1747,11 @@ WindowInfo* WindowInfoList_Find(TCHAR * file) {
     if(!normFile)
         return NULL;
 
-    WindowInfo* curr = gWindowList;
-    while (curr) {
+    for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
         if (tstr_ieq(curr->watcher.filepath(), normFile)) {
             free(normFile);
             return curr;
         }
-        curr = curr->next;
     }
     free(normFile);
     return NULL;
@@ -1814,11 +1789,9 @@ static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
 }
 
 static bool FileCloseMenuEnabled(void) {
-    WindowInfo* win = gWindowList;
-    while (win) {
+    for (WindowInfo* win = gWindowList; win; win = win->next) {
         if (win->state != WS_ABOUT)
             return true;
-        win = win->next;
     }
     return false;
 }
@@ -1967,11 +1940,9 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 /* Disable/enable menu items and toolbar buttons depending on wheter a
    given window shows a PDF file or not. */
 static void MenuToolbarUpdateStateForAllWindows(void) {
-    WindowInfo* win = gWindowList;
-    while (win) {
+    for (WindowInfo* win = gWindowList; win; win = win->next) {
         MenuUpdateStateForWindow(win);
         ToolbarUpdateStateForWindow(win);
-        win = win->next;
     }
 }
 
@@ -2377,12 +2348,6 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 
     // Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
 #ifdef THREAD_BASED_FILEWATCH
-    // TODO: passing fullPathUtf8 won't work for non-ascii files. First,
-    // it should be converted to filesystem encoding. Second, even then it won't
-    // work for unicode files names. We use utf8 so that we can safely
-    // round-trip the string.
-    // The right fix is to convert FileWatcher and PdfSync to handle Unicode
-    // file names
     if (!win->watcher.IsThreadRunning())
         win->watcher.StartWatchThread(pFullpath, &OnFileChange, (LPARAM)win);
 #else
@@ -4704,14 +4669,12 @@ static void ReloadPdfDocument(WindowInfo *win)
 
 static void RebuildProgramMenus(void)
 {
-    WindowInfo *win = gWindowList;
-    while (win) {
+    for (WindowInfo *win = gWindowList; win; win = win->next) {
         WindowInfo_RebuildMenu(win);
         // Setting the menu for a full screen window messes things up
         if (!win->fullScreen)
             SetMenu(win->hwndFrame, win->hMenu);
         MenuUpdateStateForWindow(win);
-        win = win->next;
     }
 }
 
@@ -4778,8 +4741,7 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
         SetFocus(win->hwndFrame);
 
-    win = gWindowList;
-    while (win) {
+    for (win = gWindowList; win; win = win->next) {
         if (gGlobalPrefs.m_showToolbar)
             ShowWindow(win->hwndReBar, SW_SHOW);
         else
@@ -4788,7 +4750,6 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
         GetClientRect(win->hwndFrame, &rect);
         SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
         MenuUpdateShowToolbarStateForWindow(win);
-        win = win->next;
     }
 }
 
@@ -5332,11 +5293,9 @@ static bool IsBenchMode(void)
    Caller needs to free() the memory.
    */
 static const TCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
-    FileHistoryList* curr = gFileHistoryRoot;
-    while (curr) {
+    for (FileHistoryList* curr = gFileHistoryRoot; curr; curr = curr->next) {
         if (curr->menuId == menuId)
             return tstr_dup(curr->state.filePath);
-        curr = curr->next;
     }
     return NULL;
 }
@@ -5441,13 +5400,11 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
 
 static void UpdateToolbarToolText(void)
 {
-    WindowInfo *win = gWindowList;
-    while (win) {
+    for (WindowInfo *win = gWindowList; win; win = win->next) {
         UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
         MenuUpdateStateForWindow(win);
-        win = win->next;
     }        
 }
 
@@ -5651,7 +5608,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     HWND status = CreateWindowEx(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, _T(""), WS_CHILD|SS_CENTER,
                             0, 0, 0, 0, win->hwndCanvas, (HMENU)0, hInst, NULL);
 
-    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
+    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     SetWindowFont(label, fnt, true);
     SetWindowFont(find, fnt, true);
     SetWindowFont(status, fnt, true);
@@ -5774,7 +5731,7 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     HWND total = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);  // TODO: this might not work on win95/98
+    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     SetWindowFont(label, fnt, true);
     SetWindowFont(page, fnt, true);
     SetWindowFont(total, fnt, true);
@@ -5829,9 +5786,6 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
         }
     }
     lres = SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
-
-    // TODO: construct disabled image list as well?
-    //SendMessage(hwndToolbar, TB_SETDISABLEDIMAGELIST, 0, (LPARAM)himl);
 
     LRESULT exstyle = SendMessage(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
@@ -6051,10 +6005,9 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
 
 static void PopluateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
 {
-    while (entry) {
+    for (; entry; entry = entry->next) {
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent);
         PopluateTocTreeView(hwnd, entry->child, node);
-        entry = entry->next;
     }
 }
 
@@ -7461,6 +7414,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }
 
+    TStrList_Destroy(&argListRoot);
+
     if (((printerName || printDialog) && exitOnPrint)
           || reuse_instance)
         goto Exit;
@@ -7577,7 +7532,6 @@ Exit:
 
     pdf_destoryfontlistMS();
 
-    TStrList_Destroy(&argListRoot);
     //histDump();
     return (int) msg.wParam;
 }

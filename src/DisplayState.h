@@ -33,7 +33,6 @@ enum DisplayMode {
 
 #define FILE_STR                    "File"
 #define DISPLAY_MODE_STR            "Display Mode"
-#define VISIBLE_STR                 "Visible"
 #define PAGE_NO_STR                 "Page"
 #define ZOOM_VIRTUAL_STR            "ZoomVirtual"
 #define ROTATION_STR                "Rotation"
@@ -62,7 +61,6 @@ enum DisplayMode {
 typedef struct DisplayState {
     const TCHAR *       filePath;
     enum DisplayMode    displayMode;
-    BOOL                visible;     /* if TRUE, currently shown on the screen */
     int                 scrollX;
     int                 scrollY;
     int                 pageNo;

@@ -114,7 +114,6 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     const char* txt = dict_get_str(dict, DISPLAY_MODE_STR);
     if (txt)
         DisplayModeEnumFromName(txt, &ds->displayMode);
-    dict_get_bool(dict, VISIBLE_STR, &ds->visible);
     dict_get_int(dict, PAGE_NO_STR, &ds->pageNo);
     dict_get_int(dict, ROTATION_STR, &ds->rotation);
     dict_get_int(dict, SCROLL_X_STR, &ds->scrollX);
@@ -146,7 +145,6 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     txt = DisplayModeNameFromEnum(ds->displayMode);
     if (txt)
         DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
-    DICT_ADD_INT64(prefs, VISIBLE_STR, ds->visible);
     DICT_ADD_INT64(prefs, PAGE_NO_STR, ds->pageNo);
     DICT_ADD_INT64(prefs, ROTATION_STR, ds->rotation);
     DICT_ADD_INT64(prefs, SCROLL_X_STR, ds->scrollX);
@@ -322,13 +320,6 @@ static void ParseKeyValue(char *key, char *value, DisplayState *dsOut)
         assert(fOk);
         if (!fOk || !validRotation(dsOut->rotation))
             dsOut->rotation = 0;
-        return;
-    }
-
-    if (str_eq(VISIBLE_STR, key)) {
-        dsOut->visible= FALSE;
-        fOk = ParseBool(value, &dsOut->visible);
-        assert(fOk);
         return;
     }
 

@@ -72,7 +72,6 @@ void DisplayState_Init(DisplayState *ds)
 {
     memzero(ds, sizeof(DisplayState));
     ds->displayMode = DM_AUTOMATIC;
-    ds->visible = FALSE;
     ds->pageNo = 1;
     ds->zoomVirtual = 100.0;
     ds->rotation = 0;
@@ -98,7 +97,6 @@ bool DisplayState_Serialize(DisplayState *ds, DString *strOut)
     else
         DStringSprintf(strOut, "  %s: %s\n", DISPLAY_MODE_STR, DisplayModeNameFromEnum(DM_AUTOMATIC));
 
-    DStringSprintf(strOut, "  %s: %d\n",   VISIBLE_STR, ds->visible);
     DStringSprintf(strOut, "  %s: %d\n",   PAGE_NO_STR, ds->pageNo);
     DStringSprintf(strOut, "  %s: %.4f\n", ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     DStringSprintf(strOut, "  %s: %d\n",   ROTATION_STR, ds->rotation);
