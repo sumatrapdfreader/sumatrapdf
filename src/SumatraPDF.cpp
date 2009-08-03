@@ -160,7 +160,7 @@ static HCURSOR                      gCursorScroll;
 static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushShadow;
-
+static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapCloseToc;
 
 static TCHAR *                      gBenchFileName;
@@ -5012,7 +5012,7 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         // compute the length of the message
         RECT rc = {0,0,FIND_STATUS_WIDTH,0};
         HDC hdc = GetDC(win->hwndFindStatus);
-        HGDIOBJ oldFont = SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
+        HGDIOBJ oldFont = SelectObject(hdc, gDefaultGuiFont);
         DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
         SelectObject(hdc, oldFont);
         ReleaseDC(win->hwndFindStatus, hdc);
@@ -5489,7 +5489,7 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         RECT rect;
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
-        HFONT oldfnt = SelectFont(hdc, (HFONT)GetStockObject(DEFAULT_GUI_FONT));
+        HFONT oldfnt = SelectFont(hdc, gDefaultGuiFont);
         TCHAR text[256];
 
         GetClientRect(hwnd, &rect);
@@ -5576,6 +5576,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
+    // TODO: Adjust the margins according to the height of gDefaultGuiFont
     HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
                             0, 1, FIND_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, 20 - FIND_BOX_PADDING,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
@@ -5586,10 +5587,9 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     HWND status = CreateWindowEx(WS_EX_TOPMOST, FINDSTATUS_CLASS_NAME, _T(""), WS_CHILD|SS_CENTER,
                             0, 0, 0, 0, win->hwndCanvas, (HMENU)0, hInst, NULL);
 
-    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-    SetWindowFont(label, fnt, true);
-    SetWindowFont(find, fnt, true);
-    SetWindowFont(status, fnt, true);
+    SetWindowFont(label, gDefaultGuiFont, true);
+    SetWindowFont(find, gDefaultGuiFont, true);
+    SetWindowFont(status, gDefaultGuiFont, true);
 
     if (!DefWndProcToolbar)
         DefWndProcToolbar = (WNDPROC)GetWindowLong(win->hwndToolbar, GWL_WNDPROC);
@@ -5699,6 +5699,7 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
+    // TODO: Adjust the margins according to the height of gDefaultGuiFont
     HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
                             0, 1, PAGE_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, 20 - FIND_BOX_PADDING,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
@@ -5709,10 +5710,9 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     HWND total = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win->hwndToolbar, (HMENU)0, hInst, NULL);
 
-    HFONT fnt = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-    SetWindowFont(label, fnt, true);
-    SetWindowFont(page, fnt, true);
-    SetWindowFont(total, fnt, true);
+    SetWindowFont(label, gDefaultGuiFont, true);
+    SetWindowFont(page, gDefaultGuiFont, true);
+    SetWindowFont(total, gDefaultGuiFont, true);
 
     if (!DefWndProcPageBox)
         DefWndProcPageBox = (WNDPROC)GetWindowLong(page, GWL_WNDPROC);
@@ -6731,6 +6731,11 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gBrushBg     = CreateSolidBrush(COL_WINDOW_BG);
     gBrushWhite  = CreateSolidBrush(COL_WHITE);
     gBrushShadow = CreateSolidBrush(COL_WINDOW_SHADOW);
+
+    NONCLIENTMETRICS ncm = {0};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     
     gBitmapCloseToc = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_CLOSE_TOC));
 
@@ -7416,6 +7421,7 @@ Exit:
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
     DeleteObject(gBrushShadow);
+    DeleteObject(gDefaultGuiFont);
 
     Translations_FreeData();
     CurrLangNameFree();
