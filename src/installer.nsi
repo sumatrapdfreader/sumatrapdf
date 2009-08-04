@@ -62,9 +62,11 @@ SectionEnd
 
 ; Setup the Installer sections at startup
 Function .onInit
-	; Check the option, if SumatraPDF is already the default PDF reader
+	; Check the option, if no other application is set as default PDF reader
+	ClearErrors
 	ReadRegStr $0 HKCR ".pdf" ""
-	${If} $0 == "SumatraPDF"
+	${If} ${Errors}
+	${OrIf} $0 == "SumatraPDF"
 		SectionSetFlags ${SecDefault} ${SF_SELECTED}
 	${EndIf}
 FunctionEnd
