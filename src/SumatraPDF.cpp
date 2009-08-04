@@ -7106,6 +7106,38 @@ exit:
 
 extern "C" void pdf_destoryfontlistMS(); // in pdf_fontfilems.c
 
+#ifdef DEBUG
+// Code from http://www.halcyon.com/~ast/dload/guicon.htm
+void RedirectIOToConsole(void)
+{
+    CONSOLE_SCREEN_BUFFER_INFO coninfo;
+    int hConHandle;
+
+    // allocate a console for this app
+    AllocConsole();
+
+    // set the screen buffer to be big enough to let us scroll text
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+    coninfo.dwSize.Y = 500;
+    SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+
+    // redirect unbuffered STDOUT to the console
+    hConHandle = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+    *stdout = *(FILE *)_fdopen(hConHandle, "w");
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    // redirect unbuffered STDERR to the console
+    hConHandle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+    *stderr = *(FILE *)_fdopen(hConHandle, "w");
+    setvbuf(stderr, NULL, _IONBF, 0);
+
+    // redirect unbuffered STDIN to the console
+    hConHandle = _open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
+    *stdin = *(FILE *)_fdopen(hConHandle, "r");
+    setvbuf(stdin, NULL, _IONBF, 0);
+}
+#endif
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TStrList *          argListRoot;
@@ -7245,6 +7277,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             deleteFilesOnClose = true;
+        }
+#endif
+#ifdef DEBUG
+        else if (is_arg("-console")) {
+            RedirectIOToConsole();
         }
 #endif
         else {
