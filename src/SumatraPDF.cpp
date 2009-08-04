@@ -4547,9 +4547,12 @@ static void ViewWithAcrobat(WindowInfo *win)
     if (!GetAcrobatPath(acrobatPath, dimof(acrobatPath)))
         return;
 
-    TCHAR params[MAX_PATH + 2];
-    wsprintf(params, _T("\"%s\""), win->dm->fileName());
+    // Command line format: /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
+    // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
+    // TODO: Also set zoom factor and scroll to current position?
+    TCHAR *params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
     ShellExecute(NULL, _T("open"), acrobatPath, params, NULL, SW_NORMAL);
+    free(params);
 }
 
 static void OnMenuViewSinglePage(WindowInfo *win)
