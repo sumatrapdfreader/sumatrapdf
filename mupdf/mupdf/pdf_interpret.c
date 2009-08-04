@@ -831,10 +831,11 @@ Lsetcolor:
 				return fz_throw("cannot find font in store");
 
 			gstate->size = fz_toreal(csi->stack[1]);
-			if (gstate->size <= 0.0)
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=497 */
+			if (gstate->size < -1000.0)
 			{
-				gstate->size = 1.0;
-				fz_warn("font size negative, capping to %g", gstate->size);
+				gstate->size = -1000.0;
+				fz_warn("font size too large, capping to %g", gstate->size);
 			}
 			if (gstate->size > 1000.0)
 			{
