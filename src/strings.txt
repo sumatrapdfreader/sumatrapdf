@@ -91,7 +91,8 @@
 # Welsh:
 #  Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
 #  Glenn Wall
-# Mohammed Ottama - Burmese - Unicode 5.1 encoding.
+# Mohammed Ottama - Burmese - Unicode 5.1 encoding
+# Drive DRKA (drka2003@mail.ru) - Belarusian
 
 Lang: en English
 Lang: af Afrikaans
