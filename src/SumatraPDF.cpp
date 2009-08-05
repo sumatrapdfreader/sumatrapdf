@@ -5609,6 +5609,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     UpdateToolbarFindText(win);
 }
 
+#define UWM_PAGE_SET_FOCUS (WM_APP + 1)
 static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -5644,6 +5645,8 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_SETFOCUS == message) {
+        PostMessage(hwnd, UWM_PAGE_SET_FOCUS, 0, 0);
+    } else if (UWM_PAGE_SET_FOCUS == message) {
         Edit_SetSel(hwnd, 0, -1);
         win->hwndTracker = NULL;
     } else if (WM_KEYDOWN == message) {
