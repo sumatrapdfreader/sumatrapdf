@@ -4084,6 +4084,7 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 # Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
 by:SumatraPDF асацыявана з файламі PDF
+bg:SumatraPDF е вашия PDF четец
 hu:A Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 gr:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
@@ -4099,6 +4100,7 @@ es:SumatraPDF es el lector PDF por defecto
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 by:Зараз SumatraPDF асацыявана з файламі PDF
+bg:SumatraPDF вече трябва да е четец на PDF по подразбиране
 hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 gr:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
@@ -4114,6 +4116,7 @@ es:SumatraPDF debería ser ahora tu lector PDF por defecto
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 by:У мабільным рэжыме змяніць PDF-в'юер нельга
+bg:PDF четеца не може да бъде сменен в преносим режим
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
 gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
@@ -4128,6 +4131,7 @@ es:No se puede cambiar el lector PDF por defecto en modo portátil
 -
 Open in &Adobe Reader
 by:Адкрыць у &Adobe Reader
+bg:Отвори с &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
 de:Mit &Adobe Reader öffnen
 gr:Άνοιγμα με &Adobe Reader
