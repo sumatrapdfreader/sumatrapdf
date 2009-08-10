@@ -111,9 +111,11 @@
 #define IDM_LANG_PA                     514
 #define IDM_LANG_HI                     515
 #define IDM_LANG_NN                     516
-#define IDM_SETTINGS                    517
+#define IDM_LANG_AM                     517
+
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
+#define IDM_SETTINGS                    552
 #define IDM_CHANGE_LANGUAGE             553
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
