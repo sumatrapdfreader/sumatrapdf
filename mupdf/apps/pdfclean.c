@@ -9,8 +9,6 @@
 
 #include "pdftool.h"
 
-static fz_obj *id = NULL;
-
 static pdf_crypt *outcrypt = NULL;
 static FILE *out = NULL;
 
@@ -18,7 +16,6 @@ static char *uselist = NULL;
 static int *ofslist = NULL;
 static int *genlist = NULL;
 
-static int doencrypt = 0;
 static int dogarbage = 0;
 static int doexpand = 0;
 
@@ -127,15 +124,8 @@ static void copystream(fz_obj *obj, int oid, int gen)
     if (error)
 	die(error);
 
-    if (doencrypt)
-	pdf_cryptbuffer(outcrypt, buf, oid, gen);
-
     fprintf(out, "%d %d obj\n", oid, gen);
-    if (doencrypt)
-	pdf_cryptobj(outcrypt, obj, oid, gen);
     fz_fprintobj(out, obj, !doexpand);
-    if (doencrypt)
-	pdf_cryptobj(outcrypt, obj, oid, gen);
     fprintf(out, "stream\n");
     fwrite(buf->rp, 1, buf->wp - buf->rp, out);
     fprintf(out, "endstream\nendobj\n\n");
@@ -153,9 +143,6 @@ static void expandstream(fz_obj *obj, int oid, int gen)
     if (error)
 	die(error);
 
-    if (doencrypt)
-	pdf_cryptbuffer(outcrypt, buf, oid, gen);
-
     fz_copydict(&newdict, obj);
     fz_dictdels(newdict, "Filter");
     fz_dictdels(newdict, "DecodeParms");
@@ -165,11 +152,7 @@ static void expandstream(fz_obj *obj, int oid, int gen)
     fz_dropobj(newlen);
 
     fprintf(out, "%d %d obj\n", oid, gen);
-    if (doencrypt)
-	pdf_cryptobj(outcrypt, obj, oid, gen);
     fz_fprintobj(out, newdict, !doexpand);
-    if (doencrypt)
-	pdf_cryptobj(outcrypt, obj, oid, gen);
     fprintf(out, "stream\n");
     fwrite(buf->rp, 1, buf->wp - buf->rp, out);
     fprintf(out, "endstream\nendobj\n\n");
@@ -211,11 +194,7 @@ static void saveobject(int oid, int gen)
     if (!xref->table[oid].stmofs)
     {
 	fprintf(out, "%d %d obj\n", oid, gen);
-	if (doencrypt)
-	    pdf_cryptobj(outcrypt, obj, oid, gen);
 	fz_fprintobj(out, obj, !doexpand);
-	if (doencrypt)
-	    pdf_cryptobj(outcrypt, obj, oid, gen);
 	fprintf(out, "endobj\n\n");
     }
     else
@@ -239,8 +218,8 @@ static void savexref(void)
 
     startxref = ftell(out);
 
-    fprintf(out, "xref\n0 %d\n", xref->len + doencrypt);
-    for (oid = 0; oid < xref->len + doencrypt; oid++)
+    fprintf(out, "xref\n0 %d\n", xref->len);
+    for (oid = 0; oid < xref->len; oid++)
     {
 	if (uselist[oid])
 	    fprintf(out, "%010d %05d n \n", ofslist[oid], genlist[oid]);
@@ -263,14 +242,9 @@ static void savexref(void)
     if (obj)
 	fz_dictputs(trailer, "Root", obj);
 
-    if (doencrypt)
-    {
-	fz_newindirect(&obj, xref->len, 0, xref);
-	fz_dictputs(trailer, "Encrypt", obj);
-	fz_dropobj(obj);
-    }
-
-    fz_dictputs(trailer, "ID", id);
+    obj = fz_dictgets(xref->trailer, "ID");
+    if (obj)
+	    fz_dictputs(trailer, "ID", obj);
 
     fprintf(out, "trailer\n");
     fz_fprintobj(out, trailer, !doexpand);
@@ -283,14 +257,9 @@ static void cleanusage(void)
 {
     fprintf(stderr,
 	    "usage: pdfclean [options] input.pdf [outfile.pdf]\n"
-	    "  -d -\tpassword for decryption\n"
+	    "  -p -\tpassword for decryption\n"
 	    "  -g  \tgarbage collect unused objects\n"
-	    "  -x  \texpand compressed streams\n"
-	    "  -e  \tencrypt output\n"
-	    "    -u -\tset user password for encryption\n"
-	    "    -o -\tset owner password\n"
-	    "    -p -\tset permissions (combine letters 'pmca')\n"
-	    "    -n -\tkey length in bits: 40 <= n <= 128\n");
+	    "  -x  \texpand compressed streams\n");
     exit(1);
 }
 
@@ -298,37 +267,17 @@ int main(int argc, char **argv)
 {
     char *infile;
     char *outfile = "out.pdf";
-    char *userpw = "";
-    char *ownerpw = "";
-    unsigned perms = 0xfffff0c0;	/* nothing allowed */
-    int keylen = 40;
     char *password = "";
     fz_error error;
     int c, oid;
     int lastfree;
 
-    while ((c = fz_getopt(argc, argv, "d:egn:o:p:u:x")) != -1)
+    while ((c = fz_getopt(argc, argv, "gxp:")) != -1)
     {
 	switch (c)
 	{
-	    case 'p':
-		/* see TABLE 3.15 User access permissions */
-		perms = 0xfffff0c0;
-		if (strchr(fz_optarg, 'p')) /* print */
-		    perms |= (1 << 2) | (1 << 11);
-		if (strchr(fz_optarg, 'm')) /* modify */
-		    perms |= (1 << 3) | (1 << 10);
-		if (strchr(fz_optarg, 'c')) /* copy */
-		    perms |= (1 << 4) | (1 << 9);
-		if (strchr(fz_optarg, 'a')) /* annotate / forms */
-		    perms |= (1 << 5) | (1 << 8);
-		break;
-	    case 'd': password = fz_optarg; break;
-	    case 'e': doencrypt ++; break;
+	    case 'p': password = fz_optarg; break;
 	    case 'g': dogarbage ++; break;
-	    case 'n': keylen = atoi(fz_optarg); break;
-	    case 'o': ownerpw = fz_optarg; break;
-	    case 'u': userpw = fz_optarg; break;
 	    case 'x': doexpand ++; break;
 	    default: cleanusage(); break;
 	}
@@ -342,25 +291,6 @@ int main(int argc, char **argv)
 	outfile = argv[fz_optind++];
 
     openxref(infile, password, 0);
-
-    id = fz_dictgets(xref->trailer, "ID");
-    if (!id)
-    {
-	error = fz_packobj(&id, xref, "[(ABCDEFGHIJKLMNOP)(ABCDEFGHIJKLMNOP)]");
-	if (error)
-	    die(error);
-    }
-    else
-    {
-	fz_keepobj(id);
-    }
-
-    if (doencrypt)
-    {
-	error = pdf_newencrypt(&outcrypt, userpw, ownerpw, perms, keylen, id);
-	if (error)
-	    die(error);
-    }
 
     out = fopen(outfile, "wb");
     if (!out)
@@ -410,20 +340,9 @@ int main(int argc, char **argv)
 	}
     }
 
-    /* add new encryption dictionary to xref */
-    if (doencrypt)
-    {
-	ofslist[xref->len] = ftell(out);
-	genlist[xref->len] = 0;
-	uselist[xref->len] = 1;
-	fprintf(out, "%d %d obj\n", xref->len, 0);
-	fz_fprintobj(out, outcrypt->encrypt, !doexpand);
-	fprintf(out, "endobj\n\n");
-    }
-
     /* construct linked list of free object slots */
     lastfree = 0;
-    for (oid = 0; oid < xref->len + doencrypt; oid++)
+    for (oid = 0; oid < xref->len; oid++)
     {
 	if (!uselist[oid])
 	{

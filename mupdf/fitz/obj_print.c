@@ -131,14 +131,15 @@ static void fmthex(struct fmt *fmt, fz_obj *obj)
 
 static void fmtname(struct fmt *fmt, fz_obj *obj)
 {
-	char *s = fz_toname(obj);
+	unsigned char *s = (unsigned char *) fz_toname(obj);
 	int i, c;
 
 	fmtputc(fmt, '/');
 
 	for (i = 0; s[i]; i++)
 	{
-		if (isdelim(s[i]) || iswhite(s[i]))
+		if (isdelim(s[i]) || iswhite(s[i]) ||
+				s[i] == '#' || s[i] < 32 || s[i] > 127)
 		{
 			fmtputc(fmt, '#');
 			c = (s[i] >> 4) & 0xf;
