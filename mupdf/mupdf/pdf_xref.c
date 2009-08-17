@@ -27,7 +27,6 @@ pdf_newxref(pdf_xref **xrefp)
 	xref->trailer = nil;
 	xref->root = nil;
 	xref->info = nil;
-	xref->dests = nil;
 	xref->store = nil;
 
 	xref->cap = 0;
@@ -64,8 +63,6 @@ pdf_closexref(pdf_xref *xref)
 		fz_dropobj(xref->root);
 	if (xref->info)
 		fz_dropobj(xref->info);
-	if (xref->dests)
-		fz_dropobj(xref->dests);
 	if (xref->crypt)
 		pdf_freecrypt(xref->crypt);
 

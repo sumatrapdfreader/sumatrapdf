@@ -163,11 +163,6 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
     if (moz->xref->info)
 	fz_keepobj(moz->xref->info);
 
-
-    error = pdf_loadnametrees(moz->xref);
-    if (error)
-	pdfmoz_error(moz, error);
-
     moz->doctitle = filename;
     if (strrchr(moz->doctitle, '\\'))
 	moz->doctitle = strrchr(moz->doctitle, '\\') + 1;

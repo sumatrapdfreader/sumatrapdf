@@ -1,7 +1,7 @@
 #include "fitz_base.h"
 #include "fitz_stream.h"
 
-/* keep either names or strings in the dict. don't mix & match. */
+/* dicts may only have names as keys! */
 
 static int keyvalcmp(const void *ap, const void *bp)
 {
@@ -9,9 +9,6 @@ static int keyvalcmp(const void *ap, const void *bp)
 	const fz_keyval *b = bp;
 	if (fz_isname(a->k) && fz_isname(b->k))
 		return strcmp(fz_toname(a->k), fz_toname(b->k));
-	if (fz_isstring(a->k) && fz_isstring(b->k))
-		if (fz_tostrlen(a->k) == fz_tostrlen(b->k))
-			return memcmp(fz_tostrbuf(a->k), fz_tostrbuf(b->k), fz_tostrlen(a->k));
 	return -1;
 }
 
@@ -19,8 +16,6 @@ static inline int keystrcmp(fz_obj *key, char *s)
 {
 	if (fz_isname(key))
 		return strcmp(fz_toname(key), s);
-	if (fz_isstring(key))
-		return memcmp(fz_tostrbuf(key), s, 1 + MIN(fz_tostrlen(key), strlen(s)));
 	return -1;
 }
 
@@ -268,8 +263,6 @@ fz_dictget(fz_obj *obj, fz_obj *key)
 {
 	if (fz_isname(key))
 		return fz_dictgets(obj, fz_toname(key));
-	if (fz_isstring(key))
-		return fz_dictgets(obj, fz_tostrbuf(key));
 	return nil;
 }
 
@@ -297,10 +290,8 @@ fz_dictput(fz_obj *obj, fz_obj *key, fz_obj *val)
 
 	if (fz_isname(key))
 		s = fz_toname(key);
-	else if (fz_isstring(key))
-		s = fz_tostrbuf(key);
 	else
-		return fz_throw("assert: key is not string or name (%s)", fz_objkindstr(obj));
+		return fz_throw("assert: key is not a name (%s)", fz_objkindstr(obj));
 
 	if (!val)
 		return fz_throw("assert: val does not exist for key (%s)", s);
@@ -375,10 +366,8 @@ fz_dictdel(fz_obj *obj, fz_obj *key)
 {
 	if (fz_isname(key))
 		return fz_dictdels(obj, fz_toname(key));
-	else if (fz_isstring(key))
-		return fz_dictdels(obj, fz_tostrbuf(key));
 	else
-		return fz_throw("assert: key is not string or name (%s)", fz_objkindstr(obj));
+		return fz_throw("assert: key is not a name (%s)", fz_objkindstr(obj));
 }
 
 void

@@ -131,10 +131,6 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	if (app->xref->info)
 		fz_keepobj(app->xref->info);
 
-	error = pdf_loadnametrees(app->xref);
-	if (error)
-		pdfapp_error(app, error);
-
 	error = pdf_loadoutline(&app->outline, app->xref);
 	if (error)
 		pdfapp_error(app, error);

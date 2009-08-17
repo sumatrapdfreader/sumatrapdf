@@ -246,10 +246,6 @@ DecryptedOk:
     if (error)
         goto Error;
 
-    error = pdf_loadnametrees(_xref);
-    if (error)
-        goto Error;
-
     error = pdf_loadoutline(&_outline, _xref);
     // silently ignore errors from pdf_loadoutline()
     // this information is not critical and checking the
@@ -319,7 +315,11 @@ int PdfEngine::findPageNo(fz_obj *dest)
 
 fz_obj *PdfEngine::getNamedDest(const char *name)
 {
-    fz_obj *obj = fz_dictgets(_xref->dests, (char*)name);
+    fz_obj *obj = NULL;
+    fz_obj *nameobj = NULL;
+    fz_error error = fz_newstring(&nameobj, (char*)name, strlen(name));
+    if (!error)
+        obj = pdf_lookupdest(_xref, nameobj);
     return obj;
 }
 

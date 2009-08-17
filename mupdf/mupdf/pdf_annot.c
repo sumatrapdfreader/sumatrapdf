@@ -40,15 +40,9 @@ pdf_droplink(pdf_link *link)
 static fz_obj *
 resolvedest(pdf_xref *xref, fz_obj *dest)
 {
-	if (fz_isname(dest))
+	if (fz_isname(dest) || fz_isstring(dest))
 	{
-		dest = fz_dictget(xref->dests, dest);
-		return resolvedest(xref, dest);
-	}
-
-	else if (fz_isstring(dest))
-	{
-		dest = fz_dictget(xref->dests, dest);
+		dest = pdf_lookupdest(xref, dest);
 		return resolvedest(xref, dest);
 	}
 

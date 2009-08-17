@@ -119,7 +119,6 @@ struct pdf_xref_s
 	fz_obj *trailer;		/* TODO split this into root/info/encrypt/id */
 	fz_obj *root;			/* resolved catalog dict */
 	fz_obj *info;			/* resolved info dict */
-	fz_obj *dests;			/* flattened dests nametree */
 
 	int len;
 	int cap;
@@ -561,7 +560,7 @@ struct pdf_outline_s
 };
 
 fz_error pdf_loadnametree(fz_obj **dictp, pdf_xref *xref, fz_obj *root);
-fz_error pdf_loadnametrees(pdf_xref *xref);
+fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest);
 
 fz_error pdf_newlink(pdf_link**, fz_rect rect, fz_obj *dest, pdf_linkkind kind);
 fz_error pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict);
