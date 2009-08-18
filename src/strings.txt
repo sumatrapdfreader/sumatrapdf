@@ -35,7 +35,9 @@
 #   Kristof Bal 
 #   Stephan Paternotte
 # R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com) - Tamil
-# Jose Virgili - Spanish
+# Spanish:
+#   Jose Virgili
+#   LinoSP [http://reactos.wordpress.com]
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
 # Russian:
 #  Zero-8
@@ -344,7 +346,7 @@ dk:&Gem som\tCtrl-S
 it:&Salva con nome...\tCtrl-S
 nl:&Opslaan als...\tCtrl-S
 ta:எனச் சேமி\tCtrl-S
-es:&Guardar como\tCtrl-S
+es:&Guardar como...\tCtrl-S
 hr:&Spremi kao...\tCtrl-S
 ru:Сохранить как...\tCtrl-S
 ar:&حفظ كـ\tCtrl-S
@@ -561,6 +563,7 @@ nn:&Vis
 -
 Automatic
 de:Automatisch
+es:Automático
 -
 Single page
 am:&Մեկ էջ
@@ -1263,7 +1266,7 @@ dk:Første side\tHome
 it:Prima pagina\tHome
 nl:Eerste pagina\tHome
 ta:முதல் பக்கம்\tHome
-es:Primera página\tHome
+es:Primera página\tInicio
 hr:Prva stranica\tHome
 ru:Первая страница\tHome
 ar:الصفحة الأولى\tHome
@@ -1321,7 +1324,7 @@ dk:Sidste side\tEnd
 it:Ultima pagina\tEnd
 nl:Laatste pagina\tEnd
 ta:இறுதி பக்கம்\tEnd
-es:Última página\tEnd
+es:Última página\tFin
 hr:Posljednja stranica\tEnd
 ru:Последняя страница\tEnd
 ar:الصفحة الأخيرة\tEnd
@@ -1495,7 +1498,7 @@ dk:Hele &siden\tCtrl-0
 it:&Pagina intera\tCtrl-0
 nl:Hele &Pagina\tCtrl-0
 ta:பக்கம் பொருந்தவை\tCtrl-0
-es:Ajustar &página\tCtrl-0
+es:Ajustar &Página\tCtrl-0
 hr:Prilagodi &stranici\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
@@ -1553,7 +1556,7 @@ dk:Akt&ual størrelse\tCtrl-1
 it:&Dimensioni reali\tCtrl-1
 nl:Ware grootte\tCtrl-1
 ta:மெய் அளவு\tCtrl-1
-es:Tamaño real\tCtrl-1
+es:Tamaño Real\tCtrl-1
 hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
@@ -1611,7 +1614,7 @@ dk:Tilpas &bredde\tCtrl-2
 it:&Larghezza pagina\tCtrl-2
 nl:Passend in &breedte\tCtrl-2
 ta:அகலம் பொருந்தவை\tCtrl-2
-es:&Ancho de página\tCtrl-2
+es:&Ancho de Página\tCtrl-2
 hr:&Prilagodi širini\tCtrl-2
 ru:Заполнение по ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
@@ -1819,7 +1822,7 @@ bn:নির্দেশ নথিপত্র
 it:&Guida
 tw:說明文件(&M)
 cn:使用手册(&M)
-es:&Manual de instrucciones
+es:&Manual de Instrucciones
 cy:&Llawlyfr
 ga:Lámhleabhar
 mm:&ကိုယ်တိုင်
@@ -1844,7 +1847,7 @@ dk:&Om
 it:&Informazioni
 nl:&Over
 ta:பற்றி
-es:&Acerca de
+es:&Acerca de...
 hr:&O programu...
 ru:О программе...
 ar:حول البرنامج
@@ -3091,7 +3094,7 @@ sk:Nie je k dispozícia nová verzia.
 vn:Không có phiên bản mới.
 uk:Новішої версії немає.
 ru:Обновлений не обнаружено.
-es:No hay nuevas versiones.
+es:No hay una nueva versión.
 hr:Nema nove inačice.
 it:Nessun aggiornamento disponibile
 nl:Geen nieuwe versie beschikbaar.
@@ -3134,7 +3137,7 @@ sk:Používate najnovšiu verziu.
 vn:Bạn đang dùng phiên bản mới nhất.
 uk:Ви вже маєте найновішу версію.
 ru:Вы используете последнюю версию.
-es:Su versión es la más reciente.
+es:Usted tiene la última versión.
 hr:Imate najnoviju inačicu.
 it:Hai già l'ultima versione disponibile
 nl:U gebruikt de meest recente versie.
@@ -3220,7 +3223,7 @@ sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 vn:Đã có phiên bản mới %s. Download phiên bản mới?
 uk:Нова версія %s є доступною. Завантажити нову версію?
 ru:Доступна новая версия: %s. Загрузить ее?
-es:La nueva versión %s está disponible. ¿Desea descargarla?
+es:Está disponible la nueva versión %s. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 it:È disponibile la versione %s. Scaricare la nuova versione?
 nl:Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?
@@ -3263,7 +3266,7 @@ sk:Je k dispozícia nová verzia.
 vn:Đã có phiên bản mới.
 uk:Доступна нова версія.
 ru:Доступна новая версия.
-es:Nueva versión disponible
+es:Nueva versión disponible.
 hr:Dostupna je nova inačica.
 it:È disponibile una nuova versione. 
 nl:Nieuwe versie beschikbaar.
@@ -3307,7 +3310,7 @@ sk:Preskočiť túto verziu.
 vn:Bỏ qua phiên bản này.
 uk:Пропустити цю версію.
 ru:Пропустить эту версию.
-es:Saltarse esta versión.
+es:Ignorar esta versión.
 hr:&Propusti ovu inačicu.
 it:Salta questa versione
 nl:Deze versie overslaan
@@ -3341,6 +3344,7 @@ am:Զգուշացում
 by:Папярэджанне
 hu:Figyelmeztetés
 de:Warnung
+es:Advertencia
 gr:Προσοχή
 fr:Avertissement
 ru:Предупреждение
@@ -3356,6 +3360,7 @@ am:Ընտրանքներ
 by:Параметры SumatraPDF
 hu:A SumatraPDF beállításai
 de:SumatraPDF Optionen
+es:Opciones de SumatraPDF
 gr:Επολογές SumatraPDF
 fr:SumatraPDF Options
 ru:Параметры SumatraPDF
@@ -3429,6 +3434,7 @@ am:&Կարգավորումներ
 by:Налады
 hu:&Beállítások
 de:&Einstellungen
+es:&Configuración
 gr:Ρυθμίσεις
 fr:&Préférences
 ru:Настройки
@@ -3437,7 +3443,6 @@ gr:Ρυθμίσεις
 mk:&Нагодувања
 hr:&Postavke
 cn:设置(&S)
-es:&Configuración
 -
 Fit Page
 am:Ձգել էջը
@@ -3502,6 +3507,7 @@ am:&Ընտրանքներ...
 by:&Параметры...
 hu:&Beállítások
 de:&Optionen…
+es:&Opciones…
 gr:Επιλογές…
 fr:&Options...
 ru:&Параметры...
@@ -3510,13 +3516,13 @@ gr:Επιλ&ογές
 mk:&Опции...
 hr:Mogućnosti...
 cn:选项(&O)...
-es:&Opciones...
 -
 Default &Layout:
 am:Չափը &Լռելայն
 by:&Кампаноўка па змаўчанні
 hu:Oldalmegjelenítési mód:
 de:&Standardlayout:
+es:&Vista Predeterminada:
 gr:Προκαθορισμένη διαμόρφωση σελίδας
 fr:Mise en page par défaut
 ru:&Компоновка по умолчанию
@@ -3525,13 +3531,13 @@ gr:Προκαθορισμένη διαμόρφωση:
 mk:Основен &изглед:
 hr:Pretpostavljeni &izgled:
 cn:缺省样式(&L)
-es:&Vista predeterminada:
 -
 Default &Zoom:
 am:Մեծությունը &Լռելայն
 by:&Маштаб па змаўчанні
 hu:Alap nagyítás:
 de:Standard&vergrößerung:
+es:&Zoom Predeterminado:
 gr:Προκαθορισμένο ζουμ:
 fr:&Zoom par défaut
 ru:&Масштаб по умолчанию
@@ -3540,7 +3546,6 @@ gr:Προκαθορισμένο ζουμ:
 mk:Основно &зголемување:
 hr:Pretpostavljeno &uvećanje:
 cn:缺省缩放(&Z)
-es:&Zoom predeterminado:
 -
 OK
 am:ԼԱՎ
@@ -3559,6 +3564,7 @@ am:Ընդլայնված
 by:Дадаткова
 hu:További programbeállítások
 de:Weiteres
+es:Avanzado
 gr:Προχωρημένα
 fr:Avancé
 ru:Дополнительно
@@ -3567,13 +3573,13 @@ gr:Προχωρημένα
 mk:Напредно
 hr:Napredno
 cn:高级
-es:Avanzado
 -
 Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցույց տալ &Ընտրյալները
 by:Паказваць панэль &закладак (пры магчымасці)
 hu:Dokumentumba ágyazott könyvjelzők mutatása
 de:&Lesezeichen beim Start anzeigen
+es:Mostrar la barra de marcadores cuando esté disponible
 gr:Εμφάνιση Πλευρικής μπάρας σελιδοδεικτών όπου είναι διαθέσιμοι
 fr:Voir la barre latérale des signets quand elle est disponible
 ru:Показывать панель &закладок (при возможности)
@@ -3582,13 +3588,13 @@ gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών �
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
-es:Mostrar la barra de marcadores cuando esté disponible
 -
 Cancel
 am:Մերժել
 by:Адмена
 hu:Mégse
 de:Abbrechen
+es:Cancelar
 gr:Άκυρο
 fr:Annuler
 ru:Отмена
@@ -3597,13 +3603,13 @@ gr:Άκυρο
 mk:Откажи
 hr:Odustani
 cn:取消
-es:Cancelar
 -
 Automatically check for &updates
 am:Ինքնաշխատ ստուգել &թարմացումները
 by:&Аўтаматычная праверка абнаўленняў
 hu:&Program&frissítések automatikus keresése bekapcsoláskor
 de:&Automatisch nach Updates suchen
+es:Revisar &actualizaciones automáticamente
 gr:Αυτόματος έλεγχος για ενημερώσεις
 fr:Vérifier &automatiquement les mises à jour
 ru:&Автоматическая проверка обновлений
@@ -3612,13 +3618,13 @@ gr:Αυτόματος έλεγχος για ενημερώσεις
 mk:Проверувај за &надградби автоматски
 hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
-es:Revisar actualizaciones periódicamente
 -
 &Remember these settings for each document
 am:Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
 by:Запомніць гэтыя параметры для &кожнага дакумента
 hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
 de:&Diese Einstellungen für jedes Dokument merken
+es:&Recordar estas configuraciones para cada documento
 gr:Απομνημόνευση των ρυθμίσεων για κάθε έγγραφο
 fr:Se rappeler de ces paramètres pour chaque document
 ru:Запомнить эти параметры для &каждого документа
@@ -3627,7 +3633,6 @@ gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 mk:&Запомни ги овие нагодувања за секој документ
 hr:&Upamti ove postavke za svaki pojedini dokument
 cn:为每一个文档记住这些设置(&R)
-es:&Recordar esta configuración para cada documento
 -
 Remember &opened files
 am:Հիշել &բացված ֆայլերը
@@ -3635,13 +3640,13 @@ by:&Запомніць адкрытыя файлы
 hu:Korábban megnyitott file-ok listájának tárolása
 gr:Απομνημόνευη πρόσφατων αρχείων
 de:&Eine Liste der geöffneten Dokumente führen
+es:Recordar archiv&os abiertos
 fr:Se rappeler des fichiers ouverts
 ru:&Запомнить открытые файлы
 mk: Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
 cy:Co&fio ffeiliau ar agor
-es:Recordar archiv&os abiertos
 -
 View
 am:Դիտել
@@ -3660,7 +3665,7 @@ dk:Vis
 it:Visualizza
 nl:Beeld
 ta:நோக்கு
-es:Ver
+es:Vista del Documento
 hr:Pogled
 ru:Вид
 ar:العرض
@@ -3706,6 +3711,7 @@ am:&Անցնել էջին.
 by:&Перайсці да старонкі
 hu:&Ugrás oldal:
 de:&Gehe zu Seite:
+es:&Ir a la página:
 gr:Μετάβαση στη σελίδα:
 fr:Aller à la page:
 nl:&Ga naar pagina:
@@ -3715,13 +3721,13 @@ gr:Μετάβαση στη σελίδα:
 mk:&Појди на страница:
 hr:&Idi na stranicu:
 cn:转到页面
-es:&Ir a la página:
 -
 (of %d)
 am:(%d-ից)
 by: (з %d)
 hu:(a %d-ból)
 de:(von %d)
+es:(de &d)
 fr:(de %d)
 nl:(van %d)
 ru: (из %d)
@@ -3730,13 +3736,13 @@ gr:(από %d)
 mk:(од %d)
 hr:(od %d)
 cn:(%d中的)
-es:(de &d)
 -
 Download
 am:Բեռնել
 by:Загрузка
 hu:Letöltés
 de:Herunterladen
+es:Descargar
 gr:Λήψη
 fr:Télécharger
 nl:Downloaden
@@ -3746,13 +3752,13 @@ gr:Λήψη
 mk:Преземи
 hr:Preuzmi
 cn:下载
-es:Descargar
 -
 &Yes
 am:&Այո
 by:Да
 hu:&Igen
 de:&Ja
+es:Si
 gr:&Ναι
 fr:&Oui
 nl:&Ja
@@ -3762,13 +3768,13 @@ gr:&Ναι
 mk:&Да
 hr:&Da
 cn:是(&Y)
-es:Si
 -
 &No
 am:&Ոչ
 by:Нет
 hu:&Nem
 de:&Nein
+es:&No
 gr:Ό&χι
 fr:&Non
 nl:&Nee
@@ -3778,13 +3784,13 @@ gr:Ό&χι
 mk:&Не
 hr:&Ne
 cn:否(&N)
-es:No
 -
 &No, thanks
 am:&Ոչ,շնորհակալություն։
 by:Дзякуй, не
 hu:Köszönöm,&nem
 de:&Nein, danke
+es:No, &gracias
 gr:Όχι, ευχαριστώ
 fr:Non, merci
 nl:&Nee, bedankt
@@ -3794,13 +3800,13 @@ gr:Όχι, ευχαριστώ
 mk:&Не, благодарам
 hr:&Ne, hvala
 cn:不，谢谢(&N)
-es:No, gracias
 -
 Please wait - rendering...
 am:Խնդրում ենք սպասել...
 by:Пачакайце - фармуецца малюнак...
 hu:Feldolgozás, kérem várjon
 de:Bitte einen Moment Geduld…
+es:Renderizando - Espere por favor…
 gr:Παρακαλώ περιμένετε - Φόρτωση…
 fr:S'il vous plaît attendez - génération...
 nl:Een ogenblik geduld - weergeven...
@@ -3810,13 +3816,13 @@ gr:Φόρτωση, παρακαλώ περιμένετε...
 mk:Ве молам почекајте - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待－正在渲染中...
-es:Espere por favor - renderizando...
 -
 Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
 by:Не атрымаўся сфармаваць малюнак старонкі
 hu:Oldalfeldolgozási hiba
 de:Diese Seite kann leider nicht angezeigt werden
+es:No se pudo renderizar la página
 fr:Impossible de générer la page
 nl:Deze pagina kan niet worden weergegeven
 ru:Не удалось сформировать изображение страницы
@@ -3825,13 +3831,13 @@ gr:Δε μπορεί να φορτωθεί η σελίδα
 mk:Не можам да ја прикажам страницата
 hr:Nije moguće iscrtati stranicu
 cn:不能渲染该页面
-es:No se pudo renderizar la página
 -
 No matches were found
 am:Օրինակներ չի գտնվել
 by:Узор не знойдзены
 hu:Nem található a dokumentumban
 de:Das Dokument wurde durchsucht
+es:No se encontraron coincidencias
 fr:Aucun résultat n'a été trouvé
 nl:Geen zoekresultaat gevonden
 ru:Образец не найден
@@ -3840,13 +3846,13 @@ gr:Δε βρέθηκε το κείμενο
 mk:Не се пронајдени совпаѓања
 hr:Pojam nije pronađen
 cn:没有找到匹配项
-es:No se encontraron coincidencias
 -
 Found text at page %d
 am:Տեքստը գտնվել է %d էջում
 by:Тэкст знойдзены на стар. %d
 hu:Találat a(z) %d. oldalon
 de:Text auf Seite %d gefunden
+es:Se encontró el texto en la página %d
 fr:Texte trouvé à la page %d
 nl:Tekst gevonden op pagina %d
 ru:Текст найден на стр. %d
@@ -3855,13 +3861,13 @@ gr:Το κείμενο βρέθηκε στη σελίδα %d
 mk:Пронајдов текст на страница %d
 hr:Tekst je pronađen na stranici %d
 cn:在第%d页找到文本
-es:Se encontró el texto en la página %d
 -
 Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 by:Апрацоўка старонкі %d з %d...
 hu:Keresés a(z) %d./%d oldalon
 de:Suche auf Seite %d von %d…
+es:Buscando %d de %d…
 gr:Αναζήτηση %d από %d...
 fr:Recherche de %d à %d...
 nl:Zoek %d van %d...
@@ -3871,13 +3877,13 @@ gr:Αναζήτηση %d από %d...
 mk:Пребарувам %d од %d страници...
 hr:Pretražujem stranicu %d od %d...
 cn:正在搜索全部%d的%d
-es:Buscando %d de %d...
 -
 PDF documents
 am:PDF փաստաթղթեր
 by:PDF-дакументы
 hu:PDF dokumentumok
 de:PDF-Dokumente
+es:Documentos PDF
 fr:Documents PDF
 nl:PDF-bestanden
 cy:Dogfennau PDF
@@ -3886,13 +3892,13 @@ ru:PDF-документы
 mk:PDF документи
 hr:PDF dokumenti
 cn:PDF文档
-es:Documentos PDF
 -
 All files
 am:Բոլոր ֆայլերը
 by:Усе файлы
 hu:Minden fájl
 de:Alle Dateien
+es:Todos los archivos
 gr:Όλα τα αρχεία
 fr:Tous les fichiers
 nl:Alle bestanden
@@ -3902,13 +3908,13 @@ ru:Все файлы
 mk:Сите датотеки
 hr:Sve datoteke
 cn:所有文件
-es:Todos los archivos
 -
 &Password:
 am:&Գաղտնաբառը
 by:&Пароль:
 hu:&Jelszó:
 de:&Passwort:
+es:&Contraseña:
 gr:Κωδικός:
 fr:Mot de passe:
 nl:&Wachtwoord:
@@ -3918,13 +3924,13 @@ mk:&Лозинка:
 hr:&Lozinka:
 cn:密码(&P)
 cy:&Cyfrinair:
-es:&Contraseña:
 -
 &Find what:
 am:&Ինչ փնտրել.
 by:&Узор:
 hu:Mit keres:
 de:&Suchen nach:
+es:&Buscar qué
 gr:Εύρεση του:
 fr:Rechercher quoi:
 nl:&Zoek naar:
@@ -3933,13 +3939,13 @@ mk:&Најди што:
 hr:&Što tražiti:
 cn:查找(&F):
 cy:&Canfod beth:
-es:&Buscar qué
 -
 Find
 am:Փնտրել
 by:Знайсці
 hu:Keresés
 de:Suchen
+es:Encontrar
 gr:Εύρεση
 fr:Rechercher
 nl:Zoeken
@@ -3948,13 +3954,13 @@ mk:Најди
 hr:Pronađi
 cn:查找
 cy:Canfod
-es:Buscar
 -
 &Match case
 am:&Հաշվի առնել գրանցումները
 by:&Улічваць рэгістр
 hu:Kis- és nagybetűk megkülönböztetése
 de:&Groß-/Kleinschreibung beachten
+es:&Coincidir mayúsculas y minúsculas
 gr:Ταίριασμα πεζών/κεφαλαίων
 fr:Respecter la casse:
 nl:Hoofd-/kleine letters toepassen
@@ -3963,13 +3969,13 @@ mk:&Разликувај мали и големи букви
 hr:Razlikuj velika i mala slova
 cn:匹配大小写(&M)
 cy:&Cydweddu maint
-es:&Coincidir mayúsculas y minúsculas
 -
 Hint: Use the F3 key for finding again
 am:Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը 
 ru:Для паўторнага пошуку выкарыстоўвайце клавішу F3
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
+es:"F3" para encontrar el siguiente resultado
 gr:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
 fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 nl:Tip: Gebruik de F3 toest om verder te zoeken
@@ -3978,13 +3984,13 @@ mk:За повторно пребарување користи F3 од таст�
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 cn:提示：按F3再次查找
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
-es:Utilize la tecla F3 ir al siguiente resultado
 -
 Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
 ru:Не атрымалася ініцыялізаваць друкарку
 hu:A nyomtató inicializálása nem sikerült
 de:Der Drucker konnte nicht initialisiert werden
+es:No se pudo inicializar la impresora
 gr:Απέτυχε η αρχικοποίηση του εκτυπωτή
 fr:Impossible d'initialiser l'imprimante
 nl:Kan de printer niet initialiseren
@@ -3993,13 +3999,13 @@ mk:Не можам да го подготвам печатачот
 hr:Ne mogu inicijalizirati pisač
 cn:不能初始化打印机
 cy:Methu cychwyn yr argraffydd
-es:No se puede inicializar la impresora
 -
 No synchronization info at this position
 am:Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
 by:У гэтай пазіцыі адсутнічае інфармацыя для сінхранізацыі
 hu:Nem található szinkronizálási információ az adott pozícióhoz
 de:Keine Synchronisationsinformationen an diesem Ort
+es:No hay información de sincronización en esta posición
 gr:Δε βρέθηκαν πληροφορίες συγχρονισμού στη θέση αυτή
 fr:Pas de synchronisation des informations à cette position
 nl:Geen synchronisatieinformatie beschikbaar
@@ -4008,13 +4014,13 @@ mk:Нема информации за синхронизација на оваа
 hr:Nema podatka o usklađenosti na ovom položaju
 cn:此位置没有同步信息
 cy:Dim gwybodaeth cydweddu yn y fan hon
-es:No hay información de sincronización en esta posición
 -
 Synchronization file cannot be opened
 am:Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
 by:Не атрымалася адкрыць файл з інфармацыяй для сінхранізацыі
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
 de:Die Synchronisationsdatei kann nicht geöffnet werden
+es:No se pudo abrir el archivo de sincronización
 gr:Το αρχείο συγχρονισμού δε μπορεί να ανοιχθεί
 fr:Le fichier de synchronisation ne peut pas être ouvert
 nl:Het synchronisatiebestand kan niet worden geopend 
@@ -4023,13 +4029,13 @@ mk:Синхронизациската датотека не може да се �
 hr:Datoteka usklađenja ne nože biti otvorena
 cn:不能打开同步文件
 cy:Methu agor ffeil cydweddu
-es:No se pudo abrir el archivo de sincronización
 -
 Page number %u inexistant
 am:%u էջը գոյություն չունի
 by:Старонка %u не існуе
 hu:A(z) %u oldalszám nem létezik
 de:Es gibt keine Seite %u
+es:La página &u no existe
 gr:Δεν υπάρχει σελίδα με αριθμό %u
 fr:La page %u n'existe pas
 nl:Pagina %u bestaat niet
@@ -4038,12 +4044,12 @@ mk:Страница со број %u не постои
 hr:Stranica %u ne postoji
 cn:页号%u不存在
 cy:Nid yw tudalen rhif %u yn bodoli
-es:El número de página &u es inexistente
 -
 No result found around line %u in file %s
 am:%s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
 by:Вынік, які адпавядае радку %u у файле %s, не знойдзены
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
+es:No se encontró resultado cerca de la línea %u en el archivo %s
 gr:Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s 
 fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 nl:Geen resultaat gevonden in bestand %s bij regel %u
@@ -4058,6 +4064,7 @@ am:%s ֆայլը չունի սինխրոնիզացման կետ
 by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
 de:%s hat keinen Synchronisations-Punkt
+es:El archivo fuente %s no posee un punto de sincronización
 gr:Το αρχείο προέλευσης %s δεν λεχει σημείο συγχρονισμού
 fr:Le fichier source %s n'a pas de point de synchronisation
 nl:Bestand %s heeft geen synchronisatiepunt
@@ -4066,13 +4073,13 @@ mk:Изворната датотека %s нема синхронизациск�
 hr:Izvorna datoteka %s nema točke usklađivanja
 cn:源文件%s没有同步点
 cy:Does dim pwynt cydweddu yn ffeil %s
-es:El archivo fuente %s no posee un punto de sincronización
 -
 [Changes detected; refreshing] %s
 am:[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
 by:[Выяўлены змены; адбываецца абнаўленне] %s
 hu:[a file megváltozott; frissítés] %s
 de:[Datei wurde geändert; aktualisiere…] %s
+es:[El archivo ha cambiado; actualizando] %s
 gr:[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
 fr:[Modifications détectées; actualisation] %s
 nl:[Bestand gewijzigd; verversen] %s
@@ -4081,13 +4088,13 @@ mk:[Забележани се промени; освежувам...] %s
 hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
 cy:[Newidiadau wedi eu canfod; adnewyddu]
-es:[El archivo ha cambiado; actualizando] %s
 -
 Unknown source file (%s)
 am:Անհայտ ֆայլ (%s)
 by:Невядомы зыходны файл (%s)
 hu:Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
+es:Archivo fuente desconocido (%s)
 gr:Άγνωστο αρχείο προέλευσης (%s)
 fr:Fichier source unconnu (%s)
 nl:Onbekend bronbestand (%s)
@@ -4096,13 +4103,13 @@ mk:Непозната изворна датотека (%s)
 hr:Nepoznata izvorna datoteka (%s)
 cn:未知的原文件(%s)
 cy:Ffeil ffynhonnell anhysbys (%s)
-es:Archivo fuente desconocido (%s)
 -
 Cannot print this file
 am:Հնարավոր չէ տպել այս ֆայլը
 by:Не атрымалася раздрукаваць гэты файл
 hu:Ez a file nem nyomtatható
 de:Diese Datei darf nicht gedruckt werden
+es:No se puede imprimir este archivo
 gr:Δε μπορεί να γίνει εκτύπωση του αρχείου
 fr:Impossible d'imprimer ce fichier
 nl:Dit bestand kan niet worden afgedrukt
@@ -4111,13 +4118,13 @@ mk:Не можам да ја печатам оваа датотека
 hr:Ne mogu ispisati ovu datoteku
 cn:不能打印此文件
 cy:Methu argraffu'r ffeil
-es:No se puede imprimir este archivo
 -
 PDF Document
 am:PDF փաստաթուղթ
 by:PDF-дaкумент
 hu:PDF dokumentum
 de:PDF-Dokument
+es:Documento PDF
 gr:Αρχείο PDF
 fr:Document PDF
 nl:PDF-bestand
@@ -4126,7 +4133,6 @@ mk:PDF документ
 hr:PDF dokument
 cn:PDF文档
 cy:Dogfen PDF
-es:Documento PDF
 -
 # Please keep this string as short as possible!
 Make SumatraPDF my main PDF reader
@@ -4146,7 +4152,7 @@ dk:Gør SumatraPDF til din standard PDF læser
 it:&Imposta SumatraPDF come lettore predefinito per i file PDF
 nl:SumatraPDF als standaard PDF-lezer instellen
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
-es:Convertir SumatraPDF en lector PDF por defecto
+es:Hacer SumatraPDF el lector PDF por defecto
 hr:Neka SumatraPDF bude pretpostavljeni PDF preglednik
 ru:Ассоциировать SumatraPDF с файлами PDF
 ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
@@ -4195,6 +4201,7 @@ by:SumatraPDF асацыявана з файламі PDF
 bg:SumatraPDF е вашия PDF четец
 hu:A Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
+es:SumatraPDF es el lector PDF por defecto
 gr:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
 fr:SumatraPDF est votre lecteur de PDF
 nl:SumatraPDF is de standaard PDF-lezer
@@ -4203,7 +4210,6 @@ mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 cn:SumatraPDF是你的主要PDF阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
-es:SumatraPDF es el lector PDF por defecto
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
@@ -4212,6 +4218,7 @@ by:Зараз SumatraPDF асацыявана з файламі PDF
 bg:SumatraPDF вече трябва да е четец на PDF по подразбиране
 hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
+es:SumatraPDF debería ser ahora tu lector PDF por defecto
 gr:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
 fr:SumatraPDF doit maintenant être votre lecteur de PDF
 nl:SumatraPDF zou nu de standaard PDF-lezer moeten zijn
@@ -4220,7 +4227,6 @@ mk:Сега SumatraPDF би требало да е твојот основен P
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 cn:现在SumatraPDF应该是你的主要PDF阅读器了
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
-es:SumatraPDF debería ser ahora tu lector PDF por defecto
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
@@ -4229,6 +4235,7 @@ by:У мабільным рэжыме змяніць PDF-в'юер нельга
 bg:PDF четеца не може да бъде сменен в преносим режим
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 de:Standardanwendung im portablen Modus nicht veränderbar
+es:No se puede cambiar el lector PDF por defecto en modo portátil
 gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
 fr:Le lecteur de PDF ne peut être changer en mode portable
 nl:Standaard PDF-lezer kan niet worden aangepast in portable mode
@@ -4237,7 +4244,6 @@ mk:Основниот PDF читач не може да се промени во
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变主要阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
-es:No se puede cambiar el lector PDF por defecto en modo portátil
 -
 Open in &Adobe Reader
 am:Բացել &Adobe Reader-ում
@@ -4245,6 +4251,7 @@ by:Адкрыць у &Adobe Reader
 bg:Отвори с &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
 de:Mit &Adobe Reader öffnen
+es:Abrir en &Adobe Reader
 gr:Άνοιγμα με &Adobe Reader
 fr:Ouvrir dans &Adobe Reader
 nl:Openen met &Adobe Reader
@@ -4253,4 +4260,3 @@ mk:Отвори со &Adobe Reader
 hr:Otvori u programu &Adobe Reader
 cn:在&Adobe Reader中打开
 cy:Agor yn &Adobe Reader
-es:Abrir en &Adobe Reader
