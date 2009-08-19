@@ -23,7 +23,7 @@
 # Hungarian:
 #   Richard Magyar (magyar_richard@yahoo.com)
 #   Lázár Viktor (0.9.4)
-# Persian: 
+# Persian:
 #   Adham Beyki (odinay@gmail.com)
 #   Mardi Az Pansad Dastgah Artesh
 # Lars J. Helbo - Danish
@@ -2770,7 +2770,7 @@ hu:Nyelv kiválasztása (Change language)
 ja:言語の変更 (Change language)
 kr:언어 변경 (Change language)
 th:เปลี่ยนภาษา (Change language)
-gl: Cambiar lingua (Change language)
+gl:Cambiar lingua (Change language)
 tl:Ibahin ang Wika (Change language)
 va:Canviar Idioma (Change language)
 ca:Canvia la llengua (Change language)
@@ -2951,7 +2951,7 @@ cy:Cysylltu gyda ffeiliau PDF?
 ga:Comhthiomsaigh le comhaid PDF?
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 pa:PDF ਫਾਈਲਾਂ ਨਾਲ ਸੰਬੰਦ ਬਣਾਓ ?
-hi: PDF फाईलों से संबंध बनाइए?
+hi:PDF फाईलों से संबंध बनाइए?
 nn:Tilknytte PDF-filer?
 fi:Tiedostosidos PDF-tiedostoihin?
 sv:Koppla ihop med PDF-filer?
@@ -3102,7 +3102,7 @@ fr:Pas de nouvelle version disponible
 no:Ingen ny versjon tilgjenglig.
 eu:Ez dago bertsio berririk.
 mk:Нема понова верзија.
-fa: نسخه تازه دردسترس نمی باشد
+fa:نسخه تازه دردسترس نمی باشد
 hu:Nincs újabb verzió.
 ja:新しいバージョンが利用できません。
 kr:새로운 버전이 없습니다.
@@ -3643,7 +3643,7 @@ de:&Eine Liste der geöffneten Dokumente führen
 es:Recordar archiv&os abiertos
 fr:Se rappeler des fichiers ouverts
 ru:&Запомнить открытые файлы
-mk: Запомни ги &отворените датотеки
+mk:Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
 cy:Co&fio ffeiliau ar agor
@@ -3724,13 +3724,13 @@ cn:转到页面
 -
 (of %d)
 am:(%d-ից)
-by: (з %d)
+by:(з %d)
 hu:(a %d-ból)
 de:(von %d)
-es:(de &d)
+es:(de %d)
 fr:(de %d)
 nl:(van %d)
-ru: (из %d)
+ru:(из %d)
 cy:(o %d)
 gr:(από %d) 
 mk:(од %d)
