@@ -79,7 +79,11 @@ int             FilePath_CompareA(const char *lhs, const char *rhs);
 #define FilePath_Compare   FilePath_CompareA
 #endif
 
+#ifdef _WIN32
+char *          file_read_all(const TCHAR *file_path, uint64_t *file_size_out);
+#else
 char *          file_read_all(const char *file_path, uint64_t *file_size_out);
+#endif
 uint64_t        file_size_get(const char *file_path);
 BOOL            write_to_file(const TCHAR *file_path, void *data, uint64_t data_len);
 BOOL            file_exists(const char *file_path);

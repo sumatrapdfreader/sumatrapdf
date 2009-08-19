@@ -570,14 +570,14 @@ uint64_t file_size_get(const char *file_path)
 #endif
 
 #ifdef _WIN32
-char *file_read_all(const char *file_path, uint64_t *file_size_out)
+char *file_read_all(const TCHAR *file_path, uint64_t *file_size_out)
 {
     DWORD       size, size_read;
     HANDLE      h;
     char *      data = NULL;
     int         f_ok;
 
-    h = CreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
+    h = CreateFile(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
     if (h == INVALID_HANDLE_VALUE)
         return NULL;

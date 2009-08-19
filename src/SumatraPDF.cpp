@@ -1303,16 +1303,13 @@ static bool Prefs_Load(void)
 
     TCHAR * prefsFilename = Prefs_GetFileName();
     assert(prefsFilename);
-    const char * prefsFilenameA = tstr_to_multibyte(prefsFilename, CP_ACP);
-    assert(prefsFilenameA);
     uint64_t prefsFileLen;
-    prefsTxt = file_read_all(prefsFilenameA, &prefsFileLen);
+    prefsTxt = file_read_all(prefsFilename, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
         assert(ok);
     }
 
-    free((void *)prefsFilenameA);
     free(prefsFilename);
     free(prefsTxt);
     return ok;
@@ -7349,9 +7346,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     }
                 }
                 else if (destName && !firstDocLoaded) {
-                    char * destNameA = tstr_to_multibyte(destName, CP_ACP);
-                    win->dm->goToNamedDest(destNameA);
-                    free(destNameA);
+                    char * destName_utf8 = tstr_to_utf8(destName);
+                    win->dm->goToNamedDest(destName_utf8);
+                    free(destName_utf8);
                 }
                 else if (pageNumber > 0 && !firstDocLoaded) {
                     if (win->dm->validPageNo(pageNumber))
