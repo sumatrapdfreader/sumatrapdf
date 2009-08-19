@@ -311,7 +311,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_aes.c"
+					RelativePath=".\mupdf\fitz\filt_aesd.c"
 					>
 				</File>
 				<File
@@ -324,6 +324,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\filt_arc4.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\filt_copy.c"
 					>
 				</File>
 				<File

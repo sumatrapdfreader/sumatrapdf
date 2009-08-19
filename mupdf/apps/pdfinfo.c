@@ -199,7 +199,7 @@ gatherglobalinfo(void)
 		if (!fz_isdict(cryptinfo->ref) && !fz_isindirect(cryptinfo->ref))
 			die(fz_throw("not an indirect crypt object"));
 
-		cryptinfo->u.crypt.obj = xref->crypt->encrypt;
+		// XXX cryptinfo->u.crypt.obj = xref->crypt->encrypt;
 	}
 }
 

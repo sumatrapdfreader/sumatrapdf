@@ -91,23 +91,23 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 		pdfapp_error(app, error);
 	}
 
-	/*
-	 * Handle encrypted PDF files
-	 */
-
 	error = pdf_decryptxref(app->xref);
 	if (error)
 		pdfapp_error(app, error);
 
-	if (app->xref->crypt)
+	/*
+	 * Handle encrypted PDF files
+	 */
+
+	if (pdf_needspassword(app->xref))
 	{
-		int okay = pdf_setpassword(app->xref->crypt, password);
+		int okay = pdf_authenticatepassword(app->xref, password);
 		while (!okay)
 		{
 			password = winpassword(app, filename);
 			if (!password)
 				exit(1);
-			okay = pdf_setpassword(app->xref->crypt, password);
+			okay = pdf_authenticatepassword(app->xref, password);
 			if (!okay)
 				pdfapp_warn(app, "Invalid password.");
 		}

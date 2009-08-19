@@ -134,9 +134,9 @@ fz_error openxref(char *filename, char *password)
 		return error;
 	}
 
-	if (xref->crypt)
+	if (pdf_needspassword(xref))
 	{
-		int okay = pdf_setpassword(xref->crypt, password);
+		int okay = pdf_authenticatepassword(xref, password);
 		if (!okay)
 		{
 			logbench("Warning: pdf_setpassword() failed, incorrect password\n");

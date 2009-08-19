@@ -50,9 +50,9 @@ void openxref(char *filename, char *password, int dieonbadpass)
 	if (error)
 		die(error);
 
-	if (xref->crypt)
+	if (pdf_needspassword(xref))
 	{
-		okay = pdf_setpassword(xref->crypt, password);
+		okay = pdf_authenticatepassword(xref, password);
 		if (!okay && !dieonbadpass)
 			fz_warn("invalid password, attempting to continue.");
 		else if (!okay && dieonbadpass)

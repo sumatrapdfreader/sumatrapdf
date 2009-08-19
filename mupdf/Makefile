@@ -188,8 +188,8 @@ FITZ_SRC = \
 	base_unicode.c base_string.c node_misc1.c node_misc2.c node_optimize.c node_path.c \
 	node_text.c node_toxml.c node_tree.c res_colorspace.c res_font.c \
 	res_image.c res_shade.c crypt_aes.c crypt_arc4.c crypt_crc32.c \
-	crypt_md5.c filt_a85d.c filt_a85e.c filt_aes.c filt_ahxd.c filt_ahxe.c \
-	filt_arc4.c filt_faxd.c filt_faxdtab.c filt_faxe.c filt_faxetab.c \
+	crypt_md5.c filt_a85d.c filt_a85e.c filt_aesd.c filt_ahxd.c filt_ahxe.c \
+	filt_arc4.c filt_copy.c filt_faxd.c filt_faxdtab.c filt_faxe.c filt_faxetab.c \
 	filt_flate.c filt_lzwd.c filt_lzwe.c filt_null.c filt_pipeline.c \
 	filt_predict.c filt_rld.c filt_rle.c obj_array.c obj_dict.c \
 	obj_parse.c obj_print.c obj_simple.c stm_buffer.c stm_filter.c \

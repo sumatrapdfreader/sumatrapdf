@@ -1,936 +1,1100 @@
-/* Most of this code is extracted from public domain libtomcrypt 1.17 
-   (http://libtom.org/) */
+/*
+ *  FIPS-197 compliant AES implementation
+ *
+ *  Copyright (C) 2006-2007  Christophe Devine
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *    * Redistributions of source code _must_ retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form may or may not reproduce the above
+ *      copyright notice, this list of conditions and the following
+ *      disclaimer in the documentation and/or other materials provided
+ *      with the distribution.
+ *    * Neither the name of XySSL nor the names of its contributors may be
+ *      used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ *  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*
+ *  The AES block cipher was designed by Vincent Rijmen and Joan Daemen.
+ *
+ *  http://csrc.nist.gov/encryption/aes/rijndael/Rijndael.pdf
+ *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
+ */
 
 #include "fitz_base.h"
 #include "fitz_stream.h"
 
-#define LTC_NO_ASM 1
+#define aes_context fz_aes
 
-/* This part extracted from tomcrypt.h in libtomcrypt 1.17 */
+/* AES block cipher implementation from XYSSL */
 
-enum {
-   CRYPT_OK=0,             /* Result OK */
-   CRYPT_ERROR,            /* Generic Error */
-   CRYPT_INVALID_KEYSIZE,  /* Invalid key size given */
-   CRYPT_INVALID_ROUNDS,   /* Invalid number of rounds */
-   CRYPT_INVALID_ARG,      /* Generic invalid argument */
-};
-
-/* End of part extracted from tomcrypt.h */
-
-#define STORE32H(x, y)                                                                     \
-     { (y)[0] = (unsigned char)(((x)>>24)&255); (y)[1] = (unsigned char)(((x)>>16)&255);   \
-       (y)[2] = (unsigned char)(((x)>>8)&255); (y)[3] = (unsigned char)((x)&255); }
-
-#define LOAD32H(x, y)                            \
-     { x = ((unsigned long)((y)[0] & 255)<<24) | \
-           ((unsigned long)((y)[1] & 255)<<16) | \
-           ((unsigned long)((y)[2] & 255)<<8)  | \
-           ((unsigned long)((y)[3] & 255)); }
-
-/* 32-bit Rotates */
-#if defined(_MSC_VER)
-
-/* instrinsic rotate */
-#include <stdlib.h>
-#pragma intrinsic(_lrotr,_lrotl)
-#define ROR(x,n) _lrotr(x,n)
-#define ROL(x,n) _lrotl(x,n)
-#define RORc(x,n) _lrotr(x,n)
-#define ROLc(x,n) _lrotl(x,n)
-
-#elif !defined(__STRICT_ANSI__) && defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && !defined(INTEL_CC) && !defined(LTC_NO_ASM)
-
-static inline unsigned ROL(unsigned word, int i)
-{
-   asm ("roll %%cl,%0"
-      :"=r" (word)
-      :"0" (word),"c" (i));
-   return word;
-}
-
-static inline unsigned ROR(unsigned word, int i)
-{
-   asm ("rorl %%cl,%0"
-      :"=r" (word)
-      :"0" (word),"c" (i));
-   return word;
-}
-
-#ifndef LTC_NO_ROLC
-
-static inline unsigned ROLc(unsigned word, const int i)
-{
-   asm ("roll %2,%0"
-      :"=r" (word)
-      :"0" (word),"I" (i));
-   return word;
-}
-
-static inline unsigned RORc(unsigned word, const int i)
-{
-   asm ("rorl %2,%0"
-      :"=r" (word)
-      :"0" (word),"I" (i));
-   return word;
-}
-
-#else
-
-#define ROLc ROL
-#define RORc ROR
-
-#endif
-
-#elif !defined(__STRICT_ANSI__) && defined(LTC_PPC32)
-
-static inline unsigned ROL(unsigned word, int i)
-{
-   asm ("rotlw %0,%0,%2"
-      :"=r" (word)
-      :"0" (word),"r" (i));
-   return word;
-}
-
-static inline unsigned ROR(unsigned word, int i)
-{
-   asm ("rotlw %0,%0,%2"
-      :"=r" (word)
-      :"0" (word),"r" (32-i));
-   return word;
-}
-
-#ifndef LTC_NO_ROLC
-
-static inline unsigned ROLc(unsigned word, const int i)
-{
-   asm ("rotlwi %0,%0,%2"
-      :"=r" (word)
-      :"0" (word),"I" (i));
-   return word;
-}
-
-static inline unsigned RORc(unsigned word, const int i)
-{
-   asm ("rotrwi %0,%0,%2"
-      :"=r" (word)
-      :"0" (word),"I" (i));
-   return word;
-}
-
-#else
-
-#define ROLc ROL
-#define RORc ROR
-
-#endif
-
-
-#else
-
-/* rotates the hard way */
-#define ROL(x, y) ( (((unsigned long)(x)<<(unsigned long)((y)&31)) | (((unsigned long)(x)&0xFFFFFFFFUL)>>(unsigned long)(32-((y)&31)))) & 0xFFFFFFFFUL)
-#define ROR(x, y) ( ((((unsigned long)(x)&0xFFFFFFFFUL)>>(unsigned long)((y)&31)) | ((unsigned long)(x)<<(unsigned long)(32-((y)&31)))) & 0xFFFFFFFFUL)
-#define ROLc(x, y) ( (((unsigned long)(x)<<(unsigned long)((y)&31)) | (((unsigned long)(x)&0xFFFFFFFFUL)>>(unsigned long)(32-((y)&31)))) & 0xFFFFFFFFUL)
-#define RORc(x, y) ( ((((unsigned long)(x)&0xFFFFFFFFUL)>>(unsigned long)((y)&31)) | ((unsigned long)(x)<<(unsigned long)(32-((y)&31)))) & 0xFFFFFFFFUL)
-
-#endif
-
-/* extract a byte portably */
-#ifdef _MSC_VER
-   #define byte(x, n) ((unsigned char)((x) >> (8 * (n))))
-#else
-   #define byte(x, n) (((x) >> (8 * (n))) & 255)
-#endif
-
-/* End of part extracted from tomcrypt_macros.h in libtomcrypt 1.17 */
-
-/* This part extracted from tomcrypt_argchk.h */
-#define LTC_ARGCHK(x)   if (!(x)) return CRYPT_INVALID_ARG;
-#define LTC_ARGCHKVD(x) if (!(x)) return;
-/* End of part extracted from tomcrypt_argchk.h */
-
-/* This part extracted from aes_tab.c in libtomcrypt 1.17 */
-
-/* The precomputed tables for AES */
 /*
-Te0[x] = S [x].[02, 01, 01, 03];
-Te1[x] = S [x].[03, 02, 01, 01];
-Te2[x] = S [x].[01, 03, 02, 01];
-Te3[x] = S [x].[01, 01, 03, 02];
-Te4[x] = S [x].[01, 01, 01, 01];
-
-Td0[x] = Si[x].[0e, 09, 0d, 0b];
-Td1[x] = Si[x].[0b, 0e, 09, 0d];
-Td2[x] = Si[x].[0d, 0b, 0e, 09];
-Td3[x] = Si[x].[09, 0d, 0b, 0e];
-Td4[x] = Si[x].[01, 01, 01, 01];
-*/
-
-/**
-  @file aes_tab.c
-  AES tables
-*/  
-static const ulong32 TE0[256] = {
-    0xc66363a5UL, 0xf87c7c84UL, 0xee777799UL, 0xf67b7b8dUL,
-    0xfff2f20dUL, 0xd66b6bbdUL, 0xde6f6fb1UL, 0x91c5c554UL,
-    0x60303050UL, 0x02010103UL, 0xce6767a9UL, 0x562b2b7dUL,
-    0xe7fefe19UL, 0xb5d7d762UL, 0x4dababe6UL, 0xec76769aUL,
-    0x8fcaca45UL, 0x1f82829dUL, 0x89c9c940UL, 0xfa7d7d87UL,
-    0xeffafa15UL, 0xb25959ebUL, 0x8e4747c9UL, 0xfbf0f00bUL,
-    0x41adadecUL, 0xb3d4d467UL, 0x5fa2a2fdUL, 0x45afafeaUL,
-    0x239c9cbfUL, 0x53a4a4f7UL, 0xe4727296UL, 0x9bc0c05bUL,
-    0x75b7b7c2UL, 0xe1fdfd1cUL, 0x3d9393aeUL, 0x4c26266aUL,
-    0x6c36365aUL, 0x7e3f3f41UL, 0xf5f7f702UL, 0x83cccc4fUL,
-    0x6834345cUL, 0x51a5a5f4UL, 0xd1e5e534UL, 0xf9f1f108UL,
-    0xe2717193UL, 0xabd8d873UL, 0x62313153UL, 0x2a15153fUL,
-    0x0804040cUL, 0x95c7c752UL, 0x46232365UL, 0x9dc3c35eUL,
-    0x30181828UL, 0x379696a1UL, 0x0a05050fUL, 0x2f9a9ab5UL,
-    0x0e070709UL, 0x24121236UL, 0x1b80809bUL, 0xdfe2e23dUL,
-    0xcdebeb26UL, 0x4e272769UL, 0x7fb2b2cdUL, 0xea75759fUL,
-    0x1209091bUL, 0x1d83839eUL, 0x582c2c74UL, 0x341a1a2eUL,
-    0x361b1b2dUL, 0xdc6e6eb2UL, 0xb45a5aeeUL, 0x5ba0a0fbUL,
-    0xa45252f6UL, 0x763b3b4dUL, 0xb7d6d661UL, 0x7db3b3ceUL,
-    0x5229297bUL, 0xdde3e33eUL, 0x5e2f2f71UL, 0x13848497UL,
-    0xa65353f5UL, 0xb9d1d168UL, 0x00000000UL, 0xc1eded2cUL,
-    0x40202060UL, 0xe3fcfc1fUL, 0x79b1b1c8UL, 0xb65b5bedUL,
-    0xd46a6abeUL, 0x8dcbcb46UL, 0x67bebed9UL, 0x7239394bUL,
-    0x944a4adeUL, 0x984c4cd4UL, 0xb05858e8UL, 0x85cfcf4aUL,
-    0xbbd0d06bUL, 0xc5efef2aUL, 0x4faaaae5UL, 0xedfbfb16UL,
-    0x864343c5UL, 0x9a4d4dd7UL, 0x66333355UL, 0x11858594UL,
-    0x8a4545cfUL, 0xe9f9f910UL, 0x04020206UL, 0xfe7f7f81UL,
-    0xa05050f0UL, 0x783c3c44UL, 0x259f9fbaUL, 0x4ba8a8e3UL,
-    0xa25151f3UL, 0x5da3a3feUL, 0x804040c0UL, 0x058f8f8aUL,
-    0x3f9292adUL, 0x219d9dbcUL, 0x70383848UL, 0xf1f5f504UL,
-    0x63bcbcdfUL, 0x77b6b6c1UL, 0xafdada75UL, 0x42212163UL,
-    0x20101030UL, 0xe5ffff1aUL, 0xfdf3f30eUL, 0xbfd2d26dUL,
-    0x81cdcd4cUL, 0x180c0c14UL, 0x26131335UL, 0xc3ecec2fUL,
-    0xbe5f5fe1UL, 0x359797a2UL, 0x884444ccUL, 0x2e171739UL,
-    0x93c4c457UL, 0x55a7a7f2UL, 0xfc7e7e82UL, 0x7a3d3d47UL,
-    0xc86464acUL, 0xba5d5de7UL, 0x3219192bUL, 0xe6737395UL,
-    0xc06060a0UL, 0x19818198UL, 0x9e4f4fd1UL, 0xa3dcdc7fUL,
-    0x44222266UL, 0x542a2a7eUL, 0x3b9090abUL, 0x0b888883UL,
-    0x8c4646caUL, 0xc7eeee29UL, 0x6bb8b8d3UL, 0x2814143cUL,
-    0xa7dede79UL, 0xbc5e5ee2UL, 0x160b0b1dUL, 0xaddbdb76UL,
-    0xdbe0e03bUL, 0x64323256UL, 0x743a3a4eUL, 0x140a0a1eUL,
-    0x924949dbUL, 0x0c06060aUL, 0x4824246cUL, 0xb85c5ce4UL,
-    0x9fc2c25dUL, 0xbdd3d36eUL, 0x43acacefUL, 0xc46262a6UL,
-    0x399191a8UL, 0x319595a4UL, 0xd3e4e437UL, 0xf279798bUL,
-    0xd5e7e732UL, 0x8bc8c843UL, 0x6e373759UL, 0xda6d6db7UL,
-    0x018d8d8cUL, 0xb1d5d564UL, 0x9c4e4ed2UL, 0x49a9a9e0UL,
-    0xd86c6cb4UL, 0xac5656faUL, 0xf3f4f407UL, 0xcfeaea25UL,
-    0xca6565afUL, 0xf47a7a8eUL, 0x47aeaee9UL, 0x10080818UL,
-    0x6fbabad5UL, 0xf0787888UL, 0x4a25256fUL, 0x5c2e2e72UL,
-    0x381c1c24UL, 0x57a6a6f1UL, 0x73b4b4c7UL, 0x97c6c651UL,
-    0xcbe8e823UL, 0xa1dddd7cUL, 0xe874749cUL, 0x3e1f1f21UL,
-    0x964b4bddUL, 0x61bdbddcUL, 0x0d8b8b86UL, 0x0f8a8a85UL,
-    0xe0707090UL, 0x7c3e3e42UL, 0x71b5b5c4UL, 0xcc6666aaUL,
-    0x904848d8UL, 0x06030305UL, 0xf7f6f601UL, 0x1c0e0e12UL,
-    0xc26161a3UL, 0x6a35355fUL, 0xae5757f9UL, 0x69b9b9d0UL,
-    0x17868691UL, 0x99c1c158UL, 0x3a1d1d27UL, 0x279e9eb9UL,
-    0xd9e1e138UL, 0xebf8f813UL, 0x2b9898b3UL, 0x22111133UL,
-    0xd26969bbUL, 0xa9d9d970UL, 0x078e8e89UL, 0x339494a7UL,
-    0x2d9b9bb6UL, 0x3c1e1e22UL, 0x15878792UL, 0xc9e9e920UL,
-    0x87cece49UL, 0xaa5555ffUL, 0x50282878UL, 0xa5dfdf7aUL,
-    0x038c8c8fUL, 0x59a1a1f8UL, 0x09898980UL, 0x1a0d0d17UL,
-    0x65bfbfdaUL, 0xd7e6e631UL, 0x844242c6UL, 0xd06868b8UL,
-    0x824141c3UL, 0x299999b0UL, 0x5a2d2d77UL, 0x1e0f0f11UL,
-    0x7bb0b0cbUL, 0xa85454fcUL, 0x6dbbbbd6UL, 0x2c16163aUL,
-};
-
-static const ulong32 Te4[256] = {
-    0x63636363UL, 0x7c7c7c7cUL, 0x77777777UL, 0x7b7b7b7bUL,
-    0xf2f2f2f2UL, 0x6b6b6b6bUL, 0x6f6f6f6fUL, 0xc5c5c5c5UL,
-    0x30303030UL, 0x01010101UL, 0x67676767UL, 0x2b2b2b2bUL,
-    0xfefefefeUL, 0xd7d7d7d7UL, 0xababababUL, 0x76767676UL,
-    0xcacacacaUL, 0x82828282UL, 0xc9c9c9c9UL, 0x7d7d7d7dUL,
-    0xfafafafaUL, 0x59595959UL, 0x47474747UL, 0xf0f0f0f0UL,
-    0xadadadadUL, 0xd4d4d4d4UL, 0xa2a2a2a2UL, 0xafafafafUL,
-    0x9c9c9c9cUL, 0xa4a4a4a4UL, 0x72727272UL, 0xc0c0c0c0UL,
-    0xb7b7b7b7UL, 0xfdfdfdfdUL, 0x93939393UL, 0x26262626UL,
-    0x36363636UL, 0x3f3f3f3fUL, 0xf7f7f7f7UL, 0xccccccccUL,
-    0x34343434UL, 0xa5a5a5a5UL, 0xe5e5e5e5UL, 0xf1f1f1f1UL,
-    0x71717171UL, 0xd8d8d8d8UL, 0x31313131UL, 0x15151515UL,
-    0x04040404UL, 0xc7c7c7c7UL, 0x23232323UL, 0xc3c3c3c3UL,
-    0x18181818UL, 0x96969696UL, 0x05050505UL, 0x9a9a9a9aUL,
-    0x07070707UL, 0x12121212UL, 0x80808080UL, 0xe2e2e2e2UL,
-    0xebebebebUL, 0x27272727UL, 0xb2b2b2b2UL, 0x75757575UL,
-    0x09090909UL, 0x83838383UL, 0x2c2c2c2cUL, 0x1a1a1a1aUL,
-    0x1b1b1b1bUL, 0x6e6e6e6eUL, 0x5a5a5a5aUL, 0xa0a0a0a0UL,
-    0x52525252UL, 0x3b3b3b3bUL, 0xd6d6d6d6UL, 0xb3b3b3b3UL,
-    0x29292929UL, 0xe3e3e3e3UL, 0x2f2f2f2fUL, 0x84848484UL,
-    0x53535353UL, 0xd1d1d1d1UL, 0x00000000UL, 0xededededUL,
-    0x20202020UL, 0xfcfcfcfcUL, 0xb1b1b1b1UL, 0x5b5b5b5bUL,
-    0x6a6a6a6aUL, 0xcbcbcbcbUL, 0xbebebebeUL, 0x39393939UL,
-    0x4a4a4a4aUL, 0x4c4c4c4cUL, 0x58585858UL, 0xcfcfcfcfUL,
-    0xd0d0d0d0UL, 0xefefefefUL, 0xaaaaaaaaUL, 0xfbfbfbfbUL,
-    0x43434343UL, 0x4d4d4d4dUL, 0x33333333UL, 0x85858585UL,
-    0x45454545UL, 0xf9f9f9f9UL, 0x02020202UL, 0x7f7f7f7fUL,
-    0x50505050UL, 0x3c3c3c3cUL, 0x9f9f9f9fUL, 0xa8a8a8a8UL,
-    0x51515151UL, 0xa3a3a3a3UL, 0x40404040UL, 0x8f8f8f8fUL,
-    0x92929292UL, 0x9d9d9d9dUL, 0x38383838UL, 0xf5f5f5f5UL,
-    0xbcbcbcbcUL, 0xb6b6b6b6UL, 0xdadadadaUL, 0x21212121UL,
-    0x10101010UL, 0xffffffffUL, 0xf3f3f3f3UL, 0xd2d2d2d2UL,
-    0xcdcdcdcdUL, 0x0c0c0c0cUL, 0x13131313UL, 0xececececUL,
-    0x5f5f5f5fUL, 0x97979797UL, 0x44444444UL, 0x17171717UL,
-    0xc4c4c4c4UL, 0xa7a7a7a7UL, 0x7e7e7e7eUL, 0x3d3d3d3dUL,
-    0x64646464UL, 0x5d5d5d5dUL, 0x19191919UL, 0x73737373UL,
-    0x60606060UL, 0x81818181UL, 0x4f4f4f4fUL, 0xdcdcdcdcUL,
-    0x22222222UL, 0x2a2a2a2aUL, 0x90909090UL, 0x88888888UL,
-    0x46464646UL, 0xeeeeeeeeUL, 0xb8b8b8b8UL, 0x14141414UL,
-    0xdedededeUL, 0x5e5e5e5eUL, 0x0b0b0b0bUL, 0xdbdbdbdbUL,
-    0xe0e0e0e0UL, 0x32323232UL, 0x3a3a3a3aUL, 0x0a0a0a0aUL,
-    0x49494949UL, 0x06060606UL, 0x24242424UL, 0x5c5c5c5cUL,
-    0xc2c2c2c2UL, 0xd3d3d3d3UL, 0xacacacacUL, 0x62626262UL,
-    0x91919191UL, 0x95959595UL, 0xe4e4e4e4UL, 0x79797979UL,
-    0xe7e7e7e7UL, 0xc8c8c8c8UL, 0x37373737UL, 0x6d6d6d6dUL,
-    0x8d8d8d8dUL, 0xd5d5d5d5UL, 0x4e4e4e4eUL, 0xa9a9a9a9UL,
-    0x6c6c6c6cUL, 0x56565656UL, 0xf4f4f4f4UL, 0xeaeaeaeaUL,
-    0x65656565UL, 0x7a7a7a7aUL, 0xaeaeaeaeUL, 0x08080808UL,
-    0xbabababaUL, 0x78787878UL, 0x25252525UL, 0x2e2e2e2eUL,
-    0x1c1c1c1cUL, 0xa6a6a6a6UL, 0xb4b4b4b4UL, 0xc6c6c6c6UL,
-    0xe8e8e8e8UL, 0xddddddddUL, 0x74747474UL, 0x1f1f1f1fUL,
-    0x4b4b4b4bUL, 0xbdbdbdbdUL, 0x8b8b8b8bUL, 0x8a8a8a8aUL,
-    0x70707070UL, 0x3e3e3e3eUL, 0xb5b5b5b5UL, 0x66666666UL,
-    0x48484848UL, 0x03030303UL, 0xf6f6f6f6UL, 0x0e0e0e0eUL,
-    0x61616161UL, 0x35353535UL, 0x57575757UL, 0xb9b9b9b9UL,
-    0x86868686UL, 0xc1c1c1c1UL, 0x1d1d1d1dUL, 0x9e9e9e9eUL,
-    0xe1e1e1e1UL, 0xf8f8f8f8UL, 0x98989898UL, 0x11111111UL,
-    0x69696969UL, 0xd9d9d9d9UL, 0x8e8e8e8eUL, 0x94949494UL,
-    0x9b9b9b9bUL, 0x1e1e1e1eUL, 0x87878787UL, 0xe9e9e9e9UL,
-    0xcecececeUL, 0x55555555UL, 0x28282828UL, 0xdfdfdfdfUL,
-    0x8c8c8c8cUL, 0xa1a1a1a1UL, 0x89898989UL, 0x0d0d0d0dUL,
-    0xbfbfbfbfUL, 0xe6e6e6e6UL, 0x42424242UL, 0x68686868UL,
-    0x41414141UL, 0x99999999UL, 0x2d2d2d2dUL, 0x0f0f0f0fUL,
-    0xb0b0b0b0UL, 0x54545454UL, 0xbbbbbbbbUL, 0x16161616UL,
-};
-
-#ifndef ENCRYPT_ONLY
-
-static const ulong32 TD0[256] = {
-    0x51f4a750UL, 0x7e416553UL, 0x1a17a4c3UL, 0x3a275e96UL,
-    0x3bab6bcbUL, 0x1f9d45f1UL, 0xacfa58abUL, 0x4be30393UL,
-    0x2030fa55UL, 0xad766df6UL, 0x88cc7691UL, 0xf5024c25UL,
-    0x4fe5d7fcUL, 0xc52acbd7UL, 0x26354480UL, 0xb562a38fUL,
-    0xdeb15a49UL, 0x25ba1b67UL, 0x45ea0e98UL, 0x5dfec0e1UL,
-    0xc32f7502UL, 0x814cf012UL, 0x8d4697a3UL, 0x6bd3f9c6UL,
-    0x038f5fe7UL, 0x15929c95UL, 0xbf6d7aebUL, 0x955259daUL,
-    0xd4be832dUL, 0x587421d3UL, 0x49e06929UL, 0x8ec9c844UL,
-    0x75c2896aUL, 0xf48e7978UL, 0x99583e6bUL, 0x27b971ddUL,
-    0xbee14fb6UL, 0xf088ad17UL, 0xc920ac66UL, 0x7dce3ab4UL,
-    0x63df4a18UL, 0xe51a3182UL, 0x97513360UL, 0x62537f45UL,
-    0xb16477e0UL, 0xbb6bae84UL, 0xfe81a01cUL, 0xf9082b94UL,
-    0x70486858UL, 0x8f45fd19UL, 0x94de6c87UL, 0x527bf8b7UL,
-    0xab73d323UL, 0x724b02e2UL, 0xe31f8f57UL, 0x6655ab2aUL,
-    0xb2eb2807UL, 0x2fb5c203UL, 0x86c57b9aUL, 0xd33708a5UL,
-    0x302887f2UL, 0x23bfa5b2UL, 0x02036abaUL, 0xed16825cUL,
-    0x8acf1c2bUL, 0xa779b492UL, 0xf307f2f0UL, 0x4e69e2a1UL,
-    0x65daf4cdUL, 0x0605bed5UL, 0xd134621fUL, 0xc4a6fe8aUL,
-    0x342e539dUL, 0xa2f355a0UL, 0x058ae132UL, 0xa4f6eb75UL,
-    0x0b83ec39UL, 0x4060efaaUL, 0x5e719f06UL, 0xbd6e1051UL,
-    0x3e218af9UL, 0x96dd063dUL, 0xdd3e05aeUL, 0x4de6bd46UL,
-    0x91548db5UL, 0x71c45d05UL, 0x0406d46fUL, 0x605015ffUL,
-    0x1998fb24UL, 0xd6bde997UL, 0x894043ccUL, 0x67d99e77UL,
-    0xb0e842bdUL, 0x07898b88UL, 0xe7195b38UL, 0x79c8eedbUL,
-    0xa17c0a47UL, 0x7c420fe9UL, 0xf8841ec9UL, 0x00000000UL,
-    0x09808683UL, 0x322bed48UL, 0x1e1170acUL, 0x6c5a724eUL,
-    0xfd0efffbUL, 0x0f853856UL, 0x3daed51eUL, 0x362d3927UL,
-    0x0a0fd964UL, 0x685ca621UL, 0x9b5b54d1UL, 0x24362e3aUL,
-    0x0c0a67b1UL, 0x9357e70fUL, 0xb4ee96d2UL, 0x1b9b919eUL,
-    0x80c0c54fUL, 0x61dc20a2UL, 0x5a774b69UL, 0x1c121a16UL,
-    0xe293ba0aUL, 0xc0a02ae5UL, 0x3c22e043UL, 0x121b171dUL,
-    0x0e090d0bUL, 0xf28bc7adUL, 0x2db6a8b9UL, 0x141ea9c8UL,
-    0x57f11985UL, 0xaf75074cUL, 0xee99ddbbUL, 0xa37f60fdUL,
-    0xf701269fUL, 0x5c72f5bcUL, 0x44663bc5UL, 0x5bfb7e34UL,
-    0x8b432976UL, 0xcb23c6dcUL, 0xb6edfc68UL, 0xb8e4f163UL,
-    0xd731dccaUL, 0x42638510UL, 0x13972240UL, 0x84c61120UL,
-    0x854a247dUL, 0xd2bb3df8UL, 0xaef93211UL, 0xc729a16dUL,
-    0x1d9e2f4bUL, 0xdcb230f3UL, 0x0d8652ecUL, 0x77c1e3d0UL,
-    0x2bb3166cUL, 0xa970b999UL, 0x119448faUL, 0x47e96422UL,
-    0xa8fc8cc4UL, 0xa0f03f1aUL, 0x567d2cd8UL, 0x223390efUL,
-    0x87494ec7UL, 0xd938d1c1UL, 0x8ccaa2feUL, 0x98d40b36UL,
-    0xa6f581cfUL, 0xa57ade28UL, 0xdab78e26UL, 0x3fadbfa4UL,
-    0x2c3a9de4UL, 0x5078920dUL, 0x6a5fcc9bUL, 0x547e4662UL,
-    0xf68d13c2UL, 0x90d8b8e8UL, 0x2e39f75eUL, 0x82c3aff5UL,
-    0x9f5d80beUL, 0x69d0937cUL, 0x6fd52da9UL, 0xcf2512b3UL,
-    0xc8ac993bUL, 0x10187da7UL, 0xe89c636eUL, 0xdb3bbb7bUL,
-    0xcd267809UL, 0x6e5918f4UL, 0xec9ab701UL, 0x834f9aa8UL,
-    0xe6956e65UL, 0xaaffe67eUL, 0x21bccf08UL, 0xef15e8e6UL,
-    0xbae79bd9UL, 0x4a6f36ceUL, 0xea9f09d4UL, 0x29b07cd6UL,
-    0x31a4b2afUL, 0x2a3f2331UL, 0xc6a59430UL, 0x35a266c0UL,
-    0x744ebc37UL, 0xfc82caa6UL, 0xe090d0b0UL, 0x33a7d815UL,
-    0xf104984aUL, 0x41ecdaf7UL, 0x7fcd500eUL, 0x1791f62fUL,
-    0x764dd68dUL, 0x43efb04dUL, 0xccaa4d54UL, 0xe49604dfUL,
-    0x9ed1b5e3UL, 0x4c6a881bUL, 0xc12c1fb8UL, 0x4665517fUL,
-    0x9d5eea04UL, 0x018c355dUL, 0xfa877473UL, 0xfb0b412eUL,
-    0xb3671d5aUL, 0x92dbd252UL, 0xe9105633UL, 0x6dd64713UL,
-    0x9ad7618cUL, 0x37a10c7aUL, 0x59f8148eUL, 0xeb133c89UL,
-    0xcea927eeUL, 0xb761c935UL, 0xe11ce5edUL, 0x7a47b13cUL,
-    0x9cd2df59UL, 0x55f2733fUL, 0x1814ce79UL, 0x73c737bfUL,
-    0x53f7cdeaUL, 0x5ffdaa5bUL, 0xdf3d6f14UL, 0x7844db86UL,
-    0xcaaff381UL, 0xb968c43eUL, 0x3824342cUL, 0xc2a3405fUL,
-    0x161dc372UL, 0xbce2250cUL, 0x283c498bUL, 0xff0d9541UL,
-    0x39a80171UL, 0x080cb3deUL, 0xd8b4e49cUL, 0x6456c190UL,
-    0x7bcb8461UL, 0xd532b670UL, 0x486c5c74UL, 0xd0b85742UL,
-};
-
-static const ulong32 Td4[256] = {
-    0x52525252UL, 0x09090909UL, 0x6a6a6a6aUL, 0xd5d5d5d5UL,
-    0x30303030UL, 0x36363636UL, 0xa5a5a5a5UL, 0x38383838UL,
-    0xbfbfbfbfUL, 0x40404040UL, 0xa3a3a3a3UL, 0x9e9e9e9eUL,
-    0x81818181UL, 0xf3f3f3f3UL, 0xd7d7d7d7UL, 0xfbfbfbfbUL,
-    0x7c7c7c7cUL, 0xe3e3e3e3UL, 0x39393939UL, 0x82828282UL,
-    0x9b9b9b9bUL, 0x2f2f2f2fUL, 0xffffffffUL, 0x87878787UL,
-    0x34343434UL, 0x8e8e8e8eUL, 0x43434343UL, 0x44444444UL,
-    0xc4c4c4c4UL, 0xdedededeUL, 0xe9e9e9e9UL, 0xcbcbcbcbUL,
-    0x54545454UL, 0x7b7b7b7bUL, 0x94949494UL, 0x32323232UL,
-    0xa6a6a6a6UL, 0xc2c2c2c2UL, 0x23232323UL, 0x3d3d3d3dUL,
-    0xeeeeeeeeUL, 0x4c4c4c4cUL, 0x95959595UL, 0x0b0b0b0bUL,
-    0x42424242UL, 0xfafafafaUL, 0xc3c3c3c3UL, 0x4e4e4e4eUL,
-    0x08080808UL, 0x2e2e2e2eUL, 0xa1a1a1a1UL, 0x66666666UL,
-    0x28282828UL, 0xd9d9d9d9UL, 0x24242424UL, 0xb2b2b2b2UL,
-    0x76767676UL, 0x5b5b5b5bUL, 0xa2a2a2a2UL, 0x49494949UL,
-    0x6d6d6d6dUL, 0x8b8b8b8bUL, 0xd1d1d1d1UL, 0x25252525UL,
-    0x72727272UL, 0xf8f8f8f8UL, 0xf6f6f6f6UL, 0x64646464UL,
-    0x86868686UL, 0x68686868UL, 0x98989898UL, 0x16161616UL,
-    0xd4d4d4d4UL, 0xa4a4a4a4UL, 0x5c5c5c5cUL, 0xccccccccUL,
-    0x5d5d5d5dUL, 0x65656565UL, 0xb6b6b6b6UL, 0x92929292UL,
-    0x6c6c6c6cUL, 0x70707070UL, 0x48484848UL, 0x50505050UL,
-    0xfdfdfdfdUL, 0xededededUL, 0xb9b9b9b9UL, 0xdadadadaUL,
-    0x5e5e5e5eUL, 0x15151515UL, 0x46464646UL, 0x57575757UL,
-    0xa7a7a7a7UL, 0x8d8d8d8dUL, 0x9d9d9d9dUL, 0x84848484UL,
-    0x90909090UL, 0xd8d8d8d8UL, 0xababababUL, 0x00000000UL,
-    0x8c8c8c8cUL, 0xbcbcbcbcUL, 0xd3d3d3d3UL, 0x0a0a0a0aUL,
-    0xf7f7f7f7UL, 0xe4e4e4e4UL, 0x58585858UL, 0x05050505UL,
-    0xb8b8b8b8UL, 0xb3b3b3b3UL, 0x45454545UL, 0x06060606UL,
-    0xd0d0d0d0UL, 0x2c2c2c2cUL, 0x1e1e1e1eUL, 0x8f8f8f8fUL,
-    0xcacacacaUL, 0x3f3f3f3fUL, 0x0f0f0f0fUL, 0x02020202UL,
-    0xc1c1c1c1UL, 0xafafafafUL, 0xbdbdbdbdUL, 0x03030303UL,
-    0x01010101UL, 0x13131313UL, 0x8a8a8a8aUL, 0x6b6b6b6bUL,
-    0x3a3a3a3aUL, 0x91919191UL, 0x11111111UL, 0x41414141UL,
-    0x4f4f4f4fUL, 0x67676767UL, 0xdcdcdcdcUL, 0xeaeaeaeaUL,
-    0x97979797UL, 0xf2f2f2f2UL, 0xcfcfcfcfUL, 0xcecececeUL,
-    0xf0f0f0f0UL, 0xb4b4b4b4UL, 0xe6e6e6e6UL, 0x73737373UL,
-    0x96969696UL, 0xacacacacUL, 0x74747474UL, 0x22222222UL,
-    0xe7e7e7e7UL, 0xadadadadUL, 0x35353535UL, 0x85858585UL,
-    0xe2e2e2e2UL, 0xf9f9f9f9UL, 0x37373737UL, 0xe8e8e8e8UL,
-    0x1c1c1c1cUL, 0x75757575UL, 0xdfdfdfdfUL, 0x6e6e6e6eUL,
-    0x47474747UL, 0xf1f1f1f1UL, 0x1a1a1a1aUL, 0x71717171UL,
-    0x1d1d1d1dUL, 0x29292929UL, 0xc5c5c5c5UL, 0x89898989UL,
-    0x6f6f6f6fUL, 0xb7b7b7b7UL, 0x62626262UL, 0x0e0e0e0eUL,
-    0xaaaaaaaaUL, 0x18181818UL, 0xbebebebeUL, 0x1b1b1b1bUL,
-    0xfcfcfcfcUL, 0x56565656UL, 0x3e3e3e3eUL, 0x4b4b4b4bUL,
-    0xc6c6c6c6UL, 0xd2d2d2d2UL, 0x79797979UL, 0x20202020UL,
-    0x9a9a9a9aUL, 0xdbdbdbdbUL, 0xc0c0c0c0UL, 0xfefefefeUL,
-    0x78787878UL, 0xcdcdcdcdUL, 0x5a5a5a5aUL, 0xf4f4f4f4UL,
-    0x1f1f1f1fUL, 0xddddddddUL, 0xa8a8a8a8UL, 0x33333333UL,
-    0x88888888UL, 0x07070707UL, 0xc7c7c7c7UL, 0x31313131UL,
-    0xb1b1b1b1UL, 0x12121212UL, 0x10101010UL, 0x59595959UL,
-    0x27272727UL, 0x80808080UL, 0xececececUL, 0x5f5f5f5fUL,
-    0x60606060UL, 0x51515151UL, 0x7f7f7f7fUL, 0xa9a9a9a9UL,
-    0x19191919UL, 0xb5b5b5b5UL, 0x4a4a4a4aUL, 0x0d0d0d0dUL,
-    0x2d2d2d2dUL, 0xe5e5e5e5UL, 0x7a7a7a7aUL, 0x9f9f9f9fUL,
-    0x93939393UL, 0xc9c9c9c9UL, 0x9c9c9c9cUL, 0xefefefefUL,
-    0xa0a0a0a0UL, 0xe0e0e0e0UL, 0x3b3b3b3bUL, 0x4d4d4d4dUL,
-    0xaeaeaeaeUL, 0x2a2a2a2aUL, 0xf5f5f5f5UL, 0xb0b0b0b0UL,
-    0xc8c8c8c8UL, 0xebebebebUL, 0xbbbbbbbbUL, 0x3c3c3c3cUL,
-    0x83838383UL, 0x53535353UL, 0x99999999UL, 0x61616161UL,
-    0x17171717UL, 0x2b2b2b2bUL, 0x04040404UL, 0x7e7e7e7eUL,
-    0xbabababaUL, 0x77777777UL, 0xd6d6d6d6UL, 0x26262626UL,
-    0xe1e1e1e1UL, 0x69696969UL, 0x14141414UL, 0x63636363UL,
-    0x55555555UL, 0x21212121UL, 0x0c0c0c0cUL, 0x7d7d7d7dUL,
-};
-#endif /* ENCRYPT_ONLY */
-
-#define Te0(x) TE0[x]
-#define Te1(x) RORc(TE0[x], 8)
-#define Te2(x) RORc(TE0[x], 16)
-#define Te3(x) RORc(TE0[x], 24)
-
-#define Td0(x) TD0[x]
-#define Td1(x) RORc(TD0[x], 8)
-#define Td2(x) RORc(TD0[x], 16)
-#define Td3(x) RORc(TD0[x], 24)
-
-#define Te4_0 0x000000FF & Te4
-#define Te4_1 0x0000FF00 & Te4
-#define Te4_2 0x00FF0000 & Te4
-#define Te4_3 0xFF000000 & Te4
-
-static const ulong32 rcon[] = {
-    0x01000000UL, 0x02000000UL, 0x04000000UL, 0x08000000UL,
-    0x10000000UL, 0x20000000UL, 0x40000000UL, 0x80000000UL,
-    0x1B000000UL, 0x36000000UL, /* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
-};
-
-/* This part extracted from aes.c in libtomcrypt 1.17 */
-
-#ifndef ENCRYPT_ONLY 
-
-#define SETUP    rijndael_setup
-#define ECB_ENC  rijndael_ecb_encrypt
-#define ECB_DEC  rijndael_ecb_decrypt
-#define ECB_DONE rijndael_done
-#define ECB_TEST rijndael_test
-#define ECB_KS   rijndael_keysize
-
-static ulong32 setup_mix(ulong32 temp)
-{
-   return (Te4_3[byte(temp, 2)]) ^
-          (Te4_2[byte(temp, 1)]) ^
-          (Te4_1[byte(temp, 0)]) ^
-          (Te4_0[byte(temp, 3)]);
-}
-#endif
-
-#ifndef ENCRYPT_ONLY
-static ulong32 setup_mix2(ulong32 temp)
-{
-   return Td0(255 & Te4[byte(temp, 3)]) ^
-          Td1(255 & Te4[byte(temp, 2)]) ^
-          Td2(255 & Te4[byte(temp, 1)]) ^
-          Td3(255 & Te4[byte(temp, 0)]);
-}
-#endif
-
- /**
-    Initialize the AES (Rijndael) block cipher
-    @param key The symmetric key you wish to pass
-    @param keylen The key length in bytes
-    @param num_rounds The number of rounds desired (0 for default)
-    @param skey The key in as scheduled by this function.
-    @return CRYPT_OK if successful
+ * 32-bit integer manipulation macros (little endian)
  */
-int SETUP(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
+#ifndef GET_ULONG_LE
+#define GET_ULONG_LE(n,b,i)                             \
+{                                                       \
+    (n) = ( (unsigned long) (b)[(i)    ]       )        \
+        | ( (unsigned long) (b)[(i) + 1] <<  8 )        \
+        | ( (unsigned long) (b)[(i) + 2] << 16 )        \
+        | ( (unsigned long) (b)[(i) + 3] << 24 );       \
+}
+#endif
+
+#ifndef PUT_ULONG_LE
+#define PUT_ULONG_LE(n,b,i)                             \
+{                                                       \
+    (b)[(i)    ] = (unsigned char) ( (n)       );       \
+    (b)[(i) + 1] = (unsigned char) ( (n) >>  8 );       \
+    (b)[(i) + 2] = (unsigned char) ( (n) >> 16 );       \
+    (b)[(i) + 3] = (unsigned char) ( (n) >> 24 );       \
+}
+#endif
+
+#if defined(XYSSL_AES_ROM_TABLES)
+/*
+ * Forward S-box
+ */
+static const unsigned char FSb[256] =
+{
+    0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5,
+    0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
+    0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
+    0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
+    0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC,
+    0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
+    0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A,
+    0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75,
+    0x09, 0x83, 0x2C, 0x1A, 0x1B, 0x6E, 0x5A, 0xA0,
+    0x52, 0x3B, 0xD6, 0xB3, 0x29, 0xE3, 0x2F, 0x84,
+    0x53, 0xD1, 0x00, 0xED, 0x20, 0xFC, 0xB1, 0x5B,
+    0x6A, 0xCB, 0xBE, 0x39, 0x4A, 0x4C, 0x58, 0xCF,
+    0xD0, 0xEF, 0xAA, 0xFB, 0x43, 0x4D, 0x33, 0x85,
+    0x45, 0xF9, 0x02, 0x7F, 0x50, 0x3C, 0x9F, 0xA8,
+    0x51, 0xA3, 0x40, 0x8F, 0x92, 0x9D, 0x38, 0xF5,
+    0xBC, 0xB6, 0xDA, 0x21, 0x10, 0xFF, 0xF3, 0xD2,
+    0xCD, 0x0C, 0x13, 0xEC, 0x5F, 0x97, 0x44, 0x17,
+    0xC4, 0xA7, 0x7E, 0x3D, 0x64, 0x5D, 0x19, 0x73,
+    0x60, 0x81, 0x4F, 0xDC, 0x22, 0x2A, 0x90, 0x88,
+    0x46, 0xEE, 0xB8, 0x14, 0xDE, 0x5E, 0x0B, 0xDB,
+    0xE0, 0x32, 0x3A, 0x0A, 0x49, 0x06, 0x24, 0x5C,
+    0xC2, 0xD3, 0xAC, 0x62, 0x91, 0x95, 0xE4, 0x79,
+    0xE7, 0xC8, 0x37, 0x6D, 0x8D, 0xD5, 0x4E, 0xA9,
+    0x6C, 0x56, 0xF4, 0xEA, 0x65, 0x7A, 0xAE, 0x08,
+    0xBA, 0x78, 0x25, 0x2E, 0x1C, 0xA6, 0xB4, 0xC6,
+    0xE8, 0xDD, 0x74, 0x1F, 0x4B, 0xBD, 0x8B, 0x8A,
+    0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E,
+    0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E,
+    0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94,
+    0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
+    0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68,
+    0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
+};
+
+/*
+ * Forward tables
+ */
+#define FT \
+\
+    V(A5,63,63,C6), V(84,7C,7C,F8), V(99,77,77,EE), V(8D,7B,7B,F6), \
+    V(0D,F2,F2,FF), V(BD,6B,6B,D6), V(B1,6F,6F,DE), V(54,C5,C5,91), \
+    V(50,30,30,60), V(03,01,01,02), V(A9,67,67,CE), V(7D,2B,2B,56), \
+    V(19,FE,FE,E7), V(62,D7,D7,B5), V(E6,AB,AB,4D), V(9A,76,76,EC), \
+    V(45,CA,CA,8F), V(9D,82,82,1F), V(40,C9,C9,89), V(87,7D,7D,FA), \
+    V(15,FA,FA,EF), V(EB,59,59,B2), V(C9,47,47,8E), V(0B,F0,F0,FB), \
+    V(EC,AD,AD,41), V(67,D4,D4,B3), V(FD,A2,A2,5F), V(EA,AF,AF,45), \
+    V(BF,9C,9C,23), V(F7,A4,A4,53), V(96,72,72,E4), V(5B,C0,C0,9B), \
+    V(C2,B7,B7,75), V(1C,FD,FD,E1), V(AE,93,93,3D), V(6A,26,26,4C), \
+    V(5A,36,36,6C), V(41,3F,3F,7E), V(02,F7,F7,F5), V(4F,CC,CC,83), \
+    V(5C,34,34,68), V(F4,A5,A5,51), V(34,E5,E5,D1), V(08,F1,F1,F9), \
+    V(93,71,71,E2), V(73,D8,D8,AB), V(53,31,31,62), V(3F,15,15,2A), \
+    V(0C,04,04,08), V(52,C7,C7,95), V(65,23,23,46), V(5E,C3,C3,9D), \
+    V(28,18,18,30), V(A1,96,96,37), V(0F,05,05,0A), V(B5,9A,9A,2F), \
+    V(09,07,07,0E), V(36,12,12,24), V(9B,80,80,1B), V(3D,E2,E2,DF), \
+    V(26,EB,EB,CD), V(69,27,27,4E), V(CD,B2,B2,7F), V(9F,75,75,EA), \
+    V(1B,09,09,12), V(9E,83,83,1D), V(74,2C,2C,58), V(2E,1A,1A,34), \
+    V(2D,1B,1B,36), V(B2,6E,6E,DC), V(EE,5A,5A,B4), V(FB,A0,A0,5B), \
+    V(F6,52,52,A4), V(4D,3B,3B,76), V(61,D6,D6,B7), V(CE,B3,B3,7D), \
+    V(7B,29,29,52), V(3E,E3,E3,DD), V(71,2F,2F,5E), V(97,84,84,13), \
+    V(F5,53,53,A6), V(68,D1,D1,B9), V(00,00,00,00), V(2C,ED,ED,C1), \
+    V(60,20,20,40), V(1F,FC,FC,E3), V(C8,B1,B1,79), V(ED,5B,5B,B6), \
+    V(BE,6A,6A,D4), V(46,CB,CB,8D), V(D9,BE,BE,67), V(4B,39,39,72), \
+    V(DE,4A,4A,94), V(D4,4C,4C,98), V(E8,58,58,B0), V(4A,CF,CF,85), \
+    V(6B,D0,D0,BB), V(2A,EF,EF,C5), V(E5,AA,AA,4F), V(16,FB,FB,ED), \
+    V(C5,43,43,86), V(D7,4D,4D,9A), V(55,33,33,66), V(94,85,85,11), \
+    V(CF,45,45,8A), V(10,F9,F9,E9), V(06,02,02,04), V(81,7F,7F,FE), \
+    V(F0,50,50,A0), V(44,3C,3C,78), V(BA,9F,9F,25), V(E3,A8,A8,4B), \
+    V(F3,51,51,A2), V(FE,A3,A3,5D), V(C0,40,40,80), V(8A,8F,8F,05), \
+    V(AD,92,92,3F), V(BC,9D,9D,21), V(48,38,38,70), V(04,F5,F5,F1), \
+    V(DF,BC,BC,63), V(C1,B6,B6,77), V(75,DA,DA,AF), V(63,21,21,42), \
+    V(30,10,10,20), V(1A,FF,FF,E5), V(0E,F3,F3,FD), V(6D,D2,D2,BF), \
+    V(4C,CD,CD,81), V(14,0C,0C,18), V(35,13,13,26), V(2F,EC,EC,C3), \
+    V(E1,5F,5F,BE), V(A2,97,97,35), V(CC,44,44,88), V(39,17,17,2E), \
+    V(57,C4,C4,93), V(F2,A7,A7,55), V(82,7E,7E,FC), V(47,3D,3D,7A), \
+    V(AC,64,64,C8), V(E7,5D,5D,BA), V(2B,19,19,32), V(95,73,73,E6), \
+    V(A0,60,60,C0), V(98,81,81,19), V(D1,4F,4F,9E), V(7F,DC,DC,A3), \
+    V(66,22,22,44), V(7E,2A,2A,54), V(AB,90,90,3B), V(83,88,88,0B), \
+    V(CA,46,46,8C), V(29,EE,EE,C7), V(D3,B8,B8,6B), V(3C,14,14,28), \
+    V(79,DE,DE,A7), V(E2,5E,5E,BC), V(1D,0B,0B,16), V(76,DB,DB,AD), \
+    V(3B,E0,E0,DB), V(56,32,32,64), V(4E,3A,3A,74), V(1E,0A,0A,14), \
+    V(DB,49,49,92), V(0A,06,06,0C), V(6C,24,24,48), V(E4,5C,5C,B8), \
+    V(5D,C2,C2,9F), V(6E,D3,D3,BD), V(EF,AC,AC,43), V(A6,62,62,C4), \
+    V(A8,91,91,39), V(A4,95,95,31), V(37,E4,E4,D3), V(8B,79,79,F2), \
+    V(32,E7,E7,D5), V(43,C8,C8,8B), V(59,37,37,6E), V(B7,6D,6D,DA), \
+    V(8C,8D,8D,01), V(64,D5,D5,B1), V(D2,4E,4E,9C), V(E0,A9,A9,49), \
+    V(B4,6C,6C,D8), V(FA,56,56,AC), V(07,F4,F4,F3), V(25,EA,EA,CF), \
+    V(AF,65,65,CA), V(8E,7A,7A,F4), V(E9,AE,AE,47), V(18,08,08,10), \
+    V(D5,BA,BA,6F), V(88,78,78,F0), V(6F,25,25,4A), V(72,2E,2E,5C), \
+    V(24,1C,1C,38), V(F1,A6,A6,57), V(C7,B4,B4,73), V(51,C6,C6,97), \
+    V(23,E8,E8,CB), V(7C,DD,DD,A1), V(9C,74,74,E8), V(21,1F,1F,3E), \
+    V(DD,4B,4B,96), V(DC,BD,BD,61), V(86,8B,8B,0D), V(85,8A,8A,0F), \
+    V(90,70,70,E0), V(42,3E,3E,7C), V(C4,B5,B5,71), V(AA,66,66,CC), \
+    V(D8,48,48,90), V(05,03,03,06), V(01,F6,F6,F7), V(12,0E,0E,1C), \
+    V(A3,61,61,C2), V(5F,35,35,6A), V(F9,57,57,AE), V(D0,B9,B9,69), \
+    V(91,86,86,17), V(58,C1,C1,99), V(27,1D,1D,3A), V(B9,9E,9E,27), \
+    V(38,E1,E1,D9), V(13,F8,F8,EB), V(B3,98,98,2B), V(33,11,11,22), \
+    V(BB,69,69,D2), V(70,D9,D9,A9), V(89,8E,8E,07), V(A7,94,94,33), \
+    V(B6,9B,9B,2D), V(22,1E,1E,3C), V(92,87,87,15), V(20,E9,E9,C9), \
+    V(49,CE,CE,87), V(FF,55,55,AA), V(78,28,28,50), V(7A,DF,DF,A5), \
+    V(8F,8C,8C,03), V(F8,A1,A1,59), V(80,89,89,09), V(17,0D,0D,1A), \
+    V(DA,BF,BF,65), V(31,E6,E6,D7), V(C6,42,42,84), V(B8,68,68,D0), \
+    V(C3,41,41,82), V(B0,99,99,29), V(77,2D,2D,5A), V(11,0F,0F,1E), \
+    V(CB,B0,B0,7B), V(FC,54,54,A8), V(D6,BB,BB,6D), V(3A,16,16,2C)
+
+#define V(a,b,c,d) 0x##a##b##c##d
+static const unsigned long FT0[256] = { FT };
+#undef V
+
+#define V(a,b,c,d) 0x##b##c##d##a
+static const unsigned long FT1[256] = { FT };
+#undef V
+
+#define V(a,b,c,d) 0x##c##d##a##b
+static const unsigned long FT2[256] = { FT };
+#undef V
+
+#define V(a,b,c,d) 0x##d##a##b##c
+static const unsigned long FT3[256] = { FT };
+#undef V
+
+#undef FT
+
+/*
+ * Reverse S-box
+ */
+static const unsigned char RSb[256] =
+{
+    0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38,
+    0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
+    0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87,
+    0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB,
+    0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D,
+    0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E,
+    0x08, 0x2E, 0xA1, 0x66, 0x28, 0xD9, 0x24, 0xB2,
+    0x76, 0x5B, 0xA2, 0x49, 0x6D, 0x8B, 0xD1, 0x25,
+    0x72, 0xF8, 0xF6, 0x64, 0x86, 0x68, 0x98, 0x16,
+    0xD4, 0xA4, 0x5C, 0xCC, 0x5D, 0x65, 0xB6, 0x92,
+    0x6C, 0x70, 0x48, 0x50, 0xFD, 0xED, 0xB9, 0xDA,
+    0x5E, 0x15, 0x46, 0x57, 0xA7, 0x8D, 0x9D, 0x84,
+    0x90, 0xD8, 0xAB, 0x00, 0x8C, 0xBC, 0xD3, 0x0A,
+    0xF7, 0xE4, 0x58, 0x05, 0xB8, 0xB3, 0x45, 0x06,
+    0xD0, 0x2C, 0x1E, 0x8F, 0xCA, 0x3F, 0x0F, 0x02,
+    0xC1, 0xAF, 0xBD, 0x03, 0x01, 0x13, 0x8A, 0x6B,
+    0x3A, 0x91, 0x11, 0x41, 0x4F, 0x67, 0xDC, 0xEA,
+    0x97, 0xF2, 0xCF, 0xCE, 0xF0, 0xB4, 0xE6, 0x73,
+    0x96, 0xAC, 0x74, 0x22, 0xE7, 0xAD, 0x35, 0x85,
+    0xE2, 0xF9, 0x37, 0xE8, 0x1C, 0x75, 0xDF, 0x6E,
+    0x47, 0xF1, 0x1A, 0x71, 0x1D, 0x29, 0xC5, 0x89,
+    0x6F, 0xB7, 0x62, 0x0E, 0xAA, 0x18, 0xBE, 0x1B,
+    0xFC, 0x56, 0x3E, 0x4B, 0xC6, 0xD2, 0x79, 0x20,
+    0x9A, 0xDB, 0xC0, 0xFE, 0x78, 0xCD, 0x5A, 0xF4,
+    0x1F, 0xDD, 0xA8, 0x33, 0x88, 0x07, 0xC7, 0x31,
+    0xB1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xEC, 0x5F,
+    0x60, 0x51, 0x7F, 0xA9, 0x19, 0xB5, 0x4A, 0x0D,
+    0x2D, 0xE5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF,
+    0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0,
+    0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
+    0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26,
+    0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
+};
+
+/*
+ * Reverse tables
+ */
+#define RT \
+\
+    V(50,A7,F4,51), V(53,65,41,7E), V(C3,A4,17,1A), V(96,5E,27,3A), \
+    V(CB,6B,AB,3B), V(F1,45,9D,1F), V(AB,58,FA,AC), V(93,03,E3,4B), \
+    V(55,FA,30,20), V(F6,6D,76,AD), V(91,76,CC,88), V(25,4C,02,F5), \
+    V(FC,D7,E5,4F), V(D7,CB,2A,C5), V(80,44,35,26), V(8F,A3,62,B5), \
+    V(49,5A,B1,DE), V(67,1B,BA,25), V(98,0E,EA,45), V(E1,C0,FE,5D), \
+    V(02,75,2F,C3), V(12,F0,4C,81), V(A3,97,46,8D), V(C6,F9,D3,6B), \
+    V(E7,5F,8F,03), V(95,9C,92,15), V(EB,7A,6D,BF), V(DA,59,52,95), \
+    V(2D,83,BE,D4), V(D3,21,74,58), V(29,69,E0,49), V(44,C8,C9,8E), \
+    V(6A,89,C2,75), V(78,79,8E,F4), V(6B,3E,58,99), V(DD,71,B9,27), \
+    V(B6,4F,E1,BE), V(17,AD,88,F0), V(66,AC,20,C9), V(B4,3A,CE,7D), \
+    V(18,4A,DF,63), V(82,31,1A,E5), V(60,33,51,97), V(45,7F,53,62), \
+    V(E0,77,64,B1), V(84,AE,6B,BB), V(1C,A0,81,FE), V(94,2B,08,F9), \
+    V(58,68,48,70), V(19,FD,45,8F), V(87,6C,DE,94), V(B7,F8,7B,52), \
+    V(23,D3,73,AB), V(E2,02,4B,72), V(57,8F,1F,E3), V(2A,AB,55,66), \
+    V(07,28,EB,B2), V(03,C2,B5,2F), V(9A,7B,C5,86), V(A5,08,37,D3), \
+    V(F2,87,28,30), V(B2,A5,BF,23), V(BA,6A,03,02), V(5C,82,16,ED), \
+    V(2B,1C,CF,8A), V(92,B4,79,A7), V(F0,F2,07,F3), V(A1,E2,69,4E), \
+    V(CD,F4,DA,65), V(D5,BE,05,06), V(1F,62,34,D1), V(8A,FE,A6,C4), \
+    V(9D,53,2E,34), V(A0,55,F3,A2), V(32,E1,8A,05), V(75,EB,F6,A4), \
+    V(39,EC,83,0B), V(AA,EF,60,40), V(06,9F,71,5E), V(51,10,6E,BD), \
+    V(F9,8A,21,3E), V(3D,06,DD,96), V(AE,05,3E,DD), V(46,BD,E6,4D), \
+    V(B5,8D,54,91), V(05,5D,C4,71), V(6F,D4,06,04), V(FF,15,50,60), \
+    V(24,FB,98,19), V(97,E9,BD,D6), V(CC,43,40,89), V(77,9E,D9,67), \
+    V(BD,42,E8,B0), V(88,8B,89,07), V(38,5B,19,E7), V(DB,EE,C8,79), \
+    V(47,0A,7C,A1), V(E9,0F,42,7C), V(C9,1E,84,F8), V(00,00,00,00), \
+    V(83,86,80,09), V(48,ED,2B,32), V(AC,70,11,1E), V(4E,72,5A,6C), \
+    V(FB,FF,0E,FD), V(56,38,85,0F), V(1E,D5,AE,3D), V(27,39,2D,36), \
+    V(64,D9,0F,0A), V(21,A6,5C,68), V(D1,54,5B,9B), V(3A,2E,36,24), \
+    V(B1,67,0A,0C), V(0F,E7,57,93), V(D2,96,EE,B4), V(9E,91,9B,1B), \
+    V(4F,C5,C0,80), V(A2,20,DC,61), V(69,4B,77,5A), V(16,1A,12,1C), \
+    V(0A,BA,93,E2), V(E5,2A,A0,C0), V(43,E0,22,3C), V(1D,17,1B,12), \
+    V(0B,0D,09,0E), V(AD,C7,8B,F2), V(B9,A8,B6,2D), V(C8,A9,1E,14), \
+    V(85,19,F1,57), V(4C,07,75,AF), V(BB,DD,99,EE), V(FD,60,7F,A3), \
+    V(9F,26,01,F7), V(BC,F5,72,5C), V(C5,3B,66,44), V(34,7E,FB,5B), \
+    V(76,29,43,8B), V(DC,C6,23,CB), V(68,FC,ED,B6), V(63,F1,E4,B8), \
+    V(CA,DC,31,D7), V(10,85,63,42), V(40,22,97,13), V(20,11,C6,84), \
+    V(7D,24,4A,85), V(F8,3D,BB,D2), V(11,32,F9,AE), V(6D,A1,29,C7), \
+    V(4B,2F,9E,1D), V(F3,30,B2,DC), V(EC,52,86,0D), V(D0,E3,C1,77), \
+    V(6C,16,B3,2B), V(99,B9,70,A9), V(FA,48,94,11), V(22,64,E9,47), \
+    V(C4,8C,FC,A8), V(1A,3F,F0,A0), V(D8,2C,7D,56), V(EF,90,33,22), \
+    V(C7,4E,49,87), V(C1,D1,38,D9), V(FE,A2,CA,8C), V(36,0B,D4,98), \
+    V(CF,81,F5,A6), V(28,DE,7A,A5), V(26,8E,B7,DA), V(A4,BF,AD,3F), \
+    V(E4,9D,3A,2C), V(0D,92,78,50), V(9B,CC,5F,6A), V(62,46,7E,54), \
+    V(C2,13,8D,F6), V(E8,B8,D8,90), V(5E,F7,39,2E), V(F5,AF,C3,82), \
+    V(BE,80,5D,9F), V(7C,93,D0,69), V(A9,2D,D5,6F), V(B3,12,25,CF), \
+    V(3B,99,AC,C8), V(A7,7D,18,10), V(6E,63,9C,E8), V(7B,BB,3B,DB), \
+    V(09,78,26,CD), V(F4,18,59,6E), V(01,B7,9A,EC), V(A8,9A,4F,83), \
+    V(65,6E,95,E6), V(7E,E6,FF,AA), V(08,CF,BC,21), V(E6,E8,15,EF), \
+    V(D9,9B,E7,BA), V(CE,36,6F,4A), V(D4,09,9F,EA), V(D6,7C,B0,29), \
+    V(AF,B2,A4,31), V(31,23,3F,2A), V(30,94,A5,C6), V(C0,66,A2,35), \
+    V(37,BC,4E,74), V(A6,CA,82,FC), V(B0,D0,90,E0), V(15,D8,A7,33), \
+    V(4A,98,04,F1), V(F7,DA,EC,41), V(0E,50,CD,7F), V(2F,F6,91,17), \
+    V(8D,D6,4D,76), V(4D,B0,EF,43), V(54,4D,AA,CC), V(DF,04,96,E4), \
+    V(E3,B5,D1,9E), V(1B,88,6A,4C), V(B8,1F,2C,C1), V(7F,51,65,46), \
+    V(04,EA,5E,9D), V(5D,35,8C,01), V(73,74,87,FA), V(2E,41,0B,FB), \
+    V(5A,1D,67,B3), V(52,D2,DB,92), V(33,56,10,E9), V(13,47,D6,6D), \
+    V(8C,61,D7,9A), V(7A,0C,A1,37), V(8E,14,F8,59), V(89,3C,13,EB), \
+    V(EE,27,A9,CE), V(35,C9,61,B7), V(ED,E5,1C,E1), V(3C,B1,47,7A), \
+    V(59,DF,D2,9C), V(3F,73,F2,55), V(79,CE,14,18), V(BF,37,C7,73), \
+    V(EA,CD,F7,53), V(5B,AA,FD,5F), V(14,6F,3D,DF), V(86,DB,44,78), \
+    V(81,F3,AF,CA), V(3E,C4,68,B9), V(2C,34,24,38), V(5F,40,A3,C2), \
+    V(72,C3,1D,16), V(0C,25,E2,BC), V(8B,49,3C,28), V(41,95,0D,FF), \
+    V(71,01,A8,39), V(DE,B3,0C,08), V(9C,E4,B4,D8), V(90,C1,56,64), \
+    V(61,84,CB,7B), V(70,B6,32,D5), V(74,5C,6C,48), V(42,57,B8,D0)
+
+#define V(a,b,c,d) 0x##a##b##c##d
+static const unsigned long RT0[256] = { RT };
+#undef V
+
+#define V(a,b,c,d) 0x##b##c##d##a
+static const unsigned long RT1[256] = { RT };
+#undef V
+
+#define V(a,b,c,d) 0x##c##d##a##b
+static const unsigned long RT2[256] = { RT };
+#undef V
+
+#define V(a,b,c,d) 0x##d##a##b##c
+static const unsigned long RT3[256] = { RT };
+#undef V
+
+#undef RT
+
+/*
+ * Round constants
+ */
+static const unsigned long RCON[10] =
+{
+    0x00000001, 0x00000002, 0x00000004, 0x00000008,
+    0x00000010, 0x00000020, 0x00000040, 0x00000080,
+    0x0000001B, 0x00000036
+};
+
+#else
+
+/*
+ * Forward S-box & tables
+ */
+static unsigned char FSb[256];
+static unsigned long FT0[256];
+static unsigned long FT1[256];
+static unsigned long FT2[256];
+static unsigned long FT3[256];
+
+/*
+ * Reverse S-box & tables
+ */
+static unsigned char RSb[256];
+static unsigned long RT0[256];
+static unsigned long RT1[256];
+static unsigned long RT2[256];
+static unsigned long RT3[256];
+
+/*
+ * Round constants
+ */
+static unsigned long RCON[10];
+
+/*
+ * Tables generation code
+ */
+#define ROTL8(x) ( ( x << 8 ) & 0xFFFFFFFF ) | ( x >> 24 )
+#define XTIME(x) ( ( x << 1 ) ^ ( ( x & 0x80 ) ? 0x1B : 0x00 ) )
+#define MUL(x,y) ( ( x && y ) ? pow[(log[x]+log[y]) % 255] : 0 )
+
+static int aes_init_done = 0;
+
+static void aes_gen_tables( void )
+{
+    int i, x, y, z;
+    int pow[256];
+    int log[256];
+
+    /*
+     * compute pow and log tables over GF(2^8)
+     */
+    for( i = 0, x = 1; i < 256; i++ )
+    {
+        pow[i] = x;
+        log[x] = i;
+        x = ( x ^ XTIME( x ) ) & 0xFF;
+    }
+
+    /*
+     * calculate the round constants
+     */
+    for( i = 0, x = 1; i < 10; i++ )
+    {
+        RCON[i] = (unsigned long) x;
+        x = XTIME( x ) & 0xFF;
+    }
+
+    /*
+     * generate the forward and reverse S-boxes
+     */
+    FSb[0x00] = 0x63;
+    RSb[0x63] = 0x00;
+
+    for( i = 1; i < 256; i++ )
+    {
+        x = pow[255 - log[i]];
+
+        y  = x; y = ( (y << 1) | (y >> 7) ) & 0xFF;
+        x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
+        x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
+        x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
+        x ^= y ^ 0x63;
+
+        FSb[i] = (unsigned char) x;
+        RSb[x] = (unsigned char) i;
+    }
+
+    /*
+     * generate the forward and reverse tables
+     */
+    for( i = 0; i < 256; i++ )
+    {
+        x = FSb[i];
+        y = XTIME( x ) & 0xFF;
+        z =  ( y ^ x ) & 0xFF;
+
+        FT0[i] = ( (unsigned long) y       ) ^
+                 ( (unsigned long) x <<  8 ) ^
+                 ( (unsigned long) x << 16 ) ^
+                 ( (unsigned long) z << 24 );
+
+        FT1[i] = ROTL8( FT0[i] );
+        FT2[i] = ROTL8( FT1[i] );
+        FT3[i] = ROTL8( FT2[i] );
+
+        x = RSb[i];
+
+        RT0[i] = ( (unsigned long) MUL( 0x0E, x )       ) ^
+                 ( (unsigned long) MUL( 0x09, x ) <<  8 ) ^
+                 ( (unsigned long) MUL( 0x0D, x ) << 16 ) ^
+                 ( (unsigned long) MUL( 0x0B, x ) << 24 );
+
+        RT1[i] = ROTL8( RT0[i] );
+        RT2[i] = ROTL8( RT1[i] );
+        RT3[i] = ROTL8( RT2[i] );
+    }
+}
+
+#endif
+
+/*
+ * AES key schedule (encryption)
+ */
+void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
+{
+    int i;
+    unsigned long *RK;
+
+#if !defined(XYSSL_AES_ROM_TABLES)
+    if( aes_init_done == 0 )
+    {
+        aes_gen_tables();
+        aes_init_done = 1;
+    }
+#endif
+
+    switch( keysize )
+    {
+        case 128: ctx->nr = 10; break;
+        case 192: ctx->nr = 12; break;
+        case 256: ctx->nr = 14; break;
+        default : return;
+    }
+
+#if defined(PADLOCK_ALIGN16)
+    ctx->rk = RK = PADLOCK_ALIGN16( ctx->buf );
+#else
+    ctx->rk = RK = ctx->buf;
+#endif
+
+    for( i = 0; i < (keysize >> 5); i++ )
+    {
+        GET_ULONG_LE( RK[i], key, i << 2 );
+    }
+
+    switch( ctx->nr )
+    {
+        case 10:
+
+            for( i = 0; i < 10; i++, RK += 4 )
+            {
+                RK[4]  = RK[0] ^ RCON[i] ^
+                    ( FSb[ ( RK[3] >>  8 ) & 0xFF ]       ) ^
+                    ( FSb[ ( RK[3] >> 16 ) & 0xFF ] <<  8 ) ^
+                    ( FSb[ ( RK[3] >> 24 ) & 0xFF ] << 16 ) ^
+                    ( FSb[ ( RK[3]       ) & 0xFF ] << 24 );
+
+                RK[5]  = RK[1] ^ RK[4];
+                RK[6]  = RK[2] ^ RK[5];
+                RK[7]  = RK[3] ^ RK[6];
+            }
+            break;
+
+        case 12:
+
+            for( i = 0; i < 8; i++, RK += 6 )
+            {
+                RK[6]  = RK[0] ^ RCON[i] ^
+                    ( FSb[ ( RK[5] >>  8 ) & 0xFF ]       ) ^
+                    ( FSb[ ( RK[5] >> 16 ) & 0xFF ] <<  8 ) ^
+                    ( FSb[ ( RK[5] >> 24 ) & 0xFF ] << 16 ) ^
+                    ( FSb[ ( RK[5]       ) & 0xFF ] << 24 );
+
+                RK[7]  = RK[1] ^ RK[6];
+                RK[8]  = RK[2] ^ RK[7];
+                RK[9]  = RK[3] ^ RK[8];
+                RK[10] = RK[4] ^ RK[9];
+                RK[11] = RK[5] ^ RK[10];
+            }
+            break;
+
+        case 14:
+
+            for( i = 0; i < 7; i++, RK += 8 )
+            {
+                RK[8]  = RK[0] ^ RCON[i] ^
+                    ( FSb[ ( RK[7] >>  8 ) & 0xFF ]       ) ^
+                    ( FSb[ ( RK[7] >> 16 ) & 0xFF ] <<  8 ) ^
+                    ( FSb[ ( RK[7] >> 24 ) & 0xFF ] << 16 ) ^
+                    ( FSb[ ( RK[7]       ) & 0xFF ] << 24 );
+
+                RK[9]  = RK[1] ^ RK[8];
+                RK[10] = RK[2] ^ RK[9];
+                RK[11] = RK[3] ^ RK[10];
+
+                RK[12] = RK[4] ^
+                    ( FSb[ ( RK[11]       ) & 0xFF ]       ) ^
+                    ( FSb[ ( RK[11] >>  8 ) & 0xFF ] <<  8 ) ^
+                    ( FSb[ ( RK[11] >> 16 ) & 0xFF ] << 16 ) ^
+                    ( FSb[ ( RK[11] >> 24 ) & 0xFF ] << 24 );
+
+                RK[13] = RK[5] ^ RK[12];
+                RK[14] = RK[6] ^ RK[13];
+                RK[15] = RK[7] ^ RK[14];
+            }
+            break;
+
+        default:
+
+            break;
+    }
+}
+
+/*
+ * AES key schedule (decryption)
+ */
+void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
 {
     int i, j;
-    ulong32 temp, *rk;
-#ifndef ENCRYPT_ONLY
-    ulong32 *rrk;
-#endif    
-    LTC_ARGCHK(key  != NULL);
-    LTC_ARGCHK(skey != NULL);
+    aes_context cty;
+    unsigned long *RK;
+    unsigned long *SK;
 
-    if (keylen != 16 && keylen != 24 && keylen != 32) {
-       return CRYPT_INVALID_KEYSIZE;
+    switch( keysize )
+    {
+        case 128: ctx->nr = 10; break;
+        case 192: ctx->nr = 12; break;
+        case 256: ctx->nr = 14; break;
+        default : return;
     }
 
-    if (num_rounds != 0 && num_rounds != (10 + ((keylen/8)-2)*2)) {
-       return CRYPT_INVALID_ROUNDS;
+#if defined(PADLOCK_ALIGN16)
+    ctx->rk = RK = PADLOCK_ALIGN16( ctx->buf );
+#else
+    ctx->rk = RK = ctx->buf;
+#endif
+
+    aes_setkey_enc( &cty, key, keysize );
+    SK = cty.rk + cty.nr * 4;
+
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+
+    for( i = ctx->nr - 1, SK -= 8; i > 0; i--, SK -= 8 )
+    {
+        for( j = 0; j < 4; j++, SK++ )
+        {
+            *RK++ = RT0[ FSb[ ( *SK       ) & 0xFF ] ] ^
+                    RT1[ FSb[ ( *SK >>  8 ) & 0xFF ] ] ^
+                    RT2[ FSb[ ( *SK >> 16 ) & 0xFF ] ] ^
+                    RT3[ FSb[ ( *SK >> 24 ) & 0xFF ] ];
+        }
     }
 
-    skey->rijndael.Nr = 10 + ((keylen/8)-2)*2;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
 
-    /* setup the forward key */
-    i                 = 0;
-    rk                = skey->rijndael.eK;
-    LOAD32H(rk[0], key     );
-    LOAD32H(rk[1], key +  4);
-    LOAD32H(rk[2], key +  8);
-    LOAD32H(rk[3], key + 12);
-    if (keylen == 16) {
-        j = 44;
-        for (;;) {
-            temp  = rk[3];
-            rk[4] = rk[0] ^ setup_mix(temp) ^ rcon[i];
-            rk[5] = rk[1] ^ rk[4];
-            rk[6] = rk[2] ^ rk[5];
-            rk[7] = rk[3] ^ rk[6];
-            if (++i == 10) {
-               break;
+    memset( &cty, 0, sizeof( aes_context ) );
+}
+
+#define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)     \
+{                                               \
+    X0 = *RK++ ^ FT0[ ( Y0       ) & 0xFF ] ^   \
+                 FT1[ ( Y1 >>  8 ) & 0xFF ] ^   \
+                 FT2[ ( Y2 >> 16 ) & 0xFF ] ^   \
+                 FT3[ ( Y3 >> 24 ) & 0xFF ];    \
+                                                \
+    X1 = *RK++ ^ FT0[ ( Y1       ) & 0xFF ] ^   \
+                 FT1[ ( Y2 >>  8 ) & 0xFF ] ^   \
+                 FT2[ ( Y3 >> 16 ) & 0xFF ] ^   \
+                 FT3[ ( Y0 >> 24 ) & 0xFF ];    \
+                                                \
+    X2 = *RK++ ^ FT0[ ( Y2       ) & 0xFF ] ^   \
+                 FT1[ ( Y3 >>  8 ) & 0xFF ] ^   \
+                 FT2[ ( Y0 >> 16 ) & 0xFF ] ^   \
+                 FT3[ ( Y1 >> 24 ) & 0xFF ];    \
+                                                \
+    X3 = *RK++ ^ FT0[ ( Y3       ) & 0xFF ] ^   \
+                 FT1[ ( Y0 >>  8 ) & 0xFF ] ^   \
+                 FT2[ ( Y1 >> 16 ) & 0xFF ] ^   \
+                 FT3[ ( Y2 >> 24 ) & 0xFF ];    \
+}
+
+#define AES_RROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)     \
+{                                               \
+    X0 = *RK++ ^ RT0[ ( Y0       ) & 0xFF ] ^   \
+                 RT1[ ( Y3 >>  8 ) & 0xFF ] ^   \
+                 RT2[ ( Y2 >> 16 ) & 0xFF ] ^   \
+                 RT3[ ( Y1 >> 24 ) & 0xFF ];    \
+                                                \
+    X1 = *RK++ ^ RT0[ ( Y1       ) & 0xFF ] ^   \
+                 RT1[ ( Y0 >>  8 ) & 0xFF ] ^   \
+                 RT2[ ( Y3 >> 16 ) & 0xFF ] ^   \
+                 RT3[ ( Y2 >> 24 ) & 0xFF ];    \
+                                                \
+    X2 = *RK++ ^ RT0[ ( Y2       ) & 0xFF ] ^   \
+                 RT1[ ( Y1 >>  8 ) & 0xFF ] ^   \
+                 RT2[ ( Y0 >> 16 ) & 0xFF ] ^   \
+                 RT3[ ( Y3 >> 24 ) & 0xFF ];    \
+                                                \
+    X3 = *RK++ ^ RT0[ ( Y3       ) & 0xFF ] ^   \
+                 RT1[ ( Y2 >>  8 ) & 0xFF ] ^   \
+                 RT2[ ( Y1 >> 16 ) & 0xFF ] ^   \
+                 RT3[ ( Y0 >> 24 ) & 0xFF ];    \
+}
+
+/*
+ * AES-ECB block encryption/decryption
+ */
+void aes_crypt_ecb( aes_context *ctx,
+                    int mode,
+                    const unsigned char input[16],
+                    unsigned char output[16] )
+{
+    int i;
+    unsigned long *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
+
+#if defined(XYSSL_PADLOCK_C) && defined(XYSSL_HAVE_X86)
+    if( padlock_supports( PADLOCK_ACE ) )
+    {
+        if( padlock_xcryptecb( ctx, mode, input, output ) == 0 )
+            return;
+    }
+#endif
+
+    RK = ctx->rk;
+
+    GET_ULONG_LE( X0, input,  0 ); X0 ^= *RK++;
+    GET_ULONG_LE( X1, input,  4 ); X1 ^= *RK++;
+    GET_ULONG_LE( X2, input,  8 ); X2 ^= *RK++;
+    GET_ULONG_LE( X3, input, 12 ); X3 ^= *RK++;
+
+    if( mode == AES_DECRYPT )
+    {
+        for( i = (ctx->nr >> 1) - 1; i > 0; i-- )
+        {
+            AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+            AES_RROUND( X0, X1, X2, X3, Y0, Y1, Y2, Y3 );
+        }
+
+        AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+
+        X0 = *RK++ ^ ( RSb[ ( Y0       ) & 0xFF ]       ) ^
+                     ( RSb[ ( Y3 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( RSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( RSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
+
+        X1 = *RK++ ^ ( RSb[ ( Y1       ) & 0xFF ]       ) ^
+                     ( RSb[ ( Y0 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( RSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( RSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
+
+        X2 = *RK++ ^ ( RSb[ ( Y2       ) & 0xFF ]       ) ^
+                     ( RSb[ ( Y1 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( RSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( RSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
+
+        X3 = *RK++ ^ ( RSb[ ( Y3       ) & 0xFF ]       ) ^
+                     ( RSb[ ( Y2 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+    }
+    else /* AES_ENCRYPT */
+    {
+        for( i = (ctx->nr >> 1) - 1; i > 0; i-- )
+        {
+            AES_FROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+            AES_FROUND( X0, X1, X2, X3, Y0, Y1, Y2, Y3 );
+        }
+
+        AES_FROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+
+        X0 = *RK++ ^ ( FSb[ ( Y0       ) & 0xFF ]       ) ^
+                     ( FSb[ ( Y1 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( FSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( FSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
+
+        X1 = *RK++ ^ ( FSb[ ( Y1       ) & 0xFF ]       ) ^
+                     ( FSb[ ( Y2 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( FSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( FSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+
+        X2 = *RK++ ^ ( FSb[ ( Y2       ) & 0xFF ]       ) ^
+                     ( FSb[ ( Y3 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( FSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( FSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
+
+        X3 = *RK++ ^ ( FSb[ ( Y3       ) & 0xFF ]       ) ^
+                     ( FSb[ ( Y0 >>  8 ) & 0xFF ] <<  8 ) ^
+                     ( FSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
+                     ( FSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
+    }
+
+    PUT_ULONG_LE( X0, output,  0 );
+    PUT_ULONG_LE( X1, output,  4 );
+    PUT_ULONG_LE( X2, output,  8 );
+    PUT_ULONG_LE( X3, output, 12 );
+}
+
+/*
+ * AES-CBC buffer encryption/decryption
+ */
+void aes_crypt_cbc( aes_context *ctx,
+                    int mode,
+                    int length,
+                    unsigned char iv[16],
+                    const unsigned char *input,
+                    unsigned char *output )
+{
+    int i;
+    unsigned char temp[16];
+
+#if defined(XYSSL_PADLOCK_C) && defined(XYSSL_HAVE_X86)
+    if( padlock_supports( PADLOCK_ACE ) )
+    {
+        if( padlock_xcryptcbc( ctx, mode, length, iv, input, output ) == 0 )
+            return;
+    }
+#endif
+
+    if( mode == AES_DECRYPT )
+    {
+        while( length > 0 )
+        {
+            memcpy( temp, input, 16 );
+            aes_crypt_ecb( ctx, mode, input, output );
+
+            for( i = 0; i < 16; i++ )
+                output[i] = (unsigned char)( output[i] ^ iv[i] );
+
+            memcpy( iv, temp, 16 );
+
+            input  += 16;
+            output += 16;
+            length -= 16;
+        }
+    }
+    else
+    {
+        while( length > 0 )
+        {
+            for( i = 0; i < 16; i++ )
+                output[i] = (unsigned char)( input[i] ^ iv[i] );
+
+            aes_crypt_ecb( ctx, mode, output, output );
+            memcpy( iv, output, 16 );
+
+            input  += 16;
+            output += 16;
+            length -= 16;
+        }
+    }
+}
+
+/*
+ * AES-CFB buffer encryption/decryption
+ */
+void aes_crypt_cfb( aes_context *ctx,
+                    int mode,
+                    int length,
+                    int *iv_off,
+                    unsigned char iv[16],
+                    const unsigned char *input,
+                    unsigned char *output )
+{
+    int c, n = *iv_off;
+
+    if( mode == AES_DECRYPT )
+    {
+        while( length-- )
+        {
+            if( n == 0 )
+                aes_crypt_ecb( ctx, AES_ENCRYPT, iv, iv );
+
+            c = *input++;
+            *output++ = (unsigned char)( c ^ iv[n] );
+            iv[n] = (unsigned char) c;
+
+            n = (n + 1) & 0x0F;
+        }
+    }
+    else
+    {
+        while( length-- )
+        {
+            if( n == 0 )
+                aes_crypt_ecb( ctx, AES_ENCRYPT, iv, iv );
+
+            iv[n] = *output++ = (unsigned char)( iv[n] ^ *input++ );
+
+            n = (n + 1) & 0x0F;
+        }
+    }
+
+    *iv_off = n;
+}
+
+#if defined(XYSSL_SELF_TEST)
+
+#include <stdio.h>
+
+/*
+ * AES test vectors from:
+ *
+ * http://csrc.nist.gov/archive/aes/rijndael/rijndael-vals.zip
+ */
+static const unsigned char aes_test_ecb_dec[3][16] =
+{
+    { 0x44, 0x41, 0x6A, 0xC2, 0xD1, 0xF5, 0x3C, 0x58,
+      0x33, 0x03, 0x91, 0x7E, 0x6B, 0xE9, 0xEB, 0xE0 },
+    { 0x48, 0xE3, 0x1E, 0x9E, 0x25, 0x67, 0x18, 0xF2,
+      0x92, 0x29, 0x31, 0x9C, 0x19, 0xF1, 0x5B, 0xA4 },
+    { 0x05, 0x8C, 0xCF, 0xFD, 0xBB, 0xCB, 0x38, 0x2D,
+      0x1F, 0x6F, 0x56, 0x58, 0x5D, 0x8A, 0x4A, 0xDE }
+};
+
+static const unsigned char aes_test_ecb_enc[3][16] =
+{
+    { 0xC3, 0x4C, 0x05, 0x2C, 0xC0, 0xDA, 0x8D, 0x73,
+      0x45, 0x1A, 0xFE, 0x5F, 0x03, 0xBE, 0x29, 0x7F },
+    { 0xF3, 0xF6, 0x75, 0x2A, 0xE8, 0xD7, 0x83, 0x11,
+      0x38, 0xF0, 0x41, 0x56, 0x06, 0x31, 0xB1, 0x14 },
+    { 0x8B, 0x79, 0xEE, 0xCC, 0x93, 0xA0, 0xEE, 0x5D,
+      0xFF, 0x30, 0xB4, 0xEA, 0x21, 0x63, 0x6D, 0xA4 }
+};
+
+static const unsigned char aes_test_cbc_dec[3][16] =
+{
+    { 0xFA, 0xCA, 0x37, 0xE0, 0xB0, 0xC8, 0x53, 0x73,
+      0xDF, 0x70, 0x6E, 0x73, 0xF7, 0xC9, 0xAF, 0x86 },
+    { 0x5D, 0xF6, 0x78, 0xDD, 0x17, 0xBA, 0x4E, 0x75,
+      0xB6, 0x17, 0x68, 0xC6, 0xAD, 0xEF, 0x7C, 0x7B },
+    { 0x48, 0x04, 0xE1, 0x81, 0x8F, 0xE6, 0x29, 0x75,
+      0x19, 0xA3, 0xE8, 0x8C, 0x57, 0x31, 0x04, 0x13 }
+};
+
+static const unsigned char aes_test_cbc_enc[3][16] =
+{
+    { 0x8A, 0x05, 0xFC, 0x5E, 0x09, 0x5A, 0xF4, 0x84,
+      0x8A, 0x08, 0xD3, 0x28, 0xD3, 0x68, 0x8E, 0x3D },
+    { 0x7B, 0xD9, 0x66, 0xD5, 0x3A, 0xD8, 0xC1, 0xBB,
+      0x85, 0xD2, 0xAD, 0xFA, 0xE8, 0x7B, 0xB1, 0x04 },
+    { 0xFE, 0x3C, 0x53, 0x65, 0x3E, 0x2F, 0x45, 0xB5,
+      0x6F, 0xCD, 0x88, 0xB2, 0xCC, 0x89, 0x8F, 0xF0 }
+};
+
+/*
+ * AES-CFB test vectors (generated on 2008-02-12)
+ */
+static const unsigned char aes_test_cfb_dec[3][16] =
+{
+    { 0xBA, 0x75, 0x0C, 0xC9, 0x77, 0xF8, 0xD4, 0xE1,
+      0x3E, 0x0F, 0xB5, 0x46, 0x2E, 0xA6, 0x33, 0xF6 },
+    { 0xDB, 0x40, 0x4A, 0x98, 0x7B, 0xAA, 0xA3, 0xF3,
+      0x92, 0x35, 0xAD, 0x58, 0x09, 0x9B, 0xFF, 0x6E },
+    { 0xA8, 0x17, 0x41, 0x0E, 0x76, 0x71, 0x60, 0xE5,
+      0xFD, 0x37, 0xC5, 0x43, 0xCC, 0xC8, 0xD6, 0xDA }
+};
+
+static const unsigned char aes_test_cfb_enc[3][16] =
+{
+    { 0x45, 0x62, 0xC5, 0xA1, 0xF9, 0x10, 0x8F, 0xE0,
+      0x87, 0x24, 0x25, 0x68, 0xB5, 0x12, 0xF3, 0x8B },
+    { 0xB8, 0xD4, 0xD5, 0x09, 0xF5, 0xEE, 0x08, 0x38,
+      0x48, 0x9B, 0x9D, 0xAD, 0x11, 0xB4, 0x2E, 0xD2 },
+    { 0xE9, 0x10, 0x80, 0xDA, 0xEE, 0x2D, 0x81, 0xD9,
+      0x41, 0x78, 0x91, 0xD5, 0x98, 0x78, 0xE1, 0xFA }
+};
+
+/*
+ * Checkup routine
+ */
+int aes_self_test( int verbose )
+{
+    int i, j, u, v, offset;
+    unsigned char key[32];
+    unsigned char buf[16];
+    unsigned char prv[16];
+    unsigned char iv[16];
+    aes_context ctx;
+
+    memset( key, 0, 32 );
+
+    /*
+     * ECB mode
+     */
+    for( i = 0; i < 6; i++ )
+    {
+        u = i >> 1;
+        v = i  & 1;
+
+        if( verbose != 0 )
+            printf( "  AES-ECB-%3d (%s): ", 128 + u * 64,
+                    ( v == AES_DECRYPT ) ? "dec" : "enc" );
+
+        memset( buf, 0, 16 );
+
+        if( v == AES_DECRYPT )
+        {
+            aes_setkey_dec( &ctx, key, 128 + u * 64 );
+
+            for( j = 0; j < 10000; j++ )
+                aes_crypt_ecb( &ctx, v, buf, buf );
+
+            if( memcmp( buf, aes_test_ecb_dec[u], 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    printf( "failed\n" );
+
+                return( 1 );
             }
-            rk += 4;
         }
-    } else if (keylen == 24) {
-        j = 52;   
-        LOAD32H(rk[4], key + 16);
-        LOAD32H(rk[5], key + 20);
-        for (;;) {
-        #ifdef _MSC_VER
-            temp = skey->rijndael.eK[rk - skey->rijndael.eK + 5]; 
-        #else
-            temp = rk[5];
-        #endif
-            rk[ 6] = rk[ 0] ^ setup_mix(temp) ^ rcon[i];
-            rk[ 7] = rk[ 1] ^ rk[ 6];
-            rk[ 8] = rk[ 2] ^ rk[ 7];
-            rk[ 9] = rk[ 3] ^ rk[ 8];
-            if (++i == 8) {
-                break;
+        else
+        {
+            aes_setkey_enc( &ctx, key, 128 + u * 64 );
+
+            for( j = 0; j < 10000; j++ )
+                aes_crypt_ecb( &ctx, v, buf, buf );
+
+            if( memcmp( buf, aes_test_ecb_enc[u], 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    printf( "failed\n" );
+
+                return( 1 );
             }
-            rk[10] = rk[ 4] ^ rk[ 9];
-            rk[11] = rk[ 5] ^ rk[10];
-            rk += 6;
         }
-    } else if (keylen == 32) {
-        j = 60;
-        LOAD32H(rk[4], key + 16);
-        LOAD32H(rk[5], key + 20);
-        LOAD32H(rk[6], key + 24);
-        LOAD32H(rk[7], key + 28);
-        for (;;) {
-        #ifdef _MSC_VER
-            temp = skey->rijndael.eK[rk - skey->rijndael.eK + 7]; 
-        #else
-            temp = rk[7];
-        #endif
-            rk[ 8] = rk[ 0] ^ setup_mix(temp) ^ rcon[i];
-            rk[ 9] = rk[ 1] ^ rk[ 8];
-            rk[10] = rk[ 2] ^ rk[ 9];
-            rk[11] = rk[ 3] ^ rk[10];
-            if (++i == 7) {
-                break;
+
+        if( verbose != 0 )
+            printf( "passed\n" );
+    }
+
+    if( verbose != 0 )
+        printf( "\n" );
+
+    /*
+     * CBC mode
+     */
+    for( i = 0; i < 6; i++ )
+    {
+        u = i >> 1;
+        v = i  & 1;
+
+        if( verbose != 0 )
+            printf( "  AES-CBC-%3d (%s): ", 128 + u * 64,
+                    ( v == AES_DECRYPT ) ? "dec" : "enc" );
+
+        memset( iv , 0, 16 );
+        memset( prv, 0, 16 );
+        memset( buf, 0, 16 );
+
+        if( v == AES_DECRYPT )
+        {
+            aes_setkey_dec( &ctx, key, 128 + u * 64 );
+
+            for( j = 0; j < 10000; j++ )
+                aes_crypt_cbc( &ctx, v, 16, iv, buf, buf );
+
+            if( memcmp( buf, aes_test_cbc_dec[u], 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    printf( "failed\n" );
+
+                return( 1 );
             }
-            temp = rk[11];
-            rk[12] = rk[ 4] ^ setup_mix(RORc(temp, 8));
-            rk[13] = rk[ 5] ^ rk[12];
-            rk[14] = rk[ 6] ^ rk[13];
-            rk[15] = rk[ 7] ^ rk[14];
-            rk += 8;
         }
-    } else {
-       /* this can't happen */
-       return CRYPT_ERROR;
-    }
+        else
+        {
+            aes_setkey_enc( &ctx, key, 128 + u * 64 );
 
-#ifndef ENCRYPT_ONLY    
-    /* setup the inverse key now */
-    rk   = skey->rijndael.dK;
-    rrk  = skey->rijndael.eK + j - 4; 
+            for( j = 0; j < 10000; j++ )
+            {
+                unsigned char tmp[16];
 
-    /* apply the inverse MixColumn transform to all round keys but the first and the last: */
-    /* copy first */
-    *rk++ = *rrk++;
-    *rk++ = *rrk++;
-    *rk++ = *rrk++;
-    *rk   = *rrk;
-    rk -= 3; rrk -= 3;
+                aes_crypt_cbc( &ctx, v, 16, iv, buf, buf );
 
-    for (i = 1; i < skey->rijndael.Nr; i++) {
-        rrk -= 4;
-        rk  += 4;
-        temp = rrk[0];
-        rk[0] = setup_mix2(temp);
-        temp = rrk[1];
-        rk[1] = setup_mix2(temp);
-        temp = rrk[2];
-        rk[2] = setup_mix2(temp);
-        temp = rrk[3];
-        rk[3] = setup_mix2(temp);
-    }
+                memcpy( tmp, prv, 16 );
+                memcpy( prv, buf, 16 );
+                memcpy( buf, tmp, 16 );
+            }
 
-    /* copy last */
-    rrk -= 4;
-    rk  += 4;
-    *rk++ = *rrk++;
-    *rk++ = *rrk++;
-    *rk++ = *rrk++;
-    *rk   = *rrk;
-#endif /* ENCRYPT_ONLY */
+            if( memcmp( prv, aes_test_cbc_enc[u], 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    printf( "failed\n" );
 
-    return CRYPT_OK;   
-}
-
-/**
-  Encrypts a block of text with AES
-  @param pt The input plaintext (16 bytes)
-  @param ct The output ciphertext (16 bytes)
-  @param skey The key as scheduled
-  @return CRYPT_OK if successful
-*/
-int ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
-{
-    ulong32 s0, s1, s2, s3, t0, t1, t2, t3, *rk;
-    int Nr, r;
-
-    LTC_ARGCHK(pt != NULL);
-    LTC_ARGCHK(ct != NULL);
-    LTC_ARGCHK(skey != NULL);
-
-    Nr = skey->rijndael.Nr;
-    rk = skey->rijndael.eK;
-
-    /*
-     * map byte array block to cipher state
-     * and add initial round key:
-     */
-    LOAD32H(s0, pt      ); s0 ^= rk[0];
-    LOAD32H(s1, pt  +  4); s1 ^= rk[1];
-    LOAD32H(s2, pt  +  8); s2 ^= rk[2];
-    LOAD32H(s3, pt  + 12); s3 ^= rk[3];
-
-    for (r = 0; ; r++) {
-        rk += 4;
-        t0 =
-            Te0(byte(s0, 3)) ^
-            Te1(byte(s1, 2)) ^
-            Te2(byte(s2, 1)) ^
-            Te3(byte(s3, 0)) ^
-            rk[0];
-        t1 =
-            Te0(byte(s1, 3)) ^
-            Te1(byte(s2, 2)) ^
-            Te2(byte(s3, 1)) ^
-            Te3(byte(s0, 0)) ^
-            rk[1];
-        t2 =
-            Te0(byte(s2, 3)) ^
-            Te1(byte(s3, 2)) ^
-            Te2(byte(s0, 1)) ^
-            Te3(byte(s1, 0)) ^
-            rk[2];
-        t3 =
-            Te0(byte(s3, 3)) ^
-            Te1(byte(s0, 2)) ^
-            Te2(byte(s1, 1)) ^
-            Te3(byte(s2, 0)) ^
-            rk[3];
-        if (r == Nr-2) { 
-           break;
+                return( 1 );
+            }
         }
-        s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+
+        if( verbose != 0 )
+            printf( "passed\n" );
     }
-    rk += 4;
+
+    if( verbose != 0 )
+        printf( "\n" );
 
     /*
-     * apply last round and
-     * map cipher state to byte array block:
+     * CFB mode
      */
-    s0 =
-        (Te4_3[byte(t0, 3)]) ^
-        (Te4_2[byte(t1, 2)]) ^
-        (Te4_1[byte(t2, 1)]) ^
-        (Te4_0[byte(t3, 0)]) ^
-        rk[0];
-    STORE32H(s0, ct);
-    s1 =
-        (Te4_3[byte(t1, 3)]) ^
-        (Te4_2[byte(t2, 2)]) ^
-        (Te4_1[byte(t3, 1)]) ^
-        (Te4_0[byte(t0, 0)]) ^
-        rk[1];
-    STORE32H(s1, ct+4);
-    s2 =
-        (Te4_3[byte(t2, 3)]) ^
-        (Te4_2[byte(t3, 2)]) ^
-        (Te4_1[byte(t0, 1)]) ^
-        (Te4_0[byte(t1, 0)]) ^
-        rk[2];
-    STORE32H(s2, ct+8);
-    s3 =
-        (Te4_3[byte(t3, 3)]) ^
-        (Te4_2[byte(t0, 2)]) ^
-        (Te4_1[byte(t1, 1)]) ^
-        (Te4_0[byte(t2, 0)]) ^ 
-        rk[3];
-    STORE32H(s3, ct+12);
+    for( i = 0; i < 6; i++ )
+    {
+        u = i >> 1;
+        v = i  & 1;
 
-    return CRYPT_OK;
-}
+        if( verbose != 0 )
+            printf( "  AES-CFB-%3d (%s): ", 128 + u * 64,
+                    ( v == AES_DECRYPT ) ? "dec" : "enc" );
 
-int ECB_DEC(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
-{
-    ulong32 s0, s1, s2, s3, t0, t1, t2, t3, *rk;
-    int Nr, r;
+        memset( iv , 0, 16 );
+        memset( buf, 0, 16 );
+        offset = 0;
 
-    LTC_ARGCHK(pt != NULL);
-    LTC_ARGCHK(ct != NULL);
-    LTC_ARGCHK(skey != NULL);
-    
-    Nr = skey->rijndael.Nr;
-    rk = skey->rijndael.dK;
+        if( v == AES_DECRYPT )
+        {
+            aes_setkey_dec( &ctx, key, 128 + u * 64 );
 
-    /*
-     * map byte array block to cipher state
-     * and add initial round key:
-     */
-    LOAD32H(s0, ct      ); s0 ^= rk[0];
-    LOAD32H(s1, ct  +  4); s1 ^= rk[1];
-    LOAD32H(s2, ct  +  8); s2 ^= rk[2];
-    LOAD32H(s3, ct  + 12); s3 ^= rk[3];
+            for( j = 0; j < 10000; j++ )
+                aes_crypt_cfb( &ctx, v, 16, &offset, iv, buf, buf );
 
-    for (r = 0; ; r++) {
-        rk += 4;
-        t0 =
-            Td0(byte(s0, 3)) ^
-            Td1(byte(s3, 2)) ^
-            Td2(byte(s2, 1)) ^
-            Td3(byte(s1, 0)) ^
-            rk[0];
-        t1 =
-            Td0(byte(s1, 3)) ^
-            Td1(byte(s0, 2)) ^
-            Td2(byte(s3, 1)) ^
-            Td3(byte(s2, 0)) ^
-            rk[1];
-        t2 =
-            Td0(byte(s2, 3)) ^
-            Td1(byte(s1, 2)) ^
-            Td2(byte(s0, 1)) ^
-            Td3(byte(s3, 0)) ^
-            rk[2];
-        t3 =
-            Td0(byte(s3, 3)) ^
-            Td1(byte(s2, 2)) ^
-            Td2(byte(s1, 1)) ^
-            Td3(byte(s0, 0)) ^
-            rk[3];
-        if (r == Nr-2) {
-           break; 
+            if( memcmp( buf, aes_test_cfb_dec[u], 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    printf( "failed\n" );
+
+                return( 1 );
+            }
         }
-        s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+        else
+        {
+            aes_setkey_enc( &ctx, key, 128 + u * 64 );
+
+            for( j = 0; j < 10000; j++ )
+                aes_crypt_cfb( &ctx, v, 16, &offset, iv, buf, buf );
+
+            if( memcmp( buf, aes_test_cfb_enc[u], 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    printf( "failed\n" );
+
+                return( 1 );
+            }
+        }
+
+        if( verbose != 0 )
+            printf( "passed\n" );
     }
-    rk += 4;
 
-    /*
-     * apply last round and
-     * map cipher state to byte array block:
-     */
-    s0 =
-        (Td4[byte(t0, 3)] & 0xff000000) ^
-        (Td4[byte(t3, 2)] & 0x00ff0000) ^
-        (Td4[byte(t2, 1)] & 0x0000ff00) ^
-        (Td4[byte(t1, 0)] & 0x000000ff) ^
-        rk[0];
-    STORE32H(s0, pt);
-    s1 =
-        (Td4[byte(t1, 3)] & 0xff000000) ^
-        (Td4[byte(t0, 2)] & 0x00ff0000) ^
-        (Td4[byte(t3, 1)] & 0x0000ff00) ^
-        (Td4[byte(t2, 0)] & 0x000000ff) ^
-        rk[1];
-    STORE32H(s1, pt+4);
-    s2 =
-        (Td4[byte(t2, 3)] & 0xff000000) ^
-        (Td4[byte(t1, 2)] & 0x00ff0000) ^
-        (Td4[byte(t0, 1)] & 0x0000ff00) ^
-        (Td4[byte(t3, 0)] & 0x000000ff) ^
-        rk[2];
-    STORE32H(s2, pt+8);
-    s3 =
-        (Td4[byte(t3, 3)] & 0xff000000) ^
-        (Td4[byte(t2, 2)] & 0x00ff0000) ^
-        (Td4[byte(t1, 1)] & 0x0000ff00) ^
-        (Td4[byte(t0, 0)] & 0x000000ff) ^
-        rk[3];
-    STORE32H(s3, pt+12);
 
-    return CRYPT_OK;
+    if( verbose != 0 )
+        printf( "\n" );
+
+    return( 0 );
 }
 
-/**
-  CBC encrypt
-  @param pt     Plaintext
-  @param ct     [out] Ciphertext
-  @param len    The number of bytes to process (must be multiple of block length)
-  @param cbc    CBC state
-  @return CRYPT_OK if successful
-*/
-int aes_cbc_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, symmetric_CBC *cbc)
+int main(int argc, char *argv[])
 {
-   int x, err;
-
-   LTC_ARGCHK(pt != NULL);
-   LTC_ARGCHK(ct != NULL);
-   LTC_ARGCHK(cbc != NULL);
-
-   /* is blocklen valid? */
-   if (cbc->blocklen < 1 || cbc->blocklen > (int)sizeof(cbc->IV)) {
-      return CRYPT_INVALID_ARG;
-   }    
-
-   if (len % cbc->blocklen) {
-      return CRYPT_INVALID_ARG;
-   }
-
-    while (len) {
-         /* xor IV against plaintext */
-         for (x = 0; x < cbc->blocklen; x++) {
-              cbc->IV[x] ^= pt[x];
-         }
-
-         /* encrypt */
-         if ((err = ECB_ENC(cbc->IV, ct, &cbc->key)) != CRYPT_OK) {
-            return err;
-         }
-
-         for (x = 0; x < cbc->blocklen; x++) {
-                cbc->IV[x] = ct[x];
-          }
-        
-        ct  += cbc->blocklen;
-        pt  += cbc->blocklen;
-        len -= cbc->blocklen;
-   }
-   return CRYPT_OK;
+    return aes_self_test(1);
 }
 
-/**
-  CBC decrypt
-  @param ct     Ciphertext
-  @param pt     [out] Plaintext
-  @param len    The number of bytes to process (must be multiple of block length)
-  @param cbc    CBC state
-  @return CRYPT_OK if successful
-*/
-int aes_cbc_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, symmetric_CBC *cbc)
-{
-   int x, err;
-   unsigned char tmp[16];
-   unsigned char tmpy;
-
-   LTC_ARGCHK(pt  != NULL);
-   LTC_ARGCHK(ct  != NULL);
-   LTC_ARGCHK(cbc != NULL);
-   
-   /* is blocklen valid? */
-   if (cbc->blocklen < 1 || cbc->blocklen > (int)sizeof(cbc->IV)) {
-      return CRYPT_INVALID_ARG;
-   }    
-
-   if (len % cbc->blocklen) {
-      return CRYPT_INVALID_ARG;
-   }
-   
-    while (len) {
-         /* decrypt */
-         if ((err = ECB_DEC(ct, tmp, &cbc->key)) != CRYPT_OK) {
-            return err;
-         }
-
-         for (x = 0; x < cbc->blocklen; x++) {
-               tmpy       = tmp[x] ^ cbc->IV[x];
-               cbc->IV[x] = ct[x];
-               pt[x]      = tmpy;
-         }
-       
-         ct  += cbc->blocklen;
-         pt  += cbc->blocklen;
-         len -= cbc->blocklen;
-   }
-   return CRYPT_OK;
-}
-
-void
-fz_aesinit(fz_aes *aes, unsigned char *key, unsigned keylen)
-{
-	int res;
-	aes->ivinited = 0;
-	aes->cbckey.blocklen = 16;
-	res = SETUP(key, keylen, 0, &aes->cbckey.key);
-	assert(CRYPT_OK == res);
-}
-
-void fz_setiv(fz_aes *aes, unsigned char *iv)
-{
-	memmove(aes->cbckey.IV, iv, 16);
-	aes->ivinited = 1;
-}
-
-void
-fz_aesdecrypt(fz_aes *aes, unsigned char *dest, unsigned char *src, unsigned len)
-{
-	assert(aes->ivinited);
-	if (len > 0)
-		aes_cbc_decrypt(src, dest, len, &aes->cbckey);
-}
+#endif /* defined(XYSSL_SELF_TEST) */

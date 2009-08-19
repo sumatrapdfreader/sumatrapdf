@@ -134,7 +134,6 @@ pdf_debugxref(pdf_xref *xref)
 	}
 }
 
-/* ICKY! */
 fz_error
 pdf_decryptxref(pdf_xref *xref)
 {
@@ -150,7 +149,7 @@ pdf_decryptxref(pdf_xref *xref)
 		if (fz_isnull(encrypt))
 			return fz_okay;
 
-		error = pdf_newdecrypt(&xref->crypt, encrypt, id);
+		error = pdf_newcrypt(&xref->crypt, encrypt, id);
 		if (error)
 			return fz_rethrow(error, "cannot create decrypter");
 	}

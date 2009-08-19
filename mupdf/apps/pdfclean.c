@@ -9,7 +9,6 @@
 
 #include "pdftool.h"
 
-static pdf_crypt *outcrypt = NULL;
 static FILE *out = NULL;
 
 static char *uselist = NULL;

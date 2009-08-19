@@ -34,6 +34,7 @@ if $(OS) = NT
 
 Library libfitz :
 
+	crypt_aes.c
 	crypt_arc4.c
 	crypt_crc32.c
 	crypt_md5.c
@@ -51,7 +52,9 @@ Library libfitz :
 	stm_misc.c
 
 	filt_pipeline.c
+	filt_copy.c
 	filt_arc4.c
+	filt_aesd.c
 	filt_null.c
 
 	filt_a85d.c

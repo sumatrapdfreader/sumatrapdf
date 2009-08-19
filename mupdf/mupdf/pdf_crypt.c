@@ -1,731 +1,640 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static const unsigned char padding[32] =
-{
-	0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41,
-	0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08,
-	0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80,
-	0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a
-};
-
-static void voodoo50(unsigned char *buf, int n)
-{
-	fz_md5 md5;
-	int i;
-
-	for (i = 0; i < 50; i++)
-	{
-		fz_md5init(&md5);
-		fz_md5update(&md5, buf, n);
-		fz_md5final(&md5, buf);
-	}
-}
-
-static void voodoo19(unsigned char *data, int ndata, unsigned char *key, int nkey)
-{
-	fz_arc4 arc4;
-	unsigned char keybuf[16];
-	int i, k;
-
-	for (i = 1; i <= 19; i++)
-	{
-		for (k = 0; k < nkey; k++)
-			keybuf[k] = key[k] ^ (unsigned char)i;
-		fz_arc4init(&arc4, keybuf, nkey);
-		fz_arc4encrypt(&arc4, data, data, ndata);
-	}
-}
-
-static void padpassword(unsigned char *buf, unsigned char *pw, int pwlen)
-{
-	if (pwlen > 32)
-		pwlen = 32;
-	memcpy(buf, pw, pwlen);
-	memcpy(buf + pwlen, padding, 32 - pwlen);
-}
-
-static fz_error
-pdf_parsecryptfilt(fz_obj *filters, char *filter, char **method, int *length)
-{
-	fz_obj *cryptfilt;
-	fz_obj *obj;
-
-	cryptfilt = fz_dictgets(filters, filter);
-	if (!fz_isdict(cryptfilt))
-		goto cleanup;
-
-	obj = fz_dictgets(cryptfilt, "CFM");
-	*method = "None";
-	if (fz_isname(obj))
-		*method = fz_toname(obj);
-
-	obj = fz_dictgets(cryptfilt, "Length");
-	*length = 40;
-	if (fz_isint(obj))
-		*length = fz_toint(obj);
-
-	/* Work-around to fix PDF-generators that assume that the
-	   length is specified in bytes instead of in bits */
-	if (*length < 40)
-		if (*length * 8 >= 40 && *length * 8 <= 128)
-			*length = *length * 8;
-
-	return fz_okay;
-
-cleanup:
-	return fz_throw("corrupt encryption filter dictionary");
-}
-
-static fz_error
-pdf_parseencdict(pdf_crypt *crypt, fz_obj *enc)
-{
-	fz_obj *obj;
-	fz_error error = fz_okay;
-
-	obj = fz_dictgets(enc, "Filter");
-	if (!fz_isname(obj))
-		goto cleanup;
-	crypt->handler = fz_toname(obj);
-
-	obj = fz_dictgets(enc, "V");
-	crypt->v = 0;
-	if (fz_isint(obj))
-		crypt->v = fz_toint(obj);
-
-	obj = fz_dictgets(enc, "R");
-	if (!fz_isint(obj))
-		goto cleanup;
-	crypt->r = fz_toint(obj);
-
-	if (crypt->v == 1)
-	{
-		crypt->len = 40;
-	}
-	else if (crypt->v >= 2 && crypt->v <= 3)
-	{
-		obj = fz_dictgets(enc, "Length");
-		crypt->len = 40;
-		if (fz_isint(obj))
-			crypt->len = fz_toint(obj);
-	}
-	else if (crypt->v == 4)
-	{
-		fz_obj *cryptfilt;
-		char *filt;
-
-		cryptfilt = fz_dictgets(enc, "CF");
-		if (cryptfilt && !fz_isdict(cryptfilt))
-			goto cleanup;
-
-		obj = fz_dictgets(enc, "StmF");
-		filt = "Identity";
-		if (fz_isname(obj))
-			filt = fz_toname(obj);
-
-		error = pdf_parsecryptfilt(cryptfilt, filt,
-				&crypt->stmmethod, &crypt->stmlength);
-		if (error)
-			goto cleanup;
-
-		obj = fz_dictgets(enc, "StrF");
-		filt = "Identity";
-		if (fz_isname(obj))
-			filt = fz_toname(obj);
-
-		error = pdf_parsecryptfilt(cryptfilt, filt,
-				&crypt->strmethod, &crypt->strlength);
-		if (error)
-			goto cleanup;
-
-		obj = fz_dictgets(enc, "EncryptMetadata");
-		crypt->encryptedmeta = 1;
-		if (fz_isbool(obj))
-			crypt->encryptedmeta = fz_tobool(obj);
-	}
-
-	obj = fz_dictgets(enc, "O");
-	if (!fz_isstring(obj) || fz_tostrlen(obj) != 32)
-		goto cleanup;
-	memcpy(crypt->o, fz_tostrbuf(obj), 32);
-
-	obj = fz_dictgets(enc, "U");
-	if (!fz_isstring(obj) || fz_tostrlen(obj) != 32)
-		goto cleanup;
-	memcpy(crypt->u, fz_tostrbuf(obj), 32);
-
-	obj = fz_dictgets(enc, "P");
-	if (!fz_isint(obj))
-		goto cleanup;
-	crypt->p = fz_toint(obj);
-
-	return fz_okay;
-
-cleanup:
-	if (error)
-		return fz_rethrow(error, "corrupt encryption dictionary");
-
-	return fz_throw("corrupt encryption dictionary");
-}
-
-static pdf_crypt_algo_e algofromname(char* name)
-{
-	if (!name)
-		return ALGO_RC4;
-
-	if (strcmp(name, "V2") == 0)
-		return ALGO_RC4;
-
-	if (strcmp(name, "AESV2") == 0)
-		return ALGO_AES;
-
-	return ALGO_UNKNOWN;
-}
-
 /*
- * Create crypt object for decrypting given the
- * Encoding dictionary and file ID
+ * Create crypt object for decrypting strings and streams
+ * given the Encryption and ID objects.
  */
+
 fz_error
-pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id)
+pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 {
-	pdf_crypt *crypt;
-	fz_error error;
-	fz_obj *obj;
+    pdf_crypt *crypt;
+    fz_error error;
+    fz_obj *obj;
 
-	crypt = fz_malloc(sizeof(pdf_crypt));
-	if (!crypt)
-		return fz_rethrow(-1, "out of memory: crypt struct");
+    crypt = fz_malloc(sizeof(pdf_crypt));
+    if (!crypt)
+	return fz_rethrow(-1, "out of memory: crypt struct");
 
-	memset(crypt->o, 0x00, sizeof(crypt->o));
-	memset(crypt->u, 0x00, sizeof(crypt->u));
-	crypt->p = 0;
-	crypt->v = 0;
-	crypt->r = 0;
-	crypt->len = 0;
-	crypt->handler = nil;
-	crypt->stmmethod = nil;
-	crypt->stmlength = 0;
-	crypt->strmethod = nil;
-	crypt->strlength = 0;
-	crypt->encryptedmeta = 0;
-	crypt->algo = ALGO_UNKNOWN;
-	crypt->encrypt = fz_keepobj(enc);
-	crypt->id = nil;
+    memset(crypt, 0x00, sizeof(pdf_crypt));
+    crypt->cf = nil;
 
-	memset(crypt->key, 0x00, sizeof(crypt->key));
-	crypt->keylen = 0;
+    /*
+     * Common to all security handlers (PDF 1.7 table 3.18)
+     */
 
-	error = pdf_parseencdict(crypt, enc);
-	if (error)
-	{
-		pdf_freecrypt(crypt);
-		return fz_rethrow(error, "unable to to create decryptor");
-	}
-
-	if (strcmp(crypt->handler, "Standard") != 0)
-	{
-		char *handler = crypt->handler;
-		pdf_freecrypt(crypt);
-		return fz_throw("unsupported security handler: %s", handler);
-	}
-
-	if (crypt->v == 1 || crypt->v == 2)
-	{
-		crypt->algo = ALGO_RC4;
-	}
-
-	if (crypt->v == 4)
-	{
-		pdf_crypt_algo_e stmalgo, stralgo;
-		char *stmmethod, *strmethod;
-
-		stmmethod = crypt->stmmethod;
-		stmalgo = algofromname(stmmethod);
-		if (stmalgo == ALGO_UNKNOWN)
-		{
-			pdf_freecrypt(crypt);
-			return fz_throw("unsupported stream encryption method: %s", stmmethod);
-		}
-
-		strmethod = crypt->strmethod;
-		stralgo = algofromname(strmethod);
-		if (stralgo == ALGO_UNKNOWN)
-		{
-			pdf_freecrypt(crypt);
-			return fz_throw("unsupported string encryption: %s", strmethod);
-		}
-
-		if (stmalgo != stralgo)
-		{
-			pdf_freecrypt(crypt);
-			return fz_throw("stream encryption algorithm (%s) != string encryption algorithm(%s)\n", stmmethod, strmethod);
-		}
-
-		if (crypt->stmlength != crypt->strlength)
-		{
-			int stmlength = crypt->stmlength;
-			int strlength = crypt->strlength;
-			pdf_freecrypt(crypt);
-			return fz_throw("unsupport encryption key lengths: %d vs. %d", stmlength, strlength);
-		}
-
-		crypt->len = crypt->stmlength;
-
-		crypt->v = 2;
-		crypt->algo = stmalgo;
-	}
-
-	if (crypt->len % 8 != 0)
-		goto cleanup;
-	crypt->len = crypt->len / 8;
-
-	if (crypt->v == 1 && crypt->len != 5) goto cleanup;
-	if (crypt->v == 2 && crypt->len < 5) goto cleanup;
-	if (crypt->v == 3 && (crypt->len < 5 || crypt->len > 16)) goto cleanup;
-	if (crypt->v == 4 && (crypt->len < 5 || crypt->len > 16)) goto cleanup;
-
-	if (crypt->v != 1 && crypt->v != 2)
-	{
-		pdf_freecrypt(crypt);
-		return fz_throw("unsupported encryption algorithm: %d", crypt->v);
-	}
-
-	if (fz_isarray(id) && fz_arraylen(id) == 2)
-	{
-		obj = fz_arrayget(id, 0);
-		if (fz_isstring(obj))
-			crypt->id = fz_keepobj(obj);
-	}
-
-	crypt->keylen = crypt->len + 5;
-	if (crypt->keylen > 16)
-		crypt->keylen = 16;
-
-	memset(crypt->key, 0, 16);
-
-	*cp = crypt;
-	return fz_okay;
-
-cleanup:
+    obj = fz_dictgets(dict, "Filter");
+    if (!fz_isname(obj))
+    {
 	pdf_freecrypt(crypt);
-	return fz_throw("corrupt encryption dictionary");
+	return fz_throw("unspecified encryption handler");
+    }
+    if (strcmp(fz_toname(obj), "Standard") != 0)
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("unknown encryption handler: '%s'", fz_toname(obj));
+    }
+
+    crypt->v = 0;
+    obj = fz_dictgets(dict, "V");
+    if (fz_isint(obj))
+	crypt->v = fz_toint(obj);
+    if (crypt->v != 1 && crypt->v != 2 && crypt->v != 4)
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("unknown encryption version: %d", crypt->v);
+    }
+
+    crypt->length = 40;
+    if (crypt->v == 2 || crypt->v == 4)
+    {
+	obj = fz_dictgets(dict, "Length");
+	if (fz_isint(obj))
+	    crypt->length = fz_toint(obj);
+
+	/* work-around for pdf generators that assume length is in bytes */
+	if (crypt->length < 40)
+	    crypt->length = crypt->length * 8;
+
+	if (crypt->length % 8 != 0)
+	{
+	    pdf_freecrypt(crypt);
+	    return fz_throw("invalid encryption key length: %d", crypt->length);
+	}
+	if (crypt->length > 256)
+	{
+	    pdf_freecrypt(crypt);
+	    return fz_throw("invalid encryption key length: %d", crypt->length);
+	}
+    }
+
+    if (crypt->v == 1 || crypt->v == 2)
+    {
+	crypt->stmf.method = PDF_CRYPT_RC4;
+	crypt->stmf.length = crypt->length;
+
+	crypt->strf.method = PDF_CRYPT_RC4;
+	crypt->strf.length = crypt->length;
+    }
+
+    if (crypt->v == 4)
+    {
+	crypt->stmf.method = PDF_CRYPT_NONE;
+	crypt->stmf.length = crypt->length;
+
+	crypt->strf.method = PDF_CRYPT_NONE;
+	crypt->strf.length = crypt->length;
+
+	obj = fz_dictgets(dict, "CF");
+	if (fz_isdict(obj))
+	{
+	    crypt->cf = fz_keepobj(obj);
+
+	    obj = fz_dictgets(dict, "StmF");
+	    if (fz_isname(obj))
+	    {
+		/* should verify that it is either Identity or StdCF */
+		obj = fz_dictgets(crypt->cf, fz_toname(obj));
+		if (fz_isdict(obj))
+		{
+		    error = pdf_parsecryptfilter(&crypt->stmf, obj, crypt->length);
+		    if (error)
+		    {
+			pdf_freecrypt(crypt);
+			return fz_rethrow(error, "cannot parse stream crypt filter");
+		    }
+		}
+	    }
+
+	    obj = fz_dictgets(dict, "StrF");
+	    if (fz_isname(obj))
+	    {
+		/* should verify that it is either Identity or StdCF */
+		obj = fz_dictgets(crypt->cf, fz_toname(obj));
+		if (fz_isdict(obj))
+		{
+		    error = pdf_parsecryptfilter(&crypt->strf, obj, crypt->length);
+		    if (error)
+		    {
+			pdf_freecrypt(crypt);
+			return fz_rethrow(error, "cannot parse string crypt filter");
+		    }
+		}
+	    }
+	}
+    }
+
+    /*
+     * Standard security handler (PDF 1.7 table 3.19)
+     */
+
+    obj = fz_dictgets(dict, "R");
+    if (fz_isint(obj))
+	crypt->r = fz_toint(obj);
+    else
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("encryption dictionary missing revision value");
+    }
+
+    obj = fz_dictgets(dict, "O");
+    if (fz_isstring(obj) && fz_tostrlen(obj) == 32)
+	memcpy(crypt->o, fz_tostrbuf(obj), 32);
+    else
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("encryption dictionary missing owner password");
+    }
+
+    obj = fz_dictgets(dict, "U");
+    if (fz_isstring(obj) && fz_tostrlen(obj) == 32)
+	memcpy(crypt->u, fz_tostrbuf(obj), 32);
+    else
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("encryption dictionary missing user password");
+    }
+
+    obj = fz_dictgets(dict, "P");
+    if (fz_isint(obj))
+	crypt->p = fz_toint(obj);
+    else
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("encryption dictionary missing permissions value");
+    }
+
+    crypt->encryptmetadata = 1;
+    obj = fz_dictgets(dict, "EncryptMetadata");
+    if (fz_isbool(obj))
+	crypt->encryptmetadata = fz_tobool(obj);
+
+    /*
+     * Extract file identifier string
+     */
+
+    crypt->idlength = 0;
+
+    if (fz_isarray(id) && fz_arraylen(id) == 2)
+    {
+	obj = fz_arrayget(id, 0);
+	if (fz_isstring(obj))
+	{
+	    if (fz_tostrlen(obj) <= sizeof(crypt->idstring))
+	    {
+		memcpy(crypt->idstring, fz_tostrbuf(obj), fz_tostrlen(obj));
+		crypt->idlength = fz_tostrlen(obj);
+	    }
+	}
+    }
+
+    if (crypt->idlength == 0)
+    {
+	pdf_freecrypt(crypt);
+	return fz_throw("missing file identifier");
+    }
+
+#if 0
+    {
+	int i;
+	printf("crypt: v=%d length=%d\n", crypt->v, crypt->length);
+	printf("crypt: stmf method=%d length=%d\n", crypt->stmf.method, crypt->stmf.length);
+	printf("crypt: strf method=%d length=%d\n", crypt->strf.method, crypt->strf.length);
+	printf("crypt: r=%d\n", crypt->r);
+	printf("crypt: o=<"); for (i = 0; i < 32; i++) printf("%02X", crypt->o[i]); printf(">\n");
+	printf("crypt: u=<"); for (i = 0; i < 32; i++) printf("%02X", crypt->u[i]); printf(">\n");
+	printf("crypt: p=0x%08X\n", crypt->p);
+    }
+#endif
+
+    *cryptp = crypt;
+    return fz_okay;
 }
 
 void
 pdf_freecrypt(pdf_crypt *crypt)
 {
-	if (crypt->encrypt) fz_dropobj(crypt->encrypt);
-	if (crypt->id) fz_dropobj(crypt->id);
-	fz_free(crypt);
-}
-
-static void
-createobjkey(pdf_crypt *crypt, unsigned oid, unsigned gen, unsigned char *key)
-{
-	unsigned char message[5];
-	unsigned char aesSalt[4] = {0x73, 0x41, 0x6c, 0x54}; /* 'aAlT' */
-	fz_md5 md5;
-
-	/* Algorithm 3.1 Encryption of data using an encryption key */
-
-	fz_md5init(&md5);
-
-	fz_md5update(&md5, crypt->key, crypt->len);
-
-	message[0] = oid & 0xFF;
-	message[1] = (oid >> 8) & 0xFF;
-	message[2] = (oid >> 16) & 0xFF;
-
-	message[3] = gen & 0xFF;
-	message[4] = (gen >> 8) & 0xFF;
-
-	fz_md5update(&md5, message, 5);
-
-	/* PDF 1.6 spec doesn't mention that but poppler is doing it */
-	if (crypt->algo == ALGO_AES)
-		fz_md5update(&md5, aesSalt, 4);
-
-	fz_md5final(&md5, key);
+    if (crypt->cf) fz_dropobj(crypt->cf);
+    fz_free(crypt);
 }
 
 /*
- * Algorithm 3.2 Computing an encryption key as of pdf 1.7
+ * Parse a CF dictionary entry (PDF 1.7 table 3.22)
  */
-static void
-createkey(pdf_crypt *crypt, unsigned char *userpw, int pwlen)
-{
-	unsigned char buf[32];
-	fz_md5 md5;
 
-	/* Step 1 + 2 */
-	fz_md5init(&md5);
-	padpassword(buf, userpw, pwlen);
-	fz_md5update(&md5, buf, 32);
-
-	/* Step 3 */
-	fz_md5update(&md5, crypt->o, 32);
-
-	/* Step 4 */
-	buf[0] = crypt->p & 0xFF;
-	buf[1] = (crypt->p >> 8) & 0xFF;
-	buf[2] = (crypt->p >> 16) & 0xFF;
-	buf[3] = (crypt->p >> 24) & 0xFF;
-	fz_md5update(&md5, buf, 4);
-
-	/* Step 5 */
-	fz_md5update(&md5, (unsigned char *) fz_tostrbuf(crypt->id),
-		fz_tostrlen(crypt->id));
-
-	/* Step 6 (rev 4 or later) */
-	if (crypt->r >= 4 && !crypt->encryptedmeta)
-	{
-		memset(buf, 0xff, 4);
-		fz_md5update(&md5, buf, 4);
-	}
-
-	/* Step 7 */
-	fz_md5final(&md5, crypt->key);
-
-	/* Step 8 (rev 3, or later) */
-	if (crypt->r >= 3)
-		voodoo50(crypt->key, crypt->len);
-
-	/* Step 9: key is in crypt->key */
-}
-
-/*
- * Algorithm 3.3 Computing the O value
- */
-static void
-createowner(pdf_crypt *crypt, unsigned char *userpw, int userpwlen, unsigned char *ownerpw, int ownerpwlen)
-{
-	unsigned char buf[32];
-	unsigned char key[16];
-	fz_arc4 arc4;
-	fz_md5 md5;
-
-	/* Step 1 + 2 */
-	if (ownerpwlen == 0)
-	{
-		ownerpw = userpw;
-		ownerpwlen = userpwlen;
-	}
-	padpassword(buf, ownerpw, ownerpwlen);
-	fz_md5init(&md5);
-	fz_md5update(&md5, buf, 32);
-	fz_md5final(&md5, key);
-
-	/* Step 3 (rev 3 or later) */
-	if (crypt->r >= 3)
-		voodoo50(key, crypt->len);
-
-	/* Step 4 */
-	fz_arc4init(&arc4, key, crypt->len);
-
-	/* Step 5 */
-	padpassword(buf, userpw, ownerpwlen);
-
-	/* Step 6 */
-	fz_arc4encrypt(&arc4, buf, buf, 32);
-
-	/* Step 7 (rev 3 or later) */
-	if (crypt->r >= 3)
-		voodoo19(buf, 32, key, crypt->len);
-
-	/* Step 8 */
-	memcpy(crypt->o, buf, 32);
-}
-
-/*
- * Algorithm 3.4 Computing the U value (rev 2)
- * Algorithm 3.5 Computing the U value (rev 3 or later)
- */
-static void
-createuser(pdf_crypt *crypt, unsigned char *userpw, int pwlen)
-{
-	unsigned char key[16];
-	fz_arc4 arc4;
-	fz_md5 md5;
-
-	if (crypt->r == 2)
-	{
-		createkey(crypt, userpw, pwlen);
-		fz_arc4init(&arc4, crypt->key, crypt->len);
-		fz_arc4encrypt(&arc4, crypt->u, padding, 32);
-	}
-
-	if (crypt->r >= 3)
-	{
-		/* Step 1 */
-		createkey(crypt, userpw, pwlen);
-
-		/* Step 2 */
-		fz_md5init(&md5);
-		fz_md5update(&md5, padding, 32);
-
-		/* Step 3 */
-		fz_md5update(&md5, (unsigned char *) fz_tostrbuf(crypt->id),
-			fz_tostrlen(crypt->id));
-		fz_md5final(&md5, key);
-
-		/* Step 4 */
-		fz_arc4init(&arc4, crypt->key, crypt->len);
-		fz_arc4encrypt(&arc4, key, key, 16);
-
-		/* Step 5 */
-		voodoo19(key, 16, crypt->key, crypt->len);
-
-		/* Step 6 */
-		memcpy(crypt->u, key, 16);
-		memset(crypt->u + 16, 0, 16);
-	}
-}
-
-/*
- * Create crypt object for encrypting, given passwords,
- * permissions, and file ID
- */
 fz_error
-pdf_newencrypt(pdf_crypt **cp, char *userpw, char *ownerpw, int p, int n, fz_obj *id)
+pdf_parsecryptfilter(pdf_cryptfilter *cf, fz_obj *dict, int defaultlength)
 {
-	fz_error error;
-	pdf_crypt *crypt;
+    fz_obj *obj;
 
-	crypt = fz_malloc(sizeof(pdf_crypt));
-	if (!crypt)
-		return fz_rethrow(-1, "out of memory: crypt struct");
+    cf->method = PDF_CRYPT_NONE;
+    cf->length = defaultlength;
 
-	crypt->encrypt = nil;
-	crypt->id = fz_keepobj(fz_arrayget(id, 0));
-	crypt->p = p;
-	crypt->len = MIN(MAX(n / 8, 5), 16);
-	crypt->keylen = MIN(crypt->len + 5, 16);
-	crypt->r = crypt->len == 5 ? 2 : 3;
+    obj = fz_dictgets(dict, "CFM");
+    if (fz_isname(obj))
+    {
+	if (!strcmp(fz_toname(obj), "None"))
+	    cf->method = PDF_CRYPT_NONE;
+	else if (!strcmp(fz_toname(obj), "V2"))
+	    cf->method = PDF_CRYPT_RC4;
+	else if (!strcmp(fz_toname(obj), "AESV2"))
+	    cf->method = PDF_CRYPT_AESV2;
+	else
+	    fz_throw("unknown encryption method: %s", fz_toname(obj));
+    }
 
-	createowner(crypt,
-		(unsigned char *) userpw, strlen(userpw),
-		(unsigned char *) ownerpw, strlen(ownerpw));
-	createuser(crypt,
-		(unsigned char *) userpw, strlen(userpw));
+    obj = fz_dictgets(dict, "Length");
+    if (fz_isint(obj))
+	cf->length = fz_toint(obj);
 
-	error = fz_packobj(&crypt->encrypt, nil,
-			"<< /Filter /Standard "
-			"/V %i /R %i "
-			"/O %# /U %# "
-			"/P %i "
-			"/Length %i >>",
-			crypt->r == 2 ? 1 : 2,
-			crypt->r,
-			crypt->o, 32,
-			crypt->u, 32,
-			crypt->p,
-			crypt->len * 8);
-	if (error)
-	{
-		pdf_freecrypt(crypt);
-		return fz_rethrow(error, "cannot create encryption dictionary");
-	}
+    if ((cf->length % 8) != 0)
+	return fz_throw("invalid key length: %d", cf->length);
 
-	*cp = crypt;
-	return fz_okay;
-}
-
-int
-pdf_setpassword(pdf_crypt *crypt, char *pw)
-{
-	int okay = pdf_setuserpassword(crypt, pw, strlen(pw));
-	if (!okay)
-	{
-		okay = pdf_setownerpassword(crypt, pw, strlen(pw));
-		if (!okay)
-			return 0;
-	}
-
-	return 1;
+    return fz_okay;
 }
 
 /*
- * Alorithm 3.6 Authenticating the user password as of pdf 1.7
+ * Compute an encryption key (PDF 1.7 algorithm 3.2)
  */
-int
-pdf_setuserpassword(pdf_crypt *crypt, char *userpw, int pwlen)
+
+static const unsigned char padding[32] =
 {
-	unsigned char saved[32];
-	unsigned char test[32];
+    0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41,
+    0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08,
+    0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80,
+    0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a
+};
 
-	/* Step 1 */
-	memcpy(saved, crypt->u, 32);
-	createuser(crypt, (unsigned char *) userpw, pwlen);
-	memcpy(test, crypt->u, 32);
-	memcpy(crypt->u, saved, 32);
+static void
+pdf_computeencryptionkey(pdf_crypt *crypt, unsigned char *password, int pwlen, unsigned char *key)
+{
+    unsigned char buf[32];
+    unsigned int p;
+    int i, n;
+    fz_md5 md5;
 
-	/* Step 2 */
-	if (memcmp(test, saved, crypt->r >= 3 ? 16 : 32) != 0)
-		return 0;
+    n = crypt->length / 8;
 
-	return 1;
+    /* Step 1 - copy and pad password string */
+    if (pwlen > 32)
+	pwlen = 32;
+    memcpy(buf, password, pwlen);
+    memcpy(buf + pwlen, padding, 32 - pwlen);
+
+    /* Step 2 - init md5 and pass value of step 1 */
+    fz_md5init(&md5);
+    fz_md5update(&md5, buf, 32);
+
+    /* Step 3 - pass O value */
+    fz_md5update(&md5, crypt->o, 32);
+
+    /* Step 4 - pass P value as unsigned int, low-order byte first */
+    p = (unsigned int) crypt->p;
+    buf[0] = (p) & 0xFF;
+    buf[1] = (p >> 8) & 0xFF;
+    buf[2] = (p >> 16) & 0xFF;
+    buf[3] = (p >> 24) & 0xFF;
+    fz_md5update(&md5, buf, 4);
+
+    /* Step 5 - pass first element of ID array */
+    fz_md5update(&md5, crypt->idstring, crypt->idlength);
+
+    /* Step 6 (revision 4 or greater) - if metadata is not encrypted pass 0xFFFFFFFF */
+    if (crypt->r >= 4)
+    {
+	if (!crypt->encryptmetadata)
+	{
+	    buf[0] = 0xFF;
+	    buf[1] = 0xFF;
+	    buf[2] = 0xFF;
+	    buf[3] = 0xFF;
+	    fz_md5update(&md5, buf, 4);
+	}
+    }
+
+    /* Step 7 - finish the hash */
+    fz_md5final(&md5, buf);
+
+    /* Step 8 (revision 3 or greater) - do some voodoo 50 times */
+    if (crypt->r >= 3)
+    {
+	for (i = 0; i < 50; i++)
+	{
+	    fz_md5init(&md5);
+	    fz_md5update(&md5, buf, n);
+	    fz_md5final(&md5, buf);
+	}
+    }
+
+    /* Step 9 - the key is the first 'n' bytes of the result */
+    memcpy(key, buf, n);
 }
 
 /*
- * Algorithm 3.7 Authenticating the owner password as of pdf 1.7
+ * Computing the user password (PDF 1.7 algorithm 3.4 and 3.5)
+ * Also save the generated key for decrypting objects and streams in crypt->key.
  */
-int
-pdf_setownerpassword(pdf_crypt *crypt, char *ownerpw, int pwlen)
+
+static void
+pdf_computeuserpassword(pdf_crypt *crypt, unsigned char *password, int pwlen, unsigned char *output)
 {
-	unsigned char saved[32];
-	unsigned char test[32];
-	unsigned char buf[32];
-	unsigned char key[16];
+    if (crypt->r == 2)
+    {
 	fz_arc4 arc4;
+
+	pdf_computeencryptionkey(crypt, password, pwlen, crypt->key);
+	fz_arc4init(&arc4, crypt->key, crypt->length / 8);
+	fz_arc4encrypt(&arc4, output, padding, 32);
+    }
+
+    if (crypt->r >= 3)
+    {
+	unsigned char xor[32];
+	unsigned char digest[16];
 	fz_md5 md5;
-
-	/* Step 1 */
-	/* Algorithm 3.3 Step 1 + 2 */
-	padpassword(buf, (unsigned char *) ownerpw, pwlen);
-	fz_md5init(&md5);
-	fz_md5update(&md5, buf, 32);
-	fz_md5final(&md5, key);
-
-	/* Algorithm 3.3 Step 3 (rev 3 or later) */
-	if (crypt->r >= 3)
-		voodoo50(key, crypt->len);
-
-	/* Step 2 */
-	fz_arc4init(&arc4, key, crypt->len);
-
-	if (crypt->r == 2)
-	{
-		fz_arc4encrypt(&arc4, buf, crypt->o, 32);
-	}
-	if (crypt->r >= 3)
-	{
-		unsigned char keyxor[16];
-		int i;
-		int k;
-
-		memcpy(buf, crypt->o, 32);
-
-		for(i = 19; i >= 0; --i)
-		{
-			for(k = 0; k < crypt->keylen; ++k)
-				keyxor[k] = key[k] ^ i;
-			fz_arc4init(&arc4, keyxor, crypt->keylen);
-			fz_arc4encrypt(&arc4, buf, buf, 32);
-		}
-	}
-
-	/* Step 3 */
-	/* Algorithm 3.6 Step 1 */
-	memcpy(saved, crypt->u, 32);
-	createuser(crypt, buf, 32);
-	memcpy(test, crypt->u, 32);
-	memcpy(crypt->u, saved, 32);
-
-	/* Algorithm 3.6 Step 2 */
-	if (memcmp(test, saved, crypt->r >= 3 ? 16 : 32) != 0)
-		return 0;
-
-	return 1;
-}
-
-/*
- * Recursively (and destructively!) de/encrypt all strings in obj
- */
-void
-pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gen)
-{
 	fz_arc4 arc4;
-	fz_aes aes;
-	unsigned char key[16];
-	unsigned char *s;
-	int i, n;
+	int i, x, n;
 
-	if (fz_isindirect(obj))
-		return;
+	n = crypt->length / 8;
 
-	if (fz_isstring(obj))
+	pdf_computeencryptionkey(crypt, password, pwlen, crypt->key);
+
+	fz_md5init(&md5);
+	fz_md5update(&md5, padding, 32);
+	fz_md5update(&md5, crypt->idstring, crypt->idlength);
+	fz_md5final(&md5, digest);
+
+	fz_arc4init(&arc4, crypt->key, n);
+	fz_arc4encrypt(&arc4, output, digest, 16);
+
+	for (x = 1; x <= 19; x++)
 	{
-		s = (unsigned char *) fz_tostrbuf(obj);
-		n = fz_tostrlen(obj);
-		createobjkey(crypt, oid, gen, key);
-		if (crypt->algo == ALGO_RC4)
-		{
-			fz_arc4init(&arc4, key, crypt->keylen);
-			fz_arc4encrypt(&arc4, s, s, n);
-		} else if (crypt->algo == ALGO_AES)
-		{
-			fz_aesinit(&aes, key, crypt->keylen);
-			/* first 16 bytes are IV for cbc mode of aes decryption */
-			assert(n > 16);
-			if (n > 16) {
-				fz_setiv(&aes, s);
-				fz_aesdecrypt(&aes, s, s+16, n-16);
-				/* TODO: this is not entirely correct. In AES encryption the size of
-				   encrypted data must be multiply of 16 so it seems like like strings
-				   whose size are of different lenght have garbage at the end and I
-				   don't know how to recover the right lenght of decrypted string.
-				   Example of a problem is PDF from http://code.google.com/p/sumatrapdf/issues/detail?id=284
-				   which has outline (bookmarks) 'Title' strings corrupted. */
-				memset(s + n - 16, 0, 16);
-				obj->u.s.len = n-16;
-			}
-		}
+	    for (i = 0; i < n; i++)
+		xor[i] = crypt->key[i] ^ x;
+	    fz_arc4init(&arc4, xor, n);
+	    fz_arc4encrypt(&arc4, output, output, 16);
 	}
 
-	else if (fz_isarray(obj))
-	{
-		n = fz_arraylen(obj);
-		for (i = 0; i < n; i++)
-		{
-			pdf_cryptobj(crypt, fz_arrayget(obj, i), oid, gen);
-		}
-	}
-
-	else if (fz_isdict(obj))
-	{
-		n = fz_dictlen(obj);
-		for (i = 0; i < n; i++)
-		{
-			pdf_cryptobj(crypt, fz_dictgetval(obj, i), oid, gen);
-		}
-	}
+	memcpy(output + 16, padding, 16);
+    }
 }
 
 /*
- * De/encrypt the contents of a buffer
+ * Authenticating the user password (PDF 1.7 algorithm 3.6)
+ * This also has the side effect of saving a key generated
+ * from the password for decrypting objects and streams.
  */
-void
-pdf_cryptbuffer(pdf_crypt *crypt, fz_buffer *buf, int oid, int gen)
+
+static int
+pdf_authenticateuserpassword(pdf_crypt *crypt, unsigned char *password, int pwlen)
 {
+    unsigned char output[32];
+    pdf_computeuserpassword(crypt, password, pwlen, output);
+    if (crypt->r == 2)
+	return memcmp(output, crypt->u, 32) == 0;
+    if (crypt->r >= 3)
+	return memcmp(output, crypt->u, 16) == 0;
+    return 0;
+}
+
+/*
+ * Authenticating the owner password (PDF 1.7 algorithm 3.7)
+ * Generates the user password from the owner password
+ * and calls pdf_authenticateuserpassword.
+ */
+
+static int
+pdf_authenticateownerpassword(pdf_crypt *crypt, unsigned char *ownerpass, int pwlen)
+{
+    unsigned char pwbuf[32];
+    unsigned char key[32];
+    unsigned char xor[32];
+    unsigned char userpass[32];
+    int i, n, x;
+    fz_md5 md5;
     fz_arc4 arc4;
-    unsigned char key[16];
-    createobjkey(crypt, oid, gen, key);
-    fz_arc4init(&arc4, key, crypt->keylen);
-    fz_arc4encrypt(&arc4, buf->rp, buf->rp, buf->wp - buf->rp);
+
+    n = crypt->length / 8;
+
+    /* Step 1 -- steps 1 to 4 of PDF 1.7 algorithm 3.3 */
+
+    /* copy and pad password string */
+    if (pwlen > 32)
+	pwlen = 32;
+    memcpy(pwbuf, ownerpass, pwlen);
+    memcpy(pwbuf + pwlen, padding, 32 - pwlen);
+
+    /* take md5 hash of padded password */
+    fz_md5init(&md5);
+    fz_md5update(&md5, pwbuf, 32);
+    fz_md5final(&md5, key);
+
+    /* do some voodoo 50 times (Revision 3 or greater) */
+    if (crypt->r >= 3)
+    {
+	for (i = 0; i < 50; i++)
+	{
+	    fz_md5init(&md5);
+	    fz_md5update(&md5, key, 16);
+	    fz_md5final(&md5, key);
+	}
+    }
+
+    /* Step 2 (Revision 2) */
+    if (crypt->r == 2)
+    {
+	fz_arc4init(&arc4, key, n);
+	fz_arc4encrypt(&arc4, userpass, crypt->o, 32);
+    }
+
+    /* Step 2 (Revision 3 or greater) */
+    if (crypt->r >= 3)
+    {
+	memcpy(userpass, crypt->o, 32);
+	for (x = 0; x < 20; x++)
+	{
+	    for (i = 0; i < n; i++)
+		xor[i] = key[i] ^ (19 - x);
+	    fz_arc4init(&arc4, xor, n);
+	    fz_arc4encrypt(&arc4, userpass, userpass, 32);
+	}
+    }
+
+    return pdf_authenticateuserpassword(crypt, userpass, 32);
+}
+
+
+int
+pdf_authenticatepassword(pdf_xref *xref, char *password)
+{
+    if (xref->crypt)
+    {
+	if (pdf_authenticateuserpassword(xref->crypt, (unsigned char *)password, strlen(password)))
+	    return 1;
+	if (pdf_authenticateownerpassword(xref->crypt, (unsigned char *)password, strlen(password)))
+	    return 1;
+	return 0;
+    }
+    return 1;
+}
+
+int
+pdf_needspassword(pdf_xref *xref)
+{
+    if (!xref->crypt)
+	return 0;
+    if (pdf_authenticatepassword(xref, ""))
+	return 0;
+    return 1;
 }
 
 /*
- * Create filter suitable for de/encrypting a stream
+ * PDF 1.7 algorithm 3.1
+ *
+ * Using the global encryption key that was generated from the
+ * password, create a new key that is used to decrypt indivual
+ * objects and streams. This key is based on the object and
+ * generation numbers.
+ */
+
+static int
+pdf_computeobjectkey(pdf_crypt *crypt, pdf_cryptfilter *cf, int num, int gen, unsigned char *key)
+{
+    fz_md5 md5;
+    unsigned char message[5];
+
+    fz_md5init(&md5);
+    fz_md5update(&md5, crypt->key, crypt->length / 8);
+    message[0] = (num) & 0xFF;
+    message[1] = (num >> 8) & 0xFF;
+    message[2] = (num >> 16) & 0xFF;
+    message[3] = (gen) & 0xFF;
+    message[4] = (gen >> 8) & 0xFF;
+    fz_md5update(&md5, message, 5);
+
+    if (cf->method == PDF_CRYPT_AESV2)
+	fz_md5update(&md5, (unsigned char *)"sAlT", 4);
+
+    fz_md5final(&md5, key);
+
+    if (crypt->length / 8 + 5 > 16)
+	return 16;
+    return crypt->length / 8 + 5;
+}
+
+/*
+ * PDF 1.7 algorithm 3.1
+ *
+ * Decrypt all strings in obj modifying the data in-place.
+ * Recurse through arrays and dictionaries, but do not follow
+ * indirect references.
+ */
+
+static void
+pdf_cryptobjimp(pdf_crypt *crypt, fz_obj *obj, unsigned char *key, int keylen)
+{
+    unsigned char *s;
+    int i, n;
+
+    if (fz_isindirect(obj))
+	return;
+
+    if (fz_isstring(obj))
+    {
+	s = (unsigned char *) fz_tostrbuf(obj);
+	n = fz_tostrlen(obj);
+
+	if (crypt->strf.method == PDF_CRYPT_RC4)
+	{
+	    fz_arc4 arc4;
+	    fz_arc4init(&arc4, key, keylen);
+	    fz_arc4encrypt(&arc4, s, s, n);
+	}
+
+	if (crypt->strf.method == PDF_CRYPT_AESV2)
+	{
+	    if (n >= 32)
+	    {
+		unsigned char iv[16];
+		fz_aes aes;
+		memcpy(iv, s, 16);
+		aes_setkey_dec(&aes, key, keylen * 8);
+		aes_crypt_cbc(&aes, AES_DECRYPT, n - 16, iv, s + 16, s);
+		obj->u.s.len -= 16; /* delete space used for iv */
+		obj->u.s.len -= s[n - 17]; /* delete padding bytes at end */
+	    }
+	}
+    }
+
+    else if (fz_isarray(obj))
+    {
+	n = fz_arraylen(obj);
+	for (i = 0; i < n; i++)
+	{
+	    pdf_cryptobjimp(crypt, fz_arrayget(obj, i), key, keylen);
+	}
+    }
+
+    else if (fz_isdict(obj))
+    {
+	n = fz_dictlen(obj);
+	for (i = 0; i < n; i++)
+	{
+	    pdf_cryptobjimp(crypt, fz_dictgetval(obj, i), key, keylen);
+	}
+    }
+}
+
+void
+pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen)
+{
+    unsigned char key[16];
+    int len;
+
+    len = pdf_computeobjectkey(crypt, &crypt->strf, num, gen, key);
+
+    pdf_cryptobjimp(crypt, obj, key, len);
+}
+
+/*
+ * PDF 1.7 algorithm 3.1
+ *
+ * Create filter suitable for de/encrypting a stream.
  */
 fz_error
-pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, int oid, int gen)
+pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, pdf_cryptfilter *stmf, int num, int gen)
 {
-	fz_error error;
-	unsigned char key[16];
-	createobjkey(crypt, oid, gen, key);
-	if (crypt->algo == ALGO_RC4)
-	{
-		error = fz_newarc4filter(fp, key, crypt->keylen);
-	} else if (crypt->algo == ALGO_AES)
-	{
-		error = fz_newaesfilter(fp, key, crypt->keylen);
-	} else
-	{
-		return fz_throw("unknown crypt algorithm");
-	}
+    fz_error error;
+    unsigned char key[16];
+    int len;
+
+    len = pdf_computeobjectkey(crypt, stmf, num, gen, key);
+
+    if (stmf->method == PDF_CRYPT_NONE)
+    {
+	error = fz_newcopyfilter(fp);
 	if (error)
-		return fz_rethrow(error, "cannot create crypt filter");
+	    return fz_rethrow(error, "cannot create null crypt filter");
 	return fz_okay;
+    }
+
+    if (stmf->method == PDF_CRYPT_RC4)
+    {
+	error = fz_newarc4filter(fp, key, len);
+	if (error)
+	    return fz_rethrow(error, "cannot create RC4 crypt filter");
+	return fz_okay;
+    }
+
+    if (stmf->method == PDF_CRYPT_AESV2)
+    {
+	error = fz_newaesdfilter(fp, key, len);
+	if (error)
+	    return fz_rethrow(error, "cannot create AES crypt filter");
+	return fz_okay;
+    }
+
+    return fz_throw("unknown crypt method");
 }
 

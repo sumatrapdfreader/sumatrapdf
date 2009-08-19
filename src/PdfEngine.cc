@@ -195,8 +195,8 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     if (error)
         goto Error;
 
-    if (_xref->crypt) {
-        int okay = pdf_setpassword(_xref->crypt, "");
+    if (pdf_needspassword(_xref)) {
+        int okay = pdf_authenticatepassword(_xref, "");
         if (okay)
             goto DecryptedOk;
         if (!win) {
@@ -211,7 +211,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             }
             char *pwd_utf8 = tstr_to_utf8(pwd);
             if (pwd_utf8) {
-                okay = pdf_setpassword(_xref->crypt, pwd_utf8);
+                okay = pdf_authenticatepassword(_xref, pwd_utf8);
                 free(pwd_utf8);
             }
             else

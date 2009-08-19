@@ -21,7 +21,7 @@ static LRESULT CALLBACK frameproc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK viewproc(HWND, UINT, WPARAM, LPARAM);
 
 static int bmpstride = 0;
-static char *bmpdata = NULL;
+static unsigned char *bmpdata = NULL;
 static int justcopied = 0;
 
 static pdfapp_t gapp;
@@ -109,18 +109,8 @@ void winwarn(pdfapp_t *app, char *msg)
 
 void winerror(pdfapp_t *app, fz_error error)
 {
-    char msg[4096];
-    char buf[200];
-
-    msg[0] = 0;
-
-    while (error)
-    {
-	sprintf(buf, "%d\n", error);
-	strcat(msg, buf);
-    }
-
-    MessageBoxA(hwndframe, msg, "MuPDF: Error", MB_ICONERROR);
+    fz_catch(error, "display error message to user");
+    MessageBoxA(hwndframe, "An error has occurred.", "MuPDF: Error", MB_ICONERROR);
     exit(1);
 }
 
@@ -199,12 +189,13 @@ dloginfoproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	SetDlgItemTextA(hwnd, 0x10, gapp.filename);
 
-	sprintf(buf, "PDF %g", xref->version);
+	sprintf(buf, "PDF %d.%d", xref->version / 10, xref->version % 10);
 	SetDlgItemTextA(hwnd, 0x11, buf);
 
 	if (xref->crypt)
 	{
-	    sprintf(buf, "Standard %d bit RC4", xref->crypt->len * 8);
+	    sprintf(buf, "Standard %d bit %s", xref->crypt->length,
+		    xref->crypt->strf.method == PDF_CRYPT_AESV2 ? "AES" : "RC4");
 	    SetDlgItemTextA(hwnd, 0x12, buf);
 	    strcpy(buf, "");
 	    if (xref->crypt->p & (1 << 2))
@@ -423,8 +414,8 @@ void winconvert(pdfapp_t *app, fz_pixmap *image)
 
     for (y = 0; y < image->h; y++)
     {
-	char *p = bmpdata + y * bmpstride;
-	char *s = image->samples + y * image->w * 4;
+	unsigned char *p = bmpdata + y * bmpstride;
+	unsigned char *s = image->samples + y * image->w * 4;
 	for (x = 0; x < image->w; x++)
 	{
 	    p[x * 3 + 0] = s[x * 4 + 3];

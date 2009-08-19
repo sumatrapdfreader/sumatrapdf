@@ -60,47 +60,54 @@ fz_error pdf_toucs2(unsigned short **dstp, fz_obj *src);
 #define PDF_DEFAULT_PERM_FLAGS  0xfffc
 
 typedef struct pdf_crypt_s pdf_crypt;
+typedef struct pdf_cryptfilter_s pdf_cryptfilter;
+typedef enum pdf_cryptmethod_e pdf_cryptmethod;
 
-typedef enum pdf_crypt_algo_e
+enum pdf_cryptmethod_e
 {
-	ALGO_UNKNOWN, ALGO_RC4, ALGO_AES
-} pdf_crypt_algo_e;
+	PDF_CRYPT_NONE,
+	PDF_CRYPT_RC4,
+	PDF_CRYPT_AESV2,
+	PDF_CRYPT_UNKNOWN,
+};
+
+struct pdf_cryptfilter_s
+{
+	pdf_cryptmethod method;
+	int length;
+	unsigned char key[16];
+};
 
 struct pdf_crypt_s
 {
+	unsigned char idstring[32];
+	int idlength;
+
+	int v;
+	int length;
+	fz_obj *cf;
+	pdf_cryptfilter stmf;
+	pdf_cryptfilter strf;
+
+	int r;
 	unsigned char o[32];
 	unsigned char u[32];
-	unsigned int p;
-	int v;
-	int r;
-	int len;
-	char *handler;
-	char *stmmethod;
-	int stmlength;
-	char *strmethod;
-	int strlength;
-	int encryptedmeta;
-	pdf_crypt_algo_e algo;
+	int p;
+	int encryptmetadata;
 
-	fz_obj *encrypt;
-	fz_obj *id;
-
-	unsigned char key[16];
-	int keylen;
+	unsigned char key[32]; /* decryption key generated from password */
 };
 
 /* crypt.c */
-fz_error pdf_newdecrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id);
-fz_error pdf_newencrypt(pdf_crypt **cp, char *userpw, char *ownerpw, int p, int n, fz_obj *id);
-
-int pdf_setpassword(pdf_crypt *crypt, char *pw);
-int pdf_setuserpassword(pdf_crypt *crypt, char *pw, int pwlen);
-int pdf_setownerpassword(pdf_crypt *crypt, char *pw, int pwlen);
-
-fz_error pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, int oid, int gen);
-void pdf_cryptbuffer(pdf_crypt *crypt, fz_buffer *buf, int oid, int gen);
-void pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int oid, int gen);
+fz_error pdf_newcrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id);
 void pdf_freecrypt(pdf_crypt *crypt);
+
+fz_error pdf_parsecryptfilter(pdf_cryptfilter *cf, fz_obj *dict, int defaultlength);
+fz_error pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, pdf_cryptfilter *cf, int num, int gen);
+void pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen);
+
+int pdf_needspassword(pdf_xref *xref);
+int pdf_authenticatepassword(pdf_xref *xref, char *pw);
 
 /*
  * xref and object / stream api
@@ -153,6 +160,7 @@ fz_error pdf_repairxrefw(pdf_xref *xref, wchar_t *filename);
 #endif
 #endif
 fz_error pdf_initxref(pdf_xref *);
+fz_error pdf_decryptxref(pdf_xref *);
 
 void pdf_debugxref(pdf_xref *);
 void pdf_flushxref(pdf_xref *, int force);
@@ -173,7 +181,6 @@ fz_error pdf_transplant(pdf_xref *dst, pdf_xref *src, fz_obj **newp, fz_obj *old
 
 /* private */
 fz_error pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap);
-fz_error pdf_decryptxref(pdf_xref *xref);
 
 /*
  * Resource store

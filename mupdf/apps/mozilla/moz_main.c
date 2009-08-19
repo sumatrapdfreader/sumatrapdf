@@ -72,8 +72,6 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
     SCROLLINFO si;
     fz_error error;
     fz_obj *obj;
-    char *password = "";
-    pdf_pagetree *pages;
     fz_irect bbox;
     int rot;
     int i;
@@ -110,19 +108,24 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
     if (error)
 	pdfmoz_error(moz, error);
 
-    if (moz->xref->crypt)
+    if (pdf_needspassword(moz->xref))
     {
-	int okay = pdf_setpassword(moz->xref->crypt, password);
-	if (!okay)
-	    pdfmoz_warn(moz, "Invalid password.");
+	pdfmoz_warn(moz, "PDF file is encrypted and needs a password.");
     }
 
-    moz->pagecount = moz->xrex->pagecount;
+    error = pdf_getpagecount(moz->xref, &moz->pagecount);
+    if (error)
+	pdfmoz_error(moz, fz_throw("Cannot get page count."));
+
     moz->pages = fz_malloc(sizeof(page_t) * moz->pagecount);
 
     for (i = 0; i < moz->pagecount; i++)
     {
-	moz->pages[i].obj = fz_keepobj(pdf_getpageobject(pages, i));
+	fz_obj *pageobj;
+	error = pdf_getpageobject(moz->xref, i, &pageobj);
+	if (error)
+		pdfmoz_error(moz, fz_throw("cannot load page object"));
+	moz->pages[i].obj = fz_keepobj(pageobj);
 	moz->pages[i].page = nil;
 	moz->pages[i].image = nil;
 
@@ -143,8 +146,6 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
 
 	moz->pages[i].px = 1 + PAD;
     }
-
-    pdf_droppagetree(pages);
 
     /*
      * Load meta information
