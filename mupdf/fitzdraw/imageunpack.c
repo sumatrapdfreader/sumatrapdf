@@ -48,7 +48,7 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 		if (justinvert) {
 			unsigned *wp = (unsigned *)p;
 
-			if ((((unsigned)wp) & 3) == 0) {
+			if ((((char *)wp - (char *)0) & 3) == 0) {
 				int hwh = wh / 2;
 				wh = wh - 2 * hwh;
 				while(hwh--) {

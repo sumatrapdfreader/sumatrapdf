@@ -153,7 +153,7 @@ DEBUG("solid %s [%d %d %d %d];\n", solid->cs->name, gc->argb[0], gc->argb[1], gc
 	r = gc->argb[1];
 	g = gc->argb[2];
 	b = gc->argb[3];
-	if (((unsigned)p & 3)) {
+	if ((p - (unsigned char *)0) & 3) {
 	while (n--)
 	{
 		p[0] = a;
