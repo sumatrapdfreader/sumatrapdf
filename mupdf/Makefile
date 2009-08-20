@@ -367,6 +367,33 @@ $(CMAPDUMP_APP): ${CMAPDUMP_OBJ}
 $(OUTDIR)/FITZ_%.o: %.c
 	$(CC) -MD -c $(CFLAGS) -o $@ $<
 
+$(OUTDIR)/FITZ_cmap_chinese_s.o: $(OUTDIR)/cmap_chinese_s.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_cmap_chinese_t.o: $(OUTDIR)/cmap_chinese_t.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_cmap_japanese.o: $(OUTDIR)/cmap_japanese.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_cmap_korean.o: $(OUTDIR)/cmap_korean.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_font_misc.o: $(OUTDIR)/font_misc.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_font_mono.o: $(OUTDIR)/font_mono.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_font_serif.o: $(OUTDIR)/font_serif.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_font_sans.o: $(OUTDIR)/font_sans.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
+$(OUTDIR)/FITZ_font_cjk.o: $(OUTDIR)/font_cjk.c
+	$(CC) -MD -c $(CFLAGS) -o $@ $<
+
 $(OUTDIR)/ZLIB_%.o: %.c
 	$(CC) -MD -c $(ZLIB_CFLAGS) -o $@ $<
 
