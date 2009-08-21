@@ -24,7 +24,7 @@ loadcharproc(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *stmref)
 	{
 		fz_dropstream(stm);
 		pdf_dropcsi(csi);
-		return fz_rethrow(error, "cannot interpret glyph content stream");
+		return fz_rethrow(error, "cannot interpret glyph content stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 	}
 
 	*treep = csi->tree;
@@ -36,7 +36,7 @@ loadcharproc(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *stmref)
 }
 
 fz_error
-pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
+pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 {
 	fz_error error;
 	char buf[256];
@@ -62,7 +62,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	if (!fontdesc)
 		return fz_rethrow(-1, "out of memory: font struct");
 
-	pdf_logfont("load type3 font (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), fontdesc);
+	pdf_logfont("load type3 font (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), fontdesc);
 	pdf_logfont("name %s\n", buf);
 
 	obj = fz_dictgets(dict, "FontMatrix");
@@ -182,16 +182,12 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj
 	 * Resources
 	 */
 
-	resources = nil;
+	resources = fz_dictgets(dict, "Resources");
 
-	obj = fz_dictgets(dict, "Resources");
-	if (obj)
-	{
-		error = pdf_loadresources(&resources, xref, obj);
-		if (error)
-			goto cleanup;
-	}
-	else
+	/* Inherit page's resource dict if type3 font does not have one */
+	if (!resources && rdb)
+		resources = rdb;
+	else if (!resources && !rdb)
 		fz_warn("no resource dictionary for type 3 font!");
 
 	/*

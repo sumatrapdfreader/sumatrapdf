@@ -715,10 +715,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_resources.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\mupdf\pdf_shade.c"
 					>
 				</File>

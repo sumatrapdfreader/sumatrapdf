@@ -193,7 +193,7 @@ MUPDF_OBJS = \
 	$(O)\pdf_font.obj $(O)\pdf_fontagl.obj $(O)\pdf_fontenc.obj $(O)\pdf_fontmtx.obj $(O)\pdf_function.obj \
 	$(O)\pdf_image.obj $(O)\pdf_interpret.obj $(O)\pdf_lex.obj $(O)\pdf_nametree.obj \
 	$(O)\pdf_open.obj $(O)\pdf_outline.obj $(O)\pdf_page.obj $(O)\pdf_pagetree.obj \
-	$(O)\pdf_parse.obj $(O)\pdf_pattern.obj $(O)\pdf_repair.obj $(O)\pdf_resources.obj \
+	$(O)\pdf_parse.obj $(O)\pdf_pattern.obj $(O)\pdf_repair.obj \
 	$(O)\pdf_shade.obj $(O)\pdf_shade1.obj $(O)\pdf_shade4.obj \
 	$(O)\pdf_store.obj $(O)\pdf_stream.obj $(O)\pdf_type3.obj $(O)\pdf_unicode.obj \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfilems.obj \

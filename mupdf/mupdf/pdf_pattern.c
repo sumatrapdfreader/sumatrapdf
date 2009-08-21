@@ -20,7 +20,7 @@ pdf_droppattern(pdf_pattern *pat)
 }
 
 fz_error
-pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref)
+pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	pdf_pattern *pat;
@@ -29,13 +29,13 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	fz_obj *obj;
 	pdf_csi *csi;
 
-	if ((*patp = pdf_finditem(xref->store, PDF_KPATTERN, stmref)))
+	if ((*patp = pdf_finditem(xref->store, PDF_KPATTERN, dict)))
 	{
 		pdf_keeppattern(*patp);
 		return fz_okay;
 	}
 
-	pdf_logrsrc("load pattern (%d %d R) {\n", fz_tonum(stmref), fz_togen(stmref));
+	pdf_logrsrc("load pattern (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
 	pat = fz_malloc(sizeof(pdf_pattern));
 	if (!pat)
@@ -70,7 +70,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 			pat->matrix.e, pat->matrix.f);
 
 	/* Store pattern now, to avoid possible recursion if objects refer back to this one */
-	error = pdf_storeitem(xref->store, PDF_KPATTERN, stmref, pat);
+	error = pdf_storeitem(xref->store, PDF_KPATTERN, dict, pat);
 	if (error)
 	{
 		pdf_droppattern(pat);
@@ -78,19 +78,13 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	}
 
 	/*
-	 * Resources
+	 * Locate resources
 	 */
 
-	obj = fz_dictgets(dict, "Resources");
-	if (!obj) {
-		error = fz_throw("cannot find Resources dictionary");
-		goto cleanup;
-	}
-
-	error = pdf_loadresources(&resources, xref, obj);
-	if (error)
+	resources = fz_dictgets(dict, "Resources");
+	if (!resources)
 	{
-		error = fz_rethrow(error, "cannot load resources");
+		error = fz_throw("cannot find Resources dictionary");
 		goto cleanup;
 	}
 
@@ -103,17 +97,15 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	error = pdf_newcsi(&csi, pat->ismask);
 	if (error)
 	{
-		fz_dropobj(resources);
 		error = fz_rethrow(error, "cannot create interpreter");
 		goto cleanup;
 	}
 
-	error = pdf_openstream(&stm, xref, fz_tonum(stmref), fz_togen(stmref));
+	error = pdf_openstream(&stm, xref, fz_tonum(dict), fz_togen(dict));
 	if (error)
 	{
 		pdf_dropcsi(csi);
-		fz_dropobj(resources);
-		error = fz_rethrow(error, "cannot open pattern stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
+		error = fz_rethrow(error, "cannot open pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		goto cleanup;
 	}
 
@@ -122,8 +114,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	{
 		fz_dropstream(stm);
 		pdf_dropcsi(csi);
-		fz_dropobj(resources);
-		error = fz_rethrow(error, "cannot interpret pattern stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
+		error = fz_rethrow(error, "cannot interpret pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		goto cleanup;
 	}
 
@@ -136,7 +127,6 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 
 	fz_dropstream(stm);
 	pdf_dropcsi(csi);
-	fz_dropobj(resources);
 
 	pdf_logrsrc("optimize tree\n");
 	error = fz_optimizetree(pat->tree);
@@ -152,7 +142,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict, fz_obj *stmref
 	return fz_okay;
 
 cleanup:
-	pdf_removeitem(xref->store, PDF_KPATTERN, stmref);
+	pdf_removeitem(xref->store, PDF_KPATTERN, dict);
 	pdf_droppattern(pat);
 	return error; /* already rethrown */
 }

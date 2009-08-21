@@ -2,13 +2,13 @@
 #include "mupdf.h"
 
 fz_error
-pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
+pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	pdf_xobject *form;
 	fz_obj *obj;
 
-	if ((*formp = pdf_finditem(xref->store, PDF_KXOBJECT, ref)))
+	if ((*formp = pdf_finditem(xref->store, PDF_KXOBJECT, dict)))
 	{
 		pdf_keepxobject(*formp);
 		return fz_okay;
@@ -24,14 +24,14 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 	/* Store item immediately, to avoid infinite recursion if contained
 	   objects refer again to this xobject */
-	error = pdf_storeitem(xref->store, PDF_KXOBJECT, ref, form);
+	error = pdf_storeitem(xref->store, PDF_KXOBJECT, dict, form);
 	if (error)
 	{
 		pdf_dropxobject(form);
 		return fz_rethrow(error, "cannot store xobject resource");
 	}
 
-	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), form);
+	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), form);
 
 	obj = fz_dictgets(dict, "BBox");
 	form->bbox = pdf_torect(obj);
@@ -72,18 +72,9 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	pdf_logrsrc("knockout %d\n", form->knockout);
 	pdf_logrsrc("transparency %d\n", form->transparency);
 
-	obj = fz_dictgets(dict, "Resources");
-	if (obj)
-	{
-		error = pdf_loadresources(&form->resources, xref, obj);
-		if (error)
-		{
-			error = fz_rethrow(error, "cannot load xobject resources");
-			goto cleanup;
-		}
-	}
+	form->resources = fz_dictgets(dict, "Resources");
 
-	error = pdf_loadstream(&form->contents, xref, fz_tonum(ref), fz_togen(ref));
+	error = pdf_loadstream(&form->contents, xref, fz_tonum(dict), fz_togen(dict));
 	if (error)
 	{
 		error = fz_rethrow(error, "cannot load xobject content stream");
@@ -98,7 +89,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	return fz_okay;
 
 cleanup:
-	pdf_removeitem(xref->store, PDF_KXOBJECT, ref);
+	pdf_removeitem(xref->store, PDF_KXOBJECT, dict);
 	pdf_dropxobject(form);
 	return error;
 }
@@ -116,7 +107,6 @@ pdf_dropxobject(pdf_xobject *xobj)
 	if (xobj && --xobj->refs == 0)
 	{
 		if (xobj->contents) fz_dropbuffer(xobj->contents);
-		if (xobj->resources) fz_dropobj(xobj->resources);
 		fz_free(xobj);
 	}
 }

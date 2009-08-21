@@ -56,7 +56,6 @@ Library libmupdf :
 	pdf_interpret.c
 	pdf_page.c
 	pdf_pagetree.c
-	pdf_resources.c
 	pdf_store.c
 
 	;

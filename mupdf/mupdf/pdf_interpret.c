@@ -293,7 +293,7 @@ runinlineimage(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file, fz_ob
  */
 
 static fz_error
-runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
+runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 {
 	int i, k;
 
@@ -309,7 +309,11 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 		{
 			if (fz_isarray(val) && fz_arraylen(val) == 2)
 			{
-				gstate->font = pdf_finditem(xref->store, PDF_KFONT, fz_arrayget(val, 0));
+				fz_error error;
+
+				error = pdf_loadfont(&gstate->font, xref, rdb, fz_arrayget(val, 0));
+				if (error)
+					return fz_rethrow(error, "cannot load font");
 				if (!gstate->font)
 					return fz_throw("cannot find font in store");
 				gstate->size = fz_toreal(fz_arrayget(val, 1));
@@ -396,13 +400,36 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *extgstate)
 		{
 			if (fz_isdict(val))
 			{
-			    /* TODO: we should do something here, like inserting a mask node for the S key in val */
-			    /* TODO: how to deal with the non-recursive nature of pdf soft masks? */
-			    /* fz_obj *g = fz_dictgets(val, "G"); */
-			    /*puts("we encountered a soft mask");*/
+				/* TODO: we should do something here, like inserting a mask node for the S key in val */
+				/* TODO: how to deal with the non-recursive nature of pdf soft masks? */
+				/*
+				fz_error error;
+				fz_obj *g;
+				fz_obj *subtype;
+				pdf_xobject *xobj;
+				pdf_image *img;
+
+				g = fz_dictgets(val, "G");
+				subtype = fz_dictgets(g, "Subtype");
+
+				if (!strcmp(fz_toname(subtype), "Form"))
+				{
+					error = pdf_loadxobject(&xobj, xref, g);
+					if (error)
+						return fz_rethrow(error, "cannot load xobject");
+				}
+
+				else if (!strcmp(fz_toname(subtype), "Image"))
+				{
+					error = pdf_loadimage(&img, xref, g);
+					if (error)
+						return fz_rethrow(error, "cannot load xobject");
+				}
+				*/
+				/*puts("we encountered a soft mask");*/
 			}
 		}
-		
+
 		else if (!strcmp(s, "TR"))
 		{
 			if (fz_isname(val) && strcmp(fz_toname(val), "Identity"))
@@ -521,7 +548,7 @@ runkeyword(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, char *buf)
 			if (!obj)
 				return fz_throw("cannot find extgstate resource /%s", fz_toname(csi->stack[0]));
 
-			error = runextgstate(gstate, xref, obj);
+			error = runextgstate(gstate, xref, rdb, obj);
 			if (error)
 				return fz_rethrow(error, "cannot set ExtGState");
 		}
@@ -625,9 +652,9 @@ Lsetcolorspace:
 					if (!obj)
 						return fz_throw("cannot find colorspace resource /%s", fz_toname(csi->stack[0]));
 
-					cs = pdf_finditem(xref->store, PDF_KCOLORSPACE, obj);
-					if (!cs)
-						return fz_throw("cannot find colorspace in store");
+					error = pdf_loadcolorspace(&cs, xref, obj);
+					if (error)
+						return fz_rethrow(error, "cannot load colorspace");
 				}
 
 				error = pdf_setcolorspace(csi, what, cs);
@@ -644,8 +671,9 @@ Lsetcolorspace:
 		else if (!strcmp(buf, "SC") || !strcmp(buf, "SCN"))
 		{
 			pdf_material *mat;
-			pdf_pattern *pat;
-			fz_shade *shd;
+			pdf_pattern *pat = nil;
+			fz_shade *shd = nil;
+			fz_obj *patterntype;
 			fz_obj *dict;
 			fz_obj *obj;
 			int kind;
@@ -695,22 +723,36 @@ Lsetcolor:
 					return fz_throw("cannot find pattern resource /%s",
 							fz_toname(csi->stack[csi->top - 1]));
 
-				pat = pdf_finditem(xref->store, PDF_KPATTERN, obj);
-				if (pat)
+				patterntype = fz_dictgets(obj, "PatternType");
+
+				if (fz_toint(patterntype) == 1)
 				{
-					error = pdf_setpattern(csi, what, pat, csi->top == 1 ? nil : v);
-					if (error) return fz_rethrow(error, "cannot set pattern");
+					error = pdf_loadpattern(&pat, xref, obj);
+					if (error)
+						return fz_rethrow(error, "cannot load pattern");
+					if (pat)
+					{
+						error = pdf_setpattern(csi, what, pat, csi->top == 1 ? nil : v);
+						if (error)
+							return fz_rethrow(error, "cannot set pattern");
+					}
 				}
 
-				shd = pdf_finditem(xref->store, PDF_KSHADE, obj);
-				if (shd)
+				if (fz_toint(patterntype) == 2)
 				{
-					error = pdf_setshade(csi, what, shd);
-					if (error) return fz_rethrow(error, "cannot set shade");
+					error = pdf_loadshade(&shd, xref, obj);
+					if (error)
+						return fz_rethrow(error, "cannot load shade");
+					if (shd)
+					{
+						error = pdf_setshade(csi, what, shd);
+						if (error)
+							return fz_rethrow(error, "cannot set shade");
+					}
 				}
 
 				if (!pat && !shd)
-					return fz_throw("cannot find pattern or shade in store");
+					return fz_throw("cannot load pattern or shade");
 
 				break;
 
@@ -826,9 +868,9 @@ Lsetcolor:
 			if (!obj)
 				return fz_throw("cannot find font resource: %s", fz_toname(csi->stack[0]));
 
-			gstate->font = pdf_finditem(xref->store, PDF_KFONT, obj);
-			if (!gstate->font)
-				return fz_throw("cannot find font in store");
+			error = pdf_loadfont(&gstate->font, xref, rdb, obj);
+			if (error)
+				return fz_rethrow(error, "cannot load font");
 
 			gstate->size = fz_toreal(csi->stack[1]);
 			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=497 */
@@ -924,8 +966,9 @@ Lsetcolor:
 		{
 			fz_obj *dict;
 			fz_obj *obj;
-			pdf_image *img;
-			pdf_xobject *xobj;
+			fz_obj *subtype;
+			pdf_image *img = nil;
+			pdf_xobject *xobj = nil;
 
 			if (csi->top != 1)
 				goto syntaxerror;
@@ -938,21 +981,14 @@ Lsetcolor:
 			if (!obj)
 				return fz_throw("cannot find xobject resource: '%s'", fz_toname(csi->stack[0]));
 
-			img = pdf_finditem(xref->store, PDF_KIMAGE, obj);
-			xobj = pdf_finditem(xref->store, PDF_KXOBJECT, obj);
+			subtype = fz_dictgets(obj, "Subtype");
 
-			if (!img && !xobj)
-				return fz_throw("cannot find image or xobject in store");
-
-			if (img)
+			if (!strcmp(fz_toname(subtype), "Form"))
 			{
-				error = pdf_showimage(csi, img);
+				error = pdf_loadxobject(&xobj, xref, obj);
 				if (error)
-					return fz_rethrow(error, "cannot draw image");
-			}
+					return fz_rethrow(error, "cannot load xobject");
 
-			if (xobj)
-			{
 				/* Inherit parent resources, in case this one was empty */
 				if (!xobj->resources)
 					xobj->resources = fz_keepobj(rdb);
@@ -962,6 +998,20 @@ Lsetcolor:
 				if (error)
 					return fz_rethrow(error, "cannot draw xobject");
 			}
+
+			if (!strcmp(fz_toname(subtype), "Image"))
+			{
+				error = pdf_loadimage(&img, xref, obj);
+				if (error)
+					return fz_rethrow(error, "cannot load image");
+
+				error = pdf_showimage(csi, img);
+				if (error)
+					return fz_rethrow(error, "cannot draw image");
+			}
+
+			if (!img && !xobj)
+				return fz_throw("cannot load image or xobject");
 		}
 
 		else if (!strcmp(buf, "sh"))
@@ -981,9 +1031,9 @@ Lsetcolor:
 			if (!obj)
 				return fz_throw("cannot find shade resource: %s", fz_toname(csi->stack[csi->top - 1]));
 
-			shd = pdf_finditem(xref->store, PDF_KSHADE, obj);
-			if (!shd)
-				return fz_throw("cannot find shade in store");
+			error = pdf_loadshade(&shd, xref, obj);
+			if (error)
+				return fz_rethrow(error, "cannot load shade");
 
 			error = pdf_addshade(gstate, shd);
 			if (error) return fz_rethrow(error, "cannot draw shade");

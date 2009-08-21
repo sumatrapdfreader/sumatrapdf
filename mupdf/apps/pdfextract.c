@@ -46,7 +46,7 @@ static void saveimage(fz_obj *obj, int num, int gen)
     if (error)
         die(error);
 
-    error = pdf_loadimage(&img, xref, obj, ref);
+    error = pdf_loadimage(&img, xref, obj);
     if (error)
         die(error);
 

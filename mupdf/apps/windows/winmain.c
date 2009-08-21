@@ -109,8 +109,8 @@ void winwarn(pdfapp_t *app, char *msg)
 
 void winerror(pdfapp_t *app, fz_error error)
 {
-    fz_catch(error, "display error message to user");
-    MessageBoxA(hwndframe, "An error has occurred.", "MuPDF: Error", MB_ICONERROR);
+    fz_catch(error, "displaying error message to user");
+    MessageBoxA(hwndframe, fz_errorbuf, "MuPDF: Error", MB_ICONERROR);
     exit(1);
 }
 

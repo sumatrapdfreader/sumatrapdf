@@ -9,7 +9,7 @@
 #define MAX_RAD_SEGS 36
 
 fz_error
-pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
+pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	fz_obj *obj;
@@ -112,7 +112,7 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 }
 
 fz_error
-pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
+pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 {
 	fz_point p1, p2, p3, p4;
 	fz_point ep1, ep2, ep3, ep4;
@@ -309,7 +309,7 @@ buildannulusmesh(float* mesh, int pos,
 }
 
 fz_error
-pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref)
+pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading)
 {
 	fz_obj *obj;
 	float x0, y0, r0, x1, y1, r1;

@@ -70,6 +70,10 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 #define vsnprintf _vsnprintf
 #endif
 
+#ifndef snprintf
+#define snprintf _snprintf
+#endif
+
 #ifndef isnan
 #define isnan _isnan
 #endif
@@ -174,15 +178,17 @@ int fullrune(char *str, int n);
 
 typedef int fz_error;
 
-#define fz_throw(...) fz_throwimp(__func__, __FILE__, __LINE__, __VA_ARGS__)
-#define fz_rethrow(cause, ...) fz_rethrowimp(cause, __func__, __FILE__, __LINE__, __VA_ARGS__)
-#define fz_catch(cause, ...) fz_catchimp(cause, __func__, __FILE__, __LINE__, __VA_ARGS__)
+extern char fz_errorbuf[];
+
+#define fz_throw(...) fz_throwimp(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#define fz_rethrow(cause, ...) fz_rethrowimp(cause, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define fz_catch(cause, ...) fz_catchimp(cause, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define fz_okay ((fz_error)0)
 
 void fz_warn(char *fmt, ...) __printflike(1,2);
-fz_error fz_throwimp(const char *func, const char *file, int line, char *fmt, ...) __printflike(4, 5);
-fz_error fz_rethrowimp(fz_error cause, const char *func, const char *file, int line, char *fmt, ...) __printflike(5, 6);
-fz_error fz_catchimp(fz_error cause, const char *func, const char *file, int line, char *fmt, ...) __printflike(5, 6);
+fz_error fz_throwimp(const char *file, int line, const char *func, char *fmt, ...) __printflike(4, 5);
+fz_error fz_rethrowimp(fz_error cause, const char *file, int line, const char *func, char *fmt, ...) __printflike(5, 6);
+fz_error fz_catchimp(fz_error cause, const char *file, int line, const char *func, char *fmt, ...) __printflike(5, 6);
 
 void *fz_malloc(int n);
 void *fz_realloc(void *p, int n);

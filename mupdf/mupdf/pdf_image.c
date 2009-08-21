@@ -9,6 +9,8 @@ void pdf_dropimage(fz_image *fzimg)
 {
 	pdf_image *img = (pdf_image*)fzimg;
 	fz_dropbuffer(img->samples);
+	if (img->indexed)
+		fz_dropcolorspace((fz_colorspace *) img->indexed);
 	if (img->mask)
 		fz_dropimage(img->mask);
 }
@@ -57,24 +59,30 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 	if (cs)
 	{
+		fz_obj *csd;
+		fz_obj *cso;
+
+		/* Attempt to lookup any name in the resource dictionary */
 		if (fz_isname(cs))
 		{
-			fz_obj *csd = fz_dictgets(rdb, "ColorSpace");
-			if (csd)
-			{
-				fz_obj *cso = fz_dictget(csd, cs);
-				img->super.cs = pdf_finditem(xref->store, PDF_KCOLORSPACE, cso);
-				if (img->super.cs)
-					fz_keepcolorspace(img->super.cs);
-			}
+			csd = fz_dictgets(rdb, "ColorSpace");
+			cso = fz_dictget(csd, cs);
+		}
+
+		/* If no colorspace found in resource dictionary,
+		 * assume that reference is a standard name */
+		if (!cso)
+			cso = cs;
+
+		error = pdf_loadcolorspace(&img->super.cs, xref, cso);
+		if (error)
+		{
+			pdf_dropimage((fz_image *) img);
+			return fz_rethrow(error, "cannot load colorspace");
 		}
 
 		if (!img->super.cs)
-		{
-			error = pdf_loadcolorspace(&img->super.cs, xref, cs);
-			if (error)
-				return error;
-		}
+			return fz_throw("image is missing colorspace");
 
 		if (!strcmp(img->super.cs->name, "Indexed"))
 		{
@@ -208,7 +216,7 @@ loadcolorkey(int *colorkey, int bpc, int indexed, fz_obj *obj)
 
 /* TODO error cleanup */
 fz_error
-pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
+pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	pdf_image *img;
@@ -227,7 +235,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	int stride;
 	int realsize, expectedsize;
 
-	if ((*imgp = pdf_finditem(xref->store, PDF_KIMAGE, ref)))
+	if ((*imgp = pdf_finditem(xref->store, PDF_KIMAGE, dict)))
 	{
 		fz_keepimage((fz_image*)*imgp);
 		return fz_okay;
@@ -237,7 +245,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	if (!img)
 		return fz_rethrow(-1, "out of memory: image struct");
 
-	pdf_logimage("load image (%d %d R) ptr=%p {\n", fz_tonum(ref), fz_togen(ref), img);
+	pdf_logimage("load image (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), img);
 
 	/*
 	 * Dimensions, BPC and ColorSpace
@@ -259,14 +267,11 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	obj = fz_dictgets(dict, "ColorSpace");
 	if (obj)
 	{
-		cs = pdf_finditem(xref->store, PDF_KCOLORSPACE, obj);
-		if (cs)
-			fz_keepcolorspace(cs);
-		else
+		error = pdf_loadcolorspace(&cs, xref, obj);
+		if (error)
 		{
-			error = pdf_loadcolorspace(&cs, xref, obj);
-			if (error)
-				return error;
+			fz_dropimage((fz_image *) img);
+			return fz_rethrow(error, "cannot load colorspace");
 		}
 
 		if (!strcmp(cs->name, "Indexed"))
@@ -320,7 +325,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 		sub = fz_resolveindirect(obj);
 
-		error = pdf_loadimage(&mask, xref, sub, obj);
+		error = pdf_loadimage(&mask, xref, sub);
 		if (error)
 			return error;
 
@@ -344,7 +349,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		else
 		{
 			pdf_logimage("has mask\n");
-			error = pdf_loadimage(&mask, xref, sub, obj);
+			error = pdf_loadimage(&mask, xref, sub);
 			if (error)
 				return error;
 		}
@@ -389,7 +394,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	else
 		stride = (w * (n + a) * bpc + 7) / 8;
 
-	error = pdf_loadstream(&img->samples, xref, fz_tonum(ref), fz_togen(ref));
+	error = pdf_loadstream(&img->samples, xref, fz_tonum(dict), fz_togen(dict));
 	if (error)
 	{
 		/* TODO: colorspace? */
@@ -448,7 +453,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 	pdf_logimage("}\n");
 
-	error = pdf_storeitem(xref->store, PDF_KIMAGE, ref, img);
+	error = pdf_storeitem(xref->store, PDF_KIMAGE, dict, img);
 	if (error)
 	{
 		fz_dropimage((fz_image*)img);

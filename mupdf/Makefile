@@ -213,7 +213,7 @@ MUPDF_SRC = \
 	pdf_debug.c pdf_font.c pdf_fontagl.c pdf_fontenc.c pdf_fontfile.c \
 	pdf_fontmtx.c pdf_function.c pdf_image.c pdf_interpret.c pdf_lex.c \
 	pdf_nametree.c pdf_open.c pdf_outline.c pdf_page.c pdf_pagetree.c \
-	pdf_parse.c pdf_pattern.c pdf_repair.c pdf_resources.c pdf_shade.c \
+	pdf_parse.c pdf_pattern.c pdf_repair.c pdf_shade.c \
 	pdf_shade1.c pdf_shade4.c pdf_store.c pdf_stream.c pdf_type3.c \
 	pdf_unicode.c pdf_xobject.c pdf_xref.c
 

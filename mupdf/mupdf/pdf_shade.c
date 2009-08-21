@@ -140,7 +140,7 @@ pdf_setmeshvalue(float *mesh, int i, float x, float y, float t)
 }
 
 static fz_error
-loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_matrix matrix)
+loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix matrix)
 {
 	fz_error error;
 	fz_shade *shade;
@@ -148,7 +148,7 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_m
 	int type;
 	int i;
 
-	pdf_logshade("load shade dict (%d %d R) {\n", fz_tonum(ref), fz_togen(ref));
+	pdf_logshade("load shade dict (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
 	shade = fz_malloc(sizeof(fz_shade));
 	if (!shade)
@@ -174,14 +174,11 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_m
 	obj = fz_dictgets(dict, "ColorSpace");
 	if (obj)
 	{
-		shade->cs = pdf_finditem(xref->store, PDF_KCOLORSPACE, obj);
-		if (shade->cs)
-			fz_keepcolorspace(shade->cs);
-		else
+		error = pdf_loadcolorspace(&shade->cs, xref, obj);
+		if (error)
 		{
-			error = pdf_loadcolorspace(&shade->cs, xref, obj);
-			if (error)
-				return fz_rethrow(error, "could not load colorspace");
+			fz_dropshade(shade);
+			return fz_rethrow(error, "cannot load colorspace");
 		}
 	}
 
@@ -210,31 +207,31 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref, fz_m
 	switch(type)
 	{
 	case 1:
-		error = pdf_loadtype1shade(shade, xref, dict, ref);
+		error = pdf_loadtype1shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	case 2:
-		error = pdf_loadtype2shade(shade, xref, dict, ref);
+		error = pdf_loadtype2shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	case 3:
-		error = pdf_loadtype3shade(shade, xref, dict, ref);
+		error = pdf_loadtype3shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	case 4:
-		error = pdf_loadtype4shade(shade, xref, dict, ref);
+		error = pdf_loadtype4shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	case 5:
-		error = pdf_loadtype5shade(shade, xref, dict, ref);
+		error = pdf_loadtype5shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	case 6:
-		error = pdf_loadtype6shade(shade, xref, dict, ref);
+		error = pdf_loadtype6shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	case 7:
-		error = pdf_loadtype7shade(shade, xref, dict, ref);
+		error = pdf_loadtype7shade(shade, xref, dict);
 		if (error) goto cleanup;
 		break;
 	default:
@@ -253,14 +250,13 @@ cleanup:
 }
 
 fz_error
-pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
+pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	fz_matrix mat;
 	fz_obj *obj;
-	fz_obj *shd;
 
-	if ((*shadep = pdf_finditem(xref->store, PDF_KSHADE, ref)))
+	if ((*shadep = pdf_finditem(xref->store, PDF_KSHADE, dict)))
 	{
 		fz_keepshade(*shadep);
 		return fz_okay;
@@ -271,7 +267,7 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	 */
 	if (fz_dictgets(dict, "PatternType"))
 	{
-		pdf_logshade("load shade pattern (%d %d R) {\n", fz_tonum(ref), fz_togen(ref));
+		pdf_logshade("load shade pattern (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
 		obj = fz_dictgets(dict, "Matrix");
 		if (obj)
@@ -295,8 +291,7 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		if (!obj)
 			return fz_throw("syntaxerror: missing shading dictionary");
 
-		shd = fz_resolveindirect(obj);
-		error = loadshadedict(shadep, xref, shd, obj, mat);
+		error = loadshadedict(shadep, xref, obj, mat);
 		if (error)
 			return fz_rethrow(error, "could not load shading dictionary");
 
@@ -308,12 +303,12 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	 */
 	else
 	{
-		error = loadshadedict(shadep, xref, dict, ref, fz_identity());
+		error = loadshadedict(shadep, xref, dict, fz_identity());
 		if (error)
 			return fz_rethrow(error, "could not load shading dictionary");
 	}
 
-	error = pdf_storeitem(xref->store, PDF_KSHADE, ref, *shadep);
+	error = pdf_storeitem(xref->store, PDF_KSHADE, dict, *shadep);
 	if (error)
 	{
 		fz_dropshade(*shadep);
