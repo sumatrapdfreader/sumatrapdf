@@ -223,7 +223,6 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 	pdf_image *mask;
 	int ismask;
 	fz_obj *obj;
-	fz_obj *sub;
 	int i;
 
 	int w, h, bpc;
@@ -323,9 +322,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 	{
 		pdf_logimage("has soft mask\n");
 
-		sub = fz_resolveindirect(obj);
-
-		error = pdf_loadimage(&mask, xref, sub);
+		error = pdf_loadimage(&mask, xref, obj);
 		if (error)
 			return error;
 
@@ -340,16 +337,15 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Mask");
 	if (fz_isindirect(obj))
 	{
-		sub = fz_resolveindirect(obj);
-		if (fz_isarray(sub))
+		if (fz_isarray(obj))
 		{
 			usecolorkey = 1;
-			loadcolorkey(img->colorkey, bpc, indexed != nil, sub);
+			loadcolorkey(img->colorkey, bpc, indexed != nil, obj);
 		}
 		else
 		{
 			pdf_logimage("has mask\n");
-			error = pdf_loadimage(&mask, xref, sub);
+			error = pdf_loadimage(&mask, xref, obj);
 			if (error)
 				return error;
 		}
