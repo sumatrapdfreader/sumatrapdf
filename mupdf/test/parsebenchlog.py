@@ -133,7 +133,9 @@ def parse_pdfbench_output():
     curr_pdf = None
     pdfs = []
     curr_lines = []
+    line_no = -1
     for line in open(log_file):
+        line_no += 1
         curr_lines.append(line)
 
         # as an optimization, check pageload and pagerender line since
@@ -157,7 +159,11 @@ def parse_pdfbench_output():
             if curr_pdf.failed():
                 curr_pdf.txt = string.join(curr_lines,"")
             pdfs.append(curr_pdf)
-            assert(curr_pdf.path == finish_name)
+            if curr_pdf.path != finish_name:
+                sys.stderr.write("start : %s\n" % curr_pdf.path)
+                sys.stderr.write("finish: %s\n" % finish_name)
+                sys.stderr.write("line  : %d\n\n" % line_no)
+                assert(curr_pdf.path == finish_name)
             curr_pdf = None
             curr_lines = []
         elif is_error_line(line):
