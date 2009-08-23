@@ -130,15 +130,12 @@ tail:
 
 	else if (e == fz_iodone)
 	{
-		if (!p->head->done)
-		{
-			// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=344
-			// TODO: Should this ever be allowed to happen?
-			// If tail was done but head wasn't, there must have been a (small?)
-			// trailer left in the queue - let the head read over it
-			e = fz_process(p->head, in, p->buffer);
-			assert(e == fz_iodone);
-		}
+		/* Make sure that the head is also done.
+		 * It may still contain end-of-data markers or garbage.
+		 */
+		e = fz_process(p->head, in, p->buffer);
+		if (e != fz_iodone)
+			fz_catch(e, "head filter not done");
 		return fz_iodone;
 	}
 
