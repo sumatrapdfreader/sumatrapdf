@@ -298,7 +298,7 @@ int PdfEngine::findPageNo(fz_obj *dest)
     int n = fz_tonum(dest);
     int g = fz_togen(dest);
 
-    for (p = 0; p < _pageCount; p++)
+    for (p = 1; p <= _pageCount; p++)
     {
 	fz_obj *page;
 	fz_error error = pdf_getpageobject(_xref, p, &page);
@@ -307,7 +307,7 @@ int PdfEngine::findPageNo(fz_obj *dest)
         int np = fz_tonum(page);
         int gp = fz_togen(page);
         if (n == np && g == gp)
-            return p + 1;
+            return p;
     }
 
     return 0;
@@ -336,7 +336,7 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
         return page;
     }
     fz_obj * obj;
-    fz_error error = pdf_getpageobject(_xref, pageNo -1, &obj);
+    fz_error error = pdf_getpageobject(_xref, pageNo, &obj);
     if (!error) {
         error = pdf_loadpage(&page, _xref, obj);
     }
@@ -367,7 +367,7 @@ int PdfEngine::pageRotation(int pageNo)
     assert(validPageNo(pageNo));
     fz_obj *page;
     int rotation = INVALID_ROTATION;
-    fz_error error = pdf_getpageobject(_xref, pageNo - 1, &page);
+    fz_error error = pdf_getpageobject(_xref, pageNo, &page);
     if (!error) {
 	fz_error error = pdf_getpageinfo(_xref, page, NULL, &rotation);
     }
@@ -379,7 +379,7 @@ SizeD PdfEngine::pageSize(int pageNo)
     assert(validPageNo(pageNo));
     fz_obj *page;
     fz_rect bbox;
-    fz_error error = pdf_getpageobject(_xref, pageNo - 1, &page);
+    fz_error error = pdf_getpageobject(_xref, pageNo, &page);
     if (!error) {
 	error = pdf_getpageinfo(_xref, page, &bbox, NULL);
     }

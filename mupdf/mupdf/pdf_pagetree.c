@@ -251,10 +251,6 @@ pdf_getpageobject(pdf_xref *xref, int pageno, fz_obj **pagep)
 	fz_obj *pages;
 	int count;
 
-	// TODO: this is only to offset a regression in mupdf from
-	//http://darcs.ghostscript.com/darcsweb.cgi?r=mupdf;a=commitdiff;h=20090709000319-86a4e-46304c4ff8ce491bfe1fced7fd46115dcfba940a.gz
-	pageno += 1;
-
 	inherit.resources = nil;
 	inherit.mediabox = nil;
 	inherit.cropbox = nil;
