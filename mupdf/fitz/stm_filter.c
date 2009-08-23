@@ -8,13 +8,13 @@ fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	unsigned char *oldrp;
 	unsigned char *oldwp;
 
-	assert(!out->eof);
-
 	oldrp = in->rp;
 	oldwp = out->wp;
 
 	if (f->done)
 	    return fz_iodone;
+
+	assert(!out->eof);
 
 	reason = f->process(f, in, out);
 

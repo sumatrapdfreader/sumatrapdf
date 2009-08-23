@@ -155,7 +155,7 @@ void fz_dropnode(fz_node *node);
 /* branch nodes */
 fz_error fz_newovernode(fz_node **nodep);
 fz_error fz_newmasknode(fz_node **nodep);
-fz_error fz_newblendnode(fz_node **nodep, fz_blendkind b, int k, int i);
+fz_error fz_newblendnode(fz_node **nodep, fz_blendkind b, int i, int k);
 fz_error fz_newtransformnode(fz_node **nodep, fz_matrix m);
 
 int fz_istransformnode(fz_node *node);

@@ -955,6 +955,12 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 	int i, len;
 	int cpt, cid;
 
+	if (!fontdesc)
+	{
+		fz_warn("cannot draw text since font and size not set");
+		return fz_okay;
+	}
+
 	if (fz_isarray(text))
 	{
 		for (i = 0; i < fz_arraylen(text); i++)

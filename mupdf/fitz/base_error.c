@@ -14,7 +14,7 @@ fz_printerror(int type, const char *file, int line, const char *func, char *msg)
     len = strlen(buf);
 
     fputs(buf, stderr);
-    fputs("\n", stderr);
+    putc('\n', stderr);
 
     if (fz_errorclear)
     {

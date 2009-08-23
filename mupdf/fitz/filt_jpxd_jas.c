@@ -103,20 +103,6 @@ decode:
 	if (!d->image)
 		return fz_throw("jasper error: jas_image_decode()");
 
-	fprintf(stderr, "P%c\n# JPX %d x %d n=%d bpc=%d colorspace=%04x %s\n%d %d\n%d\n",
-		jas_image_numcmpts(d->image) == 1 ? '5' : '6',
-
-		jas_image_width(d->image),
-		jas_image_height(d->image),
-		jas_image_numcmpts(d->image),
-		jas_image_cmptprec(d->image, 0),
-		jas_image_clrspc(d->image),
-		colorspacename(jas_image_clrspc(d->image)),
-
-		jas_image_width(d->image),
-		jas_image_height(d->image),
-		(1 << jas_image_cmptprec(d->image, 0)) - 1);
-
 	d->stage = 2;
 
 output:

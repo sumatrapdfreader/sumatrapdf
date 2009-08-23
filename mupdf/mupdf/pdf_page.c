@@ -226,7 +226,9 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	 */
 
 	rdb = fz_dictgets(dict, "Resources");
-	if (!rdb)
+	if (rdb)
+		rdb = fz_keepobj(rdb);
+	else
 	{
 		fz_warn("cannot find page resources, proceeding anyway.");
 		error = fz_newdict(&rdb, 0);
@@ -273,7 +275,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	page->mediabox.x1 = MAX(bbox.x0, bbox.x1);
 	page->mediabox.y1 = MAX(bbox.y0, bbox.y1);
 	page->rotate = rotate;
-	page->resources = rdb;
+	page->resources = rdb; /* we have already kept or created it */
 	page->tree = tree;
 
 	page->comments = comments;
@@ -290,6 +292,8 @@ pdf_droppage(pdf_page *page)
 {
 	pdf_logpage("drop page %p\n", page);
 	/* if (page->comments) pdf_dropcomment(page->comments); */
+	if (page->resources)
+		fz_dropobj(page->resources);
 	if (page->links)
 		pdf_droplink(page->links);
 	if (page->tree)

@@ -59,8 +59,8 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 	if (cs)
 	{
-		fz_obj *csd = NULL;
-		fz_obj *cso = NULL;
+		fz_obj *csd = nil;
+		fz_obj *cso = nil;
 
 		/* Attempt to lookup any name in the resource dictionary */
 		if (fz_isname(cs))

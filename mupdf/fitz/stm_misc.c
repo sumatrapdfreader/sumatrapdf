@@ -46,7 +46,7 @@ static inline int fz_fillbuf(fz_stream *stm, fz_buffer *buf)
 	int remaining = buf->ep - buf->wp;
 	int available = stm->buffer->wp - stm->buffer->rp;
 
-	if (available == 0)
+	if (available == 0 && remaining > 0)
 	{
 		int c = fz_readbytex(stm);
 		if (c == EOF)
@@ -62,7 +62,7 @@ static inline int fz_fillbuf(fz_stream *stm, fz_buffer *buf)
 	buf->wp += MIN(remaining, available);
 	stm->buffer->rp += MIN(remaining, available);
 
-	if (buf->rp == buf->wp && stm->buffer->eof)
+	if (stm->buffer->rp == stm->buffer->wp && stm->buffer->eof)
 		return EOF;
 	return 0;
 }

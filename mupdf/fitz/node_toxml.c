@@ -35,7 +35,8 @@ static void xmlblend(fz_blendnode *node, int level)
 {
 	fz_node *child;
 	indent(level);
-	printf("<blend mode=\"%d\">\n", node->mode);
+	printf("<blend mode=\"%d\" isolated=\"%d\" knockout=\"%d\">\n",
+		node->mode, node->isolated, node->knockout);
 	for (child = node->super.first; child; child = child->next)
 		xmlnode(child, level + 1);
 	indent(level);

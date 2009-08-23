@@ -587,8 +587,20 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		return fz_rethrow(-1, "out of memory: indexed colorspace lookup table (%d entries)", n);
 	}
 
+
+	if (fz_isstring(lookup) && fz_tostrlen(lookup) == n)
+	{
+		unsigned char *buf;
+		int i;
+
+		pdf_logrsrc("string lookup\n");
+
+		buf = (unsigned char *) fz_tostrbuf(lookup);
+		for (i = 0; i < n; i++)
+			cs->lookup[i] = buf[i];
+	}
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=396 */
-	if (fz_isindirect(lookup))
+	else if (fz_isindirect(lookup))
 	{
 		const int oid = fz_tonum(lookup);
 		const int gen = fz_togen(lookup);
@@ -620,18 +632,8 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 			fz_dropbuffer(buf);
 		}
 	}
-
-	if (fz_isstring(lookup) && fz_tostrlen(lookup) == n)
-	{
-		unsigned char *buf;
-		int i;
-
-		pdf_logrsrc("string lookup\n");
-
-		buf = (unsigned char *) fz_tostrbuf(lookup);
-		for (i = 0; i < n; i++)
-			cs->lookup[i] = buf[i];
-	}
+	else
+		return fz_throw("cannot parse colorspace lookup table");
 
 	pdf_logrsrc("}\n");
 

@@ -123,7 +123,6 @@ decode:
 	w = d->image->comps[0].w;
 	h = d->image->comps[0].h;
 	depth = d->image->comps[0].prec;
-	/*printf("openjpeg: n=%d w=%d h=%d depth=%d\n", n, w, h, depth);*/
     }
 
 output:

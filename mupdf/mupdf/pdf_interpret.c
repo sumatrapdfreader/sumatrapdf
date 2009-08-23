@@ -139,6 +139,8 @@ pdf_dropcsi(pdf_csi *csi)
 	if (csi->gstate[csi->gtop].stroke.cs)
 		fz_dropcolorspace(csi->gstate[csi->gtop].stroke.cs);
 
+	if (csi->tree) fz_droptree(csi->tree);
+
 	if (csi->path) fz_dropnode((fz_node*)csi->path);
 	if (csi->textclip) fz_dropnode((fz_node*)csi->textclip);
 	if (csi->text) fz_dropnode((fz_node*)csi->text);
@@ -177,6 +179,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	/* reset alpha to 1.0 when starting a new Transparency group */
 	if (xobj->transparency)
 	{
+	    gstate->blendmode = FZ_BNORMAL;
 	    gstate->stroke.alpha = gstate->stroke.parentalpha;
 	    gstate->fill.alpha = gstate->fill.parentalpha;
 	}
@@ -196,7 +199,8 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 
 	if (xobj->isolated || xobj->knockout)
 	{
-	    error = fz_newblendnode(&blend, FZ_BNORMAL, xobj->isolated, xobj->knockout);
+	    error = fz_newblendnode(&blend, gstate->blendmode,
+		    xobj->isolated, xobj->knockout);
 	    if (error)
 		return fz_rethrow(error, "cannot create blend node");
 	    fz_insertnodelast(gstate->head, blend);
@@ -873,7 +877,6 @@ Lsetcolor:
 				return fz_rethrow(error, "cannot load font");
 
 			gstate->size = fz_toreal(csi->stack[1]);
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=497 */
 			if (gstate->size < -1000.0)
 			{
 				gstate->size = -1000.0;
