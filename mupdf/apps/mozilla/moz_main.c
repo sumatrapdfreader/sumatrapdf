@@ -350,9 +350,9 @@ void pdfmoz_onmouse(pdfmoz_t *moz, int x, int y, int click)
 	SetCursor(moz->hand);
 	if (click)
 	{
-	    if (fz_isstring(link->dest))
+	    if (link->kind == PDF_LURI)
 		pdfmoz_gotouri(moz, link->dest);
-	    if (fz_isindirect(link->dest))
+	    else if (link->kind == PDF_LGOTO)
 		pdfmoz_gotopage(moz, link->dest);
 	    return;
 	}

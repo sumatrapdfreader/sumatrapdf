@@ -71,7 +71,10 @@ void openxref(char *filename, char *password, int dieonbadpass)
 
 	error = pdf_getpagecount(xref, &pagecount);
 	if (error)
-		die(error);
+	{
+		fz_catch(error, "cannot determine page count, attempting to continue.");
+		pagecount = 0;
+	}
 }
 
 void closexref(void)

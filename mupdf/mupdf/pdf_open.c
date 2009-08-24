@@ -713,6 +713,22 @@ pdf_loadxref2(pdf_xref *xref)
 		goto cleanup;
 	}
 
+	/* broken pdfs where first object is not free */
+	if (xref->table[0].type != 'f')
+	{
+		fz_warn("first object in xref is not free");
+		xref->table[0].type = 'f';
+	}
+
+	/* broken pdfs where freed objects have offset and gen set to 0
+	   but still exits */
+	for (i = 0; i < xref->len; i++)
+		if (xref->table[i].type == 'n' && xref->table[i].ofs == 0)
+		{
+			fz_warn("object (%d %d R) has invalid offset, assumed missing", i, xref->table[i].gen);
+			xref->table[i].type = 'f';
+		}
+
 	return fz_okay;
 
 cleanup:

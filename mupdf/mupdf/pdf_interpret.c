@@ -199,8 +199,19 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 
 	if (xobj->isolated || xobj->knockout)
 	{
+	    /* The xobject's contents ought to be blended properly,
+	       but for now, just do over and hope for something
+
 	    error = fz_newblendnode(&blend, gstate->blendmode,
 		    xobj->isolated, xobj->knockout);
+	    */
+	    if (gstate->blendmode != FZ_BNORMAL ||
+		    !xobj->isolated || !xobj->knockout)
+		fz_warn("ignoring blendmode %d %sisolated %sknockout",
+			gstate->blendmode,
+			xobj->isolated ? "" : "non-",
+			xobj->knockout ? "" : "non-");
+	    error = fz_newovernode(&blend);
 	    if (error)
 		return fz_rethrow(error, "cannot create blend node");
 	    fz_insertnodelast(gstate->head, blend);

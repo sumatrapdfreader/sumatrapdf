@@ -543,9 +543,9 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		wincursor(app, HAND);
 		if (btn == 1 && state == 1)
 		{
-			if (fz_isstring(link->dest))
+			if (link->kind == PDF_LURI)
 				pdfapp_gotouri(app, link->dest);
-			if (fz_isindirect(link->dest))
+			else if (link->kind == PDF_LGOTO)
 				pdfapp_gotopage(app, link->dest);
 			return;
 		}

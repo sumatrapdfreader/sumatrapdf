@@ -517,13 +517,10 @@ typedef struct pdf_comment_s pdf_comment;
 typedef struct pdf_widget_s pdf_widget;
 typedef struct pdf_outline_s pdf_outline;
 
-/* TODO: more kinds should be supported */
-typedef enum pdf_linkkind_e 
+typedef enum pdf_linkkind_e
 {
-	PDF_LGOTO,
+	PDF_LGOTO = 0,
 	PDF_LURI,
-	PDF_LGOTOR,
-	PDF_LUNKNOWN
 } pdf_linkkind;
 
 struct pdf_link_s
@@ -569,7 +566,7 @@ struct pdf_outline_s
 fz_error pdf_loadnametree(fz_obj **dictp, pdf_xref *xref, fz_obj *root);
 fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest);
 
-fz_error pdf_newlink(pdf_link**, fz_rect rect, fz_obj *dest, pdf_linkkind kind);
+fz_error pdf_newlink(pdf_link**, pdf_linkkind kind, fz_rect rect, fz_obj *dest);
 fz_error pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict);
 void pdf_droplink(pdf_link *link);
 
