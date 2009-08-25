@@ -35,6 +35,35 @@ static char *basefontnames[14][7] =
 	{ "ZapfDingbats", nil }
 };
 
+static int strcmpignorespace(char *a, char *b)
+{
+    while (1)
+    {
+	while (*a == ' ')
+	    a++;
+	while (*b == ' ')
+	    b++;
+	if (*a != *b)
+	    return 1;
+	if (*a == 0)
+	    return *a != *b;
+	if (*b == 0)
+	    return *a != *b;
+	a++;
+	b++;
+    }
+}
+
+static char *cleanfontname(char *fontname)
+{
+	int i, k;
+	for (i = 0; i < 14; i++)
+		for (k = 0; basefontnames[i][k]; k++)
+			if (!strcmpignorespace(basefontnames[i][k], fontname))
+				return basefontnames[i][0];
+	return fontname;
+}
+
 /*
  * FreeType and Rendering glue
  */
@@ -104,16 +133,6 @@ static int ftwidth(pdf_fontdesc *fontdesc, int cid)
 /*
  * Basic encoding tables
  */
-
-static char *cleanfontname(char *fontname)
-{
-	int i, k;
-	for (i = 0; i < 14; i++)
-		for (k = 0; basefontnames[i][k]; k++)
-			if (!strcmp(basefontnames[i][k], fontname))
-				return basefontnames[i][0];
-	return fontname;
-}
 
 static int mrecode(char *name)
 {

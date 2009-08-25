@@ -82,6 +82,14 @@ fz_fillpath(fz_gel *gel, fz_pathnode *path, fz_matrix ctm, float flatness)
 		switch (path->els[i++].k)
 		{
 		case FZ_MOVETO:
+			/* implicit closepath before moveto */
+			if (i && (cx != bx || cy != by))
+			{
+				error = line(gel, &ctm, cx, cy, bx, by);
+				if (error)
+					return error;
+			}
+
 			x1 = path->els[i++].v;
 			y1 = path->els[i++].v;
 			cx = bx = x1;
