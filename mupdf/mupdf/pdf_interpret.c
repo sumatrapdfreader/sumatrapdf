@@ -205,12 +205,14 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	    error = fz_newblendnode(&blend, gstate->blendmode,
 		    xobj->isolated, xobj->knockout);
 	    */
-	    if (gstate->blendmode != FZ_BNORMAL ||
-		    !xobj->isolated || !xobj->knockout)
-		fz_warn("ignoring blendmode %d %sisolated %sknockout",
-			gstate->blendmode,
-			xobj->isolated ? "" : "non-",
-			xobj->knockout ? "" : "non-");
+	    if (gstate->blendmode != FZ_BNORMAL)
+		fz_warn("ignoring non-normal blendmode (%d)", gstate->blendmode);
+	    if (xobj->isolated && xobj->knockout)
+		fz_warn("ignoring that the group is isolated and knockout");
+	    else if (xobj->isolated)
+		fz_warn("ignoring that the group is isolated");
+	    else if (xobj->knockout)
+		fz_warn("ignoring that the group is knockout");
 	    error = fz_newovernode(&blend);
 	    if (error)
 		return fz_rethrow(error, "cannot create blend node");
