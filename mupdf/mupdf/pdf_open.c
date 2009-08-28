@@ -723,7 +723,8 @@ pdf_loadxref2(pdf_xref *xref)
 	/* broken pdfs where freed objects have offset and gen set to 0
 	   but still exits */
 	for (i = 0; i < xref->len; i++)
-		if (xref->table[i].type == 'n' && xref->table[i].ofs == 0)
+		if (xref->table[i].type == 'n' && xref->table[i].ofs == 0 &&
+			xref->table[i].gen == 0 && xref->table[i].obj == nil)
 		{
 			fz_warn("object (%d %d R) has invalid offset, assumed missing", i, xref->table[i].gen);
 			xref->table[i].type = 'f';

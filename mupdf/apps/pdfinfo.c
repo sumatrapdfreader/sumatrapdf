@@ -866,7 +866,7 @@ printinfo(char *filename, int show, int page)
 				"Free-form triangle mesh",
 				"Lattice-form triangle mesh",
 				"Coons patch mesh",
-				"Tendor-product patch mesh",
+				"Tensor-product patch mesh",
 			};
 
 			printf(PAGE_FMT "%s (%d %d R)\n",

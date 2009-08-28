@@ -188,12 +188,8 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	    }
 	}
     }
-
-    if (crypt->idlength == 0)
-    {
-	pdf_freecrypt(crypt);
-	return fz_throw("missing file identifier");
-    }
+    else
+	fz_warn("missing file identifier, may not be able to do decryption");
 
 #if 0
     {
