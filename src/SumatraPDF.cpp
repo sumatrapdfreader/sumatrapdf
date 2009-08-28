@@ -6514,6 +6514,13 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 OnKeydown(win, wParam, lParam);
             break;
 
+        case WM_INITMENUPOPUP:
+            if (GetMenuItemID((HMENU)wParam, 0) == menuDefZoom[0].m_id) {
+                if (win)
+                    MenuUpdateZoom(win);
+            }
+            break;
+
         case WM_SETTINGCHANGE:
 InitMouseWheelInfo:
             SystemParametersInfo (SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
