@@ -4325,3 +4325,9 @@ hr:Otvori u programu &Adobe Reader
 cn:在&Adobe Reader中打开
 cy:Agor yn &Adobe Reader
 si:Odpri s programom &Adobe Reader
+-
+Copy Selection\tCtrl-C
+de:Auswahl kopieren\tStrg+C
+-
+Select content with Ctrl+left mouse button
+de:Inhalte mit Strg+linker Maustaste auswählen

@@ -1024,11 +1024,12 @@ MenuDef menuDefView[] = {
     { _TRN("Rotate left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,        0  },
     { _TRN("Rotate right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,       0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Bookmarks\tF12"),              IDM_VIEW_BOOKMARKS,          0  },
-    { SEP_ITEM, 0, 0  },
     { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN,         0  },
     { SEP_ITEM, 0, 0  },
+    { _TRN("Bookmarks\tF12"),              IDM_VIEW_BOOKMARKS,          0  },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR,  0  },
+    { SEP_ITEM, 0, 0  },
+    { _TRN("Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,          0  },
 };
 
 MenuDef menuDefGoTo[] = {
@@ -1867,7 +1868,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS,
-        IDM_VIEW_WITH_ACROBAT };
+        IDM_VIEW_WITH_ACROBAT, IDM_COPY_SELECTION };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     HMENU hmenu = win->hMenu;
@@ -3502,7 +3503,7 @@ static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
         win->dm->scrollYBy(dy, FALSE);
 }
 
-static void CopySelectionTextToClipboard(WindowInfo *win)
+static void CopySelectionToClipboard(WindowInfo *win)
 {
     SelectionOnPage *   selOnPage;
 
@@ -3786,7 +3787,6 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
             win->showSelection = false;
         } else {
             ConvertSelectionRectToSelectionOnPage (win);
-            CopySelectionTextToClipboard (win);
         }
         triggerRepaintDisplayNow(win);
     }
@@ -6497,6 +6497,13 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_GOTO_NAV_FORWARD:
                     if (win->dm)
                         win->dm->navigate(1);
+                    break;
+
+                case IDM_COPY_SELECTION:
+                    if (win->selectionOnPage)
+                        CopySelectionToClipboard(win);
+                    else
+                        WindowInfo_ShowMessage_Asynch(win, _TR("Select content with Ctrl+left mouse button"), true);
                     break;
 
                 default:
