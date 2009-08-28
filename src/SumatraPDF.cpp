@@ -5182,9 +5182,15 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEUP, 0);
+        if (win->dm->needHScroll())
+            SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGELEFT, 0);
+        else
+            win->dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
-        SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGEDOWN, 0);
+        if (win->dm->needHScroll())
+            SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGERIGHT, 0);
+        else
+            win->dm->goToNextPage(0);
     } else if (VK_SPACE == key) {
         bool forward = !WasShiftPressed();
         win->dm->scrollYByAreaDy(forward, true);
