@@ -4172,6 +4172,9 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             // Further rotate the page, so that 0° and 180° mean Portrait orientation
             if (pSize.dx() > pSize.dy())
                 rotation += 90;
+            // Swap width and height for rotated documents
+            if (pSize.dx() > pSize.dy() || 90 == rotation || 270 == rotation)
+                pSize = SizeD(pSize.dy(), pSize.dx());
 
             if (90 == rotation || 270 == rotation)
                 rotation = bPrintPortrait ? 270 : 0;
