@@ -5020,10 +5020,9 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         SelectObject(hdc, oldFont);
         ReleaseDC(win->hwndFindStatus, hdc);
         rc.right += MulDiv(15, win->dpi, 96);
-        // TODO: Reduce the height so that the progress bar isn't visible
-        rc.bottom = MulDiv(31, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT;
+        rc.bottom = MulDiv(23, win->dpi, 96);
         AdjustWindowRectEx(&rc, GetWindowLong(win->hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win->hwndFindStatus, GWL_EXSTYLE));
-        MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right-rc.left, rc.bottom-rc.top, FALSE);
+        MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
     }
 
     // if a thread has previously been started then make sure it has ended
@@ -5101,7 +5100,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
 {
     LPARAM disable = (LPARAM)MAKELONG(0,0);
 
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(31, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(23, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
     ShowWindow(win->hwndFindStatus, SW_SHOWNA);
     win->findStatusVisible = true;
 
@@ -5119,7 +5118,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
     // resize the window, in case another message has been displayed in the meantime
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(31, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(23, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
     if (!win->dm->bFoundText)
         WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
     else {
