@@ -22,23 +22,65 @@ fz_newovernode(fz_node **nodep)
 fz_rect
 fz_boundovernode(fz_overnode *node, fz_matrix ctm)
 {
-	fz_node *child;
-	fz_rect bbox;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=533 */
+	struct {
+		int cap, ix;
+		struct {
+			fz_node *node;
+			fz_rect bbox;
+		} *items;
+	} stack;
+
+	fz_node *child = node->super.first;
+	fz_rect bbox = fz_emptyrect;
 	fz_rect temp;
 
-	child = node->super.first;
 	if (!child)
 		return fz_emptyrect;
 
-	bbox = fz_boundnode(child, ctm);
-
-	child = child->next;
-	while (child)
+	stack.cap = 8;
+	stack.ix = 0;
+	stack.items = nil;
+	do
 	{
-		temp = fz_boundnode(child, ctm);
-		bbox = fz_mergerects(temp, bbox);
-		child = child->next;
-	}
+		if (child->kind != FZ_NOVER)
+		{
+			temp = fz_boundnode(child, ctm);
+			bbox = fz_mergerects(temp, bbox);
+			child = child->next;
+		}
+		else if (child->first)
+		{
+			if (!stack.items)
+				stack.items = fz_malloc(stack.cap * sizeof(*stack.items));
+			else if (stack.ix >= stack.cap)
+			{
+				stack.cap *= 2;
+				stack.items = fz_realloc(stack.items, stack.cap * sizeof(*stack.items));
+				if (!stack.items)
+					return fz_emptyrect;
+			}
+
+			stack.items[stack.ix].node = child;
+			stack.items[stack.ix].bbox = bbox;
+			stack.ix++;
+
+			bbox = fz_emptyrect;
+			child = child->first;
+		}
+		else
+		{
+			child = child->next;
+		}
+		while (!child && stack.ix > 0)
+		{
+			stack.ix--;
+			temp = stack.items[stack.ix].bbox;
+			bbox = fz_mergerects(temp, bbox);
+			child = stack.items[stack.ix].node->next;
+		}
+	} while (child);
+	fz_free(stack.items);
 
 	return bbox;
 }
