@@ -834,6 +834,9 @@ DEBUG("potentially useless mask\n");
 			clip.y0 = MAX(colorpix->y, shapepix->y);
 			clip.x1 = MIN(colorpix->x+colorpix->w, shapepix->x+shapepix->w);
 			clip.y1 = MIN(colorpix->y+colorpix->h, shapepix->y+shapepix->h);
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=653 */
+			if (clip.x0 > clip.x1) clip.x1 = clip.x0;
+			if (clip.y0 > clip.y1) clip.y1 = clip.y0;
 			error = fz_newpixmapwithrect(&gc->dest, clip, colorpix->n);
 			if (error)
 				goto cleanup;
