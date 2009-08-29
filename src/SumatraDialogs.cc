@@ -499,6 +499,100 @@ int Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
 static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 0,
     6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 125.0, 100.0, 50.0, 25.0, 12.5, 8.33 };
 
+static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, double currZoom)
+{
+    // Fill the possible zoom settings into the select box
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Page"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"-");
+#ifndef BUILD_RM_VERSION
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("6400%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("3200%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("1600%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("800%"));
+#endif
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("400%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("200%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("150%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("125%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("100%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("50%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("25%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("12.5%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("8.33%"));
+    for (int i = 0; i < dimof(gItemZoom); i++)
+        if (gItemZoom[i] == currZoom)
+            SendDlgItemMessage(hDlg, idComboBox, CB_SETCURSEL, i, 0);
+    if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
+        TCHAR *customZoom = tstr_printf(_T("%.0f%%"), currZoom);
+        SetDlgItemText(hDlg, idComboBox, customZoom);
+        free(customZoom);
+    }
+}
+
+static double GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, double defaultZoom)
+{
+    double newZoom = defaultZoom;
+
+    int ix = SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0);
+    if (ix == -1) {
+        TCHAR *customZoom = win_get_text(GetDlgItem(hDlg, idComboBox));
+        double zoom = _tstof(customZoom);
+        if (zoom >= ZOOM_MIN && zoom <= ZOOM_MAX)
+            newZoom = zoom;
+        free(customZoom);
+    } else if (0 != gItemZoom[ix])
+        newZoom = gItemZoom[ix];
+
+    return newZoom;
+}
+
+static BOOL CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    double *currZoom;
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        currZoom = (double *)lParam;
+        assert(currZoom);
+        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)currZoom);
+
+        SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
+
+        win_set_text(hDlg, _TR("Zoom factor"));
+        SetDlgItemText(hDlg, IDC_STATIC, _TR("&Magnification:"));
+        SetDlgItemText(hDlg, IDOK, _TR("Zoom"));
+        SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
+
+        CenterDialog(hDlg);
+        SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
+        return FALSE;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            currZoom = (double *)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            assert(currZoom);
+            *currZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
+            EndDialog(hDlg, DIALOG_OK_PRESSED);
+            return TRUE;
+
+        case IDCANCEL:
+            EndDialog(hDlg, DIALOG_CANCEL_PRESSED);
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+int Dialog_CustomZoom(HWND hwnd, double *currZoom)
+{
+    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM), hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
+    return dialogResult;
+}
+
 static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     SerializableGlobalPrefs *prefs;
@@ -518,33 +612,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous facing"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->m_defaultDisplayMode - DM_FIRST, 0);
 
-        // Fill the possible zoom settings into the select box
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Page"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)L"-");
-#ifndef BUILD_RM_VERSION
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("6400%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("3200%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("1600%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("800%"));
-#endif
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("400%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("200%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("150%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("125%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("100%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("50%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("25%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("12.5%"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_ADDSTRING, 0, (LPARAM)_TR("8.33%"));
-        for (int i = 0; i < dimof(gItemZoom); i++)
-            if (gItemZoom[i] == gGlobalPrefs.m_defaultZoom)
-                SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_SETCURSEL, i, 0);
-        if (SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_GETCURSEL, 0, 0) == -1) {
-            TCHAR *customZoom = tstr_printf(_T("%.0f%%"), gGlobalPrefs.m_defaultZoom);
-            SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM, customZoom);
-            free(customZoom);
-        }
+        SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, gGlobalPrefs.m_defaultZoom);
 
         CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->m_showToc ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_GLOBAL_PREFS_ONLY, !prefs->m_globalPrefsOnly ? BST_CHECKED : BST_UNCHECKED);
@@ -619,17 +687,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             case DM_CONTINUOUS_FACING: prefs->m_defaultDisplayMode = DM_CONTINUOUS_FACING; break;
             default: assert(FALSE);
             }
-            {
-                int ix = SendDlgItemMessage(hDlg, IDC_DEFAULT_ZOOM, CB_GETCURSEL, 0, 0);
-                if (ix == -1) {
-                    TCHAR *customZoom = win_get_text(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
-                    double zoom = _tstof(customZoom);
-                    if (zoom >= ZOOM_MIN && zoom <= ZOOM_MAX)
-                        prefs->m_defaultZoom = zoom;
-                    free(customZoom);
-                } else if (0 != gItemZoom[ix])
-                    prefs->m_defaultZoom = gItemZoom[ix];
-            }
+            prefs->m_defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->m_defaultZoom);
 
             prefs->m_showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
             prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));

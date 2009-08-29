@@ -1046,6 +1046,7 @@ MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl-0"),           IDM_ZOOM_FIT_PAGE,           0  },
     { _TRN("Act&ual Size\tCtrl-1"),        IDM_ZOOM_ACTUAL_SIZE,        0  },
     { _TRN("Fit Widt&h\tCtrl-2"),          IDM_ZOOM_FIT_WIDTH,          0  },
+    { _TRN("&Custom Zoom..."),             IDM_ZOOM_CUSTOM,             0  },
     { SEP_ITEM },
 #ifndef BUILD_RM_VERSION
     { _TRN("6400%"),                       IDM_ZOOM_6400,               0  },
@@ -1320,10 +1321,10 @@ unsigned short gItemId[] = {
     IDM_ZOOM_6400, IDM_ZOOM_3200, IDM_ZOOM_1600, IDM_ZOOM_800, IDM_ZOOM_400,
     IDM_ZOOM_200, IDM_ZOOM_150, IDM_ZOOM_125, IDM_ZOOM_100, IDM_ZOOM_50,
     IDM_ZOOM_25, IDM_ZOOM_12_5, IDM_ZOOM_8_33, IDM_ZOOM_FIT_PAGE, 
-    IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE };
+    IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE, IDM_ZOOM_CUSTOM };
 
 double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 
-    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_ACTUAL_SIZE };
+    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_ACTUAL_SIZE, 0 };
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
@@ -1331,7 +1332,7 @@ static UINT MenuIdFromVirtualZoom(double virtualZoom)
         if (virtualZoom == gItemZoom[i])
             return gItemId[i];
     }
-    return 0;
+    return IDM_ZOOM_CUSTOM;
 }
 
 static double ZoomMenuItemToZoom(UINT menuItemId)
@@ -1365,7 +1366,7 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
         UINT enableState = canZoom ? MF_ENABLED : MF_GRAYED;
         EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | enableState);
     }
-    assert(!menuItemId || found);
+    assert(found);
 }
 
 static void MenuUpdateZoom(WindowInfo* win)
@@ -4069,6 +4070,18 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
     ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 }
 
+static void OnMenuCustomZoom(WindowInfo *win)
+{
+    if (!win->dm)
+        return;
+
+    double zoom = win->dm->zoomVirtual();
+    if (DIALOG_CANCEL_PRESSED == Dialog_CustomZoom(win->hwndFrame, &zoom))
+        return;
+    win->dm->zoomTo(zoom);
+    MenuUpdateZoom(win);
+}
+
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 {
     // most printers can support stretchdibits,
@@ -6372,6 +6385,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_ZOOM_FIT_WIDTH:
                 case IDM_ZOOM_ACTUAL_SIZE:
                     OnMenuZoom(win, (UINT)wmId);
+                    break;
+
+                case IDM_ZOOM_CUSTOM:
+                    OnMenuCustomZoom(win);
                     break;
 
                 case IDM_VIEW_SINGLE_PAGE:

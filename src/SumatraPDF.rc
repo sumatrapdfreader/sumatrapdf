@@ -186,6 +186,17 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,184,150,50,14
 END
 
+IDD_DIALOG_CUSTOM_ZOOM DIALOGEX 0, 0, 116, 60
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zoom factor"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "&Magnification:",IDC_STATIC,6,6,104,9
+    COMBOBOX        IDC_DEFAULT_ZOOM,6,20,104,149,CBS_DROPDOWN | WS_TABSTOP
+    DEFPUSHBUTTON   "Zoom",IDOK,6,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,60,40,50,14
+END
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

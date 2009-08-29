@@ -4331,3 +4331,15 @@ de:Auswahl kopieren\tStrg+C
 -
 Select content with Ctrl+left mouse button
 de:Inhalte mit Strg+linker Maustaste auswählen
+-
+&Custom Zoom...
+de:&Zoomfaktor...
+-
+Zoom factor
+de:Zoomfaktor
+-
+&Magnification:
+de:&Vergrößerung:
+-
+Zoom
+de:Zoom

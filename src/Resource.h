@@ -13,6 +13,7 @@
 #define IDD_DIALOG_NEW_VERSION          135
 #define IDD_DIALOG_SETTINGS             136
 #define IDD_DIALOG_FIND                 137
+#define IDD_DIALOG_CUSTOM_ZOOM          138
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
@@ -55,6 +56,7 @@
 #define IDM_ZOOM_25                     453
 #define IDM_ZOOM_12_5                   454
 #define IDM_ZOOM_8_33                   455
+#define IDM_ZOOM_CUSTOM                 456
 #define IDM_CONTRIBUTE_TRANSLATION      460
 #define IDM_LANG_EN                     461
 #define IDM_LANG_FR                     462
