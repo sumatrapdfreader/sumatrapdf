@@ -3065,6 +3065,10 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         DBG_OUT("page %d ", pageNo);
 
         HBITMAP hbmp = renderedBmp->createDIBitmap(hdc);
+        int renderedBmpDx = renderedBmp->dx();
+        int renderedBmpDy = renderedBmp->dy();
+        renderedBmp = NULL; // could be invalid, as soon as the cache is unlocked
+
         UnlockCache();
         if (!hbmp)
             continue;
@@ -3073,8 +3077,6 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (bmpDC) {
             int xSrc = (int)pageInfo->bitmapX;
             int ySrc = (int)pageInfo->bitmapY;
-            int renderedBmpDx = renderedBmp->dx();
-            int renderedBmpDy = renderedBmp->dy();
 
             SelectObject(bmpDC, hbmp);
             if ((renderedBmpDx < pageInfo->currDx) || (renderedBmpDy < pageInfo->currDy))
