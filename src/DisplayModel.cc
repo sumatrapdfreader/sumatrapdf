@@ -1369,26 +1369,25 @@ bool BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rota
     return false;
 }
 
-PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text)
+PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text, UINT fromPage)
 {
     bool forward = (direction == FIND_FORWARD);
     _pdfSearch->SetDirection(forward);
     if (text != NULL)
-        bFoundText = _pdfSearch->FindFirst(currentPageNo(), text);
+        bFoundText = _pdfSearch->FindFirst(fromPage ? fromPage : currentPageNo(), text);
     else
         bFoundText = _pdfSearch->FindNext();
 
-    if (bFoundText) {
-        PdfSearchResult &rect = _pdfSearch->result;
+    if (!bFoundText)
+        return NULL;
 
-        if (text != NULL)
-            addNavPoint();
-        goToPage(rect.page, 0);
-        MapResultRectToScreen(&rect);
-        return &rect;
-    }
+    PdfSearchResult &rect = _pdfSearch->result;
 
-    return NULL;
+    if (text != NULL)
+        addNavPoint();
+    goToPage(rect.page, 0);
+    MapResultRectToScreen(&rect);
+    return &rect;
 }
 
 DisplayModel *DisplayModel_CreateFromFileName(

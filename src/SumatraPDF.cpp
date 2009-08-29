@@ -5475,6 +5475,13 @@ void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
     else
         rect = win->dm->Find(direction);
 
+    if (!rect) {
+        // With no further findings, start over (unless this was a new search from the beginning)
+        int startPage = (FIND_FORWARD == direction) ? 1 : win->dm->pageCount();
+        if (!wasModified || win->dm->currentPageNo() != startPage)
+            rect = win->dm->Find(direction, text, startPage);
+    }
+
     if (rect)
         WindowInfo_ShowSearchResult(win, rect);
     else

@@ -259,7 +259,7 @@ public:
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
 
     void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
-    PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, TCHAR *text = NULL);
+    PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, TCHAR *text = NULL, UINT fromPage = 0);
     BOOL            bFoundText;
 
     BOOL            _showToc;
