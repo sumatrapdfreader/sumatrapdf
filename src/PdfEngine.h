@@ -30,6 +30,7 @@ class PdfTocItem {
 public:
     TCHAR *title;
     void *link;
+    bool open;
 
     PdfTocItem *child;
     PdfTocItem *next;
@@ -40,6 +41,7 @@ public:
         this->link = link;
         this->child = NULL;
         this->next = NULL;
+        this->open = true;
     }
 
     ~PdfTocItem()

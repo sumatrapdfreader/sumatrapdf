@@ -264,6 +264,7 @@ PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 {
     TCHAR *name = utf8_to_tstr(entry->title);
     PdfTocItem *node = new PdfTocItem(name, entry->link);
+    node->open = entry->count >= 0;
 
     if (entry->child)
         node->AddChild(buildTocTree(entry->child));

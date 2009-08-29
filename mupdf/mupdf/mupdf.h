@@ -561,6 +561,7 @@ struct pdf_outline_s
 	pdf_link *link;
 	pdf_outline *child;
 	pdf_outline *next;
+	int count;
 };
 
 fz_error pdf_loadnametree(fz_obj **dictp, pdf_xref *xref, fz_obj *root);

@@ -5993,17 +5993,11 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent)
 {
     TV_INSERTSTRUCT tvinsert;
-    tvinsert.hParent = (HTREEITEM)parent;
+    tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
-    if (parent == NULL) {
-        tvinsert.itemex.state = TVIS_EXPANDED;
-        tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    }
-    else {
-        tvinsert.itemex.state = 0;
-        tvinsert.itemex.stateMask = 0;
-    }
-    tvinsert.itemex.mask = TVIF_TEXT|TVIF_PARAM|TVIF_STATE;
+    tvinsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+    tvinsert.itemex.state = entry->open ? TVIS_EXPANDED : 0;
+    tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry->link;
     // Replace unprintable whitespace with regular spaces
     tstr_trans_chars(entry->title, _T("\t\n\v\f\r"), _T("     "));
