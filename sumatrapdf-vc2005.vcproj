@@ -27,7 +27,7 @@
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg clean"
 				Output="obj-dbg\sumatrapdf.exe"
-				PreprocessorDefinitions="WIN32;_DEBUG"
+				PreprocessorDefinitions="WIN32;_DEBUG;SYNCTEX_FEATURE"
 				IncludeSearchPath=""
 				ForcedIncludes=""
 				AssemblySearchPath=""
@@ -47,7 +47,7 @@
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel clean"
 				Output="obj-rel\sumatrapdf.exe"
-				PreprocessorDefinitions="WIN32;NDEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;SYNCTEX_FEATURE"
 				IncludeSearchPath=""
 				ForcedIncludes=""
 				AssemblySearchPath=""
@@ -110,10 +110,6 @@
 			</File>
 			<File
 				RelativePath=".\src\AppPrefs.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\config.h"
 				>
 			</File>
 			<File
@@ -235,7 +231,115 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\src\closetoc.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\dragcursor.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PdfDoc.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraPDF.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SumatraPDF.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\toolbar_8.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraPDF.exe.manifest"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="baseutils"
+			>
+			<File
+				RelativePath=".\baseutils\base_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\base_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\benc_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\benc_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\file_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\file_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\geom_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\geom_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_strsafe.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\strlist_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\strlist_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\tstr_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\win_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\win_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\WinUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\WinUtil.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.h"
 				>
 			</File>
 		</Filter>
@@ -302,7 +406,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_aes.c"
+					RelativePath=".\mupdf\fitz\filt_aesd.c"
 					>
 				</File>
 				<File
@@ -315,6 +419,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\filt_arc4.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\filt_copy.c"
 					>
 				</File>
 				<File
@@ -702,10 +810,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_resources.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\mupdf\pdf_shade.c"
 					>
 				</File>
@@ -875,6 +979,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\src\todo.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

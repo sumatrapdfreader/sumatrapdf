@@ -74,10 +74,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\config.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\DisplayModel.cc"
 				>
 			</File>
@@ -204,23 +200,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\icons-silk\folder.bmp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\icons-silk\matchcase.bmp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\icons-silk\next.bmp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\PdfDoc.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\src\icons-silk\previous.bmp"
 				>
 			</File>
 			<File
@@ -232,19 +212,95 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\toolbar-disabled.bmp"
+				RelativePath=".\src\toolbar_8.bmp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\toolbar.bmp"
+				RelativePath=".\src\SumatraPDF.exe.manifest"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="baseutils"
+			>
+			<File
+				RelativePath=".\baseutils\base_util.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\icons-silk\zoom_in.bmp"
+				RelativePath=".\baseutils\base_util.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\icons-silk\zoom_out.bmp"
+				RelativePath=".\baseutils\benc_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\benc_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\file_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\file_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\geom_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\geom_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_strsafe.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\str_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\strlist_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\strlist_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\tstr_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\win_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\win_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\WinUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\WinUtil.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\wstr_util.h"
 				>
 			</File>
 		</Filter>
@@ -884,10 +940,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\src\SumatraPDF.exe.manifest"
-			>
-		</File>
 		<File
 			RelativePath=".\src\todo.txt"
 			>
