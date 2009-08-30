@@ -123,7 +123,7 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib \
 	comdlg32.lib shell32.lib comctl32.lib Msimg32.lib Winspool.lib \
-	wininet.lib ole32.lib shlwapi.lib
+	wininet.lib ole32.lib shlwapi.lib version.lib
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG

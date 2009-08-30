@@ -4550,7 +4550,28 @@ static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
     if (foundAcrobat && buffer)
         lstrcpyn(buffer, path, bufSize);
 
-    return foundAcrobat;
+    // TODO: Get a Unicode version for file_exists into file_util.c (cf. PdfSync.cpp)?
+    struct _stat stat_buffer;
+    return foundAcrobat && 0 == _tstat(path, &stat_buffer);
+}
+
+// The result value contains major and minor version in the high resp. the low WORD
+static DWORD GetFileVersion(TCHAR *path)
+{
+    DWORD fileVersion = 0;
+    DWORD handle;
+    DWORD size = GetFileVersionInfoSize(path, &handle);
+    LPVOID versionInfo = malloc(size);
+
+    if (GetFileVersionInfo(path, handle, size, versionInfo)) {
+        VS_FIXEDFILEINFO *fileInfo;
+        UINT len;
+        if (VerQueryValue(versionInfo, _T("\\"), (LPVOID *)&fileInfo, &len))
+            fileVersion = fileInfo->dwFileVersionMS;
+    }
+
+    free(versionInfo);
+    return fileVersion;
 }
 
 static void ViewWithAcrobat(WindowInfo *win)
@@ -4562,10 +4583,15 @@ static void ViewWithAcrobat(WindowInfo *win)
     if (!GetAcrobatPath(acrobatPath, dimof(acrobatPath)))
         return;
 
-    // Command line format: /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
+    TCHAR *params;
+    // Command line format for version 6 and later:
+    //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
     // TODO: Also set zoom factor and scroll to current position?
-    TCHAR *params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
+    if (HIWORD(GetFileVersion(acrobatPath)) >= 6)
+        params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
+    else
+        params = tstr_printf(_T("\"%s\""), win->dm->fileName());
     ShellExecute(NULL, _T("open"), acrobatPath, params, NULL, SW_NORMAL);
     free(params);
 }
