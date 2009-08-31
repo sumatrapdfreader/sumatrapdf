@@ -1,9 +1,10 @@
 /* 
-Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
+Copyright (c) 2008, 2009 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.7
+Version: 1.8
+Latest Revision: Wed Jul  1 11:16:01 UTC 2009
 See synctex_parser_readme.txt for more details
 
 License:
@@ -37,11 +38,13 @@ authorization from the copyright holder.
 */
 
 /*  The utilities declared here are subject to conditional implementation.
- *  All the operating system special stuff goes here. */
+ *  All the operating system special stuff goes here.
+ *  The problem mainly comes from file name management: path separator, encoding...
+ */
 
-#   define synctex_bool_t int
-#   define synctex_YES -1
-#   define synctex_NO 0
+#	define synctex_bool_t int
+#	define synctex_YES -1
+#	define synctex_NO 0
 
 #ifndef __SYNCTEX_PARSER_UTILS__
 #   define __SYNCTEX_PARSER_UTILS__
@@ -79,13 +82,8 @@ void _synctex_strip_last_path_extension(char * string);
  *  The given strings may differ stricto sensu, but represent the same file name.
  *  It might not be the real way of doing things.
  *  The return value is an undefined non 0 value when the two file names are equivalent.
- *  It is 0 otherwise.
- *  In order to workaround a bug in MiKTeX, we added a append_tex_extension flag.
- *  It happens that MiKTeX sometimes does not record a ".tex" file extension when it was expected to
- *  according to the documentation of TeX in tex.web.
- *  if append_tex_extension is YES, lhs and rhs are equivalent when lhs is equivalent to rhs+".tex".
- */
-synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs, synctex_bool_t append_tex_extension);
+ *  It is 0 otherwise. */
+synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs);
 
 /*	Description forthcoming.*/
 synctex_bool_t _synctex_path_is_absolute(const char * name);
@@ -103,6 +101,24 @@ char * _synctex_last_path_component(const char * name);
  *  is responsible of freeing the memory when done.
  *	The size argument is the size of the src buffer. On return the dest_ref points to a buffer sized size+2.*/
 int _synctex_copy_with_quoting_last_path_component(const char * src, char ** dest_ref, size_t size);
+
+/*  These are the possible extensions of the synctex file */
+static const char * synctex_suffix = ".synctex";
+static const char * synctex_suffix_gz = ".gz";
+
+typedef enum {
+	synctex_io_mode_read = 0,
+	synctex_io_mode_append = 2
+} synctex_io_mode_t;
+
+typedef enum {
+	synctex_compress_mode_none = 0,
+	synctex_compress_mode_gz = 1
+} synctex_compress_mode_t;
+
+static const char * synctex_io_modes[synctex_io_mode_append+2] = {"r","rb","a","ab"};
+
+int _synctex_get_name(const char * output, const char * build_directory, char ** synctex_name_ref, synctex_compress_mode_t * compress_mode_ref);
 
 
 #ifdef __cplusplus

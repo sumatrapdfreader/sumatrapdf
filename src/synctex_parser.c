@@ -1,10 +1,12 @@
 /* 
-Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
+Copyright (c) 2008, 2009 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.7
+Version: 1.8
 See synctex_parser_readme.txt for more details
+
+Latest Revision: Wed Jul  1 11:18:18 UTC 2009
 
 License:
 --------
@@ -33,6 +35,19 @@ Except as contained in this notice, the name of the copyright holder
 shall not be used in advertising or otherwise to promote the sale,  
 use or other dealings in this Software without prior written  
 authorization from the copyright holder.
+
+Acknowledgments:
+----------------
+The author received useful remarks from the pdfTeX developers, especially Hahn The Thanh,
+and significant help from XeTeX developer Jonathan Kew
+
+Nota Bene:
+----------
+If you include or use a significant part of the synctex package into a software,
+I would appreciate to be listed as contributor and see "SyncTeX" highlighted.
+
+Version 1
+Thu Jun 19 09:39:21 UTC 2008
 
 */
 
@@ -80,7 +95,7 @@ authorization from the copyright holder.
 
 /*  each synctex node has a class */
 typedef struct __synctex_class_t _synctex_class_t;
-typedef _synctex_class_t *  synctex_class_t;
+typedef _synctex_class_t * synctex_class_t;
 
 
 /*  synctex_node_t is a pointer to a node
@@ -95,12 +110,12 @@ typedef _synctex_class_t *  synctex_class_t;
  */
 typedef union _synctex_info_t {
 	int    INT;
-	char *  PTR;
+	char * PTR;
 } synctex_info_t;
 
 struct _synctex_node {
 	synctex_class_t class;
-	synctex_info_t *  implementation;
+	synctex_info_t * implementation;
 };
 
 /*  Each node of the tree, except the scanner itself belongs to a class.
@@ -233,8 +248,11 @@ void _synctex_free_leaf(synctex_node_t node) {
 	}
 	return;
 }
-
-#include <zlib.h>
+#	ifdef	__SYNCTEX_WORK__
+#		include "/usr/include/zlib.h"
+#	else
+#		include <zlib.h>
+#	endif
 
 /*  The synctex scanner is the root object.
  *  Is is initialized with the contents of a text file or a gzipped file.
@@ -242,13 +260,13 @@ void _synctex_free_leaf(synctex_node_t node) {
  */
 struct __synctex_scanner_t {
 	gzFile file;                  /*  The (possibly compressed) file */
-	unsigned char *  buffer_cur;   /*  current location in the buffer */
-	unsigned char *  buffer_start; /*  start of the buffer */
-	unsigned char *  buffer_end;   /*  end of the buffer */
-	char *  output_fmt;            /*  dvi or pdf, not yet used */
-	char *  output;                /*  the output name used to create the scanner */
-	char *  synctex;               /*  the .synctex or .synctex.gz name used to create the scanner */
-	int version;                  /* 1, not yet used */
+	unsigned char * buffer_cur;   /*  current location in the buffer */
+	unsigned char * buffer_start; /*  start of the buffer */
+	unsigned char * buffer_end;   /*  end of the buffer */
+	char * output_fmt;            /*  dvi or pdf, not yet used */
+	char * output;                /*  the output name used to create the scanner */
+	char * synctex;               /*  the .synctex or .synctex.gz name used to create the scanner */
+	int version;                  /*  1, not yet used */
 	struct {
 		unsigned has_parsed:1;		/*  Whether the scanner has parsed its underlying synctex file. */
 		unsigned reserved:sizeof(unsigned)-1;	/*  alignment */
@@ -264,7 +282,7 @@ struct __synctex_scanner_t {
 	synctex_node_t sheet;         /*  The first sheet node, its siblings are the other sheet nodes */
 	synctex_node_t input;         /*  The first input node, its siblings are the other input nodes */
 	int number_of_lists;          /*  The number of friend lists */
-	synctex_node_t *  lists_of_friends;/*  The friend lists */
+	synctex_node_t * lists_of_friends;/*  The friend lists */
 	_synctex_class_t class[synctex_node_number_of_types]; /*  The classes of the nodes of the scanner */
 };
 
@@ -305,8 +323,8 @@ struct __synctex_scanner_t {
  *  It is only used for pointer values
  */
 #   define SYNCTEX_MAKE_GET(SYNCTEX_GETTER,OFFSET)\
-synctex_node_t *  SYNCTEX_GETTER (synctex_node_t node);\
-synctex_node_t *  SYNCTEX_GETTER (synctex_node_t node) {\
+synctex_node_t * SYNCTEX_GETTER (synctex_node_t node);\
+synctex_node_t * SYNCTEX_GETTER (synctex_node_t node) {\
 	return node?(synctex_node_t *)((&((node)->implementation))+OFFSET):NULL;\
 }
 SYNCTEX_MAKE_GET(_synctex_implementation_0,0)
@@ -530,7 +548,7 @@ synctex_node_t _synctex_new_void_hbox(synctex_scanner_t scanner) {
 	return node;
 }
 
-/*  The medium nodes correspond to kern and math nodes.  */
+/*  The medium nodes correspond to kern, glue, penalty and math nodes.  */
 typedef struct {
 	synctex_class_t class;
 	synctex_info_t implementation[3+SYNCTEX_WIDTH_IDX+1]; /*  parent,sibling,friend,
@@ -763,8 +781,8 @@ synctex_node_type_t synctex_node_type(synctex_node_t node) {
 }
 
 /*  Public node accessor: the human readable type  */
-const char *  synctex_node_isa(synctex_node_t node) {
-static const char *  isa[synctex_node_number_of_types] =
+const char * synctex_node_isa(synctex_node_t node) {
+static const char * isa[synctex_node_number_of_types] =
 		{"Not a node","input","sheet","vbox","void vbox","hbox","void hbox","kern","glue","math","boundary"};
 	return isa[synctex_node_type(node)];
 }
@@ -1039,14 +1057,14 @@ void _synctex_log_void_box(synctex_node_t node);
 void _synctex_log_box(synctex_node_t node);
 void _synctex_log_horiz_box(synctex_node_t node);
 void _synctex_log_input(synctex_node_t node);
-synctex_status_t _synctex_buffer_get_available_size(synctex_scanner_t scanner, size_t *  size_ptr);
+synctex_status_t _synctex_buffer_get_available_size(synctex_scanner_t scanner, size_t * size_ptr);
 synctex_status_t _synctex_next_line(synctex_scanner_t scanner);
-synctex_status_t _synctex_match_string(synctex_scanner_t scanner, const char *  the_string);
-synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int*  value_ref);
-synctex_status_t _synctex_decode_string(synctex_scanner_t scanner, char **  value_ref);
+synctex_status_t _synctex_match_string(synctex_scanner_t scanner, const char * the_string);
+synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int* value_ref);
+synctex_status_t _synctex_decode_string(synctex_scanner_t scanner, char ** value_ref);
 synctex_status_t _synctex_scan_input(synctex_scanner_t scanner);
 synctex_status_t _synctex_scan_preamble(synctex_scanner_t scanner);
-synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, float *  value_ref);
+synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, float * value_ref);
 synctex_status_t _synctex_scan_post_scriptum(synctex_scanner_t scanner);
 int _synctex_scan_postamble(synctex_scanner_t scanner);
 synctex_status_t _synctex_setup_visible_box(synctex_node_t box);
@@ -1055,7 +1073,7 @@ synctex_status_t _synctex_scan_sheet(synctex_scanner_t scanner, synctex_node_t p
 synctex_status_t _synctex_scan_content(synctex_scanner_t scanner);
 int synctex_scanner_pre_x_offset(synctex_scanner_t scanner);
 int synctex_scanner_pre_y_offset(synctex_scanner_t scanner);
-const char *  synctex_scanner_get_output_fmt(synctex_scanner_t scanner);
+const char * synctex_scanner_get_output_fmt(synctex_scanner_t scanner);
 int _synctex_node_is_box(synctex_node_t node);
 int _synctex_bail(void);
 
@@ -1069,12 +1087,12 @@ int _synctex_bail(void);
  *  It is the responsibility of the caller to test whether this size is conforming to its needs.
  *  Negative values may return in case of error, actually
  *  when there was an error reading the synctex file. */
-synctex_status_t _synctex_buffer_get_available_size(synctex_scanner_t scanner, size_t *  size_ptr) {
+synctex_status_t _synctex_buffer_get_available_size(synctex_scanner_t scanner, size_t * size_ptr) {
   	size_t available = 0;
 	if(NULL == scanner || NULL == size_ptr) {
 		return SYNCTEX_STATUS_BAD_ARGUMENT;
 	}
-#   define size (*  size_ptr)
+#   define size (* size_ptr)
 	if(size>SYNCTEX_BUFFER_SIZE){
 		size = SYNCTEX_BUFFER_SIZE;
 	}
@@ -1101,19 +1119,19 @@ synctex_status_t _synctex_buffer_get_available_size(synctex_scanner_t scanner, s
 			/*  If the end of the file was reached, all the required SYNCTEX_BUFFER_SIZE - available
 			 *  may not be filled with values from the file.
 			 *  In that case, the buffer should stop properly after already_read characters. */
-			*  SYNCTEX_END = '\0';
+			* SYNCTEX_END = '\0';
 			SYNCTEX_CUR = SYNCTEX_START;
 			size = SYNCTEX_END - SYNCTEX_CUR; /* == old available + already_read*/
 			return SYNCTEX_STATUS_OK; /*  May be available is less than size, the caller will have to test. */
 		} else if(0>already_read) {
 			/*  There is an error in zlib */
 			int errnum = 0;
-			const char *  error_string = gzerror(SYNCTEX_FILE, &errnum);
+			const char * error_string = gzerror(SYNCTEX_FILE, &errnum);
 			if(Z_ERRNO == errnum) {
 				/*  There is an error in zlib caused by the file system */
-				_synctex_error("!  gzread error from the file system (%i)",errno);
+				_synctex_error("gzread error from the file system (%i)",errno);
 			} else {
-				_synctex_error("!  gzread error (%i:%i,%s)",already_read,errnum,error_string);
+				_synctex_error("gzread error (%i:%i,%s)",already_read,errnum,error_string);
 			}
 			return SYNCTEX_STATUS_ERROR;
 		} else {
@@ -1122,7 +1140,7 @@ synctex_status_t _synctex_buffer_get_available_size(synctex_scanner_t scanner, s
 			SYNCTEX_FILE = NULL;
  			SYNCTEX_END = SYNCTEX_CUR;
  			SYNCTEX_CUR = SYNCTEX_START;
-			*  SYNCTEX_END = '\0';/*  Terminate the string properly.*/
+			* SYNCTEX_END = '\0';/*  Terminate the string properly.*/
 			size = SYNCTEX_END - SYNCTEX_CUR;
  			return SYNCTEX_STATUS_EOF; /*  there might be a bit of text left */
 		}
@@ -1178,7 +1196,7 @@ infinite_loop:
  *  The given string might be as long as the maximum size_t value.
  *  As side effect, the buffer state may have changed if the given argument string can't fit into the buffer.
  */
-synctex_status_t _synctex_match_string(synctex_scanner_t scanner, const char *  the_string) {
+synctex_status_t _synctex_match_string(synctex_scanner_t scanner, const char * the_string) {
 	size_t tested_len = 0; /*  the number of characters at the beginning of the_string that match */
 	size_t remaining_len = 0; /*  the number of remaining characters of the_string that should match */
 	size_t available = 0;
@@ -1252,7 +1270,7 @@ more_characters:
 return_NOT_OK:
 			if(offset != gzseek(SYNCTEX_FILE,offset,SEEK_SET)) {
 				/*  This is a critical error, we could not recover the previous state. */
-				_synctex_error("!  can't seek file");
+				_synctex_error("can't seek file");
 				return SYNCTEX_STATUS_ERROR;
 			}
 			/*  Next time we are asked to fill the buffer,
@@ -1300,9 +1318,9 @@ return_NOT_OK:
  *  It is SYNCTEX_STATUS_OK if an int has been successfully parsed.
  *  The given scanner argument must not be NULL, on the contrary, value_ref may be NULL.
  */
-synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int*  value_ref) {
-	unsigned char *  ptr = NULL;
-	unsigned char *  end = NULL;
+synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int* value_ref) {
+	unsigned char * ptr = NULL;
+	unsigned char * end = NULL;
 	int result = 0;
 	size_t available = 0;
 	synctex_status_t status = 0;
@@ -1329,7 +1347,7 @@ synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int*  value_ref)
 	if(end>ptr) {
 		SYNCTEX_CUR = end;
 		if(value_ref) {
-			*  value_ref = result;
+			* value_ref = result;
 		}
 		return SYNCTEX_STATUS_OK;/*  Successfully scanned an int */
 	}	
@@ -1343,7 +1361,7 @@ synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int*  value_ref)
  *  the cursor points to the new line marker.
  *  The returned string was alloced on the heap, the caller is the owner and
  *  is responsible to free it in due time.
- *  If no string is parsed, *  value_ref is undefined.
+ *  If no string is parsed, * value_ref is undefined.
  *  The maximum length of a string that a scanner can decode is platform dependent, namely UINT_MAX.
  *  If you just want to blindly parse the file up to the end of the current line,
  *  use _synctex_next_line instead.
@@ -1353,8 +1371,8 @@ synctex_status_t _synctex_decode_int(synctex_scanner_t scanner, int*  value_ref)
  *  If either scanner or value_ref is NULL, it is considered as an error and
  *  SYNCTEX_STATUS_BAD_ARGUMENT is returned.
  */
-synctex_status_t _synctex_decode_string(synctex_scanner_t scanner, char **  value_ref) {
-	unsigned char *  end = NULL;
+synctex_status_t _synctex_decode_string(synctex_scanner_t scanner, char ** value_ref) {
+	unsigned char * end = NULL;
 	size_t current_size = 0;
 	size_t new_size = 0;
 	size_t len = 0;/*  The number of bytes to copy */
@@ -1378,7 +1396,7 @@ synctex_status_t _synctex_decode_string(synctex_scanner_t scanner, char **  valu
 	 *  SYNCTEX_CUR was already < SYNCTEX_END, or because the buffer has been properly filled. */
 	/*  end will point to the next unparsed '\n' character in the file, when mapped to the buffer. */
 	end = SYNCTEX_CUR;
-	*  value_ref = NULL;/*  Initialize, it will be realloc'ed */
+	* value_ref = NULL;/*  Initialize, it will be realloc'ed */
 	/*  We scan all the characters up to the next '\n' */
 next_character:
 	if(end<SYNCTEX_END) {
@@ -1395,18 +1413,18 @@ next_character:
 			/*  We have current_size+len+1<=UINT_MAX
 			 *  or equivalently new_size<UINT_MAX,
 			 *  where we have assumed that len<UINT_MAX */
-			if((*  value_ref = realloc(*  value_ref,new_size+1)) != NULL) {
+			if((* value_ref = realloc(* value_ref,new_size+1)) != NULL) {
 				if(memcpy((*value_ref)+current_size,SYNCTEX_CUR,len)) {
-					(*  value_ref)[new_size]='\0'; /*  Terminate the string */
+					(* value_ref)[new_size]='\0'; /*  Terminate the string */
 					SYNCTEX_CUR += len;/*  Advance to the terminating '\n' */
 					return SYNCTEX_STATUS_OK;
 				}
-				free(*  value_ref);
-				*  value_ref = NULL;
-				_synctex_error("!  could not copy memory (1).");
+				free(* value_ref);
+				* value_ref = NULL;
+				_synctex_error("could not copy memory (1).");
 				return SYNCTEX_STATUS_ERROR;
 			}
-			_synctex_error("!  could not allocate memory (1).");
+			_synctex_error("could not allocate memory (1).");
 			return SYNCTEX_STATUS_ERROR;
 		} else {
 			++end;
@@ -1417,23 +1435,23 @@ next_character:
 		len = SYNCTEX_END - SYNCTEX_CUR;
 		if(current_size>UINT_MAX-len-1) {
 			/*  We have reached the limit. */
-			_synctex_error("!  limit reached (missing %i).",current_size-(UINT_MAX-len-1));
+			_synctex_error("limit reached (missing %i).",current_size-(UINT_MAX-len-1));
 			return SYNCTEX_STATUS_ERROR;
 		}
 		new_size = current_size+len;
-		if((*  value_ref = realloc(*  value_ref,new_size+1)) != NULL) {
+		if((* value_ref = realloc(* value_ref,new_size+1)) != NULL) {
 			if(memcpy((*value_ref)+current_size,SYNCTEX_CUR,len)) {
-				(*  value_ref)[new_size]='\0'; /*  Terminate the string */
+				(* value_ref)[new_size]='\0'; /*  Terminate the string */
 				SYNCTEX_CUR = SYNCTEX_END;/*  Advance the cursor to the end of the bufer */
 				return SYNCTEX_STATUS_OK;
 			}
-			free(*  value_ref);
-			*  value_ref = NULL;
-			_synctex_error("!  could not copy memory (2).");
+			free(* value_ref);
+			* value_ref = NULL;
+			_synctex_error("could not copy memory (2).");
 			return SYNCTEX_STATUS_ERROR;
 		}
 		/*  Huge memory problem */
-		_synctex_error("!  could not allocate memory (2).");
+		_synctex_error("could not allocate memory (2).");
 		return SYNCTEX_STATUS_ERROR;
 	}
 }
@@ -1455,13 +1473,13 @@ synctex_status_t _synctex_scan_input(synctex_scanner_t scanner) {
 	/*  Create a node */
 	input = _synctex_new_input(scanner);
 	if(NULL == input) {
-		_synctex_error("!  could not create an input node.");
+		_synctex_error("could not create an input node.");
 		return SYNCTEX_STATUS_ERROR;
 	}
 	/*  Decode the synctag  */
 	status = _synctex_decode_int(scanner,&(SYNCTEX_TAG(input)));
 	if(status<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  bad format of input node.");
+		_synctex_error("bad format of input node.");
 		SYNCTEX_FREE(input);
 		return status;
 	}
@@ -1492,7 +1510,7 @@ synctex_status_t _synctex_scan_input(synctex_scanner_t scanner) {
 
 typedef synctex_status_t (*synctex_decoder_t)(synctex_scanner_t,void *);
 
-synctex_status_t _synctex_scan_named(synctex_scanner_t scanner,char *  name,void *  value_ref,synctex_decoder_t decoder);
+synctex_status_t _synctex_scan_named(synctex_scanner_t scanner,char * name,void * value_ref,synctex_decoder_t decoder);
 
 /*  Used when parsing the synctex file.
  *  Read one of the settings.
@@ -1502,7 +1520,7 @@ synctex_status_t _synctex_scan_named(synctex_scanner_t scanner,char *  name,void
  *  On return, the scanner points to the next character after the decoded object whatever it is.
  *  It is the responsibility of the caller to prepare the scanner for the next line.
  */
-synctex_status_t _synctex_scan_named(synctex_scanner_t scanner,char *  name,void *  value_ref,synctex_decoder_t decoder) {
+synctex_status_t _synctex_scan_named(synctex_scanner_t scanner,char * name,void * value_ref,synctex_decoder_t decoder) {
 	synctex_status_t status = 0;
 	if(NULL == scanner || NULL == name || NULL == value_ref || NULL == decoder) {
 		return SYNCTEX_STATUS_BAD_ARGUMENT;
@@ -1587,12 +1605,12 @@ synctex_status_t _synctex_scan_preamble(synctex_scanner_t scanner) {
 }
 
 /*  parse a float with a dimension */
-synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, float *  value_ref) {
+synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, float * value_ref) {
 	synctex_status_t status = 0;
-	unsigned char *  endptr = NULL;
+	unsigned char * endptr = NULL;
 	float f = 0;
 #ifdef HAVE_SETLOCALE
-	char *  loc = setlocale(LC_NUMERIC, NULL);
+	char * loc = setlocale(LC_NUMERIC, NULL);
 #endif
 	size_t available = 0;
 	if(NULL == scanner || NULL == value_ref) {
@@ -1601,7 +1619,7 @@ synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, fl
 	available = SYNCTEX_BUFFER_MIN_SIZE;
 	status = _synctex_buffer_get_available_size(scanner, &available);
 	if(status<SYNCTEX_STATUS_EOF) {
-		_synctex_error("!  problem with float.");
+		_synctex_error("problem with float.");
 		return status;
 	}
 #ifdef HAVE_SETLOCALE
@@ -1612,7 +1630,7 @@ synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, fl
 	setlocale(LC_NUMERIC, loc);
 #endif
 	if(endptr == SYNCTEX_CUR) {
-		_synctex_error("!  a float was expected.");
+		_synctex_error("a float was expected.");
 		return SYNCTEX_STATUS_ERROR;
 	}
 	SYNCTEX_CUR = endptr;
@@ -1620,7 +1638,7 @@ synctex_status_t _synctex_scan_float_and_dimension(synctex_scanner_t scanner, fl
 		f *= 72.27f*65536;
 	} else if(status<SYNCTEX_STATUS_EOF) {
 report_unit_error:
-		_synctex_error("!  problem with unit.");
+		_synctex_error("problem with unit.");
 		return status;
 	} else if((status = _synctex_match_string(scanner,"cm")) >= SYNCTEX_STATUS_OK) {
 		f *= 72.27f*65536/2.54f;
@@ -1672,9 +1690,9 @@ report_unit_error:
  *  a negative error is returned otherwise */
 synctex_status_t _synctex_scan_post_scriptum(synctex_scanner_t scanner) {
 	synctex_status_t status = 0;
-	unsigned char *  endptr = NULL;
+	unsigned char * endptr = NULL;
 #ifdef HAVE_SETLOCALE
-	char *  loc = setlocale(LC_NUMERIC, NULL);
+	char * loc = setlocale(LC_NUMERIC, NULL);
 #endif
 	if(NULL == scanner) {
 		return SYNCTEX_STATUS_BAD_ARGUMENT;
@@ -1713,11 +1731,11 @@ next_line:
 		setlocale(LC_NUMERIC, loc);
 #endif
 		if(endptr == SYNCTEX_CUR) {
-			_synctex_error("!  bad magnification in the post scriptum, a float was expected.");
+			_synctex_error("bad magnification in the post scriptum, a float was expected.");
 			return SYNCTEX_STATUS_ERROR;
 		}
 		if(scanner->unit<=0) {
-			_synctex_error("!  bad magnification in the post scriptum, a positive float was expected.");
+			_synctex_error("bad magnification in the post scriptum, a positive float was expected.");
 			return SYNCTEX_STATUS_ERROR;
 		}
 		SYNCTEX_CUR = endptr;
@@ -1725,14 +1743,14 @@ next_line:
 	}
 	if(status<SYNCTEX_STATUS_EOF){
 report_record_problem:
-		_synctex_error("!  Problem reading the Post Scriptum records");
+		_synctex_error("Problem reading the Post Scriptum records");
 		return status; /*  echo the error. */
 	}
 	status = _synctex_match_string(scanner,"X Offset:");
 	if(status == SYNCTEX_STATUS_OK) {
 		status = _synctex_scan_float_and_dimension(scanner, &(scanner->x_offset));
 		if(status<SYNCTEX_STATUS_OK) {
-			_synctex_error("!  problem with X offset in the Post Scriptum.");
+			_synctex_error("problem with X offset in the Post Scriptum.");
 			return status;
 		}
 		goto next_line;
@@ -1743,7 +1761,7 @@ report_record_problem:
 	if(status==SYNCTEX_STATUS_OK) {
 		status = _synctex_scan_float_and_dimension(scanner, &(scanner->y_offset));
 		if(status<SYNCTEX_STATUS_OK) {
-			_synctex_error("!  problem with Y offset in the Post Scriptum.");
+			_synctex_error("problem with Y offset in the Post Scriptum.");
 			return status;
 		}
 		goto next_line;
@@ -1853,7 +1871,7 @@ synctex_status_t _synctex_scan_sheet(synctex_scanner_t scanner, synctex_node_t s
 	synctex_node_t sibling = NULL;
 	synctex_node_t box = sheet;
 	int friend_index = 0;
-	synctex_info_t *  info = NULL;
+	synctex_info_t * info = NULL;
 	synctex_status_t status = 0;
 	size_t available = 0;
 	if((NULL == scanner) || (NULL == sheet)) {
@@ -1876,7 +1894,7 @@ scan_vbox:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HEIGHT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad vbox record.");
+					_synctex_error("Bad vbox record.");
 					#define SYNCTEX_RETURN(STATUS) return STATUS;
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
@@ -1885,7 +1903,7 @@ scan_vbox:
 				child = NULL;
 				goto child_loop;/*  next created node will be a child */
 			} else {
-				_synctex_error("!  Can't create vbox record.");
+				_synctex_error("Can't create vbox record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == '(') {
@@ -1901,7 +1919,7 @@ scan_hbox:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_setup_visible_box(child)<SYNCTEX_STATUS_OK
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad hbox record.");
+					_synctex_error("Bad hbox record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child),SYNCTEX_VERT(child));
@@ -1911,7 +1929,7 @@ scan_hbox:
 				child = NULL;
 				goto child_loop;/*  next created node will be a child */
 			} else {
-				_synctex_error("!  Can't create hbox record.");
+				_synctex_error("Can't create hbox record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == '}') {
@@ -1919,7 +1937,7 @@ scan_teehs:
 			++SYNCTEX_CUR;
 			if(NULL == parent || parent->class->type != synctex_node_type_sheet
 					|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Unexpected end of sheet.");
+				_synctex_error("Unexpected end of sheet.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			SYNCTEX_RETURN(SYNCTEX_STATUS_OK);
@@ -1927,15 +1945,15 @@ scan_teehs:
 scan_anchor:
 			++SYNCTEX_CUR;
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Missing anchor.");
+				_synctex_error("Missing anchor.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			goto prepare_loop;
 		} else {
-			/* _synctex_error("!  Ignored record %c\n",*SYNCTEX_CUR); */
+			/*  _synctex_error("Ignored record %c\n",*SYNCTEX_CUR); */
 			++SYNCTEX_CUR;
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Unexpected end.");
+				_synctex_error("Unexpected end.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			goto prepare_loop;
@@ -1944,14 +1962,14 @@ scan_anchor:
 		available = 1;
 		status = _synctex_buffer_get_available_size(scanner,&available);
 		 if(status<SYNCTEX_STATUS_OK && available>0){
-			_synctex_error("!  Uncomplete sheet(0)");
+			_synctex_error("Uncomplete sheet(0)");
 			SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 		} else {
 			goto prepare_loop;
 		}
 	}
 	_synctex_bail();
-/*  The vertical loop means that we go do one level, when we just created a box node,
+/*  The child loop means that we go do one level, when we just created a box node,
  *  the next node created is a child of this box. */
 child_loop:
 	if(SYNCTEX_CUR<SYNCTEX_END) {
@@ -1972,10 +1990,10 @@ scan_xobv:
 				child = parent;
 				parent = SYNCTEX_PARENT(child);
 			} else {
-				_synctex_error("!  Unexpected ']', ignored.");
+				_synctex_error("Unexpected ']', ignored.");
 			}
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Uncomplete sheet.");
+				_synctex_error("Uncomplete sheet.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			goto sibling_loop;
@@ -1996,10 +2014,10 @@ scan_xobh:
 				child = parent;
 				parent = SYNCTEX_PARENT(child);
 			} else {
-				_synctex_error("!  Unexpected ')', ignored.");
+				_synctex_error("Unexpected ')', ignored.");
 			}
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Uncomplete sheet.");
+				_synctex_error("Uncomplete sheet.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			goto sibling_loop;
@@ -2015,7 +2033,7 @@ scan_xobh:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HEIGHT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad void vbox record.");
+					_synctex_error("Bad void vbox record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_CHILD(parent,child);
@@ -2026,7 +2044,7 @@ scan_xobh:
 				SYNCTEX_UPDATE_FRIEND(child);
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create vbox record.");
+				_synctex_error("Can't create vbox record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'h') {
@@ -2041,7 +2059,7 @@ scan_xobh:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HEIGHT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad void hbox record.");
+					_synctex_error("Bad void hbox record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_CHILD(parent,child);
@@ -2050,7 +2068,7 @@ scan_xobh:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child)+SYNCTEX_ABS_WIDTH(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create void hbox record.");
+				_synctex_error("Can't create void hbox record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'k') {
@@ -2063,7 +2081,7 @@ scan_xobh:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_WIDTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad kern record.");
+					_synctex_error("Bad kern record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_CHILD(parent,child);
@@ -2072,7 +2090,7 @@ scan_xobh:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child)-SYNCTEX_WIDTH(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create kern record.");
+				_synctex_error("Can't create kern record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'g') {
@@ -2084,7 +2102,7 @@ scan_xobh:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HORIZ_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad glue record.");
+					_synctex_error("Bad glue record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_CHILD(parent,child);
@@ -2092,7 +2110,7 @@ scan_xobh:
 				SYNCTEX_UPDATE_FRIEND(child);
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create glue record.");
+				_synctex_error("Can't create glue record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == '$') {
@@ -2104,7 +2122,7 @@ scan_xobh:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HORIZ_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad math record.");
+					_synctex_error("Bad math record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_CHILD(parent,child);
@@ -2112,7 +2130,7 @@ scan_xobh:
 				SYNCTEX_UPDATE_FRIEND(child);
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create math record.");
+				_synctex_error("Can't create math record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'x') {
@@ -2124,7 +2142,7 @@ scan_xobh:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HORIZ_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad boundary record.");
+					_synctex_error("Bad boundary record.");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_CHILD(parent,child);
@@ -2132,7 +2150,7 @@ scan_xobh:
 				SYNCTEX_UPDATE_FRIEND(child);
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create math record.");
+				_synctex_error("Can't create math record.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == '}') {
@@ -2140,10 +2158,10 @@ scan_xobh:
 		} else if(*SYNCTEX_CUR == '!') {
 			goto scan_anchor;
 		} else {
-			/* _synctex_error("!  Ignored record %c\n",*SYNCTEX_CUR); */
+			/*  _synctex_error("Ignored record %c\n",*SYNCTEX_CUR); */
 			++SYNCTEX_CUR;
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Unexpected end.");
+				_synctex_error("Unexpected end.");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			goto child_loop;
@@ -2152,7 +2170,7 @@ scan_xobh:
 		available = 1;
 		status = _synctex_buffer_get_available_size(scanner,&available);
 		 if(status<SYNCTEX_STATUS_OK && available>0){
-			_synctex_error("!  Uncomplete sheet(0)");
+			_synctex_error("Uncomplete sheet(0)");
 			SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 		} else {
 			goto child_loop;
@@ -2175,7 +2193,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HEIGHT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad vbox record (2).");
+					_synctex_error("Bad vbox record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2183,7 +2201,7 @@ sibling_loop:
 				child = NULL;
 				goto child_loop;
 			} else {
-				_synctex_error("!  Can't create vbox record (2).");
+				_synctex_error("Can't create vbox record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == ']') {
@@ -2201,7 +2219,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_setup_visible_box(sibling)<SYNCTEX_STATUS_OK
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad hbox record (2).");
+					_synctex_error("Bad hbox record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2212,7 +2230,7 @@ sibling_loop:
 				child = NULL;
 				goto child_loop;
 			} else {
-				_synctex_error("!  Can't create hbox record (2).");
+				_synctex_error("Can't create hbox record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == ')') {
@@ -2229,7 +2247,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HEIGHT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad void vbox record (2).");
+					_synctex_error("Bad void vbox record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2237,7 +2255,7 @@ sibling_loop:
 				SYNCTEX_UPDATE_FRIEND(child);
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  can't create void vbox record (2).");
+				_synctex_error("can't create void vbox record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'h') {
@@ -2252,7 +2270,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HEIGHT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_DEPTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad void hbox record (2).");
+					_synctex_error("Bad void hbox record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2262,7 +2280,7 @@ sibling_loop:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child)+SYNCTEX_ABS_WIDTH(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  can't create void hbox record (2).");
+				_synctex_error("can't create void hbox record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'k') {
@@ -2275,7 +2293,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_WIDTH_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad kern record (2).");
+					_synctex_error("Bad kern record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2285,7 +2303,7 @@ sibling_loop:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child)-SYNCTEX_WIDTH(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create kern record (2).");
+				_synctex_error("Can't create kern record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'g') {
@@ -2297,7 +2315,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HORIZ_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad glue record (2).");
+					_synctex_error("Bad glue record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2306,7 +2324,7 @@ sibling_loop:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create glue record (2).");
+				_synctex_error("Can't create glue record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == '$') {
@@ -2318,7 +2336,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HORIZ_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad math record (2).");
+					_synctex_error("Bad math record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2327,7 +2345,7 @@ sibling_loop:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create math record (2).");
+				_synctex_error("Can't create math record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == 'x') {
@@ -2339,7 +2357,7 @@ sibling_loop:
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_HORIZ_IDX)
 						|| SYNCTEX_DECODE_FAILED(SYNCTEX_VERT_IDX)
 						|| _synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-					_synctex_error("!  Bad boundary record (2).");
+					_synctex_error("Bad boundary record (2).");
 					SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 				}
 				SYNCTEX_SET_SIBLING(child,sibling);
@@ -2348,7 +2366,7 @@ sibling_loop:
 				_synctex_horiz_box_setup_visible(parent,SYNCTEX_HORIZ(child),SYNCTEX_VERT(child));
 				goto sibling_loop;
 			} else {
-				_synctex_error("!  Can't create boundary record (2).");
+				_synctex_error("Can't create boundary record (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 		} else if(*SYNCTEX_CUR == '}') {
@@ -2356,13 +2374,13 @@ sibling_loop:
 		} else if(*SYNCTEX_CUR == '!') {
 			++SYNCTEX_CUR;
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Missing anchor (2).");
+				_synctex_error("Missing anchor (2).");
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
 			goto sibling_loop;
 		} else {
 			++SYNCTEX_CUR;
-			/* _synctex_error("!  Ignored record %c(2)\n",*SYNCTEX_CUR); */
+			/* _synctex_error("Ignored record %c(2)\n",*SYNCTEX_CUR); */
 			if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
 				SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 			}
@@ -2374,7 +2392,7 @@ sibling_loop:
 		if(status<SYNCTEX_STATUS_OK && available>0){
 			goto sibling_loop;
 		} else {
-			_synctex_error("!  Uncomplete sheet(2)");
+			_synctex_error("Uncomplete sheet(2)");
 			SYNCTEX_RETURN(SYNCTEX_STATUS_ERROR);
 		}
 	}
@@ -2394,7 +2412,7 @@ synctex_status_t _synctex_scan_content(synctex_scanner_t scanner) {
 		scanner->number_of_lists = 1024;
 		scanner->lists_of_friends = (synctex_node_t *)_synctex_malloc(scanner->number_of_lists*sizeof(synctex_node_t));
 		if(NULL == scanner->lists_of_friends) {
-			_synctex_error("!  malloc:2");
+			_synctex_error("malloc:2");
 			return SYNCTEX_STATUS_ERROR;
 		}
 	}
@@ -2405,7 +2423,7 @@ content_not_found:
 		return status;
 	}
 	if(_synctex_next_line(scanner)<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  Uncomplete Content.");
+		_synctex_error("Uncomplete Content.");
 		return SYNCTEX_STATUS_ERROR;
 	}
 	if(status == SYNCTEX_STATUS_NOT_OK) {
@@ -2415,13 +2433,13 @@ next_sheet:
 	if(*SYNCTEX_CUR != '{') {
 		status = _synctex_scan_postamble(scanner);
 		if(status < SYNCTEX_STATUS_EOF) {
-			_synctex_error("!  Bad content.");
+			_synctex_error("Bad content.");
 			return status;
 		}
 		if(status<SYNCTEX_STATUS_OK) {
 			status = _synctex_next_line(scanner);
 			if(status < SYNCTEX_STATUS_OK) {
-				_synctex_error("!  Bad content.");
+				_synctex_error("Bad content.");
 				return status;
 			}
 			goto next_sheet;
@@ -2433,19 +2451,19 @@ next_sheet:
 	sheet = _synctex_new_sheet(scanner);
 	status = _synctex_decode_int(scanner,&(SYNCTEX_PAGE(sheet)));
 	if(status<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  Missing sheet number.");
+		_synctex_error("Missing sheet number.");
 bail:
 		SYNCTEX_FREE(sheet);
 		return SYNCTEX_STATUS_ERROR;
 	}
 	status = _synctex_next_line(scanner);
 	if(status<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  Uncomplete file.");
+		_synctex_error("Uncomplete file.");
 		goto bail;
 	}
 	status = _synctex_scan_sheet(scanner,sheet);
 	if(status<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  Bad sheet content.");
+		_synctex_error("Bad sheet content.");
 		goto bail;
 	}
 	SYNCTEX_SET_SIBLING(sheet,scanner->sheet);
@@ -2455,7 +2473,7 @@ bail:
 	do {
 		status = _synctex_scan_input(scanner);
 		if(status<SYNCTEX_STATUS_EOF) {
-			_synctex_error("!  Bad input section.");
+			_synctex_error("Bad input section.");
 			goto bail;
 		}
 	}
@@ -2463,41 +2481,39 @@ bail:
 	goto next_sheet;
 }
 
-/*  These are the possible extensions of the synctex file */
-static const char *  synctex_suffix = ".synctex";
-static const char *  synctex_suffix_gz = ".gz";
+int _synctex_open(const char * output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, synctex_bool_t add_quotes, synctex_io_mode_t * io_modeRef);
 
-int _synctex_scanner_open_with_output_file(const char * output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, int add_quotes);
 
 /*  Where the synctex scanner is created. */
-synctex_scanner_t synctex_scanner_new_with_output_file(const char *  output, const char * build_directory, int parse) {
+synctex_scanner_t synctex_scanner_new_with_output_file(const char * output, const char * build_directory, int parse) {
 	gzFile file = NULL;
-	char *  synctex = NULL;
+	char * synctex = NULL;
 	synctex_scanner_t scanner = NULL;
+	synctex_io_mode_t io_mode = synctex_io_mode_read;
 	/*  Here we assume that int are smaller than void * */
 	if(sizeof(int)>sizeof(void*)) {
-		_synctex_error("!  INTERNAL INCONSISTENCY: int's are unexpectedly bigger than pointers, bailing out.");
+		_synctex_error("INTERNAL INCONSISTENCY: int's are unexpectedly bigger than pointers, bailing out.");
 		return NULL;
 	}
 	/*  We ensure that SYNCTEX_BUFFER_SIZE < UINT_MAX, I don't know if it makes sense... */
 	if(SYNCTEX_BUFFER_SIZE >= UINT_MAX) {
-		_synctex_error("!  SyncTeX BUG: Internal inconsistency, bad SYNCTEX_BUFFER_SIZE (1)");
+		_synctex_error("SyncTeX BUG: Internal inconsistency, bad SYNCTEX_BUFFER_SIZE (1)");
 		return NULL;
 	}
 	/*  for integers: */
 	if(SYNCTEX_BUFFER_SIZE < SYNCTEX_BUFFER_MIN_SIZE) {
-		_synctex_error("!  SyncTeX BUG: Internal inconsistency, bad SYNCTEX_BUFFER_SIZE (2)");
+		_synctex_error("SyncTeX BUG: Internal inconsistency, bad SYNCTEX_BUFFER_SIZE (2)");
 		return NULL;
 	}
 	/*  now open the synctex file */
-	if(_synctex_scanner_open_with_output_file(output,build_directory,&synctex,&file,0) || !file) {
-		if(_synctex_scanner_open_with_output_file(output,build_directory,&synctex,&file,1) || !file) {
+	if(_synctex_open(output,build_directory,&synctex,&file,synctex_NO,&io_mode) || !file) {
+		if(_synctex_open(output,build_directory,&synctex,&file,synctex_YES,&io_mode) || !file) {
 			return NULL;
 		}
 	}
 	scanner = (synctex_scanner_t)_synctex_malloc(sizeof(_synctex_scanner_t));
 	if(NULL == scanner) {
-		_synctex_error("!  SyncTeX: malloc problem");
+		_synctex_error("SyncTeX: malloc problem");
 		free(synctex);
 		gzclose(file);
 		return NULL;
@@ -2513,26 +2529,32 @@ synctex_scanner_t synctex_scanner_new_with_output_file(const char *  output, con
 	return parse? synctex_scanner_parse(scanner):scanner;
 }
 
-/*	0 on success, non 0 on error. */
-int __synctex_scanner_open_with_output_file(const char *  output, char ** synctex_name_ref, gzFile * file_ref, int add_quotes);
-int __synctex_scanner_open_with_output_file(const char *  output, char ** synctex_name_ref, gzFile * file_ref, int add_quotes) {
+int __synctex_open(const char * output, char ** synctex_name_ref, gzFile * file_ref, synctex_bool_t add_quotes, synctex_io_mode_t * io_modeRef);
+
+/*	This functions opens the file at the "output" given location.
+ *  It manages the problem of quoted filenames that appear with pdftex an filenames containing the space character.
+ *  In TeXLive 2008, the synctex file created with pdftex did contain unexpected quotes.
+ *	This function will remove them if possible.
+ *	0 on success, non 0 on error. */
+int __synctex_open(const char * output, char ** synctex_name_ref, gzFile * file_ref, synctex_bool_t add_quotes, synctex_io_mode_t * io_modeRef) {
 #	define synctex_name (*synctex_name_ref)
 #	define the_file (*file_ref)
+#	define io_mode (*io_modeRef)
 	if(synctex_name_ref && file_ref) {
 		char * quoteless = NULL;
+		const char * mode = synctex_io_modes[io_mode];
 		size_t size = 0;
-		const char * mode = "r";
 		/*  now create the synctex file name */
 		size = strlen(output)+strlen(synctex_suffix)+strlen(synctex_suffix_gz)+1;
 		synctex_name = (char *)malloc(size);
 		if(NULL == synctex_name) {
-			_synctex_error("!  __synctex_scanner_open_with_output_file: Memory problem (1)\n");
+			_synctex_error("!  __synctex_open: Memory problem (1)\n");
 			return 1;
 		}
 		/*  we have reserved for synctex enough memory to copy output, both suffices and 2 quotes,
 		 *  including the terminating character. size is free now. */
 		if(synctex_name != strcpy(synctex_name,output)) {
-			_synctex_error("!  __synctex_scanner_open_with_output_file: Copy problem\n");
+			_synctex_error("!  __synctex_open: Copy problem\n");
 return_on_error:
 			free(synctex_name);
 			synctex_name = NULL;/*  Don't forget to reinitialize. */
@@ -2557,7 +2579,7 @@ return_on_error:
 		}
 		/*	Now add the first path extension. */
 		if(synctex_name != strcat(synctex_name,synctex_suffix)){
-			_synctex_error("!  __synctex_scanner_open_with_output_file: Concatenation problem (can't add suffix '%s')\n",synctex_suffix);
+			_synctex_error("!  __synctex_open: Concatenation problem (can't add suffix '%s')\n",synctex_suffix);
 			goto return_on_error;
 		}
 		/*	To quoteless as well. */
@@ -2569,15 +2591,16 @@ return_on_error:
 			/*  Could not open this file */
 			if(errno != ENOENT) {
 				/*  The file does exist, this is a lower lever error, I can't do anything. */
-				_synctex_error("!  __synctex_scanner_open_with_output_file: could not open %s, error %i\n",synctex_name,errno);
+				_synctex_error("SyncTeX: could not open %s, error %i\n",synctex_name,errno);
 				goto return_on_error;
 			}
 			/*  Try the compressed version */
 			if(synctex_name != strcat(synctex_name,synctex_suffix_gz)){
-				_synctex_error("!  __synctex_scanner_open_with_output_file: Concatenation problem (can't add suffix '%s')\n",synctex_suffix_gz);
+				_synctex_error("!  __synctex_open: Concatenation problem (can't add suffix '%s')\n",synctex_suffix_gz);
 				goto return_on_error;
 			}
-			mode = "rb"; /* the file is a compressed and is a binary file, this caused errors on Windows */
+			++io_mode;
+			mode = synctex_io_modes[io_mode]; /* the file is a compressed and is a binary file, this caused errors on Windows */
 			/*	To quoteless as well. */
 			if(quoteless && (quoteless != strcat(quoteless,synctex_suffix_gz))){
 				free(quoteless);
@@ -2587,7 +2610,7 @@ return_on_error:
 				/*  Could not open this file */
 				if(errno != ENOENT) {
 					/*  The file does exist, this is a lower lever error, I can't do anything. */
-					_synctex_error("!  __synctex_scanner_open_with_output_file: could not open %s, error %i\n",synctex_name,errno);
+					_synctex_error("SyncTeX: could not open %s, error %i\n",synctex_name,errno);
 				}
 				goto return_on_error;
 			}
@@ -2597,13 +2620,13 @@ return_on_error:
 		if(quoteless) {
 			gzclose(the_file);
 			if(rename(synctex_name,quoteless)) {
-				_synctex_error("!  __synctex_scanner_open_with_output_file: could not rename %s to %s, error %i\n",synctex_name,quoteless,errno);
+				_synctex_error("SyncTeX: could not rename %s to %s, error %i\n",synctex_name,quoteless,errno);
 				/*	Reopen the file. */
 				if(NULL == (the_file = gzopen(synctex_name,mode))) {
 					/*  Could not open this file */
 					if(errno != ENOENT) {
 						/*  The file does exist, this is a lower lever error, I can't do anything. */
-						_synctex_error("!  __synctex_scanner_open_with_output_file: could not open again %s, error %i\n",synctex_name,errno);
+						_synctex_error("SyncTeX: could not open again %s, error %i\n",synctex_name,errno);
 					}
 					goto return_on_error;
 				}
@@ -2612,7 +2635,7 @@ return_on_error:
 					/*  Could not open this file */
 					if(errno != ENOENT) {
 						/*  The file does exist, this is a lower lever error, I can't do anything. */
-						_synctex_error("!  __synctex_scanner_open_with_output_file: could not open renamed %s, error %i\n",quoteless,errno);
+						_synctex_error("SyncTeX: could not open renamed %s, error %i\n",quoteless,errno);
 					}
 					goto return_on_error;
 				}
@@ -2627,21 +2650,23 @@ return_on_error:
 	return 3;	/*	Bad parameter.	*/
 #	undef synctex_name
 #	undef the_file
+#	undef io_mode
 }
 
-/*	0 on success, non 0 on error. */
-int _synctex_scanner_open_with_output_file(const char *  output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, int add_quotes) {
+
+/*	Opens the ouput file, taking into account the eventual build_directory.
+ *	0 on success, non 0 on error. */
+int _synctex_open(const char * output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, synctex_bool_t add_quotes, synctex_io_mode_t * io_modeRef) {
 #	define synctex_name (*synctex_name_ref)
 #	define the_file (*file_ref)
-	int result = __synctex_scanner_open_with_output_file(output,synctex_name_ref,file_ref,add_quotes);
+	int result = __synctex_open(output,synctex_name_ref,file_ref,add_quotes,io_modeRef);
 	if((result || !*file_ref) && build_directory && strlen(build_directory)) {
-  char * build_output, *lpc;
-  size_t size;
-  int is_absolute;
-		//size = strlen(build_directory)+strlen(lpc)+2;
-		size = strlen(build_directory)+256+2;
+		char * build_output, *lpc;
+		size_t size;
+		synctex_bool_t is_absolute;
 		build_output = NULL;
 		lpc = _synctex_last_path_component(output);
+		size = strlen(build_directory)+strlen(lpc)+2;
 		is_absolute = _synctex_path_is_absolute(build_directory);
 		if(!is_absolute) {
 			size += strlen(output);
@@ -2666,7 +2691,7 @@ int _synctex_scanner_open_with_output_file(const char *  output, const char * bu
 				if(build_output != strcat(build_output,lpc)) {
 					return -3;
 				}
-				return __synctex_scanner_open_with_output_file(build_output,synctex_name_ref,file_ref,add_quotes);
+				return __synctex_open(build_output,synctex_name_ref,file_ref,add_quotes,io_modeRef);
 			}
 		}
 		return -1;
@@ -2731,7 +2756,7 @@ synctex_scanner_t synctex_scanner_parse(synctex_scanner_t scanner) {
 	(scanner->class[synctex_node_type_boundary]).scanner = scanner;
 	SYNCTEX_START = (unsigned char *)malloc(SYNCTEX_BUFFER_SIZE+1); /*  one more character for null termination */
 	if(NULL == SYNCTEX_START) {
-		_synctex_error("!  SyncTeX: malloc error");
+		_synctex_error("SyncTeX: malloc error");
 		synctex_scanner_free(scanner);
 		return NULL;
 	}
@@ -2743,14 +2768,14 @@ synctex_scanner_t synctex_scanner_parse(synctex_scanner_t scanner) {
 	SYNCTEX_CUR = SYNCTEX_END;
 	status = _synctex_scan_preamble(scanner);
 	if(status<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  SyncTeX Error: Bad preamble\n");
+		_synctex_error("SyncTeX Error: Bad preamble\n");
 bailey:
 		synctex_scanner_free(scanner);
 		return NULL;
 	}
 	status = _synctex_scan_content(scanner);
 	if(status<SYNCTEX_STATUS_OK) {
-		_synctex_error("!  SyncTeX Error: Bad content\n");
+		_synctex_error("SyncTeX Error: Bad content\n");
 		goto bailey;
 	}
 	/*  Everything is finished, free the buffer, close the file */
@@ -2759,7 +2784,7 @@ bailey:
 	gzclose(SYNCTEX_FILE);
 	SYNCTEX_FILE = NULL;
 	/*  Final tuning: set the default values for various parameters */
-	/* 1 pre_unit = (scanner->pre_unit)/65536 pt = (scanner->pre_unit)/65781.76 bp
+	/*  1 pre_unit = (scanner->pre_unit)/65536 pt = (scanner->pre_unit)/65781.76 bp
 	 * 1 pt = 65536 sp */
 	if(scanner->pre_unit<=0) {
 		scanner->pre_unit = 8192;
@@ -2769,7 +2794,7 @@ bailey:
 	}
 	if(scanner->unit <= 0) {
 		/*  no post magnification */
-		scanner->unit = scanner->pre_unit / 65781.76;/* 65781.76 or 65536.0*/
+		scanner->unit = scanner->pre_unit / 65781.76;/*  65781.76 or 65536.0*/
 	} else {
 		/*  post magnification */
 		scanner->unit *= scanner->pre_unit / 65781.76;
@@ -2840,7 +2865,7 @@ void synctex_scanner_display(synctex_scanner_t scanner) {
 	}
 }
 /*  Public*/
-const char *  synctex_scanner_get_name(synctex_scanner_t scanner,int tag) {
+const char * synctex_scanner_get_name(synctex_scanner_t scanner,int tag) {
 	synctex_node_t input = NULL;
 	if(NULL == scanner) {
 		return NULL;
@@ -2854,36 +2879,36 @@ const char *  synctex_scanner_get_name(synctex_scanner_t scanner,int tag) {
 	return NULL;
 }
 
-int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name, synctex_bool_t append_tex_extension);
-int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name, synctex_bool_t append_tex_extension) {
+int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name);
+int _synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 	synctex_node_t input = NULL;
 	if(NULL == scanner) {
 		return 0;
 	}
 	input = scanner->input;
 	do {
-		if(_synctex_is_equivalent_file_name(name,(SYNCTEX_NAME(input)),append_tex_extension)) {
+		if(_synctex_is_equivalent_file_name(name,(SYNCTEX_NAME(input)))) {
 			return SYNCTEX_TAG(input);
 		}
 	} while((input = SYNCTEX_SIBLING(input)) != NULL);
 	return 0;
 }
 
-int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name, synctex_bool_t append_tex_extension) {
+int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 	size_t char_index = strlen(name);
 	if((scanner = synctex_scanner_parse(scanner)) && (0 < char_index)) {
 		/*  the name is not void */
 		char_index -= 1;
 		if(!SYNCTEX_IS_PATH_SEPARATOR(name[char_index])) {
 			/*  the last character of name is not a path separator */
-			int result = _synctex_scanner_get_tag(scanner,name,append_tex_extension);
+			int result = _synctex_scanner_get_tag(scanner,name);
 			if(result) {
 				return result;
 			} else {
 				/*  the given name was not the one known by TeX
 				 *  try a name relative to the enclosing directory of the scanner->output file */
-				const char *  relative = name;
-				const char *  ptr = scanner->output;
+				const char * relative = name;
+				const char * ptr = scanner->output;
 				while((strlen(relative) > 0) && (strlen(ptr) > 0) && (*relative == *ptr))
 				{
 					relative += 1;
@@ -2896,7 +2921,7 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name, synctex
 					}
 					relative -= 1;
 				}
-				if((relative > name) && (result = _synctex_scanner_get_tag(scanner,relative,append_tex_extension))) {
+				if((relative > name) && (result = _synctex_scanner_get_tag(scanner,relative))) {
 					return result;
 				}
 				if(SYNCTEX_IS_PATH_SEPARATOR(name[0])) {
@@ -2905,17 +2930,13 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name, synctex
 					while(0<char_index) {
 						char_index -= 1;
 						if(SYNCTEX_IS_PATH_SEPARATOR(name[char_index])
-								&& (result = _synctex_scanner_get_tag(scanner,name+char_index+1,append_tex_extension))) {
+								&& (result = _synctex_scanner_get_tag(scanner,name+char_index+1))) {
 							return result;
 						}
 					}
 				}
 			}
-			if(result)
 			return result;
-			if(append_tex_extension)
-				/*  Workaround for the MikTeX bug https://sourceforge.net/tracker2/?func=detail&atid=110783&aid=2419953&group_id=10783 */
-				return synctex_scanner_get_tag(scanner, name, synctex_NO);
 		}
 	}
 	return 0;
@@ -2923,13 +2944,13 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name, synctex
 synctex_node_t synctex_scanner_input(synctex_scanner_t scanner) {
 	return scanner?scanner->input:NULL;
 }
-const char *  synctex_scanner_get_output_fmt(synctex_scanner_t scanner) {
+const char * synctex_scanner_get_output_fmt(synctex_scanner_t scanner) {
 	return NULL != scanner && scanner->output_fmt?scanner->output_fmt:"";
 }
-const char *  synctex_scanner_get_output(synctex_scanner_t scanner) {
+const char * synctex_scanner_get_output(synctex_scanner_t scanner) {
 	return NULL != scanner && scanner->output?scanner->output:"";
 }
-const char *  synctex_scanner_get_synctex(synctex_scanner_t scanner) {
+const char * synctex_scanner_get_synctex(synctex_scanner_t scanner) {
 	return NULL != scanner && scanner->synctex?scanner->synctex:"";
 }
 #	ifdef SYNCTEX_NOTHING
@@ -3186,11 +3207,11 @@ synctex_node_t synctex_sheet_content(synctex_scanner_t scanner,int page) {
 #       pragma mark Query
 #   endif
 
-int synctex_display_query(synctex_scanner_t scanner,const char *  name,int line,int column) {
+int synctex_display_query(synctex_scanner_t scanner,const char * name,int line,int column) {
 #	ifdef __DARWIN_UNIX03
 #       pragma unused(column)
 #   endif
-	int tag = synctex_scanner_get_tag(scanner,name,synctex_YES);
+	int tag = synctex_scanner_get_tag(scanner,name);
 	size_t size = 0;
 	int friend_index = 0;
 	int max_line = 0;
@@ -3262,8 +3283,8 @@ int synctex_display_query(synctex_scanner_t scanner,const char *  name,int line,
 			/*  Now reverse the order to have nodes in display order, and keep just a few nodes */
 			if((SYNCTEX_START) && (SYNCTEX_END))
 			{
-				synctex_node_t *  start_ref = (synctex_node_t *)SYNCTEX_START;
-				synctex_node_t *  end_ref   = (synctex_node_t *)SYNCTEX_END;
+				synctex_node_t * start_ref = (synctex_node_t *)SYNCTEX_START;
+				synctex_node_t * end_ref   = (synctex_node_t *)SYNCTEX_END;
 				end_ref -= 1;
 				while(start_ref < end_ref) {
 					node = *start_ref;
@@ -3471,7 +3492,7 @@ end:
 #   endif
 
 int _synctex_bail(void) {
-		_synctex_error("!  SyncTeX ERROR\n");
+		_synctex_error("SyncTeX ERROR\n");
 		return -1;
 }
 /*  Rougly speaking, this is:
@@ -3791,9 +3812,9 @@ int _synctex_node_distance_to_point(synctex_point_t hitPoint, synctex_node_t nod
 
 static synctex_node_t _synctex_eq_deepest_container(synctex_point_t hitPoint,synctex_node_t node, synctex_bool_t visible) {
 	if(node) {
+		synctex_node_t result = NULL;
+		synctex_node_t child = NULL;
 		switch(node->class->type) {
-			synctex_node_t result = NULL;
-			synctex_node_t child = NULL;
 			case synctex_node_type_vbox:
 			case synctex_node_type_hbox:
 				/*  test the deep nodes first */
@@ -3979,12 +4000,12 @@ SYNCTEX_INLINE static synctex_node_t __synctex_eq_closest_child(synctex_point_t 
 	if((node = SYNCTEX_CHILD(node))) {
 		do {
 			int distance = _synctex_node_distance_to_point(hitPoint,node,visible);
+			synctex_node_t candidate = NULL;
 			if(distance<=*distanceRef) {
 				*distanceRef = distance;
 				best_node = node;
 			}
 			switch(node->class->type) {
-				synctex_node_t candidate = NULL;
 				case synctex_node_type_vbox:
 				case synctex_node_type_hbox:
 					if((candidate = __synctex_eq_closest_child(hitPoint,node,distanceRef,visible))) {
@@ -4004,8 +4025,8 @@ SYNCTEX_INLINE static synctex_node_t _synctex_eq_closest_child(synctex_point_t h
 				int best_distance = INT_MAX;
 				synctex_node_t best_node = __synctex_eq_closest_child(hitPoint,node,&best_distance,visible);
 				if((best_node)) {
+					synctex_node_t child = NULL;
 					switch(best_node->class->type) {
-						synctex_node_t child = NULL;
 						case synctex_node_type_vbox:
 						case synctex_node_type_hbox:
 							if((child = SYNCTEX_CHILD(best_node))) {
@@ -4048,75 +4069,51 @@ struct __synctex_updater_t {
 #   define SYNCTEX_FILE updater->file
 #   define SYNCTEX_NO_GZ ((updater->flags).no_gz)
 #   define SYNCTEX_fprintf (*(updater->fprintf))
-#   define SYNCTEX_YES (-1)
-#   define SYNCTEX_NO  (0)
 
-synctex_updater_t synctex_updater_new_with_output_file(const char *  output){
+synctex_updater_t synctex_updater_new_with_output_file(const char * output, const char * build_directory) {
 	synctex_updater_t updater = NULL;
-	char *  synctex = NULL;
+	char * synctex = NULL;
 	size_t size = 0;
+	synctex_io_mode_t io_mode = synctex_io_mode_read;
+	const char * mode;
 	/*  prepare the updater */
 	updater = (synctex_updater_t)_synctex_malloc(sizeof(synctex_updater_t));
 	if(NULL == updater) {
 		_synctex_error("!  synctex_updater_new_with_file: malloc problem");
 		return NULL;
 	}
-	size = strlen(output)+strlen(synctex_suffix)+strlen(synctex_suffix_gz)+1;
-	synctex = (char *)malloc(size);
-	if(NULL == synctex) {
-		_synctex_error("!  synctex_updater_new_with_output_file: Memory problem (1)\n");
-return_on_error1:
+	if(_synctex_open(output,build_directory,&synctex,&SYNCTEX_FILE,synctex_NO,&io_mode)
+		&& _synctex_open(output,build_directory,&synctex,&SYNCTEX_FILE,synctex_YES,&io_mode)) {
+return_on_error:
 		free(updater);
 		return NULL;
 	}
-	/*  we have reserved for synctex enough memory to copy output and both suffices,
-	 *  including the terminating character */
-	if(synctex != strcpy(synctex,output)) {
-		_synctex_error("!  synctex_updater_new_with_output_file: Copy problem\n");
-return_on_error2:
-		free(synctex);
-		goto return_on_error1;
-	}
-	/*  remove the last path extension if any */
-	_synctex_strip_last_path_extension(synctex);
-	/*  append the synctex suffix */
-	if(synctex != strcat(synctex,synctex_suffix)){
-		_synctex_error("!  synctex_updater_new_with_output_file: Concatenation problem (can't add suffix '%s')\n",synctex_suffix);
-		goto return_on_error2;
-	}
-	if(NULL != (SYNCTEX_FILE = fopen(synctex,"r"))){
-		/*  OK, the file exists */
-		fclose(SYNCTEX_FILE);
-		if(NULL == (SYNCTEX_FILE = (void *)fopen(synctex,"a"))) {
+	/*  OK, the file exists */
+	gzclose(SYNCTEX_FILE);
+	SYNCTEX_FILE = NULL;
+	SYNCTEX_NO_GZ = io_mode%2?synctex_NO:synctex_YES;
+	mode = synctex_io_modes[io_mode+synctex_io_mode_append];/* either "a" or "ab", depending on the file extension */
+	if(SYNCTEX_NO_GZ) {
+		if(NULL == (SYNCTEX_FILE = (void *)fopen(synctex,mode))) {
 no_write_error:
 			_synctex_error("!  synctex_updater_new_with_file: Can't append to %s",synctex);
-			goto return_on_error2;
+			free(synctex);
+			goto return_on_error;
 		}
-		SYNCTEX_NO_GZ = SYNCTEX_YES;
 		updater->fprintf = (synctex_fprintf_t)(&fprintf);
-return_updater:
-		printf("SyncTeX: updating %s...",synctex);
-		free(synctex);
-		return updater;
-	}
-	/*  append the gz suffix */
-	if(synctex != strcat(synctex,synctex_suffix_gz)){
-		_synctex_error("!  synctex_updater_new_with_output_file: Concatenation problem (can't add suffix '%s')\n",synctex_suffix_gz);
-		goto return_on_error2;
-	}
-	if(NULL != (SYNCTEX_FILE = gzopen(synctex,"r"))){
-		gzclose(SYNCTEX_FILE);
-		if(NULL == (SYNCTEX_FILE = gzopen(synctex,"a"))) {
+	} else {
+		if(NULL == (SYNCTEX_FILE = (void *)gzopen(synctex,mode))) {
 			goto no_write_error;
 		}
-		SYNCTEX_NO_GZ = SYNCTEX_NO;
 		updater->fprintf = (synctex_fprintf_t)(&gzprintf);
-		goto return_updater;
 	}
-	goto return_on_error2;
+	printf("SyncTeX: updating %s...",synctex);
+	free(synctex);
+	return updater;
 }
 
-void synctex_updater_append_magnification(synctex_updater_t updater, char *  magnification){
+
+void synctex_updater_append_magnification(synctex_updater_t updater, char * magnification){
 	if(NULL==updater) {
 		return;
 	}
@@ -4125,7 +4122,7 @@ void synctex_updater_append_magnification(synctex_updater_t updater, char *  mag
 	}
 }
 
-void synctex_updater_append_x_offset(synctex_updater_t updater, char *  x_offset){
+void synctex_updater_append_x_offset(synctex_updater_t updater, char * x_offset){
 	if(NULL==updater) {
 		return;
 	}
@@ -4134,7 +4131,7 @@ void synctex_updater_append_x_offset(synctex_updater_t updater, char *  x_offset
 	}
 }
 
-void synctex_updater_append_y_offset(synctex_updater_t updater, char *  y_offset){
+void synctex_updater_append_y_offset(synctex_updater_t updater, char * y_offset){
 	if(NULL==updater) {
 		return;
 	}

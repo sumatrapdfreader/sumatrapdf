@@ -1,9 +1,11 @@
 /* 
-Copyright (c) 2008 jerome DOT laurens AT u-bourgogne DOT fr
+Copyright (c) 2008, 2009 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.7
+Latest Revision: Wed Jul  1 11:16:51 UTC 2009
+
+Version: 1.8
 See synctex_parser_readme.txt for more details
 
 License:
@@ -34,12 +36,23 @@ shall not be used in advertising or otherwise to promote the sale,
 use or other dealings in this Software without prior written  
 authorization from the copyright holder.
 
+Acknowledgments:
+----------------
+The author received useful remarks from the pdfTeX developers, especially Hahn The Thanh,
+and significant help from XeTeX developer Jonathan Kew
+
+Nota Bene:
+----------
+If you include or use a significant part of the synctex package into a software,
+I would appreciate to be listed as contributor and see "SyncTeX" highlighted.
+
+Version 1
+Thu Jun 19 09:39:21 UTC 2008
+
 */
 
 #ifndef __SYNCTEX_PARSER__
 #   define __SYNCTEX_PARSER__
-
-#include "synctex_parser_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,6 +92,8 @@ typedef _synctex_scanner_t *  synctex_scanner_t;
  *	This directory path can be nil, it will be ignored.
  *	It can be either absolute or relative to the directory of the output pdf (dvi or xdv) file.
  *	If no synctex file is found in the same directory as the output file, then we try to find one in the build directory.
+ *  Please note that this new "build_directory" is provided as a convenient argument but should not be used.
+ *  In fact, this is implempented as a work around of a bug in MikTeX where the synctex file does not follow the pdf file.
  *  The new "parse" argument is available since version 1.5. In general, use 1.
  *  Use 0 only if you do not want to parse the content but just check the existence.
  */
@@ -187,11 +202,11 @@ float synctex_scanner_magnification(synctex_scanner_t scanner);
  *  The synctex is the real name of the synctex file,
  *  it was obtained from output by setting the proper file extension.
  */
-const char *  synctex_scanner_get_name(synctex_scanner_t scanner,int tag);
-int synctex_scanner_get_tag(synctex_scanner_t scanner,const char *  name, synctex_bool_t append_tex_extension);
+const char * synctex_scanner_get_name(synctex_scanner_t scanner,int tag);
+int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name);
 synctex_node_t synctex_scanner_input(synctex_scanner_t scanner);
-const char *  synctex_scanner_get_output(synctex_scanner_t scanner);
-const char *  synctex_scanner_get_synctex(synctex_scanner_t scanner);
+const char * synctex_scanner_get_output(synctex_scanner_t scanner);
+const char * synctex_scanner_get_synctex(synctex_scanner_t scanner);
 
 /*  Browsing the nodes
  *  parent, child and sibling are standard names for tree nodes.
@@ -241,7 +256,7 @@ typedef enum {
 /*  synctex_node_type gives the type of a given node,
  *  synctex_node_isa gives the same information as a human readable text. */
 synctex_node_type_t synctex_node_type(synctex_node_t node);
-const char *  synctex_node_isa(synctex_node_t node);
+const char * synctex_node_isa(synctex_node_t node);
 
 /*  This is primarily used for debugging purpose.
  *  The second one logs information for the node and recursively displays information for its next node */
@@ -307,12 +322,12 @@ float synctex_node_box_visible_depth(synctex_node_t node);
  *  that could occur while postprocessing files by dvipdf like filters.
  */
 typedef struct __synctex_updater_t _synctex_updater_t;
-typedef _synctex_updater_t *  synctex_updater_t;
+typedef _synctex_updater_t * synctex_updater_t;
 
 /*  Designated initializer.
  *  Once you are done with your whole job,
  *  free the updater */
-synctex_updater_t synctex_updater_new_with_output_file(const char *  output);
+synctex_updater_t synctex_updater_new_with_output_file(const char * output, const char * directory);
 
 /*  Use the next functions to append records to the synctex file,
  *  no consistency tests made on the arguments */
