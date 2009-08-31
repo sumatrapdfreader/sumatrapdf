@@ -3659,6 +3659,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             CloseHandle(pi.hThread);
         } else {
             DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
+            WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
         }
     }
 }
