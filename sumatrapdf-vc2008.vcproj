@@ -170,6 +170,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\synctex_parser_utils.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\synctex_parser_utils.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\translations.cpp"
 				>
 			</File>
@@ -183,6 +191,10 @@
 			</File>
 			<File
 				RelativePath=".\src\translations_txt.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Version.h"
 				>
 			</File>
 		</Filter>
@@ -204,6 +216,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\strings.txt"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraPDF.exe.manifest"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SumatraPDF.ico"
 				>
 			</File>
@@ -213,10 +233,6 @@
 			</File>
 			<File
 				RelativePath=".\src\toolbar_8.bmp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\SumatraPDF.exe.manifest"
 				>
 			</File>
 		</Filter>
