@@ -6533,7 +6533,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_COPY_SELECTION:
-                    if (win->selectionOnPage)
+                    // Don't break the shortcut for text boxes
+                    if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+                        SendMessage(GetFocus(), WM_COPY, 0, 0);
+                    else if (win->selectionOnPage)
                         CopySelectionToClipboard(win);
                     else
                         WindowInfo_ShowMessage_Asynch(win, _TR("Select content with Ctrl+left mouse button"), true);

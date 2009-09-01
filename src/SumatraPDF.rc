@@ -81,6 +81,7 @@ BEGIN
     "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, CONTROL
     VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY 
     "C",            IDM_COPY_SELECTION,     VIRTKEY, CONTROL
+    VK_INSERT,      IDM_COPY_SELECTION,     VIRTKEY, CONTROL
     "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
     "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL
     VK_F3,          IDM_FIND_NEXT,          VIRTKEY 
