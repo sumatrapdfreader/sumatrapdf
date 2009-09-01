@@ -4346,3 +4346,4 @@ de:Zoom
 -
 Cannot start inverse search command. Please check the command line in the settings.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
+ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
