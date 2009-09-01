@@ -403,10 +403,12 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 				}
 			}
 
-			if (gstate->blendmode == FZ_BNORMAL)
-			    error = fz_newovernode(&blend);
-			else
-			    error = fz_newblendnode(&blend, gstate->blendmode, 0, 0);
+			/* The content stream ought to be blended properly,
+			   but for now, just do over and hope for something
+
+			   error = fz_newblendnode(&blend, gstate->blendmode, 0, 0);
+			 */
+			error = fz_newovernode(&blend);
 			if (error)
 				return fz_rethrow(error, "cannot create blend node");
 			fz_insertnodelast(gstate->head, blend);

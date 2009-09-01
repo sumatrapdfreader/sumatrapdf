@@ -225,7 +225,16 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int oid, int gen)
 	if (error)
 		return fz_rethrow(error, "cannot load object (%d %d R) into cache", oid, gen);
 
-	*objp = fz_keepobj(xref->table[oid].obj);
+	if (xref->table[oid].obj)
+		*objp = fz_keepobj(xref->table[oid].obj);
+	else
+	{
+		fz_warn("cannot load missing object (%d %d R), assuming null object", oid, gen);
+
+		error = fz_newnull(&xref->table[oid].obj);
+		if (error)
+			return fz_rethrow(error, "cannot create missing object (%d %d R)", oid, gen);
+	}
 
 	return fz_okay;
 }

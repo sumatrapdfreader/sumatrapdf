@@ -145,7 +145,19 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	/* load image data */
 
 	f = fz_dictgetsa(dict, "Filter", "F");
-	if (f)
+	if (!f || (fz_isarray(f) && fz_arraylen(f) == 0))
+	{
+		error = fz_newbuffer(&img->samples, img->super.h * img->stride);
+		if (error)
+			return error;
+
+		error = fz_read(&i, file, img->samples->bp, img->super.h * img->stride);
+		if (error)
+			return error;
+
+		img->samples->wp += img->super.h * img->stride;
+	}
+	else
 	{
 		fz_stream *tempfile;
 
@@ -163,18 +175,6 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 		fz_dropfilter(filter);
 		fz_dropstream(tempfile);
-	}
-	else
-	{
-		error = fz_newbuffer(&img->samples, img->super.h * img->stride);
-		if (error)
-			return error;
-
-		error = fz_read(&i, file, img->samples->bp, img->super.h * img->stride);
-		if (error)
-			return error;
-
-		img->samples->wp += img->super.h * img->stride;
 	}
 
 	/* 0 means opaque and 1 means transparent, so we invert to get alpha */

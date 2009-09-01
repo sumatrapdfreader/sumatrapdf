@@ -20,14 +20,16 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 	int pages = 0;
 	int i;
 
-	if (fz_isnull(node))
+	if (!fz_isdict(node))
 		return fz_throw("pagetree node is missing");
 
 	type = fz_dictgets(node, "Type");
 	kids = fz_dictgets(node, "Kids");
 	count = fz_dictgets(node, "Count");
 
-	if (!type)
+	if (fz_isname(type))
+		typestr = fz_toname(type);
+	else
 	{
 		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(node), fz_togen(node));
 
@@ -43,8 +45,6 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 			typestr = "Page";
 		}
 	}
-	else
-		typestr = fz_toname(type);
 
 	if (!strcmp(typestr, "Page"))
 		(*pagesp)++;
@@ -52,7 +52,7 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 	else if (!strcmp(typestr, "Pages"))
 	{
 		if (!fz_isarray(kids))
-			return fz_throw("page tree contains no pages");
+			fz_warn("page tree node contains no pages");
 
 		pdf_logpage("subtree (%d %d R) {\n", fz_tonum(node), fz_togen(node));
 
@@ -71,7 +71,7 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 
 		if (pages != fz_toint(count))
 		{
-			fz_warn("page tree node contains incorrect number of page, continuing...");
+			fz_warn("page tree node contains incorrect number of pages, continuing...");
 
 			error = fz_newint(&count, pages);
 			if (!error)
@@ -128,14 +128,16 @@ getpageobject(pdf_xref *xref, struct stuff inherit, fz_obj *node, int *pagesp, i
 	fz_obj *inh;
 	int i;
 
-	if (fz_isnull(node))
+	if (!fz_isdict(node))
 		return fz_throw("pagetree node is missing");
 
 	type = fz_dictgets(node, "Type");
 	kids = fz_dictgets(node, "Kids");
 	count = fz_dictgets(node, "Count");
 
-	if (!type)
+	if (fz_isname(type))
+		typestr = fz_toname(type);
+	else
 	{
 		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(node), fz_togen(node));
 
@@ -151,8 +153,6 @@ getpageobject(pdf_xref *xref, struct stuff inherit, fz_obj *node, int *pagesp, i
 			typestr = "Page";
 		}
 	}
-	else
-		typestr = fz_toname(type);
 
 	if (!strcmp(typestr, "Page"))
 	{
@@ -200,7 +200,7 @@ getpageobject(pdf_xref *xref, struct stuff inherit, fz_obj *node, int *pagesp, i
 	else if (!strcmp(typestr, "Pages"))
 	{
 		if (!fz_isarray(kids))
-			return fz_throw("page tree contains no pages");
+			fz_warn("page tree node contains no pages");
 
 		if (*pagesp + fz_toint(count) < pageno)
 		{
@@ -282,13 +282,15 @@ findpageobject(pdf_xref *xref, fz_obj *node, fz_obj *page, int *pagenop, int *fo
 	fz_obj *kids;
 	int i;
 
-	if (fz_isnull(node))
+	if (!fz_isdict(node))
 		return fz_throw("pagetree node is missing");
 
 	type = fz_dictgets(node, "Type");
 	kids = fz_dictgets(node, "Kids");
 
-	if (!type)
+	if (fz_isname(type))
+		typestr = fz_toname(type);
+	else
 	{
 		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(node), fz_togen(node));
 
@@ -304,8 +306,6 @@ findpageobject(pdf_xref *xref, fz_obj *node, fz_obj *page, int *pagenop, int *fo
 			typestr = "Page";
 		}
 	}
-	else
-		typestr = fz_toname(type);
 
 	if (!strcmp(typestr, "Page"))
 	{
@@ -320,7 +320,7 @@ findpageobject(pdf_xref *xref, fz_obj *node, fz_obj *page, int *pagenop, int *fo
 	else if (!strcmp(typestr, "Pages"))
 	{
 		if (!fz_isarray(kids))
-			return fz_throw("page tree contains no pages");
+			fz_warn("page tree node contains no pages");
 
 		pdf_logpage("subtree (%d %d R) {\n", fz_tonum(node), fz_togen(node));
 
