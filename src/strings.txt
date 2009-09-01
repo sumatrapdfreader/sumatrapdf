@@ -2718,7 +2718,7 @@ pt:Configurar pesquisa inversa
 bg:Активирай обратно търсене
 by:Задаць каманду зваротнага пошуку
 br:Configurar pesquisa inversa
-de:Befehlszeile Inverssuche setzen
+de:Befehlszeile für die Inverssuche setzen
 gr:Ενφάνιση γραμμής αντίστροφης αναζήτησης
 fr:Configurer la recherche inverse
 sk:Nastaviť inverzné vyhľadávanie
@@ -4347,3 +4347,120 @@ de:Zoom
 Cannot start inverse search command. Please check the command line in the settings.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
+de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
+-
+Next Page\t->
+am:Հաջորդ էջը\t->
+af:Volgende Bladsy\t->
+bg:Следваща страница\t->
+br:Página seguinte\t->
+hu:Következő oldal\t->
+pl:Następna strona\t->
+de:Nächste Seite\t->
+fr:Page suivante\t->
+tr:Sonraki Sayfa\t->
+by:Наступная старонка\t->
+ja:次のページ\t->
+fa:صفحه بعدی\t->
+dk:Næste side\t->
+it:Pagina successiva\t->
+nl:Volgende pagina\t->
+ta:அடுத்த பக்கம்\t->
+es:Página siguiente\t->
+hr:Sljedeća stranica\t->
+ru:Следующая страница\t->
+ar:الصفحة التالية\t->
+cn:下一页\t->
+sv:Nästa sida\t->
+cz:Další stránka\t->
+gr:Επόμενη σελίδα\t->
+th:หน้าถัดไป\t->
+pt:Próxima página\t->
+no:Neste side\t->
+sk:Ďaľšia strana\t->
+vn:Trang tiếp\t->
+lt:Kitas puslapis\t->
+my:Mukasurat seterusnya\t->
+fi:Seuraava sivu\t->
+ca:Pàgina següent\t->
+si:Naslednja stran\t->
+sr-rs:Следећа страна\t->
+tw:下一頁\t->
+ml:അടുത്ത താള്‍\t->
+he:דף הבא\t->
+sp-rs:Sledeća strana\t->
+id:Halaman Berikutnya\t->
+mk:Следна страница\t->
+ro:Pagina următoare\t->
+kr:다음 장\t->
+bn:পরবর্তী পৃষ্ঠা\t->
+gl:Páxina seguinte\t->
+uk:Наступна сторінка\t->
+eu:Hurrengo orria\t->
+tl:Sunod na Pahina\t->
+va:Pàgina Següent\t->
+sn:Peji yemberi\t->
+cy:Tudalen Nesaf\t->
+ga:Leathanach Ar Aghaidh\t->
+mm:နောက် တမျက်နှာ\t->
+pa:ਅਗਲੇ ਪੰਨੇ ਤੇ\t->
+hi:अगले पृष्ठ पर\t->
+nn:Neste side\t->
+-
+Previous Page\t<-
+am:Նախորդ էջը\t<-
+af:Vorige Bladsy\t<-
+bg:Предишна страница\t<-
+br:Página anterior\t<-
+hu:Előző oldal\t<-
+pl:Poprzednia strona\t<-
+de:Vorherige Seite\t<-
+fr:Page précédente\t<-
+tr:Önceki Sayfa\t<-
+by:Папярэдняя старонка\t<-
+ja:前のページ\t<-
+fa:صفحه قبلی\t<-
+dk:Forrige side\t<-
+it:Pagina precedente\t<-
+nl:Vorige pagina\t<-
+ta:முந்தைய பக்கம்\t<-
+es:Página anterior\t<-
+hr:Prethodna stranica\t<-
+ru:Предыдущая страница\t<-
+ar:الصفحة السابقة\t<-
+cn:上一页\t<-
+sv:Föregående sida\t<-
+cz:Předchozí stránka\t<-
+gr:Προηγούμενη σελίδα\t<-
+th:หน้าก่อนหน้า\t<-
+pt:Página anterior\t<-
+no:Forrige side\t<-
+sk:Predchádzajúca strana\t<-
+vn:Trang trước\t<-
+lt:Ankstesnis puslapis\t<-
+my:Mukasurat sebelumnya\t<-
+fi:Edellinen sivu\t<-
+ca:Pàgina anterior\t<-
+si:Predhodna stran\t<-
+sr-rs:Претходна страна\t<-
+tw:上一頁\t<-
+ml:മുന്‍പുള്ള താള്‍\t<-
+he:דף קודם\t<-
+sp-rs:Prethodna strana\t<-
+id:Halaman Sebelumnya\t<-
+mk:Претходна страница\t<-
+ro:Pagina anterioară\t<-
+kr:이전 장\t<-
+bn:পূর্ববর্তী পৃষ্ঠা\t<-
+gl:Páxina anterior\t<-
+uk:Попередня сторінка\t<-
+eu:Aurreko orria\t<-
+tl:Nakaraan na Pahina\t<-
+va:Pàgina Anterior\t<-
+sn:Peji yesure\t<-
+cy:Tudalen Flaenorol\t<-
+ga:Leathanach Roimhe\t<-
+mm:ပြီးတဲ့ စာမျက်နှာ\t<-
+pa:ਪਿਛਲੇ ਪੰਨੇ ਤੇ\t<-
+hi:पिछले पृष्ठ पर\t<-
+nn:Førre side\t<-

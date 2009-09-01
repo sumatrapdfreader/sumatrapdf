@@ -1020,8 +1020,8 @@ MenuDef menuDefView[] = {
 };
 
 MenuDef menuDefGoTo[] = {
-    { _TRN("Next Page"),                   IDM_GOTO_NEXT_PAGE,          0  },
-    { _TRN("Previous Page"),               IDM_GOTO_PREV_PAGE,          0  },
+    { _TRN("Next Page\t->"),               IDM_GOTO_NEXT_PAGE,          0  },
+    { _TRN("Previous Page\t<-"),           IDM_GOTO_PREV_PAGE,          0  },
     { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE,         0  },
     { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
     { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
