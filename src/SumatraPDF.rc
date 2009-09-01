@@ -23,6 +23,34 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
 
+#include "Version.h"
+
+VS_VERSION_INFO    VERSIONINFO     MOVEABLE IMPURE LOADONCALL DISCARDABLE
+  FILEVERSION    VER_RESOURCE
+  PRODUCTVERSION VER_RESOURCE
+  FILEFLAGS     0
+  FILEOS        VOS_NT_WINDOWS32
+  FILETYPE      VFT_APP
+  FILESUBTYPE   0       // not used
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    //language ID = U.S. English, char set = Windows, Multilingual
+
+    BEGIN
+      VALUE "FileDescription", "SumatraPDF\0"
+      VALUE "FileVersion",      VER_RESOURCE_STR
+      VALUE "OriginalFilename", "SumatraPDF.exe\0"
+      VALUE "ProductName",      "SumatraPDF\0"
+      VALUE "ProductVersion",   VER_RESOURCE_STR
+      VALUE "Comments",			"SumatraPDF viewer\0"
+      VALUE "CompanyName", 		"Krzysztof Kowalczyk\0"
+    END
+  END
+END
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon

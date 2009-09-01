@@ -28,25 +28,12 @@
 
 #include "WinUtil.hpp"
 
+#include "Version.h"
+
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
 #define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS_FACING
-
-#ifndef CURR_VERSION
-#define CURR_VERSION "0.9.5"
-#endif
-
-// #define SVN_PRE_RELEASE_VER 994
-
-#define _QUOTEME(x) #x
-#define QM(x) _QUOTEME(x)
-
-#ifdef SVN_PRE_RELEASE_VER
-#define UPDATE_CHECK_VER _T(QM(SVN_PRE_RELEASE_VER))
-#else
-#define UPDATE_CHECK_VER _T(CURR_VERSION)
-#endif
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
