@@ -567,6 +567,7 @@ Automatic
 de:Automatisch
 es:Automático
 si:Samodejno
+cn:自动
 -
 Single page
 am:&Մեկ էջ
@@ -3390,7 +3391,7 @@ gr:Επιλογές SumatraPDF
 mk:Опции на SumatraPDF
 hr:Mogućnosti programa
 si:Možnosti SumatraPDF
-cn:SumatraPDF选项
+cn:SumatraPDF 选项
 -
 Fit Width
 am:Ձգել լայնությամբ
@@ -3554,7 +3555,7 @@ cy:&Cynllun Rhagosodedig:
 gr:Προκαθορισμένη διαμόρφωση:
 mk:Основен &изглед:
 hr:Pretpostavljeni &izgled:
-cn:缺省样式(&L)
+cn:默认布局(&L)
 si:&Privzeta postavitev:
 -
 Default &Zoom:
@@ -3570,7 +3571,7 @@ cy:C&hwyddo Rhagosodedig:
 gr:Προκαθορισμένο ζουμ:
 mk:Основно &зголемување:
 hr:Pretpostavljeno &uvećanje:
-cn:缺省缩放(&Z)
+cn:默认缩放(&Z)
 si:Pri&vzeta povečava:
 -
 OK
@@ -3585,6 +3586,7 @@ mk:Во ред
 hr:U redu
 es:Aceptar
 si:V redu
+cn:确定
 -
 Advanced
 am:Ընդլայնված
@@ -4328,26 +4330,33 @@ si:Odpri s programom &Adobe Reader
 -
 Copy Selection\tCtrl-C
 de:Auswahl kopieren\tStrg+C
+cn:复制选择内容\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 de:Inhalte mit Strg+linker Maustaste auswählen
+cn:使用Ctrl+鼠标左键选择内容
 -
 &Custom Zoom...
 de:&Zoomfaktor...
+cn:自定义缩放...
 -
 Zoom factor
 de:Zoomfaktor
+cn:缩放因子
 -
 &Magnification:
 de:&Vergrößerung:
+cn:放大率(&M)
 -
 Zoom
 de:Zoom
+cn:缩放
 -
 Cannot start inverse search command. Please check the command line in the settings.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
+cn:无法运行反向搜索命令。请检查设置中的命令行。
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
