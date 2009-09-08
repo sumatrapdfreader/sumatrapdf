@@ -4331,26 +4331,32 @@ si:Odpri s programom &Adobe Reader
 Copy Selection\tCtrl-C
 de:Auswahl kopieren\tStrg+C
 cn:复制选择内容\tCtrl-C
+ru:Копировать выделение\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 de:Inhalte mit Strg+linker Maustaste auswählen
 cn:使用Ctrl+鼠标左键选择内容
+ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
 -
 &Custom Zoom...
 de:&Zoomfaktor...
 cn:自定义缩放...
+ru:Заказной масштаб...
 -
 Zoom factor
 de:Zoomfaktor
 cn:缩放因子
+ru:Масштабный коэффициент
 -
 &Magnification:
 de:&Vergrößerung:
 cn:放大率(&M)
+ru:Увеличение
 -
 Zoom
 de:Zoom
 cn:缩放
+ru:Масштаб
 -
 Cannot start inverse search command. Please check the command line in the settings.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
