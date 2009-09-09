@@ -564,6 +564,7 @@ hi:देखें(&V)
 nn:&Vis
 -
 Automatic
+br:Automático
 de:Automatisch
 es:Automático
 si:Samodejno
@@ -1747,7 +1748,7 @@ nn:&Hjelp
 am:&Այցելել Ինտերնետում
 af:&Besoek Webtuiste
 bg:Посетете сайта
-br:Visitar o SumatraPDF na W&eb
+br:&Visitar a página do SumatraPDF
 hu:&Weboldal
 pl:Strona www
 de:&SumatraPDF im Internet besuchen
@@ -1806,6 +1807,7 @@ am:&Օգնություն
 hu:Útmutató(web)
 af:Handleiding
 bg:Ръководство
+br:Manual
 de:&Anleitung
 gr:Οδηγίες χρήσης
 fr:Manuel
@@ -2102,7 +2104,7 @@ Find Next
 am:Գտնել հաջորդը
 af:Soek Volgende
 pt:Encontrar próximo
-br:Localizar seguinte
+br:Localizar próximo
 bg:Намери следващото
 de:Weitersuchen
 tr:Sonrakini Bul
@@ -2153,7 +2155,7 @@ Match case
 am:Հաշվի առնել գրանցումները
 af:Vind Bypassende Klein Letters / Hoofletters
 pt:Correspondência entre maiúsculas e minúsculas
-br:Diferenciar  minúsculas e Maiúsculas
+br:Diferenciar minúsculas e Maiúsculas
 bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
@@ -2717,8 +2719,8 @@ am:Նշել փնտրման հրամանների տողը
 af:Stel Die Teenoorgestelde Soek Command-Line
 pt:Configurar pesquisa inversa
 bg:Активирай обратно търсене
-by:Задаць каманду зваротнага пошуку
 br:Configurar pesquisa inversa
+by:Задаць каманду зваротнага пошуку
 de:Befehlszeile für die Inverssuche setzen
 gr:Ενφάνιση γραμμής αντίστροφης αναζήτησης
 fr:Configurer la recherche inverse
@@ -3362,6 +3364,7 @@ sv:Hoppa över denna version
 -
 Warning
 am:Զգուշացում
+br:Aviso
 by:Папярэджанне
 hu:Figyelmeztetés
 de:Warnung
@@ -3379,6 +3382,7 @@ cn:警告
 -
 SumatraPDF Options
 am:Ընտրանքներ
+br:Opções do SumatraPDF
 by:Параметры SumatraPDF
 hu:A SumatraPDF beállításai
 de:SumatraPDF Optionen
@@ -3454,6 +3458,7 @@ nn:Tilpass breidde
 -
 &Settings
 am:&Կարգավորումներ
+br:&Preferências
 by:Налады
 hu:&Beállítások
 de:&Einstellungen
@@ -3528,6 +3533,7 @@ nn:Tilpass side
 -
 &Options...
 am:&Ընտրանքներ...
+br:&Opções...
 by:&Параметры...
 hu:&Beállítások
 de:&Optionen…
@@ -3544,6 +3550,7 @@ si:&Možnosti ...
 -
 Default &Layout:
 am:Չափը &Լռելայն
+br:&Visualização Padrão
 by:&Кампаноўка па змаўчанні
 hu:Oldalmegjelenítési mód:
 de:&Standardlayout:
@@ -3560,6 +3567,7 @@ si:&Privzeta postavitev:
 -
 Default &Zoom:
 am:Մեծությունը &Լռելայն
+br:&Zoom Padrão
 by:&Маштаб па змаўчанні
 hu:Alap nagyítás:
 de:Standard&vergrößerung:
@@ -3590,6 +3598,7 @@ cn:确定
 -
 Advanced
 am:Ընդլայնված
+br:Avançado
 by:Дадаткова
 hu:További programbeállítások
 de:Weiteres
@@ -3606,6 +3615,7 @@ si:Napredno
 -
 Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցույց տալ &Ընտրյալները
+br:Mostrar barra lateral de marcadores quando disponível
 by:Паказваць панэль &закладак (пры магчымасці)
 hu:Dokumentumba ágyazott könyvjelzők mutatása
 de:&Lesezeichen beim Start anzeigen
@@ -3622,6 +3632,7 @@ si:Pokaži stolpec z &zaznamki, če je na voljo
 -
 Cancel
 am:Մերժել
+br:Cancelar
 by:Адмена
 hu:Mégse
 de:Abbrechen
@@ -3638,6 +3649,7 @@ si:Prekliči
 -
 Automatically check for &updates
 am:Ինքնաշխատ ստուգել &թարմացումները
+br:&Buscar atualizações automaticamente
 by:&Аўтаматычная праверка абнаўленняў
 hu:&Program&frissítések automatikus keresése bekapcsoláskor
 de:&Automatisch nach Updates suchen
@@ -3654,6 +3666,7 @@ si:Samodejno preveri &obstoj posodobitev
 -
 &Remember these settings for each document
 am:Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
+br:Lembrar estas preferências para cada documento
 by:Запомніць гэтыя параметры для &кожнага дакумента
 hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
 de:&Diese Einstellungen für jedes Dokument merken
@@ -3670,6 +3683,7 @@ si:Zapomni si te &nastavitve za vsak dokument
 -
 Remember &opened files
 am:Հիշել &բացված ֆայլերը
+br:&Lembrar arquivos abertos
 by:&Запомніць адкрытыя файлы
 hu:Korábban megnyitott file-ok listájának tárolása
 gr:Απομνημόνευη πρόσφατων αρχείων
@@ -3743,6 +3757,7 @@ nn:Vis
 -
 &Go to page:
 am:&Անցնել էջին.
+br:&Ir para a página:
 by:&Перайсці да старонкі
 hu:&Ugrás oldal:
 de:&Gehe zu Seite:
@@ -3760,6 +3775,7 @@ si:Pojdi na &stran:
 -
 (of %d)
 am:(%d-ից)
+br:(de %d)
 by:(з %d)
 hu:(a %d-ból)
 de:(von %d)
@@ -3776,6 +3792,7 @@ si:(od %d)
 -
 Download
 am:Բեռնել
+br:Baixar
 by:Загрузка
 hu:Letöltés
 de:Herunterladen
@@ -3793,6 +3810,7 @@ si:Prenesi
 -
 &Yes
 am:&Այո
+br:&Sim
 by:Да
 hu:&Igen
 de:&Ja
@@ -3810,6 +3828,7 @@ si:&Da
 -
 &No
 am:&Ոչ
+br:&Não
 by:Нет
 hu:&Nem
 de:&Nein
@@ -3827,6 +3846,7 @@ si:&Ne
 -
 &No, thanks
 am:&Ոչ,շնորհակալություն։
+br:&Não, obrigado
 by:Дзякуй, не
 hu:Köszönöm,&nem
 de:&Nein, danke
@@ -3844,6 +3864,7 @@ si:&Ne, hvala
 -
 Please wait - rendering...
 am:Խնդրում ենք սպասել...
+br:Aguarde, renderizando...
 by:Пачакайце - фармуецца малюнак...
 hu:Feldolgozás, kérem várjon
 de:Bitte einen Moment Geduld…
@@ -3861,6 +3882,7 @@ si:Oprostite, upodobitev poteka ...
 -
 Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
+br:Não foi possível renderizar a página
 by:Не атрымаўся сфармаваць малюнак старонкі
 hu:Oldalfeldolgozási hiba
 de:Diese Seite kann leider nicht angezeigt werden
@@ -3877,6 +3899,7 @@ si:Strani ni mogoče upodobiti
 -
 No matches were found
 am:Օրինակներ չի գտնվել
+br:Nenhuma ocorrência encontrada
 by:Узор не знойдзены
 hu:Nem található a dokumentumban
 de:Das Dokument wurde durchsucht
@@ -3893,6 +3916,7 @@ si:Ni zadetkov
 -
 Found text at page %d
 am:Տեքստը գտնվել է %d էջում
+br:Texto encontrado na página %d
 by:Тэкст знойдзены на стар. %d
 hu:Találat a(z) %d. oldalon
 de:Text auf Seite %d gefunden
@@ -3909,6 +3933,7 @@ si:Besedilo najdeno na strani %d
 -
 Searching %d of %d...
 am:Փնտրվում է %d-ից %d
+br:Localizando %d de %d...
 by:Апрацоўка старонкі %d з %d...
 hu:Keresés a(z) %d./%d oldalon
 de:Suche auf Seite %d von %d…
@@ -3926,6 +3951,7 @@ si:Preiskovanje strani %d od %d ...
 -
 PDF documents
 am:PDF փաստաթղթեր
+br:Documentos PDF
 by:PDF-дакументы
 hu:PDF dokumentumok
 de:PDF-Dokumente
@@ -3942,6 +3968,7 @@ si:Dokumenti PDF
 -
 All files
 am:Բոլոր ֆայլերը
+br:Todos os arquivos
 by:Усе файлы
 hu:Minden fájl
 de:Alle Dateien
@@ -3959,6 +3986,7 @@ si:Vse datoteke
 -
 &Password:
 am:&Գաղտնաբառը
+br:&Senha:
 by:&Пароль:
 hu:&Jelszó:
 de:&Passwort:
@@ -3976,6 +4004,7 @@ si:&Geslo:
 -
 &Find what:
 am:&Ինչ փնտրել.
+br:&Localizar o quê:
 by:&Узор:
 hu:Mit keres:
 de:&Suchen nach:
@@ -3992,6 +4021,7 @@ si:&Najdi:
 -
 Find
 am:Փնտրել
+br:Localizar
 by:Знайсці
 hu:Keresés
 de:Suchen
@@ -4008,6 +4038,7 @@ si:Išči
 -
 &Match case
 am:&Հաշվի առնել գրանցումները
+br:Diferenciar minúsculas e Maiúsculas
 by:&Улічваць рэгістр
 hu:Kis- és nagybetűk megkülönböztetése
 de:&Groß-/Kleinschreibung beachten
@@ -4024,6 +4055,7 @@ si:Razlikuj &med velikimi/malimi črkami
 -
 Hint: Use the F3 key for finding again
 am:Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը 
+br:Dica: tecle F3 para prosseguir a busca
 ru:Для паўторнага пошуку выкарыстоўвайце клавішу F3
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
@@ -4040,6 +4072,7 @@ si:Namig: Uporabite tipko F3 za ponovno iskanje
 -
 Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
+br:Não foi possível acionar a impressora
 ru:Не атрымалася ініцыялізаваць друкарку
 hu:A nyomtató inicializálása nem sikerült
 de:Der Drucker konnte nicht initialisiert werden
@@ -4056,6 +4089,7 @@ si:Tiskalnika ni mogoče inicializirati
 -
 No synchronization info at this position
 am:Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
+br:Não há informação de sincronização nesta posição
 by:У гэтай пазіцыі адсутнічае інфармацыя для сінхранізацыі
 hu:Nem található szinkronizálási információ az adott pozícióhoz
 de:Keine Synchronisationsinformationen an diesem Ort
@@ -4072,6 +4106,7 @@ si:Na tem mestu ni sinhronizacijskih podatkov
 -
 Synchronization file cannot be opened
 am:Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
+br:Não foi possível abrir o arquivo de sincronização
 by:Не атрымалася адкрыць файл з інфармацыяй для сінхранізацыі
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
 de:Die Synchronisationsdatei kann nicht geöffnet werden
@@ -4088,6 +4123,7 @@ si:Datoteke sinhronizacije ni mogoče odpreti
 -
 Page number %u inexistant
 am:%u էջը գոյություն չունի
+br:A página %u não existe
 by:Старонка %u не існуе
 hu:A(z) %u oldalszám nem létezik
 de:Es gibt keine Seite %u
@@ -4104,6 +4140,7 @@ si:Stran številka %u ne obstaja
 -
 No result found around line %u in file %s
 am:%s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
+br:Nenhum resultado próximo à linha %u no arquivo %s
 by:Вынік, які адпавядае радку %u у файле %s, не знойдзены
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 es:No se encontró resultado cerca de la línea %u en el archivo %s
@@ -4119,6 +4156,7 @@ si:Okoli vrstice %u v datoteki %s ni zadetkov
 -
 Source file %s has no synchronization point
 am:%s ֆայլը չունի սինխրոնիզացման կետ
+br:O arquivo fonte %s não tem ponto de sincronização
 by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
 de:%s hat keinen Synchronisations-Punkt
@@ -4135,6 +4173,7 @@ si:Izvorna datoteka %s nima točke sinhronizacije
 -
 [Changes detected; refreshing] %s
 am:[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
+br:[Mudanças detectadas; atualizando] %s
 by:[Выяўлены змены; адбываецца абнаўленне] %s
 hu:[a file megváltozott; frissítés] %s
 de:[Datei wurde geändert; aktualisiere…] %s
@@ -4151,6 +4190,7 @@ si:[Spremembe zaznane; osvežitev poteka] %s
 -
 Unknown source file (%s)
 am:Անհայտ ֆայլ (%s)
+br:Arquivo fonte desconhecido (%s)
 by:Невядомы зыходны файл (%s)
 hu:Ismeretlen forrásfájl (%s)
 de:Unbekannte Datei (%s)
@@ -4167,6 +4207,7 @@ si:Neznana izvorna datoteka (%s)
 -
 Cannot print this file
 am:Հնարավոր չէ տպել այս ֆայլը
+br:Não foi possível imprimir este arquivo
 by:Не атрымалася раздрукаваць гэты файл
 hu:Ez a file nem nyomtatható
 de:Diese Datei darf nicht gedruckt werden
@@ -4183,6 +4224,7 @@ si:Te datoteke ni mogoče natisniti
 -
 PDF Document
 am:PDF փաստաթուղթ
+br:Documento PDF
 by:PDF-дaкумент
 hu:PDF dokumentum
 de:PDF-Dokument
@@ -4260,6 +4302,7 @@ nn:Bruk SumatraPDF som standard PDF-lesar
 # Please keep this string as short as possible!
 SumatraPDF is your main PDF reader
 am:PDF ֆայլերը ասոցացվել են SumatraPDF-ի հետ
+br:O SumatraPDF é o seu leitor PDF padrão
 by:SumatraPDF асацыявана з файламі PDF
 bg:SumatraPDF е вашия PDF четец
 hu:A Sumatra az alapértelmezett PDF-olvasója
@@ -4278,6 +4321,7 @@ si:SumatraPDF je vaš privzeti bralnik PDF
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 am:PDF ֆայլերը ասոցացվեցին SumatraPDF-ի հետ
+br:O SumatraPDF deve ser agora o leitor PDF padrão
 by:Зараз SumatraPDF асацыявана з файламі PDF
 bg:SumatraPDF вече трябва да е четец на PDF по подразбиране
 hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
@@ -4296,6 +4340,7 @@ si:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
 am:Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
+br:Não é possível alterar o leitor PDF padrão no modo portátil
 by:У мабільным рэжыме змяніць PDF-в'юер нельга
 bg:PDF четеца не може да бъде сменен в преносим режим
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
@@ -4313,6 +4358,7 @@ si:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 -
 Open in &Adobe Reader
 am:Բացել &Adobe Reader-ում
+br:Abrir no &Adobe Reader
 by:Адкрыць у &Adobe Reader
 bg:Отвори с &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
@@ -4329,36 +4375,43 @@ cy:Agor yn &Adobe Reader
 si:Odpri s programom &Adobe Reader
 -
 Copy Selection\tCtrl-C
+br:Copiar seleção\tCtrl-C
 de:Auswahl kopieren\tStrg+C
 cn:复制选择内容\tCtrl-C
 ru:Копировать выделение\tCtrl-C
 -
 Select content with Ctrl+left mouse button
+br:Selecionar com Ctrl+Botão esquerdo do mouse
 de:Inhalte mit Strg+linker Maustaste auswählen
 cn:使用Ctrl+鼠标左键选择内容
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
 -
 &Custom Zoom...
+br:&Zoom personalizado...
 de:&Zoomfaktor...
 cn:自定义缩放...
 ru:Заказной масштаб...
 -
 Zoom factor
+br:Proporção de Zoom
 de:Zoomfaktor
 cn:缩放因子
 ru:Масштабный коэффициент
 -
 &Magnification:
+br:Aumento:
 de:&Vergrößerung:
 cn:放大率(&M)
 ru:Увеличение
 -
 Zoom
+br:Zoom
 de:Zoom
 cn:缩放
 ru:Масштаб
 -
 Cannot start inverse search command. Please check the command line in the settings.
+br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas opções.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
