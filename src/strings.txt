@@ -569,6 +569,7 @@ de:Automatisch
 es:Automático
 si:Samodejno
 cn:自动
+hu:Automatikus
 -
 Single page
 am:&Մեկ էջ
@@ -4379,36 +4380,42 @@ br:Copiar seleção\tCtrl-C
 de:Auswahl kopieren\tStrg+C
 cn:复制选择内容\tCtrl-C
 ru:Копировать выделение\tCtrl-C
+hu:Kijelöltek másolása\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
 de:Inhalte mit Strg+linker Maustaste auswählen
 cn:使用Ctrl+鼠标左键选择内容
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
+hu:Először jelölje ki a másolandó szöveget Ctrl+Bal egérgomb -bal
 -
 &Custom Zoom...
 br:&Zoom personalizado...
 de:&Zoomfaktor...
 cn:自定义缩放...
 ru:Заказной масштаб...
+hu:... Egyéni méret
 -
 Zoom factor
 br:Proporção de Zoom
 de:Zoomfaktor
 cn:缩放因子
 ru:Масштабный коэффициент
+hu:Nagyítás mértéke
 -
 &Magnification:
 br:Aumento:
 de:&Vergrößerung:
 cn:放大率(&M)
 ru:Увеличение
+hu:Nagyítás
 -
 Zoom
 br:Zoom
 de:Zoom
 cn:缩放
 ru:Масштаб
+hu:Beállít
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas opções.
