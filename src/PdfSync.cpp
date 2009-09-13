@@ -665,8 +665,8 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
             synctex_node_t node;
             while (node = synctex_next_result(this->scanner)) {
                 *page = synctex_node_page(node);
-                *x = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_h(node));
-                *y = SYNCCOORDINATE_TO_PDFCOORDINATE(synctex_node_box_v(node));
+                *x = synctex_node_box_visible_h(node);
+                *y = synctex_node_box_visible_v(node);
                 return PDFSYNCERR_SUCCESS;
             }
             return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
