@@ -51,6 +51,13 @@ def report_error(line_no, line, err_txt):
     print err_txt
     assert 0
 
+def assert_unique_translation(curr_trans, lang, trans, line_no):
+    for el in curr_trans[1:]:
+        (lang2, trans2) = el
+        if lang == lang2:
+            print("Duplicate translation in lang '%s' at line %d" % (lang, line_no))
+            assert 0
+
 # Returns a tuple (strings, langs)
 # 'strings' maps an original, untranslated string to
 # an array of translation, where each translation is a tuple 
@@ -109,6 +116,7 @@ def load_strings_file(file_name):
             (lang, txt) = parse_line_with_translation(l)
             if lang not in lang_codes:
                 report_error(line_no, l, "lang '%s' is not in declared list of languages '%s'" % (lang, str(langs)))
+            assert_unique_translation(curr_trans, lang, txt, line_no)
             curr_trans.append([lang, txt])
         else:
             assert 0
