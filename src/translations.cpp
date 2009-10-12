@@ -30,21 +30,6 @@ const char **g_transTranslations;
 static int currLangIdx = 0;
 static TCHAR **g_translations = NULL;  // cached translations
 
-/* 'data'/'data_len' is a text describing all texts we translate.
-   It builds data structures need for quick lookup of translations
-   as well as a list of available languages.
-   It returns a list of available languages.
-   The list is not valid after a call to Translations_FreeData.
-   The function must be called before any other function in this module.
-   It can be called multiple times. This is to make debugging of translations
-   easier by allowing re-loading translation file at runtime. 
-   */
-bool Translations_FromData(const char* langs, const char* data, size_t data_len)
-{
-    assert(0); // TODO: implement me
-    return false;
-}
-
 bool Translations_SetCurrentLanguage(const char* lang)
 {
     for (int i=0; i < g_transLangsCount; i++) {
@@ -102,7 +87,6 @@ const TCHAR* Translations_GetTranslation(const char* txt)
 // Call at program exit to free all memory related to traslations functionality.
 void Translations_FreeData()
 {
-    // TODO: will be more when we implement Translations_FromData
     if (!g_translations)
         return;
     for (int i=0; i < (g_transTranslationsCount * g_transLangsCount); i++) {
