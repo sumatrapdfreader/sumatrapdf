@@ -2157,7 +2157,7 @@ Match case
 am:Հաշվի առնել գրանցումները
 af:Vind Bypassende Klein Letters / Hoofletters
 pt:Correspondência entre maiúsculas e minúsculas
-br:Diferenciar minúsculas e Maiúsculas
+br:Diferenciar minúsculas e maiúsculas
 bg:Точно същите букви
 de:Groß-/Kleinschreibung beachten
 tr:Büyük/Küçük harf eşleştir
@@ -2264,7 +2264,7 @@ Zoom In
 am:Մեծացնել
 af:Zoem In
 bg:Увеличи
-br:Aumentar Zoom
+br:Aumentar zoom
 de:Reinzoomen
 hu:Nagyítás
 pl:Powiększ
@@ -2322,7 +2322,7 @@ Zoom Out
 am:Փոքրացնել
 af:Zoem Uit
 bg:Намали
-br:Diminuir Zoom
+br:Diminuir zoom
 de:Rauszoomen
 hu:Kicsinyítés
 pl:Pomniejsz
@@ -2666,6 +2666,7 @@ Contribute translation
 am:Օգնել թարգմանել
 af:Dra By Tot Ñ Vertaling.
 bg:Допринеси за превода
+br:Contribuir na tradução
 hu:&Járulj hozzá a fordításhoz
 de:Übersetzung beisteuern
 fr:Contribuer à la traduction
@@ -3106,7 +3107,7 @@ am:Նոր տարբերակներ չկան։
 af:Geen Nuwe Weergawe Is Beskikbaar Nie.
 bg:Няма нова версия.
 by:Абнаўленняў не выяўлена.
-br:Nenhuma atualização foi encontrada.
+br:Nenhuma atualização disponível.
 de:Keine neuere Version vorhanden.
 gr:Νέα έκδοση διαθέσιμη
 sk:Nie je k dispozícia nová verzia.
@@ -3327,7 +3328,7 @@ af:Slaan Dié Weergawe Oor.
 pt:Ignorar esta versão
 bg:Пропусни тази версия.
 by:Прапусціць гэту версію.
-br:Pular esta versão.
+br:Ignorar esta versão.
 de:&Diese Version überspringen.
 gr:Παράβλεψη αυτής της έκδοσης
 sk:Preskočiť túto verziu.
@@ -3704,7 +3705,7 @@ View
 am:Դիտել
 af:Vertoon
 bg:Виж
-br:Ver
+br:Exibir
 hu:Alapértelmezett nézet
 pl:Widok
 de:Ansicht
@@ -3868,7 +3869,7 @@ ja:いいえ(&N)
 -
 Please wait - rendering...
 am:Խնդրում ենք սպասել...
-br:Aguarde, renderizando...
+br:Por favor, aguarde, renderizando...
 by:Пачакайце - фармуецца малюнак...
 hu:Feldolgozás, kérem várjon
 de:Bitte einen Moment Geduld…
@@ -4048,7 +4049,7 @@ ja:検索
 -
 &Match case
 am:&Հաշվի առնել գրանցումները
-br:Diferenciar minúsculas e Maiúsculas
+br:Diferenciar minúsculas e maiúsculas
 by:&Улічваць рэгістр
 hu:Kis- és nagybetűk megkülönböztetése
 de:&Groß-/Kleinschreibung beachten
@@ -4066,7 +4067,7 @@ ja:大文字小文字を区別する(&M)
 -
 Hint: Use the F3 key for finding again
 am:Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
-br:Dica: tecle F3 para prosseguir a busca
+br:Dica: tecle F3 para ver a próxima ocorrência
 ru:Для повторного поиска используйте клавишу F3
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
@@ -4264,7 +4265,7 @@ Make SumatraPDF my main PDF reader
 am:Ասոցացնել PDF ֆայլերը SumatraPDF-ի հետ
 af:Maak Sumatra Die Automatiese PDF Leser
 bg:Направи SumatraPDF четец на PDF по подразбиране
-br:Fazer do SumatraPDF o leitor PDF padrão
+br:Tornar o SumatraPDF o leitor PDF padrão
 hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
 de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
@@ -4341,7 +4342,7 @@ ja:SumatraPDF は既定の PDF リーダーです
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
 am:PDF ֆայլերը ասոցացվեցին SumatraPDF-ի հետ
-br:O SumatraPDF deve ser agora o leitor PDF padrão
+br:Agora o SumatraPDF deve ser seu leitor PDF padrão
 by:Зараз SumatraPDF асацыявана з файламі PDF
 bg:SumatraPDF вече трябва да е четец на PDF по подразбиране
 hu:Mostantól a Sumatra az alapértelmezett PDF-olvasója
@@ -4401,6 +4402,7 @@ Copy Selection\tCtrl-C
 br:Copiar seleção\tCtrl-C
 de:Auswahl kopieren\tStrg+C
 cn:复制选择内容\tCtrl-C
+fr:Copier la sélection 
 ru:Копировать выделение\tCtrl-C
 hu:Kijelöltek másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
@@ -4409,6 +4411,7 @@ Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
 de:Inhalte mit Strg+linker Maustaste auswählen
 cn:使用Ctrl+鼠标左键选择内容
+fr:Sélectionner avec Ctrl+bouton gauche de la souris
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
 hu:Először jelölje ki a másolandó szöveget Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
@@ -4417,6 +4420,7 @@ ja:Ctrl+右クリックで選択範囲を指定します
 br:&Zoom personalizado...
 de:&Zoomfaktor...
 cn:自定义缩放...
+fr:Zoom personnalisé
 ru:Заказной масштаб...
 hu:... Egyéni méret
 ja:カスタム(&C)...
@@ -4425,6 +4429,7 @@ Zoom factor
 br:Proporção de Zoom
 de:Zoomfaktor
 cn:缩放因子
+fr:Facteur de zoom
 ru:Масштабный коэффициент
 hu:Nagyítás mértéke
 ja:カスタム ズーム
@@ -4433,6 +4438,7 @@ ja:カスタム ズーム
 br:Aumento:
 de:&Vergrößerung:
 cn:放大率(&M)
+fr:Grossissement
 ru:Увеличение
 hu:Nagyítás
 ja:拡大率(&M):
@@ -4441,12 +4447,13 @@ Zoom
 br:Zoom
 de:Zoom
 cn:缩放
+fr:Zoom
 ru:Масштаб
 hu:Beállít
 ja:ズーム
 -
 Cannot start inverse search command. Please check the command line in the settings.
-br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas opções.
+br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
