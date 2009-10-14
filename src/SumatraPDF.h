@@ -115,7 +115,7 @@ public:
         mouseAction = MA_IDLE;
         memzero(&animState, sizeof(animState));
         memzero(&selectionRect, sizeof(selectionRect));
-        memzero(&fwdsearchmarkLoc, sizeof(fwdsearchmarkLoc));
+        fwdsearchmarkRects.clear();
         needrefresh = false;
         pdfsync = NULL;
         findStatusThread = NULL;
@@ -198,7 +198,7 @@ public:
      * a rectangular mark in the document. These variables indicate the position of the mark
      * and whether it is visible or not. */
     bool            showForwardSearchMark; // is the mark visible?
-    PointD          fwdsearchmarkLoc;      // location of the mark in user coordinates
+    vector<RectI>   fwdsearchmarkRects;    // location of the markers in user coordinates
     int             fwdsearchmarkPage;     // page 
 
     bool            showSelection;
@@ -241,7 +241,7 @@ public:
 
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, TCHAR *windowTitle=NULL);
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y);
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
 
 bool IsRunningInPortableMode(void);
 bool IsExeAssociatedWithPdfExtension(void);

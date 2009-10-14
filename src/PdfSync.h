@@ -181,6 +181,13 @@ public:
             return;    
         *y = pageHeight - *y;
     }
+
+    void convert_coord_from_internal(RectI *rc, UINT pageHeight, CoordSystem dst)
+    {
+        if (dst==this->coordsys)
+            return;    
+        rc->y = pageHeight - (rc->y + rc->dy);
+    }
     
     // Inverse-search:
     //  - sheet: page number in the PDF (starting from 1)
@@ -197,7 +204,7 @@ public:
     // Forward-search:
     // The result is returned in (page,x,y). The coordinates x,y are specified in the internal 
     // coordinate system.
-    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y) = 0;
+    virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects) = 0;
 
     void discard_index() { this->index_discarded = true; }
     bool is_index_discarded() { return this->index_discarded; }
@@ -244,7 +251,7 @@ public:
     bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
 
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
+    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects);
     int rebuild_index();
 
 private:
@@ -270,7 +277,7 @@ public:
 
     int rebuild_index();
     UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y);
+    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects);
 
 private:
     int get_record_section(int record_index);

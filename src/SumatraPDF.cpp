@@ -2930,29 +2930,20 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     if (!pageInfo->visible)
         return;
     
-    const DWORD selectionColorBlue = 0xff0000FF;
-    const DWORD selectionColorRed = 0xffFF0000;
+    const DWORD selectionColorBlue = 0xffAFBEFF;
 
     RectD recD;
     RectI recI;
-    // draw the mark
-    recD.x = win->fwdsearchmarkLoc.x-MARK_SIZE/2;
-    recD.y = win->fwdsearchmarkLoc.y-MARK_SIZE/2;
-    recD.dx = MARK_SIZE;
-    recD.dy = MARK_SIZE;
-    if (!win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD))
-        return;
-    RectI_FromRectD (&recI, &recD);
-    PaintTransparentRectangle(win, hdc, &recI, selectionColorRed);
 
-    // draw the line
-    recD.x = 0;
-    recD.y = win->fwdsearchmarkLoc.y-MARK_SIZE;
-    recD.dx = pageInfo->pageDx;
-    recD.dy = 2*MARK_SIZE;
-    win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
-    RectI_FromRectD (&recI, &recD);
-    PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue);
+    // Draw the rectangles highlighting the forward search results
+    for(UINT i=0; i<win->fwdsearchmarkRects.size();i++)
+    {
+        RectD_FromRectI (&recD, &win->fwdsearchmarkRects[i]);
+        win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
+        RectI_FromRectD (&recI, &recD);
+        PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue);
+    }
+
 }
 
 #define BORDER_SIZE   1
@@ -5077,26 +5068,37 @@ static void WindowInfo_HideMessage(WindowInfo *win)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, UINT x, UINT y)
+void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects)
 {
-    if (ret == PDFSYNCERR_SUCCESS) {
+    win->fwdsearchmarkRects.clear();
+    if (ret == PDFSYNCERR_SUCCESS && rects.size()>0 ) {
         // remember the position of the search result for drawing the rect later on
         const PdfPageInfo *pi = win->dm->getPageInfo(page);
         if (pi) {
             WindowInfo_HideMessage(win);
 
-            win->pdfsync->convert_coord_from_internal(&x, &y, (int)pi->pageDy, BottomLeft);
-            win->fwdsearchmarkLoc.set(x,y);
+            RectI overallrc;
+            RectI rc = rects[0];
+            win->pdfsync->convert_coord_from_internal(&rc, (int)pi->pageDy, BottomLeft);
+
+            overallrc = rc;
+            for(UINT i = 0; i <rects.size(); i++)
+            {
+                rc = rects[i];
+                win->pdfsync->convert_coord_from_internal(&rc, (int)pi->pageDy, BottomLeft);
+                overallrc = RectI_Union(overallrc, rc);
+                win->fwdsearchmarkRects.push_back(rc);
+            }
             win->fwdsearchmarkPage = page;
             win->showForwardSearchMark = true;
 
-            // Scroll to show the rectangle highlighting the forward search result
+            // Scroll to show the overall highlighted zone
             PdfSearchResult res;
             res.page = page;
-            res.left = x - MARK_SIZE / 2;
-            res.top = y - MARK_SIZE / 2;
-            res.right = res.left + MARK_SIZE;
-            res.bottom = res.top + MARK_SIZE;
+            res.left = overallrc.x;
+            res.top = overallrc.y;
+            res.right = overallrc.x + overallrc.dx;
+            res.bottom = overallrc.y + overallrc.dy;
             win->dm->addNavPoint();
             win->dm->goToPage(page, 0);
             win->dm->MapResultRectToScreen(&res);

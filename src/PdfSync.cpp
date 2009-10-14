@@ -4,6 +4,7 @@
 #include "SumatraPDF.h"
 #include "PdfSync.h"
 #include "tstr_util.h"
+#include "geom_util.h"
 #include <shlwapi.h>
 #include <sys/stat.h>
 
@@ -521,7 +522,7 @@ read_linerecords:
 
 }
 
-UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects)
 {
     if (this->is_index_discarded())
         rebuild_index();
@@ -556,9 +557,14 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
                     fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
                     if (recordNumber == record) {
                         *page = sheet;
-                        *x = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
-                        *y = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
-                        DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n", srcfilename, line, record, sheet, *x, *y);
+                        rects.clear();
+                        RectI rc;
+                        rc.x = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);
+                        rc.y = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(yPosition);
+                        rc.dx = MARK_SIZE;
+                        rc.dy = MARK_SIZE;
+                        rects.push_back(rc);
+                        DBG_OUT("source->pdf: %s:%u -> record:%u -> page:%u, x:%u, y:%u\n", srcfilename, line, record, sheet, rc.x, rc.y);
                         fclose(fp);
                         return PDFSYNCERR_SUCCESS;
                     }
@@ -638,7 +644,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 //    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 }
 
-UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, UINT *x, UINT *y)
+UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects)
 {
     if (this->is_index_discarded())
         if (rebuild_index())
@@ -663,13 +669,25 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
             return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
         default:
             synctex_node_t node;
+            int firstpage = -1;
+            RectI rc;
+            rects.clear();
             while (node = synctex_next_result(this->scanner)) {
-                *page = synctex_node_page(node);
-                *x = synctex_node_box_visible_h(node);
-                *y = synctex_node_box_visible_v(node);
-                return PDFSYNCERR_SUCCESS;
+                if( firstpage == -1 )
+                {
+                    firstpage = synctex_node_page(node);
+                    *page = (UINT)firstpage;
+                }
+                if( synctex_node_page(node) != firstpage )
+                    continue;
+
+                rc.x = synctex_node_box_visible_h(node);
+                rc.y  = synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node);
+                rc.dx =  synctex_node_box_visible_width(node),
+                rc.dy = synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node);
+                rects.push_back(rc);
             }
-            return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
+            return ( firstpage > 0 ) ? PDFSYNCERR_SUCCESS : PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
 //#else
     //return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -769,11 +787,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     else {
                         ack.fAck = 1;
                         assert(win->dm);
-                        UINT page, x, y;
-                            UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, &x, &y);
-                            WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, x, y);
-                            if (setfocus)
-                                SetFocus(win->hwndFrame);
+                        UINT page;
+                        vector<RectI> rects;
+                        UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, rects);
+                        WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, rects);
+                        if (setfocus)
+                            SetFocus(win->hwndFrame);
                     }
                 }
             }

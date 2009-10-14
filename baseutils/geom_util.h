@@ -21,6 +21,7 @@ typedef struct RectD {
 int    RectI_Intersect(RectI *r1, RectI *r2, RectI *rIntersectOut);
 void   RectI_FromXY(RectI *rOut, int xs, int xe, int ys, int ye);
 int    RectI_Inside(RectI *r, int x, int y);
+RectI  RectI_Union(RectI a, RectI b);
 int    RectD_FromXY(RectD *rOut, double xs, double xe,  double ys, double ye);
 void   RectD_FromRectI(RectD *rOut, const RectI *rIn);
 void   RectI_FromRectD(RectI *rOut, const RectD *rIn);

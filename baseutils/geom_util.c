@@ -165,6 +165,19 @@ int RectD_Inside(RectD *r, double x, double y)
     return TRUE;
 }
 
+RectI RectI_Union(RectI a, RectI b)
+{
+    RectI u;
+    if (a.dy <= 0. && a.dx <= 0.) return b;
+    if (b.dy <= 0. && b.dx <= 0.) return a;
+    u.x = min(a.x, b.x);
+    u.y = min(a.y, b.y);
+    u.dx = max(a.x + a.dx, b.x + b.dy) - u.x;
+    u.dy = max(a.y + a.dy, b.y + b.dy) - u.y;
+    return u;
+}
+
+
 #ifndef NDEBUG
 void RectI_AssertEqual(RectI *rIntersect, RectI *rExpected)
 {
