@@ -278,6 +278,11 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 			if (!xref->table[ofs + i].type)
 			{
 				s = buf;
+
+				/* broken pdfs where line start with white space */
+				while (*s != '\0' && iswhite(*s))
+					s++;
+
 				xref->table[ofs + i].ofs = atoi(s);
 				xref->table[ofs + i].gen = atoi(s + 11);
 				xref->table[ofs + i].type = s[17];

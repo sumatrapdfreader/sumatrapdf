@@ -21,7 +21,10 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 	int i;
 
 	if (!fz_isdict(node))
-		return fz_throw("pagetree node is missing");
+	{
+		fz_warn("pagetree node is missing, igoring missing pages...");
+		return fz_okay;
+	}
 
 	type = fz_dictgets(node, "Type");
 	kids = fz_dictgets(node, "Kids");
@@ -129,7 +132,11 @@ getpageobject(pdf_xref *xref, struct stuff inherit, fz_obj *node, int *pagesp, i
 	int i;
 
 	if (!fz_isdict(node))
-		return fz_throw("pagetree node is missing");
+	{
+		fz_warn("pagetree node is missing, ignoring missing pages...");
+		*pagep = nil;
+		return fz_okay;
+	}
 
 	type = fz_dictgets(node, "Type");
 	kids = fz_dictgets(node, "Kids");

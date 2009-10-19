@@ -38,7 +38,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 	int ucs;
 	int i;
 
-	if (fz_isindirect(cmapstm))
+	if (pdf_isstream(xref, fz_tonum(cmapstm), fz_togen(cmapstm)))
 	{
 		pdf_logfont("tounicode embedded cmap\n");
 
