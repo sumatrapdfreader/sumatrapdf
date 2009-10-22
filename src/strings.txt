@@ -1838,6 +1838,7 @@ pa:ਮਦੱਦ ਕਤਾਬ(&M)
 hi:नियम-पुस्तक(&M)
 fi:Käyttöohje
 si:P&riročnik
+sv:&Manual
 -
 &About
 am:&Մասին
@@ -3382,6 +3383,7 @@ hr:Upozorenje
 si:Opozorilo
 cn:警告
 ja:警告
+sv:Varning
 -
 SumatraPDF Options
 am:Ընտրանքներ
@@ -3399,6 +3401,7 @@ hr:Mogućnosti programa
 si:Možnosti SumatraPDF
 cn:SumatraPDF 选项
 ja:SumatraPDF のオプション
+sv:SumatraPDF Inställningar
 -
 Fit Width
 am:Ձգել լայնությամբ
@@ -3474,6 +3477,7 @@ hr:&Postavke
 cn:设置(&S)
 si:&Nastavitve
 ja:設定(&S)
+sv:Alternati&v
 -
 Fit Page
 am:Ձգել էջը
@@ -3549,6 +3553,7 @@ hr:Mogućnosti...
 cn:选项(&O)...
 si:&Možnosti ...
 ja:オプション(&O)...
+sv:&Inställningar...
 -
 Default &Layout:
 am:Չափը &Լռելայն
@@ -3566,6 +3571,7 @@ hr:Pretpostavljeni &izgled:
 cn:默认布局(&L)
 si:&Privzeta postavitev:
 ja:基本レイアウト(&L):
+sv:Förvalt &utseende
 -
 Default &Zoom:
 am:Մեծությունը &Լռելայն
@@ -3583,6 +3589,7 @@ hr:Pretpostavljeno &uvećanje:
 cn:默认缩放(&Z)
 si:Pri&vzeta povečava:
 ja:基本ズーム(&Z):
+sv:Förvalt &zoomläge
 -
 OK
 am:ԼԱՎ
@@ -3598,6 +3605,7 @@ es:Aceptar
 si:V redu
 cn:确定
 ja:OK
+sv:OK
 -
 Advanced
 am:Ընդլայնված
@@ -3615,6 +3623,7 @@ hr:Napredno
 cn:高级
 si:Napredno
 ja:拡張
+sv:Avancerad
 -
 Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցույց տալ &Ընտրյալները
@@ -3632,6 +3641,7 @@ hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
 si:Pokaži stolpec z &zaznamki, če je na voljo
 ja:ブックマークの一覧を自動的に表示する(&B)
+sv:Visa &bokmärken efter sidan när de finns
 -
 Cancel
 am:Մերժել
@@ -3649,6 +3659,7 @@ hr:Odustani
 cn:取消
 si:Prekliči
 ja:キャンセル
+sv:Avbryt
 -
 Automatically check for &updates
 am:Ինքնաշխատ ստուգել &թարմացումները
@@ -3666,6 +3677,7 @@ hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
 si:Samodejno preveri &obstoj posodobitev
 ja:自動的に最新版をチェックする(&U)
+sv:Sök efter &uppdateringar automatiskt
 -
 &Remember these settings for each document
 am:Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
@@ -3683,6 +3695,7 @@ hr:&Upamti ove postavke za svaki pojedini dokument
 cn:为每一个文档记住这些设置(&R)
 si:Zapomni si te &nastavitve za vsak dokument
 ja:ドキュメントごとに設定を記憶する(&R)
+sv:Spara dessa val per &varje dokument
 -
 Remember &opened files
 am:Հիշել &բացված ֆայլերը
@@ -3700,6 +3713,7 @@ cn:记住已打开的文件(&o)
 cy:Co&fio ffeiliau ar agor
 si:&Zapomni si odprte datoteke
 ja:開いたファイルの履歴を残す(&O)
+sv:Minns öppnade &filer
 -
 View
 am:Դիտել
@@ -3776,6 +3790,7 @@ hr:&Idi na stranicu:
 cn:转到页面
 si:Pojdi na &stran:
 ja:ページへ移動(&G):
+sv:&Gå till sida:
 -
 (of %d)
 am:(%d-ից)
@@ -3794,6 +3809,7 @@ hr:(od %d)
 cn:(%d中的)
 si:(od %d)
 ja:(%d 中)
+sv:(av %d)
 -
 Download
 am:Բեռնել
@@ -3812,6 +3828,7 @@ hr:Preuzmi
 cn:下载
 si:Prenesi
 ja:ダウンロード
+sv:Ladda &ned
 -
 &Yes
 am:&Այո
@@ -3830,6 +3847,7 @@ hr:&Da
 cn:是(&Y)
 si:&Da
 ja:はい(&Y)
+sv:&Ja
 -
 &No
 am:&Ոչ
@@ -3848,6 +3866,7 @@ hr:&Ne
 cn:否(&N)
 si:&Ne
 ja:いいえ(&N)
+sv:&Nej
 -
 &No, thanks
 am:&Ոչ,շնորհակալություն։
@@ -3866,6 +3885,7 @@ hr:&Ne, hvala
 cn:不，谢谢(&N)
 si:&Ne, hvala
 ja:いいえ(&N)
+sv:&Nej, tack
 -
 Please wait - rendering...
 am:Խնդրում ենք սպասել...
@@ -3884,6 +3904,7 @@ hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待－正在渲染中...
 si:Oprostite, upodobitev poteka ...
 ja:描画しています...
+sv:Ett ögonblick - förbereder...
 -
 Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
@@ -3902,6 +3923,7 @@ hr:Nije moguće iscrtati stranicu
 cn:不能渲染该页面
 si:Strani ni mogoče upodobiti
 ja:描画できませんでした
+sv:Kunde ej visa sidan
 -
 No matches were found
 am:Օրինակներ չի գտնվել
@@ -3920,6 +3942,7 @@ hr:Pojam nije pronađen
 cn:没有找到匹配项
 si:Ni zadetkov
 ja:見つかりませんでした
+sv:Inga träffar hittades
 -
 Found text at page %d
 am:Տեքստը գտնվել է %d էջում
@@ -3938,6 +3961,7 @@ hr:Tekst je pronađen na stranici %d
 cn:在第%d页找到文本
 si:Besedilo najdeno na strani %d
 ja:%d ページに文字列が見つかりました
+sv:Hittade text på sidan %d
 -
 Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -3956,6 +3980,7 @@ hr:Pretražujem stranicu %d od %d...
 cn:正在搜索全部%d的%d
 si:Preiskovanje strani %d od %d ...
 ja:%d ページを検索中 (%d ページ中)...
+sv:Söker %d av %d...
 -
 PDF documents
 am:PDF փաստաթղթեր
@@ -3974,6 +3999,7 @@ hr:PDF dokumenti
 cn:PDF文档
 si:Dokumenti PDF
 ja:PDF ドキュメント
+sv:PDF-dokument
 -
 All files
 am:Բոլոր ֆայլերը
@@ -3992,6 +4018,7 @@ hr:Sve datoteke
 cn:所有文件
 si:Vse datoteke
 ja:すべてのファイル
+sv:Alla filer
 -
 &Password:
 am:&Գաղտնաբառը
@@ -4010,6 +4037,7 @@ cn:密码(&P)
 cy:&Cyfrinair:
 si:&Geslo:
 ja:パスワード(&P):
+sv:&Lösenord:
 -
 &Find what:
 am:&Ինչ փնտրել.
@@ -4028,6 +4056,7 @@ cn:查找(&F):
 cy:&Canfod beth:
 si:&Najdi:
 ja:検索文字列(&F):
+sv:&Sök efter:
 -
 Find
 am:Փնտրել
@@ -4046,6 +4075,7 @@ cn:查找
 cy:Canfod
 si:Išči
 ja:検索
+sv:Sök
 -
 &Match case
 am:&Հաշվի առնել գրանցումները
@@ -4064,6 +4094,7 @@ cn:匹配大小写(&M)
 cy:&Cydweddu maint
 si:Razlikuj &med velikimi/malimi črkami
 ja:大文字小文字を区別する(&M)
+sv:Matcha &små/stora bokstäver
 -
 Hint: Use the F3 key for finding again
 am:Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
@@ -4081,6 +4112,7 @@ cn:提示：按F3再次查找
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 si:Namig: Uporabite tipko F3 za ponovno iskanje
 ja:検索を続けるには F3 キーを押します
+sv:Tips: Tryck F3 för att söka vidare
 -
 Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
@@ -4098,6 +4130,7 @@ cn:不能初始化打印机
 cy:Methu cychwyn yr argraffydd
 si:Tiskalnika ni mogoče inicializirati
 ja:プリンタの初期化に失敗しました
+sv:Kunde ej använda skrivare
 -
 No synchronization info at this position
 am:Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
@@ -4116,6 +4149,7 @@ cn:此位置没有同步信息
 cy:Dim gwybodaeth cydweddu yn y fan hon
 si:Na tem mestu ni sinhronizacijskih podatkov
 ja:この位置には同期場所がありません
+sv:Synkroniseringsinformation saknas här
 -
 Synchronization file cannot be opened
 am:Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
@@ -4134,6 +4168,7 @@ cn:不能打开同步文件
 cy:Methu agor ffeil cydweddu
 si:Datoteke sinhronizacije ni mogoče odpreti
 ja:同期ファイルは開かれていません
+sv:Synkroniseringsfil kan ej öppnas
 -
 Page number %u inexistant
 am:%u էջը գոյություն չունի
@@ -4152,6 +4187,7 @@ cn:页号%u不存在
 cy:Nid yw tudalen rhif %u yn bodoli
 si:Stran številka %u ne obstaja
 ja:指定されたページ %u は存在しません
+sv:Sidnummer %u finns ej
 -
 No result found around line %u in file %s
 am:%s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
@@ -4169,6 +4205,7 @@ cn:文件%s的第%u行附近没有找到结果
 cy:Dim canlyniad o liell %u yn ffeil %s
 si:Okoli vrstice %u v datoteki %s ni zadetkov
 ja:ファイル %s の %u 行目に見つかりませんでした
+sv:Inget resultat hittades vid rad %u i filen %s
 -
 Source file %s has no synchronization point
 am:%s ֆայլը չունի սինխրոնիզացման կետ
@@ -4187,6 +4224,7 @@ cn:源文件%s没有同步点
 cy:Does dim pwynt cydweddu yn ffeil %s
 si:Izvorna datoteka %s nima točke sinhronizacije
 ja:ソース ファイル %s に同期場所がありません
+sv:Källfilen %s har ingen synkroniseringspunkt
 -
 [Changes detected; refreshing] %s
 am:[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
@@ -4205,6 +4243,7 @@ cn:[检测到改动；刷新中] %s
 cy:[Newidiadau wedi eu canfod; adnewyddu]
 si:[Spremembe zaznane; osvežitev poteka] %s
 ja:[ファイルが変更されました。更新します] %s
+sv:[Ändringar har skett; uppdaterar] %s
 -
 Unknown source file (%s)
 am:Անհայտ ֆայլ (%s)
@@ -4223,6 +4262,7 @@ cn:未知的原文件(%s)
 cy:Ffeil ffynhonnell anhysbys (%s)
 si:Neznana izvorna datoteka (%s)
 ja:不明なソースファイルです (&s)
+sv:Okänd källfil (%s)
 -
 Cannot print this file
 am:Հնարավոր չէ տպել այս ֆայլը
@@ -4241,6 +4281,7 @@ cn:不能打印此文件
 cy:Methu argraffu'r ffeil
 si:Te datoteke ni mogoče natisniti
 ja:ファイルを印刷できません
+sv:Kan ej skriva ut denna fil
 -
 PDF Document
 am:PDF փաստաթուղթ
@@ -4259,6 +4300,7 @@ cn:PDF文档
 cy:Dogfen PDF
 si:Dokument PDF
 ja:PDF ドキュメント
+sv:PDF-dokument
 -
 # Please keep this string as short as possible!
 Make SumatraPDF my main PDF reader
@@ -4338,6 +4380,7 @@ cn:SumatraPDF是你的主要PDF阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
 si:SumatraPDF je vaš privzeti bralnik PDF
 ja:SumatraPDF は既定の PDF リーダーです
+sv:SumatraPDF är din valda PDF-läsare
 -
 # Please keep this string as short as possible!
 SumatraPDF should now be your main PDF reader
@@ -4358,6 +4401,7 @@ cn:现在SumatraPDF应该是你的主要PDF阅读器了
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 si:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
 ja:SumatraPDF は既定の PDF リーダーになりました
+sv:SumatraPDF ska nu vara din valda PDF-läsare
 -
 # Please keep this string as short as possible!
 Main PDF reader can't be changed in portable mode
@@ -4378,6 +4422,7 @@ cn:便携模式不能改变主要阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 si:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 ja:ポータブル モードでは既定の PDF リーダーを変更できません
+sv:SumatraPDF kan ej göras förvald i portabelt läge
 -
 Open in &Adobe Reader
 am:Բացել &Adobe Reader-ում
@@ -4397,6 +4442,7 @@ cn:在&Adobe Reader中打开
 cy:Agor yn &Adobe Reader
 si:Odpri s programom &Adobe Reader
 ja:Adobe Reader で開く(&A)
+sv:Öppna i &Adobe Reader
 -
 Copy Selection\tCtrl-C
 br:Copiar seleção\tCtrl-C
@@ -4406,6 +4452,7 @@ fr:Copier la sélection
 ru:Копировать выделение\tCtrl-C
 hu:Kijelöltek másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
+sv:Kopiera markering\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
@@ -4415,15 +4462,17 @@ fr:Sélectionner avec Ctrl+bouton gauche de la souris
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
 hu:Először jelölje ki a másolandó szöveget Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
+sv:Markera med Ctrl + vänster musknapp
 -
 &Custom Zoom...
 br:&Zoom personalizado...
 de:&Zoomfaktor...
 cn:自定义缩放...
-fr:Zoom personnalisé
+fr:Zoom personnalisé...
 ru:Заказной масштаб...
 hu:... Egyéni méret
 ja:カスタム(&C)...
+sv:&Eget zoomval...
 -
 Zoom factor
 br:Proporção de Zoom
@@ -4433,15 +4482,17 @@ fr:Facteur de zoom
 ru:Масштабный коэффициент
 hu:Nagyítás mértéke
 ja:カスタム ズーム
+sv:Zoomfaktor
 -
 &Magnification:
 br:Aumento:
 de:&Vergrößerung:
-cn:放大率(&M)
-fr:Grossissement
-ru:Увеличение
-hu:Nagyítás
+cn:放大率(&M):
+fr:Grossissement:
+ru:Увеличение:
+hu:Nagyítás:
 ja:拡大率(&M):
+sv:&Förstoring:
 -
 Zoom
 br:Zoom
@@ -4451,6 +4502,7 @@ fr:Zoom
 ru:Масштаб
 hu:Beállít
 ja:ズーム
+sv:Zoom
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
@@ -4459,6 +4511,7 @@ ru:Ошибка команды обратного поиска. Пожалуйс
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
 cn:无法运行反向搜索命令。请检查设置中的命令行。
 ja:逆順検索が開始できませんでした。コマンドラインを確認してください。
+sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
