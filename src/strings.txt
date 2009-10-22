@@ -527,7 +527,7 @@ hr:&Pogled
 ru:Вид
 ar:&العرض
 cn:查看(&V)
-sv:&Visa
+sv:Vi&sa
 cz:&Zobrazit
 gr:&Προβολή
 th:มุมมอง
@@ -1510,7 +1510,7 @@ hr:Prilagodi &stranici\tCtrl-0
 ru:По размеру страницы\tCtrl-0
 ar:مناسب للشاشة\tCtrl-0
 cn:适合页面(&P)\tCtrl-0
-sv:Anpa&ssa efter helsida\tCtrl-0
+sv:Anpassa efter &helsida\tCtrl-0
 cz:Přizpůsobit stránce\tCtrl-0
 gr:Ολόκληρη σελίδα\tCtrl-0
 th:พอดีหน้า\tCtrl-0
@@ -1568,7 +1568,7 @@ hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
 cn:实际大小(&U)\tCtrl-1
-sv:Normal storlek\tCtrl-1
+sv:&Normal storlek\tCtrl-1
 cz:Skutečná velikost\tCtrl-1
 gr:Πραγματικό μέγεθος\tCtrl-1
 th:ขนาดจริง\tCtrl-1
@@ -1626,7 +1626,7 @@ hr:&Prilagodi širini\tCtrl-2
 ru:Заполнение по ширине\tCtrl-2
 ar:مناسب لعرض الشاشة\tCtrl-2
 cn:适合宽度(&H)\tCtrl-2
-sv:Anpassa efter bredd\tCtrl-2
+sv:Anpassa efter &bredd\tCtrl-2
 cz:Podle šířky\tCtrl-2
 gr:Στο πλάτος παραθύρου\tCtrl-2
 th:พอดีความกว้าง\tCtrl-2
@@ -4442,7 +4442,7 @@ cn:在&Adobe Reader中打开
 cy:Agor yn &Adobe Reader
 si:Odpri s programom &Adobe Reader
 ja:Adobe Reader で開く(&A)
-sv:Öppna i &Adobe Reader
+sv:Öppna i Adobe &Reader
 -
 Copy Selection\tCtrl-C
 br:Copiar seleção\tCtrl-C
