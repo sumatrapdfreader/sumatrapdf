@@ -691,11 +691,26 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
         case INTERNET_STATUS_STATE_CHANGE:
             _snprintf(buf, 256, "STATE_CHANGE (%d)", statusLen);
             break;
-
+#else
+        case INTERNET_STATUS_CLOSING_CONNECTION:
+        case INTERNET_STATUS_CONNECTED_TO_SERVER:
+        case INTERNET_STATUS_CONNECTING_TO_SERVER:
+        case INTERNET_STATUS_CONNECTION_CLOSED:
+        case INTERNET_STATUS_HANDLE_CLOSING:
+        case INTERNET_STATUS_INTERMEDIATE_RESPONSE:
+        case INTERNET_STATUS_NAME_RESOLVED:
+        case INTERNET_STATUS_RECEIVING_RESPONSE:
+        case INTERNET_STATUS_RESPONSE_RECEIVED:
+        case INTERNET_STATUS_REDIRECT:
+        case INTERNET_STATUS_REQUEST_SENT:
+        case INTERNET_STATUS_RESOLVING_NAME:
+        case INTERNET_STATUS_SENDING_REQUEST:
+        case INTERNET_STATUS_STATE_CHANGE:
+			return;
+#endif
         default:
             _snprintf(buf, 256, "Unknown: Status %d Given", dwInternetStatus);
             break;
-#endif
     }
 
     DBG_OUT(buf);
