@@ -706,7 +706,7 @@ void __stdcall InternetCallbackProc(HINTERNET hInternet,
         case INTERNET_STATUS_RESOLVING_NAME:
         case INTERNET_STATUS_SENDING_REQUEST:
         case INTERNET_STATUS_STATE_CHANGE:
-			return;
+            return;
 #endif
         default:
             _snprintf(buf, 256, "Unknown: Status %d Given", dwInternetStatus);
@@ -4540,7 +4540,8 @@ static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
 {
     TCHAR path[MAX_PATH];
 
-    bool foundAcrobat = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path));
+    // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
+    bool foundAcrobat = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL, path, dimof(path)) || ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL, path, dimof(path));
     if (foundAcrobat && buffer)
         lstrcpyn(buffer, path, bufSize);
 
