@@ -873,10 +873,34 @@ lookupwindowsfont(char *fontname, char **fontpath, int *index)
 static fz_error
 lookupcidfont(pdf_fontdesc *font, int csi, int kind, char **fontpath, int *index)
 {
-	if (MINCHO == kind)
-		return lookupwindowsfont("MS-Mincho", fontpath, index);
-	if (GOTHIC == kind)
-		return lookupwindowsfont("MS-Gothic", fontpath, index);
+	if (MINCHO == kind) {
+		switch (csi) {
+			case CNS:
+				return lookupwindowsfont("MingLiU", fontpath, index);
+			case GB:
+				return lookupwindowsfont("SimSun", fontpath, index);
+			case Japan:
+				return lookupwindowsfont("MS-Mincho", fontpath, index);
+			case Korea:
+				return lookupwindowsfont("Batang", fontpath, index);
+		}
+	}
+
+	if (GOTHIC == kind) {
+		switch (csi) {
+			case CNS:
+				return lookupwindowsfont("DFKaiShu-SB-Estd-BF", fontpath, index);
+			case GB:
+				if (fz_okay == lookupwindowsfont("KaiTi", fontpath, index))
+					return fz_okay;
+				return lookupwindowsfont("KaiTi_GB2312", fontpath, index);
+			case Japan:
+				return lookupwindowsfont("MS-Gothic", fontpath, index);
+			case Korea:
+				return lookupwindowsfont("Gulim", fontpath, index);
+		}
+	}
+
 	return fz_throw("Unknown cid kind %d", kind);
 }
 
