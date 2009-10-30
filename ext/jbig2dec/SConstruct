@@ -1,8 +1,24 @@
 # this is an SCons build specification file
 
+import os
+
+# try to get the version number from various local information
+version = os.popen('git describe --tags 2>/dev/null').read().strip()
+if not version:
+  try:
+    for line in open('CHANGES'):
+      words = line.split()
+      if len(words) > 1 and words[0].lower() == 'version':
+        version = words[1]
+        break
+  except IOError:
+    pass
+if not version:
+  version = 'unknown-version'
+
 env = Environment(CPPDEFINES = {'HAVE_STDINT_H' : None,
 				'PACKAGE' : '\\"jbig2dec\\"',
-				'VERSION' : '\\"0.8\\"',
+				'VERSION' : '\\"'+version+'\\"',
 				'JBIG2_DEBUG' : None,
 				'JBIG2_HALFTONE' : None})
 env.Append(CCFLAGS = ' -g -Wall')

@@ -149,7 +149,6 @@ jbig2_decode_pattern_dict(Jbig2Ctx *ctx, Jbig2Segment *segment,
 			     Jbig2ArithCx *GB_stats)
 {
   Jbig2PatternDict *hd = NULL;
-  uint32_t GRAY;
   Jbig2Image *image;
   Jbig2GenericRegionParams rparams;
   int code;

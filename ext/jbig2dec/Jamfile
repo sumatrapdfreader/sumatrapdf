@@ -1,13 +1,11 @@
 # Build specification for the 'jam' tool
-#
-# You still need to run configure to generate config.h
-# 
 
-include $(HOME)/.jamrules ;
+OPTIM = -g -O2 ;
+CCFLAGS = -Wall ;
 
 # assume stdint.h and libpng are available, except on win32
 if $(OS) != NT {
-  CCFLAGS += -DHAVE_STDINT_H -DHAVE_LIBPNG ;
+  CCFLAGS += -Wall -DHAVE_STDINT_H -DHAVE_LIBPNG ;
   LINKLIBS += -lpng -lz ;
   Library libjbig2dec : jbig2_image_png.c ;
 }

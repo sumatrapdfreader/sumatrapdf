@@ -40,9 +40,9 @@ struct _Jbig2Metadata {
 };
 
 /* these bits can go to jbig2_priv.h */
-int jbig2_parse_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
+int jbig2_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
                                 const uint8_t *segment_data);
-int jbig2_parse_comment_unicode(Jbig2Ctx *ctx, Jbig2Segment *segment,
+int jbig2_comment_unicode(Jbig2Ctx *ctx, Jbig2Segment *segment,
                                const uint8_t *segment_data);
 
 #endif /* _JBIG2_METADATA_H */

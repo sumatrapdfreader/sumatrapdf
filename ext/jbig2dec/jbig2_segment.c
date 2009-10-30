@@ -207,8 +207,8 @@ int jbig2_parse_extension_segment(Jbig2Ctx *ctx, Jbig2Segment *segment,
     }
 
     switch (type) {
-        case 0x20000000: return jbig2_parse_comment_ascii(ctx, segment, segment_data);
-        case 0x20000002: return jbig2_parse_comment_unicode(ctx, segment, segment_data);
+        case 0x20000000: return jbig2_comment_ascii(ctx, segment, segment_data);
+        case 0x20000002: return jbig2_comment_unicode(ctx, segment, segment_data);
         default:
             if (necessary) {
                 return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
@@ -237,7 +237,7 @@ int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
     case 4: /* intermediate text region */
     case 6: /* immediate text region */
     case 7: /* immediate lossless text region */
-      return jbig2_parse_text_region(ctx, segment, segment_data);
+      return jbig2_text_region(ctx, segment, segment_data);
 #ifdef JBIG2_HALFTONE
     case 16:
       return jbig2_pattern_dictionary(ctx, segment, segment_data);
@@ -270,11 +270,11 @@ int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
     case 43: /* immediate lossless generic refinement region */
       return jbig2_refinement_region(ctx, segment, segment_data);
     case 48:
-      return jbig2_parse_page_info(ctx, segment, segment_data);
+      return jbig2_page_info(ctx, segment, segment_data);
     case 49:
-      return jbig2_parse_end_of_page(ctx, segment, segment_data);
+      return jbig2_end_of_page(ctx, segment, segment_data);
     case 50:
-      return jbig2_parse_end_of_stripe(ctx, segment, segment_data);
+      return jbig2_end_of_stripe(ctx, segment, segment_data);
     case 51:
       ctx->state = JBIG2_FILE_EOF;
       return jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,

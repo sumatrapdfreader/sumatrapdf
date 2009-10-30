@@ -117,10 +117,10 @@ struct _Jbig2Page {
     Jbig2Image *image;
 };
 
-int jbig2_parse_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
-int jbig2_parse_end_of_stripe(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
-int jbig2_parse_end_of_page(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
-int jbig2_parse_extension_segment(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
+int jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
+int jbig2_end_of_stripe(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
+int jbig2_end_of_page(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
+int jbig2_extension_segment(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
 
 typedef enum {
     JBIG2_COMPOSE_OR = 0,
@@ -145,13 +145,19 @@ typedef struct {
 } Jbig2RegionSegmentInfo;
 
 void jbig2_get_region_segment_info(Jbig2RegionSegmentInfo *info, const uint8_t *segment_data);
-int jbig2_parse_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
+int jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
 
 /* 7.4 */
 int jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 			       const uint8_t *segment_data);
 int jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
                                const byte *segment_data);
+
+int jbig2_pattern_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
+                               const byte *segment_data);
+int jbig2_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
+                               const byte *segment_data);
+
 
 /* The word stream design is a compromise between simplicity and
    trying to amortize the number of method calls. Each ::get_next_word

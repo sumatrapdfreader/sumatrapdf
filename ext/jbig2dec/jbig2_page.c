@@ -54,14 +54,14 @@ dump_page_info(Jbig2Ctx *ctx, Jbig2Segment *segment, Jbig2Page *page)
 }
 
 /**
- * jbig2_read_page_info: parse page info segment
+ * jbig2_page_info: parse page info segment
  *
- * parse the page info segment data and fill out a corresponding
- * Jbig2Page struct is returned, including allocating an image
- * buffer for the page (or the first stripe)
+ * Parse the page info segment data and fill out a corresponding
+ * Jbig2Page struct and ready it for subsequent rendered data,
+ * including allocating an image buffer for the page (or the first stripe)
  **/
 int
-jbig2_parse_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data)
+jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data)
 {
     Jbig2Page *page;
 
@@ -160,10 +160,10 @@ jbig2_parse_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segm
 }
 
 /**
- * jbig2_parse_end_of_stripe: parse an end of stripe segment
+ * jbig2_end_of_stripe: parse and implement an end of stripe segment
  **/
 int
-jbig2_parse_end_of_stripe(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data)
+jbig2_end_of_stripe(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data)
 {
     Jbig2Page page = ctx->pages[ctx->current_page];
     int end_row;
@@ -219,10 +219,10 @@ jbig2_complete_page (Jbig2Ctx *ctx)
 }
 
 /**
- * jbig2_parse_end_of_page: parse an end of page segment
+ * jbig2_end_of_page: parse and implement an end of page segment
  **/
 int
-jbig2_parse_end_of_page(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data)
+jbig2_end_of_page(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data)
 {
     uint32_t page_number = ctx->pages[ctx->current_page].number;
 

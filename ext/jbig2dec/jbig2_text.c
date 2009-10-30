@@ -402,10 +402,10 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 }
 
 /**
- * jbig2_parse_text_region: read a text region segment header
+ * jbig2_text_region: read a text region segment header
  **/
 int
-jbig2_parse_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
+jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
 {
     int offset = 0;
     Jbig2RegionSegmentInfo region_info;

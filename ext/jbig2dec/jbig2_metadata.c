@@ -104,7 +104,7 @@ int jbig2_metadata_add(Jbig2Ctx *ctx, Jbig2Metadata *md,
 
 
 /* decode an ascii comment segment 7.4.15.1 */
-int jbig2_parse_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
+int jbig2_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
                                const uint8_t *segment_data)
 {
     char *s = (char *)(segment_data + 4);
@@ -147,7 +147,7 @@ too_short:
 }
 
 /* decode a UCS-16 comment segement 7.4.15.2 */
-int jbig2_parse_comment_unicode(Jbig2Ctx *ctx, Jbig2Segment *segment,
+int jbig2_comment_unicode(Jbig2Ctx *ctx, Jbig2Segment *segment,
                                const uint8_t *segment_data)
 {
     return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,

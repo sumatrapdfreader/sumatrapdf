@@ -155,15 +155,15 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
 				break;
                         case 'v':
                                 if (optarg) params->verbose = atoi(optarg);
-                                else params->verbose = 9;
+                                else params->verbose = 2;
                                 break;
 			case 'h':
 			case '?':
 				params->mode = usage;
                                 break;
                         case 'V':
-                                /* the GNU Coding Standards suggest --version should
-                                   override all other options */
+                                /* the GNU Coding Standards suggest --version
+                                   should override all other options */
                                 print_version();
                                 exit(0);
                                 break;
@@ -215,7 +215,7 @@ print_usage (void)
     "    -d --dump      print the structure of the jbig2 file\n"
     "                   rather than explicitly decoding\n"
     "       --version   program name and version information\n"
-    "       --hash      print a hash of the decode document\n"
+    "       --hash      print a hash of the decoded document\n"
     "    -o <file>      send decoded output to <file>\n"
     "                   Defaults to the the input with a different\n"
     "                   extension. Pass '-' for stdout.\n"
