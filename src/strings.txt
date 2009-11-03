@@ -4450,7 +4450,7 @@ de:Auswahl kopieren\tStrg+C
 cn:复制选择内容\tCtrl-C
 fr:Copier la sélection 
 ru:Копировать выделение\tCtrl-C
-hu:Kijelöltek másolása\tCtrl-C
+hu:Kép/Szöveg másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
 sv:Kopiera markering\tCtrl-C
 -

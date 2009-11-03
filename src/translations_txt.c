@@ -1282,7 +1282,7 @@ const char *g_transTranslations[] = {
   "Folyamatos",
   "Folyamatos oldalp\303\241r",
   "&J\303\241rulj hozz\303\241 a ford\303\255t\303\241shoz",
-  "Kijel\303\266ltek m\303\241sol\303\241sa\tCtrl-C",
+  "K\303\251p/Sz\303\266veg m\303\241sol\303\241sa\tCtrl-C",
   "Nem lehet megnyitni a nyomtat\303\263t.",
   "A nyomtat\303\263 inicializ\303\241l\303\241sa nem siker\303\274lt",
   "Oldalfeldolgoz\303\241si hiba",
