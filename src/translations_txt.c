@@ -1338,7 +1338,7 @@ const char *g_transTranslations[] = {
   "Forgat\303\241s balra\tCtrl-Shift--",
   "Forgat\303\241s jobbra\tCtrl-Shift-+",
   "Keres\303\251s a(z) %d./%d oldalon",
-  "El\305\221sz\303\266r jel\303\266lje ki a m\303\241soland\303\263 sz\303\266veget Ctrl+Bal eg\303\251rgomb -bal",
+  "El\305\221sz\303\266r jel\303\266lje ki a m\303\241soland\303\263 r\303\251szt Ctrl+Bal eg\303\251rgomb -bal",
   NULL,
   "Dokumentumba \303\241gyazott k\303\266nyvjelz\305\221k mutat\303\241sa",
   "Eszk\303\266zt\303\241r",

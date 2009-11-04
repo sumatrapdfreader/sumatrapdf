@@ -4460,7 +4460,7 @@ de:Inhalte mit Strg+linker Maustaste auswählen
 cn:使用Ctrl+鼠标左键选择内容
 fr:Sélectionner avec Ctrl+bouton gauche de la souris
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
-hu:Először jelölje ki a másolandó szöveget Ctrl+Bal egérgomb -bal
+hu:Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
 sv:Markera med Ctrl + vänster musknapp
 -
