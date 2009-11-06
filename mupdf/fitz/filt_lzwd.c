@@ -17,7 +17,7 @@ typedef struct lzw_code_s lzw_code;
 
 struct lzw_code_s
 {
-	int prev;					/* prev code (in string) */
+	int prev;			/* prev code (in string) */
 	unsigned short length;		/* string len, including this token */
 	unsigned char value;		/* data value */
 	unsigned char firstchar;	/* first token of string */
@@ -34,9 +34,9 @@ struct fz_lzwd_s
 	unsigned int word;		/* bits loaded from data */
 	int bidx;
 
-	int resume;				/* resume output of code from needout */
+	int resume;			/* resume output of code from needout */
 	int codebits;			/* num bits/code */
-	int code;				/* current code */
+	int code;			/* current code */
 	int oldcode;			/* previously recognized code */
 	int nextcode;			/* next free entry */
 	lzw_code table[NUMCODES];
@@ -149,46 +149,22 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		}
 
 		lzw->code = lzw->word >> (32 - lzw->codebits);
+		lzw->code &= (1 << lzw->codebits) - 1;
+		eatbits(lzw, lzw->codebits);
 
 		if (lzw->code == LZW_EOD)
 		{
-			eatbits(lzw, lzw->codebits);
 			unstuff(lzw, in);
 			return fz_iodone;
 		}
 
 		if (lzw->code == LZW_CLEAR)
 		{
-			int oldcodebits = lzw->codebits;
-
 			lzw->codebits = MINBITS;
 			lzw->nextcode = LZW_FIRST;
-
-			lzw->code = lzw->word >> (32 - oldcodebits - MINBITS) & ((1 << MINBITS) - 1);
-
-			if (lzw->code == LZW_EOD)
-			{
-				eatbits(lzw, oldcodebits + MINBITS);
-				unstuff(lzw, in);
-				return fz_iodone;
-			}
-
-			eatbits(lzw, oldcodebits + MINBITS);
-
-			lzw->oldcode = lzw->code;
-
-			if (out->wp + 1 > out->ep)
-			{
-				lzw->resume = 1;
-				return fz_ioneedout;
-			}
-
-			*out->wp++ = lzw->code;
-
+			lzw->oldcode = -1;
 			continue;
 		}
-
-		eatbits(lzw, lzw->codebits);
 
 		/* if stream starts without a clear code, oldcode is undefined... */
 		if (lzw->oldcode == -1)
@@ -203,12 +179,14 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		lzw->table[lzw->nextcode].length = lzw->table[lzw->oldcode].length + 1;
 		if (lzw->code < lzw->nextcode)
 			lzw->table[lzw->nextcode].value = lzw->table[lzw->code].firstchar;
-		else
+		else if (lzw->code == lzw->nextcode)
 			lzw->table[lzw->nextcode].value = lzw->table[lzw->nextcode].firstchar;
+		else
+			fz_warn("out of range code encountered in lzw decode");
 
 		lzw->nextcode ++;
 
-		if (lzw->nextcode >= (1 << lzw->codebits) - lzw->earlychange - 1)
+		if (lzw->nextcode > (1 << lzw->codebits) - lzw->earlychange - 1)
 		{
 			lzw->codebits ++;
 			if (lzw->codebits > MAXBITS)
