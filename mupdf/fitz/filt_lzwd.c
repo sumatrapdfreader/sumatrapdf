@@ -49,7 +49,7 @@ fz_newlzwd(fz_filter **fp, fz_obj *params)
 
 	FZ_NEWFILTER(fz_lzwd, lzw, lzwd);
 
-	lzw->earlychange = 0;
+	lzw->earlychange = 1;
 
 	if (params)
 	{
