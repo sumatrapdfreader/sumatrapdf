@@ -3181,7 +3181,7 @@ sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
 tw:目前使用的版本為最新版。
 pt:Já possui a versão mais recente.
-cn:您的版本为最新版。
+cn:您的版本已经是最新版。
 cy:Mae'r fersiwn diweddaraf gennych.
 ga:Tá an leagan is úire agat
 mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
@@ -3225,7 +3225,7 @@ sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
 pt:Tem a versão %s
-cn:您的版本为 %s
+cn:目前版本为 %s
 cy:Mae fersiwn %s gennych
 ga:Tá leagan %s agat.
 mm:သင့်အမျိုးအစားသည် %s
@@ -3269,7 +3269,7 @@ sn:Version %s ririkuwanika. Unoda here version idzva?
 bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 tw:最新版本 %s。 是否下載?
 pt:A nova versão %s encontra-se disponível. Deseja fazer o download?
-cn:发现新版本 %s。是否下载？
+cn:发现新版本 %s。是否立即下载？
 cy:Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr??
 ga:Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 mm:အမျိုးအစားသစ်ရှိသည်။ယူမလား။
@@ -3901,7 +3901,7 @@ ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
 mk:Ве молам почекајте - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
-cn:请耐心等待－正在渲染中...
+cn:请耐心等待，正在渲染中...
 si:Oprostite, upodobitev poteka ...
 ja:描画しています...
 sv:Ett ögonblick - förbereder...
@@ -3977,7 +3977,7 @@ ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
 mk:Пребарувам %d од %d страници...
 hr:Pretražujem stranicu %d od %d...
-cn:正在搜索全部%d的%d
+cn:正在搜索第%d页/共%d页
 si:Preiskovanje strani %d od %d ...
 ja:%d ページを検索中 (%d ページ中)...
 sv:Söker %d av %d...
@@ -3996,7 +3996,7 @@ gr:Αρχεία PDF
 ru:PDF-документы
 mk:PDF документи
 hr:PDF dokumenti
-cn:PDF文档
+cn:PDF 文档
 si:Dokumenti PDF
 ja:PDF ドキュメント
 sv:PDF-dokument
@@ -4090,7 +4090,7 @@ nl:Hoofd-/kleine letters toepassen
 ru:&Учитывать регистр
 mk:&Разликувај мали и големи букви
 hr:Razlikuj velika i mala slova
-cn:匹配大小写(&M)
+cn:大小写匹配(&M)
 cy:&Cydweddu maint
 si:Razlikuj &med velikimi/malimi črkami
 ja:大文字小文字を区別する(&M)
@@ -4108,7 +4108,7 @@ fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 nl:Tip: Gebruik de F3 toest om verder te zoeken
 mk:За повторно пребарување користи F3 од тастатурата
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
-cn:提示：按F3再次查找
+cn:提示：按F3键再次查找
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 si:Namig: Uporabite tipko F3 za ponovno iskanje
 ja:検索を続けるには F3 キーを押します
@@ -4183,7 +4183,7 @@ nl:Pagina %u bestaat niet
 ru:Страница %u не существует
 mk:Страница со број %u не постои
 hr:Stranica %u ne postoji
-cn:页号%u不存在
+cn:页号 %u 不存在
 cy:Nid yw tudalen rhif %u yn bodoli
 si:Stran številka %u ne obstaja
 ja:指定されたページ %u は存在しません
@@ -4201,7 +4201,7 @@ nl:Geen resultaat gevonden in bestand %s bij regel %u
 ru:Результат, соответствующий строке %u в файле %s, не найден
 mk:Не најдов резултати околу линијата %u во датотеката %s
 hr:Nema rezultata oko retka %u u datoteci %s
-cn:文件%s的第%u行附近没有找到结果
+cn:第 %u 行附近未找到同步记录 (文件: %s)
 cy:Dim canlyniad o liell %u yn ffeil %s
 si:Okoli vrstice %u v datoteki %s ni zadetkov
 ja:ファイル %s の %u 行目に見つかりませんでした
@@ -4220,7 +4220,7 @@ nl:Bestand %s heeft geen synchronisatiepunt
 ru:Отсутствует точка синхронизации в исходном файле %s
 mk:Изворната датотека %s нема синхронизациска точка
 hr:Izvorna datoteka %s nema točke usklađivanja
-cn:源文件%s没有同步点
+cn:源文件 %s 没有同步点
 cy:Does dim pwynt cydweddu yn ffeil %s
 si:Izvorna datoteka %s nima točke sinhronizacije
 ja:ソース ファイル %s に同期場所がありません
@@ -4258,7 +4258,7 @@ nl:Onbekend bronbestand (%s)
 ru:Неизвестный исходный файл (%s)
 mk:Непозната изворна датотека (%s)
 hr:Nepoznata izvorna datoteka (%s)
-cn:未知的原文件(%s)
+cn:未知的源文件 (%s)
 cy:Ffeil ffynhonnell anhysbys (%s)
 si:Neznana izvorna datoteka (%s)
 ja:不明なソースファイルです (&s)
@@ -4296,7 +4296,7 @@ nl:PDF-bestand
 ru:PDF-документ
 mk:PDF документ
 hr:PDF dokument
-cn:PDF文档
+cn:PDF 文档
 cy:Dogfen PDF
 si:Dokument PDF
 ja:PDF ドキュメント
@@ -4376,7 +4376,7 @@ nl:SumatraPDF is de standaard PDF-lezer
 ru:SumatraPDF ассоциирована с файлами PDF
 mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
-cn:SumatraPDF是你的主要PDF阅读器
+cn:SumatraPDF 是默认 PDF 阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
 si:SumatraPDF je vaš privzeti bralnik PDF
 ja:SumatraPDF は既定の PDF リーダーです
@@ -4397,7 +4397,7 @@ nl:SumatraPDF zou nu de standaard PDF-lezer moeten zijn
 ru:Теперь SumatraPDF ассоциирована с файлами PDF
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
-cn:现在SumatraPDF应该是你的主要PDF阅读器了
+cn:现在 SumatraPDF 应该是你的默认 PDF 阅读器了
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 si:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
 ja:SumatraPDF は既定の PDF リーダーになりました
@@ -4418,7 +4418,7 @@ nl:Standaard PDF-lezer kan niet worden aangepast in portable mode
 ru:В мобильном режиме изменить PDF-вьюер нельзя
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
-cn:便携模式不能改变主要阅读器
+cn:便携模式不能改变默认 PDF 阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 si:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 ja:ポータブル モードでは既定の PDF リーダーを変更できません
@@ -4477,7 +4477,7 @@ sv:&Eget zoomval...
 Zoom factor
 br:Proporção de Zoom
 de:Zoomfaktor
-cn:缩放因子
+cn:缩放比例
 fr:Facteur de zoom
 ru:Масштабный коэффициент
 hu:Nagyítás mértéke
