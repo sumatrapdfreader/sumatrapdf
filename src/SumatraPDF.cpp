@@ -4355,9 +4355,13 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (!tstr_endswithi(dstFileName, _T(".pdf"))) {
         realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), _T(".pdf"));
     }
-    BOOL cancelled = FALSE;
-    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, &cancelled, COPY_FILE_FAIL_IF_EXISTS);
-    if (!ok) {
+    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, COPY_FILE_FAIL_IF_EXISTS);
+    if (ok) {
+        const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
+        DWORD attributes = GetFileAttributes(realDstFileName);
+        if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
+            SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
+    } else {
         SeeLastError();
         MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
     }
