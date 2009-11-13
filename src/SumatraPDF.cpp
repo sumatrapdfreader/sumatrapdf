@@ -3706,24 +3706,20 @@ static void OnDraggingStart(WindowInfo *win, int x, int y)
 
     assert(win->dm);
     if (!win->dm) return;
-    win->linkOnLastButtonDown = win->dm->linkAtPosition(x, y);
-    /* dragging mode only starts when we're not on a link */
-    if (win->linkOnLastButtonDown)
-        return;
 
     SetCapture(win->hwndCanvas);
-    win->mouseAction = MA_DRAGGING;
+    win->mouseAction = MA_MAYBEDRAGGING;
     win->dragPrevPosX = x;
     win->dragPrevPosY = y;
     win->dragStartX = x;
     win->dragStartY = y;
+    win->linkOnLastButtonDown = win->dm->linkAtPosition(x, y);
     SetCursor(gCursorDrag);
     DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
 }
 
 static void OnDraggingStop(WindowInfo *win, int x, int y)
 {
-    PdfLink *       link;
     int             dragDx, dragDy;
 
     assert(win);
@@ -3735,31 +3731,33 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
     assert(win->dm);
     if (!win->dm) return;
 
-    if (win->mouseAction == MA_DRAGGING && (GetCapture() == win->hwndCanvas)) {
-        dragDx = x - win->dragPrevPosX;
-        dragDy = y - win->dragPrevPosY;
-        DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
-        assert(!win->linkOnLastButtonDown);
-        WinMoveDocBy(win, dragDx, -dragDy*2);
-        win->dragPrevPosX = x;
-        win->dragPrevPosY = y;
+    if (MA_MAYBEDRAGGING != win->mouseAction && MA_DRAGGING != win->mouseAction)
+        return;
+
+    bool didDragMouse = MA_DRAGGING == win->mouseAction ||
+        abs(x - win->dragStartX) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win->dragStartY) > GetSystemMetrics(SM_CYDRAG);
+
+    if (GetCapture() == win->hwndCanvas) {
+        if (didDragMouse) {
+            win->linkOnLastButtonDown = NULL;
+            dragDx = x - win->dragPrevPosX;
+            dragDy = y - win->dragPrevPosY;
+            DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
+            WinMoveDocBy(win, dragDx, -dragDy*2);
+            win->dragPrevPosX = x;
+            win->dragPrevPosY = y;
+        }
         SetCursor(gCursorArrow);
         ReleaseCapture();
-        /* if we had a selection and this was just a click, hide selection */
-        if (win->showSelection) {
-            bool hideSelection = (x == win->dragStartX) && (y == win->dragStartY);
-            if (hideSelection)
-                ClearSearch(win);
-        }
-        return;
     }
 
-    if (!win->linkOnLastButtonDown)
-        return;
+    /* if we had a selection and this was just a click, hide selection */
+    if (!didDragMouse && win->showSelection)
+        ClearSearch(win);
 
-    link = win->dm->linkAtPosition(x, y);
-    if (link && (link == win->linkOnLastButtonDown)) {
-        win->dm->handleLink(link);
+    if (win->linkOnLastButtonDown && win->dm->linkAtPosition(x, y) == win->linkOnLastButtonDown) {
+        win->dm->handleLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
     win->linkOnLastButtonDown = NULL;
@@ -3767,6 +3765,8 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
 
 static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 {
+    int dragDx, dragDy;
+
     assert(win);
     if (!win || WS_SHOWING_PDF != win->state)
         return;
@@ -3774,21 +3774,32 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     assert(win->dm);
     if (!win->dm) return;
 
-    if (MA_SCROLLING == win->mouseAction) {
+    switch (win->mouseAction) {
+    case MA_SCROLLING:
         win->yScrollSpeed = (y - win->dragPrevPosY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
         win->xScrollSpeed = (x - win->dragPrevPosX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-    } else if (MA_SELECTING == win->mouseAction) {
+        break;
+    case MA_SELECTING:
         win->selectionRect.dx = x - win->selectionRect.x;
         win->selectionRect.dy = y - win->selectionRect.y;
         triggerRepaintDisplayNow(win);
-    } else if (MA_DRAGGING == win->mouseAction) {
-        int dragDx = win->dragPrevPosX - x;
-        int dragDy = win->dragPrevPosY - y;
+        break;
+    case MA_MAYBEDRAGGING:
+        // have we already started a proper drag?
+        if (abs(x - win->dragStartX) <= GetSystemMetrics(SM_CXDRAG) &&
+            abs(y - win->dragStartY) <= GetSystemMetrics(SM_CYDRAG))
+            break;
+        win->mouseAction = MA_DRAGGING;
+        win->linkOnLastButtonDown = NULL;
+        // fall through
+    case MA_DRAGGING:
+        dragDx = win->dragPrevPosX - x;
+        dragDy = win->dragPrevPosY - y;
         DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
         WinMoveDocBy(win, dragDx, dragDy);
         win->dragPrevPosX = x;
         win->dragPrevPosY = y;
-        return;
+        break;
     }
 }
 
@@ -6299,7 +6310,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         return TRUE;
                     }
                 }
-            } else if (win && MA_DRAGGING == win->mouseAction) {
+            } else if (win && (MA_DRAGGING == win->mouseAction || MA_MAYBEDRAGGING == win->mouseAction)) {
                 SetCursor(gCursorDrag);
                 return TRUE;
             } else if (win && MA_SCROLLING == win->mouseAction) {

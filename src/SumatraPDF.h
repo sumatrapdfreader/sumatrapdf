@@ -63,6 +63,7 @@ typedef struct {
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
     MA_IDLE = 0,
+    MA_MAYBEDRAGGING,
     MA_DRAGGING,
     MA_SELECTING,
     MA_SCROLLING
