@@ -29,8 +29,7 @@ void *zmalloc(size_t len)
     return data;
 }
 
-/* TODO: probably should move to some other file and change name to
-   sleep_milliseconds */
+/* TODO: probably should move to some other file */
 void sleep_milliseconds(int milliseconds)
 {
 #ifdef WIN32
