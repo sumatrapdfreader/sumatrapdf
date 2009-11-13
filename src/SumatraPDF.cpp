@@ -3175,9 +3175,9 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
  #define BETA_TXT                _T("Pre-Release")
 #else
  #ifdef DEBUG
- #define BETA_TXT                _T("Beta v") _T(CURR_VERSION) _T(" (dbg)")
+ #define BETA_TXT                _T(" v") _T(CURR_VERSION) _T(" (dbg)")
  #else
- #define BETA_TXT                _T("Beta v") _T(CURR_VERSION)
+ #define BETA_TXT                _T(" v") _T(CURR_VERSION)
  #endif
 #endif
 

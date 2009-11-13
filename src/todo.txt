@@ -1,16 +1,12 @@
-Short term todo (before next 0.9.5 release):
-
 Things to do before 1.0 release:
-* test search more and make sure it works better (currently mupdf seems to have
-  problems converting some text to their real value)
+
+Long term todo:
 * intelligent resizing so that the window takes as much space as possible on the
   screen (kind of like maximize, but doesn't actually maximizes the window but
   takes max dx or dy space available and proportional amount of the other axis)
 * TOC improvements:
   * an easy way to close TOC (I like the header with close button like in
     e editor http://www.e-texteditor.com/wiki/index.php/Projects)
-
-Long term todo:
 * find improvements:
   * better/different buttons for next/prev find
 * move DisplayState into DisplayModel and use it directly, instead of 
@@ -19,3 +15,4 @@ Long term todo:
 
 Maybe:
 * show keybindings in help
+
