@@ -2692,39 +2692,49 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
+// TODO: it should return path as newly allocated value. Passing buffer <path>
+// of unknown size is bad practice.
 static bool ResolveLnk(TCHAR * path)
 {
+    IShellLink *lnk = NULL;
+    IPersistFile *file = NULL;
+
     LPCOLESTR olePath = tstr_to_wstr(path);
     if (!olePath)
         return false;
 
-    CoInitialize(NULL);
-
-    IShellLink *lnk;
     HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                                     IID_IShellLink, (LPVOID *)&lnk);
-    if (SUCCEEDED(hRes)) {
-        IPersistFile *file;
-        hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
-        if (SUCCEEDED(hRes)) {
-            hRes = file->Load(olePath, STGM_READ);
-            if (SUCCEEDED(hRes)) {
-                hRes = lnk->Resolve(NULL, SLR_UPDATE);
-                if (SUCCEEDED(hRes)) {
-                    TCHAR newPath[MAX_PATH];
-                    hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
-                    if (SUCCEEDED(hRes)) {
-                        lstrcpyn(path, newPath, MAX_PATH);
-                    }
-                }
-            }
-            file->Release();
-        }
-        lnk->Release();
-    }
-    CoUninitialize();
-    free((void *)olePath);
+    if (FAILED(hRes))
+        goto Exit;
 
+    hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
+    if (FAILED(hRes))
+        goto Exit;
+
+    hRes = file->Load(olePath, STGM_READ);
+    if (FAILED(hRes))
+        goto Exit;
+
+    hRes = lnk->Resolve(NULL, SLR_UPDATE);
+    if (FAILED(hRes))
+        goto Exit;
+
+    TCHAR newPath[MAX_PATH];
+    hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
+    if (FAILED(hRes))
+        goto Exit;
+
+    lstrcpyn(path, newPath, MAX_PATH);
+
+Exit:
+    if (file)
+        file->Release();
+
+    if (lnk)
+        lnk->Release();
+
+    free((void *)olePath);
     return S_OK == hRes;
 }
 
@@ -7285,6 +7295,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
     InitCommonControlsEx(&cex);
 
+    CoInitialize(NULL);
+
     SerializableGlobalPrefs_Init();
 
     cmdLine  = GetCommandLine();
@@ -7604,6 +7616,8 @@ Exit:
     TStrList_Destroy(&fileNames);
 
     pdf_destoryfontlistMS();
+
+    CoUninitialize();
 
     //histDump();
     return msg.wParam;
