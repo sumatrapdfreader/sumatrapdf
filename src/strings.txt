@@ -571,6 +571,7 @@ si:Samodejno
 cn:自动
 hu:Automatikus
 ja:自動
+mk:Автоматски
 -
 Single page
 am:&Մեկ էջ
@@ -1471,7 +1472,7 @@ ml:വലുതാക്കുക
 he:זום
 sp-rs:&Uvećaj
 id:&Ukuran
-mk:&Зголемување
+mk:&Зумирање
 ro:&Panoramare
 kr:확대(&Z)
 bn:&বিবর্ধন
@@ -3584,7 +3585,7 @@ gr:Προκαθορισμένο ζουμ:
 fr:&Zoom par défaut
 ru:&Масштаб по умолчанию
 cy:C&hwyddo Rhagosodedig:
-mk:Основно &зголемување:
+mk:Основно &зумирање:
 hr:Pretpostavljeno &uvećanje:
 cn:默认缩放(&Z)
 si:Pri&vzeta povečava:
@@ -3899,7 +3900,7 @@ fr:S'il vous plaît attendez - génération...
 nl:Een ogenblik geduld - weergeven...
 ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
-mk:Ве молам почекајте - создавам приказ...
+mk:Те молам почекај - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待，正在渲染中...
 si:Oprostite, upodobitev poteka ...
@@ -4106,7 +4107,7 @@ es:"F3" para encontrar el siguiente resultado
 gr:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
 fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 nl:Tip: Gebruik de F3 toest om verder te zoeken
-mk:За повторно пребарување користи F3 од тастатурата
+mk:Совет: За повторно пребарување користи F3 од тастатурата
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 cn:提示：按F3键再次查找
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
@@ -4453,6 +4454,7 @@ ru:Копировать выделение\tCtrl-C
 hu:Kép/Szöveg másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
 sv:Kopiera markering\tCtrl-C
+mk:Копирај селекција\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
@@ -4463,6 +4465,7 @@ ru:Выберите содержимое, щелкнув Ctrl+левая кно�
 hu:Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
 sv:Markera med Ctrl + vänster musknapp
+mk:Селектирај со Ctrl и левото копче на глувчето
 -
 &Custom Zoom...
 br:&Zoom personalizado...
@@ -4473,6 +4476,7 @@ ru:Заказной масштаб...
 hu:... Egyéni méret
 ja:カスタム(&C)...
 sv:&Eget zoomval...
+mk:&Зумирање по избор...
 -
 Zoom factor
 br:Proporção de Zoom
@@ -4483,6 +4487,7 @@ ru:Масштабный коэффициент
 hu:Nagyítás mértéke
 ja:カスタム ズーム
 sv:Zoomfaktor
+mk:Коефициент на зумирање
 -
 &Magnification:
 br:Aumento:
@@ -4493,6 +4498,7 @@ ru:Увеличение:
 hu:Nagyítás:
 ja:拡大率(&M):
 sv:&Förstoring:
+mk:&Зголемување
 -
 Zoom
 br:Zoom
@@ -4503,6 +4509,7 @@ ru:Масштаб
 hu:Beállít
 ja:ズーム
 sv:Zoom
+mk:Зумирање
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
@@ -4512,6 +4519,7 @@ de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen S
 cn:无法运行反向搜索命令。请检查设置中的命令行。
 ja:逆順検索が開始できませんでした。コマンドラインを確認してください。
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
+mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во нагодувањата.
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
