@@ -3640,7 +3640,7 @@ cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
-si:Pokaži stolpec z &zaznamki, če je na voljo
+si:Pokaži podokno z &zaznamki, če so na voljo
 ja:ブックマークの一覧を自動的に表示する(&B)
 sv:Visa &bokmärken efter sidan när de finns
 -
@@ -3903,7 +3903,7 @@ cy:Arhoswch, wrthi'n cyflwyno...
 mk:Те молам почекај - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待，正在渲染中...
-si:Oprostite, upodobitev poteka ...
+si:Počakajte trenutek, upodobitev poteka ...
 ja:描画しています...
 sv:Ett ögonblick - förbereder...
 -
@@ -4455,6 +4455,7 @@ hu:Kép/Szöveg másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
 sv:Kopiera markering\tCtrl-C
 mk:Копирај селекција\tCtrl-C
+si:Kopiraj izbor\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
@@ -4466,6 +4467,7 @@ hu:Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
 sv:Markera med Ctrl + vänster musknapp
 mk:Селектирај со Ctrl и левото копче на глувчето
+si:Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
 -
 &Custom Zoom...
 br:&Zoom personalizado...
@@ -4477,6 +4479,7 @@ hu:... Egyéni méret
 ja:カスタム(&C)...
 sv:&Eget zoomval...
 mk:&Зумирање по избор...
+si:Povečava po &meri ...
 -
 Zoom factor
 br:Proporção de Zoom
@@ -4488,6 +4491,7 @@ hu:Nagyítás mértéke
 ja:カスタム ズーム
 sv:Zoomfaktor
 mk:Коефициент на зумирање
+si:Faktor povečave
 -
 &Magnification:
 br:Aumento:
@@ -4499,6 +4503,7 @@ hu:Nagyítás:
 ja:拡大率(&M):
 sv:&Förstoring:
 mk:&Зголемување
+si:&Povečanje:
 -
 Zoom
 br:Zoom
@@ -4510,6 +4515,7 @@ hu:Beállít
 ja:ズーム
 sv:Zoom
 mk:Зумирање
+si:Povečava
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
@@ -4520,6 +4526,7 @@ cn:无法运行反向搜索命令。请检查设置中的命令行。
 ja:逆順検索が開始できませんでした。コマンドラインを確認してください。
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во нагодувањата.
+si:Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
