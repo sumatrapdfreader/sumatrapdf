@@ -12,7 +12,7 @@ extern "C"
 int g_transLangsCount = 57;
 
 const char *g_transLangs[] = {
-  "en", "am", "af", "pt", "br", "bg", "de", "tr", "by", "hu", "lt", "my", "ja", "fa", "it", "nl", "fi", "ca", "si", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "sk", "vn", "kr", "bn", "cn", "fr", "ru", "gl", "es", "ar", "uk", "eu", "gr", "hr", "tl", "va", "sn", "tw", "cy", "ga", "mm", "pa", "hi", "nn", "sv", "pl", "dk", "ta", "cz", "th", "no"
+  "en", "am", "af", "pt", "br", "bg", "de", "tr", "by", "hu", "lt", "my", "ja", "fa", "it", "nl", "fi", "ca", "sl", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "sk", "vn", "kr", "bn", "cn", "fr", "ru", "gl", "es", "ar", "uk", "eu", "gr", "hr", "tl", "va", "sn", "tw", "cy", "ga", "mm", "pa", "hi", "nn", "sv", "pl", "dk", "ta", "cz", "th", "no"
 };
 
 int g_transTranslationsCount = 132;
@@ -2237,7 +2237,7 @@ const char *g_transTranslations[] = {
   "Etsi seuraava",
   "Etsi edellinen",
   "Etsi...\tCtrl-F",
-  "Etsi:",
+  "Etsl:",
   "Ensimm\303\244inen sivu\tHome",
   "Sovita sivu pystysuunnassa\tCtrl-0",
   "Sovita sivu pystysuunnassa",
@@ -2431,7 +2431,7 @@ const char *g_transTranslations[] = {
   NULL,
   NULL,
 
-  /* Translations for language si */
+  /* Translations for language sl */
   "&O programu ...",
   "&Preveri obstoj nove razli\304\215ice",
   "&Zapri\tCtrl-W",

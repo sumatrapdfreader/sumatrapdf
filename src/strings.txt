@@ -145,7 +145,7 @@ Lang: sp-rs Serbian (Latin)
 Lang: sr-rs Serbian (Cyrillic)
 Lang: sn Shona (Shona)
 Lang: sk Slovak (Slovenčina)
-Lang: si Slovenian (Slovenščina)
+Lang: sl Slovenian (Slovenščina)
 Lang: es Spanish (Español)
 Lang: sv Swedish (Svenska)
 Lang: tl Tagalog (Tagalog)
@@ -191,7 +191,7 @@ lt:&Failas
 my:&Fail
 fi:&Tiedosto
 ca:&Fitxer
-si:&Datoteka
+sl:&Datoteka
 sr-rs:Датотека
 tw:檔案(&F)
 ml:ഫയല്‍
@@ -249,7 +249,7 @@ lt:&Atverti\tCtrl-O
 my:&Buka\tCtrl-O
 fi:&Avaa\tCtrl-O
 ca:&Obre\tCtrl-O
-si:&Odpri\tCtrl-O
+sl:&Odpri\tCtrl-O
 sr-rs:Отвори\tCtrl-O
 tw:開啟\tCtrl-O
 ml:തുറക്കുക\tCtrl-O
@@ -307,7 +307,7 @@ lt:&Užverti\tCtrl-W
 my:&Tutup\tCtrl-W
 fi:&Sulje\tCtrl-W
 ca:&Tanca\tCtrl-W
-si:&Zapri\tCtrl-W
+sl:&Zapri\tCtrl-W
 sr-rs:Затвори\tCtrl-W
 tw:關閉(&C)\tCtrl-W
 ml:അടയ്ക്കുക\tCtrl-W
@@ -365,7 +365,7 @@ lt:&Įrašyti kaip...\tCtrl-S
 my:&Simpan sebagai\tCtrl-S
 fi:&Tallenna nimellä\tCtrl-S
 ca:Anomena i de&sa...\tCtrl-S
-si:Shrani &kot\tCtrl-S
+sl:Shrani &kot\tCtrl-S
 sr-rs:Сачувај као...\tCtrl-S
 tw:另存新檔(&S)\tCtrl-S
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക\tCtrl-S
@@ -423,7 +423,7 @@ lt:&Spausdinti\tCtrl-P
 my:&Cetak\tCtrl-P
 fi:&Tulosta\tCtrl-P
 ca:&Imprimeix...\tCtrl-P
-si:&Natisni\tCtrl-P
+sl:&Natisni\tCtrl-P
 sr-rs:Штампај\tCtrl-P
 tw:列印(&P)\tCtrl-P
 ml:അച്ചടി\tCtrl-P
@@ -481,7 +481,7 @@ lt:Baigti darbą\tCtrl-Q
 my:&Keluar\tCtrl-Q
 fi:&Poistu\tCtrl-Q
 ca:S&urt\tCtrl-Q
-si:I&zhod\tCtrl-Q
+sl:I&zhod\tCtrl-Q
 sr-rs:Изађи\tCtrl-Q
 tw:離開(&X)\tCtrl-Q
 ml:പുറത്തേക്ക് \tCtrl-Q
@@ -539,7 +539,7 @@ lt:Peržiūra
 my:&Lihat
 fi:&Näytä
 ca:&Visualitza
-si:&Pogled
+sl:&Pogled
 sr-rs:Приказ
 tw:檢視(&V)
 ml:കാഴ്ച്ച
@@ -567,7 +567,7 @@ Automatic
 br:Automático
 de:Automatisch
 es:Automático
-si:Samodejno
+sl:Samodejno
 cn:自动
 hu:Automatikus
 ja:自動
@@ -607,7 +607,7 @@ lt:Vienas puslapis
 my:Satu Mukasurat
 fi:Yksittäinen sivu
 ca:Pàgina única
-si:Enostransko
+sl:Enostransko
 sr-rs:Приказ једне стране
 tw:單一頁面
 ml:ഒറ്റ താള്‍
@@ -665,7 +665,7 @@ lt:Puslapiavimas
 my:Dua belah mukasurat
 fi:Rinnakkain
 ca:Pàgina doble
-si:Dvostransko
+sl:Dvostransko
 sr-rs:Приказ две стране
 tw:整頁模式
 ml:തിരിച്ച്
@@ -723,7 +723,7 @@ lt:Besitęsiantis
 my:Bersambung
 fi:Peräkkäin
 ca:Contínua
-si:Nepretrgano
+sl:Nepretrgano
 sr-rs:Непрекидни приказ
 tw:連續頁面
 ml:തുടര്‍ച്ച
@@ -781,7 +781,7 @@ lt:Besitęsiantis puslapiavimas
 my:Dua belah mukasurat bersambung
 fi:Peräkkäin ja rinnakkain
 ca:Pàgina doble contínua
-si:Nepretrgano dvostransko
+sl:Nepretrgano dvostransko
 sr-rs:Непрекидни приказ на две стране
 tw:連續整頁模式
 ml:തുടര്‍ച്ചയായി കാണിക്കുക
@@ -839,7 +839,7 @@ lt:Pasukti kairėn\tCtrl-Shift--
 my:Ubah ke kiri\tCtrl-Shift--
 fi:Kierrä vasempaan\tCtrl-Shift--
 ca:Gira a l'esquerra\tCtrl-Shift--
-si:Zasukaj v levo\tCtrl-Shift--
+sl:Zasukaj v levo\tCtrl-Shift--
 sr-rs:Ротирај лево\tCtrl-Shift--
 tw:頁面左旋\tCtrl-Shift--
 ml: ഇടത്തേക്കു ചരിക്കുക\tCtrl-Shift--
@@ -897,7 +897,7 @@ lt:Pasukti dešinėn\tCtrl-Shift-+
 my:Ubah ke kanan\tCtrl-Shift-+
 fi:Kierrä oikeaan\tCtrl-Shift-+
 ca:Gira a la dreta\tCtrl-Shift-+
-si:Zasukaj v desno\tCtrl-Shift-+
+sl:Zasukaj v desno\tCtrl-Shift-+
 sr-rs:Ротирај десно\tCtrl-Shift-+
 tw:頁面右旋\tCtrl-Shift-+
 ml:വലത്തേക്കു ചരിക്കുക\tCtrl-Shift-+
@@ -939,7 +939,7 @@ it:Segnalibri\tF12
 nl:Bladwijzers\tF12
 fi:Kirjainmerkit\tF12
 ca:Punts d'interés\tF12
-si:Zaznamki\tF12
+sl:Zaznamki\tF12
 sr-rs:Белешке\tF12
 tw:書籤\tF12
 sp-rs:Beleške\tF12
@@ -992,7 +992,7 @@ lt:Visame ekrane\tCtrl-L
 my:Mukasurat Penuh\tCtrl-L
 fi:Koko näyttö\tCtrl-L
 ca:Pantalla completa\tCtrl-L
-si:Celozaslonsko\tCtrl-L
+sl:Celozaslonsko\tCtrl-L
 sr-rs:Цео екран\tCtrl-L
 tw:全螢幕顯示(按Ctrl+L切換)\tCtrl-L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl-L
@@ -1059,7 +1059,7 @@ lt:Rodyti įrankinę
 my:Tunjukkan Bar Alat
 fi:Näytä työkalupalkki
 ca:Mostra la barra d'eines
-si:Pokaži orodno vrstico
+sl:Pokaži orodno vrstico
 sr-rs:Прикажи траку са алатима
 tw:顯示工具列
 ml:റ്റുള്‍ബാര്‍  കാണിക്കുക
@@ -1117,7 +1117,7 @@ lt:&Eiti
 my:&Pergi Ke
 fi:&Siirry
 ca:&Vés a
-si:Po&jdi na
+sl:Po&jdi na
 sr-rs:Иди на
 tw:移至(&G)
 ml:അവിടെ സന്ദര്‍ശിക്കുക
@@ -1175,7 +1175,7 @@ lt:Kitas puslapis
 my:Mukasurat seterusnya
 fi:Seuraava sivu
 ca:Pàgina següent
-si:Naslednja stran
+sl:Naslednja stran
 sr-rs:Следећа страна
 tw:下一頁
 ml:അടുത്ത താള്‍
@@ -1233,7 +1233,7 @@ lt:Ankstesnis puslapis
 my:Mukasurat sebelumnya
 fi:Edellinen sivu
 ca:Pàgina anterior
-si:Predhodna stran
+sl:Predhodna stran
 sr-rs:Претходна страна
 tw:上一頁
 ml:മുന്‍പുള്ള താള്‍
@@ -1291,7 +1291,7 @@ lt:Pirmas puslapis\tHome
 my:Mukasurat pertama\tHome
 fi:Ensimmäinen sivu\tHome
 ca:Primera pàgina\tInici
-si:Prva stran\tHome
+sl:Prva stran\tHome
 sr-rs:Прва страна\tHome
 tw:首頁\tHome
 ml:ആദ്യ താള്‍\tHome
@@ -1349,7 +1349,7 @@ lt:Paskutinis puslapis\tEnd
 my:Mukasurat terakhir
 fi:Viimeinen sivu\tEnd
 ca:Última pàgina\tFinal
-si:Zadnja stran\tEnd
+sl:Zadnja stran\tEnd
 sr-rs:Последња страна\tEnd
 tw:尾頁\tEnd
 ml:അവസാന താള്‍\tEnd
@@ -1407,7 +1407,7 @@ lt:Puslapis...\tCtrl-G
 my:Mukasurat...\tCtrl-G
 fi:Sivulle...\tCtrl-G
 ca:Pàgina...\tCtrl-G
-si:Stran ...\tCtrl-G
+sl:Stran ...\tCtrl-G
 sr-rs:Страна...\tCtrl-G
 tw:頁面...\tCtrl-G
 ml:താള്‍...\tCtrl-G
@@ -1465,7 +1465,7 @@ lt:Artinimas
 my:&Fokus
 fi:&Kohdista
 ca:&Escalat
-si:Po&večava
+sl:Po&večava
 sr-rs:Увећај
 tw:縮放(&Z)
 ml:വലുതാക്കുക
@@ -1523,7 +1523,7 @@ lt:Pritaikyti lange\tCtrl-0
 my:&Muatkan mukasurat\tCtrl-0
 fi:Sovita sivu pystysuunnassa\tCtrl-0
 ca:Ajusta a la pàgina\tCtrl-0
-si:&Prilagodi strani\tCtrl-0
+sl:&Prilagodi strani\tCtrl-0
 sr-rs:Прилагоди страни\tCtrl-0
 tw:適合頁面(&P)\tCtrl-0
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl-0
@@ -1581,7 +1581,7 @@ lt:Tikrasis dydis\tCtrl-1
 my:&Saiz sebenar\tCtrl-1
 fi:&Todellinen koko\tCtrl-1
 ca:Mida &real\tCtrl-1
-si:&Dejanska velikost\tCtrl-1
+sl:&Dejanska velikost\tCtrl-1
 sr-rs:Страна величина\tCtrl-1
 tw:實際大小(&U)\tCtrl-1
 ml:ശരിയായ വലിപ്പം\tCtrl-1
@@ -1639,7 +1639,7 @@ lt:Pritaikyti plotį\tCtrl-2
 my:&Muatkan lebar\tCtrl-2
 fi:&Sovita sivu vaakasuunnassa\tCtrl-2
 ca:Ajusta a l'am&plada\tCtrl-2
-si:P&rilagodi po širini\tCtrl-2
+sl:P&rilagodi po širini\tCtrl-2
 sr-rs:Подеси по ширини\tCtrl-2
 tw:適合寬度(&H)\tCtrl-2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
@@ -1723,7 +1723,7 @@ lt:&Pagalba
 my:&Bantuan
 fi:&Ohje
 ca:&Ajuda
-si:Po&moč
+sl:Po&moč
 sr-rs:Помоћ
 tw:說明(&H)
 ml:സഹായം
@@ -1781,7 +1781,7 @@ lt:Aplankyti svetainę
 my:&Lawat lamanweb
 fi:Vieraile ohjelman kotisivuilla
 ca:Visiteu el lloc &web
-si:Ob&išči domačo stran
+sl:Ob&išči domačo stran
 sr-rs:Посети Интернет страну
 tw:瀏覽官網(&V)
 ml:വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
@@ -1838,7 +1838,7 @@ mm:&ကိုယ်တိုင်
 pa:ਮਦੱਦ ਕਤਾਬ(&M)
 hi:नियम-पुस्तक(&M)
 fi:Käyttöohje
-si:P&riročnik
+sl:P&riročnik
 sv:&Manual
 -
 &About
@@ -1875,7 +1875,7 @@ lt:Apie
 my:&Mengenai
 fi:&Tietoja
 ca:&Quant a...
-si:&O programu ...
+sl:&O programu ...
 sr-rs:О програму
 tw:關於(&A)
 ml:പറ്റി
@@ -1944,7 +1944,7 @@ pa:ਪੰਨਾ ਨੰਬਰ:
 hi:पृष्ठ संख्या:
 nn:Side:
 fi:Sivu:
-si:Stran:
+sl:Stran:
 -
 Find:
 am:Փնտրել.
@@ -1965,9 +1965,9 @@ sk:Hľadať:
 vn:Tìm kiếm:
 lt:Ieškoti:
 my:Cari:
-fi:Etsi:
+fi:Etsl:
 ca:Cerca:
-si:Najdi:
+sl:Najdi:
 sr-rs:Пронађи:
 ml:കണ്ടെത്തുക:
 he:חפש:
@@ -2020,7 +2020,7 @@ lt:Ieškoti...\tCtrl-F
 my:Cari...\tCtrl-F
 fi:Etsi...\tCtrl-F
 ca:Cerca...\tCtrl-F
-si:Najdi ...\tCtrl-F
+sl:Najdi ...\tCtrl-F
 sr-rs:Пронађи...\tCtrl-F
 ml:കണ്ടെത്തുക...\tCtrl-F
 he:חפש...\tCtrl-F
@@ -2070,7 +2070,7 @@ it:Trova precedente
 nl:Vorige
 fi:Etsi edellinen
 ca:Cerca anterior
-si:Najdi prejšnje
+sl:Najdi prejšnje
 sr-rs:Пронађи претходно
 ml: മുന്‍പുള്ളത് കണ്ടെത്തുക
 he:חפש קודם
@@ -2122,7 +2122,7 @@ it:Trova successivo
 nl:Volgende
 fi:Etsi seuraava
 ca:Cerca següent
-si:Najdi naslednje
+sl:Najdi naslednje
 sr-rs:Пронађи следеће
 ml:അടുത്തത് കണ്ടെത്തുക
 he:חפש הבא
@@ -2171,7 +2171,7 @@ it:Maiuscole/minuscole
 nl:Hoofdlettergevoelig
 fi:Sama kirjainkoko
 ca:Distigeix la caixa
-si:Razlikuj med velikimi/malimi črkami
+sl:Razlikuj med velikimi/malimi črkami
 sr-rs:Разликуј мала и велика слова
 sp-rs:Razlikuj mala i velika slova
 id:Cocokkan Huruf Besar-Kecilnya
@@ -2238,7 +2238,7 @@ lt:Atverti
 my:Buka
 fi:Avaa
 ca:Obre
-si:Odpri
+sl:Odpri
 sr-rs:Отвори
 tw:開啟
 ml:തുറക്കുക
@@ -2296,7 +2296,7 @@ lt:Priartinti
 my:Fokus ke dalam
 fi:Kohdenna lähemmäksi
 ca:Apropa't
-si:Povečaj
+sl:Povečaj
 sr-rs:Увећај
 tw:放大
 ml:വലുതാക്കുക
@@ -2354,7 +2354,7 @@ lt:Sumažinti
 my:Fokus ke luar
 fi:Loitonna kauemmaksi
 ca:Allunya't
-si:Pomanjšaj
+sl:Pomanjšaj
 sr-rs:Умањи
 tw:縮小
 ml:ചെറുതാക്കുക
@@ -2412,7 +2412,7 @@ lt:Apie SumatraPDF
 my:Mengenai SumatraPDF
 fi:Tietoja SumatraPDF:stä
 ca:Quant al SumatraPDF
-si:O programu SumatraPDF
+sl:O programu SumatraPDF
 sr-rs:О програму SumatraPDF
 tw:關於 SumatraPDF
 ml:സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
@@ -2470,7 +2470,7 @@ lt:Nepavyko išsaugoti failo
 my:Gagal menyimpan fail
 fi:Tiedoston tallennus epäonnistui
 ca:S'ha produït un error en desar el fitxer.
-si:Shranjevanje datoteke ni uspelo.
+sl:Shranjevanje datoteke ni uspelo.
 sr-rs:Грешка при снимању PDF документа
 tw:檔案儲存失敗
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
@@ -2527,7 +2527,7 @@ lt:Klaida įkeliant PDF dokumentą
 my:Masalah memuatkan fail PDF
 fi:Tiedoston avaus epäonnistui
 ca:S'ha produït un error en carregar el fitxer.
-si:Napaka pri branju datoteke PDF.
+sl:Napaka pri branju datoteke PDF.
 sr-rs:Грешка при учитавању PDF документа
 tw:讀取PDF檔案時發失錯誤。
 ml:PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
@@ -2584,7 +2584,7 @@ lt:Nepavyko atverti spausdintuvo
 my:Pencetak tidak dapat dibuka
 fi:Tulostinta ei löydy
 ca:No s'ha pogut accedir a la impressora.
-si:Do tiskalnika ni mogoče dostopati.
+sl:Do tiskalnika ni mogoče dostopati.
 sr-rs:Штампач није пронађен
 tw:無法開啟印表機。
 ml:അച്ചടിയന്ത്രം തുറക്കാന്‍ സാധിച്ചില്ല
@@ -2641,7 +2641,7 @@ lt:Spausdinimo klaida
 my:Masalah mencetak
 fi:Tulostusongelma
 ca:S'ha produït un problema en la impressió.
-si:Težave pri tiskanju.
+sl:Težave pri tiskanju.
 sr-rs:Проблем при штампању
 tw:列印問題
 ml:അച്ചടിയില് തകരാര്‍
@@ -2693,7 +2693,7 @@ vn:Đóng góp dịch thuật
 lt:Pasiklydę vertime
 my:Menyumbangkan alihbahasa
 ca:Contribuïu en la traducció
-si:Prispevajte prevod
+sl:Prispevajte prevod
 sr-rs:Помози у превођењу овог програма
 tw:翻譯提供
 fa:در ترجمۀ اين برنامه کمک کنيد
@@ -2746,7 +2746,7 @@ gl:Establecer procura inversa
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 va:Establir busca inversa
 ca:Cerca cap enrere
-si:Nastavi obratno iskanje ukazne vrstice
+sl:Nastavi obratno iskanje ukazne vrstice
 bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 it:Imposta comando di ricerca inversa
 tw:設定反搜尋命令列
@@ -2788,7 +2788,7 @@ gl:Cambiar lingua (Change language)
 tl:Ibahin ang Wika (Change language)
 va:Canviar Idioma (Change language)
 ca:Canvia la llengua (Change language)
-si:Spremeni jezik (Change language)
+sl:Spremeni jezik (Change language)
 sn:Chinja mutauro (Change language)
 bn:ভাষা পরিবর্তন (Change language)
 tw:變更語系 (Change language)
@@ -2831,7 +2831,7 @@ gl:Introduza o contrasinal
 tl:Ipasok ang Sikretong Salita
 va:Posar contrasenya
 ca:Introduiu la contrasenya
-si:Vnesite geslo
+sl:Vnesite geslo
 sn:Isa password
 bn:শব্দকূট প্রবেশ করুন
 tw:輸入密碼
@@ -2874,7 +2874,7 @@ gl:Introduza contrasinal para %s
 tl:Ipasok ang Sikretong Salita para kay %s
 va:Posar contrasenya per a %s
 ca:Introduiu la constrasenya per a %s
-si:Vnesite geslo za %s
+sl:Vnesite geslo za %s
 sn:Isa password ya %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
 tw:輸入 %s 的密碼
@@ -2918,7 +2918,7 @@ gl:Ir a páxina
 tl:Pumunta sa Pahina
 va:Anar a la pàgina
 ca:Vés a la pàgina
-si:Pojdi na stran
+sl:Pojdi na stran
 sn:Enda kupeji
 bn:এর পৃষ্ঠায় চলুন
 tw:移至頁面
@@ -2961,7 +2961,7 @@ gl:Asociar con arquivos PDF?
 tl:Isanib sa Salansan na PDF?
 va:¿Associar en archius PDF?
 ca:Voleu associar-lo amb els fitxers PDF?
-si:Želite povezati z datotekami PDF?
+sl:Želite povezati z datotekami PDF?
 sn:Ita zvifambidzane ne PDF
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 tw:與 PDF 檔進行關聯?
@@ -3003,7 +3003,7 @@ gl:Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
 tl:Gawin SumatraPDF ang Likas na Pambasa ng mga Salansan na PDF?
 va:¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
-si:Naj bo SumatraPDF privezti program za datoteke PDF?
+sl:Naj bo SumatraPDF privezti program za datoteke PDF?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 tw:把 SumatraPDF 作為預設的PDF閱讀器?
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器？
@@ -3046,7 +3046,7 @@ gl:Non preguntar de novo
 tl:Huwag mo na akong tatanungin ulit
 va:No tornar a preguntar
 ca:No ho tornis a preguntar
-si:&Ne sprašuj več
+sl:&Ne sprašuj več
 sn:Usandivhunze futi
 bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
 tw:不要再問我
@@ -3089,7 +3089,7 @@ gl:&Comprobar nova versión
 tl:Tignan kung may bagong &bersyon
 va:&Comprovar actualisacions
 ca:&Comprova si hi ha una versió nova
-si:&Preveri obstoj nove različice
+sl:&Preveri obstoj nove različice
 sn:&Tsvaga version idzva
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
 tw:檢查是否有新版本(&C)
@@ -3133,7 +3133,7 @@ gl:Non hai nova versión dispoñible
 tl:Walang bagong bersyon na makita.
 va:No hi han noves versions.
 ca:No hi ha cap versió nova.
-si:Novejša različica ni na voljo.
+sl:Novejša različica ni na voljo.
 sn:Hapana version idzva.
 bn:নতুন সংস্করণ অনুপলব্ধ
 tw:沒有新版本
@@ -3177,7 +3177,7 @@ gl:Ten vostede a última versión
 tl:Nasa iyo na ang pinakabagong bersyon.
 va:Està es l'última versió.
 ca:Teniu la darrera versió.
-si:Imate najnovejšo različico.
+sl:Imate najnovejšo različico.
 sn:Pane version idzva.
 bn:আপনার এই সংস্করণটি সর্বাধুনিক।
 tw:目前使用的版本為最新版。
@@ -3221,7 +3221,7 @@ gl:A súa versión é %s
 tl:Ang bersyonng nasa iyo ay %s
 va:Te la versió %s
 ca:Teniu la versió %s
-si:Imate različico %s
+sl:Imate različico %s
 sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
 tw:目前版本 %s
@@ -3265,7 +3265,7 @@ gl:A nova versión %s está dispoñible. ¿Desexa obtela?
 tl:May bagong bersyon %s. Kunin ang bagong bersyon?
 va:Una nova versió %s está disponible. ¿Vols descarregar-la?
 ca:Hi ha disponible una versió nova. Voleu descarregar-la?
-si:Na voljo je nova različica %s. Jo želite prenesti?
+sl:Na voljo je nova različica %s. Jo želite prenesti?
 sn:Version %s ririkuwanika. Unoda here version idzva?
 bn:নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 tw:最新版本 %s。 是否下載?
@@ -3309,7 +3309,7 @@ gl:Nova versión dispoñible
 tl:Merong nang bagong bersyon.
 va:Nova versió disponible.
 ca:Hi ha una versió nova.
-si:Na voljo je nova različica.
+sl:Na voljo je nova različica.
 sn:Version idzva ririkuwanika
 bn:নতুন সংস্করণ উপলব্ধ হয়েছে।
 tw:新的可用版本。
@@ -3353,7 +3353,7 @@ gl:Ignorar esta versión
 tl:Laktawan ang bersyon na ito
 va:Botar-se esta versió.
 ca:Omet aquesta versió
-si:&Preskoči to različico
+sl:&Preskoči to različico
 sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
 tw:略過這個版本
@@ -3381,7 +3381,7 @@ pl:Uwaga
 cy:Rhybudd
 mk:Предупредување
 hr:Upozorenje
-si:Opozorilo
+sl:Opozorilo
 cn:警告
 ja:警告
 sv:Varning
@@ -3399,7 +3399,7 @@ ru:Параметры SumatraPDF
 cy:Dewisiadau SumatraPDF
 mk:Опции на SumatraPDF
 hr:Mogućnosti programa
-si:Možnosti SumatraPDF
+sl:Možnosti SumatraPDF
 cn:SumatraPDF 选项
 ja:SumatraPDF のオプション
 sv:SumatraPDF Inställningar
@@ -3438,7 +3438,7 @@ lt:Pritaikyti plotį
 my:Muatkan lebar
 fi:Sovita sivu vaakasuunnassa
 ca:Ajusta a l'amplada
-si:Prilagodi po širini
+sl:Prilagodi po širini
 sr-rs:Подеси по ширини
 tw:適合寬度
 ml:അകലം പൊരുത്തപ്പെടുത്തുക
@@ -3476,7 +3476,7 @@ cy:&Gosodiadau
 mk:&Нагодувања
 hr:&Postavke
 cn:设置(&S)
-si:&Nastavitve
+sl:&Nastavitve
 ja:設定(&S)
 sv:Alternati&v
 -
@@ -3514,7 +3514,7 @@ lt:Pritaikyti lange
 my:Muatkan mukasurat
 fi:Sovita sivu pystysuunnassa
 ca:Ajusta a la pàgina
-si:Prilagodi strani
+sl:Prilagodi strani
 sr-rs:Прилагоди страни
 tw:適合頁面
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക
@@ -3552,7 +3552,7 @@ cy:&Dewisiadau...
 mk:&Опции...
 hr:Mogućnosti...
 cn:选项(&O)...
-si:&Možnosti ...
+sl:&Možnosti ...
 ja:オプション(&O)...
 sv:&Inställningar...
 -
@@ -3570,7 +3570,7 @@ cy:&Cynllun Rhagosodedig:
 mk:Основен &изглед:
 hr:Pretpostavljeni &izgled:
 cn:默认布局(&L)
-si:&Privzeta postavitev:
+sl:&Privzeta postavitev:
 ja:基本レイアウト(&L):
 sv:Förvalt &utseende
 -
@@ -3588,7 +3588,7 @@ cy:C&hwyddo Rhagosodedig:
 mk:Основно &зумирање:
 hr:Pretpostavljeno &uvećanje:
 cn:默认缩放(&Z)
-si:Pri&vzeta povečava:
+sl:Pri&vzeta povečava:
 ja:基本ズーム(&Z):
 sv:Förvalt &zoomläge
 -
@@ -3603,7 +3603,7 @@ fr:OK
 mk:Во ред
 hr:U redu
 es:Aceptar
-si:V redu
+sl:V redu
 cn:确定
 ja:OK
 sv:OK
@@ -3622,7 +3622,7 @@ cy:Uwch
 mk:Напредно
 hr:Napredno
 cn:高级
-si:Napredno
+sl:Napredno
 ja:拡張
 sv:Avancerad
 -
@@ -3640,7 +3640,7 @@ cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
-si:Pokaži podokno z &zaznamki, če so na voljo
+sl:Pokaži podokno z &zaznamki, če so na voljo
 ja:ブックマークの一覧を自動的に表示する(&B)
 sv:Visa &bokmärken efter sidan när de finns
 -
@@ -3658,7 +3658,7 @@ cy:Diddymu
 mk:Откажи
 hr:Odustani
 cn:取消
-si:Prekliči
+sl:Prekliči
 ja:キャンセル
 sv:Avbryt
 -
@@ -3676,7 +3676,7 @@ cy:Gwirio'n awtomatig am &ddiweddariadau
 mk:Проверувај за &надградби автоматски
 hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
-si:Samodejno preveri &obstoj posodobitev
+sl:Samodejno preveri &obstoj posodobitev
 ja:自動的に最新版をチェックする(&U)
 sv:Sök efter &uppdateringar automatiskt
 -
@@ -3694,7 +3694,7 @@ cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 mk:&Запомни ги овие нагодувања за секој документ
 hr:&Upamti ove postavke za svaki pojedini dokument
 cn:为每一个文档记住这些设置(&R)
-si:Zapomni si te &nastavitve za vsak dokument
+sl:Zapomni si te &nastavitve za vsak dokument
 ja:ドキュメントごとに設定を記憶する(&R)
 sv:Spara dessa val per &varje dokument
 -
@@ -3712,7 +3712,7 @@ mk:Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
 cy:Co&fio ffeiliau ar agor
-si:&Zapomni si odprte datoteke
+sl:&Zapomni si odprte datoteke
 ja:開いたファイルの履歴を残す(&O)
 sv:Minns öppnade &filer
 -
@@ -3750,7 +3750,7 @@ lt:Peržiūra
 my:Lihat
 fi:Näytä
 ca:Visualitza
-si:Pogled
+sl:Pogled
 sr-rs:Приказ
 tw:檢視
 ml:കാഴ്ച്ച
@@ -3789,7 +3789,7 @@ cy:&Mynd i dudalen:
 mk:&Појди на страница:
 hr:&Idi na stranicu:
 cn:转到页面
-si:Pojdi na &stran:
+sl:Pojdi na &stran:
 ja:ページへ移動(&G):
 sv:&Gå till sida:
 -
@@ -3808,7 +3808,7 @@ gr:(από %d)
 mk:(од %d)
 hr:(od %d)
 cn:(%d中的)
-si:(od %d)
+sl:(od %d)
 ja:(%d 中)
 sv:(av %d)
 -
@@ -3827,7 +3827,7 @@ cy:Llwytho i Lawr
 mk:Преземи
 hr:Preuzmi
 cn:下载
-si:Prenesi
+sl:Prenesi
 ja:ダウンロード
 sv:Ladda &ned
 -
@@ -3846,7 +3846,7 @@ cy:&Iawn
 mk:&Да
 hr:&Da
 cn:是(&Y)
-si:&Da
+sl:&Da
 ja:はい(&Y)
 sv:&Ja
 -
@@ -3865,7 +3865,7 @@ cy:&Na
 mk:&Не
 hr:&Ne
 cn:否(&N)
-si:&Ne
+sl:&Ne
 ja:いいえ(&N)
 sv:&Nej
 -
@@ -3884,7 +3884,7 @@ cy:&Dim diolch
 mk:&Не, благодарам
 hr:&Ne, hvala
 cn:不，谢谢(&N)
-si:&Ne, hvala
+sl:&Ne, hvala
 ja:いいえ(&N)
 sv:&Nej, tack
 -
@@ -3903,7 +3903,7 @@ cy:Arhoswch, wrthi'n cyflwyno...
 mk:Те молам почекај - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
 cn:请耐心等待，正在渲染中...
-si:Počakajte trenutek, upodobitev poteka ...
+sl:Počakajte trenutek, upodobitev poteka ...
 ja:描画しています...
 sv:Ett ögonblick - förbereder...
 -
@@ -3922,7 +3922,7 @@ gr:Δε μπορεί να φορτωθεί η σελίδα
 mk:Не можам да ја прикажам страницата
 hr:Nije moguće iscrtati stranicu
 cn:不能渲染该页面
-si:Strani ni mogoče upodobiti
+sl:Strani ni mogoče upodobiti
 ja:描画できませんでした
 sv:Kunde ej visa sidan
 -
@@ -3941,7 +3941,7 @@ gr:Δε βρέθηκε το κείμενο
 mk:Не се пронајдени совпаѓања
 hr:Pojam nije pronađen
 cn:没有找到匹配项
-si:Ni zadetkov
+sl:Ni zadetkov
 ja:見つかりませんでした
 sv:Inga träffar hittades
 -
@@ -3960,7 +3960,7 @@ gr:Το κείμενο βρέθηκε στη σελίδα %d
 mk:Пронајдов текст на страница %d
 hr:Tekst je pronađen na stranici %d
 cn:在第%d页找到文本
-si:Besedilo najdeno na strani %d
+sl:Besedilo najdeno na strani %d
 ja:%d ページに文字列が見つかりました
 sv:Hittade text på sidan %d
 -
@@ -3979,7 +3979,7 @@ cy:Chwilio am %d o %d...
 mk:Пребарувам %d од %d страници...
 hr:Pretražujem stranicu %d od %d...
 cn:正在搜索第%d页/共%d页
-si:Preiskovanje strani %d od %d ...
+sl:Preiskovanje strani %d od %d ...
 ja:%d ページを検索中 (%d ページ中)...
 sv:Söker %d av %d...
 -
@@ -3998,7 +3998,7 @@ ru:PDF-документы
 mk:PDF документи
 hr:PDF dokumenti
 cn:PDF 文档
-si:Dokumenti PDF
+sl:Dokumenti PDF
 ja:PDF ドキュメント
 sv:PDF-dokument
 -
@@ -4017,7 +4017,7 @@ ru:Все файлы
 mk:Сите датотеки
 hr:Sve datoteke
 cn:所有文件
-si:Vse datoteke
+sl:Vse datoteke
 ja:すべてのファイル
 sv:Alla filer
 -
@@ -4036,7 +4036,7 @@ mk:&Лозинка:
 hr:&Lozinka:
 cn:密码(&P)
 cy:&Cyfrinair:
-si:&Geslo:
+sl:&Geslo:
 ja:パスワード(&P):
 sv:&Lösenord:
 -
@@ -4055,7 +4055,7 @@ mk:&Најди што:
 hr:&Što tražiti:
 cn:查找(&F):
 cy:&Canfod beth:
-si:&Najdi:
+sl:&Najdi:
 ja:検索文字列(&F):
 sv:&Sök efter:
 -
@@ -4074,7 +4074,7 @@ mk:Најди
 hr:Pronađi
 cn:查找
 cy:Canfod
-si:Išči
+sl:Išči
 ja:検索
 sv:Sök
 -
@@ -4093,7 +4093,7 @@ mk:&Разликувај мали и големи букви
 hr:Razlikuj velika i mala slova
 cn:大小写匹配(&M)
 cy:&Cydweddu maint
-si:Razlikuj &med velikimi/malimi črkami
+sl:Razlikuj &med velikimi/malimi črkami
 ja:大文字小文字を区別する(&M)
 sv:Matcha &små/stora bokstäver
 -
@@ -4111,7 +4111,7 @@ mk:Совет: За повторно пребарување користи F3 о
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
 cn:提示：按F3键再次查找
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
-si:Namig: Uporabite tipko F3 za ponovno iskanje
+sl:Namig: Uporabite tipko F3 za ponovno iskanje
 ja:検索を続けるには F3 キーを押します
 sv:Tips: Tryck F3 för att söka vidare
 -
@@ -4129,7 +4129,7 @@ mk:Не можам да го подготвам печатачот
 hr:Ne mogu inicijalizirati pisač
 cn:不能初始化打印机
 cy:Methu cychwyn yr argraffydd
-si:Tiskalnika ni mogoče inicializirati
+sl:Tiskalnika ni mogoče inicializirati
 ja:プリンタの初期化に失敗しました
 sv:Kunde ej använda skrivare
 -
@@ -4148,7 +4148,7 @@ mk:Нема информации за синхронизација на оваа
 hr:Nema podatka o usklađenosti na ovom položaju
 cn:此位置没有同步信息
 cy:Dim gwybodaeth cydweddu yn y fan hon
-si:Na tem mestu ni sinhronizacijskih podatkov
+sl:Na tem mestu ni sinhronizacijskih podatkov
 ja:この位置には同期場所がありません
 sv:Synkroniseringsinformation saknas här
 -
@@ -4167,7 +4167,7 @@ mk:Синхронизациската датотека не може да се �
 hr:Datoteka usklađenja ne nože biti otvorena
 cn:不能打开同步文件
 cy:Methu agor ffeil cydweddu
-si:Datoteke sinhronizacije ni mogoče odpreti
+sl:Datoteke sinhronizacije ni mogoče odpreti
 ja:同期ファイルは開かれていません
 sv:Synkroniseringsfil kan ej öppnas
 -
@@ -4186,7 +4186,7 @@ mk:Страница со број %u не постои
 hr:Stranica %u ne postoji
 cn:页号 %u 不存在
 cy:Nid yw tudalen rhif %u yn bodoli
-si:Stran številka %u ne obstaja
+sl:Stran številka %u ne obstaja
 ja:指定されたページ %u は存在しません
 sv:Sidnummer %u finns ej
 -
@@ -4204,7 +4204,7 @@ mk:Не најдов резултати околу линијата %u во да
 hr:Nema rezultata oko retka %u u datoteci %s
 cn:第 %u 行附近未找到同步记录 (文件: %s)
 cy:Dim canlyniad o liell %u yn ffeil %s
-si:Okoli vrstice %u v datoteki %s ni zadetkov
+sl:Okoli vrstice %u v datoteki %s ni zadetkov
 ja:ファイル %s の %u 行目に見つかりませんでした
 sv:Inget resultat hittades vid rad %u i filen %s
 -
@@ -4223,7 +4223,7 @@ mk:Изворната датотека %s нема синхронизациск�
 hr:Izvorna datoteka %s nema točke usklađivanja
 cn:源文件 %s 没有同步点
 cy:Does dim pwynt cydweddu yn ffeil %s
-si:Izvorna datoteka %s nima točke sinhronizacije
+sl:Izvorna datoteka %s nima točke sinhronizacije
 ja:ソース ファイル %s に同期場所がありません
 sv:Källfilen %s har ingen synkroniseringspunkt
 -
@@ -4242,7 +4242,7 @@ mk:[Забележани се промени; освежувам...] %s
 hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
 cy:[Newidiadau wedi eu canfod; adnewyddu]
-si:[Spremembe zaznane; osvežitev poteka] %s
+sl:[Spremembe zaznane; osvežitev poteka] %s
 ja:[ファイルが変更されました。更新します] %s
 sv:[Ändringar har skett; uppdaterar] %s
 -
@@ -4261,7 +4261,7 @@ mk:Непозната изворна датотека (%s)
 hr:Nepoznata izvorna datoteka (%s)
 cn:未知的源文件 (%s)
 cy:Ffeil ffynhonnell anhysbys (%s)
-si:Neznana izvorna datoteka (%s)
+sl:Neznana izvorna datoteka (%s)
 ja:不明なソースファイルです (&s)
 sv:Okänd källfil (%s)
 -
@@ -4280,7 +4280,7 @@ mk:Не можам да ја печатам оваа датотека
 hr:Ne mogu ispisati ovu datoteku
 cn:不能打印此文件
 cy:Methu argraffu'r ffeil
-si:Te datoteke ni mogoče natisniti
+sl:Te datoteke ni mogoče natisniti
 ja:ファイルを印刷できません
 sv:Kan ej skriva ut denna fil
 -
@@ -4299,7 +4299,7 @@ mk:PDF документ
 hr:PDF dokument
 cn:PDF 文档
 cy:Dogfen PDF
-si:Dokument PDF
+sl:Dokument PDF
 ja:PDF ドキュメント
 sv:PDF-dokument
 -
@@ -4338,7 +4338,7 @@ lt:Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
 my:Jadikan SumatraPDF pembaca utama PDF
 fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 ca:Fes el SumatraPDF el lector de PDF predeterminat
-si:SumatraPDF naj bo privzeti bralnik PDF
+sl:SumatraPDF naj bo privzeti bralnik PDF
 sr-rs:Нека SumatraPFD буде стандардни PDF читач
 tw:把 SumatraPDF 作為預設的PDF閱讀工具
 ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
@@ -4379,7 +4379,7 @@ mk:SumatraPDF е твојот основен PDF читач
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 cn:SumatraPDF 是默认 PDF 阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
-si:SumatraPDF je vaš privzeti bralnik PDF
+sl:SumatraPDF je vaš privzeti bralnik PDF
 ja:SumatraPDF は既定の PDF リーダーです
 sv:SumatraPDF är din valda PDF-läsare
 -
@@ -4400,7 +4400,7 @@ mk:Сега SumatraPDF би требало да е твојот основен P
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 cn:现在 SumatraPDF 应该是你的默认 PDF 阅读器了
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
-si:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
+sl:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
 ja:SumatraPDF は既定の PDF リーダーになりました
 sv:SumatraPDF ska nu vara din valda PDF-läsare
 -
@@ -4421,7 +4421,7 @@ mk:Основниот PDF читач не може да се промени во
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变默认 PDF 阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
-si:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
+sl:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 ja:ポータブル モードでは既定の PDF リーダーを変更できません
 sv:SumatraPDF kan ej göras förvald i portabelt läge
 -
@@ -4441,7 +4441,7 @@ mk:Отвори со &Adobe Reader
 hr:Otvori u programu &Adobe Reader
 cn:在&Adobe Reader中打开
 cy:Agor yn &Adobe Reader
-si:Odpri s programom &Adobe Reader
+sl:Odpri s programom &Adobe Reader
 ja:Adobe Reader で開く(&A)
 sv:Öppna i Adobe &Reader
 -
@@ -4455,7 +4455,7 @@ hu:Kép/Szöveg másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
 sv:Kopiera markering\tCtrl-C
 mk:Копирај селекција\tCtrl-C
-si:Kopiraj izbor\tCtrl-C
+sl:Kopiraj izbor\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
@@ -4467,7 +4467,7 @@ hu:Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
 sv:Markera med Ctrl + vänster musknapp
 mk:Селектирај со Ctrl и левото копче на глувчето
-si:Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
+sl:Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
 -
 &Custom Zoom...
 br:&Zoom personalizado...
@@ -4479,7 +4479,7 @@ hu:... Egyéni méret
 ja:カスタム(&C)...
 sv:&Eget zoomval...
 mk:&Зумирање по избор...
-si:Povečava po &meri ...
+sl:Povečava po &meri ...
 -
 Zoom factor
 br:Proporção de Zoom
@@ -4491,7 +4491,7 @@ hu:Nagyítás mértéke
 ja:カスタム ズーム
 sv:Zoomfaktor
 mk:Коефициент на зумирање
-si:Faktor povečave
+sl:Faktor povečave
 -
 &Magnification:
 br:Aumento:
@@ -4503,7 +4503,7 @@ hu:Nagyítás:
 ja:拡大率(&M):
 sv:&Förstoring:
 mk:&Зголемување
-si:&Povečanje:
+sl:&Povečanje:
 -
 Zoom
 br:Zoom
@@ -4515,7 +4515,7 @@ hu:Beállít
 ja:ズーム
 sv:Zoom
 mk:Зумирање
-si:Povečava
+sl:Povečava
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
@@ -4526,7 +4526,7 @@ cn:无法运行反向搜索命令。请检查设置中的命令行。
 ja:逆順検索が開始できませんでした。コマンドラインを確認してください。
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во нагодувањата.
-si:Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
+sl:Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
@@ -4562,7 +4562,7 @@ lt:Kitas puslapis\t->
 my:Mukasurat seterusnya\t->
 fi:Seuraava sivu\t->
 ca:Pàgina següent\t->
-si:Naslednja stran\t->
+sl:Naslednja stran\t->
 sr-rs:Следећа страна\t->
 tw:下一頁\t->
 ml:അടുത്ത താള്‍\t->
@@ -4620,7 +4620,7 @@ lt:Ankstesnis puslapis\t<-
 my:Mukasurat sebelumnya\t<-
 fi:Edellinen sivu\t<-
 ca:Pàgina anterior\t<-
-si:Predhodna stran\t<-
+sl:Predhodna stran\t<-
 sr-rs:Претходна страна\t<-
 tw:上一頁\t<-
 ml:മുന്‍പുള്ള താള്‍\t<-
