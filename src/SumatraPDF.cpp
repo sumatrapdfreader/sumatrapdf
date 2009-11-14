@@ -3252,7 +3252,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
-    { _T("ui polishing"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/"),
+    { _T("ui polishing"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/#SumatraPDF"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
