@@ -115,7 +115,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define SPLITTER_DX  5
 
 #define REPAINT_TIMER_ID    1
-#define REPAINT_DELAY_IN_MS 400
+/* Time to delay painting when going to a new page (prevents flickering) */
+#define REPAINT_DELAY_IN_MS 200
 
 #define SMOOTHSCROLL_TIMER_ID       2
 #define SMOOTHSCROLL_DELAY_IN_MS    20
@@ -6338,9 +6339,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_TIMER:
             assert(win);
             if (win) {
-                if (REPAINT_TIMER_ID == wParam)
+                if (REPAINT_TIMER_ID == wParam) {
+                    KillTimer(hwnd, REPAINT_TIMER_ID);
                     WindowInfo_RedrawAll(win);
-                else if (SMOOTHSCROLL_TIMER_ID == wParam) {
+                } else if (SMOOTHSCROLL_TIMER_ID == wParam) {
                     if (MA_SCROLLING == win->mouseAction)
                         WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
                     else
@@ -6367,8 +6369,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_PAINT:
             /* it might happen that we get WM_PAINT after destroying a window */
             if (win) {
-                /* blindly kill the timer, just in case it's there */
-                KillTimer(hwnd, REPAINT_TIMER_ID);
                 OnPaint(win);
             }
             break;
