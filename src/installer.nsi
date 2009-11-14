@@ -75,27 +75,44 @@ Section "Uninstall"
 	; Remove registry keys
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF"
 	DeleteRegKey HKLM "Software\SumatraPDF"
-	; Try to restore the previous default PDF reader
+	
+	; Try to restore the previous default PDF reader (for all users)
 	ClearErrors
-	ReadRegStr $0 HKCR "SumatraPDF" "previous.pdf"
+	ReadRegStr $0 HKLM "Software\Classes\SumatraPDF" "previous.pdf"
 	${IfNot} ${Errors}
-		WriteRegStr HKCR ".pdf" "" $0
+		WriteRegStr HKLM "Software\Classes\.pdf" "" $0
 	${Else}
 		ClearErrors
-		ReadRegStr $0 HKCR ".pdf" ""
+		ReadRegStr $0 HKLM "Software\Classes\.pdf" ""
 		${IfNot} ${Errors}
 		${AndIf} $0 == "SumatraPDF"
-			DeleteRegValue HKCR ".pdf" ""
+			DeleteRegValue HKLM "Software\Classes\.pdf" ""
 		${EndIf}
 	${EndIf}
-	DeleteRegKey HKCR "SumatraPDF"
+	DeleteRegKey HKLM "Software\Classes\SumatraPDF"
+	
+	; Try to restore the previous default PDF reader (for the current user)
+	ClearErrors
+	ReadRegStr $0 HKCU "Software\Classes\SumatraPDF" "previous.pdf"
+	${IfNot} ${Errors}
+		WriteRegStr HKCU "Software\Classes\.pdf" "" $0
+	${Else}
+		ClearErrors
+		ReadRegStr $0 HKCU "Software\Classes\.pdf" ""
+		${IfNot} ${Errors}
+		${AndIf} $0 == "SumatraPDF"
+			DeleteRegValue HKCU "Software\Classes\.pdf" ""
+		${EndIf}
+	${EndIf}
+	DeleteRegKey HKCU "Software\Classes\SumatraPDF"
+	DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf" "ProgId"
 	
 	; Remove the shortcut, if any
 	SetShellVarContext all
 	Delete "$SMPROGRAMS\SumatraPDF.lnk"
 	
 	; Remove files and uninstaller
-	Delete $INSTDIR\SumatraPDF.exe
-	Delete $INSTDIR\Uninstall.exe
+	Delete "$INSTDIR\SumatraPDF.exe"
+	Delete "$INSTDIR\Uninstall.exe"
 	RMDir "$INSTDIR"
 SectionEnd

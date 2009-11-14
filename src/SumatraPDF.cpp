@@ -2549,17 +2549,19 @@ Software\Classes\.pdf default key is name of reg entry describing the app
   handling opening PDF files. In our case it's SumatraPDF
 
 Software\Classes\SumatraPDF\DefaultIcon = $exePath,1
-  1 tells which icon resource within the executable (I think))
+  1 means the second icon resource within the executable
 Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
   tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
 Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
-  shuld be SumatraPDF (FoxIt takes over it)
+  should be SumatraPDF (FoxIt takes it over); only needed for HKEY_CURRENT_USER
 
 HKEY_CLASSES_ROOT\.pdf\OpenWithList
   list of all apps that can be used to open PDF files. We don't touch that.
 
-HKEY_CLASSES_ROOT\.pdf default comes from either HKLM\Software\Classes\.pdf or
-HKCU\Software\Classes\.pdf (HKCU has priority over HKLM)
+HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
+HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
+
+Note: When making changes below, please also adjust the installer.nsis script.
 */
 static void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
@@ -2579,14 +2581,19 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\DefaultIcon"), NULL, icon_path);
     free(icon_path);
 
-    TCHAR *cmd_path = tstr_cat3(_T("\""), exePath, _T("\" \"%1\"")); // "${exePath}" "%1"
-    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmd_path);
-    free(cmd_path);
-
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
-    WriteRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, APP_NAME_STR);
-    WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), APP_NAME_STR);
+    TCHAR *cmd_path = tstr_cat3(_T("\""), exePath, _T("\" \"%1\"")); // "${exePath}" "%1"
+    ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmd_path);
+    free(cmd_path);
+
+    // Only change the association if we're confident, that we've registered ourselves well enough
+    if (ok) {
+        WriteRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, APP_NAME_STR);
+        if (hkey == HKEY_CURRENT_USER) {
+            WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), APP_NAME_STR);
+        }
+    }
 }
 
 static void DoAssociateExeWithPdfExtension()
@@ -2609,12 +2616,8 @@ bool IsExeAssociatedWithPdfExtension(void)
     TCHAR tmp[MAX_PATH];
     bool ok;
 
-    // those 2 don't have to exist but if they do exist, they must be APP_NAME_STR
+    // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     ok = ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), tmp, dimof(tmp));
-    if (ok && !tstr_eq(tmp, APP_NAME_STR))
-        return false;
-
-    ok = ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), tmp, dimof(tmp));
     if (ok && !tstr_eq(tmp, APP_NAME_STR))
         return false;
 
@@ -2635,9 +2638,10 @@ bool IsExeAssociatedWithPdfExtension(void)
 
     GetModuleFileName(NULL, exePath, dimof(exePath));
     TCHAR *cmd_path = tstr_cat3(_T("\""), exePath, _T("\" \"%1\"")); // "${exePath}" "%1"
-    int same = tstr_eq(tmp, cmd_path);
+    bool same = !!tstr_eq(tmp, cmd_path);
     free(cmd_path);
-	return same ? true : false;
+    
+    return same;
 }
 
 static BOOL RunMyselfAsAdmin(TCHAR *cmdline)
