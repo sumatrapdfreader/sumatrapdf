@@ -835,7 +835,7 @@ const char *g_transTranslations[] = {
   "&Gehe zu Seite:",
   "&Hilfe",
   "&Vergr\303\266\303\237erung:",
-  "&Anleitung",
+  "&Benutzerhandbuch",
   "&Gro\303\237-/Kleinschreibung beachten",
   "&Nein",
   "&Nein, danke",

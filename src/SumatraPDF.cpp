@@ -2696,16 +2696,15 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-// TODO: it should return path as newly allocated value. Passing buffer <path>
-// of unknown size is bad practice.
-static bool ResolveLnk(TCHAR * path)
+static TCHAR * ResolveLnk(TCHAR * path)
 {
     IShellLink *lnk = NULL;
     IPersistFile *file = NULL;
+    TCHAR *resolvedPath = NULL;
 
     LPCOLESTR olePath = tstr_to_wstr(path);
     if (!olePath)
-        return false;
+        return NULL;
 
     HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                                     IID_IShellLink, (LPVOID *)&lnk);
@@ -2729,17 +2728,16 @@ static bool ResolveLnk(TCHAR * path)
     if (FAILED(hRes))
         goto Exit;
 
-    lstrcpyn(path, newPath, MAX_PATH);
+    resolvedPath = tstr_dup(newPath);
 
 Exit:
     if (file)
         file->Release();
-
     if (lnk)
         lnk->Release();
-
     free((void *)olePath);
-    return S_OK == hRes;
+
+    return resolvedPath;
 }
 
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
@@ -2751,8 +2749,13 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
     for (i = 0; i < files_count; i++)
     {
         DragQueryFile(hDrop, i, filename, MAX_PATH);
-        if (tstr_endswithi(filename, _T(".lnk")))
-            ResolveLnk(filename);
+        if (tstr_endswithi(filename, _T(".lnk"))) {
+            TCHAR *resolved = ResolveLnk(filename);
+            if (resolved) {
+                lstrcpyn(filename, resolved, MAX_PATH);
+                free(resolved);
+            }
+        }
         // The first dropped document may override the current window
         LoadPdf(filename, i == 0 ? win : NULL);
     }

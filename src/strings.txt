@@ -1810,7 +1810,7 @@ hu:Útmutató(web)
 af:Handleiding
 bg:Ръководство
 br:Manual
-de:&Anleitung
+de:&Benutzerhandbuch
 gr:Οδηγίες χρήσης
 fr:Manuel
 pl:Instrukcja obslugi
