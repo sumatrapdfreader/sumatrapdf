@@ -566,6 +566,7 @@ nn:&Vis
 Automatic
 br:Automático
 de:Automatisch
+gr:Αυτόματα
 es:Automático
 sl:Samodejno
 cn:自动
@@ -4014,11 +4015,11 @@ br:Documentos PDF
 by:PDF-дакументы
 hu:PDF dokumentumok
 de:PDF-Dokumente
+gr:Αρχεία PDF
 es:Documentos PDF
 fr:Documents PDF
 nl:PDF-bestanden
 cy:Dogfennau PDF
-gr:Αρχεία PDF
 ru:PDF-документы
 mk:PDF документи
 hr:PDF dokumenti
@@ -4494,6 +4495,7 @@ vn:Mở bằng Adobe Reader
 Copy Selection\tCtrl-C
 br:Copiar seleção\tCtrl-C
 de:Auswahl kopieren\tStrg+C
+gr:Αντιγραφή επιλεγμένων\tCtrl-C
 cn:复制选择内容\tCtrl-C
 fr:Copier la sélection 
 ru:Копировать выделение\tCtrl-C
@@ -4507,6 +4509,7 @@ vn:Copy phần đánh dấu
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
 de:Inhalte mit Strg+linker Maustaste auswählen
+gr:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 cn:使用Ctrl+鼠标左键选择内容
 fr:Sélectionner avec Ctrl+bouton gauche de la souris
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
@@ -4520,6 +4523,7 @@ vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 &Custom Zoom...
 br:&Zoom personalizado...
 de:&Zoomfaktor...
+gr:&Ορισμός ζουμ...
 cn:自定义缩放...
 fr:Zoom personnalisé...
 ru:Заказной масштаб...
@@ -4533,6 +4537,7 @@ vn:Thu phóng &tuỳ ý...
 Zoom factor
 br:Proporção de Zoom
 de:Zoomfaktor
+gr:Ποσοστό ζουμ
 cn:缩放比例
 fr:Facteur de zoom
 ru:Масштабный коэффициент
@@ -4546,6 +4551,7 @@ vn:Hệ số thu phóng
 &Magnification:
 br:Aumento:
 de:&Vergrößerung:
+gr:Μεγέθυνση:
 cn:放大率(&M):
 fr:Grossissement:
 ru:Увеличение:
@@ -4559,6 +4565,7 @@ vn:Phóng đại:
 Zoom
 br:Zoom
 de:Zoom
+gr:Ζουμ
 cn:缩放
 fr:Zoom
 ru:Масштаб
@@ -4574,6 +4581,7 @@ br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando us
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
+gr:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις
 cn:无法运行反向搜索命令。请检查设置中的命令行。
 ja:逆順検索が開始できませんでした。コマンドラインを確認してください。
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
