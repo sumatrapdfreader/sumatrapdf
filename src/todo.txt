@@ -1,4 +1,11 @@
-Things to do before 1.0 release:
+Things to for 1.1 release:
+* document info window showing basic information about the file
+* a button to switch mouse between dragging and text selection, like in Adobe Reader
+  and FoxIt. The current way with Ctrl is not discoverable enough.
+* add "Show Cover Page During Facing" menu item, like in FoxIt and Reader
+* move http-related code to a separate file
+* split translations into one-file-per-language scheme, to make
+  updating translations easier for people and easier merging
 
 Long term todo:
 * intelligent resizing so that the window takes as much space as possible on the
