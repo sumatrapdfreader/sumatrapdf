@@ -157,6 +157,8 @@ Lang: va Valencian (Valencià)
 Lang: vn Vietnamese (Việt Nam)
 Lang: cy Welsh (Cymraeg)
 -
+Show Cover Page During Facing
+-
 &File
 am:&Ֆայլ
 af:&Lêer

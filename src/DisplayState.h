@@ -33,6 +33,7 @@ enum DisplayMode {
 
 #define FILE_STR                    "File"
 #define DISPLAY_MODE_STR            "Display Mode"
+#define SHOW_COVER_PAGE_STR         "Show Cover Page"
 #define PAGE_NO_STR                 "Page"
 #define ZOOM_VIRTUAL_STR            "ZoomVirtual"
 #define ROTATION_STR                "Rotation"

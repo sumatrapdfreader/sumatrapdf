@@ -32,7 +32,7 @@
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
-#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS_FACING
+#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_SHOW_COVER_PAGE
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -190,6 +190,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     NULL, // TCHAR *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
+    0, // int m_showCoverPage
     DEFAULT_ZOOM, // double m_defaultZoom
     WIN_STATE_NORMAL, // int  m_windowState
     DEFAULT_WIN_POS, // int  m_windowPosX
@@ -750,27 +751,40 @@ void RenderQueue_Clear()
 static void MenuUpdateDisplayMode(WindowInfo *win)
 {
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
-    if (win->dm)
+    int showCoverPage = gGlobalPrefs.m_showCoverPage;
+
+    if (win->dm) {
         displayMode = win->dm->displayMode();
+        showCoverPage = win->dm->showCover();
+    }
 
     HMENU menuMain = win->hMenu;
     UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
         CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_UNCHECKED);
+        if ((MF_ENABLED == enableState) && (IDM_VIEW_SHOW_COVER_PAGE == id)) {
+            if ((DM_SINGLE_PAGE == displayMode) || (DM_CONTINUOUS == displayMode)) {
+                enableState = MF_GRAYED;
+            }
+        }
         EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
     }
 
     UINT id = 0;
     switch (displayMode) {
-    case DM_SINGLE_PAGE: id = IDM_VIEW_SINGLE_PAGE; break;
-    case DM_FACING: id = IDM_VIEW_FACING; break;
-    case DM_CONTINUOUS: id = IDM_VIEW_CONTINUOUS; break;
-    case DM_CONTINUOUS_FACING: id = IDM_VIEW_CONTINUOUS_FACING; break;
-    default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
+        case DM_SINGLE_PAGE: id = IDM_VIEW_SINGLE_PAGE; break;
+        case DM_FACING: id = IDM_VIEW_FACING; break;
+        case DM_CONTINUOUS: id = IDM_VIEW_CONTINUOUS; break;
+        case DM_CONTINUOUS_FACING: id = IDM_VIEW_CONTINUOUS_FACING; break;
+        default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
     }
 
     if (id)
         CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_CHECKED);
+
+    if (showCoverPage)
+        CheckMenuItem(menuMain, IDM_VIEW_SHOW_COVER_PAGE, MF_BYCOMMAND | MF_CHECKED);
+
 }
 
 static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
@@ -809,6 +823,7 @@ MenuDef menuDefView[] = {
     { _TRN("Facing"),                      IDM_VIEW_FACING,             0  },
     { _TRN("Continuous"),                  IDM_VIEW_CONTINUOUS,         0  },
     { _TRN("Continuous facing"),           IDM_VIEW_CONTINUOUS_FACING,  0  },
+    { _TRN("Show Cover Page During Facing"), IDM_VIEW_SHOW_COVER_PAGE,  0  },
     { SEP_ITEM, 0, 0  },
     { _TRN("Rotate left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,        0  },
     { _TRN("Rotate right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,       0  },
@@ -1850,6 +1865,7 @@ static void RecalcSelectionPosition (WindowInfo *win) {
         selOnPage = selOnPage->next;
     }
 }
+
 // Clear all the requests from the PageRender queue.
 static void ClearPageRenderRequests()
 {
@@ -4645,10 +4661,23 @@ static void OnMenuViewContinuous(WindowInfo *win)
     SwitchToDisplayMode(win, DM_CONTINUOUS);
 }
 
+// toggles 'show cover page' state
+static void OnMenuShowCoverPage(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return;
+    if (!win->dm) return;
+    bool showCover = !win->dm->showCover();
+    win->dm->setShowCover(showCover);
+    MenuUpdateDisplayMode(win);
+}
+
 static void OnMenuViewContinuousFacing(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
+    if (!win->dm) return;
+
     SwitchToDisplayMode(win, DM_CONTINUOUS_FACING);
 }
 
@@ -6286,6 +6315,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_CONTINUOUS:
                     OnMenuViewContinuous(win);
+                    break;
+
+                case IDM_VIEW_SHOW_COVER_PAGE:
+                    OnMenuShowCoverPage(win);
                     break;
 
                 case IDM_VIEW_SHOW_HIDE_TOOLBAR:

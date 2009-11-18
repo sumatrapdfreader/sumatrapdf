@@ -680,12 +680,12 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
 
             switch (SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST)
             {
-            case DM_AUTOMATIC: prefs->m_defaultDisplayMode = DM_AUTOMATIC; break;
-            case DM_SINGLE_PAGE: prefs->m_defaultDisplayMode = DM_SINGLE_PAGE; break;
-            case DM_FACING: prefs->m_defaultDisplayMode = DM_FACING; break;
-            case DM_CONTINUOUS: prefs->m_defaultDisplayMode = DM_CONTINUOUS; break;
-            case DM_CONTINUOUS_FACING: prefs->m_defaultDisplayMode = DM_CONTINUOUS_FACING; break;
-            default: assert(FALSE);
+                case DM_AUTOMATIC: prefs->m_defaultDisplayMode = DM_AUTOMATIC; break;
+                case DM_SINGLE_PAGE: prefs->m_defaultDisplayMode = DM_SINGLE_PAGE; break;
+                case DM_FACING: prefs->m_defaultDisplayMode = DM_FACING; break;
+                case DM_CONTINUOUS: prefs->m_defaultDisplayMode = DM_CONTINUOUS; break;
+                case DM_CONTINUOUS_FACING: prefs->m_defaultDisplayMode = DM_CONTINUOUS_FACING; break;
+                default: assert(FALSE);
             }
             prefs->m_defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->m_defaultZoom);
 

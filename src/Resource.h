@@ -21,16 +21,20 @@
 #define IDM_EXIT                        405
 #define IDM_REFRESH                     406
 #define IDM_VIEW_WITH_ACROBAT           407
+/* IDM_VIEW_SINGLE_PAGE - IDM_VIEW_SHOW_COVER_PAGE must be in a continous range */
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_CONTINUOUS             412
 #define IDM_VIEW_CONTINUOUS_FACING      413
-#define IDM_VIEW_ROTATE_LEFT            414
-#define IDM_VIEW_ROTATE_RIGHT           415
+#define IDM_VIEW_SHOW_COVER_PAGE        414
+
+#define IDM_VIEW_ROTATE_LEFT            415
+#define IDM_VIEW_ROTATE_RIGHT           416
 #define IDM_VIEW_BOOKMARKS              417
 #define IDM_VIEW_FULLSCREEN             418
 #define IDM_VIEW_SHOW_HIDE_TOOLBAR      419
 #define IDM_COPY_SELECTION              420
+
 #define IDM_GOTO_NEXT_PAGE              430
 #define IDM_GOTO_PREV_PAGE              431
 #define IDM_GOTO_FIRST_PAGE             432

@@ -78,6 +78,8 @@ benc_dict* Prefs_SerializeGlobal(void)
     txt = DisplayModeNameFromEnum(gGlobalPrefs.m_defaultDisplayMode);
     DICT_ADD_STR(prefs, DISPLAY_MODE_STR, txt);
 
+    DICT_ADD_INT64(prefs, SHOW_COVER_PAGE_STR, gGlobalPrefs.m_showCoverPage);
+
     txt = str_printf("%.4f", gGlobalPrefs.m_defaultZoom);
     if (txt) {
         DICT_ADD_STR(prefs, ZOOM_VIRTUAL_STR, txt);
@@ -436,6 +438,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     const char* txt = dict_get_str(global, DISPLAY_MODE_STR);
     if (txt)
         DisplayModeEnumFromName(txt, &gGlobalPrefs.m_defaultDisplayMode);
+    dict_get_int(global, SHOW_COVER_PAGE_STR, &gGlobalPrefs.m_showCoverPage);
     dict_get_double_from_str(global, ZOOM_VIRTUAL_STR, &gGlobalPrefs.m_defaultZoom);
     dict_get_int(global, WINDOW_STATE_STR, &gGlobalPrefs.m_windowState);
 
