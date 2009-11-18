@@ -3061,6 +3061,9 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("ui polishing"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/#SumatraPDF"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
+    { _T("TeX enhancements"), _T("William Blum"), _T("http://william.famille-blum.org/"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
     { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
@@ -3068,8 +3071,6 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     0, 0, 0, 0, 0, 0, 0, 0 },
 
 #ifdef _TEX_ENHANCEMENT
-    { _T("TeX enhancements"), _T("William Blum"), _T("http://william.famille-blum.org/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
     { _T("SyncTeX"), _T("J\xE9rome Laurens"), _T("http://itexmac.sourceforge.net/SyncTeX.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif 
