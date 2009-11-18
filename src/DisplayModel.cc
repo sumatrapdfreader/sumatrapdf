@@ -1,5 +1,5 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
-   License: GPLv2 */
+   License: GPLv3 */
 
 /* How to think of display logic: physical screen of size
    drawAreaSize is a window into (possibly much larger)

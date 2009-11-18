@@ -2,7 +2,7 @@
 #define HTTP_H__
 
 /* Copyright Krzysztof Kowalczyk 2006-2009
-   License: GPLv2 */
+   License: GPLv3 */
 
 #include <Wininet.h>
 #include "MemSegment.h"
