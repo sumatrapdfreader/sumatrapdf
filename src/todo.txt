@@ -6,6 +6,14 @@ Things to for 1.1 release:
  * add an item in preferences dialog
 * split translations into one-file-per-language scheme, to make
   updating translations easier for people and easier merging
+* finish new language detection code
+
+Maybe for 1.1:
+* add menu option to create a crashdump on crash and submit it to a website
+  with a note about what happened. This is meant to make it easier to get
+  callstacks for the crashes from people who experience crashes I can't
+  reproduce. This should be an opt-in, disabled by default, because otherwise
+  I suspect I would get too many crash reports since Sumatra is quite popular.
 
 Long term todo:
 * intelligent resizing so that the window takes as much space as possible on the
