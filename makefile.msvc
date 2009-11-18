@@ -318,7 +318,7 @@ FONTDUMP_MAP = $(O)\fontdump.map
 
 SUMATRA_OBJS = \
 	$(O)\AppPrefs.obj $(O)\base_util.obj $(O)\benc_util.obj $(O)\DisplayModel.obj \
-	$(O)\DisplayState.obj $(O)\Http.obj $(O)\MemSegment.obj \
+	$(O)\DisplayState.obj $(O)\Http.obj $(O)\CrashHandler.obj $(O)\MemSegment.obj \
 	$(O)\file_util.obj $(O)\FileHistory.obj $(O)\geom_util.obj \
 	$(O)\PdfEngine.obj $(O)\PdfSearch.obj $(O)\str_util.obj $(O)\strlist_util.obj \
 	$(O)\SumatraDialogs.obj $(O)\SumatraPDF.obj $(O)\translations.obj \

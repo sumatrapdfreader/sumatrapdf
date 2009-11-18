@@ -94,6 +94,7 @@ void    sip_completion_enable(void);
 #endif
 
 void    launch_url(const TCHAR *url);
+void    exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden);
 
 TCHAR * get_app_data_folder_path(BOOL f_create);
 

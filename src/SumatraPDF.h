@@ -44,6 +44,7 @@
 #include "PdfSync.h"
 
 #define APP_NAME_STR            _T("SumatraPDF")
+#define CMD_ARG_SEND_CRASHDUMP _T("/sendcrashdump")
 
 /* Current state of a window:
   - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF

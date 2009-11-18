@@ -9,6 +9,10 @@
 #include "str_util.h"
 #include "wstr_util.h"
 
+#ifdef WIN32
+#define DIR_SEP_TSTR _T("/")
+#endif
+
 #ifdef _UNICODE
   #define tstr_len      wcslen
   #define tstr_dup      wstr_dup

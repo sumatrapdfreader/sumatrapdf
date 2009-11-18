@@ -302,6 +302,27 @@ void launch_url(const TCHAR *url)
     return;
 }
 
+void exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden)
+{
+    SHELLEXECUTEINFO sei;
+    BOOL             res;
+
+    if (NULL == exe)
+        return;
+
+    ZeroMemory(&sei, sizeof(sei));
+    sei.cbSize  = sizeof(sei);
+    sei.fMask   = SEE_MASK_FLAG_NO_UI;
+    sei.lpVerb  = NULL;
+    sei.lpFile  = exe;
+    sei.lpParameters = params;
+    if (hidden)
+        sei.nShow = SW_HIDE;
+    else
+        sei.nShow   = SW_SHOWNORMAL;
+    res = ShellExecuteEx(&sei);
+}
+
 /* On windows those are defined as:
 #define CSIDL_PROGRAMS           0x0002
 #define CSIDL_PERSONAL           0x0005

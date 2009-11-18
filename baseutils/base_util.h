@@ -77,6 +77,7 @@
 #define SAZA(struct_name, n) (struct_name *)zmalloc(sizeof(struct_name) * (n))
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
+#define UNUSED_VAR( x )  (x) = (x)
 
 #ifdef __cplusplus
 extern "C"
