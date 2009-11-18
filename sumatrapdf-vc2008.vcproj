@@ -106,6 +106,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Http.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Http.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\LangMenuDef.cpp"
 				>
 			</File>

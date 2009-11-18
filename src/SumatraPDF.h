@@ -43,6 +43,8 @@
 #include "FileWatch.h"
 #include "PdfSync.h"
 
+#define APP_NAME_STR            _T("SumatraPDF")
+
 /* Current state of a window:
   - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF
   - WS_SHOWING_PDF - showing a PDF file
