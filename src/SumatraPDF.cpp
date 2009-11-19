@@ -2650,11 +2650,11 @@ static int ExtractNextNumber(TCHAR **txt)
 // -1 otherwise.
 // e.g. 
 //   0.9.3.900 is greater than 0.9.3
-//   1/|09@300 is greater than 1/|09@3 which is greater than 1$%9)1
+//   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 int CompareVersion(TCHAR *txt1, TCHAR *txt2)
 {
     int v1, v2;
-    while(1) {
+    while (1) {
         v1 = ExtractNextNumber(&txt1);
         v2 = ExtractNextNumber(&txt2);
         if (v1 == v2) {
@@ -2728,7 +2728,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
     /* TODO: too hackish */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
-    if (CompareVersion(verTxt, UPDATE_CHECK_VER)>0){
+    if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0){
         bool showDialog = true;
         // if automated, respect gGlobalPrefs.m_versionToSkip
         if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
