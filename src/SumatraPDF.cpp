@@ -245,10 +245,10 @@ static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win,
     bool showWin, bool placeWindow);
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize);
 
-void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
+static void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 static void ClearSearch(WindowInfo *win);
-void WindowInfo_EnterFullscreen(WindowInfo *win);
-void WindowInfo_ExitFullscreen(WindowInfo *win);
+static void WindowInfo_EnterFullscreen(WindowInfo *win);
+static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=0);
 
 #define SEP_ITEM "-----"
@@ -4794,7 +4794,7 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
-void WindowInfo_EnterFullscreen(WindowInfo *win)
+static void WindowInfo_EnterFullscreen(WindowInfo *win)
 {
     if (win->fullScreen || !IsWindowVisible(win->hwndFrame)) 
         return;
@@ -4838,7 +4838,7 @@ void WindowInfo_EnterFullscreen(WindowInfo *win)
     SetFocus(win->hwndFrame);
 }
 
-void WindowInfo_ExitFullscreen(WindowInfo *win)
+static void WindowInfo_ExitFullscreen(WindowInfo *win)
 {
     if (!win->fullScreen) 
         return;
@@ -5375,7 +5375,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return ret;
 }
 
-void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
+static void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
 {
     TCHAR text[256];
     GetWindowText(hwnd, text, sizeof(text));
