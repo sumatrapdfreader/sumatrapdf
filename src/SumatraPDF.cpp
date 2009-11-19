@@ -2684,7 +2684,7 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
 
 static bool ValiProgramVersionChar(char c)
 {
-    if (c >= '0' & c <= '9')
+    if (c >= '0' && c <= '9')
         return true;
     if (c == '.' || c == '\r' || c == '\n')
         return true;
