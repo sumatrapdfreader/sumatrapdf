@@ -2682,38 +2682,75 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
     return DIALOG_OK_PRESSED == res;
 }
 
+static bool ValiProgramVersionChar(char c)
+{
+    if (c >= '0' & c <= '9')
+        return true;
+    if (c == '.' || c == '\r' || c == '\n')
+        return true;
+    return false;
+}
+
+// the only valid chars are 0-9, . and newlines. Return false if contains
+// anything else
+static bool ValidProgramVersion(char *txt)
+{
+    char c = *txt++;
+    while (c != 0) {
+        if (!ValiProgramVersionChar(c)) {
+            return false;
+        }
+        c = *txt++;
+    }
+    return true;
+}
+
 static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
     DWORD dataSize;
     char *txt = (char*)ctx->data.getData(&dataSize);
     TCHAR *url = ctx->url;
-    if (tstr_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
-        TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
-        /* TODO: too hackish */
-        tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
-        if (CompareVersion(verTxt, UPDATE_CHECK_VER)>0){
-            bool showDialog = true;
-            // if automated, respect gGlobalPrefs.m_versionToSkip
-            if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
-                if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt)) {
-                    showDialog = false;
-                }
-            }
-            if (showDialog) {
-                BOOL download = ShowNewVersionDialog(win, verTxt);
-                if (download) {
-                    LaunchBrowser(SVN_UPDATE_LINK);
-                }
-            }
-        } else {
-            /* if automated => don't notify that there is no new version */
-            if (!ctx->autoCheck) {
-                MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("No new version available."), MB_ICONEXCLAMATION | MB_OK);
+    if (!tstr_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
+        goto Exit;
+    }
+
+    // see http://code.google.com/p/sumatrapdf/issues/detail?id=725
+    // if a user configures os-wide proxy that is not regular ie proxy
+    // (which we pick up) we might get complete garbage in response to
+    // our query and in might accidentally contain number which might
+    // be bigger than our version number which will make program ask
+    // to upgrade every time
+    // to fix that, we reject text that doesn't look like comes from us
+    if (!ValidProgramVersion(txt)) {
+        goto Exit;
+    }
+        
+    TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
+    /* TODO: too hackish */
+    tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
+    if (CompareVersion(verTxt, UPDATE_CHECK_VER)>0){
+        bool showDialog = true;
+        // if automated, respect gGlobalPrefs.m_versionToSkip
+        if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
+            if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt)) {
+                showDialog = false;
             }
         }
-        free(verTxt);
+        if (showDialog) {
+            BOOL download = ShowNewVersionDialog(win, verTxt);
+            if (download) {
+                LaunchBrowser(SVN_UPDATE_LINK);
+            }
+        }
+    } else {
+        /* if automated => don't notify that there is no new version */
+        if (!ctx->autoCheck) {
+            MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("No new version available."), MB_ICONEXCLAMATION | MB_OK);
+        }
     }
-    free(txt);
+    free(verTxt);
+Exit:
+	free(txt);
     delete ctx;
 }
 
