@@ -4,7 +4,6 @@
 # ZLIB_DIR=
 # JPEG_DIR=
 # JBIG2_DIR=
-# JASPER_DIR=
 # OPENJPEG_DIR=
 
 # Symbolic names for HOST variable
@@ -35,10 +34,6 @@ ifneq ($(JPEG_DIR),)
 VPATH+=$(JPEG_DIR)
 endif
 
-ifneq ($(JASPER_DIR),)
-VPATH+=$(JASPER_DIR)/base:$(JASPER_DIR)/jp2:$(JASPER_DIR)/pgx:$(JASPER_DIR)/jpc
-endif
-
 ifneq ($(OPENJPEG_DIR),)
 VPATH+=$(OPENJPEG_DIR)
 endif
@@ -61,11 +56,6 @@ endif
 ifneq ($(JBIG2_DIR),)
 INCS += -I $(JBIG2_DIR)
 CFLAGS += -DHAVE_JBIG2DEC
-endif
-
-ifneq ($(JASPER_DIR),)
-INCS += -I $(JASPER_DIR)/include
-CFLAGS += -DHAVE_JASPER -DJAS_CONFIGURE
 endif
 
 ifneq ($(OPENJPEG_DIR),)
@@ -106,8 +96,6 @@ CFLAGS += -std=c99 -DHAVE_C99
 ZLIB_CFLAGS = $(CFLAGS)
 JPEG_CFLAGS = $(CFLAGS)
 JBIG2_CFLAGS = $(CFLAGS) -DHAVE_STDINT_H
-JASPER_CFLAGS = $(CFLAGS) -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_PNM_SUPPORT -DEXCLUDE_BMP_SUPPORT \
-	-DEXCLUDE_RAS_SUPPORT -DEXCLUDE_JPG_SUPPORT
 OPENJPEG_CFLAGS = $(CFLAGS)
 
 #-DHAVE_CONFIG_H
@@ -159,19 +147,6 @@ JBIG2_SRC = \
 	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
 	jbig2_image.c jbig2_metadata.c
 
-JASPER_SRC = \
-	jas_cm.c jas_debug.c jas_icc.c \
-	jas_iccdata.c jas_image.c jas_init.c jas_malloc.c \
-	jas_seq.c jas_stream.c jas_string.c jas_tvp.c \
-	jas_version.c \
-	jp2_cod.c jp2_dec.c jp2_enc.c \
-	jpc_bs.c jpc_cs.c jpc_dec.c jpc_enc.c \
-	jpc_math.c jpc_mct.c jpc_mqcod.c jpc_mqdec.c \
-	jpc_mqenc.c jpc_qmfb.c jpc_t1cod.c jpc_t1dec.c \
-	jpc_t1enc.c jpc_t2cod.c jpc_t2dec.c jpc_t2enc.c \
-	jpc_tagtree.c jpc_tsfb.c jpc_util.c \
-	pgx_cod.c pgx_dec.c pgx_enc.c
-
 OPENJPEG_SRC = \
 	bio.c cio.c dwt.c event.c image.c \
 	j2k.c j2k_lib.c jp2.c jpt.c mct.c \
@@ -188,19 +163,15 @@ FITZ_SRC = \
 	base_unicode.c base_string.c node_misc1.c node_misc2.c node_optimize.c node_path.c \
 	node_text.c node_toxml.c node_tree.c res_colorspace.c res_font.c \
 	res_image.c res_shade.c crypt_aes.c crypt_arc4.c crypt_crc32.c \
-	crypt_md5.c filt_a85d.c filt_a85e.c filt_aesd.c filt_ahxd.c filt_ahxe.c \
-	filt_arc4.c filt_copy.c filt_faxd.c filt_faxdtab.c filt_faxe.c filt_faxetab.c \
-	filt_flate.c filt_lzwd.c filt_lzwe.c filt_null.c filt_pipeline.c \
-	filt_predict.c filt_rld.c filt_rle.c obj_array.c obj_dict.c \
+	crypt_md5.c filt_aesd.c filt_basic.c \
+	filt_arc4.c filt_faxd.c filt_faxdtab.c \
+	filt_flate.c filt_lzwd.c filt_pipeline.c \
+	filt_predict.c obj_array.c obj_dict.c \
 	obj_parse.c obj_print.c obj_simple.c stm_buffer.c stm_filter.c \
-	stm_misc.c stm_open.c stm_read.c filt_dctd.c filt_dcte.c util_getopt.c
-
-ifneq ($(JASPER_DIR),)
-FITZ_SRC += filt_jpxd_jas.c
-endif
+	stm_misc.c stm_open.c stm_read.c filt_dctd.c util_getopt.c
 
 ifneq ($(OPENJPEG_DIR),)
-FITZ_SRC += filt_jpxd_opj.c
+FITZ_SRC += filt_jpxd.c
 endif
 
 ifneq ($(JBIG2_DIR),)
@@ -233,9 +204,6 @@ JPEG_DEP = $(patsubst %.o, %.d, $(JPEG_OBJ))
 
 ZLIB_OBJ = $(patsubst %.c, $(OUTDIR)/ZLIB_%.o, ${ZLIB_SRC})
 ZLIB_DEP = $(patsubst %.o, %.d, $(ZLIB_OBJ))
-
-JASPER_OBJ = $(patsubst %.c, $(OUTDIR)/JASPER_%.o, ${JASPER_SRC})
-JASPER_DEP = $(patsubst %.o, %.d, $(JASPER_OBJ))
 
 OPENJPEG_OBJ = $(patsubst %.c, $(OUTDIR)/OPENJPEG_%.o, ${OPENJPEG_SRC})
 OPENJPEG_DEP = $(patsubst %.o, %.d, $(OPENJPEG_OBJ))
@@ -295,15 +263,6 @@ PDFDRAW_OBJ    += $(JPEG_OBJ)
 PDFINFO_OBJ    += $(JPEG_OBJ)
 PDFSHOW_OBJ    += $(JPEG_OBJ)
 PDFEXTRACT_OBJ += $(JPEG_OBJ)
-endif
-
-ifneq ($(JASPER_DIR),)
-PDFBENCH_OBJ   += $(JASPER_OBJ)
-PDFCLEAN_OBJ   += $(JASPER_OBJ)
-PDFDRAW_OBJ    += $(JASPER_OBJ)
-PDFINFO_OBJ    += $(JASPER_OBJ)
-PDFSHOW_OBJ    += $(JASPER_OBJ)
-PDFEXTRACT_OBJ += $(JASPER_OBJ)
 endif
 
 ifneq ($(OPENJPEG_DIR),)
@@ -403,9 +362,6 @@ $(OUTDIR)/JPEG_%.o: %.c
 $(OUTDIR)/JBIG_%.o: %.c
 	$(CC) -MD -c $(JBIG2_CFLAGS) -o $@ $<
 
-$(OUTDIR)/JASPER_%.o: %.c
-	$(CC) -MD -c $(JASPER_CFLAGS) -o $@ $<
-
 $(OUTDIR)/OPENJPEG_%.o: %.c
 	$(CC) -MD -c $(OPENJPEG_CFLAGS) -o $@ $<
 
@@ -479,10 +435,6 @@ endif
 
 ifneq ($(JPEG_DIR),)
 -include $(JPEG_DEP)
-endif
-
-ifneq ($(JASPER_DIR),)
--include $(JASPER_DEP)
 endif
 
 ifneq ($(OPENJPEG_DIR),)
