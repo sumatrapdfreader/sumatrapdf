@@ -14,7 +14,8 @@ struct entry
 	int stmlen;
 };
 
-static fz_error parseobj(fz_stream *file, char *buf, int cap,
+static fz_error
+fz_repairobj(fz_stream *file, char *buf, int cap,
 	int *stmofsp, int *stmlenp, int *isroot, int *isinfo)
 {
 	fz_error error;
@@ -199,7 +200,7 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 
 		if (tok == PDF_TOBJ)
 		{
-			error = parseobj(file, buf, sizeof buf, &stmofs, &stmlen, &isroot, &isinfo);
+			error = fz_repairobj(file, buf, sizeof buf, &stmofs, &stmlen, &isroot, &isinfo);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);

@@ -11,9 +11,6 @@
 CFG=dbg
 !endif
 
-# set to use openjpeg, unset to use jasper
-JPEG2=openjpeg
-
 # O is directory where object and binary files go
 !if "$(EXB)"=="rm"
 O = obj-rm-$(CFG)
@@ -32,7 +29,6 @@ FITZ_DIR=mupdf
 ZLIB_DIR=$(EXTLIBSDIR)ext\zlib-1.2.3
 FREETYPE_DIR=$(EXTLIBSDIR)ext\freetype-2.3.9
 JPEG_DIR=$(EXTLIBSDIR)ext\jpeg6b
-JASPER_DIR=$(EXTLIBSDIR)ext\jasper\src\libjasper
 OPENJPEG_DIR=$(EXTLIBSDIR)ext\openjpeg-1.3\libopenjpeg
 JBIG2_DIR=$(EXTLIBSDIR)ext\jbig2dec
 
@@ -80,12 +76,6 @@ FT_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/include \
 # jbig2 flags
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
-# jasper flags
-JASPER_CFLAGS = $(CFLAGS) /I$(JASPER_DIR)/include \
-	/D "EXCLUDE_MIF_SUPPORT" /D "EXCLUDE_PNM_SUPPORT" \
-	/D "EXCLUDE_BMP_SUPPORT" /D "EXCLUDE_RAS_SUPPORT" \
-	/D "EXCLUDE_JPG_SUPPORT"
-
 # openjpeg flags
 OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR)
 
@@ -97,11 +87,7 @@ FITZ_CFLAGS = $(CFLAGS) /TC \
 	/D "NEED_MATH" \
 	/D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
-!if "$(JPEG2)"=="openjpeg"
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_OPENJPEG" /D "OPJ_STATIC" /I$(OPENJPEG_DIR)
-!else
-FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_JASPER" /I$(JASPER_DIR)/include
-!endif
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
 	/I$(FITZ_DIR)/apps \
@@ -175,19 +161,6 @@ JBIG2_OBJS = \
 	$(O)\jbig2_mmr.obj $(O)\jbig2_page.obj $(O)\jbig2_metadata.obj
 # jbig2_image_pbm$(OBJ) jbig2dec$(OBJ) sha1$(OBJ)
 
-JASPER_OBJS = \
-	$(O)\jas_cm.obj $(O)\jas_debug.obj $(O)\jas_icc.obj \
-	$(O)\jas_iccdata.obj $(O)\jas_image.obj $(O)\jas_init.obj $(O)\jas_malloc.obj \
-	$(O)\jas_seq.obj $(O)\jas_stream.obj $(O)\jas_string.obj $(O)\jas_tvp.obj \
-	$(O)\jas_version.obj \
-	$(O)\jp2_cod.obj $(O)\jp2_dec.obj $(O)\jp2_enc.obj \
-	$(O)\jpc_bs.obj $(O)\jpc_cs.obj $(O)\jpc_dec.obj $(O)\jpc_enc.obj \
-	$(O)\jpc_math.obj $(O)\jpc_mct.obj $(O)\jpc_mqcod.obj $(O)\jpc_mqdec.obj \
-	$(O)\jpc_mqenc.obj $(O)\jpc_qmfb.obj $(O)\jpc_t1cod.obj $(O)\jpc_t1dec.obj \
-	$(O)\jpc_t1enc.obj $(O)\jpc_t2cod.obj $(O)\jpc_t2dec.obj $(O)\jpc_t2enc.obj \
-	$(O)\jpc_tagtree.obj $(O)\jpc_tsfb.obj $(O)\jpc_util.obj \
-	$(O)\pgx_cod.obj $(O)\pgx_dec.obj $(O)\pgx_enc.obj
-
 OPENJPEG_OBJS = \
 	$(O)\bio.obj $(O)\cio.obj $(O)\dwt.obj $(O)\event.obj $(O)\image.obj \
 	$(O)\j2k.obj $(O)\j2k_lib.obj $(O)\jp2.obj $(O)\jpt.obj $(O)\mct.obj \
@@ -207,21 +180,17 @@ FITZ_OBJS = \
 	$(O)\node_misc1.obj $(O)\node_misc2.obj $(O)\node_optimize.obj $(O)\node_path.obj \
 	$(O)\node_text.obj $(O)\node_toxml.obj $(O)\node_tree.obj $(O)\res_colorspace.obj \
 	$(O)\res_font.obj $(O)\res_image.obj $(O)\res_shade.obj \
-	$(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj $(O)\filt_a85d.obj \
-	$(O)\filt_a85e.obj $(O)\filt_aesd.obj $(O)\filt_ahxd.obj $(O)\filt_ahxe.obj $(O)\filt_arc4.obj \
-	$(O)\filt_copy.obj $(O)\filt_faxd.obj $(O)\filt_faxdtab.obj $(O)\filt_faxe.obj $(O)\filt_faxetab.obj \
-	$(O)\filt_flate.obj $(O)\filt_lzwd.obj $(O)\filt_lzwe.obj $(O)\filt_null.obj \
-	$(O)\filt_pipeline.obj $(O)\filt_predict.obj $(O)\filt_rld.obj $(O)\filt_rle.obj \
+	$(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj \
+	$(O)\filt_aesd.obj $(O)\filt_arc4.obj \
+	$(O)\filt_basic.obj $(O)\filt_faxd.obj $(O)\filt_faxdtab.obj \
+	$(O)\filt_flate.obj $(O)\filt_lzwd.obj \
+	$(O)\filt_pipeline.obj $(O)\filt_predict.obj \
 	$(O)\obj_array.obj $(O)\obj_dict.obj $(O)\obj_parse.obj $(O)\obj_print.obj \
 	$(O)\obj_simple.obj $(O)\stm_buffer.obj $(O)\stm_filter.obj $(O)\stm_misc.obj \
 	$(O)\stm_open.obj $(O)\stm_read.obj $(O)\filt_dctd.obj \
-	$(O)\filt_dcte.obj $(O)\filt_jbig2d.obj
+	$(O)\filt_jbig2d.obj
 
-!if "$(JPEG2)"=="openjpeg"
-FITZ_OBJS = $(FITZ_OBJS) $(O)\filt_jpxd_opj.obj 
-!else
-FITZ_OBJS = $(FITZ_OBJS) $(O)\filt_jpxd_jas.obj
-!endif
+FITZ_OBJS = $(FITZ_OBJS) $(O)\filt_jpxd.obj 
 
 MUPDF_OBJS = \
 	$(O)\pdf_annot.obj $(O)\pdf_build.obj $(O)\pdf_cmap.obj $(O)\pdf_colorspace1.obj \
@@ -260,11 +229,7 @@ LIBS_OBJS = \
 	$(FONT_OBJS) \
 	$(CMAP_OBJS)
 
-!if "$(JPEG2)"=="openjpeg"
 LIBS_OBJS = $(LIBS_OBJS) $(OPENJPEG_OBJS)
-!else
-LIBS_OBJS = $(LIBS_OBJS) $(JASPER_OBJS)
-!endif
 
 PDFAPP_OBJS = $(LIBS_OBJS) $(O)\pdfapp.obj $(O)\winmain.obj
 
@@ -580,19 +545,6 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 # libjpeg directories
 {$(JPEG_DIR)}.c{$(O)}.obj::
 	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
-
-# jasper directories
-{$(JASPER_DIR)\base}.c{$(O)}.obj::
-	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
-
-{$(JASPER_DIR)\jp2}.c{$(O)}.obj::
-	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
-
-{$(JASPER_DIR)\jpc}.c{$(O)}.obj::
-	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
-
-{$(JASPER_DIR)\pgx}.c{$(O)}.obj::
-	$(CC) $(JASPER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # openjpeg directories
 {$(OPENJPEG_DIR)}.c{$(O)}.obj::
