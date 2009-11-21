@@ -354,7 +354,7 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
 	    /* (3c.viii) */
 	    if (!params->TRANSPOSED) {
-		switch (params->REFCORNER) {  /* FIXME: double check offsets */
+		switch (params->REFCORNER) {
 		case JBIG2_CORNER_TOPLEFT: x = S; y = T; break;
 		case JBIG2_CORNER_TOPRIGHT: x = S - IB->width + 1; y = T; break;
 		case JBIG2_CORNER_BOTTOMLEFT: x = S; y = T - IB->height + 1; break;
@@ -362,10 +362,10 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 		}
 	    } else { /* TRANSPOSED */
 		switch (params->REFCORNER) {
-		case JBIG2_CORNER_TOPLEFT: y = S; x = T; break;
-		case JBIG2_CORNER_TOPRIGHT: y = S - IB->width + 1; x = T; break;
-		case JBIG2_CORNER_BOTTOMLEFT: y = S; x = T - IB->height + 1; break;
-		case JBIG2_CORNER_BOTTOMRIGHT: y = S - IB->width + 1; x = T - IB->height + 1; break;
+		case JBIG2_CORNER_TOPLEFT: x = T; y = S; break;
+		case JBIG2_CORNER_TOPRIGHT: x = T - IB->width + 1; y = S; break;
+		case JBIG2_CORNER_BOTTOMLEFT: x = T; y = S - IB->height + 1; break;
+		case JBIG2_CORNER_BOTTOMRIGHT: x = T - IB->width + 1; y = S - IB->height + 1; break;
 		}
 	    }
 

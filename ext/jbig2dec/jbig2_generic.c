@@ -494,6 +494,11 @@ jbig2_decode_generic_region(Jbig2Ctx *ctx,
 {
   const int8_t *gbat = params->gbat;
 
+  if (!params->MMR && params->TPGDON) {
+    return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+	"NYI: typical prediction in a generic region\n");
+  }
+
   if (!params->MMR && params->GBTEMPLATE == 0) {
     if (gbat[0] == +3 && gbat[1] == -1 &&
         gbat[2] == -3 && gbat[3] == -1 &&
