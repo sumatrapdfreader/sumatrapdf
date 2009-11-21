@@ -2760,14 +2760,13 @@ static void DrawCenteredText(HDC hdc, RECT *r, const TCHAR *txt)
     DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
-static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor) {
+static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor, int margin = 1) {
     HBITMAP hbitmap;       // bitmap handle
     BITMAPINFO bmi;        // bitmap header
     VOID *pvBits;          // pointer to DIB section
     BLENDFUNCTION bf;      // structure for alpha blending
     HDC rectDC = CreateCompatibleDC(hdc);
     const DWORD selectionColorBlack = 0xff000000;
-    const int margin = 1;
 
     ZeroMemory(&bmi, sizeof(BITMAPINFO));
 
@@ -2845,7 +2844,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         RectD_FromRectI (&recD, &win->fwdsearchmarkRects[i]);
         win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
         RectI_FromRectD (&recI, &recD);
-        PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue);
+        PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue, 0);
     }
 
 }
