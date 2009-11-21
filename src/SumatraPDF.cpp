@@ -3502,6 +3502,11 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     assert(win);
     if (!win || !win->dm ) return;
 
+    // Clear the last forward-search result
+    win->fwdsearchmarkRects.clear();
+    InvalidateRect(win->hwndCanvas, NULL, FALSE);
+
+
     if (!win->pdfsync) {
         win->pdfsync = CreateSynchronizer(win->watcher.filepath());
         if (!win->pdfsync) {
