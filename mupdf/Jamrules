@@ -23,8 +23,6 @@
 #
 #   -sHAVE_JBIG2DEC=true
 #
-#   -sHAVE_JASPER=true
-#	-- or --
 #   -sHAVE_OPENJPEG=true
 #
 # To compile without builtin CJK CMap and font support, and save a few
@@ -44,7 +42,6 @@ ALL_LOCATE_TARGET ?= [ FDirName $(TOP) build $(OS:L)-$(OSPLAT:L)-$(BUILD:L) ] ;
 
 # Add compile time defines for JBIG2 and JPEG2000 support.
 if $(HAVE_JBIG2DEC) { DEFINES += HAVE_JBIG2DEC ; }
-if $(HAVE_JASPER)   { DEFINES += HAVE_JASPER ; }
 if $(HAVE_OPENJPEG) { DEFINES += HAVE_OPENJPEG ; }
 
 if $(OS) = LINUX
@@ -62,7 +59,6 @@ if $(OS) = LINUX
     if $(BUILD) = release { OPTIM = -O3 ; }
 
     if $(HAVE_JBIG2DEC)	{ LINKLIBS += -ljbig2dec ; }
-    if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 }
 
@@ -81,7 +77,6 @@ if $(OS) = MACOSX
     if $(BUILD) = release { OPTIM = -O3 ; }
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
-    if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 }
 
@@ -103,7 +98,6 @@ if $(OS) = MINGW
     if $(BUILD) = release { OPTIM = -O3 ; }
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
-    if $(HAVE_JASPER)	{ LINKLIBS += -ljasper ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }
 
     actions WindRes { windres -i $(>) -o $(<) --include-dir=$(>:D) }
@@ -126,7 +120,6 @@ if $(OS) = NT
     if $(BUILD) = release { }
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += jbig2dec.lib ; }
-    if $(HAVE_JASPER)	{ LINKLIBS += jasper.lib ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += openjpeg.lib ; }
 
     actions WindRes { rc /fo $(<) $(>) }
