@@ -2402,18 +2402,6 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
     }
 }
 
-static void DoAssociateExeWithPdfExtension()
-{
-    DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
-    DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
-
-    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
-
-    // Remind the user, when a different application takes over
-    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
-    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
-}
-
 // verify that all registry entries that need to be set in order to associate
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension(void)
@@ -2450,27 +2438,16 @@ bool IsExeAssociatedWithPdfExtension(void)
     return same;
 }
 
-static BOOL RunMyselfAsAdmin(TCHAR *cmdline)
-{
-    assert(WindowsVer2000OrGreater());
-    TCHAR *exePath = ExePathGet();
-    SHELLEXECUTEINFO sei = {0};
-    sei.cbSize = sizeof(sei);
-    sei.lpVerb = _T("runas");
-    sei.lpFile = exePath;
-    sei.lpParameters = cmdline;
-    sei.nShow = SW_SHOWNORMAL;
-    sei.fMask = SEE_MASK_FLAG_NO_UI;
-    BOOL ok = ShellExecuteEx(&sei);
-    return ok;
-}
-
 void AssociateExeWithPdfExtension(void)
 {
-    if (WindowsVerVistaOrGreater())
-        RunMyselfAsAdmin(_T("-register-for-pdf"));
-    else
-        DoAssociateExeWithPdfExtension();
+    DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
+    DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
+
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
+
+    // Remind the user, when a different application takes over
+    gGlobalPrefs.m_pdfAssociateShouldAssociate = TRUE;
+    gGlobalPrefs.m_pdfAssociateDontAskAgain = FALSE;
 }
 
 // Registering happens either through the Installer or the Options dialog;
@@ -7210,7 +7187,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     TCHAR *newWindowTitle = NULL;
     for (TStrList *currArg = argListRoot->next; currArg; currArg = currArg->next) {
         if (is_arg("-register-for-pdf")) {
-            DoAssociateExeWithPdfExtension();
+            AssociateExeWithPdfExtension();
             return 0;
         }
         else if (is_arg("-enum-printers")) {
