@@ -1024,6 +1024,7 @@ Lsetcolor:
 					return fz_rethrow(error, "cannot load image");
 
 				error = pdf_showimage(csi, img);
+				fz_dropimage(img); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 				if (error)
 					return fz_rethrow(error, "cannot draw image");
 			}
