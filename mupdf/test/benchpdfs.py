@@ -24,6 +24,10 @@ import sys, os, os.path, urllib2, gzip, bz2, traceback
 # To generate the name run sha1sum on an (uncompressed) pdf, rename
 # the file to a result of that + .pdf and optionally compress with gzip or bzip2
 
+# TODO:
+# - run multiple pdfbench executables at the same time to see if it's faster
+#   (by virtue of using multiple cpus if they're available)
+
 pdfs_to_test = [
     "http://darcs.kowalczyk.info/testpdfs/293bcd6b00e006d66fdc62ea436508f3ebb30219.pdf.gz"
 ]
