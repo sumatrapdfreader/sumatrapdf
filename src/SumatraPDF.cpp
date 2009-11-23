@@ -4237,7 +4237,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     if (!tstr_endswithi(dstFileName, _T(".pdf"))) {
         realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), _T(".pdf"));
     }
-    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, COPY_FILE_FAIL_IF_EXISTS);
+    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
     if (ok) {
         const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
         DWORD attributes = GetFileAttributes(realDstFileName);
