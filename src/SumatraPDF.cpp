@@ -1319,6 +1319,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     // we postpone the reload until the next autorefresh event
     bool tryrepair = !autorefresh;
     LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryrepair, true, false);
+    DisplayState_Free(&ds);
 }
 
 #ifndef THREAD_BASED_FILEWATCH
