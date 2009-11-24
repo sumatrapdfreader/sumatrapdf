@@ -106,6 +106,7 @@ pdf_dropxobject(pdf_xobject *xobj)
 {
 	if (xobj && --xobj->refs == 0)
 	{
+		if (xobj->resources) pdf_dropxobject(xobj->resources); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 		if (xobj->contents) fz_dropbuffer(xobj->contents);
 		fz_free(xobj);
 	}

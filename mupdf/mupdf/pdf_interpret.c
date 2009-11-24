@@ -138,6 +138,9 @@ pdf_dropcsi(pdf_csi *csi)
 		fz_dropcolorspace(csi->gstate[csi->gtop].fill.cs);
 	if (csi->gstate[csi->gtop].stroke.cs)
 		fz_dropcolorspace(csi->gstate[csi->gtop].stroke.cs);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+	if (csi->gstate[csi->gtop].font)
+		pdf_dropfont(csi->gstate[csi->gtop].font);
 
 	if (csi->tree) fz_droptree(csi->tree);
 
@@ -333,10 +336,6 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 					return fz_rethrow(error, "cannot load font");
 				if (!gstate->font)
 					return fz_throw("cannot find font in store");
-
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487
-					font will be leaked if not dropped */
-				pdf_dropfont(gstate->font);
 
 				gstate->size = fz_toreal(fz_arrayget(val, 1));
 			}
@@ -896,10 +895,6 @@ Lsetcolor:
 			if (error)
 				return fz_rethrow(error, "cannot load font");
 
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487
-				font will be leaked if not dropped */
-			pdf_dropfont(gstate->font);
-
 			gstate->size = fz_toreal(csi->stack[1]);
 			if (gstate->size < -1000.0)
 			{
@@ -1022,6 +1017,7 @@ Lsetcolor:
 
 				clearstack(csi);
 				error = runxobject(csi, xref, rdb, xobj);
+				pdf_dropxobject(xobj); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 				if (error)
 					return fz_rethrow(error, "cannot draw xobject");
 			}

@@ -342,7 +342,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 			usecolorkey = 1;
 			loadcolorkey(img->colorkey, bpc, indexed != nil, obj);
 		}
-		else
+		else if (!mask) /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 		{
 			pdf_logimage("has mask\n");
 			error = pdf_loadimage(&mask, xref, obj);
