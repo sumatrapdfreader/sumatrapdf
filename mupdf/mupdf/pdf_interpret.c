@@ -108,6 +108,7 @@ gsave(pdf_csi *csi)
 
 	pdf_keepmaterial(&gs->stroke);
 	pdf_keepmaterial(&gs->fill);
+	if (gs->font) pdf_keepfont(gs->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 
 	return fz_okay;
 }
@@ -122,6 +123,7 @@ grestore(pdf_csi *csi)
 
 	pdf_dropmaterial(&gs->stroke);
 	pdf_dropmaterial(&gs->fill);
+	pdf_dropfont(gs->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 
 	csi->gtop --;
 

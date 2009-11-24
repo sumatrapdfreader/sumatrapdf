@@ -104,5 +104,6 @@ fz_removenode(fz_node *child)
 	}
 
 	parent->last = prev;
+	child->next = nil; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690679 */
 }
 
