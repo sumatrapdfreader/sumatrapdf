@@ -85,7 +85,10 @@ again:
 	case FZ_NOVER:
 	case FZ_NMASK:
 	case FZ_NBLEND:
+		break;
 	case FZ_NCOLOR:
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690680 */
+		fz_dropsolidnode((fz_solidnode *) node);
 		break;
 	case FZ_NPATH:
 		fz_droppathnode((fz_pathnode *) node);

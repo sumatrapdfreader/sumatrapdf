@@ -684,6 +684,7 @@ Lsetcolorspace:
 				}
 
 				error = pdf_setcolorspace(csi, what, cs);
+				fz_dropcolorspace(cs); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690680 */
 				if (error) return fz_rethrow(error, "cannot set colorspace");
 			}
 		}
