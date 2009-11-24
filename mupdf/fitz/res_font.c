@@ -25,6 +25,7 @@ fz_newfont(void)
 
 	font->t3matrix = fz_identity();
 	font->t3procs = nil;
+	font->t3widths = nil; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690959 */
 
 	font->bbox.x0 = 0;
 	font->bbox.y0 = 0;
@@ -64,6 +65,10 @@ fz_dropfont(fz_font *font)
 				fz_warn("freetype finalizing face: %s", ft_errorstring(fterr));
 			fz_finalizefreetype();
 		}
+
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690959 */
+		if (font->t3widths)
+			fz_free(font->t3widths);
 
 		fz_free(font);
 	}
