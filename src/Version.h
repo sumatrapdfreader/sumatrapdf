@@ -3,12 +3,12 @@
 
 // CURR_VERSION can be over-written externally (via makefile)
 #ifndef CURR_VERSION
-#define CURR_VERSION "1.0"
+#define CURR_VERSION "1.1"
 #endif
 
 // version as included in resources
-#define VER_RESOURCE      1,0,0,0
-#define VER_RESOURCE_STR  "1.0.0.0\0"
+#define VER_RESOURCE      1,1,0,0
+#define VER_RESOURCE_STR  "1.1.0.0\0"
 
 // #define SVN_PRE_RELEASE_VER 994
 
