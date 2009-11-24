@@ -333,6 +333,11 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 					return fz_rethrow(error, "cannot load font");
 				if (!gstate->font)
 					return fz_throw("cannot find font in store");
+
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487
+					font will be leaked if not dropped */
+				pdf_dropfont(gstate->font);
+
 				gstate->size = fz_toreal(fz_arrayget(val, 1));
 			}
 			else
@@ -891,6 +896,10 @@ Lsetcolor:
 			if (error)
 				return fz_rethrow(error, "cannot load font");
 
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487
+				font will be leaked if not dropped */
+			pdf_dropfont(gstate->font);
+
 			gstate->size = fz_toreal(csi->stack[1]);
 			if (gstate->size < -1000.0)
 			{
@@ -1024,7 +1033,7 @@ Lsetcolor:
 					return fz_rethrow(error, "cannot load image");
 
 				error = pdf_showimage(csi, img);
-				fz_dropimage(img); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+				fz_dropimage((fz_image*)img); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 				if (error)
 					return fz_rethrow(error, "cannot draw image");
 			}
