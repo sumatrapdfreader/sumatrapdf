@@ -331,6 +331,7 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 			{
 				fz_error error;
 
+				pdf_dropfont(gstate->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 				error = pdf_loadfont(&gstate->font, xref, rdb, fz_arrayget(val, 0));
 				if (error)
 					return fz_rethrow(error, "cannot load font");
@@ -891,6 +892,7 @@ Lsetcolor:
 			if (!obj)
 				return fz_throw("cannot find font resource: %s", fz_toname(csi->stack[0]));
 
+			pdf_dropfont(gstate->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 			error = pdf_loadfont(&gstate->font, xref, rdb, obj);
 			if (error)
 				return fz_rethrow(error, "cannot load font");
