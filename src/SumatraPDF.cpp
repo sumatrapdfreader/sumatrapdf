@@ -1312,13 +1312,13 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED 
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
-    LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false,
-                        !autorefresh, // We don't allow PDF-repair if it is an autorefresh because
-                                      // a refresh event can occur before the file is finished being written,
-                                      // in which case the repair could fail. Instead, if the file is broken, 
-                                      // we postpone the reload until the next autorefresh event
-                        true,
-                        false);
+
+    // We don't allow PDF-repair if it is an autorefresh because
+    // a refresh event can occur before the file is finished being written,
+    // in which case the repair could fail. Instead, if the file is broken, 
+    // we postpone the reload until the next autorefresh event
+    bool tryrepair = !autorefresh;
+    LoadPdfIntoWindow(win->watcher.filepath(), win, &ds, false, tryrepair, true, false);
 }
 
 #ifndef THREAD_BASED_FILEWATCH
