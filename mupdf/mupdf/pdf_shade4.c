@@ -38,7 +38,7 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading)
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
 	float c1[FZ_MAXCOLORS];
-	int i, z;
+	int i, z, alen;
 	int bitspervertex;
 	int bytepervertex;
 	fz_buffer *buf;
@@ -65,7 +65,12 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading)
 		x1 = fz_toreal(fz_arrayget(obj, 1));
 		y0 = fz_toreal(fz_arrayget(obj, 2));
 		y1 = fz_toreal(fz_arrayget(obj, 3));
-		for (i=0; i < fz_arraylen(obj) / 2; ++i) {
+		/* security issue reported by Christophe Devine - obj can have more
+			items than size of c0/c1, corrupting the stack */
+		alen = fz_arraylen(obj) / 2;
+		if (alen > FZ_MAXCOLORS)
+			alen = FZ_MAXCOLORS;
+		for (i=0; i < alen; ++i) {
 			c0[i] = fz_toreal(fz_arrayget(obj, i*2+4));
 			c1[i] = fz_toreal(fz_arrayget(obj, i*2+5));
 		}
