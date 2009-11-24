@@ -54,6 +54,9 @@ CFLAGS = $(CFLAGS) /W3 /GR- /Zi /GS /Gy
 !if "$(CFG)"=="rel"
 CFLAGS = $(CFLAGS) /Os /Ox /GL /D "NDEBUG"
 LDFLAGS = $(LDFLAGS) /LTCG
+# /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
+# http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
+LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE
 CFLAGS = $(CFLAGS) /EHs-c- 
 !else
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu 
