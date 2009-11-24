@@ -159,7 +159,7 @@ fz_error benchloadpage(int pagenum)
 	double timems;
 
 	timerstart(&timer);
-	error = pdf_getpageobject(xref, pagenum - 1, &pageobj);
+	error = pdf_getpageobject(xref, pagenum, &pageobj);
 	if (error)
 	{
 		logbench("Error: failed to load page %d\n", pagenum);
