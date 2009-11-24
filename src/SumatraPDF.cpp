@@ -7121,6 +7121,38 @@ void RedirectIOToConsole(void)
 }
 #endif
 
+#define PROCESS_EXECUTE_FLAGS 0x22
+
+/*
+ * enable "NX" execution prevention for XP, 2003
+ * cf. http://www.uninformed.org/?v=2&a=4
+ */
+typedef HRESULT (WINAPI *_NtSetInformationProcess)(
+   HANDLE  ProcessHandle,
+   UINT    ProcessInformationClass,
+   PVOID   ProcessInformation,
+   ULONG   ProcessInformationLength
+   );
+
+static void EnableNx(void)
+{
+   HMODULE ntdll;
+   DWORD dep_mode;
+   _NtSetInformationProcess ntsip;
+
+   ntdll = LoadLibrary(L"ntdll.dll");
+   if (ntdll == NULL)
+       return;
+
+   ntsip = (_NtSetInformationProcess)GetProcAddress(ntdll, "NtSetInformationProcess");
+   if (ntsip != NULL)
+   {
+       dep_mode = 13; /* ENABLE | DISABLE_ATL | PERMANENT */
+       ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS,
+           &dep_mode, sizeof(dep_mode));
+   }
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TStrList *          argListRoot;
@@ -7147,6 +7179,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
     UNREFERENCED_PARAMETER(hPrevInstance);
+
+    EnableNx();
 
     u_DoAllTests();
 
