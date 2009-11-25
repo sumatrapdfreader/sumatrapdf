@@ -60,6 +60,9 @@ typedef struct {
 
     int  m_showToc;
     int  m_globalPrefsOnly;
+    /* If this is <= 0 then use the default (row) highlight, otherwise mark rows using 
+       colour blocks on the left side of the page at the specified offset */
+    int  m_fwdsearchOffset;
 } SerializableGlobalPrefs;
 
 extern SerializableGlobalPrefs gGlobalPrefs;

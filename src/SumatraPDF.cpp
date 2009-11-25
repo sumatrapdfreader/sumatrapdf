@@ -199,6 +199,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_WIN_POS, // int  m_windowDy
     1, // int  m_showToc
     0, // int  m_globalPrefsOnly
+    0, // int  m_fwdsearchOffset
 };
 
 typedef struct ToolbarButtonInfo {
@@ -2811,7 +2812,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     if (!pageInfo->visible)
         return;
     
-    const DWORD selectionColorBlue = 0xffAFBEFF;
+    const DWORD selectionColorBlue = 0xff6581FF;
 
     RectD recD;
     RectI recI;
@@ -2822,6 +2823,13 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         RectD_FromRectI (&recD, &win->fwdsearchmarkRects[i]);
         win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
         RectI_FromRectD (&recI, &recD);
+        if (gGlobalPrefs.m_fwdsearchOffset > 0)
+        {
+          recI.x = pageInfo->screenX + gGlobalPrefs.m_fwdsearchOffset;
+          recI.dx = 15;
+          recI.y -= 4;
+          recI.dy += 8;          
+        }
         PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue, 0);
     }
 
@@ -7260,6 +7268,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             currArg = currArg->next;
             free(gGlobalPrefs.m_inverseSearchCmdLine);
             gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(currArg->str);
+        }
+        else if (is_arg("-fwdsearch-offset") && currArg->next) {
+            currArg = currArg->next;
+            gGlobalPrefs.m_fwdsearchOffset = _ttoi(currArg->str);
         }
         else if (is_arg("-esc-to-exit")) {
             gGlobalPrefs.m_escToExit = TRUE;
