@@ -773,6 +773,7 @@ Lsetcolor:
 					if (shd)
 					{
 						error = pdf_setshade(csi, what, shd);
+						fz_dropshade(shd); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 						if (error)
 							return fz_rethrow(error, "cannot set shade");
 					}
@@ -1065,6 +1066,7 @@ Lsetcolor:
 				return fz_rethrow(error, "cannot load shade");
 
 			error = pdf_addshade(gstate, shd);
+			fz_dropshade(shd); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 			if (error) return fz_rethrow(error, "cannot draw shade");
 		}
 
