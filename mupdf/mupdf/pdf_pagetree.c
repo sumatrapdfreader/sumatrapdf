@@ -22,7 +22,8 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 
 	if (!fz_isdict(node))
 	{
-		fz_warn("pagetree node is missing, igoring missing pages...");
+		/* sumatra: disable frequent warning that clutters stress test output */
+		/* fz_warn("pagetree node is missing, igoring missing pages..."); */
 		return fz_okay;
 	}
 
@@ -133,7 +134,8 @@ getpageobject(pdf_xref *xref, struct stuff inherit, fz_obj *node, int *pagesp, i
 
 	if (!fz_isdict(node))
 	{
-		fz_warn("pagetree node is missing, ignoring missing pages...");
+		/* sumatra: disable frequent warning that clutters stress test output */
+		/* fz_warn("pagetree node is missing, ignoring missing pages..."); */
 		*pagep = nil;
 		return fz_okay;
 	}
