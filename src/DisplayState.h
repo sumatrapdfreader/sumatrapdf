@@ -59,6 +59,10 @@ enum DisplayMode {
 #define GLOBAL_PREFS_ONLY_STR       "GlobalPrefsOnly"
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 
+#define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
+#define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
+#define FWDSEARCH_WIDTH             "ForwardSearch_HighlightWidth"
+
 typedef struct DisplayState {
     const TCHAR *       filePath;
     enum DisplayMode    displayMode;

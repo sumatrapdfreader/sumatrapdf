@@ -60,9 +60,10 @@ typedef struct {
 
     int  m_showToc;
     int  m_globalPrefsOnly;
-    /* If this is <= 0 then use the default (row) highlight, otherwise mark rows using 
-       colour blocks on the left side of the page at the specified offset */
-    int  m_fwdsearchOffset;
+    /* Forward search highlighting settings  */
+    int  m_fwdsearchOffset; /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
+    int  m_fwdsearchColor;  /* highlight color of the forward-search for both the standard and margin style*/
+    int  m_fwdsearchWidth;  /* width of the coloured blocks for the margin style */
 } SerializableGlobalPrefs;
 
 extern SerializableGlobalPrefs gGlobalPrefs;

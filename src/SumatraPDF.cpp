@@ -95,6 +95,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
 
+#define COL_FWDSEARCH_BG        RGB(101,129,255)
+
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
@@ -200,6 +202,8 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     1, // int  m_showToc
     0, // int  m_globalPrefsOnly
     0, // int  m_fwdsearchOffset
+    COL_FWDSEARCH_BG, // int  m_fwdsearchColor
+    15, // int  m_fwdsearchWidth
 };
 
 typedef struct ToolbarButtonInfo {
@@ -2812,7 +2816,10 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     if (!pageInfo->visible)
         return;
     
-    const DWORD selectionColorBlue = 0xff6581FF;
+    const DWORD selectionColorBlue = 0xff000000 | 
+        (GetRValue(gGlobalPrefs.m_fwdsearchColor) << 16) |
+        (GetGValue(gGlobalPrefs.m_fwdsearchColor) << 8) | 
+        GetBValue(gGlobalPrefs.m_fwdsearchColor);
 
     RectD recD;
     RectI recI;
@@ -2826,7 +2833,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         if (gGlobalPrefs.m_fwdsearchOffset > 0)
         {
           recI.x = pageInfo->screenX + gGlobalPrefs.m_fwdsearchOffset;
-          recI.dx = 15;
+		  recI.dx = gGlobalPrefs.m_fwdsearchWidth > 0 ? gGlobalPrefs.m_fwdsearchWidth : 15;
           recI.y -= 4;
           recI.dy += 8;          
         }
@@ -7011,9 +7018,11 @@ TCHAR *GetDefaultPrinterName()
 
 #define is_arg(txt) tstr_ieq(_T(txt), currArg->str)
 
-/* Parse 'txt' as hex color and set it as background color */
-static void ParseBgColor(const TCHAR* txt)
+/* Parse 'txt' as hex color and return the result in 'destColor' */
+static void ParseColor(int *destColor, const TCHAR* txt)
 {
+    if(!destColor)
+        return;
     if (tstr_startswith(txt, _T("0x")))
         txt += 2;
     else if (tstr_startswith(txt, _T("#")))
@@ -7029,8 +7038,7 @@ static void ParseBgColor(const TCHAR* txt)
         return;
     if (*txt)
         return;
-    int col = RGB(r,g,b);
-    gGlobalPrefs.m_bgColor = col;
+    *destColor = RGB(r,g,b);
 }
 
 HDDEDATA CALLBACK DdeCallback(UINT uType,
@@ -7262,7 +7270,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
         else if (is_arg("-bgcolor") && currArg->next) {
             currArg = currArg->next;
-            ParseBgColor(currArg->str);
+            ParseColor(&gGlobalPrefs.m_bgColor, currArg->str);
         }
         else if (is_arg("-inverse-search") && currArg->next) {
             currArg = currArg->next;
@@ -7272,6 +7280,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-fwdsearch-offset") && currArg->next) {
             currArg = currArg->next;
             gGlobalPrefs.m_fwdsearchOffset = _ttoi(currArg->str);
+        }
+        else if (is_arg("-fwdsearch-width") && currArg->next) {
+            currArg = currArg->next;
+            gGlobalPrefs.m_fwdsearchWidth = _ttoi(currArg->str);
+        }
+        else if (is_arg("-fwdsearch-color") && currArg->next) {
+            currArg = currArg->next;
+            ParseColor(&gGlobalPrefs.m_fwdsearchColor, currArg->str);
         }
         else if (is_arg("-esc-to-exit")) {
             gGlobalPrefs.m_escToExit = TRUE;
