@@ -54,6 +54,7 @@ static int cleanwhite(fz_node *node)
 					fz_removenode(current);
 				else
 					return 1;
+				fz_dropnode(current); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690679 */
 			}
 			else
 			{
