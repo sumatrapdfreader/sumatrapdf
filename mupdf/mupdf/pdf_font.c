@@ -558,9 +558,9 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	return fz_okay;
 
 cleanup:
-	fz_free(etable);
-	fz_dropfont(fontdesc->font);
-	fz_free(fontdesc);
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487 */
+	if (etable != fontdesc->cidtogid) fz_free(etable);
+	pdf_dropfont(fontdesc);
 	return fz_rethrow(error, "cannot load simple font");
 }
 
