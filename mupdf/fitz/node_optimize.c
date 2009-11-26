@@ -90,7 +90,10 @@ static void cleanovers(fz_node *node)
 
 		if (fz_isovernode(current))
 		{
-			if (current->first == current->last)
+			if (current->first == current->last &&
+				/* HACK: We seem to leek the prev node, if a childless node is removed here
+				 * http://bugs.ghostscript.com/show_bug.cgi?id=690679 */
+				(current->first || !prev))
 			{
 				child = current->first;
 				fz_removenode(current);
