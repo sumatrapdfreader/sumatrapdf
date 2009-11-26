@@ -760,6 +760,7 @@ Lsetcolor:
 					if (pat)
 					{
 						error = pdf_setpattern(csi, what, pat, csi->top == 1 ? nil : v);
+						pdf_droppattern(pat); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 						if (error)
 							return fz_rethrow(error, "cannot set pattern");
 					}
