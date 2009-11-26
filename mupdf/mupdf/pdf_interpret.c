@@ -146,11 +146,11 @@ pdf_dropcsi(pdf_csi *csi)
 	if (csi->gstate[csi->gtop].fill.pattern)
 		pdf_droppattern(csi->gstate[csi->gtop].fill.pattern);
 	if (csi->gstate[csi->gtop].stroke.pattern)
-		pdf_droppattern(csi->gstate[csi->gtop].fill.pattern);
+		pdf_droppattern(csi->gstate[csi->gtop].stroke.pattern);
 	if (csi->gstate[csi->gtop].fill.shade)
 		fz_dropshade(csi->gstate[csi->gtop].fill.shade);
 	if (csi->gstate[csi->gtop].stroke.shade)
-		fz_dropshade(csi->gstate[csi->gtop].fill.shade);
+		fz_dropshade(csi->gstate[csi->gtop].stroke.shade);
 
 	if (csi->tree) fz_droptree(csi->tree);
 
