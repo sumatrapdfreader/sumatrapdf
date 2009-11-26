@@ -6,6 +6,7 @@ void fz_droppathnode(fz_pathnode* node);
 void fz_droptextnode(fz_textnode* node);
 void fz_dropimagenode(fz_imagenode* node);
 void fz_dropshadenode(fz_shadenode* node);
+void fz_dropsolidnode(fz_solidnode *node); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690680 */
 
 fz_rect fz_boundtransformnode(fz_transformnode* node, fz_matrix ctm);
 fz_rect fz_boundovernode(fz_overnode* node, fz_matrix ctm);
