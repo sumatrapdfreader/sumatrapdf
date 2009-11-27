@@ -5198,11 +5198,14 @@ static void OnChar(WindowInfo *win, int key)
         if (win->fullScreen)
             OnMenuViewFullscreen(win);
         else if (gGlobalPrefs.m_escToExit)
-            DestroyWindow(win->hwndFrame);
+            CloseWindow(win, TRUE);
         else
             ClearSearch(win);
-    } else if ('q' == key) {
-        DestroyWindow(win->hwndFrame);
+        return;
+    }
+    if ('q' == key) {
+        CloseWindow(win, TRUE);
+        return;
     }
 
     if (!win->dm)
