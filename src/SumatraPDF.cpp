@@ -106,9 +106,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
-// TODO: we should dynamically determine c:\program files location
-#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\WINEDT.EXE \"[Open(|%f|);SelPar(%l,8)]\"")
-
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
 #define DEF_PAGE_DY 792
@@ -255,6 +252,7 @@ static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=0);
+static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen);
 
 #define SEP_ITEM "-----"
 
@@ -588,7 +586,12 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 }
 
 static void SerializableGlobalPrefs_Init() {
-    gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(DEFAULT_INVERSE_SEARCH_COMMANDLINE);
+    // Initialize the inverse search command line to a reasonable default value
+    TCHAR path[MAX_PATH];
+    if (ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"), NULL, path, dimof(path)))
+        gGlobalPrefs.m_inverseSearchCmdLine = tstr_printf(_T("\"%s\" \"[Open(|%%f|);SelPar(%%l,8)]\""), path);
+    else
+        gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(_T(""));
 }
 
 static void SerializableGlobalPrefs_Deinit()
