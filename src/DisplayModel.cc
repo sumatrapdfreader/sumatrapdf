@@ -389,8 +389,11 @@ void DisplayModel::setShowCover(bool showCover)
     this->_showCover = showCover;
     
     ScrollState ss;
-    if (displayModeFacing(displayMode()) && getScrollState(&ss))
+    if (displayModeFacing(displayMode()) && getScrollState(&ss)) {
+        if (displayModeContinuous(displayMode()))
+            relayout(zoomVirtual(), rotation());
         setScrollState(&ss);
+    }
 }
 
 /* Given pdf info and zoom/rotation, calculate the position of each page on a

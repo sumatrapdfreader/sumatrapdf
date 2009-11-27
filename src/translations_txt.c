@@ -944,7 +944,7 @@ const char *g_transTranslations[] = {
   "Suche auf Seite %d von %d\342\200\246",
   "Inhalte mit Strg+linker Maustaste ausw\303\244hlen",
   "Befehlszeile f\303\274r die Inverssuche setzen",
-  NULL,
+  "Deckblatt f\303\274r Doppelseite",
   "&Lesezeichen beim Start anzeigen",
   "Werkzeugleiste anzeigen",
   "Einzelne Seite",

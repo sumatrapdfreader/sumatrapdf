@@ -768,11 +768,6 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
     UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
         CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_UNCHECKED);
-        if ((MF_ENABLED == enableState) && (IDM_VIEW_SHOW_COVER_PAGE == id)) {
-            if ((DM_SINGLE_PAGE == displayMode) || (DM_CONTINUOUS == displayMode)) {
-                enableState = MF_GRAYED;
-            }
-        }
         EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
     }
 

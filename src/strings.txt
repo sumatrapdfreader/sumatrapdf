@@ -158,6 +158,7 @@ Lang: vn Vietnamese (Việt Nam)
 Lang: cy Welsh (Cymraeg)
 -
 Show Cover Page During Facing
+de:Deckblatt für Doppelseite
 -
 &File
 am:&Ֆայլ
