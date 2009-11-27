@@ -347,7 +347,6 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 					return fz_rethrow(error, "cannot load font");
 				if (!gstate->font)
 					return fz_throw("cannot find font in store");
-
 				gstate->size = fz_toreal(fz_arrayget(val, 1));
 			}
 			else

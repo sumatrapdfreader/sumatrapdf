@@ -484,6 +484,9 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	else
 		n = 1;
 
+	if (n > FZ_MAXCOLORS)
+		return fz_throw("too many components in colorspace");
+
 	pdf_logrsrc("n = %d\n", n);
 
 	error = pdf_loadcolorspace(&base, xref, baseobj);

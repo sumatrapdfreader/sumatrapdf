@@ -365,12 +365,45 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	int oid, gen, stmofs;
 	int size, w0, w1, w2;
 	int t;
+	int i;
 
 	pdf_logxref("load new xref format\n");
 
 	error = pdf_parseindobj(&trailer, xref, xref->file, buf, cap, &oid, &gen, &stmofs);
 	if (error)
 		return fz_rethrow(error, "cannot parse compressed xref stream object");
+
+	obj = fz_dictgets(trailer, "Size");
+	if (!obj)
+	{
+		fz_dropobj(trailer);
+		return fz_throw("xref stream missing Size entry");
+	}
+	size = fz_toint(obj);
+
+	if (size >= xref->cap)
+	{
+		xref->cap = size + 1; /* for hack to allow broken pdf generators with off-by-one errors */
+		xref->table = fz_realloc(xref->table, xref->cap * sizeof(pdf_xrefentry));
+		if (!xref->table)
+		{
+			fz_dropobj(trailer);
+			return fz_rethrow(-1, "out of memory: xref table");
+		}
+	}
+
+	if (size > xref->len)
+	{
+		for (i = xref->len; i < xref->cap; i++)
+		{
+			xref->table[i].ofs = 0;
+			xref->table[i].gen = 0;
+			xref->table[i].stmofs = 0;
+			xref->table[i].obj = nil;
+			xref->table[i].type = 0;
+		}
+		xref->len = size;
+	}
 
 	if (oid < 0 || oid >= xref->len)
 	{
@@ -392,14 +425,6 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	xref->table[oid].obj = fz_keepobj(trailer);
 	xref->table[oid].stmofs = stmofs;
 	xref->table[oid].ofs = 0;
-
-	obj = fz_dictgets(trailer, "Size");
-	if (!obj)
-	{
-		fz_dropobj(trailer);
-		return fz_throw("xref stream missing Size entry");
-	}
-	size = fz_toint(obj);
 
 	obj = fz_dictgets(trailer, "W");
 	if (!obj) {
