@@ -7,14 +7,15 @@
 
 enum DisplayMode {
     DM_FIRST = 0,
-    // automatic means: continuous or continuous facing,
-    // depending on the document's desired PageLayout
+    // automatic means: the continuous form of single page, facing or
+    // book view - depending on the document's desired PageLayout
     DM_AUTOMATIC = DM_FIRST,
     DM_SINGLE_PAGE,
     DM_FACING,
+    DM_BOOK_VIEW,
     DM_CONTINUOUS,
     DM_CONTINUOUS_FACING,
-    DM_LAST = DM_CONTINUOUS_FACING
+    DM_CONTINUOUS_BOOK_VIEW
 };
 
 #define ZOOM_FIT_PAGE       -1
@@ -26,14 +27,15 @@ enum DisplayMode {
 #define DM_AUTOMATIC_STR            "automatic"
 #define DM_SINGLE_PAGE_STR          "single page"
 #define DM_FACING_STR               "facing"
+#define DM_BOOK_VIEW_STR            "book view"
 #define DM_CONTINUOUS_STR           "continuous"
 #define DM_CONTINUOUS_FACING_STR    "continuous facing"
+#define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
 
 #define FILE_HISTORY_STR            "File History"
 
 #define FILE_STR                    "File"
 #define DISPLAY_MODE_STR            "Display Mode"
-#define SHOW_COVER_PAGE_STR         "Show Cover Page"
 #define PAGE_NO_STR                 "Page"
 #define ZOOM_VIRTUAL_STR            "ZoomVirtual"
 #define ROTATION_STR                "Rotation"

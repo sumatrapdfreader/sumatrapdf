@@ -32,7 +32,7 @@
 // those are defined here instead of resource.h to avoid
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
-#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_SHOW_COVER_PAGE
+#define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -193,7 +193,6 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     NULL, // TCHAR *m_versionToSkip
     NULL, // char *m_lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode m_defaultDisplayMode
-    0, // int m_showCoverPage
     DEFAULT_ZOOM, // double m_defaultZoom
     WIN_STATE_NORMAL, // int  m_windowState
     DEFAULT_WIN_POS, // int  m_windowPosX
@@ -757,12 +756,9 @@ void RenderQueue_Clear()
 static void MenuUpdateDisplayMode(WindowInfo *win)
 {
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
-    int showCoverPage = gGlobalPrefs.m_showCoverPage;
 
-    if (win->dm) {
+    if (win->dm)
         displayMode = win->dm->displayMode();
-        showCoverPage = win->dm->showCover();
-    }
 
     HMENU menuMain = win->hMenu;
     UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
@@ -775,24 +771,33 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
     switch (displayMode) {
         case DM_SINGLE_PAGE: id = IDM_VIEW_SINGLE_PAGE; break;
         case DM_FACING: id = IDM_VIEW_FACING; break;
-        case DM_CONTINUOUS: id = IDM_VIEW_CONTINUOUS; break;
-        case DM_CONTINUOUS_FACING: id = IDM_VIEW_CONTINUOUS_FACING; break;
+        case DM_BOOK_VIEW: id = IDM_VIEW_BOOK; break;
+        case DM_CONTINUOUS: id = IDM_VIEW_SINGLE_PAGE; break;
+        case DM_CONTINUOUS_FACING: id = IDM_VIEW_FACING; break;
+        case DM_CONTINUOUS_BOOK_VIEW: id = IDM_VIEW_BOOK; break;
         default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
     }
 
     if (id)
         CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_CHECKED);
 
-    if (showCoverPage)
-        CheckMenuItem(menuMain, IDM_VIEW_SHOW_COVER_PAGE, MF_BYCOMMAND | MF_CHECKED);
+    if (displayModeContinuous(displayMode))
+        CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_CHECKED);
 
 }
 
-static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
+static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
 {
     if (!win->dm)
         return;
 
+    if (keepContinuous && displayModeContinuous(win->dm->displayMode())) {
+        switch (displayMode) {
+            case DM_SINGLE_PAGE: displayMode = DM_CONTINUOUS; break;
+            case DM_FACING: displayMode = DM_CONTINUOUS_FACING; break;
+            case DM_BOOK_VIEW: displayMode = DM_CONTINUOUS_BOOK_VIEW; break;
+        }
+    }
     win->dm->changeDisplayMode(displayMode);
     MenuUpdateDisplayMode(win);
 }
@@ -822,9 +827,8 @@ MenuDef menuDefFile[] = {
 MenuDef menuDefView[] = {
     { _TRN("Single page"),                 IDM_VIEW_SINGLE_PAGE,        0  },
     { _TRN("Facing"),                      IDM_VIEW_FACING,             0  },
-    { _TRN("Continuous"),                  IDM_VIEW_CONTINUOUS,         0  },
-    { _TRN("Continuous facing"),           IDM_VIEW_CONTINUOUS_FACING,  0  },
-    { _TRN("Show Cover Page During Facing"), IDM_VIEW_SHOW_COVER_PAGE,  0  },
+    { _TRN("Book view"),                   IDM_VIEW_BOOK,               0  },
+    { _TRN("Show pages continuously"),     IDM_VIEW_CONTINUOUS,         0  },
     { SEP_ITEM, 0, 0  },
     { _TRN("Rotate left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,        0  },
     { _TRN("Rotate right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,       0  },
@@ -2264,8 +2268,13 @@ void DisplayModel::setScrollbarsState(void)
             si.nPage = 1;
         }
         else if (DM_FACING == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
-            si.nPos = (win->dm->currentPageNo() + (win->dm->showCover() ? 2 : 1)) / 2 - 1;
-            si.nMax = (win->dm->pageCount() + (win->dm->showCover() ? 2 : 1)) / 2 - 1;
+            si.nPos = (win->dm->currentPageNo() + 1) / 2 - 1;
+            si.nMax = (win->dm->pageCount() + 1) / 2 - 1;
+            si.nPage = 1;
+        }
+        else if (DM_BOOK_VIEW == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
+            si.nPos = win->dm->currentPageNo() / 2;
+            si.nMax = win->dm->pageCount() / 2;
             si.nPage = 1;
         }
         else {
@@ -4372,7 +4381,9 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
         if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
             win->dm->goToPage(si.nPos + 1, 0);
         else if (DM_FACING == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
-            win->dm->goToPage(si.nPos * 2 + (win->dm->showCover() && si.nPos > 0 ? 0 : 1), 0);
+            win->dm->goToPage(si.nPos * 2 + 1, 0);
+        else if (DM_BOOK_VIEW == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
+            win->dm->goToPage(si.nPos * 2 + (si.nPos > 0 ? 0 : 1), 0);
         else
             win->dm->scrollYTo(si.nPos);
     }
@@ -4493,14 +4504,21 @@ static void OnMenuViewSinglePage(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    SwitchToDisplayMode(win, DM_SINGLE_PAGE);
+    SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
 }
 
 static void OnMenuViewFacing(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    SwitchToDisplayMode(win, DM_FACING);
+    SwitchToDisplayMode(win, DM_FACING, true);
+}
+
+static void OnMenuViewBook(WindowInfo *win)
+{
+    assert(win);
+    if (!win) return;
+    SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
 }
 
 static void RememberWindowPosition(WindowInfo *win)
@@ -4685,31 +4703,29 @@ static void OnMenuSettings(WindowInfo *win)
     Prefs_Save();
 }
 
+// toggles 'show pages continuously' state
 static void OnMenuViewContinuous(WindowInfo *win)
 {
     assert(win);
     if (!win) return;
-    SwitchToDisplayMode(win, DM_CONTINUOUS);
-}
-
-// toggles 'show cover page' state
-static void OnMenuShowCoverPage(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return;
-    if (!win->dm) return;
-    bool showCover = !win->dm->showCover();
-    win->dm->setShowCover(showCover);
-    MenuUpdateDisplayMode(win);
-}
-
-static void OnMenuViewContinuousFacing(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return;
     if (!win->dm) return;
 
-    SwitchToDisplayMode(win, DM_CONTINUOUS_FACING);
+    DisplayMode newMode = win->dm->displayMode();
+    switch (newMode) {
+        case DM_SINGLE_PAGE:
+        case DM_CONTINUOUS:
+            newMode = displayModeContinuous(newMode) ? DM_SINGLE_PAGE : DM_CONTINUOUS;
+            break;
+        case DM_FACING:
+        case DM_CONTINUOUS_FACING:
+            newMode = displayModeContinuous(newMode) ? DM_FACING : DM_CONTINUOUS_FACING;
+            break;
+        case DM_BOOK_VIEW:
+        case DM_CONTINUOUS_BOOK_VIEW:
+            newMode = displayModeContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
+            break;
+    }
+    SwitchToDisplayMode(win, newMode, false);
 }
 
 static void OnMenuGoToNextPage(WindowInfo *win)
@@ -5205,9 +5221,11 @@ static void OnChar(WindowInfo *win, int key)
         win->dm->goToNextPage(0);
     } else if ('c' == key) {
         DisplayMode newMode = DM_CONTINUOUS;
-        if (displayModeFacing(win->dm->displayMode()))
+        if (displayModeShowCover(win->dm->displayMode()))
+            newMode = DM_CONTINUOUS_BOOK_VIEW;
+        else if (displayModeFacing(win->dm->displayMode()))
             newMode = DM_CONTINUOUS_FACING;
-        SwitchToDisplayMode(win, newMode);
+        SwitchToDisplayMode(win, newMode, false);
     } else if ('p' == key) {
         win->dm->goToPrevPage(0);
     } else if ('z' == key) {
@@ -6344,12 +6362,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     OnMenuViewFacing(win);
                     break;
 
-                case IDM_VIEW_CONTINUOUS:
-                    OnMenuViewContinuous(win);
+                case IDM_VIEW_BOOK:
+                    OnMenuViewBook(win);
                     break;
 
-                case IDM_VIEW_SHOW_COVER_PAGE:
-                    OnMenuShowCoverPage(win);
+                case IDM_VIEW_CONTINUOUS:
+                    OnMenuViewContinuous(win);
                     break;
 
                 case IDM_VIEW_SHOW_HIDE_TOOLBAR:
@@ -6387,10 +6405,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_FULLSCREEN:
                     OnMenuViewFullscreen(win);
-                    break;
-
-                case IDM_VIEW_CONTINUOUS_FACING:
-                    OnMenuViewContinuousFacing(win);
                     break;
 
                 case IDM_VIEW_ROTATE_LEFT:

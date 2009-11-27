@@ -157,9 +157,6 @@ Lang: va Valencian (Valencià)
 Lang: vn Vietnamese (Việt Nam)
 Lang: cy Welsh (Cymraeg)
 -
-Show Cover Page During Facing
-de:Deckblatt für Doppelseite
--
 &File
 am:&Ֆայլ
 af:&Lêer
@@ -694,6 +691,9 @@ pa:ਕਿਤਾਬ
 hi:पुस्तक
 nn:Motståande
 -
+Book view
+de:Buchansicht
+-
 Continuous
 am:Անդադար
 af:Aanmekaar
@@ -809,6 +809,12 @@ mm:ဆက်တိုက် မျက်နှာ
 pa:ਲਗਾਤਾਰ ਕਿਤਾਬ
 hi:निरन्तर पुस्तक
 nn:Kontunuerleg motståande
+-
+Continuous book view
+de:Fortlaufende Buchansicht
+-
+Show pages continuously
+de:Fortlaufend anzeigen
 -
 Rotate left\tCtrl-Shift--
 am:Շրջել ձախ\tCtrl-Shift--

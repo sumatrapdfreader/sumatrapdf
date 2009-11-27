@@ -167,10 +167,6 @@ public:
 
     int startPage(void) const { return _startPage; }
 
-    /* show cover determines where odd pages are layed out in facing mode */
-    bool showCover(void) const { return _showCover; }
-    void setShowCover(bool showCover);
-
     int currentPageNo(void) const;
 
     PdfEngine *     pdfEngine;
@@ -338,6 +334,7 @@ public:
 
 bool                displayModeContinuous(DisplayMode displayMode);
 bool                displayModeFacing(DisplayMode displayMode);
+bool                displayModeShowCover(DisplayMode displayMode);
 DisplaySettings *   globalDisplaySettings(void);
 int                 columnsFromDisplayMode(DisplayMode displayMode);
 void                pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation, double *pageDxOut, double *pageDyOut);

@@ -74,18 +74,17 @@ DisplaySettings gDisplaySettings = {
 
 bool displayModeFacing(DisplayMode displayMode)
 {
-    if (DM_FACING == displayMode || DM_CONTINUOUS_FACING == displayMode)
-        return true;
-    assert(DM_SINGLE_PAGE == displayMode || DM_CONTINUOUS == displayMode);
-    return false;
+    return DM_FACING == displayMode || DM_CONTINUOUS_FACING == displayMode || displayModeShowCover(displayMode);
 }
 
 bool displayModeContinuous(DisplayMode displayMode)
 {
-    if (DM_CONTINUOUS == displayMode || DM_CONTINUOUS_FACING == displayMode)
-        return true;
-    assert(DM_SINGLE_PAGE == displayMode || DM_FACING == displayMode);
-    return false;
+    return DM_CONTINUOUS == displayMode || DM_CONTINUOUS_FACING == displayMode || DM_CONTINUOUS_BOOK_VIEW == displayMode;
+}
+
+bool displayModeShowCover(DisplayMode displayMode)
+{
+    return DM_BOOK_VIEW == displayMode || DM_CONTINUOUS_BOOK_VIEW == displayMode;
 }
 
 int columnsFromDisplayMode(DisplayMode displayMode)
@@ -165,7 +164,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _dpiFactor = dpi * 1.0 / 72.0;
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
-    _showCover = false;
     _appData = NULL;
     pdfEngine = NULL;
     _pdfSearch = NULL;
@@ -220,12 +218,13 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
 
     const char *pageLayoutName = pdfEngine->getPageLayoutName();
     if (DM_AUTOMATIC == _displayMode) {
-        if (!str_startswith(pageLayoutName, "Two"))
-            _displayMode = DM_CONTINUOUS;
-        else
+        if (str_endswith(pageLayoutName, "Right"))
+            _displayMode = DM_CONTINUOUS_BOOK_VIEW;
+        else if (str_startswith(pageLayoutName, "Two"))
             _displayMode = DM_CONTINUOUS_FACING;
+        else
+            _displayMode = DM_CONTINUOUS;
     }
-    _showCover = !!str_endswith(pageLayoutName, "Right");
 
     if (!buildPagesInfo())
         return false;
@@ -245,7 +244,7 @@ bool DisplayModel::buildPagesInfo(void)
 
     int columns = columnsFromDisplayMode(_displayMode);
     int startPage = _startPage;
-    if (_showCover && startPage == 1 && columns > 1)
+    if (displayModeShowCover(_displayMode) && startPage == 1 && columns > 1)
         startPage--;
     for (int pageNo = 1; pageNo <= _pageCount; pageNo++) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
@@ -384,18 +383,6 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         this->_zoomReal = zoomVirtual * this->_dpiFactor;
 }
 
-void DisplayModel::setShowCover(bool showCover)
-{
-    this->_showCover = showCover;
-    
-    ScrollState ss;
-    if (displayModeFacing(displayMode()) && getScrollState(&ss)) {
-        if (displayModeContinuous(displayMode()))
-            relayout(zoomVirtual(), rotation());
-        setScrollState(&ss);
-    }
-}
-
 /* Given pdf info and zoom/rotation, calculate the position of each page on a
    large sheet that is continous view. Needs to be recalculated when:
      * zoom changes
@@ -470,7 +457,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
            substract it when we create new page */
         currPosX += (pageInfo->currDx + PADDING_BETWEEN_PAGES_X);
 
-        if (_showCover && pageNo == 1 && columnsLeft > 1) {
+        if (displayModeShowCover(displayMode()) && pageNo == 1 && columnsLeft > 1) {
             if (displayModeContinuous(displayMode()) || drawAreaSize.dx() >= currPosX + pageInfo->currDx) {
                 /* leave the very first spot empty when showing the cover page */
                 pageInfo->currPosX = currPosX;
@@ -524,11 +511,11 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
                 assert(!pageInfo->visible);
                 continue;
             }
-            if (_showCover && pageNo == 1 && columns > 1)
+            if (displayModeShowCover(displayMode()) && pageNo == 1 && columns > 1)
                 pageInARow++;
             pageOffX = (pageInARow * (PADDING_BETWEEN_PAGES_X + areaPerPageDx));
             // center the cover page in non-continuous mode
-            if (_showCover && pageNo == 1 && columns > 1 && !displayModeContinuous(displayMode()))
+            if (displayModeShowCover(displayMode()) && pageNo == 1 && columns > 1 && !displayModeContinuous(displayMode()))
                 pageOffX /= 2;
             pageOffX += (areaPerPageDx - pageInfo->currDx) / 2;
             assert(pageOffX >= 0.0);
@@ -577,7 +564,7 @@ void DisplayModel::changeStartPage(int startPage)
 
     int columns = columnsFromDisplayMode(displayMode());
     _startPage = startPage;
-    if (_showCover && startPage == 1 && columns > 1)
+    if (displayModeShowCover(displayMode()) && startPage == 1 && columns > 1)
         startPage--;
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
@@ -904,7 +891,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
     if (displayModeFacing(displayMode()))
-        pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(displayMode()), _showCover);
+        pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(displayMode()), displayModeShowCover(displayMode()));
 
     if (!displayModeContinuous(displayMode())) {
         /* in single page mode going to another page involves recalculating
@@ -966,7 +953,7 @@ bool DisplayModel::goToNextPage(int scrollY)
 {
     int columns = columnsFromDisplayMode(displayMode());
     int newPageNo = currentPageNo() + columns;
-    int firstPageInNewRow = FirstPageInARowNo(newPageNo, columns, _showCover);
+    int firstPageInNewRow = FirstPageInARowNo(newPageNo, columns, displayModeShowCover(displayMode()));
 
 //    DBG_OUT("DisplayModel::goToNextPage(scrollY=%d), currPageNo=%d, firstPageInNewRow=%d\n", scrollY, currPageNo, firstPageInNewRow);
     if (firstPageInNewRow > pageCount()) {
@@ -989,7 +976,7 @@ bool DisplayModel::goToPrevPage(int scrollY)
         goToPage(currPageNo, scrollY);
         return true;
     }
-    int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, _showCover);
+    int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, displayModeShowCover(displayMode()));
     if (firstPageInNewRow < 1) {
         /* we're on a first page, can't go back */
         return FALSE;
@@ -1005,7 +992,7 @@ bool DisplayModel::goToLastPage(void)
     int columns = columnsFromDisplayMode(displayMode());
     int currPageNo = currentPageNo();
     int newPageNo = pageCount();
-    int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns, _showCover);
+    int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns, displayModeShowCover(displayMode()));
 
     if (currPageNo == firstPageInLastRow) /* are we on the last page already ? */
         return FALSE;

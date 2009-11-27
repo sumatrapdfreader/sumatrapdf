@@ -49,7 +49,6 @@ typedef struct {
     /* Default state of Sumatra window */
     /* TODO: I would also like to remember a monitor, but that seems a bit complicated */
     DisplayMode m_defaultDisplayMode;
-    int m_showCoverPage;
 
     double m_defaultZoom;
     int  m_windowState;

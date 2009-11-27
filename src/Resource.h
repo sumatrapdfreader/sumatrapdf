@@ -21,12 +21,11 @@
 #define IDM_EXIT                        405
 #define IDM_REFRESH                     406
 #define IDM_VIEW_WITH_ACROBAT           407
-/* IDM_VIEW_SINGLE_PAGE - IDM_VIEW_SHOW_COVER_PAGE must be in a continous range */
+/* IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS must be in a continous range */
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
-#define IDM_VIEW_CONTINUOUS             412
-#define IDM_VIEW_CONTINUOUS_FACING      413
-#define IDM_VIEW_SHOW_COVER_PAGE        414
+#define IDM_VIEW_BOOK                   412
+#define IDM_VIEW_CONTINUOUS             413
 
 #define IDM_VIEW_ROTATE_LEFT            415
 #define IDM_VIEW_ROTATE_RIGHT           416
