@@ -6617,7 +6617,8 @@ InitMouseWheelInfo:
                         MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
                         TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
 
-                        if (ht.flags & TVHT_ONITEM)
+                        // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
+                        if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
                             GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
                         break;
                     }

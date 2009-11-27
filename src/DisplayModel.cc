@@ -1505,6 +1505,22 @@ void DisplayModel::handleLink2(pdf_link* link)
             addNavPoint();
             goToPage(page, 0);
         }
+    } else if (PDF_LLAUNCH == link->kind) {
+        fz_obj *obj = fz_dictgets(link->dest, "Type");
+        if (fz_isname(obj) && !strcmp(fz_toname(obj), "FileSpec")) {
+            TCHAR *path = utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
+            tstr_trans_chars(path, _T("/"), _T("\\"));
+            /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
+            if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
+                TCHAR *basePath = FilePath_GetDir(fileName());
+                TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
+                /* TODO: The new window gets pushed to the background */
+                LoadPdf(combinedPath);
+                free(combinedPath);
+                free(basePath);
+            }
+            free(path);
+        }
     }
 }
 

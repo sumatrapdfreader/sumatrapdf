@@ -114,6 +114,13 @@ pdf_loadlink(pdf_link **linkp, pdf_xref *xref, fz_obj *dict)
 			dest = fz_dictgets(action, "URI");
 			pdf_logpage("action uri %s\n", fz_tostrbuf(dest));
 		}
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=726 */
+		else if (fz_isname(obj) && !strcmp(fz_toname(obj), "Launch"))
+		{
+			kind = PDF_LLAUNCH;
+			dest = fz_dictgets(action, "F");
+			pdf_logpage("action launch (%d %d R)\n", fz_tonum(dest), fz_togen(dest));
+		}
 		else
 		{
 			pdf_logpage("unhandled link action, ignoring link\n");
