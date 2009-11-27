@@ -471,9 +471,14 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
         currPosX += (pageInfo->currDx + PADDING_BETWEEN_PAGES_X);
 
         if (_showCover && pageNo == 1 && columnsLeft > 1) {
-            /* leave the very first spot empty when showing the cover page */
-            pageInfo->currPosX = currPosX;
-            currPosX += (pageInfo->currDx + PADDING_BETWEEN_PAGES_X);
+            if (displayModeContinuous(displayMode()) || drawAreaSize.dx() >= currPosX + pageInfo->currDx) {
+                /* leave the very first spot empty when showing the cover page */
+                pageInfo->currPosX = currPosX;
+                currPosX += (pageInfo->currDx + PADDING_BETWEEN_PAGES_X);
+                // center the cover page in non-continuous mode
+                if (!displayModeContinuous(displayMode()))
+                    currPosX -= (pageInfo->currDx + PADDING_BETWEEN_PAGES_X) / 2;
+            }
             columnsLeft--;
         }
 
