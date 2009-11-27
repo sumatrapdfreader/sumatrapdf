@@ -106,7 +106,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
-#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\Program Files\WinEdt Team\WinEdt\WINEDT.EXE \"[Open(|%f|);SelPar(%l,8)]\"")
+// TODO: we should dynamically determine c:\program files location
+#define DEFAULT_INVERSE_SEARCH_COMMANDLINE _T("C:\\Program Files\\WinEdt Team\\WinEdt\\WINEDT.EXE \"[Open(|%f|);SelPar(%l,8)]\"")
 
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_DX 612
