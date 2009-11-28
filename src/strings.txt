@@ -30,6 +30,7 @@
 # Italian:
 #   Angelo Contardi
 #   iBlawgger
+#  Alessandro Visentin
 # Dutch:
 #   Barry Haveman (webstek.info) 
 #   Kristof Bal 
@@ -171,7 +172,7 @@ by:Файл
 ja:ファイル(&F)
 fa:فايل
 dk:&Filer
-it:&File
+it:&Dati
 nl:&Bestand
 ta:கோப்பு
 es:&Archivo
@@ -345,7 +346,7 @@ by:Захаваць як\tCtrl-S
 ja:名前を付けて保存(&S)\tCtrl+S
 fa:...ذخيره به نام دیگر\tCtrl-S
 dk:&Gem som\tCtrl-S
-it:&Salva con nome...\tCtrl-S
+it:&Salva come...\tCtrl-S
 nl:&Opslaan als...\tCtrl-S
 ta:எனச் சேமி\tCtrl-S
 es:&Guardar como...\tCtrl-S
@@ -519,7 +520,7 @@ by:Выгляд
 ja:表示(&V)
 fa:نمايش
 dk:&Vis
-it:&Visualizza
+it:&Vedi
 nl:&Beeld
 ta:நோக்கு
 es:&Ver
@@ -571,6 +572,7 @@ es:Automático
 sl:Samodejno
 cn:自动
 hu:Automatikus
+it:Automatico
 ja:自動
 mk:Автоматски
 vn:Tự động
@@ -709,7 +711,7 @@ by:Працягла
 ja:連続
 fa:نمايش پيوسته
 dk:Fortløbende
-it:Pagina singola continua
+it:Pagina continua
 nl:Doorlopend
 ta:தொடர்
 es:Contínua
@@ -1051,7 +1053,7 @@ by:Паказ панэлі прылад
 ja:ツール バーの表示(&T)
 fa:نمايش نوار ابزار
 dk:Vis værktøjslinie
-it:Mostra la barra degli strumenti
+it:Mostra barra strumenti
 nl:Werkbalk tonen
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
@@ -1457,7 +1459,7 @@ by:Памер
 ja:ズーム(&Z)
 fa:تغيير بزرگی
 dk:&Zoom
-it:&Zoom
+it:&Ingrandimento
 nl:&Zoom
 ta:பெரிதாக்கு
 es:&Zoom
@@ -1840,7 +1842,7 @@ gl:Manual de Instruccións
 mk:Прирачник за употреба
 tl:Gabay
 bn:নির্দেশ নথিপত্র
-it:&Guida
+it:&Manuale
 tw:說明文件(&M)
 cn:使用手册(&M)
 es:&Manual de Instrucciones
@@ -2463,7 +2465,7 @@ by:Немагчыма захаваць файл
 ja:ファイルの保存に失敗しました
 fa:ذخيره کردن فايل با مشکل روبرو شد
 dk:Kunne ikke gemme filen.
-it:Salvataggio del file PDF fallito!
+it:Salvataggio del file fallito!
 nl:Fout bij opslaan bestand
 ta:கோப்பு சேமிப்பு தோற்பு
 es:Error al Guardar el Archivo
@@ -2520,7 +2522,7 @@ by:Памылка пры адчыненні файла.
 ja:PDF ファイルの読み込みエラーです。
 fa:گشودن فايل با مشکل مواجه شد
 dk:Fejl ved åbning af PDF-fil
-it:Errore durante l'apertura del file PDF.
+it:Errore durante l'apertura del file.
 nl:Fout bij laden PDF bestand.
 ta:PDF கோப்பு ஏற்று பிழை
 es:Error al Cargar el Archivo PDF.
@@ -3176,7 +3178,7 @@ uk:Ви вже маєте найновішу версію.
 ru:Вы используете последнюю версию.
 es:Usted tiene la última versión.
 hr:Imate najnoviju inačicu.
-it:Hai già l'ultima versione disponibile
+it:Hai l'ultima versione disponibile
 nl:U gebruikt de meest recente versie.
 fr:Vous avez la dernière version sortie
 no:Du har den nyeste versjonen.
@@ -3389,6 +3391,7 @@ hu:Figyelmeztetés
 de:Warnung
 es:Advertencia
 gr:Προειδοποίηση
+it:Avviso
 fr:Avertissement
 ru:Предупреждение
 pl:Uwaga
@@ -3409,6 +3412,7 @@ by:Параметры SumatraPDF
 hu:A SumatraPDF beállításai
 de:SumatraPDF Optionen
 es:Opciones de SumatraPDF
+it:Opzioni SumatraPDF
 gr:Επιλογές SumatraPDF
 fr:SumatraPDF Options
 ru:Параметры SumatraPDF
@@ -3489,6 +3493,7 @@ de:&Einstellungen
 es:&Configuración
 gr:Ρυθμίσεις
 fr:&Préférences
+it:&Preferenze
 ru:Настройки
 cy:&Gosodiadau
 mk:&Нагодувања
@@ -3563,6 +3568,7 @@ am:&Ընտրանքներ...
 br:&Opções...
 by:&Параметры...
 hu:&Beállítások
+it:&Opzioni
 de:&Optionen…
 es:&Opciones…
 gr:Επιλ&ογές
@@ -3587,6 +3593,7 @@ de:&Standardlayout:
 es:&Vista Predeterminada:
 gr:Προκαθορισμένη διαμόρφωση:
 fr:Mise en page par défaut
+it:&Vista predeffinita
 ru:&Компоновка по умолчанию
 cy:&Cynllun Rhagosodedig:
 mk:Основен &изглед:
@@ -3607,6 +3614,7 @@ de:Standard&vergrößerung:
 es:&Zoom Predeterminado:
 gr:Προκαθορισμένο ζουμ:
 fr:&Zoom par défaut
+it:&Ingrandimento predefinito
 ru:&Масштаб по умолчанию
 cy:C&hwyddo Rhagosodedig:
 mk:Основно &зумирање:
@@ -3626,6 +3634,7 @@ hu:OK
 gr:ΟΚ
 cy:Iawn
 fr:OK
+it:OK
 mk:Во ред
 hr:U redu
 es:Aceptar
@@ -3645,6 +3654,7 @@ de:Weiteres
 es:Avanzado
 gr:Προχωρημένα
 fr:Avancé
+it:Avanzate
 ru:Дополнительно
 cy:Uwch
 mk:Напредно
@@ -3665,6 +3675,7 @@ de:&Lesezeichen beim Start anzeigen
 es:Mostrar la barra de marcadores cuando esté disponible
 gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 fr:Voir la barre latérale des signets quand elle est disponible
+it:Mostra la &barra dei segnalibri quando è disponibile
 ru:Показывать панель &закладок (при возможности)
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 mk:Прикажи го алатникот со &обележувачи кога е достапен
@@ -3685,6 +3696,7 @@ de:Abbrechen
 es:Cancelar
 gr:Άκυρο
 fr:Annuler
+it:Annulla
 ru:Отмена
 cy:Diddymu
 mk:Откажи
@@ -3705,6 +3717,7 @@ de:&Automatisch nach Updates suchen
 es:Revisar &actualizaciones automáticamente
 gr:Αυτόματος έλεγχος για ενημερώσεις
 fr:Vérifier &automatiquement les mises à jour
+it:Verifica &automaticamente aggiornamenti
 ru:&Автоматическая проверка обновлений
 cy:Gwirio'n awtomatig am &ddiweddariadau
 mk:Проверувај за &надградби автоматски
@@ -3725,6 +3738,7 @@ de:&Diese Einstellungen für jedes Dokument merken
 es:&Recordar estas configuraciones para cada documento
 gr:Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 fr:Se rappeler de ces paramètres pour chaque document
+it:&Ricorda le impostazioni per ogni documento
 ru:Запомнить эти параметры для &каждого документа
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 mk:&Запомни ги овие нагодувања за секој документ
@@ -3745,6 +3759,7 @@ gr:Απομνημόνευη πρόσφατων αρχείων
 de:&Eine Liste der geöffneten Dokumente führen
 es:Recordar archiv&os abiertos
 fr:Se rappeler des fichiers ouverts
+it:R&icorda i file aperti
 ru:&Запомнить открытые файлы
 mk:Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
@@ -3770,7 +3785,7 @@ by:Выгляд
 ja:表示
 fa:نمايش
 dk:Vis
-it:Visualizza
+it:Vedi
 nl:Beeld
 ta:நோக்கு
 es:Vista del Documento
@@ -3823,6 +3838,7 @@ de:&Gehe zu Seite:
 es:&Ir a la página:
 gr:Μετάβαση στη σελίδα:
 fr:Aller à la page:
+it:Va&i a pagina:
 nl:&Ga naar pagina:
 ru:&Перейти к странице
 cy:&Mynd i dudalen:
@@ -3843,6 +3859,7 @@ hu:(a %d-ból)
 de:(von %d)
 es:(de %d)
 fr:(de %d)
+it:(di %d)
 nl:(van %d)
 ru:(из %d)
 cy:(o %d)
@@ -3865,6 +3882,7 @@ de:Herunterladen
 es:Descargar
 gr:Λήψη
 fr:Télécharger
+it:Scarica
 nl:Downloaden
 ru:Загрузка
 cy:Llwytho i Lawr
@@ -3886,6 +3904,7 @@ de:&Ja
 es:Si
 gr:&Ναι
 fr:&Oui
+it:&Sì
 nl:&Ja
 ru:Да
 cy:&Iawn
@@ -3907,6 +3926,7 @@ de:&Nein
 es:&No
 gr:Ό&χι
 fr:&Non
+it:&No
 nl:&Nee
 ru:Нет
 cy:&Na
@@ -3928,6 +3948,7 @@ de:&Nein, danke
 es:No, &gracias
 gr:Όχι, ευχαριστώ
 fr:Non, merci
+it:N&o, grazie
 nl:&Nee, bedankt
 ru:Спасибо, нет
 cy:&Dim diolch
@@ -3949,6 +3970,7 @@ de:Bitte einen Moment Geduld…
 es:Renderizando - Espere por favor…
 gr:Φόρτωση, παρακαλώ περιμένετε...
 fr:S'il vous plaît attendez - génération...
+it:Prego attendere - sto renderizzando...
 nl:Een ogenblik geduld - weergeven...
 ru:Подождите - формируется изображение...
 cy:Arhoswch, wrthi'n cyflwyno...
@@ -3969,6 +3991,7 @@ hu:Oldalfeldolgozási hiba
 de:Diese Seite kann leider nicht angezeigt werden
 es:No se pudo renderizar la página
 fr:Impossible de générer la page
+it:Impossibile renderizzare la pagina
 nl:Deze pagina kan niet worden weergegeven
 ru:Не удалось сформировать изображение страницы
 cy:Methu cyflwyno'r dudalen
@@ -3990,6 +4013,7 @@ hu:Nem található a dokumentumban
 de:Das Dokument wurde durchsucht
 es:No se encontraron coincidencias
 fr:Aucun résultat n'a été trouvé
+it:Nessuna corrispondenza trovata
 nl:Geen zoekresultaat gevonden
 ru:Образец не найден
 cy:Heb ganfod cyfatebiad
@@ -4011,6 +4035,7 @@ hu:Találat a(z) %d. oldalon
 de:Text auf Seite %d gefunden
 es:Se encontró el texto en la página %d
 fr:Texte trouvé à la page %d
+it:Testo trovato a pagina %d
 nl:Tekst gevonden op pagina %d
 ru:Текст найден на стр. %d
 cy:Canfod testun ar dudalen %d
@@ -4033,6 +4058,7 @@ de:Suche auf Seite %d von %d…
 es:Buscando %d de %d…
 gr:Αναζήτηση %d από %d...
 fr:Recherche de %d à %d...
+it:In ricerca %d di %d...
 nl:Zoek %d van %d...
 ru:Обработка страницы %d из %d...
 cy:Chwilio am %d o %d...
@@ -4054,6 +4080,7 @@ de:PDF-Dokumente
 gr:Αρχεία PDF
 es:Documentos PDF
 fr:Documents PDF
+it:Documenti PDF
 nl:PDF-bestanden
 cy:Dogfennau PDF
 ru:PDF-документы
@@ -4075,6 +4102,7 @@ de:Alle Dateien
 es:Todos los archivos
 gr:Όλα τα αρχεία
 fr:Tous les fichiers
+it:Tutti i file
 nl:Alle bestanden
 cy:Pob ffeil
 ru:Все файлы
@@ -4096,6 +4124,7 @@ de:&Passwort:
 es:&Contraseña:
 gr:Κωδικός:
 fr:Mot de passe:
+it:Parola chiave:
 nl:&Wachtwoord:
 ru:&Пароль:
 mk:&Лозинка:
@@ -4117,6 +4146,7 @@ de:&Suchen nach:
 es:&Buscar qué
 gr:Εύρεση του:
 fr:Rechercher quoi:
+it:R&icerca:
 nl:&Zoek naar:
 ru:&Образец:
 mk:&Најди што:
@@ -4138,6 +4168,7 @@ de:Suchen
 es:Encontrar
 gr:Εύρεση
 fr:Rechercher
+it:Trova
 nl:Zoeken
 ru:Найти
 mk:Најди
@@ -4159,6 +4190,7 @@ de:&Groß-/Kleinschreibung beachten
 es:&Coincidir mayúsculas y minúsculas
 gr:Ταίριασμα πεζών/κεφαλαίων
 fr:Respecter la casse:
+it:&Maiuscole/minuscole
 nl:Hoofd-/kleine letters toepassen
 ru:&Учитывать регистр
 mk:&Разликувај мали и големи букви
@@ -4180,6 +4212,7 @@ de:Tipp: F3-Taste verwenden, um weiterzusuchen
 es:"F3" para encontrar el siguiente resultado
 gr:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
 fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
+it:Ricorda: Usa F3 per trovare nuovamente
 nl:Tip: Gebruik de F3 toest om verder te zoeken
 mk:Совет: За повторно пребарување користи F3 од тастатурата
 hr:Pomoć: koristite tipku F3 za ponovnu pretragu
@@ -4200,6 +4233,7 @@ de:Der Drucker konnte nicht initialisiert werden
 es:No se pudo inicializar la impresora
 gr:Απέτυχε η αρχικοποίηση του εκτυπωτή
 fr:Impossible d'initialiser l'imprimante
+it:Impossibile inizializzare la stampante
 nl:Kan de printer niet initialiseren
 mk:Не можам да го подготвам печатачот
 hr:Ne mogu inicijalizirati pisač
@@ -4220,6 +4254,7 @@ de:Keine Synchronisationsinformationen an diesem Ort
 es:No hay información de sincronización en esta posición
 gr:Δε βρέθηκαν πληροφορίες συγχρονισμού στη θέση αυτή
 fr:Pas de synchronisation des informations à cette position
+it:Niente informazioni di sincronizzazione in questa posizione
 nl:Geen synchronisatieinformatie beschikbaar
 ru:В этой позиции отсутствует информация для синхронизации
 mk:Нема информации за синхронизација на оваа позиција
@@ -4241,6 +4276,7 @@ de:Die Synchronisationsdatei kann nicht geöffnet werden
 es:No se pudo abrir el archivo de sincronización
 gr:Το αρχείο συγχρονισμού δε μπορεί να ανοιχθεί
 fr:Le fichier de synchronisation ne peut pas être ouvert
+it:Il file di sincronizzazione non può essere aperto
 nl:Het synchronisatiebestand kan niet worden geopend
 ru:Не удалось открыть файл с информацией для синхронизации
 mk:Синхронизациската датотека не може да се отвори
@@ -4262,6 +4298,7 @@ de:Es gibt keine Seite %u
 es:La página &u no existe
 gr:Δεν υπάρχει σελίδα με αριθμό %u
 fr:La page %u n'existe pas
+it:Pagina numero  %u inesistente
 nl:Pagina %u bestaat niet
 ru:Страница %u не существует
 mk:Страница со број %u не постои
@@ -4282,6 +4319,7 @@ de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 es:No se encontró resultado cerca de la línea %u en el archivo %s
 gr:Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s
 fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
+it:Nessun risultato trovato intorno alla riga %u nel file %s
 nl:Geen resultaat gevonden in bestand %s bij regel %u
 ru:Результат, соответствующий строке %u в файле %s, не найден
 mk:Не најдов резултати околу линијата %u во датотеката %s
@@ -4303,6 +4341,7 @@ de:%s hat keinen Synchronisations-Punkt
 es:El archivo fuente %s no posee un punto de sincronización
 gr:Το αρχείο προέλευσης %s δεν λεχει σημείο συγχρονισμού
 fr:Le fichier source %s n'a pas de point de synchronisation
+it:Il file sorgente non ha punti di sincronizzazione
 nl:Bestand %s heeft geen synchronisatiepunt
 ru:Отсутствует точка синхронизации в исходном файле %s
 mk:Изворната датотека %s нема синхронизациска точка
@@ -4324,6 +4363,7 @@ de:[Datei wurde geändert; aktualisiere…] %s
 es:[El archivo ha cambiado; actualizando] %s
 gr:[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
 fr:[Modifications détectées; actualisation] %s
+it:[Cambiamenti rilevati; in aggiornamento] %s
 nl:[Bestand gewijzigd; verversen] %s
 ru:[Обнаружены изменения; происходит обновление] %s
 mk:[Забележани се промени; освежувам...] %s
@@ -4345,6 +4385,7 @@ de:Unbekannte Datei (%s)
 es:Archivo fuente desconocido (%s)
 gr:Άγνωστο αρχείο προέλευσης (%s)
 fr:Fichier source unconnu (%s)
+it:File sorgente ignoto
 nl:Onbekend bronbestand (%s)
 ru:Неизвестный исходный файл (%s)
 mk:Непозната изворна датотека (%s)
@@ -4366,6 +4407,7 @@ de:Diese Datei darf nicht gedruckt werden
 es:No se puede imprimir este archivo
 gr:Δε μπορεί να γίνει εκτύπωση του αρχείου
 fr:Impossible d'imprimer ce fichier
+it:Impossibile stampare il file
 nl:Dit bestand kan niet worden afgedrukt
 ru:Не удалось распечатать этот файл
 mk:Не можам да ја печатам оваа датотека
@@ -4387,6 +4429,7 @@ de:PDF-Dokument
 es:Documento PDF
 gr:Αρχείο PDF
 fr:Document PDF
+it:Documento PDF
 nl:PDF-bestand
 ru:PDF-документ
 mk:PDF документ
@@ -4409,12 +4452,12 @@ hu:SumatraPDF mint alapértelmezett PDF olvasó
 pl:Zrób domyślnym programem dla PDF
 de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
 fr:Définir SumatraPDF comme lecteur PDF par défaut
+it:Imposta SumatraPDF come lettore PDF predefinito
 tr:&Varsayılan PDF okuyucusu yap
 by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ja:SumatraPDF を既定の PDF リーダーにする
 fa:PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
 dk:Gør SumatraPDF til din standard PDF læser
-it:&Imposta SumatraPDF come lettore predefinito per i file PDF
 nl:SumatraPDF als standaard PDF-lezer instellen
 ta:SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 es:Hacer SumatraPDF el lector PDF por defecto
@@ -4469,6 +4512,7 @@ de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 es:SumatraPDF es el lector PDF por defecto
 gr:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
 fr:SumatraPDF est votre lecteur de PDF
+it:SumatraPDF è il lettore PDF predefinito
 nl:SumatraPDF is de standaard PDF-lezer
 ru:SumatraPDF ассоциирована с файлами PDF
 mk:SumatraPDF е твојот основен PDF читач
@@ -4492,6 +4536,7 @@ de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 es:SumatraPDF debería ser ahora tu lector PDF por defecto
 gr:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
 fr:SumatraPDF doit maintenant être votre lecteur de PDF
+it:SumatraPDF dev'essere ora il lettore PDF predefinito
 nl:SumatraPDF zou nu de standaard PDF-lezer moeten zijn
 ru:Теперь SumatraPDF ассоциирована с файлами PDF
 mk:Сега SumatraPDF би требало да е твојот основен PDF читач
@@ -4515,6 +4560,7 @@ de:Standardanwendung im portablen Modus nicht veränderbar
 es:No se puede cambiar el lector PDF por defecto en modo portátil
 gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
 fr:Le lecteur de PDF ne peut être changer en mode portable
+it:Il lettore PDF predefinito non può cambiare in modo portable
 nl:Standaard PDF-lezer kan niet worden aangepast in portable mode
 ru:В мобильном режиме изменить PDF-вьюер нельзя
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
@@ -4537,6 +4583,7 @@ de:Mit &Adobe Reader öffnen
 es:Abrir en &Adobe Reader
 gr:Άνοιγμα με &Adobe Reader
 fr:Ouvrir dans &Adobe Reader
+it:Apri in &Adobe Reader
 nl:Openen met &Adobe Reader
 ru:Открыть в &Adobe Reader
 mk:Отвори со &Adobe Reader
@@ -4554,7 +4601,8 @@ br:Copiar seleção\tCtrl-C
 de:Auswahl kopieren\tStrg+C
 gr:Αντιγραφή επιλεγμένων\tCtrl-C
 cn:复制选择内容\tCtrl-C
-fr:Copier la sélection 
+fr:Copier la sélection
+it:Copia Selezione
 ru:Копировать выделение\tCtrl-C
 hu:Kép/Szöveg másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
@@ -4570,6 +4618,7 @@ de:Inhalte mit Strg+linker Maustaste auswählen
 gr:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 cn:使用Ctrl+鼠标左键选择内容
 fr:Sélectionner avec Ctrl+bouton gauche de la souris
+it:Seleziona contenuti con Ctrl+tasto destro del mouse
 ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
 hu:Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
@@ -4585,6 +4634,7 @@ de:&Zoomfaktor...
 gr:&Ορισμός ζουμ...
 cn:自定义缩放...
 fr:Zoom personnalisé...
+it:I&ngrandimento personalizzato
 ru:Заказной масштаб...
 hu:... Egyéni méret
 ja:カスタム(&C)...
@@ -4600,6 +4650,7 @@ de:Zoomfaktor
 gr:Ποσοστό ζουμ
 cn:缩放比例
 fr:Facteur de zoom
+it:Fattore ingrandimento
 ru:Масштабный коэффициент
 hu:Nagyítás mértéke
 ja:カスタム ズーム
@@ -4615,6 +4666,7 @@ de:&Vergrößerung:
 gr:Μεγέθυνση:
 cn:放大率(&M):
 fr:Grossissement:
+it:Ingrossa&mento:
 ru:Увеличение:
 hu:Nagyítás:
 ja:拡大率(&M):
@@ -4630,6 +4682,7 @@ de:Zoom
 gr:Ζουμ
 cn:缩放
 fr:Zoom
+it:Ingrandimento
 ru:Масштаб
 hu:Beállít
 ja:ズーム
@@ -4642,6 +4695,7 @@ pt:Zoom
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
+it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
 ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
 gr:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις
