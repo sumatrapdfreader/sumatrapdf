@@ -3041,8 +3041,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             continue;
 
         LockCache();
-        //BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
-        BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo);
+        BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
         if (entry)
             renderedBmp = entry->bitmap;
 
