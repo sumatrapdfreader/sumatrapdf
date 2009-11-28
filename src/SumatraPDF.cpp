@@ -588,64 +588,72 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 
 
 //
-// List of rules used to detect commonly used TeX editors.
+// List of rules used to detect TeX editors.
 //
+
+// type of path information retrieved from the registy
+typedef enum
+{
+    BinaryPath,         // full path to the editor's binary file
+    BinaryDir,          // directory containing the editor's binary file
+    SiblingPath,        // full path to a sibling file of the editor's binary file    
+} EditorPathType;
 typedef struct 
 {
-PTSTR  Name;
-HKEY   RegRoot;
-PTSTR  RegKey;
-PTSTR  RegValue;
-PTSTR  InverseSearchFormat;
+    PTSTR          Name;                // Editor name
+    EditorPathType Type;                // Type of the path information obtained from the registry
+    HKEY           RegRoot;             // Root of the regkey
+    PTSTR          RegKey;              // Registry key path
+    PTSTR          RegValue;            // Registry value name
+    PTSTR          BinaryFilename;      // Editor's binary file name
+    PTSTR          InverseSearchArgs;   // Parameters to be passed to the editor;
+                                        // use placeholder '%f' for path to source file and '%l' for line number.
 } EditorDetectionRules;
 static EditorDetectionRules editor_rules[] =
 {
-    _T("WinEdt"),             HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"),
-                              NULL,                   _T("\"%s\" \"[Open(|%%f|);SelPar(%%l,8)]\""),
+    _T("WinEdt"),             BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"), NULL,
+                              _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
 
-    _T("WinEdt"),             HKEY_CURRENT_USER,      _T("Software\\WinEdt"),
-                              _T("Install Root"),     _T("\"%s\\WinEdt.exe\" \"[Open(|%%f|);SelPar(%%l,8)]\""),
+    _T("WinEdt"),             BinaryDir, HKEY_CURRENT_USER, _T("Software\\WinEdt"), _T("Install Root"),
+                              _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
 
-    _T("Notepad++"),          HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe"), 
-                              NULL,                   _T("\"%s\" -n%%l \"%%f\""),
+    _T("Notepad++"),          BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe"), NULL,
+                              _T("WinEdt.exe"), _T("-n%l \"%f\""),
 
-    _T("Notepad++"),          HKEY_LOCAL_MACHINE,     _T("Software\\Notepad++"), 
-                              NULL,                   _T("\"%s\\notepad++.exe\" -n%%l \"%%f\""),
+    _T("Notepad++"),          BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Notepad++"), NULL,
+                              _T("notepad++.exe"), _T("-n%l \"%f\""),
 
-    _T("Notepad++"),          HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++"),
-                              _T("DisplayIcon"),      _T("\"%s\" -n%%l \"%%f\""),
+    _T("Notepad++"),          BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++"), _T("DisplayIcon"),
+                              _T("notepad++.exe"), _T("-n%l \"%f\""),
 
-    _T("TeXnicCenter Alpha"), HKEY_LOCAL_MACHINE,     _T("Software\\ToolsCenter\\TeXnicCenterNT"),
-                              _T("AppPath"),          _T("\"%s\\TeXnicCenter.exe\" /ddecmd \"[goto('%%f', '%%l')]\""),
+    _T("TeXnicCenter Alpha"), BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\ToolsCenter\\TeXnicCenterNT"), _T("AppPath"),
+                              _T("TeXnicCenter.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
 
-    _T("TeXnicCenter Alpha"), HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1"),
-                              _T("InstallLocation"),  _T("\"%s\\TeXnicCenter.exe\" /ddecmd \"[goto('%%f', '%%l')]\""),
+    _T("TeXnicCenter Alpha"), BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1"), _T("InstallLocation"),
+                              _T("TeXnicCenter.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
 
-    _T("TeXnicCenter"),       HKEY_LOCAL_MACHINE,     _T("Software\\ToolsCenter\\TeXnicCenter"),
-                              _T("AppPath"),          _T("\"%s\\TEXCNTR.EXE\" /ddecmd \"[goto('%%f', '%%l')]\""),
+    _T("TeXnicCenter"),       BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\ToolsCenter\\TeXnicCenter"), _T("AppPath"),
+                              _T("TEXCNTR.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
 
-    _T("TeXnicCenter"),       HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1"),
-                              _T("InstallLocation"),  _T("\"%s\\TEXCNTR.EXE\" /ddecmd \"[goto('%%f', '%%l')]\""),
+    _T("TeXnicCenter"),       BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1"), _T("InstallLocation"),
+                              _T("TEXCNTR.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
 
+    _T("WinShell"),           BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"), _T("InstallLocation"),
+                              _T("WinShell.exe"), _T("-c \"%f\" -l %l"),
 
-    _T("WinShell"),           HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"),
-                              _T("InstallLocation"),  _T("\"%s\\WinShell.EXE\" -c \"%%f\" -l %%l"),
-
-    _T("Gvim"),               HKEY_LOCAL_MACHINE,     _T("Software\\Vim\\Gvim"),
-                              _T("path"),             _T("\"%s\" \"%%f\" +%%l"),
+    _T("Gvim"),               BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Vim\\Gvim"), _T("path"),
+                              _T("gvim.exe"), _T("\"%f\" +%l"),
     
-    // TODO: use this rule only if the latex-suite is installed for ViM (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-    //_T("Gvim"),             HKEY_LOCAL_MACHINE,     _T("Software\\Vim\\Gvim"),
-    //                        _T("path"),             _T("-c "\"%s\" :RemoteOpen +%%l %%f"),
+    // TODO: add this rule only if the latex-suite for ViM is installed (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
+    _T("Gvim+latex-suite"),   BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Vim\\Gvim"), _T("path"),
+                             _T("gvim.exe"), _T("-c \":RemoteOpen +%l %f\""),
                               
+    _T("Texmaker"),           SiblingPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker"), _T("UninstallString"),
+                              _T("texmaker.exe"), _T("\"%f\" -line %l"),
+
     // TODO: find a way to detect where emacs is installed
-    //_T("ntEmacs"),            HKEY_LOCAL_MACHINE,     _T("???"),
-    //                          _T("???"),              _T("\"C:\ntemacs23\bin\emacsclientw.exe\" +%%l \"%%f\""),
-
-    // TODO: find a way to detect where Texmaker is installed
-    //_T("Texmaker              HKEY_LOCAL_MACHINE,     _T("???"),
-    //                          _T("???"),             _T("\"%s\" \"%%f\" -line %%l"),
-
+    //_T("ntEmacs"),            BinaryPath, HKEY_LOCAL_MACHINE, _T("???"), _T("???"),
+    //                          _T("emacsclientw.exe"), _T("+%l \"%f\""),
 };
 
 //
@@ -669,12 +677,35 @@ void AutoDetectInverseSearchCommands(PTSTR *pfirst, HWND hwndCombo)
     {
         if (ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
         {
-            int len = _tcslen(path);
-            // remove trailing path separator
-            if( len > 0 && path[len-1] == '\\' )
-                path[len-1]=0;
+            PTSTR cmd;
+            if(editor_rules[i].Type == SiblingPath)
+            {
+                // remove file part
+                PTSTR dir = FilePath_GetDir(path);
 
-            PTSTR cmd = tstr_printf(editor_rules[i].InverseSearchFormat, path);            
+                // remove trailing path separator
+                int len = _tcslen(dir);
+                if( len > 0 && dir[len-1] == '\\' )
+                    dir[len-1]=0;
+
+                cmd = tstr_printf(_T("\"%s\\%s\" %s"), dir, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
+
+                free(dir);
+            }
+            else if(editor_rules[i].Type == BinaryDir )
+            {
+                // remove trailing path separator
+                int len = _tcslen(path);
+                if( len > 0 && path[len-1] == '\\' )
+                    path[len-1]=0;
+                cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
+            }
+            else //if( editor_rules[i].Type == BinaryPath )
+            {
+                cmd = tstr_printf(_T("\"%s\" %s"), path, editor_rules[i].InverseSearchArgs);
+            }
+    
+
             if(pfirst && !*pfirst) *pfirst = tstr_dup(cmd);
             if(hwndCombo==NULL)
             {
