@@ -3502,12 +3502,14 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
 static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 {
     assert(win);
-    if (!win || !win->dm ) return;
+    if (!win || !win->dm) return;
 
     // Clear the last forward-search result
     win->fwdsearchmarkRects.clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
+    if (!gGlobalPrefs.m_inverseSearchCmdLine || !*gGlobalPrefs.m_inverseSearchCmdLine)
+        return;
 
     if (!win->pdfsync) {
         win->pdfsync = CreateSynchronizer(win->watcher.filepath());
