@@ -3585,6 +3585,7 @@ static void DeleteOldSelectionInfo (WindowInfo *win) {
         selOnPage = tmp;
     }
     win->selectionOnPage = NULL;
+    win->showSelection = false;
 }
 
 static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
@@ -3810,7 +3811,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
         win->selectionRect.y = min (win->selectionRect.y, y);
 
         if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
-            win->showSelection = false;
+            DeleteOldSelectionInfo(win);
         } else {
             ConvertSelectionRectToSelectionOnPage (win);
         }
@@ -3860,7 +3861,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         return;
     }
 
-    if (!gRestrictedUse && (key & MK_CONTROL) != 0)
+    if (MA_SELECTING == win->mouseAction)
         OnSelectionStop(win, x, y);
     else
         OnDraggingStop(win, x, y);
@@ -5307,7 +5308,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
 
 static void ClearSearch(WindowInfo *win)
 {
-    win->showSelection = false;
+    DeleteOldSelectionInfo(win);
     triggerRepaintDisplayNow(win);
 }
 
