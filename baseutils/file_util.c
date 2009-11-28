@@ -520,12 +520,24 @@ FileInfo *FileList_GetFileInfo(FileList *fl, int file_no)
     return fi;
 }
 
-BOOL file_exists(const char *file_path)
+BOOL file_existsA(const char *file_path)
 {
     struct stat buf;
     int         res;
 
     res = stat(file_path, &buf);
+    if (0 != res)
+        return FALSE;
+    /* TODO: also check if this is a file (and not a directory) */
+    return TRUE;
+}
+
+BOOL file_existsW(const WCHAR *file_path)
+{
+    struct _stat buf;
+    int          res;
+
+    res = _wstat(file_path, &buf);
     if (0 != res)
         return FALSE;
     /* TODO: also check if this is a file (and not a directory) */

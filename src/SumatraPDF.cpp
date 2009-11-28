@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <direct.h>
 
 #include <windowsx.h>
 #include <shellapi.h>
@@ -4457,9 +4458,7 @@ static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
     if (foundAcrobat && buffer)
         lstrcpyn(buffer, path, bufSize);
 
-    // TODO: Get a Unicode version for file_exists into file_util.c (cf. PdfSync.cpp)?
-    struct _stat stat_buffer;
-    return foundAcrobat && 0 == _tstat(path, &stat_buffer);
+    return foundAcrobat && file_exists(path);
 }
 
 // The result value contains major and minor version in the high resp. the low WORD
@@ -7173,7 +7172,7 @@ static void EnableNx(void)
    DWORD dep_mode;
    _NtSetInformationProcess ntsip;
 
-   ntdll = LoadLibrary(L"ntdll.dll");
+   ntdll = LoadLibrary(_T("ntdll.dll"));
    if (ntdll == NULL)
        return;
 

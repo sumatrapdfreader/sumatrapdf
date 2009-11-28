@@ -86,7 +86,13 @@ char *          file_read_all(const char *file_path, uint64_t *file_size_out);
 #endif
 uint64_t        file_size_get(const char *file_path);
 BOOL            write_to_file(const TCHAR *file_path, void *data, uint64_t data_len);
-BOOL            file_exists(const char *file_path);
+BOOL            file_existsA(const char *file_path);
+BOOL            file_existsW(const WCHAR *file_path);
+#ifdef _UNICODE
+#define file_exists   file_existsW
+#else
+#define file_exists   file_existsA
+#endif
 
 #ifdef __cplusplus
 }
