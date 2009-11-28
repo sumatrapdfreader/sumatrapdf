@@ -664,6 +664,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
 
         SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
         SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
+        AutoDetectInverseSearchCommands(NULL, GetDlgItem(hDlg, IDC_CMDLINE));
 #else
         ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);
         ShowWindow(GetDlgItem(hDlg, IDC_CMDLINE_LABEL), SW_HIDE);

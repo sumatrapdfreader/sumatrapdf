@@ -586,13 +586,97 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
 }
 
-static void SerializableGlobalPrefs_Init() {
-    // Initialize the inverse search command line to a reasonable default value
+
+//
+// List of rules used to detect commonly used TeX editors.
+//
+// TODO: add rules for ntEmacs, Vim, Texmaker, WinShell, ...
+//
+typedef struct 
+{
+PTSTR  Name;
+HKEY   RegRoot;
+PTSTR  RegKey;
+PTSTR  RegValue;
+PTSTR  InverseSearchFormat;
+} EditorDetectionRules;
+static EditorDetectionRules editor_rules[] =
+{
+    _T("WinEdt"),             HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"),
+                              NULL,                   _T("\"%s\" \"[Open(|%%f|);SelPar(%%l,8)]\""),
+
+    _T("WinEdt"),             HKEY_CURRENT_USER,      _T("Software\\WinEdt"),
+                              _T("Install Root"),     _T("\"%s\\WinEdt.exe\" \"[Open(|%%f|);SelPar(%%l,8)]\""),
+
+    _T("Notepad++"),          HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe"), 
+                              NULL,                   _T("\"%s\" -n%%l \"%%f\""),
+
+    _T("Notepad++"),          HKEY_LOCAL_MACHINE,     _T("Software\\Notepad++"), 
+                              NULL,                   _T("\"%s\\notepad++.exe\" -n%%l \"%%f\""),
+
+    _T("Notepad++"),          HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++"),
+                              _T("DisplayIcon"),      _T("\"%s\" -n%%l \"%%f\""),
+
+    _T("TeXnicCenter Alpha"), HKEY_LOCAL_MACHINE,     _T("Software\\ToolsCenter\\TeXnicCenterNT"),
+                              _T("AppPath"),          _T("\"%s\\TeXnicCenter.exe\" /ddecmd \"[goto('%%f', '%%l')]\""),
+
+    _T("TeXnicCenter Alpha"), HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1"),
+                              _T("InstallLocation"),  _T("\"%s\\TeXnicCenter.exe\" /ddecmd \"[goto('%%f', '%%l')]\""),
+
+    _T("TeXnicCenter"),       HKEY_LOCAL_MACHINE,     _T("Software\\ToolsCenter\\TeXnicCenter"),
+                              _T("AppPath"),          _T("\"%s\\TEXCNTR.EXE\" /ddecmd \"[goto('%%f', '%%l')]\""),
+
+    _T("TeXnicCenter"),       HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1"),
+                              _T("InstallLocation"),  _T("\"%s\\TEXCNTR.EXE\" /ddecmd \"[goto('%%f', '%%l')]\""),
+};
+
+//
+// Detect TeX editors installed on the system and construct the
+// corresponding inverse search commands.
+//
+// Parameters:
+//      pfirst  -- (optional) *pfirst will contain the inverse search command of the first detected editor.
+//                  (The string needs to be freed by the caller.)
+//      combo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
+//
+//
+void AutoDetectInverseSearchCommands(PTSTR *pfirst, HWND hwndCombo)
+{
+    if(pfirst)
+        *pfirst = NULL;
+
+    // Go through the list of rules
     TCHAR path[MAX_PATH];
-    if (ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"), NULL, path, dimof(path)))
-        gGlobalPrefs.m_inverseSearchCmdLine = tstr_printf(_T("\"%s\" \"[Open(|%%f|);SelPar(%%l,8)]\""), path);
-    else
-        gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(_T(""));
+    for(int i=0; i<dimof(editor_rules); i++)
+    {
+        if (ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
+        {
+            PCTSTR cmd = tstr_printf(editor_rules[i].InverseSearchFormat, path);
+            if(pfirst && !*pfirst) *pfirst = tstr_dup(cmd);
+            if(hwndCombo==NULL)
+            {
+                // no need to fill a combo box: return immeditately after finding an editor.
+                free(cmd);
+                return;
+            }
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)cmd);
+            free(cmd);
+            // skip the remaining rules for this editor
+            while(i+1<dimof(editor_rules) && _tcscmp(editor_rules[i].Name, editor_rules[i+1].Name) == 0)
+                i++;
+        }
+    }
+
+    // fall back to notepad
+    if(pfirst && !*pfirst)
+        *pfirst = tstr_dup(_T("notepad %f"));
+}
+
+
+
+static void SerializableGlobalPrefs_Init() {
+    // Detect a text editor and use it as the default inverse search handler
+    AutoDetectInverseSearchCommands(&gGlobalPrefs.m_inverseSearchCmdLine, NULL);
 }
 
 static void SerializableGlobalPrefs_Deinit()
