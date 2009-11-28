@@ -661,76 +661,70 @@ static EditorDetectionRules editor_rules[] =
 // corresponding inverse search commands.
 //
 // Parameters:
-//      pfirst  -- (optional) *pfirst will contain the inverse search command of the first detected editor.
-//                  (The string needs to be freed by the caller.)
 //      combo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
+// Returns:
+//      the inverse search command of the first detected editor (the caller needs to free() the result).
 //
 //
-void AutoDetectInverseSearchCommands(PTSTR *pfirst, HWND hwndCombo)
+LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
-    if(pfirst)
-        *pfirst = NULL;
+    LPTSTR firstEditor = NULL;
+    TCHAR path[MAX_PATH];
 
     // Go through the list of rules
-    TCHAR path[MAX_PATH];
-    for(int i=0; i<dimof(editor_rules); i++)
+    for (int i = 0; i < dimof(editor_rules); i++)
     {
         if (ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
         {
             PTSTR cmd;
-            if(editor_rules[i].Type == SiblingPath)
+            if (editor_rules[i].Type == SiblingPath)
             {
                 // remove file part
                 PTSTR dir = FilePath_GetDir(path);
-
-                // remove trailing path separator
-                int len = _tcslen(dir);
-                if( len > 0 && dir[len-1] == '\\' )
-                    dir[len-1]=0;
-
                 cmd = tstr_printf(_T("\"%s\\%s\" %s"), dir, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-
                 free(dir);
             }
-            else if(editor_rules[i].Type == BinaryDir )
+            else if (editor_rules[i].Type == BinaryDir)
             {
-                // remove trailing path separator
-                int len = _tcslen(path);
-                if( len > 0 && path[len-1] == '\\' )
-                    path[len-1]=0;
+                // remove trailing path separator (TODO: move to function in file_util.c)
+                int len = lstrlen(path);
+                if (*path && char_is_dir_sep(path[len-1]))
+                    path[len-1] = 0;
                 cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
             }
-            else //if( editor_rules[i].Type == BinaryPath )
+            else // if (editor_rules[i].Type == BinaryPath)
             {
                 cmd = tstr_printf(_T("\"%s\" %s"), path, editor_rules[i].InverseSearchArgs);
             }
-    
 
-            if(pfirst && !*pfirst) *pfirst = tstr_dup(cmd);
-            if(hwndCombo==NULL)
+            if (!firstEditor)
+                firstEditor = tstr_dup(cmd);
+            if (!hwndCombo)
             {
                 // no need to fill a combo box: return immeditately after finding an editor.
                 free(cmd);
-                return;
+                return firstEditor;
             }
+
             SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)cmd);
             free(cmd);
+
             // skip the remaining rules for this editor
-            while(i+1<dimof(editor_rules) && _tcscmp(editor_rules[i].Name, editor_rules[i+1].Name) == 0)
+            while (i + 1 < dimof(editor_rules) && _tcscmp(editor_rules[i].Name, editor_rules[i+1].Name) == 0)
                 i++;
         }
     }
 
-    // fall back to notepad
-    if(pfirst && !*pfirst)
-        *pfirst = tstr_dup(_T("notepad %f"));
+    // Don't fall back to any default as long as double-clicking causes
+    // an incomprehensible error message for users who've never heard of LaTeX
+    // when a default editor is configured
+    // // if (!firstEditor) firstEditor = tstr_dup(_T("notepad %f"));
+    return firstEditor;
 }
-
-
 
 static void SerializableGlobalPrefs_Init() {
     // Detect a text editor and use it as the default inverse search handler
-    AutoDetectInverseSearchCommands(&gGlobalPrefs.m_inverseSearchCmdLine, NULL);
+    gGlobalPrefs.m_inverseSearchCmdLine = AutoDetectInverseSearchCommands();
 }
 
 static void SerializableGlobalPrefs_Deinit()

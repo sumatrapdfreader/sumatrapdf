@@ -246,7 +246,7 @@ public:
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, TCHAR *windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
-void AutoDetectInverseSearchCommands(PTSTR *pfirst, HWND hwndCombo);
+LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 
 bool IsRunningInPortableMode(void);
 bool IsExeAssociatedWithPdfExtension(void);
