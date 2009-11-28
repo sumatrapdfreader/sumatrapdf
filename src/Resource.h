@@ -21,6 +21,7 @@
 #define IDM_EXIT                        405
 #define IDM_REFRESH                     406
 #define IDM_VIEW_WITH_ACROBAT           407
+
 /* IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS must be in a continous range */
 #define IDM_VIEW_SINGLE_PAGE            410
 #define IDM_VIEW_FACING                 411
@@ -43,6 +44,8 @@
 #define IDM_FIND_NEXT                   436
 #define IDM_FIND_PREV                   437
 #define IDM_FIND_MATCH                  438
+
+/* IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continous range */
 #define IDM_ZOOM_FIT_PAGE               440
 #define IDM_ZOOM_ACTUAL_SIZE            441
 #define IDM_ZOOM_FIT_WIDTH              442
@@ -60,6 +63,7 @@
 #define IDM_ZOOM_12_5                   454
 #define IDM_ZOOM_8_33                   455
 #define IDM_ZOOM_CUSTOM                 456
+
 #define IDM_CONTRIBUTE_TRANSLATION      460
 #define IDM_LANG_EN                     461
 #define IDM_LANG_FR                     462

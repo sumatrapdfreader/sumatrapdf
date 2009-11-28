@@ -34,6 +34,8 @@
 // having them overwritten by dialog editor
 #define IDM_VIEW_LAYOUT_FIRST           IDM_VIEW_SINGLE_PAGE
 #define IDM_VIEW_LAYOUT_LAST            IDM_VIEW_CONTINUOUS
+#define IDM_ZOOM_FIRST                  IDM_ZOOM_FIT_PAGE
+#define IDM_ZOOM_LAST                   IDM_ZOOM_CUSTOM
 
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -898,10 +900,8 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
 
     HMENU menuMain = win->hMenu;
     UINT enableState = win->dm ? MF_ENABLED : MF_GRAYED;
-    for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
-        CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_UNCHECKED);
+    for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
         EnableMenuItem(menuMain, id, MF_BYCOMMAND | enableState);
-    }
 
     UINT id = 0;
     switch (displayMode) {
@@ -914,9 +914,7 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
         default: assert(!win->dm && DM_AUTOMATIC == displayMode); break;
     }
 
-    if (id)
-        CheckMenuItem(menuMain, id, MF_BYCOMMAND | MF_CHECKED);
-
+    CheckMenuRadioItem(menuMain, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     if (displayModeContinuous(displayMode))
         CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_CHECKED);
 
@@ -1293,25 +1291,16 @@ static double ZoomMenuItemToZoom(UINT menuItemId)
 
 static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
 {
-    BOOL found = FALSE;
+    assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
+
+    for (size_t i = 0; i < dimof(gItemId); i++)
+        EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | (canZoom ? MF_ENABLED : MF_GRAYED));
+
     if (IDM_ZOOM_100 == menuItemId)
         menuItemId = IDM_ZOOM_ACTUAL_SIZE;
-
-    for (size_t i=0; i<dimof(gItemId); i++) {
-        UINT checkState = MF_BYCOMMAND | MF_UNCHECKED;
-        if (menuItemId == gItemId[i]) {
-            assert(!found);
-            found = TRUE;
-            checkState = MF_BYCOMMAND | MF_CHECKED;
-        }
-        else if (IDM_ZOOM_ACTUAL_SIZE == menuItemId && IDM_ZOOM_100 == gItemId[i]) {
-            checkState = MF_BYCOMMAND | MF_CHECKED;
-        }
-        CheckMenuItem(hmenu, gItemId[i], checkState);
-        UINT enableState = canZoom ? MF_ENABLED : MF_GRAYED;
-        EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | enableState);
-    }
-    assert(found);
+    CheckMenuRadioItem(hmenu, IDM_ZOOM_FIRST, IDM_ZOOM_LAST, menuItemId, MF_BYCOMMAND);
+    if (IDM_ZOOM_ACTUAL_SIZE == menuItemId)
+        CheckMenuRadioItem(hmenu, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
 }
 
 static void MenuUpdateZoom(WindowInfo* win)
