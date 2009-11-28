@@ -1058,7 +1058,7 @@ nl:Werkbalk tonen
 ta:கருவிப்பட்டை காண்பி
 es:Mostrar barra de herramientas
 hr:Prikaži alatnu traku
-ru:Показ панели инструментов
+ru:Панель инструментов
 ar:عرض شريط الأدوات
 cn:显示工具栏
 sv:Visa verktygsfält
@@ -1116,7 +1116,7 @@ nl:&Ga naar
 ta:அங்கு செல்
 es:&Ir a
 hr:Idi na
-ru:Перейти
+ru:Переход
 ar:&الذهاب إلى
 cn:转到(&G)
 sv:&Gå till
@@ -1406,7 +1406,7 @@ nl:Pagina...\tCtrl-G
 ta:பக்கம்...\tCtrl-G
 es:Página...\tCtrl-G
 hr:Stranica...\tCtrl-G
-ru:Страница...\tCtrl-G
+ru:Указанная страница...\tCtrl-G
 ar:صفحة محددة\tCtrl-G
 cn:页面...\tCtrl-G
 sv:Sida...\tCtrl-G
@@ -2584,7 +2584,7 @@ nl:Printer niet gevonden
 ta:அச்சுப்பொறியை திறக்க முடியவில்லை
 es:Impresora no accesible
 hr:Nije moguće pristupiti pisaču
-ru:Принтер не доступен
+ru:Принтер недоступен
 ar:تعذر فتح الطابعة
 cn:无法打开打印机
 sv:Kan inte anropa skrivaren.
@@ -3131,7 +3131,7 @@ gr:Νέα έκδοση διαθέσιμη
 sk:Nie je k dispozícia nová verzia.
 vn:Không có phiên bản mới.
 uk:Новішої версії немає.
-ru:Обновлений не обнаружено.
+ru:Обновлений не обнаружено
 es:No hay una nueva versión.
 hr:Nema nove inačice.
 it:Nessun aggiornamento disponibile
@@ -3175,7 +3175,7 @@ gr:Έχετε την τελευταία έκδοση.
 sk:Používate najnovšiu verziu.
 vn:Bạn đang dùng phiên bản mới nhất.
 uk:Ви вже маєте найновішу версію.
-ru:Вы используете последнюю версию.
+ru:Вы используете новейшую версию.
 es:Usted tiene la última versión.
 hr:Imate najnoviju inačicu.
 it:Hai l'ultima versione disponibile
@@ -3263,7 +3263,7 @@ gr:Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψ�
 sk:Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 vn:Đã có phiên bản mới %s. Download phiên bản mới?
 uk:Нова версія %s є доступною. Завантажити нову версію?
-ru:Доступна новая версия: %s. Загрузить ее?
+ru:Доступна новая версия: %s. Загрузить её?
 es:Está disponible la nueva versión %s. ¿Desea descargarla?
 hr:Dostupna je nova inačica: %s. Skinuti novu inačicu?
 it:È disponibile la versione %s. Scaricare la nuova versione?
@@ -3393,7 +3393,7 @@ es:Advertencia
 gr:Προειδοποίηση
 it:Avviso
 fr:Avertissement
-ru:Предупреждение
+ru:Внимание
 pl:Uwaga
 cy:Rhybudd
 mk:Предупредување
@@ -3676,7 +3676,7 @@ es:Mostrar la barra de marcadores cuando esté disponible
 gr:Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 fr:Voir la barre latérale des signets quand elle est disponible
 it:Mostra la &barra dei segnalibri quando è disponibile
-ru:Показывать панель &закладок (при возможности)
+ru:Показывать панель &закладок (по возможности)
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 hr:Prikaži traku &straničnika kada je dostupna
@@ -3718,7 +3718,7 @@ es:Revisar &actualizaciones automáticamente
 gr:Αυτόματος έλεγχος για ενημερώσεις
 fr:Vérifier &automatiquement les mises à jour
 it:Verifica &automaticamente aggiornamenti
-ru:&Автоматическая проверка обновлений
+ru:&Автоматически проверять обновления
 cy:Gwirio'n awtomatig am &ddiweddariadau
 mk:Проверувај за &надградби автоматски
 hr:Provjeravaj &nadogradnje automatski
@@ -3760,7 +3760,7 @@ de:&Eine Liste der geöffneten Dokumente führen
 es:Recordar archiv&os abiertos
 fr:Se rappeler des fichiers ouverts
 it:R&icorda i file aperti
-ru:&Запомнить открытые файлы
+ru:&Запомнить открытые файлыru:&Запоминать открытые файлы
 mk:Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
@@ -3950,7 +3950,7 @@ gr:Όχι, ευχαριστώ
 fr:Non, merci
 it:N&o, grazie
 nl:&Nee, bedankt
-ru:Спасибо, нет
+ru:Нет, спасибо
 cy:&Dim diolch
 mk:&Не, благодарам
 hr:&Ne, hvala
@@ -3972,7 +3972,7 @@ gr:Φόρτωση, παρακαλώ περιμένετε...
 fr:S'il vous plaît attendez - génération...
 it:Prego attendere - sto renderizzando...
 nl:Een ogenblik geduld - weergeven...
-ru:Подождите - формируется изображение...
+ru:Формируется изображение, подождите...
 cy:Arhoswch, wrthi'n cyflwyno...
 mk:Те молам почекај - создавам приказ...
 hr:Molim pričekajte, iscrtavam...
@@ -4015,7 +4015,7 @@ es:No se encontraron coincidencias
 fr:Aucun résultat n'a été trouvé
 it:Nessuna corrispondenza trovata
 nl:Geen zoekresultaat gevonden
-ru:Образец не найден
+ru:Совпадений не найдено
 cy:Heb ganfod cyfatebiad
 gr:Δε βρέθηκε το κείμενο
 mk:Не се пронајдени совпаѓања
@@ -4148,7 +4148,7 @@ gr:Εύρεση του:
 fr:Rechercher quoi:
 it:R&icerca:
 nl:&Zoek naar:
-ru:&Образец:
+ru:&Найти:
 mk:&Најди што:
 hr:&Što tražiti:
 cn:查找(&F):
@@ -4170,7 +4170,7 @@ gr:Εύρεση
 fr:Rechercher
 it:Trova
 nl:Zoeken
-ru:Найти
+ru:Поиск
 mk:Најди
 hr:Pronađi
 cn:查找
@@ -4256,7 +4256,7 @@ gr:Δε βρέθηκαν πληροφορίες συγχρονισμού στη 
 fr:Pas de synchronisation des informations à cette position
 it:Niente informazioni di sincronizzazione in questa posizione
 nl:Geen synchronisatieinformatie beschikbaar
-ru:В этой позиции отсутствует информация для синхронизации
+ru:В этой позиции нет информации для синхронизации
 mk:Нема информации за синхронизација на оваа позиција
 hr:Nema podatka o usklađenosti na ovom položaju
 cn:此位置没有同步信息
@@ -4365,7 +4365,7 @@ gr:[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
 fr:[Modifications détectées; actualisation] %s
 it:[Cambiamenti rilevati; in aggiornamento] %s
 nl:[Bestand gewijzigd; verversen] %s
-ru:[Обнаружены изменения; происходит обновление] %s
+ru:[Обнаружены изменения; обновление...] %s
 mk:[Забележани се промени; освежувам...] %s
 hr:[Dogodila se promjena - osvježavam] %s
 cn:[检测到改动；刷新中] %s
@@ -4562,7 +4562,7 @@ gr:Δε μπορεί να γίνει συσχετισμός σε portable mode
 fr:Le lecteur de PDF ne peut être changer en mode portable
 it:Il lettore PDF predefinito non può cambiare in modo portable
 nl:Standaard PDF-lezer kan niet worden aangepast in portable mode
-ru:В мобильном режиме изменить PDF-вьюер нельзя
+ru:В мобильном режиме ассоциирование невозможно
 mk:Основниот PDF читач не може да се промени во мобилен режим на работа
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 cn:便携模式不能改变默认 PDF 阅读器
@@ -4603,7 +4603,7 @@ gr:Αντιγραφή επιλεγμένων\tCtrl-C
 cn:复制选择内容\tCtrl-C
 fr:Copier la sélection
 it:Copia Selezione
-ru:Копировать выделение\tCtrl-C
+ru:Скопировать выделенное\tCtrl-C
 hu:Kép/Szöveg másolása\tCtrl-C
 ja:選択範囲をコピー\tCtrl+C
 sv:Kopiera markering\tCtrl-C
@@ -4619,7 +4619,7 @@ gr:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτ
 cn:使用Ctrl+鼠标左键选择内容
 fr:Sélectionner avec Ctrl+bouton gauche de la souris
 it:Seleziona contenuti con Ctrl+tasto destro del mouse
-ru:Выберите содержимое, щелкнув Ctrl+левая кнопка мыши
+ru:Выберите содержимое, нажав Ctrl и левую кнопку мыши
 hu:Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 ja:Ctrl+右クリックで選択範囲を指定します
 sv:Markera med Ctrl + vänster musknapp
@@ -4635,7 +4635,7 @@ gr:&Ορισμός ζουμ...
 cn:自定义缩放...
 fr:Zoom personnalisé...
 it:I&ngrandimento personalizzato
-ru:Заказной масштаб...
+ru:Указать масштаб...
 hu:... Egyéni méret
 ja:カスタム(&C)...
 sv:&Eget zoomval...
@@ -4651,7 +4651,7 @@ gr:Ποσοστό ζουμ
 cn:缩放比例
 fr:Facteur de zoom
 it:Fattore ingrandimento
-ru:Масштабный коэффициент
+ru:Масштаб
 hu:Nagyítás mértéke
 ja:カスタム ズーム
 sv:Zoomfaktor
@@ -4667,7 +4667,7 @@ gr:Μεγέθυνση:
 cn:放大率(&M):
 fr:Grossissement:
 it:Ingrossa&mento:
-ru:Увеличение:
+ru:Масштабирование:
 hu:Nagyítás:
 ja:拡大率(&M):
 sv:&Förstoring:
@@ -4696,7 +4696,7 @@ Cannot start inverse search command. Please check the command line in the settin
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
-ru:Ошибка команды обратного поиска. Пожалуйста, проверьте параметры командной строки.
+ru:Ошибка команды обратного поиска. Проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
 gr:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις
 cn:无法运行反向搜索命令。请检查设置中的命令行。
