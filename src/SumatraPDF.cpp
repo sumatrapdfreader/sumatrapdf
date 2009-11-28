@@ -590,8 +590,6 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 //
 // List of rules used to detect commonly used TeX editors.
 //
-// TODO: add rules for ntEmacs, Vim, Texmaker, ...
-//
 typedef struct 
 {
 PTSTR  Name;
@@ -630,8 +628,24 @@ static EditorDetectionRules editor_rules[] =
                               _T("InstallLocation"),  _T("\"%s\\TEXCNTR.EXE\" /ddecmd \"[goto('%%f', '%%l')]\""),
 
 
-    _T("WinShell"),       HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"),
-                              _T("InstallLocation"),  _T("\"%s\\WinShell.EXE\" -c %%f -l %%l"),
+    _T("WinShell"),           HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"),
+                              _T("InstallLocation"),  _T("\"%s\\WinShell.EXE\" -c \"%%f\" -l %%l"),
+
+    _T("Gvim"),               HKEY_LOCAL_MACHINE,     _T("Software\\Vim\\Gvim"),
+                              _T("path"),             _T("\"%s\" \"%%f\" +%%l"),
+    
+    // TODO: use this rule only if the latex-suite is installed for ViM (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
+    //_T("Gvim"),             HKEY_LOCAL_MACHINE,     _T("Software\\Vim\\Gvim"),
+    //                        _T("path"),             _T("-c "\"%s\" :RemoteOpen +%%l %%f"),
+                              
+    // TODO: find a way to detect where emacs is installed
+    //_T("ntEmacs"),            HKEY_LOCAL_MACHINE,     _T("???"),
+    //                          _T("???"),              _T("\"C:\ntemacs23\bin\emacsclientw.exe\" +%%l \"%%f\""),
+
+    // TODO: find a way to detect where Texmaker is installed
+    //_T("Texmaker              HKEY_LOCAL_MACHINE,     _T("???"),
+    //                          _T("???"),             _T("\"%s\" \"%%f\" -line %%l"),
+
 };
 
 //
@@ -655,7 +669,12 @@ void AutoDetectInverseSearchCommands(PTSTR *pfirst, HWND hwndCombo)
     {
         if (ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
         {
-            PTSTR cmd = tstr_printf(editor_rules[i].InverseSearchFormat, path);
+            int len = _tcslen(path);
+            // remove trailing path separator
+            if( len > 0 && path[len-1] == '\\' )
+                path[len-1]=0;
+
+            PTSTR cmd = tstr_printf(editor_rules[i].InverseSearchFormat, path);            
             if(pfirst && !*pfirst) *pfirst = tstr_dup(cmd);
             if(hwndCombo==NULL)
             {
