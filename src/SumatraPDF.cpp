@@ -590,7 +590,7 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 //
 // List of rules used to detect commonly used TeX editors.
 //
-// TODO: add rules for ntEmacs, Vim, Texmaker, WinShell, ...
+// TODO: add rules for ntEmacs, Vim, Texmaker, ...
 //
 typedef struct 
 {
@@ -628,6 +628,10 @@ static EditorDetectionRules editor_rules[] =
 
     _T("TeXnicCenter"),       HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1"),
                               _T("InstallLocation"),  _T("\"%s\\TEXCNTR.EXE\" /ddecmd \"[goto('%%f', '%%l')]\""),
+
+
+    _T("WinShell"),       HKEY_LOCAL_MACHINE,     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"),
+                              _T("InstallLocation"),  _T("\"%s\\WinShell.EXE\" -c %%f -l %%l"),
 };
 
 //
@@ -651,7 +655,7 @@ void AutoDetectInverseSearchCommands(PTSTR *pfirst, HWND hwndCombo)
     {
         if (ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
         {
-            PCTSTR cmd = tstr_printf(editor_rules[i].InverseSearchFormat, path);
+            PTSTR cmd = tstr_printf(editor_rules[i].InverseSearchFormat, path);
             if(pfirst && !*pfirst) *pfirst = tstr_dup(cmd);
             if(hwndCombo==NULL)
             {
