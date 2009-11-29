@@ -663,7 +663,7 @@ static EditorDetectionRules editor_rules[] =
 // corresponding inverse search commands.
 //
 // Parameters:
-//      combo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
+//      hwndCombo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
 // Returns:
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
 //
@@ -689,7 +689,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
             else if (editor_rules[i].Type == BinaryDir)
             {
                 // remove trailing path separator (TODO: move to function in file_util.c)
-                int len = lstrlen(path);
+                int len = tstr_len(path);
                 if (*path && char_is_dir_sep(path[len-1]))
                     path[len-1] = 0;
                 cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
@@ -712,7 +712,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
             free(cmd);
 
             // skip the remaining rules for this editor
-            while (i + 1 < dimof(editor_rules) && _tcscmp(editor_rules[i].Name, editor_rules[i+1].Name) == 0)
+            while (i + 1 < dimof(editor_rules) && tstr_eq(editor_rules[i].Name, editor_rules[i+1].Name))
                 i++;
         }
     }
