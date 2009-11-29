@@ -4822,3 +4822,6 @@ mm:ပြီးတဲ့ စာမျက်နှာ\t<-
 pa:ਪਿਛਲੇ ਪੰਨੇ ਤੇ\t<-
 hi:पिछले पृष्ठ पर\t<-
 nn:Førre side\t<-
+-
+No synchronization file found
+fr:Aucun fichier de synchronization trouvé

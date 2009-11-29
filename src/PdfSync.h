@@ -104,7 +104,8 @@ public:
 //////
 // Error codes returned by the synchronization functions
 enum {  PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
-        PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED, // the sync file cannot be opened
+        PDFSYNCERR_SYNCFILE_NOTFOUND,         // no sync file found
+        PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED, // sync file cannot be opened
         PDFSYNCERR_INVALID_PAGE_NUMBER,       // the given page number does not exist in the sync file
         PDFSYNCERR_NO_SYNC_AT_LOCATION,       // no synchronization found at this location
         PDFSYNCERR_UNKNOWN_SOURCEFILE,        // the source file is not present in the sync file
@@ -294,8 +295,8 @@ private:
 };
 
 
-// create a synchronizer for the given PDF file
-Synchronizer *CreateSynchronizer(LPCTSTR pdffilename);
+// Create a synchronizer object for a PDF file
+UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync);
 
 #define PDFSYNC_DDE_SERVICE   _T("SUMATRA")
 #define PDFSYNC_DDE_TOPIC     _T("control")

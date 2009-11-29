@@ -717,10 +717,8 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         }
     }
 
-    // Don't fall back to any default as long as double-clicking causes
-    // an incomprehensible error message for users who've never heard of LaTeX
-    // when a default editor is configured
-    // // if (!firstEditor) firstEditor = tstr_dup(_T("notepad %f"));
+    // Fall back to notepad as a default handler
+    if (!firstEditor) firstEditor = tstr_dup(_T("notepad %f"));
     return firstEditor;
 }
 
@@ -2267,7 +2265,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
         win->watcher.Init(pFullpath);
 #endif
 
-    win->pdfsync = CreateSynchronizer(pFullpath);
+     CreateSynchronizer(pFullpath, &win->pdfsync);
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         AddFileToHistory(pFullpath);
@@ -3629,12 +3627,32 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     win->fwdsearchmarkRects.clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
+    // No inverse search command configured
     if (!gGlobalPrefs.m_inverseSearchCmdLine || !*gGlobalPrefs.m_inverseSearchCmdLine)
+    {
+#ifdef _TEX_ENHANCEMENT
+        WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+#endif
         return;
+    }
+
+    // On double-clicking no error message will be shown to the user if the PDF does not have a synchronization file is present.)
 
     if (!win->pdfsync) {
-        win->pdfsync = CreateSynchronizer(win->watcher.filepath());
-        if (!win->pdfsync) {
+        UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
+
+        if( err == PDFSYNCERR_SYNCFILE_NOTFOUND )
+        {
+            // In the official build to avoid confusion for non-LaTeX users
+            // we do not show any error message if no synchronization file is present.
+            DBG_OUT("Pdfsync: Sync file not found!\n");
+#ifdef _TEX_ENHANCEMENT
+            WindowInfo_ShowMessage_Asynch(win, _TR("No synchronization file found"), true);
+#endif
+            return;
+        }
+        else if ( err != PDFSYNCERR_SUCCESS || !win->pdfsync )
+        {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             WindowInfo_ShowMessage_Asynch(win, _TR("Synchronization file cannot be opened"), true);
             return;
@@ -5176,8 +5194,10 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
         }
     }
 
-    TCHAR buf[MAX_PATH];
-    if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
+    TCHAR buf[MAX_PATH];    
+    if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
+        _sntprintf(buf, dimof(buf), _TR("No synchronization file found"));
+    else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
         _sntprintf(buf, dimof(buf), _TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
         _sntprintf(buf, dimof(buf), _TR("Page number %u inexistant"), page);

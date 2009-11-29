@@ -663,8 +663,10 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         }
 
         SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
-        // TODO: Select the active command line through CB_SETCURSEL
+        // Fill the combo with the list of possible inverse search commands
         free(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+        // Set the text in the combo and automatically selects the
+        // corresponding item in the list. There is no need to send a CB_SETCURSEL message.
         SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
 #else
         ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);

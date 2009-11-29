@@ -14,8 +14,17 @@
 // convert a PDF coordinate into a sync file coordinate
 #define PDFCOORDINATE_TO_SYNCCOORDINATE(p)          (p*65781.76)
 
-Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
+//
+// Create a Synchronizer object for a PDF file.
+//
+// It creates either a SyncTex or PdfSync object
+// based on the synchronization file found in the folder containing the PDF file.
+//
+UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
 {
+    if(!sync)
+        return PDFSYNCERR_INVALID_ARGUMENT;
+
     TCHAR syncfile[MAX_PATH];
     size_t n = lstrlen(pdffilename);
     size_t u = dimof(PDF_EXTENSION)-1;
@@ -24,7 +33,10 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
         tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
         tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
         if (file_exists(syncfile)) 
-            return new Pdfsync(syncfile);
+        {
+            *sync = new Pdfsync(syncfile);
+            return PDFSYNCERR_SUCCESS;
+        }
 
         #ifdef SYNCTEX_FEATURE
             // check if a compressed SYNCTEX file is present
@@ -38,14 +50,22 @@ Synchronizer *CreateSynchronizer(LPCTSTR pdffilename)
             exist |= file_exists(syncfile);
 
             if(exist)
-                return new SyncTex(syncfile); // due to a bug with synctex_parser.c, this must always be 
-                                              // the path to the .synctex file (even if a .synctex.gz file is used instead)
+            {
+                // due to a bug with synctex_parser.c, this must always be 
+                // the path to the .synctex file (even if a .synctex.gz file is used instead)
+                *sync = new SyncTex(syncfile);
+                return PDFSYNCERR_SUCCESS;
+            }
+            else
+            {
+                return PDFSYNCERR_SYNCFILE_NOTFOUND;
+            }
+
         #endif
-        return NULL;
     }
     else {
         DBG_OUT("Bad PDF filename! (%s)\n", pdffilename);
-        return NULL;
+        return PDFSYNCERR_INVALID_ARGUMENT;
     }
 }
 
@@ -635,7 +655,6 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
         }
     }
     return PDFSYNCERR_NO_SYNC_AT_LOCATION;
-//    return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 }
 
 UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects)
@@ -683,9 +702,6 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
             }
             return ( firstpage > 0 ) ? PDFSYNCERR_SUCCESS : PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
-//#else
-    //return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-//#endif
 }
 #endif
 
