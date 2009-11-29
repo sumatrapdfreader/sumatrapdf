@@ -1730,7 +1730,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
         }
         else // Figure out what to show.
         {
-            switch( cmdId )
+            switch (cmdId)
             {
                 case IDM_FIND_NEXT:
                 case IDM_FIND_PREV: 
@@ -2743,7 +2743,7 @@ static int ExtractNextNumber(TCHAR **txt)
     int val = -1;
     while(**txt && ((val < 0) || (val > 9)))
         val = *((*txt)++) - '0';
-    if( val == -1 )
+    if (val == -1)
         return -1;
 
     TCHAR c;
@@ -3641,7 +3641,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     if (!win->pdfsync) {
         UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
 
-        if( err == PDFSYNCERR_SYNCFILE_NOTFOUND )
+        if (err == PDFSYNCERR_SYNCFILE_NOTFOUND )
         {
             // In the official build to avoid confusion for non-LaTeX users
             // we do not show any error message if no synchronization file is present.
@@ -3651,7 +3651,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 #endif
             return;
         }
-        else if ( err != PDFSYNCERR_SUCCESS || !win->pdfsync )
+        else if (err != PDFSYNCERR_SUCCESS || !win->pdfsync)
         {
             DBG_OUT("Pdfsync: Sync file cannot be loaded!\n");
             WindowInfo_ShowMessage_Asynch(win, _TR("Synchronization file cannot be opened"), true);

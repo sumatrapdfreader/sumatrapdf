@@ -22,7 +22,7 @@
 //
 UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
 {
-    if(!sync)
+    if (!sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
     TCHAR syncfile[MAX_PATH];
@@ -686,12 +686,12 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
             RectI rc;
             rects.clear();
             while (node = synctex_next_result(this->scanner)) {
-                if( firstpage == -1 )
+                if (firstpage == -1)
                 {
                     firstpage = synctex_node_page(node);
                     *page = (UINT)firstpage;
                 }
-                if( synctex_node_page(node) != firstpage )
+                if (synctex_node_page(node) != firstpage)
                     continue;
 
                 rc.x = synctex_node_box_visible_h(node);
