@@ -305,7 +305,7 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 			bbox.y0 = y;
 			bbox.y1 = y + fontdy;
 
-			if (fabs(dy) > 0.2)
+			if (fabs(dy) > 0.27) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 			{
 				pdf_textline *newline;
 				error = pdf_newtextline(&newline);
@@ -314,7 +314,7 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 				(*line)->next = newline;
 				*line = newline;
 			}
-			else if (fabs(dx) > 0.2)
+			else if (fabs(dx) > 0.15 && (*line)->len > 0 && (*line)->text[(*line)->len - 1].c != ' ') /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 			{
 				error = addtextchar(*line, bbox, ' ');
 				if (error)
