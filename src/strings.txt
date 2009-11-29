@@ -4093,6 +4093,9 @@ sv:PDF-dokument
 vn:Tệp PDF
 pt:Documentos PDF
 -
+Text documents
+de:Text-Dokumente
+-
 All files
 am:Բոլոր ֆայլերը
 br:Todos os arquivos
@@ -4825,3 +4828,4 @@ nn:Førre side\t<-
 -
 No synchronization file found
 fr:Aucun fichier de synchronization trouvé
+de:Synchronisationsdatei nicht gefunden

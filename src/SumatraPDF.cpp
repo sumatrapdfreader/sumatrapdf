@@ -4392,6 +4392,8 @@ static void OnMenuSaveAs(WindowInfo *win)
     TCHAR fileFilter[256] = {0};
     tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("PDF documents"));
     tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.pdf\1"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("Text documents"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.txt\1"));
     tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
     tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
@@ -4412,18 +4414,32 @@ static void OnMenuSaveAs(WindowInfo *win)
         return;
 
     TCHAR * realDstFileName = dstFileName;
-    if (!tstr_endswithi(dstFileName, _T(".pdf"))) {
-        realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), _T(".pdf"));
+    if (!tstr_endswithi(dstFileName, _T(".pdf")) && !tstr_endswithi(dstFileName, _T(".txt"))) {
+        TCHAR *defaultExt = 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
+        realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), defaultExt);
     }
-    BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
-    if (ok) {
-        const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
-        DWORD attributes = GetFileAttributes(realDstFileName);
-        if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
-            SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
-    } else {
-        SeeLastError();
-        MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+    if (tstr_endswithi(realDstFileName, _T(".txt"))) {
+        int bufLen = win->dm->extractAllText(NULL) + 1;
+        TCHAR *text = (TCHAR *)malloc(bufLen * sizeof(TCHAR));
+        win->dm->extractAllText(text, bufLen);
+        char *textUTF8 = tstr_to_utf8(text);
+        char *textUTF8BOM = str_cat("\xEF\xBB\xBF", textUTF8);
+        free(textUTF8);
+        free(text);        
+        write_to_file(realDstFileName, textUTF8BOM, str_len(textUTF8BOM));
+        free(textUTF8BOM);
+    }
+    else {
+        BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
+        if (ok) {
+            const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
+            DWORD attributes = GetFileAttributes(realDstFileName);
+            if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
+                SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
+        } else {
+            SeeLastError();
+            MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+        }
     }
     if (realDstFileName != dstFileName)
         free(realDstFileName);

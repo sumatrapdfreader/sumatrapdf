@@ -46,6 +46,7 @@
 #include "SumatraPDF.h"
 #include "DisplayModel.h"
 #include "tstr_util.h"
+#include "strlist_util.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -1629,6 +1630,42 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buf
     pdf_droptextline(line);
 
     return len;
+}
+
+/* extract all text from the document - returns the number of chars */
+int DisplayModel::extractAllText(TCHAR *buffer, int buf_len)
+{
+    TStrList *lines = NULL;
+    int textLen = 0;
+
+    for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
+        pdf_textline *line;
+        fz_tree *tree = pdfEngine->getPdfPage(pageNo)->tree;
+        fz_error error = pdf_loadtextfromtree(&line, tree, fz_identity());
+        if (!error) {
+            for (pdf_textline *ln = line; ln; ln = ln->next) {
+                TCHAR *lineCR = (TCHAR *)malloc((ln->len + 3) * sizeof(TCHAR));
+                for (int i = 0; i < ln->len; i++) {
+                    lineCR[i] = ln->text[i].c;
+                    if (lineCR[i] < 32)
+                        lineCR[i] = '?';
+                }
+                lstrcpy(lineCR + ln->len, _T("\r\n"));
+                TStrList_InsertAndOwn(&lines, lineCR);
+                textLen += ln->len + 2;
+            }
+            pdf_droptextline(line);
+        }
+    }
+    if (buffer && textLen < buf_len) {
+        *buffer = 0;
+        TStrList_Reverse(&lines);
+        for (TStrList *next = lines; next; next = next->next)
+            lstrcat(buffer, next->str);
+    }
+    TStrList_Destroy(&lines);
+
+    return textLen;
 }
 
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)

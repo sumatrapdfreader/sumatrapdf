@@ -238,6 +238,7 @@ public:
     void            rotateBy(int rotation);
 
     int             getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buflen);
+    int             extractAllText(TCHAR *buffer, int buf_len=0);
 
     void            clearSearchHit(void);
     void            setSearchHit(int pageNo, RectD *hitRect);
