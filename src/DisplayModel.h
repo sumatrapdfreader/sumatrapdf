@@ -68,7 +68,7 @@ typedef struct PdfPageInfo {
     double          currPosY;
 
     /* data that changes due to scrolling. Calculated in DisplayModel_RecalcVisibleParts() */
-    bool            visible; /* is currently visible on the page ? */
+    double          visible; /* visible ratio of the page (0 = invisible, 1 = fully visible) */
     /* part of the image that should be shown */
     int             bitmapX, bitmapY, bitmapDx, bitmapDy;
     /* where it should be blitted on the screen */

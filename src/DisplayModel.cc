@@ -199,6 +199,8 @@ DisplayModel::~DisplayModel()
 
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 {
+    if (!validPageNo(pageNo))
+        return NULL;
     assert(validPageNo(pageNo));
     assert(_pagesInfo);
     if (!_pagesInfo) return NULL;
@@ -252,7 +254,7 @@ bool DisplayModel::buildPagesInfo(void)
         pageInfo->pageDx = pageSize.dx();
         pageInfo->pageDy = pageSize.dy();
         pageInfo->rotation = pdfEngine->pageRotation(pageNo);
-        pageInfo->visible = false;
+        pageInfo->visible = 0;
         pageInfo->shown = false;
         if (displayModeContinuous(_displayMode)) {
             pageInfo->shown = true;
@@ -277,7 +279,7 @@ bool DisplayModel::pageVisible(int pageNo)
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
     if (!pageInfo)
         return false;
-    return pageInfo->visible;
+    return pageInfo->visible > 0;
 }
 
 /* Return true if a page is visible or a page below or above is visible */
@@ -352,9 +354,24 @@ int DisplayModel::firstVisiblePageNo(void) const
 
 int DisplayModel::currentPageNo(void) const
 {
-    if (displayModeContinuous(displayMode()))
-        return firstVisiblePageNo();
-    return _startPage;
+    if (!displayModeContinuous(displayMode()))
+        return _startPage;
+
+    assert(_pagesInfo);
+    if (!_pagesInfo) return INVALID_PAGE_NO;
+    // determine the most visible page
+    int mostVisiblePage = INVALID_PAGE_NO;
+    double ratio = 0;
+
+    for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
+        PdfPageInfo *pageInfo = getPageInfo(pageNo);
+        if (pageInfo->visible > ratio) {
+            mostVisiblePage = pageNo;
+            ratio = pageInfo->visible;
+        }
+    }
+
+    return mostVisiblePage;
 }
 
 void DisplayModel::setZoomVirtual(double zoomVirtual)
@@ -575,7 +592,7 @@ void DisplayModel::changeStartPage(int startPage)
             pageInfo->shown = true;
         } else
             pageInfo->shown = false;
-        pageInfo->visible = false;
+        pageInfo->visible = 0;
     }
     relayout(zoomVirtual(), rotation());
 }
@@ -613,9 +630,9 @@ void DisplayModel::recalcVisibleParts(void)
         pageRect.y = (int)pageInfo->currPosY;
         pageRect.dx = (int)pageInfo->currDx;
         pageRect.dy = (int)pageInfo->currDy;
-        pageInfo->visible = false;
-        if (RectI_Intersect(&pageRect, &drawAreaRect, &intersect)) {
-            pageInfo->visible = true;
+        pageInfo->visible = 0;
+        if (pageRect.dx * pageRect.dy > 0 && RectI_Intersect(&pageRect, &drawAreaRect, &intersect)) {
+            pageInfo->visible = 1.0 * intersect.dx * intersect.dy / (pageRect.dx * pageRect.dy);
             
             pageInfo->bitmapX = (int) ((double)intersect.x - pageInfo->currPosX);
             assert(pageInfo->bitmapX >= 0);
@@ -938,7 +955,7 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
             PdfPageInfo *pageInfo = &(_pagesInfo[pageNo-1]);
             pageInfo->shown = true;
-            pageInfo->visible = false;
+            pageInfo->visible = 0;
         }
         relayout(zoomVirtual(), rotation());
     }
@@ -1024,10 +1041,15 @@ bool DisplayModel::goToFirstPage(void)
 void DisplayModel::scrollXTo(int xOff)
 {
     DBG_OUT("DisplayModel::scrollXTo(xOff=%d)\n", xOff);
+    
+    int currPageNo = currentPageNo();
     areaOffset.x = (double)xOff;
     recalcVisibleParts();
     recalcLinksCanvasPos();
     setScrollbarsState();
+    
+    if (currentPageNo() != currPageNo)
+        pageChanged();
     repaintDisplay(false);
 }
 
