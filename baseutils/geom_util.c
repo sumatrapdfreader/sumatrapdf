@@ -3,73 +3,47 @@
 #include "base_util.h"
 #include "geom_util.h"
 
-/* Return true if 'r1' and 'r2' intersect. Put the intersect area into
-   'rIntersectOut'.
+/* Return true if 'r1' and 'r2' intersect and optionally
+      put the intersect area into 'rIntersectOut'.
    Return false if there is no intersection. */
 int RectI_Intersect(RectI *r1, RectI *r2, RectI *rIntersectOut)
 {
-    int     x1s, x1e, x2s, x2e;
-    int     y1s, y1e, y2s, y2e;
-
-    int     xIntersectS, xIntersectE;
-    int     yIntersectS, yIntersectE;
-
-    assert(r1 && r2 && rIntersectOut);
-    if (!r1 || !r2 || !rIntersectOut)
+    assert(r1 && r2);
+    if (!r1 || !r2)
         return 0;
-
-    x1s = r1->x;
-    x2s = r2->x;
-    x1e = x1s + r1->dx;
-    x2e = x2s + r2->dx;
 
     /* { } visualizes r1 and | | visualizes r2 */
 
-    /* problem is symmetric, so reduce the number of different cases by
-       consistent ordering where r1 is always before r2 in axis-x */
-    if (x2s < x1s) {
-        swap_int(&x1s, &x2s);
-        swap_int(&x1e, &x2e);
-    }
-
     /* case of non-overlapping rectangles i.e.:
        { }   | | */
-    if (x2s > x1e)
+    if (r2->x > r1->x + r1->dx)
         return 0;
-
+    /* | |   { } */
+    if (r1->x > r2->x + r2->dx)
+        return 0;
     /* partially overlapped i.e.:
-       {  |  } |
+       {  |  } |   or   |  {  |  }
        and one inside the other i.e.:
-       {  | |  } */
+       {  | |  }   or   |  {  }  |
 
-    assert(x2s >= x1s);
-    assert(x2s <= x1e);
-    xIntersectS = x2s;
-    xIntersectE = number_min(x1e, x2e);
-    assert(xIntersectE >= xIntersectS);
+       In these cases, the intersection starts with the larger of the start coordinates
+       and ends with the smaller of the end coordinates (these are only calculated,
+       when the intersection rectangle is actually requested) */
 
     /* the logic for y is the same */
-    y1s = r1->y;
-    y2s = r2->y;
-    y1e = y1s + r1->dy;
-    y2e = y2s + r2->dy;
-    if (y2s < y1s) {
-        swap_int(&y1s, &y2s);
-        swap_int(&y1e, &y2e);
-    }
-    if (y2s > y1e)
+    if (r2->y > r1->y + r1->dy)
         return 0;
-    assert(y2s >= y1s);
-    assert(y2s <= y1e);
-    yIntersectS = y2s;
-    yIntersectE = number_min(y1e, y2e);
+    if (r1->y > r2->y + r2->dy)
+        return 0;
 
-    rIntersectOut->x = xIntersectS;
-    rIntersectOut->y = yIntersectS;
-    assert(xIntersectE >= xIntersectS);
-    assert(yIntersectE >= yIntersectS);
-    rIntersectOut->dx = xIntersectE - xIntersectS;
-    rIntersectOut->dy = yIntersectE - yIntersectS;
+    if (rIntersectOut) {
+        int xIntersectS = number_max(r1->x, r2->x);
+        int xIntersectE = number_min(r1->x + r1->dx, r2->x + r2->dx);
+        int yIntersectS = number_max(r1->y, r2->y);
+        int yIntersectE = number_min(r1->y + r1->dy, r2->y + r2->dy);
+
+        RectI_FromXY(rIntersectOut, xIntersectS, xIntersectE, yIntersectS, yIntersectE);
+    }
     return 1;
 }
 
@@ -181,10 +155,7 @@ RectI RectI_Union(RectI a, RectI b)
 #ifndef NDEBUG
 void RectI_AssertEqual(RectI *rIntersect, RectI *rExpected)
 {
-    assert(rIntersect->x == rExpected->x);
-    assert(rIntersect->y == rExpected->y);
-    assert(rIntersect->dx == rExpected->dx);
-    assert(rIntersect->dy == rExpected->dy);
+    assert(memcmp(rIntersect, rExpected, sizeof(RectI)) == 0);
 }
 
 void u_RectI_Intersect(void)

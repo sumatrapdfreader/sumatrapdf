@@ -103,7 +103,8 @@ typedef struct ms_timer {
 void        swap_int(int *one, int *two);
 void        swap_double(double *one, double *two);
 
-#define number_min(one,two) one < two ? one : two
+#define number_min(one,two) ((one) < (two) ? (one) : (two))
+#define number_max(one,two) ((one) > (two) ? (one) : (two))
 
 void        memzero(void *data, size_t len);
 void *      zmalloc(size_t size);
