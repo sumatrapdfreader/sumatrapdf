@@ -165,7 +165,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
     
     fgetline(jobname, dimof(jobname), fp); // get the job name from the first line
     // replace star by spaces (somehow tex replaces spaces by stars in the jobname)
-    for(PSTR rep = jobname; *rep; rep++) {
+    for (PSTR rep = jobname; *rep; rep++) {
         if (*rep==_T('*'))
             *rep=_T(' ');
     }
@@ -309,7 +309,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 size_t maxsheet = pdfsheet_index.size();
                 if (cur_sheetNumber>=maxsheet) {
                     pdfsheet_index.resize(cur_sheetNumber+1);
-                    for(size_t s=maxsheet;s<=cur_sheetNumber;s++)
+                    for (size_t s=maxsheet;s<=cur_sheetNumber;s++)
                         pdfsheet_index[s] = (size_t)-1;
                 }
                 break;
@@ -372,7 +372,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
     // read all the sections of 'p' declarations for this pdf sheet
     fpos_t linepos;
-    for(size_t cur_psection = pdfsheet_index[sheet];
+    for (size_t cur_psection = pdfsheet_index[sheet];
         (cur_psection<this->pline_sections.size())
         && ((sheet<pdfsheet_index.size()-1 && cur_psection < pdfsheet_index[sheet+1])
                 || sheet==pdfsheet_index.size()-1) ;
@@ -470,7 +470,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
 
     // find the source file entry
     size_t isrc = (size_t)-1;
-    for(size_t i=0; i<this->srcfiles.size();i++) {
+    for (size_t i=0; i<this->srcfiles.size();i++) {
         if (str_ieq(mb_srcfilename, this->srcfiles[i].filename)) {
             isrc = i;
             break;
@@ -492,7 +492,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
          closestrecline = (UINT)-1; // closest record-line
     fpos_t closestrecline_filepos = -1; // position of the closest record-line in the file
     int c;
-    for(size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
+    for (size_t isec=srcfile.first_recordsection; isec<=srcfile.last_recordsection; isec++ ) {
         record_section &sec = this->record_sections[isec];
         // does this section belong to the desired file?
         if (sec.srcfile == isrc) {
@@ -556,9 +556,9 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     // records have been found for the desired source position:
     // we now find the pages and position in the PDF corresponding to the first record in the
     // list of record found
-    for(size_t irecord=0;irecord<found_records.size();irecord++) {
+    for (size_t irecord=0;irecord<found_records.size();irecord++) {
         size_t record = found_records[irecord];
-        for(size_t sheet=0;sheet<this->pdfsheet_index.size();sheet++) {
+        for (size_t sheet=0;sheet<this->pdfsheet_index.size();sheet++) {
             if (this->pdfsheet_index[sheet] != (size_t)-1) {
                 fsetpos(fp, &this->pline_sections[this->pdfsheet_index[sheet]].startpos);
                 int c;

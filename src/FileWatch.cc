@@ -35,7 +35,7 @@ void SimultaneousSynchronousAbort(int nfw, FileWatcher **fw){
     // Preparing to exit the program: ask the children thread to terminate
     HANDLE *hp = new HANDLE[nfw];
     int k = 0;
-    for(int i=0; i<nfw;i++) {
+    for (int i=0; i<nfw;i++) {
         if (fw[i]->hWatchingThread) {
             // send a message to the stop the watching thread
             SetEvent(fw[i]->hEvtStopWatching);
@@ -44,7 +44,7 @@ void SimultaneousSynchronousAbort(int nfw, FileWatcher **fw){
     }
     // wait for the two threads to end
     WaitForMultipleObjects(k, hp, TRUE, INFINITE);
-    for(int i=0; i<nfw;i++) {
+    for (int i=0; i<nfw;i++) {
         if (fw[i]->hWatchingThread) {
             CloseHandle(fw[i]->hWatchingThread);
             fw[i]->hWatchingThread = NULL;

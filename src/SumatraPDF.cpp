@@ -2953,7 +2953,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     RectI recI;
 
     // Draw the rectangles highlighting the forward search results
-    for(UINT i=0; i<win->fwdsearchmarkRects.size();i++)
+    for (UINT i=0; i<win->fwdsearchmarkRects.size();i++)
     {
         RectD_FromRectI (&recD, &win->fwdsearchmarkRects[i]);
         win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
@@ -5168,7 +5168,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             win->pdfsync->convert_coord_from_internal(&rc, (int)pi->pageDy, BottomLeft);
 
             overallrc = rc;
-            for(UINT i = 0; i <rects.size(); i++)
+            for (UINT i = 0; i <rects.size(); i++)
             {
                 rc = rects[i];
                 win->pdfsync->convert_coord_from_internal(&rc, (int)pi->pageDy, BottomLeft);
