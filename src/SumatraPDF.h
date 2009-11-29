@@ -227,6 +227,7 @@ public:
     long            prevStyle;
     RECT            frameRc;
     RECT            canvasRc;
+    POINT           prevCanvasBR;
 
     TCHAR *         title;
 

@@ -2383,6 +2383,19 @@ void DisplayModel::setScrollbarsState(void)
     }
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
+    // When hiding the scroll bars and fitting width, it could be that we'd have to
+    // display the scroll bars right again for the new width. Make sure we haven't just done
+    // that - or if so, force the vertical scroll bar to remain visible.
+    if (ZOOM_FIT_WIDTH == win->dm->zoomVirtual()) {
+        if (win->prevCanvasBR.y != drawAreaDy || win->prevCanvasBR.x != drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) {
+            win->prevCanvasBR.x = drawAreaDx;
+            win->prevCanvasBR.y = drawAreaDy;
+        }
+        else if (drawAreaDy == canvasDy) {
+            canvasDy++;
+        }
+    }
+
     if (drawAreaDy >= canvasDy) {
         si.nMin = 0;
         if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
@@ -4030,7 +4043,6 @@ static void OnPaint(WindowInfo *win)
             SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
     } else if (WS_SHOWING_PDF == win->state) {
-        //TODO: it might cause infinite loop due to showing/hiding scrollbars
         WinResizeIfNeeded(win);
         WindowInfo_Paint(win, hdc, &ps);
         WindowInfo_DoubleBuffer_Show(win, hdc);
