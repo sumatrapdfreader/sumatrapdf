@@ -969,9 +969,13 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
 bool DisplayModel::goToNextPage(int scrollY)
 {
     int columns = columnsFromDisplayMode(displayMode());
-    int newPageNo = currentPageNo() + columns;
-    int firstPageInNewRow = FirstPageInARowNo(newPageNo, columns, displayModeShowCover(displayMode()));
-
+    int currPageNo = currentPageNo();
+    // Fully display the current page, if the previous page is still visible
+    if (validPageNo(currPageNo - columns) && pageVisible(currPageNo - columns) && getPageInfo(currPageNo)->visible < 1) {
+        goToPage(currPageNo, scrollY);
+        return true;
+    }
+    int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, displayModeShowCover(displayMode()));
 //    DBG_OUT("DisplayModel::goToNextPage(scrollY=%d), currPageNo=%d, firstPageInNewRow=%d\n", scrollY, currPageNo, firstPageInNewRow);
     if (firstPageInNewRow > pageCount()) {
         /* we're on a last row or after it, can't go any further */
