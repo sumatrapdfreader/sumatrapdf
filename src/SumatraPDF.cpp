@@ -3274,6 +3274,8 @@ static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
     return NULL;
 }
 
+#define MIN_ABOUT_DX 326 // chosen so that (dbg) in debug builds is not cut off
+
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 {
     SIZE            txtSize;
@@ -3335,6 +3337,8 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     totalDx  = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx;
     totalDx += ABOUT_LEFT_RIGHT_SPACE_DX + ABOUT_LINE_SEP_SIZE + ABOUT_LEFT_RIGHT_SPACE_DX;
     totalDx += rightLargestDx + ABOUT_MARGIN_DX + ABOUT_LINE_OUTER_SIZE;
+    if (totalDx < MIN_ABOUT_DX)
+        totalDx = MIN_ABOUT_DX;
 
     totalDy  = boxDy;
     totalDy += ABOUT_LINE_OUTER_SIZE;
