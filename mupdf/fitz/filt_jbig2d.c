@@ -56,10 +56,9 @@ void
 fz_dropjbig2d(fz_filter *filter)
 {
 	fz_jbig2d *d = (fz_jbig2d*)filter;
-	jbig2_ctx_free(d->ctx);
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690605 */
 	if (d->gctx)
 		jbig2_global_ctx_free(d->gctx);
+	jbig2_ctx_free(d->ctx);
 }
 
 fz_error

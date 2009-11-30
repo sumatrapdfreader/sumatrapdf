@@ -322,6 +322,9 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 		error = fz_hashremove(store->hash, &refkey);
 		if (error)
 			return fz_rethrow(error, "cannot remove item from store");
+
+		pdf_logrsrc("remove item %s (%d %d R) ptr=%p\n", kindstr(kind), fz_tonum(key), fz_togen(key), item->val);
+
 		dropitem(kind, item->val);
 		fz_dropobj(item->key);
 		fz_free(item);

@@ -108,7 +108,8 @@ gsave(pdf_csi *csi)
 
 	pdf_keepmaterial(&gs->stroke);
 	pdf_keepmaterial(&gs->fill);
-	if (gs->font) pdf_keepfont(gs->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+	if (gs->font)
+		pdf_keepfont(gs->font);
 
 	return fz_okay;
 }
@@ -123,7 +124,8 @@ grestore(pdf_csi *csi)
 
 	pdf_dropmaterial(&gs->stroke);
 	pdf_dropmaterial(&gs->fill);
-	pdf_dropfont(gs->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+	if (gs->font)
+		pdf_dropfont(gs->font);
 
 	csi->gtop --;
 
@@ -671,11 +673,11 @@ Lsetcolorspace:
 			else
 			{
 				if (!strcmp(fz_toname(obj), "DeviceGray"))
-					cs = pdf_devicegray;
+					cs = fz_keepcolorspace(pdf_devicegray);
 				else if (!strcmp(fz_toname(obj), "DeviceRGB"))
-					cs = pdf_devicergb;
+					cs = fz_keepcolorspace(pdf_devicergb);
 				else if (!strcmp(fz_toname(obj), "DeviceCMYK"))
-					cs = pdf_devicecmyk;
+					cs = fz_keepcolorspace(pdf_devicecmyk);
 				else
 				{
 					fz_obj *dict = fz_dictgets(rdb, "ColorSpace");
@@ -691,8 +693,9 @@ Lsetcolorspace:
 				}
 
 				error = pdf_setcolorspace(csi, what, cs);
-				fz_dropcolorspace(cs); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690680 */
 				if (error) return fz_rethrow(error, "cannot set colorspace");
+
+                                fz_dropcolorspace(cs);
 			}
 		}
 
@@ -904,7 +907,9 @@ Lsetcolor:
 			if (!obj)
 				return fz_throw("cannot find font resource: %s", fz_toname(csi->stack[0]));
 
-			pdf_dropfont(gstate->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+			if (gstate->font)
+				pdf_dropfont(gstate->font);
+
 			error = pdf_loadfont(&gstate->font, xref, rdb, obj);
 			if (error)
 				return fz_rethrow(error, "cannot load font");
@@ -1270,7 +1275,7 @@ Lsetcolor:
 		csi->clipevenodd = 0;
 		break;
 
-	case 'g':	
+	case 'g':
 		if (csi->top != 1)
 			goto syntaxerror;
 

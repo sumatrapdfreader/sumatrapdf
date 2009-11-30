@@ -41,10 +41,9 @@ Before compiling MuPDF you need to install thirdy party dependencies.
 	freetype2
 
 There are a few optional dependencies that you don't strictly need.
-You will probably want the versions that Ghostscript maintains.
 
 	jbig2dec
-	jasper
+	OpenJPEG
 
 MuPDF uses the Perforce Jam build tool. You need the Perforce version 2.5
 or later. FTJam will also work. If you do not have a compiled
@@ -72,7 +71,7 @@ search paths or compiler flags for your system.
 To compile in the optional jbig2 and jpeg2000 support, you need
 to add the following arguments to jam:
 
-	$ jam '-sHAVE_JBIG2DEC=yes' '-sHAVE_JASPER=yes'
+	$ jam '-sHAVE_JBIG2DEC=yes' '-sHAVE_OPENJPEG=yes'
 
 If you want a crippled version without the builtin CJK fonts and data files,
 to shave a few megabytes off the binary size, add:

@@ -227,7 +227,6 @@ fz_colorspace *pdf_devicepattern = &kdevicepattern;
 static fz_error
 loadcalgray(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 {
-	fz_error error;
 	struct calgray *cs;
 	fz_obj *tmp;
 
@@ -276,7 +275,6 @@ loadcalgray(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 static fz_error
 loadcalrgb(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 {
-	fz_error error;
 	struct calrgb *cs;
 	fz_obj *tmp;
 	int i;
@@ -345,7 +343,6 @@ loadcalrgb(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 static fz_error
 loadlab(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 {
-	fz_error error;
 	struct cielab *cs;
 	fz_obj *tmp;
 
