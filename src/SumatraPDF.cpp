@@ -3201,6 +3201,21 @@ typedef struct AboutLayoutInfoEl {
 } AboutLayoutInfoEl;
 
 AboutLayoutInfoEl gAboutLayoutInfo[] = {
+    { _T("website"), _T("SumatraPDF website"), _T("http://blog.kowalczyk.info/software/sumatrapdf"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
+    { _T("forums"), _T("SumatraPDF forums"), _T("http://blog.kowalczyk.info/forum_sumatra"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
+    { _T("programming"), _T("Krzysztof Kowalczyk"), _T("http://blog.kowalczyk.info"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
+    { _T("programming"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/#SumatraPDF"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+    
+    { _T("programming"), _T("William Blum"), _T("http://william.famille-blum.org/"),
+    0, 0, 0, 0, 0, 0, 0, 0 },
+
 #ifdef _TEX_ENHANCEMENT
     { _T("note"), _T("TeX build"), _T("http://william.famille-blum.org/software/sumatra/index.html"),
     0, 0, 0, 0, 0, 0, 0, 0 },
@@ -3209,28 +3224,13 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("a note"), _T("Pre-release version, for testing only!"), NULL,
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif
-    { _T("programming"), _T("Krzysztof Kowalczyk"), _T("http://blog.kowalczyk.info"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
     { _T("pdf rendering"), _T("MuPDF"), _T("http://ccxvii.net/fitz/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("website"), _T("http://blog.kowalczyk.info/software/sumatrapdf"), _T("http://blog.kowalczyk.info/software/sumatrapdf"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("forums"), _T("http://blog.kowalczyk.info/forum_sumatra"), _T("http://blog.kowalczyk.info/forum_sumatra"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { _T("program icon"), _T("Zenon"), _T("http://www.flashvidz.tk/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("ui polishing"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/#SumatraPDF"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("TeX enhancements"), _T("William Blum"), _T("http://william.famille-blum.org/"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
