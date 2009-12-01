@@ -128,14 +128,6 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	fz_dropstream(stm);
 	pdf_dropcsi(csi);
 
-	pdf_logrsrc("optimize tree\n");
-	error = fz_optimizetree(pat->tree);
-	if (error)
-	{
-		error = fz_rethrow(error, "cannot optimize pattern tree");
-		goto cleanup;
-	}
-
 	pdf_logrsrc("}\n");
 
 	*patp = pat;

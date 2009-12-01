@@ -31,8 +31,6 @@ void fz_insertnodelast(fz_node *parent, fz_node *child);
 void fz_insertnodeafter(fz_node *prev, fz_node *child);
 void fz_removenode(fz_node *child);
 
-fz_error fz_optimizetree(fz_tree *tree);
-
 /* node types */
 
 typedef struct fz_transformnode_s fz_transformnode;

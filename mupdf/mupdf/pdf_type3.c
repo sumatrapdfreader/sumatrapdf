@@ -213,10 +213,6 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 				if (error)
 					goto cleanup;
 
-				error = fz_optimizetree(fontdesc->font->t3procs[i]);
-				if (error)
-					goto cleanup;
-
 				pdf_logfont("}\n");
 			}
 		}
