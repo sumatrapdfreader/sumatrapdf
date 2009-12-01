@@ -660,16 +660,22 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
             GetClientRect(GetDlgItem(hDlg, IDCANCEL), &rc);
             MapWindowPoints(GetDlgItem(hDlg, IDCANCEL), hDlg, (LPPOINT)&rc, 2);
             MoveWindow(GetDlgItem(hDlg, IDCANCEL), rc.left, rc.top + addHeight, rect_dx(&rc), rect_dy(&rc), TRUE);
-        }
 
-        SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
-        // Fill the combo with the list of possible inverse search commands
-        free(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
-        // Select the active command line
-        if (CB_ERR == SendMessage(GetDlgItem(hDlg, IDC_CMDLINE),CB_SELECTSTRING, -1, (LPARAM) prefs->m_inverseSearchCmdLine))
-        {
-            // Set the text in the combo, if none of the existing commands was selected
-            SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
+            SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
+            // Fill the combo with the list of possible inverse search commands
+            free(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+            // Find the index of the active command line    
+            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->m_inverseSearchCmdLine);
+            if (CB_ERR == ind)
+            {            
+                // if no existing command was selected then set the user custom command in the combo
+                SetDlgItemText(hDlg, IDC_CMDLINE, prefs->m_inverseSearchCmdLine);
+            }
+            else
+            {
+                // select the active command
+                SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM) ind , 0);
+            }
         }
 #else
         ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);
