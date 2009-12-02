@@ -122,7 +122,7 @@ public:
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA);
 
-    bool printingAllowed();
+    bool hasPermission(int permission);
     int linkCount();
     void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
     bool hasTocTree() { 

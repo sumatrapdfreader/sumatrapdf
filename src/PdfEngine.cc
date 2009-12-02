@@ -389,13 +389,12 @@ SizeD PdfEngine::pageSize(int pageNo)
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }
 
-bool PdfEngine::printingAllowed()
+bool PdfEngine::hasPermission(int permission)
 {
     assert(_xref);
-    int permissionFlags = PDF_DEFAULT_PERM_FLAGS;
-    if (_xref && _xref->crypt)
-        permissionFlags = _xref->crypt->p;
-    if (permissionFlags & PDF_PERM_PRINT)
+    if (!_xref || !_xref->crypt)
+        return true;
+    if (_xref->crypt->p & permission)
         return true;
     return false;
 }

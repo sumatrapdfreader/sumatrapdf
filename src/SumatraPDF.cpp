@@ -1812,7 +1812,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 
     bool filePrintEnabled = false;
-    if (win->dm && win->dm->pdfEngine && win->dm->pdfEngine->printingAllowed())
+    if (win->dm && win->dm->pdfEngine && win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT))
         filePrintEnabled = true;
     if (filePrintEnabled)
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
@@ -3564,7 +3564,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
     GlobalUnlock(handle);
 
-    if (copied > 0)
+    if (copied > 0 && win->dm->pdfEngine->hasPermission(PDF_PERM_COPY))
         if (!SetClipboardData(CF_UNICODETEXT, handle))
             SeeLastError();
 
@@ -4381,6 +4381,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     OPENFILENAME   ofn = {0};
     TCHAR          dstFileName[MAX_PATH] = {0};
     const TCHAR *  srcFileName = NULL;
+    bool           hasCopyPerm = true;
 
     assert(win);
     if (!win) return;
@@ -4391,13 +4392,19 @@ static void OnMenuSaveAs(WindowInfo *win)
     assert(srcFileName);
     if (!srcFileName) return;
 
+    // Can't save a PDF's content as a plain text if text copying isn't allowed
+    if (!win->dm->pdfEngine->hasPermission(PDF_PERM_COPY))
+        hasCopyPerm = false;
+
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
     TCHAR fileFilter[256] = {0};
     tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("PDF documents"));
     tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.pdf\1"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("Text documents"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.txt\1"));
+    if (hasCopyPerm) {
+        tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("Text documents"));
+        tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.txt\1"));
+    }
     tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
     tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
@@ -4418,11 +4425,13 @@ static void OnMenuSaveAs(WindowInfo *win)
         return;
 
     TCHAR * realDstFileName = dstFileName;
-    if (!tstr_endswithi(dstFileName, _T(".pdf")) && !tstr_endswithi(dstFileName, _T(".txt"))) {
-        TCHAR *defaultExt = 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
+    // Make sure that the file has a valid ending
+    if (!tstr_endswithi(dstFileName, _T(".pdf")) && !(hasCopyPerm && tstr_endswithi(dstFileName, _T(".txt")))) {
+        TCHAR *defaultExt = hasCopyPerm && 2 == ofn.nFilterIndex ? _T(".txt") : _T(".pdf");
         realDstFileName = tstr_cat_s(dstFileName, dimof(dstFileName), defaultExt);
     }
-    if (tstr_endswithi(realDstFileName, _T(".txt"))) {
+    // Extract all text when saving as a plain text file
+    if (hasCopyPerm && tstr_endswithi(realDstFileName, _T(".txt"))) {
         int bufLen = win->dm->extractAllText(NULL) + 1;
         TCHAR *text = (TCHAR *)malloc(bufLen * sizeof(TCHAR));
         win->dm->extractAllText(text, bufLen);
@@ -4433,9 +4442,11 @@ static void OnMenuSaveAs(WindowInfo *win)
         write_to_file(realDstFileName, textUTF8BOM, str_len(textUTF8BOM));
         free(textUTF8BOM);
     }
+    // Just copy the file when saving as PDF file
     else {
         BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
         if (ok) {
+            // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
             DWORD attributes = GetFileAttributes(realDstFileName);
             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
@@ -7074,7 +7085,7 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
     LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
 
-    if (!win->dm->pdfEngine->printingAllowed()) {
+    if (!win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT)) {
         MessageBox(win->hwndFrame, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
