@@ -577,6 +577,7 @@ ja:自動
 mk:Автоматски
 vn:Tự động
 pt:Automático
+ru:Автоматически
 -
 Single page
 am:&Մեկ էջ
@@ -597,7 +598,7 @@ nl:Enkele pagina
 ta:ஒற்றைப் பக்கம்
 es:Página única
 hr:Jedna stranica
-ru:Одна страница
+ru:Постранично
 ar:صفحة واحدة
 cn:单个页面
 sv:Enkel sida
@@ -655,7 +656,7 @@ nl:Dubbele pagina
 ta:முகப்பு
 es:Página doble
 hr:Dvije stranice
-ru:Две страницы
+ru:Попарно
 ar:صفحتان متقابلتان
 cn:平铺页面
 sv:Uppslag
@@ -696,6 +697,7 @@ nn:Motståande
 -
 Book view
 de:Buchansicht
+ru:В разворот
 -
 Continuous
 am:Անդադար
@@ -774,7 +776,7 @@ nl:Dubbele pagina doorlopend
 ta:தொடர் முகப்பு
 es:Página doble contínua
 hr:Dvije stranice sljedno
-ru:Непрерывно по две страницы
+ru:Попарно непрерывно
 ar:صفحات متقابلة متتالية
 cn:连续平铺页面
 sv:Fortlöpande uppslag
@@ -815,9 +817,11 @@ nn:Kontunuerleg motståande
 -
 Continuous book view
 de:Fortlaufende Buchansicht
+ru:В разворот непрерывно
 -
 Show pages continuously
 de:Fortlaufend anzeigen
+ru:Непрерывно
 -
 Rotate left\tCtrl-Shift--
 am:Շրջել ձախ\tCtrl-Shift--
@@ -3760,7 +3764,7 @@ de:&Eine Liste der geöffneten Dokumente führen
 es:Recordar archiv&os abiertos
 fr:Se rappeler des fichiers ouverts
 it:R&icorda i file aperti
-ru:&Запомнить открытые файлыru:&Запоминать открытые файлы
+ru:&Запоминать открытые файлы
 mk:Запомни ги &отворените датотеки
 hr:Upamti &otvorene datoteke
 cn:记住已打开的文件(&o)
@@ -4095,6 +4099,7 @@ pt:Documentos PDF
 -
 Text documents
 de:Text-Dokumente
+ru:Текстовые документы
 -
 All files
 am:Բոլոր ֆայլերը
@@ -4828,4 +4833,4 @@ nn:Førre side\t<-
 -
 No synchronization file found
 fr:Aucun fichier de synchronization trouvé
-de:Synchronisationsdatei nicht gefunden
+ru:Файл синхронизации не найден
