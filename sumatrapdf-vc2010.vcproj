@@ -106,6 +106,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Http.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Http.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\LangMenuDef.cpp"
 				>
 			</File>
@@ -375,23 +383,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_a85d.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_a85e.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\filt_aesd.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_ahxd.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_ahxe.c"
 					>
 				</File>
 				<File
@@ -399,23 +391,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_copy.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_dctc.h"
+					RelativePath=".\mupdf\fitz\filt_basic.c"
 					>
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\filt_dctd.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_dcte.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_faxc.h"
 					>
 				</File>
 				<File
@@ -428,18 +408,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\filt_faxdtab.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_faxe.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_faxe.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_faxetab.c"
 					>
 				</File>
 				<File
@@ -459,27 +427,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_lzwe.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_null.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\filt_pipeline.c"
 					>
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\filt_predict.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_rld.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_rle.c"
 					>
 				</File>
 				<File
@@ -508,10 +460,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\node_misc2.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_optimize.c"
 					>
 				</File>
 				<File
