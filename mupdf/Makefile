@@ -160,7 +160,7 @@ FITZ_DRAW_SRC = \
 
 FITZ_SRC = \
 	base_memory.c base_error.c base_hash.c base_matrix.c base_rect.c \
-	base_unicode.c base_string.c node_misc1.c node_misc2.c node_optimize.c node_path.c \
+	base_unicode.c base_string.c node_misc1.c node_misc2.c node_path.c \
 	node_text.c node_toxml.c node_tree.c res_colorspace.c res_font.c \
 	res_image.c res_shade.c crypt_aes.c crypt_arc4.c crypt_crc32.c \
 	crypt_md5.c filt_aesd.c filt_basic.c \

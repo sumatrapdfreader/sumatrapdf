@@ -180,7 +180,7 @@ FITZ_OBJS = \
 	$(O)\base_rect.obj $(O)\base_unicode.obj $(O)\base_string.obj \
 	$(O)\util_getopt.obj $(O)\util_gettimeofday.obj \
 	$(O)\base_cpudep.obj \
-	$(O)\node_misc1.obj $(O)\node_misc2.obj $(O)\node_optimize.obj $(O)\node_path.obj \
+	$(O)\node_misc1.obj $(O)\node_misc2.obj $(O)\node_path.obj \
 	$(O)\node_text.obj $(O)\node_toxml.obj $(O)\node_tree.obj $(O)\res_colorspace.obj \
 	$(O)\res_font.obj $(O)\res_image.obj $(O)\res_shade.obj \
 	$(O)\crypt_aes.obj $(O)\crypt_arc4.obj $(O)\crypt_crc32.obj $(O)\crypt_md5.obj \
