@@ -111,9 +111,7 @@ fz_error openxref(char *filename, char *password)
 {
 	fz_error error;
 
-	error = pdf_newxref(&xref);
-	if (error)
-		return error;
+	xref = pdf_newxref();
 
 	error = pdf_loadxref(xref, filename);
 	if (error)
@@ -144,9 +142,7 @@ fz_error openxref(char *filename, char *password)
 		}
 	}
 
-	error = pdf_getpagecount(xref, &pagecount);
-	if (error)
-		return error;
+	pagecount = pdf_getpagecount(xref);
 
 	return fz_okay;
 }
@@ -159,12 +155,8 @@ fz_error benchloadpage(int pagenum)
 	double timems;
 
 	timerstart(&timer);
-	error = pdf_getpageobject(xref, pagenum, &pageobj);
-	if (error)
-	{
-		logbench("Error: failed to load page %d\n", pagenum);
-		return error;
-	}
+	pageobj = pdf_getpageobject(xref, pagenum);
+
 	drawpage = nil;
 	error = pdf_loadpage(&drawpage, xref, pageobj);
 	timerstop(&timer);
