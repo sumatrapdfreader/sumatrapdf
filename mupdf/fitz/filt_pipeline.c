@@ -16,15 +16,15 @@ struct fz_pipeline_s
 	int tailneedsin;
 };
 
-fz_error
-fz_chainpipeline(fz_filter **fp, fz_filter *head, fz_filter *tail, fz_buffer *buf)
+fz_filter *
+fz_chainpipeline(fz_filter *head, fz_filter *tail, fz_buffer *buf)
 {
 	FZ_NEWFILTER(fz_pipeline, p, pipeline);
 	p->head = fz_keepfilter(head);
 	p->tail = fz_keepfilter(tail);
 	p->tailneedsin = 1;
 	p->buffer = fz_keepbuffer(buf);
-	return fz_okay;
+	return (fz_filter*)p;
 }
 
 void
@@ -38,25 +38,17 @@ fz_unchainpipeline(fz_filter *filter, fz_filter **oldfp, fz_buffer **oldbp)
 	fz_dropfilter(filter);
 }
 
-fz_error
-fz_newpipeline(fz_filter **fp, fz_filter *head, fz_filter *tail)
+fz_filter *
+fz_newpipeline(fz_filter *head, fz_filter *tail)
 {
-	fz_error error;
-
 	FZ_NEWFILTER(fz_pipeline, p, pipeline);
 
-	error = fz_newbuffer(&p->buffer, FZ_BUFSIZE);
-	if (error)
-	{
-	    fz_free(p);
-	    return fz_rethrow(error, "cannot create buffer");
-	}
-
+	p->buffer = fz_newbuffer(FZ_BUFSIZE);
 	p->head = fz_keepfilter(head);
 	p->tail = fz_keepfilter(tail);
 	p->tailneedsin = 1;
 
-	return fz_okay;
+	return (fz_filter*)p;
 }
 
 void
@@ -90,13 +82,10 @@ head:
 	{
 		if (p->tailneedsin && !p->head->produced)
 		{
-			fz_error be = fz_okay;
 			if (p->buffer->rp > p->buffer->bp)
-				be = fz_rewindbuffer(p->buffer);
+				fz_rewindbuffer(p->buffer);
 			else
-				be = fz_growbuffer(p->buffer);
-			if (be)
-				return be;
+				fz_growbuffer(p->buffer);
 			goto head;
 		}
 		goto tail;

@@ -1,11 +1,11 @@
 #include "fitz_base.h"
 #include "fitz_stream.h"
 
-fz_error
-fz_newcopyfilter(fz_filter **fp)
+fz_filter *
+fz_newcopyfilter(void)
 {
     FZ_NEWFILTER(fz_filter, f, copyfilter);
-    return fz_okay;
+	return f;
 }
 
 void
@@ -49,13 +49,13 @@ struct fz_nullfilter_s
 	int cur;
 };
 
-fz_error
-fz_newnullfilter(fz_filter **fp, int len)
+fz_filter *
+fz_newnullfilter(int len)
 {
 	FZ_NEWFILTER(fz_nullfilter, f, nullfilter);
 	f->len = len;
 	f->cur = 0;
-	return fz_okay;
+	return (fz_filter *)f;
 }
 
 void
@@ -128,13 +128,13 @@ static inline int fromhex(int a)
 	return 0;
 }
 
-fz_error
-fz_newahxd(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newahxd(fz_obj *params)
 {
 	FZ_NEWFILTER(fz_ahxd, f, ahxd);
 	f->odd = 0;
 	f->a = 0;
-	return fz_okay;
+	return (fz_filter *)f;
 }
 
 void
@@ -209,13 +209,13 @@ struct fz_a85d_s
 	int count;
 };
 
-fz_error
-fz_newa85d(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newa85d(fz_obj *params)
 {
 	FZ_NEWFILTER(fz_a85d, f, a85d);
 	f->word = 0;
 	f->count = 0;
-	return fz_okay;
+	return (fz_filter *)f;
 }
 
 void
@@ -301,8 +301,8 @@ fz_processa85d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			case 4:
 				f->word = f->word * 85 + 0xffL;
 				*(out->wp+2) = f->word >> 8;
-o2:				*(out->wp+1) = f->word >> 16;
-o1:				*(out->wp+0) = f->word >> 24;
+				o2:				*(out->wp+1) = f->word >> 16;
+				o1:				*(out->wp+0) = f->word >> 24;
 				out->wp += f->count - 1;
 				break;
 			}
@@ -315,11 +315,11 @@ o1:				*(out->wp+0) = f->word >> 24;
 	}
 }
 
-fz_error
-fz_newrld(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newrld(fz_obj *params)
 {
 	FZ_NEWFILTER(fz_filter, f, rld);
-	return fz_okay;
+	return f;
 }
 
 void

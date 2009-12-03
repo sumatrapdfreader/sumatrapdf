@@ -43,11 +43,6 @@ pdf_loadcomponentshadefunc(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj
 	}
 
 	func = fz_malloc(fz_arraylen(funcs) * sizeof(pdf_function *));
-	if (!func)
-	{
-		error = fz_rethrow(-1, "out of memory: shading function");
-		goto cleanup;
-	}
 	memset(func, 0x00, fz_arraylen(funcs) * sizeof(pdf_function *));
 
 	for (i = 0; i < fz_arraylen(funcs); i++)
@@ -148,9 +143,6 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix matrix)
 	pdf_logshade("load shade dict (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
 	shade = fz_malloc(sizeof(fz_shade));
-	if (!shade)
-		return fz_rethrow(-1, "out of memory");
-
 	shade->refs = 1;
 	shade->usebackground = 0;
 	shade->usefunction = 0;
@@ -305,12 +297,7 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 			return fz_rethrow(error, "could not load shading dictionary");
 	}
 
-	error = pdf_storeitem(xref->store, PDF_KSHADE, dict, *shadep);
-	if (error)
-	{
-		fz_dropshade(*shadep);
-		return fz_rethrow(error, "could not put shading dictionary in store");
-	}
+	pdf_storeitem(xref->store, PDF_KSHADE, dict, *shadep);
 
 	return fz_okay;
 }

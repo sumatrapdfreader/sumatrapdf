@@ -673,9 +673,7 @@ gatherinfo(int show, int page)
 	fz_obj *shade;
 	fz_obj *pattern;
 
-	error = pdf_getpageobject(xref, page, &pageobj);
-	if (error)
-		die(error);
+	pageobj = pdf_getpageobject(xref, page);
 
 	if (!pageobj)
 		die(fz_throw("cannot retrieve info from page %d", page));
@@ -773,6 +771,7 @@ printinfo(char *filename, int show, int page)
 		printf("MediaBox: ");
 		printf("\n");
 		for (i = 0; i < dims; i++)
+		{
 			printf(PAGE_FMT "[ %g %g %g %g ]\n",
 					dim[i]->page,
 					fz_tonum(dim[i]->pageobj), fz_togen(dim[i]->pageobj),
@@ -780,6 +779,7 @@ printinfo(char *filename, int show, int page)
 					dim[i]->u.dim.bbox->y0,
 					dim[i]->u.dim.bbox->x1,
 					dim[i]->u.dim.bbox->y1);
+		}
 		printf("\n");
 
 		for (i = 0; i < dims; i++)

@@ -124,9 +124,7 @@ static fz_error parsecodespacerange(pdf_cmap *cmap, fz_stream *file)
 	    if (tok == PDF_TSTRING)
 	    {
 		hi = codefromstring(buf, len);
-		error = pdf_addcodespace(cmap, lo, hi, len);
-		if (error)
-		    return fz_rethrow(error, "cannot add code space");
+				pdf_addcodespace(cmap, lo, hi, len);
 	    }
 	    else break;
 	}
@@ -175,9 +173,7 @@ static fz_error parsecidrange(pdf_cmap *cmap, fz_stream *file)
 
 	dst = atoi(buf);
 
-	error = pdf_maprangetorange(cmap, lo, hi, dst);
-	if (error)
-	    return fz_rethrow(error, "cannot map cidrange");
+		pdf_maprangetorange(cmap, lo, hi, dst);
     }
 }
 
@@ -211,9 +207,7 @@ static fz_error parsecidchar(pdf_cmap *cmap, fz_stream *file)
 
 	dst = atoi(buf);
 
-	error = pdf_maprangetorange(cmap, src, src, dst);
-	if (error)
-	    return fz_rethrow(error, "cannot map cidchar");
+		pdf_maprangetorange(cmap, src, src, dst);
     }
 }
 
@@ -244,9 +238,7 @@ static fz_error parsebfrangearray(pdf_cmap *cmap, fz_stream *file, int lo, int h
 	    for (i = 0; i < len / 2; i++)
 		dst[i] = codefromstring(buf + i * 2, 2);
 
-	    error = pdf_maponetomany(cmap, lo, dst, len / 2);
-	    if (error)
-		return fz_rethrow(error, "cannot map bfrange array");
+			pdf_maponetomany(cmap, lo, dst, len / 2);
 	}
 
 	lo ++;
@@ -292,9 +284,7 @@ static fz_error parsebfrange(pdf_cmap *cmap, fz_stream *file)
 	    if (len == 2)
 	    {
 		dst = codefromstring(buf, len);
-		error = pdf_maprangetorange(cmap, lo, hi, dst);
-		if (error)
-		    return fz_rethrow(error, "cannot map bfrange");
+				pdf_maprangetorange(cmap, lo, hi, dst);
 	    }
 	    else
 	    {
@@ -309,9 +299,7 @@ static fz_error parsebfrange(pdf_cmap *cmap, fz_stream *file)
 		    while (lo <= hi)
 		    {
 			dststr[i-1] ++;
-			error = pdf_maponetomany(cmap, lo, dststr, i);
-			if (error)
-			    return fz_rethrow(error, "cannot map bfrange");
+						pdf_maponetomany(cmap, lo, dststr, i);
 			lo ++;
 		    }
 		}
@@ -367,10 +355,7 @@ static fz_error parsebfchar(pdf_cmap *cmap, fz_stream *file)
 	{
 	    for (i = 0; i < len / 2; i++)
 		dst[i] = codefromstring(buf + i * 2, 2);
-
-	    error = pdf_maponetomany(cmap, src, dst, i);
-	    if (error)
-		return fz_rethrow(error, "cannot map bfchar");
+			pdf_maponetomany(cmap, src, dst, i);
 	}
     }
 }
@@ -385,9 +370,7 @@ pdf_parsecmap(pdf_cmap **cmapp, fz_stream *file)
     pdf_token_e tok;
     int len;
 
-    error = pdf_newcmap(&cmap);
-    if (error)
-	return fz_rethrow(error, "cannot create cmap");
+	cmap = pdf_newcmap();
 
     strcpy(key, ".notdef");
 
@@ -485,12 +468,7 @@ pdf_parsecmap(pdf_cmap **cmapp, fz_stream *file)
 	/* ignore everything else */
     }
 
-    error = pdf_sortcmap(cmap);
-    if (error)
-    {
-	error = fz_rethrow(error, "cannot sort cmap");
-	goto cleanup;
-    }
+	pdf_sortcmap(cmap);
 
     *cmapp = cmap;
     return fz_okay;

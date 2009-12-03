@@ -9,12 +9,12 @@ struct fz_arc4c_s
 	fz_arc4 arc4;
 };
 
-fz_error
-fz_newarc4filter(fz_filter **fp, unsigned char *key, unsigned keylen)
+fz_filter *
+fz_newarc4filter(unsigned char *key, unsigned keylen)
 {
 	FZ_NEWFILTER(fz_arc4c, f, arc4filter);
 	fz_arc4init(&f->arc4, key, keylen);
-	return fz_okay;
+	return (fz_filter *)f;
 }
 
 void

@@ -363,7 +363,7 @@ void windocopy(pdfapp_t *app)
 	*utf8 = 0;
 	*latin1 = 0;
 
-printf("oncopy utf8=%zd latin1=%zd\n", strlen(copyutf8), strlen(copylatin1));
+	printf("oncopy utf8=%zd latin1=%zd\n", strlen(copyutf8), strlen(copylatin1));
 
 	XSetSelectionOwner(xdpy, XA_PRIMARY, xwin, copytime);
 
@@ -374,7 +374,7 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 {
 	XEvent nevt;
 
-printf("onselreq\n");
+	printf("onselreq\n");
 
 	if (property == None)
 		property = target;
@@ -395,7 +395,7 @@ printf("onselreq\n");
 		atomlist[1] = XA_TIMESTAMP;
 		atomlist[2] = XA_STRING;
 		atomlist[3] = XA_UTF8_STRING;
-printf(" -> targets\n");
+		printf(" -> targets\n");
 		XChangeProperty(xdpy, requestor, property, target,
 				32, PropModeReplace,
 				(unsigned char *)atomlist, sizeof(atomlist)/sizeof(Atom));
@@ -403,7 +403,7 @@ printf(" -> targets\n");
 
 	else if (target == XA_STRING)
 	{
-printf(" -> string %zd\n", strlen(copylatin1));
+		printf(" -> string %zd\n", strlen(copylatin1));
 		XChangeProperty(xdpy, requestor, property, target,
 				8, PropModeReplace,
 				(unsigned char *)copylatin1, strlen(copylatin1));
@@ -411,7 +411,7 @@ printf(" -> string %zd\n", strlen(copylatin1));
 
 	else if (target == XA_UTF8_STRING)
 	{
-printf(" -> utf8string\n");
+		printf(" -> utf8string\n");
 		XChangeProperty(xdpy, requestor, property, target,
 				8, PropModeReplace,
 				(unsigned char *)copyutf8, strlen(copyutf8));
@@ -419,7 +419,7 @@ printf(" -> utf8string\n");
 
 	else
 	{
-printf(" -> unknown\n");
+		printf(" -> unknown\n");
 		nevt.xselection.property = None;
 	}
 

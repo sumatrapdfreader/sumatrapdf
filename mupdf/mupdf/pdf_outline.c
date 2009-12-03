@@ -1,10 +1,9 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static fz_error
-loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
+static pdf_outline *
+loadoutline(pdf_xref *xref, fz_obj *dict)
 {
-	fz_error error;
 	pdf_outline *node;
 	fz_obj *obj;
 
@@ -20,17 +19,13 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Title");
 	if (obj)
 	{
-		error = pdf_toutf8(&node->title, obj);
-		if (error)
-			return fz_rethrow(error, "cannot convert Title to UTF-8");
+		node->title = pdf_toutf8(obj);
 		pdf_logpage("title %s\n", node->title);
 	}
 
 	if (fz_dictgets(dict, "Dest") || fz_dictgets(dict, "A"))
 	{
-		error = pdf_loadlink(&node->link, xref, dict);
-		if (error)
-			return fz_rethrow(error, "cannot load link");
+		node->link = pdf_loadlink(xref, dict);
 	}
 
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690735 */
@@ -40,9 +35,7 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "First");
 	if (obj)
 	{
-		error = loadoutline(&node->child, xref, obj);
-		if (error)
-			return fz_rethrow(error, "cannot load outline");
+		node->child = loadoutline(xref, obj);
 	}
 
 	pdf_logpage("}\n");
@@ -50,19 +43,15 @@ loadoutline(pdf_outline **nodep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Next");
 	if (obj)
 	{
-		error = loadoutline(&node->next, xref, obj);
-		if (error)
-			return fz_rethrow(error, "cannot load outline");
+		node->next = loadoutline(xref, obj);
 	}
 
-	*nodep = node;
-	return fz_okay;
+	return node;
 }
 
-fz_error
-pdf_loadoutline(pdf_outline **nodep, pdf_xref *xref)
+pdf_outline *
+pdf_loadoutline(pdf_xref *xref)
 {
-	fz_error error;
 	pdf_outline *node;
 	fz_obj *obj;
 	fz_obj *first;
@@ -77,16 +66,13 @@ pdf_loadoutline(pdf_outline **nodep, pdf_xref *xref)
 		first = fz_dictgets(obj, "First");
 		if (first)
 		{
-			error = loadoutline(&node, xref, first);
-			if (error)
-				return fz_rethrow(error, "cannot load outline");
+			node = loadoutline(xref, first);
 		}
 	}
 
 	pdf_logpage("}\n");
 
-	*nodep = node;
-	return fz_okay;
+	return node;
 }
 
 void

@@ -66,8 +66,6 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 
 	shade->meshlen = NSEGS * NSEGS * 2;
 	shade->mesh = fz_malloc(sizeof(float) * (2 + ncomp) * 3 * shade->meshlen);
-	if (!shade->mesh)
-		return fz_rethrow(-1, "out of memory");
 
 	n = 0;
 	for (yy = 0; yy < NSEGS; ++yy)
@@ -189,8 +187,6 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 
 	shade->meshlen = 2 + e0 * 2 + e1 * 2;
 	shade->mesh = fz_malloc(sizeof(float) * 3*3 * shade->meshlen);
-	if (!shade->mesh)
-		return fz_rethrow(-1, "out of memory");
 
 	p1.x = x0 + BIGNUM * cos(theta);
 	p1.y = y0 + BIGNUM * sin(theta);
@@ -411,8 +407,6 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 		{
 			shade->meshlen = pos;
 			shade->mesh = fz_malloc(sizeof(float) * 9 * shade->meshlen);
-			if (!shade->mesh)
-				return fz_rethrow(-1, "out of memory");
 		}
 	}
 

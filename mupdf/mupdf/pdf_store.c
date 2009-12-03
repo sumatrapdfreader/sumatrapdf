@@ -89,27 +89,14 @@ static void dropitem(pdf_itemkind kind, void *val)
 	}
 }
 
-fz_error
-pdf_newstore(pdf_store **storep)
+pdf_store *
+pdf_newstore(void)
 {
-	fz_error error;
 	pdf_store *store;
-
 	store = fz_malloc(sizeof(pdf_store));
-	if (!store)
-		return fz_rethrow(-1, "out of memory: store struct");
-
-	error = fz_newhash(&store->hash, 4096, sizeof(struct refkey));
-	if (error)
-	{
-		fz_free(store);
-		return fz_rethrow(error, "cannot create hash");
-	}
-
+	store->hash = fz_newhash(4096, sizeof(struct refkey));
 	store->root = nil;
-
-	*storep = store;
-	return fz_okay;
+	return store;
 }
 
 void
@@ -161,10 +148,9 @@ static void evictitem(pdf_item *item)
 	fz_free(item);
 }
 
-fz_error
+void
 pdf_evictageditems(pdf_store *store)
 {
-	fz_error error;
 	pdf_item *item;
 	pdf_item *next;
 	pdf_item *prev;
@@ -175,12 +161,9 @@ pdf_evictageditems(pdf_store *store)
 	{
 		key = fz_hashgetkey(store->hash, i);
 		item = fz_hashfind(store->hash, key);
-
 		if (item && item->age > itemmaxage(item->kind))
 		{
-			error = fz_hashremove(store->hash, key);
-			if (error)
-				return error;
+			fz_hashremove(store->hash, key);
 			evictitem(item);
 		}
 	}
@@ -189,7 +172,6 @@ pdf_evictageditems(pdf_store *store)
 	for (item = store->root; item; item = next)
 	{
 		next = item->next;
-
 		if (item->age > itemmaxage(item->kind))
 		{
 			if (!prev)
@@ -201,8 +183,6 @@ pdf_evictageditems(pdf_store *store)
 		else
 			prev = item;
 	}
-
-	return fz_okay;
 }
 
 void
@@ -222,16 +202,12 @@ pdf_agestoreditems(pdf_store *store)
 		item->age++;
 }
 
-fz_error
+void
 pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 {
-	fz_error error;
 	pdf_item *item;
 
 	item = fz_malloc(sizeof(pdf_item));
-	if (!item)
-		return fz_rethrow(-1, "out of memory: store list node");
-
 	item->kind = kind;
 	item->key = fz_keepobj(key);
 	item->val = val;
@@ -248,9 +224,7 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 		refkey.oid = fz_tonum(key);
 		refkey.gen = fz_togen(key);
 
-		error = fz_hashinsert(store->hash, &refkey, item);
-		if (error)
-			return fz_rethrow(error, "cannot insert object into hash");
+		fz_hashinsert(store->hash, &refkey, item);
 	}
 	else
 	{
@@ -261,7 +235,6 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 	}
 
 	keepitem(kind, val);
-	return fz_okay;
 }
 
 void *
@@ -300,15 +273,14 @@ pdf_finditem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 	return nil;
 }
 
-fz_error
+void
 pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 {
-	fz_error error;
 	pdf_item *item, *prev;
 	struct refkey refkey;
 
 	if (key == nil)
-		return fz_okay;
+		return;
 
 	if (fz_isindirect(key))
 	{
@@ -318,10 +290,8 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 
 		item = fz_hashfind(store->hash, &refkey);
 		if (!item)
-			return fz_throw("cannot remove non-existent item from store");
-		error = fz_hashremove(store->hash, &refkey);
-		if (error)
-			return fz_rethrow(error, "cannot remove item from store");
+			return;
+		fz_hashremove(store->hash, &refkey);
 
 		pdf_logrsrc("remove item %s (%d %d R) ptr=%p\n", kindstr(kind), fz_tonum(key), fz_togen(key), item->val);
 
@@ -349,8 +319,6 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 			prev = item;
 		}
 	}
-
-	return fz_okay;
 }
 
 void

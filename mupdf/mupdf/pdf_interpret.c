@@ -9,8 +9,6 @@ pdf_newcsi(pdf_csi **csip, int maskonly)
 	fz_node *node;
 
 	csi = fz_malloc(sizeof(pdf_csi));
-	if (!csi)
-		return fz_rethrow(-1, "out of memory: interpreter struct");
 
 	pdf_initgstate(&csi->gstate[0]);
 
@@ -94,13 +92,16 @@ pdf_dropmaterial(pdf_material *mat)
 	return mat;
 }
 
-static fz_error
+static void
 gsave(pdf_csi *csi)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
 
 	if (csi->gtop == 31)
-		return fz_throw("gstate overflow in content stream");
+	{
+		fz_warn("gstate overflow in content stream");
+		return;
+	}
 
 	memcpy(&csi->gstate[csi->gtop + 1], &csi->gstate[csi->gtop], sizeof(pdf_gstate));
 
@@ -110,17 +111,18 @@ gsave(pdf_csi *csi)
 	pdf_keepmaterial(&gs->fill);
 	if (gs->font)
 		pdf_keepfont(gs->font);
-
-	return fz_okay;
 }
 
-static fz_error
+static void
 grestore(pdf_csi *csi)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
 
 	if (csi->gtop == 0)
-		return fz_throw("gstate underflow in content stream");
+	{
+		fz_warn("gstate underflow in content stream");
+		return;
+	}
 
 	pdf_dropmaterial(&gs->stroke);
 	pdf_dropmaterial(&gs->fill);
@@ -128,31 +130,18 @@ grestore(pdf_csi *csi)
 		pdf_dropfont(gs->font);
 
 	csi->gtop --;
-
-	return fz_okay;
 }
 
 void
 pdf_dropcsi(pdf_csi *csi)
 {
 	while (csi->gtop)
-		grestore(csi); /* no need to check for impossible errors */
+		grestore(csi);
 
-	if (csi->gstate[csi->gtop].fill.cs)
-		fz_dropcolorspace(csi->gstate[csi->gtop].fill.cs);
-	if (csi->gstate[csi->gtop].stroke.cs)
-		fz_dropcolorspace(csi->gstate[csi->gtop].stroke.cs);
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+	pdf_dropmaterial(&csi->gstate[csi->gtop].fill);
+	pdf_dropmaterial(&csi->gstate[csi->gtop].stroke);
 	if (csi->gstate[csi->gtop].font)
 		pdf_dropfont(csi->gstate[csi->gtop].font);
-	if (csi->gstate[csi->gtop].fill.pattern)
-		pdf_droppattern(csi->gstate[csi->gtop].fill.pattern);
-	if (csi->gstate[csi->gtop].stroke.pattern)
-		pdf_droppattern(csi->gstate[csi->gtop].stroke.pattern);
-	if (csi->gstate[csi->gtop].fill.shade)
-		fz_dropshade(csi->gstate[csi->gtop].fill.shade);
-	if (csi->gstate[csi->gtop].stroke.shade)
-		fz_dropshade(csi->gstate[csi->gtop].stroke.shade);
 
 	if (csi->tree) fz_droptree(csi->tree);
 
@@ -181,10 +170,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	pdf_gstate *gstate;
 	float x, y, w, h;
 
-	/* gsave */
-	error = gsave(csi);
-	if (error)
-		return fz_rethrow(error, "cannot push graphics state");
+	gsave(csi);
 
 	gstate = csi->gstate + csi->gtop;
 
@@ -257,9 +243,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 
 	xobj->contents->rp = xobj->contents->bp;
 
-	error = fz_openrbuffer(&file, xobj->contents);
-	if (error)
-		return fz_rethrow(error, "cannot open XObject stream");
+	file = fz_openrbuffer(xobj->contents);
 
 	if (xobj->resources)
 		rdb = xobj->resources;
@@ -271,10 +255,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	if (error)
 		return fz_rethrow(error, "cannot interpret XObject stream");
 
-	/* grestore */
-	error = grestore(csi);
-	if (error)
-		return fz_rethrow(error, "cannot pop graphics state");
+	grestore(csi);
 
 	return fz_okay;
 }
@@ -343,7 +324,12 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 			{
 				fz_error error;
 
-				pdf_dropfont(gstate->font); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+				if (gstate->font)
+				{
+					pdf_dropfont(gstate->font);
+					gstate->font = nil;
+				}
+
 				error = pdf_loadfont(&gstate->font, xref, rdb, fz_arrayget(val, 0));
 				if (error)
 					return fz_rethrow(error, "cannot load font");
@@ -708,8 +694,6 @@ Lsetcolorspace:
 		else if (!strcmp(buf, "SC") || !strcmp(buf, "SCN"))
 		{
 			pdf_material *mat;
-			pdf_pattern *pat = nil;
-			fz_shade *shd = nil;
 			fz_obj *patterntype;
 			fz_obj *dict;
 			fz_obj *obj;
@@ -764,34 +748,38 @@ Lsetcolor:
 
 				if (fz_toint(patterntype) == 1)
 				{
+					pdf_pattern *pat;
 					error = pdf_loadpattern(&pat, xref, obj);
 					if (error)
 						return fz_rethrow(error, "cannot load pattern");
 					if (pat)
 					{
 						error = pdf_setpattern(csi, what, pat, csi->top == 1 ? nil : v);
-						pdf_droppattern(pat); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 						if (error)
 							return fz_rethrow(error, "cannot set pattern");
 					}
+					pdf_droppattern(pat);
 				}
 
-				if (fz_toint(patterntype) == 2)
+				else if (fz_toint(patterntype) == 2)
 				{
+					fz_shade *shd;
 					error = pdf_loadshade(&shd, xref, obj);
 					if (error)
 						return fz_rethrow(error, "cannot load shade");
 					if (shd)
 					{
 						error = pdf_setshade(csi, what, shd);
-						fz_dropshade(shd); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 						if (error)
 							return fz_rethrow(error, "cannot set shade");
 					}
+					fz_dropshade(shd);
 				}
 
-				if (!pat && !shd)
-					return fz_throw("cannot load pattern or shade");
+				else
+				{
+					return fz_throw("unknown pattern type: %d", fz_toint(patterntype));
+				}
 
 				break;
 
@@ -908,7 +896,10 @@ Lsetcolor:
 				return fz_throw("cannot find font resource: %s", fz_toname(csi->stack[0]));
 
 			if (gstate->font)
+			{
 				pdf_dropfont(gstate->font);
+				gstate->font = nil;
+			}
 
 			error = pdf_loadfont(&gstate->font, xref, rdb, obj);
 			if (error)
@@ -1008,8 +999,6 @@ Lsetcolor:
 			fz_obj *dict;
 			fz_obj *obj;
 			fz_obj *subtype;
-			pdf_image *img = nil;
-			pdf_xobject *xobj = nil;
 
 			if (csi->top != 1)
 				goto syntaxerror;
@@ -1023,9 +1012,13 @@ Lsetcolor:
 				return fz_throw("cannot find xobject resource: '%s'", fz_toname(csi->stack[0]));
 
 			subtype = fz_dictgets(obj, "Subtype");
+			if (!subtype)
+				return fz_throw("no XObject subtype specified");
 
 			if (!strcmp(fz_toname(subtype), "Form"))
 			{
+				pdf_xobject *xobj;
+
 				error = pdf_loadxobject(&xobj, xref, obj);
 				if (error)
 					return fz_rethrow(error, "cannot load xobject");
@@ -1036,25 +1029,31 @@ Lsetcolor:
 
 				clearstack(csi);
 				error = runxobject(csi, xref, rdb, xobj);
-				pdf_dropxobject(xobj); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 				if (error)
 					return fz_rethrow(error, "cannot draw xobject");
+
+				pdf_dropxobject(xobj);
 			}
 
-			if (!strcmp(fz_toname(subtype), "Image"))
+			else if (!strcmp(fz_toname(subtype), "Image"))
 			{
+				pdf_image *img;
+
 				error = pdf_loadimage(&img, xref, obj);
 				if (error)
 					return fz_rethrow(error, "cannot load image");
 
 				error = pdf_showimage(csi, img);
-				fz_dropimage((fz_image*)img); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
 				if (error)
 					return fz_rethrow(error, "cannot draw image");
+
+				fz_dropimage((fz_image*)img);
 			}
 
-			if (!img && !xobj)
-				return fz_throw("cannot load image or xobject");
+			else
+			{
+				return fz_throw("unknown XObject subtype: %s", fz_toname(subtype));
+			}
 		}
 
 		else if (!strcmp(buf, "sh"))
@@ -1079,8 +1078,10 @@ Lsetcolor:
 				return fz_rethrow(error, "cannot load shade");
 
 			error = pdf_addshade(gstate, shd);
-			fz_dropshade(shd); /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
-			if (error) return fz_rethrow(error, "cannot draw shade");
+			if (error)
+				return fz_rethrow(error, "cannot draw shade");
+
+			fz_dropshade(shd);
 		}
 
 		else if (!strcmp(buf, "d0"))
@@ -1107,17 +1108,13 @@ Lsetcolor:
 	case 'q':
 		if (csi->top != 0)
 			goto syntaxerror;
-		error = gsave(csi);
-		if (error)
-			return fz_rethrow(error, "cannot gsave");
+		gsave(csi);
 		break;
 
 	case 'Q':
 		if (csi->top != 0)
 			goto syntaxerror;
-		error = grestore(csi);
-		if (error)
-			return fz_rethrow(error, "cannot grestore");
+		grestore(csi);
 		break;
 
 	case 'w':
@@ -1394,19 +1391,15 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 			}
 			else if (tok == PDF_TINT || tok == PDF_TREAL)
 			{
-				error = fz_newreal(&obj, atof(buf));
-				if (error) return fz_rethrow(error, "cannot create number");
-				error = fz_arraypush(csi->array, obj);
+				obj = fz_newreal(atof(buf));
+				fz_arraypush(csi->array, obj);
 				fz_dropobj(obj);
-				if (error) return fz_rethrow(error, "cannot add number to array");
 			}
 			else if (tok == PDF_TSTRING)
 			{
-				error = fz_newstring(&obj, buf, len);
-				if (error) return fz_rethrow(error, "cannot create string");
-				error = fz_arraypush(csi->array, obj);
+				obj = fz_newstring(buf, len);
+				fz_arraypush(csi->array, obj);
 				fz_dropobj(obj);
-				if (error) return fz_rethrow(error, "cannot add string to array");
 			}
 			else if (tok == PDF_TEOF)
 			{
@@ -1426,8 +1419,7 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 
 			/* optimize text-object array parsing */
 		case PDF_TOARRAY:
-			error = fz_newarray(&csi->array, 8);
-			if (error) return fz_rethrow(error, "cannot create array");
+			csi->array = fz_newarray(8);
 			break;
 
 		case PDF_TODICT:
@@ -1437,44 +1429,37 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 			break;
 
 		case PDF_TNAME:
-			error = fz_newname(&csi->stack[csi->top], buf);
-			if (error) return fz_rethrow(error, "cannot create name");
+			csi->stack[csi->top] = fz_newname(buf);
 			csi->top ++;
 			break;
 
 		case PDF_TINT:
-			error = fz_newint(&csi->stack[csi->top], atoi(buf));
-			if (error) return fz_rethrow(error, "cannot create integer");
+			csi->stack[csi->top] = fz_newint(atoi(buf));
 			csi->top ++;
 			break;
 
 		case PDF_TREAL:
-			error = fz_newreal(&csi->stack[csi->top], atof(buf));
-			if (error) return fz_rethrow(error, "cannot create real");
+			csi->stack[csi->top] = fz_newreal(atof(buf));
 			csi->top ++;
 			break;
 
 		case PDF_TSTRING:
-			error = fz_newstring(&csi->stack[csi->top], buf, len);
-			if (error) return fz_rethrow(error, "cannot create string");
+			csi->stack[csi->top] = fz_newstring(buf, len);
 			csi->top ++;
 			break;
 
 		case PDF_TTRUE:
-			error = fz_newbool(&csi->stack[csi->top], 1);
-			if (error) return fz_rethrow(error, "cannot create true");
+			csi->stack[csi->top] = fz_newbool(1);
 			csi->top ++;
 			break;
 
 		case PDF_TFALSE:
-			error = fz_newbool(&csi->stack[csi->top], 0);
-			if (error) return fz_rethrow(error, "cannot create false");
+			csi->stack[csi->top] = fz_newbool(0);
 			csi->top ++;
 			break;
 
 		case PDF_TNULL:
-			error = fz_newnull(&csi->stack[csi->top]);
-			if (error) return fz_rethrow(error, "cannot create null");
+			csi->stack[csi->top] = fz_newnull();
 			csi->top ++;
 			break;
 
@@ -1513,4 +1498,3 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 		}
 	}
 }
-

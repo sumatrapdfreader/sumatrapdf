@@ -76,12 +76,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
 
     pdf_logfont("}\n");
 
-    error = pdf_storeitem(xref->store, PDF_KCMAP, stmref, cmap);
-    if (error)
-    {
-	error = fz_rethrow(error, "cannot store cmap resource");
-	goto cleanup;
-    }
+	pdf_storeitem(xref->store, PDF_KCMAP, stmref, cmap);
 
     *cmapp = cmap;
     return fz_okay;
@@ -97,40 +92,16 @@ cleanup:
 /*
  * Create an Identity-* CMap (for both 1 and 2-byte encodings)
  */
-fz_error
-pdf_newidentitycmap(pdf_cmap **cmapp, int wmode, int bytes)
+pdf_cmap *
+pdf_newidentitycmap(int wmode, int bytes)
 {
-    fz_error error;
-    pdf_cmap *cmap;
-
-    error = pdf_newcmap(&cmap);
-    if (error)
-	return fz_rethrow(error, "cannot create cmap");
-
+	pdf_cmap *cmap = pdf_newcmap();
     sprintf(cmap->cmapname, "Identity-%c", wmode ? 'V' : 'H');
-
-    error = pdf_addcodespace(cmap, 0x0000, 0xffff, bytes);
-    if (error) {
-	pdf_dropcmap(cmap);
-	return fz_rethrow(error, "cannot add code space");
-    }
-
-    error = pdf_maprangetorange(cmap, 0x0000, 0xffff, 0);
-    if (error) {
-	pdf_dropcmap(cmap);
-	return fz_rethrow(error, "cannot map <0000> to <ffff>");
-    }
-
-    error = pdf_sortcmap(cmap);
-    if (error) {
-	pdf_dropcmap(cmap);
-	return fz_rethrow(error, "cannot sort cmap");
-    }
-
+	pdf_addcodespace(cmap, 0x0000, 0xffff, bytes);
+	pdf_maprangetorange(cmap, 0x0000, 0xffff, 0);
+	pdf_sortcmap(cmap);
     pdf_setwmode(cmap, wmode);
-
-    *cmapp = cmap;
-    return fz_okay;
+	return cmap;
 }
 
 /*

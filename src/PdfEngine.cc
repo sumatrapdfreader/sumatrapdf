@@ -177,11 +177,10 @@ PdfEngine::~PdfEngine()
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
+	fz_error error;
     _windowInfo = win;
     setFileName(fileName);
-    fz_error error = pdf_newxref(&_xref);
-    if (error)
-        goto Error;
+    _xref = pdf_newxref();
 
     error = pdf_loadxreft(_xref, (TCHAR *)fileName);
     if (error) {
@@ -242,11 +241,8 @@ DecryptedOk:
     if (_xref->info)
         fz_keepobj(_xref->info);
 
-    error = pdf_getpagecount(_xref, &_pageCount);
-    if (error)
-        goto Error;
-
-    error = pdf_loadoutline(&_outline, _xref);
+    _pageCount = pdf_getpagecount(_xref);
+    _outline = pdf_loadoutline(_xref);
     // silently ignore errors from pdf_loadoutline()
     // this information is not critical and checking the
     // error might prevent loading some pdfs that would
@@ -301,10 +297,7 @@ int PdfEngine::findPageNo(fz_obj *dest)
 
     for (p = 1; p <= _pageCount; p++)
     {
-	fz_obj *page;
-	fz_error error = pdf_getpageobject(_xref, p, &page);
-	if (error)
-	    continue;
+        fz_obj *page = pdf_getpageobject(_xref, p);
         int np = fz_tonum(page);
         int gp = fz_togen(page);
         if (n == np && g == gp)
@@ -316,12 +309,8 @@ int PdfEngine::findPageNo(fz_obj *dest)
 
 fz_obj *PdfEngine::getNamedDest(const char *name)
 {
-    fz_obj *obj = NULL;
-    fz_obj *nameobj = NULL;
-    fz_error error = fz_newstring(&nameobj, (char*)name, strlen(name));
-    if (!error)
-        obj = pdf_lookupdest(_xref, nameobj);
-    return obj;
+    fz_obj *nameobj = fz_newstring((char*)name, strlen(name));
+    return pdf_lookupdest(_xref, nameobj);
 }
 
 pdf_page *PdfEngine::getPdfPage(int pageNo)
@@ -336,11 +325,8 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
         return page;
     }
-    fz_obj * obj;
-    fz_error error = pdf_getpageobject(_xref, pageNo, &obj);
-    if (!error) {
-        error = pdf_loadpage(&page, _xref, obj);
-    }
+    fz_obj * obj = pdf_getpageobject(_xref, pageNo);
+    fz_error error = pdf_loadpage(&page, _xref, obj);
     if (error) {
         if (!ReleaseSemaphore(_getPageSem, 1, NULL))
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
@@ -366,25 +352,18 @@ void PdfEngine::dropPdfPage(int pageNo)
 int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_obj *page;
     int rotation = INVALID_ROTATION;
-    fz_error error = pdf_getpageobject(_xref, pageNo, &page);
-    if (!error) {
-	fz_error error = pdf_getpageinfo(_xref, page, NULL, &rotation);
-    }
+    fz_obj *page = pdf_getpageobject(_xref, pageNo);
+	pdf_getpageinfo(_xref, page, NULL, &rotation);
     return rotation;
 }
 
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_obj *page;
     fz_rect bbox;
-    fz_error error = pdf_getpageobject(_xref, pageNo, &page);
-    if (!error) {
-	error = pdf_getpageinfo(_xref, page, &bbox, NULL);
-    }
-    if (error)
+    fz_obj *page = pdf_getpageobject(_xref, pageNo);
+    if (fz_okay != pdf_getpageinfo(_xref, page, &bbox, NULL))
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }

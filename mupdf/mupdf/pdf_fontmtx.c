@@ -20,44 +20,28 @@ pdf_setdefaultvmtx(pdf_fontdesc *font, int y, int w)
 	font->dvmtx.w = w;
 }
 
-fz_error
+void
 pdf_addhmtx(pdf_fontdesc *font, int lo, int hi, int w)
 {
-	int newcap;
-	pdf_hmtx *newmtx;
-
 	if (font->nhmtx + 1 >= font->hmtxcap)
 	{
-		newcap = font->hmtxcap + 16;
-		newmtx = fz_realloc(font->hmtx, sizeof(pdf_hmtx) * newcap);
-		if (!newmtx)
-			return fz_rethrow(-1, "out of memory");
-		font->hmtxcap = newcap;
-		font->hmtx = newmtx;
+		font->hmtxcap = font->hmtxcap + 16;
+		font->hmtx = fz_realloc(font->hmtx, sizeof(pdf_hmtx) * font->hmtxcap);
 	}
 
 	font->hmtx[font->nhmtx].lo = lo;
 	font->hmtx[font->nhmtx].hi = hi;
 	font->hmtx[font->nhmtx].w = w;
 	font->nhmtx++;
-
-	return fz_okay;
 }
 
-fz_error
+void
 pdf_addvmtx(pdf_fontdesc *font, int lo, int hi, int x, int y, int w)
 {
-	int newcap;
-	pdf_vmtx *newmtx;
-
 	if (font->nvmtx + 1 >= font->vmtxcap)
 	{
-		newcap = font->vmtxcap + 16;
-		newmtx = fz_realloc(font->vmtx, sizeof(pdf_vmtx) * newcap);
-		if (!newmtx)
-			return fz_rethrow(-1, "out of memory");
-		font->vmtxcap = newcap;
-		font->vmtx = newmtx;
+		font->vmtxcap = font->vmtxcap + 16;
+		font->vmtx = fz_realloc(font->vmtx, sizeof(pdf_vmtx) * font->vmtxcap);
 	}
 
 	font->vmtx[font->nvmtx].lo = lo;
@@ -66,8 +50,6 @@ pdf_addvmtx(pdf_fontdesc *font, int lo, int hi, int x, int y, int w)
 	font->vmtx[font->nvmtx].y = y;
 	font->vmtx[font->nvmtx].w = w;
 	font->nvmtx++;
-
-	return fz_okay;
 }
 
 static int cmph(const void *a0, const void *b0)
@@ -84,42 +66,20 @@ static int cmpv(const void *a0, const void *b0)
 	return a->lo - b->lo;
 }
 
-fz_error
+void
 pdf_endhmtx(pdf_fontdesc *font)
 {
-	pdf_hmtx *newmtx;
-
 	if (!font->hmtx)
-		return fz_okay;
-
+		return;
 	qsort(font->hmtx, font->nhmtx, sizeof(pdf_hmtx), cmph);
-
-	newmtx = fz_realloc(font->hmtx, sizeof(pdf_hmtx) * font->nhmtx);
-	if (!newmtx)
-		return fz_rethrow(-1, "out of memory");
-	font->hmtxcap = font->nhmtx;
-	font->hmtx = newmtx;
-
-	return fz_okay;
 }
 
-fz_error
+void
 pdf_endvmtx(pdf_fontdesc *font)
 {
-	pdf_vmtx *newmtx;
-
 	if (!font->vmtx)
-		return fz_okay;
-
+		return;
 	qsort(font->vmtx, font->nvmtx, sizeof(pdf_vmtx), cmpv);
-
-	newmtx = fz_realloc(font->vmtx, sizeof(pdf_vmtx) * font->nvmtx);
-	if (!newmtx)
-		return fz_rethrow(-1, "out of memory");
-	font->vmtxcap = font->nvmtx;
-	font->vmtx = newmtx;
-
-	return fz_okay;
 }
 
 pdf_hmtx

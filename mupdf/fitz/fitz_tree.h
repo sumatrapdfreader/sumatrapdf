@@ -278,7 +278,7 @@ TODO the unicode textels
 struct fz_textgid_s { float e, f; int gid; };
 struct fz_textucs_s { int idx; int ucs; };
 
- */
+*/
 
 typedef struct fz_textel_s fz_textel;
 
@@ -319,7 +319,7 @@ struct fz_colorspace_s
 	void (*convcolor)(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv);
 	void (*toxyz)(fz_colorspace *, float *src, float *xyz);
 	void (*fromxyz)(fz_colorspace *, float *xyz, float *dst);
-	void (*drop)(fz_colorspace *);
+	void (*freefunc)(fz_colorspace *);
 };
 
 struct fz_colorcube1_s { unsigned char v[17]; };
@@ -369,7 +369,7 @@ struct fz_glyph_s
 fz_error fz_newfreetypefont(fz_font **fontp, char *name, int substitute);
 fz_error fz_loadfreetypefontfile(fz_font *font, char *path, int index);
 fz_error fz_loadfreetypefontbuffer(fz_font *font, unsigned char *data, int len, int index);
-fz_error fz_newtype3font(fz_font **fontp, char *name, fz_matrix matrix);
+fz_font * fz_newtype3font(char *name, fz_matrix matrix);
 
 fz_error fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index);
 fz_error fz_newfontfromfile(fz_font **fontp, char *path, int index);
@@ -386,7 +386,7 @@ struct fz_image_s
 {
 	int refs;
 	fz_error (*loadtile)(fz_image*,fz_pixmap*);
-	void (*drop)(fz_image*);
+	void (*freefunc)(fz_image*);
 	fz_colorspace *cs;
 	int w, h, n, a;
 };

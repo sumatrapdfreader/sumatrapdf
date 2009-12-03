@@ -11,21 +11,11 @@ struct pdf_tensorpatch_s
     float color[4][FZ_MAXCOLORS];
 };
 
-static fz_error
+static void
 growshademesh(fz_shade *shade, int amount)
 {
-	float *newmesh;
-	int newcap;
-
-	newcap = shade->meshcap + amount;
-	newmesh = fz_realloc(shade->mesh, sizeof(float) * newcap);
-	if (!newmesh)
-		return fz_rethrow(-1, "out of memory");
-
-	shade->mesh = newmesh;
-	shade->meshcap = newcap;
-
-	return fz_okay;
+	shade->meshcap = shade->meshcap + amount;
+	shade->mesh = fz_realloc(shade->mesh, sizeof(float) * shade->meshcap);
 }
 
 static fz_error
@@ -322,11 +312,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 			{\
 				int z;\
 				if (shade->meshlen + 2 + ncomp >= shade->meshcap) \
-				{ \
-					error = growshademesh(shade, shade->meshcap + 1024); \
-					if (error) \
-						goto cleanup; \
-				} \
+					growshademesh(shade, shade->meshcap + 1024); \
 				shade->mesh[j++] = x[idx];\
 				shade->mesh[j++] = y[idx];\
 				for (z = 0; z < ncomp; ++z) \
@@ -339,9 +325,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 	shade->meshlen = 0;
 	shade->meshcap = 0;
 	shade->mesh = nil;
-	error = growshademesh(shade, 1024);
-	if (error)
-		goto cleanup;
+	growshademesh(shade, 1024);
 
 	j = 0;
 	for (p = 0; p < vpr-1; ++p)
@@ -371,9 +355,6 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 	pdf_logshade("}\n");
 
 	return fz_okay;
-
-cleanup:
-	return error;
 }
 
 #define SEGMENTATION_DEPTH 2
@@ -528,8 +509,6 @@ static inline int setvertex(float *mesh, fz_point pt, float *color, int ptr, int
 static int
 triangulatepatch(pdf_tensorpatch p, fz_shade *shade, int ptr, int ncomp)
 {
-	fz_error error;
-
 	ptr = setvertex(shade->mesh, p.pole[0][0], p.color[0], ptr, ncomp);
 	ptr = setvertex(shade->mesh, p.pole[3][0], p.color[1], ptr, ncomp);
 	ptr = setvertex(shade->mesh, p.pole[3][3], p.color[2], ptr, ncomp);
@@ -538,17 +517,9 @@ triangulatepatch(pdf_tensorpatch p, fz_shade *shade, int ptr, int ncomp)
 	ptr = setvertex(shade->mesh, p.pole[0][3], p.color[3], ptr, ncomp);
 
 	if (shade->meshcap - 1024 < ptr)
-	{
-		error = growshademesh(shade, 1024);
-		if (error)
-			goto cleanup;
-	}
+		growshademesh(shade, 1024);
 
 	return ptr;
-
-cleanup:
-	/* error handling */
-	return -1;
 }
 
 static int
@@ -647,9 +618,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 
 	shade->meshcap = 0;
 	shade->mesh = nil;
-	error = growshademesh(shade, 1024);
-	if (error)
-		goto cleanup;
+	growshademesh(shade, 1024);
 
 	n = 2 + ncomp;
 	j = 0;
@@ -705,9 +674,6 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 	pdf_logshade("}\n");
 
 	return fz_okay;
-
-cleanup:
-	return error;
 }
 
 fz_error
@@ -760,8 +726,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 
 	shade->meshcap = 0;
 	shade->mesh = nil;
-	error = growshademesh(shade, 1024);
-	if (error) goto cleanup;
+	growshademesh(shade, 1024);
 
 	n = 2 + ncomp;
 	j = 0;
@@ -820,8 +785,5 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 	pdf_logshade("}\n");
 
 	return fz_okay;
-
-cleanup:
-	return error;
 }
 

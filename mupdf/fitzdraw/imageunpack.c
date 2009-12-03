@@ -219,11 +219,11 @@ static void loadtile1(byte * restrict src, int sw, byte * restrict dst, int dw, 
 }
 
 static void loadtile2(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
-	TILE(ttwo)
+TILE(ttwo)
 static void loadtile4(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
-	TILE(tnib)
+TILE(tnib)
 static void loadtile8(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
-	TILE(toct)
+TILE(toct)
 
 void (*fz_decodetile)(fz_pixmap *pix, int skip, float *decode) = decodetile;
 void (*fz_loadtile1)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile1;

@@ -1,6 +1,7 @@
 #include "fitz_base.h"
 #include "fitz_stream.h"
 
+#define OPJ_STATIC
 #include <openjpeg.h>
 
 typedef struct fz_jpxd_s fz_jpxd;
@@ -32,8 +33,8 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 }
 
 
-fz_error
-fz_newjpxd(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newjpxd(fz_obj *params)
 {
     FZ_NEWFILTER(fz_jpxd, d, jpxd);
 
@@ -54,12 +55,12 @@ fz_newjpxd(fz_filter **fp, fz_obj *params)
 
     d->info = opj_create_decompress(CODEC_JP2);
     if (!d->info)
-	return fz_throw("opj_create_decompress failed");
+		fz_warn("assert: opj_create_decompress failed");
 
     opj_set_event_mgr((opj_common_ptr)d->info, &d->evtmgr, stderr);
     opj_setup_decoder(d->info, &d->params);
 
-    return fz_okay;
+	return (fz_filter*)d;
 }
 
 void

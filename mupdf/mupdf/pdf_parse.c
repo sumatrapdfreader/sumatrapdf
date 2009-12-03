@@ -27,11 +27,11 @@ fz_matrix pdf_tomatrix(fz_obj *array)
 	return m;
 }
 
-fz_error
-pdf_toutf8(char **dstp, fz_obj *src)
+char *
+pdf_toutf8(fz_obj *src)
 {
 	unsigned char *srcptr = (unsigned char *) fz_tostrbuf(src);
-	char *dstptr;
+	char *dstptr, *dst;
 	int srclen = fz_tostrlen(src);
 	int dstlen = 0;
 	int ucs;
@@ -45,9 +45,7 @@ pdf_toutf8(char **dstp, fz_obj *src)
 			dstlen += runelen(ucs);
 		}
 
-		dstptr = *dstp = fz_malloc(dstlen + 1);
-		if (!dstptr)
-			return fz_rethrow(-1, "out of memory: utf-8 string");
+		dstptr = dst = fz_malloc(dstlen + 1);
 
 		for (i = 2; i < srclen; i += 2)
 		{
@@ -61,9 +59,7 @@ pdf_toutf8(char **dstp, fz_obj *src)
 		for (i = 0; i < srclen; i++)
 			dstlen += runelen(pdf_docencoding[srcptr[i]]);
 
-		dstptr = *dstp = fz_malloc(dstlen + 1);
-		if (!dstptr)
-			return fz_rethrow(-1, "out of memory: utf-8 string");
+		dstptr = dst = fz_malloc(dstlen + 1);
 
 		for (i = 0; i < srclen; i++)
 		{
@@ -73,31 +69,27 @@ pdf_toutf8(char **dstp, fz_obj *src)
 	}
 
 	*dstptr = '\0';
-	return fz_okay;
+	return dst;
 }
 
-fz_error
-pdf_toucs2(unsigned short **dstp, fz_obj *src)
+unsigned short *
+pdf_toucs2(fz_obj *src)
 {
 	unsigned char *srcptr = (unsigned char *) fz_tostrbuf(src);
-	unsigned short *dstptr;
+	unsigned short *dstptr, *dst;
 	int srclen = fz_tostrlen(src);
 	int i;
 
 	if (srclen > 2 && srcptr[0] == 254 && srcptr[1] == 255)
 	{
-		dstptr = *dstp = fz_malloc(((srclen - 2) / 2 + 1) * sizeof(short));
-		if (!dstptr)
-			return fz_rethrow(-1, "out of memory: ucs-2 string");
+		dstptr = dst = fz_malloc(((srclen - 2) / 2 + 1) * sizeof(short));
 		for (i = 2; i < srclen; i += 2)
 			*dstptr++ = (srcptr[i] << 8) | srcptr[i+1];
 	}
 
 	else
 	{
-		dstptr = *dstp = fz_malloc((srclen + 1) * sizeof(short));
-		if (!dstptr)
-			return fz_rethrow(-1, "out of memory: ucs-2 string");
+		dstptr = dst = fz_malloc((srclen + 1) * sizeof(short));
 		for (i = 0; i < srclen; i++)
 			*dstptr++ = pdf_docencoding[srcptr[i]];
 	}
@@ -116,53 +108,39 @@ pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 	pdf_token_e tok;
 	int len;
 
-	error = fz_newarray(&ary, 4);
-	if (error)
-		return fz_rethrow(error, "cannot create array");
+	ary = fz_newarray(4);
 
 	while (1)
 	{
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
-			goto cleanup;
+		{
+			fz_dropobj(ary);
+			return fz_rethrow(error, "cannot parse array");
+		}
 
 		if (tok != PDF_TINT && tok != PDF_TR)
 		{
 			if (n > 0)
 			{
-				error = fz_newint(&obj, a);
-				if (error)
-					goto cleanup;
-				error = fz_arraypush(ary, obj);
-				if (error)
-					goto cleanup;
+				obj = fz_newint(a);
+				fz_arraypush(ary, obj);
 				fz_dropobj(obj);
-				obj = nil;
 			}
 			if (n > 1)
 			{
-				error = fz_newint(&obj, b);
-				if (error)
-					goto cleanup;
-				error = fz_arraypush(ary, obj);
-				if (error)
-					goto cleanup;
+				obj = fz_newint(b);
+				fz_arraypush(ary, obj);
 				fz_dropobj(obj);
-				obj = nil;
 			}
 			n = 0;
 		}
 
 		if (tok == PDF_TINT && n == 2)
 		{
-			error = fz_newint(&obj, a);
-			if (error)
-				goto cleanup;
-			error = fz_arraypush(ary, obj);
-			if (error)
-				goto cleanup;
+			obj = fz_newint(a);
+			fz_arraypush(ary, obj);
 			fz_dropobj(obj);
-			obj = nil;
 			a = b;
 			n --;
 		}
@@ -172,6 +150,7 @@ pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 		case PDF_TCARRAY:
 			*op = ary;
 			return fz_okay;
+
 		case PDF_TINT:
 			if (n == 0)
 				a = atoi(buf);
@@ -179,44 +158,77 @@ pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 				b = atoi(buf);
 			n ++;
 			break;
+
 		case PDF_TR:
 			if (n != 2)
-				goto cleanup;
-			error = fz_newindirect(&obj, a, b, xref);
-			if (error)
-				goto cleanup;
+			{
+				fz_dropobj(ary);
+				return fz_throw("cannot parse indirect reference in array");
+			}
+			obj = fz_newindirect(a, b, xref);
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
 			n = 0;
 			break;
 
-		case PDF_TOARRAY: error = pdf_parsearray(&obj, xref, file, buf, cap); break;
-		case PDF_TODICT: error = pdf_parsedict(&obj, xref, file, buf, cap); break;
-		case PDF_TNAME: error = fz_newname(&obj, buf); break;
-		case PDF_TREAL: error = fz_newreal(&obj, atof(buf)); break;
-		case PDF_TSTRING: error = fz_newstring(&obj, buf, len); break;
-		case PDF_TTRUE: error = fz_newbool(&obj, 1); break;
-		case PDF_TFALSE: error = fz_newbool(&obj, 0); break;
-		case PDF_TNULL: error = fz_newnull(&obj); break;
-		default: goto cleanup;
-		}
-		if (error)
-			goto cleanup;
-
-		if (obj)
-		{
-			error = fz_arraypush(ary, obj);
+		case PDF_TOARRAY:
+			error = pdf_parsearray(&obj, xref, file, buf, cap);
 			if (error)
-				goto cleanup;
-			fz_dropobj(obj);
+			{
+				fz_dropobj(ary);
+				return fz_rethrow(error, "cannot parse array");
 		}
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
 
-		obj = nil;
+		case PDF_TODICT:
+			error = pdf_parsedict(&obj, xref, file, buf, cap);
+		if (error)
+			{
+				fz_dropobj(ary);
+				return fz_rethrow(error, "cannot parse array");
+			}
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+
+		case PDF_TNAME:
+			obj = fz_newname(buf);
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+		case PDF_TREAL:
+			obj = fz_newreal(atof(buf));
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+		case PDF_TSTRING:
+			obj = fz_newstring(buf, len);
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+		case PDF_TTRUE:
+			obj = fz_newbool(1);
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+		case PDF_TFALSE:
+			obj = fz_newbool(0);
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+		case PDF_TNULL:
+			obj = fz_newnull();
+			fz_arraypush(ary, obj);
+			fz_dropobj(obj);
+			break;
+
+		default:
+			fz_dropobj(ary);
+			return fz_rethrow(error, "cannot parse token in array");
+		}
 	}
-
-cleanup:
-	if (obj) fz_dropobj(obj);
-	if (ary) fz_dropobj(ary);
-	*op = nil;
-	return fz_rethrow(error, "cannot parse array");
 }
 
 fz_error
@@ -230,15 +242,16 @@ pdf_parsedict(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 	int len;
 	int a, b;
 
-	error = fz_newdict(&dict, 8);
-	if (error)
-		return fz_rethrow(error, "cannot create dict");
+	dict = fz_newdict(8);
 
 	while (1)
 	{
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
-			goto cleanup;
+		{
+			fz_dropobj(dict);
+			return fz_rethrow(error, "cannot parse dict");
+		}
 
 skip:
 		if (tok == PDF_TCDICT)
@@ -256,46 +269,64 @@ skip:
 
 		if (tok != PDF_TNAME)
 		{
-			error = fz_throw("invalid key in dict");
-			goto cleanup;
+			fz_dropobj(dict);
+			return fz_throw("invalid key in dict");;
 		}
 
-		error = fz_newname(&key, buf);
-		if (error)
-			goto cleanup;
+		key = fz_newname(buf);
 
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
-			goto cleanup;
+		{
+			fz_dropobj(dict);
+			return fz_rethrow(error, "cannot parse dict");
+		}
 
 		switch (tok)
 		{
-		case PDF_TOARRAY: error = pdf_parsearray(&val, xref, file, buf, cap); break;
-		case PDF_TODICT: error = pdf_parsedict(&val, xref, file, buf, cap); break;
-		case PDF_TNAME: error = fz_newname(&val, buf); break;
-		case PDF_TREAL: error = fz_newreal(&val, atof(buf)); break;
-		case PDF_TSTRING: error = fz_newstring(&val, buf, len); break;
-		case PDF_TTRUE: error = fz_newbool(&val, 1); break;
-		case PDF_TFALSE: error = fz_newbool(&val, 0); break;
-		case PDF_TNULL: error = fz_newnull(&val); break;
+		case PDF_TOARRAY:
+			error = pdf_parsearray(&val, xref, file, buf, cap);
+			if (error)
+			{
+				fz_dropobj(key);
+				fz_dropobj(dict);
+				return fz_rethrow(error, "cannot parse dict");
+			}
+			break;
+
+		case PDF_TODICT:
+			error = pdf_parsedict(&val, xref, file, buf, cap);
+			if (error)
+			{
+				fz_dropobj(key);
+				fz_dropobj(dict);
+				return fz_rethrow(error, "cannot parse dict");
+			}
+			break;
+
+		case PDF_TNAME: val = fz_newname(buf); break;
+		case PDF_TREAL: val = fz_newreal(atof(buf)); break;
+		case PDF_TSTRING: val = fz_newstring(buf, len); break;
+		case PDF_TTRUE: val = fz_newbool(1); break;
+		case PDF_TFALSE: val = fz_newbool(0); break;
+		case PDF_TNULL: val = fz_newnull(); break;
 
 		case PDF_TINT:
 			a = atoi(buf);
 			error = pdf_lex(&tok, file, buf, cap, &len);
 			if (error)
-				goto cleanup;
+			{
+				fz_dropobj(key);
+				fz_dropobj(dict);
+				return fz_rethrow(error, "cannot parse dict");
+			}
 			if (tok == PDF_TCDICT || tok == PDF_TNAME ||
 					(tok == PDF_TKEYWORD && !strcmp(buf, "ID")))
 			{
-				error = fz_newint(&val, a);
-				if (error)
-					goto cleanup;
-				error = fz_dictput(dict, key, val);
-				if (error)
-					goto cleanup;
+				val = fz_newint(a);
+				fz_dictput(dict, key, val);
 				fz_dropobj(val);
 				fz_dropobj(key);
-				key = val = nil;
 				goto skip;
 			}
 			if (tok == PDF_TINT)
@@ -303,39 +334,29 @@ skip:
 				b = atoi(buf);
 				error = pdf_lex(&tok, file, buf, cap, &len);
 				if (error)
-					goto cleanup;
+				{
+					fz_dropobj(key);
+					fz_dropobj(dict);
+					return fz_rethrow(error, "cannot parse dict");
+				}
 				if (tok == PDF_TR)
 				{
-					error = fz_newindirect(&val, a, b, xref);
+					val = fz_newindirect(a, b, xref);
 					break;
 				}
 			}
-			error = fz_throw("invalid indirect reference in dict");
-			goto cleanup;
+			fz_dropobj(key);
+			fz_dropobj(dict);
+			return fz_throw("invalid indirect reference in dict");
 
 		default:
-			error = fz_throw("unknown token in dict");
-			goto cleanup;
+			return fz_throw("unknown token in dict");
 		}
 
-		if (error)
-			goto cleanup;
-
-		error = fz_dictput(dict, key, val);
-		if (error)
-			goto cleanup;
-
+		fz_dictput(dict, key, val);
 		fz_dropobj(val);
 		fz_dropobj(key);
-		key = val = nil;
 	}
-
-cleanup:
-	if (key) fz_dropobj(key);
-	if (val) fz_dropobj(val);
-	if (dict) fz_dropobj(dict);
-	*op = nil;
-	return fz_rethrow(error, "cannot parse dict");
 }
 
 fz_error
@@ -351,20 +372,26 @@ pdf_parsestmobj(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap
 
 	switch (tok)
 	{
-	case PDF_TOARRAY: error = pdf_parsearray(op, xref, file, buf, cap); break;
-	case PDF_TODICT: error = pdf_parsedict(op, xref, file, buf, cap); break;
-	case PDF_TNAME: error = fz_newname(op, buf); break;
-	case PDF_TREAL: error = fz_newreal(op, atof(buf)); break;
-	case PDF_TSTRING: error = fz_newstring(op, buf, len); break;
-	case PDF_TTRUE: error = fz_newbool(op, 1); break;
-	case PDF_TFALSE: error = fz_newbool(op, 0); break;
-	case PDF_TNULL: error = fz_newnull(op); break;
-	case PDF_TINT: error = fz_newint(op, atoi(buf)); break;
+	case PDF_TOARRAY:
+		error = pdf_parsearray(op, xref, file, buf, cap);
+		if (error)
+			return fz_rethrow(error, "cannot parse object stream");
+		break;
+	case PDF_TODICT:
+		error = pdf_parsedict(op, xref, file, buf, cap);
+		if (error)
+			return fz_rethrow(error, "cannot parse object stream");
+		break;
+	case PDF_TNAME: *op = fz_newname(buf); break;
+	case PDF_TREAL: *op = fz_newreal(atof(buf)); break;
+	case PDF_TSTRING: *op = fz_newstring(buf, len); break;
+	case PDF_TTRUE: *op = fz_newbool(1); break;
+	case PDF_TFALSE: *op = fz_newbool(0); break;
+	case PDF_TNULL: *op = fz_newnull(); break;
+	case PDF_TINT: *op = fz_newint(atoi(buf)); break;
 	default: return fz_throw("unknown token in object stream");
 	}
 
-	if (error)
-		return fz_rethrow(error, "cannot parse object stream");
 	return fz_okay;
 }
 
@@ -381,44 +408,58 @@ pdf_parseindobj(fz_obj **op, pdf_xref *xref,
 	int a, b;
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
-	if (error || tok != PDF_TINT)
-		goto cleanup;
+	if (error)
+		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+	if (tok != PDF_TINT)
+		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
 	num = atoi(buf);
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
-	if (error || tok != PDF_TINT)
-		goto cleanup;
+	if (error)
+		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+	if (tok != PDF_TINT)
+		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
 	gen = atoi(buf);
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
-	if (error || tok != PDF_TOBJ)
-		goto cleanup;
+	if (error)
+		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+	if (tok != PDF_TOBJ)
+		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (error)
-		goto cleanup;
+		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
 
 	switch (tok)
 	{
-	case PDF_TOARRAY: error = pdf_parsearray(&obj, xref, file, buf, cap); break;
-	case PDF_TODICT: error = pdf_parsedict(&obj, xref, file, buf, cap); break;
-	case PDF_TNAME: error = fz_newname(&obj, buf); break;
-	case PDF_TREAL: error = fz_newreal(&obj, atof(buf)); break;
-	case PDF_TSTRING: error = fz_newstring(&obj, buf, len); break;
-	case PDF_TTRUE: error = fz_newbool(&obj, 1); break;
-	case PDF_TFALSE: error = fz_newbool(&obj, 0); break;
-	case PDF_TNULL: error = fz_newnull(&obj); break;
+	case PDF_TOARRAY:
+		error = pdf_parsearray(&obj, xref, file, buf, cap);
+		if (error)
+			return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+		break;
+
+	case PDF_TODICT:
+		error = pdf_parsedict(&obj, xref, file, buf, cap);
+		if (error)
+			return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+		break;
+
+	case PDF_TNAME: obj = fz_newname(buf); break;
+	case PDF_TREAL: obj = fz_newreal(atof(buf)); break;
+	case PDF_TSTRING: obj = fz_newstring(buf, len); break;
+	case PDF_TTRUE: obj = fz_newbool(1); break;
+	case PDF_TFALSE: obj = fz_newbool(0); break;
+	case PDF_TNULL: obj = fz_newnull(); break;
 
 	case PDF_TINT:
 		a = atoi(buf);
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
-			goto cleanup;
+			return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
 		if (tok == PDF_TSTREAM || tok == PDF_TENDOBJ)
 		{
-			error = fz_newint(&obj, a);
-			if (error)
-				goto cleanup;
+			obj = fz_newint(a);
 			goto skip;
 		}
 		if (tok == PDF_TINT)
@@ -426,28 +467,29 @@ pdf_parseindobj(fz_obj **op, pdf_xref *xref,
 			b = atoi(buf);
 			error = pdf_lex(&tok, file, buf, cap, &len);
 			if (error)
-				goto cleanup;
+				return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
 			if (tok == PDF_TR)
 			{
-				error = fz_newindirect(&obj, a, b, xref);
+				obj = fz_newindirect(a, b, xref);
 				break;
 			}
 		}
-		goto cleanup;
+		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
 
 	case PDF_TENDOBJ:
-		error = fz_newnull(&obj);
+		obj = fz_newnull();
 		goto skip;
 
 	default:
-		goto cleanup;
+		return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
 	}
-	if (error)
-		goto cleanup;
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
 	if (error)
-		goto cleanup;
+	{
+		fz_dropobj(obj);
+		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+	}
 
 skip:
 	if (tok == PDF_TSTREAM)
@@ -463,7 +505,10 @@ skip:
 		}
 		error = fz_readerror(file);
 		if (error)
-			goto cleanup;
+		{
+			fz_dropobj(obj);
+			return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
+		}
 		stmofs = fz_tell(file);
 	}
 	else if (tok == PDF_TENDOBJ)
@@ -481,12 +526,5 @@ skip:
 	if (ostmofs) *ostmofs = stmofs;
 	*op = obj;
 	return fz_okay;
-
-cleanup:
-	if (obj)
-		fz_dropobj(obj);
-	if (error)
-		return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
-	return fz_throw("cannot parse indirect object (%d %d R)", num, gen);
 }
 

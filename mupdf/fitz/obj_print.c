@@ -325,8 +325,6 @@ fz_fprintobj(FILE *fp, fz_obj *obj, int tight)
 	else
 	{
 		ptr = fz_malloc(n + 1);
-		if (!ptr)
-			return -1;
 		fz_sprintobj(ptr, n + 1, obj, tight);
 		fputs(ptr, fp);
 		fputc('\n', fp);

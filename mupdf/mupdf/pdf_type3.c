@@ -59,8 +59,6 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 		sprintf(buf, "Unnamed-T3");
 
 	fontdesc = pdf_newfontdesc();
-	if (!fontdesc)
-		return fz_rethrow(-1, "out of memory: font struct");
 
 	pdf_logfont("load type3 font (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), fontdesc);
 	pdf_logfont("name %s\n", buf);
@@ -86,12 +84,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 	bbox.x1 = fz_ceil(bbox.x1 * 1000);
 	bbox.y1 = fz_ceil(bbox.y1 * 1000);
 
-	error = fz_newtype3font(&fontdesc->font, buf, matrix);
-	if (error)
-	{
-	    pdf_dropfont(fontdesc);
-	    return fz_rethrow(error, "could not create type3 font");
-	}
+	fontdesc->font = fz_newtype3font(buf, matrix);
 
 	fz_setfontbbox(fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
@@ -138,12 +131,9 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 		}
 	}
 
-	error = pdf_newidentitycmap(&fontdesc->encoding, 0, 1);
-	if (error)
-		goto cleanup;
+	fontdesc->encoding = pdf_newidentitycmap(0, 1);
 
-	error = pdf_loadtounicode(fontdesc, xref,
-			estrings, nil, fz_dictgets(dict, "ToUnicode"));
+	error = pdf_loadtounicode(fontdesc, xref, estrings, nil, fz_dictgets(dict, "ToUnicode"));
 	if (error)
 		goto cleanup;
 
@@ -168,15 +158,10 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 		float w = fz_toreal(fz_arrayget(widths, i - first));
 		w = fontdesc->font->t3matrix.a * w * 1000.0;
 		fontdesc->font->t3widths[i] = w * 0.001;
-
-		error = pdf_addhmtx(fontdesc, i, i, w);
-		if (error)
-			goto cleanup;
+		pdf_addhmtx(fontdesc, i, i, w);
 	}
 
-	error = pdf_endhmtx(fontdesc);
-	if (error)
-		goto cleanup;
+	pdf_endhmtx(fontdesc);
 
 	/*
 	 * Resources

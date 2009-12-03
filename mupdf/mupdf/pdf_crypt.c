@@ -14,9 +14,6 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
     fz_obj *obj;
 
     crypt = fz_malloc(sizeof(pdf_crypt));
-    if (!crypt)
-	return fz_rethrow(-1, "out of memory: crypt struct");
-
     memset(crypt, 0x00, sizeof(pdf_crypt));
     crypt->cf = nil;
 
@@ -598,39 +595,20 @@ pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen)
  *
  * Create filter suitable for de/encrypting a stream.
  */
-fz_error
-pdf_cryptstream(fz_filter **fp, pdf_crypt *crypt, pdf_cryptfilter *stmf, int num, int gen)
+fz_filter *
+pdf_cryptstream(pdf_crypt * crypt, pdf_cryptfilter * stmf, int num, int gen)
 {
-    fz_error error;
     unsigned char key[16];
     int len;
 
     len = pdf_computeobjectkey(crypt, stmf, num, gen, key);
 
-    if (stmf->method == PDF_CRYPT_NONE)
-    {
-	error = fz_newcopyfilter(fp);
-	if (error)
-	    return fz_rethrow(error, "cannot create null crypt filter");
-	return fz_okay;
-    }
-
     if (stmf->method == PDF_CRYPT_RC4)
-    {
-	error = fz_newarc4filter(fp, key, len);
-	if (error)
-	    return fz_rethrow(error, "cannot create RC4 crypt filter");
-	return fz_okay;
-    }
+		return fz_newarc4filter(key, len);
 
     if (stmf->method == PDF_CRYPT_AESV2)
-    {
-	error = fz_newaesdfilter(fp, key, len);
-	if (error)
-	    return fz_rethrow(error, "cannot create AES crypt filter");
-	return fz_okay;
-    }
+		return fz_newaesdfilter(key, len);
 
-    return fz_throw("unknown crypt method");
+	return fz_newcopyfilter();
 }
 

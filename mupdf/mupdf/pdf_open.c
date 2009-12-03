@@ -253,8 +253,6 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 			fz_warn("broken xref section, proceeding anyway.");
 			xref->cap = ofs + len;
 			xref->table = fz_realloc(xref->table, xref->cap * sizeof(pdf_xrefentry));
-			if (!xref->table)
-				return fz_rethrow(-1, "out of memory: xref table");
 		}
 
 		if ((ofs + len) > xref->len)
@@ -385,11 +383,6 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	{
 		xref->cap = size + 1; /* for hack to allow broken pdf generators with off-by-one errors */
 		xref->table = fz_realloc(xref->table, xref->cap * sizeof(pdf_xrefentry));
-		if (!xref->table)
-		{
-			fz_dropobj(trailer);
-			return fz_rethrow(-1, "out of memory: xref table");
-		}
 	}
 
 	if (size > xref->len)
@@ -587,24 +580,13 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 	pdf_logxref("  count %d\n", count);
 
 	oidbuf = fz_malloc(count * sizeof(int));
-	if (!oidbuf)
-	{
-		error = fz_rethrow(-1, "out of memory: object id buffer");
-		goto cleanupobj;
-	}
-
 	ofsbuf = fz_malloc(count * sizeof(int));
-	if (!ofsbuf)
-	{
-		error = fz_rethrow(-1, "out of memory: offset buffer");
-		goto cleanupoid;
-	}
 
 	error = pdf_openstream(&stm, xref, oid, gen);
 	if (error)
 	{
 		error = fz_rethrow(error, "cannot open object stream");
-		goto cleanupofs;
+		goto cleanupbuf;
 	}
 
 	for (i = 0; i < count; i++)
@@ -664,11 +646,9 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 
 cleanupstm:
 	fz_dropstream(stm);
-cleanupofs:
+cleanupbuf:
 	fz_free(ofsbuf);
-cleanupoid:
 	fz_free(oidbuf);
-cleanupobj:
 	fz_dropobj(objstm);
 	return error; /* already rethrown */
 }
@@ -721,12 +701,6 @@ pdf_loadxref2(pdf_xref *xref)
 	xref->len = fz_toint(size);
 	xref->cap = xref->len + 1; /* for hack to allow broken pdf generators with off-by-one errors */
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
-	if (!xref->table)
-	{
-		error = fz_rethrow(-1, "out of memory: xref table");
-		goto cleanup;
-	}
-
 	for (i = 0; i < xref->cap; i++)
 	{
 		xref->table[i].ofs = 0;

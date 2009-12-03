@@ -159,8 +159,6 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 	int next;
 	int i;
 
-
-
 	xref->file = file;
 
 	/* TODO: extract version */
@@ -168,11 +166,6 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 	listlen = 0;
 	listcap = 1024;
 	list = fz_malloc(listcap * sizeof(struct entry));
-	if (!list)
-	{
-		error = fz_rethrow(-1, "out of memory: reparation object list");
-		goto cleanup;
-	}
 
 	while (1)
 	{
@@ -221,14 +214,8 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 
 			if (listlen + 1 == listcap)
 			{
-				struct entry *newlist;
-				listcap = listcap * 2;
-				newlist = fz_realloc(list, listcap * sizeof(struct entry));
-				if (!newlist) {
-					error = fz_rethrow(-1, "out of memory: resize reparation object list");
-					goto cleanup;
-				}
-				list = newlist;
+				listcap = (listcap * 3) / 2;
+				list = fz_realloc(list, listcap * sizeof(struct entry));
 			}
 
                         pdf_logxref("found object: (%d %d R)\n", oid, gen);
@@ -269,11 +256,6 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 	xref->len = maxoid + 1;
 	xref->cap = xref->len;
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
-	if (!xref->table)
-	{
-		error = fz_rethrow(-1, "out of memory: xref table");
-		goto cleanup;
-	}
 
 	xref->table[0].type = 'f';
 	xref->table[0].ofs = 0;
@@ -313,24 +295,10 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 				goto cleanup;
 			}
 
-			error = fz_newint(&length, list[i].stmlen);
-			if (error)
-			{
-				fz_dropobj(dict);
-				error = fz_rethrow(error, "cannot create integer object");
-				goto cleanup;
-			}
-
-			error = fz_dictputs(dict, "Length", length);
-			if (error)
-			{
+			length = fz_newint(list[i].stmlen);
+			fz_dictputs(dict, "Length", length);
 				fz_dropobj(length);
-				fz_dropobj(dict);
-				error = fz_rethrow(error, "cannot update stream length");
-				goto cleanup;
-			}
 
-			fz_dropobj(length);
 			fz_dropobj(dict);
 		}
 	}

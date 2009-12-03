@@ -21,8 +21,8 @@ struct fz_predict_s
 	unsigned char *ref;
 };
 
-fz_error
-fz_newpredictd(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newpredictd(fz_obj *params)
 {
 	fz_obj *obj;
 
@@ -42,8 +42,8 @@ fz_newpredictd(fz_filter **fp, fz_obj *params)
 	    p->predictor != 12 && p->predictor != 13 &&
 	    p->predictor != 14 && p->predictor != 15)
 	{
-	    fz_free(p);
-	    return fz_throw("invalid predictor");
+		fz_warn("invalid predictor: %d", p->predictor);
+		p->predictor = 1;
 	}
 
 	obj = fz_dictgets(params, "Columns");
@@ -64,11 +64,6 @@ fz_newpredictd(fz_filter **fp, fz_obj *params)
 	if (p->predictor >= 10)
 	{
 		p->ref = fz_malloc(p->stride);
-		if (!p->ref)
-		{
-			fz_free(p);
-			return fz_rethrow(-1, "out of memory: scanline buffer");
-		}
 		memset(p->ref, 0, p->stride);
 	}
 	else
@@ -76,7 +71,7 @@ fz_newpredictd(fz_filter **fp, fz_obj *params)
 		p->ref = nil;
 	}
 
-	return fz_okay;
+	return (fz_filter*)p;
 }
 
 void

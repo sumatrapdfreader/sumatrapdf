@@ -169,13 +169,16 @@ extern unsigned fz_cpuflags;
 
 #define STRIDE(n, bcp) (((bpc) * (n) + 7) / 8)
 
-/* plan9 stuff for utf-8 and path munging */
+/* plan9 stuff for utf-8 */
 int chartorune(int *rune, char *str);
 int runetochar(char *str, int *rune);
 int runelen(long c);
 int runenlen(int *r, int nrune);
 int fullrune(char *str, int n);
 
+/*
+ * Error handling.
+ */
 typedef int fz_error;
 
 extern char fz_errorbuf[];
@@ -201,19 +204,23 @@ char *fz_strdup(char *s);
 
 typedef struct fz_hashtable_s fz_hashtable;
 
-fz_error fz_newhash(fz_hashtable **tablep, int initialsize, int keylen);
-fz_error fz_resizehash(fz_hashtable *table, int newsize);
+fz_hashtable * fz_newhash(int initialsize, int keylen);
+void fz_resizehash(fz_hashtable *table, int newsize);
 void fz_debughash(fz_hashtable *table);
 void fz_emptyhash(fz_hashtable *table);
 void fz_drophash(fz_hashtable *table);
 
 void *fz_hashfind(fz_hashtable *table, void *key);
-fz_error fz_hashinsert(fz_hashtable *table, void *key, void *val);
-fz_error fz_hashremove(fz_hashtable *table, void *key);
+void fz_hashinsert(fz_hashtable *table, void *key, void *val);
+void fz_hashremove(fz_hashtable *table, void *key);
 
 int fz_hashlen(fz_hashtable *table);
 void *fz_hashgetkey(fz_hashtable *table, int idx);
 void *fz_hashgetval(fz_hashtable *table, int idx);
+
+/*
+ * Math and geometry
+ */
 
 /* multiply 8-bit fixpoint (0..1) so that 0*0==0 and 255*255==255 */
 #define fz_mul255(a,b) (((a) * ((b) + 1)) >> 8)
@@ -235,7 +242,7 @@ extern fz_rect fz_infiniterect;
 /*
 	/ a b 0 \
 	| c d 0 |
-	\ e f 1 /
+\ e f 1 /
 */
 
 struct fz_matrix_s

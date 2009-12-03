@@ -23,10 +23,9 @@ zfree(void *opaque, void *ptr)
 	fz_free(ptr);
 }
 
-fz_error
-fz_newflated(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newflated(fz_obj *params)
 {
-	fz_error eo;
 	fz_obj *obj;
 	int zipfmt;
 	int ei;
@@ -57,12 +56,10 @@ fz_newflated(fz_filter **fp, fz_obj *params)
 
 	if (ei != Z_OK)
 	{
-		eo = fz_throw("zlib error: inflateInit: %s", f->z.msg);
-		fz_free(f);
-		return eo;
+		fz_warn("zlib error: inflateInit: %s", f->z.msg);
 	}
 
-	return fz_okay;
+	return (fz_filter*)f;
 }
 
 void
@@ -73,7 +70,7 @@ fz_dropflated(fz_filter *f)
 
 	err = inflateEnd(zp);
 	if (err != Z_OK)
-		fprintf(stderr, "inflateEnd: %s", zp->msg);
+		fz_warn("inflateEnd: %s", zp->msg);
 }
 
 fz_error

@@ -22,23 +22,18 @@
  * Allocate, destroy and simple parameters.
  */
 
-fz_error
-pdf_newcmap(pdf_cmap **cmapp)
+pdf_cmap *
+pdf_newcmap(void)
 {
     pdf_cmap *cmap;
 
-    cmap = *cmapp = fz_malloc(sizeof(pdf_cmap));
-    if (!cmap)
-	return fz_rethrow(-1, "out of memory: cmap struct");
+	cmap = fz_malloc(sizeof(pdf_cmap));
+	cmap->refs = 1;
 
-    cmap->refs = 1;
     strcpy(cmap->cmapname, "");
-
     strcpy(cmap->usecmapname, "");
     cmap->usecmap = nil;
-
     cmap->wmode = 0;
-
     cmap->ncspace = 0;
 
     cmap->rlen = 0;
@@ -49,7 +44,7 @@ pdf_newcmap(pdf_cmap **cmapp)
     cmap->tcap = 0;
     cmap->table = nil;
 
-    return fz_okay;
+	return cmap;
 }
 
 pdf_cmap *
@@ -163,145 +158,95 @@ pdf_debugcmap(pdf_cmap *cmap)
  * These ranges are used by pdf_decodecmap to decode
  * multi-byte encoded strings.
  */
-fz_error
+void
 pdf_addcodespace(pdf_cmap *cmap, int low, int high, int n)
 {
     if (cmap->ncspace + 1 == nelem(cmap->cspace))
-	return fz_throw("assert: too many code space ranges");
+	{
+		fz_warn("assert: too many code space ranges");
+		return;
+	}
 
     cmap->cspace[cmap->ncspace].n = n;
     cmap->cspace[cmap->ncspace].low = low;
     cmap->cspace[cmap->ncspace].high = high;
-
     cmap->ncspace ++;
-
-    return fz_okay;
 }
 
 /*
  * Add an integer to the table.
  */
-static fz_error
+static void
 addtable(pdf_cmap *cmap, int value)
 {
     if (cmap->tlen + 1 > cmap->tcap)
     {
-	int newcap = cmap->tcap == 0 ? 256 : cmap->tcap * 2;
-	unsigned short *newtable = fz_realloc(cmap->table, newcap * sizeof(unsigned short));
-	if (!newtable)
-	    return fz_rethrow(-1, "out of memory: cmap table");
-	cmap->tcap = newcap;
-	cmap->table = newtable;
+		cmap->tcap = cmap->tcap == 0 ? 256 : (cmap->tcap * 3) / 2;
+		cmap->table = fz_realloc(cmap->table, cmap->tcap * sizeof(unsigned short));
     }
-
     cmap->table[cmap->tlen++] = value;
-
-    return fz_okay;
 }
 
 /*
  * Add a range.
  */
-static fz_error
+static void
 addrange(pdf_cmap *cmap, int low, int high, int flag, int offset)
 {
     if (cmap->rlen + 1 > cmap->rcap)
     {
-	pdf_range *newranges;
-	int newcap = cmap->rcap == 0 ? 256 : cmap->rcap * 2;
-	newranges = fz_realloc(cmap->ranges, newcap * sizeof(pdf_range));
-	if (!newranges)
-	    return fz_rethrow(-1, "out of memory: cmap ranges");
-	cmap->rcap = newcap;
-	cmap->ranges = newranges;
+		cmap->rcap = cmap->rcap == 0 ? 256 : (cmap->rcap * 3) / 2;
+		cmap->ranges = fz_realloc(cmap->ranges, cmap->rcap * sizeof(pdf_range));
     }
-
     cmap->ranges[cmap->rlen].low = low;
     cmap->ranges[cmap->rlen].high = high;
     cmap->ranges[cmap->rlen].flag = flag;
     cmap->ranges[cmap->rlen].offset = offset;
     cmap->rlen ++;
-
-    return fz_okay;
 }
 
 /*
  * Add a range-to-table mapping.
  */
-fz_error
+void
 pdf_maprangetotable(pdf_cmap *cmap, int low, int *table, int len)
 {
-    fz_error error;
-    int offset;
-    int high;
     int i;
-
-    high = low + len;
-    offset = cmap->tlen;
-
+	int high = low + len;
+	int offset = cmap->tlen;
     for (i = 0; i < len; i++)
-    {
-	error = addtable(cmap, table[i]);
-	if (error)
-	    return fz_rethrow(error, "cannot add range-to-table index");
-    }
-
-    error = addrange(cmap, low, high, PDF_CMAP_TABLE, offset);
-    if (error)
-	return fz_rethrow(error, "cannot add range-to-table range");
-
-    return fz_okay;
+		addtable(cmap, table[i]);
+	addrange(cmap, low, high, PDF_CMAP_TABLE, offset);
 }
 
 /*
  * Add a range of contiguous one-to-one mappings (ie 1..5 maps to 21..25)
  */
-fz_error
+void
 pdf_maprangetorange(pdf_cmap *cmap, int low, int high, int offset)
 {
-    fz_error error;
-    error = addrange(cmap, low, high, high - low == 0 ? PDF_CMAP_SINGLE : PDF_CMAP_RANGE, offset);
-    if (error)
-	return fz_rethrow(error, "cannot add range-to-range mapping");
-    return fz_okay;
+	addrange(cmap, low, high, high - low == 0 ? PDF_CMAP_SINGLE : PDF_CMAP_RANGE, offset);
 }
 
 /*
  * Add a single one-to-many mapping.
  */
-fz_error
+void
 pdf_maponetomany(pdf_cmap *cmap, int low, int *values, int len)
 {
-    fz_error error;
-    int offset;
-    int i;
+	int offset, i;
 
     if (len == 1)
     {
-	error = addrange(cmap, low, low, PDF_CMAP_SINGLE, values[0]);
-	if (error)
-	    return fz_rethrow(error, "cannot add one-to-one mapping");
-	return fz_okay;
+		addrange(cmap, low, low, PDF_CMAP_SINGLE, values[0]);
+		return;
     }
 
     offset = cmap->tlen;
-
-    error = addtable(cmap, len);
-    if (error)
-	return fz_rethrow(error, "cannot add one-to-many table length");
-
+	addtable(cmap, len);
     for (i = 0; i < len; i++)
-    {
-	error = addtable(cmap, values[i]);
-	if (error)
-	    return fz_rethrow(error, "cannot add one-to-many table index");
-    }
-
-    error = addrange(cmap, low, low, PDF_CMAP_MULTI, offset);
-    if (error)
-	return fz_rethrow(error, "cannot add one-to-many mapping");
-
-    return fz_okay;
+		addtable(cmap, values[i]);
+	addrange(cmap, low, low, PDF_CMAP_MULTI, offset);
 }
 
 /*
@@ -315,17 +260,14 @@ static int cmprange(const void *va, const void *vb)
     return ((const pdf_range*)va)->low - ((const pdf_range*)vb)->low;
 }
 
-fz_error
+void
 pdf_sortcmap(pdf_cmap *cmap)
 {
-    fz_error error;
-    pdf_range *newranges;
-    unsigned short *newtable;
     pdf_range *a;			/* last written range on output */
     pdf_range *b;			/* current range examined on input */
 
     if (cmap->rlen == 0)
-	return fz_okay;
+		return;
 
     qsort(cmap->ranges, cmap->rlen, sizeof(pdf_range), cmprange);
 
@@ -357,9 +299,7 @@ pdf_sortcmap(pdf_cmap *cmap)
 		else if (a->flag == PDF_CMAP_TABLE && b->flag == PDF_CMAP_SINGLE)
 		{
 		    a->high = b->high;
-		    error = addtable(cmap, b->offset);
-		    if (error)
-			return fz_rethrow(error, "cannot convert LS -> L");
+					addtable(cmap, b->offset);
 		}
 
 		/* LR -> LR */
@@ -383,15 +323,8 @@ pdf_sortcmap(pdf_cmap *cmap)
 		{
 		    a->flag = PDF_CMAP_TABLE;
 		    a->high = b->high;
-
-		    error = addtable(cmap, a->offset);
-		    if (error)
-			return fz_rethrow(error, "cannot convert SS -> L");
-
-		    error = addtable(cmap, b->offset);
-		    if (error)
-			return fz_rethrow(error, "cannot convert SS -> L");
-
+					addtable(cmap, a->offset);
+					addtable(cmap, b->offset);
 		    a->offset = cmap->tlen - 2;
 		}
 
@@ -399,9 +332,7 @@ pdf_sortcmap(pdf_cmap *cmap)
 		else if (a->flag == PDF_CMAP_TABLE && b->flag == PDF_CMAP_SINGLE)
 		{
 		    a->high = b->high;
-		    error = addtable(cmap, b->offset);
-		    if (error)
-			return fz_rethrow(error, "cannot convert LS -> L");
+					addtable(cmap, b->offset);
 		}
 
 		/* XX -> XX */
@@ -420,25 +351,6 @@ pdf_sortcmap(pdf_cmap *cmap)
 
 	b ++;
     }
-
-    cmap->rlen = a - cmap->ranges + 1;
-
-    newranges = fz_realloc(cmap->ranges, cmap->rlen * sizeof(pdf_range));
-    if (!newranges)
-	return fz_rethrow(-1, "out of memory: cmap ranges");
-    cmap->rcap = cmap->rlen;
-    cmap->ranges = newranges;
-
-    if (cmap->tlen)
-    {
-	newtable = fz_realloc(cmap->table, cmap->tlen * sizeof(unsigned short));
-	if (!newtable)
-	    return fz_rethrow(-1, "out of memory: cmap table");
-	cmap->tcap = cmap->tlen;
-	cmap->table = newtable;
-    }
-
-    return fz_okay;
 }
 
 /*

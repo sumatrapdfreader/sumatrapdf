@@ -77,10 +77,7 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 
 	app->filename = filename;
 
-	error = pdf_newxref(&app->xref);
-	if (error)
-		pdfapp_error(app, error);
-
+	app->xref = pdf_newxref();
 	error = pdf_loadxref(app->xref, filename);
 	if (error)
 	{
@@ -131,9 +128,7 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	if (app->xref->info)
 		fz_keepobj(app->xref->info);
 
-	error = pdf_loadoutline(&app->outline, app->xref);
-	if (error)
-		pdfapp_error(app, error);
+	app->outline = pdf_loadoutline(app->xref);
 
 	app->doctitle = filename;
 	if (strrchr(app->doctitle, '\\'))
@@ -145,9 +140,7 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 		obj = fz_dictgets(app->xref->info, "Title");
 		if (obj)
 		{
-			error = pdf_toutf8(&app->doctitle, obj);
-			if (error)
-				pdfapp_error(app, error);
+			app->doctitle = pdf_toutf8(obj);
 		}
 	}
 
@@ -155,9 +148,7 @@ void pdfapp_open(pdfapp_t *app, char *filename)
 	 * Start at first page
 	 */
 
-	error = pdf_getpagecount(app->xref, &app->pagecount);
-	if (error)
-		pdfapp_error(app, error);
+	app->pagecount = pdf_getpagecount(app->xref);
 
 	app->shrinkwrap = 1;
 	if (app->pageno < 1)
@@ -245,16 +236,13 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 			pdf_droppage(app->page);
 		app->page = nil;
 
-		error = pdf_getpageobject(app->xref, app->pageno, &obj);
-		if (error)
-			pdfapp_error(app, error);
-
+		obj = pdf_getpageobject(app->xref, app->pageno);
 		error = pdf_loadpage(&app->page, app->xref, obj);
 		if (error)
 			pdfapp_error(app, error);
 
 		sprintf(buf, "%s - %d/%d", app->doctitle,
-				app->pageno, app->pagecount);
+			app->pageno, app->pagecount);
 		wintitle(app, buf);
 	}
 
@@ -270,7 +258,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		bbox = fz_transformaabb(ctm, app->page->mediabox);
 
 		error = fz_rendertree(&app->image, app->rast, app->page->tree,
-				ctm, fz_roundrect(bbox), 1);
+			ctm, fz_roundrect(bbox), 1);
 		if (error)
 			pdfapp_error(app, error);
 
@@ -311,12 +299,9 @@ static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
 
 static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)
 {
-	fz_error error;
 	int page;
 
-	error = pdf_findpageobject(app->xref, obj, &page);
-	if (error)
-		pdfapp_error(app, error);
+	page = pdf_findpageobject(app->xref, obj);
 
 	if (app->histlen + 1 == 256)
 	{
@@ -357,9 +342,9 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 	switch (c)
 	{
 
-	/*
-	 * Zoom and rotate
-	 */
+		/*
+		 * Zoom and rotate
+		 */
 
 	case '+':
 	case '=':
@@ -394,9 +379,9 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		pdfapp_showpage(app, 0, 1);
 		break;
 
-	/*
-	 * Pan view, but dont need to repaint image
-	 */
+		/*
+		 * Pan view, but dont need to repaint image
+		 */
 
 	case 'w':
 		app->shrinkwrap = 1;
@@ -424,9 +409,9 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		pdfapp_showpage(app, 0, 0);
 		break;
 
-	/*
-	 * Page navigation
-	 */
+		/*
+		 * Page navigation
+		 */
 
 	case 'g':
 	case '\n':
@@ -453,9 +438,9 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 			app->pageno = app->hist[--app->histlen];
 		break;
 
-	/*
-	 * Back and forth ...
-	 */
+		/*
+		 * Back and forth ...
+		 */
 
 	case 'p':
 		panto = PAN_TO_BOTTOM;
@@ -590,7 +575,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 			else
 			{
 				/* scroll up/down, or left/right if
-				   shift is pressed */
+				shift is pressed */
 				int isx = (modifiers & (1<<0));
 				int xstep = isx ? 20 * dir : 0;
 				int ystep = !isx ? 20 * dir : 0;

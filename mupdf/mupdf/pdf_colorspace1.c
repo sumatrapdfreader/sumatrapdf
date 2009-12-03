@@ -6,7 +6,7 @@
 static void initcs(fz_colorspace *cs, char *name, int n,
 	void(*to)(fz_colorspace*,float*,float*),
 	void(*from)(fz_colorspace*,float*,float*),
-	void(*drop)(fz_colorspace*))
+	void(*freefunc)(fz_colorspace*))
 {
 	strlcpy(cs->name, name, sizeof cs->name);
 	cs->refs = 1;
@@ -14,7 +14,7 @@ static void initcs(fz_colorspace *cs, char *name, int n,
 	cs->convcolor = pdf_convcolor;
 	cs->toxyz = to;
 	cs->fromxyz = from;
-	cs->drop = drop;
+	cs->freefunc = freefunc;
 	cs->n = n;
 }
 
@@ -223,16 +223,13 @@ fz_colorspace *pdf_devicepattern = &kdevicepattern;
  */
 
 #ifdef USECAL
-
-static fz_error
-loadcalgray(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
+static fz_colorspace *
+loadcalgray(pdf_xref *xref, fz_obj *dict)
 {
 	struct calgray *cs;
 	fz_obj *tmp;
 
 	cs = fz_malloc(sizeof(struct calgray));
-	if (!cs)
-		return fz_rethrow(-1, "out of memory: gray colorspace struct");
 
 	pdf_logrsrc("load CalGray\n");
 
@@ -268,20 +265,17 @@ loadcalgray(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 	if (fz_isreal(tmp))
 		cs->gamma = fz_toreal(tmp);
 
-	*csp = (fz_colorspace*) cs;
-	return fz_okay;
+	return (fz_colorspace*) cs;
 }
 
-static fz_error
-loadcalrgb(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
+static fz_colorspace *
+loadcalrgb(pdf_xref *xref, fz_obj *dict)
 {
 	struct calrgb *cs;
 	fz_obj *tmp;
 	int i;
 
 	cs = fz_malloc(sizeof(struct calrgb));
-	if (!cs)
-		return fz_rethrow(-1, "out of memory: RGB colorspace struct");
 
 	pdf_logrsrc("load CalRGB\n");
 
@@ -336,19 +330,16 @@ loadcalrgb(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 
 	fz_invert3x3(cs->invmat, cs->matrix);
 
-	*csp = (fz_colorspace*) cs;
-	return fz_okay;
+	return (fz_colorspace*) cs;
 }
 
-static fz_error
-loadlab(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
+static fz_colorspace *
+loadlab(pdf_xref *xref, fz_obj *dict)
 {
 	struct cielab *cs;
 	fz_obj *tmp;
 
 	cs = fz_malloc(sizeof(struct cielab));
-	if (!cs)
-		return fz_rethrow(-1, "out of memory: L*a*b colorspace struct");
 
 	pdf_logrsrc("load Lab\n");
 
@@ -392,10 +383,8 @@ loadlab(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 		cs->range[3] = fz_toreal(fz_arrayget(tmp, 3));
 	}
 
-	*csp = (fz_colorspace*) cs;
-	return fz_okay;
+	return (fz_colorspace*) cs;
 }
-
 #endif
 
 /*
@@ -455,7 +444,7 @@ static void separationtoxyz(fz_colorspace *fzcs, float *sep, float *xyz)
 }
 
 static void
-dropseparation(fz_colorspace *fzcs)
+freeseparation(fz_colorspace *fzcs)
 {
 	struct separation *cs = (struct separation *)fzcs;
 	fz_dropcolorspace(cs->base);
@@ -489,7 +478,6 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	error = pdf_loadcolorspace(&base, xref, baseobj);
 	if (error)
 		return fz_rethrow(error, "cannot load base colorspace");
-	fz_keepcolorspace(base);
 
 	error = pdf_loadfunction(&tint, xref, tintobj);
 	if (error)
@@ -499,19 +487,16 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	}
 
 	cs = fz_malloc(sizeof(struct separation));
-	if (!cs)
-	{
-		pdf_dropfunction(tint);
-		fz_dropcolorspace(base);
-		return fz_rethrow(-1, "out of memory: separation colorspace struct");
-	}
 
 	initcs((fz_colorspace*)cs,
 			n == 1 ? "Separation" : "DeviceN", n,
-			separationtoxyz, nil, dropseparation);
+		separationtoxyz, nil, freeseparation);
 
-	cs->base = base;
-	cs->tint = tint;
+	cs->base = fz_keepcolorspace(base);
+	cs->tint = pdf_keepfunction(tint);
+
+	fz_dropcolorspace(base);
+	pdf_dropfunction(tint);
 
 	pdf_logrsrc("}\n");
 
@@ -539,7 +524,7 @@ indexedtoxyz(fz_colorspace *fzcs, float *ind, float *xyz)
 #endif
 
 static void
-dropindexed(fz_colorspace *fzcs)
+freeindexed(fz_colorspace *fzcs)
 {
 	pdf_indexed *cs = (pdf_indexed *)fzcs;
 	if (cs->base) fz_dropcolorspace(cs->base);
@@ -562,30 +547,20 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	error = pdf_loadcolorspace(&base, xref, baseobj);
 	if (error)
 		return fz_rethrow(error, "cannot load base colorspace");
-	fz_keepcolorspace(base);
 
 	pdf_logrsrc("base %s\n", base->name);
 
 	cs = fz_malloc(sizeof(pdf_indexed));
-	if (!cs)
-	{
-		fz_dropcolorspace(base);
-		return fz_rethrow(-1, "out of memory: indexed colorspace struct");
-	}
 
-	initcs((fz_colorspace*)cs, "Indexed", 1, nil, nil, dropindexed);
+	initcs((fz_colorspace*)cs, "Indexed", 1, nil, nil, freeindexed);
 
-	cs->base = base;
+	cs->base = fz_keepcolorspace(base);
 	cs->high = fz_toint(highobj);
 
-	n = base->n * (cs->high + 1);
+	fz_dropcolorspace(base);
 
+	n = base->n * (cs->high + 1);
 	cs->lookup = fz_malloc(n);
-	if (!cs->lookup)
-	{
-		fz_dropcolorspace((fz_colorspace*)cs);
-		return fz_rethrow(-1, "out of memory: indexed colorspace lookup table (%d entries)", n);
-	}
 
 	if (fz_isstring(lookup) && fz_tostrlen(lookup) == n)
 	{
@@ -665,11 +640,11 @@ pdf_loadcolorspaceimp(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 
 #ifdef USECAL
 			else if (!strcmp(fz_toname(name), "CalGray"))
-				return loadcalgray(csp, xref, fz_arrayget(obj, 1));
+				*csp = loadcalgray(xref, fz_arrayget(obj, 1));
 			else if (!strcmp(fz_toname(name), "CalRGB"))
-				return loadcalrgb(csp, xref, fz_arrayget(obj, 1));
+				*csp = loadcalrgb(xref, fz_arrayget(obj, 1));
 			else if (!strcmp(fz_toname(name), "Lab"))
-				return loadlab(csp, xref, fz_arrayget(obj, 1));
+				*csp = loadlab(xref, fz_arrayget(obj, 1));
 #else
 			else if (!strcmp(fz_toname(name), "CalGray"))
 				*csp = pdf_devicegray;
@@ -749,9 +724,7 @@ pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 	if (error)
 		return fz_rethrow(error, "cannot load colorspace");
 
-	error = pdf_storeitem(xref->store, PDF_KCOLORSPACE, obj, *csp);
-	if (error)
-		return fz_rethrow(error, "cannot store colorspace resource");
+	pdf_storeitem(xref->store, PDF_KCOLORSPACE, obj, *csp);
 
 	return fz_okay;
 }

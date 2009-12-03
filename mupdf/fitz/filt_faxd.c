@@ -97,10 +97,10 @@ findchangingcolor(const unsigned char *line, int x, int w, int color)
 }
 
 static const unsigned char lm[8] =
-	{ 0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01 };
+{ 0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01 };
 
 static const unsigned char rm[8] =
-	{ 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
+{ 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
 
 static inline void
 setbits(unsigned char *line, int x0, int x1)
@@ -165,8 +165,8 @@ struct fz_faxd_s
 	unsigned char *dst;
 };
 
-fz_error
-fz_newfaxd(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newfaxd(fz_obj *params)
 {
 	fz_obj *obj;
 
@@ -216,24 +216,12 @@ fz_newfaxd(fz_filter **fp, fz_obj *params)
 	fax->eolc = 0;
 
 	fax->ref = fz_malloc(fax->stride);
-	if (!fax->ref)
-	{
-		fz_free(fax);
-		return fz_rethrow(-1, "out of memory: scanline buffer one");
-	}
-
 	fax->dst = fz_malloc(fax->stride);
-	if (!fax->dst)
-	{
-		fz_free(fax->ref);
-		fz_free(fax);
-		return fz_rethrow(-1, "out of memory: scanline buffer two");
-	}
 
 	memset(fax->ref, 0, fax->stride);
 	memset(fax->dst, 0, fax->stride);
 
-	return fz_okay;
+	return (fz_filter*)fax;
 }
 
 void

@@ -88,10 +88,7 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
 
     moz->filename = filename;
 
-    error = pdf_newxref(&moz->xref);
-    if (error)
-	pdfmoz_error(moz, error);
-
+    moz->xref = pdf_newxref();
     error = pdf_loadxref(moz->xref, filename);
     if (error)
     {
@@ -113,18 +110,13 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
 	pdfmoz_warn(moz, "PDF file is encrypted and needs a password.");
     }
 
-    error = pdf_getpagecount(moz->xref, &moz->pagecount);
-    if (error)
-	pdfmoz_error(moz, fz_throw("Cannot get page count."));
-
+    moz->pagecount = pdf_getpagecount(moz->xref);
     moz->pages = fz_malloc(sizeof(page_t) * moz->pagecount);
 
     for (i = 0; i < moz->pagecount; i++)
     {
 	fz_obj *pageobj;
-	error = pdf_getpageobject(moz->xref, i, &pageobj);
-	if (error)
-		pdfmoz_error(moz, fz_throw("cannot load page object"));
+	pageobj = pdf_getpageobject(moz->xref, i);
 	moz->pages[i].obj = fz_keepobj(pageobj);
 	moz->pages[i].page = nil;
 	moz->pages[i].image = nil;
@@ -173,11 +165,7 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
     {
 	obj = fz_dictgets(moz->xref->info, "Title");
 	if (obj)
-	{
-	    error = pdf_toutf8(&moz->doctitle, obj);
-	    if (error)
-		pdfmoz_error(moz, error);
-	}
+	    moz->doctitle = pdf_toutf8(obj);
     }
 
     /*
@@ -276,26 +264,15 @@ void pdfmoz_gotouri(pdfmoz_t *moz, fz_obj *uri)
 
 int pdfmoz_getpagenum(pdfmoz_t *moz, fz_obj *obj)
 {
-    fz_error error;
-    int page;
-    int i, y = 0;
-
-    error = pdf_findpageobject(moz->xref, obj, &page);
-    if (error)
-	pdfmoz_error(moz, error);
-
-    return page;
+    return pdf_findpageobject(moz->xref, obj);
 }
 
 void pdfmoz_gotopage(pdfmoz_t *moz, fz_obj *obj)
 {
-    fz_error error;
     int page;
     int i, y = 0;
 
-    error = pdf_findpageobject(moz->xref, obj, &page);
-    if (error)
-	pdfmoz_error(moz, error);
+    page = pdf_findpageobject(moz->xref, obj);
 
     for (i = 0; i < page; i++)
 	y += moz->pages[i].px;

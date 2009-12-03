@@ -93,9 +93,7 @@ static void drawloadpage(int pagenum, struct benchmark *loadtimes)
 	gettime(&start);
     }
 
-    error = pdf_getpageobject(xref, pagenum, &pageobj);
-    if (error)
-	die(error);
+	pageobj = pdf_getpageobject(xref, pagenum);
     error = pdf_loadpage(&drawpage, xref, pageobj);
     if (error)
 	die(error);

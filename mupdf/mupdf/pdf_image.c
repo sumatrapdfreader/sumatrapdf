@@ -5,7 +5,8 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-void pdf_dropimage(fz_image *fzimg)
+static void
+pdf_freeimage(fz_image *fzimg)
 {
 	pdf_image *img = (pdf_image*)fzimg;
 	fz_dropbuffer(img->samples);
@@ -29,15 +30,13 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	int i;
 
 	img = fz_malloc(sizeof(pdf_image));
-	if (!img)
-		return fz_rethrow(-1, "out of memory: image struct");
 
 	pdf_logimage("load inline image %p {\n", img);
 
 	img->super.refs = 1;
 	img->super.cs = nil;
 	img->super.loadtile = pdf_loadtile;
-	img->super.drop = pdf_dropimage;
+	img->super.freefunc = pdf_freeimage;
 	img->super.n = 0;
 	img->super.a = 0;
 	img->indexed = nil;
@@ -77,7 +76,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		error = pdf_loadcolorspace(&img->super.cs, xref, cso);
 		if (error)
 		{
-			pdf_dropimage((fz_image *) img);
+			pdf_freeimage((fz_image *) img);
 			return fz_rethrow(error, "cannot load colorspace");
 		}
 
@@ -147,9 +146,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	f = fz_dictgetsa(dict, "Filter", "F");
 	if (!f || (fz_isarray(f) && fz_arraylen(f) == 0))
 	{
-		error = fz_newbuffer(&img->samples, img->super.h * img->stride);
-		if (error)
-			return error;
+		img->samples = fz_newbuffer(img->super.h * img->stride);
 
 		error = fz_read(&i, file, img->samples->bp, img->super.h * img->stride);
 		if (error)
@@ -161,20 +158,16 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	{
 		fz_stream *tempfile;
 
-		error = pdf_buildinlinefilter(&filter, xref, dict);
-		if (error)
-			return error;
+		filter = pdf_buildinlinefilter(xref, dict);
 
-		error = fz_openrfilter(&tempfile, filter, file);
-		if (error)
-			return error;
+		tempfile = fz_openrfilter(filter, file);
 
-		error = fz_readall(&img->samples, tempfile, img->stride * img->super.h);
+		img->samples = fz_readall(tempfile, img->stride * img->super.h);
+		fz_dropstream(tempfile);
 		if (error)
 			return error;
 
 		fz_dropfilter(filter);
-		fz_dropstream(tempfile);
 	}
 
 	/* 0 means opaque and 1 means transparent, so we invert to get alpha */
@@ -241,8 +234,6 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 	}
 
 	img = fz_malloc(sizeof(pdf_image));
-	if (!img)
-		return fz_rethrow(-1, "out of memory: image struct");
 
 	pdf_logimage("load image (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), img);
 
@@ -342,9 +333,15 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 			usecolorkey = 1;
 			loadcolorkey(img->colorkey, bpc, indexed != nil, obj);
 		}
-		else if (!mask) /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690942 */
+		else
 		{
 			pdf_logimage("has mask\n");
+			if (mask)
+			{
+				fz_warn("image has both a mask and a soft mask. ignoring the soft mask.");
+				pdf_freeimage((fz_image*)mask);
+				mask = nil;
+			}
 			error = pdf_loadimage(&mask, xref, obj);
 			if (error)
 				return error;
@@ -405,14 +402,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 		/* don't treat truncated image as fatal - get as much as possible and
 		   fill the rest with 0 */
 		fz_buffer *buf;
-		error = fz_newbuffer(&buf, expectedsize);
-		if (error)
-		{
-			/* TODO: colorspace? */
-			fz_dropbuffer(img->samples);
-			fz_free(img);
-			return error;
-		}
+		buf = fz_newbuffer(expectedsize);
 		memset(buf->bp, 0, expectedsize);
 		memmove(buf->bp, img->samples->bp, realsize);
 		buf->wp = buf->bp + expectedsize;
@@ -435,7 +425,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 
 	img->super.refs = 1;
 	img->super.loadtile = pdf_loadtile;
-	img->super.drop = pdf_dropimage;
+	img->super.freefunc = pdf_freeimage;
 	img->super.cs = cs;
 	img->super.w = w;
 	img->super.h = h;
@@ -449,12 +439,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 
 	pdf_logimage("}\n");
 
-	error = pdf_storeitem(xref->store, PDF_KIMAGE, dict, img);
-	if (error)
-	{
-		fz_dropimage((fz_image*)img);
-		return error;
-	}
+	pdf_storeitem(xref->store, PDF_KIMAGE, dict, img);
 
 	*imgp = img;
 	return fz_okay;

@@ -11,13 +11,13 @@ struct fz_aesd_s
     int ivcount;
 };
 
-fz_error
-fz_newaesdfilter(fz_filter **fp, unsigned char *key, unsigned keylen)
+fz_filter *
+fz_newaesdfilter(unsigned char *key, unsigned keylen)
 {
     FZ_NEWFILTER(fz_aesd, f, aesdfilter);
     aes_setkey_dec(&f->aes, key, keylen * 8);
     f->ivcount = 0;
-    return fz_okay;
+	return (fz_filter *)f;
 }
 
 void

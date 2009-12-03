@@ -98,7 +98,7 @@ static const featuretest features[] = {
 	{ mmxext, HAVE_MMXEXT, "mmxext" },
 	{ sse, HAVE_SSE, "sse" },
 	{ sse2, HAVE_SSE2, "sse2" },
-/*	{ sse3, HAVE_SSE3, "sse3" }, */
+	/*	{ sse3, HAVE_SSE3, "sse3" }, */
 #ifdef ARCH_X86_64
 	{ amd64, HAVE_AMD64, "amd64" }
 #endif
@@ -266,7 +266,7 @@ void fz_cpudetect(void)
 /*
 static __attribute__((constructor, used)) void fzcpudetect(void)
 {
-	fz_cpudetect();
+fz_cpudetect();
 }
 */
 

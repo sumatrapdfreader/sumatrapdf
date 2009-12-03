@@ -95,14 +95,14 @@ static fz_error
 rendertransform(fz_renderer *gc, fz_transformnode *transform, fz_matrix ctm)
 {
 	fz_error error;
-DEBUG("transform [%g %g %g %g %g %g]\n",
-transform->m.a, transform->m.b,
-transform->m.c, transform->m.d,
-transform->m.e, transform->m.f);
-DEBUG("{\n");
+	DEBUG("transform [%g %g %g %g %g %g]\n",
+		transform->m.a, transform->m.b,
+		transform->m.c, transform->m.d,
+		transform->m.e, transform->m.f);
+	DEBUG("{\n");
 	ctm = fz_concat(transform->m, ctm);
 	error = rendernode(gc, transform->super.first, ctm);
-DEBUG("}\n");
+	DEBUG("}\n");
 	return error;
 }
 
@@ -133,7 +133,7 @@ rendersolid(fz_renderer *gc, fz_solidnode *solid, fz_matrix ctm)
 	gc->argb[5] = rgb[1] * 255;
 	gc->argb[6] = rgb[2] * 255;
 
-DEBUG("solid %s [%d %d %d %d];\n", solid->cs->name, gc->argb[0], gc->argb[1], gc->argb[2], gc->argb[3]);
+	DEBUG("solid %s [%d %d %d %d];\n", solid->cs->name, gc->argb[0], gc->argb[1], gc->argb[2], gc->argb[3]);
 
 	if (gc->flag == FOVER)
 	{
@@ -223,11 +223,11 @@ renderpath(fz_renderer *gc, fz_pathnode *path, fz_matrix ctm)
 	if (fz_isemptyrect(clip))
 		return fz_okay;
 
-DEBUG("path %s;\n", path->paint == FZ_STROKE ? "stroke" : "fill");
+	DEBUG("path %s;\n", path->paint == FZ_STROKE ? "stroke" : "fill");
 
 	if (gc->flag & FRGB)
 	{
-DEBUG(" path rgb %d %d %d %d, %d %d %d\n", gc->argb[0], gc->argb[1], gc->argb[2], gc->argb[3], gc->argb[4], gc->argb[5], gc->argb[6]);
+		DEBUG(" path rgb %d %d %d %d, %d %d %d\n", gc->argb[0], gc->argb[1], gc->argb[2], gc->argb[3], gc->argb[4], gc->argb[5], gc->argb[6]);
 		return fz_scanconvert(gc->gel, gc->ael, path->paint == FZ_EOFILL,
 					clip, gc->over, gc->argb, 1);
 	}
@@ -319,9 +319,9 @@ rendertext(fz_renderer *gc, fz_textnode *text, fz_matrix ctm)
 	tbox = fz_roundrect(fz_boundnode((fz_node*)text, ctm));
 	clip = fz_intersectirects(gc->clip, tbox);
 
-DEBUG("text %s n=%d [%g %g %g %g];\n",
-text->font->name, text->len,
-text->trm.a, text->trm.b, text->trm.c, text->trm.d);
+	DEBUG("text %s n=%d [%g %g %g %g];\n",
+		text->font->name, text->len,
+		text->trm.a, text->trm.b, text->trm.c, text->trm.d);
 
 	if (fz_isemptyrect(clip))
 		return fz_okay;
@@ -402,7 +402,7 @@ renderimage(fz_renderer *gc, fz_imagenode *node, fz_matrix ctm)
 	int w, h;
 	int tileheight;
 
-DEBUG("image %dx%d %d+%d %s\n{\n", image->w, image->h, image->n, image->a, image->cs?image->cs->name:"(nil)");
+	DEBUG("image %dx%d %d+%d %s\n{\n", image->w, image->h, image->n, image->a, image->cs?image->cs->name:"(nil)");
 
 	bbox = fz_roundrect(fz_boundnode((fz_node*)node, ctm));
 	clip = fz_intersectirects(gc->clip, bbox);
@@ -460,7 +460,7 @@ DEBUG("image %dx%d %d+%d %s\n{\n", image->w, image->h, image->n, image->a, image
 	else {
 
 
-DEBUG("  load image\n");
+		DEBUG("  load image\n");
 		error = fz_newpixmap(&tile, 0, 0, image->w, image->h, image->n + 1);
 		if (error)
 			return error;
@@ -471,7 +471,7 @@ DEBUG("  load image\n");
 
 		if (dx != 1 || dy != 1)
 		{
-DEBUG("  scale image 1/%d 1/%d\n", dx, dy);
+			DEBUG("  scale image 1/%d 1/%d\n", dx, dy);
 			error = fz_scalepixmap(&temp, tile, dx, dy);
 			if (error)
 				goto cleanup;
@@ -482,7 +482,7 @@ DEBUG("  scale image 1/%d 1/%d\n", dx, dy);
 
 	if (image->cs && image->cs != gc->model)
 	{
-DEBUG("  convert from %s to %s\n", image->cs->name, gc->model->name);
+		DEBUG("  convert from %s to %s\n", image->cs->name, gc->model->name);
 		error = fz_newpixmap(&temp, tile->x, tile->y, tile->w, tile->h, gc->model->n + 1);
 		if (error)
 			goto cleanup;
@@ -521,7 +521,7 @@ DEBUG("  convert from %s to %s\n", image->cs->name, gc->model->name);
 	{
 	case FNONE:
 		{
-DEBUG("  fnone %d x %d\n", w, h);
+			DEBUG("  fnone %d x %d\n", w, h);
 			if (image->cs)
 				error = fz_newpixmapwithrect(&gc->dest, clip, gc->model->n + 1);
 			else
@@ -538,7 +538,7 @@ DEBUG("  fnone %d x %d\n", w, h);
 
 	case FOVER:
 		{
-DEBUG("  fover %d x %d\n", w, h);
+			DEBUG("  fover %d x %d\n", w, h);
 			if (image->cs)
 				fz_img_4o4(PSRC, PDST(gc->over), PCTM);
 			else
@@ -547,7 +547,7 @@ DEBUG("  fover %d x %d\n", w, h);
 		break;
 
 	case FOVER | FRGB:
-DEBUG("  fover+rgb %d x %d\n", w, h);
+		DEBUG("  fover+rgb %d x %d\n", w, h);
 		fz_img_w4i1o4(gc->argb, PSRC, PDST(gc->over), PCTM);
 		break;
 
@@ -555,7 +555,7 @@ DEBUG("  fover+rgb %d x %d\n", w, h);
 		assert(!"impossible flag in image span function");
 	}
 
-DEBUG("}\n");
+	DEBUG("}\n");
 
 	fz_droppixmap(tile);
 	return fz_okay;
@@ -697,7 +697,7 @@ renderover(fz_renderer *gc, fz_overnode *over, fz_matrix ctm)
 
 	if (!gc->over)
 	{
-DEBUG("over cluster %d\n{\n", gc->maskonly ? 1 : 4);
+		DEBUG("over cluster %d\n{\n", gc->maskonly ? 1 : 4);
 		cluster = 1;
 		if (gc->maskonly)
 			error = fz_newpixmapwithrect(&gc->over, gc->clip, 1);
@@ -707,7 +707,7 @@ DEBUG("over cluster %d\n{\n", gc->maskonly ? 1 : 4);
 			return error;
 		fz_clearpixmap(gc->over);
 	}
-else DEBUG("over\n{\n");
+	else DEBUG("over\n{\n");
 
 	for (child = over->super.first; child; child = child->next)
 	{
@@ -728,7 +728,7 @@ else DEBUG("over\n{\n");
 		gc->over = nil;
 	}
 
-DEBUG("}\n");
+	DEBUG("}\n");
 
 	return fz_okay;
 }
@@ -789,15 +789,15 @@ rendermask(fz_renderer *gc, fz_masknode *mask, fz_matrix ctm)
 	if (fz_isemptyrect(clip))
 		return fz_okay;
 
-DEBUG("mask [%d %d %d %d]\n{\n", clip.x0, clip.y0, clip.x1, clip.y1);
+	DEBUG("mask [%d %d %d %d]\n{\n", clip.x0, clip.y0, clip.x1, clip.y1);
 
-{
-fz_irect sbox = fz_roundrect(fz_boundnode(shape, ctm));
-fz_irect cbox = fz_roundrect(fz_boundnode(color, ctm));
-if (cbox.x0 >= sbox.x0 && cbox.x1 <= sbox.x1)
-if (cbox.y0 >= sbox.y0 && cbox.y1 <= sbox.y1)
-DEBUG("potentially useless mask\n");
-}
+	{
+		fz_irect sbox = fz_roundrect(fz_boundnode(shape, ctm));
+		fz_irect cbox = fz_roundrect(fz_boundnode(color, ctm));
+		if (cbox.x0 >= sbox.x0 && cbox.x1 <= sbox.x1)
+			if (cbox.y0 >= sbox.y0 && cbox.y1 <= sbox.y1)
+				DEBUG("potentially useless mask\n");
+	}
 
 	gc->clip = clip;
 	gc->over = nil;
@@ -844,7 +844,7 @@ DEBUG("potentially useless mask\n");
 		}
 	}
 
-DEBUG("}\n");
+	DEBUG("}\n");
 
 	if (shapepix) fz_droppixmap(shapepix);
 	if (colorpix) fz_droppixmap(colorpix);
@@ -919,15 +919,15 @@ fz_rendertree(fz_pixmap **outp,
 	else
 		memset(gc->over->samples, 0x00, gc->over->w * gc->over->h * gc->over->n);
 
-DEBUG("tree %d [%d %d %d %d]\n{\n",
-gc->maskonly ? 1 : 4,
-bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+	DEBUG("tree %d [%d %d %d %d]\n{\n",
+		gc->maskonly ? 1 : 4,
+		bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
 	error = rendernode(gc, tree->root, ctm);
 	if (error)
 		return error;
 
-DEBUG("}\n");
+	DEBUG("}\n");
 
 	if (gc->dest)
 	{

@@ -11,8 +11,6 @@ newstm(int kind)
 	fz_stream *stm;
 
 	stm = fz_malloc(sizeof(fz_stream));
-	if (!stm)
-		return nil;
 
 	stm->refs = 1;
 	stm->kind = kind;
@@ -67,19 +65,11 @@ fz_dropstream(fz_stream *stm)
 #ifdef WIN32
 fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path)
 {
-	fz_error error;
 	fz_stream *stm;
 
 	stm = newstm(FZ_SFILE);
-	if (!stm)
-		return fz_rethrow(-1, "out of memory: stream struct");
 
-	error = fz_newbuffer(&stm->buffer, FZ_BUFSIZE);
-	if (error)
-	{
-		fz_free(stm);
-		return fz_rethrow(error, "cannot create buffer");
-	}
+	stm->buffer = fz_newbuffer(FZ_BUFSIZE);
 
 	stm->file = _wopen(path, O_BINARY | O_RDONLY, 0666);
 	if (stm->file < 0)
@@ -96,19 +86,11 @@ fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path)
 
 fz_error fz_openrfile(fz_stream **stmp, char *path)
 {
-	fz_error error;
 	fz_stream *stm;
 
 	stm = newstm(FZ_SFILE);
-	if (!stm)
-		return fz_rethrow(-1, "out of memory: stream struct");
 
-	error = fz_newbuffer(&stm->buffer, FZ_BUFSIZE);
-	if (error)
-	{
-		fz_free(stm);
-		return fz_rethrow(error, "cannot create buffer");
-	}
+	stm->buffer = fz_newbuffer(FZ_BUFSIZE);
 
 	stm->file = open(path, O_BINARY | O_RDONLY, 0666);
 	if (stm->file < 0)
@@ -122,63 +104,37 @@ fz_error fz_openrfile(fz_stream **stmp, char *path)
 	return fz_okay;
 }
 
-fz_error fz_openrfilter(fz_stream **stmp, fz_filter *flt, fz_stream *src)
+fz_stream * fz_openrfilter(fz_filter *flt, fz_stream *src)
 {
-	fz_error error;
 	fz_stream *stm;
 
 	stm = newstm(FZ_SFILTER);
-	if (!stm)
-		return fz_rethrow(-1, "out of memory: stream struct");
-
-	error = fz_newbuffer(&stm->buffer, FZ_BUFSIZE);
-	if (error)
-	{
-		fz_free(stm);
-		return fz_rethrow(error, "cannot create buffer");
-	}
-
+	stm->buffer = fz_newbuffer(FZ_BUFSIZE);
 	stm->chain = fz_keepstream(src);
 	stm->filter = fz_keepfilter(flt);
 
-	*stmp = stm;
-	return fz_okay;
+	return stm;
 }
 
-fz_error fz_openrbuffer(fz_stream **stmp, fz_buffer *buf)
+fz_stream * fz_openrbuffer(fz_buffer *buf)
 {
 	fz_stream *stm;
 
 	stm = newstm(FZ_SBUFFER);
-	if (!stm)
-		return fz_rethrow(-1, "out of memory: stream struct");
-
 	stm->buffer = fz_keepbuffer(buf);
-
 	stm->buffer->eof = 1;
 
-	*stmp = stm;
-	return fz_okay;
+	return stm;
 }
 
-fz_error fz_openrmemory(fz_stream **stmp, unsigned char *mem, int len)
+fz_stream * fz_openrmemory(unsigned char *mem, int len)
 {
-	fz_error error;
 	fz_buffer *buf;
+	fz_stream *stm;
 
-	error = fz_newbufferwithmemory(&buf, mem, len);
-	if (error)
-		return fz_rethrow(error, "cannot create memory buffer");
-
-	error = fz_openrbuffer(stmp, buf);
-	if (error)
-	{
+	buf = fz_newbufferwithmemory(mem, len);
+	stm = fz_openrbuffer(buf);
 		fz_dropbuffer(buf);
-		return fz_rethrow(error, "cannot open memory buffer stream");
-	}
 
-	fz_dropbuffer(buf);
-
-	return fz_okay;
+	return stm;
 }
-

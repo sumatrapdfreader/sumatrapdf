@@ -15,21 +15,13 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	}
 
 	form = fz_malloc(sizeof(pdf_xobject));
-	if (!form)
-		return fz_rethrow(-1, "out of memory: xobject struct");
-
 	form->refs = 1;
 	form->resources = nil;
 	form->contents = nil;
 
 	/* Store item immediately, to avoid infinite recursion if contained
 	   objects refer again to this xobject */
-	error = pdf_storeitem(xref->store, PDF_KXOBJECT, dict, form);
-	if (error)
-	{
-		pdf_dropxobject(form);
-		return fz_rethrow(error, "cannot store xobject resource");
-	}
+	pdf_storeitem(xref->store, PDF_KXOBJECT, dict, form);
 
 	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), form);
 

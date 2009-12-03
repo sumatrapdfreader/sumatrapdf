@@ -13,9 +13,6 @@ fz_newfont(void)
 	fz_font *font;
 
 	font = fz_malloc(sizeof(fz_font));
-	if (!font)
-		return nil;
-
 	font->refs = 1;
 	strcpy(font->name, "<unknown>");
 
@@ -25,7 +22,7 @@ fz_newfont(void)
 
 	font->t3matrix = fz_identity();
 	font->t3procs = nil;
-	font->t3widths = nil; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690959 */
+	font->t3widths = nil;
 
 	font->bbox.x0 = 0;
 	font->bbox.y0 = 0;
@@ -61,6 +58,7 @@ fz_dropfont(fz_font *font)
 				fz_rendert3glyph(&glyph, font, 0, tmr);
 			}
 			fz_free(font->t3procs);
+			fz_free(font->t3widths);
 		}
 
 		if (font->ftface)
@@ -70,10 +68,6 @@ fz_dropfont(fz_font *font)
 				fz_warn("freetype finalizing face: %s", ft_errorstring(fterr));
 			fz_finalizefreetype();
 		}
-
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690959 */
-		if (font->t3widths)
-			fz_free(font->t3widths);
 
 		fz_free(font);
 	}
@@ -177,8 +171,6 @@ fz_newfontfromfile(fz_font **fontp, char *path, int index)
 		return fz_rethrow(error, "cannot init freetype library");
 
 	font = fz_newfont();
-	if (!font)
-		return fz_rethrow(-1, "out of memory: font struct");
 
 	fterr = FT_New_Face(fz_ftlib, path, index, (FT_Face*)&font->ftface);
 	if (fterr)
@@ -203,8 +195,6 @@ fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 		return fz_rethrow(error, "cannot init freetype library");
 
 	font = fz_newfont();
-	if (!font)
-		return fz_rethrow(-1, "out of memory: font struct");
 
 	fterr = FT_New_Memory_Face(fz_ftlib, data, len, index, (FT_Face*)&font->ftface);
 	if (fterr)
@@ -346,31 +336,17 @@ fz_renderftglyph(fz_glyph *glyph, fz_font *font, int gid, fz_matrix trm)
  * Type 3 fonts...
  */
 
-fz_error
-fz_newtype3font(fz_font **fontp, char *name, fz_matrix matrix)
+fz_font *
+fz_newtype3font(char *name, fz_matrix matrix)
 {
 	fz_font *font;
 	int i;
 
 	font = fz_newfont();
-	if (!font)
-		return fz_rethrow(-1, "out of memory: font struct");
-
 	font->t3procs = fz_malloc(sizeof(fz_tree*) * 256);
-	if (!font->t3procs)
-	{
-		fz_free(font);
-		return fz_rethrow(-1, "out of memory: type3 font charproc array");
-	}
-
 	font->t3widths = fz_malloc(sizeof(float) * 256);
-	if (!font->t3widths)
-	{
-		fz_free(font->t3procs);
-		fz_free(font);
-		return fz_rethrow(-1, "out of memory: type3 font widths array");
-	}
 
+	strlcpy(font->name, name, sizeof(font->name));
 	font->t3matrix = matrix;
 	for (i = 0; i < 256; i++)
 	{
@@ -378,10 +354,7 @@ fz_newtype3font(fz_font **fontp, char *name, fz_matrix matrix)
 		font->t3widths[i] = 0;
 	}
 
-	strlcpy(font->name, name, sizeof(font->name));
-
-	*fontp = font;
-	return fz_okay;
+	return font;
 }
 
 /* XXX UGLY HACK XXX */

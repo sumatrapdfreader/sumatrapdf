@@ -183,9 +183,6 @@ pdf_newfontdesc(void)
 	pdf_fontdesc *fontdesc;
 
 	fontdesc = fz_malloc(sizeof (pdf_fontdesc));
-	if (!fontdesc)
-		return nil;
-
 	fontdesc->refs = 1;
 
 	fontdesc->font = nil;
@@ -266,8 +263,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	 */
 
 	fontdesc = pdf_newfontdesc();
-	if (!fontdesc)
-		return fz_rethrow(-1, "out of memory");
 
 	pdf_logfont("load simple font (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), fontdesc);
 	pdf_logfont("basefont0 %s\n", basefont);
@@ -338,9 +333,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		fz_warn("freetype could not find any cmaps");
 
 	etable = fz_malloc(sizeof(unsigned short) * 256);
-	if (!etable)
-		goto cleanup;
-
 	for (i = 0; i < 256; i++)
 	{
 		estrings[i] = nil;
@@ -388,10 +380,12 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		{
 			pdf_logfont("encode type1/cff by strings\n");
 			for (i = 0; i < 256; i++)
+			{
 				if (estrings[i])
 					etable[i] = FT_Get_Name_Index(face, estrings[i]);
 				else
 					etable[i] = ftcharindex(face, i);
+		}
 		}
 
 		if (kind == TRUETYPE)
@@ -401,6 +395,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			{
 				pdf_logfont("encode truetype via unicode\n");
 				for (i = 0; i < 256; i++)
+				{
 					if (estrings[i])
 					{
 						int aglbuf[256];
@@ -414,12 +409,14 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 					else
 						etable[i] = ftcharindex(face, i);
 			}
+			}
 
 			/* MacRoman cmap */
 			else if (face->charmap && face->charmap->platform_id == 1)
 			{
 				pdf_logfont("encode truetype via macroman\n");
 				for (i = 0; i < 256; i++)
+				{
 					if (estrings[i])
 					{
 						k = mrecode(estrings[i]);
@@ -430,6 +427,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 					}
 					else
 						etable[i] = ftcharindex(face, i);
+			}
 			}
 
 			/* Symbolic cmap */
@@ -499,10 +497,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
-	error = pdf_newidentitycmap(&fontdesc->encoding, 0, 1);
-	if (error)
-		goto cleanup;
-
+	fontdesc->encoding = pdf_newidentitycmap(0, 1);
 	fontdesc->ncidtogid = 256;
 	fontdesc->cidtogid = etable;
 
@@ -530,9 +525,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		for (i = 0; i < last - first + 1; i++)
 		{
 			int wid = fz_toint(fz_arrayget(widths, i));
-			error = pdf_addhmtx(fontdesc, i + first, i + first, wid);
-			if (error)
-				goto cleanup;
+			pdf_addhmtx(fontdesc, i + first, i + first, wid);
 		}
 	}
 	else
@@ -542,15 +535,11 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			fz_warn("freetype set character size: %s", ft_errorstring(fterr));
 		for (i = 0; i < 256; i++)
 		{
-			error = pdf_addhmtx(fontdesc, i, i, ftwidth(fontdesc, i));
-			if (error)
-				goto cleanup;
+			pdf_addhmtx(fontdesc, i, i, ftwidth(fontdesc, i));
 		}
 	}
 
-	error = pdf_endhmtx(fontdesc);
-	if (error)
-		goto cleanup;
+	pdf_endhmtx(fontdesc);
 
 	pdf_logfont("}\n");
 
@@ -559,7 +548,8 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 cleanup:
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487 */
-	if (etable != fontdesc->cidtogid) fz_free(etable);
+	if (etable != fontdesc->cidtogid)
+                fz_free(etable);
 	pdf_dropfont(fontdesc);
 	return fz_rethrow(error, "cannot load simple font");
 }
@@ -618,8 +608,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	 */
 
 	fontdesc = pdf_newfontdesc();
-	if (!fontdesc)
-		return fz_rethrow(-1, "out of memory");
 
 	pdf_logfont("load cid font (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), fontdesc);
 	pdf_logfont("basefont %s\n", basefont);
@@ -652,13 +640,14 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	 * Encoding
 	 */
 
+	error = fz_okay;
 	if (fz_isname(encoding))
 	{
 		pdf_logfont("encoding /%s\n", fz_toname(encoding));
 		if (!strcmp(fz_toname(encoding), "Identity-H"))
-			error = pdf_newidentitycmap(&fontdesc->encoding, 0, 2);
+			fontdesc->encoding = pdf_newidentitycmap(0, 2);
 		else if (!strcmp(fz_toname(encoding), "Identity-V"))
-			error = pdf_newidentitycmap(&fontdesc->encoding, 1, 2);
+			fontdesc->encoding = pdf_newidentitycmap(1, 2);
 		else
 			error = pdf_loadsystemcmap(&fontdesc->encoding, fz_toname(encoding));
 	}
@@ -684,9 +673,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 		cidtogidmap = fz_dictgets(dict, "CIDToGIDMap");
 		if (fz_isindirect(cidtogidmap))
 		{
-			unsigned short *map;
 			fz_buffer *buf;
-			int len;
 
 			pdf_logfont("cidtogidmap stream\n");
 
@@ -694,20 +681,10 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 			if (error)
 				goto cleanup;
 
-			len = (buf->wp - buf->rp) / 2;
-
-			map = fz_malloc(len * sizeof(unsigned short));
-			if (!map) {
-				fz_dropbuffer(buf);
-				error = fz_rethrow(-1, "out of memory: cidtogidmap");
-				goto cleanup;
-			}
-
-			for (i = 0; i < len; i++)
-				map[i] = (buf->rp[i * 2] << 8) + buf->rp[i * 2 + 1];
-
-			fontdesc->ncidtogid = len;
-			fontdesc->cidtogid = map;
+			fontdesc->ncidtogid = (buf->wp - buf->rp) / 2;
+			fontdesc->cidtogid = fz_malloc(fontdesc->ncidtogid * sizeof(unsigned short));
+			for (i = 0; i < fontdesc->ncidtogid; i++)
+				fontdesc->cidtogid[i] = (buf->rp[i * 2] << 8) + buf->rp[i * 2 + 1];
 
 			fz_dropbuffer(buf);
 		}
@@ -772,9 +749,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 				for (k = 0; k < fz_arraylen(obj); k++)
 				{
 					w = fz_toint(fz_arrayget(obj, k));
-					error = pdf_addhmtx(fontdesc, c0 + k, c0 + k, w);
-					if (error)
-						goto cleanup;
+					pdf_addhmtx(fontdesc, c0 + k, c0 + k, w);
 				}
 				i += 2;
 			}
@@ -782,17 +757,13 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 			{
 				c1 = fz_toint(obj);
 				w = fz_toint(fz_arrayget(widths, i + 2));
-				error = pdf_addhmtx(fontdesc, c0, c1, w);
-				if (error)
-					goto cleanup;
+				pdf_addhmtx(fontdesc, c0, c1, w);
 				i += 3;
 			}
 		}
 	}
 
-	error = pdf_endhmtx(fontdesc);
-	if (error)
-		goto cleanup;
+	pdf_endhmtx(fontdesc);
 
 	/*
 	 * Vertical
@@ -829,9 +800,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 						w = fz_toint(fz_arrayget(obj, k + 0));
 						x = fz_toint(fz_arrayget(obj, k + 1));
 						y = fz_toint(fz_arrayget(obj, k + 2));
-						error = pdf_addvmtx(fontdesc, c0 + k, c0 + k, x, y, w);
-						if (error)
-							goto cleanup;
+						pdf_addvmtx(fontdesc, c0 + k, c0 + k, x, y, w);
 					}
 					i += 2;
 				}
@@ -841,17 +810,13 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 					w = fz_toint(fz_arrayget(widths, i + 2));
 					x = fz_toint(fz_arrayget(widths, i + 3));
 					y = fz_toint(fz_arrayget(widths, i + 4));
-					error = pdf_addvmtx(fontdesc, c0, c1, x, y, w);
-					if (error)
-						goto cleanup;
+					pdf_addvmtx(fontdesc, c0, c1, x, y, w);
 					i += 5;
 				}
 			}
 		}
 
-		error = pdf_endvmtx(fontdesc);
-		if (error)
-			goto cleanup;
+		pdf_endvmtx(fontdesc);
 	}
 
 	pdf_logfont("}\n");
@@ -1010,9 +975,7 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	if (error)
 	    return fz_rethrow(error, "cannot load font");
 
-	error = pdf_storeitem(xref->store, PDF_KFONT, dict, *fontdescp);
-	if (error)
-	    return fz_rethrow(error, "cannot store font resource");
+	pdf_storeitem(xref->store, PDF_KFONT, dict, *fontdescp);
 
 	return fz_okay;
 }

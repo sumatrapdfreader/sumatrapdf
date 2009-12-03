@@ -72,33 +72,21 @@ static inline int fz_fillbuf(fz_stream *stm, fz_buffer *buf)
  * a freshly allocated buffer.
  */
 
-fz_error
-fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint)
+fz_buffer *
+fz_readall(fz_stream *stm, int sizehint)
 {
-	fz_error error;
 	fz_buffer *buf;
 
 	if (sizehint == 0)
 	    sizehint = 4 * 1024;
 
-	error = fz_newbuffer(&buf, sizehint);
-	if (error)
-	    return fz_rethrow(error, "cannot create scratch buffer");
+	buf = fz_newbuffer(sizehint);
 
 	while (fz_fillbuf(stm, buf) != EOF)
 	{
 		if (buf->wp == buf->ep)
-		{
-		    error = fz_growbuffer(buf);
-		    if (error)
-		    {
-			fz_dropbuffer(buf);
-			return fz_rethrow(error, "cannot resize scratch buffer");
-		    }
-		}
+			fz_growbuffer(buf);
 	}
 
-	*bufp = buf;
-	return fz_okay;
+	return buf;
 }
-

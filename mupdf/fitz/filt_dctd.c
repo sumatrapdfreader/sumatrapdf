@@ -81,10 +81,9 @@ static void myskipinput(j_decompress_ptr cinfo, long n)
 	src->super.next_input_byte = in->rp;
 }
 
-fz_error
-fz_newdctd(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newdctd(fz_obj *params)
 {
-	fz_error err;
 	fz_obj *obj;
 	int colortransform;
 
@@ -106,11 +105,8 @@ fz_newdctd(fz_filter **fp, fz_obj *params)
 	myiniterr(&d->err);
 	d->cinfo.err = (struct jpeg_error_mgr*) &d->err;
 
-	if (setjmp(d->err.jb)) {
-		err = fz_throw("cannot decode jpeg: %s", d->err.msg);
-		fz_free(d);
-		return err;
-	}
+	if (setjmp(d->err.jb))
+		fz_warn("cannot initialise jpeg: %s", d->err.msg);
 
 	/* create decompression object. this zeroes cinfo except for err. */
 	jpeg_create_decompress(&d->cinfo);
@@ -131,7 +127,7 @@ fz_newdctd(fz_filter **fp, fz_obj *params)
 	d->cinfo.dct_method = JDCT_FASTEST;
 	d->cinfo.do_fancy_upsampling = FALSE;
 
-	return fz_okay;
+	return (fz_filter *)d;
 }
 
 void

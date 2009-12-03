@@ -4,71 +4,78 @@
 extern void fz_freearray(fz_obj *array);
 extern void fz_freedict(fz_obj *dict);
 
-#define NEWOBJ(KIND,SIZE) \
-	fz_obj *o; \
-	o = *op = fz_malloc(SIZE); \
-	if (!o) return fz_rethrow(-1, "out of memory: dynamic object"); \
-	o->refs = 1; \
-	o->kind = KIND;
-
-fz_error
-fz_newnull(fz_obj **op)
+fz_obj *
+fz_newnull(void)
 {
-	NEWOBJ(FZ_NULL, sizeof (fz_obj));
-	return fz_okay;
+	fz_obj *o = fz_malloc(sizeof(fz_obj));
+	o->refs = 1;
+	o->kind = FZ_NULL;
+	return o;
 }
 
-fz_error
-fz_newbool(fz_obj **op, int b)
+fz_obj *
+fz_newbool(int b)
 {
-	NEWOBJ(FZ_BOOL, sizeof (fz_obj));
+	fz_obj *o = fz_malloc(sizeof(fz_obj));
+	o->refs = 1;
+	o->kind = FZ_BOOL;
 	o->u.b = b;
-	return fz_okay;
+	return o;
 }
 
-fz_error
-fz_newint(fz_obj **op, int i)
+fz_obj *
+fz_newint(int i)
 {
-	NEWOBJ(FZ_INT, sizeof (fz_obj));
+	fz_obj *o = fz_malloc(sizeof(fz_obj));
+	o->refs = 1;
+	o->kind = FZ_INT;
 	o->u.i = i;
-	return fz_okay;
+	return o;
 }
 
-fz_error
-fz_newreal(fz_obj **op, float f)
+fz_obj *
+fz_newreal(float f)
 {
-	NEWOBJ(FZ_REAL, sizeof (fz_obj));
+	fz_obj *o = fz_malloc(sizeof(fz_obj));
+	o->refs = 1;
+	o->kind = FZ_REAL;
 	o->u.f = f;
-	return fz_okay;
+	return o;
 }
 
-fz_error
-fz_newstring(fz_obj **op, char *str, int len)
+fz_obj *
+fz_newstring(char *str, int len)
 {
-	NEWOBJ(FZ_STRING, offsetof(fz_obj, u.s.buf) + len + 1);
+	fz_obj *o = fz_malloc(offsetof(fz_obj, u.s.buf) + len + 1);
+	o->refs = 1;
+	o->kind = FZ_STRING;
 	o->u.s.len = len;
 	memcpy(o->u.s.buf, str, len);
 	o->u.s.buf[len] = '\0';
-	return fz_okay;
+	return o;
 }
 
-fz_error
-fz_newname(fz_obj **op, char *str)
+fz_obj *
+fz_newname(char *str)
 {
-	NEWOBJ(FZ_NAME, offsetof(fz_obj, u.n) + strlen(str) + 1);
+	fz_obj *o = fz_malloc(offsetof(fz_obj, u.n) + strlen(str) + 1);
+	o->refs = 1;
+	o->kind = FZ_NAME;
 	strcpy(o->u.n, str);
-	return fz_okay;
+	return o;
 }
 
-fz_error
-fz_newindirect(fz_obj **op, int num, int gen, pdf_xref *xref)
+fz_obj *
+fz_newindirect(int num, int gen, pdf_xref *xref)
 {
-	NEWOBJ(FZ_INDIRECT, sizeof (fz_obj));
+	fz_obj *o = fz_malloc(sizeof(fz_obj));
+	o->refs = 1;
+	o->kind = FZ_INDIRECT;
 	o->u.r.num = num;
 	o->u.r.gen = gen;
 	o->u.r.xref = xref;
 	o->u.r.obj = nil;
-	return fz_okay;
+	return o;
 }
 
 fz_obj *

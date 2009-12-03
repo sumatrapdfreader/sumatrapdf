@@ -46,12 +46,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 		if (error)
 			return fz_rethrow(error, "cannot load embedded cmap");
 
-		error = pdf_newcmap(&font->tounicode);
-		if (error)
-		{
-			pdf_dropcmap(cmap);
-			return fz_rethrow(error, "cannot create tounicode cmap");
-		}
+		font->tounicode = pdf_newcmap();
 
 		for (i = 0; i < (strings ? 256 : 65536); i++)
 		{
@@ -60,23 +55,11 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 			{
 				ucs = pdf_lookupcmap(cmap, i);
 				if (ucs > 0)
-				{
-					error = pdf_maprangetorange(font->tounicode, cid, cid, ucs);
-					if (error)
-					{
-						pdf_dropcmap(cmap);
-						return fz_rethrow(error, "cannot create tounicode mapping");
-					}
-				}
+					pdf_maprangetorange(font->tounicode, cid, cid, ucs);
 			}
 		}
 
-		error = pdf_sortcmap(font->tounicode);
-		if (error)
-		{
-			pdf_dropcmap(cmap);
-			return fz_rethrow(error, "cannot sort tounicode mappings");
-		}
+		pdf_sortcmap(font->tounicode);
 
 		pdf_dropcmap(cmap);
 		return fz_okay;
@@ -111,8 +94,6 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 
 		font->ncidtoucs = 256;
 		font->cidtoucs = fz_malloc(256 * sizeof(unsigned short));
-		if (!font->cidtoucs)
-			return fz_rethrow(-1, "out of memory: tounicode cidtoucs table");
 
 		for (i = 0; i < 256; i++)
 		{
@@ -151,18 +132,16 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
  * in the text objects.
  */
 
-fz_error
-pdf_newtextline(pdf_textline **linep)
+pdf_textline *
+pdf_newtextline(void)
 {
 	pdf_textline *line;
-	line = *linep = fz_malloc(sizeof(pdf_textline));
-	if (!line)
-		return fz_rethrow(-1, "out of memory: textline struct");
+	line = fz_malloc(sizeof(pdf_textline));
 	line->len = 0;
 	line->cap = 0;
 	line->text = nil;
 	line->next = nil;
-	return fz_okay;
+	return line;
 }
 
 void
@@ -174,20 +153,13 @@ pdf_droptextline(pdf_textline *line)
 	fz_free(line);
 }
 
-static fz_error
+static void
 addtextchar(pdf_textline *line, fz_irect bbox, int c)
 {
-	pdf_textchar *newtext;
-	int newcap;
-
 	if (line->len + 1 >= line->cap)
 	{
-		newcap = line->cap ? line->cap * 2 : 80;
-		newtext = fz_realloc(line->text, sizeof(pdf_textchar) * newcap);
-		if (!newtext)
-			return fz_rethrow(-1, "out of memory: textline buffer resize");
-		line->cap = newcap;
-		line->text = newtext;
+		line->cap = line->cap ? (line->cap * 3) / 2 : 80;
+		line->text = fz_realloc(line->text, sizeof(pdf_textchar) * line->cap);
 	}
 
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=400 */
@@ -210,8 +182,6 @@ addtextchar(pdf_textline *line, fz_irect bbox, int c)
 	line->text[line->len].bbox = bbox;
 	line->text[line->len].c = c;
 	line->len ++;
-
-	return fz_okay;
 }
 
 static fz_error
@@ -264,6 +234,7 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 		    if (fterr)
 			    return fz_throw("freetype set character size: %s", ft_errorstring(fterr));
         }
+
 		for (i = 0; i < text->len; i++)
 		{
 			tm.e = text->els[i].x;
@@ -307,23 +278,16 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 
 			if (fabs(dy) > 0.27) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 			{
-				pdf_textline *newline;
-				error = pdf_newtextline(&newline);
-				if (error)
-					return fz_rethrow(error, "cannot create new text line");
+				pdf_textline *newline = pdf_newtextline();
 				(*line)->next = newline;
 				*line = newline;
 			}
 			else if (fabs(dx) > 0.15 && (*line)->len > 0 && (*line)->text[(*line)->len - 1].c != ' ') /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 			{
-				error = addtextchar(*line, bbox, ' ');
-				if (error)
-					return fz_rethrow(error, "cannot add character to text line");
+				addtextchar(*line, bbox, ' ');
 			}
 
-			error = addtextchar(*line, bbox, text->els[i].ucs);
-			if (error)
-				return fz_rethrow(error, "cannot add character to text line");
+			addtextchar(*line, bbox, text->els[i].ucs);
 		}
 	}
 
@@ -351,10 +315,7 @@ pdf_loadtextfromtree(pdf_textline **outp, fz_tree *tree, fz_matrix ctm)
 	oldpt.x = -1;
 	oldpt.y = -1;
 
-	error = pdf_newtextline(&root);
-	if (error)
-		return fz_rethrow(error, "cannot create new text line");
-
+	root = pdf_newtextline();
 	line = root;
 
 	error = extracttext(&line, tree->root, ctm, &oldpt);

@@ -366,7 +366,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_colorspace *destcs, fz_pixmap 
 				tri[k][j] = shade->mesh[( i * 3 + k) * n + j] * 255;
 		}
 		fz_drawtriangle(temp, tri[0], tri[1], tri[2], n);
-	    baddata:
+baddata:
 		;
 	}
 

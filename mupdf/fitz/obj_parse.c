@@ -60,9 +60,8 @@ static void parsekeyword(char **sp, char *b, char *eb)
 	*sp = s;
 }
 
-static fz_error parsename(fz_obj **obj, char **sp)
+static fz_obj * parsename(char **sp)
 {
-	fz_error error;
 	char buf[64];
 	char *s = *sp;
 	char *p = buf;
@@ -73,15 +72,11 @@ static fz_error parsename(fz_obj **obj, char **sp)
 	*p++ = 0;
 	*sp = s;
 
-	error = fz_newname(obj, buf);
-	if (error)
-		return fz_rethrow(error, "cannot create name");
-	return fz_okay;
+	return fz_newname(buf);
 }
 
-static fz_error parsenumber(fz_obj **obj, char **sp)
+static fz_obj * parsenumber(char **sp)
 {
-	fz_error error;
 	char buf[32];
 	char *s = *sp;
 	char *p = buf;
@@ -97,26 +92,19 @@ static fz_error parsenumber(fz_obj **obj, char **sp)
 	*sp = s;
 
 	if (strchr(buf, '.'))
-		error = fz_newreal(obj, atof(buf));
-	else
-		error = fz_newint(obj, atoi(buf));
-
-	if (error)
-		return fz_rethrow(error, "cannot parse number");
-	return fz_okay;
+		return fz_newreal(atof(buf));
+	return fz_newint(atoi(buf));
 }
 
 static fz_error parsedict(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 {
-	fz_error error = fz_okay;
+	fz_error error;
 	fz_obj *dict = nil;
 	fz_obj *key = nil;
 	fz_obj *val = nil;
 	char *s = *sp;
 
-	error = fz_newdict(&dict, 8);
-	if (error)
-		return fz_rethrow(error, "cannot create dict");
+	dict = fz_newdict(8);
 
 	s += 2;	/* skip "<<" */
 
@@ -144,12 +132,7 @@ static fz_error parsedict(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v
 			goto cleanup;
 		}
 
-		error = parsename(&key, &s);
-		if (error)
-		{
-			error = fz_rethrow(error, "cannot parse key");
-			goto cleanup;
-		}
+		key = parsename(&s);
 
 		skipwhite(&s);
 
@@ -160,12 +143,7 @@ static fz_error parsedict(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v
 			goto cleanup;
 		}
 
-		error = fz_dictput(dict, key, val);
-		if (error)
-		{
-			error = fz_rethrow(error, "cannot insert dict entry");
-			goto cleanup;
-		}
+		fz_dictput(dict, key, val);
 
 		fz_dropobj(val); val = nil;
 		fz_dropobj(key); key = nil;
@@ -191,9 +169,7 @@ static fz_error parsearray(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *
 	fz_obj *o;
 	char *s = *sp;
 
-	error = fz_newarray(&a, 8);
-	if (error)
-		return fz_rethrow(error, "cannot create array");
+	a = fz_newarray(8);
 
 	s ++;	/* skip '[' */
 
@@ -214,13 +190,7 @@ static fz_error parsearray(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *
 			return fz_rethrow(error, "cannot parse item");
 		}
 
-		error = fz_arraypush(a, o);
-		if (error)
-		{
-			fz_dropobj(o);
-			fz_dropobj(a);
-			return fz_rethrow(error, "cannot add item to array");
-		}
+		fz_arraypush(a, o);
 
 		fz_dropobj(o);
 	}
@@ -230,9 +200,8 @@ static fz_error parsearray(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *
 	return fz_okay;
 }
 
-static fz_error parsestring(fz_obj **obj, char **sp)
+static fz_obj * parsestring(char **sp)
 {
-	fz_error error;
 	char buf[512];
 	char *s = *sp;
 	char *p = buf;
@@ -290,16 +259,11 @@ static fz_error parsestring(fz_obj **obj, char **sp)
 	}
 
 	*sp = s;
-
-	error = fz_newstring(obj, buf, p - buf - 1);
-	if (error)
-		return fz_rethrow(error, "cannot create string");
-	return fz_okay;
+	return fz_newstring(buf, p - buf - 1);
 }
 
-static fz_error parsehexstring(fz_obj **obj, char **sp)
+static fz_obj * parsehexstring(char **sp)
 {
-	fz_error error;
 	char buf[512];
 	char *s = *sp;
 	char *p = buf;
@@ -330,10 +294,7 @@ static fz_error parsehexstring(fz_obj **obj, char **sp)
 	}
 
 	*sp = s;
-	error = fz_newstring(obj, buf, p - buf);
-	if (error)
-		return fz_rethrow(error, "cannot create string");
-	return fz_okay;
+	return fz_newstring(buf, p - buf);
 }
 
 static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
@@ -349,8 +310,6 @@ static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 
 	skipwhite(&s);
 
-	error = fz_okay;
-
 	if (v != nil && *s == '%')
 	{
 		s ++;
@@ -358,47 +317,39 @@ static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 		switch (*s)
 		{
 		case 'o': *obj = fz_keepobj(va_arg(v->ap, fz_obj*)); break;
-		case 'b': error = fz_newbool(obj, va_arg(v->ap, int)); break;
-		case 'i': error = fz_newint(obj, va_arg(v->ap, int)); break;
-		case 'f': error = fz_newreal(obj, (float)va_arg(v->ap, double)); break;
-		case 'n': error = fz_newname(obj, va_arg(v->ap, char*)); break;
+		case 'b': *obj = fz_newbool(va_arg(v->ap, int)); break;
+		case 'i': *obj = fz_newint(va_arg(v->ap, int)); break;
+		case 'f': *obj = fz_newreal((float)va_arg(v->ap, double)); break;
+		case 'n': *obj = fz_newname(va_arg(v->ap, char*)); break;
 		case 'r':
 			  num = va_arg(v->ap, int);
 			  gen = va_arg(v->ap, int);
-			  error = fz_newindirect(obj, num, gen, xref);
+			*obj = fz_newindirect(num, gen, xref);
 			  break;
 		case 's':
 			  tmp = va_arg(v->ap, char*);
-			  error = fz_newstring(obj, tmp, strlen(tmp));
+			*obj = fz_newstring(tmp, strlen(tmp));
 			  break;
 		case '#':
 			  tmp = va_arg(v->ap, char*);
 			  len = va_arg(v->ap, int);
-			  error = fz_newstring(obj, tmp, len);
+			*obj = fz_newstring(tmp, len);
 			  break;
 		default:
-			  error = fz_throw("unknown format specifier in packobj: '%c'", *s);
-			  break;
+			return fz_throw("unknown format specifier in packobj: '%c'", *s);
 		}
-
-		if (error)
-			error = fz_rethrow(error, "cannot create object for %% format");
 
 		s ++;
 	}
 
 	else if (*s == '/')
 	{
-		error = parsename(obj, &s);
-		if (error)
-			error = fz_rethrow(error, "cannot parse name");
+		*obj = parsename(&s);
 	}
 
 	else if (*s == '(')
 	{
-		error = parsestring(obj, &s);
-		if (error)
-			error = fz_rethrow(error, "cannot parse string");
+		*obj = parsestring(&s);
 	}
 
 	else if (*s == '<')
@@ -407,13 +358,11 @@ static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 		{
 			error = parsedict(obj, xref, &s, v);
 			if (error)
-				error = fz_rethrow(error, "cannot parse dict");
+				return fz_rethrow(error, "cannot parse dict");
 		}
 		else
 		{
-			error = parsehexstring(obj, &s);
-			if (error)
-				error = fz_rethrow(error, "cannot parse hex string");
+			*obj = parsehexstring(&s);
 		}
 	}
 
@@ -421,14 +370,12 @@ static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 	{
 		error = parsearray(obj, xref, &s, v);
 		if (error)
-			error = fz_rethrow(error, "cannot parse array");
+			return fz_rethrow(error, "cannot parse array");
 	}
 
 	else if (*s == '-' || *s == '.' || (*s >= '0' && *s <= '9'))
 	{
-		error = parsenumber(obj, &s);
-		if (error)
-			error = fz_rethrow(error, "cannot parse number");
+		*obj = parsenumber(&s);
 	}
 
 	else if (isregular(*s))
@@ -436,32 +383,20 @@ static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 		parsekeyword(&s, buf, buf + sizeof buf);
 
 		if (strcmp("true", buf) == 0)
-		{
-			error = fz_newbool(obj, 1);
-			if (error)
-				error = fz_rethrow(error, "cannot create bool (true)");
-		}
+			*obj = fz_newbool(1);
 		else if (strcmp("false", buf) == 0)
-		{
-			error = fz_newbool(obj, 0);
-			if (error)
-				error = fz_rethrow(error, "cannot create bool (false)");
-		}
+			*obj = fz_newbool(0);
 		else if (strcmp("null", buf) == 0)
-		{
-			error = fz_newnull(obj);
-			if (error)
-				error = fz_rethrow(error, "cannot create null object");
-		}
+			*obj = fz_newnull();
 		else
-			error = fz_throw("undefined keyword %s", buf);
+			return fz_throw("undefined keyword %s", buf);
 	}
 
 	else
-		error = fz_throw("syntax error: unknown byte 0x%d", *s);
+		return fz_throw("syntax error: unknown byte 0x%d", *s);
 
 	*sp = s;
-	return error; /* already rethrown */
+	return fz_okay;
 }
 
 fz_error fz_packobj(fz_obj **op, pdf_xref *xref, char *fmt, ...)

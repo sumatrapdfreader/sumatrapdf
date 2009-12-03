@@ -142,11 +142,11 @@ static void expandstream(fz_obj *obj, int oid, int gen)
     if (error)
 	die(error);
 
-    fz_copydict(&newdict, obj);
+	newdict = fz_copydict(obj);
     fz_dictdels(newdict, "Filter");
     fz_dictdels(newdict, "DecodeParms");
 
-    fz_newint(&newlen, buf->wp - buf->rp);
+	newlen = fz_newint(buf->wp - buf->rp);
     fz_dictputs(newdict, "Length", newlen);
     fz_dropobj(newlen);
 
@@ -227,9 +227,9 @@ static void savexref(void)
     }
     fprintf(out, "\n");
 
-    fz_newdict(&trailer, 5);
+	trailer = fz_newdict(5);
 
-    fz_newint(&obj, xref->len);
+	obj = fz_newint(xref->len);
     fz_dictputs(trailer, "Size", obj);
     fz_dropobj(obj);
 

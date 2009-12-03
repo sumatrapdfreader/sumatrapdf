@@ -210,4 +210,4 @@ fz_luminosity_rgb(int *bdr, int *bdg, int *bdb, int sr, int sg, int sb)
 
 //fz_separable_blend(, fz_blendkind mode)
 //{
-//}
+	//}

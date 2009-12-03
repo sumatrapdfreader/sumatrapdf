@@ -14,12 +14,7 @@ runone(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *stmref)
 	if (error)
 		return fz_rethrow(error, "cannot load content stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 
-	error = fz_openrbuffer(&stm, buf);
-	if (error)
-	{
-		fz_dropbuffer(buf);
-		return fz_rethrow(error, "cannot open content buffer (read)");
-	}
+	stm = fz_openrbuffer(buf);
 
 	error = pdf_runcsi(csi, xref, rdb, stm);
 
@@ -47,9 +42,7 @@ runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 
     pdf_logpage("multiple content streams: %d\n", fz_arraylen(list));
 
-    error = fz_newbuffer(&big, 32 * 1024);
-    if (error)
-	return fz_rethrow(error, "cannot create content buffer");
+	big = fz_newbuffer(32 * 1024);
 
     for (i = 0; i < fz_arraylen(list); i++)
     {
@@ -65,13 +58,7 @@ runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 
 	while (big->wp + n + 1 > big->ep)
 	{
-	    error = fz_growbuffer(big);
-	    if (error)
-	    {
-		fz_dropbuffer(one);
-		fz_dropbuffer(big);
-		return fz_rethrow(error, "cannot load content stream part %d/%d", i + 1, fz_arraylen(list));
-	    }
+			fz_growbuffer(big);
 	}
 
 	memcpy(big->wp, one->rp, n);
@@ -82,12 +69,7 @@ runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 	fz_dropbuffer(one);
     }
 
-    error = fz_openrbuffer(&file, big);
-    if (error)
-    {
-	fz_dropbuffer(big);
-	return fz_rethrow(error, "cannot open content buffer (read)");
-    }
+	file = fz_openrbuffer(big);
 
     error = pdf_runcsi(csi, xref, rdb, file);
     if (error)
@@ -205,9 +187,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	obj = fz_dictgets(dict, "Annots");
 	if (obj)
 	{
-		error = pdf_loadannots(&comments, &links, xref, obj);
-		if (error)
-			return fz_rethrow(error, "cannot load annotations");
+		pdf_loadannots(&comments, &links, xref, obj);
 	}
 
 	/*
@@ -216,9 +196,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	if (!xref->store)
 	{
-		error = pdf_newstore(&xref->store);
-		if (error)
-			return fz_rethrow(error, "cannot create resource store");
+		xref->store = pdf_newstore();
 	}
 
 	/*
@@ -231,9 +209,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	else
 	{
 		fz_warn("cannot find page resources, proceeding anyway.");
-		error = fz_newdict(&rdb, 0);
-		if (error)
-			return fz_rethrow(error, "cannot create fake page resources");
+		rdb = fz_newdict(0);
 	}
 
 	/*
@@ -254,13 +230,6 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	 */
 
 	page = fz_malloc(sizeof(pdf_page));
-	if (!page)
-	{
-		fz_droptree(tree);
-		fz_dropobj(rdb);
-		return fz_rethrow(-1, "out of memory: page struct");
-	}
-
 	page->mediabox.x0 = MIN(bbox.x0, bbox.x1);
 	page->mediabox.y0 = MIN(bbox.y0, bbox.y1);
 	page->mediabox.x1 = MAX(bbox.x0, bbox.x1);

@@ -38,13 +38,9 @@ static void saveimage(fz_obj *obj, int num, int gen)
     int x;
     int y;
 
-    error = fz_newindirect(&ref, num, gen, xref);
-    if (error)
-        die(error);
+	ref = fz_newindirect(num, gen, xref);
 
-    error = pdf_newstore(&xref->store);
-    if (error)
-        die(error);
+	xref->store = pdf_newstore();
 
     error = pdf_loadimage(&img, xref, ref);
     if (error)
@@ -184,9 +180,7 @@ static void savefont(fz_obj *dict, int num, int gen)
         return;
     }
 
-    error = fz_newbuffer(&buf, 0);
-    if (error)
-        die(error);
+	buf = fz_newbuffer(0);
 
     error = pdf_loadstream(&buf, xref, fz_tonum(stream), fz_togen(stream));
     if (error)

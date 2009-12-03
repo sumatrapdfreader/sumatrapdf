@@ -62,20 +62,18 @@ struct fz_obj_s
 	} u;
 };
 
-fz_error fz_newnull(fz_obj **op);
-fz_error fz_newbool(fz_obj **op, int b);
-fz_error fz_newint(fz_obj **op, int i);
-fz_error fz_newreal(fz_obj **op, float f);
-fz_error fz_newname(fz_obj **op, char *str);
-fz_error fz_newstring(fz_obj **op, char *str, int len);
-fz_error fz_newindirect(fz_obj **op, int num, int gen, pdf_xref *xref);
+fz_obj * fz_newnull(void);
+fz_obj * fz_newbool(int b);
+fz_obj * fz_newint(int i);
+fz_obj * fz_newreal(float f);
+fz_obj * fz_newname(char *str);
+fz_obj * fz_newstring(char *str, int len);
+fz_obj * fz_newindirect(int num, int gen, pdf_xref *xref);
 
-fz_error fz_newarray(fz_obj **op, int initialcap);
-fz_error fz_newdict(fz_obj **op, int initialcap);
-fz_error fz_copyarray(fz_obj **op, fz_obj *array);
-fz_error fz_copydict(fz_obj **op, fz_obj *dict);
-fz_error fz_deepcopyarray(fz_obj **op, fz_obj *array);
-fz_error fz_deepcopydict(fz_obj **op, fz_obj *dict);
+fz_obj * fz_newarray(int initialcap);
+fz_obj * fz_newdict(int initialcap);
+fz_obj * fz_copyarray(fz_obj *array);
+fz_obj * fz_copydict(fz_obj *dict);
 
 fz_obj *fz_keepobj(fz_obj *obj);
 void fz_dropobj(fz_obj *obj);
@@ -105,12 +103,12 @@ int fz_tostrlen(fz_obj *obj);
 int fz_tonum(fz_obj *obj);
 int fz_togen(fz_obj *obj);
 
-fz_error fz_newnamefromstring(fz_obj **op, fz_obj *str);
+fz_obj * fz_newnamefromstring(fz_obj *str);
 
 int fz_arraylen(fz_obj *array);
 fz_obj *fz_arrayget(fz_obj *array, int i);
-fz_error fz_arrayput(fz_obj *array, int i, fz_obj *obj);
-fz_error fz_arraypush(fz_obj *array, fz_obj *obj);
+void fz_arrayput(fz_obj *array, int i, fz_obj *obj);
+void fz_arraypush(fz_obj *array, fz_obj *obj);
 
 int fz_dictlen(fz_obj *dict);
 fz_obj *fz_dictgetkey(fz_obj *dict, int idx);
@@ -118,18 +116,18 @@ fz_obj *fz_dictgetval(fz_obj *dict, int idx);
 fz_obj *fz_dictget(fz_obj *dict, fz_obj *key);
 fz_obj *fz_dictgets(fz_obj *dict, char *key);
 fz_obj *fz_dictgetsa(fz_obj *dict, char *key, char *abbrev);
-fz_error fz_dictput(fz_obj *dict, fz_obj *key, fz_obj *val);
-fz_error fz_dictputs(fz_obj *dict, char *key, fz_obj *val);
-fz_error fz_dictdel(fz_obj *dict, fz_obj *key);
-fz_error fz_dictdels(fz_obj *dict, char *key);
+void fz_dictput(fz_obj *dict, fz_obj *key, fz_obj *val);
+void fz_dictputs(fz_obj *dict, char *key, fz_obj *val);
+void fz_dictdel(fz_obj *dict, fz_obj *key);
+void fz_dictdels(fz_obj *dict, char *key);
 void fz_sortdict(fz_obj *dict);
 
 int fz_sprintobj(char *s, int n, fz_obj *obj, int tight);
 int fz_fprintobj(FILE *fp, fz_obj *obj, int tight);
 void fz_debugobj(fz_obj *obj);
 
-fz_error fz_parseobj(fz_obj **objp, pdf_xref *xref, char *s);
-fz_error fz_packobj(fz_obj **objp, pdf_xref *xref, char *fmt, ...);
+fz_error fz_parseobj(fz_obj **, pdf_xref *xref, char *s);
+fz_error fz_packobj(fz_obj **, pdf_xref *xref, char *fmt, ...);
 
 char *fz_objkindstr(fz_obj *obj);
 
@@ -165,11 +163,11 @@ struct fz_buffer_s
 	int eof;
 };
 
-fz_error fz_newbuffer(fz_buffer **bufp, int size);
-fz_error fz_newbufferwithmemory(fz_buffer **bufp, unsigned char *data, int size);
+fz_buffer * fz_newbuffer(int size);
+fz_buffer * fz_newbufferwithmemory(unsigned char *data, int size);
 
-fz_error fz_rewindbuffer(fz_buffer *buf);
-fz_error fz_growbuffer(fz_buffer *buf);
+void fz_rewindbuffer(fz_buffer *buf);
+void fz_growbuffer(fz_buffer *buf);
 
 fz_buffer *fz_keepbuffer(fz_buffer *buf);
 void fz_dropbuffer(fz_buffer *buf);
@@ -184,7 +182,7 @@ void fz_dropbuffer(fz_buffer *buf);
  *    ioneedout -- output buffer exhausted, please provide more space (ep-wp)
  *    iodone -- finished, please never call me again. ever!
  * or...
- *    any other error object -- oops, something blew up.
+ *    any other error code -- oops, something blew up.
  *
  * To make using the filter easier, three variables are updated:
  *    produced -- if we actually produced any new data
@@ -214,16 +212,14 @@ typedef struct fz_filter_s fz_filter;
 	fz_error fz_process ## NAME (fz_filter*,fz_buffer*,fz_buffer*);   \
 	void fz_drop ## NAME (fz_filter*);                                  \
 	TYPE *VAR;                                                          \
-	*fp = fz_malloc(sizeof(TYPE));                                      \
-	if (!*fp) return fz_throw("outofmem: %s filter struct", #NAME);     \
-	(*fp)->refs = 1;                                                    \
-	(*fp)->process = fz_process ## NAME ;                               \
-	(*fp)->drop = fz_drop ## NAME ;                                     \
-	(*fp)->consumed = 0;                                                \
-	(*fp)->produced = 0;                                                \
-	(*fp)->count = 0;                                                   \
-	(*fp)->done = 0;                                                    \
-	VAR = (TYPE*) *fp
+	VAR = fz_malloc(sizeof(TYPE));	 \
+	((fz_filter*)VAR)->refs = 1; \
+	((fz_filter*)VAR)->process = fz_process ## NAME ;  \
+	((fz_filter*)VAR)->drop = fz_drop ## NAME ;  \
+	((fz_filter*)VAR)->consumed = 0;  \
+	((fz_filter*)VAR)->produced = 0; \
+	((fz_filter*)VAR)->count = 0; \
+	((fz_filter*)VAR)->done = 0;
 
 struct fz_filter_s
 {
@@ -240,27 +236,27 @@ fz_error fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out);
 fz_filter *fz_keepfilter(fz_filter *f);
 void fz_dropfilter(fz_filter *f);
 
-fz_error fz_newpipeline(fz_filter **fp, fz_filter *head, fz_filter *tail);
-fz_error fz_chainpipeline(fz_filter **fp, fz_filter *head, fz_filter *tail, fz_buffer *buf);
+fz_filter * fz_newpipeline(fz_filter *head, fz_filter *tail);
+fz_filter * fz_chainpipeline(fz_filter *head, fz_filter *tail, fz_buffer *buf);
 void fz_unchainpipeline(fz_filter *pipe, fz_filter **oldfp, fz_buffer **oldbp);
 
 /* stop and reverse! special case needed for postscript only */
 void fz_pushbackahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out, int n);
 
-fz_error fz_newnullfilter(fz_filter **fp, int len);
-fz_error fz_newcopyfilter(fz_filter **fp);
-fz_error fz_newarc4filter(fz_filter **fp, unsigned char *key, unsigned keylen);
-fz_error fz_newaesdfilter(fz_filter **fp, unsigned char *key, unsigned keylen);
-fz_error fz_newa85d(fz_filter **filterp, fz_obj *param);
-fz_error fz_newahxd(fz_filter **filterp, fz_obj *param);
-fz_error fz_newrld(fz_filter **filterp, fz_obj *param);
-fz_error fz_newdctd(fz_filter **filterp, fz_obj *param);
-fz_error fz_newfaxd(fz_filter **filterp, fz_obj *param);
-fz_error fz_newflated(fz_filter **filterp, fz_obj *param);
-fz_error fz_newlzwd(fz_filter **filterp, fz_obj *param);
-fz_error fz_newpredictd(fz_filter **filterp, fz_obj *param);
-fz_error fz_newjbig2d(fz_filter **filterp, fz_obj *param);
-fz_error fz_newjpxd(fz_filter **filterp, fz_obj *param);
+fz_filter * fz_newnullfilter(int len);
+fz_filter * fz_newcopyfilter();
+fz_filter * fz_newarc4filter(unsigned char *key, unsigned keylen);
+fz_filter * fz_newaesdfilter(unsigned char *key, unsigned keylen);
+fz_filter * fz_newa85d(fz_obj *param);
+fz_filter * fz_newahxd(fz_obj *param);
+fz_filter * fz_newrld(fz_obj *param);
+fz_filter * fz_newdctd(fz_obj *param);
+fz_filter * fz_newfaxd(fz_obj *param);
+fz_filter * fz_newflated(fz_obj *param);
+fz_filter * fz_newlzwd(fz_obj *param);
+fz_filter * fz_newpredictd(fz_obj *param);
+fz_filter * fz_newjbig2d(fz_obj *param);
+fz_filter * fz_newjpxd(fz_obj *param);
 
 fz_error fz_setjbig2dglobalstream(fz_filter *filter, unsigned char *buf, int len);
 
@@ -356,12 +352,9 @@ fz_error fz_openrfile(fz_stream **stmp, char *filename);
 fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path);
 #endif
 
-/* write to memory buffers! */
-fz_error fz_openrmemory(fz_stream **stmp, unsigned char *mem, int len);
-fz_error fz_openrbuffer(fz_stream **stmp, fz_buffer *buf);
-
-/* almost like fork() exec() pipe() */
-fz_error fz_openrfilter(fz_stream **stmp, fz_filter *flt, fz_stream *chain);
+fz_stream * fz_openrmemory(unsigned char *mem, int len);
+fz_stream * fz_openrbuffer(fz_buffer *buf);
+fz_stream * fz_openrfilter(fz_filter *flt, fz_stream *chain);
 
 /*
  * Functions that are common to both input and output streams.
@@ -382,8 +375,8 @@ fz_error fz_rseek(fz_stream *stm, int offset, int whence);
 
 fz_error fz_readimp(fz_stream *stm);
 fz_error fz_read(int *np, fz_stream *stm, unsigned char *buf, int len);
-fz_error fz_readall(fz_buffer **bufp, fz_stream *stm, int sizehint);
 fz_error fz_readline(fz_stream *stm, char *buf, int max);
+fz_buffer * fz_readall(fz_stream *stm, int sizehint);
 
 /*
  * Error handling when reading with readbyte/peekbyte is non-standard.

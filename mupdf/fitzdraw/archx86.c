@@ -12,7 +12,7 @@ typedef unsigned char byte;
 #ifdef HAVE_MMX
 
 /* -mmmx for gcc >= 3.4 enables the mmx intrinsic functions, icc and VC
-   shouldn't require anything */
+shouldn't require anything */
 #include <mmintrin.h>
 
 static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int dw, int w0, int h)

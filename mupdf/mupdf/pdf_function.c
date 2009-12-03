@@ -306,20 +306,14 @@ pspop(psstack *st)
 	return fz_okay;
 }
 
-static fz_error
+static void
 resizecode(pdf_function *func, int newsize)
 {
 	if (newsize >= func->u.p.cap)
 	{
-		int newcodecap = func->u.p.cap + 64;
-		psobj *newcode;
-		newcode = fz_realloc(func->u.p.code, newcodecap * sizeof(psobj));
-		if (!newcode)
-			return fz_rethrow(-1, "out of memory: calculator function code");
-		func->u.p.cap = newcodecap;
-		func->u.p.code = newcode;
+		func->u.p.cap = func->u.p.cap + 64;
+		func->u.p.code = fz_realloc(func->u.p.code, func->u.p.cap * sizeof(psobj));
 	}
-	return fz_okay;
 }
 
 static fz_error
@@ -346,18 +340,14 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 			return fz_throw("truncated calculator function");
 
 		case PDF_TINT:
-			error = resizecode(func, *codeptr);
-			if (error)
-				return fz_rethrow(error, "resize calculator function code");
+			resizecode(func, *codeptr);
 			func->u.p.code[*codeptr].type = PSINT;
 			func->u.p.code[*codeptr].u.i = atoi(buf);
 			++*codeptr;
 			break;
 
 		case PDF_TREAL:
-			error = resizecode(func, *codeptr);
-			if (error)
-				return fz_rethrow(error, "resize calculator function code");
+			resizecode(func, *codeptr);
 			func->u.p.code[*codeptr].type = PSREAL;
 			func->u.p.code[*codeptr].u.f = atof(buf);
 			++*codeptr;
@@ -367,9 +357,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 			opptr = *codeptr;
 			*codeptr += 3;
 
-			error = resizecode(func, opptr + 2);
-			if (error)
-				return fz_rethrow(error, "resize calculator function code");
+			resizecode(func, opptr + 2);
 
 			error = parsecode(func, stream, codeptr);
 			if (error)
@@ -429,9 +417,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 			break;
 
 		case PDF_TCBRACE:
-			error = resizecode(func, *codeptr);
-			if (error)
-				return fz_rethrow(error, "resize calculator function code");
+			resizecode(func, *codeptr);
 			func->u.p.code[*codeptr].type = PSOPERATOR;
 			func->u.p.code[*codeptr].u.op = PSORETURN;
 			++*codeptr;
@@ -455,10 +441,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 			if (cmp != 0)
 				return fz_throw("unknown operator: '%s'", buf);
 
-			error = resizecode(func, *codeptr);
-			if (error)
-				return fz_rethrow(error, "resize calculator function code");
-
+			resizecode(func, *codeptr);
 			func->u.p.code[*codeptr].type = PSOPERATOR;
 			func->u.p.code[*codeptr].u.op = a;
 			++*codeptr;
@@ -504,7 +487,7 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, in
 	return fz_okay;
 }
 
-#define SAFE_RETHROW            if (error) fz_rethrow(error, "runtime error in calculator function")
+#define SAFE_RETHROW            if (error) return fz_rethrow(error, "runtime error in calculator function")
 #define SAFE_PUSHINT(st, a)	{ error = pspushint(st, a); SAFE_RETHROW; }
 #define SAFE_PUSHREAL(st, a)	{ error = pspushreal(st, a); SAFE_RETHROW; }
 #define SAFE_PUSHBOOL(st, a)	{ error = pspushbool(st, a); SAFE_RETHROW; }
@@ -1009,8 +992,6 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int ge
 	pdf_logrsrc("samplecount %d\n", samplecount);
 
 	func->u.sa.samples = fz_malloc(samplecount * sizeof(int));
-	if (!func->u.sa.samples)
-		return fz_rethrow(-1, "out of memory: samples");
 
 	error = pdf_openstream(&stream, xref, oid, gen);
 	if (error)
@@ -1101,8 +1082,6 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 	{
 		s0 = fz_malloc((1 << func->m) * 2 * sizeof(float));
 		s1 = s0 + (1 << func->m);
-		if (!s0)
-			return fz_rethrow(-1, "out of memory: scratch buffer");
 	}
 
 	/* FIXME i think this is wrong... test with 2 samples it gets wrong idxs */
@@ -1254,24 +1233,9 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		pdf_logrsrc("k %d\n", func->u.st.k);
 
 		func->u.st.funcs = fz_malloc(func->u.st.k * sizeof (pdf_function));
-		if (!func->u.st.funcs)
-			return fz_throw("out of memory");
-		funcs = func->u.st.funcs;
-
 		func->u.st.bounds = fz_malloc((func->u.st.k - 1) * sizeof (float));
-		if (!func->u.st.bounds)
-		{
-			fz_free(func->u.st.funcs);
-			return fz_throw("out of memory");
-		}
-
 		func->u.st.encode = fz_malloc(func->u.st.k * 2 * sizeof (float));
-		if (!func->u.st.encode)
-		{
-			fz_free(func->u.st.funcs);
-			fz_free(func->u.st.bounds);
-			return fz_throw("out of memory");
-		}
+		funcs = func->u.st.funcs;
 
 		for (i = 0; i < k; ++i)
 		{
@@ -1317,7 +1281,6 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 	{
 		if (!fz_isarray(obj) || fz_arraylen(obj) != k * 2)
 			return fz_throw("malformed /Encode");
-
 		for (i = 0; i < k; ++i)
 		{
 			func->u.st.encode[i*2+0] = fz_toreal(fz_arrayget(obj, i*2+0));
@@ -1434,9 +1397,6 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 	pdf_logrsrc("load function (%d %d R) {\n", fz_tonum(ref), fz_togen(ref));
 
 	func = fz_malloc(sizeof(pdf_function));
-	if (!func)
-		return fz_rethrow(-1, "out of memory: function struct");
-
 	memset(func, 0, sizeof(pdf_function));
 	func->refs = 1;
 
@@ -1527,12 +1487,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 
 	pdf_logrsrc("}\n");
 
-	error = pdf_storeitem(xref->store, PDF_KFUNCTION, ref, func);
-	if (error)
-	{
-		pdf_dropfunction(func);
-		return fz_rethrow(error, "cannot store function resource");
-	}
+	pdf_storeitem(xref->store, PDF_KFUNCTION, ref, func);
 
 	*funcp = func;
 	return fz_okay;

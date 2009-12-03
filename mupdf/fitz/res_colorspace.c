@@ -29,8 +29,8 @@ fz_dropcolorspace(fz_colorspace *cs)
 		return;
 	if (cs && --cs->refs == 0)
 	{
-		if (cs->drop)
-			cs->drop(cs);
+		if (cs->freefunc)
+			cs->freefunc(cs);
 		fz_free(cs);
 	}
 }

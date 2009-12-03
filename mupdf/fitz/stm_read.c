@@ -20,22 +20,9 @@ fz_readimp(fz_stream *stm)
 	if (buf->eof)
 		return fz_okay;
 
-	error = fz_rewindbuffer(buf);
-	if (error)
-	{
-		stm->dead = 1;
-		return fz_rethrow(error, "cannot rewind output buffer");
-	}
-
+	fz_rewindbuffer(buf);
 	if (buf->ep - buf->wp == 0)
-	{
-		error = fz_growbuffer(buf);
-		if (error)
-		{
-			stm->dead = 1;
-			return fz_rethrow(error, "cannot grow output buffer");
-		}
-	}
+		fz_growbuffer(buf);
 
 	switch (stm->kind)
 	{
@@ -80,23 +67,9 @@ fz_readimp(fz_stream *stm)
 					return 0;
 
 				if (buf->rp > buf->bp)
-				{
-					error = fz_rewindbuffer(buf);
-					if (error)
-					{
-						stm->dead = 1;
-						return fz_rethrow(error, "cannot rewind buffer");
-					}
-				}
+					fz_rewindbuffer(buf);
 				else
-				{
-					error = fz_growbuffer(buf);
-					if (error)
-					{
-						stm->dead = 1;
-						return fz_rethrow(error, "cannot grow buffer");
-					}
-				}
+					fz_growbuffer(buf);
 			}
 
 			else if (reason == fz_iodone)

@@ -42,8 +42,8 @@ struct fz_lzwd_s
 	lzw_code table[NUMCODES];
 };
 
-fz_error
-fz_newlzwd(fz_filter **fp, fz_obj *params)
+fz_filter *
+fz_newlzwd(fz_obj *params)
 {
 	int i;
 
@@ -83,7 +83,7 @@ fz_newlzwd(fz_filter **fp, fz_obj *params)
 	lzw->oldcode = -1;
 	lzw->resume = 0;
 
-	return fz_okay;
+	return (fz_filter *)lzw;
 }
 
 void

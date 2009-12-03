@@ -13,8 +13,8 @@ fz_dropimage(fz_image *image)
 {
 	if (image && --image->refs == 0)
 	{
-		if (image->drop)
-			image->drop(image);
+		if (image->freefunc)
+			image->freefunc(image);
 		if (image->cs)
 			fz_dropcolorspace(image->cs);
 		fz_free(image);
