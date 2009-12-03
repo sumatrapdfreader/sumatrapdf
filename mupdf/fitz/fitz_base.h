@@ -223,7 +223,7 @@ void *fz_hashgetval(fz_hashtable *table, int idx);
  */
 
 /* multiply 8-bit fixpoint (0..1) so that 0*0==0 and 255*255==255 */
-#define fz_mul255(a,b) (((a) * ((b) + 1)) >> 8)
+#define fz_mul255(a,b) (((a) * ((b) + ((b) >> 7))) >> 8)
 #define fz_floor(x) floor(x)
 #define fz_ceil(x) ceil(x)
 

@@ -29,94 +29,48 @@ fz_initnode(fz_node *node, fz_nodekind kind)
 	node->next = nil;
 }
 
-#if 0 /* c.f http://code.google.com/p/sumatrapdf/issues/detail?id=718 */
-void
-fz_dropnode(fz_node *node)
-{
-	if (node->first)
-		fz_dropnode(node->first);
-	if (node->next)
-		fz_dropnode(node->next);
-
-	switch (node->kind)
-	{
-	case FZ_NTRANSFORM:
-	case FZ_NOVER:
-	case FZ_NMASK:
-	case FZ_NBLEND:
-		break;
-	case FZ_NCOLOR:
-		fz_dropsolidnode((fz_solidnode *) node);
-		break;
-	case FZ_NPATH:
-		fz_droppathnode((fz_pathnode *) node);
-		break;
-	case FZ_NTEXT:
-		fz_droptextnode((fz_textnode *) node);
-		break;
-	case FZ_NIMAGE:
-		fz_dropimagenode((fz_imagenode *) node);
-		break;
-	case FZ_NSHADE:
-		fz_dropshadenode((fz_shadenode *) node);
-		break;
-	case FZ_NLINK:
-		fz_droplinknode((fz_linknode *) node);
-		break;
-	}
-
-	fz_free(node);
-}
-#else
 void
 fz_dropnode(fz_node *node)
 {
 	fz_node *next;
-again:
-	/*  Use tail-call instead of naive recursion for dropping node->next to fix
-		problems with high stack usage and crashes due to stack overflow in some
-		documents. We can't tail-call on both node->first and node->next so
-		I'm making educated guess that node->next usually has deeper nesting.
-		*/
-	next = node->next;
-	if (node->first)
-		fz_dropnode(node->first);
-	
-	switch (node->kind)
-	{
-	case FZ_NTRANSFORM:
-	case FZ_NOVER:
-	case FZ_NMASK:
-	case FZ_NBLEND:
-		break;
-	case FZ_NCOLOR:
-		fz_dropsolidnode((fz_solidnode *) node);
-		break;
-	case FZ_NPATH:
-		fz_droppathnode((fz_pathnode *) node);
-		break;
-	case FZ_NTEXT:
-		fz_droptextnode((fz_textnode *) node);
-		break;
-	case FZ_NIMAGE:
-		fz_dropimagenode((fz_imagenode *) node);
-		break;
-	case FZ_NSHADE:
-		fz_dropshadenode((fz_shadenode *) node);
-		break;
-	case FZ_NLINK:
-		fz_droplinknode((fz_linknode *) node);
-		break;
-	}
 
-	fz_free(node);
-	if (next)
+	while (node)
 	{
+		if (node->first)
+			fz_dropnode(node->first);
+
+		switch (node->kind)
+		{
+		case FZ_NTRANSFORM:
+		case FZ_NOVER:
+		case FZ_NMASK:
+		case FZ_NBLEND:
+			break;
+		case FZ_NCOLOR:
+			fz_dropsolidnode((fz_solidnode *) node);
+			break;
+		case FZ_NPATH:
+			fz_droppathnode((fz_pathnode *) node);
+			break;
+		case FZ_NTEXT:
+			fz_droptextnode((fz_textnode *) node);
+			break;
+		case FZ_NIMAGE:
+			fz_dropimagenode((fz_imagenode *) node);
+			break;
+		case FZ_NSHADE:
+			fz_dropshadenode((fz_shadenode *) node);
+			break;
+		case FZ_NLINK:
+			fz_droplinknode((fz_linknode *) node);
+			break;
+		}
+
+		next = node->next;
+		fz_free(node);
 		node = next;
-		goto again;
 	}
 }
-#endif
 
 fz_rect
 fz_boundnode(fz_node *node, fz_matrix ctm)

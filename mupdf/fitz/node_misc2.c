@@ -19,10 +19,34 @@ fz_newovernode(fz_node **nodep)
 	return fz_okay;
 }
 
+#if 0 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=533 */
 fz_rect
 fz_boundovernode(fz_overnode *node, fz_matrix ctm)
 {
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=533 */
+	fz_node *child;
+	fz_rect bbox;
+	fz_rect temp;
+
+	child = node->super.first;
+	if (!child)
+		return fz_emptyrect;
+
+	bbox = fz_boundnode(child, ctm);
+
+	child = child->next;
+	while (child)
+	{
+		temp = fz_boundnode(child, ctm);
+		bbox = fz_mergerects(temp, bbox);
+		child = child->next;
+	}
+
+	return bbox;
+}
+#else
+fz_rect
+fz_boundovernode(fz_overnode *node, fz_matrix ctm)
+{
 	struct {
 		int cap, ix;
 		struct {
@@ -84,6 +108,7 @@ fz_boundovernode(fz_overnode *node, fz_matrix ctm)
 
 	return bbox;
 }
+#endif
 
 /*
  * Mask

@@ -431,7 +431,8 @@ void winopenuri(pdfapp_t *app, char *buf)
 	char *browser = getenv("BROWSER");
 	if (!browser)
 		browser = "open";
-	execlp(browser, browser, buf, 0);
+	if (fork() == 0)
+		execlp(browser, browser, buf, (char*)0);
 }
 
 static void onkey(int c)
