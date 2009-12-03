@@ -107,9 +107,9 @@ fz_lineto(fz_pathnode *path, float x, float y)
 
 fz_error
 fz_curveto(fz_pathnode *path,
-		float x1, float y1,
-		float x2, float y2,
-		float x3, float y3)
+	float x1, float y1,
+	float x2, float y2,
+	float x3, float y3)
 {
 	if (path->len == 0)
 		return fz_throw("no current point");

@@ -7,8 +7,8 @@ typedef struct pdf_tensorpatch_s pdf_tensorpatch;
 
 struct pdf_tensorpatch_s
 {
-    fz_point pole[4][4];
-    float color[4][FZ_MAXCOLORS];
+	fz_point pole[4][4];
+	float color[4][FZ_MAXCOLORS];
 };
 
 static void
@@ -19,7 +19,7 @@ growshademesh(fz_shade *shade, int amount)
 }
 
 static fz_error
-parsedecode(fz_obj *decode, int ncomp, 
+parsedecode(fz_obj *decode, int ncomp,
 	float *x0, float *x1, float *y0, float *y1, float *c0, float *c1)
 {
 	int i;
@@ -391,37 +391,37 @@ filltensorinterior(pdf_tensorpatch *p)
 	((p0 + p3 + p3) / 3.0f)
 
 	p->pole[1][1].x = lcp1(p->pole[0][1].x, p->pole[3][1].x) +
-		lcp1(p->pole[1][0].x, p->pole[1][3].x) -
-		lcp1(lcp1(p->pole[0][0].x, p->pole[0][3].x),
+	lcp1(p->pole[1][0].x, p->pole[1][3].x) -
+	lcp1(lcp1(p->pole[0][0].x, p->pole[0][3].x),
 		lcp1(p->pole[3][0].x, p->pole[3][3].x));
 	p->pole[1][2].x = lcp1(p->pole[0][2].x, p->pole[3][2].x) +
-		lcp2(p->pole[1][0].x, p->pole[1][3].x) -
-		lcp1(lcp2(p->pole[0][0].x, p->pole[0][3].x),
+	lcp2(p->pole[1][0].x, p->pole[1][3].x) -
+	lcp1(lcp2(p->pole[0][0].x, p->pole[0][3].x),
 		lcp2(p->pole[3][0].x, p->pole[3][3].x));
 	p->pole[2][1].x = lcp2(p->pole[0][1].x, p->pole[3][1].x) +
-		lcp1(p->pole[2][0].x, p->pole[2][3].x) -
-		lcp2(lcp1(p->pole[0][0].x, p->pole[0][3].x),
+	lcp1(p->pole[2][0].x, p->pole[2][3].x) -
+	lcp2(lcp1(p->pole[0][0].x, p->pole[0][3].x),
 		lcp1(p->pole[3][0].x, p->pole[3][3].x));
 	p->pole[2][2].x = lcp2(p->pole[0][2].x, p->pole[3][2].x) +
-		lcp2(p->pole[2][0].x, p->pole[2][3].x) -
-		lcp2(lcp2(p->pole[0][0].x, p->pole[0][3].x),
+	lcp2(p->pole[2][0].x, p->pole[2][3].x) -
+	lcp2(lcp2(p->pole[0][0].x, p->pole[0][3].x),
 		lcp2(p->pole[3][0].x, p->pole[3][3].x));
 
 	p->pole[1][1].y = lcp1(p->pole[0][1].y, p->pole[3][1].y) +
-		lcp1(p->pole[1][0].y, p->pole[1][3].y) -
-		lcp1(lcp1(p->pole[0][0].y, p->pole[0][3].y),
+	lcp1(p->pole[1][0].y, p->pole[1][3].y) -
+	lcp1(lcp1(p->pole[0][0].y, p->pole[0][3].y),
 		lcp1(p->pole[3][0].y, p->pole[3][3].y));
 	p->pole[1][2].y = lcp1(p->pole[0][2].y, p->pole[3][2].y) +
-		lcp2(p->pole[1][0].y, p->pole[1][3].y) -
-		lcp1(lcp2(p->pole[0][0].y, p->pole[0][3].y),
+	lcp2(p->pole[1][0].y, p->pole[1][3].y) -
+	lcp1(lcp2(p->pole[0][0].y, p->pole[0][3].y),
 		lcp2(p->pole[3][0].y, p->pole[3][3].y));
 	p->pole[2][1].y = lcp2(p->pole[0][1].y, p->pole[3][1].y) +
-		lcp1(p->pole[2][0].y, p->pole[2][3].y) -
-		lcp2(lcp1(p->pole[0][0].y, p->pole[0][3].y),
+	lcp1(p->pole[2][0].y, p->pole[2][3].y) -
+	lcp2(lcp1(p->pole[0][0].y, p->pole[0][3].y),
 		lcp1(p->pole[3][0].y, p->pole[3][3].y));
 	p->pole[2][2].y = lcp2(p->pole[0][2].y, p->pole[3][2].y) +
-		lcp2(p->pole[2][0].y, p->pole[2][3].y) -
-		lcp2(lcp2(p->pole[0][0].y, p->pole[0][3].y),
+	lcp2(p->pole[2][0].y, p->pole[2][3].y) -
+	lcp2(lcp2(p->pole[0][0].y, p->pole[0][3].y),
 		lcp2(p->pole[3][0].y, p->pole[3][3].y));
 
 #undef lcp1
@@ -433,33 +433,33 @@ split_curve_s(const fz_point *pole, fz_point *q0, fz_point *q1, int pole_step)
 {
 #define midpoint(a,b)\
 	((a)/2.0f + (b)/2.0f) /* to avoid overflow */
-    float x12 = midpoint(pole[1 * pole_step].x, pole[2 * pole_step].x);
-    float y12 = midpoint(pole[1 * pole_step].y, pole[2 * pole_step].y);
+	float x12 = midpoint(pole[1 * pole_step].x, pole[2 * pole_step].x);
+	float y12 = midpoint(pole[1 * pole_step].y, pole[2 * pole_step].y);
 
-    q0[1 * pole_step].x = midpoint(pole[0 * pole_step].x, pole[1 * pole_step].x);
-    q0[1 * pole_step].y = midpoint(pole[0 * pole_step].y, pole[1 * pole_step].y);
-    q1[2 * pole_step].x = midpoint(pole[2 * pole_step].x, pole[3 * pole_step].x);
-    q1[2 * pole_step].y = midpoint(pole[2 * pole_step].y, pole[3 * pole_step].y);
-    q0[2 * pole_step].x = midpoint(q0[1 * pole_step].x, x12);
-    q0[2 * pole_step].y = midpoint(q0[1 * pole_step].y, y12);
-    q1[1 * pole_step].x = midpoint(x12, q1[2 * pole_step].x);
-    q1[1 * pole_step].y = midpoint(y12, q1[2 * pole_step].y);
-    q0[0 * pole_step].x = pole[0 * pole_step].x;
-    q0[0 * pole_step].y = pole[0 * pole_step].y;
-    q0[3 * pole_step].x = q1[0 * pole_step].x = midpoint(q0[2 * pole_step].x, q1[1 * pole_step].x);
-    q0[3 * pole_step].y = q1[0 * pole_step].y = midpoint(q0[2 * pole_step].y, q1[1 * pole_step].y);
-    q1[3 * pole_step].x = pole[3 * pole_step].x;
-    q1[3 * pole_step].y = pole[3 * pole_step].y;
+	q0[1 * pole_step].x = midpoint(pole[0 * pole_step].x, pole[1 * pole_step].x);
+	q0[1 * pole_step].y = midpoint(pole[0 * pole_step].y, pole[1 * pole_step].y);
+	q1[2 * pole_step].x = midpoint(pole[2 * pole_step].x, pole[3 * pole_step].x);
+	q1[2 * pole_step].y = midpoint(pole[2 * pole_step].y, pole[3 * pole_step].y);
+	q0[2 * pole_step].x = midpoint(q0[1 * pole_step].x, x12);
+	q0[2 * pole_step].y = midpoint(q0[1 * pole_step].y, y12);
+	q1[1 * pole_step].x = midpoint(x12, q1[2 * pole_step].x);
+	q1[1 * pole_step].y = midpoint(y12, q1[2 * pole_step].y);
+	q0[0 * pole_step].x = pole[0 * pole_step].x;
+	q0[0 * pole_step].y = pole[0 * pole_step].y;
+	q0[3 * pole_step].x = q1[0 * pole_step].x = midpoint(q0[2 * pole_step].x, q1[1 * pole_step].x);
+	q0[3 * pole_step].y = q1[0 * pole_step].y = midpoint(q0[2 * pole_step].y, q1[1 * pole_step].y);
+	q1[3 * pole_step].x = pole[3 * pole_step].x;
+	q1[3 * pole_step].y = pole[3 * pole_step].y;
 #undef midpoint
 }
 
 static inline void
 split_patch(pdf_tensorpatch *s0, pdf_tensorpatch *s1, const pdf_tensorpatch *p)
 {
-    split_curve_s(&p->pole[0][0], &s0->pole[0][0], &s1->pole[0][0], 4);
-    split_curve_s(&p->pole[0][1], &s0->pole[0][1], &s1->pole[0][1], 4);
-    split_curve_s(&p->pole[0][2], &s0->pole[0][2], &s1->pole[0][2], 4);
-    split_curve_s(&p->pole[0][3], &s0->pole[0][3], &s1->pole[0][3], 4);
+	split_curve_s(&p->pole[0][0], &s0->pole[0][0], &s1->pole[0][0], 4);
+	split_curve_s(&p->pole[0][1], &s0->pole[0][1], &s1->pole[0][1], 4);
+	split_curve_s(&p->pole[0][2], &s0->pole[0][2], &s1->pole[0][2], 4);
+	split_curve_s(&p->pole[0][3], &s0->pole[0][3], &s1->pole[0][3], 4);
 
 	copycolor(s0->color[0], p->color[0]);
 	midcolor(s0->color[1], p->color[0], p->color[1]);
@@ -476,10 +476,10 @@ static inline void
 split_stripe(pdf_tensorpatch *s0, pdf_tensorpatch *s1, const pdf_tensorpatch *p)
 
 {
-    split_curve_s(p->pole[0], s0->pole[0], s1->pole[0], 1);
-    split_curve_s(p->pole[1], s0->pole[1], s1->pole[1], 1);
-    split_curve_s(p->pole[2], s0->pole[2], s1->pole[2], 1);
-    split_curve_s(p->pole[3], s0->pole[3], s1->pole[3], 1);
+	split_curve_s(p->pole[0], s0->pole[0], s1->pole[0], 1);
+	split_curve_s(p->pole[1], s0->pole[1], s1->pole[1], 1);
+	split_curve_s(p->pole[2], s0->pole[2], s1->pole[2], 1);
+	split_curve_s(p->pole[3], s0->pole[3], s1->pole[3], 1);
 
 	copycolor(s0->color[0], p->color[0]);
 	copycolor(s0->color[1], p->color[1]);
@@ -646,7 +646,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 			{
 				t = getdata(stream, bpcomp);
 				patch.color[i][k] =
-					c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
+				c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
 			}
 		}
 
@@ -754,7 +754,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 			{
 				t = getdata(stream, bpcomp);
 				patch.color[i][k] =
-					c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
+				c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
 			}
 		}
 

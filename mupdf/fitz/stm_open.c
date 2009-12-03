@@ -134,7 +134,7 @@ fz_stream * fz_openrmemory(unsigned char *mem, int len)
 
 	buf = fz_newbufferwithmemory(mem, len);
 	stm = fz_openrbuffer(buf);
-		fz_dropbuffer(buf);
+	fz_dropbuffer(buf);
 
 	return stm;
 }

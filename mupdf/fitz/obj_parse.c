@@ -35,7 +35,7 @@ static inline int isregular(int ch)
 static inline int fromhex(char ch)
 {
 	if (ch >= '0' && ch <= '9')
-		return  ch - '0';
+		return ch - '0';
 	else if (ch >= 'A' && ch <= 'F')
 		return ch - 'A' + 0xA;
 	else if (ch >= 'a' && ch <= 'f')
@@ -322,19 +322,19 @@ static fz_error parseobj(fz_obj **obj, pdf_xref *xref, char **sp, struct vap *v)
 		case 'f': *obj = fz_newreal((float)va_arg(v->ap, double)); break;
 		case 'n': *obj = fz_newname(va_arg(v->ap, char*)); break;
 		case 'r':
-			  num = va_arg(v->ap, int);
-			  gen = va_arg(v->ap, int);
+			num = va_arg(v->ap, int);
+			gen = va_arg(v->ap, int);
 			*obj = fz_newindirect(num, gen, xref);
-			  break;
+			break;
 		case 's':
-			  tmp = va_arg(v->ap, char*);
+			tmp = va_arg(v->ap, char*);
 			*obj = fz_newstring(tmp, strlen(tmp));
-			  break;
+			break;
 		case '#':
-			  tmp = va_arg(v->ap, char*);
-			  len = va_arg(v->ap, int);
+			tmp = va_arg(v->ap, char*);
+			len = va_arg(v->ap, int);
 			*obj = fz_newstring(tmp, len);
-			  break;
+			break;
 		default:
 			return fz_throw("unknown format specifier in packobj: '%c'", *s);
 		}

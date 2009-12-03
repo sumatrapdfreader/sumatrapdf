@@ -68,8 +68,8 @@ pdf_loadlink(pdf_xref *xref, fz_obj *dict)
 	{
 		bbox = pdf_torect(obj);
 		pdf_logpage("rect [%g %g %g %g]\n",
-				bbox.x0, bbox.y0,
-				bbox.x1, bbox.y1);
+			bbox.x0, bbox.y0,
+			bbox.x1, bbox.y1);
 	}
 	else
 		bbox = fz_emptyrect;

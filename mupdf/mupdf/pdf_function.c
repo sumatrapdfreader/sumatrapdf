@@ -203,7 +203,7 @@ pspopnum(psstack *st, float *real)
 	if (!pschecktype(st, PSINT) && !pschecktype(st, PSREAL))
 		return fz_stacktypemismatch;
 	*real = (st->stack[st->sp].type == PSINT) ?
-		st->stack[st->sp].u.i : st->stack[st->sp].u.f;
+	st->stack[st->sp].u.i : st->stack[st->sp].u.f;
 	++st->sp;
 	return fz_okay;
 }
@@ -1071,7 +1071,7 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 	{
 		x = CLAMP(in[i], func->domain[i][0], func->domain[i][1]);
 		x = LERP(x, func->domain[i][0], func->domain[i][1],
-				func->u.sa.encode[i][0], func->u.sa.encode[i][1]);
+			func->u.sa.encode[i][0], func->u.sa.encode[i][1]);
 		x = CLAMP(x, 0, func->u.sa.size[i] - 1);
 		e[0][i] = floor(x);
 		e[1][i] = ceil(x);
@@ -1107,7 +1107,7 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 
 		/* decode output values */
 		out[i] = LERP(s0[0], 0, (1 << func->u.sa.bps) - 1,
-				func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
 		out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 	}
 
@@ -1271,7 +1271,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 		}
 
 		if (k != 1 && (func->domain[0][0] > func->u.st.bounds[0] ||
-					func->domain[0][1] < func->u.st.bounds[k-2]))
+			func->domain[0][1] < func->u.st.bounds[k-2]))
 			fz_warn("malformed shading function bounds (domain mismatch), proceeding anyway.");
 	}
 

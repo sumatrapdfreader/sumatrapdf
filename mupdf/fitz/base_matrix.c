@@ -13,8 +13,8 @@ void fz_invert3x3(float *dst, float *m)
 	(c1 * D2(a2,a3,b2,b3))
 
 	det = D3(M3(m,0,0), M3(m,1,0), M3(m,2,0),
-			 M3(m,0,1), M3(m,1,1), M3(m,2,1),
-			 M3(m,0,2), M3(m,1,2), M3(m,2,2));
+		M3(m,0,1), M3(m,1,1), M3(m,2,1),
+		M3(m,0,2), M3(m,1,2), M3(m,2,2));
 	if (det == 0)
 		det = 1.0;
 	det = 1.0 / det;
@@ -140,7 +140,7 @@ int
 fz_isrectilinear(fz_matrix m)
 {
 	return	(fabs(m.b) < FLT_EPSILON && fabs(m.c) < FLT_EPSILON) ||
-			(fabs(m.a) < FLT_EPSILON && fabs(m.d) < FLT_EPSILON);
+		(fabs(m.a) < FLT_EPSILON && fabs(m.d) < FLT_EPSILON);
 }
 
 float

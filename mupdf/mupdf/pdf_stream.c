@@ -83,47 +83,47 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 
 	else if (!strcmp(s, "FlateDecode") || !strcmp(s, "Fl"))
 	{
-			fz_obj *obj = fz_dictgets(p, "Predictor");
-			if (obj)
-			{
+		fz_obj *obj = fz_dictgets(p, "Predictor");
+		if (obj)
+		{
 			decompress = fz_newflated(p);
 			predict = fz_newpredictd(p);
 			pipe = fz_newpipeline(decompress, predict);
-				fz_dropfilter(decompress);
-				fz_dropfilter(predict);
+			fz_dropfilter(decompress);
+			fz_dropfilter(predict);
 			return pipe;
-			}
+		}
 		return fz_newflated(p);
 	}
 
 	else if (!strcmp(s, "LZWDecode") || !strcmp(s, "LZW"))
 	{
-			fz_obj *obj = fz_dictgets(p, "Predictor");
-			if (obj)
-			{
+		fz_obj *obj = fz_dictgets(p, "Predictor");
+		if (obj)
+		{
 			decompress = fz_newlzwd(p);
 			predict = fz_newpredictd(p);
 			pipe = fz_newpipeline(decompress, predict);
-				fz_dropfilter(decompress);
-				fz_dropfilter(predict);
+			fz_dropfilter(decompress);
+			fz_dropfilter(predict);
 			return pipe;
-			}
+		}
 		return fz_newlzwd(p);
 	}
 
 #ifdef HAVE_JBIG2DEC
 	else if (!strcmp(s, "JBIG2Decode"))
 	{
-			fz_obj *obj = fz_dictgets(p, "JBIG2Globals");
-			if (obj)
-			{
-				fz_buffer *globals;
+		fz_obj *obj = fz_dictgets(p, "JBIG2Globals");
+		if (obj)
+		{
+			fz_buffer *globals;
 			fz_filter *dec;
 
 			dec = fz_newjbig2d(p);
 
-				error = pdf_loadstream(&globals, xref, fz_tonum(obj), fz_togen(obj));
-				if (error)
+			error = pdf_loadstream(&globals, xref, fz_tonum(obj), fz_togen(obj));
+			if (error)
 				fz_catch(error, "cannot load jbig2 global segments");
 			else
 			{
@@ -132,7 +132,7 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 					fz_catch(error, "cannot apply jbig2 global segments");
 			}
 
-				fz_dropbuffer(globals);
+			fz_dropbuffer(globals);
 
 			return dec;
 		}
@@ -301,7 +301,7 @@ pdf_buildfilter(pdf_xref *xref, fz_obj *stmobj, int num, int gen)
 		{
 			/* The pipeline chain takes ownership of base */
 			return buildfilterchain(xref, base, filters, params, num, gen);
-	}
+		}
 	}
 
 	return base;

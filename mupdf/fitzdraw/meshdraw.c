@@ -77,8 +77,8 @@ static inline void copyvert(float *dst, float *src, int n)
 }
 
 static int clippoly(float src[MAXV][MAXN],
-					float dst[MAXV][MAXN], int len, int n,
-					float val, int isy, int ismax)
+	float dst[MAXV][MAXN], int len, int n,
+	float val, int isy, int ismax)
 {
 	float cv1[MAXN];
 	float cv2[MAXN];
@@ -100,18 +100,18 @@ static int clippoly(float src[MAXV][MAXN],
 
 		switch (r)
 		{
-			case IN:
-				copyvert(dst[cp++], cv2, n);
-				break;
-			case OUT:
-				break;
-			case LEAVE:
-				copyvert(dst[cp++], cv2, n);
-				break;
-			case ENTER:
-				copyvert(dst[cp++], cv1, n);
-				copyvert(dst[cp++], cv2, n);
-				break;
+		case IN:
+			copyvert(dst[cp++], cv2, n);
+			break;
+		case OUT:
+			break;
+		case LEAVE:
+			copyvert(dst[cp++], cv2, n);
+			break;
+		case ENTER:
+			copyvert(dst[cp++], cv1, n);
+			copyvert(dst[cp++], cv2, n);
+			break;
 		}
 		v1 = v2;
 	}
@@ -339,7 +339,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_colorspace *destcs, fz_pixmap 
 	{
 		n = 2 + shade->cs->n;
 		error = fz_newpixmap(&temp, dest->x, dest->y, dest->w, dest->h,
-					shade->cs->n + 1);
+			shade->cs->n + 1);
 		if (error)
 			return error;
 	}
@@ -359,7 +359,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_colorspace *destcs, fz_pixmap 
 			p.y = shade->mesh[(i * 3 + k) * n + 1];
 			p = fz_transformpoint(ctm, p);
 			if (isnan(p.y) || isnan(p.x)) // How is this happening?
-				goto baddata;
+			goto baddata;
 			tri[k][0] = p.x;
 			tri[k][1] = p.y;
 			for (j = 2; j < n; j++)

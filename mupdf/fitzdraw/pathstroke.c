@@ -38,9 +38,9 @@ line(struct sctx *s, float x0, float y0, float x1, float y1)
 
 static fz_error
 arc(struct sctx *s,
-		float xc, float yc,
-		float x0, float y0,
-		float x1, float y1)
+	float xc, float yc,
+	float x0, float y0,
+	float x1, float y1)
 {
 	fz_error error;
 	float th0, th1, r;
@@ -255,17 +255,17 @@ linecap(struct sctx *s, fz_point a, fz_point b)
 	if (linecap == SQUARE)
 	{
 		error = line(s, b.x - dlx, b.y - dly,
-						b.x - dlx - dly,
-						b.y - dly + dlx);
+			b.x - dlx - dly,
+			b.y - dly + dlx);
 		if (error) return error;
 		error = line(s, b.x - dlx - dly,
-						b.y - dly + dlx,
-						b.x + dlx - dly,
-						b.y + dly + dlx);
+			b.y - dly + dlx,
+			b.x + dlx - dly,
+			b.y + dly + dlx);
 		if (error) return error;
 		error = line(s, b.x + dlx - dly,
-						b.y + dly + dlx,
-						b.x + dlx, b.y + dly);
+			b.y + dly + dlx,
+			b.x + dlx, b.y + dly);
 		if (error) return error;
 	}
 

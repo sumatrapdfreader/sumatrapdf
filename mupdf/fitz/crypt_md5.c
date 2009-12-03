@@ -99,9 +99,9 @@ static void decode(unsigned int *output, const unsigned char *input, const unsig
 	for (i = 0, j = 0; j < len; i++, j += 4)
 	{
 		output[i] = ((unsigned int)input[j]) |
-			(((unsigned int)input[j+1]) << 8) |
-			(((unsigned int)input[j+2]) << 16) |
-			(((unsigned int)input[j+3]) << 24);
+		(((unsigned int)input[j+1]) << 8) |
+		(((unsigned int)input[j+2]) << 16) |
+		(((unsigned int)input[j+3]) << 24);
 	}
 }
 

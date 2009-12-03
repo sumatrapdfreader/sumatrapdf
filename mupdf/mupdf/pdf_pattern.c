@@ -52,8 +52,8 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	pat->bbox = pdf_torect(obj);
 
 	pdf_logrsrc("bbox [%g %g %g %g]\n",
-			pat->bbox.x0, pat->bbox.y0,
-			pat->bbox.x1, pat->bbox.y1);
+		pat->bbox.x0, pat->bbox.y0,
+		pat->bbox.x1, pat->bbox.y1);
 
 	obj = fz_dictgets(dict, "Matrix");
 	if (obj)
@@ -62,9 +62,9 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 		pat->matrix = fz_identity();
 
 	pdf_logrsrc("matrix [%g %g %g %g %g %g]\n",
-			pat->matrix.a, pat->matrix.b,
-			pat->matrix.c, pat->matrix.d,
-			pat->matrix.e, pat->matrix.f);
+		pat->matrix.a, pat->matrix.b,
+		pat->matrix.c, pat->matrix.d,
+		pat->matrix.e, pat->matrix.f);
 
 	/* Store pattern now, to avoid possible recursion if objects refer back to this one */
 	pdf_storeitem(xref->store, PDF_KPATTERN, dict, pat);

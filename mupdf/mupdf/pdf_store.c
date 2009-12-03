@@ -264,10 +264,10 @@ pdf_finditem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 	{
 		for (item = store->root; item; item = item->next)
 			if (item->kind == kind && !fz_objcmp(item->key, key))
-			{
-				item->age = 0;
-				return item->val;
-			}
+		{
+			item->age = 0;
+			return item->val;
+		}
 	}
 
 	return nil;

@@ -18,7 +18,7 @@ pdf_freeimage(fz_image *fzimg)
 
 fz_error
 pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
-		fz_obj *rdb, fz_obj *dict, fz_stream *file)
+	fz_obj *rdb, fz_obj *dict, fz_stream *file)
 {
 	fz_error error;
 	pdf_image *img;
@@ -69,7 +69,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		}
 
 		/* If no colorspace found in resource dictionary,
-		 * assume that reference is a standard name */
+		* assume that reference is a standard name */
 		if (!cso)
 			cso = cs;
 
@@ -113,7 +113,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		img->super.n = 0;
 		img->super.a = 1;
 	}
-        else if (!cs)
+	else if (!cs)
 		return fz_throw("image is missing colorspace");
 
 	if (fz_isarray(d))
@@ -301,12 +301,12 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 		a = 1;
 	}
 	else
-        {
+	{
 		if (!cs)
 			return fz_throw("colorspace missing for image");
 		if (bpc == 0)
 			return fz_throw("image has no bits per component");
-        }
+	}
 
 	obj = fz_dictgets(dict, "SMask");
 	if (fz_isindirect(obj))
@@ -400,7 +400,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 	if (realsize < expectedsize)
 	{
 		/* don't treat truncated image as fatal - get as much as possible and
-		   fill the rest with 0 */
+		fill the rest with 0 */
 		fz_buffer *buf;
 		buf = fz_newbuffer(expectedsize);
 		memset(buf->bp, 0, expectedsize);
@@ -524,8 +524,8 @@ pdf_loadtile(fz_image *img, fz_pixmap *tile)
 		}
 
 		tilefunc(src->samples->rp + (tile->y * src->stride), src->stride,
-				tmp->samples, tmp->w,
-				tmp->w, tmp->h, 0);
+			tmp->samples, tmp->w,
+			tmp->w, tmp->h, 0);
 
 		for (y = 0; y < tile->h; y++)
 		{
@@ -556,8 +556,8 @@ pdf_loadtile(fz_image *img, fz_pixmap *tile)
 	else
 	{
 		tilefunc(src->samples->rp + (tile->y * src->stride), src->stride,
-				tile->samples, tile->w * tile->n,
-				tile->w * (img->n + img->a), tile->h, img->a ? 0 : img->n);
+			tile->samples, tile->w * tile->n,
+			tile->w * (img->n + img->a), tile->h, img->a ? 0 : img->n);
 		if (src->usecolorkey)
 			maskcolorkey(tile, src->colorkey);
 		fz_decodetile(tile, !img->a, src->decode);

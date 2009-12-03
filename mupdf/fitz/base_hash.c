@@ -118,8 +118,8 @@ fz_resizehash(fz_hashtable *table, int newsize)
 		if (oldents[i].val)
 		{
 			fz_hashinsert(table, oldents[i].key, oldents[i].val);
-			}
 		}
+	}
 
 	fz_free(oldents);
 }

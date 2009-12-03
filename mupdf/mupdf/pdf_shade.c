@@ -189,8 +189,8 @@ loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix matrix)
 	{
 		shade->bbox = pdf_torect(obj);
 		pdf_logshade("bbox [%g %g %g %g]\n",
-				shade->bbox.x0, shade->bbox.y0,
-				shade->bbox.x1, shade->bbox.y1);
+			shade->bbox.x0, shade->bbox.y0,
+			shade->bbox.x1, shade->bbox.y1);
 	}
 
 	switch(type)
@@ -263,7 +263,7 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 		{
 			mat = pdf_tomatrix(obj);
 			pdf_logshade("matrix [%g %g %g %g %g %g]\n",
-					mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
+				mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
 		}
 		else
 		{

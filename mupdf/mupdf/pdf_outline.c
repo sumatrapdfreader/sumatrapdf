@@ -98,9 +98,9 @@ pdf_debugoutline(pdf_outline *outline, int level)
 			putchar(' ');
 
 		if (outline->title)
-		    printf("%s ", outline->title);
+			printf("%s ", outline->title);
 		else
-		    printf("<nil> ");
+			printf("<nil> ");
 
 		if (outline->link)
 			fz_debugobj(outline->link->dest);

@@ -152,16 +152,16 @@ static void
 infousage(void)
 {
 	fprintf(stderr,
-			"usage: pdfinfo [options] [file.pdf ... ]\n"
-			"  -d -\tpassword for decryption\n"
-			"  -f -\tlist fonts\n"
-			"  -i -\tlist images\n"
-			"  -m -\tlist dimensions\n"
-			"  -p -\tlist patterns\n"
-			"  -s -\tlist shadings\n"
-			"  -x -\tlist form and postscript xobjects\n"
-			"  example:\n"
-			"    pdfinfo -p mypassword a.pdf\n");
+		"usage: pdfinfo [options] [file.pdf ... ]\n"
+		"  -d -\tpassword for decryption\n"
+		"  -f -\tlist fonts\n"
+		"  -i -\tlist images\n"
+		"  -m -\tlist dimensions\n"
+		"  -p -\tlist patterns\n"
+		"  -s -\tlist shadings\n"
+		"  -x -\tlist form and postscript xobjects\n"
+		"  example:\n"
+		"    pdfinfo -p mypassword a.pdf\n");
 	exit(1);
 }
 
@@ -286,7 +286,7 @@ gatherfonts(int page, fz_obj *pageobj, fz_obj *dict)
 
 		for (k = 0; k < fonts; k++)
 			if (fz_tonum(font[k]->ref) == fz_tonum(ref) &&
-					fz_togen(font[k]->ref) == fz_togen(ref))
+				fz_togen(font[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < fonts)
@@ -388,7 +388,7 @@ gatherimages(int page, fz_obj *pageobj, fz_obj *dict)
 
 		for (k = 0; k < images; k++)
 			if (fz_tonum(image[k]->ref) == fz_tonum(ref) &&
-					fz_togen(image[k]->ref) == fz_togen(ref))
+				fz_togen(image[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < images)
@@ -459,7 +459,7 @@ gatherforms(int page, fz_obj *pageobj, fz_obj *dict)
 
 		for (k = 0; k < forms; k++)
 			if (fz_tonum(form[k]->ref) == fz_tonum(ref) &&
-					fz_togen(form[k]->ref) == fz_togen(ref))
+				fz_togen(form[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < forms)
@@ -512,12 +512,12 @@ gatherpsobjs(int page, fz_obj *pageobj, fz_obj *dict)
 		if (subtype && !fz_isname(subtype))
 			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
 		if (strcmp(fz_toname(type), "PS") &&
-				(strcmp(fz_toname(type), "Form") || strcmp(fz_toname(subtype), "PS")))
+			(strcmp(fz_toname(type), "Form") || strcmp(fz_toname(subtype), "PS")))
 			continue;
 
 		for (k = 0; k < psobjs; k++)
 			if (fz_tonum(psobj[k]->ref) == fz_tonum(ref) &&
-					fz_togen(psobj[k]->ref) == fz_togen(ref))
+				fz_togen(psobj[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < psobjs)
@@ -566,7 +566,7 @@ gathershadings(int page, fz_obj *pageobj, fz_obj *dict)
 
 		for (k = 0; k < shadings; k++)
 			if (fz_tonum(shading[k]->ref) == fz_tonum(ref) &&
-			    fz_togen(shading[k]->ref) == fz_togen(ref))
+				fz_togen(shading[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < shadings)
@@ -635,7 +635,7 @@ gatherpatterns(int page, fz_obj *pageobj, fz_obj *dict)
 
 		for (k = 0; k < patterns; k++)
 			if (fz_tonum(pattern[k]->ref) == fz_tonum(ref) &&
-			    fz_togen(pattern[k]->ref) == fz_togen(ref))
+				fz_togen(pattern[k]->ref) == fz_togen(ref))
 				break;
 
 		if (k < patterns)
@@ -773,12 +773,12 @@ printinfo(char *filename, int show, int page)
 		for (i = 0; i < dims; i++)
 		{
 			printf(PAGE_FMT "[ %g %g %g %g ]\n",
-					dim[i]->page,
-					fz_tonum(dim[i]->pageobj), fz_togen(dim[i]->pageobj),
-					dim[i]->u.dim.bbox->x0,
-					dim[i]->u.dim.bbox->y0,
-					dim[i]->u.dim.bbox->x1,
-					dim[i]->u.dim.bbox->y1);
+				dim[i]->page,
+				fz_tonum(dim[i]->pageobj), fz_togen(dim[i]->pageobj),
+				dim[i]->u.dim.bbox->x0,
+				dim[i]->u.dim.bbox->y0,
+				dim[i]->u.dim.bbox->x1,
+				dim[i]->u.dim.bbox->y1);
 		}
 		printf("\n");
 
@@ -798,11 +798,11 @@ printinfo(char *filename, int show, int page)
 		for (i = 0; i < fonts; i++)
 		{
 			printf(PAGE_FMT "%s '%s' (%d %d R)\n",
-					font[i]->page,
-					fz_tonum(font[i]->pageobj), fz_togen(font[i]->pageobj),
-					fz_toname(font[i]->u.font.subtype),
-					fz_toname(font[i]->u.font.name),
-					fz_tonum(font[i]->ref), fz_togen(font[i]->ref));
+				font[i]->page,
+				fz_tonum(font[i]->pageobj), fz_togen(font[i]->pageobj),
+				fz_toname(font[i]->u.font.subtype),
+				fz_toname(font[i]->u.font.name),
+				fz_tonum(font[i]->ref), fz_togen(font[i]->ref));
 		}
 		printf("\n");
 
@@ -819,29 +819,29 @@ printinfo(char *filename, int show, int page)
 		for (i = 0; i < images; i++)
 		{
 			printf(PAGE_FMT "[ ",
-					image[i]->page,
-					fz_tonum(image[i]->pageobj), fz_togen(image[i]->pageobj));
+				image[i]->page,
+				fz_tonum(image[i]->pageobj), fz_togen(image[i]->pageobj));
 
 			if (fz_isarray(image[i]->u.image.filter))
 				for (j = 0; j < fz_arraylen(image[i]->u.image.filter); j++)
-				{
-					printf("%s%s",
-							fz_toname(fz_arrayget(image[i]->u.image.filter, j)),
-							j == fz_arraylen(image[i]->u.image.filter) - 1 ? "" : " ");
-				}
+			{
+				printf("%s%s",
+					fz_toname(fz_arrayget(image[i]->u.image.filter, j)),
+					j == fz_arraylen(image[i]->u.image.filter) - 1 ? "" : " ");
+			}
 			else if (image[i]->u.image.filter)
 				printf("%s", fz_toname(image[i]->u.image.filter));
 			else
 				printf("Raw");
 
 			printf(" ] %dx%d %dbpc %s%s%s (%d %d R)\n",
-					fz_toint(image[i]->u.image.width),
-					fz_toint(image[i]->u.image.height),
-					image[i]->u.image.bpc ? fz_toint(image[i]->u.image.bpc) : 1,
-					image[i]->u.image.cs ? fz_toname(image[i]->u.image.cs) : "ImageMask",
-					image[i]->u.image.altcs ? " " : "",
-					image[i]->u.image.altcs ? fz_toname(image[i]->u.image.altcs) : "",
-					fz_tonum(image[i]->ref), fz_togen(image[i]->ref));
+				fz_toint(image[i]->u.image.width),
+				fz_toint(image[i]->u.image.height),
+				image[i]->u.image.bpc ? fz_toint(image[i]->u.image.bpc) : 1,
+				image[i]->u.image.cs ? fz_toname(image[i]->u.image.cs) : "ImageMask",
+				image[i]->u.image.altcs ? " " : "",
+				image[i]->u.image.altcs ? fz_toname(image[i]->u.image.altcs) : "",
+				fz_tonum(image[i]->ref), fz_togen(image[i]->ref));
 		}
 		printf("\n");
 
@@ -870,10 +870,10 @@ printinfo(char *filename, int show, int page)
 			};
 
 			printf(PAGE_FMT "%s (%d %d R)\n",
-					shading[i]->page,
-					fz_tonum(shading[i]->pageobj), fz_togen(shading[i]->pageobj),
-					shadingtype[fz_toint(shading[i]->u.shading.type)],
-					fz_tonum(shading[i]->ref), fz_togen(shading[i]->ref));
+				shading[i]->page,
+				fz_tonum(shading[i]->pageobj), fz_togen(shading[i]->pageobj),
+				shadingtype[fz_toint(shading[i]->u.shading.type)],
+				fz_tonum(shading[i]->ref), fz_togen(shading[i]->ref));
 		}
 		printf("\n");
 
@@ -910,12 +910,12 @@ printinfo(char *filename, int show, int page)
 			};
 
 			printf(PAGE_FMT "%s %s %s (%d %d R)\n",
-					pattern[i]->page,
-					fz_tonum(pattern[i]->pageobj), fz_togen(pattern[i]->pageobj),
-					patterntype[fz_toint(pattern[i]->u.pattern.pattern)],
-					painttype[fz_toint(pattern[i]->u.pattern.paint)],
-					tilingtype[fz_toint(pattern[i]->u.pattern.tiling)],
-					fz_tonum(pattern[i]->ref), fz_togen(pattern[i]->ref));
+				pattern[i]->page,
+				fz_tonum(pattern[i]->pageobj), fz_togen(pattern[i]->pageobj),
+				patterntype[fz_toint(pattern[i]->u.pattern.pattern)],
+				painttype[fz_toint(pattern[i]->u.pattern.paint)],
+				tilingtype[fz_toint(pattern[i]->u.pattern.tiling)],
+				fz_tonum(pattern[i]->ref), fz_togen(pattern[i]->ref));
 		}
 		printf("\n");
 
@@ -932,11 +932,11 @@ printinfo(char *filename, int show, int page)
 		for (i = 0; i < forms; i++)
 		{
 			printf(PAGE_FMT "%s%s (%d %d R)\n",
-					form[i]->page,
-					fz_tonum(form[i]->pageobj), fz_togen(form[i]->pageobj),
-					form[i]->u.form.group ? "Group" : "",
-					form[i]->u.form.reference ? "Reference" : "",
-					fz_tonum(form[i]->ref), fz_togen(form[i]->ref));
+				form[i]->page,
+				fz_tonum(form[i]->pageobj), fz_togen(form[i]->pageobj),
+				form[i]->u.form.group ? "Group" : "",
+				form[i]->u.form.reference ? "Reference" : "",
+				fz_tonum(form[i]->ref), fz_togen(form[i]->ref));
 		}
 		printf("\n");
 
@@ -953,9 +953,9 @@ printinfo(char *filename, int show, int page)
 		for (i = 0; i < psobjs; i++)
 		{
 			printf(PAGE_FMT "(%d %d R)\n",
-					psobj[i]->page,
-					fz_tonum(psobj[i]->pageobj), fz_togen(psobj[i]->pageobj),
-					fz_tonum(psobj[i]->ref), fz_togen(psobj[i]->ref));
+				psobj[i]->page,
+				fz_tonum(psobj[i]->pageobj), fz_togen(psobj[i]->pageobj),
+				fz_tonum(psobj[i]->ref), fz_togen(psobj[i]->ref));
 		}
 		printf("\n");
 
@@ -1042,16 +1042,16 @@ int main(int argc, char **argv)
 	{
 		switch (c)
 		{
-			case 'm': if (show == ALL) show = DIMENSIONS; else show |= DIMENSIONS; break;
-			case 'f': if (show == ALL) show = FONTS; else show |= FONTS; break;
-			case 'i': if (show == ALL) show = IMAGES; else show |= IMAGES; break;
-			case 's': if (show == ALL) show = SHADINGS; else show |= SHADINGS; break;
-			case 'p': if (show == ALL) show = PATTERNS; else show |= PATTERNS; break;
-			case 'x': if (show == ALL) show = XOBJS; else show |= XOBJS; break;
-			case 'd': password = fz_optarg; break;
-			default:
-				infousage();
-				break;
+		case 'm': if (show == ALL) show = DIMENSIONS; else show |= DIMENSIONS; break;
+		case 'f': if (show == ALL) show = FONTS; else show |= FONTS; break;
+		case 'i': if (show == ALL) show = IMAGES; else show |= IMAGES; break;
+		case 's': if (show == ALL) show = SHADINGS; else show |= SHADINGS; break;
+		case 'p': if (show == ALL) show = PATTERNS; else show |= PATTERNS; break;
+		case 'x': if (show == ALL) show = XOBJS; else show |= XOBJS; break;
+		case 'd': password = fz_optarg; break;
+		default:
+			infousage();
+			break;
 		}
 	}
 

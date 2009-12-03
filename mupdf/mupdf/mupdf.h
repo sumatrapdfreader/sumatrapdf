@@ -49,15 +49,15 @@ unsigned short * pdf_toucs2(fz_obj *src);
  */
 
 /* Permission flag bits */
-#define PDF_PERM_PRINT          (1<<2)
-#define PDF_PERM_CHANGE         (1<<3)
-#define PDF_PERM_COPY           (1<<4)
-#define PDF_PERM_NOTES          (1<<5)
-#define PDF_PERM_FILL_FORM      (1<<8)
-#define PDF_PERM_ACCESSIBILITY  (1<<9)
-#define PDF_PERM_ASSEMBLE       (1<<10)
+#define PDF_PERM_PRINT (1<<2)
+#define PDF_PERM_CHANGE (1<<3)
+#define PDF_PERM_COPY (1<<4)
+#define PDF_PERM_NOTES (1<<5)
+#define PDF_PERM_FILL_FORM (1<<8)
+#define PDF_PERM_ACCESSIBILITY (1<<9)
+#define PDF_PERM_ASSEMBLE (1<<10)
 #define PDF_PERM_HIGH_RES_PRINT (1<<11)
-#define PDF_DEFAULT_PERM_FLAGS  0xfffc
+#define PDF_DEFAULT_PERM_FLAGS 0xfffc
 
 typedef struct pdf_crypt_s pdf_crypt;
 typedef struct pdf_cryptfilter_s pdf_cryptfilter;

@@ -237,14 +237,14 @@ fz_dictdels(fz_obj *obj, char *key)
 	else
 	{
 		int i = fz_dictfinds(obj, key);
-	if (i >= 0)
-	{
-		fz_dropobj(obj->u.d.items[i].k);
-		fz_dropobj(obj->u.d.items[i].v);
-		obj->u.d.sorted = 0;
-		obj->u.d.items[i] = obj->u.d.items[obj->u.d.len-1];
-		obj->u.d.len --;
-	}
+		if (i >= 0)
+		{
+			fz_dropobj(obj->u.d.items[i].k);
+			fz_dropobj(obj->u.d.items[i].v);
+			obj->u.d.sorted = 0;
+			obj->u.d.items[i] = obj->u.d.items[obj->u.d.len-1];
+			obj->u.d.len --;
+		}
 	}
 }
 

@@ -47,9 +47,9 @@ static void xmltransform(fz_transformnode *node, int level)
 {
 	indent(level);
 	printf("<transform matrix=\"%g %g %g %g %g %g\">\n",
-			node->m.a, node->m.b,
-			node->m.c, node->m.d,
-			node->m.e, node->m.f);
+		node->m.a, node->m.b,
+		node->m.c, node->m.d,
+		node->m.e, node->m.f);
 	xmlnode(node->super.first, level + 1);
 	indent(level);
 	printf("</transform>\n");
@@ -84,10 +84,10 @@ static void xmlpath(fz_pathnode *node, int level)
 	if (node->paint == FZ_STROKE)
 	{
 		printf("<path fill=\"stroke\" cap=\"%d\" join=\"%d\" width=\"%g\" miter=\"%g\"",
-				node->linecap,
-				node->linejoin,
-				node->linewidth,
-				node->miterlimit);
+			node->linecap,
+			node->linejoin,
+			node->linewidth,
+			node->miterlimit);
 		if (node->dash)
 		{
 			printf(" phase=\"%g\" array=\"", node->dash->phase);
@@ -100,7 +100,7 @@ static void xmlpath(fz_pathnode *node, int level)
 	else
 	{
 		printf("<path fill=\"%s\">\n",
-				node->paint == FZ_FILL ? "nonzero" : "evenodd");
+			node->paint == FZ_FILL ? "nonzero" : "evenodd");
 	}
 
 	fz_debugpathnode(node, level + 2);
@@ -115,17 +115,17 @@ static void xmltext(fz_textnode *node, int level)
 
 	indent(level);
 	printf("<text font=\"%s\" matrix=\"%g %g %g %g\">\n", node->font->name,
-			node->trm.a, node->trm.b, node->trm.c, node->trm.d);
+		node->trm.a, node->trm.b, node->trm.c, node->trm.d);
 
 	for (i = 0; i < node->len; i++)
 	{
 		indent(level + 1);
 		if (node->els[i].ucs >= 32 && node->els[i].ucs < 128)
 			printf("<g ucs=\"%c\" gid=%d x=\"%g\" y=\"%g\" />\n",
-					node->els[i].ucs, node->els[i].gid, node->els[i].x, node->els[i].y);
+				node->els[i].ucs, node->els[i].gid, node->els[i].x, node->els[i].y);
 		else
 			printf("<g ucs=\"U+%04X\" gid=%d x=\"%g\" y=\"%g\" />\n",
-					node->els[i].ucs, node->els[i].gid, node->els[i].x, node->els[i].y);
+				node->els[i].ucs, node->els[i].gid, node->els[i].x, node->els[i].y);
 	}
 
 	indent(level);
@@ -137,7 +137,7 @@ static void xmlimage(fz_imagenode *node, int level)
 	fz_image *image = node->image;
 	indent(level);
 	printf("<image w=\"%d\" h=\"%d\" n=\"%d\" a=\"%d\" />\n",
-			image->w, image->h, image->n, image->a);
+		image->w, image->h, image->n, image->a);
 }
 
 static void xmlshade(fz_shadenode *node, int level)

@@ -33,55 +33,55 @@ runone(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *stmref)
 static fz_error
 runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 {
-    fz_error error;
-    fz_stream *file;
-    fz_buffer *big;
-    fz_buffer *one;
-    fz_obj *stm;
-    int i, n;
+	fz_error error;
+	fz_stream *file;
+	fz_buffer *big;
+	fz_buffer *one;
+	fz_obj *stm;
+	int i, n;
 
-    pdf_logpage("multiple content streams: %d\n", fz_arraylen(list));
+	pdf_logpage("multiple content streams: %d\n", fz_arraylen(list));
 
 	big = fz_newbuffer(32 * 1024);
 
-    for (i = 0; i < fz_arraylen(list); i++)
-    {
-	stm = fz_arrayget(list, i);
-	error = pdf_loadstream(&one, xref, fz_tonum(stm), fz_togen(stm));
-	if (error)
+	for (i = 0; i < fz_arraylen(list); i++)
 	{
-	    fz_dropbuffer(big);
-	    return fz_rethrow(error, "cannot load content stream part %d/%d", i + 1, fz_arraylen(list));
-	}
+		stm = fz_arrayget(list, i);
+		error = pdf_loadstream(&one, xref, fz_tonum(stm), fz_togen(stm));
+		if (error)
+		{
+			fz_dropbuffer(big);
+			return fz_rethrow(error, "cannot load content stream part %d/%d", i + 1, fz_arraylen(list));
+		}
 
-	n = one->wp - one->rp;
+		n = one->wp - one->rp;
 
-	while (big->wp + n + 1 > big->ep)
-	{
+		while (big->wp + n + 1 > big->ep)
+		{
 			fz_growbuffer(big);
+		}
+
+		memcpy(big->wp, one->rp, n);
+
+		big->wp += n;
+		*big->wp++ = ' ';
+
+		fz_dropbuffer(one);
 	}
-
-	memcpy(big->wp, one->rp, n);
-
-	big->wp += n;
-	*big->wp++ = ' ';
-
-	fz_dropbuffer(one);
-    }
 
 	file = fz_openrbuffer(big);
 
-    error = pdf_runcsi(csi, xref, rdb, file);
-    if (error)
-    {
-	fz_dropbuffer(big);
-	fz_dropstream(file);
-	return fz_rethrow(error, "cannot interpret content buffer");
-    }
+	error = pdf_runcsi(csi, xref, rdb, file);
+	if (error)
+	{
+		fz_dropbuffer(big);
+		fz_dropstream(file);
+		return fz_rethrow(error, "cannot interpret content buffer");
+	}
 
-    fz_dropstream(file);
-    fz_dropbuffer(big);
-    return fz_okay;
+	fz_dropstream(file);
+	fz_dropbuffer(big);
+	return fz_okay;
 }
 
 static fz_error
@@ -167,10 +167,10 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	bbox = pdf_torect(obj);
 
 	pdf_logpage("bbox [%g %g %g %g]\n",
-			bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+		bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
 	if (bbox.x1 - bbox.x0 < 1 || bbox.y1 - bbox.y0 < 1)
-	    return fz_throw("invalid page size");
+		return fz_throw("invalid page size");
 
 	obj = fz_dictgets(dict, "Rotate");
 	if (fz_isint(obj))

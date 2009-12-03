@@ -92,10 +92,10 @@ if $(OS) = MINGW
     CCFLAGS = -Wall -std=gnu99 -Ic:/local/include ;
     LINKFLAGS = -Lc:/local/lib ;
     LINKLIBS = -lfreetype -ljpeg -lz -lm ;
-    APPLINKLIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows ;
+    APPLINKLIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 ;
 
     if $(BUILD) = debug   { OPTIM = -g -O0 -fno-inline ; }
-    if $(BUILD) = release { OPTIM = -O3 ; }
+    if $(BUILD) = release { OPTIM = -O3 ; APPLINKLIBS += -mwindows ; }
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += -ljbig2dec ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += -lopenjpeg ; }

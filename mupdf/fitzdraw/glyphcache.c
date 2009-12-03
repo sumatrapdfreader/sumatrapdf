@@ -230,26 +230,26 @@ fz_debugglyphcache(fz_glyphcache *arena)
 	int i;
 	for (i = 0; i < arena->slots; i++)
 	{
-		if (!arena->hash[i].val)
-			printf("glyph % 4d: empty\n", i);
-		else {
-			fz_key *k = &arena->hash[i].key;
-			fz_val *b = arena->hash[i].val;
-			printf("glyph % 4d: %p %d [%g %g %g %g + %d %d] "
-					"-> [%dx%d %d,%d]\n", i,
-				k->fid, k->cid,
-				k->a / 65536.0,
-				k->b / 65536.0,
-				k->c / 65536.0,
-				k->d / 65536.0,
-				k->e, k->f,
-				b->w, b->h, b->x, b->y);
-		}
+	if (!arena->hash[i].val)
+	printf("glyph % 4d: empty\n", i);
+	else {
+	fz_key *k = &arena->hash[i].key;
+	fz_val *b = arena->hash[i].val;
+	printf("glyph % 4d: %p %d [%g %g %g %g + %d %d] "
+	"-> [%dx%d %d,%d]\n", i,
+	k->fid, k->cid,
+	k->a / 65536.0,
+	k->b / 65536.0,
+	k->c / 65536.0,
+	k->d / 65536.0,
+	k->e, k->f,
+	b->w, b->h, b->x, b->y);
+	}
 	}
 
 	for (i = 0; i < arena->load; i++)
-		printf("lru %04d: glyph %d (%d)\n", i,
-			arena->lru[i].ent - arena->hash, arena->lru[i].uses);
+	printf("lru %04d: glyph %d (%d)\n", i,
+	arena->lru[i].ent - arena->hash, arena->lru[i].uses);
 	*/
 }
 
@@ -354,19 +354,19 @@ fz_renderglyph(fz_glyphcache *arena, fz_glyph *glyph, fz_font *font, int cid, fz
 
 	if (font->ftface)
 	{
-	    error = fz_renderftglyph(glyph, font, cid, ctm);
-	    if (error)
-		return error;
+		error = fz_renderftglyph(glyph, font, cid, ctm);
+		if (error)
+			return error;
 	}
 	else if (font->t3procs)
 	{
-	    error = fz_rendert3glyph(glyph, font, cid, ctm);
-	    if (error)
-		return error;
+		error = fz_rendert3glyph(glyph, font, cid, ctm);
+		if (error)
+			return error;
 	}
 	else
 	{
-	    return fz_throw("uninitialized font structure");
+		return fz_throw("uninitialized font structure");
 	}
 
 	size = glyph->w * glyph->h;

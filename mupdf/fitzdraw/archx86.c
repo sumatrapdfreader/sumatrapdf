@@ -18,12 +18,12 @@ shouldn't require anything */
 static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int dw, int w0, int h)
 {
 	/*
-	  rendering all pages of
-	  x11pdf ~/doc/OpenGL/Presentations/CEDEC2003_Venus_and_Vulcan.pdf
-	    %     cumulative  self	     self     total
-	  time     seconds   seconds    calls ms/call ms/call  name
-	  30.50     20.04    20.04      261    76.76    76.76  duff_4i1o4
-	  21.67     22.02    10.95      221    49.55    49.55  duff_4i1o4mmx
+	rendering all pages of
+	x11pdf ~/doc/OpenGL/Presentations/CEDEC2003_Venus_and_Vulcan.pdf
+	%     cumulative  self	     self     total
+	time     seconds   seconds    calls ms/call ms/call  name
+	30.50     20.04    20.04      261    76.76    76.76  duff_4i1o4
+	21.67     22.02    10.95      221    49.55    49.55  duff_4i1o4mmx
 	*/
 	__m64 mzero = _mm_setzero_si64();
 	while (h--)
@@ -89,7 +89,7 @@ getargb(unsigned *s, int w, int h, int u, int v)
 static void img_4o4mmx(FZ_PSRC, FZ_PDST, FZ_PCTM)
 {
 	/* since mmx does not have an unsigned multiply instruction we use
-	   17.15 fixed point */
+	17.15 fixed point */
 	u0 >>= 1;	v0 >>= 1;
 	fa >>= 1;	fb >>= 1;
 	fc >>= 1;	fd >>= 1;
@@ -115,8 +115,8 @@ static void img_4o4mmx(FZ_PSRC, FZ_PDST, FZ_PCTM)
 			int fv = v & 0x7fff;
 
 			int atedge =
-				(iu < 0) | (iu >= (srcw - 1)) |
-				(iv < 0) | (iv >= (srch - 1));
+			(iu < 0) | (iu >= (srcw - 1)) |
+			(iv < 0) | (iv >= (srch - 1));
 
 			__m64 ms0s1;
 			__m64 ms2s3;

@@ -37,10 +37,10 @@ fz_newpredictd(fz_obj *params)
 	if (obj)
 		p->predictor = fz_toint(obj);
 
-	if (p->predictor !=  1 && p->predictor !=  2 &&
-	    p->predictor != 10 && p->predictor != 11 &&
-	    p->predictor != 12 && p->predictor != 13 &&
-	    p->predictor != 14 && p->predictor != 15)
+	if (p->predictor != 1 && p->predictor != 2 &&
+		p->predictor != 10 && p->predictor != 11 &&
+		p->predictor != 12 && p->predictor != 13 &&
+		p->predictor != 14 && p->predictor != 15)
 	{
 		fz_warn("invalid predictor: %d", p->predictor);
 		p->predictor = 1;
@@ -86,10 +86,10 @@ getcomponent(unsigned char *buf, int x, int bpc)
 {
 	switch (bpc)
 	{
-		case 1: return buf[x / 8] >> (7 - (x % 8)) & 0x01;
-		case 2: return buf[x / 4] >> ((3 - (x % 4)) * 2) & 0x03;
-		case 4: return buf[x / 2] >> ((1 - (x % 2)) * 4) & 0x0f;
-		case 8: return buf[x];
+	case 1: return buf[x / 8] >> (7 - (x % 8)) & 0x01;
+	case 2: return buf[x / 4] >> ((3 - (x % 4)) * 2) & 0x03;
+	case 4: return buf[x / 2] >> ((1 - (x % 2)) * 4) & 0x0f;
+	case 8: return buf[x];
 	}
 	return 0;
 }
@@ -99,10 +99,10 @@ putcomponent(unsigned char *buf, int x, int bpc, int value)
 {
 	switch (bpc)
 	{
-		case 1: buf[x / 8] |= value << (7 - (x % 8)); break;
-		case 2: buf[x / 4] |= value << ((3 - (x % 4)) * 2); break;
-		case 4: buf[x / 2] |= value << ((1 - (x % 2)) * 4); break;
-		case 8: buf[x] = value; break;
+	case 1: buf[x / 8] |= value << (7 - (x % 8)); break;
+	case 2: buf[x / 4] |= value << ((3 - (x % 4)) * 2); break;
+	case 4: buf[x / 2] |= value << ((1 - (x % 2)) * 4); break;
+	case 8: buf[x] = value; break;
 	}
 }
 
@@ -160,11 +160,11 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 	{
 		switch (predictor)
 		{
-			case 0: out[i] = in[i]; break;
-			case 1: out[i] = in[i] + left[k]; break;
-			case 2: out[i] = in[i] + p->ref[i]; break;
-			case 3: out[i] = in[i] + (left[k] + p->ref[i]) / 2; break;
-			case 4: out[i] = in[i] + paeth(left[k], p->ref[i], upleft[k]); break;
+		case 0: out[i] = in[i]; break;
+		case 1: out[i] = in[i] + left[k]; break;
+		case 2: out[i] = in[i] + p->ref[i]; break;
+		case 3: out[i] = in[i] + (left[k] + p->ref[i]) / 2; break;
+		case 4: out[i] = in[i] + paeth(left[k], p->ref[i], upleft[k]); break;
 		}
 		left[k] = out[i];
 		upleft[k] = p->ref[i];

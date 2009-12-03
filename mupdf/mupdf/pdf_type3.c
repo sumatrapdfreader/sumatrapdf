@@ -67,16 +67,16 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 	matrix = pdf_tomatrix(obj);
 
 	pdf_logfont("matrix [%g %g %g %g %g %g]\n",
-			matrix.a, matrix.b,
-			matrix.c, matrix.d,
-			matrix.e, matrix.f);
+		matrix.a, matrix.b,
+		matrix.c, matrix.d,
+		matrix.e, matrix.f);
 
 	obj = fz_dictgets(dict, "FontBBox");
 	bbox = pdf_torect(obj);
 
 	pdf_logfont("bbox [%g %g %g %g]\n",
-			bbox.x0, bbox.y0,
-			bbox.x1, bbox.y1);
+		bbox.x0, bbox.y0,
+		bbox.x1, bbox.y1);
 
 	bbox = fz_transformaabb(matrix, bbox);
 	bbox.x0 = fz_floor(bbox.x0 * 1000);

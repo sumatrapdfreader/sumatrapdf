@@ -357,83 +357,83 @@ dec2d(fz_faxd *fax)
 
 	switch (code)
 	{
-		case H:
-			fax->stage = SH1;
-			break;
+	case H:
+		fax->stage = SH1;
+		break;
 
-		case P:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 >= fax->columns)
-				b2 = fax->columns;
-			else
-				b2 = findchanging(fax->ref, b1, fax->columns);
-			if (fax->c) setbits(fax->dst, fax->a, b2);
-			fax->a = b2;
-			break;
+	case P:
+		b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 >= fax->columns)
+			b2 = fax->columns;
+		else
+			b2 = findchanging(fax->ref, b1, fax->columns);
+		if (fax->c) setbits(fax->dst, fax->a, b2);
+		fax->a = b2;
+		break;
 
-		case V0:
-			b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case V0:
+		b1 = findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case VR1:
-			b1 = 1 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 >= fax->columns) b1 = fax->columns;
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case VR1:
+		b1 = 1 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 >= fax->columns) b1 = fax->columns;
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case VR2:
-			b1 = 2 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 >= fax->columns) b1 = fax->columns;
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case VR2:
+		b1 = 2 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 >= fax->columns) b1 = fax->columns;
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case VR3:
-			b1 = 3 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 >= fax->columns) b1 = fax->columns;
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case VR3:
+		b1 = 3 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 >= fax->columns) b1 = fax->columns;
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case VL1:
-			b1 = -1 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 < 0) b1 = 0;
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case VL1:
+		b1 = -1 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 < 0) b1 = 0;
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case VL2:
-			b1 = -2 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 < 0) b1 = 0;
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case VL2:
+		b1 = -2 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 < 0) b1 = 0;
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case VL3:
-			b1 = -3 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
-			if (b1 < 0) b1 = 0;
-			if (fax->c) setbits(fax->dst, fax->a, b1);
-			fax->a = b1;
-			fax->c = !fax->c;
-			break;
+	case VL3:
+		b1 = -3 + findchangingcolor(fax->ref, fax->a, fax->columns, !fax->c);
+		if (b1 < 0) b1 = 0;
+		if (fax->c) setbits(fax->dst, fax->a, b1);
+		fax->a = b1;
+		fax->c = !fax->c;
+		break;
 
-		case UNCOMPRESSED:
-			return fz_throw("uncompressed data in faxd");
+	case UNCOMPRESSED:
+		return fz_throw("uncompressed data in faxd");
 
-		case ERROR:
-			return fz_throw("invalid code in 2d faxd");
+	case ERROR:
+		return fz_throw("invalid code in 2d faxd");
 
-		default:
-			return fz_throw("invalid code in 2d faxd (%d)", code);
+	default:
+		return fz_throw("invalid code in 2d faxd (%d)", code);
 	}
 
 	return 0;

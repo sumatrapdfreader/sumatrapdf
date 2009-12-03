@@ -208,10 +208,10 @@ typedef struct fz_filter_s fz_filter;
  * Evil looking macro to create an initialize a filter struct.
  */
 
-#define FZ_NEWFILTER(TYPE,VAR,NAME)                                         \
-	fz_error fz_process ## NAME (fz_filter*,fz_buffer*,fz_buffer*);   \
-	void fz_drop ## NAME (fz_filter*);                                  \
-	TYPE *VAR;                                                          \
+#define FZ_NEWFILTER(TYPE,VAR,NAME) \
+	fz_error fz_process ## NAME (fz_filter*,fz_buffer*,fz_buffer*); \
+	void fz_drop ## NAME (fz_filter*); \
+	TYPE *VAR; \
 	VAR = fz_malloc(sizeof(TYPE));	 \
 	((fz_filter*)VAR)->refs = 1; \
 	((fz_filter*)VAR)->process = fz_process ## NAME ;  \
@@ -317,9 +317,9 @@ typedef struct fz_aes_s fz_aes;
 void aes_setkey_enc( fz_aes *ctx, const unsigned char *key, int keysize );
 void aes_setkey_dec( fz_aes *ctx, const unsigned char *key, int keysize );
 void aes_crypt_cbc( fz_aes *ctx, int mode, int length,
-                    unsigned char iv[16],
-                    const unsigned char *input,
-                    unsigned char *output );
+	unsigned char iv[16],
+	const unsigned char *input,
+	unsigned char *output );
 
 /*
  * Stream API for Fitz.
@@ -398,18 +398,18 @@ int fz_peekbytex(fz_stream *stm);
 
 static inline int fz_readbyte(fz_stream *stm)
 {
-    fz_buffer *buf = stm->buffer;
-    if (buf->rp < buf->wp)
-	return *buf->rp++;
-    return fz_readbytex(stm);
+	fz_buffer *buf = stm->buffer;
+	if (buf->rp < buf->wp)
+		return *buf->rp++;
+	return fz_readbytex(stm);
 }
 
 static inline int fz_peekbyte(fz_stream *stm)
 {
-    fz_buffer *buf = stm->buffer;
-    if (buf->rp < buf->wp)
-	return *buf->rp;
-    return fz_peekbytex(stm);
+	fz_buffer *buf = stm->buffer;
+	if (buf->rp < buf->wp)
+		return *buf->rp;
+	return fz_peekbytex(stm);
 }
 
 #endif

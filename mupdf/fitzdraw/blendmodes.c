@@ -190,7 +190,7 @@ fz_saturation_rgb(int *bdr, int *bdg, int *bdb, int sr, int sg, int sb)
 {
 	int tr, tg, tb;
 	setsat(*bdr, *bdg, *bdb, sat(sr, sg, sb), &tr, &tg, &tb);
-	setlum(tr, tg, tb, lum(*bdr, *bdg, *bdb), bdr, bdg, bdb);	
+	setlum(tr, tg, tb, lum(*bdr, *bdg, *bdb), bdr, bdg, bdb);
 }
 
 

@@ -78,7 +78,7 @@ fz_readall(fz_stream *stm, int sizehint)
 	fz_buffer *buf;
 
 	if (sizehint == 0)
-	    sizehint = 4 * 1024;
+		sizehint = 4 * 1024;
 
 	buf = fz_newbuffer(sizehint);
 

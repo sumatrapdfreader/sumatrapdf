@@ -489,7 +489,7 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 	cs = fz_malloc(sizeof(struct separation));
 
 	initcs((fz_colorspace*)cs,
-			n == 1 ? "Separation" : "DeviceN", n,
+		n == 1 ? "Separation" : "DeviceN", n,
 		separationtoxyz, nil, freeseparation);
 
 	cs->base = fz_keepcolorspace(base);

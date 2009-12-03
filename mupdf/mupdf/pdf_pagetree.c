@@ -77,8 +77,8 @@ getpagecount(pdf_xref *xref, fz_obj *node, int *pagesp)
 			fz_warn("page tree node contains incorrect number of pages, continuing...");
 			count = fz_newint(pages);
 			fz_dictputs(node, "Count", count);
-				fz_dropobj(count);
-			}
+			fz_dropobj(count);
+		}
 
 		pdf_logpage("%d pages\n", pages);
 

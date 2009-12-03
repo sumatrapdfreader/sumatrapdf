@@ -178,7 +178,7 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 	dist = hypot(x1 - x0, y1 - y0);
 
 	/* if the axis has virtually length 0 (a point),
-	   do not extend as there is nothing to extend beyond */
+	do not extend as there is nothing to extend beyond */
 	if (dist < FLT_EPSILON)
 	{
 		e0 = 0;
@@ -205,7 +205,7 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 	n = 0;
 
 	/* if the axis has virtually length 0 (a point), use the same axis
-	   position t = 0 for all triangle vertices */
+	position t = 0 for all triangle vertices */
 	if (dist < FLT_EPSILON)
 	{
 		pdf_setmeshvalue(shade->mesh, n++, p1.x, p1.y, 0);
@@ -262,8 +262,8 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict)
 
 static int
 buildannulusmesh(float* mesh, int pos,
-					float x0, float y0, float r0, float x1, float y1, float r1,
-					float c0, float c1, int nomesh)
+	float x0, float y0, float r0, float x1, float y1, float r1,
+	float c0, float c1, int nomesh)
 {
 	int n = pos * 3;
 	float dist = hypot(x1 - x0, y1 - y0);

@@ -177,14 +177,14 @@ pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 			{
 				fz_dropobj(ary);
 				return fz_rethrow(error, "cannot parse array");
-		}
+			}
 			fz_arraypush(ary, obj);
 			fz_dropobj(obj);
 			break;
 
 		case PDF_TODICT:
 			error = pdf_parsedict(&obj, xref, file, buf, cap);
-		if (error)
+			if (error)
 			{
 				fz_dropobj(ary);
 				return fz_rethrow(error, "cannot parse array");
@@ -321,7 +321,7 @@ skip:
 				return fz_rethrow(error, "cannot parse dict");
 			}
 			if (tok == PDF_TCDICT || tok == PDF_TNAME ||
-					(tok == PDF_TKEYWORD && !strcmp(buf, "ID")))
+				(tok == PDF_TKEYWORD && !strcmp(buf, "ID")))
 			{
 				val = fz_newint(a);
 				fz_dictput(dict, key, val);
@@ -397,8 +397,8 @@ pdf_parsestmobj(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap
 
 fz_error
 pdf_parseindobj(fz_obj **op, pdf_xref *xref,
-		fz_stream *file, char *buf, int cap,
-		int *onum, int *ogen, int *ostmofs)
+	fz_stream *file, char *buf, int cap,
+	int *onum, int *ogen, int *ostmofs)
 {
 	fz_error error = fz_okay;
 	fz_obj *obj = nil;

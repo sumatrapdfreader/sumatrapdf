@@ -434,8 +434,8 @@ static inline void toalpha(unsigned char *list, int n)
 }
 
 static inline void blit(fz_pixmap *pix, int x, int y,
-						unsigned char *list, int skipx, int len,
-						unsigned char *argb, int over)
+	unsigned char *list, int skipx, int len,
+	unsigned char *argb, int over)
 {
 	unsigned char *dst;
 	unsigned char cov;

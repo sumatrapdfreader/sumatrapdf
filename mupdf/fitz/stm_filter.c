@@ -12,7 +12,7 @@ fz_process(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	oldwp = out->wp;
 
 	if (f->done)
-	    return fz_iodone;
+		return fz_iodone;
 
 	assert(!out->eof);
 

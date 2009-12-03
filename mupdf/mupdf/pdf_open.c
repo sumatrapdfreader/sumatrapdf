@@ -247,7 +247,7 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		}
 
 		/* broken pdfs where size in trailer undershoots
-		   entries in xref sections */
+		entries in xref sections */
 		if ((ofs + len) > xref->cap)
 		{
 			fz_warn("broken xref section, proceeding anyway.");
@@ -402,14 +402,14 @@ readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	{
 		if (oid == xref->len && oid < xref->cap)
 		{
-		    /* allow broken pdf files that have off-by-one errors in the xref */
-		    fz_warn("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
-		    xref->len ++;
+			/* allow broken pdf files that have off-by-one errors in the xref */
+			fz_warn("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
+			xref->len ++;
 		}
 		else
 		{
-		    fz_dropobj(trailer);
-		    return fz_throw("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
+			fz_dropobj(trailer);
+			return fz_throw("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
 		}
 	}
 
@@ -725,14 +725,14 @@ pdf_loadxref2(pdf_xref *xref)
 	}
 
 	/* broken pdfs where freed objects have offset and gen set to 0
-	   but still exits */
+	but still exits */
 	for (i = 0; i < xref->len; i++)
 		if (xref->table[i].type == 'n' && xref->table[i].ofs == 0 &&
 			xref->table[i].gen == 0 && xref->table[i].obj == nil)
-		{
-			fz_warn("object (%d %d R) has invalid offset, assumed missing", i, xref->table[i].gen);
-			xref->table[i].type = 'f';
-		}
+	{
+		fz_warn("object (%d %d R) has invalid offset, assumed missing", i, xref->table[i].gen);
+		xref->table[i].type = 'f';
+	}
 
 	return fz_okay;
 

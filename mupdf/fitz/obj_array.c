@@ -37,7 +37,7 @@ fz_copyarray(fz_obj *obj)
 	for (i = 0; i < fz_arraylen(obj); i++)
 	{
 		fz_arraypush(new, fz_arrayget(obj, i));
-		}
+	}
 
 	return new;
 }
@@ -78,9 +78,9 @@ fz_arrayput(fz_obj *obj, int i, fz_obj *item)
 		fz_warn("assert: index %d > length %d", i, obj->u.a.len);
 	else
 	{
-	if (obj->u.a.items[i])
-		fz_dropobj(obj->u.a.items[i]);
-	obj->u.a.items[i] = fz_keepobj(item);
+		if (obj->u.a.items[i])
+			fz_dropobj(obj->u.a.items[i]);
+		obj->u.a.items[i] = fz_keepobj(item);
 	}
 }
 
@@ -93,16 +93,16 @@ fz_arraypush(fz_obj *obj, fz_obj *item)
 		fz_warn("assert: not an array (%s)", fz_objkindstr(obj));
 	else
 	{
-	if (obj->u.a.len + 1 > obj->u.a.cap)
-	{
+		if (obj->u.a.len + 1 > obj->u.a.cap)
+		{
 			int i;
 			obj->u.a.cap = (obj->u.a.cap * 3) / 2;
 			obj->u.a.items = fz_realloc(obj->u.a.items, sizeof (fz_obj*) * obj->u.a.cap);
 			for (i = obj->u.a.len ; i < obj->u.a.cap; i++)
 				obj->u.a.items[i] = nil;
-	}
-	obj->u.a.items[obj->u.a.len] = fz_keepobj(item);
-	obj->u.a.len++;
+		}
+		obj->u.a.items[obj->u.a.len] = fz_keepobj(item);
+		obj->u.a.len++;
 	}
 }
 

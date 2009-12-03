@@ -4,7 +4,7 @@
 fz_filter *
 fz_newcopyfilter(void)
 {
-    FZ_NEWFILTER(fz_filter, f, copyfilter);
+	FZ_NEWFILTER(fz_filter, f, copyfilter);
 	return f;
 }
 
@@ -16,28 +16,28 @@ fz_dropcopyfilter(fz_filter *f)
 fz_error
 fz_processcopyfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 {
-    int n;
+	int n;
 
-    while (1)
-    {
-	if (in->rp + 1 > in->wp)
+	while (1)
 	{
-	    if (in->eof)
-		return fz_iodone;
-	    return fz_ioneedin;
-	}
+		if (in->rp + 1 > in->wp)
+		{
+			if (in->eof)
+				return fz_iodone;
+			return fz_ioneedin;
+		}
 
-	if (out->wp + 1 > out->ep)
-	    return fz_ioneedout;
+		if (out->wp + 1 > out->ep)
+			return fz_ioneedout;
 
-	n = MIN(in->wp - in->rp, out->ep - out->wp);
-	if (n)
-	{
-	    memcpy(out->wp, in->rp, n);
-	    in->rp += n;
-	    out->wp += n;
+		n = MIN(in->wp - in->rp, out->ep - out->wp);
+		if (n)
+		{
+			memcpy(out->wp, in->rp, n);
+			in->rp += n;
+			out->wp += n;
+		}
 	}
-    }
 }
 
 typedef struct fz_nullfilter_s fz_nullfilter;
@@ -71,7 +71,7 @@ fz_processnullfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 	n = MIN(in->wp - in->rp, out->ep - out->wp);
 	if (f->len >= 0)
-	    n = MIN(n, f->len - f->cur);
+		n = MIN(n, f->len - f->cur);
 
 	if (n)
 	{

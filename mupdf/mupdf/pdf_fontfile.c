@@ -59,52 +59,52 @@ static const struct
 	const unsigned char *cff;
 	const unsigned int *len;
 	} basefonts[] = {
-    { "Courier",
-	pdf_font_NimbusMonL_Regu_cff_buf,
-	&pdf_font_NimbusMonL_Regu_cff_len },
-    { "Courier-Bold",
-	pdf_font_NimbusMonL_Bold_cff_buf,
-	&pdf_font_NimbusMonL_Bold_cff_len },
-    { "Courier-Oblique",
-	pdf_font_NimbusMonL_ReguObli_cff_buf,
-	&pdf_font_NimbusMonL_ReguObli_cff_len },
-    { "Courier-BoldOblique",
-	pdf_font_NimbusMonL_BoldObli_cff_buf,
-	&pdf_font_NimbusMonL_BoldObli_cff_len },
-    { "Helvetica",
-	pdf_font_NimbusSanL_Regu_cff_buf,
-	&pdf_font_NimbusSanL_Regu_cff_len },
-    { "Helvetica-Bold",
-	pdf_font_NimbusSanL_Bold_cff_buf,
-	&pdf_font_NimbusSanL_Bold_cff_len },
-    { "Helvetica-Oblique",
-	pdf_font_NimbusSanL_ReguItal_cff_buf,
-	&pdf_font_NimbusSanL_ReguItal_cff_len },
-    { "Helvetica-BoldOblique",
-	pdf_font_NimbusSanL_BoldItal_cff_buf,
-	&pdf_font_NimbusSanL_BoldItal_cff_len },
-    { "Times-Roman",
-	pdf_font_NimbusRomNo9L_Regu_cff_buf,
-	&pdf_font_NimbusRomNo9L_Regu_cff_len },
-    { "Times-Bold",
-	pdf_font_NimbusRomNo9L_Medi_cff_buf,
-	&pdf_font_NimbusRomNo9L_Medi_cff_len },
-    { "Times-Italic",
-	pdf_font_NimbusRomNo9L_ReguItal_cff_buf,
-	&pdf_font_NimbusRomNo9L_ReguItal_cff_len },
-    { "Times-BoldItalic",
-	pdf_font_NimbusRomNo9L_MediItal_cff_buf,
-	&pdf_font_NimbusRomNo9L_MediItal_cff_len },
-    { "Symbol",
-	pdf_font_StandardSymL_cff_buf,
-	&pdf_font_StandardSymL_cff_len },
-    { "ZapfDingbats",
-	pdf_font_Dingbats_cff_buf,
-	&pdf_font_Dingbats_cff_len },
-    { "Chancery",
-	pdf_font_URWChanceryL_MediItal_cff_buf,
-	&pdf_font_URWChanceryL_MediItal_cff_len },
-    { nil, nil, nil }
+	{ "Courier",
+		pdf_font_NimbusMonL_Regu_cff_buf,
+		&pdf_font_NimbusMonL_Regu_cff_len },
+	{ "Courier-Bold",
+		pdf_font_NimbusMonL_Bold_cff_buf,
+		&pdf_font_NimbusMonL_Bold_cff_len },
+	{ "Courier-Oblique",
+		pdf_font_NimbusMonL_ReguObli_cff_buf,
+		&pdf_font_NimbusMonL_ReguObli_cff_len },
+	{ "Courier-BoldOblique",
+		pdf_font_NimbusMonL_BoldObli_cff_buf,
+		&pdf_font_NimbusMonL_BoldObli_cff_len },
+	{ "Helvetica",
+		pdf_font_NimbusSanL_Regu_cff_buf,
+		&pdf_font_NimbusSanL_Regu_cff_len },
+	{ "Helvetica-Bold",
+		pdf_font_NimbusSanL_Bold_cff_buf,
+		&pdf_font_NimbusSanL_Bold_cff_len },
+	{ "Helvetica-Oblique",
+		pdf_font_NimbusSanL_ReguItal_cff_buf,
+		&pdf_font_NimbusSanL_ReguItal_cff_len },
+	{ "Helvetica-BoldOblique",
+		pdf_font_NimbusSanL_BoldItal_cff_buf,
+		&pdf_font_NimbusSanL_BoldItal_cff_len },
+	{ "Times-Roman",
+		pdf_font_NimbusRomNo9L_Regu_cff_buf,
+		&pdf_font_NimbusRomNo9L_Regu_cff_len },
+	{ "Times-Bold",
+		pdf_font_NimbusRomNo9L_Medi_cff_buf,
+		&pdf_font_NimbusRomNo9L_Medi_cff_len },
+	{ "Times-Italic",
+		pdf_font_NimbusRomNo9L_ReguItal_cff_buf,
+		&pdf_font_NimbusRomNo9L_ReguItal_cff_len },
+	{ "Times-BoldItalic",
+		pdf_font_NimbusRomNo9L_MediItal_cff_buf,
+		&pdf_font_NimbusRomNo9L_MediItal_cff_len },
+	{ "Symbol",
+		pdf_font_StandardSymL_cff_buf,
+		&pdf_font_StandardSymL_cff_len },
+	{ "ZapfDingbats",
+		pdf_font_Dingbats_cff_buf,
+		&pdf_font_Dingbats_cff_len },
+	{ "Chancery",
+		pdf_font_URWChanceryL_MediItal_cff_buf,
+		&pdf_font_URWChanceryL_MediItal_cff_len },
+	{ nil, nil, nil }
 };
 
 fz_error
@@ -147,7 +147,7 @@ loadsystemcidfont(pdf_fontdesc *font, int csi, int kind)
 		(unsigned char *)pdf_font_DroidSansFallback_ttf_buf,
 		pdf_font_DroidSansFallback_ttf_len, 0);
 	if (error)
-	    return fz_rethrow(error, "cannot load builtin CJK font");
+		return fz_rethrow(error, "cannot load builtin CJK font");
 	font->font->ftsubstitute = 1; /* substitute font */
 	return fz_okay;
 #else
@@ -186,7 +186,7 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
 		isbold = 1;
 
 	pdf_logfont("fixed-%d serif-%d italic-%d script-%d bold-%d\n",
-			isfixed, isserif, isitalic, isscript, isbold);
+		isfixed, isserif, isitalic, isscript, isbold);
 
 	if (collection)
 	{

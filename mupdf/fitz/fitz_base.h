@@ -86,7 +86,7 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 #define R_OK 4
 #endif
 
-#else /* C99 or close enough */ 
+#else /* C99 or close enough */
 
 #include <unistd.h>
 #define FZ_FLEX
@@ -325,5 +325,5 @@ fz_error fz_scalepixmap(fz_pixmap **dstp, fz_pixmap *src, int xdenom, int ydenom
 /* needed for tiled rendering */
 fz_error fz_newscaledpixmap(fz_pixmap **dstp, int w, int h, int n, int xdenom, int ydenom);
 fz_error fz_scalepixmaptile(fz_pixmap *dstp, int xoffs, int yoffs,
-			     fz_pixmap *tile, int xdenom, int ydenom);
+	fz_pixmap *tile, int xdenom, int ydenom);
 

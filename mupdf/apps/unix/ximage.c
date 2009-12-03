@@ -22,12 +22,12 @@ extern int ffs(int);
 
 typedef void (*ximage_convert_func_t)
 (
-	 const unsigned char *src,
-	 int srcstride,
-	 unsigned char *dst,
-	 int dststride,
-	 int w,
-	 int h
+	const unsigned char *src,
+	int srcstride,
+	unsigned char *dst,
+	int dststride,
+	int w,
+	int h
 	);
 
 #define POOLSIZE 4
@@ -84,7 +84,7 @@ static struct
 	int shmcode;
 	XImage *pool[POOLSIZE];
 	/* MUST exist during the lifetime of the shared ximage according to the
-	   xc/doc/hardcopy/Xext/mit-shm.PS.gz */
+	xc/doc/hardcopy/Xext/mit-shm.PS.gz */
 	XShmSegmentInfo shminfo[POOLSIZE];
 	int lastused;
 } info;
@@ -173,15 +173,15 @@ make_colormap(void)
 					info.rgbcube[i].green = (g * 36) << 8;
 					info.rgbcube[i].blue = (b * 85) << 8;
 					info.rgbcube[i].flags =
-						DoRed | DoGreen | DoBlue;
+					DoRed | DoGreen | DoBlue;
 					i++;
 				}
 			}
 		}
 		info.colormap = XCreateColormap(info.display,
-					RootWindow(info.display, info.screen),
-					info.visual.visual,
-					AllocAll);
+			RootWindow(info.display, info.screen),
+			info.visual.visual,
+			AllocAll);
 		XStoreColors(info.display, info.colormap, info.rgbcube, 256);
 		return;
 	}
@@ -191,7 +191,7 @@ make_colormap(void)
 		return;
 	}
 	fprintf(stderr, "Cannot handle visual class %d with depth: %d\n",
-			info.visual.class, info.visual.depth);
+		info.visual.class, info.visual.depth);
 	return;
 }
 
@@ -220,11 +220,11 @@ select_mode(void)
 	bs = ffs(bm) - 1;
 
 	printf("ximage: mode %d/%d %08lx %08lx %08lx (%ld,%ld,%ld) %s%s\n",
-			info.visual.depth,
-			info.bitsperpixel,
-			rm, gm, bm, rs, gs, bs,
-			byteorder == MSBFirst ? "msb" : "lsb",
-			byterev ? " <swap>":"");
+		info.visual.depth,
+		info.bitsperpixel,
+		rm, gm, bm, rs, gs, bs,
+		byteorder == MSBFirst ? "msb" : "lsb",
+		byterev ? " <swap>":"");
 
 	info.mode = UNKNOWN;
 	if (info.bitsperpixel == 8) {
@@ -273,8 +273,8 @@ create_pool(void)
 
 	for (i = 0; i < POOLSIZE; i++) {
 		info.pool[i] = createximage(info.display,
-					info.visual.visual, &info.shminfo[i], info.visual.depth,
-					WIDTH, HEIGHT);
+			info.visual.visual, &info.shminfo[i], info.visual.depth,
+			WIDTH, HEIGHT);
 		if (info.pool[i] == nil) {
 			return 0;
 		}
@@ -364,7 +364,7 @@ ximage_init(Display *display, int screen, Visual *visual)
 
 	/* identify code for MIT-SHM extension */
 	if (XQueryExtension(display, "MIT-SHM", &major, &event, &error) &&
-			XShmQueryExtension(display))
+		XShmQueryExtension(display))
 		info.shmcode = major;
 
 	/* intercept errors looking for SHM code */
@@ -401,11 +401,11 @@ ximage_get_colormap(void)
 
 void
 ximage_blit(Drawable d, GC gc,
-		int dstx, int dsty,
-		unsigned char *srcdata,
-		int srcx, int srcy,
-		int srcw, int srch,
-		int srcstride)
+	int dstx, int dsty,
+	unsigned char *srcdata,
+	int srcx, int srcy,
+	int srcw, int srch,
+	int srcstride)
 {
 	XImage *image;
 	int ax, ay;
@@ -422,12 +422,12 @@ ximage_blit(Drawable d, GC gc,
 			image = next_pool_image();
 
 			srcptr = srcdata +
-				(ay + srcy) * srcstride +
-				(ax + srcx) * 4;
+			(ay + srcy) * srcstride +
+			(ax + srcx) * 4;
 
 			info.convert_func(srcptr, srcstride,
-					  (unsigned char *) image->data,
-					  image->bytes_per_line, w, h);
+				(unsigned char *) image->data,
+				image->bytes_per_line, w, h);
 
 			if (info.useshm)
 			{
@@ -499,16 +499,16 @@ ximage_convert_bgra8888(PARAMS)
 		for (x = 0; x < w; x++) {
 			val = s[x];
 			d[x] =
-				(val >> 24) |
-				((val >> 8) & 0xff00) |
-				(val << 24) |
-				((val << 8) & 0xff0000);
+			(val >> 24) |
+			((val >> 8) & 0xff00) |
+			(val << 24) |
+			((val << 8) & 0xff0000);
 			/*
 			d[x] =
-				(((val >> 24) & 0xff) <<  0) |
-				(((val >> 16) & 0xff) <<  8) |
-				(((val >>  8) & 0xff) << 16) |
-				(((val >>  0) & 0xff) << 24);
+			(((val >> 24) & 0xff) <<  0) |
+			(((val >> 16) & 0xff) <<  8) |
+			(((val >>  8) & 0xff) << 16) |
+			(((val >>  0) & 0xff) << 24);
 			*/
 		}
 		d += dststride>>2;
@@ -531,7 +531,7 @@ ximage_convert_abgr8888(PARAMS)
 			val = s[x];
 #if 1 /* FZ_MSB */
 			d[x] = (val & 0xff00ff00) |
-				(((val << 16) | (val >> 16)) & 0x00ff00ff);
+			(((val << 16) | (val >> 16)) & 0x00ff00ff);
 #else /* FZ_LSB */
 			d[x] = (val << 24) | ((val >> 8) & 0xff);
 #endif
@@ -598,9 +598,9 @@ ximage_convert_rgb565(PARAMS)
 			g = src[4*x + 2];
 			b = src[4*x + 3];
 			((unsigned short *)dst)[x] =
-				((r & 0xF8) << 8) |
-				((g & 0xFC) << 3) |
-				(b >> 3);
+			((r & 0xF8) << 8) |
+			((g & 0xFC) << 3) |
+			(b >> 3);
 		}
 		src += srcstride;
 		dst += dststride;
@@ -618,13 +618,13 @@ ximage_convert_rgb565_br(PARAMS)
 			g = src[4*x + 2];
 			b = src[4*x + 3];
 			/* final word is:
-			   g4 g3 g2 b7 b6 b5 b4 b3  r7 r6 r5 r4 r3 g7 g6 g5
-			 */
+			g4 g3 g2 b7 b6 b5 b4 b3  r7 r6 r5 r4 r3 g7 g6 g5
+			*/
 			((unsigned short *)dst)[x] =
-				(r & 0xF8) |
-				((g & 0xE0) >> 5) |
-				((g & 0x1C) << 11) |
-				((b & 0xF8) << 5);
+			(r & 0xF8) |
+			((g & 0xE0) >> 5) |
+			((g & 0x1C) << 11) |
+			((b & 0xF8) << 5);
 		}
 		src += srcstride;
 		dst += dststride;
@@ -642,9 +642,9 @@ ximage_convert_rgb555(PARAMS)
 			g = src[4*x + 2];
 			b = src[4*x + 3];
 			((unsigned short *)dst)[x] =
-				((r & 0xF8) << 7) |
-				((g & 0xF8) << 2) |
-				(b >> 3);
+			((r & 0xF8) << 7) |
+			((g & 0xF8) << 2) |
+			(b >> 3);
 		}
 		src += srcstride;
 		dst += dststride;
@@ -662,13 +662,13 @@ ximage_convert_rgb555_br(PARAMS)
 			g = src[4*x + 2];
 			b = src[4*x + 3];
 			/* final word is:
-			   g5 g4 g3 b7 b6 b5 b4 b3  0 r7 r6 r5 r4 r3 g7 g6
-			 */
+			g5 g4 g3 b7 b6 b5 b4 b3  0 r7 r6 r5 r4 r3 g7 g6
+			*/
 			((unsigned short *)dst)[x] =
-				((r & 0xF8) >> 1) |
-				((g & 0xC0) >> 6) |
-				((g & 0x38) << 10) |
-				((b & 0xF8) << 5);
+			((r & 0xF8) >> 1) |
+			((g & 0xC0) >> 6) |
+			((g & 0x38) << 10) |
+			((b & 0xF8) << 5);
 		}
 		src += srcstride;
 		dst += dststride;

@@ -49,7 +49,7 @@ static inline int ishex(int ch)
 static inline int fromhex(int ch)
 {
 	if (ch >= '0' && ch <= '9')
-		return  ch - '0';
+		return ch - '0';
 	else if (ch >= 'A' && ch <= 'F')
 		return ch - 'A' + 0xA;
 	else if (ch >= 'a' && ch <= 'f')
@@ -343,7 +343,7 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 			goto cleanupokay;
 		}
 
-		else if (c ==  '}')
+		else if (c == '}')
 		{
 			fz_readbyte(f);
 			*tok = PDF_TCBRACE;

@@ -139,7 +139,7 @@ static void fmtname(struct fmt *fmt, fz_obj *obj)
 	for (i = 0; s[i]; i++)
 	{
 		if (isdelim(s[i]) || iswhite(s[i]) ||
-				s[i] == '#' || s[i] < 32 || s[i] > 127)
+			s[i] == '#' || s[i] < 32 || s[i] > 127)
 		{
 			fmtputc(fmt, '#');
 			c = (s[i] >> 4) & 0xf;
@@ -336,6 +336,6 @@ fz_fprintobj(FILE *fp, fz_obj *obj, int tight)
 void
 fz_debugobj(fz_obj *obj)
 {
-    fz_fprintobj(stdout, obj, 0);
+	fz_fprintobj(stdout, obj, 0);
 }
 

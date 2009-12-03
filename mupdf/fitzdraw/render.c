@@ -148,20 +148,20 @@ rendersolid(fz_renderer *gc, fz_solidnode *solid, fz_matrix ctm)
 		p = gc->dest->samples;
 		n = gc->dest->w * gc->dest->h;
 	}
-	
+
 	a = gc->argb[0];
 	r = gc->argb[1];
 	g = gc->argb[2];
 	b = gc->argb[3];
 	if ((p - (unsigned char *)0) & 3) {
-	while (n--)
-	{
-		p[0] = a;
-		p[1] = r;
-		p[2] = g;
-		p[3] = b;
-		p += 4;
-	}
+		while (n--)
+		{
+			p[0] = a;
+			p[1] = r;
+			p[2] = g;
+			p[3] = b;
+			p += 4;
+		}
 	}
 	else
 	{
@@ -229,12 +229,12 @@ renderpath(fz_renderer *gc, fz_pathnode *path, fz_matrix ctm)
 	{
 		DEBUG(" path rgb %d %d %d %d, %d %d %d\n", gc->argb[0], gc->argb[1], gc->argb[2], gc->argb[3], gc->argb[4], gc->argb[5], gc->argb[6]);
 		return fz_scanconvert(gc->gel, gc->ael, path->paint == FZ_EOFILL,
-					clip, gc->over, gc->argb, 1);
+				clip, gc->over, gc->argb, 1);
 	}
 	else if (gc->flag & FOVER)
 	{
 		return fz_scanconvert(gc->gel, gc->ael, path->paint == FZ_EOFILL,
-					clip, gc->over, nil, 1);
+				clip, gc->over, nil, 1);
 	}
 	else
 	{
@@ -243,7 +243,7 @@ renderpath(fz_renderer *gc, fz_pathnode *path, fz_matrix ctm)
 			return error;
 		fz_clearpixmap(gc->dest);
 		return fz_scanconvert(gc->gel, gc->ael, path->paint == FZ_EOFILL,
-					clip, gc->dest, nil, 0);
+				clip, gc->dest, nil, 0);
 	}
 }
 
@@ -409,8 +409,8 @@ renderimage(fz_renderer *gc, fz_imagenode *node, fz_matrix ctm)
 
 	if (fz_isemptyrect(clip))
 		return fz_okay;
-        if (image->w == 0 || image->h == 0)
-                return fz_okay;
+	if (image->w == 0 || image->h == 0)
+		return fz_okay;
 
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690409 */
 	if (image->n + image->a == 0)
@@ -428,7 +428,7 @@ renderimage(fz_renderer *gc, fz_imagenode *node, fz_matrix ctm)
 
 		DEBUG("  load image tile size = %dx%d\n", image->w, tileheight);
 		error = fz_newpixmap(&tile, 0, 0, image->w,
-				     tileheight, image->n + 1);
+			tileheight, image->n + 1);
 		if (error)
 			return error;
 
@@ -442,7 +442,7 @@ renderimage(fz_renderer *gc, fz_imagenode *node, fz_matrix ctm)
 			tile->y = y;
 			tile->h = tileheight;
 			DEBUG("  tile xywh=%d %d %d %d sxsy=1/%d 1/%d\n",
-			      0, y, image->w, tileheight, dx, dy);
+				0, y, image->w, tileheight, dx, dy);
 			error = image->loadtile(image, tile);
 			if (error)
 				goto cleanup1;

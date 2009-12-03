@@ -37,14 +37,14 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 		return;
 
 	switch (n) {
-	    case 1:
+	case 1:
 		while (wh--)
 		{
 			p[0] = min[0] + fz_mul255(sub[0], p[0]);
 			p ++;
 		}
 		break;
-	    case 2:
+	case 2:
 		if (justinvert) {
 			unsigned *wp = (unsigned *)p;
 
@@ -69,14 +69,14 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 			}
 		}
 		else
-		while (wh--)
+			while (wh--)
 		{
 			p[0] = min[0] + fz_mul255(sub[0], p[0]);
 			p[1] = min[1] + fz_mul255(sub[1], p[1]);
 			p += 2;
 		}
 		break;
-	    default:
+	default:
 		while (wh--)
 		{
 			for (i = 0; i < n; i++)

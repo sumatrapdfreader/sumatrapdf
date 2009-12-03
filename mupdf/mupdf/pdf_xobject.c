@@ -20,7 +20,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	form->contents = nil;
 
 	/* Store item immediately, to avoid infinite recursion if contained
-	   objects refer again to this xobject */
+	objects refer again to this xobject */
 	pdf_storeitem(xref->store, PDF_KXOBJECT, dict, form);
 
 	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), form);
@@ -29,8 +29,8 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	form->bbox = pdf_torect(obj);
 
 	pdf_logrsrc("bbox [%g %g %g %g]\n",
-			form->bbox.x0, form->bbox.y0,
-			form->bbox.x1, form->bbox.y1);
+		form->bbox.x0, form->bbox.y0,
+		form->bbox.x1, form->bbox.y1);
 
 	obj = fz_dictgets(dict, "Matrix");
 	if (obj)
@@ -39,9 +39,9 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 		form->matrix = fz_identity();
 
 	pdf_logrsrc("matrix [%g %g %g %g %g %g]\n",
-			form->matrix.a, form->matrix.b,
-			form->matrix.c, form->matrix.d,
-			form->matrix.e, form->matrix.f);
+		form->matrix.a, form->matrix.b,
+		form->matrix.c, form->matrix.d,
+		form->matrix.e, form->matrix.f);
 
 	form->isolated = 0;
 	form->knockout = 0;

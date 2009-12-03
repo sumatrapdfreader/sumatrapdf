@@ -233,7 +233,7 @@ fz_renderftglyph(fz_glyph *glyph, fz_font *font, int gid, fz_matrix trm)
 			return fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
 
 		fterr = FT_Load_Glyph(font->ftface, gid,
-				FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
+			FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
 		if (fterr)
 			return fz_throw("freetype failed to load glyph: %s", ft_errorstring(fterr));
 
@@ -261,7 +261,7 @@ fz_renderftglyph(fz_glyph *glyph, fz_font *font, int gid, fz_matrix trm)
 	 * into FT_Set_Char_Size instead
 	 */
 
-	m.xx = trm.a * 64;      /* should be 65536 */
+	m.xx = trm.a * 64; /* should be 65536 */
 	m.yx = trm.b * 64;
 	m.xy = trm.c * 64;
 	m.yy = trm.d * 64;
@@ -275,30 +275,30 @@ fz_renderftglyph(fz_glyph *glyph, fz_font *font, int gid, fz_matrix trm)
 
 	if (font->fthint)
 	{
-	    /* Enable hinting, but keep the huge char size so that
-	     * it is hinted for a character. This will in effect nullify
-	     * the effect of grid fitting. This form of hinting should
-	     * only be used for DynaLab and similar tricky TrueType fonts,
-	     * so that we get the correct outline shape.
-	     */
+		/* Enable hinting, but keep the huge char size so that
+		 * it is hinted for a character. This will in effect nullify
+		 * the effect of grid fitting. This form of hinting should
+		 * only be used for DynaLab and similar tricky TrueType fonts,
+		 * so that we get the correct outline shape.
+		 */
 #ifdef USE_HINTING
-	    /* If you really want grid fitting, enable this code. */
-	    float scale = fz_matrixexpansion(trm);
-	    m.xx = trm.a * 65536 / scale;
-	    m.xy = trm.b * 65536 / scale;
-	    m.yx = trm.c * 65536 / scale;
-	    m.yy = trm.d * 65536 / scale;
-	    v.x = 0;
-	    v.y = 0;
+		/* If you really want grid fitting, enable this code. */
+		float scale = fz_matrixexpansion(trm);
+		m.xx = trm.a * 65536 / scale;
+		m.xy = trm.b * 65536 / scale;
+		m.yx = trm.c * 65536 / scale;
+		m.yy = trm.d * 65536 / scale;
+		v.x = 0;
+		v.y = 0;
 
-	    fterr = FT_Set_Char_Size(face, 64 * scale, 64 * scale, 72, 72);
-	    if (fterr)
-		    fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
-	    FT_Set_Transform(face, &m, &v);
+		fterr = FT_Set_Char_Size(face, 64 * scale, 64 * scale, 72, 72);
+		if (fterr)
+			fz_warn("freetype setting character size: %s", ft_errorstring(fterr));
+		FT_Set_Transform(face, &m, &v);
 #endif
-	    fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
-	    if (fterr)
-		fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
+		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP);
+		if (fterr)
+			fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
 	}
 	else
 	{
@@ -425,13 +425,13 @@ fz_debugfont(fz_font *font)
 	if (font->t3procs)
 	{
 		printf("  type3 matrix [%g %g %g %g]\n",
-				font->t3matrix.a, font->t3matrix.b,
-				font->t3matrix.c, font->t3matrix.d);
+			font->t3matrix.a, font->t3matrix.b,
+			font->t3matrix.c, font->t3matrix.d);
 	}
 
 	printf("  bbox [%d %d %d %d]\n",
-			font->bbox.x0, font->bbox.y0,
-			font->bbox.x1, font->bbox.y1);
+		font->bbox.x0, font->bbox.y0,
+		font->bbox.x1, font->bbox.y1);
 
 	printf("}\n");
 }

@@ -120,11 +120,11 @@ pdf_debugxref(pdf_xref *xref)
 	for (i = 0; i < xref->len; i++)
 	{
 		printf("%010d %05d %c (ref=%d, ofs=%d)\n",
-				xref->table[i].ofs,
-				xref->table[i].gen,
-				xref->table[i].type,
-				xref->table[i].obj ? xref->table[i].obj->refs : 0,
-				xref->table[i].stmofs);
+			xref->table[i].ofs,
+			xref->table[i].gen,
+			xref->table[i].type,
+			xref->table[i].obj ? xref->table[i].obj->refs : 0,
+			xref->table[i].stmofs);
 	}
 }
 
