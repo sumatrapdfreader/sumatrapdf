@@ -165,10 +165,8 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 {
 	fz_error error;
 	fz_node *transform;
-	fz_node *blend;
 	fz_stream *file;
 	pdf_gstate *gstate;
-	float x, y, w, h;
 
 	gsave(csi);
 
@@ -200,12 +198,6 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 
 	if (xobj->isolated || xobj->knockout)
 	{
-		/* The xobject's contents ought to be blended properly,
-		but for now, just do over and hope for something
-
-		error = fz_newblendnode(&blend, gstate->blendmode,
-		xobj->isolated, xobj->knockout);
-		*/
 		if (gstate->blendmode != FZ_BNORMAL)
 			fz_warn("ignoring non-normal blendmode (%d)", gstate->blendmode);
 		if (xobj->isolated && xobj->knockout)
@@ -214,30 +206,26 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 			fz_warn("ignoring that the group is isolated");
 		else if (xobj->knockout)
 			fz_warn("ignoring that the group is knockout");
+		/* The xobject's contents ought to be blended properly, but for now do nothing
+		error = fz_newblendnode(&blend, gstate->blendmode,
+		xobj->isolated, xobj->knockout);
 		error = fz_newovernode(&blend);
 		if (error)
 			return fz_rethrow(error, "cannot create blend node");
 		fz_insertnodelast(gstate->head, blend);
 		gstate->head = blend;
+		*/
 	}
 
-	/* clip the xobject; cf. http://bugs.ghostscript.com/show_bug.cgi?id=690622 */
-	
-	x = xobj->bbox.x0; w = xobj->bbox.x1 - x;
-	y = xobj->bbox.y0; h = xobj->bbox.y1 - y;
-	error = fz_moveto(csi->path, x, y);
-	if (error) return fz_rethrow(error, "cannot clip xobject");
-	error = fz_lineto(csi->path, x + w, y);
-	if (error) return fz_rethrow(error, "cannot clip xobject");
-	error = fz_lineto(csi->path, x + w, y + h);
-	if (error) return fz_rethrow(error, "cannot clip xobject");
-	error = fz_lineto(csi->path, x, y + h);
-	if (error) return fz_rethrow(error, "cannot clip xobject");
-	error = fz_closepath(csi->path);
-	if (error) return fz_rethrow(error, "cannot clip xobject");
+	/* clip to the bounds */
+
+	fz_moveto(csi->path, xobj->bbox.x0, xobj->bbox.y0);
+	fz_lineto(csi->path, xobj->bbox.x1, xobj->bbox.y0);
+	fz_lineto(csi->path, xobj->bbox.x1, xobj->bbox.y1);
+	fz_lineto(csi->path, xobj->bbox.x0, xobj->bbox.y1);
+	fz_closepath(csi->path);
 	csi->clip = 1;
-	error = pdf_showpath(csi, 0, 0, 0, 0);
-	if (error) return fz_rethrow(error, "cannot clip xobject");
+	pdf_showpath(csi, 0, 0, 0, 0);
 
 	/* run contents */
 
@@ -371,8 +359,6 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 
 		else if (!strcmp(s, "BM"))
 		{
-			fz_error error;
-			fz_node *blend;
 			static const struct { const char *name; fz_blendkind mode; } bm[] = {
 				{ "Normal", FZ_BNORMAL },
 				{ "Multiply", FZ_BMULTIPLY },
@@ -405,16 +391,14 @@ runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
 				}
 			}
 
-			/* The content stream ought to be blended properly,
-			but for now, just do over and hope for something
-
+			/* The content stream ought to be blended properly, but for now do nothing.
 			error = fz_newblendnode(&blend, gstate->blendmode, 0, 0);
-			*/
 			error = fz_newovernode(&blend);
 			if (error)
 				return fz_rethrow(error, "cannot create blend node");
 			fz_insertnodelast(gstate->head, blend);
 			gstate->head = blend;
+			*/
 		}
 
 		else if (!strcmp(s, "SMask"))

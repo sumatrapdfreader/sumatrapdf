@@ -23,14 +23,16 @@ loadoutline(pdf_xref *xref, fz_obj *dict)
 		pdf_logpage("title %s\n", node->title);
 	}
 
+	obj = fz_dictgets(dict, "Count");
+	if (obj)
+	{
+		node->count = fz_toint(obj);
+	}
+
 	if (fz_dictgets(dict, "Dest") || fz_dictgets(dict, "A"))
 	{
 		node->link = pdf_loadlink(xref, dict);
 	}
-
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690735 */
-	obj = fz_dictgets(dict, "Count");
-	node->count = fz_toint(obj);
 
 	obj = fz_dictgets(dict, "First");
 	if (obj)
