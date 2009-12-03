@@ -95,7 +95,7 @@ pdf_toucs2(fz_obj *src)
 	}
 
 	*dstptr = '\0';
-	return fz_okay;
+	return dst;
 }
 
 fz_error
