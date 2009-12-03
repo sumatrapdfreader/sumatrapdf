@@ -288,13 +288,14 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 	wincursor(app, ARROW);
 }
 
-
 static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
 {
-	char buf[2048];
+	char *buf;
+	buf = fz_malloc(fz_tostrlen(uri) + 1);
 	memcpy(buf, fz_tostrbuf(uri), fz_tostrlen(uri));
 	buf[fz_tostrlen(uri)] = 0;
 	winopenuri(app, buf);
+	fz_free(buf);
 }
 
 static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)

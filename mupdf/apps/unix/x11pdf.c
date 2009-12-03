@@ -428,12 +428,10 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 
 void winopenuri(pdfapp_t *app, char *buf)
 {
-	char cmd[2048];
-	if (getenv("BROWSER"))
-		sprintf(cmd, "$BROWSER %s &", buf);
-	else
-		sprintf(cmd, "open %s", buf);
-	system(cmd);
+	char *browser = getenv("BROWSER");
+	if (!browser)
+		browser = "open";
+	execlp(browser, browser, buf, 0);
 }
 
 static void onkey(int c)

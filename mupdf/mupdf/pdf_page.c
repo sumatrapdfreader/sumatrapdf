@@ -85,52 +85,32 @@ runmany(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_obj *list)
 }
 
 static fz_error
-loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *ref)
+loadpagecontents(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *obj)
 {
-	fz_error error;
-	fz_obj *obj;
+	fz_error error = fz_okay;
 	pdf_csi *csi;
 
 	error = pdf_newcsi(&csi, 0);
 	if (error)
 		return fz_rethrow(error, "cannot create interpreter");
 
-	if (fz_isindirect(ref))
+	if (fz_isarray(obj))
 	{
-		obj = fz_resolveindirect(ref);
-
-		if (fz_isarray(obj))
-		{
-			if (fz_arraylen(obj) == 1)
-				error = runone(csi, xref, rdb, fz_arrayget(obj, 0));
-			else
-				error = runmany(csi, xref, rdb, obj);
-		}
+		if (fz_arraylen(obj) == 1)
+			error = runone(csi, xref, rdb, fz_arrayget(obj, 0));
 		else
-			error = runone(csi, xref, rdb, ref);
-
-		if (error)
-		{
-			pdf_dropcsi(csi);
-			return fz_rethrow(error, "cannot interpret page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		}
+			error = runmany(csi, xref, rdb, obj);
 	}
-
-	else if (fz_isarray(ref))
-	{
-		if (fz_arraylen(ref) == 1)
-			error = runone(csi, xref, rdb, fz_arrayget(ref, 0));
-		else
-			error = runmany(csi, xref, rdb, ref);
-
-		if (error)
-		{
-			pdf_dropcsi(csi);
-			return fz_rethrow(error, "cannot interpret page contents (%d %d R)", fz_tonum(ref), fz_togen(ref));
-		}
-	}
+	else if (pdf_isstream(xref, fz_tonum(obj), fz_togen(obj)))
+		error = runone(csi, xref, rdb, obj);
 	else
 		fz_warn("page contents missing, leaving page blank");
+
+	if (obj && error)
+	{
+		pdf_dropcsi(csi);
+		return fz_rethrow(error, "cannot interpret page contents (%d %d R)", fz_tonum(obj), fz_togen(obj));
+	}
 
 	*treep = csi->tree;
 	csi->tree = nil;
