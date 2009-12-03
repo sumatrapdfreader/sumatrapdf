@@ -109,7 +109,7 @@ fz_resizehash(fz_hashtable *table, int newsize)
 	}
 
 	table->ents = fz_malloc(sizeof(fz_hashentry) * newsize);
-	memset(table->ents, 0, sizeof(fz_hashentry) * table->size);
+	memset(table->ents, 0, sizeof(fz_hashentry) * newsize);
 	table->size = newsize;
 	table->load = 0;
 
