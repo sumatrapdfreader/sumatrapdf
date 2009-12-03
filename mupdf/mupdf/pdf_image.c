@@ -164,8 +164,6 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 		img->samples = fz_readall(tempfile, img->stride * img->super.h);
 		fz_dropstream(tempfile);
-		if (error)
-			return error;
 
 		fz_dropfilter(filter);
 	}

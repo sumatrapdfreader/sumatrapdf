@@ -53,7 +53,7 @@ fz_dropfont(fz_font *font)
 				if (font->t3procs[i])
 					fz_droptree(font->t3procs[i]);
 			{ /* HACK: make sure the static pixmap is freed through a dummy call */
-                fz_glyph glyph; fz_matrix tmr = { 0 };
+				fz_glyph glyph; fz_matrix tmr = { 0 };
 				font->t3procs[0] = nil;
 				fz_rendert3glyph(&glyph, font, 0, tmr);
 			}

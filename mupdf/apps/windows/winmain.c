@@ -66,9 +66,9 @@ void associate(char *argv0)
 		KEY_WRITE, NULL, &kicon, &disp))
 		return;
 
-    sprintf(tmp, "%s,1", argv0);
-    if (RegSetValueEx(kicon, "", 0, REG_SZ, tmp, strlen(tmp)+1))
-	return;
+	sprintf(tmp, "%s,1", argv0);
+	if (RegSetValueEx(kicon, "", 0, REG_SZ, tmp, strlen(tmp)+1))
+		return;
 
 	RegCloseKey(kicon);
 
@@ -792,7 +792,7 @@ int main(int argc, char **argv)
 		filename = buf;
 	}
 
-    /* Keyboard events */
+	pdfapp_open(&gapp, filename);
 
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
