@@ -2874,7 +2874,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     }
     free(verTxt);
 Exit:
-	free(txt);
+    free(txt);
     delete ctx;
 }
 
@@ -2962,25 +2962,24 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         (GetGValue(gGlobalPrefs.m_fwdsearchColor) << 8) | 
         GetBValue(gGlobalPrefs.m_fwdsearchColor);
 
-    RectD recD;
-    RectI recI;
-
     // Draw the rectangles highlighting the forward search results
-    for (UINT i=0; i<win->fwdsearchmarkRects.size();i++)
+    for (UINT i = 0; i < win->fwdsearchmarkRects.size(); i++)
     {
-        RectD_FromRectI (&recD, &win->fwdsearchmarkRects[i]);
-        win->dm->rectCvtUserToScreen (win->fwdsearchmarkPage, &recD);
-        RectI_FromRectD (&recI, &recD);
+        RectD recD;
+        RectI recI;
+
+        RectD_FromRectI(&recD, &win->fwdsearchmarkRects[i]);
+        win->dm->rectCvtUserToScreen(win->fwdsearchmarkPage, &recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0)
         {
-          recI.x = pageInfo->screenX + gGlobalPrefs.m_fwdsearchOffset;
-		  recI.dx = gGlobalPrefs.m_fwdsearchWidth > 0 ? gGlobalPrefs.m_fwdsearchWidth : 15;
-          recI.y -= 4;
-          recI.dy += 8;          
+            recI.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal() / 100.0;
+            recI.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal() / 100.0;
+            recI.y -= 4;
+            recI.dy += 8;          
         }
+        RectI_FromRectD(&recI, &recD);
         PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue, 0);
     }
-
 }
 
 #define BORDER_SIZE   1
