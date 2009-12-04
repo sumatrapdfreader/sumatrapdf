@@ -293,6 +293,7 @@ addinvisibleshape(pdf_gstate *gs, fz_node *shape)
 	return fz_okay;
 }
 
+#if 0 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690643 */
 static fz_matrix getmatrix(fz_node *node)
 {
 	if (node->parent)
@@ -306,6 +307,16 @@ static fz_matrix getmatrix(fz_node *node)
 		return ((fz_transformnode*)node)->m;
 	return fz_identity();
 }
+#else
+static fz_matrix getmatrix(fz_node *node)
+{
+	while (node->parent && !(fz_istransformnode(node) && ((fz_transformnode*)node)->container))
+		node = node->parent;
+	if (fz_istransformnode(node) && ((fz_transformnode*)node)->container)
+		return ((fz_transformnode*)node)->m;
+	return fz_identity();
+}
+#endif
 
 static fz_error
 addpatternshape(pdf_gstate *gs, fz_node *shape,

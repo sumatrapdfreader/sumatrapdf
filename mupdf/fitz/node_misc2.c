@@ -211,6 +211,7 @@ fz_newtransformnode(fz_node **nodep, fz_matrix m)
 
 	fz_initnode((fz_node*)node, FZ_NTRANSFORM);
 	node->m = m;
+	node->container = 0; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690643 */
 
 	return fz_okay;
 }

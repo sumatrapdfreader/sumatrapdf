@@ -189,6 +189,7 @@ runxobject(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, pdf_xobject *xobj)
 	if (error)
 		return fz_rethrow(error, "cannot create transform node");
 
+	((fz_transformnode*)transform)->container = 1; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690643 */
 	error = pdf_addtransform(gstate, transform);
 	if (error)
 	{

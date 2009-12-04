@@ -97,6 +97,7 @@ struct fz_transformnode_s
 {
 	fz_node super;
 	fz_matrix m;
+	int container; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690643 */
 };
 
 struct fz_overnode_s
