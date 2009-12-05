@@ -951,7 +951,7 @@ const char *g_transTranslations[] = {
   "Das Dokument wurde durchsucht",
   "Keine neuere Version vorhanden.",
   "In der N\303\244he von Zeile %u in der Datei %s wurde kein Resultat gefunden",
-  NULL,
+  "Synchronisationsdatei nicht gefunden",
   "Keine Synchronisationsinformationen an diesem Ort",
   NULL,
   "\303\226&ffnen\342\200\246",

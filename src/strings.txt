@@ -4833,4 +4833,5 @@ nn:Førre side\t<-
 -
 No synchronization file found
 fr:Aucun fichier de synchronization trouvé
+de:Synchronisationsdatei nicht gefunden
 ru:Файл синхронизации не найден
