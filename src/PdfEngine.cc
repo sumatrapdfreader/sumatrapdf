@@ -229,6 +229,9 @@ DecryptedOk:
      * TODO: more descriptive errors?
      */
 
+    /* TODO: pdftool.c doesn't fz_resolveindirect() of "Root" object but
+        pdf_getpagecount() does. Who is right? (leaving resolving in since it
+        doesn't hurt) */
     fz_obj *obj;
     obj = fz_dictgets(_xref->trailer, "Root");
     _xref->root = fz_resolveindirect(obj);
