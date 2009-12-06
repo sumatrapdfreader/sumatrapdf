@@ -2457,20 +2457,16 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
 static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen)
 {
     HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_READ, NULL, &keyTmp, NULL);
-    if (ERROR_SUCCESS != res) {
-        SeeLastError();
-        goto Exit;
+    LONG res = RegOpenKeyEx(keySub, keyName, 0, KEY_READ, &keyTmp);
+
+    if (ERROR_SUCCESS == res) {
+        bufLen *= sizeof(TCHAR); // we need the buffer size in bytes not TCHARs
+        res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
+        RegCloseKey(keyTmp);
     }
-    // we need the buffer size in bytes not TCHARs
-    bufLen *= sizeof(TCHAR);
-    res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
+
     if (ERROR_SUCCESS != res)
         SeeLastError();
-Exit:
-    if (NULL != keyTmp)
-        RegCloseKey(keyTmp);
-
     return ERROR_SUCCESS == res;
 }
 
@@ -2478,17 +2474,14 @@ static bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName,
 {
     HKEY keyTmp = NULL;
     LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
-    if (ERROR_SUCCESS != res) {
-        SeeLastError();
-        goto Exit;
+
+    if (ERROR_SUCCESS == res) {
+        res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
+        RegCloseKey(keyTmp);
     }
-    res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
+
     if (ERROR_SUCCESS != res)
         SeeLastError();
-Exit:
-    if (NULL != keyTmp)
-        RegCloseKey(keyTmp);
-
     return ERROR_SUCCESS == res;
 }
 
