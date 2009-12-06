@@ -126,6 +126,8 @@ static void drawfreepage(void)
 	pdf_droppage(drawpage);
 	drawpage = nil;
 
+	flushxref();
+
 	/* Flush resources between pages.
 	 * TODO: should check memory usage before deciding to do this.
 	 */

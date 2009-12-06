@@ -236,6 +236,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 			pdf_droppage(app->page);
 		app->page = nil;
 
+		pdf_flushxref(app->xref, 0);
+
 		obj = pdf_getpageobject(app->xref, app->pageno);
 		error = pdf_loadpage(&app->page, app->xref, obj);
 		if (error)

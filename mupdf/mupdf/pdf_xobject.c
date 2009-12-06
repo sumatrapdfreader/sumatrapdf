@@ -65,6 +65,8 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	pdf_logrsrc("transparency %d\n", form->transparency);
 
 	form->resources = fz_dictgets(dict, "Resources");
+	if (form->resources)
+		form->resources = fz_keepobj(form->resources);
 
 	error = pdf_loadstream(&form->contents, xref, fz_tonum(dict), fz_togen(dict));
 	if (error)
@@ -98,6 +100,7 @@ pdf_dropxobject(pdf_xobject *xobj)
 {
 	if (xobj && --xobj->refs == 0)
 	{
+		if (xobj->resources) fz_dropobj(xobj->resources);
 		if (xobj->contents) fz_dropbuffer(xobj->contents);
 		fz_free(xobj);
 	}
