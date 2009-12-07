@@ -209,7 +209,7 @@ static int streq(const char *s1, const char *s2)
 }
 
 /* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
-   matches "EurostileExtended-Roman" */
+   matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
 static int
 fontnamematches(const char *s1, const char *s2)
 {
@@ -228,7 +228,7 @@ fontnamematches(const char *s1, const char *s2)
 	if (*s1)
 		rest = s1;
 
-	if (0 == stricmp(rest, "-roman"))
+	if (',' == *rest || 0 == stricmp(rest, "-roman"))
 		return 1;
 	return 0;
 }
