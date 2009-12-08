@@ -499,6 +499,7 @@ pdf_loadtile(fz_image *img, fz_pixmap *tile)
 	case 2: tilefunc = fz_loadtile2; break;
 	case 4: tilefunc = fz_loadtile4; break;
 	case 8: tilefunc = fz_loadtile8; break;
+	case 16: tilefunc = fz_loadtile16; break;
 	default:
 		return fz_throw("rangecheck: unsupported bit depth: %d", src->bpc);
 	}

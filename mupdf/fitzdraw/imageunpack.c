@@ -94,6 +94,7 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 #define ttwo(buf,x) ((buf[x >> 2] >> ( ( 3 - (x & 3) ) << 1 ) ) & 3 ) * 85
 #define tnib(buf,x) ((buf[x >> 1] >> ( ( 1 - (x & 1) ) << 2 ) ) & 15 ) * 17
 #define toct(buf,x) (buf[x])
+#define thex(buf,x) (buf[x << 1])
 
 static byte t1pad0[256][8];
 static byte t1pad1[256][16];
@@ -224,10 +225,13 @@ static void loadtile4(byte * restrict src, int sw, byte * restrict dst, int dw, 
 TILE(tnib)
 static void loadtile8(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
 TILE(toct)
+static void loadtile16(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
+TILE(thex)
 
 void (*fz_decodetile)(fz_pixmap *pix, int skip, float *decode) = decodetile;
 void (*fz_loadtile1)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile1;
 void (*fz_loadtile2)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile2;
 void (*fz_loadtile4)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile4;
 void (*fz_loadtile8)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile8;
+void (*fz_loadtile16)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile16;
 

@@ -99,6 +99,7 @@ extern void (*fz_loadtile1)(FZ_BYTE*, int sw, FZ_BYTE*, int dw, int w, int h, in
 extern void (*fz_loadtile2)(FZ_BYTE*, int sw, FZ_BYTE*, int dw, int w, int h, int pad);
 extern void (*fz_loadtile4)(FZ_BYTE*, int sw, FZ_BYTE*, int dw, int w, int h, int pad);
 extern void (*fz_loadtile8)(FZ_BYTE*, int sw, FZ_BYTE*, int dw, int w, int h, int pad);
+extern void (*fz_loadtile16)(FZ_BYTE*, int sw, FZ_BYTE*, int dw, int w, int h, int pad);
 
 extern void (*fz_srown)(FZ_BYTE *src, FZ_BYTE *dst, int w, int denom, int n);
 extern void (*fz_srow1)(FZ_BYTE *src, FZ_BYTE *dst, int w, int denom);
