@@ -310,7 +310,10 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 		if (kind == TYPE1)
 		{
-			if (test->platform_id == 7)
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=664 */
+			if (test->platform_id == 3 && test->encoding_id == 1)
+				cmap = test;
+			if (test->platform_id == 7 && test->encoding_id == 2)
 				cmap = test;
 		}
 
