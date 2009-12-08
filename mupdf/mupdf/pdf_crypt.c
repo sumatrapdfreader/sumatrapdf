@@ -40,7 +40,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	if (crypt->v != 1 && crypt->v != 2 && crypt->v != 4)
 	{
 		pdf_freecrypt(crypt);
-		return fz_throw("unknown encryption version: %d", crypt->v);
+		return fz_throw("unknown encryption version");
 	}
 
 	crypt->length = 40;

@@ -410,6 +410,7 @@ fz_error fz_packobj(fz_obj **op, pdf_xref *xref, char *fmt, ...)
 
 	error = parseobj(op, xref, &fmt, &v);
 
+	va_end(v.ap);
 	va_end(ap);
 
 	if (error)

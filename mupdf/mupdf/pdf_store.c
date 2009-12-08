@@ -175,9 +175,9 @@ pdf_evictageditems(pdf_store *store)
 		if (item->age > itemmaxage(item->kind))
 		{
 			if (!prev)
-				store->root = item->next;
+				store->root = next;
 			else
-				prev->next = item->next;
+				prev->next = next;
 			evictitem(item);
 		}
 		else

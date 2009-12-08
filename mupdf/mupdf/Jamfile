@@ -167,30 +167,30 @@ Library libcmaps : cmap_korean.c ;
 SubDir TOP fonts ;
 
 GenFile font_misc.c : fontdump
-    Dingbats.cff
-    StandardSymL.cff
-    URWChanceryL-MediItal.cff
+    Dingbats.ttf
+    StandardSymL.ttf
+    URWChanceryL-MediItal.ttf
     ;
 
 GenFile font_mono.c : fontdump
-    NimbusMonL-Regu.cff
-    NimbusMonL-ReguObli.cff
-    NimbusMonL-Bold.cff
-    NimbusMonL-BoldObli.cff
+    NimbusMonL-Regu.ttf
+    NimbusMonL-ReguObli.ttf
+    NimbusMonL-Bold.ttf
+    NimbusMonL-BoldObli.ttf
     ;
 
 GenFile font_serif.c : fontdump
-    NimbusRomNo9L-Regu.cff
-    NimbusRomNo9L-ReguItal.cff
-    NimbusRomNo9L-Medi.cff
-    NimbusRomNo9L-MediItal.cff
+    NimbusRomNo9L-Regu.ttf
+    NimbusRomNo9L-ReguItal.ttf
+    NimbusRomNo9L-Medi.ttf
+    NimbusRomNo9L-MediItal.ttf
     ;
 
 GenFile font_sans.c : fontdump
-    NimbusSanL-Bold.cff
-    NimbusSanL-BoldItal.cff
-    NimbusSanL-Regu.cff
-    NimbusSanL-ReguItal.cff
+    NimbusSanL-Bold.ttf
+    NimbusSanL-BoldItal.ttf
+    NimbusSanL-Regu.ttf
+    NimbusSanL-ReguItal.ttf
     ;
 
 Library libfonts :

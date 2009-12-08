@@ -1,36 +1,36 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-extern const unsigned char pdf_font_Dingbats_cff_buf[];
-extern const unsigned int  pdf_font_Dingbats_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_Bold_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_Bold_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_BoldObli_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_BoldObli_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_Regu_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_Regu_cff_len;
-extern const unsigned char pdf_font_NimbusMonL_ReguObli_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_ReguObli_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_Medi_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_Medi_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_MediItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_MediItal_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_Regu_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_Regu_cff_len;
-extern const unsigned char pdf_font_NimbusRomNo9L_ReguItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_ReguItal_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_Bold_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_Bold_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_BoldItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_BoldItal_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_Regu_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_Regu_cff_len;
-extern const unsigned char pdf_font_NimbusSanL_ReguItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_ReguItal_cff_len;
-extern const unsigned char pdf_font_StandardSymL_cff_buf[];
-extern const unsigned int  pdf_font_StandardSymL_cff_len;
-extern const unsigned char pdf_font_URWChanceryL_MediItal_cff_buf[];
-extern const unsigned int  pdf_font_URWChanceryL_MediItal_cff_len;
+extern const unsigned char pdf_font_Dingbats_ttf_buf[];
+extern const unsigned int  pdf_font_Dingbats_ttf_len;
+extern const unsigned char pdf_font_NimbusMonL_Bold_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusMonL_Bold_ttf_len;
+extern const unsigned char pdf_font_NimbusMonL_BoldObli_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusMonL_BoldObli_ttf_len;
+extern const unsigned char pdf_font_NimbusMonL_Regu_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusMonL_Regu_ttf_len;
+extern const unsigned char pdf_font_NimbusMonL_ReguObli_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusMonL_ReguObli_ttf_len;
+extern const unsigned char pdf_font_NimbusRomNo9L_Medi_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusRomNo9L_Medi_ttf_len;
+extern const unsigned char pdf_font_NimbusRomNo9L_MediItal_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusRomNo9L_MediItal_ttf_len;
+extern const unsigned char pdf_font_NimbusRomNo9L_Regu_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusRomNo9L_Regu_ttf_len;
+extern const unsigned char pdf_font_NimbusRomNo9L_ReguItal_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusRomNo9L_ReguItal_ttf_len;
+extern const unsigned char pdf_font_NimbusSanL_Bold_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusSanL_Bold_ttf_len;
+extern const unsigned char pdf_font_NimbusSanL_BoldItal_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusSanL_BoldItal_ttf_len;
+extern const unsigned char pdf_font_NimbusSanL_Regu_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusSanL_Regu_ttf_len;
+extern const unsigned char pdf_font_NimbusSanL_ReguItal_ttf_buf[];
+extern const unsigned int  pdf_font_NimbusSanL_ReguItal_ttf_len;
+extern const unsigned char pdf_font_StandardSymL_ttf_buf[];
+extern const unsigned int  pdf_font_StandardSymL_ttf_len;
+extern const unsigned char pdf_font_URWChanceryL_MediItal_ttf_buf[];
+extern const unsigned int  pdf_font_URWChanceryL_MediItal_ttf_len;
 
 #ifndef NOCJK
 extern const unsigned char pdf_font_DroidSansFallback_ttf_buf[];
@@ -56,54 +56,54 @@ enum { MINCHO, GOTHIC };
 static const struct
 {
 	const char *name;
-	const unsigned char *cff;
+	const unsigned char *ttf;
 	const unsigned int *len;
 	} basefonts[] = {
 	{ "Courier",
-		pdf_font_NimbusMonL_Regu_cff_buf,
-		&pdf_font_NimbusMonL_Regu_cff_len },
+		pdf_font_NimbusMonL_Regu_ttf_buf,
+		&pdf_font_NimbusMonL_Regu_ttf_len },
 	{ "Courier-Bold",
-		pdf_font_NimbusMonL_Bold_cff_buf,
-		&pdf_font_NimbusMonL_Bold_cff_len },
+		pdf_font_NimbusMonL_Bold_ttf_buf,
+		&pdf_font_NimbusMonL_Bold_ttf_len },
 	{ "Courier-Oblique",
-		pdf_font_NimbusMonL_ReguObli_cff_buf,
-		&pdf_font_NimbusMonL_ReguObli_cff_len },
+		pdf_font_NimbusMonL_ReguObli_ttf_buf,
+		&pdf_font_NimbusMonL_ReguObli_ttf_len },
 	{ "Courier-BoldOblique",
-		pdf_font_NimbusMonL_BoldObli_cff_buf,
-		&pdf_font_NimbusMonL_BoldObli_cff_len },
+		pdf_font_NimbusMonL_BoldObli_ttf_buf,
+		&pdf_font_NimbusMonL_BoldObli_ttf_len },
 	{ "Helvetica",
-		pdf_font_NimbusSanL_Regu_cff_buf,
-		&pdf_font_NimbusSanL_Regu_cff_len },
+		pdf_font_NimbusSanL_Regu_ttf_buf,
+		&pdf_font_NimbusSanL_Regu_ttf_len },
 	{ "Helvetica-Bold",
-		pdf_font_NimbusSanL_Bold_cff_buf,
-		&pdf_font_NimbusSanL_Bold_cff_len },
+		pdf_font_NimbusSanL_Bold_ttf_buf,
+		&pdf_font_NimbusSanL_Bold_ttf_len },
 	{ "Helvetica-Oblique",
-		pdf_font_NimbusSanL_ReguItal_cff_buf,
-		&pdf_font_NimbusSanL_ReguItal_cff_len },
+		pdf_font_NimbusSanL_ReguItal_ttf_buf,
+		&pdf_font_NimbusSanL_ReguItal_ttf_len },
 	{ "Helvetica-BoldOblique",
-		pdf_font_NimbusSanL_BoldItal_cff_buf,
-		&pdf_font_NimbusSanL_BoldItal_cff_len },
+		pdf_font_NimbusSanL_BoldItal_ttf_buf,
+		&pdf_font_NimbusSanL_BoldItal_ttf_len },
 	{ "Times-Roman",
-		pdf_font_NimbusRomNo9L_Regu_cff_buf,
-		&pdf_font_NimbusRomNo9L_Regu_cff_len },
+		pdf_font_NimbusRomNo9L_Regu_ttf_buf,
+		&pdf_font_NimbusRomNo9L_Regu_ttf_len },
 	{ "Times-Bold",
-		pdf_font_NimbusRomNo9L_Medi_cff_buf,
-		&pdf_font_NimbusRomNo9L_Medi_cff_len },
+		pdf_font_NimbusRomNo9L_Medi_ttf_buf,
+		&pdf_font_NimbusRomNo9L_Medi_ttf_len },
 	{ "Times-Italic",
-		pdf_font_NimbusRomNo9L_ReguItal_cff_buf,
-		&pdf_font_NimbusRomNo9L_ReguItal_cff_len },
+		pdf_font_NimbusRomNo9L_ReguItal_ttf_buf,
+		&pdf_font_NimbusRomNo9L_ReguItal_ttf_len },
 	{ "Times-BoldItalic",
-		pdf_font_NimbusRomNo9L_MediItal_cff_buf,
-		&pdf_font_NimbusRomNo9L_MediItal_cff_len },
+		pdf_font_NimbusRomNo9L_MediItal_ttf_buf,
+		&pdf_font_NimbusRomNo9L_MediItal_ttf_len },
 	{ "Symbol",
-		pdf_font_StandardSymL_cff_buf,
-		&pdf_font_StandardSymL_cff_len },
+		pdf_font_StandardSymL_ttf_buf,
+		&pdf_font_StandardSymL_ttf_len },
 	{ "ZapfDingbats",
-		pdf_font_Dingbats_cff_buf,
-		&pdf_font_Dingbats_cff_len },
+		pdf_font_Dingbats_ttf_buf,
+		&pdf_font_Dingbats_ttf_len },
 	{ "Chancery",
-		pdf_font_URWChanceryL_MediItal_cff_buf,
-		&pdf_font_URWChanceryL_MediItal_cff_len },
+		pdf_font_URWChanceryL_MediItal_ttf_buf,
+		&pdf_font_URWChanceryL_MediItal_ttf_len },
 	{ nil, nil, nil }
 };
 
@@ -124,7 +124,7 @@ pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
 found:
 	pdf_logfont("load builtin font %s\n", fontname);
 
-	data = (unsigned char *) basefonts[i].cff;
+	data = (unsigned char *) basefonts[i].ttf;
 	len = *basefonts[i].len;
 
 	error = fz_newfontfrombuffer(&font->font, data, len, 0);

@@ -384,30 +384,30 @@ $(O)\cmap_korean.c: $(CMAPDUMP_APP)
 
 $(O)\font_misc.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_misc.c \
-	$(FITZ_DIR)\fonts\Dingbats.cff \
-	$(FITZ_DIR)\fonts\StandardSymL.cff \
-	$(FITZ_DIR)\fonts\URWChanceryL-MediItal.cff
+	$(FITZ_DIR)\fonts\Dingbats.ttf \
+	$(FITZ_DIR)\fonts\StandardSymL.ttf \
+	$(FITZ_DIR)\fonts\URWChanceryL-MediItal.ttf
 
 $(O)\font_mono.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_mono.c \
-	$(FITZ_DIR)\fonts\NimbusMonL-Regu.cff \
-	$(FITZ_DIR)\fonts\NimbusMonL-ReguObli.cff \
-	$(FITZ_DIR)\fonts\NimbusMonL-Bold.cff \
-	$(FITZ_DIR)\fonts\NimbusMonL-BoldObli.cff
+	$(FITZ_DIR)\fonts\NimbusMonL-Regu.ttf \
+	$(FITZ_DIR)\fonts\NimbusMonL-ReguObli.ttf \
+	$(FITZ_DIR)\fonts\NimbusMonL-Bold.ttf \
+	$(FITZ_DIR)\fonts\NimbusMonL-BoldObli.ttf
 
 $(O)\font_serif.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_serif.c \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-Regu.cff \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-ReguItal.cff \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-Medi.cff \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-MediItal.cff
+	$(FITZ_DIR)\fonts\NimbusRomNo9L-Regu.ttf \
+	$(FITZ_DIR)\fonts\NimbusRomNo9L-ReguItal.ttf \
+	$(FITZ_DIR)\fonts\NimbusRomNo9L-Medi.ttf \
+	$(FITZ_DIR)\fonts\NimbusRomNo9L-MediItal.ttf
 
 $(O)\font_sans.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_sans.c \
-	$(FITZ_DIR)\fonts\NimbusSanL-Bold.cff \
-	$(FITZ_DIR)\fonts\NimbusSanL-BoldItal.cff \
-	$(FITZ_DIR)\fonts\NimbusSanL-Regu.cff \
-	$(FITZ_DIR)\fonts\NimbusSanL-ReguItal.cff
+	$(FITZ_DIR)\fonts\NimbusSanL-Bold.ttf \
+	$(FITZ_DIR)\fonts\NimbusSanL-BoldItal.ttf \
+	$(FITZ_DIR)\fonts\NimbusSanL-Regu.ttf \
+	$(FITZ_DIR)\fonts\NimbusSanL-ReguItal.ttf
 
 $(PDFBENCH_APP): $(PDFBENCH_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFBENCH_APP) /PDB:$(PDFBENCH_PDB) \
