@@ -385,7 +385,21 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			for (i = 0; i < 256; i++)
 			{
 				if (estrings[i])
+				{
 					etable[i] = FT_Get_Name_Index(face, estrings[i]);
+					if (etable[i] == 0)
+					{
+						int aglcode = pdf_lookupagl(estrings[i]);
+						char **aglnames = pdf_lookupaglnames(aglcode);
+						while (*aglnames)
+						{
+							etable[i] = FT_Get_Name_Index(face, *aglnames);
+							if (etable[i])
+								break;
+							aglnames++;
+						}
+					}
+				}
 				else
 					etable[i] = ftcharindex(face, i);
 			}
@@ -401,13 +415,11 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 				{
 					if (estrings[i])
 					{
-						int aglbuf[256];
-						int aglnum;
-						aglnum = pdf_lookupagl(estrings[i], aglbuf, nelem(aglbuf));
-						if (aglnum != 1)
+						int aglcode = pdf_lookupagl(estrings[i]);
+						if (!aglcode)
 							etable[i] = FT_Get_Name_Index(face, estrings[i]);
 						else
-							etable[i] = ftcharindex(face, aglbuf[0]);
+							etable[i] = ftcharindex(face, aglcode);
 					}
 					else
 						etable[i] = ftcharindex(face, i);

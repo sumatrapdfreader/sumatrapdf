@@ -402,7 +402,8 @@ fz_error pdf_loadsystemcmap(pdf_cmap **cmapp, char *name);
  */
 
 void pdf_loadencoding(char **estrings, char *encoding);
-int pdf_lookupagl(char *name, int *ucsbuf, int ucscap);
+int pdf_lookupagl(char *name);
+char **pdf_lookupaglnames(int ucs);
 
 extern const unsigned short pdf_docencoding[256];
 extern const char * const pdf_macroman[256];

@@ -90,7 +90,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 	{
 		pdf_logfont("tounicode strings\n");
 
-		/* TODO use tounicode cmap here ... for one-to-many mappings */
+		/* TODO one-to-many mappings */
 
 		font->ncidtoucs = 256;
 		font->cidtoucs = fz_malloc(256 * sizeof(unsigned short));
@@ -98,15 +98,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 		for (i = 0; i < 256; i++)
 		{
 			if (strings[i])
-			{
-				int aglbuf[256];
-				int aglnum;
-				aglnum = pdf_lookupagl(strings[i], aglbuf, nelem(aglbuf));
-				if (aglnum > 0)
-					font->cidtoucs[i] = aglbuf[0];
-				else
-					font->cidtoucs[i] = '?';
-			}
+				font->cidtoucs[i] = pdf_lookupagl(strings[i]);
 			else
 				font->cidtoucs[i] = '?';
 		}

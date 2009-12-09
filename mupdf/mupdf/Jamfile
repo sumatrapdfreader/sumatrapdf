@@ -60,151 +60,101 @@ Library libmupdf :
 
 	;
 
-#
-# The CMaps come from http://www.adobe.com/devnet/font/#pcfi
-#
+# The CMaps come from Adobe:
+# http://opensource.adobe.com/wiki/display/cmap/CMap+Resources
+# http://opensource.adobe.com/wiki/display/pdfmapping/Mapping+Resources+for+PDF
 
 SubDir TOP cmaps ;
 
-SubDir TOP cmaps chinese_s ;
-GenFile cmap_chinese_s.c : cmapdump
-    Adobe-GB1-4
-    Adobe-GB1-UCS2
-    GB-EUC-H
-    GB-EUC-V
-    GBK-EUC-H
-    GBK-EUC-UCS2
-    GBK-EUC-V
-    GBK2K-H
-    GBK2K-V
-    GBKp-EUC-H
-    GBKp-EUC-V
-    GBT-EUC-H
-    GBT-EUC-V
-    GBpc-EUC-H
-    GBpc-EUC-UCS2
-    GBpc-EUC-UCS2C
-    GBpc-EUC-V
-    UniGB-UCS2-H
-    UniGB-UCS2-V
-    ;
-Library libcmaps : cmap_chinese_s.c ;
+GenFile cmap_tounicode.c : cmapdump
+	Adobe-CNS1-UCS2 Adobe-GB1-UCS2
+	Adobe-Japan1-UCS2 Adobe-Korea1-UCS2 ;
 
-SubDir TOP cmaps chinese_t ;
-GenFile cmap_chinese_t.c : cmapdump
-    Adobe-CNS1-3
-    Adobe-CNS1-UCS2
-    B5pc-H
-    B5pc-UCS2
-    B5pc-UCS2C
-    B5pc-V
-    CNS-EUC-H
-    CNS-EUC-V
-    ETen-B5-H
-    ETen-B5-UCS2
-    ETen-B5-V
-    ETenms-B5-H
-    ETenms-B5-V
-    HKscs-B5-H
-    HKscs-B5-V
-    UniCNS-UCS2-H
-    UniCNS-UCS2-V
-    ;
-Library libcmaps : cmap_chinese_t.c ;
+GenFile cmap_cns.c : cmapdump
+	Adobe-CNS1-0 Adobe-CNS1-1 Adobe-CNS1-2 Adobe-CNS1-3
+	Adobe-CNS1-4 Adobe-CNS1-5 Adobe-CNS1-6 B5-H B5-V B5pc-H B5pc-V
+	CNS-EUC-H CNS-EUC-V CNS1-H CNS1-V CNS2-H CNS2-V ETen-B5-H
+	ETen-B5-V ETenms-B5-H ETenms-B5-V ETHK-B5-H ETHK-B5-V
+	HKdla-B5-H HKdla-B5-V HKdlb-B5-H HKdlb-B5-V HKgccs-B5-H
+	HKgccs-B5-V HKm314-B5-H HKm314-B5-V HKm471-B5-H HKm471-B5-V
+	HKscs-B5-H HKscs-B5-V UniCNS-UCS2-H UniCNS-UCS2-V ;
 
-SubDir TOP cmaps japanese ;
-GenFile cmap_japanese.c : cmapdump
-    83pv-RKSJ-H
-    90ms-RKSJ-H
-    90ms-RKSJ-UCS2
-    90ms-RKSJ-V
-    90msp-RKSJ-H
-    90msp-RKSJ-V
-    90pv-RKSJ-H
-    90pv-RKSJ-UCS2
-    90pv-RKSJ-UCS2C
-    Add-RKSJ-H
-    Add-RKSJ-V
-    Adobe-Japan1-4
-    Adobe-Japan1-UCS2
-    EUC-H
-    EUC-V
-    Ext-RKSJ-H
-    Ext-RKSJ-V
-    H
-    UniJIS-UCS2-H
-    UniJIS-UCS2-HW-H
-    UniJIS-UCS2-HW-V
-    UniJIS-UCS2-V
-    V
-    ;
-Library libcmaps : cmap_japanese.c ;
+GenFile cmap_gb.c : cmapdump
+	Adobe-GB1-0 Adobe-GB1-1 Adobe-GB1-2 Adobe-GB1-3 Adobe-GB1-4
+	Adobe-GB1-5 GB-EUC-H GB-EUC-V GB-H GB-V GBK-EUC-H GBK-EUC-V
+	GBK2K-H GBK2K-V GBKp-EUC-H GBKp-EUC-V GBpc-EUC-H GBpc-EUC-V
+	GBT-EUC-H GBT-EUC-V GBT-H GBT-V GBTpc-EUC-H GBTpc-EUC-V
+	UniGB-UCS2-H UniGB-UCS2-V ;
 
-SubDir TOP cmaps korean ;
-GenFile cmap_korean.c : cmapdump
-    Adobe-Korea1-2
-    Adobe-Korea1-UCS2
-    KSC-EUC-H
-    KSC-EUC-V
-    KSCms-UHC-H
-    KSCms-UHC-HW-H
-    KSCms-UHC-HW-V
-    KSCms-UHC-UCS2
-    KSCms-UHC-V
-    KSCpc-EUC-H
-    KSCpc-EUC-UCS2
-    KSCpc-EUC-UCS2C
-    UniKS-UCS2-H
-    UniKS-UCS2-V
-    ;
-Library libcmaps : cmap_korean.c ;
+GenFile cmap_japan.c : cmapdump
+	78-EUC-H 78-EUC-V 78-H 78-RKSJ-H 78-RKSJ-V 78-V 78ms-RKSJ-H
+	78ms-RKSJ-V 83pv-RKSJ-H 90ms-RKSJ-H 90ms-RKSJ-V 90msp-RKSJ-H
+	90msp-RKSJ-V 90pv-RKSJ-H 90pv-RKSJ-V Add-H Add-RKSJ-H
+	Add-RKSJ-V Add-V Adobe-Japan1-0 Adobe-Japan1-1 Adobe-Japan1-2
+	Adobe-Japan1-3 Adobe-Japan1-4 Adobe-Japan1-5 Adobe-Japan1-6
+	EUC-H EUC-V Ext-H Ext-RKSJ-H Ext-RKSJ-V Ext-V H Hankaku
+	Hiragana Katakana NWP-H NWP-V RKSJ-H RKSJ-V Roman
+	UniJIS-UCS2-H UniJIS-UCS2-HW-H UniJIS-UCS2-HW-V UniJIS-UCS2-V
+	UniJISPro-UCS2-HW-V UniJISPro-UCS2-V V WP-Symbol
+	Adobe-Japan2-0 Hojo-EUC-H Hojo-EUC-V Hojo-H Hojo-V
+	UniHojo-UCS2-H UniHojo-UCS2-V ;
 
-#
+GenFile cmap_korea.c : cmapdump
+	Adobe-Korea1-0 Adobe-Korea1-1 Adobe-Korea1-2 KSC-EUC-H
+	KSC-EUC-V KSC-H KSC-Johab-H KSC-Johab-V KSC-V KSCms-UHC-H
+	KSCms-UHC-HW-H KSCms-UHC-HW-V KSCms-UHC-V KSCpc-EUC-H
+	KSCpc-EUC-V UniKS-UCS2-H UniKS-UCS2-V ;
+
+Library libcmaps :
+	cmap_tounicode.c
+	cmap_cns.c
+	cmap_gb.c
+	cmap_japan.c
+	cmap_korea.c
+	;
+
 # The base 14 fonts are the Type1 URW fonts converted to raw CFF format.
 # DroidSansFallback.ttf is a compact CJK font from Google's Android project.
-#
 
 SubDir TOP fonts ;
 
 GenFile font_misc.c : fontdump
-    Dingbats.ttf
-    StandardSymL.ttf
-    URWChanceryL-MediItal.ttf
-    ;
+	Dingbats.cff
+	StandardSymL.cff
+	URWChanceryL-MediItal.cff
+	;
 
 GenFile font_mono.c : fontdump
-    NimbusMonL-Regu.ttf
-    NimbusMonL-ReguObli.ttf
-    NimbusMonL-Bold.ttf
-    NimbusMonL-BoldObli.ttf
-    ;
+	NimbusMonL-Regu.cff
+	NimbusMonL-ReguObli.cff
+	NimbusMonL-Bold.cff
+	NimbusMonL-BoldObli.cff
+	;
 
 GenFile font_serif.c : fontdump
-    NimbusRomNo9L-Regu.ttf
-    NimbusRomNo9L-ReguItal.ttf
-    NimbusRomNo9L-Medi.ttf
-    NimbusRomNo9L-MediItal.ttf
-    ;
+	NimbusRomNo9L-Regu.cff
+	NimbusRomNo9L-ReguItal.cff
+	NimbusRomNo9L-Medi.cff
+	NimbusRomNo9L-MediItal.cff
+	;
 
 GenFile font_sans.c : fontdump
-    NimbusSanL-Bold.ttf
-    NimbusSanL-BoldItal.ttf
-    NimbusSanL-Regu.ttf
-    NimbusSanL-ReguItal.ttf
-    ;
+	NimbusSanL-Bold.cff
+	NimbusSanL-BoldItal.cff
+	NimbusSanL-Regu.cff
+	NimbusSanL-ReguItal.cff
+	;
 
 Library libfonts :
-    font_misc.c
-    font_mono.c
-    font_serif.c
-    font_sans.c
-    ;
+	font_misc.c
+	font_mono.c
+	font_serif.c
+	font_sans.c
+	;
 
 if ! ( NOCJK in $(DEFINES) )
 {
-    SubDir TOP fonts droid ;
-    GenFile font_cjk.c : fontdump DroidSansFallback.ttf ;
-    Library libfonts : font_cjk.c ;
+	SubDir TOP fonts droid ;
+	GenFile font_cjk.c : fontdump DroidSansFallback.ttf ;
+	Library libfonts : font_cjk.c ;
 }
-
-
