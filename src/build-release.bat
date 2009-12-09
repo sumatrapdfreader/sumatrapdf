@@ -19,13 +19,13 @@ mkdir %OUT_PATH%
 @zip >nul
 @IF ERRORLEVEL 1 goto ZIP_NEEDED
 
-devenv ..\sumatrapdf-vc2008.sln /Rebuild "Release|Win32"
+start /low /b /wait devenv ..\sumatrapdf-vc2008.sln /Rebuild "Release|Win32"
 @IF ERRORLEVEL 1 goto BUILD_FAILED
 echo Compilation ok!
 copy ..\obj-rel\SumatraPDF.exe ..\obj-rel\SumatraPDF-uncomp.exe
 copy ..\obj-rel\SumatraPDF.pdb %OUT_PATH%\SumatraPDF-%VERSION%.pdb
 @rem upx --best --compress-icons=0 ..\obj-rel\SumatraPDF.exe
-upx --ultra-brute --compress-icons=0 ..\obj-rel\SumatraPDF.exe
+start /low /b /wait upx --ultra-brute --compress-icons=0 ..\obj-rel\SumatraPDF.exe
 @IF ERRORLEVEL 1 goto PACK_FAILED
 
 @makensis installer
