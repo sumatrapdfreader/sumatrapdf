@@ -2221,6 +2221,36 @@ static void CheckPositionAndSize(DisplayState* ds)
     }
 }
 
+static void AdjustRemovableDriveLetter(TCHAR *path)
+{
+    TCHAR szDrive[] = _T("?:\\"), origDrive;
+    DWORD driveMask;
+
+    // Don't bother if the file path is still valid
+    if (file_exists(path))
+        return;
+
+    // Don't bother for invalid and non-removable drives
+    szDrive[0] = toupper(path[0]);
+    if (szDrive[0] < 'A' || szDrive[0] > 'Z')
+        return;
+    if (GetDriveType(szDrive) != DRIVE_REMOVABLE)
+        return;
+
+    // Iterate through all (other) removable drives and try to find the file there
+    szDrive[0] = 'A';
+    origDrive = path[0];
+    for (driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
+        if ((driveMask & 1) && szDrive[0] != origDrive && GetDriveType(szDrive) == DRIVE_REMOVABLE) {
+            path[0] = szDrive[0];
+            if (file_exists(path))
+                return;
+        }
+        szDrive[0]++;
+    }
+    path[0] = origDrive;
+}
+
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR *windowTitle)
 {
     assert(fileName);
@@ -2248,8 +2278,10 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 
     FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, pFullpath);
     DisplayState *ds = NULL;
-    if (fileFromHistory)
+    if (fileFromHistory) {
         ds = &fileFromHistory->state;
+        AdjustRemovableDriveLetter(pFullpath);
+    }
 
     CheckPositionAndSize(ds);
     if (!LoadPdfIntoWindow(pFullpath, win, ds, is_new_window, true, showWin, true)) {
@@ -2265,7 +2297,7 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
         win->watcher.Init(pFullpath);
 #endif
 
-     CreateSynchronizer(pFullpath, &win->pdfsync);
+    CreateSynchronizer(pFullpath, &win->pdfsync);
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
         AddFileToHistory(pFullpath);
