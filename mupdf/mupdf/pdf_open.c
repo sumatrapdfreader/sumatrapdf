@@ -47,8 +47,8 @@ readstartxref(pdf_xref *xref)
 	if (error)
 		return fz_rethrow(error, "cannot seek to end of file");
 
-LookForEOF:
 	t = MAX(0, fz_tell(xref->file) - ((int)sizeof buf));
+LookForEOF:
 	error = fz_seek(xref->file, t, 0);
 	if (error)
 		return fz_rethrow(error, "cannot seek to offset %d", t);
@@ -61,8 +61,8 @@ LookForEOF:
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=719 */
 	for (i = n - 5; i >= 0 && memcmp(buf + i, "%%EOF", 5) != 0; i--);
 	if (i < n - 5 && t > 0)
-    {
-        fz_seek(xref->file, i < 0 ? t : t + i + 5, 0);
+	{
+		t = MAX(0, (t + i + 5) - ((int)sizeof buf));
 		goto LookForEOF;
 	}
 	n = i;
