@@ -47,6 +47,7 @@ readstartxref(pdf_xref *xref)
 	if (error)
 		return fz_rethrow(error, "cannot seek to end of file");
 
+LookForEOF:
 	t = MAX(0, fz_tell(xref->file) - ((int)sizeof buf));
 	error = fz_seek(xref->file, t, 0);
 	if (error)
@@ -55,6 +56,16 @@ readstartxref(pdf_xref *xref)
 	error = fz_read(&n, xref->file, buf, sizeof buf);
 	if (error)
 		return fz_rethrow(error, "cannot read from file");
+
+	/* make sure that the buffer ends with "%%EOF" before looking for "startxref" */
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=719 */
+	for (i = n - 5; i >= 0 && memcmp(buf + i, "%%EOF", 5) != 0; i--);
+	if (i < n - 5 && t > 0)
+    {
+        fz_seek(xref->file, i < 0 ? t : t + i + 5, 0);
+		goto LookForEOF;
+	}
+	n = i;
 
 	for (i = n - 9; i >= 0; i--)
 	{
