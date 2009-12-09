@@ -1,5 +1,6 @@
 ; Use modern visuals for the Installer
 !include MUI2.nsh
+!include FileFunc.nsh
 XpStyle on
 
 Name "SumatraPDF"
@@ -50,6 +51,8 @@ Section "SumatraPDF" SecMain
 	
 	; Write the uninstall keys for Windows
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "DisplayName" "SumatraPDF"
+	${GetFileVersion} "$INSTDIR\SumatraPDF.exe" $R0
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "DisplayVersion" $R0
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "UninstallString" '"$INSTDIR\uninstall.exe"'
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "NoModify" 1
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "NoRepair" 1
