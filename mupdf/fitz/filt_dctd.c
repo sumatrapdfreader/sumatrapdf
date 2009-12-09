@@ -145,7 +145,7 @@ fz_error
 fz_processdctd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 {
 	fz_dctd *d = (fz_dctd*)filter;
-	boolean b;
+	int b;
 	int i;
 	int stride;
 	JSAMPROW scanlines[1];

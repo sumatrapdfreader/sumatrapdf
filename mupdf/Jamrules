@@ -36,6 +36,7 @@ if $(JAM_TOOLSET) = MINGW   { OS = MINGW ; }
 if $(JAM_TOOLSET) = VISUALC { OS = NT ; }
 
 BUILD ?= debug ;
+OSPLAT ?= x64 ; # this one isn't in the jambase :(
 
 # Place all build products here:
 ALL_LOCATE_TARGET ?= [ FDirName $(TOP) build $(OS:L)-$(OSPLAT:L)-$(BUILD:L) ] ;
