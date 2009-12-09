@@ -718,10 +718,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_fontfilems.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\mupdf\pdf_fontmtx.c"
 					>
 				</File>
