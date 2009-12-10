@@ -58,7 +58,7 @@ static char *cleanfontname(char *fontname)
 {
 	int i, k;
 	for (i = 0; i < 14; i++)
-		for (k = 0; basefontnames[i][k]; k++)
+		for (k = 1; basefontnames[i][k]; k++) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=664 */
 			if (!strcmpignorespace(basefontnames[i][k], fontname))
 				return basefontnames[i][0];
 	return fontname;
