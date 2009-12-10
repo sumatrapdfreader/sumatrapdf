@@ -3,13 +3,14 @@
 #ifndef _PDF_ENGINE_H_
 #define _PDF_ENGINE_H_
 
-#include "geom_util.h"
-#include "tstr_util.h"
-
 extern "C" {
 #include <fitz.h>
 #include <mupdf.h>
 }
+
+#include "base_util.h"
+#include "geom_util.h"
+#include "tstr_util.h"
 
 /* Describes a link on PDF page. */
 typedef struct PdfLink {
@@ -146,6 +147,7 @@ private:
 
     void dropPdfPage(int pageNo);
     PdfTocItem * buildTocTree(pdf_outline *entry);
+    void PdfEngine::linkifyPageText(pdf_page *page);
 
     pdf_xref *      _xref;
     pdf_outline *   _outline;

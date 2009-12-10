@@ -1514,17 +1514,18 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
     return true;
 }
 
-static void launch_url_a(const char *url)
+static void launch_url(const TCHAR *url)
 {
-    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+    ShellExecute(NULL, _T("open"), url, NULL, NULL, SW_SHOWNORMAL);
 }
 
 void DisplayModel::handleLink2(pdf_link* link)
 {
     if (PDF_LURI == link->kind) {
-        char *uri = fz_tostrbuf(link->dest);
-        if (str_startswithi(uri, "http"))
-            launch_url_a(uri);
+        TCHAR *uri = utf8_to_tstr(fz_tostrbuf(link->dest));
+        if (tstr_startswithi(uri, _T("http")))
+            launch_url(uri);
+        free(uri);
         /* else: unsupported uri type */
     } else if (PDF_LGOTO == link->kind) {
         int page = pdfEngine->findPageNo(link->dest);

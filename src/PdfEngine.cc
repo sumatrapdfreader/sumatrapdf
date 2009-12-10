@@ -1,6 +1,5 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv3 */
-#include "base_util.h"
 #include "PdfEngine.h"
 
 // in SumatraPDF.cpp
@@ -338,6 +337,7 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     _pages[pageNo-1] = page;
     if (!ReleaseSemaphore(_getPageSem, 1, NULL))
         DBG_OUT("Fitz: ReleaseSemaphore error!\n");
+    linkifyPageText(page);
     return page;
 }
 
@@ -504,6 +504,70 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
         }
     }
     assert(linkCount == linkNo);
+}
+
+void PdfEngine::linkifyPageText(pdf_page *page)
+{
+    pdf_textline *line;
+    TCHAR lineText[1024];
+
+    fz_error error = pdf_loadtextfromtree(&line, page->tree, fz_identity());
+    if (error)
+        return;
+
+    for (pdf_textline *ln = line; ln; ln = ln->next) {
+        // extract one line
+        int lineLen = MIN(ln->len, dimof(lineText) - 2);
+        for (int i = 0; i < lineLen; i++) {
+            lineText[i] = ln->text[i].c;
+            if (lineText[i] < 32)
+                lineText[i] = ' ';
+        }
+        // make sure that all lines end on a space
+        lstrcpy(lineText + lineLen, _T(" "));
+
+        for (TCHAR *start = lineText; *start; start++) {
+            TCHAR *end;
+            fz_rect bbox;
+
+            // look for words starting with "http" or "www."
+            if (('h' != *start || _tcsncmp(start, _T("http"), 4) != 0) &&
+                ('w' != *start || _tcsncmp(start, _T("www."), 4) != 0) ||
+                (start > lineText && (isalnum(start[-1]) || '/' == start[-1])))
+                continue;
+
+            // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
+            for (end = start; !isspace(*end); end++);
+            assert(*end);
+            if (',' == *(end - 1) || '.' == *(end - 1))
+                end--;
+            *end = 0;
+
+            // make sure that no other link is associated with this word
+            bbox.x0 = ln->text[start - lineText].bbox.x0;
+            bbox.y0 = ln->text[start - lineText].bbox.y0;
+            bbox.x1 = ln->text[end - lineText - 1].bbox.x1;
+            bbox.y1 = ln->text[end - lineText - 1].bbox.y1;
+            for (pdf_link *link = page->links; link && start < end; link = link->next) {
+                fz_rect isect = fz_intersectrects(bbox, link->rect);
+                if (0 != memcmp(&isect, &fz_emptyrect, sizeof(fz_rect)))
+                    start = end;
+            }
+
+            // add the link, if it's a new one
+            if (*start) {
+                char *uri = tstr_to_utf8(start);
+                fz_obj *dest = fz_newstring(uri, strlen(uri));
+                pdf_link *link = pdf_newlink(PDF_LURI, bbox, dest);
+                link->next = page->links;
+                page->links = link;
+                fz_dropobj(dest);
+                free(uri);
+            }
+            start = end;
+        }
+    }
+    pdf_droptextline(line);
 }
 
 char *PdfEngine::getPageLayoutName(void)
