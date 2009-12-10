@@ -2224,6 +2224,7 @@ static void CheckPositionAndSize(DisplayState* ds)
 static void AdjustRemovableDriveLetter(TCHAR *path)
 {
     TCHAR szDrive[] = _T("?:\\"), origDrive;
+    UINT driveType;
     DWORD driveMask;
 
     // Don't bother if the file path is still valid
@@ -2234,7 +2235,8 @@ static void AdjustRemovableDriveLetter(TCHAR *path)
     szDrive[0] = toupper(path[0]);
     if (szDrive[0] < 'A' || szDrive[0] > 'Z')
         return;
-    if (GetDriveType(szDrive) != DRIVE_REMOVABLE)
+    driveType = GetDriveType(szDrive);
+    if (DRIVE_REMOVABLE != driveType && DRIVE_UNKNOWN != driveType && DRIVE_NO_ROOT_DIR != driveType)
         return;
 
     // Iterate through all (other) removable drives and try to find the file there
