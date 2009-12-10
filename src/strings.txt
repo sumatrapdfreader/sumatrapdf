@@ -14,8 +14,8 @@
 #   Simon Bünzli (zeniko@gmail.com)
 # Hakan ATAÇ - Turkish
 # Belarusian :
-#  Яўген Змачынскі
-#  Drive DRKA (drka2003@mail.ru)
+#   Яўген Змачынскі
+#   Drive DRKA (drka2003@mail.ru)
 # French:
 #   fiuzzy
 #   laclasse
@@ -30,7 +30,7 @@
 # Italian:
 #   Angelo Contardi
 #   iBlawgger
-#  Alessandro Visentin
+#   Alessandro Visentin
 # Dutch:
 #   Barry Haveman (webstek.info) 
 #   Kristof Bal 
@@ -41,9 +41,9 @@
 #   LinoSP [http://reactos.wordpress.com]
 # Krunoslav Tomorad (cygnus77@gmail.com) - Croatian
 # Russian:
-#  Zero-8
-#  Dmitry Yerokhin (erodim@mail.ru)
-#  Victor Kozyakin
+#   Zero-8
+#   Dmitry Yerokhin (erodim@mail.ru)
+#   Victor Kozyakin
 # Arabic:
 #   Mohammed Al-Foulad (http://www.mbsee.info)
 #   Boubker Talibi
@@ -51,14 +51,15 @@
 # Swedish:
 #   Linus Persson
 #   Cecilia B
+#   Sebastian Rasmussen
 # Kristian Vrhel - Czech
 # Greek (Hellenic):
 #   Giorgos Dimopoulos (geodimo1985@gmail.com)
 #   George Georgiou (geonetor@yahoo.gr)
 # Uthen Phutneam - Thai
 # Português (Portugal):
-#  Ricardo Santos[bogas](http://www.meta-morf.pt.vu)
-#  Bruno Rodrigues
+#   Ricardo Santos[bogas](http://www.meta-morf.pt.vu)
+#   Bruno Rodrigues
 # Jon Ivar F. Omland - Norwegian
 # Kjell A. A. Holm - Norwegian
 # Jon Stødle - Norwegian Neo-Norwegian
@@ -77,30 +78,30 @@
 # Maxin B. John (maxinbjohn@gmail.com) - Malayalam 
 # Eyal Berman - Hebrew
 # Srpski/Latinica (Serbian/Latin)
-# 	milanso (milanso@gmail.com)
-#	Slavko Majski (shobra@gmail.com)
+#   milanso (milanso@gmail.com)
+#   Slavko Majski (shobra@gmail.com)
 # Srpski/Ćirilica (Serbian/Cyrillic )
-# 	Горан Обрадовић
-#	Slavko Majski (shobra@gmail.com)
+#   Горан Обрадовић
+#   Slavko Majski (shobra@gmail.com)
 # Yudi Wibisono (http://yudiwbs.wordpress.com) - Indonesia
 # Гоце Митевски (http://www.nicer2.com) - Macedonian 
 # Elly Câmpeanu - Romanian
 # Korean/한국어:
-#  Hong Seung-geol (hsgno5@hanmir.com)
-#  Karnes Kim (karnes@gmail.com)
+#   Hong Seung-geol (hsgno5@hanmir.com)
+#   Karnes Kim (karnes@gmail.com)
 # Bengali/বাংলা:
-#  Soham Chatterjee (soham.chatterjee@gmail.com)
-#  Shabab Mustafa (shabab.mustafa@gmail.com)
+#   Soham Chatterjee (soham.chatterjee@gmail.com)
+#   Shabab Mustafa (shabab.mustafa@gmail.com)
 # Xulio Gómez Díaz - Galego (Galician)
 # Христо Бенев (http://hbcom.info) - Bulgarian/Български
-# Daniel Bohdan - Ukrainian	
+# Daniel Bohdan - Ukrainian
 # Igor G. Olaizola - Basque
 # Mark Angelo F. Racca - Tagalog
 # Vicent Adam - Valencian
 # Brian Musarurwa
 # Welsh:
-#  Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
-#  Glenn Wall
+#   Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
+#   Glenn Wall
 # Mohammed Ottama - Burmese - Unicode 5.1 encoding
 # Drive DRKA (drka2003@mail.ru) - Belarusian
 
@@ -242,7 +243,7 @@ hr:&Otvori\tCtrl-O
 ru:Открыть\tCtrl-O
 ar:&فتح\tCtrl-O
 cn:打开(&O)\tCtrl-O
-sv:&Öppna\tCtrl-O
+sv:&Öppna...\tCtrl-O
 cz:&Otevřít\tCtrl-O
 gr:Ά&νοιγμα\tCtrl-O
 th:เปิด\tCtrl-O
@@ -416,7 +417,7 @@ hr:&Ispiši\tCtrl-P
 ru:Печать\tCtrl-P
 ar:&طباعة\tCtrl-P
 cn:打印(&P)\tCtrl-P
-sv:Skriv &ut\tCtrl-P
+sv:Skriv &ut...\tCtrl-P
 cz:&Tisk\tCtrl-P
 gr:&Εκτύπωση\tCtrl-P
 th:พิมพ์\tCtrl-P
@@ -575,6 +576,7 @@ gr:Αυτόματα
 es:Automático
 sl:Samodejno
 cn:自动
+sv:Automatiskt
 hu:Automatikus
 it:Automatico
 ja:自動
@@ -703,6 +705,7 @@ nn:Motståande
 -
 Book view
 de:Buchansicht
+sv:Bokuppslag
 ru:В разворот
 -
 Continuous
@@ -823,11 +826,13 @@ nn:Kontunuerleg motståande
 -
 Continuous book view
 de:Fortlaufende Buchansicht
+sv:Fortlöpande bokuppslag
 ru:В разворот непрерывно
 -
 Show pages continuously
 de:Fortlaufend anzeigen
 ru:Непрерывно
+sv:Visa sidor fortlöpande
 sr-rs:Непрекидни приказ страна
 sp-rs:Neprekidni prikaz strana
 -
@@ -1595,7 +1600,7 @@ hr:Stvarna veličina\tCtrl-1
 ru:Реальный размер\tCtrl-1
 ar:الحجم الحقيقي\tCtrl-1
 cn:实际大小(&U)\tCtrl-1
-sv:&Normal storlek\tCtrl-1
+sv:&Verklig storlek\tCtrl-1
 cz:Skutečná velikost\tCtrl-1
 gr:Πραγματικό μέγεθος\tCtrl-1
 th:ขนาดจริง\tCtrl-1
@@ -2232,7 +2237,7 @@ mm:တူညီ သော
 pa:ਅੱਖਰ ਅਕਾਰ ਮਿਲਾਓ
 hi:अक्षर आकार मिलाएं
 nn:Skil mellom store/små bokstavar
-sv:Matcha stora/små bokstäver
+sv:Matcha versaler/gemener
 -
 Open
 am:Բացել
@@ -3196,7 +3201,7 @@ pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
 hi:नया संसकरण उपलब्ध है
 nn:Ingen nye versjonar.
 fi:Ei uudempia versioita saatavilla.
-sv:Ingen ny version.
+sv:Ingen ny version tillgänglig.
 sr-rs:Новија верија није доступна.
 sp-rs:Novija verzija nije dostupna.
 -
@@ -3334,7 +3339,7 @@ pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋ
 hi:संसकरण %s उपलब्ध है । डाउनलोड करूँ ?
 nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
 fi:Uudempi versio %s saatavilla. Ladataanko uudempi versio?
-sv:Nyare version %s finns. Ladda ner den?
+sv:Nyare version %s tillgänglig. Ladda ner den?
 sr-rs:Доступна је верзија %s. Преузети нову верзију?
 sp-rs:Dostupna je verzija %s. Preuzeti novu verziju?
 -
@@ -3380,7 +3385,7 @@ pa:ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਹੈ ।
 hi:नया संसकरण उपलब्ध है ।
 nn:Ny versjon tilgjengeleg.
 fi:Uusi versio saatavilla.
-sv:Nyare version finns.
+sv:Nyare version tillgänglig.
 sr-rs:Новија верзија је доступна.
 sp-rs:Novija verzija je dostupna.
 -
@@ -3745,7 +3750,7 @@ hr:Prikaži traku &straničnika kada je dostupna
 cn:若可用则显示书签侧边栏(&b)
 sl:Pokaži podokno z &zaznamki, če so na voljo
 ja:ブックマークの一覧を自動的に表示する(&B)
-sv:Visa &bokmärken efter sidan när de finns
+sv:Visa &bokmärken när de finns
 vn:Hiện chỉ dấu sách nếu có
 pt:Mostrar &barra de marcadores quando disponível
 sr-rs:Прикажи траку са белешкама када је доступна
@@ -3791,7 +3796,7 @@ hr:Provjeravaj &nadogradnje automatski
 cn:自动检查更新(&u)
 sl:Samodejno preveri &obstoj posodobitev
 ja:自動的に最新版をチェックする(&U)
-sv:Sök efter &uppdateringar automatiskt
+sv:Sök automatisk efter &uppdateringar
 vn:Tự động kiểm tra có phiên bản mới
 pt:Verificar act&ualizações automaticamente
 sr-rs:Аутоматски проверавај доступност нове верзије
@@ -3814,7 +3819,7 @@ hr:&Upamti ove postavke za svaki pojedini dokument
 cn:为每一个文档记住这些设置(&R)
 sl:Zapomni si te &nastavitve za vsak dokument
 ja:ドキュメントごとに設定を記憶する(&R)
-sv:Spara dessa val per &varje dokument
+sv:Kom ihåg dessa inställningar för &varje dokument
 vn:Nhớ cài đặt này cho mọi tệp
 pt:Le&mbrar estas definições para cada documento
 sr-rs:Запамти ова подешавања за сваки појединачни документ
@@ -3837,7 +3842,7 @@ cn:记住已打开的文件(&o)
 cy:Co&fio ffeiliau ar agor
 sl:&Zapomni si odprte datoteke
 ja:開いたファイルの履歴を残す(&O)
-sv:Minns öppnade &filer
+sv:Kom ihåg öppnade &filer
 vn:Nhớ danh sách tệp đã mở
 pt:Lembrar ficheiros abert&os
 sr-rs:Запамти отворене датотеке
@@ -4192,6 +4197,7 @@ sp-rs:PDF dokumenti
 Text documents
 de:Text-Dokumente
 ru:Текстовые документы
+sv:Text-dokument
 sr-rs:Текстуални документи
 sp-rs:Tekstualni dokumenti
 -
@@ -4309,7 +4315,7 @@ cn:大小写匹配(&M)
 cy:&Cydweddu maint
 sl:Razlikuj &med velikimi/malimi črkami
 ja:大文字小文字を区別する(&M)
-sv:Matcha &små/stora bokstäver
+sv:Matcha &versaler/gemener
 vn:Phân biệt chữ &Hoa
 pt:Se&nsível à capitalização
 sr-rs:Разликуј мала и велика слова
@@ -4498,7 +4504,7 @@ cn:[检测到改动；刷新中] %s
 cy:[Newidiadau wedi eu canfod; adnewyddu]
 sl:[Spremembe zaznane; osvežitev poteka] %s
 ja:[ファイルが変更されました。更新します] %s
-sv:[Ändringar har skett; uppdaterar] %s
+sv:[Ändringar detekterade; uppdaterar] %s
 vn:[Phát hiện thay đổi; đang cập nhật] %s
 pt:[Mudanças detectadas; actualizando] %s
 sr-rs:[Промене су примећене; освежавам] %s
@@ -4784,7 +4790,7 @@ it:I&ngrandimento personalizzato
 ru:Указать масштаб...
 hu:... Egyéni méret
 ja:カスタム(&C)...
-sv:&Eget zoomval...
+sv:&Anpassad zoom...
 mk:&Зумирање по избор...
 sl:Povečava po &meri ...
 vn:Thu phóng &tuỳ ý...
