@@ -1633,9 +1633,10 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buf
     return len;
 }
 
-/* extract all text from the document - returns the number of chars */
-int DisplayModel::extractAllText(TCHAR *buffer, int buf_len)
+/* extract all text from the document (caller needs to free() the result) */
+TCHAR *DisplayModel::extractAllText(void)
 {
+    TCHAR *content = NULL;
     TStrList *lines = NULL;
     int textLen = 0;
 
@@ -1658,15 +1659,15 @@ int DisplayModel::extractAllText(TCHAR *buffer, int buf_len)
             pdf_droptextline(line);
         }
     }
-    if (buffer && textLen < buf_len) {
-        *buffer = 0;
-        TStrList_Reverse(&lines);
-        for (TStrList *next = lines; next; next = next->next)
-            lstrcat(buffer, next->str);
-    }
+
+    content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR));
+    content[0] = 0;
+    TStrList_Reverse(&lines);
+    for (TStrList *next = lines; next; next = next->next)
+        lstrcat(content, next->str);
     TStrList_Destroy(&lines);
 
-    return textLen;
+    return content;
 }
 
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)

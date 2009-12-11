@@ -4458,9 +4458,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && tstr_endswithi(realDstFileName, _T(".txt"))) {
-        int bufLen = win->dm->extractAllText(NULL) + 1;
-        TCHAR *text = (TCHAR *)malloc(bufLen * sizeof(TCHAR));
-        win->dm->extractAllText(text, bufLen);
+        TCHAR *text = win->dm->extractAllText();
         char *textUTF8 = tstr_to_utf8(text);
         char *textUTF8BOM = str_cat("\xEF\xBB\xBF", textUTF8);
         free(textUTF8);
