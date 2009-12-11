@@ -58,7 +58,7 @@ static char *cleanfontname(char *fontname)
 {
 	int i, k;
 	for (i = 0; i < 14; i++)
-		for (k = 1; basefontnames[i][k]; k++) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=664 */
+		for (k = 0; basefontnames[i][k]; k++)
 			if (!strcmpignorespace(basefontnames[i][k], fontname))
 				return basefontnames[i][0];
 	return fontname;
@@ -269,7 +269,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	pdf_logfont("basefont1 %s\n", fontname);
 
 	descriptor = fz_dictgets(dict, "FontDescriptor");
-	if (descriptor && basefont == fontname)
+	if (descriptor) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=664 */
 		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, nil);
 	else
 		error = pdf_loadbuiltinfont(fontdesc, fontname);
