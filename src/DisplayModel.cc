@@ -1523,7 +1523,7 @@ void DisplayModel::handleLink2(pdf_link* link)
 {
     if (PDF_LURI == link->kind) {
         TCHAR *uri = utf8_to_tstr(fz_tostrbuf(link->dest));
-        if (tstr_startswithi(uri, _T("http")))
+        if (tstr_startswithi(uri, _T("http:")) || tstr_startswithi(uri, _T("https:")))
             launch_url(uri);
         free(uri);
         /* else: unsupported uri type */
