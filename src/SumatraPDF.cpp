@@ -40,8 +40,6 @@
 // this sucks but I don't know any other way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-//#define FANCY_UI 1
-
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Only enable for stress-testing the logic. On
    desktop machine we usually have plenty memory */
@@ -1915,28 +1913,12 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         }
     }
 
-#if FANCY_UI
-    hwndFrame = CreateWindowEx(
-//            WS_EX_TOOLWINDOW,
-        0,
-//            WS_OVERLAPPEDWINDOW,
-//            WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE,
-        //WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_HSCROLL | WS_VSCROLL,
-        FRAME_CLASS_NAME, gWindowTitle,
-        WS_POPUP,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        winDx, winDy,
-        NULL, NULL,
-        ghinst, NULL);
-#else
     hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, gWindowTitle,
             WS_OVERLAPPEDWINDOW,
             winX, winY, winDx, winDy,
             NULL, NULL,
             ghinst, NULL);
-#endif
-
     if (!hwndFrame)
         return NULL;
 
