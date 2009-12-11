@@ -51,7 +51,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 		for (i = 0; i < (strings ? 256 : 65536); i++)
 		{
 			cid = pdf_lookupcmap(font->encoding, i);
-			if (cid > 0)
+			if (cid >= 0) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 			{
 				ucs = pdf_lookupcmap(cmap, i);
 				if (ucs > 0)
