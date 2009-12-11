@@ -5407,10 +5407,10 @@ static void OnChar(WindowInfo *win, int key)
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 
     if (VK_ESCAPE == key) {
-        if (win->fullScreen)
-            OnMenuViewFullscreen(win);
-        else if (gGlobalPrefs.m_escToExit)
+        if (gGlobalPrefs.m_escToExit)
             CloseWindow(win, TRUE);
+        else if (win->fullScreen)
+            OnMenuViewFullscreen(win);
         else
             ClearSearch(win);
         return;
@@ -7650,6 +7650,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
  
     if (!firstDocLoaded) {
+        bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState);
         /* disable benchmark mode if we couldn't open file to benchmark */
         if (gBenchFileName)
             free(gBenchFileName);
@@ -7658,15 +7659,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (!win)
             goto Exit;
 
-        if (gGlobalPrefs.m_windowState == WIN_STATE_FULLSCREEN)
-            ShowWindow(win->hwndFrame, SW_MAXIMIZE);
-        else if (gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED)
+        if (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState ||
+            WIN_STATE_MAXIMIZED == gGlobalPrefs.m_windowState)
             ShowWindow(win->hwndFrame, SW_MAXIMIZE);
         else
             ShowWindow(win->hwndFrame, SW_SHOW);
         UpdateWindow(win->hwndFrame);
 
-        if (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState)
+        if (enterFullscreen)
             WindowInfo_EnterFullscreen(win);
     }
 
