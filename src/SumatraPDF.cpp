@@ -5441,6 +5441,23 @@ static void OnChar(WindowInfo *win, int key)
         else if (displayModeFacing(win->dm->displayMode()))
             newMode = DM_CONTINUOUS_FACING;
         SwitchToDisplayMode(win, newMode, false);
+    } else if ('b' == key) {
+        // experimental "e-book view": flip a single page
+        bool forward = !WasShiftPressed();
+        bool alreadyFacing = displayModeFacing(win->dm->displayMode());
+        int currPage = win->dm->currentPageNo();
+
+        DisplayMode newMode = DM_CONTINUOUS_BOOK_VIEW;
+        if (displayModeShowCover(win->dm->displayMode()))
+            newMode = DM_CONTINUOUS_FACING;
+        SwitchToDisplayMode(win, newMode, false);
+
+        if (!alreadyFacing)
+            ; // don't do anything further
+        else if (forward && currPage >= win->dm->currentPageNo() && (currPage > 1 || newMode == DM_CONTINUOUS_BOOK_VIEW))
+            win->dm->goToNextPage(0);
+        else if (!forward && currPage <= win->dm->currentPageNo())
+            win->dm->goToPrevPage(0);
     } else if ('p' == key) {
         win->dm->goToPrevPage(0);
     } else if ('z' == key) {
