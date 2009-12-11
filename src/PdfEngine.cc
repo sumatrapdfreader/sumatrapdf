@@ -537,7 +537,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
                 continue;
 
             // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-            for (end = start; !isspace(*end); end++);
+            for (end = start; !_istspace(*end); end++);
             assert(*end);
             if (',' == *(end - 1) || '.' == *(end - 1))
                 end--;
@@ -554,8 +554,8 @@ void PdfEngine::linkifyPageText(pdf_page *page)
                     start = end;
             }
 
-            // add the link, if it's a new one
-            if (*start) {
+            // add the link, if it's a new one (ignoring www. links without a toplevel domain)
+            if (*start && (tstr_startswith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
                 char *uri = tstr_to_utf8(start);
                 char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
                 fz_obj *dest = fz_newstring(httpUri, strlen(httpUri));
