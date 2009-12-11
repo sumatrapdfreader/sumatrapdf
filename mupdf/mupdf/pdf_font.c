@@ -343,6 +343,9 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	}
 
 	encoding = fz_dictgets(dict, "Encoding");
+	/* ignore invalid Encoding names; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=771 */
+	if (fz_isname(encoding) && !strstr(fz_toname(encoding), "Encoding"))
+		encoding = nil;
 	if (encoding && !(kind == TRUETYPE && symbolic))
 	{
 		if (fz_isname(encoding))
@@ -564,7 +567,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 cleanup:
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487 */
 	if (etable != fontdesc->cidtogid)
-                fz_free(etable);
+		fz_free(etable);
 	pdf_dropfont(fontdesc);
 	return fz_rethrow(error, "cannot load simple font");
 }
