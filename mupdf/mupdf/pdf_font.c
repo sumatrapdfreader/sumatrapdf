@@ -361,7 +361,8 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			else if (!fontdesc->isembedded)
 				pdf_loadencoding(estrings, "StandardEncoding");
 			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690615 */
-			else if (!fontdesc->encoding && !symbolic)
+			/* note: FT_Get_Name_Index fails for CFF fonts, so let them be encoded by index */
+			else if (!fontdesc->encoding && !strcmp(FT_Get_X11_Font_Format(face), "Type 1"))
 				pdf_loadencoding(estrings, "StandardEncoding");
 
 			diff = fz_dictgets(encoding, "Differences");
