@@ -947,8 +947,8 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
     if (_displayMode == displayMode)
         return;
 
-    _displayMode = displayMode;
     int currPageNo = currentPageNo();
+    _displayMode = displayMode;
     if (displayModeContinuous(displayMode)) {
         /* mark all pages as shown but not yet visible. The equivalent code
            for non-continuous mode is in DisplayModel::changeStartPage() called
