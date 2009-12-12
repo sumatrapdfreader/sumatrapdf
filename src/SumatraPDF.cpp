@@ -6131,6 +6131,10 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
                 DestroyWindow(win->hwndFrame);
+            else if ('+' == wParam)
+                win->dm->zoomBy(ZOOM_IN_FACTOR);
+            else if ('-' == wParam)
+                win->dm->zoomBy(ZOOM_OUT_FACTOR);
             break;
     }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
