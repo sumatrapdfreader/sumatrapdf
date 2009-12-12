@@ -113,63 +113,31 @@ static const struct
 
 #include <windows.h>
 
-/* TODO: make this a function */
-#define SAFE_FZ_READ(file, buf, size)\
-	err = fz_read(&byteread, (file), (char*)(buf), (size)); \
-	if (err) goto cleanup; \
-	if (byteread != (size)) err = fz_throw("ioerror");\
-	if (err) goto cleanup;
-
-#define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
+// TODO: Use more of FreeType for TTF parsing (for performance reasons,
+//       the fonts can't be parsed completely, though)
+#include <ft2build.h>
+#include FT_TRUETYPE_IDS_H
+#include FT_TRUETYPE_TAGS_H
 
 #define SWAPWORD(x)		MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x)		MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
 
-#define PLATFORM_UNICODE				0
-#define PLATFORM_MACINTOSH				1
-#define PLATFORM_ISO					2
-#define PLATFORM_MICROSOFT				3
-
-#define UNI_ENC_UNI_1					0
-#define UNI_ENC_UNI_1_1					1
-#define UNI_ENC_ISO						2
-#define UNI_ENC_UNI_2_BMP				3
-#define UNI_ENC_UNI_2_FULL_REPERTOIRE	4
-
-#define MAC_ROMAN						0
-#define MAC_JAPANESE					1
-#define MAC_CHINESE_TRADITIONAL			2
-#define MAC_KOREAN						3
-#define MAC_CHINESE_SIMPLIFIED			25
-
-#define MS_ENC_SYMBOL					0
-#define MS_ENC_UNI_BMP					1
-#define MS_ENC_SHIFTJIS					2
-#define MS_ENC_PRC						3
-#define MS_ENC_BIG5						4
-#define MS_ENC_WANSUNG					5
-#define MS_ENC_JOHAB					6
-#define MS_ENC_UNI_FULL_REPETOIRE		10
-
 #define TTC_VERSION1	0x00010000
 #define TTC_VERSION2	0x00020000
 
-typedef struct pdf_fontmapMS_s pdf_fontmapMS;
-typedef struct pdf_fontlistMS_s pdf_fontlistMS;
-
-struct pdf_fontmapMS_s
+typedef struct pdf_fontmapMS_s
 {
 	char fontface[128];
 	char fontpath[MAX_PATH];
 	int index;
-};
+} pdf_fontmapMS;
 
-struct pdf_fontlistMS_s
+typedef struct pdf_fontlistMS_s
 {
 	pdf_fontmapMS *fontmap;
 	int len;
 	int cap;
-};
+} pdf_fontlistMS;
 
 typedef struct _tagTT_OFFSET_TABLE
 {
@@ -183,7 +151,7 @@ typedef struct _tagTT_OFFSET_TABLE
 
 typedef struct _tagTT_TABLE_DIRECTORY
 {
-	char	szTag[4];			//table name
+	ULONG	uTag;				//table name
 	ULONG	uCheckSum;			//Check sum
 	ULONG	uOffset;			//Offset from beginning of file
 	ULONG	uLength;			//length of the table in bytes
@@ -208,7 +176,7 @@ typedef struct _tagTT_NAME_RECORD
 
 typedef struct _tagFONT_COLLECTION
 {
-	char	Tag[4];
+	ULONG	Tag;
 	ULONG	Version;
 	ULONG	NumFonts;
 } FONT_COLLECTION;
@@ -304,38 +272,21 @@ removeredundancy(pdf_fontlistMS *fl)
 #endif
 }
 
+/* source and dest can be same */
 static fz_error
-swapword(char* pbyte, int nLen)
+decodeunicodeBMP(char* source, int sourcelen, char* dest, int destlen)
 {
-	int i;
-	char tmp;
-	int nMax;
+	wchar_t tmp[1024 * 2];
+	int converted, i;
 
-	if (nLen % 2)
+	if (sourcelen % 2 != 0)
 		return fz_throw("fonterror");
 
-	nMax = nLen / 2;
-	for (i = 0; i < nLen; ++i) {
-		tmp = pbyte[i*2];
-		pbyte[i*2] = pbyte[i*2+1];
-		pbyte[i*2+1] = tmp;
-	}
-	return fz_okay;
-}
+	memset(tmp, 0, sizeof(tmp));
+	for (i = 0; i < sourcelen / 2; i++)
+		tmp[i] = SWAPWORD(((wchar_t *)source)[i]);
 
-/* pSouce and PDest can be same */
-static fz_error
-decodeunicodeBMP(char* source, int sourcelen,char* dest, int destlen)
-{
-	wchar_t tmp[1024*2];
-	int converted;
-	memset(tmp,0,sizeof(tmp));
-	memcpy(tmp,source,sourcelen);
-	swapword((char*)tmp,sourcelen);
-
-	converted = WideCharToMultiByte(CP_ACP, 0, tmp,
-		-1, dest, destlen, NULL, NULL);
-
+	converted = WideCharToMultiByte(CP_ACP, 0, tmp, -1, dest, destlen, NULL, NULL);
 	if (converted == 0)
 		return fz_throw("fonterror");
 
@@ -343,63 +294,41 @@ decodeunicodeBMP(char* source, int sourcelen,char* dest, int destlen)
 }
 
 static fz_error
-decodeunicodeplatform(char* source, int sourcelen,char* dest, int destlen, int enctype)
+decodeplatformstring(int platform, int enctype, char* source, int sourcelen, char* dest, int destlen)
 {
-	fz_error err = fz_okay;
-	switch(enctype)
+	switch (platform)
 	{
-	case UNI_ENC_UNI_1:
-	case UNI_ENC_UNI_2_BMP:
-		err = decodeunicodeBMP(source,sourcelen,dest,destlen);
-		break;
-	case UNI_ENC_UNI_2_FULL_REPERTOIRE:
-	case UNI_ENC_UNI_1_1:
-	case UNI_ENC_ISO:
-	default:
-		err = fz_throw("fonterror : unsupported encoding");
-		break;
-	}
-	return err;
-}
-
-static fz_error
-decodemacintoshplatform(char* source, int sourcelen,char* dest, int destlen, int enctype)
-{
-	fz_error err = fz_okay;
-	switch(enctype)
-	{
-	case MAC_ROMAN:
-		if (sourcelen + 1 > destlen)
-			err = fz_throw("fonterror : short buf lenth");
-		else
+	case TT_PLATFORM_APPLE_UNICODE:
+		switch (enctype)
 		{
-			memcpy(source,dest,sourcelen);
-			dest[sourcelen] = 0;
+		case TT_APPLE_ID_DEFAULT:
+		case TT_APPLE_ID_UNICODE_2_0:
+			return decodeunicodeBMP(source, sourcelen, dest, destlen);
 		}
-		break;
+		return fz_throw("fonterror : unsupported encoding");
+	case TT_PLATFORM_MACINTOSH:
+		switch( enctype)
+		{
+		case TT_MAC_ID_ROMAN:
+			if (sourcelen + 1 > destlen)
+				return fz_throw("fonterror : short buf lenth");
+			memcpy(source, dest, sourcelen);
+			dest[sourcelen] = 0;
+			return fz_okay;
+		}
+		return fz_throw("fonterror : unsupported encoding");
+	case TT_PLATFORM_MICROSOFT:
+		switch (enctype)
+		{
+		case TT_MS_ID_SYMBOL_CS:
+		case TT_MS_ID_UNICODE_CS:
+		case TT_MS_ID_UCS_4:
+			return decodeunicodeBMP(source, sourcelen, dest, destlen);
+		}
+		return fz_throw("fonterror : unsupported encoding");
 	default:
-		err = fz_throw("fonterror : unsupported encoding");
-		break;
+		return fz_throw("fonterror : unsupported platform");
 	}
-	return err;
-}
-
-static fz_error
-decodemicrosoftplatform(char* source, int sourcelen,char* dest, int destlen, int enctype)
-{
-	fz_error err = fz_okay;
-	switch(enctype)
-	{
-	case MS_ENC_SYMBOL:
-	case MS_ENC_UNI_BMP:
-	case MS_ENC_UNI_FULL_REPETOIRE:
-		err = decodeunicodeBMP(source,sourcelen,dest,destlen);
-		break;
-	default:
-		err = fz_throw("fonterror : unsupported encoding");
-		break;
-	}
-	return err;
 }
 
 static fz_error
@@ -417,8 +346,7 @@ growfontlist(pdf_fontlistMS *fl)
 	if (!newitems)
 		return fz_rethrow(-1, "out of memory");;
 
-	memset(newitems + fl->cap, 0,
-		sizeof(struct fz_keyval_s) * (newcap - fl->cap));
+	memset(newitems + fl->cap, 0, sizeof(pdf_fontmapMS) * (newcap - fl->cap));
 
 	fl->fontmap = newitems;
 	fl->cap = newcap;
@@ -429,11 +357,9 @@ growfontlist(pdf_fontlistMS *fl)
 static fz_error
 insertmapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
 {
-	fz_error err;
-
 	if (fl->len == fl->cap)
 	{
-		err = growfontlist(fl);
+		fz_error err = growfontlist(fl);
 		if (err) return err;
 	}
 
@@ -450,10 +376,22 @@ insertmapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
 }
 
 static fz_error
+safe_read(fz_stream *file, char *buf, int size)
+{
+	int bytesRead;
+	fz_error err = fz_read(&bytesRead, file, buf, size);
+	if (err)
+		return err;
+
+	if (bytesRead != size)
+		return fz_throw("ioerror");
+	return fz_okay;
+}
+
+static fz_error
 parseTTF(fz_stream *file, int offset, int index, char *path)
 {
 	fz_error err = fz_okay;
-	int byteread;
 
 	TT_OFFSET_TABLE ttOffsetTable;
 	TT_TABLE_DIRECTORY tblDir;
@@ -461,11 +399,11 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	TT_NAME_RECORD ttRecord;
 
 	char szTemp[4096];
-	int found;
 	int i;
 
 	fz_seek(file,offset,0);
-	SAFE_FZ_READ(file, &ttOffsetTable, sizeof(TT_OFFSET_TABLE));
+	err = safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
+	if (err) return err;
 
 	ttOffsetTable.uNumOfTables = SWAPWORD(ttOffsetTable.uNumOfTables);
 	ttOffsetTable.uMajorVersion = SWAPWORD(ttOffsetTable.uMajorVersion);
@@ -475,34 +413,22 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	if (ttOffsetTable.uMajorVersion != 1 || ttOffsetTable.uMinorVersion != 0)
 		return fz_throw("fonterror : invalid font version");
 
-	found = 0;
-
-	for (i = 0; i< ttOffsetTable.uNumOfTables; i++)
+	tblDir.uLength = 0;
+	for (i = 0; i < ttOffsetTable.uNumOfTables; i++)
 	{
-		SAFE_FZ_READ(file,&tblDir,sizeof(TT_TABLE_DIRECTORY));
-
-		memcpy(szTemp, tblDir.szTag, 4);
-		szTemp[4] = 0;
-
-		if (!stricmp(szTemp, "name"))
-		{
-			found = 1;
-			tblDir.uLength = SWAPLONG(tblDir.uLength);
-			tblDir.uOffset = SWAPLONG(tblDir.uOffset);
+		err = safe_read(file, (char *)&tblDir, sizeof(TT_TABLE_DIRECTORY));
+		if (err) return err;
+		if (!tblDir.uTag || SWAPLONG(tblDir.uTag) == TTAG_name)
 			break;
-		}
-		else if (szTemp[0] == 0)
-		{
-			break;
-		}
 	}
-
-	if (!found)
+	if (!tblDir.uLength)
 		return err;
+	tblDir.uOffset = SWAPLONG(tblDir.uOffset);
+	tblDir.uLength = SWAPLONG(tblDir.uLength);
 
 	fz_seek(file, tblDir.uOffset,0);
-
-	SAFE_FZ_READ(file,&ttNTHeader,sizeof(TT_NAME_TABLE_HEADER));
+	err = safe_read(file, (char *)&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER));
+	if (err) return err;
 
 	ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
 	ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
@@ -512,13 +438,13 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	for (i = 0; i < ttNTHeader.uNRCount && err == fz_okay; ++i)
 	{
 		fz_seek(file, offset + sizeof(TT_NAME_RECORD)*i, 0);
-		SAFE_FZ_READ(file,&ttRecord,sizeof(TT_NAME_RECORD));
+		err = safe_read(file, (char *)&ttRecord, sizeof(TT_NAME_RECORD));
+		if (err) return err;
 
 		ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
 		ttRecord.uLanguageID = SWAPWORD(ttRecord.uLanguageID);
 
-		// Full Name
-		if (ttRecord.uNameID == 6)
+		if (ttRecord.uNameID == TT_NAME_ID_PS_NAME)
 		{
 			ttRecord.uPlatformID = SWAPWORD(ttRecord.uPlatformID);
 			ttRecord.uEncodingID = SWAPWORD(ttRecord.uEncodingID);
@@ -526,54 +452,29 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 			ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
 
 			fz_seek(file, tblDir.uOffset + ttRecord.uStringOffset + ttNTHeader.uStorageOffset, 0);
-			SAFE_FZ_READ(file, szTemp, ttRecord.uStringLength);
+			err = safe_read(file, szTemp, ttRecord.uStringLength);
+			if (err) return err;
 
-			switch(ttRecord.uPlatformID)
-			{
-			case PLATFORM_UNICODE:
-				err = decodeunicodeplatform(szTemp, ttRecord.uStringLength,
-					szTemp, sizeof(szTemp), ttRecord.uEncodingID);
-				break;
-			case PLATFORM_MACINTOSH:
-				err = decodemacintoshplatform(szTemp, ttRecord.uStringLength,
-					szTemp, sizeof(szTemp), ttRecord.uEncodingID);
-				break;
-			case PLATFORM_ISO:
-				err = fz_throw("fonterror : unsupported platform");
-				break;
-			case PLATFORM_MICROSOFT:
-				err = decodemicrosoftplatform(szTemp, ttRecord.uStringLength,
-					szTemp, sizeof(szTemp), ttRecord.uEncodingID);
-				break;
-			}
-
+			err = decodeplatformstring(ttRecord.uPlatformID, ttRecord.uEncodingID,
+				szTemp, ttRecord.uStringLength, szTemp, sizeof(szTemp));
 			if (err == fz_okay)
 				err = insertmapping(&fontlistMS, szTemp, path, index);
 		}
 	}
 
-cleanup:
 	return err;
 }
 
 static fz_error
 parseTTFs(char *path)
 {
-	fz_error err = fz_okay;
 	fz_stream *file = nil;
+	fz_error err = fz_openrfile(&file, path);
+	if (!err)
+		err = parseTTF(file, 0, 0, path);
 
-	err = fz_openrfile(&file, path);
-	if (err)
-		goto cleanup;
-
-	err = parseTTF(file,0,0,path);
-	if (err)
-		goto cleanup;
-
-cleanup:
 	if (file)
 		fz_dropstream(file);
-
 	return err;
 }
 
@@ -581,17 +482,16 @@ static fz_error
 parseTTCs(char *path)
 {
 	fz_error err = fz_okay;
-	int byteread;
 	fz_stream *file = nil;
 	FONT_COLLECTION fontcollectioin;
 	ULONG i;
 
 	err = fz_openrfile(&file, path);
-	if (err)
-		goto cleanup;
+	if (err) goto cleanup;
 
-	SAFE_FZ_READ(file, &fontcollectioin, sizeof(FONT_COLLECTION));
-	if (!memcmp(fontcollectioin.Tag,"ttcf",sizeof(fontcollectioin.Tag)))
+	err = safe_read(file, (char *)&fontcollectioin, sizeof(FONT_COLLECTION));
+	if (err) goto cleanup;
+	if (SWAPLONG(fontcollectioin.Tag) == TTAG_ttcf)
 	{
 		fontcollectioin.Version = SWAPLONG(fontcollectioin.Version);
 		fontcollectioin.NumFonts = SWAPLONG(fontcollectioin.NumFonts);
@@ -605,7 +505,8 @@ parseTTCs(char *path)
 				goto cleanup;
 			}
 
-			SAFE_FZ_READ(file, offsettable, sizeof(ULONG)*fontcollectioin.NumFonts);
+			err = safe_read(file, (char *)offsettable, sizeof(ULONG) * fontcollectioin.NumFonts);
+			if (err) goto cleanup;
 			for (i = 0; i < fontcollectioin.NumFonts; ++i)
 			{
 				offsettable[i] = SWAPLONG(offsettable[i]);
@@ -625,7 +526,6 @@ parseTTCs(char *path)
 		goto cleanup;
 	}
 
-
 cleanup:
 	if (file)
 		fz_dropstream(file);
@@ -636,24 +536,16 @@ cleanup:
 static fz_error
 pdf_createfontlistMS()
 {
-	char szFontDir[MAX_PATH*2];
-	char szSearch[MAX_PATH*2];
+	char szFontDir[MAX_PATH];
 	char szFile[MAX_PATH*2];
-	BOOL fFinished;
 	HANDLE hList;
 	WIN32_FIND_DATAA FileData;
-	fz_error err;
-
-	if (fontlistMS.len != 0)
-		return fz_okay;
-
-	GetWindowsDirectoryA(szFontDir, sizeof(szFontDir));
 
 	// Get the proper directory path
-	strcat(szFontDir,"\\Fonts\\");
-	sprintf(szSearch,"%s*.tt?",szFontDir);
-	// Get the first file
-	hList = FindFirstFileA(szSearch, &FileData);
+	GetWindowsDirectoryA(szFontDir, sizeof(szFontDir));
+	strcat(szFontDir,"\\Fonts\\*.?t?");
+
+	hList = FindFirstFileA(szFontDir, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
 	{
 		/* Don't complain about missing directories */
@@ -661,35 +553,24 @@ pdf_createfontlistMS()
 			return fz_throw("fonterror : can't find system fonts dir");
 		return fz_throw("ioerror");
 	}
+	// drop the wildcards
+	szFontDir[strlen(szFontDir) - 5] = 0;
 	// Traverse through the directory structure
-	fFinished = FALSE;
-	while (!fFinished)
+	do
 	{
 		if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
+			char *fileExt;
 			// Get the full path for sub directory
-			sprintf(szFile,"%s%s", szFontDir, FileData.cFileName);
-			if (szFile[strlen(szFile)-1] == 'c' || szFile[strlen(szFile)-1] == 'C')
-			{
-				err = parseTTCs(szFile);
-				// ignore error parsing a given font file
-			}
-			else if (szFile[strlen(szFile)-1] == 'f'|| szFile[strlen(szFile)-1] == 'F')
-			{
-				err = parseTTFs(szFile);
-				// ignore error parsing a given font file
-			}
+			sprintf(szFile, "%s%s", szFontDir, FileData.cFileName);
+			fileExt = szFile + strlen(szFile) - 4;
+			if (!stricmp(fileExt, ".ttc"))
+				parseTTCs(szFile);
+			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
+				parseTTFs(szFile);
+			// ignore errors occurring while parsing a given font file
 		}
-
-		if (!FindNextFileA(hList, &FileData))
-		{
-			if (GetLastError() == ERROR_NO_MORE_FILES)
-			{
-				fFinished = TRUE;
-			}
-		}
-	}
-	// Let go of find handle
+	} while (FindNextFileA(hList, &FileData));
 	FindClose(hList);
 
 	removeredundancy(&fontlistMS);
@@ -717,12 +598,15 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	char *pattern;
 	int i;
 
-	pdf_createfontlistMS();
 	if (fontlistMS.len == 0)
-		return fz_throw("fonterror : no fonts in the system");
+	{
+		pdf_createfontlistMS();
+		if (fontlistMS.len == 0)
+			return fz_throw("fonterror : no fonts in the system");
+	}
 
 	pattern = fontname;
-	for (i = 0; i < ARRAY_SIZE(baseSubstitutes); i++)
+	for (i = 0; i < _countof(baseSubstitutes); i++)
 	{
 		if (!strcmp(fontname, baseSubstitutes[i].name))
 		{
