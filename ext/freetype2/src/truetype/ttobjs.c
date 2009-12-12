@@ -18,9 +18,7 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_STREAM_H
-#include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_SFNT_H
 
@@ -150,7 +148,9 @@
   static FT_Bool
   tt_check_trickyness( FT_String*  name )
   {
-    static const char* const  trick_names[] =
+#define TRICK_NAMES_MAX_CHARACTERS  16
+#define TRICK_NAMES_COUNT 7
+    static const char trick_names[TRICK_NAMES_COUNT][TRICK_NAMES_MAX_CHARACTERS+1] =
     {
       "DFKaiSho-SB",     /* dfkaisb.ttf */
       "DFKaiShu",
@@ -159,7 +159,6 @@
       "MingLiU",         /* mingliu.ttf & mingliu.ttc */
       "PMingLiU",        /* mingliu.ttc */
       "MingLi43",        /* mingli.ttf */
-      NULL
     };
     int  nn;
 
@@ -169,7 +168,7 @@
 
     /* Note that we only check the face name at the moment; it might */
     /* be worth to do more checks for a few special cases.           */
-    for ( nn = 0; trick_names[nn] != NULL; nn++ )
+    for ( nn = 0; nn < TRICK_NAMES_COUNT; nn++ )
       if ( ft_strstr( name, trick_names[nn] ) )
         return TRUE;
 
@@ -612,18 +611,15 @@
 
     /* Set default metrics */
     {
-      FT_Size_Metrics*  metrics  = &size->metrics;
-      TT_Size_Metrics*  metrics2 = &size->ttmetrics;
+      TT_Size_Metrics*  metrics = &size->ttmetrics;
 
-      metrics->x_ppem = 0;
-      metrics->y_ppem = 0;
 
-      metrics2->rotated   = FALSE;
-      metrics2->stretched = FALSE;
+      metrics->rotated   = FALSE;
+      metrics->stretched = FALSE;
 
       /* set default compensation (all 0) */
       for ( i = 0; i < 4; i++ )
-        metrics2->compensations[i] = 0;
+        metrics->compensations[i] = 0;
     }
 
     /* allocate function defs, instruction defs, cvt, and storage area */

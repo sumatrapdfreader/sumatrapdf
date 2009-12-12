@@ -421,7 +421,7 @@
           "FreeType: %ld bytes of memory leaked in %ld blocks\n",
           leaks, leak_count );
 
-      printf( "FreeType: No memory leaks detected!\n" );
+      printf( "FreeType: no memory leaks detected\n" );
     }
   }
 

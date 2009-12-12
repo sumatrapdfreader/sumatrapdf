@@ -85,17 +85,17 @@
 
 
   /*
-   * nFeatureFlags is typed to FT_UInt to accept that in
+   * nFeatureFlags is typed to FT_ULong to accept that in
    * mort (typed FT_UShort) and morx (typed FT_ULong).
    */
   FT_LOCAL_DEF( void )
   gxv_mort_featurearray_validate( FT_Bytes       table,
                                   FT_Bytes       limit,
-                                  FT_UInt        nFeatureFlags,
+                                  FT_ULong       nFeatureFlags,
                                   GXV_Validator  valid )
   {
     FT_Bytes  p = table;
-    FT_UInt   i;
+    FT_ULong  i;
 
     GXV_mort_featureRec  f = GXV_MORT_FEATURE_OFF;
 

@@ -209,7 +209,7 @@
     {
       if ( format & 1 )
       {
-        FT_UInt   table_size;
+        FT_PtrDist  table_size;
 
         OTV_OPTIONAL_TABLE( device );
 
@@ -911,7 +911,8 @@
     {
     case 1:     /* ExtensionPosFormat1 */
       {
-        FT_UInt            ExtensionLookupType, ExtensionOffset;
+        FT_UInt            ExtensionLookupType;
+        FT_ULong           ExtensionOffset;
         OTV_Validate_Func  validate;
 
 

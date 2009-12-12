@@ -752,9 +752,9 @@
                           const char  *insertion )
   {
     char*        new_name;
-    char*        tmp;
+    const char*  tmp;
     const char*  slash;
-    unsigned     new_length;
+    size_t       new_length;
     FT_Error     error = FT_Err_Ok;
 
     FT_UNUSED( error );

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*  Copyright 2003 Huw D M Davies for Codeweavers                          */
 /*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
@@ -342,7 +342,7 @@
 
         if ( !font_count || !font_offset )
         {
-          FT_TRACE2(( "this file doesn't contain any FNT resources!\n" ));
+          FT_TRACE2(( "this file doesn't contain any FNT resources\n" ));
           error = FNT_Err_Invalid_File_Format;
           goto Exit;
         }
@@ -619,7 +619,7 @@
   }
 
 
-  static FT_UInt
+  static FT_UInt32
   fnt_cmap_char_next( FNT_CMap    cmap,
                       FT_UInt32  *pchar_code )
   {
@@ -833,7 +833,7 @@
 
       if ( font->header.face_name_offset >= font->header.file_size )
       {
-        FT_TRACE2(( "invalid family name offset!\n" ));
+        FT_TRACE2(( "invalid family name offset\n" ));
         error = FNT_Err_Invalid_File_Format;
         goto Fail;
       }
@@ -980,7 +980,7 @@
 
     if ( offset >= font->header.file_size )
     {
-      FT_TRACE2(( "invalid FNT offset!\n" ));
+      FT_TRACE2(( "invalid FNT offset\n" ));
       error = FNT_Err_Invalid_File_Format;
       goto Exit;
     }

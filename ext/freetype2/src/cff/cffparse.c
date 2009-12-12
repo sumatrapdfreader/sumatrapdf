@@ -22,6 +22,7 @@
 #include FT_INTERNAL_DEBUG_H
 
 #include "cfferrs.h"
+#include "cffpic.h"
 
 
   /*************************************************************************/
@@ -34,47 +35,20 @@
 #define FT_COMPONENT  trace_cffparse
 
 
-  enum
-  {
-    cff_kind_none = 0,
-    cff_kind_num,
-    cff_kind_fixed,
-    cff_kind_fixed_thousand,
-    cff_kind_string,
-    cff_kind_bool,
-    cff_kind_delta,
-    cff_kind_callback,
-
-    cff_kind_max  /* do not remove */
-  };
-
-
-  /* now generate handlers for the most simple fields */
-  typedef FT_Error  (*CFF_Field_Reader)( CFF_Parser  parser );
-
-  typedef struct  CFF_Field_Handler_
-  {
-    int               kind;
-    int               code;
-    FT_UInt           offset;
-    FT_Byte           size;
-    CFF_Field_Reader  reader;
-    FT_UInt           array_max;
-    FT_UInt           count_offset;
-
-  } CFF_Field_Handler;
 
 
   FT_LOCAL_DEF( void )
   cff_parser_init( CFF_Parser  parser,
                    FT_UInt     code,
-                   void*       object )
+                   void*       object,
+                   FT_Library  library)
   {
     FT_MEM_ZERO( parser, sizeof ( *parser ) );
 
     parser->top         = parser->stack;
     parser->object_code = code;
     parser->object      = object;
+    parser->library     = library;
   }
 
 
@@ -156,8 +130,8 @@
   static FT_Fixed
   cff_parse_real( FT_Byte*  start,
                   FT_Byte*  limit,
-                  FT_Int    power_ten,
-                  FT_Int*   scaling )
+                  FT_Long   power_ten,
+                  FT_Long*  scaling )
   {
     FT_Byte*  p = start;
     FT_UInt   nib;
@@ -165,7 +139,7 @@
 
     FT_Long   result, number, rest, exponent;
     FT_Int    sign = 0, exponent_sign = 0;
-    FT_Int    exponent_add, integer_length, fraction_length;
+    FT_Long   exponent_add, integer_length, fraction_length;
 
 
     if ( scaling )
@@ -180,6 +154,8 @@
     exponent_add    = 0;
     integer_length  = 0;
     fraction_length = 0;
+
+    FT_UNUSED( rest );
 
     /* First of all, read the integer part. */
     phase = 4;
@@ -310,7 +286,7 @@
         {
           if ( exponent > 0 )
           {
-            FT_Int  new_fraction_length, shift;
+            FT_Long  new_fraction_length, shift;
 
 
             /* Make `scaling' as small as possible. */
@@ -410,7 +386,7 @@
   /* but return `10^scaling' times the number read in      */
   static FT_Fixed
   cff_parse_fixed_scaled( FT_Byte**  d,
-                          FT_Int     scaling )
+                          FT_Long    scaling )
   {
     return **d == 30 ? cff_parse_real( d[0], d[1], scaling, NULL )
                      : ( cff_parse_integer( d[0], d[1] ) *
@@ -423,7 +399,7 @@
   /* the scaling factor (as a power of 10)                     */
   static FT_Fixed
   cff_parse_fixed_dynamic( FT_Byte**  d,
-                           FT_Int*    scaling )
+                           FT_Long*   scaling )
   {
     FT_ASSERT( scaling );
 
@@ -476,7 +452,7 @@
 
     if ( parser->top >= parser->stack + 6 )
     {
-      FT_Int  scaling;
+      FT_Long  scaling;
 
 
       error = CFF_Err_Ok;
@@ -578,7 +554,12 @@
     {
       dict->cid_registry   = (FT_UInt)cff_parse_num ( data++ );
       dict->cid_ordering   = (FT_UInt)cff_parse_num ( data++ );
-      dict->cid_supplement = (FT_ULong)cff_parse_num( data );
+      if ( **data == 30 )
+        FT_TRACE1(( "cff_parse_cid_ros: real supplement is rounded\n" ));
+      dict->cid_supplement = cff_parse_num( data );
+      if ( dict->cid_supplement < 0 )
+        FT_TRACE1(( "cff_parse_cid_ros: negative supplement %d is found\n",
+                   dict->cid_supplement ));
       error = CFF_Err_Ok;
     }
 
@@ -598,6 +579,11 @@
           CFF_FIELD( code, name, cff_kind_bool )
 #define CFF_FIELD_DELTA( code, name, max ) \
           CFF_FIELD( code, name, cff_kind_delta )
+
+#define CFFCODE_TOPDICT  0x1000
+#define CFFCODE_PRIVATE  0x2000
+
+#ifndef FT_CONFIG_OPTION_PIC
 
 #define CFF_FIELD_CALLBACK( code, name ) \
           {                              \
@@ -630,9 +616,6 @@
           FT_FIELD_OFFSET( num_ ## name )  \
         },
 
-#define CFFCODE_TOPDICT  0x1000
-#define CFFCODE_PRIVATE  0x2000
-
   static const CFF_Field_Handler  cff_field_handlers[] =
   {
 
@@ -642,13 +625,99 @@
   };
 
 
+#else /* FT_CONFIG_OPTION_PIC */
+
+  void FT_Destroy_Class_cff_field_handlers(FT_Library library, CFF_Field_Handler* clazz)
+  {
+    FT_Memory memory = library->memory;
+    if ( clazz )
+      FT_FREE( clazz );
+  }
+
+  FT_Error FT_Create_Class_cff_field_handlers(FT_Library library, CFF_Field_Handler** output_class)
+  {
+    CFF_Field_Handler*  clazz;
+    FT_Error          error;
+    FT_Memory memory = library->memory;
+    int i=0;
+
+#undef CFF_FIELD
+#undef CFF_FIELD_DELTA
+#undef CFF_FIELD_CALLBACK
+#define CFF_FIELD_CALLBACK( code, name ) i++;
+#define CFF_FIELD( code, name, kind ) i++;
+#define CFF_FIELD_DELTA( code, name, max ) i++;
+
+#include "cfftoken.h"
+    i++;/*{ 0, 0, 0, 0, 0, 0, 0 }*/
+
+    if ( FT_ALLOC( clazz, sizeof(CFF_Field_Handler)*i ) )
+      return error;
+
+    i=0;
+#undef CFF_FIELD
+#undef CFF_FIELD_DELTA
+#undef CFF_FIELD_CALLBACK
+
+#define CFF_FIELD_CALLBACK( code_, name_ )                                   \
+    clazz[i].kind = cff_kind_callback;                                       \
+    clazz[i].code = code_ | CFFCODE;                                         \
+    clazz[i].offset = 0;                                                     \
+    clazz[i].size = 0;                                                       \
+    clazz[i].reader = cff_parse_ ## name_;                                   \
+    clazz[i].array_max = 0;                                                  \
+    clazz[i].count_offset = 0;                                               \
+    i++;
+
+#undef  CFF_FIELD
+#define CFF_FIELD( code_, name_, kind_ )                                     \
+    clazz[i].kind = kind_;                                                   \
+    clazz[i].code = code_ | CFFCODE;                                         \
+    clazz[i].offset = FT_FIELD_OFFSET( name_ );                              \
+    clazz[i].size = FT_FIELD_SIZE( name_ );                                  \
+    clazz[i].reader = 0;                                                     \
+    clazz[i].array_max = 0;                                                  \
+    clazz[i].count_offset = 0;                                               \
+    i++;                                                                     \
+
+#undef  CFF_FIELD_DELTA
+#define CFF_FIELD_DELTA( code_, name_, max_ )                                \
+    clazz[i].kind = cff_kind_delta;                                          \
+    clazz[i].code = code_ | CFFCODE;                                         \
+    clazz[i].offset = FT_FIELD_OFFSET( name_ );                              \
+    clazz[i].size = FT_FIELD_SIZE_DELTA( name_ );                            \
+    clazz[i].reader = 0;                                                     \
+    clazz[i].array_max = max_;                                               \
+    clazz[i].count_offset = FT_FIELD_OFFSET( num_ ## name_ );                \
+    i++;
+
+#include "cfftoken.h"
+
+    clazz[i].kind = 0;
+    clazz[i].code = 0;
+    clazz[i].offset = 0;
+    clazz[i].size = 0;
+    clazz[i].reader = 0;
+    clazz[i].array_max = 0;
+    clazz[i].count_offset = 0;
+
+    *output_class = clazz;
+    return FT_Err_Ok;
+  }
+
+
+#endif /* FT_CONFIG_OPTION_PIC */
+
+
   FT_LOCAL_DEF( FT_Error )
   cff_parser_run( CFF_Parser  parser,
                   FT_Byte*    start,
                   FT_Byte*    limit )
   {
-    FT_Byte*  p     = start;
-    FT_Error  error = CFF_Err_Ok;
+    FT_Byte*    p       = start;
+    FT_Error    error   = CFF_Err_Ok;
+    FT_Library  library = parser->library;
+    FT_UNUSED(library);
 
 
     parser->top    = parser->stack;
@@ -718,7 +787,7 @@
         }
         code = code | parser->object_code;
 
-        for ( field = cff_field_handlers; field->kind; field++ )
+        for ( field = FT_CFF_FIELD_HANDLERS_GET; field->kind; field++ )
         {
           if ( field->code == (FT_Int)code )
           {

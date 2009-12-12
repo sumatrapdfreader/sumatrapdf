@@ -110,12 +110,12 @@
   FT_EXPORT_DEF( FT_Int32 )
   FT_Sqrt32( FT_Int32  x )
   {
-    FT_ULong  val, root, newroot, mask;
+    FT_UInt32  val, root, newroot, mask;
 
 
     root = 0;
-    mask = 0x40000000L;
-    val  = (FT_ULong)x;
+    mask = (FT_UInt32)0x40000000UL;
+    val  = (FT_UInt32)x;
 
     do
     {
@@ -362,6 +362,7 @@
     long  s;
 
 
+    /* XXX: this function does not allow 64-bit arguments */
     if ( a == 0 || b == c )
       return a;
 
@@ -377,12 +378,12 @@
       FT_Int64  temp, temp2;
 
 
-      ft_multo64( a, b, &temp );
+      ft_multo64( (FT_Int32)a, (FT_Int32)b, &temp );
 
       temp2.hi = 0;
       temp2.lo = (FT_UInt32)(c >> 1);
       FT_Add64( &temp, &temp2, &temp );
-      a = ft_div64by32( temp.hi, temp.lo, c );
+      a = ft_div64by32( temp.hi, temp.lo, (FT_Int32)c );
     }
     else
       a = 0x7FFFFFFFL;
@@ -416,8 +417,8 @@
       FT_Int64  temp;
 
 
-      ft_multo64( a, b, &temp );
-      a = ft_div64by32( temp.hi, temp.lo, c );
+      ft_multo64( (FT_Int32)a, (FT_Int32)b, &temp );
+      a = ft_div64by32( temp.hi, temp.lo, (FT_Int32)c );
     }
     else
       a = 0x7FFFFFFFL;
@@ -539,13 +540,14 @@
     FT_UInt32  q;
 
 
-    s  = a; a = FT_ABS( a );
-    s ^= b; b = FT_ABS( b );
+    /* XXX: this function does not allow 64-bit arguments */
+    s  = (FT_Int32)a; a = FT_ABS( a );
+    s ^= (FT_Int32)b; b = FT_ABS( b );
 
     if ( b == 0 )
     {
       /* check for division by 0 */
-      q = 0x7FFFFFFFL;
+      q = (FT_UInt32)0x7FFFFFFFL;
     }
     else if ( ( a >> 16 ) == 0 )
     {
@@ -562,7 +564,7 @@
       temp2.hi = 0;
       temp2.lo = (FT_UInt32)( b >> 1 );
       FT_Add64( &temp, &temp2, &temp );
-      q = ft_div64by32( temp.hi, temp.lo, b );
+      q = ft_div64by32( temp.hi, temp.lo, (FT_Int32)b );
     }
 
     return ( s < 0 ? -(FT_Int32)q : (FT_Int32)q );
@@ -840,7 +842,7 @@
                          FT_Pos  out_x,
                          FT_Pos  out_y )
   {
-    FT_Int  result;
+    FT_Long  result; /* avoid overflow on 16-bit system */
 
 
     /* deal with the trivial cases quickly */
@@ -889,8 +891,9 @@
       FT_Int64  z1, z2;
 
 
-      ft_multo64( in_x, out_y, &z1 );
-      ft_multo64( in_y, out_x, &z2 );
+      /* XXX: this function does not allow 64-bit arguments */
+      ft_multo64( (FT_Int32)in_x, (FT_Int32)out_y, &z1 );
+      ft_multo64( (FT_Int32)in_y, (FT_Int32)out_x, &z2 );
 
       if ( z1.hi > z2.hi )
         result = +1;
@@ -906,7 +909,8 @@
 #endif
     }
 
-    return result;
+    /* XXX: only the sign of return value, +1/0/-1 must be used */
+    return (FT_Int)result;
   }
 
 

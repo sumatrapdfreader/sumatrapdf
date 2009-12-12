@@ -199,7 +199,7 @@
 
     FT_UShort  feature;
     FT_UShort  nSettings;
-    FT_UInt    settingTable;
+    FT_ULong   settingTable;
     FT_UShort  featureFlags;
 
     FT_Bool    exclusive;

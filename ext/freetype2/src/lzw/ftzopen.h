@@ -118,7 +118,7 @@
     FT_Int       buf_offset;
     FT_Int       buf_size;
     FT_Bool      buf_clear;
-    FT_Int       buf_total;
+    FT_Offset    buf_total;
 
     FT_UInt      max_bits;    /* max code bits, from file header   */
     FT_Int       block_mode;  /* block mode flag, from file header */
@@ -137,7 +137,7 @@
 
     FT_Byte*     stack;       /* character stack */
     FT_UInt      stack_top;
-    FT_UInt      stack_size;
+    FT_Offset    stack_size;
     FT_Byte      stack_0[FT_LZW_DEFAULT_STACK_SIZE]; /* minimize heap alloc */
 
     FT_Stream    source;      /* source stream */

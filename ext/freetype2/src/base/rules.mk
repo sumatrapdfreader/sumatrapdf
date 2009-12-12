@@ -37,10 +37,10 @@ BASE_SRC := $(BASE_DIR)/ftadvanc.c \
             $(BASE_DIR)/ftcalc.c   \
             $(BASE_DIR)/ftdbgmem.c \
             $(BASE_DIR)/ftgloadr.c \
-            $(BASE_DIR)/ftnames.c  \
             $(BASE_DIR)/ftobjs.c   \
             $(BASE_DIR)/ftoutln.c  \
             $(BASE_DIR)/ftrfork.c  \
+            $(BASE_DIR)/ftsnames.c \
             $(BASE_DIR)/ftstream.c \
             $(BASE_DIR)/fttrigon.c \
             $(BASE_DIR)/ftutil.c

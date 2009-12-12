@@ -58,7 +58,9 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    code_first :: The lowest valid character code in the encoding.     */
   /*                                                                       */
-  /*    code_last  :: The highest valid character code in the encoding.    */
+  /*    code_last  :: The highest valid character code in the encoding     */
+  /*                  + 1. When equal to code_first there are no valid     */
+  /*                  character codes.                                     */
   /*                                                                       */
   /*    char_index :: An array of corresponding glyph indices.             */
   /*                                                                       */
@@ -230,7 +232,7 @@ FT_BEGIN_HEADER
     /* undocumented, optional: has the same meaning as len_buildchar */
     /* for Type 2 fonts; manipulated by othersubrs 19, 24, and 25    */
     FT_UInt          len_buildchar;
-    FT_Int*          buildchar;
+    FT_Long*         buildchar;
 
     /* since version 2.1 - interface to PostScript hinter */
     const void*     pshinter;

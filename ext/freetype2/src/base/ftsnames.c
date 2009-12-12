@@ -1,13 +1,13 @@
 /***************************************************************************/
 /*                                                                         */
-/*  ftnames.c                                                              */
+/*  ftsnames.c                                                             */
 /*                                                                         */
 /*    Simple interface to access SFNT name tables (which are used          */
 /*    to hold font names, copyright info, notices, etc.) (body).           */
 /*                                                                         */
 /*    This is _not_ used to retrieve glyph names!                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2009 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -28,16 +28,16 @@
 #ifdef TT_CONFIG_OPTION_SFNT_NAMES
 
 
-  /* documentation is in ftnames.h */
+  /* documentation is in ftsnames.h */
 
   FT_EXPORT_DEF( FT_UInt )
   FT_Get_Sfnt_Name_Count( FT_Face  face )
   {
-    return (face && FT_IS_SFNT( face )) ? ((TT_Face)face)->num_names : 0;
+    return ( face && FT_IS_SFNT( face ) ) ? ((TT_Face)face)->num_names : 0;
   }
 
 
-  /* documentation is in ftnames.h */
+  /* documentation is in ftsnames.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_Sfnt_Name( FT_Face       face,

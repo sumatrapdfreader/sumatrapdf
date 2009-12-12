@@ -81,16 +81,14 @@
   static const AF_Script_UniRangeRec  af_indic_uniranges[] =
   {
 #if 0
-    { 0x0100,  0xFFFF },  /* why this? */
+    AF_UNIRANGE_REC( 0x0100UL, 0xFFFFUL ),  /* why this? */
 #endif
-    { 0x0900, 0x0DFF},    /* Indic Range */
-    { 0,       0 }
+    AF_UNIRANGE_REC( 0x0900UL, 0x0DFFUL),    /* Indic Range */
+    AF_UNIRANGE_REC(      0UL,      0UL)
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_indic_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_indic_script_class,
     AF_SCRIPT_INDIC,
     af_indic_uniranges,
 
@@ -102,7 +100,7 @@
 
     (AF_Script_InitHintsFunc)   af_indic_hints_init,
     (AF_Script_ApplyHintsFunc)  af_indic_hints_apply
-  };
+  )
 
 #else /* !AF_CONFIG_OPTION_INDIC */
 
@@ -112,9 +110,7 @@
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_indic_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_indic_script_class,
     AF_SCRIPT_INDIC,
     af_indic_uniranges,
 
@@ -126,7 +122,7 @@
 
     (AF_Script_InitHintsFunc)   NULL,
     (AF_Script_ApplyHintsFunc)  NULL
-  };
+  )
 
 #endif /* !AF_CONFIG_OPTION_INDIC */
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (specification).                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -53,8 +53,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    current       :: The current glyph outline.                        */
   /*                                                                       */
-  /*    last          :: The last point position.                          */
-  /*                                                                       */
   /*    pos_x         :: The horizontal translation (if composite glyph).  */
   /*                                                                       */
   /*    pos_y         :: The vertical translation (if composite glyph).    */
@@ -87,8 +85,6 @@ FT_BEGIN_HEADER
     FT_GlyphLoader  loader;
     FT_Outline*     base;
     FT_Outline*     current;
-
-    FT_Vector       last;
 
     FT_Pos          pos_x;
     FT_Pos          pos_y;
@@ -157,6 +153,8 @@ FT_BEGIN_HEADER
     FT_UInt            num_glyphs;    /* number of glyphs in font */
 
     FT_Render_Mode     hint_mode;
+
+    FT_Bool            seac;
 
   } CFF_Decoder;
 

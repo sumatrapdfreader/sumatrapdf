@@ -598,7 +598,7 @@ FT_BEGIN_HEADER
    *
    * @description:
    *   Call this function after @FT_Stroker_GetBorderCounts to
-   *   export the all borders to your own @FT_Outline structure.
+   *   export all borders to your own @FT_Outline structure.
    *
    *   Note that this function appends the border points and
    *   contours to your outline, but does not try to resize its

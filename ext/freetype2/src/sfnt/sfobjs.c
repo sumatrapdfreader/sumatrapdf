@@ -749,8 +749,8 @@
 
     /* now set up root fields */
     {
-      FT_Face   root  = &face->root;
-      FT_Int32  flags = root->face_flags;
+      FT_Face  root  = &face->root;
+      FT_Long  flags = root->face_flags;
 
 
       /*********************************************************************/

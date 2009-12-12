@@ -62,7 +62,7 @@
 
     if ( table_size < 8 )
     {
-      FT_ERROR(( "tt_face_load_sbit_strikes: table too short!\n" ));
+      FT_ERROR(( "tt_face_load_sbit_strikes: table too short\n" ));
       error = SFNT_Err_Invalid_File_Format;
       goto Exit;
     }
@@ -80,7 +80,7 @@
 
     if ( version != 0x00020000UL || num_strikes >= 0x10000UL )
     {
-      FT_ERROR(( "tt_face_load_sbit_strikes: invalid table version!\n" ));
+      FT_ERROR(( "tt_face_load_sbit_strikes: invalid table version\n" ));
       error = SFNT_Err_Invalid_File_Format;
       goto Fail;
     }
@@ -469,6 +469,41 @@
   }
 
 
+  /*
+   * Load a bit-aligned bitmap (with pointer `p') into a line-aligned bitmap
+   * (with pointer `write').  In the example below, the width is 3 pixel,
+   * and `x_pos' is 1 pixel.
+   *
+   *       p                               p+1
+   *     |                               |                               |
+   *     | 7   6   5   4   3   2   1   0 | 7   6   5   4   3   2   1   0 |...
+   *     |                               |                               |
+   *       +-------+   +-------+   +-------+ ...
+   *           .           .           .
+   *           .           .           .
+   *           v           .           .
+   *       +-------+       .           .
+   * |                               | .
+   * | 7   6   5   4   3   2   1   0 | .
+   * |                               | .
+   *   write               .           .
+   *                       .           .
+   *                       v           .
+   *                   +-------+       .
+   *             |                               |
+   *             | 7   6   5   4   3   2   1   0 |
+   *             |                               |
+   *               write+1             .
+   *                                   .
+   *                                   v
+   *                               +-------+
+   *                         |                               |
+   *                         | 7   6   5   4   3   2   1   0 |
+   *                         |                               |
+   *                           write+2
+   *
+   */
+
   static FT_Error
   tt_sbit_decoder_load_bit_aligned( TT_SBitDecoder  decoder,
                                     FT_Byte*        p,
@@ -514,6 +549,8 @@
     }
 
     /* now do the blit */
+
+    /* adjust `line' to point to the first byte of the bitmap */
     line  += y_pos * pitch + ( x_pos >> 3 );
     x_pos &= 7;
 
@@ -524,21 +561,23 @@
     for ( h = height; h > 0; h--, line += pitch )
     {
       FT_Byte*  write = line;
-      FT_Int    w = width;
+      FT_Int    w     = width;
 
 
+      /* handle initial byte (in target bitmap) specially if necessary */
       if ( x_pos )
       {
         w = ( width < 8 - x_pos ) ? width : 8 - x_pos;
 
         if ( h == height )
         {
-          rval  |= *p++;
-          nbits += x_pos;
+          rval  = *p++;
+          nbits = x_pos;
         }
         else if ( nbits < w )
         {
-          rval  |= *p++;
+          if ( p < limit )
+            rval |= *p++;
           nbits += 8 - w;
         }
         else
@@ -554,6 +593,7 @@
         w = width - w;
       }
 
+      /* handle medial bytes */
       for ( ; w >= 8; w -= 8 )
       {
         rval     |= *p++;
@@ -562,11 +602,13 @@
         rval <<= 8;
       }
 
+      /* handle final byte if necessary */
       if ( w > 0 )
       {
         if ( nbits < w )
         {
-          rval   |= *p++;
+          if ( p < limit )
+            rval |= *p++;
           *write |= ( ( rval >> nbits ) & 0xFF ) & ( 0xFF00U >> w );
           nbits  += 8 - w;
 

@@ -111,7 +111,7 @@ THE SOFTWARE.
 
     while ( min < max )
     {
-      FT_UInt32  code;
+      FT_ULong  code;
 
 
       mid  = ( min + max ) >> 1;
@@ -140,7 +140,7 @@ THE SOFTWARE.
     PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
     FT_UInt       min, max, mid;
-    FT_UInt32     charcode  = *acharcode + 1;
+    FT_ULong      charcode  = *acharcode + 1;
     FT_UInt       result    = 0;
 
 
@@ -149,7 +149,7 @@ THE SOFTWARE.
 
     while ( min < max )
     {
-      FT_UInt32  code;
+      FT_ULong  code;
 
 
       mid  = ( min + max ) >> 1;
@@ -175,7 +175,14 @@ THE SOFTWARE.
     }
 
   Exit:
-    *acharcode = charcode;
+    if ( charcode > 0xFFFFFFFFUL )
+    {
+      FT_TRACE1(( "pcf_cmap_char_next: charcode 0x%x > 32bit API" ));
+      *acharcode = 0;
+      /* XXX: result should be changed to indicate an overflow error */
+    }
+    else
+      *acharcode = (FT_UInt32)charcode;
     return result;
   }
 
@@ -266,21 +273,27 @@ THE SOFTWARE.
     error = pcf_load_font( stream, face );
     if ( error )
     {
-      FT_Error  error2;
-
-
       PCF_Face_Done( pcfface );
 
-#ifdef FT_CONFIG_OPTION_USE_ZLIB
-      /* this didn't work, try gzip support! */
-      error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
-      if ( FT_ERROR_BASE( error2 ) == FT_Err_Unimplemented_Feature )
-        goto Fail;
+#if defined( FT_CONFIG_OPTION_USE_ZLIB ) || \
+    defined( FT_CONFIG_OPTION_USE_LZW )
 
-      error = error2;
-#endif
-      if ( error )
+#ifdef FT_CONFIG_OPTION_USE_ZLIB
+      {
+        FT_Error  error2;
+
+
+        /* this didn't work, try gzip support! */
+        error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
+        if ( FT_ERROR_BASE( error2 ) == FT_Err_Unimplemented_Feature )
+          goto Fail;
+
+        error = error2;
+      }
+#endif /* FT_CONFIG_OPTION_USE_ZLIB */
+
 #ifdef FT_CONFIG_OPTION_USE_LZW
+      if ( error )
       {
         FT_Error  error3;
 
@@ -291,32 +304,26 @@ THE SOFTWARE.
           goto Fail;
 
         error = error3;
-        if ( error )
-          goto Fail;
-
-        face->gzip_source = stream;
-        pcfface->stream   = &face->gzip_stream;
-
-        stream = pcfface->stream;
-
-        error = pcf_load_font( stream, face );
-        if ( error )
-          goto Fail;
       }
-#else
+#endif /* FT_CONFIG_OPTION_USE_LZW */
+
+      if ( error )
         goto Fail;
+
+      face->gzip_source = stream;
+      pcfface->stream   = &face->gzip_stream;
+
+      stream = pcfface->stream;
+
+      error = pcf_load_font( stream, face );
+      if ( error )
+        goto Fail;
+
+#else /* !(FT_CONFIG_OPTION_USE_ZLIB || FT_CONFIG_OPTION_USE_LZW) */
+
+      goto Fail;
+
 #endif
-      else
-      {
-        face->gzip_source = stream;
-        pcfface->stream   = &face->gzip_stream;
-
-        stream = pcfface->stream;
-
-        error = pcf_load_font( stream, face );
-        if ( error )
-          goto Fail;
-      }
     }
 
     /* set up charmap */
@@ -448,7 +455,7 @@ THE SOFTWARE.
     FT_Error    error  = PCF_Err_Ok;
     FT_Bitmap*  bitmap = &slot->bitmap;
     PCF_Metric  metric;
-    int         bytes;
+    FT_Offset   bytes;
 
     FT_UNUSED( load_flags );
 
@@ -578,12 +585,17 @@ THE SOFTWARE.
       }
       else
       {
+        if ( prop->value.l > 0x7FFFFFFFL || prop->value.l < ( -1 - 0x7FFFFFFFL ) )
+        {
+          FT_TRACE1(( "pcf_get_bdf_property: " ));
+          FT_TRACE1(( "too large integer 0x%x is truncated\n" ));
+        }
         /* Apparently, the PCF driver loads all properties as signed integers!
          * This really doesn't seem to be a problem, because this is
          * sufficient for any meaningful values.
          */
         aproperty->type      = BDF_PROPERTY_TYPE_INTEGER;
-        aproperty->u.integer = prop->value.integer;
+        aproperty->u.integer = (FT_Int32)prop->value.l;
       }
       return 0;
     }

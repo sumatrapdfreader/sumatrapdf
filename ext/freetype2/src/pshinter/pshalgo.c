@@ -103,7 +103,7 @@
 
     if ( idx >= table->max_hints )
     {
-      FT_ERROR(( "psh_hint_table_record: invalid hint index %d\n", idx ));
+      FT_TRACE0(( "psh_hint_table_record: invalid hint index %d\n", idx ));
       return;
     }
 
@@ -137,7 +137,7 @@
     if ( table->num_hints < table->max_hints )
       table->sort_global[table->num_hints++] = hint;
     else
-      FT_ERROR(( "psh_hint_table_record: too many sorted hints!  BUG!\n" ));
+      FT_TRACE0(( "psh_hint_table_record: too many sorted hints!  BUG!\n" ));
   }
 
 
@@ -230,7 +230,7 @@
       FT_UInt  idx;
 
 
-      FT_ERROR(( "psh_hint_table_init: missing/incorrect hint masks!\n" ));
+      FT_TRACE0(( "psh_hint_table_init: missing/incorrect hint masks\n" ));
 
       count = table->max_hints;
       for ( idx = 0; idx < count; idx++ )
@@ -282,8 +282,8 @@
           {
             hint2 = sort[0];
             if ( psh_hint_overlap( hint, hint2 ) )
-              FT_ERROR(( "psh_hint_table_activate_mask:"
-                         " found overlapping hints\n" ))
+              FT_TRACE0(( "psh_hint_table_activate_mask:"
+                          " found overlapping hints\n" ))
           }
 #else
           count2 = 0;
@@ -295,8 +295,8 @@
             if ( count < table->max_hints )
               table->sort[count++] = hint;
             else
-              FT_ERROR(( "psh_hint_tableactivate_mask:"
-                         " too many active hints\n" ));
+              FT_TRACE0(( "psh_hint_tableactivate_mask:"
+                          " too many active hints\n" ));
           }
         }
       }

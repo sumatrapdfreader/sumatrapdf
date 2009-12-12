@@ -18,11 +18,9 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
 #include FT_OUTLINE_H
-#include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 
 #include "cffobjs.h"
@@ -474,8 +472,6 @@
       point->x = x >> 16;
       point->y = y >> 16;
       *control = (FT_Byte)( flag ? FT_CURVE_TAG_ON : FT_CURVE_TAG_CUBIC );
-
-      builder->last = *point;
     }
 
     outline->n_points++;
@@ -554,26 +550,23 @@
   cff_builder_close_contour( CFF_Builder*  builder )
   {
     FT_Outline*  outline = builder->current;
+    FT_Int       first;
 
 
     if ( !outline )
       return;
 
-    /* XXXX: We must not include the last point in the path if it */
-    /*       is located on the first point.                       */
+    first = outline->n_contours <= 1
+            ? 0 : outline->contours[outline->n_contours - 2] + 1;
+
+    /* We must not include the last point in the path if it */
+    /* is located on the first point.                       */
     if ( outline->n_points > 1 )
     {
-      FT_Int      first   = 0;
       FT_Vector*  p1      = outline->points + first;
       FT_Vector*  p2      = outline->points + outline->n_points - 1;
       FT_Byte*    control = (FT_Byte*)outline->tags + outline->n_points - 1;
 
-
-      if ( outline->n_contours > 1 )
-      {
-        first = outline->contours[outline->n_contours - 2] + 1;
-        p1    = outline->points + first;
-      }
 
       /* `delete' last point only if it coincides with the first    */
       /* point and if it is not a control point (which can happen). */
@@ -583,8 +576,18 @@
     }
 
     if ( outline->n_contours > 0 )
-      outline->contours[outline->n_contours - 1] =
-        (short)( outline->n_points - 1 );
+    {
+      /* Don't add contours only consisting of one point, i.e., */
+      /* check whether begin point and last point are the same. */
+      if ( first == outline->n_points - 1 )
+      {
+        outline->n_contours--;
+        outline->n_points--;
+      }
+      else
+        outline->contours[outline->n_contours - 1] =
+          (short)( outline->n_points - 1 );
+    }
   }
 
 
@@ -704,6 +707,12 @@
     FT_ULong      charstring_len;
 
 
+    if ( decoder->seac )
+    {
+      FT_ERROR(( "cff_operator_seac: invalid nested seac\n" ));
+      return CFF_Err_Syntax_Error;
+    }
+
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     /* Incremental fonts don't necessarily have valid charsets.        */
     /* They use the character code, not the glyph index, in this case. */
@@ -724,8 +733,8 @@
 
     if ( bchar_index < 0 || achar_index < 0 )
     {
-      FT_ERROR(( "cff_operator_seac:" ));
-      FT_ERROR(( " invalid seac character code arguments\n" ));
+      FT_ERROR(( "cff_operator_seac:"
+                 " invalid seac character code arguments\n" ));
       return CFF_Err_Syntax_Error;
     }
 
@@ -774,8 +783,11 @@
                                 &charstring, &charstring_len );
     if ( !error )
     {
+      /* the seac operator must not be nested */
+      decoder->seac = TRUE;
       error = cff_decoder_parse_charstrings( decoder, charstring,
                                              charstring_len );
+      decoder->seac = FALSE;
 
       if ( error )
         goto Exit;
@@ -800,8 +812,11 @@
                                 &charstring, &charstring_len );
     if ( !error )
     {
+      /* the seac operator must not be nested */
+      decoder->seac = TRUE;
       error = cff_decoder_parse_charstrings( decoder, charstring,
                                              charstring_len );
+      decoder->seac = FALSE;
 
       if ( error )
         goto Exit;
@@ -863,9 +878,10 @@
     decoder->read_width = 1;
 
     /* compute random seed from stack address of parameter */
-    seed = (FT_Fixed)(char*)&seed           ^
-           (FT_Fixed)(char*)&decoder        ^
-           (FT_Fixed)(char*)&charstring_base;
+    seed = (FT_Fixed)( ( (FT_PtrDist)(char*)&seed              ^
+                         (FT_PtrDist)(char*)&decoder           ^
+                         (FT_PtrDist)(char*)&charstring_base ) &
+                         FT_ULONG_MAX ) ;
     seed = ( seed ^ ( seed >> 10 ) ^ ( seed >> 20 ) ) & 0xFFFFL;
     if ( seed == 0 )
       seed = 0x7384;
@@ -920,18 +936,18 @@
           ip += 2;
         }
         else if ( v < 247 )
-          val = (FT_Long)v - 139;
+          val = (FT_Int32)v - 139;
         else if ( v < 251 )
         {
           if ( ip >= limit )
             goto Syntax_Error;
-          val = ( (FT_Long)v - 247 ) * 256 + *ip++ + 108;
+          val = ( (FT_Int32)v - 247 ) * 256 + *ip++ + 108;
         }
         else if ( v < 255 )
         {
           if ( ip >= limit )
             goto Syntax_Error;
-          val = -( (FT_Long)v - 251 ) * 256 - *ip++ - 108;
+          val = -( (FT_Int32)v - 251 ) * 256 - *ip++ - 108;
         }
         else
         {
@@ -2241,8 +2257,8 @@
 
             if ( idx >= decoder->num_locals )
             {
-              FT_ERROR(( "cff_decoder_parse_charstrings:" ));
-              FT_ERROR(( " invalid local subr index\n" ));
+              FT_ERROR(( "cff_decoder_parse_charstrings:"
+                         " invalid local subr index\n" ));
               goto Syntax_Error;
             }
 
@@ -2263,7 +2279,7 @@
             if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
-                         " invoking empty subrs!\n" ));
+                         " invoking empty subrs\n" ));
               goto Syntax_Error;
             }
 
@@ -2283,8 +2299,8 @@
 
             if ( idx >= decoder->num_globals )
             {
-              FT_ERROR(( "cff_decoder_parse_charstrings:" ));
-              FT_ERROR(( " invalid global subr index\n" ));
+              FT_ERROR(( "cff_decoder_parse_charstrings:"
+                         " invalid global subr index\n" ));
               goto Syntax_Error;
             }
 
@@ -2305,7 +2321,7 @@
             if ( !zone->base || zone->limit == zone->base )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:"
-                         " invoking empty subrs!\n" ));
+                         " invoking empty subrs\n" ));
               goto Syntax_Error;
             }
 
@@ -2354,15 +2370,15 @@
     return error;
 
   Syntax_Error:
-    FT_TRACE4(( "cff_decoder_parse_charstrings: syntax error!\n" ));
+    FT_TRACE4(( "cff_decoder_parse_charstrings: syntax error\n" ));
     return CFF_Err_Invalid_File_Format;
 
   Stack_Underflow:
-    FT_TRACE4(( "cff_decoder_parse_charstrings: stack underflow!\n" ));
+    FT_TRACE4(( "cff_decoder_parse_charstrings: stack underflow\n" ));
     return CFF_Err_Too_Few_Arguments;
 
   Stack_Overflow:
-    FT_TRACE4(( "cff_decoder_parse_charstrings: stack overflow!\n" ));
+    FT_TRACE4(( "cff_decoder_parse_charstrings: stack overflow\n" ));
     return CFF_Err_Stack_Overflow;
   }
 
@@ -2565,8 +2581,8 @@
       FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select,
                                              glyph_index );
 
-      FT_Int  top_upm = cff->top_font.font_dict.units_per_em;
-      FT_Int  sub_upm = cff->subfonts[fd_index]->font_dict.units_per_em;
+      FT_ULong  top_upm = cff->top_font.font_dict.units_per_em;
+      FT_ULong  sub_upm = cff->subfonts[fd_index]->font_dict.units_per_em;
 
 
       font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
@@ -2711,9 +2727,14 @@
         glyph->root.linearHoriAdvance           = decoder.glyph_width;
         glyph->root.internal->glyph_transformed = 0;
 
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
         has_vertical_info = FT_BOOL( face->vertical_info                   &&
                                      face->vertical.number_Of_VMetrics > 0 &&
                                      face->vertical.long_metrics           );
+#else
+        has_vertical_info = FT_BOOL( face->vertical_info                   &&
+                                     face->vertical.number_Of_VMetrics > 0 );
+#endif
 
         /* get the vertical metrics from the vtmx table if we have one */
         if ( has_vertical_info )
@@ -2750,8 +2771,8 @@
 
         glyph->root.outline.flags |= FT_OUTLINE_REVERSE_FILL;
 
-        /* apply the font matrix -- `xx' has already been normalized */
-        if ( !( font_matrix.yy == 0x10000L &&
+        if ( !( font_matrix.xx == 0x10000L &&
+                font_matrix.yy == 0x10000L &&
                 font_matrix.xy == 0        &&
                 font_matrix.yx == 0        ) )
           FT_Outline_Transform( &glyph->root.outline, &font_matrix );
@@ -2804,7 +2825,8 @@
         metrics->horiBearingY = cbox.yMax;
 
         if ( has_vertical_info )
-          metrics->vertBearingX = -metrics->width / 2;
+          metrics->vertBearingX = metrics->horiBearingX -
+                                    metrics->horiAdvance / 2;
         else
           ft_synthesize_vertical_metrics( metrics,
                                           metrics->vertAdvance );

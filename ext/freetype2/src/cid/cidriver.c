@@ -20,7 +20,6 @@
 #include "cidriver.h"
 #include "cidgload.h"
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_STREAM_H
 
 #include "ciderrs.h"
 

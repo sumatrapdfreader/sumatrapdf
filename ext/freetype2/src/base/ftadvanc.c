@@ -140,7 +140,7 @@
     if ( flags & FT_ADVANCE_FLAG_FAST_ONLY )
       return FT_Err_Unimplemented_Feature;
 
-    flags |= FT_LOAD_ADVANCE_ONLY;
+    flags |= (FT_UInt32)FT_LOAD_ADVANCE_ONLY;
     for ( nn = 0; nn < count; nn++ )
     {
       error = FT_Load_Glyph( face, start + nn, flags );

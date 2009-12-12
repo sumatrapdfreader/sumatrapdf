@@ -736,6 +736,7 @@
   {
     FT_Error   error   = FT_Err_Ok;
     FT_UInt    i;
+    FT_Long    j;
     FT_UShort  max_cid = 0;
 
 
@@ -750,8 +751,11 @@
     if ( FT_NEW_ARRAY( charset->cids, max_cid ) )
       goto Exit;
 
-    for ( i = 0; i < num_glyphs; i++ )
-      charset->cids[charset->sids[i]] = (FT_UShort)i;
+    /* When multiple GIDs map to the same CID, we choose the lowest */
+    /* GID.  This is not described in any spec, but it matches the  */
+    /* behaviour of recent Acroread versions.                       */
+    for ( j = num_glyphs - 1; j >= 0 ; j-- )
+      charset->cids[charset->sids[j]] = (FT_UShort)j;
 
     charset->max_cid    = max_cid;
     charset->num_glyphs = num_glyphs;
@@ -842,7 +846,20 @@
             goto Exit;
 
           for ( j = 1; j < num_glyphs; j++ )
-            charset->sids[j] = FT_GET_USHORT();
+          {
+            FT_UShort sid = FT_GET_USHORT();
+
+
+            /* this constant is given in the CFF specification */
+            if ( sid < 65000L )
+              charset->sids[j] = sid;
+            else
+            {
+              FT_TRACE0(( "cff_charset_load:"
+                          " invalid SID value %d set to zero\n", sid ));
+              charset->sids[j] = 0;
+            }
+          }
 
           FT_FRAME_EXIT();
         }
@@ -875,6 +892,20 @@
                 goto Exit;
             }
 
+            /* check whether the range contains at least one valid glyph; */
+            /* the constant is given in the CFF specification             */
+            if ( glyph_sid >= 65000L ) {
+              FT_ERROR(( "cff_charset_load: invalid SID range\n" ));
+              error = CFF_Err_Invalid_File_Format;
+              goto Exit;
+            }
+
+            /* try to rescue some of the SIDs if `nleft' is too large */
+            if ( nleft > 65000L - 1L || glyph_sid >= 65000L - nleft ) {
+              FT_ERROR(( "cff_charset_load: invalid SID range trimmed\n" ));
+              nleft = ( FT_UInt )( 65000L - 1L - glyph_sid );
+            }
+
             /* Fill in the range of sids -- `nleft + 1' glyphs. */
             for ( i = 0; j < num_glyphs && i <= nleft; i++, j++, glyph_sid++ )
               charset->sids[j] = glyph_sid;
@@ -883,7 +914,7 @@
         break;
 
       default:
-        FT_ERROR(( "cff_charset_load: invalid table format!\n" ));
+        FT_ERROR(( "cff_charset_load: invalid table format\n" ));
         error = CFF_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -906,7 +937,7 @@
         if ( num_glyphs > 229 )
         {
           FT_ERROR(( "cff_charset_load: implicit charset larger than\n"
-                     "predefined charset (Adobe ISO-Latin)!\n" ));
+                     "predefined charset (Adobe ISO-Latin)\n" ));
           error = CFF_Err_Invalid_File_Format;
           goto Exit;
         }
@@ -924,7 +955,7 @@
         if ( num_glyphs > 166 )
         {
           FT_ERROR(( "cff_charset_load: implicit charset larger than\n"
-                     "predefined charset (Adobe Expert)!\n" ));
+                     "predefined charset (Adobe Expert)\n" ));
           error = CFF_Err_Invalid_File_Format;
           goto Exit;
         }
@@ -942,7 +973,7 @@
         if ( num_glyphs > 87 )
         {
           FT_ERROR(( "cff_charset_load: implicit charset larger than\n"
-                     "predefined charset (Adobe Expert Subset)!\n" ));
+                     "predefined charset (Adobe Expert Subset)\n" ));
           error = CFF_Err_Invalid_File_Format;
           goto Exit;
         }
@@ -1127,7 +1158,7 @@
         break;
 
       default:
-        FT_ERROR(( "cff_encoding_load: invalid table format!\n" ));
+        FT_ERROR(( "cff_encoding_load: invalid table format\n" ));
         error = CFF_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -1222,7 +1253,7 @@
         break;
 
       default:
-        FT_ERROR(( "cff_encoding_load: invalid table format!\n" ));
+        FT_ERROR(( "cff_encoding_load: invalid table format\n" ));
         error = CFF_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -1240,7 +1271,8 @@
                     CFF_Index    idx,
                     FT_UInt      font_index,
                     FT_Stream    stream,
-                    FT_ULong     base_offset )
+                    FT_ULong     base_offset,
+                    FT_Library   library )
   {
     FT_Error         error;
     CFF_ParserRec    parser;
@@ -1250,7 +1282,7 @@
     CFF_Private      priv = &font->private_dict;
 
 
-    cff_parser_init( &parser, CFF_CODE_TOPDICT, &font->font_dict );
+    cff_parser_init( &parser, CFF_CODE_TOPDICT, &font->font_dict, library );
 
     /* set defaults */
     FT_MEM_ZERO( top, sizeof ( *top ) );
@@ -1301,7 +1333,7 @@
       priv->expansion_factor = (FT_Fixed)( 0.06 * 0x10000L );
       priv->blue_scale       = (FT_Fixed)( 0.039625 * 0x10000L * 1000 );
 
-      cff_parser_init( &parser, CFF_CODE_PRIVATE, priv );
+      cff_parser_init( &parser, CFF_CODE_PRIVATE, priv, library );
 
       if ( FT_STREAM_SEEK( base_offset + font->font_dict.private_offset ) ||
            FT_FRAME_ENTER( font->font_dict.private_size )                 )
@@ -1354,7 +1386,8 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  cff_font_load( FT_Stream  stream,
+  cff_font_load( FT_Library library,
+                 FT_Stream  stream,
                  FT_Int     face_index,
                  CFF_Font   font,
                  FT_Bool    pure_cff )
@@ -1394,7 +1427,7 @@
          font->header_size      < 4 ||
          font->absolute_offsize > 4 )
     {
-      FT_TRACE2(( "[not a CFF font header!]\n" ));
+      FT_TRACE2(( "[not a CFF font header]\n" ));
       error = CFF_Err_Unknown_File_Format;
       goto Exit;
     }
@@ -1432,7 +1465,8 @@
                               &font->font_dict_index,
                               face_index,
                               stream,
-                              base_offset );
+                              base_offset,
+                              library );
     if ( error )
       goto Exit;
 
@@ -1462,7 +1496,7 @@
 
       if ( fd_index.count > CFF_MAX_CID_FONTS )
       {
-        FT_ERROR(( "cff_font_load: FD array too large in CID font\n" ));
+        FT_TRACE0(( "cff_font_load: FD array too large in CID font\n" ));
         goto Fail_CID;
       }
 
@@ -1480,7 +1514,7 @@
       {
         sub = font->subfonts[idx];
         error = cff_subfont_load( sub, &fd_index, idx,
-                                  stream, base_offset );
+                                  stream, base_offset, library );
         if ( error )
           goto Fail_CID;
       }
@@ -1503,7 +1537,7 @@
     /* read the charstrings index now */
     if ( dict->charstrings_offset == 0 )
     {
-      FT_ERROR(( "cff_font_load: no charstrings offset!\n" ));
+      FT_ERROR(( "cff_font_load: no charstrings offset\n" ));
       error = CFF_Err_Unknown_File_Format;
       goto Exit;
     }

@@ -540,7 +540,7 @@ class  DocBlock:
         while start < end and not string.strip( source[end] ):
             end = end - 1
 
-        if start == end:
+        if start == end and not string.strip( source[start] ):
             self.code = []
         else:
             self.code = source[start:end + 1]

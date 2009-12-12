@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2008 by                                          */
+/*  Copyright 2006, 2007, 2008, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -58,9 +58,12 @@
 
     if ( FT_Select_Charmap( face, FT_ENCODING_UNICODE ) )
       face->charmap = NULL;
-
-    /* latin's version would suffice */
-    af_latin_metrics_init_widths( metrics, face, 0x7530 );
+    else
+    {
+      /* latin's version would suffice */
+      af_latin_metrics_init_widths( metrics, face, 0x7530 );
+      af_latin_metrics_check_digits( metrics, face );
+    }
 
     FT_Set_Charmap( face, oldmap );
 
@@ -1017,7 +1020,7 @@
     AF_AxisHints  axis       = &hints->axis[dim];
     AF_Edge       edges      = axis->edges;
     AF_Edge       edge_limit = edges + axis->num_edges;
-    FT_Int        n_edges;
+    FT_PtrDist    n_edges;
     AF_Edge       edge;
     AF_Edge       anchor   = 0;
     FT_Pos        delta    = 0;
@@ -1441,35 +1444,33 @@
   static const AF_Script_UniRangeRec  af_cjk_uniranges[] =
   {
 #if 0
-    {  0x0100UL,  0xFFFFUL },  /* why this? */
+    AF_UNIRANGE_REC(  0x0100UL,  0xFFFFUL ),  /* why this? */
 #endif
-    {  0x2E80UL,  0x2EFFUL },  /* CJK Radicals Supplement                 */
-    {  0x2F00UL,  0x2FDFUL },  /* Kangxi Radicals                         */
-    {  0x3000UL,  0x303FUL },  /* CJK Symbols and Punctuation             */
-    {  0x3040UL,  0x309FUL },  /* Hiragana                                */
-    {  0x30A0UL,  0x30FFUL },  /* Katakana                                */
-    {  0x3100UL,  0x312FUL },  /* Bopomofo                                */
-    {  0x3130UL,  0x318FUL },  /* Hangul Compatibility Jamo               */
-    {  0x31A0UL,  0x31BFUL },  /* Bopomofo Extended                       */
-    {  0x31C0UL,  0x31EFUL },  /* CJK Strokes                             */
-    {  0x31F0UL,  0x31FFUL },  /* Katakana Phonetic Extensions            */
-    {  0x3200UL,  0x32FFUL },  /* Enclosed CJK Letters and Months         */
-    {  0x3300UL,  0x33FFUL },  /* CJK Compatibility                       */
-    {  0x3400UL,  0x4DBFUL },  /* CJK Unified Ideographs Extension A      */
-    {  0x4DC0UL,  0x4DFFUL },  /* Yijing Hexagram Symbols                 */
-    {  0x4E00UL,  0x9FFFUL },  /* CJK Unified Ideographs                  */
-    {  0xF900UL,  0xFAFFUL },  /* CJK Compatibility Ideographs            */
-    {  0xFE30UL,  0xFE4FUL },  /* CJK Compatibility Forms                 */
-    {  0xFF00UL,  0xFFEFUL },  /* Halfwidth and Fullwidth Forms           */
-    { 0x20000UL, 0x2A6DFUL },  /* CJK Unified Ideographs Extension B      */
-    { 0x2F800UL, 0x2FA1FUL },  /* CJK Compatibility Ideographs Supplement */
-    {       0UL,       0UL }
+    AF_UNIRANGE_REC(  0x2E80UL,  0x2EFFUL ),  /* CJK Radicals Supplement                 */
+    AF_UNIRANGE_REC(  0x2F00UL,  0x2FDFUL ),  /* Kangxi Radicals                         */
+    AF_UNIRANGE_REC(  0x3000UL,  0x303FUL ),  /* CJK Symbols and Punctuation             */
+    AF_UNIRANGE_REC(  0x3040UL,  0x309FUL ),  /* Hiragana                                */
+    AF_UNIRANGE_REC(  0x30A0UL,  0x30FFUL ),  /* Katakana                                */
+    AF_UNIRANGE_REC(  0x3100UL,  0x312FUL ),  /* Bopomofo                                */
+    AF_UNIRANGE_REC(  0x3130UL,  0x318FUL ),  /* Hangul Compatibility Jamo               */
+    AF_UNIRANGE_REC(  0x31A0UL,  0x31BFUL ),  /* Bopomofo Extended                       */
+    AF_UNIRANGE_REC(  0x31C0UL,  0x31EFUL ),  /* CJK Strokes                             */
+    AF_UNIRANGE_REC(  0x31F0UL,  0x31FFUL ),  /* Katakana Phonetic Extensions            */
+    AF_UNIRANGE_REC(  0x3200UL,  0x32FFUL ),  /* Enclosed CJK Letters and Months         */
+    AF_UNIRANGE_REC(  0x3300UL,  0x33FFUL ),  /* CJK Compatibility                       */
+    AF_UNIRANGE_REC(  0x3400UL,  0x4DBFUL ),  /* CJK Unified Ideographs Extension A      */
+    AF_UNIRANGE_REC(  0x4DC0UL,  0x4DFFUL ),  /* Yijing Hexagram Symbols                 */
+    AF_UNIRANGE_REC(  0x4E00UL,  0x9FFFUL ),  /* CJK Unified Ideographs                  */
+    AF_UNIRANGE_REC(  0xF900UL,  0xFAFFUL ),  /* CJK Compatibility Ideographs            */
+    AF_UNIRANGE_REC(  0xFE30UL,  0xFE4FUL ),  /* CJK Compatibility Forms                 */
+    AF_UNIRANGE_REC(  0xFF00UL,  0xFFEFUL ),  /* Halfwidth and Fullwidth Forms           */
+    AF_UNIRANGE_REC( 0x20000UL, 0x2A6DFUL ),  /* CJK Unified Ideographs Extension B      */
+    AF_UNIRANGE_REC( 0x2F800UL, 0x2FA1FUL ),  /* CJK Compatibility Ideographs Supplement */
+    AF_UNIRANGE_REC(       0UL,       0UL )
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_cjk_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
 
@@ -1481,19 +1482,17 @@
 
     (AF_Script_InitHintsFunc)   af_cjk_hints_init,
     (AF_Script_ApplyHintsFunc)  af_cjk_hints_apply
-  };
+  )
 
 #else /* !AF_CONFIG_OPTION_CJK */
 
   static const AF_Script_UniRangeRec  af_cjk_uniranges[] =
   {
-    { 0, 0 }
+    AF_UNIRANGE_REC( 0UL, 0UL )
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_cjk_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
 
@@ -1505,7 +1504,7 @@
 
     (AF_Script_InitHintsFunc)   NULL,
     (AF_Script_ApplyHintsFunc)  NULL
-  };
+  )
 
 #endif /* !AF_CONFIG_OPTION_CJK */
 

@@ -112,7 +112,7 @@
 
         if ( parser->num_dict < 0 )
         {
-          FT_ERROR(( "cid_load_keyword: invalid use of `%s'!\n",
+          FT_ERROR(( "cid_load_keyword: invalid use of `%s'\n",
                      keyword->ident ));
           error = CID_Err_Syntax_Error;
           goto Exit;

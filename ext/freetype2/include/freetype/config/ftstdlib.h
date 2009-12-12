@@ -61,6 +61,7 @@
 
 #define FT_CHAR_BIT   CHAR_BIT
 #define FT_INT_MAX    INT_MAX
+#define FT_INT_MIN    INT_MIN
 #define FT_UINT_MAX   UINT_MAX
 #define FT_ULONG_MAX  ULONG_MAX
 

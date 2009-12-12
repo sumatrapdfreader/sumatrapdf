@@ -415,7 +415,8 @@
     {
     case 1:     /* ExtensionSubstFormat1 */
       {
-        FT_UInt            ExtensionLookupType, ExtensionOffset;
+        FT_UInt            ExtensionLookupType;
+        FT_ULong           ExtensionOffset;
         OTV_Validate_Func  validate;
 
 

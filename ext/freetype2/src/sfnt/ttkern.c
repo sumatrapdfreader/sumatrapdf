@@ -22,7 +22,6 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_TRUETYPE_TAGS_H
 #include "ttkern.h"
-#include "ttload.h"
 
 #include "sferrors.h"
 
@@ -60,14 +59,16 @@
 
     if ( table_size < 4 )  /* the case of a malformed table */
     {
-      FT_ERROR(( "kerning table is too small - ignored\n" ));
+      FT_ERROR(( "tt_face_load_kern:"
+                 " kerning table is too small - ignored\n" ));
       error = SFNT_Err_Table_Missing;
       goto Exit;
     }
 
     if ( FT_FRAME_EXTRACT( table_size, face->kern_table ) )
     {
-      FT_ERROR(( "could not extract kerning table\n" ));
+      FT_ERROR(( "tt_face_load_kern:"
+                 " could not extract kerning table\n" ));
       goto Exit;
     }
 
@@ -86,7 +87,7 @@
     {
       FT_UInt    num_pairs, length, coverage;
       FT_Byte*   p_next;
-      FT_UInt32  mask = 1UL << nn;
+      FT_UInt32  mask = (FT_UInt32)1UL << nn;
 
 
       if ( p + 6 > p_limit )
@@ -125,8 +126,8 @@
        */
       if ( num_pairs > 0 )
       {
-        FT_UInt  count;
-        FT_UInt  old_pair;
+        FT_ULong  count;
+        FT_ULong  old_pair;
 
 
         old_pair = FT_NEXT_ULONG( p );

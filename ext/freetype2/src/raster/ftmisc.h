@@ -52,6 +52,31 @@
               (FT_ULong)_x4         )
 
 
+  /* from include/freetype2/ftsystem.h */
+
+  typedef struct FT_MemoryRec_*  FT_Memory;
+
+  typedef void* (*FT_Alloc_Func)( FT_Memory  memory,
+                                  long       size );
+
+  typedef void (*FT_Free_Func)( FT_Memory  memory,
+                                void*      block );
+
+  typedef void* (*FT_Realloc_Func)( FT_Memory  memory,
+                                    long       cur_size,
+                                    long       new_size,
+                                    void*      block );
+
+  typedef struct FT_MemoryRec_
+  {
+    void*            user;
+
+    FT_Alloc_Func    alloc;
+    FT_Free_Func     free;
+    FT_Realloc_Func  realloc;
+
+  } FT_MemoryRec;
+
   /* from src/ftcalc.c */
 
 #include <inttypes.h>

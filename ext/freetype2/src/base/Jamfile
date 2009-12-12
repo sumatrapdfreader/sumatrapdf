@@ -18,8 +18,9 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) base ;
   if $(FT2_MULTI)
   {
     _sources = ftadvanc ftcalc   ftdbgmem ftgloadr
-               ftnames  ftobjs   ftoutln  ftrfork
+               ftobjs   ftoutln  ftrfork  ftsnames
                ftstream fttrigon ftutil
+               basepic  ftpic
                ;
   }
   else

@@ -18,10 +18,20 @@
 
 #include <ft2build.h>
 #include FT_SYNTHESIS_H
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_OUTLINE_H
 #include FT_BITMAP_H
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+  /* messages during execution.                                            */
+  /*                                                                       */
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_synth
 
   /*************************************************************************/
   /*************************************************************************/
@@ -106,6 +116,18 @@
         xstr = 1 << 6;
       ystr &= ~63;
 
+      /*
+       * XXX: overflow check for 16-bit system, for compatibility
+       *      with FT_GlyphSlot_Embolden() since freetype-2.1.10.
+       *      unfortunately, this function return no informations
+       *      about the cause of error.
+       */
+      if ( ( ystr >> 6 ) > FT_INT_MAX || ( ystr >> 6 ) < FT_INT_MIN )
+      {
+        FT_TRACE1(( "FT_GlyphSlot_Embolden:" ));
+        FT_TRACE1(( "too strong embolding parameter ystr=%d\n", ystr ));
+        return;
+      }
       error = FT_GlyphSlot_Own_Bitmap( slot );
       if ( error )
         return;
@@ -129,8 +151,9 @@
     slot->metrics.vertBearingY += ystr;
     slot->metrics.vertAdvance  += ystr;
 
+    /* XXX: 16-bit overflow case must be excluded before here */
     if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
-      slot->bitmap_top += ystr >> 6;
+      slot->bitmap_top += (FT_Int)( ystr >> 6 );
   }
 
 

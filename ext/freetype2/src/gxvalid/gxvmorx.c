@@ -69,8 +69,8 @@
       FT_ULong  length;
       FT_ULong  coverage;
       FT_ULong  subFeatureFlags;
-      FT_UInt   type;
-      FT_UInt   rest;
+      FT_ULong  type;
+      FT_ULong  rest;
 
 
       GXV_LIMIT_CHECK( 4 + 4 + 4 );

@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008 by Roberto Alameda. */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009               */
+/*  by Roberto Alameda.                                                    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -19,7 +20,6 @@
 #include "t42parse.h"
 #include "t42error.h"
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_STREAM_H
 #include FT_LIST_H
 
 
@@ -70,7 +70,7 @@
 
     if ( !loader.charstrings.init )
     {
-      FT_ERROR(( "T42_Open_Face: no charstrings array in face!\n" ));
+      FT_ERROR(( "T42_Open_Face: no charstrings array in face\n" ));
       error = T42_Err_Invalid_File_Format;
     }
 
@@ -100,8 +100,8 @@
       /* The index is then stored in type1.encoding.char_index, and  */
       /* the name in type1.encoding.char_name                        */
 
-      min_char = +32000;
-      max_char = -32000;
+      min_char = 0;
+      max_char = 0;
 
       charcode = 0;
       for ( ; charcode < loader.encoding_table.max_elems; charcode++ )
@@ -127,13 +127,14 @@
               {
                 if ( charcode < min_char )
                   min_char = charcode;
-                if ( charcode > max_char )
-                  max_char = charcode;
+                if ( charcode >= max_char )
+                  max_char = charcode + 1;
               }
               break;
             }
           }
       }
+
       type1->encoding.code_first = min_char;
       type1->encoding.code_last  = max_char;
       type1->encoding.num_chars  = loader.num_chars;

@@ -95,7 +95,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_std_char_next( T1_CMapStd   cmap,
                          FT_UInt32   *pchar_code )
   {
@@ -179,7 +179,7 @@
 
 
     cmap->first   = encoding->code_first;
-    cmap->count   = (FT_UInt)( encoding->code_last - cmap->first + 1 );
+    cmap->count   = (FT_UInt)( encoding->code_last - cmap->first );
     cmap->indices = encoding->char_index;
 
     FT_ASSERT( cmap->indices != NULL );
@@ -213,7 +213,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_custom_char_next( T1_CMapCustom  cmap,
                             FT_UInt32     *pchar_code )
   {
@@ -312,7 +312,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_unicode_char_next( PS_Unicodes  unicodes,
                              FT_UInt32   *pchar_code )
   {

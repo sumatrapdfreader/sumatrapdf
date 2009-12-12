@@ -228,8 +228,12 @@
     if ( !bitmap || !bitmap->buffer )
       return FT_Err_Invalid_Argument;
 
-    xstr = FT_PIX_ROUND( xStrength ) >> 6;
-    ystr = FT_PIX_ROUND( yStrength ) >> 6;
+    if ( ( ( FT_PIX_ROUND( xStrength ) >> 6 ) > FT_INT_MAX ) ||
+         ( ( FT_PIX_ROUND( yStrength ) >> 6 ) > FT_INT_MAX ) )
+      return FT_Err_Invalid_Argument;
+       
+    xstr = (FT_Int)FT_PIX_ROUND( xStrength ) >> 6;
+    ystr = (FT_Int)FT_PIX_ROUND( yStrength ) >> 6;
 
     if ( xstr == 0 && ystr == 0 )
       return FT_Err_Ok;

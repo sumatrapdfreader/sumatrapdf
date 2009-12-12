@@ -240,6 +240,179 @@ FT_BEGIN_HEADER
 
 #endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Macro>                                                               */
+  /*    FT_DECLARE_DRIVER                                                  */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Used to create a forward declaration of a                          */
+  /*    FT_Driver_ClassRec stract instance.                                */
+  /*                                                                       */
+  /* <Macro>                                                               */
+  /*    FT_DEFINE_DRIVER                                                   */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Used to initialize an instance of FT_Driver_ClassRec struct.       */
+  /*                                                                       */
+  /*    When FT_CONFIG_OPTION_PIC is defined a Create funtion will need    */
+  /*    to called with a pointer where the allocated stracture is returned.*/
+  /*    And when it is no longer needed a Destroy function needs           */
+  /*    to be called to release that allocation.                           */
+  /*    fcinit.c (ft_create_default_module_classes) already contains       */
+  /*    a mechanism to call these functions for the default modules        */
+  /*    described in ftmodule.h                                            */
+  /*                                                                       */
+  /*    Notice that the created Create and Destroy functions call          */
+  /*    pic_init and pic_free function to allow you to manually allocate   */
+  /*    and initialize any additional global data, like module specific    */
+  /*    interface, and put them in the global pic container defined in     */
+  /*    ftpic.h. if you don't need them just implement the functions as    */
+  /*    empty to resolve the link error.                                   */
+  /*                                                                       */
+  /*    When FT_CONFIG_OPTION_PIC is not defined the struct will be        */
+  /*    allocated in the global scope (or the scope where the macro        */
+  /*    is used).                                                          */
+  /*                                                                       */
+#ifndef FT_CONFIG_OPTION_PIC
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+#define FT_DEFINE_DRIVERS_OLD_INTERNALS(a_,b_) \
+  a_, b_,
+#else
+  #define FT_DEFINE_DRIVERS_OLD_INTERNALS(a_,b_)
+#endif
+
+#define FT_DECLARE_DRIVER(class_)    \
+  FT_CALLBACK_TABLE                  \
+  const FT_Driver_ClassRec  class_;  
+
+#define FT_DEFINE_DRIVER(class_,                                             \
+                         flags_, size_, name_, version_, requires_,          \
+                         interface_, init_, done_, get_interface_,           \
+                         face_object_size_, size_object_size_,               \
+                         slot_object_size_, init_face_, done_face_,          \
+                         init_size_, done_size_, init_slot_, done_slot_,     \
+                         old_set_char_sizes_, old_set_pixel_sizes_,          \
+                         load_glyph_, get_kerning_, attach_file_,            \
+                         get_advances_, request_size_, select_size_ )        \
+  FT_CALLBACK_TABLE_DEF                                                      \
+  const FT_Driver_ClassRec class_ =                                          \
+  {                                                                          \
+    FT_DEFINE_ROOT_MODULE(flags_,size_,name_,version_,requires_,interface_,  \
+                          init_,done_,get_interface_)                        \
+                                                                             \
+    face_object_size_,                                                       \
+    size_object_size_,                                                       \
+    slot_object_size_,                                                       \
+                                                                             \
+    init_face_,                                                              \
+    done_face_,                                                              \
+                                                                             \
+    init_size_,                                                              \
+    done_size_,                                                              \
+                                                                             \
+    init_slot_,                                                              \
+    done_slot_,                                                              \
+                                                                             \
+    FT_DEFINE_DRIVERS_OLD_INTERNALS(old_set_char_sizes_, old_set_pixel_sizes_) \
+                                                                             \
+    load_glyph_,                                                             \
+                                                                             \
+    get_kerning_,                                                            \
+    attach_file_,                                                            \
+    get_advances_,                                                           \
+                                                                             \
+    request_size_,                                                           \
+    select_size_                                                             \
+  };
+
+#else /* FT_CONFIG_OPTION_PIC */ 
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+#define FT_DEFINE_DRIVERS_OLD_INTERNALS(a_,b_) \
+  clazz->set_char_sizes = a_; \
+  clazz->set_pixel_sizes = b_;
+#else
+  #define FT_DEFINE_DRIVERS_OLD_INTERNALS(a_,b_)
+#endif
+
+#define FT_DECLARE_DRIVER(class_)    FT_DECLARE_MODULE(class_)
+
+#define FT_DEFINE_DRIVER(class_,                                             \
+                         flags_, size_, name_, version_, requires_,          \
+                         interface_, init_, done_, get_interface_,           \
+                         face_object_size_, size_object_size_,               \
+                         slot_object_size_, init_face_, done_face_,          \
+                         init_size_, done_size_, init_slot_, done_slot_,     \
+                         old_set_char_sizes_, old_set_pixel_sizes_,          \
+                         load_glyph_, get_kerning_, attach_file_,            \
+                         get_advances_, request_size_, select_size_ )        \
+  void class_##_pic_free( FT_Library library );                              \
+  FT_Error class_##_pic_init( FT_Library library );                          \
+                                                                             \
+  void                                                                       \
+  FT_Destroy_Class_##class_( FT_Library        library,                      \
+                             FT_Module_Class*  clazz )                       \
+  {                                                                          \
+    FT_Memory       memory = library->memory;                                \
+    FT_Driver_Class dclazz = (FT_Driver_Class)clazz;                         \
+    class_##_pic_free( library );                                            \
+    if ( dclazz )                                                            \
+      FT_FREE( dclazz );                                                     \
+  }                                                                          \
+                                                                             \
+  FT_Error                                                                   \
+  FT_Create_Class_##class_( FT_Library        library,                       \
+                            FT_Module_Class**  output_class )                \
+  {                                                                          \
+    FT_Driver_Class  clazz;                                                  \
+    FT_Error         error;                                                  \
+    FT_Memory        memory = library->memory;                               \
+                                                                             \
+    if ( FT_ALLOC( clazz, sizeof(*clazz) ) )                                 \
+      return error;                                                          \
+                                                                             \
+    error = class_##_pic_init( library );                                    \
+    if(error)                                                                \
+    {                                                                        \
+      FT_FREE( clazz );                                                      \
+      return error;                                                          \
+    }                                                                        \
+                                                                             \
+    FT_DEFINE_ROOT_MODULE(flags_,size_,name_,version_,requires_,interface_,  \
+                          init_,done_,get_interface_)                        \
+                                                                             \
+    clazz->face_object_size    = face_object_size_;                          \
+    clazz->size_object_size    = size_object_size_;                          \
+    clazz->slot_object_size    = slot_object_size_;                          \
+                                                                             \
+    clazz->init_face           = init_face_;                                 \
+    clazz->done_face           = done_face_;                                 \
+                                                                             \
+    clazz->init_size           = init_size_;                                 \
+    clazz->done_size           = done_size_;                                 \
+                                                                             \
+    clazz->init_slot           = init_slot_;                                 \
+    clazz->done_slot           = done_slot_;                                 \
+                                                                             \
+    FT_DEFINE_DRIVERS_OLD_INTERNALS(old_set_char_sizes_, old_set_pixel_sizes_) \
+                                                                             \
+    clazz->load_glyph          = load_glyph_;                                \
+                                                                             \
+    clazz->get_kerning         = get_kerning_;                               \
+    clazz->attach_file         = attach_file_;                               \
+    clazz->get_advances        = get_advances_;                              \
+                                                                             \
+    clazz->request_size        = request_size_;                              \
+    clazz->select_size         = select_size_;                               \
+                                                                             \
+    *output_class = (FT_Module_Class*)clazz;                                 \
+    return FT_Err_Ok;                                                        \
+  }                
+
+
+#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

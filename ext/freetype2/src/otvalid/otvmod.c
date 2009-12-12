@@ -82,11 +82,24 @@
     FT_Byte* volatile         math;
     FT_ULong                  len_base, len_gdef, len_gpos, len_gsub, len_jstf;
     FT_ULong                  len_math;
+    FT_UInt                   num_glyphs = (FT_UInt)face->num_glyphs;
     FT_ValidatorRec volatile  valid;
 
 
     base     = gdef     = gpos     = gsub     = jstf     = math     = NULL;
     len_base = len_gdef = len_gpos = len_gsub = len_jstf = len_math = 0;
+
+    /*
+     * XXX: OpenType tables cannot handle 32-bit glyph index,
+     *      although broken TrueType can have 32-bit glyph index.
+     */
+    if ( face->num_glyphs > 0xFFFFL )
+    {
+      FT_TRACE1(( "otv_validate: Invalid glyphs index (0x0000FFFF - 0x%08x) ",
+                  face->num_glyphs ));
+      FT_TRACE1(( "are not handled by OpenType tables\n" ));
+      num_glyphs = 0xFFFF;
+    }
 
     /* load tables */
 
@@ -148,7 +161,7 @@
     {
       ft_validator_init( &valid, gpos, gpos + len_gpos, FT_VALIDATE_DEFAULT );
       if ( ft_setjmp( valid.jump_buffer ) == 0 )
-        otv_GPOS_validate( gpos, face->num_glyphs, &valid );
+        otv_GPOS_validate( gpos, num_glyphs, &valid );
       error = valid.error;
       if ( error )
         goto Exit;
@@ -158,7 +171,7 @@
     {
       ft_validator_init( &valid, gsub, gsub + len_gsub, FT_VALIDATE_DEFAULT );
       if ( ft_setjmp( valid.jump_buffer ) == 0 )
-        otv_GSUB_validate( gsub, face->num_glyphs, &valid );
+        otv_GSUB_validate( gsub, num_glyphs, &valid );
       error = valid.error;
       if ( error )
         goto Exit;
@@ -168,7 +181,7 @@
     {
       ft_validator_init( &valid, gdef, gdef + len_gdef, FT_VALIDATE_DEFAULT );
       if ( ft_setjmp( valid.jump_buffer ) == 0 )
-        otv_GDEF_validate( gdef, gsub, gpos, face->num_glyphs, &valid );
+        otv_GDEF_validate( gdef, gsub, gpos, num_glyphs, &valid );
       error = valid.error;
       if ( error )
         goto Exit;
@@ -178,7 +191,7 @@
     {
       ft_validator_init( &valid, jstf, jstf + len_jstf, FT_VALIDATE_DEFAULT );
       if ( ft_setjmp( valid.jump_buffer ) == 0 )
-        otv_JSTF_validate( jstf, gsub, gpos, face->num_glyphs, &valid );
+        otv_JSTF_validate( jstf, gsub, gpos, num_glyphs, &valid );
       error = valid.error;
       if ( error )
         goto Exit;
@@ -188,7 +201,7 @@
     {
       ft_validator_init( &valid, math, math + len_math, FT_VALIDATE_DEFAULT );
       if ( ft_setjmp( valid.jump_buffer ) == 0 )
-        otv_MATH_validate( math, face->num_glyphs, &valid );
+        otv_MATH_validate( math, num_glyphs, &valid );
       error = valid.error;
       if ( error )
         goto Exit;

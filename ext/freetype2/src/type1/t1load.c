@@ -65,6 +65,7 @@
 #include FT_CONFIG_CONFIG_H
 #include FT_MULTIPLE_MASTERS_H
 #include FT_INTERNAL_TYPE1_TYPES_H
+#include FT_INTERNAL_CALC_H
 
 #include "t1load.h"
 #include "t1errors.h"
@@ -213,10 +214,6 @@
   }
 
 
-#define FT_INT_TO_FIXED( a )  ( (a) << 16 )
-#define FT_FIXED_TO_INT( a )  ( FT_RoundFix( a ) >> 16 )
-
-
   /*************************************************************************/
   /*                                                                       */
   /* Given a normalized (blend) coordinate, figure out the design          */
@@ -230,7 +227,7 @@
 
 
     if ( ncv <= axismap->blend_points[0] )
-      return FT_INT_TO_FIXED( axismap->design_points[0] );
+      return INT_TO_FIXED( axismap->design_points[0] );
 
     for ( j = 1; j < axismap->num_points; ++j )
     {
@@ -241,7 +238,7 @@
                                  axismap->blend_points[j] -
                                    axismap->blend_points[j - 1] );
 
-        return FT_INT_TO_FIXED( axismap->design_points[j - 1] ) +
+        return INT_TO_FIXED( axismap->design_points[j - 1] ) +
                  FT_MulDiv( t,
                             axismap->design_points[j] -
                               axismap->design_points[j - 1],
@@ -249,7 +246,7 @@
       }
     }
 
-    return FT_INT_TO_FIXED( axismap->design_points[axismap->num_points - 1] );
+    return INT_TO_FIXED( axismap->design_points[axismap->num_points - 1] );
   }
 
 
@@ -331,8 +328,8 @@
     for ( i = 0 ; i < mmaster.num_axis; ++i )
     {
       mmvar->axis[i].name    = mmaster.axis[i].name;
-      mmvar->axis[i].minimum = FT_INT_TO_FIXED( mmaster.axis[i].minimum);
-      mmvar->axis[i].maximum = FT_INT_TO_FIXED( mmaster.axis[i].maximum);
+      mmvar->axis[i].minimum = INT_TO_FIXED( mmaster.axis[i].minimum);
+      mmvar->axis[i].maximum = INT_TO_FIXED( mmaster.axis[i].maximum);
       mmvar->axis[i].def     = ( mmvar->axis[i].minimum +
                                    mmvar->axis[i].maximum ) / 2;
                             /* Does not apply.  But this value is in range */
@@ -502,7 +499,7 @@
      if ( num_coords <= 4 && num_coords > 0 )
      {
        for ( i = 0; i < num_coords; ++i )
-         lcoords[i] = FT_FIXED_TO_INT( coords[i] );
+         lcoords[i] = FIXED_TO_INT( coords[i] );
        error = T1_Set_MM_Design( face, num_coords, lcoords );
      }
 
@@ -654,8 +651,8 @@
     }
     if ( num_designs == 0 || num_designs > T1_MAX_MM_DESIGNS )
     {
-      FT_ERROR(( "parse_blend_design_positions:" ));
-      FT_ERROR(( " incorrect number of designs: %d\n",
+      FT_ERROR(( "parse_blend_design_positions:"
+                 " incorrect number of designs: %d\n",
                  num_designs ));
       error = T1_Err_Invalid_File_Format;
       goto Exit;
@@ -687,8 +684,8 @@
         {
           if ( n_axis <= 0 || n_axis > T1_MAX_MM_AXIS )
           {
-            FT_ERROR(( "parse_blend_design_positions:" ));
-            FT_ERROR(( "  invalid number of axes: %d\n",
+            FT_ERROR(( "parse_blend_design_positions:"
+                       " invalid number of axes: %d\n",
                        n_axis ));
             error = T1_Err_Invalid_File_Format;
             goto Exit;
@@ -842,8 +839,8 @@
     }
     if ( num_designs == 0 || num_designs > T1_MAX_MM_DESIGNS )
     {
-      FT_ERROR(( "parse_weight_vector:" ));
-      FT_ERROR(( " incorrect number of designs: %d\n",
+      FT_ERROR(( "parse_weight_vector:"
+                 " incorrect number of designs: %d\n",
                  num_designs ));
       error = T1_Err_Invalid_File_Format;
       goto Exit;
@@ -859,9 +856,9 @@
     else if ( blend->num_designs != (FT_UInt)num_designs )
     {
       FT_ERROR(( "parse_weight_vector:"
-                 " /BlendDesignPosition and /WeightVector have\n" ));
-      FT_ERROR(( "                    "
-                 " different number of elements!\n" ));
+                 " /BlendDesignPosition and /WeightVector have\n"
+                 "                    "
+                 " different number of elements\n" ));
       error = T1_Err_Invalid_File_Format;
       goto Exit;
     }
@@ -1143,7 +1140,7 @@
     cur = parser->root.cursor;
     if ( cur >= limit )
     {
-      FT_ERROR(( "parse_encoding: out of bounds!\n" ));
+      FT_ERROR(( "parse_encoding: out of bounds\n" ));
       parser->root.error = T1_Err_Invalid_File_Format;
       return;
     }
@@ -2156,7 +2153,7 @@
 #endif
       if ( !loader.charstrings.init )
       {
-        FT_ERROR(( "T1_Open_Face: no `/CharStrings' array in face!\n" ));
+        FT_ERROR(( "T1_Open_Face: no `/CharStrings' array in face\n" ));
         error = T1_Err_Invalid_File_Format;
       }
 
@@ -2185,8 +2182,8 @@
       /* the index is then stored in type1.encoding.char_index, and */
       /* a the name to type1.encoding.char_name                     */
 
-      min_char = +32000;
-      max_char = -32000;
+      min_char = 0;
+      max_char = 0;
 
       charcode = 0;
       for ( ; charcode < loader.encoding_table.max_elems; charcode++ )
@@ -2212,23 +2209,12 @@
               {
                 if ( charcode < min_char )
                   min_char = charcode;
-                if ( charcode > max_char )
-                  max_char = charcode;
+                if ( charcode >= max_char )
+                  max_char = charcode + 1;
               }
               break;
             }
           }
-      }
-
-      /*
-       *  Yes, this happens: Certain PDF-embedded fonts have only a
-       *  `.notdef' glyph defined!
-       */
-
-      if ( min_char > max_char )
-      {
-        min_char = 0;
-        max_char = loader.encoding_table.max_elems;
       }
 
       type1->encoding.code_first = min_char;

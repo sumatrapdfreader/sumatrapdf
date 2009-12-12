@@ -348,14 +348,18 @@
     /* free bitmap buffer if needed */
     ft_glyphslot_free_bitmap( slot );
 
-    /* free glyph loader */
-    if ( FT_DRIVER_USES_OUTLINES( driver ) )
+    /* slot->internal might be NULL in out-of-memory situations */
+    if ( slot->internal )
     {
-      FT_GlyphLoader_Done( slot->internal->loader );
-      slot->internal->loader = 0;
-    }
+      /* free glyph loader */
+      if ( FT_DRIVER_USES_OUTLINES( driver ) )
+      {
+        FT_GlyphLoader_Done( slot->internal->loader );
+        slot->internal->loader = 0;
+      }
 
-    FT_FREE( slot->internal );
+      FT_FREE( slot->internal );
+    }
   }
 
 
@@ -588,27 +592,29 @@
      * Determine whether we need to auto-hint or not.
      * The general rules are:
      *
-     * - Do only auto-hinting if we have a hinter module,
-     *   a scalable font format dealing with outlines,
-     *   and no transforms except simple slants.
+     * - Do only auto-hinting if we have a hinter module, a scalable font
+     *   format dealing with outlines, and no transforms except simple
+     *   slants and/or rotations by integer multiples of 90 degrees.
      *
-     * - Then, autohint if FT_LOAD_FORCE_AUTOHINT is set
-     *   or if we don't have a native font hinter.
+     * - Then, auto-hint if FT_LOAD_FORCE_AUTOHINT is set or if we don't
+     *   have a native font hinter.
      *
      * - Otherwise, auto-hint for LIGHT hinting mode.
      *
-     * - Exception: The font is `tricky' and requires
-     *   the native hinter to load properly.
+     * - Exception: The font is `tricky' and requires the native hinter to
+     *   load properly.
      */
 
-    if ( hinter                                   &&
-         !( load_flags & FT_LOAD_NO_HINTING )     &&
-         !( load_flags & FT_LOAD_NO_AUTOHINT )    &&
-         FT_DRIVER_IS_SCALABLE( driver )          &&
-         FT_DRIVER_USES_OUTLINES( driver )        &&
-         !FT_IS_TRICKY( face )                    &&
-         face->internal->transform_matrix.yy > 0  &&
-         face->internal->transform_matrix.yx == 0 )
+    if ( hinter                                           &&
+         !( load_flags & FT_LOAD_NO_HINTING )             &&
+         !( load_flags & FT_LOAD_NO_AUTOHINT )            &&
+         FT_DRIVER_IS_SCALABLE( driver )                  &&
+         FT_DRIVER_USES_OUTLINES( driver )                &&
+         !FT_IS_TRICKY( face )                            &&
+         ( ( face->internal->transform_matrix.yx == 0 &&
+             face->internal->transform_matrix.xx != 0 ) ||
+           ( face->internal->transform_matrix.xx == 0 &&
+             face->internal->transform_matrix.yx != 0 ) ) )
     {
       if ( ( load_flags & FT_LOAD_FORCE_AUTOHINT ) ||
            !FT_DRIVER_HAS_HINTER( driver )         )
@@ -2398,12 +2404,24 @@
   ft_synthesize_vertical_metrics( FT_Glyph_Metrics*  metrics,
                                   FT_Pos             advance )
   {
+    FT_Pos  height = metrics->height;
+
+
+    /* compensate for glyph with bbox above/below the baseline */
+    if ( metrics->horiBearingY < 0 )
+    {
+      if ( height < metrics->horiBearingY )
+        height = metrics->horiBearingY;
+    }
+    else if ( metrics->horiBearingY > 0 )
+      height -= metrics->horiBearingY;
+
     /* the factor 1.2 is a heuristical value */
     if ( !advance )
-      advance = metrics->height * 12 / 10;
+      advance = height * 12 / 10;
 
-    metrics->vertBearingX = -( metrics->width / 2 );
-    metrics->vertBearingY = ( advance - metrics->height ) / 2;
+    metrics->vertBearingX = metrics->horiBearingX - metrics->horiAdvance / 2;
+    metrics->vertBearingY = ( advance - height ) / 2;
     metrics->vertAdvance  = advance;
   }
 
@@ -3048,7 +3066,12 @@
       FT_CMap  cmap = FT_CMAP( face->charmap );
 
 
-      result = cmap->clazz->char_index( cmap, charcode );
+      if ( charcode > 0xFFFFFFFFUL )
+      {
+        FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+        FT_TRACE1(( " 0x%x is truncated\n", charcode ));
+      }
+      result = cmap->clazz->char_index( cmap, (FT_UInt32)charcode );
     }
     return  result;
   }
@@ -3128,8 +3151,20 @@
         FT_CMap  vcmap = FT_CMAP( charmap );
 
 
-        result = vcmap->clazz->char_var_index( vcmap, ucmap, charcode,
-                                               variantSelector );
+        if ( charcode > 0xFFFFFFFFUL )
+        {
+          FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+          FT_TRACE1(( " 0x%x is truncated\n", charcode ));
+        }
+        if ( variantSelector > 0xFFFFFFFFUL )
+        {
+          FT_TRACE1(( "FT_Get_Char_Index: too large variantSelector" ));
+          FT_TRACE1(( " 0x%x is truncated\n", variantSelector ));
+        }
+
+        result = vcmap->clazz->char_var_index( vcmap, ucmap,
+                                               (FT_UInt32)charcode,
+                                               (FT_UInt32)variantSelector );
       }
     }
 
@@ -3157,8 +3192,20 @@
         FT_CMap  vcmap = FT_CMAP( charmap );
 
 
-        result = vcmap->clazz->char_var_default( vcmap, charcode,
-                                                 variantSelector );
+        if ( charcode > 0xFFFFFFFFUL )
+        {
+          FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+          FT_TRACE1(( " 0x%x is truncated\n", charcode ));
+        }
+        if ( variantSelector > 0xFFFFFFFFUL )
+        {
+          FT_TRACE1(( "FT_Get_Char_Index: too large variantSelector" ));
+          FT_TRACE1(( " 0x%x is truncated\n", variantSelector ));
+        }
+
+        result = vcmap->clazz->char_var_default( vcmap,
+                                                 (FT_UInt32)charcode,
+                                                 (FT_UInt32)variantSelector );
       }
     }
 
@@ -3213,7 +3260,14 @@
         FT_Memory  memory = FT_FACE_MEMORY( face );
 
 
-        result = vcmap->clazz->charvariant_list( vcmap, memory, charcode );
+        if ( charcode > 0xFFFFFFFFUL )
+        {
+          FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+          FT_TRACE1(( " 0x%x is truncated\n", charcode ));
+        }
+
+        result = vcmap->clazz->charvariant_list( vcmap, memory,
+                                                 (FT_UInt32)charcode );
       }
     }
     return result;
@@ -3240,8 +3294,14 @@
         FT_Memory  memory = FT_FACE_MEMORY( face );
 
 
+        if ( variantSelector > 0xFFFFFFFFUL )
+        {
+          FT_TRACE1(( "FT_Get_Char_Index: too large variantSelector" ));
+          FT_TRACE1(( " 0x%x is truncated\n", variantSelector ));
+        }
+
         result = vcmap->clazz->variantchar_list( vcmap, memory,
-                                                 variantSelector );
+                                                 (FT_UInt32)variantSelector );
       }
     }
 
@@ -3291,7 +3351,7 @@
       ((FT_Byte*)buffer)[0] = 0;
 
     if ( face                                     &&
-         glyph_index <= (FT_UInt)face->num_glyphs &&
+         (FT_Long)glyph_index <= face->num_glyphs &&
          FT_HAS_GLYPH_NAMES( face )               )
     {
       FT_Service_GlyphDict  service;
@@ -3391,6 +3451,7 @@
                       FT_ULong  *length )
   {
     FT_Service_SFNT_Table  service;
+    FT_ULong               offset;
 
 
     if ( !face || !FT_IS_SFNT( face ) )
@@ -3400,7 +3461,7 @@
     if ( service == NULL )
       return FT_Err_Unimplemented_Feature;
 
-    return service->table_info( face, table_index, tag, length );
+    return service->table_info( face, table_index, tag, &offset, length );
   }
 
 
@@ -3725,7 +3786,7 @@
         while ( renderer )
         {
           error = renderer->render( renderer, slot, render_mode, NULL );
-          if ( !error ||
+          if ( !error                                               ||
                FT_ERROR_BASE( error ) != FT_Err_Cannot_Render_Glyph )
             break;
 
@@ -4123,6 +4184,13 @@
 
     library->memory = memory;
 
+#ifdef FT_CONFIG_OPTION_PIC
+    /* initialize position independent code containers */
+    error = ft_pic_container_init( library );
+    if ( error )
+      goto Fail;
+#endif
+
     /* allocate the render pool */
     library->raster_pool_size = FT_RENDER_POOL_SIZE;
 #if FT_RENDER_POOL_SIZE > 0
@@ -4130,12 +4198,19 @@
       goto Fail;
 #endif
 
+    library->version_major = FREETYPE_MAJOR;
+    library->version_minor = FREETYPE_MINOR;
+    library->version_patch = FREETYPE_PATCH;
+
     /* That's ok now */
     *alibrary = library;
 
     return FT_Err_Ok;
 
   Fail:
+#ifdef FT_CONFIG_OPTION_PIC
+    ft_pic_container_destroy( library );
+#endif
     FT_FREE( library );
     return error;
   }
@@ -4216,7 +4291,7 @@
         {
           FT_Done_Face( FT_FACE( faces->head->data ) );
           if ( faces->head )
-            FT_ERROR(( "FT_Done_Library: failed to free some faces\n" ));
+            FT_TRACE0(( "FT_Done_Library: failed to free some faces\n" ));
         }
       }
     }
@@ -4251,6 +4326,11 @@
     /* Destroy raster objects */
     FT_FREE( library->raster_pool );
     library->raster_pool_size = 0;
+
+#ifdef FT_CONFIG_OPTION_PIC
+    /* Destroy pic container contents */
+    ft_pic_container_destroy( library );
+#endif
 
     FT_FREE( library );
     return FT_Err_Ok;

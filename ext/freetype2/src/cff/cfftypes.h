@@ -130,7 +130,7 @@ FT_BEGIN_HEADER
     /* these should only be used for the top-level font dictionary */
     FT_UInt    cid_registry;
     FT_UInt    cid_ordering;
-    FT_ULong   cid_supplement;
+    FT_Long    cid_supplement;
 
     FT_Long    cid_font_version;
     FT_Long    cid_font_revision;

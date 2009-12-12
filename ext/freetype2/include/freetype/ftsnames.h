@@ -7,7 +7,7 @@
 /*                                                                         */
 /*    This is _not_ used to retrieve glyph names!                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2009 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -147,7 +147,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Note>                                                                */
   /*    The `string' array returned in the `aname' structure is not        */
-  /*    null-terminated.                                                   */
+  /*    null-terminated.  The application should deallocate it if it is no */
+  /*    longer in use.                                                     */
   /*                                                                       */
   /*    Use @FT_Get_Sfnt_Name_Count to get the total number of available   */
   /*    `name' table entries, then do a loop until you get the right       */

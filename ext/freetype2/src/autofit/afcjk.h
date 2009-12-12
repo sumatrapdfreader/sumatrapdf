@@ -27,8 +27,7 @@ FT_BEGIN_HEADER
 
   /* the CJK-specific script class */
 
-  FT_CALLBACK_TABLE const AF_ScriptClassRec
-  af_cjk_script_class;
+  AF_DECLARE_SCRIPT_CLASS(af_cjk_script_class)
 
 
   FT_LOCAL( FT_Error )

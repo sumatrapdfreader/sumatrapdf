@@ -46,6 +46,31 @@ FT_BEGIN_HEADER
     FT_CID_GetCIDFromGlyphIndexFunc           get_cid_from_glyph_index;
   };
 
+#ifndef FT_CONFIG_OPTION_PIC
+
+#define FT_DEFINE_SERVICE_CIDREC(class_, get_ros_,                           \
+        get_is_cid_, get_cid_from_glyph_index_ )                             \
+  static const FT_Service_CIDRec class_ =                                    \
+  {                                                                          \
+    get_ros_, get_is_cid_, get_cid_from_glyph_index_                         \
+  };
+
+#else /* FT_CONFIG_OPTION_PIC */ 
+
+#define FT_DEFINE_SERVICE_CIDREC(class_, get_ros_,                           \
+        get_is_cid_, get_cid_from_glyph_index_ )                             \
+  void                                                                       \
+  FT_Init_Class_##class_( FT_Library library,                                \
+                          FT_Service_CIDRec* clazz)                          \
+  {                                                                          \
+    FT_UNUSED(library);                                                      \
+    clazz->get_ros = get_ros_;                                               \
+    clazz->get_is_cid = get_is_cid_;                                         \
+    clazz->get_cid_from_glyph_index = get_cid_from_glyph_index_;             \
+  } 
+
+#endif /* FT_CONFIG_OPTION_PIC */ 
+
   /* */
 
 

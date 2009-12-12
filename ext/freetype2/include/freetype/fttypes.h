@@ -167,7 +167,7 @@ FT_BEGIN_HEADER
   /*    FT_Tag                                                             */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A typedef for 32-bit tags (as used in the SFNT format).             */
+  /*    A typedef for 32-bit tags (as used in the SFNT format).            */
   /*                                                                       */
   typedef FT_UInt32  FT_Tag;
 
@@ -474,6 +474,7 @@ FT_BEGIN_HEADER
   /*    this macro.                                                        */
   /*                                                                       */
 #define FT_MAKE_TAG( _x1, _x2, _x3, _x4 ) \
+          (FT_Tag)                        \
           ( ( (FT_ULong)_x1 << 24 ) |     \
             ( (FT_ULong)_x2 << 16 ) |     \
             ( (FT_ULong)_x3 <<  8 ) |     \
