@@ -125,9 +125,11 @@ static const struct
 #define TTC_VERSION1	0x00010000
 #define TTC_VERSION2	0x00020000
 
+#define MAX_FACENAME	128
+
 typedef struct pdf_fontmapMS_s
 {
-	char fontface[128];
+	char fontface[MAX_FACENAME];
 	char fontpath[MAX_PATH];
 	int index;
 } pdf_fontmapMS;
@@ -141,8 +143,7 @@ typedef struct pdf_fontlistMS_s
 
 typedef struct _tagTT_OFFSET_TABLE
 {
-	USHORT	uMajorVersion;
-	USHORT	uMinorVersion;
+	ULONG	uVersion;
 	USHORT	uNumOfTables;
 	USHORT	uSearchRange;
 	USHORT	uEntrySelector;
@@ -245,31 +246,6 @@ sortcompare(const void *elem1, const void *elem2)
 		return -1;
 
 	return stricmp(val1->fontface, val2->fontface);
-}
-
-static void
-removeredundancy(pdf_fontlistMS *fl)
-{
-	int i;
-	int roffset = 0;
-	int redundancy_count = 0;
-
-	qsort(fl->fontmap, fl->len, sizeof(pdf_fontmapMS), sortcompare);
-	for (i = 0; i < fl->len - 1; ++i)
-	{
-		if (!strcmp(fl->fontmap[i].fontface,fl->fontmap[i+1].fontface))
-		{
-			fl->fontmap[i].fontface[0] = 0;
-			++redundancy_count;
-		}
-	}
-	qsort(fl->fontmap, fl->len, sizeof(pdf_fontmapMS), sortcompare);
-	fl->len -= redundancy_count;
-#if 0
-	for (i = 0; i < fl->len; ++i)
-		fprintf(stdout,"%s , %s , %d\n",fl->fontmap[i].fontface,
-			fl->fontmap[i].fontpath,fl->fontmap[i].index);
-#endif
 }
 
 /* source and dest can be same */
@@ -398,71 +374,105 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	TT_NAME_TABLE_HEADER ttNTHeader;
 	TT_NAME_RECORD ttRecord;
 
-	char szTemp[4096];
-	int i;
+	char szTemp[MAX_FACENAME * 2], szPSName[MAX_FACENAME] = { 0 };
+	char szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
+	int i, count, tblOffset;
 
 	fz_seek(file,offset,0);
 	err = safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
 	if (err) return err;
 
-	ttOffsetTable.uNumOfTables = SWAPWORD(ttOffsetTable.uNumOfTables);
-	ttOffsetTable.uMajorVersion = SWAPWORD(ttOffsetTable.uMajorVersion);
-	ttOffsetTable.uMinorVersion = SWAPWORD(ttOffsetTable.uMinorVersion);
-
 	// check if this is a TrueType font and the version is 1.0
-	if (ttOffsetTable.uMajorVersion != 1 || ttOffsetTable.uMinorVersion != 0)
+	if (SWAPLONG(ttOffsetTable.uVersion) != TTC_VERSION1)
 		return fz_throw("fonterror : invalid font version");
 
-	tblDir.uLength = 0;
-	for (i = 0; i < ttOffsetTable.uNumOfTables; i++)
+	// determine the name table's offset by iterating through the offset table
+	count = SWAPWORD(ttOffsetTable.uNumOfTables);
+	for (i = 0; i < count; i++)
 	{
 		err = safe_read(file, (char *)&tblDir, sizeof(TT_TABLE_DIRECTORY));
 		if (err) return err;
 		if (!tblDir.uTag || SWAPLONG(tblDir.uTag) == TTAG_name)
 			break;
 	}
-	if (!tblDir.uLength)
-		return err;
-	tblDir.uOffset = SWAPLONG(tblDir.uOffset);
-	tblDir.uLength = SWAPLONG(tblDir.uLength);
+	if (count == i || !tblDir.uTag)
+		return fz_throw("fonterror : nameless font");
+	tblOffset = SWAPLONG(tblDir.uOffset);
 
-	fz_seek(file, tblDir.uOffset,0);
+	// read the 'name' table for record count and offsets
+	fz_seek(file, tblOffset, 0);
 	err = safe_read(file, (char *)&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER));
 	if (err) return err;
+	offset = tblOffset + sizeof(TT_NAME_TABLE_HEADER);
+	tblOffset += SWAPWORD(ttNTHeader.uStorageOffset);
 
-	ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
-	ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
-
-	offset = tblDir.uOffset + sizeof(TT_NAME_TABLE_HEADER);
-
-	for (i = 0; i < ttNTHeader.uNRCount && err == fz_okay; ++i)
+	// read through the strings for PostScript name and font family
+	count = SWAPWORD(ttNTHeader.uNRCount);
+	for (i = 0; i < count; i++)
 	{
-		fz_seek(file, offset + sizeof(TT_NAME_RECORD)*i, 0);
+		short nameId;
+		char *target;
+		int stringLength;
+
+		fz_seek(file, offset + i * sizeof(TT_NAME_RECORD), 0);
 		err = safe_read(file, (char *)&ttRecord, sizeof(TT_NAME_RECORD));
 		if (err) return err;
 
-		ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
-		ttRecord.uLanguageID = SWAPWORD(ttRecord.uLanguageID);
+		// ignore non-English strings
+		if (ttRecord.uLanguageID && SWAPWORD(ttRecord.uLanguageID) != 0x409)
+			continue;
+		// ignore empty and overlong strings
+		stringLength = SWAPWORD(ttRecord.uStringLength);
+		if (stringLength == 0 || stringLength >= sizeof(szTemp))
+			continue;
+		// ignore names other than font (sub)family and PostScript name
+		nameId = SWAPWORD(ttRecord.uNameID);
+		if (TT_NAME_ID_FONT_FAMILY == nameId)
+			target = szTTName;
+		else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
+			target = szStyle;
+		else if (TT_NAME_ID_PS_NAME == nameId)
+			target = szPSName;
+		else
+			continue;
 
-		if (ttRecord.uNameID == TT_NAME_ID_PS_NAME)
-		{
-			ttRecord.uPlatformID = SWAPWORD(ttRecord.uPlatformID);
-			ttRecord.uEncodingID = SWAPWORD(ttRecord.uEncodingID);
-			ttRecord.uStringLength = SWAPWORD(ttRecord.uStringLength);
-			ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
-
-			fz_seek(file, tblDir.uOffset + ttRecord.uStringOffset + ttNTHeader.uStorageOffset, 0);
-			err = safe_read(file, szTemp, ttRecord.uStringLength);
-			if (err) return err;
-
-			err = decodeplatformstring(ttRecord.uPlatformID, ttRecord.uEncodingID,
-				szTemp, ttRecord.uStringLength, szTemp, sizeof(szTemp));
-			if (err == fz_okay)
-				err = insertmapping(&fontlistMS, szTemp, path, index);
-		}
+		fz_seek(file, tblOffset + SWAPWORD(ttRecord.uStringOffset), 0);
+		err = safe_read(file, szTemp, stringLength);
+		if (!err)
+			err = decodeplatformstring(SWAPWORD(ttRecord.uPlatformID), SWAPWORD(ttRecord.uEncodingID),
+				szTemp, stringLength, target, MAX_FACENAME);
+		if (err) return err;
 	}
 
-	return err;
+	if (szPSName[0])
+	{
+		err = insertmapping(&fontlistMS, szPSName, path, index);
+		if (err) return err;
+	}
+	if (szTTName[0])
+	{
+		// derive a PostScript-like name and add it, if it's different from the font's
+		// included PostScript name; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=376
+		char *p1, *p2;
+		// append the font's subfamily, unless it's a Regular font
+		if (szStyle[0] && stricmp(szStyle, "Regular") != 0)
+		{
+			strlcat(szTTName, "-", MAX_FACENAME);
+			strlcat(szTTName, szStyle, MAX_FACENAME);
+		}
+		// remove all spaces from the font name
+		for (p2 = p1 = szTTName; *p2; p2++)
+			if (!isspace(*p2))
+				*p1++ = *p2;
+		*p1 = 0;
+		// compare the two names before adding this one
+		if (lookupcompare(szTTName, szPSName))
+		{
+			err = insertmapping(&fontlistMS, szTTName, path, index);
+			if (err) return err;
+		}
+	}
+	return fz_okay;
 }
 
 static fz_error
@@ -481,52 +491,44 @@ parseTTFs(char *path)
 static fz_error
 parseTTCs(char *path)
 {
-	fz_error err = fz_okay;
 	fz_stream *file = nil;
-	FONT_COLLECTION fontcollectioin;
-	ULONG i;
+	FONT_COLLECTION fontcollection;
+	ULONG i, numFonts, *offsettable = nil;
 
-	err = fz_openrfile(&file, path);
+	fz_error err = fz_openrfile(&file, path);
 	if (err) goto cleanup;
 
-	err = safe_read(file, (char *)&fontcollectioin, sizeof(FONT_COLLECTION));
+	err = safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));
 	if (err) goto cleanup;
-	if (SWAPLONG(fontcollectioin.Tag) == TTAG_ttcf)
-	{
-		fontcollectioin.Version = SWAPLONG(fontcollectioin.Version);
-		fontcollectioin.NumFonts = SWAPLONG(fontcollectioin.NumFonts);
-		if (fontcollectioin.Version == TTC_VERSION1 ||
-			fontcollectioin.Version == TTC_VERSION2 )
-		{
-			ULONG *offsettable = fz_malloc(sizeof(ULONG)*fontcollectioin.NumFonts);
-			if (offsettable == nil)
-			{
-				err = fz_throw("out of memory");
-				goto cleanup;
-			}
-
-			err = safe_read(file, (char *)offsettable, sizeof(ULONG) * fontcollectioin.NumFonts);
-			if (err) goto cleanup;
-			for (i = 0; i < fontcollectioin.NumFonts; ++i)
-			{
-				offsettable[i] = SWAPLONG(offsettable[i]);
-				parseTTF(file,offsettable[i],i,path);
-			}
-			fz_free(offsettable);
-		}
-		else
-		{
-			err = fz_throw("fonterror : invalid version");
-			goto cleanup;
-		}
-	}
-	else
+	if (SWAPLONG(fontcollection.Tag) != TTAG_ttcf)
 	{
 		err = fz_throw("fonterror : wrong format");
 		goto cleanup;
 	}
 
+	if (SWAPLONG(fontcollection.Version) != TTC_VERSION1 && SWAPLONG(fontcollection.Version) != TTC_VERSION2)
+	{
+		err = fz_throw("fonterror : invalid version");
+		goto cleanup;
+	}
+
+	numFonts = SWAPLONG(fontcollection.NumFonts);
+	offsettable = fz_malloc(numFonts * sizeof(ULONG));
+	if (offsettable == nil)
+	{
+		err = fz_throw("out of memory");
+		goto cleanup;
+	}
+
+	err = safe_read(file, (char *)offsettable, numFonts * sizeof(ULONG));
+	for (i = 0; i < numFonts && !err; i++)
+	{
+		err = parseTTF(file, SWAPLONG(offsettable[i]), i, path);
+	}
+
 cleanup:
+	if (offsettable)
+		fz_free(offsettable);
 	if (file)
 		fz_dropstream(file);
 
@@ -543,7 +545,7 @@ pdf_createfontlistMS()
 
 	// Get the proper directory path
 	GetWindowsDirectoryA(szFontDir, sizeof(szFontDir));
-	strcat(szFontDir,"\\Fonts\\*.?t?");
+	strlcat(szFontDir,"\\Fonts\\*.?t?", MAX_PATH);
 
 	hList = FindFirstFileA(szFontDir, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
@@ -573,7 +575,8 @@ pdf_createfontlistMS()
 	} while (FindNextFileA(hList, &FileData));
 	FindClose(hList);
 
-	removeredundancy(&fontlistMS);
+	// sort the font list, so that it can be searched binarily
+	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), sortcompare);
 	// TODO: make "TimesNewRomanPSMT" default substitute font?
 
 	return fz_okay;
