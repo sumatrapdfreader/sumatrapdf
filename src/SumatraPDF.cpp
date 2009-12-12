@@ -5429,14 +5429,17 @@ static void OnChar(WindowInfo *win, int key)
         bool alreadyFacing = displayModeFacing(win->dm->displayMode());
         int currPage = win->dm->currentPageNo();
 
-        DisplayMode newMode = DM_CONTINUOUS_BOOK_VIEW;
+        DisplayMode newMode = DM_BOOK_VIEW;
         if (displayModeShowCover(win->dm->displayMode()))
-            newMode = DM_CONTINUOUS_FACING;
+            newMode = DM_FACING;
+        if (displayModeContinuous(win->dm->displayMode()))
+            newMode = DM_BOOK_VIEW == newMode ? DM_CONTINUOUS_BOOK_VIEW : DM_CONTINUOUS_FACING;
         SwitchToDisplayMode(win, newMode, false);
 
         if (!alreadyFacing)
             ; // don't do anything further
-        else if (forward && currPage >= win->dm->currentPageNo() && (currPage > 1 || newMode == DM_CONTINUOUS_BOOK_VIEW))
+        else if (forward && currPage >= win->dm->currentPageNo() &&
+                 (currPage > 1 || newMode == DM_BOOK_VIEW || newMode == DM_CONTINUOUS_BOOK_VIEW))
             win->dm->goToNextPage(0);
         else if (!forward && currPage <= win->dm->currentPageNo())
             win->dm->goToPrevPage(0);
