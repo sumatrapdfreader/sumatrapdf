@@ -491,6 +491,12 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			}
 		}
 
+		/* Load a default encoding for TrueType fonts with a charmap */
+		/* (this is likely not quite correct, though...) */
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=779 */
+		if (!FT_HAS_GLYPH_NAMES(face) && face->charmap && kind == TRUETYPE)
+			pdf_loadencoding(estrings, "WinAnsiEncoding");
+
 		/* Load encoding Differences nonetheless, when they're available */
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=115 */
 		if (fz_isdict(encoding))
