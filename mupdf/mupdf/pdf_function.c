@@ -1008,8 +1008,8 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int ge
 		{
 			if (fz_peekbyte(stream) == EOF && bits == 0)
 			{
-				fz_dropstream(stream);
 				error = fz_readerror(stream);
+				fz_dropstream(stream); /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=780 */
 				if (error)
 					return fz_rethrow(error, "truncated sample stream");
 				return fz_throw("truncated sample stream");
@@ -1018,11 +1018,11 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int ge
 			if (bps == 8) {
 				s = fz_readbyte(stream);
 			}
-			else if (samplecount == 16) {
+			else if (bps == 16) { /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=780 */
 				s = fz_readbyte(stream);
 				s = (s << 8) + fz_readbyte(stream);
 			}
-			else if (samplecount == 32) {
+			else if (bps == 32) { /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=780 */
 				s = fz_readbyte(stream);
 				s = (s << 8) + fz_readbyte(stream);
 				s = (s << 8) + fz_readbyte(stream);
