@@ -383,12 +383,9 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	err = safe_read(file, (char *)&ttOffsetTable, sizeof(TT_OFFSET_TABLE));
 	if (err) return err;
 
-	// check if this is a TrueType font and the version is 1.0
-	if (SWAPLONG(ttOffsetTable.uVersion) != TTC_VERSION1)
+	// check if this is a TrueType font of version 1.0 or an OpenType font
+	if (SWAPLONG(ttOffsetTable.uVersion) != TTC_VERSION1 && ttOffsetTable.uVersion != TTAG_OTTO)
 	{
-		// don't warn about OpenType fonts not containing TrueType data
-		if (ttOffsetTable.uVersion == *(ULONG *)"OTTO")
-			return fz_okay;
 		return fz_throw("fonterror : invalid font version");
 	}
 
@@ -607,7 +604,7 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
 		*comma = ',';
 	}
-	// second, substitute the font name against a known PostScript name
+	// second, substitute the font name with a known PostScript name
 	if (!found)
 	{
 		char *pattern = nil;
