@@ -1,4 +1,6 @@
+#ifdef WIN32
 #define NOCJK /* disable built-in CJK support (use a system provided TTF instead - if available) */
+#endif
 
 #include "fitz.h"
 #include "mupdf.h"
@@ -716,6 +718,7 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 	font->font->ftsubstitute = 1; /* substitute font */
 	return fz_okay;
 #else
+#ifdef WIN32
 	/* Try to fall back to a reasonable TrueType font that might be installed locally */
 	switch (kind)
 	{
@@ -743,6 +746,7 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 	default:
 		return fz_throw("Unknown cid kind %d", kind);
 	}
+#endif
 	return fz_throw("no builtin CJK font file");
 #endif
 }
