@@ -128,6 +128,8 @@ static const struct
 
 #define MAX_FACENAME	128
 
+// Note: the font face must be the first field so that the structure
+//       can be considered a simple string for searching
 typedef struct pdf_fontmapMS_s
 {
 	char fontface[MAX_FACENAME];
@@ -209,44 +211,24 @@ static pdf_fontlistMS fontlistMS =
 	0,
 };
 
+/* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
+   matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
 static int
 lookupcompare(const void *elem1, const void *elem2)
 {
-	pdf_fontmapMS *val1 = (pdf_fontmapMS *)elem1;
-	pdf_fontmapMS *val2 = (pdf_fontmapMS *)elem2;
-	int len1, len2;
+	char *val1 = (char *)elem1;
+	char *val2 = (char *)elem2;
+	int len1 = strlen(val1);
+	int len2 = strlen(val2);
 
-	if (val1->fontface[0] == 0)
-		return 1;
-	if (val2->fontface[0] == 0)
-		return -1;
-
-	/* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
-	   matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
-	len1 = strlen(val1->fontface);
-	len2 = strlen(val2->fontface);
 	if (len1 != len2)
 	{
-		char *rest = len1 > len2 ? val1->fontface + len2 : val2->fontface + len1;
+		char *rest = len1 > len2 ? val1 + len2 : val2 + len1;
 		if (',' == *rest || !stricmp(rest, "-roman"))
-			return strnicmp(val1->fontface, val2->fontface, MIN(len1, len2));
+			return strnicmp(val1, val2, MIN(len1, len2));
 	}
 
-	return stricmp(val1->fontface, val2->fontface);
-}
-
-static int
-sortcompare(const void *elem1, const void *elem2)
-{
-	pdf_fontmapMS *val1 = (pdf_fontmapMS *)elem1;
-	pdf_fontmapMS *val2 = (pdf_fontmapMS *)elem2;
-
-	if (val1->fontface[0] == 0)
-		return 1;
-	if (val2->fontface[0] == 0)
-		return -1;
-
-	return stricmp(val1->fontface, val2->fontface);
+	return stricmp(val1, val2);
 }
 
 /* source and dest can be same */
@@ -366,6 +348,23 @@ safe_read(fz_stream *file, char *buf, int size)
 }
 
 static fz_error
+read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecord, char *buf, int size)
+{
+	fz_error err;
+	char szTemp[MAX_FACENAME * 2];
+	// ignore empty and overlong strings
+	int stringLength = SWAPWORD(ttRecord->uStringLength);
+	if (stringLength == 0 || stringLength >= sizeof(szTemp))
+		return fz_okay;
+
+	fz_seek(file, offset + SWAPWORD(ttRecord->uStringOffset), 0);
+	err = safe_read(file, szTemp, stringLength);
+	if (err) return err;
+	return decodeplatformstring(SWAPWORD(ttRecord->uPlatformID), SWAPWORD(ttRecord->uEncodingID),
+		szTemp, stringLength, buf, size);
+}
+
+static fz_error
 parseTTF(fz_stream *file, int offset, int index, char *path)
 {
 	fz_error err = fz_okay;
@@ -375,8 +374,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	TT_NAME_TABLE_HEADER ttNTHeader;
 	TT_NAME_RECORD ttRecord;
 
-	char szTemp[MAX_FACENAME * 2], szPSName[MAX_FACENAME] = { 0 };
-	char szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
+	char szPSName[MAX_FACENAME] = { 0 }, szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
 	int i, count, tblOffset;
 
 	fz_seek(file,offset,0);
@@ -385,7 +383,12 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 
 	// check if this is a TrueType font and the version is 1.0
 	if (SWAPLONG(ttOffsetTable.uVersion) != TTC_VERSION1)
+	{
+		// don't warn about OpenType fonts not containing TrueType data
+		if (ttOffsetTable.uVersion == *(ULONG *)"OTTO")
+			return fz_okay;
 		return fz_throw("fonterror : invalid font version");
+	}
 
 	// determine the name table's offset by iterating through the offset table
 	count = SWAPWORD(ttOffsetTable.uNumOfTables);
@@ -412,36 +415,22 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	for (i = 0; i < count; i++)
 	{
 		short nameId;
-		char *target;
-		int stringLength;
 
 		fz_seek(file, offset + i * sizeof(TT_NAME_RECORD), 0);
 		err = safe_read(file, (char *)&ttRecord, sizeof(TT_NAME_RECORD));
 		if (err) return err;
 
 		// ignore non-English strings
-		if (ttRecord.uLanguageID && SWAPWORD(ttRecord.uLanguageID) != 0x409)
-			continue;
-		// ignore empty and overlong strings
-		stringLength = SWAPWORD(ttRecord.uStringLength);
-		if (stringLength == 0 || stringLength >= sizeof(szTemp))
+		if (ttRecord.uLanguageID && SWAPWORD(ttRecord.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
 			continue;
 		// ignore names other than font (sub)family and PostScript name
 		nameId = SWAPWORD(ttRecord.uNameID);
 		if (TT_NAME_ID_FONT_FAMILY == nameId)
-			target = szTTName;
+			err = read_ttf_string(file, tblOffset, &ttRecord, szTTName, MAX_FACENAME);
 		else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
-			target = szStyle;
+			err = read_ttf_string(file, tblOffset, &ttRecord, szStyle, MAX_FACENAME);
 		else if (TT_NAME_ID_PS_NAME == nameId)
-			target = szPSName;
-		else
-			continue;
-
-		fz_seek(file, tblOffset + SWAPWORD(ttRecord.uStringOffset), 0);
-		err = safe_read(file, szTemp, stringLength);
-		if (!err)
-			err = decodeplatformstring(SWAPWORD(ttRecord.uPlatformID), SWAPWORD(ttRecord.uEncodingID),
-				szTemp, stringLength, target, MAX_FACENAME);
+			err = read_ttf_string(file, tblOffset, &ttRecord, szPSName, MAX_FACENAME);
 		if (err) return err;
 	}
 
@@ -577,7 +566,7 @@ pdf_createfontlistMS()
 	FindClose(hList);
 
 	// sort the font list, so that it can be searched binarily
-	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), sortcompare);
+	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), stricmp);
 	// TODO: make "TimesNewRomanPSMT" default substitute font?
 
 	return fz_okay;
@@ -597,9 +586,8 @@ static fz_error
 loadwindowsfont(pdf_fontdesc *font, char *fontname)
 {
 	fz_error error;
-	pdf_fontmapMS fontmap;
-	pdf_fontmapMS *found;
-	char *pattern;
+	pdf_fontmapMS *found = nil;
+	char *comma;
 	int i;
 
 	if (fontlistMS.len == 0)
@@ -609,22 +597,34 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 			return fz_throw("fonterror : no fonts in the system");
 	}
 
-	pattern = fontname;
-	for (i = 0; i < _countof(baseSubstitutes); i++)
+	// first, try to find the exact font name (including appended style information)
+	comma = strchr(fontname, ',');
+	if (comma)
 	{
-		if (!strcmp(fontname, baseSubstitutes[i].name))
-		{
-			pattern = baseSubstitutes[i].pattern;
-			break;
-		}
+		*comma = '-';
+		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+		*comma = ',';
 	}
-
-	strlcpy(fontmap.fontface, pattern, sizeof(fontmap.fontface));
-	found = bsearch(&fontmap, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+	// second, substitute the font name against a known PostScript name
 	if (!found)
 	{
-		return !fz_okay;
+		char *pattern = nil;
+		for (i = 0; i < _countof(baseSubstitutes); i++)
+		{
+			if (!strcmp(fontname, baseSubstitutes[i].name))
+			{
+				pattern = baseSubstitutes[i].pattern;
+				break;
+			}
+		}
+		if (pattern)
+			found = bsearch(pattern, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
 	}
+	// third, search for the font name without additional style information
+	if (!found)
+		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+	if (!found)
+		return !fz_okay;
 
 	error = fz_newfontfromfile(&font->font, found->fontpath, found->index);
 	if (error)
@@ -659,7 +659,6 @@ loadjapansubstitute(pdf_fontdesc *font, char *fontname)
 #endif
 
 /***** end of Windows font loading code *****/
-
 #endif
 
 fz_error
