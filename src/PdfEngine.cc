@@ -541,6 +541,9 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             assert(*end);
             if (',' == *(end - 1) || '.' == *(end - 1))
                 end--;
+            // also ignore a closing parenthesis, if the URL doesn't contain any opening one
+            if (')' == *(end - 1) && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
+                end--;
             *end = 0;
 
             // make sure that no other link is associated with this word
