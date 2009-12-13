@@ -674,6 +674,7 @@ pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
 		if (!strcmp(fontname, basefonts[i].name))
 			goto found;
 
+#ifdef WIN32
 	/* we use built-in fonts in addition to those installed on windows
 	   because the metric for Times-Roman in windows fonts seems wrong
 	   and we end up with over-lapping text if this font is used.
@@ -682,6 +683,7 @@ pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
 	error = loadwindowsfont(font, fontname);
 	if (fz_okay == error)
 		return fz_okay;
+#endif
 
 	return fz_throw("cannot find font: '%s'", fontname);
 
@@ -758,10 +760,12 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
 	int isscript = 0;
 	int isfixed = 0;
 
+#ifdef WIN32
 	/* try to find a precise match in Windows' fonts before falling back to a built-in one */
 	error = loadwindowsfont(font, fontname);
 	if (fz_okay == error)
 		return fz_okay;
+#endif
 
 	if (strstr(fontname, "Bold"))
 		isbold = 1;
