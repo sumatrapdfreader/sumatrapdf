@@ -4417,9 +4417,13 @@ static void OnMenuSaveAs(WindowInfo *win)
     tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
+    // Remove the extension so that it can be re-added depending on the chosen filter
+    tstr_copy(dstFileName, dimof(dstFileName), FilePath_GetBaseName(srcFileName));
+    if (tstr_endswithi(dstFileName, _T(".pdf")))
+        dstFileName[lstrlen(dstFileName) - 4] = 0;
+
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    tstr_copy(dstFileName, dimof(dstFileName), FilePath_GetBaseName(srcFileName));
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -4427,6 +4431,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
+    ofn.lpstrDefExt = _T("pdf");
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     if (FALSE == GetSaveFileName(&ofn))
