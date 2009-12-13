@@ -109,6 +109,7 @@ static const struct
 	{ nil, nil, nil }
 };
 
+#ifdef WIN32
 /***** start of Windows font loading code *****/
 
 #include <windows.h>
@@ -658,6 +659,8 @@ loadjapansubstitute(pdf_fontdesc *font, char *fontname)
 #endif
 
 /***** end of Windows font loading code *****/
+
+#endif
 
 fz_error
 pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
