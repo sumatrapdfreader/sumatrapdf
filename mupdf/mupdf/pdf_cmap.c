@@ -236,6 +236,17 @@ pdf_maponetomany(pdf_cmap *cmap, int low, int *values, int len)
 {
 	int offset, i;
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
+	/* store ligatures as a single character */
+	if (len == 2 && values[0] == 'f')
+	{
+		switch (values[1])
+		{
+		case 'f': values[0] = 0xFB00; len--; break;
+		case 'i': values[0] = 0xFB01; len--; break;
+		case 'l': values[0] = 0xFB02; len--; break;
+		}
+	}
 	if (len == 1)
 	{
 		addrange(cmap, low, low, PDF_CMAP_SINGLE, values[0]);
