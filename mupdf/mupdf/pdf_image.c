@@ -525,6 +525,12 @@ pdf_loadtile(fz_image *img, fz_pixmap *tile)
 		tilefunc(src->samples->rp + (tile->y * src->stride), src->stride,
 			tmp->samples, tmp->w,
 			tmp->w, tmp->h, 0);
+		{ /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=336 */
+			float decode[2];
+			decode[0] = src->decode[0] * bpcfact / 255;
+			decode[1] = src->decode[1] * bpcfact / 255;
+			fz_decodetile(tmp, 0, decode);
+		}
 
 		for (y = 0; y < tile->h; y++)
 		{
