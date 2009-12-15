@@ -93,7 +93,6 @@ readoldtrailer(pdf_xref *xref, char *buf, int cap)
 	int ofs, len;
 	char *s;
 	int n;
-	int t;
 	pdf_token_e tok;
 	int c;
 
@@ -104,6 +103,15 @@ readoldtrailer(pdf_xref *xref, char *buf, int cap)
 		return fz_rethrow(error, "cannot read xref marker");
 	if (strncmp(buf, "xref", 4) != 0)
 		return fz_throw("cannot find xref marker");
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=543 */
+	/* broken pdfs where 'ofs len' is not on a separate line */
+	if (strlen(buf) != 4)
+	{
+		error = fz_seek(xref->file, 4 - strlen(buf), 1);
+		if (error)
+			return fz_rethrow(error, "cannot seek in file");
+	}
 
 	while (1)
 	{
@@ -129,11 +137,8 @@ readoldtrailer(pdf_xref *xref, char *buf, int cap)
 				return fz_rethrow(error, "cannot seek in file");
 		}
 
-		t = fz_tell(xref->file);
-		if (t < 0)
-			return fz_throw("cannot tell in file");
-
-		error = fz_seek(xref->file, t + 20 * len, 0);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=543 */
+		error = fz_seek(xref->file, 20 * len, 1);
 		if (error)
 			return fz_rethrow(error, "cannot seek in file");
 	}
@@ -233,6 +238,15 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		return fz_rethrow(error, "cannot read xref marker");
 	if (strncmp(buf, "xref", 4) != 0)
 		return fz_throw("cannot find xref marker");
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=543 */
+	/* broken pdfs where 'ofs len' is not on a separate line */
+	if (strlen(buf) != 4)
+	{
+		error = fz_seek(xref->file, 4 - strlen(buf), 1);
+		if (error)
+			return fz_rethrow(error, "cannot seek in file");
+	}
 
 	while (1)
 	{
