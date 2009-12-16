@@ -1556,7 +1556,7 @@ fi:Sovita sivu pystysuunnassa\tCtrl-0
 ca:Ajusta a la pàgina\tCtrl-0
 sl:&Prilagodi strani\tCtrl-0
 sr-rs:Прилагоди страни\tCtrl-0
-tw:適合頁面(&P)\tCtrl-0
+tw:合適頁面(&P)\tCtrl-0
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl-0
 he:התאם דף\tCtrl-0
 sp-rs:Prilagodi &strani\tCtrl-0
@@ -1672,7 +1672,7 @@ fi:&Sovita sivu vaakasuunnassa\tCtrl-2
 ca:Ajusta a l'am&plada\tCtrl-2
 sl:P&rilagodi po širini\tCtrl-2
 sr-rs:Прилагоди ширини\tCtrl-2
-tw:適合寬度(&H)\tCtrl-2
+tw:合適寬度(&H)\tCtrl-2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
 he:התאם רוחב\tCtrl-2
 sp-rs:&Prilagodi širini\tCtrl-2
@@ -3009,7 +3009,7 @@ ca:Voleu associar-lo amb els fitxers PDF?
 sl:Želite povezati z datotekami PDF?
 sn:Ita zvifambidzane ne PDF
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
-tw:與 PDF 檔進行關聯?
+tw:關聯至 PDF 檔?
 cn:是否关联 PDF 文件？
 cy:Cysylltu gyda ffeiliau PDF?
 ga:Comhthiomsaigh le comhaid PDF?
@@ -3283,7 +3283,7 @@ ca:Teniu la versió %s
 sl:Imate različico %s
 sn:Pane version %s
 bn:আপনার সংস্করণটি হল %s
-tw:目前版本 %s
+tw:您使用的版本 %s
 pt:Tem a versão %s
 cn:目前版本为 %s
 cy:Mae fersiwn %s gennych
@@ -3421,7 +3421,7 @@ ca:Omet aquesta versió
 sl:&Preskoči to različico
 sn:Siyana neversion irori.
 bn:এই সংস্করণটি পরিহার করুন
-tw:略過這個版本
+tw:略過此版本(&S)
 cn:跳过此版本
 cy:&Hepgor y fersiwn yma.
 ga:Ná bac leis an leagan seo.
@@ -3457,6 +3457,7 @@ vn:Cảnh báo
 pt:Aviso
 sr-rs:Упозорење
 sp-rs:Upozorenje
+tw:警告
 -
 SumatraPDF Options
 am:Ընտրանքներ
@@ -3480,6 +3481,7 @@ vn:Tuỳ chọn SumatraPDF
 pt:Opções de SumatraPDF
 sr-rs:Подешавања програма SumatraPDF
 sp-rs:Podešavanja programa SumatraPDF
+tw:SumatraPDF 選項
 -
 Fit Width
 am:Ձգել լայնությամբ
@@ -3517,7 +3519,7 @@ fi:Sovita sivu vaakasuunnassa
 ca:Ajusta a l'amplada
 sl:Prilagodi po širini
 sr-rs:Прилагоди ширини
-tw:適合寬度
+tw:合適寬度
 ml:അകലം പൊരുത്തപ്പെടുത്തുക
 he:התאם רוחב
 sp-rs:Prilagodi širini
@@ -3561,6 +3563,7 @@ vn:&Cài đặt
 pt:&Definições
 sr-rs:Подешавања
 sp-rs:Podešavanja
+tw:設定
 -
 Fit Page
 am:Ձգել էջը
@@ -3598,7 +3601,7 @@ fi:Sovita sivu pystysuunnassa
 ca:Ajusta a la pàgina
 sl:Prilagodi strani
 sr-rs:Прилагоди страни
-tw:適合頁面
+tw:合適頁面
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക
 he:התאם דף
 sp-rs:Prilagodi strani
@@ -3642,6 +3645,7 @@ vn:&Tuỳ chọn
 pt:&Opções...
 sr-rs:Опције
 sp-rs:Opcije
+tw:選項(&O)...
 -
 Default &Layout:
 am:Չափը &Լռելայն
@@ -4797,6 +4801,7 @@ vn:Thu phóng &tuỳ ý...
 pt:Zoom P&ersonalizado...
 sr-rs:Изборно увећање...
 sp-rs:Izborno uvećanje...
+tw:自訂縮放(&C)...
 -
 Zoom factor
 br:Proporção de Zoom
@@ -4815,6 +4820,7 @@ vn:Hệ số thu phóng
 pt:Factor de Zoom
 sr-rs:Фактор увећања
 sp-rs:Faktor uvećanja
+tw:縮放比例
 -
 &Magnification:
 br:Aumento:
@@ -4833,6 +4839,7 @@ vn:Phóng đại:
 pt:Amp&liação
 sr-rs:Увећање:
 sp-rs:Uvećanje:
+tw:倍率(&M)
 -
 Zoom
 br:Zoom
@@ -4851,6 +4858,7 @@ vn:Thu Phóng
 pt:Zoom
 sr-rs:Увећај
 sp-rs:Uvećaj
+tw:縮放
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
@@ -4868,6 +4876,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 pt:Não é possível iniciar o comando da procura inversa. Verifique a linha de comandos nas definições.
 sr-rs:Не могу да започнем команду инверзне претраге. Проверите командну линију у опцијама.
 sp-rs:Ne mogu da započnem komandu inverzne pretrage. Proverite komandnu liniju u opcijama.
+tw:無法進行逆向搜尋。請檢查設定裡的命令列。
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
