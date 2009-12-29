@@ -115,7 +115,8 @@ def load_strings_file(file_name):
                 report_error(line_no, l, "Expected line with translation")
             (lang, txt) = parse_line_with_translation(l)
             if lang not in lang_codes:
-                report_error(line_no, l, "lang '%s' is not in declared list of languages '%s'" % (lang, str(langs)))
+                langnames = [e[0] for e in langs]
+                report_error(line_no, l, "lang '%s' is not in declared list of languages '%s'" % (lang, ", ".join(langnames)))
             assert_unique_translation(curr_trans, lang, txt, line_no)
             curr_trans.append([lang, txt])
         else:

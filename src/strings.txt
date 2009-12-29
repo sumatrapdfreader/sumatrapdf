@@ -586,6 +586,7 @@ pt:Automático
 ru:Автоматически
 sr-rs:Аутоматски
 sp-rs:Automatski
+cy:Awtomatig
 -
 Single page
 am:&Մեկ էջ
@@ -707,6 +708,7 @@ Book view
 de:Buchansicht
 sv:Bokuppslag
 ru:В разворот
+cy:Golwg llyfr
 -
 Continuous
 am:Անդադար
@@ -828,6 +830,7 @@ Continuous book view
 de:Fortlaufende Buchansicht
 sv:Fortlöpande bokuppslag
 ru:В разворот непрерывно
+cy:Golwg llyfr didor
 -
 Show pages continuously
 de:Fortlaufend anzeigen
@@ -835,6 +838,7 @@ ru:Непрерывно
 sv:Visa sidor fortlöpande
 sr-rs:Непрекидни приказ страна
 sp-rs:Neprekidni prikaz strana
+cy:Dangos tudalennau'n ddidor
 -
 Rotate left\tCtrl-Shift--
 am:Շրջել ձախ\tCtrl-Shift--
@@ -1165,7 +1169,7 @@ eu:...ra &Joan
 tl:Pumun&ta Sa...
 va:&Anar a
 sn:Enda ku...
-cy:&Mynd i...
+cy:&Mynd
 ga:Téigh Chuig...
 mm:သို့ သွား
 pa:ਜਾਵੋ(&G)
@@ -4204,6 +4208,7 @@ ru:Текстовые документы
 sv:Text-dokument
 sr-rs:Текстуални документи
 sp-rs:Tekstualni dokumenti
+cy:Dogfennau testun
 -
 All files
 am:Բոլոր ֆայլերը
@@ -4765,6 +4770,7 @@ vn:Copy phần đánh dấu
 pt:Copiar Selecção\tCtrl-C
 sr-rs:Копирај изабрано
 sp-rs:Kopiraj izabrano
+cy:Copïo'r Dewis\tCtrl-C
 -
 Select content with Ctrl+left mouse button
 br:Selecionar com Ctrl+Botão esquerdo do mouse
@@ -4783,6 +4789,7 @@ vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 pt:Seleccionar conteúdo com Ctrl+Botão esquerdo do rato
 sr-rs:Да изаберете садржај, користите Ctrl и лево дугме миша
 sp-rs:Da izaberete sadržaj, koristite Ctrl i levo dugme miša
+cy:Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 -
 &Custom Zoom...
 br:&Zoom personalizado...
@@ -4802,6 +4809,7 @@ pt:Zoom P&ersonalizado...
 sr-rs:Изборно увећање...
 sp-rs:Izborno uvećanje...
 tw:自訂縮放(&C)...
+cy:&Addasu Chwyddo...
 -
 Zoom factor
 br:Proporção de Zoom
@@ -4821,6 +4829,7 @@ pt:Factor de Zoom
 sr-rs:Фактор увећања
 sp-rs:Faktor uvećanja
 tw:縮放比例
+cy:Ffactor Chwyddo
 -
 &Magnification:
 br:Aumento:
@@ -4840,6 +4849,7 @@ pt:Amp&liação
 sr-rs:Увећање:
 sp-rs:Uvećanje:
 tw:倍率(&M)
+cy:&Chwyddiad:
 -
 Zoom
 br:Zoom
@@ -4859,6 +4869,7 @@ pt:Zoom
 sr-rs:Увећај
 sp-rs:Uvećaj
 tw:縮放
+cy:Chwyddo
 -
 Cannot start inverse search command. Please check the command line in the settings.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
@@ -4877,6 +4888,7 @@ pt:Não é possível iniciar o comando da procura inversa. Verifique a linha de 
 sr-rs:Не могу да започнем команду инверзне претраге. Проверите командну линију у опцијама.
 sp-rs:Ne mogu da započnem komandu inverzne pretrage. Proverite komandnu liniju u opcijama.
 tw:無法進行逆向搜尋。請檢查設定裡的命令列。
+cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 -
 Next Page\t->
 am:Հաջորդ էջը\t->
@@ -5000,4 +5012,5 @@ de:Synchronisationsdatei nicht gefunden
 ru:Файл синхронизации не найден
 sr-rs:Усклађивачка датотека није нађена
 sp-rs:Usklađivačka datoteka nije nađena
+cy:Heb ganfod ffeil cydweddu
 
