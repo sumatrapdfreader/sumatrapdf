@@ -4463,8 +4463,15 @@ static void OnMenuSaveAs(WindowInfo *win)
             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
                 SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
         } else {
-            SeeLastError();
-            MessageBox(win->hwndFrame, _TR("Failed to save a file"), _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+            TCHAR *msgBuf, *errorMsg;
+            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPTSTR)&msgBuf, 0, NULL)) {
+                errorMsg = tstr_printf(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
+                LocalFree(msgBuf);
+            } else {
+                errorMsg = tstr_dup(_TR("Failed to save a file"));
+            }
+            MessageBox(win->hwndFrame, errorMsg, _TR("Warning"), MB_OK | MB_ICONEXCLAMATION);
+            free(errorMsg);
         }
     }
     if (realDstFileName != dstFileName)
