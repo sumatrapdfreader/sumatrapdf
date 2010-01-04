@@ -756,17 +756,21 @@ rendermask(fz_renderer *gc, fz_masknode *mask, fz_matrix ctm)
 	{
 		if (fz_issolidnode(color))
 		{
-			fz_solidnode *solid = (fz_solidnode*)color;
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=794 */
+			if (!gc->maskonly)
+			{
+				fz_solidnode *solid = (fz_solidnode*)color;
 
-			fz_convertcolor(solid->cs, solid->samples, gc->model, rgb);
-			gc->argb[0] = solid->a * 255;
-			gc->argb[1] = rgb[0] * solid->a * 255;
-			gc->argb[2] = rgb[1] * solid->a * 255;
-			gc->argb[3] = rgb[2] * solid->a * 255;
-			gc->argb[4] = rgb[0] * 255;
-			gc->argb[5] = rgb[1] * 255;
-			gc->argb[6] = rgb[2] * 255;
-			gc->flag |= FRGB;
+				fz_convertcolor(solid->cs, solid->samples, gc->model, rgb);
+				gc->argb[0] = solid->a * 255;
+				gc->argb[1] = rgb[0] * solid->a * 255;
+				gc->argb[2] = rgb[1] * solid->a * 255;
+				gc->argb[3] = rgb[2] * solid->a * 255;
+				gc->argb[4] = rgb[0] * 255;
+				gc->argb[5] = rgb[1] * 255;
+				gc->argb[6] = rgb[2] * 255;
+				gc->flag |= FRGB;
+			}
 
 			/* we know these can handle the FRGB shortcut */
 			if (fz_ispathnode(shape))
