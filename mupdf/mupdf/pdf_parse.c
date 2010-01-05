@@ -495,6 +495,8 @@ skip:
 	if (tok == PDF_TSTREAM)
 	{
 		int c = fz_readbyte(file);
+		/* ignore an accidental space; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=806 */
+		if (c == ' ' && (fz_peekbyte(file) == '\r' || fz_peekbyte(file) == '\n')) c = fz_readbyte(file);
 		if (c == '\r')
 		{
 			c = fz_peekbyte(file);
