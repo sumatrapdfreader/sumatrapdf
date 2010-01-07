@@ -233,6 +233,17 @@ lookupcompare(const void *elem1, const void *elem2)
 	return stricmp(val1, val2);
 }
 
+static void
+removespaces(char *srcDest)
+{
+	char *dest;
+
+	for (dest = srcDest; *srcDest; srcDest++)
+		if (!isspace(*srcDest))
+			*dest++ = *srcDest;
+	*dest = 0;
+}
+
 /* source and dest can be same */
 static fz_error
 decodeunicodeBMP(char* source, int sourcelen, char* dest, int destlen)
@@ -442,18 +453,14 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	{
 		// derive a PostScript-like name and add it, if it's different from the font's
 		// included PostScript name; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=376
-		char *p1, *p2;
+
 		// append the font's subfamily, unless it's a Regular font
 		if (szStyle[0] && stricmp(szStyle, "Regular") != 0)
 		{
 			strlcat(szTTName, "-", MAX_FACENAME);
 			strlcat(szTTName, szStyle, MAX_FACENAME);
 		}
-		// remove all spaces from the font name
-		for (p2 = p1 = szTTName; *p2; p2++)
-			if (!isspace(*p2))
-				*p1++ = *p2;
-		*p1 = 0;
+		removespaces(szTTName);
 		// compare the two names before adding this one
 		if (lookupcompare(szTTName, szPSName))
 		{
@@ -587,7 +594,6 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	fz_error error;
 	pdf_fontmapMS *found = nil;
 	char *comma;
-	int i;
 
 	if (fontlistMS.len == 0)
 	{
@@ -595,6 +601,10 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 		if (fontlistMS.len == 0)
 			return fz_throw("fonterror : no fonts in the system");
 	}
+
+	// work on a normalized copy of the font name
+	fontname = strdup(fontname);
+	removespaces(fontname);
 
 	// first, try to find the exact font name (including appended style information)
 	comma = strchr(fontname, ',');
@@ -607,21 +617,18 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	// second, substitute the font name with a known PostScript name
 	if (!found)
 	{
-		char *pattern = nil;
+		int i;
 		for (i = 0; i < _countof(baseSubstitutes); i++)
-		{
 			if (!strcmp(fontname, baseSubstitutes[i].name))
-			{
-				pattern = baseSubstitutes[i].pattern;
 				break;
-			}
-		}
-		if (pattern)
-			found = bsearch(pattern, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+		if (i < _countof(baseSubstitutes))
+			found = bsearch(baseSubstitutes[i].name, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
 	}
 	// third, search for the font name without additional style information
 	if (!found)
 		found = bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+	free(fontname);
+
 	if (!found)
 		return !fz_okay;
 
