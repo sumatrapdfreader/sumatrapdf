@@ -136,10 +136,11 @@ atobjend:
 	return fz_okay;
 }
 
-static fz_error
-pdf_repairxref2(pdf_xref *xref, fz_stream *file)
+fz_error
+pdf_repairxref(pdf_xref *xref, char *filename)
 {
 	fz_error error;
+	fz_stream *file;
 
 	struct entry *list = nil;
 	int listlen;
@@ -158,6 +159,12 @@ pdf_repairxref2(pdf_xref *xref, fz_stream *file)
 	int len;
 	int next;
 	int i;
+
+	error = fz_openrfile(&file, filename);
+	if (error)
+		return fz_rethrow(error, "cannot open file '%s'", filename);
+
+	pdf_logxref("repairxref '%s' %p\n", filename, xref);
 
 	xref->file = file;
 
@@ -325,28 +332,3 @@ cleanup:
 	return error; /* already rethrown */
 }
 
-fz_error
-pdf_repairxref(pdf_xref *xref, char *filename)
-{
-	fz_error error;
-	fz_stream *file;
-	error = fz_openrfile(&file, filename);
-	if (error)
-		return fz_rethrow(error, "cannot open file '%s'", filename);
-	pdf_logxref("repairxref '%s' %p\n", filename, xref);
-	return pdf_repairxref2(xref, file);
-}
-
-#ifdef WIN32
-fz_error
-pdf_repairxrefw(pdf_xref *xref, wchar_t *filename)
-{
-	fz_error error;
-	fz_stream *file;
-	error = fz_openrfilew(&file, filename);
-	if (error)
-		return fz_rethrow(error, "cannot open file");
-	pdf_logxref("repairxref %p\n", xref);
-	return pdf_repairxref2(xref, file);
-}
-#endif

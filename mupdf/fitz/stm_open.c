@@ -63,25 +63,37 @@ fz_dropstream(fz_stream *stm)
 }
 
 #ifdef WIN32
-fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path)
+#include <windows.h>
+
+static int open_utf8(char *utf8path, int oflag, int pmode)
 {
-	fz_stream *stm;
+	int pathlen = strlen(utf8path) + 1;
+	wchar_t *wpath = fz_malloc(pathlen * 2);
+	int result;
 
-	stm = newstm(FZ_SFILE);
-
-	stm->buffer = fz_newbuffer(FZ_BUFSIZE);
-
-	stm->file = _wopen(path, O_BINARY | O_RDONLY, 0666);
-	if (stm->file < 0)
+	/* Convert UTF-8 to UTF-16 */
+	result = MultiByteToWideChar(CP_UTF8, 0, utf8path, -1, wpath, pathlen * 2);
+	/* (and if the path isn't UTF-8 after all, fall back to the ANSI code page) */
+	if (result == ERROR_NO_UNICODE_TRANSLATION)
+		MultiByteToWideChar(CP_ACP, 0, utf8path, -1, wpath, pathlen * 2);
+#ifdef _UNICODE
+	result = _wopen(wpath, oflag, pmode);
+#else
 	{
-		fz_dropbuffer(stm->buffer);
-		fz_free(stm);
-		return fz_throw("syserr: open '%s': %s", path, strerror(errno));
+		/* Convert UTF-16 to the ANSI code page */
+		char *path = fz_malloc(pathlen);
+		WideCharToMultiByte(CP_ACP, 0, wpath, -1, path, pathlen, NULL, NULL);
+		result = open(path, oflag, pmode);
+		fz_free(path);
 	}
+#endif
+	fz_free(wpath);
 
-	*stmp = stm;
-	return fz_okay;
+	return result;
 }
+
+/* redefine open(...) below, as the path is supposed to be UTF-8 */
+#define open(path, oflag, pmode) open_utf8(path, oflag, pmode);
 #endif
 
 fz_error fz_openrfile(fz_stream **stmp, char *path)

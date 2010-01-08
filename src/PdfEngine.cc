@@ -181,13 +181,17 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     setFileName(fileName);
     _xref = pdf_newxref();
 
-    error = pdf_loadxreft(_xref, (TCHAR *)fileName);
+    char *utf8path = tstr_to_utf8(fileName);
+    error = pdf_loadxref(_xref, utf8path);
     if (error) {
         if (tryrepair)
-            error = pdf_repairxreft(_xref, (TCHAR *)fileName);
-        if (error)
+            error = pdf_repairxref(_xref, utf8path);
+        if (error) {
+            free(utf8path);
             goto Error;
+        }
     }
+    free(utf8path);
 
     error = pdf_decryptxref(_xref);
     if (error)

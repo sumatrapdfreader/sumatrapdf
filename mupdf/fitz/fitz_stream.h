@@ -347,11 +347,6 @@ struct fz_stream_s
  */
 
 fz_error fz_openrfile(fz_stream **stmp, char *filename);
-#ifdef WIN32
-#include <wchar.h>
-fz_error fz_openrfilew(fz_stream **stmp, wchar_t *path);
-#endif
-
 fz_stream * fz_openrmemory(unsigned char *mem, int len);
 fz_stream * fz_openrbuffer(fz_buffer *buf);
 fz_stream * fz_openrfilter(fz_filter *flt, fz_stream *chain);
