@@ -20,7 +20,7 @@ typedef struct {
 class PdfSearchTracker
 {
 public:
-    virtual void FindUpdateStatus(int count, int total) = 0;
+    virtual bool FindUpdateStatus(int count, int total) = 0;
 };
 
 class PdfSearch
@@ -67,17 +67,18 @@ protected:
         Reset();
     }
     
-    void UpdateTracker(int pageNo, int total)
+    // returns false, if the search has been canceled
+    bool UpdateTracker(int pageNo, int total)
     {
         if (!tracker)
-            return;
+            return true;
 
         int count;
         if (forward)
             count = pageNo;
         else
             count = total - pageNo + 1;
-        tracker->FindUpdateStatus(count, total);
+        return tracker->FindUpdateStatus(count, total);
     }
 };
 

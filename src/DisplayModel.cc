@@ -1400,16 +1400,9 @@ PdfSearchResult *DisplayModel::Find(PdfSearchDirection direction, TCHAR *text, U
     else
         bFoundText = _pdfSearch->FindNext();
 
-    if (!bFoundText)
-        return NULL;
-
-    PdfSearchResult &rect = _pdfSearch->result;
-
-    if (text != NULL)
-        addNavPoint();
-    goToPage(rect.page, 0);
-    MapResultRectToScreen(&rect);
-    return &rect;
+    if (bFoundText)
+        return &_pdfSearch->result;
+    return NULL;
 }
 
 DisplayModel *DisplayModel_CreateFromFileName(

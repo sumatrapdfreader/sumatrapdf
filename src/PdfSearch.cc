@@ -172,8 +172,7 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     else
         step = -1;
 
-    while (1 <= pageNo && pageNo <= total) {
-        UpdateTracker(pageNo, total);
+    while (1 <= pageNo && pageNo <= total && UpdateTracker(pageNo, total)) {
         Reset();
 
         pdf_page *page = engine->getPdfPage(pageNo);

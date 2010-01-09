@@ -112,6 +112,8 @@ public:
         hMenu = NULL;
         hdc = NULL;
         dpi = 96;
+        findThread = NULL;
+        findCanceled = false;
         findPercent = 0;
         findStatusVisible = false;
         showSelection = false;
@@ -168,6 +170,8 @@ public:
     BITMAPINFO *    dibInfo;
     int             dpi;
 
+    HANDLE          findThread;
+    bool            findCanceled;
     int             findPercent;
     bool            findStatusVisible;    
     HANDLE          findStatusThread; // handle of the thread showing the status of the search result
@@ -239,7 +243,7 @@ public:
 
     void TrackMouse(HWND hwnd=NULL);
     void FindStart();
-    virtual void FindUpdateStatus(int count, int total);
+    virtual bool FindUpdateStatus(int count, int total);
     void FocusPageNoEdit();
 
 };

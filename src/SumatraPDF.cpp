@@ -83,6 +83,8 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WM_APP_REPAINT_DELAYED (WM_APP + 10)
 #define WM_APP_REPAINT_NOW     (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
+#define WM_APP_FIND_UPDATE     (WM_APP + 13)
+#define WM_APP_FIND_END        (WM_APP + 14)
 
 #define COL_WHITE RGB(0xff,0xff,0xff)
 #define COL_BLACK RGB(0,0,0)
@@ -168,6 +170,7 @@ static HANDLE                       gPageRenderSem;
 static HANDLE                       gPageRenderClearQueue;
 static HANDLE                       gPageRenderQueueCleared;
 static PageRenderRequest *          gCurPageRenderReq;
+static bool                         gSuspendRendering = false;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -248,7 +251,7 @@ static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win,
     bool showWin, bool placeWindow);
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize);
 
-static void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
+static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
@@ -1529,6 +1532,17 @@ static void WindowInfo_DoubleBuffer_Show(WindowInfo *win, HDC hdc)
     }
 }
 
+static void WindowInfo_AbortFinding(WindowInfo *win)
+{
+    if (win->findThread) {
+        win->findCanceled = true;
+        WaitForSingleObject(win->findThread, INFINITE);
+        CloseHandle(win->findThread);
+        win->findThread = NULL;
+    }
+    win->findCanceled = false;
+}
+
 static void WindowInfoList_Remove(WindowInfo *to_remove);
 
 static void WindowInfo_Delete(WindowInfo *win)
@@ -1539,6 +1553,7 @@ static void WindowInfo_Delete(WindowInfo *win)
         RenderQueue_RemoveForDisplayModel(win->dm);
         cancelRenderingForDisplayModel(win->dm);
     }
+    WindowInfo_AbortFinding(win);
     delete win->dm;
     if (win->pdfsync) {
       delete win->pdfsync;
@@ -2031,6 +2046,7 @@ static bool LoadPdfIntoWindow(
     SizeD totalDrawAreaSize(win->winSize());
 
     DisplayModel *previousmodel = win->dm;
+    WindowInfo_AbortFinding(win);
 
     win->dm = DisplayModel_CreateFromFileName(fileName,
         totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
@@ -4103,6 +4119,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
             MenuUpdateBookmarksStateForWindow(win);
         }
         win->ClearTocBox();
+        WindowInfo_AbortFinding(win);
         delete win->dm;
         win->dm = NULL;
         UpdateToolbarPageText(win, 0);
@@ -5029,7 +5046,7 @@ static void OnMenuFind(WindowInfo *win)
         }
         free(findString);
 
-        Find(win->hwndFindBox, win, FIND_FORWARD);
+        Find(win, FIND_FORWARD);
     }
     free((void *)previousFind);
 }
@@ -5165,8 +5182,9 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
 }
 
 // Show a message for 3000 millisecond at most
-DWORD WINAPI ShowMessageThread(WindowInfo *win)
+static DWORD WINAPI ShowMessageThread(LPVOID data)
 {
+    WindowInfo *win = (WindowInfo *)data;
     ShowWindowAsync(win->hwndFindStatus, SW_SHOWNA);
     WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
     ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
@@ -5177,7 +5195,8 @@ DWORD WINAPI ShowMessageThread(WindowInfo *win)
 // If resize = true then the window width is adjusted to the length of the text
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize)
 {
-    win_set_text(win->hwndFindStatus, message);
+    if (message)
+        win_set_text(win->hwndFindStatus, message);
     if (resize) {
         // compute the length of the message
         RECT rc = {0,0,FIND_STATUS_WIDTH,0};
@@ -5199,7 +5218,7 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         CloseHandle(win->findStatusThread);
     }
     ResetEvent(win->stopFindStatusThreadEvent);
-    win->findStatusThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowMessageThread, (void*)win, 0, 0);
+    win->findStatusThread = CreateThread(NULL, 0, ShowMessageThread, win, 0, 0);
 }
 
 // hide the message
@@ -5289,7 +5308,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
 }
 
-static void WindowInfo_HideFindStatus(WindowInfo *win)
+static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
 {
     LPARAM enable = (LPARAM)MAKELONG(1,0);
 
@@ -5299,7 +5318,9 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
 
     // resize the window, in case another message has been displayed in the meantime
     MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(23, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
-    if (!win->dm->bFoundText)
+    if (canceled)
+        WindowInfo_ShowMessage_Asynch(win, NULL, false);
+    else if (!win->dm->bFoundText)
         WindowInfo_ShowMessage_Asynch(win, _TR("No matches were found"), false);
     else {
         TCHAR buf[256];
@@ -5310,12 +5331,12 @@ static void WindowInfo_HideFindStatus(WindowInfo *win)
 
 static void OnMenuFindNext(WindowInfo *win)
 {
-    Find(win->hwndFindBox, win, FIND_FORWARD);
+    Find(win, FIND_FORWARD);
 }
 
 static void OnMenuFindPrev(WindowInfo *win)
 {
-    Find(win->hwndFindBox, win, FIND_BACKWARD);
+    Find(win, FIND_BACKWARD);
 }
 
 static void OnMenuFindMatchCase(WindowInfo *win)
@@ -5403,6 +5424,8 @@ static void OnChar(WindowInfo *win, int key)
     if (VK_ESCAPE == key) {
         if (gGlobalPrefs.m_escToExit)
             CloseWindow(win, TRUE);
+        else if (win->findThread)
+            WindowInfo_AbortFinding(win);
         else if (win->fullScreen)
             OnMenuViewFullscreen(win);
         else
@@ -5609,13 +5632,16 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     if (WM_CHAR == message) {
         if (VK_ESCAPE == wParam || VK_TAB == wParam)
         {
-            SetFocus(win->hwndFrame);
+            if (win->findThread)
+                WindowInfo_AbortFinding(win);
+            else
+                SetFocus(win->hwndFrame);
             return 1;
         } 
 
         if (VK_RETURN == wParam)
         {
-            Find(hwnd, win);
+            Find(win);
             SetFocus(hwnd); // Set focus back to Text box so return can be pressed again to find next one.
             return 1;
         }
@@ -5652,35 +5678,64 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     return ret;
 }
 
-static void Find(HWND hwnd, WindowInfo *win, PdfSearchDirection direction)
-{
+typedef struct FindThreadData {
+    WindowInfo *win;
+    PdfSearchDirection direction;
     TCHAR text[256];
-    GetWindowText(hwnd, text, sizeof(text));
-    bool hasText = lstrlen(text) > 0;
-    if (!hasText)
-        return;
+} FindThreadData;
 
-    BOOL wasModified = Edit_GetModify(hwnd);
+static DWORD WINAPI FindThread(LPVOID data)
+{
+    FindThreadData *ftd = (FindThreadData *)data;
+    WindowInfo *win = ftd->win;
+
+    BOOL wasModified = Edit_GetModify(win->hwndFindBox);
+    Edit_SetModify(win->hwndFindBox, FALSE);
+
+    // Suspend page rendering while finding, since MuPDF isn't thread-safe
+    LockCache();
+    gSuspendRendering = true;
+    UnlockCache();
+    while (gCurPageRenderReq)
+        Sleep(10);
+
     PdfSearchResult *rect;
     if (wasModified)
-        rect = win->dm->Find(direction, text);
+        rect = win->dm->Find(ftd->direction, ftd->text);
     else
-        rect = win->dm->Find(direction);
+        rect = win->dm->Find(ftd->direction);
 
-    if (!rect) {
+    if (!win->findCanceled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
-        int startPage = (FIND_FORWARD == direction) ? 1 : win->dm->pageCount();
+        int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->pageCount();
         if (!wasModified || win->dm->currentPageNo() != startPage)
-            rect = win->dm->Find(direction, text, startPage);
+            rect = win->dm->Find(ftd->direction, ftd->text, startPage);
     }
+    gSuspendRendering = false;
+    free(ftd);
 
-    if (rect)
-        WindowInfo_ShowSearchResult(win, rect);
+    if (win->findCanceled)
+        rect = NULL;
+    LPARAM lParam = rect ? wasModified : win->findCanceled;
+    PostMessage(win->hwndFrame, WM_APP_FIND_END, (WPARAM)rect, lParam);
+
+    return 0;
+}
+
+static void Find(WindowInfo *win, PdfSearchDirection direction)
+{
+    WindowInfo_AbortFinding(win);
+
+    FindThreadData *ftd = (FindThreadData *)malloc(sizeof(FindThreadData));
+    ftd->win = win;
+    ftd->direction = direction;
+    GetWindowText(win->hwndFindBox, ftd->text, sizeof(ftd->text));
+
+    bool hasText = lstrlen(ftd->text) > 0;
+    if (hasText)
+        win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
     else
-        ClearSearch(win);
-    WindowInfo_HideFindStatus(win);
-
-    Edit_SetModify(hwnd, FALSE);
+        free(ftd);
 }
 
 static WNDPROC DefWndProcToolbar = NULL;
@@ -6095,23 +6150,13 @@ void WindowInfo::FindStart()
     SetFocus(hwndFindBox);
 }
 
-void WindowInfo::FindUpdateStatus(int current, int total)
+bool WindowInfo::FindUpdateStatus(int current, int total)
 {
-    if (!findStatusVisible) {
-        WindowInfo_ShowFindStatus(this);
-    }
-
-    TCHAR buf[256];
-    wsprintf(buf, _TR("Searching %d of %d..."), current, total);
-    win_set_text(hwndFindStatus, buf);
+    PostMessage(hwndFrame, WM_APP_FIND_UPDATE, current, total);
 
     findPercent = current * 100 / total;
 
-    MSG msg = { 0 };
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+    return !findCanceled;
 }
 
 void WindowInfo::TrackMouse(HWND tracker)
@@ -6818,6 +6863,32 @@ InitMouseWheelInfo:
                 OnUrlDownloaded(win, (HttpReqCtx*)wParam);
             break;
 
+        case WM_APP_FIND_UPDATE:
+            if (!win->findStatusVisible)
+                WindowInfo_ShowFindStatus(win);
+
+            {
+                TCHAR buf[256];
+                wsprintf(buf, _TR("Searching %d of %d..."), (int)wParam, (int)lParam);
+                win_set_text(win->hwndFindStatus, buf);
+            }
+            break;
+
+        case WM_APP_FIND_END:
+            if (wParam) {
+                PdfSearchResult *rect = (PdfSearchResult *)wParam;
+                if (lParam) // wasModified
+                    win->dm->addNavPoint();
+                win->dm->goToPage(rect->page, 0);
+                win->dm->MapResultRectToScreen(rect);
+                WindowInfo_ShowSearchResult(win, rect);
+                WindowInfo_HideFindStatus(win);
+            } else {
+                ClearSearch(win);
+                WindowInfo_HideFindStatus(win, !!lParam);
+            }
+            break;
+
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
                 LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
@@ -7042,6 +7113,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         LockCache();
         gCurPageRenderReq = NULL;
         int count = gPageRenderRequestsCount;
+        bool suspended = gSuspendRendering;
         UnlockCache();
         if (0 == count) {
             HANDLE handles[2] = { gPageRenderSem, gPageRenderClearQueue };
@@ -7060,7 +7132,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
                 continue;
             }
         }
-        if (0 == gPageRenderRequestsCount) {
+        if (0 == gPageRenderRequestsCount || suspended) {
             continue;
         }
         LockCache();
@@ -7102,13 +7174,12 @@ static DWORD WINAPI PageRenderThread(PVOID data)
 static void CreatePageRenderThread(void)
 {
     LONG semMaxCount = 1000; /* don't really know what the limit should be */
-    DWORD dwThread1ID = 0;
     assert(NULL == gPageRenderThreadHandle);
 
     gPageRenderSem = CreateSemaphore(NULL, 0, semMaxCount, NULL);
     gPageRenderClearQueue = CreateEvent(NULL, FALSE, FALSE, NULL);
     gPageRenderQueueCleared = CreateEvent(NULL, FALSE, FALSE, NULL);
-    gPageRenderThreadHandle = CreateThread(NULL, 0, PageRenderThread, (void*)NULL, 0, &dwThread1ID);
+    gPageRenderThreadHandle = CreateThread(NULL, 0, PageRenderThread, NULL, 0, 0);
     assert(NULL != gPageRenderThreadHandle);
 }
 
