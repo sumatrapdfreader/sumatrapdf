@@ -1537,8 +1537,6 @@ static void WindowInfo_AbortFinding(WindowInfo *win)
     if (win->findThread) {
         win->findCanceled = true;
         WaitForSingleObject(win->findThread, INFINITE);
-        CloseHandle(win->findThread);
-        win->findThread = NULL;
     }
     win->findCanceled = false;
 }
@@ -5214,8 +5212,6 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     }
 
     win->showSelection = true;
-    win->TrackMouse();
-
     triggerRepaintDisplayNow(win);
 }
 
@@ -5670,7 +5666,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
     if (WM_CHAR == message) {
         if (VK_ESCAPE == wParam || VK_TAB == wParam)
         {
-            if (win->findThread)
+            if (VK_ESCAPE == wParam && win->findThread)
                 WindowInfo_AbortFinding(win);
             else
                 SetFocus(win->hwndFrame);
@@ -5680,7 +5676,6 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         if (VK_RETURN == wParam)
         {
             Find(win);
-            SetFocus(hwnd); // Set focus back to Text box so return can be pressed again to find next one.
             return 1;
         }
     }
@@ -5756,6 +5751,10 @@ static DWORD WINAPI FindThread(LPVOID data)
         rect = NULL;
     LPARAM lParam = rect ? wasModified : win->findCanceled;
     PostMessage(win->hwndFrame, WM_APP_FIND_END, (WPARAM)rect, lParam);
+
+    HANDLE hThread = win->findThread;
+    win->findThread = NULL;
+    CloseHandle(hThread);
 
     return 0;
 }
@@ -6201,7 +6200,6 @@ void WindowInfo::TrackMouse(HWND tracker)
 {
     if (!tracker)
         tracker = hwndCanvas;
-    else
     if (hwndFrame != GetActiveWindow() || hwndFindBox == GetFocus() || hwndPageBox == GetFocus() || hwndTracker == tracker)
         return;
 
@@ -6462,9 +6460,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             return 0;
 
         case WM_MOUSEMOVE:
-            win->TrackMouse(hwnd);
-            if (win)
+            if (win) {
+                win->TrackMouse(hwnd);
                 OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            }
             break;
 
         case WM_LBUTTONDBLCLK:
