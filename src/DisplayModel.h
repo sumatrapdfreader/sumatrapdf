@@ -224,7 +224,7 @@ public:
     bool            goToNextPage(int scrollY);
     bool            goToFirstPage(void);
     bool            goToLastPage(void);
-    void            goToTocLink(void *link);
+    void            goToTocLink(pdf_link *link);
 
     void            scrollXTo(int xOff);
     void            scrollXBy(int dx);
@@ -267,7 +267,6 @@ public:
     void            MapResultRectToScreen(PdfSearchResult *rect);
 
     void            rebuildLinks();
-    void            handleLink2(pdf_link* link);
 
     bool            getScrollState(ScrollState *state);
     void            setScrollState(ScrollState *state);

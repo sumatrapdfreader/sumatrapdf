@@ -20,6 +20,11 @@ typedef struct PdfLink {
     pdf_link *      link;
 } PdfLink;
 
+typedef struct PdfPage {
+    pdf_page *      page;
+    int             num; // the page's object number
+} PdfPage;
+
 class WindowInfo;
 
 #define INVALID_PAGE_NO     -1
@@ -30,13 +35,13 @@ class WindowInfo;
 class PdfTocItem {
 public:
     TCHAR *title;
-    void *link;
+    pdf_link *link;
     bool open;
 
     PdfTocItem *child;
     PdfTocItem *next;
 
-    PdfTocItem(TCHAR *title, void *link)
+    PdfTocItem(TCHAR *title, pdf_link *link)
     {
         this->title = title;
         this->link = link;
@@ -151,7 +156,7 @@ private:
 
     pdf_xref *      _xref;
     pdf_outline *   _outline;
-    pdf_page **     _pages;
+    PdfPage *       _pages;
     fz_renderer *   _rast;
 };
 

@@ -2346,6 +2346,54 @@ static void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
+static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hParent, int pageNo)
+{
+    HTREEITEM hCurrItem = NULL;
+
+    TVITEM item;
+    item.hItem = hParent;
+    item.mask = TVIF_PARAM | TVIF_STATE;
+    item.stateMask = TVIS_EXPANDED;
+    TreeView_GetItem(win->hwndTocBox, &item);
+
+    // return if this item is on the specified page (or on a latter page)
+    if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
+        int page = win->dm->pdfEngine->findPageNo(((pdf_link *)item.lParam)->dest);
+        if (page > pageNo)
+            return NULL;
+        if (page == pageNo)
+            return hParent;
+        hCurrItem = hParent;
+    }
+
+    // find any child item closer to the specified page
+    if ((item.state & TVIS_EXPANDED)) {
+        HTREEITEM hChild = TreeView_GetChild(win->hwndTocBox, hParent);
+        while (hChild) {
+            HTREEITEM hItem = WindowInfo_TreeItemForPageNo(win, hChild, pageNo);
+            if (!hItem)
+                break;
+            hCurrItem = hItem;
+            hChild = TreeView_GetNextSibling(win->hwndTocBox, hChild);
+        }
+    }
+
+    return hCurrItem;
+}
+
+static void WindowInfo_UpdateTocSelection(WindowInfo *win, int pageNo)
+{
+    if (!win->dm || !win->dm->_showToc)
+        return;
+
+    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocBox);
+    if (!hRoot)
+        return;
+    HTREEITEM hCurrItem = WindowInfo_TreeItemForPageNo(win, hRoot, pageNo);
+    if (hCurrItem)
+        TreeView_SelectItem(win->hwndTocBox, hCurrItem);
+}
+
 // The current page edit box is updated with the current page number
 void DisplayModel::pageChanged()
 {
@@ -2362,6 +2410,7 @@ void DisplayModel::pageChanged()
             SetWindowText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
+        WindowInfo_UpdateTocSelection(win, currPageNo);
     }
 }
 
@@ -5556,7 +5605,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
     if (win->dm && item.lParam)
-        win->dm->goToTocLink((void *)item.lParam);
+        win->dm->goToTocLink((pdf_link *)item.lParam);
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
@@ -6234,11 +6283,11 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static void PopluateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
+static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent);
-        PopluateTocTreeView(hwnd, entry->child, node);
+        PopulateTocTreeView(hwnd, entry->child, node);
     }
 }
 
@@ -6249,7 +6298,7 @@ void WindowInfo::LoadTocTree()
 
     PdfTocItem *toc = dm->getTocTree();
     if (toc) {
-        PopluateTocTreeView(hwndTocBox, toc);
+        PopulateTocTreeView(hwndTocBox, toc);
         delete toc;
     }
     tocLoaded = true;

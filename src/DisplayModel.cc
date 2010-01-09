@@ -1512,8 +1512,10 @@ static void launch_url(const TCHAR *url)
     ShellExecute(NULL, _T("open"), url, NULL, NULL, SW_SHOWNORMAL);
 }
 
-void DisplayModel::handleLink2(pdf_link* link)
+void DisplayModel::goToTocLink(pdf_link* link)
 {
+    if (!link)
+        return;
     if (PDF_LURI == link->kind) {
         TCHAR *uri = utf8_to_tstr(fz_tostrbuf(link->dest));
         if (tstr_startswithi(uri, _T("http:")) || tstr_startswithi(uri, _T("https:")))
@@ -1547,16 +1549,7 @@ void DisplayModel::handleLink2(pdf_link* link)
 
 void DisplayModel::handleLink(PdfLink *link)
 {
-    handleLink2(link->link);
-}
-
-void DisplayModel::goToTocLink(void *linktmp)
-{
-    if (!linktmp)
-        return;
-
-    pdf_link *link = (pdf_link*)linktmp;
-    handleLink2(link);
+    goToTocLink(link->link);
 }
 
 void DisplayModel::goToNamedDest(const char *name)

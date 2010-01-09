@@ -150,8 +150,8 @@ PdfEngine::~PdfEngine()
 {
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
-            if (_pages[i])
-                pdf_droppage(_pages[i]);
+            if (_pages[i].page)
+                pdf_droppage(_pages[i].page);
         }
         free(_pages);
     }
@@ -254,9 +254,8 @@ DecryptedOk:
     // error might prevent loading some pdfs that would
     // otherwise get displayed
 
-    _pages = (pdf_page**)malloc(sizeof(pdf_page*) * _pageCount);
-    for (int i = 0; i < _pageCount; i++)
-        _pages[i] = NULL;
+    _pages = (PdfPage *)malloc(sizeof(PdfPage) * _pageCount);
+    memset(_pages, 0, sizeof(PdfPage) * _pageCount);
     return true;
 Error:
     return false;
@@ -287,11 +286,9 @@ PdfTocItem *PdfEngine::getTocTree()
 
 int PdfEngine::findPageNo(fz_obj *dest)
 {
-    int p = 0;
-    if (fz_isint(dest)) {
-        p = fz_toint(dest);
-        return p+1;
-    }
+    if (fz_isint(dest))
+        return fz_toint(dest) + 1;
+
     if (fz_isdict(dest)) {
         // The destination is linked from a Go-To action's D array
         fz_obj * D = fz_dictgets(dest, "D");
@@ -299,15 +296,13 @@ int PdfEngine::findPageNo(fz_obj *dest)
             dest = fz_arrayget(D, 0);
     }
     int n = fz_tonum(dest);
-    int g = fz_togen(dest);
 
-    for (p = 1; p <= _pageCount; p++)
+    for (int i = 0; i < _pageCount; i++)
     {
-        fz_obj *page = pdf_getpageobject(_xref, p);
-        int np = fz_tonum(page);
-        int gp = fz_togen(page);
-        if (n == np && g == gp)
-            return p;
+        if (0 == _pages[i].num)
+            _pages[i].num = fz_tonum(pdf_getpageobject(_xref, i + 1));
+        if (n == _pages[i].num)
+            return i + 1;
     }
 
     return 0;
@@ -325,7 +320,7 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
         return NULL;
 
     WaitForSingleObject(_getPageSem, INFINITE);
-    pdf_page* page = _pages[pageNo-1];
+    pdf_page* page = _pages[pageNo-1].page;
     if (page) {
         if (!ReleaseSemaphore(_getPageSem, 1, NULL))
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
@@ -338,7 +333,8 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
             DBG_OUT("Fitz: ReleaseSemaphore error!\n");
         return NULL;
     }
-    _pages[pageNo-1] = page;
+    _pages[pageNo-1].page = page;
+    _pages[pageNo-1].num = fz_tonum(obj);
     if (!ReleaseSemaphore(_getPageSem, 1, NULL))
         DBG_OUT("Fitz: ReleaseSemaphore error!\n");
     linkifyPageText(page);
@@ -349,11 +345,11 @@ void PdfEngine::dropPdfPage(int pageNo)
 {
     assert(_pages);
     if (!_pages) return;
-    pdf_page* page = _pages[pageNo-1];
+    pdf_page* page = _pages[pageNo-1].page;
     assert(page);
     if (!page) return;
     pdf_droppage(page);
-    _pages[pageNo-1] = NULL;
+    _pages[pageNo-1].page = NULL;
 }
 
 int PdfEngine::pageRotation(int pageNo)
@@ -469,7 +465,7 @@ int PdfEngine::linkCount() {
 
     for (int i=0; i < _pageCount; i++)
     {
-        pdf_page* page = _pages[i];
+        pdf_page* page = _pages[i].page;
         if (page)
             count += linksLinkCount(page->links);
     }
@@ -485,7 +481,7 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
 
     for (pageNo=0; pageNo < _pageCount; pageNo++)
     {
-        pdf_page* page = _pages[pageNo];
+        pdf_page* page = _pages[pageNo].page;
         if (!page)
             continue;
         link = page->links;
