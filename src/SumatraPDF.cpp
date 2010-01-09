@@ -4279,15 +4279,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             else
                 rotation = bPrintPortrait ? 0 : 90;
 
-            double zoom;
-            int printAreaDx, printAreaDy;
-            if (0 == rotation) {
-                zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
-                printAreaDx = zoom * pSize.dx(); printAreaDy = zoom * pSize.dy();
-            } else {
-                zoom = min((double)printAreaWidth / pSize.dy(), (double)printAreaHeight / pSize.dx());
-                printAreaDx = zoom * pSize.dy(); printAreaDy = zoom * pSize.dx();
-            }
+            double zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
+            int printAreaDx = zoom * pSize.dx(), printAreaDy = zoom * pSize.dy();
 
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
             if (!bmp)
