@@ -623,7 +623,7 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 			if (!strcmp(fontname, baseSubstitutes[i].name))
 				break;
 		if (i < _countof(baseSubstitutes))
-			found = bsearch(baseSubstitutes[i].name, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
+			found = bsearch(baseSubstitutes[i].pattern, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookupcompare);
 	}
 	// third, search for the font name without additional style information
 	if (!found)
