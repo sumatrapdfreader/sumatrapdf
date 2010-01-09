@@ -6257,7 +6257,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 
     win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
-                        TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|
+                        TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                         WS_TABSTOP|WS_CHILD,
                         0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
 
@@ -6444,6 +6444,42 @@ void WindowInfo::ClearTocBox()
     if (!tocLoaded) return;
     TreeView_DeleteAllItems(hwndTocBox);
     tocLoaded = false;
+}
+
+static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
+{
+    pdf_link *link = (pdf_link *)nmit->lParam;
+    TCHAR *path = NULL;
+
+    if (!link || PDF_LGOTO == link->kind) {
+    } else if (PDF_LURI == link->kind) {
+        path = utf8_to_tstr(fz_tostrbuf(link->dest));
+    } else if (PDF_LLAUNCH == link->kind) {
+        fz_obj *obj = fz_dictgets(link->dest, "Type");
+        if (fz_isname(obj) && !strcmp(fz_toname(obj), "FileSpec"))
+            path = utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
+    }
+
+    if (!path)
+        return;
+
+    RECT rcLine, rcLabel;
+    HWND hTV = nmit->hdr.hwndFrom;
+    // Display the item's full label, if it's overlong
+    TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
+    TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
+    if (rcLine.right + 2 < rcLabel.right) {
+        TVITEM item;
+        item.hItem = nmit->hItem;
+        item.mask = TVIF_TEXT;
+        item.pszText = nmit->pszText;
+        item.cchTextMax = nmit->cchTextMax;
+        TreeView_GetItem(hTV, &item);
+        tstr_cat_s(nmit->pszText, nmit->cchTextMax, _T("\r\n"));
+    }
+
+    tstr_cat_s(nmit->pszText, nmit->cchTextMax, path);
+    free(path);
 }
 
 static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -7055,6 +7091,9 @@ InitMouseWheelInfo:
                             default:
                                 return CDRF_DODEFAULT;
                         }
+                        break;
+                    case TVN_GETINFOTIP:
+                        CustomizeToCInfoTip((LPNMTVGETINFOTIP)lParam);
                         break;
                 }
             }
