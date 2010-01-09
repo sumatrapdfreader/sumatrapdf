@@ -571,6 +571,7 @@ nn:&Vis
 -
 Automatic
 br:Automático
+bg:Автоматично
 de:Automatisch
 gr:Αυτόματα
 es:Automático
@@ -705,6 +706,7 @@ hi:पुस्तक
 nn:Motståande
 -
 Book view
+bg:Като книга
 de:Buchansicht
 sv:Bokuppslag
 ru:В разворот
@@ -827,12 +829,14 @@ hi:निरन्तर पुस्तक
 nn:Kontunuerleg motståande
 -
 Continuous book view
+bg:Като книга - непрекъснати
 de:Fortlaufende Buchansicht
 sv:Fortlöpande bokuppslag
 ru:В разворот непрерывно
 cy:Golwg llyfr didor
 -
 Show pages continuously
+bg:Непрекъснати
 de:Fortlaufend anzeigen
 ru:Непрерывно
 sv:Visa sidor fortlöpande
@@ -3440,6 +3444,7 @@ sp-rs:Preskoči ovu verziju
 -
 Warning
 am:Զգուշացում
+bg:Внимание
 br:Aviso
 by:Папярэджанне
 hu:Figyelmeztetés
@@ -3465,6 +3470,7 @@ tw:警告
 -
 SumatraPDF Options
 am:Ընտրանքներ
+bg:Опции на SumatraPDF
 br:Opções do SumatraPDF
 by:Параметры SumatraPDF
 hu:A SumatraPDF beállításai
@@ -3547,6 +3553,7 @@ nn:Tilpass breidde
 -
 &Settings
 am:&Կարգավորումներ
+bg:Настройки
 br:&Preferências
 by:Налады
 hu:&Beállítások
@@ -3629,6 +3636,7 @@ nn:Tilpass side
 -
 &Options...
 am:&Ընտրանքներ...
+bg:Параметри
 br:&Opções...
 by:&Параметры...
 hu:&Beállítások
@@ -3653,6 +3661,7 @@ tw:選項(&O)...
 -
 Default &Layout:
 am:Չափը &Լռելայն
+bg:Раположение по подразбиране
 br:&Visualização Padrão
 by:&Кампаноўка па змаўчанні
 hu:Oldalmegjelenítési mód:
@@ -3676,6 +3685,7 @@ sp-rs:Podrazumevani prikaz
 -
 Default &Zoom:
 am:Մեծությունը &Լռելայն
+bg:Увеличение по подразбиране
 br:&Zoom Padrão
 by:&Маштаб па змаўчанні
 hu:Alap nagyítás:
@@ -3720,6 +3730,7 @@ sp-rs:U redu
 -
 Advanced
 am:Ընդլայնված
+bg:Допълнителни
 br:Avançado
 by:Дадаткова
 hu:További programbeállítások
@@ -3743,6 +3754,7 @@ sp-rs:Dodatno
 -
 Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցույց տալ &Ընտրյալները
+bg:Покажи показалеца в станичната колона когато е възможно
 br:Mostrar barra lateral de marcadores quando disponível
 by:Паказваць панэль &закладак (пры магчымасці)
 hu:Dokumentumba ágyazott könyvjelzők mutatása
@@ -3766,6 +3778,7 @@ sp-rs:Prikaži traku sa beleškama kada je dostupna
 -
 Cancel
 am:Մերժել
+bg:Откажи
 br:Cancelar
 by:Адмена
 hu:Mégse
@@ -3789,6 +3802,7 @@ sp-rs:Odustani
 -
 Automatically check for &updates
 am:Ինքնաշխատ ստուգել &թարմացումները
+bg:Автоматично проверявай за обновления
 br:&Buscar atualizações automaticamente
 by:&Аўтаматычная праверка абнаўленняў
 hu:&Program&frissítések automatikus keresése bekapcsoláskor
@@ -3812,6 +3826,7 @@ sp-rs:Automatski proveravaj dostupnost nove verzije
 -
 &Remember these settings for each document
 am:Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
+bg:Запази настройките за всеки документ
 br:Lembrar estas preferências para cada documento
 by:Запомніць гэтыя параметры для &кожнага дакумента
 hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
@@ -3835,6 +3850,7 @@ sp-rs:Zapamti ova podešavanja za svaki pojedinačni dokument
 -
 Remember &opened files
 am:Հիշել &բացված ֆայլերը
+bg:Запомни отворените файлове
 br:&Lembrar arquivos abertos
 by:&Запомніць адкрытыя файлы
 hu:Korábban megnyitott file-ok listájának tárolása
@@ -3916,6 +3932,7 @@ nn:Vis
 -
 &Go to page:
 am:&Անցնել էջին.
+bg:Отиди на страница:
 br:&Ir para a página:
 by:&Перайсці да старонкі
 hu:&Ugrás oldal:
@@ -3940,6 +3957,7 @@ sp-rs:Idi na stranu:
 -
 (of %d)
 am:(%d-ից)
+bg:(от %d)
 br:(de %d)
 by:(з %d)
 hu:(a %d-ból)
@@ -3964,6 +3982,7 @@ sp-rs:(od %d)
 -
 Download
 am:Բեռնել
+bg:Свали
 br:Baixar
 by:Загрузка
 hu:Letöltés
@@ -3988,6 +4007,7 @@ sp-rs:Preuzmi
 -
 &Yes
 am:&Այո
+bg:Да
 br:&Sim
 by:Да
 hu:&Igen
@@ -4012,6 +4032,7 @@ sp-rs:Da
 -
 &No
 am:&Ոչ
+bg:Не
 br:&Não
 by:Нет
 hu:&Nem
@@ -4036,6 +4057,7 @@ sp-rs:Ne
 -
 &No, thanks
 am:&Ոչ,շնորհակալություն։
+bg:Не, благодаря
 br:&Não, obrigado
 by:Дзякуй, не
 hu:Köszönöm,&nem
@@ -4060,6 +4082,7 @@ sp-rs:Ne, hvala
 -
 Please wait - rendering...
 am:Խնդրում ենք սպասել...
+bg:Моля изчакайте - изображението се създава
 br:Por favor, aguarde, renderizando...
 by:Пачакайце - фармуецца малюнак...
 hu:Feldolgozás, kérem várjon
@@ -4084,6 +4107,7 @@ sp-rs:Molimo sačekajte - spremam prikaz...
 -
 Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
+bg:Страницата не може да се изобрази
 br:Não foi possível renderizar a página
 by:Не атрымаўся сфармаваць малюнак старонкі
 hu:Oldalfeldolgozási hiba
@@ -4108,6 +4132,7 @@ sp-rs:Nemoguće prikazivanje strane
 -
 No matches were found
 am:Օրինակներ չի գտնվել
+bg:Няма съвпадения
 br:Nenhuma ocorrência encontrada
 by:Узор не знойдзены
 hu:Nem található a dokumentumban
@@ -4132,6 +4157,7 @@ sp-rs:Pojam nije pronađen
 -
 Found text at page %d
 am:Տեքստը գտնվել է %d էջում
+bg:Текста е намерен на страница %d
 br:Texto encontrado na página %d
 by:Тэкст знойдзены на стар. %d
 hu:Találat a(z) %d. oldalon
@@ -4156,6 +4182,7 @@ sp-rs:Tekst je pronađen na strani %d
 -
 Searching %d of %d...
 am:Փնտրվում է %d-ից %d
+bg:Търсене в страница %d от %d...
 br:Localizando %d de %d...
 by:Апрацоўка старонкі %d з %d...
 hu:Keresés a(z) %d./%d oldalon
@@ -4180,6 +4207,7 @@ sp-rs:Pretražujem stranu %d od %d...
 -
 PDF documents
 am:PDF փաստաթղթեր
+bg:PDF документи
 br:Documentos PDF
 by:PDF-дакументы
 hu:PDF dokumentumok
@@ -4212,6 +4240,7 @@ cy:Dogfennau testun
 -
 All files
 am:Բոլոր ֆայլերը
+bg:Всички файлове
 br:Todos os arquivos
 by:Усе файлы
 hu:Minden fájl
@@ -4236,6 +4265,7 @@ sp-rs:Sve datoteke
 -
 &Password:
 am:&Գաղտնաբառը
+bg:Парола
 br:&Senha:
 by:&Пароль:
 hu:&Jelszó:
@@ -4260,6 +4290,7 @@ sp-rs:Lozinka
 -
 &Find what:
 am:&Ինչ փնտրել.
+bg:Търсене на:
 br:&Localizar o quê:
 by:&Узор:
 hu:Mit keres:
@@ -4284,6 +4315,7 @@ sp-rs:Pojam:
 -
 Find
 am:Փնտրել
+bg:Търси
 br:Localizar
 by:Знайсці
 hu:Keresés
@@ -4308,6 +4340,7 @@ sp-rs:Pronađi
 -
 &Match case
 am:&Հաշվի առնել գրանցումները
+bg:Същия текст
 br:Diferenciar minúsculas e maiúsculas
 by:&Улічваць рэгістр
 hu:Kis- és nagybetűk megkülönböztetése
@@ -4332,6 +4365,7 @@ sp-rs:Razlikuj mala i velika slova
 -
 Hint: Use the F3 key for finding again
 am:Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
+bg:Съвет: Използвайте F3 за повторно търсене
 br:Dica: tecle F3 para ver a próxima ocorrência
 ru:Для повторного поиска используйте клавишу F3
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
@@ -4355,6 +4389,7 @@ sp-rs:Savet: Koristite taster F3 za nastavak pretrage
 -
 Couldn't initialize printer
 am:Հնարավոր չէ գտնել տպիչ
+bg:Принтера не може да бъде инициализиран
 br:Não foi possível acionar a impressora
 ru:Не удалось инициализировать принтер
 hu:A nyomtató inicializálása nem sikerült
@@ -4378,6 +4413,7 @@ sp-rs:Nije moguće pokrenuti štampač
 -
 No synchronization info at this position
 am:Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
+bg:В тази позиция няма информация за синхронизация
 br:Não há informação de sincronização nesta posição
 by:У гэтай пазіцыі адсутнічае інфармацыя для сінхранізацыі
 hu:Nem található szinkronizálási információ az adott pozícióhoz
@@ -4402,6 +4438,7 @@ sp-rs:Nema podataka o usklađenosti na ovoj poziciji
 -
 Synchronization file cannot be opened
 am:Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
+bg:Синхронизационния файл не може да бъде отворен
 br:Não foi possível abrir o arquivo de sincronização
 by:Не атрымалася адкрыць файл з інфармацыяй для сінхранізацыі
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
@@ -4426,6 +4463,7 @@ sp-rs:Nije moguće otvoriti usklađivačku datoteku
 -
 Page number %u inexistant
 am:%u էջը գոյություն չունի
+bg:Страница номер не съществува
 br:A página %u não existe
 by:Старонка %u не існуе
 hu:A(z) %u oldalszám nem létezik
@@ -4450,6 +4488,7 @@ sp-rs:Strana broj %u ne postoji
 -
 No result found around line %u in file %s
 am:%s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
+bg:Няма резултати около линия %u във файла %s
 br:Nenhum resultado próximo à linha %u no arquivo %s
 by:Вынік, які адпавядае радку %u у файле %s, не знойдзены
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
@@ -4473,6 +4512,7 @@ sp-rs:Rezultati oko linije %u u datoteci %s nisu pronađeni
 -
 Source file %s has no synchronization point
 am:%s ֆայլը չունի սինխրոնիզացման կետ
+bg:Източника %s няма синхронизационна точка
 br:O arquivo fonte %s não tem ponto de sincronização
 by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
@@ -4497,6 +4537,7 @@ sp-rs:Izvorna datoteka nema tačku usklađivanja
 -
 [Changes detected; refreshing] %s
 am:[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
+bg:[Намерени са промени; обновявам] %s
 br:[Mudanças detectadas; atualizando] %s
 by:[Выяўлены змены; адбываецца абнаўленне] %s
 hu:[a file megváltozott; frissítés] %s
@@ -4521,6 +4562,7 @@ sp-rs:[Promene su primećene; osvežavam] %s
 -
 Unknown source file (%s)
 am:Անհայտ ֆայլ (%s)
+bg:Непознат файл източник (%s)
 br:Arquivo fonte desconhecido (%s)
 by:Невядомы зыходны файл (%s)
 hu:Ismeretlen forrásfájl (%s)
@@ -4545,6 +4587,7 @@ sp-rs:Nepoznata izvorna datoteka (%s)
 -
 Cannot print this file
 am:Հնարավոր չէ տպել այս ֆայլը
+bg:Файла не може да бъде отпечатан
 br:Não foi possível imprimir este arquivo
 by:Не атрымалася раздрукаваць гэты файл
 hu:Ez a file nem nyomtatható
@@ -4569,6 +4612,7 @@ sp-rs:Štampanje ove datoteke nije moguće
 -
 PDF Document
 am:PDF փաստաթուղթ
+bg:PDF документ
 br:Documento PDF
 by:PDF-дaкумент
 hu:PDF dokumentum
@@ -4754,6 +4798,7 @@ sr-rs:Отвори у програму Adobe Reader
 sp-rs:Otvori u programu Adobe Reader
 -
 Copy Selection\tCtrl-C
+bg:Копирай избраното\tCtrl-C
 br:Copiar seleção\tCtrl-C
 de:Auswahl kopieren\tStrg+C
 gr:Αντιγραφή επιλεγμένων\tCtrl-C
@@ -4773,6 +4818,7 @@ sp-rs:Kopiraj izabrano
 cy:Copïo'r Dewis\tCtrl-C
 -
 Select content with Ctrl+left mouse button
+bg:Изберете съдържание с Ctrl и левия бутон на мишката
 br:Selecionar com Ctrl+Botão esquerdo do mouse
 de:Inhalte mit Strg+linker Maustaste auswählen
 gr:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
@@ -4792,6 +4838,7 @@ sp-rs:Da izaberete sadržaj, koristite Ctrl i levo dugme miša
 cy:Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 -
 &Custom Zoom...
+bg:Увеличение по избор...
 br:&Zoom personalizado...
 de:&Zoomfaktor...
 gr:&Ορισμός ζουμ...
@@ -4812,6 +4859,7 @@ tw:自訂縮放(&C)...
 cy:&Addasu Chwyddo...
 -
 Zoom factor
+bg:оефициент на увеличение
 br:Proporção de Zoom
 de:Zoomfaktor
 gr:Ποσοστό ζουμ
@@ -4832,6 +4880,7 @@ tw:縮放比例
 cy:Ffactor Chwyddo
 -
 &Magnification:
+bg:Увеличение:
 br:Aumento:
 de:&Vergrößerung:
 gr:Μεγέθυνση:
@@ -4852,6 +4901,7 @@ tw:倍率(&M)
 cy:&Chwyddiad:
 -
 Zoom
+bg:Увеличение
 br:Zoom
 de:Zoom
 gr:Ζουμ
@@ -4872,6 +4922,7 @@ tw:縮放
 cy:Chwyddo
 -
 Cannot start inverse search command. Please check the command line in the settings.
+bg:Обратното търсене не може да започне. Моля проверете параметрите в настройките.
 br:Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
@@ -5007,6 +5058,7 @@ hi:पिछले पृष्ठ पर\t<-
 nn:Førre side\t<-
 -
 No synchronization file found
+bg:Синфронизационния файл не е намерен
 fr:Aucun fichier de synchronization trouvé
 de:Synchronisationsdatei nicht gefunden
 ru:Файл синхронизации не найден
