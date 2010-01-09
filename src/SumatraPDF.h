@@ -130,6 +130,7 @@ public:
         hdcDoubleBuffer = NULL;
         bmpDoubleBuffer = NULL;
         title = NULL;
+        currPageNo = 0;
     }
     
     void GetCanvasSize() { 
@@ -234,6 +235,7 @@ public:
     POINT           prevCanvasBR;
 
     TCHAR *         title;
+    int             currPageNo;
 
     void ShowTocBox();
     void HideTocBox();

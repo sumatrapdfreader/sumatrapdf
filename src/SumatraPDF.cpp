@@ -2377,7 +2377,7 @@ static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, 
     return hCurrItem;
 }
 
-static void WindowInfo_UpdateTocSelection(WindowInfo *win, int pageNo)
+static void WindowInfo_UpdateTocSelection(WindowInfo *win, int currPageNo)
 {
     if (!win->dm || !win->dm->_showToc || !win->tocLoaded)
         return;
@@ -2385,9 +2385,10 @@ static void WindowInfo_UpdateTocSelection(WindowInfo *win, int pageNo)
     HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocBox);
     if (!hRoot)
         return;
-    HTREEITEM hCurrItem = WindowInfo_TreeItemForPageNo(win, hRoot, pageNo);
+    HTREEITEM hCurrItem = WindowInfo_TreeItemForPageNo(win, hRoot, currPageNo);
     if (hCurrItem)
         TreeView_SelectItem(win->hwndTocBox, hCurrItem);
+    win->currPageNo = currPageNo;
 }
 
 // The current page edit box is updated with the current page number
@@ -2406,7 +2407,8 @@ void DisplayModel::pageChanged()
             SetWindowText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
-        WindowInfo_UpdateTocSelection(win, currPageNo);
+        if (currPageNo != win->currPageNo)
+            WindowInfo_UpdateTocSelection(win, currPageNo);
     }
 }
 
@@ -5589,7 +5591,7 @@ static void OnMenuAbout() {
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL)
+static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
     if (!hItem)
         hItem = TreeView_GetSelection(hTV);
@@ -5598,7 +5600,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
-    if (win->dm && item.lParam)
+    if (win->dm && item.lParam && (allowExternal || PDF_LGOTO == ((pdf_link *)item.lParam)->kind))
         win->dm->goToTocLink((pdf_link *)item.lParam);
 }
 
@@ -6444,6 +6446,7 @@ void WindowInfo::ClearTocBox()
     if (!tocLoaded) return;
     TreeView_DeleteAllItems(hwndTocBox);
     tocLoaded = false;
+    currPageNo = 0;
 }
 
 static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
@@ -7049,7 +7052,7 @@ InitMouseWheelInfo:
                         // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
                         // We have to ignore this message to prevent the current page to be changed.
                         if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
-                            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem);
+                            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
                         // The case pnmtv->action==TVC_UNKNOWN is ignored because 
                         // it corresponds to a notification sent by
                         // the function TreeView_DeleteAllItems after deletion of the item.
