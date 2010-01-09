@@ -97,19 +97,22 @@ FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
 	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
-FITZ_CFLAGS = $(FITZ_CFLAGS) /D "UNICODE" /D "_UNICODE"
-
 SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc \
 	/I$(FITZ_DIR)\fitz /I$(FITZ_DIR)\mupdf \
 	/I$(ZLIB_DIR) /Isrc /IDialogSizer 
 
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
 !if "$(TEXBUILD)"=="1"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=_T(\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\")" /D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")" /D "CURR_VERSION=\"$(VERSION)\""
+!endif
+
+# Make it easy to compile as ANSI or UNICODE application
+!if "$(_ANSI)"==""
+FITZ_CFLAGS = $(FITZ_CFLAGS) /D "UNICODE" /D "_UNICODE"
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib \
