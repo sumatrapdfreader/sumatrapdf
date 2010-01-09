@@ -37,6 +37,7 @@ public:
     TCHAR *title;
     pdf_link *link;
     bool open;
+    int pageNo;
 
     PdfTocItem *child;
     PdfTocItem *next;
@@ -48,6 +49,7 @@ public:
         this->child = NULL;
         this->next = NULL;
         this->open = true;
+        this->pageNo = 0;
     }
 
     ~PdfTocItem()

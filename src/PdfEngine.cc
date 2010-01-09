@@ -266,6 +266,8 @@ PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
     TCHAR *name = utf8_to_tstr(entry->title);
     PdfTocItem *node = new PdfTocItem(name, entry->link);
     node->open = entry->count >= 0;
+    if (entry->link && PDF_LGOTO == entry->link->kind)
+        node->pageNo = findPageNo(entry->link->dest);
 
     if (entry->child)
         node->AddChild(buildTocTree(entry->child));

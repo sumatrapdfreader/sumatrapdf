@@ -85,6 +85,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
 #define WM_APP_FIND_UPDATE     (WM_APP + 13)
 #define WM_APP_FIND_END        (WM_APP + 14)
+#define WM_APP_REPAINT_TOC     (WM_APP + 15)
 
 #define COL_WHITE RGB(0xff,0xff,0xff)
 #define COL_BLACK RGB(0,0,0)
@@ -6232,6 +6233,15 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             else if ('-' == wParam)
                 win->dm->zoomBy(ZOOM_OUT_FACTOR);
             break;
+        case WM_SIZE:
+        case WM_HSCROLL:
+            // Repaint the ToC so that RelayoutTocItem is called for all items
+            PostMessage(hwnd, WM_APP_REPAINT_TOC, 0, 0);
+            break;
+        case WM_APP_REPAINT_TOC:
+            InvalidateRect(hwnd, NULL, TRUE);
+            UpdateWindow(hwnd);
+            break;
     }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 }
@@ -6250,7 +6260,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
 
     win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
-                        TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_INFOTIP|TVS_FULLROWSELECT|
+                        TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|
                         WS_TABSTOP|WS_CHILD,
                         0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
 
@@ -6277,8 +6287,14 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     // Replace unprintable whitespace with regular spaces
     tstr_trans_chars(entry->title, _T("\t\n\v\f\r"), _T("     "));
     tvinsert.itemex.pszText = entry->title;
-    
-    return TreeView_InsertItem(hwnd, &tvinsert);
+
+    if (!entry->pageNo)
+        return TreeView_InsertItem(hwnd, &tvinsert);
+
+    tvinsert.itemex.pszText = tstr_printf(_T("%s  %d"), entry->title, entry->pageNo);
+    HTREEITEM hItem = TreeView_InsertItem(hwnd, &tvinsert);
+    free(tvinsert.itemex.pszText);
+    return hItem;
 }
 
 static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
@@ -6287,6 +6303,70 @@ static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent =
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent);
         PopulateTocTreeView(hwnd, entry->child, node);
     }
+}
+
+static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
+{
+    // code inspired by http://www.codeguru.com/cpp/controls/treeview/multiview/article.php/c3985/
+    LPNMCUSTOMDRAW ncd = &ntvcd->nmcd;
+    HWND hTV = ncd->hdr.hwndFrom;
+    HTREEITEM hItem = (HTREEITEM)ncd->dwItemSpec;
+    RECT rcItem;
+    if (0 == ncd->rc.right - ncd->rc.left || 0 == ncd->rc.bottom - ncd->rc.top)
+        return;
+    if (!TreeView_GetItemRect(hTV, hItem, &rcItem, TRUE))
+        return;
+    if (rcItem.right > ncd->rc.right)
+        rcItem.right = ncd->rc.right;
+
+    // Clear the label
+    RECT rcFullWidth = rcItem;
+    rcFullWidth.right = ncd->rc.right;
+    HBRUSH brushBg = CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+    FillRect(ncd->hdc, &rcFullWidth, brushBg);
+    DeleteObject(brushBg);
+
+    // Get the label's text
+    TCHAR szText[MAX_PATH];
+    TVITEM item;
+    item.hItem = hItem;
+    item.mask = TVIF_TEXT;
+    item.pszText = szText;
+    item.cchTextMax = MAX_PATH;
+    TreeView_GetItem(hTV, &item);
+
+    // Draw the page number right-aligned (if there is one)
+    TCHAR *lpPageNo = item.pszText + lstrlen(item.pszText);
+    for (lpPageNo--; lpPageNo > item.pszText && _istdigit(*lpPageNo); lpPageNo--);
+    if (lpPageNo > item.pszText && ' ' == *lpPageNo && *(lpPageNo + 1) && ' ' == *--lpPageNo) {
+        RECT rcPageNo = rcFullWidth;
+        InflateRect(&rcPageNo, -2, -1);
+
+        SIZE txtSize;
+        GetTextExtentPoint32(ncd->hdc, lpPageNo, lstrlen(lpPageNo), &txtSize);
+        rcPageNo.left = rcPageNo.right - txtSize.cx;
+
+        SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
+        SetBkColor(ncd->hdc, GetSysColor(COLOR_WINDOW));
+        DrawText(ncd->hdc, lpPageNo, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER);
+
+        // Reduce the size of the label and cut off the page number
+        rcItem.right = max(rcItem.right - txtSize.cx, 0);
+        *lpPageNo = 0;
+    }
+
+    SetTextColor(ncd->hdc, ntvcd->clrText);
+    SetBkColor(ncd->hdc, ntvcd->clrTextBk);
+
+    // Draw the focus rectangle (including proper background color)
+    brushBg = CreateSolidBrush(ntvcd->clrTextBk);
+    FillRect(ncd->hdc, &rcItem, brushBg);
+    DeleteObject(brushBg);
+    if ((ncd->uItemState & CDIS_FOCUS))
+        DrawFocusRect(ncd->hdc, &rcItem);
+
+    InflateRect(&rcItem, -2, -1);
+    DrawText(ncd->hdc, item.pszText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
 }
 
 void WindowInfo::LoadTocTree()
@@ -6965,6 +7045,19 @@ InitMouseWheelInfo:
                     }
                     case NM_RETURN:
                         GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
+                        break;
+                    case NM_CUSTOMDRAW:
+                        switch (((LPNMCUSTOMDRAW)lParam)->dwDrawStage) {
+                            case CDDS_PREPAINT:
+                                return CDRF_NOTIFYITEMDRAW;
+                            case CDDS_ITEMPREPAINT:
+                                return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+                            case CDDS_ITEMPOSTPAINT:
+                                RelayoutTocItem((LPNMTVCUSTOMDRAW)lParam);
+                                // fall through
+                            default:
+                                return CDRF_DODEFAULT;
+                        }
                         break;
                 }
             }
