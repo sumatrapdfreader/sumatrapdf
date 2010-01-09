@@ -2162,15 +2162,14 @@ Error:
         }
         UpdateWindow(win->hwndFrame);
     }
+    if (win->tocLoaded)
+        win->ClearTocBox();
     if (win->dm)
         win->dm->setScrollState(&ss);
     if (win->dm && win->dm->_showToc) {
         if (win->dm->hasTocTree()) {
-            win->ClearTocBox();
             win->ShowTocBox();
-        }
-        else
-        {
+        } else {
             // Hide the now useless ToC sidebar and force an update afterwards
             win->HideTocBox();
             WindowInfo_RedrawAll(win, true);
@@ -2345,36 +2344,34 @@ static void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
-static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hParent, int pageNo)
+static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
 {
     HTREEITEM hCurrItem = NULL;
 
-    TVITEM item;
-    item.hItem = hParent;
-    item.mask = TVIF_PARAM | TVIF_STATE;
-    item.stateMask = TVIS_EXPANDED;
-    TreeView_GetItem(win->hwndTocBox, &item);
+    while (hItem) {
+        TVITEM item;
+        item.hItem = hItem;
+        item.mask = TVIF_PARAM | TVIF_STATE;
+        item.stateMask = TVIS_EXPANDED;
+        TreeView_GetItem(win->hwndTocBox, &item);
 
-    // return if this item is on the specified page (or on a latter page)
-    if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
-        int page = win->dm->pdfEngine->findPageNo(((pdf_link *)item.lParam)->dest);
-        if (page > pageNo)
-            return NULL;
-        if (page == pageNo)
-            return hParent;
-        hCurrItem = hParent;
-    }
-
-    // find any child item closer to the specified page
-    if ((item.state & TVIS_EXPANDED)) {
-        HTREEITEM hChild = TreeView_GetChild(win->hwndTocBox, hParent);
-        while (hChild) {
-            HTREEITEM hItem = WindowInfo_TreeItemForPageNo(win, hChild, pageNo);
-            if (!hItem)
+        // return if this item is on the specified page (or on a latter page)
+        if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
+            int page = win->dm->pdfEngine->findPageNo(((pdf_link *)item.lParam)->dest);
+            if (page <= pageNo)
+                hCurrItem = hItem;
+            if (page >= pageNo)
                 break;
-            hCurrItem = hItem;
-            hChild = TreeView_GetNextSibling(win->hwndTocBox, hChild);
         }
+
+        // find any child item closer to the specified page
+        HTREEITEM hSubItem = NULL;
+        if ((item.state & TVIS_EXPANDED))
+            hSubItem = WindowInfo_TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocBox, hItem), pageNo);
+        if (hSubItem)
+            hCurrItem = hSubItem;
+
+        hItem = TreeView_GetNextSibling(win->hwndTocBox, hItem);
     }
 
     return hCurrItem;
@@ -2382,7 +2379,7 @@ static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hParent
 
 static void WindowInfo_UpdateTocSelection(WindowInfo *win, int pageNo)
 {
-    if (!win->dm || !win->dm->_showToc)
+    if (!win->dm || !win->dm->_showToc || !win->tocLoaded)
         return;
 
     HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocBox);
