@@ -4229,17 +4229,13 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
 
             int rotation = pdfEngine->pageRotation(pr->nFromPage) + dm->rotation();
-            double zoom;
-            int printAreaDx, printAreaDy;
-            if ((rotation % 180) == 0) {
-                zoom = min((double)printAreaWidth / r->dx, (double)printAreaHeight / r->dy);
-                printAreaDx = zoom * r->dx; printAreaDy = zoom * r->dy;
-            } else {
-                zoom = min((double)printAreaWidth / r->dy, (double)printAreaHeight / r->dx);
-                printAreaDx = zoom * r->dy; printAreaDy = zoom * r->dx;
-            }
+            // Swap width and height for rotated documents
+            SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
-            RenderedBitmap *bmp = pdfEngine->renderBitmap(pr->nFromPage, 100.0 * zoom, 0, &clipRegion, NULL, NULL);
+            double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
+            int printAreaDx = zoom * sSize.dx(), printAreaDy = zoom * sSize.dy();
+
+            RenderedBitmap *bmp = pdfEngine->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL);
             if (!bmp)
                 goto Error; /* most likely ran out of memory */
 
