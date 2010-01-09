@@ -1507,43 +1507,50 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
     return true;
 }
 
-static void launch_url(const TCHAR *url)
+TCHAR *DisplayModel::getLinkPath(pdf_link *link)
 {
-    ShellExecute(NULL, _T("open"), url, NULL, NULL, SW_SHOWNORMAL);
+    fz_obj *obj;
+    switch (link ? link->kind : -1) {
+        case PDF_LURI:
+            return utf8_to_tstr(fz_tostrbuf(link->dest));
+        case PDF_LLAUNCH:
+            obj = fz_dictgets(link->dest, "Type");
+            if (fz_isname(obj) && !strcmp(fz_toname(obj), "FileSpec"))
+                return utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
+            // fall through
+        default:
+            return NULL;
+    }
 }
 
 void DisplayModel::goToTocLink(pdf_link* link)
 {
+    TCHAR *path = NULL;
     if (!link)
         return;
-    if (PDF_LURI == link->kind) {
-        TCHAR *uri = utf8_to_tstr(fz_tostrbuf(link->dest));
-        if (tstr_startswithi(uri, _T("http:")) || tstr_startswithi(uri, _T("https:")))
-            launch_url(uri);
-        free(uri);
+    if (PDF_LURI == link->kind && (path = getLinkPath(link))) {
+        if (tstr_startswithi(path, _T("http:")) || tstr_startswithi(path, _T("https:")))
+            launch_url(path);
         /* else: unsupported uri type */
+        free(path);
     } else if (PDF_LGOTO == link->kind) {
         int page = pdfEngine->findPageNo(link->dest);
         if (page > 0) {
             addNavPoint();
             goToPage(page, 0);
         }
-    } else if (PDF_LLAUNCH == link->kind) {
-        fz_obj *obj = fz_dictgets(link->dest, "Type");
-        if (fz_isname(obj) && !strcmp(fz_toname(obj), "FileSpec")) {
-            TCHAR *path = utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
-            tstr_trans_chars(path, _T("/"), _T("\\"));
-            /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
-            if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
-                TCHAR *basePath = FilePath_GetDir(fileName());
-                TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
-                /* TODO: The new window gets pushed to the background */
-                LoadPdf(combinedPath);
-                free(combinedPath);
-                free(basePath);
-            }
-            free(path);
+    } else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
+        tstr_trans_chars(path, _T("/"), _T("\\"));
+        /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
+        if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
+            TCHAR *basePath = FilePath_GetDir(fileName());
+            TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
+            /* TODO: The new window gets pushed to the background */
+            LoadPdf(combinedPath);
+            free(combinedPath);
+            free(basePath);
         }
+        free(path);
     }
 }
 

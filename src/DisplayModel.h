@@ -246,7 +246,7 @@ public:
 
     int             getLinkCount(void);
     PdfLink *       linkAtPosition(int x, int y);
-
+    TCHAR *         getLinkPath(pdf_link *link);
     void            handleLink(PdfLink *pdfLink);
     void            goToNamedDest(const char *name);
 

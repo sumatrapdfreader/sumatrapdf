@@ -109,6 +109,8 @@ public:
         hwndTocBox = NULL;
         hwndSpliter = NULL;
         hwndTracker = NULL;
+        hwndInfotip = NULL;
+        infotipVisible = false;
         hMenu = NULL;
         hdc = NULL;
         dpi = 96;
@@ -165,6 +167,8 @@ public:
     HWND            hwndTocBox;
     HWND            hwndSpliter;
     HWND            hwndTracker;
+    HWND            hwndInfotip;
+    bool            infotipVisible;
     HMENU           hMenu;
 
     HDC             hdc;

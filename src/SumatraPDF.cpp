@@ -1958,6 +1958,11 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
 
+    win->hwndInfotip = CreateWindowEx(WS_EX_TOPMOST,
+        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        win->hwndCanvas, NULL, ghinst, NULL);
+
     CreateToolbar(win, ghinst);
     CreateTocBox(win, ghinst);
     WindowInfo_UpdateFindbox(win);
@@ -4753,7 +4758,7 @@ static void ViewWithAcrobat(WindowInfo *win)
         params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
     else
         params = tstr_printf(_T("\"%s\""), win->dm->fileName());
-    ShellExecute(NULL, _T("open"), acrobatPath, params, NULL, SW_NORMAL);
+    exec_with_params(acrobatPath, params);
     free(params);
 }
 
@@ -6449,20 +6454,10 @@ void WindowInfo::ClearTocBox()
     currPageNo = 0;
 }
 
-static void CustomizeToCInfoTip(LPNMTVGETINFOTIP nmit)
+static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
 {
     pdf_link *link = (pdf_link *)nmit->lParam;
-    TCHAR *path = NULL;
-
-    if (!link || PDF_LGOTO == link->kind) {
-    } else if (PDF_LURI == link->kind) {
-        path = utf8_to_tstr(fz_tostrbuf(link->dest));
-    } else if (PDF_LLAUNCH == link->kind) {
-        fz_obj *obj = fz_dictgets(link->dest, "Type");
-        if (fz_isname(obj) && !strcmp(fz_toname(obj), "FileSpec"))
-            path = utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
-    }
-
+    TCHAR *path = win->dm->getLinkPath(link);
     if (!path)
         return;
 
@@ -6542,6 +6537,31 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
+}
+
+static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link)
+{
+    if (!link && !win->infotipVisible)
+        return;
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = win->hwndCanvas;
+
+    if (link) {
+        ti.uFlags = TTF_SUBCLASS;
+        rect_set(&ti.rect, link->rectCanvas.x, link->rectCanvas.y, link->rectCanvas.dx, link->rectCanvas.dy);
+        ti.lpszText = win->dm->getLinkPath(link->link);
+        if (ti.lpszText) {
+            SendMessage(win->hwndInfotip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+            free(ti.lpszText);
+            win->infotipVisible = true;
+            return;
+        }
+    }
+
+    SendMessage(win->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    win->infotipVisible = false;
 }
 
 /* TODO: gAccumDelta must be per WindowInfo */
@@ -6627,10 +6647,12 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                     PdfLink * link = win->dm->linkAtPosition(pt.x, pt.y);
                     if (link) {
+                        CreateInfotipForPdfLink(win, link);
                         SetCursor(gCursorHand);
                         return TRUE;
                     }
                 }
+                CreateInfotipForPdfLink(win, NULL);
             }
             return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -7096,7 +7118,7 @@ InitMouseWheelInfo:
                         }
                         break;
                     case TVN_GETINFOTIP:
-                        CustomizeToCInfoTip((LPNMTVGETINFOTIP)lParam);
+                        CustomizeToCInfoTip(win, (LPNMTVGETINFOTIP)lParam);
                         break;
                 }
             }
