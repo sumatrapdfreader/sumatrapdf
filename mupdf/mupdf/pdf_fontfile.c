@@ -134,7 +134,7 @@ static const struct
 //       can be considered a simple string for searching
 typedef struct pdf_fontmapMS_s
 {
-	char fontface[MAX_FACENAME];
+	char fontface[MAX_FACENAME]; // UTF-8 encoded
 	char fontpath[MAX_PATH];
 	int index;
 } pdf_fontmapMS;
@@ -239,7 +239,7 @@ removespaces(char *srcDest)
 	char *dest;
 
 	for (dest = srcDest; *srcDest; srcDest++)
-		if (!isspace(*srcDest))
+		if (*srcDest != ' ')
 			*dest++ = *srcDest;
 	*dest = 0;
 }
@@ -258,7 +258,7 @@ decodeunicodeBMP(char* source, int sourcelen, char* dest, int destlen)
 	for (i = 0; i < sourcelen / 2; i++)
 		tmp[i] = SWAPWORD(((wchar_t *)source)[i]);
 
-	converted = WideCharToMultiByte(CP_ACP, 0, tmp, -1, dest, destlen, NULL, NULL);
+	converted = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, dest, destlen, NULL, NULL);
 	if (converted == 0)
 		return fz_throw("fonterror");
 
@@ -284,6 +284,7 @@ decodeplatformstring(int platform, int enctype, char* source, int sourcelen, cha
 		case TT_MAC_ID_ROMAN:
 			if (sourcelen + 1 > destlen)
 				return fz_throw("fonterror : short buf lenth");
+			// TODO: Convert to UTF-8 from what encoding?
 			memcpy(source, dest, sourcelen);
 			dest[sourcelen] = 0;
 			return fz_okay;
