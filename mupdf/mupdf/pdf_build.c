@@ -871,7 +871,7 @@ showglyph(pdf_csi *csi, int cid)
 	pdf_hmtx h;
 	pdf_vmtx v;
 	int gid;
-	int ucs;
+	int ucs = -1;
 
 	tsm.a = gstate->size * gstate->scale;
 	tsm.b = 0;
@@ -882,9 +882,11 @@ showglyph(pdf_csi *csi, int cid)
 
 	if (fontdesc->tounicode)
 		ucs = pdf_lookupcmap(fontdesc->tounicode, cid);
-	else if (cid < fontdesc->ncidtoucs)
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=787 */
+	/* fall back to ncidtoucs if the char wasn't in tounicode */
+	if (ucs < 0 && cid < fontdesc->ncidtoucs)
 		ucs = fontdesc->cidtoucs[cid];
-	else
+	if (ucs < 0)
 		ucs = '?';
 
 	gid = pdf_fontcidtogid(fontdesc, cid);

@@ -62,7 +62,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 		pdf_sortcmap(font->tounicode);
 
 		pdf_dropcmap(cmap);
-		return fz_okay;
+		// return fz_okay; // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=787
 	}
 
 	else if (collection)
