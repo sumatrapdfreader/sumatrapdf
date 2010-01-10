@@ -115,6 +115,7 @@ static const struct
 /***** start of Windows font loading code *****/
 
 #include <windows.h>
+#include <tchar.h>
 
 // TODO: Use more of FreeType for TTF parsing (for performance reasons,
 //       the fonts can't be parsed completely, though)
@@ -135,7 +136,7 @@ static const struct
 typedef struct pdf_fontmapMS_s
 {
 	char fontface[MAX_FACENAME]; // UTF-8 encoded
-	char fontpath[MAX_PATH];
+	char fontpath[MAX_PATH * 2]; // UTF-8 encoded (when compiled with _UNICODE)
 	int index;
 } pdf_fontmapMS;
 
@@ -535,16 +536,16 @@ cleanup:
 static fz_error
 pdf_createfontlistMS()
 {
-	char szFontDir[MAX_PATH];
-	char szFile[MAX_PATH*2];
+	TCHAR szFontDir[MAX_PATH], szFile[MAX_PATH];
+	char szPathUtf8[MAX_PATH * 3], *fileExt;
 	HANDLE hList;
-	WIN32_FIND_DATAA FileData;
+	WIN32_FIND_DATA FileData;
 
 	// Get the proper directory path
-	GetWindowsDirectoryA(szFontDir, sizeof(szFontDir));
-	strlcat(szFontDir,"\\Fonts\\*.?t?", MAX_PATH);
+	GetWindowsDirectory(szFontDir, _countof(szFontDir));
+	_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
 
-	hList = FindFirstFileA(szFontDir, &FileData);
+	hList = FindFirstFile(szFontDir, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
 	{
 		/* Don't complain about missing directories */
@@ -553,23 +554,28 @@ pdf_createfontlistMS()
 		return fz_throw("ioerror");
 	}
 	// drop the wildcards
-	szFontDir[strlen(szFontDir) - 5] = 0;
+	szFontDir[lstrlen(szFontDir) - 5] = 0;
 	// Traverse through the directory structure
 	do
 	{
 		if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			char *fileExt;
 			// Get the full path for sub directory
-			sprintf(szFile, "%s%s", szFontDir, FileData.cFileName);
-			fileExt = szFile + strlen(szFile) - 4;
+			_stprintf_s(szFile, MAX_PATH, _T("%s%s"), szFontDir, FileData.cFileName);
+#ifdef _UNICODE
+			WideCharToMultiByte(CP_UTF8, 0, szFile, -1, szPathUtf8, sizeof(szPathUtf8), NULL, NULL);
+#else
+			// fz_openrfile falls back to the ANSI code page if the string isn't proper UTF-8
+			strcpy(szPathUtf8, szFile);
+#endif
+			fileExt = szPathUtf8 + strlen(szPathUtf8) - 4;
 			if (!stricmp(fileExt, ".ttc"))
-				parseTTCs(szFile);
+				parseTTCs(szPathUtf8);
 			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
-				parseTTFs(szFile);
+				parseTTFs(szPathUtf8);
 			// ignore errors occurring while parsing a given font file
 		}
-	} while (FindNextFileA(hList, &FileData));
+	} while (FindNextFile(hList, &FileData));
 	FindClose(hList);
 
 	// sort the font list, so that it can be searched binarily
