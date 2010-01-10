@@ -149,6 +149,7 @@ static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
 static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
+static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
 static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapCloseToc;
@@ -206,6 +207,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     0, // int  m_fwdsearchOffset
     COL_FWDSEARCH_BG, // int  m_fwdsearchColor
     15, // int  m_fwdsearchWidth
+    FALSE, // BOOL m_invertColors
 };
 
 typedef struct ToolbarButtonInfo {
@@ -3097,7 +3099,7 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * boun
     // Draw frame
     HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x88, 0x88, 0x88));
     SelectObject(hdc, pe);
-    SelectObject(hdc, gBrushWhite);
+    SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, fx, fy, fx + fw, fy + fh);
     DeletePen(pe);
 }
@@ -3137,7 +3139,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (!entry || BITMAP_CANNOT_RENDER == renderedBmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
-            SetTextColor(hdc, COL_BLACK);
+            SetTextColor(hdc, gGlobalPrefs.m_invertColors ? COL_WHITE : COL_BLACK);
             if (!entry) {
                 /* TODO: assert is queued for rendering ? */
                 DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
@@ -7232,6 +7234,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorDrag  = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gBrushBg     = CreateSolidBrush(COL_WINDOW_BG);
     gBrushWhite  = CreateSolidBrush(COL_WHITE);
+    gBrushBlack  = CreateSolidBrush(COL_BLACK);
     gBrushShadow = CreateSolidBrush(COL_WINDOW_SHADOW);
 
     NONCLIENTMETRICS ncm = {0};
@@ -7346,6 +7349,9 @@ static DWORD WINAPI PageRenderThread(PVOID data)
             delete bmp;
             continue;
         }
+        if (bmp && gGlobalPrefs.m_invertColors)
+            for (int i = 0; i < bmp->dx() * bmp->dy() * 3; i++)
+                bmp->data()[i] = 255 - bmp->data()[i];
         if (bmp)
             DBG_OUT("PageRenderThread(): finished rendering %d\n", req.pageNo);
         else
@@ -7827,6 +7833,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             currArg = currArg->next;
             newWindowTitle = tstr_dup(currArg->str); 
         }
+        else if (is_arg("-invertcolors")) {
+            gGlobalPrefs.m_invertColors = TRUE;
+        }
 #ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             deleteFilesOnClose = true;
@@ -8008,6 +8017,7 @@ Exit:
     FileHistoryList_Free(&gFileHistoryRoot);
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);
+    DeleteObject(gBrushBlack);
     DeleteObject(gBrushShadow);
     DeleteObject(gDefaultGuiFont);
 
