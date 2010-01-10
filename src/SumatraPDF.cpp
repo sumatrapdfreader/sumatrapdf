@@ -3331,7 +3331,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect);
 static void OnPaintAbout(HWND hwnd);
 
-static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
+static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el=NULL)
 {
     if (gRestrictedUse)
         return NULL;
@@ -3349,6 +3349,8 @@ static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y)
         if ((y < gAboutLayoutInfo[i].rightTxtPosY) ||
             (y > gAboutLayoutInfo[i].rightTxtPosY + gAboutLayoutInfo[i].rightTxtDy))
             continue;
+        if (el)
+            *el = &gAboutLayoutInfo[i];
         return gAboutLayoutInfo[i].url;
     }
     return NULL;
@@ -6522,8 +6524,7 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_SETCURSOR:
             if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                url = AboutGetLink(NULL, pt.x, pt.y);
-                if (url) {
+                if (AboutGetLink(NULL, pt.x, pt.y)) {
                     SetCursor(gCursorHand);
                     return TRUE;
                 }
@@ -6560,17 +6561,17 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
     return 0;
 }
 
-static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link)
+static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutInfoEl *aboutEl=NULL)
 {
-    if (!link && !win->infotipVisible)
+    if (!link && !aboutEl && !win->infotipVisible)
         return;
 
     TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
     ti.hwnd = win->hwndCanvas;
+    ti.uFlags = TTF_SUBCLASS;
 
     if (link) {
-        ti.uFlags = TTF_SUBCLASS;
         rect_set(&ti.rect, link->rectCanvas.x, link->rectCanvas.y, link->rectCanvas.dx, link->rectCanvas.dy);
         ti.lpszText = win->dm->getLinkPath(link->link);
         if (ti.lpszText) {
@@ -6579,6 +6580,13 @@ static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link)
             win->infotipVisible = true;
             return;
         }
+    }
+    if (aboutEl && aboutEl->url) {
+        rect_set(&ti.rect, aboutEl->rightTxtPosX, aboutEl->rightTxtPosY, aboutEl->rightTxtDx, aboutEl->rightTxtDy);
+        ti.lpszText = (TCHAR *)aboutEl->url;
+        SendMessage(win->hwndInfotip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+        win->infotipVisible = true;
+        return;
     }
 
     SendMessage(win->hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
@@ -6651,8 +6659,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             if (win && WS_ABOUT == win->state) {
                 POINT pt;
                 if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                    const TCHAR * url = AboutGetLink(win, pt.x, pt.y);
-                    if (url) {
+                    AboutLayoutInfoEl *aboutEl;
+                    if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
+                        CreateInfotipForPdfLink(win, NULL, aboutEl);
                         SetCursor(gCursorHand);
                         return TRUE;
                     }
@@ -6673,8 +6682,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         return TRUE;
                     }
                 }
-                CreateInfotipForPdfLink(win, NULL);
             }
+            CreateInfotipForPdfLink(win, NULL);
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
