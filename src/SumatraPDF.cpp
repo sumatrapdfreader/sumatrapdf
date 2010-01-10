@@ -5052,10 +5052,8 @@ static void OnMenuGoToPage(WindowInfo *win)
     }
 
     int newPageNo = Dialog_GoToPage(win);
-    if (win->dm->validPageNo(newPageNo)) {
-        win->dm->addNavPoint();
-        win->dm->goToPage(newPageNo, 0);
-    }
+    if (win->dm->validPageNo(newPageNo))
+        win->dm->goToPage(newPageNo, 0, true);
 }
 
 static void OnMenuFind(WindowInfo *win)
@@ -5308,8 +5306,7 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             res.top = overallrc.y;
             res.right = overallrc.x + overallrc.dx;
             res.bottom = overallrc.y + overallrc.dy;
-            win->dm->addNavPoint();
-            win->dm->goToPage(page, 0);
+            win->dm->goToPage(page, 0, true);
             win->dm->MapResultRectToScreen(&res);
             if (IsIconic(win->hwndFrame))
                 ShowWindowAsync(win->hwndFrame, SW_RESTORE);
@@ -5533,6 +5530,12 @@ static void OnChar(WindowInfo *win, int key)
         WindowInfo_Refresh(win, false);
     } else if ('/' == key) {
         OnMenuFind(win);
+    } else if (VK_TAB == key) {
+        // Tab order: Page -> Find -> ToC -> Frame -> ...
+        if (!win->fullScreen && gGlobalPrefs.m_showToolbar)
+            SetFocus(win->hwndPageBox);
+        else if (win->dm->_showToc)
+            SetFocus(win->hwndTocBox);
     }
 }
 
@@ -5673,9 +5676,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_CHAR == message) {
-        if (VK_ESCAPE == wParam || VK_TAB == wParam)
+        if (VK_ESCAPE == wParam)
         {
-            if (VK_ESCAPE == wParam && win->findThread)
+            if (win->findThread)
                 WindowInfo_AbortFinding(win);
             else
                 SetFocus(win->hwndFrame);
@@ -5685,6 +5688,16 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         if (VK_RETURN == wParam)
         {
             Find(win);
+            return 1;
+        }
+
+        if (VK_TAB == wParam)
+        {
+            // Tab order: Page -> Find -> ToC -> Frame -> ...
+            if (win->dm->_showToc)
+                SetFocus(win->hwndTocBox);
+            else
+                SetFocus(win->hwndFrame);
             return 1;
         }
     }
@@ -5937,19 +5950,23 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 
     if (WM_CHAR == message) {
         if (VK_RETURN == wParam) {
-            TCHAR buf[256];
+            TCHAR *buf = win_get_text(win->hwndPageBox);
             int newPageNo;
-            GetWindowText(win->hwndPageBox, buf, dimof(buf));
             newPageNo = _ttoi(buf);
             if (win->dm->validPageNo(newPageNo)) {
-                win->dm->addNavPoint();
-                win->dm->goToPage(newPageNo, 0);
+                win->dm->goToPage(newPageNo, 0, true);
                 SetFocus(win->hwndFrame);
             }
+            free(buf);
             return 1;
         }
-        else if (VK_ESCAPE == wParam || VK_TAB == wParam) {
+        else if (VK_ESCAPE == wParam) {
             SetFocus(win->hwndFrame);
+            return 1;
+        }
+        else if (VK_TAB == wParam) {
+            // Tab order: Page -> Find -> ToC -> Frame -> ...
+            SetFocus(win->hwndFindBox);
             return 1;
         }
     } else if (WM_ERASEBKGND == message) {
@@ -7056,9 +7073,7 @@ InitMouseWheelInfo:
         case WM_APP_FIND_END:
             if (wParam) {
                 PdfSearchResult *rect = (PdfSearchResult *)wParam;
-                if (lParam) // wasModified
-                    win->dm->addNavPoint();
-                win->dm->goToPage(rect->page, 0);
+                win->dm->goToPage(rect->page, 0, !!lParam); // lParam == wasModified
                 win->dm->MapResultRectToScreen(rect);
                 WindowInfo_ShowSearchResult(win, rect);
                 WindowInfo_HideFindStatus(win);
@@ -7086,6 +7101,7 @@ InitMouseWheelInfo:
                     case TVN_KEYDOWN: {
                         TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
                         if (VK_TAB == ptvkd->wVKey) {
+                            // Tab order: Page -> Find -> ToC -> Frame -> ...
                             SetFocus(win->hwndFrame);
                             return 1;
                         }

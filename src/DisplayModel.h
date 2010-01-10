@@ -219,7 +219,7 @@ public:
     bool            pageVisibleNearby(int pageNo);
     void            relayout(double zoomVirtual, int rotation);
 
-    void            goToPage(int pageNo, int scrollY, int scrollX=-1);
+    void            goToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            goToPrevPage(int scrollY);
     bool            goToNextPage(int scrollY);
     bool            goToFirstPage(void);

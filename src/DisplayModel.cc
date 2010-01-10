@@ -900,11 +900,13 @@ static int FirstPageInARowNo(int pageNo, int columns, bool showCover)
     return firstPageNo;
 }
 
-void DisplayModel::goToPage(int pageNo, int scrollY, int scrollX)
+void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 {
     assert(validPageNo(pageNo));
     if (!validPageNo(pageNo))
         return;
+    if (addNavPt)
+        addNavPoint();
 
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
@@ -1018,8 +1020,7 @@ bool DisplayModel::goToLastPage(void)
 
     if (currPageNo == firstPageInLastRow) /* are we on the last page already ? */
         return FALSE;
-    addNavPoint();
-    goToPage(firstPageInLastRow, 0);
+    goToPage(firstPageInLastRow, 0, true);
     return TRUE;
 }
 
@@ -1038,8 +1039,7 @@ bool DisplayModel::goToFirstPage(void)
             return FALSE;
         }
     }
-    addNavPoint();
-    goToPage(1, 0);
+    goToPage(1, 0, true);
     return TRUE;
 }
 
@@ -1535,10 +1535,8 @@ void DisplayModel::goToTocLink(pdf_link* link)
         free(path);
     } else if (PDF_LGOTO == link->kind) {
         int page = pdfEngine->findPageNo(link->dest);
-        if (page > 0) {
-            addNavPoint();
-            goToPage(page, 0);
-        }
+        if (page > 0)
+            goToPage(page, 0, true);
     } else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         tstr_trans_chars(path, _T("/"), _T("\\"));
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
@@ -1561,18 +1559,12 @@ void DisplayModel::handleLink(PdfLink *link)
 
 void DisplayModel::goToNamedDest(const char *name)
 {
+    int page = 1;
     fz_obj *dest = pdfEngine->getNamedDest(name);
-    if (!dest)
-    {
-        addNavPoint();
-        goToPage(1, 0);
-        return;
-    }
-    int page = pdfEngine->findPageNo(dest);
-    if (page > 0) {
-        addNavPoint();
-        goToPage(page, 0);
-    }
+    if (dest)
+        page = pdfEngine->findPageNo(dest);
+    if (page > 0)
+        goToPage(page, 0, true);
 }
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
@@ -1800,7 +1792,7 @@ void DisplayModel::setScrollState(ScrollState *state)
         newX += areaOffset.x;
     if (state->y < 0)
         newY = 0;
-    goToPage(state->page, newY, newX);
+    goToPage(state->page, newY, false, newX);
 }
 
 /* Records the current scroll state for later navigating back to. */
