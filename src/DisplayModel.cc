@@ -1814,10 +1814,15 @@ bool DisplayModel::addNavPoint(bool keepForward)
     return ss.page != 0;
 }
 
+bool DisplayModel::canNavigate(int dir)
+{
+    return _navHistoryIx + dir >= 0 && _navHistoryIx + dir < _navHistoryEnd && (_navHistoryIx != NAV_HISTORY_LEN || _navHistoryIx + dir != 0);
+}
+
 /* Navigates |dir| steps forward or backwards. */
 void DisplayModel::navigate(int dir)
 {
-    if (_navHistoryIx + dir < 0 || _navHistoryIx + dir >= _navHistoryEnd || (_navHistoryIx == NAV_HISTORY_LEN && _navHistoryIx + dir == 0))
+    if (!canNavigate(dir))
         return;
     addNavPoint(true);
     _navHistoryIx += dir - 1; // -1 because adding a nav point increases the index

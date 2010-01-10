@@ -985,6 +985,9 @@ MenuDef menuDefGoTo[] = {
     { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
     { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
     { SEP_ITEM ,                           0,                           0  },
+    { _TRN("Back\tAlt+<-"),                IDM_GOTO_NAV_BACK,           0  },
+    { _TRN("Forward\tAlt+->"),             IDM_GOTO_NAV_FORWARD,        0  },
+    { SEP_ITEM ,                           0,                           0  },
     { _TRN("Find...\tCtrl-F"),             IDM_FIND_FIRST,              0  },
 };
 
@@ -1817,8 +1820,8 @@ static void MenuUpdateLanguage(WindowInfo *win) {
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
-        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS,
-        IDM_VIEW_WITH_ACROBAT, IDM_COPY_SELECTION };
+        IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_VIEW_WITH_ACROBAT, IDM_COPY_SELECTION };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     HMENU hmenu = win->hMenu;
@@ -4764,7 +4767,7 @@ static void ViewWithAcrobat(WindowInfo *win)
         params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
     else
         params = tstr_printf(_T("\"%s\""), win->dm->fileName());
-    exec_with_params(acrobatPath, params);
+    exec_with_params(acrobatPath, params, FALSE);
     free(params);
 }
 
@@ -6990,6 +6993,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             if (GetMenuItemID((HMENU)wParam, 0) == menuDefZoom[0].m_id) {
                 if (win)
                     MenuUpdateZoom(win);
+            }
+            else if (GetMenuItemID((HMENU)wParam, 0) == menuDefGoTo[0].m_id) {
+                if (win && WS_SHOWING_PDF == win->state) {
+                    EnableMenuItem((HMENU)wParam, IDM_GOTO_NAV_BACK,
+                        MF_BYCOMMAND | (win->dm && win->dm->canNavigate(-1) ? MF_ENABLED : MF_GRAYED));
+                    EnableMenuItem((HMENU)wParam, IDM_GOTO_NAV_FORWARD,
+                        MF_BYCOMMAND | (win->dm && win->dm->canNavigate(1) ? MF_ENABLED : MF_GRAYED));
+                }
             }
             break;
 

@@ -1187,7 +1187,7 @@ bg:Следваща страница
 br:Página seguinte
 hu:Következő oldal
 pl:Następna strona
-de:Nächste Seite
+de:&Nächste Seite
 fr:Page suivante
 tr:Sonraki Sayfa
 by:Наступная старонка
@@ -1245,7 +1245,7 @@ bg:Предишна страница
 br:Página anterior
 hu:Előző oldal
 pl:Poprzednia strona
-de:Vorherige Seite
+de:&Vorherige Seite
 fr:Page précédente
 tr:Önceki Sayfa
 by:Папярэдняя старонка
@@ -1303,7 +1303,7 @@ bg:Начална страница\tHome
 br:Primeira página\tHome
 hu:Első oldal\tHome
 pl:Pierwsza strona\tHome
-de:Erste Seite\tPos1
+de:&Erste Seite\tPos1
 fr:Première page\tHome
 tr:İlk Sayfa\tHome
 by:Першая старонка\tHome
@@ -1361,7 +1361,7 @@ bg:Последна страница\tEnd
 br:Última página\tEnd
 hu:Utolsó oldal\tEnd
 pl:Ostatnia strona\tEnd
-de:Letzte Seite\tEnde
+de:&Letzte Seite\tEnde
 fr:Dernière page\tEnd
 tr:Son Sayfa\tEnd
 by:Апошняя старонка\tEnd
@@ -1419,7 +1419,7 @@ bg:Страница...\tCtrl-G
 br:Página...\tCtrl-G
 hu:Megadott oldal...\tCtrl-G
 pl:Strona...\tCtrl-G
-de:Seite…\tStrg+G
+de:&Seite…\tStrg+G
 fr:Page...\tCtrl-G
 tr:Sayfa...\tCtrl-G
 by:Старонка...\tCtrl-G
@@ -2049,7 +2049,7 @@ pt:Procurar...\tCtrl-F
 br:Localizar...\tCtrl-F
 by:Знайсці...\tCtrl-F
 bg:Търси...\tCtrl-F
-de:Suchen…\tStrg+F
+de:S&uchen…\tStrg+F
 tr:Bul...\tCtrl-F
 hu:Keresés...\tCtrl-F
 pl:Szukaj...\tCtrl-F
@@ -4948,7 +4948,7 @@ bg:Следваща страница\t->
 br:Página seguinte\t->
 hu:Következő oldal\t->
 pl:Następna strona\t->
-de:Nächste Seite\t->
+de:&Nächste Seite\t->
 fr:Page suivante\t->
 tr:Sonraki Sayfa\t->
 by:Наступная старонка\t->
@@ -5006,7 +5006,7 @@ bg:Предишна страница\t<-
 br:Página anterior\t<-
 hu:Előző oldal\t<-
 pl:Poprzednia strona\t<-
-de:Vorherige Seite\t<-
+de:&Vorherige Seite\t<-
 fr:Page précédente\t<-
 tr:Önceki Sayfa\t<-
 by:Папярэдняя старонка\t<-
@@ -5065,4 +5065,9 @@ ru:Файл синхронизации не найден
 sr-rs:Усклађивачка датотека није нађена
 sp-rs:Usklađivačka datoteka nije nađena
 cy:Heb ganfod ffeil cydweddu
-
+-
+Back\tAlt+<-
+de:&Zurück\tAlt+<-
+-
+Forward\tAlt+->
+de:Vor&wärts\tAlt+->

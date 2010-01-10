@@ -272,6 +272,7 @@ public:
     void            setScrollState(ScrollState *state);
 
     bool            addNavPoint(bool keepForward=false);
+    bool            canNavigate(int dir);
     void            navigate(int dir);
 
 protected:
