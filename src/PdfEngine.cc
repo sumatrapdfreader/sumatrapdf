@@ -337,9 +337,9 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     }
     _pages[pageNo-1].page = page;
     _pages[pageNo-1].num = fz_tonum(obj);
+    linkifyPageText(page);
     if (!ReleaseSemaphore(_getPageSem, 1, NULL))
         DBG_OUT("Fitz: ReleaseSemaphore error!\n");
-    linkifyPageText(page);
     return page;
 }
 

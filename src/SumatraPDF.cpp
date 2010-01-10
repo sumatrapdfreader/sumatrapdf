@@ -255,6 +255,7 @@ static bool LoadPdfIntoWindow(const TCHAR *fileName, WindowInfo *win,
 static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message, bool resize);
 
 static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
+static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
@@ -1572,6 +1573,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
     DragAcceptFiles(win->hwndCanvas, FALSE);
+    DeleteOldSelectionInfo(win);
 
     free(win->title);
     win->title = NULL;
