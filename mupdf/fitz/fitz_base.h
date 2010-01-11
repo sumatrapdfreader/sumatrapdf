@@ -66,12 +66,10 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define __func__ __FUNCTION__
 
+#define snprintf _snprintf
+
 #if _MSC_VER < 1500
 #define vsnprintf _vsnprintf
-#endif
-
-#ifndef snprintf
-#define snprintf _snprintf
 #endif
 
 #ifndef isnan

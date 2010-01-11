@@ -56,7 +56,7 @@ struct fz_dctd_s
 };
 
 static void myinitsource(j_decompress_ptr cinfo) { /* empty */ }
-static boolean myfillinput(j_decompress_ptr cinfo) { return FALSE; }
+static int myfillinput(j_decompress_ptr cinfo) { return FALSE; }
 static void mytermsource(j_decompress_ptr cinfo) { /* empty */ }
 
 static void myskipinput(j_decompress_ptr cinfo, long n)
