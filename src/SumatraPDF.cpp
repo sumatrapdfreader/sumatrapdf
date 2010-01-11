@@ -4264,22 +4264,23 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
     SetMapMode(hdc, MM_TEXT);
 
-    int printAreaWidth = GetDeviceCaps(hdc, HORZRES);
-    int printAreaHeight = GetDeviceCaps(hdc, VERTRES);
-
-    int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-    int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    // use pixel sizes for printer with non square pixels
-    float fLogPixelsx= (float)GetDeviceCaps(hdc, LOGPIXELSX); 
-    float fLogPixelsy= (float)GetDeviceCaps(hdc, LOGPIXELSY);
-
-    bool bPrintPortrait=fLogPixelsx*printAreaWidth<fLogPixelsy*printAreaHeight;
+    int printAreaWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
+    int printAreaHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
+    double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / 72.0, GetDeviceCaps(hdc, LOGPIXELSY) / 72.0)
+    bool bPrintPortrait = printAreaWidth < printAreaHeight;
     if (devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
+
     // print all the pages the user requested unless
     // bContinue flags there is a problem.
     for (int i=0; i < nPageRanges; i++) {
         if (-1 == pr->nToPage && 0 < pr->nFromPage) {
+            // print with minimal margins as required by the printer
+            int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+            int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+            printAreaWidth = GetDeviceCaps(hdc, HORZRES);
+            printAreaHeight = GetDeviceCaps(hdc, VERTRES);
+
             assert(1 == nPageRanges && sel && !sel->next);
             DBG_OUT(" printing:  drawing bitmap for selection\n");
             StartPage(hdc);
@@ -4319,9 +4320,6 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             // MM_TEXT: Each logical unit is mapped to one device pixel.
             // Positive x is to the right; positive y is down.
 
-            // try to use a zoom that matches the size of the page in the
-            // printer
-
             SizeD pSize = pdfEngine->pageSize(pageNo);
             int rotation = pdfEngine->pageRotation(pageNo);
             // Further rotate the page, so that 0° and 180° mean Portrait orientation
@@ -4336,15 +4334,16 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             else
                 rotation = bPrintPortrait ? 0 : 90;
 
-            double zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
+            // try to use correct zoom values (scale down to fit the physical page, though)
+            double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
             int printAreaDx = zoom * pSize.dx(), printAreaDy = zoom * pSize.dy();
 
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
             if (!bmp)
                 goto Error; /* most likely ran out of memory */
 
-            bmp->stretchDIBits(hdc, leftMargin + (printAreaWidth - printAreaDx) / 2,
-                topMargin + (printAreaHeight - printAreaDy) / 2, printAreaDx, printAreaDy);
+            bmp->stretchDIBits(hdc, (printAreaWidth - printAreaDx) / 2,
+                (printAreaHeight - printAreaDy) / 2, printAreaDx, printAreaDy);
             delete bmp;
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
