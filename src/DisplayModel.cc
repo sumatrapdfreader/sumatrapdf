@@ -186,6 +186,10 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
 
 DisplayModel::~DisplayModel()
 {
+    RenderQueue_RemoveForDisplayModel(this);
+    BitmapCache_FreeForDisplayModel(this);
+    cancelRenderingForDisplayModel(this);
+
     if (_pagesInfo)
         free(_pagesInfo);
     if (_links)
@@ -193,9 +197,6 @@ DisplayModel::~DisplayModel()
     free(_navHistory);
     delete _pdfSearch;
     delete pdfEngine;
-    RenderQueue_RemoveForDisplayModel(this);
-    BitmapCache_FreeForDisplayModel(this);
-    cancelRenderingForDisplayModel(this);
 }
 
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
