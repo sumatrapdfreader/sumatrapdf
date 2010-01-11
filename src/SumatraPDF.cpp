@@ -5485,8 +5485,8 @@ static void OnChar(WindowInfo *win, int key)
         return;
 
     if (VK_BACK == key) {
-        bool forward = !WasShiftPressed();
-        win->dm->scrollYByAreaDy(!forward, true);
+        bool forward = WasShiftPressed();
+        win->dm->navigate(forward ? 1 : -1);
     } else if ('g' == key) {
         OnMenuGoToPage(win);
     } else if ('j' == key) {
