@@ -4266,7 +4266,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
     int printAreaWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
     int printAreaHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
-    double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / 72.0, GetDeviceCaps(hdc, LOGPIXELSY) / 72.0)
+    double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / 72.0, GetDeviceCaps(hdc, LOGPIXELSY) / 72.0);
     bool bPrintPortrait = printAreaWidth < printAreaHeight;
     if (devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
