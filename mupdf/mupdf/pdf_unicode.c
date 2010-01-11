@@ -56,6 +56,15 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 				ucs = pdf_lookupcmap(cmap, i);
 				if (ucs > 0)
 					pdf_maprangetorange(font->tounicode, cid, cid, ucs);
+				else if (ucs < -1)
+				{
+					/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
+					/* copy over a multi-character mapping */
+					int j, tbl[7], len = min(cmap->table[-ucs - 2], 7);
+					for (j = 0; j < len; j++)
+						tbl[j] = cmap->table[-ucs - 1 + j];
+					pdf_maponetomany(font->tounicode, cid, tbl, len);
+				}
 			}
 		}
 
@@ -279,7 +288,10 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 				addtextchar(*line, bbox, ' ');
 			}
 
-			addtextchar(*line, bbox, text->els[i].ucs);
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
+			/* add one or several characters */
+			for (x = 1; x <= text->els[i].ucs[0]; x++)
+				addtextchar(*line, bbox, text->els[i].ucs[x]);
 		}
 	}
 

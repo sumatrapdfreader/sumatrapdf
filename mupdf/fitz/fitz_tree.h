@@ -287,7 +287,7 @@ struct fz_textel_s
 {
 	float x, y;
 	int gid;
-	int ucs;
+	int ucs[8]; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
 };
 
 struct fz_textnode_s
@@ -301,7 +301,7 @@ struct fz_textnode_s
 
 fz_error fz_newtextnode(fz_textnode **textp, fz_font *face);
 fz_error fz_clonetextnode(fz_textnode **textp, fz_textnode *oldtext);
-fz_error fz_addtext(fz_textnode *text, int gid, int ucs, float x, float y);
+fz_error fz_addtext(fz_textnode *text, int gid, int ucs[], float x, float y);
 fz_error fz_endtext(fz_textnode *text);
 
 typedef struct fz_colorcube_s fz_colorcube;

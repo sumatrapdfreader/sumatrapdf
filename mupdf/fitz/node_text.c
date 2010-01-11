@@ -129,11 +129,15 @@ growtext(fz_textnode *text, int n)
 }
 
 fz_error
-fz_addtext(fz_textnode *text, int gid, int ucs, float x, float y)
+fz_addtext(fz_textnode *text, int gid, int ucs[], float x, float y)
 {
 	if (growtext(text, 1) != fz_okay)
 		return fz_rethrow(-1, "out of memory");
-	text->els[text->len].ucs = ucs;
+	{ /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
+		int i;
+		for (i = 0; i <= ucs[0]; i++)
+			text->els[text->len].ucs[i] = ucs[i];
+	}
 	text->els[text->len].gid = gid;
 	text->els[text->len].x = x;
 	text->els[text->len].y = y;
