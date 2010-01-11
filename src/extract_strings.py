@@ -2,7 +2,7 @@ import codecs, re
 
 c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
-strings_file = "strings.txt"
+STRINGS_FILE = "strings.txt"
 
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
 
@@ -172,7 +172,7 @@ def dump_diffs(strings_dict, strings):
         print "\n".join(only_in_c) + "\n"
     only_in_txt = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_TXT]
     if only_in_txt:
-        print "\nOnly in %s file:" % strings_file
+        print "\nOnly in %s file:" % STRINGS_FILE
         print "\n".join(only_in_txt) + "\n"
 
 def langs_sort_func(x,y):
@@ -215,7 +215,7 @@ def dump_missing_for_language(strings_dict, lang):
 
 def main():
     import sys
-    (strings_dict, langs) = load_strings_file(strings_file)
+    (strings_dict, langs) = load_strings_file(STRINGS_FILE)
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
         dump_missing_per_language(strings_dict)
