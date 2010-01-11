@@ -1656,10 +1656,10 @@ TCHAR *DisplayModel::extractAllText(void)
     return content;
 }
 
-void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
+void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
 {
-    PdfPageInfo *pageInfo = getPageInfo(rect->page);
-    pdf_page *page = pdfEngine->getPdfPage(rect->page);
+    PdfPageInfo *pageInfo = getPageInfo(res->page);
+    pdf_page *page = pdfEngine->getPdfPage(res->page);
     if(!page)
         return;
     int rot = rotation();
@@ -1674,53 +1674,56 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *rect)
     if (dispRot == 180 || dispRot == 270)
         vy += pageInfo->currDy;
 
-    double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
-    fz_matrix ctm = pdfEngine->viewctm(page, zoomReal() * 0.01, rot);
-    fz_point tp, p1 = {left, top}, p2 = {right, bottom};
+    for (int i = 0; i < res->len; i++) {
+        RECT *rect = &res->rects[i];
+        double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
+        fz_matrix ctm = pdfEngine->viewctm(page, zoomReal() * 0.01, rot);
+        fz_point tp, p1 = {left, top}, p2 = {right, bottom};
 
-    tp = fz_transformpoint(ctm, p1);
-    left = tp.x - 0.5 + vx;
-    top = tp.y - 0.5 + vy;
+        tp = fz_transformpoint(ctm, p1);
+        left = tp.x - 0.5 + vx;
+        top = tp.y - 0.5 + vy;
 
-    tp = fz_transformpoint(ctm, p2);
-    right = tp.x + 0.5 + vx;
-    bottom = tp.y + 0.5 + vy;
-    
-    if (top > bottom) {
-        double tmp = top;
-        top = bottom;
-        bottom = tmp;
-    }
+        tp = fz_transformpoint(ctm, p2);
+        right = tp.x + 0.5 + vx;
+        bottom = tp.y + 0.5 + vy;
+        
+        if (top > bottom) {
+            double tmp = top;
+            top = bottom;
+            bottom = tmp;
+        }
 
-    rect->left = (int)floor(left);
-    rect->top = (int)floor(top);
-    rect->right = (int)ceil(right) + 5;
-    rect->bottom = (int)ceil(bottom) + 5;
+        rect->left = (int)floor(left);
+        rect->top = (int)floor(top);
+        rect->right = (int)ceil(right) + 5;
+        rect->bottom = (int)ceil(bottom) + 5;
 
-    int sx = 0, sy = 0;
-    if (rect->bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
-        sy = rect->bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy;
+        int sx = 0, sy = 0;
+        if (rect->bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
+            sy = rect->bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy;
 
-    if (rect->left < pageInfo->screenX + pageInfo->bitmapX) {
-        sx = rect->left - pageInfo->screenX - pageInfo->bitmapX - 5;
-        if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
-            sx = -(pageInfo->screenX + pageInfo->bitmapX);
-    }
-    else
-    if (rect->right > pageInfo->screenX + pageInfo->bitmapDx) {
-        sx = rect->right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
-    }
+        if (rect->left < pageInfo->screenX + pageInfo->bitmapX) {
+            sx = rect->left - pageInfo->screenX - pageInfo->bitmapX - 5;
+            if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
+                sx = -(pageInfo->screenX + pageInfo->bitmapX);
+        }
+        else
+        if (rect->right > pageInfo->screenX + pageInfo->bitmapDx) {
+            sx = rect->right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
+        }
 
-    if (sx != 0) {
-        scrollXBy(sx);
-        rect->left -= sx;
-        rect->right -= sx;
-    }
+        if (sx != 0) {
+            scrollXBy(sx);
+            rect->left -= sx;
+            rect->right -= sx;
+        }
 
-    if (sy > 0) {
-        scrollYBy(sy, false);
-        rect->top -= sy;
-        rect->bottom -= sy;
+        if (sy > 0) {
+            scrollYBy(sy, false);
+            rect->top -= sy;
+            rect->bottom -= sy;
+        }
     }
 }
 

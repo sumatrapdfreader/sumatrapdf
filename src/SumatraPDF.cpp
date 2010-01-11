@@ -5195,31 +5195,34 @@ static void OnMenuViewFullscreen(WindowInfo *win)
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
 {
-    RectI pageOnScreen;
     PdfPageInfo *pdfPage = win->dm->getPageInfo(result->page);
-    pageOnScreen.x = pdfPage->screenX;
-    pageOnScreen.y = pdfPage->screenY;
-    pageOnScreen.dx = pdfPage->bitmapDx;
-    pageOnScreen.dy = pdfPage->bitmapDy;
-
-    RectI rect = {
-        result->left,
-        result->top,
-        abs(result->right - result->left),
-        abs(result->bottom - result->top)
+    RectI pageOnScreen = {
+        pdfPage->screenX,
+        pdfPage->screenY,
+        pdfPage->bitmapDx,
+        pdfPage->bitmapDy
     };
-    // TODO: this should really be fixed by the upper layer and here
-    // bottom should always be >= top
-    // assert(result->bottom >= result->top);
-    // assert(result->right >= result->left);
-    RectI intersect;
+
     DeleteOldSelectionInfo(win);
-    if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {
-        SelectionOnPage *selOnPage = (SelectionOnPage*)malloc(sizeof(SelectionOnPage));
-        RectD_FromRectI(&selOnPage->selectionPage, &intersect);
-        win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
-        selOnPage->next = win->selectionOnPage;
-        win->selectionOnPage = selOnPage;
+    for (int i = 0; i < result->len; i++) {
+        RectI rect = {
+            result->rects[i].left,
+            result->rects[i].top,
+            abs(result->rects[i].right - result->rects[i].left),
+            abs(result->rects[i].bottom - result->rects[i].top)
+        };
+        // TODO: this should really be fixed by the upper layer and here
+        // bottom should always be >= top
+        // assert(result->bottom >= result->top);
+        // assert(result->right >= result->left);
+        RectI intersect;
+        if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {
+            SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
+            RectD_FromRectI(&selOnPage->selectionPage, &intersect);
+            win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
+            selOnPage->next = win->selectionOnPage;
+            win->selectionOnPage = selOnPage;
+        }
     }
 
     win->showSelection = true;
@@ -5304,12 +5307,12 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             win->showForwardSearchMark = true;
 
             // Scroll to show the overall highlighted zone
-            PdfSearchResult res;
-            res.page = page;
-            res.left = overallrc.x;
-            res.top = overallrc.y;
-            res.right = overallrc.x + overallrc.dx;
-            res.bottom = overallrc.y + overallrc.dy;
+            RECT rcRes;
+            rcRes.left = overallrc.x;
+            rcRes.top = overallrc.y;
+            rcRes.right = overallrc.x + overallrc.dx;
+            rcRes.bottom = overallrc.y + overallrc.dy;
+            PdfSearchResult res = { page, 1, &rcRes };
             win->dm->goToPage(page, 0, true);
             win->dm->MapResultRectToScreen(&res);
             if (IsIconic(win->hwndFrame))

@@ -15,12 +15,15 @@ PdfSearch::PdfSearch(PdfEngine *engine)
     sensitive = false;
     forward = true;
     result.page = 1;
+    result.len = 0;
+    result.rects = NULL;
     this->engine = engine;
 }
 
 PdfSearch::~PdfSearch()
 {
     Clear();
+    free(result.rects);
 }
 
 void PdfSearch::Reset()
@@ -87,9 +90,10 @@ bool PdfSearch::MatchChars(WCHAR c1, WCHAR c2)
 
 bool PdfSearch::MatchAtPosition(int n)
 {
+    RECT rc;
     WCHAR *p = text;
-    result.left = current->text[n].bbox.x0;
-    result.top = current->text[n].bbox.y0;
+    rc.left = current->text[n].bbox.x0;
+    rc.top = current->text[n].bbox.y0;
     last = n;
 
     while (n < current->len && *p) {
@@ -101,16 +105,18 @@ bool PdfSearch::MatchAtPosition(int n)
 
     if (*p == 0) {
         // Found
-        result.right = current->text[n-1].bbox.x1;
+        rc.right = current->text[n-1].bbox.x1;
         if (current->len > n) {
-            if (result.right > current->text[n].bbox.x0)
-                result.right = current->text[n].bbox.x0;
+            if (rc.right > current->text[n].bbox.x0)
+                rc.right = current->text[n].bbox.x0;
         }
-        result.bottom = current->text[n-1].bbox.y1;
+        rc.bottom = current->text[n-1].bbox.y1;
         if (forward)
             last = last + 1;
         else
             last = last - 1;
+        result.rects = (RECT *)realloc(result.rects, sizeof(RECT) * ++result.len);
+        memcpy(&result.rects[result.len - 1], &rc, sizeof(RECT));
         return true;
     }
     return false;
@@ -121,6 +127,10 @@ bool PdfSearch::FindTextInPage(int page)
 {
     if (!text)
         return false;
+
+    result.len = 0;
+    free(result.rects);
+    result.rects = NULL;
 
     WCHAR p = *text;
     int start = last;

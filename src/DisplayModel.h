@@ -264,7 +264,7 @@ public:
 
     int             getPageNoByPoint (double x, double y);
 
-    void            MapResultRectToScreen(PdfSearchResult *rect);
+    void            MapResultRectToScreen(PdfSearchResult *res);
 
     void            rebuildLinks();
 
