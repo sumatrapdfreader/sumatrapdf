@@ -24,10 +24,10 @@ public:
 class PdfSearch
 {
 protected:
-    WCHAR *text;
+    TCHAR *text;
     int   length;
     bool  forward;
-    bool sensitive;
+    bool  sensitive;
 
 public:
     PdfSearchResult result;
@@ -35,16 +35,14 @@ public:
 
 private:
     PdfEngine *engine;
+    TCHAR *pageText;
+    int findIndex;
     pdf_textline *line;
-    pdf_textline *current;
-    long last;
 
 protected:
-    void ReverseLineList();
-    bool MatchChars(WCHAR c1, WCHAR c2);
-    bool MatchAtPosition(int n);
-    bool FindTextInPage(int page = 0);
-    bool FindStartingAtPage(int page);
+    void PdfSearch::FillResultRects(TCHAR *found);
+    bool FindTextInPage(int pageNo = 0);
+    bool FindStartingAtPage(int pageNo);
 
 public:
     PdfSearch(PdfEngine *engine);
@@ -54,6 +52,7 @@ public:
     void SetText(TCHAR *text);
     void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
     void SetDirection(bool forward);
+    TCHAR *ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), pdf_textline **line_out=NULL);
     bool FindFirst(int page, TCHAR *text);
     bool FindNext();
 

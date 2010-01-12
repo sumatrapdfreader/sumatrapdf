@@ -5208,17 +5208,17 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
         RectI rect = {
             result->rects[i].left,
             result->rects[i].top,
-            abs(result->rects[i].right - result->rects[i].left),
-            abs(result->rects[i].bottom - result->rects[i].top)
+            result->rects[i].right - result->rects[i].left,
+            result->rects[i].bottom - result->rects[i].top
         };
-        // TODO: this should really be fixed by the upper layer and here
-        // bottom should always be >= top
-        // assert(result->bottom >= result->top);
-        // assert(result->right >= result->left);
+        assert(result->rects[i].bottom >= result->rects[i].top);
+        assert(result->rects[i].right >= result->rects[i].left);
+
         RectI intersect;
         if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {
             SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
             RectD_FromRectI(&selOnPage->selectionPage, &intersect);
+            selOnPage->pageNo = result->page;
             win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
             selOnPage->next = win->selectionOnPage;
             win->selectionOnPage = selOnPage;
@@ -5743,6 +5743,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 typedef struct FindThreadData {
     WindowInfo *win;
     PdfSearchDirection direction;
+    BOOL wasModified;
     TCHAR text[256];
 } FindThreadData;
 
@@ -5750,9 +5751,6 @@ static DWORD WINAPI FindThread(LPVOID data)
 {
     FindThreadData *ftd = (FindThreadData *)data;
     WindowInfo *win = ftd->win;
-
-    BOOL wasModified = Edit_GetModify(win->hwndFindBox);
-    Edit_SetModify(win->hwndFindBox, FALSE);
 
     // Suspend page rendering while finding, since MuPDF isn't thread-safe
     LockCache();
@@ -5762,7 +5760,7 @@ static DWORD WINAPI FindThread(LPVOID data)
         Sleep(10);
 
     PdfSearchResult *rect;
-    if (wasModified)
+    if (ftd->wasModified)
         rect = win->dm->Find(ftd->direction, ftd->text);
     else
         rect = win->dm->Find(ftd->direction);
@@ -5770,7 +5768,7 @@ static DWORD WINAPI FindThread(LPVOID data)
     if (!win->findCanceled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
         int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->dm->pageCount();
-        if (!wasModified || win->dm->currentPageNo() != startPage)
+        if (!ftd->wasModified || win->dm->currentPageNo() != startPage)
             rect = win->dm->Find(ftd->direction, ftd->text, startPage);
     }
     gSuspendRendering = false;
@@ -5778,7 +5776,7 @@ static DWORD WINAPI FindThread(LPVOID data)
 
     if (win->findCanceled)
         rect = NULL;
-    LPARAM lParam = rect ? wasModified : win->findCanceled;
+    LPARAM lParam = rect ? ftd->wasModified : win->findCanceled;
     PostMessage(win->hwndFrame, WM_APP_FIND_END, (WPARAM)rect, lParam);
 
     HANDLE hThread = win->findThread;
@@ -5796,6 +5794,8 @@ static void Find(WindowInfo *win, PdfSearchDirection direction)
     ftd->win = win;
     ftd->direction = direction;
     GetWindowText(win->hwndFindBox, ftd->text, sizeof(ftd->text));
+    ftd->wasModified = Edit_GetModify(win->hwndFindBox);
+    Edit_SetModify(win->hwndFindBox, FALSE);
 
     bool hasText = lstrlen(ftd->text) > 0;
     if (hasText)

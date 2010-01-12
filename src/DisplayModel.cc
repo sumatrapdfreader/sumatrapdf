@@ -1622,36 +1622,22 @@ int DisplayModel::getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buf
 /* extract all text from the document (caller needs to free() the result) */
 TCHAR *DisplayModel::extractAllText(void)
 {
-    TCHAR *content = NULL;
-    TStrList *lines = NULL;
+    TStrList *pages = NULL;
     int textLen = 0;
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
-        pdf_textline *line;
-        fz_tree *tree = pdfEngine->getPdfPage(pageNo)->tree;
-        fz_error error = pdf_loadtextfromtree(&line, tree, fz_identity());
-        if (!error) {
-            for (pdf_textline *ln = line; ln; ln = ln->next) {
-                TCHAR *lineCR = (TCHAR *)malloc((ln->len + 3) * sizeof(TCHAR));
-                for (int i = 0; i < ln->len; i++) {
-                    lineCR[i] = ln->text[i].c;
-                    if (lineCR[i] < 32)
-                        lineCR[i] = '?';
-                }
-                lstrcpy(lineCR + ln->len, _T("\r\n"));
-                TStrList_InsertAndOwn(&lines, lineCR);
-                textLen += ln->len + 2;
-            }
-            pdf_droptextline(line);
-        }
+        TStrList_InsertAndOwn(&pages, _pdfSearch->ExtractPageText(pageNo));
+        textLen += lstrlen(pages->str);
     }
 
-    content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR));
-    content[0] = 0;
-    TStrList_Reverse(&lines);
-    for (TStrList *next = lines; next; next = next->next)
-        lstrcat(content, next->str);
-    TStrList_Destroy(&lines);
+    TCHAR *content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR)), *nextPage = content;
+    TStrList_Reverse(&pages);
+    for (TStrList *next = pages; next; next = next->next)
+    {
+        lstrcpy(nextPage, next->str);
+        nextPage += lstrlen(next->str);
+    }
+    TStrList_Destroy(&pages);
 
     return content;
 }
