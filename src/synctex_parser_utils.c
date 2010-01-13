@@ -3,9 +3,9 @@ Copyright (c) 2008, 2009 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Latest Revision: Wed Jul  1 11:16:25 UTC 2009
+Latest Revision: Wed Nov  4 11:52:35 UTC 2009
 
-Version: 1.8
+Version: 1.9
 See synctex_parser_readme.txt for more details
 
 License:
@@ -52,29 +52,40 @@ authorization from the copyright holder.
 
 #include <sys/stat.h>
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
+#define SYNCTEX_WINDOWS 1
+#endif
+
+#ifdef _WIN32_WINNT_WINXP
+#define SYNCTEX_RECENT_WINDOWS 1
+#endif
+
+#ifdef SYNCTEX_WINDOWS
 #include <windows.h>
 #endif
 
 void *_synctex_malloc(size_t size) {
 	void * ptr = malloc(size);
 	if(ptr) {
-/*  In Visual C, bzero is not available */
-#ifdef _MSC_VER
+/*  There used to be a switch to use bzero because it is more secure. JL */
 		memset(ptr,0, size);
-#else
-		bzero(ptr,size);
-#endif
 	}
 	return (void *)ptr;
 }
 
-int _synctex_error(char * reason,...) {
+int _synctex_error(const char * reason,...) {
 	va_list arg;
 	int result;
 	va_start (arg, reason);
-#	ifdef _WIN32
-	{/*	This code is contributed by William Blum */
+#	ifdef SYNCTEX_RECENT_WINDOWS
+	{/*	This code is contributed by William Blum.
+        As it does not work on some older computers,
+        the _WIN32 conditional here is replaced with a SYNCTEX_RECENT_WINDOWS one.
+        According to http://msdn.microsoft.com/en-us/library/aa363362(VS.85).aspx
+        Minimum supported client	Windows 2000 Professional
+        Minimum supported server	Windows 2000 Server
+        People running Windows 2K standard edition will not have OutputDebugStringA.
+        JL.*/
 		char *buff;
 		size_t len;
 		OutputDebugStringA("SyncTeX ERROR: ");
@@ -85,11 +96,11 @@ int _synctex_error(char * reason,...) {
 		OutputDebugStringA("\n");
 		free(buff);
 	}
-#else
+#   else
 	result = fprintf(stderr,"SyncTeX ERROR: ");
 	result += vfprintf(stderr, reason, arg);
 	result += fprintf(stderr,"\n");
-#endif
+#   endif
 	va_end (arg);
 	return result;
 }
@@ -109,12 +120,12 @@ void _synctex_strip_last_path_extension(char * string) {
 				last_component = next+1;
 			}
 		}
-#ifdef	_WIN32
+#       ifdef	SYNCTEX_WINDOWS
 		/*  On Windows, the '\' is also a path separator. */
 		while((next = strstr(last_component,"\\"))){
 			last_component = next+1;
 		}
-#endif
+#       endif
 		/*  then we find the last path extension */
 		if((last_extension = strstr(last_component,"."))){
 			++last_extension;
@@ -131,7 +142,7 @@ void _synctex_strip_last_path_extension(char * string) {
 
 /*  Compare two file names, windows is sometimes case insensitive... */
 synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs) {
-#	if _WIN32
+#	if SYNCTEX_WINDOWS
     /*  On Windows, filename should be compared case insensitive.
 	 *  The characters '/' and '\' are both valid path separators.
 	 *  There will be a very serious problem concerning UTF8 because
@@ -171,7 +182,7 @@ synctex_bool_t _synctex_path_is_absolute(const char * name) {
 	if(!strlen(name)) {
 		return synctex_NO;
 	}
-#	if _WIN32
+#	if SYNCTEX_WINDOWS
 	if(strlen(name)>2) {
 		return (name[1]==':' && SYNCTEX_IS_PATH_SEPARATOR(name[2]))?synctex_YES:synctex_NO;
 	}
@@ -431,7 +442,7 @@ int _synctex_get_name(const char * output, const char * build_directory, char **
 			TEST(build_quoted,synctex_compress_mode_none);
 			TEST(build_quoted_gz,synctex_compress_mode_gz);
 #			undef TEST
-			/*  Free all the intermediate filenames, except the on that will be used as returned value. */
+			/*  Free all the intermediate filenames, except the one that will be used as returned value. */
 #			define CLEAN_AND_REMOVE(FILENAME) \
 			if(FILENAME && (FILENAME!=synctex_name)) {\
 				remove(FILENAME);\

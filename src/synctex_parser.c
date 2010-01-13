@@ -3,7 +3,7 @@ Copyright (c) 2008, 2009 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the SyncTeX package.
 
-Version: 1.8
+Version: 1.9
 See synctex_parser_readme.txt for more details
 
 Latest Revision: Wed Jul  1 11:18:18 UTC 2009
@@ -212,7 +212,7 @@ struct __synctex_class_t {
 		SYNCTEX_GETTER(NODE,friend)[0]=NEW_FRIEND;\
 	}
 
-/*  Next box getter and setter. The box tree can be traversed from one horizontal boxes to the other.
+/*  Next box getter and setter. The box tree can be traversed from one horizontal box to the other.
  *  Navigation starts with the deeper boxes.
  */
 #   define SYNCTEX_NEXT_HORIZ_BOX(NODE) SYNCTEX_GET(NODE,next_box)
@@ -2483,7 +2483,6 @@ bail:
 
 int _synctex_open(const char * output, const char * build_directory, char ** synctex_name_ref, gzFile * file_ref, synctex_bool_t add_quotes, synctex_io_mode_t * io_modeRef);
 
-
 /*  Where the synctex scanner is created. */
 synctex_scanner_t synctex_scanner_new_with_output_file(const char * output, const char * build_directory, int parse) {
 	gzFile file = NULL;
@@ -2652,7 +2651,6 @@ return_on_error:
 #	undef the_file
 #	undef io_mode
 }
-
 
 /*	Opens the ouput file, taking into account the eventual build_directory.
  *	0 on success, non 0 on error. */
@@ -3398,7 +3396,7 @@ int synctex_edit_query(synctex_scanner_t scanner,int page,float h,float v) {
 	synctex_node_t other_node = NULL; /*  placeholder */
 	synctex_point_t hitPoint = {0,0}; /*  placeholder */
 	synctex_node_set_t bestNodes = {NULL,NULL}; /*  holds the best node */
-	synctex_distances_t bestDistances = {INT_MAX,INT_MAX};
+	synctex_distances_t bestDistances = {INT_MAX,INT_MAX}; /*  holds the best distances for the best node */
 	synctex_node_t bestContainer = NULL; /*  placeholder */
 	if(NULL == (scanner = synctex_scanner_parse(scanner)) || 0 >= scanner->unit) {/*  scanner->unit must be >0 */
 		return 0;
@@ -3436,6 +3434,7 @@ end:
 						}
 					} while((other_node = SYNCTEX_NEXT_HORIZ_BOX(other_node)));
 				}
+                /*  node is the smallest horizontal box that contains hitPoint. */
 				if((bestContainer = _synctex_eq_deepest_container(hitPoint,node,synctex_YES))) {
 					node = bestContainer;
 				}
@@ -3478,6 +3477,9 @@ end:
 				return SYNCTEX_STATUS_ERROR;
 			}
 		} while ((node = SYNCTEX_NEXT_HORIZ_BOX(node)));
+		/*  All the horizontal boxes have been tested,
+		 *  None of them contains the hit point.
+		 */
 	}
 	/*  We are not lucky */
 	if((node = SYNCTEX_CHILD(sheet))) {
@@ -3663,10 +3665,10 @@ int _synctex_point_v_distance(synctex_point_t hitPoint, synctex_node_t node,sync
 
 SYNCTEX_INLINE static synctex_node_t _synctex_smallest_container(synctex_node_t node, synctex_node_t other_node) {
 	float height, other_height;
-	if(SYNCTEX_WIDTH(node)<SYNCTEX_WIDTH(other_node)) {
+	if(SYNCTEX_ABS_WIDTH(node)<SYNCTEX_ABS_WIDTH(other_node)) {
 		return node;
 	}
-	if(SYNCTEX_WIDTH(node)>SYNCTEX_WIDTH(other_node)) {
+	if(SYNCTEX_ABS_WIDTH(node)>SYNCTEX_ABS_WIDTH(other_node)) {
 		return other_node;
 	}
 	height = SYNCTEX_ABS_DEPTH(node) + SYNCTEX_ABS_HEIGHT(node);
@@ -3827,7 +3829,10 @@ static synctex_node_t _synctex_eq_deepest_container(synctex_point_t hitPoint,syn
 				}
 				/*  is the hit point inside the box? */
 				if(_synctex_point_in_box(hitPoint,node,visible)) {
-					if(node && (node->class->type == synctex_node_type_vbox) && (child = SYNCTEX_CHILD(node))) {
+					/*  for vboxes we try to use some node inside.
+					 *  Walk through the list of siblings until we find the closest one.
+					 *  Only consider siblings with children. */
+					if((node->class->type == synctex_node_type_vbox) && (child = SYNCTEX_CHILD(node))) {
 						int bestDistance = INT_MAX;
 						do {
 							if(SYNCTEX_CHILD(child)) {
@@ -3873,11 +3878,12 @@ SYNCTEX_INLINE static int __synctex_eq_get_closest_children_in_hbox(synctex_poin
 					}
 				}
 			} else if(off7 == 0) {
+				/*  hitPoint is inside node. */ 
 				bestDistancesRef->left = bestDistancesRef->right = 0;
 				bestNodesRef->left = node;
 				bestNodesRef->right = NULL;
 				result |= SYNCTEX_MASK_LEFT;
-			} else { /*  here off7 < 0 */
+			} else { /*  here off7 < 0, hitPoint is to the right of node */
 				off7 = -off7;
 				if(bestDistancesRef->left > off7) {
 					bestDistancesRef->left = off7;
@@ -4073,7 +4079,6 @@ struct __synctex_updater_t {
 synctex_updater_t synctex_updater_new_with_output_file(const char * output, const char * build_directory) {
 	synctex_updater_t updater = NULL;
 	char * synctex = NULL;
-	size_t size = 0;
 	synctex_io_mode_t io_mode = synctex_io_mode_read;
 	const char * mode;
 	/*  prepare the updater */
