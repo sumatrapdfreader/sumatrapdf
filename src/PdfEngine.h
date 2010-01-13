@@ -143,6 +143,10 @@ public:
     int        findPageNo(fz_obj *dest);
     fz_obj    *getNamedDest(const char *name);
     char     * getPageLayoutName(void);
+    TCHAR    * PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), pdf_textline **line_out=NULL);
+    TCHAR    * PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), pdf_textline **line_out=NULL) {
+        return ExtractPageText(getPdfPage(pageNo), lineSep, line_out);
+    };
 
 protected:
     const TCHAR *_fileName;

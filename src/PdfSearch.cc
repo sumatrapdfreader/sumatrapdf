@@ -50,38 +50,6 @@ void PdfSearch::SetDirection(bool forward)
     findIndex += length * (forward ? 1 : -1);
 }
 
-TCHAR *PdfSearch::ExtractPageText(int pageNo, TCHAR *lineSep, pdf_textline **line_out)
-{
-    pdf_textline *line;
-    fz_tree *tree = engine->getPdfPage(pageNo)->tree;
-    fz_error error = pdf_loadtextfromtree(&line, tree, fz_identity());
-    if (error)
-        return NULL;
-
-    int textLen = 0;
-    for (pdf_textline *ln = line; ln; ln = ln->next)
-        textLen += ln->len + lstrlen(lineSep);
-
-    TCHAR *content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR)), *lineText = content;
-
-    for (pdf_textline *ln = line; ln; ln = ln->next) {
-        for (int i = 0; i < ln->len; i++) {
-            lineText[i] = ln->text[i].c;
-            if (lineText[i] < 32)
-                lineText[i] = '?';
-        }
-        lstrcpy(lineText + ln->len, lineSep);
-        lineText += ln->len + lstrlen(lineSep);
-    }
-
-    if (line_out)
-        *line_out = line;
-    else
-        pdf_droptextline(line);
-
-    return content;
-}
-
 void PdfSearch::FillResultRects(TCHAR *found)
 {
     // skip to the line containing the match
@@ -170,7 +138,7 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     while (1 <= pageNo && pageNo <= total && UpdateTracker(pageNo, total)) {
         Reset();
 
-        pageText = ExtractPageText(pageNo, _T(" "), &line);
+        pageText = engine->ExtractPageText(pageNo, _T(" "), &line);
         findIndex = forward ? 0 : lstrlen(pageText);
 
         if (pageText && FindTextInPage(pageNo))

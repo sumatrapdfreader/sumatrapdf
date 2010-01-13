@@ -1569,54 +1569,42 @@ void DisplayModel::goToNamedDest(const char *name)
 }
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
- * to <buf>. Returnes number of copied characters */
-int DisplayModel::getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buflen)
+ * into a newly allocated buffer (which the caller needs to free()). */
+TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 {
-    double          x, y;
-    pdf_textline *  ln;
     pdf_textline *  line;
-    pdf_page *      page = pdfEngine->getPdfPage(pageNo);
-    fz_tree *       tree = page->tree;
-    double          rot = 0;
-    double          zoom = 1;
+    TCHAR *pageText = pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), &line);
+    if (!pageText)
+        return NULL;
 
-    fz_error error = pdf_loadtextfromtree(&line, tree, fz_identity());
-    if (error)
-        return 0;
-
-    int len = 0;
-
-    for (ln = line; ln; ln = ln->next) {
-        int prevLen = len;
+    TCHAR *result = (TCHAR *)malloc((lstrlen(pageText) + 1) * sizeof(TCHAR));
+    TCHAR *src = pageText, *dest = result;
+    for (pdf_textline *ln = line; ln; ln = ln->next) {
+        TCHAR *prevLine = dest;
         for (int i = 0; i < ln->len; i++) {
             // TODO: would be better to have bbox and test for intersect with
             // region, to catch characters that are only partially inside 
             // the region
-            x = ln->text[i].bbox.x0;
-            y = ln->text[i].bbox.y0;
-            int c = ln->text[i].c;
-            if (c < 32)
-                c = '?';
-            if (RectD_Inside(region, x, y) && (len < buflen)) {
-                buf[len++] = c;
+            if (RectD_Inside(region, ln->text[i].bbox.x0, ln->text[i].bbox.y0)) {
+                *dest++ = *src;
                 //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)c, (int)c, (unsigned short)c);
                 //DBG_OUT("Found char: %c : %hu; real %c : %hu\n", c, (unsigned short)(unsigned char) c, ln->text[i].c, ln->text[i].c);
             }
+            src++;
         }
-
-        if ((len > prevLen) && (len < buflen - 2)) {
-#ifdef WIN32
-            buf[len++] = DOS_NEWLINE[0];
-            buf[len++] = DOS_NEWLINE[1];
+        if (dest > prevLine) {
+            *dest++ = DOS_NEWLINE[0];
+            *dest++ = DOS_NEWLINE[1];
             //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
-#else
-            buf[len++] = UNIX_NEWLINE_C;
-#endif
         }
+        src += 2; // DOS_NEWLINE
     }
-    pdf_droptextline(line);
+    *dest = 0;
 
-    return len;
+    pdf_droptextline(line);
+    free(pageText);
+
+    return result;
 }
 
 /* extract all text from the document (caller needs to free() the result) */
@@ -1626,7 +1614,7 @@ TCHAR *DisplayModel::extractAllText(void)
     int textLen = 0;
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
-        TStrList_InsertAndOwn(&pages, _pdfSearch->ExtractPageText(pageNo));
+        TStrList_InsertAndOwn(&pages, pdfEngine->ExtractPageText(pageNo));
         textLen += lstrlen(pages->str);
     }
 

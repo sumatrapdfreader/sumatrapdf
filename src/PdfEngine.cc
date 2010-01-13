@@ -511,71 +511,98 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
 void PdfEngine::linkifyPageText(pdf_page *page)
 {
     pdf_textline *line;
-    TCHAR lineText[1024];
-
-    fz_error error = pdf_loadtextfromtree(&line, page->tree, fz_identity());
-    if (error)
+    TCHAR *pageText = ExtractPageText(page, _T(" "), &line);
+    if (!pageText)
         return;
 
-    for (pdf_textline *ln = line; ln; ln = ln->next) {
-        // extract one line
-        int lineLen = MIN(ln->len, dimof(lineText) - 2);
-        for (int i = 0; i < lineLen; i++) {
-            lineText[i] = ln->text[i].c;
-            if (lineText[i] < 32)
-                lineText[i] = ' ';
+    pdf_textline *current = line;
+    for (TCHAR *start = pageText; *start; start++) {
+        TCHAR *end;
+        fz_rect bbox;
+
+        // look for words starting with "http://", "https://" or "www."
+        if (('h' != *start || _tcsncmp(start, _T("http://"), 7) != 0 && _tcsncmp(start, _T("https://"), 8) != 0) &&
+            ('w' != *start || _tcsncmp(start, _T("www."), 4) != 0) ||
+            (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
+            continue;
+
+        // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
+        for (end = start; !_istspace(*end); end++);
+        assert(*end);
+        if (',' == *(end - 1) || '.' == *(end - 1))
+            end--;
+        // also ignore a closing parenthesis, if the URL doesn't contain any opening one
+        if (')' == *(end - 1) && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
+            end--;
+        *end = 0;
+
+        // get positioning information for the matching line
+        pdf_textline *ln;
+        TCHAR *lineText = pageText;
+        for (ln = line; lineText + ln->len < start; ln = ln->next)
+            lineText += ln->len + 1;
+
+        // make sure that no other link is associated with this word
+        bbox.x0 = ln->text[start - lineText].bbox.x0;
+        bbox.y0 = ln->text[start - lineText].bbox.y0;
+        bbox.x1 = ln->text[end - lineText - 1].bbox.x1;
+        bbox.y1 = ln->text[end - lineText - 1].bbox.y1;
+        for (pdf_link *link = page->links; link && start < end; link = link->next) {
+            fz_rect isect = fz_intersectrects(bbox, link->rect);
+            if (0 != memcmp(&isect, &fz_emptyrect, sizeof(fz_rect)))
+                start = end;
         }
-        // make sure that all lines end on a space
-        lstrcpy(lineText + lineLen, _T(" "));
 
-        for (TCHAR *start = lineText; *start; start++) {
-            TCHAR *end;
-            fz_rect bbox;
-
-            // look for words starting with "http://", "https://" or "www."
-            if (('h' != *start || _tcsncmp(start, _T("http://"), 7) != 0 && _tcsncmp(start, _T("https://"), 8) != 0) &&
-                ('w' != *start || _tcsncmp(start, _T("www."), 4) != 0) ||
-                (start > lineText && (_istalnum(start[-1]) || '/' == start[-1])))
-                continue;
-
-            // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-            for (end = start; !_istspace(*end); end++);
-            assert(*end);
-            if (',' == *(end - 1) || '.' == *(end - 1))
-                end--;
-            // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-            if (')' == *(end - 1) && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
-                end--;
-            *end = 0;
-
-            // make sure that no other link is associated with this word
-            bbox.x0 = ln->text[start - lineText].bbox.x0;
-            bbox.y0 = ln->text[start - lineText].bbox.y0;
-            bbox.x1 = ln->text[end - lineText - 1].bbox.x1;
-            bbox.y1 = ln->text[end - lineText - 1].bbox.y1;
-            for (pdf_link *link = page->links; link && start < end; link = link->next) {
-                fz_rect isect = fz_intersectrects(bbox, link->rect);
-                if (0 != memcmp(&isect, &fz_emptyrect, sizeof(fz_rect)))
-                    start = end;
-            }
-
-            // add the link, if it's a new one (ignoring www. links without a toplevel domain)
-            if (*start && (tstr_startswith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
-                char *uri = tstr_to_utf8(start);
-                char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
-                fz_obj *dest = fz_newstring(httpUri, strlen(httpUri));
-                pdf_link *link = pdf_newlink(PDF_LURI, bbox, dest);
-                link->next = page->links;
-                page->links = link;
-                fz_dropobj(dest);
-                if (httpUri != uri)
-                    free(httpUri);
-                free(uri);
-            }
-            start = end;
+        // add the link, if it's a new one (ignoring www. links without a toplevel domain)
+        if (*start && (tstr_startswith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
+            char *uri = tstr_to_utf8(start);
+            char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
+            fz_obj *dest = fz_newstring(httpUri, strlen(httpUri));
+            pdf_link *link = pdf_newlink(PDF_LURI, bbox, dest);
+            link->next = page->links;
+            page->links = link;
+            fz_dropobj(dest);
+            if (httpUri != uri)
+                free(httpUri);
+            free(uri);
         }
+        start = end;
     }
     pdf_droptextline(line);
+    free(pageText);
+}
+
+TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, pdf_textline **line_out)
+{
+    pdf_textline *line;
+    fz_error error = pdf_loadtextfromtree(&line, page->tree, fz_identity());
+    if (error)
+        return NULL;
+
+    int lineSepLen = lstrlen(lineSep);
+    int textLen = 0;
+    for (pdf_textline *ln = line; ln; ln = ln->next)
+        textLen += ln->len + lineSepLen;
+
+    TCHAR *content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR)), *dest = content;
+
+    for (pdf_textline *ln = line; ln; ln = ln->next) {
+        for (int i = 0; i < ln->len; i++) {
+            *dest = ln->text[i].c;
+            if (*dest < 32)
+                *dest = '?';
+            dest++;
+        }
+        lstrcpy(dest, lineSep);
+        dest += lineSepLen;
+    }
+
+    if (line_out)
+        *line_out = line;
+    else
+        pdf_droptextline(line);
+
+    return content;
 }
 
 char *PdfEngine::getPageLayoutName(void)

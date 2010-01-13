@@ -237,7 +237,7 @@ public:
     void            zoomBy(double zoomFactor);
     void            rotateBy(int rotation);
 
-    int             getTextInRegion(int pageNo, RectD *region, WCHAR *buf, int buflen);
+    TCHAR *         getTextInRegion(int pageNo, RectD *region);
     TCHAR *         extractAllText(void);
 
     void            clearSearchHit(void);

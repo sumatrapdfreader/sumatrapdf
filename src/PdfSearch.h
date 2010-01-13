@@ -52,7 +52,6 @@ public:
     void SetText(TCHAR *text);
     void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
     void SetDirection(bool forward);
-    TCHAR *ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), pdf_textline **line_out=NULL);
     bool FindFirst(int page, TCHAR *text);
     bool FindNext();
 

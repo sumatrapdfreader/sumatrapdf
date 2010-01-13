@@ -3612,49 +3612,47 @@ static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
 
 static void CopySelectionToClipboard(WindowInfo *win)
 {
-    SelectionOnPage *   selOnPage;
-
     assert(win);
     if (!win) return;
-
     if (!win->selectionOnPage) return;
-
-    HGLOBAL handle;
-    WCHAR *ucsbuf;
-    int ucsbuflen = 4096;
-
     if (!OpenClipboard(NULL)) return;
 
-    EmptyClipboard();
+    if (win->dm->pdfEngine->hasPermission(PDF_PERM_COPY)) {
+        int textLen = 0;
+        TStrList *selections = NULL;
+        for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next) {
+            TStrList_InsertAndOwn(&selections, win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
+            textLen += lstrlen(selections->str);
+        }
 
-    handle = GlobalAlloc(GMEM_MOVEABLE, ucsbuflen * sizeof(TCHAR));
-    if (!handle) {
-        CloseClipboard();
-        return;
-    }
-    ucsbuf = (WCHAR *)GlobalLock(handle);
+        EmptyClipboard();
+        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (textLen + 1) * sizeof(TCHAR));
+        if (!handle) {
+            TStrList_Destroy(&selections);
+            CloseClipboard();
+            return;
+        }
 
-    selOnPage = win->selectionOnPage;
+        TCHAR *selText = (TCHAR *)GlobalLock(handle), *nextPart = selText;
+        TStrList_Reverse(&selections);
+        for (TStrList *next = selections; next; next = next->next)
+        {
+            lstrcpy(nextPart, next->str);
+            nextPart += lstrlen(next->str);
+        }
+        TStrList_Destroy(&selections);
+        GlobalUnlock(handle);
 
-    int copied = 0;
-    while (selOnPage != NULL) {
-        int charCopied = win->dm->getTextInRegion(selOnPage->pageNo, 
-            &selOnPage->selectionPage, ucsbuf + copied, ucsbuflen - copied - 1);
-        copied += charCopied;
-        if (ucsbuflen - copied == 1) 
-            break;
-        selOnPage = selOnPage->next;
-    }
-    ucsbuf[copied] = 0;
-
-    GlobalUnlock(handle);
-
-    if (copied > 0 && win->dm->pdfEngine->hasPermission(PDF_PERM_COPY))
+#ifdef UNICODE
         if (!SetClipboardData(CF_UNICODETEXT, handle))
+#else
+        if (!SetClipboardData(CF_TEXT, handle))
+#endif
             SeeLastError();
+    }
 
     /* also copy a screenshot of the current selection to the clipboard */
-    selOnPage = win->selectionOnPage;
+    SelectionOnPage *selOnPage = win->selectionOnPage;
     RectD * r = &selOnPage->selectionPage;
     fz_rect clipRegion;
     clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
@@ -3671,7 +3669,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
             DeleteObject(hBmp);
         }
         ReleaseDC(NULL, hDC);
-        free(bmp);
+        delete bmp;
     }
 
     CloseClipboard();
