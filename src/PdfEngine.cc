@@ -510,12 +510,11 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
 
 void PdfEngine::linkifyPageText(pdf_page *page)
 {
-    pdf_textline *line;
-    TCHAR *pageText = ExtractPageText(page, _T(" "), &line);
+    fz_irect *coords;
+    TCHAR *pageText = ExtractPageText(page, _T(" "), &coords);
     if (!pageText)
         return;
 
-    pdf_textline *current = line;
     for (TCHAR *start = pageText; *start; start++) {
         TCHAR *end;
         fz_rect bbox;
@@ -536,17 +535,11 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             end--;
         *end = 0;
 
-        // get positioning information for the matching line
-        pdf_textline *ln;
-        TCHAR *lineText = pageText;
-        for (ln = line; lineText + ln->len < start; ln = ln->next)
-            lineText += ln->len + 1;
-
         // make sure that no other link is associated with this word
-        bbox.x0 = ln->text[start - lineText].bbox.x0;
-        bbox.y0 = ln->text[start - lineText].bbox.y0;
-        bbox.x1 = ln->text[end - lineText - 1].bbox.x1;
-        bbox.y1 = ln->text[end - lineText - 1].bbox.y1;
+        bbox.x0 = coords[start - pageText].x0;
+        bbox.y0 = coords[start - pageText].y0;
+        bbox.x1 = coords[end - pageText - 1].x1;
+        bbox.y1 = coords[end - pageText - 1].y1;
         for (pdf_link *link = page->links; link && start < end; link = link->next) {
             fz_rect isect = fz_intersectrects(bbox, link->rect);
             if (0 != memcmp(&isect, &fz_emptyrect, sizeof(fz_rect)))
@@ -568,11 +561,11 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         }
         start = end;
     }
-    pdf_droptextline(line);
+    free(coords);
     free(pageText);
 }
 
-TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, pdf_textline **line_out)
+TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_irect **coords_out)
 {
     pdf_textline *line;
     fz_error error = pdf_loadtextfromtree(&line, page->tree, fz_identity());
@@ -584,7 +577,12 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, pdf_textline *
     for (pdf_textline *ln = line; ln; ln = ln->next)
         textLen += ln->len + lineSepLen;
 
-    TCHAR *content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR)), *dest = content;
+    WCHAR *content = (WCHAR *)malloc((textLen + 1) * sizeof(WCHAR)), *dest = content;
+    if (!content)
+        return NULL;
+    fz_irect *destRect = NULL;
+    if (coords_out)
+        destRect = *coords_out = (fz_irect *)malloc(textLen * sizeof(fz_irect));
 
     for (pdf_textline *ln = line; ln; ln = ln->next) {
         for (int i = 0; i < ln->len; i++) {
@@ -592,17 +590,30 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, pdf_textline *
             if (*dest < 32)
                 *dest = '?';
             dest++;
+            if (destRect)
+                memcpy(destRect++, &ln->text[i].bbox, sizeof(fz_irect));
         }
+#ifdef UNICODE
         lstrcpy(dest, lineSep);
         dest += lineSepLen;
+#else
+        dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
+#endif
+        if (destRect) {
+            memset(destRect, 0, lineSepLen * sizeof(fz_irect));
+            destRect += lineSepLen;
+        }
     }
 
-    if (line_out)
-        *line_out = line;
-    else
-        pdf_droptextline(line);
+    pdf_droptextline(line);
 
+#ifdef UNICODE
     return content;
+#else
+    TCHAR *contentT = wstr_to_tstr(content);
+    free(content);
+    return contentT;
+#endif
 }
 
 char *PdfEngine::getPageLayoutName(void)

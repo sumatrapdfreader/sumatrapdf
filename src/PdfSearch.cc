@@ -1,14 +1,12 @@
 #include "PdfSearch.h"
 #include <shlwapi.h>
 
-#define LINESEPLEN 1
-
 PdfSearch::PdfSearch(PdfEngine *engine)
 {
     tracker = NULL;
     text = NULL;
     pageText = NULL;
-    line = NULL;
+    coords = NULL;
     sensitive = false;
     forward = true;
     result.page = 1;
@@ -25,13 +23,11 @@ PdfSearch::~PdfSearch()
 
 void PdfSearch::Reset()
 {
-    if (pageText) {
+    if (pageText || coords) {
         free(pageText);
         pageText = NULL;
-    }
-    if (line) {
-        pdf_droptextline(line);
-        line = NULL;
+        free(coords);
+        coords = NULL;
     }
 }
 
@@ -52,48 +48,30 @@ void PdfSearch::SetDirection(bool forward)
 
 void PdfSearch::FillResultRects(TCHAR *found)
 {
-    // skip to the line containing the match
-    pdf_textline *current;
-    int count = 0;
-    for (current = line; current && count + current->len < findIndex; current = current->next)
-        count += current->len + LINESEPLEN;
-    // get the index of the first character on that line
-    int n = found - pageText - count, nRest = length;
-    if (n == current->len) { // skip line if the first character was lineSep
-        current = current->next;
-        n = 0;
-        nRest--;
-    }
+    fz_irect *c = &coords[found - pageText], *end = c + length;
+    for (; c < end; c++) {
+        // skip line breaks
+        if (!c->x0 && !c->x1)
+            continue;
 
-    while (nRest > 0) {
         result.rects = (RECT *)realloc(result.rects, sizeof(RECT) * ++result.len);
         RECT *rc = &result.rects[result.len - 1];
 
-        rc->left = current->text[n].bbox.x0;
-        rc->top = current->text[n].bbox.y0;
+        rc->left = c->x0;
+        rc->top = c->y0;
 
-        if (n + nRest < current->len) {
-            n += nRest;
-            nRest = 0;
-        } else {
-            nRest -= current->len - n + LINESEPLEN;
-            n = current->len - 1;
-        }
+        for (; c < end && (c->x0 || c->x1); c++);
+        c--;
 
-        rc->right = current->text[n-1].bbox.x1;
-        if (current->len > n && rc->right > current->text[n].bbox.x0)
-            rc->right = current->text[n].bbox.x0;
-        rc->bottom = current->text[n-1].bbox.y1;
+        rc->right = c->x1;
+        rc->bottom = c->y1;
+        if ((c[1].x0 || c[1].x1) && rc->right > c[1].x0)
+            rc->right = c[1].x0;
 
         if (rc->bottom < rc->top)
             swap_int((int *)&rc->bottom, (int *)&rc->top);
         if (rc->right < rc->left)
             swap_int((int *)&rc->right, (int *)&rc->left);
-
-        if (nRest > 0) {
-            current = current->next;
-            n = 0;
-        }
     }
 }
 
@@ -138,7 +116,7 @@ bool PdfSearch::FindStartingAtPage(int pageNo)
     while (1 <= pageNo && pageNo <= total && UpdateTracker(pageNo, total)) {
         Reset();
 
-        pageText = engine->ExtractPageText(pageNo, _T(" "), &line);
+        pageText = engine->ExtractPageText(pageNo, _T(" "), &coords);
         findIndex = forward ? 0 : lstrlen(pageText);
 
         if (pageText && FindTextInPage(pageNo))
