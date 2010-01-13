@@ -127,7 +127,7 @@ static int ftloadt1encoding(FT_Face face, char **estrings)
 		encoding = &font->encoding;
 		if (encoding->code_first == encoding->code_last)
 			break;
-		assert(encoding->code_first < encoding->code_last && encoding->code_last < 256);
+		assert(encoding->code_first < encoding->code_last && encoding->code_last <= 256);
 		for (i = encoding->code_first; i < encoding->code_last; i++)
 			estrings[i] = encoding->char_name[i];
 		return 1;
