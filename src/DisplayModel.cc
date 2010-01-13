@@ -1573,7 +1573,7 @@ void DisplayModel::goToNamedDest(const char *name)
 TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 {
     pdf_textline *  line;
-    TCHAR *pageText = pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), &line);
+    TCHAR *pageText = pdfEngine->ExtractPageText(pageNo, _T(""), &line);
     if (!pageText)
         return NULL;
 
@@ -1597,7 +1597,6 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
             *dest++ = DOS_NEWLINE[1];
             //DBG_OUT("Char: %c : %d; ushort: %hu\n", (char)buf[p], (int)(unsigned char)buf[p], buf[p]);
         }
-        src += 2; // DOS_NEWLINE
     }
     *dest = 0;
 
