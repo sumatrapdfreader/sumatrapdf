@@ -57,21 +57,18 @@ void PdfSearch::FillResultRects(TCHAR *found)
         result.rects = (RECT *)realloc(result.rects, sizeof(RECT) * ++result.len);
         RECT *rc = &result.rects[result.len - 1];
 
-        rc->left = c->x0;
-        rc->top = c->y0;
-
+        fz_irect c0 = *c;
         for (; c < end && (c->x0 || c->x1); c++);
         c--;
+        fz_irect c1 = *c;
 
-        rc->right = c->x1;
-        rc->bottom = c->y1;
-        if ((c[1].x0 || c[1].x1) && rc->right > c[1].x0)
+        rc->left = min(c0.x0, c1.x0);
+        rc->top = min(c0.y0, c1.y0);
+        rc->right = max(c0.x1, c1.x1);
+        rc->bottom = max(c0.y1, c1.y1);
+        // cut the right edge, if it overlaps the next character's
+        if ((c[1].x0 || c[1].x1) && rc->left < c[1].x1 && rc->right > c[1].x0)
             rc->right = c[1].x0;
-
-        if (rc->bottom < rc->top)
-            swap_int((int *)&rc->bottom, (int *)&rc->top);
-        if (rc->right < rc->left)
-            swap_int((int *)&rc->right, (int *)&rc->left);
     }
 }
 

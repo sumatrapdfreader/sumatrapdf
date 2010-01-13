@@ -163,23 +163,6 @@ addtextchar(pdf_textline *line, fz_irect bbox, int c)
 		line->text = fz_realloc(line->text, sizeof(pdf_textchar) * line->cap);
 	}
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=400 */
-	/* copy ligatures as individual characters */
-	switch (c)
-	{
-	case 0xFB00: /* ff */
-		addtextchar(line, bbox, 'f'); c = 'f'; break;
-	case 0xFB03: /* ffi */
-		addtextchar(line, bbox, 'f');
-	case 0xFB01: /* fi */
-		addtextchar(line, bbox, 'f'); c = 'i'; break;
-	case 0xFB04: /* ffl */
-		addtextchar(line, bbox, 'f');
-	case 0xFB02: /* fl */
-		addtextchar(line, bbox, 'f'); c = 'l'; break;
-	case 0xFB05: case 0xFB06: /* st */
-		addtextchar(line, bbox, 's'); c = 't'; break;
-	}
 	line->text[line->len].bbox = bbox;
 	line->text[line->len].c = c;
 	line->len ++;
@@ -308,6 +291,122 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 	return fz_okay;
 }
 
+/***** various string fixups *****/
+static void
+insertcharacter(pdf_textline *line, int i, int c)
+{
+	if (line->len + 1 >= line->cap)
+	{
+		line->cap = line->cap ? (line->cap * 3) / 2 : 80;
+		line->text = fz_realloc(line->text, sizeof(pdf_textchar) * line->cap);
+	}
+
+	memmove(&line->text[i + 1], &line->text[i], (line->len - i) * sizeof(pdf_textchar));
+	line->text[i].c = c;
+	line->text[i].bbox = line->text[i + 1].bbox;
+	line->len++;
+}
+
+static void
+deletecharacter(pdf_textline *line, int i)
+{
+	memmove(&line->text[i], &line->text[i + 1], (line->len - (i + 1)) * sizeof(pdf_textchar));
+	line->len--;
+}
+
+static void
+reversecharacters(pdf_textline *line, int i, int j)
+{
+	while (i < j)
+	{
+		pdf_textchar tc = line->text[i];
+		line->text[i] = line->text[j];
+		line->text[j] = tc;
+		i++; j--;
+	}
+}
+
+static int
+ornatecharacter(int ornate, int character)
+{
+	static wchar_t *ornates[] = {
+		L" ¨´`^",
+		L"aäáàâ", L"AÄÁÀÂ",
+		L"eëéèê", L"EËÉÈÊ",
+		L"iïíìî", L"IÏÍÌÎ",
+		L"oöóòô", L"OÖÓÒÔ",
+		L"uüúùû", L"UÜÚÙÛ",
+		nil
+	};
+	int i, j;
+
+	for (i = 1; ornates[0][i] && ornates[0][i] != (wchar_t)ornate; i++);
+	for (j = 1; ornates[j] && ornates[j][0] != (wchar_t)character; j++);
+	return ornates[0][i] && ornates[j] ? ornates[j][i] : 0;
+}
+
+/* TODO: Complete these lists... */
+#define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
+#define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
+
+static void
+fixuptextlines(pdf_textline *root)
+{
+	pdf_textline *line;
+	for (line = root; line; line = line->next)
+	{
+		int i;
+		for (i = 0; i < line->len; i++)
+		{
+			switch (line->text[i].c)
+			{
+			/* recombine characters and their accents */
+			case 0x00A8: /* ¨ */
+			case 0x00B4: /* ´ */
+			case 0x0060: /* ` */
+			case 0x005E: /* ^ */
+				if (i + 2 < line->len && line->text[i + 1].c == 32)
+				{
+					int newC = ornatecharacter(line->text[i].c, line->text[i + 2].c);
+					if (newC)
+					{
+						deletecharacter(line, i);
+						deletecharacter(line, i);
+						line->text[i].c = newC;
+					}
+				}
+				break;
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=400 */
+			/* copy ligatures as individual characters */
+			case 0xFB00: /* ff */
+				insertcharacter(line, i++, 'f'); line->text[i].c = 'f'; break;
+			case 0xFB03: /* ffi */
+				insertcharacter(line, i++, 'f');
+			case 0xFB01: /* fi */
+				insertcharacter(line, i++, 'f'); line->text[i].c = 'i'; break;
+			case 0xFB04: /* ffl */
+				insertcharacter(line, i++, 'f');
+			case 0xFB02: /* fl */
+				insertcharacter(line, i++, 'f'); line->text[i].c = 'l'; break;
+			case 0xFB05: case 0xFB06: /* st */
+				insertcharacter(line, i++, 's'); line->text[i].c = 't'; break;
+			default:
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=733 */
+				/* reverse words written in RTL languages */
+				if (ISRIGHTTOLEFTCHAR(line->text[i].c))
+				{
+					int j = i + 1;
+					while (j < line->len && line->text[j - 1].bbox.x0 <= line->text[j].bbox.x0 && !ISLEFTTORIGHTCHAR(line->text[i].c))
+						j++;
+					reversecharacters(line, i, j - 1);
+					i = j;
+				}
+			}
+		}
+	}
+}
+/***** various string fixups *****/
+
 fz_error
 pdf_loadtextfromtree(pdf_textline **outp, fz_tree *tree, fz_matrix ctm)
 {
@@ -329,6 +428,7 @@ pdf_loadtextfromtree(pdf_textline **outp, fz_tree *tree, fz_matrix ctm)
 		return fz_rethrow(error, "cannot extract text from display tree");
 	}
 
+	fixuptextlines(root);
 	*outp = root;
 	return fz_okay;
 }
