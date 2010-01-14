@@ -5407,6 +5407,40 @@ static bool WasShiftPressed()
     return WasKeyDown(VK_LSHIFT) || WasKeyDown(VK_RSHIFT);
 }
 
+static void AdvanceFocus(WindowInfo *win)
+{
+    // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
+
+    bool reversed = WasShiftPressed();
+    bool hasToolbar = !win->fullScreen && gGlobalPrefs.m_showToolbar;
+    bool hasToC = win->dm && win->dm->_showToc;
+
+    HWND current = GetFocus();
+    HWND next = win->hwndFrame;
+
+    if (current == win->hwndFrame) {
+        if ((!hasToolbar || reversed) && hasToC)
+            next = win->hwndTocBox;
+        else if (!reversed && hasToolbar)
+            next = win->hwndPageBox;
+        else if (reversed && hasToolbar)
+            next = win->hwndFindBox;
+    } else if (current == win->hwndTocBox) {
+        if (reversed && hasToolbar)
+            next = win->hwndFindBox;
+    } else if (current == win->hwndPageBox) {
+        if (!reversed)
+            next = win->hwndFindBox;
+    } else if (current == win->hwndFindBox) {
+        if (reversed)
+            next = win->hwndPageBox;
+        else if (hasToC)
+            next = win->hwndTocBox;
+    }
+
+    SetFocus(next);
+}
+
 static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=false)
 {
     if (!win->dm)
@@ -5538,11 +5572,7 @@ static void OnChar(WindowInfo *win, int key)
     } else if ('/' == key) {
         OnMenuFind(win);
     } else if (VK_TAB == key) {
-        // Tab order: Page -> Find -> ToC -> Frame -> ...
-        if (!win->fullScreen && gGlobalPrefs.m_showToolbar)
-            SetFocus(win->hwndPageBox);
-        else if (win->dm->_showToc)
-            SetFocus(win->hwndTocBox);
+        AdvanceFocus(win);
     }
 }
 
@@ -5700,11 +5730,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 
         if (VK_TAB == wParam)
         {
-            // Tab order: Page -> Find -> ToC -> Frame -> ...
-            if (win->dm->_showToc)
-                SetFocus(win->hwndTocBox);
-            else
-                SetFocus(win->hwndFrame);
+            AdvanceFocus(win);
             return 1;
         }
     }
@@ -5972,8 +5998,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
         }
         else if (VK_TAB == wParam) {
-            // Tab order: Page -> Find -> ToC -> Frame -> ...
-            SetFocus(win->hwndFindBox);
+            AdvanceFocus(win);
             return 1;
         }
     } else if (WM_ERASEBKGND == message) {
@@ -7119,8 +7144,7 @@ InitMouseWheelInfo:
                     case TVN_KEYDOWN: {
                         TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
                         if (VK_TAB == ptvkd->wVKey) {
-                            // Tab order: Page -> Find -> ToC -> Frame -> ...
-                            SetFocus(win->hwndFrame);
+                            AdvanceFocus(win);
                             return 1;
                         }
                         break;
