@@ -111,10 +111,10 @@ static BOOL             gDebugShowLinks = FALSE;
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
 /* Default size for the window, happens to be american A4 size (I think) */
-#define DEF_PAGE_DX 612
-#define DEF_PAGE_DY 792
+#define DEF_PAGE_RATIO (612.0/792.0)
 
 #define SPLITTER_DX  5
+#define SPLITTER_MIN_WIDTH 150
 
 #define REPAINT_TIMER_ID    1
 /* Time to delay painting when going to a new page (prevents flickering) */
@@ -1896,25 +1896,30 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     WindowInfo* win;
 
     /* TODO: maybe adjustement of size and position should be outside of this function */
+    RECT workArea;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    int defPageDy = rect_dy(&workArea);
+    int defPageDx = defPageDy * DEF_PAGE_RATIO;
+
     int winX = CW_USEDEFAULT;
-    int winY = CW_USEDEFAULT;
+    int winY = workArea.top;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowPosX) {
         winX = gGlobalPrefs.m_windowPosX;
         winY = gGlobalPrefs.m_windowPosY;
     }
 
-    int winDx = DEF_PAGE_DX;
+    int winDx = defPageDx;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDx) {
         winDx = gGlobalPrefs.m_windowDx;
         if (winDx < MIN_WIN_DX || winDx > MAX_WIN_DX)
-            winDx = DEF_PAGE_DX;
+            winDx = defPageDx;
     }
     
-    int winDy = DEF_PAGE_DY;
+    int winDy = defPageDy;
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDy) {
         winDy = gGlobalPrefs.m_windowDy;
         if (winDy < MIN_WIN_DY || winDy > MAX_WIN_DY)
-            winDy = DEF_PAGE_DY;
+            winDy = defPageDy;
     }
     
     if (winX != CW_USEDEFAULT && winY != CW_USEDEFAULT) {
@@ -2218,12 +2223,9 @@ static void CheckPositionAndSize(DisplayState* ds)
         ds->windowDy = gGlobalPrefs.m_windowDy;
     }
 
-    if (ds->windowDx < MIN_WIN_DX || ds->windowDx > MAX_WIN_DX)
-        ds->windowDx = DEF_PAGE_DX;
-    if (ds->windowDy < MIN_WIN_DY || ds->windowDy > MAX_WIN_DY)
-        ds->windowDy = DEF_PAGE_DY;
-    
-    if (!IsWindowVisibleOnAMonitor(ds->windowX, ds->windowY, ds->windowDx, ds->windowDy)) {
+    if (ds->windowDx < MIN_WIN_DX || ds->windowDx > MAX_WIN_DX ||
+        ds->windowDy < MIN_WIN_DY || ds->windowDy > MAX_WIN_DY ||
+        !IsWindowVisibleOnAMonitor(ds->windowX, ds->windowY, ds->windowDx, ds->windowDy)) {
         ds->windowX = CW_USEDEFAULT;
         ds->windowY = CW_USEDEFAULT;
     }
@@ -6204,7 +6206,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 RECT r;
                 GetWindowRect(win->hwndTocBox, &r);
                 tw = rect_dx(&r) + dx;
-                if (tw <= DEF_PAGE_DX / 4) break;
+                if (tw <= SPLITTER_MIN_WIDTH) break;
 
                 GetClientRect(win->hwndFrame, &r);
                 int width = rect_dx(&r) - tw - SPLITTER_DX;
