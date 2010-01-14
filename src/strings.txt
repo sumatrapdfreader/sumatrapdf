@@ -2668,7 +2668,7 @@ nl:Probleem bij het afdrukken.
 ja:印刷の問題です。
 fa:مشکل در چاپ
 it:Problema di stampa.
-es:Error de impresión.
+es:Problema de impresión.
 hr:Problem prilikom ispisivanja.
 ru:Ошибка при печати.
 ar:يوجد مشكلة في الطباعة
@@ -4032,7 +4032,7 @@ by:Да
 cz:&Ano
 hu:&Igen
 de:&Ja
-es:Si
+es:Sí
 gr:&Ναι
 fr:&Oui
 it:&Sì
@@ -4261,6 +4261,7 @@ sp-rs:PDF dokumenti
 Text documents
 cz:Textové dokumenty
 de:Text-Dokumente
+es:Documentos de Texto
 ru:Текстовые документы
 sv:Text-dokument
 sr-rs:Текстуални документи
@@ -4327,7 +4328,7 @@ by:&Узор:
 cz:Hledat &co:
 hu:Mit keres:
 de:&Suchen nach:
-es:&Buscar qué
+es:&Encontrar:
 gr:Εύρεση του:
 fr:Rechercher quoi:
 it:R&icerca:
@@ -4353,7 +4354,7 @@ by:Знайсці
 cz:Hledat
 hu:Keresés
 de:Suchen
-es:Encontrar
+es:Buscar
 gr:Εύρεση
 fr:Rechercher
 it:Trova
@@ -4405,7 +4406,7 @@ cz:Nápověda: Použijte klávesu F3 pro další hledání
 ru:Для повторного поиска используйте клавишу F3
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
-es:"F3" para encontrar el siguiente resultado
+es:Usar "F3" para mostrar el siguiente resultado
 gr:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
 fr:Remarque: Utilisez la touche F3 pour trouver de nouveau
 it:Ricorda: Usa F3 per trovare nuovamente
@@ -4584,7 +4585,7 @@ by:[Выяўлены змены; адбываецца абнаўленне] %s
 cz:Zjištěna změna; obnovuji] %s
 hu:[a file megváltozott; frissítés] %s
 de:[Datei wurde geändert; aktualisiere…] %s
-es:[El archivo ha cambiado; actualizando] %s
+es:[Modificaciones detectadas; actualizando] %s
 gr:[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
 fr:[Modifications détectées; actualisation] %s
 it:[Cambiamenti rilevati; in aggiornamento] %s
@@ -4748,7 +4749,7 @@ bg:SumatraPDF е вашия PDF четец
 cz:SumatraPDF je výchozí PDF čtečka
 hu:A Sumatra az alapértelmezett PDF-olvasója
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
-es:SumatraPDF es el lector PDF por defecto
+es:SumatraPDF es el lector PDF predeterminado
 gr:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
 fr:SumatraPDF est votre lecteur de PDF
 it:SumatraPDF è il lettore PDF predefinito
@@ -4851,6 +4852,7 @@ bg:Копирай избраното\tCtrl-C
 br:Copiar seleção\tCtrl-C
 cz:Zkopírovat výběr\tCtrl-C
 de:Auswahl kopieren\tStrg+C
+es:Copiar Selección\tCtrl-C
 gr:Αντιγραφή επιλεγμένων\tCtrl-C
 cn:复制选择内容\tCtrl-C
 fr:Copier la sélection
@@ -4872,6 +4874,7 @@ bg:Изберете съдържание с Ctrl и левия бутон на �
 br:Selecionar com Ctrl+Botão esquerdo do mouse
 cz:Vybrat obsah s Ctrl+levé tlačítko myši
 de:Inhalte mit Strg+linker Maustaste auswählen
+es:Seleccionar con Ctrl+Click
 gr:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 cn:使用Ctrl+鼠标左键选择内容
 fr:Sélectionner avec Ctrl+bouton gauche de la souris
@@ -4893,6 +4896,7 @@ bg:Увеличение по избор...
 br:&Zoom personalizado...
 cz:&Volitelné přiblížení...
 de:&Zoomfaktor...
+es:&Zoom personalizado...
 gr:&Ορισμός ζουμ...
 cn:自定义缩放...
 fr:Zoom personnalisé...
@@ -4915,6 +4919,7 @@ bg:оефициент на увеличение
 br:Proporção de Zoom
 cz:Měřítko přiblížení
 de:Zoomfaktor
+es:Proporción de Zoom
 gr:Ποσοστό ζουμ
 cn:缩放比例
 fr:Facteur de zoom
@@ -4937,6 +4942,7 @@ bg:Увеличение:
 br:Aumento:
 cz:&Zvětšení
 de:&Vergrößerung:
+es:Aumento:
 gr:Μεγέθυνση:
 cn:放大率(&M):
 fr:Grossissement:
@@ -4959,6 +4965,7 @@ bg:Увеличение
 br:Zoom
 cz:Přiblížení
 de:Zoom
+es:Zoom
 gr:Ζουμ
 cn:缩放
 fr:Zoom
@@ -4984,6 +4991,7 @@ fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuil
 it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
 ru:Ошибка команды обратного поиска. Проверьте параметры командной строки.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
+es:No se puede iniciar el comando de búsqueda inversa. Verifique la línea de comandos en las opciones.
 gr:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις
 cn:无法运行反向搜索命令。请检查设置中的命令行。
 ja:逆順検索が開始できませんでした。コマンドラインを確認してください。
@@ -5118,6 +5126,7 @@ bg:Синфронизационния файл не е намерен
 cz:Synchronizační soubor nebyl nalezen
 fr:Aucun fichier de synchronization trouvé
 de:Synchronisationsdatei nicht gefunden
+es:No se encontró archivo de sincronización
 ru:Файл синхронизации не найден
 sr-rs:Усклађивачка датотека није нађена
 sp-rs:Usklađivačka datoteka nije nađena
@@ -5126,7 +5135,9 @@ cy:Heb ganfod ffeil cydweddu
 Back\tAlt+<-
 cz:Zpět\tAlt+<-
 de:&Zurück\tAlt+<-
+es:Atrás\tAlt+<-
 -
 Forward\tAlt+->
 cz:Vpřed\tAlt+->
 de:Vor&wärts\tAlt+->
+es:Adelante\tAlt+->
