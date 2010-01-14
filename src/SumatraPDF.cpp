@@ -2393,6 +2393,8 @@ static void WindowInfo_UpdateTocSelection(WindowInfo *win, int currPageNo)
 {
     if (!win->dm || !win->dm->_showToc || !win->tocLoaded)
         return;
+    if (GetFocus() != win->hwndTocBox)
+        return;
 
     HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocBox);
     if (!hRoot)
