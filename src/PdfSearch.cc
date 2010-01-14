@@ -67,7 +67,7 @@ void PdfSearch::FillResultRects(TCHAR *found)
         rc->right = max(c0.x1, c1.x1);
         rc->bottom = max(c0.y1, c1.y1);
         // cut the right edge, if it overlaps the next character's
-        if ((c[1].x0 || c[1].x1) && rc->left < c[1].x1 && rc->right > c[1].x0)
+        if ((c[1].x0 || c[1].x1) && rc->left < c[1].x0 && rc->right > c[1].x0)
             rc->right = c[1].x0;
     }
 }
