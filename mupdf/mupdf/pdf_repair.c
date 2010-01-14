@@ -57,8 +57,8 @@ fz_repairobj(fz_stream *file, char *buf, int cap,
 		obj = fz_dictgets(dict, "Filter");
 		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Standard"))
 		{
-			fz_dropobj(dict);
-			return fz_throw("cannot repair encrypted files");
+			/* http://code.google.com/p/sumatrapdf/issues/detail?id=817 */
+			fz_warn("might not be able to repair encrypted files");
 		}
 
 		fz_dropobj(dict);
