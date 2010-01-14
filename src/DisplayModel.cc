@@ -1644,6 +1644,7 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
     if (dispRot == 180 || dispRot == 270)
         vy += pageInfo->currDy;
 
+    RECT extremes = { 0 };
     for (int i = 0; i < res->len; i++) {
         RECT *rect = &res->rects[i];
         double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
@@ -1657,43 +1658,51 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
         tp = fz_transformpoint(ctm, p2);
         right = tp.x + 0.5 + vx;
         bottom = tp.y + 0.5 + vy;
-        
-        if (top > bottom) {
-            double tmp = top;
-            top = bottom;
-            bottom = tmp;
-        }
+
+        if (left > right)
+            swap_double(&left, &right);
+        if (top > bottom)
+            swap_double(&top, &bottom);
 
         rect->left = (int)floor(left);
         rect->top = (int)floor(top);
         rect->right = (int)ceil(right) + 5;
         rect->bottom = (int)ceil(bottom) + 5;
 
-        int sx = 0, sy = 0;
-        if (rect->bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
-            sy = rect->bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy;
+        if (0 == i) {
+            memcpy(&extremes, rect, sizeof(RECT));
+        } else {
+            extremes.left = min(rect->left, extremes.left);
+            extremes.right = max(rect->right, extremes.right);
+            extremes.top = min(rect->top, extremes.top);
+            extremes.bottom = max(rect->bottom, extremes.bottom);
+        }
+    }
 
-        if (rect->left < pageInfo->screenX + pageInfo->bitmapX) {
-            sx = rect->left - pageInfo->screenX - pageInfo->bitmapX - 5;
-            if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
-                sx = -(pageInfo->screenX + pageInfo->bitmapX);
-        }
-        else
-        if (rect->right > pageInfo->screenX + pageInfo->bitmapDx) {
-            sx = rect->right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
-        }
+    int sx = 0, sy = 0;
+    if (extremes.bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
+        sy = extremes.bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy;
 
-        if (sx != 0) {
-            scrollXBy(sx);
-            rect->left -= sx;
-            rect->right -= sx;
-        }
+    if (extremes.left < pageInfo->screenX + pageInfo->bitmapX) {
+        sx = extremes.left - pageInfo->screenX - pageInfo->bitmapX - 5;
+        if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
+            sx = -(pageInfo->screenX + pageInfo->bitmapX);
+    } else if (extremes.right > pageInfo->screenX + pageInfo->bitmapDx) {
+        sx = extremes.right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
+    }
 
-        if (sy > 0) {
-            scrollYBy(sy, false);
-            rect->top -= sy;
-            rect->bottom -= sy;
-        }
+    if (sy < 0)
+        sy = 0;
+    if (sx != 0)
+        scrollXBy(sx);
+    if (sy != 0)
+        scrollYBy(sy, false);
+
+    for (int i = 0; i < res->len; i++) {
+        res->rects[i].left -= sx;
+        res->rects[i].right -= sx;
+        res->rects[i].top -= sy;
+        res->rects[i].bottom -= sy;
     }
 }
 
