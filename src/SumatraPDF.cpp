@@ -259,7 +259,8 @@ static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
-static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=0);
+static bool CanViewWithAcrobat(WindowInfo *win=NULL);
+static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen);
 
 #define SEP_ITEM "-----"
@@ -957,6 +958,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
+    { _TRN("Send by &email..."),                    IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
 };
@@ -1098,11 +1100,17 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     }
     
     HMENU mainMenu = CreateMenu();
-    // Don't display the Acrobat option, if the program couldn't be found
-    if (!GetAcrobatPath()) {
+    // Don't display the Acrobat and email options, if the program couldn't be found
+    bool noAcrobat = !CanViewWithAcrobat(), noEmail = !CanSendAsEmailAttachment();
+    if (noAcrobat || noEmail) {
         for (int i = 0; i < dimof(menuDefFile); i++) {
             if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
-                menuDefFile[i].m_title = menuDefFile[i - 1].m_title = NULL;
+                if (noAcrobat)
+                    menuDefFile[i].m_title = NULL;
+                if (noEmail)
+                    menuDefFile[i + 1].m_title = NULL;
+                if (noAcrobat && noEmail)
+                    menuDefFile[i - 1].m_title = NULL;
             }
         }
     }
@@ -1821,7 +1829,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
-        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_VIEW_WITH_ACROBAT, IDM_COPY_SELECTION };
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_VIEW_WITH_ACROBAT, IDM_SEND_BY_EMAIL,
+        IDM_COPY_SELECTION };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     HMENU hmenu = win->hMenu;
@@ -4719,7 +4728,7 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
         win->dm->scrollXTo(si.nPos);
 }
 
-static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
+static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=NULL)
 {
     TCHAR path[MAX_PATH];
 
@@ -4750,6 +4759,14 @@ static DWORD GetFileVersion(TCHAR *path)
     return fileVersion;
 }
 
+static bool CanViewWithAcrobat(WindowInfo *win)
+{
+    // Requirements: a valid filename and a valid path to Adobe Reader
+    if (win && (!WindowInfo_PdfLoaded(win) || !file_exists(win->dm->fileName())))
+        return false;
+    return GetAcrobatPath() != NULL;
+}
+
 static void ViewWithAcrobat(WindowInfo *win)
 {
     if (!WindowInfo_PdfLoaded(win))
@@ -4770,6 +4787,77 @@ static void ViewWithAcrobat(WindowInfo *win)
         params = tstr_printf(_T("\"%s\""), win->dm->fileName());
     exec_with_params(acrobatPath, params, FALSE);
     free(params);
+}
+
+/* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
+static IDataObject* GetDataObjectForFile(LPCTSTR pszPath, HWND hwnd=NULL)
+{
+    IDataObject* pDataObject = NULL;
+    IShellFolder *pDesktopFolder;
+    HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
+    if (FAILED(hr))
+        return NULL;
+
+    LPWSTR lpWPath = tstr_to_wstr(pszPath);
+    LPITEMIDLIST pidl;
+    hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
+    if (SUCCEEDED(hr)) {
+        IShellFolder *pShellFolder;
+        LPCITEMIDLIST pidlChild;
+        hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
+        if (SUCCEEDED(hr)) {
+            pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
+            pShellFolder->Release();
+        }
+        CoTaskMemFree(pidl);
+    }
+    pDesktopFolder->Release();
+
+    free(lpWPath);
+    return pDataObject;
+}
+
+#define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE); 
+
+static bool CanSendAsEmailAttachment(WindowInfo *win)
+{
+    // Requirements: a valid filename and access to SendMail's IDropTarget interface
+    if (win && (!WindowInfo_PdfLoaded(win) || !file_exists(win->dm->fileName())))
+        return false;
+
+    IDropTarget *pDropTarget = NULL;
+    if (FAILED(CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget)))
+        return false;
+    pDropTarget->Release();
+    return true;
+}
+
+static bool SendAsEmailAttachment(WindowInfo *win)
+{
+    if (!CanSendAsEmailAttachment(win))
+        return false;
+
+    // We use the SendTo drop target provided by SendMail.dll, which should ship with all
+    // commonly used Windows versions, instead of MAPISendMail, which doesn't support
+    // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
+    IDataObject *pDataObject = GetDataObjectForFile(win->dm->fileName(), win->hwndFrame);
+    if (!pDataObject)
+        return false;
+
+    IDropTarget *pDropTarget = NULL;
+    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL, IID_IDropTarget, (void **)&pDropTarget);
+    if (SUCCEEDED(hr)) {
+        POINTL pt = { 0, 0 };
+        DWORD dwEffect = 0;
+        pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
+        hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
+        pDropTarget->Release();
+    }
+
+    pDataObject->Release();
+    return SUCCEEDED(hr);
 }
 
 static void OnMenuViewSinglePage(WindowInfo *win)
@@ -6970,6 +7058,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_VIEW_WITH_ACROBAT:
                     if (!gRestrictedUse)
                         ViewWithAcrobat(win);
+                    break;
+
+                case IDM_SEND_BY_EMAIL:
+                    if (!gRestrictedUse)
+                        SendAsEmailAttachment(win);
                     break;
 
                 case IDM_MOVE_FRAME_FOCUS:

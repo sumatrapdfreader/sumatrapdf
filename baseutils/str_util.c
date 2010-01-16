@@ -651,12 +651,18 @@ Error_OOM:
 /* Caller needs to free() the result */
 char *str_to_multibyte(const char *src, UINT CodePage)
 {
+    if (CP_ACP == CodePage)
+        return str_dup(src);
+
     return multibyte_to_multibyte(src, CP_ACP, CodePage);
 }
 
 /* Caller needs to free() the result */
 char *multibyte_to_str(const char *src, UINT CodePage)
 {
+    if (CP_ACP == CodePage)
+        return str_dup(src);
+
     return multibyte_to_multibyte(src, CodePage, CP_ACP);
 }
 
