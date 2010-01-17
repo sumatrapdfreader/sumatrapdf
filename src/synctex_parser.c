@@ -3086,10 +3086,10 @@ float synctex_node_box_visible_v(synctex_node_t node){
 		case synctex_node_type_vbox:
 		case synctex_node_type_void_vbox:
 		case synctex_node_type_void_hbox:
-			return SYNCTEX_VERT(node)*node->class->scanner->unit+node->class->scanner->x_offset;
+			return SYNCTEX_VERT(node)*node->class->scanner->unit+node->class->scanner->y_offset;
 		case synctex_node_type_hbox:
 result:
-			return SYNCTEX_VERT_V(node)*node->class->scanner->unit+node->class->scanner->x_offset;
+			return SYNCTEX_VERT_V(node)*node->class->scanner->unit+node->class->scanner->y_offset;
 	}
 	if((node = SYNCTEX_PARENT(node)) && (node->class->type != synctex_node_type_sheet)) {
 		goto result;
