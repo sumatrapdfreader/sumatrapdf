@@ -5092,8 +5092,7 @@ int pdf_lookupagl(char *name)
 
 	if (strstr(buf, "uni") == buf)
 		return strtol(buf + 3, nil, 16);
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=795 */
-	else if (strstr(buf, "u") == buf || strstr(buf, "G") == buf)
+	else if (strstr(buf, "u") == buf)
 		return strtol(buf + 1, nil, 16);
 	else if (strstr(buf, "a") == buf && strlen(buf) >= 3)
 		return strtol(buf + 1, nil, 10);
