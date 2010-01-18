@@ -4849,6 +4849,7 @@ sp-rs:Otvori u programu Adobe Reader
 -
 Send by &email...
 de:Als &E-Mail versenden…
+ru:Послать по &email...
 -
 Copy Selection\tCtrl-C
 bg:Копирай избраното\tCtrl-C
@@ -5139,8 +5140,10 @@ Back\tAlt+<-
 cz:Zpět\tAlt+<-
 de:&Zurück\tAlt+<-
 es:Atrás\tAlt+<-
+ru:Назад\tAlt+<-
 -
 Forward\tAlt+->
 cz:Vpřed\tAlt+->
 de:Vor&wärts\tAlt+->
 es:Adelante\tAlt+->
+ru:Вперед\tAlt+->
