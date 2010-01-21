@@ -712,6 +712,7 @@ de:Buchansicht
 sv:Bokuppslag
 ru:В разворот
 cy:Golwg llyfr
+pt: Como livro
 -
 Continuous
 am:Անդադար
@@ -835,6 +836,7 @@ de:Fortlaufende Buchansicht
 sv:Fortlöpande bokuppslag
 ru:В разворот непрерывно
 cy:Golwg llyfr didor
+pt:Livro contínuo
 -
 Show pages continuously
 bg:Непрекъснати
@@ -844,6 +846,7 @@ sv:Visa sidor fortlöpande
 sr-rs:Непрекидни приказ страна
 sp-rs:Neprekidni prikaz strana
 cy:Dangos tudalennau'n ddidor
+pt:Mostrar páginas contínuas
 -
 Rotate left\tCtrl-Shift--
 am:Շրջել ձախ\tCtrl-Shift--
@@ -4267,6 +4270,7 @@ sv:Text-dokument
 sr-rs:Текстуални документи
 sp-rs:Tekstualni dokumenti
 cy:Dogfennau testun
+pt:Documentos de texto
 -
 All files
 am:Բոլոր ֆայլերը
@@ -4850,6 +4854,7 @@ sp-rs:Otvori u programu Adobe Reader
 Send by &email...
 de:Als &E-Mail versenden…
 ru:Послать по &email...
+pt:Enviar por &e-mail...
 -
 Copy Selection\tCtrl-C
 bg:Копирай избраното\tCtrl-C
@@ -5135,15 +5140,18 @@ ru:Файл синхронизации не найден
 sr-rs:Усклађивачка датотека није нађена
 sp-rs:Usklađivačka datoteka nije nađena
 cy:Heb ganfod ffeil cydweddu
+pt:Nenhum ficheiro de sincronização encontrado
 -
 Back\tAlt+<-
 cz:Zpět\tAlt+<-
 de:&Zurück\tAlt+<-
 es:Atrás\tAlt+<-
 ru:Назад\tAlt+<-
+pt:Retroceder\tAlt+<-
 -
 Forward\tAlt+->
 cz:Vpřed\tAlt+->
 de:Vor&wärts\tAlt+->
 es:Adelante\tAlt+->
 ru:Вперед\tAlt+->
+pt:Avançar\tAlt+->
