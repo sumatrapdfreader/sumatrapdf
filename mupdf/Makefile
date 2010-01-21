@@ -428,7 +428,9 @@ $(OUTDIR)/cmap_cns.c: $(CMAPDUMP_APP)
 	cmaps/HKscs-B5-H \
 	cmaps/HKscs-B5-V \
 	cmaps/UniCNS-UCS2-H \
-	cmaps/UniCNS-UCS2-V
+	cmaps/UniCNS-UCS2-V \
+	cmaps/UniCNS-UTF16-H \
+	cmaps/UniCNS-UTF16-V
 
 $(OUTDIR)/cmap_gb.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(OUTDIR)/cmap_gb.c \
@@ -457,7 +459,9 @@ $(OUTDIR)/cmap_gb.c: $(CMAPDUMP_APP)
 	cmaps/GBTpc-EUC-H \
 	cmaps/GBTpc-EUC-V \
 	cmaps/UniGB-UCS2-H \
-	cmaps/UniGB-UCS2-V
+	cmaps/UniGB-UCS2-V \
+	cmaps/UniGB-UTF16-H \
+	cmaps/UniGB-UTF16-V
 
 $(OUTDIR)/cmap_japan.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(OUTDIR)/cmap_japan.c \
@@ -516,7 +520,11 @@ $(OUTDIR)/cmap_japan.c: $(CMAPDUMP_APP)
 	cmaps/Hojo-H \
 	cmaps/Hojo-V \
 	cmaps/UniHojo-UCS2-H \
-	cmaps/UniHojo-UCS2-V
+	cmaps/UniHojo-UCS2-V \
+	cmaps/UniHojo-UTF16-H \
+	cmaps/UniHojo-UTF16-V \
+	cmaps/UniJIS-UTF16-H \
+	cmaps/UniJIS-UTF16-V
 
 $(OUTDIR)/cmap_korea.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(OUTDIR)/cmap_korea.c \
@@ -536,7 +544,9 @@ $(OUTDIR)/cmap_korea.c: $(CMAPDUMP_APP)
 	cmaps/KSCpc-EUC-H \
 	cmaps/KSCpc-EUC-V \
 	cmaps/UniKS-UCS2-H \
-	cmaps/UniKS-UCS2-V
+	cmaps/UniKS-UCS2-V \
+	cmaps/UniKS-UTF16-H \
+	cmaps/UniKS-UTF16-V
 
 fontsources: $(OUTDIR)/font_misc.c $(OUTDIR)/font_mono.c $(OUTDIR)/font_serif.c $(OUTDIR)/font_sans.c $(OUTDIR)/font_cjk.c
 	@echo "building font sources"
