@@ -36,11 +36,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
 PREREQUISITES
 
 Before compiling MuPDF you need to install thirdy party dependencies.
@@ -92,7 +87,7 @@ DOWNLOAD
 The latest development source is available directly from the darcs repository.
 Browse the source or use the following command line to check out the source:
 
-    darcs get http://ccxvii.net/repos/mupdf
+    darcs get http://mupdf.com/repos/mupdf
 
 INSTALLING
 

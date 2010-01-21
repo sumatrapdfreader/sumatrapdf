@@ -29,7 +29,7 @@ static pdfapp_t gapp;
 /*
  * Associate PDFView with PDF files.
  */
-
+#if 0
 void associate(char *argv0)
 {
 	char tmp[256];
@@ -97,6 +97,7 @@ void associate(char *argv0)
 
 	RegCloseKey(key);
 }
+#endif
 
 /*
  * Dialog boxes
@@ -780,7 +781,7 @@ int main(int argc, char **argv)
 
 	pdfapp_init(&gapp);
 
-	associate(argv[0]);
+	/* associate(argv[0]); */
 	winopen();
 
 	if (argc == 2)

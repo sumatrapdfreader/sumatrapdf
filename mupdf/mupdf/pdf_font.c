@@ -282,7 +282,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	fz_obj *descriptor;
 	fz_obj *encoding;
 	fz_obj *widths;
-	unsigned short *etable;
+	unsigned short *etable = nil;
 	pdf_fontdesc *fontdesc;
 	fz_irect bbox;
 	FT_Face face;
@@ -630,7 +630,7 @@ static fz_error
 loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *encoding, fz_obj *tounicode)
 {
 	fz_error error;
-	fz_obj *widths = nil;
+	fz_obj *widths;
 	fz_obj *descriptor;
 	pdf_fontdesc *fontdesc;
 	FT_Face face;
@@ -897,8 +897,6 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	return fz_okay;
 
 cleanup:
-	if (widths)
-		fz_dropobj(widths);
 	fz_dropfont(fontdesc->font);
 	fz_free(fontdesc);
 	return fz_rethrow(error, "cannot load cid font");

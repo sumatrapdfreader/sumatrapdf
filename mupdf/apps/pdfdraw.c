@@ -153,10 +153,10 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	long start;
 	long end;
 	long elapsed;
-
 	fz_md5 digest;
 
-	fz_md5init(&digest);
+	if (!drawpattern)
+		fz_md5init(&digest);
 
 	drawloadpage(pagenum, loadtimes);
 
@@ -219,7 +219,8 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 			}
 		}
 
-		fz_md5update(&digest, pix->samples, pix->h * pix->w * 4);
+		if (!drawpattern)
+			fz_md5update(&digest, pix->samples, pix->h * pix->w * 4);
 
 		pix->y += bh;
 		if (pix->y + pix->h > bbox.y1)
@@ -228,7 +229,7 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 
 	fz_droppixmap(pix);
 
-	{
+	if (!drawpattern) {
 		unsigned char buf[16];
 		fz_md5final(&digest, buf);
 		for (i = 0; i < 16; i++)

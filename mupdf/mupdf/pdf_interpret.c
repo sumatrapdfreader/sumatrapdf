@@ -1452,13 +1452,17 @@ pdf_runcsi(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file)
 			if (!strcmp(buf, "BI"))
 			{
 				fz_obj *obj;
+				int ch;
 
 				error = pdf_parsedict(&obj, xref, file, buf, sizeof buf);
 				if (error)
 					return fz_rethrow(error, "cannot parse inline image dictionary");
 
 				/* read whitespace after ID keyword */
-				fz_readbyte(file);
+				ch = fz_readbyte(file);
+				if (ch == '\r')
+					if (fz_peekbyte(file) == '\n')
+						fz_readbyte(file);
 				error = fz_readerror(file);
 				if (error)
 					return fz_rethrow(error, "cannot parse whitespace before inline image");

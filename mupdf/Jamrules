@@ -32,11 +32,21 @@
 #
 
 # Workaround for different OS/OSPLAT settings on FTJam and plain jam
-if $(JAM_TOOLSET) = MINGW   { OS = MINGW ; }
+if $(JAM_TOOLSET) = MINGW   { OS = MINGW ; OSPLAT = x86 ; }
 if $(JAM_TOOLSET) = VISUALC { OS = NT ; }
 
+# detect amd64, which isn't in the outdated jambase :(
+if $(OS) = NT {
+	if $(Platform) = X64 {
+		OSPLAT = amd64 ;
+	} else {
+		OSPLAT ?= x86 ;
+	}
+} else {
+	OSPLAT ?= amd64 ;
+}
+
 BUILD ?= debug ;
-OSPLAT ?= x64 ; # this one isn't in the jambase :(
 
 # Place all build products here:
 ALL_LOCATE_TARGET ?= [ FDirName $(TOP) build $(OS:L)-$(OSPLAT:L)-$(BUILD:L) ] ;
@@ -90,8 +100,8 @@ if $(OS) = MINGW
     BUILD_WINAPP = true ;
     BUILD_PLUGIN = true ;
 
-    CCFLAGS = -Wall -std=gnu99 -Ic:/local/include ;
-    LINKFLAGS = -Lc:/local/lib ;
+    CCFLAGS = -Wall -std=gnu99 -Ic:/msys/1.0/local/include ;
+    LINKFLAGS = -Lc:/msys/1.0/local/lib ;
     LINKLIBS = -lfreetype -ljpeg -lz -lm ;
     APPLINKLIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 ;
 
@@ -112,13 +122,14 @@ if $(OS) = NT
 
     BUILD_WINAPP = true ;
 
-    CCFLAGS = /Ic:/local/include ;
-    LINKFLAGS = /LIBPATH:c:/local/lib ;
-    LINKLIBS = freetype.lib jpeg.lib z.lib ;
-    APPLINKLIBS = gdi32.lib comdlg32.lib user32.lib advapi32.lib shell32.lib ;
+    CCFLAGS = /I../msvc-include ;
+    LINKFLAGS = /LIBPATH:../msvc-lib-$(OSPLAT)
+	/NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRT ;
+    LINKLIBS = freetype.lib libjpeg.lib zlib.lib ;
+    APPLINKLIBS = gdi32.lib comdlg32.lib user32.lib shell32.lib ;
 
     if $(BUILD) = debug   { }
-    if $(BUILD) = release { }
+    if $(BUILD) = release { OPTIM = /O2 ; }
 
     if $(HAVE_JBIG2DEC) { LINKLIBS += jbig2dec.lib ; }
     if $(HAVE_OPENJPEG)	{ LINKLIBS += openjpeg.lib ; }

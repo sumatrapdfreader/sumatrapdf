@@ -96,7 +96,7 @@ int pdf_lookupagl(char *name)
 	}
 
 	if (strstr(buf, "uni") == buf)
-		strtol(buf + 3, nil, 16);
+		return strtol(buf + 3, nil, 16);
 	else if (strstr(buf, "u") == buf)
 		return strtol(buf + 1, nil, 16);
 	else if (strstr(buf, "a") == buf && strlen(buf) >= 3)

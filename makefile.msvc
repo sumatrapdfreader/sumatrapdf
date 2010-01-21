@@ -383,7 +383,9 @@ $(O)\cmap_cns.c: $(CMAPDUMP_APP)
 	$(FITZ_DIR)\cmaps\HKscs-B5-H \
 	$(FITZ_DIR)\cmaps\HKscs-B5-V \
 	$(FITZ_DIR)\cmaps\UniCNS-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniCNS-UCS2-V
+	$(FITZ_DIR)\cmaps\UniCNS-UCS2-V \
+	$(FITZ_DIR)\cmaps\UniCNS-UTF16-H \
+	$(FITZ_DIR)\cmaps\UniCNS-UTF16-V
 
 $(O)\cmap_gb.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_gb.c \
@@ -412,7 +414,9 @@ $(O)\cmap_gb.c: $(CMAPDUMP_APP)
 	$(FITZ_DIR)\cmaps\GBTpc-EUC-H \
 	$(FITZ_DIR)\cmaps\GBTpc-EUC-V \
 	$(FITZ_DIR)\cmaps\UniGB-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniGB-UCS2-V
+	$(FITZ_DIR)\cmaps\UniGB-UCS2-V \
+	$(FITZ_DIR)\cmaps\UniGB-UTF16-H \
+	$(FITZ_DIR)\cmaps\UniGB-UTF16-V
 
 $(O)\cmap_japan.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_japan.c \
@@ -471,7 +475,11 @@ $(O)\cmap_japan.c: $(CMAPDUMP_APP)
 	$(FITZ_DIR)\cmaps\Hojo-H \
 	$(FITZ_DIR)\cmaps\Hojo-V \
 	$(FITZ_DIR)\cmaps\UniHojo-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniHojo-UCS2-V
+	$(FITZ_DIR)\cmaps\UniHojo-UCS2-V \
+	$(FITZ_DIR)\cmaps\UniHojo-UTF16-H \
+	$(FITZ_DIR)\cmaps\UniHojo-UTF16-V \
+	$(FITZ_DIR)\cmaps\UniJIS-UTF16-H \
+	$(FITZ_DIR)\cmaps\UniJIS-UTF16-V
 
 $(O)\cmap_korea.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_korea.c \
@@ -491,7 +499,9 @@ $(O)\cmap_korea.c: $(CMAPDUMP_APP)
 	$(FITZ_DIR)\cmaps\KSCpc-EUC-H \
 	$(FITZ_DIR)\cmaps\KSCpc-EUC-V \
 	$(FITZ_DIR)\cmaps\UniKS-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniKS-UCS2-V
+	$(FITZ_DIR)\cmaps\UniKS-UCS2-V \
+	$(FITZ_DIR)\cmaps\UniKS-UTF16-H \
+	$(FITZ_DIR)\cmaps\UniKS-UTF16-V
 
 $(O)\font_misc.obj: $(O)\font_misc.c
 $(O)\font_mono.obj: $(O)\font_mono.c
