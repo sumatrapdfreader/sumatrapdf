@@ -330,12 +330,15 @@ static int
 ornatecharacter(int ornate, int character)
 {
 	static wchar_t *ornates[] = {
+#ifdef WIN32
+		/* TODO: those must be encoded with hex encoding, because gcc doesn't understand this file encoding */
 		L" ¨´`^",
 		L"aäáàâ", L"AÄÁÀÂ",
 		L"eëéèê", L"EËÉÈÊ",
 		L"iïíìî", L"IÏÍÌÎ",
 		L"oöóòô", L"OÖÓÒÔ",
 		L"uüúùû", L"UÜÚÙÛ",
+#endif
 		nil
 	};
 	int i, j;

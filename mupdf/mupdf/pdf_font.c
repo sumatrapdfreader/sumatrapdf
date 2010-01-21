@@ -1,6 +1,12 @@
 #include "fitz.h"
 #include "mupdf.h"
 
+#ifndef WIN32
+/* TODO: should build freetype from sources in unix/mac build as well */
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_XFREE86_H
+#else
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 /* for accessing to the internal Type 1 specific structures (for extracting the embedded encoding table) */
 #define FT2_BUILD_LIBRARY
@@ -10,6 +16,7 @@
 
 #include FT_INTERNAL_INTERNAL_H
 #include FT_INTERNAL_TYPE1_TYPES_H
+#endif
 
 static char *basefontnames[14][7] =
 {
@@ -101,6 +108,7 @@ static int ftcharindex(FT_Face face, int cid)
 
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 /* extract the Type 1 font's embedded encoding table */
+#ifdef WIN32
 static int ftloadt1encoding(FT_Face face, char **estrings)
 {
 	T1_Encoding encoding;
@@ -134,6 +142,12 @@ static int ftloadt1encoding(FT_Face face, char **estrings)
 	}
 	return 0;
 }
+#else
+static int ftloadt1encoding(FT_Face face, char **estrings)
+{
+  return 0;
+}
+#endif
 
 static inline int ftcidtogid(pdf_fontdesc *fontdesc, int cid)
 {
