@@ -60,7 +60,10 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 				{
 					/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
 					/* copy over a multi-character mapping */
-					int j, tbl[7], len = min(cmap->table[-ucs - 2], 7);
+					int j, tbl[7], len = cmap->table[-ucs - 2];
+					if (len > 7) {
+						len = 7;
+					}
 					for (j = 0; j < len; j++)
 						tbl[j] = cmap->table[-ucs - 1 + j];
 					pdf_maponetomany(font->tounicode, cid, tbl, len);
