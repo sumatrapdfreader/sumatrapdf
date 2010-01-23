@@ -5143,6 +5143,7 @@ cy:Heb ganfod ffeil cydweddu
 pt:Nenhum ficheiro de sincronização encontrado
 -
 Back\tAlt+<-
+bg:Назад\tAlt+<-
 cz:Zpět\tAlt+<-
 de:&Zurück\tAlt+<-
 es:Atrás\tAlt+<-
@@ -5150,6 +5151,7 @@ ru:Назад\tAlt+<-
 pt:Retroceder\tAlt+<-
 -
 Forward\tAlt+->
+bg:Напред\tAlt+->
 cz:Vpřed\tAlt+->
 de:Vor&wärts\tAlt+->
 es:Adelante\tAlt+->
