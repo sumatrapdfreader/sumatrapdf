@@ -92,6 +92,7 @@ static BOOL             gDebugShowLinks = FALSE;
 #define COL_BLUE_LINK RGB(0,0x20,0xa0)
 #define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
 #define COL_WINDOW_SHADOW RGB(0x40, 0x40, 0x40)
+#define COL_PAGE_FRAME RGB(0x88, 0x88, 0x88)
 
 #ifdef SVN_PRE_RELEASE_VER
 #define ABOUT_BG_COLOR          RGB(255,0,0)
@@ -1531,10 +1532,9 @@ static bool WindowInfo_DoubleBuffer_New(WindowInfo *win)
     /* TODO: do I need this ? */
     SelectObject(win->hdcDoubleBuffer, win->bmpDoubleBuffer);
     /* fill out everything with background color */
-    RECT r = {0};
-    r.bottom = win->winDy();
-    r.right = win->winDx();
-    FillRect(win->hdcDoubleBuffer, &r, gBrushBg);
+    RECT r;
+    rect_set(&r, 0, 0, win->winDx(), win->winDy());
+    FillRect(win->hdcDoubleBuffer, &r, win->fullScreen ? gBrushBlack : gBrushBg);
     win->hdcToDraw = win->hdcDoubleBuffer;
     return TRUE;
 }
@@ -3081,7 +3081,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool fullScreen, RECT * bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
@@ -3108,14 +3108,14 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, RECT * boun
     }
 
     // Draw shadow
-    RECT rc;
-    HBRUSH br = CreateSolidBrush(RGB(0x44, 0x44, 0x44));
-    rect_set(&rc, sx, sy, sw, sh);
-    FillRect(hdc, &rc, br);
-    DeleteBrush(br);
+    if (!fullScreen) {
+        RECT rc;
+        rect_set(&rc, sx, sy, sw, sh);
+        FillRect(hdc, &rc, gBrushShadow);
+    }
 
     // Draw frame
-    HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x88, 0x88, 0x88));
+    HPEN pe = CreatePen(PS_SOLID, 1, fullScreen ? TRANSPARENT : COL_PAGE_FRAME);
     SelectObject(hdc, pe);
     SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, fx, fy, fx + fw, fy + fh);
@@ -3136,7 +3136,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     assert(win->hdcToDraw);
     hdc = win->hdcToDraw;
 
-    FillRect(hdc, &(ps->rcPaint), gBrushBg);
+    FillRect(hdc, &(ps->rcPaint), win->fullScreen ? gBrushBlack : gBrushBg);
 
     DBG_OUT("WindowInfo_Paint() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
@@ -3152,7 +3152,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (entry)
             renderedBmp = entry->bitmap;
 
-        PaintPageFrameAndShadow(hdc, pageInfo, &bounds);
+        PaintPageFrameAndShadow(hdc, pageInfo, win->fullScreen, &bounds);
 
         if (!entry || BITMAP_CANNOT_RENDER == renderedBmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
