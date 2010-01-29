@@ -134,7 +134,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict):
             curr_trans = l
         #print l
     fo.close()
-    print("Parsing '%s', %d translations" % (os.path.basename(file_path), len(all_origs)))
+    #print("Parsing '%s', %d translations" % (os.path.basename(file_path), len(all_origs)))
 
 # Returns a tuple (strings, langs)
 # 'strings' maps an original, untranslated string to
@@ -142,13 +142,17 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict):
 # [language, text translated into this language]
 # 'langs' is an array of language definition tuples. First item in a tuple
 # is language iso code (e.g. "en" or "sp-rs" and second is language name
-def load_strings_file_new(files_path):
+def load_strings_file_new():
+    files_path = STRINGS_PATH
     strings_dict = {}
-    langs_dict = {}
+    langs_dict = { "en" : "English" }
     lang_codes = [lang_code_from_file_name(f) for f in os.listdir(files_path) if lang_code_from_file_name(f) is not None]
     for lang_code in lang_codes:
         path = os.path.join(files_path, "strings-" + lang_code + ".txt")
         load_one_strings_file(path, lang_code, strings_dict, langs_dict)
+    for s in TRANSLATION_EXCEPTIONS:
+        if s not in strings_dict:
+            strings_dict[s] = []
     return (strings_dict, langs_dict.items())
 
 # Returns a tuple (strings, langs)
@@ -157,7 +161,8 @@ def load_strings_file_new(files_path):
 # [language, text translated into this language]
 # 'langs' is an array of language definition tuples. First item in a tuple
 # is language iso code (e.g. "en" or "sp-rs" and second is language name
-def load_strings_file_old(file_name):
+def load_strings_file_old():
+    file_name = STRINGS_FILE
     strings_dict = {}
     langs = []
     lang_codes = {}
@@ -259,7 +264,7 @@ def gen_diff(strings_dict, strings):
 
 def dump_diffs(strings_dict, strings):
     strings_all = gen_diff(strings_dict, strings)
-    only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C and s not in TRANSLATION_EXCEPTIONS]
+    only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C]
     #only_in_c = ["'" + s + "'" for s in only_in_c]
     if only_in_c:
         print "\nOnly in C code:"
@@ -304,7 +309,7 @@ def dump_missing_for_language(strings_dict, lang):
             print k
 
 def main2():
-    (strings_dict, langs) = load_strings_file_new(STRINGS_PATH)
+    (strings_dict, langs) = load_strings_file_new()
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
         dump_missing_per_language(strings_dict)
@@ -313,7 +318,7 @@ def main2():
         dump_missing_for_language(strings_dict, sys.argv[1])
     
 def main():
-    (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
+    (strings_dict, langs) = load_strings_file_old()
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
         dump_missing_per_language(strings_dict)

@@ -52,7 +52,7 @@ def gen_strings_for_lang(lang_id, lang_name, contributors, translations):
     print("%d translations in %s" % (len(trans), file_name))
 
 def main():
-    (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
+    (strings_dict, langs) = load_strings_file_old()
     translations_for_langs = gen_translations_for_languages(strings_dict)
     for (lang_id, lang_name) in langs:
         if 'en' == lang_id: continue

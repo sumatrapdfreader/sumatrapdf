@@ -1,4 +1,4 @@
-from extract_strings import load_strings_file_old, STRINGS_FILE, get_lang_list
+from extract_strings import load_strings_file_old, load_strings_file_new, get_lang_list
 
 ### file templates ###
 
@@ -136,9 +136,18 @@ def gen_h_code(strings_dict, file_name):
     file_content = TRANSLATIONS_TXT_H % locals()
     file(file_name, "wb").write(file_content)
 
+LANG_ORDER = ["en", "am", "af", "pt", "br", "bg", "de", "tr", "by", "hu", "lt", "my", "ja", "fa", "it", "nl", "fi", "ca", "sl", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "sk", "vn", "kr", "bn", "cn", "fr", "ru", "gl", "es", "ar", "uk", "eu", "gr", "hr", "tl", "va", "sn", "tw", "cy", "ga", "mm", "pa", "hi", "nn", "sv", "pl", "dk", "ta", "cz", "th", "no"]
+
+# This is just to make the order the same as the old code that was parsing
+# just one translation file, to avoid a diff in generted c code when switching
+# from the old to the new method
+def fix_langs_order(langs):
+    return sorted(langs, lambda x,y: cmp(LANG_ORDER.index(x), LANG_ORDER.index(y)))
+
 def gen_c_code(strings_dict, file_name):
     default_lang = "en"
     langs = get_lang_list(strings_dict)
+    langs = fix_langs_order(langs)
     assert default_lang not in langs
     langs = [default_lang] + langs
     langs_count = len(langs)
@@ -182,7 +191,7 @@ def gen_lang_menu_def_c(langs, file_name):
     
     lang_names = ['{ %s, %s },' % (c_escape(lang[1]), to_idm(lang[0])) for lang in langs]
     lang_names = "\n    ".join(lang_names)
-    
+
     file_content = LANG_MENU_DEF_C % locals()
     file(file_name, "wb").write(file_content)
 
@@ -193,7 +202,8 @@ def gen_code(strings_dict, langs, h_file_name, c_file_name):
     gen_lang_menu_def_h(langs, "LangMenuDef.h")
 
 def main():
-    (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
+    (strings_dict, langs) = load_strings_file_old()
+    #(strings_dict, langs) = load_strings_file_new()
     h_file_name = "translations_txt.h"
     c_file_name = "translations_txt.c"
     gen_code(strings_dict, langs, h_file_name, c_file_name)
