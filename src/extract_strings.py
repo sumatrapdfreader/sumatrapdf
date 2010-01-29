@@ -4,6 +4,15 @@ import os.path
 import re
 import sys
 
+"""
+TODO:
+ * preserve contributors
+
+Extracts translatable strings from *.c and *.h files, dumps statistics
+about untranslated strings to stdout and adds untranslated strings as
+comments at the end of strings file for each language.
+"""
+
 c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
 STRINGS_FILE = "strings.txt"
@@ -82,7 +91,7 @@ def lang_code_from_file_name(file_name):
 
 # The structure of strings file should be: comments section at the beginning of the file,
 # Lang: and Contributor: lines, translations, (optional) comments sectin at the end of the file
-def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict):
+def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contributors_dict):
     fo = codecs.open(file_path, "r", "utf-8-sig")
     seen_lang = False
     top_comments = []
@@ -146,14 +155,15 @@ def load_strings_file_new():
     files_path = STRINGS_PATH
     strings_dict = {}
     langs_dict = { "en" : "English" }
+    contributors_dict = {}
     lang_codes = [lang_code_from_file_name(f) for f in os.listdir(files_path) if lang_code_from_file_name(f) is not None]
     for lang_code in lang_codes:
         path = os.path.join(files_path, "strings-" + lang_code + ".txt")
-        load_one_strings_file(path, lang_code, strings_dict, langs_dict)
+        load_one_strings_file(path, lang_code, strings_dict, langs_dict, contributors_dict)
     for s in TRANSLATION_EXCEPTIONS:
         if s not in strings_dict:
             strings_dict[s] = []
-    return (strings_dict, langs_dict.items())
+    return (strings_dict, langs_dict.items(), contributors_dict)
 
 # Returns a tuple (strings, langs)
 # 'strings' maps an original, untranslated string to
@@ -300,6 +310,60 @@ def dump_missing_per_language(strings_dict, dump_strings=False):
         if not dump_strings: continue
         for u in untranslated:
             print "  " + u
+    return untranslated_dict
+
+TOP_COMMENT = """
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+"""
+
+# converts strings_dict which maps english text to array of (lang, translation)
+# tuples to a hash that maps language to an array (english phrase, translation)
+def gen_translations_for_languages(strings_dict):
+    translations_for_language = {}
+    for english in sorted(strings_dict.keys()):
+        translations = strings_dict[english]
+        for (lang_id, translation) in translations:
+            if 'en' == lang_id:
+                print(translation)
+            if lang_id not in translations_for_language:
+                translations_for_language[lang_id] = []
+            trans = translations_for_language[lang_id]
+            trans.append([english, translation])
+    return translations_for_language
+
+def gen_strings_file_for_lang(lang_id, lang_name, translations, contributors, untranslated):
+    file_name = "strings-" + lang_id + ".txt"
+    trans = translations[lang_id]
+    fo = codecs.open(file_name, "w", "utf-8-sig")
+    fo.write("# Translations for %s (%s) language\n" % (lang_name, lang_id))
+    fo.write(TOP_COMMENT)
+    fo.write("Lang: %s %s\n\n" % (lang_id, lang_name))
+    for c in contributors:
+        fo.write("Contributor: %s\n" % c)
+    if len(contributors) > 0:
+        fo.write("\n")
+    for (english, tr) in trans:
+        fo.write(english + "\n")
+        fo.write("%s\n\n" % tr)
+    
+    if len(untranslated) > 0:
+        fo.write("# Untranslated:\n")
+        for s in untranslated:
+            fo.write("#%s\n" % s)
+        fo.write("\n")
+    fo.close()
+    print("%d translations in %s" % (len(trans), file_name))
+
+def write_out_strings_files(strings_dict, langs, contributors={}, untranslated={}):
+    translations_for_langs = gen_translations_for_languages(strings_dict)
+    for (lang_id, lang_name) in langs:
+        if 'en' == lang_id: continue
+        contributors_for_lang = contributors.get(lang_id, [])
+        untranslated_for_lang = sorted(untranslated.get(lang_id, []))
+        gen_strings_file_for_lang(lang_id, lang_name, translations_for_langs, contributors_for_lang, untranslated_for_lang)
 
 def dump_missing_for_language(strings_dict, lang):
     print "Untranslated strings for '%s':" % lang
@@ -308,16 +372,17 @@ def dump_missing_for_language(strings_dict, lang):
         if not is_translated and k not in TRANSLATION_EXCEPTIONS:
             print k
 
-def main2():
-    (strings_dict, langs) = load_strings_file_new()
+def main():
+    (strings_dict, langs, contributors) = load_strings_file_new()
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
-        dump_missing_per_language(strings_dict)
+        untranslated = dump_missing_per_language(strings_dict)
         dump_diffs(strings_dict, strings)
+        write_out_strings_files(strings_dict, langs, contributors, untranslated)
     else:
         dump_missing_for_language(strings_dict, sys.argv[1])
     
-def main():
+def main_old():
     (strings_dict, langs) = load_strings_file_old()
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
@@ -327,5 +392,4 @@ def main():
         dump_missing_for_language(strings_dict, sys.argv[1])
 
 if __name__ == "__main__":
-    main2()
-    #main2()
+    main()
