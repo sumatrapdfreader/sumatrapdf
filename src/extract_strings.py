@@ -1,23 +1,31 @@
-import codecs, re
+import codecs
+import os
+import os.path
+import re
+import sys
 
 c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
 STRINGS_FILE = "strings.txt"
+SCRIPT_PATH = os.path.realpath(".")
+STRINGS_PATH = SCRIPT_PATH
 
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
 
 def state_name(state):
     if ST_NONE == state: return "ST_NONE"
     if ST_BEFORE_ORIG == state: return "ST_BEFORE_ORIG"
+    assert ST_IN_TRANSLATIONS == state, "UNKNOWN STATE %d" % state
     if ST_IN_TRANSLATIONS == state: return "ST_IN_TRANSLATIONS"
-    assert 0
     return "UNKNOWN STATE"
 
 LANG_TXT = "Lang:"
+CONTRIBUTOR_TXT = "Contributor:"
 
 def is_lang_line(l): return l.startswith(LANG_TXT)
 def is_separator_line(l): return l == "-"
 def is_comment_line(l): return l.startswith("#")
+def is_contributor_line(l): return l.startswith(CONTRIBUTOR_TXT)
 
 def line_strip_newline(l, newline_chars="\r\n"):
     while True:
@@ -45,18 +53,100 @@ def parse_lang_line(l):
     assert 2 == len(lang_iso) or 5 == len(lang_iso)
     return (lang_iso, lang_name)
 
+def parse_contrib_line(l):
+    assert is_contributor_line(l)
+    parts = l.split(":")
+    assert 2 == len(parts)
+    return parts[1].strip()
+
 def report_error(line_no, line, err_txt):
     print "Error on line %d:" % line_no
     print "'%s'" % line
     print err_txt
-    assert 0
+    raise ValueError
 
-def assert_unique_translation(curr_trans, lang, trans, line_no):
+def assert_unique_translation(curr_trans, lang, line_no):
     for el in curr_trans[1:]:
         (lang2, trans2) = el
-        if lang == lang2:
-            print("Duplicate translation in lang '%s' at line %d" % (lang, line_no))
-            assert 0
+        assert lang != lang2, "Duplicate translation in lang '%s' at line %d" % (lang, line_no)
+
+# Extract language code (e.g. "br") from language translation file name
+# (e.g. "strings-br.txt"). Returns None if file name doesn't fit expected pattern
+def lang_code_from_file_name(file_name):
+    if not file_name.startswith("strings-"): return None
+    if not file_name.endswith(".txt"): return None
+    return file_name[len("strings-"):-len(".txt")]
+
+# The structure of strings file should be: comments section at the beginning of the file,
+# Lang: and Contributor: lines, translations, (optional) comments sectin at the end of the file
+def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict):
+    fo = codecs.open(file_path, "r", "utf-8-sig")
+    seen_lang = False
+    top_comments = []
+    bottom_comments = []
+    contributors = []
+    curr_orig = None
+    curr_trans = None
+    line_no = 0
+    all_origs = {}
+    for l in fo.readlines():
+        line_no = line_no + 1
+        #print "'%s'" % l
+        l = line_strip_newline(l)
+        if 0 == len(l):
+            if curr_orig is None: continue
+            assert curr_orig not in all_origs, "Duplicate entry for '%s'" % curr_orig
+            assert curr_trans is not None
+            if curr_orig not in strings_dict:
+                strings_dict[curr_orig] = [(lang_code, curr_trans)]
+            else:
+                strings_dict[curr_orig].append((lang_code, curr_trans))
+            all_origs[curr_orig] = True
+            curr_orig = None
+            curr_trans = None
+            continue
+        #print state_name(state)
+        if is_comment_line(l):
+            if seen_lang:
+                bottom_comments.append(l)
+            else:
+                top_comments.append(l)
+            continue
+        if is_lang_line(l):
+            assert not seen_lang
+            assert 0 == len(contributors)
+            (lang_iso, lang_name) = parse_lang_line(l)
+            assert lang_iso == lang_code, "lang code ('%s') in file '%s' must match code in file name ('%s')" % (lang_iso, file_path, lang_code)
+            assert lang_iso not in langs_dict
+            langs_dict[lang_iso] = lang_name
+            continue
+        if is_contributor_line(l):
+            assert seen_lang
+            contributors.append(parse_contrib_line(l))
+            continue
+        if curr_orig is None:
+            curr_orig = l
+        else:
+            assert curr_trans is None, "curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path))
+            curr_trans = l
+        #print l
+    fo.close()
+    print("Parsing '%s', %d translations" % (os.path.basename(file_path), len(all_origs)))
+
+# Returns a tuple (strings, langs)
+# 'strings' maps an original, untranslated string to
+# an array of translation, where each translation is a tuple 
+# [language, text translated into this language]
+# 'langs' is an array of language definition tuples. First item in a tuple
+# is language iso code (e.g. "en" or "sp-rs" and second is language name
+def load_strings_file_new(files_path):
+    strings_dict = {}
+    langs_dict = {}
+    lang_codes = [lang_code_from_file_name(f) for f in os.listdir(files_path) if lang_code_from_file_name(f) is not None]
+    for lang_code in lang_codes:
+        path = os.path.join(files_path, "strings-" + lang_code + ".txt")
+        load_one_strings_file(path, lang_code, strings_dict, langs_dict)
+    return (strings_dict, langs_dict.items())
 
 # Returns a tuple (strings, langs)
 # 'strings' maps an original, untranslated string to
@@ -117,10 +207,10 @@ def load_strings_file_old(file_name):
             if lang not in lang_codes:
                 langnames = [e[0] for e in langs]
                 report_error(line_no, l, "lang '%s' is not in declared list of languages '%s'" % (lang, ", ".join(langnames)))
-            assert_unique_translation(curr_trans, lang, txt, line_no)
+            assert_unique_translation(curr_trans, lang, line_no)
             curr_trans.append([lang, txt])
         else:
-            assert 0
+            raise ValueError
         #print l
     fo.close()
     # TODO: repeat of a code above
@@ -167,6 +257,7 @@ def gen_diff(strings_dict, strings):
 def dump_diffs(strings_dict, strings):
     strings_all = gen_diff(strings_dict, strings)
     only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C]
+    #only_in_c = ["'" + s + "'" for s in only_in_c]
     if only_in_c:
         print "\nOnly in C code:"
         print "\n".join(only_in_c) + "\n"
@@ -212,9 +303,16 @@ def dump_missing_for_language(strings_dict, lang):
         if not is_translated and not k in translation_exceptions:
             print k
 
-
+def main2():
+    (strings_dict, langs) = load_strings_file_new(STRINGS_PATH)
+    strings = extract_strings_from_c_files(c_files_to_process)
+    if len(sys.argv) == 1:
+        dump_missing_per_language(strings_dict)
+        dump_diffs(strings_dict, strings)
+    else:
+        dump_missing_for_language(strings_dict, sys.argv[1])
+    
 def main():
-    import sys
     (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
@@ -225,4 +323,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+    #main2()
