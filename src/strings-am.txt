@@ -6,6 +6,8 @@
 
 Lang: am Armenian (Հայերեն)
 
+Contributor: Hrant Ohanyan (hrantmail@mail.am)
+
 &About
 &Մասին
 
