@@ -1,0 +1,200 @@
+﻿# Translations for Basque (Euskara) (eu) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: eu Basque (Euskara)
+
+&About
+Ho&Ni buruz...
+
+&Check for new version
+Bertsio berriagorik ba ote den begiratu
+
+&Close\tCtrl-W
+&Itxi\tCtrl-W
+
+&Don't ask me again
+Ez berriz galdetu
+
+&File
+&Fitxategia
+
+&Go To
+...ra &Joan
+
+&Help
+&Laguntza
+
+&Open\tCtrl-O
+Ireki\tCtrl-O
+
+&Print\tCtrl-P
+&Inprimatu\tCtrl-P
+
+&Save as\tCtrl-S
+... bezala &Gorde\tCtrl-S
+
+&Skip this version
+Bertsio berria saihestu
+
+&View
+I&kusi
+
+&Visit website
+&Web orria bisitatu
+
+&Zoom
+&Zoom-a
+
+About SumatraPDF
+SumatraPDF-taz
+
+Act&ual Size\tCtrl-1
+&Berezko neurria\tCtrl-1
+
+Associate with PDF files?
+PDF fitxategiekin lotu?
+
+Bookmarks\tF12
+Markagailuak\tF12
+
+Change language
+Hizkuntza aldatu (Change language)
+
+Continuous
+Jarraian
+
+Continuous facing
+Bi aldetatik jarraian
+
+Contribute translation
+Lagun gaitzazu itzulpenekin
+
+Could not open Printer
+Ezin da inprimagailua ireki
+
+E&xit\tCtrl-Q
+&Irten\tCtrl-Q
+
+Enter password
+Pasahitza sartu
+
+Enter password for %s
+%s-rentzat pasahitza sartu
+
+Error loading PDF file.
+PDF fitxategia kargargatzerakoan errorea suertatu da
+
+Facing
+Bi aldetatik
+
+Failed to save a file
+Fitxategia ezin izan da gorde
+
+Find Next
+Hurrengoa bilatu
+
+Find Previous
+Aurrekoa bilatu
+
+Find...\tCtrl-F
+Bilatu...\tCtrl-F
+
+Find:
+Bilatu:
+
+First Page\tHome
+Lehendabiziko orria \tHome
+
+Fit &Page\tCtrl-0
+Orriaren neurria egokitu\tCtrl-O
+
+Fit Page
+Orriaren neurria egokitu
+
+Fit Widt&h\tCtrl-2
+Orriaren zabalera egokitu\tCtrl-2
+
+Fit Width
+Orriaren zabalera egokitu
+
+Fullscreen\tCtrl-L
+Pantaila osoan\tCtrl-L
+
+Go to page
+...garren orrira joan
+
+Last Page\tEnd
+Azken orria\tEnd
+
+Make SumatraPDF default application for PDF files?
+PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
+
+Make SumatraPDF my main PDF reader
+SumatraPDF erabili besterik ezean PDFak irakurtzeko
+
+Match case
+Hizki handiak edo txikiak bereizi
+
+New version %s is available. Download new version?
+%s bertsio berria eskuragarri dago. Jeisterik nahi?
+
+New version available.
+Bertsio berria eskuragarri duzu.
+
+Next Page
+Hurrengo orria
+
+Next Page\t->
+Hurrengo orria\t->
+
+No new version available.
+Ez dago bertsio berririk.
+
+Open
+Ireki
+
+Page...\tCtrl-G
+...garren orria\tCtrl-G
+
+Previous Page
+Aurreko orria
+
+Previous Page\t<-
+Aurreko orria\t<-
+
+Printing problem.
+Arazoak inprimatze lanetan
+
+Rotate left\tCtrl-Shift--
+Ezkerrerantz biratu\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Eskubirantz biratu\tCtrl-Shift-+
+
+Set inverse search command-line
+Alderantzizko bilaketa ezarri
+
+Show toolbar
+Lanabes barra azaldu
+
+Single page
+Orri bakarra
+
+View
+Ikusi
+
+You have the latest version.
+Azkeneko bertsioa da daukazuna.
+
+You have version %s
+%s bertsioa daukazu.
+
+Zoom In
+Zoom-a hurbildu
+
+Zoom Out
+Zoom-a urruneratu
+

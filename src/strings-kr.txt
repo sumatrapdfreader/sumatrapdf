@@ -1,0 +1,206 @@
+﻿# Translations for Korean (한국어) (kr) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: kr Korean (한국어)
+
+&About
+정보(&A)...
+
+&Check for new version
+새 버전 확인
+
+&Close\tCtrl-W
+닫기(&C)\tCtrl-W
+
+&Don't ask me again
+다시 묻지 않음
+
+&File
+파일(&F)
+
+&Go To
+이동(&G)
+
+&Help
+도움말(&H)
+
+&Manual
+사용설명서
+
+&Open\tCtrl-O
+열기(&O)...\tCtrl-O
+
+&Print\tCtrl-P
+인쇄(&P)...\tCtrl-P
+
+&Save as\tCtrl-S
+다른 이름으로 저장(&S)...\tCtrl-S
+
+&Skip this version
+이 버전 무시
+
+&View
+보기(&V)
+
+&Visit website
+웹 사이트 방문(&V)
+
+&Zoom
+확대(&Z)
+
+About SumatraPDF
+SumatraPDF 정보
+
+Act&ual Size\tCtrl-1
+본래 크기(&U)\tCtrl-1
+
+Associate with PDF files?
+PDF 파일 연결을 설정할까요?
+
+Bookmarks\tF12
+책갈피\tF12
+
+Change language
+언어 변경 (Change language)
+
+Continuous
+한 장씩 연속
+
+Continuous facing
+여러 장씩 연속
+
+Contribute translation
+번역 기여
+
+Could not open Printer
+프린터를 열 수 없습니다.
+
+E&xit\tCtrl-Q
+끝내기(&X)\tCtrl-Q
+
+Enter password
+패스워드 입력
+
+Enter password for %s
+%s의 패스워드를 입력하십시오
+
+Error loading PDF file.
+PDF 파일을 읽을 수 없습니다.
+
+Facing
+여러 장씩
+
+Failed to save a file
+파일을 저장할 수 없습니다.
+
+Find Next
+다음 찾기
+
+Find Previous
+이전 찾기
+
+Find...\tCtrl-F
+찾기...\tCtrl-F
+
+Find:
+찾기:
+
+First Page\tHome
+첫 장\tHome
+
+Fit &Page\tCtrl-0
+창 크기에 맞춤(&P)\tCtrl-0
+
+Fit Page
+창 크기에 맞춤
+
+Fit Widt&h\tCtrl-2
+꽉 찬 화면(&H)\tCtrl-2
+
+Fit Width
+꽉 찬 화면
+
+Fullscreen\tCtrl-L
+전체 화면\tCtrl-L
+
+Go to page
+페이지로 가기
+
+Last Page\tEnd
+마지막 장\tEnd
+
+Make SumatraPDF default application for PDF files?
+SumatraPDF를 기본 PDF 뷰어로 설정할까요?
+
+Make SumatraPDF my main PDF reader
+SumatraPDF를 기본 PDF 뷰어로 설정
+
+Match case
+대/소문자 구분
+
+New version %s is available. Download new version?
+새 버전 %s 이 나왔습니다. 다운로드하시겠습니까?
+
+New version available.
+새로운 버전이 나왔습니다.
+
+Next Page
+다음 장
+
+Next Page\t->
+다음 장\t->
+
+No new version available.
+새로운 버전이 없습니다.
+
+Open
+열기
+
+Page...\tCtrl-G
+쪽...\tCtrl-G
+
+Page:
+페이지:
+
+Previous Page
+이전 장
+
+Previous Page\t<-
+이전 장\t<-
+
+Printing problem.
+인쇄를 할 수 없습니다.
+
+Rotate left\tCtrl-Shift--
+왼쪽으로 회전\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+오른쪽으로 회전\tCtrl-Shift-+
+
+Set inverse search command-line
+역탐색 명령 설정
+
+Show toolbar
+도구 모음 보기
+
+Single page
+한 장씩
+
+View
+보기
+
+You have the latest version.
+최신 버전입니다.
+
+You have version %s
+현재 버전은 %s 입니다.
+
+Zoom In
+확대
+
+Zoom Out
+축소
+

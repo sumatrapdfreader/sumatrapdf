@@ -1,0 +1,365 @@
+﻿# Translations for Japanese (日本語) (ja) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: ja Japanese (日本語)
+
+&About
+バージョン情報(&A)
+
+&Check for new version
+新しいバージョンのチェック(&C)
+
+&Close\tCtrl-W
+閉じる(&C)\tCtrl+W
+
+&Custom Zoom...
+カスタム(&C)...
+
+&Don't ask me again
+再び質問しない
+
+&File
+ファイル(&F)
+
+&Find what:
+検索文字列(&F):
+
+&Go To
+移動(&G)
+
+&Go to page:
+ページへ移動(&G):
+
+&Help
+ヘルプ(&H)
+
+&Magnification:
+拡大率(&M):
+
+&Manual
+マニュアル(&M)
+
+&Match case
+大文字小文字を区別する(&M)
+
+&No
+いいえ(&N)
+
+&No, thanks
+いいえ(&N)
+
+&Open\tCtrl-O
+開く(&O)\tCtrl+O
+
+&Options...
+オプション(&O)...
+
+&Password:
+パスワード(&P):
+
+&Print\tCtrl-P
+印刷(&P)\tCtrl+P
+
+&Remember these settings for each document
+ドキュメントごとに設定を記憶する(&R)
+
+&Save as\tCtrl-S
+名前を付けて保存(&S)\tCtrl+S
+
+&Settings
+設定(&S)
+
+&Skip this version
+このバージョンをスキップする
+
+&View
+表示(&V)
+
+&Visit website
+ウェブサイトの訪問(&V)
+
+&Yes
+はい(&Y)
+
+&Zoom
+ズーム(&Z)
+
+(of %d)
+(%d 中)
+
+About SumatraPDF
+SumatraPDF のバージョン情報
+
+Act&ual Size\tCtrl-1
+実際のサイズ(&U)\tCtrl+1
+
+Advanced
+拡張
+
+All files
+すべてのファイル
+
+Associate with PDF files?
+PDF ファイルと関連付けますか?
+
+Automatic
+自動
+
+Automatically check for &updates
+自動的に最新版をチェックする(&U)
+
+Bookmarks\tF12
+ブックマーク(&B)\tF12
+
+Cancel
+キャンセル
+
+Cannot print this file
+ファイルを印刷できません
+
+Cannot start inverse search command. Please check the command line in the settings.
+逆順検索が開始できませんでした。コマンドラインを確認してください。
+
+Change language
+言語の変更 (Change language)
+
+Continuous
+連続
+
+Continuous facing
+連続の見返し
+
+Contribute translation
+翻訳の提供
+
+Copy Selection\tCtrl-C
+選択範囲をコピー\tCtrl+C
+
+Could not open Printer
+プリンタを開けませんでした
+
+Couldn't initialize printer
+プリンタの初期化に失敗しました
+
+Couldn't render the page
+描画できませんでした
+
+Default &Layout:
+基本レイアウト(&L):
+
+Default &Zoom:
+基本ズーム(&Z):
+
+Download
+ダウンロード
+
+E&xit\tCtrl-Q
+終了(&X)\tCtrl+Q
+
+Enter password
+パスワードの入力
+
+Enter password for %s
+%s のパスワードを入力します
+
+Error loading PDF file.
+PDF ファイルの読み込みエラーです。
+
+Facing
+見返し
+
+Failed to save a file
+ファイルの保存に失敗しました
+
+Find
+検索
+
+Find Next
+次を検索(&N)
+
+Find Previous
+前を検索(&P)
+
+Find...\tCtrl-F
+検索(&F)...\tCtrl-F
+
+Find:
+検索:
+
+First Page\tHome
+最初のページ(&F)\tHome
+
+Fit &Page\tCtrl-0
+ページに合わせる(&P)\tCtrl+0
+
+Fit Page
+ページに合わせる
+
+Fit Widt&h\tCtrl-2
+幅に合わせる(&H)\tCtrl+2
+
+Fit Width
+幅に合わせる
+
+Found text at page %d
+%d ページに文字列が見つかりました
+
+Fullscreen\tCtrl-L
+全画面表示(&S)\tCtrl+L
+
+Go to page
+ページへ移動
+
+Hint: Use the F3 key for finding again
+検索を続けるには F3 キーを押します
+
+Last Page\tEnd
+最後のページ(&L)\tEnd
+
+Main PDF reader can't be changed in portable mode
+ポータブル モードでは既定の PDF リーダーを変更できません
+
+Make SumatraPDF default application for PDF files?
+SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
+
+Make SumatraPDF my main PDF reader
+SumatraPDF を既定の PDF リーダーにする
+
+Match case
+大文字と小文字を区別する(&C)
+
+New version %s is available. Download new version?
+新しいバージョン %s が利用可能です。新しいバージョンをダウンロードしますか？
+
+New version available.
+新しいバージョンが利用可能です。
+
+Next Page
+次のページ(&N)
+
+Next Page\t->
+次のページ(&N)\t→
+
+No matches were found
+見つかりませんでした
+
+No new version available.
+新しいバージョンが利用できません。
+
+No result found around line %u in file %s
+ファイル %s の %u 行目に見つかりませんでした
+
+No synchronization info at this position
+この位置には同期場所がありません
+
+OK
+OK
+
+Open
+開く(&O)
+
+Open in &Adobe Reader
+Adobe Reader で開く(&A)
+
+PDF Document
+PDF ドキュメント
+
+PDF documents
+PDF ドキュメント
+
+Page number %u inexistant
+指定されたページ %u は存在しません
+
+Page...\tCtrl-G
+ページ指定(&G)...\tCtrl+G
+
+Page:
+ページ:
+
+Please wait - rendering...
+描画しています...
+
+Previous Page
+前のページ(&P)
+
+Previous Page\t<-
+前のページ(&P)\t←
+
+Printing problem.
+印刷の問題です。
+
+Remember &opened files
+開いたファイルの履歴を残す(&O)
+
+Rotate left\tCtrl-Shift--
+左に回転(&L)\tCtrl+Shift+-
+
+Rotate right\tCtrl-Shift-+
+右に回転(&R)\tCtrl+Shift++
+
+Searching %d of %d...
+%d ページを検索中 (%d ページ中)...
+
+Select content with Ctrl+left mouse button
+Ctrl+右クリックで選択範囲を指定します
+
+Set inverse search command-line
+逆検索コマンドラインの設定
+
+Show the &bookmarks sidebar when available
+ブックマークの一覧を自動的に表示する(&B)
+
+Show toolbar
+ツール バーの表示(&T)
+
+Single page
+単一のページ
+
+Source file %s has no synchronization point
+ソース ファイル %s に同期場所がありません
+
+SumatraPDF Options
+SumatraPDF のオプション
+
+SumatraPDF is your main PDF reader
+SumatraPDF は既定の PDF リーダーです
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF は既定の PDF リーダーになりました
+
+Synchronization file cannot be opened
+同期ファイルは開かれていません
+
+Unknown source file (%s)
+不明なソースファイルです (&s)
+
+View
+表示
+
+Warning
+警告
+
+You have the latest version.
+最新のバージョンです。
+
+You have version %s
+バージョン %s です
+
+Zoom
+ズーム
+
+Zoom In
+拡大(&I)
+
+Zoom Out
+縮小(&O)
+
+Zoom factor
+カスタム ズーム
+
+[Changes detected; refreshing] %s
+[ファイルが変更されました。更新します] %s
+

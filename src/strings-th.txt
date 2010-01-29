@@ -1,0 +1,188 @@
+﻿# Translations for Thai (ภาษาไทย) (th) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: th Thai (ภาษาไทย)
+
+&About
+เกี่ยวกับ
+
+&Check for new version
+&ตรวจสำหรับสอบเวอร์ชั่นใหม่
+
+&Close\tCtrl-W
+ปิด\tCtrl-W
+
+&Don't ask me again
+ไม่ต้องถามอีกครั้ง
+
+&File
+แฟ้ม
+
+&Go To
+ไปที่
+
+&Help
+ช่วยเหลือ
+
+&Manual
+คู่มือการใช้งาน
+
+&Open\tCtrl-O
+เปิด\tCtrl-O
+
+&Print\tCtrl-P
+พิมพ์\tCtrl-P
+
+&Save as\tCtrl-S
+บันทึกเป็น\tCtrl-S
+
+&Skip this version
+ช้ามเวอร์ชั่นนี้ไป
+
+&View
+มุมมอง
+
+&Visit website
+เยี่ยมเว็บไชด์
+
+&Zoom
+ขยาย
+
+About SumatraPDF
+เกี่ยวกับ SumatraPDF
+
+Act&ual Size\tCtrl-1
+ขนาดจริง\tCtrl-1
+
+Associate with PDF files?
+เชื่อมกับไฟล์ PDF
+
+Bookmarks\tF12
+ที่คั่น\tF12
+
+Change language
+เปลี่ยนภาษา (Change language)
+
+Continuous
+ต่อเนื่อง
+
+Continuous facing
+เป็นหน้าต่อเนื่อง
+
+Contribute translation
+ร่วมช่วยเหลือในการแปลภาษา
+
+Could not open Printer
+ไม่สามารถเปิดเครื่องพิมพ์ได้
+
+E&xit\tCtrl-Q
+ออก\tCtrl-Q
+
+Enter password
+ป้อนรหัสผ่าน
+
+Enter password for %s
+ป้อนรหัสผ่านสำหรับ %s
+
+Error loading PDF file.
+การเปิดไฟล์ผิดพลาด
+
+Facing
+เป็นหน้า
+
+Failed to save a file
+การบันทึกไฟล์ล้มเหลว
+
+First Page\tHome
+หน้าแรก
+
+Fit &Page\tCtrl-0
+พอดีหน้า\tCtrl-0
+
+Fit Page
+พอดีหน้า
+
+Fit Widt&h\tCtrl-2
+พอดีความกว้าง\tCtrl-2
+
+Fit Width
+พอดีความกว้าง
+
+Fullscreen\tCtrl-L
+เต็มจอภาพ\tCtrl-L
+
+Go to page
+ไปที่หน้า
+
+Last Page\tEnd
+หน้าสุดท้าย
+
+Make SumatraPDF default application for PDF files?
+ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF
+
+Make SumatraPDF my main PDF reader
+ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหลักสำหรับเปิดไฟล์ PDF
+
+New version %s is available. Download new version?
+เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
+
+New version available.
+เวอร์ชั่นใหม่ออกแล้ว
+
+Next Page
+หน้าถัดไป
+
+Next Page\t->
+หน้าถัดไป\t->
+
+No new version available.
+ไม่มีเวอร์ชั่นใหม่
+
+Open
+เปิด
+
+Page...\tCtrl-G
+หน้า...\tCtrl-G
+
+Previous Page
+หน้าก่อนหน้า
+
+Previous Page\t<-
+หน้าก่อนหน้า\t<-
+
+Printing problem.
+การพิมพ์เกิดปัญหา
+
+Rotate left\tCtrl-Shift--
+หมุนซ้าย\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+หมุนขวา\tCtrl-Shift-+
+
+Set inverse search command-line
+ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
+
+Show toolbar
+แสดงแถบเครื่องมือ
+
+Single page
+หน้าเดี่ยว
+
+View
+มุมมอง
+
+You have the latest version.
+โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
+
+You have version %s
+ของคุณเป็นเวอร์ชั่น
+
+Zoom In
+ขยาย
+
+Zoom Out
+ย่อ
+

@@ -1,0 +1,161 @@
+﻿# Translations for Norwegian (Norsk) (no) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: no Norwegian (Norsk)
+
+&About
+&Om
+
+&Check for new version
+Se etter oppdatering
+
+&Close\tCtrl-W
+&Lukk\tCtrl-W
+
+&Don't ask me again
+Ikke spør meg igjen.
+
+&File
+&Fil
+
+&Go To
+&Gå til
+
+&Help
+&Hjelp
+
+&Open\tCtrl-O
+&Åpne\tCtrl-O
+
+&Print\tCtrl-P
+Skriv &ut\tCtrl-P
+
+&Save as\tCtrl-S
+Lagre &som\tCtrl-S
+
+&View
+&Vis
+
+&Visit website
+Besøk &hjemmeside
+
+&Zoom
+&Zoom
+
+About SumatraPDF
+Om SumatraPDF
+
+Act&ual Size\tCtrl-1
+F&aktisk størrelse\tCtrl-1
+
+Continuous
+Kontinuerlig
+
+Continuous facing
+Kontinuerlig motstående
+
+Contribute translation
+Bidra med oversetting
+
+Could not open Printer
+Kan ikke finne skriveren.
+
+E&xit\tCtrl-Q
+&Avslutt\tCtrl-Q
+
+Error loading PDF file.
+Feil ved åpning av PDF-fil.
+
+Facing
+Motstående
+
+Failed to save a file
+Kan ikke lagre filen.
+
+First Page\tHome
+Første side\tHome
+
+Fit &Page\tCtrl-0
+Tilpass &side\tCtrl-0
+
+Fit Page
+Tilpass side
+
+Fit Widt&h\tCtrl-2
+Tilpass &bredde\tCtrl-2
+
+Fit Width
+Tilpass bredde
+
+Fullscreen\tCtrl-L
+Full skjerm\tCtrl-L
+
+Last Page\tEnd
+Siste side\tEnd
+
+Make SumatraPDF my main PDF reader
+Bruk SumatraPDF som standard PDF-leser
+
+New version %s is available. Download new version?
+Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
+
+New version available.
+Ny versjon tilgjenglig.
+
+Next Page
+Neste side
+
+Next Page\t->
+Neste side\t->
+
+No new version available.
+Ingen ny versjon tilgjenglig.
+
+Open
+Åpne
+
+Page...\tCtrl-G
+Side...\tCtrl-G
+
+Page:
+Side:
+
+Previous Page
+Forrige side
+
+Previous Page\t<-
+Forrige side\t<-
+
+Printing problem.
+Problem med utskrift.
+
+Rotate left\tCtrl-Shift--
+Roter til venstre\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Roter til høyre\tCtrl-Shift-+
+
+Show toolbar
+Vis verktøylinje
+
+Single page
+Enkel side
+
+View
+Vis
+
+You have the latest version.
+Du har den nyeste versjonen.
+
+You have version %s
+Du har versjon %s
+
+Zoom In
+Forstørr
+
+Zoom Out
+Forminsk
+

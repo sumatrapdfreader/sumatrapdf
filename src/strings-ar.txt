@@ -1,0 +1,149 @@
+﻿# Translations for Arabic (الْعَرَبيّة) (ar) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: ar Arabic (الْعَرَبيّة)
+
+&About
+حول البرنامج
+
+&Close\tCtrl-W
+&إغلاق\tCtrl-W
+
+&File
+ملف
+
+&Go To
+&الذهاب إلى
+
+&Help
+&مساعدة
+
+&Open\tCtrl-O
+&فتح\tCtrl-O
+
+&Print\tCtrl-P
+&طباعة\tCtrl-P
+
+&Save as\tCtrl-S
+&حفظ كـ\tCtrl-S
+
+&View
+&العرض
+
+&Visit website
+&زيارة موقع البرنامج
+
+&Zoom
+التقريب
+
+About SumatraPDF
+SumatraPDF حول برنامج
+
+Act&ual Size\tCtrl-1
+الحجم الحقيقي\tCtrl-1
+
+Continuous
+صفحات متتالية
+
+Continuous facing
+صفحات متقابلة متتالية
+
+Contribute translation
+ساهم في ترجمة البرنامج
+
+Could not open Printer
+تعذر فتح الطابعة
+
+E&xit\tCtrl-Q
+إغلاق البرنامج\tCtrl-Q
+
+Error loading PDF file.
+هناك خطأ في تشغيل الملف
+
+Facing
+صفحتان متقابلتان
+
+Failed to save a file
+فشل حفظ الملف
+
+Find Previous
+البحث عن السابق
+
+Find...\tCtrl-F
+بحث...\tCtrl-F
+
+Find:
+بحث
+
+First Page\tHome
+الصفحة الأولى\tHome
+
+Fit &Page\tCtrl-0
+مناسب للشاشة\tCtrl-0
+
+Fit Page
+مناسب للشاشة
+
+Fit Widt&h\tCtrl-2
+مناسب لعرض الشاشة\tCtrl-2
+
+Fit Width
+مناسب لعرض الشاشة
+
+Fullscreen\tCtrl-L
+بحجم الشاشة\tCtrl-L
+
+Last Page\tEnd
+الصفحة الأخيرة\tEnd
+
+Make SumatraPDF my main PDF reader
+PDF جعل هذا البرنامج القارىء الرئيسي لملفات
+
+Match case
+مناسبة الخط
+
+Next Page
+الصفحة التالية
+
+Next Page\t->
+الصفحة التالية\t->
+
+Open
+فتح
+
+Page...\tCtrl-G
+صفحة محددة\tCtrl-G
+
+Previous Page
+الصفحة السابقة
+
+Previous Page\t<-
+الصفحة السابقة\t<-
+
+Printing problem.
+يوجد مشكلة في الطباعة
+
+Rotate left\tCtrl-Shift--
+دوران لليسار\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+دوران لليمين\tCtrl-Shift-+
+
+Show toolbar
+عرض شريط الأدوات
+
+Single page
+صفحة واحدة
+
+View
+العرض
+
+Zoom In
+تكبير
+
+Zoom Out
+تصغير
+

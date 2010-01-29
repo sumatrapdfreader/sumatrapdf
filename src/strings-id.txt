@@ -1,0 +1,152 @@
+﻿# Translations for Indonesian (Bahasa Indonesia) (id) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: id Indonesian (Bahasa Indonesia)
+
+&About
+&Tentang
+
+&Close\tCtrl-W
+&Tutup\tCtrl-W
+
+&File
+&Berkas
+
+&Go To
+&Pergi ke
+
+&Help
+Ban&tuan
+
+&Open\tCtrl-O
+&Buka\tCtrl-O
+
+&Print\tCtrl-P
+&Cetak\tCtrl-P
+
+&Save as\tCtrl-S
+&Simpan sebagai\tCtrl-S
+
+&View
+&Lihat
+
+&Visit website
+&Kunjungi Halaman Web
+
+&Zoom
+&Ukuran
+
+About SumatraPDF
+Tentang SumatraPDF
+
+Act&ual Size\tCtrl-1
+&Ukuran Sebenarnya\tCtrl-1
+
+Continuous
+Bersambung
+
+Continuous facing
+Dua Halaman Bersambung
+
+Contribute translation
+Membantu alihbahasa
+
+Could not open Printer
+Tidak dapat membuka printer
+
+E&xit\tCtrl-Q
+&Keluar\tCtrl-Q
+
+Error loading PDF file.
+Kesalahan dalam memanggil berkas PDF.
+
+Facing
+Dua Halaman
+
+Failed to save a file
+Gagal menyimpan berkas
+
+Find Next
+Temukan Sesudah
+
+Find Previous
+Temukan Sebelum
+
+Find...\tCtrl-F
+Temukan...\tCtrl-F
+
+Find:
+Temukan:
+
+First Page\tHome
+Halaman Pertama\tHome
+
+Fit &Page\tCtrl-0
+&Sesuaikan\tCtrl-0
+
+Fit Page
+Sesuaikan
+
+Fit Widt&h\tCtrl-2
+Sesuaikan dengan &Lebar\tCtrl-2
+
+Fit Width
+Sesuaikan dengan Lebar
+
+Fullscreen\tCtrl-L
+Selayar Penuh\tCtrl-L
+
+Last Page\tEnd
+Halaman Terakhir\tEnd
+
+Make SumatraPDF my main PDF reader
+Jadikan SumatraPDF sebagai pembaca-PDF utama
+
+Match case
+Cocokkan Huruf Besar-Kecilnya
+
+Next Page
+Halaman Berikutnya
+
+Next Page\t->
+Halaman Berikutnya\t->
+
+Open
+Buka
+
+Page...\tCtrl-G
+Halaman...\tCtrl-G
+
+Previous Page
+Halaman Sebelumnya
+
+Previous Page\t<-
+Halaman Sebelumnya\t<-
+
+Printing problem.
+Masalahan Pencetakkan.
+
+Rotate left\tCtrl-Shift--
+Putar ke kiri\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Putar ke Kanan\tCtrl-Shift-+
+
+Show toolbar
+Perlihatkan toolbar
+
+Single page
+Satu Halaman
+
+View
+Lihat
+
+Zoom In
+Perbesar
+
+Zoom Out
+Perkecil
+

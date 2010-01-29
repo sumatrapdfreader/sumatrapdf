@@ -1,0 +1,365 @@
+﻿# Translations for Slovenian (Slovenščina) (sl) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: sl Slovenian (Slovenščina)
+
+&About
+&O programu ...
+
+&Check for new version
+&Preveri obstoj nove različice
+
+&Close\tCtrl-W
+&Zapri\tCtrl-W
+
+&Custom Zoom...
+Povečava po &meri ...
+
+&Don't ask me again
+&Ne sprašuj več
+
+&File
+&Datoteka
+
+&Find what:
+&Najdi:
+
+&Go To
+Po&jdi na
+
+&Go to page:
+Pojdi na &stran:
+
+&Help
+Po&moč
+
+&Magnification:
+&Povečanje:
+
+&Manual
+P&riročnik
+
+&Match case
+Razlikuj &med velikimi/malimi črkami
+
+&No
+&Ne
+
+&No, thanks
+&Ne, hvala
+
+&Open\tCtrl-O
+&Odpri\tCtrl-O
+
+&Options...
+&Možnosti ...
+
+&Password:
+&Geslo:
+
+&Print\tCtrl-P
+&Natisni\tCtrl-P
+
+&Remember these settings for each document
+Zapomni si te &nastavitve za vsak dokument
+
+&Save as\tCtrl-S
+Shrani &kot\tCtrl-S
+
+&Settings
+&Nastavitve
+
+&Skip this version
+&Preskoči to različico
+
+&View
+&Pogled
+
+&Visit website
+Ob&išči domačo stran
+
+&Yes
+&Da
+
+&Zoom
+Po&večava
+
+(of %d)
+(od %d)
+
+About SumatraPDF
+O programu SumatraPDF
+
+Act&ual Size\tCtrl-1
+&Dejanska velikost\tCtrl-1
+
+Advanced
+Napredno
+
+All files
+Vse datoteke
+
+Associate with PDF files?
+Želite povezati z datotekami PDF?
+
+Automatic
+Samodejno
+
+Automatically check for &updates
+Samodejno preveri &obstoj posodobitev
+
+Bookmarks\tF12
+Zaznamki\tF12
+
+Cancel
+Prekliči
+
+Cannot print this file
+Te datoteke ni mogoče natisniti
+
+Cannot start inverse search command. Please check the command line in the settings.
+Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
+
+Change language
+Spremeni jezik (Change language)
+
+Continuous
+Nepretrgano
+
+Continuous facing
+Nepretrgano dvostransko
+
+Contribute translation
+Prispevajte prevod
+
+Copy Selection\tCtrl-C
+Kopiraj izbor\tCtrl-C
+
+Could not open Printer
+Do tiskalnika ni mogoče dostopati.
+
+Couldn't initialize printer
+Tiskalnika ni mogoče inicializirati
+
+Couldn't render the page
+Strani ni mogoče upodobiti
+
+Default &Layout:
+&Privzeta postavitev:
+
+Default &Zoom:
+Pri&vzeta povečava:
+
+Download
+Prenesi
+
+E&xit\tCtrl-Q
+I&zhod\tCtrl-Q
+
+Enter password
+Vnesite geslo
+
+Enter password for %s
+Vnesite geslo za %s
+
+Error loading PDF file.
+Napaka pri branju datoteke PDF.
+
+Facing
+Dvostransko
+
+Failed to save a file
+Shranjevanje datoteke ni uspelo.
+
+Find
+Išči
+
+Find Next
+Najdi naslednje
+
+Find Previous
+Najdi prejšnje
+
+Find...\tCtrl-F
+Najdi ...\tCtrl-F
+
+Find:
+Najdi:
+
+First Page\tHome
+Prva stran\tHome
+
+Fit &Page\tCtrl-0
+&Prilagodi strani\tCtrl-0
+
+Fit Page
+Prilagodi strani
+
+Fit Widt&h\tCtrl-2
+P&rilagodi po širini\tCtrl-2
+
+Fit Width
+Prilagodi po širini
+
+Found text at page %d
+Besedilo najdeno na strani %d
+
+Fullscreen\tCtrl-L
+Celozaslonsko\tCtrl-L
+
+Go to page
+Pojdi na stran
+
+Hint: Use the F3 key for finding again
+Namig: Uporabite tipko F3 za ponovno iskanje
+
+Last Page\tEnd
+Zadnja stran\tEnd
+
+Main PDF reader can't be changed in portable mode
+Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
+
+Make SumatraPDF default application for PDF files?
+Naj bo SumatraPDF privezti program za datoteke PDF?
+
+Make SumatraPDF my main PDF reader
+SumatraPDF naj bo privzeti bralnik PDF
+
+Match case
+Razlikuj med velikimi/malimi črkami
+
+New version %s is available. Download new version?
+Na voljo je nova različica %s. Jo želite prenesti?
+
+New version available.
+Na voljo je nova različica.
+
+Next Page
+Naslednja stran
+
+Next Page\t->
+Naslednja stran\t->
+
+No matches were found
+Ni zadetkov
+
+No new version available.
+Novejša različica ni na voljo.
+
+No result found around line %u in file %s
+Okoli vrstice %u v datoteki %s ni zadetkov
+
+No synchronization info at this position
+Na tem mestu ni sinhronizacijskih podatkov
+
+OK
+V redu
+
+Open
+Odpri
+
+Open in &Adobe Reader
+Odpri s programom &Adobe Reader
+
+PDF Document
+Dokument PDF
+
+PDF documents
+Dokumenti PDF
+
+Page number %u inexistant
+Stran številka %u ne obstaja
+
+Page...\tCtrl-G
+Stran ...\tCtrl-G
+
+Page:
+Stran:
+
+Please wait - rendering...
+Počakajte trenutek, upodobitev poteka ...
+
+Previous Page
+Predhodna stran
+
+Previous Page\t<-
+Predhodna stran\t<-
+
+Printing problem.
+Težave pri tiskanju.
+
+Remember &opened files
+&Zapomni si odprte datoteke
+
+Rotate left\tCtrl-Shift--
+Zasukaj v levo\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Zasukaj v desno\tCtrl-Shift-+
+
+Searching %d of %d...
+Preiskovanje strani %d od %d ...
+
+Select content with Ctrl+left mouse button
+Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
+
+Set inverse search command-line
+Nastavi obratno iskanje ukazne vrstice
+
+Show the &bookmarks sidebar when available
+Pokaži podokno z &zaznamki, če so na voljo
+
+Show toolbar
+Pokaži orodno vrstico
+
+Single page
+Enostransko
+
+Source file %s has no synchronization point
+Izvorna datoteka %s nima točke sinhronizacije
+
+SumatraPDF Options
+Možnosti SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF je vaš privzeti bralnik PDF
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
+
+Synchronization file cannot be opened
+Datoteke sinhronizacije ni mogoče odpreti
+
+Unknown source file (%s)
+Neznana izvorna datoteka (%s)
+
+View
+Pogled
+
+Warning
+Opozorilo
+
+You have the latest version.
+Imate najnovejšo različico.
+
+You have version %s
+Imate različico %s
+
+Zoom
+Povečava
+
+Zoom In
+Povečaj
+
+Zoom Out
+Pomanjšaj
+
+Zoom factor
+Faktor povečave
+
+[Changes detected; refreshing] %s
+[Spremembe zaznane; osvežitev poteka] %s
+

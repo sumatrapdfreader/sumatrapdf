@@ -1,0 +1,203 @@
+﻿# Translations for Burmese (ဗမာ စာ) (mm) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: mm Burmese (ဗမာ စာ)
+
+&About
+အကြောင်း
+
+&Check for new version
+အမျိုးအစား သစ်စုံစမ်းရန်
+
+&Close\tCtrl-W
+&ပိတ်ပါ\tCtrl-W
+
+&Don't ask me again
+ထပ်မမေးပါနှင့်။
+
+&File
+&ဖိုင်
+
+&Go To
+သို့ သွား
+
+&Help
+&အကူအညီ
+
+&Manual
+&ကိုယ်တိုင်
+
+&Open\tCtrl-O
+&ဖွင့်ပါ\tCtrl-O
+
+&Print\tCtrl-P
+&ပုံနှိပ်ပါ\tCtrl-P
+
+&Save as\tCtrl-S
+&ကဲ့သို့ သိမ်းပါ.....\tCtrl-S
+
+&Skip this version
+ဒီအမျိုးအစား ကိုရှောင်မည်။
+
+&View
+&မြင်ကွင်း
+
+&Visit website
+&ဝဘ်ဌာနေ သို့
+
+&Zoom
+ချဲ့ထွင်
+
+About SumatraPDF
+စူမာတရာ အကြောင်း
+
+Act&ual Size\tCtrl-1
+ပုံမှန် အရွယ်\tCtrl-1
+
+Associate with PDF files?
+PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
+
+Bookmarks\tF12
+စာမျက်နှာ မှတ်သား\tF12
+
+Change language
+စာ စကား ပြောင်းရန် (Change language)
+
+Continuous
+ဆက်တိုက်
+
+Continuous facing
+ဆက်တိုက် မျက်နှာ
+
+Could not open Printer
+ပုံနှိပ်ကရိယာ ဖွင့်မရပါ
+
+E&xit\tCtrl-Q
+&ထွက်ပါ\tCtrl-Q
+
+Enter password
+လျှို့ဝှက် ထည့်သွင်းရန်
+
+Enter password for %s
+လျှို့ဝှက် ထည့်သွင်း %s
+
+Error loading PDF file.
+ဖိုင် ဖွင့်ရာ အမှားအယွင်းရှိ
+
+Facing
+ အရှေ့မျက်နှာ
+
+Failed to save a file
+ဖိုင် သိမ်းမရပါ
+
+Find Next
+နောက်တခု ရှာပါ
+
+Find Previous
+ပြီးခဲ့တာ ရှာပါ
+
+Find...\tCtrl-F
+ရှာပါ\tCtrl-F
+
+Find:
+ရှာပါ
+
+First Page\tHome
+ပထမ စာမျက်နှာ\tHome
+
+Fit &Page\tCtrl-0
+စာမျက်နှာ ပြည့်\tCtrl-O
+
+Fit Page
+စာမျက်နှာ ပြည့်
+
+Fit Widt&h\tCtrl-2
+အလျားနှင့်အမြင့် အပြည့်
+
+Fit Width
+အလျားနှင့်အမြင့် အပြည့်
+
+Fullscreen\tCtrl-L
+မြင်ကွင်း ပြည့်\tCtrl-L
+
+Go to page
+သွားရန် စာမျက်နှာ
+
+Last Page\tEnd
+နောက်ဆုံး စာမျက်နှာ\tEnd
+
+Make SumatraPDF default application for PDF files?
+SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
+
+Make SumatraPDF my main PDF reader
+စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
+
+Match case
+တူညီ သော
+
+New version %s is available. Download new version?
+အမျိုးအစားသစ်ရှိသည်။ယူမလား။
+
+New version available.
+အမျိုးအစား သစ်ရှိသည်
+
+Next Page
+နောက် တမျက်နှာ
+
+Next Page\t->
+နောက် တမျက်နှာ\t->
+
+No new version available.
+အမျိုးအစားသစ် မရှိပါ
+
+Open
+ဖွင့်ပါ
+
+Page...\tCtrl-G
+စာမျက်နှာ...\tCtrl-G
+
+Page:
+စာ မျက်နှာ
+
+Previous Page
+ပြီးတဲ့ စာမျက်နှာ
+
+Previous Page\t<-
+ပြီးတဲ့ စာမျက်နှာ\t<-
+
+Printing problem.
+ပုံနှိပ် ကရိယာ ပြသာနာ
+
+Rotate left\tCtrl-Shift--
+ဘယ်သို့ လှဲ့\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+ညာသို့ လှဲ့\tCtrl-Shift-+
+
+Set inverse search command-line
+command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
+
+Show toolbar
+တူးလ်ဘား ပြပါ
+
+Single page
+ တ မျက်နှာ
+
+View
+မြင်ကွင်း
+
+You have the latest version.
+သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
+
+You have version %s
+သင့်အမျိုးအစားသည် %s
+
+Zoom In
+ကျဉ်းပါ
+
+Zoom Out
+ချဲ့ပါ
+

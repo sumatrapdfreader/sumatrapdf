@@ -1,0 +1,134 @@
+﻿# Translations for Danish (Dansk) (dk) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: dk Danish (Dansk)
+
+&About
+&Om
+
+&Close\tCtrl-W
+&Luk\tCtrl-W
+
+&File
+&Filer
+
+&Go To
+&Gå til
+
+&Help
+&Hjælp
+
+&Open\tCtrl-O
+&Åbn\tCtrl-O
+
+&Print\tCtrl-P
+&Udskriv\tCtrl-P
+
+&Save as\tCtrl-S
+&Gem som\tCtrl-S
+
+&View
+&Vis
+
+&Visit website
+Besøg &webside
+
+&Zoom
+&Zoom
+
+About SumatraPDF
+Om SumatraPDF
+
+Act&ual Size\tCtrl-1
+Akt&ual størrelse\tCtrl-1
+
+Continuous
+Fortløbende
+
+Continuous facing
+Fortløbende modstående
+
+Could not open Printer
+Kunne ikke åbne printeren
+
+E&xit\tCtrl-Q
+&Slut\tCtrl-Q
+
+Error loading PDF file.
+Fejl ved åbning af PDF-fil
+
+Facing
+Modstående
+
+Failed to save a file
+Kunne ikke gemme filen.
+
+First Page\tHome
+Første side\tHome
+
+Fit &Page\tCtrl-0
+Hele &siden\tCtrl-0
+
+Fit Page
+Hele siden
+
+Fit Widt&h\tCtrl-2
+Tilpas &bredde\tCtrl-2
+
+Fit Width
+Tilpas bredde
+
+Last Page\tEnd
+Sidste side\tEnd
+
+Make SumatraPDF my main PDF reader
+Gør SumatraPDF til din standard PDF læser
+
+Next Page
+Næste side
+
+Next Page\t->
+Næste side\t->
+
+Open
+Åbn
+
+Page...\tCtrl-G
+Side...\tCtrl-G
+
+Page:
+Side:
+
+Previous Page
+Forrige side
+
+Previous Page\t<-
+Forrige side\t<-
+
+Printing problem.
+Printer problem
+
+Rotate left\tCtrl-Shift--
+Drej venstre\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Drej højre\tCtrl-Shift-+
+
+Show toolbar
+Vis værktøjslinie
+
+Single page
+Enkelt side
+
+View
+Vis
+
+Zoom In
+Zoom ind
+
+Zoom Out
+Zoom ud
+

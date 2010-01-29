@@ -1,0 +1,137 @@
+﻿# Translations for Hebrew (עברית) (he) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: he Hebrew (עברית)
+
+&About
+אודות
+
+&Close\tCtrl-W
+&סגור\tCtrl-W
+
+&File
+&קובץ
+
+&Go To
+לך ל
+
+&Help
+עזרה
+
+&Open\tCtrl-O
+&פתח\tCtrl-O
+
+&Print\tCtrl-P
+הדפס\tCtrl-P
+
+&Save as\tCtrl-S
+שמירה בשם\tCtrl-S
+
+&View
+&תצוגה
+
+&Visit website
+בקר באתר
+
+&Zoom
+זום
+
+About SumatraPDF
+אודות סומטרהPDF
+
+Act&ual Size\tCtrl-1
+גודל מקור\tCtrl-1
+
+Continuous
+המשך
+
+Continuous facing
+המשך תצוגה כפולה
+
+Contribute translation
+עזור לתרגם
+
+E&xit\tCtrl-Q
+יציאה\tCtrl-Q
+
+Facing
+דף כפול
+
+Find Next
+חפש הבא
+
+Find Previous
+חפש קודם
+
+Find...\tCtrl-F
+חפש...\tCtrl-F
+
+Find:
+חפש:
+
+First Page\tHome
+דף ראשון\tHome
+
+Fit &Page\tCtrl-0
+התאם דף\tCtrl-0
+
+Fit Page
+התאם דף
+
+Fit Widt&h\tCtrl-2
+התאם רוחב\tCtrl-2
+
+Fit Width
+התאם רוחב
+
+Fullscreen\tCtrl-L
+מסך מלא\tCtrl-L
+
+Last Page\tEnd
+דף אחרון\tEnd
+
+Make SumatraPDF my main PDF reader
+הפוך את סומטרה לברירת מחדל עבור קבצי PDF
+
+Next Page
+דף הבא
+
+Next Page\t->
+דף הבא\t->
+
+Open
+פתח
+
+Page...\tCtrl-G
+דף...\tCtrl-G
+
+Previous Page
+דף קודם
+
+Previous Page\t<-
+דף קודם\t<-
+
+Rotate left\tCtrl-Shift--
+סובב שמאלה\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+סובב ימינה\tCtrl-Shift-+
+
+Show toolbar
+הצג שורת תפריט
+
+Single page
+דף יחיד
+
+View
+תצוגה
+
+Zoom In
+זום פנימה
+
+Zoom Out
+זום החוצה
+

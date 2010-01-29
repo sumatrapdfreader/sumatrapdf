@@ -1,0 +1,203 @@
+﻿# Translations for Valencian (Valencià) (va) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: va Valencian (Valencià)
+
+&About
+Al voltant de
+
+&Check for new version
+&Comprovar actualisacions
+
+&Close\tCtrl-W
+&Tancar\tCtrl-W
+
+&Don't ask me again
+No tornar a preguntar
+
+&File
+&Archiu
+
+&Go To
+&Anar a
+
+&Help
+&Ajuda
+
+&Open\tCtrl-O
+Obrir\tCtrl-O
+
+&Print\tCtrl-P
+&Imprimir\tCtrl-P
+
+&Save as\tCtrl-S
+&Guardar com...\tCtrl-S
+
+&Skip this version
+Botar-se esta versió.
+
+&View
+&Vore
+
+&Visit website
+&Visitar Lloc Web
+
+&Zoom
+&Zoom
+
+About SumatraPDF
+Al voltant de SumatraPDF
+
+Act&ual Size\tCtrl-1
+Tam&any Real\tCtrl-1
+
+Associate with PDF files?
+¿Associar en archius PDF?
+
+Bookmarks\tF12
+Marcadors\tF12
+
+Change language
+Canviar Idioma (Change language)
+
+Continuous
+Contínua
+
+Continuous facing
+Pàgina Doble Contínua
+
+Contribute translation
+Contribuir en la traducció
+
+Could not open Printer
+No s'ha pogut obrir l'impressora.
+
+E&xit\tCtrl-Q
+E&ixir\tCtrl-Q
+
+Enter password
+Posar contrasenya
+
+Enter password for %s
+Posar contrasenya per a %s
+
+Error loading PDF file.
+Erro al Carregar l'Archiu PDF.
+
+Facing
+Pàgina Doble
+
+Failed to save a file
+Erro al Guardar l'Archiu
+
+Find Next
+Busca Següent
+
+Find Previous
+Busca Anterior
+
+Find...\tCtrl-F
+Buscar...\tCtrl-F
+
+Find:
+Buscar:
+
+First Page\tHome
+Primera Pàgina\tInici
+
+Fit &Page\tCtrl-0
+Ajustar &Pàgina\tCtrl-0
+
+Fit Page
+Ajustar Pàgina
+
+Fit Widt&h\tCtrl-2
+&Amplària de la Pàgina\tCtrl-2
+
+Fit Width
+Amplària de la Pàgina
+
+Fullscreen\tCtrl-L
+Pantalla Completa\tCtrl-L
+
+Go to page
+Anar a la pàgina
+
+Last Page\tEnd
+Última Pàgina\tFi
+
+Make SumatraPDF default application for PDF files?
+¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
+
+Make SumatraPDF my main PDF reader
+Convertir SumatraPDF en llector PDF per defecte
+
+Match case
+Distinguir MAYÚSCULES i minúscules
+
+New version %s is available. Download new version?
+Una nova versió %s está disponible. ¿Vols descarregar-la?
+
+New version available.
+Nova versió disponible.
+
+Next Page
+Pàgina Següent
+
+Next Page\t->
+Pàgina Següent\t->
+
+No new version available.
+No hi han noves versions.
+
+Open
+Obrir
+
+Page...\tCtrl-G
+Pàgina...\tCtrl-G
+
+Page:
+Pàgina:
+
+Previous Page
+Pàgina Anterior
+
+Previous Page\t<-
+Pàgina Anterior\t<-
+
+Printing problem.
+Erro d'impressió.
+
+Rotate left\tCtrl-Shift--
+Girar a l'esquerra\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Girar a la dreta\tCtrl-Shift-+
+
+Set inverse search command-line
+Establir busca inversa
+
+Show toolbar
+Mostrar barra de ferramentes
+
+Single page
+Pàgina Única
+
+View
+Vore
+
+You have the latest version.
+Està es l'última versió.
+
+You have version %s
+Te la versió %s
+
+Zoom In
+Arrimar
+
+Zoom Out
+Alluntar
+

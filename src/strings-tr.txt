@@ -1,0 +1,158 @@
+﻿# Translations for Turkish (Türkçe) (tr) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: tr Turkish (Türkçe)
+
+&About
+&Hakkında
+
+&Close\tCtrl-W
+Kapa&t\tCtrl-W
+
+&File
+&Dosya
+
+&Go To
+&Git
+
+&Help
+&Yardım
+
+&Open\tCtrl-O
+&Aç\tCtrl-O
+
+&Print\tCtrl-P
+&Yazdır\tCtrl-P
+
+&Save as\tCtrl-S
+&Farklı kaydet\tCtrl-S
+
+&View
+&Göster
+
+&Visit website
+&Web sayfası
+
+&Zoom
+&Yakınlaştırma
+
+About SumatraPDF
+SumatraPDF hakkında
+
+Act&ual Size\tCtrl-1
+Gerçek Boyut\tCtrl-1
+
+Bookmarks\tF12
+Yer imleri\tF12
+
+Continuous
+Devamlı
+
+Continuous facing
+Devamlı çift sayfa
+
+Contribute translation
+Çeviriye katkıda bulunun.
+
+Could not open Printer
+Yazıcıya erişilemiyor.
+
+E&xit\tCtrl-Q
+Çı&kış\tCtrl-O
+
+Error loading PDF file.
+Dosya yüklenirken hata çıktı.
+
+Facing
+Çift sayfa
+
+Failed to save a file
+Dosya kaydedilirken hata çıktı.
+
+Find Next
+Sonrakini Bul
+
+Find Previous
+Öncekini bul
+
+Find...\tCtrl-F
+Bul...\tCtrl-F
+
+Find:
+Bul:
+
+First Page\tHome
+İlk Sayfa\tHome
+
+Fit &Page\tCtrl-0
+&Sayfaya sığdır\tCtrl-0
+
+Fit Page
+Sayfaya sığdır
+
+Fit Widt&h\tCtrl-2
+Genişliğe &sığdır\tCtrl-2
+
+Fit Width
+Genişliğe sığdır
+
+Fullscreen\tCtrl-L
+Tam Ekran\tCtrl-L
+
+Last Page\tEnd
+Son Sayfa\tEnd
+
+Make SumatraPDF my main PDF reader
+&Varsayılan PDF okuyucusu yap
+
+Match case
+Büyük/Küçük harf eşleştir
+
+Next Page
+Sonraki Sayfa
+
+Next Page\t->
+Sonraki Sayfa\t->
+
+Open
+&Aç
+
+Page...\tCtrl-G
+Sayfa...\tCtrl-G
+
+Page:
+Sayfa:
+
+Previous Page
+Önceki Sayfa
+
+Previous Page\t<-
+Önceki Sayfa\t<-
+
+Printing problem.
+Yazdırma problemi.
+
+Rotate left\tCtrl-Shift--
+Sola çevir\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Sağa çevir\tCtrl-Shift-+
+
+Show toolbar
+Araç kutusunu göster
+
+Single page
+Tek sayfa
+
+View
+Göster
+
+Zoom In
+Yakınlaştır
+
+Zoom Out
+Uzaklaştır
+

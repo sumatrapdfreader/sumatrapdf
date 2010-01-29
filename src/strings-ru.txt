@@ -1,0 +1,386 @@
+﻿# Translations for Russian (Русский) (ru) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: ru Russian (Русский)
+
+&About
+О программе...
+
+&Check for new version
+Проверить наличие новой версии
+
+&Close\tCtrl-W
+Закрыть\tCtrl-W
+
+&Custom Zoom...
+Указать масштаб...
+
+&Don't ask me again
+Больше не спрашивать
+
+&File
+Файл
+
+&Find what:
+&Найти:
+
+&Go To
+Переход
+
+&Go to page:
+&Перейти к странице
+
+&Help
+Справка
+
+&Magnification:
+Масштабирование:
+
+&Manual
+Руководство
+
+&Match case
+&Учитывать регистр
+
+&No
+Нет
+
+&No, thanks
+Нет, спасибо
+
+&Open\tCtrl-O
+Открыть\tCtrl-O
+
+&Options...
+&Параметры...
+
+&Password:
+&Пароль:
+
+&Print\tCtrl-P
+Печать\tCtrl-P
+
+&Remember these settings for each document
+Запомнить эти параметры для &каждого документа
+
+&Save as\tCtrl-S
+Сохранить как...\tCtrl-S
+
+&Settings
+Настройки
+
+&Skip this version
+Пропустить эту версию.
+
+&View
+Вид
+
+&Visit website
+Посетить веб-сайт программы
+
+&Yes
+Да
+
+&Zoom
+Масштаб
+
+(of %d)
+(из %d)
+
+About SumatraPDF
+О программе SumatraPDF
+
+Act&ual Size\tCtrl-1
+Реальный размер\tCtrl-1
+
+Advanced
+Дополнительно
+
+All files
+Все файлы
+
+Associate with PDF files?
+Ассоциировать с PDF-файлами?
+
+Automatic
+Автоматически
+
+Automatically check for &updates
+&Автоматически проверять обновления
+
+Back\tAlt+<-
+Назад\tAlt+<-
+
+Book view
+В разворот
+
+Bookmarks\tF12
+Закладки\tF12
+
+Cancel
+Отмена
+
+Cannot print this file
+Не удалось распечатать этот файл
+
+Cannot start inverse search command. Please check the command line in the settings.
+Ошибка команды обратного поиска. Проверьте параметры командной строки.
+
+Change language
+Изменить язык (Change language)
+
+Continuous
+Непрерывно
+
+Continuous book view
+В разворот непрерывно
+
+Continuous facing
+Попарно непрерывно
+
+Contribute translation
+Помочь с переводом
+
+Copy Selection\tCtrl-C
+Скопировать выделенное\tCtrl-C
+
+Could not open Printer
+Принтер недоступен
+
+Couldn't initialize printer
+Не удалось инициализировать принтер
+
+Couldn't render the page
+Не удалось сформировать изображение страницы
+
+Default &Layout:
+&Компоновка по умолчанию
+
+Default &Zoom:
+&Масштаб по умолчанию
+
+Download
+Загрузка
+
+E&xit\tCtrl-Q
+Выход\tCtrl-Q
+
+Enter password
+Введите пароль
+
+Enter password for %s
+Введите пароль для %s
+
+Error loading PDF file.
+Ошибка открытия PDF-файла.
+
+Facing
+Попарно
+
+Failed to save a file
+Ошибка сохранения файла
+
+Find
+Поиск
+
+Find Next
+Найти следующее
+
+Find Previous
+Найти предыдущее
+
+Find...\tCtrl-F
+Найти...\tCtrl-F
+
+Find:
+Найти:
+
+First Page\tHome
+Первая страница\tHome
+
+Fit &Page\tCtrl-0
+По размеру страницы\tCtrl-0
+
+Fit Page
+По размеру страницы
+
+Fit Widt&h\tCtrl-2
+Заполнение по ширине\tCtrl-2
+
+Fit Width
+Заполнение по ширине
+
+Forward\tAlt+->
+Вперед\tAlt+->
+
+Found text at page %d
+Текст найден на стр. %d
+
+Fullscreen\tCtrl-L
+Полный экран\tCtrl-L
+
+Go to page
+Перейти на страницу
+
+Hint: Use the F3 key for finding again
+Для повторного поиска используйте клавишу F3
+
+Last Page\tEnd
+Последняя страница\tEnd
+
+Main PDF reader can't be changed in portable mode
+В мобильном режиме ассоциирование невозможно
+
+Make SumatraPDF default application for PDF files?
+Сделать SumatraPDF стандартной программой просмотра PDF-файлов?
+
+Make SumatraPDF my main PDF reader
+Ассоциировать SumatraPDF с файлами PDF
+
+Match case
+Учитывать регистр
+
+New version %s is available. Download new version?
+Доступна новая версия: %s. Загрузить её?
+
+New version available.
+Доступна новая версия.
+
+Next Page
+Следующая страница
+
+Next Page\t->
+Следующая страница\t->
+
+No matches were found
+Совпадений не найдено
+
+No new version available.
+Обновлений не обнаружено
+
+No result found around line %u in file %s
+Результат, соответствующий строке %u в файле %s, не найден
+
+No synchronization file found
+Файл синхронизации не найден
+
+No synchronization info at this position
+В этой позиции нет информации для синхронизации
+
+Open
+Открыть
+
+Open in &Adobe Reader
+Открыть в &Adobe Reader
+
+PDF Document
+PDF-документ
+
+PDF documents
+PDF-документы
+
+Page number %u inexistant
+Страница %u не существует
+
+Page...\tCtrl-G
+Указанная страница...\tCtrl-G
+
+Page:
+Страница:
+
+Please wait - rendering...
+Формируется изображение, подождите...
+
+Previous Page
+Предыдущая страница
+
+Previous Page\t<-
+Предыдущая страница\t<-
+
+Printing problem.
+Ошибка при печати.
+
+Remember &opened files
+&Запоминать открытые файлы
+
+Rotate left\tCtrl-Shift--
+Повернуть влево\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Повернуть вправо\tCtrl-Shift-+
+
+Searching %d of %d...
+Обработка страницы %d из %d...
+
+Select content with Ctrl+left mouse button
+Выберите содержимое, нажав Ctrl и левую кнопку мыши
+
+Send by &email...
+Послать по &email...
+
+Set inverse search command-line
+Задать команду обратного поиска
+
+Show pages continuously
+Непрерывно
+
+Show the &bookmarks sidebar when available
+Показывать панель &закладок (по возможности)
+
+Show toolbar
+Панель инструментов
+
+Single page
+Постранично
+
+Source file %s has no synchronization point
+Отсутствует точка синхронизации в исходном файле %s
+
+SumatraPDF Options
+Параметры SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF ассоциирована с файлами PDF
+
+SumatraPDF should now be your main PDF reader
+Теперь SumatraPDF ассоциирована с файлами PDF
+
+Synchronization file cannot be opened
+Не удалось открыть файл с информацией для синхронизации
+
+Text documents
+Текстовые документы
+
+Unknown source file (%s)
+Неизвестный исходный файл (%s)
+
+View
+Вид
+
+Warning
+Внимание
+
+You have the latest version.
+Вы используете новейшую версию.
+
+You have version %s
+Вы используете версию %s
+
+Zoom
+Масштаб
+
+Zoom In
+Увеличить
+
+Zoom Out
+Уменьшить
+
+Zoom factor
+Масштаб
+
+[Changes detected; refreshing] %s
+[Обнаружены изменения; обновление...] %s
+

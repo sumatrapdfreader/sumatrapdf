@@ -1,0 +1,380 @@
+﻿# Translations for Welsh (Cymraeg) (cy) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: cy Welsh (Cymraeg)
+
+&About
+&Ynghylch...
+
+&Check for new version
+&Gwirio am fersiwn newydd
+
+&Close\tCtrl-W
+&Cau\tCtrl-W
+
+&Custom Zoom...
+&Addasu Chwyddo...
+
+&Don't ask me again
+&Peidio gofyn eto
+
+&File
+&Ffeil
+
+&Find what:
+&Canfod beth:
+
+&Go To
+&Mynd
+
+&Go to page:
+&Mynd i dudalen:
+
+&Help
+&Cymorth
+
+&Magnification:
+&Chwyddiad:
+
+&Manual
+&Llawlyfr
+
+&Match case
+&Cydweddu maint
+
+&No
+&Na
+
+&No, thanks
+&Dim diolch
+
+&Open\tCtrl-O
+&Agor\tCtrl-O
+
+&Options...
+&Dewisiadau...
+
+&Password:
+&Cyfrinair:
+
+&Print\tCtrl-P
+&Argraffu\tCtrl-P
+
+&Remember these settings for each document
+C&ofio'r gosodiadau hyn ar gyfer pob dogfen
+
+&Save as\tCtrl-S
+&Cadw fel...\tCtrl-S
+
+&Settings
+&Gosodiadau
+
+&Skip this version
+&Hepgor y fersiwn yma.
+
+&View
+&Gweld
+
+&Visit website
+&Ymweld â'r Wefan
+
+&Yes
+&Iawn
+
+&Zoom
+&Chwyddo
+
+(of %d)
+(o %d)
+
+About SumatraPDF
+Ynghylch SumatraPDF
+
+Act&ual Size\tCtrl-1
+&Gwir Faint\tCtrl-1
+
+Advanced
+Uwch
+
+All files
+Pob ffeil
+
+Associate with PDF files?
+Cysylltu gyda ffeiliau PDF?
+
+Automatic
+Awtomatig
+
+Automatically check for &updates
+Gwirio'n awtomatig am &ddiweddariadau
+
+Book view
+Golwg llyfr
+
+Bookmarks\tF12
+Nodau Tudalen\tF12
+
+Cancel
+Diddymu
+
+Cannot print this file
+Methu argraffu'r ffeil
+
+Cannot start inverse search command. Please check the command line in the settings.
+Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
+
+Change language
+Newid iaith (Change language)
+
+Continuous
+Didor
+
+Continuous book view
+Golwg llyfr didor
+
+Continuous facing
+Gwynebu'n Ddidor
+
+Contribute translation
+Cyfrannu cyfieithiad.
+
+Copy Selection\tCtrl-C
+Copïo'r Dewis\tCtrl-C
+
+Could not open Printer
+Methu agor Argraffydd
+
+Couldn't initialize printer
+Methu cychwyn yr argraffydd
+
+Couldn't render the page
+Methu cyflwyno'r dudalen
+
+Default &Layout:
+&Cynllun Rhagosodedig:
+
+Default &Zoom:
+C&hwyddo Rhagosodedig:
+
+Download
+Llwytho i Lawr
+
+E&xit\tCtrl-Q
+&Gadael\tCtrl-Q
+
+Enter password
+Rhoi cyfrinair
+
+Enter password for %s
+Rhoi cyfrinair ar gyfer %s
+
+Error loading PDF file.
+Gwall wrth lwytho ffeil.
+
+Facing
+Wynebu
+
+Failed to save a file
+Methwyd cadw ffeil
+
+Find
+Canfod
+
+Find Next
+Canfod y Nesaf
+
+Find Previous
+Canfod y Blaenorol
+
+Find...\tCtrl-F
+Canfod...\tCtrl-F
+
+Find:
+Canfod:
+
+First Page\tHome
+Tudalen Gyntaf\tHome
+
+Fit &Page\tCtrl-0
+&Ffitio'r Dudalen\tCtrl-0
+
+Fit Page
+Ffitio'r Dudalen
+
+Fit Widt&h\tCtrl-2
+&Fitio'r Lled\tCtrl-2
+
+Fit Width
+Fitio'r Lled
+
+Found text at page %d
+Canfod testun ar dudalen %d
+
+Fullscreen\tCtrl-L
+Sgrin Lawn\tCtrl-L
+
+Go to page
+Mynd i dudalen
+
+Hint: Use the F3 key for finding again
+Cyngor: Defnyddiwch bysell F3 i ganfod eto
+
+Last Page\tEnd
+Tudalen Olaf\tEnd
+
+Main PDF reader can't be changed in portable mode
+Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
+
+Make SumatraPDF default application for PDF files?
+Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
+
+Make SumatraPDF my main PDF reader
+Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
+
+Match case
+Cydweddu Maint
+
+New version %s is available. Download new version?
+Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr??
+
+New version available.
+Mae fersiwn newydd ar gael.
+
+Next Page
+Tudalen Nesaf
+
+Next Page\t->
+Tudalen Nesaf\t->
+
+No matches were found
+Heb ganfod cyfatebiad
+
+No new version available.
+Dim fersiwn newydd ar gael.
+
+No result found around line %u in file %s
+Dim canlyniad o liell %u yn ffeil %s
+
+No synchronization file found
+Heb ganfod ffeil cydweddu
+
+No synchronization info at this position
+Dim gwybodaeth cydweddu yn y fan hon
+
+OK
+Iawn
+
+Open
+Agor
+
+Open in &Adobe Reader
+Agor yn &Adobe Reader
+
+PDF Document
+Dogfen PDF
+
+PDF documents
+Dogfennau PDF
+
+Page number %u inexistant
+Nid yw tudalen rhif %u yn bodoli
+
+Page...\tCtrl-G
+Tudalen...\tCtrl-G
+
+Page:
+Tudalen:
+
+Please wait - rendering...
+Arhoswch, wrthi'n cyflwyno...
+
+Previous Page
+Tudalen Flaenorol
+
+Previous Page\t<-
+Tudalen Flaenorol\t<-
+
+Printing problem.
+Anhawster argraffu
+
+Remember &opened files
+Co&fio ffeiliau ar agor
+
+Rotate left\tCtrl-Shift--
+Troi i'r chwith\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Troi i'r dde\tCtrl-Shift-+
+
+Searching %d of %d...
+Chwilio am %d o %d...
+
+Select content with Ctrl+left mouse button
+Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
+
+Set inverse search command-line
+Gosod linell-orchymyn chwilio gwrthdro
+
+Show pages continuously
+Dangos tudalennau'n ddidor
+
+Show the &bookmarks sidebar when available
+Dangos bar ochr y &nodau tudalen pan yw ar gael
+
+Show toolbar
+Dangos y bar offer
+
+Single page
+Tudalen unigol
+
+Source file %s has no synchronization point
+Does dim pwynt cydweddu yn ffeil %s
+
+SumatraPDF Options
+Dewisiadau SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF yw eich prif ddarllenydd PDF
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF dylai fod eich prif ddarllenydd PDF
+
+Synchronization file cannot be opened
+Methu agor ffeil cydweddu
+
+Text documents
+Dogfennau testun
+
+Unknown source file (%s)
+Ffeil ffynhonnell anhysbys (%s)
+
+View
+Gweld
+
+Warning
+Rhybudd
+
+You have the latest version.
+Mae'r fersiwn diweddaraf gennych.
+
+You have version %s
+Mae fersiwn %s gennych
+
+Zoom
+Chwyddo
+
+Zoom In
+Chwyddo i Mewn
+
+Zoom Out
+Chwyddo Allan
+
+Zoom factor
+Ffactor Chwyddo
+
+[Changes detected; refreshing] %s
+[Newidiadau wedi eu canfod; adnewyddu]
+

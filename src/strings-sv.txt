@@ -1,0 +1,377 @@
+﻿# Translations for Swedish (Svenska) (sv) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: sv Swedish (Svenska)
+
+&About
+&Om
+
+&Check for new version
+&Sök efter ny version
+
+&Close\tCtrl-W
+&Stäng\tCtrl-W
+
+&Custom Zoom...
+&Anpassad zoom...
+
+&Don't ask me again
+Fråga mig inte igen
+
+&File
+&Arkiv
+
+&Find what:
+&Sök efter:
+
+&Go To
+&Gå till
+
+&Go to page:
+&Gå till sida:
+
+&Help
+&Hjälp
+
+&Magnification:
+&Förstoring:
+
+&Manual
+&Manual
+
+&Match case
+Matcha &versaler/gemener
+
+&No
+&Nej
+
+&No, thanks
+&Nej, tack
+
+&Open\tCtrl-O
+&Öppna...\tCtrl-O
+
+&Options...
+&Inställningar...
+
+&Password:
+&Lösenord:
+
+&Print\tCtrl-P
+Skriv &ut...\tCtrl-P
+
+&Remember these settings for each document
+Kom ihåg dessa inställningar för &varje dokument
+
+&Save as\tCtrl-S
+Spara so&m...\tCtrl-S
+
+&Settings
+Alternati&v
+
+&Skip this version
+Hoppa över denna version
+
+&View
+Vi&sa
+
+&Visit website
+Besök webbplats
+
+&Yes
+&Ja
+
+&Zoom
+&Zoom
+
+(of %d)
+(av %d)
+
+About SumatraPDF
+Om SumatraPDF
+
+Act&ual Size\tCtrl-1
+&Verklig storlek\tCtrl-1
+
+Advanced
+Avancerad
+
+All files
+Alla filer
+
+Associate with PDF files?
+Koppla ihop med PDF-filer?
+
+Automatic
+Automatiskt
+
+Automatically check for &updates
+Sök automatisk efter &uppdateringar
+
+Book view
+Bokuppslag
+
+Bookmarks\tF12
+Bokmärken\tF12
+
+Cancel
+Avbryt
+
+Cannot print this file
+Kan ej skriva ut denna fil
+
+Cannot start inverse search command. Please check the command line in the settings.
+Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
+
+Change language
+Byt språk (Change language)
+
+Continuous
+Fortlöpande
+
+Continuous book view
+Fortlöpande bokuppslag
+
+Continuous facing
+Fortlöpande uppslag
+
+Contribute translation
+Bidra med översättning
+
+Copy Selection\tCtrl-C
+Kopiera markering\tCtrl-C
+
+Could not open Printer
+Kan inte anropa skrivaren.
+
+Couldn't initialize printer
+Kunde ej använda skrivare
+
+Couldn't render the page
+Kunde ej visa sidan
+
+Default &Layout:
+Förvalt &utseende
+
+Default &Zoom:
+Förvalt &zoomläge
+
+Download
+Ladda &ned
+
+E&xit\tCtrl-Q
+&Avsluta\tCtrl-Q
+
+Enter password
+Ange lösenord
+
+Enter password for %s
+Ange lösenord för %s
+
+Error loading PDF file.
+Kan inte öppna PDF-filen.
+
+Facing
+Uppslag
+
+Failed to save a file
+Kan inte spara filen.
+
+Find
+Sök
+
+Find Next
+Sök nästa
+
+Find Previous
+Sök föregående
+
+Find...\tCtrl-F
+Sök...\tCtrl-F
+
+Find:
+Sök
+
+First Page\tHome
+Första sidan\tHome
+
+Fit &Page\tCtrl-0
+Anpassa efter &helsida\tCtrl-0
+
+Fit Page
+Anpassa efter helsida
+
+Fit Widt&h\tCtrl-2
+Anpassa efter &bredd\tCtrl-2
+
+Fit Width
+Anpassa efter bredd
+
+Found text at page %d
+Hittade text på sidan %d
+
+Fullscreen\tCtrl-L
+Fullskärm\tCtrl-L
+
+Go to page
+Gå till sida
+
+Hint: Use the F3 key for finding again
+Tips: Tryck F3 för att söka vidare
+
+Last Page\tEnd
+Sista sidan\tEnd
+
+Main PDF reader can't be changed in portable mode
+SumatraPDF kan ej göras förvald i portabelt läge
+
+Make SumatraPDF default application for PDF files?
+Ställa in SumatraPDF som standardprogram för PDF-filer?
+
+Make SumatraPDF my main PDF reader
+Använd SumatraPDF som standardläsare för PDF
+
+Match case
+Matcha versaler/gemener
+
+New version %s is available. Download new version?
+Nyare version %s tillgänglig. Ladda ner den?
+
+New version available.
+Nyare version tillgänglig.
+
+Next Page
+Nästa sida
+
+Next Page\t->
+Nästa sida\t->
+
+No matches were found
+Inga träffar hittades
+
+No new version available.
+Ingen ny version tillgänglig.
+
+No result found around line %u in file %s
+Inget resultat hittades vid rad %u i filen %s
+
+No synchronization info at this position
+Synkroniseringsinformation saknas här
+
+OK
+OK
+
+Open
+Öppna
+
+Open in &Adobe Reader
+Öppna i Adobe &Reader
+
+PDF Document
+PDF-dokument
+
+PDF documents
+PDF-dokument
+
+Page number %u inexistant
+Sidnummer %u finns ej
+
+Page...\tCtrl-G
+Sida...\tCtrl-G
+
+Page:
+Sida:
+
+Please wait - rendering...
+Ett ögonblick - förbereder...
+
+Previous Page
+Föregående sida
+
+Previous Page\t<-
+Föregående sida\t<-
+
+Printing problem.
+Utskriftsproblem.
+
+Remember &opened files
+Kom ihåg öppnade &filer
+
+Rotate left\tCtrl-Shift--
+Rotera åt vänster\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Rotera åt höger\tCtrl-Shift-+
+
+Searching %d of %d...
+Söker %d av %d...
+
+Select content with Ctrl+left mouse button
+Markera med Ctrl + vänster musknapp
+
+Set inverse search command-line
+Sätt motsatt sök-kommandorad
+
+Show pages continuously
+Visa sidor fortlöpande
+
+Show the &bookmarks sidebar when available
+Visa &bokmärken när de finns
+
+Show toolbar
+Visa verktygsfält
+
+Single page
+Enkel sida
+
+Source file %s has no synchronization point
+Källfilen %s har ingen synkroniseringspunkt
+
+SumatraPDF Options
+SumatraPDF Inställningar
+
+SumatraPDF is your main PDF reader
+SumatraPDF är din valda PDF-läsare
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF ska nu vara din valda PDF-läsare
+
+Synchronization file cannot be opened
+Synkroniseringsfil kan ej öppnas
+
+Text documents
+Text-dokument
+
+Unknown source file (%s)
+Okänd källfil (%s)
+
+View
+Visa
+
+Warning
+Varning
+
+You have the latest version.
+Du har den senaste versionen.
+
+You have version %s
+Du har version %s
+
+Zoom
+Zoom
+
+Zoom In
+Zooma in
+
+Zoom Out
+Zooma ut
+
+Zoom factor
+Zoomfaktor
+
+[Changes detected; refreshing] %s
+[Ändringar detekterade; uppdaterar] %s
+

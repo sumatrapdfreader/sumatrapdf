@@ -1,0 +1,155 @@
+﻿# Translations for Polish (Polski) (pl) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: pl Polish (Polski)
+
+&About
+O programie
+
+&Close\tCtrl-W
+&Zamknij\tCtrl-W
+
+&File
+Plik
+
+&Go To
+Idź do
+
+&Help
+&Pomoc
+
+&Manual
+Instrukcja obslugi
+
+&Open\tCtrl-O
+Otwórz\tCtrl-O
+
+&Print\tCtrl-P
+Drukuj\tCtrl-P
+
+&Save as\tCtrl-S
+Zapisz jako\tCtrl-S
+
+&View
+&Widok
+
+&Visit website
+Strona www
+
+&Zoom
+Powiększenie
+
+About SumatraPDF
+O programie
+
+Act&ual Size\tCtrl-1
+Prawdziwy rozmiar\tCtrl-1
+
+Change language
+Zmien język (Change language)
+
+Continuous
+Ciągły
+
+Continuous facing
+Ciągły na przeciwko
+
+Contribute translation
+Pomóż przy translacji
+
+Could not open Printer
+Drukarka niedostępna.
+
+E&xit\tCtrl-Q
+Wyjdź\tCtrl-Q
+
+Error loading PDF file.
+Problem przy otwarzaniu pliku.
+
+Facing
+Na przeciwko
+
+Failed to save a file
+Problem przy zapisywaniu pliku.
+
+Find...\tCtrl-F
+Szukaj...\tCtrl-F
+
+Find:
+Szukaj:
+
+First Page\tHome
+Pierwsza strona\tHome
+
+Fit &Page\tCtrl-0
+Dopasuj do strony\tCtrl-0
+
+Fit Page
+Dopasuj do strony
+
+Fit Widt&h\tCtrl-2
+Dopasuj do szerokości\tCtrl-2
+
+Fit Width
+Dopasuj do szerokości
+
+Fullscreen\tCtrl-L
+Na cały ekran\tCtrl-L
+
+Last Page\tEnd
+Ostatnia strona\tEnd
+
+Make SumatraPDF my main PDF reader
+Zrób domyślnym programem dla PDF
+
+Next Page
+Następna strona
+
+Next Page\t->
+Następna strona\t->
+
+Open
+Otwórz
+
+Page...\tCtrl-G
+Strona...\tCtrl-G
+
+Page:
+Strona:
+
+Previous Page
+Poprzednia strona
+
+Previous Page\t<-
+Poprzednia strona\t<-
+
+Printing problem.
+Problem z drukowaniem.
+
+Rotate left\tCtrl-Shift--
+Obróć w lewo\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Obróć w prawo\tCtrl-Shift-+
+
+Show toolbar
+Pokaż toolbar
+
+Single page
+Jedna strona
+
+View
+Widok
+
+Warning
+Uwaga
+
+Zoom In
+Powiększ
+
+Zoom Out
+Pomniejsz
+

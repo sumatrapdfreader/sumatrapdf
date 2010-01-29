@@ -1,0 +1,152 @@
+﻿# Translations for Lithuanian (Lietuvių) (lt) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: lt Lithuanian (Lietuvių)
+
+&About
+Apie
+
+&Close\tCtrl-W
+&Užverti\tCtrl-W
+
+&File
+&Failas
+
+&Go To
+&Eiti
+
+&Help
+&Pagalba
+
+&Open\tCtrl-O
+&Atverti\tCtrl-O
+
+&Print\tCtrl-P
+&Spausdinti\tCtrl-P
+
+&Save as\tCtrl-S
+&Įrašyti kaip...\tCtrl-S
+
+&View
+Peržiūra
+
+&Visit website
+Aplankyti svetainę
+
+&Zoom
+Artinimas
+
+About SumatraPDF
+Apie SumatraPDF
+
+Act&ual Size\tCtrl-1
+Tikrasis dydis\tCtrl-1
+
+Bookmarks\tF12
+Žymės\tF12
+
+Continuous
+Besitęsiantis
+
+Continuous facing
+Besitęsiantis puslapiavimas
+
+Contribute translation
+Pasiklydę vertime
+
+Could not open Printer
+Nepavyko atverti spausdintuvo
+
+E&xit\tCtrl-Q
+Baigti darbą\tCtrl-Q
+
+Error loading PDF file.
+Klaida įkeliant PDF dokumentą
+
+Facing
+Puslapiavimas
+
+Failed to save a file
+Nepavyko išsaugoti failo
+
+Find Next
+Rasti ankstesnį
+
+Find Previous
+Rasti kitą
+
+Find...\tCtrl-F
+Ieškoti...\tCtrl-F
+
+Find:
+Ieškoti:
+
+First Page\tHome
+Pirmas puslapis\tHome
+
+Fit &Page\tCtrl-0
+Pritaikyti lange\tCtrl-0
+
+Fit Page
+Pritaikyti lange
+
+Fit Widt&h\tCtrl-2
+Pritaikyti plotį\tCtrl-2
+
+Fit Width
+Pritaikyti plotį
+
+Fullscreen\tCtrl-L
+Visame ekrane\tCtrl-L
+
+Last Page\tEnd
+Paskutinis puslapis\tEnd
+
+Make SumatraPDF my main PDF reader
+Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
+
+Next Page
+Kitas puslapis
+
+Next Page\t->
+Kitas puslapis\t->
+
+Open
+Atverti
+
+Page...\tCtrl-G
+Puslapis...\tCtrl-G
+
+Previous Page
+Ankstesnis puslapis
+
+Previous Page\t<-
+Ankstesnis puslapis\t<-
+
+Printing problem.
+Spausdinimo klaida
+
+Rotate left\tCtrl-Shift--
+Pasukti kairėn\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Pasukti dešinėn\tCtrl-Shift-+
+
+Show toolbar
+Rodyti įrankinę
+
+Single page
+Vienas puslapis
+
+View
+Peržiūra
+
+Zoom In
+Priartinti
+
+Zoom Out
+Sumažinti
+

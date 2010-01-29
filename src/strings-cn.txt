@@ -1,0 +1,365 @@
+﻿# Translations for Chinese Simplified (简体中文) (cn) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: cn Chinese Simplified (简体中文)
+
+&About
+关于(&A)
+
+&Check for new version
+检查是否有新版本(&C)
+
+&Close\tCtrl-W
+关闭(&C)\tCtrl-W
+
+&Custom Zoom...
+自定义缩放...
+
+&Don't ask me again
+以后不再询问
+
+&File
+文件(&F)
+
+&Find what:
+查找(&F):
+
+&Go To
+转到(&G)
+
+&Go to page:
+转到页面
+
+&Help
+帮助(&H)
+
+&Magnification:
+放大率(&M):
+
+&Manual
+使用手册(&M)
+
+&Match case
+大小写匹配(&M)
+
+&No
+否(&N)
+
+&No, thanks
+不，谢谢(&N)
+
+&Open\tCtrl-O
+打开(&O)\tCtrl-O
+
+&Options...
+选项(&O)...
+
+&Password:
+密码(&P)
+
+&Print\tCtrl-P
+打印(&P)\tCtrl-P
+
+&Remember these settings for each document
+为每一个文档记住这些设置(&R)
+
+&Save as\tCtrl-S
+另存为(&S)\tCtrl-S
+
+&Settings
+设置(&S)
+
+&Skip this version
+跳过此版本
+
+&View
+查看(&V)
+
+&Visit website
+访问网站(&V)
+
+&Yes
+是(&Y)
+
+&Zoom
+缩放(&Z)
+
+(of %d)
+(%d中的)
+
+About SumatraPDF
+关于 SumatraPDF
+
+Act&ual Size\tCtrl-1
+实际大小(&U)\tCtrl-1
+
+Advanced
+高级
+
+All files
+所有文件
+
+Associate with PDF files?
+是否关联 PDF 文件？
+
+Automatic
+自动
+
+Automatically check for &updates
+自动检查更新(&u)
+
+Bookmarks\tF12
+书签\tF12
+
+Cancel
+取消
+
+Cannot print this file
+不能打印此文件
+
+Cannot start inverse search command. Please check the command line in the settings.
+无法运行反向搜索命令。请检查设置中的命令行。
+
+Change language
+改变语言 (Change language)
+
+Continuous
+连续页面
+
+Continuous facing
+连续平铺页面
+
+Contribute translation
+提供翻译
+
+Copy Selection\tCtrl-C
+复制选择内容\tCtrl-C
+
+Could not open Printer
+无法打开打印机
+
+Couldn't initialize printer
+不能初始化打印机
+
+Couldn't render the page
+不能渲染该页面
+
+Default &Layout:
+默认布局(&L)
+
+Default &Zoom:
+默认缩放(&Z)
+
+Download
+下载
+
+E&xit\tCtrl-Q
+退出(&X)\tCtrl-Q
+
+Enter password
+输入密码
+
+Enter password for %s
+输入 %s 的密码
+
+Error loading PDF file.
+载入 PDF 文件时发生错误。
+
+Facing
+平铺页面
+
+Failed to save a file
+保存文件失败
+
+Find
+查找
+
+Find Next
+下一个
+
+Find Previous
+上一个
+
+Find...\tCtrl-F
+查找...\tCtrl-F
+
+Find:
+查找：
+
+First Page\tHome
+第一页\tHome
+
+Fit &Page\tCtrl-0
+适合页面(&P)\tCtrl-0
+
+Fit Page
+适合页面
+
+Fit Widt&h\tCtrl-2
+适合宽度(&H)\tCtrl-2
+
+Fit Width
+适合宽度
+
+Found text at page %d
+在第%d页找到文本
+
+Fullscreen\tCtrl-L
+全屏\tCtrl-L
+
+Go to page
+转到页面
+
+Hint: Use the F3 key for finding again
+提示：按F3键再次查找
+
+Last Page\tEnd
+最后一页\tEnd
+
+Main PDF reader can't be changed in portable mode
+便携模式不能改变默认 PDF 阅读器
+
+Make SumatraPDF default application for PDF files?
+将 SumatraPDF 设置为默认的 PDF 阅读器？
+
+Make SumatraPDF my main PDF reader
+将 SumatraPDF 设置为默认的 PDF 阅读器
+
+Match case
+大小写匹配
+
+New version %s is available. Download new version?
+发现新版本 %s。是否立即下载？
+
+New version available.
+发现新版本。
+
+Next Page
+下一页
+
+Next Page\t->
+下一页\t->
+
+No matches were found
+没有找到匹配项
+
+No new version available.
+未发现新版本。
+
+No result found around line %u in file %s
+第 %u 行附近未找到同步记录 (文件: %s)
+
+No synchronization info at this position
+此位置没有同步信息
+
+OK
+确定
+
+Open
+打开
+
+Open in &Adobe Reader
+在&Adobe Reader中打开
+
+PDF Document
+PDF 文档
+
+PDF documents
+PDF 文档
+
+Page number %u inexistant
+页号 %u 不存在
+
+Page...\tCtrl-G
+页面...\tCtrl-G
+
+Page:
+页数：
+
+Please wait - rendering...
+请耐心等待，正在渲染中...
+
+Previous Page
+上一页
+
+Previous Page\t<-
+上一页\t<-
+
+Printing problem.
+打印问题。
+
+Remember &opened files
+记住已打开的文件(&o)
+
+Rotate left\tCtrl-Shift--
+向左旋转\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+向右旋转\tCtrl-Shift-+
+
+Searching %d of %d...
+正在搜索第%d页/共%d页
+
+Select content with Ctrl+left mouse button
+使用Ctrl+鼠标左键选择内容
+
+Set inverse search command-line
+设置反向搜索命令行
+
+Show the &bookmarks sidebar when available
+若可用则显示书签侧边栏(&b)
+
+Show toolbar
+显示工具栏
+
+Single page
+单个页面
+
+Source file %s has no synchronization point
+源文件 %s 没有同步点
+
+SumatraPDF Options
+SumatraPDF 选项
+
+SumatraPDF is your main PDF reader
+SumatraPDF 是默认 PDF 阅读器
+
+SumatraPDF should now be your main PDF reader
+现在 SumatraPDF 应该是你的默认 PDF 阅读器了
+
+Synchronization file cannot be opened
+不能打开同步文件
+
+Unknown source file (%s)
+未知的源文件 (%s)
+
+View
+查看
+
+Warning
+警告
+
+You have the latest version.
+您的版本已经是最新版。
+
+You have version %s
+目前版本为 %s
+
+Zoom
+缩放
+
+Zoom In
+放大
+
+Zoom Out
+缩小
+
+Zoom factor
+缩放比例
+
+[Changes detected; refreshing] %s
+[检测到改动；刷新中] %s
+

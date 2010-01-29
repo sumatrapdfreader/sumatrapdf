@@ -1,0 +1,332 @@
+﻿# Translations for Belarusian (Беларуская) (by) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: by Belarusian (Беларуская)
+
+&About
+Аб праграме
+
+&Check for new version
+Праверыць наяўнасць новай версіі
+
+&Close\tCtrl-W
+Зачыніць\tCtrl-W
+
+&Don't ask me again
+Больш не пытаць
+
+&File
+Файл
+
+&Find what:
+&Узор:
+
+&Go To
+Перайсці да
+
+&Go to page:
+&Перайсці да старонкі
+
+&Help
+Дапамога
+
+&Match case
+&Улічваць рэгістр
+
+&No
+Нет
+
+&No, thanks
+Дзякуй, не
+
+&Open\tCtrl-O
+Адчыніць\tCtrl-O
+
+&Options...
+&Параметры...
+
+&Password:
+&Пароль:
+
+&Print\tCtrl-P
+Друкаваць\tCtrl-P
+
+&Remember these settings for each document
+Запомніць гэтыя параметры для &кожнага дакумента
+
+&Save as\tCtrl-S
+Захаваць як\tCtrl-S
+
+&Settings
+Налады
+
+&Skip this version
+Прапусціць гэту версію.
+
+&View
+Выгляд
+
+&Visit website
+Наведаць сайт
+
+&Yes
+Да
+
+&Zoom
+Памер
+
+(of %d)
+(з %d)
+
+About SumatraPDF
+Аб SumatraPDF
+
+Act&ual Size\tCtrl-1
+Рэальны памер\tCtrl-1
+
+Advanced
+Дадаткова
+
+All files
+Усе файлы
+
+Associate with PDF files?
+Асацыяваць з PDF-файламі?
+
+Automatically check for &updates
+&Аўтаматычная праверка абнаўленняў
+
+Bookmarks\tF12
+Закладкі\tF12
+
+Cancel
+Адмена
+
+Cannot print this file
+Не атрымалася раздрукаваць гэты файл
+
+Change language
+Змяніць мову (Change language)
+
+Continuous
+Працягла
+
+Continuous facing
+Працягла дзьве старонкі
+
+Contribute translation
+Дапамагчы з перакладам
+
+Could not open Printer
+Немагчыма адчыніць друкарку
+
+Couldn't render the page
+Не атрымаўся сфармаваць малюнак старонкі
+
+Default &Layout:
+&Кампаноўка па змаўчанні
+
+Default &Zoom:
+&Маштаб па змаўчанні
+
+Download
+Загрузка
+
+E&xit\tCtrl-Q
+Выйсце\tCtrl-Q
+
+Enter password
+Увядзіце пароль
+
+Enter password for %s
+Увядзіце пароль для %s
+
+Error loading PDF file.
+Памылка пры адчыненні файла.
+
+Facing
+Дзьве старонкі
+
+Failed to save a file
+Немагчыма захаваць файл
+
+Find
+Знайсці
+
+Find Next
+Найти следующее
+
+Find Previous
+Знайсці папярэдняе
+
+Find...\tCtrl-F
+Знайсці...\tCtrl-F
+
+Find:
+Знайсці:
+
+First Page\tHome
+Першая старонка\tHome
+
+Fit &Page\tCtrl-0
+Змясціць старонку\tCtrl-0
+
+Fit Page
+Змясціць старонку
+
+Fit Widt&h\tCtrl-2
+Змясціць па шырыне
+
+Fit Width
+Змясціць па шырыне
+
+Found text at page %d
+Тэкст знойдзены на стар. %d
+
+Fullscreen\tCtrl-L
+Поўны экран\tCtrl-L
+
+Go to page
+Перайсці на старонку
+
+Last Page\tEnd
+Апошняя старонка\tEnd
+
+Main PDF reader can't be changed in portable mode
+У мабільным рэжыме змяніць PDF-в'юер нельга
+
+Make SumatraPDF default application for PDF files?
+Зрабіць SumatraPDF стандартнай праграмай прагляду PDF-файлаў?
+
+Make SumatraPDF my main PDF reader
+Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
+
+Match case
+Улічваць рэгістр
+
+New version %s is available. Download new version?
+Даступная новая версія: %s. Загрузіць яе?
+
+New version available.
+Даступная новая версія.
+
+Next Page
+Наступная старонка
+
+Next Page\t->
+Наступная старонка\t->
+
+No matches were found
+Узор не знойдзены
+
+No new version available.
+Абнаўленняў не выяўлена.
+
+No result found around line %u in file %s
+Вынік, які адпавядае радку %u у файле %s, не знойдзены
+
+No synchronization info at this position
+У гэтай пазіцыі адсутнічае інфармацыя для сінхранізацыі
+
+OK
+ДА
+
+Open
+Адчыніць
+
+Open in &Adobe Reader
+Адкрыць у &Adobe Reader
+
+PDF Document
+PDF-дaкумент
+
+PDF documents
+PDF-дакументы
+
+Page number %u inexistant
+Старонка %u не існуе
+
+Page...\tCtrl-G
+Старонка...\tCtrl-G
+
+Page:
+Старонка:
+
+Please wait - rendering...
+Пачакайце - фармуецца малюнак...
+
+Previous Page
+Папярэдняя старонка
+
+Previous Page\t<-
+Папярэдняя старонка\t<-
+
+Printing problem.
+Памылка з друкаваннем.
+
+Remember &opened files
+&Запомніць адкрытыя файлы
+
+Rotate left\tCtrl-Shift--
+Павярнуць налева\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Павярнуць направа\tCtrl-Shift-+
+
+Searching %d of %d...
+Апрацоўка старонкі %d з %d...
+
+Set inverse search command-line
+Задаць каманду зваротнага пошуку
+
+Show the &bookmarks sidebar when available
+Паказваць панэль &закладак (пры магчымасці)
+
+Show toolbar
+Паказ панэлі прылад
+
+Single page
+Адна старонка
+
+Source file %s has no synchronization point
+Адсутнічае кропка сінхранізацыі ў зыходным файле %s
+
+SumatraPDF Options
+Параметры SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF асацыявана з файламі PDF
+
+SumatraPDF should now be your main PDF reader
+Зараз SumatraPDF асацыявана з файламі PDF
+
+Synchronization file cannot be opened
+Не атрымалася адкрыць файл з інфармацыяй для сінхранізацыі
+
+Unknown source file (%s)
+Невядомы зыходны файл (%s)
+
+View
+Выгляд
+
+Warning
+Папярэджанне
+
+You have the latest version.
+Вы выкарыстоўваеце апошнюю версію.
+
+You have version %s
+Вы выкарыстоўваеце версію %s
+
+Zoom In
+Павялічыць
+
+Zoom Out
+Паменьшыць
+
+[Changes detected; refreshing] %s
+[Выяўлены змены; адбываецца абнаўленне] %s
+

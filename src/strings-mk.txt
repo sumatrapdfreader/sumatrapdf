@@ -1,0 +1,365 @@
+﻿# Translations for Macedonian (Македонски) (mk) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: mk Macedonian (Македонски)
+
+&About
+&За SumatraPDF...
+
+&Check for new version
+&Провери за нова верзија
+
+&Close\tCtrl-W
+&Затвори\tCtrl-W
+
+&Custom Zoom...
+&Зумирање по избор...
+
+&Don't ask me again
+Не ме прашувај повторно
+
+&File
+&Датотека
+
+&Find what:
+&Најди што:
+
+&Go To
+П&ојди на
+
+&Go to page:
+&Појди на страница:
+
+&Help
+&Помош
+
+&Magnification:
+&Зголемување
+
+&Manual
+Прирачник за употреба
+
+&Match case
+&Разликувај мали и големи букви
+
+&No
+&Не
+
+&No, thanks
+&Не, благодарам
+
+&Open\tCtrl-O
+&Отвори\tCtrl-O
+
+&Options...
+&Опции...
+
+&Password:
+&Лозинка:
+
+&Print\tCtrl-P
+&Печати\tCtrl-P
+
+&Remember these settings for each document
+&Запомни ги овие нагодувања за секој документ
+
+&Save as\tCtrl-S
+&Зачувај како...\tCtrl-S
+
+&Settings
+&Нагодувања
+
+&Skip this version
+Прескокни ја оваа верзија
+
+&View
+&Поглед
+
+&Visit website
+Посети веб-сајт
+
+&Yes
+&Да
+
+&Zoom
+&Зумирање
+
+(of %d)
+(од %d)
+
+About SumatraPDF
+За SumatraPDF
+
+Act&ual Size\tCtrl-1
+Ре&ална големина\tCtrl-1
+
+Advanced
+Напредно
+
+All files
+Сите датотеки
+
+Associate with PDF files?
+Да управувам со PDF датотеки?
+
+Automatic
+Автоматски
+
+Automatically check for &updates
+Проверувај за &надградби автоматски
+
+Bookmarks\tF12
+Обележувачи\tF12
+
+Cancel
+Откажи
+
+Cannot print this file
+Не можам да ја печатам оваа датотека
+
+Cannot start inverse search command. Please check the command line in the settings.
+Не можам да започнам со обратното пребарување. Провери ја командната линија во нагодувањата.
+
+Change language
+Смени јазик (Change language)
+
+Continuous
+Непрекинат приказ
+
+Continuous facing
+Непрекинат приказ со две страници
+
+Contribute translation
+Учествувај во преведувањето на оваа апликација
+
+Copy Selection\tCtrl-C
+Копирај селекција\tCtrl-C
+
+Could not open Printer
+Пристапот до печатачот не е можен
+
+Couldn't initialize printer
+Не можам да го подготвам печатачот
+
+Couldn't render the page
+Не можам да ја прикажам страницата
+
+Default &Layout:
+Основен &изглед:
+
+Default &Zoom:
+Основно &зумирање:
+
+Download
+Преземи
+
+E&xit\tCtrl-Q
+&Излез\tCtrl-Q
+
+Enter password
+Внеси лозинка
+
+Enter password for %s
+Внеси лозинка за %s
+
+Error loading PDF file.
+Грешка при вчитување на PDF документот.
+
+Facing
+Две страници
+
+Failed to save a file
+Зачувување на PDF документот не успеа
+
+Find
+Најди
+
+Find Next
+Најди следно
+
+Find Previous
+Најди претходно
+
+Find...\tCtrl-F
+Најди...\tCtrl-F
+
+Find:
+Најди:
+
+First Page\tHome
+Прва страница\tHome
+
+Fit &Page\tCtrl-0
+Прилагоди на &страница\tCtrl-0
+
+Fit Page
+Прилагоди на страница
+
+Fit Widt&h\tCtrl-2
+Прилагоди на &ширина\tCtrl-2
+
+Fit Width
+Прилагоди на ширина
+
+Found text at page %d
+Пронајдов текст на страница %d
+
+Fullscreen\tCtrl-L
+На цел екран\tCtrl-L
+
+Go to page
+Појди на страница
+
+Hint: Use the F3 key for finding again
+Совет: За повторно пребарување користи F3 од тастатурата
+
+Last Page\tEnd
+Последна страница\tEnd
+
+Main PDF reader can't be changed in portable mode
+Основниот PDF читач не може да се промени во мобилен режим на работа
+
+Make SumatraPDF default application for PDF files?
+Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
+
+Make SumatraPDF my main PDF reader
+Направи го SumatraPDF основен PDF читач
+
+Match case
+Разликувај мали и големи букви
+
+New version %s is available. Download new version?
+Нова верзија %s е достапна. Сакаш да ја преземеш?
+
+New version available.
+Достапна е нова верзија.
+
+Next Page
+Следна страница
+
+Next Page\t->
+Следна страница\t->
+
+No matches were found
+Не се пронајдени совпаѓања
+
+No new version available.
+Нема понова верзија.
+
+No result found around line %u in file %s
+Не најдов резултати околу линијата %u во датотеката %s
+
+No synchronization info at this position
+Нема информации за синхронизација на оваа позиција
+
+OK
+Во ред
+
+Open
+Отвори
+
+Open in &Adobe Reader
+Отвори со &Adobe Reader
+
+PDF Document
+PDF документ
+
+PDF documents
+PDF документи
+
+Page number %u inexistant
+Страница со број %u не постои
+
+Page...\tCtrl-G
+Страница...\tCtrl-G
+
+Page:
+Страница:
+
+Please wait - rendering...
+Те молам почекај - создавам приказ...
+
+Previous Page
+Претходна страница
+
+Previous Page\t<-
+Претходна страница\t<-
+
+Printing problem.
+Проблем при печатење.
+
+Remember &opened files
+Запомни ги &отворените датотеки
+
+Rotate left\tCtrl-Shift--
+Ротирај на лево\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Ротирај на десно\tCtrl-Shift-+
+
+Searching %d of %d...
+Пребарувам %d од %d страници...
+
+Select content with Ctrl+left mouse button
+Селектирај со Ctrl и левото копче на глувчето
+
+Set inverse search command-line
+Активирај инверзно пребарување
+
+Show the &bookmarks sidebar when available
+Прикажи го алатникот со &обележувачи кога е достапен
+
+Show toolbar
+Прикажи алатник
+
+Single page
+Една страница
+
+Source file %s has no synchronization point
+Изворната датотека %s нема синхронизациска точка
+
+SumatraPDF Options
+Опции на SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF е твојот основен PDF читач
+
+SumatraPDF should now be your main PDF reader
+Сега SumatraPDF би требало да е твојот основен PDF читач
+
+Synchronization file cannot be opened
+Синхронизациската датотека не може да се отвори
+
+Unknown source file (%s)
+Непозната изворна датотека (%s)
+
+View
+Поглед
+
+Warning
+Предупредување
+
+You have the latest version.
+Ја имаш најновата верзија.
+
+You have version %s
+Ја имаш верзијата %s
+
+Zoom
+Зумирање
+
+Zoom In
+Зголеми
+
+Zoom Out
+Намали
+
+Zoom factor
+Коефициент на зумирање
+
+[Changes detected; refreshing] %s
+[Забележани се промени; освежувам...] %s
+
