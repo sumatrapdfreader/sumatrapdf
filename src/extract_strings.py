@@ -6,7 +6,8 @@ import sys
 
 """
 TODO:
- * preserve contributors
+ * generate and upload to s3 *.js files with info about language translations
+   (lang name, lang id, contributors, number of untranslated strings)
 
 Extracts translatable strings from *.c and *.h files, dumps statistics
 about untranslated strings to stdout and adds untranslated strings as
@@ -131,6 +132,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert lang_iso == lang_code, "lang code ('%s') in file '%s' must match code in file name ('%s')" % (lang_iso, file_path, lang_code)
             assert lang_iso not in langs_dict
             langs_dict[lang_iso] = lang_name
+            seen_lang = True
             continue
         if is_contributor_line(l):
             assert seen_lang
@@ -142,6 +144,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert curr_trans is None, "curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path))
             curr_trans = l
         #print l
+    contributors_dict[lang_code] = contributors
     fo.close()
     #print("Parsing '%s', %d translations" % (os.path.basename(file_path), len(all_origs)))
 

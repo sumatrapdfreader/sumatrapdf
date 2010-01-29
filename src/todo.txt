@@ -1,9 +1,9 @@
 Things to for 1.1 release:
+* generate and upload to s3 *.js files with info about language translations
+   (lang name, lang id, contributors, number of untranslated strings)
 * document info window showing basic information about the file
 * a button to switch mouse between dragging and text selection, like in Adobe Reader
-  and FoxIt. The current way with Ctrl is not discoverable enough.
-* split translations into one-file-per-language scheme, to make
-  updating translations easier for people and easier merging
+  and FoxIt. The current way with Ctrl is not discoverable enough
 * finish new language detection code
 
 Maybe for 1.1:
