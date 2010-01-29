@@ -64,7 +64,7 @@ def assert_unique_translation(curr_trans, lang, trans, line_no):
 # [language, text translated into this language]
 # 'langs' is an array of language definition tuples. First item in a tuple
 # is language iso code (e.g. "en" or "sp-rs" and second is language name
-def load_strings_file(file_name):
+def load_strings_file_old(file_name):
     strings_dict = {}
     langs = []
     lang_codes = {}
@@ -215,7 +215,7 @@ def dump_missing_for_language(strings_dict, lang):
 
 def main():
     import sys
-    (strings_dict, langs) = load_strings_file(STRINGS_FILE)
+    (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
         dump_missing_per_language(strings_dict)

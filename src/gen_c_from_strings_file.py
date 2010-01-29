@@ -1,4 +1,4 @@
-from extract_strings import load_strings_file, STRINGS_FILE, get_lang_list
+from extract_strings import load_strings_file_old, STRINGS_FILE, get_lang_list
 
 ### file templates ###
 
@@ -193,7 +193,7 @@ def gen_code(strings_dict, langs, h_file_name, c_file_name):
     gen_lang_menu_def_h(langs, "LangMenuDef.h")
 
 def main():
-    (strings_dict, langs) = load_strings_file(STRINGS_FILE)
+    (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
     h_file_name = "translations_txt.h"
     c_file_name = "translations_txt.c"
     gen_code(strings_dict, langs, h_file_name, c_file_name)

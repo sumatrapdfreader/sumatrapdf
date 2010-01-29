@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from extract_strings import load_strings_file
+from extract_strings import load_strings_file_old
 import codecs
 
 """
@@ -52,7 +52,7 @@ def gen_strings_for_lang(lang_id, lang_name, contributors, translations):
     print("%d translations in %s" % (len(trans), file_name))
 
 def main():
-    (strings_dict, langs) = load_strings_file(STRINGS_FILE)
+    (strings_dict, langs) = load_strings_file_old(STRINGS_FILE)
     translations_for_langs = gen_translations_for_languages(strings_dict)
     for (lang_id, lang_name) in langs:
         if 'en' == lang_id: continue
