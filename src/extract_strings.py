@@ -68,8 +68,8 @@ def parse_lang_line(l):
 
 def parse_contrib_line(l):
     assert is_contributor_line(l)
-    parts = l.split(":")
-    assert 2 == len(parts)
+    parts = l.split(":", 1)
+    assert 2 == len(parts), "line: '%s'" % l
     return parts[1].strip()
 
 def report_error(line_no, line, err_txt):
