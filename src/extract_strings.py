@@ -10,6 +10,9 @@ STRINGS_FILE = "strings.txt"
 SCRIPT_PATH = os.path.realpath(".")
 STRINGS_PATH = SCRIPT_PATH
 
+# strings that don't need to be translated
+TRANSLATION_EXCEPTIONS = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%"]
+
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
 
 def state_name(state):
@@ -256,7 +259,7 @@ def gen_diff(strings_dict, strings):
 
 def dump_diffs(strings_dict, strings):
     strings_all = gen_diff(strings_dict, strings)
-    only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C]
+    only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C and s not in TRANSLATION_EXCEPTIONS]
     #only_in_c = ["'" + s + "'" for s in only_in_c]
     if only_in_c:
         print "\nOnly in C code:"
@@ -269,15 +272,12 @@ def dump_diffs(strings_dict, strings):
 def langs_sort_func(x,y):
     return cmp(len(y[1]),len(x[1]))
 
-# strings that don't need to be translated
-translation_exceptions = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%"]
-
 def dump_missing_per_language(strings_dict, dump_strings=False):
     untranslated_dict = {}
     for lang in get_lang_list(strings_dict):
         untranslated = []
         for txt in strings_dict.keys():
-            if txt in translation_exceptions: continue
+            if txt in TRANSLATION_EXCEPTIONS: continue
             translations = strings_dict[txt]
             found_translation = False
             for tr in translations:
@@ -300,7 +300,7 @@ def dump_missing_for_language(strings_dict, lang):
     print "Untranslated strings for '%s':" % lang
     for k in strings_dict:
         is_translated = len([item[1] for item in strings_dict[k] if item[0] == lang]) == 1
-        if not is_translated and not k in translation_exceptions:
+        if not is_translated and k not in TRANSLATION_EXCEPTIONS:
             print k
 
 def main2():
@@ -322,5 +322,5 @@ def main():
         dump_missing_for_language(strings_dict, sys.argv[1])
 
 if __name__ == "__main__":
-    main()
+    main2()
     #main2()
