@@ -6,6 +6,8 @@
 
 Lang: vn Vietnamese (Việt Nam)
 
+Contributor: Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong)
+
 &About
 &Giới thiệu
 

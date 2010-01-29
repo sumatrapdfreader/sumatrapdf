@@ -6,6 +6,8 @@
 
 Lang: th Thai (ภาษาไทย)
 
+Contributor: Uthen Phutneam
+
 &About
 เกี่ยวกับ
 

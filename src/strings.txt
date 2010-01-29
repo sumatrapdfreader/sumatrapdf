@@ -99,7 +99,7 @@
 # Igor G. Olaizola - Basque
 # Mark Angelo F. Racca - Tagalog
 # Vicent Adam - Valencian
-# Brian Musarurwa
+# Brian Musarurwa - Shona language
 # Welsh:
 #   Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
 #   Glenn Wall

@@ -6,6 +6,9 @@
 
 Lang: no Norwegian (Norsk)
 
+Contributor: Jon Ivar F. Omland
+Contributor: Kjell A. A. Holm
+
 &About
 &Om
 

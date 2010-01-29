@@ -6,6 +6,9 @@
 
 Lang: hu Hungarian (Magyar)
 
+Contributor: Richard Magyar (magyar_richard@yahoo.com)
+Contributor: Lázár Viktor
+
 &About
 Név&jegy
 

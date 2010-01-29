@@ -6,6 +6,8 @@
 
 Lang: eu Basque (Euskara)
 
+Contributor: Igor G. Olaizola
+
 &About
 Ho&Ni buruz...
 

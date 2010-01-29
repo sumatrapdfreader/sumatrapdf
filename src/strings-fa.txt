@@ -6,6 +6,9 @@
 
 Lang: fa Persian (فارسی)
 
+Contributor: Adham Beyki (odinay@gmail.com)
+Contributor: Mardi Az Pansad Dastgah Artesh
+
 &About
 درباره
 

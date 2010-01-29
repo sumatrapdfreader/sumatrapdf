@@ -6,6 +6,8 @@
 
 Lang: fi Finnish (Suomi)
 
+Contributor: Pekka Halmela
+
 &About
 &Tietoja
 

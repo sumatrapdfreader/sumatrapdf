@@ -6,6 +6,8 @@
 
 Lang: uk Ukrainian (Українська)
 
+Contributor: Daniel Bohdan
+
 &About
 П&ро програму...
 

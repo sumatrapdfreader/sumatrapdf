@@ -6,6 +6,8 @@
 
 Lang: ca Catalan (Català)
 
+Contributor: Joan Montané
+
 &About
 &Quant a...
 

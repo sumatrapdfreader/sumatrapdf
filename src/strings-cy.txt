@@ -6,6 +6,9 @@
 
 Lang: cy Welsh (Cymraeg)
 
+Contributor: Rhoslyn Prys Cymraeg/Welsh (post@meddal.com)
+Contributor: Glenn Wall
+
 &About
 &Ynghylch...
 

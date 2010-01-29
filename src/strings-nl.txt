@@ -6,6 +6,10 @@
 
 Lang: nl Dutch (Nederlands)
 
+Contributor: Barry Haveman (http://webstek.info) 
+Contributor: Kristof Bal 
+Contributor: Stephan Paternotte
+
 &About
 &Over
 

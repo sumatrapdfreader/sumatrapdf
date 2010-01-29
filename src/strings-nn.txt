@@ -6,6 +6,8 @@
 
 Lang: nn Norwegian Neo-Norwegian (Norsk nynorsk)
 
+Contributor: Jon Stødle
+
 &About
 &Om
 

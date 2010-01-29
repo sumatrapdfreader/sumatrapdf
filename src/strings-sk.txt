@@ -6,6 +6,9 @@
 
 Lang: sk Slovak (Slovenčina)
 
+Contributor: Radoslav Zelenák (radoslav.zelenak@elkop.sk)
+Contributor: Bernard Holý - TREVERT
+
 &About
 &O programe...
 

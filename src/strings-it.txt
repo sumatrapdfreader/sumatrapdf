@@ -6,6 +6,10 @@
 
 Lang: it Italian (Italiano)
 
+Contributor: Angelo Contardi
+Contributor: iBlawgger
+Contributor: Alessandro Visentin
+
 &About
 &Informazioni
 

@@ -6,6 +6,9 @@
 
 Lang: fr French (Français)
 
+Contributor: fiuzzy
+Contributor: laclasse
+
 &About
 A propos
 

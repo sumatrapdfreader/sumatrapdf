@@ -6,6 +6,10 @@
 
 Lang: sv Swedish (Svenska)
 
+Contributor: Linus Persson
+Contributor: Cecilia B
+Contributor: Sebastian Rasmussen
+
 &About
 &Om
 

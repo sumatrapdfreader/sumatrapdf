@@ -6,6 +6,8 @@
 
 Lang: af Afrikaans
 
+Contributor: Pieter Kotzé
+
 &About
 &Omtrent
 

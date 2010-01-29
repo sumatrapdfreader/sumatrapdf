@@ -6,6 +6,8 @@
 
 Lang: tl Tagalog (Tagalog)
 
+Contributor: Mark Angelo F. Racca
+
 &About
 Tungkol S&a...
 

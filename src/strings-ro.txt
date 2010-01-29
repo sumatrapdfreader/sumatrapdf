@@ -6,6 +6,8 @@
 
 Lang: ro Romanian (Română)
 
+Contributor: Elly Câmpeanu
+
 &About
 &Despre
 

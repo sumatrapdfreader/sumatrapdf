@@ -6,6 +6,9 @@
 
 Lang: by Belarusian (Беларуская)
 
+Contributor: Яўген Змачынскі
+Contributor: Drive DRKA (drka2003@mail.ru)
+
 &About
 Аб праграме
 

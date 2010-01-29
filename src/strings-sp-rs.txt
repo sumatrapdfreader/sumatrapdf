@@ -6,6 +6,9 @@
 
 Lang: sp-rs Serbian (Latin)
 
+Contributor: milanso (milanso@gmail.com)
+Contributor: Slavko Majski (shobra@gmail.com)
+
 &About
 &O programu
 

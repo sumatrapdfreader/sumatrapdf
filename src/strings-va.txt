@@ -6,6 +6,8 @@
 
 Lang: va Valencian (Valencià)
 
+Contributor: Vicent Adam
+
 &About
 Al voltant de
 

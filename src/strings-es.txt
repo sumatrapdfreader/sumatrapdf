@@ -6,6 +6,9 @@
 
 Lang: es Spanish (Español)
 
+Contributor: Jose Virgili
+Contributor: LinoSP [http://reactos.wordpress.com]
+
 &About
 &Acerca de...
 

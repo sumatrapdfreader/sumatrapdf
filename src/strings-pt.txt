@@ -6,6 +6,9 @@
 
 Lang: pt Portuguese - Portugal (Português)
 
+Contributor: Ricardo Santos[bogas] (http://www.meta-morf.pt.vu)
+Contributor: Bruno Rodrigues
+
 &About
 &Sobre
 

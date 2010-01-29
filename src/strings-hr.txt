@@ -6,6 +6,8 @@
 
 Lang: hr Croatian (Hrvatski)
 
+Contributor: Krunoslav Tomorad (cygnus77@gmail.com)
+
 &About
 &O programu...
 

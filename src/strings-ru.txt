@@ -6,6 +6,10 @@
 
 Lang: ru Russian (Русский)
 
+Contributor: Zero-8
+Contributor: Dmitry Yerokhin (erodim@mail.ru)
+Contributor: Victor Kozyakin
+
 &About
 О программе...
 

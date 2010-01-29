@@ -6,6 +6,8 @@
 
 Lang: ml Malayalam (മലയാളം)
 
+Contributor: Maxin B. John (maxinbjohn@gmail.com)
+
 &About
 പറ്റി
 

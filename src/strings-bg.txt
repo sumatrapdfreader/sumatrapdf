@@ -6,6 +6,8 @@
 
 Lang: bg Bulgarian (Български)
 
+Contributor: Христо Бенев (http://hbcom.info)
+
 &About
 Относно програмата...
 

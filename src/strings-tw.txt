@@ -6,6 +6,8 @@
 
 Lang: tw Chinese Traditional (繁體中文)
 
+Contributor: FreeXD (http://blog.ecstart.com/?47979)
+
 &About
 關於(&A)
 

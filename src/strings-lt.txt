@@ -6,6 +6,8 @@
 
 Lang: lt Lithuanian (Lietuvių)
 
+Contributor: Viktoras Jakovlevas
+
 &About
 Apie
 

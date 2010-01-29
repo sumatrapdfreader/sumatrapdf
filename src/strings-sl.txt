@@ -6,6 +6,9 @@
 
 Lang: sl Slovenian (Slovenščina)
 
+Contributor: Janez Vehovec
+Contributor: Martin Srebotnjak
+
 &About
 &O programu ...
 

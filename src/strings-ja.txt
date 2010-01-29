@@ -6,6 +6,8 @@
 
 Lang: ja Japanese (日本語)
 
+Contributor: Nardog (nardog.takoweb.com)
+
 &About
 バージョン情報(&A)
 

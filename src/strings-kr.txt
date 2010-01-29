@@ -6,6 +6,9 @@
 
 Lang: kr Korean (한국어)
 
+Contributor: Hong Seung-geol (hsgno5@hanmir.com)
+Contributor: Karnes Kim (karnes@gmail.com)
+
 &About
 정보(&A)...
 

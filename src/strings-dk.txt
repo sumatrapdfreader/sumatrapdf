@@ -6,6 +6,8 @@
 
 Lang: dk Danish (Dansk)
 
+Contributor: Lars J. Helbo
+
 &About
 &Om
 

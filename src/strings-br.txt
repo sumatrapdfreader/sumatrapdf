@@ -6,6 +6,8 @@
 
 Lang: br Portuguese - Brazil (Português)
 
+Contributor: Francisco Fuchs (pontocinza.blogspot.com)
+
 &About
 S&obre o SumatraPDF
 

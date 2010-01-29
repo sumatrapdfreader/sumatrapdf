@@ -6,6 +6,8 @@
 
 Lang: sn Shona (Shona)
 
+Contributor: Brian Musarurwa
+
 &About
 &Nezve...
 

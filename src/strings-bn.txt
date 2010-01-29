@@ -6,6 +6,9 @@
 
 Lang: bn Bengali (বাংলা)
 
+Contributor: Soham Chatterjee (soham.chatterjee@gmail.com)
+Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
+
 &About
 &আমাদের সম্পর্কে
 

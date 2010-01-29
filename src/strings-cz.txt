@@ -6,6 +6,9 @@
 
 Lang: cz Czech (Čeština)
 
+Contributor: Kristian Vrhel
+Contributor: Jiri Saneistr
+
 &About
 &O programu
 

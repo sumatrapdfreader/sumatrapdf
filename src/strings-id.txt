@@ -6,6 +6,8 @@
 
 Lang: id Indonesian (Bahasa Indonesia)
 
+Contributor: Yudi Wibisono (http://yudiwbs.wordpress.com)
+
 &About
 &Tentang
 

@@ -6,6 +6,8 @@
 
 Lang: mk Macedonian (Македонски)
 
+Contributor: Гоце Митевски (http://www.nicer2.com)
+
 &About
 &За SumatraPDF...
 

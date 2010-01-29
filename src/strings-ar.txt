@@ -6,6 +6,9 @@
 
 Lang: ar Arabic (الْعَرَبيّة)
 
+Contributor: Mohammed Al-Foulad (http://www.mbsee.info)
+Contributor: Boubker Talibi
+
 &About
 حول البرنامج
 

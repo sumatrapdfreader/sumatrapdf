@@ -6,6 +6,9 @@
 
 Lang: sr-rs Serbian (Cyrillic)
 
+Contributor: Горан Обрадовић
+Contributor: Slavko Majski (shobra@gmail.com)
+
 &About
 О програму
 

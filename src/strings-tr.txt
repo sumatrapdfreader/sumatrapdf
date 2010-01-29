@@ -6,6 +6,8 @@
 
 Lang: tr Turkish (Türkçe)
 
+Contributor: Hakan ATAÇ
+
 &About
 &Hakkında
 

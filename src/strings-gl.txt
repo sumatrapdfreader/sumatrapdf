@@ -6,6 +6,8 @@
 
 Lang: gl Galician (Galego)
 
+Contributor: Xulio Gómez Díaz
+
 &About
 Arred&or de
 

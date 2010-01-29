@@ -6,6 +6,8 @@
 
 Lang: cn Chinese Simplified (简体中文)
 
+Contributor: WangKing (http://wkismet.spaces.live.com)
+
 &About
 关于(&A)
 

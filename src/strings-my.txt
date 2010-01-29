@@ -6,6 +6,8 @@
 
 Lang: my Malaysian (Bahasa Melayu)
 
+Contributor: Masley b. Mastil
+
 &About
 &Mengenai
 

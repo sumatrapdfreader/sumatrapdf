@@ -6,6 +6,10 @@
 
 Lang: de German (Deutsch)
 
+Contributor: Lars Wohlfahrt (www.eviltux.de)
+Contributor: Christopher Amann
+Contributor: Simon Bünzli (zeniko@gmail.com)
+
 &About
 &Über SumatraPDF
 

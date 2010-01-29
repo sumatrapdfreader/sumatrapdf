@@ -6,6 +6,9 @@
 
 Lang: gr Greek (Ελληνικά)
 
+Contributor: Giorgos Dimopoulos (geodimo1985@gmail.com)
+Contributor: George Georgiou (geonetor@yahoo.gr)
+
 &About
 &Σχετικά...
 

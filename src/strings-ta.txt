@@ -6,6 +6,8 @@
 
 Lang: ta Tamil (தமிழ்)
 
+Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
+
 &About
 பற்றி
 

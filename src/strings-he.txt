@@ -6,6 +6,8 @@
 
 Lang: he Hebrew (עברית)
 
+Contributor: Eyal Berman
+
 &About
 אודות
 

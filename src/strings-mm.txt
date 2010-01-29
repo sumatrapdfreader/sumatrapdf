@@ -6,6 +6,8 @@
 
 Lang: mm Burmese (ဗမာ စာ)
 
+Contributor: Mohammed Ottama
+
 &About
 အကြောင်း
 
