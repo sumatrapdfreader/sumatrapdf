@@ -339,3 +339,21 @@ Umanji
 [Changes detected; refreshing] %s
 [Dogodila se promjena - osvježavam] %s
 
+# Untranslated:
+#&Custom Zoom...
+#&Magnification:
+#Automatic
+#Back\tAlt+<-
+#Book view
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Forward\tAlt+->
+#No synchronization file found
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Text documents
+#Zoom
+#Zoom factor
+

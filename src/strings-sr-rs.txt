@@ -372,3 +372,10 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Промене су примећене; освежавам] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Book view
+#Continuous book view
+#Forward\tAlt+->
+#Send by &email...
+

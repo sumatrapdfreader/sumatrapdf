@@ -384,3 +384,6 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Обнаружены изменения; обновление...] %s
 
+# Untranslated:
+#OK
+

@@ -363,3 +363,13 @@ Zoom factor
 [Changes detected; refreshing] %s
 [检测到改动；刷新中] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Book view
+#Continuous book view
+#Forward\tAlt+->
+#No synchronization file found
+#Send by &email...
+#Show pages continuously
+#Text documents
+

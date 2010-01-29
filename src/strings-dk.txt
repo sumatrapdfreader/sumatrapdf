@@ -132,3 +132,90 @@ Zoom ind
 Zoom Out
 Zoom ud
 
+# Untranslated:
+#&Check for new version
+#&Custom Zoom...
+#&Don't ask me again
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Manual
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Skip this version
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Associate with PDF files?
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+<-
+#Book view
+#Bookmarks\tF12
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Change language
+#Continuous book view
+#Contribute translation
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Default &Layout:
+#Default &Zoom:
+#Download
+#Enter password
+#Enter password for %s
+#Find
+#Find Next
+#Find Previous
+#Find...\tCtrl-F
+#Find:
+#Forward\tAlt+->
+#Found text at page %d
+#Fullscreen\tCtrl-L
+#Go to page
+#Hint: Use the F3 key for finding again
+#Main PDF reader can't be changed in portable mode
+#Make SumatraPDF default application for PDF files?
+#Match case
+#New version %s is available. Download new version?
+#New version available.
+#No matches were found
+#No new version available.
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#OK
+#Open in &Adobe Reader
+#PDF Document
+#PDF documents
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Unknown source file (%s)
+#Warning
+#You have the latest version.
+#You have version %s
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

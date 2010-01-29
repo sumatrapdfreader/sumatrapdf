@@ -204,3 +204,66 @@ Zoom In
 Zoom Out
 ਛੋਟਾ ਕਰੋ
 
+# Untranslated:
+#&Custom Zoom...
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+<-
+#Book view
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Default &Layout:
+#Default &Zoom:
+#Download
+#Find
+#Forward\tAlt+->
+#Found text at page %d
+#Hint: Use the F3 key for finding again
+#Main PDF reader can't be changed in portable mode
+#No matches were found
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#OK
+#Open in &Adobe Reader
+#PDF Document
+#PDF documents
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Unknown source file (%s)
+#Warning
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

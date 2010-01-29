@@ -378,3 +378,8 @@ Ffactor Chwyddo
 [Changes detected; refreshing] %s
 [Newidiadau wedi eu canfod; adnewyddu]
 
+# Untranslated:
+#Back\tAlt+<-
+#Forward\tAlt+->
+#Send by &email...
+

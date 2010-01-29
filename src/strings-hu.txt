@@ -354,3 +354,16 @@ Nagyítás mértéke
 [Changes detected; refreshing] %s
 [a file megváltozott; frissítés] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Book view
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Forward\tAlt+->
+#No result found around line %u in file %s
+#No synchronization file found
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#Text documents
+

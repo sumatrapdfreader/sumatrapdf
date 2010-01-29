@@ -375,3 +375,9 @@ Proporción de Zoom
 [Changes detected; refreshing] %s
 [Modificaciones detectadas; actualizando] %s
 
+# Untranslated:
+#Book view
+#Continuous book view
+#Send by &email...
+#Show pages continuously
+

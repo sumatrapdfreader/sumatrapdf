@@ -309,3 +309,31 @@ Měřítko přiblížení
 [Changes detected; refreshing] %s
 Zjištěna změna; obnovuji] %s
 
+# Untranslated:
+#&Manual
+#&Skip this version
+#Associate with PDF files?
+#Automatic
+#Book view
+#Bookmarks\tF12
+#Continuous book view
+#Default &Zoom:
+#Enter password
+#Enter password for %s
+#Find Next
+#Find Previous
+#Find...\tCtrl-F
+#Find:
+#Fullscreen\tCtrl-L
+#Go to page
+#Make SumatraPDF default application for PDF files?
+#Match case
+#New version %s is available. Download new version?
+#New version available.
+#No new version available.
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#You have the latest version.
+#You have version %s
+

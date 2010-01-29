@@ -372,3 +372,10 @@ Faktor uvećanja
 [Changes detected; refreshing] %s
 [Promene su primećene; osvežavam] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Book view
+#Continuous book view
+#Forward\tAlt+->
+#Send by &email...
+

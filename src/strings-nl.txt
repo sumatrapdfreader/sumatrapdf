@@ -300,3 +300,34 @@ Uitzoomen
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
 
+# Untranslated:
+#&Custom Zoom...
+#&Magnification:
+#&Options...
+#&Remember these settings for each document
+#&Settings
+#Advanced
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+<-
+#Book view
+#Cancel
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Default &Layout:
+#Default &Zoom:
+#Forward\tAlt+->
+#No synchronization file found
+#OK
+#Remember &opened files
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#SumatraPDF Options
+#Text documents
+#Warning
+#Zoom
+#Zoom factor
+

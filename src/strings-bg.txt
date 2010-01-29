@@ -378,3 +378,8 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Намерени са промени; обновявам] %s
 
+# Untranslated:
+#OK
+#Send by &email...
+#Text documents
+

@@ -375,3 +375,9 @@ Zoomfaktor
 [Changes detected; refreshing] %s
 [Ändringar detekterade; uppdaterar] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Forward\tAlt+->
+#No synchronization file found
+#Send by &email...
+

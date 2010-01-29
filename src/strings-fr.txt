@@ -363,3 +363,13 @@ Facteur de zoom
 [Changes detected; refreshing] %s
 [Modifications détectées; actualisation] %s
 
+# Untranslated:
+#Automatic
+#Back\tAlt+<-
+#Book view
+#Continuous book view
+#Forward\tAlt+->
+#Send by &email...
+#Show pages continuously
+#Text documents
+

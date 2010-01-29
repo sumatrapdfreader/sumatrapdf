@@ -330,3 +330,24 @@ Zoom Out
 [Changes detected; refreshing] %s
 [Выяўлены змены; адбываецца абнаўленне] %s
 
+# Untranslated:
+#&Custom Zoom...
+#&Magnification:
+#&Manual
+#Automatic
+#Back\tAlt+<-
+#Book view
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Forward\tAlt+->
+#Hint: Use the F3 key for finding again
+#No synchronization file found
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Text documents
+#Zoom
+#Zoom factor
+

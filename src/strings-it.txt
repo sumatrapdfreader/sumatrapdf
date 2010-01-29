@@ -363,3 +363,13 @@ Fattore ingrandimento
 [Changes detected; refreshing] %s
 [Cambiamenti rilevati; in aggiornamento] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Book view
+#Continuous book view
+#Forward\tAlt+->
+#No synchronization file found
+#Send by &email...
+#Show pages continuously
+#Text documents
+

@@ -360,3 +360,14 @@ Proporção de Zoom
 [Changes detected; refreshing] %s
 [Mudanças detectadas; atualizando] %s
 
+# Untranslated:
+#Back\tAlt+<-
+#Book view
+#Continuous book view
+#Forward\tAlt+->
+#No synchronization file found
+#OK
+#Send by &email...
+#Show pages continuously
+#Text documents
+
