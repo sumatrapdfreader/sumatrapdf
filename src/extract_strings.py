@@ -355,7 +355,7 @@ def gen_strings_file_for_lang(lang_id, lang_name, translations, contributors, un
             fo.write("#%s\n" % s)
         fo.write("\n")
     fo.close()
-    print("%d translations in %s" % (len(trans), file_name))
+    #print("%d translations in %s" % (len(trans), file_name))
 
 def write_out_strings_files(strings_dict, langs, contributors={}, untranslated={}):
     translations_for_langs = gen_translations_for_languages(strings_dict)
