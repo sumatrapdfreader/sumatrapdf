@@ -357,16 +357,27 @@ Nagyítás mértéke
 [Changes detected; refreshing] %s
 [a file megváltozott; frissítés] %s
 
+Book view
+Könyv(Oldalpár címlappal)
+
+Continuous book view
+Folyamatos könyv
+
+Show pages continuously
+Folyamatos nézet
+
+Send by &email...
+Fájl küldése &e-mail-ben
+
+Back\tAlt+<-
+Ugrás vissza\tAlt+<-
+
+Forward\tAlt+->
+Ugrás előre\tAlt+->
+
 # Untranslated:
-#Back\tAlt+<-
-#Book view
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Forward\tAlt+->
 #No result found around line %u in file %s
 #No synchronization file found
-#Send by &email...
 #Set inverse search command-line
-#Show pages continuously
 #Text documents
-
