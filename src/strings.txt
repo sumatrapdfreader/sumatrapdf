@@ -19,6 +19,7 @@
 # French:
 #   fiuzzy
 #   laclasse
+#   phoenix
 # Nardog (nardog.takoweb.com) - Japanese
 # Hungarian:
 #   Richard Magyar (magyar_richard@yahoo.com)
@@ -589,6 +590,7 @@ ru:Автоматически
 sr-rs:Аутоматски
 sp-rs:Automatski
 cy:Awtomatig
+fr:Automatique
 -
 Single page
 am:&Մեկ էջ
@@ -712,7 +714,8 @@ de:Buchansicht
 sv:Bokuppslag
 ru:В разворот
 cy:Golwg llyfr
-pt: Como livro
+pt:Como livro
+fr:Comme livre
 -
 Continuous
 am:Անդադար
@@ -837,6 +840,7 @@ sv:Fortlöpande bokuppslag
 ru:В разворот непрерывно
 cy:Golwg llyfr didor
 pt:Livro contínuo
+fr:Continue comme livre
 -
 Show pages continuously
 bg:Непрекъснати
@@ -847,6 +851,7 @@ sr-rs:Непрекидни приказ страна
 sp-rs:Neprekidni prikaz strana
 cy:Dangos tudalennau'n ddidor
 pt:Mostrar páginas contínuas
+fr:Afficher les pages en continu
 -
 Rotate left\tCtrl-Shift--
 am:Շրջել ձախ\tCtrl-Shift--
@@ -1895,7 +1900,7 @@ br:S&obre o SumatraPDF
 hu:Név&jegy
 pl:O programie
 de:&Über SumatraPDF
-fr:A propos
+fr:À propos
 tr:&Hakkında
 by:Аб праграме
 ja:バージョン情報(&A)
@@ -4855,6 +4860,7 @@ Send by &email...
 de:Als &E-Mail versenden…
 ru:Послать по &email...
 pt:Enviar por &e-mail...
+fr:Envoyer par &email...
 -
 Copy Selection\tCtrl-C
 bg:Копирай избраното\tCtrl-C
@@ -5149,6 +5155,7 @@ de:&Zurück\tAlt+<-
 es:Atrás\tAlt+<-
 ru:Назад\tAlt+<-
 pt:Retroceder\tAlt+<-
+fr:Retour\tAlt+<-
 -
 Forward\tAlt+->
 bg:Напред\tAlt+->
@@ -5157,3 +5164,4 @@ de:Vor&wärts\tAlt+->
 es:Adelante\tAlt+->
 ru:Вперед\tAlt+->
 pt:Avançar\tAlt+->
+fr:Avancer\tAlt+->

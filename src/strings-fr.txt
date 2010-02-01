@@ -8,9 +8,10 @@ Lang: fr French (Français)
 
 Contributor: fiuzzy
 Contributor: laclasse
+Contributor: phoenix
 
 &About
-A propos
+À propos
 
 &Check for new version
 Vérifier les mises à jour
@@ -366,13 +367,26 @@ Facteur de zoom
 [Changes detected; refreshing] %s
 [Modifications détectées; actualisation] %s
 
-# Untranslated:
-#Automatic
-#Back\tAlt+<-
-#Book view
-#Continuous book view
-#Forward\tAlt+->
-#Send by &email...
-#Show pages continuously
-#Text documents
+Automatic
+Automatique
 
+Book view
+Comme livre
+
+Continuous book view
+Continue comme livre
+
+Show pages continuously
+Afficher les pages en continu
+
+Send by &email...
+Envoyer par &email...
+
+Back\tAlt+<-
+Retour\tAlt+<-
+
+Forward\tAlt+->
+Avancer\tAlt+->
+
+# Untranslated:
+#Text documents
