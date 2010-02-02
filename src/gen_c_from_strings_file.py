@@ -272,7 +272,7 @@ def gen_and_upload_js(strings_dict, langs, contributors):
         return
     data = gen_js_data(strings_dict, langs, contributors)
     js = simplejson.dumps(data)
-    js = "var langsData = " + js + ";\n"
+    js = "var g_langsData = " + js + ";\n"
     #print(js)
     s3UploadDataPublic(js, S3_JS_NAME)
 
