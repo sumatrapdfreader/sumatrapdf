@@ -366,13 +366,29 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
 
+Back\tAlt+<-
+Πίσω\tAlt+<-
+
+Book view
+Προβολή βιβλίου
+
+Continuous book view
+Προβολή βιβλίου, συνεχόμενα
+
+Forward\tAlt+->
+Εμπρός\tAlt+->
+
+No synchronization file found
+Δε βρέθηκε αρχείο συγχρονισμού
+
+Send by &email...
+Αποστολή με &email...
+
+Show pages continuously
+Εμφάνιση σελίδων συνεχόμενα
+
+Text documents
+Αρχεία κειμένου
+
 # Untranslated:
-#Back\tAlt+<-
-#Book view
-#Continuous book view
-#Forward\tAlt+->
-#No synchronization file found
-#Send by &email...
-#Show pages continuously
-#Text documents
 
