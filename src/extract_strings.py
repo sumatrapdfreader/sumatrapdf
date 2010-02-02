@@ -5,10 +5,6 @@ import re
 import sys
 
 """
-TODO:
- * generate and upload to s3 *.js files with info about language translations
-   (lang name, lang id, contributors, number of untranslated strings)
-
 Extracts translatable strings from *.c and *.h files, dumps statistics
 about untranslated strings to stdout and adds untranslated strings as
 comments at the end of strings file for each language.
