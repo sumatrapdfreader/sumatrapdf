@@ -16,7 +16,7 @@ comments at the end of strings file for each language.
 
 c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
-STRINGS_FILE = "strings.txt"
+STRINGS_FILE = "strings-obsolete.txt"
 SCRIPT_PATH = os.path.realpath(".")
 STRINGS_PATH = SCRIPT_PATH
 
