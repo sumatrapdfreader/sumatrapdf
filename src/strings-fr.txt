@@ -337,6 +337,9 @@ SumatraPDF doit maintenant être votre lecteur de PDF
 Synchronization file cannot be opened
 Le fichier de synchronisation ne peut pas être ouvert
 
+Text documents
+Documents texte
+
 Unknown source file (%s)
 Fichier source unconnu (%s)
 
@@ -389,4 +392,3 @@ Forward\tAlt+->
 Avancer\tAlt+->
 
 # Untranslated:
-#Text documents
