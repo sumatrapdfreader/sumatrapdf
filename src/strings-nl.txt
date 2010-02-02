@@ -9,6 +9,7 @@ Lang: nl Dutch (Nederlands)
 Contributor: Barry Haveman (http://webstek.info)
 Contributor: Kristof Bal
 Contributor: Stephan Paternotte
+Contributor: Marco La Fors
 
 &About
 &Over
@@ -304,34 +305,91 @@ Uitzoomen
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
 
-# Untranslated:
-#&Custom Zoom...
-#&Magnification:
-#&Options...
-#&Remember these settings for each document
-#&Settings
-#Advanced
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+<-
-#Book view
-#Cancel
-#Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Default &Layout:
-#Default &Zoom:
-#Forward\tAlt+->
-#No synchronization file found
-#OK
-#Remember &opened files
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
-#Show the &bookmarks sidebar when available
-#SumatraPDF Options
-#Text documents
-#Warning
-#Zoom
-#Zoom factor
+&Custom Zoom...
+&Aangepaste Zoom...
 
+&Magnification:
+&Vergroting:
+
+&Options...
+&Opties...
+
+&Remember these settings for each document
+&Bewaar deze instellingen voor elk document
+
+&Settings
+&Instellingen
+
+Advanced
+Geavanceerd
+
+Automatic
+Automatisch
+
+Automatically check for &updates
+Automatisch controleren op &updates
+
+Back\tAlt+<-
+Terug\tAlt+<-
+
+Book view
+Boek beeld
+
+Cancel
+Annuleren
+
+Continuous book view
+Continue book beeld
+
+Copy Selection\tCtrl-C
+Kopieer selectie\tCtrl-C
+
+Default &Layout:
+Standaard &Layout:
+
+Default &Zoom:
+Standaard &Zoom:
+
+Forward\tAlt+->
+Verder\tAlt+->
+
+No synchronization file found
+Geen synchronisatiebestand gevonden
+
+OK
+Oke
+
+Remember &opened files
+Herinner ge&opende bestanden
+
+Select content with Ctrl+left mouse button
+Selecteer inhoud met Ctrl+linker muis knop
+
+Send by &email...
+Verzend per &email...
+
+Show pages continuously
+Toon pagina's continue
+
+Show the &bookmarks sidebar when available
+Toon de &Favorieten werkbalk indien beschikbaar
+
+SumatraPDF Options
+SumatraPDF Opties
+
+Text documents
+Tekst documenten
+
+Warning
+Waarschuwing
+
+Zoom
+Zoom
+
+Zoom factor
+Zoomfactor
+
+Cannot start inverse search command. Please check the command line in the settings.
+Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
+
+# Untranslated:
