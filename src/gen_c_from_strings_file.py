@@ -1,4 +1,52 @@
-from extract_strings import load_strings_file_old, load_strings_file_new, get_lang_list
+from extract_strings import load_strings_file_old, load_strings_file_new, get_lang_list, untranslated_count_for_lang
+import simplejson
+
+g_can_upload = True
+
+try:
+    import boto.s3
+    from boto.s3.key import Key
+except:
+    print("You need boto library (http://code.google.com/p/boto/)")
+    print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
+    print("cd boto; python setup.py install")
+    g_can_upload = False
+
+try:
+    import awscreds
+except:
+    print("awscreds.py not present")
+    g_can_upload = False
+
+S3_BUCKET = "kjkpub"
+S3_JS_NAME = "blog/sumatrapdf-langs.js"
+g_s3conn = None
+
+def s3connection():
+  global g_s3conn
+  if g_s3conn is None:
+    g_s3conn = boto.s3.connection.S3Connection(awscreds.access, awscreds.secret, True)
+  return g_s3conn
+
+def s3PubBucket(): return s3connection().get_bucket(S3_BUCKET)
+
+def ul_cb(sofar, total):
+    print("So far: %d, total: %d" % (sofar , total))
+
+def s3UploadFilePublic(local_file_name, remote_file_name):
+    bucket = s3PubBucket()
+    k = Key(bucket)
+    k.key = remote_file_name
+    k.set_contents_from_filename(local_file_name, cb=ul_cb)
+    k.make_public()
+
+def s3UploadDataPublic(data, remote_file_name):
+    print("Uploading data to s3 as '%s'" % remote_file_name)
+    bucket = s3PubBucket()
+    k = Key(bucket)
+    k.key = remote_file_name
+    k.set_contents_from_string(data)
+    k.make_public()
 
 ### file templates ###
 
@@ -201,12 +249,40 @@ def gen_code(strings_dict, langs, h_file_name, c_file_name):
     gen_lang_menu_def_c(langs, "LangMenuDef.cpp")
     gen_lang_menu_def_h(langs, "LangMenuDef.h")
 
+def contributors_for_lang(contributors, lang):
+    return sorted(contributors.get(lang, []))
+
+def gen_js_data(strings_dict, langs, contributors):
+    res = []
+    for (lang_iso, lang_name) in langs:
+        lang_name = lang_name.split(" (")[0]
+        count = untranslated_count_for_lang(strings_dict, lang_iso)
+        svnurl = "http://sumatrapdf.googlecode.com/svn/trunk/src/strings-" + lang_iso + ".txt"
+        c = contributors_for_lang(contributors, lang_iso)
+        res.append([lang_iso, lang_name, count, svnurl, c])
+    return sorted(res, lambda x,y: cmp(y[2], x[2]))
+
+# Generate json data as array of arrays in the format:
+# [langname, lang-iso-code, untranslated_strings_count, svn_url, [contributors]]
+# sorted by untranslated string count (biggest at the top)
+def gen_and_upload_js(strings_dict, langs, contributors):
+    global g_can_upload
+    if not g_can_upload:
+        print("Can't upload javascript to s3")
+        return
+    data = gen_js_data(strings_dict, langs, contributors)
+    js = simplejson.dumps(data)
+    js = "var langsData = " + js + ";\n"
+    #print(js)
+    s3UploadDataPublic(js, S3_JS_NAME)
+
 def main():
     #(strings_dict, langs) = load_strings_file_old()
     (strings_dict, langs, contributors) = load_strings_file_new()
     h_file_name = "translations_txt.h"
     c_file_name = "translations_txt.c"
     gen_code(strings_dict, langs, h_file_name, c_file_name)
+    gen_and_upload_js(strings_dict, langs, contributors)
 
 if __name__ == "__main__":
     main()

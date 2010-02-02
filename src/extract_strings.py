@@ -375,6 +375,15 @@ def dump_missing_for_language(strings_dict, lang):
         if not is_translated and k not in TRANSLATION_EXCEPTIONS:
             print k
 
+def untranslated_count_for_lang(strings_dict, lang):
+    if 'en' == lang: return 0 # special case since the test below thinks all english are untranslated
+    count = 0
+    for k in strings_dict:
+        is_translated = len([item[1] for item in strings_dict[k] if item[0] == lang]) == 1
+        if not is_translated and k not in TRANSLATION_EXCEPTIONS:
+            count += 1
+    return count
+
 def main():
     (strings_dict, langs, contributors) = load_strings_file_new()
     strings = extract_strings_from_c_files(c_files_to_process)
