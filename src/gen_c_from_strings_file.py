@@ -255,6 +255,7 @@ def contributors_for_lang(contributors, lang):
 def gen_js_data(strings_dict, langs, contributors):
     res = []
     for (lang_iso, lang_name) in langs:
+        if "en" == lang_iso: continue
         lang_name = lang_name.split(" (")[0]
         count = untranslated_count_for_lang(strings_dict, lang_iso)
         svnurl = "http://sumatrapdf.googlecode.com/svn/trunk/src/strings-" + lang_iso + ".txt"
