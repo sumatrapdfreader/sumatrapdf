@@ -2501,26 +2501,29 @@ void DisplayModel::setScrollbarsState(void)
     }
 
     if (drawAreaDy >= canvasDy) {
+        si.nPos = 0;
         si.nMin = 0;
-        if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
-            si.nPos = win->dm->currentPageNo() - 1;
-            si.nMax = win->dm->pageCount() - 1;
-            si.nPage = 1;
-        }
-        else if (DM_FACING == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
-            si.nPos = (win->dm->currentPageNo() + 1) / 2 - 1;
-            si.nMax = (win->dm->pageCount() + 1) / 2 - 1;
-            si.nPage = 1;
-        }
-        else if (DM_BOOK_VIEW == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
-            si.nPos = win->dm->currentPageNo() / 2;
-            si.nMax = win->dm->pageCount() / 2;
-            si.nPage = 1;
-        }
-        else {
-            si.nPos = 0;
-            si.nMax = 99;
-            si.nPage = 100;
+        si.nMax = 99;
+        si.nPage = 100;
+
+        if (!win->fullScreen && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
+            switch (win->dm->displayMode()) {
+                case DM_SINGLE_PAGE:
+                    si.nPos = win->dm->currentPageNo() - 1;
+                    si.nMax = win->dm->pageCount() - 1;
+                    si.nPage = 1;
+                    break;
+                case DM_FACING:
+                    si.nPos = (win->dm->currentPageNo() + 1) / 2 - 1;
+                    si.nMax = (win->dm->pageCount() + 1) / 2 - 1;
+                    si.nPage = 1;
+                    break;
+                case DM_BOOK_VIEW:
+                    si.nPos = win->dm->currentPageNo() / 2;
+                    si.nMax = win->dm->pageCount() / 2;
+                    si.nPage = 1;
+                    break;
+            }
         }
     } else {
         si.nPos = (int)areaOffset.y;
