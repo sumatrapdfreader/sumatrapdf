@@ -6376,6 +6376,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
         case WM_SIZE:
         case WM_HSCROLL:
             // Repaint the ToC so that RelayoutTocItem is called for all items
@@ -6385,6 +6386,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             InvalidateRect(hwnd, NULL, TRUE);
             UpdateWindow(hwnd);
             break;
+#endif
     }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 }
@@ -6431,6 +6433,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     tstr_trans_chars(entry->title, _T("\t\n\v\f\r"), _T("     "));
     tvinsert.itemex.pszText = entry->title;
 
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
     if (!entry->pageNo)
         return TreeView_InsertItem(hwnd, &tvinsert);
 
@@ -6438,6 +6441,9 @@ static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent
     HTREEITEM hItem = TreeView_InsertItem(hwnd, &tvinsert);
     free(tvinsert.itemex.pszText);
     return hItem;
+#else
+    return TreeView_InsertItem(hwnd, &tvinsert);
+#endif
 }
 
 static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent = NULL)
@@ -6448,6 +6454,7 @@ static void PopulateTocTreeView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent =
     }
 }
 
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
 static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 {
     // code inspired by http://www.codeguru.com/cpp/controls/treeview/multiview/article.php/c3985/
@@ -6511,6 +6518,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     InflateRect(&rcItem, -2, -1);
     DrawText(ncd->hdc, item.pszText, -1, &rcItem, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_WORD_ELLIPSIS);
 }
+#endif
 
 void WindowInfo::LoadTocTree()
 {
@@ -7262,6 +7270,7 @@ InitMouseWheelInfo:
                         GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
                         break;
                     case NM_CUSTOMDRAW:
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
                         switch (((LPNMCUSTOMDRAW)lParam)->dwDrawStage) {
                             case CDDS_PREPAINT:
                                 return CDRF_NOTIFYITEMDRAW;
@@ -7274,6 +7283,9 @@ InitMouseWheelInfo:
                                 return CDRF_DODEFAULT;
                         }
                         break;
+#else
+                        return CDRF_DODEFAULT;
+#endif
                     case TVN_GETINFOTIP:
                         CustomizeToCInfoTip(win, (LPNMTVGETINFOTIP)lParam);
                         break;
