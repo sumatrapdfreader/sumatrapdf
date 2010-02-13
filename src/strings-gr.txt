@@ -13,7 +13,7 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Σχετικά...
 
 &Check for new version
-Έλεγχος για νέα έκδοση
+&Έλεγχος για νέα έκδοση
 
 &Close\tCtrl-W
 &Κλείσιμο\tCtrl-W
@@ -22,28 +22,28 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Ορισμός ζουμ...
 
 &Don't ask me again
-Να μην ερωτηθώ ξανά
+&Να μην ερωτηθώ ξανά
 
 &File
 &Αρχείο
 
 &Find what:
-Εύρεση του:
+&Εύρεση του:
 
 &Go To
 &Μετάβαση
 
 &Go to page:
-Μετάβαση στη σελίδα:
+&Μετάβαση στη σελίδα:
 
 &Help
 &Βοήθεια
 
 &Magnification:
-Μεγέθυνση:
+&Μεγέθυνση:
 
 &Manual
-Οδηγίες χρήσης
+&Οδηγίες χρήσης
 
 &Match case
 Ταίριασμα πεζών/κεφαλαίων
@@ -52,31 +52,31 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 Ό&χι
 
 &No, thanks
-Όχι, ευχαριστώ
+&Όχι, ευχαριστώ
 
 &Open\tCtrl-O
-Ά&νοιγμα\tCtrl-O
+&Άνοιγμα\tCtrl-O
 
 &Options...
-Επιλ&ογές
+&Επιλογές...
 
 &Password:
-Κωδικός:
+&Κωδικός:
 
 &Print\tCtrl-P
 &Εκτύπωση\tCtrl-P
 
 &Remember these settings for each document
-Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
+&Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 
 &Save as\tCtrl-S
-Α&ποθήκευση ως\tCtrl-S
+&Αποθήκευση ως\tCtrl-S
 
 &Settings
-Ρυθμίσεις
+&Ρυθμίσεις
 
 &Skip this version
-Παράβλεψη αυτής της έκδοσης
+&Παράβλεψη αυτής της έκδοσης
 
 &View
 &Προβολή
@@ -94,7 +94,7 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 (από %d)
 
 About SumatraPDF
-Για το πρόγραμμα SumatraPDF
+Σχετικά με το SumatraPDF
 
 Act&ual Size\tCtrl-1
 Πραγματικό μέγεθος\tCtrl-1
@@ -121,10 +121,10 @@ Cancel
 Άκυρο
 
 Cannot print this file
-Δε μπορεί να γίνει εκτύπωση του αρχείου
+Δε μπορούσε να εκτυπωθεί το αρχείο
 
 Cannot start inverse search command. Please check the command line in the settings.
-Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις
+Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις.
 
 Change language
 Αλλαγή γλώσσας (Change language)
@@ -142,19 +142,19 @@ Copy Selection\tCtrl-C
 Αντιγραφή επιλεγμένων\tCtrl-C
 
 Could not open Printer
-Δε μπορεί να ανοίξει ο εκτυπωτής
+Απέτυχε το άνοιγμα του εκτυπωτή
 
 Couldn't initialize printer
-Απέτυχε η αρχικοποίηση του εκτυπωτή
+Απέτυχε η έναρξη του εκτυπωτή
 
 Couldn't render the page
 Δε μπορεί να φορτωθεί η σελίδα
 
 Default &Layout:
-Προκαθορισμένη διαμόρφωση:
+Προκαθορισμένη &διαμόρφωση:
 
 Default &Zoom:
-Προκαθορισμένο ζουμ:
+Προκαθορισμένο &ζουμ:
 
 Download
 Λήψη
@@ -166,10 +166,10 @@ Enter password
 Εισάγετε κωδικό
 
 Enter password for %s
-Εισάγετε κωδικό για το  %s
+Εισάγετε κωδικό για το %s
 
 Error loading PDF file.
-Σφάλμα κατά τη φόρτωση του αρχείου
+Σφάλμα κατά τη φόρτωση του αρχείου PDF.
 
 Facing
 Δύο σελίδες
@@ -229,7 +229,7 @@ Make SumatraPDF default application for PDF files?
 Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα  αρχείων PDF;
 
 Make SumatraPDF my main PDF reader
-Συσχετισμός SumatraPDF με αρχεία PDF
+Συσχετισμός του SumatraPDF με αρχεία PDF
 
 Match case
 Αντιστοίχιση πεζών-κεφαλαίων
@@ -238,7 +238,7 @@ New version %s is available. Download new version?
 Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 
 New version available.
-Νέα ένδοση διαθέσιμη
+Νέα έκδοση διαθέσιμη
 
 Next Page
 Επόμενη σελίδα
@@ -250,7 +250,7 @@ No matches were found
 Δε βρέθηκε το κείμενο
 
 No new version available.
-Νέα έκδοση διαθέσιμη
+Δεν υπάρχει νεα έκδοση.
 
 No result found around line %u in file %s
 Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s
@@ -346,7 +346,7 @@ Warning
 Προειδοποίηση
 
 You have the latest version.
-Έχετε την τελευταία έκδοση.
+Έχετε την πιο πρόσφατη έκδοση.
 
 You have version %s
 Έχετε την έκδοση %s
@@ -361,10 +361,10 @@ Zoom Out
 Σμίκρυνση
 
 Zoom factor
-Ποσοστό ζουμ
+Ποσοστό μεγέθυνσης
 
 [Changes detected; refreshing] %s
-[Ανιχνελυθηκαν αλλαγές, ανανέωση…] %s
+[Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
 
 Back\tAlt+<-
 Πίσω\tAlt+<-
@@ -373,7 +373,7 @@ Book view
 Προβολή βιβλίου
 
 Continuous book view
-Προβολή βιβλίου, συνεχόμενα
+Συνεχόμενη προβολή βιβλίου
 
 Forward\tAlt+->
 Εμπρός\tAlt+->
@@ -385,7 +385,7 @@ Send by &email...
 Αποστολή με &email...
 
 Show pages continuously
-Εμφάνιση σελίδων συνεχόμενα
+Συνεχής εμφάνιση σελίδων
 
 Text documents
 Αρχεία κειμένου
