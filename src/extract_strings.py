@@ -140,6 +140,15 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert curr_trans is None, "curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path))
             curr_trans = l
         #print l
+
+    if curr_orig:
+        assert curr_trans
+        if curr_orig not in strings_dict:
+            strings_dict[curr_orig] = [(lang_code, curr_trans)]
+        else:
+            strings_dict[curr_orig].append((lang_code, curr_trans))
+        all_origs[curr_orig] = True
+
     contributors_dict[lang_code] = contributors
     fo.close()
     #print("Parsing '%s', %d translations" % (os.path.basename(file_path), len(all_origs)))

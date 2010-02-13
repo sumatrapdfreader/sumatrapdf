@@ -8111,7 +8111,7 @@ const char *g_transTranslations[] = {
   "Zoom inn",
   "Zoom ut",
   "Zoom til",
-  NULL,
+  "[Endringer oppdaget; oppdaterer] %s",
 };
 
 #ifdef __cplusplus
