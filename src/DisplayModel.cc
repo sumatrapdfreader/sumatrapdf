@@ -1785,8 +1785,12 @@ bool DisplayModel::addNavPoint(bool keepForward)
     if (!getScrollState(&ss))
         ss.page = 0; // invalid nav point
 
-    if (NAV_HISTORY_LEN == _navHistoryIx) {
-        memmove(&_navHistory[0], &_navHistory[1], (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
+    if (!keepForward && _navHistoryIx > 0 && !memcmp(&ss, &_navHistory[_navHistoryIx - 1], sizeof(ss))) {
+        // don't add another point to exact the same position (so overwrite instead of append)
+        _navHistoryIx--;
+    }
+    else if (NAV_HISTORY_LEN == _navHistoryIx) {
+        memmove(_navHistory, _navHistory + 1, (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
         _navHistoryIx--;
     }
     memcpy(&_navHistory[_navHistoryIx], &ss, sizeof(ss));
