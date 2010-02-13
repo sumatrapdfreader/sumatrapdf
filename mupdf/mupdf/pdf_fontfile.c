@@ -642,7 +642,42 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	error = fz_newfontfromfile(&font->font, found->fontpath, found->index);
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from a file %s", found->fontpath);
+
+	/* it's a substitute font: override the metrics */
+	font->font->ftsubstitute = 1;
+
 	return fz_okay;
+}
+
+static fz_error loadsimilarcjkfont(pdf_fontdesc *font, int ros, int kind)
+{
+	switch (kind)
+	{
+	case MINCHO:
+		switch (ros)
+		{
+		case CNS: return pdf_loadsystemfont(font, "MingLiU", nil);
+		case GB: return pdf_loadsystemfont(font, "SimSun", nil);
+		case Japan: return pdf_loadsystemfont(font, "MS-Mincho", nil);
+		case Korea: return pdf_loadsystemfont(font, "Batang", nil);
+		}
+		break;
+	case GOTHIC:
+		switch (ros)
+		{
+		case CNS: return pdf_loadsystemfont(font, "DFKaiShu-SB-Estd-BF", nil);
+		case GB:
+			if (fz_okay == pdf_loadsystemfont(font, "KaiTi", nil))
+				return fz_okay;
+			return pdf_loadsystemfont(font, "KaiTi_GB2312", nil);
+		case Japan: return pdf_loadsystemfont(font, "MS-Gothic", nil);
+		case Korea: return pdf_loadsystemfont(font, "Gulim", nil);
+		}
+		break;
+	default:
+		return fz_throw("Unknown cid kind %d", kind);
+	}
+	return -1;
 }
 
 #if 0
@@ -715,6 +750,13 @@ found:
 static fz_error
 loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 {
+#ifdef WIN32
+	/* Try to fall back to a reasonable TrueType font that might be installed locally */
+	if (loadsimilarcjkfont(font, ros, kind) == fz_okay)
+	{
+		return fz_okay;
+	}
+#endif
 #ifndef NOCJK
 	fz_error error;
 	/* We only have one builtin fallback font, we'd really like
@@ -729,35 +771,6 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 	font->font->ftsubstitute = 1; /* substitute font */
 	return fz_okay;
 #else
-#ifdef WIN32
-	/* Try to fall back to a reasonable TrueType font that might be installed locally */
-	switch (kind)
-	{
-	case MINCHO:
-		switch (ros)
-		{
-		case CNS: return pdf_loadsystemfont(font, "MingLiU", nil);
-		case GB: return pdf_loadsystemfont(font, "SimSun", nil);
-		case Japan: return pdf_loadsystemfont(font, "MS-Mincho", nil);
-		case Korea: return pdf_loadsystemfont(font, "Batang", nil);
-		}
-		break;
-	case GOTHIC:
-		switch (ros)
-		{
-		case CNS: return pdf_loadsystemfont(font, "DFKaiShu-SB-Estd-BF", nil);
-		case GB:
-			if (fz_okay == pdf_loadsystemfont(font, "KaiTi", nil))
-				return fz_okay;
-			return pdf_loadsystemfont(font, "KaiTi_GB2312", nil);
-		case Japan: return pdf_loadsystemfont(font, "MS-Gothic", nil);
-		case Korea: return pdf_loadsystemfont(font, "Gulim", nil);
-		}
-		break;
-	default:
-		return fz_throw("Unknown cid kind %d", kind);
-	}
-#endif
 	return fz_throw("no builtin CJK font file");
 #endif
 }
