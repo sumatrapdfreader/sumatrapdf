@@ -1,7 +1,3 @@
-#ifdef WIN32
-#define NOCJK /* disable built-in CJK support (use a system provided TTF instead - if available) */
-#endif
-
 #include "fitz.h"
 #include "mupdf.h"
 
@@ -36,7 +32,7 @@ extern const unsigned int  pdf_font_StandardSymL_cff_len;
 extern const unsigned char pdf_font_URWChanceryL_MediItal_cff_buf[];
 extern const unsigned int  pdf_font_URWChanceryL_MediItal_cff_len;
 
-#ifndef NOCJK
+#if !defined(NOCJK) && !defined(NOCJKFONT)
 extern const unsigned char pdf_font_DroidSansFallback_ttf_buf[];
 extern const unsigned int  pdf_font_DroidSansFallback_ttf_len;
 #endif
@@ -750,6 +746,9 @@ found:
 static fz_error
 loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 {
+#if !defined(NOCJK) && !defined(NOCJKFONT)
+	fz_error error;
+#endif
 #ifdef WIN32
 	/* Try to fall back to a reasonable TrueType font that might be installed locally */
 	if (loadsimilarcjkfont(font, ros, kind) == fz_okay)
@@ -757,8 +756,7 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 		return fz_okay;
 	}
 #endif
-#ifndef NOCJK
-	fz_error error;
+#if !defined(NOCJK) && !defined(NOCJKFONT)
 	/* We only have one builtin fallback font, we'd really like
 	 * to have one for each combination of ROS and Kind.
 	 */

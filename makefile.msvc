@@ -215,10 +215,15 @@ MUPDF_OBJS = \
 FONT_OBJS = \
 	$(O)\font_misc.obj \
 	$(O)\font_mono.obj \
-	$(O)\font_sans.obj \
-	$(O)\font_serif.obj
+	$(O)\font_serif.obj \
+	$(O)\font_sans.obj
 
-#$(O)\font_cjk.obj \
+# Make it easy to compile a CJK font in
+!if "$(WITHCJKFONT)"==""
+FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NOCJKFONT"
+!else
+FONT_OBJS = $(FONT_OBJS) $(O)\font_cjk.obj
+!endif
 
 CMAP_OBJS = \
 	$(O)\cmap_tounicode.obj \
@@ -507,6 +512,7 @@ $(O)\font_misc.obj: $(O)\font_misc.c
 $(O)\font_mono.obj: $(O)\font_mono.c
 $(O)\font_serif.obj: $(O)\font_serif.c
 $(O)\font_sans.obj: $(O)\font_sans.c
+$(O)\font_cjk.obj: $(O)\font_cjk.c
 
 $(O)\font_misc.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_misc.c \
@@ -534,6 +540,10 @@ $(O)\font_sans.c: $(FONTDUMP_APP)
 	$(FITZ_DIR)\fonts\NimbusSanL-BoldItal.cff \
 	$(FITZ_DIR)\fonts\NimbusSanL-Regu.cff \
 	$(FITZ_DIR)\fonts\NimbusSanL-ReguItal.cff
+
+$(O)\font_cjk.c: $(FONTDUMP_APP)
+	$(FONTDUMP_APP) $(O)\font_cjk.c \
+	$(FITZ_DIR)\fonts\droid\DroidSansFallback.ttf
 
 $(PDFBENCH_APP): $(PDFBENCH_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFBENCH_APP) /PDB:$(PDFBENCH_PDB) \
