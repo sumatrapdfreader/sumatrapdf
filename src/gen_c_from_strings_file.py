@@ -184,7 +184,7 @@ def gen_h_code(strings_dict, file_name):
     file_content = TRANSLATIONS_TXT_H % locals()
     file(file_name, "wb").write(file_content)
 
-LANG_ORDER = ["en", "am", "af", "pt", "br", "bg", "de", "tr", "by", "hu", "lt", "my", "ja", "fa", "it", "nl", "fi", "ca", "sl", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "sk", "vn", "kr", "bn", "cn", "fr", "ru", "gl", "es", "ar", "uk", "eu", "gr", "hr", "tl", "va", "sn", "tw", "cy", "ga", "mm", "pa", "hi", "nn", "sv", "pl", "dk", "ta", "cz", "th", "no"]
+LANG_ORDER = ["en", "am", "af", "pt", "br", "bg", "de", "tr", "by", "hu", "lt", "my", "ja", "fa", "it", "nl", "fi", "ca", "sl", "sr-rs", "ml", "he", "sp-rs", "id", "mk", "ro", "sk", "vn", "kr", "bn", "cn", "fr", "ru", "gl", "es", "ar", "uk", "eu", "gr", "hr", "tl", "va", "sn", "tw", "cy", "ga", "mm", "pa", "hi", "nn", "sv", "pl", "dk", "ta", "cz", "th", "no", "kw"]
 
 # This is just to make the order the same as the old code that was parsing
 # just one translation file, to avoid a diff in generted c code when switching
