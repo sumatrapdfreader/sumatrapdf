@@ -574,6 +574,31 @@ pdf_createfontlistMS()
 	} while (FindNextFile(hList, &FileData));
 	FindClose(hList);
 
+#ifdef NOCJKFONT
+	{
+		// If no CJK fallback font is builtin but one has been shipped separately (in the same
+        // directory as the main executable), add it to the list of loadable system fonts
+		TCHAR *lpFileName;
+		HFILE hFile;
+
+		GetModuleFileName(0, szFontDir, MAX_PATH);
+		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
+		lstrcpyn(lpFileName, _T("DroidSansFallback.ttf"), MAX_PATH - (lpFileName - szFile));
+
+		hFile = CreateFile(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
+#ifdef _UNICODE
+			WideCharToMultiByte(CP_UTF8, 0, szFile, -1, szPathUtf8, sizeof(szPathUtf8), NULL, NULL);
+#else
+			strcpy(szPathUtf8, szFile);
+#endif
+			insertmapping(&fontlistMS, "DroidSansFallback", szPathUtf8, 0);
+			CloseHandle(hFile);
+		}
+	}
+#endif
+
 	// sort the font list, so that it can be searched binarily
 	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), stricmp);
 	// TODO: make "TimesNewRomanPSMT" default substitute font?
@@ -645,7 +670,8 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	return fz_okay;
 }
 
-static fz_error loadsimilarcjkfont(pdf_fontdesc *font, int ros, int kind)
+static fz_error
+loadsimilarcjkfont(pdf_fontdesc *font, int ros, int kind)
 {
 	switch (kind)
 	{
@@ -752,9 +778,12 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 #ifdef WIN32
 	/* Try to fall back to a reasonable TrueType font that might be installed locally */
 	if (loadsimilarcjkfont(font, ros, kind) == fz_okay)
-	{
 		return fz_okay;
-	}
+#ifdef NOCJKFONT
+	/* If no CJK fallback font is builtin, maybe one has been shipped separately */
+	if (loadwindowsfont(font, "DroidSansFallback") == fz_okay)
+		return fz_okay;
+#endif
 #endif
 #if !defined(NOCJK) && !defined(NOCJKFONT)
 	/* We only have one builtin fallback font, we'd really like
