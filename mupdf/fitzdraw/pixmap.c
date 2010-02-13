@@ -17,7 +17,8 @@ fz_newpixmap(fz_pixmap **pixp, int x, int y, int w, int h, int n)
 	pix->h = h;
 	pix->n = n;
 
-	pix->samples = fz_malloc(pix->w * pix->h * pix->n * sizeof(fz_sample));
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691110 */
+	pix->samples = malloc(pix->w * pix->h * pix->n * sizeof(fz_sample));
 	if (!pix->samples) {
 		fz_free(pix);
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690743 */
