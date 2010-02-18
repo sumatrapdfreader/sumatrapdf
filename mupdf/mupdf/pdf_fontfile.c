@@ -577,9 +577,9 @@ pdf_createfontlistMS()
 #ifdef NOCJKFONT
 	{
 		// If no CJK fallback font is builtin but one has been shipped separately (in the same
-        // directory as the main executable), add it to the list of loadable system fonts
+		// directory as the main executable), add it to the list of loadable system fonts
 		TCHAR *lpFileName;
-		HFILE hFile;
+		HANDLE hFile;
 
 		GetModuleFileName(0, szFontDir, MAX_PATH);
 		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
@@ -765,6 +765,14 @@ found:
 	error = fz_newfontfrombuffer(&font->font, data, len, 0);
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from buffer");
+
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691119 */
+	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
+	{
+		/* hack to prevent StandardEncoding from being loaded in pdf_font.c */
+		font->isembedded = 1;
+		font->flags |= FD_SYMBOLIC;
+	}
 
 	return fz_okay;
 }
