@@ -3323,7 +3323,7 @@ AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { _T("a note"), _T("Pre-release version, for testing only!"), NULL,
     0, 0, 0, 0, 0, 0, 0, 0 },
 #endif
-    { _T("pdf rendering"), _T("MuPDF"), _T("http://ccxvii.net/fitz/"),
+    { _T("pdf rendering"), _T("MuPDF"), _T("http://mupdf.com"),
     0, 0, 0, 0, 0, 0, 0, 0 },
 
     { _T("program icon"), _T("Zenon"), _T("http://www.flashvidz.tk/"),
