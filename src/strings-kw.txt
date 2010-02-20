@@ -115,6 +115,9 @@ Awtomatek
 Automatically check for &updates
 Checkya rag nowythyansow yn awtomatek
 
+Back\tAlt+<-
+War-lergh\tAlt+<-
+
 Book view
 Gwel-lyver
 
@@ -213,6 +216,9 @@ Fit Widt&h\tCtrl-2
 
 Fit Width
 Desedha Les
+
+Forward\tAlt+->
+Yn-rag\tAlt+->
 
 Found text at page %d
 Tekst kevys war folen %d
@@ -319,6 +325,9 @@ Ow hwilas %d a %d...
 Select content with Ctrl+left mouse button
 Dewis dalgh gans Ctrl+boton-logosen kledh
 
+Send by &email...
+Danvon der &e-bost...
+
 Set inverse search command-line
 Settya linen-arhadow gorthhwilas
 
@@ -382,11 +391,3 @@ Faktor-zoum
 [Changes detected; refreshing] %s
 [Nowythyansow kevys; owth arnowytha] %s
 
-Back\tAlt+<-
-War-lergh\tAlt+<-
-
-Forward\tAlt+->
-Yn-rag\tAlt+->
-
-Send by &email...
-Danvon der &e-bost...

@@ -114,6 +114,12 @@ Automatikus
 Automatically check for &updates
 &Program&frissítések automatikus keresése bekapcsoláskor
 
+Back\tAlt+<-
+Ugrás vissza\tAlt+<-
+
+Book view
+Könyv(Oldalpár címlappal)
+
 Bookmarks\tF12
 Könyvjelzők\tF12
 
@@ -128,6 +134,9 @@ Nyelv kiválasztása (Change language)
 
 Continuous
 Folyamatos
+
+Continuous book view
+Folyamatos könyv
 
 Continuous facing
 Folyamatos oldalpár
@@ -203,6 +212,9 @@ Oldal&szélesség\tCtrl-2
 
 Fit Width
 Oldalszélesség
+
+Forward\tAlt+->
+Ugrás előre\tAlt+->
 
 Found text at page %d
 Találat a(z) %d. oldalon
@@ -303,6 +315,12 @@ Keresés a(z) %d./%d oldalon
 Select content with Ctrl+left mouse button
 Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 
+Send by &email...
+Fájl küldése &e-mail-ben
+
+Show pages continuously
+Folyamatos nézet
+
 Show the &bookmarks sidebar when available
 Dokumentumba ágyazott könyvjelzők mutatása
 
@@ -357,27 +375,10 @@ Nagyítás mértéke
 [Changes detected; refreshing] %s
 [a file megváltozott; frissítés] %s
 
-Book view
-Könyv(Oldalpár címlappal)
-
-Continuous book view
-Folyamatos könyv
-
-Show pages continuously
-Folyamatos nézet
-
-Send by &email...
-Fájl küldése &e-mail-ben
-
-Back\tAlt+<-
-Ugrás vissza\tAlt+<-
-
-Forward\tAlt+->
-Ugrás előre\tAlt+->
-
 # Untranslated:
 #Cannot start inverse search command. Please check the command line in the settings.
 #No result found around line %u in file %s
 #No synchronization file found
 #Set inverse search command-line
 #Text documents
+

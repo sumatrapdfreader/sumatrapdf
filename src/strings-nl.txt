@@ -20,6 +20,9 @@ Contributor: Marco La Fors
 &Close\tCtrl-W
 &Sluiten\tCtrl-W
 
+&Custom Zoom...
+&Aangepaste Zoom...
+
 &Don't ask me again
 Niet meer vragen
 
@@ -38,6 +41,9 @@ Niet meer vragen
 &Help
 &Help
 
+&Magnification:
+&Vergroting:
+
 &Manual
 Handleiding
 
@@ -53,14 +59,23 @@ Hoofd-/kleine letters toepassen
 &Open\tCtrl-O
 &Open\tCtrl-O
 
+&Options...
+&Opties...
+
 &Password:
 &Wachtwoord:
 
 &Print\tCtrl-P
 &Afdrukken\tCtrl-P
 
+&Remember these settings for each document
+&Bewaar deze instellingen voor elk document
+
 &Save as\tCtrl-S
 &Opslaan als...\tCtrl-S
+
+&Settings
+&Instellingen
 
 &Skip this version
 Deze versie overslaan
@@ -86,17 +101,38 @@ Over SumatraPDF
 Act&ual Size\tCtrl-1
 Ware grootte\tCtrl-1
 
+Advanced
+Geavanceerd
+
 All files
 Alle bestanden
 
 Associate with PDF files?
 Associëren met PDF-bestanden?
 
+Automatic
+Automatisch
+
+Automatically check for &updates
+Automatisch controleren op &updates
+
+Back\tAlt+<-
+Terug\tAlt+<-
+
+Book view
+Boek beeld
+
 Bookmarks\tF12
 Bladwijzers\tF12
 
+Cancel
+Annuleren
+
 Cannot print this file
 Dit bestand kan niet worden afgedrukt
+
+Cannot start inverse search command. Please check the command line in the settings.
+Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
 
 Change language
 Taal kiezen (Change language)
@@ -104,11 +140,17 @@ Taal kiezen (Change language)
 Continuous
 Doorlopend
 
+Continuous book view
+Continue book beeld
+
 Continuous facing
 Dubbele pagina doorlopend
 
 Contribute translation
 Help met vertalen
+
+Copy Selection\tCtrl-C
+Kopieer selectie\tCtrl-C
 
 Could not open Printer
 Printer niet gevonden
@@ -118,6 +160,12 @@ Kan de printer niet initialiseren
 
 Couldn't render the page
 Deze pagina kan niet worden weergegeven
+
+Default &Layout:
+Standaard &Layout:
+
+Default &Zoom:
+Standaard &Zoom:
 
 Download
 Downloaden
@@ -170,6 +218,9 @@ Passend in &breedte\tCtrl-2
 Fit Width
 Passend in breedte
 
+Forward\tAlt+->
+Verder\tAlt+->
+
 Found text at page %d
 Tekst gevonden op pagina %d
 
@@ -218,8 +269,14 @@ Geen nieuwe versie beschikbaar.
 No result found around line %u in file %s
 Geen resultaat gevonden in bestand %s bij regel %u
 
+No synchronization file found
+Geen synchronisatiebestand gevonden
+
 No synchronization info at this position
 Geen synchronisatieinformatie beschikbaar
+
+OK
+Oke
 
 Open
 Openen
@@ -254,6 +311,9 @@ Vorige pagina\t<-
 Printing problem.
 Probleem bij het afdrukken.
 
+Remember &opened files
+Herinner ge&opende bestanden
+
 Rotate left\tCtrl-Shift--
 Linksom draaien\tCtrl-Shift--
 
@@ -263,8 +323,20 @@ Rechtsom draaien\tCtrl-Shift-+
 Searching %d of %d...
 Zoek %d van %d...
 
+Select content with Ctrl+left mouse button
+Selecteer inhoud met Ctrl+linker muis knop
+
+Send by &email...
+Verzend per &email...
+
 Set inverse search command-line
 Omgekeerde zoekrichting instellen
+
+Show pages continuously
+Toon pagina's continue
+
+Show the &bookmarks sidebar when available
+Toon de &Favorieten werkbalk indien beschikbaar
 
 Show toolbar
 Werkbalk tonen
@@ -275,6 +347,9 @@ Enkele pagina
 Source file %s has no synchronization point
 Bestand %s heeft geen synchronisatiepunt
 
+SumatraPDF Options
+SumatraPDF Opties
+
 SumatraPDF is your main PDF reader
 SumatraPDF is de standaard PDF-lezer
 
@@ -284,11 +359,17 @@ SumatraPDF zou nu de standaard PDF-lezer moeten zijn
 Synchronization file cannot be opened
 Het synchronisatiebestand kan niet worden geopend
 
+Text documents
+Tekst documenten
+
 Unknown source file (%s)
 Onbekend bronbestand (%s)
 
 View
 Beeld
+
+Warning
+Waarschuwing
 
 You have the latest version.
 U gebruikt de meest recente versie.
@@ -296,100 +377,18 @@ U gebruikt de meest recente versie.
 You have version %s
 U heeft versie %s
 
+Zoom
+Zoom
+
 Zoom In
 Inzoomen
 
 Zoom Out
 Uitzoomen
 
-[Changes detected; refreshing] %s
-[Bestand gewijzigd; verversen] %s
-
-&Custom Zoom...
-&Aangepaste Zoom...
-
-&Magnification:
-&Vergroting:
-
-&Options...
-&Opties...
-
-&Remember these settings for each document
-&Bewaar deze instellingen voor elk document
-
-&Settings
-&Instellingen
-
-Advanced
-Geavanceerd
-
-Automatic
-Automatisch
-
-Automatically check for &updates
-Automatisch controleren op &updates
-
-Back\tAlt+<-
-Terug\tAlt+<-
-
-Book view
-Boek beeld
-
-Cancel
-Annuleren
-
-Continuous book view
-Continue book beeld
-
-Copy Selection\tCtrl-C
-Kopieer selectie\tCtrl-C
-
-Default &Layout:
-Standaard &Layout:
-
-Default &Zoom:
-Standaard &Zoom:
-
-Forward\tAlt+->
-Verder\tAlt+->
-
-No synchronization file found
-Geen synchronisatiebestand gevonden
-
-OK
-Oke
-
-Remember &opened files
-Herinner ge&opende bestanden
-
-Select content with Ctrl+left mouse button
-Selecteer inhoud met Ctrl+linker muis knop
-
-Send by &email...
-Verzend per &email...
-
-Show pages continuously
-Toon pagina's continue
-
-Show the &bookmarks sidebar when available
-Toon de &Favorieten werkbalk indien beschikbaar
-
-SumatraPDF Options
-SumatraPDF Opties
-
-Text documents
-Tekst documenten
-
-Warning
-Waarschuwing
-
-Zoom
-Zoom
-
 Zoom factor
 Zoomfactor
 
-Cannot start inverse search command. Please check the command line in the settings.
-Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
+[Changes detected; refreshing] %s
+[Bestand gewijzigd; verversen] %s
 
-# Untranslated:

@@ -10,247 +10,119 @@ Contributor: Jon Ivar F. Omland
 Contributor: Kjell A. A. Holm
 Contributor: BJ Hill
 
-#Menylinje
-&File
-&Fil
-
-&View
-&Vis
-
-&Go To
-&Gå til
-
-&Zoom
-&Zoom
-
-&Settings
-&Alternativer
-
-&Help
-&Hjelp
-
-#Fil
-&Open\tCtrl-O
-&Åpne...\tCtrl+O
-
-&Close\tCtrl-W
-&Lukk\tCtrl+W
-
-&Save as\tCtrl-S
-Lagre &som...\tCtrl+S
-
-&Print\tCtrl-P
-&Skriv ut...\tCtrl+P
-
-Open in &Adobe Reader
-Åpne i &Adobe Reader
-
-E&xit\tCtrl-Q
-A&vslutt\tCtrl+Q
-
-#Vis
-Single page
-Enkeltside
-
-Facing
-Motstående
-
-Continuous
-Kontinuerlig
-
-Continuous facing
-Kontinuerlig - motst&ående
-
-Rotate left\tCtrl-Shift--
-Roter mot klokken\tCtrl+Shift+Minus
-
-Rotate right\tCtrl-Shift-+
-Roter med klokken\tCtrl+Shift+Pluss
-
-Fullscreen\tCtrl-L
-Fullskjerm\tCtrl+L
-
-Bookmarks\tF12
-Bokmerker\tF12
-
-Show toolbar
-Vis verktøylinje
-
-Copy Selection\tCtrl-C
-Kopier merket tekst\tCtrl+C
-
-Select content with Ctrl+left mouse button
-Velg innhold med Ctrl+Venstre museknapp
-
-#Gå til
-Next Page\t->
-Neste side\tPil høyre
-
-Previous Page\t<-
-Forrige side\tPil venstre
-
-First Page\tHome
-Første side\tHome
-
-Last Page\tEnd
-Siste side\tEnd
-
-Page...\tCtrl-G
-Side...\tCtrl+G
-
-Find...\tCtrl-F
-Søk etter...\tCtrl+F
-
-#Zoom
-Fit &Page\tCtrl-0
-Tilpass &side\tCtrl+0
-
-Act&ual Size\tCtrl-1
-Fak&tisk størrelse\tCtrl+1
-
-Fit Widt&h\tCtrl-2
-Tilpass til bredd&e\tCtrl+2
-
-&Custom Zoom...
-&Egendefinert zoom...
-
-#Alternativer
-Change language
-Endre språk
-
-&Options...
-&Innstillinger...
-
-#Hjelp
-&Visit website
-&Besøk hjemmeside
-
-&Manual
-&Bruksanvisning
+&About
+&Om
 
 &Check for new version
 &Se etter ny versjon...
 
-&About
-&Om
+&Close\tCtrl-W
+&Lukk\tCtrl+W
 
-#Verktøylinje
-Open
-Åpne
+&Custom Zoom...
+&Egendefinert zoom...
 
-Page:
-Side:
+&Don't ask me again
+&Ikke spør meg igjen.
 
-Previous Page
-Forrige side
-
-Next Page
-Neste side
-
-Zoom Out
-Zoom ut
-
-Zoom In
-Zoom inn
-
-Find:
-Søk etter:
-
-Find Previous
-Forrige
-
-Find Next
-Neste
-
-Match case
-Skill mellom store og små bokstaver
-
-#Åpne...
-PDF documents
-PDF dokumenter (*.pdf)
-
-All files
-Alle filer (*.*)
-
-#Side...
-Go to page
-Gå til side
-
-&Go to page:
-&Gå til side:
-
-(of %d)
-(av %d)
-
-#Søk etter...
-Find
-Søk etter
+&File
+&Fil
 
 &Find what:
 &Søk etter:
 
-&Match case
-&Skill mellom store og små bokstaver
+&Go To
+&Gå til
 
-Hint: Use the F3 key for finding again
-Tips: Bruk F3 tasten for søk etter neste
+&Go to page:
+&Gå til side:
 
-#Egendefinert zoom
-Zoom factor
-Zoom til
+&Help
+&Hjelp
 
 &Magnification:
 &Forstørrelse:
 
-Zoom
-Zoom
+&Manual
+&Bruksanvisning
 
-#Innstillinger...
-View
-Vis
+&Match case
+&Skill mellom store og små bokstaver
 
-Default &Layout:
-Standard sideoppsett:
+&No
+&Nei
 
-Automatic
-Automatisk
+&No, thanks
+&Nei, takk
 
-Default &Zoom:
-Standard&zoom:
+&Open\tCtrl-O
+&Åpne...\tCtrl+O
 
-Show the &bookmarks sidebar when available
-Vis &bookmerker-fanen når tilgjengelig
+&Options...
+&Innstillinger...
+
+&Password:
+&Passord:
+
+&Print\tCtrl-P
+&Skriv ut...\tCtrl+P
 
 &Remember these settings for each document
 &Husk disse innstillingene for hvert dokument
 
-Advanced
-Avansert
+&Save as\tCtrl-S
+Lagre &som...\tCtrl+S
 
-Automatically check for &updates
-Automatisk sjekk for &oppdateringer
+&Settings
+&Alternativer
 
-Remember &opened files
-Husk &åpnede filer
+&Skip this version
+&Ignorer denne versjonen
 
-SumatraPDF is your main PDF reader
-SumatraPDF er din standard PDF-leser
+&View
+&Vis
 
-Make SumatraPDF my main PDF reader
-Bruk SumatraPDF som standard PDF-leser
+&Visit website
+&Besøk hjemmeside
 
-#Generelt
+&Yes
+&Ja
+
+&Zoom
+&Zoom
+
+(of %d)
+(av %d)
+
 About SumatraPDF
 Om SumatraPDF
 
+Act&ual Size\tCtrl-1
+Fak&tisk størrelse\tCtrl+1
+
+Advanced
+Avansert
+
+All files
+Alle filer (*.*)
+
 Associate with PDF files?
 Tilknytt til PDF filer?
+
+Automatic
+Automatisk
+
+Automatically check for &updates
+Automatisk sjekk for &oppdateringer
 
 Back\tAlt+<-
 Tilbake\tAlt+Pil venstre
 
 Book view
 Bokvisning
+
+Bookmarks\tF12
+Bokmerker\tF12
 
 Cancel
 Avbryt
@@ -261,11 +133,26 @@ Kan ikke skrive ut filen
 Cannot start inverse search command. Please check the command line in the settings.
 Kan ikke starte inversert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
 
+Change language
+Endre språk
+
+Continuous
+Kontinuerlig
+
 Continuous book view
 Kontinuerlig bokvisning
 
+Continuous facing
+Kontinuerlig - motst&ående
+
 Contribute translation
 Bidra med oversetting
+
+Copy Selection\tCtrl-C
+Kopier merket tekst\tCtrl+C
+
+Could not open Printer
+Kunne ikke åpne skriveren.
 
 Couldn't initialize printer
 Kunne ikke klargjøre skriveren
@@ -273,14 +160,17 @@ Kunne ikke klargjøre skriveren
 Couldn't render the page
 Kunne ikke vise siden
 
-Could not open Printer
-Kunne ikke åpne skriveren.
+Default &Layout:
+Standard sideoppsett:
 
-&Don't ask me again
-&Ikke spør meg igjen.
+Default &Zoom:
+Standard&zoom:
 
 Download
 Nedlasting
+
+E&xit\tCtrl-Q
+A&vslutt\tCtrl+Q
 
 Enter password
 Skriv inn passord
@@ -291,11 +181,38 @@ Skriv inn passord for %s
 Error loading PDF file.
 Feil ved åpning av PDF fil.
 
+Facing
+Motstående
+
 Failed to save a file
 Feil ved lagring av filen.
 
+Find
+Søk etter
+
+Find Next
+Neste
+
+Find Previous
+Forrige
+
+Find...\tCtrl-F
+Søk etter...\tCtrl+F
+
+Find:
+Søk etter:
+
+First Page\tHome
+Første side\tHome
+
+Fit &Page\tCtrl-0
+Tilpass &side\tCtrl+0
+
 Fit Page
 Tilpass side
+
+Fit Widt&h\tCtrl-2
+Tilpass til bredd&e\tCtrl+2
 
 Fit Width
 Tilpass til bredde
@@ -306,11 +223,29 @@ Fremover\tAlt+Pil høyre
 Found text at page %d
 Fant tekst på side &d
 
+Fullscreen\tCtrl-L
+Fullskjerm\tCtrl+L
+
+Go to page
+Gå til side
+
+Hint: Use the F3 key for finding again
+Tips: Bruk F3 tasten for søk etter neste
+
+Last Page\tEnd
+Siste side\tEnd
+
 Main PDF reader can't be changed in portable mode
 Standard pdf-leser kan ikke endres i flyttbar modus
 
 Make SumatraPDF default application for PDF files?
 Gjør SumatraPDF standard åpningsprogram for PDF filer?
+
+Make SumatraPDF my main PDF reader
+Bruk SumatraPDF som standard PDF-leser
+
+Match case
+Skill mellom store og små bokstaver
 
 New version %s is available. Download new version?
 Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
@@ -318,11 +253,11 @@ Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 New version available.
 Ny versjon tilgjenglig.
 
-&No
-&Nei
+Next Page
+Neste side
 
-&No, thanks
-&Nei, takk
+Next Page\t->
+Neste side\tPil høyre
 
 No matches were found
 Søkeelementet ble ikke funnet
@@ -342,23 +277,53 @@ Ingen synkroniserings info her
 OK
 OK
 
-&Password:
-&Passord:
+Open
+Åpne
+
+Open in &Adobe Reader
+Åpne i &Adobe Reader
 
 PDF Document
 PDF Dokument
 
+PDF documents
+PDF dokumenter (*.pdf)
+
 Page number %u inexistant
 Sidetallet '%u' finnes ikke i dokumentet.
+
+Page...\tCtrl-G
+Side...\tCtrl+G
+
+Page:
+Side:
 
 Please wait - rendering...
 Vennligst vent - arbeider...
 
+Previous Page
+Forrige side
+
+Previous Page\t<-
+Forrige side\tPil venstre
+
 Printing problem.
 Problem med utskrift.
 
+Remember &opened files
+Husk &åpnede filer
+
+Rotate left\tCtrl-Shift--
+Roter mot klokken\tCtrl+Shift+Minus
+
+Rotate right\tCtrl-Shift-+
+Roter med klokken\tCtrl+Shift+Pluss
+
 Searching %d of %d...
 Søker &d av &d...
+
+Select content with Ctrl+left mouse button
+Velg innhold med Ctrl+Venstre museknapp
 
 Send by &email...
 Send med e-post...
@@ -369,14 +334,23 @@ Sett invertert søke kommandolinje
 Show pages continuously
 Vis sider kontinuerlig
 
-&Skip this version
-&Ignorer denne versjonen
+Show the &bookmarks sidebar when available
+Vis &bookmerker-fanen når tilgjengelig
+
+Show toolbar
+Vis verktøylinje
+
+Single page
+Enkeltside
 
 Source file %s has no synchronization point
 Kildefilen %s har ingen synkroniserings punkt
 
 SumatraPDF Options
 Innstillinger
+
+SumatraPDF is your main PDF reader
+SumatraPDF er din standard PDF-leser
 
 SumatraPDF should now be your main PDF reader
 SumatraPDF burde være din standard pdf-leser
@@ -390,11 +364,11 @@ Tekstdokumenter
 Unknown source file (%s)
 Ukjent kildefil (&s)
 
+View
+Vis
+
 Warning
 Advarsel
-
-&Yes
-&Ja
 
 You have the latest version.
 Du har den siste versjonen.
@@ -402,5 +376,18 @@ Du har den siste versjonen.
 You have version %s
 Du har versjon %s
 
+Zoom
+Zoom
+
+Zoom In
+Zoom inn
+
+Zoom Out
+Zoom ut
+
+Zoom factor
+Zoom til
+
 [Changes detected; refreshing] %s
 [Endringer oppdaget; oppdaterer] %s
+

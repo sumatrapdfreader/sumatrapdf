@@ -75,7 +75,7 @@ Lembrar estas preferências para cada documento
 &Preferências
 
 &Skip this version
-Ignorar esta versão.
+Ignorar esta versão
 
 &View
 &Ver
@@ -105,13 +105,19 @@ All files
 Todos os arquivos
 
 Associate with PDF files?
-Associar arquivos PDF?
+Associar com arquivos PDF?
 
 Automatic
 Automático
 
 Automatically check for &updates
-&Buscar atualizações automaticamente
+&Procurar atualizações automaticamente
+
+Back\tAlt+<-
+Voltar\tAlt+<-
+
+Book view
+Ver como Livro
 
 Bookmarks\tF12
 Marcadores\tF12
@@ -130,6 +136,9 @@ Mudar o idioma (Change language)
 
 Continuous
 Contínuo
+
+Continuous book view
+Ver como Livro de modo contínuo
 
 Continuous facing
 Página dupla contínua
@@ -206,6 +215,9 @@ Ajustar pela l&argura\tCtrl-2
 Fit Width
 Ajustar pela largura
 
+Forward\tAlt+->
+Avançar\tAlt+->
+
 Found text at page %d
 Texto encontrado na página %d
 
@@ -216,7 +228,7 @@ Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
-Dica: tecle F3 para ver a próxima ocorrência
+Dica: tecle F3 para achar a próxima ocorrência
 
 Last Page\tEnd
 Última página\tEnd
@@ -254,8 +266,14 @@ Nenhuma atualização disponível.
 No result found around line %u in file %s
 Nenhum resultado próximo à linha %u no arquivo %s
 
+No synchronization file found
+Nenhum arquivo de sincronização foi encontrado
+
 No synchronization info at this position
 Não há informação de sincronização nesta posição
+
+OK
+OK
 
 Open
 Abrir
@@ -279,7 +297,7 @@ Page:
 Página:
 
 Please wait - rendering...
-Por favor, aguarde, renderizando...
+Por favor aguarde, renderizando...
 
 Previous Page
 Página anterior
@@ -305,8 +323,14 @@ Localizando %d de %d...
 Select content with Ctrl+left mouse button
 Selecionar com Ctrl+Botão esquerdo do mouse
 
+Send by &email...
+Enviar por email...
+
 Set inverse search command-line
 Configurar pesquisa inversa
+
+Show pages continuously
+Exibir páginas de modo contínuo
 
 Show the &bookmarks sidebar when available
 Mostrar barra lateral de marcadores quando disponível
@@ -327,10 +351,13 @@ SumatraPDF is your main PDF reader
 O SumatraPDF é o seu leitor PDF padrão
 
 SumatraPDF should now be your main PDF reader
-Agora o SumatraPDF deve ser seu leitor PDF padrão
+O SumatraPDF deve ser agora seu leitor PDF padrão
 
 Synchronization file cannot be opened
 Não foi possível abrir o arquivo de sincronização
+
+Text documents
+Documentos de texto
 
 Unknown source file (%s)
 Arquivo fonte desconhecido (%s)
@@ -361,15 +388,4 @@ Proporção de Zoom
 
 [Changes detected; refreshing] %s
 [Mudanças detectadas; atualizando] %s
-
-# Untranslated:
-#Back\tAlt+<-
-#Book view
-#Continuous book view
-#Forward\tAlt+->
-#No synchronization file found
-#OK
-#Send by &email...
-#Show pages continuously
-#Text documents
 

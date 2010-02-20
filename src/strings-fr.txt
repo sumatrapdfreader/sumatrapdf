@@ -109,8 +109,17 @@ Tous les fichiers
 Associate with PDF files?
 Associer aux fichiers PDF ?
 
+Automatic
+Automatique
+
 Automatically check for &updates
 Vérifier &automatiquement les mises à jour
+
+Back\tAlt+<-
+Retour\tAlt+<-
+
+Book view
+Comme livre
 
 Bookmarks\tF12
 Signets\tF12
@@ -129,6 +138,9 @@ Changer la langue (Change language)
 
 Continuous
 Continue
+
+Continuous book view
+Continue comme livre
 
 Continuous facing
 Continue - Page double
@@ -204,6 +216,9 @@ Pleine largeur
 
 Fit Width
 Pleine largeur
+
+Forward\tAlt+->
+Avancer\tAlt+->
 
 Found text at page %d
 Texte trouvé à la page %d
@@ -310,8 +325,14 @@ Recherche de %d à %d...
 Select content with Ctrl+left mouse button
 Sélectionner avec Ctrl+bouton gauche de la souris
 
+Send by &email...
+Envoyer par &email...
+
 Set inverse search command-line
 Configurer la recherche inverse
+
+Show pages continuously
+Afficher les pages en continu
 
 Show the &bookmarks sidebar when available
 Voir la barre latérale des signets quand elle est disponible
@@ -370,25 +391,3 @@ Facteur de zoom
 [Changes detected; refreshing] %s
 [Modifications détectées; actualisation] %s
 
-Automatic
-Automatique
-
-Book view
-Comme livre
-
-Continuous book view
-Continue comme livre
-
-Show pages continuously
-Afficher les pages en continu
-
-Send by &email...
-Envoyer par &email...
-
-Back\tAlt+<-
-Retour\tAlt+<-
-
-Forward\tAlt+->
-Avancer\tAlt+->
-
-# Untranslated:

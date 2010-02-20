@@ -114,6 +114,12 @@ Automatic
 Automatically check for &updates
 Αυτόματος έλεγχος για ενημερώσεις
 
+Back\tAlt+<-
+Πίσω\tAlt+<-
+
+Book view
+Προβολή βιβλίου
+
 Bookmarks\tF12
 Σελιδοδείκτες\tF12
 
@@ -131,6 +137,9 @@ Change language
 
 Continuous
 Μια σελίδα, συνεχόμενα
+
+Continuous book view
+Συνεχόμενη προβολή βιβλίου
 
 Continuous facing
 Δύο σελίδες, συνεχόμενα
@@ -207,6 +216,9 @@ Fit Widt&h\tCtrl-2
 Fit Width
 Πλάτος παραθύρου
 
+Forward\tAlt+->
+Εμπρός\tAlt+->
+
 Found text at page %d
 Το κείμενο βρέθηκε στη σελίδα %d
 
@@ -254,6 +266,9 @@ No new version available.
 
 No result found around line %u in file %s
 Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s
+
+No synchronization file found
+Δε βρέθηκε αρχείο συγχρονισμού
 
 No synchronization info at this position
 Δε βρέθηκαν πληροφορίες συγχρονισμού στη θέση αυτή
@@ -309,8 +324,14 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 
+Send by &email...
+Αποστολή με &email...
+
 Set inverse search command-line
 Ενφάνιση γραμμής αντίστροφης αναζήτησης
+
+Show pages continuously
+Συνεχής εμφάνιση σελίδων
 
 Show the &bookmarks sidebar when available
 Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
@@ -335,6 +356,9 @@ SumatraPDF should now be your main PDF reader
 
 Synchronization file cannot be opened
 Το αρχείο συγχρονισμού δε μπορεί να ανοιχθεί
+
+Text documents
+Αρχεία κειμένου
 
 Unknown source file (%s)
 Άγνωστο αρχείο προέλευσης (%s)
@@ -365,30 +389,4 @@ Zoom factor
 
 [Changes detected; refreshing] %s
 [Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
-
-Back\tAlt+<-
-Πίσω\tAlt+<-
-
-Book view
-Προβολή βιβλίου
-
-Continuous book view
-Συνεχόμενη προβολή βιβλίου
-
-Forward\tAlt+->
-Εμπρός\tAlt+->
-
-No synchronization file found
-Δε βρέθηκε αρχείο συγχρονισμού
-
-Send by &email...
-Αποστολή με &email...
-
-Show pages continuously
-Συνεχής εμφάνιση σελίδων
-
-Text documents
-Αρχεία κειμένου
-
-# Untranslated:
 
