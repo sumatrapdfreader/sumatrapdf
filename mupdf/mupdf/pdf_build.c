@@ -1,5 +1,7 @@
 #include "fitz.h"
 #include "mupdf.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 void
 pdf_initgstate(pdf_gstate *gs)
@@ -899,6 +901,10 @@ showglyph(pdf_csi *csi, int cid)
 		ucs[1] = '?';
 
 	gid = pdf_fontcidtogid(fontdesc, cid);
+	if (gid == 0 && ucs[1] == 0x22ef && fontdesc->font->ftface)
+	{
+		gid = FT_Get_Char_Index(fontdesc->font->ftface, 0x2026);
+	}
 
 	if (fontdesc->wmode == 1)
 	{
