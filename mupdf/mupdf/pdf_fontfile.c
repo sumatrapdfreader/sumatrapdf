@@ -630,6 +630,8 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 			return fz_throw("fonterror : no fonts in the system");
 	}
 
+	pdf_logfont("win32: try load font `%s'\n", fontname);
+
 	// work on a normalized copy of the font name
 	fontname = strdup(fontname);
 	removespaces(fontname);
@@ -664,6 +666,7 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from a file %s", found->fontpath);
 
+	pdf_logfont("win32: load font from `%s'\n", found->fontpath);
 	/* it's a substitute font: override the metrics */
 	font->font->ftsubstitute = 1;
 
