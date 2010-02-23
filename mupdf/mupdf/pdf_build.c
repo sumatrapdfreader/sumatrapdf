@@ -901,6 +901,8 @@ showglyph(pdf_csi *csi, int cid)
 		ucs[1] = '?';
 
 	gid = pdf_fontcidtogid(fontdesc, cid);
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=855 */
+	/* some chinese fonts only ship the similarly looking 0x2026 */
 	if (gid == 0 && ucs[1] == 0x22ef && fontdesc->font->ftface)
 	{
 		gid = FT_Get_Char_Index(fontdesc->font->ftface, 0x2026);
