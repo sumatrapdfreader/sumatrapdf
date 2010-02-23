@@ -6,7 +6,7 @@
 
 Lang: am Armenian (Հայերեն)
 
-Contributor: Hrant Ohanyan (hrantmail@mail.am)
+Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 
 &About
 &Մասին
@@ -16,6 +16,9 @@ Contributor: Hrant Ohanyan (hrantmail@mail.am)
 
 &Close\tCtrl-W
 &Փակել\tCtrl-W
+
+&Custom Zoom...
+&Ընտրված չափը
 
 &Don't ask me again
 &Այլևս չհարցնել
@@ -34,6 +37,9 @@ Contributor: Hrant Ohanyan (hrantmail@mail.am)
 
 &Help
 &Օգնություն
+
+&Magnification:
+&Մեժացնել
 
 &Manual
 &Օգնություն
@@ -101,8 +107,17 @@ All files
 Associate with PDF files?
 Ասոցացնե՞լ PDF ֆայլերի հետ։
 
+Automatic
+Ինքնաշխատ
+
 Automatically check for &updates
 Ինքնաշխատ ստուգել &թարմացումները
+
+Back\tAlt+<-
+Հետ\tAlt+<-
+
+Book view
+Գրքի նման
 
 Bookmarks\tF12
 Ընտրյալները\tF12
@@ -113,17 +128,26 @@ Cancel
 Cannot print this file
 Հնարավոր չէ տպել այս ֆայլը
 
+Cannot start inverse search command. Please check the command line in the settings.
+Հնարավոր չէ որոնել։Ստուգեք հրամանների տողի կարգավորումները։
+
 Change language
 Փոխել լեզուն (Change language)
 
 Continuous
 Անդադար
 
+Continuous book view
+Շարունակել գրքի տեսքով
+
 Continuous facing
 Անդադար երկու էջով
 
 Contribute translation
 Օգնել թարգմանել
+
+Copy Selection\tCtrl-C
+Պատճենել ընտրվածը\tCtrl-C
 
 Could not open Printer
 Տպիչը հասանելի չէ
@@ -191,6 +215,9 @@ Fit Widt&h\tCtrl-2
 Fit Width
 Ձգել լայնությամբ
 
+Forward\tAlt+->
+Առաջ\tAlt+->
+
 Found text at page %d
 Տեքստը գտնվել է %d էջում
 
@@ -238,6 +265,9 @@ No new version available.
 
 No result found around line %u in file %s
 %s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
+
+No synchronization file found
+Չեն գտնվել համանման ֆայլեր
 
 No synchronization info at this position
 Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
@@ -290,8 +320,17 @@ Rotate right\tCtrl-Shift-+
 Searching %d of %d...
 Փնտրվում է %d-ից %d
 
+Select content with Ctrl+left mouse button
+Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
+
+Send by &email...
+Ուղարկել &email-ով
+
 Set inverse search command-line
 Նշել փնտրման հրամանների տողը
+
+Show pages continuously
+Անընդհատ ցույց տալ էջերը
 
 Show the &bookmarks sidebar when available
 Հնարավորության դեպքում ցույց տալ &Ընտրյալները
@@ -317,6 +356,9 @@ PDF ֆայլերը ասոցացվեցին SumatraPDF-ի հետ
 Synchronization file cannot be opened
 Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
 
+Text documents
+Տեքստային փաստաթղթեր
+
 Unknown source file (%s)
 Անհայտ ֆայլ (%s)
 
@@ -332,30 +374,18 @@ You have the latest version.
 You have version %s
 Դուք օգտագործում եք %s տարբերակը
 
+Zoom
+Չափը
+
 Zoom In
 Մեծացնել
 
 Zoom Out
 Փոքրացնել
 
+Zoom factor
+Չափի գործակիցը
+
 [Changes detected; refreshing] %s
 [Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
-
-# Untranslated:
-#&Custom Zoom...
-#&Magnification:
-#Automatic
-#Back\tAlt+<-
-#Book view
-#Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Forward\tAlt+->
-#No synchronization file found
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
-#Text documents
-#Zoom
-#Zoom factor
 
