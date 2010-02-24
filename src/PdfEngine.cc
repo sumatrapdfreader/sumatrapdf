@@ -297,6 +297,9 @@ int PdfEngine::findPageNo(fz_obj *dest)
         if (D && fz_isarray(D))
             dest = fz_arrayget(D, 0);
     }
+    else if (fz_isarray(dest)) {
+        dest = fz_arrayget(dest, 0);
+    }
     int n = fz_tonum(dest);
 
     for (int i = 0; i < _pageCount; i++)
