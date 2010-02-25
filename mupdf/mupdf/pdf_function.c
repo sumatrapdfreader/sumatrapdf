@@ -466,6 +466,9 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, in
 	if (error)
 		return fz_rethrow(error, "cannot open calculator function stream");
 
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691139 */
+	while (fz_peekbyte(stream) == ' ') fz_readbyte(stream);
+
 	if (fz_readbyte(stream) != '{')
 	{
 		fz_dropstream(stream);
