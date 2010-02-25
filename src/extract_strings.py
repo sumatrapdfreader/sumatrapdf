@@ -105,7 +105,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
         if 0 == len(l):
             if curr_orig is None: continue
             assert curr_orig not in all_origs, "Duplicate entry for '%s'" % curr_orig
-            assert curr_trans is not None
+            assert curr_trans is not None, "File %s, line %d" % (file_path, line_no)
             if curr_orig not in strings_dict:
                 strings_dict[curr_orig] = [(lang_code, curr_trans)]
             else:
