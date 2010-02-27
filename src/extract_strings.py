@@ -394,7 +394,7 @@ def untranslated_count_for_lang(strings_dict, lang):
             count += 1
     return count
 
-def main():
+def main_obsolete():
     (strings_dict, langs, contributors) = load_strings_file_new()
     strings = extract_strings_from_c_files()
     if len(sys.argv) == 1:
@@ -413,4 +413,4 @@ def main_old():
         dump_missing_for_language(strings_dict, sys.argv[1])
 
 if __name__ == "__main__":
-    main()
+    print("Run update_translations.py instead")
