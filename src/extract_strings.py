@@ -295,7 +295,7 @@ def dump_diffs(strings_dict, strings):
 def langs_sort_func(x,y):
     return cmp(len(y[1]),len(x[1]))
 
-def dump_missing_per_language(strings_dict, dump_strings=False):
+def dump_missing_per_language(strings, strings_dict, dump_strings=False):
     untranslated_dict = {}
     for lang in get_lang_list(strings_dict):
         untranslated = []
@@ -310,6 +310,10 @@ def dump_missing_per_language(strings_dict, dump_strings=False):
                     break
             if not found_translation:
                 untranslated.append(txt)
+        # add strings that only exist in C file as untranslated
+        for s in strings:
+          if s not in strings_dict.keys() and s not in untranslated:
+            untranslated.append(s)
         untranslated_dict[lang] = untranslated
     items = untranslated_dict.items()
     items.sort(langs_sort_func)
@@ -393,8 +397,7 @@ def main():
     (strings_dict, langs, contributors) = load_strings_file_new()
     strings = extract_strings_from_c_files(c_files_to_process)
     if len(sys.argv) == 1:
-        untranslated = dump_missing_per_language(strings_dict)
-        dump_diffs(strings_dict, strings)
+        untranslated = dump_missing_per_language(strings, strings_dict)
         write_out_strings_files(strings_dict, langs, contributors, untranslated)
     else:
         dump_missing_for_language(strings_dict, sys.argv[1])
