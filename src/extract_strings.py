@@ -10,7 +10,7 @@ about untranslated strings to stdout and adds untranslated strings as
 comments at the end of strings file for each language.
 """
 
-c_files_to_process = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
+C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraDialogs.cc"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
 STRINGS_FILE = "strings_obsolete.txt"
 SCRIPT_PATH = os.path.realpath(".")
@@ -257,7 +257,8 @@ def get_lang_list(strings_dict):
                 langs.append(lang)
     return langs
 
-def extract_strings_from_c_files(files):
+def extract_strings_from_c_files():
+    files = C_FILES_TO_PROCESS
     strings = []
     for f in files:
         file_content = file(f, "rb").read()
@@ -395,7 +396,7 @@ def untranslated_count_for_lang(strings_dict, lang):
 
 def main():
     (strings_dict, langs, contributors) = load_strings_file_new()
-    strings = extract_strings_from_c_files(c_files_to_process)
+    strings = extract_strings_from_c_files()
     if len(sys.argv) == 1:
         untranslated = dump_missing_per_language(strings, strings_dict)
         write_out_strings_files(strings_dict, langs, contributors, untranslated)
@@ -404,7 +405,7 @@ def main():
     
 def main_old():
     (strings_dict, langs) = load_strings_file_old()
-    strings = extract_strings_from_c_files(c_files_to_process)
+    strings = extract_strings_from_c_files()
     if len(sys.argv) == 1:
         dump_missing_per_language(strings_dict)
         dump_diffs(strings_dict, strings)
