@@ -392,3 +392,6 @@ Zoomfactor
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
 
+# Untranslated:
+#Properties...
+

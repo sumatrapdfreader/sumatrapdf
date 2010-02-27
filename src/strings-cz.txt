@@ -334,6 +334,7 @@ Zjištěna změna; obnovuji] %s
 #New version %s is available. Download new version?
 #New version available.
 #No new version available.
+#Properties...
 #Send by &email...
 #Set inverse search command-line
 #Show pages continuously

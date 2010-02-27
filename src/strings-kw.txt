@@ -391,3 +391,6 @@ Faktor-zoum
 [Changes detected; refreshing] %s
 [Nowythyansow kevys; owth arnowytha] %s
 
+# Untranslated:
+#Properties...
+

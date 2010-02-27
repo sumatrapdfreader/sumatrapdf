@@ -371,6 +371,7 @@ Zoom factor
 #Continuous book view
 #Forward\tAlt+->
 #No synchronization file found
+#Properties...
 #Send by &email...
 #Show pages continuously
 #Text documents

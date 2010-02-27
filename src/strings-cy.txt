@@ -384,5 +384,6 @@ Ffactor Chwyddo
 # Untranslated:
 #Back\tAlt+<-
 #Forward\tAlt+->
+#Properties...
 #Send by &email...
 

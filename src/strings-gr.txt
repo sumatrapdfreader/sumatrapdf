@@ -390,3 +390,6 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
 
+# Untranslated:
+#Properties...
+

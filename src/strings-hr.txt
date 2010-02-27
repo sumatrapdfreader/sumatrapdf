@@ -352,6 +352,7 @@ Umanji
 #Copy Selection\tCtrl-C
 #Forward\tAlt+->
 #No synchronization file found
+#Properties...
 #Select content with Ctrl+left mouse button
 #Send by &email...
 #Show pages continuously

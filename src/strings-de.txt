@@ -391,3 +391,6 @@ Zoomfaktor
 [Changes detected; refreshing] %s
 [Datei wurde geändert; aktualisiere…] %s
 
+# Untranslated:
+#Properties...
+

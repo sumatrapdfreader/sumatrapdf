@@ -379,6 +379,7 @@ Nagyítás mértéke
 #Cannot start inverse search command. Please check the command line in the settings.
 #No result found around line %u in file %s
 #No synchronization file found
+#Properties...
 #Set inverse search command-line
 #Text documents
 

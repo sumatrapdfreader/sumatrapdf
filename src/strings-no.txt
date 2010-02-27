@@ -391,3 +391,6 @@ Zoom til
 [Changes detected; refreshing] %s
 [Endringer oppdaget; oppdaterer] %s
 
+# Untranslated:
+#Properties...
+

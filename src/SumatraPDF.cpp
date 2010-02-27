@@ -961,6 +961,8 @@ MenuDef menuDefFile[] = {
     { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &email..."),                    IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Properties..."),                    	IDM_PROPERTIES,          	0 },
+    { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
 };
 
@@ -1830,7 +1832,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_VIEW_WITH_ACROBAT, IDM_SEND_BY_EMAIL,
-        IDM_COPY_SELECTION };
+        IDM_COPY_SELECTION, IDM_PROPERTIES };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     HMENU hmenu = win->hMenu;
@@ -4837,6 +4839,11 @@ static bool CanSendAsEmailAttachment(WindowInfo *win)
     return true;
 }
 
+static void ShowPdfProperties(WindowInfo *win)
+{
+	MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
+}
+
 static bool SendAsEmailAttachment(WindowInfo *win)
 {
     if (!CanSendAsEmailAttachment(win))
@@ -7075,6 +7082,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     if (!gRestrictedUse)
                         SendAsEmailAttachment(win);
                     break;
+				case IDM_PROPERTIES:
+					ShowPdfProperties(win);
+					break;
 
                 case IDM_MOVE_FRAME_FOCUS:
                     if (win->hwndFrame != GetFocus())

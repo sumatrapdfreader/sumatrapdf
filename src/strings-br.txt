@@ -389,3 +389,6 @@ Proporção de Zoom
 [Changes detected; refreshing] %s
 [Mudanças detectadas; atualizando] %s
 
+# Untranslated:
+#Properties...
+

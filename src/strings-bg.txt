@@ -382,6 +382,7 @@ Zoom factor
 
 # Untranslated:
 #OK
+#Properties...
 #Send by &email...
 #Text documents
 

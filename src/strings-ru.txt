@@ -390,4 +390,5 @@ Zoom factor
 
 # Untranslated:
 #OK
+#Properties...
 

@@ -347,6 +347,7 @@ Zoom Out
 #Forward\tAlt+->
 #Hint: Use the F3 key for finding again
 #No synchronization file found
+#Properties...
 #Select content with Ctrl+left mouse button
 #Send by &email...
 #Show pages continuously

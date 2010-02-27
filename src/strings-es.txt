@@ -381,6 +381,7 @@ Proporción de Zoom
 # Untranslated:
 #Book view
 #Continuous book view
+#Properties...
 #Send by &email...
 #Show pages continuously
 

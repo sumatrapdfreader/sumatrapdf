@@ -391,3 +391,6 @@ Facteur de zoom
 [Changes detected; refreshing] %s
 [Modifications détectées; actualisation] %s
 
+# Untranslated:
+#Properties...
+

@@ -380,5 +380,6 @@ Zoom factor
 #Book view
 #Continuous book view
 #Forward\tAlt+->
+#Properties...
 #Send by &email...
 

@@ -22,6 +22,7 @@
 #define IDM_REFRESH                     406
 #define IDM_VIEW_WITH_ACROBAT           407
 #define IDM_SEND_BY_EMAIL               408
+#define IDM_PROPERTIES					409
 
 /* IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS must be in a continous range */
 #define IDM_VIEW_SINGLE_PAGE            410

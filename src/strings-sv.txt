@@ -383,5 +383,6 @@ Zoomfaktor
 #Back\tAlt+<-
 #Forward\tAlt+->
 #No synchronization file found
+#Properties...
 #Send by &email...
 
