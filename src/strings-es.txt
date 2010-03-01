@@ -117,6 +117,9 @@ Revisar &actualizaciones automáticamente
 Back\tAlt+<-
 Atrás\tAlt+<-
 
+Book view
+Vista de libro
+
 Bookmarks\tF12
 Marcadores\tF12
 
@@ -134,6 +137,9 @@ Cambiar Idioma (Change language)
 
 Continuous
 Contínua
+
+Continuous book view
+Vista continua de libro
 
 Continuous facing
 Página doble contínua
@@ -303,6 +309,9 @@ Página anterior\t<-
 Printing problem.
 Problema de impresión.
 
+Properties...
+Propiedades...
+
 Remember &opened files
 Recordar archiv&os abiertos
 
@@ -318,8 +327,14 @@ Buscando %d de %d…
 Select content with Ctrl+left mouse button
 Seleccionar con Ctrl+Click
 
+Send by &email...
+Enviar por correo electrónico
+
 Set inverse search command-line
 Establecer búsqueda inversa
+
+Show pages continuously
+Mostrar paginas continuamente
 
 Show the &bookmarks sidebar when available
 Mostrar la barra de marcadores cuando esté disponible
@@ -377,11 +392,4 @@ Proporción de Zoom
 
 [Changes detected; refreshing] %s
 [Modificaciones detectadas; actualizando] %s
-
-# Untranslated:
-#Book view
-#Continuous book view
-#Properties...
-#Send by &email...
-#Show pages continuously
 
