@@ -4,6 +4,9 @@
  * Used by the filter library and the mupdf parser.
  */
 
+#ifndef _FITZ_STREAM_H_
+#define _FITZ_STREAM_H_
+
 typedef struct pdf_xref_s pdf_xref; /* this file is about to be merged with mupdf */
 
 typedef struct fz_obj_s fz_obj;
@@ -409,3 +412,4 @@ static inline int fz_peekbyte(fz_stream *stm)
 
 #endif
 
+#endif

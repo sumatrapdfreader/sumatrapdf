@@ -4,6 +4,9 @@ FITZLIBS = libmupdf libfitz libfitzdraw libfonts libcmaps ;
 
 SubDir TOP apps ;
 
+Library libpdfapp : pdfapp.c ;
+Library libpdftool : pdftool.c ;
+
 Main pdfshow : pdfshow.c ;
 LinkLibraries pdfshow : libpdftool $(FITZLIBS) ;
 
@@ -19,24 +22,16 @@ LinkLibraries pdfinfo : libpdftool $(FITZLIBS) ;
 Main pdfextract : pdfextract.c ;
 LinkLibraries pdfextract : libpdftool $(FITZLIBS) ;
 
-SubDir TOP apps common ;
-Library libpdfapp : pdfapp.c ;
-
-SubDir TOP apps common ;
-Library libpdftool : pdftool.c ;
-
 if $(BUILD_WINAPP)
 {
-    SubDir TOP apps windows ;
-    Main mupdf : winmain.c winres.rc ;
+    Main mupdf : win_main.c win_res.rc ;
     LinkLibraries mupdf : libpdfapp $(FITZLIBS) ;
     LINKLIBS on mupdf$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
 }
 
 if $(BUILD_X11APP)
 {
-    SubDir TOP apps unix ;
-    Main mupdf : x11pdf.c ximage.c ;
+    Main mupdf : x11_main.c x11_image.c ;
     LinkLibraries mupdf : libpdfapp $(FITZLIBS) ;
     LINKLIBS on mupdf$(SUFEXE) = $(LINKLIBS) $(APPLINKLIBS) ;
 }

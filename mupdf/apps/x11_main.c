@@ -2,7 +2,7 @@
 #include "mupdf.h"
 #include "pdfapp.h"
 
-#include "gs_l.xbm"
+#include "x11_icon.xbm"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

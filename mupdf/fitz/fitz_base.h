@@ -2,6 +2,9 @@
  * Include the basic standard libc headers.
  */
 
+#ifndef _FITZ_BASE_H_
+#define _FITZ_BASE_H_
+
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
@@ -324,4 +327,7 @@ fz_error fz_scalepixmap(fz_pixmap **dstp, fz_pixmap *src, int xdenom, int ydenom
 fz_error fz_newscaledpixmap(fz_pixmap **dstp, int w, int h, int n, int xdenom, int ydenom);
 fz_error fz_scalepixmaptile(fz_pixmap *dstp, int xoffs, int yoffs,
 	fz_pixmap *tile, int xdenom, int ydenom);
+
+#endif
+
 
