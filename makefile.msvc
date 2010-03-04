@@ -281,10 +281,7 @@ PDFEXTRACT_APP = $(O)\pdfextract.exe
 PDFEXTRACT_PDB = $(O)\pdfextract.pdb
 PDFEXTRACT_MAP = $(O)\pdfextract.map
 
-CMAPDUMP_OBJS = $(O)\base_error.obj $(O)\base_memory.obj \
-	$(O)\stm_read.obj $(O)\stm_buffer.obj $(O)\stm_filter.obj \
-	$(O)\stm_open.obj $(O)\base_string.obj \
-	$(O)\cmapdump.obj
+CMAPDUMP_OBJS =  $(O)\cmapdump.obj
 
 CMAPDUMP_APP = $(O)\cmapdump.exe
 CMAPDUMP_PDB = $(O)\cmapdump.pdb
