@@ -5,21 +5,24 @@
 
 /* TODO: those should be set from the makefile */
 // Modify the following defines if you have to target a platform prior to the ones specified below.
-// Refer to MSDN for the latest info on corresponding values for different platforms.
+// Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
+// and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
+// We set the features uniformly to Win 2000 or later.
 #ifndef WINVER
 #define WINVER 0x0500
 #endif
 
 #ifndef _WIN32_WINNT 
-#define _WIN32_WINNT 0x0400
+#define _WIN32_WINNT 0x0500
 #endif
 
-#ifndef _WIN32_WINDOWS        // Allow use of features specific to Windows 98 or later.
-#define _WIN32_WINDOWS 0x0410 // Change this to the appropriate value to target Windows Me or later.
+#ifndef _WIN32_WINDOWS
+#define _WIN32_WINDOWS 0x0500
 #endif
 
-#ifndef _WIN32_IE             // Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0600      // Change this to the appropriate value to target other versions of IE.
+// Allow use of features specific to IE 6.0 or later.
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0600
 #endif
 
 #define THREAD_BASED_FILEWATCH

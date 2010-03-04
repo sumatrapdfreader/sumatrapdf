@@ -6869,6 +6869,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
     const TCHAR *   fileName;
+    short           param;
 
     win = WindowInfo_FindByHwnd(hwnd);
 
@@ -6893,6 +6894,17 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             if (win) {
                 RememberWindowPosition(win);
                 AdjustWindowEdge(win);
+            }
+            break;
+
+        case WM_APPCOMMAND:
+            param = GET_APPCOMMAND_LPARAM(lParam);
+            if (APPCOMMAND_BROWSER_BACKWARD == param) {
+                if (win)
+                    OnKeydown(win, VK_PRIOR, lParam);
+            } else if (APPCOMMAND_BROWSER_FORWARD == param) {
+                if (win)
+                    OnKeydown(win, VK_NEXT, lParam);
             }
             break;
 
