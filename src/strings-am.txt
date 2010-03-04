@@ -308,6 +308,9 @@ Previous Page\t<-
 Printing problem.
 Սխալ տպելիս
 
+Properties...
+Հատկություններ...
+
 Remember &opened files
 Հիշել &բացված ֆայլերը
 
@@ -388,7 +391,4 @@ Zoom factor
 
 [Changes detected; refreshing] %s
 [Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
-
-# Untranslated:
-#Properties...
 
