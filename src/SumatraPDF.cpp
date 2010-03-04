@@ -743,8 +743,7 @@ static void SerializableGlobalPrefs_Deinit()
 
 void LaunchBrowser(const TCHAR *url)
 {
-    if (gRestrictedUse)
-        return;
+    if (gRestrictedUse) return;
     launch_url(url);
 }
 
@@ -1075,6 +1074,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
 
 static void AppendRecentFilesToMenu(HMENU m)
 {
+    if (gRestrictedUse) return;
     if (!gFileHistoryRoot) return;
 
     int itemsAdded = 0;
@@ -1119,8 +1119,7 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     }
 
     HMENU tmp = BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile));
-    if (!gRestrictedUse)
-        AppendRecentFilesToMenu(tmp);
+    AppendRecentFilesToMenu(tmp);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&File"));
     tmp = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView));
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)tmp, _TR("&View"));
@@ -3354,8 +3353,7 @@ static void OnPaintAbout(HWND hwnd);
 
 static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el=NULL)
 {
-    if (gRestrictedUse)
-        return NULL;
+    if (gRestrictedUse) return NULL;
 
     // Update the link location information
     if (win)
@@ -4392,6 +4390,8 @@ static void OnMenuPrint(WindowInfo *win)
     PRINTDLGEX       pd;
     LPPRINTPAGERANGE ppr = NULL;
 
+    if (gRestrictedUse) return;
+
     assert(win);
     if (!win) return;
 
@@ -4473,6 +4473,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     const TCHAR *  srcFileName = NULL;
     bool           hasCopyPerm = true;
 
+    if (gRestrictedUse) return;
     assert(win);
     if (!win) return;
     assert(win->dm);
@@ -4564,6 +4565,8 @@ static void OnMenuOpen(WindowInfo *win)
 {
     OPENFILENAME  ofn = {0};
     TCHAR         fileName[260];
+
+    if (gRestrictedUse) return;
 
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
@@ -4774,6 +4777,8 @@ static bool CanViewWithAcrobat(WindowInfo *win)
 
 static void ViewWithAcrobat(WindowInfo *win)
 {
+    if (gRestrictedUse) return;
+
     if (!WindowInfo_PdfLoaded(win))
         return;
 
@@ -4841,11 +4846,13 @@ static bool CanSendAsEmailAttachment(WindowInfo *win)
 
 static void ShowPdfProperties(WindowInfo *win)
 {
-	MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
+    MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
 }
 
 static bool SendAsEmailAttachment(WindowInfo *win)
 {
+    if (gRestrictedUse) return false;
+
     if (!CanSendAsEmailAttachment(win))
         return false;
 
@@ -5058,6 +5065,8 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
 
 static void OnMenuSettings(WindowInfo *win)
 {
+    if (gRestrictedUse) return;
+
     if (DIALOG_OK_PRESSED != Dialog_Settings(win->hwndFrame, &gGlobalPrefs))
         return;
 
@@ -5543,7 +5552,7 @@ static void AdvanceFocus(WindowInfo *win)
 
 static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=false)
 {
-    if (!win->dm)
+    if (!win || !win->dm)
         return false;
     
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasShiftPressed());
@@ -5599,6 +5608,7 @@ static void OnChar(WindowInfo *win, int key)
 {
 //    DBG_OUT("char=%d,%c\n", key, (char)key);
 
+    if (!win) return;
     if (IsCharUpper((TCHAR)key))
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 
@@ -6900,11 +6910,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
         case WM_APPCOMMAND:
             param = GET_APPCOMMAND_LPARAM(lParam);
             if (APPCOMMAND_BROWSER_BACKWARD == param) {
-                if (win)
-                    OnKeydown(win, VK_PRIOR, lParam);
+                OnKeydown(win, VK_PRIOR, lParam);
             } else if (APPCOMMAND_BROWSER_FORWARD == param) {
-                if (win)
-                    OnKeydown(win, VK_NEXT, lParam);
+                OnKeydown(win, VK_NEXT, lParam);
             }
             break;
 
@@ -6923,18 +6931,15 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             {
                 case IDM_OPEN:
                 case IDT_FILE_OPEN:
-                    if (!gRestrictedUse)
-                        OnMenuOpen(win);
+                    OnMenuOpen(win);
                     break;
                 case IDM_SAVEAS:
-                    if (!gRestrictedUse)
-                        OnMenuSaveAs(win);
+                    OnMenuSaveAs(win);
                     break;
 
                 case IDT_FILE_PRINT:
                 case IDM_PRINT:
-                    if (!gRestrictedUse)
-                        OnMenuPrint(win);
+                    OnMenuPrint(win);
                     break;
 
                 case IDT_FILE_EXIT:
@@ -7081,22 +7086,20 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_SETTINGS:
-                    if (!gRestrictedUse)
-                        OnMenuSettings(win);
+                    OnMenuSettings(win);
                     break;
 
                 case IDM_VIEW_WITH_ACROBAT:
-                    if (!gRestrictedUse)
-                        ViewWithAcrobat(win);
+                    ViewWithAcrobat(win);
                     break;
 
                 case IDM_SEND_BY_EMAIL:
-                    if (!gRestrictedUse)
-                        SendAsEmailAttachment(win);
+                    SendAsEmailAttachment(win);
                     break;
-				case IDM_PROPERTIES:
-					ShowPdfProperties(win);
-					break;
+
+                case IDM_PROPERTIES:
+                    ShowPdfProperties(win);
+                    break;
 
                 case IDM_MOVE_FRAME_FOCUS:
                     if (win->hwndFrame != GetFocus())
@@ -7131,13 +7134,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_CHAR:
-            if (win)
-                OnChar(win, wParam);
+            OnChar(win, wParam);
             break;
 
         case WM_KEYDOWN:
-            if (win)
-                OnKeydown(win, wParam, lParam);
+            OnKeydown(win, wParam, lParam);
             break;
 
         case WM_INITMENUPOPUP:
