@@ -138,7 +138,7 @@ Continuous
 Contínuo
 
 Continuous book view
-Ver como Livro de modo contínuo
+Ver como Livro contínuo
 
 Continuous facing
 Página dupla contínua
@@ -308,6 +308,9 @@ Página anterior\t<-
 Printing problem.
 Problema de impressão.
 
+Properties...
+Propriedades...
+
 Remember &opened files
 &Lembrar arquivos abertos
 
@@ -388,7 +391,4 @@ Proporção de Zoom
 
 [Changes detected; refreshing] %s
 [Mudanças detectadas; atualizando] %s
-
-# Untranslated:
-#Properties...
 
