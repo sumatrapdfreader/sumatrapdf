@@ -241,9 +241,7 @@ PDFEXTRACT_DEP = $(patsubst %.o, %.d, $(PDFEXTRACT_OBJ))
 FONTDUMP_SRC = fontdump.c
 FONTDUMP_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${FONTDUMP_SRC})
 
-CMAPDUMP_SRC = cmapdump.c base_error.c base_memory.c \
-	stm_read.c stm_buffer.c stm_filter.c \
-	stm_open.c base_string.c
+CMAPDUMP_SRC = cmapdump.c
 
 CMAPDUMP_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${CMAPDUMP_SRC})
 
