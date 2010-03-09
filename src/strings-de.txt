@@ -310,6 +310,9 @@ Previous Page\t<-
 Printing problem.
 Druckerproblem
 
+Properties...
+Eigenschaften...
+
 Remember &opened files
 &Eine Liste der geöffneten Dokumente führen
 
@@ -390,7 +393,4 @@ Zoomfaktor
 
 [Changes detected; refreshing] %s
 [Datei wurde geändert; aktualisiere…] %s
-
-# Untranslated:
-#Properties...
 
