@@ -91,7 +91,7 @@ bool PdfSearch::FindTextInPage(int pageNo)
     else
         do { // unfortunately, there's no StrRStr...
             found = StrRStrI(pageText, pageText + findIndex, text);
-            findIndex = found - pageText + length - 1;
+            findIndex = found - pageText;
         } while (found && sensitive && StrCmpN(text, found, length) != 0);
 
     if (found) {
