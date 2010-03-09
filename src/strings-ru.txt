@@ -274,6 +274,9 @@ No synchronization file found
 No synchronization info at this position
 В этой позиции нет информации для синхронизации
 
+OK
+OK
+
 Open
 Открыть
 
@@ -306,6 +309,9 @@ Previous Page\t<-
 
 Printing problem.
 Ошибка при печати.
+
+Properties...
+Свойства...
 
 Remember &opened files
 &Запоминать открытые файлы
@@ -387,8 +393,4 @@ Zoom factor
 
 [Changes detected; refreshing] %s
 [Обнаружены изменения; обновление...] %s
-
-# Untranslated:
-#OK
-#Properties...
 
