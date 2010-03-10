@@ -741,12 +741,14 @@ gatherinfo(int show, int page)
 static void
 printglobalinfo(void)
 {
+	fz_obj *tmp;
 	printf("\nPDF-%d.%d\n", xref->version / 10, xref->version % 10);
 
 	if (info->u.info.obj)
 	{
 		printf("Info object (%d %d R):\n", fz_tonum(info->ref), fz_togen(info->ref));
-		fz_debugobj(info->u.info.obj);
+		tmp = fz_resolveindirect(info->u.info.obj);
+		fz_debugobj(tmp);
 	}
 
 	if (cryptinfo->u.crypt.obj)
@@ -1035,7 +1037,7 @@ int main(int argc, char **argv)
 	enum { NO_FILE_OPENED, NO_INFO_GATHERED, INFO_SHOWN } state;
 	char *filename = "";
 	char *password = "";
-	int show = ALL;
+	int show = DIMENSIONS | FONTS;
 	int c;
 
 	while ((c = fz_getopt(argc, argv, "mfispxd:")) != -1)
