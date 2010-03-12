@@ -294,6 +294,65 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
 	return fz_okay;
 }
 
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=722 */
+static fz_error
+extracttext_norec(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *oldpt)
+{
+	struct {
+		int cap, ix;
+		struct {
+			fz_node *node;
+			fz_matrix ctm;
+			fz_point *oldpt;
+		} *items;
+	} stack = { 8, 0, nil };
+
+	do
+	{
+		if (fz_istextnode(node))
+		{
+			fz_error error = extracttext(line, node, ctm, oldpt);
+			if (error)
+				return fz_rethrow(error, "cannot extract text from display node");
+		}
+
+		if (fz_istransformnode(node))
+			ctm = fz_concat(((fz_transformnode*)node)->m, ctm);
+
+		if (node->first)
+		{
+			if (!stack.items)
+				stack.items = fz_malloc(stack.cap * sizeof(*stack.items));
+			else if (stack.ix >= stack.cap)
+			{
+				stack.cap *= 2;
+				stack.items = fz_realloc(stack.items, stack.cap * sizeof(*stack.items));
+			}
+
+			stack.items[stack.ix].node = node;
+			stack.items[stack.ix].ctm = ctm;
+			stack.items[stack.ix].oldpt = oldpt;
+			stack.ix++;
+
+			node = node->first;
+		}
+		else if (stack.items)
+		{
+			node = node->next;
+		}
+		while (!node && stack.ix > 0)
+		{
+			stack.ix--;
+			ctm = stack.items[stack.ix].ctm;
+			oldpt = stack.items[stack.ix].oldpt;
+			node = stack.items[stack.ix].node->next;
+		}
+	} while (node);
+	fz_free(stack.items);
+
+	return fz_okay;
+}
+
 /***** various string fixups *****/
 static void
 insertcharacter(pdf_textline *line, int i, int c)
@@ -427,7 +486,7 @@ pdf_loadtextfromtree(pdf_textline **outp, fz_tree *tree, fz_matrix ctm)
 	root = pdf_newtextline();
 	line = root;
 
-	error = extracttext(&line, tree->root, ctm, &oldpt);
+	error = extracttext_norec(&line, tree->root, ctm, &oldpt);
 	if (error)
 	{
 		pdf_droptextline(root);
