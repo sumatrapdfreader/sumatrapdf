@@ -2172,7 +2172,7 @@ Error:
             rect.right = rect.left + state->windowDx;
             
             // Make sure it doesn't have a position like outside of the screen etc.
-            rect_shift_to_work_area(&rect);
+            rect_shift_to_work_area(&rect, FALSE);
             
             // This shouldn't happen until win->state != WS_ABOUT, so that we don't
             // accidentally update gGlobalState with this window's dimensions

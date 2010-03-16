@@ -86,7 +86,7 @@ int     screen_get_dx(void);
 int     screen_get_dy(void);
 int     screen_get_menu_dy(void);
 int     screen_get_caption_dy(void);
-void rect_shift_to_work_area(RECT *rect);
+void rect_shift_to_work_area(RECT *rect, BOOL bFully);
 
 #ifdef _WIN32_WCE
 void    sip_completion_disable(void);

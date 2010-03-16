@@ -394,31 +394,25 @@ int screen_get_caption_dy(void)
 
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
-void rect_shift_to_work_area(RECT *rect)
+void rect_shift_to_work_area(RECT *rect, BOOL bFully)
 {
-    MONITORINFO mi;
+    MONITORINFO mi = { 0 };
     mi.cbSize = sizeof mi;
     GetMonitorInfo(MonitorFromRect(rect, MONITOR_DEFAULTTONEAREST), &mi);
     
-    if (rect->bottom <= mi.rcWork.top) {
+    if (rect->bottom <= mi.rcWork.top || bFully && rect->top < mi.rcWork.top)
         /* Rectangle is too far above work area */
-        rect->bottom += mi.rcWork.top - rect->top;
-        rect->top = mi.rcWork.top;
-    } else if (rect->top >= mi.rcWork.bottom) {
+        OffsetRect(rect, 0, mi.rcWork.top - rect->top);
+    else if (rect->top >= mi.rcWork.bottom || bFully && rect->bottom > mi.rcWork.bottom)
         /* Rectangle is too far below */
-        rect->top -= rect->bottom - mi.rcWork.bottom;
-        rect->bottom = mi.rcWork.bottom;
-    }
+        OffsetRect(rect, 0, mi.rcWork.bottom - rect->bottom);
     
-    if (rect->right <= mi.rcWork.left) {
+    if (rect->right <= mi.rcWork.left || bFully && rect->left < mi.rcWork.left)
         /* Too far left */
-        rect->right += mi.rcWork.left - rect->left;
-        rect->left = mi.rcWork.left;
-    } else if (rect->left >= mi.rcWork.right) {
+        OffsetRect(rect, mi.rcWork.left - rect->left, 0);
+    else if (rect->left >= mi.rcWork.right || bFully && rect->right > mi.rcWork.right)
         /* Right */
-        rect->left -= rect->right - mi.rcWork.right;
-        rect->right = mi.rcWork.right;
-    }
+        OffsetRect(rect, mi.rcWork.right - rect->right, 0);
 }
 
 /* given a string id 'strId' from resources, get the string in a dynamically
