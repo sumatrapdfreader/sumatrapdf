@@ -120,7 +120,7 @@ Back\tAlt+<-
 Terug\tAlt+<-
 
 Book view
-Boek beeld
+Boekweergave
 
 Bookmarks\tF12
 Bladwijzers\tF12
@@ -141,7 +141,7 @@ Continuous
 Doorlopend
 
 Continuous book view
-Continue book beeld
+Boekweergave doorlopend
 
 Continuous facing
 Dubbele pagina doorlopend
@@ -159,7 +159,7 @@ Couldn't initialize printer
 Kan de printer niet initialiseren
 
 Couldn't render the page
-Deze pagina kan niet worden weergegeven
+Kan de pagina niet weergeven
 
 Default &Layout:
 Standaard &Layout:
@@ -276,7 +276,7 @@ No synchronization info at this position
 Geen synchronisatieinformatie beschikbaar
 
 OK
-Oke
+Oké
 
 Open
 Openen
@@ -311,6 +311,9 @@ Vorige pagina\t<-
 Printing problem.
 Probleem bij het afdrukken.
 
+Properties...
+Eigenschappen...
+
 Remember &opened files
 Herinner ge&opende bestanden
 
@@ -321,7 +324,7 @@ Rotate right\tCtrl-Shift-+
 Rechtsom draaien\tCtrl-Shift-+
 
 Searching %d of %d...
-Zoek %d van %d...
+Zoeken %d van %d...
 
 Select content with Ctrl+left mouse button
 Selecteer inhoud met Ctrl+linker muis knop
@@ -391,7 +394,4 @@ Zoomfactor
 
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
-
-# Untranslated:
-#Properties...
 
