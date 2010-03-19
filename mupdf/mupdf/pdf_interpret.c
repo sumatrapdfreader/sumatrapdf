@@ -266,11 +266,20 @@ runinlineimage(pdf_csi *csi, pdf_xref *xref, fz_obj *rdb, fz_stream *file, fz_ob
 	if (error)
 		return fz_rethrow(error, "cannot load inline image");
 
+FindEndImageMarker:
 	error = pdf_lex(&tok, file, buf, sizeof buf, &len);
 	if (error)
 	{
 		fz_dropimage((fz_image*)img);
 		return fz_rethrow(error, "syntax error after inline image");
+	}
+
+	/* apparently Adobe Reader silently ignores trailing garbage */
+	/* (this might even still be too conservative in what we tolerate) */
+	if (tok == PDF_TKEYWORD && strcmp("EI", buf))
+	{
+		fz_warn("ignoring garbage after inline image");
+		goto FindEndImageMarker;
 	}
 
 	if (tok != PDF_TKEYWORD || strcmp("EI", buf))
