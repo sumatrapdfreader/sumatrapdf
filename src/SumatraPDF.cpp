@@ -5568,9 +5568,15 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToNextPage(0);
     } else if (VK_UP == key) {
-        SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        if (win->dm->needVScroll())
+            SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        else
+            win->dm->goToPrevPage(0);
     } else if (VK_DOWN == key) {
-        SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        if (win->dm->needVScroll())
+            SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        else
+            win->dm->goToNextPage(0);
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
