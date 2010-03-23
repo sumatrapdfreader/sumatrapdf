@@ -336,9 +336,9 @@ extracttext_norec(pdf_textline **line, fz_node *node, fz_matrix ctm, fz_point *o
 
 			node = node->first;
 		}
-		else if (stack.items)
+		else
 		{
-			node = node->next;
+			node = stack.items ? node->next : nil;
 		}
 		while (!node && stack.ix > 0)
 		{
