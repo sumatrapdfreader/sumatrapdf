@@ -24,7 +24,7 @@ Contributor: Marco La Fors
 &Aangepaste Zoom...
 
 &Don't ask me again
-Niet meer vragen
+&Niet meer vragen
 
 &File
 &Bestand
@@ -45,10 +45,10 @@ Niet meer vragen
 &Vergroting:
 
 &Manual
-Handleiding
+&Handleiding
 
 &Match case
-Hoofd-/kleine letters toepassen
+&Hoofdlettergevoelig
 
 &No
 &Nee
@@ -72,16 +72,16 @@ Hoofd-/kleine letters toepassen
 &Bewaar deze instellingen voor elk document
 
 &Save as\tCtrl-S
-&Opslaan als...\tCtrl-S
+O&pslaan als...\tCtrl-S
 
 &Settings
 &Instellingen
 
 &Skip this version
-Deze versie overslaan
+Deze versie over&slaan
 
 &View
-&Beeld
+Bee&ld
 
 &Visit website
 Bezoek de &website
@@ -99,7 +99,7 @@ About SumatraPDF
 Over SumatraPDF
 
 Act&ual Size\tCtrl-1
-Ware grootte\tCtrl-1
+&Ware grootte\tCtrl-1
 
 Advanced
 Geavanceerd
@@ -120,7 +120,7 @@ Back\tAlt+<-
 Terug\tAlt+<-
 
 Book view
-Boekweergave
+&Boekweergave
 
 Bookmarks\tF12
 Bladwijzers\tF12
@@ -135,7 +135,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
 
 Change language
-Taal kiezen (Change language)
+&Taal kiezen (Change language)
 
 Continuous
 Doorlopend
@@ -183,7 +183,7 @@ Error loading PDF file.
 Fout bij laden PDF bestand.
 
 Facing
-Dubbele pagina
+&Dubbele pagina
 
 Failed to save a file
 Fout bij opslaan bestand
@@ -327,7 +327,7 @@ Searching %d of %d...
 Zoeken %d van %d...
 
 Select content with Ctrl+left mouse button
-Selecteer inhoud met Ctrl+linker muis knop
+Selecteer inhoud met Ctrl+linker muisknop
 
 Send by &email...
 Verzend per &email...
@@ -336,16 +336,16 @@ Set inverse search command-line
 Omgekeerde zoekrichting instellen
 
 Show pages continuously
-Toon pagina's continue
+Toon pagina's doorlopend
 
 Show the &bookmarks sidebar when available
-Toon de &Favorieten werkbalk indien beschikbaar
+Toon &Favorieten-werkbalk indien beschikbaar
 
 Show toolbar
 Werkbalk tonen
 
 Single page
-Enkele pagina
+&Enkele pagina
 
 Source file %s has no synchronization point
 Bestand %s heeft geen synchronisatiepunt
@@ -369,7 +369,7 @@ Unknown source file (%s)
 Onbekend bronbestand (%s)
 
 View
-Beeld
+Bee&ld
 
 Warning
 Waarschuwing
@@ -381,7 +381,7 @@ You have version %s
 U heeft versie %s
 
 Zoom
-Zoom
+&Zoom
 
 Zoom In
 Inzoomen
