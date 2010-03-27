@@ -4844,8 +4844,43 @@ static bool CanSendAsEmailAttachment(WindowInfo *win)
     return true;
 }
 
+typedef struct PdfPropertiesLayoutEl {
+    /* A property is always in format:
+    Name (left): Value (right) */
+    const TCHAR *   leftTxt;
+    const TCHAR *   rightTxt;
+
+    /* data calculated by the layout */
+    int             leftTxtPosX;
+    int             leftTxtPosY;
+    int             leftTxtDx;
+    int             leftTxtDy;
+
+    int             rightTxtPosX;
+    int             rightTxtPosY;
+    int             rightTxtDx;
+    int             rightTxtDy;
+} PdfPropertiesLayoutEl;
+
+enum { MAX_PDF_PROPERTIES = 128 };
+
+PdfPropertiesLayoutEl g_pdfProperties[MAX_PDF_PROPERTIES];
+int g_pdfPropertiesCount;
+
+static void AddPdfProperty(const TCHAR *left, const TCHAR *right) {
+    if (g_pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
+        return;
+    }
+    g_pdfProperties[g_pdfPropertiesCount].leftTxt = left;
+    g_pdfProperties[g_pdfPropertiesCount].leftTxt = left;
+    ++g_pdfPropertiesCount;
+}
+
 static void ShowPdfProperties(WindowInfo *win)
 {
+    g_pdfPropertiesCount = 0;
+    AddPdfProperty(_T("Author:"), _T("William Blake"));
+    AddPdfProperty(_T("File:"), _T("foo.pdf"));
     MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
 }
 
