@@ -683,45 +683,47 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     // Go through the list of rules
     for (int i = 0; i < dimof(editor_rules); i++)
     {
-        if (ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
+        if (!ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
         {
-            PTSTR cmd;
-            if (editor_rules[i].Type == SiblingPath)
-            {
-                // remove file part
-                PTSTR dir = FilePath_GetDir(path);
-                cmd = tstr_printf(_T("\"%s\\%s\" %s"), dir, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-                free(dir);
-            }
-            else if (editor_rules[i].Type == BinaryDir)
-            {
-                // remove trailing path separator (TODO: move to function in file_util.c)
-                int len = tstr_len(path);
-                if (*path && char_is_dir_sep(path[len-1]))
-                    path[len-1] = 0;
-                cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
-            }
-            else // if (editor_rules[i].Type == BinaryPath)
-            {
-                cmd = tstr_printf(_T("\"%s\" %s"), path, editor_rules[i].InverseSearchArgs);
-            }
-
-            if (!firstEditor)
-                firstEditor = tstr_dup(cmd);
-            if (!hwndCombo)
-            {
-                // no need to fill a combo box: return immeditately after finding an editor.
-                free(cmd);
-                return firstEditor;
-            }
-
-            SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)cmd);
-            free(cmd);
-
-            // skip the remaining rules for this editor
-            while (i + 1 < dimof(editor_rules) && tstr_eq(editor_rules[i].Name, editor_rules[i+1].Name))
-                i++;
+            continue;
         }
+
+        PTSTR cmd;
+        if (editor_rules[i].Type == SiblingPath)
+        {
+            // remove file part
+            PTSTR dir = FilePath_GetDir(path);
+            cmd = tstr_printf(_T("\"%s\\%s\" %s"), dir, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
+            free(dir);
+        }
+        else if (editor_rules[i].Type == BinaryDir)
+        {
+            // remove trailing path separator (TODO: move to function in file_util.c)
+            int len = tstr_len(path);
+            if (*path && char_is_dir_sep(path[len-1]))
+                path[len-1] = 0;
+            cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
+        }
+        else // if (editor_rules[i].Type == BinaryPath)
+        {
+            cmd = tstr_printf(_T("\"%s\" %s"), path, editor_rules[i].InverseSearchArgs);
+        }
+
+        if (!firstEditor)
+            firstEditor = tstr_dup(cmd);
+        if (!hwndCombo)
+        {
+            // no need to fill a combo box: return immeditately after finding an editor.
+            free(cmd);
+            return firstEditor;
+        }
+
+        SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)cmd);
+        free(cmd);
+
+        // skip the remaining rules for this editor
+        while (i + 1 < dimof(editor_rules) && tstr_eq(editor_rules[i].Name, editor_rules[i+1].Name))
+            i++;
     }
 
     // Fall back to notepad as a default handler
@@ -4881,6 +4883,16 @@ static void ShowPdfProperties(WindowInfo *win)
     g_pdfPropertiesCount = 0;
     AddPdfProperty(_T("Author:"), _T("William Blake"));
     AddPdfProperty(_T("File:"), _T("foo.pdf"));
+    AddPdfProperty(_T("Created:"), _T("12/22/2009 5:19:33 PM"));
+    AddPdfProperty(_T("Modified:"), _T("3/8/2010 1:43:02 PM"));
+    AddPdfProperty(_T("Application:"), _T("pdftk 1.12 -- www.pdftk.com"));
+    AddPdfProperty(_T("PDF Producer:"), _T("itext-paulo (lowagie.com)[JDK1.1] - build 132"));
+    AddPdfProperty(_T("PDF Version:"), _T("1.6 (Acrobat 7.x"));
+    AddPdfProperty(_T("File Size:"), _T("1.29 MB (1,348,258 Bytes)"));
+    AddPdfProperty(_T("Page Szie:"), _T("7x36 x 8.97 in"));
+    AddPdfProperty(_T("Tagged PDF:"), _T("No"));
+    AddPdfProperty(_T("Number of Pages:"), _T("28"));
+    AddPdfProperty(_T("Fast Web View:"), _T("No"));
     MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
 }
 
@@ -6920,6 +6932,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
     const TCHAR *   fileName;
+    HttpReqCtx *    ctx;
 
     win = WindowInfo_FindByHwnd(hwnd);
 
@@ -7258,8 +7271,11 @@ InitMouseWheelInfo:
 
         case WM_APP_URL_DOWNLOADED:
             assert(win);
+            ctx = (HttpReqCtx*)wParam;
             if (win)
-                OnUrlDownloaded(win, (HttpReqCtx*)wParam);
+                OnUrlDownloaded(win, ctx);
+            else
+                delete ctx;
             break;
 
         case WM_APP_FIND_UPDATE:
