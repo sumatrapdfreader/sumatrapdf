@@ -4597,10 +4597,9 @@ static void OnMenuOpen(WindowInfo *win)
     if (FALSE != GetOpenFileName(&ofn))
         LoadPdf(fileName, win);
 }
+
 static void RotateLeft(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
     win->dm->rotateBy(-90);
@@ -4608,8 +4607,6 @@ static void RotateLeft(WindowInfo *win)
 
 static void RotateRight(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
     win->dm->rotateBy(90);
@@ -5156,8 +5153,6 @@ static void OnMenuViewContinuous(WindowInfo *win)
 
 static void OnMenuGoToNextPage(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
     win->dm->goToNextPage(0);
@@ -5165,8 +5160,6 @@ static void OnMenuGoToNextPage(WindowInfo *win)
 
 static void OnMenuGoToPrevPage(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
     win->dm->goToPrevPage(0);
@@ -5174,8 +5167,6 @@ static void OnMenuGoToPrevPage(WindowInfo *win)
 
 static void OnMenuGoToLastPage(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
     win->dm->goToLastPage();
@@ -5183,8 +5174,6 @@ static void OnMenuGoToLastPage(WindowInfo *win)
 
 static void OnMenuGoToFirstPage(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
     win->dm->goToFirstPage();
@@ -5200,8 +5189,6 @@ void WindowInfo::FocusPageNoEdit()
 
 static void OnMenuGoToPage(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
 
@@ -5218,8 +5205,6 @@ static void OnMenuGoToPage(WindowInfo *win)
 
 static void OnMenuFind(WindowInfo *win)
 {
-    assert(win);
-    if (!win) return;
     if (!WindowInfo_PdfLoaded(win))
         return;
 
