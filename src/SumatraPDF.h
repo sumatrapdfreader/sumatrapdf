@@ -84,6 +84,26 @@ typedef struct SelectionOnPage {
                                          * or NULL if such page not exists */
 } SelectionOnPage;
 
+typedef struct PdfPropertiesLayoutEl {
+    /* A property is always in format:
+    Name (left): Value (right) */
+    const TCHAR *   leftTxt;
+    const TCHAR *   rightTxt;
+
+    /* data calculated by the layout */
+    int             leftTxtPosX;
+    int             leftTxtPosY;
+    int             leftTxtDx;
+    int             leftTxtDy;
+
+    int             rightTxtPosX;
+    int             rightTxtPosY;
+    int             rightTxtDx;
+    int             rightTxtDy;
+} PdfPropertiesLayoutEl;
+
+enum { MAX_PDF_PROPERTIES = 128 };
+
 /* Describes information related to one window with (optional) pdf document
    on the screen */
 class WindowInfo : public PdfSearchTracker
@@ -113,6 +133,8 @@ public:
         hwndSpliter = NULL;
         hwndTracker = NULL;
         hwndInfotip = NULL;
+        hwndPdfProperties = NULL;
+
         infotipVisible = false;
         hMenu = NULL;
         hdc = NULL;
@@ -136,6 +158,7 @@ public:
         bmpDoubleBuffer = NULL;
         title = NULL;
         currPageNo = 0;
+        pdfPropertiesCount = 0;
     }
     
     void GetCanvasSize() { 
@@ -171,6 +194,7 @@ public:
     HWND            hwndSpliter;
     HWND            hwndTracker;
     HWND            hwndInfotip;
+
     bool            infotipVisible;
     HMENU           hMenu;
 
@@ -243,6 +267,10 @@ public:
 
     TCHAR *         title;
     int             currPageNo;
+
+    HWND            hwndPdfProperties;
+    PdfPropertiesLayoutEl   pdfProperties[MAX_PDF_PROPERTIES];
+    int                     pdfPropertiesCount;
 
     void ShowTocBox();
     void HideTocBox();

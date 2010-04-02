@@ -181,9 +181,6 @@ static int                          gReBarDy;
 static int                          gReBarDyFrame;
 static HWND                         gHwndAbout;
 
-// TODO: this is actually per WindowInfo and we can have more than one
-static HWND                         gHwndProperties;
-
 static bool                         gRestrictedUse = false;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
@@ -1576,6 +1573,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     }
     WindowInfo_AbortFinding(win);
     delete win->dm;
+    win->dm = NULL;
     if (win->pdfsync) {
       delete win->pdfsync;
       win->pdfsync = NULL;
@@ -1588,7 +1586,10 @@ static void WindowInfo_Delete(WindowInfo *win)
         CloseHandle(win->findStatusThread);
         win->findStatusThread = NULL;
     }
-    win->dm = NULL;
+    if (win->hwndPdfProperties) {
+        DestroyWindow(win->hwndPdfProperties);
+        assert(NULL == win->hwndPdfProperties);
+    }
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
     DragAcceptFiles(win->hwndCanvas, FALSE);
@@ -1618,6 +1619,8 @@ static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
         if (hwnd == win->hwndTocBox)
             return win;
         if (hwnd == win->hwndSpliter)
+            return win;
+        if (hwnd == win->hwndPdfProperties)
             return win;
     }
     return NULL;
@@ -4132,34 +4135,11 @@ static void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-typedef struct PdfPropertiesLayoutEl {
-    /* A property is always in format:
-    Name (left): Value (right) */
-    const TCHAR *   leftTxt;
-    const TCHAR *   rightTxt;
-
-    /* data calculated by the layout */
-    int             leftTxtPosX;
-    int             leftTxtPosY;
-    int             leftTxtDx;
-    int             leftTxtDy;
-
-    int             rightTxtPosX;
-    int             rightTxtPosY;
-    int             rightTxtDx;
-    int             rightTxtDy;
-} PdfPropertiesLayoutEl;
-
-enum { MAX_PDF_PROPERTIES = 128 };
-
-// TODO: this must be per PDF (per WindowInfo)
-PdfPropertiesLayoutEl g_pdfProperties[MAX_PDF_PROPERTIES];
-int g_pdfPropertiesCount;
-
 static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 {
     const TCHAR *txt;
     int          x, y;
+    WindowInfo * win = WindowInfo_FindByHwnd(hwnd);
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 #if 0
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
@@ -4186,19 +4166,19 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 
     /* render text on the left*/
     (HFONT)SelectObject(hdc, fontLeftTxt);
-    for (int i = 0; i < g_pdfPropertiesCount; i++) {
-        txt = g_pdfProperties[i].leftTxt;
-        x = g_pdfProperties[i].leftTxtPosX;
-        y = g_pdfProperties[i].leftTxtPosY;
+    for (int i = 0; i < win->pdfPropertiesCount; i++) {
+        txt = win->pdfProperties[i].leftTxt;
+        x = win->pdfProperties[i].leftTxtPosX;
+        y = win->pdfProperties[i].leftTxtPosY;
         TextOut(hdc, x, y, txt, lstrlen(txt));
     }
 
     /* render text on the right */
     (HFONT)SelectObject(hdc, fontRightTxt);
-    for (int i = 0; i < g_pdfPropertiesCount; i++) {
-        txt = g_pdfProperties[i].rightTxt;
-        x = g_pdfProperties[i].rightTxtPosX;
-        y = g_pdfProperties[i].rightTxtPosY;
+    for (int i = 0; i < win->pdfPropertiesCount; i++) {
+        txt = win->pdfProperties[i].rightTxt;
+        x = win->pdfProperties[i].rightTxtPosX;
+        y = win->pdfProperties[i].rightTxtPosY;
         TextOut(hdc, x, y, txt, lstrlen(txt));
     }
 
@@ -4298,6 +4278,10 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         WindowInfo_AbortFinding(win);
         delete win->dm;
         win->dm = NULL;
+        if (win->hwndPdfProperties) {
+            DestroyWindow(win->hwndPdfProperties);
+            assert(NULL == win->hwndPdfProperties);
+        }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
         WindowInfo_RedrawAll(win);
@@ -4942,13 +4926,13 @@ static bool CanSendAsEmailAttachment(WindowInfo *win)
     return true;
 }
 
-static void AddPdfProperty(const TCHAR *left, const TCHAR *right) {
-    if (g_pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
+static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *right) {
+    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
         return;
     }
-    g_pdfProperties[g_pdfPropertiesCount].leftTxt = left;
-    g_pdfProperties[g_pdfPropertiesCount].rightTxt = right;
-    ++g_pdfPropertiesCount;
+    win->pdfProperties[win->pdfPropertiesCount].leftTxt = left;
+    win->pdfProperties[win->pdfPropertiesCount].rightTxt = right;
+    ++win->pdfPropertiesCount;
 }
 
 static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
@@ -4959,6 +4943,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     int             currY;
     int             offX, offY;
     const TCHAR *   txt;
+    WindowInfo *    win = WindowInfo_FindByHwnd(hwnd);
 
     HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
@@ -4968,18 +4953,18 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     (HFONT)SelectObject(hdc, fontLeftTxt);
     leftMaxDx = 0;
     leftDy = 0;
-    for (int i = 0; i < g_pdfPropertiesCount; i++) {
-        txt = g_pdfProperties[i].leftTxt;
+    for (int i = 0; i < win->pdfPropertiesCount; i++) {
+        txt = win->pdfProperties[i].leftTxt;
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        g_pdfProperties[i].leftTxtDx = (int)txtSize.cx;
-        g_pdfProperties[i].leftTxtDy = (int)txtSize.cy;
+        win->pdfProperties[i].leftTxtDx = (int)txtSize.cx;
+        win->pdfProperties[i].leftTxtDy = (int)txtSize.cy;
 
         if (i > 0) {
-             assert(g_pdfProperties[i-1].leftTxtDy == g_pdfProperties[i].leftTxtDy);
+             assert(win->pdfProperties[i-1].leftTxtDy == win->pdfProperties[i].leftTxtDy);
         }
 
-        if (g_pdfProperties[i].leftTxtDx > leftMaxDx) {
-            leftMaxDx = g_pdfProperties[i].leftTxtDx;
+        if (win->pdfProperties[i].leftTxtDx > leftMaxDx) {
+            leftMaxDx = win->pdfProperties[i].leftTxtDx;
         }
     }
 
@@ -4987,27 +4972,27 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     (HFONT)SelectObject(hdc, fontRightTxt);
     rightMaxDx = 0;
     rightDy = 0;
-    for (int i = 0; i < g_pdfPropertiesCount; i++) {
-        txt = g_pdfProperties[i].rightTxt;
+    for (int i = 0; i < win->pdfPropertiesCount; i++) {
+        txt = win->pdfProperties[i].rightTxt;
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        g_pdfProperties[i].rightTxtDx = (int)txtSize.cx;
-        g_pdfProperties[i].rightTxtDy = (int)txtSize.cy;
+        win->pdfProperties[i].rightTxtDx = (int)txtSize.cx;
+        win->pdfProperties[i].rightTxtDy = (int)txtSize.cy;
 
         if (i > 0) {
-             assert(g_pdfProperties[i-1].rightTxtDy == g_pdfProperties[i].rightTxtDy);
+             assert(win->pdfProperties[i-1].rightTxtDy == win->pdfProperties[i].rightTxtDy);
         }
 
-        if (g_pdfProperties[i].rightTxtDx > rightMaxDx) {
-            rightMaxDx = g_pdfProperties[i].rightTxtDx;
+        if (win->pdfProperties[i].rightTxtDx > rightMaxDx) {
+            rightMaxDx = win->pdfProperties[i].rightTxtDx;
         }
     }
 
-    int textDy = g_pdfProperties[0].rightTxtDy;
+    int textDy = win->pdfProperties[0].rightTxtDy;
 
     totalDx = leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX + rightMaxDx;
 
     totalDy = 4;
-    totalDy += (g_pdfPropertiesCount * (textDy + PROPERTIES_TXT_DY_PADDING));
+    totalDy += (win->pdfPropertiesCount * (textDy + PROPERTIES_TXT_DY_PADDING));
     totalDy += 4;
 
     RECT rc;
@@ -5023,11 +5008,11 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     }
 
     currY = offY;
-    for (int i=0; i < g_pdfPropertiesCount; i++) {
-        g_pdfProperties[i].leftTxtPosX = offX + leftMaxDx - g_pdfProperties[i].leftTxtDx;
-        g_pdfProperties[i].leftTxtPosY = offY + currY;
-        g_pdfProperties[i].rightTxtPosX = offX + leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-        g_pdfProperties[i].rightTxtPosY = offY + currY;
+    for (int i=0; i < win->pdfPropertiesCount; i++) {
+        win->pdfProperties[i].leftTxtPosX = offX + leftMaxDx - win->pdfProperties[i].leftTxtDx;
+        win->pdfProperties[i].leftTxtPosY = offY + currY;
+        win->pdfProperties[i].rightTxtPosX = offX + leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+        win->pdfProperties[i].rightTxtPosY = offY + currY;
         currY += (textDy + PROPERTIES_TXT_DY_PADDING);
     }
 
@@ -5036,58 +5021,58 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     Win32_Font_Delete(fontRightTxt);
 }
 
-static void CreatePropertiesWindow() {
-    if (gHwndProperties) {
-        SetActiveWindow(gHwndProperties);
+static void CreatePropertiesWindow(WindowInfo *win) {
+    if (win->hwndPdfProperties) {
+        SetActiveWindow(win->hwndPdfProperties);
         return;
     }
 
-    gHwndProperties = CreateWindow(
+    win->hwndPdfProperties = CreateWindow(
             PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
             CW_USEDEFAULT, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT,
             NULL, NULL,
             ghinst, NULL);
-    if (!gHwndProperties)
+    if (!win->hwndPdfProperties)
         return;
 
     // get the dimensions required for the about box's content
     RECT rc;
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(gHwndProperties, &ps);
-    UpdatePropertiesLayout(gHwndProperties, hdc, &rc);
-    EndPaint(gHwndProperties, &ps);
+    HDC hdc = BeginPaint(win->hwndPdfProperties, &ps);
+    UpdatePropertiesLayout(win->hwndPdfProperties, hdc, &rc);
+    EndPaint(win->hwndPdfProperties, &ps);
     InflateRect(&rc, ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
 
     // resize the new window to just match these dimensions
     RECT wRc, cRc;
-    GetWindowRect(gHwndProperties, &wRc);
-    GetClientRect(gHwndProperties, &cRc);
+    GetWindowRect(win->hwndPdfProperties, &wRc);
+    GetClientRect(win->hwndPdfProperties, &cRc);
     wRc.right += rect_dx(&rc) - rect_dx(&cRc);
     wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
-    MoveWindow(gHwndProperties, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
+    MoveWindow(win->hwndPdfProperties, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
 
-    ShowWindow(gHwndProperties, SW_SHOW);
+    ShowWindow(win->hwndPdfProperties, SW_SHOW);
 }
 
 static void OnMenuProperties(WindowInfo *win)
 {
-    g_pdfPropertiesCount = 0;
-    AddPdfProperty(_T("Author:"), _T("William Blake"));
-    AddPdfProperty(_T("File:"), _T("foo.pdf"));
-    AddPdfProperty(_T("Created:"), _T("12/22/2009 5:19:33 PM"));
-    AddPdfProperty(_T("Modified:"), _T("3/8/2010 1:43:02 PM"));
-    AddPdfProperty(_T("Application:"), _T("pdftk 1.12 -- www.pdftk.com"));
-    AddPdfProperty(_T("PDF Producer:"), _T("itext-paulo (lowagie.com)[JDK1.1] - build 132"));
-    AddPdfProperty(_T("PDF Version:"), _T("1.6 (Acrobat 7.x"));
-    AddPdfProperty(_T("File Size:"), _T("1.29 MB (1,348,258 Bytes)"));
-    AddPdfProperty(_T("Page Size:"), _T("7x36 x 8.97 in"));
-    AddPdfProperty(_T("Tagged PDF:"), _T("No"));
-    AddPdfProperty(_T("Number of Pages:"), _T("28"));
-    AddPdfProperty(_T("Fast Web View:"), _T("No"));
-    CreatePropertiesWindow();
-    //MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
+    win->pdfPropertiesCount = 0;
+    // TODO: use the real PDF information
+    AddPdfProperty(win, _T("Author:"), _T("William Blake"));
+    AddPdfProperty(win, _T("File:"), _T("foo.pdf"));
+    AddPdfProperty(win, _T("Created:"), _T("12/22/2009 5:19:33 PM"));
+    AddPdfProperty(win, _T("Modified:"), _T("3/8/2010 1:43:02 PM"));
+    AddPdfProperty(win, _T("Application:"), _T("pdftk 1.12 -- www.pdftk.com"));
+    AddPdfProperty(win, _T("PDF Producer:"), _T("itext-paulo (lowagie.com)[JDK1.1] - build 132"));
+    AddPdfProperty(win, _T("PDF Version:"), _T("1.6 (Acrobat 7.x"));
+    AddPdfProperty(win, _T("File Size:"), _T("1.29 MB (1,348,258 Bytes)"));
+    AddPdfProperty(win, _T("Page Size:"), _T("7x36 x 8.97 in"));
+    AddPdfProperty(win, _T("Tagged PDF:"), _T("No"));
+    AddPdfProperty(win, _T("Number of Pages:"), _T("28"));
+    AddPdfProperty(win, _T("Fast Web View:"), _T("No"));
+    CreatePropertiesWindow(win);
 }
 
 static bool SendAsEmailAttachment(WindowInfo *win)
@@ -6942,10 +6927,10 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
 
 static LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     switch (message)
     {
         case WM_CREATE:
-            assert(!gHwndProperties);
             break;
 
         case WM_ERASEBKGND:
@@ -6962,12 +6947,11 @@ static LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam
             break;
 
         case WM_DESTROY:
-            assert(gHwndProperties);
-            gHwndProperties = NULL;
+            assert(win->hwndPdfProperties);
+            win->hwndPdfProperties = NULL;
             break;
 
         /* TODO: handle mouse move/down/up so that links work */
-
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
