@@ -105,10 +105,12 @@ static BOOL             gDebugShowLinks = FALSE;
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
+#define PROPERTIES_CLASS_NAME   _T("SUMATRA_PDF_PROPERTIES")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define PDF_DOC_NAME            _T("Adobe PDF Document")
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
+#define PROPERTIES_WIN_TITLE    _T("PDF Properties") // TODO: translate it
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
 /* Default size for the window, happens to be american A4 size (I think) */
@@ -178,6 +180,9 @@ static bool                         gSuspendRendering = false;
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
 static HWND                         gHwndAbout;
+
+// TODO: this is actually per WindowInfo and we can have more than one
+static HWND                         gHwndProperties;
 
 static bool                         gRestrictedUse = false;
 
@@ -3284,6 +3289,8 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
 #define ABOUT_TXT_DY            6
 
+#define PROPERTIES_TXT_DY_PADDING 2
+
 typedef struct AboutLayoutInfoEl {
     /* static data, must be provided */
     const TCHAR *   leftTxt;
@@ -3479,7 +3486,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     Win32_Font_Delete(fontRightTxt);
 }
 
-static void DrawAbout(HWND hwnd, HDC hdc, RECT * rect)
+static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 {
     SIZE            txtSize;
     int             totalDx, totalDy;
@@ -4122,6 +4129,98 @@ static void OnPaintAbout(HWND hwnd)
     HDC hdc = BeginPaint(hwnd, &ps);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
     DrawAbout(hwnd, hdc, &rc);
+    EndPaint(hwnd, &ps);
+}
+
+typedef struct PdfPropertiesLayoutEl {
+    /* A property is always in format:
+    Name (left): Value (right) */
+    const TCHAR *   leftTxt;
+    const TCHAR *   rightTxt;
+
+    /* data calculated by the layout */
+    int             leftTxtPosX;
+    int             leftTxtPosY;
+    int             leftTxtDx;
+    int             leftTxtDy;
+
+    int             rightTxtPosX;
+    int             rightTxtPosY;
+    int             rightTxtDx;
+    int             rightTxtDy;
+} PdfPropertiesLayoutEl;
+
+enum { MAX_PDF_PROPERTIES = 128 };
+
+// TODO: this must be per PDF (per WindowInfo)
+PdfPropertiesLayoutEl g_pdfProperties[MAX_PDF_PROPERTIES];
+int g_pdfPropertiesCount;
+
+static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
+{
+    const TCHAR *txt;
+    int          x, y;
+    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
+#if 0
+    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
+#endif
+
+    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+
+    HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
+
+    SetBkMode(hdc, TRANSPARENT);
+
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    FillRect(hdc, &rc, brushBg);
+
+
+#if 0
+    SelectObject(hdc, brushBg);
+    SelectObject(hdc, penBorder);
+#endif
+
+    SetTextColor(hdc, ABOUT_BORDER_COL);
+
+    /* render text on the left*/
+    (HFONT)SelectObject(hdc, fontLeftTxt);
+    for (int i = 0; i < g_pdfPropertiesCount; i++) {
+        txt = g_pdfProperties[i].leftTxt;
+        x = g_pdfProperties[i].leftTxtPosX;
+        y = g_pdfProperties[i].leftTxtPosY;
+        TextOut(hdc, x, y, txt, lstrlen(txt));
+    }
+
+    /* render text on the right */
+    (HFONT)SelectObject(hdc, fontRightTxt);
+    for (int i = 0; i < g_pdfPropertiesCount; i++) {
+        txt = g_pdfProperties[i].rightTxt;
+        x = g_pdfProperties[i].rightTxtPosX;
+        y = g_pdfProperties[i].rightTxtPosY;
+        TextOut(hdc, x, y, txt, lstrlen(txt));
+    }
+
+    SelectObject(hdc, origFont);
+    Win32_Font_Delete(fontLeftTxt);
+    Win32_Font_Delete(fontRightTxt);
+
+    DeleteObject(brushBg);
+#if 0
+    DeleteObject(penBorder);
+#endif
+}
+
+static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect);
+
+static void OnPaintProperties(HWND hwnd)
+{
+    PAINTSTRUCT ps;
+    RECT rc;
+    HDC hdc = BeginPaint(hwnd, &ps);
+    UpdatePropertiesLayout(hwnd, hdc, &rc);
+    DrawProperties(hwnd, hdc, &rc);
     EndPaint(hwnd, &ps);
 }
 
@@ -4843,39 +4942,136 @@ static bool CanSendAsEmailAttachment(WindowInfo *win)
     return true;
 }
 
-typedef struct PdfPropertiesLayoutEl {
-    /* A property is always in format:
-    Name (left): Value (right) */
-    const TCHAR *   leftTxt;
-    const TCHAR *   rightTxt;
-
-    /* data calculated by the layout */
-    int             leftTxtPosX;
-    int             leftTxtPosY;
-    int             leftTxtDx;
-    int             leftTxtDy;
-
-    int             rightTxtPosX;
-    int             rightTxtPosY;
-    int             rightTxtDx;
-    int             rightTxtDy;
-} PdfPropertiesLayoutEl;
-
-enum { MAX_PDF_PROPERTIES = 128 };
-
-PdfPropertiesLayoutEl g_pdfProperties[MAX_PDF_PROPERTIES];
-int g_pdfPropertiesCount;
-
 static void AddPdfProperty(const TCHAR *left, const TCHAR *right) {
     if (g_pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
         return;
     }
     g_pdfProperties[g_pdfPropertiesCount].leftTxt = left;
-    g_pdfProperties[g_pdfPropertiesCount].leftTxt = left;
+    g_pdfProperties[g_pdfPropertiesCount].rightTxt = right;
     ++g_pdfPropertiesCount;
 }
 
-static void ShowPdfProperties(WindowInfo *win)
+static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
+    SIZE            txtSize;
+    int             totalDx, totalDy;
+    int             leftDy, rightDy;
+    int             leftMaxDx, rightMaxDx;
+    int             currY;
+    int             offX, offY;
+    const TCHAR *   txt;
+
+    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+    HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt);
+
+    /* calculate text dimensions for the left side */
+    (HFONT)SelectObject(hdc, fontLeftTxt);
+    leftMaxDx = 0;
+    leftDy = 0;
+    for (int i = 0; i < g_pdfPropertiesCount; i++) {
+        txt = g_pdfProperties[i].leftTxt;
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+        g_pdfProperties[i].leftTxtDx = (int)txtSize.cx;
+        g_pdfProperties[i].leftTxtDy = (int)txtSize.cy;
+
+        if (i > 0) {
+             assert(g_pdfProperties[i-1].leftTxtDy == g_pdfProperties[i].leftTxtDy);
+        }
+
+        if (g_pdfProperties[i].leftTxtDx > leftMaxDx) {
+            leftMaxDx = g_pdfProperties[i].leftTxtDx;
+        }
+    }
+
+    /* calculate text dimensions for the right side */
+    (HFONT)SelectObject(hdc, fontRightTxt);
+    rightMaxDx = 0;
+    rightDy = 0;
+    for (int i = 0; i < g_pdfPropertiesCount; i++) {
+        txt = g_pdfProperties[i].rightTxt;
+        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
+        g_pdfProperties[i].rightTxtDx = (int)txtSize.cx;
+        g_pdfProperties[i].rightTxtDy = (int)txtSize.cy;
+
+        if (i > 0) {
+             assert(g_pdfProperties[i-1].rightTxtDy == g_pdfProperties[i].rightTxtDy);
+        }
+
+        if (g_pdfProperties[i].rightTxtDx > rightMaxDx) {
+            rightMaxDx = g_pdfProperties[i].rightTxtDx;
+        }
+    }
+
+    int textDy = g_pdfProperties[0].rightTxtDy;
+
+    totalDx = leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX + rightMaxDx;
+
+    totalDy = 4;
+    totalDy += (g_pdfPropertiesCount * (textDy + PROPERTIES_TXT_DY_PADDING));
+    totalDy += 4;
+
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    offX = (rect_dx(&rc) - totalDx) / 2;
+    offY = (rect_dy(&rc) - totalDy) / 2;
+
+    if (rect) {
+        rect->left = offX;
+        rect->top = offY;
+        rect->right = offX + totalDx;
+        rect->bottom = offY + totalDy;
+    }
+
+    currY = offY;
+    for (int i=0; i < g_pdfPropertiesCount; i++) {
+        g_pdfProperties[i].leftTxtPosX = offX + leftMaxDx - g_pdfProperties[i].leftTxtDx;
+        g_pdfProperties[i].leftTxtPosY = offY + currY;
+        g_pdfProperties[i].rightTxtPosX = offX + leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+        g_pdfProperties[i].rightTxtPosY = offY + currY;
+        currY += (textDy + PROPERTIES_TXT_DY_PADDING);
+    }
+
+    SelectObject(hdc, origFont);
+    Win32_Font_Delete(fontLeftTxt);
+    Win32_Font_Delete(fontRightTxt);
+}
+
+static void CreatePropertiesWindow() {
+    if (gHwndProperties) {
+        SetActiveWindow(gHwndProperties);
+        return;
+    }
+
+    gHwndProperties = CreateWindow(
+            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
+            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            NULL, NULL,
+            ghinst, NULL);
+    if (!gHwndProperties)
+        return;
+
+    // get the dimensions required for the about box's content
+    RECT rc;
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(gHwndProperties, &ps);
+    UpdatePropertiesLayout(gHwndProperties, hdc, &rc);
+    EndPaint(gHwndProperties, &ps);
+    InflateRect(&rc, ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
+
+    // resize the new window to just match these dimensions
+    RECT wRc, cRc;
+    GetWindowRect(gHwndProperties, &wRc);
+    GetClientRect(gHwndProperties, &cRc);
+    wRc.right += rect_dx(&rc) - rect_dx(&cRc);
+    wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
+    MoveWindow(gHwndProperties, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
+
+    ShowWindow(gHwndProperties, SW_SHOW);
+}
+
+static void OnMenuProperties(WindowInfo *win)
 {
     g_pdfPropertiesCount = 0;
     AddPdfProperty(_T("Author:"), _T("William Blake"));
@@ -4886,11 +5082,12 @@ static void ShowPdfProperties(WindowInfo *win)
     AddPdfProperty(_T("PDF Producer:"), _T("itext-paulo (lowagie.com)[JDK1.1] - build 132"));
     AddPdfProperty(_T("PDF Version:"), _T("1.6 (Acrobat 7.x"));
     AddPdfProperty(_T("File Size:"), _T("1.29 MB (1,348,258 Bytes)"));
-    AddPdfProperty(_T("Page Szie:"), _T("7x36 x 8.97 in"));
+    AddPdfProperty(_T("Page Size:"), _T("7x36 x 8.97 in"));
     AddPdfProperty(_T("Tagged PDF:"), _T("No"));
     AddPdfProperty(_T("Number of Pages:"), _T("28"));
     AddPdfProperty(_T("Fast Web View:"), _T("No"));
-    MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
+    CreatePropertiesWindow();
+    //MessageBox(win->hwndFrame, _T("Not implemented!"), _T("Not implemented!"), MB_ICONEXCLAMATION | MB_OK);
 }
 
 static bool SendAsEmailAttachment(WindowInfo *win)
@@ -6743,6 +6940,40 @@ static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPA
     return 0;
 }
 
+static LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+        case WM_CREATE:
+            assert(!gHwndProperties);
+            break;
+
+        case WM_ERASEBKGND:
+            // do nothing, helps to avoid flicker
+            return TRUE;
+
+        case WM_PAINT:
+            OnPaintProperties(hwnd);
+            break;
+
+        case WM_CHAR:
+            if (VK_ESCAPE == wParam)
+                DestroyWindow(hwnd);
+            break;
+
+        case WM_DESTROY:
+            assert(gHwndProperties);
+            gHwndProperties = NULL;
+            break;
+
+        /* TODO: handle mouse move/down/up so that links work */
+
+        default:
+            return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+    return 0;
+}
+
 static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutInfoEl *aboutEl=NULL)
 {
     if (!link && !aboutEl && !win->infotipVisible)
@@ -7127,7 +7358,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_PROPERTIES:
-                    ShowPdfProperties(win);
+                    OnMenuProperties(win);
                     break;
 
                 case IDM_MOVE_FRAME_FOCUS:
@@ -7357,87 +7588,72 @@ InitMouseWheelInfo:
     return 0;
 }
 
+static void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) {
+    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = 0;
+    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground  = NULL;
+    wcex.lpszMenuName   = NULL;
+    wcex.hIconSm        = 0;
+}
+
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
     ATOM        atom;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcFrame;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = NULL;
-    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = FRAME_CLASS_NAME;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    FillWndClassEx(wcex, hInstance);
     wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc    = WndProcCanvas;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = NULL;
-    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = CANVAS_CLASS_NAME;
-    wcex.hIconSm        = 0;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcAbout;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = NULL;
-    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = ABOUT_CLASS_NAME;
-    wcex.hIconSm        = 0;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    FillWndClassEx(wcex, hInstance);
+    wcex.lpfnWndProc    = WndProcProperties;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.lpszClassName  = PROPERTIES_CLASS_NAME;
+    atom = RegisterClassEx(&wcex);
+    if (!atom)
+        return FALSE;
+
+    FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcSpliter;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = SPLITER_CLASS_NAME;
-    wcex.hIconSm        = 0;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
 
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    FillWndClassEx(wcex, hInstance);
     wcex.lpfnWndProc    = WndProcFindStatus;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = FINDSTATUS_CLASS_NAME;
-    wcex.hIconSm        = 0;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;

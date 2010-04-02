@@ -1,10 +1,10 @@
 Things to for 1.1 release:
 * document info window showing basic information about the file
-* a button to switch mouse between dragging and text selection, like in Adobe Reader
-  and FoxIt. The current way with Ctrl is not discoverable enough
 * finish new language detection code
 
 Maybe for 1.1:
+* a button to switch mouse between dragging and text selection, like in Adobe Reader
+  and FoxIt. The current way with Ctrl is not discoverable enough
 * add menu option to create a crashdump on crash and submit it to a website
   with a note about what happened. This is meant to make it easier to get
   callstacks for the crashes from people who experience crashes I can't
