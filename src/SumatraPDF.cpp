@@ -264,7 +264,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
-static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen);
+static void FreePdfProperties(WindowInfo *win);
 
 #define SEP_ITEM "-----"
 
@@ -597,10 +597,49 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
 }
 
+static void SeeLastError(void) {
+    TCHAR *msgBuf = NULL;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&msgBuf, 0, NULL);
+    if (!msgBuf) return;
+    _tprintf(_T("SeeLastError(): %s\n"), msgBuf);
+    OutputDebugString(msgBuf);
+    LocalFree(msgBuf);
+}
 
-//
+static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen)
+{
+    HKEY keyTmp = NULL;
+    LONG res = RegOpenKeyEx(keySub, keyName, 0, KEY_READ, &keyTmp);
+
+    if (ERROR_SUCCESS == res) {
+        bufLen *= sizeof(TCHAR); // we need the buffer size in bytes not TCHARs
+        res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
+        RegCloseKey(keyTmp);
+    }
+
+    if (ERROR_SUCCESS != res)
+        SeeLastError();
+    return ERROR_SUCCESS == res;
+}
+
+static bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
+{
+    HKEY keyTmp = NULL;
+    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
+
+    if (ERROR_SUCCESS == res) {
+        res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
+        RegCloseKey(keyTmp);
+    }
+
+    if (ERROR_SUCCESS != res)
+        SeeLastError();
+    return ERROR_SUCCESS == res;
+}
+
 // List of rules used to detect TeX editors.
-//
 
 // type of path information retrieved from the registy
 typedef enum
@@ -667,7 +706,6 @@ static EditorDetectionRules editor_rules[] =
     //                          _T("emacsclientw.exe"), _T("+%l \"%f\""),
 };
 
-//
 // Detect TeX editors installed on the system and construct the
 // corresponding inverse search commands.
 //
@@ -675,14 +713,11 @@ static EditorDetectionRules editor_rules[] =
 //      hwndCombo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
 // Returns:
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
-//
-//
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
     LPTSTR firstEditor = NULL;
     TCHAR path[MAX_PATH];
 
-    // Go through the list of rules
     for (int i = 0; i < dimof(editor_rules); i++)
     {
         if (!ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue, path, dimof(path)))
@@ -1332,17 +1367,6 @@ static void MenuUpdateZoom(WindowInfo* win)
     ZoomMenuItemCheck(win->hMenu, menuId, NULL != win->dm);
 }
 
-static void SeeLastError(void) {
-    TCHAR *msgBuf = NULL;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&msgBuf, 0, NULL);
-    if (!msgBuf) return;
-    _tprintf(_T("SeeLastError(): %s\n"), msgBuf);
-    OutputDebugString(msgBuf);
-    LocalFree(msgBuf);
-}
-
 static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 {
     // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
@@ -1590,6 +1614,7 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
+    FreePdfProperties(win);
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
     DragAcceptFiles(win->hwndCanvas, FALSE);
@@ -2570,37 +2595,6 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
         dm->zoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == dm->zoomVirtual())
         dm->zoomTo(ZOOM_FIT_PAGE);
-}
-
-static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen)
-{
-    HKEY keyTmp = NULL;
-    LONG res = RegOpenKeyEx(keySub, keyName, 0, KEY_READ, &keyTmp);
-
-    if (ERROR_SUCCESS == res) {
-        bufLen *= sizeof(TCHAR); // we need the buffer size in bytes not TCHARs
-        res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
-        RegCloseKey(keyTmp);
-    }
-
-    if (ERROR_SUCCESS != res)
-        SeeLastError();
-    return ERROR_SUCCESS == res;
-}
-
-static bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
-{
-    HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
-
-    if (ERROR_SUCCESS == res) {
-        res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
-        RegCloseKey(keyTmp);
-    }
-
-    if (ERROR_SUCCESS != res)
-        SeeLastError();
-    return ERROR_SUCCESS == res;
 }
 
 /*
@@ -4931,7 +4925,7 @@ static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *righ
         return;
     }
     win->pdfProperties[win->pdfPropertiesCount].leftTxt = left;
-    win->pdfProperties[win->pdfPropertiesCount].rightTxt = right;
+    win->pdfProperties[win->pdfPropertiesCount].rightTxt = tstr_dup(right);
     ++win->pdfPropertiesCount;
 }
 
@@ -5056,9 +5050,19 @@ static void CreatePropertiesWindow(WindowInfo *win) {
     ShowWindow(win->hwndPdfProperties, SW_SHOW);
 }
 
+static void FreePdfProperties(WindowInfo *win)
+{
+    // free the text on the right. Text on left is static, so doesn't need to
+    // be freed
+    for (int i=0; i<win->pdfPropertiesCount; i++) {
+        free((void*)win->pdfProperties[i].rightTxt);
+    }
+    win->pdfPropertiesCount = 0;
+}
+
 static void OnMenuProperties(WindowInfo *win)
 {
-    win->pdfPropertiesCount = 0;
+    FreePdfProperties(win);
     // TODO: use the real PDF information
     AddPdfProperty(win, _T("Author:"), _T("William Blake"));
     AddPdfProperty(win, _T("File:"), _T("foo.pdf"));
