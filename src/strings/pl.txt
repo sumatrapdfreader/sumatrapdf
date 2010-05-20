@@ -1,0 +1,252 @@
+﻿# Translations for Polish (Polski) (pl) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: pl Polish (Polski)
+
+&About
+O programie
+
+&Close\tCtrl-W
+&Zamknij\tCtrl-W
+
+&File
+Plik
+
+&Go To
+Idź do
+
+&Help
+&Pomoc
+
+&Manual
+Instrukcja obslugi
+
+&Open\tCtrl-O
+Otwórz\tCtrl-O
+
+&Print\tCtrl-P
+Drukuj\tCtrl-P
+
+&Save as\tCtrl-S
+Zapisz jako\tCtrl-S
+
+&View
+&Widok
+
+&Visit website
+Strona www
+
+&Zoom
+Powiększenie
+
+About SumatraPDF
+O programie
+
+Act&ual Size\tCtrl-1
+Prawdziwy rozmiar\tCtrl-1
+
+Change language
+Zmien język (Change language)
+
+Continuous
+Ciągły
+
+Continuous facing
+Ciągły na przeciwko
+
+Contribute translation
+Pomóż przy translacji
+
+Could not open Printer
+Drukarka niedostępna.
+
+E&xit\tCtrl-Q
+Wyjdź\tCtrl-Q
+
+Error loading PDF file.
+Problem przy otwarzaniu pliku.
+
+Facing
+Na przeciwko
+
+Failed to save a file
+Problem przy zapisywaniu pliku.
+
+Find...\tCtrl-F
+Szukaj...\tCtrl-F
+
+Find:
+Szukaj:
+
+First Page\tHome
+Pierwsza strona\tHome
+
+Fit &Page\tCtrl-0
+Dopasuj do strony\tCtrl-0
+
+Fit Page
+Dopasuj do strony
+
+Fit Widt&h\tCtrl-2
+Dopasuj do szerokości\tCtrl-2
+
+Fit Width
+Dopasuj do szerokości
+
+Fullscreen\tCtrl-L
+Na cały ekran\tCtrl-L
+
+Last Page\tEnd
+Ostatnia strona\tEnd
+
+Make SumatraPDF my main PDF reader
+Zrób domyślnym programem dla PDF
+
+Next Page
+Następna strona
+
+Next Page\tRight Arrow
+Następna strona\t->
+
+Open
+Otwórz
+
+Page...\tCtrl-G
+Strona...\tCtrl-G
+
+Page:
+Strona:
+
+Previous Page
+Poprzednia strona
+
+Previous Page\tLeft Arrow
+Poprzednia strona\t<-
+
+Printing problem.
+Problem z drukowaniem.
+
+Rotate left\tCtrl-Shift--
+Obróć w lewo\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Obróć w prawo\tCtrl-Shift-+
+
+Show toolbar
+Pokaż toolbar
+
+Single page
+Jedna strona
+
+View
+Widok
+
+Warning
+Uwaga
+
+Zoom In
+Powiększ
+
+Zoom Out
+Pomniejsz
+
+# Untranslated:
+#&Check for new version
+#&Custom Zoom...
+#&Don't ask me again
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Skip this version
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Associate with PDF files?
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bookmarks\tF12
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#Enter password
+#Enter password for %s
+#File Size:
+#File:
+#Find
+#Find Next
+#Find Previous
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Go to page
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Make SumatraPDF default application for PDF files?
+#Match case
+#Modified:
+#New version %s is available. Download new version?
+#New version available.
+#No matches were found
+#No new version available.
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#You have the latest version.
+#You have version %s
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

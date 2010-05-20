@@ -1,4 +1,7 @@
-#include "fitz_base.h"
+#include "fitz.h"
+
+#define MAX4(a,b,c,d) MAX(MAX(a,b), MAX(c,d))
+#define MIN4(a,b,c,d) MIN(MIN(a,b), MIN(c,d))
 
 void fz_invert3x3(float *dst, float *m)
 {
@@ -139,7 +142,7 @@ fz_invertmatrix(fz_matrix src)
 int
 fz_isrectilinear(fz_matrix m)
 {
-	return	(fabs(m.b) < FLT_EPSILON && fabs(m.c) < FLT_EPSILON) ||
+	return (fabs(m.b) < FLT_EPSILON && fabs(m.c) < FLT_EPSILON) ||
 		(fabs(m.a) < FLT_EPSILON && fabs(m.d) < FLT_EPSILON);
 }
 
@@ -159,7 +162,7 @@ fz_transformpoint(fz_matrix m, fz_point p)
 }
 
 fz_rect
-fz_transformaabb(fz_matrix m, fz_rect r)
+fz_transformrect(fz_matrix m, fz_rect r)
 {
 	fz_point s, t, u, v;
 

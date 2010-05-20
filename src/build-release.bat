@@ -1,68 +1,52 @@
-call "C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
-@set PATH=%PATH%;%ProgramFiles%\NSIS
-@set OUT_PATH=C:\kjk\src\sumatrapdf\builds
+@echo off
 
-@rem create OUT_PATH if doesn't exist
-@IF EXIST %OUT_PATH% GOTO DONT_CREATE_OUT_PATH
-mkdir %OUT_PATH%
-:DONT_CREATE_OUT_PATH
+:TRYVC9
+@call vc9.bat
+IF ERRORLEVEL 1 GOTO TRYVC8
+GOTO HAS_VC
 
-@pushd .
-@set VERSION=%1
-@IF NOT DEFINED VERSION GOTO VERSION_NEEDED
+:TRYVC8
+@call vc8.bat
+IF ERRORLEVEL 1 GOTO VS_NEEDED
+GOTO HAS_VC
 
-@rem check if makensis exists
-@makensis /version >nul
-@IF ERRORLEVEL 1 goto NSIS_NEEDED
+:HAS_VC
+IF EXIST "%ProgramFiles%\NSIS" GOTO HAS_NSIS
+IF EXIST "%ProgramFiles(x86)%\NSIS" GOTO HAS_NSIS_X86
+GOTO NSIS_NEEDED
 
-@rem check if zip exists
-@zip >nul
-@IF ERRORLEVEL 1 goto ZIP_NEEDED
+:HAS_NSIS_X86
+set PATH=%PATH%;%ProgramFiles(x86)%\NSIS
+GOTO NEXT
 
-start /low /b /wait devenv ..\sumatrapdf-vc2008.sln /Rebuild "Release|Win32"
-@IF ERRORLEVEL 1 goto BUILD_FAILED
-echo Compilation ok!
-copy ..\obj-rel\SumatraPDF.exe ..\obj-rel\SumatraPDF-uncomp.exe
-copy ..\obj-rel\SumatraPDF.pdb %OUT_PATH%\SumatraPDF-%VERSION%.pdb
-@rem upx --best --compress-icons=0 ..\obj-rel\SumatraPDF.exe
-start /low /b /wait upx --ultra-brute --compress-icons=0 ..\obj-rel\SumatraPDF.exe
-@IF ERRORLEVEL 1 goto PACK_FAILED
+:HAS_NSIS
+set PATH=%PATH%;%ProgramFiles%\NSIS
+GOTO NEXT
 
-@makensis installer
-@IF ERRORLEVEL 1 goto INSTALLER_FAILED
+:NEXT
+rem check if makensis exists
+makensis /version >nul
+IF ERRORLEVEL 1 goto NSIS_NEEDED
 
-move SumatraPDF-install.exe ..\obj-rel\SumatraPDF-%VERSION%-install.exe
-copy ..\obj-rel\SumatraPDF-%VERSION%-install.exe %OUT_PATH%\SumatraPDF-%VERSION%-install.exe
+rem check if zip exists
+zip -? >nul
+IF ERRORLEVEL 1 goto ZIP_NEEDED
 
-@cd ..\obj-rel
-@rem don't bother compressing since our *.exe has already been packed
-zip -0 SumatraPDF-%VERSION%.zip SumatraPDF.exe
-copy SumatraPDF-%VERSION%.zip %OUT_PATH%\SumatraPDF-%VERSION%.zip
-@goto END
+:BUILD
+python build-release.py %1 %2 %3
+goto END
 
-:INSTALLER_FAILED
-echo Installer script failed
-@goto END
-
-:PACK_FAILED
-echo Failed to pack executable with upx. Do you have upx installed?
-@goto END
-
-:BUILD_FAILED
-echo Build failed!
-@goto END
-
-:VERSION_NEEDED
-echo Need to provide version number e.g. build-release.bat 1.0
-@goto END
+:VS_NEEDED
+echo Visual Studio 2008 (vs9) or 2005 (vs8) doesn't seem to be installed
+goto END
 
 :NSIS_NEEDED
-echo NSIS doesn't seem to be installed. Get it from http://nsis.sourceforge.net/Download
-@goto END
+echo NSIS doesn't seem to installed in %ProgramFiles% or %ProgramFiles(x86)%\NSIS
+echo Get it from http://nsis.sourceforge.net/Download
+goto END
 
 :ZIP_NEEDED
 echo zip.exe doesn't seem to be available in PATH
-@goto END
+goto END
 
 :END
-@popd

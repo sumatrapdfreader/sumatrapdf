@@ -1,0 +1,438 @@
+﻿# Translations for Hungarian (Magyar) (hu) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: hu Hungarian (Magyar)
+
+Contributor: Richard Magyar (magyar_richard@yahoo.com)
+Contributor: Lázár Viktor
+
+&About
+Név&jegy
+
+&Check for new version
+Újabb &verzió keresése
+
+&Close\tCtrl-W
+Be&zárás\tCtrl-W
+
+&Custom Zoom...
+... Egyéni méret
+
+&Don't ask me again
+Ne kérdezze meg többé
+
+&File
+&Fájl
+
+&Find what:
+Mit keres:
+
+&Go To
+U&grás
+
+&Go to page:
+&Ugrás oldal:
+
+&Help
+&Súgó
+
+&Magnification:
+Nagyítás:
+
+&Manual
+Útmutató(web)
+
+&Match case
+Kis- és nagybetűk megkülönböztetése
+
+&No
+&Nem
+
+&No, thanks
+Köszönöm,&nem
+
+&Open\tCtrl-O
+Megny&itás\tCtrl-O
+
+&Options...
+&Beállítások
+
+&Password:
+&Jelszó:
+
+&Print\tCtrl-P
+Nyomt&atás\tCtrl-P
+
+&Remember these settings for each document
+Eltérő nézet-beállítások megjegyzése dokumentumonként
+
+&Save as\tCtrl-S
+Ment&és másként...\tCtrl-S
+
+&Settings
+&Beállítások
+
+&Skip this version
+Verzió kihagyása
+
+&View
+&Nézet
+
+&Visit website
+&Weboldal
+
+&Yes
+&Igen
+
+&Zoom
+&Nagyítás
+
+(of %d)
+(a %d-ból)
+
+About SumatraPDF
+SumatraPDF névjegye
+
+Act&ual Size\tCtrl-1
+&Eredeti méret\tCtrl-1
+
+Advanced
+További programbeállítások
+
+All files
+Minden fájl
+
+Application:
+Alkalmazás:
+
+Associate with PDF files?
+Társítsuk a PDF fájlokkal?
+
+Author:
+Készítő:
+
+Automatic
+Automatikus
+
+Automatically check for &updates
+&Program&frissítések automatikus keresése bekapcsoláskor
+
+Back\tAlt+Left Arrow
+Ugrás vissza\tAlt+<-
+
+Book view
+Könyv(Oldalpár címlappal)
+
+Bookmarks\tF12
+Könyvjelzők\tF12
+
+Bytes
+bájt
+
+Cancel
+Mégse
+
+Cannot print this file
+Ez a file nem nyomtatható
+
+Change language
+Nyelv kiválasztása (Change language)
+
+Continuous
+Folyamatos
+
+Continuous book view
+Folyamatos könyv
+
+Continuous facing
+Folyamatos oldalpár
+
+Contribute translation
+&Járulj hozzá a fordításhoz
+
+Copy Selection\tCtrl-C
+Kép/Szöveg másolása\tCtrl-C
+
+Could not open Printer
+Nem lehet megnyitni a nyomtatót.
+
+Couldn't initialize printer
+A nyomtató inicializálása nem sikerült
+
+Couldn't render the page
+Oldalfeldolgozási hiba
+
+Created:
+Készült:
+
+Default &Layout:
+Oldalmegjelenítési mód:
+
+Default &Zoom:
+Alap nagyítás:
+
+Document Properties
+A dokumentum tulajdonságai
+
+Download
+Letöltés
+
+E&xit\tCtrl-Q
+&Kilépés\tCtrl-Q
+
+Enter password
+Írja be a jelszót
+
+Enter password for %s
+Írja be a(z) %s jelszavát
+
+Error loading PDF file.
+Hiba a PDF betöltése közben.
+
+Facing
+Oldalpár
+
+Failed to save a file
+A fájl mentése sikertelen
+
+File Size:
+Méret:
+
+File:
+Fájl:
+
+Find
+Keresés
+
+Find Next
+Következő keresése
+
+Find Previous
+Előző keresése
+
+Find...\tCtrl-F
+Keresés...\tCtrl-F
+
+Find:
+Keresés:
+
+First Page\tHome
+Első oldal\tHome
+
+Fit &Page\tCtrl-0
+&Teljes oldal\tCtrl-0
+
+Fit Page
+Teljes oldal
+
+Fit Widt&h\tCtrl-2
+Oldal&szélesség\tCtrl-2
+
+Fit Width
+Oldalszélesség
+
+Forward\tAlt+Right Arrow
+Ugrás előre\tAlt+->
+
+Found text at page %d
+Találat a(z) %d. oldalon
+
+Fullscreen\tCtrl-L
+Teljes képernyő\tCtrl+L
+
+GB
+Gb
+
+Go to page
+Ugrás adott oldalra
+
+Hint: Use the F3 key for finding again
+Tipp: Nyomja meg az F3-at a következő találathoz
+
+KB
+Kb
+
+Last Page\tEnd
+Utolsó oldal\tEnd
+
+MB
+Mb
+
+Main PDF reader can't be changed in portable mode
+Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
+
+Make SumatraPDF default application for PDF files?
+Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
+
+Make SumatraPDF my main PDF reader
+SumatraPDF mint alapértelmezett PDF olvasó
+
+Match case
+Kis- és nagybetűk megkülönböztetése
+
+Modified:
+Módosítva:
+
+New version %s is available. Download new version?
+Új verzió érhető el (%s). Kívánja letölteni?
+
+New version available.
+Új verzió érhető el.
+
+Next Page
+Következő oldal
+
+Next Page\tRight Arrow
+Következő oldal\t->
+
+No matches were found
+Nem található a dokumentumban
+
+No new version available.
+Nincs újabb verzió.
+
+No synchronization info at this position
+Nem található szinkronizálási információ az adott pozícióhoz
+
+Number of Pages:
+Oldalak száma:
+
+OK
+OK
+
+Open
+Megny&itás
+
+Open in &Adobe Reader
+Megnyitás &Adobe Acrobat-ban
+
+P&roperties...\tCtrl-D
+&Tulajdonságok\tCtrl-D
+
+PDF Document
+PDF dokumentum
+
+PDF Producer:
+PDF-et létrehozta: 
+
+PDF Version:
+PDF verzió:
+
+PDF documents
+PDF dokumentumok
+
+Page Size:
+Oldalméret
+
+Page number %u inexistant
+A(z) %u oldalszám nem létezik
+
+Page...\tCtrl-G
+Megadott oldal...\tCtrl-G
+
+Page:
+Oldal:
+
+Please wait - rendering...
+Feldolgozás, kérem várjon
+
+Previous Page
+Előző oldal
+
+Previous Page\tLeft Arrow
+Előző oldal\t<-
+
+Printing problem.
+Nyomtatási probléma.
+
+Properties...
+Tulajdonságok...
+
+Remember &opened files
+Korábban megnyitott file-ok listájának tárolása
+
+Rotate left\tCtrl-Shift--
+Forgatás balra\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Forgatás jobbra\tCtrl-Shift-+
+
+Searching %d of %d...
+Keresés a(z) %d./%d oldalon
+
+Select content with Ctrl+left mouse button
+Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
+
+Send by &email...
+Fájl küldése &e-mail-ben
+
+Show pages continuously
+Folyamatos nézet
+
+Show the &bookmarks sidebar when available
+Dokumentumba ágyazott könyvjelzők mutatása
+
+Show toolbar
+Eszköztár
+
+Single page
+Egy oldalas
+
+Source file %s has no synchronization point
+A '%s' forrásfájlban nincs szinkronizációs hely
+
+SumatraPDF Options
+A SumatraPDF beállításai
+
+SumatraPDF is your main PDF reader
+A Sumatra az alapértelmezett PDF-olvasója
+
+SumatraPDF should now be your main PDF reader
+Mostantól a Sumatra az alapértelmezett PDF-olvasója
+
+Synchronization file cannot be opened
+Nem sikerült megnyitni a szinkronizációs fájlt
+
+Title:
+Cím:
+
+Unknown source file (%s)
+Ismeretlen forrásfájl (%s)
+
+View
+Alapértelmezett nézet
+
+Warning
+Figyelmeztetés
+
+You have the latest version.
+Önnél a legfrissebb verzió van telepítve.
+
+You have version %s
+Jelenlegi verzió: %s
+
+Zoom
+Beállít
+
+Zoom In
+Nagyítás
+
+Zoom Out
+Kicsinyítés
+
+Zoom factor
+Nagyítás mértéke
+
+[Changes detected; refreshing] %s
+[a file megváltozott; frissítés] %s
+
+# Untranslated:
+#Cannot start inverse search command. Please check the command line in the settings.
+#No result found around line %u in file %s
+#No synchronization file found
+#Set inverse search command-line
+#Text documents
+

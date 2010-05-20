@@ -22,17 +22,17 @@ extern void windocopy(pdfapp_t*);
 struct pdfapp_s
 {
 	/* current document params */
-	char *filename;
 	char *doctitle;
 	pdf_xref *xref;
 	pdf_outline *outline;
-	fz_renderer *rast;
 	int pagecount;
+	fz_glyphcache *cache;
 
 	/* current view params */
 	float zoom;
 	int rotate;
 	fz_pixmap *image;
+	fz_textspan *text;
 
 	/* current page params */
 	int pageno;
@@ -56,14 +56,14 @@ struct pdfapp_s
 
 	int iscopying;
 	int selx, sely;
-	fz_irect selr;
+	fz_bbox selr;
 
 	/* client context storage */
 	void *userdata;
 };
 
 void pdfapp_init(pdfapp_t *app);
-void pdfapp_open(pdfapp_t *app, char *filename);
+void pdfapp_open(pdfapp_t *app, char *filename, int fd);
 void pdfapp_close(pdfapp_t *app);
 
 char *pdfapp_usage(pdfapp_t *app);

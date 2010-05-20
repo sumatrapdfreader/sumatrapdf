@@ -72,7 +72,7 @@ void pdfmoz_open(pdfmoz_t *moz, char *filename)
     SCROLLINFO si;
     fz_error error;
     fz_obj *obj;
-    fz_irect bbox;
+    fz_bbox bbox;
     int rot;
     int i;
 

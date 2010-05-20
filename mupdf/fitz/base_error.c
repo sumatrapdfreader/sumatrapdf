@@ -1,20 +1,25 @@
-#include "fitz_base.h"
+#include "fitz.h"
 
-char fz_errorbuf[100*20] = {0};
+char fz_errorbuf[150*20] = {0};
 static int fz_errorlen = 0;
 static int fz_errorclear = 1;
 
 static void
 fz_printerror(int type, const char *file, int line, const char *func, char *msg)
 {
-	char buf[100];
+	char buf[150];
 	int len;
+	char *s;
 
-	snprintf(buf, sizeof buf, "%c %s:%d: %s(): %s", type, file, line, func, msg);
+	s = strrchr(file, '\\');
+	if (s)
+		file = s + 1;
+
+	fprintf(stderr, "%c %s:%d: %s(): %s\n", type, file, line, func, msg);
+
+	snprintf(buf, sizeof buf, "%s:%d: %s(): %s", file, line, func, msg);
+	buf[sizeof(buf)-1] = 0;
 	len = strlen(buf);
-
-	fputs(buf, stderr);
-	putc('\n', stderr);
 
 	if (fz_errorclear)
 	{
@@ -44,33 +49,36 @@ void fz_warn(char *fmt, ...)
 
 fz_error fz_throwimp(const char *file, int line, const char *func, char *fmt, ...)
 {
-	char buf[100];
+	char buf[150];
 	va_list ap;
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof buf, fmt, ap);
 	va_end(ap);
+	buf[sizeof(buf)-1] = 0;
 	fz_printerror('+', file, line, func, buf);
 	return -1;
 }
 
 fz_error fz_rethrowimp(fz_error cause, const char *file, int line, const char *func, char *fmt, ...)
 {
-	char buf[100];
+	char buf[150];
 	va_list ap;
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof buf, fmt, ap);
 	va_end(ap);
+	buf[sizeof(buf)-1] = 0;
 	fz_printerror('|', file, line, func, buf);
 	return cause;
 }
 
 fz_error fz_catchimp(fz_error cause, const char *file, int line, const char *func, char *fmt, ...)
 {
-	char buf[100];
+	char buf[150];
 	va_list ap;
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof buf, fmt, ap);
 	va_end(ap);
+	buf[sizeof(buf)-1] = 0;
 	fz_printerror('\\', file, line, func, buf);
 	fz_errorclear = 1;
 	return cause;

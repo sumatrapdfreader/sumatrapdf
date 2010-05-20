@@ -128,11 +128,11 @@ static const struct
 #define MAX_FACENAME	128
 
 // Note: the font face must be the first field so that the structure
-//       can be considered a simple string for searching
+//       can be treated like a simple string for searching
 typedef struct pdf_fontmapMS_s
 {
 	char fontface[MAX_FACENAME]; // UTF-8 encoded
-	char fontpath[MAX_PATH * 2]; // UTF-8 encoded (when compiled with _UNICODE)
+	char fontpath[MAX_PATH];     // ANSI encoded
 	int index;
 } pdf_fontmapMS;
 
@@ -336,8 +336,8 @@ insertmapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
 	if (fl->len >= fl->cap)
 		return fz_throw("fonterror : fontlist overflow");
 
-	strlcpy(fl->fontmap[fl->len].fontface, facename, sizeof(fl->fontmap[0].fontface));
-	strlcpy(fl->fontmap[fl->len].fontpath, path, sizeof(fl->fontmap[0].fontpath));
+	fz_strlcpy(fl->fontmap[fl->len].fontface, facename, sizeof(fl->fontmap[0].fontface));
+	fz_strlcpy(fl->fontmap[fl->len].fontpath, path, sizeof(fl->fontmap[0].fontpath));
 	fl->fontmap[fl->len].index = index;
 
 	++fl->len;
@@ -455,8 +455,8 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 		// append the font's subfamily, unless it's a Regular font
 		if (szStyle[0] && stricmp(szStyle, "Regular") != 0)
 		{
-			strlcat(szTTName, "-", MAX_FACENAME);
-			strlcat(szTTName, szStyle, MAX_FACENAME);
+			fz_strlcat(szTTName, "-", MAX_FACENAME);
+			fz_strlcat(szTTName, szStyle, MAX_FACENAME);
 		}
 		removespaces(szTTName);
 		// compare the two names before adding this one
@@ -472,25 +472,29 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 static fz_error
 parseTTFs(char *path)
 {
-	fz_stream *file = nil;
-	fz_error err = fz_openrfile(&file, path);
-	if (!err)
-		err = parseTTF(file, 0, 0, path);
+	fz_error err;
+	fz_stream *file = fz_openfile(open(path, O_BINARY | O_RDONLY));
+	if (!file)
+		return fz_throw("fonterror : %s not found", path);
 
-	if (file)
-		fz_dropstream(file);
+	err = parseTTF(file, 0, 0, path);
+	fz_dropstream(file);
 	return err;
 }
 
 static fz_error
 parseTTCs(char *path)
 {
-	fz_stream *file = nil;
 	FONT_COLLECTION fontcollection;
 	ULONG i, numFonts, *offsettable = nil;
+	fz_error err;
 
-	fz_error err = fz_openrfile(&file, path);
-	if (err) goto cleanup;
+	fz_stream *file = fz_openfile(open(path, O_BINARY | O_RDONLY));
+	if (!file)
+	{
+		err = fz_throw("fonterror : %s not found", path);
+		goto cleanup;
+	}
 
 	err = safe_read(file, (char *)&fontcollection, sizeof(FONT_COLLECTION));
 	if (err) goto cleanup;
@@ -533,7 +537,7 @@ static fz_error
 pdf_createfontlistMS()
 {
 	TCHAR szFontDir[MAX_PATH], szFile[MAX_PATH];
-	char szPathUtf8[MAX_PATH * 3], *fileExt;
+	char szPathAnsi[MAX_PATH], *fileExt;
 	HANDLE hList;
 	WIN32_FIND_DATA FileData;
 
@@ -559,16 +563,16 @@ pdf_createfontlistMS()
 			// Get the full path for sub directory
 			_stprintf_s(szFile, MAX_PATH, _T("%s%s"), szFontDir, FileData.cFileName);
 #ifdef _UNICODE
-			WideCharToMultiByte(CP_UTF8, 0, szFile, -1, szPathUtf8, sizeof(szPathUtf8), NULL, NULL);
+			// FreeType uses fopen and thus requires the path to be in the ANSI code page
+			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, NULL);
 #else
-			// fz_openrfile falls back to the ANSI code page if the string isn't proper UTF-8
-			strcpy(szPathUtf8, szFile);
+			strcpy(szPathAnsi, szFile);
 #endif
-			fileExt = szPathUtf8 + strlen(szPathUtf8) - 4;
+			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
 			if (!stricmp(fileExt, ".ttc"))
-				parseTTCs(szPathUtf8);
+				parseTTCs(szPathAnsi);
 			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
-				parseTTFs(szPathUtf8);
+				parseTTFs(szPathAnsi);
 			// ignore errors occurring while parsing a given font file
 		}
 	} while (FindNextFile(hList, &FileData));
@@ -589,11 +593,11 @@ pdf_createfontlistMS()
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
 #ifdef _UNICODE
-			WideCharToMultiByte(CP_UTF8, 0, szFile, -1, szPathUtf8, sizeof(szPathUtf8), NULL, NULL);
+			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, NULL);
 #else
-			strcpy(szPathUtf8, szFile);
+			strcpy(szPathAnsi, szFile);
 #endif
-			insertmapping(&fontlistMS, "DroidSansFallback", szPathUtf8, 0);
+			insertmapping(&fontlistMS, "DroidSansFallback", szPathAnsi, 0);
 			CloseHandle(hFile);
 		}
 	}
@@ -662,13 +666,12 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 	if (!found)
 		return !fz_okay;
 
+	// TODO: use fz_newfontfrombuffer so that fontpath can be a proper TCHAR[]
 	error = fz_newfontfromfile(&font->font, found->fontpath, found->index);
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from a file %s", found->fontpath);
 
 	pdf_logfont("win32: load font from `%s'\n", found->fontpath);
-	/* it's a substitute font: override the metrics */
-	font->font->ftsubstitute = 1;
 
 	return fz_okay;
 }
@@ -735,7 +738,7 @@ loadjapansubstitute(pdf_fontdesc *font, char *fontname)
 #endif
 
 fz_error
-pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
+pdf_loadbuiltinfont(pdf_fontdesc *fontdesc, char *fontname)
 {
 	fz_error error;
 	unsigned char *data;
@@ -752,7 +755,7 @@ pdf_loadbuiltinfont(pdf_fontdesc *font, char *fontname)
 	   and we end up with over-lapping text if this font is used.
 	   poppler doesn't have this problem even when using windows fonts
 	   so maybe there's a better fix. */
-	error = loadwindowsfont(font, fontname);
+	error = loadwindowsfont(fontdesc, fontname);
 	if (fz_okay == error)
 		return fz_okay;
 #endif
@@ -765,7 +768,7 @@ found:
 	data = (unsigned char *) basefonts[i].cff;
 	len = *basefonts[i].len;
 
-	error = fz_newfontfrombuffer(&font->font, data, len, 0);
+	error = fz_newfontfrombuffer(&fontdesc->font, data, len, 0);
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from buffer");
 
@@ -773,27 +776,34 @@ found:
 	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
 	{
 		/* hack to prevent StandardEncoding from being loaded in pdf_font.c */
-		font->isembedded = 1;
-		font->flags |= FD_SYMBOLIC;
+		fontdesc->isembedded = 1;
+		fontdesc->flags |= FD_SYMBOLIC;
 	}
+	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
 
 	return fz_okay;
 }
 
 static fz_error
-loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
+loadsystemcidfont(pdf_fontdesc *fontdesc, int ros, int kind)
 {
 #if !defined(NOCJK) && !defined(NOCJKFONT)
 	fz_error error;
 #endif
 #ifdef WIN32
 	/* Try to fall back to a reasonable TrueType font that might be installed locally */
-	if (loadsimilarcjkfont(font, ros, kind) == fz_okay)
+	if (loadsimilarcjkfont(fontdesc, ros, kind) == fz_okay)
+	{
+		fontdesc->font->ftsubstitute = 1;
 		return fz_okay;
+	}
 #ifdef NOCJKFONT
 	/* If no CJK fallback font is builtin, maybe one has been shipped separately */
-	if (loadwindowsfont(font, "DroidSansFallback") == fz_okay)
+	if (loadwindowsfont(fontdesc, "DroidSansFallback") == fz_okay)
+	{
+		fontdesc->font->ftsubstitute = 1;
 		return fz_okay;
+	}
 #endif
 #endif
 #if !defined(NOCJK) && !defined(NOCJKFONT)
@@ -801,12 +811,12 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 	 * to have one for each combination of ROS and Kind.
 	 */
 	pdf_logfont("loading builtin CJK font\n");
-	error = fz_newfontfrombuffer(&font->font,
+	error = fz_newfontfrombuffer(&fontdesc->font,
 		(unsigned char *)pdf_font_DroidSansFallback_ttf_buf,
 		pdf_font_DroidSansFallback_ttf_len, 0);
 	if (error)
 		return fz_rethrow(error, "cannot load builtin CJK font");
-	font->font->ftsubstitute = 1; /* substitute font */
+	fontdesc->font->ftsubstitute = 1; /* substitute font */
 	return fz_okay;
 #else
 	return fz_throw("no builtin CJK font file");
@@ -814,7 +824,7 @@ loadsystemcidfont(pdf_fontdesc *font, int ros, int kind)
 }
 
 fz_error
-pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
+pdf_loadsystemfont(pdf_fontdesc *fontdesc, char *fontname, char *collection)
 {
 	fz_error error;
 	char *name;
@@ -827,9 +837,14 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
 
 #ifdef WIN32
 	/* try to find a precise match in Windows' fonts before falling back to a built-in one */
-	error = loadwindowsfont(font, fontname);
+	error = loadwindowsfont(fontdesc, fontname);
 	if (fz_okay == error)
+	{
+		/* TODO: this seems to be required at least for MS-Mincho - why? */
+		if (collection)
+			fontdesc->font->ftsubstitute = 1;
 		return fz_okay;
+	}
 #endif
 
 	if (strstr(fontname, "Bold"))
@@ -839,15 +854,15 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
 	if (strstr(fontname, "Oblique"))
 		isitalic = 1;
 
-	if (font->flags & FD_FIXED)
+	if (fontdesc->flags & FD_FIXED)
 		isfixed = 1;
-	if (font->flags & FD_SERIF)
+	if (fontdesc->flags & FD_SERIF)
 		isserif = 1;
-	if (font->flags & FD_ITALIC)
+	if (fontdesc->flags & FD_ITALIC)
 		isitalic = 1;
-	if (font->flags & FD_SCRIPT)
+	if (fontdesc->flags & FD_SCRIPT)
 		isscript = 1;
-	if (font->flags & FD_FORCEBOLD)
+	if (fontdesc->flags & FD_FORCEBOLD)
 		isbold = 1;
 
 	pdf_logfont("fixed-%d serif-%d italic-%d script-%d bold-%d\n",
@@ -863,15 +878,15 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
 			kind = GOTHIC;
 
 		if (!strcmp(collection, "Adobe-CNS1"))
-			return loadsystemcidfont(font, CNS, kind);
+			return loadsystemcidfont(fontdesc, CNS, kind);
 		else if (!strcmp(collection, "Adobe-GB1"))
-			return loadsystemcidfont(font, GB, kind);
+			return loadsystemcidfont(fontdesc, GB, kind);
 		else if (!strcmp(collection, "Adobe-Japan1"))
-			return loadsystemcidfont(font, Japan, kind);
+			return loadsystemcidfont(fontdesc, Japan, kind);
 		else if (!strcmp(collection, "Adobe-Japan2"))
-			return loadsystemcidfont(font, Japan, kind);
+			return loadsystemcidfont(fontdesc, Japan, kind);
 		else if (!strcmp(collection, "Adobe-Korea1"))
-			return loadsystemcidfont(font, Korea, kind);
+			return loadsystemcidfont(fontdesc, Korea, kind);
 
 		fz_warn("unknown cid collection: %s", collection);
 	}
@@ -915,18 +930,18 @@ pdf_loadsystemfont(pdf_fontdesc *font, char *fontname, char *collection)
 		}
 	}
 
-	error = pdf_loadbuiltinfont(font, name);
+	error = pdf_loadbuiltinfont(fontdesc, name);
 	if (error)
 		return fz_throw("cannot load builtin substitute font: %s", name);
 
 	/* it's a substitute font: override the metrics */
-	font->font->ftsubstitute = 1;
+	fontdesc->font->ftsubstitute = 1;
 
 	return fz_okay;
 }
 
 fz_error
-pdf_loadembeddedfont(pdf_fontdesc *font, pdf_xref *xref, fz_obj *stmref)
+pdf_loadembeddedfont(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *stmref)
 {
 	fz_error error;
 	fz_buffer *buf;
@@ -937,17 +952,17 @@ pdf_loadembeddedfont(pdf_fontdesc *font, pdf_xref *xref, fz_obj *stmref)
 	if (error)
 		return fz_rethrow(error, "cannot load font stream");
 
-	error = fz_newfontfrombuffer(&font->font, buf->rp, buf->wp - buf->rp, 0);
+	error = fz_newfontfrombuffer(&fontdesc->font, buf->rp, buf->wp - buf->rp, 0);
 	if (error)
 	{
 		fz_dropbuffer(buf);
 		return fz_rethrow(error, "cannot load embedded font (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 	}
 
-	font->buffer = buf->rp; /* save the buffer so we can free it later */
+	fontdesc->buffer = buf->rp; /* save the buffer so we can free it later */
 	fz_free(buf); /* only free the fz_buffer struct, not the contained data */
 
-	font->isembedded = 1;
+	fontdesc->isembedded = 1;
 
 	return fz_okay;
 }

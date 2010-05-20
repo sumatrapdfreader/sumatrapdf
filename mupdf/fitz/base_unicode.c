@@ -1,3 +1,5 @@
+#include "fitz.h"
+
 enum
 {
 	UTFmax        = 4,            /* maximum bytes per rune */
@@ -174,44 +176,5 @@ runelen(int c)
 {
 	char str[10];
 	return runetochar(str, &c);
-}
-
-int
-runenlen(int *r, int nrune)
-{
-	int nb, c;
-
-	nb = 0;
-	while (nrune--) {
-		c = *r++;
-		if (c <= Rune1)
-			nb++;
-		else if (c <= Rune2)
-			nb += 2;
-		else if (c <= Rune3)
-			nb += 3;
-		else /* assert(c <= Rune4) */
-			nb += 4;
-	}
-	return nb;
-}
-
-int
-fullrune(char *str, int n)
-{
-	if (n > 0) {
-		int c = *(unsigned char*)str;
-		if (c < Tx)
-			return 1;
-		if (n > 1) {
-			if (c < T3)
-				return 1;
-			if (n > 2) {
-				if (c < T4 || n > 3)
-					return 1;
-			}
-		}
-	}
-	return 0;
 }
 

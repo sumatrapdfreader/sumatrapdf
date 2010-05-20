@@ -5070,7 +5070,7 @@ int pdf_lookupagl(char *name)
 	int l = 0;
 	int r = nelem(aglcodes) - 1;
 
-	strlcpy(buf, name, sizeof buf);
+	fz_strlcpy(buf, name, sizeof buf);
 
 	/* kill anything after first period and underscore */
 	p = strchr(buf, '.');

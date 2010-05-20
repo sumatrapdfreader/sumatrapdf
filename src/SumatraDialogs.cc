@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include <windows.h>

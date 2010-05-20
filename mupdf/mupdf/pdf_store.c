@@ -15,13 +15,13 @@ struct pdf_item_s
 struct refkey
 {
 	pdf_itemkind kind;
-	int oid;
+	int num;
 	int gen;
 };
 
 struct pdf_store_s
 {
-	fz_hashtable *hash;	/* hash for oid/gen keys */
+	fz_hashtable *hash;	/* hash for num/gen keys */
 	pdf_item *root;		/* linked list for everything else */
 };
 
@@ -66,7 +66,7 @@ static void keepitem(pdf_itemkind kind, void *val)
 	case PDF_KCOLORSPACE: fz_keepcolorspace(val); break;
 	case PDF_KFUNCTION: pdf_keepfunction(val); break;
 	case PDF_KXOBJECT: pdf_keepxobject(val); break;
-	case PDF_KIMAGE: fz_keepimage(val); break;
+	case PDF_KIMAGE: pdf_keepimage(val); break;
 	case PDF_KPATTERN: pdf_keeppattern(val); break;
 	case PDF_KSHADE: fz_keepshade(val); break;
 	case PDF_KCMAP: pdf_keepcmap(val); break;
@@ -81,7 +81,7 @@ static void dropitem(pdf_itemkind kind, void *val)
 	case PDF_KCOLORSPACE: fz_dropcolorspace(val); break;
 	case PDF_KFUNCTION: pdf_dropfunction(val); break;
 	case PDF_KXOBJECT: pdf_dropxobject(val); break;
-	case PDF_KIMAGE: fz_dropimage(val); break;
+	case PDF_KIMAGE: pdf_dropimage(val); break;
 	case PDF_KPATTERN: pdf_droppattern(val); break;
 	case PDF_KSHADE: fz_dropshade(val); break;
 	case PDF_KCMAP: pdf_dropcmap(val); break;
@@ -221,7 +221,7 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 		pdf_logrsrc("store item %s (%d %d R) ptr=%p\n", kindstr(kind), fz_tonum(key), fz_togen(key), val);
 
 		refkey.kind = kind;
-		refkey.oid = fz_tonum(key);
+		refkey.num = fz_tonum(key);
 		refkey.gen = fz_togen(key);
 
 		fz_hashinsert(store->hash, &refkey, item);
@@ -249,7 +249,7 @@ pdf_finditem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 	if (fz_isindirect(key))
 	{
 		refkey.kind = kind;
-		refkey.oid = fz_tonum(key);
+		refkey.num = fz_tonum(key);
 		refkey.gen = fz_togen(key);
 
 		item = fz_hashfind(store->hash, &refkey);
@@ -285,7 +285,7 @@ pdf_removeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key)
 	if (fz_isindirect(key))
 	{
 		refkey.kind = kind;
-		refkey.oid = fz_tonum(key);
+		refkey.num = fz_tonum(key);
 		refkey.gen = fz_togen(key);
 
 		item = fz_hashfind(store->hash, &refkey);
@@ -337,7 +337,7 @@ pdf_debugstore(pdf_store *store)
 		item = fz_hashgetval(store->hash, i);
 		if (key && item)
 		{
-			printf("store[%d] (%d %d R) = %p\n", i, key->oid, key->gen, item->val);
+			printf("store[%d] (%d %d R) = %p\n", i, key->num, key->gen, item->val);
 		}
 	}
 

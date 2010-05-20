@@ -1,5 +1,5 @@
 #include "fitz.h"
-#include "mupdf.h"
+#include "mupdf.h" /* for pdf_loadobject */
 
 extern void fz_freearray(fz_obj *array);
 extern void fz_freedict(fz_obj *dict);

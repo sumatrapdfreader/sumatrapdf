@@ -125,6 +125,7 @@
 #define IDM_LANG_NN                     516
 #define IDM_LANG_AM                     517
 #define IDM_LANG_KW                     518
+#define IDM_LANG_FY_NL                  519
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551

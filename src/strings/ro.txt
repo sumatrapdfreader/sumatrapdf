@@ -1,0 +1,256 @@
+﻿# Translations for Romanian (Română) (ro) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: ro Romanian (Română)
+
+Contributor: Elly Câmpeanu
+
+&About
+&Despre
+
+&Close\tCtrl-W
+Înc&hidere\tCtrl-W
+
+&File
+&Fişier
+
+&Go To
+Sal&t la...
+
+&Help
+A&jutor
+
+&Open\tCtrl-O
+&Deschidere\tCtrl-O
+
+&Print\tCtrl-P
+I&mprimare\tCtrl-P
+
+&Save as\tCtrl-S
+Salvare c&a...\tCtrl-S
+
+&View
+&Vizualizare
+
+&Visit website
+&Vizitează website-ul
+
+&Zoom
+&Panoramare
+
+About SumatraPDF
+Despre SumatraPDF
+
+Act&ual Size\tCtrl-1
+Mărime &actuală\tCtrl-1
+
+Bookmarks\tF12
+Marcaje\tF12
+
+Continuous
+Continuu
+
+Continuous facing
+Pagină dublă continuu
+
+Contribute translation
+Contribuie la traducere
+
+Could not open Printer
+Imprimantă inaccesibilă
+
+E&xit\tCtrl-Q
+&Ieşire\tCtrl-Q
+
+Error loading PDF file.
+Erroare la încărcarea unui fişier PDF.
+
+Facing
+Două pagini
+
+Failed to save a file
+Eroare la salvarea unui fişier
+
+Find Next
+Caută înainte
+
+Find Previous
+Caută înapoi
+
+Find...\tCtrl-F
+Caută...\tCtrl-F
+
+Find:
+Caută:
+
+First Page\tHome
+Prima pagină\tHome
+
+Fit &Page\tCtrl-0
+&Pagină întreagă\tCtrl-0
+
+Fit Page
+Pagină întreagă
+
+Fit Widt&h\tCtrl-2
+Lăţime pagină
+
+Fit Width
+Lăţime pagină
+
+Fullscreen\tCtrl-L
+Ecran complet\tCtrl-L
+
+Last Page\tEnd
+Ultima pagină\tEnd
+
+Make SumatraPDF my main PDF reader
+Fă SumatraPDF un cititor implicit de PDF
+
+Match case
+Potrivire litere mari şi mici
+
+Next Page
+Pagina următoare
+
+Next Page\tRight Arrow
+Pagina următoare\t->
+
+Open
+Deschide
+
+Page...\tCtrl-G
+Pagina...\tCtrl-G
+
+Page:
+Pagina:
+
+Previous Page
+Pagina anterioară
+
+Previous Page\tLeft Arrow
+Pagina anterioară\t<-
+
+Printing problem.
+Problemă la imprimare.
+
+Rotate left\tCtrl-Shift--
+Roteşte spre stânga\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Roteşte spre dreapta\tCtrl-Shift-+
+
+Show toolbar
+Arată bara de instrumente
+
+Single page
+O singură pagină
+
+View
+Vizualizare
+
+Zoom In
+Măreşte
+
+Zoom Out
+Micşorează
+
+# Untranslated:
+#&Check for new version
+#&Custom Zoom...
+#&Don't ask me again
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Manual
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Skip this version
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Associate with PDF files?
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Change language
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#Enter password
+#Enter password for %s
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Go to page
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Make SumatraPDF default application for PDF files?
+#Modified:
+#New version %s is available. Download new version?
+#New version available.
+#No matches were found
+#No new version available.
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#Warning
+#You have the latest version.
+#You have version %s
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

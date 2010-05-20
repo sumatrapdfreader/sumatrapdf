@@ -1,0 +1,41 @@
+.TH PDFCLEAN 1 "March 24, 2010"
+.\" Please adjust this date whenever revising the manpage.
+.SH NAME
+pdfclean \- garbage collect, decompress and pretty print a PDF file
+.SH SYNOPSIS
+.B pdfclean
+.RI [ options ]
+.RI PDFfile
+.RI [ output ]
+.SH DESCRIPTION
+This manual page briefly describes the
+.B pdfclean
+command. Unless any options that modify the behaviour are specified the
+input PDF file is pretty printed and stored under the output PDF file name
+(out.pdf if no file name is given).
+.PP
+.SH OPTIONS
+A description of each of the supported options is included below.
+.TP
+.B \-p password
+Uses the given password during decryption of an encrypted PDF file.
+The password is tried both as user and owner password.
+.TP
+.B \-g
+Enables garbage collection of PDF objects that have no references from
+other objects.
+.TP
+.B \-x
+Expands compressed PDF object streams. This may make a file much larger,
+but provides easy access to all PDF object streams. Note that encrypted
+files requires the password to be set using
+.B \-p .
+.SH SEE ALSO
+.BR mupdf (1),
+.BR pdfdraw (1).
+.BR pdfshow (1).
+.SH AUTHOR
+MuPDF was written by Tor Andersson <tor@ghostscript.com>.
+MuPDF is Copyright 2006-2010 Artifex Software, Inc.
+.PP
+This manual page was written by Sebastian Rasmussen <sebras@hotmail.com>.

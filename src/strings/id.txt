@@ -1,0 +1,446 @@
+﻿# Translations for Indonesian (Bahasa Indonesia) (id) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: id Indonesian (Bahasa Indonesia)
+
+Contributor: Yudi Wibisono (http://yudiwbs.wordpress.com)
+Contributor: Ricki Yani Setiawan
+
+&About
+&Tentang
+
+&Check for new version
+&Periksa versi baru
+
+&Close\tCtrl-W
+&Tutup\tCtrl-W
+
+&Custom Zoom...
+&Pembesaran khusus
+
+&Don't ask me again
+&Jangan ulangi pertanyaan ini
+
+&File
+&Berkas
+
+&Find what:
+&Cari :
+
+&Go To
+&Pergi ke
+
+&Go to page:
+&Pergi ke halaman:
+
+&Help
+Ban&tuan
+
+&Magnification:
+&Pembesaran
+
+&Manual
+&Manual
+
+&Match case
+&Samakan jenis
+
+&No
+&Tidak
+
+&No, thanks
+&Tidak, terima kasih
+
+&Open\tCtrl-O
+&Buka\tCtrl-O
+
+&Options...
+&Pilihan...
+
+&Password:
+&Kata kunci"
+
+&Print\tCtrl-P
+&Cetak\tCtrl-P
+
+&Remember these settings for each document
+&Ingat pengaturan ini untuk tiap dokumen
+
+&Save as\tCtrl-S
+&Simpan sebagai\tCtrl-S
+
+&Settings
+&Pengaturan
+
+&Skip this version
+&Lewatkan versi ini
+
+&View
+&Lihat
+
+&Visit website
+&Kunjungi Halaman Web
+
+&Yes
+&Ya
+
+&Zoom
+&Ukuran
+
+(of %d)
+(atau %d)
+
+About SumatraPDF
+Tentang SumatraPDF
+
+Act&ual Size\tCtrl-1
+&Ukuran Sebenarnya\tCtrl-1
+
+Advanced
+Tingkat lanjut
+
+All files
+Semua berkas
+
+Application:
+Aplikasi
+
+Associate with PDF files?
+Asosiasikan dengan berkas PDF?
+
+Author:
+Pengarang:
+
+Automatic
+Otomatis
+
+Automatically check for &updates
+Periksa &pemutakhiran secara otomatis
+
+Back\tAlt+Left Arrow
+Kembali\tAlt+<-
+
+Book view
+Tampilan buku
+
+Bookmarks\tF12
+Kutipan\tF12
+
+Bytes
+Bytes
+
+Cancel
+Batal
+
+Cannot print this file
+Tidak dapat mencetak berkas ini
+
+Cannot start inverse search command. Please check the command line in the settings.
+Tidak dapat memulai perintah pencarian mundur. Harap periksa baris perintah di bagian pengaturan.
+
+Change language
+Ubah bahasa
+
+Continuous
+Bersambung
+
+Continuous book view
+Tampilan buku secara kontinu
+
+Continuous facing
+Dua Halaman Bersambung
+
+Contribute translation
+Membantu alihbahasa
+
+Copy Selection\tCtrl-C
+Gandakan hasil seleksi\tCtrl-C
+
+Could not open Printer
+Tidak dapat membuka printer
+
+Couldn't initialize printer
+Tidak dapat menginisialisasi printer
+
+Couldn't render the page
+Tidak dapat menampilkan halaman
+
+Created:
+Dibuat:
+
+Default &Layout:
+Tampilan &Standar
+
+Default &Zoom:
+Pembesaran &Standar
+
+Document Properties
+Properti Dokumen
+
+Download
+Unduh
+
+E&xit\tCtrl-Q
+&Keluar\tCtrl-Q
+
+Enter password
+Masukkan kata kunci
+
+Enter password for %s
+Masukkan kata kunci untuk %s
+
+Error loading PDF file.
+Kesalahan dalam memanggil berkas PDF.
+
+Facing
+Dua Halaman
+
+Failed to save a file
+Gagal menyimpan berkas
+
+File Size:
+Ukuran Berkas:
+
+File:
+Berkas:
+
+Find
+Cari
+
+Find Next
+Temukan Sesudah
+
+Find Previous
+Temukan Sebelum
+
+Find...\tCtrl-F
+Temukan...\tCtrl-F
+
+Find:
+Temukan:
+
+First Page\tHome
+Halaman Pertama\tHome
+
+Fit &Page\tCtrl-0
+&Sesuaikan\tCtrl-0
+
+Fit Page
+Sesuaikan
+
+Fit Widt&h\tCtrl-2
+Sesuaikan dengan &Lebar\tCtrl-2
+
+Fit Width
+Sesuaikan dengan Lebar
+
+Forward\tAlt+Right Arrow
+Berikutnya\tAlt+->
+
+Found text at page %d
+Teks ditemukan pada halaman %d
+
+Fullscreen\tCtrl-L
+Selayar Penuh\tCtrl-L
+
+GB
+GB
+
+Go to page
+Pergi ke halaman
+
+Hint: Use the F3 key for finding again
+Tips : Gunakan tombol F3 untuk mengulangi pencarian
+
+KB
+KB
+
+Last Page\tEnd
+Halaman Terakhir\tEnd
+
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+Pembaca PDF utama tidak dapat diubah dalam mode portabel
+
+Make SumatraPDF default application for PDF files?
+Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?
+
+Make SumatraPDF my main PDF reader
+Jadikan SumatraPDF sebagai pembaca-PDF utama
+
+Match case
+Cocokkan Huruf Besar-Kecilnya
+
+Modified:
+Dimodifikasi:
+
+New version %s is available. Download new version?
+Versi baru %s telah tersedia. Unduh versi baru ini?
+
+New version available.
+Versi baru telah tersedia
+
+Next Page
+Halaman Berikutnya
+
+Next Page\tRight Arrow
+Halaman Berikutnya\t->
+
+No matches were found
+Tidak ada persamaan ditemukan
+
+No new version available.
+Versi baru tidak tersedia
+
+No result found around line %u in file %s
+Tidak ada hasil ditemukan pada baris %u di dalam berkas %s
+
+No synchronization file found
+Tidak ada berkas sinkronisasi ditemukan
+
+No synchronization info at this position
+Tidak ada informasi sinkronisasi pada lokasi ini
+
+Number of Pages:
+Jumlah halaman:
+
+OK
+OK
+
+Open
+Buka
+
+Open in &Adobe Reader
+Buka di &Adobe Reader
+
+P&roperties...\tCtrl-D
+P&roperti...\tCtrl-D
+
+PDF Document
+Berkas PDF
+
+PDF Producer:
+Produser PDF:
+
+PDF Version:
+Versi PDF:
+
+PDF documents
+Berkas-berkas dokumen
+
+Page Size:
+Ukuran Halaman:
+
+Page number %u inexistant
+Halaman %u tidak tersedia
+
+Page...\tCtrl-G
+Halaman...\tCtrl-G
+
+Page:
+Halaman:
+
+Please wait - rendering...
+Harap tunggu - sedang dalam proses...
+
+Previous Page
+Halaman Sebelumnya
+
+Previous Page\tLeft Arrow
+Halaman Sebelumnya\t<-
+
+Printing problem.
+Masalahan Pencetakkan.
+
+Properties...
+Karakteristik
+
+Remember &opened files
+Ingat &berkas yang pernah terbuka
+
+Rotate left\tCtrl-Shift--
+Putar ke kiri\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Putar ke Kanan\tCtrl-Shift-+
+
+Searching %d of %d...
+Sedang mencari %d dari %d
+
+Select content with Ctrl+left mouse button
+Pilih konten dengan tombol Ctrl+left pada mouse
+
+Send by &email...
+Kirim dengan &email
+
+Set inverse search command-line
+Tetapkan perintah pencarian mundur
+
+Show pages continuously
+Tampilkan halaman secara kontinu
+
+Show the &bookmarks sidebar when available
+Tampilkan kolom &kutipan jika tersedia
+
+Show toolbar
+Perlihatkan toolbar
+
+Single page
+Satu Halaman
+
+Source file %s has no synchronization point
+Berkas asal %s tidak mempunyai titik sinkronisasi
+
+SumatraPDF Options
+Pilihan-pilihan di SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF ada pembaca berkas PDF utama anda
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF sekarang telah menjadi pembaca berkas PDF utama anda
+
+Synchronization file cannot be opened
+Berkas sinkronisasi tidak dapat dibuka
+
+Text documents
+Dokumen-dokumen teks
+
+Title:
+Judul:
+
+Unknown source file (%s)
+Berkas asal (%s) tidak diketahui
+
+View
+Lihat
+
+Warning
+Peringatan
+
+You have the latest version.
+Anda telah memiliki versi terbaru
+
+You have version %s
+Anda memiliki versi %s
+
+Zoom
+Pembesaran
+
+Zoom In
+Perbesar
+
+Zoom Out
+Perkecil
+
+Zoom factor
+Faktor pembesaran
+
+[Changes detected; refreshing] %s
+[Perubahan terdeteksi; muat ulang] %s
+

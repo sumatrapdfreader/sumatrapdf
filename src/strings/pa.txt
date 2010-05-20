@@ -1,0 +1,286 @@
+﻿# Translations for Punjabi (ਪੰਜਾਬੀ) (pa) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: pa Punjabi (ਪੰਜਾਬੀ)
+
+&About
+Sumatra ਬਾਰੇ(&A)
+
+&Check for new version
+ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
+
+&Close\tCtrl-W
+ਬੰਦ ਕਰੋ(&C)\tCtrl-W
+
+&Don't ask me again
+ਮੈਥੌਂ ਮੁੜ ਨਾ ਪੁਛੋ
+
+&File
+ਫਾਇਲ(&F)
+
+&Go To
+ਜਾਵੋ(&G)
+
+&Help
+ਸਹਾਇਤਾ(&H)
+
+&Manual
+ਮਦੱਦ ਕਤਾਬ(&M)
+
+&Open\tCtrl-O
+ਫਾਇਲ ਖੋਲੋ(&O)\tCtrl-O
+
+&Print\tCtrl-P
+ਪਰਿੰਟ ਕਰੋ(&P)\tCtrl-P
+
+&Save as\tCtrl-S
+ਇੰਝ ਸੰਬਾਲੋ(&S)\tCtrl-S
+
+&Skip this version
+ਇਸ ਵਰਜਨ ਨੂੰ ਛਡੋ
+
+&View
+ਵੇਖੋ(&V)
+
+&Visit website
+ਵੇਬਸਾਇਟ ਵੇਥੋ(&V)
+
+&Zoom
+ਵੱਡਾ ਕਰੋ(&Z)
+
+About SumatraPDF
+Sumatra ਬਾਰੇ
+
+Act&ual Size\tCtrl-1
+ਸਹੀ ਅਕਾਰ(&u)\tCtrl-1
+
+Associate with PDF files?
+PDF ਫਾਈਲਾਂ ਨਾਲ ਸੰਬੰਦ ਬਣਾਓ ?
+
+Bookmarks\tF12
+ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ\tF12
+
+Change language
+ਭਾਸ਼ਾ ਬਦਲੋ (Change language)
+
+Continuous
+ਲਗਾਤਾਰ
+
+Continuous facing
+ਲਗਾਤਾਰ ਕਿਤਾਬ
+
+Contribute translation
+ਅਨੁਵਾਦ ਕਰਨ ਵਿੱਚ ਮਦੱਦ ਕਰੋ
+
+Could not open Printer
+ਪਰਿੰਟ ਖੋਲਿਆ ਨਹੀ ਜਾ ਸਕਿਆ
+
+E&xit\tCtrl-Q
+ਬੰਦ ਕਰੋ(&x)\tCtrl-Q
+
+Enter password
+ਪਾਸਵਰਡ ਭਰੋ
+
+Enter password for %s
+%s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
+
+Error loading PDF file.
+PDF ਫਾਈਲ ਖੋਲੀ ਨਹੀ ਜਾ ਸਕੀ ।
+
+Facing
+ਕਿਤਾਬ
+
+Failed to save a file
+ਫਾਈਲ ਸੰਭਾਲੀ ਨਹੀ ਜਾ ਸਕੀ
+
+Find Next
+ਅਗਲਾ ਲੱਭੋ
+
+Find Previous
+ਪਿਛਲਾ ਲੱਭੋ
+
+Find...\tCtrl-F
+ਲੱਭੋ...\tCtrl-F
+
+Find:
+ਲੱਭੋ:
+
+First Page\tHome
+ਪਹਿਲੇ ਪੰਨੇ ਤੇ\tHome
+
+Fit &Page\tCtrl-0
+ਫਿਟ ਕਰੋ(&P)\tCtrl-0
+
+Fit Page
+ਫਿਟ ਕਰੋ
+
+Fit Widt&h\tCtrl-2
+ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ(&h)\tCtrl-2
+
+Fit Width
+ਚੋੜਾਈ ਦੇ ਮੁਤਾਬਕ
+
+Fullscreen\tCtrl-L
+ਪੂਰੀ ਸਕਰੀਨ\tCtrl-L
+
+Go to page
+ਪੰਨੇ ਤੇ ਜਾਓ
+
+Last Page\tEnd
+ਆਖਰੀ ਪੰਨੇ ਤੇ\tEnd
+
+Make SumatraPDF default application for PDF files?
+PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
+
+Make SumatraPDF my main PDF reader
+ਸਾਰੀਂਆ  PDF ਫਾਈਲਾ SumatraPDF ਵਿਚ ਖੋਲੋ
+
+Match case
+ਅੱਖਰ ਅਕਾਰ ਮਿਲਾਓ
+
+New version %s is available. Download new version?
+ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
+
+New version available.
+ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਹੈ ।
+
+Next Page
+ਅਗਲੇ ਪੰਨੇ ਤੇ
+
+Next Page\tRight Arrow
+ਅਗਲੇ ਪੰਨੇ ਤੇ\t->
+
+No new version available.
+ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
+
+Open
+ਖੋਲੋ
+
+Page...\tCtrl-G
+ਪੰਨਾ ਨੰਬਰ ਤੇ\tCtrl-G
+
+Page:
+ਪੰਨਾ ਨੰਬਰ:
+
+Previous Page
+ਪਿਛਲੇ ਪੰਨੇ ਤੇ
+
+Previous Page\tLeft Arrow
+ਪਿਛਲੇ ਪੰਨੇ ਤੇ\t<-
+
+Printing problem.
+ਪਰਿਨਟ ਕਰਨ ਵਿੱਚ ਗਲਤੀ
+
+Rotate left\tCtrl-Shift--
+ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+ਖੱਬੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl-Shift-+
+
+Set inverse search command-line
+ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
+
+Show toolbar
+ਸੰਦ ਵਾਲੀ ਫੱਟੀ ਵਖਾਓ
+
+Single page
+ਇਕ ਪੰਨਾ
+
+View
+ਵੇਖੋ
+
+You have the latest version.
+ਤੋਹਾਡੇ ਕੋਲ ਪਿਹਲਾਂ ਤੌਂ ਹੀ ਨਵਾਂ ਵਰਜਨ ਹੈ
+
+You have version %s
+ਤੋਹਾਡੇ ਕੋਲ %s ਵਰਜਨ ਹੈ
+
+Zoom In
+ਵੱਡਾ ਕਰੋ
+
+Zoom Out
+ਛੋਟਾ ਕਰੋ
+
+# Untranslated:
+#&Custom Zoom...
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Modified:
+#No matches were found
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#Warning
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

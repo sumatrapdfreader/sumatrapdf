@@ -1,0 +1,242 @@
+﻿# Translations for Hebrew (עברית) (he) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: he Hebrew (עברית)
+
+Contributor: Eyal Berman
+
+&About
+אודות
+
+&Close\tCtrl-W
+&סגור\tCtrl-W
+
+&File
+&קובץ
+
+&Go To
+לך ל
+
+&Help
+עזרה
+
+&Open\tCtrl-O
+&פתח\tCtrl-O
+
+&Print\tCtrl-P
+הדפס\tCtrl-P
+
+&Save as\tCtrl-S
+שמירה בשם\tCtrl-S
+
+&View
+&תצוגה
+
+&Visit website
+בקר באתר
+
+&Zoom
+זום
+
+About SumatraPDF
+אודות סומטרהPDF
+
+Act&ual Size\tCtrl-1
+גודל מקור\tCtrl-1
+
+Continuous
+המשך
+
+Continuous facing
+המשך תצוגה כפולה
+
+Contribute translation
+עזור לתרגם
+
+E&xit\tCtrl-Q
+יציאה\tCtrl-Q
+
+Facing
+דף כפול
+
+Find Next
+חפש הבא
+
+Find Previous
+חפש קודם
+
+Find...\tCtrl-F
+חפש...\tCtrl-F
+
+Find:
+חפש:
+
+First Page\tHome
+דף ראשון\tHome
+
+Fit &Page\tCtrl-0
+התאם דף\tCtrl-0
+
+Fit Page
+התאם דף
+
+Fit Widt&h\tCtrl-2
+התאם רוחב\tCtrl-2
+
+Fit Width
+התאם רוחב
+
+Fullscreen\tCtrl-L
+מסך מלא\tCtrl-L
+
+Last Page\tEnd
+דף אחרון\tEnd
+
+Make SumatraPDF my main PDF reader
+הפוך את סומטרה לברירת מחדל עבור קבצי PDF
+
+Next Page
+דף הבא
+
+Next Page\tRight Arrow
+דף הבא\t->
+
+Open
+פתח
+
+Page...\tCtrl-G
+דף...\tCtrl-G
+
+Previous Page
+דף קודם
+
+Previous Page\tLeft Arrow
+דף קודם\t<-
+
+Rotate left\tCtrl-Shift--
+סובב שמאלה\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+סובב ימינה\tCtrl-Shift-+
+
+Show toolbar
+הצג שורת תפריט
+
+Single page
+דף יחיד
+
+View
+תצוגה
+
+Zoom In
+זום פנימה
+
+Zoom Out
+זום החוצה
+
+# Untranslated:
+#&Check for new version
+#&Custom Zoom...
+#&Don't ask me again
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Manual
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Skip this version
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Associate with PDF files?
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bookmarks\tF12
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Change language
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Could not open Printer
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#Enter password
+#Enter password for %s
+#Error loading PDF file.
+#Failed to save a file
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Go to page
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Make SumatraPDF default application for PDF files?
+#Match case
+#Modified:
+#New version %s is available. Download new version?
+#New version available.
+#No matches were found
+#No new version available.
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Page:
+#Please wait - rendering...
+#Printing problem.
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#Warning
+#You have the latest version.
+#You have version %s
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

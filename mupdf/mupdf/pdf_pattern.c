@@ -1,33 +1,12 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-pdf_pattern *
-pdf_keeppattern(pdf_pattern *pat)
-{
-	pat->refs ++;
-	return pat;
-}
-
-void
-pdf_droppattern(pdf_pattern *pat)
-{
-	if (pat && --pat->refs == 0)
-	{
-		if (pat->tree)
-			fz_droptree(pat->tree);
-		fz_free(pat);
-	}
-}
-
 fz_error
 pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	pdf_pattern *pat;
-	fz_stream *stm;
-	fz_obj *resources;
 	fz_obj *obj;
-	pdf_csi *csi;
 
 	if ((*patp = pdf_finditem(xref->store, PDF_KPATTERN, dict)))
 	{
@@ -39,7 +18,12 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 
 	pat = fz_malloc(sizeof(pdf_pattern));
 	pat->refs = 1;
-	pat->tree = nil;
+	pat->resources = nil;
+	pat->contents = nil;
+
+	/* Store pattern now, to avoid possible recursion if objects refer back to this one */
+	pdf_storeitem(xref->store, PDF_KPATTERN, dict, pat);
+
 	pat->ismask = fz_toint(fz_dictgets(dict, "PaintType")) == 2;
 	pat->xstep = fz_toreal(fz_dictgets(dict, "XStep"));
 	pat->ystep = fz_toreal(fz_dictgets(dict, "YStep"));
@@ -66,68 +50,38 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 		pat->matrix.c, pat->matrix.d,
 		pat->matrix.e, pat->matrix.f);
 
-	/* Store pattern now, to avoid possible recursion if objects refer back to this one */
-	pdf_storeitem(xref->store, PDF_KPATTERN, dict, pat);
+	pat->resources = fz_dictgets(dict, "Resources");
+	if (pat->resources)
+		fz_keepobj(pat->resources);
 
-	/*
-	 * Locate resources
-	 */
-
-	resources = fz_dictgets(dict, "Resources");
-	if (!resources)
-	{
-		error = fz_throw("cannot find Resources dictionary");
-		goto cleanup;
-	}
-
-	/*
-	 * Content stream
-	 */
-
-	pdf_logrsrc("content stream\n");
-
-	error = pdf_newcsi(&csi, pat->ismask);
+	error = pdf_loadstream(&pat->contents, xref, fz_tonum(dict), fz_togen(dict));
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot create interpreter");
-		goto cleanup;
+		pdf_removeitem(xref->store, PDF_KPATTERN, dict);
+		pdf_droppattern(pat);
+		return fz_rethrow(error, "cannot load pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
-
-	error = pdf_openstream(&stm, xref, fz_tonum(dict), fz_togen(dict));
-	if (error)
-	{
-		pdf_dropcsi(csi);
-		error = fz_rethrow(error, "cannot open pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
-		goto cleanup;
-	}
-
-	error = pdf_runcsi(csi, xref, resources, stm);
-	if (error)
-	{
-		fz_dropstream(stm);
-		pdf_dropcsi(csi);
-		error = fz_rethrow(error, "cannot interpret pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
-		goto cleanup;
-	}
-
-	/*
-	 *  Move display list to pattern struct
-	 */
-
-	pat->tree = csi->tree;
-	csi->tree = nil;
-
-	fz_dropstream(stm);
-	pdf_dropcsi(csi);
-
-	pdf_logrsrc("}\n");
 
 	*patp = pat;
 	return fz_okay;
-
-cleanup:
-	pdf_removeitem(xref->store, PDF_KPATTERN, dict);
-	pdf_droppattern(pat);
-	return error; /* already rethrown */
 }
 
+pdf_pattern *
+pdf_keeppattern(pdf_pattern *pat)
+{
+	pat->refs ++;
+	return pat;
+}
+
+void
+pdf_droppattern(pdf_pattern *pat)
+{
+	if (pat && --pat->refs == 0)
+	{
+		if (pat->resources)
+			fz_dropobj(pat->resources);
+		if (pat->contents)
+			fz_dropbuffer(pat->contents);
+		fz_free(pat);
+	}
+}

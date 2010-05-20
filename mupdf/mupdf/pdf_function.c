@@ -426,7 +426,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 		case PDF_TKEYWORD:
 			cmp = -1;
 			a = -1;
-			b = sizeof(psopnames) / sizeof(psopnames[0]);
+			b = nelem(psopnames);
 			while (b - a > 1)
 			{
 				mid = (a + b) / 2;
@@ -1247,7 +1247,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 			if (error)
 				return fz_rethrow(error, "cannot load sub function %d", i);
 			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
-				return fz_rethrow(error, "sub function %d /Domain or /Range mismatch", i);
+				return fz_throw("sub function %d /Domain or /Range mismatch", i);
 		}
 
 		if (!func->n)

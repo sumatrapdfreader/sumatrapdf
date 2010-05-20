@@ -1,0 +1,448 @@
+﻿# Translations for French (Français) (fr) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: fr French (Français)
+
+Contributor: fiuzzy
+Contributor: laclasse
+Contributor: phoenix
+Contributor: pconno
+
+&About
+À propos
+
+&Check for new version
+Vérifier les mises à jour
+
+&Close\tCtrl-W
+&Fermer\tCtrl-W
+
+&Custom Zoom...
+Zoom personnalisé...
+
+&Don't ask me again
+Ne plus le demander
+
+&File
+&Fichier
+
+&Find what:
+Rechercher quoi:
+
+&Go To
+Atteindre
+
+&Go to page:
+Aller à la page:
+
+&Help
+Aide
+
+&Magnification:
+Grossissement:
+
+&Manual
+Manuel
+
+&Match case
+Respecter la casse:
+
+&No
+&Non
+
+&No, thanks
+Non, merci
+
+&Open\tCtrl-O
+&Ouvrir\tCtrl-O
+
+&Options...
+&Options...
+
+&Password:
+Mot de passe:
+
+&Print\tCtrl-P
+&Imprimer\tCtrl-P
+
+&Remember these settings for each document
+Se rappeler de ces paramètres pour chaque document
+
+&Save as\tCtrl-S
+&Enregistrer sous\tCtrl-S
+
+&Settings
+&Préférences
+
+&Skip this version
+Ignorer cette version
+
+&View
+&Affichage
+
+&Visit website
+Visiter le site web
+
+&Yes
+&Oui
+
+&Zoom
+Zoom
+
+(of %d)
+(de %d)
+
+About SumatraPDF
+A propos de SumatraPDF
+
+Act&ual Size\tCtrl-1
+Taille réelle\tCtrl-1
+
+Advanced
+Avancé
+
+All files
+Tous les fichiers
+
+Application:
+Application:
+
+Associate with PDF files?
+Associer aux fichiers PDF ?
+
+Author:
+Auteur:
+
+Automatic
+Automatique
+
+Automatically check for &updates
+Vérifier &automatiquement les mises à jour
+
+Back\tAlt+Left Arrow
+Retour\tAlt+<-
+
+Book view
+Comme livre
+
+Bookmarks\tF12
+Signets\tF12
+
+Bytes
+Octets
+
+Cancel
+Annuler
+
+Cannot print this file
+Impossible d'imprimer ce fichier
+
+Cannot start inverse search command. Please check the command line in the settings.
+Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
+
+Change language
+Changer la langue (Change language)
+
+Continuous
+Continue
+
+Continuous book view
+Continue comme livre
+
+Continuous facing
+Continue - Page double
+
+Contribute translation
+Contribuer à la traduction
+
+Copy Selection\tCtrl-C
+Copier la sélection
+
+Could not open Printer
+Impossible d'accéder à l'imprimante
+
+Couldn't initialize printer
+Impossible d'initialiser l'imprimante
+
+Couldn't render the page
+Impossible de générer la page
+
+Created:
+Créé:
+
+Default &Layout:
+Mise en page par défaut
+
+Default &Zoom:
+&Zoom par défaut
+
+Document Properties
+Propriétés du document
+
+Download
+Télécharger
+
+E&xit\tCtrl-Q
+Quitter\tCtrl-Q
+
+Enter password
+Entrer le mot de passe
+
+Enter password for %s
+Entrer le mot de passe pour %s
+
+Error loading PDF file.
+Erreur à l'ouverture du fichier PDF.
+
+Facing
+Page double
+
+Failed to save a file
+Echec d'enregistrement du fichier
+
+File Size:
+Taille du fichier:
+
+File:
+Fichier:
+
+Find
+Rechercher
+
+Find Next
+Occurrence suivante
+
+Find Previous
+Occurrence précédente
+
+Find...\tCtrl-F
+Rechercher...\tCtrl-F
+
+Find:
+Rechercher:
+
+First Page\tHome
+Première page\tHome
+
+Fit &Page\tCtrl-0
+Page entière\tCtrl-0
+
+Fit Page
+Page entière
+
+Fit Widt&h\tCtrl-2
+Pleine largeur
+
+Fit Width
+Pleine largeur
+
+Forward\tAlt+Right Arrow
+Avancer\tAlt+->
+
+Found text at page %d
+Texte trouvé à la page %d
+
+Fullscreen\tCtrl-L
+Plein écran\tCtrl-L
+
+GB
+Go
+
+Go to page
+Aller à la page
+
+Hint: Use the F3 key for finding again
+Remarque: Utilisez la touche F3 pour trouver de nouveau
+
+KB
+Ko
+
+Last Page\tEnd
+Dernière page\tEnd
+
+MB
+Mo
+
+Main PDF reader can't be changed in portable mode
+Le lecteur de PDF ne peut être changer en mode portable
+
+Make SumatraPDF default application for PDF files?
+Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
+
+Make SumatraPDF my main PDF reader
+Définir SumatraPDF comme lecteur PDF par défaut
+
+Match case
+Respecter la casse
+
+Modified:
+Modifié:
+
+New version %s is available. Download new version?
+La version %s est disponible. Télécharger la nouvelle version ?
+
+New version available.
+Une nouvelle version est disponible
+
+Next Page
+Page suivante
+
+Next Page\tRight Arrow
+Page suivante\t->
+
+No matches were found
+Aucun résultat n'a été trouvé
+
+No new version available.
+Pas de nouvelle version disponible
+
+No result found around line %u in file %s
+Aucun résultat trouvé autour de la ligne %u dans le fichier %s
+
+No synchronization file found
+Aucun fichier de synchronization trouvé
+
+No synchronization info at this position
+Pas de synchronisation des informations à cette position
+
+Number of Pages:
+Nombre de pages:
+
+OK
+OK
+
+Open
+Ouvrir
+
+Open in &Adobe Reader
+Ouvrir dans &Adobe Reader
+
+P&roperties...\tCtrl-D
+Propriétés...\tCtrl-D
+
+PDF Document
+Document PDF
+
+PDF Producer:
+PDF produit par:
+
+PDF Version:
+Version du PDF:
+
+PDF documents
+Documents PDF
+
+Page Size:
+Taille de la page:
+
+Page number %u inexistant
+La page %u n'existe pas
+
+Page...\tCtrl-G
+Page...\tCtrl-G
+
+Page:
+Page:
+
+Please wait - rendering...
+S'il vous plaît attendez - génération...
+
+Previous Page
+Page précédente
+
+Previous Page\tLeft Arrow
+Page précédente\t<-
+
+Printing problem.
+Problème d'impression.
+
+Properties...
+Propriétés...
+
+Remember &opened files
+Se rappeler des fichiers ouverts
+
+Rotate left\tCtrl-Shift--
+Rotation antihoraire\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Rotation horaire\tCtrl-Shift-+
+
+Searching %d of %d...
+Recherche de %d à %d...
+
+Select content with Ctrl+left mouse button
+Sélectionner avec Ctrl+bouton gauche de la souris
+
+Send by &email...
+Envoyer par &email...
+
+Set inverse search command-line
+Configurer la recherche inverse
+
+Show pages continuously
+Afficher les pages en continu
+
+Show the &bookmarks sidebar when available
+Voir la barre latérale des signets quand elle est disponible
+
+Show toolbar
+Afficher la barre d'outils
+
+Single page
+Une seule page
+
+Source file %s has no synchronization point
+Le fichier source %s n'a pas de point de synchronisation
+
+SumatraPDF Options
+SumatraPDF Options
+
+SumatraPDF is your main PDF reader
+SumatraPDF est votre lecteur de PDF
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF doit maintenant être votre lecteur de PDF
+
+Synchronization file cannot be opened
+Le fichier de synchronisation ne peut pas être ouvert
+
+Text documents
+Documents texte
+
+Title:
+Titre:
+
+Unknown source file (%s)
+Fichier source unconnu (%s)
+
+View
+Affichage
+
+Warning
+Avertissement
+
+You have the latest version.
+Vous avez la dernière version sortie
+
+You have version %s
+Votre version est la %s
+
+Zoom
+Zoom
+
+Zoom In
+Zoom avant
+
+Zoom Out
+Zoom arrière
+
+Zoom factor
+Facteur de zoom
+
+[Changes detected; refreshing] %s
+[Modifications détectées; actualisation] %s
+

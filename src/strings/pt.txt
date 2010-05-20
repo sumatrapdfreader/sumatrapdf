@@ -1,0 +1,446 @@
+﻿# Translations for Portuguese - Portugal (Português) (pt) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: pt Portuguese - Portugal (Português)
+
+Contributor: Ricardo Santos[bogas] (http://www.meta-morf.pt.vu)
+Contributor: Bruno Rodrigues
+
+&About
+&Sobre
+
+&Check for new version
+Veri&ficar por novas versões
+
+&Close\tCtrl-W
+Fe&char\tCtrl-W
+
+&Custom Zoom...
+Zoom P&ersonalizado...
+
+&Don't ask me again
+&Não perguntar novamente
+
+&File
+&Ficheiro
+
+&Find what:
+O que &procurar:
+
+&Go To
+Ir &Para
+
+&Go to page:
+Ir pa&ra a página:
+
+&Help
+A&juda
+
+&Magnification:
+Amp&liação
+
+&Manual
+&Manual
+
+&Match case
+Se&nsível à capitalização
+
+&No
+&Não
+
+&No, thanks
+&Não, obrigado(a)
+
+&Open\tCtrl-O
+&Abrir\tCtrl-O
+
+&Options...
+&Opções...
+
+&Password:
+&Palavra-passe:
+
+&Print\tCtrl-P
+&Imprimir\tCtrl-P
+
+&Remember these settings for each document
+Le&mbrar estas definições para cada documento
+
+&Save as\tCtrl-S
+&Guardar como\tCtrl-S
+
+&Settings
+&Definições
+
+&Skip this version
+Ignorar &esta versão
+
+&View
+&Ver
+
+&Visit website
+&Visitar a página web
+
+&Yes
+:&Sim
+
+&Zoom
+&Zoom
+
+(of %d)
+(de %d)
+
+About SumatraPDF
+Sobre SumatraPDF
+
+Act&ual Size\tCtrl-1
+Tamanho Act&ual\tCtrl-1
+
+Advanced
+Avançadas
+
+All files
+Todos os ficheiros
+
+Application:
+Aplicação:
+
+Associate with PDF files?
+Associar a ficheiros PDF?
+
+Author:
+Autor:
+
+Automatic
+Automático
+
+Automatically check for &updates
+Verificar act&ualizações automaticamente
+
+Back\tAlt+Left Arrow
+Retroceder\tAlt+<-
+
+Book view
+ Como livro
+
+Bookmarks\tF12
+Marcadores\tF12
+
+Bytes
+Bytes
+
+Cancel
+Cancelar
+
+Cannot print this file
+Não foi possível imprimir este ficheiro
+
+Cannot start inverse search command. Please check the command line in the settings.
+Não é possível iniciar o comando da procura inversa. Verifique a linha de comandos nas definições.
+
+Change language
+Mudar idioma
+
+Continuous
+Página única contínua
+
+Continuous book view
+Livro contínuo
+
+Continuous facing
+Página dupla contínua
+
+Contribute translation
+Contribuir na tradução
+
+Copy Selection\tCtrl-C
+Copiar Selecção\tCtrl-C
+
+Could not open Printer
+Não foi possível abrir a Impressora
+
+Couldn't initialize printer
+Não foi possível inicializar a impressora
+
+Couldn't render the page
+Não foi possível processar a página
+
+Created:
+Criado:
+
+Default &Layout:
+Dispo&sição por Omissão:
+
+Default &Zoom:
+&Zoom por Omissão:
+
+Document Properties
+Propriedades do docuemento
+
+Download
+Transferir
+
+E&xit\tCtrl-Q
+S&air\tCtrl-Q
+
+Enter password
+Introduzir palavra-passe
+
+Enter password for %s
+Introduzir palavra-passe para %s
+
+Error loading PDF file.
+Erro ao carregar o PDF.
+
+Facing
+Página dupla
+
+Failed to save a file
+Erro ao guardar o ficheiro
+
+File Size:
+Tamanho do Ficheiro:
+
+File:
+Ficheiro:
+
+Find
+Procurar
+
+Find Next
+Procurar Seguinte
+
+Find Previous
+Procurar Anterior
+
+Find...\tCtrl-F
+Procurar...\tCtrl-F
+
+Find:
+Procurar:
+
+First Page\tHome
+Primeira Página\tHome
+
+Fit &Page\tCtrl-0
+Ajus&tar à Página\tCtrl-0
+
+Fit Page
+Ajustar à Página
+
+Fit Widt&h\tCtrl-2
+Ajustar à &Largura\tCtrl-2
+
+Fit Width
+Ajustar à Largura
+
+Forward\tAlt+Right Arrow
+Avançar\tAlt+->
+
+Found text at page %d
+Texto encontrado na página %d
+
+Fullscreen\tCtrl-L
+Ecrã completo\tCtrl-L
+
+GB
+GB
+
+Go to page
+Ir para a página
+
+Hint: Use the F3 key for finding again
+Dica: prima F3 para procurar a próxima ocorrência
+
+KB
+KB
+
+Last Page\tEnd
+Última Página\tEnd
+
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+No modo portátil, não é possivel alterar o leitor de PDFs
+
+Make SumatraPDF default application for PDF files?
+Tornar SumatraPDF a aplicação por omissão para PDFs?
+
+Make SumatraPDF my main PDF reader
+Tornar SumatraPDF o leitor de PDFs por omissão
+
+Match case
+Sensível à capitalização
+
+Modified:
+Modificado:
+
+New version %s is available. Download new version?
+Nova versão %s disponível. Transferir nova versão?
+
+New version available.
+Nova versão disponível.
+
+Next Page
+Página Seguinte
+
+Next Page\tRight Arrow
+Página Seguinte\t->
+
+No matches were found
+Nenhuma ocorrência encontrada
+
+No new version available.
+Não existe uma nova versão.
+
+No result found around line %u in file %s
+Nenhum resultado próximo da linha %u no ficheiro %s
+
+No synchronization file found
+Nenhum ficheiro de sincronização encontrado
+
+No synchronization info at this position
+Não há informação de sincronização nesta posição
+
+Number of Pages:
+Número de Páginas:
+
+OK
+OK
+
+Open
+Abrir
+
+Open in &Adobe Reader
+Abrir no &Adobe Reader
+
+P&roperties...\tCtrl-D
+P&ropriedades...\tCtrl-D
+
+PDF Document
+Documento PDF
+
+PDF Producer:
+Criador do PDF:
+
+PDF Version:
+Versão PDF:
+
+PDF documents
+Documentos PDF
+
+Page Size:
+Tamanho da Página:
+
+Page number %u inexistant
+A página %u não existe
+
+Page...\tCtrl-G
+Página...\tCtrl-G
+
+Page:
+Página:
+
+Please wait - rendering...
+Por favor aguarde - a processar...
+
+Previous Page
+Página Anterior
+
+Previous Page\tLeft Arrow
+Página Anterior\t<-
+
+Printing problem.
+Problema de impressão.
+
+Properties...
+Propriedades...
+
+Remember &opened files
+Lembrar ficheiros abert&os
+
+Rotate left\tCtrl-Shift--
+Rodar à esquerda\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Rodar à direita\tCtrl-Shift-+
+
+Searching %d of %d...
+Procurando %d de %d...
+
+Select content with Ctrl+left mouse button
+Seleccionar conteúdo com Ctrl+Botão esquerdo do rato
+
+Send by &email...
+Enviar por &e-mail...
+
+Set inverse search command-line
+Definir linha de comando para procura inversa
+
+Show pages continuously
+Mostrar páginas contínuas
+
+Show the &bookmarks sidebar when available
+Mostrar &barra de marcadores quando disponível
+
+Show toolbar
+Mostrar barra de ferramentas
+
+Single page
+Página única
+
+Source file %s has no synchronization point
+O ficheiro fonte %s não tem ponto de sincronização
+
+SumatraPDF Options
+Opções de SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF é o leitor de PDFs por omissão
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF deve agora ser o leitor de PDFs por omissão
+
+Synchronization file cannot be opened
+Não foi possível abrir o ficheiro de sincronização
+
+Text documents
+Documentos de texto
+
+Title:
+Título:
+
+Unknown source file (%s)
+Ficheiro fonte (%s) desconhecido
+
+View
+Ver
+
+Warning
+Aviso
+
+You have the latest version.
+Já possui a versão mais recente.
+
+You have version %s
+Tem a versão %s
+
+Zoom
+Zoom
+
+Zoom In
+Aumentar Zoom
+
+Zoom Out
+Diminuir Zoom
+
+Zoom factor
+Factor de Zoom
+
+[Changes detected; refreshing] %s
+[Mudanças detectadas; actualizando] %s
+

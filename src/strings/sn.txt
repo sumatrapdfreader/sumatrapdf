@@ -1,0 +1,282 @@
+﻿# Translations for Shona (Shona) (sn) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: sn Shona (Shona)
+
+Contributor: Brian Musarurwa
+
+&About
+&Nezve...
+
+&Check for new version
+&Tsvaga version idzva
+
+&Close\tCtrl-W
+&Vhara\tCtrl-0
+
+&Don't ask me again
+Usandivhunze futi
+
+&File
+&Faira
+
+&Go To
+Enda ku...
+
+&Help
+&Rubatsiro
+
+&Open\tCtrl-O
+Vhura\tCtrl-0
+
+&Print\tCtrl-P
+&Printa\tCtrl-P
+
+&Save as\tCtrl-S
+&Sevha se...\tCtrl-S
+
+&Skip this version
+Siyana neversion irori.
+
+&View
+&Maonero
+
+&Visit website
+&Shanyira dande-mtande
+
+&Zoom
+&Zuma
+
+About SumatraPDF
+NezveSumatraPDF
+
+Act&ual Size\tCtrl-1
+Saizi chaiyo\tCtrl-1
+
+Associate with PDF files?
+Ita zvifambidzane ne PDF
+
+Bookmarks\tF12
+Mabhukumaki\tF12
+
+Change language
+Chinja mutauro (Change language)
+
+Continuous
+Continuous
+
+Continuous facing
+Facing iriContinous
+
+Contribute translation
+Batsira kuturikira
+
+Could not open Printer
+Tatadza kuvhura Printer
+
+E&xit\tCtrl-Q
+&Siyana Nazvo\tCtrl-Q
+
+Enter password
+Isa password
+
+Enter password for %s
+Isa password ya %s
+
+Error loading PDF file.
+Tatadza kulodha faira rePDF
+
+Facing
+Facing
+
+Failed to save a file
+Tatadza kuseva faira
+
+Find Next
+Wana pamberi
+
+Find Previous
+Wana pashure
+
+Find...\tCtrl-F
+Wana...\tCtrl-F
+
+Find:
+Wana:
+
+First Page\tHome
+Peji yekutanga\tHome
+
+Fit &Page\tCtrl-0
+Kwanisa &Peji\tCtrl-0
+
+Fit Page
+Kwanisa Peji
+
+Fit Widt&h\tCtrl-2
+Kwanisa hupamhu\tCtrl-2
+
+Fit Width
+Kwanisa hupamhu
+
+Fullscreen\tCtrl-L
+Zadza Screen\tCtrl-L
+
+Go to page
+Enda kupeji
+
+Last Page\tEnd
+Peji yekupedzisira\tEnd
+
+Make SumatraPDF my main PDF reader
+Ita SumatraPDF igovhura maPDF ese
+
+Match case
+Fananidza kesi
+
+New version %s is available. Download new version?
+Version %s ririkuwanika. Unoda here version idzva?
+
+New version available.
+Version idzva ririkuwanika
+
+Next Page
+Peji yemberi
+
+Next Page\tRight Arrow
+Peji yemberi\t->
+
+No new version available.
+Hapana version idzva.
+
+Open
+Vhura
+
+Page...\tCtrl-G
+Peji...\tCtrl-G
+
+Page:
+Peji:
+
+Previous Page
+Peji yesure
+
+Previous Page\tLeft Arrow
+Peji yesure\t<-
+
+Printing problem.
+Dambudziko pakuprinta
+
+Rotate left\tCtrl-Shift--
+Tenderedza kuruboshwe\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Tenderedza kurudyi\tCtrl-Shift-+
+
+Show toolbar
+Ratidza Toolbar
+
+Single page
+Peji imwechete
+
+View
+Maonero
+
+You have the latest version.
+Pane version idzva.
+
+You have version %s
+Pane version %s
+
+Zoom In
+Kudza
+
+Zoom Out
+Duputsa
+
+# Untranslated:
+#&Custom Zoom...
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Manual
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Make SumatraPDF default application for PDF files?
+#Modified:
+#No matches were found
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Set inverse search command-line
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#Warning
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

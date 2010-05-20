@@ -17,7 +17,7 @@ int pagetobench = -1;
 int loadonly = 0;
 pdf_xref *xref = nil;
 int pagecount = 0;
-fz_renderer *drawgc = nil;
+fz_glyphcache *drawcache = nil;
 pdf_page *drawpage = nil;
 
 /* milli-second timer */
@@ -96,7 +96,7 @@ double timeinms(mstimer *timer)
 void closexref(void)
 {
 	if (!xref)
-                return;
+		return;
 
 	if (xref->store)
 	{
@@ -109,27 +109,10 @@ void closexref(void)
 
 fz_error openxref(char *filename, char *password)
 {
-	fz_error error;
-
-	xref = pdf_newxref();
-
-	error = pdf_loadxref(xref, filename);
-	if (error)
+	xref = pdf_openxref(filename);
+	if (!xref)
 	{
-		logbench("Warning: pdf_loadxref() failed, trying to repair\n");
-		error = pdf_repairxref(xref, filename);
-		if (error)
-		{
-			logbench("Error: pdf_repairxref() failed\n");
-			return error;
-		}
-	}
-
-	error = pdf_decryptxref(xref);
-	if (error)
-	{
-		logbench("Error: pdf_decryptxref() failed\n");
-		return error;
+		return fz_throw("pdf_openxref() failed");
 	}
 
 	if (pdf_needspassword(xref))
@@ -174,32 +157,29 @@ fz_error benchrenderpage(int pagenum)
 {
 	fz_error error;
 	fz_matrix ctm;
-	fz_irect bbox;
+	fz_bbox bbox;
 	fz_pixmap *pix;
 	int w, h;
 	mstimer timer;
 	double timems;
+	fz_device *dev;
 
 	timerstart(&timer);
 	ctm = fz_identity();
 	ctm = fz_concat(ctm, fz_translate(0, -drawpage->mediabox.y1));
 
-	bbox = fz_roundrect(fz_transformaabb(ctm, drawpage->mediabox));
+	bbox = fz_roundrect(fz_transformrect(ctm, drawpage->mediabox));
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	error = fz_newpixmap(&pix, bbox.x0, bbox.y0, w, h, 4);
+	pix = fz_newpixmapwithrect(pdf_devicergb, bbox);
+	fz_clearpixmap(pix, 0xFF);
+	dev = fz_newdrawdevice(drawcache, pix);
+	error = pdf_runcontentstream(dev, ctm, xref, drawpage->resources, drawpage->contents);
+	fz_freedevice(dev);
 	if (error)
 	{
-		logbench("Error: fz_newpixmap() failed\n");
-		return error;
-	}
-
-	memset(pix->samples, 0xff, pix->h * pix->w * pix->n);
-	error = fz_rendertreeover(drawgc, pix, drawpage->tree, ctm);
-	if (error)
-	{
-		logbench("Error: rz_rendertreeover() failed\n");
+		logbench("Error: pdf_runcontentstream() failed\n");
 		goto Exit;
 	}
 
@@ -226,10 +206,10 @@ void benchfile(char *pdffilename)
 	int pages;
 	int curpage;
 
-	error = fz_newrenderer(&drawgc, pdf_devicergb, 0, 1024 * 512);
-	if (error)
+	drawcache = fz_newglyphcache();
+	if (!drawcache)
 	{
-		logbench("Error: fz_newrenderer() failed\n");
+		logbench("Error: fz_newglyphcache() failed\n");
 		goto Exit;
 	}
 
@@ -259,8 +239,8 @@ void benchfile(char *pdffilename)
 
 Exit:
 	logbench("Finished: %s\n", pdffilename);
-	if (drawgc)
-		fz_droprenderer(drawgc);
+	if (drawcache)
+		fz_freeglyphcache(drawcache);
 	closexref();
 }
 

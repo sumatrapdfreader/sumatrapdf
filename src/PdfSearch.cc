@@ -48,7 +48,7 @@ void PdfSearch::SetDirection(bool forward)
 
 void PdfSearch::FillResultRects(TCHAR *found)
 {
-    fz_irect *c = &coords[found - pageText], *end = c + length;
+    fz_bbox *c = &coords[found - pageText], *end = c + length;
     for (; c < end; c++) {
         // skip line breaks
         if (!c->x0 && !c->x1)
@@ -57,10 +57,10 @@ void PdfSearch::FillResultRects(TCHAR *found)
         result.rects = (RECT *)realloc(result.rects, sizeof(RECT) * ++result.len);
         RECT *rc = &result.rects[result.len - 1];
 
-        fz_irect c0 = *c;
+        fz_bbox c0 = *c;
         for (; c < end && (c->x0 || c->x1); c++);
         c--;
-        fz_irect c1 = *c;
+        fz_bbox c1 = *c;
 
         rc->left = min(c0.x0, c1.x0);
         rc->top = min(c0.y0, c1.y0);

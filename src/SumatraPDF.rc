@@ -44,8 +44,8 @@ BEGIN
       VALUE "OriginalFilename", "SumatraPDF.exe\0"
       VALUE "ProductName",      "SumatraPDF\0"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "Comments",			"SumatraPDF viewer\0"
-      VALUE "CompanyName", 		"Krzysztof Kowalczyk\0"
+      VALUE "Comments",         "SumatraPDF viewer\0"
+      VALUE "CompanyName",      "Krzysztof Kowalczyk\0"
     END
   END
 END
@@ -68,35 +68,36 @@ IDI_PDFDOC              ICON                    "PdfDoc.ico"
 
 IDC_SUMATRAPDF ACCELERATORS 
 BEGIN
+    "C",            IDM_COPY_SELECTION,     VIRTKEY, CONTROL
+    "D",            IDM_PROPERTIES,         VIRTKEY, CONTROL
+    "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL
+    "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
+    "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, CONTROL
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
-    "W",            IDM_CLOSE,              VIRTKEY, CONTROL
     "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
     "P",            IDM_PRINT,              VIRTKEY, CONTROL
     "Q",            IDM_EXIT,               VIRTKEY, CONTROL
+    "W",            IDM_CLOSE,              VIRTKEY, CONTROL
+    "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
+    "1",            IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
+    "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
+    VK_NUMPAD0,     IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
+    VK_NUMPAD1,     IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
+    VK_NUMPAD2,     IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
     VK_ADD,         IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL
-    VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL
     VK_SUBTRACT,    IDM_VIEW_ROTATE_LEFT,   VIRTKEY, SHIFT, CONTROL
-    VK_OEM_MINUS,   IDM_VIEW_ROTATE_LEFT,   VIRTKEY, SHIFT, CONTROL
-    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY 
-    "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, CONTROL
-    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY 
-    "C",            IDM_COPY_SELECTION,     VIRTKEY, CONTROL
     VK_INSERT,      IDM_COPY_SELECTION,     VIRTKEY, CONTROL
-    "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
-    "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL
     VK_F3,          IDM_FIND_NEXT,          VIRTKEY 
     VK_F3,          IDM_FIND_PREV,          VIRTKEY, SHIFT
-    "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
-    VK_NUMPAD0,     IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
-    "1",            IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
-    VK_NUMPAD1,     IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL
-    "2",            IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
-    VK_NUMPAD2,     IDM_ZOOM_FIT_WIDTH,     VIRTKEY, CONTROL
+    VK_F6,          IDM_MOVE_FRAME_FOCUS,   VIRTKEY
+    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY 
+    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY 
     VK_ADD,         IDT_VIEW_ZOOMIN,        VIRTKEY, CONTROL
+    VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL
     VK_OEM_PLUS,    IDT_VIEW_ZOOMIN,        VIRTKEY, CONTROL
     VK_SUBTRACT,    IDT_VIEW_ZOOMOUT,       VIRTKEY, CONTROL
+    VK_OEM_MINUS,   IDM_VIEW_ROTATE_LEFT,   VIRTKEY, SHIFT, CONTROL
     VK_OEM_MINUS,   IDT_VIEW_ZOOMOUT,       VIRTKEY, CONTROL
-    VK_F6,          IDM_MOVE_FRAME_FOCUS,   VIRTKEY
     VK_LEFT,        IDM_GOTO_NAV_BACK,      VIRTKEY, ALT
     VK_RIGHT,       IDM_GOTO_NAV_FORWARD,   VIRTKEY, ALT
     VK_BROWSER_BACK, IDM_GOTO_NAV_BACK,     VIRTKEY 

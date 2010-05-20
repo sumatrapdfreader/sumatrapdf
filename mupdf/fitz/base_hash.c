@@ -9,10 +9,9 @@
  * and removed frequently.
  */
 
-#include "fitz_base.h"
+#include "fitz.h"
 
-enum { MAXKEYLEN = 16 };
-
+enum { MAXKEYLEN = 48 };
 typedef struct fz_hashentry_s fz_hashentry;
 
 struct fz_hashentry_s
@@ -94,7 +93,7 @@ fz_drophash(fz_hashtable *table)
 	fz_free(table);
 }
 
-void
+static void
 fz_resizehash(fz_hashtable *table, int newsize)
 {
 	fz_hashentry *oldents = table->ents;

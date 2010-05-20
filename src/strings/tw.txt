@@ -1,0 +1,306 @@
+﻿# Translations for Chinese Traditional (繁體中文) (tw) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: tw Chinese Traditional (繁體中文)
+
+Contributor: FreeXD (http://blog.ecstart.com/?47979)
+
+&About
+關於(&A)
+
+&Check for new version
+檢查是否有新版本(&C)
+
+&Close\tCtrl-W
+關閉(&C)\tCtrl-W
+
+&Custom Zoom...
+自訂縮放(&C)...
+
+&Don't ask me again
+不要再問我
+
+&File
+檔案(&F)
+
+&Go To
+移至(&G)
+
+&Help
+說明(&H)
+
+&Magnification:
+倍率(&M)
+
+&Manual
+說明文件(&M)
+
+&Open\tCtrl-O
+開啟\tCtrl-O
+
+&Options...
+選項(&O)...
+
+&Print\tCtrl-P
+列印(&P)\tCtrl-P
+
+&Save as\tCtrl-S
+另存新檔(&S)\tCtrl-S
+
+&Settings
+設定
+
+&Skip this version
+略過此版本(&S)
+
+&View
+檢視(&V)
+
+&Visit website
+瀏覽官網(&V)
+
+&Zoom
+縮放(&Z)
+
+About SumatraPDF
+關於 SumatraPDF
+
+Act&ual Size\tCtrl-1
+實際大小(&U)\tCtrl-1
+
+Associate with PDF files?
+關聯至 PDF 檔?
+
+Bookmarks\tF12
+書籤\tF12
+
+Cannot start inverse search command. Please check the command line in the settings.
+無法進行逆向搜尋。請檢查設定裡的命令列。
+
+Change language
+變更語系 (Change language)
+
+Continuous
+連續頁面
+
+Continuous facing
+連續整頁模式
+
+Contribute translation
+翻譯提供
+
+Could not open Printer
+無法開啟印表機。
+
+E&xit\tCtrl-Q
+離開(&X)\tCtrl-Q
+
+Enter password
+輸入密碼
+
+Enter password for %s
+輸入 %s 的密碼
+
+Error loading PDF file.
+讀取PDF檔案時發失錯誤。
+
+Facing
+整頁模式
+
+Failed to save a file
+檔案儲存失敗
+
+Find Next
+向下尋找
+
+Find Previous
+向上尋找
+
+Find...\tCtrl-F
+尋找...\tCtrl-F
+
+Find:
+尋找：
+
+First Page\tHome
+首頁\tHome
+
+Fit &Page\tCtrl-0
+合適頁面(&P)\tCtrl-0
+
+Fit Page
+合適頁面
+
+Fit Widt&h\tCtrl-2
+合適寬度(&H)\tCtrl-2
+
+Fit Width
+合適寬度
+
+Fullscreen\tCtrl-L
+全螢幕顯示(按Ctrl+L切換)\tCtrl-L
+
+Go to page
+移至頁面
+
+Last Page\tEnd
+尾頁\tEnd
+
+Make SumatraPDF default application for PDF files?
+把 SumatraPDF 作為預設的PDF閱讀器?
+
+Make SumatraPDF my main PDF reader
+把 SumatraPDF 作為預設的PDF閱讀工具
+
+Match case
+符合大小寫
+
+New version %s is available. Download new version?
+最新版本 %s。 是否下載?
+
+New version available.
+新的可用版本。
+
+Next Page
+下一頁
+
+Next Page\tRight Arrow
+下一頁\t->
+
+No new version available.
+沒有新版本
+
+Open
+開啟
+
+Page...\tCtrl-G
+頁面...\tCtrl-G
+
+Page:
+頁數：
+
+Previous Page
+上一頁
+
+Previous Page\tLeft Arrow
+上一頁\t<-
+
+Printing problem.
+列印問題
+
+Rotate left\tCtrl-Shift--
+頁面左旋\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+頁面右旋\tCtrl-Shift-+
+
+Set inverse search command-line
+設定反搜尋命令列
+
+Show toolbar
+顯示工具列
+
+Single page
+單一頁面
+
+SumatraPDF Options
+SumatraPDF 選項
+
+View
+檢視
+
+Warning
+警告
+
+You have the latest version.
+目前使用的版本為最新版。
+
+You have version %s
+您使用的版本 %s
+
+Zoom
+縮放
+
+Zoom In
+放大
+
+Zoom Out
+縮小
+
+Zoom factor
+縮放比例
+
+# Untranslated:
+#&Find what:
+#&Go to page:
+#&Match case
+#&No
+#&No, thanks
+#&Password:
+#&Remember these settings for each document
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cancel
+#Cannot print this file
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Modified:
+#No matches were found
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#[Changes detected; refreshing] %s
+

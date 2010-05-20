@@ -22,6 +22,7 @@ You end up with several executables:
  * pdfinfo
  * pdfshow
  * pdfextract
+ * pdfview
 in obj-rel-win and obj-dbg-win directories. Those are sample programs
 using mpudf.
 

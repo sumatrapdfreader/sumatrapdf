@@ -7,8 +7,6 @@
 #ifndef _FITZ_STREAM_H_
 #define _FITZ_STREAM_H_
 
-typedef struct pdf_xref_s pdf_xref; /* this file is about to be merged with mupdf */
-
 typedef struct fz_obj_s fz_obj;
 typedef struct fz_keyval_s fz_keyval;
 
@@ -59,7 +57,7 @@ struct fz_obj_s
 		struct {
 			int num;
 			int gen;
-			pdf_xref *xref;
+			struct pdf_xref_s *xref;
 			fz_obj *obj;
 		} r;
 	} u;
@@ -71,7 +69,7 @@ fz_obj * fz_newint(int i);
 fz_obj * fz_newreal(float f);
 fz_obj * fz_newname(char *str);
 fz_obj * fz_newstring(char *str, int len);
-fz_obj * fz_newindirect(int num, int gen, pdf_xref *xref);
+fz_obj * fz_newindirect(int num, int gen, struct pdf_xref_s *xref);
 
 fz_obj * fz_newarray(int initialcap);
 fz_obj * fz_newdict(int initialcap);
@@ -106,8 +104,6 @@ int fz_tostrlen(fz_obj *obj);
 int fz_tonum(fz_obj *obj);
 int fz_togen(fz_obj *obj);
 
-fz_obj * fz_newnamefromstring(fz_obj *str);
-
 int fz_arraylen(fz_obj *array);
 fz_obj *fz_arrayget(fz_obj *array, int i);
 void fz_arrayput(fz_obj *array, int i, fz_obj *obj);
@@ -128,9 +124,6 @@ void fz_sortdict(fz_obj *dict);
 int fz_sprintobj(char *s, int n, fz_obj *obj, int tight);
 int fz_fprintobj(FILE *fp, fz_obj *obj, int tight);
 void fz_debugobj(fz_obj *obj);
-
-fz_error fz_parseobj(fz_obj **, pdf_xref *xref, char *s);
-fz_error fz_packobj(fz_obj **, pdf_xref *xref, char *fmt, ...);
 
 char *fz_objkindstr(fz_obj *obj);
 
@@ -269,10 +262,6 @@ fz_error fz_setjbig2dglobalstream(fz_filter *filter, unsigned char *buf, int len
  * For further encapsulation in filters, or not.
  */
 
-/* crc-32 checksum */
-
-unsigned long fz_crc32(unsigned long crc, unsigned char *buf, int len);
-
 /* md5 digests */
 
 typedef struct fz_md5_s fz_md5;
@@ -349,10 +338,10 @@ struct fz_stream_s
  * Various stream creation functions.
  */
 
-fz_error fz_openrfile(fz_stream **stmp, char *filename);
-fz_stream * fz_openrmemory(unsigned char *mem, int len);
-fz_stream * fz_openrbuffer(fz_buffer *buf);
-fz_stream * fz_openrfilter(fz_filter *flt, fz_stream *chain);
+fz_stream * fz_openfile(int file);
+fz_stream * fz_openmemory(unsigned char *mem, int len);
+fz_stream * fz_openbuffer(fz_buffer *buf);
+fz_stream * fz_openfilter(fz_filter *flt, fz_stream *chain);
 
 /*
  * Functions that are common to both input and output streams.
@@ -367,9 +356,6 @@ fz_error fz_seek(fz_stream *stm, int offset, int whence);
 /*
  * Input stream functions.
  */
-
-int fz_rtell(fz_stream *stm);
-fz_error fz_rseek(fz_stream *stm, int offset, int whence);
 
 fz_error fz_readimp(fz_stream *stm);
 fz_error fz_read(int *np, fz_stream *stm, unsigned char *buf, int len);

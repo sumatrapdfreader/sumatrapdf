@@ -1,5 +1,4 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 /* TODO: check if this works with 16bpp images */
 

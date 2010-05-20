@@ -1,0 +1,4 @@
+build/debug/mupdf usr/bin
+debian/mupdf.xpm usr/share/pixmaps
+debian/mupdf.desktop usr/share/applications
+debian/mupdf.applications usr/share/application-registry

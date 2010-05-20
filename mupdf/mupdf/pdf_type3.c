@@ -1,40 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static fz_error
-loadcharproc(fz_tree **treep, pdf_xref *xref, fz_obj *rdb, fz_obj *stmref)
-{
-	fz_error error;
-	pdf_csi *csi;
-	fz_stream *stm;
-
-	error = pdf_newcsi(&csi, 1);
-	if (error)
-		return fz_rethrow(error, "cannot create interpreter");
-
-	error = pdf_openstream(&stm, xref, fz_tonum(stmref), fz_togen(stmref));
-	if (error)
-	{
-		pdf_dropcsi(csi);
-		return fz_rethrow(error, "cannot open glyph content stream");
-	}
-
-	error = pdf_runcsi(csi, xref, rdb, stm);
-	if (error)
-	{
-		fz_dropstream(stm);
-		pdf_dropcsi(csi);
-		return fz_rethrow(error, "cannot interpret glyph content stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
-	}
-
-	*treep = csi->tree;
-	csi->tree = nil;
-
-	fz_dropstream(stm);
-	pdf_dropcsi(csi);
-	return fz_okay;
-}
-
 fz_error
 pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 {
@@ -44,7 +10,6 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 	pdf_fontdesc *fontdesc;
 	fz_obj *encoding;
 	fz_obj *widths;
-	fz_obj *resources;
 	fz_obj *charprocs;
 	fz_obj *obj;
 	int first, last;
@@ -54,7 +19,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 
 	obj = fz_dictgets(dict, "Name");
 	if (fz_isname(obj))
-		strlcpy(buf, fz_toname(obj), sizeof buf);
+		fz_strlcpy(buf, fz_toname(obj), sizeof buf);
 	else
 		sprintf(buf, "Unnamed-T3");
 
@@ -77,12 +42,6 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 	pdf_logfont("bbox [%g %g %g %g]\n",
 		bbox.x0, bbox.y0,
 		bbox.x1, bbox.y1);
-
-	bbox = fz_transformaabb(matrix, bbox);
-	bbox.x0 = fz_floor(bbox.x0 * 1000);
-	bbox.y0 = fz_floor(bbox.y0 * 1000);
-	bbox.x1 = fz_ceil(bbox.x1 * 1000);
-	bbox.y1 = fz_ceil(bbox.y1 * 1000);
 
 	fontdesc->font = fz_newtype3font(buf, matrix);
 
@@ -164,16 +123,19 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 	pdf_endhmtx(fontdesc);
 
 	/*
-	 * Resources
+	 * Resources -- inherit page resources if the font doesn't have its own
 	 */
 
-	resources = fz_dictgets(dict, "Resources");
-
-	/* Inherit page's resource dict if type3 font does not have one */
-	if (!resources && rdb)
-		resources = rdb;
-	else if (!resources && !rdb)
+	fontdesc->font->t3resources = fz_dictgets(dict, "Resources");
+	if (!fontdesc->font->t3resources)
+		fontdesc->font->t3resources = rdb;
+	if (fontdesc->font->t3resources)
+		fz_keepobj(fontdesc->font->t3resources);
+	if (!fontdesc->font->t3resources)
 		fz_warn("no resource dictionary for type 3 font!");
+
+	fontdesc->font->t3xref = xref;
+	fontdesc->font->t3runcontentstream = pdf_runcontentstream;
 
 	/*
 	 * CharProcs
@@ -191,14 +153,11 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 		if (estrings[i])
 		{
 			obj = fz_dictgets(charprocs, estrings[i]);
-			if (obj)
+			if (pdf_isstream(xref, fz_tonum(obj), fz_togen(obj)))
 			{
-				pdf_logfont("load charproc %s {\n", estrings[i]);
-				error = loadcharproc(&fontdesc->font->t3procs[i], xref, resources, obj);
+				error = pdf_loadstream(&fontdesc->font->t3procs[i], xref, fz_tonum(obj), fz_togen(obj));
 				if (error)
 					goto cleanup;
-
-				pdf_logfont("}\n");
 			}
 		}
 	}

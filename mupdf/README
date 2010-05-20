@@ -43,44 +43,17 @@ Before compiling MuPDF you need to install thirdy party dependencies.
 	zlib
 	libjpeg
 	freetype2
-
-There are a few optional dependencies that you don't strictly need.
-
 	jbig2dec
 	OpenJPEG
 
-MuPDF uses the Perforce Jam build tool. You need the Perforce version 2.5
-or later. FTJam will also work. If you do not have a compiled
-binary for your system, you can find the Jam and FTJam web sites here:
-
-	http://www.perforce.com/jam/jam.html
-	http://www.freetype.org/jam/index.html
-
-I use Mingw and MSYS to compile for Windows. If you use anything
-else, you are on your own.
+On windows you should download and unzip the mupdf-thirdparty.zip
+archive in the mupdf source to build using the Visual Studio project.
 
 COMPILING
 
-If all of that is installed, compiling should be a cinch.
-Issue the command 'jam' in the root of the project directory.
-Add a parameter '-sBUILD=release' or '-sBUILD=profile' to
-build release or profile versions.
-
-	$ jam '-sBUILD=release'
-
-If the build fails because it cannot find header files or libraries,
-look first in Jamrules to see if there is anything wrong with the
-search paths or compiler flags for your system.
-
-To compile in the optional jbig2 and jpeg2000 support, you need
-to add the following arguments to jam:
-
-	$ jam '-sHAVE_JBIG2DEC=yes' '-sHAVE_OPENJPEG=yes'
-
-If you want a crippled version without the builtin CJK fonts and data files,
-to shave a few megabytes off the binary size, add:
-
-	$ jam '-sDEFINES=NOCJK'
+You will need to use GNU Make to build with the supplied Makefile.
+It may be necessary to edit the Makefile for your system if it
+cannot find header files or libraries.
 
 DOWNLOAD
 

@@ -131,7 +131,7 @@ typedef struct ScrollState {
 class DisplayModel
 {
 public:
-    DisplayModel(DisplayMode displayMode, int dpi=96);
+    DisplayModel(DisplayMode displayMode, int dpi=USER_DEFAULT_SCREEN_DPI);
     ~DisplayModel();
 
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
@@ -292,6 +292,8 @@ protected:
     void            pageChanged(void);
     /* called when we decide that the display needs to be redrawn */
     void            repaintDisplay(bool delayed);
+
+    void            goToPdfDest(fz_obj *dest);
 
     PdfSearch *     _pdfSearch;
     DisplayMode     _displayMode; /* TODO: not used yet */

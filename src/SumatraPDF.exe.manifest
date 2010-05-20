@@ -6,7 +6,7 @@
 				name="Microsoft.Windows.Common-Controls"
 				version="6.0.0.0"
 				type="win32"
-				processorArchitecture="x86"
+				processorArchitecture="*"
 				publicKeyToken="6595b64144ccf1df"
 				language="*"
 			/>
@@ -19,4 +19,9 @@
 			</requestedPrivileges>
 		</security>
 	</trustInfo>
+	<application xmlns="urn:schemas-microsoft-com:asm.v3">
+		<windowsSettings>
+			<dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
+		</windowsSettings>
+	</application>
 </assembly>

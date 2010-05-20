@@ -1,5 +1,4 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 typedef struct fz_aesd_s fz_aesd;
 

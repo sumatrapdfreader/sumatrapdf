@@ -1,26 +1,7 @@
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "SumatraPDF.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <direct.h>
-
-#include <windowsx.h>
-#include <shellapi.h>
-#include <shlobj.h>
-
-#include "file_util.h"
-#include "geom_util.h"
-#include "str_strsafe.h"
-#include "strlist_util.h"
-#include "translations.h"
-#include "win_util.h"
-#include "tstr_util.h"
-#include "Http.h"
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
@@ -87,13 +68,6 @@ static BOOL             gDebugShowLinks = FALSE;
 #define WM_APP_FIND_END        (WM_APP + 14)
 #define WM_APP_REPAINT_TOC     (WM_APP + 15)
 
-#define COL_WHITE RGB(0xff,0xff,0xff)
-#define COL_BLACK RGB(0,0,0)
-#define COL_BLUE_LINK RGB(0,0x20,0xa0)
-#define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
-#define COL_WINDOW_SHADOW RGB(0x40, 0x40, 0x40)
-#define COL_PAGE_FRAME RGB(0x88, 0x88, 0x88)
-
 #ifdef SVN_PRE_RELEASE_VER
 #define ABOUT_BG_COLOR          RGB(255,0,0)
 #else
@@ -104,13 +78,9 @@ static BOOL             gDebugShowLinks = FALSE;
 
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
-#define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
-#define PROPERTIES_CLASS_NAME   _T("SUMATRA_PDF_PROPERTIES")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
 #define PDF_DOC_NAME            _T("Adobe PDF Document")
-#define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
-#define PROPERTIES_WIN_TITLE    _T("PDF Properties") // TODO: translate it
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
 /* Default size for the window, happens to be american A4 size (I think) */
@@ -140,13 +110,13 @@ static BOOL             gDebugShowLinks = FALSE;
 
 static FileHistoryList *            gFileHistoryRoot = NULL;
 
-static HINSTANCE                    ghinst = NULL;
-TCHAR                               gWindowTitle[MAX_LOADSTRING];
+       HINSTANCE                    ghinst = NULL;
+static TCHAR                        gWindowTitle[MAX_LOADSTRING];
 
 static WindowInfo*                  gWindowList;
 
 static HCURSOR                      gCursorArrow;
-static HCURSOR                      gCursorHand;
+       HCURSOR                      gCursorHand;
 static HCURSOR                      gCursorDrag;
 static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
@@ -179,9 +149,8 @@ static bool                         gSuspendRendering = false;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
-static HWND                         gHwndAbout;
 
-static bool                         gRestrictedUse = false;
+       bool                         gRestrictedUse = false;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
     TRUE, // BOOL m_showToolbar
@@ -264,7 +233,6 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
-static void FreePdfProperties(WindowInfo *win);
 
 #define SEP_ITEM "-----"
 
@@ -999,7 +967,7 @@ MenuDef menuDefFile[] = {
     { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &email..."),                    IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Properties..."),                    	IDM_PROPERTIES,          	0 },
+    { _TRN("P&roperties...\tCtrl-D"),               IDM_PROPERTIES,             0 },
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
 };
@@ -1022,14 +990,14 @@ MenuDef menuDefView[] = {
 };
 
 MenuDef menuDefGoTo[] = {
-    { _TRN("Next Page\t->"),               IDM_GOTO_NEXT_PAGE,          0  },
-    { _TRN("Previous Page\t<-"),           IDM_GOTO_PREV_PAGE,          0  },
+    { _TRN("Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,          0  },
+    { _TRN("Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,          0  },
     { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE,         0  },
     { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
     { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
     { SEP_ITEM ,                           0,                           0  },
-    { _TRN("Back\tAlt+<-"),                IDM_GOTO_NAV_BACK,           0  },
-    { _TRN("Forward\tAlt+->"),             IDM_GOTO_NAV_FORWARD,        0  },
+    { _TRN("Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,           0  },
+    { _TRN("Forward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,        0  },
     { SEP_ITEM ,                           0,                           0  },
     { _TRN("Find...\tCtrl-F"),             IDM_FIND_FIRST,              0  },
 };
@@ -1589,6 +1557,13 @@ static void WindowInfoList_Remove(WindowInfo *to_remove);
 
 static void WindowInfo_Delete(WindowInfo *win)
 {
+    // must DestroyWindow(win->hwndPdfProperties) before removing win from
+    // the list of properties beacuse WM_DESTROY handler needs to find
+    // WindowInfo for its HWND
+    if (win->hwndPdfProperties) {
+        DestroyWindow(win->hwndPdfProperties);
+        assert(NULL == win->hwndPdfProperties);
+    }
     WindowInfoList_Remove(win);
 
     if (win->dm) {
@@ -1610,10 +1585,6 @@ static void WindowInfo_Delete(WindowInfo *win)
         CloseHandle(win->findStatusThread);
         win->findStatusThread = NULL;
     }
-    if (win->hwndPdfProperties) {
-        DestroyWindow(win->hwndPdfProperties);
-        assert(NULL == win->hwndPdfProperties);
-    }
     FreePdfProperties(win);
     WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
@@ -1621,12 +1592,13 @@ static void WindowInfo_Delete(WindowInfo *win)
     DeleteOldSelectionInfo(win);
 
     free(win->title);
-    win->title = NULL;
+    if (win->loadedFilePath)
+        free(win->loadedFilePath);
 
     delete win;
 }
 
-static WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
+WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
 {
     for (WindowInfo *win = gWindowList; win; win = win->next) {
         if (hwnd == win->hwndFrame)
@@ -1667,7 +1639,9 @@ static WindowInfo *WindowInfo_New(HWND hwndFrame) {
     win->mouseAction = MA_IDLE;
     
     HDC hdc = GetDC(hwndFrame);
-    win->dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+    win->dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+    // round untypical resolutions up to the nearest quarter
+    win->uiDPIFactor = ceil(win->dpi * 4.0 / USER_DEFAULT_SCREEN_DPI) / 4.0;
     ReleaseDC(hwndFrame, hdc);
 
     return win;
@@ -1865,10 +1839,11 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
-        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_VIEW_WITH_ACROBAT, IDM_SEND_BY_EMAIL,
+        IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
         IDM_COPY_SELECTION, IDM_PROPERTIES };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
+    assert(!fileCloseEnabled == !win->loadedFilePath);
     HMENU hmenu = win->hMenu;
     if (fileCloseEnabled)
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_ENABLED);
@@ -1882,6 +1857,11 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
     else
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
+
+    if (CanViewWithAcrobat(win))
+        EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
+    else
+        EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
 
     MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
@@ -1921,67 +1901,53 @@ static void MenuToolbarUpdateStateForAllWindows(void) {
 }
 
 #define MIN_WIN_DX 50
-#define MAX_WIN_DX 4096
 #define MIN_WIN_DY 50
-#define MAX_WIN_DY 4096
 
-static bool IsWindowVisibleOnAMonitor(int x, int y, int dx, int dy)
+static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
 {
-    // check whether the lower half of the window's title bar is
-    // inside a visible area (supports multiple monitors)
-    RECT caption;
-    int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    SetRect(&caption, x, y + captionDy / 2, x + dx, y + captionDy);
+    RECT rc = { *x, *y, *x + *dy, *y + *dy };
 
-    return NULL != MonitorFromRect(&caption, MONITOR_DEFAULTTONULL);
+    // adjust to the work-area of the current monitor (not necessarily the primary one)
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof(mi);
+    if (!GetMonitorInfo(MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST), &mi))
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+
+    // make sure that the window is neither too small nor bigger than the monitor
+    if (*dx < MIN_WIN_DX || *dx > rect_dx(&mi.rcWork))
+        *dx = rect_dy(&mi.rcWork) * DEF_PAGE_RATIO;
+    if (*dy < MIN_WIN_DY || *dy > rect_dy(&mi.rcWork))
+        *dy = rect_dy(&mi.rcWork);
+
+    // check whether the lower half of the window's title bar is
+    // inside a visible working area
+    int captionDy = GetSystemMetrics(SM_CYCAPTION);
+    rc.bottom = rc.top + captionDy;
+    rc.top += captionDy / 2;
+    if (!IntersectRect(&mi.rcMonitor, &mi.rcWork, &rc)) {
+        *x = mi.rcWork.left;
+        *y = mi.rcWork.top;
+    }
 }
 
 static WindowInfo* WindowInfo_CreateEmpty(void) {
     HWND        hwndFrame, hwndCanvas;
     WindowInfo* win;
 
-    /* TODO: maybe adjustement of size and position should be outside of this function */
     RECT workArea;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    int defPageDy = rect_dy(&workArea);
-    int defPageDx = defPageDy * DEF_PAGE_RATIO;
-
     int winX = CW_USEDEFAULT;
-    int winY = workArea.top;
+    int winY = CW_USEDEFAULT;
+    int winDy = rect_dy(&workArea);
+    int winDx = winDy * DEF_PAGE_RATIO;
+
     if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowPosX) {
         winX = gGlobalPrefs.m_windowPosX;
         winY = gGlobalPrefs.m_windowPosY;
-    }
-
-    int winDx = defPageDx;
-    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDx) {
         winDx = gGlobalPrefs.m_windowDx;
-        if (winDx < MIN_WIN_DX || winDx > MAX_WIN_DX)
-            winDx = defPageDx;
-    }
-    
-    int winDy = defPageDy;
-    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowDy) {
         winDy = gGlobalPrefs.m_windowDy;
-        if (winDy < MIN_WIN_DY || winDy > MAX_WIN_DY)
-            winDy = defPageDy;
-    }
-    
-    if (winX != CW_USEDEFAULT && winY != CW_USEDEFAULT) {
-        if (!IsWindowVisibleOnAMonitor(winX, winY, winDx, winDy)) {
-            RECT rc;
-            rc.left = winX;
-            rc.top = winY;
-            rc.right = rc.left+ winDx;
-            rc.bottom = rc.top + winDy;
-            
-            MONITORINFO mi;
-            mi.cbSize = sizeof(mi);
-            GetMonitorInfo(MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST), &mi);
-            
-            winX = mi.rcMonitor.left + CW_USEDEFAULT;
-            winY = mi.rcMonitor.top + CW_USEDEFAULT;
-        }
+
+        EnsureWindowVisibility(&winX, &winY, &winDx, &winDy);
     }
 
     hwndFrame = CreateWindow(
@@ -2111,6 +2077,9 @@ static bool LoadPdfIntoWindow(
 
     win->dm = DisplayModel_CreateFromFileName(fileName,
         totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
+    if (win->loadedFilePath)
+        free(win->loadedFilePath);
+    win->loadedFilePath = tstr_dup(fileName);
 
     if (!win->dm) {
         //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
@@ -2268,12 +2237,7 @@ static void CheckPositionAndSize(DisplayState* ds)
         ds->windowDy = gGlobalPrefs.m_windowDy;
     }
 
-    if (ds->windowDx < MIN_WIN_DX || ds->windowDx > MAX_WIN_DX ||
-        ds->windowDy < MIN_WIN_DY || ds->windowDy > MAX_WIN_DY ||
-        !IsWindowVisibleOnAMonitor(ds->windowX, ds->windowY, ds->windowDx, ds->windowDy)) {
-        ds->windowX = CW_USEDEFAULT;
-        ds->windowY = CW_USEDEFAULT;
-    }
+    EnsureWindowVisibility(&ds->windowX, &ds->windowY, &ds->windowDx, &ds->windowDy);
 }
 
 static void AdjustRemovableDriveLetter(TCHAR *path)
@@ -2329,19 +2293,19 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
 
     // TODO: fileName might not exist.
     // Normalize the file path    
-    TCHAR *pFullpath = FilePath_Normalize(fileName, FALSE);
-    if (!pFullpath)
+    TCHAR *fullpath = FilePath_Normalize(fileName, FALSE);
+    if (!fullpath)
         goto exit;
 
-    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, pFullpath);
+    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fullpath);
     DisplayState *ds = NULL;
     if (fileFromHistory) {
         ds = &fileFromHistory->state;
-        AdjustRemovableDriveLetter(pFullpath);
+        AdjustRemovableDriveLetter(fullpath);
     }
 
     CheckPositionAndSize(ds);
-    if (!LoadPdfIntoWindow(pFullpath, win, ds, is_new_window, true, showWin, true)) {
+    if (!LoadPdfIntoWindow(fullpath, win, ds, is_new_window, true, showWin, true)) {
         /* failed to open */
         goto exit;
     }
@@ -2349,29 +2313,28 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     // Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
 #ifdef THREAD_BASED_FILEWATCH
     if (!win->watcher.IsThreadRunning())
-        win->watcher.StartWatchThread(pFullpath, &OnFileChange, (LPARAM)win);
+        win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
 #else
-        win->watcher.Init(pFullpath);
+        win->watcher.Init(fullpath);
 #endif
 
-    CreateSynchronizer(pFullpath, &win->pdfsync);
+    CreateSynchronizer(fullpath, &win->pdfsync);
 
     if (gGlobalPrefs.m_rememberOpenedFiles) {
-        AddFileToHistory(pFullpath);
+        AddFileToHistory(fullpath);
         RebuildProgramMenus();
     }
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    SHAddToRecentDocs(SHARD_PATH, pFullpath);
+    SHAddToRecentDocs(SHARD_PATH, fullpath);
 
 exit:
-    if (pFullpath)
-        free(pFullpath);
+    free(fullpath);
     return win;
 }
 
-static HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
+HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
 {
     HFONT       font_dc;
     HFONT       font;
@@ -2381,24 +2344,22 @@ static HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize)
     if (!GetObject(font_dc, sizeof(LOGFONT), &lf))
         return NULL;
 
-    lf.lfHeight = (LONG)-fontSize;
     lf.lfWidth = 0;
-    //lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
     lf.lfItalic = FALSE;
     lf.lfUnderline = FALSE;
     lf.lfStrikeOut = FALSE;
     lf.lfCharSet = DEFAULT_CHARSET;
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
-    //lf.lfQuality = CLEARTYPE_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;    
-    _tcscpy_s(lf.lfFaceName, LF_FACESIZE, fontName);
+    lstrcpyn(lf.lfFaceName, fontName, LF_FACESIZE);
     lf.lfWeight = FW_DONTCARE;
     font = CreateFontIndirect(&lf);
     return font;
 }
 
-static void Win32_Font_Delete(HFONT font)
+void Win32_Font_Delete(HFONT font)
 {
     DeleteObject(font);
 }
@@ -3247,375 +3208,6 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     }
 }
 
-/* TODO: change the name to DrawAbout.
-   Draws the about screen a remember some state for hyperlinking.
-   It transcribes the design I did in graphics software - hopeless
-   to understand without seeing the design. */
-#define ABOUT_RECT_PADDING          8
-#define ABOUT_LINE_OUTER_SIZE       2
-#define ABOUT_LINE_SEP_SIZE         1
-#define ABOUT_LEFT_RIGHT_SPACE_DX   8
-#define ABOUT_MARGIN_DX            10
-#define ABOUT_BOX_MARGIN_DY         6
-
-#define ABOUT_BORDER_COL            COL_BLACK
-
-#ifndef SUMATRA_TXT
-#define SUMATRA_TXT             _T("Sumatra PDF")
-#endif
-#define SUMATRA_TXT_FONT        _T("Arial Black")
-#define SUMATRA_TXT_FONT_SIZE   24
-#define TXTFY(val) #val
-
-#ifdef SVN_PRE_RELEASE_VER
- #define BETA_TXT                _T("Pre-Release")
-#else
- #ifdef DEBUG
- #define BETA_TXT                _T(" v") _T(CURR_VERSION) _T(" (dbg)")
- #else
- #define BETA_TXT                _T(" v") _T(CURR_VERSION)
- #endif
-#endif
-
-#define BETA_TXT_FONT           _T("Arial Black")
-#define BETA_TXT_FONT_SIZE      12
-#define LEFT_TXT_FONT           _T("Arial")
-#define LEFT_TXT_FONT_SIZE      12
-#define RIGHT_TXT_FONT          _T("Arial Black")
-#define RIGHT_TXT_FONT_SIZE     12
-
-#define ABOUT_TXT_DY            6
-
-#define PROPERTIES_TXT_DY_PADDING 2
-
-typedef struct AboutLayoutInfoEl {
-    /* static data, must be provided */
-    const TCHAR *   leftTxt;
-    const TCHAR *   rightTxt;
-    const TCHAR *   url;
-
-    /* data calculated by the layout */
-    int             leftTxtPosX;
-    int             leftTxtPosY;
-    int             leftTxtDx;
-    int             leftTxtDy;
-
-    int             rightTxtPosX;
-    int             rightTxtPosY;
-    int             rightTxtDx;
-    int             rightTxtDy;
-} AboutLayoutInfoEl;
-
-AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { _T("website"), _T("SumatraPDF website"), _T("http://blog.kowalczyk.info/software/sumatrapdf"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("forums"), _T("SumatraPDF forums"), _T("http://blog.kowalczyk.info/forum_sumatra"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("programming"), _T("Krzysztof Kowalczyk"), _T("http://blog.kowalczyk.info"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("programming"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/#SumatraPDF"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-    
-    { _T("programming"), _T("William Blum"), _T("http://william.famille-blum.org/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-#ifdef _TEX_ENHANCEMENT
-    { _T("note"), _T("TeX build"), _T("http://william.famille-blum.org/software/sumatra/index.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-#endif 
-#ifdef SVN_PRE_RELEASE_VER
-    { _T("a note"), _T("Pre-release version, for testing only!"), NULL,
-    0, 0, 0, 0, 0, 0, 0, 0 },
-#endif
-    { _T("pdf rendering"), _T("MuPDF"), _T("http://mupdf.com"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("program icon"), _T("Zenon"), _T("http://www.flashvidz.tk/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("translations"), _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-#ifdef _TEX_ENHANCEMENT
-    { _T("SyncTeX"), _T("J\xE9rome Laurens"), _T("http://itexmac.sourceforge.net/SyncTeX.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-#endif 
-
-    { NULL, NULL, NULL,
-    0, 0, 0, 0, 0, 0, 0, 0 }
-};
-
-static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect);
-static void OnPaintAbout(HWND hwnd);
-
-static const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el=NULL)
-{
-    if (gRestrictedUse) return NULL;
-
-    // Update the link location information
-    if (win)
-        UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, NULL);
-    else
-        OnPaintAbout(gHwndAbout);
-
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt; i++) {
-        if ((x < gAboutLayoutInfo[i].rightTxtPosX) ||
-            (x > gAboutLayoutInfo[i].rightTxtPosX + gAboutLayoutInfo[i].rightTxtDx))
-            continue;
-        if ((y < gAboutLayoutInfo[i].rightTxtPosY) ||
-            (y > gAboutLayoutInfo[i].rightTxtPosY + gAboutLayoutInfo[i].rightTxtDy))
-            continue;
-        if (el)
-            *el = &gAboutLayoutInfo[i];
-        return gAboutLayoutInfo[i].url;
-    }
-    return NULL;
-}
-
-#define MIN_ABOUT_DX 326 // chosen so that (dbg) in debug builds is not cut off
-
-static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
-{
-    SIZE            txtSize;
-    int             totalDx, totalDy;
-    int             leftDy, rightDy;
-    int             leftLargestDx, rightLargestDx;
-    int             linePosX, linePosY;
-    int             currY;
-    int             offX, offY;
-    int             boxDy;
-
-    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-    HFONT origFont = (HFONT)SelectObject(hdc, fontSumatraTxt);
-
-    /* calculate top box height */
-    const TCHAR *txt = SUMATRA_TXT;
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-    boxDy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
-
-    /* calculate left text dimensions */
-    (HFONT)SelectObject(hdc, fontLeftTxt);
-    leftLargestDx = 0;
-    leftDy = 0;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].leftTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        gAboutLayoutInfo[i].leftTxtDx = (int)txtSize.cx;
-        gAboutLayoutInfo[i].leftTxtDy = (int)txtSize.cy;
-
-        if (0 == i)
-            leftDy = gAboutLayoutInfo[i].leftTxtDy;
-        else
-            assert(leftDy == gAboutLayoutInfo[i].leftTxtDy);
-        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
-            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
-    }
-
-    /* calculate right text dimensions */
-    (HFONT)SelectObject(hdc, fontRightTxt);
-    rightLargestDx = 0;
-    rightDy = 0;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].rightTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        gAboutLayoutInfo[i].rightTxtDx = (int)txtSize.cx;
-        gAboutLayoutInfo[i].rightTxtDy = (int)txtSize.cy;
-
-        if (0 == i)
-            rightDy = gAboutLayoutInfo[i].rightTxtDy;
-        else
-            assert(rightDy == gAboutLayoutInfo[i].rightTxtDy);
-        if (rightLargestDx < gAboutLayoutInfo[i].rightTxtDx)
-            rightLargestDx = gAboutLayoutInfo[i].rightTxtDx;
-    }
-
-    /* calculate total dimension and position */
-    totalDx  = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx;
-    totalDx += ABOUT_LEFT_RIGHT_SPACE_DX + ABOUT_LINE_SEP_SIZE + ABOUT_LEFT_RIGHT_SPACE_DX;
-    totalDx += rightLargestDx + ABOUT_MARGIN_DX + ABOUT_LINE_OUTER_SIZE;
-    if (totalDx < MIN_ABOUT_DX)
-        totalDx = MIN_ABOUT_DX;
-
-    totalDy  = boxDy;
-    totalDy += ABOUT_LINE_OUTER_SIZE;
-    totalDy += (dimof(gAboutLayoutInfo)-1) * (rightDy + ABOUT_TXT_DY);
-    totalDy += ABOUT_LINE_OUTER_SIZE + 4;
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    offX = (rect_dx(&rc) - totalDx) / 2;
-    offY = (rect_dy(&rc) - totalDy) / 2;
-
-    if (rect) {
-        rect->left = offX;
-        rect->top = offY;
-        rect->right = offX + totalDx;
-        rect->bottom = offY + totalDy;
-    }
-
-    /* calculate text positions */
-    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-    linePosY = 4;
-
-    currY = offY + boxDy + linePosY;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        gAboutLayoutInfo[i].leftTxtPosX = offX + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - gAboutLayoutInfo[i].leftTxtDx;
-        gAboutLayoutInfo[i].leftTxtPosY = currY + (rightDy - leftDy) / 2;
-        gAboutLayoutInfo[i].rightTxtPosX = offX + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
-        gAboutLayoutInfo[i].rightTxtPosY = currY;
-        currY += rightDy + ABOUT_TXT_DY;
-    }
-
-    SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontSumatraTxt);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
-}
-
-static void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
-{
-    SIZE            txtSize;
-    int             totalDx, totalDy;
-    int             leftLargestDx;
-    int             sumatraPdfTxtDx, sumatraPdfTxtDy;
-    int             linePosX, linePosY, lineDy;
-    int             offX, offY;
-    int             x, y;
-    int             boxDy;
-
-    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
-
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
-    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLACK);
-    HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
-
-    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontBetaTxt = Win32_Font_GetSimple(hdc, BETA_TXT_FONT, BETA_TXT_FONT_SIZE);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-
-    HFONT origFont = (HFONT)SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
-
-    SetBkMode(hdc, TRANSPARENT);
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    FillRect(hdc, &rc, brushBg);
-
-    SelectObject(hdc, brushBg);
-    SelectObject(hdc, penBorder);
-
-    offX = rect->left;
-    offY = rect->top;
-    totalDx = rect_dx(rect);
-    totalDy = rect_dy(rect);
-
-    /* render title */
-    const TCHAR *txt = SUMATRA_TXT;
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-    sumatraPdfTxtDx = txtSize.cx;
-    sumatraPdfTxtDy = txtSize.cy;
-
-    boxDy = sumatraPdfTxtDy + ABOUT_BOX_MARGIN_DY * 2;
-
-    Rectangle(hdc, offX, offY + ABOUT_LINE_OUTER_SIZE, offX + totalDx, offY + boxDy + ABOUT_LINE_OUTER_SIZE);
-
-    SetTextColor(hdc, ABOUT_BORDER_COL);
-    (HFONT)SelectObject(hdc, fontSumatraTxt);
-    x = offX + (totalDx - sumatraPdfTxtDx) / 2;
-    y = offY + (boxDy - sumatraPdfTxtDy) / 2;
-    txt = SUMATRA_TXT;
-    TextOut(hdc, x, y, txt, lstrlen(txt));
-
-    (HFONT)SelectObject(hdc, fontBetaTxt);
-    x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
-    y = offY + (boxDy - sumatraPdfTxtDy) / 2;
-    txt = BETA_TXT;
-    TextOut(hdc, x, y, txt, lstrlen(txt));
-
-#ifdef BUILD_RM_VERSION
-    txt = _T("Adapted by RM");
-    TextOut(hdc, x, y + 16, txt, lstrlen(txt));
-#endif
-
-#ifdef SVN_PRE_RELEASE_VER
-    GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-    y += (int)txtSize.cy + 2;
-
-    TCHAR buf[128];
-    _sntprintf(buf, dimof(buf), _T("v%s svn %d"), _T(CURR_VERSION), SVN_PRE_RELEASE_VER);
-    txt = &(buf[0]);
-    TextOut(hdc, x, y, txt, lstrlen(txt));
-#endif
-    SetTextColor(hdc, ABOUT_BORDER_COL);
-
-    offY += boxDy;
-    Rectangle(hdc, offX, offY, offX + totalDx, offY + totalDy - boxDy);
-
-    /* render text on the left*/
-    leftLargestDx = 0;
-    (HFONT)SelectObject(hdc, fontLeftTxt);
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].leftTxt;
-        x = gAboutLayoutInfo[i].leftTxtPosX;
-        y = gAboutLayoutInfo[i].leftTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-
-        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
-            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
-    }
-
-    /* render text on the right */
-    (HFONT)SelectObject(hdc, fontRightTxt);
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        bool hasUrl = !gRestrictedUse && gAboutLayoutInfo[i].url;
-        SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
-
-        txt = gAboutLayoutInfo[i].rightTxt;
-        x = gAboutLayoutInfo[i].rightTxtPosX;
-        y = gAboutLayoutInfo[i].rightTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-
-        if (!hasUrl)
-            continue;
-
-        int underlineY = y + gAboutLayoutInfo[i].rightTxtDy - 3;
-        SelectObject(hdc, penLinkLine);
-        MoveToEx(hdc, x, underlineY, NULL);
-        LineTo(hdc, x + gAboutLayoutInfo[i].rightTxtDx, underlineY);    
-    }
-
-    linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-    linePosY = 4;
-    lineDy = (dimof(gAboutLayoutInfo)-1) * (gAboutLayoutInfo[0].rightTxtDy + ABOUT_TXT_DY);
-
-    SelectObject(hdc, penDivideLine);
-    MoveToEx(hdc, linePosX + offX, linePosY + offY, NULL);
-    LineTo(hdc, linePosX + offX, linePosY + lineDy + offY);
-
-    SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontSumatraTxt);
-    Win32_Font_Delete(fontBetaTxt);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
-
-    DeleteObject(brushBg);
-    DeleteObject(penBorder);
-    DeleteObject(penDivideLine);
-    DeleteObject(penLinkLine);
-}
-
 static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
 {
     assert(win);
@@ -3872,14 +3464,16 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
         ReleaseCapture();
     }
 
-    /* if we had a selection and this was just a click, hide selection */
-    if (!didDragMouse && win->showSelection)
-        ClearSearch(win);
-
     if (win->linkOnLastButtonDown && win->dm->linkAtPosition(x, y) == win->linkOnLastButtonDown) {
         win->dm->handleLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
+    /* if we had a selection and this was just a click, hide selection */
+    else if (!didDragMouse && win->showSelection)
+        ClearSearch(win);
+    else if (!didDragMouse && win->fullScreen)
+        win->dm->goToNextPage(0);
+
     win->linkOnLastButtonDown = NULL;
 }
 
@@ -4009,7 +3603,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
     win->mouseAction = MA_IDLE;
 }
 
-static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y)
+static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
 {
     assert(win);
     if (!win) return;
@@ -4027,6 +3621,12 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y)
     } else {
         win->mouseAction = MA_IDLE;
     }
+}
+
+static void OnMouseRightButtonClick(WindowInfo *win, int x, int y, int key)
+{
+    if (win->fullScreen && win->dm)
+        win->dm->goToPrevPage(0);
 }
 
 #define ABOUT_ANIM_TIMER_ID 15
@@ -4119,85 +3719,6 @@ static void WindowInfo_DoubleBuffer_Resize_IfNeeded(WindowInfo *win)
     WinResizeIfNeeded(win, false);
 }
 
-static void OnPaintAbout(HWND hwnd)
-{
-    PAINTSTRUCT ps;
-    RECT rc;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    UpdateAboutLayoutInfo(hwnd, hdc, &rc);
-    DrawAbout(hwnd, hdc, &rc);
-    EndPaint(hwnd, &ps);
-}
-
-static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
-{
-    const TCHAR *txt;
-    int          x, y;
-    WindowInfo * win = WindowInfo_FindByHwnd(hwnd);
-    HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
-#if 0
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
-#endif
-
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-
-    HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
-
-    SetBkMode(hdc, TRANSPARENT);
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    FillRect(hdc, &rc, brushBg);
-
-
-#if 0
-    SelectObject(hdc, brushBg);
-    SelectObject(hdc, penBorder);
-#endif
-
-    SetTextColor(hdc, ABOUT_BORDER_COL);
-
-    /* render text on the left*/
-    (HFONT)SelectObject(hdc, fontLeftTxt);
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].leftTxt;
-        x = win->pdfProperties[i].leftTxtPosX;
-        y = win->pdfProperties[i].leftTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-    }
-
-    /* render text on the right */
-    (HFONT)SelectObject(hdc, fontRightTxt);
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].rightTxt;
-        x = win->pdfProperties[i].rightTxtPosX;
-        y = win->pdfProperties[i].rightTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-    }
-
-    SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
-
-    DeleteObject(brushBg);
-#if 0
-    DeleteObject(penBorder);
-#endif
-}
-
-static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect);
-
-static void OnPaintProperties(HWND hwnd)
-{
-    PAINTSTRUCT ps;
-    RECT rc;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    UpdatePropertiesLayout(hwnd, hdc, &rc);
-    DrawProperties(hwnd, hdc, &rc);
-    EndPaint(hwnd, &ps);
-}
-
 static void OnPaint(WindowInfo *win)
 {
     PAINTSTRUCT ps;
@@ -4272,6 +3793,10 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         WindowInfo_AbortFinding(win);
         delete win->dm;
         win->dm = NULL;
+        if (win->loadedFilePath) {
+            free(win->loadedFilePath);
+            win->loadedFilePath = NULL;
+        }
         if (win->hwndPdfProperties) {
             DestroyWindow(win->hwndPdfProperties);
             assert(NULL == win->hwndPdfProperties);
@@ -4388,14 +3913,12 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
             double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
-            int printAreaDx = zoom * sSize.dx(), printAreaDy = zoom * sSize.dy();
-
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL);
             if (!bmp)
                 goto Error; /* most likely ran out of memory */
 
-            bmp->stretchDIBits(hdc, leftMargin + (printAreaWidth - printAreaDx) / 2,
-                topMargin + (printAreaHeight - printAreaDy) / 2, printAreaDx, printAreaDy);
+            bmp->stretchDIBits(hdc, leftMargin + (printAreaWidth - bmp->dx()) / 2,
+                topMargin + (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
             delete bmp;
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
@@ -4429,14 +3952,12 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
             // try to use correct zoom values (scale down to fit the physical page, though)
             double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
-            int printAreaDx = zoom * pSize.dx(), printAreaDy = zoom * pSize.dy();
-
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
             if (!bmp)
                 goto Error; /* most likely ran out of memory */
 
-            bmp->stretchDIBits(hdc, (printAreaWidth - printAreaDx) / 2,
-                (printAreaHeight - printAreaDy) / 2, printAreaDx, printAreaDy);
+            bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
+                (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
             delete bmp;
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
@@ -4449,6 +3970,51 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 Error:
     EndDoc(hdc);
 }
+
+#ifndef ID_APPLY_NOW
+#define ID_APPLY_NOW 0x3021
+#endif
+
+static LRESULT CALLBACK DisableApplyBtnWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uiMsg == WM_ENABLE)
+        EnableWindow(hWnd, FALSE);
+
+    WNDPROC nextWndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWL_USERDATA);
+    return CallWindowProc(nextWndProc, hWnd, uiMsg, wParam, lParam);
+}
+
+/* minimal IPrintDialogCallback implementation for hiding the useless Apply button */
+class ApplyButtonDiablingCallback : public IPrintDialogCallback
+{
+public:
+    ApplyButtonDiablingCallback() : m_cRef(0) { };
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
+        if (riid == IID_IUnknown || riid == IID_IPrintDialogCallback) {
+            *ppv = static_cast<IUnknown*>(this);
+            this->AddRef();
+            return S_OK;
+        }
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    };
+    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_cRef); };
+    STDMETHODIMP_(ULONG) Release() { return InterlockedDecrement(&m_cRef); };
+    STDMETHODIMP HandleMessage(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult) {
+        if (uiMsg == WM_INITDIALOG) {
+            HWND hPropSheetContainer = GetParent(GetParent(hDlg));
+            HWND hApplyButton = GetDlgItem(hPropSheetContainer, ID_APPLY_NOW);
+            WNDPROC nextWndProc = (WNDPROC)SetWindowLongPtr(hApplyButton, GWL_WNDPROC, (LONG_PTR)DisableApplyBtnWndProc);
+            SetWindowLongPtr(hApplyButton, GWL_USERDATA, (LONG_PTR)nextWndProc);
+        }
+        return S_FALSE;
+    };
+    STDMETHODIMP InitDone() { return E_NOTIMPL; };
+    STDMETHODIMP SelectionChange() { return E_NOTIMPL; };
+protected:
+    LONG m_cRef;
+    WNDPROC m_wndProc;
+};
 
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
@@ -4506,6 +4072,7 @@ static void OnMenuPrint(WindowInfo *win)
     pd.nMinPage = 1;
     pd.nMaxPage = dm->pageCount();
     pd.nStartPage = START_PAGE_GENERAL;
+    pd.lpCallback = new ApplyButtonDiablingCallback();
 
     if (PrintDlgEx(&pd) == S_OK) {
         if (pd.dwResultAction==PD_RESULT_PRINT) {
@@ -4540,6 +4107,7 @@ static void OnMenuPrint(WindowInfo *win)
     }
 
     free(ppr);
+    free(pd.lpCallback);
     if (pd.hDC != NULL) DeleteDC(pd.hDC);
     if (pd.hDevNames != NULL) GlobalFree(pd.hDevNames);
     if (pd.hDevMode != NULL) GlobalFree(pd.hDevMode);
@@ -4846,7 +4414,7 @@ static DWORD GetFileVersion(TCHAR *path)
 static bool CanViewWithAcrobat(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (win && (!WindowInfo_PdfLoaded(win) || !file_exists(win->dm->fileName())))
+    if (win && (!win->loadedFilePath || !file_exists(win->loadedFilePath)))
         return false;
     return GetAcrobatPath() != NULL;
 }
@@ -4855,7 +4423,7 @@ static void ViewWithAcrobat(WindowInfo *win)
 {
     if (gRestrictedUse) return;
 
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->loadedFilePath)
         return;
 
     TCHAR acrobatPath[MAX_PATH];
@@ -4867,7 +4435,9 @@ static void ViewWithAcrobat(WindowInfo *win)
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
     // TODO: Also set zoom factor and scroll to current position?
-    if (HIWORD(GetFileVersion(acrobatPath)) >= 6)
+    if (!win->dm)
+        params = tstr_printf(_T("\"%s\""), win->loadedFilePath);
+    else if (HIWORD(GetFileVersion(acrobatPath)) >= 6)
         params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
     else
         params = tstr_printf(_T("\"%s\""), win->dm->fileName());
@@ -4918,165 +4488,6 @@ static bool CanSendAsEmailAttachment(WindowInfo *win)
         return false;
     pDropTarget->Release();
     return true;
-}
-
-static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *right) {
-    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
-        return;
-    }
-    win->pdfProperties[win->pdfPropertiesCount].leftTxt = left;
-    win->pdfProperties[win->pdfPropertiesCount].rightTxt = tstr_dup(right);
-    ++win->pdfPropertiesCount;
-}
-
-static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
-    SIZE            txtSize;
-    int             totalDx, totalDy;
-    int             leftDy, rightDy;
-    int             leftMaxDx, rightMaxDx;
-    int             currY;
-    int             offX, offY;
-    const TCHAR *   txt;
-    WindowInfo *    win = WindowInfo_FindByHwnd(hwnd);
-
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-    HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt);
-
-    /* calculate text dimensions for the left side */
-    (HFONT)SelectObject(hdc, fontLeftTxt);
-    leftMaxDx = 0;
-    leftDy = 0;
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].leftTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        win->pdfProperties[i].leftTxtDx = (int)txtSize.cx;
-        win->pdfProperties[i].leftTxtDy = (int)txtSize.cy;
-
-        if (i > 0) {
-             assert(win->pdfProperties[i-1].leftTxtDy == win->pdfProperties[i].leftTxtDy);
-        }
-
-        if (win->pdfProperties[i].leftTxtDx > leftMaxDx) {
-            leftMaxDx = win->pdfProperties[i].leftTxtDx;
-        }
-    }
-
-    /* calculate text dimensions for the right side */
-    (HFONT)SelectObject(hdc, fontRightTxt);
-    rightMaxDx = 0;
-    rightDy = 0;
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].rightTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        win->pdfProperties[i].rightTxtDx = (int)txtSize.cx;
-        win->pdfProperties[i].rightTxtDy = (int)txtSize.cy;
-
-        if (i > 0) {
-             assert(win->pdfProperties[i-1].rightTxtDy == win->pdfProperties[i].rightTxtDy);
-        }
-
-        if (win->pdfProperties[i].rightTxtDx > rightMaxDx) {
-            rightMaxDx = win->pdfProperties[i].rightTxtDx;
-        }
-    }
-
-    int textDy = win->pdfProperties[0].rightTxtDy;
-
-    totalDx = leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX + rightMaxDx;
-
-    totalDy = 4;
-    totalDy += (win->pdfPropertiesCount * (textDy + PROPERTIES_TXT_DY_PADDING));
-    totalDy += 4;
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    offX = (rect_dx(&rc) - totalDx) / 2;
-    offY = (rect_dy(&rc) - totalDy) / 2;
-
-    if (rect) {
-        rect->left = offX;
-        rect->top = offY;
-        rect->right = offX + totalDx;
-        rect->bottom = offY + totalDy;
-    }
-
-    currY = offY;
-    for (int i=0; i < win->pdfPropertiesCount; i++) {
-        win->pdfProperties[i].leftTxtPosX = offX + leftMaxDx - win->pdfProperties[i].leftTxtDx;
-        win->pdfProperties[i].leftTxtPosY = offY + currY;
-        win->pdfProperties[i].rightTxtPosX = offX + leftMaxDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-        win->pdfProperties[i].rightTxtPosY = offY + currY;
-        currY += (textDy + PROPERTIES_TXT_DY_PADDING);
-    }
-
-    SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontLeftTxt);
-    Win32_Font_Delete(fontRightTxt);
-}
-
-static void CreatePropertiesWindow(WindowInfo *win) {
-    if (win->hwndPdfProperties) {
-        SetActiveWindow(win->hwndPdfProperties);
-        return;
-    }
-
-    win->hwndPdfProperties = CreateWindow(
-            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            NULL, NULL,
-            ghinst, NULL);
-    if (!win->hwndPdfProperties)
-        return;
-
-    // get the dimensions required for the about box's content
-    RECT rc;
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(win->hwndPdfProperties, &ps);
-    UpdatePropertiesLayout(win->hwndPdfProperties, hdc, &rc);
-    EndPaint(win->hwndPdfProperties, &ps);
-    InflateRect(&rc, ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
-
-    // resize the new window to just match these dimensions
-    RECT wRc, cRc;
-    GetWindowRect(win->hwndPdfProperties, &wRc);
-    GetClientRect(win->hwndPdfProperties, &cRc);
-    wRc.right += rect_dx(&rc) - rect_dx(&cRc);
-    wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
-    MoveWindow(win->hwndPdfProperties, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
-
-    ShowWindow(win->hwndPdfProperties, SW_SHOW);
-}
-
-static void FreePdfProperties(WindowInfo *win)
-{
-    // free the text on the right. Text on left is static, so doesn't need to
-    // be freed
-    for (int i=0; i<win->pdfPropertiesCount; i++) {
-        free((void*)win->pdfProperties[i].rightTxt);
-    }
-    win->pdfPropertiesCount = 0;
-}
-
-static void OnMenuProperties(WindowInfo *win)
-{
-    FreePdfProperties(win);
-    // TODO: use the real PDF information
-    AddPdfProperty(win, _T("Author:"), _T("William Blake"));
-    AddPdfProperty(win, _T("File:"), _T("foo.pdf"));
-    AddPdfProperty(win, _T("Created:"), _T("12/22/2009 5:19:33 PM"));
-    AddPdfProperty(win, _T("Modified:"), _T("3/8/2010 1:43:02 PM"));
-    AddPdfProperty(win, _T("Application:"), _T("pdftk 1.12 -- www.pdftk.com"));
-    AddPdfProperty(win, _T("PDF Producer:"), _T("itext-paulo (lowagie.com)[JDK1.1] - build 132"));
-    AddPdfProperty(win, _T("PDF Version:"), _T("1.6 (Acrobat 7.x"));
-    AddPdfProperty(win, _T("File Size:"), _T("1.29 MB (1,348,258 Bytes)"));
-    AddPdfProperty(win, _T("Page Size:"), _T("7x36 x 8.97 in"));
-    AddPdfProperty(win, _T("Tagged PDF:"), _T("No"));
-    AddPdfProperty(win, _T("Number of Pages:"), _T("28"));
-    AddPdfProperty(win, _T("Fast Web View:"), _T("No"));
-    CreatePropertiesWindow(win);
 }
 
 static bool SendAsEmailAttachment(WindowInfo *win)
@@ -5580,8 +4991,8 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE);
         SelectObject(hdc, oldFont);
         ReleaseDC(win->hwndFindStatus, hdc);
-        rc.right += MulDiv(15, win->dpi, 96);
-        rc.bottom = MulDiv(23, win->dpi, 96);
+        rc.right += MulDiv(15, win->dpi, USER_DEFAULT_SCREEN_DPI);
+        rc.bottom = MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI);
         AdjustWindowRectEx(&rc, GetWindowLong(win->hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win->hwndFindStatus, GWL_EXSTYLE));
         MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
     }
@@ -5673,7 +5084,7 @@ static void WindowInfo_ShowFindStatus(WindowInfo *win)
 {
     LPARAM disable = (LPARAM)MAKELONG(0,0);
 
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(23, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI), MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
     ShowWindow(win->hwndFindStatus, SW_SHOWNA);
     win->findStatusVisible = true;
 
@@ -5691,7 +5102,7 @@ static void WindowInfo_HideFindStatus(WindowInfo *win, bool canceled=false)
     SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
     // resize the window, in case another message has been displayed in the meantime
-    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, 96), MulDiv(23, win->dpi, 96) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
+    MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN, FIND_STATUS_MARGIN, MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI), MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI) + FIND_STATUS_PROGRESS_HEIGHT + 8, false);
     if (canceled)
         WindowInfo_ShowMessage_Asynch(win, NULL, false);
     else if (!win->dm->bFoundText)
@@ -5850,6 +5261,9 @@ static void OnChar(WindowInfo *win, int key)
     if ('q' == key) {
         CloseWindow(win, TRUE);
         return;
+    } else if ('r' == key && !win->dm && win->loadedFilePath) {
+        LoadPdf(win->loadedFilePath, win);
+        return;
     }
 
     if (!win->dm)
@@ -5938,41 +5352,6 @@ static void OnMenuContributeTranslation()
 
 #define FRAMES_PER_SECS 60
 #define ANIM_FREQ_IN_MS  1000 / FRAMES_PER_SECS
-
-static void OnMenuAbout() {
-    if (gHwndAbout) {
-        SetActiveWindow(gHwndAbout);
-        return;
-    }
-
-    gHwndAbout = CreateWindow(
-            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            NULL, NULL,
-            ghinst, NULL);
-    if (!gHwndAbout)
-        return;
-
-    // get the dimensions required for the about box's content
-    RECT rc;
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(gHwndAbout, &ps);
-    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
-    EndPaint(gHwndAbout, &ps);
-    InflateRect(&rc, ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
-
-    // resize the new window to just match these dimensions
-    RECT wRc, cRc;
-    GetWindowRect(gHwndAbout, &wRc);
-    GetClientRect(gHwndAbout, &cRc);
-    wRc.right += rect_dx(&rc) - rect_dx(&cRc);
-    wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
-    MoveWindow(gHwndAbout, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
-
-    ShowWindow(gHwndAbout, SW_SHOW);
-}
 
 static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
@@ -6078,9 +5457,6 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             r.right -= 2;
             Edit_SetRectNoPaint(hwnd, &r);
         }
-    }
-    else if (WM_SETFOCUS == message) {
-        win->hwndTracker = NULL;
     }
     else if (WM_KEYDOWN == message) {
         if (OnKeydown(win, wParam, lParam, true))
@@ -6201,8 +5577,8 @@ static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam
         rect.top += 4;
         DrawText(hdc, text, lstrlen(text), &rect, DT_LEFT);
         
-        int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, 96) - 20;
-        rect.top += MulDiv(20, win->dpi, 96);
+        int width = MulDiv(FIND_STATUS_WIDTH, win->dpi, USER_DEFAULT_SCREEN_DPI) - 20;
+        rect.top += MulDiv(20, win->dpi, USER_DEFAULT_SCREEN_DPI);
         rect.bottom = rect.top + FIND_STATUS_PROGRESS_HEIGHT;
         rect.right = rect.left + width;
         PaintRectangle(hdc, &rect);
@@ -6241,6 +5617,7 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
     return sz;
 }
 
+#define TOOLBAR_MIN_ICON_SIZE 16
 #define FIND_BOX_WIDTH 160
 #define FIND_BOX_PADDING 3
 static void UpdateToolbarFindText(WindowInfo *win)
@@ -6250,6 +5627,7 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     RECT findWndRect;
     GetWindowRect(win->hwndFindBg, &findWndRect);
+    int findWndDx = rect_dx(&findWndRect);
     int findWndDy = rect_dy(&findWndRect);
 
     RECT r;
@@ -6261,24 +5639,25 @@ static void UpdateToolbarFindText(WindowInfo *win)
     size.cx += 6;
 
     MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
-    MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, FIND_BOX_WIDTH, findWndDy, false);
+    MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, findWndDx, findWndDy, false);
     MoveWindow(win->hwndFindBox, pos_x + size.cx + FIND_BOX_PADDING, (findWndDy - size.cy + 1) / 2 + pos_y,
-        FIND_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, size.cy, false);
+        findWndDx - 1.5 * FIND_BOX_PADDING, size.cy, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = size.cx + FIND_BOX_WIDTH + 12;
+    bi.cx = size.cx + findWndDx + 12;
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
 }
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, FIND_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, FIND_BOX_WIDTH * win->uiDPIFactor, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 4,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
-                            0, 1, FIND_BOX_WIDTH - 2, 18,
+                            0, 1, FIND_BOX_WIDTH * win->uiDPIFactor - 2, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
@@ -6349,7 +5728,6 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         PostMessage(hwnd, UWM_PAGE_SET_FOCUS, 0, 0);
     } else if (UWM_PAGE_SET_FOCUS == message) {
         Edit_SetSel(hwnd, 0, -1);
-        win->hwndTracker = NULL;
     } else if (WM_KEYDOWN == message) {
         if (OnKeydown(win, wParam, lParam, true))
             return 0;
@@ -6368,6 +5746,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 
     RECT pageWndRect;
     GetWindowRect(win->hwndPageBg, &pageWndRect);
+    int pageWndDx = rect_dx(&pageWndRect);
     int pageWndDy = rect_dy(&pageWndRect);
 
     RECT r;
@@ -6388,25 +5767,26 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     size2.cx += 6;
 
     MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
-    MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, PAGE_BOX_WIDTH, pageWndDy, false);
+    MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, pageWndDx, pageWndDy, false);
     MoveWindow(win->hwndPageBox, pos_x + size.cx + FIND_BOX_PADDING, (pageWndDy - size.cy + 1) / 2 + pos_y,
-        PAGE_BOX_WIDTH - 1.5 * FIND_BOX_PADDING, size.cy, false);
-    MoveWindow(win->hwndPageTotal, pos_x + size.cx + PAGE_BOX_WIDTH, (pageWndDy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
+        pageWndDx - 1.5 * FIND_BOX_PADDING, size.cy, false);
+    MoveWindow(win->hwndPageTotal, pos_x + size.cx + pageWndDx, (pageWndDy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = size.cx + PAGE_BOX_WIDTH + size2.cx + 12;
+    bi.cx = size.cx + pageWndDx + size2.cx + 12;
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
 }
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, PAGE_BOX_WIDTH, 20, win->hwndToolbar, (HMENU)0, hInst, NULL);
+                            0, 1, PAGE_BOX_WIDTH * win->uiDPIFactor, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 4,
+                            win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, PAGE_BOX_WIDTH - 2, 18,
+                            0, 1, PAGE_BOX_WIDTH * win->uiDPIFactor - 2, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
@@ -6457,6 +5837,13 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HBITMAP hbmp = LoadExternalBitmap(hInst, _T("toolbar_8.bmp"), IDB_TOOLBAR);
     BITMAP bmp;
     GetObject(hbmp, sizeof(BITMAP), &bmp);
+    // stretch the toolbar bitmaps for higher DPI settings
+    // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
+    if (win->uiDPIFactor > 1 && bmp.bmHeight < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
+        bmp.bmWidth *= win->uiDPIFactor;
+        bmp.bmHeight *= win->uiDPIFactor;
+        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmp.bmWidth, bmp.bmHeight, LR_COPYDELETEORG);
+    }
     // Assume square icons
     himl = ImageList_Create(bmp.bmHeight, bmp.bmHeight, ILC_COLORDDB | ILC_MASK, 0, 0);
     ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
@@ -6574,7 +5961,6 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
 
 void WindowInfo::FindStart()
 {
-    hwndTracker = NULL;
     SendMessage(hwndFindBox, EM_SETSEL, 0, -1);
     SetFocus(hwndFindBox);
 }
@@ -6588,34 +5974,11 @@ bool WindowInfo::FindUpdateStatus(int current, int total)
     return !findCanceled;
 }
 
-void WindowInfo::TrackMouse(HWND tracker)
-{
-    if (!tracker)
-        tracker = hwndCanvas;
-    if (hwndFrame != GetActiveWindow() || hwndFindBox == GetFocus() || hwndPageBox == GetFocus() || hwndTracker == tracker)
-        return;
-
-    TRACKMOUSEEVENT tme = { sizeof(tme) };
-    tme.dwFlags = TME_LEAVE;
-    tme.hwndTrack = hwndTracker = tracker;
-    TrackMouseEvent(&tme);
-    if (tracker == hwndCanvas)
-        SetFocus(hwndFrame);
-    else
-        SetFocus(hwndTocBox);
-}
-
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     switch (message) {
-        case WM_MOUSELEAVE:
-            win->hwndTracker = NULL;
-            return 0;
-        case WM_MOUSEMOVE:
-            win->TrackMouse(hwnd);
-            break;
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
                 DestroyWindow(win->hwndFrame);
@@ -6781,17 +6144,21 @@ void WindowInfo::ToggleTocBox()
 {
     if (!dm)
         return;
-    if (!dm->_showToc)
+    if (!dm->_showToc) {
         ShowTocBox();
-    else
+        SetFocus(hwndTocBox);
+    } else {
         HideTocBox();
+    }
     MenuUpdateBookmarksStateForWindow(this);
 }
 
 void WindowInfo::ShowTocBox()
 {
-    if (!dm->hasTocTree())
-        goto Exit;
+    if (!dm->hasTocTree()) {
+        dm->_showToc = TRUE;
+        return;
+    }
 
     LoadTocTree();
 
@@ -6815,8 +6182,9 @@ void WindowInfo::ShowTocBox()
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndSpliter, NULL, cx, cy, SPLITTER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndCanvas, NULL, cx + SPLITTER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
-Exit:
+
     dm->_showToc = TRUE;
+    WindowInfo_UpdateTocSelection(this, dm->currentPageNo());
 }
 
 void WindowInfo::HideTocBox()
@@ -6829,6 +6197,9 @@ void WindowInfo::HideTocBox()
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen)
         cy = gReBarDy + gReBarDyFrame;
+
+    if (GetFocus() == hwndTocBox)
+        SetFocus(hwndFrame);
 
     SetWindowPos(hwndCanvas, NULL, 0, cy, cw, ch - cy, SWP_NOZORDER);
     ShowWindow(hwndTocBox, SW_HIDE);
@@ -6871,97 +6242,6 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     free(path);
 }
 
-static LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    const TCHAR * url;
-    POINT pt;
-
-    switch (message)
-    {
-        case WM_CREATE:
-            assert(!gHwndAbout);
-            break;
-
-        case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
-            return TRUE;
-
-        case WM_PAINT:
-            OnPaintAbout(hwnd);
-            break;
-
-        case WM_SETCURSOR:
-            if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                if (AboutGetLink(NULL, pt.x, pt.y)) {
-                    SetCursor(gCursorHand);
-                    return TRUE;
-                }
-            }
-            return DefWindowProc(hwnd, message, wParam, lParam);
-
-        case WM_LBUTTONDOWN:
-            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            SetWindowLong(hwnd, GWL_USERDATA, (LONG)url);
-            break;
-
-        case WM_LBUTTONUP:
-            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url && url == (const TCHAR *)GetWindowLong(hwnd, GWL_USERDATA))
-                LaunchBrowser(url);
-            SetWindowLong(hwnd, GWL_USERDATA, 0);
-            break;
-
-        case WM_CHAR:
-            if (VK_ESCAPE == wParam)
-                DestroyWindow(hwnd);
-            break;
-
-        case WM_DESTROY:
-            assert(gHwndAbout);
-            gHwndAbout = NULL;
-            break;
-
-        /* TODO: handle mouse move/down/up so that links work */
-
-        default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
-    }
-    return 0;
-}
-
-static LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
-    switch (message)
-    {
-        case WM_CREATE:
-            break;
-
-        case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
-            return TRUE;
-
-        case WM_PAINT:
-            OnPaintProperties(hwnd);
-            break;
-
-        case WM_CHAR:
-            if (VK_ESCAPE == wParam)
-                DestroyWindow(hwnd);
-            break;
-
-        case WM_DESTROY:
-            assert(win->hwndPdfProperties);
-            win->hwndPdfProperties = NULL;
-            break;
-
-        /* TODO: handle mouse move/down/up so that links work */
-        default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
-    }
-    return 0;
-}
-
 static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutInfoEl *aboutEl=NULL)
 {
     if (!link && !aboutEl && !win->infotipVisible)
@@ -6976,7 +6256,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutI
         rect_set(&ti.rect, link->rectCanvas.x, link->rectCanvas.y, link->rectCanvas.dx, link->rectCanvas.dy);
         ti.lpszText = win->dm->getLinkPath(link->link);
         if (ti.lpszText) {
-            SendMessage(win->hwndInfotip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+            SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
             free(ti.lpszText);
             win->infotipVisible = true;
             return;
@@ -6985,7 +6265,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutI
     if (aboutEl && aboutEl->url) {
         rect_set(&ti.rect, aboutEl->rightTxtPosX, aboutEl->rightTxtPosY, aboutEl->rightTxtDx, aboutEl->rightTxtDy);
         ti.lpszText = (TCHAR *)aboutEl->url;
-        SendMessage(win->hwndInfotip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+        SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         win->infotipVisible = true;
         return;
     }
@@ -7021,20 +6301,20 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             OnHScroll(win, wParam);
             return WM_HSCROLL_HANDLED;
 
-        case WM_MOUSELEAVE:
-            win->hwndTracker = NULL;
-            return 0;
-
         case WM_MOUSEMOVE:
-            if (win) {
-                win->TrackMouse(hwnd);
+            if (win)
                 OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            }
             break;
 
         case WM_LBUTTONDBLCLK:
-            if (win)
+            if (win) {
+#ifndef _TEX_ENHANCEMENT
+                if (win->fullScreen)
+                    OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+                else
+#endif
                 OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            }
             break;
 
         case WM_LBUTTONDOWN:
@@ -7052,9 +6332,14 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             {
                 SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
                 // TODO: Create window that shows location of initial click for reference
-                OnMouseMiddleButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                OnMouseMiddleButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
             }
             return 0;
+
+        case WM_RBUTTONUP:
+            if (win)
+                OnMouseRightButtonClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
 
         case WM_SETCURSOR:
             if (win && WS_ABOUT == win->state) {
@@ -7370,6 +6655,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     // Don't break the shortcut for text boxes
                     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
                         SendMessage(GetFocus(), WM_COPY, 0, 0);
+                    else if (win->hwndPdfProperties == GetForegroundWindow())
+                        CopyPropertiesToClipboard(win);
                     else if (win->selectionOnPage)
                         CopySelectionToClipboard(win);
                     else
@@ -8110,6 +7397,8 @@ static void EnableNx(void)
    }
 }
 
+typedef BOOL (WINAPI *procSetProcessDPIAware)(VOID);
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TStrList *          argListRoot;
@@ -8138,6 +7427,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     UNREFERENCED_PARAMETER(hPrevInstance);
 
     EnableNx();
+#ifdef _DEBUG
+    // in release builds, DPI-awareness is enabled through the manifest
+    HMODULE hUser32 = LoadLibrary(_T("user32.dll"));
+    if (hUser32) {
+        procSetProcessDPIAware SetProcessDPIAware;
+        if ((SetProcessDPIAware = GetProcAddress(hUser32, "SetProcessDPIAware")))
+            SetProcessDPIAware();
+        FreeLibrary(hUser32);
+    }
+#endif
 
     u_DoAllTests();
 

@@ -1,41 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/*
- * create xref structure.
- * needs to be initialized by initxref, openxref or repairxref.
- */
-
-pdf_xref *
-pdf_newxref(void)
-{
-	pdf_xref *xref;
-
-	xref = fz_malloc(sizeof(pdf_xref));
-
-	memset(xref, 0, sizeof(pdf_xref));
-
-	pdf_logxref("newxref %p\n", xref);
-
-	xref->file = nil;
-	xref->version = 13;
-	xref->startxref = 0;
-	xref->crypt = nil;
-
-	xref->trailer = nil;
-	xref->root = nil;
-	xref->info = nil;
-	xref->store = nil;
-
-	xref->cap = 0;
-	xref->len = 0;
-	xref->table = nil;
-
-	xref->store = nil;	/* you need to create this if you want to render */
-
-	return xref;
-}
-
 void
 pdf_closexref(pdf_xref *xref)
 {
@@ -53,35 +18,12 @@ pdf_closexref(pdf_xref *xref)
 
 	if (xref->file)
 		fz_dropstream(xref->file);
-
 	if (xref->trailer)
 		fz_dropobj(xref->trailer);
-	if (xref->root)
-		fz_dropobj(xref->root);
-	if (xref->info)
-		fz_dropobj(xref->info);
 	if (xref->crypt)
 		pdf_freecrypt(xref->crypt);
 
 	fz_free(xref);
-}
-
-fz_error
-pdf_initxref(pdf_xref *xref)
-{
-	xref->table = fz_malloc(sizeof(pdf_xrefentry) * 128);
-	xref->cap = 128;
-	xref->len = 1;
-
-	xref->crypt = nil;
-
-	xref->table[0].type = 'f';
-	xref->table[0].ofs = 0;
-	xref->table[0].gen = 65535;
-	xref->table[0].stmofs = 0;
-	xref->table[0].obj = nil;
-
-	return fz_okay;
 }
 
 void
@@ -128,27 +70,108 @@ pdf_debugxref(pdf_xref *xref)
 	}
 }
 
-fz_error
-pdf_decryptxref(pdf_xref *xref)
+/*
+ * compressed object streams
+ */
+
+static fz_error
+pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 {
 	fz_error error;
-	fz_obj *encrypt;
-	fz_obj *id;
+	fz_stream *stm;
+	fz_obj *objstm;
+	int *oidbuf;
+	int *ofsbuf;
 
-	encrypt = fz_dictgets(xref->trailer, "Encrypt");
-	id = fz_dictgets(xref->trailer, "ID");
+	fz_obj *obj;
+	int first;
+	int count;
+	int i, n;
+	pdf_token_e tok;
 
-	if (encrypt)
+	pdf_logxref("loadobjstm (%d %d R)\n", oid, gen);
+
+	error = pdf_loadobject(&objstm, xref, oid, gen);
+	if (error)
+		return fz_rethrow(error, "cannot load object stream object");
+
+	count = fz_toint(fz_dictgets(objstm, "N"));
+	first = fz_toint(fz_dictgets(objstm, "First"));
+
+	pdf_logxref("  count %d\n", count);
+
+	oidbuf = fz_malloc(count * sizeof(int));
+	ofsbuf = fz_malloc(count * sizeof(int));
+
+	error = pdf_openstream(&stm, xref, oid, gen);
+	if (error)
 	{
-		if (fz_isnull(encrypt))
-			return fz_okay;
-
-		error = pdf_newcrypt(&xref->crypt, encrypt, id);
-		if (error)
-			return fz_rethrow(error, "cannot create decrypter");
+		error = fz_rethrow(error, "cannot open object stream");
+		goto cleanupbuf;
 	}
 
+	for (i = 0; i < count; i++)
+	{
+		error = pdf_lex(&tok, stm, buf, cap, &n);
+		if (error || tok != PDF_TINT)
+		{
+			error = fz_rethrow(error, "corrupt object stream");
+			goto cleanupstm;
+		}
+		oidbuf[i] = atoi(buf);
+
+		error = pdf_lex(&tok, stm, buf, cap, &n);
+		if (error || tok != PDF_TINT)
+		{
+			error = fz_rethrow(error, "corrupt object stream");
+			goto cleanupstm;
+		}
+		ofsbuf[i] = atoi(buf);
+	}
+
+	error = fz_seek(stm, first, 0);
+	if (error)
+	{
+		error = fz_rethrow(error, "cannot seek in object stream");
+		goto cleanupstm;
+	}
+
+	for (i = 0; i < count; i++)
+	{
+		/* FIXME: seek to first + ofsbuf[i] */
+
+		error = pdf_parsestmobj(&obj, xref, stm, buf, cap);
+		if (error)
+		{
+			error = fz_rethrow(error, "cannot parse object %d in stream", i);
+			goto cleanupstm;
+		}
+
+		if (oidbuf[i] < 1 || oidbuf[i] >= xref->len)
+		{
+			fz_dropobj(obj);
+			error = fz_throw("object id (%d 0 R) out of range (0..%d)", oidbuf[i], xref->len - 1);
+			goto cleanupstm;
+		}
+
+		if (xref->table[oidbuf[i]].obj)
+			fz_dropobj(xref->table[oidbuf[i]].obj);
+		xref->table[oidbuf[i]].obj = obj;
+	}
+
+	fz_dropstream(stm);
+	fz_free(ofsbuf);
+	fz_free(oidbuf);
+	fz_dropobj(objstm);
 	return fz_okay;
+
+cleanupstm:
+	fz_dropstream(stm);
+cleanupbuf:
+	fz_free(ofsbuf);
+	fz_free(oidbuf);
+	fz_dropobj(objstm);
+	return error; /* already rethrown */
 }
 
 /*
@@ -158,8 +181,6 @@ pdf_decryptxref(pdf_xref *xref)
 fz_error
 pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 {
-	char buf[65536];	/* yeowch! */
-
 	fz_error error;
 	pdf_xrefentry *x;
 	int roid, rgen;
@@ -184,7 +205,8 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 		if (error)
 			return fz_rethrow(error, "cannot seek to object (%d %d R) offset %d", oid, gen, x->ofs);
 
-		error = pdf_parseindobj(&x->obj, xref, xref->file, buf, sizeof buf, &roid, &rgen, &x->stmofs);
+		error = pdf_parseindobj(&x->obj, xref, xref->file, xref->scratch, sizeof xref->scratch,
+			&roid, &rgen, &x->stmofs);
 		if (error)
 			return fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
 
@@ -199,7 +221,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 	{
 		if (!x->obj)
 		{
-			error = pdf_loadobjstm(xref, x->ofs, 0, buf, sizeof buf);
+			error = pdf_loadobjstm(xref, x->ofs, 0, xref->scratch, sizeof xref->scratch);
 			if (error)
 				return fz_rethrow(error, "cannot load object stream containing object (%d %d R)", oid, gen);
 		}

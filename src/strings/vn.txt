@@ -1,0 +1,394 @@
+﻿# Translations for Vietnamese (Việt Nam) (vn) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: vn Vietnamese (Việt Nam)
+
+Contributor: Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong)
+
+&About
+&Giới thiệu
+
+&Check for new version
+Kiểm tra có phiên bản mới
+
+&Close\tCtrl-W
+&Đóng tệp\tCtrl-W
+
+&Custom Zoom...
+Thu phóng &tuỳ ý...
+
+&Don't ask me again
+Không hỏi lại
+
+&File
+&Tệp tin
+
+&Find what:
+Tìm cái gì:
+
+&Go To
+&Nhảy đến
+
+&Go to page:
+&Nhảy đến trang:
+
+&Help
+Trợ &giúp
+
+&Magnification:
+Phóng đại:
+
+&Manual
+&Hướng dẫn sử dụng
+
+&Match case
+Phân biệt chữ &Hoa
+
+&No
+&Không
+
+&No, thanks
+&Không, cảm ơn
+
+&Open\tCtrl-O
+&Mở tệp\tCtrl-O
+
+&Options...
+&Tuỳ chọn
+
+&Password:
+&Mật mã:
+
+&Print\tCtrl-P
+&In\tCtrl-P
+
+&Remember these settings for each document
+Nhớ cài đặt này cho mọi tệp
+
+&Save as\tCtrl-S
+&Sao lưu\tCtrl-S
+
+&Settings
+&Cài đặt
+
+&Skip this version
+Bỏ qua phiên bản này.
+
+&View
+&Khung nhìn
+
+&Visit website
+Thăm &website
+
+&Yes
+Đồng ý
+
+&Zoom
+Thu-&Phóng
+
+(of %d)
+(trên %d)
+
+About SumatraPDF
+Giới thiệu SumatraPDF
+
+Act&ual Size\tCtrl-1
+Kích thướ&c thật\tCtrl-1
+
+Advanced
+Cao cấp
+
+All files
+Các loại tệp
+
+Associate with PDF files?
+Liên kết với tệp PDF?
+
+Automatic
+Tự động
+
+Automatically check for &updates
+Tự động kiểm tra có phiên bản mới
+
+Bookmarks\tF12
+Chỉ dấu sách\tF12
+
+Cancel
+Huỷ
+
+Cannot print this file
+Không in được tệp này
+
+Cannot start inverse search command. Please check the command line in the settings.
+Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
+
+Change language
+Đổi ngôn ngữ (Change language)
+
+Continuous
+Liên tục
+
+Continuous facing
+Liên tục trang kép
+
+Contribute translation
+Đóng góp dịch thuật
+
+Copy Selection\tCtrl-C
+Copy phần đánh dấu
+
+Could not open Printer
+Không mở được máy in.
+
+Couldn't initialize printer
+Không khởi động được máy in
+
+Couldn't render the page
+Không hiện được trang
+
+Default &Layout:
+Khung nhìn mặc định
+
+Default &Zoom:
+Kích thước mặc định
+
+Download
+Tải xuống
+
+E&xit\tCtrl-Q
+Th&oát\tCtrl-Q
+
+Enter password
+Nhập mật khẩu
+
+Enter password for %s
+Nhật mật khẩu cho %s
+
+Error loading PDF file.
+Lỗi nạp tệp PDF.
+
+Facing
+Trang kép
+
+Failed to save a file
+Không lưu được tệp.
+
+Find
+Tìm kiếm
+
+Find Next
+Tìm phía sau
+
+Find Previous
+Tìm phía trước
+
+Find...\tCtrl-F
+Tìm kiếm...\tCtrl-F
+
+Find:
+Tìm kiếm:
+
+First Page\tHome
+Trang đầu\tHome
+
+Fit &Page\tCtrl-0
+Vừa &trang\tCtrl-0
+
+Fit Page
+Vừa trang
+
+Fit Widt&h\tCtrl-2
+Vừa chiều &rộng\tCtrl-2
+
+Fit Width
+Vừa chiều rộng
+
+Found text at page %d
+Tìm thấy từ ở trang %d
+
+Fullscreen\tCtrl-L
+Toàn màn hình\tCtrl-L
+
+Go to page
+Nhảy đến trang
+
+Hint: Use the F3 key for finding again
+Gợi ý: Nhấn phím F3 để tìm tiếp
+
+Last Page\tEnd
+Trang cuối\tEnd
+
+Main PDF reader can't be changed in portable mode
+Không thay đổi được trình đọc PDF chính trong chế độ di động
+
+Make SumatraPDF default application for PDF files?
+Đặt SumatraPDF làm trình đọc PDF mặc định?
+
+Make SumatraPDF my main PDF reader
+Đặt SumatraPDF làm trình đọc PDF chính
+
+Match case
+Phân biệt chữ Hoa
+
+New version %s is available. Download new version?
+Đã có phiên bản mới %s. Download phiên bản mới?
+
+New version available.
+Đã có phiên bản mới.
+
+Next Page
+Trang sau
+
+Next Page\tRight Arrow
+Trang sau\t->
+
+No matches were found
+Không tìm thấy
+
+No new version available.
+Không có phiên bản mới.
+
+No result found around line %u in file %s
+Không tìm thấy kết ở dòng %u trong tệp %s
+
+No synchronization info at this position
+Không có thông tin đồng bộ ở chỗ này
+
+OK
+Đồng ý
+
+Open
+Mở tệp
+
+Open in &Adobe Reader
+Mở bằng Adobe Reader
+
+PDF Document
+Tệp PDF
+
+PDF documents
+Tệp PDF
+
+Page number %u inexistant
+Trang số %u không tồn tại
+
+Page...\tCtrl-G
+Trang...\tCtrl-G
+
+Page:
+Trang:
+
+Please wait - rendering...
+Xin chờ đợi, đang hiện...
+
+Previous Page
+Trang trước
+
+Previous Page\tLeft Arrow
+Trang trước\t<-
+
+Printing problem.
+Lỗi in.
+
+Remember &opened files
+Nhớ danh sách tệp đã mở
+
+Rotate left\tCtrl-Shift--
+Quay trái\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Quay phải\tCtrl-Shift-+
+
+Searching %d of %d...
+Đang tìm %d trên %d
+
+Select content with Ctrl+left mouse button
+Đánh dấu nội dung bằng Ctrl+phím chuột trái
+
+Set inverse search command-line
+Đặt dòng lệnh tìm kiếm ngược
+
+Show the &bookmarks sidebar when available
+Hiện chỉ dấu sách nếu có
+
+Show toolbar
+Hiện thanh công cụ
+
+Single page
+Trang đơn
+
+Source file %s has no synchronization point
+Tệp nguồn %s không có điểm đồng bộ
+
+SumatraPDF Options
+Tuỳ chọn SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF là trình đọc PDF chính của bạn
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF giờ là trình đọc PDF chính của bạn
+
+Synchronization file cannot be opened
+Không mở được tệp đồng bộ
+
+Unknown source file (%s)
+Không rõ tệp nguồn (%s)
+
+View
+Khung nhìn
+
+Warning
+Cảnh báo
+
+You have the latest version.
+Bạn đang dùng phiên bản mới nhất.
+
+You have version %s
+Bạn đang dùng phiên bản %s
+
+Zoom
+Thu Phóng
+
+Zoom In
+Phóng to
+
+Zoom Out
+Thu nhỏ
+
+Zoom factor
+Hệ số thu phóng
+
+[Changes detected; refreshing] %s
+[Phát hiện thay đổi; đang cập nhật] %s
+
+# Untranslated:
+#Application:
+#Author:
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Continuous book view
+#Created:
+#Document Properties
+#File Size:
+#File:
+#Forward\tAlt+Right Arrow
+#GB
+#KB
+#MB
+#Modified:
+#No synchronization file found
+#Number of Pages:
+#P&roperties...\tCtrl-D
+#PDF Producer:
+#PDF Version:
+#Page Size:
+#Send by &email...
+#Show pages continuously
+#Text documents
+#Title:
+

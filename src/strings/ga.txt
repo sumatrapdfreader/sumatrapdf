@@ -1,0 +1,286 @@
+﻿# Translations for Irish (Gaeilge) (ga) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: ga Irish (Gaeilge)
+
+&About
+Maidir le
+
+&Check for new version
+Téigh ar thóir leagan nua
+
+&Close\tCtrl-W
+&Dún\tCtrl-W
+
+&Don't ask me again
+Ná fiafraigh dom arís
+
+&File
+&Comhad
+
+&Go To
+Téigh Chuig...
+
+&Help
+C&abhair
+
+&Manual
+Lámhleabhar
+
+&Open\tCtrl-O
+&Oscail\tCtrl-O
+
+&Print\tCtrl-P
+Clóbhuail\tCtrl-P
+
+&Save as\tCtrl-S
+Cuir i dtaisce mar...\tCtrl-S
+
+&Skip this version
+Ná bac leis an leagan seo.
+
+&View
+Amharc
+
+&Visit website
+Tabhair cuairt ar an suíomh idirlín
+
+&Zoom
+Féithigh
+
+About SumatraPDF
+Maidir le SumatraPDF
+
+Act&ual Size\tCtrl-1
+Fíormhéid\tCtrl-1
+
+Associate with PDF files?
+Comhthiomsaigh le comhaid PDF?
+
+Bookmarks\tF12
+Astail\tF12
+
+Change language
+Athraigh an Teanga (Change language)
+
+Continuous
+Ar Leanúint
+
+Continuous facing
+Dhá Leathanach Ar Leanúint
+
+Contribute translation
+Aistrigh É Seo
+
+Could not open Printer
+Níorbh fhéidir an Clóire a oscailt
+
+E&xit\tCtrl-Q
+Scoir\tCtrl-Q
+
+Enter password
+Cuir isteach focal faire
+
+Enter password for %s
+Cuir isteach focal faire le haghaidh %s
+
+Error loading PDF file.
+Tharla botún ag luchtú comhad PDF.
+
+Facing
+Dhá Leathanach
+
+Failed to save a file
+Theip air comhad a chur i dtaisce
+
+Find Next
+Aimsigh Ar Aghaidh
+
+Find Previous
+Aimsigh Roimhe
+
+Find...\tCtrl-F
+Aimsigh...\tCtrl-F
+
+Find:
+Aimsigh:
+
+First Page\tHome
+An Chéad Leathanach\tHome
+
+Fit &Page\tCtrl-0
+Oiriúnaigh don Lch\tCtrl-0
+
+Fit Page
+Oiriúnaigh don Lch
+
+Fit Widt&h\tCtrl-2
+Oiriúnaigh don Leithead\tCtrl-2
+
+Fit Width
+Oiriúnaigh don Leithead
+
+Fullscreen\tCtrl-L
+Lánscáileán\tCtrl-L
+
+Go to page
+Téigh chuig lch
+
+Last Page\tEnd
+An Leathanach Deiridh\tEnd
+
+Make SumatraPDF default application for PDF files?
+Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
+
+Make SumatraPDF my main PDF reader
+Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
+
+Match case
+Comhoiriúnaigh an cás
+
+New version %s is available. Download new version?
+Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
+
+New version available.
+Tá leagan nua ar fáil.
+
+Next Page
+Leathanach Ar Aghaidh
+
+Next Page\tRight Arrow
+Leathanach Ar Aghaidh\t->
+
+No new version available.
+Níl leagan nua ar fáil.
+
+Open
+Oscail
+
+Page...\tCtrl-G
+Leathanach...\tCtrl-G
+
+Page:
+Leathanach:
+
+Previous Page
+Leathanach Roimhe
+
+Previous Page\tLeft Arrow
+Leathanach Roimhe\t<-
+
+Printing problem.
+Botún Clóbhuailte
+
+Rotate left\tCtrl-Shift--
+Rothlaigh Tuathalach\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Rothlaigh Deiseal\tCtrl-Shift-+
+
+Set inverse search command-line
+Socruigh líne na n-orduithe cuardaigh inbhéarta
+
+Show toolbar
+Taispeáin an Barra Uirlisí
+
+Single page
+Leathanach Amháin
+
+View
+Amharc
+
+You have the latest version.
+Tá an leagan is úire agat
+
+You have version %s
+Tá leagan %s agat.
+
+Zoom In
+Féithigh Isteach
+
+Zoom Out
+Féithigh Amach
+
+# Untranslated:
+#&Custom Zoom...
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Modified:
+#No matches were found
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#Warning
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

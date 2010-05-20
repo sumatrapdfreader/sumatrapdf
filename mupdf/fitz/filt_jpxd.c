@@ -1,5 +1,4 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 #define OPJ_STATIC
 #include <openjpeg.h>

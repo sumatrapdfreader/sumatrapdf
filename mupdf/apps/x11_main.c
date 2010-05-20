@@ -105,7 +105,7 @@ static void winopen(void)
 
 	xdpy = XOpenDisplay(nil);
 	if (!xdpy)
-		winerror(&gapp, fz_throw("could not open display"));
+		winerror(&gapp, fz_throw("cannot open display"));
 
 	XA_TARGETS = XInternAtom(xdpy, "TARGETS", False);
 	XA_TIMESTAMP = XInternAtom(xdpy, "TIMESTAMP", False);
@@ -523,6 +523,7 @@ int main(int argc, char **argv)
 	int pageno = 1;
 	int wasshowingpage;
 	struct timeval tmo, tmo_at;
+	int fd;
 
 	while ((c = fz_getopt(argc, argv, "d:z:p:")) != -1)
 	{
@@ -556,7 +557,11 @@ int main(int argc, char **argv)
 	gapp.zoom = zoom / 100.0;
 	gapp.pageno = pageno;
 
-	pdfapp_open(&gapp, filename);
+	fd = open(filename, O_BINARY | O_RDONLY, 0666);
+	if (fd < 0)
+		winerror(&gapp, fz_throw("cannot open file '%s'", filename));
+
+	pdfapp_open(&gapp, filename, fd);
 
 	winresettmo(&tmo, &tmo_at);
 
@@ -660,4 +665,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-

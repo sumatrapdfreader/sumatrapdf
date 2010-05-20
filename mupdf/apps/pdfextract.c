@@ -6,8 +6,8 @@
 
 static void showusage(void)
 {
-	fprintf(stderr, "usage: pdfextract [-d password] <file> [object numbers]\n");
-	fprintf(stderr, "  -d  \tdecrypt password\n");
+	fprintf(stderr, "usage: pdfextract [-p password] <file> [object numbers]\n");
+	fprintf(stderr, "  -p  \tpassword\n");
 	exit(1);
 }
 
@@ -23,7 +23,7 @@ static int isfontdesc(fz_obj *obj)
 	return fz_isname(type) && !strcmp(fz_toname(type), "FontDescriptor");
 }
 
-static void saveimage(fz_obj *obj, int num, int gen)
+static void saveimage(int num, int gen)
 {
 	pdf_image *img = nil;
 	fz_obj *ref;
@@ -31,12 +31,8 @@ static void saveimage(fz_obj *obj, int num, int gen)
 	fz_pixmap *pix;
 	char name[1024];
 	FILE *f;
-	int bpc;
-	int w;
-	int h;
-	int n;
-	int x;
-	int y;
+	int x, y;
+	unsigned char *samples;
 
 	ref = fz_newindirect(num, gen, xref);
 
@@ -46,50 +42,39 @@ static void saveimage(fz_obj *obj, int num, int gen)
 	if (error)
 		die(error);
 
-	n = img->super.n;
-	w = img->super.w;
-	h = img->super.h;
-	bpc = img->bpc;
+	pix = fz_newpixmap(img->cs, 0, 0, img->w, img->h);
 
-	error = fz_newpixmap(&pix, 0, 0, w, h, n + 1);
+	error = pdf_loadtile(img, pix);
 	if (error)
 		die(error);
 
-	error = img->super.loadtile(&img->super, pix);
-	if (error)
-		die(error);
-
-	if (bpc == 1 && n == 0)
+	if (img->bpc == 1 && img->n == 0)
 	{
 		fz_pixmap *temp;
 
-		error = fz_newpixmap(&temp, pix->x, pix->y, pix->w, pix->h, pdf_devicergb->n + 1);
-		if (error)
-			die(error);
+		temp = fz_newpixmap(pdf_devicergb, pix->x, pix->y, pix->w, pix->h);
 
 		for (y = 0; y < pix->h; y++)
 			for (x = 0; x < pix->w; x++)
-		{
-			int pixel = y * pix->w + x;
-			temp->samples[pixel * temp->n + 0] = 255;
-			temp->samples[pixel * temp->n + 1] = pix->samples[pixel];
-			temp->samples[pixel * temp->n + 2] = pix->samples[pixel];
-			temp->samples[pixel * temp->n + 3] = pix->samples[pixel];
-		}
+			{
+				int pixel = y * pix->w + x;
+				temp->samples[pixel * temp->n + 0] = 255;
+				temp->samples[pixel * temp->n + 1] = pix->samples[pixel];
+				temp->samples[pixel * temp->n + 2] = pix->samples[pixel];
+				temp->samples[pixel * temp->n + 3] = pix->samples[pixel];
+			}
 
 		fz_droppixmap(pix);
 		pix = temp;
 	}
 
-	if (img->super.cs && strcmp(img->super.cs->name, "DeviceRGB"))
+	if (img->cs && strcmp(img->cs->name, "DeviceRGB"))
 	{
 		fz_pixmap *temp;
 
-		error = fz_newpixmap(&temp, pix->x, pix->y, pix->w, pix->h, pdf_devicergb->n + 1);
-		if (error)
-			die(error);
+		temp = fz_newpixmap(pdf_devicergb, pix->x, pix->y, pix->w, pix->h);
 
-		fz_convertpixmap(img->super.cs, pix, pdf_devicergb, temp);
+		fz_convertpixmap(img->cs, pix, pdf_devicergb, temp);
 		fz_droppixmap(pix);
 		pix = temp;
 	}
@@ -100,17 +85,22 @@ static void saveimage(fz_obj *obj, int num, int gen)
 	if (f == NULL)
 		die(fz_throw("Error creating image file"));
 
-	fprintf(f, "P6\n%d %d\n%d\n", w, h, 255);
+	fprintf(f, "P6\n%d %d\n%d\n", img->w, img->h, 255);
+
+	samples = pix->samples;
 
 	for (y = 0; y < pix->h; y++)
 		for (x = 0; x < pix->w; x++)
-	{
-		fz_sample *sample = &pix->samples[(y * pix->w + x) * (pdf_devicergb->n + 1)];
-		unsigned char r = sample[1];
-		unsigned char g = sample[2];
-		unsigned char b = sample[3];
-		fprintf(f, "%c%c%c", r, g, b);
-	}
+		{
+			unsigned char r, g, b;
+
+			samples++;
+			r = *(samples++);
+			g = *(samples++);
+			b = *(samples++);
+
+			fprintf(f, "%c%c%c", r, g, b);
+		}
 
 	if (fclose(f) < 0)
 		die(fz_throw("Error closing image file"));
@@ -120,12 +110,12 @@ static void saveimage(fz_obj *obj, int num, int gen)
 	pdf_dropstore(xref->store);
 	xref->store = nil;
 
-	fz_dropimage(&img->super);
+	pdf_dropimage(img);
 
 	fz_dropobj(ref);
 }
 
-static void savefont(fz_obj *dict, int num, int gen)
+static void savefont(fz_obj *dict, int num)
 {
 	fz_error error;
 	char name[1024];
@@ -214,9 +204,9 @@ static void showobject(int num, int gen)
 		die(error);
 
 	if (isimage(obj))
-		saveimage(obj, num, gen);
+		saveimage(num, gen);
 	else if (isfontdesc(obj))
-		savefont(obj, num, gen);
+		savefont(obj, num);
 
 	fz_dropobj(obj);
 }
@@ -226,11 +216,11 @@ int main(int argc, char **argv)
 	char *password = "";
 	int c, o;
 
-	while ((c = fz_getopt(argc, argv, "d:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:")) != -1)
 	{
 		switch (c)
 		{
-		case 'd': password = fz_optarg; break;
+		case 'p': password = fz_optarg; break;
 		default:
 			showusage();
 			break;

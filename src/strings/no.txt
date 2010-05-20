@@ -1,0 +1,447 @@
+﻿# Translations for Norwegian (Norsk) (no) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: no Norwegian (Norsk)
+
+Contributor: Jon Ivar F. Omland
+Contributor: Kjell A. A. Holm
+Contributor: BJ Hill
+
+&About
+&Om
+
+&Check for new version
+&Se etter ny versjon...
+
+&Close\tCtrl-W
+&Lukk\tCtrl+W
+
+&Custom Zoom...
+&Egendefinert zoom...
+
+&Don't ask me again
+&Ikke spør meg igjen.
+
+&File
+&Fil
+
+&Find what:
+&Søk etter:
+
+&Go To
+&Gå til
+
+&Go to page:
+&Gå til side:
+
+&Help
+&Hjelp
+
+&Magnification:
+&Forstørrelse:
+
+&Manual
+&Bruksanvisning
+
+&Match case
+&Skill mellom store og små bokstaver
+
+&No
+&Nei
+
+&No, thanks
+&Nei, takk
+
+&Open\tCtrl-O
+&Åpne...\tCtrl+O
+
+&Options...
+&Innstillinger...
+
+&Password:
+&Passord:
+
+&Print\tCtrl-P
+&Skriv ut...\tCtrl+P
+
+&Remember these settings for each document
+&Husk disse innstillingene for hvert dokument
+
+&Save as\tCtrl-S
+Lagre &som...\tCtrl+S
+
+&Settings
+&Alternativer
+
+&Skip this version
+&Ignorer denne versjonen
+
+&View
+&Vis
+
+&Visit website
+&Besøk hjemmeside
+
+&Yes
+&Ja
+
+&Zoom
+&Zoom
+
+(of %d)
+(av %d)
+
+About SumatraPDF
+Om SumatraPDF
+
+Act&ual Size\tCtrl-1
+Fak&tisk størrelse\tCtrl+1
+
+Advanced
+Avansert
+
+All files
+Alle filer (*.*)
+
+Application:
+Program:
+
+Associate with PDF files?
+Tilknytt til PDF filer?
+
+Author:
+Forfatter:
+
+Automatic
+Automatisk
+
+Automatically check for &updates
+Automatisk sjekk for &oppdateringer
+
+Back\tAlt+Left Arrow
+Tilbake\tAlt+Pil venstre
+
+Book view
+Bokvisning
+
+Bookmarks\tF12
+Bokmerker\tF12
+
+Bytes
+bytes
+
+Cancel
+Avbryt
+
+Cannot print this file
+Kan ikke skrive ut filen
+
+Cannot start inverse search command. Please check the command line in the settings.
+Kan ikke starte inversert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
+
+Change language
+Endre språk
+
+Continuous
+Kontinuerlig
+
+Continuous book view
+Kontinuerlig bokvisning
+
+Continuous facing
+Kontinuerlig - motst&ående
+
+Contribute translation
+Bidra med oversetting
+
+Copy Selection\tCtrl-C
+Kopier merket tekst\tCtrl+C
+
+Could not open Printer
+Kunne ikke åpne skriveren.
+
+Couldn't initialize printer
+Kunne ikke klargjøre skriveren
+
+Couldn't render the page
+Kunne ikke vise siden
+
+Created:
+Opprettet:
+
+Default &Layout:
+Standard sideoppsett:
+
+Default &Zoom:
+Standard&zoom:
+
+Document Properties
+Dokumentegenskaper
+
+Download
+Nedlasting
+
+E&xit\tCtrl-Q
+A&vslutt\tCtrl+Q
+
+Enter password
+Skriv inn passord
+
+Enter password for %s
+Skriv inn passord for %s
+
+Error loading PDF file.
+Feil ved åpning av PDF fil.
+
+Facing
+Motstående
+
+Failed to save a file
+Feil ved lagring av filen.
+
+File Size:
+Filstørrelse:
+
+File:
+Fil:
+
+Find
+Søk etter
+
+Find Next
+Neste
+
+Find Previous
+Forrige
+
+Find...\tCtrl-F
+Søk etter...\tCtrl+F
+
+Find:
+Søk etter:
+
+First Page\tHome
+Første side\tHome
+
+Fit &Page\tCtrl-0
+Tilpass &side\tCtrl+0
+
+Fit Page
+Tilpass side
+
+Fit Widt&h\tCtrl-2
+Tilpass til bredd&e\tCtrl+2
+
+Fit Width
+Tilpass til bredde
+
+Forward\tAlt+Right Arrow
+Fremover\tAlt+Pil høyre
+
+Found text at page %d
+Fant tekst på side &d
+
+Fullscreen\tCtrl-L
+Fullskjerm\tCtrl+L
+
+GB
+GB
+
+Go to page
+Gå til side
+
+Hint: Use the F3 key for finding again
+Tips: Bruk F3 tasten for søk etter neste
+
+KB
+KB
+
+Last Page\tEnd
+Siste side\tEnd
+
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+Standard pdf-leser kan ikke endres i flyttbar modus
+
+Make SumatraPDF default application for PDF files?
+Gjør SumatraPDF standard åpningsprogram for PDF filer?
+
+Make SumatraPDF my main PDF reader
+Bruk SumatraPDF som standard PDF-leser
+
+Match case
+Skill mellom store og små bokstaver
+
+Modified:
+Endret:
+
+New version %s is available. Download new version?
+Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
+
+New version available.
+Ny versjon tilgjenglig.
+
+Next Page
+Neste side
+
+Next Page\tRight Arrow
+Neste side\tPil høyre
+
+No matches were found
+Søkeelementet ble ikke funnet
+
+No new version available.
+Ingen ny versjon tilgjenglig.
+
+No result found around line %u in file %s
+Ingen resultater funnet rundt linje %u i filen %s
+
+No synchronization file found
+Ingen synkroniserende fil funnet
+
+No synchronization info at this position
+Ingen synkroniserings info her
+
+Number of Pages:
+Antall sider:
+
+OK
+OK
+
+Open
+Åpne
+
+Open in &Adobe Reader
+Åpne i &Adobe Reader
+
+P&roperties...\tCtrl-D
+E&genskaper...\tCtrl-D
+
+PDF Document
+PDF Dokument
+
+PDF Producer:
+PDF-produsent:
+
+PDF Version:
+PDF-versjon:
+
+PDF documents
+PDF dokumenter (*.pdf)
+
+Page Size:
+Sidestørrelse:
+
+Page number %u inexistant
+Sidetallet '%u' finnes ikke i dokumentet.
+
+Page...\tCtrl-G
+Side...\tCtrl+G
+
+Page:
+Side:
+
+Please wait - rendering...
+Vennligst vent - arbeider...
+
+Previous Page
+Forrige side
+
+Previous Page\tLeft Arrow
+Forrige side\tPil venstre
+
+Printing problem.
+Problem med utskrift.
+
+Properties...
+Egenskaper...
+
+Remember &opened files
+Husk &åpnede filer
+
+Rotate left\tCtrl-Shift--
+Roter mot klokken\tCtrl+Shift+Minus
+
+Rotate right\tCtrl-Shift-+
+Roter med klokken\tCtrl+Shift+Pluss
+
+Searching %d of %d...
+Søker &d av &d...
+
+Select content with Ctrl+left mouse button
+Velg innhold med Ctrl+Venstre museknapp
+
+Send by &email...
+Send med e-post...
+
+Set inverse search command-line
+Sett invertert søke kommandolinje
+
+Show pages continuously
+Vis sider kontinuerlig
+
+Show the &bookmarks sidebar when available
+Vis &bookmerker-fanen når tilgjengelig
+
+Show toolbar
+Vis verktøylinje
+
+Single page
+Enkeltside
+
+Source file %s has no synchronization point
+Kildefilen %s har ingen synkroniserings punkt
+
+SumatraPDF Options
+Innstillinger
+
+SumatraPDF is your main PDF reader
+SumatraPDF er din standard PDF-leser
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF burde være din standard pdf-leser
+
+Synchronization file cannot be opened
+Synkroniserende fil kan ikke åpnes
+
+Text documents
+Tekstdokumenter
+
+Title:
+Tittel:
+
+Unknown source file (%s)
+Ukjent kildefil (&s)
+
+View
+Vis
+
+Warning
+Advarsel
+
+You have the latest version.
+Du har den siste versjonen.
+
+You have version %s
+Du har versjon %s
+
+Zoom
+Zoom
+
+Zoom In
+Zoom inn
+
+Zoom Out
+Zoom ut
+
+Zoom factor
+Zoom til
+
+[Changes detected; refreshing] %s
+[Endringer oppdaget; oppdaterer] %s
+

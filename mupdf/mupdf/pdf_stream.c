@@ -15,7 +15,7 @@ pdf_isstream(pdf_xref *xref, int num, int gen)
 	error = pdf_cacheobject(xref, num, gen);
 	if (error)
 	{
-		fz_catch(error, "could not load object, ignoring error");
+		fz_catch(error, "cannot load object, ignoring error");
 		return 0;
 	}
 
@@ -111,7 +111,6 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 		return fz_newlzwd(p);
 	}
 
-#ifdef HAVE_JBIG2DEC
 	else if (!strcmp(s, "JBIG2Decode"))
 	{
 		fz_obj *obj = fz_dictgets(p, "JBIG2Globals");
@@ -138,12 +137,9 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 		}
 		return fz_newjbig2d(p);
 	}
-#endif
 
-#ifdef HAVE_OPENJPEG
 	else if (!strcmp(s, "JPXDecode"))
 		return fz_newjpxd(p);
-#endif
 
 	else if (!strcmp(s, "Crypt"))
 	{
@@ -335,7 +331,7 @@ pdf_openrawstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 		if (error)
 			return fz_rethrow(error, "cannot seek to stream");
 
-		*stmp = fz_openrfilter(filter, xref->file);
+		*stmp = fz_openfilter(filter, xref->file);
 		fz_dropfilter(filter);
 		return fz_okay;
 	}
@@ -372,7 +368,7 @@ pdf_openstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 		if (error)
 			return fz_rethrow(error, "cannot seek to stream");
 
-		*stmp = fz_openrfilter(filter, xref->file);
+		*stmp = fz_openfilter(filter, xref->file);
 		fz_dropfilter(filter);
 		return fz_okay;
 	}
@@ -393,7 +389,14 @@ pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen)
 	if (error)
 		return fz_rethrow(error, "cannot open raw stream (%d %d R)", num, gen);
 
-	*bufp = fz_readall(stm, 0); // TODO extract io errors
+	*bufp = fz_readall(stm, 0);
+	error = fz_readerror(stm);
+	if (error)
+	{
+		fz_dropstream(stm);
+		return fz_rethrow(error, "cannot read raw stream (%d %d R)", num, gen);
+	}
+
 	fz_dropstream(stm);
 	return fz_okay;
 }
@@ -411,7 +414,14 @@ pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen)
 	if (error)
 		return fz_rethrow(error, "cannot open stream (%d %d R)", num, gen);
 
-	*bufp = fz_readall(stm, 0); // TODO extract io errors
+	*bufp = fz_readall(stm, 0);
+	error = fz_readerror(stm);
+	if (error)
+	{
+		fz_dropstream(stm);
+		return fz_rethrow(error, "cannot read raw stream (%d %d R)", num, gen);
+	}
+
 	fz_dropstream(stm);
 	return fz_okay;
 }

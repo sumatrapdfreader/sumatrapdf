@@ -4,15 +4,18 @@
 #include FT_FREETYPE_H
 
 void
-pdf_initgstate(pdf_gstate *gs)
+pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 {
-	gs->linewidth = 1.0;
-	gs->linecap = 0;
-	gs->linejoin = 0;
-	gs->miterlimit = 10;
-	gs->dashphase = 0;
-	gs->dashlen = 0;
-	memset(gs->dashlist, 0, sizeof(gs->dashlist));
+	gs->ctm = ctm;
+	gs->clipdepth = 0;
+
+	gs->strokestate.linewidth = 1.0;
+	gs->strokestate.linecap = 0;
+	gs->strokestate.linejoin = 0;
+	gs->strokestate.miterlimit = 10;
+	gs->strokestate.dashphase = 0;
+	gs->strokestate.dashlen = 0;
+	memset(gs->strokestate.dashlist, 0, sizeof(gs->strokestate.dashlist));
 
 	gs->stroke.kind = PDF_MCOLOR;
 	gs->stroke.cs = fz_keepcolorspace(pdf_devicegray);
@@ -42,29 +45,15 @@ pdf_initgstate(pdf_gstate *gs)
 	gs->size = -1;
 	gs->render = 0;
 	gs->rise = 0;
-
-	gs->head = nil;
 }
 
-static fz_error
-pdf_newovernode(fz_node **nodep, pdf_gstate *gs)
-{
-	if (gs->blendmode == FZ_BNORMAL)
-		return fz_newovernode(nodep);
-	else
-		return fz_newblendnode(nodep, gs->blendmode, 0, 0);
-}
-
-fz_error
+void
 pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
-	fz_error error;
 	pdf_material *mat;
 
-	error = pdf_flushtext(csi);
-	if (error)
-		return fz_rethrow(error, "cannot finish text node (state change)");
+	pdf_flushtext(csi);
 
 	mat = what == PDF_MFILL ? &gs->fill : &gs->stroke;
 
@@ -87,22 +76,17 @@ pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs)
 
 	if (!strcmp(cs->name, "Lab"))
 		mat->kind = PDF_MLAB;
-
-	return fz_okay;
 }
 
-fz_error
+void
 pdf_setcolor(pdf_csi *csi, int what, float *v)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
-	fz_error error;
 	pdf_indexed *ind;
 	pdf_material *mat;
 	int i, k;
 
-	error = pdf_flushtext(csi);
-	if (error)
-		return fz_rethrow(error, "cannot finish text node (state change)");
+	pdf_flushtext(csi);
 
 	mat = what == PDF_MFILL ? &gs->fill : &gs->stroke;
 
@@ -136,22 +120,37 @@ Lindexed:
 		break;
 
 	default:
-		return fz_throw("color incompatible with material");
+		fz_warn("color incompatible with material");
 	}
-
-	return fz_okay;
 }
 
-fz_error
+static void
+pdf_unsetpattern(pdf_csi *csi, int what)
+{
+	pdf_gstate *gs = csi->gstate + csi->gtop;
+	pdf_material *mat;
+	mat = what == PDF_MFILL ? &gs->fill : &gs->stroke;
+	if (mat->kind == PDF_MPATTERN)
+	{
+		if (mat->pattern)
+			pdf_droppattern(mat->pattern);
+		mat->pattern = nil;
+		if (!strcmp(mat->cs->name, "Lab"))
+			mat->kind = PDF_MLAB;
+		else if (!strcmp(mat->cs->name, "Indexed"))
+			mat->kind = PDF_MINDEXED;
+		else
+			mat->kind = PDF_MCOLOR;
+	}
+}
+
+void
 pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
-	fz_error error;
 	pdf_material *mat;
 
-	error = pdf_flushtext(csi);
-	if (error)
-		return fz_rethrow(error, "cannot finish text node (state change)");
+	pdf_flushtext(csi);
 
 	mat = what == PDF_MFILL ? &gs->fill : &gs->stroke;
 
@@ -165,25 +164,16 @@ pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v)
 		mat->pattern = nil;
 
 	if (v)
-	{
-		error = pdf_setcolor(csi, what, v);
-		if (error)
-			return fz_rethrow(error, "cannot set color");
-	}
-
-	return fz_okay;
+		pdf_setcolor(csi, what, v);
 }
 
-fz_error
+void
 pdf_setshade(pdf_csi *csi, int what, fz_shade *shade)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
-	fz_error error;
 	pdf_material *mat;
 
-	error = pdf_flushtext(csi);
-	if (error)
-		return fz_rethrow(error, "cannot finish text node (state change)");
+	pdf_flushtext(csi);
 
 	mat = what == PDF_MFILL ? &gs->fill : &gs->stroke;
 
@@ -192,682 +182,374 @@ pdf_setshade(pdf_csi *csi, int what, fz_shade *shade)
 
 	mat->kind = PDF_MSHADE;
 	mat->shade = fz_keepshade(shade);
-
-	return fz_okay;
 }
 
-fz_error
-pdf_buildstrokepath(pdf_gstate *gs, fz_pathnode *path)
+void
+pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 {
+	pdf_gstate *gstate;
+	fz_matrix ptm, invptm;
+	fz_matrix oldtopctm;
 	fz_error error;
-	fz_stroke stroke;
-	fz_dash *dash;
-
-	stroke.linecap = gs->linecap;
-	stroke.linejoin = gs->linejoin;
-	stroke.linewidth = gs->linewidth;
-	stroke.miterlimit = gs->miterlimit;
-
-	if (gs->dashlen)
-	{
-		error = fz_newdash(&dash, gs->dashphase, gs->dashlen, gs->dashlist);
-		if (error)
-			return fz_rethrow(error, "cannot create dash pattern");
-	}
-	else
-		dash = nil;
-
-	error = fz_endpath(path, FZ_STROKE, &stroke, dash);
-	if (error)
-	{
-		fz_dropdash(dash);
-		return fz_rethrow(error, "cannot finish path node");
-	}
-
-	return fz_okay;
-}
-
-fz_error
-pdf_buildfillpath(pdf_gstate *gs, fz_pathnode *path, int eofill)
-{
-	fz_error error;
-	error = fz_endpath(path, eofill ? FZ_EOFILL : FZ_FILL, nil, nil);
-	if (error)
-		return fz_rethrow(error, "cannot finish path node");
-	return fz_okay;
-}
-
-static fz_error
-addcolorshape(pdf_gstate *gs, fz_node *shape, float alpha, fz_colorspace *cs, float *v)
-{
-	fz_error error;
-	fz_node *mask;
-	fz_node *solid;
-
-	error = fz_newmasknode(&mask);
-	if (error)
-		return fz_rethrow(error, "cannot create mask node");
-
-	error = fz_newsolidnode(&solid, alpha, cs, cs->n, v);
-	if (error)
-	{
-		fz_dropnode(mask);
-		return fz_rethrow(error, "cannot create color node");
-	}
-
-	fz_insertnodelast(mask, shape);
-	fz_insertnodelast(mask, solid);
-	fz_insertnodelast(gs->head, mask);
-
-	return fz_okay;
-}
-
-static fz_error
-addinvisibleshape(pdf_gstate *gs, fz_node *shape)
-{
-	fz_error error;
-	fz_node *mask;
-	fz_pathnode *path;
-
-	error = fz_newmasknode(&mask);
-	if (error)
-		return fz_rethrow(error, "cannot create mask node");
-
-	error = fz_newpathnode(&path);
-	if (error)
-	{
-		fz_dropnode(mask);
-		return fz_rethrow(error, "cannot create path node");
-	}
-
-	error = fz_endpath(path, FZ_FILL, nil, nil);
-	if (error)
-	{
-		fz_dropnode(mask);
-		fz_dropnode((fz_node*)path);
-		return fz_rethrow(error, "cannot finish path node");
-	}
-
-	fz_insertnodelast(mask, (fz_node*)path);
-	fz_insertnodelast(mask, shape);
-	fz_insertnodelast(gs->head, mask);
-
-	return fz_okay;
-}
-
-#if 0 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690643 */
-static fz_matrix getmatrix(fz_node *node)
-{
-	if (node->parent)
-	{
-		fz_matrix ptm = getmatrix(node->parent);
-		if (fz_istransformnode(node))
-			return fz_concat(((fz_transformnode*)node)->m, ptm);
-		return ptm;
-	}
-	if (fz_istransformnode(node))
-		return ((fz_transformnode*)node)->m;
-	return fz_identity();
-}
-#else
-static fz_matrix getmatrix(fz_node *node)
-{
-	while (node->parent && !(fz_istransformnode(node) && ((fz_transformnode*)node)->container))
-		node = node->parent;
-	if (fz_istransformnode(node) && ((fz_transformnode*)node)->container)
-		return ((fz_transformnode*)node)->m;
-	return fz_identity();
-}
-#endif
-
-static fz_error
-addpatternshape(pdf_gstate *gs, fz_node *shape,
-	pdf_pattern *pat, fz_colorspace *cs, float *v)
-{
-	fz_error error;
-	fz_node *xform;
-	fz_node *over;
-	fz_node *mask;
-	fz_node *link;
-	fz_matrix ctm;
-	fz_matrix inv;
-	fz_matrix ptm;
-	fz_rect bbox;
 	int x, y, x0, y0, x1, y1;
+	int oldtop;
 
-	/* patterns are painted in user space */
-	ctm = getmatrix(gs->head);
-	inv = fz_invertmatrix(ctm);
-
-	error = fz_newmasknode(&mask);
-	if (error)
-		return fz_rethrow(error, "cannot create mask node");
-
-	ptm = fz_concat(pat->matrix, fz_invertmatrix(ctm));
-	error = fz_newtransformnode(&xform, ptm);
-	if (error)
-	{
-		fz_dropnode(mask);
-		return fz_rethrow(error, "cannot create transform node");
-	}
-
-	error = pdf_newovernode(&over, gs);
-	if (error)
-	{
-		fz_dropnode(xform);
-		fz_dropnode(mask);
-		return fz_rethrow(error, "cannot create over node");
-	}
-
-	fz_insertnodelast(mask, shape);
-	fz_insertnodelast(mask, xform);
-	fz_insertnodelast(xform, over);
-	xform = nil;
-
-	/* over, xform, mask are now owned by the tree */
-
-	/* get bbox of shape in pattern space for stamping */
-	ptm = fz_concat(ctm, fz_invertmatrix(pat->matrix));
-	bbox = fz_boundnode(shape, ptm);
-
-	/* expand bbox by pattern bbox */
-	bbox.x0 += pat->bbox.x0;
-	bbox.y0 += pat->bbox.y0;
-	bbox.x1 += pat->bbox.x1;
-	bbox.y1 += pat->bbox.y1;
-
-	x0 = fz_floor(bbox.x0 / pat->xstep);
-	y0 = fz_floor(bbox.y0 / pat->ystep);
-	x1 = fz_ceil(bbox.x1 / pat->xstep);
-	y1 = fz_ceil(bbox.y1 / pat->ystep);
-
-	for (y = y0; y <= y1; y++)
-	{
-		for (x = x0; x <= x1; x++)
-		{
-			ptm = fz_translate(x * pat->xstep, y * pat->ystep);
-			error = fz_newtransformnode(&xform, ptm);
-			if (error)
-				return fz_rethrow(error, "cannot create transform node for stamp");
-			error = fz_newlinknode(&link, pat->tree);
-			if (error)
-			{
-				fz_dropnode(xform);
-				return fz_rethrow(error, "cannot create link node for stamp");
-			}
-			fz_insertnodelast(xform, link);
-			fz_insertnodelast(over, xform);
-		}
-	}
+	pdf_gsave(csi);
+	gstate = csi->gstate + csi->gtop;
 
 	if (pat->ismask)
 	{
-		error = addcolorshape(gs, mask, 1.0, cs, v);
-		if (error)
-			return fz_rethrow(error, "cannot add colored shape");
-		return fz_okay;
-	}
-
-	fz_insertnodelast(gs->head, mask);
-	return fz_okay;
-}
-
-fz_error
-pdf_addshade(pdf_gstate *gs, fz_shade *shade)
-{
-	fz_error error;
-	fz_node *node;
-
-	error = fz_newshadenode(&node, shade);
-	if (error)
-		return fz_rethrow(error, "cannot create shade node");
-
-	fz_insertnodelast(gs->head, node);
-
-	return fz_okay;
-}
-
-static fz_error
-addshadeshape(pdf_gstate *gs, fz_node *shape, fz_shade *shade)
-{
-	fz_error error;
-	fz_node *mask;
-	fz_node *color;
-	fz_node *xform;
-	fz_node *over;
-	fz_node *bgnd;
-	fz_matrix ctm;
-	fz_matrix inv;
-
-	ctm = getmatrix(gs->head);
-	inv = fz_invertmatrix(ctm);
-
-	error = fz_newtransformnode(&xform, inv);
-	if (error)
-		return fz_rethrow(error, "cannot create transform node");
-
-	error = fz_newmasknode(&mask);
-	if (error)
-	{
-		fz_dropnode(xform);
-		return fz_rethrow(error, "cannot create mask node");
-	}
-
-	error = fz_newshadenode(&color, shade);
-	if (error)
-	{
-		fz_dropnode(mask);
-		fz_dropnode(xform);
-		return fz_rethrow(error, "cannot create shade node");
-	}
-
-	if (shade->usebackground)
-	{
-		error = pdf_newovernode(&over, gs);
-		if (error)
+		pdf_unsetpattern(csi, PDF_MFILL);
+		pdf_unsetpattern(csi, PDF_MSTROKE);
+		if (what == PDF_MFILL)
 		{
-			fz_dropnode(color);
-			fz_dropnode(mask);
-			fz_dropnode(xform);
-			return fz_rethrow(error, "cannot create over node for background color");
+			pdf_dropmaterial(&gstate->stroke);
+			pdf_keepmaterial(&gstate->fill);
+			gstate->stroke = gstate->fill;
 		}
-
-		error = fz_newsolidnode(&bgnd, 1.0f, shade->cs, shade->cs->n, shade->background);
-		if (error)
+		if (what == PDF_MSTROKE)
 		{
-			fz_dropnode(over);
-			fz_dropnode(color);
-			fz_dropnode(mask);
-			fz_dropnode(xform);
-			return fz_rethrow(error, "cannot create solid node for background color");
+			pdf_dropmaterial(&gstate->fill);
+			pdf_keepmaterial(&gstate->stroke);
+			gstate->fill = gstate->stroke;
 		}
-
-		fz_insertnodelast(mask, shape);
-		fz_insertnodelast(over, bgnd);
-		fz_insertnodelast(over, color);
-		fz_insertnodelast(xform, over);
-		fz_insertnodelast(mask, xform);
-		fz_insertnodelast(gs->head, mask);
 	}
 	else
 	{
-		fz_insertnodelast(mask, shape);
-		fz_insertnodelast(xform, color);
-		fz_insertnodelast(mask, xform);
-		fz_insertnodelast(gs->head, mask);
+		// TODO: unset only the current fill/stroke or both?
+		pdf_unsetpattern(csi, what);
 	}
 
-	return fz_okay;
-}
+	ptm = fz_concat(pat->matrix, csi->topctm);
+	invptm = fz_invertmatrix(ptm);
 
-fz_error
-pdf_addfillshape(pdf_gstate *gs, fz_node *shape)
-{
-	fz_error error;
+	/* patterns are painted using the ctm in effect at the beginning of the content stream */
+	/* get bbox of shape in pattern space for stamping */
+	bbox = fz_transformrect(invptm, bbox);
+	x0 = floor(bbox.x0 / pat->xstep);
+	y0 = floor(bbox.y0 / pat->ystep);
+	x1 = ceil(bbox.x1 / pat->xstep);
+	y1 = ceil(bbox.y1 / pat->ystep);
 
-	switch (gs->fill.kind)
+	oldtopctm = csi->topctm;
+	oldtop = csi->gtop;
+
+	for (y = y0; y < y1; y++)
 	{
-	case PDF_MNONE:
-		fz_insertnodelast(gs->head, shape);
-		break;
-
-	case PDF_MCOLOR:
-	case PDF_MLAB:
-	case PDF_MINDEXED:
-		error = addcolorshape(gs, shape, gs->fill.alpha, gs->fill.cs, gs->fill.v);
-		if (error)
-			return fz_rethrow(error, "cannot add colored shape");
-		break;
-
-	case PDF_MPATTERN:
-		error = addpatternshape(gs, shape, gs->fill.pattern, gs->fill.cs, gs->fill.v);
-		if (error)
-			return fz_rethrow(error, "cannot add pattern shape");
-		break;
-
-	case PDF_MSHADE:
-		error = addshadeshape(gs, shape, gs->fill.shade);
-		if (error)
-			return fz_rethrow(error, "cannot add shade shape");
-		break;
-
-	default:
-		return fz_throw("assert: unknown material");
-	}
-
-	return fz_okay;
-}
-
-fz_error
-pdf_addstrokeshape(pdf_gstate *gs, fz_node *shape)
-{
-	fz_error error;
-
-	switch (gs->stroke.kind)
-	{
-	case PDF_MNONE:
-		fz_insertnodelast(gs->head, shape);
-		break;
-
-	case PDF_MCOLOR:
-	case PDF_MLAB:
-	case PDF_MINDEXED:
-		error = addcolorshape(gs, shape, gs->stroke.alpha, gs->stroke.cs, gs->stroke.v);
-		if (error)
-			return fz_rethrow(error, "cannot add colored shape");
-		break;
-
-	case PDF_MPATTERN:
-		error = addpatternshape(gs, shape, gs->stroke.pattern, gs->stroke.cs, gs->stroke.v);
-		if (error)
-			return fz_rethrow(error, "cannot add pattern shape");
-		break;
-
-	case PDF_MSHADE:
-		error = addshadeshape(gs, shape, gs->stroke.shade);
-		if (error)
-			return fz_rethrow(error, "cannot add shade shape");
-		break;
-
-	default:
-		return fz_throw("assert: unknown material");
-	}
-
-	return fz_okay;
-}
-
-fz_error
-pdf_addclipmask(pdf_gstate *gs, fz_node *shape)
-{
-	fz_error error;
-	fz_node *mask;
-	fz_node *over;
-
-	error = fz_newmasknode(&mask);
-	if (error)
-		return fz_rethrow(error, "cannot create mask node");
-
-	error = pdf_newovernode(&over, gs);
-	if (error)
-	{
-		fz_dropnode(mask);
-		return fz_rethrow(error, "cannot create over node");
-	}
-
-	fz_insertnodelast(mask, shape);
-	fz_insertnodelast(mask, over);
-	fz_insertnodelast(gs->head, mask);
-	gs->head = over;
-
-	return fz_okay;
-}
-
-fz_error
-pdf_addtransform(pdf_gstate *gs, fz_node *transform)
-{
-	fz_error error;
-	fz_node *over;
-
-	error = pdf_newovernode(&over, gs);
-	if (error)
-		return fz_rethrow(error, "cannot create over node");
-
-	fz_insertnodelast(gs->head, transform);
-	fz_insertnodelast(transform, over);
-	gs->head = over;
-
-	return fz_okay;
-}
-
-fz_error
-pdf_showimage(pdf_csi *csi, pdf_image *img)
-{
-	fz_error error;
-	fz_node *mask;
-	fz_node *color;
-	fz_node *shape;
-
-	error = fz_newimagenode(&color, (fz_image*)img);
-	if (error)
-		return fz_rethrow(error, "cannot create image node");
-
-	if (img->super.n == 0 && img->super.a == 1)
-	{
-		error = pdf_addfillshape(csi->gstate + csi->gtop, color);
-		if (error)
+		for (x = x0; x < x1; x++)
 		{
-			fz_dropnode(color);
-			return fz_rethrow(error, "cannot add filled image mask");
-		}
-	}
-
-	else
-	{
-		if (img->mask)
-		{
-			error = fz_newimagenode(&shape, (fz_image*)img->mask);
+			gstate->ctm = fz_concat(fz_translate(x * pat->xstep, y * pat->ystep), ptm);
+			csi->topctm = gstate->ctm;
+			error = pdf_runcsibuffer(csi, pat->resources, pat->contents);
 			if (error)
-			{
-				fz_dropnode(color);
-				return fz_rethrow(error, "cannot create image node for image mask");
-			}
-			error = fz_newmasknode(&mask);
-			if (error)
-			{
-				fz_dropnode(shape);
-				fz_dropnode(color);
-				return fz_rethrow(error, "cannot create mask node for image mask");
-			}
-			fz_insertnodelast(mask, shape);
-			fz_insertnodelast(mask, color);
-			fz_insertnodelast(csi->gstate[csi->gtop].head, mask);
-		}
-		else
-		{
-			fz_insertnodelast(csi->gstate[csi->gtop].head, color);
+				fz_catch(error, "cannot render pattern tile");
+			while (oldtop < csi->gtop)
+				pdf_grestore(csi);
 		}
 	}
 
-	return fz_okay;
+	csi->topctm = oldtopctm;
+
+	pdf_grestore(csi);
 }
 
-fz_error
-pdf_showpath(pdf_csi *csi,
-	int doclose, int dofill, int dostroke, int evenodd)
+void
+pdf_showshade(pdf_csi *csi, fz_shade *shd)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	fz_error error;
-	char *reason;
-	fz_pathnode *spath = nil;
-	fz_pathnode *fpath = nil;
-	fz_pathnode *clip = nil;
+	csi->dev->fillshade(csi->dev->user, shd, gstate->ctm);
+}
 
-	/* TODO review memory cleanup code cleanup... */
-
-	if (doclose)
+void
+pdf_showimage(pdf_csi *csi, pdf_image *image)
+{
+	fz_path *path = nil;
+	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	fz_pixmap *tile = fz_newpixmap(image->cs, 0, 0, image->w, image->h);
+	fz_error error = pdf_loadtile(image, tile);
+	if (error)
 	{
-		error = fz_closepath(csi->path);
-		if (error)
-			return fz_rethrow(error, "cannot create path node");
+		fz_droppixmap(tile);
+		fz_catch(error, "cannot load image data");
+		return;
 	}
 
-	/*
-	 * Prepare the various copies of the path node.
-	 */
+	/* TODO: clip against a unit rectangle in the image blit instead */
+	if (!fz_isrectilinear(gstate->ctm))
+	{
+		path = fz_newpath();
+		fz_moveto(path, 0.0, 0.0);
+		fz_lineto(path, 1.0, 0.0);
+		fz_lineto(path, 1.0, 1.0);
+		fz_lineto(path, 0.0, 1.0);
+		fz_closepath(path);
+		csi->dev->clippath(csi->dev->user, path, 0, gstate->ctm);
+	}
+
+	if (image->mask)
+	{
+		fz_pixmap *mask = fz_newpixmap(NULL, 0, 0, image->mask->w, image->mask->h);
+		error = pdf_loadtile(image->mask, mask);
+		if (error)
+			fz_catch(error, "cannot load image mask data");
+		csi->dev->clipimagemask(csi->dev->user, mask, gstate->ctm);
+		fz_droppixmap(mask);
+	}
+
+	if (image->n == 0 && image->a == 1)
+	{
+		fz_rect bbox;
+
+		switch (gstate->fill.kind)
+		{
+		case PDF_MNONE:
+			break;
+		case PDF_MCOLOR:
+		case PDF_MINDEXED:
+		case PDF_MLAB:
+			csi->dev->fillimagemask(csi->dev->user, tile, gstate->ctm,
+				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
+			break;
+		case PDF_MPATTERN:
+			bbox.x0 = 0;
+			bbox.y0 = 0;
+			bbox.x1 = 1;
+			bbox.y1 = 1;
+			bbox = fz_transformrect(gstate->ctm, bbox);
+			csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
+			pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		case PDF_MSHADE:
+			csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		}
+	}
+	else
+	{
+		csi->dev->fillimage(csi->dev->user, tile, gstate->ctm);
+	}
+
+	if (image->mask)
+		csi->dev->popclip(csi->dev->user);
+
+	if (path)
+	{
+		fz_freepath(path);
+		csi->dev->popclip(csi->dev->user);
+	}
+
+	fz_droppixmap(tile);
+}
+
+void
+pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
+{
+	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	fz_rect bbox;
+	fz_path *path;
+
+	path = csi->path;
+	csi->path = fz_newpath();
+
+	if (doclose)
+		fz_closepath(path);
 
 	if (csi->clip)
 	{
-		error = fz_clonepathnode(&clip, csi->path);
-		if (error)
-			return fz_rethrow(error, "cannot copy path node for clip mask");
+		gstate->clipdepth++;
+		csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
+		csi->clip = 0;
 	}
-
-	if (dofill && dostroke)
-	{
-		fpath = csi->path;
-		error = fz_clonepathnode(&spath, fpath);
-		if (error)
-			return fz_rethrow(error, "cannot duplicate path node");
-	}
-	else if (dofill)
-	{
-		fpath = csi->path;
-	}
-	else if (dostroke)
-	{
-		spath = csi->path;
-	}
-	else
-	{
-		fz_dropnode((fz_node*)csi->path);
-	}
-
-	csi->path = nil;
-
-	/*
-	 * Add nodes to the tree.
-	 */
 
 	if (dofill)
 	{
-		error = pdf_buildfillpath(gstate, fpath, evenodd);
-		if (error)
+		switch (gstate->fill.kind)
 		{
-			reason = "cannot finish fill path";
-			goto cleanup;
-		}
-
-		error = pdf_addfillshape(gstate, (fz_node*)fpath);
-		if (error)
-		{
-			reason = "cannot add filled path";
-			goto cleanup;
+		case PDF_MNONE:
+			break;
+		case PDF_MCOLOR:
+		case PDF_MINDEXED:
+		case PDF_MLAB:
+			csi->dev->fillpath(csi->dev->user, path, evenodd, gstate->ctm,
+				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
+			break;
+		case PDF_MPATTERN:
+			bbox = fz_boundpath(path, nil, gstate->ctm);
+			csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
+			pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		case PDF_MSHADE:
+			csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
+			csi->dev->popclip(csi->dev->user);
+			break;
 		}
 	}
 
 	if (dostroke)
 	{
-		error = pdf_buildstrokepath(gstate, spath);
-		if (error)
+		switch (gstate->stroke.kind)
 		{
-			reason = "cannot finish stroke path";
-			goto cleanup;
-		}
-
-		error = pdf_addstrokeshape(gstate, (fz_node*)spath);
-		if (error)
-		{
-			reason = "cannot add stroked path";
-			goto cleanup;
+		case PDF_MNONE:
+			break;
+		case PDF_MCOLOR:
+		case PDF_MINDEXED:
+		case PDF_MLAB:
+			csi->dev->strokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm,
+				gstate->stroke.cs, gstate->stroke.v, gstate->stroke.alpha);
+			break;
+		case PDF_MPATTERN:
+			bbox = fz_boundpath(path, &gstate->strokestate, gstate->ctm);
+			csi->dev->clipstrokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm);
+			pdf_showpattern(csi, gstate->stroke.pattern, bbox, PDF_MFILL);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		case PDF_MSHADE:
+			csi->dev->clipstrokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, gstate->ctm);
+			csi->dev->popclip(csi->dev->user);
+			break;
 		}
 	}
 
-	if (csi->clip)
-	{
-		error = fz_endpath(clip, evenodd ? FZ_EOFILL : FZ_FILL, nil, nil);
-		if (error)
-		{
-			reason = "cannot finish clip path";
-			goto cleanupclip;
-		}
-
-		error = pdf_addclipmask(gstate, (fz_node*)clip);
-		if (error)
-		{
-			reason = "cannot add clip mask";
-			goto cleanupclip;
-		}
-
-		csi->clip = 0;
-	}
-
-	error = fz_newpathnode(&csi->path);
-	if (error)
-		return fz_rethrow(error, "cannot create path node");
-
-	return fz_okay;
-
-cleanup:
-	if (spath) fz_dropnode((fz_node *)spath);
-	if (fpath) fz_dropnode((fz_node *)fpath);
-cleanupclip:
-	if (clip) fz_dropnode((fz_node *)clip);
-
-	return fz_rethrow(error, "%s", reason);
+	fz_freepath(path);
 }
 
 /*
  * Text
  */
 
-fz_error
+void
 pdf_flushtext(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	fz_error error;
+	fz_text *text;
+	int dofill = 0;
+	int dostroke = 0;
+	int doclip = 0;
+	int doinvisible = 0;
+	fz_rect bbox;
 
-	if (csi->text)
+	if (!csi->text)
+		return;
+	text = csi->text;
+	csi->text = nil;
+
+	switch (csi->textmode)
 	{
-		switch (csi->textmode)
-		{
-		case 0:	/* fill */
-		case 1:	/* stroke */
-		case 2:	/* stroke + fill */
-			error = pdf_addfillshape(gstate, (fz_node*)csi->text);
-			if (error)
-				return fz_rethrow(error, "cannot add filled text");
-			break;
-
-		case 3:	/* invisible */
-			error = addinvisibleshape(gstate, (fz_node*)csi->text);
-			if (error)
-				return fz_rethrow(error, "cannot add invisible text");
-			break;
-
-		case 4: /* fill + clip */
-		case 5: /* stroke + clip */
-		case 6: /* stroke + fill + clip */
-			{
-				fz_textnode *temp;
-
-				error = fz_clonetextnode(&temp, csi->text);
-				if (error)
-					return fz_rethrow(error, "cannot duplicate text");
-
-				error = pdf_addfillshape(gstate, (fz_node*)temp);
-				if (error)
-				{
-					fz_dropnode((fz_node*)temp);
-					return fz_rethrow(error, "cannot add filled text");
-				}
-
-				/* FIXME stroked text */
-			}
-			/* fall through */
-
-		case 7: /* invisible clip ( + fallthrough clips ) */
-			if (!csi->textclip)
-			{
-				error = pdf_newovernode(&csi->textclip, gstate);
-				if (error)
-					return fz_rethrow(error, "cannot create over node");
-			}
-			fz_insertnodelast(csi->textclip, (fz_node*)csi->text);
-			break;
-		}
-
-		csi->text = nil;
+	case 0:
+		dofill = 1;
+		break;
+	case 1:
+		dostroke = 1;
+		break;
+	case 2:
+		dofill = 1;
+		dostroke = 1;
+		break;
+	case 3:
+		doinvisible = 1;
+		break;
+	case 4:
+		dofill = 1;
+		doclip = 1;
+		break;
+	case 5:
+		dostroke = 1;
+		doclip = 1;
+		break;
+	case 6:
+		dofill = 1;
+		dostroke = 1;
+		doclip = 1;
+		break;
+	case 7:
+		doclip = 1;
+		break;
 	}
 
-	return fz_okay;
+	/* FIXME -- stroked text is not implemented yet */
+	if (dostroke)
+	{
+		fz_warn("stroked text not supported yet; filling instead");
+		dostroke = 0;
+		dofill = 1;
+	}
+
+	if (doinvisible)
+		csi->dev->ignoretext(csi->dev->user, text, gstate->ctm);
+
+	if (doclip)
+	{
+		gstate->clipdepth++;
+		csi->dev->cliptext(csi->dev->user, text, gstate->ctm, csi->accumulate);
+		csi->accumulate = 2;
+	}
+
+	if (dofill)
+	{
+		switch (gstate->fill.kind)
+		{
+		case PDF_MNONE:
+			break;
+		case PDF_MCOLOR:
+		case PDF_MINDEXED:
+		case PDF_MLAB:
+			csi->dev->filltext(csi->dev->user, text, gstate->ctm,
+				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
+			break;
+		case PDF_MPATTERN:
+			bbox = fz_boundtext(text, gstate->ctm);
+			csi->dev->cliptext(csi->dev->user, text, gstate->ctm, 0);
+			pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		case PDF_MSHADE:
+			csi->dev->cliptext(csi->dev->user, text, gstate->ctm, 0);
+			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		}
+	}
+
+	if (dostroke)
+	{
+		switch (gstate->stroke.kind)
+		{
+		case PDF_MNONE:
+			break;
+		case PDF_MCOLOR:
+		case PDF_MINDEXED:
+		case PDF_MLAB:
+			csi->dev->stroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm,
+				gstate->stroke.cs, gstate->stroke.v, gstate->stroke.alpha);
+			break;
+		case PDF_MPATTERN:
+			bbox = fz_boundtext(text, gstate->ctm);
+			csi->dev->clipstroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm);
+			pdf_showpattern(csi, gstate->stroke.pattern, bbox, PDF_MFILL);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		case PDF_MSHADE:
+			csi->dev->clipstroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, gstate->ctm);
+			csi->dev->popclip(csi->dev->user);
+			break;
+		}
+	}
+
+	fz_freetext(text);
 }
 
-static fz_error
-showglyph(pdf_csi *csi, int cid)
+static void
+pdf_showglyph(pdf_csi *csi, int cid)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_fontdesc *fontdesc = gstate->font;
-	fz_error error;
 	fz_matrix tsm, trm;
 	float w0, w1, tx, ty;
 	pdf_hmtx h;
@@ -897,7 +579,7 @@ showglyph(pdf_csi *csi, int cid)
 	/* fall back to ncidtoucs if the char wasn't in tounicode */
 	if (ucs[1] < 0 && cid < fontdesc->ncidtoucs)
 		ucs[1] = fontdesc->cidtoucs[cid];
-	if (ucs[1] < 0)
+	if (ucs[1] <= 0)
 		ucs[1] = '?';
 
 	gid = pdf_fontcidtogid(fontdesc, cid);
@@ -926,14 +608,9 @@ showglyph(pdf_csi *csi, int cid)
 		fabs(trm.d - csi->text->trm.d) > FLT_EPSILON ||
 		gstate->render != csi->textmode)
 	{
-		error = pdf_flushtext(csi);
-		if (error)
-			return fz_rethrow(error, "cannot finish text node (face/matrix change)");
+		pdf_flushtext(csi);
 
-		error = fz_newtextnode(&csi->text, fontdesc->font);
-		if (error)
-			return fz_rethrow(error, "cannot create text node");
-
+		csi->text = fz_newtext(fontdesc->font);
 		csi->text->trm = trm;
 		csi->text->trm.e = 0;
 		csi->text->trm.f = 0;
@@ -941,9 +618,7 @@ showglyph(pdf_csi *csi, int cid)
 	}
 
 	/* add glyph to textobject */
-	error = fz_addtext(csi->text, gid, ucs, trm.e, trm.f);
-	if (error)
-		return fz_rethrow(error, "cannot add glyph to text node");
+	fz_addtext(csi->text, gid, ucs, trm.e, trm.f);
 
 	if (fontdesc->wmode == 0)
 	{
@@ -959,12 +634,10 @@ showglyph(pdf_csi *csi, int cid)
 		ty = w1 * gstate->size + gstate->charspace;
 		csi->tm = fz_concat(fz_translate(0, ty), csi->tm);
 	}
-
-	return fz_okay;
 }
 
 static void
-showspace(pdf_csi *csi, float tadj)
+pdf_showspace(pdf_csi *csi, float tadj)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_fontdesc *fontdesc = gstate->font;
@@ -974,12 +647,11 @@ showspace(pdf_csi *csi, float tadj)
 		csi->tm = fz_concat(fz_translate(0, tadj), csi->tm);
 }
 
-fz_error
+void
 pdf_showtext(pdf_csi *csi, fz_obj *text)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_fontdesc *fontdesc = gstate->font;
-	fz_error error;
 	unsigned char *buf;
 	unsigned char *end;
 	int i, len;
@@ -988,7 +660,7 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 	if (!fontdesc)
 	{
 		fz_warn("cannot draw text since font and size not set");
-		return fz_okay;
+		return;
 	}
 
 	if (fz_isarray(text))
@@ -997,38 +669,29 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 		{
 			fz_obj *item = fz_arrayget(text, i);
 			if (fz_isstring(item))
-			{
-				error = pdf_showtext(csi, item);
-				if (error)
-					return fz_rethrow(error, "cannot draw text item");
-			}
+				pdf_showtext(csi, item);
 			else
-			{
-				showspace(csi, - fz_toreal(item) * gstate->size / 1000.0);
-			}
+				pdf_showspace(csi, - fz_toreal(item) * gstate->size / 1000.0);
 		}
-		return fz_okay;
 	}
 
-	buf = (unsigned char *)fz_tostrbuf(text);
-	len = fz_tostrlen(text);
-	end = buf + len;
-
-	while (buf < end)
+	if (fz_isstring(text))
 	{
-		buf = pdf_decodecmap(fontdesc->encoding, buf, &cpt);
-		cid = pdf_lookupcmap(fontdesc->encoding, cpt);
-		if (cid == -1)
-			cid = 0;
+		buf = (unsigned char *)fz_tostrbuf(text);
+		len = fz_tostrlen(text);
+		end = buf + len;
 
-		error = showglyph(csi, cid);
-		if (error)
-			return fz_rethrow(error, "cannot draw glyph");
+		while (buf < end)
+		{
+			buf = pdf_decodecmap(fontdesc->encoding, buf, &cpt);
+			cid = pdf_lookupcmap(fontdesc->encoding, cpt);
+			if (cid == -1)
+				cid = 0;
 
-		if (cpt == 32)
-			showspace(csi, gstate->wordspace);
+			pdf_showglyph(csi, cid);
+
+			if (cpt == 32)
+				pdf_showspace(csi, gstate->wordspace);
+		}
 	}
-
-	return fz_okay;
 }
-

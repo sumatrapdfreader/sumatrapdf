@@ -1,0 +1,404 @@
+﻿# Translations for Bulgarian (Български) (bg) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: bg Bulgarian (Български)
+
+Contributor: Христо Бенев (http://hbcom.info)
+
+&About
+Относно програмата...
+
+&Check for new version
+Проверка за нова версия
+
+&Close\tCtrl-W
+Затвори\tCtrl-W
+
+&Custom Zoom...
+Увеличение по избор...
+
+&Don't ask me again
+Не питай отново
+
+&File
+&Файл
+
+&Find what:
+Търсене на:
+
+&Go To
+Отиди &на
+
+&Go to page:
+Отиди на страница:
+
+&Help
+Помо&щ
+
+&Magnification:
+Увеличение:
+
+&Manual
+Ръководство
+
+&Match case
+Същия текст
+
+&No
+Не
+
+&No, thanks
+Не, благодаря
+
+&Open\tCtrl-O
+&Отвори\tCtrl-O
+
+&Options...
+Параметри
+
+&Password:
+Парола
+
+&Print\tCtrl-P
+От&печатай\tCtrl-P
+
+&Remember these settings for each document
+Запази настройките за всеки документ
+
+&Save as\tCtrl-S
+&Запиши като...\tCtrl-S
+
+&Settings
+Настройки
+
+&Skip this version
+Пропусни тази версия.
+
+&View
+&Виж
+
+&Visit website
+Посетете сайта
+
+&Yes
+Да
+
+&Zoom
+&Мащаб
+
+(of %d)
+(от %d)
+
+About SumatraPDF
+Относно SumatraPDF
+
+Act&ual Size\tCtrl-1
+Едно към едно\tCtrl-1
+
+Advanced
+Допълнителни
+
+All files
+Всички файлове
+
+Associate with PDF files?
+Асоцииране с PDF файлове?
+
+Automatic
+Автоматично
+
+Automatically check for &updates
+Автоматично проверявай за обновления
+
+Back\tAlt+Left Arrow
+Назад\tAlt+<-
+
+Book view
+Като книга
+
+Bookmarks\tF12
+Етикети\tF12
+
+Cancel
+Откажи
+
+Cannot print this file
+Файла не може да бъде отпечатан
+
+Cannot start inverse search command. Please check the command line in the settings.
+Обратното търсене не може да започне. Моля проверете параметрите в настройките.
+
+Change language
+Смени езика (Change language)
+
+Continuous
+Непрекъснати
+
+Continuous book view
+Като книга - непрекъснати
+
+Continuous facing
+Две непрекъснати
+
+Contribute translation
+Допринеси за превода
+
+Copy Selection\tCtrl-C
+Копирай избраното\tCtrl-C
+
+Could not open Printer
+Принтера не е достъпен
+
+Couldn't initialize printer
+Принтера не може да бъде инициализиран
+
+Couldn't render the page
+Страницата не може да се изобрази
+
+Default &Layout:
+Раположение по подразбиране
+
+Default &Zoom:
+Увеличение по подразбиране
+
+Download
+Свали
+
+E&xit\tCtrl-Q
+&Изход\tCtrl-Q
+
+Enter password
+Въведете парола
+
+Enter password for %s
+Въведете парола за %s
+
+Error loading PDF file.
+Грешка при зареждане на файла.
+
+Facing
+Две страници
+
+Failed to save a file
+Грешка при записване на файла
+
+Find
+Търси
+
+Find Next
+Намери следващото
+
+Find Previous
+Намери предишното
+
+Find...\tCtrl-F
+Търси...\tCtrl-F
+
+Find:
+Търси:
+
+First Page\tHome
+Начална страница\tHome
+
+Fit &Page\tCtrl-0
+Оразмери страницата\tCtrl-0
+
+Fit Page
+Оразмери страницата
+
+Fit Widt&h\tCtrl-2
+Оразмери по ширина\tCtrl-2
+
+Fit Width
+Оразмери по ширина
+
+Forward\tAlt+Right Arrow
+Напред\tAlt+->
+
+Found text at page %d
+Текста е намерен на страница %d
+
+Fullscreen\tCtrl-L
+Цял Екран\tCtrl-L
+
+Go to page
+Към страница
+
+Hint: Use the F3 key for finding again
+Съвет: Използвайте F3 за повторно търсене
+
+Last Page\tEnd
+Последна страница\tEnd
+
+Main PDF reader can't be changed in portable mode
+PDF четеца не може да бъде сменен в преносим режим
+
+Make SumatraPDF default application for PDF files?
+Направи SumatraPDF основно приложение за PDF файлове?
+
+Make SumatraPDF my main PDF reader
+Направи SumatraPDF четец на PDF по подразбиране
+
+Match case
+Точно същите букви
+
+New version %s is available. Download new version?
+Достъпна е нова версия %s. Искате ли да я свалите?
+
+New version available.
+Има нова версия.
+
+Next Page
+Следваща страница
+
+Next Page\tRight Arrow
+Следваща страница\t->
+
+No matches were found
+Няма съвпадения
+
+No new version available.
+Няма нова версия.
+
+No result found around line %u in file %s
+Няма резултати около линия %u във файла %s
+
+No synchronization file found
+Синфронизационния файл не е намерен
+
+No synchronization info at this position
+В тази позиция няма информация за синхронизация
+
+Open
+Отвори
+
+Open in &Adobe Reader
+Отвори с &Adobe Reader
+
+PDF Document
+PDF документ
+
+PDF documents
+PDF документи
+
+Page number %u inexistant
+Страница номер не съществува
+
+Page...\tCtrl-G
+Страница...\tCtrl-G
+
+Page:
+Страница:
+
+Please wait - rendering...
+Моля изчакайте - изображението се създава
+
+Previous Page
+Предишна страница
+
+Previous Page\tLeft Arrow
+Предишна страница\t<-
+
+Printing problem.
+Проблем при печатане.
+
+Remember &opened files
+Запомни отворените файлове
+
+Rotate left\tCtrl-Shift--
+Завърти наляво\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Завърти надясно\tCtrl-Shift-+
+
+Searching %d of %d...
+Търсене в страница %d от %d...
+
+Select content with Ctrl+left mouse button
+Изберете съдържание с Ctrl и левия бутон на мишката
+
+Set inverse search command-line
+Активирай обратно търсене
+
+Show pages continuously
+Непрекъснати
+
+Show the &bookmarks sidebar when available
+Покажи показалеца в станичната колона когато е възможно
+
+Show toolbar
+Покажи лентата с инструменти
+
+Single page
+Единична страница
+
+Source file %s has no synchronization point
+Източника %s няма синхронизационна точка
+
+SumatraPDF Options
+Опции на SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF е вашия PDF четец
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF вече трябва да е четец на PDF по подразбиране
+
+Synchronization file cannot be opened
+Синхронизационния файл не може да бъде отворен
+
+Unknown source file (%s)
+Непознат файл източник (%s)
+
+View
+Виж
+
+Warning
+Внимание
+
+You have the latest version.
+Имате последната версия.
+
+You have version %s
+Вашата версия е %s
+
+Zoom
+Увеличение
+
+Zoom In
+Увеличи
+
+Zoom Out
+Намали
+
+Zoom factor
+оефициент на увеличение
+
+[Changes detected; refreshing] %s
+[Намерени са промени; обновявам] %s
+
+# Untranslated:
+#Application:
+#Author:
+#Bytes
+#Created:
+#Document Properties
+#File Size:
+#File:
+#GB
+#KB
+#MB
+#Modified:
+#Number of Pages:
+#OK
+#P&roperties...\tCtrl-D
+#PDF Producer:
+#PDF Version:
+#Page Size:
+#Send by &email...
+#Text documents
+#Title:
+

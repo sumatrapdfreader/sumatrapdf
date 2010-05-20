@@ -11,13 +11,20 @@ static fz_error pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, in
     int rotate;
     fz_obj *obj;
 
-    obj = fz_dictgets(dict, "CropBox");
-    if (!obj)
-        obj = fz_dictgets(dict, "MediaBox");
-
+    obj = fz_dictgets(dict, "MediaBox");
     if (!fz_isarray(obj))
         return fz_throw("syntaxerror: Page missing MediaBox");
     bbox = pdf_torect(obj);
+
+    obj = fz_dictgets(dict, "CropBox");
+    if (obj && fz_isarray(obj)) {
+        // crop MediaBox to CropBox
+        fz_rect cropbox = pdf_torect(obj);
+        bbox.x0 = MAX(bbox.x0, cropbox.x0);
+        bbox.x1 = MIN(bbox.x1, cropbox.x1);
+        bbox.y0 = MAX(bbox.y0, cropbox.y0);
+        bbox.y1 = MIN(bbox.y1, cropbox.y1);
+    }
 
     //pdf_logpage("bbox [%g %g %g %g]\n", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
@@ -136,12 +143,12 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 }
 
 PdfEngine::PdfEngine() : 
-        _fileName(0)
+        _fileName(NULL)
         , _pageCount(INVALID_PAGE_NO) 
         , _xref(NULL)
         , _outline(NULL)
         , _pages(NULL)
-        , _rast(NULL)
+        , _drawcache(NULL)
 {
     _getPageSem = CreateSemaphore(NULL, 1, 1, NULL);
 }
@@ -158,16 +165,15 @@ PdfEngine::~PdfEngine()
 
     if (_outline)
         pdf_dropoutline(_outline);
-
     if (_xref) {
-        if (_xref->store)
+        if (_xref->store) {
             pdf_dropstore(_xref->store);
-        _xref->store = 0;
+            _xref->store = NULL;
+        }
         pdf_closexref(_xref);
     }
-
-    if (_rast)
-        fz_droprenderer(_rast);
+    if (_drawcache)
+        fz_freeglyphcache(_drawcache);
 
     CloseHandle(_getPageSem);
 
@@ -176,26 +182,17 @@ PdfEngine::~PdfEngine()
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
-	fz_error error;
     _windowInfo = win;
     setFileName(fileName);
-    _xref = pdf_newxref();
 
-    char *utf8path = tstr_to_utf8(fileName);
-    error = pdf_loadxref(_xref, utf8path);
-    if (error) {
-        if (tryrepair)
-            error = pdf_repairxref(_xref, utf8path);
-        if (error) {
-            free(utf8path);
-            goto Error;
-        }
-    }
-    free(utf8path);
-
-    error = pdf_decryptxref(_xref);
-    if (error)
-        goto Error;
+    int fd = _topen(fileName, O_BINARY | O_RDONLY);
+    if (-1 == fd)
+        return false;
+    fz_stream *file = fz_openfile(fd);
+    _xref = pdf_openxref(file);
+    fz_dropstream(file);
+    if (!_xref)
+        return false;
 
     if (pdf_needspassword(_xref)) {
         int okay = pdf_authenticatepassword(_xref, "");
@@ -203,13 +200,13 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             goto DecryptedOk;
         if (!win) {
             // win might not be given if called from pdfbench.cc
-            goto Error;
+            return false;
         }
         for (int i=0; i<3; i++) {
             TCHAR *pwd = GetPasswordForFile(win, fileName);
             if (!pwd) {
                 // password not given
-                goto Error;
+                return false;
             }
             char *pwd_utf8 = tstr_to_utf8(pwd);
             if (pwd_utf8) {
@@ -222,31 +219,10 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             if (okay)
                 goto DecryptedOk;
         }
-        goto Error;
+        return false;
     }
 
 DecryptedOk:
-    /*
-     * Load meta information
-     * TODO: move this into mupdf library
-     * TODO: more descriptive errors?
-     */
-
-    /* TODO: pdftool.c doesn't fz_resolveindirect() of "Root" object but
-        pdf_getpagecount() does. Who is right? (leaving resolving in since it
-        doesn't hurt) */
-    fz_obj *obj;
-    obj = fz_dictgets(_xref->trailer, "Root");
-    _xref->root = fz_resolveindirect(obj);
-    if (!_xref->root)
-        goto Error;
-    fz_keepobj(_xref->root);
-
-    obj = fz_dictgets(_xref->trailer, "Info");
-    _xref->info = fz_resolveindirect(obj);
-    if (_xref->info)
-        fz_keepobj(_xref->info);
-
     _pageCount = pdf_getpagecount(_xref);
     _outline = pdf_loadoutline(_xref);
     // silently ignore errors from pdf_loadoutline()
@@ -254,11 +230,8 @@ DecryptedOk:
     // error might prevent loading some pdfs that would
     // otherwise get displayed
 
-    _pages = (PdfPage *)malloc(sizeof(PdfPage) * _pageCount);
-    memset(_pages, 0, sizeof(PdfPage) * _pageCount);
-    return true;
-Error:
-    return false;
+    _pages = (PdfPage *)calloc(_pageCount, sizeof(PdfPage));
+    return _pageCount > 0;
 }
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
@@ -295,11 +268,11 @@ int PdfEngine::findPageNo(fz_obj *dest)
         // The destination is linked from a Go-To action's D array
         fz_obj * D = fz_dictgets(dest, "D");
         if (D && fz_isarray(D))
-            dest = fz_arrayget(D, 0);
+            dest = D;
     }
-    else if (fz_isarray(dest)) {
+    if (fz_isarray(dest))
         dest = fz_arrayget(dest, 0);
-    }
+
     int n = fz_tonum(dest);
 
     for (int i = 0; i < _pageCount; i++)
@@ -422,33 +395,38 @@ RenderedBitmap *PdfEngine::renderBitmap(
                            BOOL (*abortCheckCbkA)(void *data),
                            void *abortCheckCbkDataA)
 {
-    fz_error error;
-    fz_matrix ctm;
-    fz_rect bbox;
-
-    if (!_rast) {
-        error = fz_newrenderer(&_rast, pdf_devicergb, 0, 1024 * 512);
-    }
-
-    fz_pixmap* image = NULL;
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
-        goto Error;
+        return NULL;
     zoomReal = zoomReal / 100.0;
-    ctm = viewctm(page, zoomReal, rotation);
+    fz_matrix ctm = viewctm(page, zoomReal, rotation);
     if (!pageRect)
         pageRect = &page->mediabox;
-    bbox = fz_transformaabb(ctm, *pageRect);
-    error = fz_rendertree(&image, _rast, page->tree, ctm, fz_roundrect(bbox), 1);
+    fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
+
+    // make sure not to request too large a pixmap, as MuPDF just aborts on OOM;
+    // instead we get a 1*y sized pixmap and try to resize it manually and just
+    // fail to render if we run out of memory.
+    fz_pixmap *image = fz_newpixmap(pdf_devicergb, bbox.x0, bbox.y0, 1, bbox.y1 - bbox.y0);
+    image->w = bbox.x1 - bbox.x0;
+    free(image->samples);
+    image->samples = (unsigned char *)malloc(image->w * image->h * image->n);
+    if (!image->samples)
+        return NULL;
+
+    fz_clearpixmap(image, 0xFF); // initialize white background
+    if (!_drawcache)
+        _drawcache = fz_newglyphcache();
+    fz_device *dev = fz_newdrawdevice(_drawcache, image);
+    fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
+    fz_freedevice(dev);
 #if CONSERVE_MEMORY
     dropPdfPage(pageNo);
 #endif
     if (error)
-        goto Error;
+        return NULL;
     ConvertPixmapForWindows(image);
     return new RenderedBitmap(image);
-Error:
-    return NULL;
 }
 
 static int linksLinkCount(pdf_link *currLink) {
@@ -483,6 +461,7 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
     int pageNo;
     PdfLink *pdfLink = pdfLinks;
     int linkNo = 0;
+    float tmp;
 
     for (pageNo=0; pageNo < _pageCount; pageNo++)
     {
@@ -497,9 +476,23 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
             pdfLink->link = link;
             pdfLink->rectPage.x = link->rect.x0;
             pdfLink->rectPage.y = link->rect.y0;
+
+            // there are PDFs that have x,y positions in reverse order, so
+            // fix them up
+            if (link->rect.x0 > link->rect.x1) {
+                tmp = link->rect.x0;
+                link->rect.x0 = link->rect.x1;
+                link->rect.x1 = tmp;
+            }
             assert(link->rect.x1 >= link->rect.x0);
             pdfLink->rectPage.dx = link->rect.x1 - link->rect.x0;
             assert(pdfLink->rectPage.dx >= 0);
+
+            if (link->rect.y0 > link->rect.y1) {
+                tmp = link->rect.y0;
+                link->rect.y0 = link->rect.y1;
+                link->rect.y1 = tmp;
+            }
             assert(link->rect.y1 >= link->rect.y0);
             pdfLink->rectPage.dy = link->rect.y1 - link->rect.y0;
             assert(pdfLink->rectPage.dy >= 0);
@@ -513,11 +506,12 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
 
 void PdfEngine::linkifyPageText(pdf_page *page)
 {
-    fz_irect *coords;
+    fz_bbox *coords;
     TCHAR *pageText = ExtractPageText(page, _T(" "), &coords);
     if (!pageText)
         return;
 
+    pdf_link *firstLink = page->links;
     for (TCHAR *start = pageText; *start; start++) {
         TCHAR *end;
         fz_rect bbox;
@@ -538,14 +532,14 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             end--;
         *end = 0;
 
-        // make sure that no other link is associated with this word
+        // make sure that no other link is associated with this area
         bbox.x0 = coords[start - pageText].x0;
         bbox.y0 = coords[start - pageText].y0;
         bbox.x1 = coords[end - pageText - 1].x1;
         bbox.y1 = coords[end - pageText - 1].y1;
-        for (pdf_link *link = page->links; link && start < end; link = link->next) {
-            fz_rect isect = fz_intersectrects(bbox, link->rect);
-            if (0 != memcmp(&isect, &fz_emptyrect, sizeof(fz_rect)))
+        for (pdf_link *link = firstLink; link && *start; link = link->next) {
+            fz_bbox isect = fz_intersectbbox(fz_roundrect(bbox), fz_roundrect(link->rect));
+            if ((isect.x1 - isect.x0) != 0 && (isect.y1 - isect.y0) != 0)
                 start = end;
         }
 
@@ -568,33 +562,37 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     free(pageText);
 }
 
-TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_irect **coords_out)
+TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coords_out)
 {
-    pdf_textline *line;
-    fz_error error = pdf_loadtextfromtree(&line, page->tree, fz_identity());
-    if (error)
+    fz_textspan *text = fz_newtextspan();
+    fz_device *dev = fz_newtextdevice(text);
+    fz_error error = pdf_runcontentstream(dev, fz_identity(), _xref, page->resources, page->contents);
+    fz_freedevice(dev);
+    if (error) {
+        fz_freetextspan(text);
         return NULL;
+    }
 
     int lineSepLen = lstrlen(lineSep);
     int textLen = 0;
-    for (pdf_textline *ln = line; ln; ln = ln->next)
-        textLen += ln->len + lineSepLen;
+    for (fz_textspan *span = text; span; span = span->next)
+        textLen += span->len + lineSepLen;
 
     WCHAR *content = (WCHAR *)malloc((textLen + 1) * sizeof(WCHAR)), *dest = content;
     if (!content)
         return NULL;
-    fz_irect *destRect = NULL;
+    fz_bbox *destRect = NULL;
     if (coords_out)
-        destRect = *coords_out = (fz_irect *)malloc(textLen * sizeof(fz_irect));
+        destRect = *coords_out = (fz_bbox *)malloc(textLen * sizeof(fz_bbox));
 
-    for (pdf_textline *ln = line; ln; ln = ln->next) {
-        for (int i = 0; i < ln->len; i++) {
-            *dest = ln->text[i].c;
+    for (fz_textspan *span = text; span; span = span->next) {
+        for (int i = 0; i < span->len; i++) {
+            *dest = span->text[i].c;
             if (*dest < 32)
                 *dest = '?';
             dest++;
             if (destRect)
-                memcpy(destRect++, &ln->text[i].bbox, sizeof(fz_irect));
+                memcpy(destRect++, &span->text[i].bbox, sizeof(fz_bbox));
         }
 #ifdef UNICODE
         lstrcpy(dest, lineSep);
@@ -603,12 +601,12 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_irect **coo
         dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
 #endif
         if (destRect) {
-            memset(destRect, 0, lineSepLen * sizeof(fz_irect));
+            memset(destRect, 0, lineSepLen * sizeof(fz_bbox));
             destRect += lineSepLen;
         }
     }
 
-    pdf_droptextline(line);
+    fz_freetextspan(text);
 
 #ifdef UNICODE
     return content;
@@ -621,5 +619,5 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_irect **coo
 
 char *PdfEngine::getPageLayoutName(void)
 {
-    return fz_toname(fz_dictgets(_xref->root, "PageLayout"));
+    return fz_toname(fz_dictgets(fz_dictgets(_xref->trailer, "Root"), "PageLayout"));
 }

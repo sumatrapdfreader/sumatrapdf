@@ -10,10 +10,10 @@ static int showcolumn;
 
 static void showusage(void)
 {
-	fprintf(stderr, "usage: pdfshow [-bx] [-d password] <file> [xref] [trailer] [object numbers]\n");
+	fprintf(stderr, "usage: pdfshow [-bx] [-p password] <file> [xref] [trailer] [object numbers]\n");
 	fprintf(stderr, "  -b  \tprint streams as raw binary data\n");
 	fprintf(stderr, "  -x  \tdecompress streams\n");
-	fprintf(stderr, "  -d  \tdecrypt password\n");
+	fprintf(stderr, "  -p  \tdecrypt password\n");
 	exit(1);
 }
 
@@ -125,11 +125,11 @@ int main(int argc, char **argv)
 	char *password = "";
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "d:bx")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:bx")) != -1)
 	{
 		switch (c)
 		{
-		case 'd': password = fz_optarg; break;
+		case 'p': password = fz_optarg; break;
 		case 'b': showbinary ++; break;
 		case 'x': showdecode ++; break;
 		default:

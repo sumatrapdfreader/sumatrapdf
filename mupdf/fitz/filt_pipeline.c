@@ -1,7 +1,4 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
-
-#define noDEBUG 1
+#include "fitz.h"
 
 typedef struct fz_pipeline_s fz_pipeline;
 

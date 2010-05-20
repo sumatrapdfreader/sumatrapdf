@@ -1,0 +1,378 @@
+﻿# Translations for Croatian (Hrvatski) (hr) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: hr Croatian (Hrvatski)
+
+Contributor: Krunoslav Tomorad (cygnus77@gmail.com)
+
+&About
+&O programu...
+
+&Check for new version
+Provjeri dostupnost nove inačice
+
+&Close\tCtrl-W
+&Zatvori\tCtrl-W
+
+&Don't ask me again
+Ubuduće nemoj pitati
+
+&File
+&Datoteka
+
+&Find what:
+&Što tražiti:
+
+&Go To
+Idi na
+
+&Go to page:
+&Idi na stranicu:
+
+&Help
+&Pomoć
+
+&Manual
+Korisnički priručnik
+
+&Match case
+Razlikuj velika i mala slova
+
+&No
+&Ne
+
+&No, thanks
+&Ne, hvala
+
+&Open\tCtrl-O
+&Otvori\tCtrl-O
+
+&Options...
+Mogućnosti...
+
+&Password:
+&Lozinka:
+
+&Print\tCtrl-P
+&Ispiši\tCtrl-P
+
+&Remember these settings for each document
+&Upamti ove postavke za svaki pojedini dokument
+
+&Save as\tCtrl-S
+&Spremi kao...\tCtrl-S
+
+&Settings
+&Postavke
+
+&Skip this version
+&Propusti ovu inačicu.
+
+&View
+&Pogled
+
+&Visit website
+&Posjeti internetsku stranicu
+
+&Yes
+&Da
+
+&Zoom
+&Uvećaj
+
+(of %d)
+(od %d)
+
+About SumatraPDF
+O SumatriPDF
+
+Act&ual Size\tCtrl-1
+Stvarna veličina\tCtrl-1
+
+Advanced
+Napredno
+
+All files
+Sve datoteke
+
+Associate with PDF files?
+Asocirati sa PDF datotekama?
+
+Automatically check for &updates
+Provjeravaj &nadogradnje automatski
+
+Bookmarks\tF12
+Straničnik\tF12
+
+Cancel
+Odustani
+
+Cannot print this file
+Ne mogu ispisati ovu datoteku
+
+Change language
+Promijeni jezik (Change language)
+
+Continuous
+Slijedno
+
+Continuous facing
+Dvije stranice sljedno
+
+Contribute translation
+Pomozite prijevodom
+
+Could not open Printer
+Nije moguće pristupiti pisaču
+
+Couldn't initialize printer
+Ne mogu inicijalizirati pisač
+
+Couldn't render the page
+Nije moguće iscrtati stranicu
+
+Default &Layout:
+Pretpostavljeni &izgled:
+
+Default &Zoom:
+Pretpostavljeno &uvećanje:
+
+Download
+Preuzmi
+
+E&xit\tCtrl-Q
+&Izađi\tCtrl-Q
+
+Enter password
+Unesite lozinku
+
+Enter password for %s
+Unesite lozinku za %s
+
+Error loading PDF file.
+Greška prilikom učitavanja PDF datoteke.
+
+Facing
+Dvije stranice
+
+Failed to save a file
+Spremanje datoteke nije uspjelo
+
+Find
+Pronađi
+
+Find Next
+Pronađi sljedeće
+
+Find Previous
+Pronađi prethodno
+
+Find...\tCtrl-F
+Pronađi...\tCtrl-F
+
+Find:
+Pronađi:
+
+First Page\tHome
+Prva stranica\tHome
+
+Fit &Page\tCtrl-0
+Prilagodi &stranici\tCtrl-0
+
+Fit Page
+Prilagodi stranici
+
+Fit Widt&h\tCtrl-2
+&Prilagodi širini\tCtrl-2
+
+Fit Width
+Podesi po širini
+
+Found text at page %d
+Tekst je pronađen na stranici %d
+
+Fullscreen\tCtrl-L
+Cijeli zaslon\tCtrl-L
+
+Go to page
+Idi na stranicu
+
+Hint: Use the F3 key for finding again
+Pomoć: koristite tipku F3 za ponovnu pretragu
+
+Last Page\tEnd
+Posljednja stranica\tEnd
+
+Main PDF reader can't be changed in portable mode
+Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
+
+Make SumatraPDF default application for PDF files?
+Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
+
+Make SumatraPDF my main PDF reader
+Neka SumatraPDF bude pretpostavljeni PDF preglednik
+
+Match case
+Razlikuj velika i mala slova
+
+New version %s is available. Download new version?
+Dostupna je nova inačica: %s. Skinuti novu inačicu?
+
+New version available.
+Dostupna je nova inačica.
+
+Next Page
+Sljedeća stranica
+
+Next Page\tRight Arrow
+Sljedeća stranica\t->
+
+No matches were found
+Pojam nije pronađen
+
+No new version available.
+Nema nove inačice.
+
+No result found around line %u in file %s
+Nema rezultata oko retka %u u datoteci %s
+
+No synchronization info at this position
+Nema podatka o usklađenosti na ovom položaju
+
+OK
+U redu
+
+Open
+Otvori
+
+Open in &Adobe Reader
+Otvori u programu &Adobe Reader
+
+PDF Document
+PDF dokument
+
+PDF documents
+PDF dokumenti
+
+Page number %u inexistant
+Stranica %u ne postoji
+
+Page...\tCtrl-G
+Stranica...\tCtrl-G
+
+Page:
+Stranica:
+
+Please wait - rendering...
+Molim pričekajte, iscrtavam...
+
+Previous Page
+Prethodna stranica
+
+Previous Page\tLeft Arrow
+Prethodna stranica\t<-
+
+Printing problem.
+Problem prilikom ispisivanja.
+
+Remember &opened files
+Upamti &otvorene datoteke
+
+Rotate left\tCtrl-Shift--
+Zaokreni nalijevo\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Zaokreni nadesno\tCtrl-Shift-+
+
+Searching %d of %d...
+Pretražujem stranicu %d od %d...
+
+Set inverse search command-line
+Omogući unazadnu pretragu
+
+Show the &bookmarks sidebar when available
+Prikaži traku &straničnika kada je dostupna
+
+Show toolbar
+Prikaži alatnu traku
+
+Single page
+Jedna stranica
+
+Source file %s has no synchronization point
+Izvorna datoteka %s nema točke usklađivanja
+
+SumatraPDF Options
+Mogućnosti programa
+
+SumatraPDF is your main PDF reader
+SumatraPDF je vaš glavni glavni preglednik PDF datoteka
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
+
+Synchronization file cannot be opened
+Datoteka usklađenja ne nože biti otvorena
+
+Unknown source file (%s)
+Nepoznata izvorna datoteka (%s)
+
+View
+Pogled
+
+Warning
+Upozorenje
+
+You have the latest version.
+Imate najnoviju inačicu.
+
+You have version %s
+Imate inačicu %s
+
+Zoom In
+Uvećaj
+
+Zoom Out
+Umanji
+
+[Changes detected; refreshing] %s
+[Dogodila se promjena - osvježavam] %s
+
+# Untranslated:
+#&Custom Zoom...
+#&Magnification:
+#Application:
+#Author:
+#Automatic
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Created:
+#Document Properties
+#File Size:
+#File:
+#Forward\tAlt+Right Arrow
+#GB
+#KB
+#MB
+#Modified:
+#No synchronization file found
+#Number of Pages:
+#P&roperties...\tCtrl-D
+#PDF Producer:
+#PDF Version:
+#Page Size:
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Text documents
+#Title:
+#Zoom
+#Zoom factor
+

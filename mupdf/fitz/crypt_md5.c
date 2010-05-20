@@ -23,8 +23,7 @@ These notices must be retained in any copies of any part of this
 documentation and/or software.
 */
 
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 /* Constants for MD5Transform routine */
 enum

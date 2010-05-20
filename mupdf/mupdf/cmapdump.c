@@ -24,9 +24,9 @@ flagtoname(int flag)
 	switch (flag)
 	{
 	case PDF_CMAP_SINGLE: return "PDF_CMAP_SINGLE,";
-	case PDF_CMAP_RANGE: return "PDF_CMAP_RANGE, ";
-	case PDF_CMAP_TABLE: return "PDF_CMAP_TABLE, ";
-	case PDF_CMAP_MULTI: return "PDF_CMAP_MULTI, ";
+	case PDF_CMAP_RANGE: return "PDF_CMAP_RANGE,";
+	case PDF_CMAP_TABLE: return "PDF_CMAP_TABLE,";
+	case PDF_CMAP_MULTI: return "PDF_CMAP_MULTI,";
 	}
 	return "-1,";
 }
@@ -52,6 +52,7 @@ main(int argc, char **argv)
 	char name[256];
 	char *realname;
 	int i, k;
+	int fd;
 
 	if (argc < 3)
 	{
@@ -62,7 +63,7 @@ main(int argc, char **argv)
 	fo = fopen(argv[1], "wb");
 	if (!fo)
 	{
-		fprintf(stderr, "cmapdump: could not open output file\n");
+		fprintf(stderr, "cmapdump: could not open output file '%s'\n", argv[1]);
 		return 1;
 	}
 
@@ -89,17 +90,19 @@ main(int argc, char **argv)
 		strcpy(name, realname);
 		clean(name);
 
-		error = fz_openrfile(&fi, argv[i]);
-		if (error)
+		fd = open(argv[i], O_BINARY | O_RDONLY, 0666);
+		if (fd < 0)
 		{
-			fz_catch(error, "cmapdump: could not open input file %s\n", argv[i]);
+			fz_throw("cmapdump: could not open input file '%s'\n", argv[i]);
 			return 1;
 		}
+
+		fi = fz_openfile(fd);
 
 		error = pdf_parsecmap(&cmap, fi);
 		if (error)
 		{
-			fz_catch(error, "cmapdump: could not parse input cmap %s\n", argv[i]);
+			fz_catch(error, "cmapdump: could not parse input cmap '%s'\n", argv[i]);
 			return 1;
 		}
 
@@ -132,7 +135,7 @@ main(int argc, char **argv)
 			{
 				if (k % 8 == 0)
 					fprintf(fo, "\n    ");
-				fprintf(fo, "%d, ", cmap->table[k]);
+				fprintf(fo, "%d,", cmap->table[k]);
 			}
 			fprintf(fo, "\n};\n\n");
 		}
@@ -168,6 +171,12 @@ main(int argc, char **argv)
 		fprintf(fo, "};\n\n");
 
 		fz_dropstream(fi);
+	}
+
+	if (fclose(fo))
+	{
+		fprintf(stderr, "cmapdump: could not close output file '%s'\n", argv[1]);
+		return 1;
 	}
 
 	return 0;

@@ -298,7 +298,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	fz_obj *widths;
 	unsigned short *etable = nil;
 	pdf_fontdesc *fontdesc;
-	fz_irect bbox;
+	fz_bbox bbox;
 	FT_Face face;
 	FT_CharMap cmap;
 	int kind;
@@ -366,10 +366,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 		if (kind == TYPE1)
 		{
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=664 */
-			if (test->platform_id == 3 && test->encoding_id == 1)
-				cmap = test;
-			if (test->platform_id == 7 && test->encoding_id == 2)
+			if (test->platform_id == 7)
 				cmap = test;
 		}
 
@@ -512,7 +509,14 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 				pdf_logfont("encode truetype symbolic\n");
 				for (i = 0; i < 256; i++)
 				{
-					etable[i] = ftcharindex(face, i);
+					if (estrings[i])
+					{
+						etable[i] = FT_Get_Name_Index(face, estrings[i]);
+						if (etable[i] == 0)
+							etable[i] = ftcharindex(face, i);
+					}
+					else
+						etable[i] = ftcharindex(face, i);
 					fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 					if (fterr)
 					{
@@ -648,7 +652,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	fz_obj *descriptor;
 	pdf_fontdesc *fontdesc;
 	FT_Face face;
-	fz_irect bbox;
+	fz_bbox bbox;
 	int kind;
 	char collection[256];
 	char *basefont;
@@ -675,15 +679,15 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 		tmplen = MIN(sizeof tmpstr - 1, fz_tostrlen(obj));
 		memcpy(tmpstr, fz_tostrbuf(obj), tmplen);
 		tmpstr[tmplen] = '\0';
-		strlcpy(collection, tmpstr, sizeof collection);
+		fz_strlcpy(collection, tmpstr, sizeof collection);
 
-		strlcat(collection, "-", sizeof collection);
+		fz_strlcat(collection, "-", sizeof collection);
 
 		obj = fz_dictgets(cidinfo, "Ordering");
 		tmplen = MIN(sizeof tmpstr - 1, fz_tostrlen(obj));
 		memcpy(tmpstr, fz_tostrbuf(obj), tmplen);
 		tmpstr[tmplen] = '\0';
-		strlcat(collection, tmpstr, sizeof collection);
+		fz_strlcat(collection, tmpstr, sizeof collection);
 	}
 
 	/*
@@ -1007,10 +1011,45 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 			return fz_rethrow(error, "cannot load font descriptor");
 	}
 
+	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
+
 	pdf_logfont("}\n");
 
 	return fz_okay;
 
+}
+
+static void
+pdf_makewidthtable(pdf_fontdesc *fontdesc)
+{
+	fz_font *font = fontdesc->font;
+	int i, k, cid, gid;
+
+	font->widthcount = 0;
+	for (i = 0; i < fontdesc->nhmtx; i++)
+	{
+		for (k = fontdesc->hmtx[i].lo; k <= fontdesc->hmtx[i].hi; k++)
+		{
+			cid = pdf_lookupcmap(fontdesc->encoding, k);
+			gid = pdf_fontcidtogid(fontdesc, cid);
+			if (gid > font->widthcount)
+				font->widthcount = gid;
+		}
+	}
+	font->widthcount ++;
+
+	font->widthtable = fz_malloc(sizeof(int) * font->widthcount);
+	memset(font->widthtable, 0, sizeof(int) * font->widthcount);
+
+	for (i = 0; i < fontdesc->nhmtx; i++)
+	{
+		for (k = fontdesc->hmtx[i].lo; k <= fontdesc->hmtx[i].hi; k++)
+		{
+			cid = pdf_lookupcmap(fontdesc->encoding, k);
+			gid = pdf_fontcidtogid(fontdesc, cid);
+			font->widthtable[gid] = fontdesc->hmtx[i].w;
+		}
+	}
 }
 
 fz_error
@@ -1058,6 +1097,9 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	}
 	if (error)
 		return fz_rethrow(error, "cannot load font");
+
+	if ((*fontdescp)->font->ftsubstitute)
+		pdf_makewidthtable(*fontdescp);
 
 	pdf_storeitem(xref->store, PDF_KFONT, dict, *fontdescp);
 

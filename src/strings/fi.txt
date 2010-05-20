@@ -1,0 +1,446 @@
+﻿# Translations for Finnish (Suomi) (fi) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: fi Finnish (Suomi)
+
+Contributor: Pekka Halmela
+Contributor: Olli
+
+&About
+&Tietoja
+
+&Check for new version
+Tarkista, onko päivityksiä saatavilla
+
+&Close\tCtrl-W
+&Sulje\tCtrl-W
+
+&Custom Zoom...
+&Mukautettu lähennys...
+
+&Don't ask me again
+Älä kysy uudestaan
+
+&File
+&Tiedosto
+
+&Find what:
+&Etsittävä
+
+&Go To
+&Siirry
+
+&Go to page:
+&Siirry sivulle:
+
+&Help
+&Ohje
+
+&Magnification:
+&Suurennus:
+
+&Manual
+Käyttöohje
+
+&Match case
+Sama kirjainkoko
+
+&No
+&Ei
+
+&No, thanks
+&Ei, kiitos
+
+&Open\tCtrl-O
+&Avaa\tCtrl-O
+
+&Options...
+&Asetukset
+
+&Password:
+&Salasana
+
+&Print\tCtrl-P
+&Tulosta\tCtrl-P
+
+&Remember these settings for each document
+&Muista nämä asetukset jokaiselle asiakirjalle
+
+&Save as\tCtrl-S
+&Tallenna nimellä\tCtrl-S
+
+&Settings
+&Asetukset
+
+&Skip this version
+Ohita tämä versio
+
+&View
+&Näytä
+
+&Visit website
+Vieraile ohjelman kotisivuilla
+
+&Yes
+&Kyllä
+
+&Zoom
+&Kohdista
+
+(of %d)
+(%d:stä)
+
+About SumatraPDF
+Tietoja SumatraPDF:stä
+
+Act&ual Size\tCtrl-1
+&Todellinen koko\tCtrl-1
+
+Advanced
+Kehittynyt
+
+All files
+Kaikki tiedostot
+
+Application:
+Ohjelma:
+
+Associate with PDF files?
+Tiedostosidos PDF-tiedostoihin?
+
+Author:
+Tekijä:
+
+Automatic
+Automaattinen
+
+Automatically check for &updates
+Tarkista pä&ivitykset automaattisesti
+
+Back\tAlt+Left Arrow
+Takaisin\tAlt+Vasen nuoli
+
+Book view
+Kirjanäkymä
+
+Bookmarks\tF12
+Kirjanmerkit\tF12
+
+Bytes
+tavua
+
+Cancel
+Peruuta
+
+Cannot print this file
+Tämän tiedoston tulostus epäonnistui
+
+Cannot start inverse search command. Please check the command line in the settings.
+Käänteisen hakukomennon aloitus epäonnistui. Tarkista komentorivi asetuksissa.
+
+Change language
+Valitse kieli (Change language)
+
+Continuous
+Peräkkäin
+
+Continuous book view
+Jatkuva kirjanäkymä
+
+Continuous facing
+Peräkkäin ja rinnakkain
+
+Contribute translation
+Osallistu suomennosprojektiin
+
+Copy Selection\tCtrl-C
+Kopioi valinta\tCtrl-C
+
+Could not open Printer
+Tulostinta ei löydy
+
+Couldn't initialize printer
+Tulostinta ei voida valmistella
+
+Couldn't render the page
+Sivun tulkinta epäonnistui
+
+Created:
+Tehty:
+
+Default &Layout:
+Oletus&tyyli:
+
+Default &Zoom:
+Oletus&lähennys:
+
+Document Properties
+Asiakirjan ominaisuudet
+
+Download
+Lataa
+
+E&xit\tCtrl-Q
+&Poistu\tCtrl-Q
+
+Enter password
+Kirjoita salasana
+
+Enter password for %s
+Kirjoita tiedoston %s salasana
+
+Error loading PDF file.
+Tiedoston avaus epäonnistui
+
+Facing
+Rinnakkain
+
+Failed to save a file
+Tiedoston tallennus epäonnistui
+
+File Size:
+Tiedoston koko:
+
+File:
+Tiedosto:
+
+Find
+Etsi
+
+Find Next
+Etsi seuraava
+
+Find Previous
+Etsi edellinen
+
+Find...\tCtrl-F
+Etsi...\tCtrl-F
+
+Find:
+Etsi:
+
+First Page\tHome
+Ensimmäinen sivu\tHome
+
+Fit &Page\tCtrl-0
+Sovita sivu pystysuunnassa\tCtrl-0
+
+Fit Page
+Sovita sivu pystysuunnassa
+
+Fit Widt&h\tCtrl-2
+&Sovita sivu vaakasuunnassa\tCtrl-2
+
+Fit Width
+Sovita sivu vaakasuunnassa
+
+Forward\tAlt+Right Arrow
+Seuraava\tAlt+Oikea nuoli
+
+Found text at page %d
+Tekstiä löytyi sivulta %d
+
+Fullscreen\tCtrl-L
+Koko näyttö\tCtrl-L
+
+GB
+Gt
+
+Go to page
+Siirry sivulle
+
+Hint: Use the F3 key for finding again
+Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
+
+KB
+Kt
+
+Last Page\tEnd
+Viimeinen sivu\tEnd
+
+MB
+Mt
+
+Main PDF reader can't be changed in portable mode
+Pää-PDF-lukijaa ei voida muuttaa kannettavassa tilassa
+
+Make SumatraPDF default application for PDF files?
+Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma?
+
+Make SumatraPDF my main PDF reader
+Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
+
+Match case
+Sama kirjainkoko
+
+Modified:
+Muuttanut:
+
+New version %s is available. Download new version?
+Uudempi versio %s saatavilla. Ladataanko uudempi versio?
+
+New version available.
+Uusi versio saatavilla.
+
+Next Page
+Seuraava sivu
+
+Next Page\tRight Arrow
+Seuraava sivu\t->
+
+No matches were found
+Osumia ei löytynyt
+
+No new version available.
+Ei uudempia versioita saatavilla.
+
+No result found around line %u in file %s
+Tulosta ei löytynyt rivin %u ympäriltä tiedostossa %s
+
+No synchronization file found
+Synkronointitiedostoa ei löytynyt
+
+No synchronization info at this position
+Tällä sijainnilla ei ole synkronisointitietoja
+
+Number of Pages:
+Sivujen määrä:
+
+OK
+OK
+
+Open
+Avaa
+
+Open in &Adobe Reader
+Avaa &Adobe Readerissa
+
+P&roperties...\tCtrl-D
+O&minaisuudet...\tCtrl-D
+
+PDF Document
+PDF-asiakirja
+
+PDF Producer:
+PDF-tuottaja:
+
+PDF Version:
+PDF-versio:
+
+PDF documents
+PDF-asiakirjat
+
+Page Size:
+Sivun koko:
+
+Page number %u inexistant
+Sivunumeroa %u ei ole olemassa
+
+Page...\tCtrl-G
+Sivulle...\tCtrl-G
+
+Page:
+Sivu:
+
+Please wait - rendering...
+Odota - tulkitaan...
+
+Previous Page
+Edellinen sivu
+
+Previous Page\tLeft Arrow
+Edellinen sivu\t<-
+
+Printing problem.
+Tulostusongelma
+
+Properties...
+Ominaisuudet...
+
+Remember &opened files
+Muista &avatut tiedostot
+
+Rotate left\tCtrl-Shift--
+Käännä vasemmalle\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Käännä oikealle\tCtrl-Shift-+
+
+Searching %d of %d...
+Etsitään %d/%d...
+
+Select content with Ctrl+left mouse button
+Valitse sisältöä Ctrl+vasemmanpuoleinen hiiren painike
+
+Send by &email...
+Lähetä &sähköpostilla
+
+Set inverse search command-line
+Aseta käänteinen haku komentorivillä
+
+Show pages continuously
+Näytä sivut jatkuvasti
+
+Show the &bookmarks sidebar when available
+Näytä &kirjanmerkit sivupalkissa, kun saatavilla
+
+Show toolbar
+Näytä työkalupalkki
+
+Single page
+Yksittäinen sivu
+
+Source file %s has no synchronization point
+Lähdetiedostolla %s ei ole synkronisaatiopistettä
+
+SumatraPDF Options
+SumatraPDF:n asetukset
+
+SumatraPDF is your main PDF reader
+SumatraPDF on pää-PDF-lukijasi
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF:n pitäisi nyt olla pää-PDF-lukijasi
+
+Synchronization file cannot be opened
+Synkronisointitiedostoa ei voitu avata
+
+Text documents
+Tekstiasiakirjat
+
+Title:
+Otsikko:
+
+Unknown source file (%s)
+Tuntematon lähdetiedosto (%s)
+
+View
+Näytä
+
+Warning
+Varoitus
+
+You have the latest version.
+Sinulla on uusin versio.
+
+You have version %s
+Sinulla on versio %s
+
+Zoom
+Lähennä
+
+Zoom In
+Kohdenna lähemmäksi
+
+Zoom Out
+Loitonna kauemmaksi
+
+Zoom factor
+Lähennyskerroin
+
+[Changes detected; refreshing] %s
+[Muutoksia tunnistettiin; päivitetään] %s
+

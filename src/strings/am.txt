@@ -1,0 +1,445 @@
+﻿# Translations for Armenian (Հայերեն) (am) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: am Armenian (Հայերեն)
+
+Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
+
+&About
+&Մասին
+
+&Check for new version
+&Ստուգել նոր տարբերակները
+
+&Close\tCtrl-W
+&Փակել\tCtrl-W
+
+&Custom Zoom...
+&Ընտրված չափը
+
+&Don't ask me again
+&Այլևս չհարցնել
+
+&File
+&Ֆայլ
+
+&Find what:
+&Ինչ փնտրել.
+
+&Go To
+&Անցնել
+
+&Go to page:
+&Անցնել էջին.
+
+&Help
+&Օգնություն
+
+&Magnification:
+&Մեժացնել
+
+&Manual
+&Օգնություն
+
+&Match case
+&Հաշվի առնել գրանցումները
+
+&No
+&Ոչ
+
+&No, thanks
+&Ոչ,շնորհակալություն։
+
+&Open\tCtrl-O
+Բացել\tCtrl-O
+
+&Options...
+&Ընտրանքներ...
+
+&Password:
+&Գաղտնաբառը
+
+&Print\tCtrl-P
+&Տպել\tCtrl-P
+
+&Remember these settings for each document
+Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
+
+&Save as\tCtrl-S
+&Պահպանել որպես\tCtrl-S
+
+&Settings
+&Կարգավորումներ
+
+&Skip this version
+&Բաց թողնել այս տարբերակը
+
+&View
+&Դիտել
+
+&Visit website
+&Այցելել Ինտերնետում
+
+&Yes
+&Այո
+
+&Zoom
+&Չափը
+
+(of %d)
+(%d-ից)
+
+About SumatraPDF
+SumatraPDF-ի մասին
+
+Act&ual Size\tCtrl-1
+Իրական &չափը\tCtrl-1
+
+Advanced
+Ընդլայնված
+
+All files
+Բոլոր ֆայլերը
+
+Application:
+Ծրագիրը.
+
+Associate with PDF files?
+Ասոցացնե՞լ PDF ֆայլերի հետ։
+
+Author:
+Հեղինակը.
+
+Automatic
+Ինքնաշխատ
+
+Automatically check for &updates
+Ինքնաշխատ ստուգել &թարմացումները
+
+Back\tAlt+Left Arrow
+Հետ\tAlt+<-
+
+Book view
+Գրքի նման
+
+Bookmarks\tF12
+Ընտրյալները\tF12
+
+Bytes
+Բայթ
+
+Cancel
+Մերժել
+
+Cannot print this file
+Հնարավոր չէ տպել այս ֆայլը
+
+Cannot start inverse search command. Please check the command line in the settings.
+Հնարավոր չէ որոնել։Ստուգեք հրամանների տողի կարգավորումները։
+
+Change language
+Փոխել լեզուն (Change language)
+
+Continuous
+Անդադար
+
+Continuous book view
+Շարունակել գրքի տեսքով
+
+Continuous facing
+Անդադար երկու էջով
+
+Contribute translation
+Օգնել թարգմանել
+
+Copy Selection\tCtrl-C
+Պատճենել ընտրվածը\tCtrl-C
+
+Could not open Printer
+Տպիչը հասանելի չէ
+
+Couldn't initialize printer
+Հնարավոր չէ գտնել տպիչ
+
+Couldn't render the page
+Հնարավոր չեղավ ստեղծել էջի պատկերը
+
+Created:
+Ստեղծված է.
+
+Default &Layout:
+Չափը &Լռելայն
+
+Default &Zoom:
+Մեծությունը &Լռելայն
+
+Document Properties
+Փաստաթղթի հատկությունները
+
+Download
+Բեռնել
+
+E&xit\tCtrl-Q
+Դուրս &գալ\tCtrl-Q
+
+Enter password
+Գրել գաղտնագիրը
+
+Enter password for %s
+Գրել գաղտնագիրը՝ %s-ի համար
+
+Error loading PDF file.
+Սխալ՝ PDF ֆայլը բեռնելիս։
+
+Facing
+Երկու էջ
+
+Failed to save a file
+Հնարավոր չէ պահպանել ֆայլում
+
+File Size:
+Ֆայլի չափը.
+
+File:
+Ֆայլ.
+
+Find
+Փնտրել
+
+Find Next
+Գտնել հաջորդը
+
+Find Previous
+Գտնել նախորդը
+
+Find...\tCtrl-F
+Փնտրել...\tCtrl-F
+
+Find:
+Փնտրել.
+
+First Page\tHome
+Առաջին էջը\tHome
+
+Fit &Page\tCtrl-0
+Էջի &չափով\tCtrl-0
+
+Fit Page
+Ձգել էջը
+
+Fit Widt&h\tCtrl-2
+Հավասարեցնել &լայնությամբ\tCtrl-2
+
+Fit Width
+Ձգել լայնությամբ
+
+Forward\tAlt+Right Arrow
+Առաջ\tAlt+->
+
+Found text at page %d
+Տեքստը գտնվել է %d էջում
+
+Fullscreen\tCtrl-L
+Ամբողջ էկրանով\tCtrl-L
+
+GB
+ԳԲ
+
+Go to page
+Անցնել էջին
+
+Hint: Use the F3 key for finding again
+Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
+
+KB
+ԿԲ
+
+Last Page\tEnd
+Վերջին էջը\tEnd
+
+MB
+ՄԲ
+
+Main PDF reader can't be changed in portable mode
+Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
+
+Make SumatraPDF default application for PDF files?
+Դարձնե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
+
+Make SumatraPDF my main PDF reader
+Ասոցացնել PDF ֆայլերը SumatraPDF-ի հետ
+
+Match case
+Հաշվի առնել գրանցումները
+
+Modified:
+Փոփոխված.
+
+New version %s is available. Download new version?
+Նոր՝ %s տարբերակը հասանելի է։ Բեռնե՞լ նոր տարբերակը։
+
+New version available.
+Հասանելի է նոր տարբերակ
+
+Next Page
+Հաջորդ էջը
+
+Next Page\tRight Arrow
+Հաջորդ էջը\t->
+
+No matches were found
+Օրինակներ չի գտնվել
+
+No new version available.
+Նոր տարբերակներ չկան։
+
+No result found around line %u in file %s
+%s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
+
+No synchronization file found
+Չեն գտնվել համանման ֆայլեր
+
+No synchronization info at this position
+Այստեղ չկա սինխրոնիզացնելու համար տեղեկություն
+
+Number of Pages:
+Էջերի քանակը.
+
+OK
+ԼԱՎ
+
+Open
+Բացել
+
+Open in &Adobe Reader
+Բացել &Adobe Reader-ում
+
+P&roperties...\tCtrl-D
+Հ&ատկություններ...\tCtrl-D
+
+PDF Document
+PDF փաստաթուղթ
+
+PDF Producer:
+PDF արտադրողը.
+
+PDF Version:
+PDF-ի տարբերակը.
+
+PDF documents
+PDF փաստաթղթեր
+
+Page Size:
+Էջի չափը.
+
+Page number %u inexistant
+%u էջը գոյություն չունի
+
+Page...\tCtrl-G
+Էջը...\tCtrl-G
+
+Page:
+Էջը.
+
+Please wait - rendering...
+Խնդրում ենք սպասել...
+
+Previous Page
+Նախորդ էջը
+
+Previous Page\tLeft Arrow
+Նախորդ էջը\t<-
+
+Printing problem.
+Սխալ տպելիս
+
+Properties...
+Հատկություններ...
+
+Remember &opened files
+Հիշել &բացված ֆայլերը
+
+Rotate left\tCtrl-Shift--
+Շրջել ձախ\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Շրջել աջ\tCtrl-Shift-+
+
+Searching %d of %d...
+Փնտրվում է %d-ից %d
+
+Select content with Ctrl+left mouse button
+Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
+
+Send by &email...
+Ուղարկել &email-ով
+
+Set inverse search command-line
+Նշել փնտրման հրամանների տողը
+
+Show pages continuously
+Անընդհատ ցույց տալ էջերը
+
+Show the &bookmarks sidebar when available
+Հնարավորության դեպքում ցույց տալ &Ընտրյալները
+
+Show toolbar
+Ցույց տալ գործիքները
+
+Single page
+&Մեկ էջ
+
+Source file %s has no synchronization point
+%s ֆայլը չունի սինխրոնիզացման կետ
+
+SumatraPDF Options
+Ընտրանքներ
+
+SumatraPDF is your main PDF reader
+PDF ֆայլերը ասոցացվել են SumatraPDF-ի հետ
+
+SumatraPDF should now be your main PDF reader
+PDF ֆայլերը ասոցացվեցին SumatraPDF-ի հետ
+
+Synchronization file cannot be opened
+Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
+
+Text documents
+Տեքստային փաստաթղթեր
+
+Title:
+Անունը.
+
+Unknown source file (%s)
+Անհայտ ֆայլ (%s)
+
+View
+Դիտել
+
+Warning
+Զգուշացում
+
+You have the latest version.
+Սա վերջին տարբերակն է։
+
+You have version %s
+Դուք օգտագործում եք %s տարբերակը
+
+Zoom
+Չափը
+
+Zoom In
+Մեծացնել
+
+Zoom Out
+Փոքրացնել
+
+Zoom factor
+Չափի գործակիցը
+
+[Changes detected; refreshing] %s
+[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
+

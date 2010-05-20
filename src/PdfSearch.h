@@ -37,7 +37,7 @@ private:
     PdfEngine *engine;
     TCHAR *pageText;
     int findIndex;
-    fz_irect *coords;
+    fz_bbox *coords;
 
 protected:
     void PdfSearch::FillResultRects(TCHAR *found);

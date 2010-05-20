@@ -169,22 +169,16 @@ static void
 gatherglobalinfo(void)
 {
 	info = fz_malloc(sizeof (struct info));
-	if (!info)
-		die(fz_throw("out of memory"));
 
 	info->page = -1;
 	info->pageobj = nil;
 	info->ref = nil;
 	info->u.info.obj = nil;
 
-	if (xref->info)
-	{
-		info->ref = fz_dictgets(xref->trailer, "Info");
-		if (!fz_isdict(info->ref) && !fz_isindirect(info->ref))
-			die(fz_throw("not an indirect info object"));
-
-		info->u.info.obj = xref->info;
-	}
+	info->ref = fz_dictgets(xref->trailer, "Info");
+	if (!fz_isindirect(info->ref))
+		die(fz_throw("not an indirect info object"));
+	info->u.info.obj = fz_resolveindirect(info->ref);
 
 	cryptinfo = fz_malloc(sizeof (struct info));
 
@@ -193,14 +187,11 @@ gatherglobalinfo(void)
 	cryptinfo->ref = nil;
 	cryptinfo->u.crypt.obj = nil;
 
-	if (xref->crypt)
-	{
-		cryptinfo->ref = fz_dictgets(xref->trailer, "Encrypt");
-		if (!fz_isdict(cryptinfo->ref) && !fz_isindirect(cryptinfo->ref))
-			die(fz_throw("not an indirect crypt object"));
-
-		// XXX cryptinfo->u.crypt.obj = xref->crypt->encrypt;
-	}
+	cryptinfo->ref = fz_dictgets(xref->trailer, "Encrypt");
+	if (cryptinfo->ref &&
+		!fz_isdict(cryptinfo->ref) && !fz_isindirect(cryptinfo->ref))
+		die(fz_throw("not an indirect crypt object"));
+	cryptinfo->u.info.obj = fz_resolveindirect(cryptinfo->ref);
 }
 
 static fz_error
@@ -227,17 +218,8 @@ gatherdimensions(int page, fz_obj *pageobj)
 	dims++;
 
 	dim = fz_realloc(dim, dims * sizeof (struct info *));
-	if (!dim)
-		return fz_throw("out of memory");
-
 	dim[dims - 1] = fz_malloc(sizeof (struct info));
-	if (!dim[dims - 1])
-		return fz_throw("out of memory");
-
 	dim[dims - 1]->u.dim.bbox = fz_malloc(sizeof (fz_rect));
-	if (!dim[dims - 1]->u.dim.bbox)
-		return fz_throw("out of memory");
-
 	dim[dims - 1]->page = page;
 	dim[dims - 1]->pageobj = pageobj;
 	dim[dims - 1]->ref = nil;
@@ -295,12 +277,7 @@ gatherfonts(int page, fz_obj *pageobj, fz_obj *dict)
 		fonts++;
 
 		font = fz_realloc(font, fonts * sizeof (struct info *));
-		if (!font)
-			return fz_throw("out of memory");
-
 		font[fonts - 1] = fz_malloc(sizeof (struct info));
-		if (!font[fonts - 1])
-			return fz_throw("out of memory");
 
 		font[fonts - 1]->page = page;
 		font[fonts - 1]->pageobj = pageobj;
@@ -397,12 +374,7 @@ gatherimages(int page, fz_obj *pageobj, fz_obj *dict)
 		images++;
 
 		image = fz_realloc(image, images * sizeof (struct info *));
-		if (!image)
-			return fz_throw("out of memory");
-
 		image[images - 1] = fz_malloc(sizeof (struct info));
-		if (!image[images - 1])
-			return fz_throw("out of memory");
 
 		image[images - 1]->page = page;
 		image[images - 1]->pageobj = pageobj;
@@ -468,12 +440,7 @@ gatherforms(int page, fz_obj *pageobj, fz_obj *dict)
 		forms++;
 
 		form = fz_realloc(form, forms * sizeof (struct info *));
-		if (!form)
-			return fz_throw("out of memory");
-
 		form[forms - 1] = fz_malloc(sizeof (struct info));
-		if (!form[forms - 1])
-			return fz_throw("out of memory");
 
 		form[forms - 1]->page = page;
 		form[forms - 1]->pageobj = pageobj;
@@ -526,12 +493,7 @@ gatherpsobjs(int page, fz_obj *pageobj, fz_obj *dict)
 		psobjs++;
 
 		psobj = fz_realloc(psobj, psobjs * sizeof (struct info *));
-		if (!psobj)
-			return fz_throw("out of memory");
-
 		psobj[psobjs - 1] = fz_malloc(sizeof (struct info));
-		if (!psobj[psobjs - 1])
-			return fz_throw("out of memory");
 
 		psobj[psobjs - 1]->page = page;
 		psobj[psobjs - 1]->pageobj = pageobj;
@@ -575,12 +537,7 @@ gathershadings(int page, fz_obj *pageobj, fz_obj *dict)
 		shadings++;
 
 		shading = fz_realloc(shading, shadings * sizeof (struct info *));
-		if (!shading)
-			return fz_throw("out of memory");
-
 		shading[shadings - 1] = fz_malloc(sizeof (struct info));
-		if (!shading[shadings - 1])
-			return fz_throw("out of memory");
 
 		shading[shadings - 1]->page = page;
 		shading[shadings - 1]->pageobj = pageobj;
@@ -644,12 +601,7 @@ gatherpatterns(int page, fz_obj *pageobj, fz_obj *dict)
 		patterns++;
 
 		pattern = fz_realloc(pattern, patterns * sizeof (struct info *));
-		if (!pattern)
-			return fz_throw("out of memory");
-
 		pattern[patterns - 1] = fz_malloc(sizeof (struct info));
-		if (!pattern[patterns - 1])
-			return fz_throw("out of memory");
 
 		pattern[patterns - 1]->page = page;
 		pattern[patterns - 1]->pageobj = pageobj;
@@ -746,7 +698,7 @@ printglobalinfo(void)
 	if (info->u.info.obj)
 	{
 		printf("Info object (%d %d R):\n", fz_tonum(info->ref), fz_togen(info->ref));
-		fz_debugobj(info->u.info.obj);
+		fz_debugobj(fz_resolveindirect(info->u.info.obj));
 	}
 
 	if (cryptinfo->u.crypt.obj)
@@ -979,7 +931,7 @@ showinfo(char *filename, int show, char *pagelist)
 
 	allpages = !strcmp(pagelist, "1-");
 
-	spec = strsep(&pagelist, ",");
+	spec = fz_strsep(&pagelist, ",");
 	while (spec)
 	{
 		dash = strchr(spec, '-');
@@ -1023,7 +975,7 @@ showinfo(char *filename, int show, char *pagelist)
 			}
 		}
 
-		spec = strsep(&pagelist, ",");
+		spec = fz_strsep(&pagelist, ",");
 	}
 
 	if (allpages)

@@ -226,7 +226,7 @@ pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 
 		default:
 			fz_dropobj(ary);
-			return fz_rethrow(error, "cannot parse token in array");
+			return fz_throw("cannot parse token in array");
 		}
 	}
 }

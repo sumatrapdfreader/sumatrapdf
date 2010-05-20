@@ -255,7 +255,7 @@ static void savexref(void)
 static void cleanusage(void)
 {
 	fprintf(stderr,
-		"usage: pdfclean [options] input.pdf [outfile.pdf]\n"
+		"usage: pdfclean [options] input.pdf [outfile.pdf] [pages]\n"
 		"  -p -\tpassword for decryption\n"
 		"  -g  \tgarbage collect unused objects\n"
 		"  -x  \texpand compressed streams\n");
@@ -270,6 +270,7 @@ int main(int argc, char **argv)
 	fz_error error;
 	int c, oid;
 	int lastfree;
+	int subset;
 
 	while ((c = fz_getopt(argc, argv, "gxp:")) != -1)
 	{
@@ -286,8 +287,16 @@ int main(int argc, char **argv)
 		cleanusage();
 
 	infile = argv[fz_optind++];
-	if (argc - fz_optind > 0)
+
+	if (argc - fz_optind > 0 &&
+		(strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF")))
+	{
 		outfile = argv[fz_optind++];
+	}
+
+	subset = 0;
+	if (argc - fz_optind > 0)
+		subset = 1;
 
 	openxref(infile, password, 0);
 
@@ -311,6 +320,90 @@ int main(int argc, char **argv)
 
 	/* Make sure any objects hidden in compressed streams have been loaded */
 	preloadobjstms();
+
+	/* Only retain the specified subset of the pages */
+	if (subset)
+	{
+		fz_obj *root, *pages, *kids;
+		int count;
+
+		/* Snatch pages entry from root dict */
+		root = fz_dictgets(xref->trailer, "Root");
+		pages = fz_keepobj(fz_dictgets(root, "Pages"));
+
+		/* Then empty the root dict */
+		while (fz_dictlen(root) > 0)
+		{
+			fz_obj *key = fz_dictgetkey(root, 0);
+			fz_dictdel(root, key);
+		}
+
+		/* And only retain pages and type entries */
+		fz_dictputs(root, "Pages", pages);
+		fz_dictputs(root, "Type", fz_newname("Catalog"));
+		fz_dropobj(pages);
+
+		/* Create a new kids array too add into pages dict
+		   since each element must be replaced to point to
+		   a retained page */
+		kids = fz_newarray(1);
+		count = 0;
+
+		/* Retain pages specified */
+		while (argc - fz_optind)
+		{
+			int page, spage, epage;
+			char *spec, *dash;
+			char *pagelist = argv[fz_optind];
+
+			spec = fz_strsep(&pagelist, ",");
+			while (spec)
+			{
+				dash = strchr(spec, '-');
+
+				if (dash == spec)
+					spage = epage = 1;
+				else
+					spage = epage = atoi(spec);
+
+				if (dash)
+				{
+					if (strlen(dash) > 1)
+						epage = atoi(dash + 1);
+					else
+						epage = pagecount;
+				}
+
+				if (spage > epage)
+					page = spage, spage = epage, epage = page;
+
+				if (spage < 1)
+					spage = 1;
+				if (epage > pagecount)
+					epage = pagecount;
+
+				for (page = spage; page <= epage; page++)
+				{
+					fz_obj *pageobj = pdf_getpageobject(xref, page);
+
+					/* Update parent reference */
+					fz_dictputs(pageobj, "Parent", pages);
+
+					/* Store page object in new kids array */
+					fz_arraypush(kids, pageobj);
+					count++;
+				}
+
+				spec = fz_strsep(&pagelist, ",");
+			}
+
+			fz_optind++;
+		}
+
+		/* Update page count and kids array */
+		fz_dictputs(pages, "Count", fz_newint(count));
+		fz_dictputs(pages, "Kids", kids);
+	}
 
 	/* Sweep & mark objects from the trailer */
 	error = sweepobj(xref, xref->trailer);
@@ -339,7 +432,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/* construct linked list of free object slots */
+	/* Construct linked list of free object slots */
 	lastfree = 0;
 	for (oid = 0; oid < xref->len; oid++)
 	{

@@ -1,5 +1,4 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 /* TODO: complete rewrite with error checking and use fitz memctx */
 
@@ -13,7 +12,7 @@
 +create the per-page ctx
 */
 
-#ifdef WIN32 /* Microsoft Visual C++ */
+#ifdef _WIN32 /* Microsoft Visual C++ */
 
 typedef signed char             int8_t;
 typedef short int               int16_t;

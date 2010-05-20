@@ -90,5 +90,11 @@ main(int argc, char **argv)
 		fclose(fi);
 	}
 
+	if (fclose(fo))
+	{
+		fprintf(stderr, "fontdump: could not close output file '%s'\n", argv[1]);
+		return 1;
+	}
+
 	return 0;
 }

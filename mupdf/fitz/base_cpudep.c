@@ -22,13 +22,13 @@ void fz_cpudetect(void)
 
 #else
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <signal.h> /* signal/sigaction */
 #include <setjmp.h> /* sigsetjmp/siglongjmp */
 #endif
 
 /*
-#ifdef WIN32
+#ifdef _WIN32
 #define sigjmp_buf jmp_buf
 #define sigsetjmp(a,b) setjmp(a)
 #define siglongjmp longjmp
@@ -106,43 +106,6 @@ static const featuretest features[] = {
 
 #endif
 
-
-#if defined(ARCH_SPARC)
-static void vis(void)
-/*
-Stupidly Sun assembler decides to mark anything using VIS instructions in the
-ELF header, which causes link errors if using the following (which also
-requires passing -xarch=v8plusa|v9a passed to the assembler so it accepts the
-instruction in the first place, v9a for 64 bit binaries):
-
-{ __asm__ ("fand %f8, %f8, %f8\n\t"); }
-
-so instead we just emit the opcode directly, bypassing that check.
-*/
-{ __asm__ (".word 0x91B20E08"); }
-
-/* static void vis2(void)
-{ __asm__ ("edge8n %%l0, %%l0, %%l0\n\t" : : : "%l0"); } */
-
-static const featuretest features[] = {
-	{ vis, HAVE_VIS, "vis" }
-};
-
-#endif
-
-
-#if defined(ARCH_PPC)
-
-static void altivec(void)
-{ __asm__ ("vand v0, v0, v0\n\t"); }
-
-
-static const featuretest features[] = {
-	{ altivec, HAVE_ALTIVEC, "altivec" },
-};
-
-#endif
-
 static int
 enabled(char *env, const char *ext)
 {
@@ -185,7 +148,7 @@ dumpflags(void)
 	fputc('\n', stdout);
 }
 
-#ifndef WIN32
+#ifndef _WIN32
 
 static sigjmp_buf jmpbuf;
 static volatile sig_atomic_t canjump;
@@ -263,15 +226,7 @@ void fz_cpudetect(void)
 	dumpflags();
 }
 
-/*
-static __attribute__((constructor, used)) void fzcpudetect(void)
-{
-fz_cpudetect();
-}
-*/
-
-
-#else /* WIN32 */
+#else /* _WIN32 */
 
 void fz_cpudetect(void)
 {

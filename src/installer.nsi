@@ -4,7 +4,7 @@
 XpStyle on
 
 Name "SumatraPDF"
-OutFile "SumatraPDF-install.exe"
+OutFile "SumatraPDF-${SUMVER}-install.exe"
 
 ; Registry key to check for directory (so if you install again, it will overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\SumatraPDF" "Install_Dir"
@@ -38,7 +38,7 @@ Section "SumatraPDF" SecMain
 	
 	; Copy the main executable and the uninstaller
 	SetOutPath $INSTDIR
-	File /oname=SumatraPDF.exe "..\obj-rel\SumatraPDF.exe"
+	File /oname=SumatraPDF.exe "builds\${SUMVER}\SumatraPDF-${SUMVER}.exe"
 	WriteUninstaller "$INSTDIR\Uninstall.exe"
 	
 	; Always create the link for all users
@@ -51,8 +51,7 @@ Section "SumatraPDF" SecMain
 	
 	; Write the uninstall keys for Windows
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "DisplayName" "SumatraPDF"
-	${GetFileVersion} "$INSTDIR\SumatraPDF.exe" $R0
-	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "DisplayVersion" $R0
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "DisplayVersion" ${SUMVER}
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "UninstallString" '"$INSTDIR\uninstall.exe"'
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "NoModify" 1
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF" "NoRepair" 1

@@ -1,8 +1,6 @@
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 #include <jpeglib.h>
-
 #include <setjmp.h>
 
 typedef struct fz_dctd_s fz_dctd;
@@ -19,7 +17,7 @@ static void myerrexit(j_common_ptr cinfo)
 	struct myerrmgr *err = (struct myerrmgr *)cinfo->err;
 	char msgbuf[JMSG_LENGTH_MAX];
 	err->super.format_message(cinfo, msgbuf);
-	strlcpy(err->msg, msgbuf, sizeof err->msg);
+	fz_strlcpy(err->msg, msgbuf, sizeof err->msg);
 	longjmp(err->jb, 1);
 }
 

@@ -59,8 +59,9 @@ pdf_lookupdestimp(fz_obj *node, fz_obj *nameddest)
 fz_obj *
 pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest)
 {
-	fz_obj *dests = fz_dictgets(xref->root, "Dests");
-	fz_obj *names = fz_dictgets(xref->root, "Names");
+	fz_obj *root = fz_dictgets(xref->trailer, "Root");
+	fz_obj *dests = fz_dictgets(root, "Dests");
+	fz_obj *names = fz_dictgets(root, "Names");
 	fz_obj *dest = nil;
 
 	/* PDF 1.1 has destinations in a dictionary */

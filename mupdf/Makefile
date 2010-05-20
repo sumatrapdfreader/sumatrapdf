@@ -1,602 +1,364 @@
-# Makefile for building mupdf and related stuff
-# Valid option to make:
-# CFG=[rel|dbg|rel64|dbg64] - dbg if not given
-# ZLIB_DIR=
-# JPEG_DIR=
-# JBIG2_DIR=
-# OPENJPEG_DIR=
+# GNU Makefile for MuPDF
+#
+#	make build=release prefix=$HOME install
+#
 
-# Symbolic names for HOST variable
-HOST_LINUX := Linux
-HOST_MAC := Darwin
-HOST_CYGWIN_6 := CYGWIN_NT-6.0
-HOST_CYGWIN_5 := CYGWIN_NT-5.1
-HOST_CYGWIN := Cygwin
+prefix ?= /usr/local
+build ?= debug
 
-# HOST can be: Linux, Darwin, CYGWIN_NT-6.0
-HOST := $(shell uname -s)
+default: all
 
-ifeq ($(HOST),$(HOST_CYGWIN_6))
-HOST = $(HOST_CYGWIN)
+#
+# Compiler and configuration
+#
+
+OS := $(shell uname)
+OS := $(OS:MINGW%=MINGW)
+
+LIBS := -ljbig2dec -lopenjpeg -lfreetype -ljpeg -lz -lm
+CFLAGS := -Wall --std=gnu99 -Ifitz -Imupdf
+LDFLAGS =
+CC = cc
+LD = $(CC)
+AR = ar
+
+ifeq "$(build)" "debug"
+CFLAGS += -g -O0
 endif
 
-ifeq ($(HOST),$(HOST_CYGWIN_5))
-HOST = $(HOST_CYGWIN)
+ifeq "$(build)" "release"
+CFLAGS += -O3
 endif
 
-VPATH=fitzdraw:fitz:mupdf:fonts:cmaps:apps:apps/common:$(JBIG2_DIR)
-
-ifneq ($(ZLIB_DIR),)
-VPATH+=$(ZLIB_DIR)
+ifeq "$(OS)" "Linux"
+CFLAGS += `pkg-config --cflags freetype2`
+LDFLAGS += `pkg-config --libs freetype2`
+X11LIBS = -lX11 -lXext
+PDFVIEW_EXE = $(X11VIEW_EXE)
+ifeq  "$(build)" "release"
+CFLAGS += -mmmx -ftree-vectorize -msse -msse2 -march=k8 -DARCH_X86
+ARCH_SRC = archx86.c
+endif
 endif
 
-ifneq ($(JPEG_DIR),)
-VPATH+=$(JPEG_DIR)
+ifeq "$(OS)" "Darwin"
+CFLAGS += -I$(HOME)/include -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -DARCH_X86_64
+LDFLAGS += -L$(HOME)/lib -L/usr/X11R6/lib
+X11LIBS = -lX11 -lXext
+PDFVIEW_EXE = $(X11VIEW_EXE)
+ARCH_SRC = archx86.c
 endif
 
-ifneq ($(OPENJPEG_DIR),)
-VPATH+=$(OPENJPEG_DIR)
+ifeq "$(OS)" "MINGW"
+CC = gcc
+CFLAGS += -Ic:/msys/1.0/local/include
+LDFLAGS += -Lc:/msys/1.0/local/lib
+W32LIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows
+PDFVIEW_EXE = $(WINVIEW_EXE)
 endif
 
-# make dbg default target if none provided
-ifeq ($(CFG),)
-CFG=dbg
-endif
+# Edit these if you are cross compiling:
 
-INCS = -I fitz -I mupdf -I cmaps -Iapps
+HOSTCC ?= $(CC)
+HOSTLD ?= $(HOSTCC)
+HOSTCFLAGS ?= $(CFLAGS)
+HOSTLDFLAGS ?= $(LDFLAGS)
 
-ifneq ($(JPEG_DIR),)
-INCS += -I $(JPEG_DIR)
-endif
+#
+# Build commands
+#
 
-ifneq ($(ZLIB_DIR),)
-INCS += -I $(ZLIB_DIR)
-endif
+HOSTCC_CMD = @ echo HOSTCC $@ && $(HOSTCC) -o $@ -c $< $(HOSTCFLAGS)
+HOSTLD_CMD = @ echo HOSTLD $@ && $(HOSTLD) -o $@ $^ $(HOSTLDFLAGS)
+GENFILE_CMD = @ echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
 
-ifneq ($(JBIG2_DIR),)
-INCS += -I $(JBIG2_DIR)
-CFLAGS += -DHAVE_JBIG2DEC
-endif
+CC_CMD = @ echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
+LD_CMD = @ echo LD $@ && $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
+AR_CMD = @ echo AR $@ && $(AR) cru $@ $^
 
-ifneq ($(OPENJPEG_DIR),)
-INCS += -I $(OPENJPEG_DIR)
-CFLAGS += -DHAVE_OPENJPEG
-endif
+#
+# Directories
+#
 
-FREETYPE_CFLAGS  = `freetype-config --cflags`
-FREETYPE_LDFLAGS = `freetype-config --libs`
+OBJDIR = build/$(build)
+GENDIR = build/generated
+HOSTDIR = build/host
 
-# cc-option
-# Usage: OP_CFLAGS+=$(call cc-option, -falign-functions=0, -malign-functions=0)
+DIRS = $(OBJDIR) $(GENDIR) $(HOSTDIR)
 
-cc-option = $(shell if $(CC) $(OP_CFLAGS) $(1) -S -o /dev/null -xc /dev/null \
-              > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi ;)
+$(DIRS):
+	mkdir -p $@
 
-CFLAGS += -g -Wall
-CFLAGS += $(call cc-option, -Wno-pointer-sign, "")
+#
+# Sources
+#
 
-ifeq ($(CFG),dbg)
-CFLAGS += -O0 -fno-inline ${INCS}
-endif
+FITZ_HDR=fitz/fitz.h fitz/fitz_base.h fitz/fitz_draw.h fitz/fitz_stream.h fitz/fitz_res.h
+FITZ_SRC=$(addprefix fitz/, \
+	base_cpudep.c \
+	base_error.c base_memory.c base_string.c base_unicode.c  \
+	base_hash.c base_matrix.c base_rect.c \
+	crypt_aes.c crypt_arc4.c crypt_md5.c \
+	filt_aesd.c filt_arc4.c filt_basic.c filt_dctd.c filt_faxd.c filt_faxdtab.c filt_flate.c \
+	filt_jbig2d.c filt_jpxd.c filt_lzwd.c filt_pipeline.c filt_predict.c \
+	dev_null.c dev_text.c dev_draw.c dev_bbox.c dev_list.c dev_trace.c \
+	obj_array.c obj_dict.c obj_print.c obj_simple.c \
+	res_colorspace.c res_font.c res_shade.c res_pixmap.c \
+	res_path.c res_text.c \
+	stm_buffer.c stm_filter.c stm_misc.c stm_open.c stm_read.c \
+	util_getopt.c util_gettimeofday.c )
+FITZ_OBJ=$(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
+FITZ_LIB=$(OBJDIR)/libfitz.a
 
-ifeq ($(CFG),dbg64)
-CFLAGS += -m64 -O0 -fno-inline ${INCS}
-endif
+$(FITZ_OBJ): $(FITZ_HDR)
+$(FITZ_LIB): $(FITZ_OBJ)
+	 $(AR_CMD)
 
-ifeq ($(CFG),rel)
-CFLAGS += -O3 ${INCS} -DNDEBUG
-endif
+DRAW_SRC=$(addprefix draw/, $(ARCH_SRC) \
+	blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c meshdraw.c \
+	pathfill.c pathscan.c pathstroke.c porterduff.c )
+DRAW_OBJ=$(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
+DRAW_LIB=$(OBJDIR)/libdraw.a
 
-ifeq ($(CFG),rel64)
-CFLAGS += -m64 -O3 ${INCS} -DNDEBUG
-endif
+$(DRAW_OBJ): $(FITZ_HDR)
+$(DRAW_LIB): $(DRAW_OBJ)
+	 $(AR_CMD)
 
-CFLAGS += -std=c99 -DHAVE_C99
-
-ZLIB_CFLAGS = $(CFLAGS)
-JPEG_CFLAGS = $(CFLAGS)
-JBIG2_CFLAGS = $(CFLAGS) -DHAVE_STDINT_H
-OPENJPEG_CFLAGS = $(CFLAGS)
-
-#-DHAVE_CONFIG_H
-
-CFLAGS += ${FREETYPE_CFLAGS}
-
-LDFLAGS += ${FREETYPE_LDFLAGS} -lm
-
-#ifeq ($(JPEG_DIR),)
-#LDFLAGS += -ljpeg
-#endif
-
-ifeq ($(CFG), rel64)
-LDFLAGS += -m64
-endif
-
-ifeq ($(CFG), dbg64)
-LDFLAGS += -m64
-endif
-
-ifeq ($(ZLIB_DIR),)
-LDFLAGS += -lz
-endif
-
-OUTDIR=obj-$(CFG)
-
-VPATH+=$(OUTDIR)
-
-ZLIB_SRC = \
-	adler32.c crc32.c inflate.c zutil.c \
-	inffast.c inftrees.c deflate.c compress.c \
-	trees.c \
-	gzio.c
-
-JPEG_SRC = \
-	jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c \
-	jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c \
-	jcphuff.c jcprepct.c jcsample.c jctrans.c jdapimin.c jdapistd.c \
-	jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c jddctmgr.c jdhuff.c \
-	jdinput.c jdmainct.c jdmarker.c jdmaster.c jdmerge.c jdphuff.c \
-	jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c jfdctfst.c \
-	jfdctint.c jidctflt.c jidctfst.c jidctint.c jidctred.c jquant1.c \
-	jquant2.c jutils.c jmemmgr.c jmemnobs.c
-
-JBIG2_SRC = \
-	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
-	jbig2_huffman.c jbig2_segment.c jbig2_page.c \
-	jbig2_symbol_dict.c jbig2_text.c \
-	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
-	jbig2_image.c jbig2_metadata.c
-
-OPENJPEG_SRC = \
-	bio.c cio.c dwt.c event.c image.c \
-	j2k.c j2k_lib.c jp2.c jpt.c mct.c \
-	mqc.c openjpeg.c pi.c raw.c t1.c \
-	t2.c tcd.c tgt.c
-
-FITZ_DRAW_SRC = \
-	archx86.c blendmodes.c imagescale.c pathfill.c pixmap.c \
-	glyphcache.c imageunpack.c pathscan.c porterduff.c imagedraw.c \
-	meshdraw.c pathstroke.c render.c
-
-FITZ_SRC = \
-	base_memory.c base_error.c base_hash.c base_matrix.c base_rect.c \
-	base_unicode.c base_string.c node_misc1.c node_misc2.c node_path.c \
-	node_text.c node_toxml.c node_tree.c res_colorspace.c res_font.c \
-	res_image.c res_shade.c crypt_aes.c crypt_arc4.c crypt_crc32.c \
-	crypt_md5.c filt_aesd.c filt_basic.c \
-	filt_arc4.c filt_faxd.c filt_faxdtab.c \
-	filt_flate.c filt_lzwd.c filt_pipeline.c \
-	filt_predict.c obj_array.c obj_dict.c \
-	obj_parse.c obj_print.c obj_simple.c stm_buffer.c stm_filter.c \
-	stm_misc.c stm_open.c stm_read.c filt_dctd.c util_getopt.c
-
-ifneq ($(OPENJPEG_DIR),)
-FITZ_SRC += filt_jpxd.c
-endif
-
-ifneq ($(JBIG2_DIR),)
-FITZ_SRC += filt_jbig2d.c
-endif
-
-MUPDF_SRC = \
+MUPDF_HDR=$(FITZ_HDR) mupdf/mupdf.h
+MUPDF_SRC=$(addprefix mupdf/, \
 	pdf_annot.c pdf_build.c pdf_cmap.c pdf_cmap_load.c pdf_cmap_parse.c \
-	pdf_cmap_table.c pdf_colorspace1.c pdf_colorspace2.c pdf_crypt.c \
-	pdf_debug.c pdf_font.c pdf_fontagl.c pdf_fontenc.c pdf_fontfile.c \
-	pdf_fontmtx.c pdf_function.c pdf_image.c pdf_interpret.c pdf_lex.c \
-	pdf_nametree.c pdf_open.c pdf_outline.c pdf_page.c pdf_pagetree.c \
-	pdf_parse.c pdf_pattern.c pdf_repair.c pdf_shade.c \
-	pdf_shade1.c pdf_shade4.c pdf_store.c pdf_stream.c pdf_type3.c \
-	pdf_unicode.c pdf_xobject.c pdf_xref.c
-
-FONTS_SRC = font_misc.c font_mono.c font_serif.c font_sans.c font_cjk.c
-
-CMAPS_SRC = cmap_tounicode.c cmap_cns.c cmap_gb.c cmap_japan.c cmap_korea.c
-
-LIBS_SRC = \
-	${CMAPS_SRC} \
-	${FONTS_SRC} \
-	${FITZ_DRAW_SRC} \
-	${FITZ_SRC} \
-	${MUPDF_SRC}
-
-JPEG_OBJ = $(patsubst %.c, $(OUTDIR)/JPEG_%.o, ${JPEG_SRC})
-JPEG_DEP = $(patsubst %.o, %.d, $(JPEG_OBJ))
-
-ZLIB_OBJ = $(patsubst %.c, $(OUTDIR)/ZLIB_%.o, ${ZLIB_SRC})
-ZLIB_DEP = $(patsubst %.o, %.d, $(ZLIB_OBJ))
-
-OPENJPEG_OBJ = $(patsubst %.c, $(OUTDIR)/OPENJPEG_%.o, ${OPENJPEG_SRC})
-OPENJPEG_DEP = $(patsubst %.o, %.d, $(OPENJPEG_OBJ))
-
-JBIG2_OBJ = $(patsubst %.c, $(OUTDIR)/JBIG_%.o, ${JBIG2_SRC})
-JBIG2_DEP = $(patsubst %.o, %.d, $(JBIG2_OBJ))
-
-LIBS_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${LIBS_SRC})
-LIBS_DEP = $(patsubst %.o, %.d, $(LIBS_OBJ))
-
-PDFBENCH_SRC = pdfbench.c
-PDFBENCH_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFBENCH_SRC})
-PDFBENCH_DEP = $(patsubst %.o, %.d, $(PDFBENCH_OBJ))
-
-PDFCLEAN_SRC = pdftool.c pdfclean.c
-PDFCLEAN_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFCLEAN_SRC})
-PDFCLEAN_DEP = $(patsubst %.o, %.d, $(PDFCLEAN_OBJ))
-
-PDFDRAW_SRC = pdftool.c pdfdraw.c
-PDFDRAW_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFDRAW_SRC})
-PDFDRAW_DEP = $(patsubst %.o, %.d, $(PDFDRAW_OBJ))
-
-PDFINFO_SRC = pdftool.c pdfinfo.c
-PDFINFO_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFINFO_SRC})
-PDFINFO_DEP = $(patsubst %.o, %.d, $(PDFINFO_OBJ))
-
-PDFINFO2_SRC = pdftool.c pdfinfo2.c
-PDFINFO2_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFINFO2_SRC})
-PDFINFO2_DEP = $(patsubst %.o, %.d, $(PDFINFO2_OBJ))
-
-PDFSHOW_SRC = pdftool.c pdfshow.c
-PDFSHOW_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFSHOW_SRC})
-PDFSHOW_DEP = $(patsubst %.o, %.d, $(PDFSHOW_OBJ))
-
-PDFEXTRACT_SRC = pdftool.c pdfextract.c
-PDFEXTRACT_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFEXTRACT_SRC})
-PDFEXTRACT_DEP = $(patsubst %.o, %.d, $(PDFEXTRACT_OBJ))
-
-FONTDUMP_SRC = fontdump.c
-FONTDUMP_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${FONTDUMP_SRC})
-
-CMAPDUMP_SRC = cmapdump.c
-
-CMAPDUMP_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${CMAPDUMP_SRC})
-
-ifneq ($(ZLIB_DIR),)
-PDFBENCH_OBJ   += $(ZLIB_OBJ)
-PDFCLEAN_OBJ   += $(ZLIB_OBJ)
-PDFDRAW_OBJ    += $(ZLIB_OBJ)
-PDFINFO_OBJ    += $(ZLIB_OBJ)
-PDFINFO2_OBJ   += $(ZLIB_OBJ)
-PDFSHOW_OBJ    += $(ZLIB_OBJ)
-PDFEXTRACT_OBJ += $(ZLIB_OBJ)
-endif
-
-ifneq ($(JPEG_DIR),)
-PDFBENCH_OBJ   += $(JPEG_OBJ)
-PDFCLEAN_OBJ   += $(JPEG_OBJ)
-PDFDRAW_OBJ    += $(JPEG_OBJ)
-PDFINFO_OBJ    += $(JPEG_OBJ)
-PDFINFO2_OBJ   += $(JPEG_OBJ)
-PDFSHOW_OBJ    += $(JPEG_OBJ)
-PDFEXTRACT_OBJ += $(JPEG_OBJ)
-endif
+	pdf_cmap_table.c pdf_colorspace.c pdf_crypt.c pdf_debug.c \
+	pdf_font.c pdf_fontagl.c pdf_fontenc.c pdf_fontfile.c pdf_fontmtx.c \
+	pdf_function.c pdf_image.c pdf_interpret.c pdf_lex.c pdf_nametree.c pdf_open.c \
+	pdf_outline.c pdf_page.c pdf_pagetree.c pdf_parse.c pdf_pattern.c pdf_repair.c \
+	pdf_shade.c pdf_store.c pdf_stream.c pdf_type3.c \
+	pdf_unicode.c pdf_xobject.c pdf_xref.c )
+MUPDF_OBJ=$(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
+MUPDF_LIB=$(OBJDIR)/libmupdf.a
+
+$(MUPDF_OBJ): $(MUPDF_HDR)
+$(MUPDF_LIB): $(MUPDF_OBJ)
+	 $(AR_CMD)
+
+$(OBJDIR)/%.o: fitz/%.c
+	$(CC_CMD)
+$(OBJDIR)/%.o: draw/%.c
+	$(CC_CMD)
+$(OBJDIR)/%.o: mupdf/%.c
+	$(CC_CMD)
+
+#
+# Code generation tools run on the host
+#
+
+FONTDUMP_EXE=$(HOSTDIR)/fontdump
+CMAPDUMP_EXE=$(HOSTDIR)/cmapdump
+
+$(FONTDUMP_EXE): $(HOSTDIR)/fontdump.o
+	$(HOSTLD_CMD)
+$(CMAPDUMP_EXE): $(HOSTDIR)/cmapdump.o
+	$(HOSTLD_CMD)
+
+$(HOSTDIR)/%.o: mupdf/%.c
+	$(HOSTCC_CMD)
+
+$(OBJDIR)/%.o: $(GENDIR)/%.c
+	$(CC_CMD)
+
+#
+# Generated font file dumps
+#
+
+BASEFONT_FILES=$(addprefix fonts/, \
+	Dingbats.cff NimbusMonL-Bold.cff NimbusMonL-BoldObli.cff NimbusMonL-Regu.cff \
+	NimbusMonL-ReguObli.cff NimbusRomNo9L-Medi.cff NimbusRomNo9L-MediItal.cff \
+	NimbusRomNo9L-Regu.cff NimbusRomNo9L-ReguItal.cff NimbusSanL-Bold.cff \
+	NimbusSanL-BoldItal.cff NimbusSanL-Regu.cff NimbusSanL-ReguItal.cff \
+	StandardSymL.cff URWChanceryL-MediItal.cff )
+
+CJKFONT_FILES=fonts/droid/DroidSansFallback.ttf
+
+$(GENDIR)/font_base14.c: $(FONTDUMP_EXE) $(BASEFONT_FILES)
+	$(GENFILE_CMD)
+$(GENDIR)/font_cjk.c: $(FONTDUMP_EXE) $(CJKFONT_FILES)
+	$(GENFILE_CMD)
+
+FONT_SRC=\
+	$(GENDIR)/font_base14.c \
+	$(GENDIR)/font_cjk.c
+
+FONT_OBJ=$(FONT_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
+FONT_LIB=$(OBJDIR)/libfonts.a
+
+$(FONT_LIB): $(FONT_OBJ)
+	 $(AR_CMD)
+
+#
+# Generated CMap file dumps
+#
+
+CMAP_UNICODE_FILES=$(addprefix cmaps/, \
+        Adobe-CNS1-UCS2 Adobe-GB1-UCS2 \
+        Adobe-Japan1-UCS2 Adobe-Korea1-UCS2 )
+
+CMAP_CNS_FILES=$(addprefix cmaps/, \
+        Adobe-CNS1-0 Adobe-CNS1-1 Adobe-CNS1-2 Adobe-CNS1-3 \
+        Adobe-CNS1-4 Adobe-CNS1-5 Adobe-CNS1-6 B5-H B5-V B5pc-H B5pc-V \
+        CNS-EUC-H CNS-EUC-V CNS1-H CNS1-V CNS2-H CNS2-V ETen-B5-H \
+        ETen-B5-V ETenms-B5-H ETenms-B5-V ETHK-B5-H ETHK-B5-V \
+        HKdla-B5-H HKdla-B5-V HKdlb-B5-H HKdlb-B5-V HKgccs-B5-H \
+        HKgccs-B5-V HKm314-B5-H HKm314-B5-V HKm471-B5-H HKm471-B5-V \
+        HKscs-B5-H HKscs-B5-V UniCNS-UCS2-H UniCNS-UCS2-V \
+        UniCNS-UTF16-H UniCNS-UTF16-V )
+
+CMAP_GB_FILES=$(addprefix cmaps/, \
+        Adobe-GB1-0 Adobe-GB1-1 Adobe-GB1-2 Adobe-GB1-3 Adobe-GB1-4 \
+        Adobe-GB1-5 GB-EUC-H GB-EUC-V GB-H GB-V GBK-EUC-H GBK-EUC-V \
+        GBK2K-H GBK2K-V GBKp-EUC-H GBKp-EUC-V GBpc-EUC-H GBpc-EUC-V \
+        GBT-EUC-H GBT-EUC-V GBT-H GBT-V GBTpc-EUC-H GBTpc-EUC-V \
+        UniGB-UCS2-H UniGB-UCS2-V UniGB-UTF16-H UniGB-UTF16-V )
+
+CMAP_JAPAN_FILES=$(addprefix cmaps/, \
+        78-EUC-H 78-EUC-V 78-H 78-RKSJ-H 78-RKSJ-V 78-V 78ms-RKSJ-H \
+        78ms-RKSJ-V 83pv-RKSJ-H 90ms-RKSJ-H 90ms-RKSJ-V 90msp-RKSJ-H \
+        90msp-RKSJ-V 90pv-RKSJ-H 90pv-RKSJ-V Add-H Add-RKSJ-H \
+        Add-RKSJ-V Add-V Adobe-Japan1-0 Adobe-Japan1-1 Adobe-Japan1-2 \
+        Adobe-Japan1-3 Adobe-Japan1-4 Adobe-Japan1-5 Adobe-Japan1-6 \
+        EUC-H EUC-V Ext-H Ext-RKSJ-H Ext-RKSJ-V Ext-V H Hankaku \
+        Hiragana Katakana NWP-H NWP-V RKSJ-H RKSJ-V Roman \
+        UniJIS-UCS2-H UniJIS-UCS2-HW-H UniJIS-UCS2-HW-V UniJIS-UCS2-V \
+        UniJISPro-UCS2-HW-V UniJISPro-UCS2-V V WP-Symbol \
+        Adobe-Japan2-0 Hojo-EUC-H Hojo-EUC-V Hojo-H Hojo-V \
+        UniHojo-UCS2-H UniHojo-UCS2-V UniHojo-UTF16-H UniHojo-UTF16-V \
+        UniJIS-UTF16-H UniJIS-UTF16-V )
+
+CMAP_KOREA_FILES=$(addprefix cmaps/, \
+        Adobe-Korea1-0 Adobe-Korea1-1 Adobe-Korea1-2 KSC-EUC-H \
+        KSC-EUC-V KSC-H KSC-Johab-H KSC-Johab-V KSC-V KSCms-UHC-H \
+        KSCms-UHC-HW-H KSCms-UHC-HW-V KSCms-UHC-V KSCpc-EUC-H \
+        KSCpc-EUC-V UniKS-UCS2-H UniKS-UCS2-V UniKS-UTF16-H UniKS-UTF16-V )
+
+$(GENDIR)/cmap_unicode.c: $(CMAPDUMP_EXE) $(CMAP_UNICODE_FILES)
+	$(GENFILE_CMD)
+$(GENDIR)/cmap_cns.c: $(CMAPDUMP_EXE) $(CMAP_CNS_FILES)
+	$(GENFILE_CMD)
+$(GENDIR)/cmap_gb.c: $(CMAPDUMP_EXE) $(CMAP_GB_FILES)
+	$(GENFILE_CMD)
+$(GENDIR)/cmap_japan.c: $(CMAPDUMP_EXE) $(CMAP_JAPAN_FILES)
+	$(GENFILE_CMD)
+$(GENDIR)/cmap_korea.c: $(CMAPDUMP_EXE) $(CMAP_KOREA_FILES)
+	$(GENFILE_CMD)
+
+CMAP_SRC=\
+	$(GENDIR)/cmap_unicode.c \
+	$(GENDIR)/cmap_cns.c \
+	$(GENDIR)/cmap_gb.c \
+	$(GENDIR)/cmap_japan.c \
+	$(GENDIR)/cmap_korea.c
+
+CMAP_OBJ=$(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
+CMAP_LIB=$(OBJDIR)/libcmaps.a
+
+$(CMAP_OBJ): $(MUPDF_HDR)
+$(CMAP_LIB): $(CMAP_OBJ)
+	 $(AR_CMD)
+
+#
+# Apps
+#
+
+APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE)
+
+PDFAPP_HDR = apps/pdfapp.h
+PDFTOOL_HDR = apps/pdftool.h
+
+$(OBJDIR)/%.o: apps/%.c
+	$(CC_CMD)
+
+PDFSHOW_SRC=apps/pdfshow.c apps/pdftool.c
+PDFSHOW_OBJ=$(PDFSHOW_SRC:apps/%.c=$(OBJDIR)/%.o)
+PDFSHOW_EXE=$(OBJDIR)/pdfshow
+
+$(PDFSHOW_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(MUPDF_LIB) $(FITZ_LIB)
+	$(LD_CMD)
+
+PDFCLEAN_SRC=apps/pdfclean.c apps/pdftool.c
+PDFCLEAN_OBJ=$(PDFCLEAN_SRC:apps/%.c=$(OBJDIR)/%.o)
+PDFCLEAN_EXE=$(OBJDIR)/pdfclean
+
+$(PDFCLEAN_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(MUPDF_LIB) $(FITZ_LIB)
+	$(LD_CMD)
+
+PDFDRAW_SRC=apps/pdfdraw.c apps/pdftool.c
+PDFDRAW_OBJ=$(PDFDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
+PDFDRAW_EXE=$(OBJDIR)/pdfdraw
+
+$(PDFDRAW_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+	$(LD_CMD)
+
+PDFEXTRACT_SRC=apps/pdfextract.c apps/pdftool.c
+PDFEXTRACT_OBJ=$(PDFEXTRACT_SRC:apps/%.c=$(OBJDIR)/%.o)
+PDFEXTRACT_EXE=$(OBJDIR)/pdfextract
+
+$(PDFEXTRACT_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+	$(LD_CMD)
+
+PDFINFO_SRC=apps/pdfinfo.c apps/pdftool.c
+PDFINFO_OBJ=$(PDFINFO_SRC:apps/%.c=$(OBJDIR)/%.o)
+PDFINFO_EXE=$(OBJDIR)/pdfinfo
+
+$(PDFINFO_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+	$(LD_CMD)
+
+X11VIEW_SRC=apps/x11_main.c apps/x11_image.c apps/pdfapp.c
+X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
+X11VIEW_EXE=$(OBJDIR)/mupdf
+
+$(X11VIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
+$(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+	$(LD_CMD) $(X11LIBS)
+
+WINVIEW_SRC=apps/win_main.c apps/pdfapp.c
+WINVIEW_RES=apps/win_res.rc
+WINVIEW_OBJ=$(WINVIEW_SRC:apps/%.c=$(OBJDIR)/%.o) $(WINVIEW_RES:apps/%.rc=$(OBJDIR)/%.o)
+WINVIEW_EXE=$(OBJDIR)/mupdf.exe
+
+$(OBJDIR)/%.o: apps/%.rc
+	windres -i $< -o $@ --include-dir=apps
+
+$(WINVIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
+$(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+	$(LD_CMD) $(W32LIBS)
+
+#
+# Installation and tarball packaging
+#
+
+dist: $(DIRS) $(APPS)
+	mkdir -p mupdf-dist
+	cp README COPYING $(APPS) mupdf-dist
+	tar cvf mupdf-dist.tar mupdf-dist
+	rm -rf mupdf-dist
+
+#
+# Default rules
+#
+
+all: $(DIRS) $(APPS)
+
+clean:
+	rm -rf $(OBJDIR)/*
+	rm -rf $(GENDIR)/*
+	rm -rf $(HOSTDIR)/*
+
+nuke:
+	rm -rf build
+
+install: $(DIRS) $(APPS)
+	install $(APPS) $(prefix)/bin
 
-ifneq ($(OPENJPEG_DIR),)
-PDFBENCH_OBJ   += $(OPENJPEG_OBJ)
-PDFCLEAN_OBJ   += $(OPENJPEG_OBJ)
-PDFDRAW_OBJ    += $(OPENJPEG_OBJ)
-PDFINFO_OBJ    += $(OPENJPEG_OBJ)
-PDFINFO2_OBJ   += $(OPENJPEG_OBJ)
-PDFSHOW_OBJ    += $(OPENJPEG_OBJ)
-PDFEXTRACT_OBJ += $(OPENJPEG_OBJ)
-endif
-
-ifneq ($(JBIG2_DIR),)
-PDFBENCH_OBJ   += $(JBIG2_OBJ)
-PDFCLEAN_OBJ   += $(JBIG2_OBJ)
-PDFDRAW_OBJ    += $(JBIG2_OBJ)
-PDFINFO_OBJ    += $(JBIG2_OBJ)
-PDFINFO2_OBJ   += $(JBIG2_OBJ)
-PDFSHOW_OBJ    += $(JBIG2_OBJ)
-PDFEXTRACT_OBJ += $(JBIG2_OBJ)
-endif
-
-PDFBENCH_APP   = ${OUTDIR}/pdfbench
-PDFCLEAN_APP   = ${OUTDIR}/pdfclean
-PDFDRAW_APP    = ${OUTDIR}/pdfdraw
-PDFINFO_APP    = ${OUTDIR}/pdfinfo
-PDFINFO2_APP   = ${OUTDIR}/pdfinfo2
-PDFSHOW_APP    = ${OUTDIR}/pdfshow
-PDFEXTRACT_APP = ${OUTDIR}/pdfextract
-FONTDUMP_APP   = ${OUTDIR}/fontdump
-CMAPDUMP_APP   = ${OUTDIR}/cmapdump
-
-all: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP} ${PDFCLEAN_APP} ${PDFDRAW_APP} ${PDFINFO_APP} ${PDFINFO2_APP}  ${PDFSHOW_APP} ${PDFEXTRACT_APP}
-
-pdfbench: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP}
-
-$(OUTDIR):
-	@mkdir -p $(OUTDIR)
-
-$(PDFBENCH_APP): ${LIBS_OBJ} ${PDFBENCH_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFCLEAN_APP): ${LIBS_OBJ} ${PDFCLEAN_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFDRAW_APP): ${LIBS_OBJ} ${PDFDRAW_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFINFO_APP): ${LIBS_OBJ} ${PDFINFO_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFINFO2_APP): ${LIBS_OBJ} ${PDFINFO2_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFSHOW_APP): ${LIBS_OBJ} ${PDFSHOW_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFEXTRACT_APP): ${LIBS_OBJ} ${PDFEXTRACT_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(FONTDUMP_APP): ${FONTDUMP_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(CMAPDUMP_APP): ${CMAPDUMP_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(OUTDIR)/FITZ_%.o: %.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_cmap_tounicode.o: $(OUTDIR)/cmap_tounicode.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_cmap_cns.o: $(OUTDIR)/cmap_cns.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_cmap_gb.o: $(OUTDIR)/cmap_gb.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_cmap_japan.o: $(OUTDIR)/cmap_japan.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_cmap_korea.o: $(OUTDIR)/cmap_korea.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_font_misc.o: $(OUTDIR)/font_misc.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_font_mono.o: $(OUTDIR)/font_mono.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_font_serif.o: $(OUTDIR)/font_serif.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_font_sans.o: $(OUTDIR)/font_sans.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/FITZ_font_cjk.o: $(OUTDIR)/font_cjk.c
-	$(CC) -MD -c $(CFLAGS) -o $@ $<
-
-$(OUTDIR)/ZLIB_%.o: %.c
-	$(CC) -MD -c $(ZLIB_CFLAGS) -o $@ $<
-
-$(OUTDIR)/JPEG_%.o: %.c
-	$(CC) -MD -c $(JPEG_CFLAGS) -o $@ $<
-
-$(OUTDIR)/JBIG_%.o: %.c
-	$(CC) -MD -c $(JBIG2_CFLAGS) -o $@ $<
-
-$(OUTDIR)/OPENJPEG_%.o: %.c
-	$(CC) -MD -c $(OPENJPEG_CFLAGS) -o $@ $<
-
-$(OUTDIR)/font_misc.c: $(FONTDUMP_APP)
-	$(FONTDUMP_APP) $@ fonts/Dingbats.cff fonts/StandardSymL.cff fonts/URWChanceryL-MediItal.cff
-
-$(OUTDIR)/font_mono.c: $(FONTDUMP_APP)
-	$(FONTDUMP_APP) $@ fonts/NimbusMonL-Regu.cff fonts/NimbusMonL-ReguObli.cff fonts/NimbusMonL-Bold.cff fonts/NimbusMonL-BoldObli.cff
-
-$(OUTDIR)/font_serif.c: $(FONTDUMP_APP)
-	$(FONTDUMP_APP) $@ fonts/NimbusRomNo9L-Regu.cff fonts/NimbusRomNo9L-ReguItal.cff fonts/NimbusRomNo9L-Medi.cff fonts/NimbusRomNo9L-MediItal.cff
-
-$(OUTDIR)/font_sans.c: $(FONTDUMP_APP)
-	$(FONTDUMP_APP) $@ fonts/NimbusSanL-Bold.cff fonts/NimbusSanL-BoldItal.cff fonts/NimbusSanL-Regu.cff fonts/NimbusSanL-ReguItal.cff
-
-$(OUTDIR)/font_cjk.c: $(FONTDUMP_APP)
-	$(FONTDUMP_APP) $@ fonts/droid/DroidSansFallback.ttf
-
-$(OUTDIR)/cmap_tounicode.c: $(CMAPDUMP_APP)
-	$(CMAPDUMP_APP) $(OUTDIR)/cmap_tounicode.c \
-	cmaps/Adobe-CNS1-UCS2 \
-	cmaps/Adobe-GB1-UCS2 \
-	cmaps/Adobe-Japan1-UCS2 \
-	cmaps/Adobe-Korea1-UCS2
-
-$(OUTDIR)/cmap_cns.c: $(CMAPDUMP_APP)
-	$(CMAPDUMP_APP) $(OUTDIR)/cmap_cns.c \
-	cmaps/Adobe-CNS1-0 \
-	cmaps/Adobe-CNS1-1 \
-	cmaps/Adobe-CNS1-2 \
-	cmaps/Adobe-CNS1-3 \
-	cmaps/Adobe-CNS1-4 \
-	cmaps/Adobe-CNS1-5 \
-	cmaps/Adobe-CNS1-6 \
-	cmaps/B5-H \
-	cmaps/B5-V \
-	cmaps/B5pc-H \
-	cmaps/B5pc-V \
-	cmaps/CNS-EUC-H \
-	cmaps/CNS-EUC-V \
-	cmaps/CNS1-H \
-	cmaps/CNS1-V \
-	cmaps/CNS2-H \
-	cmaps/CNS2-V \
-	cmaps/ETen-B5-H \
-	cmaps/ETen-B5-V \
-	cmaps/ETenms-B5-H \
-	cmaps/ETenms-B5-V \
-	cmaps/ETHK-B5-H \
-	cmaps/ETHK-B5-V \
-	cmaps/HKdla-B5-H \
-	cmaps/HKdla-B5-V \
-	cmaps/HKdlb-B5-H \
-	cmaps/HKdlb-B5-V \
-	cmaps/HKgccs-B5-H \
-	cmaps/HKgccs-B5-V \
-	cmaps/HKm314-B5-H \
-	cmaps/HKm314-B5-V \
-	cmaps/HKm471-B5-H \
-	cmaps/HKm471-B5-V \
-	cmaps/HKscs-B5-H \
-	cmaps/HKscs-B5-V \
-	cmaps/UniCNS-UCS2-H \
-	cmaps/UniCNS-UCS2-V \
-	cmaps/UniCNS-UTF16-H \
-	cmaps/UniCNS-UTF16-V
-
-$(OUTDIR)/cmap_gb.c: $(CMAPDUMP_APP)
-	$(CMAPDUMP_APP) $(OUTDIR)/cmap_gb.c \
-	cmaps/Adobe-GB1-0 \
-	cmaps/Adobe-GB1-1 \
-	cmaps/Adobe-GB1-2 \
-	cmaps/Adobe-GB1-3 \
-	cmaps/Adobe-GB1-4 \
-	cmaps/Adobe-GB1-5 \
-	cmaps/GB-EUC-H \
-	cmaps/GB-EUC-V \
-	cmaps/GB-H \
-	cmaps/GB-V \
-	cmaps/GBK-EUC-H \
-	cmaps/GBK-EUC-V \
-	cmaps/GBK2K-H \
-	cmaps/GBK2K-V \
-	cmaps/GBKp-EUC-H \
-	cmaps/GBKp-EUC-V \
-	cmaps/GBpc-EUC-H \
-	cmaps/GBpc-EUC-V \
-	cmaps/GBT-EUC-H \
-	cmaps/GBT-EUC-V \
-	cmaps/GBT-H \
-	cmaps/GBT-V \
-	cmaps/GBTpc-EUC-H \
-	cmaps/GBTpc-EUC-V \
-	cmaps/UniGB-UCS2-H \
-	cmaps/UniGB-UCS2-V \
-	cmaps/UniGB-UTF16-H \
-	cmaps/UniGB-UTF16-V
-
-$(OUTDIR)/cmap_japan.c: $(CMAPDUMP_APP)
-	$(CMAPDUMP_APP) $(OUTDIR)/cmap_japan.c \
-	cmaps/78-EUC-H \
-	cmaps/78-EUC-V \
-	cmaps/78-H \
-	cmaps/78-RKSJ-H \
-	cmaps/78-RKSJ-V \
-	cmaps/78-V \
-	cmaps/78ms-RKSJ-H \
-	cmaps/78ms-RKSJ-V \
-	cmaps/83pv-RKSJ-H \
-	cmaps/90ms-RKSJ-H \
-	cmaps/90ms-RKSJ-V \
-	cmaps/90msp-RKSJ-H \
-	cmaps/90msp-RKSJ-V \
-	cmaps/90pv-RKSJ-H \
-	cmaps/90pv-RKSJ-V \
-	cmaps/Add-H \
-	cmaps/Add-RKSJ-H \
-	cmaps/Add-RKSJ-V \
-	cmaps/Add-V \
-	cmaps/Adobe-Japan1-0 \
-	cmaps/Adobe-Japan1-1 \
-	cmaps/Adobe-Japan1-2 \
-	cmaps/Adobe-Japan1-3 \
-	cmaps/Adobe-Japan1-4 \
-	cmaps/Adobe-Japan1-5 \
-	cmaps/Adobe-Japan1-6 \
-	cmaps/EUC-H \
-	cmaps/EUC-V \
-	cmaps/Ext-H \
-	cmaps/Ext-RKSJ-H \
-	cmaps/Ext-RKSJ-V \
-	cmaps/Ext-V \
-	cmaps/H \
-	cmaps/Hankaku \
-	cmaps/Hiragana \
-	cmaps/Katakana \
-	cmaps/NWP-H \
-	cmaps/NWP-V \
-	cmaps/RKSJ-H \
-	cmaps/RKSJ-V \
-	cmaps/Roman \
-	cmaps/UniJIS-UCS2-H \
-	cmaps/UniJIS-UCS2-HW-H \
-	cmaps/UniJIS-UCS2-HW-V \
-	cmaps/UniJIS-UCS2-V \
-	cmaps/UniJISPro-UCS2-HW-V \
-	cmaps/UniJISPro-UCS2-V \
-	cmaps/V \
-	cmaps/WP-Symbol \
-	cmaps/Adobe-Japan2-0 \
-	cmaps/Hojo-EUC-H \
-	cmaps/Hojo-EUC-V \
-	cmaps/Hojo-H \
-	cmaps/Hojo-V \
-	cmaps/UniHojo-UCS2-H \
-	cmaps/UniHojo-UCS2-V \
-	cmaps/UniHojo-UTF16-H \
-	cmaps/UniHojo-UTF16-V \
-	cmaps/UniJIS-UTF16-H \
-	cmaps/UniJIS-UTF16-V
-
-$(OUTDIR)/cmap_korea.c: $(CMAPDUMP_APP)
-	$(CMAPDUMP_APP) $(OUTDIR)/cmap_korea.c \
-	cmaps/Adobe-Korea1-0 \
-	cmaps/Adobe-Korea1-1 \
-	cmaps/Adobe-Korea1-2 \
-	cmaps/KSC-EUC-H \
-	cmaps/KSC-EUC-V \
-	cmaps/KSC-H \
-	cmaps/KSC-Johab-H \
-	cmaps/KSC-Johab-V \
-	cmaps/KSC-V \
-	cmaps/KSCms-UHC-H \
-	cmaps/KSCms-UHC-HW-H \
-	cmaps/KSCms-UHC-HW-V \
-	cmaps/KSCms-UHC-V \
-	cmaps/KSCpc-EUC-H \
-	cmaps/KSCpc-EUC-V \
-	cmaps/UniKS-UCS2-H \
-	cmaps/UniKS-UCS2-V \
-	cmaps/UniKS-UTF16-H \
-	cmaps/UniKS-UTF16-V
-
-fontsources: $(OUTDIR)/font_misc.c $(OUTDIR)/font_mono.c $(OUTDIR)/font_serif.c $(OUTDIR)/font_sans.c $(OUTDIR)/font_cjk.c
-	@echo "building font sources"
-
-ifneq ($(ZLIB_DIR),)
--include $(ZLIB_DEP)
-endif
-
-ifneq ($(JPEG_DIR),)
--include $(JPEG_DEP)
-endif
-
-ifneq ($(OPENJPEG_DIR),)
--include $(OPENJPEG_DEP)
-endif
-
-ifneq ($(JBIG2_DIR),)
--include $(JBIG2_DEP)
-endif
-
--include $(PDFCLEAN_DEP)
--include $(PDFBENCH_DEP)
-
-inform:
-ifneq ($(CFG),rel)
-ifneq ($(CFG),dbg)
-ifneq ($(CFG),rel64)
-ifneq ($(CFG),dbg64)
-	@echo "Invalid configuration: '"$(CFG)"'"
-	@echo "Valid configurations: rel, dbg (e.g. make CFG=dbg)"
-	@exit 1
-endif
-endif
-endif
-endif
-
-clean: inform
-	rm -rf obj-$(CFG)
-
-cleanall:
-	rm -rf obj-*
-
-force:

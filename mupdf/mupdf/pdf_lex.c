@@ -225,9 +225,11 @@ lexhexstring(fz_stream *f, char *buf, int n)
 				x = !x;
 			}
 		}
-		else
-			// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=624
+		// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=624
+		else if (c != EOF)
 			fz_warn("Ignoring invalid character in hexstring: %c", c);
+		else
+			break;
 	}
 
 	return s - buf;

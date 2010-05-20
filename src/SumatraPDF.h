@@ -1,5 +1,6 @@
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
+
 #ifndef SUMATRAPDF_H_
 #define SUMATRAPDF_H_
 
@@ -14,6 +15,8 @@
 
 #ifndef _WIN32_WINNT 
 #define _WIN32_WINNT 0x0500
+// the following is only defined for _WIN32_WINNT >= 0x0600
+#define USER_DEFAULT_SCREEN_DPI 96
 #endif
 
 #ifndef _WIN32_WINDOWS
@@ -41,13 +44,53 @@
 #include <tchar.h>
 #include "resource.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <direct.h>
+
+#include <windowsx.h>
+#include <shellapi.h>
+#include <shlobj.h>
+
+#include "base_util.h"
+#include "file_util.h"
+#include "geom_util.h"
+#include "str_strsafe.h"
+#include "strlist_util.h"
 #include "win_util.h"
+#include "tstr_util.h"
+#include "Http.h"
+
 #include "DisplayModel.h"
 #include "FileWatch.h"
 #include "PdfSync.h"
+#include "translations.h"
+
+typedef unsigned char u8;
+typedef unsigned long u32;
+
+CASSERT(sizeof(u32) == 4, u32_is_4_bytes)
+
+#define KB 1024
+#define MB (1024*KB)
+#define GB (1024*MB)
 
 #define APP_NAME_STR            _T("SumatraPDF")
 #define CMD_ARG_SEND_CRASHDUMP _T("/sendcrashdump")
+
+#define COL_WHITE RGB(0xff,0xff,0xff)
+#define COL_BLACK RGB(0,0,0)
+#define COL_BLUE_LINK RGB(0,0x20,0xa0)
+#define COL_WINDOW_BG RGB(0xcc, 0xcc, 0xcc)
+#define COL_WINDOW_SHADOW RGB(0x40, 0x40, 0x40)
+#define COL_PAGE_FRAME RGB(0x88, 0x88, 0x88)
+
+#define LEFT_TXT_FONT           _T("Arial")
+#define LEFT_TXT_FONT_SIZE      12
+#define RIGHT_TXT_FONT          _T("Arial Black")
+#define RIGHT_TXT_FONT_SIZE     12
 
 /* Current state of a window:
   - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF
@@ -131,14 +174,14 @@ public:
         hwndPageTotal = NULL;
         hwndTocBox = NULL;
         hwndSpliter = NULL;
-        hwndTracker = NULL;
         hwndInfotip = NULL;
         hwndPdfProperties = NULL;
 
         infotipVisible = false;
         hMenu = NULL;
         hdc = NULL;
-        dpi = 96;
+        dpi = USER_DEFAULT_SCREEN_DPI;
+        uiDPIFactor = 1.0;
         findThread = NULL;
         findCanceled = false;
         findPercent = 0;
@@ -157,6 +200,7 @@ public:
         hdcDoubleBuffer = NULL;
         bmpDoubleBuffer = NULL;
         title = NULL;
+        loadedFilePath = NULL;
         currPageNo = 0;
         pdfPropertiesCount = 0;
     }
@@ -176,6 +220,7 @@ public:
     WindowInfo *    next;
     WinState        state;
     bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
+    TCHAR *         loadedFilePath;
 
     DisplayModel *  dm;
     HWND            hwndFrame;
@@ -192,8 +237,8 @@ public:
     HWND            hwndPageTotal;
     HWND            hwndTocBox;
     HWND            hwndSpliter;
-    HWND            hwndTracker;
     HWND            hwndInfotip;
+    HWND            hwndPdfProperties;
 
     bool            infotipVisible;
     HMENU           hMenu;
@@ -201,6 +246,7 @@ public:
     HDC             hdc;
     BITMAPINFO *    dibInfo;
     int             dpi;
+    float           uiDPIFactor;
 
     HANDLE          findThread;
     bool            findCanceled;
@@ -268,7 +314,6 @@ public:
     TCHAR *         title;
     int             currPageNo;
 
-    HWND            hwndPdfProperties;
     PdfPropertiesLayoutEl   pdfProperties[MAX_PDF_PROPERTIES];
     int                     pdfPropertiesCount;
 
@@ -278,13 +323,13 @@ public:
     void LoadTocTree();
     void ToggleTocBox();
 
-    void TrackMouse(HWND hwnd=NULL);
     void FindStart();
     virtual bool FindUpdateStatus(int count, int total);
     void FocusPageNoEdit();
 
 };
 
+WindowInfo* WindowInfo_FindByHwnd(HWND hwnd);
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, TCHAR *windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
@@ -293,5 +338,48 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
 bool IsRunningInPortableMode(void);
 bool IsExeAssociatedWithPdfExtension(void);
 void AssociateExeWithPdfExtension();
+
+HFONT Win32_Font_GetSimple(HDC hdc, TCHAR *fontName, int fontSize);
+void Win32_Font_Delete(HFONT font);
+void LaunchBrowser(const TCHAR *url);
+
+extern HCURSOR gCursorHand;
+extern bool gRestrictedUse;
+extern HINSTANCE ghinst;
+
+// In SumatraAbout.cpp
+#define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
+
+typedef struct AboutLayoutInfoEl {
+    /* static data, must be provided */
+    const TCHAR *   leftTxt;
+    const TCHAR *   rightTxt;
+    const TCHAR *   url;
+
+    /* data calculated by the layout */
+    int             leftTxtPosX;
+    int             leftTxtPosY;
+    int             leftTxtDx;
+    int             leftTxtDy;
+
+    int             rightTxtPosX;
+    int             rightTxtPosY;
+    int             rightTxtDx;
+    int             rightTxtDy;
+} AboutLayoutInfoEl;
+
+void DrawAbout(HWND hwnd, HDC hdc, RECT *rect);
+void OnMenuAbout();
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el=NULL);
+void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect);
+
+// In SumatraProperties.cpp
+#define PROPERTIES_CLASS_NAME   _T("SUMATRA_PDF_PROPERTIES")
+
+void FreePdfProperties(WindowInfo *win);
+void OnMenuProperties(WindowInfo *win);
+void CopyPropertiesToClipboard(WindowInfo *win);
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 #endif

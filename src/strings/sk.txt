@@ -1,0 +1,289 @@
+﻿# Translations for Slovak (Slovenčina) (sk) language
+
+# Lines at the beginning starting with # are comments
+# This file must be in utf-8 encoding. Make sure you use a proper
+# text editor (notepad++ or notepad2 will work) and set utf8 encoding.
+
+Lang: sk Slovak (Slovenčina)
+
+Contributor: Radoslav Zelenák (radoslav.zelenak@elkop.sk)
+Contributor: Bernard Holý - TREVERT
+
+&About
+&O programe...
+
+&Check for new version
+Skontrolovať novú verziu
+
+&Close\tCtrl-W
+Zatvoriť\tCtrl-W
+
+&Don't ask me again
+Nepýtať sa znova
+
+&File
+Súbor
+
+&Go To
+Ísť na
+
+&Help
+Nápoveda
+
+&Manual
+Príručka
+
+&Open\tCtrl-O
+Otvoriť\tCtrl-O
+
+&Print\tCtrl-P
+Tlačiť\tCtrl-P
+
+&Save as\tCtrl-S
+Uložiť ako...\tCtrl-S
+
+&Skip this version
+Preskočiť túto verziu.
+
+&View
+&Zobraziť
+
+&Visit website
+&Navštíviť webovú stránku
+
+&Zoom
+&Zväčšenie
+
+About SumatraPDF
+O programe SumatraPDF
+
+Act&ual Size\tCtrl-1
+Skutočná veľkosť\tCtrl-1
+
+Associate with PDF files?
+Asociovať s PDF súbormi?
+
+Bookmarks\tF12
+Záložky\tF12
+
+Change language
+Zmeniť jazyk (Change language)
+
+Continuous
+Priebežne
+
+Continuous facing
+Dve strany priebežne
+
+Contribute translation
+Prispieť k prekladu programu
+
+Could not open Printer
+Nie je možné otvoriť tlačiareň.
+
+E&xit\tCtrl-Q
+&Ukončiť\tCtrl-Q
+
+Enter password
+Zadať heslo
+
+Enter password for %s
+Zadať heslo pre %s
+
+Error loading PDF file.
+Chyba pri pokuse načítať PDF súbor.
+
+Facing
+Dve strany
+
+Failed to save a file
+Zlyhanie pri ukladaní súboru.
+
+Find Next
+Hľadať ďalšie
+
+Find Previous
+Hľadať predchádzajúce
+
+Find...\tCtrl-F
+Hľadať...\tCtrl-F
+
+Find:
+Hľadať:
+
+First Page\tHome
+Prvá strana\tHome
+
+Fit &Page\tCtrl-0
+Prispôsobiť strane\tCtrl-0
+
+Fit Page
+Prispôsobiť strane
+
+Fit Widt&h\tCtrl-2
+Na šírku obrazovky\tCtrl-2
+
+Fit Width
+Na šírku obrazovky
+
+Fullscreen\tCtrl-L
+Na celú obrazovku\tCtrl-L
+
+Go to page
+Ísť na stranu
+
+Last Page\tEnd
+Posledná strana\tEnd
+
+Make SumatraPDF default application for PDF files?
+Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
+
+Make SumatraPDF my main PDF reader
+Nastaviť SumatraPDF ako predvolený PDF prehliadač
+
+Match case
+Rozlišovať veľké/malé písmená
+
+New version %s is available. Download new version?
+Nová verzia %s je dispozícii. Stiahnuť novú verziu?
+
+New version available.
+Je k dispozícia nová verzia.
+
+Next Page
+Ďaľšia strana
+
+Next Page\tRight Arrow
+Ďaľšia strana\t->
+
+No new version available.
+Nie je k dispozícia nová verzia.
+
+Open
+Otvoriť
+
+Page...\tCtrl-G
+Strana...\tCtrl-G
+
+Page:
+Strana:
+
+Previous Page
+Predchádzajúca strana
+
+Previous Page\tLeft Arrow
+Predchádzajúca strana\t<-
+
+Printing problem.
+Problém pri tlači.
+
+Rotate left\tCtrl-Shift--
+Otočiť vľavo\tCtrl-Shift--
+
+Rotate right\tCtrl-Shift-+
+Otočiť vpravo\tCtrl-Shift-+
+
+Set inverse search command-line
+Nastaviť inverzné vyhľadávanie
+
+Show toolbar
+Zobraziť panel nástrojov
+
+Single page
+Jedna strana
+
+View
+Zobraziť
+
+You have the latest version.
+Používate najnovšiu verziu.
+
+You have version %s
+Používate verziu %s
+
+Zoom In
+Zvačšiť
+
+Zoom Out
+Zmenšiť
+
+# Untranslated:
+#&Custom Zoom...
+#&Find what:
+#&Go to page:
+#&Magnification:
+#&Match case
+#&No
+#&No, thanks
+#&Options...
+#&Password:
+#&Remember these settings for each document
+#&Settings
+#&Yes
+#(of %d)
+#Advanced
+#All files
+#Application:
+#Author:
+#Automatic
+#Automatically check for &updates
+#Back\tAlt+Left Arrow
+#Book view
+#Bytes
+#Cancel
+#Cannot print this file
+#Cannot start inverse search command. Please check the command line in the settings.
+#Continuous book view
+#Copy Selection\tCtrl-C
+#Couldn't initialize printer
+#Couldn't render the page
+#Created:
+#Default &Layout:
+#Default &Zoom:
+#Document Properties
+#Download
+#File Size:
+#File:
+#Find
+#Forward\tAlt+Right Arrow
+#Found text at page %d
+#GB
+#Hint: Use the F3 key for finding again
+#KB
+#MB
+#Main PDF reader can't be changed in portable mode
+#Modified:
+#No matches were found
+#No result found around line %u in file %s
+#No synchronization file found
+#No synchronization info at this position
+#Number of Pages:
+#OK
+#Open in &Adobe Reader
+#P&roperties...\tCtrl-D
+#PDF Document
+#PDF Producer:
+#PDF Version:
+#PDF documents
+#Page Size:
+#Page number %u inexistant
+#Please wait - rendering...
+#Remember &opened files
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &email...
+#Show pages continuously
+#Show the &bookmarks sidebar when available
+#Source file %s has no synchronization point
+#SumatraPDF Options
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#Warning
+#Zoom
+#Zoom factor
+#[Changes detected; refreshing] %s
+

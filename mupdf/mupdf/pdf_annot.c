@@ -35,7 +35,7 @@ resolvedest(pdf_xref *xref, fz_obj *dest)
 
 	else if (fz_isarray(dest))
 	{
-		return fz_arrayget(dest, 0);
+		return dest; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=275 */
 	}
 
 	else if (fz_isdict(dest))

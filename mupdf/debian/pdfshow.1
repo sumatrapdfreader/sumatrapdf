@@ -1,0 +1,44 @@
+.TH PDFSHOW 1 "April 15, 2010"
+.\" Please adjust this date whenever revising the manpage.
+.SH NAME
+pdfshow \- PDF file debugging tool used to show PDF objects
+.SH SYNOPSIS
+.B pdfshow
+.RI [ options ]
+.RI PDFfile
+.RI [ xref ]
+.RI [ trailer ]
+.RI [ object-number ]
+.B ...
+.SH DESCRIPTION
+This manual page briefly describes the
+.B pdfshow
+command. The default action taken if only a PDF file name is given is to
+print the PDF trailer. An alternative is to specify xref as an argument,
+causing
+.B pdfshow
+to print the trailer section of the file. The most useful operation
+however is to give one or more whitespace separated integers referring to
+PDF objects, causing each to be printed.
+.PP
+.SH OPTIONS
+A description of each of the supported options is included below.
+.TP
+.B \-b
+Causes pdfshow to print all object streams as raw binary data
+.TP
+.B \-p password
+Uses the given password during decryption of an encrypted PDF file.
+The password is tried both as user and owner password.
+.TP
+.B \-x
+Enables decompression of object stream contents before printing them.
+.SH SEE ALSO
+.BR mupdf (1),
+.BR pdfclean (1).
+.BR pdfdraw (1).
+.SH AUTHOR
+MuPDF was written by Tor Andersson <tor@ghostscript.com>.
+MuPDF is Copyright 2006-2010 Artifex Software, Inc.
+.PP
+This manual page was written by Sebastian Rasmussen <sebras@hotmail.com>.

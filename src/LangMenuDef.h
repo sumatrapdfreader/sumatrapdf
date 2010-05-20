@@ -5,7 +5,7 @@
 #ifndef LANG_MENU_DEF_H__
 #define LANG_MENU_DEF_H__
 
-#define LANGS_COUNT 58
+#define LANGS_COUNT 59
 
 
 typedef struct MenuDef {

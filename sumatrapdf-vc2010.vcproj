@@ -154,6 +154,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SumatraAbout.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\SumatraDialogs.cc"
 				>
 			</File>
@@ -167,6 +171,10 @@
 			</File>
 			<File
 				RelativePath=".\src\SumatraPDF.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraProperties.cpp"
 				>
 			</File>
 			<File
@@ -375,11 +383,31 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\crypt_crc32.c"
+					RelativePath=".\mupdf\fitz\crypt_md5.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\crypt_md5.c"
+					RelativePath=".\mupdf\fitz\dev_bbox.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\dev_draw.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\dev_list.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\dev_null.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\dev_text.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\dev_trace.c"
 					>
 				</File>
 				<File
@@ -447,35 +475,11 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\fitz_res.h"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\fitz_stream.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\fitz_tree.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_misc1.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_misc2.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_path.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_text.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_toxml.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\node_tree.c"
 					>
 				</File>
 				<File
@@ -484,10 +488,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\obj_dict.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\obj_parse.c"
 					>
 				</File>
 				<File
@@ -507,11 +507,19 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\res_image.c"
+					RelativePath=".\mupdf\fitz\res_path.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\res_pixmap.c"
 					>
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\res_shade.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\res_text.c"
 					>
 				</File>
 				<File
@@ -544,66 +552,50 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="fitzdraw"
+				Name="draw"
 				>
-				<File
-					RelativePath=".\mupdf\fitzdraw\archppc.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitzdraw\archsparc.c"
-					>
-				</File>
 				<File
 					RelativePath=".\mupdf\fitzdraw\archx86.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\blendmodes.c"
+					RelativePath=".\mupdf\draw\blendmodes.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\glyphcache.c"
+					RelativePath=".\mupdf\draw\glyphcache.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\imagedraw.c"
+					RelativePath=".\mupdf\draw\imagedraw.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\imagescale.c"
+					RelativePath=".\mupdf\draw\imagescale.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\imageunpack.c"
+					RelativePath=".\mupdf\draw\imageunpack.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\meshdraw.c"
+					RelativePath=".\mupdf\draw\meshdraw.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\pathfill.c"
+					RelativePath=".\mupdf\draw\pathfill.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\pathscan.c"
+					RelativePath=".\mupdf\draw\pathscan.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\pathstroke.c"
+					RelativePath=".\mupdf\draw\pathstroke.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitzdraw\pixmap.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitzdraw\porterduff.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitzdraw\render.c"
+					RelativePath=".\mupdf\draw\porterduff.c"
 					>
 				</File>
 			</Filter>
@@ -647,11 +639,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_colorspace1.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\mupdf\pdf_colorspace2.c"
+					RelativePath=".\mupdf\mupdf\pdf_colorspace.c"
 					>
 				</File>
 				<File
@@ -732,14 +720,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\mupdf\pdf_shade.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\mupdf\pdf_shade1.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\mupdf\pdf_shade4.c"
 					>
 				</File>
 				<File

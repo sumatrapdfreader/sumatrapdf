@@ -1,0 +1,63 @@
+.TH PDFDRAW 1 "April 15, 2010"
+.\" Please adjust this date whenever revising the manpage.
+.SH NAME
+pdfdraw \- renderer tool to convert a PDF file to PNM image files
+.SH SYNOPSIS
+.B pdfdraw
+.RI [ options ]
+.RI [ PDFfile\ pages ]
+.B ...
+.SH DESCRIPTION
+This manual page briefly describes the
+.B pdfdraw
+command. Unless any options that modify the behaviour are specified each
+page of each PDF file is rendered and a MD5 checksum over the resulting
+pixels is computed and printed. If the
+.RI pages
+argument is missing all pages will be rendered, but it could be specified
+and in that case this controls what pages to render. The argument can be
+given as a single integer representing the page number, by a range, e.g.
+1-3, comma-separates page numbers and ranges, e.g. 1-3,5,7-9. Additionally
+the last element in the comma-separated list can be specified as an open
+range, e.g. 9-, which means that all pages in the PDF file starting from
+that page ar rendered.
+.PP
+.SH OPTIONS
+A description of each of the supported options is included below.
+.TP
+.B \-b bands
+Each page is rendered in the given number of separate bands. The default is
+to render the entire page in one go.
+.TP
+.B \-p password
+Uses the given password during decryption of an encrypted PDF file.
+The password is tried both as user and owner password.
+.TP
+.B \-o pattern
+Enables generation of PNM files, one per page. Each file is given a name
+represented by the specified pattern where %d represents the page number,
+e.g. output%03d.pnm.
+.TP
+.B \-r resolution
+Specified the resolution when rendering each page, specified in dots per
+inch. The deafult is 72dpi.
+.TP
+.B \-m
+Enables benchmarking, causing rendering time to be printed for each page as
+well as summary statistics after all pages in each PDF file have been
+rendered.
+.TP
+.B \-t
+Print the text on the page in UTF-8.
+.TP
+.B \-x
+Print an XML representation of the page graphics.
+.SH SEE ALSO
+.BR mupdf (1),
+.BR pdfclean (1).
+.BR pdfshow (1).
+.SH AUTHOR
+MuPDF was written by Tor Andersson <tor@ghostscript.com>.
+MuPDF is Copyright 2006-2010 Artifex Software, Inc.
+.PP
+This manual page was written by Sebastian Rasmussen <sebras@hotmail.com>.

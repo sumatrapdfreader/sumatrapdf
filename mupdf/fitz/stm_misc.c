@@ -2,8 +2,7 @@
  * Miscellaneous I/O functions
  */
 
-#include "fitz_base.h"
-#include "fitz_stream.h"
+#include "fitz.h"
 
 /*
  * Read a line terminated by LF or CR or CRLF.

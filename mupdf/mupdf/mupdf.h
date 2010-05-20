@@ -5,6 +5,8 @@
 #error "fitz.h must be included before mupdf.h"
 #endif
 
+typedef struct pdf_xref_s pdf_xref;
+
 void pdf_logxref(char *fmt, ...);
 void pdf_logrsrc(char *fmt, ...);
 void pdf_logfont(char *fmt, ...);
@@ -114,7 +116,6 @@ int pdf_authenticatepassword(pdf_xref *xref, char *pw);
  */
 
 typedef struct pdf_xrefentry_s pdf_xrefentry;
-/* typedef struct pdf_xref_s pdf_xref; -- already defined in fitz_stream.h */
 
 struct pdf_xref_s
 {
@@ -122,10 +123,7 @@ struct pdf_xref_s
 	int version;
 	int startxref;
 	pdf_crypt *crypt;
-
-	fz_obj *trailer;		/* TODO split this into root/info/encrypt/id */
-	fz_obj *root;			/* resolved catalog dict */
-	fz_obj *info;			/* resolved info dict */
+	fz_obj *trailer;
 
 	int len;
 	int cap;
@@ -133,6 +131,8 @@ struct pdf_xref_s
 
 	struct pdf_store_s *store;
 	struct pdf_outline_s *outlines;
+
+	char scratch[65536];
 };
 
 struct pdf_xrefentry_s
@@ -144,15 +144,10 @@ struct pdf_xrefentry_s
 	int type;	/* 0=unset (f)ree i(n)use (o)bjstm */
 };
 
-pdf_xref * pdf_newxref(void);
-fz_error pdf_repairxref(pdf_xref *, char *filename);
-fz_error pdf_loadxref(pdf_xref *, char *filename);
-fz_error pdf_initxref(pdf_xref *);
-fz_error pdf_decryptxref(pdf_xref *);
-
+pdf_xref * pdf_openxref(fz_stream *file);
+void pdf_closexref(pdf_xref *);
 void pdf_debugxref(pdf_xref *);
 void pdf_flushxref(pdf_xref *, int force);
-void pdf_closexref(pdf_xref *);
 
 fz_error pdf_cacheobject(pdf_xref *, int oid, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int oid, int gen);
@@ -164,11 +159,8 @@ fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen);
 fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int oid, int gen);
 fz_error pdf_openstream(fz_stream **stmp, pdf_xref *, int oid, int gen);
 
-fz_error pdf_garbagecollect(pdf_xref *xref);
-fz_error pdf_transplant(pdf_xref *dst, pdf_xref *src, fz_obj **newp, fz_obj *old);
-
 /* private */
-fz_error pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap);
+extern fz_error pdf_repairxref(pdf_xref *xref, char *buf, int bufsize);
 
 /*
  * Resource store
@@ -191,6 +183,7 @@ typedef enum pdf_itemkind_e
 pdf_store * pdf_newstore(void);
 void pdf_emptystore(pdf_store *store);
 void pdf_dropstore(pdf_store *store);
+void pdf_debugstore(pdf_store *store);
 
 void pdf_agestoreditems(pdf_store *store);
 void pdf_evictageditems(pdf_store *store);
@@ -224,12 +217,6 @@ struct pdf_indexed_s
 	unsigned char *lookup;
 };
 
-extern fz_colorspace *pdf_devicegray;
-extern fz_colorspace *pdf_devicergb;
-extern fz_colorspace *pdf_devicecmyk;
-extern fz_colorspace *pdf_devicelab;
-extern fz_colorspace *pdf_devicepattern;
-
 void pdf_convcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv);
 void pdf_convpixmap(fz_colorspace *ss, fz_pixmap *sp, fz_colorspace *ds, fz_pixmap *dp);
 
@@ -249,7 +236,8 @@ struct pdf_pattern_s
 	float ystep;
 	fz_matrix matrix;
 	fz_rect bbox;
-	fz_tree *tree;
+	fz_obj *resources;
+	fz_buffer *contents;
 };
 
 fz_error pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *obj);
@@ -260,15 +248,6 @@ void pdf_droppattern(pdf_pattern *pat);
  * Shading
  */
 
-void pdf_setmeshvalue(float *mesh, int i, float x, float y, float t);
-fz_error pdf_loadshadefunction(fz_shade *shade, pdf_xref *xref, fz_obj *dict, float t0, float t1);
-fz_error pdf_loadtype1shade(fz_shade *, pdf_xref *, fz_obj *dict);
-fz_error pdf_loadtype2shade(fz_shade *, pdf_xref *, fz_obj *dict);
-fz_error pdf_loadtype3shade(fz_shade *, pdf_xref *, fz_obj *dict);
-fz_error pdf_loadtype4shade(fz_shade *, pdf_xref *, fz_obj *dict);
-fz_error pdf_loadtype5shade(fz_shade *, pdf_xref *, fz_obj *dict);
-fz_error pdf_loadtype6shade(fz_shade *, pdf_xref *, fz_obj *dict);
-fz_error pdf_loadtype7shade(fz_shade *, pdf_xref *, fz_obj *dict);
 fz_error pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *obj);
 
 /*
@@ -301,8 +280,10 @@ typedef struct pdf_image_s pdf_image;
 
 struct pdf_image_s
 {
-	fz_image super;
-	fz_image *mask;			/* explicit mask with subimage */
+	int refs;
+	int w, h, n, a;
+	fz_colorspace *cs;
+	pdf_image *mask;			/* explicit mask with subimage */
 	int usecolorkey;		/* explicit color-keyed masking */
 	int colorkey[FZ_MAXCOLORS * 2];
 	pdf_indexed *indexed;
@@ -314,8 +295,9 @@ struct pdf_image_s
 
 fz_error pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
 fz_error pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *obj);
-fz_error pdf_loadtile(fz_image *image, fz_pixmap *tile);
-void pdf_dropimage(fz_image *img);
+fz_error pdf_loadtile(pdf_image *image, fz_pixmap *tile);
+pdf_image *pdf_keepimage(pdf_image *img);
+void pdf_dropimage(pdf_image *img);
 
 /*
  * CMap
@@ -481,7 +463,6 @@ fz_error pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref, char **strings, c
 fz_error pdf_loadbuiltinfont(pdf_fontdesc *font, char *basefont);
 fz_error pdf_loadembeddedfont(pdf_fontdesc *font, pdf_xref *xref, fz_obj *stmref);
 fz_error pdf_loadsystemfont(pdf_fontdesc *font, char *basefont, char *collection);
-fz_error pdf_loadsubstitutefont(pdf_fontdesc *font, int fdflags, char *collection);
 
 /* type3.c */
 fz_error pdf_loadtype3font(pdf_fontdesc **fontp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
@@ -552,7 +533,6 @@ struct pdf_outline_s
 	pdf_outline *next;
 };
 
-fz_error pdf_loadnametree(fz_obj **dictp, pdf_xref *xref, fz_obj *root);
 fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest);
 
 pdf_link *pdf_newlink(pdf_linkkind kind, fz_rect rect, fz_obj *dest);
@@ -570,30 +550,15 @@ void pdf_loadannots(pdf_comment **, pdf_link **, pdf_xref *, fz_obj *annots);
  */
 
 typedef struct pdf_page_s pdf_page;
-typedef struct pdf_textline_s pdf_textline;
-typedef struct pdf_textchar_s pdf_textchar;
 
 struct pdf_page_s
 {
 	fz_rect mediabox;
 	int rotate;
 	fz_obj *resources;
-	fz_tree *tree;
+	fz_buffer *contents;
 	pdf_comment *comments;
 	pdf_link *links;
-};
-
-struct pdf_textchar_s
-{
-	fz_irect bbox;
-	int c;
-};
-
-struct pdf_textline_s
-{
-	int len, cap;
-	pdf_textchar *text;
-	pdf_textline *next;
 };
 
 /* pagetree.c */
@@ -604,12 +569,6 @@ int pdf_findpageobject(pdf_xref *xref, fz_obj *pageobj);
 /* page.c */
 fz_error pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *ref);
 void pdf_droppage(pdf_page *page);
-
-/* unicode.c */
-fz_error pdf_loadtextfromtree(pdf_textline **linep, fz_tree *tree, fz_matrix ctm);
-void pdf_debugtextline(pdf_textline *line);
-pdf_textline * pdf_newtextline(void);
-void pdf_droptextline(pdf_textline *line);
 
 /*
  * content stream parsing
@@ -649,14 +608,11 @@ struct pdf_material_s
 
 struct pdf_gstate_s
 {
+	fz_matrix ctm;
+	int clipdepth;
+
 	/* path stroking */
-	float linewidth;
-	int linecap;
-	int linejoin;
-	float miterlimit;
-	float dashphase;
-	int dashlen;
-	float dashlist[32];
+	fz_strokestate strokestate;
 
 	/* materials */
 	pdf_material stroke;
@@ -672,58 +628,55 @@ struct pdf_gstate_s
 	float size;
 	int render;
 	float rise;
-
-	/* tree construction state */
-	fz_node *head;
 };
 
 struct pdf_csi_s
 {
-	pdf_gstate gstate[32];
-	int gtop;
+	fz_device *dev;
+	pdf_xref *xref;
+
 	fz_obj *stack[32];
 	int top;
 	int xbalance;
 	fz_obj *array;
 
 	/* path object state */
-	fz_pathnode *path;
+	fz_path *path;
 	int clip;
 	int clipevenodd;
 
 	/* text object state */
-	fz_node *textclip;
-	fz_textnode *text;
+	fz_text *text;
 	fz_matrix tlm;
 	fz_matrix tm;
 	int textmode;
+	int accumulate;
 
-	fz_tree *tree;
+	/* graphics state */
+	fz_matrix topctm;
+	pdf_gstate gstate[32];
+	int gtop;
 };
 
 /* build.c */
-void pdf_initgstate(pdf_gstate *gs);
-fz_error pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs);
-fz_error pdf_setcolor(pdf_csi *csi, int what, float *v);
-fz_error pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v);
-fz_error pdf_setshade(pdf_csi *csi, int what, fz_shade *shade);
-
-fz_error pdf_buildstrokepath(pdf_gstate *gs, fz_pathnode *path);
-fz_error pdf_buildfillpath(pdf_gstate *gs, fz_pathnode *path, int evenodd);
-fz_error pdf_addfillshape(pdf_gstate *gs, fz_node *shape);
-fz_error pdf_addstrokeshape(pdf_gstate *gs, fz_node *shape);
-fz_error pdf_addclipmask(pdf_gstate *gs, fz_node *shape);
-fz_error pdf_addtransform(pdf_gstate *gs, fz_node *transform);
-fz_error pdf_addshade(pdf_gstate *gs, fz_shade *shade);
-fz_error pdf_showpath(pdf_csi*, int close, int fill, int stroke, int evenodd);
-fz_error pdf_showtext(pdf_csi*, fz_obj *text);
-fz_error pdf_flushtext(pdf_csi*);
-fz_error pdf_showimage(pdf_csi*, pdf_image *img);
+void pdf_initgstate(pdf_gstate *gs, fz_matrix ctm);
+void pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs);
+void pdf_setcolor(pdf_csi *csi, int what, float *v);
+void pdf_setpattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v);
+void pdf_setshade(pdf_csi *csi, int what, fz_shade *shade);
+void pdf_showpath(pdf_csi*, int close, int fill, int stroke, int evenodd);
+void pdf_showtext(pdf_csi*, fz_obj *text);
+void pdf_flushtext(pdf_csi*);
+void pdf_showimage(pdf_csi*, pdf_image *img);
+void pdf_showshade(pdf_csi*, fz_shade *shd);
 
 /* interpret.c */
-fz_error pdf_newcsi(pdf_csi **csip, int maskonly);
-fz_error pdf_runcsi(pdf_csi *, pdf_xref *xref, fz_obj *rdb, fz_stream *);
-void pdf_dropcsi(pdf_csi *csi);
+void pdf_gsave(pdf_csi *csi);
+void pdf_grestore(pdf_csi *csi);
+fz_error pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
+fz_error pdf_runcontentstream(fz_device *dev, fz_matrix ctm, pdf_xref *xref, fz_obj *resources, fz_buffer *contents);
+
+pdf_material * pdf_keepmaterial(pdf_material *mat);
+pdf_material * pdf_dropmaterial(pdf_material *mat);
 
 #endif
-

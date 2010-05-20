@@ -126,7 +126,7 @@ pdf_loadsystemcmap(pdf_cmap **cmapp, char *cmapname)
 			{
 				error = pdf_loadsystemcmap(&usecmap, cmap->usecmapname);
 				if (error)
-					return fz_rethrow(error, "could not load usecmap: %s", cmap->usecmapname);
+					return fz_rethrow(error, "cannot load usecmap: %s", cmap->usecmapname);
 				pdf_setusecmap(cmap, usecmap);
 			}
 			*cmapp = cmap;

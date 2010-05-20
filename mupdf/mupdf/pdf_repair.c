@@ -98,7 +98,7 @@ fz_repairobj(fz_stream *file, char *buf, int cap,
 				return fz_rethrow(error, "cannot seek in file");
 			error = pdf_lex(&tok, file, buf, cap, &len);
 			if (error)
-				return fz_rethrow(error, "cannot scan for endstream token");
+				fz_catch(error, "cannot find endstream token, falling back to scanning");
 			if (tok == PDF_TENDSTREAM)
 				goto atobjend;
 			error = fz_seek(file, *stmofsp, 0);
@@ -137,17 +137,15 @@ atobjend:
 }
 
 fz_error
-pdf_repairxref(pdf_xref *xref, char *filename)
+pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 {
 	fz_error error;
-	fz_stream *file;
+	fz_obj *obj;
 
 	struct entry *list = nil;
 	int listlen;
 	int listcap;
 	int maxoid = 0;
-
-	char buf[65536];
 
 	int oid = 0;
 	int gen = 0;
@@ -160,15 +158,9 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 	int next;
 	int i;
 
-	error = fz_openrfile(&file, filename);
-	if (error)
-		return fz_rethrow(error, "cannot open file '%s'", filename);
+	pdf_logxref("repairxref %p\n", xref);
 
-	pdf_logxref("repairxref '%s' %p\n", filename, xref);
-
-	xref->file = file;
-
-	/* TODO: extract version */
+	fz_seek(xref->file, 0, 0);
 
 	listlen = 0;
 	listcap = 1024;
@@ -176,14 +168,14 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 
 	while (1)
 	{
-		tmpofs = fz_tell(file);
+		tmpofs = fz_tell(xref->file);
 		if (tmpofs < 0)
 		{
 			error = fz_throw("cannot tell in file");
 			goto cleanup;
 		}
 
-		error = pdf_lex(&tok, file, buf, sizeof buf, &len);
+		error = pdf_lex(&tok, xref->file, buf, bufsize, &len);
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot scan for objects");
@@ -200,7 +192,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 
 		if (tok == PDF_TOBJ)
 		{
-			error = fz_repairobj(file, buf, sizeof buf, &stmofs, &stmlen, &isroot, &isinfo);
+			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &isroot, &isinfo);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
@@ -239,7 +231,7 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 		}
 
 		if (tok == PDF_TERROR)
-			fz_readbyte(file);
+			fz_readbyte(xref->file);
 
 		if (tok == PDF_TEOF)
 			break;
@@ -251,14 +243,15 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 		goto cleanup;
 	}
 
-	error = fz_packobj(&xref->trailer, xref,
-		"<< /Size %i /Root %r >>",
-		maxoid + 1, rootoid, rootgen);
-	if (error)
-	{
-		error = fz_rethrow(error, "cannot create new trailer");
-		goto cleanup;
-	}
+	xref->trailer = fz_newdict(2);
+
+	obj = fz_newint(maxoid + 1);
+	fz_dictputs(xref->trailer, "Size", obj);
+	fz_dropobj(obj);
+
+	obj = fz_newindirect(rootoid, rootgen, xref);
+	fz_dictputs(xref->trailer, "Root", obj);
+	fz_dropobj(obj);
 
 	xref->len = maxoid + 1;
 	xref->cap = xref->len;
@@ -326,9 +319,6 @@ pdf_repairxref(pdf_xref *xref, char *filename)
 	return fz_okay;
 
 cleanup:
-	fz_dropstream(file);
-	xref->file = nil; /* don't keep the stale pointer */
 	fz_free(list);
 	return error; /* already rethrown */
 }
-

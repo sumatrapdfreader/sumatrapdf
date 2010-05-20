@@ -1,4 +1,4 @@
-#include "fitz_base.h"
+#include "fitz.h"
 
 void * fz_malloc(int n)
 {
