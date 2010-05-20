@@ -188,7 +188,12 @@ void *fz_hashgetval(fz_hashtable *table, int idx);
  */
 
 /* multiply 8-bit fixpoint (0..1) so that 0*0==0 and 255*255==255 */
-#define fz_mul255(a,b) (((a) * ((b) + ((b) >> 7))) >> 8)
+static inline int fz_mul255(int a, int b)
+{
+	int x = a * b + 0x80;
+	x += x >> 8;
+	return x >> 8;
+}
 
 typedef struct fz_matrix_s fz_matrix;
 typedef struct fz_point_s fz_point;

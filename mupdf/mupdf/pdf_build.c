@@ -263,7 +263,6 @@ pdf_showshade(pdf_csi *csi, fz_shade *shd)
 void
 pdf_showimage(pdf_csi *csi, pdf_image *image)
 {
-	fz_path *path = nil;
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_pixmap *tile = fz_newpixmap(image->cs, 0, 0, image->w, image->h);
 	fz_error error = pdf_loadtile(image, tile);
@@ -272,18 +271,6 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 		fz_droppixmap(tile);
 		fz_catch(error, "cannot load image data");
 		return;
-	}
-
-	/* TODO: clip against a unit rectangle in the image blit instead */
-	if (!fz_isrectilinear(gstate->ctm))
-	{
-		path = fz_newpath();
-		fz_moveto(path, 0.0, 0.0);
-		fz_lineto(path, 1.0, 0.0);
-		fz_lineto(path, 1.0, 1.0);
-		fz_lineto(path, 0.0, 1.0);
-		fz_closepath(path);
-		csi->dev->clippath(csi->dev->user, path, 0, gstate->ctm);
 	}
 
 	if (image->mask)
@@ -334,12 +321,6 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 
 	if (image->mask)
 		csi->dev->popclip(csi->dev->user);
-
-	if (path)
-	{
-		fz_freepath(path);
-		csi->dev->popclip(csi->dev->user);
-	}
 
 	fz_droppixmap(tile);
 }

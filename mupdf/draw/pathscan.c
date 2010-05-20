@@ -422,7 +422,7 @@ static inline void toalpha(unsigned char *list, int n)
 
 static inline void blit(fz_pixmap *pix, int x, int y,
 	unsigned char *list, int skipx, int len,
-	unsigned char *argb, int over)
+	unsigned char *argb, fz_pixmap *image, fz_matrix *invmat)
 {
 	unsigned char *dst;
 	unsigned char cov;
@@ -437,17 +437,31 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 		++list;
 	}
 
-	if (argb)
-		fz_path_w4i1o4(argb, list, cov, len, dst);
-	else if (over)
-		fz_path_1o1(list, cov, len, dst);
+	if (image)
+	{
+		int u = (invmat->a * (x + 0.5) + invmat->c * (y + 0.5) + invmat->e) * 65536;
+		int v = (invmat->b * (x + 0.5) + invmat->d * (y + 0.5) + invmat->f) * 65536;
+		int fa = invmat->a * 65536;
+		int fb = invmat->b * 65536;
+		if (argb)
+			fz_img_w4i1o4(argb, list, cov, len, dst, image, u, v, fa, fb);
+		else if (image->colorspace)
+			fz_img_4o4(list, cov, len, dst, image, u, v, fa, fb);
+		else
+			fz_img_1o1(list, cov, len, dst, image, u, v, fa, fb);
+	}
 	else
-		fz_path_1c1(list, cov, len, dst);
+	{
+		if (argb)
+			fz_path_w4i1o4(argb, list, cov, len, dst);
+		else
+			fz_path_1o1(list, cov, len, dst);
+	}
 }
 
 fz_error
 fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
-	fz_pixmap *pix, unsigned char *argb, int over)
+	fz_pixmap *pix, unsigned char *argb, fz_pixmap *image, fz_matrix *invmat)
 {
 	fz_error error;
 	unsigned char *deltas;
@@ -483,7 +497,7 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 		{
 			if (yd >= clip.y0 && yd < clip.y1)
 			{
-				blit(pix, xmin + skipx, yd, deltas, skipx, clipn, argb, over);
+				blit(pix, xmin + skipx, yd, deltas, skipx, clipn, argb, image, invmat);
 			}
 		}
 		yd = yc;
@@ -512,7 +526,7 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 
 	if (yd >= clip.y0 && yd < clip.y1)
 	{
-		blit(pix, xmin + skipx, yd, deltas, skipx, clipn, argb, over);
+		blit(pix, xmin + skipx, yd, deltas, skipx, clipn, argb, image, invmat);
 	}
 
 	fz_free(deltas);

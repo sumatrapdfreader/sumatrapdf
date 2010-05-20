@@ -1,77 +1,33 @@
 # GNU Makefile for MuPDF
 #
-#	make build=release prefix=$HOME install
+#	make build=release prefix=/usr/local [pregen=dir] install
 #
-
-prefix ?= /usr/local
-build ?= debug
 
 default: all
 
-#
-# Compiler and configuration
-#
+build ?= debug
+prefix ?= /usr/local
 
-OS := $(shell uname)
-OS := $(OS:MINGW%=MINGW)
+OBJDIR := build/$(build)
+GENDIR := build/generated
 
-LIBS := -ljbig2dec -lopenjpeg -lfreetype -ljpeg -lz -lm
-CFLAGS := -Wall --std=gnu99 -Ifitz -Imupdf
-LDFLAGS =
-CC = cc
-LD = $(CC)
-AR = ar
+# If no pregen is supplied, then generate (dump) the font and cmap .c
+# files as part of the build. If it is supplied, then just build from
+# that directory.
 
-ifeq "$(build)" "debug"
-CFLAGS += -g -O0
+ifneq "$(pregen)" ""
+GENDIR := $(pregen)
 endif
 
-ifeq "$(build)" "release"
-CFLAGS += -O3
-endif
+# Compiler flags and configuration options are kept in a separate file.
 
-ifeq "$(OS)" "Linux"
-CFLAGS += `pkg-config --cflags freetype2`
-LDFLAGS += `pkg-config --libs freetype2`
-X11LIBS = -lX11 -lXext
-PDFVIEW_EXE = $(X11VIEW_EXE)
-ifeq  "$(build)" "release"
-CFLAGS += -mmmx -ftree-vectorize -msse -msse2 -march=k8 -DARCH_X86
-ARCH_SRC = archx86.c
-endif
-endif
-
-ifeq "$(OS)" "Darwin"
-CFLAGS += -I$(HOME)/include -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -DARCH_X86_64
-LDFLAGS += -L$(HOME)/lib -L/usr/X11R6/lib
-X11LIBS = -lX11 -lXext
-PDFVIEW_EXE = $(X11VIEW_EXE)
-ARCH_SRC = archx86.c
-endif
-
-ifeq "$(OS)" "MINGW"
-CC = gcc
-CFLAGS += -Ic:/msys/1.0/local/include
-LDFLAGS += -Lc:/msys/1.0/local/lib
-W32LIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows
-PDFVIEW_EXE = $(WINVIEW_EXE)
-endif
-
-# Edit these if you are cross compiling:
-
-HOSTCC ?= $(CC)
-HOSTLD ?= $(HOSTCC)
-HOSTCFLAGS ?= $(CFLAGS)
-HOSTLDFLAGS ?= $(LDFLAGS)
+-include Makerules
 
 #
 # Build commands
 #
 
-HOSTCC_CMD = @ echo HOSTCC $@ && $(HOSTCC) -o $@ -c $< $(HOSTCFLAGS)
-HOSTLD_CMD = @ echo HOSTLD $@ && $(HOSTLD) -o $@ $^ $(HOSTLDFLAGS)
 GENFILE_CMD = @ echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
-
 CC_CMD = @ echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
 LD_CMD = @ echo LD $@ && $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
 AR_CMD = @ echo AR $@ && $(AR) cru $@ $^
@@ -80,14 +36,22 @@ AR_CMD = @ echo AR $@ && $(AR) cru $@ $^
 # Directories
 #
 
-OBJDIR = build/$(build)
-GENDIR = build/generated
-HOSTDIR = build/host
-
-DIRS = $(OBJDIR) $(GENDIR) $(HOSTDIR)
+DIRS = $(OBJDIR) $(GENDIR)
 
 $(DIRS):
 	mkdir -p $@
+
+#
+# Code generation tools
+#
+
+FONTDUMP_EXE=$(OBJDIR)/fontdump
+$(FONTDUMP_EXE): $(OBJDIR)/fontdump.o
+	$(LD_CMD)
+
+CMAPDUMP_EXE=$(OBJDIR)/cmapdump
+$(CMAPDUMP_EXE): $(OBJDIR)/cmapdump.o
+	$(LD_CMD)
 
 #
 # Sources
@@ -108,21 +72,13 @@ FITZ_SRC=$(addprefix fitz/, \
 	stm_buffer.c stm_filter.c stm_misc.c stm_open.c stm_read.c \
 	util_getopt.c util_gettimeofday.c )
 FITZ_OBJ=$(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
-FITZ_LIB=$(OBJDIR)/libfitz.a
-
 $(FITZ_OBJ): $(FITZ_HDR)
-$(FITZ_LIB): $(FITZ_OBJ)
-	 $(AR_CMD)
 
 DRAW_SRC=$(addprefix draw/, $(ARCH_SRC) \
 	blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c meshdraw.c \
 	pathfill.c pathscan.c pathstroke.c porterduff.c )
 DRAW_OBJ=$(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
-DRAW_LIB=$(OBJDIR)/libdraw.a
-
 $(DRAW_OBJ): $(FITZ_HDR)
-$(DRAW_LIB): $(DRAW_OBJ)
-	 $(AR_CMD)
 
 MUPDF_HDR=$(FITZ_HDR) mupdf/mupdf.h
 MUPDF_SRC=$(addprefix mupdf/, \
@@ -134,11 +90,7 @@ MUPDF_SRC=$(addprefix mupdf/, \
 	pdf_shade.c pdf_store.c pdf_stream.c pdf_type3.c \
 	pdf_unicode.c pdf_xobject.c pdf_xref.c )
 MUPDF_OBJ=$(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
-MUPDF_LIB=$(OBJDIR)/libmupdf.a
-
 $(MUPDF_OBJ): $(MUPDF_HDR)
-$(MUPDF_LIB): $(MUPDF_OBJ)
-	 $(AR_CMD)
 
 $(OBJDIR)/%.o: fitz/%.c
 	$(CC_CMD)
@@ -146,22 +98,6 @@ $(OBJDIR)/%.o: draw/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: mupdf/%.c
 	$(CC_CMD)
-
-#
-# Code generation tools run on the host
-#
-
-FONTDUMP_EXE=$(HOSTDIR)/fontdump
-CMAPDUMP_EXE=$(HOSTDIR)/cmapdump
-
-$(FONTDUMP_EXE): $(HOSTDIR)/fontdump.o
-	$(HOSTLD_CMD)
-$(CMAPDUMP_EXE): $(HOSTDIR)/cmapdump.o
-	$(HOSTLD_CMD)
-
-$(HOSTDIR)/%.o: mupdf/%.c
-	$(HOSTCC_CMD)
-
 $(OBJDIR)/%.o: $(GENDIR)/%.c
 	$(CC_CMD)
 
@@ -178,20 +114,20 @@ BASEFONT_FILES=$(addprefix fonts/, \
 
 CJKFONT_FILES=fonts/droid/DroidSansFallback.ttf
 
+ifeq "$(pregen)" ""
+
 $(GENDIR)/font_base14.c: $(FONTDUMP_EXE) $(BASEFONT_FILES)
 	$(GENFILE_CMD)
 $(GENDIR)/font_cjk.c: $(FONTDUMP_EXE) $(CJKFONT_FILES)
 	$(GENFILE_CMD)
+
+endif
 
 FONT_SRC=\
 	$(GENDIR)/font_base14.c \
 	$(GENDIR)/font_cjk.c
 
 FONT_OBJ=$(FONT_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
-FONT_LIB=$(OBJDIR)/libfonts.a
-
-$(FONT_LIB): $(FONT_OBJ)
-	 $(AR_CMD)
 
 #
 # Generated CMap file dumps
@@ -238,6 +174,8 @@ CMAP_KOREA_FILES=$(addprefix cmaps/, \
         KSCms-UHC-HW-H KSCms-UHC-HW-V KSCms-UHC-V KSCpc-EUC-H \
         KSCpc-EUC-V UniKS-UCS2-H UniKS-UCS2-V UniKS-UTF16-H UniKS-UTF16-V )
 
+ifeq "$(pregen)" ""
+
 $(GENDIR)/cmap_unicode.c: $(CMAPDUMP_EXE) $(CMAP_UNICODE_FILES)
 	$(GENFILE_CMD)
 $(GENDIR)/cmap_cns.c: $(CMAPDUMP_EXE) $(CMAP_CNS_FILES)
@@ -249,6 +187,8 @@ $(GENDIR)/cmap_japan.c: $(CMAPDUMP_EXE) $(CMAP_JAPAN_FILES)
 $(GENDIR)/cmap_korea.c: $(CMAPDUMP_EXE) $(CMAP_KOREA_FILES)
 	$(GENFILE_CMD)
 
+endif
+
 CMAP_SRC=\
 	$(GENDIR)/cmap_unicode.c \
 	$(GENDIR)/cmap_cns.c \
@@ -257,14 +197,17 @@ CMAP_SRC=\
 	$(GENDIR)/cmap_korea.c
 
 CMAP_OBJ=$(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
-CMAP_LIB=$(OBJDIR)/libcmaps.a
 
-$(CMAP_OBJ): $(MUPDF_HDR)
-$(CMAP_LIB): $(CMAP_OBJ)
+#
+# Library
+#
+
+MUPDF_LIB=$(OBJDIR)/libmupdf.a
+$(MUPDF_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUPDF_OBJ) $(CMAP_OBJ) $(FONT_OBJ)
 	 $(AR_CMD)
 
 #
-# Apps
+# Applications
 #
 
 APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE)
@@ -280,7 +223,7 @@ PDFSHOW_OBJ=$(PDFSHOW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFSHOW_EXE=$(OBJDIR)/pdfshow
 
 $(PDFSHOW_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
-$(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(MUPDF_LIB) $(FITZ_LIB)
+$(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(MUPDF_LIB)
 	$(LD_CMD)
 
 PDFCLEAN_SRC=apps/pdfclean.c apps/pdftool.c
@@ -288,7 +231,7 @@ PDFCLEAN_OBJ=$(PDFCLEAN_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFCLEAN_EXE=$(OBJDIR)/pdfclean
 
 $(PDFCLEAN_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
-$(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(MUPDF_LIB) $(FITZ_LIB)
+$(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(MUPDF_LIB)
 	$(LD_CMD)
 
 PDFDRAW_SRC=apps/pdfdraw.c apps/pdftool.c
@@ -296,7 +239,7 @@ PDFDRAW_OBJ=$(PDFDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFDRAW_EXE=$(OBJDIR)/pdfdraw
 
 $(PDFDRAW_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
-$(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+$(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(MUPDF_LIB)
 	$(LD_CMD)
 
 PDFEXTRACT_SRC=apps/pdfextract.c apps/pdftool.c
@@ -304,7 +247,7 @@ PDFEXTRACT_OBJ=$(PDFEXTRACT_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFEXTRACT_EXE=$(OBJDIR)/pdfextract
 
 $(PDFEXTRACT_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
-$(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+$(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(MUPDF_LIB)
 	$(LD_CMD)
 
 PDFINFO_SRC=apps/pdfinfo.c apps/pdftool.c
@@ -312,7 +255,7 @@ PDFINFO_OBJ=$(PDFINFO_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFINFO_EXE=$(OBJDIR)/pdfinfo
 
 $(PDFINFO_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
-$(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+$(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB)
 	$(LD_CMD)
 
 X11VIEW_SRC=apps/x11_main.c apps/x11_image.c apps/pdfapp.c
@@ -320,7 +263,7 @@ X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
 X11VIEW_EXE=$(OBJDIR)/mupdf
 
 $(X11VIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
-$(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+$(X11VIEW_EXE): $(X11VIEW_OBJ) $(MUPDF_LIB)
 	$(LD_CMD) $(X11LIBS)
 
 WINVIEW_SRC=apps/win_main.c apps/pdfapp.c
@@ -332,7 +275,7 @@ $(OBJDIR)/%.o: apps/%.rc
 	windres -i $< -o $@ --include-dir=apps
 
 $(WINVIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
-$(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(FONT_LIB) $(CMAP_LIB) $(FITZ_LIB) $(DRAW_LIB)
+$(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB)
 	$(LD_CMD) $(W32LIBS)
 
 #
@@ -353,12 +296,12 @@ all: $(DIRS) $(APPS)
 
 clean:
 	rm -rf $(OBJDIR)/*
-	rm -rf $(GENDIR)/*
-	rm -rf $(HOSTDIR)/*
 
 nuke:
 	rm -rf build
 
-install: $(DIRS) $(APPS)
+install: $(DIRS) $(APPS) $(MUPDF_LIB)
 	install $(APPS) $(prefix)/bin
+	install $(MUPDF_LIB) $(prefix)/lib
+	install $(MUPDF_HDR) $(prefix)/include
 

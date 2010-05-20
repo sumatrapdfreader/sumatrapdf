@@ -57,7 +57,7 @@ fz_ael * fz_newael(void);
 void fz_freeael(fz_ael *ael);
 
 fz_error fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill,
-	fz_bbox clip, fz_pixmap *pix, unsigned char *argb, int over);
+	fz_bbox clip, fz_pixmap *pix, unsigned char *argb, fz_pixmap *image, fz_matrix *invmat);
 
 void fz_fillpath(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness);
 void fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, float flatness, float linewidth);
@@ -67,39 +67,25 @@ void fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix c
  * Function pointers -- they can be replaced by cpu-optimized versions
  */
 
-#define FZ_PSRC \
-	unsigned char *src, int srcw, int srch
-#define FZ_PDST \
-	unsigned char *dst0, int dstw
-#define FZ_PCTM \
-	int u0, int v0, int fa, int fb, int fc, int fd, int w0, int h
-
 extern void fz_accelerate(void);
 
 extern void (*fz_duff_non)(unsigned char*,int,int,unsigned char*,int,int,int);
-extern void (*fz_duff_nimcn)(unsigned char*,int,int,unsigned char*,int,int,unsigned char*,int,int,int);
 extern void (*fz_duff_nimon)(unsigned char*,int,int,unsigned char*,int,int,unsigned char*,int,int,int);
 extern void (*fz_duff_1o1)(unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_4o4)(unsigned char*,int,unsigned char*,int,int,int);
-extern void (*fz_duff_1i1c1)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
-extern void (*fz_duff_4i1c4)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_1i1o1)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_4i1o4)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 
-extern void (*fz_path_1c1)(unsigned char*,unsigned char,int,unsigned char*);
 extern void (*fz_path_1o1)(unsigned char*,unsigned char,int,unsigned char*);
 extern void (*fz_path_w4i1o4)(unsigned char*,unsigned char*,unsigned char,int,unsigned char*);
 
-extern void (*fz_text_1c1)(unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_text_1o1)(unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_text_w4i1o4)(unsigned char*,unsigned char*,int,unsigned char*,int,int,int);
 
-extern void (*fz_img_ncn)(FZ_PSRC, int sn, FZ_PDST, FZ_PCTM);
-extern void (*fz_img_1c1)(FZ_PSRC, FZ_PDST, FZ_PCTM);
-extern void (*fz_img_4c4)(FZ_PSRC, FZ_PDST, FZ_PCTM);
-extern void (*fz_img_1o1)(FZ_PSRC, FZ_PDST, FZ_PCTM);
-extern void (*fz_img_4o4)(FZ_PSRC, FZ_PDST, FZ_PCTM);
-extern void (*fz_img_w4i1o4)(unsigned char*,FZ_PSRC,FZ_PDST,FZ_PCTM);
+extern void (*fz_img_non)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,fz_matrix*);
+extern void (*fz_img_1o1)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
+extern void (*fz_img_4o4)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
+extern void (*fz_img_w4i1o4)(unsigned char*,unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
 
 extern void (*fz_decodetile)(fz_pixmap *pix, int skip, float *decode);
 extern void (*fz_loadtile1)(unsigned char*, int sw, unsigned char*, int dw, int w, int h, int pad);

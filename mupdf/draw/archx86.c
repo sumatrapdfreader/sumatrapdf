@@ -77,6 +77,8 @@ static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int d
 	_mm_empty();
 }
 
+#if 0 /* TODO */
+
 static inline unsigned
 getargb(unsigned *s, int w, int h, int u, int v)
 {
@@ -212,6 +214,8 @@ static void img_4o4mmx(FZ_PSRC, FZ_PDST, FZ_PCTM)
 	_mm_empty();
 }
 
+#endif
+
 #endif /* HAVE_MMX */
 
 #if defined (ARCH_X86) || defined(ARCH_X86_64)
@@ -222,7 +226,7 @@ fz_accelerate(void)
 	if (fz_cpuflags & HAVE_MMX)
 	{
 		fz_duff_4i1o4 = duff_4i1o4mmx;
-		fz_img_4o4 = img_4o4mmx;
+// TODO		fz_img_4o4 = img_4o4mmx;
 	}
 #  endif
 }

@@ -1135,8 +1135,8 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 		{
 			p[0] = prevp[10];
 			p[1] = prevp[11];
-			p[2] = prevp[12];
-			p[3] = prevp[ 0];
+			p[2] = prevp[ 0];
+			p[3] = prevp[ 1];
 			memcpy(c[0], prevc[3], FZ_MAXCOLORS * sizeof(float));
 			memcpy(c[1], prevc[0], FZ_MAXCOLORS * sizeof(float));
 

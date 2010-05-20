@@ -1,59 +1,54 @@
 #include "fitz.h"
 
-#define CLAMPUV
-
 typedef unsigned char byte;
 
-#define lerp(a,b,t) (a + (((b - a) * t) >> 16))
-
-static inline byte getcomp(byte *s, int w, int h, int u, int v, int n, int k)
+static inline byte
+getmask(byte *s, int w, int h, int u, int v)
 {
-#ifdef CLAMPUV
 	if (u < 0) u = 0;
 	if (v < 0) v = 0;
 	if (u >= w) u = w - 1;
 	if (v >= h) v = h - 1;
-#else
-	if (u < 0) return 0;
-	if (v < 0) return 0;
-	if (u >= w) return 0;
-	if (v >= h) return 0;
-#endif
-	return s[(w * v + u) * n + k];
-}
-
-static inline int samplecomp(byte *s, int w, int h, int u, int v, int n, int k)
-{
-	int ui = u >> 16;
-	int vi = v >> 16;
-	int ud = u & 0xFFFF;
-	int vd = v & 0xFFFF;
-	int a = getcomp(s, w, h, ui, vi, n, k);
-	int b = getcomp(s, w, h, ui+1, vi, n, k);
-	int c = getcomp(s, w, h, ui, vi+1, n, k);
-	int d = getcomp(s, w, h, ui+1, vi+1, n, k);
-	int ab = lerp(a, b, ud);
-	int cd = lerp(c, d, ud);
-	return lerp(ab, cd, vd);
-}
-
-static inline byte getmask(byte *s, int w, int h, int u, int v)
-{
-#ifdef CLAMPUV
-	if (u < 0) u = 0;
-	if (v < 0) v = 0;
-	if (u >= w) u = w - 1;
-	if (v >= h) v = h - 1;
-#else
-	if (u < 0) return 0;
-	if (v < 0) return 0;
-	if (u >= w) return 0;
-	if (v >= h) return 0;
-#endif
 	return s[w * v + u];
 }
 
-static inline int samplemask(byte *s, int w, int h, int u, int v)
+static inline byte *
+getargb(byte *s, int w, int h, int u, int v)
+{
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
+	return s + ((w * v + u) << 2);
+}
+
+static inline int
+getcolor(byte *s, int w, int h, int n, int u, int v, int k)
+{
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
+	return s[w * v * n + u + k];
+}
+
+static inline int
+lerp(int a, int b, int t)
+{
+	return a + (((b - a) * t) >> 16);
+}
+
+static inline void
+lerpargb(byte *dst, byte *a, byte *b, int t)
+{
+	dst[0] = lerp(a[0], b[0], t);
+	dst[1] = lerp(a[1], b[1], t);
+	dst[2] = lerp(a[2], b[2], t);
+	dst[3] = lerp(a[3], b[3], t);
+}
+
+static inline int
+samplemask(byte *s, int w, int h, int u, int v)
 {
 	int ui = u >> 16;
 	int vi = v >> 16;
@@ -68,32 +63,8 @@ static inline int samplemask(byte *s, int w, int h, int u, int v)
 	return lerp(ab, cd, vd);
 }
 
-static inline void lerpargb(byte *dst, byte *a, byte *b, int t)
-{
-	dst[0] = lerp(a[0], b[0], t);
-	dst[1] = lerp(a[1], b[1], t);
-	dst[2] = lerp(a[2], b[2], t);
-	dst[3] = lerp(a[3], b[3], t);
-}
-
-static inline byte *getargb(byte *s, int w, int h, int u, int v)
-{
-#ifdef CLAMPUV
-	if (u < 0) u = 0;
-	if (v < 0) v = 0;
-	if (u >= w) u = w - 1;
-	if (v >= h) v = h - 1;
-#else
-	static byte t[4] = { 0, 0, 0, 0 };
-	if (u < 0) return t;
-	if (v < 0) return t;
-	if (u >= w) return t;
-	if (v >= h) return t;
-#endif
-	return s + ((w * v + u) << 2);
-}
-
-static inline void sampleargb(byte *s, int w, int h, int u, int v, byte *abcd)
+static inline void
+sampleargb(byte *s, int w, int h, int u, int v, byte *out)
 {
 	byte ab[4];
 	byte cd[4];
@@ -107,163 +78,101 @@ static inline void sampleargb(byte *s, int w, int h, int u, int v, byte *abcd)
 	byte *d = getargb(s, w, h, ui+1, vi+1);
 	lerpargb(ab, a, b, ud);
 	lerpargb(cd, c, d, ud);
-	lerpargb(abcd, ab, cd, vd);
+	lerpargb(out, ab, cd, vd);
 }
 
-static void img_ncn(FZ_PSRC, int srcn, FZ_PDST, FZ_PCTM)
+static inline void
+samplecolor(byte *s, int w, int h, int n, int u, int v, byte *out)
 {
+	int ui = u >> 16;
+	int vi = v >> 16;
+	int ud = u & 0xFFFF;
+	int vd = v & 0xFFFF;
 	int k;
-	while (h--)
+	for (k = 0; k < n; k++)
 	{
-		byte *dstp = dst0;
-		int u = u0;
-		int v = v0;
-		int w = w0;
-		while (w--)
-		{
-			for (k = 0; k < srcn; k++)
-			{
-				dstp[k] = samplecomp(src, srcw, srch, u, v, srcn, k);
-				dstp += srcn;
-				u += fa;
-				v += fb;
-			}
-		}
-		dst0 += dstw;
-		u0 += fc;
-		v0 += fd;
+		int a = getcolor(s, w, h, n, ui, vi, k);
+		int b = getcolor(s, w, h, n, ui+1, vi, k);
+		int c = getcolor(s, w, h, n, ui, vi+1, k);
+		int d = getcolor(s, w, h, n, ui+1, vi+1, k);
+		int ab = lerp(a, b, ud);
+		int cd = lerp(c, d, ud);
+		out[k] = lerp(ab, cd, vd);
 	}
 }
 
-static void img_1c1(FZ_PSRC, FZ_PDST, FZ_PCTM)
+static void
+img_1o1(byte * restrict src, byte cov, int len, byte * restrict dst,
+	fz_pixmap *image, int u, int v, int fa, int fb)
 {
-	while (h--)
+	byte *samples = image->samples;
+	int w = image->w;
+	int h = image->h;
+	byte sa;
+	while (len--)
 	{
-		byte *dstp = dst0;
-		int u = u0;
-		int v = v0;
-		int w = w0;
-		while (w--)
-		{
-			dstp[0] = samplemask(src, srcw, srch, u, v);
-			dstp ++;
-			u += fa;
-			v += fb;
-		}
-		dst0 += dstw;
-		u0 += fc;
-		v0 += fd;
+		cov += *src; *src = 0; src++;
+		sa = fz_mul255(cov, samplemask(samples, w, h, u, v));
+		dst[0] = sa + fz_mul255(dst[0], 255 - sa);
+		dst++;
+		u += fa;
+		v += fb;
 	}
 }
 
-static void img_4c4(FZ_PSRC, FZ_PDST, FZ_PCTM)
+static void
+img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
+	fz_pixmap *image, int u, int v, int fa, int fb)
 {
-	while (h--)
-	{
-		byte *dstp = dst0;
-		int u = u0;
-		int v = v0;
-		int w = w0;
-		while (w--)
-		{
-			sampleargb(src, srcw, srch, u, v, dstp);
-			dstp += 4;
-			u += fa;
-			v += fb;
-		}
-		dst0 += dstw;
-		u0 += fc;
-		v0 += fd;
-	}
-}
-
-static void img_1o1(FZ_PSRC, FZ_PDST, FZ_PCTM)
-{
-	byte srca;
-	while (h--)
-	{
-		byte *dstp = dst0;
-		int u = u0;
-		int v = v0;
-		int w = w0;
-		while (w--)
-		{
-			srca = samplemask(src, srcw, srch, u, v);
-			dstp[0] = srca + fz_mul255(dstp[0], 255 - srca);
-			dstp ++;
-			u += fa;
-			v += fb;
-		}
-		dst0 += dstw;
-		u0 += fc;
-		v0 += fd;
-	}
-}
-
-static void img_4o4(FZ_PSRC, FZ_PDST, FZ_PCTM)
-{
+	byte *samples = image->samples;
+	int w = image->w;
+	int h = image->h;
 	byte argb[4];
-	byte ssa;
-	while (h--)
+	byte sa, ssa;
+	while (len--)
 	{
-		byte *dstp = dst0;
-		int u = u0;
-		int v = v0;
-		int w = w0;
-		while (w--)
-		{
-			sampleargb(src, srcw, srch, u, v, argb);
-			ssa = 255 - argb[0];
-			dstp[0] = argb[0] + fz_mul255(dstp[0], ssa);
-			dstp[1] = argb[1] + fz_mul255(dstp[1], ssa);
-			dstp[2] = argb[2] + fz_mul255(dstp[2], ssa);
-			dstp[3] = argb[3] + fz_mul255(dstp[3], ssa);
-			dstp += 4;
-			u += fa;
-			v += fb;
-		}
-		dst0 += dstw;
-		u0 += fc;
-		v0 += fd;
+		cov += *src; *src = 0; src++;
+		sampleargb(samples, w, h, u, v, argb);
+		sa = fz_mul255(argb[0], cov);
+		ssa = 255 - sa;
+		dst[0] = sa + fz_mul255(dst[0], ssa);
+		dst[1] = fz_mul255(argb[1], sa) + fz_mul255(dst[1], ssa);
+		dst[2] = fz_mul255(argb[2], sa) + fz_mul255(dst[2], ssa);
+		dst[3] = fz_mul255(argb[3], sa) + fz_mul255(dst[3], ssa);
+		dst += 4;
+		u += fa;
+		v += fb;
 	}
 }
 
-static void img_w4i1o4(byte *argb, FZ_PSRC, FZ_PDST, FZ_PCTM)
+static void
+img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict dst,
+	fz_pixmap *image, int u, int v, int fa, int fb)
 {
+	byte *samples = image->samples;
+	int w = image->w;
+	int h = image->h;
 	byte alpha = argb[0];
 	byte r = argb[1];
 	byte g = argb[2];
 	byte b = argb[3];
-	byte cov;
-	byte ca;
-	while (h--)
+	byte ca, cca;
+	while (len--)
 	{
-		byte *dstp = dst0;
-		int u = u0;
-		int v = v0;
-		int w = w0;
-		while (w--)
-		{
-			cov = samplemask(src, srcw, srch, u, v);
-			ca = fz_mul255(cov, alpha);
-			dstp[0] = ca + fz_mul255(dstp[0], 255 - ca);
-			dstp[1] = fz_mul255((short)r - dstp[1], ca) + dstp[1];
-			dstp[2] = fz_mul255((short)g - dstp[2], ca) + dstp[2];
-			dstp[3] = fz_mul255((short)b - dstp[3], ca) + dstp[3];
-			dstp += 4;
-			u += fa;
-			v += fb;
-		}
-		dst0 += dstw;
-		u0 += fc;
-		v0 += fd;
+		cov += *src; *src = 0; src++;
+		ca = fz_mul255(cov, samplemask(samples, w, h, u, v));
+		ca = fz_mul255(ca, alpha);
+		cca = 255 - ca;
+		dst[0] = ca + fz_mul255(dst[0], cca);
+		dst[1] = fz_mul255(r, ca) + fz_mul255(dst[1], cca);
+		dst[2] = fz_mul255(g, ca) + fz_mul255(dst[2], cca);
+		dst[3] = fz_mul255(b, ca) + fz_mul255(dst[3], cca);
+		dst += 4;
+		u += fa;
+		v += fb;
 	}
 }
 
-void (*fz_img_ncn)(FZ_PSRC, int sn, FZ_PDST, FZ_PCTM) = img_ncn;
-void (*fz_img_1c1)(FZ_PSRC, FZ_PDST, FZ_PCTM) = img_1c1;
-void (*fz_img_4c4)(FZ_PSRC, FZ_PDST, FZ_PCTM) = img_4c4;
-void (*fz_img_1o1)(FZ_PSRC, FZ_PDST, FZ_PCTM) = img_1o1;
-void (*fz_img_4o4)(FZ_PSRC, FZ_PDST, FZ_PCTM) = img_4o4;
-void (*fz_img_w4i1o4)(byte*,FZ_PSRC,FZ_PDST,FZ_PCTM) = img_w4i1o4;
-
+void (*fz_img_1o1)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_1o1;
+void (*fz_img_4o4)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_4o4;
+void (*fz_img_w4i1o4)(byte*, byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_w4i1o4;
