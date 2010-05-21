@@ -24,7 +24,7 @@ ifeq ($(HOST),$(HOST_CYGWIN_5))
 HOST = $(HOST_CYGWIN)
 endif
 
-VPATH=fitzdraw:fitz:mupdf:fonts:cmaps:apps:apps/common:$(JBIG2_DIR)
+VPATH=draw:fitz:mupdf:fonts:cmaps:apps:$(JBIG2_DIR)
 
 ifneq ($(ZLIB_DIR),)
 VPATH+=$(ZLIB_DIR)
@@ -154,21 +154,22 @@ OPENJPEG_SRC = \
 	t2.c tcd.c tgt.c
 
 FITZ_DRAW_SRC = \
-	archx86.c blendmodes.c imagescale.c pathfill.c pixmap.c \
-	glyphcache.c imageunpack.c pathscan.c porterduff.c imagedraw.c \
-	meshdraw.c pathstroke.c render.c
+	blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c \
+	meshdraw.c pathfill.c pathscan.c pathstroke.c porterduff.c
 
 FITZ_SRC = \
-	base_memory.c base_error.c base_hash.c base_matrix.c base_rect.c \
-	base_unicode.c base_string.c node_misc1.c node_misc2.c node_path.c \
-	node_text.c node_toxml.c node_tree.c res_colorspace.c res_font.c \
-	res_image.c res_shade.c crypt_aes.c crypt_arc4.c crypt_crc32.c \
-	crypt_md5.c filt_aesd.c filt_basic.c \
-	filt_arc4.c filt_faxd.c filt_faxdtab.c \
-	filt_flate.c filt_lzwd.c filt_pipeline.c \
-	filt_predict.c obj_array.c obj_dict.c \
-	obj_parse.c obj_print.c obj_simple.c stm_buffer.c stm_filter.c \
-	stm_misc.c stm_open.c stm_read.c filt_dctd.c util_getopt.c
+	base_cpudep.c \
+	base_error.c base_memory.c base_string.c base_unicode.c \
+	base_hash.c base_matrix.c base_rect.c \
+	crypt_aes.c crypt_arc4.c crypt_md5.c \
+	filt_aesd.c filt_arc4.c filt_basic.c filt_dctd.c filt_faxd.c filt_faxdtab.c filt_flate.c \
+	filt_jbig2d.c filt_jpxd.c filt_lzwd.c filt_pipeline.c filt_predict.c \
+	dev_null.c dev_text.c dev_draw.c dev_bbox.c dev_list.c dev_trace.c \
+	obj_array.c obj_dict.c obj_print.c obj_simple.c \
+	res_colorspace.c res_font.c res_shade.c res_pixmap.c \
+	res_path.c res_text.c \
+	stm_buffer.c stm_filter.c stm_misc.c stm_open.c stm_read.c \
+	util_getopt.c util_gettimeofday.c
 
 ifneq ($(OPENJPEG_DIR),)
 FITZ_SRC += filt_jpxd.c
@@ -180,12 +181,12 @@ endif
 
 MUPDF_SRC = \
 	pdf_annot.c pdf_build.c pdf_cmap.c pdf_cmap_load.c pdf_cmap_parse.c \
-	pdf_cmap_table.c pdf_colorspace1.c pdf_colorspace2.c pdf_crypt.c \
+	pdf_cmap_table.c pdf_colorspace.c pdf_crypt.c \
 	pdf_debug.c pdf_font.c pdf_fontagl.c pdf_fontenc.c pdf_fontfile.c \
 	pdf_fontmtx.c pdf_function.c pdf_image.c pdf_interpret.c pdf_lex.c \
 	pdf_nametree.c pdf_open.c pdf_outline.c pdf_page.c pdf_pagetree.c \
 	pdf_parse.c pdf_pattern.c pdf_repair.c pdf_shade.c \
-	pdf_shade1.c pdf_shade4.c pdf_store.c pdf_stream.c pdf_type3.c \
+	pdf_store.c pdf_stream.c pdf_type3.c \
 	pdf_unicode.c pdf_xobject.c pdf_xref.c
 
 FONTS_SRC = font_misc.c font_mono.c font_serif.c font_sans.c font_cjk.c
