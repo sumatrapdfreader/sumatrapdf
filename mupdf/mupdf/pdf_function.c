@@ -1503,8 +1503,10 @@ pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outle
 	float r;
 	int i;
 
-	if (func->m != inlen || func->n != outlen)
-		return fz_throw("function argument count mismatch");
+	if (inlen < func->m)
+		return fz_throw("not enough inputs to function");
+	if (func->n < outlen)
+		return fz_throw("too few outputs from function");
 
 	switch(func->type)
 	{

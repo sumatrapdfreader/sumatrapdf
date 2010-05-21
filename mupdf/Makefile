@@ -292,7 +292,7 @@ dist: $(DIRS) $(APPS)
 # Default rules
 #
 
-all: $(DIRS) $(APPS)
+all: $(DIRS) $(MUPDF_LIB) $(APPS)
 
 clean:
 	rm -rf $(OBJDIR)/*

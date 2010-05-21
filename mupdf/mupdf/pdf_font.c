@@ -411,7 +411,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			base = fz_dictgets(encoding, "BaseEncoding");
 			if (fz_isname(base))
 				pdf_loadencoding(estrings, fz_toname(base));
-			else if (!fontdesc->isembedded)
+			else if (!fontdesc->isembedded && !symbolic)
 				pdf_loadencoding(estrings, "StandardEncoding");
 			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=690615 and http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 			/* try to extract an encoding from the font or synthesize a likely one */

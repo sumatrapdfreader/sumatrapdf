@@ -54,13 +54,6 @@ fz_repairobj(fz_stream *file, char *buf, int cap,
 		if (fz_isint(obj))
 			stmlen = fz_toint(obj);
 
-		obj = fz_dictgets(dict, "Filter");
-		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Standard"))
-		{
-			/* http://code.google.com/p/sumatrapdf/issues/detail?id=817 */
-			fz_warn("might not be able to repair encrypted files");
-		}
-
 		fz_dropobj(dict);
 	}
 
@@ -140,7 +133,10 @@ fz_error
 pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 {
 	fz_error error;
-	fz_obj *obj;
+	fz_obj *dict, *obj;
+
+	fz_obj *encrypt = nil;
+	fz_obj *id = nil;
 
 	struct entry *list = nil;
 	int listlen;
@@ -230,6 +226,24 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 				maxoid = oid;
 		}
 
+		/* trailer dictionary */
+		if (tok == PDF_TODICT)
+		{
+			error = pdf_parsedict(&dict, xref, xref->file, buf, bufsize);
+			if (error)
+				return fz_rethrow(error, "cannot parse object");
+
+			obj = fz_dictgets(dict, "Encrypt");
+			if (obj)
+				encrypt = fz_keepobj(obj);
+
+			obj = fz_dictgets(dict, "ID");
+			if (obj)
+				id = fz_keepobj(obj);
+
+			fz_dropobj(dict);
+		}
+
 		if (tok == PDF_TERROR)
 			fz_readbyte(xref->file);
 
@@ -243,7 +257,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		goto cleanup;
 	}
 
-	xref->trailer = fz_newdict(2);
+	xref->trailer = fz_newdict(4);
 
 	obj = fz_newint(maxoid + 1);
 	fz_dictputs(xref->trailer, "Size", obj);
@@ -252,6 +266,18 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	obj = fz_newindirect(rootoid, rootgen, xref);
 	fz_dictputs(xref->trailer, "Root", obj);
 	fz_dropobj(obj);
+
+	if (encrypt)
+	{
+		fz_dictputs(xref->trailer, "Encrypt", encrypt);
+		fz_dropobj(encrypt);
+	}
+
+	if (id)
+	{
+		fz_dictputs(xref->trailer, "ID", id);
+		fz_dropobj(id);
+	}
 
 	xref->len = maxoid + 1;
 	xref->cap = xref->len;

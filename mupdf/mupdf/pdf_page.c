@@ -70,7 +70,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	fz_error error;
 	pdf_page *page;
 	fz_obj *obj;
-	fz_rect bbox;
+	fz_bbox bbox;
 
 	pdf_logpage("load page {\n");
 
@@ -85,22 +85,29 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	page->comments = nil;
 	page->links = nil;
 
-	obj = fz_dictgets(dict, "CropBox");
-	if (!obj)
-		obj = fz_dictgets(dict, "MediaBox");
+	obj = fz_dictgets(dict, "MediaBox");
 	if (!fz_isarray(obj))
 		return fz_throw("cannot find page bounds");
-	bbox = pdf_torect(obj);
-	if (bbox.x1 - bbox.x0 < 1 || bbox.y1 - bbox.y0 < 1)
-		return fz_throw("invalid page size");
+	bbox = fz_roundrect(pdf_torect(obj));
+
+	obj = fz_dictgets(dict, "CropBox");
+	if (fz_isarray(obj))
+	{
+		fz_bbox cropbox = fz_roundrect(pdf_torect(obj));
+		bbox = fz_intersectbbox(bbox, cropbox);
+	}
 
 	page->mediabox.x0 = MIN(bbox.x0, bbox.x1);
 	page->mediabox.y0 = MIN(bbox.y0, bbox.y1);
 	page->mediabox.x1 = MAX(bbox.x0, bbox.x1);
 	page->mediabox.y1 = MAX(bbox.y0, bbox.y1);
+
+	if (page->mediabox.x1 - page->mediabox.x0 < 1 || page->mediabox.y1 - page->mediabox.y0 < 1)
+		return fz_throw("invalid page size");
+
 	page->rotate = fz_toint(fz_dictgets(dict, "Rotate"));
 
-	pdf_logpage("bbox [%g %g %g %g]\n", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+	pdf_logpage("bbox [%d %d %d %d]\n", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 	pdf_logpage("rotate %d\n", page->rotate);
 
 	obj = fz_dictgets(dict, "Annots");

@@ -772,14 +772,10 @@ found:
 	if (error)
 		return fz_rethrow(error, "cannot load freetype font from buffer");
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691119 */
-	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
-	{
-		/* hack to prevent StandardEncoding from being loaded in pdf_font.c */
-		fontdesc->isembedded = 1;
-		fontdesc->flags |= FD_SYMBOLIC;
-	}
 	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
+
+	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
+		fontdesc->flags |= FD_SYMBOLIC;
 
 	return fz_okay;
 }
