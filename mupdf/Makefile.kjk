@@ -131,14 +131,16 @@ ZLIB_SRC = \
 	gzio.c
 
 JPEG_SRC = \
-	jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c \
-	jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c \
-	jcphuff.c jcprepct.c jcsample.c jctrans.c jdapimin.c jdapistd.c \
-	jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c jddctmgr.c jdhuff.c \
-	jdinput.c jdmainct.c jdmarker.c jdmaster.c jdmerge.c jdphuff.c \
-	jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c jfdctfst.c \
-	jfdctint.c jidctflt.c jidctfst.c jidctint.c jidctred.c jquant1.c \
-	jquant2.c jutils.c jmemmgr.c jmemnobs.c
+	jaricom.c jcomapi.c jutils.c jerror.c jmemmgr.c \
+	jcapimin.c jcapistd.c jcarith.c jctrans.c jcparam.c \
+	jdatadst.c jcinit.c jcmaster.c jcmarker.c jcmainct.c \
+	jcprepct.c jccoefct.c jccolor.c jcsample.c jchuff.c \
+	jcdctmgr.c jfdctfst.c jfdctflt.c jfdctint.c \
+	jdapimin.c jdapistd.c jdarith.c jdtrans.c jdatasrc.c \
+	jdmaster.c jdinput.c jdmarker.c jdhuff.c jdmainct.c \
+	jdcoefct.c jdpostct.c jddctmgr.c jidctfst.c jidctflt.c \
+	jidctint.c jdsample.c jdcolor.c jquant1.c jquant2.c \
+	jdmerge.c jmemnobs.c
 
 JBIG2_SRC = \
 	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
