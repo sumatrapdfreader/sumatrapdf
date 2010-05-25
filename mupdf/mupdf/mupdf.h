@@ -360,6 +360,7 @@ void pdf_maponetomany(pdf_cmap *cmap, int one, int *many, int len);
 void pdf_sortcmap(pdf_cmap *cmap);
 
 int pdf_lookupcmap(pdf_cmap *cmap, int cpt);
+int pdf_lookupcmapfull(pdf_cmap *cmap, int cpt, int *out);
 unsigned char *pdf_decodecmap(pdf_cmap *cmap, unsigned char *s, int *cpt);
 
 pdf_cmap * pdf_newidentitycmap(int wmode, int bytes);

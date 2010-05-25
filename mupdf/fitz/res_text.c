@@ -99,14 +99,10 @@ fz_growtext(fz_text *text, int n)
 }
 
 void
-fz_addtext(fz_text *text, int gid, int ucs[], float x, float y)
+fz_addtext(fz_text *text, int gid, int ucs, float x, float y)
 {
 	fz_growtext(text, 1);
-	{ /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
-		int i;
-		for (i = 0; i <= ucs[0]; i++)
-			text->els[text->len].ucs[i] = ucs[i];
-	}
+	text->els[text->len].ucs = ucs;
 	text->els[text->len].gid = gid;
 	text->els[text->len].x = x;
 	text->els[text->len].y = y;

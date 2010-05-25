@@ -242,6 +242,12 @@ pdf_maponetomany(pdf_cmap *cmap, int low, int *values, int len)
 		return;
 	}
 
+	if (len > 8)
+	{
+		fz_warn("one to many mapping is too large (%d); truncating", len);
+		len = 8;
+	}
+
 	offset = cmap->tlen;
 	addtable(cmap, len);
 	for (i = 0; i < len; i++)
@@ -376,9 +382,7 @@ pdf_lookupcmap(pdf_cmap *cmap, int cpt)
 			if (cmap->ranges[m].flag == PDF_CMAP_TABLE)
 				return cmap->table[i];
 			if (cmap->ranges[m].flag == PDF_CMAP_MULTI)
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
-				/* allow callers to detect that this was a multi-character mapping */
-				return -2 - cmap->ranges[m].offset;
+				return cmap->table[cmap->ranges[m].offset + 1]; /* first char */
 			return i;
 		}
 	}
@@ -387,6 +391,50 @@ pdf_lookupcmap(pdf_cmap *cmap, int cpt)
 		return pdf_lookupcmap(cmap->usecmap, cpt);
 
 	return -1;
+}
+
+int
+pdf_lookupcmapfull(pdf_cmap *cmap, int cpt, int *out)
+{
+	int i, k, n;
+	int l = 0;
+	int r = cmap->rlen - 1;
+	int m;
+
+	while (l <= r)
+	{
+		m = (l + r) >> 1;
+		if (cpt < cmap->ranges[m].low)
+			r = m - 1;
+		else if (cpt > cmap->ranges[m].high)
+			l = m + 1;
+		else
+		{
+			k = cpt - cmap->ranges[m].low + cmap->ranges[m].offset;
+			if (cmap->ranges[m].flag == PDF_CMAP_TABLE)
+			{
+				out[0] = cmap->table[k];
+				return 1;
+			}
+			else if (cmap->ranges[m].flag == PDF_CMAP_MULTI)
+			{
+				n = cmap->ranges[m].offset;
+				for (i = 0; i < cmap->table[n]; i++)
+					out[i] = cmap->table[n + i + 1];
+				return cmap->table[n];
+			}
+			else
+			{
+				out[0] = k;
+				return 1;
+			}
+		}
+	}
+
+	if (cmap->usecmap)
+		return pdf_lookupcmapfull(cmap->usecmap, cpt, out);
+
+	return 0;
 }
 
 /*
@@ -418,4 +466,3 @@ pdf_decodecmap(pdf_cmap *cmap, unsigned char *buf, int *cpt)
 	*cpt = 0;
 	return buf + 1;
 }
-

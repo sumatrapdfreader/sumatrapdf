@@ -259,8 +259,8 @@ typedef struct fz_textel_s fz_textel;
 struct fz_textel_s
 {
 	float x, y;
-	int gid;
-	int ucs[8]; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
+	int gid; /* -1 for one gid to many ucs mappings */
+	int ucs; /* -1 for one ucs to many gid mappings */
 };
 
 struct fz_text_s
@@ -272,7 +272,7 @@ struct fz_text_s
 };
 
 fz_text * fz_newtext(fz_font *face);
-void fz_addtext(fz_text *text, int gid, int ucs[], float x, float y);
+void fz_addtext(fz_text *text, int gid, int ucs, float x, float y);
 void fz_endtext(fz_text *text);
 void fz_freetext(fz_text *text);
 void fz_debugtext(fz_text*, int indent);

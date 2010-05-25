@@ -103,6 +103,8 @@ fz_addtextchar(fz_textspan **last, fz_font *font, float size, int c, fz_bbox bbo
 
 	switch (c)
 	{
+	case -1: /* ignore when one unicode character maps to multiple glyphs */
+		break;
 	case 0xFB00: /* ff */
 		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 0, 2));
 		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 1, 2));
@@ -343,8 +345,17 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			fz_warn("freetype set character size: %s", ft_errorstring(fterr));
 	}
 
+	rect = fz_emptyrect;
+
 	for (i = 0; i < text->len; i++)
 	{
+		if (text->els[i].gid < 0)
+		{
+			/* TODO: split rect for one-to-many mapped chars */
+			fz_addtextchar(last, font, size, text->els[i].ucs, fz_roundrect(rect));
+			continue;
+		}
+
 		/* Get point in user space to perform heuristic space and newspan tests */
 		p.x = text->els[i].x;
 		p.y = text->els[i].y;
@@ -399,10 +410,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			spacerect = fz_transformrect(trm, spacerect);
 			fz_addtextchar(last, font, size, ' ', fz_roundrect(spacerect));
 		}
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
-		/* add one or several characters */
-		for (fterr = 1; fterr <= text->els[i].ucs[0]; fterr++)
-			fz_addtextchar(last, font, size, text->els[i].ucs[fterr], fz_roundrect(rect));
+		fz_addtextchar(last, font, size, text->els[i].ucs, fz_roundrect(rect));
 	}
 
 	fixuptextspan(firstSpan);

@@ -61,10 +61,8 @@ fz_dropstream(fz_stream *stm)
 	}
 }
 
-
 fz_stream *
 fz_openfile(int fd)
-
 {
 	fz_stream *stm;
 

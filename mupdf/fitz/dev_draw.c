@@ -349,6 +349,9 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 	for (i = 0; i < text->len; i++)
 	{
 		gid = text->els[i].gid;
+		if (gid < 0)
+			continue;
+
 		tm.e = text->els[i].x;
 		tm.f = text->els[i].y;
 		trm = fz_concat(tm, ctm);
@@ -433,6 +436,9 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 		for (i = 0; i < text->len; i++)
 		{
 			gid = text->els[i].gid;
+			if (gid < 0)
+				continue;
+
 			tm.e = text->els[i].x;
 			tm.f = text->els[i].y;
 			trm = fz_concat(tm, ctm);

@@ -536,7 +536,9 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	pdf_hmtx h;
 	pdf_vmtx v;
 	int gid;
-	int ucs[8] = { 1, -1 }; /* len, characters... */
+	int ucsbuf[8];
+	int ucslen;
+	int i;
 
 	tsm.a = gstate->size * gstate->scale;
 	tsm.b = 0;
@@ -545,28 +547,24 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	tsm.e = 0;
 	tsm.f = gstate->rise;
 
+	ucslen = 0;
 	if (fontdesc->tounicode)
-		ucs[1] = pdf_lookupcmap(fontdesc->tounicode, cid);
-	if (ucs[1] < -1)
+		ucslen = pdf_lookupcmapfull(fontdesc->tounicode, cid, ucsbuf);
+	if (ucslen == 0 && cid < fontdesc->ncidtoucs)
 	{
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
-		/* prepare to add multiple characters (e.g. a ligature) */
-		int j, offset = -ucs[1] - 2;
-		ucs[0] = fontdesc->tounicode->table[offset];
-		for (j = 1; j <= ucs[0]; j++)
-			ucs[j] = fontdesc->tounicode->table[offset + j];
+		ucsbuf[0] = fontdesc->cidtoucs[cid];
+		ucslen = 1;
 	}
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=787 */
-	/* fall back to ncidtoucs if the char wasn't in tounicode */
-	if (ucs[1] < 0 && cid < fontdesc->ncidtoucs)
-		ucs[1] = fontdesc->cidtoucs[cid];
-	if (ucs[1] <= 0)
-		ucs[1] = '?';
+	if (ucslen == 0 || ucslen == 1 && ucsbuf[0] == 0)
+	{
+		ucsbuf[0] = '?';
+		ucslen = 1;
+	}
 
 	gid = pdf_fontcidtogid(fontdesc, cid);
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=855 */
 	/* some chinese fonts only ship the similarly looking 0x2026 */
-	if (gid == 0 && ucs[1] == 0x22ef && fontdesc->font->ftface)
+	if (gid == 0 && ucsbuf[0] == 0x22ef && fontdesc->font->ftface)
 	{
 		gid = FT_Get_Char_Index(fontdesc->font->ftface, 0x2026);
 	}
@@ -599,7 +597,11 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	}
 
 	/* add glyph to textobject */
-	fz_addtext(csi->text, gid, ucs, trm.e, trm.f);
+	fz_addtext(csi->text, gid, ucsbuf[0], trm.e, trm.f);
+
+	/* add filler glyphs for one-to-many unicode mapping */
+	for (i = 1; i < ucslen; i++)
+		fz_addtext(csi->text, -1, ucsbuf[i], trm.e, trm.f);
 
 	if (fontdesc->wmode == 0)
 	{

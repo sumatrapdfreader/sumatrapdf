@@ -12,7 +12,8 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 	fz_error error = fz_okay;
 	pdf_cmap *cmap;
 	int cid;
-	int ucs;
+	int ucsbuf[8];
+	int ucslen;
 	int i;
 
 	if (pdf_isstream(xref, fz_tonum(cmapstm), fz_togen(cmapstm)))
@@ -28,30 +29,19 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 		for (i = 0; i < (strings ? 256 : 65536); i++)
 		{
 			cid = pdf_lookupcmap(font->encoding, i);
-			if (cid >= 0) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
+			if (cid >= 0)
 			{
-				ucs = pdf_lookupcmap(cmap, i);
-				if (ucs > 0)
-					pdf_maprangetorange(font->tounicode, cid, cid, ucs);
-				else if (ucs < -1)
-				{
-					/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=788 */
-					/* copy over a multi-character mapping */
-					int j, tbl[7], len = cmap->table[-ucs - 2];
-					if (len > 7) {
-						len = 7;
-					}
-					for (j = 0; j < len; j++)
-						tbl[j] = cmap->table[-ucs - 1 + j];
-					pdf_maponetomany(font->tounicode, cid, tbl, len);
-				}
+				ucslen = pdf_lookupcmapfull(cmap, i, ucsbuf);
+				if (ucslen == 1)
+					pdf_maprangetorange(font->tounicode, cid, cid, ucsbuf[0]);
+				if (ucslen > 1)
+					pdf_maponetomany(font->tounicode, cid, ucsbuf, ucslen);
 			}
 		}
 
 		pdf_sortcmap(font->tounicode);
 
 		pdf_dropcmap(cmap);
-		// return fz_okay; // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=787
 	}
 
 	else if (collection)
@@ -91,8 +81,6 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 			else
 				font->cidtoucs[i] = '?';
 		}
-
-		return fz_okay;
 	}
 
 	if (!font->tounicode && !font->cidtoucs)

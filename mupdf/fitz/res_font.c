@@ -57,7 +57,7 @@ fz_dropfont(fz_font *font)
 				fz_dropobj(font->t3resources);
 			for (i = 0; i < 256; i++)
 				if (font->t3procs[i])
-			fz_dropbuffer(font->t3procs[i]);
+					fz_dropbuffer(font->t3procs[i]);
 			fz_free(font->t3procs);
 			fz_free(font->t3widths);
 		}

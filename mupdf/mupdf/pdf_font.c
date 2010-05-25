@@ -81,7 +81,7 @@ static char *cleanfontname(char *fontname)
  * FreeType and Rendering glue
  */
 
-enum { UNKNOWN, TYPE1, TRUETYPE, CID };
+enum { UNKNOWN, TYPE1, TRUETYPE };
 
 static int ftkind(FT_Face face)
 {
@@ -108,9 +108,9 @@ static int ftcharindex(FT_Face face, int cid)
 
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
 /* extract the Type 1 font's embedded encoding table */
-#ifdef WIN32
 static int ftloadt1encoding(FT_Face face, char **estrings)
 {
+#ifdef WIN32
 	T1_Encoding encoding;
 	T1_Font font;
 	int i;
@@ -140,14 +140,9 @@ static int ftloadt1encoding(FT_Face face, char **estrings)
 			estrings[i] = encoding->char_name[i];
 		return 1;
 	}
+#endif
 	return 0;
 }
-#else
-static int ftloadt1encoding(FT_Face face, char **estrings)
-{
-  return 0;
-}
-#endif
 
 static inline int ftcidtogid(pdf_fontdesc *fontdesc, int cid)
 {
@@ -399,7 +394,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	/* ignore invalid Encoding names; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=771 */
 	if (fz_isname(encoding) && !strstr(fz_toname(encoding), "Encoding"))
 		encoding = nil;
-	if (encoding && !(kind == TRUETYPE && symbolic))
+	if (encoding)
 	{
 		if (fz_isname(encoding))
 			pdf_loadencoding(estrings, fz_toname(encoding));
@@ -436,87 +431,91 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 				}
 			}
 		}
+	}
 
-		if (kind == TYPE1)
+	if (kind == TYPE1)
+	{
+		pdf_logfont("encode type1/cff by strings\n");
+		for (i = 0; i < 256; i++)
 		{
-			pdf_logfont("encode type1/cff by strings\n");
+			if (estrings[i])
+			{
+				etable[i] = FT_Get_Name_Index(face, estrings[i]);
+				if (etable[i] == 0)
+				{
+					int aglcode = pdf_lookupagl(estrings[i]);
+					char **aglnames = pdf_lookupaglnames(aglcode);
+					while (*aglnames)
+					{
+						etable[i] = FT_Get_Name_Index(face, *aglnames);
+						if (etable[i])
+							break;
+						aglnames++;
+					}
+				}
+			}
+			else
+				etable[i] = ftcharindex(face, i);
+		}
+	}
+
+	if (kind == TRUETYPE)
+	{
+		/* Unicode cmap */
+		if (!symbolic && face->charmap && face->charmap->platform_id == 3)
+		{
+			pdf_logfont("encode truetype via unicode\n");
 			for (i = 0; i < 256; i++)
 			{
 				if (estrings[i])
 				{
-					etable[i] = FT_Get_Name_Index(face, estrings[i]);
-					if (etable[i] == 0)
-					{
-						int aglcode = pdf_lookupagl(estrings[i]);
-						char **aglnames = pdf_lookupaglnames(aglcode);
-						while (*aglnames)
-						{
-							etable[i] = FT_Get_Name_Index(face, *aglnames);
-							if (etable[i])
-								break;
-							aglnames++;
-						}
-					}
+					int aglcode = pdf_lookupagl(estrings[i]);
+					if (!aglcode)
+						etable[i] = FT_Get_Name_Index(face, estrings[i]);
+					else
+						etable[i] = ftcharindex(face, aglcode);
 				}
 				else
 					etable[i] = ftcharindex(face, i);
 			}
 		}
 
-		if (kind == TRUETYPE)
+		/* MacRoman cmap */
+		else if (!symbolic && face->charmap && face->charmap->platform_id == 1)
 		{
-			/* Unicode cmap */
-			if (face->charmap && face->charmap->platform_id == 3)
+			pdf_logfont("encode truetype via macroman\n");
+			for (i = 0; i < 256; i++)
 			{
-				pdf_logfont("encode truetype via unicode\n");
-				for (i = 0; i < 256; i++)
+				if (estrings[i])
 				{
-					if (estrings[i])
-					{
-						int aglcode = pdf_lookupagl(estrings[i]);
-						if (!aglcode)
-							etable[i] = FT_Get_Name_Index(face, estrings[i]);
-						else
-							etable[i] = ftcharindex(face, aglcode);
-					}
-					else
-						etable[i] = ftcharindex(face, i);
-				}
-			}
-
-			/* MacRoman cmap */
-			else if (face->charmap && face->charmap->platform_id == 1)
-			{
-				pdf_logfont("encode truetype via macroman\n");
-				for (i = 0; i < 256; i++)
-				{
-					if (estrings[i])
-					{
-						k = mrecode(estrings[i]);
-						if (k <= 0)
-							etable[i] = FT_Get_Name_Index(face, estrings[i]);
-						else
-							etable[i] = ftcharindex(face, k);
-					}
-					else
-						etable[i] = ftcharindex(face, i);
-				}
-			}
-
-			/* Symbolic cmap */
-			else
-			{
-				pdf_logfont("encode truetype symbolic\n");
-				for (i = 0; i < 256; i++)
-				{
-					if (estrings[i])
-					{
+					k = mrecode(estrings[i]);
+					if (k <= 0)
 						etable[i] = FT_Get_Name_Index(face, estrings[i]);
-						if (etable[i] == 0)
-							etable[i] = ftcharindex(face, i);
-					}
 					else
+						etable[i] = ftcharindex(face, k);
+				}
+				else
+					etable[i] = ftcharindex(face, i);
+			}
+		}
+
+		/* Symbolic cmap */
+		else
+		{
+			pdf_logfont("encode truetype symbolic\n");
+			for (i = 0; i < 256; i++)
+			{
+				if (estrings[i])
+				{
+					etable[i] = FT_Get_Name_Index(face, estrings[i]);
+					if (etable[i] == 0)
 						etable[i] = ftcharindex(face, i);
+				}
+				else
+					etable[i] = ftcharindex(face, i);
+
+				if (FT_HAS_GLYPH_NAMES(face))
+				{
 					fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 					if (fterr)
 					{
@@ -530,8 +529,32 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
-	else
+	if (kind == UNKNOWN)
 	{
+		pdf_logfont("encode builtin\n");
+		for (i = 0; i < 256; i++)
+		{
+			etable[i] = ftcharindex(face, i);
+			if (etable[i] == 0)
+				continue;
+
+			if (FT_HAS_GLYPH_NAMES(face))
+			{
+				fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
+				if (fterr)
+				{
+					error = fz_throw("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
+					goto cleanup;
+				}
+				if (ebuffer[i][0])
+					estrings[i] = ebuffer[i];
+			}
+		}
+	}
+
+	if (!encoding || kind == TRUETYPE && symbolic)
+	{
+		/* TODO: Figure out why the following is still necessary. */
 		pdf_logfont("encode builtin\n");
 		for (i = 0; i < 256; i++)
 		{
