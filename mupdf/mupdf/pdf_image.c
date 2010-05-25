@@ -87,7 +87,7 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		if (error)
 		{
 			pdf_dropimage(img);
-			return fz_rethrow(error, "cannot load colorspace");
+			return fz_rethrow(error, "cannot load colorspace (%d %d R)", fz_tonum(cso), fz_togen(cso));
 		}
 
 		if (!img->cs)
@@ -269,7 +269,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict)
 		if (error)
 		{
 			pdf_dropimage(img);
-			return fz_rethrow(error, "cannot load colorspace");
+			return fz_rethrow(error, "cannot load colorspace (%d %d R)", fz_tonum(obj), fz_togen(obj));
 		}
 
 		if (!strcmp(cs->name, "Indexed"))

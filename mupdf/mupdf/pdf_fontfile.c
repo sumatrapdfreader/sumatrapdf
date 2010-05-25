@@ -946,7 +946,7 @@ pdf_loadembeddedfont(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *stmref)
 
 	error = pdf_loadstream(&buf, xref, fz_tonum(stmref), fz_togen(stmref));
 	if (error)
-		return fz_rethrow(error, "cannot load font stream");
+		return fz_rethrow(error, "cannot load font stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 
 	error = fz_newfontfrombuffer(&fontdesc->font, buf->rp, buf->wp - buf->rp, 0);
 	if (error)

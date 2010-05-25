@@ -57,7 +57,7 @@ $(CMAPDUMP_EXE): $(OBJDIR)/cmapdump.o
 # Sources
 #
 
-FITZ_HDR=fitz/fitz.h fitz/fitz_base.h fitz/fitz_draw.h fitz/fitz_stream.h fitz/fitz_res.h
+FITZ_HDR=fitz/fitz.h fitz/fitz_base.h fitz/fitz_draw.h fitz/fitz_stream.h
 FITZ_SRC=$(addprefix fitz/, \
 	base_cpudep.c \
 	base_error.c base_memory.c base_string.c base_unicode.c  \

@@ -21,7 +21,7 @@ pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,
 
 		error = pdf_loadembeddedcmap(&cmap, xref, cmapstm);
 		if (error)
-			return fz_rethrow(error, "cannot load embedded cmap");
+			return fz_rethrow(error, "cannot load embedded cmap (%d %d R)", fz_tonum(cmapstm), fz_togen(cmapstm));
 
 		font->tounicode = pdf_newcmap();
 

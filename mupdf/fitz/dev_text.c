@@ -29,6 +29,7 @@ typedef struct fz_textdevice_s fz_textdevice;
 struct fz_textdevice_s
 {
 	fz_point point;
+	fz_textspan *head;
 	fz_textspan *span;
 };
 
@@ -59,6 +60,28 @@ fz_freetextspan(fz_textspan *span)
 }
 
 static void
+fz_addtextcharimp(fz_textspan *span, int c, fz_bbox bbox)
+{
+	if (span->len + 1 >= span->cap)
+	{
+		span->cap = span->cap ? (span->cap * 3) / 2 : 80;
+		span->text = fz_realloc(span->text, sizeof(fz_textchar) * span->cap);
+	}
+	span->text[span->len].c = c;
+	span->text[span->len].bbox = bbox;
+	span->len ++;
+}
+
+static fz_bbox
+fz_splitbbox(fz_bbox bbox, int i, int n)
+{
+	int w = bbox.x1 - bbox.x0;
+	bbox.x0 = bbox.x0 + w * i / n;
+	bbox.x1 = bbox.x0 + w * (i + 1) / n;
+	return bbox;
+}
+
+static void
 fz_addtextchar(fz_textspan **last, fz_font *font, float size, int c, fz_bbox bbox)
 {
 	fz_textspan *span = *last;
@@ -78,14 +101,39 @@ fz_addtextchar(fz_textspan **last, fz_font *font, float size, int c, fz_bbox bbo
 		*last = span;
 	}
 
-	if (span->len + 1 >= span->cap)
+	switch (c)
 	{
-		span->cap = span->cap ? (span->cap * 3) / 2 : 80;
-		span->text = fz_realloc(span->text, sizeof(fz_textchar) * span->cap);
+	case 0xFB00: /* ff */
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 0, 2));
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 1, 2));
+		break;
+	case 0xFB01: /* fi */
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 0, 2));
+		fz_addtextcharimp(span, 'i', fz_splitbbox(bbox, 1, 2));
+		break;
+	case 0xFB02: /* fl */
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 0, 2));
+		fz_addtextcharimp(span, 'l', fz_splitbbox(bbox, 1, 2));
+		break;
+	case 0xFB03: /* ffi */
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 0, 3));
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 1, 3));
+		fz_addtextcharimp(span, 'i', fz_splitbbox(bbox, 2, 3));
+		break;
+	case 0xFB04: /* ffl */
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 0, 3));
+		fz_addtextcharimp(span, 'f', fz_splitbbox(bbox, 1, 3));
+		fz_addtextcharimp(span, 'l', fz_splitbbox(bbox, 2, 3));
+		break;
+	case 0xFB05: /* long st */
+	case 0xFB06: /* st */
+		fz_addtextcharimp(span, 's', fz_splitbbox(bbox, 0, 2));
+		fz_addtextcharimp(span, 't', fz_splitbbox(bbox, 1, 2));
+		break;
+	default:
+		fz_addtextcharimp(span, c, bbox);
+		break;
 	}
-	span->text[span->len].c = c;
-	span->text[span->len].bbox = bbox;
-	span->len ++;
 }
 
 static void
@@ -172,16 +220,6 @@ ensurespanlength(fz_textspan *span, int mincap)
 }
 
 static void
-insertcharacter(fz_textspan *span, int i, int c)
-{
-	ensurespanlength(span, span->len + 1);
-	memmove(&span->text[i + 1], &span->text[i], (span->len - i) * sizeof(fz_textchar));
-	span->len++;
-	span->text[i].c = c;
-	span->text[i].bbox = span->text[i + 1].bbox;
-}
-
-static void
 mergetwospans(fz_textspan *span)
 {
 	ensurespanlength(span, span->len + span->next->len);
@@ -262,20 +300,6 @@ fixuptextspan(fz_textspan *span)
 					}
 				}
 				break;
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=400 */
-			/* copy ligatures as individual characters */
-			case 0xFB00: /* ff */
-				insertcharacter(span, i++, 'f'); span->text[i].c = 'f'; break;
-			case 0xFB03: /* ffi */
-				insertcharacter(span, i++, 'f');
-			case 0xFB01: /* fi */
-				insertcharacter(span, i++, 'f'); span->text[i].c = 'i'; break;
-			case 0xFB04: /* ffl */
-				insertcharacter(span, i++, 'f');
-			case 0xFB02: /* fl */
-				insertcharacter(span, i++, 'f'); span->text[i].c = 'l'; break;
-			case 0xFB05: case 0xFB06: /* st */
-				insertcharacter(span, i++, 's'); span->text[i].c = 't'; break;
 			default:
 				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=733 */
 				/* reverse words written in RTL languages */
@@ -425,7 +449,12 @@ static void
 fz_textfreeuser(void *user)
 {
 	fz_textdevice *tdev = user;
+
 	tdev->span->eol = 1;
+
+	/* TODO: unicode NFC normalization */
+	/* TODO: bidi logical reordering */
+
 	fz_free(tdev);
 }
 
@@ -434,6 +463,7 @@ fz_newtextdevice(fz_textspan *root)
 {
 	fz_device *dev;
 	fz_textdevice *tdev = fz_malloc(sizeof(fz_textdevice));
+	tdev->head = root;
 	tdev->span = root;
 	tdev->point.x = -1;
 	tdev->point.y = -1;

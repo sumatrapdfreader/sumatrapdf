@@ -99,7 +99,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 					if (error)
 					{
 						pdf_freecrypt(crypt);
-						return fz_rethrow(error, "cannot parse stream crypt filter");
+						return fz_rethrow(error, "cannot parse stream crypt filter (%d %d R)", fz_tonum(obj), fz_togen(obj));
 					}
 				}
 			}
@@ -115,7 +115,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 					if (error)
 					{
 						pdf_freecrypt(crypt);
-						return fz_rethrow(error, "cannot parse string crypt filter");
+						return fz_rethrow(error, "cannot parse string crypt filter (%d %d R)", fz_tonum(obj), fz_togen(obj));
 					}
 				}
 			}

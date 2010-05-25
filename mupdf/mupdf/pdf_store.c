@@ -34,7 +34,7 @@ static char *kindstr(pdf_itemkind kind)
 	case PDF_KXOBJECT: return "xobject";
 	case PDF_KIMAGE: return "image";
 	case PDF_KPATTERN: return "pattern";
-	case PDF_KSHADE: return "shade";
+	case PDF_KSHADE: return "shading";
 	case PDF_KCMAP: return "cmap";
 	case PDF_KFONT: return "font";
 	}

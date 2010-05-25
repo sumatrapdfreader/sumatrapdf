@@ -29,13 +29,14 @@ static void pdfapp_error(pdfapp_t *app, fz_error error)
 char *pdfapp_usage(pdfapp_t *app)
 {
 	return
-		"   l <\t\t-- rotate left\n"
-		"   r >\t\t-- rotate right\n"
+		"   <\t\t-- rotate left\n"
+		"   >\t\t-- rotate right\n"
 		"   u up\t\t-- scroll up\n"
 		"   d down\t-- scroll down\n"
 		"   = +\t\t-- zoom in\n"
 		"   -\t\t-- zoom out\n"
 		"   w\t\t-- shrinkwrap\n"
+		"   r\t\t-- reload file\n"
 		"\n"
 		"   n pgdn space\t-- next page\n"
 		"   b pgup back\t-- previous page\n"
@@ -56,7 +57,6 @@ void pdfapp_init(pdfapp_t *app)
 	app->scrw = 640;
 	app->scrh = 480;
 	app->zoom = 1.0;
-	app->cache = fz_newglyphcache();
 }
 
 void pdfapp_open(pdfapp_t *app, char *filename, int fd)
@@ -66,6 +66,8 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	char *password = "";
 	fz_stream *file;
 
+	app->cache = fz_newglyphcache();
+
 	/*
 	 * Open PDF and load xref table
 	 */
@@ -74,6 +76,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	app->xref = pdf_openxref(file);
 	if (!app->xref)
 		pdfapp_error(app, fz_throw("cannot open PDF file '%s'", filename));
+	fz_dropstream(file);
 
 	/*
 	 * Handle encrypted PDF files
@@ -121,6 +124,8 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	app->shrinkwrap = 1;
 	if (app->pageno < 1)
 		app->pageno = 1;
+	if (app->pageno > app->pagecount)
+		app->pageno = app->pagecount;
 	if (app->zoom < 0.1)
 		app->zoom = 0.1;
 	if (app->zoom > 3.0)
@@ -356,12 +361,10 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 			app->zoom = 0.1;
 		pdfapp_showpage(app, 0, 1);
 		break;
-	case 'l':
 	case '<':
 		app->rotate -= 90;
 		pdfapp_showpage(app, 0, 1);
 		break;
-	case 'r':
 	case '>':
 		app->rotate += 90;
 		pdfapp_showpage(app, 0, 1);
@@ -477,6 +480,15 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		panto = PAN_TO_TOP;	app->pageno -= 10; break;
 	case 'F':
 		panto = PAN_TO_TOP;	app->pageno += 10; break;
+
+		/*
+		 * Reloading the file...
+		 */
+
+	case 'r':
+		oldpage = -1;
+		winreloadfile(app);
+		break;
 	}
 
 	if (c < '0' || c > '9')

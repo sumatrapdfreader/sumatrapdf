@@ -91,13 +91,11 @@ pdf_getpagecountimp(pdf_xref *xref, fz_obj *node, int *pagesp)
 int
 pdf_getpagecount(pdf_xref *xref)
 {
-	fz_obj *ref;
 	fz_obj *catalog;
 	fz_obj *pages;
 	int count;
 
-	ref = fz_dictgets(xref->trailer, "Root");
-	catalog = fz_resolveindirect(ref);
+	catalog = fz_dictgets(xref->trailer, "Root");
 
 	pages = fz_dictgets(catalog, "Pages");
 	pdf_logpage("determining page count (%d %d R) {\n", fz_tonum(pages), fz_togen(pages));
@@ -232,7 +230,6 @@ fz_obj *
 pdf_getpageobject(pdf_xref *xref, int pageno)
 {
 	struct stuff inherit;
-	fz_obj *ref;
 	fz_obj *catalog;
 	fz_obj *pages;
 	fz_obj *page;
@@ -243,8 +240,7 @@ pdf_getpageobject(pdf_xref *xref, int pageno)
 	inherit.cropbox = nil;
 	inherit.rotate = nil;
 
-	ref = fz_dictgets(xref->trailer, "Root");
-	catalog = fz_resolveindirect(ref);
+	catalog = fz_dictgets(xref->trailer, "Root");
 
 	pages = fz_dictgets(catalog, "Pages");
 	pdf_logpage("get page %d (%d %d R) {\n", pageno, fz_tonum(pages), fz_togen(pages));
@@ -331,14 +327,12 @@ pdf_findpageobjectimp(pdf_xref *xref, fz_obj *node, fz_obj *page, int *pagenop, 
 int
 pdf_findpageobject(pdf_xref *xref, fz_obj *page)
 {
-	fz_obj *ref;
 	fz_obj *catalog;
 	fz_obj *pages;
 	int pageno;
 	int found;
 
-	ref = fz_dictgets(xref->trailer, "Root");
-	catalog = fz_resolveindirect(ref);
+	catalog = fz_dictgets(xref->trailer, "Root");
 
 	pages = fz_dictgets(catalog, "Pages");
 	pdf_logpage("find page object (%d %d R) (%d %d R) {\n", fz_tonum(page), fz_togen(page), fz_tonum(pages), fz_togen(pages));

@@ -454,15 +454,15 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 }
 
 static fz_error
-loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int gen)
+loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int gen)
 {
 	fz_error error;
 	fz_stream *stream;
 	int codeptr;
 
-	pdf_logrsrc("load postscript function (%d %d R)\n", oid, gen);
+	pdf_logrsrc("load postscript function (%d %d R)\n", num, gen);
 
-	error = pdf_openstream(&stream, xref, oid, gen);
+	error = pdf_openstream(&stream, xref, num, gen);
 	if (error)
 		return fz_rethrow(error, "cannot open calculator function stream");
 
@@ -483,7 +483,7 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, in
 	if (error)
 	{
 		fz_dropstream(stream);
-		return fz_rethrow(error, "cannot parse calculator function");
+		return fz_rethrow(error, "cannot parse calculator function (%d %d R)", num, gen);
 	}
 
 	fz_dropstream(stream);
@@ -917,7 +917,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 static int bps_supported[] = { 1, 2, 4, 8, 12, 16, 24, 32 };
 
 static fz_error
-loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int gen)
+loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int gen)
 {
 	fz_error error;
 	fz_stream *stream;
@@ -996,9 +996,9 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int oid, int ge
 
 	func->u.sa.samples = fz_malloc(samplecount * sizeof(int));
 
-	error = pdf_openstream(&stream, xref, oid, gen);
+	error = pdf_openstream(&stream, xref, num, gen);
 	if (error)
-		return fz_rethrow(error, "cannot open samples stream");
+		return fz_rethrow(error, "cannot open samples stream (%d %d R)", num, gen);
 
 	/* read samples */
 	{
@@ -1245,7 +1245,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 			sub = fz_arrayget(obj, i);
 			error = pdf_loadfunction(&func->u.st.funcs[i], xref, sub);
 			if (error)
-				return fz_rethrow(error, "cannot load sub function %d", i);
+				return fz_rethrow(error, "cannot load sub function %d (%d %d R)", i, fz_tonum(sub), fz_togen(sub));
 			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
 				return fz_throw("sub function %d /Domain or /Range mismatch", i);
 		}
@@ -1383,27 +1383,24 @@ pdf_dropfunction(pdf_function *func)
 }
 
 fz_error
-pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
+pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	pdf_function *func;
-	fz_obj *dict;
 	fz_obj *obj;
 	int i;
 
-	if ((*funcp = pdf_finditem(xref->store, PDF_KFUNCTION, ref)))
+	if ((*funcp = pdf_finditem(xref->store, PDF_KFUNCTION, dict)))
 	{
 		pdf_keepfunction(*funcp);
 		return fz_okay;
 	}
 
-	pdf_logrsrc("load function (%d %d R) {\n", fz_tonum(ref), fz_togen(ref));
+	pdf_logrsrc("load function (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
 	func = fz_malloc(sizeof(pdf_function));
 	memset(func, 0, sizeof(pdf_function));
 	func->refs = 1;
-
-	dict = fz_resolveindirect(ref);
 
 	obj = fz_dictgets(dict, "FunctionType");
 	func->type = fz_toint(obj);
@@ -1448,11 +1445,11 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 	switch(func->type)
 	{
 	case SAMPLE:
-		error = loadsamplefunc(func, xref, dict, fz_tonum(ref), fz_togen(ref));
+		error = loadsamplefunc(func, xref, dict, fz_tonum(dict), fz_togen(dict));
 		if (error)
 		{
 			pdf_dropfunction(func);
-			return fz_rethrow(error, "cannot load sampled function (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_rethrow(error, "cannot load sampled function (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		}
 		break;
 
@@ -1461,7 +1458,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropfunction(func);
-			return fz_rethrow(error, "cannot load exponential function (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_rethrow(error, "cannot load exponential function (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		}
 		break;
 
@@ -1470,27 +1467,27 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *ref)
 		if (error)
 		{
 			pdf_dropfunction(func);
-			return fz_rethrow(error, "cannot load stitching function (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_rethrow(error, "cannot load stitching function (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		}
 		break;
 
 	case POSTSCRIPT:
-		error = loadpostscriptfunc(func, xref, dict, fz_tonum(ref), fz_togen(ref));
+		error = loadpostscriptfunc(func, xref, dict, fz_tonum(dict), fz_togen(dict));
 		if (error)
 		{
 			pdf_dropfunction(func);
-			return fz_rethrow(error, "cannot load calculator function (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_rethrow(error, "cannot load calculator function (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		}
 		break;
 
 	default:
 		fz_free(func);
-		return fz_throw("unknown function type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		return fz_throw("unknown function type (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
 	pdf_logrsrc("}\n");
 
-	pdf_storeitem(xref->store, PDF_KFUNCTION, ref, func);
+	pdf_storeitem(xref->store, PDF_KFUNCTION, dict, func);
 
 	*funcp = func;
 	return fz_okay;

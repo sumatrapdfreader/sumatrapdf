@@ -39,7 +39,7 @@ fz_error pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *len);
 fz_error pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
 fz_error pdf_parsedict(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
 fz_error pdf_parsestmobj(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap);
-fz_error pdf_parseindobj(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap, int *oid, int *gen, int *stmofs);
+fz_error pdf_parseindobj(fz_obj **op, pdf_xref *xref, fz_stream *f, char *buf, int cap, int *num, int *gen, int *stmofs);
 
 fz_rect pdf_torect(fz_obj *array);
 fz_matrix pdf_tomatrix(fz_obj *array);
@@ -149,15 +149,15 @@ void pdf_closexref(pdf_xref *);
 void pdf_debugxref(pdf_xref *);
 void pdf_flushxref(pdf_xref *, int force);
 
-fz_error pdf_cacheobject(pdf_xref *, int oid, int gen);
-fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int oid, int gen);
+fz_error pdf_cacheobject(pdf_xref *, int num, int gen);
+fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
 
-int pdf_isstream(pdf_xref *xref, int oid, int gen);
+int pdf_isstream(pdf_xref *xref, int num, int gen);
 fz_filter * pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj);
-fz_error pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen);
-fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int oid, int gen);
-fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int oid, int gen);
-fz_error pdf_openstream(fz_stream **stmp, pdf_xref *, int oid, int gen);
+fz_error pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
+fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
+fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int num, int gen);
+fz_error pdf_openstream(fz_stream **stmp, pdf_xref *, int num, int gen);
 
 /* private */
 extern fz_error pdf_repairxref(pdf_xref *xref, char *buf, int bufsize);

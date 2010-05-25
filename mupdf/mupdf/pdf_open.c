@@ -371,14 +371,14 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	fz_obj *trailer;
 	fz_obj *index;
 	fz_obj *obj;
-	int oid, gen, stmofs;
+	int num, gen, stmofs;
 	int size, w0, w1, w2;
 	int t;
 	int i;
 
 	pdf_logxref("load new xref format\n");
 
-	error = pdf_parseindobj(&trailer, xref, xref->file, buf, cap, &oid, &gen, &stmofs);
+	error = pdf_parseindobj(&trailer, xref, xref->file, buf, cap, &num, &gen, &stmofs);
 	if (error)
 		return fz_rethrow(error, "cannot parse compressed xref stream object");
 
@@ -386,7 +386,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	if (!obj)
 	{
 		fz_dropobj(trailer);
-		return fz_throw("xref stream missing Size entry");
+		return fz_throw("xref stream missing Size entry (%d %d R)", num, gen);
 	}
 	size = fz_toint(obj);
 
@@ -409,31 +409,31 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		xref->len = size;
 	}
 
-	if (oid < 0 || oid >= xref->len)
+	if (num < 0 || num >= xref->len)
 	{
-		if (oid == xref->len && oid < xref->cap)
+		if (num == xref->len && num < xref->cap)
 		{
 			/* allow broken pdf files that have off-by-one errors in the xref */
-			fz_warn("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
+			fz_warn("object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
 			xref->len ++;
 		}
 		else
 		{
 			fz_dropobj(trailer);
-			return fz_throw("object id (%d %d R) out of range (0..%d)", oid, gen, xref->len - 1);
+			return fz_throw("object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
 		}
 	}
 
-	xref->table[oid].type = 'n';
-	xref->table[oid].gen = gen;
-	xref->table[oid].obj = fz_keepobj(trailer);
-	xref->table[oid].stmofs = stmofs;
-	xref->table[oid].ofs = 0;
+	xref->table[num].type = 'n';
+	xref->table[num].gen = gen;
+	xref->table[num].obj = fz_keepobj(trailer);
+	xref->table[num].stmofs = stmofs;
+	xref->table[num].ofs = 0;
 
 	obj = fz_dictgets(trailer, "W");
 	if (!obj) {
 		fz_dropobj(trailer);
-		return fz_throw("xref stream missing W entry");
+		return fz_throw("xref stream missing W entry (%d %d R)", num, gen);
 	}
 	w0 = fz_toint(fz_arrayget(obj, 0));
 	w1 = fz_toint(fz_arrayget(obj, 1));
@@ -441,11 +441,11 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 	index = fz_dictgets(trailer, "Index");
 
-	error = pdf_openstream(&stm, xref, oid, gen);
+	error = pdf_openstream(&stm, xref, num, gen);
 	if (error)
 	{
 		fz_dropobj(trailer);
-		return fz_rethrow(error, "cannot open compressed xref stream");
+		return fz_rethrow(error, "cannot open compressed xref stream (%d %d R)", num, gen);
 	}
 
 	if (!index)
@@ -455,7 +455,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		{
 			fz_dropstream(stm);
 			fz_dropobj(trailer);
-			return fz_rethrow(error, "cannot read xref stream");
+			return fz_rethrow(error, "cannot read xref stream (%d %d R)", num, gen);
 		}
 	}
 	else
@@ -469,7 +469,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 			{
 				fz_dropstream(stm);
 				fz_dropobj(trailer);
-				return fz_rethrow(error, "cannot read xref stream section");
+				return fz_rethrow(error, "cannot read xref stream section (%d %d R)", num, gen);
 			}
 		}
 	}

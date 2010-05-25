@@ -170,6 +170,6 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 cleanup:
 	fz_dropfont(fontdesc->font);
 	fz_free(fontdesc);
-	return fz_rethrow(error, "cannot load type3 font");
+	return fz_rethrow(error, "cannot load type3 font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 }
 

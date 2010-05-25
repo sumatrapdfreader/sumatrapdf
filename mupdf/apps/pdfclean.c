@@ -55,35 +55,29 @@ static fz_error sweepobj(pdf_xref *xref, fz_obj *obj)
 	return fz_okay;
 }
 
-static fz_error sweepref(pdf_xref *xref, fz_obj *ref)
+static fz_error sweepref(pdf_xref *xref, fz_obj *obj)
 {
 	fz_error error;
-	fz_obj *obj;
 	fz_obj *len;
-	int oid, gen;
+	int num, gen;
 
-	oid = fz_tonum(ref);
-	gen = fz_tonum(ref);
+	num = fz_tonum(obj);
+	gen = fz_tonum(obj);
 
-	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object out of range (%d %d R)", oid, gen);
+	if (num < 0 || num >= xref->len)
+		return fz_throw("object out of range (%d %d R)", num, gen);
 
-	if (uselist[oid])
+	if (uselist[num])
 		return fz_okay;
 
-	uselist[oid] = 1;
-
-	obj = fz_resolveindirect(ref);
+	uselist[num] = 1;
 
 	/* Bake in /Length in stream objects */
-	if (xref->table[oid].stmofs)
+	if (xref->table[num].stmofs)
 	{
 		len = fz_dictgets(obj, "Length");
 		if (fz_isindirect(len))
-		{
-			len = fz_resolveindirect(len);
 			fz_dictputs(obj, "Length", len);
-		}
 	}
 
 	error = sweepobj(xref, obj);
@@ -100,13 +94,13 @@ static void preloadobjstms(void)
 {
 	fz_error error;
 	fz_obj *obj;
-	int oid;
+	int num;
 
-	for (oid = 0; oid < xref->len; oid++)
+	for (num = 0; num < xref->len; num++)
 	{
-		if (xref->table[oid].type == 'o')
+		if (xref->table[num].type == 'o')
 		{
-			error = pdf_loadobject(&obj, xref, oid, 0);
+			error = pdf_loadobject(&obj, xref, num, 0);
 			if (error)
 				die(error);
 			fz_dropobj(obj);
@@ -114,16 +108,16 @@ static void preloadobjstms(void)
 	}
 }
 
-static void copystream(fz_obj *obj, int oid, int gen)
+static void copystream(fz_obj *obj, int num, int gen)
 {
 	fz_error error;
 	fz_buffer *buf;
 
-	error = pdf_loadrawstream(&buf, xref, oid, gen);
+	error = pdf_loadrawstream(&buf, xref, num, gen);
 	if (error)
 		die(error);
 
-	fprintf(out, "%d %d obj\n", oid, gen);
+	fprintf(out, "%d %d obj\n", num, gen);
 	fz_fprintobj(out, obj, !doexpand);
 	fprintf(out, "stream\n");
 	fwrite(buf->rp, 1, buf->wp - buf->rp, out);
@@ -132,13 +126,13 @@ static void copystream(fz_obj *obj, int oid, int gen)
 	fz_dropbuffer(buf);
 }
 
-static void expandstream(fz_obj *obj, int oid, int gen)
+static void expandstream(fz_obj *obj, int num, int gen)
 {
 	fz_error error;
 	fz_buffer *buf;
 	fz_obj *newdict, *newlen;
 
-	error = pdf_loadstream(&buf, xref, oid, gen);
+	error = pdf_loadstream(&buf, xref, num, gen);
 	if (error)
 		die(error);
 
@@ -150,7 +144,7 @@ static void expandstream(fz_obj *obj, int oid, int gen)
 	fz_dictputs(newdict, "Length", newlen);
 	fz_dropobj(newlen);
 
-	fprintf(out, "%d %d obj\n", oid, gen);
+	fprintf(out, "%d %d obj\n", num, gen);
 	fz_fprintobj(out, newdict, !doexpand);
 	fprintf(out, "stream\n");
 	fwrite(buf->rp, 1, buf->wp - buf->rp, out);
@@ -161,13 +155,13 @@ static void expandstream(fz_obj *obj, int oid, int gen)
 	fz_dropbuffer(buf);
 }
 
-static void saveobject(int oid, int gen)
+static void saveobject(int num, int gen)
 {
 	fz_error error;
 	fz_obj *obj;
 	fz_obj *type;
 
-	error = pdf_loadobject(&obj, xref, oid, gen);
+	error = pdf_loadobject(&obj, xref, num, gen);
 	if (error)
 		die(error);
 
@@ -177,31 +171,31 @@ static void saveobject(int oid, int gen)
 		type = fz_dictgets(obj, "Type");
 		if (fz_isname(type) && !strcmp(fz_toname(type), "ObjStm"))
 		{
-			uselist[oid] = 0;
+			uselist[num] = 0;
 			fz_dropobj(obj);
 			return;
 		}
 		if (fz_isname(type) && !strcmp(fz_toname(type), "XRef"))
 		{
-			uselist[oid] = 0;
+			uselist[num] = 0;
 			fz_dropobj(obj);
 			return;
 		}
 	}
 
 
-	if (!xref->table[oid].stmofs)
+	if (!xref->table[num].stmofs)
 	{
-		fprintf(out, "%d %d obj\n", oid, gen);
+		fprintf(out, "%d %d obj\n", num, gen);
 		fz_fprintobj(out, obj, !doexpand);
 		fprintf(out, "endobj\n\n");
 	}
 	else
 	{
 		if (doexpand)
-			expandstream(obj, oid, gen);
+			expandstream(obj, num, gen);
 		else
-			copystream(obj, oid, gen);
+			copystream(obj, num, gen);
 	}
 
 
@@ -213,17 +207,17 @@ static void savexref(void)
 	fz_obj *trailer;
 	fz_obj *obj;
 	int startxref;
-	int oid;
+	int num;
 
 	startxref = ftell(out);
 
 	fprintf(out, "xref\n0 %d\n", xref->len);
-	for (oid = 0; oid < xref->len; oid++)
+	for (num = 0; num < xref->len; num++)
 	{
-		if (uselist[oid])
-			fprintf(out, "%010d %05d n \n", ofslist[oid], genlist[oid]);
+		if (uselist[num])
+			fprintf(out, "%010d %05d n \n", ofslist[num], genlist[num]);
 		else
-			fprintf(out, "%010d %05d f \n", ofslist[oid], genlist[oid]);
+			fprintf(out, "%010d %05d f \n", ofslist[num], genlist[num]);
 	}
 	fprintf(out, "\n");
 
@@ -268,7 +262,7 @@ int main(int argc, char **argv)
 	char *outfile = "out.pdf";
 	char *password = "";
 	fz_error error;
-	int c, oid;
+	int c, num;
 	int lastfree;
 	int subset;
 
@@ -311,11 +305,11 @@ int main(int argc, char **argv)
 	ofslist = malloc(sizeof (int) * (xref->len + 1));
 	genlist = malloc(sizeof (int) * (xref->len + 1));
 
-	for (oid = 0; oid < xref->len; oid++)
+	for (num = 0; num < xref->len; num++)
 	{
-		uselist[oid] = 0;
-		ofslist[oid] = 0;
-		genlist[oid] = 0;
+		uselist[num] = 0;
+		ofslist[num] = 0;
+		genlist[num] = 0;
 	}
 
 	/* Make sure any objects hidden in compressed streams have been loaded */
@@ -410,37 +404,37 @@ int main(int argc, char **argv)
 	if (error)
 		die(fz_rethrow(error, "cannot mark used objects"));
 
-	for (oid = 0; oid < xref->len; oid++)
+	for (num = 0; num < xref->len; num++)
 	{
-		if (xref->table[oid].type == 'f')
-			uselist[oid] = 0;
+		if (xref->table[num].type == 'f')
+			uselist[num] = 0;
 
-		if (xref->table[oid].type == 'f')
-			genlist[oid] = xref->table[oid].gen;
-		if (xref->table[oid].type == 'n')
-			genlist[oid] = xref->table[oid].gen;
-		if (xref->table[oid].type == 'o')
-			genlist[oid] = 0;
+		if (xref->table[num].type == 'f')
+			genlist[num] = xref->table[num].gen;
+		if (xref->table[num].type == 'n')
+			genlist[num] = xref->table[num].gen;
+		if (xref->table[num].type == 'o')
+			genlist[num] = 0;
 
-		if (dogarbage && !uselist[oid])
+		if (dogarbage && !uselist[num])
 			continue;
 
-		if (xref->table[oid].type == 'n' || xref->table[oid].type == 'o')
+		if (xref->table[num].type == 'n' || xref->table[num].type == 'o')
 		{
-			ofslist[oid] = ftell(out);
-			saveobject(oid, genlist[oid]);
+			ofslist[num] = ftell(out);
+			saveobject(num, genlist[num]);
 		}
 	}
 
 	/* Construct linked list of free object slots */
 	lastfree = 0;
-	for (oid = 0; oid < xref->len; oid++)
+	for (num = 0; num < xref->len; num++)
 	{
-		if (!uselist[oid])
+		if (!uselist[num])
 		{
-			genlist[oid]++;
-			ofslist[lastfree] = oid;
-			lastfree = oid;
+			genlist[num]++;
+			ofslist[lastfree] = num;
+			lastfree = num;
 		}
 	}
 

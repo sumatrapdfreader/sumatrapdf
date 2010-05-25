@@ -33,7 +33,7 @@ fz_debugshade(fz_shade *shade)
 	float *vertex;
 	int triangle;
 
-	printf("shade {\n");
+	printf("shading {\n");
 
 	printf("  bbox [%g %g %g %g]\n",
 		shade->bbox.x0, shade->bbox.y0,

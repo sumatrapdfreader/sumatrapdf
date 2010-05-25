@@ -54,6 +54,7 @@ static Atom XA_UTF8_STRING;
 static int x11fd;
 static int xscr;
 static Window xwin;
+static Pixmap xicon;
 static GC xgc;
 static XEvent xevt;
 static int mapped = 0;
@@ -69,6 +70,7 @@ static int reqh = 0;
 static char copylatin1[1024 * 16] = "";
 static char copyutf8[1024 * 48] = "";
 static Time copytime;
+static char *filename;
 
 static pdfapp_t gapp;
 
@@ -137,6 +139,8 @@ static void winopen(void)
 		ximage_get_visual(),
 		0,
 		nil);
+	if (xwin == None)
+		winerror(&gapp, fz_throw("cannot create window"));
 
 	XSetWindowColormap(xdpy, xwin, ximage_get_colormap());
 	XSelectInput(xdpy, xwin,
@@ -153,10 +157,11 @@ static void winopen(void)
 	if (wmhints)
 	{
 		wmhints->flags = IconPixmapHint;
-		wmhints->icon_pixmap = XCreateBitmapFromData(xdpy, xwin,
+		xicon = XCreateBitmapFromData(xdpy, xwin,
 			(char *) gs_l_xbm_bits, gs_l_xbm_width, gs_l_xbm_height);
-		if (wmhints->icon_pixmap)
+		if (xicon)
 		{
+			wmhints->icon_pixmap = xicon;
 			XSetWMHints(xdpy, xwin, wmhints);
 		}
 		XFree(wmhints);
@@ -172,6 +177,21 @@ static void winopen(void)
 	}
 
 	x11fd = ConnectionNumber(xdpy);
+}
+
+void winclose(pdfapp_t *app)
+{
+	XFreePixmap(xdpy, xicon);
+
+	XFreeCursor(xdpy, xcwait);
+	XFreeCursor(xdpy, xchand);
+	XFreeCursor(xdpy, xcarrow);
+
+	XFreeGC(xdpy, xgc);
+
+	XDestroyWindow(xdpy, xwin);
+
+	XCloseDisplay(xdpy);
 }
 
 void wincursor(pdfapp_t *app, int curs)
@@ -426,6 +446,19 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 	XSendEvent(xdpy, requestor, False, SelectionNotify, &nevt);
 }
 
+void winreloadfile(pdfapp_t *app)
+{
+	int fd;
+
+	pdfapp_close(app);
+
+	fd = open(filename, O_BINARY | O_RDONLY, 0666);
+	if (fd < 0)
+	        winerror(app, fz_throw("cannot reload file '%s'", filename));
+
+	pdfapp_open(app, filename, fd);
+}
+
 void winopenuri(pdfapp_t *app, char *buf)
 {
 	char *browser = getenv("BROWSER");
@@ -446,7 +479,10 @@ static void onkey(int c)
 	if (c == 'P')
 		windrawpageno(&gapp);
 	else if (c == 'q')
-		exit(0);
+	{
+		XSelectInput(xdpy, xwin, StructureNotifyMask);
+		XUnmapWindow(xdpy, xwin);
+	}
 	else
 		pdfapp_onkey(&gapp, c);
 }
@@ -512,7 +548,6 @@ static void winresettmo(struct timeval *tmo, struct timeval *tmo_at)
 
 int main(int argc, char **argv)
 {
-	char *filename;
 	int c;
 	int len;
 	char buf[128];
@@ -523,6 +558,7 @@ int main(int argc, char **argv)
 	int pageno = 1;
 	int wasshowingpage;
 	struct timeval tmo, tmo_at;
+	int closing;
 	int fd;
 
 	while ((c = fz_getopt(argc, argv, "d:z:p:")) != -1)
@@ -565,7 +601,8 @@ int main(int argc, char **argv)
 
 	winresettmo(&tmo, &tmo_at);
 
-	while (1)
+	closing = 0;
+	while (!closing)
 	{
 		do
 		{
@@ -645,11 +682,16 @@ int main(int argc, char **argv)
 					xevt.xselectionrequest.property,
 					xevt.xselectionrequest.time);
 				break;
+
+			case UnmapNotify:
+				winclose(&gapp);
+				closing = 1;
+				break;
 			}
 		}
-		while (XPending(xdpy));
+		while (!closing && XPending(xdpy));
 
-		if (dirty)
+		if (!closing && dirty)
 		{
 			winblit(&gapp);
 			dirty = 0;

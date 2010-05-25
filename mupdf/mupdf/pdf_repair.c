@@ -7,7 +7,7 @@
 
 struct entry
 {
-	int oid;
+	int num;
 	int gen;
 	int ofs;
 	int stmofs;
@@ -141,13 +141,13 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	struct entry *list = nil;
 	int listlen;
 	int listcap;
-	int maxoid = 0;
+	int maxnum = 0;
 
-	int oid = 0;
+	int num = 0;
 	int gen = 0;
-	int tmpofs, oidofs = 0, genofs = 0;
-	int isroot, rootoid = 0, rootgen = 0;
-	int isinfo, infooid = 0, infogen = 0;
+	int tmpofs, numofs = 0, genofs = 0;
+	int isroot, rootnum = 0, rootgen = 0;
+	int isinfo, infonum = 0, infogen = 0;
 	int stmlen, stmofs = 0;
 	pdf_token_e tok;
 	int len;
@@ -180,8 +180,8 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 		if (tok == PDF_TINT)
 		{
-			oidofs = genofs;
-			oid = gen;
+			numofs = genofs;
+			num = gen;
 			genofs = tmpofs;
 			gen = atoi(buf);
 		}
@@ -191,19 +191,19 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &isroot, &isinfo);
 			if (error)
 			{
-				error = fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
+				error = fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
 				goto cleanup;
 			}
 
 			if (isroot) {
-				pdf_logxref("found catalog: (%d %d R)\n", oid, gen);
-				rootoid = oid;
+				pdf_logxref("found catalog: (%d %d R)\n", num, gen);
+				rootnum = num;
 				rootgen = gen;
 			}
 
 			if (isinfo) {
-				pdf_logxref("found info: (%d %d R)\n", oid, gen);
-				infooid = oid;
+				pdf_logxref("found info: (%d %d R)\n", num, gen);
+				infonum = num;
 				infogen = gen;
 			}
 
@@ -213,17 +213,17 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 				list = fz_realloc(list, listcap * sizeof(struct entry));
 			}
 
-			pdf_logxref("found object: (%d %d R)\n", oid, gen);
+			pdf_logxref("found object: (%d %d R)\n", num, gen);
 
-			list[listlen].oid = oid;
+			list[listlen].num = num;
 			list[listlen].gen = gen;
-			list[listlen].ofs = oidofs;
+			list[listlen].ofs = numofs;
 			list[listlen].stmofs = stmofs;
 			list[listlen].stmlen = stmlen;
 			listlen ++;
 
-			if (oid > maxoid)
-				maxoid = oid;
+			if (num > maxnum)
+				maxnum = num;
 		}
 
 		/* trailer dictionary */
@@ -251,7 +251,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 			break;
 	}
 
-	if (rootoid == 0)
+	if (rootnum == 0)
 	{
 		error = fz_throw("cannot find catalog object");
 		goto cleanup;
@@ -259,11 +259,11 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	xref->trailer = fz_newdict(4);
 
-	obj = fz_newint(maxoid + 1);
+	obj = fz_newint(maxnum + 1);
 	fz_dictputs(xref->trailer, "Size", obj);
 	fz_dropobj(obj);
 
-	obj = fz_newindirect(rootoid, rootgen, xref);
+	obj = fz_newindirect(rootnum, rootgen, xref);
 	fz_dictputs(xref->trailer, "Root", obj);
 	fz_dropobj(obj);
 
@@ -279,7 +279,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		fz_dropobj(id);
 	}
 
-	xref->len = maxoid + 1;
+	xref->len = maxnum + 1;
 	xref->cap = xref->len;
 	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
 
@@ -300,11 +300,11 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	for (i = 0; i < listlen; i++)
 	{
-		xref->table[list[i].oid].type = 'n';
-		xref->table[list[i].oid].ofs = list[i].ofs;
-		xref->table[list[i].oid].gen = list[i].gen;
+		xref->table[list[i].num].type = 'n';
+		xref->table[list[i].num].ofs = list[i].ofs;
+		xref->table[list[i].num].gen = list[i].gen;
 
-		xref->table[list[i].oid].stmofs = list[i].stmofs;
+		xref->table[list[i].num].stmofs = list[i].stmofs;
 
 		/* corrected stream length */
 		if (list[i].stmlen >= 0)
@@ -312,12 +312,12 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 			fz_obj *dict, *length;
 
 			pdf_logxref("correct stream length %d %d = %d\n",
-				list[i].oid, list[i].gen, list[i].stmlen);
+				list[i].num, list[i].gen, list[i].stmlen);
 
-			error = pdf_loadobject(&dict, xref, list[i].oid, list[i].gen);
+			error = pdf_loadobject(&dict, xref, list[i].num, list[i].gen);
 			if (error)
 			{
-				error = fz_rethrow(error, "cannot load stream object");
+				error = fz_rethrow(error, "cannot load stream object (%d %d R)", list[i].num, list[i].gen);
 				goto cleanup;
 			}
 

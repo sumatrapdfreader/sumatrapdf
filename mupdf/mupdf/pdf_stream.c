@@ -160,7 +160,7 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 			{
 				error = pdf_parsecryptfilter(&cf, obj, xref->crypt->length);
 				if (error)
-					fz_catch(error, "cannot parse crypt filter");
+					fz_catch(error, "cannot parse crypt filter (%d %d R)", fz_tonum(obj), fz_togen(obj));
 				else
 					return pdf_cryptstream(xref->crypt, &cf, num, gen);
 			}

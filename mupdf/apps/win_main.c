@@ -527,6 +527,19 @@ void windocopy(pdfapp_t *app)
 	justcopied = 1;	/* keep inversion around for a while... */
 }
 
+void winreloadfile(pdfapp_t *app)
+{
+       int fd;
+
+       pdfapp_close(app);
+
+       fd = _wopen(wbuf, O_BINARY | O_RDONLY, 0666);
+       if (fd < 0)
+               winerror(&gapp, fz_throw("cannot reload file '%s'", filename));
+
+       pdfapp_open(app, filename, fd);
+}
+
 void winopenuri(pdfapp_t *app, char *buf)
 {
 	ShellExecute(hwndframe, "open", buf, 0, 0, SW_SHOWNORMAL);

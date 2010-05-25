@@ -20,7 +20,6 @@ struct info
 {
 	int page;
 	fz_obj *pageobj;
-	fz_obj *ref;
 	union {
 		struct {
 			fz_obj *obj;
@@ -29,13 +28,16 @@ struct info
 			fz_obj *obj;
 		} crypt;
 		struct {
+			fz_obj *obj;
 			fz_rect *bbox;
 		} dim;
 		struct {
+			fz_obj *obj;
 			fz_obj *subtype;
 			fz_obj *name;
 		} font;
 		struct {
+			fz_obj *obj;
 			fz_obj *width;
 			fz_obj *height;
 			fz_obj *bpc;
@@ -44,14 +46,17 @@ struct info
 			fz_obj *altcs;
 		} image;
 		struct {
+			fz_obj *obj;
 			fz_obj *type;
 		} shading;
 		struct {
-			fz_obj *pattern;
+			fz_obj *obj;
+			fz_obj *type;
 			fz_obj *paint;
 			fz_obj *tiling;
 		} pattern;
 		struct {
+			fz_obj *obj;
 			fz_obj *group;
 			fz_obj *reference;
 		} form;
@@ -172,39 +177,35 @@ gatherglobalinfo(void)
 
 	info->page = -1;
 	info->pageobj = nil;
-	info->ref = nil;
 	info->u.info.obj = nil;
 
-	info->ref = fz_dictgets(xref->trailer, "Info");
-	if (!fz_isindirect(info->ref))
+	info->u.info.obj = fz_dictgets(xref->trailer, "Info");
+	if (!fz_isindirect(info->u.info.obj))
 		die(fz_throw("not an indirect info object"));
-	info->u.info.obj = fz_resolveindirect(info->ref);
 
 	cryptinfo = fz_malloc(sizeof (struct info));
 
 	cryptinfo->page = -1;
 	cryptinfo->pageobj = nil;
-	cryptinfo->ref = nil;
 	cryptinfo->u.crypt.obj = nil;
 
-	cryptinfo->ref = fz_dictgets(xref->trailer, "Encrypt");
-	if (cryptinfo->ref &&
-		!fz_isdict(cryptinfo->ref) && !fz_isindirect(cryptinfo->ref))
+	cryptinfo->u.info.obj = fz_dictgets(xref->trailer, "Encrypt");
+	if (cryptinfo->u.info.obj &&
+		!fz_isdict(cryptinfo->u.info.obj) &&
+		!fz_isindirect(cryptinfo->u.info.obj))
 		die(fz_throw("not an indirect crypt object"));
-	cryptinfo->u.info.obj = fz_resolveindirect(cryptinfo->ref);
 }
 
 static fz_error
 gatherdimensions(int page, fz_obj *pageobj)
 {
-	fz_obj *ref;
 	fz_rect bbox;
 	fz_obj *obj;
 	int j;
 
-	obj = ref = fz_dictgets(pageobj, "MediaBox");
+	obj = fz_dictgets(pageobj, "MediaBox");
 	if (!fz_isarray(obj))
-		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(ref), fz_togen(ref));
+		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(obj), fz_togen(obj));
 
 	bbox = pdf_torect(obj);
 
@@ -222,7 +223,6 @@ gatherdimensions(int page, fz_obj *pageobj)
 	dim[dims - 1]->u.dim.bbox = fz_malloc(sizeof (fz_rect));
 	dim[dims - 1]->page = page;
 	dim[dims - 1]->pageobj = pageobj;
-	dim[dims - 1]->ref = nil;
 	memcpy(dim[dims - 1]->u.dim.bbox, &bbox, sizeof (fz_rect));
 
 	return fz_okay;
@@ -235,40 +235,39 @@ gatherfonts(int page, fz_obj *pageobj, fz_obj *dict)
 
 	for (i = 0; i < fz_dictlen(dict); i++)
 	{
-		fz_obj *ref;
 		fz_obj *fontdict;
 		fz_obj *subtype;
 		fz_obj *basefont;
 		fz_obj *name;
 		int k;
 
-		fontdict = ref = fz_dictgetval(dict, i);
+		fontdict = fz_dictgetval(dict, i);
 		if (!fz_isdict(fontdict))
 		{
-			fz_warn("not a font dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_warn("not a font dict (%d %d R)", fz_tonum(fontdict), fz_togen(fontdict));
 			continue;
 		}
 
 		subtype = fz_dictgets(fontdict, "Subtype");
 		if (!fz_isname(subtype))
-			fz_warn("not a font dict subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_warn("not a font dict subtype (%d %d R)", fz_tonum(fontdict), fz_togen(fontdict));
 
 		basefont = fz_dictgets(fontdict, "BaseFont");
 		if (basefont)
 		{
 			if (!fz_isname(basefont))
-				return fz_throw("not a font dict basefont (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				return fz_throw("not a font dict basefont (%d %d R)", fz_tonum(fontdict), fz_togen(fontdict));
 		}
 		else
 		{
 			name = fz_dictgets(fontdict, "Name");
 			if (name && !fz_isname(name))
-				return fz_throw("not a font dict name (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				return fz_throw("not a font dict name (%d %d R)", fz_tonum(fontdict), fz_togen(fontdict));
 		}
 
 		for (k = 0; k < fonts; k++)
-			if (fz_tonum(font[k]->ref) == fz_tonum(ref) &&
-				fz_togen(font[k]->ref) == fz_togen(ref))
+			if (fz_tonum(font[k]->u.font.obj) == fz_tonum(fontdict) &&
+				fz_togen(font[k]->u.font.obj) == fz_togen(fontdict))
 				break;
 
 		if (k < fonts)
@@ -281,7 +280,7 @@ gatherfonts(int page, fz_obj *pageobj, fz_obj *dict)
 
 		font[fonts - 1]->page = page;
 		font[fonts - 1]->pageobj = pageobj;
-		font[fonts - 1]->ref = ref;
+		font[fonts - 1]->u.font.obj = fontdict;
 		font[fonts - 1]->u.font.subtype = subtype;
 		font[fonts - 1]->u.font.name = basefont ? basefont : name;
 	}
@@ -296,7 +295,6 @@ gatherimages(int page, fz_obj *pageobj, fz_obj *dict)
 
 	for (i = 0; i < fz_dictlen(dict); i++)
 	{
-		fz_obj *ref;
 		fz_obj *imagedict;
 		fz_obj *type;
 		fz_obj *width;
@@ -308,19 +306,19 @@ gatherimages(int page, fz_obj *pageobj, fz_obj *dict)
 		fz_obj *altcs;
 		int k;
 
-		imagedict = ref = fz_dictgetval(dict, i);
+		imagedict = fz_dictgetval(dict, i);
 		if (!fz_isdict(imagedict))
-			return fz_throw("not an image dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image dict (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 
 		type = fz_dictgets(imagedict, "Subtype");
 		if (!fz_isname(type))
-			return fz_throw("not an image subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image subtype (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 		if (strcmp(fz_toname(type), "Image"))
 			continue;
 
 		filter = fz_dictgets(imagedict, "Filter");
 		if (filter && !fz_isname(filter) && !fz_isarray(filter))
-			return fz_throw("not an image filter (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image filter (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 
 		mask = fz_dictgets(imagedict, "ImageMask");
 
@@ -342,30 +340,30 @@ gatherimages(int page, fz_obj *pageobj, fz_obj *dict)
 		if (fz_isbool(mask) && fz_tobool(mask))
 		{
 			if (cs)
-				fz_warn("image mask (%d %d R) may not have colorspace", fz_tonum(ref), fz_togen(ref));
+				fz_warn("image mask (%d %d R) may not have colorspace", fz_tonum(imagedict), fz_togen(imagedict));
 		}
 		if (cs && !fz_isname(cs))
-			return fz_throw("not an image colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image colorspace (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 		if (altcs && !fz_isname(altcs))
-			return fz_throw("not an image alternate colorspace (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image alternate colorspace (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 
 		width = fz_dictgets(imagedict, "Width");
 		if (!fz_isint(width))
-			return fz_throw("not an image width (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image width (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 
 		height = fz_dictgets(imagedict, "Height");
 		if (!fz_isint(height))
-			return fz_throw("not an image height (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image height (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 
 		bpc = fz_dictgets(imagedict, "BitsPerComponent");
 		if (!fz_tobool(mask) && !fz_isint(bpc))
-			return fz_throw("not an image bits per component (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image bits per component (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 		if (fz_tobool(mask) && fz_isint(bpc) && fz_toint(bpc) != 1)
-			return fz_throw("not an image mask bits per component (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not an image mask bits per component (%d %d R)", fz_tonum(imagedict), fz_togen(imagedict));
 
 		for (k = 0; k < images; k++)
-			if (fz_tonum(image[k]->ref) == fz_tonum(ref) &&
-				fz_togen(image[k]->ref) == fz_togen(ref))
+			if (fz_tonum(image[k]->u.image.obj) == fz_tonum(imagedict) &&
+				fz_togen(image[k]->u.image.obj) == fz_togen(imagedict))
 				break;
 
 		if (k < images)
@@ -378,7 +376,7 @@ gatherimages(int page, fz_obj *pageobj, fz_obj *dict)
 
 		image[images - 1]->page = page;
 		image[images - 1]->pageobj = pageobj;
-		image[images - 1]->ref = ref;
+		image[images - 1]->u.image.obj = imagedict;
 		image[images - 1]->u.image.width = width;
 		image[images - 1]->u.image.height = height;
 		image[images - 1]->u.image.bpc = bpc;
@@ -397,7 +395,6 @@ gatherforms(int page, fz_obj *pageobj, fz_obj *dict)
 
 	for (i = 0; i < fz_dictlen(dict); i++)
 	{
-		fz_obj *ref;
 		fz_obj *xobjdict;
 		fz_obj *type;
 		fz_obj *subtype;
@@ -405,33 +402,33 @@ gatherforms(int page, fz_obj *pageobj, fz_obj *dict)
 		fz_obj *reference;
 		int k;
 
-		xobjdict = ref = fz_dictgetval(dict, i);
+		xobjdict = fz_dictgetval(dict, i);
 		if (!fz_isdict(xobjdict))
-			return fz_throw("not a xobject dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a xobject dict (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 
 		type = fz_dictgets(xobjdict, "Subtype");
 		if (!fz_isname(type))
-			return fz_throw("not a xobject type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a xobject type (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 		if (strcmp(fz_toname(type), "Form"))
 			continue;
 
 		subtype = fz_dictgets(xobjdict, "Subtype2");
 		if (subtype && !fz_isname(subtype))
-			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 		if (strcmp(fz_toname(subtype), "PS"))
 			continue;
 
 		group = fz_dictgets(xobjdict, "Group");
 		if (group && !fz_isdict(group))
-			return fz_throw("not a form xobject group dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a form xobject group dict (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 
 		reference = fz_dictgets(xobjdict, "Ref");
 		if (reference && !fz_isdict(reference))
-			return fz_throw("not a form xobject reference dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a form xobject reference dict (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 
 		for (k = 0; k < forms; k++)
-			if (fz_tonum(form[k]->ref) == fz_tonum(ref) &&
-				fz_togen(form[k]->ref) == fz_togen(ref))
+			if (fz_tonum(form[k]->u.form.obj) == fz_tonum(xobjdict) &&
+				fz_togen(form[k]->u.form.obj) == fz_togen(xobjdict))
 				break;
 
 		if (k < forms)
@@ -444,7 +441,7 @@ gatherforms(int page, fz_obj *pageobj, fz_obj *dict)
 
 		form[forms - 1]->page = page;
 		form[forms - 1]->pageobj = pageobj;
-		form[forms - 1]->ref = ref;
+		form[forms - 1]->u.form.obj = xobjdict;
 		form[forms - 1]->u.form.group = group;
 		form[forms - 1]->u.form.reference = reference;
 	}
@@ -459,32 +456,31 @@ gatherpsobjs(int page, fz_obj *pageobj, fz_obj *dict)
 
 	for (i = 0; i < fz_dictlen(dict); i++)
 	{
-		fz_obj *ref;
 		fz_obj *xobjdict;
 		fz_obj *type;
 		fz_obj *subtype;
 		int k;
 
-		xobjdict = ref = fz_dictgetval(dict, i);
+		xobjdict = fz_dictgetval(dict, i);
 		if (!fz_isdict(xobjdict))
-			return fz_throw("not a xobject dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a xobject dict (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 
 		type = fz_dictgets(xobjdict, "Subtype");
 		if (!fz_isname(type))
-			return fz_throw("not a xobject type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a xobject type (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 		if (strcmp(fz_toname(type), "Form"))
 			continue;
 
 		subtype = fz_dictgets(xobjdict, "Subtype2");
 		if (subtype && !fz_isname(subtype))
-			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a xobject subtype (%d %d R)", fz_tonum(xobjdict), fz_togen(xobjdict));
 		if (strcmp(fz_toname(type), "PS") &&
 			(strcmp(fz_toname(type), "Form") || strcmp(fz_toname(subtype), "PS")))
 			continue;
 
 		for (k = 0; k < psobjs; k++)
-			if (fz_tonum(psobj[k]->ref) == fz_tonum(ref) &&
-				fz_togen(psobj[k]->ref) == fz_togen(ref))
+			if (fz_tonum(psobj[k]->u.form.obj) == fz_tonum(xobjdict) &&
+				fz_togen(psobj[k]->u.form.obj) == fz_togen(xobjdict))
 				break;
 
 		if (k < psobjs)
@@ -497,7 +493,7 @@ gatherpsobjs(int page, fz_obj *pageobj, fz_obj *dict)
 
 		psobj[psobjs - 1]->page = page;
 		psobj[psobjs - 1]->pageobj = pageobj;
-		psobj[psobjs - 1]->ref = ref;
+		psobj[psobjs - 1]->u.form.obj = xobjdict;
 	}
 
 	return fz_okay;
@@ -510,25 +506,24 @@ gathershadings(int page, fz_obj *pageobj, fz_obj *dict)
 
 	for (i = 0; i < fz_dictlen(dict); i++)
 	{
-		fz_obj *ref;
 		fz_obj *shade;
 		fz_obj *type;
 		int k;
 
-		shade = ref = fz_dictgetval(dict, i);
+		shade = fz_dictgetval(dict, i);
 		if (!fz_isdict(shade))
-			return fz_throw("not a shading dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a shading dict (%d %d R)", fz_tonum(shade), fz_togen(shade));
 
 		type = fz_dictgets(shade, "ShadingType");
 		if (!fz_isint(type) || fz_toint(type) < 1 || fz_toint(type) > 7)
 		{
-			fz_warn("not a shading type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_warn("not a shading type (%d %d R)", fz_tonum(shade), fz_togen(shade));
 			type = nil;
 		}
 
 		for (k = 0; k < shadings; k++)
-			if (fz_tonum(shading[k]->ref) == fz_tonum(ref) &&
-				fz_togen(shading[k]->ref) == fz_togen(ref))
+			if (fz_tonum(shading[k]->u.shading.obj) == fz_tonum(shade) &&
+				fz_togen(shading[k]->u.shading.obj) == fz_togen(shade))
 				break;
 
 		if (k < shadings)
@@ -541,7 +536,7 @@ gathershadings(int page, fz_obj *pageobj, fz_obj *dict)
 
 		shading[shadings - 1]->page = page;
 		shading[shadings - 1]->pageobj = pageobj;
-		shading[shadings - 1]->ref = ref;
+		shading[shadings - 1]->u.shading.obj = shade;
 		shading[shadings - 1]->u.shading.type = type;
 	}
 
@@ -555,21 +550,20 @@ gatherpatterns(int page, fz_obj *pageobj, fz_obj *dict)
 
 	for (i = 0; i < fz_dictlen(dict); i++)
 	{
-		fz_obj *ref;
 		fz_obj *patterndict;
 		fz_obj *type;
 		fz_obj *paint = nil;
 		fz_obj *tiling = nil;
 		int k;
 
-		patterndict = ref = fz_dictgetval(dict, i);
+		patterndict = fz_dictgetval(dict, i);
 		if (!fz_isdict(patterndict))
-			return fz_throw("not a pattern dict (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			return fz_throw("not a pattern dict (%d %d R)", fz_tonum(patterndict), fz_togen(patterndict));
 
 		type = fz_dictgets(patterndict, "PatternType");
 		if (!fz_isint(type) || fz_toint(type) < 1 || fz_toint(type) > 2)
 		{
-			fz_warn("not a pattern type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+			fz_warn("not a pattern type (%d %d R)", fz_tonum(patterndict), fz_togen(patterndict));
 			type = nil;
 		}
 
@@ -578,21 +572,21 @@ gatherpatterns(int page, fz_obj *pageobj, fz_obj *dict)
 			paint = fz_dictgets(patterndict, "PaintType");
 			if (!fz_isint(paint) || fz_toint(paint) < 1 || fz_toint(paint) > 2)
 			{
-				fz_warn("not a pattern paint type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				fz_warn("not a pattern paint type (%d %d R)", fz_tonum(patterndict), fz_togen(patterndict));
 				paint = nil;
 			}
 
 			tiling = fz_dictgets(patterndict, "TilingType");
 			if (!fz_isint(tiling) || fz_toint(tiling) < 1 || fz_toint(tiling) > 3)
 			{
-				fz_warn("not a pattern tiling type (%d %d R)", fz_tonum(ref), fz_togen(ref));
+				fz_warn("not a pattern tiling type (%d %d R)", fz_tonum(patterndict), fz_togen(patterndict));
 				tiling = nil;
 			}
 		}
 
 		for (k = 0; k < patterns; k++)
-			if (fz_tonum(pattern[k]->ref) == fz_tonum(ref) &&
-				fz_togen(pattern[k]->ref) == fz_togen(ref))
+			if (fz_tonum(pattern[k]->u.pattern.obj) == fz_tonum(patterndict) &&
+				fz_togen(pattern[k]->u.pattern.obj) == fz_togen(patterndict))
 				break;
 
 		if (k < patterns)
@@ -605,8 +599,8 @@ gatherpatterns(int page, fz_obj *pageobj, fz_obj *dict)
 
 		pattern[patterns - 1]->page = page;
 		pattern[patterns - 1]->pageobj = pageobj;
-		pattern[patterns - 1]->ref = ref;
-		pattern[patterns - 1]->u.pattern.pattern = type;
+		pattern[patterns - 1]->u.pattern.obj = patterndict;
+		pattern[patterns - 1]->u.pattern.type = type;
 		pattern[patterns - 1]->u.pattern.paint = paint;
 		pattern[patterns - 1]->u.pattern.tiling = tiling;
 	}
@@ -697,13 +691,13 @@ printglobalinfo(void)
 
 	if (info->u.info.obj)
 	{
-		printf("Info object (%d %d R):\n", fz_tonum(info->ref), fz_togen(info->ref));
-		fz_debugobj(fz_resolveindirect(info->u.info.obj));
+		printf("Info object (%d %d R):\n", fz_tonum(info->u.info.obj), fz_togen(info->u.info.obj));
+		fz_debugobj(info->u.info.obj);
 	}
 
 	if (cryptinfo->u.crypt.obj)
 	{
-		printf("\nEncryption object (%d %d R):\n", fz_tonum(cryptinfo->ref), fz_togen(cryptinfo->ref));
+		printf("\nEncryption object (%d %d R):\n", fz_tonum(cryptinfo->u.info.obj), fz_togen(cryptinfo->u.info.obj));
 		fz_debugobj(cryptinfo->u.crypt.obj);
 	}
 
@@ -754,7 +748,7 @@ printinfo(char *filename, int show, int page)
 				fz_tonum(font[i]->pageobj), fz_togen(font[i]->pageobj),
 				fz_toname(font[i]->u.font.subtype),
 				fz_toname(font[i]->u.font.name),
-				fz_tonum(font[i]->ref), fz_togen(font[i]->ref));
+				fz_tonum(font[i]->u.font.obj), fz_togen(font[i]->u.font.obj));
 		}
 		printf("\n");
 
@@ -793,7 +787,7 @@ printinfo(char *filename, int show, int page)
 				image[i]->u.image.cs ? fz_toname(image[i]->u.image.cs) : "ImageMask",
 				image[i]->u.image.altcs ? " " : "",
 				image[i]->u.image.altcs ? fz_toname(image[i]->u.image.altcs) : "",
-				fz_tonum(image[i]->ref), fz_togen(image[i]->ref));
+				fz_tonum(image[i]->u.image.obj), fz_togen(image[i]->u.image.obj));
 		}
 		printf("\n");
 
@@ -825,7 +819,7 @@ printinfo(char *filename, int show, int page)
 				shading[i]->page,
 				fz_tonum(shading[i]->pageobj), fz_togen(shading[i]->pageobj),
 				shadingtype[fz_toint(shading[i]->u.shading.type)],
-				fz_tonum(shading[i]->ref), fz_togen(shading[i]->ref));
+				fz_tonum(shading[i]->u.shading.obj), fz_togen(shading[i]->u.shading.obj));
 		}
 		printf("\n");
 
@@ -864,10 +858,10 @@ printinfo(char *filename, int show, int page)
 			printf(PAGE_FMT "%s %s %s (%d %d R)\n",
 				pattern[i]->page,
 				fz_tonum(pattern[i]->pageobj), fz_togen(pattern[i]->pageobj),
-				patterntype[fz_toint(pattern[i]->u.pattern.pattern)],
+				patterntype[fz_toint(pattern[i]->u.pattern.type)],
 				painttype[fz_toint(pattern[i]->u.pattern.paint)],
 				tilingtype[fz_toint(pattern[i]->u.pattern.tiling)],
-				fz_tonum(pattern[i]->ref), fz_togen(pattern[i]->ref));
+				fz_tonum(pattern[i]->u.pattern.obj), fz_togen(pattern[i]->u.pattern.obj));
 		}
 		printf("\n");
 
@@ -888,7 +882,7 @@ printinfo(char *filename, int show, int page)
 				fz_tonum(form[i]->pageobj), fz_togen(form[i]->pageobj),
 				form[i]->u.form.group ? "Group" : "",
 				form[i]->u.form.reference ? "Reference" : "",
-				fz_tonum(form[i]->ref), fz_togen(form[i]->ref));
+				fz_tonum(form[i]->u.form.obj), fz_togen(form[i]->u.form.obj));
 		}
 		printf("\n");
 
@@ -907,7 +901,7 @@ printinfo(char *filename, int show, int page)
 			printf(PAGE_FMT "(%d %d R)\n",
 				psobj[i]->page,
 				fz_tonum(psobj[i]->pageobj), fz_togen(psobj[i]->pageobj),
-				fz_tonum(psobj[i]->ref), fz_togen(psobj[i]->ref));
+				fz_tonum(psobj[i]->u.form.obj), fz_togen(psobj[i]->u.form.obj));
 		}
 		printf("\n");
 

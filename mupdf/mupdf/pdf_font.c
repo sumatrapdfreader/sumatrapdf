@@ -637,7 +637,7 @@ cleanup:
 	if (etable != fontdesc->cidtogid)
 		fz_free(etable);
 	pdf_dropfont(fontdesc);
-	return fz_rethrow(error, "cannot load simple font");
+	return fz_rethrow(error, "cannot load simple font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 }
 
 /*
@@ -917,7 +917,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 cleanup:
 	fz_dropfont(fontdesc->font);
 	fz_free(fontdesc);
-	return fz_rethrow(error, "cannot load cid font");
+	return fz_rethrow(error, "cannot load cid font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 }
 
 static fz_error
@@ -947,7 +947,7 @@ loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	else
 		error = fz_throw("syntaxerror: unknown cid font type");
 	if (error)
-		return fz_rethrow(error, "cannot load descendant font");
+		return fz_rethrow(error, "cannot load descendant font (%d %d R)", fz_tonum(dfont), fz_togen(dfont));
 
 	return fz_okay;
 }
@@ -1001,14 +1001,14 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 			fz_catch(error, "ignored error when loading embedded font, attempting to load system font");
 			error = pdf_loadsystemfont(fontdesc, fontname, collection);
 			if (error)
-				return fz_rethrow(error, "cannot load font descriptor");
+				return fz_rethrow(error, "cannot load font descriptor (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		}
 	}
 	else
 	{
 		error = pdf_loadsystemfont(fontdesc, fontname, collection);
 		if (error)
-			return fz_rethrow(error, "cannot load font descriptor");
+			return fz_rethrow(error, "cannot load font descriptor (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
 	fz_strlcpy(fontdesc->font->name, fontname, sizeof fontdesc->font->name);
@@ -1096,7 +1096,7 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 		error = loadsimplefont(fontdescp, xref, dict);
 	}
 	if (error)
-		return fz_rethrow(error, "cannot load font");
+		return fz_rethrow(error, "cannot load font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 
 	if ((*fontdescp)->font->ftsubstitute)
 		pdf_makewidthtable(*fontdescp);

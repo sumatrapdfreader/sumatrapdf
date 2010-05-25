@@ -21,7 +21,7 @@ pdf_loadpagecontentsarray(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 		if (error)
 		{
 			fz_dropbuffer(big);
-			return fz_rethrow(error, "cannot load content stream part %d/%d", i + 1, fz_arraylen(list));
+			return fz_rethrow(error, "cannot load content stream part %d/%d (%d %d R)", i + 1, fz_arraylen(list), fz_tonum(stm), fz_togen(stm));
 		}
 
 		n = one->wp - one->rp;
@@ -47,13 +47,13 @@ pdf_loadpagecontents(fz_buffer **bufp, pdf_xref *xref, fz_obj *obj)
 	{
 		error = pdf_loadpagecontentsarray(bufp, xref, obj);
 		if (error)
-			return fz_rethrow(error, "cannot load content stream array");
+			return fz_rethrow(error, "cannot load content stream array (%d %d R)", fz_tonum(obj), fz_togen(obj));
 	}
 	else if (pdf_isstream(xref, fz_tonum(obj), fz_togen(obj)))
 	{
 		error = pdf_loadstream(bufp, xref, fz_tonum(obj), fz_togen(obj));
 		if (error)
-			return fz_rethrow(error, "cannot load content stream");
+			return fz_rethrow(error, "cannot load content stream (%d %d R)", fz_tonum(obj), fz_togen(obj));
 	}
 	else
 	{
@@ -87,7 +87,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	obj = fz_dictgets(dict, "MediaBox");
 	if (!fz_isarray(obj))
-		return fz_throw("cannot find page bounds");
+		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	bbox = fz_roundrect(pdf_torect(obj));
 
 	obj = fz_dictgets(dict, "CropBox");
@@ -123,7 +123,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	if (error)
 	{
 		pdf_droppage(page);
-		return fz_rethrow(error, "cannot load page contents");
+		return fz_rethrow(error, "cannot load page contents (%d %d R)", fz_tonum(obj), fz_togen(obj));
 	}
 
 	pdf_logpage("} %p\n", page);

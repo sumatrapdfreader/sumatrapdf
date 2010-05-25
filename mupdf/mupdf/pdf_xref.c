@@ -75,12 +75,12 @@ pdf_debugxref(pdf_xref *xref)
  */
 
 static fz_error
-pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
+pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 {
 	fz_error error;
 	fz_stream *stm;
 	fz_obj *objstm;
-	int *oidbuf;
+	int *numbuf;
 	int *ofsbuf;
 
 	fz_obj *obj;
@@ -89,24 +89,24 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 	int i, n;
 	pdf_token_e tok;
 
-	pdf_logxref("loadobjstm (%d %d R)\n", oid, gen);
+	pdf_logxref("loadobjstm (%d %d R)\n", num, gen);
 
-	error = pdf_loadobject(&objstm, xref, oid, gen);
+	error = pdf_loadobject(&objstm, xref, num, gen);
 	if (error)
-		return fz_rethrow(error, "cannot load object stream object");
+		return fz_rethrow(error, "cannot load object stream object (%d %d R)", num, gen);
 
 	count = fz_toint(fz_dictgets(objstm, "N"));
 	first = fz_toint(fz_dictgets(objstm, "First"));
 
 	pdf_logxref("  count %d\n", count);
 
-	oidbuf = fz_malloc(count * sizeof(int));
+	numbuf = fz_malloc(count * sizeof(int));
 	ofsbuf = fz_malloc(count * sizeof(int));
 
-	error = pdf_openstream(&stm, xref, oid, gen);
+	error = pdf_openstream(&stm, xref, num, gen);
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot open object stream");
+		error = fz_rethrow(error, "cannot open object stream (%d %d R)", num, gen);
 		goto cleanupbuf;
 	}
 
@@ -115,15 +115,15 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 		error = pdf_lex(&tok, stm, buf, cap, &n);
 		if (error || tok != PDF_TINT)
 		{
-			error = fz_rethrow(error, "corrupt object stream");
+			error = fz_rethrow(error, "corrupt object stream (%d %d R)", num, gen);
 			goto cleanupstm;
 		}
-		oidbuf[i] = atoi(buf);
+		numbuf[i] = atoi(buf);
 
 		error = pdf_lex(&tok, stm, buf, cap, &n);
 		if (error || tok != PDF_TINT)
 		{
-			error = fz_rethrow(error, "corrupt object stream");
+			error = fz_rethrow(error, "corrupt object stream (%d %d R)", num, gen);
 			goto cleanupstm;
 		}
 		ofsbuf[i] = atoi(buf);
@@ -132,7 +132,7 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 	error = fz_seek(stm, first, 0);
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot seek in object stream");
+		error = fz_rethrow(error, "cannot seek in object stream (%d %d R)", num, gen);
 		goto cleanupstm;
 	}
 
@@ -143,25 +143,25 @@ pdf_loadobjstm(pdf_xref *xref, int oid, int gen, char *buf, int cap)
 		error = pdf_parsestmobj(&obj, xref, stm, buf, cap);
 		if (error)
 		{
-			error = fz_rethrow(error, "cannot parse object %d in stream", i);
+			error = fz_rethrow(error, "cannot parse object %d in stream (%d %d R)", i, num, gen);
 			goto cleanupstm;
 		}
 
-		if (oidbuf[i] < 1 || oidbuf[i] >= xref->len)
+		if (numbuf[i] < 1 || numbuf[i] >= xref->len)
 		{
 			fz_dropobj(obj);
-			error = fz_throw("object id (%d 0 R) out of range (0..%d)", oidbuf[i], xref->len - 1);
+			error = fz_throw("object id (%d 0 R) out of range (0..%d)", numbuf[i], xref->len - 1);
 			goto cleanupstm;
 		}
 
-		if (xref->table[oidbuf[i]].obj)
-			fz_dropobj(xref->table[oidbuf[i]].obj);
-		xref->table[oidbuf[i]].obj = obj;
+		if (xref->table[numbuf[i]].obj)
+			fz_dropobj(xref->table[numbuf[i]].obj);
+		xref->table[numbuf[i]].obj = obj;
 	}
 
 	fz_dropstream(stm);
 	fz_free(ofsbuf);
-	fz_free(oidbuf);
+	fz_free(numbuf);
 	fz_dropobj(objstm);
 	return fz_okay;
 
@@ -169,7 +169,7 @@ cleanupstm:
 	fz_dropstream(stm);
 cleanupbuf:
 	fz_free(ofsbuf);
-	fz_free(oidbuf);
+	fz_free(numbuf);
 	fz_dropobj(objstm);
 	return error; /* already rethrown */
 }
@@ -179,16 +179,16 @@ cleanupbuf:
  */
 
 fz_error
-pdf_cacheobject(pdf_xref *xref, int oid, int gen)
+pdf_cacheobject(pdf_xref *xref, int num, int gen)
 {
 	fz_error error;
 	pdf_xrefentry *x;
-	int roid, rgen;
+	int rnum, rgen;
 
-	if (oid < 0 || oid >= xref->len)
-		return fz_throw("object out of range (%d %d R); xref size %d", oid, gen, xref->len);
+	if (num < 0 || num >= xref->len)
+		return fz_throw("object out of range (%d %d R); xref size %d", num, gen, xref->len);
 
-	x = &xref->table[oid];
+	x = &xref->table[num];
 
 	if (x->obj)
 		return fz_okay;
@@ -203,18 +203,18 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 	{
 		error = fz_seek(xref->file, x->ofs, 0);
 		if (error)
-			return fz_rethrow(error, "cannot seek to object (%d %d R) offset %d", oid, gen, x->ofs);
+			return fz_rethrow(error, "cannot seek to object (%d %d R) offset %d", num, gen, x->ofs);
 
 		error = pdf_parseindobj(&x->obj, xref, xref->file, xref->scratch, sizeof xref->scratch,
-			&roid, &rgen, &x->stmofs);
+			&rnum, &rgen, &x->stmofs);
 		if (error)
-			return fz_rethrow(error, "cannot parse object (%d %d R)", oid, gen);
+			return fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
 
-		if (roid != oid)
-			return fz_throw("found object (%d %d R) instead of (%d %d R)", roid, rgen, oid, gen);
+		if (rnum != num)
+			return fz_throw("found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
 
 		if (xref->crypt)
-			pdf_cryptobj(xref->crypt, x->obj, oid, gen);
+			pdf_cryptobj(xref->crypt, x->obj, num, gen);
 	}
 
 	else if (x->type == 'o')
@@ -223,7 +223,7 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 		{
 			error = pdf_loadobjstm(xref, x->ofs, 0, xref->scratch, sizeof xref->scratch);
 			if (error)
-				return fz_rethrow(error, "cannot load object stream containing object (%d %d R)", oid, gen);
+				return fz_rethrow(error, "cannot load object stream containing object (%d %d R)", num, gen);
 		}
 	}
 
@@ -231,20 +231,20 @@ pdf_cacheobject(pdf_xref *xref, int oid, int gen)
 }
 
 fz_error
-pdf_loadobject(fz_obj **objp, pdf_xref *xref, int oid, int gen)
+pdf_loadobject(fz_obj **objp, pdf_xref *xref, int num, int gen)
 {
 	fz_error error;
 
-	error = pdf_cacheobject(xref, oid, gen);
+	error = pdf_cacheobject(xref, num, gen);
 	if (error)
-		return fz_rethrow(error, "cannot load object (%d %d R) into cache", oid, gen);
+		return fz_rethrow(error, "cannot load object (%d %d R) into cache", num, gen);
 
-	if (xref->table[oid].obj)
-		*objp = fz_keepobj(xref->table[oid].obj);
+	if (xref->table[num].obj)
+		*objp = fz_keepobj(xref->table[num].obj);
 	else
 	{
-		fz_warn("cannot load missing object (%d %d R), assuming null object", oid, gen);
-		xref->table[oid].obj = fz_newnull();
+		fz_warn("cannot load missing object (%d %d R), assuming null object", num, gen);
+		xref->table[num].obj = fz_newnull();
 	}
 
 	return fz_okay;

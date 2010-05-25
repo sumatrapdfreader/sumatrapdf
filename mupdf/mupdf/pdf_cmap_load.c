@@ -5,37 +5,34 @@
  * Load CMap stream in PDF file
  */
 fz_error
-pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
+pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 {
 	fz_error error = fz_okay;
-	fz_obj *stmobj;
 	fz_stream *file = nil;
 	pdf_cmap *cmap = nil;
 	pdf_cmap *usecmap;
 	fz_obj *wmode;
 	fz_obj *obj;
 
-	if ((*cmapp = pdf_finditem(xref->store, PDF_KCMAP, stmref)))
+	if ((*cmapp = pdf_finditem(xref->store, PDF_KCMAP, stmobj)))
 	{
 		pdf_keepcmap(*cmapp);
 		return fz_okay;
 	}
 
-	pdf_logfont("load embedded cmap (%d %d R) {\n", fz_tonum(stmref), fz_togen(stmref));
+	pdf_logfont("load embedded cmap (%d %d R) {\n", fz_tonum(stmobj), fz_togen(stmobj));
 
-	stmobj = fz_resolveindirect(stmref);
-
-	error = pdf_openstream(&file, xref, fz_tonum(stmref), fz_togen(stmref));
+	error = pdf_openstream(&file, xref, fz_tonum(stmobj), fz_togen(stmobj));
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot open cmap stream");
+		error = fz_rethrow(error, "cannot open cmap stream (%d %d R)", fz_tonum(stmobj), fz_togen(stmobj));
 		goto cleanup;
 	}
 
 	error = pdf_parsecmap(&cmap, file);
 	if (error)
 	{
-		error = fz_rethrow(error, "cannot parse cmap stream");
+		error = fz_rethrow(error, "cannot parse cmap stream (%d %d R)", fz_tonum(stmobj), fz_togen(stmobj));
 		goto cleanup;
 	}
 
@@ -67,7 +64,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
 		error = pdf_loadembeddedcmap(&usecmap, xref, obj);
 		if (error)
 		{
-			error = fz_rethrow(error, "cannot load embedded usecmap");
+			error = fz_rethrow(error, "cannot load embedded usecmap (%d %d R)", fz_tonum(obj), fz_togen(obj));
 			goto cleanup;
 		}
 		pdf_setusecmap(cmap, usecmap);
@@ -76,7 +73,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmref)
 
 	pdf_logfont("}\n");
 
-	pdf_storeitem(xref->store, PDF_KCMAP, stmref, cmap);
+	pdf_storeitem(xref->store, PDF_KCMAP, stmobj, cmap);
 
 	*cmapp = cmap;
 	return fz_okay;
