@@ -275,3 +275,8 @@ fz_peekbytex(fz_stream *stm)
 	return buf->rp < buf->wp ? *buf->rp : EOF ;
 }
 
+void fz_unreadbytex(fz_stream *stm)
+{
+	fz_buffer *buf = stm->buffer;
+	buf->rp--;
+}

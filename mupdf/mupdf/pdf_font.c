@@ -433,6 +433,11 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 		}
 	}
 
+	/* start with the builtin encoding */
+	for (i = 0; i < 256; i++)
+		etable[i] = ftcharindex(face, i);
+
+	/* encode by glyph name where we can */
 	if (kind == TYPE1)
 	{
 		pdf_logfont("encode type1/cff by strings\n");
@@ -454,11 +459,10 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 					}
 				}
 			}
-			else
-				etable[i] = ftcharindex(face, i);
 		}
 	}
 
+	/* encode by glyph name where we can */
 	if (kind == TRUETYPE)
 	{
 		/* Unicode cmap */
@@ -475,8 +479,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 					else
 						etable[i] = ftcharindex(face, aglcode);
 				}
-				else
-					etable[i] = ftcharindex(face, i);
 			}
 		}
 
@@ -494,8 +496,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 					else
 						etable[i] = ftcharindex(face, k);
 				}
-				else
-					etable[i] = ftcharindex(face, i);
 			}
 		}
 
@@ -511,97 +511,52 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 					if (etable[i] == 0)
 						etable[i] = ftcharindex(face, i);
 				}
-				else
-					etable[i] = ftcharindex(face, i);
-
-				if (FT_HAS_GLYPH_NAMES(face))
-				{
-					fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
-					if (fterr)
-					{
-						error = fz_throw("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
-						goto cleanup;
-					}
-					if (ebuffer[i][0])
-						estrings[i] = ebuffer[i];
-				}
-			}
-		}
-	}
-
-	if (kind == UNKNOWN)
-	{
-		pdf_logfont("encode builtin\n");
-		for (i = 0; i < 256; i++)
-		{
-			etable[i] = ftcharindex(face, i);
-			if (etable[i] == 0)
-				continue;
-
-			if (FT_HAS_GLYPH_NAMES(face))
-			{
-				fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
-				if (fterr)
-				{
-					error = fz_throw("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
-					goto cleanup;
-				}
-				if (ebuffer[i][0])
-					estrings[i] = ebuffer[i];
-			}
-		}
-	}
-
-	if (!encoding || kind == TRUETYPE && symbolic)
-	{
-		/* TODO: Figure out why the following is still necessary. */
-		pdf_logfont("encode builtin\n");
-		for (i = 0; i < 256; i++)
-		{
-			etable[i] = ftcharindex(face, i);
-			if (etable[i] == 0)
-				continue;
-
-			if (FT_HAS_GLYPH_NAMES(face))
-			{
-				fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
-				if (fterr)
-				{
-					error = fz_throw("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
-					goto cleanup;
-				}
-				if (ebuffer[i][0])
-					estrings[i] = ebuffer[i];
 			}
 		}
 
 		/* Load a default encoding for TrueType fonts with a charmap */
 		/* (this is likely not quite correct, though...) */
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=779 */
-		if (!FT_HAS_GLYPH_NAMES(face) && face->charmap && kind == TRUETYPE)
+		if (!FT_HAS_GLYPH_NAMES(face) && face->charmap)
 			pdf_loadencoding(estrings, "WinAnsiEncoding");
+	}
 
-		/* Load encoding Differences nonetheless, when they're available */
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=115 */
-		if (fz_isdict(encoding))
+	/* try to reverse the glyph names from the builtin encoding */
+	if (FT_HAS_GLYPH_NAMES(face))
+	{
+		for (i = 0; i < 256; i++)
 		{
-			fz_obj *diff, *item;
-
-			diff = fz_dictgets(encoding, "Differences");
-			if (fz_isarray(diff))
+			if (etable[i] && !estrings[i])
 			{
-				n = fz_arraylen(diff);
-				k = 0;
-				for (i = 0; i < n; i++)
-				{
-					item = fz_arrayget(diff, i);
-					if (fz_isint(item))
-						k = fz_toint(item);
-					if (fz_isname(item))
-						estrings[k++] = fz_toname(item);
-					if (k < 0) k = 0;
-					if (k > 255) k = 255;
-				}
+				fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
+				if (fterr)
+					fz_warn("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
+				if (ebuffer[i][0])
+					estrings[i] = ebuffer[i];
+			}
+		}
+	}
+
+	/* Prevent encoding Differences from being overwritten by reloading them */
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=115 */
+	if (encoding && fz_isdict(encoding))
+	{
+		fz_obj *diff, *item;
+
+		diff = fz_dictgets(encoding, "Differences");
+		if (fz_isarray(diff))
+		{
+			n = fz_arraylen(diff);
+			k = 0;
+			for (i = 0; i < n; i++)
+			{
+				item = fz_arrayget(diff, i);
+				if (fz_isint(item))
+					k = fz_toint(item);
+				if (fz_isname(item))
+					estrings[k++] = fz_toname(item);
+				if (k < 0) k = 0;
+				if (k > 255) k = 255;
 			}
 		}
 	}

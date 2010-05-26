@@ -365,7 +365,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 			break;
 		case PDF_MSHADE:
 			csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
-			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
 			break;
 		}
@@ -391,7 +391,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 			break;
 		case PDF_MSHADE:
 			csi->dev->clipstrokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm);
-			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
 			break;
 		}
@@ -491,7 +491,7 @@ pdf_flushtext(pdf_csi *csi)
 			break;
 		case PDF_MSHADE:
 			csi->dev->cliptext(csi->dev->user, text, gstate->ctm, 0);
-			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
 			break;
 		}
@@ -517,7 +517,7 @@ pdf_flushtext(pdf_csi *csi)
 			break;
 		case PDF_MSHADE:
 			csi->dev->clipstroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm);
-			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, gstate->ctm);
+			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
 			break;
 		}
