@@ -3884,18 +3884,17 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
     int printAreaWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
     int printAreaHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
+    int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
     double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / 72.0, GetDeviceCaps(hdc, LOGPIXELSY) / 72.0);
     bool bPrintPortrait = printAreaWidth < printAreaHeight;
     if (devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
 
-    // print all the pages the user requested unless
-    // bContinue flags there is a problem.
-    for (int i=0; i < nPageRanges; i++) {
+    // print all the pages the user requested
+    for (int i = 0; i < nPageRanges; i++) {
         if (-1 == pr->nToPage && 0 < pr->nFromPage) {
             // print with minimal margins as required by the printer
-            int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-            int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
             printAreaWidth = GetDeviceCaps(hdc, HORZRES);
             printAreaHeight = GetDeviceCaps(hdc, VERTRES);
 
@@ -3914,12 +3913,11 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
             double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL);
-            if (!bmp)
-                goto Error; /* most likely ran out of memory */
-
-            bmp->stretchDIBits(hdc, leftMargin + (printAreaWidth - bmp->dx()) / 2,
-                topMargin + (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
-            delete bmp;
+            if (bmp) {
+                bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
+                    (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
+                delete bmp;
+            }
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
                 return;
@@ -3938,27 +3936,27 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
             SizeD pSize = pdfEngine->pageSize(pageNo);
             int rotation = pdfEngine->pageRotation(pageNo);
-            // Further rotate the page, so that 0° and 180° mean Portrait orientation
-            if (pSize.dx() > pSize.dy())
+            // Turn the document by 90° if it isn't in portrait mode
+            if (pSize.dx() > pSize.dy()) {
                 rotation += 90;
-            // Swap width and height for rotated documents
-            if (pSize.dx() > pSize.dy() || 90 == rotation || 270 == rotation)
                 pSize = SizeD(pSize.dy(), pSize.dx());
-
-            if (90 == rotation || 270 == rotation)
-                rotation = bPrintPortrait ? 270 : 0;
-            else
-                rotation = bPrintPortrait ? 0 : 90;
+            }
+            // make sure not to print upside-down
+            rotation = (rotation % 180) == 0 ? 0 : 270;
+            // finally turn the page by (another) 90° in landscape mode
+            if (!bPrintPortrait) {
+                rotation = (rotation + 90) % 360;
+                pSize = SizeD(pSize.dy(), pSize.dx());
+            }
 
             // try to use correct zoom values (scale down to fit the physical page, though)
             double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
-            if (!bmp)
-                goto Error; /* most likely ran out of memory */
-
-            bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
-                (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
-            delete bmp;
+            if (bmp) {
+                bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
+                    (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
+                delete bmp;
+            }
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
                 return;
@@ -3967,7 +3965,6 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
         pr++;
     }
 
-Error:
     EndDoc(hdc);
 }
 

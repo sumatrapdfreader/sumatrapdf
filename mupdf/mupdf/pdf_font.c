@@ -8,7 +8,7 @@
 #include FT_XFREE86_H
 #else
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
-/* for accessing to the internal Type 1 specific structures (for extracting the embedded encoding table) */
+/* get access to the internal Type 1 specific structures (for extracting the embedded encoding table) */
 #define FT2_BUILD_LIBRARY
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -391,9 +391,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	}
 
 	encoding = fz_dictgets(dict, "Encoding");
-	/* ignore invalid Encoding names; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=771 */
-	if (fz_isname(encoding) && !strstr(fz_toname(encoding), "Encoding"))
-		encoding = nil;
 	if (encoding)
 	{
 		if (fz_isname(encoding))
@@ -539,7 +536,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 
 	/* Prevent encoding Differences from being overwritten by reloading them */
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=115 */
-	if (encoding && fz_isdict(encoding))
+	if (fz_isdict(encoding))
 	{
 		fz_obj *diff, *item;
 

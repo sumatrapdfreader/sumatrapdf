@@ -423,8 +423,10 @@ RenderedBitmap *PdfEngine::renderBitmap(
 #if CONSERVE_MEMORY
     dropPdfPage(pageNo);
 #endif
-    if (error)
+    if (error) {
+        fz_droppixmap(image);
         return NULL;
+    }
     ConvertPixmapForWindows(image);
     return new RenderedBitmap(image);
 }
