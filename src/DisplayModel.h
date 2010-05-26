@@ -164,6 +164,7 @@ public:
     void setZoomVirtual(double zoomVirtual);
 
     double zoomReal(void) const { return _zoomReal; }
+    double zoomReal(int pageNo) { return zoomRealFromVirtualForPage(_zoomVirtual, pageNo); }
 
     int startPage(void) const { return _startPage; }
 

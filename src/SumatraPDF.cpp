@@ -811,7 +811,7 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     LockCache();
     int rotation = dm->rotation();
     normalizeRotation(&rotation);
-    double zoomLevel = dm->zoomReal();
+    double zoomLevel = dm->zoomReal(pageNo);
 
     if (BitmapCache_Exists(dm, pageNo, zoomLevel, rotation)) {
         goto LeaveCsAndExit;

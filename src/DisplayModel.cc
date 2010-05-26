@@ -301,10 +301,13 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
    and ZOOM_FIT_PAGE, calculate an absolute zoom level */
 double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
 {
-    double          _zoomReal, zoomX, zoomY, pageDx, pageDy;
+    double          zoomX, zoomY, pageDx, pageDy;
     double          areaForPageDx, areaForPageDy;
     int             areaForPageDxInt;
     int             columns;
+
+    if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE)
+        return zoomVirtual * this->_dpiFactor;
 
     pageSizeAfterRotation(getPageInfo(pageNo), rotation(), &pageDx, &pageDy);
 
@@ -317,26 +320,21 @@ double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
     areaForPageDxInt = (int)(areaForPageDx / columns);
     areaForPageDx = (double)areaForPageDxInt;
     areaForPageDy = drawAreaSize.dy() - PADDING_PAGE_BORDER_TOP - PADDING_PAGE_BORDER_BOTTOM;
-    if (ZOOM_FIT_WIDTH == zoomVirtual) {
-        /* TODO: should use gWinDx if we don't show scrollbarY */
-        if (areaForPageDx <= 0) {
-            return 0;
-        }
-        _zoomReal = (areaForPageDx * 100.0) / (double)pageDx;
-    } else if (ZOOM_FIT_PAGE == zoomVirtual) {
-        if (areaForPageDx <= 0 || areaForPageDy <= 0) {
-            return 0;
-        }
-        zoomX = (areaForPageDx * 100.0) / (double)pageDx;
-        zoomY = (areaForPageDy * 100.0) / (double)pageDy;
-        if (zoomX < zoomY)
-            _zoomReal = zoomX;
-        else
-            _zoomReal= zoomY;
-    } else
-        _zoomReal = zoomVirtual * this->_dpiFactor;
 
-    return _zoomReal;
+    /* TODO: should use gWinDx if we don't show scrollbarY */
+    if (areaForPageDx <= 0 || areaForPageDy <= 0)
+        return 0;
+
+    zoomX = (areaForPageDx * 100.0) / (double)pageDx;
+    zoomY = (areaForPageDy * 100.0) / (double)pageDy;
+
+    if (ZOOM_FIT_WIDTH == zoomVirtual)
+        return zoomX;
+
+    assert(ZOOM_FIT_PAGE == zoomVirtual);
+    if (zoomX < zoomY)
+        return zoomX;
+    return zoomY;
 }
 
 int DisplayModel::firstVisiblePageNo(void) const
