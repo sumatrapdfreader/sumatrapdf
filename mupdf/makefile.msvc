@@ -138,7 +138,7 @@ OPENJPEG_OBJS = \
 	$(O)\t2.obj $(O)\tcd.obj $(O)\tgt.obj
 
 FITZ_DRAW_OBJS = \
-	$(O)\archx86.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\pathfill.obj \
+	$(O)\archport.obj $(O)\archx86.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\pathfill.obj \
 	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
 	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj
 

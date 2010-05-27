@@ -805,6 +805,7 @@ Lsetcolor:
 			case PDF_MSHADE:
 				return fz_throw("cannot set color in shade objects");
 			}
+			break;
 		}
 		default:
 			goto defaultcase;
@@ -1294,6 +1295,7 @@ Lsetcolor:
 				return fz_rethrow(error, "cannot load shading (%d %d R)", fz_tonum(obj), fz_togen(obj));
 			pdf_showshade(csi, shd);
 			fz_dropshade(shd);
+			break;
 		}
 		default:
 			goto defaultcase;

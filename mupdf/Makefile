@@ -75,7 +75,7 @@ FITZ_OBJ=$(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
 $(FITZ_OBJ): $(FITZ_HDR)
 
 DRAW_SRC=$(addprefix draw/, $(ARCH_SRC) \
-	blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c meshdraw.c \
+	archport.c blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c meshdraw.c \
 	pathfill.c pathscan.c pathstroke.c porterduff.c )
 DRAW_OBJ=$(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
 $(DRAW_OBJ): $(FITZ_HDR)

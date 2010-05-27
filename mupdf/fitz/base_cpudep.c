@@ -12,10 +12,6 @@ unsigned fz_cpuflags = 0;
 
 #ifndef HAVE_CPUDEP
 
-void fz_accelerate(void)
-{
-}
-
 void fz_cpudetect(void)
 {
 }

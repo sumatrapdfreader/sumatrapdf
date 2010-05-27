@@ -594,7 +594,11 @@
 				Name="draw"
 				>
 				<File
-					RelativePath=".\mupdf\fitzdraw\archx86.c"
+					RelativePath=".\mupdf\draw\archport.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\draw\archx86.c"
 					>
 				</File>
 				<File

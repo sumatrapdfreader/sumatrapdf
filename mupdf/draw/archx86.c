@@ -220,7 +220,7 @@ static void img_4o4mmx(FZ_PSRC, FZ_PDST, FZ_PCTM)
 
 #if defined (ARCH_X86) || defined(ARCH_X86_64)
 void
-fz_accelerate(void)
+fz_acceleratearch(void)
 {
 #  ifdef HAVE_MMX
 	if (fz_cpuflags & HAVE_MMX)

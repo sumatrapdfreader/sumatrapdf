@@ -98,7 +98,7 @@ path_w4i1o4arm(byte * restrict argb, byte * restrict src, byte cov, int len, byt
 }
 
 void
-fz_accelerate(void)
+fz_acceleratearch(void)
 {
 	fz_path_w4i1o4 = path_w4i1o4arm;
 }

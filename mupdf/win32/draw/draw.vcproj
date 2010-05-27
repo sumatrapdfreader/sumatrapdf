@@ -147,6 +147,10 @@
 			Name="draw"
 			>
 			<File
+				RelativePath="..\..\draw\archport.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\draw\archx86.c"
 				>
 			</File>
