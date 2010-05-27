@@ -156,6 +156,25 @@ double limitValue(double val, double min, double max)
     return val;
 }
 
+/* given 'columns' and an absolute 'pageNo', return the number of the first
+   page in a row to which a 'pageNo' belongs e.g. if 'columns' is 2 and we
+   have 5 pages in 3 rows (depending on showCover):
+
+   Pages   Result           Pages   Result
+   (1,2)   1                  (1)   1
+   (3,4)   3                (2,3)   2
+   (5)     5                (4,5)   4
+ */
+static int FirstPageInARowNo(int pageNo, int columns, bool showCover)
+{
+    if (showCover && columns > 1)
+        pageNo++;
+    int firstPageNo = pageNo - ((pageNo - 1) % columns);
+    if (showCover && columns > 1 && firstPageNo > 1)
+        firstPageNo--;
+    return firstPageNo;
+}
+
 DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
 {
     _displayMode = displayMode;
@@ -407,6 +426,19 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         this->_zoomReal = minZoom;
     } else
         this->_zoomReal = zoomVirtual * this->_dpiFactor;
+}
+
+double DisplayModel::zoomReal(int pageNo)
+{
+    DisplayMode mode = displayMode();
+    if (displayModeContinuous(mode))
+        return _zoomReal;
+    if (!displayModeFacing(mode))
+        return zoomRealFromVirtualForPage(_zoomVirtual, pageNo);
+    pageNo = FirstPageInARowNo(pageNo, columnsFromDisplayMode(mode), displayModeShowCover(mode));
+    if (pageNo == pageCount())
+        return zoomRealFromVirtualForPage(_zoomVirtual, pageNo);
+    return min(zoomRealFromVirtualForPage(_zoomVirtual, pageNo), zoomRealFromVirtualForPage(_zoomVirtual, pageNo + 1));
 }
 
 /* Given pdf info and zoom/rotation, calculate the position of each page on a
@@ -867,25 +899,6 @@ void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
         renderVisibleParts();
         setScrollbarsState();
     }
-}
-
-/* given 'columns' and an absolute 'pageNo', return the number of the first
-   page in a row to which a 'pageNo' belongs e.g. if 'columns' is 2 and we
-   have 5 pages in 3 rows (depending on showCover):
-
-   Pages   Result           Pages   Result
-   (1,2)   1                  (1)   1
-   (3,4)   3                (2,3)   2
-   (5)     5                (4,5)   4
- */
-static int FirstPageInARowNo(int pageNo, int columns, bool showCover)
-{
-    if (showCover && columns > 1)
-        pageNo++;
-    int firstPageNo = pageNo - ((pageNo - 1) % columns);
-    if (showCover && columns > 1 && firstPageNo > 1)
-        firstPageNo--;
-    return firstPageNo;
 }
 
 void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)

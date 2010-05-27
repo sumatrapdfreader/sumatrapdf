@@ -13,17 +13,13 @@ command.
 .SH OPTIONS
 A description of each of the supported options is included below.
 .TP
-.B \-z percentage
-Changes the initial zoom percentage from the default 100%. The allowed
-range is 10%-300%.
-.TP
-.B \-d password
-Uses the given password during decryption of an encrypted PDF file.
+.B \-p password
+Uses the given password to open an encrypted PDF file.
 The password is tried both as user and owner password.
 .TP
-.B \-p page
-Show the given page number instead of the first page of the PDF file when
-opening the MuPDF window.
+.B \-r resolution
+Changes the initial zoom level, specified as the resolution in dpi.
+The default value is 72.
 .SH MOUSE AND KEY BINDINGS
 In addition to the key bindings described below, the mouse can also be
 used. Clicking the left mouse button follows links within the PDF while

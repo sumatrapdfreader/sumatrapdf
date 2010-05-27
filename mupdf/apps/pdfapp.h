@@ -4,6 +4,9 @@
  * uses a number of callbacks to the GUI app.
  */
 
+#define MINRES 54
+#define MAXRES 300
+
 typedef struct pdfapp_s pdfapp_t;
 
 enum { ARROW, HAND, WAIT };
@@ -30,7 +33,7 @@ struct pdfapp_s
 	fz_glyphcache *cache;
 
 	/* current view params */
-	float zoom;
+	int resolution;
 	int rotate;
 	fz_pixmap *image;
 	fz_textspan *text;

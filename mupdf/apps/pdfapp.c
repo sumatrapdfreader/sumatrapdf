@@ -2,6 +2,8 @@
 #include <mupdf.h>
 #include "pdfapp.h"
 
+#define ZOOMSTEP 1.142857
+
 enum panning
 {
 	DONT_PAN = 0,
@@ -56,7 +58,7 @@ void pdfapp_init(pdfapp_t *app)
 	memset(app, 0, sizeof(pdfapp_t));
 	app->scrw = 640;
 	app->scrh = 480;
-	app->zoom = 1.0;
+	app->resolution = 72;
 }
 
 void pdfapp_open(pdfapp_t *app, char *filename, int fd)
@@ -126,10 +128,10 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 		app->pageno = 1;
 	if (app->pageno > app->pagecount)
 		app->pageno = app->pagecount;
-	if (app->zoom < 0.1)
-		app->zoom = 0.1;
-	if (app->zoom > 3.0)
-		app->zoom = 3.0;
+	if (app->resolution < MINRES)
+		app->resolution = MINRES;
+	if (app->resolution > MAXRES)
+		app->resolution = MAXRES;
 	app->rotate = 0;
 	app->panx = 0;
 	app->pany = 0;
@@ -172,7 +174,7 @@ static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 	fz_matrix ctm;
 	ctm = fz_identity();
 	ctm = fz_concat(ctm, fz_translate(0, -app->page->mediabox.y1));
-	ctm = fz_concat(ctm, fz_scale(app->zoom, -app->zoom));
+	ctm = fz_concat(ctm, fz_scale(app->resolution/72.0, -app->resolution/72.0));
 	ctm = fz_concat(ctm, fz_rotate(app->rotate + app->page->rotate));
 	return ctm;
 }
@@ -211,6 +213,10 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 	fz_bbox bbox;
 	fz_obj *obj;
 
+	sprintf(buf, "%s - %d/%d (%d dpi)", app->doctitle,
+		app->pageno, app->pagecount, app->resolution);
+	wintitle(app, buf);
+
 	if (loadpage)
 	{
 		wincursor(app, WAIT);
@@ -225,10 +231,6 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		error = pdf_loadpage(&app->page, app->xref, obj);
 		if (error)
 			pdfapp_error(app, error);
-
-		sprintf(buf, "%s - %d/%d", app->doctitle,
-			app->pageno, app->pagecount);
-		wintitle(app, buf);
 	}
 
 	if (drawpage)
@@ -350,15 +352,15 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 
 	case '+':
 	case '=':
-		app->zoom += 0.1;
-		if (app->zoom > 3.0)
-			app->zoom = 3.0;
+		app->resolution *= ZOOMSTEP;
+		if (app->resolution > MAXRES)
+			app->resolution = MAXRES;
 		pdfapp_showpage(app, 0, 1);
 		break;
 	case '-':
-		app->zoom -= 0.1;
-		if (app->zoom < 0.1)
-			app->zoom = 0.1;
+		app->resolution /= ZOOMSTEP;
+		if (app->resolution < MINRES)
+			app->resolution = MINRES;
 		pdfapp_showpage(app, 0, 1);
 		break;
 	case '<':
@@ -575,11 +577,14 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 			if (modifiers & (1<<2))
 			{
 				/* zoom in/out if ctrl is pressed */
-				app->zoom += 0.1 * dir;
-				if (app->zoom > 3.0)
-					app->zoom = 3.0;
-				if (app->zoom < 0.1)
-					app->zoom = 0.1;
+				if (dir > 0)
+					app->resolution *= ZOOMSTEP;
+				else
+					app->resolution /= ZOOMSTEP;
+				if (app->resolution > MAXRES)
+					app->resolution = MAXRES;
+				if (app->resolution < MINRES)
+					app->resolution = MINRES;
 				pdfapp_showpage(app, 0, 1);
 			}
 			else

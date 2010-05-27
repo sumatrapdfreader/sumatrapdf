@@ -8,7 +8,7 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 	dh_testroot
-	$(MAKE)
+	$(MAKE) "build=release"
 	touch $@
 
 clean:

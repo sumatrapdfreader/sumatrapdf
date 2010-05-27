@@ -121,10 +121,6 @@ fz_newdctd(fz_obj *params)
 	d->src.super.next_input_byte = nil;
 	d->src.skip = 0;
 
-	/* speed up jpeg decoding a bit */
-	d->cinfo.dct_method = JDCT_FASTEST;
-	d->cinfo.do_fancy_upsampling = FALSE;
-
 	return (fz_filter *)d;
 }
 
@@ -177,6 +173,10 @@ fz_processdctd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		i = jpeg_read_header(&d->cinfo, TRUE);
 		if (i == JPEG_SUSPENDED)
 			goto needinput;
+
+		/* speed up jpeg decoding a bit */
+		d->cinfo.dct_method = JDCT_FASTEST;
+		d->cinfo.do_fancy_upsampling = FALSE;
 
 		/* default value if ColorTransform is not set */
 		if (d->colortransform == -1)

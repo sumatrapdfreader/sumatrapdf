@@ -100,7 +100,7 @@ static const featuretest features[] = {
 	{ sse2, HAVE_SSE2, "sse2" },
 	/*	{ sse3, HAVE_SSE3, "sse3" }, */
 #ifdef ARCH_X86_64
-	{ amd64, HAVE_AMD64, "amd64" }
+	{ amd64, HAVE_AMD64, "amd64" },
 #endif
 };
 

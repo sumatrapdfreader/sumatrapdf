@@ -1,20 +1,6 @@
-mupdf (1.0-3) unstable; urgency=low
+mupdf (0.6-1) unstable; urgency=low
 
-  * Added pdfclean and a suitable manpage to the mupdf-utils package and
-    fixed a few errors and omissions.
+  * First release of MuPDF with debian package.
 
- -- Sebastian Rasmussen <sebras@hotmail.com>  Wed, 24 Mar 2010 01:42:02 +0100
-
-mupdf (1.0-2) unstable; urgency=low
-
-  * Added mupdf-utils package, including debugging utilities pdfshow and
-    pdfdraw as well as the corresponding manpages.
-
- -- Sebastian Rasmussen <sebras@hotmail.com>  Sun, 21 Mar 2010 21:49:09 +0100
-
-mupdf (1.0-1) unstable; urgency=low
-
-  * Initial release, thank you debhelper.
-
- -- Sebastian Rasmussen <sebras@hotmail.com>  Mon, 15 Mar 2010 01:12:20 +0100
+ -- Tor Andersson <tor@ghostscript.com>  Thu, 27 May 2010 17:11:13 +0100
 

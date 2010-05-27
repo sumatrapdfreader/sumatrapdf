@@ -1,0 +1,3 @@
+build/release/pdfdraw usr/bin
+build/release/pdfclean usr/bin
+build/release/pdfshow usr/bin

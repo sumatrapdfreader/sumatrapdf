@@ -500,7 +500,7 @@ static void onmouse(int x, int y, int btn, int modifiers, int state)
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: mupdf [-d password] [-z zoom%%] [-p pagenumber] file.pdf\n");
+	fprintf(stderr, "usage: mupdf [-p password] [-r resolution] file.pdf [page]\n");
 	exit(1);
 }
 
@@ -554,33 +554,35 @@ int main(int argc, char **argv)
 	KeySym keysym;
 	int oldx = 0;
 	int oldy = 0;
-	int zoom = 100;
+	int resolution = 72;
 	int pageno = 1;
 	int wasshowingpage;
 	struct timeval tmo, tmo_at;
 	int closing;
 	int fd;
 
-	while ((c = fz_getopt(argc, argv, "d:z:p:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:")) != -1)
 	{
 		switch (c)
 		{
-		case 'd': password = fz_optarg; break;
-		case 'z': zoom = atoi(fz_optarg); break;
-		case 'p': pageno = atoi(fz_optarg); break;
+		case 'p': password = fz_optarg; break;
+		case 'r': resolution = atoi(fz_optarg); break;
 		default: usage();
 		}
 	}
 
-	if (zoom < 100)
-		zoom = 100;
-	if (zoom > 300)
-		zoom = 300;
+	if (resolution < MINRES)
+		resolution = MINRES;
+	if (resolution > MAXRES)
+		resolution = MAXRES;
 
 	if (argc - fz_optind == 0)
 		usage();
 
 	filename = argv[fz_optind++];
+
+	if (argc - fz_optind == 1)
+		pageno = atoi(argv[fz_optind++]);
 
 	fz_cpudetect();
 	fz_accelerate();
@@ -590,7 +592,7 @@ int main(int argc, char **argv)
 	pdfapp_init(&gapp);
 	gapp.scrw = DisplayWidth(xdpy, xscr);
 	gapp.scrh = DisplayHeight(xdpy, xscr);
-	gapp.zoom = zoom / 100.0;
+	gapp.resolution = resolution;
 	gapp.pageno = pageno;
 
 	fd = open(filename, O_BINARY | O_RDONLY, 0666);
