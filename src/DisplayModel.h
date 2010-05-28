@@ -232,7 +232,6 @@ public:
 
     void            scrollYTo(int yOff);
     void            scrollYBy(int dy, bool changePage);
-    void            scrollYByAreaDy(bool forward, bool changePage);
 
     void            zoomTo(double zoomVirtual);
     void            zoomBy(double zoomFactor);

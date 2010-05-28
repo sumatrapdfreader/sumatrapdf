@@ -2527,6 +2527,12 @@ void DisplayModel::setScrollbarsState(void)
         si.nMin = 0;
         si.nMax = canvasDy-1;
         si.nPage = drawAreaDy;
+
+        if (ZOOM_FIT_PAGE != win->dm->zoomVirtual()) {
+            // keep the top/bottom 5% of the previous page visible after paging down/up
+            si.nPage *= 0.95;
+            si.nMax -= drawAreaDy - si.nPage;
+        }
     }
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
@@ -4270,36 +4276,13 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 
     switch (LOWORD(wParam))
     {
-        case SB_TOP:
-           si.nPos = si.nMin;
-           break;
-
-        case SB_BOTTOM:
-           si.nPos = si.nMax;
-           break;
-
-        case SB_LINEUP:
-           si.nPos -= lineHeight;
-           break;
-
-        case SB_LINEDOWN:
-           si.nPos += lineHeight;
-           break;
-
-        case SB_PAGEUP:
-           si.nPos -= si.nPage;
-           break;
-
-        case SB_PAGEDOWN:
-           si.nPos += si.nPage;
-           break;
-
-        case SB_THUMBTRACK:
-           si.nPos = si.nTrackPos;
-           break;
-
-        default:
-           break;
+    case SB_TOP:        si.nPos = si.nMin; break;
+    case SB_BOTTOM:     si.nPos = si.nMax; break;
+    case SB_LINEUP:     si.nPos -= lineHeight; break;
+    case SB_LINEDOWN:   si.nPos += lineHeight; break;
+    case SB_PAGEUP:     si.nPos -= si.nPage; break;
+    case SB_PAGEDOWN:   si.nPos += si.nPage; break;
+    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
     }
 
     // Set the position and then retrieve it.  Due to adjustments
@@ -4334,36 +4317,13 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
 
     switch (LOWORD(wParam))
     {
-        case SB_TOP:
-           si.nPos = si.nMin;
-           break;
-
-        case SB_BOTTOM:
-           si.nPos = si.nMax;
-           break;
-
-        case SB_LINEUP:
-           si.nPos -= 16;
-           break;
-
-        case SB_LINEDOWN:
-           si.nPos += 16;
-           break;
-
-        case SB_PAGEUP:
-           si.nPos -= si.nPage;
-           break;
-
-        case SB_PAGEDOWN:
-           si.nPos += si.nPage;
-           break;
-
-        case SB_THUMBTRACK:
-           si.nPos = si.nTrackPos;
-           break;
-
-        default:
-           break;
+    case SB_LEFT:       si.nPos = si.nMin; break;
+    case SB_RIGHT:      si.nPos = si.nMax; break;
+    case SB_LINELEFT:   si.nPos -= 16; break;
+    case SB_LINERIGHT:  si.nPos += 16; break;
+    case SB_PAGELEFT:   si.nPos -= si.nPage; break;
+    case SB_PAGERIGHT:  si.nPos += si.nPage; break;
+    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
     }
 
     // Set the position and then retrieve it.  Due to adjustments
@@ -5185,7 +5145,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
 
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        SendMessage (win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToPrevPage(0);
     } else if (VK_NEXT == key) {
@@ -5195,30 +5155,29 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
             win->dm->goToNextPage(0);
     } else if (VK_UP == key) {
         if (win->dm->needVScroll())
-            SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         else
             win->dm->goToPrevPage(0);
     } else if (VK_DOWN == key) {
         if (win->dm->needVScroll())
-            SendMessage (win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         else
             win->dm->goToNextPage(0);
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
+    } else if (VK_SPACE == key) {
+        return OnKeydown(win, WasShiftPressed() ? VK_PRIOR : VK_NEXT, 0, inTextfield);
     } else if (VK_LEFT == key) {
         if (win->dm->needHScroll())
-            SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGELEFT, 0);
+            SendMessage(win->hwndCanvas, WM_HSCROLL, WasShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win->dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
         if (win->dm->needHScroll())
-            SendMessage (win->hwndCanvas, WM_HSCROLL, SB_PAGERIGHT, 0);
+            SendMessage(win->hwndCanvas, WM_HSCROLL, WasShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win->dm->goToNextPage(0);
-    } else if (VK_SPACE == key) {
-        bool forward = !WasShiftPressed();
-        win->dm->scrollYByAreaDy(forward, true);
     } else if (VK_HOME == key) {
         win->dm->goToFirstPage();
     } else if (VK_END == key) {

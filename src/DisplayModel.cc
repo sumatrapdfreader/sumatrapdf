@@ -1143,15 +1143,6 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     repaintDisplay(false);
 }
 
-void DisplayModel::scrollYByAreaDy(bool forward, bool changePage)
-{
-    int toScroll = drawAreaSize.dyI();
-    if (forward)
-        scrollYBy(toScroll, changePage);
-    else
-        scrollYBy(-toScroll, changePage);
-}
-
 void DisplayModel::zoomTo(double zoomVirtual)
 {
     ScrollState ss;
