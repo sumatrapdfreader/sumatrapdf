@@ -94,6 +94,15 @@ input:
 	d->stage = 1;
 
 decode:
+	// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=937
+	if (in->wp - in->rp >= 2 && in->rp[0] == 0xFF && in->rp[1] == 0x4F)
+	{
+		opj_destroy_decompress(d->info);
+		d->info = opj_create_decompress(CODEC_J2K);
+		opj_set_event_mgr((opj_common_ptr)d->info, &d->evtmgr, stderr);
+		opj_setup_decoder(d->info, &d->params);
+	}
+
 	cio = opj_cio_open((opj_common_ptr)d->info, in->rp, in->wp - in->rp);
 	in->rp = in->wp;
 
