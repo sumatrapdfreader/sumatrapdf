@@ -298,6 +298,9 @@ def main():
     #(strings_dict, langs) = load_strings_file_old()
     (strings_dict, langs, contributors) = load_strings_file_new()
     strings = extract_strings_from_c_files()
+    for s in strings_dict.keys():
+        if s not in strings:
+            del strings_dict[s]
     untranslated_dict = dump_missing_per_language(strings, strings_dict)
     untranslated = get_untranslated_as_list(untranslated_dict)
     write_out_strings_files(strings_dict, langs, contributors, untranslated_dict)

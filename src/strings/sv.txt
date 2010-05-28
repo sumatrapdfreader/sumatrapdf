@@ -359,9 +359,6 @@ Föregående sida\t<-
 Printing problem.
 Utskriftsproblem.
 
-Properties...
-Egenskaper...
-
 Remember &opened files
 Kom ihåg öppnade &filer
 

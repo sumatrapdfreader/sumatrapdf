@@ -357,9 +357,6 @@ Edellinen sivu\t<-
 Printing problem.
 Tulostusongelma
 
-Properties...
-Ominaisuudet...
-
 Remember &opened files
 Muista &avatut tiedostot
 

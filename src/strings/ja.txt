@@ -308,9 +308,6 @@ Previous Page\tLeft Arrow
 Printing problem.
 印刷の問題です。
 
-Properties...
-プロパティ...
-
 Remember &opened files
 開かれたファイルを記憶する(&O)
 

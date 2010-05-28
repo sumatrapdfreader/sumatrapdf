@@ -358,9 +358,6 @@ Forrige side\tPil venstre
 Printing problem.
 Problem med utskrift.
 
-Properties...
-Egenskaper...
-
 Remember &opened files
 Husk &åpnede filer
 

@@ -391,6 +391,7 @@ def untranslated_count_for_lang(strings_dict, lang):
     for k in strings_dict:
         is_translated = len([item[1] for item in strings_dict[k] if item[0] == lang]) == 1
         if not is_translated and k not in TRANSLATION_EXCEPTIONS:
+            #print("%s: %s" % (lang, k))
             count += 1
     return count
 

@@ -308,9 +308,6 @@ Página anterior\t<-
 Printing problem.
 Problema de impressão.
 
-Properties...
-Propriedades...
-
 Remember &opened files
 &Lembrar arquivos abertos
 

@@ -358,9 +358,6 @@ Previous Page\tLeft Arrow
 Printing problem.
 Ошибка при печати.
 
-Properties...
-Свойства...
-
 Remember &opened files
 &Запоминать открытые файлы
 

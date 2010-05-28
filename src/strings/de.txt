@@ -359,9 +359,6 @@ Previous Page\tLeft Arrow
 Printing problem.
 Druckerproblem
 
-Properties...
-Eigenschaften...
-
 Remember &opened files
 Liste der &zuletzt geöffneten Dokumente anlegen
 

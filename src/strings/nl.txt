@@ -361,9 +361,6 @@ Vorige pagina\t<-
 Printing problem.
 Probleem bij het afdrukken.
 
-Properties...
-Eigenschappen...
-
 Remember &opened files
 Herinner ge&opende bestanden
 

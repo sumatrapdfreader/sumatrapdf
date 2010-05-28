@@ -261,9 +261,6 @@ Buksan
 Open in &Adobe Reader
 Buksan sa Adobe Reader
 
-P&roperties...
-Mga Katangian...
-
 PDF Document
 PDF Document
 
@@ -296,9 +293,6 @@ Naunang Pahina\t<-
 
 Printing problem.
 May Problema sa Pagpi-print.
-
-Properties...
-Mga Katangian...
 
 Remember &opened files
 Alalahanin ang mga binuksang files

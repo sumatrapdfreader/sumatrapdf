@@ -356,9 +356,6 @@ Previous Page\tLeft Arrow
 Printing problem.
 Սխալ տպելիս
 
-Properties...
-Հատկություններ...
-
 Remember &opened files
 Հիշել &բացված ֆայլերը
 

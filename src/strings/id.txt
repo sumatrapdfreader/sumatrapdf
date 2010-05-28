@@ -357,9 +357,6 @@ Halaman Sebelumnya\t<-
 Printing problem.
 Masalahan Pencetakkan.
 
-Properties...
-Karakteristik
-
 Remember &opened files
 Ingat &berkas yang pernah terbuka
 

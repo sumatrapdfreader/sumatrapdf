@@ -348,9 +348,6 @@ Előző oldal\t<-
 Printing problem.
 Nyomtatási probléma.
 
-Properties...
-Tulajdonságok...
-
 Remember &opened files
 Korábban megnyitott file-ok listájának tárolása
 

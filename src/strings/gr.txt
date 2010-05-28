@@ -357,9 +357,6 @@ Previous Page\tLeft Arrow
 Printing problem.
 Πρόβλημα εκτύπωσης
 
-Properties...
-Ιδιότητες...
-
 Remember &opened files
 Απομνημόνευη πρόσφατων αρχείων
 

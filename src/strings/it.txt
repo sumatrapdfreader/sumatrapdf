@@ -359,9 +359,6 @@ Pagina precedente\t<-
 Printing problem.
 Problema di stampa.
 
-Properties...
-Proprietà...
-
 Remember &opened files
 R&icorda i file aperti
 
