@@ -375,6 +375,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	int size, w0, w1, w2;
 	int t;
 	int i;
+	pdf_xrefentry oldEntry; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=936 */
 
 	pdf_logxref("load new xref format\n");
 
@@ -424,6 +425,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		}
 	}
 
+	oldEntry = xref->table[num]; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=936 */
 	xref->table[num].type = 'n';
 	xref->table[num].gen = gen;
 	xref->table[num].obj = fz_keepobj(trailer);
@@ -475,6 +477,13 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	}
 
 	fz_dropstream(stm);
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=936 */
+	if (oldEntry.type)
+	{
+		fz_dropobj(xref->table[num].obj);
+		xref->table[num] = oldEntry;
+	}
 
 	*trailerp = trailer;
 
