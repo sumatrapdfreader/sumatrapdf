@@ -561,8 +561,7 @@
   psnames_get_service( FT_Module    module,
                        const char*  service_id )
   {
-    FT_Library library = module->library;
-    FT_UNUSED(library);
+    FT_UNUSED( module );
 
     return ft_service_list_lookup( FT_PSCMAPS_SERVICES_GET, service_id );
   }
