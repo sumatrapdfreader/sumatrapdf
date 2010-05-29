@@ -7,30 +7,76 @@
 Lang: he Hebrew (עברית)
 
 Contributor: Eyal Berman
+Contributor: Amos Kotter
 
 &About
 אודות
 
+&Check for new version
+בדוק לגרסה חדשה
+
 &Close\tCtrl-W
 &סגור\tCtrl-W
+
+&Custom Zoom...
+זום משתמש...
+
+&Don't ask me again
+אל תשאל שנית
 
 &File
 &קובץ
 
+&Find what:
+מה למצוא:
+
 &Go To
 לך ל
+
+&Go to page:
+עבור לעמוד
 
 &Help
 עזרה
 
+&Magnification:
+הגדלה
+
+&Manual
+ידני
+
+&Match case
+התאם אות גדולה/קטנה
+
+&No
+לא
+
+&No, thanks
+לא, תודה
+
 &Open\tCtrl-O
 &פתח\tCtrl-O
+
+&Options...
+אפשרויות...
+
+&Password:
+סיסמה:
 
 &Print\tCtrl-P
 הדפס\tCtrl-P
 
+&Remember these settings for each document
+זכור הגדרות אלו לכל מסמך
+
 &Save as\tCtrl-S
 שמירה בשם\tCtrl-S
+
+&Settings
+הגדרות
+
+&Skip this version
+דלג מהדורה זו
 
 &View
 &תצוגה
@@ -38,29 +84,131 @@ Contributor: Eyal Berman
 &Visit website
 בקר באתר
 
+&Yes
+כן
+
 &Zoom
 זום
 
+(of %d)
+(%d מ)
+
 About SumatraPDF
-אודות סומטרהPDF
+PDF אודות סומטרה
 
 Act&ual Size\tCtrl-1
 גודל מקור\tCtrl-1
 
+Advanced
+מתקדם
+
+All files
+כל הקבצים
+
+Application:
+יישום:
+
+Associate with PDF files?
+?PDF לשייך לקבצי
+
+Author:
+עורך:
+
+Automatic
+אוטומטי
+
+Automatically check for &updates
+בדוק אוטומטית לעדכונים
+
+Back\tAlt+Left Arrow
+חזור\tAlt+<-
+
+Book view
+תצוגת ספר
+
+Bookmarks\tF12
+סימניה\tF12
+
+Bytes
+ביטים
+
+Cancel
+בטל
+
+Cannot print this file
+לא ניתן להדפיס הקובץ
+
+Cannot start inverse search command. Please check the command line in the settings.
+לא ניתן להריץ פקודת חיפוש הפוך. אנא בדוק הפקודה בהגדרות
+
+Change language
+שנה שפה
+
 Continuous
-המשך
+רציף
+
+Continuous book view
+תצוגת ספר רציפה
 
 Continuous facing
-המשך תצוגה כפולה
+המשך תצוגה רציפה
 
 Contribute translation
 עזור לתרגם
 
+Copy Selection\tCtrl-C
+העתק בחירה\tCtrl-C
+
+Could not open Printer
+לא ניתן לפתוח מדפסת
+
+Couldn't initialize printer
+לא ניתן לאתחל מדפסת
+
+Couldn't render the page
+לא ניתן להציג הדף
+
+Created:
+נוצר:
+
+Default &Layout:
+סידור ברירת מחדל:
+
+Default &Zoom:
+זום ברירת ברירת מחדל:
+
+Document Properties
+תכונות מסמך
+
+Download
+הורדה
+
 E&xit\tCtrl-Q
 יציאה\tCtrl-Q
 
+Enter password
+הכנס סיסמה
+
+Enter password for %s
+%s הכנס סיסמה עבור
+
+Error loading PDF file.
+PDF שגיאה בהעלאת קובץ
+
 Facing
 דף כפול
+
+Failed to save a file
+כישלון בשמירת הקובץ
+
+File Size:
+גודל הקובץ:
+
+File:
+קובץ:
+
+Find
+חפש
 
 Find Next
 חפש הבא
@@ -89,14 +237,53 @@ Fit Widt&h\tCtrl-2
 Fit Width
 התאם רוחב
 
+Forward\tAlt+Right Arrow
+קדימה\tAlt+ ?
+
+Found text at page %d
+%d חפש מלל בעמוד
+
 Fullscreen\tCtrl-L
 מסך מלא\tCtrl-L
+
+GB
+GB
+
+Go to page
+עבור לעמוד
+
+Hint: Use the F3 key for finding again
+F3 רמז: לחיפוש הבא, השתמש במקש
+
+KB
+KB
 
 Last Page\tEnd
 דף אחרון\tEnd
 
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+PDF לא ניתן לשנות במצב נייד את קורא ה
+
+Make SumatraPDF default application for PDF files?
+?SumatraPDF האם לקבוע כברירת מחדל את
+
 Make SumatraPDF my main PDF reader
-הפוך את סומטרה לברירת מחדל עבור קבצי PDF
+PDF הפוך את סומטרה לברירת מחדל עבור קבצי
+
+Match case
+התאם לאותיות קטנות/גדולות
+
+Modified:
+שונה:
+
+New version %s is available. Download new version?
+?%s מהדורה חדשה זמינה. להוריד מהדורה
+
+New version available.
+מהדורה חדשה זמינה
 
 Next Page
 דף הבא
@@ -104,11 +291,62 @@ Next Page
 Next Page\tRight Arrow
 דף הבא\t->
 
+No matches were found
+לא נמצאו התאמות
+
+No new version available.
+לא נמצאה מהדורה חדשה
+
+No result found around line %u in file %s
+%s בקובץ %u אין תוצאה באזור שורה
+
+No synchronization file found
+לא נמצא קובץ סנכרון
+
+No synchronization info at this position
+לא נמצא מידע סנכרון במקום זה
+
+Number of Pages:
+מספר עמודים:
+
+OK
+אשר
+
 Open
 פתח
 
+Open in &Adobe Reader
+Adobe פתח בקורא
+
+P&roperties...\tCtrl-D
+תכונות...\tCtrl-D
+
+PDF Document
+PDF מסמך
+
+PDF Producer:
+PDF מפיק:
+
+PDF Version:
+PDF מהדורת:
+
+PDF documents
+PDF מסמך
+
+Page Size:
+גודל עמוד:
+
+Page number %u inexistant
+לא קיים %u עמוד מספר
+
 Page...\tCtrl-G
 דף...\tCtrl-G
+
+Page:
+עמוד:
+
+Please wait - rendering...
+אנא המתן – מבצע...
 
 Previous Page
 דף קודם
@@ -116,11 +354,35 @@ Previous Page
 Previous Page\tLeft Arrow
 דף קודם\t<-
 
+Printing problem.
+בעיית הדפסה
+
+Remember &opened files
+זכור קבצים פתוחים
+
 Rotate left\tCtrl-Shift--
 סובב שמאלה\tCtrl-Shift--
 
 Rotate right\tCtrl-Shift-+
 סובב ימינה\tCtrl-Shift-+
+
+Searching %d of %d...
+%d מ %d מחפש...
+
+Select content with Ctrl+left mouse button
+וכפתור עכבר שמאל Ctrl בחר תוכן עם
+
+Send by &email...
+שלח אימייל
+
+Set inverse search command-line
+קבע פקודת חיפוש הפוך
+
+Show pages continuously
+הצג דפים ברציפות
+
+Show the &bookmarks sidebar when available
+הצג סרגל-צד סימניות כשזמין
 
 Show toolbar
 הצג שורת תפריט
@@ -128,8 +390,44 @@ Show toolbar
 Single page
 דף יחיד
 
+Source file %s has no synchronization point
+%s אין נקודת סנכרון לקובץ מקור
+
+SumatraPDF Options
+SumatraPDF אפשרויות
+
+SumatraPDF is your main PDF reader
+SumatraPDF ראשי הינו PDF קורא
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF ראשי אמור להיות עכשיו PDF קורא
+
+Synchronization file cannot be opened
+לא ניתן לפתוח קובץ סנכרון
+
+Text documents
+(מסמך מלל (טקסט
+
+Title:
+כותרת:
+
+Unknown source file (%s)
+קובץ מקור לא ידוע (%s)
+
 View
 תצוגה
+
+Warning
+אזהרה
+
+You have the latest version.
+ברשותך המדורה האחרונה
+
+You have version %s
+%s המהדורה שברשותך היא
+
+Zoom
+זום
 
 Zoom In
 זום פנימה
@@ -137,106 +435,9 @@ Zoom In
 Zoom Out
 זום החוצה
 
-# Untranslated:
-#&Check for new version
-#&Custom Zoom...
-#&Don't ask me again
-#&Find what:
-#&Go to page:
-#&Magnification:
-#&Manual
-#&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
-#&Remember these settings for each document
-#&Settings
-#&Skip this version
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Associate with PDF files?
-#Author:
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
-#Bookmarks\tF12
-#Bytes
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Change language
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Could not open Printer
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Default &Layout:
-#Default &Zoom:
-#Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#Error loading PDF file.
-#Failed to save a file
-#File Size:
-#File:
-#Find
-#Forward\tAlt+Right Arrow
-#Found text at page %d
-#GB
-#Go to page
-#Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
-#Make SumatraPDF default application for PDF files?
-#Match case
-#Modified:
-#New version %s is available. Download new version?
-#New version available.
-#No matches were found
-#No new version available.
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties...\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Page:
-#Please wait - rendering...
-#Printing problem.
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Set inverse search command-line
-#Show pages continuously
-#Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
+Zoom factor
+מקדם זום
+
+[Changes detected; refreshing] %s
+[מרענן ; נתגלו שינויים] %s
 
