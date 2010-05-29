@@ -64,7 +64,7 @@ CFLAGS = $(CFLAGS) /MDd /EHsc
 ZLIB_CFLAGS = $(CFLAGS)
 
 # freetype flags
-FT_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/include \
+FT_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
 
 # jbig2 flags
