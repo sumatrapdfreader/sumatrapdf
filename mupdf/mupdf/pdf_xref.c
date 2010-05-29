@@ -138,10 +138,6 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 
 	for (i = 0; i < count; i++)
 	{
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=926 */
-		if (xref->table[numbuf[i]].type != 'o' || xref->table[numbuf[i]].ofs != num)
-			continue;
-
 		/* FIXME: seek to first + ofsbuf[i] */
 
 		error = pdf_parsestmobj(&obj, xref, stm, buf, cap);
@@ -156,6 +152,13 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 			fz_dropobj(obj);
 			error = fz_throw("object id (%d 0 R) out of range (0..%d)", numbuf[i], xref->len - 1);
 			goto cleanupstm;
+		}
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=926 */
+		if (xref->table[numbuf[i]].type != 'o' || xref->table[numbuf[i]].ofs != num)
+		{
+			fz_dropobj(obj);
+			continue;
 		}
 
 		if (xref->table[numbuf[i]].obj)
