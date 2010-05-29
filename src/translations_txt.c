@@ -993,7 +993,7 @@ const char *g_transTranslations[] = {
   "&Optionen\342\200\246",
   "&Passwort:",
   "&Drucken\342\200\246\tStrg+P",
-  "&Die Einstellungen gelten f\303\274r jedes Dokument",
+  "Ansicht-&Einstellungen f\303\274r jedes Dokument merken",
   "Speichern &unter\342\200\246\tStrg+S",
   "&Einstellungen",
   "&Diese Version \303\274berspringen.",

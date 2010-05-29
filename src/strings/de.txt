@@ -69,7 +69,7 @@ Nicht &wieder fragen.
 &Drucken…\tStrg+P
 
 &Remember these settings for each document
-&Die Einstellungen gelten für jedes Dokument
+Ansicht-&Einstellungen für jedes Dokument merken
 
 &Save as\tCtrl-S
 Speichern &unter…\tStrg+S

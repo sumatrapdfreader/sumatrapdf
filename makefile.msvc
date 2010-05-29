@@ -84,10 +84,10 @@ SUMATRA_OBJS = \
 
 SUMATRA_HEADERS = \
 	src\AppPrefs.h src\CrashHandler.h src\DisplayModel.h src\DisplayState.h \
-	src\FileHistory.h src\FileWatch.h src\Http.h src\LangMenuDef.h src\MemSegment.h \
-	src\PdfEngine.h src\PdfSearch.h src\PdfSync.h src\Resource.h src\SumatraDialogs.h \
-	src\SumatraPDF.h src\synctex_parser.h src\synctex_parser_utils.h src\translations.h \
-	src\translations_txt.h src\Version.h
+	src\FileHistory.h src\FileWatch.h src\Http.h src\MemSegment.h src\PdfEngine.h \
+	src\PdfSearch.h src\PdfSync.h src\Resource.h src\SumatraDialogs.h src\SumatraPDF.h \
+	src\synctex_parser.h src\synctex_parser_utils.h src\translations.h src\Version.h
+# src\LangMenuDef.h src\translations_txt.h
 
 # Don't include a manifest in Debug builds (it could override the external manifest)
 !if "$(CFG)"=="rel"

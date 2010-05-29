@@ -2,7 +2,6 @@ import codecs
 import os
 import os.path
 import re
-import sets
 import sys
 
 """
@@ -38,8 +37,7 @@ def is_contributor_line(l): return l.startswith(CONTRIBUTOR_TXT)
 
 def seq_uniq(seq): 
     # Not order preserving
-    set = sets.Set(seq) 
-    return list(set)
+    return list(set(seq))
 
 def line_strip_newline(l, newline_chars="\r\n"):
     while True:
