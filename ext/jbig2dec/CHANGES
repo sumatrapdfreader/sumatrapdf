@@ -1,6 +1,10 @@
-Version 0.11 (unreleased)
+Version 0.11 (2010 February 2)
 
- * no changes recorded
+ * Support for generic regions with typical prediction (042_8.jb2)
+ * Correct bitmap offsets with transposed text (042_19.jb2)
+ * Autotools build now uses libtool and provides a shared library
+ * Manpage for jbig2dec
+ * Code cleanup and robustness fixes
 
 Version 0.10 (2009 May 28)
 

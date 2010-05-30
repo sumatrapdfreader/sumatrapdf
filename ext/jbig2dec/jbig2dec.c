@@ -209,7 +209,7 @@ print_usage (void)
     "  embedded streams.\n"
     "\n"
     "  available options:\n"
-    "    -h --help	this usage summary\n"
+    "    -h --help      this usage summary\n"
     "    -q --quiet     suppress diagnostic output\n"
     "    -v --verbose   set the verbosity level\n"
     "    -d --dump      print the structure of the jbig2 file\n"
