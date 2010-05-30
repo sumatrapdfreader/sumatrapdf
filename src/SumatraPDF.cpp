@@ -5097,16 +5097,11 @@ static bool WasKeyDown(int virtKey)
     return false;
 }
 
-static bool WasShiftPressed()
-{
-    return WasKeyDown(VK_LSHIFT) || WasKeyDown(VK_RSHIFT);
-}
-
 static void AdvanceFocus(WindowInfo *win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
 
-    bool reversed = WasShiftPressed();
+    bool reversed = WasKeyDown(VK_SHIFT);
     bool hasToolbar = !win->fullScreen && gGlobalPrefs.m_showToolbar;
     bool hasToC = win->dm && win->dm->_showToc;
 
@@ -5141,7 +5136,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
     if (!win || !win->dm)
         return false;
     
-    //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasShiftPressed());
+    //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
@@ -5167,15 +5162,15 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         // The remaining keys have a different meaning
         return false;
     } else if (VK_SPACE == key) {
-        return OnKeydown(win, WasShiftPressed() ? VK_PRIOR : VK_NEXT, 0, inTextfield);
+        return OnKeydown(win, WasKeyDown(VK_SHIFT) ? VK_PRIOR : VK_NEXT, 0, inTextfield);
     } else if (VK_LEFT == key) {
         if (win->dm->needHScroll())
-            SendMessage(win->hwndCanvas, WM_HSCROLL, WasShiftPressed() ? SB_PAGELEFT : SB_LINELEFT, 0);
+            SendMessage(win->hwndCanvas, WM_HSCROLL, WasKeyDown(VK_SHIFT) ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win->dm->goToPrevPage(0);
     } else if (VK_RIGHT == key) {
         if (win->dm->needHScroll())
-            SendMessage(win->hwndCanvas, WM_HSCROLL, WasShiftPressed() ? SB_PAGERIGHT : SB_LINERIGHT, 0);
+            SendMessage(win->hwndCanvas, WM_HSCROLL, WasKeyDown(VK_SHIFT) ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win->dm->goToNextPage(0);
     } else if (VK_HOME == key) {
@@ -5226,7 +5221,7 @@ static void OnChar(WindowInfo *win, int key)
         return;
 
     if (VK_BACK == key) {
-        bool forward = WasShiftPressed();
+        bool forward = WasKeyDown(VK_SHIFT);
         win->dm->navigate(forward ? 1 : -1);
     } else if ('g' == key) {
         OnMenuGoToPage(win);
@@ -5245,7 +5240,7 @@ static void OnChar(WindowInfo *win, int key)
         SwitchToDisplayMode(win, newMode, false);
     } else if ('b' == key) {
         // experimental "e-book view": flip a single page
-        bool forward = !WasShiftPressed();
+        bool forward = !WasKeyDown(VK_SHIFT);
         bool alreadyFacing = displayModeFacing(win->dm->displayMode());
         int currPage = win->dm->currentPageNo();
 
@@ -6663,7 +6658,8 @@ InitMouseWheelInfo:
             if (!win || !win->dm) /* TODO: check for pdfDoc as well ? */
                 break;
 
-            if (LOWORD(wParam) == MK_CONTROL)
+            // Note: not all mouse drivers correctly report the Ctrl key's state
+            if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL))
             {
                 if ((short)HIWORD(wParam) < 0)
                     win->dm->zoomBy(ZOOM_OUT_FACTOR);
