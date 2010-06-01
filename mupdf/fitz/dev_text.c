@@ -369,7 +369,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 		/* Get advance width and update pen position */
 		if (font->ftface)
 		{
-			FT_Fixed ftadv;
+			FT_Fixed ftadv = 0;
 			fterr = FT_Get_Advance(font->ftface, text->els[i].gid,
 				FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING,
 				&ftadv);

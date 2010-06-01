@@ -629,13 +629,13 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 					SAFE_PUSHBOOL(st, i1 == i2);
 				}
 				else if (pstoptwoarenums(st)) {
-					SAFE_POPNUM(st, &r1);
+					SAFE_POPNUM(st, &r2);
 					SAFE_POPNUM(st, &r1);
 					SAFE_PUSHBOOL(st, r1 == r2);
 				}
 				else {
 					SAFE_POPBOOL(st, &b2);
-					SAFE_POPBOOL(st, &b2);
+					SAFE_POPBOOL(st, &b1);
 					SAFE_PUSHBOOL(st, b1 == b2);
 				}
 				break;

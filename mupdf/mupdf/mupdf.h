@@ -158,6 +158,7 @@ fz_error pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
 fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
 fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int num, int gen);
 fz_error pdf_openstream(fz_stream **stmp, pdf_xref *, int num, int gen);
+fz_error pdf_openstreamat(fz_stream **stmp, pdf_xref *xref, int num, int gen, fz_obj *dict, int stmofs);
 
 /* private */
 extern fz_error pdf_repairxref(pdf_xref *xref, char *buf, int bufsize);

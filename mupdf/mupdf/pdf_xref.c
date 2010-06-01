@@ -154,16 +154,16 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 			goto cleanupstm;
 		}
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=926 */
-		if (xref->table[numbuf[i]].type != 'o' || xref->table[numbuf[i]].ofs != num)
+		if (xref->table[numbuf[i]].type == 'o' && xref->table[numbuf[i]].ofs == num)
+		{
+			if (xref->table[numbuf[i]].obj)
+				fz_dropobj(xref->table[numbuf[i]].obj);
+			xref->table[numbuf[i]].obj = obj;
+		}
+		else
 		{
 			fz_dropobj(obj);
-			continue;
 		}
-
-		if (xref->table[numbuf[i]].obj)
-			fz_dropobj(xref->table[numbuf[i]].obj);
-		xref->table[numbuf[i]].obj = obj;
 	}
 
 	fz_dropstream(stm);
@@ -252,6 +252,7 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int num, int gen)
 	{
 		fz_warn("cannot load missing object (%d %d R), assuming null object", num, gen);
 		xref->table[num].obj = fz_newnull();
+		*objp = fz_keepobj(xref->table[num].obj);
 	}
 
 	return fz_okay;

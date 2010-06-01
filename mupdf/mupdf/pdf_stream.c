@@ -376,6 +376,28 @@ pdf_openstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 	return fz_throw("object is not a stream");
 }
 
+fz_error
+pdf_openstreamat(fz_stream **stmp, pdf_xref *xref, int num, int gen, fz_obj *dict, int stmofs)
+{
+	fz_error error;
+	fz_filter *filter;
+
+	if (stmofs)
+	{
+		filter = pdf_buildfilter(xref, dict, num, gen);
+
+		error = fz_seek(xref->file, stmofs, 0);
+		if (error)
+			return fz_rethrow(error, "cannot seek to stream");
+
+		*stmp = fz_openfilter(filter, xref->file);
+		fz_dropfilter(filter);
+		return fz_okay;
+	}
+
+	return fz_throw("object is not a stream");
+}
+
 /*
  * Load raw (compressed but decrypted) contents of a stream into buf.
  */

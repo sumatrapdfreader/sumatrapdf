@@ -77,10 +77,13 @@ static fz_error sweepref(pdf_xref *xref, fz_obj *obj)
 	{
 		len = fz_dictgets(obj, "Length");
 		if (fz_isindirect(len))
+		{
+			len = fz_resolveindirect(len);
 			fz_dictputs(obj, "Length", len);
+		}
 	}
 
-	error = sweepobj(xref, obj);
+	error = sweepobj(xref, fz_resolveindirect(obj));
 	if (error)
 	{
 		fz_dropobj(obj);

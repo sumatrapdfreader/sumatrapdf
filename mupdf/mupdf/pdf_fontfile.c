@@ -2,39 +2,39 @@
 #include "mupdf.h"
 
 extern const unsigned char pdf_font_Dingbats_cff_buf[];
-extern const unsigned int  pdf_font_Dingbats_cff_len;
+extern const unsigned int pdf_font_Dingbats_cff_len;
 extern const unsigned char pdf_font_NimbusMonL_Bold_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_Bold_cff_len;
+extern const unsigned int pdf_font_NimbusMonL_Bold_cff_len;
 extern const unsigned char pdf_font_NimbusMonL_BoldObli_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_BoldObli_cff_len;
+extern const unsigned int pdf_font_NimbusMonL_BoldObli_cff_len;
 extern const unsigned char pdf_font_NimbusMonL_Regu_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_Regu_cff_len;
+extern const unsigned int pdf_font_NimbusMonL_Regu_cff_len;
 extern const unsigned char pdf_font_NimbusMonL_ReguObli_cff_buf[];
-extern const unsigned int  pdf_font_NimbusMonL_ReguObli_cff_len;
+extern const unsigned int pdf_font_NimbusMonL_ReguObli_cff_len;
 extern const unsigned char pdf_font_NimbusRomNo9L_Medi_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_Medi_cff_len;
+extern const unsigned int pdf_font_NimbusRomNo9L_Medi_cff_len;
 extern const unsigned char pdf_font_NimbusRomNo9L_MediItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_MediItal_cff_len;
+extern const unsigned int pdf_font_NimbusRomNo9L_MediItal_cff_len;
 extern const unsigned char pdf_font_NimbusRomNo9L_Regu_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_Regu_cff_len;
+extern const unsigned int pdf_font_NimbusRomNo9L_Regu_cff_len;
 extern const unsigned char pdf_font_NimbusRomNo9L_ReguItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusRomNo9L_ReguItal_cff_len;
+extern const unsigned int pdf_font_NimbusRomNo9L_ReguItal_cff_len;
 extern const unsigned char pdf_font_NimbusSanL_Bold_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_Bold_cff_len;
+extern const unsigned int pdf_font_NimbusSanL_Bold_cff_len;
 extern const unsigned char pdf_font_NimbusSanL_BoldItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_BoldItal_cff_len;
+extern const unsigned int pdf_font_NimbusSanL_BoldItal_cff_len;
 extern const unsigned char pdf_font_NimbusSanL_Regu_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_Regu_cff_len;
+extern const unsigned int pdf_font_NimbusSanL_Regu_cff_len;
 extern const unsigned char pdf_font_NimbusSanL_ReguItal_cff_buf[];
-extern const unsigned int  pdf_font_NimbusSanL_ReguItal_cff_len;
+extern const unsigned int pdf_font_NimbusSanL_ReguItal_cff_len;
 extern const unsigned char pdf_font_StandardSymL_cff_buf[];
-extern const unsigned int  pdf_font_StandardSymL_cff_len;
+extern const unsigned int pdf_font_StandardSymL_cff_len;
 extern const unsigned char pdf_font_URWChanceryL_MediItal_cff_buf[];
-extern const unsigned int  pdf_font_URWChanceryL_MediItal_cff_len;
+extern const unsigned int pdf_font_URWChanceryL_MediItal_cff_len;
 
 #if !defined(NOCJK) && !defined(NOCJKFONT)
 extern const unsigned char pdf_font_DroidSansFallback_ttf_buf[];
-extern const unsigned int  pdf_font_DroidSansFallback_ttf_len;
+extern const unsigned int pdf_font_DroidSansFallback_ttf_len;
 #endif
 
 enum

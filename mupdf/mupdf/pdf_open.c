@@ -75,6 +75,7 @@ LookForEOF:
 			while (iswhite(buf[i]) && i < n)
 				i ++;
 			xref->startxref = atoi((char*)(buf + i));
+			pdf_logxref("startxref %d\n", xref->startxref);
 			return fz_okay;
 		}
 	}
@@ -124,7 +125,7 @@ pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 		/* broken pdfs where the section is not on a separate line */
 		if (s && *s != '\0')
 		{
-			error = fz_seek(xref->file, -(2 + strlen(s)), 1);
+			error = fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
 			if (error)
 				return fz_rethrow(error, "cannot seek in file");
 		}
@@ -252,7 +253,7 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		if (s && *s != '\0')
 		{
 			fz_warn("broken xref section. proceeding anyway.");
-			error = fz_seek(xref->file, -(2 + strlen(s)), 1);
+			error = fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
 			if (error)
 				return fz_rethrow(error, "cannot seek to xref");
 		}
@@ -375,7 +376,6 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	int size, w0, w1, w2;
 	int t;
 	int i;
-	pdf_xrefentry oldEntry; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=936 */
 
 	pdf_logxref("load new xref format\n");
 
@@ -425,12 +425,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		}
 	}
 
-	oldEntry = xref->table[num]; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=936 */
-	xref->table[num].type = 'n';
-	xref->table[num].gen = gen;
-	xref->table[num].obj = fz_keepobj(trailer);
-	xref->table[num].stmofs = stmofs;
-	xref->table[num].ofs = 0;
+	pdf_logxref("  num=%d gen=%d size=%d\n", num, gen, size);
 
 	obj = fz_dictgets(trailer, "W");
 	if (!obj) {
@@ -443,7 +438,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 	index = fz_dictgets(trailer, "Index");
 
-	error = pdf_openstream(&stm, xref, num, gen);
+	error = pdf_openstreamat(&stm, xref, num, gen, trailer, stmofs);
 	if (error)
 	{
 		fz_dropobj(trailer);
@@ -477,13 +472,6 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	}
 
 	fz_dropstream(stm);
-
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=936 */
-	if (oldEntry.type)
-	{
-		fz_dropobj(xref->table[num].obj);
-		xref->table[num] = oldEntry;
-	}
 
 	*trailerp = trailer;
 
@@ -650,7 +638,7 @@ pdf_openxref(fz_stream *file)
 	xref = fz_malloc(sizeof(pdf_xref));
 	memset(xref, 0, sizeof(pdf_xref));
 
-	pdf_logxref("loadxref %p\n", xref);
+	pdf_logxref("openxref %p\n", xref);
 
 	xref->file = fz_keepstream(file);
 

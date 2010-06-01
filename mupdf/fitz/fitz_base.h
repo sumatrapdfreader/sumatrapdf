@@ -141,7 +141,7 @@ extern int fz_strlcat(char *dst, const char *src, int n);
 
 /* getopt */
 extern int fz_getopt(int nargc, char * const * nargv, const char *ostr);
-extern int fz_opterr, fz_optind, fz_optopt;
+extern int fz_optind;
 extern char *fz_optarg;
 
 /* memory allocation */

@@ -73,6 +73,7 @@ static Time copytime;
 static char *filename;
 
 static pdfapp_t gapp;
+static int closing = 0;
 
 /*
  * Dialog boxes
@@ -177,21 +178,6 @@ static void winopen(void)
 	}
 
 	x11fd = ConnectionNumber(xdpy);
-}
-
-void winclose(pdfapp_t *app)
-{
-	XFreePixmap(xdpy, xicon);
-
-	XFreeCursor(xdpy, xcwait);
-	XFreeCursor(xdpy, xchand);
-	XFreeCursor(xdpy, xcarrow);
-
-	XFreeGC(xdpy, xgc);
-
-	XDestroyWindow(xdpy, xwin);
-
-	XCloseDisplay(xdpy);
 }
 
 void wincursor(pdfapp_t *app, int curs)
@@ -479,10 +465,7 @@ static void onkey(int c)
 	if (c == 'P')
 		windrawpageno(&gapp);
 	else if (c == 'q')
-	{
-		XSelectInput(xdpy, xwin, StructureNotifyMask);
-		XUnmapWindow(xdpy, xwin);
-	}
+		closing = 1;
 	else
 		pdfapp_onkey(&gapp, c);
 }
@@ -558,7 +541,6 @@ int main(int argc, char **argv)
 	int pageno = 1;
 	int wasshowingpage;
 	struct timeval tmo, tmo_at;
-	int closing;
 	int fd;
 
 	while ((c = fz_getopt(argc, argv, "p:r:")) != -1)
@@ -642,8 +624,37 @@ int main(int argc, char **argv)
 				wasshowingpage = isshowingpage;
 
 				len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, nil);
+
+				switch (keysym)
+				{
+				case XK_Escape:
+					len = 1; buf[0] = 'q';
+					break;
+
+				case XK_Up:
+					len = 1; buf[0] = 'u';
+					break;
+				case XK_Down:
+					len = 1; buf[0] = 'd';
+					break;
+
+				case XK_Left:
+					len = 1; buf[0] = 'p';
+					break;
+				case XK_Right:
+					len = 1; buf[0] = 'n';
+					break;
+
+				case XK_Page_Up:
+					len = 1; buf[0] = 'b';
+					break;
+				case XK_Page_Down:
+					len = 1; buf[0] = ' ';
+					break;
+				}
 				if (len)
 					onkey(buf[0]);
+
 				onmouse(oldx, oldy, 0, 0, 0);
 
 				if (dirty)
@@ -684,11 +695,6 @@ int main(int argc, char **argv)
 					xevt.xselectionrequest.property,
 					xevt.xselectionrequest.time);
 				break;
-
-			case UnmapNotify:
-				winclose(&gapp);
-				closing = 1;
-				break;
 			}
 		}
 		while (!closing && XPending(xdpy));
@@ -706,6 +712,18 @@ int main(int argc, char **argv)
 	}
 
 	pdfapp_close(&gapp);
+
+	XDestroyWindow(xdpy, xwin);
+
+	XFreePixmap(xdpy, xicon);
+
+	XFreeCursor(xdpy, xcwait);
+	XFreeCursor(xdpy, xchand);
+	XFreeCursor(xdpy, xcarrow);
+
+	XFreeGC(xdpy, xgc);
+
+	XCloseDisplay(xdpy);
 
 	return 0;
 }
