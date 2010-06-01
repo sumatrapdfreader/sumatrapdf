@@ -13,13 +13,13 @@ Contributor: Bruno Rodrigues
 &Sobre
 
 &Check for new version
-Veri&ficar por novas versões
+Verificar por &novas versões
 
 &Close\tCtrl-W
-Fe&char\tCtrl-W
+&Fechar\tCtrl-W
 
 &Custom Zoom...
-Zoom P&ersonalizado...
+&Personalizado...
 
 &Don't ask me again
 &Não perguntar novamente
@@ -37,7 +37,7 @@ Ir &Para
 Ir pa&ra a página:
 
 &Help
-A&juda
+&Ajuda
 
 &Magnification:
 Amp&liação
@@ -46,7 +46,7 @@ Amp&liação
 &Manual
 
 &Match case
-Se&nsível à capitalização
+&Sensível à capitalização
 
 &No
 &Não
@@ -85,7 +85,7 @@ Ignorar &esta versão
 &Visitar a página web
 
 &Yes
-:&Sim
+&Sim
 
 &Zoom
 &Zoom
@@ -97,7 +97,7 @@ About SumatraPDF
 Sobre SumatraPDF
 
 Act&ual Size\tCtrl-1
-Tamanho Act&ual\tCtrl-1
+&Tamanho Real\tCtrl-1
 
 Advanced
 Avançadas
@@ -124,7 +124,7 @@ Back\tAlt+Left Arrow
 Retroceder\tAlt+<-
 
 Book view
- Como livro
+Como livro
 
 Bookmarks\tF12
 Marcadores\tF12
@@ -178,13 +178,13 @@ Default &Zoom:
 &Zoom por Omissão:
 
 Document Properties
-Propriedades do docuemento
+Propriedades do documento
 
 Download
 Transferir
 
 E&xit\tCtrl-Q
-S&air\tCtrl-Q
+&Sair\tCtrl-Q
 
 Enter password
 Introduzir palavra-passe
@@ -226,7 +226,7 @@ First Page\tHome
 Primeira Página\tHome
 
 Fit &Page\tCtrl-0
-Ajus&tar à Página\tCtrl-0
+&Ajustar à Página\tCtrl-0
 
 Fit Page
 Ajustar à Página
@@ -253,7 +253,7 @@ Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
-Dica: prima F3 para procurar a próxima ocorrência
+Dica: prima F3 para procurar a próxima
 
 KB
 KB
@@ -319,7 +319,7 @@ Open in &Adobe Reader
 Abrir no &Adobe Reader
 
 P&roperties...\tCtrl-D
-P&ropriedades...\tCtrl-D
+&Propriedades...\tCtrl-D
 
 PDF Document
 Documento PDF
@@ -373,7 +373,7 @@ Select content with Ctrl+left mouse button
 Seleccionar conteúdo com Ctrl+Botão esquerdo do rato
 
 Send by &email...
-Enviar por &e-mail...
+&Enviar por e-mail...
 
 Set inverse search command-line
 Definir linha de comando para procura inversa
@@ -394,7 +394,7 @@ Source file %s has no synchronization point
 O ficheiro fonte %s não tem ponto de sincronização
 
 SumatraPDF Options
-Opções de SumatraPDF
+Opções do SumatraPDF
 
 SumatraPDF is your main PDF reader
 SumatraPDF é o leitor de PDFs por omissão
@@ -421,7 +421,7 @@ Warning
 Aviso
 
 You have the latest version.
-Já possui a versão mais recente.
+Já tem a versão mais recente.
 
 You have version %s
 Tem a versão %s
@@ -430,10 +430,10 @@ Zoom
 Zoom
 
 Zoom In
-Aumentar Zoom
+Ampliar
 
 Zoom Out
-Diminuir Zoom
+Reduzir
 
 Zoom factor
 Factor de Zoom
