@@ -7,7 +7,7 @@
 Lang: he Hebrew (עברית)
 
 Contributor: Eyal Berman
-Contributor: Amos Kotter
+Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &About
 אודות
