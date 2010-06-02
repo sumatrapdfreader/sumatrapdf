@@ -348,6 +348,7 @@ Zoom Out
 #Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -366,8 +367,11 @@ Zoom Out
 #Select content with Ctrl+left mouse button
 #Send by &email...
 #Show pages continuously
+#Subject:
 #Text documents
 #Title:
 #Zoom
 #Zoom factor
+#copying text
+#printing document
 

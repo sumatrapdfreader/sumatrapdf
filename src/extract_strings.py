@@ -85,8 +85,8 @@ def assert_unique_translation(curr_trans, lang, line_no):
 # Extract language code (e.g. "br") from language translation file name
 # (e.g. "br.txt" or "sr-sr.txt"). Returns None if file name doesn't fit expected pattern
 def lang_code_from_file_name(file_name):
-	match = re.match(r"(\w{2,3}(?:-\w{2,3})?)\.txt", file_name)
-	return match and match.group(1)
+    match = re.match(r"(\w{2,3}(?:-\w{2,3})?)\.txt", file_name)
+    return match and match.group(1)
 
 # The structure of strings file should be: comments section at the beginning of the file,
 # Lang: and Contributor: lines, translations, (optional) comments sectin at the end of the file
@@ -304,14 +304,12 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
         untranslated = []
         for s in strings:
             if s in TRANSLATION_EXCEPTIONS: continue
+            if not s in strings_dict:
+                untranslated.append(s)
+                continue
             translations = strings_dict[s]
-            found = False
-            for tr in translations:
-                tr_lang = tr[0]
-                if lang == tr_lang:
-                    found = True
-                    break
-            if not found and s not in untranslated: 
+            found = filter(lambda tr: tr[0] == lang, translations)
+            if not found and s not in untranslated:
                 untranslated.append(s)
         untranslated_dict[lang] = untranslated
     items = untranslated_dict.items()

@@ -68,17 +68,12 @@
 #include "PdfSync.h"
 #include "translations.h"
 
-typedef unsigned char u8;
-typedef unsigned long u32;
-
-CASSERT(sizeof(u32) == 4, u32_is_4_bytes)
-
 #define KB 1024
 #define MB (1024*KB)
 #define GB (1024*MB)
 
 #define APP_NAME_STR            _T("SumatraPDF")
-#define CMD_ARG_SEND_CRASHDUMP _T("/sendcrashdump")
+#define CMD_ARG_SEND_CRASHDUMP  _T("/sendcrashdump")
 
 #define COL_WHITE RGB(0xff,0xff,0xff)
 #define COL_BLACK RGB(0,0,0)

@@ -443,3 +443,9 @@ Fattore ingrandimento
 [Changes detected; refreshing] %s
 [Cambiamenti rilevati; in aggiornamento] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

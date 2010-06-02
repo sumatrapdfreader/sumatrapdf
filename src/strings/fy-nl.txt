@@ -440,3 +440,9 @@ Zoomfaktor
 [Changes detected; refreshing] %s
 [Bestân wizige; ferfarskje] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

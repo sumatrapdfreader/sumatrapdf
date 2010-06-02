@@ -91,13 +91,13 @@ static void stretchDIBitsCommon(RenderedBitmap *bmp, HDC hdc, int leftMargin, in
 
             // find this color in the palette
             for (k = 0; k < paletteSize; k++)
-                if (*(int *)&bmi->bmiColors[k] == *(int *)&c)
+                if (*(int32_t *)&bmi->bmiColors[k] == *(int32_t *)&c)
                     break;
             // add it to the palette if it isn't in there and if there's still space left
             if (k == paletteSize) {
                 if (k >= 256)
                     goto ProducingPaletteDone;
-                *(int *)&bmi->bmiColors[paletteSize] = *(int *)&c;
+                *(int32_t *)&bmi->bmiColors[paletteSize] = *(int32_t *)&c;
                 paletteSize++;
             }
             // 8-bit data consists of indices into the color palette

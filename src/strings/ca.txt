@@ -441,3 +441,9 @@ Factor de zoom
 [Changes detected; refreshing] %s
 [S'han detectat canvis; actualitzant] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

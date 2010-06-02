@@ -395,6 +395,7 @@ Zoom faktor
 #Author:
 #Bytes
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -407,5 +408,8 @@ Zoom faktor
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Subject:
 #Title:
+#copying text
+#printing document
 

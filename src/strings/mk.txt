@@ -373,6 +373,7 @@ Zoom factor
 #Bytes
 #Continuous book view
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -389,6 +390,9 @@ Zoom factor
 #Page Size:
 #Send by &email...
 #Show pages continuously
+#Subject:
 #Text documents
 #Title:
+#copying text
+#printing document
 

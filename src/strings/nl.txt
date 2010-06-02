@@ -445,3 +445,9 @@ Zoomfactor
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

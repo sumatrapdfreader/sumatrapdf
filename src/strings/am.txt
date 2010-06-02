@@ -440,3 +440,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

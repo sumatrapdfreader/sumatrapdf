@@ -374,6 +374,7 @@ Faktor povečave
 #Bytes
 #Continuous book view
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -390,6 +391,9 @@ Faktor povečave
 #Page Size:
 #Send by &email...
 #Show pages continuously
+#Subject:
 #Text documents
 #Title:
+#copying text
+#printing document
 

@@ -105,7 +105,6 @@ void StrList_Destroy(StrList **root)
 void WStrList_Destroy(WStrList **root)
 {
     StrList_Destroy((StrList**)root);
-
 }
 
 void StrList_Reverse(StrList **strListRoot)
@@ -127,4 +126,64 @@ void StrList_Reverse(StrList **strListRoot)
 void WStrList_Reverse(WStrList **strListRoot)
 {
     StrList_Reverse((StrList **)strListRoot);
+}
+
+char *StrList_Join(StrList *strListRoot, char *joint)
+{
+    StrList *next;
+    int len = 0;
+    int jointLen = joint ? str_len(joint) : 0;
+    char *result, *tmp;
+
+    for (next = strListRoot; next; next = next->next)
+        len += str_len(next->str) + jointLen;
+    len -= jointLen;
+    if (len <= 0)
+        return str_dup("");
+
+    result = malloc(len + 1);
+    if (!result)
+        return NULL;
+
+    for (next = strListRoot, tmp = result; next; next = next->next)
+    {
+        strcpy(tmp, next->str);
+        tmp += str_len(next->str);
+        if (jointLen > 0 && next->next) {
+            strcpy(tmp, joint);
+            tmp += jointLen;
+        }
+    }
+
+    return result;
+}
+
+WCHAR *WStrList_Join(WStrList *strListRoot, WCHAR *joint)
+{
+    WStrList *next;
+    int len = 0;
+    int jointLen = joint ? wstr_len(joint) : 0;
+    WCHAR *result, *tmp;
+
+    for (next = strListRoot; next; next = next->next)
+        len += wstr_len(next->str) + jointLen;
+    len -= jointLen;
+    if (len <= 0)
+        return wstr_dup(L"");
+
+    result = malloc((len + 1) * sizeof(WCHAR));
+    if (!result)
+        return NULL;
+
+    for (next = strListRoot, tmp = result; next; next = next->next)
+    {
+        lstrcpyW(tmp, next->str);
+        tmp += wstr_len(next->str);
+        if (jointLen > 0 && next->next) {
+            lstrcpyW(tmp, joint);
+            tmp += jointLen;
+        }
+    }
+
+    return result;
 }

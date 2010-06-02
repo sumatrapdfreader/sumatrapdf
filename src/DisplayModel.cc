@@ -1616,20 +1616,12 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 TCHAR *DisplayModel::extractAllText(void)
 {
     TStrList *pages = NULL;
-    int textLen = 0;
 
-    for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
+    for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
         TStrList_InsertAndOwn(&pages, pdfEngine->ExtractPageText(pageNo));
-        textLen += lstrlen(pages->str);
-    }
 
-    TCHAR *content = (TCHAR *)malloc((textLen + 1) * sizeof(TCHAR)), *nextPage = content;
     TStrList_Reverse(&pages);
-    for (TStrList *next = pages; next; next = next->next)
-    {
-        lstrcpy(nextPage, next->str);
-        nextPage += lstrlen(next->str);
-    }
+    TCHAR *content = TStrList_Join(pages, NULL);
     TStrList_Destroy(&pages);
 
     return content;

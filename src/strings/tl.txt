@@ -365,6 +365,7 @@ Paliitin/Lumayo
 #Couldn't initialize printer
 #Default &Layout:
 #Default &Zoom:
+#Denied Permissions:
 #Document Properties
 #Forward\tAlt+Right Arrow
 #Hint: Use the F3 key for finding again
@@ -376,10 +377,13 @@ Paliitin/Lumayo
 #Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
+#Subject:
 #SumatraPDF Options
 #Synchronization file cannot be opened
 #Text documents
 #Unknown source file (%s)
 #Zoom
 #Zoom factor
+#copying text
+#printing document
 

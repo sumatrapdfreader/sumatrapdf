@@ -443,3 +443,9 @@ Zoomfaktor
 [Changes detected; refreshing] %s
 [Ändringar detekterade; uppdaterar] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

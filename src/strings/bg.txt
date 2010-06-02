@@ -385,6 +385,7 @@ Zoom factor
 #Author:
 #Bytes
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -399,6 +400,9 @@ Zoom factor
 #PDF Version:
 #Page Size:
 #Send by &email...
+#Subject:
 #Text documents
 #Title:
+#copying text
+#printing document
 

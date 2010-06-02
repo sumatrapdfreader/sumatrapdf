@@ -441,3 +441,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [מרענן ; נתגלו שינויים] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

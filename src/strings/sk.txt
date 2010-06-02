@@ -240,6 +240,7 @@ Zmenšiť
 #Created:
 #Default &Layout:
 #Default &Zoom:
+#Denied Permissions:
 #Document Properties
 #Download
 #File Size:
@@ -275,6 +276,7 @@ Zmenšiť
 #Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
+#Subject:
 #SumatraPDF Options
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
@@ -286,4 +288,6 @@ Zmenšiť
 #Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s
+#copying text
+#printing document
 

@@ -441,3 +441,9 @@ Proporción de Zoom
 [Changes detected; refreshing] %s
 [Modificaciones detectadas; actualizando] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

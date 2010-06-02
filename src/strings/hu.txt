@@ -428,8 +428,12 @@ Nagyítás mértéke
 
 # Untranslated:
 #Cannot start inverse search command. Please check the command line in the settings.
+#Denied Permissions:
 #No result found around line %u in file %s
 #No synchronization file found
 #Set inverse search command-line
+#Subject:
 #Text documents
+#copying text
+#printing document
 

@@ -442,3 +442,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Обнаружены изменения; обновление...] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

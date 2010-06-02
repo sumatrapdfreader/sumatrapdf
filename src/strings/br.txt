@@ -394,6 +394,7 @@ Proporção de Zoom
 #Author:
 #Bytes
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -406,5 +407,8 @@ Proporção de Zoom
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Subject:
 #Title:
+#copying text
+#printing document
 

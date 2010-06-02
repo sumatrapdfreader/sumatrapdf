@@ -239,6 +239,7 @@ Zoem Uit
 #Created:
 #Default &Layout:
 #Default &Zoom:
+#Denied Permissions:
 #Document Properties
 #Download
 #File Size:
@@ -274,6 +275,7 @@ Zoem Uit
 #Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
+#Subject:
 #SumatraPDF Options
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
@@ -285,4 +287,6 @@ Zoem Uit
 #Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s
+#copying text
+#printing document
 

@@ -442,3 +442,9 @@ Zoom til
 [Changes detected; refreshing] %s
 [Endringer oppdaget; oppdaterer] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

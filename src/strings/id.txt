@@ -441,3 +441,9 @@ Faktor pembesaran
 [Changes detected; refreshing] %s
 [Perubahan terdeteksi; muat ulang] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

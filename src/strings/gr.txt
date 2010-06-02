@@ -441,3 +441,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

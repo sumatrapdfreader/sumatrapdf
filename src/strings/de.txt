@@ -171,13 +171,16 @@ Couldn't render the page
 Diese Seite kann leider nicht angezeigt werden
 
 Created:
-Erstellt:
+Erstellt am:
 
 Default &Layout:
 &Standardlayout:
 
 Default &Zoom:
 Standard&vergrößerung:
+
+Denied Permissions:
+Einschränkungen:
 
 Document Properties
 Dokumenteigenschaften
@@ -279,7 +282,7 @@ Match case
 Groß-/Kleinschreibung beachten
 
 Modified:
-Geändert:
+Geändert am:
 
 New version %s is available. Download new version?
 Es ist eine neue Version vorhanden. Möchten Sie diese herunterladen?
@@ -395,6 +398,9 @@ Einzelne Seite
 Source file %s has no synchronization point
 %s hat keinen Synchronisations-Punkt
 
+Subject:
+Thema:
+
 SumatraPDF Options
 SumatraPDF Optionen
 
@@ -442,4 +448,10 @@ Zoomfaktor
 
 [Changes detected; refreshing] %s
 [Datei wurde geändert; aktualisiere…] %s
+
+copying text
+Text kopieren verweigert
+
+printing document
+Dokument drucken verweigert
 

@@ -387,6 +387,7 @@ Ffactor Chwyddo
 #Back\tAlt+Left Arrow
 #Bytes
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -401,5 +402,8 @@ Ffactor Chwyddo
 #PDF Version:
 #Page Size:
 #Send by &email...
+#Subject:
 #Title:
+#copying text
+#printing document
 

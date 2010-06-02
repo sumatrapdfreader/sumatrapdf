@@ -396,6 +396,7 @@ Faktor-zoum
 #Author:
 #Bytes
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -408,5 +409,8 @@ Faktor-zoum
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Subject:
 #Title:
+#copying text
+#printing document
 

@@ -373,6 +373,7 @@ Hệ số thu phóng
 #Bytes
 #Continuous book view
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -389,6 +390,9 @@ Hệ số thu phóng
 #Page Size:
 #Send by &email...
 #Show pages continuously
+#Subject:
 #Text documents
 #Title:
+#copying text
+#printing document
 

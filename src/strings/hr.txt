@@ -354,6 +354,7 @@ Umanji
 #Continuous book view
 #Copy Selection\tCtrl-C
 #Created:
+#Denied Permissions:
 #Document Properties
 #File Size:
 #File:
@@ -371,8 +372,11 @@ Umanji
 #Select content with Ctrl+left mouse button
 #Send by &email...
 #Show pages continuously
+#Subject:
 #Text documents
 #Title:
 #Zoom
 #Zoom factor
+#copying text
+#printing document
 

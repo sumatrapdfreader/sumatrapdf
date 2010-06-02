@@ -23,12 +23,14 @@ BOOL    StrList_InsertAndOwn(StrList **root, char *txt);
 BOOL    StrList_Insert(StrList **root, char *txt);
 void    StrList_Destroy(StrList **root);
 void    StrList_Reverse(StrList **strListRoot);
+char  * StrList_Join(StrList *strListRoot, char *joint);
 
 int     WStrList_Len(WStrList **root);
 BOOL    WStrList_InsertAndOwn(WStrList **root, WCHAR *txt);
 BOOL    WStrList_Insert(WStrList **root, WCHAR *txt);
 void    WStrList_Destroy(WStrList **root);
 void    WStrList_Reverse(WStrList **strListRoot);
+WCHAR * WStrList_Join(WStrList *strListRoot, WCHAR *joint);
 
 #ifdef _UNICODE
 #define TStrList                WStrList
@@ -37,6 +39,7 @@ void    WStrList_Reverse(WStrList **strListRoot);
 #define TStrList_Insert         WStrList_Insert
 #define TStrList_Destroy        WStrList_Destroy
 #define TStrList_Reverse        WStrList_Reverse
+#define TStrList_Join           WStrList_Join
 #else
 #define TStrList                StrList
 #define TStrList_Len            StrList_Len
@@ -44,8 +47,8 @@ void    WStrList_Reverse(WStrList **strListRoot);
 #define TStrList_Insert         StrList_Insert
 #define TStrList_Destroy        StrList_Destroy
 #define TStrList_Reverse        StrList_Reverse
+#define TStrList_Join           StrList_Join
 #endif
-
 
 #ifdef __cplusplus
 }

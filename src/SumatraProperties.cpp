@@ -28,7 +28,7 @@ static uint64_t WinFileSizeGet(const TCHAR *file_path)
     return res;
 }
 
-static bool IsUtf16be(u8* s, unsigned short len) {
+static bool IsUtf16be(uint8_t *s, unsigned short len) {
     if (len < 2)
         return false;
     if (len % 2 != 0)
@@ -38,7 +38,7 @@ static bool IsUtf16be(u8* s, unsigned short len) {
     return false;
 }
 
-static bool IsUtf16le(u8* s, unsigned short len) {
+static bool IsUtf16le(uint8_t *s, unsigned short len) {
     if (len < 2)
         return false;
     if (len % 2 != 0)
@@ -50,7 +50,7 @@ static bool IsUtf16le(u8* s, unsigned short len) {
 
 #define SWAPWORD(x)	MAKEWORD(HIBYTE(x), LOBYTE(x))
 
-static char *Utf16beToUtf8(u8* s, unsigned short len) {
+static char *Utf16beToUtf8(uint8_t *s, unsigned short len) {
     WCHAR *utf16 = (WCHAR *)malloc(len + 2);
     memcpy(utf16, s, len);
 
@@ -69,9 +69,9 @@ static char *fz_toutf8(fz_obj *obj) {
     int len = fz_tostrlen(obj);
     char *s = fz_tostrbuf(obj);
 
-    if (IsUtf16be((u8*)s, len))
-        return len > 2 ? Utf16beToUtf8((u8*)s, len) : NULL;
-    if (IsUtf16le((u8*)s, len))
+    if (IsUtf16be((uint8_t *)s, len))
+        return len > 2 ? Utf16beToUtf8((uint8_t *)s, len) : NULL;
+    if (IsUtf16le((uint8_t *)s, len))
         return len > 2 ? wstr_to_utf8(((WCHAR *)s) + 1) : NULL;
     // TODO: it's possible we need to support other utf encodings,
     // but we'll wait until we have a PDF that needs that
@@ -199,34 +199,44 @@ static TCHAR *FormatNumWithThousandSep(uint64_t num) {
     return tstr_dup(buf2);
 }
 
+// Format a floating point number with at most two decimal after the point
+// Caller needs to free the result.
+static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) {
+    TCHAR buf[64];
+    uint64_t num = number * 100;
+
+    TCHAR *tmp = FormatNumWithThousandSep(num / 100);
+    TCHAR decimal[4];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, dimof(decimal));
+
+    // always add between one and two decimals after the point
+    wsprintf(buf, _T("%s%s%02d"), tmp, decimal, num % 100);
+    if (buf[lstrlen(buf) - 1] == '0')
+        buf[lstrlen(buf) - 1] = '\0';
+    free(tmp);
+
+    return unit ? tstr_printf(_T("%s %s"), buf, unit) : tstr_dup(buf);
+}
+
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
 static TCHAR *FormatSizeSuccint(uint64_t size) {
-    TCHAR buf[64];
-    TCHAR *tmp;
-    const TCHAR *unit;
+    const TCHAR *unit = NULL;
+    double s = size;
 
-    double s = (double)size;
     if (size > GB) {
-        s = s / (double)GB;
+        s /= GB;
         unit = _TR("GB");
     } else if (size > MB) {
-        s = s / (double)MB;
+        s /= MB;
         unit = _TR("MB");
     } else {
-        s = s / (double)KB;
+        s /= KB;
         unit = _TR("KB");
     }
 
-    // TODO: probably should use locale's decimal separator
-    _sntprintf(buf, sizeof(buf), _T("%.2f"), s);
-    // we might end up with ".?0" suffix, which we don't want
-    tmp = buf + tstr_len(buf) - 1;
-    if (*tmp == '0')
-        *tmp = '\0';
-
-    return tstr_printf(_T("%s %s"), buf, unit);
+    return FormatFloatWithThousandSep(s, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -243,6 +253,51 @@ static TCHAR *FormatPdfSize(uint64_t size) {
     free(n2);
 
     return result;
+}
+
+// format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
+// Caller needs to free the result
+static TCHAR *FormatPdfPageSize(double width, double height) {
+    TCHAR unitSystem[2];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
+    bool isMetric = unitSystem[0] == '0';
+
+    width *= (isMetric ? 2.54 : 1.0) / 72;
+    height *= (isMetric ? 2.54 : 1.0) / 72;
+
+    if (((int)(width * 100)) % 100 == 99)
+        width += 0.01;
+    if (((int)(height * 100)) % 100 == 99)
+        height += 0.01;
+
+    TCHAR *strWidth = FormatFloatWithThousandSep(width);
+    TCHAR *strHeight = FormatFloatWithThousandSep(height, isMetric ? _T("cm") : _T("in"));
+    TCHAR *result = tstr_printf(_T("%s x %s"), strWidth, strHeight);
+    free(strWidth);
+    free(strHeight);
+
+    return result;
+}
+
+// returns a list of permissions denied by this document (NULL if everything's permitted)
+// Caller needs to free the result
+static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
+    TStrList *denials = NULL;
+    if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
+        TStrList_Insert(&denials, (TCHAR *)_TR("printing document"));
+    if (!pdfEngine->hasPermission(PDF_PERM_COPY))
+        TStrList_Insert(&denials, (TCHAR *)_TR("copying text"));
+
+    TStrList_Reverse(&denials);
+    TCHAR *denialList = TStrList_Join(denials, _T(", "));
+    TStrList_Destroy(&denials);
+
+    if (!*denialList) {
+        free(denialList);
+        return NULL;
+    }
+
+    return denialList;
 }
 
 static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *right) {
@@ -481,6 +536,10 @@ void OnMenuProperties(WindowInfo *win)
         AddPdfPropertyUtf8(win, _TR("Title:"), titleStr);
         free(titleStr);
     }
+    if (subjectStr) {
+        AddPdfPropertyUtf8(win, _TR("Subject:"), subjectStr);
+        free(subjectStr);
+    }
     if (authorStr) {
         AddPdfPropertyUtf8(win, _TR("Author:"), authorStr);
         free(authorStr);
@@ -511,25 +570,29 @@ void OnMenuProperties(WindowInfo *win)
     AddPdfProperty(win, _TR("File Size:"), tmp);
     free(tmp);
 
-    //AddPdfProperty(win, _TR("Page Size:"), _T("7x36 x 8.97 in"));
+    tmp = tstr_printf(_T("%d"), dm->pageCount());
+    AddPdfProperty(win, _TR("Number of Pages:"), tmp);
+    free(tmp);
+
+    tmp = FormatPdfPageSize(dm->getPageInfo(dm->currentPageNo())->pageDx, dm->getPageInfo(dm->currentPageNo())->pageDy);
+    AddPdfProperty(win, _TR("Page Size:"), tmp);
+    free(tmp);
+
+    tmp = FormatPdfPermissions(dm->pdfEngine);
+    if (tmp) {
+        AddPdfProperty(win, _TR("Denied Permissions:"), tmp);
+        free(tmp);
+    }
+
+    // TODO: this is about linearlized PDF. Looks like mupdf would
+    // have to be extended to detect linearlized PDF. The rules are described
+    // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
+    //AddPdfProperty(win, _T("Fast Web View:"), _T("No"));
 
     // TODO: probably needs to extend mupdf to get this information.
     // Tagged PDF rules are described in 14.8.2 of
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
     //AddPdfProperty(win, _T("Tagged PDF:"), _T("No"));
-
-    tmp = tstr_printf(_T("%d"), dm->pageCount());
-    AddPdfProperty(win, _TR("Number of Pages:"), tmp);
-    free(tmp);
-
-
-    // TODO: this is probably about linearlized PDF. Looks like mupdf would
-    // have to be extended to detect linearlized PDF. The rules are described
-    // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    //AddPdfProperty(win, _T("Fast Web View:"), _T("No"));
-
-    // TODO: also display subject?
-    free(subjectStr);
 
     CreatePropertiesWindow(win);
 }

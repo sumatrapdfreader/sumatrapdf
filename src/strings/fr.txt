@@ -443,3 +443,9 @@ Facteur de zoom
 [Changes detected; refreshing] %s
 [Modifications détectées; actualisation] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

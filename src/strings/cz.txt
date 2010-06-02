@@ -325,6 +325,7 @@ Zjištěna změna; obnovuji] %s
 #Continuous book view
 #Created:
 #Default &Zoom:
+#Denied Permissions:
 #Document Properties
 #Enter password
 #Enter password for %s
@@ -353,7 +354,10 @@ Zjištěna změna; obnovuji] %s
 #Send by &email...
 #Set inverse search command-line
 #Show pages continuously
+#Subject:
 #Title:
 #You have the latest version.
 #You have version %s
+#copying text
+#printing document
 

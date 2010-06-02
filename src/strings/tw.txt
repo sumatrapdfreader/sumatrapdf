@@ -261,6 +261,7 @@ Zoom factor
 #Created:
 #Default &Layout:
 #Default &Zoom:
+#Denied Permissions:
 #Document Properties
 #Download
 #File Size:
@@ -296,6 +297,7 @@ Zoom factor
 #Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
+#Subject:
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
@@ -303,4 +305,6 @@ Zoom factor
 #Title:
 #Unknown source file (%s)
 #[Changes detected; refreshing] %s
+#copying text
+#printing document
 

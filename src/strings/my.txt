@@ -194,6 +194,7 @@ Fokus ke luar
 #Created:
 #Default &Layout:
 #Default &Zoom:
+#Denied Permissions:
 #Document Properties
 #Download
 #Enter password
@@ -238,6 +239,7 @@ Fokus ke luar
 #Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
+#Subject:
 #SumatraPDF Options
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
@@ -251,4 +253,6 @@ Fokus ke luar
 #Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s
+#copying text
+#printing document
 

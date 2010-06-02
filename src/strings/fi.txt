@@ -441,3 +441,9 @@ Lähennyskerroin
 [Changes detected; refreshing] %s
 [Muutoksia tunnistettiin; päivitetään] %s
 
+# Untranslated:
+#Denied Permissions:
+#Subject:
+#copying text
+#printing document
+

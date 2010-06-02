@@ -3238,37 +3238,29 @@ static void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
 
     if (win->dm->pdfEngine->hasPermission(PDF_PERM_COPY)) {
-        int textLen = 0;
         TStrList *selections = NULL;
-        for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next) {
+        for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next)
             TStrList_InsertAndOwn(&selections, win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
-            textLen += lstrlen(selections->str);
-        }
+
+        TStrList_Reverse(&selections);
+        TCHAR *selText = TStrList_Join(selections, NULL);
+        TStrList_Destroy(&selections);
 
         EmptyClipboard();
-        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (textLen + 1) * sizeof(TCHAR));
-        if (!handle) {
-            TStrList_Destroy(&selections);
-            CloseClipboard();
-            return;
-        }
-
-        TCHAR *selText = (TCHAR *)GlobalLock(handle), *nextPart = selText;
-        TStrList_Reverse(&selections);
-        for (TStrList *next = selections; next; next = next->next)
-        {
-            lstrcpy(nextPart, next->str);
-            nextPart += lstrlen(next->str);
-        }
-        TStrList_Destroy(&selections);
-        GlobalUnlock(handle);
+        HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(selText) + 1) * sizeof(TCHAR));
+        if (handle) {
+            TCHAR *globalText = (TCHAR *)GlobalLock(handle);
+            lstrcpy(globalText, selText);
+            GlobalUnlock(handle);
 
 #ifdef UNICODE
-        if (!SetClipboardData(CF_UNICODETEXT, handle))
+            if (!SetClipboardData(CF_UNICODETEXT, handle))
 #else
-        if (!SetClipboardData(CF_TEXT, handle))
+            if (!SetClipboardData(CF_TEXT, handle))
 #endif
-            SeeLastError();
+                SeeLastError();
+        }
+        free(selText);
     }
 
     /* also copy a screenshot of the current selection to the clipboard */
