@@ -366,6 +366,7 @@ Zoom factor
 [Забележани се промени; освежувам...] %s
 
 # Untranslated:
+#&Print... (denied)
 #Application:
 #Author:
 #Back\tAlt+Left Arrow

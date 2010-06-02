@@ -444,6 +444,7 @@ Zoomfaktor
 [Ändringar detekterade; uppdaterar] %s
 
 # Untranslated:
+#&Print... (denied)
 #Denied Permissions:
 #Subject:
 #copying text

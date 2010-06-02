@@ -1,4 +1,4 @@
-from extract_strings import load_strings_file_old, load_strings_file_new, get_lang_list, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files
+from extract_strings import load_strings_file_old, load_strings_file_new, get_lang_list, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files, key_sort_func
 import simplejson
 
 g_can_upload = True
@@ -212,7 +212,7 @@ def gen_c_code(strings_dict, file_name):
     langs_c = ", ".join(langs_c)
     
     keys = strings_dict.keys()
-    keys.sort()
+    keys.sort(cmp=key_sort_func)
     lines = []
     for lang in langs:
         if "en" == lang:

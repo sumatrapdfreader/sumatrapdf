@@ -337,6 +337,7 @@ Zoom Out
 #&Custom Zoom...
 #&Magnification:
 #&Manual
+#&Print... (denied)
 #Application:
 #Author:
 #Automatic

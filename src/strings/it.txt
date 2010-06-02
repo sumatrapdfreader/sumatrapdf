@@ -444,6 +444,7 @@ Fattore ingrandimento
 [Cambiamenti rilevati; in aggiornamento] %s
 
 # Untranslated:
+#&Print... (denied)
 #Denied Permissions:
 #Subject:
 #copying text

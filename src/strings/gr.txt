@@ -442,6 +442,7 @@ Zoom factor
 [Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
 
 # Untranslated:
+#&Print... (denied)
 #Denied Permissions:
 #Subject:
 #copying text

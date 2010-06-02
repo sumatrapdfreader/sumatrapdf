@@ -441,6 +441,7 @@ Zoomfaktor
 [Bestân wizige; ferfarskje] %s
 
 # Untranslated:
+#&Print... (denied)
 #Denied Permissions:
 #Subject:
 #copying text

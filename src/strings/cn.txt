@@ -366,6 +366,7 @@ Zoom factor
 [检测到改动；刷新中] %s
 
 # Untranslated:
+#&Print... (denied)
 #Application:
 #Author:
 #Back\tAlt+Left Arrow

@@ -163,6 +163,7 @@ Zoom Out
 #&No, thanks
 #&Options...
 #&Password:
+#&Print... (denied)
 #&Remember these settings for each document
 #&Settings
 #&Skip this version

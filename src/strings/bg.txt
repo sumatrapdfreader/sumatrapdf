@@ -381,6 +381,7 @@ Zoom factor
 [Намерени са промени; обновявам] %s
 
 # Untranslated:
+#&Print... (denied)
 #Application:
 #Author:
 #Bytes

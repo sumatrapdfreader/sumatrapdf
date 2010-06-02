@@ -367,6 +367,7 @@ Faktor povečave
 [Spremembe zaznane; osvežitev poteka] %s
 
 # Untranslated:
+#&Print... (denied)
 #Application:
 #Author:
 #Back\tAlt+Left Arrow

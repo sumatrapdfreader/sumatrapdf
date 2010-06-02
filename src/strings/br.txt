@@ -390,6 +390,7 @@ Proporção de Zoom
 [Mudanças detectadas; atualizando] %s
 
 # Untranslated:
+#&Print... (denied)
 #Application:
 #Author:
 #Bytes

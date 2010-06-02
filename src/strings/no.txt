@@ -443,6 +443,7 @@ Zoom til
 [Endringer oppdaget; oppdaterer] %s
 
 # Untranslated:
+#&Print... (denied)
 #Denied Permissions:
 #Subject:
 #copying text

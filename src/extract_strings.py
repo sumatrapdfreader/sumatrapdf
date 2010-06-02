@@ -328,11 +328,15 @@ TOP_COMMENT = """
 
 """
 
+# correctly sorts strings containing escaped tabulators
+def key_sort_func(a, b):
+	return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
+
 # converts strings_dict which maps english text to array of (lang, translation)
 # tuples to a hash that maps language to an array (english phrase, translation)
 def gen_translations_for_languages(strings_dict):
     translations_for_language = {}
-    for english in sorted(strings_dict.keys()):
+    for english in sorted(strings_dict.keys(), cmp=key_sort_func):
         translations = strings_dict[english]
         for (lang_id, translation) in translations:
             if 'en' == lang_id:

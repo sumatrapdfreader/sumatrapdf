@@ -344,6 +344,7 @@ Umanji
 # Untranslated:
 #&Custom Zoom...
 #&Magnification:
+#&Print... (denied)
 #Application:
 #Author:
 #Automatic

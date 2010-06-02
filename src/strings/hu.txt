@@ -427,6 +427,7 @@ Nagyítás mértéke
 [a file megváltozott; frissítés] %s
 
 # Untranslated:
+#&Print... (denied)
 #Cannot start inverse search command. Please check the command line in the settings.
 #Denied Permissions:
 #No result found around line %u in file %s

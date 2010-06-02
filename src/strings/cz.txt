@@ -314,6 +314,7 @@ Zjištěna změna; obnovuji] %s
 
 # Untranslated:
 #&Manual
+#&Print... (denied)
 #&Skip this version
 #Application:
 #Associate with PDF files?

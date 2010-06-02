@@ -217,6 +217,7 @@ Zmenšiť
 #&No, thanks
 #&Options...
 #&Password:
+#&Print... (denied)
 #&Remember these settings for each document
 #&Settings
 #&Yes

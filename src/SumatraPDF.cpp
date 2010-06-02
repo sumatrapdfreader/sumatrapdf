@@ -1835,6 +1835,29 @@ static void MenuUpdateLanguage(WindowInfo *win) {
     }
 }
 
+static void MenuUpdatePrintItem(WindowInfo *win) {
+    HMENU hmenu = win->hMenu;
+    bool filePrintEnabled = false;
+    if (win->dm && win->dm->pdfEngine)
+        filePrintEnabled = true;
+    bool filePrintAllowed = !filePrintEnabled || win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT);
+
+    int ix;
+    for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].m_id != IDM_PRINT; ix++);
+    assert(ix < dimof(menuDefFile));
+    if (ix < dimof(menuDefFile)) {
+        const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].m_title);
+        if (!filePrintAllowed)
+            printItem = _TR("&Print... (denied)");
+        ModifyMenu(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
+    }
+
+    if (filePrintEnabled && filePrintAllowed)
+        EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
+    else
+        EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
+}
+
 static void MenuUpdateStateForWindow(WindowInfo *win) {
     static UINT menusToDisableIfNoPdf[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
@@ -1850,19 +1873,12 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     else
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 
-    bool filePrintEnabled = false;
-    if (win->dm && win->dm->pdfEngine && win->dm->pdfEngine->hasPermission(PDF_PERM_PRINT))
-        filePrintEnabled = true;
-    if (filePrintEnabled)
-        EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
-    else
-        EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
-
     if (CanViewWithAcrobat(win))
         EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
     else
         EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
 
+    MenuUpdatePrintItem(win);
     MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
     MenuUpdateLanguage(win);

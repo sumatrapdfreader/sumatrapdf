@@ -444,6 +444,7 @@ Facteur de zoom
 [Modifications détectées; actualisation] %s
 
 # Untranslated:
+#&Print... (denied)
 #Denied Permissions:
 #Subject:
 #copying text
