@@ -229,34 +229,33 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
         return false;
 
     if (pdf_needspassword(_xref)) {
-        int okay = pdf_authenticatepassword(_xref, "");
-        if (okay)
-            goto DecryptedOk;
-        if (!win) {
+        bool okay = !!pdf_authenticatepassword(_xref, "");
+        if (!okay && !win)
             // win might not be given if called from pdfbench.cc
             return false;
-        }
-        for (int i=0; i<3; i++) {
+
+        for (int i = 0; !okay && i < 3; i++) {
             TCHAR *pwd = GetPasswordForFile(win, fileName);
-            if (!pwd) {
+            if (!pwd)
                 // password not given
                 return false;
-            }
+
             char *pwd_utf8 = tstr_to_utf8(pwd);
-            if (pwd_utf8) {
-                okay = pdf_authenticatepassword(_xref, pwd_utf8);
-                free(pwd_utf8);
-            }
-            else
-                okay = 0;
+            char *pwd_ansi = tstr_to_multibyte(pwd, CP_ACP);
+            if (pwd_utf8)
+                okay = !!pdf_authenticatepassword(_xref, pwd_utf8);
+            // for some documents, only the ANSI-encoded password works
+            if (!okay && pwd_ansi)
+                okay = !!pdf_authenticatepassword(_xref, pwd_ansi);
+
+            free(pwd_utf8);
+            free(pwd_ansi);
             free(pwd);
-            if (okay)
-                goto DecryptedOk;
         }
-        return false;
+        if (!okay)
+            return false;
     }
 
-DecryptedOk:
     _pageCount = pdf_getpagecount(_xref);
     _outline = pdf_loadoutline(_xref);
     // silently ignore errors from pdf_loadoutline()
