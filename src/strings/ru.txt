@@ -67,6 +67,9 @@ Contributor: Victor Kozyakin
 &Print\tCtrl-P
 Печать\tCtrl-P
 
+&Print... (denied)
+Печать... (отмена)
+
 &Remember these settings for each document
 Запомнить эти параметры для &каждого документа
 
@@ -177,6 +180,9 @@ Default &Layout:
 
 Default &Zoom:
 &Масштаб по умолчанию
+
+Denied Permissions:
+Запрещенные права:
 
 Document Properties
 Свойства документа
@@ -394,6 +400,9 @@ Single page
 Source file %s has no synchronization point
 Отсутствует точка синхронизации в исходном файле %s
 
+Subject:
+Тема:
+
 SumatraPDF Options
 Параметры SumatraPDF
 
@@ -442,10 +451,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Обнаружены изменения; обновление...] %s
 
-# Untranslated:
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+копируется текст
+
+printing document
+печатается документ
 
