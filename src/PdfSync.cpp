@@ -788,10 +788,12 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 win = WindowInfoList_Find(pdffile);
                 
                 // if not then open it
-                if (newwindow || !win || WS_SHOWING_PDF != win->state)
+                if (newwindow || !win)
                     win = LoadPdf(pdffile, !newwindow ? win : NULL);
+                else if (win && WS_ERROR_LOADING_PDF == win->state)
+                    SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 
-                if (win && WS_SHOWING_PDF == win->state ) {
+                if (win && WS_SHOWING_PDF == win->state) {
                     if (!win->pdfsync)
                         DBG_OUT("PdfSync: No sync file loaded!\n");
                     else {
@@ -819,17 +821,21 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                 win = WindowInfoList_Find(pdffile);
                 
                 // if not then open it
-                if ( newwindow || !win || WS_SHOWING_PDF != win->state)
+                if (newwindow || !win)
                     win = LoadPdf(pdffile, !newwindow ? win : NULL);
+                else if (win && WS_ERROR_LOADING_PDF == win->state) {
+                    SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
+                    forcerefresh = false;
+                }
                 
-                if (win && WS_SHOWING_PDF == win->state ) {
+                assert(!win || WS_ABOUT != win->state)
+                if (win) {
                     ack.fAck = 1;
                     if (forcerefresh)
-                        PostMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, 0);
+                        PostMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, TRUE);
                     if (setfocus)
                         SetFocus(win->hwndFrame);
                 }
-                
             }
             // Jump to named destination DDE command.
             // format is [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
@@ -843,16 +849,17 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                // check if the PDF is already opened
                 WindowInfo *win = NULL;
                 win = WindowInfoList_Find(pdffile);
+                if (win && WS_ERROR_LOADING_PDF == win->state)
+                    SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 if (win && WS_SHOWING_PDF == win->state) {
-                    LPSTR destname_ansi = tstr_to_multibyte(destname, CP_ACP);
-                    if (destname_ansi) {
-                        win->dm->goToNamedDest(destname_ansi);
+                    LPSTR destname_utf8 = tstr_to_utf8(destname);
+                    if (destname_utf8) {
+                        win->dm->goToNamedDest(destname_utf8);
                         ack.fAck = 1;
                         SetFocus(win->hwndFrame);
-                        free(destname_ansi);
+                        free(destname_utf8);
                     }
                 }
-                
             }
             // Jump to page DDE command.
             // format is [<DDECOMMAND_GOTO>("<pdffilepath>", <page number>)]
@@ -864,6 +871,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             {
                // check if the PDF is already opened
                 WindowInfo *win = WindowInfoList_Find(pdffile);
+                if (win && WS_ERROR_LOADING_PDF == win->state)
+                    SendMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, FALSE);
                 if (win && WS_SHOWING_PDF == win->state) {
                     if (win->dm->validPageNo(page)) {
                         win->dm->goToPage(page, 0, true);
@@ -871,7 +880,6 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                         SetFocus(win->hwndFrame);
                     }
                 }
-                
             }
             else
                 DBG_OUT("WM_DDE_EXECUTE: unknown DDE command or bad command format\n");

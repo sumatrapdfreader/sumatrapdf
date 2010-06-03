@@ -1446,8 +1446,11 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     DisplayState ds;
     DisplayState_Init(&ds);
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-    if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm))
+    if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm)) {
+        if (!autorefresh && !win->dm && win->loadedFilePath)
+            LoadPdf(win->loadedFilePath, win);
         return;
+    }
     UpdateDisplayStateWindowRect(win, &ds);
     // Set the windows state based on the actual window's placement
     ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
@@ -1691,11 +1694,11 @@ static int WindowInfoList_Len(void) {
 // Find the first windows showing a given PDF file 
 WindowInfo* WindowInfoList_Find(TCHAR * file) {
     TCHAR * normFile = FilePath_Normalize(file, FALSE);
-    if(!normFile)
+    if (!normFile)
         return NULL;
 
     for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
-        if (tstr_ieq(curr->watcher.filepath(), normFile)) {
+        if (curr->loadedFilePath && tstr_ieq(curr->loadedFilePath, normFile)) {
             free(normFile);
             return curr;
         }
@@ -2091,11 +2094,11 @@ static bool LoadPdfIntoWindow(
     DisplayModel *previousmodel = win->dm;
     WindowInfo_AbortFinding(win);
 
-    win->dm = DisplayModel_CreateFromFileName(fileName,
-        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
     if (win->loadedFilePath)
         free(win->loadedFilePath);
     win->loadedFilePath = tstr_dup(fileName);
+    win->dm = DisplayModel_CreateFromFileName(fileName,
+        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
 
     if (!win->dm) {
         //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
@@ -2238,7 +2241,7 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
-    PostMessage(((WindowInfo *)param)->hwndFrame, WM_COMMAND, IDM_REFRESH, 0);
+    PostMessage(((WindowInfo *)param)->hwndFrame, WM_COMMAND, IDM_REFRESH, TRUE);
 }
 
 static void CheckPositionAndSize(DisplayState* ds)
@@ -5220,8 +5223,8 @@ static void OnChar(WindowInfo *win, int key)
     if ('q' == key) {
         CloseWindow(win, TRUE);
         return;
-    } else if ('r' == key && !win->dm && win->loadedFilePath) {
-        LoadPdf(win->loadedFilePath, win);
+    } else if ('r' == key && win->loadedFilePath) {
+        WindowInfo_Refresh(win, false);
         return;
     }
 
@@ -5274,8 +5277,6 @@ static void OnChar(WindowInfo *win, int key)
         win->dm->zoomBy(ZOOM_IN_FACTOR);
     } else if ('-' == key) {
         win->dm->zoomBy(ZOOM_OUT_FACTOR);
-    } else if ('r' == key) {
-        WindowInfo_Refresh(win, false);
     } else if ('/' == key) {
         OnMenuFind(win);
     } else if (VK_TAB == key) {
@@ -6444,7 +6445,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_REFRESH:
-                    WindowInfo_Refresh(win, true);
+                    // for accelerators, lParam is 0 (FALSE), so
+                    // make a value of 1 (TRUE) mean autorefresh
+                    WindowInfo_Refresh(win, !!lParam);
                     break;
 
                 case IDT_VIEW_ZOOMIN:
