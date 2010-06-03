@@ -828,7 +828,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     forcerefresh = false;
                 }
                 
-                assert(!win || WS_ABOUT != win->state)
+                assert(!win || WS_ABOUT != win->state);
                 if (win) {
                     ack.fAck = 1;
                     if (forcerefresh)
