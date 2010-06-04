@@ -883,6 +883,11 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     newRequest->abort = FALSE;
 
     UnlockCache();
+    // remove the previous rendering from the cache to prevent a race condition,
+    // where BitmapCache_Exists finds a previous rendering of wrong dimensions
+    // leaving us with no rendering at all
+    BitmapCache_FreePage(dm, pageNo);
+
     /* tell rendering thread there's a new request to render */
     LONG  prevCount;
     ReleaseSemaphore(gPageRenderSem, 1, &prevCount);

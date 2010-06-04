@@ -1270,7 +1270,7 @@ bool BitmapCache_FreeNotVisible(void) {
     return freedSomething;
 }
 
-static bool BitmapCache_FreePage(DisplayModel *dm, int pageNo) {
+bool BitmapCache_FreePage(DisplayModel *dm, int pageNo) {
     LockCache();
     int cacheCount = gBitmapCacheCount;
     bool freedSomething = false;

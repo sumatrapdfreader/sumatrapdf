@@ -385,6 +385,7 @@ BitmapCacheEntry *BitmapCache_Find(DisplayModel *dm, int pageNo);
 bool              BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rotation);
 void              BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel, int rotation, 
                                   RenderedBitmap *bitmap, double renderTime);
+bool              BitmapCache_FreePage(DisplayModel *dm, int pageNo);
 void              BitmapCache_FreeAll(void);
 bool              BitmapCache_FreeForDisplayModel(DisplayModel *dm);
 bool              BitmapCache_FreeNotVisible(void);
