@@ -6358,8 +6358,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutI
     win->infotipVisible = false;
 }
 
-/* TODO: gAccumDelta must be per WindowInfo */
-static int      gDeltaPerLine, gAccumDelta;      // for mouse wheel logic
+static int      gDeltaPerLine;      // for mouse wheel logic
 
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -6501,7 +6500,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int             wmId, wmEvent;
+    int             wmId, wmEvent, current;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
     const TCHAR *   fileName;
@@ -6810,26 +6809,28 @@ InitMouseWheelInfo:
             if (gDeltaPerLine == 0)
                break;
 
-            if (!displayModeContinuous(win->dm->displayMode())) {
+            win->wheelAccumDelta += (short) HIWORD (wParam);     // 120 or -120
+            current = GetScrollPos(win->hwndCanvas, SB_VERT);
+
+            // In non-continuous, page fitting view mode, SB_LINEUP/DOWN already means page up/down
+            if (!displayModeContinuous(win->dm->displayMode()) && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
+                win->wheelAccumDelta = gDeltaPerLine * (win->wheelAccumDelta > 0 ? 1 : -1);
+
+            while (win->wheelAccumDelta >= gDeltaPerLine) {
+                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+                win->wheelAccumDelta -= gDeltaPerLine;
+            }
+            while (win->wheelAccumDelta <= -gDeltaPerLine) {
+                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+                win->wheelAccumDelta += gDeltaPerLine;
+            }
+
+            if (!displayModeContinuous(win->dm->displayMode()) &&
+                GetScrollPos(win->hwndCanvas, SB_VERT) == current) {
                 if ((short) HIWORD (wParam) > 0)
                     win->dm->goToPrevPage(0);
                 else
                     win->dm->goToNextPage(0);
-                return 0;
-            }
-
-            gAccumDelta += (short) HIWORD (wParam);     // 120 or -120
-
-            while (gAccumDelta >= gDeltaPerLine)
-            {
-                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
-                gAccumDelta -= gDeltaPerLine;
-            }
-
-            while (gAccumDelta <= -gDeltaPerLine)
-            {
-                SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
-                gAccumDelta += gDeltaPerLine;
             }
             return 0;
 

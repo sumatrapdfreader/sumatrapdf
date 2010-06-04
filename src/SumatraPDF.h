@@ -206,6 +206,7 @@ public:
         loadedFilePath = NULL;
         currPageNo = 0;
         pdfPropertiesCount = 0;
+        wheelAccumDelta = 0;
     }
     
     void GetCanvasSize() { 
@@ -320,6 +321,8 @@ public:
 
     TCHAR *         title;
     int             currPageNo;
+
+    int             wheelAccumDelta;
 
     PdfPropertiesLayoutEl   pdfProperties[MAX_PDF_PROPERTIES];
     int                     pdfPropertiesCount;
