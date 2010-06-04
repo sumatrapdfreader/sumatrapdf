@@ -5210,20 +5210,25 @@ static void OnChar(WindowInfo *win, int key)
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 
     if (VK_ESCAPE == key) {
-        if (gGlobalPrefs.m_escToExit)
-            CloseWindow(win, TRUE);
-        else if (win->findThread)
+        if (win->findThread)
             WindowInfo_AbortFinding(win);
         else if (win->fullScreen)
             OnMenuViewFullscreen(win);
-        else
-            ClearSearch(win);
+        else {
+            if (gGlobalPrefs.m_escToExit)
+                CloseWindow(win, TRUE);
+            else
+                ClearSearch(win);
+        }
         return;
     }
+
     if ('q' == key) {
         CloseWindow(win, TRUE);
         return;
-    } else if ('r' == key && win->loadedFilePath) {
+    }
+
+    if ('r' == key && win->loadedFilePath) {
         WindowInfo_Refresh(win, false);
         return;
     }
