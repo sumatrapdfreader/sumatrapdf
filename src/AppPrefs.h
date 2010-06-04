@@ -11,7 +11,6 @@
 #define MAX_RECENT_FILES_IN_MENU 10
 
 /* enum from m_windowState */
-// TODO: Shouldn't FULLSCREEN be tracked separately?
 enum {
     WIN_STATE_NORMAL = 1 /* use remebered position and size */
     ,WIN_STATE_MAXIMIZED /* ignore position and size, maximize the window */    

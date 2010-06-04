@@ -113,6 +113,13 @@ enum MouseAction {
     MA_SCROLLING
 };
 
+enum PresentationMode {
+    PM_DISABLED = 0,
+    PM_ENABLED,
+    PM_BLACK_SCREEN,
+    PM_WHITE_SCREEN
+};
+
 /* Represents selected area on given page */
 typedef struct SelectionOnPage {
     int              pageNo;
@@ -156,6 +163,7 @@ public:
         selectionOnPage = NULL;
         tocLoaded = false;
         fullScreen = false;
+        presentation = PM_DISABLED;
         hwndFrame = NULL;
         hwndCanvas = NULL;
         hwndToolbar = NULL;
@@ -300,6 +308,10 @@ public:
 
     bool            tocLoaded;
     bool            fullScreen;
+    BOOL            _tocBeforeFullScreen;
+    PresentationMode presentation;
+    BOOL            _tocBeforePresentation;
+    int             _windowStateBeforePresentation;
 
     long            prevStyle;
     RECT            frameRc;

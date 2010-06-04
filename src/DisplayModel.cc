@@ -71,6 +71,9 @@ DisplaySettings gDisplaySettings = {
   PADDING_PAGE_BORDER_RIGHT_DEF,
   PADDING_BETWEEN_PAGES_X_DEF,
   PADDING_BETWEEN_PAGES_Y_DEF
+}, gDisplaySettingsPresentation = {
+  0, 0, 0, 0,
+  PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
 };
 
 bool displayModeFacing(DisplayMode displayMode)
@@ -95,11 +98,6 @@ int columnsFromDisplayMode(DisplayMode displayMode)
     return 1;
 }
 
-DisplaySettings *globalDisplaySettings(void)
-{
-    return &gDisplaySettings;
-}
-
 bool rotationFlipped(int rotation)
 {
     normalizeRotation(&rotation);
@@ -109,21 +107,23 @@ bool rotationFlipped(int rotation)
     return false;
 }
 
-bool displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm)
+bool DisplayModel::displayStateFromModel(DisplayState *ds)
 {
-    ds->filePath = tstr_dup(dm->fileName());
+    bool presMode = getPresentationMode();
+    ds->filePath = tstr_dup(fileName());
     if (!ds->filePath)
         return false;
-    ds->displayMode = dm->displayMode();
-    ds->rotation = dm->rotation();
-    ds->zoomVirtual = dm->zoomVirtual();
-    ds->showToc = dm->_showToc;
+
+    ds->displayMode = presMode ? _presDisplayMode : displayMode();
+    ds->rotation = rotation();
+    ds->zoomVirtual = presMode ? _presZoomVirtual : zoomVirtual();
+    ds->showToc = _showToc;
 
     ScrollState ss;
-    dm->getScrollState(&ss);
+    getScrollState(&ss);
     ds->pageNo = ss.page;
-    ds->scrollX = floor(ss.x + 0.5);
-    ds->scrollY = floor(ss.y + 0.5);
+    ds->scrollX = presMode ? 0 : floor(ss.x + 0.5);
+    ds->scrollY = presMode ? 0 : floor(ss.y + 0.5);
 
     return true;
 }
@@ -180,6 +180,8 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _displayMode = displayMode;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
+    _padding = &gDisplaySettings;
+    _presentationMode = false;
     // 1 PDF user space unit equals 1/72 inch
     _dpiFactor = dpi * 1.0 / 72.0;
     _showToc = TRUE;
@@ -334,11 +336,11 @@ double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
     assert(0 != (int)pageDy);
 
     columns = columnsFromDisplayMode(displayMode());
-    areaForPageDx = (drawAreaSize.dx() - PADDING_PAGE_BORDER_LEFT - PADDING_PAGE_BORDER_RIGHT);
-    areaForPageDx -= (PADDING_BETWEEN_PAGES_X * (columns - 1));
+    areaForPageDx = (drawAreaSize.dx() - _padding->pageBorderLeft - _padding->pageBorderRight);
+    areaForPageDx -= _padding->betweenPagesX * (columns - 1);
     areaForPageDxInt = (int)(areaForPageDx / columns);
     areaForPageDx = (double)areaForPageDxInt;
-    areaForPageDy = drawAreaSize.dy() - PADDING_PAGE_BORDER_TOP - PADDING_PAGE_BORDER_BOTTOM;
+    areaForPageDy = drawAreaSize.dy() - _padding->pageBorderTop - _padding->pageBorderBottom;
 
     /* TODO: should use gWinDx if we don't show scrollbarY */
     if (areaForPageDx <= 0 || areaForPageDy <= 0)
@@ -472,7 +474,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
 
     _rotation = rotation;
 
-    double currPosY = PADDING_PAGE_BORDER_TOP;
+    double currPosY = _padding->pageBorderTop;
     double currZoomReal = _zoomReal;
     setZoomVirtual(zoomVirtual);
 
@@ -489,7 +491,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     columns = columnsFromDisplayMode(displayMode());
     columnOffsets = (int *)calloc(columns, sizeof(int));
     pageInARow = 0;
-    currPosX = PADDING_PAGE_BORDER_LEFT;
+    currPosX = _padding->pageBorderLeft;
     rowMaxPageDy = 0;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         pageInfo = getPageInfo(pageNo);
@@ -516,7 +518,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
         assert(pageInARow <= columns);
         if (pageInARow == columns) {
             /* starting next row */
-            currPosY += rowMaxPageDy + PADDING_BETWEEN_PAGES_Y;
+            currPosY += rowMaxPageDy + _padding->betweenPagesY;
             rowMaxPageDy = 0;
             pageInARow = 0;
         }
@@ -528,8 +530,8 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
 
     if (pageInARow != 0)
         /* this is a partial row */
-        currPosY += rowMaxPageDy + PADDING_BETWEEN_PAGES_Y;
-    totalAreaDx = PADDING_PAGE_BORDER_LEFT + columnOffsets[0] + (columns == 2 ? PADDING_BETWEEN_PAGES_X + columnOffsets[1] : 0) + PADDING_PAGE_BORDER_RIGHT;
+        currPosY += rowMaxPageDy + _padding->betweenPagesY;
+    totalAreaDx = _padding->pageBorderLeft + columnOffsets[0] + (columns == 2 ? _padding->betweenPagesX + columnOffsets[1] : 0) + _padding->pageBorderRight;
 
     /* since pages can be smaller than the drawing area, center them in x axis */
     offX = 0;
@@ -540,7 +542,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     }
     assert(offX >= 0.0);
     pageInARow = 0;
-    pageOffX = offX + PADDING_PAGE_BORDER_LEFT;
+    pageOffX = offX + _padding->pageBorderLeft;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         pageInfo = getPageInfo(pageNo);
         if (!pageInfo->shown) {
@@ -549,16 +551,16 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
         }
         // leave first spot empty in cover page mode
         if (displayModeShowCover(displayMode()) && pageNo == 1)
-            pageOffX += columnOffsets[pageInARow++] + PADDING_BETWEEN_PAGES_X;
+            pageOffX += columnOffsets[pageInARow++] + _padding->betweenPagesX;
         pageInfo->currPosX = pageOffX + (columnOffsets[pageInARow] - pageInfo->currDx) / 2;
         // center the cover page over the first two spots in non-continuous mode
         if (displayModeShowCover(displayMode()) && pageNo == 1 && !displayModeContinuous(displayMode()))
-            pageInfo->currPosX = offX + PADDING_PAGE_BORDER_LEFT + (columnOffsets[0] + PADDING_BETWEEN_PAGES_X + columnOffsets[1] - pageInfo->currDx) / 2;
-        pageOffX += columnOffsets[pageInARow++] + PADDING_BETWEEN_PAGES_X;
+            pageInfo->currPosX = offX + _padding->pageBorderLeft + (columnOffsets[0] + _padding->betweenPagesX + columnOffsets[1] - pageInfo->currDx) / 2;
+        pageOffX += columnOffsets[pageInARow++] + _padding->betweenPagesX;
         assert(pageOffX >= 0 && pageInfo->currPosX >= 0);
 
         if (pageInARow == columns) {
-            pageOffX = offX + PADDING_PAGE_BORDER_LEFT;
+            pageOffX = offX + _padding->pageBorderLeft;
             pageInARow = 0;
         }
     }
@@ -572,9 +574,9 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     }
 
     /* if a page is smaller than drawing area in y axis, y-center the page */
-    totalAreaDy = currPosY + PADDING_PAGE_BORDER_BOTTOM - PADDING_BETWEEN_PAGES_Y;
+    totalAreaDy = currPosY + _padding->pageBorderBottom - _padding->betweenPagesY;
     if (totalAreaDy < drawAreaSize.dy()) {
-        offY = PADDING_PAGE_BORDER_TOP + (drawAreaSize.dy() - totalAreaDy) / 2;
+        offY = _padding->pageBorderTop + (drawAreaSize.dy() - totalAreaDy) / 2;
         DBG_OUT("  offY = %.2f\n", offY);
         assert(offY >= 0.0);
         totalAreaDy = drawAreaSize.dy();
@@ -925,7 +927,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         areaOffset.x = (double)scrollX;
     // make sure to not display the blank space beside the first page in cover mode
     else if (-1 == scrollX && 1 == pageNo && displayModeShowCover(displayMode()))
-        areaOffset.x = pageInfo->currPosX - PADDING_PAGE_BORDER_LEFT;
+        areaOffset.x = pageInfo->currPosX - _padding->pageBorderLeft;
 
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPosY in RecalcPagesInfo. So we shouldn't
@@ -934,7 +936,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     areaOffset.y = (double)scrollY;
     // Move the next page to the top (unless the remaining pages fit onto a single screen)
     if (displayModeContinuous(displayMode()))
-        areaOffset.y = pageInfo->currPosY - PADDING_PAGE_BORDER_TOP + (double)scrollY;
+        areaOffset.y = pageInfo->currPosY - _padding->pageBorderTop + (double)scrollY;
 
     areaOffset.x = limitValue(areaOffset.x, 0, _canvasSize.dx() - drawAreaSize.dx());
     areaOffset.y = limitValue(areaOffset.y, 0, _canvasSize.dy() - drawAreaSize.dy());
@@ -967,6 +969,23 @@ void DisplayModel::changeDisplayMode(DisplayMode displayMode)
         relayout(zoomVirtual(), rotation());
     }
     goToPage(currPageNo, 0);
+}
+
+void DisplayModel::setPresentationMode(bool enable)
+{
+    _presentationMode = enable;
+    if (enable) {
+        _presDisplayMode = _displayMode;
+        _presZoomVirtual = _zoomVirtual;
+        _padding = &gDisplaySettingsPresentation;
+        changeDisplayMode(DM_SINGLE_PAGE);
+        zoomTo(ZOOM_FIT_PAGE);
+    }
+    else {
+        _padding = &gDisplaySettings;
+        changeDisplayMode(_presDisplayMode);
+        zoomTo(_presZoomVirtual);
+    }
 }
 
 /* In continuous mode just scrolls to the next page. In single page mode

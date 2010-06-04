@@ -72,7 +72,8 @@ BEGIN
     "D",            IDM_PROPERTIES,         VIRTKEY, CONTROL
     "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL
     "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
-    "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, CONTROL
+    "L",            IDM_VIEW_PRESENTATION_MODE, VIRTKEY, CONTROL
+    "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, SHIFT, CONTROL
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
     "P",            IDM_PRINT,              VIRTKEY, CONTROL
@@ -90,7 +91,8 @@ BEGIN
     VK_F3,          IDM_FIND_NEXT,          VIRTKEY 
     VK_F3,          IDM_FIND_PREV,          VIRTKEY, SHIFT
     VK_F6,          IDM_MOVE_FRAME_FOCUS,   VIRTKEY
-    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY 
+    VK_F11,         IDM_VIEW_PRESENTATION_MODE, VIRTKEY 
+    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY, SHIFT
     VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY 
     VK_ADD,         IDT_VIEW_ZOOMIN,        VIRTKEY, CONTROL
     VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL

@@ -229,7 +229,7 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
 static void Find(WindowInfo *win, PdfSearchDirection direction = FIND_FORWARD);
 static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
-static void WindowInfo_EnterFullscreen(WindowInfo *win);
+static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
@@ -519,6 +519,15 @@ void u_testMemSegment()
     free(data);
 }
 #endif
+
+#define KEY_PRESSED_MASK 0x8000
+static bool WasKeyDown(int virtKey)
+{
+    SHORT state = GetKeyState(virtKey);
+    if (KEY_PRESSED_MASK & state)
+        return true;
+    return false;
+}
 
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
@@ -981,7 +990,7 @@ MenuDef menuDefView[] = {
     { _TRN("Rotate left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,        0  },
     { _TRN("Rotate right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,       0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_FULLSCREEN,         0  },
+    { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_PRESENTATION_MODE,  0  },
     { SEP_ITEM, 0, 0  },
     { _TRN("Bookmarks\tF12"),              IDM_VIEW_BOOKMARKS,          0  },
     { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR,  0  },
@@ -1339,7 +1348,7 @@ static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 {
     // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
     //       the non-maximized dimensions for proper restoration)
-    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen)
+    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen || win->presentation)
         return;
 
     RECT r;
@@ -1364,7 +1373,9 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (WS_ABOUT == win->state || gGlobalPrefs.m_globalPrefsOnly)
     {
         // update global windowState for next default launch when no pdf opened
-        if (win->fullScreen)
+        if (win->presentation)
+            gGlobalPrefs.m_windowState = win->_windowStateBeforePresentation;
+        else if (win->fullScreen)
             gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
         else if (IsZoomed(win->hwndFrame))
             gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
@@ -1391,14 +1402,16 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
 
     // Update pdf-specific windowState
-    if (win->fullScreen)
+    if (win->presentation)
+        ds.windowState = win->_windowStateBeforePresentation;
+    else if (win->fullScreen)
         ds.windowState = WIN_STATE_FULLSCREEN;
     else if (IsZoomed(win->hwndFrame))
         ds.windowState = WIN_STATE_MAXIMIZED;
     else
         ds.windowState = WIN_STATE_NORMAL;
 
-    if (!displayStateFromDisplayModel(&ds, win->dm))
+    if (!win->dm->displayStateFromModel(&ds))
         return;
 
     UpdateDisplayStateWindowRect(win, &ds);
@@ -1446,7 +1459,7 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     DisplayState ds;
     DisplayState_Init(&ds);
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-    if (!win->dm || !displayStateFromDisplayModel(&ds, win->dm)) {
+    if (!win->dm || !win->dm->displayStateFromModel(&ds)) {
         if (!autorefresh && !win->dm && win->loadedFilePath)
             LoadPdf(win->loadedFilePath, win);
         return;
@@ -1534,7 +1547,7 @@ static bool WindowInfo_DoubleBuffer_New(WindowInfo *win)
     /* fill out everything with background color */
     RECT r;
     rect_set(&r, 0, 0, win->winDx(), win->winDy());
-    FillRect(win->hdcDoubleBuffer, &r, win->fullScreen ? gBrushBlack : gBrushBg);
+    FillRect(win->hdcDoubleBuffer, &r, win->presentation ? gBrushBlack : gBrushBg);
     win->hdcToDraw = win->hdcDoubleBuffer;
     return TRUE;
 }
@@ -2522,7 +2535,7 @@ void DisplayModel::setScrollbarsState(void)
         si.nMax = 99;
         si.nPage = 100;
 
-        if (!win->fullScreen && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
+        if (!win->fullScreen && !win->presentation && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
             switch (win->dm->displayMode()) {
                 case DM_SINGLE_PAGE:
                     si.nPos = win->dm->currentPageNo() - 1;
@@ -3075,7 +3088,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
 
 #define BORDER_SIZE   1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool fullScreen, RECT * bounds)
+static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presentation, RECT * bounds)
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
@@ -3102,14 +3115,14 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool fullSc
     }
 
     // Draw shadow
-    if (!fullScreen) {
+    if (!presentation) {
         RECT rc;
         rect_set(&rc, sx, sy, sw, sh);
         FillRect(hdc, &rc, gBrushShadow);
     }
 
     // Draw frame
-    HPEN pe = CreatePen(PS_SOLID, 1, fullScreen ? TRANSPARENT : COL_PAGE_FRAME);
+    HPEN pe = CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME);
     SelectObject(hdc, pe);
     SelectObject(hdc, gGlobalPrefs.m_invertColors ? gBrushBlack : gBrushWhite);
     Rectangle(hdc, fx, fy, fx + fw, fy + fh);
@@ -3130,7 +3143,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     assert(win->hdcToDraw);
     hdc = win->hdcToDraw;
 
-    FillRect(hdc, &(ps->rcPaint), win->fullScreen ? gBrushBlack : gBrushBg);
+    FillRect(hdc, &ps->rcPaint, win->presentation ? gBrushBlack : gBrushBg);
 
     DBG_OUT("WindowInfo_Paint() ");
     for (int pageNo = 1; pageNo <= dm->pageCount(); ++pageNo) {
@@ -3146,7 +3159,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (entry)
             renderedBmp = entry->bitmap;
 
-        PaintPageFrameAndShadow(hdc, pageInfo, win->fullScreen, &bounds);
+        PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, &bounds);
 
         if (!entry || BITMAP_CANNOT_RENDER == renderedBmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
@@ -3425,6 +3438,12 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     }
 }
 
+static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
+{
+    win->presentation = mode;
+    WindowInfo_RedrawAll(win);
+}
+
 static void OnDraggingStart(WindowInfo *win, int x, int y)
 {
     assert(win);
@@ -3485,11 +3504,19 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
         win->dm->handleLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
+    else if (didDragMouse)
+        /* pass */;
     /* if we had a selection and this was just a click, hide selection */
-    else if (!didDragMouse && win->showSelection)
+    else if (win->showSelection)
         ClearSearch(win);
-    else if (!didDragMouse && win->fullScreen)
-        win->dm->goToNextPage(0);
+    else if (win->fullScreen || PM_ENABLED == win->presentation) {
+        if (WasKeyDown(VK_SHIFT))
+            win->dm->goToPrevPage(0);
+        else
+            win->dm->goToNextPage(0);
+    }
+    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+        ChangePresentationMode(win, PM_ENABLED);
 
     win->linkOnLastButtonDown = NULL;
 }
@@ -3642,7 +3669,7 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
 
 static void OnMouseRightButtonClick(WindowInfo *win, int x, int y, int key)
 {
-    if (win->fullScreen && win->dm)
+    if ((win->fullScreen || PM_ENABLED == win->presentation) && win->dm)
         win->dm->goToPrevPage(0);
 }
 
@@ -3759,9 +3786,18 @@ static void OnPaint(WindowInfo *win)
             SelectObject(hdc, origFont);
         Win32_Font_Delete(fontRightTxt);
     } else if (WS_SHOWING_PDF == win->state) {
-        WinResizeIfNeeded(win);
-        WindowInfo_Paint(win, hdc, &ps);
-        WindowInfo_DoubleBuffer_Show(win, hdc);
+        switch (win->presentation) {
+        case PM_BLACK_SCREEN:
+            FillRect(hdc, &ps.rcPaint, gBrushBlack);
+            break;
+        case PM_WHITE_SCREEN:
+            FillRect(hdc, &ps.rcPaint, gBrushWhite);
+            break;
+        default:
+            WinResizeIfNeeded(win);
+            WindowInfo_Paint(win, hdc, &ps);
+            WindowInfo_DoubleBuffer_Show(win, hdc);
+        }
     } else
         assert(0);
 
@@ -4517,7 +4553,9 @@ static void RememberWindowPosition(WindowInfo *win)
         return;
     
     // update global windowState for next default launch when no pdf opened
-    if (win->fullScreen)
+    if (win->presentation)
+        gGlobalPrefs.m_windowState = win->_windowStateBeforePresentation;
+    else if (win->fullScreen)
         gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
     else if (IsZoomed(win->hwndFrame))
         gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
@@ -4525,7 +4563,7 @@ static void RememberWindowPosition(WindowInfo *win)
         gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
-    if (WIN_STATE_NORMAL != gGlobalPrefs.m_windowState || IsIconic(win->hwndFrame))
+    if (WIN_STATE_NORMAL != gGlobalPrefs.m_windowState || IsIconic(win->hwndFrame) || win->presentation)
         return;
 
     RECT rc;
@@ -4544,7 +4582,7 @@ static void AdjustWindowEdge(WindowInfo *win)
     // Remove the canvas' edge in the cases where the vertical scrollbar
     // would otherwise touch the screen's edge, making the scrollbar much
     // easier to hit with the mouse (cf. Fitts' law)
-    if (IsZoomed(win->hwndFrame) || win->fullScreen)
+    if (IsZoomed(win->hwndFrame) || win->fullScreen || win->presentation)
         newStyle &= ~WS_EX_STATICEDGE;
     else
         newStyle |= WS_EX_STATICEDGE;
@@ -4591,7 +4629,7 @@ static void RebuildProgramMenus(void)
     for (WindowInfo *win = gWindowList; win; win = win->next) {
         WindowInfo_RebuildMenu(win);
         // Setting the menu for a full screen window messes things up
-        if (!win->fullScreen)
+        if (!win->fullScreen && PM_DISABLED == win->presentation)
             SetMenu(win->hwndFrame, win->hMenu);
         MenuUpdateStateForWindow(win);
     }
@@ -4758,7 +4796,7 @@ static void OnMenuGoToPage(WindowInfo *win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.m_showToolbar && !win->fullScreen) {
+    if (gGlobalPrefs.m_showToolbar && !win->fullScreen && PM_DISABLED == win->presentation) {
         win->FocusPageNoEdit();
         return;
     }
@@ -4774,7 +4812,7 @@ static void OnMenuFind(WindowInfo *win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.m_showToolbar && !win->fullScreen) {
+    if (gGlobalPrefs.m_showToolbar && !win->fullScreen && PM_DISABLED == win->presentation) {
         win->FindStart();
         return;
     }
@@ -4814,18 +4852,29 @@ static void OnMenuViewRotateRight(WindowInfo *win)
     RotateRight(win);
 }
 
-static void WindowInfo_EnterFullscreen(WindowInfo *win)
+static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
 {
-    if (win->fullScreen || !IsWindowVisible(win->hwndFrame)) 
+    if ((presentation ? win->presentation : win->fullScreen) || !IsWindowVisible(win->hwndFrame)) 
         return;
-    win->fullScreen = true;
 
-    if (win->dm) {
-        // Remove TOC from full screen, add back later on exit fullscreen
-        win->dm->_tocBeforeFullScreen = win->dm->_showToc;
-        if (win->dm->_showToc)
-            win->HideTocBox();
+    if (presentation) {
+        if (win->fullScreen)
+            win->_windowStateBeforePresentation = WIN_STATE_FULLSCREEN;
+        else if (IsZoomed(win->hwndFrame))
+            win->_windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
+        else
+            win->_windowStateBeforePresentation = WIN_STATE_NORMAL;
+        win->presentation = PM_ENABLED;
+        win->_tocBeforePresentation = win->dm ? win->dm->_showToc : FALSE;
     }
+    else {
+        win->fullScreen = true;
+        win->_tocBeforeFullScreen = win->dm ? win->dm->_showToc : FALSE;
+    }
+
+    // Remove TOC from full screen, add back later on exit fullscreen
+    if (win->dm && win->dm->_showToc)
+        win->HideTocBox();
 
     int x, y, w, h;
     MONITORINFOEX mi;
@@ -4843,7 +4892,9 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win)
         w = rect_dx(&mi.rcMonitor);
         h = rect_dy(&mi.rcMonitor);
     }
-    long ws = win->prevStyle = GetWindowLong(win->hwndFrame, GWL_STYLE);
+    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
+    if (!presentation || !win->fullScreen)
+        win->prevStyle = ws;
     ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
@@ -4854,18 +4905,34 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win)
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST, x, y, w, h, SWP_FRAMECHANGED|SWP_NOZORDER);
     SetWindowPos(win->hwndCanvas, NULL, 0, 0, w, h, SWP_NOZORDER);
+
+    if (presentation)
+        win->dm->setPresentationMode(true);
+
     // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win->hwndFrame);
 }
 
 static void WindowInfo_ExitFullscreen(WindowInfo *win)
 {
-    if (!win->fullScreen) 
+    if (!win->fullScreen && PM_DISABLED == win->presentation) 
         return;
-    win->fullScreen = false;
 
-    if (win->dm && win->dm->_tocBeforeFullScreen)
+    bool wasPresentation = PM_DISABLED != win->presentation;
+    if (wasPresentation) {
+        win->dm->setPresentationMode(false);
+        win->presentation = PM_DISABLED;
+    }
+    else
+        win->fullScreen = false;
+
+    if (win->dm && (wasPresentation ? win->_tocBeforePresentation : win->_tocBeforeFullScreen))
         win->ShowTocBox();
+
+    if (win->fullScreen) {
+        assert(wasPresentation);
+        return;
+    }
 
     if (gGlobalPrefs.m_showToolbar)
         ShowWindow(win->hwndReBar, SW_SHOW);
@@ -4875,6 +4942,18 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
                  win->frameRc.left, win->frameRc.top,
                  rect_dx(&win->frameRc), rect_dy(&win->frameRc),
                  SWP_FRAMECHANGED|SWP_NOZORDER);
+}
+
+static void OnMenuViewPresentation(WindowInfo *win)
+{
+    assert(win);
+    if (!win)
+        return;
+
+    if (win->presentation != PM_DISABLED)
+        WindowInfo_ExitFullscreen(win);
+    else
+        WindowInfo_EnterFullscreen(win, true);
 }
 
 static void OnMenuViewFullscreen(WindowInfo *win)
@@ -4893,7 +4972,11 @@ static void OnMenuViewFullscreen(WindowInfo *win)
             gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
     }
 
-    if (win->fullScreen)
+    if (win->presentation) {
+        WindowInfo_ExitFullscreen(win);
+        WindowInfo_EnterFullscreen(win);
+    }
+    else if (win->fullScreen)
         WindowInfo_ExitFullscreen(win);
     else
         WindowInfo_EnterFullscreen(win);
@@ -5099,21 +5182,12 @@ static void OnMenuFindMatchCase(WindowInfo *win)
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
 
-#define KEY_PRESSED_MASK 0x8000
-static bool WasKeyDown(int virtKey)
-{
-    SHORT state = GetKeyState(virtKey);
-    if (KEY_PRESSED_MASK & state)
-        return true;
-    return false;
-}
-
 static void AdvanceFocus(WindowInfo *win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Frame -> ...
 
     bool reversed = WasKeyDown(VK_SHIFT);
-    bool hasToolbar = !win->fullScreen && gGlobalPrefs.m_showToolbar;
+    bool hasToolbar = !win->fullScreen && !win->presentation && gGlobalPrefs.m_showToolbar;
     bool hasToC = win->dm && win->dm->_showToc;
 
     HWND current = GetFocus();
@@ -5213,10 +5287,14 @@ static void OnChar(WindowInfo *win, int key)
     case VK_ESCAPE:
         if (win->findThread)
             WindowInfo_AbortFinding(win);
-        else if (win->fullScreen)
-            OnMenuViewFullscreen(win);
+        else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+            ChangePresentationMode(win, PM_ENABLED);
+        else if (win->presentation)
+            OnMenuViewPresentation(win);
         else if (gGlobalPrefs.m_escToExit)
             CloseWindow(win, TRUE);
+        else if (win->fullScreen)
+            OnMenuViewFullscreen(win);
         else
             ClearSearch(win);
         return;
@@ -5277,7 +5355,11 @@ static void OnChar(WindowInfo *win, int key)
         }
         break;
     case 'b':
-        {
+        if (PM_BLACK_SCREEN == win->presentation)
+            ChangePresentationMode(win, PM_ENABLED);
+        else if (win->presentation)
+            ChangePresentationMode(win, PM_BLACK_SCREEN);
+        else {
             // experimental "e-book view": flip a single page
             bool forward = !WasKeyDown(VK_SHIFT);
             bool alreadyFacing = displayModeFacing(win->dm->displayMode());
@@ -5299,10 +5381,16 @@ static void OnChar(WindowInfo *win, int key)
                 win->dm->goToPrevPage(0);
         }
         break;
+    case 'w':
+        if (PM_WHITE_SCREEN == win->presentation)
+            ChangePresentationMode(win, PM_ENABLED);
+        else if (win->presentation)
+            ChangePresentationMode(win, PM_WHITE_SCREEN);
+        break;
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs.m_showToolbar || win->fullScreen) {
+        if (!gGlobalPrefs.m_showToolbar || win->fullScreen || PM_ENABLED == win->presentation) {
             int current = win->dm->currentPageNo(), total = win->dm->pageCount();
             TCHAR *pageInfo = tstr_printf(_T("%s %d / %d"), _TR("Page:"), current, total);
             WindowInfo_ShowMessage_Asynch(win, pageInfo, true);
@@ -5919,7 +6007,7 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 int width = rect_dx(&r) - tw - SPLITTER_DX;
                 int height = rect_dy(&r);
 
-                if (gGlobalPrefs.m_showToolbar && !win->fullScreen) {
+                if (gGlobalPrefs.m_showToolbar && !win->fullScreen && !win->presentation) {
                     ty = gReBarDy + gReBarDyFrame;
                     height -= ty;
                 }
@@ -6148,6 +6236,9 @@ void WindowInfo::ShowTocBox()
         return;
     }
 
+    if (PM_BLACK_SCREEN == presentation || PM_WHITE_SCREEN == presentation)
+        return;
+
     LoadTocTree();
 
     RECT rtoc, rframe;
@@ -6156,7 +6247,7 @@ void WindowInfo::ShowTocBox()
     GetClientRect(hwndFrame, &rframe);
     GetWindowRect(hwndTocBox, &rtoc);
 
-    if (gGlobalPrefs.m_showToolbar && !fullScreen)
+    if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
@@ -6183,7 +6274,7 @@ void WindowInfo::HideTocBox()
     int cy = 0;
     int cw = rect_dx(&r), ch = rect_dy(&r);
 
-    if (gGlobalPrefs.m_showToolbar && !fullScreen)
+    if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
 
     if (GetFocus() == hwndTocBox)
@@ -6297,7 +6388,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_LBUTTONDBLCLK:
             if (win) {
 #ifndef _TEX_ENHANCEMENT
-                if (win->fullScreen)
+                if (win->fullScreen || win->presentation)
                     OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
                 else
 #endif
@@ -6558,6 +6649,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_GOTO_PAGE:
                     OnMenuGoToPage(win);
+                    break;
+
+                case IDM_VIEW_PRESENTATION_MODE:
+                    OnMenuViewPresentation(win);
                     break;
 
                 case IDM_VIEW_FULLSCREEN:
@@ -7401,6 +7496,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     bool                exitOnPrint = false;
     bool                printToDefaultPrinter = false;
     bool                printDialog = false;
+    bool                enterPresentation = false;
     TCHAR *             destName = NULL;
     int                 pageNumber = 0;
     TCHAR *             cmdLine;
@@ -7555,6 +7651,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-invertcolors")) {
             gGlobalPrefs.m_invertColors = TRUE;
         }
+        else if (is_arg("-presentation")) {
+            enterPresentation = true;
+        }
 #ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             deleteFilesOnClose = true;
@@ -7632,6 +7731,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     if (win->dm->validPageNo(pageNumber))
                         win->dm->goToPage(pageNumber, 0);
                 }
+                if (WS_SHOWING_PDF == win->state && enterPresentation && !firstDocLoaded)
+                    WindowInfo_EnterFullscreen(win, true);
             }
 
             if (exitOnPrint)

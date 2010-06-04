@@ -13,12 +13,12 @@
 #define INVALID_BIG_ZOOM    999999.0   /* arbitrary but big */
 
 typedef struct DisplaySettings {
-    int     paddingPageBorderTop;
-    int     paddingPageBorderBottom;
-    int     paddingPageBorderLeft;
-    int     paddingPageBorderRight;
-    int     paddingBetweenPagesX;
-    int     paddingBetweenPagesY;
+    int     pageBorderTop;
+    int     pageBorderBottom;
+    int     pageBorderLeft;
+    int     pageBorderRight;
+    int     betweenPagesX;
+    int     betweenPagesY;
 } DisplaySettings;
 
 /* the default distance between a page and window border edges, in pixels */
@@ -32,13 +32,6 @@ typedef struct DisplaySettings {
 /* the distance between pages in y axis, in pixels. Only applicable if
    more than one page in y axis (continuous mode) */
 #define PADDING_BETWEEN_PAGES_Y_DEF      PADDING_PAGE_BORDER_TOP_DEF + PADDING_PAGE_BORDER_BOTTOM_DEF
-
-#define PADDING_PAGE_BORDER_TOP      gDisplaySettings.paddingPageBorderTop
-#define PADDING_PAGE_BORDER_BOTTOM   gDisplaySettings.paddingPageBorderBottom
-#define PADDING_PAGE_BORDER_LEFT     gDisplaySettings.paddingPageBorderLeft
-#define PADDING_PAGE_BORDER_RIGHT    gDisplaySettings.paddingPageBorderRight
-#define PADDING_BETWEEN_PAGES_X      gDisplaySettings.paddingBetweenPagesX
-#define PADDING_BETWEEN_PAGES_Y      gDisplaySettings.paddingBetweenPagesY
 
 #define POINT_OUT_OF_PAGE           0
 
@@ -152,9 +145,12 @@ public:
     /* current rotation selected by user */
     int rotation(void) const { return _rotation; }
     void setRotation(int rotation) { _rotation = rotation; }
-    DisplayMode displayMode() const { return _displayMode; }
 
+    DisplayMode displayMode() const { return _displayMode; }
     void changeDisplayMode(DisplayMode displayMode);
+    void setPresentationMode(bool enable);
+    bool getPresentationMode() const { return _presentationMode; }
+
     const TCHAR *fileName(void) const { return pdfEngine->fileName(); }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
@@ -260,7 +256,6 @@ public:
     BOOL            bFoundText;
 
     BOOL            _showToc;
-    BOOL            _tocBeforeFullScreen;
 
     int             getPageNoByPoint (double x, double y);
 
@@ -274,6 +269,8 @@ public:
     bool            addNavPoint(bool keepForward=false);
     bool            canNavigate(int dir);
     void            navigate(int dir);
+
+    bool            displayStateFromModel(DisplayState *ds);
 
 protected:
 
@@ -313,6 +310,7 @@ protected:
     /* size of virtual canvas containing all rendered pages.
        TODO: re-consider, 32 signed number should be large enough for everything. */
     SizeD           _canvasSize;
+    DisplaySettings * _padding;
 
     /* real zoom value calculated from zoomVirtual. Same as zoomVirtual except
        for ZOOM_FIT_PAGE and ZOOM_FIT_WIDTH */
@@ -324,6 +322,11 @@ protected:
     double          _dpiFactor;
     /* display odd pages on the right? */
     bool            _showCover;
+
+    /* if we're in presentation mode, _pres* contains the pre-presentation values */
+    bool            _presentationMode;
+    double          _presZoomVirtual;
+    DisplayMode     _presDisplayMode;
 
     ScrollState   * _navHistory;
     int             _navHistoryIx;
@@ -338,10 +341,8 @@ public:
 bool                displayModeContinuous(DisplayMode displayMode);
 bool                displayModeFacing(DisplayMode displayMode);
 bool                displayModeShowCover(DisplayMode displayMode);
-DisplaySettings *   globalDisplaySettings(void);
 int                 columnsFromDisplayMode(DisplayMode displayMode);
 void                pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation, double *pageDxOut, double *pageDyOut);
-bool                displayStateFromDisplayModel(DisplayState *ds, DisplayModel *dm);
 
 DisplayModel *DisplayModel_CreateFromFileName(
   const TCHAR *fileName,
@@ -349,8 +350,6 @@ DisplayModel *DisplayModel_CreateFromFileName(
   int scrollbarXDy, int scrollbarYDx,
   DisplayMode displayMode, int startPage,
   WindowInfo *win, bool tryrepair);
-
-extern DisplaySettings gDisplaySettings;
 
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoomReal)
