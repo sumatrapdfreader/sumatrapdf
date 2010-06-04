@@ -4962,7 +4962,7 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         rc.right += MulDiv(15, win->dpi, USER_DEFAULT_SCREEN_DPI);
         rc.bottom = MulDiv(23, win->dpi, USER_DEFAULT_SCREEN_DPI);
         AdjustWindowRectEx(&rc, GetWindowLong(win->hwndFindStatus, GWL_STYLE), FALSE, GetWindowLong(win->hwndFindStatus, GWL_EXSTYLE));
-        MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
+        MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right - rc.left + FIND_STATUS_MARGIN, rc.bottom - rc.top, TRUE);
     }
 
     // if a thread has previously been started then make sure it has ended
@@ -5209,26 +5209,21 @@ static void OnChar(WindowInfo *win, int key)
     if (IsCharUpper((TCHAR)key))
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 
-    if (VK_ESCAPE == key) {
+    switch (key) {
+    case VK_ESCAPE:
         if (win->findThread)
             WindowInfo_AbortFinding(win);
         else if (win->fullScreen)
             OnMenuViewFullscreen(win);
-        else {
-            if (gGlobalPrefs.m_escToExit)
-                CloseWindow(win, TRUE);
-            else
-                ClearSearch(win);
-        }
+        else if (gGlobalPrefs.m_escToExit)
+            CloseWindow(win, TRUE);
+        else
+            ClearSearch(win);
         return;
-    }
-
-    if ('q' == key) {
+    case 'q':
         CloseWindow(win, TRUE);
         return;
-    }
-
-    if ('r' == key && win->loadedFilePath) {
+    case 'r':
         WindowInfo_Refresh(win, false);
         return;
     }
@@ -5236,56 +5231,84 @@ static void OnChar(WindowInfo *win, int key)
     if (!win->dm)
         return;
 
-    if (VK_BACK == key) {
-        bool forward = WasKeyDown(VK_SHIFT);
-        win->dm->navigate(forward ? 1 : -1);
-    } else if ('g' == key) {
+    switch (key) {
+    case VK_TAB: AdvanceFocus(win); break;
+    case VK_BACK:
+        {
+            bool forward = WasKeyDown(VK_SHIFT);
+            win->dm->navigate(forward ? 1 : -1);
+        }
+        break;
+    case 'g':
         OnMenuGoToPage(win);
-    } else if ('j' == key) {
+        break;
+    case 'j':
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
-    } else if ('k' == key) {
+        break;
+    case 'k':
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
-    } else if ('n' == key) {
+        break;
+    case 'n':
         win->dm->goToNextPage(0);
-    } else if ('c' == key) {
-        DisplayMode newMode = DM_CONTINUOUS;
-        if (displayModeShowCover(win->dm->displayMode()))
-            newMode = DM_CONTINUOUS_BOOK_VIEW;
-        else if (displayModeFacing(win->dm->displayMode()))
-            newMode = DM_CONTINUOUS_FACING;
-        SwitchToDisplayMode(win, newMode, false);
-    } else if ('b' == key) {
-        // experimental "e-book view": flip a single page
-        bool forward = !WasKeyDown(VK_SHIFT);
-        bool alreadyFacing = displayModeFacing(win->dm->displayMode());
-        int currPage = win->dm->currentPageNo();
-
-        DisplayMode newMode = DM_BOOK_VIEW;
-        if (displayModeShowCover(win->dm->displayMode()))
-            newMode = DM_FACING;
-        if (displayModeContinuous(win->dm->displayMode()))
-            newMode = DM_BOOK_VIEW == newMode ? DM_CONTINUOUS_BOOK_VIEW : DM_CONTINUOUS_FACING;
-        SwitchToDisplayMode(win, newMode, false);
-
-        if (!alreadyFacing)
-            ; // don't do anything further
-        else if (forward && currPage >= win->dm->currentPageNo() &&
-                 (currPage > 1 || newMode == DM_BOOK_VIEW || newMode == DM_CONTINUOUS_BOOK_VIEW))
-            win->dm->goToNextPage(0);
-        else if (!forward && currPage <= win->dm->currentPageNo())
-            win->dm->goToPrevPage(0);
-    } else if ('p' == key) {
+        break;
+    case 'p':
         win->dm->goToPrevPage(0);
-    } else if ('z' == key) {
+        break;
+    case 'z':
         WindowInfo_ToggleZoom(win);
-    } else if ('+' == key) {
+        break;
+    case '+':
         win->dm->zoomBy(ZOOM_IN_FACTOR);
-    } else if ('-' == key) {
+        break;
+    case '-':
         win->dm->zoomBy(ZOOM_OUT_FACTOR);
-    } else if ('/' == key) {
+        break;
+    case '/':
         OnMenuFind(win);
-    } else if (VK_TAB == key) {
-        AdvanceFocus(win);
+        break;
+    case 'c':
+        {
+            DisplayMode newMode = DM_CONTINUOUS;
+            if (displayModeShowCover(win->dm->displayMode()))
+                newMode = DM_CONTINUOUS_BOOK_VIEW;
+            else if (displayModeFacing(win->dm->displayMode()))
+                newMode = DM_CONTINUOUS_FACING;
+            SwitchToDisplayMode(win, newMode, false);
+        }
+        break;
+    case 'b':
+        {
+            // experimental "e-book view": flip a single page
+            bool forward = !WasKeyDown(VK_SHIFT);
+            bool alreadyFacing = displayModeFacing(win->dm->displayMode());
+            int currPage = win->dm->currentPageNo();
+
+            DisplayMode newMode = DM_BOOK_VIEW;
+            if (displayModeShowCover(win->dm->displayMode()))
+                newMode = DM_FACING;
+            if (displayModeContinuous(win->dm->displayMode()))
+                newMode = DM_BOOK_VIEW == newMode ? DM_CONTINUOUS_BOOK_VIEW : DM_CONTINUOUS_FACING;
+            SwitchToDisplayMode(win, newMode, false);
+
+            if (!alreadyFacing)
+                ; // don't do anything further
+            else if (forward && currPage >= win->dm->currentPageNo() &&
+                     (currPage > 1 || newMode == DM_BOOK_VIEW || newMode == DM_CONTINUOUS_BOOK_VIEW))
+                win->dm->goToNextPage(0);
+            else if (!forward && currPage <= win->dm->currentPageNo())
+                win->dm->goToPrevPage(0);
+        }
+        break;
+    case 'i':
+        // experimental "page info" tip: make figuring out current page and
+        // total pages count a one-key action (unless they're already visible)
+        if (!gGlobalPrefs.m_showToolbar || win->fullScreen) {
+            int current = win->dm->currentPageNo(), total = win->dm->pageCount();
+            TCHAR *pageInfo = tstr_printf(_T("%s %d / %d"), _TR("Page:"), current, total);
+            WindowInfo_ShowMessage_Asynch(win, pageInfo, true);
+            free(pageInfo);
+        }
+        break;
     }
 }
 
@@ -5494,7 +5517,7 @@ static void Find(WindowInfo *win, PdfSearchDirection direction)
     FindThreadData *ftd = (FindThreadData *)malloc(sizeof(FindThreadData));
     ftd->win = win;
     ftd->direction = direction;
-    GetWindowText(win->hwndFindBox, ftd->text, sizeof(ftd->text));
+    GetWindowText(win->hwndFindBox, ftd->text, dimof(ftd->text));
     ftd->wasModified = Edit_GetModify(win->hwndFindBox);
     Edit_SetModify(win->hwndFindBox, FALSE);
 
