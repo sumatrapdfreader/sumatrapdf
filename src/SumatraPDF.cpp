@@ -5228,6 +5228,9 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
     
     //DBG_OUT("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+        return false;
+
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
@@ -5251,8 +5254,6 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
-    } else if (VK_SPACE == key) {
-        return OnKeydown(win, WasKeyDown(VK_SHIFT) ? VK_PRIOR : VK_NEXT, 0, inTextfield);
     } else if (VK_LEFT == key) {
         if (win->dm->needHScroll())
             SendMessage(win->hwndCanvas, WM_HSCROLL, WasKeyDown(VK_SHIFT) ? SB_PAGELEFT : SB_LINELEFT, 0);
@@ -5288,12 +5289,15 @@ static void OnChar(WindowInfo *win, int key)
     if (IsCharUpper((TCHAR)key))
         key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
 
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        ChangePresentationMode(win, PM_ENABLED);
+        return;
+    }
+
     switch (key) {
     case VK_ESCAPE:
         if (win->findThread)
             WindowInfo_AbortFinding(win);
-        else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-            ChangePresentationMode(win, PM_ENABLED);
         else if (win->presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs.m_escToExit)
@@ -5315,7 +5319,13 @@ static void OnChar(WindowInfo *win, int key)
         return;
 
     switch (key) {
-    case VK_TAB: AdvanceFocus(win); break;
+    case VK_TAB:
+        AdvanceFocus(win);
+        break;
+    case VK_SPACE:
+    case VK_RETURN:
+        OnKeydown(win, WasKeyDown(VK_SHIFT) ? VK_PRIOR : VK_NEXT, 0);
+        break;
     case VK_BACK:
         {
             bool forward = WasKeyDown(VK_SHIFT);
@@ -5360,9 +5370,7 @@ static void OnChar(WindowInfo *win, int key)
         }
         break;
     case 'b':
-        if (PM_BLACK_SCREEN == win->presentation)
-            ChangePresentationMode(win, PM_ENABLED);
-        else if (win->presentation)
+        if (win->presentation)
             ChangePresentationMode(win, PM_BLACK_SCREEN);
         else {
             // experimental "e-book view": flip a single page
@@ -5386,10 +5394,12 @@ static void OnChar(WindowInfo *win, int key)
                 win->dm->goToPrevPage(0);
         }
         break;
+    case '.':
+        if (win->presentation)
+            ChangePresentationMode(win, PM_BLACK_SCREEN);
+        break;
     case 'w':
-        if (PM_WHITE_SCREEN == win->presentation)
-            ChangePresentationMode(win, PM_ENABLED);
-        else if (win->presentation)
+        if (win->presentation)
             ChangePresentationMode(win, PM_WHITE_SCREEN);
         break;
     case 'i':
@@ -6799,7 +6809,7 @@ InitMouseWheelInfo:
             // Note: not all mouse drivers correctly report the Ctrl key's state
             if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL))
             {
-                if ((short)HIWORD(wParam) < 0)
+                if (GET_WHEEL_DELTA_WPARAM(wParam) < 0)
                     win->dm->zoomBy(ZOOM_OUT_FACTOR);
                 else
                     win->dm->zoomBy(ZOOM_IN_FACTOR);
@@ -6809,7 +6819,7 @@ InitMouseWheelInfo:
             if (gDeltaPerLine == 0)
                break;
 
-            win->wheelAccumDelta += (short) HIWORD (wParam);     // 120 or -120
+            win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
             current = GetScrollPos(win->hwndCanvas, SB_VERT);
 
             // In non-continuous, page fitting view mode, SB_LINEUP/DOWN already means page up/down
@@ -6827,7 +6837,7 @@ InitMouseWheelInfo:
 
             if (!displayModeContinuous(win->dm->displayMode()) &&
                 GetScrollPos(win->hwndCanvas, SB_VERT) == current) {
-                if ((short) HIWORD (wParam) > 0)
+                if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
                     win->dm->goToPrevPage(-1);
                 else
                     win->dm->goToNextPage(0);
