@@ -1028,6 +1028,11 @@ bool DisplayModel::goToPrevPage(int scrollY)
         /* we're on a first page, can't go back */
         return FALSE;
     }
+
+    // scroll to the bottom of the page
+    if (-1 == scrollY)
+        scrollY = getPageInfo(firstPageInNewRow)->bitmapDy;
+
     goToPage(firstPageInNewRow, scrollY);
     return TRUE;
 }

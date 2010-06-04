@@ -5232,7 +5232,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
-            win->dm->goToPrevPage(0);
+            win->dm->goToPrevPage(-1);
     } else if (VK_NEXT == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
@@ -5242,7 +5242,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
         if (win->dm->needVScroll())
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         else
-            win->dm->goToPrevPage(0);
+            win->dm->goToPrevPage(-1);
     } else if (VK_DOWN == key) {
         if (win->dm->needVScroll())
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
@@ -6828,7 +6828,7 @@ InitMouseWheelInfo:
             if (!displayModeContinuous(win->dm->displayMode()) &&
                 GetScrollPos(win->hwndCanvas, SB_VERT) == current) {
                 if ((short) HIWORD (wParam) > 0)
-                    win->dm->goToPrevPage(0);
+                    win->dm->goToPrevPage(-1);
                 else
                     win->dm->goToNextPage(0);
             }
