@@ -10,6 +10,7 @@ Contributor: fiuzzy
 Contributor: laclasse
 Contributor: phoenix
 Contributor: pconno
+Contributor: didier
 
 &About
 À propos
@@ -67,6 +68,9 @@ Mot de passe:
 
 &Print\tCtrl-P
 &Imprimer\tCtrl-P
+
+&Print... (denied)
+&Imprimer.. (Interdit)
 
 &Remember these settings for each document
 Se rappeler de ces paramètres pour chaque document
@@ -178,6 +182,9 @@ Mise en page par défaut
 
 Default &Zoom:
 &Zoom par défaut
+
+Denied Permissions:
+Interdictions:
 
 Document Properties
 Propriétés du document
@@ -395,6 +402,9 @@ Une seule page
 Source file %s has no synchronization point
 Le fichier source %s n'a pas de point de synchronisation
 
+Subject:
+Objet:
+
 SumatraPDF Options
 SumatraPDF Options
 
@@ -443,10 +453,9 @@ Facteur de zoom
 [Changes detected; refreshing] %s
 [Modifications détectées; actualisation] %s
 
-# Untranslated:
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+copier le text
+
+printing document
+imprimer le document
 
