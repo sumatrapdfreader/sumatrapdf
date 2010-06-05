@@ -206,6 +206,8 @@ public:
         loadedFilePath = NULL;
         currPageNo = 0;
         pdfPropertiesCount = 0;
+        xScrollSpeed = 0;
+        yScrollSpeed = 0;
         wheelAccumDelta = 0;
     }
     
