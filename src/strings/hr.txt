@@ -17,6 +17,9 @@ Provjeri dostupnost nove inačice
 &Close\tCtrl-W
 &Zatvori\tCtrl-W
 
+&Custom Zoom...
+&Prilagođeno uvećanje...
+
 &Don't ask me again
 Ubuduće nemoj pitati
 
@@ -34,6 +37,9 @@ Idi na
 
 &Help
 &Pomoć
+
+&Magnification:
+&Uvećanje:
 
 &Manual
 Korisnički priručnik
@@ -54,10 +60,13 @@ Razlikuj velika i mala slova
 Mogućnosti...
 
 &Password:
-&Lozinka:
+&Zaporka:
 
 &Print\tCtrl-P
 &Ispiši\tCtrl-P
+
+&Print... (denied)
+&Ispis... (nije dopušteno)
 
 &Remember these settings for each document
 &Upamti ove postavke za svaki pojedini dokument
@@ -98,14 +107,32 @@ Napredno
 All files
 Sve datoteke
 
+Application:
+Aplikacija:
+
 Associate with PDF files?
 Asocirati sa PDF datotekama?
+
+Author:
+Autor
+
+Automatic
+Automatsko
 
 Automatically check for &updates
 Provjeravaj &nadogradnje automatski
 
+Back\tAlt+Left Arrow
+Natrag\tAlt+<-
+
+Book view
+Knjiški pogled
+
 Bookmarks\tF12
 Straničnik\tF12
+
+Bytes
+Okteta
 
 Cancel
 Odustani
@@ -113,20 +140,29 @@ Odustani
 Cannot print this file
 Ne mogu ispisati ovu datoteku
 
+Cannot start inverse search command. Please check the command line in the settings.
+Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredbeni redak u postavkama.
+
 Change language
 Promijeni jezik (Change language)
 
 Continuous
 Slijedno
 
+Continuous book view
+Slijedni knjiški pogled
+
 Continuous facing
-Dvije stranice sljedno
+Dvije stranice slijedno
 
 Contribute translation
-Pomozite prijevodom
+Pomozi prijevodom
+
+Copy Selection\tCtrl-C
+Kopiraj odabir\tCtrl-C
 
 Could not open Printer
-Nije moguće pristupiti pisaču
+Ne mogu pristupiti pisaču
 
 Couldn't initialize printer
 Ne mogu inicijalizirati pisač
@@ -134,11 +170,20 @@ Ne mogu inicijalizirati pisač
 Couldn't render the page
 Nije moguće iscrtati stranicu
 
+Created:
+Stvoreno:
+
 Default &Layout:
 Pretpostavljeni &izgled:
 
 Default &Zoom:
 Pretpostavljeno &uvećanje:
+
+Denied Permissions:
+Dozvole ograničenja:
+
+Document Properties
+Svojstva dokumenta
 
 Download
 Preuzmi
@@ -147,10 +192,10 @@ E&xit\tCtrl-Q
 &Izađi\tCtrl-Q
 
 Enter password
-Unesite lozinku
+Unesi zaporku
 
 Enter password for %s
-Unesite lozinku za %s
+Unesi zaporku za %s
 
 Error loading PDF file.
 Greška prilikom učitavanja PDF datoteke.
@@ -161,11 +206,17 @@ Dvije stranice
 Failed to save a file
 Spremanje datoteke nije uspjelo
 
+File Size:
+Veličina datoteke:
+
+File:
+Datoteka:
+
 Find
 Pronađi
 
 Find Next
-Pronađi sljedeće
+Pronađi slijedeće
 
 Find Previous
 Pronađi prethodno
@@ -186,40 +237,55 @@ Fit Page
 Prilagodi stranici
 
 Fit Widt&h\tCtrl-2
-&Prilagodi širini\tCtrl-2
+&Namjesti po širini\tCtrl-2
 
 Fit Width
-Podesi po širini
+Namjesti po širini
+
+Forward\tAlt+Right Arrow
+Naprijed\tAlt+->
 
 Found text at page %d
-Tekst je pronađen na stranici %d
+Tekst je pronađen na %d. stranici
 
 Fullscreen\tCtrl-L
 Cijeli zaslon\tCtrl-L
+
+GB
+GiB
 
 Go to page
 Idi na stranicu
 
 Hint: Use the F3 key for finding again
-Pomoć: koristite tipku F3 za ponovnu pretragu
+Pomoć: upotrijebite tipku F3 za ponovnu pretragu
+
+KB
+KiB
 
 Last Page\tEnd
-Posljednja stranica\tEnd
+Poslijednja stranica\tEnd
+
+MB
+MiB
 
 Main PDF reader can't be changed in portable mode
 Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 
 Make SumatraPDF default application for PDF files?
-Učiniti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
+Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 
 Make SumatraPDF my main PDF reader
-Neka SumatraPDF bude pretpostavljeni PDF preglednik
+Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka
 
 Match case
 Razlikuj velika i mala slova
 
+Modified:
+Promijenjeno:
+
 New version %s is available. Download new version?
-Dostupna je nova inačica: %s. Skinuti novu inačicu?
+Dostupna je nova inačica (%s). Preuzeti novu inačicu?
 
 New version available.
 Dostupna je nova inačica.
@@ -237,10 +303,16 @@ No new version available.
 Nema nove inačice.
 
 No result found around line %u in file %s
-Nema rezultata oko retka %u u datoteci %s
+Nema rezultata oko %u. retka u datoteci %s
+
+No synchronization file found
+Datoteka usklađivanja nije pronađena
 
 No synchronization info at this position
-Nema podatka o usklađenosti na ovom položaju
+Nema podatka o usklađenosti na ovom mjestu
+
+Number of Pages:
+Broj stranica:
 
 OK
 U redu
@@ -251,11 +323,23 @@ Otvori
 Open in &Adobe Reader
 Otvori u programu &Adobe Reader
 
+P&roperties...\tCtrl-D
+S&vojstva...\tCtrl-D
+
 PDF Document
 PDF dokument
 
+PDF Producer:
+Proizvođač PDF-a:
+
+PDF Version:
+Inačica PDF-a:
+
 PDF documents
 PDF dokumenti
+
+Page Size:
+Veličina stranice:
 
 Page number %u inexistant
 Stranica %u ne postoji
@@ -288,13 +372,22 @@ Rotate right\tCtrl-Shift-+
 Zaokreni nadesno\tCtrl-Shift-+
 
 Searching %d of %d...
-Pretražujem stranicu %d od %d...
+Pretražujem %d. stranicu (od %d)...
+
+Select content with Ctrl+left mouse button
+Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
+
+Send by &email...
+Pošalji &e-poštom...
 
 Set inverse search command-line
 Omogući unazadnu pretragu
 
+Show pages continuously
+Prikaži stranice slijedno
+
 Show the &bookmarks sidebar when available
-Prikaži traku &straničnika kada je dostupna
+Prikaži traku &straničnika kad je dostupna
 
 Show toolbar
 Prikaži alatnu traku
@@ -304,6 +397,9 @@ Jedna stranica
 
 Source file %s has no synchronization point
 Izvorna datoteka %s nema točke usklađivanja
+
+Subject:
+Tema:
 
 SumatraPDF Options
 Mogućnosti programa
@@ -315,7 +411,13 @@ SumatraPDF should now be your main PDF reader
 SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 
 Synchronization file cannot be opened
-Datoteka usklađenja ne nože biti otvorena
+Datoteka usklađenja se ne može otvoriti
+
+Text documents
+Tekstualni dokumenti
+
+Title:
+Naslov:
 
 Unknown source file (%s)
 Nepoznata izvorna datoteka (%s)
@@ -332,52 +434,24 @@ Imate najnoviju inačicu.
 You have version %s
 Imate inačicu %s
 
+Zoom
+Uvećanje
+
 Zoom In
 Uvećaj
 
 Zoom Out
 Umanji
 
+Zoom factor
+Faktor uvećanja
+
 [Changes detected; refreshing] %s
 [Dogodila se promjena - osvježavam] %s
 
-# Untranslated:
-#&Custom Zoom...
-#&Magnification:
-#&Print... (denied)
-#Application:
-#Author:
-#Automatic
-#Back\tAlt+Left Arrow
-#Book view
-#Bytes
-#Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Created:
-#Denied Permissions:
-#Document Properties
-#File Size:
-#File:
-#Forward\tAlt+Right Arrow
-#GB
-#KB
-#MB
-#Modified:
-#No synchronization file found
-#Number of Pages:
-#P&roperties...\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
-#Subject:
-#Text documents
-#Title:
-#Zoom
-#Zoom factor
-#copying text
-#printing document
+copying text
+kopiram tekst
+
+printing document
+ispisujem dokument
 
