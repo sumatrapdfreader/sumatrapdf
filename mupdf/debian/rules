@@ -8,7 +8,7 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 	dh_testroot
-	$(MAKE) "build=release"
+	$(MAKE) build=release prefix=$(CURDIR)/debian/tmp/usr install
 	touch $@
 
 clean:

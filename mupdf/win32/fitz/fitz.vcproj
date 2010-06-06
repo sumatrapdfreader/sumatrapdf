@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib-123;..\..\mupdf"
+				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\mupdf"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -103,7 +103,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib-123;..\..\mupdf"
+				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\mupdf"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

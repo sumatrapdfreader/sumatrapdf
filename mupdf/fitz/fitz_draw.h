@@ -121,6 +121,7 @@ struct fz_textspan_s
 {
 	fz_font *font;
 	float size;
+	int wmode;
 	int len, cap;
 	fz_textchar *text;
 	fz_textspan *next;
@@ -267,11 +268,12 @@ struct fz_text_s
 {
 	fz_font *font;
 	fz_matrix trm;
+	int wmode;
 	int len, cap;
 	fz_textel *els;
 };
 
-fz_text * fz_newtext(fz_font *face);
+fz_text * fz_newtext(fz_font *face, fz_matrix trm, int wmode);
 void fz_addtext(fz_text *text, int gid, int ucs, float x, float y);
 void fz_endtext(fz_text *text);
 void fz_freetext(fz_text *text);

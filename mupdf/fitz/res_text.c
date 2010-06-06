@@ -1,13 +1,14 @@
 #include "fitz.h"
 
 fz_text *
-fz_newtext(fz_font *font)
+fz_newtext(fz_font *font, fz_matrix trm, int wmode)
 {
 	fz_text *text;
 
 	text = fz_malloc(sizeof(fz_text));
 	text->font = fz_keepfont(font);
-	text->trm = fz_identity();
+	text->trm = trm;
+	text->wmode = wmode;
 	text->len = 0;
 	text->cap = 0;
 	text->els = nil;
@@ -31,6 +32,7 @@ fz_clonetext(fz_text *old)
 	text = fz_malloc(sizeof(fz_text));
 	text->font = fz_keepfont(old->font);
 	text->trm = old->trm;
+	text->wmode = old->wmode;
 	text->len = old->len;
 	text->cap = text->len;
 	text->els = fz_malloc(text->len * sizeof(fz_textel));

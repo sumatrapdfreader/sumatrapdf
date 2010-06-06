@@ -258,6 +258,7 @@ fz_bbox fz_intersectbbox(fz_bbox a, fz_bbox b);
 fz_bbox fz_unionbbox(fz_bbox a, fz_bbox b);
 
 fz_point fz_transformpoint(fz_matrix m, fz_point p);
+fz_point fz_transformvector(fz_matrix m, fz_point p);
 fz_rect fz_transformrect(fz_matrix m, fz_rect r);
 
 #endif

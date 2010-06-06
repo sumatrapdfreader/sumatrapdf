@@ -149,11 +149,19 @@
 			Name="jpeg"
 			>
 			<File
+				RelativePath="..\..\thirdparty\jpeg\jaricom.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\thirdparty\jpeg\jcapimin.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\thirdparty\jpeg\jcapistd.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\thirdparty\jpeg\jcarith.c"
 				>
 			</File>
 			<File
@@ -170,10 +178,6 @@
 			</File>
 			<File
 				RelativePath="..\..\thirdparty\jpeg\jchuff.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\thirdparty\jpeg\jchuff.h"
 				>
 			</File>
 			<File
@@ -197,11 +201,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcparam.c"
+				RelativePath="..\..\thirdparty\jpeg\jconfig.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jcphuff.c"
+				RelativePath="..\..\thirdparty\jpeg\jcparam.c"
 				>
 			</File>
 			<File
@@ -222,6 +226,10 @@
 			</File>
 			<File
 				RelativePath="..\..\thirdparty\jpeg\jdapistd.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\thirdparty\jpeg\jdarith.c"
 				>
 			</File>
 			<File
@@ -253,10 +261,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jdhuff.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\thirdparty\jpeg\jdinput.c"
 				>
 			</File>
@@ -274,10 +278,6 @@
 			</File>
 			<File
 				RelativePath="..\..\thirdparty\jpeg\jdmerge.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\thirdparty\jpeg\jdphuff.c"
 				>
 			</File>
 			<File
@@ -325,19 +325,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jidctred.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\thirdparty\jpeg\jinclude.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jmemmgr.c"
+				RelativePath="..\..\thirdparty\jpeg\jmemansi.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jpeg\jmemnobs.c"
+				RelativePath="..\..\thirdparty\jpeg\jmemmgr.c"
 				>
 			</File>
 			<File

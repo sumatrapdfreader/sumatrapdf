@@ -1,0 +1,195 @@
+# GNU Makefile for third party libraries used by MuPDF
+#
+# If thirdparty libraries are supplied, they will be built as
+# static libraries. Download and unzip the the mupdf-thirdparty.zip archive
+# in the source directory.
+
+jbig2dec_dir := $(wildcard thirdparty/jbig2dec*)
+openjpeg_dir := $(wildcard thirdparty/openjpeg*/libopenjpeg)
+freetype_dir := $(wildcard thirdparty/freetype*)
+jpeg_dir := $(wildcard thirdparty/jpeg*)
+zlib_dir := $(wildcard thirdparty/zlib*)
+
+ifneq "$(jbig2dec_dir)" ""
+
+THIRD_LIBS += $(JBIG2DEC_LIB)
+THIRD_INCS += -I$(jbig2dec_dir)
+LIBS := $(filter-out $(LIBS), -ljbig2dec)
+
+JBIG2DEC_SRC=$(addprefix $(jbig2dec_dir)/, \
+	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
+	jbig2_huffman.c jbig2_segment.c jbig2_page.c \
+	jbig2_symbol_dict.c jbig2_text.c \
+	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
+	jbig2_image.c jbig2_metadata.c )
+JBIG2DEC_OBJ=$(JBIG2DEC_SRC:$(jbig2dec_dir)/%.c=$(OBJDIR)/%.o)
+JBIG2DEC_LIB=$(OBJDIR)/libjbig2dec.a
+$(JBIG2DEC_LIB): $(JBIG2DEC_OBJ)
+	$(AR_CMD)
+$(OBJDIR)/%.o: $(jbig2dec_dir)/%.c
+	$(CC_CMD) -DHAVE_STDINT_H
+
+endif
+
+ifneq "$(openjpeg_dir)" ""
+
+THIRD_LIBS += $(OPENJPEG_LIB)
+THIRD_INCS += -I$(openjpeg_dir)
+LIBS := $(filter-out $(LIBS), -lopenjpeg)
+
+OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
+	bio.c cio.c dwt.c event.c image.c \
+	j2k.c j2k_lib.c jp2.c jpt.c mct.c \
+	mqc.c openjpeg.c pi.c raw.c t1.c \
+	t2.c tcd.c tgt.c )
+OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
+OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
+$(OPENJPEG_LIB): $(OPENJPEG_OBJ)
+	 $(AR_CMD)
+$(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
+	$(CC_CMD)
+
+endif
+
+ifneq "$(jpeg_dir)" ""
+
+THIRD_LIBS += $(JPEG_LIB)
+THIRD_INCS += -I$(jpeg_dir)
+LIBS := $(filter-out $(LIBS), -ljpeg)
+
+JPEG_SRC=$(addprefix $(jpeg_dir)/, \
+	jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c \
+	jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c \
+	jcomapi.c jcparam.c jcprepct.c jcsample.c jctrans.c jdapimin.c \
+	jdapistd.c jdarith.c jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c \
+	jddctmgr.c jdhuff.c jdinput.c jdmainct.c jdmarker.c jdmaster.c \
+	jdmerge.c jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c \
+	jfdctfst.c jfdctint.c jidctflt.c jidctfst.c jidctint.c jquant1.c \
+	jquant2.c jutils.c jmemmgr.c jmemansi.c )
+JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
+JPEG_LIB=$(OBJDIR)/libjpeg.a
+$(JPEG_LIB): $(JPEG_OBJ)
+	 $(AR_CMD)
+$(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c
+	$(CC_CMD)
+
+endif
+
+ifneq "$(zlib_dir)" ""
+
+THIRD_LIBS += $(ZLIB_LIB)
+THIRD_INCS += -I$(zlib_dir)
+LIBS := $(filter-out $(LIBS), -lz)
+
+ZLIB_SRC=$(addprefix $(zlib_dir)/, \
+	adler32.c compress.c crc32.c deflate.c \
+	gzclose.c gzlib.c gzread.c gzwrite.c \
+	infback.c inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c )
+ZLIB_OBJ=$(ZLIB_SRC:$(zlib_dir)/%.c=$(OBJDIR)/zlib_%.o)
+ZLIB_LIB=$(OBJDIR)/libz.a
+$(ZLIB_LIB): $(ZLIB_OBJ)
+	 $(AR_CMD)
+$(OBJDIR)/zlib_%.o: $(zlib_dir)/%.c
+	$(CC_CMD)
+
+endif
+
+ifneq "$(freetype_dir)" ""
+
+THIRD_LIBS += $(FREETYPE_LIB)
+THIRD_INCS += -I$(freetype_dir)/include
+LIBS := $(filter-out $(LIBS), -lfreetype)
+
+FREETYPE_OBJ=$(addprefix $(OBJDIR)/ft_, \
+	autofit.o ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftdebug.o ftgasp.o \
+	ftglyph.o ftgxval.o ftinit.o ftlcdfil.o ftmm.o ftotval.o ftpfr.o \
+	ftstroke.o ftsynth.o ftsystem.o fttype1.o ftwinfnt.o ftxf86.o \
+	ftpatent.o bdf.o ftcache.o cff.o type1cid.o ftgzip.o ftlzw.o \
+	pcf.o pfr.o psaux.o pshinter.o psnames.o raster.o smooth.o sfnt.o \
+	truetype.o type1.o type42.o winfnt.o )
+FREETYPE_LIB=$(OBJDIR)/libfreetype.a
+$(FREETYPE_LIB): $(FREETYPE_OBJ)
+	 $(AR_CMD)
+
+FTCC_CMD = $(CC_CMD) -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON
+
+$(OBJDIR)/ft_autofit.o: $(freetype_dir)/src/autofit/autofit.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftbase.o: $(freetype_dir)/src/base/ftbase.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftbbox.o: $(freetype_dir)/src/base/ftbbox.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftbdf.o: $(freetype_dir)/src/base/ftbdf.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftbitmap.o: $(freetype_dir)/src/base/ftbitmap.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftdebug.o: $(freetype_dir)/src/base/ftdebug.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftgasp.o: $(freetype_dir)/src/base/ftgasp.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftglyph.o: $(freetype_dir)/src/base/ftglyph.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftgxval.o: $(freetype_dir)/src/base/ftgxval.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftinit.o: $(freetype_dir)/src/base/ftinit.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftlcdfil.o: $(freetype_dir)/src/base/ftlcdfil.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftmm.o: $(freetype_dir)/src/base/ftmm.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftotval.o: $(freetype_dir)/src/base/ftotval.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftpfr.o: $(freetype_dir)/src/base/ftpfr.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftstroke.o: $(freetype_dir)/src/base/ftstroke.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftsynth.o: $(freetype_dir)/src/base/ftsynth.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftsystem.o: $(freetype_dir)/src/base/ftsystem.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_fttype1.o: $(freetype_dir)/src/base/fttype1.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftwinfnt.o: $(freetype_dir)/src/base/ftwinfnt.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftxf86.o: $(freetype_dir)/src/base/ftxf86.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftpatent.o: $(freetype_dir)/src/base/ftpatent.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_bdf.o: $(freetype_dir)/src/bdf/bdf.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftcache.o: $(freetype_dir)/src/cache/ftcache.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_cff.o: $(freetype_dir)/src/cff/cff.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_type1cid.o: $(freetype_dir)/src/cid/type1cid.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftgzip.o: $(freetype_dir)/src/gzip/ftgzip.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_ftlzw.o: $(freetype_dir)/src/lzw/ftlzw.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_pcf.o: $(freetype_dir)/src/pcf/pcf.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_pfr.o: $(freetype_dir)/src/pfr/pfr.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_psaux.o: $(freetype_dir)/src/psaux/psaux.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_pshinter.o: $(freetype_dir)/src/pshinter/pshinter.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_psnames.o: $(freetype_dir)/src/psnames/psnames.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_raster.o: $(freetype_dir)/src/raster/raster.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_smooth.o: $(freetype_dir)/src/smooth/smooth.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_sfnt.o: $(freetype_dir)/src/sfnt/sfnt.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_truetype.o: $(freetype_dir)/src/truetype/truetype.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_type1.o: $(freetype_dir)/src/type1/type1.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_type42.o: $(freetype_dir)/src/type42/type42.c
+	$(FTCC_CMD)
+$(OBJDIR)/ft_winfnt.o: $(freetype_dir)/src/winfonts/winfnt.c
+	$(FTCC_CMD)
+
+endif

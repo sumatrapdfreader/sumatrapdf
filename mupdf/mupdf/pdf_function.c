@@ -118,6 +118,37 @@ struct psstack_s
 	int sp;
 };
 
+void
+pdf_debugpsstack(psstack *st)
+{
+	int i;
+
+	printf("stack: ");
+
+	for (i = PSSTACKSIZE - 1; i >= st->sp; i--)
+	{
+		switch (st->stack[i].type)
+		{
+		case PSBOOL:
+			if (st->stack[i].u.b)
+				printf("true ");
+			else
+				printf("false ");
+			break;
+
+		case PSINT:
+			printf("%d ", st->stack[i].u.i);
+			break;
+
+		case PSREAL:
+			printf("%g ", st->stack[i].u.f);
+			break;
+		}
+	}
+	printf("\n");
+
+}
+
 static void
 psinitstack(psstack *st)
 {
@@ -323,7 +354,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 	char buf[64];
 	int len;
 	pdf_token_e tok;
-	int opptr, elseptr;
+	int opptr, elseptr, ifptr;
 	int a, b, mid, cmp;
 
 	memset(buf, 0, sizeof(buf));
@@ -355,10 +386,11 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 
 		case PDF_TOBRACE:
 			opptr = *codeptr;
-			*codeptr += 3;
+			*codeptr += 4;
 
-			resizecode(func, opptr + 2);
+			resizecode(func, *codeptr);
 
+			ifptr = *codeptr;
 			error = parsecode(func, stream, codeptr);
 			if (error)
 				return fz_rethrow(error, "error in 'if' branch");
@@ -392,7 +424,9 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 					func->u.p.code[opptr].type = PSOPERATOR;
 					func->u.p.code[opptr].u.op = PSOIF;
 					func->u.p.code[opptr+2].type = PSBLOCK;
-					func->u.p.code[opptr+2].u.block = *codeptr;
+					func->u.p.code[opptr+2].u.block = ifptr;
+					func->u.p.code[opptr+3].type = PSBLOCK;
+					func->u.p.code[opptr+3].u.block = *codeptr;
 				}
 				else if (!strcmp(buf, "ifelse"))
 				{
@@ -403,7 +437,9 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 					func->u.p.code[opptr+1].type = PSBLOCK;
 					func->u.p.code[opptr+1].u.block = elseptr;
 					func->u.p.code[opptr+2].type = PSBLOCK;
-					func->u.p.code[opptr+2].u.block = *codeptr;
+					func->u.p.code[opptr+2].u.block = ifptr;
+					func->u.p.code[opptr+3].type = PSBLOCK;
+					func->u.p.code[opptr+3].u.block = *codeptr;
 				}
 				else
 				{
@@ -564,7 +600,10 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOATAN:
 				SAFE_POPNUM(st, &r2);
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, atan2(r1, r2)*RADIAN);
+				r1 = atan2(r1, r2) * RADIAN;
+				if (r1 < 0)
+					r1 += 360;
+				SAFE_PUSHREAL(st, r1);
 				break;
 
 			case PSOBITSHIFT:
@@ -874,26 +913,26 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOIF:
 				SAFE_POPBOOL(st, &b1);
 				if (b1) {
-					error = evalpostscriptfunc(func, st, codeptr + 2);
+					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr + 1].u.block);
 					if (error)
 						return fz_rethrow(error, "runtime error in if-branch");
 				}
-				codeptr = func->u.p.code[codeptr + 1].u.block;
+				codeptr = func->u.p.code[codeptr + 2].u.block;
 				break;
 
 			case PSOIFELSE:
 				SAFE_POPBOOL(st, &b1);
 				if (b1) {
-					error = evalpostscriptfunc(func, st, codeptr + 2);
+					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr + 1].u.block);
 					if (error)
 						return fz_rethrow(error, "runtime error in if-branch");
 				}
 				else {
-					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr].u.block);
+					error = evalpostscriptfunc(func, st, func->u.p.code[codeptr + 0].u.block);
 					if (error)
 						return fz_rethrow(error, "runtime error in else-branch");
 				}
-				codeptr = func->u.p.code[codeptr + 1].u.block;
+				codeptr = func->u.p.code[codeptr + 2].u.block;
 				break;
 
 			case PSORETURN:
@@ -1531,7 +1570,11 @@ pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outle
 			psinitstack(&st);
 
 			for (i = 0; i < func->m; ++i)
-				SAFE_PUSHREAL(&st, in[i]);
+			{
+				float x;
+				x = CLAMP(in[i], func->domain[i][0], func->domain[i][1]);
+				SAFE_PUSHREAL(&st, x);
+			}
 
 			error = evalpostscriptfunc(func, &st, 0);
 			if (error)
@@ -1552,3 +1595,219 @@ pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outle
 	return fz_okay;
 }
 
+void
+pdf_debugindent(char *prefix, int level, char *suffix)
+{
+	int i;
+
+	printf("%s", prefix);
+
+	for (i = 0; i < level; i++)
+		printf("  ");
+
+	printf("%s", suffix);
+}
+
+
+void
+pdf_debugpsfunccode(psobj *funccode, psobj *code, int level)
+{
+	int eof, wasop;
+
+	pdf_debugindent("", level, "{");
+
+	/* Print empty blocks as { }, instead of separating braces on different lines. */
+	if (code->type == PSOPERATOR && code->u.op == PSORETURN)
+	{
+		printf(" } ");
+		return;
+	}
+
+	pdf_debugindent("\n", ++level, "");
+
+	eof = 0;
+	wasop = 0;
+	while (!eof)
+	{
+		switch (code->type)
+		{
+		case PSINT:
+			if (wasop)
+				pdf_debugindent("\n", level, "");
+
+			printf("%d ", code->u.i);
+			wasop = 0;
+			code++;
+			break;
+
+		case PSREAL:
+			if (wasop)
+				pdf_debugindent("\n", level, "");
+
+			printf("%g ", code->u.f);
+			wasop = 0;
+			code++;
+			break;
+
+		case PSOPERATOR:
+			if (code->u.op == PSORETURN)
+			{
+				printf("\n");
+				eof = 1;
+			}
+			else if (code->u.op == PSOIF)
+			{
+				printf("\n");
+				pdf_debugpsfunccode(funccode, &funccode[(code + 2)->u.block], level);
+
+				printf("%s", psopnames[code->u.op]);
+				code = &funccode[(code + 3)->u.block];
+				if (code->type != PSOPERATOR || code->u.op != PSORETURN)
+					pdf_debugindent("\n", level, "");
+
+				wasop = 0;
+			}
+			else if (code->u.op == PSOIFELSE)
+			{
+				printf("\n");
+				pdf_debugpsfunccode(funccode, &funccode[(code + 2)->u.block], level);
+
+				printf("\n");
+				pdf_debugpsfunccode(funccode, &funccode[(code + 1)->u.block], level);
+
+				printf("%s", psopnames[code->u.op]);
+				code = &funccode[(code + 3)->u.block];
+				if (code->type != PSOPERATOR || code->u.op != PSORETURN)
+					pdf_debugindent("\n", level, "");
+
+				wasop = 0;
+			}
+			else
+			{
+				printf("%s ", psopnames[code->u.op]);
+				code++;
+				wasop = 1;
+			}
+			break;
+		}
+	}
+
+	pdf_debugindent("", --level, "} ");
+}
+
+void
+pdf_debugfunctionimp(pdf_function *func, int level)
+{
+	int i;
+
+	pdf_debugindent("", level, "function {\n");
+
+	pdf_debugindent("", ++level, "");
+	switch (func->type)
+	{
+	case SAMPLE:
+		printf("sampled");
+		break;
+	case EXPONENTIAL:
+		printf("exponential");
+		break;
+	case STITCHING:
+		printf("stitching");
+		break;
+	case POSTSCRIPT:
+		printf("postscript");
+		break;
+	}
+
+	pdf_debugindent("\n", level, "");
+	printf("%d input -> %d output\n", func->m, func->n);
+
+	pdf_debugindent("", level, "domain ");
+	for (i = 0; i < func->m; i++)
+		printf("%g %g ", func->domain[i][0], func->domain[i][1]);
+	printf("\n");
+
+	if (func->hasrange)
+	{
+		pdf_debugindent("", level, "range ");
+		for (i = 0; i < func->n; i++)
+			printf("%g %g ", func->range[i][0], func->range[i][1]);
+		printf("\n");
+	}
+
+	switch (func->type)
+	{
+	case SAMPLE:
+		pdf_debugindent("", level, "");
+		printf("bps: %d\n", func->u.sa.bps);
+
+		pdf_debugindent("", level, "");
+		printf("size: [ ");
+		for (i = 0; i < func->m; i++)
+			printf("%d ", func->u.sa.size[i]);
+		printf("]\n");
+
+		pdf_debugindent("", level, "");
+		printf("encode: [ ");
+		for (i = 0; i < func->m; i++)
+			printf("%g %g ", func->u.sa.encode[i][0], func->u.sa.encode[i][1]);
+		printf("]\n");
+
+		pdf_debugindent("", level, "");
+		printf("decode: [ ");
+		for (i = 0; i < func->m; i++)
+			printf("%g %g ", func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+		printf("]\n");
+		break;
+
+	case EXPONENTIAL:
+		pdf_debugindent("", level, "");
+		printf("n: %g\n", func->u.e.n);
+
+		pdf_debugindent("", level, "");
+		printf("c0: [ ");
+		for (i = 0; i < func->n; i++)
+			printf("%g ", func->u.e.c0[i]);
+		printf("]\n");
+
+		pdf_debugindent("", level, "");
+		printf("c1: [ ");
+		for (i = 0; i < func->n; i++)
+			printf("%g ", func->u.e.c1[i]);
+		printf("]\n");
+		break;
+
+	case STITCHING:
+		pdf_debugindent("", level, "");
+		printf("%d functions\n", func->u.st.k);
+
+		pdf_debugindent("", level, "");
+		printf("bounds: [ ");
+		for (i = 0; i < func->u.st.k - 1; i++)
+			printf("%g ", func->u.st.bounds[i]);
+		printf("]\n");
+
+		pdf_debugindent("", level, "");
+		printf("encode: [ ");
+		for (i = 0; i < func->u.st.k * 2; i++)
+			printf("%g ", func->u.st.encode[i]);
+		printf("]\n");
+
+		for (i = 0; i < func->u.st.k; i++)
+			pdf_debugfunctionimp(func->u.st.funcs[i], level);
+		break;
+
+	case POSTSCRIPT:
+		pdf_debugpsfunccode(func->u.p.code, func->u.p.code, level);
+		printf("\n");
+		break;
+	}
+
+	pdf_debugindent("", --level, "}\n");
+}
+
+void
+pdf_debugfunction(pdf_function *func)
+{
+	pdf_debugfunctionimp(func, 0);
+}

@@ -3,8 +3,8 @@
 OS := $(shell uname)
 OS := $(OS:MINGW%=MINGW)
 
-LIBS := -ljbig2dec -lopenjpeg -lfreetype -ljpeg -lz -lm
-CFLAGS := -Wall --std=gnu99 -Ifitz -Imupdf
+LIBS := -lfreetype -ljbig2dec -lopenjpeg -ljpeg -lz -lm
+CFLAGS := -Wall --std=gnu99 -Ifitz -Imupdf $(THIRD_INCS)
 LDFLAGS =
 CC = cc
 LD = $(CC)
@@ -19,31 +19,35 @@ CFLAGS += -O3
 endif
 
 ifeq "$(OS)" "Linux"
+ifeq "$(freetype_dir)" ""
 CFLAGS += `pkg-config --cflags freetype2`
 LDFLAGS += `pkg-config --libs freetype2`
+endif
 X11LIBS = -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
-ifeq  "$(build)" "release"
+ifeq "$(build)" "release"
 CFLAGS += -mmmx -ftree-vectorize -msse -msse2 -march=k8 -DARCH_X86
 ARCH_SRC = archx86.c
 endif
 endif
 
 ifeq "$(OS)" "Darwin"
-CFLAGS += -I$(HOME)/include -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
+CFLAGS += -I$(HOME)/include -I/usr/X11R6/include
 LDFLAGS += -L$(HOME)/lib -L/usr/X11R6/lib
+ifeq "$(freetype_dir)" ""
+CFLAGS += -I/usr/X11R6/include/freetype2
+endif
 X11LIBS = -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
-ifeq  "$(build)" "release"
+ifeq "$(build)" "release"
 CFLAGS += -DARCH_X86_64
 ARCH_SRC = archx86.c
 endif
 endif
 
+# MinGW build depends on thirdparty
 ifeq "$(OS)" "MINGW"
 CC = gcc
-CFLAGS += -Ic:/msys/1.0/local/include
-LDFLAGS += -Lc:/msys/1.0/local/lib
 W32LIBS = -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows
 PDFVIEW_EXE = $(WINVIEW_EXE)
 endif

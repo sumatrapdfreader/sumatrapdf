@@ -580,7 +580,8 @@ pdf_showglyph(pdf_csi *csi, int cid)
 
 	/* flush buffered text if face or matrix or rendermode has changed */
 	if (!csi->text ||
-		(fontdesc->font) != csi->text->font ||
+		fontdesc->font != csi->text->font ||
+		fontdesc->wmode != csi->text->wmode ||
 		fabs(trm.a - csi->text->trm.a) > FLT_EPSILON ||
 		fabs(trm.b - csi->text->trm.b) > FLT_EPSILON ||
 		fabs(trm.c - csi->text->trm.c) > FLT_EPSILON ||
@@ -589,8 +590,7 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	{
 		pdf_flushtext(csi);
 
-		csi->text = fz_newtext(fontdesc->font);
-		csi->text->trm = trm;
+		csi->text = fz_newtext(fontdesc->font, trm, fontdesc->wmode);
 		csi->text->trm.e = 0;
 		csi->text->trm.f = 0;
 		csi->textmode = gstate->render;

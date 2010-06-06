@@ -161,6 +161,15 @@ fz_transformpoint(fz_matrix m, fz_point p)
 	return t;
 }
 
+fz_point
+fz_transformvector(fz_matrix m, fz_point p)
+{
+	fz_point t;
+	t.x = p.x * m.a + p.y * m.c;
+	t.y = p.x * m.b + p.y * m.d;
+	return t;
+}
+
 fz_rect
 fz_transformrect(fz_matrix m, fz_rect r)
 {

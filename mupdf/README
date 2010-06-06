@@ -36,7 +36,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-PREREQUISITES
+COMPILING
 
 Before compiling MuPDF you need to install thirdy party dependencies.
 
@@ -46,10 +46,11 @@ Before compiling MuPDF you need to install thirdy party dependencies.
 	jbig2dec
 	OpenJPEG
 
-On windows you should download and unzip the mupdf-thirdparty.zip
-archive in the mupdf source to build using the Visual Studio project.
+If you don't have these installed on your system you can download and unzip
+the mupdf-thirdparty.zip archive in the mupdf source tree. The makefile
+will pick up the existence of this directory automatically.
 
-COMPILING
+You must unpack mupdf-thirdparty.zip to build using the Visual Studio project.
 
 You will need to use GNU Make to build with the supplied Makefile.
 It may be necessary to edit the Makefile for your system if it
@@ -64,8 +65,8 @@ Browse the source or use the following command line to check out the source:
 
 INSTALLING
 
-There is no install. Just copy the resulting binary from the build
-directory to a directory in your path.
+Typing "make prefix=/usr/local install" will install the binary,
+static library and header files on your system.
 
 REPORTING BUGS AND PROBLEMS
 
@@ -76,6 +77,4 @@ selected component.
 
 If you are reporting a problem with PDF parsing,
 please include the problematic file as an attachment.
-
--- tor
 

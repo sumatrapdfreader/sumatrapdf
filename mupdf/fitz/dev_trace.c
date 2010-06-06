@@ -133,7 +133,7 @@ static void
 fz_tracefilltext(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	printf("<filltext font=\"%s\" ", text->font->name);
+	printf("<filltext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_tracecolor(colorspace, color, alpha);
 	fz_tracematrix(fz_concat(ctm, text->trm));
 	printf(">\n");
@@ -145,7 +145,7 @@ static void
 fz_tracestroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	printf("<stroketext font=\"%s\" ", text->font->name);
+	printf("<stroketext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_tracecolor(colorspace, color, alpha);
 	fz_tracematrix(fz_concat(ctm, text->trm));
 	printf(">\n");
@@ -157,7 +157,7 @@ static void
 fz_tracecliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 {
 	printf("<gsave>\n");
-	printf("<cliptext font=\"%s\" ", text->font->name);
+	printf("<cliptext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	printf("accumulate=\"%d\" ", accumulate);
 	fz_tracematrix(fz_concat(ctm, text->trm));
 	printf(">\n");
@@ -169,7 +169,7 @@ static void
 fz_traceclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
 {
 	printf("<gsave>\n");
-	printf("<clipstroketext font=\"%s\" ", text->font->name);
+	printf("<clipstroketext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_tracematrix(fz_concat(ctm, text->trm));
 	printf(">\n");
 	fz_debugtext(text, 0);
@@ -179,7 +179,7 @@ fz_traceclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_mat
 static void
 fz_traceignoretext(void *user, fz_text *text, fz_matrix ctm)
 {
-	printf("<ignoretext font=\"%s\" ", text->font->name);
+	printf("<ignoretext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_tracematrix(fz_concat(ctm, text->trm));
 	printf(">\n");
 	fz_debugtext(text, 0);
