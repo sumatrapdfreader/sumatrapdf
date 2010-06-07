@@ -7433,8 +7433,6 @@ exit:
     DdeUninitialize(inst);
 }
 
-extern "C" void pdf_destroyfontlistMS(); // in pdf_fontfile.c
-
 #ifdef DEBUG
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
 void RedirectIOToConsole(void)
@@ -7889,11 +7887,8 @@ Exit:
 #endif // BUILD_RM_VERSION
     TStrList_Destroy(&fileNames);
 
-    pdf_destroyfontlistMS();
-
     CoUninitialize();
 
-    //histDump();
     return msg.wParam;
 }
 

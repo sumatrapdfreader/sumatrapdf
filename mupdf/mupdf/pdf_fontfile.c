@@ -610,14 +610,17 @@ pdf_createfontlistMS()
 	return fz_okay;
 }
 
-void
-pdf_destroyfontlistMS()
+static int
+pdf_destroyfontlistMS(void)
 {
 	if (fontlistMS.fontmap != nil)
 		fz_free(fontlistMS.fontmap);
 
+	fontlistMS.fontmap = nil;
 	fontlistMS.len = 0;
 	fontlistMS.cap = 0;
+
+	return 0;
 }
 
 static fz_error
@@ -632,6 +635,7 @@ loadwindowsfont(pdf_fontdesc *font, char *fontname)
 		pdf_createfontlistMS();
 		if (fontlistMS.len == 0)
 			return fz_throw("fonterror : no fonts in the system");
+		_onexit(pdf_destroyfontlistMS);
 	}
 
 	pdf_logfont("win32: try load font `%s'\n", fontname);
