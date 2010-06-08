@@ -66,6 +66,9 @@ Sama kirjainkoko
 &Print\tCtrl-P
 &Tulosta\tCtrl-P
 
+&Print... (denied)
+&Tulosta... (kielletty)
+
 &Remember these settings for each document
 &Muista nämä asetukset jokaiselle asiakirjalle
 
@@ -176,6 +179,9 @@ Oletus&tyyli:
 
 Default &Zoom:
 Oletus&lähennys:
+
+Denied Permissions:
+Kielletyt oikeudet:
 
 Document Properties
 Asiakirjan ominaisuudet
@@ -393,6 +399,9 @@ Yksittäinen sivu
 Source file %s has no synchronization point
 Lähdetiedostolla %s ei ole synkronisaatiopistettä
 
+Subject:
+Otsikko:
+
 SumatraPDF Options
 SumatraPDF:n asetukset
 
@@ -441,10 +450,9 @@ Lähennyskerroin
 [Changes detected; refreshing] %s
 [Muutoksia tunnistettiin; päivitetään] %s
 
-# Untranslated:
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+Kopioidaan tekstiä
+
+printing document
+tulostetaan asiakirjaa
 
