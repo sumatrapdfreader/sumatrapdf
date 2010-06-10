@@ -8,6 +8,7 @@ Lang: pt Portuguese - Portugal (Português)
 
 Contributor: Ricardo Santos[bogas] (http://www.meta-morf.pt.vu)
 Contributor: Bruno Rodrigues
+Contributor: Sérgio Marques <smarquespt@gmsil.com>, 2010
 
 &About
 &Sobre
@@ -40,7 +41,7 @@ Ir pa&ra a página:
 &Ajuda
 
 &Magnification:
-Amp&liação
+Amp&liação:
 
 &Manual
 &Manual
@@ -66,11 +67,14 @@ Amp&liação
 &Print\tCtrl-P
 &Imprimir\tCtrl-P
 
+&Print... (denied)
+&Imprimir...(rejeitado)
+
 &Remember these settings for each document
 Le&mbrar estas definições para cada documento
 
 &Save as\tCtrl-S
-&Guardar como\tCtrl-S
+&Gravar como\tCtrl-S
 
 &Settings
 &Definições
@@ -82,7 +86,7 @@ Ignorar &esta versão
 &Ver
 
 &Visit website
-&Visitar a página web
+&Visitar sítio web
 
 &Yes
 &Sim
@@ -177,8 +181,11 @@ Dispo&sição por Omissão:
 Default &Zoom:
 &Zoom por Omissão:
 
+Denied Permissions:
+Permissões Rejeitadas:
+
 Document Properties
-Propriedades do documento
+Propriedades do Documento
 
 Download
 Transferir
@@ -187,10 +194,10 @@ E&xit\tCtrl-Q
 &Sair\tCtrl-Q
 
 Enter password
-Introduzir palavra-passe
+Introduza a palavra-passe
 
 Enter password for %s
-Introduzir palavra-passe para %s
+Introduza a palavra-passe para %s
 
 Error loading PDF file.
 Erro ao carregar o PDF.
@@ -199,7 +206,7 @@ Facing
 Página dupla
 
 Failed to save a file
-Erro ao guardar o ficheiro
+Erro ao gravar o ficheiro
 
 File Size:
 Tamanho do Ficheiro:
@@ -253,7 +260,7 @@ Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
-Dica: prima F3 para procurar a próxima
+Dica: prima F3 para procurar a seguinte
 
 KB
 KB
@@ -393,6 +400,9 @@ Página única
 Source file %s has no synchronization point
 O ficheiro fonte %s não tem ponto de sincronização
 
+Subject:
+Assunto:
+
 SumatraPDF Options
 Opções do SumatraPDF
 
@@ -441,10 +451,9 @@ Factor de Zoom
 [Changes detected; refreshing] %s
 [Mudanças detectadas; actualizando] %s
 
-# Untranslated:
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+copiando texto
+
+printing document
+imprimindo documento
 
