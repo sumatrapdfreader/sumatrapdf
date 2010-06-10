@@ -25,7 +25,7 @@ Vérifier les mises à jour
 Zoom personnalisé...
 
 &Don't ask me again
-Ne plus le demander
+Ne plus me demander
 
 &File
 &Fichier
@@ -274,7 +274,7 @@ MB
 Mo
 
 Main PDF reader can't be changed in portable mode
-Le lecteur de PDF ne peut être changer en mode portable
+Le lecteur de PDF ne peut être changé en mode portable
 
 Make SumatraPDF default application for PDF files?
 Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
@@ -355,7 +355,7 @@ Page:
 Page:
 
 Please wait - rendering...
-S'il vous plaît attendez - génération...
+Patientez s'il vous plaît - génération...
 
 Previous Page
 Page précédente
