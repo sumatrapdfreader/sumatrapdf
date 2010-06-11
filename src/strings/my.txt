@@ -20,23 +20,59 @@ Contributor: Masley b. Mastil
 &Go To
 &Pergi Ke
 
+&Go to page:
+&Pergi ke mukasurat:
+
 &Help
 &Bantuan
+
+&Magnification:
+&Pembesaran:
+
+&Manual
+&Manual
+
+&No
+&Tidak
+
+&No, thanks
+&Tidak, terima kasih
 
 &Open\tCtrl-O
 &Buka\tCtrl-O
 
+&Options...
+&Opsyen-opsyen...
+
+&Password:
+&Kata laluan
+
 &Print\tCtrl-P
 &Cetak\tCtrl-P
 
+&Print... (denied)
+&Cetak... (dinafikan)
+
+&Remember these settings for each document
+&Ingat tetapan-tetapan ini untuk setiap dokumen
+
 &Save as\tCtrl-S
 &Simpan sebagai\tCtrl-S
+
+&Settings
+&Tetapan
+
+&Skip this version
+&Langkau versi ini
 
 &View
 &Lihat
 
 &Visit website
 &Lawat lamanweb
+
+&Yes
+&Ya
 
 &Zoom
 &Fokus
@@ -47,11 +83,41 @@ Mengenai SumatraPDF
 Act&ual Size\tCtrl-1
 &Saiz sebenar\tCtrl-1
 
+All files
+Semua fail
+
+Application:
+Aplikasi
+
+Automatic
+Automatik
+
+Automatically check for &updates
+Semak &kemas kini secara automatik
+
+Book view
+Paparan buku
+
 Bookmarks\tF12
 Penanda\tF12
 
+Bytes
+Bytes
+
+Cancel
+Batal
+
+Cannot print this file
+Tidak boleh cetak fail ini
+
+Change language
+Tukar bahasa
+
 Continuous
 Bersambung
+
+Continuous book view
+Paparan buku berterusan
 
 Continuous facing
 Dua belah mukasurat bersambung
@@ -62,8 +128,17 @@ Menyumbangkan alihbahasa
 Could not open Printer
 Pencetak tidak dapat dibuka
 
+Download
+Muat turun
+
 E&xit\tCtrl-Q
 &Keluar\tCtrl-Q
+
+Enter password
+Masukkan kata laluan
+
+Enter password for %s
+Masukkan kata laluan untuk %s
 
 Error loading PDF file.
 Masalah memuatkan fail PDF
@@ -73,6 +148,15 @@ Dua belah mukasurat
 
 Failed to save a file
 Gagal menyimpan fail
+
+File Size:
+Saiz fail:
+
+File:
+Fail:
+
+Find
+Cari
 
 Find Next
 Cari selepas
@@ -104,8 +188,23 @@ Muatkan lebar
 Fullscreen\tCtrl-L
 Mukasurat Penuh\tCtrl-L
 
+GB
+GB
+
+Go to page
+Pergi ke mukasurat
+
+KB
+KB
+
 Last Page\tEnd
 Mukasurat terakhir
+
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 
 Make SumatraPDF my main PDF reader
 Jadikan SumatraPDF pembaca utama PDF
@@ -119,11 +218,38 @@ Mukasurat seterusnya
 Next Page\tRight Arrow
 Mukasurat seterusnya\t->
 
+No matches were found
+Tiada padanan dijumpai
+
+No new version available.
+Tidak terdapat versi terbaru
+
+Number of Pages:
+Jumlah mukasurat:
+
+OK
+OK
+
 Open
 Buka
 
+PDF Document
+Dokumen PDF
+
+PDF Version:
+Versi PDF:
+
+PDF documents
+Dokumen-dokumen PDF
+
+Page Size:
+Saiz mukasurat
+
 Page...\tCtrl-G
 Mukasurat...\tCtrl-G
+
+Page:
+Mukasurat:
 
 Previous Page
 Mukasurat sebelumnya
@@ -140,14 +266,32 @@ Ubah ke kiri\tCtrl-Shift--
 Rotate right\tCtrl-Shift-+
 Ubah ke kanan\tCtrl-Shift-+
 
+Show pages continuously
+Papar mukasurat secara berterusan
+
 Show toolbar
 Tunjukkan Bar Alat
 
 Single page
 Satu Mukasurat
 
+Subject:
+Subjek
+
+SumatraPDF Options
+Tetapan-tetapan SumatraPDF
+
+SumatraPDF is your main PDF reader
+Sumatra PDF ialah pembaca PDF utama anda 
+
+Title:
+Tajuk:
+
 View
 Lihat
+
+Warning
+Amaran
 
 Zoom In
 Fokus ke dalam
@@ -155,40 +299,24 @@ Fokus ke dalam
 Zoom Out
 Fokus ke luar
 
+copying text
+menyalin teks
+
+printing document
+mencetak dokumen
+
 # Untranslated:
 #&Check for new version
 #&Custom Zoom...
 #&Don't ask me again
 #&Find what:
-#&Go to page:
-#&Magnification:
-#&Manual
 #&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
-#&Print... (denied)
-#&Remember these settings for each document
-#&Settings
-#&Skip this version
-#&Yes
 #(of %d)
 #Advanced
-#All files
-#Application:
 #Associate with PDF files?
 #Author:
-#Automatic
-#Automatically check for &updates
 #Back\tAlt+Left Arrow
-#Book view
-#Bytes
-#Cancel
-#Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Change language
-#Continuous book view
 #Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
@@ -197,63 +325,35 @@ Fokus ke luar
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#File Size:
-#File:
-#Find
 #Forward\tAlt+Right Arrow
 #Found text at page %d
-#GB
-#Go to page
 #Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
 #Make SumatraPDF default application for PDF files?
 #Modified:
 #New version %s is available. Download new version?
 #New version available.
-#No matches were found
-#No new version available.
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#Number of Pages:
-#OK
 #Open in &Adobe Reader
 #P&roperties...\tCtrl-D
-#PDF Document
 #PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
 #Page number %u inexistant
-#Page:
 #Please wait - rendering...
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
 #Send by &email...
 #Set inverse search command-line
-#Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
 #Text documents
-#Title:
 #Unknown source file (%s)
-#Warning
 #You have the latest version.
 #You have version %s
 #Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s
-#copying text
-#printing document
 
