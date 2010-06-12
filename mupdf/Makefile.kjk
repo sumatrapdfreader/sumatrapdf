@@ -156,7 +156,7 @@ OPENJPEG_SRC = \
 	t2.c tcd.c tgt.c
 
 FITZ_DRAW_SRC = \
-	blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c \
+	archport.c blendmodes.c glyphcache.c imagedraw.c imagescale.c imageunpack.c \
 	meshdraw.c pathfill.c pathscan.c pathstroke.c porterduff.c
 
 FITZ_SRC = \
@@ -233,10 +233,6 @@ PDFINFO_SRC = pdftool.c pdfinfo.c
 PDFINFO_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFINFO_SRC})
 PDFINFO_DEP = $(patsubst %.o, %.d, $(PDFINFO_OBJ))
 
-PDFINFO2_SRC = pdftool.c pdfinfo2.c
-PDFINFO2_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFINFO2_SRC})
-PDFINFO2_DEP = $(patsubst %.o, %.d, $(PDFINFO2_OBJ))
-
 PDFSHOW_SRC = pdftool.c pdfshow.c
 PDFSHOW_OBJ = $(patsubst %.c, $(OUTDIR)/FITZ_%.o, ${PDFSHOW_SRC})
 PDFSHOW_DEP = $(patsubst %.o, %.d, $(PDFSHOW_OBJ))
@@ -257,7 +253,6 @@ PDFBENCH_OBJ   += $(ZLIB_OBJ)
 PDFCLEAN_OBJ   += $(ZLIB_OBJ)
 PDFDRAW_OBJ    += $(ZLIB_OBJ)
 PDFINFO_OBJ    += $(ZLIB_OBJ)
-PDFINFO2_OBJ   += $(ZLIB_OBJ)
 PDFSHOW_OBJ    += $(ZLIB_OBJ)
 PDFEXTRACT_OBJ += $(ZLIB_OBJ)
 endif
@@ -267,7 +262,6 @@ PDFBENCH_OBJ   += $(JPEG_OBJ)
 PDFCLEAN_OBJ   += $(JPEG_OBJ)
 PDFDRAW_OBJ    += $(JPEG_OBJ)
 PDFINFO_OBJ    += $(JPEG_OBJ)
-PDFINFO2_OBJ   += $(JPEG_OBJ)
 PDFSHOW_OBJ    += $(JPEG_OBJ)
 PDFEXTRACT_OBJ += $(JPEG_OBJ)
 endif
@@ -277,7 +271,6 @@ PDFBENCH_OBJ   += $(OPENJPEG_OBJ)
 PDFCLEAN_OBJ   += $(OPENJPEG_OBJ)
 PDFDRAW_OBJ    += $(OPENJPEG_OBJ)
 PDFINFO_OBJ    += $(OPENJPEG_OBJ)
-PDFINFO2_OBJ   += $(OPENJPEG_OBJ)
 PDFSHOW_OBJ    += $(OPENJPEG_OBJ)
 PDFEXTRACT_OBJ += $(OPENJPEG_OBJ)
 endif
@@ -287,7 +280,6 @@ PDFBENCH_OBJ   += $(JBIG2_OBJ)
 PDFCLEAN_OBJ   += $(JBIG2_OBJ)
 PDFDRAW_OBJ    += $(JBIG2_OBJ)
 PDFINFO_OBJ    += $(JBIG2_OBJ)
-PDFINFO2_OBJ   += $(JBIG2_OBJ)
 PDFSHOW_OBJ    += $(JBIG2_OBJ)
 PDFEXTRACT_OBJ += $(JBIG2_OBJ)
 endif
@@ -296,13 +288,12 @@ PDFBENCH_APP   = ${OUTDIR}/pdfbench
 PDFCLEAN_APP   = ${OUTDIR}/pdfclean
 PDFDRAW_APP    = ${OUTDIR}/pdfdraw
 PDFINFO_APP    = ${OUTDIR}/pdfinfo
-PDFINFO2_APP   = ${OUTDIR}/pdfinfo2
 PDFSHOW_APP    = ${OUTDIR}/pdfshow
 PDFEXTRACT_APP = ${OUTDIR}/pdfextract
 FONTDUMP_APP   = ${OUTDIR}/fontdump
 CMAPDUMP_APP   = ${OUTDIR}/cmapdump
 
-all: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP} ${PDFCLEAN_APP} ${PDFDRAW_APP} ${PDFINFO_APP} ${PDFINFO2_APP}  ${PDFSHOW_APP} ${PDFEXTRACT_APP}
+all: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP} ${PDFCLEAN_APP} ${PDFDRAW_APP} ${PDFINFO_APP}  ${PDFSHOW_APP} ${PDFEXTRACT_APP}
 
 pdfbench: inform ${OUTDIR} ${CMAPDUMP_APP} ${PDFBENCH_APP}
 
@@ -319,9 +310,6 @@ $(PDFDRAW_APP): ${LIBS_OBJ} ${PDFDRAW_OBJ}
 	$(CC) -g -o $@ $^ ${LDFLAGS}
 
 $(PDFINFO_APP): ${LIBS_OBJ} ${PDFINFO_OBJ}
-	$(CC) -g -o $@ $^ ${LDFLAGS}
-
-$(PDFINFO2_APP): ${LIBS_OBJ} ${PDFINFO2_OBJ}
 	$(CC) -g -o $@ $^ ${LDFLAGS}
 
 $(PDFSHOW_APP): ${LIBS_OBJ} ${PDFSHOW_OBJ}
