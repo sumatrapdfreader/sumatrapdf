@@ -1,7 +1,10 @@
 ; Use modern visuals for the Installer
+!addplugindir bin
 !include MUI2.nsh
 !include FileFunc.nsh
 XpStyle on
+
+!define EXE_NAME "SumatraPDF.exe"
 
 Name "SumatraPDF"
 OutFile "SumatraPDF-${SUMVER}-install.exe"
@@ -35,7 +38,12 @@ InstallDir $PROGRAMFILES\SumatraPDF
 Section "SumatraPDF" SecMain
 	; Prevent this section from being unselected
 	SectionIn RO
-	
+
+    ; kill the process so that installer can over-write with new executable
+    Processes::KillProcessAndWait "${EXE_NAME}"
+    ; empirically we need to sleep a while before the file can be overwritten
+    Sleep 1000
+
 	; Copy the main executable and the uninstaller
 	SetOutPath $INSTDIR
 	File /oname=SumatraPDF.exe "builds\${SUMVER}\SumatraPDF-${SUMVER}.exe"
@@ -74,6 +82,11 @@ Function .onInit
 FunctionEnd
 
 Section "Uninstall"
+    ; kill the process so that we can delete the executable
+    Processes::KillProcessAndWait "${EXE_NAME}"
+    ; empirically we need to sleep a while before the file can be overwritten
+    Sleep 1000
+
 	; Remove registry keys
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SumatraPDF"
 	DeleteRegKey HKLM "Software\SumatraPDF"

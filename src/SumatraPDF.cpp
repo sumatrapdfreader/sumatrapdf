@@ -2623,7 +2623,7 @@ HKEY_CLASSES_ROOT\.pdf\OpenWithList
 HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
 HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
-Note: When making changes below, please also adjust the installer.nsis script.
+Note: When making changes below, please also adjust the installer.nsi script.
 */
 static void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
