@@ -752,22 +752,18 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref,
 static int
 getdata(fz_stream *stream, int bps)
 {
-	unsigned int bitmask = (1 << bps) - 1;
-	unsigned int buf = 0;
-	int bits = 0;
-	int s;
+	unsigned int v = 0;
+	int c, n;
 
-	while (bits < bps)
+	for (n = 0; n < bps; n += 8)
 	{
-		buf = (buf << 8) | (fz_readbyte(stream) & 0xff); // TODO: EOF? No? Oh, ok...
-		bits += 8;
+		c = fz_readbyte(stream);
+		if (c == EOF)
+			break;
+		v = (v << 8) | c;
 	}
-	s = buf >> (bits - bps);
-	if (bps < 32)
-		s = s & bitmask;
-	bits -= bps;
 
-	return s;
+	return v;
 }
 
 static fz_error
@@ -776,6 +772,8 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
+	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
+	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
 	int ncomp;
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
@@ -827,15 +825,15 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref,
 		flag[idx] = getdata(stream, bpflag);
 
 		t = getdata(stream, bpcoord);
-		x[idx] = x0 + (t * (x1 - x0) / (pow(2, 24) - 1));
+		x[idx] = x0 + t * (x1 - x0) * coordscale;
 
 		t = getdata(stream, bpcoord);
-		y[idx] = y0 + (t * (y1 - y0) / (pow(2, 24) - 1));
+		y[idx] = y0 + t * (y1 - y0) * coordscale;
 
 		for (i = 0; i < ncomp; i++)
 		{
 			t = getdata(stream, bpcomp);
-			cval[idx][i] = t / (double)(pow(2, 16) - 1);
+			cval[idx][i] = c0[i] + t * (c1[i] - c0[i]) * compscale;
 		}
 
 		if (!intriangle && flag[idx] == 0)
@@ -914,6 +912,8 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
+	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
+	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
 	int ncomp;
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
@@ -935,6 +935,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 		c0[i] = decode[4 + i * 2 + 0];
 		c1[i] = decode[4 + i * 2 + 1];
 	}
+
 
 	pdf_logshade("decode [%g %g %g %g", x0, x1, y0, y1);
 	for (i = 0; i < shade->cs->n; i++)
@@ -966,14 +967,14 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 			for (col = 0; col < vprow; col++)
 			{
 				t = getdata(stream, bpcoord);
-				p->x = x0 + (t * (x1 - x0) / (float) (pow(2, bpcoord) - 1));
+				p->x = x0 + t * (x1 - x0) * coordscale;
 				t = getdata(stream, bpcoord);
-				p->y = y0 + (t * (y1 - y0) / (float) (pow(2, bpcoord) - 1));
+				p->y = y0 + t * (y1 - y0) * coordscale;
 
 				for (i = 0; i < ncomp; i++)
 				{
 					t = getdata(stream, bpcomp);
-					c[i] = c0[i] + (t * (c1[i] - c0[i]) / (float) (pow(2, bpcomp) - 1));
+					c[i] = c0[i] + t * (c1[i] - c0[i]) * compscale;
 				}
 
 				p++;
@@ -1020,6 +1021,8 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
+	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
+	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
 	int ncomp;
 	fz_point p0, p1;
 	float c0[FZ_MAXCOLORS];
@@ -1083,12 +1086,13 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 			startcolor = 2;
 		}
 
+
 		for (i = startpt; i < 12; i++)
 		{
 			t = getdata(stream, bpcoord);
-			p[i].x = (float) (p0.x + (t * (p1.x - p0.x) / (pow(2, bpcoord) - 1.)));
+			p[i].x = p0.x + t * (p1.x - p0.x) * coordscale;
 			t = getdata(stream, bpcoord);
-			p[i].y = (float) (p0.y + (t * (p1.y - p0.y) / (pow(2, bpcoord) - 1.)));
+			p[i].y = p0.y + t * (p1.y - p0.y) * coordscale;
 		}
 
 		for (i = startcolor; i < 4; i++)
@@ -1096,7 +1100,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 			for (k = 0; k < ncomp; k++)
 			{
 				t = getdata(stream, bpcomp);
-				c[i][k] = c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
+				c[i][k] = c0[k] + t * (c1[k] - c0[k]) * compscale;
 			}
 		}
 
@@ -1130,10 +1134,10 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 		}
 		else if (flag == 3 && hasprevpatch)
 		{
-			p[0] = prevp[10];
-			p[1] = prevp[11];
-			p[2] = prevp[ 0];
-			p[3] = prevp[ 1];
+			p[0] = prevp[ 9];
+			p[1] = prevp[10];
+			p[2] = prevp[11];
+			p[3] = prevp[ 0];
 			memcpy(c[0], prevc[3], FZ_MAXCOLORS * sizeof(float));
 			memcpy(c[1], prevc[0], FZ_MAXCOLORS * sizeof(float));
 
@@ -1174,6 +1178,8 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
+	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
+	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
 	int ncomp;
 	fz_point p0, p1;
 	float c0[FZ_MAXCOLORS];
@@ -1240,9 +1246,9 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 		for (i = startpt; i < 16; i++)
 		{
 			t = getdata(stream, bpcoord);
-			p[i].x = (float) (p0.x + (t * (p1.x - p0.x) / (pow(2, bpcoord) - 1.)));
+			p[i].x = p0.x + t * (p1.x - p0.x) * coordscale;
 			t = getdata(stream, bpcoord);
-			p[i].y = (float) (p0.y + (t * (p1.y - p0.y) / (pow(2, bpcoord) - 1.)));
+			p[i].y = p0.y + t * (p1.y - p0.y) * coordscale;
 		}
 
 		for (i = startcolor; i < 4; i++)
@@ -1250,7 +1256,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 			for (k = 0; k < ncomp; k++)
 			{
 				t = getdata(stream, bpcomp);
-				c[i][k] = c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
+				c[i][k] = c0[k] + t * (c1[k] - c0[k]) * compscale;
 			}
 		}
 
@@ -1583,7 +1589,7 @@ cleanup:
 			pdf_dropfunction(func[i]);
 	fz_dropshade(shade);
 
-	return fz_rethrow(error, "cannot load shading (%d %d R)", fz_tonum(dict), fz_togen(dict));
+	return fz_rethrow(error, "cannot load shading type %d (%d %d R)", type, fz_tonum(dict), fz_togen(dict));
 }
 
 fz_error

@@ -191,7 +191,7 @@ loadedge(int gel[MAXV][MAXN], int s, int e, int *ael, int *del, int n)
 {
 	int swp, k, dy;
 
-	if (gel[s][1] > gel[s][1])
+	if (gel[s][1] > gel[e][1])
 	{
 		swp = s; s = e; e = swp;
 	}
