@@ -11,11 +11,23 @@ Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
 &About
 பற்றி
 
+&Check for new version
+புதிய பதிப்பை தேடு
+
 &Close\tCtrl-W
 மூடு\tCtrl-W
 
+&Custom Zoom...
+விருப்பிற்கேற்ற பெருக்கம்
+
+&Don't ask me again
+மரு படியும் கேட்காதே
+
 &File
 கோப்பு
+
+&Find what:
+எதை தேடவும்
 
 &Go To
 அங்கு செல்
@@ -23,20 +35,53 @@ Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
 &Help
 உதவி
 
+&Magnification:
+பெரிதாக்கம்
+
+&Manual
+செய்முறை ஏடு
+
+&Match case
+தட்டுப் பொருத்தம்
+
+&No
+இல்லை
+
+&No, thanks
+இல்லை, நன்றி
+
 &Open\tCtrl-O
 திற\tCtrl-O
+
+&Options...
+விருப்ப பேரம்
+
+&Password:
+கடவுச்சொல்
 
 &Print\tCtrl-P
 அச்சிடு\tCtrl-P
 
+&Remember these settings for each document
+அமைப்புகளை ஞாபகம் கொள்
+
 &Save as\tCtrl-S
 எனச் சேமி\tCtrl-S
+
+&Settings
+அமைப்புகள்
+
+&Skip this version
+இப்பதிப்பை தவிர்
 
 &View
 நோக்கு
 
 &Visit website
 வலைத்தளம் செல்
+
+&Yes
+ஆம்
 
 &Zoom
 பெரிதாக்கு
@@ -47,17 +92,89 @@ SumatraPDF பற்றி
 Act&ual Size\tCtrl-1
 மெய் அளவு\tCtrl-1
 
+Advanced
+மேம்பட்ட அமைப்புகள்
+
+All files
+எல்லா கோப்புகள்
+
+Application:
+செயலி
+
+Associate with PDF files?
+PDF கோப்புகளுடன் இணை
+
+Author:
+ஆசிரியர்
+
+Automatic
+தானாக
+
+Automatically check for &updates
+தானாக புதுப்பித்த பதிப்பை தேடு
+
+Back\tAlt+Left Arrow
+பின்\tAlt+Left Arrow
+
+Book view
+ஏடு வடிவி நோக்கு
+
+Bookmarks\tF12
+புத்தகக்குறி
+
+Bytes
+Bytes
+
+Cancel
+இரத்து செய்
+
+Cannot print this file
+ கோப்பை அச்சிட முடியவில்லை
+
+Change language
+மொழியை மாற்று
+
 Continuous
 தொடர்
+
+Continuous book view
+தொடர் ஏடு வடிவ நோக்கு
 
 Continuous facing
 தொடர் முகப்பு
 
+Contribute translation
+மொழிபெயர்ப்புக்கு பங்களி
+
+Copy Selection\tCtrl-C
+தேர்வுசெய்ததை நகல் செய்
+
 Could not open Printer
 அச்சுப்பொறியை திறக்க முடியவில்லை
 
+Couldn't initialize printer
+அச்சுப்பொறியை தொடக்க முடியவில்லை
+
+Couldn't render the page
+பக்கத்தை அளிக்க முடியவில்லை
+
+Created:
+உருÅ¡க்கப்பட்டது
+
+Document Properties
+கோப்பின் பண்புகள்
+
+Download
+பதிவிற்க்கம்
+
 E&xit\tCtrl-Q
 வெளியேறு\tCtrl-Q
+
+Enter password
+கடவுச்சொல்லை வழங்கு
+
+Enter password for %s
+%s  காண கடவுச்சொல்லை வழங்கு
 
 Error loading PDF file.
 PDF கோப்பு ஏற்று பிழை
@@ -67,6 +184,27 @@ Facing
 
 Failed to save a file
 கோப்பு சேமிப்பு தோற்பு
+
+File Size:
+கோப்பின் அளவு:
+
+File:
+கோப்பு
+
+Find
+தேடு
+
+Find Next
+அடுத்ததை தேடு
+
+Find Previous
+முந்தையதை தேடு
+
+Find...\tCtrl-F
+தேடு...\tCtrl-F
+
+Find:
+தேடு:
 
 First Page\tHome
 முதல் பக்கம்\tHome
@@ -83,11 +221,47 @@ Fit Widt&h\tCtrl-2
 Fit Width
 அகலம் பொருந்தவை
 
+Forward\tAlt+Right Arrow
+முன்னோகி\tAlt+Right Arrow
+
+Found text at page %d
+வாசகத்தை %d பக்கத்தில் கண்டுபிடிக்கப்பட்டுள்ளது
+
+Fullscreen\tCtrl-L
+முழுத்திரை
+
+GB
+GB
+
+Go to page
+பக்கததிர்க்கு செல்
+
+Hint: Use the F3 key for finding again
+சிறுகுரிப்பு: F3 தட்டை¨Â மருமுறை தேட பயண் படுத்து
+
+KB
+KB
+
 Last Page\tEnd
 இறுதி பக்கம்\tEnd
 
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
+
 Make SumatraPDF my main PDF reader
 SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
+
+Modified:
+மாற்ற்ப்பட்தது
+
+New version %s is available. Download new version?
+புதிய பதிப்பு %s பதிவிறக்க இருக்கிறது. பதிவிரக்கம் செய்யவா?
+
+New version available.
+புதிய பதிப்பு இருக்கிறது
 
 Next Page
 அடுத்த பக்கம்
@@ -95,20 +269,68 @@ Next Page
 Next Page\tRight Arrow
 அடுத்த பக்கம்\t->
 
+No matches were found
+ஒரு பொருத்தமும் இல்லை
+
+No new version available.
+புதிய பதிப்பு எதுவம் இல்லை
+
+No result found around line %u in file %s
+முடிவுகள் எதுவும் கோப்பு %s இல் உள்ள வரி %u கண்டுபிடிக்க முடியவில்லை
+
+Number of Pages:
+பக்கங்களின் எண்ணிக்கை
+
+OK
+சரி
+
 Open
 திற
 
+Open in &Adobe Reader
+&Adobe Reader இல் திற
+
+P&roperties...\tCtrl-D
+பண்புகள்...\tCtrl-D
+
+PDF Document
+PDF கோப்பு
+
+PDF Producer:
+PDF உற்பத்தியாளர்
+
+PDF Version:
+PDF பதிப்பு
+
+PDF documents
+PDF கோப்புகள்
+
+Page Size:
+பக்க அளவு
+
+Page number %u inexistant
+பக்க எண் %u இருக்கவில்லை
+
 Page...\tCtrl-G
 பக்கம்...\tCtrl-G
+
+Page:
+பக்கம்:
+
+Please wait - rendering...
+தயவுசெய்து காத்திருக்கவும் - அளீக்கபட்டுவருகிறது...
 
 Previous Page
 முந்தைய பக்கம்
 
 Previous Page\tLeft Arrow
-முந்தைய பக்கம்\t<-
+முந்தைய பக்கம்\tLeft Arrow
 
 Printing problem.
 அச்சுப்பொறி சிக்கல்
+
+Remember &opened files
+திறந்த &கோப்புகளை நினைவுகொள்
 
 Rotate left\tCtrl-Shift--
 இடதுப்புறம் சுழற்று\tCtrl-Shift--
@@ -116,14 +338,59 @@ Rotate left\tCtrl-Shift--
 Rotate right\tCtrl-Shift-+
 வலப்புறம் சுழற்று\tCtrl-Shift-+
 
+Searching %d of %d...
+%d இல் %d தேடப்படுகிறது....
+
+Select content with Ctrl+left mouse button
+உள்ளடகத்தை தேர்வு செய்ய Ctrl+இடது சுட்டெலி பொத்தானை அழுத்து
+
+Send by &email...
+மின்மடல்லாக அனுப்பு...
+
+Show pages continuously
+பக்கங்களை தொடர்ச்சியாக காட்டு
+
+Show the &bookmarks sidebar when available
+புத்தககுறி பட்டை இருந்தல் காட்டு
+
 Show toolbar
 கருவிப்பட்டை காண்பி
 
 Single page
 ஒற்றைப் பக்கம்
 
+SumatraPDF Options
+SumatraPDFஇன் விருப்பப பேரம்
+
+SumatraPDF is your main PDF reader
+SumatraPDF உங்களின் முதன்மை PDF படிப்பி
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF இப்பொழுது உங்களின் முதன்மை PDF படிப்பி
+
+Text documents
+உரை கொப்புகள்
+
+Title:
+தலைப்பு:
+
+Unknown source file (%s)
+தெரியாத மூல கோப்பு
+
 View
 நோக்கு
+
+Warning
+எக்சரிக்கை
+
+You have the latest version.
+உங்களிடம் புதிய பதிப்பு உள்ளது
+
+You have version %s
+உங்களின் பதிப்பு %s
+
+Zoom
+பெரிதக்கு
 
 Zoom In
 பெரிதாக்கு
@@ -131,113 +398,28 @@ Zoom In
 Zoom Out
 சிறிதாக்கு
 
+Zoom factor
+பெரிதக்கக்காரணி
+
+[Changes detected; refreshing] %s
+[மாற்றங்கள் கண்டுபிடிக்க பட்டுள்ளது; புதுபிக்கபட்டு வருகிறது]%s
+
 # Untranslated:
-#&Check for new version
-#&Custom Zoom...
-#&Don't ask me again
-#&Find what:
 #&Go to page:
-#&Magnification:
-#&Manual
-#&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
 #&Print... (denied)
-#&Remember these settings for each document
-#&Settings
-#&Skip this version
-#&Yes
 #(of %d)
-#Advanced
-#All files
-#Application:
-#Associate with PDF files?
-#Author:
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
-#Bookmarks\tF12
-#Bytes
-#Cancel
-#Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Change language
-#Continuous book view
-#Contribute translation
-#Copy Selection\tCtrl-C
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
-#Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#File Size:
-#File:
-#Find
-#Find Next
-#Find Previous
-#Find...\tCtrl-F
-#Find:
-#Forward\tAlt+Right Arrow
-#Found text at page %d
-#Fullscreen\tCtrl-L
-#GB
-#Go to page
-#Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
 #Make SumatraPDF default application for PDF files?
 #Match case
-#Modified:
-#New version %s is available. Download new version?
-#New version available.
-#No matches were found
-#No new version available.
-#No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties...\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Page:
-#Please wait - rendering...
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &email...
 #Set inverse search command-line
-#Show pages continuously
-#Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
 #copying text
 #printing document
 
