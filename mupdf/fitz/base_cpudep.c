@@ -10,6 +10,12 @@ Glenn Kennard <d98gk@efd.lth.se>
 /* global run-time constant */
 unsigned fz_cpuflags = 0;
 
+int fz_isbigendian(void)
+{
+	static const int one = 1;
+	return *(char*)&one == 0;
+}
+
 #ifndef HAVE_CPUDEP
 
 void fz_cpudetect(void)

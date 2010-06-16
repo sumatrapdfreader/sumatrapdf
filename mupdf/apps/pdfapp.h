@@ -45,6 +45,7 @@ struct pdfapp_s
 	/* snapback history */
 	int hist[256];
 	int histlen;
+	int marks[10];
 
 	/* window system sizes */
 	int winw, winh;

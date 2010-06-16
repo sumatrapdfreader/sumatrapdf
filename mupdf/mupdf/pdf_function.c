@@ -1274,7 +1274,7 @@ loadstitchingfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict)
 
 		pdf_logrsrc("k %d\n", func->u.st.k);
 
-		func->u.st.funcs = fz_malloc(func->u.st.k * sizeof (pdf_function));
+		func->u.st.funcs = fz_malloc(func->u.st.k * sizeof (pdf_function*));
 		func->u.st.bounds = fz_malloc((func->u.st.k - 1) * sizeof (float));
 		func->u.st.encode = fz_malloc(func->u.st.k * 2 * sizeof (float));
 		funcs = func->u.st.funcs;

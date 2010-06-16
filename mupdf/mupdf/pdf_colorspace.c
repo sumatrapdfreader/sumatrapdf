@@ -854,7 +854,10 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		fz_dropbuffer(buf);
 	}
 	else
+	{
+		fz_dropcolorspace((fz_colorspace*)cs);
 		return fz_throw("cannot parse colorspace lookup table");
+	}
 
 	pdf_logrsrc("}\n");
 

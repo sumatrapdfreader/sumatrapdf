@@ -58,18 +58,27 @@ pdf_addtriangle(fz_shade *shade,
 
 	shade->mesh[shade->meshlen++] = x0;
 	shade->mesh[shade->meshlen++] = y0;
-	for (i = 2; i < ncomp; i++)
-		shade->mesh[shade->meshlen++] = color0[i - 2];
+	if (shade->usefunction)
+		shade->mesh[shade->meshlen++] = *color0;
+	else
+		for (i = 0; i < shade->cs->n ; i++)
+			shade->mesh[shade->meshlen++] = color0[i];
 
 	shade->mesh[shade->meshlen++] = x1;
 	shade->mesh[shade->meshlen++] = y1;
-	for (i = 2; i < ncomp; i++)
-		shade->mesh[shade->meshlen++] = color1[i - 2];
+	if (shade->usefunction)
+		shade->mesh[shade->meshlen++] = *color1;
+	else
+		for (i = 0; i < shade->cs->n; i++)
+			shade->mesh[shade->meshlen++] = color1[i];
 
 	shade->mesh[shade->meshlen++] = x2;
 	shade->mesh[shade->meshlen++] = y2;
-	for (i = 2; i < ncomp; i++)
-		shade->mesh[shade->meshlen++] = color2[i - 2];
+	if (shade->usefunction)
+		shade->mesh[shade->meshlen++] = *color2;
+	else
+		for (i = 0; i < shade->cs->n; i++)
+			shade->mesh[shade->meshlen++] = color2[i];
 }
 
 /* adds quad triangles (x0, y0) -> (x1, y1) -> (x3, y3) and
@@ -494,7 +503,6 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 	int e0, e1;
 	float theta;
 	float dist;
-	int n;
 	fz_error error;
 	float tmin, tmax;
 
@@ -548,7 +556,6 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 	pdf_logshade("p3 %g %g\n", p3.x, p3.y);
 	pdf_logshade("p4 %g %g\n", p4.x, p4.y);
 
-	n = 0;
 	tmin = 0.0f;
 	tmax = 1.0f;
 

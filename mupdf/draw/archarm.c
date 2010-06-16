@@ -4,14 +4,16 @@
 
 #include "fitz.h"
 
+typedef unsigned char byte;
+
 /* always surround cpu specific code with HAVE_XXX */
 #ifdef ARCH_ARM
 
 static void
-path_w4i1o4arm(byte * restrict argb, byte * restrict src, byte cov, int len, byte * restrict dst)
+path_w4i1o4_arm(byte * restrict argb, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	/* The ARM code here is a hand coded implementation
-	 * of the optimized C version below. */
+	 * of the optimized C version. */
 	if (len <= 0)
 		return;
 	asm volatile(
@@ -100,7 +102,7 @@ path_w4i1o4arm(byte * restrict argb, byte * restrict src, byte cov, int len, byt
 void
 fz_acceleratearch(void)
 {
-	fz_path_w4i1o4 = path_w4i1o4arm;
+	fz_path_w4i1o4 = path_w4i1o4_arm;
 }
 
 #endif

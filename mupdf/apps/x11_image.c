@@ -10,7 +10,7 @@
 # define _XOPEN_SOURCE 1
 #endif
 
-#include <fitz.h>
+#include "fitz.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -205,11 +205,10 @@ select_mode(void)
 	unsigned long rs, gs, bs;
 
 	byteorder = ImageByteOrder(info.display);
-#if BYTE_ORDER == BIG_ENDIAN
-	byterev = byteorder != MSBFirst;
-#else
-	byterev = byteorder != LSBFirst;
-#endif
+	if (fz_isbigendian())
+		byterev = byteorder != MSBFirst;
+	else
+		byterev = byteorder != LSBFirst;
 
 	rm = info.visual.red_mask;
 	gm = info.visual.green_mask;

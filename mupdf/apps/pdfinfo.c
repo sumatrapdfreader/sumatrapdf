@@ -1043,5 +1043,7 @@ int main(int argc, char **argv)
 	}
 
 	closexref();
+
+	return 0;
 }
 

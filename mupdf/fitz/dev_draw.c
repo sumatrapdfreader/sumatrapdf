@@ -25,42 +25,6 @@ struct fz_drawdevice_s
 };
 
 static void
-blendover(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *sp, *dp;
-	fz_bbox sr, dr;
-	int x, y, w, h;
-
-	sr.x0 = src->x;
-	sr.y0 = src->y;
-	sr.x1 = src->x + src->w;
-	sr.y1 = src->y + src->h;
-
-	dr.x0 = dst->x;
-	dr.y0 = dst->y;
-	dr.x1 = dst->x + dst->w;
-	dr.y1 = dst->y + dst->h;
-
-	dr = fz_intersectbbox(sr, dr);
-	x = dr.x0;
-	y = dr.y0;
-	w = dr.x1 - dr.x0;
-	h = dr.y1 - dr.y0;
-
-	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
-
-	if (src->n == 1 && dst->n == 1)
-		fz_duff_1o1(sp, src->w, dp, dst->w, w, h);
-	else if (src->n == 4 && dst->n == 4)
-		fz_duff_4o4(sp, src->w * 4, dp, dst->w * 4, w, h);
-	else if (src->n == dst->n)
-		fz_duff_non(sp, src->w * src->n, src->n, dp, dst->w * dst->n, w, h);
-	else
-		assert(!"blendover src and dst mismatch");
-}
-
-static void
 blendmaskover(fz_pixmap *src, fz_pixmap *msk, fz_pixmap *dst)
 {
 	unsigned char *sp, *dp, *mp;
@@ -472,13 +436,13 @@ static void
 fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 {
 	fz_drawdevice *dev = user;
+	fz_pixmap *dest = dev->dest;
 	fz_rect bounds;
 	fz_bbox bbox;
-	fz_pixmap *temp;
 	float rgb[3];
 	unsigned char argb[4];
 	unsigned char *s;
-	int n;
+	int x, y;
 
 	bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
 	bbox = fz_roundrect(bounds);
@@ -493,8 +457,6 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 		return;
 	}
 
-	temp = fz_newpixmapwithrect(dev->model, bbox);
-
 	if (shade->usebackground)
 	{
 		fz_convertcolor(shade->cs, shade->background, dev->model, rgb);
@@ -502,22 +464,20 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 		argb[1] = rgb[0] * 255;
 		argb[2] = rgb[1] * 255;
 		argb[3] = rgb[2] * 255;
-		s = temp->samples;
-		n = temp->w * temp->h;
-		while (n--)
+		for (y = bbox.y0; y < bbox.y1; y++)
 		{
-			*s++ = argb[0];
-			*s++ = argb[1];
-			*s++ = argb[2];
-			*s++ = argb[3];
+			s = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
+			for (x = bbox.x0; x < bbox.x1; x++)
+			{
+				*s++ = argb[0];
+				*s++ = argb[1];
+				*s++ = argb[2];
+				*s++ = argb[3];
+			}
 		}
-		blendover(temp, dev->dest);
 	}
 
-	fz_rendershade(shade, ctm, temp);
-	blendover(temp, dev->dest);
-
-	fz_droppixmap(temp);
+	fz_rendershade(shade, ctm, dev->dest, bbox);
 }
 
 static inline void

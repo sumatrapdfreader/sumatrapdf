@@ -143,6 +143,7 @@ fz_boundpath(fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 			p.x = path->els[i++].v;
 			p.y = path->els[i++].v;
 			r = boundexpand(r, fz_transformpoint(ctm, p));
+			break;
 		case FZ_MOVETO:
 		case FZ_LINETO:
 			p.x = path->els[i++].v;

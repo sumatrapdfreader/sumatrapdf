@@ -444,5 +444,7 @@ int main(int argc, char **argv)
 	savexref();
 
 	closexref();
+
+	return 0;
 }
 

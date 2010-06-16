@@ -59,6 +59,10 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #else /* C99 or close enough */
 
+#ifdef __GNUC__
+#define restrict __restrict
+#endif
+
 #include <unistd.h>
 
 #endif
@@ -87,6 +91,8 @@ extern void fz_cpudetect(void);
 
 /* treat as constant! */
 extern unsigned fz_cpuflags;
+
+int fz_isbigendian(void);
 
 /*
  * Base Fitz runtime.

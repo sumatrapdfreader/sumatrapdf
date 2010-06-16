@@ -217,14 +217,14 @@ stepedge(int *ael, int *del, int n)
 }
 
 static void
-fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n)
+fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox bbox)
 {
 	float poly[MAXV][MAXN];
 	float temp[MAXV][MAXN];
-	float cx0 = pix->x;
-	float cy0 = pix->y;
-	float cx1 = pix->x + pix->w;
-	float cy1 = pix->y + pix->h;
+	float cx0 = bbox.x0;
+	float cy0 = bbox.y0;
+	float cx1 = bbox.x1;
+	float cy1 = bbox.y1;
 
 	int gel[MAXV][MAXN];
 	int ael[2][MAXN];
@@ -311,15 +311,17 @@ fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n)
  */
 
 void
-fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest)
+fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	unsigned char clut[256][FZ_MAXCOLORS];
 	unsigned char *s, *d;
+	unsigned char sa, ssa;
 	fz_pixmap *temp;
 	float color[FZ_MAXCOLORS];
 	float tri[3][MAXN];
 	fz_point p;
 	int i, j, k, n;
+	int x, y;
 
 	assert(dest->n == 4);
 
@@ -328,15 +330,14 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest)
 	if (shade->usefunction)
 	{
 		n = 3;
-		temp = fz_newpixmap(pdf_devicegray, dest->x, dest->y, dest->w, dest->h);
+		temp = fz_newpixmapwithrect(pdf_devicegray, bbox);
+		fz_clearpixmap(temp, 0);
 	}
 	else
 	{
 		n = 2 + shade->cs->n;
 		temp = dest;
 	}
-
-	fz_clearpixmap(temp, 0);
 
 	for (i = 0; i < shade->meshlen; i++)
 	{
@@ -357,7 +358,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest)
 					tri[k][j + 2] *= 255;
 			}
 		}
-		fz_drawtriangle(temp, tri[0], tri[1], tri[2], 2 + temp->colorspace->n);
+		fz_drawtriangle(temp, tri[0], tri[1], tri[2], 2 + temp->colorspace->n, bbox);
 	}
 
 	if (shade->usefunction)
@@ -369,17 +370,20 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest)
 				clut[i][k] = color[k] * 255;
 		}
 
-		n = temp->w * temp->h;
-		s = temp->samples;
-		d = dest->samples;
-
-		while (n--)
+		for (y = bbox.y0; y < bbox.y1; y++)
 		{
-			d[0] = s[0];
-			for (k = 0; k < dest->colorspace->n; k++)
-				d[k + 1] = fz_mul255(s[0], clut[s[1]][k]);
-			s += 2;
-			d += 1 + dest->colorspace->n;
+			s = temp->samples + ((bbox.x0 - temp->x) + (y - temp->y) * temp->w) * temp->n;
+			d = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
+			for (x = bbox.x0; x < bbox.x1; x++)
+			{
+				sa = s[0];
+				ssa = 255 - sa;
+				d[0] = s[0] + fz_mul255(d[0], ssa);
+				for (k = 0; k < dest->colorspace->n; k++)
+					d[k+1] = fz_mul255(clut[s[1]][k], sa) + fz_mul255(d[k+1], ssa);
+				s += 2;
+				d += 1 + dest->colorspace->n;
+			}
 		}
 
 		fz_droppixmap(temp);

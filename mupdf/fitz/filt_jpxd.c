@@ -45,20 +45,6 @@ fz_newjpxd(fz_obj *params)
 	d->y = 0;
 	d->k = 0;
 
-	memset(&d->evtmgr, 0, sizeof(d->evtmgr));
-	d->evtmgr.error_handler = fz_opj_error_callback;
-	d->evtmgr.warning_handler = fz_opj_warning_callback;
-	d->evtmgr.info_handler = fz_opj_info_callback;
-
-	opj_set_default_decoder_parameters(&d->params);
-
-	d->info = opj_create_decompress(CODEC_JP2);
-	if (!d->info)
-		fz_warn("assert: opj_create_decompress failed");
-
-	opj_set_event_mgr((opj_common_ptr)d->info, &d->evtmgr, stderr);
-	opj_setup_decoder(d->info, &d->params);
-
 	return (fz_filter*)d;
 }
 
@@ -66,14 +52,17 @@ void
 fz_dropjpxd(fz_filter *filter)
 {
 	fz_jpxd *d = (fz_jpxd*)filter;
-	if (d->image) opj_image_destroy(d->image);
-	if (d->info) opj_destroy_decompress(d->info);
+	if (d->image)
+		opj_image_destroy(d->image);
+	if (d->info)
+		opj_destroy_decompress(d->info);
 }
 
 fz_error
 fz_processjpxd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 {
 	fz_jpxd *d = (fz_jpxd*)filter;
+	int format;
 	int n, w, h, depth, sgnd;
 	int k, v;
 
@@ -94,14 +83,28 @@ input:
 	d->stage = 1;
 
 decode:
-	// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=937
-	if (in->wp - in->rp >= 2 && in->rp[0] == 0xFF && in->rp[1] == 0x4F)
-	{
-		opj_destroy_decompress(d->info);
-		d->info = opj_create_decompress(CODEC_J2K);
-		opj_set_event_mgr((opj_common_ptr)d->info, &d->evtmgr, stderr);
-		opj_setup_decoder(d->info, &d->params);
-	}
+	memset(&d->evtmgr, 0, sizeof(d->evtmgr));
+	d->evtmgr.error_handler = fz_opj_error_callback;
+	d->evtmgr.warning_handler = fz_opj_warning_callback;
+	d->evtmgr.info_handler = fz_opj_info_callback;
+
+	opj_set_default_decoder_parameters(&d->params);
+
+	if (in->wp - in->rp < 2)
+		return fz_throw("not enough data to determine image format");
+
+	/* Check for SOC marker -- if found we have a bare J2K stream */
+	if (in->rp[0] == 0xFF && in->rp[1] == 0x4F)
+		format = CODEC_J2K;
+	else
+		format = CODEC_JP2;
+
+	d->info = opj_create_decompress(format);
+	if (!d->info)
+		fz_warn("assert: opj_create_decompress failed");
+
+	opj_set_event_mgr((opj_common_ptr)d->info, &d->evtmgr, stderr);
+	opj_setup_decoder(d->info, &d->params);
 
 	cio = opj_cio_open((opj_common_ptr)d->info, in->rp, in->wp - in->rp);
 	in->rp = in->wp;
@@ -115,8 +118,6 @@ decode:
 
 	opj_cio_close(cio);
 
-	d->stage = 2;
-
 	for (k = 1; k < d->image->numcomps; k++)
 	{
 		if (d->image->comps[k].w != d->image->comps[0].w)
@@ -127,12 +128,7 @@ decode:
 			return fz_throw("image components have different precision");
 	}
 
-	{
-		n = d->image->numcomps;
-		w = d->image->comps[0].w;
-		h = d->image->comps[0].h;
-		depth = d->image->comps[0].prec;
-	}
+	d->stage = 2;
 
 output:
 	n = d->image->numcomps;

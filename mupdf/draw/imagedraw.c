@@ -108,12 +108,13 @@ img_1o1(byte * restrict src, byte cov, int len, byte * restrict dst,
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
-	byte sa;
 	while (len--)
 	{
+		int sa;
 		cov += *src; *src = 0; src++;
-		sa = fz_mul255(cov, samplemask(samples, w, h, u, v));
-		dst[0] = sa + fz_mul255(dst[0], 255 - sa);
+		sa = samplemask(samples, w, h, u, v);
+		sa = FZ_COMBINE(FZ_EXPAND(sa), FZ_EXPAND(cov));
+		dst[0] = FZ_BLEND(255, dst[0], sa);
 		dst++;
 		u += fa;
 		v += fb;
@@ -128,17 +129,16 @@ img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 	int w = image->w;
 	int h = image->h;
 	byte argb[4];
-	byte sa, ssa;
 	while (len--)
 	{
+		int sa;
 		cov += *src; *src = 0; src++;
 		sampleargb(samples, w, h, u, v, argb);
-		sa = fz_mul255(argb[0], cov);
-		ssa = 255 - sa;
-		dst[0] = sa + fz_mul255(dst[0], ssa);
-		dst[1] = fz_mul255(argb[1], sa) + fz_mul255(dst[1], ssa);
-		dst[2] = fz_mul255(argb[2], sa) + fz_mul255(dst[2], ssa);
-		dst[3] = fz_mul255(argb[3], sa) + fz_mul255(dst[3], ssa);
+		sa = FZ_COMBINE(FZ_EXPAND(argb[0]), FZ_EXPAND(cov));
+		dst[0] = FZ_BLEND(255, dst[0], sa);
+		dst[1] = FZ_BLEND(argb[1], dst[1], sa);
+		dst[2] = FZ_BLEND(argb[2], dst[2], sa);
+		dst[3] = FZ_BLEND(argb[3], dst[3], sa);
 		dst += 4;
 		u += fa;
 		v += fb;
@@ -152,21 +152,20 @@ img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict d
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
-	byte alpha = argb[0];
+	int alpha = FZ_EXPAND(argb[0]);
 	byte r = argb[1];
 	byte g = argb[2];
 	byte b = argb[3];
-	byte ca, cca;
 	while (len--)
 	{
+		int ca;
 		cov += *src; *src = 0; src++;
-		ca = fz_mul255(cov, samplemask(samples, w, h, u, v));
-		ca = fz_mul255(ca, alpha);
-		cca = 255 - ca;
-		dst[0] = ca + fz_mul255(dst[0], cca);
-		dst[1] = fz_mul255(r, ca) + fz_mul255(dst[1], cca);
-		dst[2] = fz_mul255(g, ca) + fz_mul255(dst[2], cca);
-		dst[3] = fz_mul255(b, ca) + fz_mul255(dst[3], cca);
+		ca = samplemask(samples, w, h, u, v);
+		ca = FZ_COMBINE(FZ_EXPAND(ca), alpha);
+		dst[0] = FZ_BLEND(255, dst[0], ca);
+		dst[1] = FZ_BLEND(r, dst[1], ca);
+		dst[2] = FZ_BLEND(g, dst[2], ca);
+		dst[3] = FZ_BLEND(b, dst[3], ca);
 		dst += 4;
 		u += fa;
 		v += fb;

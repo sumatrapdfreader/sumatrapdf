@@ -386,7 +386,7 @@ void fz_dropshade(fz_shade *shade);
 void fz_debugshade(fz_shade *shade);
 
 fz_rect fz_boundshade(fz_shade *shade, fz_matrix ctm);
-void fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dst);
+void fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dst, fz_bbox bbox);
 
 /*
  * Glyph cache
@@ -450,6 +450,21 @@ void fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix
 void fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, float flatness, float linewidth);
 
 /*
+ * Macros used to do blending
+ */
+
+/* Expand a value A from the 0...255 range to the 0..256 range */
+#define FZ_EXPAND(A) ((A)+((A)>>7))
+
+/* Combine values A (in any range) and B (in the 0..256 range),
+ * to give a single value in the same range as A was. */
+#define FZ_COMBINE(A,B) (((A)*(B))>>8)
+
+/* Blend SRC and DST (in the same range) together according to
+ * AMOUNT (in the 0...256 range). */
+#define FZ_BLEND(SRC, DST, AMOUNT) ((((SRC)-(DST))*(AMOUNT) + ((DST)<<8))>>8)
+
+/*
  * Function pointers -- they can be replaced by cpu-optimized versions
  */
 
@@ -492,4 +507,3 @@ extern void (*fz_scol1)(unsigned char *src, unsigned char *dst, int w, int denom
 extern void (*fz_scol2)(unsigned char *src, unsigned char *dst, int w, int denom);
 extern void (*fz_scol4)(unsigned char *src, unsigned char *dst, int w, int denom);
 extern void (*fz_scol5)(unsigned char *src, unsigned char *dst, int w, int denom);
-

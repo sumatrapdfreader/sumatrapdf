@@ -409,7 +409,10 @@ fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 	i = 0;
 
 	if (path->len > 0 && path->els[0].k != FZ_MOVETO)
+	{
 		fz_warn("assert: path must begin with moveto");
+		return;
+	}
 
 	p0.x = p0.y = 0;
 
@@ -599,7 +602,10 @@ fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, f
 	i = 0;
 
 	if (path->len > 0 && path->els[0].k != FZ_MOVETO)
+	{
 		fz_warn("assert: path must begin with moveto");
+		return;
+	}
 
 	p0.x = p0.y = 0;
 

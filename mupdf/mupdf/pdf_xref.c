@@ -61,10 +61,10 @@ pdf_debugxref(pdf_xref *xref)
 	printf("xref\n0 %d\n", xref->len);
 	for (i = 0; i < xref->len; i++)
 	{
-		printf("%010d %05d %c (ref=%d, ofs=%d)\n",
+		printf("%05d: %010d %05d %c (refs=%d, stmofs=%d)\n", i,
 			xref->table[i].ofs,
 			xref->table[i].gen,
-			xref->table[i].type,
+			xref->table[i].type ? xref->table[i].type : '-',
 			xref->table[i].obj ? xref->table[i].obj->refs : 0,
 			xref->table[i].stmofs);
 	}
@@ -138,7 +138,12 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 
 	for (i = 0; i < count; i++)
 	{
-		/* FIXME: seek to first + ofsbuf[i] */
+		error = fz_seek(stm, first + ofsbuf[i], 0);
+		if (error)
+		{
+			error = fz_rethrow(error, "cannot seek in object stream (%d %d R)", num, gen);
+			goto cleanupstm;
+		}
 
 		error = pdf_parsestmobj(&obj, xref, stm, buf, cap);
 		if (error)

@@ -14,7 +14,7 @@ ifneq "$(jbig2dec_dir)" ""
 
 THIRD_LIBS += $(JBIG2DEC_LIB)
 THIRD_INCS += -I$(jbig2dec_dir)
-LIBS := $(filter-out $(LIBS), -ljbig2dec)
+LIBS := $(filter-out -ljbig2dec, $(LIBS))
 
 JBIG2DEC_SRC=$(addprefix $(jbig2dec_dir)/, \
 	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
@@ -35,7 +35,7 @@ ifneq "$(openjpeg_dir)" ""
 
 THIRD_LIBS += $(OPENJPEG_LIB)
 THIRD_INCS += -I$(openjpeg_dir)
-LIBS := $(filter-out $(LIBS), -lopenjpeg)
+LIBS := $(filter-out -lopenjpeg, $(LIBS))
 
 OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
 	bio.c cio.c dwt.c event.c image.c \
@@ -55,7 +55,7 @@ ifneq "$(jpeg_dir)" ""
 
 THIRD_LIBS += $(JPEG_LIB)
 THIRD_INCS += -I$(jpeg_dir)
-LIBS := $(filter-out $(LIBS), -ljpeg)
+LIBS := $(filter-out -ljpeg, $(LIBS))
 
 JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c \
@@ -79,7 +79,7 @@ ifneq "$(zlib_dir)" ""
 
 THIRD_LIBS += $(ZLIB_LIB)
 THIRD_INCS += -I$(zlib_dir)
-LIBS := $(filter-out $(LIBS), -lz)
+LIBS := $(filter-out -lz, $(LIBS))
 
 ZLIB_SRC=$(addprefix $(zlib_dir)/, \
 	adler32.c compress.c crc32.c deflate.c \
@@ -98,7 +98,10 @@ ifneq "$(freetype_dir)" ""
 
 THIRD_LIBS += $(FREETYPE_LIB)
 THIRD_INCS += -I$(freetype_dir)/include
-LIBS := $(filter-out $(LIBS), -lfreetype)
+LIBS := $(filter-out -lfreetype, $(LIBS))
+
+SYS_FREETYPE_INC :=
+SYS_FREETYPE_LIB :=
 
 FREETYPE_OBJ=$(addprefix $(OBJDIR)/ft_, \
 	autofit.o ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftdebug.o ftgasp.o \

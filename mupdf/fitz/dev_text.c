@@ -451,7 +451,6 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 		pen->y = trm.f + dir.y * adv;
 
 		fz_addtextchar(last, font, size, text->wmode, text->els[i].ucs, fz_roundrect(rect));
-
 	}
 
 	fixuptextspan(firstSpan);

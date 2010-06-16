@@ -60,7 +60,7 @@ static void drawusage(void)
 		"  -r -\tresolution in dpi\n"
 		"  -m\tprint benchmark results\n"
 		"  -s\tprint MD5 checksum of page pixel data\n"
-		"  -t\ttext extraction made\n"
+		"  -t\ttext extraction mode\n"
 		"  -x\txml trace mode\n"
 		"  example:\n"
 		"    pdfdraw -o output%%03d.pnm input.pdf 1-3,5,9-\n");
@@ -461,5 +461,7 @@ int main(int argc, char **argv)
 		drawpages("1-");
 
 	closexref();
+
+	return 0;
 }
 

@@ -156,7 +156,9 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	pdf_logxref("repairxref %p\n", xref);
 
-	fz_seek(xref->file, 0, 0);
+	error = fz_seek(xref->file, 0, 0);
+	if (error)
+		return fz_rethrow(error, "cannot seek to beginning of file");
 
 	listlen = 0;
 	listcap = 1024;

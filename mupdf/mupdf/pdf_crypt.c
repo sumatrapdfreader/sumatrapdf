@@ -57,12 +57,12 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		if (crypt->length % 8 != 0)
 		{
 			pdf_freecrypt(crypt);
-			return fz_throw("invalid encryption key length: %d", crypt->length);
+			return fz_throw("invalid encryption key length");
 		}
 		if (crypt->length > 256)
 		{
 			pdf_freecrypt(crypt);
-			return fz_throw("invalid encryption key length: %d", crypt->length);
+			return fz_throw("invalid encryption key length");
 		}
 	}
 

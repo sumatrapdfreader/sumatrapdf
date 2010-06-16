@@ -430,16 +430,34 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		break;
 
 	case 'm':
-		if (app->histlen + 1 == 256)
+		if (app->numberlen > 0)
 		{
-			memmove(app->hist, app->hist + 1, sizeof(int) * 255);
-			app->histlen --;
+			int idx = atoi(app->number);
+
+			if (idx >= 0 && idx < nelem(app->marks))
+				app->marks[idx] = app->pageno;
 		}
-		app->hist[app->histlen++] = app->pageno;
+		else
+		{
+			if (app->histlen + 1 == 256)
+			{
+				memmove(app->hist, app->hist + 1, sizeof(int) * 255);
+				app->histlen --;
+			}
+			app->hist[app->histlen++] = app->pageno;
+		}
 		break;
 
 	case 't':
-		if (app->histlen > 0)
+		if (app->numberlen > 0)
+		{
+			int idx = atoi(app->number);
+
+			if (idx >= 0 && idx < nelem(app->marks))
+				if (app->marks[idx] > 0)
+					app->pageno = app->marks[idx];
+		}
+		else if (app->histlen > 0)
 			app->pageno = app->hist[--app->histlen];
 		break;
 
