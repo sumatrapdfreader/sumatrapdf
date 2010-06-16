@@ -200,6 +200,8 @@ path_w4i1o4(byte * restrict argb, byte * restrict src, byte cov, int len, byte *
 static void
 text_1o1(byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
 {
+	srcw -= w0;
+	dstw -= w0;
 	while (h--)
 	{
 		int w = w0;
