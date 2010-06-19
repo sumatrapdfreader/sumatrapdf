@@ -75,7 +75,8 @@ pdf_parsecmapname(pdf_cmap *cmap, fz_stream *file)
 	if (error)
 		return fz_rethrow(error, "syntaxerror in cmap");
 
-	if (tok == PDF_TNAME)
+	/* c.f. http://code.google.com/p/sumatrapdf/issues/detail?id=967 */
+	if (tok == PDF_TNAME || tok == PDF_TKEYWORD)
 	{
 		fz_strlcpy(cmap->cmapname, buf, sizeof(cmap->cmapname));
 		return fz_okay;
