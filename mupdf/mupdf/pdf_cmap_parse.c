@@ -75,10 +75,26 @@ pdf_parsecmapname(pdf_cmap *cmap, fz_stream *file)
 	if (error)
 		return fz_rethrow(error, "syntaxerror in cmap");
 
-	/* c.f. http://code.google.com/p/sumatrapdf/issues/detail?id=967 */
-	if (tok == PDF_TNAME || tok == PDF_TKEYWORD)
+	if (tok == PDF_TNAME)
 	{
 		fz_strlcpy(cmap->cmapname, buf, sizeof(cmap->cmapname));
+		return fz_okay;
+	}
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=967 */
+	if (tok == PDF_TKEYWORD)
+	{
+		*cmap->cmapname = '\0';
+		while (tok != PDF_TKEYWORD || strcmp(buf, "def") != 0)
+		{
+			if (*cmap->cmapname)
+				fz_strlcat(cmap->cmapname, " ", sizeof(cmap->cmapname));
+			fz_strlcat(cmap->cmapname, buf, sizeof(cmap->cmapname));
+
+			error = pdf_lexcmap(&tok, file, buf, sizeof buf, &len);
+			if (error || tok == PDF_TEOF)
+				return fz_rethrow(error, "syntaxerror in cmap");
+		}
 		return fz_okay;
 	}
 
