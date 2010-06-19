@@ -12,10 +12,10 @@ fz_bbox
 fz_roundrect(fz_rect f)
 {
 	fz_bbox i;
-	i.x0 = floor(f.x0);
-	i.y0 = floor(f.y0);
-	i.x1 = ceil(f.x1);
-	i.y1 = ceil(f.y1);
+	i.x0 = floorf(f.x0);
+	i.y0 = floorf(f.y0);
+	i.x1 = ceilf(f.x1);
+	i.y1 = ceilf(f.y1);
 	return i;
 }
 

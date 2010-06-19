@@ -30,7 +30,7 @@ static fz_glyphcache *drawcache = nil;
 static int drawmode = DRAWPNM;
 static char *drawpattern = nil;
 static pdf_page *drawpage = nil;
-static float drawzoom = 1.0;
+static float drawzoom = 1;
 static int drawrotate = 0;
 static int drawbands = 1;
 static int drawcount = 0;
@@ -418,7 +418,7 @@ int main(int argc, char **argv)
 		case 'b': drawbands = atoi(fz_optarg); break;
 		case 'p': password = fz_optarg; break;
 		case 'o': drawpattern = fz_optarg; break;
-		case 'r': drawzoom = atof(fz_optarg) / 72.0; break;
+		case 'r': drawzoom = atof(fz_optarg) / 72; break;
 		case 't': drawmode = DRAWTXT; break;
 		case 'x': drawmode = DRAWXML; break;
 		case 'm': benchmark = 1; break;

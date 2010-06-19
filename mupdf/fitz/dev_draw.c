@@ -75,7 +75,7 @@ fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 {
 	fz_drawdevice *dev = user;
 	float expansion = fz_matrixexpansion(ctm);
-	float flatness = 0.3 / expansion;
+	float flatness = 0.3f / expansion;
 	fz_bbox bbox;
 
 	fz_resetgel(dev->gel, dev->scissor);
@@ -111,12 +111,12 @@ fz_drawstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix c
 {
 	fz_drawdevice *dev = user;
 	float expansion = fz_matrixexpansion(ctm);
-	float flatness = 0.3 / expansion;
+	float flatness = 0.3f / expansion;
 	float linewidth = stroke->linewidth;
 	fz_bbox bbox;
 
-	if (linewidth * expansion < 0.1)
-		linewidth = 1.0 / expansion;
+	if (linewidth * expansion < 0.1f)
+		linewidth = 1 / expansion;
 
 	fz_resetgel(dev->gel, dev->scissor);
 	if (stroke->dashlen > 0)
@@ -153,7 +153,7 @@ fz_drawclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 {
 	fz_drawdevice *dev = user;
 	float expansion = fz_matrixexpansion(ctm);
-	float flatness = 0.3 / expansion;
+	float flatness = 0.3f / expansion;
 	fz_pixmap *mask, *dest;
 	fz_bbox bbox;
 
@@ -201,7 +201,7 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 {
 	fz_drawdevice *dev = user;
 	float expansion = fz_matrixexpansion(ctm);
-	float flatness = 0.3 / expansion;
+	float flatness = 0.3f / expansion;
 	float linewidth = stroke->linewidth;
 	fz_pixmap *mask, *dest;
 	fz_bbox bbox;
@@ -212,8 +212,8 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 		return;
 	}
 
-	if (linewidth * expansion < 0.1)
-		linewidth = 1.0 / expansion;
+	if (linewidth * expansion < 0.1f)
+		linewidth = 1 / expansion;
 
 	fz_resetgel(dev->gel, dev->scissor);
 	if (stroke->dashlen > 0)
@@ -319,10 +319,10 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 		tm.e = text->els[i].x;
 		tm.f = text->els[i].y;
 		trm = fz_concat(tm, ctm);
-		x = floor(trm.e);
-		y = floor(trm.f);
-		trm.e = QUANT(trm.e - floor(trm.e), HSUBPIX);
-		trm.f = QUANT(trm.f - floor(trm.f), VSUBPIX);
+		x = floorf(trm.e);
+		y = floorf(trm.f);
+		trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
+		trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
 		glyph = fz_renderglyph(dev->cache, text->font, gid, trm);
 		if (glyph)
@@ -406,10 +406,10 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 			tm.e = text->els[i].x;
 			tm.f = text->els[i].y;
 			trm = fz_concat(tm, ctm);
-			x = floor(trm.e);
-			y = floor(trm.f);
-			trm.e = QUANT(trm.e - floor(trm.e), HSUBPIX);
-			trm.f = QUANT(trm.f - floor(trm.f), VSUBPIX);
+			x = floorf(trm.e);
+			y = floorf(trm.f);
+			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
+			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
 			glyph = fz_renderglyph(dev->cache, text->font, gid, trm);
 			if (glyph)
@@ -489,15 +489,15 @@ calcimagestate(fz_drawdevice *dev, fz_pixmap *image, fz_matrix ctm,
 	fz_matrix mat;
 	int w, h;
 
-	sx = image->w / sqrt(ctm.a * ctm.a + ctm.b * ctm.b);
-	sy = image->h / sqrt(ctm.c * ctm.c + ctm.d * ctm.d);
+	sx = image->w / sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	sy = image->h / sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 
-	if (sx < 1.0)
+	if (sx < 1)
 		*dx = 1;
 	else
 		*dx = sx;
 
-	if (sy < 1.0)
+	if (sy < 1)
 		*dy = 1;
 	else
 		*dy = sy;
@@ -506,14 +506,14 @@ calcimagestate(fz_drawdevice *dev, fz_pixmap *image, fz_matrix ctm,
 	h = image->h / *dy;
 
 	path = fz_newpath();
-	fz_moveto(path, 0.0, 0.0);
-	fz_lineto(path, 1.0, 0.0);
-	fz_lineto(path, 1.0, 1.0);
-	fz_lineto(path, 0.0, 1.0);
+	fz_moveto(path, 0, 0);
+	fz_lineto(path, 1, 0);
+	fz_lineto(path, 1, 1);
+	fz_lineto(path, 0, 1);
 	fz_closepath(path);
 
 	fz_resetgel(dev->gel, dev->scissor);
-	fz_fillpath(dev->gel, path, ctm, 1.0);
+	fz_fillpath(dev->gel, path, ctm, 1);
 	fz_sortgel(dev->gel);
 
 	fz_freepath(path);
@@ -521,15 +521,15 @@ calcimagestate(fz_drawdevice *dev, fz_pixmap *image, fz_matrix ctm,
 	*bbox = fz_boundgel(dev->gel);
 	*bbox = fz_intersectbbox(*bbox, dev->scissor);
 	
-	mat.a =  1.0 / w;
-	mat.b = 0.0;
-	mat.c = 0.0;
-	mat.d =  -1.0 / h;
-	mat.e = 0.0;
-	mat.f = 1.0;
+	mat.a = 1.0f / w;
+	mat.b = 0;
+	mat.c = 0;
+	mat.d = -1.0f / h;
+	mat.e = 0;
+	mat.f = 1;
 	*invmat = fz_invertmatrix(fz_concat(mat, ctm));
-	invmat->e -= 0.5;
-	invmat->f -= 0.5;
+	invmat->e -= 0.5f;
+	invmat->f -= 0.5f;
 }
 
 static void

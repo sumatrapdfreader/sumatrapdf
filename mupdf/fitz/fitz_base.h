@@ -57,6 +57,8 @@ extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 #define vsnprintf _vsnprintf
 #endif
 
+#define hypotf _hypotf
+
 #else /* C99 or close enough */
 
 #ifdef __GNUC__

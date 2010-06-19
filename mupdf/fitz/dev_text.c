@@ -41,7 +41,7 @@ fz_newtextspan(void)
 	span = fz_malloc(sizeof(fz_textspan));
 	span->font = nil;
 	span->wmode = 0;
-	span->size = 0.0;
+	span->size = 0;
 	span->len = 0;
 	span->cap = 0;
 	span->text = nil;
@@ -360,13 +360,13 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 
 	if (text->wmode == 0)
 	{
-		dir.x = 1.0;
-		dir.y = 0.0;
+		dir.x = 1;
+		dir.y = 0;
 	}
 	else
 	{
-		dir.x = 0.0;
-		dir.y = 1.0;
+		dir.x = 0;
+		dir.y = 1;
 	}
 
 	tm.e = 0;
@@ -393,24 +393,24 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 		dy = pen->y - trm.f;
 		if (pen->x == -1 && pen->y == -1)
 			dx = dy = 0;
-		cross = dx * dir.y - dy * dir.x;
+		cross = fabsf(dx * dir.y - dy * dir.x);
 		dist2 = dx * dx + dy * dy;
 
 		/* Add space and newlines based on pen movement */
-		if (fabs(dist2) > size * size * 0.04)
+		if (dist2 > size * size * 0.04f)
 		{
-			if (fabs(cross) > 0.1)
+			if (cross > 0.1f)
 			{
 				fz_addtextnewline(last, font, size, text->wmode);
 			}
 			else if ((*last)->len == 0 || (*last)->text[(*last)->len - 1].c == ' ') ; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
-			else if (fabs(cross) < 0.1 && dist2 > size * size * 0.04)
+			else if (cross < 0.1f && dist2 > size * size * 0.04f)
 			{
 				fz_rect spacerect;
-				spacerect.x0 = -fabs(dx);
-				spacerect.y0 = 0.0;
-				spacerect.x1 = 0.0;
-				spacerect.y1 = 1.0;
+				spacerect.x0 = -fabsf(dx);
+				spacerect.y0 = 0;
+				spacerect.x1 = 0;
+				spacerect.y1 = 1;
 				spacerect = fz_transformrect(trm, spacerect);
 				fz_addtextchar(last, font, size, text->wmode, ' ', fz_roundrect(spacerect));
 			}
@@ -426,24 +426,24 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			err = FT_Get_Advance(font->ftface, text->els[i].gid, mask, &ftadv);
 			if (err)
 				fz_warn("freetype get advance (gid %d): %s", text->els[i].gid, ft_errorstring(err));
-			adv = ftadv / 65536.0;
+			adv = ftadv / 65536.0f;
 			if (text->wmode)
 			{
-				adv = -1.0; /* TODO: freetype returns broken vertical metrics */
-				rect.x0 = 0.0; rect.y0 = 0.0;
-				rect.x1 = 1.0; rect.y1 = adv;
+				adv = -1; /* TODO: freetype returns broken vertical metrics */
+				rect.x0 = 0; rect.y0 = 0;
+				rect.x1 = 1; rect.y1 = adv;
 			}
 			else
 			{
-				rect.x0 = 0.0; rect.y0 = 0.0;
-				rect.x1 = adv; rect.y1 = 1.0;
+				rect.x0 = 0; rect.y0 = 0;
+				rect.x1 = adv; rect.y1 = 1;
 			}
 		}
 		else
 		{
 			adv = font->t3widths[text->els[i].gid];
-			rect.x0 = 0.0; rect.y0 = 0.0;
-			rect.x1 = adv; rect.y1 = 1.0;
+			rect.x0 = 0; rect.y0 = 0;
+			rect.x1 = adv; rect.y1 = 1;
 		}
 
 		rect = fz_transformrect(trm, rect);

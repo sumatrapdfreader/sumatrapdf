@@ -128,13 +128,13 @@ midcolor(float *c, float *c1, float *c2)
 {
 	int i;
 	for (i = 0; i < FZ_MAXCOLORS; i++)
-		c[i] = (float) ((c1[i] + c2[i]) / 2.0);
+		c[i] = (c1[i] + c2[i]) * 0.5f;
 }
 
 static inline float
 midpoint(float a, float b)
 {
-	return a / 2.0f + b / 2.0f;
+	return a * 0.5f + b * 0.5f;
 }
 
 static inline void
@@ -371,7 +371,7 @@ pdf_samplecompositeshadefunction(fz_shade *shade,
 
 	for (i = 0; i < 256; i++)
 	{
-		float t = t0 + (i / 256.0) * (t1 - t0);
+		float t = t0 + (i / 255.0f) * (t1 - t0);
 
 		error = pdf_evalfunction(func, &t, 1, shade->function[i], shade->cs->n);
 		if (error)
@@ -390,7 +390,7 @@ pdf_samplecomponentshadefunction(fz_shade *shade,
 
 	for (i = 0; i < 256; i++)
 	{
-		float t = t0 + (i / 256.0) * (t1 - t0);
+		float t = t0 + (i / 255.0f) * (t1 - t0);
 
 		for (k = 0; k < funcs; k++)
 		{
@@ -445,8 +445,8 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref,
 
 	for (yy = 0; yy < NSEGS; yy++)
 	{
-		y = y0 + (y1 - y0) * yy / (float) NSEGS;
-		yn = y0 + (y1 - y0) * (yy + 1) / (float) NSEGS;
+		y = y0 + (y1 - y0) * yy / NSEGS;
+		yn = y0 + (y1 - y0) * (yy + 1) / NSEGS;
 
 		for (xx = 0; xx < NSEGS; xx++)
 		{
@@ -454,13 +454,13 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref,
 			fz_point vcoord[4];
 			int i;
 
-			x = x0 + (x1 - x0) * (xx / (float) NSEGS);
-			xn = x0 + (x1 - x0) * (xx + 1) / (float) NSEGS;
+			x = x0 + (x1 - x0) * xx / NSEGS;
+			xn = x0 + (x1 - x0) * (xx + 1) / NSEGS;
 
-			vcoord[0].x =  x; vcoord[0].y =  y;
-			vcoord[1].x = xn; vcoord[1].y =  y;
+			vcoord[0].x = x; vcoord[0].y = y;
+			vcoord[1].x = xn; vcoord[1].y = y;
 			vcoord[2].x = xn; vcoord[2].y = yn;
-			vcoord[3].x =  x; vcoord[3].y = yn;
+			vcoord[3].x = x; vcoord[3].y = yn;
 
 			for (i = 0; i < 4; i++)
 			{
@@ -527,12 +527,12 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 	if (error)
 		return fz_rethrow(error, "unable to sample shading function");
 
-	theta = atan2(y1 - y0, x1 - x0);
-	theta += M_PI / 2.0;
+	theta = atan2f(y1 - y0, x1 - x0);
+	theta += (float)M_PI * 0.5f;
 
 	pdf_logshade("theta=%g\n", theta);
 
-	dist = hypot(x1 - x0, y1 - y0);
+	dist = hypotf(x1 - x0, y1 - y0);
 
 	/* if the axis has virtually length 0 (a point),
 	do not extend as there is nothing to extend beyond */
@@ -542,22 +542,22 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 		e1 = 0;
 	}
 
-	p1.x = x0 + HUGENUM * cos(theta);
-	p1.y = y0 + HUGENUM * sin(theta);
-	p2.x = x1 + HUGENUM * cos(theta);
-	p2.y = y1 + HUGENUM * sin(theta);
-	p3.x = x0 - HUGENUM * cos(theta);
-	p3.y = y0 - HUGENUM * sin(theta);
-	p4.x = x1 - HUGENUM * cos(theta);
-	p4.y = y1 - HUGENUM * sin(theta);
+	p1.x = x0 + HUGENUM * cosf(theta);
+	p1.y = y0 + HUGENUM * sinf(theta);
+	p2.x = x1 + HUGENUM * cosf(theta);
+	p2.y = y1 + HUGENUM * sinf(theta);
+	p3.x = x0 - HUGENUM * cosf(theta);
+	p3.y = y0 - HUGENUM * sinf(theta);
+	p4.x = x1 - HUGENUM * cosf(theta);
+	p4.y = y1 - HUGENUM * sinf(theta);
 
 	pdf_logshade("p1 %g %g\n", p1.x, p1.y);
 	pdf_logshade("p2 %g %g\n", p2.x, p2.y);
 	pdf_logshade("p3 %g %g\n", p3.x, p3.y);
 	pdf_logshade("p4 %g %g\n", p4.x, p4.y);
 
-	tmin = 0.0f;
-	tmax = 1.0f;
+	tmin = 0;
+	tmax = 1;
 
 	/* if the axis has virtually length 0 (a point), use the same axis
 	position t = 0 for all triangle vertices */
@@ -587,8 +587,8 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 
 		pdf_addquad(shade,
 			ep1.x, ep1.y, &tmin,
-			 p1.x,  p1.y, &tmin,
-			 p3.x,  p3.y, &tmin,
+			p1.x, p1.y, &tmin,
+			p3.x, p3.y, &tmin,
 			ep3.x, ep3.y, &tmin);
 	}
 
@@ -600,10 +600,10 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 		ep4.y = p4.y + (y1 - y0) / dist * HUGENUM;
 
 		pdf_addquad(shade,
-			 p2.x,  p2.y, &tmax,
+			p2.x, p2.y, &tmax,
 			ep2.x, ep2.y, &tmax,
 			ep4.x, ep4.y, &tmax,
-			 p4.x,  p4.y, &tmax);
+			p4.x, p4.y, &tmax);
 	}
 
 	shade->meshlen = shade->meshlen / 3 / 3;
@@ -619,20 +619,20 @@ buildannulusmesh(fz_shade *shade, int pos,
 	float x1, float y1, float r1,
 	float c0, float c1, int nomesh)
 {
-	float dist = hypot(x1 - x0, y1 - y0);
+	float dist = hypotf(x1 - x0, y1 - y0);
 	float step;
 	float theta;
 	int i;
 
 	if (dist != 0)
-		theta = asin((r1 - r0) / dist) + M_PI / 2.0 + atan2(y1 - y0, x1 - x0);
+		theta = asinf((r1 - r0) / dist) + (float)M_PI * 0.5f + atan2f(y1 - y0, x1 - x0);
 	else
 		theta = 0;
 
-	if (!(theta >= 0 && theta <= M_PI))
+	if (!(theta >= 0 && theta <= (float)M_PI))
 		theta = 0;
 
-	step = M_PI * 2.0 / (float) MAX_RAD_SEGS;
+	step = (float)M_PI * 2.0f / MAX_RAD_SEGS;
 
 	for (i = 0; i < MAX_RAD_SEGS; theta -= step, i++)
 	{
@@ -736,17 +736,17 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref,
 		if (e0)
 			pos = buildannulusmesh(shade, pos,
 				ex0, ey0, er0,
-				x0, y0, r0, 0,
-				0, 1 - i);
+				x0, y0, r0,
+				0, 0, 1 - i);
 		pos = buildannulusmesh(shade, pos,
 			x0, y0, r0,
 			x1, y1, r1,
-			0, 1.0f, 1 - i);
+			0, 1, 1 - i);
 		if (e1)
 			pos = buildannulusmesh(shade, pos,
 				x1, y1, r1,
 				ex1, ey1, er1,
-				1.0f, 1.0f, 1 - i);
+				1, 1, 1 - i);
 	}
 
 	shade->meshlen = shade->meshlen / 3 / 3;
@@ -779,8 +779,8 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
-	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
+	float coordscale = 1 / (powf(2, bpcoord) - 1);
+	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
@@ -919,8 +919,8 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
-	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
+	float coordscale = 1 / (powf(2, bpcoord) - 1);
+	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
@@ -1028,8 +1028,8 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
-	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
+	float coordscale = 1 / (powf(2, bpcoord) - 1);
+	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	fz_point p0, p1;
 	float c0[FZ_MAXCOLORS];
@@ -1185,8 +1185,8 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1.0 / (pow(2, bpcoord) - 1.0);
-	float compscale = 1.0 / (pow(2, bpcomp) - 1.0);
+	float coordscale = 1 / (powf(2, bpcoord) - 1);
+	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	fz_point p0, p1;
 	float c0[FZ_MAXCOLORS];
@@ -1422,10 +1422,10 @@ pdf_loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix tra
 			shade->bbox.x1, shade->bbox.y1);
 	}
 
-	domain[0] = 0.0;
-	domain[1] = 1.0;
-	domain[2] = 0.0;
-	domain[3] = 1.0;
+	domain[0] = 0;
+	domain[1] = 1;
+	domain[2] = 0;
+	domain[3] = 1;
 
 	obj = fz_dictgets(dict, "Domain");
 	if (fz_isarray(obj))

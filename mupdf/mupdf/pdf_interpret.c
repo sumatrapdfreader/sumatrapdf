@@ -835,7 +835,7 @@ Lsetcolor:
 			if (csi->top < 1)
 				goto syntaxerror;
 			pdf_flushtext(csi);
-			gstate->scale = fz_toreal(csi->stack[0]) / 100.0;
+			gstate->scale = fz_toreal(csi->stack[0]) / 100;
 			break;
 		case 'L':
 			if (buf[2] != 0)
@@ -877,14 +877,14 @@ Lsetcolor:
 				return fz_rethrow(error, "cannot load font (%d %d R)", fz_tonum(obj), fz_togen(obj));
 
 			gstate->size = fz_toreal(csi->stack[1]);
-			if (gstate->size < -1000.0)
+			if (gstate->size < -1000)
 			{
-				gstate->size = -1000.0;
+				gstate->size = -1000;
 				fz_warn("font size too large, capping to %g", gstate->size);
 			}
-			if (gstate->size > 1000.0)
+			if (gstate->size > 1000)
 			{
-				gstate->size = 1000.0;
+				gstate->size = 1000;
 				fz_warn("font size too large, capping to %g", gstate->size);
 			}
 			break;

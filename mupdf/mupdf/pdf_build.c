@@ -9,7 +9,7 @@ pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->ctm = ctm;
 	gs->clipdepth = 0;
 
-	gs->strokestate.linewidth = 1.0;
+	gs->strokestate.linewidth = 1;
 	gs->strokestate.linecap = 0;
 	gs->strokestate.linejoin = 0;
 	gs->strokestate.miterlimit = 10;
@@ -23,8 +23,8 @@ pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->stroke.indexed = nil;
 	gs->stroke.pattern = nil;
 	gs->stroke.shade = nil;
-	gs->stroke.parentalpha = 1.0;
-	gs->stroke.alpha = 1.0;
+	gs->stroke.parentalpha = 1;
+	gs->stroke.alpha = 1;
 
 	gs->fill.kind = PDF_MCOLOR;
 	gs->fill.cs = fz_keepcolorspace(pdf_devicegray);
@@ -32,8 +32,8 @@ pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->fill.indexed = nil;
 	gs->fill.pattern = nil;
 	gs->fill.shade = nil;
-	gs->fill.parentalpha = 1.0;
-	gs->fill.alpha = 1.0;
+	gs->fill.parentalpha = 1;
+	gs->fill.alpha = 1;
 
 	gs->blendmode = FZ_BNORMAL;
 
@@ -106,9 +106,9 @@ pdf_setcolor(pdf_csi *csi, int what, float *v)
 
 	case PDF_MLAB:
 Llab:
-		mat->v[0] = v[0] / 100.0;
-		mat->v[1] = (v[1] + 100) / 200.0;
-		mat->v[2] = (v[2] + 100) / 200.0;
+		mat->v[0] = v[0] / 100;
+		mat->v[1] = (v[1] + 100) / 200;
+		mat->v[2] = (v[2] + 100) / 200;
 		break;
 
 	case PDF_MINDEXED:
@@ -116,7 +116,7 @@ Lindexed:
 		ind = mat->indexed;
 		i = CLAMP(v[0], 0, ind->high);
 		for (k = 0; k < ind->base->n; k++)
-			mat->v[k] = ind->lookup[ind->base->n * i + k] / 255.0;
+			mat->v[k] = ind->lookup[ind->base->n * i + k] / 255.0f;
 		break;
 
 	default:
@@ -226,10 +226,10 @@ pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 	/* patterns are painted using the ctm in effect at the beginning of the content stream */
 	/* get bbox of shape in pattern space for stamping */
 	bbox = fz_transformrect(invptm, bbox);
-	x0 = floor(bbox.x0 / pat->xstep);
-	y0 = floor(bbox.y0 / pat->ystep);
-	x1 = ceil(bbox.x1 / pat->xstep);
-	y1 = ceil(bbox.y1 / pat->ystep);
+	x0 = floorf(bbox.x0 / pat->xstep);
+	y0 = floorf(bbox.y0 / pat->ystep);
+	x1 = ceilf(bbox.x1 / pat->xstep);
+	y1 = ceilf(bbox.y1 / pat->ystep);
 
 	oldtopctm = csi->topctm;
 	oldtop = csi->gtop;
@@ -572,8 +572,8 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	if (fontdesc->wmode == 1)
 	{
 		v = pdf_getvmtx(fontdesc, cid);
-		tsm.e -= v.x * gstate->size / 1000.0;
-		tsm.f -= v.y * gstate->size / 1000.0;
+		tsm.e -= v.x * gstate->size * 0.001f;
+		tsm.f -= v.y * gstate->size * 0.001f;
 	}
 
 	trm = fz_concat(tsm, csi->tm);
@@ -582,10 +582,10 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	if (!csi->text ||
 		fontdesc->font != csi->text->font ||
 		fontdesc->wmode != csi->text->wmode ||
-		fabs(trm.a - csi->text->trm.a) > FLT_EPSILON ||
-		fabs(trm.b - csi->text->trm.b) > FLT_EPSILON ||
-		fabs(trm.c - csi->text->trm.c) > FLT_EPSILON ||
-		fabs(trm.d - csi->text->trm.d) > FLT_EPSILON ||
+		fabsf(trm.a - csi->text->trm.a) > FLT_EPSILON ||
+		fabsf(trm.b - csi->text->trm.b) > FLT_EPSILON ||
+		fabsf(trm.c - csi->text->trm.c) > FLT_EPSILON ||
+		fabsf(trm.d - csi->text->trm.d) > FLT_EPSILON ||
 		gstate->render != csi->textmode)
 	{
 		pdf_flushtext(csi);
@@ -606,14 +606,14 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	if (fontdesc->wmode == 0)
 	{
 		h = pdf_gethmtx(fontdesc, cid);
-		w0 = h.w / 1000.0;
+		w0 = h.w * 0.001f;
 		tx = (w0 * gstate->size + gstate->charspace) * gstate->scale;
 		csi->tm = fz_concat(fz_translate(tx, 0), csi->tm);
 	}
 
 	if (fontdesc->wmode == 1)
 	{
-		w1 = v.w / 1000.0;
+		w1 = v.w * 0.001f;
 		ty = w1 * gstate->size + gstate->charspace;
 		csi->tm = fz_concat(fz_translate(0, ty), csi->tm);
 	}
@@ -654,7 +654,7 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 			if (fz_isstring(item))
 				pdf_showtext(csi, item);
 			else
-				pdf_showspace(csi, - fz_toreal(item) * gstate->size / 1000.0);
+				pdf_showspace(csi, - fz_toreal(item) * gstate->size * 0.001f);
 		}
 	}
 

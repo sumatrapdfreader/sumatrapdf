@@ -74,15 +74,15 @@ fz_renderglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix ctm)
 	key.b = ctm.b * 65536;
 	key.c = ctm.c * 65536;
 	key.d = ctm.d * 65536;
-	key.e = (ctm.e - floor(ctm.e)) * 256;
-	key.f = (ctm.f - floor(ctm.f)) * 256;
+	key.e = (ctm.e - floorf(ctm.e)) * 256;
+	key.f = (ctm.f - floorf(ctm.f)) * 256;
 
 	val = fz_hashfind(cache->hash, &key);
 	if (val)
 		return fz_keeppixmap(val);
 
-	ctm.e = floor(ctm.e) + key.e / 256.0;
-	ctm.f = floor(ctm.f) + key.f / 256.0;
+	ctm.e = floorf(ctm.e) + key.e / 256.0f;
+	ctm.f = floorf(ctm.f) + key.f / 256.0f;
 
 	if (font->ftface)
 	{

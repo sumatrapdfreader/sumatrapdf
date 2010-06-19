@@ -114,10 +114,10 @@ fz_insertgel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 	int v;
 	int d;
 
-	int x0 = floor(fx0 * HSCALE);
-	int y0 = floor(fy0 * VSCALE);
-	int x1 = floor(fx1 * HSCALE);
-	int y1 = floor(fy1 * VSCALE);
+	int x0 = floorf(fx0 * HSCALE);
+	int y0 = floorf(fy0 * VSCALE);
+	int x1 = floorf(fx1 * HSCALE);
+	int y1 = floorf(fy1 * VSCALE);
 
 	d = cliplerpy(gel->clip.y0, 0, x0, y0, x1, y1, &v);
 	if (d == OUTSIDE) return;
@@ -439,8 +439,8 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 
 	if (image)
 	{
-		int u = (invmat->a * (x + 0.5) + invmat->c * (y + 0.5) + invmat->e) * 65536;
-		int v = (invmat->b * (x + 0.5) + invmat->d * (y + 0.5) + invmat->f) * 65536;
+		int u = (invmat->a * (x + 0.5f) + invmat->c * (y + 0.5f) + invmat->e) * 65536;
+		int v = (invmat->b * (x + 0.5f) + invmat->d * (y + 0.5f) + invmat->f) * 65536;
 		int fa = invmat->a * 65536;
 		int fb = invmat->b * 65536;
 		if (argb)

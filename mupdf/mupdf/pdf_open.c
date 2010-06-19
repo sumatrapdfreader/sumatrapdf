@@ -28,7 +28,7 @@ pdf_loadversion(pdf_xref *xref)
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		return fz_throw("cannot recognize version marker");
 
-	xref->version = (int) (atof(buf + 5) * 10.0 + 0.5);
+	xref->version = atof(buf + 5) * 10;
 
 	pdf_logxref("version %d.%d\n", xref->version / 10, xref->version % 10);
 

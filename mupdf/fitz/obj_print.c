@@ -241,7 +241,7 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 	case FZ_REAL:
 		sprintf(buf, "%g", fz_toreal(obj));
 		if (strchr(buf, 'e')) /* bad news! */
-			sprintf(buf, fabs(fz_toreal(obj)) > 1 ? "%1.1f" : "%1.8f", fz_toreal(obj));
+			sprintf(buf, fabsf(fz_toreal(obj)) > 1 ? "%1.1f" : "%1.8f", fz_toreal(obj));
 		fmtputs(fmt, buf);
 		break;
 	case FZ_STRING:

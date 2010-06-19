@@ -567,7 +567,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 				}
 				else {
 					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, fabs(r1));
+					SAFE_PUSHREAL(st, fabsf(r1));
 				}
 				break;
 
@@ -600,7 +600,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOATAN:
 				SAFE_POPNUM(st, &r2);
 				SAFE_POPNUM(st, &r1);
-				r1 = atan2(r1, r2) * RADIAN;
+				r1 = atan2f(r1, r2) * RADIAN;
 				if (r1 < 0)
 					r1 += 360;
 				SAFE_PUSHREAL(st, r1);
@@ -623,7 +623,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOCEILING:
 				if (!pstopisint(st)) {
 					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, ceil(r1));
+					SAFE_PUSHREAL(st, ceilf(r1));
 				}
 				break;
 
@@ -634,7 +634,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 
 			case PSOCOS:
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, cos(r1/RADIAN));
+				SAFE_PUSHREAL(st, cosf(r1/RADIAN));
 				break;
 
 			case PSOCVI:
@@ -686,7 +686,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOEXP:
 				SAFE_POPNUM(st, &r2);
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, pow(r1, r2));
+				SAFE_PUSHREAL(st, powf(r1, r2));
 				break;
 
 			case PSOFALSE:
@@ -696,7 +696,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOFLOOR:
 				if (!pstopisint(st)) {
 					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, floor(r1));
+					SAFE_PUSHREAL(st, floorf(r1));
 				}
 				break;
 
@@ -752,12 +752,12 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 
 			case PSOLN:
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, log(r1));
+				SAFE_PUSHREAL(st, logf(r1));
 				break;
 
 			case PSOLOG:
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, log10(r1));
+				SAFE_PUSHREAL(st, log10f(r1));
 				break;
 
 			case PSOLT:
@@ -859,18 +859,18 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOROUND:
 				if (!pstopisint(st)) {
 					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, (r1 >= 0) ? floor(r1 + 0.5) : ceil(r1 - 0.5));
+					SAFE_PUSHREAL(st, (r1 >= 0) ? floorf(r1 + 0.5f) : ceilf(r1 - 0.5f));
 				}
 				break;
 
 			case PSOSIN:
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, sin(r1/RADIAN));
+				SAFE_PUSHREAL(st, sinf(r1/RADIAN));
 				break;
 
 			case PSOSQRT:
 				SAFE_POPNUM(st, &r1);
-				SAFE_PUSHREAL(st, sqrt(r1));
+				SAFE_PUSHREAL(st, sqrtf(r1));
 				break;
 
 			case PSOSUB:
@@ -893,7 +893,7 @@ evalpostscriptfunc(pdf_function *func, psstack *st, int codeptr)
 			case PSOTRUNCATE:
 				if (!pstopisint(st)) {
 					SAFE_POPNUM(st, &r1);
-					SAFE_PUSHREAL(st, (r1 >= 0) ? floor(r1) : ceil(r1));
+					SAFE_PUSHREAL(st, (r1 >= 0) ? floorf(r1) : ceilf(r1));
 				}
 				break;
 
@@ -1115,9 +1115,9 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 		x = LERP(x, func->domain[i][0], func->domain[i][1],
 			func->u.sa.encode[i][0], func->u.sa.encode[i][1]);
 		x = CLAMP(x, 0, func->u.sa.size[i] - 1);
-		e[0][i] = floor(x);
-		e[1][i] = ceil(x);
-		efrac[i] = x - floor(x);
+		e[0][i] = floorf(x);
+		e[1][i] = ceilf(x);
+		efrac[i] = x - floorf(x);
 	}
 
 	if (func->m > 4)
@@ -1232,7 +1232,7 @@ evalexponentialfunc(pdf_function *func, float in, float *out)
 	if (func->u.e.n < 0 && x == 0)
 		return fz_throw("constraint error");
 
-	tmp = pow(x, func->u.e.n);
+	tmp = powf(x, func->u.e.n);
 	for (i = 0; i < func->n; ++i)
 	{
 		out[i] = func->u.e.c0[i] + tmp * (func->u.e.c1[i] - func->u.e.c0[i]);

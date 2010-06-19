@@ -64,7 +64,7 @@ fz_gammapixmap(fz_pixmap *pix, float gamma)
 	unsigned char *p = pix->samples;
 	int i;
 	for (i = 0; i < 256; i++)
-		table[i] = CLAMP(pow(i / 255.0, gamma) * 255.0, 0, 255);
+		table[i] = CLAMP(powf(i / 255.0f, gamma) * 255, 0, 255);
 	while (n--)
 	{
 		*p = table[*p];

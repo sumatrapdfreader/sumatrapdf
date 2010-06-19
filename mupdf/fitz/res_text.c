@@ -73,10 +73,10 @@ fz_boundtext(fz_text *text, fz_matrix ctm)
 	trm.e = 0;
 	trm.f = 0;
 
-	fbox.x0 = text->font->bbox.x0 * 0.001;
-	fbox.y0 = text->font->bbox.y0 * 0.001;
-	fbox.x1 = text->font->bbox.x1 * 0.001;
-	fbox.y1 = text->font->bbox.y1 * 0.001;
+	fbox.x0 = text->font->bbox.x0 * 0.001f;
+	fbox.y0 = text->font->bbox.y0 * 0.001f;
+	fbox.x1 = text->font->bbox.x1 * 0.001f;
+	fbox.y1 = text->font->bbox.y1 * 0.001f;
 
 	fbox = fz_transformrect(trm, fbox);
 

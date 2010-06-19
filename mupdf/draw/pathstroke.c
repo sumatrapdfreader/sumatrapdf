@@ -47,22 +47,22 @@ arc(struct sctx *s,
 	float ox, oy, nx, ny;
 	int n, i;
 
-	r = fabs(s->linewidth);
-	theta = 2 * M_SQRT2 * sqrt(s->flatness / r);
-	th0 = atan2(y0, x0);
-	th1 = atan2(y1, x1);
+	r = fabsf(s->linewidth);
+	theta = 2 * (float)M_SQRT2 * sqrtf(s->flatness / r);
+	th0 = atan2f(y0, x0);
+	th1 = atan2f(y1, x1);
 
 	if (r > 0)
 	{
 		if (th0 < th1)
-			th0 += M_PI * 2;
-		n = ceil((th0 - th1) / theta);
+			th0 += (float)M_PI * 2;
+		n = ceilf((th0 - th1) / theta);
 	}
 	else
 	{
 		if (th1 < th0)
-			th1 += M_PI * 2;
-		n = ceil((th1 - th0) / theta);
+			th1 += (float)M_PI * 2;
+		n = ceilf((th1 - th0) / theta);
 	}
 
 	ox = x0;
@@ -70,8 +70,8 @@ arc(struct sctx *s,
 	for (i = 1; i < n; i++)
 	{
 		theta = th0 + (th1 - th0) * i / n;
-		nx = cos(theta) * r;
-		ny = sin(theta) * r;
+		nx = cosf(theta) * r;
+		ny = sinf(theta) * r;
 		line(s, xc + ox, yc + oy, xc + nx, yc + ny);
 		ox = nx;
 		oy = ny;
@@ -85,7 +85,7 @@ linestroke(struct sctx *s, fz_point a, fz_point b)
 {
 	float dx = b.x - a.x;
 	float dy = b.y - a.y;
-	float scale = s->linewidth / sqrt(dx * dx + dy * dy);
+	float scale = s->linewidth / sqrtf(dx * dx + dy * dy);
 	float dlx = dy * scale;
 	float dly = -dx * scale;
 	line(s, a.x - dlx, a.y - dly, b.x - dlx, b.y - dly);
@@ -118,18 +118,18 @@ linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	if (dx1 * dx1 + dy1 * dy1 < FLT_EPSILON)
 		linejoin = BEVEL;
 
-	scale = linewidth / sqrt(dx0 * dx0 + dy0 * dy0);
+	scale = linewidth / sqrtf(dx0 * dx0 + dy0 * dy0);
 	dlx0 = dy0 * scale;
 	dly0 = -dx0 * scale;
 
-	scale = linewidth / sqrt(dx1 * dx1 + dy1 * dy1);
+	scale = linewidth / sqrtf(dx1 * dx1 + dy1 * dy1);
 	dlx1 = dy1 * scale;
 	dly1 = -dx1 * scale;
 
 	cross = dx1 * dy0 - dx0 * dy1;
 
-	dmx = (dlx0 + dlx1) * 0.5;
-	dmy = (dly0 + dly1) * 0.5;
+	dmx = (dlx0 + dlx1) * 0.5f;
+	dmy = (dly0 + dly1) * 0.5f;
 	dmr2 = dmx * dmx + dmy * dmy;
 
 	if (cross * cross < FLT_EPSILON && dx0 * dx1 + dy0 * dy1 >= 0)
@@ -190,7 +190,7 @@ linecap(struct sctx *s, fz_point a, fz_point b)
 	float dx = b.x - a.x;
 	float dy = b.y - a.y;
 
-	float scale = linewidth / sqrt(dx * dx + dy * dy);
+	float scale = linewidth / sqrtf(dx * dx + dy * dy);
 	float dlx = dy * scale;
 	float dly = -dx * scale;
 
@@ -200,14 +200,14 @@ linecap(struct sctx *s, fz_point a, fz_point b)
 	if (linecap == ROUND)
 	{
 		int i;
-		int n = ceil(M_PI / (2.0 * M_SQRT2 * sqrt(flatness / linewidth)));
+		int n = ceilf((float)M_PI / (2.0f * (float)M_SQRT2 * sqrtf(flatness / linewidth)));
 		float ox = b.x - dlx;
 		float oy = b.y - dly;
 		for (i = 1; i < n; i++)
 		{
-			float theta = M_PI * i / n;
-			float cth = cos(theta);
-			float sth = sin(theta);
+			float theta = (float)M_PI * i / n;
+			float cth = cosf(theta);
+			float sth = sinf(theta);
 			float nx = b.x - dlx * cth - dly * sth;
 			float ny = b.y - dly * cth + dlx * sth;
 			line(s, ox, oy, nx, ny);
@@ -237,16 +237,16 @@ linedot(struct sctx *s, fz_point a)
 {
 	float flatness = s->flatness;
 	float linewidth = s->linewidth;
-	int n = ceil(M_PI / (M_SQRT2 * sqrt(flatness / linewidth)));
+	int n = ceilf((float)M_PI / ((float)M_SQRT2 * sqrtf(flatness / linewidth)));
 	float ox = a.x - linewidth;
 	float oy = a.y;
 	int i;
 
 	for (i = 1; i < n; i++)
 	{
-		float theta = M_PI * 2 * i / n;
-		float cth = cos(theta);
-		float sth = sin(theta);
+		float theta = (float)M_PI * 2 * i / n;
+		float cth = cosf(theta);
+		float sth = sinf(theta);
 		float nx = a.x - cth * linewidth;
 		float ny = a.y + sth * linewidth;
 		line(s, ox, oy, nx, ny);
@@ -400,7 +400,7 @@ fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 
 	s.linecap = stroke->linecap;
 	s.linejoin = stroke->linejoin;
-	s.linewidth = linewidth * 0.5; /* hairlines use a different value from the path value */
+	s.linewidth = linewidth * 0.5f; /* hairlines use a different value from the path value */
 	s.miterlimit = stroke->miterlimit;
 	s.sn = 0;
 	s.bn = 0;
@@ -487,7 +487,7 @@ dashlineto(struct sctx *s, fz_point b)
 	a = s->cur;
 	dx = b.x - a.x;
 	dy = b.y - a.y;
-	total = sqrt(dx * dx + dy * dy);
+	total = sqrtf(dx * dx + dy * dy);
 	used = 0;
 
 	while (total - used > s->dashlist[s->offset] - s->phase)
@@ -586,7 +586,7 @@ fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, f
 
 	s.linecap = stroke->linecap;
 	s.linejoin = stroke->linejoin;
-	s.linewidth = linewidth * 0.5;
+	s.linewidth = linewidth * 0.5f;
 	s.miterlimit = stroke->miterlimit;
 	s.sn = 0;
 	s.bn = 0;

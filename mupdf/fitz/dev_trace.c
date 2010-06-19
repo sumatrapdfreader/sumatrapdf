@@ -15,7 +15,7 @@ fz_tracecolor(fz_colorspace *colorspace, float *color, float alpha)
 	for (i = 0; i < colorspace->n; i++)
 		printf("%s%g", i == 0 ? "" : " ", color[i]);
 	printf("\" ");
-	if (alpha != 1.0)
+	if (alpha < 1.0f)
 		printf("alpha=\"%g\" ", alpha);
 }
 

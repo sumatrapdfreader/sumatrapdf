@@ -243,9 +243,9 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		if (realw)
 			scale = (float) subw / realw;
 		else
-			scale = 1.0;
+			scale = 1;
 
-		trm = fz_concat(fz_scale(scale, 1.0), trm);
+		trm = fz_concat(fz_scale(scale, 1), trm);
 	}
 
 	/* freetype mutilates complex glyphs if they are loaded

@@ -174,7 +174,7 @@ static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 	fz_matrix ctm;
 	ctm = fz_identity();
 	ctm = fz_concat(ctm, fz_translate(0, -app->page->mediabox.y1));
-	ctm = fz_concat(ctm, fz_scale(app->resolution/72.0, -app->resolution/72.0));
+	ctm = fz_concat(ctm, fz_scale(app->resolution/72.0f, -app->resolution/72.0f));
 	ctm = fz_concat(ctm, fz_rotate(app->rotate + app->page->rotate));
 	return ctm;
 }

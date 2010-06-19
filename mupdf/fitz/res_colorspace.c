@@ -45,7 +45,7 @@ fz_stdconvcolor(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *ds
 		srcs->toxyz(srcs, srcv, xyz);
 		dsts->fromxyz(dsts, xyz, dstv);
 		for (i = 0; i < dsts->n; i++)
-			dstv[i] = CLAMP(dstv[i], 0.0, 1.0);
+			dstv[i] = CLAMP(dstv[i], 0, 1);
 	}
 	else
 	{
@@ -75,7 +75,7 @@ fz_stdconvpixmap(fz_colorspace *srcs, fz_pixmap *src, fz_colorspace *dsts, fz_pi
 			*d++ = *s++;
 
 			for (k = 0; k < src->n - 1; k++)
-				srcv[k] = *s++ / 255.0;
+				srcv[k] = *s++ / 255.0f;
 
 			fz_convertcolor(srcs, srcv, dsts, dstv);
 

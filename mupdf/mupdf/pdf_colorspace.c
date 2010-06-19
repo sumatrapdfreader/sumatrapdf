@@ -239,13 +239,13 @@ void pdf_convcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 	{
 		if (ds == pdf_devicegray)
 		{
-			dv[0] = sv[0] * 0.3 + sv[1] * 0.59 + sv[2] * 0.11;
+			dv[0] = sv[0] * 0.3f + sv[1] * 0.59f + sv[2] * 0.11f;
 		}
 		else if (ds == pdf_devicecmyk)
 		{
-			float c = 1.0 - sv[1];
-			float m = 1.0 - sv[2];
-			float y = 1.0 - sv[3];
+			float c = 1 - sv[1];
+			float m = 1 - sv[2];
+			float y = 1 - sv[3];
 			float k = MIN(c, MIN(m, y));
 			dv[0] = c - k;
 			dv[1] = m - k;
@@ -260,17 +260,17 @@ void pdf_convcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 	{
 		if (ds == pdf_devicegray)
 		{
-			float c = sv[1] * 0.3;
-			float m = sv[2] * 0.59;
-			float y = sv[2] * 0.11;
-			dv[0] = 1.0 - MIN(c + m + y + sv[3], 1.0);
+			float c = sv[1] * 0.3f;
+			float m = sv[2] * 0.59f;
+			float y = sv[2] * 0.11f;
+			dv[0] = 1 - MIN(c + m + y + sv[3], 1);
 		}
 		else if (ds == pdf_devicergb)
 		{
 			/*
-			dv[0] = 1.0 - MIN(sv[0] + sv[3], 1.0);
-			dv[1] = 1.0 - MIN(sv[1] + sv[3], 1.0);
-			dv[2] = 1.0 - MIN(sv[2] + sv[3], 1.0);
+			dv[0] = 1 - MIN(sv[0] + sv[3], 1);
+			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
+			dv[2] = 1 - MIN(sv[2] + sv[3], 1);
 			*/
 			cmykToRGBMatrixMultiplication(sv, dv); /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=756 */
 		}
@@ -297,18 +297,18 @@ struct calgray
 static void graytoxyz(fz_colorspace *fzcs, float *gray, float *xyz)
 {
 	struct calgray *cs = (struct calgray *) fzcs;
-	xyz[0] = pow(gray[0], cs->gamma) * cs->white[0];
-	xyz[1] = pow(gray[0], cs->gamma) * cs->white[1];
-	xyz[2] = pow(gray[0], cs->gamma) * cs->white[2];
+	xyz[0] = powf(gray[0], cs->gamma) * cs->white[0];
+	xyz[1] = powf(gray[0], cs->gamma) * cs->white[1];
+	xyz[2] = powf(gray[0], cs->gamma) * cs->white[2];
 }
 
 static void xyztogray(fz_colorspace *fzcs, float *xyz, float *gray)
 {
 	struct calgray *cs = (struct calgray *) fzcs;
-	float r = pow(xyz[0], 1.0 / cs->gamma) / cs->white[0];
-	float g = pow(xyz[1], 1.0 / cs->gamma) / cs->white[1];
-	float b = pow(xyz[2], 1.0 / cs->gamma) / cs->white[2];
-	gray[0] = r * 0.3 + g * 0.59 + b * 0.11;
+	float r = powf(xyz[0], 1 / cs->gamma) / cs->white[0];
+	float g = powf(xyz[1], 1 / cs->gamma) / cs->white[1];
+	float b = powf(xyz[2], 1 / cs->gamma) / cs->white[2];
+	gray[0] = r * 0.3f + g * 0.59f + b * 0.11f;
 }
 
 /*
@@ -328,9 +328,9 @@ struct calrgb
 static void rgbtoxyz(fz_colorspace *fzcs, float *rgb, float *xyz)
 {
 	struct calrgb *cs = (struct calrgb *) fzcs;
-	float a = pow(rgb[0], cs->gamma[0]) * cs->white[0];
-	float b = pow(rgb[1], cs->gamma[1]) * cs->white[1];
-	float c = pow(rgb[2], cs->gamma[2]) * cs->white[2];
+	float a = powf(rgb[0], cs->gamma[0]) * cs->white[0];
+	float b = powf(rgb[1], cs->gamma[1]) * cs->white[1];
+	float c = powf(rgb[2], cs->gamma[2]) * cs->white[2];
 	xyz[0] = a * cs->matrix[0] + b * cs->matrix[1] + c * cs->matrix[2];
 	xyz[1] = a * cs->matrix[3] + b * cs->matrix[4] + c * cs->matrix[5];
 	xyz[2] = a * cs->matrix[6] + b * cs->matrix[7] + c * cs->matrix[8];
@@ -342,9 +342,9 @@ static void xyztorgb(fz_colorspace *fzcs, float *xyz, float *rgb)
 	float a = xyz[0] * cs->invmat[0] + xyz[1] * cs->invmat[1] + xyz[2] * cs->invmat[2];
 	float b = xyz[0] * cs->invmat[3] + xyz[1] * cs->invmat[4] + xyz[2] * cs->invmat[5];
 	float c = xyz[0] * cs->invmat[6] + xyz[1] * cs->invmat[7] + xyz[2] * cs->invmat[8];
-	rgb[0] = pow(a, 1.0 / cs->gamma[0]) / cs->white[0];
-	rgb[1] = pow(b, 1.0 / cs->gamma[1]) / cs->white[1];
-	rgb[2] = pow(c, 1.0 / cs->gamma[2]) / cs->white[2];
+	rgb[0] = powf(a, 1 / cs->gamma[0]) / cs->white[0];
+	rgb[1] = powf(b, 1 / cs->gamma[1]) / cs->white[1];
+	rgb[2] = powf(c, 1 / cs->gamma[2]) / cs->white[2];
 }
 
 /*
@@ -354,9 +354,9 @@ static void xyztorgb(fz_colorspace *fzcs, float *xyz, float *rgb)
 static void devicecmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
 {
 	float rgb[3];
-	rgb[0] = 1.0 - MIN(1.0, cmyk[0] + cmyk[3]);
-	rgb[1] = 1.0 - MIN(1.0, cmyk[1] + cmyk[3]);
-	rgb[2] = 1.0 - MIN(1.0, cmyk[2] + cmyk[3]);
+	rgb[0] = 1 - MIN(1, cmyk[0] + cmyk[3]);
+	rgb[1] = 1 - MIN(1, cmyk[1] + cmyk[3]);
+	rgb[2] = 1 - MIN(1, cmyk[2] + cmyk[3]);
 	rgbtoxyz(pdf_devicergb, rgb, xyz);
 }
 
@@ -365,9 +365,9 @@ static void xyztodevicecmyk(fz_colorspace *cs, float *xyz, float *cmyk)
 	float rgb[3];
 	float c, m, y, k;
 	xyztorgb(pdf_devicergb, xyz, rgb);
-	c = 1.0 - rgb[0];
-	m = 1.0 - rgb[0];
-	y = 1.0 - rgb[0];
+	c = 1 - rgb[0];
+	m = 1 - rgb[0];
+	y = 1 - rgb[0];
 	k = MIN(c, MIN(m, y));
 	cmyk[0] = c - k;
 	cmyk[1] = m - k;
@@ -389,16 +389,16 @@ struct cielab
 
 static inline float fung(float x)
 {
-	if (x >= 6.0 / 29.0)
+	if (x >= 6.0f / 29.0f)
 		return x * x * x;
-	return (108.0 / 841.0) * (x - (4.0 / 29.0));
+	return (108.0f / 841.0f) * (x - (4.0f / 29.0f));
 }
 
 static inline float invg(float x)
 {
-	if (x > 0.008856)
-		return pow(x, 1.0 / 3.0);
-	return (7.787 * x) + (16.0 / 116.0);
+	if (x > 0.008856f)
+		return powf(x, 1.0f / 3.0f);
+	return (7.787f * x) + (16.0f / 116.0f);
 }
 
 static void labtoxyz(fz_colorspace *fzcs, float *lab, float *xyz)
@@ -412,9 +412,9 @@ static void labtoxyz(fz_colorspace *fzcs, float *lab, float *xyz)
 	lstar = tmp[0];
 	astar = MAX(MIN(tmp[1], cs->range[1]), cs->range[0]);
 	bstar = MAX(MIN(tmp[2], cs->range[3]), cs->range[2]);
-	l = (lstar + 16.0) / 116.0 + astar / 500.0;
-	m = (lstar + 16.0) / 116.0;
-	n = (lstar + 16.0) / 116.0 - bstar / 200.0;
+	l = (lstar + 16) / 116 + astar / 500;
+	m = (lstar + 16) / 116;
+	n = (lstar + 16) / 116 - bstar / 200;
 	xyz[0] = fung(l) * cs->white[0];
 	xyz[1] = fung(m) * cs->white[1];
 	xyz[2] = fung(n) * cs->white[2];
@@ -425,15 +425,15 @@ static void xyztolab(fz_colorspace *fzcs, float *xyz, float *lab)
 	struct cielab *cs = (struct cielab *) fzcs;
 	float tmp[3];
 	float yyn = xyz[1] / cs->white[1];
-	if (yyn < 0.008856)
-		tmp[0] = 116.0 * yyn * (1.0 / 3.0) - 16.0;
+	if (yyn < 0.008856f)
+		tmp[0] = 116.0f * yyn * (1.0f / 3.0f) - 16.0f;
 	else
-		tmp[0] = 903.3 * yyn;
+		tmp[0] = 903.3f * yyn;
 	tmp[1] = 500 * (invg(xyz[0]/cs->white[0]) - invg(xyz[1]/cs->white[1]));
 	tmp[2] = 200 * (invg(xyz[1]/cs->white[1]) - invg(xyz[2]/cs->white[2]));
-	lab[0] = tmp[0] / 100.0;
-	lab[1] = (tmp[1] + 100) / 200.0;
-	lab[2] = (tmp[2] + 100) / 200.0;
+	lab[0] = tmp[0] / 100;
+	lab[1] = (tmp[1] + 100) / 200;
+	lab[2] = (tmp[2] + 100) / 200;
 }
 
 /*
@@ -443,17 +443,17 @@ static void xyztolab(fz_colorspace *fzcs, float *xyz, float *lab)
 static struct calgray kdevicegray =
 {
 	{ -1, "DeviceGray", 1, pdf_convpixmap, pdf_convcolor, graytoxyz, xyztogray, nil },
-	{ 1.0000, 1.0000, 1.0000 },
-	{ 0.0000, 0.0000, 0.0000 },
-	1.0000
+	{ 1, 1, 1 },
+	{ 0, 0, 0 },
+	1
 };
 
 static struct calrgb kdevicergb =
 {
 	{ -1, "DeviceRGB", 3, pdf_convpixmap, pdf_convcolor, rgbtoxyz, xyztorgb, nil },
-	{ 1.0000, 1.0000, 1.0000 },
-	{ 0.0000, 0.0000, 0.0000 },
-	{ 1.0000, 1.0000, 1.0000 },
+	{ 1, 1, 1 },
+	{ 0, 0, 0 },
+	{ 1, 1, 1 },
 	{ 1,0,0, 0,1,0, 0,0,1 },
 	{ 1,0,0, 0,1,0, 0,0,1 },
 };
@@ -466,8 +466,8 @@ static fz_colorspace kdevicecmyk =
 static struct cielab kdevicelab =
 {
 	{ -1, "Lab", 3, pdf_convpixmap, fz_stdconvcolor, labtoxyz, xyztolab, nil },
-	{ 1.0000, 1.0000, 1.0000 },
-	{ 0.0000, 0.0000, 0.0000 },
+	{ 1, 1, 1 },
+	{ 0, 0, 0 },
 	{ -100, 100, -100, 100 },
 };
 
@@ -499,15 +499,15 @@ loadcalgray(pdf_xref *xref, fz_obj *dict)
 
 	initcs((fz_colorspace*)cs, "CalGray", 1, graytoxyz, xyztogray, nil);
 
-	cs->white[0] = 1.0;
-	cs->white[1] = 1.0;
-	cs->white[2] = 1.0;
+	cs->white[0] = 1;
+	cs->white[1] = 1;
+	cs->white[2] = 1;
 
-	cs->black[0] = 0.0;
-	cs->black[1] = 0.0;
-	cs->black[2] = 0.0;
+	cs->black[0] = 0;
+	cs->black[1] = 0;
+	cs->black[2] = 0;
 
-	cs->gamma = 1.0;
+	cs->gamma = 1;
 
 	tmp = fz_dictgets(dict, "WhitePoint");
 	if (fz_isarray(tmp))
@@ -545,21 +545,21 @@ loadcalrgb(pdf_xref *xref, fz_obj *dict)
 
 	initcs((fz_colorspace*)cs, "CalRGB", 3, rgbtoxyz, xyztorgb, nil);
 
-	cs->white[0] = 1.0;
-	cs->white[1] = 1.0;
-	cs->white[2] = 1.0;
+	cs->white[0] = 1;
+	cs->white[1] = 1;
+	cs->white[2] = 1;
 
-	cs->black[0] = 0.0;
-	cs->black[1] = 0.0;
-	cs->black[2] = 0.0;
+	cs->black[0] = 0;
+	cs->black[1] = 0;
+	cs->black[2] = 0;
 
-	cs->gamma[0] = 1.0;
-	cs->gamma[1] = 1.0;
-	cs->gamma[2] = 1.0;
+	cs->gamma[0] = 1;
+	cs->gamma[1] = 1;
+	cs->gamma[2] = 1;
 
-	cs->matrix[0] = 1.0; cs->matrix[1] = 0.0; cs->matrix[2] = 0.0;
-	cs->matrix[3] = 0.0; cs->matrix[4] = 1.0; cs->matrix[5] = 0.0;
-	cs->matrix[6] = 0.0; cs->matrix[7] = 0.0; cs->matrix[8] = 1.0;
+	cs->matrix[0] = 1; cs->matrix[1] = 0; cs->matrix[2] = 0;
+	cs->matrix[3] = 0; cs->matrix[4] = 1; cs->matrix[5] = 0;
+	cs->matrix[6] = 0; cs->matrix[7] = 0; cs->matrix[8] = 1;
 
 	tmp = fz_dictgets(dict, "WhitePoint");
 	if (fz_isarray(tmp))
@@ -609,13 +609,13 @@ loadlab(pdf_xref *xref, fz_obj *dict)
 
 	initcs((fz_colorspace*)cs, "Lab", 3, labtoxyz, xyztolab, nil);
 
-	cs->white[0] = 1.0;
-	cs->white[1] = 1.0;
-	cs->white[2] = 1.0;
+	cs->white[0] = 1;
+	cs->white[1] = 1;
+	cs->white[2] = 1;
 
-	cs->black[0] = 0.0;
-	cs->black[1] = 0.0;
-	cs->black[2] = 0.0;
+	cs->black[0] = 0;
+	cs->black[1] = 0;
+	cs->black[2] = 0;
 
 	cs->range[0] = -100;
 	cs->range[1] = 100;
@@ -779,7 +779,7 @@ indexedtoxyz(fz_colorspace *fzcs, float *ind, float *xyz)
 	i = ind[0] * 255;
 	i = CLAMP(i, 0, cs->high);
 	for (k = 0; k < cs->base->n; k++)
-		alt[k] = cs->lookup[i * cs->base->n + k] / 255.0;
+		alt[k] = cs->lookup[i * cs->base->n + k] / 255.0f;
 	cs->base->toxyz(cs->base, alt, xyz);
 }
 #endif

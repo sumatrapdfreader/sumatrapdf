@@ -19,8 +19,8 @@ void fz_invert3x3(float *dst, float *m)
 		M3(m,0,1), M3(m,1,1), M3(m,2,1),
 		M3(m,0,2), M3(m,1,2), M3(m,2,2));
 	if (det == 0)
-		det = 1.0;
-	det = 1.0 / det;
+		det = 1;
+	det = 1 / det;
 
 	M3(dst,0,0) =  M3(m,1,1) * M3(m,2,2) - M3(m,1,2) * M3(m,2,1);
 	M3(dst,0,1) = -M3(m,0,1) * M3(m,2,2) + M3(m,0,2) * M3(m,2,1);
@@ -78,35 +78,35 @@ fz_rotate(float theta)
 	float s;
 	float c;
 
-	while (theta < 0.0f)
-		theta += 360.0f;
-	while (theta >= 360.0f)
-		theta -= 360.0f;
+	while (theta < 0)
+		theta += 360;
+	while (theta >= 360)
+		theta -= 360;
 
-	if (fabs(0.0f - theta) < FLT_EPSILON)
+	if (fabsf(0 - theta) < FLT_EPSILON)
 	{
-		s = 0.0f;
-		c = 1.0f;
+		s = 0;
+		c = 1;
 	}
-	else if (fabs(90.0f - theta) < FLT_EPSILON)
+	else if (fabsf(90.0f - theta) < FLT_EPSILON)
 	{
-		s = 1.0f;
-		c = 0.0f;
+		s = 1;
+		c = 0;
 	}
-	else if (fabs(180.0f - theta) < FLT_EPSILON)
+	else if (fabsf(180.0f - theta) < FLT_EPSILON)
 	{
-		s = 0.0f;
-		c = -1.0f;
+		s = 0;
+		c = -1;
 	}
-	else if (fabs(270.0f - theta) < FLT_EPSILON)
+	else if (fabsf(270.0f - theta) < FLT_EPSILON)
 	{
-		s = -1.0f;
-		c = 0.0f;
+		s = -1;
+		c = 0;
 	}
 	else
 	{
-		s = sin(theta * M_PI / 180.0);
-		c = cos(theta * M_PI / 180.0);
+		s = sinf(theta * (float)M_PI / 180);
+		c = cosf(theta * (float)M_PI / 180);
 	}
 
 	m.a =  c;  m.b = s;
@@ -129,7 +129,7 @@ fz_matrix
 fz_invertmatrix(fz_matrix src)
 {
 	fz_matrix dst;
-	float rdet = 1.0 / (src.a * src.d - src.b * src.c);
+	float rdet = 1 / (src.a * src.d - src.b * src.c);
 	dst.a = src.d * rdet;
 	dst.b = -src.b * rdet;
 	dst.c = -src.c * rdet;
@@ -142,14 +142,14 @@ fz_invertmatrix(fz_matrix src)
 int
 fz_isrectilinear(fz_matrix m)
 {
-	return (fabs(m.b) < FLT_EPSILON && fabs(m.c) < FLT_EPSILON) ||
-		(fabs(m.a) < FLT_EPSILON && fabs(m.d) < FLT_EPSILON);
+	return (fabsf(m.b) < FLT_EPSILON && fabsf(m.c) < FLT_EPSILON) ||
+		(fabsf(m.a) < FLT_EPSILON && fabsf(m.d) < FLT_EPSILON);
 }
 
 float
 fz_matrixexpansion(fz_matrix m)
 {
-	return sqrt(fabs(m.a * m.d - m.b * m.c));
+	return sqrtf(fabsf(m.a * m.d - m.b * m.c));
 }
 
 fz_point
