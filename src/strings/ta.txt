@@ -7,6 +7,7 @@
 Lang: ta Tamil (தமிழ்)
 
 Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
+Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 
 &About
 பற்றி
@@ -31,6 +32,9 @@ Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
 
 &Go To
 அங்கு செல்
+
+&Go to page:
+பக்கதிர்க்கு செல்:
 
 &Help
 உதவி
@@ -62,6 +66,9 @@ Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
 &Print\tCtrl-P
 அச்சிடு\tCtrl-P
 
+&Print... (denied)
+அகசிடல்... (நிராகரிக்கப்பட்டது)
+
 &Remember these settings for each document
 அமைப்புகளை ஞாபகம் கொள்
 
@@ -85,6 +92,9 @@ Contributor: R. Rajesh Jeba Anbiah (rajeshanbiah.blogspot.com)
 
 &Zoom
 பெரிதாக்கு
+
+(of %d)
+(இன் %d)
 
 About SumatraPDF
 SumatraPDF பற்றி
@@ -129,7 +139,7 @@ Cancel
 இரத்து செய்
 
 Cannot print this file
- கோப்பை அச்சிட முடியவில்லை
+கோப்பை அச்சிட முடியவில்லை
 
 Change language
 மொழியை மாற்று
@@ -159,7 +169,16 @@ Couldn't render the page
 பக்கத்தை அளிக்க முடியவில்லை
 
 Created:
-உருÅ¡க்கப்பட்டது
+உருவாக்கப்பட்டது
+
+Default &Layout:
+கோட நிலை வடிவமைப்பு
+
+Default &Zoom:
+கோட நிலை உரு அளவு
+
+Denied Permissions:
+அனுமதி மருக்கப்பட்டது
 
 Document Properties
 கோப்பின் பண்புகள்
@@ -251,8 +270,14 @@ MB
 Main PDF reader can't be changed in portable mode
 முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
 
+Make SumatraPDF default application for PDF files?
+SumatraPDFயை கோட நிலை PDF படிப்பியாக மாற்றவா?
+
 Make SumatraPDF my main PDF reader
 SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
+
+Match case
+தட்டுப்பொருத்தம்
 
 Modified:
 மாற்ற்ப்பட்தது
@@ -277,6 +302,12 @@ No new version available.
 
 No result found around line %u in file %s
 முடிவுகள் எதுவும் கோப்பு %s இல் உள்ள வரி %u கண்டுபிடிக்க முடியவில்லை
+
+No synchronization file found
+ஒத்தியங்கு கோப்பு எதுவும் கண்டுபிடிக்கவில்லை
+
+No synchronization info at this position
+ஒத்தியங்கு தகவல் எதுவும் இந்த நிலையில் இல்லை
 
 Number of Pages:
 பக்கங்களின் எண்ணிக்கை
@@ -318,7 +349,7 @@ Page:
 பக்கம்:
 
 Please wait - rendering...
-தயவுசெய்து காத்திருக்கவும் - அளீக்கபட்டுவருகிறது...
+தயவுசெய்து காத்திருக்கவும் - அளிக்கபட்டுவருகிறது...
 
 Previous Page
 முந்தைய பக்கம்
@@ -359,6 +390,12 @@ Show toolbar
 Single page
 ஒற்றைப் பக்கம்
 
+Source file %s has no synchronization point
+%s முல கோப்பிர்க்கு ஒத்தியங்கு மையம் எதுவும் இல்லை
+
+Subject:
+எழுவாய்:
+
 SumatraPDF Options
 SumatraPDFஇன் விருப்பப பேரம்
 
@@ -367,6 +404,9 @@ SumatraPDF உங்களின் முதன்மை PDF படிப்ப
 
 SumatraPDF should now be your main PDF reader
 SumatraPDF இப்பொழுது உங்களின் முதன்மை PDF படிப்பி
+
+Synchronization file cannot be opened
+ஒத்தியங்கு கோப்பை திறக்க முடியவில்லை
 
 Text documents
 உரை கொப்புகள்
@@ -404,22 +444,13 @@ Zoom factor
 [Changes detected; refreshing] %s
 [மாற்றங்கள் கண்டுபிடிக்க பட்டுள்ளது; புதுபிக்கபட்டு வருகிறது]%s
 
+copying text
+நகல் எடுக்கப்படுகிறது
+
+printing document
+கோப்பு அக்சிடப்படுகிறது
+
 # Untranslated:
-#&Go to page:
-#&Print... (denied)
-#(of %d)
 #Cannot start inverse search command. Please check the command line in the settings.
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Make SumatraPDF default application for PDF files?
-#Match case
-#No synchronization file found
-#No synchronization info at this position
 #Set inverse search command-line
-#Source file %s has no synchronization point
-#Subject:
-#Synchronization file cannot be opened
-#copying text
-#printing document
 
