@@ -10,11 +10,11 @@ LD := $(CC)
 AR := ar
 
 ifeq "$(build)" "debug"
-CFLAGS += -g -O0
+CFLAGS += -g -O0 -DDEBUG
 endif
 
 ifeq "$(build)" "release"
-CFLAGS += -O3
+CFLAGS += -O3 -DNDEBUG
 endif
 
 ifeq "$(OS)" "Linux"
@@ -26,7 +26,7 @@ PDFVIEW_EXE = $(X11VIEW_EXE)
 
 ifeq "$(build)" "release"
 CFLAGS += -mmmx -ftree-vectorize -msse -msse2 -march=k8 -DARCH_X86
-ARCH_SRC = archx86.c
+DRAW_ARCH_SRC := archx86.c
 endif
 
 endif
@@ -41,7 +41,7 @@ PDFVIEW_EXE = $(X11VIEW_EXE)
 
 ifeq "$(build)" "release"
 CFLAGS += -DARCH_X86_64
-ARCH_SRC := archx86.c
+DRAW_ARCH_SRC := archx86.c
 endif
 
 endif

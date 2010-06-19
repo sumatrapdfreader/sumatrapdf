@@ -17,7 +17,7 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 	int wh = pix->w * pix->h;
 	int i;
 	int justinvert = 1;
-	unsigned mask;
+	unsigned int mask;
 
 	min[0] = 0;
 	max[0] = 255;

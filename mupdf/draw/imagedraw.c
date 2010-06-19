@@ -108,13 +108,20 @@ img_1o1(byte * restrict src, byte cov, int len, byte * restrict dst,
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
+
 	while (len--)
 	{
 		int sa;
 		cov += *src; *src = 0; src++;
-		sa = samplemask(samples, w, h, u, v);
-		sa = FZ_COMBINE(FZ_EXPAND(sa), FZ_EXPAND(cov));
-		dst[0] = FZ_BLEND(255, dst[0], sa);
+		if (cov != 0)
+		{
+			sa = samplemask(samples, w, h, u, v);
+			sa = FZ_COMBINE(FZ_EXPAND(sa), FZ_EXPAND(cov));
+			if (sa != 0)
+			{
+				dst[0] = FZ_BLEND(255, dst[0], sa);
+			}
+		}
 		dst++;
 		u += fa;
 		v += fb;
@@ -129,16 +136,23 @@ img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 	int w = image->w;
 	int h = image->h;
 	byte argb[4];
+
 	while (len--)
 	{
 		int sa;
 		cov += *src; *src = 0; src++;
-		sampleargb(samples, w, h, u, v, argb);
-		sa = FZ_COMBINE(FZ_EXPAND(argb[0]), FZ_EXPAND(cov));
-		dst[0] = FZ_BLEND(255, dst[0], sa);
-		dst[1] = FZ_BLEND(argb[1], dst[1], sa);
-		dst[2] = FZ_BLEND(argb[2], dst[2], sa);
-		dst[3] = FZ_BLEND(argb[3], dst[3], sa);
+		if (cov != 0)
+		{
+			sampleargb(samples, w, h, u, v, argb);
+			sa = FZ_COMBINE(FZ_EXPAND(argb[0]), FZ_EXPAND(cov));
+			if (sa != 0)
+			{
+				dst[0] = FZ_BLEND(255, dst[0], sa);
+				dst[1] = FZ_BLEND(argb[1], dst[1], sa);
+				dst[2] = FZ_BLEND(argb[2], dst[2], sa);
+				dst[3] = FZ_BLEND(argb[3], dst[3], sa);
+			}
+		}
 		dst += 4;
 		u += fa;
 		v += fb;
@@ -156,19 +170,55 @@ img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict d
 	byte r = argb[1];
 	byte g = argb[2];
 	byte b = argb[3];
-	while (len--)
+
+	if (alpha == 0)
+		return;
+	if (alpha != 256)
 	{
-		int ca;
-		cov += *src; *src = 0; src++;
-		ca = samplemask(samples, w, h, u, v);
-		ca = FZ_COMBINE(FZ_EXPAND(ca), alpha);
-		dst[0] = FZ_BLEND(255, dst[0], ca);
-		dst[1] = FZ_BLEND(r, dst[1], ca);
-		dst[2] = FZ_BLEND(g, dst[2], ca);
-		dst[3] = FZ_BLEND(b, dst[3], ca);
-		dst += 4;
-		u += fa;
-		v += fb;
+		while (len--)
+		{
+			int ca;
+			cov += *src; *src = 0; src++;
+			if (cov != 0)
+			{
+				ca = samplemask(samples, w, h, u, v);
+				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
+				ca = FZ_COMBINE(ca, alpha);
+				if (ca != 0)
+				{
+					dst[0] = FZ_BLEND(255, dst[0], ca);
+					dst[1] = FZ_BLEND(r, dst[1], ca);
+					dst[2] = FZ_BLEND(g, dst[2], ca);
+					dst[3] = FZ_BLEND(b, dst[3], ca);
+				}
+			}
+			dst += 4;
+			u += fa;
+			v += fb;
+		}
+	}
+	else
+	{
+		while (len--)
+		{
+			int ca;
+			cov += *src; *src = 0; src++;
+			if (cov != 0)
+			{
+				ca = samplemask(samples, w, h, u, v);
+				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
+				if (ca != 0)
+				{
+					dst[0] = FZ_BLEND(255, dst[0], ca);
+					dst[1] = FZ_BLEND(r, dst[1], ca);
+					dst[2] = FZ_BLEND(g, dst[2], ca);
+					dst[3] = FZ_BLEND(b, dst[3], ca);
+				}
+			}
+			dst += 4;
+			u += fa;
+			v += fb;
+		}
 	}
 }
 

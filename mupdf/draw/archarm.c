@@ -9,6 +9,10 @@ typedef unsigned char byte;
 /* always surround cpu specific code with HAVE_XXX */
 #ifdef ARCH_ARM
 
+/* from imagescalearm.s */
+extern void fz_srow4_arm(byte *src, byte *dst, int w, int denom);
+extern void fz_scol4_arm(byte *src, byte *dst, int w, int denom);
+
 static void
 path_w4i1o4_arm(byte * restrict argb, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
@@ -103,6 +107,8 @@ void
 fz_acceleratearch(void)
 {
 	fz_path_w4i1o4 = path_w4i1o4_arm;
+	fz_srow4 = fz_srow4_arm;
+	fz_scol4 = fz_scol4_arm;
 }
 
 #endif

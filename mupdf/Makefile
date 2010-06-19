@@ -60,11 +60,11 @@ $(DIRS):
 # Code generation tools
 #
 
-FONTDUMP_EXE=$(OBJDIR)/fontdump
+FONTDUMP_EXE := $(OBJDIR)/fontdump
 $(FONTDUMP_EXE): $(OBJDIR)/fontdump.o
 	$(LD_CMD)
 
-CMAPDUMP_EXE=$(OBJDIR)/cmapdump
+CMAPDUMP_EXE := $(OBJDIR)/cmapdump
 $(CMAPDUMP_EXE): $(OBJDIR)/cmapdump.o
 	$(LD_CMD)
 
@@ -72,8 +72,8 @@ $(CMAPDUMP_EXE): $(OBJDIR)/cmapdump.o
 # Sources
 #
 
-FITZ_HDR=fitz/fitz.h fitz/fitz_base.h fitz/fitz_draw.h fitz/fitz_stream.h
-FITZ_SRC=$(addprefix fitz/, \
+FITZ_HDR := fitz/fitz.h fitz/fitz_base.h fitz/fitz_draw.h fitz/fitz_stream.h
+FITZ_SRC := $(addprefix fitz/, \
 	base_cpudep.c \
 	base_error.c base_memory.c base_string.c base_unicode.c \
 	base_hash.c base_matrix.c base_rect.c \
@@ -87,18 +87,19 @@ FITZ_SRC=$(addprefix fitz/, \
 	res_path.c res_text.c \
 	stm_buffer.c stm_filter.c stm_misc.c stm_open.c stm_read.c \
 	util_getopt.c util_gettimeofday.c )
-FITZ_OBJ=$(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
+FITZ_OBJ := $(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
 $(FITZ_OBJ): $(FITZ_HDR)
 
-DRAW_SRC=$(addprefix draw/, $(ARCH_SRC) \
+DRAW_SRC := $(addprefix draw/, $(DRAW_ARCH_SRC) \
 	archport.c blendmodes.c glyphcache.c \
 	imagedraw.c imagescale.c imageunpack.c meshdraw.c \
 	pathfill.c pathscan.c pathstroke.c porterduff.c )
-DRAW_OBJ=$(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
+DRAW_OBJ := $(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
+DRAW_OBJ := $(DRAW_OBJ:draw/%.s=$(OBJDIR)/%.o)
 $(DRAW_OBJ): $(FITZ_HDR)
 
-MUPDF_HDR=$(FITZ_HDR) mupdf/mupdf.h
-MUPDF_SRC=$(addprefix mupdf/, \
+MUPDF_HDR := $(FITZ_HDR) mupdf/mupdf.h
+MUPDF_SRC := $(addprefix mupdf/, \
 	pdf_annot.c pdf_build.c pdf_cmap.c pdf_cmap_load.c pdf_cmap_parse.c \
 	pdf_cmap_table.c pdf_colorspace.c pdf_crypt.c pdf_debug.c \
 	pdf_font.c pdf_fontagl.c pdf_fontenc.c pdf_fontfile.c pdf_fontmtx.c \
@@ -106,12 +107,14 @@ MUPDF_SRC=$(addprefix mupdf/, \
 	pdf_open.c pdf_outline.c pdf_page.c pdf_pagetree.c pdf_parse.c \
 	pdf_pattern.c pdf_repair.c pdf_shade.c pdf_store.c pdf_stream.c \
 	pdf_type3.c pdf_unicode.c pdf_xobject.c pdf_xref.c )
-MUPDF_OBJ=$(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
+MUPDF_OBJ := $(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
 $(MUPDF_OBJ): $(MUPDF_HDR)
 
 $(OBJDIR)/%.o: fitz/%.c
 	$(CC_CMD)
 $(OBJDIR)/%.o: draw/%.c
+	$(CC_CMD)
+$(OBJDIR)/%.o: draw/%.s
 	$(CC_CMD)
 $(OBJDIR)/%.o: mupdf/%.c
 	$(CC_CMD)
@@ -122,7 +125,7 @@ $(OBJDIR)/%.o: $(GENDIR)/%.c
 # Generated font file dumps
 #
 
-BASEFONT_FILES=$(addprefix fonts/, \
+BASEFONT_FILES := $(addprefix fonts/, \
 	Dingbats.cff \
 	NimbusMonL-Bold.cff NimbusMonL-BoldObli.cff \
 	NimbusMonL-Regu.cff NimbusMonL-ReguObli.cff \
@@ -132,7 +135,7 @@ BASEFONT_FILES=$(addprefix fonts/, \
 	NimbusSanL-Regu.cff NimbusSanL-ReguItal.cff \
 	StandardSymL.cff URWChanceryL-MediItal.cff )
 
-CJKFONT_FILES=fonts/droid/DroidSansFallback.ttf
+CJKFONT_FILES := fonts/droid/DroidSansFallback.ttf
 
 ifeq "$(pregen)" ""
 
@@ -143,21 +146,21 @@ $(GENDIR)/font_cjk.c: $(FONTDUMP_EXE) $(CJKFONT_FILES)
 
 endif
 
-FONT_SRC=\
+FONT_SRC := \
 	$(GENDIR)/font_base14.c \
 	$(GENDIR)/font_cjk.c
 
-FONT_OBJ=$(FONT_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
+FONT_OBJ := $(FONT_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
 
 #
 # Generated CMap file dumps
 #
 
-CMAP_UNICODE_FILES=$(addprefix cmaps/, \
+CMAP_UNICODE_FILES := $(addprefix cmaps/, \
 	Adobe-CNS1-UCS2 Adobe-GB1-UCS2 \
 	Adobe-Japan1-UCS2 Adobe-Korea1-UCS2 )
 
-CMAP_CNS_FILES=$(addprefix cmaps/, \
+CMAP_CNS_FILES := $(addprefix cmaps/, \
 	Adobe-CNS1-0 Adobe-CNS1-1 Adobe-CNS1-2 Adobe-CNS1-3 \
 	Adobe-CNS1-4 Adobe-CNS1-5 Adobe-CNS1-6 B5-H B5-V B5pc-H B5pc-V \
 	CNS-EUC-H CNS-EUC-V CNS1-H CNS1-V CNS2-H CNS2-V ETen-B5-H \
@@ -167,14 +170,14 @@ CMAP_CNS_FILES=$(addprefix cmaps/, \
 	HKscs-B5-H HKscs-B5-V UniCNS-UCS2-H UniCNS-UCS2-V \
 	UniCNS-UTF16-H UniCNS-UTF16-V )
 
-CMAP_GB_FILES=$(addprefix cmaps/, \
+CMAP_GB_FILES := $(addprefix cmaps/, \
 	Adobe-GB1-0 Adobe-GB1-1 Adobe-GB1-2 Adobe-GB1-3 Adobe-GB1-4 \
 	Adobe-GB1-5 GB-EUC-H GB-EUC-V GB-H GB-V GBK-EUC-H GBK-EUC-V \
 	GBK2K-H GBK2K-V GBKp-EUC-H GBKp-EUC-V GBpc-EUC-H GBpc-EUC-V \
 	GBT-EUC-H GBT-EUC-V GBT-H GBT-V GBTpc-EUC-H GBTpc-EUC-V \
 	UniGB-UCS2-H UniGB-UCS2-V UniGB-UTF16-H UniGB-UTF16-V )
 
-CMAP_JAPAN_FILES=$(addprefix cmaps/, \
+CMAP_JAPAN_FILES := $(addprefix cmaps/, \
 	78-EUC-H 78-EUC-V 78-H 78-RKSJ-H 78-RKSJ-V 78-V 78ms-RKSJ-H \
 	78ms-RKSJ-V 83pv-RKSJ-H 90ms-RKSJ-H 90ms-RKSJ-V 90msp-RKSJ-H \
 	90msp-RKSJ-V 90pv-RKSJ-H 90pv-RKSJ-V Add-H Add-RKSJ-H \
@@ -188,7 +191,7 @@ CMAP_JAPAN_FILES=$(addprefix cmaps/, \
 	UniHojo-UCS2-H UniHojo-UCS2-V UniHojo-UTF16-H UniHojo-UTF16-V \
 	UniJIS-UTF16-H UniJIS-UTF16-V )
 
-CMAP_KOREA_FILES=$(addprefix cmaps/, \
+CMAP_KOREA_FILES := $(addprefix cmaps/, \
 	Adobe-Korea1-0 Adobe-Korea1-1 Adobe-Korea1-2 KSC-EUC-H \
 	KSC-EUC-V KSC-H KSC-Johab-H KSC-Johab-V KSC-V KSCms-UHC-H \
 	KSCms-UHC-HW-H KSCms-UHC-HW-V KSCms-UHC-V KSCpc-EUC-H \
@@ -209,20 +212,20 @@ $(GENDIR)/cmap_korea.c: $(CMAPDUMP_EXE) $(CMAP_KOREA_FILES)
 
 endif
 
-CMAP_SRC=\
+CMAP_SRC := \
 	$(GENDIR)/cmap_unicode.c \
 	$(GENDIR)/cmap_cns.c \
 	$(GENDIR)/cmap_gb.c \
 	$(GENDIR)/cmap_japan.c \
 	$(GENDIR)/cmap_korea.c
 
-CMAP_OBJ=$(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
+CMAP_OBJ := $(CMAP_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
 
 #
 # Library
 #
 
-MUPDF_LIB=$(OBJDIR)/libmupdf.a
+MUPDF_LIB = $(OBJDIR)/libmupdf.a
 $(MUPDF_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUPDF_OBJ) $(CMAP_OBJ) $(FONT_OBJ)
 	 $(AR_CMD)
 

@@ -47,60 +47,58 @@ static inline void srowc(byte * restrict src, byte * restrict dst, int w, int de
 
 	assert(n <= 5);
 
-	left = 0;
+	left = denom;
 
-	for (x = 0; x < w; x++)
+	for (x = w; x > 0; x--)
 	{
-		sum1 += src[x * n + 0];
+		sum1 += *src++;
 		/* the compiler eliminates these if-tests */
 		if (n >= 2)
-			sum2 += src[x * n + 1];
+			sum2 += *src++;
 		if (n >= 3)
-			sum3 += src[x * n + 2];
+			sum3 += *src++;
 		if (n >= 4)
-			sum4 += src[x * n + 3];
+			sum4 += *src++;
 		if (n >= 5)
-			sum5 += src[x * n + 4];
+			sum5 += *src++;
 
-		if (++left == denom)
+		if (--left == 0)
 		{
-			left = 0;
+			left = denom;
 
-			dst[0] = (sum1 * invdenom + (1<<15)) >> 16;
+			*dst++ = (sum1 * invdenom + (1<<15)) >> 16;
 			sum1 = 0;
 			if (n >= 2) {
-				dst[1] = (sum2 * invdenom + (1<<15)) >> 16;
+				*dst++ = (sum2 * invdenom + (1<<15)) >> 16;
 				sum2 = 0;
 			}
 			if (n >= 3) {
-				dst[2] = (sum3 * invdenom + (1<<15)) >> 16;
+				*dst++ = (sum3 * invdenom + (1<<15)) >> 16;
 				sum3 = 0;
 			}
 			if (n >= 4) {
-				dst[3] = (sum4 * invdenom + (1<<15)) >> 16;
+				*dst++ = (sum4 * invdenom + (1<<15)) >> 16;
 				sum4 = 0;
 			}
 			if (n >= 5) {
-				dst[4] = (sum5 * invdenom + (1<<15)) >> 16;
+				*dst++ = (sum5 * invdenom + (1<<15)) >> 16;
 				sum5 = 0;
 			}
-
-
-			dst += n;
 		}
 	}
 
 	/* left overs */
+	left = denom - left;
 	if (left) {
-		dst[0] = sum1 / left;
-		if (n >=2)
-			dst[1] = sum2 / left;
-		if (n >=3)
-			dst[2] = sum3 / left;
-		if (n >=4)
-			dst[3] = sum4 / left;
-		if (n >=5)
-			dst[4] = sum5 / left;
+		*dst++ = sum1 / left;
+		if (n >= 2)
+			*dst++ = sum2 / left;
+		if (n >= 3)
+			*dst++ = sum3 / left;
+		if (n >= 4)
+			*dst++ = sum4 / left;
+		if (n >= 5)
+			*dst++ = sum5 / left;
 	}
 }
 
@@ -145,24 +143,71 @@ static inline void scoln(byte * restrict src, byte * restrict dst, int w, int de
 	}
 }
 
+static inline void scolc(byte * restrict src, byte * restrict dst, int w, int denom, int n)
+{
+	int invdenom = (1<<16) / denom;
+	int x, y;
+	int sum0;
+	int sum1;
+	int sum2;
+	int sum3;
+	int sum4;
+
+	assert(n <= 5);
+
+	x = w;
+	w *= n;
+	for (; x > 0; x--)
+	{
+		sum0 = 0;
+		sum1 = 0;
+		sum2 = 0;
+		sum3 = 0;
+		sum4 = 0;
+		for (y = denom; y > 0; y--)
+		{
+			sum0 += src[0];
+			if (n >= 2)
+				sum1 += src[1];
+			if (n >= 3)
+				sum2 += src[2];
+			if (n >= 4)
+				sum3 += src[3];
+			if (n >= 5)
+				sum4 += src[4];
+			src += w;
+		}
+		src += n - denom * w;
+		*dst++ = (sum0 * invdenom + (1<<15)) >> 16;
+		if (n >= 2)
+			*dst++ = (sum1 * invdenom + (1<<15)) >> 16;
+		if (n >= 3)
+			*dst++ = (sum2 * invdenom + (1<<15)) >> 16;
+		if (n >= 4)
+			*dst++ = (sum3 * invdenom + (1<<15)) >> 16;
+		if (n >= 5)
+			*dst++ = (sum4 * invdenom + (1<<15)) >> 16;
+	}
+}
+
 static void scol1(byte *src, byte *dst, int w, int denom)
 {
-	scoln(src, dst, w, denom, 1);
+	scolc(src, dst, w, denom, 1);
 }
 
 static void scol2(byte *src, byte *dst, int w, int denom)
 {
-	scoln(src, dst, w, denom, 2);
+	scolc(src, dst, w, denom, 2);
 }
 
 static void scol4(byte *src, byte *dst, int w, int denom)
 {
-	scoln(src, dst, w, denom, 4);
+	scolc(src, dst, w, denom, 4);
 }
 
 static void scol5(byte *src, byte *dst, int w, int denom)
 {
-	scoln(src, dst, w, denom, 5);
+	scolc(src, dst, w, denom, 5);
 }
 
 void (*fz_srown)(byte *src, byte *dst, int w, int denom, int n) = srown;

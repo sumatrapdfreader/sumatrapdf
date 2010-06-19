@@ -17,6 +17,7 @@ struct fz_predict_s
 
 	int stride;
 	int bpp;
+	unsigned char *refbuf;
 	unsigned char *ref;
 };
 
@@ -62,13 +63,14 @@ fz_newpredictd(fz_obj *params)
 
 	if (p->predictor >= 10)
 	{
-		p->ref = fz_malloc(p->stride);
-		memset(p->ref, 0, p->stride);
+		p->refbuf = fz_malloc(p->stride);
+		memset(p->refbuf, 0, p->stride);
 	}
 	else
 	{
-		p->ref = nil;
+		p->refbuf = nil;
 	}
+	p->ref = nil;
 
 	return (fz_filter*)p;
 }
@@ -77,7 +79,7 @@ void
 fz_droppredict(fz_filter *filter)
 {
 	fz_predict *p = (fz_predict*)filter;
-	fz_free(p->ref);
+	fz_free(p->refbuf);
 }
 
 static inline int
@@ -147,26 +149,59 @@ fz_predicttiff(fz_predict *p, unsigned char *in, unsigned char *out)
 static void
 fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
 {
-	int upleft[MAXC], left[MAXC], i, k;
+	int bpp = p->bpp;
+	int i;
+	unsigned char *ref = p->ref;
 
-	for (k = 0; k < p->bpp; k++)
+	switch (predictor)
 	{
-		left[k] = 0;
-		upleft[k] = 0;
-	}
-
-	for (k = 0, i = 0; i < p->stride; k = (k + 1) % p->bpp, i ++)
-	{
-		switch (predictor)
+	case 0:
+		memcpy(out, in, p->stride);
+		break;
+	case 1:
+		for (i = bpp; i > 0; i--)
 		{
-		case 0: out[i] = in[i]; break;
-		case 1: out[i] = in[i] + left[k]; break;
-		case 2: out[i] = in[i] + p->ref[i]; break;
-		case 3: out[i] = in[i] + (left[k] + p->ref[i]) / 2; break;
-		case 4: out[i] = in[i] + paeth(left[k], p->ref[i], upleft[k]); break;
+			*out++ = *in++;
 		}
-		left[k] = out[i];
-		upleft[k] = p->ref[i];
+		for (i = p->stride - bpp; i > 0; i--)
+		{
+			 *out = *in++ + out[-bpp];
+			 out++;
+		}
+		break;
+	case 2:
+		for (i = bpp; i > 0; i--)
+		{
+			*out++ = *in++ + *ref++;
+		}
+		for (i = p->stride - bpp; i > 0; i--)
+		{
+			 *out++ = *in++ + *ref++;
+		}
+		break;
+	case 3:
+		for (i = bpp; i > 0; i--)
+		{
+			*out++ = *in++ + (*ref++) / 2;
+		}
+		for (i = p->stride - bpp; i > 0; i--)
+		{
+			 *out = *in++ + (out[-bpp] + *ref++)/2;
+			 out++;
+		}
+		break;
+	case 4:
+		for (i = bpp; i > 0; i--)
+		{
+			*out++ = *in++ + paeth(0, *ref++, 0);
+		}
+		for (i = p->stride - bpp; i > 0; i --)
+		{
+			*out = *in++ + paeth(out[-bpp], *ref, ref[-bpp]);
+			ref++;
+			out++;
+		}
+		break;
 	}
 }
 
@@ -177,17 +212,28 @@ fz_processpredict(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	int ispng = dec->predictor >= 10;
 	int predictor;
 
+	dec->ref = dec->refbuf;
 	while (1)
 	{
 		if (in->rp + dec->stride + ispng > in->wp)
 		{
 			if (in->eof)
 				return fz_iodone;
+			if (dec->refbuf != dec->ref)
+			{
+				memcpy(dec->refbuf, dec->ref, dec->stride);
+			}
 			return fz_ioneedin;
 		}
 
 		if (out->wp + dec->stride > out->ep)
+		{
+			if (dec->refbuf != dec->ref)
+			{
+				memcpy(dec->refbuf, dec->ref, dec->stride);
+			}
 			return fz_ioneedout;
+		}
 
 		if (dec->predictor == 1)
 		{
@@ -205,8 +251,10 @@ fz_processpredict(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 			fz_predictpng(dec, in->rp, out->wp, predictor);
 		}
 
-		if (dec->ref)
-			memcpy(dec->ref, out->wp, dec->stride);
+		if (dec->refbuf)
+		{
+			dec->ref = out->wp;
+		}
 
 		in->rp += dec->stride;
 		out->wp += dec->stride;

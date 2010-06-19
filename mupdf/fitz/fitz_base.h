@@ -5,7 +5,7 @@
 #ifndef _FITZ_BASE_H_
 #define _FITZ_BASE_H_
 
-#ifdef _DEBUG
+#ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>

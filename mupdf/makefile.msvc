@@ -55,7 +55,7 @@ LDFLAGS = $(LDFLAGS) /LTCG
 LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
 CFLAGS = $(CFLAGS) /EHs-c- 
 !else
-CFLAGS = $(CFLAGS) /Od /RTCs /RTCu 
+CFLAGS = $(CFLAGS) /Od /RTCs /RTCu /D "DEBUG"
 # exception handling must be activated to enable memory leak detection
 CFLAGS = $(CFLAGS) /MDd /EHsc
 !endif
