@@ -5587,7 +5587,7 @@ static DWORD WINAPI FindThread(LPVOID data)
         Sleep(10);
 
     PdfSearchResult *rect;
-    if (ftd->wasModified)
+    if (ftd->wasModified || win->dm->lastFoundPage() != win->dm->currentPageNo())
         rect = win->dm->Find(ftd->direction, ftd->text);
     else
         rect = win->dm->Find(ftd->direction);

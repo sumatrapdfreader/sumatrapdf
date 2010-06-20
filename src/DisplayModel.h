@@ -253,6 +253,7 @@ public:
 
     void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
     PdfSearchResult *Find(PdfSearchDirection direction = FIND_FORWARD, TCHAR *text = NULL, UINT fromPage = 0);
+    int             lastFoundPage(void) const { return _pdfSearch->result.page; }
     BOOL            bFoundText;
 
     BOOL            _showToc;
