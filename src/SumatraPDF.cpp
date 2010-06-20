@@ -7714,15 +7714,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         for (TStrList *currArg = fileNames; currArg; currArg = currArg->next) {
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
-                TCHAR command[2 * MAX_PATH + 20];
-                wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), currArg->str);
+                TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
+                GetFullPathName(currArg->str, dimof(fullpath), fullpath, NULL);
+                wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 if (destName && !firstDocLoaded) {
-                    wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), currArg->str, destName);
+                    wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, destName);
                     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 }
                 else if (pageNumber > 0 && !firstDocLoaded) {
-                    wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), currArg->str, pageNumber);
+                    wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, pageNumber);
                     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 }
             }
