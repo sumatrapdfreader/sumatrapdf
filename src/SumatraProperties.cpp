@@ -301,7 +301,7 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
 }
 
 static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *right) {
-    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
+    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES || !*right) {
         return;
     }
     win->pdfProperties[win->pdfPropertiesCount].leftTxt = left;

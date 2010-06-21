@@ -204,6 +204,14 @@ PdfEngine::~PdfEngine()
             pdf_freestore(_xref->store);
             _xref->store = NULL;
         }
+        if (_xref->pagerefs) {
+            for (int i = 0; i < _xref->pagelen; i++) {
+                fz_dropobj(_xref->pagerefs[i]);
+                fz_dropobj(_xref->pageobjs[i]);
+            }
+            fz_free(_xref->pagerefs);
+            fz_free(_xref->pageobjs);
+        }
         pdf_closexref(_xref);
     }
     if (_drawcache)
