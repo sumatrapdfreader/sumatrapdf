@@ -294,7 +294,8 @@ lexstring(fz_stream *f, char *buf, int n)
 				}
 				else if (c != EOF)
 					fz_unreadbyte(f);
-				*s++ = oct;
+				c = oct < 256 ? pdf_docencoding[oct] : 0;
+				s += runetochar(s, &c);
 				break;
 			case '\n':
 				break;
@@ -304,11 +305,13 @@ lexstring(fz_stream *f, char *buf, int n)
 					fz_unreadbyte(f);
 				break;
 			default:
-				*s++ = c;
+				c = pdf_docencoding[c];
+				s += runetochar(s, &c);
 			}
 			break;
 		default:
-			*s++ = c;
+			c = pdf_docencoding[c];
+			s += runetochar(s, &c);
 			break;
 		}
 	}
