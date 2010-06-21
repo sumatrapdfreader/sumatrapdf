@@ -1,5 +1,8 @@
 #include "fitz.h"
 
+#define LINEDIST 0.9f
+#define SPACEDIST 0.25f
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -345,21 +348,21 @@ fixuptextspan(fz_textspan *span)
 static void
 fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *pen)
 {
+	fz_textspan *firstSpan = *last;
 	fz_font *font = text->font;
 	FT_Face face = font->ftface;
 	fz_matrix tm = text->trm;
 	fz_matrix trm;
 	float size;
-	float dx, dy;
 	float adv;
 	fz_rect rect;
-	fz_point dir;
-	int i, err;
-	float cross, dist2;
+	fz_point dir, ndir;
+	fz_point delta, ndelta;
+	float dist, dot;
 	float ascender = 1;
 	float descender = 0;
 	int multi;
-	fz_textspan *firstSpan = *last;
+	int i, err;
 
  	if (text->len == 0)
 		return;
@@ -390,6 +393,10 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 	tm.f = 0;
 	trm = fz_concat(tm, ctm);
  	dir = fz_transformvector(trm, dir);
+	dist = sqrtf(dir.x * dir.x + dir.y * dir.y);
+	ndir.x = dir.x / dist;
+	ndir.y = dir.y / dist;
+
 	size = fz_matrixexpansion(trm);
 
 	multi = 1;
@@ -410,30 +417,36 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 		tm.f = text->els[i].y;
 		trm = fz_concat(tm, ctm);
 
-		dx = pen->x - trm.e;
-		dy = pen->y - trm.f;
+		delta.x = pen->x - trm.e;
+		delta.y = pen->y - trm.f;
 		if (pen->x == -1 && pen->y == -1)
-			dx = dy = 0;
-		cross = fabsf(dx * dir.y - dy * dir.x);
-		dist2 = dx * dx + dy * dy;
+			delta.x = delta.y = 0;
+
+		dist = sqrtf(delta.x * delta.x + delta.y * delta.y);
 
 		/* Add space and newlines based on pen movement */
-		if (dist2 > size * size * 0.04f)
+		if (dist > 0)
 		{
-			if (cross > 0.1f)
+			ndelta.x = delta.x / dist;
+			ndelta.y = delta.y / dist;
+			dot = ndelta.x * ndir.x + ndelta.y * ndir.y;
+
+			if (dist > size * LINEDIST)
 			{
 				fz_addtextnewline(last, font, size, text->wmode);
 			}
-			else if ((*last)->len == 0 || (*last)->text[(*last)->len - 1].c == ' ') ; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=687 */
-			else if (cross < 0.1f && dist2 > size * size * 0.04f)
+			else if (fabsf(dot) > 0.95f && dist > size * SPACEDIST)
 			{
-				fz_rect spacerect;
-				spacerect.x0 = -0.2f;
-				spacerect.y0 = 0;
-				spacerect.x1 = 0;
-				spacerect.y1 = 1;
-				spacerect = fz_transformrect(trm, spacerect);
-				fz_addtextchar(last, font, size, text->wmode, ' ', fz_roundrect(spacerect));
+				if ((*last)->len != 0 && (*last)->text[(*last)->len - 1].c != ' ')
+				{
+					fz_rect spacerect;
+					spacerect.x0 = -0.2f;
+					spacerect.y0 = 0;
+					spacerect.x1 = 0;
+					spacerect.y1 = 1;
+					spacerect = fz_transformrect(trm, spacerect);
+					fz_addtextchar(last, font, size, text->wmode, ' ', fz_roundrect(spacerect));
+				}
 			}
 		}
 

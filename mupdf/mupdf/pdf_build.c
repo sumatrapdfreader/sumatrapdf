@@ -264,8 +264,11 @@ void
 pdf_showimage(pdf_csi *csi, pdf_image *image)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	fz_pixmap *tile = fz_newpixmap(image->cs, 0, 0, image->w, image->h);
-	fz_error error = pdf_loadtile(image, tile);
+	fz_pixmap *tile;
+	fz_error error;
+
+	tile = fz_newpixmap(image->cs, 0, 0, image->w, image->h);
+	error = pdf_loadtile(image, tile);
 	if (error)
 	{
 		fz_droppixmap(tile);

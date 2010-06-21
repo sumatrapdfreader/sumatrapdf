@@ -238,7 +238,6 @@ PDFEXTRACT_PDB = $(O)\pdfextract.pdb
 PDFEXTRACT_MAP = $(O)\pdfextract.map
 
 CMAPDUMP_OBJS =  $(O)\cmapdump.obj
-
 CMAPDUMP_APP = $(O)\cmapdump.exe
 CMAPDUMP_PDB = $(O)\cmapdump.pdb
 CMAPDUMP_MAP = $(O)\cmapdump.map

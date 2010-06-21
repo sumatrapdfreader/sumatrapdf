@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 	if (argc - fz_optind > 0)
 		subset = 1;
 
-	openxref(infile, password, 0);
+	openxref(infile, password, 0, 0);
 
 	out = fopen(outfile, "wb");
 	if (!out)

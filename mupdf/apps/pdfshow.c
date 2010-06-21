@@ -5,15 +5,15 @@
 #include "pdftool.h"
 
 static int showbinary = 0;
-static int showdecode = 0;
+static int showraw = 0;
 static int showcolumn;
 
 static void showusage(void)
 {
-	fprintf(stderr, "usage: pdfshow [-bx] [-p password] <file> [xref] [trailer] [object numbers]\n");
-	fprintf(stderr, "  -b  \tprint streams as raw binary data\n");
-	fprintf(stderr, "  -x  \tdecompress streams\n");
-	fprintf(stderr, "  -p  \tdecrypt password\n");
+	fprintf(stderr, "usage: pdfshow [-bc] [-p password] <file> [xref] [trailer] [object numbers]\n");
+	fprintf(stderr, "  -b  \tprint streams as binary data (don't pretty-print)\n");
+	fprintf(stderr, "  -c  \tprint compressed streams (don't decompress)\n");
+	fprintf(stderr, "  -p  \tpassword for encrypted files\n");
 	exit(1);
 }
 
@@ -66,10 +66,10 @@ static void showstream(int num, int gen)
 
 	showcolumn = 0;
 
-	if (showdecode)
-		error = pdf_openstream(&stm, xref, num, gen);
-	else
+	if (showraw)
 		error = pdf_openrawstream(&stm, xref, num, gen);
+	else
+		error = pdf_openstream(&stm, xref, num, gen);
 	if (error)
 		die(error);
 
@@ -125,13 +125,13 @@ int main(int argc, char **argv)
 	char *password = "";
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "p:bx")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:bc")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'b': showbinary ++; break;
-		case 'x': showdecode ++; break;
+		case 'c': showraw ++; break;
 		default:
 			showusage();
 			break;
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	if (fz_optind == argc)
 		showusage();
 
-	openxref(argv[fz_optind++], password, 0);
+	openxref(argv[fz_optind++], password, 0, 0);
 
 	if (fz_optind == argc)
 		showtrailer();

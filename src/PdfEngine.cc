@@ -256,6 +256,8 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             return false;
     }
 
+    if (pdf_loadpagetree(_xref) != fz_okay)
+        return false;
     _pageCount = pdf_getpagecount(_xref);
     _outline = pdf_loadoutline(_xref);
     // silently ignore errors from pdf_loadoutline()

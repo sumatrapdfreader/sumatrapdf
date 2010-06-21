@@ -129,6 +129,11 @@ struct pdf_xref_s
 	int cap;
 	pdf_xrefentry *table;
 
+	int pagelen;
+	int pagecap;
+	fz_obj **pageobjs;
+	fz_obj **pagerefs;
+
 	struct pdf_store_s *store;
 	struct pdf_outline_s *outlines;
 
@@ -539,6 +544,7 @@ struct pdf_page_s
 };
 
 /* pagetree.c */
+fz_error pdf_loadpagetree(pdf_xref *xref);
 int pdf_getpagecount(pdf_xref *xref);
 fz_obj * pdf_getpageobject(pdf_xref *xref, int p);
 int pdf_findpageobject(pdf_xref *xref, fz_obj *pageobj);

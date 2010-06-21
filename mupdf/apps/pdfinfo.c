@@ -1021,7 +1021,7 @@ int main(int argc, char **argv)
 			closexref();
 			filename = argv[fz_optind];
 			printf("%s:\n", filename);
-			openxref(filename, password, 0);
+			openxref(filename, password, 0, 1);
 			gatherglobalinfo();
 			state = NO_INFO_GATHERED;
 		}

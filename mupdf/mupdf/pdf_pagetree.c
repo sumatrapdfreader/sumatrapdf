@@ -1,7 +1,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-struct stuff
+struct info
 {
 	fz_obj *resources;
 	fz_obj *mediabox;
@@ -9,343 +9,117 @@ struct stuff
 	fz_obj *rotate;
 };
 
-static void
-pdf_getpagecountimp(pdf_xref *xref, fz_obj *node, int *pagesp)
-{
-	fz_obj *type;
-	fz_obj *kids;
-	fz_obj *count;
-	char *typestr;
-	int pages = 0;
-	int i;
-
-	if (!fz_isdict(node))
-	{
-		fz_warn("pagetree node is missing, igoring missing pages...");
-		return;
-	}
-
-	type = fz_dictgets(node, "Type");
-	kids = fz_dictgets(node, "Kids");
-	count = fz_dictgets(node, "Count");
-
-	if (fz_isname(type))
-		typestr = fz_toname(type);
-	else
-	{
-		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(node), fz_togen(node));
-
-		kids = fz_dictgets(node, "Kids");
-		if (kids)
-		{
-			fz_warn("guessing it may be a pagetree node, continuing...");
-			typestr = "Pages";
-		}
-		else
-		{
-			fz_warn("guessing it may be a page, continuing...");
-			typestr = "Page";
-		}
-	}
-
-	if (!strcmp(typestr, "Page"))
-		(*pagesp)++;
-
-	else if (!strcmp(typestr, "Pages"))
-	{
-		if (!fz_isarray(kids))
-			fz_warn("page tree node contains no pages");
-
-		pdf_logpage("subtree (%d %d R) {\n", fz_tonum(node), fz_togen(node));
-
-		for (i = 0; i < fz_arraylen(kids); i++)
-		{
-			fz_obj *obj = fz_arrayget(kids, i);
-
-			/* prevent infinite recursion possible in maliciously crafted PDFs */
-			if (obj == node)
-			{
-				fz_warn("cyclic page tree");
-				return;
-			}
-
-			pdf_getpagecountimp(xref, obj, &pages);
-		}
-
-		if (pages != fz_toint(count))
-		{
-			fz_warn("page tree node contains incorrect number of pages, continuing...");
-			count = fz_newint(pages);
-			fz_dictputs(node, "Count", count);
-			fz_dropobj(count);
-		}
-
-		pdf_logpage("%d pages\n", pages);
-
-		(*pagesp) += pages;
-
-		pdf_logpage("}\n");
-	}
-}
-
 int
 pdf_getpagecount(pdf_xref *xref)
 {
-	fz_obj *catalog;
-	fz_obj *pages;
-	int count;
-
-	catalog = fz_dictgets(xref->trailer, "Root");
-
-	pages = fz_dictgets(catalog, "Pages");
-	pdf_logpage("determining page count (%d %d R) {\n", fz_tonum(pages), fz_togen(pages));
-
-	count = 0;
-	pdf_getpagecountimp(xref, pages, &count);
-
-	pdf_logpage("}\n");
-
-	return count;
-}
-
-static void
-pdf_getpageobjectimp(pdf_xref *xref, struct stuff inherit, fz_obj *node, int *pagesp, int pageno, fz_obj **pagep)
-{
-	char *typestr;
-	fz_obj *type;
-	fz_obj *kids;
-	fz_obj *count;
-	fz_obj *inh;
-	int i;
-
-	if (!fz_isdict(node))
-	{
-		fz_warn("pagetree node is missing, ignoring missing pages...");
-		*pagep = nil;
-		return;
-	}
-
-	type = fz_dictgets(node, "Type");
-	kids = fz_dictgets(node, "Kids");
-	count = fz_dictgets(node, "Count");
-
-	if (fz_isname(type))
-		typestr = fz_toname(type);
-	else
-	{
-		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(node), fz_togen(node));
-
-		kids = fz_dictgets(node, "Kids");
-		if (kids)
-		{
-			fz_warn("guessing it may be a pagetree node, continuing...");
-			typestr = "Pages";
-		}
-		else
-		{
-			fz_warn("guessing it may be a page, continuing...");
-			typestr = "Page";
-		}
-	}
-
-	if (!strcmp(typestr, "Page"))
-	{
-		(*pagesp)++;
-		if (*pagesp == pageno)
-		{
-			pdf_logpage("page %d (%d %d R)\n", *pagesp, fz_tonum(node), fz_togen(node));
-
-			if (inherit.resources && !fz_dictgets(node, "Resources"))
-			{
-				pdf_logpage("inherited resources\n");
-				fz_dictputs(node, "Resources", inherit.resources);
-			}
-
-			if (inherit.mediabox && !fz_dictgets(node, "MediaBox"))
-			{
-				pdf_logpage("inherit mediabox\n");
-				fz_dictputs(node, "MediaBox", inherit.mediabox);
-			}
-
-			if (inherit.cropbox && !fz_dictgets(node, "CropBox"))
-			{
-				pdf_logpage("inherit cropbox\n");
-				fz_dictputs(node, "CropBox", inherit.cropbox);
-			}
-
-			if (inherit.rotate && !fz_dictgets(node, "Rotate"))
-			{
-				pdf_logpage("inherit rotate\n");
-				fz_dictputs(node, "Rotate", inherit.rotate);
-			}
-
-			*pagep = node;
-		}
-	}
-
-	else if (!strcmp(typestr, "Pages"))
-	{
-		if (!fz_isarray(kids))
-			fz_warn("page tree node contains no pages");
-
-		if (*pagesp + fz_toint(count) < pageno)
-		{
-			(*pagesp) += fz_toint(count);
-			return;
-		}
-
-		inh = fz_dictgets(node, "Resources");
-		if (inh) inherit.resources = inh;
-
-		inh = fz_dictgets(node, "MediaBox");
-		if (inh) inherit.mediabox = inh;
-
-		inh = fz_dictgets(node, "CropBox");
-		if (inh) inherit.cropbox = inh;
-
-		inh = fz_dictgets(node, "Rotate");
-		if (inh) inherit.rotate = inh;
-
-		pdf_logpage("subtree (%d %d R) {\n", fz_tonum(node), fz_togen(node));
-
-		for (i = 0; !(*pagep) && i < fz_arraylen(kids); i++)
-		{
-			fz_obj *obj = fz_arrayget(kids, i);
-
-			/* prevent infinite recursion possible in maliciously crafted PDFs */
-			if (obj == node)
-			{
-				fz_warn("cyclic page tree");
-				return;
-			}
-
-			pdf_getpageobjectimp(xref, inherit, obj, pagesp, pageno, pagep);
-		}
-
-		pdf_logpage("}\n");
-	}
+	return xref->pagelen;
 }
 
 fz_obj *
-pdf_getpageobject(pdf_xref *xref, int pageno)
+pdf_getpageobject(pdf_xref *xref, int number)
 {
-	struct stuff inherit;
-	fz_obj *catalog;
-	fz_obj *pages;
-	fz_obj *page;
-	int count;
-
-	inherit.resources = nil;
-	inherit.mediabox = nil;
-	inherit.cropbox = nil;
-	inherit.rotate = nil;
-
-	catalog = fz_dictgets(xref->trailer, "Root");
-
-	pages = fz_dictgets(catalog, "Pages");
-	pdf_logpage("get page %d (%d %d R) {\n", pageno, fz_tonum(pages), fz_togen(pages));
-
-	page = nil;
-	count = 0;
-	pdf_getpageobjectimp(xref, inherit, pages, &count, pageno, &page);
-	if (!page)
-		fz_warn("cannot find page %d", pageno);
-
-	pdf_logpage("}\n");
-
-	return page;
-}
-
-static void
-pdf_findpageobjectimp(pdf_xref *xref, fz_obj *node, fz_obj *page, int *pagenop, int *foundp)
-{
-	char *typestr;
-	fz_obj *type;
-	fz_obj *kids;
-	int i;
-
-	if (!fz_isdict(node))
-		return;
-
-	type = fz_dictgets(node, "Type");
-	kids = fz_dictgets(node, "Kids");
-
-	if (fz_isname(type))
-		typestr = fz_toname(type);
-	else
-	{
-		fz_warn("pagetree node (%d %d R) lacks required type", fz_tonum(node), fz_togen(node));
-
-		kids = fz_dictgets(node, "Kids");
-		if (kids)
-		{
-			fz_warn("guessing it may be a pagetree node, continuing...");
-			typestr = "Pages";
-		}
-		else
-		{
-			fz_warn("guessing it may be a page, continuing...");
-			typestr = "Page";
-		}
-	}
-
-	if (!strcmp(typestr, "Page"))
-	{
-		(*pagenop)++;
-		if (fz_tonum(node) == fz_tonum(page))
-		{
-			pdf_logpage("page %d (%d %d R)\n", *pagenop, fz_tonum(node), fz_togen(node));
-			*foundp = 1;
-		}
-	}
-
-	else if (!strcmp(typestr, "Pages"))
-	{
-		if (!fz_isarray(kids))
-			fz_warn("page tree node contains no pages");
-
-		pdf_logpage("subtree (%d %d R) {\n", fz_tonum(node), fz_togen(node));
-
-		for (i = 0; !(*foundp) && i < fz_arraylen(kids); i++)
-		{
-			fz_obj *obj = fz_arrayget(kids, i);
-
-			/* prevent infinite recursion possible in maliciously crafted PDFs */
-			if (obj == node)
-			{
-				fz_warn("cyclic page tree");
-				return;
-			}
-
-			pdf_findpageobjectimp(xref, obj, page, pagenop, foundp);
-		}
-
-		pdf_logpage("}\n");
-	}
+	if (number > 0 && number <= xref->pagelen)
+		return xref->pageobjs[number - 1];
+	return nil;
 }
 
 int
 pdf_findpageobject(pdf_xref *xref, fz_obj *page)
 {
-	fz_obj *catalog;
-	fz_obj *pages;
-	int pageno;
-	int found;
-
-	catalog = fz_dictgets(xref->trailer, "Root");
-
-	pages = fz_dictgets(catalog, "Pages");
-	pdf_logpage("find page object (%d %d R) (%d %d R) {\n", fz_tonum(page), fz_togen(page), fz_tonum(pages), fz_togen(pages));
-
-	pageno = 0;
-	found = 0;
-	pdf_findpageobjectimp(xref, pages, page, &pageno, &found);
-
-	pdf_logpage("}\n");
-
-	if (!found)
-		fz_warn("cannot find page object (%d %d R)", fz_tonum(page), fz_togen(page));
-
-	return pageno;
+	int num = fz_tonum(page);
+	int gen = fz_togen(page);
+	int i;
+	for (i = 0; i < xref->pagelen; i++)
+		if (num == fz_tonum(xref->pagerefs[i]) && gen == fz_togen(xref->pagerefs[i]))
+			return i + 1;
+	return 0;
 }
 
+void
+pdf_loadpagetreenode(pdf_xref *xref, fz_obj *node, struct info info)
+{
+	fz_obj *dict;
+	fz_obj *kids;
+	fz_obj *count;
+	fz_obj *obj;
+	int i, n;
+
+	kids = fz_dictgets(node, "Kids");
+	count = fz_dictgets(node, "Count");
+
+	if (fz_isarray(kids) && fz_isint(count))
+	{
+		obj = fz_dictgets(node, "Resources");
+		if (obj)
+			info.resources = obj;
+		obj = fz_dictgets(node, "MediaBox");
+		if (obj)
+			info.mediabox = obj;
+		obj = fz_dictgets(node, "CropBox");
+		if (obj)
+			info.cropbox = obj;
+		obj = fz_dictgets(node, "Rotate");
+		if (obj)
+			info.rotate = obj;
+
+		n = fz_arraylen(kids);
+		for (i = 0; i < n; i++)
+		{
+			obj = fz_arrayget(kids, i);
+			pdf_loadpagetreenode(xref, obj, info);
+		}
+	}
+	else
+	{
+		dict = fz_resolveindirect(node);
+
+		if (info.resources && !fz_dictgets(dict, "Resources"))
+			fz_dictputs(dict, "Resources", info.resources);
+		if (info.mediabox && !fz_dictgets(dict, "MediaBox"))
+			fz_dictputs(dict, "MediaBox", info.mediabox);
+		if (info.cropbox && !fz_dictgets(dict, "CropBox"))
+			fz_dictputs(dict, "CropBox", info.cropbox);
+		if (info.rotate && !fz_dictgets(dict, "Rotate"))
+			fz_dictputs(dict, "Rotate", info.rotate);
+
+		if (xref->pagelen == xref->pagecap)
+		{
+			fz_warn("found more pages than expected");
+			xref->pagecap ++;
+			xref->pagerefs = fz_realloc(xref->pagerefs, sizeof(fz_obj*) * xref->pagecap);
+			xref->pageobjs = fz_realloc(xref->pageobjs, sizeof(fz_obj*) * xref->pagecap);
+		}
+
+		xref->pagerefs[xref->pagelen] = fz_keepobj(node);
+		xref->pageobjs[xref->pagelen] = fz_keepobj(dict);
+		xref->pagelen ++;
+	}
+}
+
+fz_error
+pdf_loadpagetree(pdf_xref *xref)
+{
+	struct info info;
+	fz_obj *catalog = fz_dictgets(xref->trailer, "Root");
+	fz_obj *pages = fz_dictgets(catalog, "Pages");
+	fz_obj *count = fz_dictgets(pages, "Count");
+
+	if (!fz_isdict(pages))
+		return fz_throw("missing page tree");
+	if (!fz_isint(count))
+		return fz_throw("missing page count");
+
+	xref->pagecap = fz_toint(count);
+	xref->pagelen = 0;
+	xref->pagerefs = fz_malloc(sizeof(fz_obj*) * xref->pagecap);
+	xref->pageobjs = fz_malloc(sizeof(fz_obj*) * xref->pagecap);
+
+	info.resources = nil;
+	info.mediabox = nil;
+	info.cropbox = nil;
+	info.rotate = nil;
+
+	pdf_loadpagetreenode(xref, pages, info);
+
+	return fz_okay;
+}

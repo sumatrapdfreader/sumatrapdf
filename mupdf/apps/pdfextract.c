@@ -230,7 +230,7 @@ int main(int argc, char **argv)
 	if (fz_optind == argc)
 		showusage();
 
-	openxref(argv[fz_optind++], password, 0);
+	openxref(argv[fz_optind++], password, 0, 0);
 
 	if (fz_optind == argc)
 		for (o = 0; o < xref->len; o++)

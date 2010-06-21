@@ -89,6 +89,7 @@ void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 
 void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 {
+	fz_error error;
 	fz_obj *obj;
 	fz_obj *info;
 	char *password = "";
@@ -146,6 +147,10 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	/*
 	 * Start at first page
 	 */
+
+	error = pdf_loadpagetree(app->xref);
+	if (error)
+		pdfapp_error(app, fz_rethrow(error, "cannot load page tree"));
 
 	app->pagecount = pdf_getpagecount(app->xref);
 

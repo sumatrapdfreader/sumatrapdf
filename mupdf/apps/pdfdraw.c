@@ -446,7 +446,7 @@ int main(int argc, char **argv)
 
 			drawcache = fz_newglyphcache();
 
-			openxref(argv[fz_optind], password, 0);
+			openxref(argv[fz_optind], password, 0, 1);
 			state = NO_PAGES_DRAWN;
 		}
 		else

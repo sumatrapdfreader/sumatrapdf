@@ -587,6 +587,11 @@ Lsetcolorspace:
 				pdf_dropimage(img);
 			}
 
+			else if (!strcmp(fz_toname(subtype), "PS"))
+			{
+				fz_warn("ignoring XObject with subtype PS");
+			}
+
 			else
 			{
 				return fz_throw("unknown XObject subtype: %s", fz_toname(subtype));

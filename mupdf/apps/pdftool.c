@@ -21,9 +21,10 @@ void setcleanup(void (*func)(void))
 	cleanup = func;
 }
 
-void openxref(char *filename, char *password, int dieonbadpass)
+void openxref(char *filename, char *password, int dieonbadpass, int loadpages)
 {
 	fz_stream *file;
+	fz_error error;
 	int okay;
 	int fd;
 
@@ -52,7 +53,13 @@ void openxref(char *filename, char *password, int dieonbadpass)
 			die(fz_throw("invalid password"));
 	}
 
-	pagecount = pdf_getpagecount(xref);
+	if (loadpages)
+	{
+		error = pdf_loadpagetree(xref);
+		if (error)
+			die(fz_rethrow(error, "cannot load page tree"));
+		pagecount = pdf_getpagecount(xref);
+	}
 }
 
 void flushxref(void)
