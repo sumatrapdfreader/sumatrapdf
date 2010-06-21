@@ -1,7 +1,7 @@
 #include "fitz.h"
 
 #define LINEDIST 0.9f
-#define SPACEDIST 0.25f
+#define SPACEDIST 0.2f
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

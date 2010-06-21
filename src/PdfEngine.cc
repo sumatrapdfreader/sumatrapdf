@@ -639,6 +639,8 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
             if (destRect)
                 memcpy(destRect++, &span->text[i].bbox, sizeof(fz_bbox));
         }
+        if (!span->eol)
+            continue;
 #ifdef UNICODE
         lstrcpy(dest, lineSep);
         dest += lineSepLen;

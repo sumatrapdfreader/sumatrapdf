@@ -9,13 +9,11 @@
 #include "../fitz/base_error.c"
 #include "../fitz/base_memory.c"
 #include "../fitz/base_string.c"
-#include "../fitz/base_unicode.c"
 #include "../fitz/stm_buffer.c"
 #include "../fitz/stm_filter.c"
 #include "../fitz/stm_open.c"
 #include "../fitz/stm_read.c"
 
-#include "../mupdf/pdf_fontenc.c"
 #include "../mupdf/pdf_lex.c"
 #include "../mupdf/pdf_cmap.c"
 #include "../mupdf/pdf_cmap_parse.c"
