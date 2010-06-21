@@ -107,7 +107,7 @@ static void saveimage(int num, int gen)
 
 	fz_droppixmap(pix);
 
-	pdf_dropstore(xref->store);
+	pdf_freestore(xref->store);
 	xref->store = nil;
 
 	pdf_dropimage(img);

@@ -76,14 +76,14 @@ pdf_loadoutline(pdf_xref *xref)
 }
 
 void
-pdf_dropoutline(pdf_outline *outline)
+pdf_freeoutline(pdf_outline *outline)
 {
 	if (outline->child)
-		pdf_dropoutline(outline->child);
+		pdf_freeoutline(outline->child);
 	if (outline->next)
-		pdf_dropoutline(outline->next);
+		pdf_freeoutline(outline->next);
 	if (outline->link)
-		pdf_droplink(outline->link);
+		pdf_freelink(outline->link);
 	fz_free(outline->title);
 	fz_free(outline);
 }

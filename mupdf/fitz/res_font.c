@@ -238,7 +238,7 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		if (fterr)
 			fz_warn("freetype failed to load glyph: %s", ft_errorstring(fterr));
 
-		realw = ((FT_Face)font->ftface)->glyph->advance.x;
+		realw = ((FT_Face)font->ftface)->glyph->metrics.horiAdvance;
 		subw = font->widthtable[gid];
 		if (realw)
 			scale = (float) subw / realw;

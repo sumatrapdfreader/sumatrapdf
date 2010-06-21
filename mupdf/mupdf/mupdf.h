@@ -183,7 +183,7 @@ typedef enum pdf_itemkind_e
 
 pdf_store * pdf_newstore(void);
 void pdf_emptystore(pdf_store *store);
-void pdf_dropstore(pdf_store *store);
+void pdf_freestore(pdf_store *store);
 void pdf_debugstore(pdf_store *store);
 
 void pdf_agestoreditems(pdf_store *store);
@@ -483,8 +483,6 @@ void pdf_debugfont(pdf_fontdesc *fontdesc);
  */
 
 typedef struct pdf_link_s pdf_link;
-typedef struct pdf_comment_s pdf_comment;
-typedef struct pdf_widget_s pdf_widget;
 typedef struct pdf_outline_s pdf_outline;
 
 typedef enum pdf_linkkind_e
@@ -502,30 +500,6 @@ struct pdf_link_s
 	pdf_link *next;
 };
 
-typedef enum pdf_commentkind_e
-{
-	PDF_CTEXT,
-	PDF_CFREETEXT,
-	PDF_CLINE,
-	PDF_CSQUARE,
-	PDF_CCIRCLE,
-	PDF_CPOLYGON,
-	PDF_CPOLYLINE,
-	PDF_CMARKUP,
-	PDF_CCARET,
-	PDF_CSTAMP,
-	PDF_CINK
-} pdf_commentkind;
-
-struct pdf_comment_s
-{
-	pdf_commentkind kind;
-	fz_rect rect;
-	fz_rect popup;
-	fz_obj *contents;
-	pdf_comment *next;
-};
-
 struct pdf_outline_s
 {
 	char *title;
@@ -539,13 +513,13 @@ fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest);
 
 pdf_link *pdf_newlink(pdf_linkkind kind, fz_rect rect, fz_obj *dest);
 pdf_link *pdf_loadlink(pdf_xref *xref, fz_obj *dict);
-void pdf_droplink(pdf_link *link);
+void pdf_freelink(pdf_link *link);
 
 pdf_outline *pdf_loadoutline(pdf_xref *xref);
 void pdf_debugoutline(pdf_outline *outline, int level);
-void pdf_dropoutline(pdf_outline *outline);
+void pdf_freeoutline(pdf_outline *outline);
 
-void pdf_loadannots(pdf_comment **, pdf_link **, pdf_xref *, fz_obj *annots);
+void pdf_loadannots(pdf_link **, pdf_xref *, fz_obj *annots);
 
 /*
  * Page tree, pages and related objects
@@ -559,7 +533,8 @@ struct pdf_page_s
 	int rotate;
 	fz_obj *resources;
 	fz_buffer *contents;
-	pdf_comment *comments;
+	fz_displaylist *list;
+	fz_textspan *text;
 	pdf_link *links;
 };
 
@@ -570,7 +545,7 @@ int pdf_findpageobject(pdf_xref *xref, fz_obj *pageobj);
 
 /* page.c */
 fz_error pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *ref);
-void pdf_droppage(pdf_page *page);
+void pdf_freepage(pdf_page *page);
 
 /*
  * content stream parsing

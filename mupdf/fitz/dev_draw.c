@@ -520,7 +520,7 @@ calcimagestate(fz_drawdevice *dev, fz_pixmap *image, fz_matrix ctm,
 
 	*bbox = fz_boundgel(dev->gel);
 	*bbox = fz_intersectbbox(*bbox, dev->scissor);
-	
+
 	mat.a = 1.0f / w;
 	mat.b = 0;
 	mat.c = 0;

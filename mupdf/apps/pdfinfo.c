@@ -148,7 +148,7 @@ static void local_cleanup(void)
 
 	if (xref && xref->store)
 	{
-		pdf_dropstore(xref->store);
+		pdf_freestore(xref->store);
 		xref->store = nil;
 	}
 }

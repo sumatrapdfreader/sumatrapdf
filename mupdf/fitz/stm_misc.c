@@ -40,7 +40,8 @@ fz_readline(fz_stream *stm, char *mem, int n)
 	return fz_okay;
 }
 
-static inline int fz_fillbuf(fz_stream *stm, fz_buffer *buf)
+static inline int
+fz_fillbuf(fz_stream *stm, fz_buffer *buf)
 {
 	int remaining = buf->ep - buf->wp;
 	int available = stm->buffer->wp - stm->buffer->rp;

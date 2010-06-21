@@ -185,7 +185,7 @@ typedef struct fz_hashtable_s fz_hashtable;
 fz_hashtable * fz_newhash(int initialsize, int keylen);
 void fz_debughash(fz_hashtable *table);
 void fz_emptyhash(fz_hashtable *table);
-void fz_drophash(fz_hashtable *table);
+void fz_freehash(fz_hashtable *table);
 
 void *fz_hashfind(fz_hashtable *table, void *key);
 void fz_hashinsert(fz_hashtable *table, void *key, void *val);

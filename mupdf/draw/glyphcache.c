@@ -1,5 +1,6 @@
 #include "fitz.h"
 
+#define MAXFONTSIZE 1000
 #define MAXGLYPHSIZE 256
 #define MAXCACHESIZE (1024*1024)
 
@@ -58,7 +59,7 @@ void
 fz_freeglyphcache(fz_glyphcache *cache)
 {
 	fz_evictglyphcache(cache);
-	fz_drophash(cache->hash);
+	fz_freehash(cache->hash);
 	fz_free(cache);
 }
 
@@ -67,6 +68,14 @@ fz_renderglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix ctm)
 {
 	fz_glyphkey key;
 	fz_pixmap *val;
+	float size = fz_matrixexpansion(ctm);
+
+	if (size > MAXFONTSIZE)
+	{
+		/* TODO: this case should be handled by rendering glyph as a path fill */
+		fz_warn("font size too large (%g), not rendering glyph", size);
+		return nil;
+	}
 
 	key.font = font;
 	key.cid = cid;

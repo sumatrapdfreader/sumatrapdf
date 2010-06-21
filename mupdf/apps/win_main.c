@@ -56,7 +56,7 @@ void win32error(char *msg)
 	LPSTR buf;
 	int code = GetLastError();
 	FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-		FORMAT_MESSAGE_FROM_SYSTEM | 
+		FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
 		code,
@@ -232,7 +232,7 @@ dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-void help()
+void winhelp()
 {
 	int code = DialogBoxW(NULL, L"IDD_DLOGABOUT", hwndframe, dlogaboutproc);
 	if (code <= 0)
@@ -344,6 +344,12 @@ void winopen()
 	SetCursor(arrowcurs);
 }
 
+void winclose(pdfapp_t *app)
+{
+	pdfapp_close(app);
+	exit(0);
+}
+
 void wincursor(pdfapp_t *app, int curs)
 {
 	if (curs == ARROW)
@@ -395,33 +401,18 @@ void winconvert(pdfapp_t *app, fz_pixmap *image)
 	}
 }
 
-void invertcopyrect(void)
+void windrawrect(pdfapp_t *app, fz_bbox rect, int color)
 {
-	unsigned char *p;
-	int x0 = gapp.selr.x0 - gapp.panx;
-	int x1 = gapp.selr.x1 - gapp.panx;
-	int y0 = gapp.selr.y0 - gapp.pany;
-	int y1 = gapp.selr.y1 - gapp.pany;
-	int x, y;
+	RECT r;
+	r.left = rect.x0;
+	r.top = rect.y0;
+	r.right = rect.x1;
+	r.bottom = rect.y1;
+	FillRect(hdc, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
+}
 
-	x0 = CLAMP(x0, 0, gapp.image->w - 1);
-	x1 = CLAMP(x1, 0, gapp.image->w - 1);
-	y0 = CLAMP(y0, 0, gapp.image->h - 1);
-	y1 = CLAMP(y1, 0, gapp.image->h - 1);
-
-	for (y = y0; y < y1; y++)
-	{
-		p = bmpdata + y * bmpstride + x0 * 3;
-		for (x = x0; x < x1; x++)
-		{
-			p[0] = 255 - p[0];
-			p[1] = 255 - p[1];
-			p[2] = 255 - p[2];
-			p += 3;
-		}
-	}
-
-	justcopied = 1;
+void windrawstring(pdfapp_t *app, int x, int y, char *s)
+{
 }
 
 void winblit()
@@ -435,7 +426,10 @@ void winblit()
 	if (bmpdata)
 	{
 		if (gapp.iscopying || justcopied)
-			invertcopyrect();
+		{
+			pdfapp_invert(&gapp, gapp.selr);
+			justcopied = 1;
+		}
 
 		dibinf->bmiHeader.biWidth = gapp.image->w;
 		dibinf->bmiHeader.biHeight = -gapp.image->h;
@@ -455,7 +449,10 @@ void winblit()
 		);
 
 		if (gapp.iscopying || justcopied)
-			invertcopyrect();
+		{
+			pdfapp_invert(&gapp, gapp.selr);
+			justcopied = 1;
+		}
 	}
 
 	/* Grey background */
@@ -560,21 +557,16 @@ void handlekey(int c)
 	switch (c)
 	{
 	case VK_F1: c = '?'; break;
-	case VK_ESCAPE: c = 'q'; break;
-	case VK_DOWN: c = 'd'; break;
-	case VK_UP: c = 'u'; break;
-	case VK_LEFT: c = 'p'; break;
-	case VK_RIGHT: c = 'n'; break;
-	case VK_PRIOR: c = 'b'; break;
-	case VK_NEXT: c = ' '; break;
+	case VK_ESCAPE: c = '\033'; break;
+	case VK_DOWN: c = 'j'; break;
+	case VK_UP: c = 'k'; break;
+	case VK_LEFT: c = 'b'; break;
+	case VK_RIGHT: c = ' '; break;
+	case VK_PRIOR: c = ','; break;
+	case VK_NEXT: c = '.'; break;
 	}
 
-	if (c == 'q')
-		exit(0);
-	else if (c == '?' || c == 'h')
-		help();
-	else
-		pdfapp_onkey(&gapp, c);
+	pdfapp_onkey(&gapp, c);
 }
 
 void handlemouse(int x, int y, int btn, int state)
@@ -612,7 +604,7 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SYSCOMMAND:
 		if (wParam == ID_ABOUT)
 		{
-			help();
+			winhelp();
 			return 0;
 		}
 		if (wParam == ID_DOCINFO)

@@ -41,7 +41,7 @@ static void local_cleanup(void)
 {
 	if (xref && xref->store)
 	{
-		pdf_dropstore(xref->store);
+		pdf_freestore(xref->store);
 		xref->store = nil;
 	}
 	if (drawcache)
@@ -122,7 +122,7 @@ static void drawloadpage(int pagenum, struct benchmark *loadtimes)
 
 static void drawfreepage(void)
 {
-	pdf_droppage(drawpage);
+	pdf_freepage(drawpage);
 	drawpage = nil;
 
 	flushxref();

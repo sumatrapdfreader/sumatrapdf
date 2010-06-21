@@ -22,6 +22,10 @@ extern void winopenuri(pdfapp_t*, char *s);
 extern void wincursor(pdfapp_t*, int curs);
 extern void windocopy(pdfapp_t*);
 extern void winreloadfile(pdfapp_t*);
+extern void wininvert(pdfapp_t*, fz_bbox rect);
+extern void windrawstring(pdfapp_t*, int x, int y, char *s);
+extern void winclose(pdfapp_t*);
+extern void winhelp(pdfapp_t*);
 
 struct pdfapp_s
 {
@@ -36,7 +40,6 @@ struct pdfapp_s
 	int resolution;
 	int rotate;
 	fz_pixmap *image;
-	fz_textspan *text;
 
 	/* current page params */
 	int pageno;
@@ -63,6 +66,12 @@ struct pdfapp_s
 	int selx, sely;
 	fz_bbox selr;
 
+	/* search state */
+	int isediting;
+	char search[512];
+	int hit;
+	int hitlen;
+
 	/* client context storage */
 	void *userdata;
 };
@@ -78,3 +87,5 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen);
 void pdfapp_onresize(pdfapp_t *app, int w, int h);
 
+void pdfapp_invert(pdfapp_t *app, fz_bbox rect);
+void pdfapp_inverthit(pdfapp_t *app);

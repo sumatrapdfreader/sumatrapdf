@@ -5,7 +5,7 @@
 #include "fitz.h"
 
 static fz_stream *
-newstm(int kind)
+fz_newstream(int kind)
 {
 	fz_stream *stm;
 
@@ -66,7 +66,7 @@ fz_openfile(int fd)
 {
 	fz_stream *stm;
 
-	stm = newstm(FZ_SFILE);
+	stm = fz_newstream(FZ_SFILE);
 	stm->buffer = fz_newbuffer(FZ_BUFSIZE);
 	stm->file = fd;
 
@@ -78,7 +78,7 @@ fz_openfilter(fz_filter *flt, fz_stream *src)
 {
 	fz_stream *stm;
 
-	stm = newstm(FZ_SFILTER);
+	stm = fz_newstream(FZ_SFILTER);
 	stm->buffer = fz_newbuffer(FZ_BUFSIZE);
 	stm->chain = fz_keepstream(src);
 	stm->filter = fz_keepfilter(flt);
@@ -91,7 +91,7 @@ fz_openbuffer(fz_buffer *buf)
 {
 	fz_stream *stm;
 
-	stm = newstm(FZ_SBUFFER);
+	stm = fz_newstream(FZ_SBUFFER);
 	stm->buffer = fz_keepbuffer(buf);
 	stm->buffer->eof = 1;
 

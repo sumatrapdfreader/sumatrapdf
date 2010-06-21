@@ -8,8 +8,6 @@
 #include "mupdf.h"
 
 extern pdf_cmap pdf_cmap_Adobe_CNS1_0;
-
-extern pdf_cmap pdf_cmap_Adobe_CNS1_0;
 extern pdf_cmap pdf_cmap_Adobe_CNS1_1;
 extern pdf_cmap pdf_cmap_Adobe_CNS1_2;
 extern pdf_cmap pdf_cmap_Adobe_CNS1_3;

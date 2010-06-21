@@ -15,9 +15,9 @@ FT_Get_Advance(FT_Face face, int gid, int masks, FT_Fixed *out)
 	if (err)
 		return err;
 	if (masks & FT_LOAD_VERTICAL_LAYOUT)
-		*out = face->glyph->advance.y * 1024;
+		*out = (face->glyph->metrics.vertAdvance << 16) / 1000;
 	else
-		*out = face->glyph->advance.x * 1024;
+		*out = (face->glyph->metrics.horiAdvance << 16) / 1000;
 	return 0;
 }
 
@@ -77,9 +77,10 @@ fz_addtextcharimp(fz_textspan *span, int c, fz_bbox bbox)
 static fz_bbox
 fz_splitbbox(fz_bbox bbox, int i, int n)
 {
-	int w = bbox.x1 - bbox.x0;
-	bbox.x0 = bbox.x0 + w * i / n;
-	bbox.x1 = bbox.x0 + w * (i + 1) / n;
+	float w = (float)(bbox.x1 - bbox.x0) / n;
+	float x0 = bbox.x0;
+	bbox.x0 = x0 + i * w;
+	bbox.x1 = x0 + (i + 1) * w;
 	return bbox;
 }
 
@@ -139,6 +140,17 @@ fz_addtextchar(fz_textspan **last, fz_font *font, float size, int wmode, int c, 
 		fz_addtextcharimp(span, c, bbox);
 		break;
 	}
+}
+
+static void
+fz_dividetextchars(fz_textspan **last, int n, fz_bbox bbox)
+{
+	fz_textspan *span = *last;
+	int i, x;
+	x = span->len - n;
+	if (x >= 0)
+		for (i = 0; i < n; i++)
+			span->text[x + i].bbox = fz_splitbbox(bbox, i, n);
 }
 
 static void
@@ -334,6 +346,7 @@ static void
 fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *pen)
 {
 	fz_font *font = text->font;
+	FT_Face face = font->ftface;
 	fz_matrix tm = text->trm;
 	fz_matrix trm;
 	float size;
@@ -343,6 +356,9 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 	fz_point dir;
 	int i, err;
 	float cross, dist2;
+	float ascender = 1;
+	float descender = 0;
+	int multi;
 	fz_textspan *firstSpan = *last;
 
  	if (text->len == 0)
@@ -350,10 +366,11 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 
 	if (font->ftface)
 	{
-		FT_Set_Transform(font->ftface, NULL, NULL);
-		err = FT_Set_Char_Size(font->ftface, 64, 64, 72, 72);
+		err = FT_Set_Char_Size(font->ftface, 1000, 1000, 72, 72);
 		if (err)
 			fz_warn("freetype set character size: %s", ft_errorstring(err));
+		ascender = (float)face->ascender / face->units_per_EM;
+		descender = (float)face->descender / face->units_per_EM;
 	}
 
 	rect = fz_emptyrect;
@@ -375,14 +392,18 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
  	dir = fz_transformvector(trm, dir);
 	size = fz_matrixexpansion(trm);
 
+	multi = 1;
+
 	for (i = 0; i < text->len; i++)
 	{
 		if (text->els[i].gid < 0)
 		{
-			/* TODO: split rect for one-to-many mapped chars */
 			fz_addtextchar(last, font, size, text->wmode, text->els[i].ucs, fz_roundrect(rect));
+			multi ++;
+			fz_dividetextchars(last, multi, fz_roundrect(rect));
 			continue;
 		}
+		multi = 1;
 
 		/* Calculate new pen location and delta */
 		tm.e = text->els[i].x;
@@ -407,7 +428,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			else if (cross < 0.1f && dist2 > size * size * 0.04f)
 			{
 				fz_rect spacerect;
-				spacerect.x0 = -fabsf(dx);
+				spacerect.x0 = -0.2f;
 				spacerect.y0 = 0;
 				spacerect.x1 = 0;
 				spacerect.y1 = 1;
@@ -426,24 +447,30 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			err = FT_Get_Advance(font->ftface, text->els[i].gid, mask, &ftadv);
 			if (err)
 				fz_warn("freetype get advance (gid %d): %s", text->els[i].gid, ft_errorstring(err));
-			adv = ftadv / 65536.0f;
+			adv = ftadv / 1024000.0f;
 			if (text->wmode)
 			{
 				adv = -1; /* TODO: freetype returns broken vertical metrics */
-				rect.x0 = 0; rect.y0 = 0;
-				rect.x1 = 1; rect.y1 = adv;
+				rect.x0 = 0;
+				rect.y0 = 0;
+				rect.x1 = 1;
+				rect.y1 = adv;
 			}
 			else
 			{
-				rect.x0 = 0; rect.y0 = 0;
-				rect.x1 = adv; rect.y1 = 1;
+				rect.x0 = 0;
+				rect.y0 = descender;
+				rect.x1 = adv;
+				rect.y1 = ascender;
 			}
 		}
 		else
 		{
 			adv = font->t3widths[text->els[i].gid];
-			rect.x0 = 0; rect.y0 = 0;
-			rect.x1 = adv; rect.y1 = 1;
+			rect.x0 = 0;
+			rect.y0 = descender;
+			rect.x1 = adv;
+			rect.y1 = ascender;
 		}
 
 		rect = fz_transformrect(trm, rect);

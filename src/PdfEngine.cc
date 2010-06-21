@@ -192,16 +192,16 @@ PdfEngine::~PdfEngine()
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
             if (_pages[i].page)
-                pdf_droppage(_pages[i].page);
+                pdf_freepage(_pages[i].page);
         }
         free(_pages);
     }
 
     if (_outline)
-        pdf_dropoutline(_outline);
+        pdf_freeoutline(_outline);
     if (_xref) {
         if (_xref->store) {
-            pdf_dropstore(_xref->store);
+            pdf_freestore(_xref->store);
             _xref->store = NULL;
         }
         pdf_closexref(_xref);
@@ -359,7 +359,7 @@ void PdfEngine::dropPdfPage(int pageNo)
     pdf_page* page = _pages[pageNo-1].page;
     assert(page);
     if (!page) return;
-    pdf_droppage(page);
+    pdf_freepage(page);
     _pages[pageNo-1].page = NULL;
 }
 

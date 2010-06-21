@@ -133,10 +133,10 @@ pdf_emptystore(pdf_store *store)
 }
 
 void
-pdf_dropstore(pdf_store *store)
+pdf_freestore(pdf_store *store)
 {
 	pdf_emptystore(store);
-	fz_drophash(store->hash);
+	fz_freehash(store->hash);
 	fz_free(store);
 }
 

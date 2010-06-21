@@ -100,7 +100,7 @@ void closexref(void)
 
 	if (xref->store)
 	{
-		pdf_dropstore(xref->store);
+		pdf_freestore(xref->store);
 		xref->store = nil;
 	}
 	pdf_closexref(xref);
@@ -109,7 +109,9 @@ void closexref(void)
 
 fz_error openxref(char *filename, char *password)
 {
-	xref = pdf_openxref(filename);
+	fz_stream *file = fz_openfile(open(filename, O_BINARY | O_RDONLY, 0666));
+	xref = pdf_openxref(file);
+	fz_dropstream(file);
 	if (!xref)
 	{
 		return fz_throw("pdf_openxref() failed");
@@ -194,7 +196,7 @@ Exit:
 
 void freepage(void)
 {
-	pdf_droppage(drawpage);
+	pdf_freepage(drawpage);
 	drawpage = nil;
 }
 
