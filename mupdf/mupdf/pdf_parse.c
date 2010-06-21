@@ -282,21 +282,6 @@ skip:
 			return fz_rethrow(error, "cannot parse dict");
 		}
 
-		/* convert PdfDocEncoding to UTF-8 */
-		if (tok == PDF_TSTRING && !(len > 2 && buf[0] == 254 && buf[1] == 255))
-		{
-			char *utf8 = fz_malloc(len * 3 + 1), *s = utf8;
-			int i, c;
-			for (i = 0; i < len; i++)
-			{
-				c = pdf_docencoding[buf[i]];
-				s += runetochar(s, &c);
-			}
-			len = s - utf8;
-			memcpy(buf, utf8, len);
-			fz_free(utf8);
-		}
-
 		switch (tok)
 		{
 		case PDF_TOARRAY:

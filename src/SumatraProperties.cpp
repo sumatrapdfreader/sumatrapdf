@@ -28,60 +28,23 @@ static uint64_t WinFileSizeGet(const TCHAR *file_path)
     return res;
 }
 
-static bool IsUtf16be(uint8_t *s, unsigned short len) {
-    if (len < 2)
-        return false;
-    if (len % 2 != 0)
-        return false;
-    if ((0xfe == s[0]) && (0xff == s[1]))
-        return true;
-    return false;
-}
-
-static bool IsUtf16le(uint8_t *s, unsigned short len) {
-    if (len < 2)
-        return false;
-    if (len % 2 != 0)
-        return false;
-    if ((0xff == s[0]) && (0xfe == s[1]))
-        return true;
-    return false;
-}
-
-#define SWAPWORD(x)	MAKEWORD(HIBYTE(x), LOBYTE(x))
-
-static char *Utf16beToUtf8(uint8_t *s, unsigned short len) {
-    WCHAR *utf16 = (WCHAR *)malloc(len + 2);
-    memcpy(utf16, s, len);
-
-    // convert from big- to little-endian
-    for (int i = 0; i < len / 2; i++)
-        utf16[i] = SWAPWORD(utf16[i]);
-    utf16[len / 2] = '\0';
-
-    char *utf8 = wstr_to_utf8(utf16 + 1);
-    free(utf16);
-    return utf8;
-}
-
 // Note: returns NULL instead of an empty string
-static char *fz_toutf8(fz_obj *obj) {
-    int len = fz_tostrlen(obj);
-    char *s = fz_tostrbuf(obj);
-
-    if (IsUtf16be((uint8_t *)s, len))
-        return len > 2 ? Utf16beToUtf8((uint8_t *)s, len) : NULL;
-    if (IsUtf16le((uint8_t *)s, len))
-        return len > 2 ? wstr_to_utf8(((WCHAR *)s) + 1) : NULL;
-    // TODO: it's possible we need to support other utf encodings,
-    // but we'll wait until we have a PDF that needs that
-    return len > 0 ? str_dup(s) : NULL;
+static TCHAR *PdfToString(fz_obj *obj) {
+    WCHAR *s = (WCHAR *)pdf_toucs2(obj);
+    TCHAR *str = NULL;
+    if (s && *s)
+        str = wstr_to_tstr(s);
+    fz_free(s);
+    return str;
 }
 
-static char *PdfDateParseInt(char *s, int numDigits, int *valOut) {
+static TCHAR *PdfDateParseInt(TCHAR *s, int numDigits, WORD *valOut) {
+    if (!s)
+        return NULL;
+
     int n = 0;
     while (numDigits > 0) {
-        char c = *s++;
+        TCHAR c = *s++;
         if (c < '0' || c > '9') {
             return NULL;
         }
@@ -95,40 +58,20 @@ static char *PdfDateParseInt(char *s, int numDigits, int *valOut) {
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParse(char *pdfDate, SYSTEMTIME *timeOut) {
-    int n;
-
+static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
+    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
     if ('D' == pdfDate[0] && ':' == pdfDate[1]) {
         pdfDate += 2;
     }
-    // parse YYYY part
-    pdfDate = PdfDateParseInt(pdfDate, 4, &n);
-    if (!pdfDate) { return false; }
-    timeOut->wYear = n;
-    // parse MM part
-    pdfDate = PdfDateParseInt(pdfDate, 2, &n);
-    if (!pdfDate) { return false; }
-    timeOut->wMonth = n;    
-    // parse DD part
-    pdfDate = PdfDateParseInt(pdfDate, 2, &n);
-    if (!pdfDate) { return false; }
-    timeOut->wDay = n;
-    // parse HH part
-    pdfDate = PdfDateParseInt(pdfDate, 2, &n);
-    if (!pdfDate) { return false; }
-    timeOut->wHour = n;
-    // parse MM part
-    pdfDate = PdfDateParseInt(pdfDate, 2, &n);
-    if (!pdfDate) { return false; }
-    timeOut->wMinute = n;
-
-    timeOut->wSecond = 0;
-    timeOut->wMilliseconds = 0;
-    // TODO: this is wrong but I don't know how to calculate wDayOfWeek
-    // and it doesn't matter anyway because we don't display day of the week
-    timeOut->wDayOfWeek = 0;
-    return true;
+    pdfDate = PdfDateParseInt(pdfDate, 4, &timeOut->wYear);
+    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wMonth);
+    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wDay);
+    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wHour);
+    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wMinute);
+    // TODO: I don't know how to calculate wDayOfWeek and it doesn't
+    //       matter anyway because we don't display day of the week
+    return pdfDate != NULL;
 }
 
 // Convert a date in PDF format, e.g. "D:20091222171933-05'00'" to a display
@@ -141,13 +84,13 @@ static TCHAR *PdfDateToDisplay(fz_obj *dateObj) {
     int ret;
     TCHAR *tmp;
     TCHAR buf[512];
-    char *s;
+    TCHAR *s;
     int cchBufLen = dimof(buf);
 
     if (!dateObj) {
         return NULL;
     }
-    s = fz_toutf8(dateObj);
+    s = PdfToString(dateObj);
     if (!s) {
         return NULL;
     }
@@ -172,9 +115,7 @@ static TCHAR *PdfDateToDisplay(fz_obj *dateObj) {
     free(s);
     return tstr_dup(buf);
 Error:
-    tmp = utf8_to_tstr(s);
-    free(s);
-    return tmp;
+    return s;
 }
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
@@ -301,18 +242,12 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
 }
 
 static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *right) {
-    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES || !*right) {
+    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
         return;
     }
     win->pdfProperties[win->pdfPropertiesCount].leftTxt = left;
     win->pdfProperties[win->pdfPropertiesCount].rightTxt = tstr_dup(right);
     ++win->pdfPropertiesCount;
-}
-
-static void AddPdfPropertyUtf8(WindowInfo *win, const TCHAR *left, const char *right) {
-    TCHAR *rightTxt = utf8_to_tstr(right);
-    AddPdfProperty(win, left, rightTxt);
-    free(rightTxt);
 }
 
 void FreePdfProperties(WindowInfo *win)
@@ -474,11 +409,11 @@ void OnMenuProperties(WindowInfo *win)
     fz_obj *    creationDate = NULL;
     fz_obj *    modDate = NULL;
 
-    char *      subjectStr = NULL;
-    char *      authorStr = NULL;
-    char *      titleStr = NULL;
-    char *      producerStr = NULL;
-    char *      creatorStr  = NULL;
+    TCHAR *     subjectStr = NULL;
+    TCHAR *     authorStr = NULL;
+    TCHAR *     titleStr = NULL;
+    TCHAR *     producerStr = NULL;
+    TCHAR *     creatorStr  = NULL;
     TCHAR *     creationDateStr = NULL;
     TCHAR *     modDateStr = NULL;
 
@@ -504,23 +439,23 @@ void OnMenuProperties(WindowInfo *win)
     if (info) {
         title = fz_dictgets(info, "Title");
         if (title) {
-            titleStr = fz_toutf8(title);
+            titleStr = PdfToString(title);
         }
         author = fz_dictgets(info, "Author");
         if (author) {
-            authorStr = fz_toutf8(author);
+            authorStr = PdfToString(author);
         }
         subject = fz_dictgets(info, "Subject");
         if (subject) {
-            subjectStr = fz_toutf8(subject);
+            subjectStr = PdfToString(subject);
         }
         producer = fz_dictgets(info, "Producer");
         if (producer) {
-            producerStr = fz_toutf8(producer);
+            producerStr = PdfToString(producer);
         }
         creator = fz_dictgets(info, "Creator");
         if (creator) {
-            creatorStr = fz_toutf8(creator);
+            creatorStr = PdfToString(creator);
         }
         creationDate = fz_dictgets(info, "CreationDate");
         creationDateStr = PdfDateToDisplay(creationDate);
@@ -533,15 +468,15 @@ void OnMenuProperties(WindowInfo *win)
         AddPdfProperty(win, _TR("File:"), win->dm->fileName());
     }
     if (titleStr) {
-        AddPdfPropertyUtf8(win, _TR("Title:"), titleStr);
+        AddPdfProperty(win, _TR("Title:"), titleStr);
         free(titleStr);
     }
     if (subjectStr) {
-        AddPdfPropertyUtf8(win, _TR("Subject:"), subjectStr);
+        AddPdfProperty(win, _TR("Subject:"), subjectStr);
         free(subjectStr);
     }
     if (authorStr) {
-        AddPdfPropertyUtf8(win, _TR("Author:"), authorStr);
+        AddPdfProperty(win, _TR("Author:"), authorStr);
         free(authorStr);
     }
     if (creationDateStr) {
@@ -553,11 +488,11 @@ void OnMenuProperties(WindowInfo *win)
         free(modDateStr);
     }
     if (creatorStr) {
-        AddPdfPropertyUtf8(win, _TR("Application:"), creatorStr);
+        AddPdfProperty(win, _TR("Application:"), creatorStr);
         free(creatorStr);
     }
     if (producerStr) {
-        AddPdfPropertyUtf8(win, _TR("PDF Producer:"), producerStr);
+        AddPdfProperty(win, _TR("PDF Producer:"), producerStr);
         free(producerStr);
     }
 
