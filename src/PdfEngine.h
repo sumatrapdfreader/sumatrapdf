@@ -143,12 +143,12 @@ public:
     int        findPageNo(fz_obj *dest);
     fz_obj    *getNamedDest(const char *name);
     char     * getPageLayoutName(void);
-    TCHAR    * PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL);
-    TCHAR    * PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL) {
+    TCHAR    * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL);
+    TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL) {
         return ExtractPageText(getPdfPage(pageNo), lineSep, coords_out);
     };
-
-    pdf_xref *      _xref;
+    fz_obj   * getPdfInfo(void) { return _xref ? fz_dictgets(_xref->trailer, "Info") : NULL; }
+    int        getPdfVersion(void) const { return _xref->version; }
 
 protected:
     const TCHAR *_fileName;
@@ -156,11 +156,12 @@ protected:
     WindowInfo *_windowInfo;
 
 private:
-    HANDLE            _getPageSem;
+    CRITICAL_SECTION _xrefAccess;
+    pdf_xref *      _xref;
 
     void dropPdfPage(int pageNo);
-    PdfTocItem * buildTocTree(pdf_outline *entry);
-    void PdfEngine::linkifyPageText(pdf_page *page);
+    PdfTocItem    * buildTocTree(pdf_outline *entry);
+    void            linkifyPageText(pdf_page *page);
 
     pdf_outline *   _outline;
     PdfPage *       _pages;

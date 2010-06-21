@@ -5029,7 +5029,8 @@ static DWORD WINAPI ShowMessageThread(LPVOID data)
     WindowInfo *win = (WindowInfo *)data;
     ShowWindowAsync(win->hwndFindStatus, SW_SHOWNA);
     WaitForSingleObject(win->stopFindStatusThreadEvent, 3000);
-    ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
+    if (!win->findStatusVisible)
+        ShowWindowAsync(win->hwndFindStatus, SW_HIDE);
     return 0;
 }
 
@@ -5053,6 +5054,7 @@ static void WindowInfo_ShowMessage_Asynch(WindowInfo *win, const TCHAR *message,
         MoveWindow(win->hwndFindStatus, FIND_STATUS_MARGIN + rc.left, FIND_STATUS_MARGIN + rc.top, rc.right - rc.left + FIND_STATUS_MARGIN, rc.bottom - rc.top, TRUE);
     }
 
+    win->findStatusVisible = false;
     // if a thread has previously been started then make sure it has ended
     if (win->findStatusThread) {
         SetEvent(win->stopFindStatusThreadEvent);

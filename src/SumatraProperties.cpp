@@ -399,7 +399,6 @@ void OnMenuProperties(WindowInfo *win)
 {
     uint64_t    fileSize;
     TCHAR *     tmp;
-    pdf_xref *  xref;
     fz_obj *    info = NULL;
     fz_obj *    subject = NULL;
     fz_obj *    author = NULL;
@@ -423,20 +422,14 @@ void OnMenuProperties(WindowInfo *win)
     }
 
     DisplayModel *dm = win->dm;
-    if (!dm || !dm->pdfEngine || !dm->pdfEngine->_xref) {
+    if (!dm || !dm->pdfEngine) {
         return;
     }
 
     FreePdfProperties(win);
 
-    xref = dm->pdfEngine->_xref;
-    info = fz_dictgets(xref->trailer, "Info");;
-
-    if (!fz_isdict(info)) {
-        info = NULL;
-    }
-
-    if (info) {
+    info = dm->pdfEngine->getPdfInfo();
+    if (fz_isdict(info)) {
         title = fz_dictgets(info, "Title");
         if (title) {
             titleStr = PdfToString(title);
@@ -496,7 +489,8 @@ void OnMenuProperties(WindowInfo *win)
         free(producerStr);
     }
 
-    tmp = tstr_printf(_T("%d.%d"), xref->version / 10, xref->version % 10);
+    int version = win->dm->pdfEngine->getPdfVersion();
+    tmp = tstr_printf(_T("%d.%d"), version / 10, version % 10);
     AddPdfProperty(win, _TR("PDF Version:"), tmp);
     free(tmp);
 

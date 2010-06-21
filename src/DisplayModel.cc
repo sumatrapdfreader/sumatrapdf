@@ -200,9 +200,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
-
-    pdfEngine = new PdfEngine();
-    _pdfSearch = new PdfSearch(pdfEngine);
 }
 
 DisplayModel::~DisplayModel()
@@ -216,8 +213,10 @@ DisplayModel::~DisplayModel()
     if (_links)
         free(_links);
     free(_navHistory);
-    delete _pdfSearch;
-    delete pdfEngine;
+    if (_pdfSearch)
+        delete _pdfSearch;
+    if (pdfEngine)
+        delete pdfEngine;
 }
 
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
@@ -233,8 +232,11 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair)
 { 
     assert(fileName);
-    if (!pdfEngine->load(fileName, win, tryrepair))
-          return false;
+    pdfEngine = new PdfEngine();
+    if (!pdfEngine->load(fileName, win, tryrepair)) {
+        delete pdfEngine;
+        return false;
+    }
 
     if (validPageNo(startPage))
         _startPage = startPage;
@@ -254,6 +256,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
     if (!buildPagesInfo())
         return false;
 
+    _pdfSearch = new PdfSearch(pdfEngine);
     _pdfSearch->tracker = (PdfSearchTracker *)win;
     return true;
 }
@@ -1735,7 +1738,8 @@ void DisplayModel::rebuildLinks()
 {
     int count = pdfEngine->linkCount();
     assert(count > _linksCount);
-    free(_links);
+    if (_links)
+        free(_links);
     _links = (PdfLink*)malloc(count * sizeof(PdfLink));
     _linksCount = count;
     pdfEngine->fillPdfLinks(_links, _linksCount);

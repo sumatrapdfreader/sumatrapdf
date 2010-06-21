@@ -5,43 +5,6 @@
 // in SumatraPDF.cpp
 extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
-static fz_error pdf_getpageinfo(pdf_xref *xref, fz_obj *dict, fz_rect *bboxp, int *rotatep)
-{
-    fz_rect bbox;
-    int rotate;
-    fz_obj *obj;
-
-    obj = fz_dictgets(dict, "MediaBox");
-    if (!fz_isarray(obj))
-        return fz_throw("syntaxerror: Page missing MediaBox");
-    bbox = pdf_torect(obj);
-
-    obj = fz_dictgets(dict, "CropBox");
-    if (obj && fz_isarray(obj)) {
-        // crop MediaBox to CropBox
-        fz_rect cropbox = pdf_torect(obj);
-        bbox.x0 = MAX(bbox.x0, cropbox.x0);
-        bbox.x1 = MIN(bbox.x1, cropbox.x1);
-        bbox.y0 = MAX(bbox.y0, cropbox.y0);
-        bbox.y1 = MIN(bbox.y1, cropbox.y1);
-    }
-
-    //pdf_logpage("bbox [%g %g %g %g]\n", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
-
-    obj = fz_dictgets(dict, "Rotate");
-    rotate = 0;
-    if (fz_isint(obj))
-        rotate = fz_toint(obj);
-
-    //pdf_logpage("rotate %d\n", rotate);
-
-    if (bboxp)
-        *bboxp = bbox;
-    if (rotatep)
-        *rotatep = rotate;
-    return fz_okay;
-}
-
 static HBITMAP createDIBitmapCommon(RenderedBitmap *bmp, HDC hdc)
 {
     int bmpDx = bmp->dx();
@@ -184,11 +147,12 @@ PdfEngine::PdfEngine() :
         , _pages(NULL)
         , _drawcache(NULL)
 {
-    _getPageSem = CreateSemaphore(NULL, 1, 1, NULL);
+    InitializeCriticalSection(&_xrefAccess);
 }
 
 PdfEngine::~PdfEngine()
 {
+    EnterCriticalSection(&_xrefAccess);
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
             if (_pages[i].page)
@@ -216,10 +180,10 @@ PdfEngine::~PdfEngine()
     }
     if (_drawcache)
         fz_freeglyphcache(_drawcache);
-
-    CloseHandle(_getPageSem);
-
     free((void*)_fileName);
+
+    LeaveCriticalSection(&_xrefAccess);
+    DeleteCriticalSection(&_xrefAccess);
 }
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
@@ -231,13 +195,13 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     if (-1 == fd)
         return false;
     fz_stream *file = fz_openfile(fd);
-    _xref = pdf_openxref(file);
+    pdf_xref *xref = pdf_openxref(file);
     fz_dropstream(file);
-    if (!_xref)
+    if (!xref)
         return false;
 
-    if (pdf_needspassword(_xref)) {
-        bool okay = !!pdf_authenticatepassword(_xref, "");
+    if (pdf_needspassword(xref)) {
+        bool okay = !!pdf_authenticatepassword(xref, "");
         if (!okay && !win)
             // win might not be given if called from pdfbench.cc
             return false;
@@ -251,10 +215,10 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             char *pwd_utf8 = tstr_to_utf8(pwd);
             char *pwd_ansi = tstr_to_multibyte(pwd, CP_ACP);
             if (pwd_utf8)
-                okay = !!pdf_authenticatepassword(_xref, pwd_utf8);
+                okay = !!pdf_authenticatepassword(xref, pwd_utf8);
             // for some documents, only the ANSI-encoded password works
             if (!okay && pwd_ansi)
-                okay = !!pdf_authenticatepassword(_xref, pwd_ansi);
+                okay = !!pdf_authenticatepassword(xref, pwd_ansi);
 
             free(pwd_utf8);
             free(pwd_ansi);
@@ -264,8 +228,10 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             return false;
     }
 
-    if (pdf_loadpagetree(_xref) != fz_okay)
+    if (pdf_loadpagetree(xref) != fz_okay)
         return false;
+    EnterCriticalSection(&_xrefAccess);
+    _xref = xref;
     _pageCount = pdf_getpagecount(_xref);
     _outline = pdf_loadoutline(_xref);
     // silently ignore errors from pdf_loadoutline()
@@ -274,6 +240,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     // otherwise get displayed
 
     _pages = (PdfPage *)calloc(_pageCount, sizeof(PdfPage));
+    LeaveCriticalSection(&_xrefAccess);
     return _pageCount > 0;
 }
 
@@ -340,25 +307,23 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     if (!_pages)
         return NULL;
 
-    WaitForSingleObject(_getPageSem, INFINITE);
+    bool needsLinkification = false;
+
+    EnterCriticalSection(&_xrefAccess);
     pdf_page* page = _pages[pageNo-1].page;
-    if (page) {
-        if (!ReleaseSemaphore(_getPageSem, 1, NULL))
-            DBG_OUT("Fitz: ReleaseSemaphore error!\n");
-        return page;
+    if (!page) {
+        fz_obj * obj = pdf_getpageobject(_xref, pageNo);
+        fz_error error = pdf_loadpage(&page, _xref, obj);
+        if (!error) {
+            _pages[pageNo-1].page = page;
+            _pages[pageNo-1].num = fz_tonum(obj);
+            needsLinkification = true;
+        }
     }
-    fz_obj * obj = pdf_getpageobject(_xref, pageNo);
-    fz_error error = pdf_loadpage(&page, _xref, obj);
-    if (error) {
-        if (!ReleaseSemaphore(_getPageSem, 1, NULL))
-            DBG_OUT("Fitz: ReleaseSemaphore error!\n");
-        return NULL;
-    }
-    _pages[pageNo-1].page = page;
-    _pages[pageNo-1].num = fz_tonum(obj);
-    linkifyPageText(page);
-    if (!ReleaseSemaphore(_getPageSem, 1, NULL))
-        DBG_OUT("Fitz: ReleaseSemaphore error!\n");
+    LeaveCriticalSection(&_xrefAccess);
+
+    if (needsLinkification)
+        linkifyPageText(page);
     return page;
 }
 
@@ -366,30 +331,34 @@ void PdfEngine::dropPdfPage(int pageNo)
 {
     assert(_pages);
     if (!_pages) return;
+    EnterCriticalSection(&_xrefAccess);
     pdf_page* page = _pages[pageNo-1].page;
     assert(page);
-    if (!page) return;
-    pdf_freepage(page);
-    _pages[pageNo-1].page = NULL;
+    if (page) {
+        pdf_freepage(page);
+        _pages[pageNo-1].page = NULL;
+    }
+    LeaveCriticalSection(&_xrefAccess);
 }
 
 int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
-    int rotation = INVALID_ROTATION;
+    int rotation = 0;
     fz_obj *page = pdf_getpageobject(_xref, pageNo);
-	pdf_getpageinfo(_xref, page, NULL, &rotation);
+    fz_obj *obj = fz_dictgets(page, "Rotate");
+    if (fz_isint(obj))
+        rotation = fz_toint(obj);
     return rotation;
 }
 
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_rect bbox;
     fz_obj *page = pdf_getpageobject(_xref, pageNo);
-    if (fz_okay != pdf_getpageinfo(_xref, page, &bbox, NULL))
+    if (!page)
         return SizeD(0,0);
-    return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
+    return SizeD(fabs(page->mediabox.x1 - page->mediabox.x0), fabs(page->mediabox.y1 - page->mediabox.y0));
 }
 
 bool PdfEngine::hasPermission(int permission)
@@ -461,7 +430,9 @@ RenderedBitmap *PdfEngine::renderBitmap(
     if (!_drawcache)
         _drawcache = fz_newglyphcache();
     fz_device *dev = fz_newdrawdevice(_drawcache, image);
+    EnterCriticalSection(&_xrefAccess);
     fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
+    LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
 #if CONSERVE_MEMORY
     dropPdfPage(pageNo);
@@ -611,7 +582,9 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
 {
     fz_textspan *text = fz_newtextspan();
     fz_device *dev = fz_newtextdevice(text);
+    EnterCriticalSection(&_xrefAccess);
     fz_error error = pdf_runcontentstream(dev, fz_identity(), _xref, page->resources, page->contents);
+    LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
     if (error) {
         fz_freetextspan(text);
