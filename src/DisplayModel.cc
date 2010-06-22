@@ -235,6 +235,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
     pdfEngine = new PdfEngine();
     if (!pdfEngine->load(fileName, win, tryrepair)) {
         delete pdfEngine;
+        pdfEngine = NULL;
         return false;
     }
 

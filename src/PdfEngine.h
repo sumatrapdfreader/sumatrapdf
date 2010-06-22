@@ -141,7 +141,7 @@ public:
 
     pdf_page * getPdfPage(int pageNo);
     int        findPageNo(fz_obj *dest);
-    fz_obj    *getNamedDest(const char *name);
+    fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
     TCHAR    * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL);
     TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL) {
@@ -156,6 +156,7 @@ protected:
     WindowInfo *_windowInfo;
 
 private:
+    CRITICAL_SECTION _pagesAccess;
     CRITICAL_SECTION _xrefAccess;
     pdf_xref *      _xref;
 

@@ -179,12 +179,13 @@ PdfEngine::PdfEngine() :
         , _pages(NULL)
         , _drawcache(NULL)
 {
+    InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_xrefAccess);
 }
 
 PdfEngine::~PdfEngine()
 {
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&_pagesAccess);
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
             if (_pages[i].page)
@@ -192,9 +193,13 @@ PdfEngine::~PdfEngine()
         }
         free(_pages);
     }
+    LeaveCriticalSection(&_pagesAccess);
+    DeleteCriticalSection(&_pagesAccess);
 
     if (_outline)
         pdf_freeoutline(_outline);
+
+    EnterCriticalSection(&_xrefAccess);
     if (_xref) {
         if (_xref->store) {
             pdf_freestore(_xref->store);
@@ -210,12 +215,12 @@ PdfEngine::~PdfEngine()
         }
         pdf_closexref(_xref);
     }
+    LeaveCriticalSection(&_xrefAccess);
+    DeleteCriticalSection(&_xrefAccess);
+
     if (_drawcache)
         fz_freeglyphcache(_drawcache);
     free((void*)_fileName);
-
-    LeaveCriticalSection(&_xrefAccess);
-    DeleteCriticalSection(&_xrefAccess);
 }
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
@@ -270,9 +275,9 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     // this information is not critical and checking the
     // error might prevent loading some pdfs that would
     // otherwise get displayed
+    LeaveCriticalSection(&_xrefAccess);
 
     _pages = (PdfPage *)calloc(_pageCount, sizeof(PdfPage));
-    LeaveCriticalSection(&_xrefAccess);
     return _pageCount > 0;
 }
 
@@ -341,9 +346,10 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
 
     bool needsLinkification = false;
 
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&_pagesAccess);
     pdf_page* page = _pages[pageNo-1].page;
     if (!page) {
+        EnterCriticalSection(&_xrefAccess);
         fz_obj * obj = pdf_getpageobject(_xref, pageNo);
         fz_error error = pdf_loadpage(&page, _xref, obj);
         if (!error) {
@@ -351,8 +357,9 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
             _pages[pageNo-1].num = fz_tonum(obj);
             needsLinkification = true;
         }
+        LeaveCriticalSection(&_xrefAccess);
     }
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&_pagesAccess);
 
     if (needsLinkification)
         linkifyPageText(page);
@@ -363,14 +370,14 @@ void PdfEngine::dropPdfPage(int pageNo)
 {
     assert(_pages);
     if (!_pages) return;
-    EnterCriticalSection(&_xrefAccess);
+    EnterCriticalSection(&_pagesAccess);
     pdf_page* page = _pages[pageNo-1].page;
     assert(page);
     if (page) {
         pdf_freepage(page);
         _pages[pageNo-1].page = NULL;
     }
-    LeaveCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&_pagesAccess);
 }
 
 int PdfEngine::pageRotation(int pageNo)
