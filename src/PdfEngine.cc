@@ -5,6 +5,38 @@
 // in SumatraPDF.cpp
 extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
+// copied from pdf_page.c
+fz_error
+pdf_loadpageinfo(pdf_page *page, pdf_xref *xref, fz_obj *dict)
+{
+	fz_obj *obj;
+	fz_bbox bbox;
+
+	obj = fz_dictgets(dict, "MediaBox");
+	if (!fz_isarray(obj))
+		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(dict), fz_togen(dict));
+	bbox = fz_roundrect(pdf_torect(obj));
+
+	obj = fz_dictgets(dict, "CropBox");
+	if (fz_isarray(obj))
+	{
+		fz_bbox cropbox = fz_roundrect(pdf_torect(obj));
+		bbox = fz_intersectbbox(bbox, cropbox);
+	}
+
+	page->mediabox.x0 = MIN(bbox.x0, bbox.x1);
+	page->mediabox.y0 = MIN(bbox.y0, bbox.y1);
+	page->mediabox.x1 = MAX(bbox.x0, bbox.x1);
+	page->mediabox.y1 = MAX(bbox.y0, bbox.y1);
+
+	if (page->mediabox.x1 - page->mediabox.x0 < 1 || page->mediabox.y1 - page->mediabox.y0 < 1)
+		return fz_throw("invalid page size");
+
+	page->rotate = fz_toint(fz_dictgets(dict, "Rotate"));
+
+	return fz_okay;
+}
+
 static HBITMAP createDIBitmapCommon(RenderedBitmap *bmp, HDC hdc)
 {
     int bmpDx = bmp->dx();
@@ -344,21 +376,20 @@ void PdfEngine::dropPdfPage(int pageNo)
 int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
-    int rotation = 0;
-    fz_obj *page = pdf_getpageobject(_xref, pageNo);
-    fz_obj *obj = fz_dictgets(page, "Rotate");
-    if (fz_isint(obj))
-        rotation = fz_toint(obj);
-    return rotation;
+    pdf_page page;
+    if (pdf_loadpageinfo(&page, _xref, pdf_getpageobject(_xref, pageNo)) != fz_okay)
+        return INVALID_ROTATION;
+    return page.rotate;
 }
 
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_obj *page = pdf_getpageobject(_xref, pageNo);
-    if (!page)
+    pdf_page page;
+    if (pdf_loadpageinfo(&page, _xref, pdf_getpageobject(_xref, pageNo)) != fz_okay)
         return SizeD(0,0);
-    return SizeD(fabs(page->mediabox.x1 - page->mediabox.x0), fabs(page->mediabox.y1 - page->mediabox.y0));
+    fz_rect bbox = page.mediabox;
+    return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }
 
 bool PdfEngine::hasPermission(int permission)
