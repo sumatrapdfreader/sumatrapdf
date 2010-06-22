@@ -188,8 +188,8 @@ PdfEngine::~PdfEngine()
     EnterCriticalSection(&_pagesAccess);
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
-            if (_pages[i].page)
-                pdf_freepage(_pages[i].page);
+            if (_pages[i])
+                pdf_freepage(_pages[i]);
         }
         free(_pages);
     }
@@ -277,7 +277,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     // otherwise get displayed
     LeaveCriticalSection(&_xrefAccess);
 
-    _pages = (PdfPage *)calloc(_pageCount, sizeof(PdfPage));
+    _pages = (pdf_page **)calloc(_pageCount, sizeof(pdf_page *));
     return _pageCount > 0;
 }
 
@@ -320,17 +320,7 @@ int PdfEngine::findPageNo(fz_obj *dest)
     if (fz_isarray(dest))
         dest = fz_arrayget(dest, 0);
 
-    int n = fz_tonum(dest);
-
-    for (int i = 0; i < _pageCount; i++)
-    {
-        if (0 == _pages[i].num)
-            _pages[i].num = fz_tonum(pdf_getpageobject(_xref, i + 1));
-        if (n == _pages[i].num)
-            return i + 1;
-    }
-
-    return 0;
+    return pdf_findpageobject(_xref, dest);
 }
 
 fz_obj *PdfEngine::getNamedDest(const char *name)
@@ -347,14 +337,13 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     bool needsLinkification = false;
 
     EnterCriticalSection(&_pagesAccess);
-    pdf_page* page = _pages[pageNo-1].page;
+    pdf_page *page = _pages[pageNo-1];
     if (!page) {
         EnterCriticalSection(&_xrefAccess);
         fz_obj * obj = pdf_getpageobject(_xref, pageNo);
         fz_error error = pdf_loadpage(&page, _xref, obj);
         if (!error) {
-            _pages[pageNo-1].page = page;
-            _pages[pageNo-1].num = fz_tonum(obj);
+            _pages[pageNo-1] = page;
             needsLinkification = true;
         }
         LeaveCriticalSection(&_xrefAccess);
@@ -371,11 +360,11 @@ void PdfEngine::dropPdfPage(int pageNo)
     assert(_pages);
     if (!_pages) return;
     EnterCriticalSection(&_pagesAccess);
-    pdf_page* page = _pages[pageNo-1].page;
+    pdf_page *page = _pages[pageNo-1];
     assert(page);
     if (page) {
         pdf_freepage(page);
-        _pages[pageNo-1].page = NULL;
+        _pages[pageNo-1] = NULL;
     }
     LeaveCriticalSection(&_pagesAccess);
 }
@@ -502,7 +491,7 @@ int PdfEngine::linkCount() {
 
     for (int i=0; i < _pageCount; i++)
     {
-        pdf_page* page = _pages[i].page;
+        pdf_page *page = _pages[i];
         if (page)
             count += linksLinkCount(page->links);
     }
@@ -519,7 +508,7 @@ void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
 
     for (pageNo=0; pageNo < _pageCount; pageNo++)
     {
-        pdf_page* page = _pages[pageNo].page;
+        pdf_page *page = _pages[pageNo];
         if (!page)
             continue;
         link = page->links;

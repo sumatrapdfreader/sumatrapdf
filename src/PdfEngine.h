@@ -20,11 +20,6 @@ typedef struct PdfLink {
     pdf_link *      link;
 } PdfLink;
 
-typedef struct PdfPage {
-    pdf_page *      page;
-    int             num; // the page's object number
-} PdfPage;
-
 class WindowInfo;
 
 #define INVALID_PAGE_NO     -1
@@ -165,7 +160,7 @@ private:
     void            linkifyPageText(pdf_page *page);
 
     pdf_outline *   _outline;
-    PdfPage *       _pages;
+    pdf_page **     _pages;
     fz_glyphcache * _drawcache;
 };
 
