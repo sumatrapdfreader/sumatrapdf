@@ -28,7 +28,7 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 		min[i] = decode[(i - skip) * 2] * 255;
 		max[i] = decode[(i - skip) * 2 + 1] * 255;
 		sub[i] = max[i] - min[i];
-		needed |= (min[i] != 0) |  (max[i] != 255);
+		needed |= (min[i] != 0) | (max[i] != 255);
 		justinvert &= min[i] == 255 && max[i] == 0 && sub[i] == -255;
 	}
 

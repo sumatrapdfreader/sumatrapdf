@@ -20,7 +20,8 @@ duff_non(byte * restrict sp, int sw, int sn, byte * restrict dp, int dw, int w0,
 		{
 			/* RJW: Alpha handling suspicious here; sp[0] counts twice */
 			int sa = FZ_EXPAND(sp[0]);
-			for (k = 0; k < sn; k++)
+			dp[0] = FZ_BLEND(255, dp[0], sa);
+			for (k = 1; k < sn; k++)
 			{
 				dp[k] = FZ_BLEND(sp[k], dp[k], sa);
 			}
@@ -47,7 +48,8 @@ duff_nimon(byte * restrict sp, int sw, int sn, byte * restrict mp, int mw, int m
 		{
 			/* TODO: validate this */
 			int ma = FZ_COMBINE(FZ_EXPAND(mp[0]), FZ_EXPAND(sp[0]));
-			for (k = 0; k < sn; k++)
+			dp[0] = FZ_BLEND(255, dp[0], ma);
+			for (k = 1; k < sn; k++)
 			{
 				dp[k] = FZ_BLEND(sp[k], dp[k], ma);
 			}
@@ -93,7 +95,7 @@ duff_4o4(byte *sp, int sw, byte *dp, int dw, int w0, int h)
 		while (w--)
 		{
 			int alpha = FZ_EXPAND(sp[0]);
-			dp[0] = FZ_BLEND(sp[0], dp[0], alpha);
+			dp[0] = FZ_BLEND(255, dp[0], alpha);
 			dp[1] = FZ_BLEND(sp[1], dp[1], alpha);
 			dp[2] = FZ_BLEND(sp[2], dp[2], alpha);
 			dp[3] = FZ_BLEND(sp[3], dp[3], alpha);
@@ -174,12 +176,30 @@ path_1o1(byte * restrict src, byte cov, int len, byte * restrict dst)
 }
 
 static void
+path_w2i1o2(byte * restrict ag, byte * restrict src, byte cov, int len, byte * restrict dst)
+{
+	int alpha = FZ_EXPAND(ag[0]);
+	byte g = ag[1];
+
+	while (len--)
+	{
+		int ca;
+		cov += *src; *src = 0; src++;
+		ca = FZ_COMBINE(FZ_EXPAND(cov), alpha);
+		dst[0] = FZ_BLEND(255, dst[0], ca);
+		dst[1] = FZ_BLEND(g, dst[1], ca);
+		dst += 2;
+	}
+}
+
+static void
 path_w4i1o4(byte * restrict argb, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	int alpha = FZ_EXPAND(argb[0]);
 	byte r = argb[1];
 	byte g = argb[2];
 	byte b = argb[3];
+
 	while (len--)
 	{
 		int ca;
@@ -218,12 +238,37 @@ text_1o1(byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, i
 }
 
 static void
+text_w2i1o2(byte * restrict ag, byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
+{
+	int alpha = FZ_EXPAND(ag[0]);
+	byte g = ag[1];
+
+	srcw -= w0;
+	dstw -= w0<<1;
+	while (h--)
+	{
+		int w = w0;
+		while (w--)
+		{
+			int c = FZ_COMBINE(FZ_EXPAND(src[0]), alpha);
+			dst[0] = FZ_BLEND(255, dst[0], c);
+			dst[1] = FZ_BLEND(g, dst[1], c);
+			src ++;
+			dst += 2;
+		}
+		src += srcw;
+		dst += dstw;
+	}
+}
+
+static void
 text_w4i1o4(byte * restrict argb, byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
 {
 	int alpha = FZ_EXPAND(argb[0]);
 	byte r = argb[1];
 	byte g = argb[2];
 	byte b = argb[3];
+
 	srcw -= w0;
 	dstw -= w0<<2;
 	while (h--)
@@ -256,7 +301,9 @@ void (*fz_duff_1i1o1)(byte*,int,byte*,int,byte*,int,int,int) = duff_1i1o1;
 void (*fz_duff_4i1o4)(byte*,int,byte*,int,byte*,int,int,int) = duff_4i1o4;
 
 void (*fz_path_1o1)(byte*,byte,int,byte*) = path_1o1;
+void (*fz_path_w2i1o2)(byte*,byte*,byte,int,byte*) = path_w2i1o2;
 void (*fz_path_w4i1o4)(byte*,byte*,byte,int,byte*) = path_w4i1o4;
 
 void (*fz_text_1o1)(byte*,int,byte*,int,int,int) = text_1o1;
+void (*fz_text_w2i1o2)(byte*,byte*,int,byte*,int,int,int) = text_w2i1o2;
 void (*fz_text_w4i1o4)(byte*,byte*,int,byte*,int,int,int) = text_w4i1o4;

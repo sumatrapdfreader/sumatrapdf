@@ -71,10 +71,18 @@ fz_pixmap * fz_scalepixmap(fz_pixmap *src, int xdenom, int ydenom);
  * The device interface.
  */
 
+enum
+{
+	FZ_IGNOREIMAGE = 1,
+	FZ_IGNORESHADE = 2,
+};
+
 typedef struct fz_device_s fz_device;
 
 struct fz_device_s
 {
+	int hints;
+
 	void *user;
 	void (*freeuser)(void *);
 
@@ -479,14 +487,18 @@ extern void (*fz_duff_1i1o1)(unsigned char*,int,unsigned char*,int,unsigned char
 extern void (*fz_duff_4i1o4)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 
 extern void (*fz_path_1o1)(unsigned char*,unsigned char,int,unsigned char*);
+extern void (*fz_path_w2i1o2)(unsigned char*,unsigned char*,unsigned char,int,unsigned char*);
 extern void (*fz_path_w4i1o4)(unsigned char*,unsigned char*,unsigned char,int,unsigned char*);
 
 extern void (*fz_text_1o1)(unsigned char*,int,unsigned char*,int,int,int);
+extern void (*fz_text_w2i1o2)(unsigned char*,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_text_w4i1o4)(unsigned char*,unsigned char*,int,unsigned char*,int,int,int);
 
 extern void (*fz_img_non)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,fz_matrix*);
 extern void (*fz_img_1o1)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
 extern void (*fz_img_4o4)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
+extern void (*fz_img_2o2)(unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
+extern void (*fz_img_w2i1o2)(unsigned char*,unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
 extern void (*fz_img_w4i1o4)(unsigned char*,unsigned char*,unsigned char,int,unsigned char*,fz_pixmap*,int u, int v, int fa, int fb);
 
 extern void (*fz_decodetile)(fz_pixmap *pix, int skip, float *decode);

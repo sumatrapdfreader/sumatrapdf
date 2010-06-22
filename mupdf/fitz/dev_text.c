@@ -320,7 +320,11 @@ fixuptextspan(fz_textspan *span)
 				}
 				if (i + 1 < span->len)
 				{
-					int newC = ornatecharacter(span->text[i].c, span->text[i + 1].c);
+					int newC = 0;
+					if (span->text[i + 1].c != 32 || i + 2 < span->len)
+						newC = ornatecharacter(span->text[i].c, span->text[i + 1].c);
+					else if ((newC = ornatecharacter(span->text[i].c, span->text[i + 2].c)))
+						deletecharacter(span, i + 1);
 					if (newC)
 					{
 						deletecharacter(span, i);
@@ -457,9 +461,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			int mask = FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING;
 			if (text->wmode)
 				mask |= FT_LOAD_VERTICAL_LAYOUT;
-			err = FT_Get_Advance(font->ftface, text->els[i].gid, mask, &ftadv);
-			if (err)
-				fz_warn("freetype get advance (gid %d): %s", text->els[i].gid, ft_errorstring(err));
+			FT_Get_Advance(font->ftface, text->els[i].gid, mask, &ftadv);
 			adv = ftadv / 1024000.0f;
 			if (text->wmode)
 			{
@@ -557,6 +559,7 @@ fz_newtextdevice(fz_textspan *root)
 	tdev->point.y = -1;
 
 	dev = fz_newdevice(tdev);
+	dev->hints = FZ_IGNOREIMAGE | FZ_IGNORESHADE;
 	dev->freeuser = fz_textfreeuser;
 	dev->filltext = fz_textfilltext;
 	dev->stroketext = fz_textstroketext;

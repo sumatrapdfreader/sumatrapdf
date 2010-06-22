@@ -22,6 +22,16 @@ getargb(byte *s, int w, int h, int u, int v)
 	return s + ((w * v + u) << 2);
 }
 
+static inline byte *
+getag(byte *s, int w, int h, int u, int v)
+{
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
+	return s + ((w * v + u) << 1);
+}
+
 static inline int
 getcolor(byte *s, int w, int h, int n, int u, int v, int k)
 {
@@ -36,6 +46,13 @@ static inline int
 lerp(int a, int b, int t)
 {
 	return a + (((b - a) * t) >> 16);
+}
+
+static inline void
+lerpag(byte *dst, byte *a, byte *b, int t)
+{
+	dst[0] = lerp(a[0], b[0], t);
+	dst[1] = lerp(a[1], b[1], t);
 }
 
 static inline void
@@ -61,6 +78,24 @@ samplemask(byte *s, int w, int h, int u, int v)
 	int ab = lerp(a, b, ud);
 	int cd = lerp(c, d, ud);
 	return lerp(ab, cd, vd);
+}
+
+static inline void
+sampleag(byte *s, int w, int h, int u, int v, byte *out)
+{
+	byte ab[4];
+	byte cd[4];
+	int ui = u >> 16;
+	int vi = v >> 16;
+	int ud = u & 0xFFFF;
+	int vd = v & 0xFFFF;
+	byte *a = getag(s, w, h, ui, vi);
+	byte *b = getag(s, w, h, ui+1, vi);
+	byte *c = getag(s, w, h, ui, vi+1);
+	byte *d = getag(s, w, h, ui+1, vi+1);
+	lerpag(ab, a, b, ud);
+	lerpag(cd, c, d, ud);
+	lerpag(out, ab, cd, vd);
 }
 
 static inline void
@@ -129,6 +164,35 @@ img_1o1(byte * restrict src, byte cov, int len, byte * restrict dst,
 }
 
 static void
+img_2o2(byte * restrict src, byte cov, int len, byte * restrict dst,
+	fz_pixmap *image, int u, int v, int fa, int fb)
+{
+	byte *samples = image->samples;
+	int w = image->w;
+	int h = image->h;
+	byte ag[2];
+
+	while (len--)
+	{
+		int sa;
+		cov += *src; *src = 0; src++;
+		if (cov != 0)
+		{
+			sampleag(samples, w, h, u, v, ag);
+			sa = FZ_COMBINE(FZ_EXPAND(ag[0]), FZ_EXPAND(cov));
+			if (sa != 0)
+			{
+				dst[0] = FZ_BLEND(255, dst[0], sa);
+				dst[1] = FZ_BLEND(ag[1], dst[1], sa);
+			}
+		}
+		dst += 2;
+		u += fa;
+		v += fb;
+	}
+}
+
+static void
 img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 	fz_pixmap *image, int u, int v, int fa, int fb)
 {
@@ -156,6 +220,63 @@ img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 		dst += 4;
 		u += fa;
 		v += fb;
+	}
+}
+
+static void
+img_w2i1o2(byte *ag, byte * restrict src, byte cov, int len, byte * restrict dst,
+	fz_pixmap *image, int u, int v, int fa, int fb)
+{
+	byte *samples = image->samples;
+	int w = image->w;
+	int h = image->h;
+	int alpha = FZ_EXPAND(ag[0]);
+	byte g = ag[1];
+
+	if (alpha == 0)
+		return;
+	if (alpha != 256)
+	{
+		while (len--)
+		{
+			int ca;
+			cov += *src; *src = 0; src++;
+			if (cov != 0)
+			{
+				ca = samplemask(samples, w, h, u, v);
+				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
+				ca = FZ_COMBINE(ca, alpha);
+				if (ca != 0)
+				{
+					dst[0] = FZ_BLEND(255, dst[0], ca);
+					dst[1] = FZ_BLEND(g, dst[1], ca);
+				}
+			}
+			dst += 2;
+			u += fa;
+			v += fb;
+		}
+	}
+	else
+	{
+		while (len--)
+		{
+			int ca;
+			cov += *src; *src = 0; src++;
+			if (cov != 0)
+			{
+				ca = samplemask(samples, w, h, u, v);
+				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
+				if (ca != 0)
+				{
+					dst[0] = FZ_BLEND(255, dst[0], ca);
+					dst[1] = FZ_BLEND(g, dst[1], ca);
+				}
+			}
+			dst += 2;
+			u += fa;
+			v += fb;
+		}
 	}
 }
 
@@ -223,5 +344,7 @@ img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict d
 }
 
 void (*fz_img_1o1)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_1o1;
+void (*fz_img_2o2)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_2o2;
 void (*fz_img_4o4)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_4o4;
+void (*fz_img_w2i1o2)(byte*, byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_w2i1o2;
 void (*fz_img_w4i1o4)(byte*, byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_w4i1o4;

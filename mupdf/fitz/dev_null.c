@@ -22,6 +22,8 @@ fz_newdevice(void *user)
 	fz_device *dev = fz_malloc(sizeof(fz_device));
 	memset(dev, 0, sizeof(fz_device));
 
+	dev->hints = 0;
+
 	dev->user = user;
 	dev->freeuser = fz_nullfreeuser;
 

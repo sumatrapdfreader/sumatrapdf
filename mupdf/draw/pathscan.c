@@ -422,7 +422,7 @@ static inline void toalpha(unsigned char *list, int n)
 
 static inline void blit(fz_pixmap *pix, int x, int y,
 	unsigned char *list, int skipx, int len,
-	unsigned char *argb, fz_pixmap *image, fz_matrix *invmat)
+	unsigned char *color, fz_pixmap *image, fz_matrix *invmat)
 {
 	unsigned char *dst;
 	unsigned char cov;
@@ -443,17 +443,61 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 		int v = (invmat->b * (x + 0.5f) + invmat->d * (y + 0.5f) + invmat->f) * 65536;
 		int fa = invmat->a * 65536;
 		int fb = invmat->b * 65536;
-		if (argb)
-			fz_img_w4i1o4(argb, list, cov, len, dst, image, u, v, fa, fb);
+		// assert(image->n == pix->n);
+		if (color)
+		{
+			switch (pix->n)
+			{
+				case 2:
+					fz_img_w2i1o2(color, list, cov, len, dst, image, u, v, fa, fb);
+					break;
+				case 4:
+					fz_img_w4i1o4(color, list, cov, len, dst, image, u, v, fa, fb);
+					break;
+				default:
+					assert("Write fz_img_wni1on" != NULL);
+					//fz_img_wni1on(color, list, cov, len, dst, image, u, v, fa, fb);
+					break;
+			}
+		}
 		else if (image->colorspace)
+		{
+			assert(image->colorspace->n == image->n-1);
+			switch (pix->n)
+			{
+				case 2:
+					fz_img_2o2(list, cov, len, dst, image, u, v, fa, fb);
+					break;
+				case 4:
 			fz_img_4o4(list, cov, len, dst, image, u, v, fa, fb);
+					break;
+				default:
+					assert("Write fz_img_non" != NULL);
+					//fz_img_non(list, cov, len, dst, image, u, v, fa, fb);
+					break;
+			}
+		}
 		else
 			fz_img_1o1(list, cov, len, dst, image, u, v, fa, fb);
 	}
 	else
 	{
-		if (argb)
-			fz_path_w4i1o4(argb, list, cov, len, dst);
+		if (color)
+		{
+			switch (pix->n)
+			{
+				case 2:
+					fz_path_w2i1o2(color, list, cov, len, dst);
+					break;
+				case 4:
+					fz_path_w4i1o4(color, list, cov, len, dst);
+					break;
+				default:
+					assert("Write fz_path_wni1on" != NULL);
+					//fz_path_wni1on(color, list, cov, len, dst);
+					break;
+			}
+		}
 		else
 			fz_path_1o1(list, cov, len, dst);
 	}

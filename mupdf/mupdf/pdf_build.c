@@ -348,7 +348,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		csi->clip = 0;
 	}
 
-	if (dofill)
+	if (dofill && !(csi->dev->hints & FZ_IGNOREIMAGE))
 	{
 		switch (gstate->fill.kind)
 		{
@@ -374,7 +374,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		}
 	}
 
-	if (dostroke)
+	if (dostroke && !(csi->dev->hints & FZ_IGNOREIMAGE))
 	{
 		switch (gstate->stroke.kind)
 		{

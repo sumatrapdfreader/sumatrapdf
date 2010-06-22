@@ -238,7 +238,7 @@ fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox 
 	copyvert(poly[1], bv, n);
 	copyvert(poly[2], cv, n);
 
-	len = clippoly(poly, temp,   3, n, cx0, 0, 0);
+	len = clippoly(poly, temp, 3, n, cx0, 0, 0);
 	len = clippoly(temp, poly, len, n, cx1, 0, 1);
 	len = clippoly(poly, temp, len, n, cy0, 1, 0);
 	len = clippoly(temp, poly, len, n, cy1, 1, 1);
@@ -268,7 +268,7 @@ fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox 
 
 	y = gel[top][1];
 
-	if (findnext(gel, len, top, &s0, &e0,  1))
+	if (findnext(gel, len, top, &s0, &e0, 1))
 		return;
 	if (findnext(gel, len, top, &s1, &e1, -1))
 		return;

@@ -277,7 +277,20 @@ drawglyph(unsigned char *argb, fz_pixmap *dst, fz_pixmap *src, int xorig, int yo
 	h = sy1 - sy0;
 
 	if (dst->colorspace)
-		fz_text_w4i1o4(argb, sp, src->w, dp, dst->w * 4, w, h);
+	{
+		switch (dst->n)
+		{
+		case 2:
+			fz_text_w2i1o2(argb, sp, src->w, dp, dst->w * 2, w, h);
+			break;
+		case 4:
+			fz_text_w4i1o4(argb, sp, src->w, dp, dst->w * 4, w, h);
+			break;
+		default:
+			assert("Write fz_text_wni1on" != NULL);
+			break;
+		}
+	}
 	else
 		fz_text_1o1(sp, src->w, dp, dst->w, w, h);
 }

@@ -14,7 +14,7 @@
 #include <sys/time.h>
 #endif
 
-enum { DRAWPNM, DRAWTXT, DRAWXML };
+enum { DRAWPNM, DRAWPGM, DRAWTXT, DRAWXML };
 
 struct benchmark
 {
@@ -59,6 +59,7 @@ static void drawusage(void)
 		"  -o -\tpattern (%%d for page number) for output file\n"
 		"  -r -\tresolution in dpi\n"
 		"  -m\tprint benchmark results\n"
+		"  -g\toutput a pgm rather than a pnm\n"
 		"  -s\tprint MD5 checksum of page pixel data\n"
 		"  -t\ttext extraction mode\n"
 		"  -x\txml trace mode\n"
@@ -139,7 +140,7 @@ static void drawfreepage(void)
 	}
 }
 
-static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes)
+static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *drawtimes, int greyscale)
 {
 	static int fd = -1;
 	fz_error error;
@@ -182,11 +183,18 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 				die(fz_throw("ioerror: could not create raster file '%s'", name));
 		}
 
-		sprintf(pnmhdr, "P6\n%d %d\n255\n", w, h);
+ 		if (greyscale)
+		{
+			sprintf(pnmhdr, "P5\n%d %d\n255\n", w, h);
+		}
+		else
+		{
+			sprintf(pnmhdr, "P6\n%d %d\n255\n", w, h);
+		}
 		write(fd, pnmhdr, strlen(pnmhdr));
 	}
 
-	pix = fz_newpixmap(pdf_devicergb, bbox.x0, bbox.y0, w, bh);
+	pix = fz_newpixmap((greyscale ? pdf_devicegray : pdf_devicergb), bbox.x0, bbox.y0, w, bh);
 	fz_clearpixmap(pix, 0xFF);
 
 	memset(pix->samples, 0xff, pix->h * pix->w * pix->n);
@@ -204,26 +212,46 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 			die(fz_rethrow(error, "cannot draw page %d in PDF file '%s'", pagenum, basename));
 		fz_freedevice(dev);
 
+		if (checksum)
+			fz_md5update(&digest, pix->samples, pix->h * pix->w * pix->n);
 		if (drawpattern)
 		{
-			for (y = 0; y < pix->h; y++)
+			unsigned char *src = pix->samples;
+			if (greyscale)
 			{
-				unsigned char *src = pix->samples + y * pix->w * 4;
-				unsigned char *dst = src;
-
-				for (x = 0; x < pix->w; x++)
+				for (y = pix->h; y > 0; y--)
 				{
-					dst[x * 3 + 0] = src[x * 4 + 1];
-					dst[x * 3 + 1] = src[x * 4 + 2];
-					dst[x * 3 + 2] = src[x * 4 + 3];
-				}
+					unsigned char *dst = src;
 
-				write(fd, dst, pix->w * 3);
+					for (x = pix->w; x > 0; x--)
+					{
+						src++;
+						*dst++ = *src++;
+					}
+					dst -= pix->w;
+
+					write(fd, dst, pix->w);
+				}
+			}
+			else
+			{
+				for (y = pix->h; y > 0; y--)
+				{
+					unsigned char *dst = src;
+
+					for (x = pix->w; x > 0; x--)
+					{
+						src++;
+						*dst++ = *src++;
+						*dst++ = *src++;
+						*dst++ = *src++;
+					}
+					dst -= pix->w * 3;
+
+					write(fd, dst, pix->w * 3);
+				}
 			}
 		}
-
-		if (checksum)
-			fz_md5update(&digest, pix->samples, pix->h * pix->w * 4);
 
 		pix->y += bh;
 		if (pix->y + pix->h > bbox.y1)
@@ -374,7 +402,8 @@ static void drawpages(char *pagelist)
 		{
 			switch (drawmode)
 			{
-			case DRAWPNM: drawpnm(page, &loadtimes, &drawtimes); break;
+			case DRAWPNM: drawpnm(page, &loadtimes, &drawtimes, 0); break;
+			case DRAWPGM: drawpnm(page, &loadtimes, &drawtimes, 1); break;
 			case DRAWTXT: drawtxt(page, &loadtimes); break;
 			case DRAWXML: drawxml(page); break;
 			}
@@ -411,7 +440,7 @@ int main(int argc, char **argv)
 	fz_cpudetect();
 	fz_accelerate();
 
-	while ((c = fz_getopt(argc, argv, "b:p:o:r:txms")) != -1)
+	while ((c = fz_getopt(argc, argv, "b:p:o:r:gtxms")) != -1)
 	{
 		switch (c)
 		{
@@ -419,6 +448,7 @@ int main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		case 'o': drawpattern = fz_optarg; break;
 		case 'r': drawzoom = atof(fz_optarg) / 72; break;
+		case 'g': drawmode = DRAWPGM; break;
 		case 't': drawmode = DRAWTXT; break;
 		case 'x': drawmode = DRAWXML; break;
 		case 'm': benchmark = 1; break;
@@ -464,4 +494,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-
