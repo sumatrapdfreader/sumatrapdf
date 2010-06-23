@@ -103,10 +103,127 @@ path_w4i1o4_arm(byte * restrict argb, byte * restrict src, byte cov, int len, by
 	);
 }
 
+static void loadtile8_arm(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
+{
+	if ((h == 0) || (w == 0))
+		return;
+
+	switch (pad)
+	{
+	case 0:
+		while (h--)
+		{
+			memcpy(dst, src, w);
+			src += sw;
+			dst += dw;
+		}
+		break;
+
+	case 1:
+		sw -= w;
+		dw -= w<<1;
+		asm volatile(
+			"MOV	r11,#255				\n"
+			"1:						\n"
+			"MOV	r5, %[w]		@ r5 = x = w	\n"
+			"2:						\n"
+			"LDRB	r4, [%[src]], #1	@ r4 = *src++	\n"
+			"SUBS	r5, r5, #1				\n"
+			"STRB	r11,[%[dst]], #1	@ *dst++ = 255	\n"
+			"STRB	r4, [%[dst]], #1	@ *dst++ = r4	\n"
+			"BGT	2b					\n"
+			"ADD	%[src],%[src],%[sw]	@ src += sw	\n"
+			"ADD	%[dst],%[dst],%[dw]	@ dst += dw	\n"
+			"SUBS	%[h],%[h],#1				\n"
+			"BGT	1b					\n"
+			:
+			[src] "+r" (src),
+			[sw]  "+r" (sw),
+			[dst] "+r" (dst),
+			[dw]  "+r" (dw),
+			[h]   "+r" (h),
+			[w]   "+r" (w)
+			:
+			:
+			"r4","r5","r11","memory","cc"
+			);
+		break;
+
+	case 3:
+		sw -= w;
+		asm volatile(
+			"MOV	r11,#255				\n"
+			"1:						\n"
+			"MOV	r5, %[w]		@ r5 = x = w	\n"
+			"MOV	r8, %[dst]		@ r8 = dp = dst	\n"
+			"2:						\n"
+			"LDRB	r4, [%[src]], #1	@ r4 = *src++	\n"
+			"LDRB	r6, [%[src]], #1	@ r6 = *src++	\n"
+			"LDRB	r7, [%[src]], #1	@ r7 = *src++	\n"
+			"SUBS	r5, r5, #3				\n"
+			"STRB	r11,[r8], #1		@ *dp++ = 255	\n"
+			"STRB	r4, [r8], #1		@ *dp++ = r4	\n"
+			"STRB	r6, [r8], #1		@ *dp++ = r6	\n"
+			"STRB	r7, [r8], #1		@ *dp++ = r7	\n"
+			"BGT	2b					\n"
+			"ADD	%[src],%[src],%[sw]	@ src += sw	\n"
+			"ADD	%[dst],%[dst],%[dw]	@ dst += dw	\n"
+			"SUBS	%[h],%[h],#1				\n"
+			"BGT	1b					\n"
+			:
+			[src] "+r" (src),
+			[sw]  "+r" (sw),
+			[dst] "+r" (dst),
+			[dw]  "+r" (dw),
+			[h]   "+r" (h),
+			[w]   "+r" (w)
+			:
+			:
+			"r4","r5","r6","r7","r8","r11","memory","cc"
+			);
+		break;
+
+	default:
+		sw -= w;
+		asm volatile(
+			"mov	r9,#255					\n"
+			"1:						\n"
+			"mov	r7, %[dst]	@ r7 = dp = dst		\n"
+			"mov	r8, #1		@ r8 = tpad = 1		\n"
+			"mov	r14,%[w]	@ r11= x = w		\n"
+			"2:						\n"
+			"ldrb	r10,[%[src]],#1				\n"
+			"subs	r8, r8, #1				\n"
+			"moveq	r8, %[pad]				\n"
+			"streqb	r9, [r7], #1				\n"
+			"strb	r10,[r7], #1				\n"
+			"subs	r14,r14, #1				\n"
+			"bgt	2b					\n"
+			"add	%[src],%[src],%[sw]			\n"
+			"add	%[dst],%[dst],%[dw]			\n"
+			"subs	%[h], %[h], #1				\n"
+			"bgt	1b					\n"
+			:
+			[src] "+r" (src),
+			[sw]  "+r" (sw),
+			[dst] "+r" (dst),
+			[dw]  "+r" (dw),
+			[h]   "+r" (h),
+			[w]   "+r" (w),
+			[pad] "+r" (pad)
+			:
+			:
+			"r7","r8","r9","r10","r14","memory","cc"
+			);
+		break;
+	}
+}
+
 void
 fz_acceleratearch(void)
 {
 	fz_path_w4i1o4 = path_w4i1o4_arm;
+	fz_loadtile8 = loadtile8_arm;
 	fz_srow4 = fz_srow4_arm;
 	fz_scol4 = fz_scol4_arm;
 }

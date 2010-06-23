@@ -510,26 +510,24 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 				}
 			}
 		}
-
-		/* Load a default encoding for TrueType fonts with a charmap */
-		/* (this is likely not quite correct, though...) */
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=779 */
-		if (!FT_HAS_GLYPH_NAMES(face) && face->charmap)
-			pdf_loadencoding(estrings, "WinAnsiEncoding");
 	}
 
 	/* try to reverse the glyph names from the builtin encoding */
-	if (FT_HAS_GLYPH_NAMES(face))
+	for (i = 0; i < 256; i++)
 	{
-		for (i = 0; i < 256; i++)
+		if (etable[i] && !estrings[i])
 		{
-			if (etable[i] && !estrings[i])
+			if (FT_HAS_GLYPH_NAMES(face))
 			{
 				fterr = FT_Get_Glyph_Name(face, etable[i], ebuffer[i], 32);
 				if (fterr)
 					fz_warn("freetype get glyph name (gid %d): %s", etable[i], ft_errorstring(fterr));
 				if (ebuffer[i][0])
 					estrings[i] = ebuffer[i];
+			}
+			else
+			{
+				estrings[i] = pdf_winansi[i];
 			}
 		}
 	}
@@ -608,7 +606,6 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	return fz_okay;
 
 cleanup:
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=487 */
 	if (etable != fontdesc->cidtogid)
 		fz_free(etable);
 	pdf_dropfont(fontdesc);
@@ -890,8 +887,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 	return fz_okay;
 
 cleanup:
-	fz_dropfont(fontdesc->font);
-	fz_free(fontdesc);
+	pdf_dropfont(fontdesc);
 	return fz_rethrow(error, "cannot load cid font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 }
 

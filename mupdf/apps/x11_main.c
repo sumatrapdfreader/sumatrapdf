@@ -205,11 +205,6 @@ void wintitle(pdfapp_t *app, char *s)
 #endif
 }
 
-void winconvert(pdfapp_t *app, fz_pixmap *image)
-{
-	/* never mind */
-}
-
 void winhelp(pdfapp_t *app)
 {
 	fprintf(stderr, "%s", pdfapp_usage(app));

@@ -273,10 +273,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\jbig2dec.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\thirdparty\jbig2dec\memcmp.c"
 				>
 			</File>

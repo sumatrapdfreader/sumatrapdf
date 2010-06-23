@@ -390,9 +390,8 @@ pdf_parsecmap(pdf_cmap **cmapp, fz_stream *file)
 		error = pdf_lexcmap(&tok, file, buf, sizeof buf, &len);
 		if (error)
 		{
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=642 */
-			fz_warn("syntaxerror in cmap");
-			tok = PDF_TEOF;
+			error = fz_rethrow(error, "syntaxerror in cmap");
+			goto cleanup;
 		}
 
 		if (tok == PDF_TEOF || tok == TENDCMAP)

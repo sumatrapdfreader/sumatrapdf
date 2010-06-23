@@ -297,8 +297,6 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		idev = fz_newdrawdevice(app->cache, app->image);
 		fz_executedisplaylist(app->page->list, idev, ctm);
 		fz_freedevice(idev);
-
-		winconvert(app, app->image);
 	}
 
 	pdfapp_panview(app, app->panx, app->pany);

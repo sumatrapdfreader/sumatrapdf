@@ -495,6 +495,9 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	fz_error error;
 	fz_stream *stream;
 	int codeptr;
+	char buf[64];
+	pdf_token_e tok;
+	int len;
 
 	pdf_logrsrc("load postscript function (%d %d R)\n", num, gen);
 
@@ -502,10 +505,14 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	if (error)
 		return fz_rethrow(error, "cannot open calculator function stream");
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691139 */
-	while (fz_peekbyte(stream) == ' ') fz_readbyte(stream);
+	error = pdf_lex(&tok, stream, buf, sizeof buf, &len);
+	if (error)
+	{
+		fz_dropstream(stream);
+		return fz_rethrow(error, "stream is not a calculator function");
+	}
 
-	if (fz_readbyte(stream) != '{')
+	if (tok != PDF_TOBRACE)
 	{
 		fz_dropstream(stream);
 		return fz_throw("stream is not a calculator function");

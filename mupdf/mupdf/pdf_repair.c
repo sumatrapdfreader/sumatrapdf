@@ -176,8 +176,8 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		error = pdf_lex(&tok, xref->file, buf, bufsize, &len);
 		if (error)
 		{
-			error = fz_rethrow(error, "cannot scan for objects");
-			goto cleanup;
+			fz_catch(error, "ignoring the rest of the file");
+			break;
 		}
 
 		if (tok == PDF_TINT)

@@ -378,7 +378,7 @@ void wintitle(pdfapp_t *app, char *title)
 	SetWindowTextW(hwndframe, wide);
 }
 
-void winconvert(pdfapp_t *app, fz_pixmap *image)
+void winconvert(fz_pixmap *image)
 {
 	int y, x;
 
@@ -401,18 +401,21 @@ void winconvert(pdfapp_t *app, fz_pixmap *image)
 	}
 }
 
-void windrawrect(pdfapp_t *app, fz_bbox rect, int color)
+void windrawrect(pdfapp_t *app, int x0, int y0, int x1, int y1)
 {
 	RECT r;
-	r.left = rect.x0;
-	r.top = rect.y0;
-	r.right = rect.x1;
-	r.bottom = rect.y1;
+	r.left = x0;
+	r.top = y0;
+	r.right = x1;
+	r.bottom = y1;
 	FillRect(hdc, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
 }
 
 void windrawstring(pdfapp_t *app, int x, int y, char *s)
 {
+	HFONT font = (HFONT)GetStockObject(ANSI_FIXED_FONT);
+	SelectObject(hdc, font);
+	TextOutA(hdc, x, y - 12, s, strlen(s));
 }
 
 void winblit()
@@ -423,7 +426,7 @@ void winblit()
 	int y1 = gapp.pany + gapp.image->h;
 	RECT r;
 
-	if (bmpdata)
+	if (gapp.image)
 	{
 		if (gapp.iscopying || justcopied)
 		{
@@ -431,22 +434,28 @@ void winblit()
 			justcopied = 1;
 		}
 
+		pdfapp_inverthit(&gapp);
+
+		winconvert(gapp.image);
+
 		dibinf->bmiHeader.biWidth = gapp.image->w;
 		dibinf->bmiHeader.biHeight = -gapp.image->h;
 		dibinf->bmiHeader.biSizeImage = gapp.image->h * bmpstride;
 		SetDIBitsToDevice(hdc,
-		gapp.panx, /* destx */
-		gapp.pany, /* desty */
-		gapp.image->w, /* destw */
-		gapp.image->h, /* desth */
-		0, /* srcx */
-		0, /* srcy */
-		0, /* startscan */
-		gapp.image->h, /* numscans */
-		bmpdata, /* pBits */
-		dibinf, /* pInfo */
-		DIB_RGB_COLORS /* color use flag */
-		);
+			gapp.panx, /* destx */
+			gapp.pany, /* desty */
+			gapp.image->w, /* destw */
+			gapp.image->h, /* desth */
+			0, /* srcx */
+			0, /* srcy */
+			0, /* startscan */
+			gapp.image->h, /* numscans */
+			bmpdata, /* pBits */
+			dibinf, /* pInfo */
+			DIB_RGB_COLORS /* color use flag */
+			);
+
+		pdfapp_inverthit(&gapp);
 
 		if (gapp.iscopying || justcopied)
 		{
@@ -478,6 +487,14 @@ void winblit()
 	r.top = y0 + 2;
 	r.bottom = y1;
 	FillRect(hdc, &r, shbrush);
+
+	if (gapp.isediting)
+	{
+		char buf[sizeof(gapp.search) + 50];
+		sprintf(buf, "Search: %s", gapp.search);
+		windrawrect(&gapp, 0, 0, gapp.winw, 30);
+		windrawstring(&gapp, 10, 20, buf);
+	}
 }
 
 void winresize(pdfapp_t *app, int w, int h)
@@ -526,15 +543,15 @@ void windocopy(pdfapp_t *app)
 
 void winreloadfile(pdfapp_t *app)
 {
-       int fd;
+	int fd;
 
-       pdfapp_close(app);
+	pdfapp_close(app);
 
-       fd = _wopen(wbuf, O_BINARY | O_RDONLY, 0666);
-       if (fd < 0)
-               winerror(&gapp, fz_throw("cannot reload file '%s'", filename));
+	fd = _wopen(wbuf, O_BINARY | O_RDONLY, 0666);
+	if (fd < 0)
+		winerror(&gapp, fz_throw("cannot reload file '%s'", filename));
 
-       pdfapp_open(app, filename, fd);
+	pdfapp_open(app, filename, fd);
 }
 
 void winopenuri(pdfapp_t *app, char *buf)
@@ -554,19 +571,23 @@ void handlekey(int c)
 	}
 
 	/* translate VK into ascii equivalents */
-	switch (c)
+	if (c > 256)
 	{
-	case VK_F1: c = '?'; break;
-	case VK_ESCAPE: c = '\033'; break;
-	case VK_DOWN: c = 'j'; break;
-	case VK_UP: c = 'k'; break;
-	case VK_LEFT: c = 'b'; break;
-	case VK_RIGHT: c = ' '; break;
-	case VK_PRIOR: c = ','; break;
-	case VK_NEXT: c = '.'; break;
+		switch (c - 256)
+		{
+		case VK_F1: c = '?'; break;
+		case VK_ESCAPE: c = '\033'; break;
+		case VK_DOWN: c = 'j'; break;
+		case VK_UP: c = 'k'; break;
+		case VK_LEFT: c = 'b'; break;
+		case VK_RIGHT: c = ' '; break;
+		case VK_PRIOR: c = ','; break;
+		case VK_NEXT: c = '.'; break;
+		}
 	}
 
 	pdfapp_onkey(&gapp, c);
+	winrepaint(&gapp);
 }
 
 void handlemouse(int x, int y, int btn, int state)
@@ -615,15 +636,15 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_SIZE:
-		{
-			// More generally, you should use GetEffectiveClientRect
-			// if you have a toolbar etc.
-				RECT rect;
-			GetClientRect(hwnd, &rect);
-			MoveWindow(hwndview, rect.left, rect.top,
-			rect.right-rect.left, rect.bottom-rect.top, TRUE);
-		}
+	{
+		// More generally, you should use GetEffectiveClientRect
+		// if you have a toolbar etc.
+		RECT rect;
+		GetClientRect(hwnd, &rect);
+		MoveWindow(hwndview, rect.left, rect.top,
+		rect.right-rect.left, rect.bottom-rect.top, TRUE);
 		return 0;
+	}
 
 	case WM_SIZING:
 		gapp.shrinkwrap = 0;
@@ -659,15 +680,15 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	 * so we don't need to do any fancy waiting to defer repainting.
 	 */
 	case WM_PAINT:
-		{
-			//puts("WM_PAINT");
-			PAINTSTRUCT ps;
-			hdc = BeginPaint(hwnd, &ps);
-			winblit();
-			hdc = NULL;
-			EndPaint(hwnd, &ps);
-			return 0;
-		}
+	{
+		//puts("WM_PAINT");
+		PAINTSTRUCT ps;
+		hdc = BeginPaint(hwnd, &ps);
+		winblit();
+		hdc = NULL;
+		EndPaint(hwnd, &ps);
+		return 0;
+	}
 
 	case WM_ERASEBKGND:
 		return 1; // well, we don't need to erase to redraw cleanly
@@ -712,9 +733,9 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEWHEEL:
 		if ((signed short)HIWORD(wParam) > 0)
-			handlekey(LOWORD(wParam) & MK_SHIFT ? '+' : 'u');
+			handlekey(LOWORD(wParam) & MK_SHIFT ? '+' : 'k');
 		else
-			handlekey(LOWORD(wParam) & MK_SHIFT ? '-' : 'd');
+			handlekey(LOWORD(wParam) & MK_SHIFT ? '-' : 'j');
 		return 0;
 
 	/* Keyboard events */
@@ -731,7 +752,7 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case VK_DOWN:
 		case VK_NEXT:
 		case VK_ESCAPE:
-			handlekey(wParam);
+			handlekey(wParam + 256);
 			handlemouse(oldx, oldy, 0, 0);	/* update cursor */
 			return 0;
 		}
@@ -739,8 +760,11 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	/* unicode encoded chars, including escape, backspace etc... */
 	case WM_CHAR:
-		handlekey(wParam);
-		handlemouse(oldx, oldy, 0, 0);	/* update cursor */
+		if (wParam < 256)
+		{
+			handlekey(wParam);
+			handlemouse(oldx, oldy, 0, 0);	/* update cursor */
+		}
 		return 0;
 	}
 
@@ -754,12 +778,10 @@ int WINAPI
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	int argc;
-	LPWSTR *argv;
+	LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	MSG msg;
 	int fd;
 	int code;
-
-	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 
 	fz_cpudetect();
 	fz_accelerate();

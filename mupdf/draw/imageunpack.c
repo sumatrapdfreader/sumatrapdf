@@ -224,7 +224,78 @@ TILE(ttwo)
 static void loadtile4(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
 TILE(tnib)
 static void loadtile8(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
-TILE(toct)
+{
+	if ((h == 0) || (w == 0))
+		return;
+
+	switch (pad)
+	{
+	case 0:
+		while (h--)
+		{
+			memcpy(dst, src, w);
+			src += sw;
+			dst += dw;
+		}
+		break;
+
+	case 1:
+		sw -= w;
+		dw -= w<<1;
+		while (h--)
+		{
+			int x;
+			for (x = w; x > 0; x --)
+			{
+				*dst++ = 255;
+				*dst++ = *src++;
+			}
+			src += sw;
+			dst += dw;
+		}
+		break;
+
+	case 3:
+		sw -= w;
+		while (h--)
+		{
+			byte *dp = dst;
+			int x;
+			for (x = w; x > 0; x -= 3)
+			{
+				*dp++ = 255;
+				*dp++ = *src++;
+				*dp++ = *src++;
+				*dp++ = *src++;
+			}
+			src += sw;
+			dst += dw;
+		}
+		break;
+
+	default:
+		sw -= w;
+		while (h--)
+		{
+			byte *dp = dst;
+			int tpad = 1;
+			int x;
+			for (x = w; x > 0; x--)
+			{
+				tpad--;
+				if (tpad == 0) {
+					tpad = pad;
+					*dp++ = 255;
+				}
+				*dp++ = *src++;
+			}
+			src += sw;
+			dst += dw;
+		}
+		break;
+	}
+}
+
 static void loadtile16(byte * restrict src, int sw, byte * restrict dst, int dw, int w, int h, int pad)
 TILE(thex)
 

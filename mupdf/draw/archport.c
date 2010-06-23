@@ -370,7 +370,7 @@ img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
 				vi = v >> 16;
 				if (vi < 0)
 				{
-				 	vi = 0;
+					vi = 0;
 					vi1 = 0;
 				}
 				else if (vi >= h)
@@ -439,7 +439,7 @@ img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
 				vi = v >> 16;
 				if (vi < 0)
 				{
-				 	vi = 0;
+					vi = 0;
 					vi1 = 0;
 				}
 				else if (vi >= h)
@@ -521,7 +521,7 @@ img_1o1_32bit(byte * restrict src, byte cov, int len, byte * restrict dst,
 			vi = v >> 16;
 			if (vi < 0)
 			{
-			 	vi = 0;
+				vi = 0;
 				vi1 = 0;
 			}
 			else if (vi >= h)

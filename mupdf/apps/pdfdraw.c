@@ -8,6 +8,8 @@
 
 #include "pdftool.h"
 
+#define MAXBANDSIZE (3 * 1024 * 1024)
+
 #ifdef _MSC_VER
 #include <winsock2.h>
 #else
@@ -154,6 +156,9 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	long end;
 	long elapsed;
 	fz_md5 digest;
+	int numbands = drawbands;
+	fz_displaylist *list = nil;
+	fz_device *dev;
 
 	if (checksum)
 		fz_md5init(&digest);
@@ -171,7 +176,13 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	bbox = fz_roundrect(fz_transformrect(ctm, drawpage->mediabox));
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
-	bh = h / drawbands;
+
+	if (w * h > MAXBANDSIZE)
+		numbands = (w * h) / MAXBANDSIZE;
+	if (numbands < 1)
+		numbands = 1;
+
+	bh = h / numbands;
 
 	if (drawpattern)
 	{
@@ -183,7 +194,7 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 				die(fz_throw("ioerror: could not create raster file '%s'", name));
 		}
 
- 		if (greyscale)
+		if (greyscale)
 		{
 			sprintf(pnmhdr, "P5\n%d %d\n255\n", w, h);
 		}
@@ -199,17 +210,34 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 
 	memset(pix->samples, 0xff, pix->h * pix->w * pix->n);
 
-	for (b = 0; b < drawbands; b++)
+	if (numbands > 1)
 	{
-		fz_device *dev;
-
-		if (drawbands > 1)
-			fprintf(stdout, "drawing band %d / %d\n", b + 1, drawbands);
-
-		dev = fz_newdrawdevice(drawcache, pix);
-		error = pdf_runcontentstream(dev, ctm, xref, drawpage->resources, drawpage->contents);
+		fprintf(stdout, "creating display list for banded rendering\n");
+		list = fz_newdisplaylist();
+		dev = fz_newlistdevice(list);
+		error = pdf_runcontentstream(dev, fz_identity(), xref, drawpage->resources, drawpage->contents);
 		if (error)
 			die(fz_rethrow(error, "cannot draw page %d in PDF file '%s'", pagenum, basename));
+		fz_freedevice(dev);
+	}
+
+	for (b = 0; b < numbands; b++)
+	{
+
+		dev = fz_newdrawdevice(drawcache, pix);
+
+		if (numbands > 1)
+		{
+			fprintf(stdout, "drawing band %d / %d\n", b + 1, numbands);
+			fz_executedisplaylist(list, dev, ctm);
+		}
+		else
+		{
+			error = pdf_runcontentstream(dev, ctm, xref, drawpage->resources, drawpage->contents);
+			if (error)
+				die(fz_rethrow(error, "cannot draw page %d in PDF file '%s'", pagenum, basename));
+		}
+
 		fz_freedevice(dev);
 
 		if (checksum)
@@ -257,6 +285,9 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 		if (pix->y + pix->h > bbox.y1)
 			pix->h = bbox.y1 - pix->y;
 	}
+
+	if (list)
+		fz_freedisplaylist(list);
 
 	fz_droppixmap(pix);
 

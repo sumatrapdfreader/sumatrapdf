@@ -88,7 +88,7 @@ ZLIB_SRC=$(addprefix $(zlib_dir)/, \
 ZLIB_OBJ=$(ZLIB_SRC:$(zlib_dir)/%.c=$(OBJDIR)/zlib_%.o)
 ZLIB_LIB=$(OBJDIR)/libz.a
 $(ZLIB_LIB): $(ZLIB_OBJ)
-	 $(AR_CMD)
+	$(AR_CMD)
 $(OBJDIR)/zlib_%.o: $(zlib_dir)/%.c
 	$(CC_CMD)
 

@@ -443,9 +443,9 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 		int v = (invmat->b * (x + 0.5f) + invmat->d * (y + 0.5f) + invmat->f) * 65536;
 		int fa = invmat->a * 65536;
 		int fb = invmat->b * 65536;
-		// assert(image->n == pix->n);
 		if (color)
 		{
+			assert(image->n == 1);
 			switch (pix->n)
 			{
 				case 2:
@@ -462,14 +462,15 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 		}
 		else if (image->colorspace)
 		{
-			assert(image->colorspace->n == image->n-1);
+			assert(image->colorspace->n == image->n - 1);
+			assert(image->n == pix->n);
 			switch (pix->n)
 			{
 				case 2:
 					fz_img_2o2(list, cov, len, dst, image, u, v, fa, fb);
 					break;
 				case 4:
-			fz_img_4o4(list, cov, len, dst, image, u, v, fa, fb);
+					fz_img_4o4(list, cov, len, dst, image, u, v, fa, fb);
 					break;
 				default:
 					assert("Write fz_img_non" != NULL);
@@ -478,7 +479,11 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 			}
 		}
 		else
+		{
+			assert(image->n == 1);
+			assert(image->n == pix->n);
 			fz_img_1o1(list, cov, len, dst, image, u, v, fa, fb);
+		}
 	}
 	else
 	{

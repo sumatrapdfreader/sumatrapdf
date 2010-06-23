@@ -103,7 +103,12 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	in->rp = in->wp - zp->avail_in;
 	out->wp = out->ep - zp->avail_out;
 
-	if (err == Z_STREAM_END || err == Z_BUF_ERROR)
+	if (err == Z_DATA_ERROR && in->eof && in->rp == in->wp)
+	{
+		fz_warn("ignoring zlib error: %s", zp->msg);
+		return fz_iodone;
+	}
+	else if (err == Z_STREAM_END || err == Z_BUF_ERROR)
 	{
 		return fz_iodone;
 	}

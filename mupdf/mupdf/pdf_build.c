@@ -558,7 +558,7 @@ pdf_showglyph(pdf_csi *csi, int cid)
 		ucsbuf[0] = fontdesc->cidtoucs[cid];
 		ucslen = 1;
 	}
-	if (ucslen == 0 || ucslen == 1 && ucsbuf[0] == 0)
+	if (ucslen == 0 || (ucslen == 1 && ucsbuf[0] == 0))
 	{
 		ucsbuf[0] = '?';
 		ucslen = 1;
