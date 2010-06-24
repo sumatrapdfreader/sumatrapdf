@@ -238,11 +238,11 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
         return false;
 
     if (pdf_needspassword(xref)) {
-        bool okay = !!pdf_authenticatepassword(xref, "");
-        if (!okay && !win)
+        if (!win)
             // win might not be given if called from pdfbench.cc
             return false;
 
+        bool okay = false;
         for (int i = 0; !okay && i < 3; i++) {
             TCHAR *pwd = GetPasswordForFile(win, fileName);
             if (!pwd)
