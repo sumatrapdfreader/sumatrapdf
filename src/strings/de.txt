@@ -68,6 +68,9 @@ Nicht &wieder fragen.
 &Print\tCtrl-P
 &Drucken…\tStrg+P
 
+&Print with %s...\tCtrl-P
+&Drucken mit %s…\tStrg+P
+
 &Print... (denied)
 &Drucken… (verweigert)
 

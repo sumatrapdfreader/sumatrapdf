@@ -366,6 +366,7 @@ Hệ số thu phóng
 [Phát hiện thay đổi; đang cập nhật] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

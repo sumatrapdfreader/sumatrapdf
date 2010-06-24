@@ -382,6 +382,7 @@ Ffactor Chwyddo
 [Newidiadau wedi eu canfod; adnewyddu]
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

@@ -442,6 +442,7 @@ Faktor pembesaran
 [Perubahan terdeteksi; muat ulang] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Denied Permissions:
 #Subject:

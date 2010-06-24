@@ -446,6 +446,7 @@ Zoomfactor
 [Bestand gewijzigd; verversen] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Denied Permissions:
 #Subject:

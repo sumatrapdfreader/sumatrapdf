@@ -390,6 +390,7 @@ Proporção de Zoom
 [Mudanças detectadas; atualizando] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

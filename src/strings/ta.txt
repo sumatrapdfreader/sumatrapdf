@@ -451,6 +451,7 @@ printing document
 கோப்பு அக்சிடப்படுகிறது
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #Cannot start inverse search command. Please check the command line in the settings.
 #Set inverse search command-line
 

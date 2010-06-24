@@ -459,3 +459,6 @@ copier le text
 printing document
 imprimer le document
 
+# Untranslated:
+#&Print with %s...\tCtrl-P
+

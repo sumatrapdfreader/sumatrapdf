@@ -355,6 +355,7 @@ Paliitin/Lumayo
 #&Custom Zoom...
 #&Magnification:
 #&Match case
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #&Remember these settings for each document
 #Advanced

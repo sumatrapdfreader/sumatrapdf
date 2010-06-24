@@ -457,3 +457,6 @@ copiado de texto
 printing document
 impresión de documento
 
+# Untranslated:
+#&Print with %s...\tCtrl-P
+

@@ -390,6 +390,7 @@ Zoom factor
 [変更が検出されました。更新しています] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

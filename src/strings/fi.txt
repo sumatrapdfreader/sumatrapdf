@@ -456,3 +456,6 @@ Kopioidaan tekstiä
 printing document
 tulostetaan asiakirjaa
 
+# Untranslated:
+#&Print with %s...\tCtrl-P
+

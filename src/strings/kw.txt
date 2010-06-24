@@ -392,6 +392,7 @@ Faktor-zoum
 [Nowythyansow kevys; owth arnowytha] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

@@ -337,6 +337,7 @@ Zoom Out
 #&Custom Zoom...
 #&Magnification:
 #&Manual
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

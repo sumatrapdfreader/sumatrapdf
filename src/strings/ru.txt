@@ -457,3 +457,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#&Print with %s...\tCtrl-P
+

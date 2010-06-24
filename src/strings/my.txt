@@ -311,6 +311,7 @@ mencetak dokumen
 #&Don't ask me again
 #&Find what:
 #&Match case
+#&Print with %s...\tCtrl-P
 #(of %d)
 #Advanced
 #Associate with PDF files?

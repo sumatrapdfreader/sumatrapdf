@@ -314,6 +314,7 @@ Zjištěna změna; obnovuji] %s
 
 # Untranslated:
 #&Manual
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #&Skip this version
 #Application:

@@ -240,6 +240,7 @@ Zoom factor
 #&No
 #&No, thanks
 #&Password:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #&Remember these settings for each document
 #&Yes

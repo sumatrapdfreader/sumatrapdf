@@ -171,6 +171,7 @@ Uzaklaştır
 #&No, thanks
 #&Options...
 #&Password:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #&Remember these settings for each document
 #&Settings

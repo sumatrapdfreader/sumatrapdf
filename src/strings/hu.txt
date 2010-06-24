@@ -427,6 +427,7 @@ Nagyítás mértéke
 [a file megváltozott; frissítés] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Cannot start inverse search command. Please check the command line in the settings.
 #Denied Permissions:

@@ -455,3 +455,6 @@ kopiram tekst
 printing document
 ispisujem dokument
 
+# Untranslated:
+#&Print with %s...\tCtrl-P
+

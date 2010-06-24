@@ -180,7 +180,6 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     COL_FWDSEARCH_BG, // int  m_fwdsearchColor
     15, // int  m_fwdsearchWidth
     FALSE, // BOOL m_invertColors
-    NULL, // TCHAR *m_printCmdLine
 };
 
 typedef struct ToolbarButtonInfo {
@@ -232,6 +231,7 @@ static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
+static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=NULL);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
@@ -756,7 +756,6 @@ static void SerializableGlobalPrefs_Deinit()
     free(gGlobalPrefs.m_versionToSkip);
     free(gGlobalPrefs.m_inverseSearchCmdLine);
     free(gGlobalPrefs.m_lastUpdateTime);
-    free(gGlobalPrefs.m_printCmdLine);
 }
 
 void LaunchBrowser(const TCHAR *url)
@@ -1870,8 +1869,13 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
     assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
         const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].m_title);
+        TCHAR printExtItem[256];
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
+        else if (CanViewWithAcrobat()) {
+            wsprintf(printExtItem, _TR("&Print with %s...\tCtrl-P"), _T("Adobe Reader"));
+            printItem = printExtItem;
+        }
         ModifyMenu(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
@@ -4103,30 +4107,18 @@ static void OnMenuPrint(WindowInfo *win)
 
     bool hasSelection = win->selectionOnPage && !win->selectionOnPage->next;
 
-    // optionally use an external printing tool (configured with -set-print-cmdline)
-    if (!hasSelection && gGlobalPrefs.m_printCmdLine && *gGlobalPrefs.m_printCmdLine) {
-        TCHAR *executable, *params;
-        // split executable path and arguments
-        TCHAR *next = _tcschr(gGlobalPrefs.m_printCmdLine + 1, *gGlobalPrefs.m_printCmdLine == '"' ? '"' : ' ');
-        executable = tstr_dupn(gGlobalPrefs.m_printCmdLine, next - gGlobalPrefs.m_printCmdLine);
-        if (*executable == '"')
-            memmove(executable, executable + 1, lstrlen(executable) * sizeof(TCHAR));
-
-        // replace "%1" with filename (or append filename if "%1" is missing)
-        TCHAR *arg = _tcsstr(++next, _T("%1"));
-        if (arg) {
-            TCHAR *arg1 = tstr_dupn(next, arg - next);
-            params = tstr_printf(_T("%s \"%s\" %s"), arg1, win->loadedFilePath, arg + 2);
-            free(arg1);
+    // use an external printing tool until our printing engine improves
+    if (!hasSelection && CanViewWithAcrobat(win)) {
+        TCHAR acrobatPath[MAX_PATH];
+        if (GetAcrobatPath(acrobatPath, dimof(acrobatPath))) {
+            // Command line format:
+            //   /P <filename>
+            // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
+            TCHAR *params = tstr_printf(_T("/P \"%s\""), win->loadedFilePath);
+            exec_with_params(acrobatPath, params, FALSE);
+            free(params);
+            return;
         }
-        else
-            params = tstr_printf(_T("%s \"%s\""), next, win->loadedFilePath);
-
-        // run the external printing application
-        exec_with_params(executable, params, FALSE);
-        free(executable);
-        free(params);
-        return;
     }
 
     /* printing uses the WindowInfo win that is created for the
@@ -4417,7 +4409,7 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
         win->dm->scrollXTo(si.nPos);
 }
 
-static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=NULL)
+static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
 {
     TCHAR path[MAX_PATH];
 
@@ -4472,12 +4464,10 @@ static void ViewWithAcrobat(WindowInfo *win)
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
     // TODO: Also set zoom factor and scroll to current position?
-    if (!win->dm)
-        params = tstr_printf(_T("\"%s\""), win->loadedFilePath);
-    else if (HIWORD(GetFileVersion(acrobatPath)) >= 6)
+    if (win->dm && HIWORD(GetFileVersion(acrobatPath)) >= 6)
         params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
     else
-        params = tstr_printf(_T("\"%s\""), win->dm->fileName());
+        params = tstr_printf(_T("\"%s\""), win->loadedFilePath);
     exec_with_params(acrobatPath, params, FALSE);
     free(params);
 }
@@ -7647,14 +7637,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             currArg = currArg->next;
             free(gGlobalPrefs.m_inverseSearchCmdLine);
             gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(currArg->str);
-        }
-        else if (is_arg("-set-print-cmdline")) {
-            free(gGlobalPrefs.m_printCmdLine);
-            gGlobalPrefs.m_printCmdLine = (TCHAR *)calloc(MAX_PATH * 5, sizeof(TCHAR));
-            while ((currArg = currArg->next))
-                wsprintf(gGlobalPrefs.m_printCmdLine + lstrlen(gGlobalPrefs.m_printCmdLine),
-                    _tcschr(currArg->str, ' ') ? _T("\"%s\" ") : _T("%s "), currArg->str);
-            Prefs_Save();
         }
         else if (is_arg("-fwdsearch-offset") && currArg->next) {
             currArg = currArg->next;

@@ -376,6 +376,7 @@ Faktor uvećanja
 [Promene su primećene; osvežavam] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:

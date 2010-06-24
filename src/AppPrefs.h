@@ -64,7 +64,6 @@ typedef struct {
     int  m_fwdsearchWidth;  /* width of the coloured blocks for the margin style */
 
     BOOL m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
-    TCHAR *m_printCmdLine; /* command line to be called for printing from the menu item (experimental!) */
 } SerializableGlobalPrefs;
 
 extern SerializableGlobalPrefs gGlobalPrefs;

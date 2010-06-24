@@ -381,6 +381,7 @@ Zoom factor
 [Намерени са промени; обновявам] %s
 
 # Untranslated:
+#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
