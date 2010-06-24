@@ -688,22 +688,22 @@ loadsimilarcjkfont(pdf_fontdesc *font, int ros, int kind)
 	case MINCHO:
 		switch (ros)
 		{
-		case CNS: return pdf_loadsystemfont(font, "MingLiU", nil);
-		case GB: return pdf_loadsystemfont(font, "SimSun", nil);
-		case Japan: return pdf_loadsystemfont(font, "MS-Mincho", nil);
-		case Korea: return pdf_loadsystemfont(font, "Batang", nil);
+		case CNS: return loadwindowsfont(font, "MingLiU");
+		case GB: return loadwindowsfont(font, "SimSun");
+		case Japan: return loadwindowsfont(font, "MS-Mincho");
+		case Korea: return loadwindowsfont(font, "Batang");
 		}
 		break;
 	case GOTHIC:
 		switch (ros)
 		{
-		case CNS: return pdf_loadsystemfont(font, "DFKaiShu-SB-Estd-BF", nil);
+		case CNS: return loadwindowsfont(font, "DFKaiShu-SB-Estd-BF");
 		case GB:
-			if (fz_okay == pdf_loadsystemfont(font, "KaiTi", nil))
+			if (fz_okay == loadwindowsfont(font, "KaiTi"))
 				return fz_okay;
-			return pdf_loadsystemfont(font, "KaiTi_GB2312", nil);
-		case Japan: return pdf_loadsystemfont(font, "MS-Gothic", nil);
-		case Korea: return pdf_loadsystemfont(font, "Gulim", nil);
+			return loadwindowsfont(font, "KaiTi_GB2312");
+		case Japan: return loadwindowsfont(font, "MS-Gothic");
+		case Korea: return loadwindowsfont(font, "Gulim");
 		}
 		break;
 	default:
@@ -819,7 +819,8 @@ loadsystemcidfont(pdf_fontdesc *fontdesc, int ros, int kind)
 	fontdesc->font->ftsubstitute = 1; /* substitute font */
 	return fz_okay;
 #else
-	return fz_throw("no builtin CJK font file");
+	fz_warn("no builtin CJK font file");
+	return pdf_loadsystemfont(fontdesc, "", nil);
 #endif
 }
 
