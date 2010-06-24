@@ -223,7 +223,7 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 
 	for (b = 0; b < numbands; b++)
 	{
-
+		fz_clearpixmap(pix, 0xFF);
 		dev = fz_newdrawdevice(drawcache, pix);
 
 		if (numbands > 1)
