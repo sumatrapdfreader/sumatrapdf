@@ -313,6 +313,8 @@ skip:
 
 		case PDF_TINT:
 			a = atoi(buf);
+			if (a == INT_MAX) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=972 */
+				a = (unsigned int)_atoi64(buf);
 			error = pdf_lex(&tok, file, buf, cap, &len);
 			if (error)
 			{
