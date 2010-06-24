@@ -1069,7 +1069,8 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	if (error)
 		return fz_rethrow(error, "cannot load font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 
-	if ((*fontdescp)->font->ftsubstitute)
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=958 */
+	if ((*fontdescp)->font->ftsubstitute && !(subtype && !strcmp(subtype, "Type0")))
 		pdf_makewidthtable(*fontdescp);
 
 	pdf_storeitem(xref->store, PDF_KFONT, dict, *fontdescp);
