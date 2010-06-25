@@ -84,12 +84,11 @@ FITZ_CFLAGS = $(CFLAGS) /TC \
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
-	/I$(FITZ_DIR)/apps \
+	/I$(FITZ_DIR)/apps /I$(FITZ_DIR)/gdidraw \
 	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
-LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib \
-	shell32.lib
+LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG
@@ -140,7 +139,7 @@ OPENJPEG_OBJS = \
 FITZ_DRAW_OBJS = \
 	$(O)\archport.obj $(O)\archx86.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\pathfill.obj \
 	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
-	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj
+	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\dev_gdi.obj
 
 FITZ_OBJS = \
 	$(O)\base_memory.obj $(O)\base_error.obj $(O)\base_hash.obj $(O)\base_matrix.obj \
@@ -217,6 +216,11 @@ PDFDRAW_APP = $(O)\pdfdraw.exe
 PDFDRAW_PDB = $(O)\pdfdraw.pdb
 PDFDRAW_MAP = $(O)\pdfdraw.map
 
+PDFGDRAW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfgdraw.obj
+PDFGDRAW_APP = $(O)\pdfgdraw.exe
+PDFGDRAW_PDB = $(O)\pdfgdraw.pdb
+PDFGDRAW_MAP = $(O)\pdfgdraw.map
+
 PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
 PDFSHOW_PDB = $(O)\pdfshow.pdb
@@ -247,7 +251,7 @@ FONTDUMP_APP = $(O)\fontdump.exe
 FONTDUMP_PDB = $(O)\fontdump.pdb
 FONTDUMP_MAP = $(O)\fontdump.map
 
-all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
+all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFGDRAW_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -494,6 +498,12 @@ $(PDFDRAW_APP): $(PDFDRAW_OBJS)
 	/MAP:$(PDFDRAW_MAP) \
 	/SUBSYSTEM:CONSOLE
 
+$(PDFGDRAW_APP): $(PDFGDRAW_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(PDFGDRAW_APP) /PDB:$(PDFGDRAW_PDB) \
+	$(PDFGDRAW_OBJS) $(LIBS) \
+	/MAP:$(PDFGDRAW_MAP) \
+	/SUBSYSTEM:CONSOLE
+
 $(PDFSHOW_APP): $(PDFSHOW_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFSHOW_APP) /PDB:$(PDFSHOW_PDB) \
 	$(PDFSHOW_OBJS) $(LIBS) \
@@ -629,6 +639,9 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\cmaps\}.c{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FITZ_DIR)\gdidraw\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # files generated during build process (fonts and cmaps)
