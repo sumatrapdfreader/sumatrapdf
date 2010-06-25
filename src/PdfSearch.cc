@@ -1,10 +1,13 @@
 #include "PdfSearch.h"
 #include <shlwapi.h>
 
+#define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
+
 PdfSearch::PdfSearch(PdfEngine *engine)
 {
     tracker = NULL;
     text = NULL;
+    anchor = NULL;
     pageText = NULL;
     coords = NULL;
     sensitive = false;
@@ -35,7 +38,16 @@ void PdfSearch::SetText(TCHAR *text)
 {
     this->Clear();
     this->text = tstr_dup(text);
-    this->length = lstrlen(text);
+
+    // extract anchor string (the first word or the first symbol) for faster searching
+    TCHAR *c = this->text, *end;
+    SkipWhitespace(c);
+    if (_istalnum(*c)) {
+        for (end = c; _istalnum(*end); end++);
+        this->anchor = tstr_dupn(c, end - c);
+    }
+    else
+        this->anchor = tstr_dupn(c, 1);
 }
 
 void PdfSearch::SetDirection(bool forward)
@@ -43,10 +55,10 @@ void PdfSearch::SetDirection(bool forward)
     if (forward == this->forward)
         return;
     this->forward = forward;
-    findIndex += length * (forward ? 1 : -1);
+    findIndex += lstrlen(text) * (forward ? 1 : -1);
 }
 
-void PdfSearch::FillResultRects(TCHAR *found)
+void PdfSearch::FillResultRects(TCHAR *found, int length)
 {
     fz_bbox *c = &coords[found - pageText], *end = c + length;
     for (; c < end; c++) {
@@ -72,6 +84,30 @@ void PdfSearch::FillResultRects(TCHAR *found)
     }
 }
 
+// try to match "text" from "start" with whitespace tolerance
+// (ignore all whitespace except after alphanumeric characters)
+int PdfSearch::MatchLen(TCHAR *start)
+{
+    TCHAR *match = text, *end = start;
+    SkipWhitespace(match);
+    assert(!_istspace(*end));
+
+    while (*match) {
+        if (!*end)
+            return 0;
+        if (sensitive ? *match != *end : _totlower(*match) != _totlower(*end))
+            return 0;
+        match++;
+        end++;
+        if (!_istalnum(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
+            SkipWhitespace(match);
+            SkipWhitespace(end);
+        }
+    }
+
+    return end - start;
+}
+
 // TODO: use Boyer-Moore algorithm here (if it proves to be faster)
 bool PdfSearch::FindTextInPage(int pageNo)
 {
@@ -85,28 +121,28 @@ bool PdfSearch::FindTextInPage(int pageNo)
     result.rects = NULL;
     result.page = pageNo;
 
-    TCHAR *found = NULL;
-    if (forward)
-        found = (sensitive ? StrStr : StrStrI)(pageText + findIndex, text);
-    else
-        do { // unfortunately, there's no StrRStr...
-            found = StrRStrI(pageText, pageText + findIndex, text);
-            findIndex = found - pageText;
-        } while (found && sensitive && StrCmpN(text, found, length) != 0);
-
-    if (found) {
-        findIndex = found - pageText;
-        FillResultRects(found);
+    TCHAR *found;
+    int length;
+    do {
         if (forward)
-            findIndex += length;
-    }
+            found = (sensitive ? StrStr : StrStrI)(pageText + findIndex, anchor);
+        else
+            found = StrRStrI(pageText, pageText + findIndex, anchor);
+        if (!found)
+            return false;
+        findIndex = found - pageText + (forward ? 1 : 0);
+        length = MatchLen(found);
+    } while (!length);
 
-    return found != NULL;
+    FillResultRects(found, length);
+    findIndex = found - pageText + (forward ? length : 0);
+
+    return true;
 }
 
 bool PdfSearch::FindStartingAtPage(int pageNo)
 {
-    if (!text)
+    if (!text || !anchor || !*anchor)
         return false;
 
     int total = engine->pageCount();

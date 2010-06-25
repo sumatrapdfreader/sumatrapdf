@@ -30,7 +30,7 @@ SumatraPDF: $(O) $(SUMATRA_APP)
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
-!INCLUDE mupdf\makefile.msvc
+!INCLUDE $(FITZ_DIR)\makefile.msvc
 
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 

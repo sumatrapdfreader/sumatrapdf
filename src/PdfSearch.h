@@ -23,27 +23,6 @@ public:
 
 class PdfSearch
 {
-protected:
-    TCHAR *text;
-    int   length;
-    bool  forward;
-    bool  sensitive;
-
-public:
-    PdfSearchResult result;
-    PdfSearchTracker *tracker;
-
-private:
-    PdfEngine *engine;
-    TCHAR *pageText;
-    int findIndex;
-    fz_bbox *coords;
-
-protected:
-    void PdfSearch::FillResultRects(TCHAR *found);
-    bool FindTextInPage(int pageNo = 0);
-    bool FindStartingAtPage(int pageNo);
-
 public:
     PdfSearch(PdfEngine *engine);
     ~PdfSearch();
@@ -55,11 +34,26 @@ public:
     bool FindFirst(int page, TCHAR *text);
     bool FindNext();
 
+    PdfSearchResult result;
+    PdfSearchTracker *tracker;
+
 protected:
+    TCHAR *text;
+    TCHAR *anchor;
+    bool  forward;
+    bool  sensitive;
+
+    void FillResultRects(TCHAR *found, int length);
+    bool FindTextInPage(int pageNo = 0);
+    bool FindStartingAtPage(int pageNo);
+    int MatchLen(TCHAR *start);
+
     void Clear()
     {
         free(text);
         text = NULL;
+        free(anchor);
+        anchor = NULL;
         Reset();
     }
     
@@ -68,14 +62,14 @@ protected:
     {
         if (!tracker)
             return true;
-
-        int count;
-        if (forward)
-            count = pageNo;
-        else
-            count = total - pageNo + 1;
-        return tracker->FindUpdateStatus(count, total);
+        return tracker->FindUpdateStatus(pageNo, total);
     }
+
+private:
+    PdfEngine *engine;
+    TCHAR *pageText;
+    int findIndex;
+    fz_bbox *coords;
 };
 
 #endif // _PDF_SEARCH_H
