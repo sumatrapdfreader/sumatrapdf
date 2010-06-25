@@ -368,7 +368,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 	int multi;
 	int i, err;
 
- 	if (text->len == 0)
+	if (text->len == 0)
 		return;
 
 	if (font->ftface)
@@ -396,7 +396,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 	tm.e = 0;
 	tm.f = 0;
 	trm = fz_concat(tm, ctm);
- 	dir = fz_transformvector(trm, dir);
+	dir = fz_transformvector(trm, dir);
 	dist = sqrtf(dir.x * dir.x + dir.y * dir.y);
 	ndir.x = dir.x / dist;
 	ndir.y = dir.y / dist;
@@ -441,7 +441,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			}
 			else if (fabsf(dot) > 0.95f && dist > size * SPACEDIST)
 			{
-				if ((*last)->len != 0 && (*last)->text[(*last)->len - 1].c != ' ')
+				if ((*last)->len > 0 && (*last)->text[(*last)->len - 1].c != ' ')
 				{
 					fz_rect spacerect;
 					spacerect.x0 = -0.2f;

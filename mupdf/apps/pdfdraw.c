@@ -206,9 +206,6 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	}
 
 	pix = fz_newpixmap((greyscale ? pdf_devicegray : pdf_devicergb), bbox.x0, bbox.y0, w, bh);
-	fz_clearpixmap(pix, 0xFF);
-
-	memset(pix->samples, 0xff, pix->h * pix->w * pix->n);
 
 	if (numbands > 1)
 	{
@@ -224,6 +221,7 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	for (b = 0; b < numbands; b++)
 	{
 		fz_clearpixmap(pix, 0xFF);
+
 		dev = fz_newdrawdevice(drawcache, pix);
 
 		if (numbands > 1)
