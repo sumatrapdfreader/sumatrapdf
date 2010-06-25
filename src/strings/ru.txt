@@ -67,6 +67,9 @@ Contributor: Victor Kozyakin
 &Print\tCtrl-P
 Печать\tCtrl-P
 
+&Print with %s...\tCtrl-P
+Печатать с помощью %s...\tCtrl-P
+
 &Print... (denied)
 Печать... (отмена)
 
@@ -456,7 +459,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#&Print with %s...\tCtrl-P
 
