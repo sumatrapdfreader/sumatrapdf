@@ -2,6 +2,7 @@
 #include <shlwapi.h>
 
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
+#define isasciialnum(c) ('a' <= (c) && (c) <= 'z' || 'A' <= (c) && (c) <= 'Z' || '0' <= (c) && (c) <= '9')
 
 PdfSearch::PdfSearch(PdfEngine *engine)
 {
@@ -42,8 +43,8 @@ void PdfSearch::SetText(TCHAR *text)
     // extract anchor string (the first word or the first symbol) for faster searching
     TCHAR *c = this->text, *end;
     SkipWhitespace(c);
-    if (_istalnum(*c)) {
-        for (end = c; _istalnum(*end); end++);
+    if (isasciialnum(*c)) {
+        for (end = c; isasciialnum(*end); end++);
         this->anchor = tstr_dupn(c, end - c);
     }
     else
@@ -99,7 +100,7 @@ int PdfSearch::MatchLen(TCHAR *start)
             return 0;
         match++;
         end++;
-        if (!_istalnum(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
+        if (!isasciialnum(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }
