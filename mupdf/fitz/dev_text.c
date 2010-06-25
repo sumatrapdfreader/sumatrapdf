@@ -314,14 +314,14 @@ fixuptextspan(fz_textspan *span)
 			case 0x00B4: /* ´ */
 			case 0x0060: /* ` */
 			case 0x005E: /* ^ */
-				if (i + 1 == span->len && span->next && span->next->len > 0)
+				if (span->next && span->next->len > 0 && (i + 1 == span->len || i + 2 == span->len && span->text[i + 1].c == 32))
 				{
 					mergetwospans(span);
 				}
 				if (i + 1 < span->len)
 				{
 					int newC = 0;
-					if (span->text[i + 1].c != 32 || i + 2 < span->len)
+					if (span->text[i + 1].c != 32 || i + 2 >= span->len)
 						newC = ornatecharacter(span->text[i].c, span->text[i + 1].c);
 					else if ((newC = ornatecharacter(span->text[i].c, span->text[i + 2].c)))
 						deletecharacter(span, i + 1);
