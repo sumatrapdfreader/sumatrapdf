@@ -65,6 +65,12 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Print\tCtrl-P
 &Տպել\tCtrl-P
 
+&Print with %s...\tCtrl-P
+&Տպել %s-ի հետ...\tCtrl-P
+
+&Print... (denied)
+&Տպել... (մերժված)
+
 &Remember these settings for each document
 Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
 
@@ -175,6 +181,9 @@ Default &Layout:
 
 Default &Zoom:
 Մեծությունը &Լռելայն
+
+Denied Permissions:
+Լիազորությունները մերժված են.
 
 Document Properties
 Փաստաթղթի հատկությունները
@@ -392,6 +401,9 @@ Single page
 Source file %s has no synchronization point
 %s ֆայլը չունի սինխրոնիզացման կետ
 
+Subject:
+Ֆայլը.
+
 SumatraPDF Options
 Ընտրանքներ
 
@@ -440,11 +452,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+տեքստը պատճենվում է
+
+printing document
+փաստաթուղթը տպվում է
 
