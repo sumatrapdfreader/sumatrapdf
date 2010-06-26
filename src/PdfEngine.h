@@ -6,6 +6,7 @@
 extern "C" {
 #include <fitz.h>
 #include <mupdf.h>
+#include <gdidraw.h>
 }
 
 #include "base_util.h"
@@ -82,18 +83,26 @@ private:
 
 class RenderedBitmap {
 public:
-    RenderedBitmap(fz_pixmap *);
-    ~RenderedBitmap();
+    RenderedBitmap(fz_pixmap *pixmap) { _pixmap = pixmap; }
+    ~RenderedBitmap() { fz_droppixmap(_pixmap); }
 
-    int dx() { return _bitmap->w; }
-    int dy() { return _bitmap->h; }
-    int rowSize();
-    unsigned char *data();
+    int dx() const { return _pixmap->w; }
+    int dy() const { return _pixmap->h; }
 
-    HBITMAP createDIBitmap(HDC);
-    void stretchDIBits(HDC, int, int, int, int);
+    HBITMAP createDIBitmap(HDC hdc) { return fz_pixtobitmap(hdc, _pixmap, FALSE); }
+    void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
+        fz_rect dest = { leftMargin, topMargin, leftMargin + pageDx, topMargin + pageDy };
+        fz_pixmaptodc(hdc, _pixmap, &dest);
+    }
+    void invertColors() {
+        unsigned char *bmpData = _pixmap->samples;
+        int dataLen = dx() * dy() * _pixmap->n;
+        for (int i = 0; i < dataLen; i++)
+            bmpData[i] = 255 - bmpData[i];
+    }
+
 protected:
-    fz_pixmap *_bitmap;
+    fz_pixmap *_pixmap;
 };
 
 class PdfEngine {

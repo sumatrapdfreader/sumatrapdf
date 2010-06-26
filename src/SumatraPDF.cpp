@@ -4017,6 +4017,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
             RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
             if (bmp) {
+                // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
                     (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
                 delete bmp;
@@ -7188,8 +7189,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
             continue;
         }
         if (bmp && gGlobalPrefs.m_invertColors)
-            for (int i = 0; i < bmp->dx() * bmp->dy() * 3; i++)
-                bmp->data()[i] = 255 - bmp->data()[i];
+            bmp->invertColors();
         if (bmp)
             DBG_OUT("PageRenderThread(): finished rendering %d\n", req.pageNo);
         else

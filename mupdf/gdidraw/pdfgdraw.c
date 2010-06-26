@@ -4,6 +4,7 @@
  *   Benchmark rendering speed.
  */
 
+#include <windows.h>
 #include <pdftool.h>
 #include "gdidraw.h"
 
@@ -160,7 +161,7 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 
 	hDCMain = GetDC(NULL);
 	hDC = CreateCompatibleDC(hDCMain);
-	hbmp = CreateCompatibleBitmap(hDC, w, h);
+	hbmp = CreateCompatibleBitmap(hDCMain, w, h);
 	DeleteObject(SelectObject(hDC, hbmp));
 	
 	SetRect(&rc, 0, 0, w, h);
@@ -188,7 +189,7 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	fz_freedevice(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-	bmi.bmiHeader.biHeight = -h;
+	bmi.bmiHeader.biHeight = h;
 	bmi.bmiHeader.biWidth = w;
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 24;

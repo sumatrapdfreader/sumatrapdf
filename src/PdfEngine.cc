@@ -1,5 +1,6 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv3 */
+#include <windows.h>
 #include "PdfEngine.h"
 
 // in SumatraPDF.cpp
@@ -35,127 +36,6 @@ pdf_loadpageinfo(pdf_page *page, pdf_xref *xref, fz_obj *dict)
 	page->rotate = fz_toint(fz_dictgets(dict, "Rotate"));
 
 	return fz_okay;
-}
-
-static HBITMAP createDIBitmapCommon(RenderedBitmap *bmp, HDC hdc)
-{
-    int bmpDx = bmp->dx();
-    int bmpDy = bmp->dy();
-    int bmpRowSize = bmp->rowSize();
-
-    BITMAPINFOHEADER bmih;
-    bmih.biSize = sizeof(bmih);
-    bmih.biHeight = -bmpDy;
-    bmih.biWidth = bmpDx;
-    bmih.biPlanes = 1;
-    bmih.biBitCount = 24;
-    bmih.biCompression = BI_RGB;
-    bmih.biSizeImage = bmpDy * bmpRowSize;;
-    bmih.biXPelsPerMeter = bmih.biYPelsPerMeter = 0;
-    bmih.biClrUsed = bmih.biClrImportant = 0;
-
-    unsigned char* bmpData = bmp->data();
-    HBITMAP hbmp = ::CreateDIBitmap(hdc, &bmih, CBM_INIT, bmpData, (BITMAPINFO *)&bmih , DIB_RGB_COLORS);
-    return hbmp;
-}
-
-static void stretchDIBitsCommon(RenderedBitmap *bmp, HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy)
-{
-    // Try to extract a 256 color palette so that we can print 8-bit images instead of 24-bit ones.
-    // This should speed up printing for most monochrome documents by saving spool resources.
-    int bmpDx = bmp->dx();
-    int bmpDy = bmp->dy();
-    int bmpRowSize24 = bmp->rowSize();
-    int bmpRowSize8 = ((bmpDx + 3) / 4) * 4;
-
-    BITMAPINFO *bmi = (BITMAPINFO *)malloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    memset(bmi, 0, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    unsigned char *bmpData24 = bmp->data();
-    unsigned char *bmpData8 = (unsigned char *)malloc(bmpRowSize8 * bmpDy);
-    int paletteSize = 0;
-
-    bool hasPalette = false;
-    for (int j = 0; j < bmpDy; j++) {
-        for (int i = 0; i < bmpDx; i++) {
-            RGBQUAD c = { 0 };
-            int k;
-
-            c.rgbRed = bmpData24[j * bmpRowSize24 + i * 3 + 2];
-            c.rgbGreen = bmpData24[j * bmpRowSize24 + i * 3 + 1];
-            c.rgbBlue = bmpData24[j * bmpRowSize24 + i * 3];
-
-            // find this color in the palette
-            for (k = 0; k < paletteSize; k++)
-                if (*(int32_t *)&bmi->bmiColors[k] == *(int32_t *)&c)
-                    break;
-            // add it to the palette if it isn't in there and if there's still space left
-            if (k == paletteSize) {
-                if (k >= 256)
-                    goto ProducingPaletteDone;
-                *(int32_t *)&bmi->bmiColors[paletteSize] = *(int32_t *)&c;
-                paletteSize++;
-            }
-            // 8-bit data consists of indices into the color palette
-            bmpData8[j * bmpRowSize8 + i] = k;
-        }
-    }
-    // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
-    hasPalette = paletteSize <= 256;
-
-ProducingPaletteDone:
-    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = bmpDx;
-    bmi->bmiHeader.biHeight = -bmpDy;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    bmi->bmiHeader.biBitCount = hasPalette ? 8 : 24;
-    bmi->bmiHeader.biSizeImage = bmpDy * (hasPalette ? bmpRowSize8 : bmpRowSize24);
-    bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
-
-    ::StretchDIBits(hdc,
-        // destination rectangle
-        leftMargin, topMargin, pageDx, pageDy,
-        // source rectangle
-        0, 0, bmpDx, bmpDy,
-        hasPalette ? bmpData8 : bmpData24, bmi,
-        DIB_RGB_COLORS,
-        SRCCOPY);
-
-    free(bmpData8);
-    free(bmi);
-}
-
-RenderedBitmap::RenderedBitmap(fz_pixmap *bitmap)
-{
-    _bitmap = bitmap;
-}
-
-RenderedBitmap::~RenderedBitmap()
-{
-    if (_bitmap)
-        fz_droppixmap(_bitmap);
-}
-
-int RenderedBitmap::rowSize()
-{
-    int rowSize = ((_bitmap->w * 3 + 3) / 4) * 4;
-    return rowSize;
-}
-
-unsigned char *RenderedBitmap::data()
-{
-    unsigned char* bmpData = _bitmap->samples;
-    return bmpData;
-}
-
-HBITMAP RenderedBitmap::createDIBitmap(HDC hdc)
-{
-    return createDIBitmapCommon(this, hdc);
-}
-
-void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy)
-{
-    stretchDIBitsCommon(this, hdc, leftMargin, topMargin, pageDx, pageDy);
 }
 
 fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
