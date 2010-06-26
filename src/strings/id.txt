@@ -8,6 +8,7 @@ Lang: id Indonesian (Bahasa Indonesia)
 
 Contributor: Yudi Wibisono (http://yudiwbs.wordpress.com)
 Contributor: Ricki Yani Setiawan
+Contributor: Tri R.A. Wibowo
 
 &About
 &Tentang
@@ -65,6 +66,12 @@ Ban&tuan
 
 &Print\tCtrl-P
 &Cetak\tCtrl-P
+
+&Print with %s...\tCtrl-P
+&Cetak dengan %s...\tCtrl-P
+
+&Print... (denied)
+&Cetak... (ditolak)
 
 &Remember these settings for each document
 &Ingat pengaturan ini untuk tiap dokumen
@@ -176,6 +183,9 @@ Tampilan &Standar
 
 Default &Zoom:
 Pembesaran &Standar
+
+Denied Permissions:
+Izin yang ditolak:
 
 Document Properties
 Properti Dokumen
@@ -393,6 +403,9 @@ Satu Halaman
 Source file %s has no synchronization point
 Berkas asal %s tidak mempunyai titik sinkronisasi
 
+Subject:
+Perihal:
+
 SumatraPDF Options
 Pilihan-pilihan di SumatraPDF
 
@@ -441,11 +454,9 @@ Faktor pembesaran
 [Changes detected; refreshing] %s
 [Perubahan terdeteksi; muat ulang] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+menyalin teks
+
+printing document
+mencetak dokumen
 
