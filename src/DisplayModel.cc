@@ -49,6 +49,7 @@
 #include "strlist_util.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 
 #ifdef _WIN32
