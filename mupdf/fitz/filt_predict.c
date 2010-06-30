@@ -165,8 +165,8 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 		}
 		for (i = p->stride - bpp; i > 0; i--)
 		{
-			 *out = *in++ + out[-bpp];
-			 out++;
+			*out = *in++ + out[-bpp];
+			out++;
 		}
 		break;
 	case 2:
@@ -176,7 +176,7 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 		}
 		for (i = p->stride - bpp; i > 0; i--)
 		{
-			 *out++ = *in++ + *ref++;
+			*out++ = *in++ + *ref++;
 		}
 		break;
 	case 3:
@@ -186,8 +186,8 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 		}
 		for (i = p->stride - bpp; i > 0; i--)
 		{
-			 *out = *in++ + (out[-bpp] + *ref++)/2;
-			 out++;
+			*out = *in++ + (out[-bpp] + *ref++)/2;
+			out++;
 		}
 		break;
 	case 4:

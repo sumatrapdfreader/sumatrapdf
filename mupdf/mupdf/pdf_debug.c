@@ -3,8 +3,8 @@
 
 /*
  * Enable logging by setting environment variable MULOG to:
- *   (a)ll or a combination of
- *   (x)ref (r)src (f)ont (i)mage (s)hade (p)age
+ *	(a)ll or a combination of
+ *	(x)ref (r)src (f)ont (i)mage (s)hade (p)age
  *
  * eg. MULOG=fis ./x11pdf mytestfile.pdf
  */
@@ -59,7 +59,7 @@ static inline void pdflog(int tag, char *name, char *fmt, va_list ap)
 	{
 		printf("%s: ", name);
 		for (i = 0; i < level; i++)
-			printf("  ");
+			printf("\t");
 	}
 
 	vprintf(fmt, ap);

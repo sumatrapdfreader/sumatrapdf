@@ -5,8 +5,8 @@
 
 extern "C" {
 #include <fitz.h>
+#include <fitz_gdidraw.h>
 #include <mupdf.h>
-#include <gdidraw.h>
 }
 
 #include "base_util.h"
@@ -83,7 +83,7 @@ private:
 
 class RenderedBitmap {
 public:
-    RenderedBitmap(fz_pixmap *pixmap) { _pixmap = pixmap; }
+    RenderedBitmap(fz_pixmap *pixmap) { _pixmap = fz_keeppixmap(pixmap); }
     ~RenderedBitmap() { fz_droppixmap(_pixmap); }
 
     int dx() const { return _pixmap->w; }

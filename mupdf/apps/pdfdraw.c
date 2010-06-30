@@ -1,9 +1,9 @@
 /*
  * pdfdraw:
- *   Draw pages to PPM bitmaps.
- *   Dump parsed display list as XML.
- *   Dump text content as UTF-8.
- *   Benchmark rendering speed.
+ *	Draw pages to PPM bitmaps.
+ *	Dump parsed display list as XML.
+ *	Dump text content as UTF-8.
+ *	Benchmark rendering speed.
  */
 
 #include "pdftool.h"
@@ -57,16 +57,16 @@ static void drawusage(void)
 {
 	fprintf(stderr,
 		"usage: pdfdraw [options] [file.pdf pages ... ]\n"
-		"  -p -\tpassword for decryption\n"
-		"  -o -\tpattern (%%d for page number) for output file\n"
-		"  -r -\tresolution in dpi\n"
-		"  -m\tprint benchmark results\n"
-		"  -g\toutput a pgm rather than a pnm\n"
-		"  -s\tprint MD5 checksum of page pixel data\n"
-		"  -t\ttext extraction mode\n"
-		"  -x\txml trace mode\n"
-		"  example:\n"
-		"    pdfdraw -o output%%03d.pnm input.pdf 1-3,5,9-\n");
+		"\t-p -\tpassword for decryption\n"
+		"\t-o -\tpattern (%%d for page number) for output file\n"
+		"\t-r -\tresolution in dpi\n"
+		"\t-m\tprint benchmark results\n"
+		"\t-g\toutput a pgm rather than a pnm\n"
+		"\t-s\tprint MD5 checksum of page pixel data\n"
+		"\t-t\ttext extraction mode\n"
+		"\t-x\txml trace mode\n"
+		"example:\n"
+		"\tpdfdraw -o output%%03d.pnm input.pdf 1-3,5,9-\n");
 	exit(1);
 }
 
@@ -251,8 +251,8 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 
 					for (x = pix->w; x > 0; x--)
 					{
-						src++;
 						*dst++ = *src++;
+						src++;
 					}
 					dst -= pix->w;
 
@@ -267,10 +267,10 @@ static void drawpnm(int pagenum, struct benchmark *loadtimes, struct benchmark *
 
 					for (x = pix->w; x > 0; x--)
 					{
+						*dst++ = *src++;
+						*dst++ = *src++;
+						*dst++ = *src++;
 						src++;
-						*dst++ = *src++;
-						*dst++ = *src++;
-						*dst++ = *src++;
 					}
 					dst -= pix->w * 3;
 

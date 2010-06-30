@@ -53,7 +53,7 @@ static void mmx(void)
 static void m3dnow(void)
 { __asm__ ("pavgusb %mm0, %mm0\n\t"); }
 
-static void mmxext(void) /* aka  Extended 3DNow! */
+static void mmxext(void) /* aka Extended 3DNow! */
 { __asm__ ("pmaxsw %mm0, %mm0\n\t"); }
 
 static void sse(void)
@@ -73,7 +73,7 @@ static void mmx(void)
 static void m3dnow(void)
 { __asm pavgusb mm0, mm0; }
 
-static void mmxext(void) /* aka  Extended 3DNow! */
+static void mmxext(void) /* aka Extended 3DNow! */
 { __asm pmaxsw mm0, mm0; }
 
 static void sse(void)

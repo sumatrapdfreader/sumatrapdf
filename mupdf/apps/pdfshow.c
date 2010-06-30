@@ -11,9 +11,9 @@ static int showcolumn;
 static void showusage(void)
 {
 	fprintf(stderr, "usage: pdfshow [-bc] [-p password] <file> [xref] [trailer] [object numbers]\n");
-	fprintf(stderr, "  -b  \tprint streams as binary data (don't pretty-print)\n");
-	fprintf(stderr, "  -c  \tprint compressed streams (don't decompress)\n");
-	fprintf(stderr, "  -p  \tpassword for encrypted files\n");
+	fprintf(stderr, "\t-b\tprint streams as binary data (don't pretty-print)\n");
+	fprintf(stderr, "\t-c\tprint compressed streams (don't decompress)\n");
+	fprintf(stderr, "\t-p\tpassword for encrypted files\n");
 	exit(1);
 }
 

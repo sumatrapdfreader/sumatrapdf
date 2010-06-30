@@ -2,8 +2,12 @@
 #include <mupdf.h>
 #include "pdfapp.h"
 
+#ifndef UNICODE
 #define UNICODE
+#endif
+#ifndef _UNICODE
 #define _UNICODE
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
@@ -26,8 +30,6 @@ static HCURSOR arrowcurs, handcurs, waitcurs;
 static LRESULT CALLBACK frameproc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK viewproc(HWND, UINT, WPARAM, LPARAM);
 
-static int bmpstride = 0;
-static unsigned char *bmpdata = NULL;
 static int justcopied = 0;
 
 static pdfapp_t gapp;
@@ -301,7 +303,7 @@ void winopen()
 	assert(dibinf != NULL);
 	dibinf->bmiHeader.biSize = sizeof(dibinf->bmiHeader);
 	dibinf->bmiHeader.biPlanes = 1;
-	dibinf->bmiHeader.biBitCount = 24;
+	dibinf->bmiHeader.biBitCount = 32;
 	dibinf->bmiHeader.biCompression = BI_RGB;
 	dibinf->bmiHeader.biXPelsPerMeter = 2834;
 	dibinf->bmiHeader.biYPelsPerMeter = 2834;
@@ -378,29 +380,6 @@ void wintitle(pdfapp_t *app, char *title)
 	SetWindowTextW(hwndframe, wide);
 }
 
-void winconvert(fz_pixmap *image)
-{
-	int y, x;
-
-	if (bmpdata)
-		fz_free(bmpdata);
-
-	bmpstride = ((image->w * 3 + 3) / 4) * 4;
-	bmpdata = fz_malloc(image->h * bmpstride);
-
-	for (y = 0; y < image->h; y++)
-	{
-		unsigned char *p = bmpdata + y * bmpstride;
-		unsigned char *s = image->samples + y * image->w * 4;
-		for (x = 0; x < image->w; x++)
-		{
-			p[x * 3 + 0] = s[x * 4 + 3];
-			p[x * 3 + 1] = s[x * 4 + 2];
-			p[x * 3 + 2] = s[x * 4 + 1];
-		}
-	}
-}
-
 void windrawrect(pdfapp_t *app, int x0, int y0, int x1, int y1)
 {
 	RECT r;
@@ -436,24 +415,35 @@ void winblit()
 
 		pdfapp_inverthit(&gapp);
 
-		winconvert(gapp.image);
-
 		dibinf->bmiHeader.biWidth = gapp.image->w;
 		dibinf->bmiHeader.biHeight = -gapp.image->h;
-		dibinf->bmiHeader.biSizeImage = gapp.image->h * bmpstride;
-		SetDIBitsToDevice(hdc,
-			gapp.panx, /* destx */
-			gapp.pany, /* desty */
-			gapp.image->w, /* destw */
-			gapp.image->h, /* desth */
-			0, /* srcx */
-			0, /* srcy */
-			0, /* startscan */
-			gapp.image->h, /* numscans */
-			bmpdata, /* pBits */
-			dibinf, /* pInfo */
-			DIB_RGB_COLORS /* color use flag */
-			);
+		dibinf->bmiHeader.biSizeImage = gapp.image->h * 4;
+
+		if (gapp.image->n == 2)
+		{
+			int i = gapp.image->w * gapp.image->h;
+			unsigned char *color = malloc(i*4);
+			unsigned char *s = gapp.image->samples;
+			unsigned char *d = color;
+			for (; i > 0 ; i--)
+			{
+				d[2] = d[1] = d[0] = *s++;
+				d[3] = *s++;
+				d += 4;
+			}
+			SetDIBitsToDevice(hdc,
+				gapp.panx, gapp.pany, gapp.image->w, gapp.image->h,
+				0, 0, 0, gapp.image->h, color,
+				dibinf, DIB_RGB_COLORS);
+			free(color);
+ 		}
+		if (gapp.image->n == 4)
+		{
+			SetDIBitsToDevice(hdc,
+				gapp.panx, gapp.pany, gapp.image->w, gapp.image->h,
+				0, 0, 0, gapp.image->h, gapp.image->samples,
+				dibinf, DIB_RGB_COLORS);
+		}
 
 		pdfapp_inverthit(&gapp);
 

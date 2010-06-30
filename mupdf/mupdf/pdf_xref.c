@@ -4,6 +4,8 @@
 void
 pdf_closexref(pdf_xref *xref)
 {
+	int i;
+
 	pdf_logxref("closexref %p\n", xref);
 
 	/* don't touch the pdf_store module ... we don't want that dependency here */
@@ -14,6 +16,19 @@ pdf_closexref(pdf_xref *xref)
 	{
 		pdf_flushxref(xref, 1);
 		fz_free(xref->table);
+	}
+
+	if (xref->pageobjs)
+	{
+		for (i = 0; i < xref->pagelen; i++)
+			fz_dropobj(xref->pageobjs[i]);
+		fz_free(xref->pageobjs);
+	}
+	if (xref->pagerefs)
+	{
+		for (i = 0; i < xref->pagelen; i++)
+			fz_dropobj(xref->pagerefs[i]);
+		fz_free(xref->pagerefs);
 	}
 
 	if (xref->file)
@@ -98,7 +113,7 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 	count = fz_toint(fz_dictgets(objstm, "N"));
 	first = fz_toint(fz_dictgets(objstm, "First"));
 
-	pdf_logxref("  count %d\n", count);
+	pdf_logxref("\tcount %d\n", count);
 
 	numbuf = fz_malloc(count * sizeof(int));
 	ofsbuf = fz_malloc(count * sizeof(int));

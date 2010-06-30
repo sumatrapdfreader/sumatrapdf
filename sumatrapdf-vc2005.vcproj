@@ -434,6 +434,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\gdidraw\dev_gdi.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\dev_list.c"
 					>
 				</File>
@@ -511,6 +515,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\fitz_draw.h"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\gdidraw\fitz_gdidraw.h"
 					>
 				</File>
 				<File

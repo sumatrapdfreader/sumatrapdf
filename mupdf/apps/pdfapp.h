@@ -39,6 +39,7 @@ struct pdfapp_s
 	int resolution;
 	int rotate;
 	fz_pixmap *image;
+	int grayscale;
 
 	/* current page params */
 	int pageno;

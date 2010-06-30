@@ -1,12 +1,12 @@
-# Name:          Adobe Glyph List
+# Name: Adobe Glyph List
 # Table version: 2.0
-# Date:          September 20, 2002
+# Date: September 20, 2002
 #
 # See http://partners.adobe.com/asn/developer/typeforum/unicodegn.html
 #
 # Format: Semicolon-delimited fields:
-#            (1) glyph name
-#            (2) Unicode scalar value
+#	(1) glyph name
+#	(2) Unicode scalar value
 A;0041
 AE;00C6
 AEacute;01FC

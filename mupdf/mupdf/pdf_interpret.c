@@ -798,7 +798,7 @@ Lsetcolor:
 					if ((csi->dev->hints & FZ_IGNORESHADE) == 0)
 					{
 						fz_shade *shd;
-						error = pdf_loadshade(&shd, csi->xref, obj);
+						error = pdf_loadshading(&shd, csi->xref, obj);
 						if (error)
 							return fz_rethrow(error, "cannot load shading (%d %d R)", fz_tonum(obj), fz_togen(obj));
 						pdf_setshade(csi, what, shd);
@@ -1294,7 +1294,7 @@ Lsetcolor:
 
 			if ((csi->dev->hints & FZ_IGNORESHADE) == 0)
 			{
-				error = pdf_loadshade(&shd, csi->xref, obj);
+				error = pdf_loadshading(&shd, csi->xref, obj);
 				if (error)
 					return fz_rethrow(error, "cannot load shading (%d %d R)", fz_tonum(obj), fz_togen(obj));
 				pdf_showshade(csi, shd);

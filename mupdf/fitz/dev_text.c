@@ -18,9 +18,9 @@ FT_Get_Advance(FT_Face face, int gid, int masks, FT_Fixed *out)
 	if (err)
 		return err;
 	if (masks & FT_LOAD_VERTICAL_LAYOUT)
-		*out = (face->glyph->metrics.vertAdvance << 16) / 1000;
+		*out = face->glyph->metrics.vertAdvance << 10;
 	else
-		*out = (face->glyph->metrics.horiAdvance << 16) / 1000;
+		*out = face->glyph->metrics.horiAdvance << 10;
 	return 0;
 }
 
@@ -373,7 +373,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 
 	if (font->ftface)
 	{
-		err = FT_Set_Char_Size(font->ftface, 1000, 1000, 72, 72);
+		err = FT_Set_Char_Size(font->ftface, 64, 64, 72, 72);
 		if (err)
 			fz_warn("freetype set character size: %s", ft_errorstring(err));
 		ascender = (float)face->ascender / face->units_per_EM;
@@ -462,7 +462,7 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 			if (text->wmode)
 				mask |= FT_LOAD_VERTICAL_LAYOUT;
 			FT_Get_Advance(font->ftface, text->els[i].gid, mask, &ftadv);
-			adv = ftadv / 1024000.0f;
+			adv = ftadv / 65536.0f;
 			if (text->wmode)
 			{
 				adv = -1; /* TODO: freetype returns broken vertical metrics */

@@ -1,5 +1,5 @@
 /*
- * Blit ARGB images to X with X(Shm)Images
+ * Blit RGBA images to X with X(Shm)Images
  */
 
 #ifndef _XOPEN_SOURCE
@@ -243,17 +243,17 @@ select_mode(void)
 			info.mode = byteorder == MSBFirst ? BGR888 : RGB888;
 	}
 	else if (info.bitsperpixel == 32) {
-		if (rs ==  0 && gs ==  8 && bs == 16)
+		if (rs == 0 && gs == 8 && bs == 16)
 			info.mode = byteorder == MSBFirst ? ABGR8888 : RGBA8888;
-		if (rs ==  8 && gs == 16 && bs == 24)
+		if (rs == 8 && gs == 16 && bs == 24)
 			info.mode = byteorder == MSBFirst ? BGRA8888 : ARGB8888;
-		if (rs == 16 && gs ==  8 && bs ==  0)
+		if (rs == 16 && gs == 8 && bs == 0)
 			info.mode = byteorder == MSBFirst ? ARGB8888 : BGRA8888;
-		if (rs == 24 && gs == 16 && bs ==  8)
+		if (rs == 24 && gs == 16 && bs == 8)
 			info.mode = byteorder == MSBFirst ? RGBA8888 : ABGR8888;
 	}
 
-	printf("ximage: ARGB8888 to %s\n", modename[info.mode]);
+	printf("ximage: RGBA8888 to %s\n", modename[info.mode]);
 
 	/* select conversion function */
 	info.convert_func = ximage_convert_funcs[info.mode];
@@ -461,29 +461,30 @@ ximage_blit(Drawable d, GC gc,
 #endif
 
 #define PARAMS \
-	 const unsigned char * restrict src, \
-	 int srcstride, \
-	 unsigned char * restrict dst, \
-	 int dststride, \
-	 int w, \
-	 int h
+	const unsigned char * restrict src, \
+	int srcstride, \
+	unsigned char * restrict dst, \
+	int dststride, \
+	int w, \
+	int h
 
 /*
- * Convert byte:ARGB8888 to various formats
+ * Convert byte:RGBA8888 to various formats
  */
 
 static void
 ximage_convert_argb8888(PARAMS)
 {
 	int x, y;
-	unsigned * restrict s = (unsigned *)src;
-	unsigned * restrict d = (unsigned *)dst;
 	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
-			d[x] = s[x];
+		for (x = 0; x < w; x ++) {
+			dst[x * 4 + 0] = src[x * 4 + 3]; /* a */
+			dst[x * 4 + 1] = src[x * 4 + 0]; /* r */
+			dst[x * 4 + 2] = src[x * 4 + 1]; /* g */
+			dst[x * 4 + 3] = src[x * 4 + 2]; /* b */
 		}
-		d += dststride>>2;
-		s += srcstride>>2;
+		dst += dststride;
+		src += srcstride;
 	}
 }
 
@@ -491,52 +492,31 @@ static void
 ximage_convert_bgra8888(PARAMS)
 {
 	int x, y;
-	unsigned * restrict s = (unsigned *)src;
-	unsigned * restrict d = (unsigned *)dst;
-	unsigned val;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			val = s[x];
-			d[x] =
-			(val >> 24) |
-			((val >> 8) & 0xff00) |
-			(val << 24) |
-			((val << 8) & 0xff0000);
-			/*
-			d[x] =
-			(((val >> 24) & 0xff) <<  0) |
-			(((val >> 16) & 0xff) <<  8) |
-			(((val >>  8) & 0xff) << 16) |
-			(((val >>  0) & 0xff) << 24);
-			*/
+			dst[x * 4 + 0] = src[x * 4 + 2];
+			dst[x * 4 + 1] = src[x * 4 + 1];
+			dst[x * 4 + 2] = src[x * 4 + 0];
+			dst[x * 4 + 3] = src[x * 4 + 3];
 		}
-		d += dststride>>2;
-		s += srcstride>>2;
+		dst += dststride;
+		src += srcstride;
 	}
 }
-
-/* following have yet to receive some MMX love ;-) */
 
 static void
 ximage_convert_abgr8888(PARAMS)
 {
 	int x, y;
-	unsigned * restrict s = (unsigned *)src;
-	unsigned * restrict d = (unsigned *)dst;
-	unsigned val;
-
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			val = s[x];
-#if 1 /* FZ_MSB */
-			d[x] = (val & 0xff00ff00) |
-			(((val << 16) | (val >> 16)) & 0x00ff00ff);
-#else /* FZ_LSB */
-			d[x] = (val << 24) | ((val >> 8) & 0xff);
-#endif
+			dst[x * 4 + 0] = src[x * 4 + 3];
+			dst[x * 4 + 1] = src[x * 4 + 2];
+			dst[x * 4 + 2] = src[x * 4 + 1];
+			dst[x * 4 + 3] = src[x * 4 + 0];
 		}
-		d += dststride>>2;
-		s += srcstride>>2;
+		dst += dststride;
+		src += srcstride;
 	}
 }
 
@@ -546,10 +526,7 @@ ximage_convert_rgba8888(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			dst[x * 4 + 0] = src[x * 4 + 1];
-			dst[x * 4 + 1] = src[x * 4 + 2];
-			dst[x * 4 + 2] = src[x * 4 + 3];
-			dst[x * 4 + 3] = src[x * 4 + 0];
+			dst[x] = src[x];
 		}
 		dst += dststride;
 		src += srcstride;
@@ -562,9 +539,9 @@ ximage_convert_bgr888(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			dst[3*x + 0] = src[4*x + 3];
-			dst[3*x + 1] = src[4*x + 2];
-			dst[3*x + 2] = src[4*x + 1];
+			dst[3*x + 0] = src[4*x + 2];
+			dst[3*x + 1] = src[4*x + 1];
+			dst[3*x + 2] = src[4*x + 0];
 		}
 		src += srcstride;
 		dst += dststride;
@@ -577,9 +554,9 @@ ximage_convert_rgb888(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			dst[3*x + 0] = src[4*x + 1];
-			dst[3*x + 1] = src[4*x + 2];
-			dst[3*x + 2] = src[4*x + 3];
+			dst[3*x + 0] = src[4*x + 0];
+			dst[3*x + 1] = src[4*x + 1];
+			dst[3*x + 2] = src[4*x + 2];
 		}
 		src += srcstride;
 		dst += dststride;
@@ -593,9 +570,9 @@ ximage_convert_rgb565(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			r = src[4*x + 1];
-			g = src[4*x + 2];
-			b = src[4*x + 3];
+			r = src[4*x + 0];
+			g = src[4*x + 1];
+			b = src[4*x + 2];
 			((unsigned short *)dst)[x] =
 			((r & 0xF8) << 8) |
 			((g & 0xFC) << 3) |
@@ -613,11 +590,11 @@ ximage_convert_rgb565_br(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			r = src[4*x + 1];
-			g = src[4*x + 2];
-			b = src[4*x + 3];
+			r = src[4*x + 0];
+			g = src[4*x + 1];
+			b = src[4*x + 2];
 			/* final word is:
-			g4 g3 g2 b7 b6 b5 b4 b3  r7 r6 r5 r4 r3 g7 g6 g5
+			g4 g3 g2 b7 b6 b5 b4 b3 : r7 r6 r5 r4 r3 g7 g6 g5
 			*/
 			((unsigned short *)dst)[x] =
 			(r & 0xF8) |
@@ -637,9 +614,9 @@ ximage_convert_rgb555(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			r = src[4*x + 1];
-			g = src[4*x + 2];
-			b = src[4*x + 3];
+			r = src[4*x + 0];
+			g = src[4*x + 1];
+			b = src[4*x + 2];
 			((unsigned short *)dst)[x] =
 			((r & 0xF8) << 7) |
 			((g & 0xF8) << 2) |
@@ -657,11 +634,11 @@ ximage_convert_rgb555_br(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			r = src[4*x + 1];
-			g = src[4*x + 2];
-			b = src[4*x + 3];
+			r = src[4*x + 0];
+			g = src[4*x + 1];
+			b = src[4*x + 2];
 			/* final word is:
-			g5 g4 g3 b7 b6 b5 b4 b3  0 r7 r6 r5 r4 r3 g7 g6
+			g5 g4 g3 b7 b6 b5 b4 b3 : 0 r7 r6 r5 r4 r3 g7 g6
 			*/
 			((unsigned short *)dst)[x] =
 			((r & 0xF8) >> 1) |
@@ -681,9 +658,9 @@ ximage_convert_bgr233(PARAMS)
 	int x,y;
 	for(y = 0; y < h; y++) {
 		for(x = 0; x < w; x++) {
-			r = src[4*x + 1];
-			g = src[4*x + 2];
-			b = src[4*x + 3];
+			r = src[4*x + 0];
+			g = src[4*x + 1];
+			b = src[4*x + 2];
 			/* format: b7 b6 g7 g6 g5 r7 r6 r5 */
 			dst[x] = (b&0xC0) | ((g>>2)&0x38) | ((r>>5)&0x7);
 		}

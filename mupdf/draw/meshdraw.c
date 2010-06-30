@@ -147,12 +147,12 @@ drawscan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
 
 	while (w--)
 	{
-		*p++ = 255;
 		for (k = 0; k < n; k++)
 		{
 			*p++ = v[k] >> 16;
 			v[k] += dv[k];
 		}
+		*p++ = 255;
 	}
 }
 
@@ -320,42 +320,45 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 	float color[FZ_MAXCOLORS];
 	float tri[3][MAXN];
 	fz_point p;
-	int i, j, k, n;
+	float *mesh;
+	int ntris;
+	int i, j, k;
 	int x, y;
 
 	assert(dest->n == 4);
 
 	ctm = fz_concat(shade->matrix, ctm);
+	mesh = shade->mesh;
 
 	if (shade->usefunction)
 	{
-		n = 3;
 		temp = fz_newpixmapwithrect(pdf_devicegray, bbox);
 		fz_clearpixmap(temp, 0);
+		ntris = shade->meshlen / 9;
 	}
 	else
 	{
-		n = 2 + shade->cs->n;
 		temp = dest;
+		ntris = shade->meshlen / ((2 + shade->cs->n) * 3);
 	}
 
-	for (i = 0; i < shade->meshlen; i++)
+	while (ntris--)
 	{
 		for (k = 0; k < 3; k++)
 		{
-			p.x = shade->mesh[(i * 3 + k) * n + 0];
-			p.y = shade->mesh[(i * 3 + k) * n + 1];
+			p.x = *mesh++;
+			p.y = *mesh++;
 			p = fz_transformpoint(ctm, p);
 			tri[k][0] = p.x;
 			tri[k][1] = p.y;
 			if (shade->usefunction)
-				tri[k][2] = shade->mesh[(i * 3 + k) * n + 2] * 255;
+				tri[k][2] = *mesh++ * 255;
 			else
 			{
-				fz_convertcolor(shade->cs, shade->mesh + (i * 3 + k) * n + 2,
-						temp->colorspace, tri[k] + 2);
+				fz_convertcolor(shade->cs, mesh, temp->colorspace, tri[k] + 2);
 				for (j = 0; j < temp->colorspace->n; j++)
 					tri[k][j + 2] *= 255;
+				mesh += shade->cs->n;
 			}
 		}
 		fz_drawtriangle(temp, tri[0], tri[1], tri[2], 2 + temp->colorspace->n, bbox);
@@ -376,11 +379,11 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 			d = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
 			for (x = bbox.x0; x < bbox.x1; x++)
 			{
-				sa = s[0];
+				sa = s[1];
 				ssa = 255 - sa;
-				d[0] = s[0] + fz_mul255(d[0], ssa);
 				for (k = 0; k < dest->colorspace->n; k++)
-					d[k+1] = fz_mul255(clut[s[1]][k], sa) + fz_mul255(d[k+1], ssa);
+					d[k] = fz_mul255(clut[s[0]][k], sa) + fz_mul255(d[k+1], ssa);
+				d[k] = s[1] + fz_mul255(d[k], ssa);
 				s += 2;
 				d += 1 + dest->colorspace->n;
 			}

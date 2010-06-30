@@ -253,9 +253,9 @@ static void cleanusage(void)
 {
 	fprintf(stderr,
 		"usage: pdfclean [options] input.pdf [outfile.pdf] [pages]\n"
-		"  -p -\tpassword for decryption\n"
-		"  -g  \tgarbage collect unused objects\n"
-		"  -x  \texpand compressed streams\n");
+		"\t-p -\tpassword for decryption\n"
+		"\t-g\tgarbage collect unused objects\n"
+		"\t-x\texpand compressed streams\n");
 	exit(1);
 }
 
@@ -341,8 +341,8 @@ int main(int argc, char **argv)
 		fz_dropobj(pages);
 
 		/* Create a new kids array too add into pages dict
-		   since each element must be replaced to point to
-		   a retained page */
+		 * since each element must be replaced to point to
+		 * a retained page */
 		kids = fz_newarray(1);
 		count = 0;
 

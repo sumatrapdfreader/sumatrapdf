@@ -7,7 +7,7 @@
 static void showusage(void)
 {
 	fprintf(stderr, "usage: pdfextract [-p password] <file> [object numbers]\n");
-	fprintf(stderr, "  -p  \tpassword\n");
+	fprintf(stderr, "\t-p\tpassword\n");
 	exit(1);
 }
 

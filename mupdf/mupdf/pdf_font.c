@@ -172,7 +172,7 @@ static int ftwidth(pdf_fontdesc *fontdesc, int cid)
 	gid = ftcidtogid(fontdesc, cid);
 
 	fterr = FT_Load_Glyph(fontdesc->font->ftface, gid,
-		FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
+			FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
 	if (fterr)
 	{
 		fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
@@ -284,7 +284,7 @@ pdf_newfontdesc(void)
  * Simple fonts (Type1 and TrueType)
  */
 
-static fz_error
+	static fz_error
 loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
@@ -527,7 +527,7 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 			}
 			else
 			{
-				estrings[i] = pdf_winansi[i];
+				estrings[i] = (char*) pdf_winansi[i]; /* discard const */
 			}
 		}
 	}
@@ -616,7 +616,7 @@ cleanup:
  * CID Fonts
  */
 
-static fz_error
+	static fz_error
 loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *encoding, fz_obj *tounicode)
 {
 	fz_error error;
@@ -891,7 +891,7 @@ cleanup:
 	return fz_rethrow(error, "cannot load cid font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 }
 
-static fz_error
+	static fz_error
 loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
@@ -950,9 +950,7 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 	fontdesc->missingwidth = fz_toreal(fz_dictgets(dict, "MissingWidth"));
 
 	bbox = pdf_torect(fz_dictgets(dict, "FontBBox"));
-	pdf_logfont("bbox [%g %g %g %g]\n",
-		bbox.x0, bbox.y0,
-		bbox.x1, bbox.y1);
+	pdf_logfont("bbox [%g %g %g %g]\n", bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
 	pdf_logfont("flags %d\n", fontdesc->flags);
 
@@ -1086,27 +1084,27 @@ pdf_debugfont(pdf_fontdesc *fontdesc)
 	printf("fontdesc {\n");
 
 	if (fontdesc->font->ftface)
-		printf("  freetype font\n");
+		printf("\tfreetype font\n");
 	if (fontdesc->font->t3procs)
-		printf("  type3 font\n");
+		printf("\ttype3 font\n");
 
-	printf("  wmode %d\n", fontdesc->wmode);
-	printf("  DW %d\n", fontdesc->dhmtx.w);
+	printf("\twmode %d\n", fontdesc->wmode);
+	printf("\tDW %d\n", fontdesc->dhmtx.w);
 
-	printf("  W {\n");
+	printf("\tW {\n");
 	for (i = 0; i < fontdesc->nhmtx; i++)
-		printf("    <%04x> <%04x> %d\n",
+		printf("\t\t<%04x> <%04x> %d\n",
 			fontdesc->hmtx[i].lo, fontdesc->hmtx[i].hi, fontdesc->hmtx[i].w);
-	printf("  }\n");
+	printf("\t}\n");
 
 	if (fontdesc->wmode)
 	{
-		printf("  DW2 [%d %d]\n", fontdesc->dvmtx.y, fontdesc->dvmtx.w);
-		printf("  W2 {\n");
+		printf("\tDW2 [%d %d]\n", fontdesc->dvmtx.y, fontdesc->dvmtx.w);
+		printf("\tW2 {\n");
 		for (i = 0; i < fontdesc->nvmtx; i++)
-			printf("    <%04x> <%04x> %d %d %d\n", fontdesc->vmtx[i].lo, fontdesc->vmtx[i].hi,
+			printf("\t\t<%04x> <%04x> %d %d %d\n", fontdesc->vmtx[i].lo, fontdesc->vmtx[i].hi,
 				fontdesc->vmtx[i].x, fontdesc->vmtx[i].y, fontdesc->vmtx[i].w);
-		printf("  }\n");
+		printf("\t}\n");
 	}
 }
 

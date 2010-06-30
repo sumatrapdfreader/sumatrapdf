@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <fitz.h>
-#include "gdidraw.h"
+#include <fitz_gdidraw.h>
 
 static void
 gdiapplytransform(HDC hDC, fz_matrix ctm)
@@ -266,9 +266,9 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 				
 				if (n == 3)
 				{
-					c.rgbRed = samples[j * rows + i * 3 + 2];
-					c.rgbGreen = samples[j * rows + i * 3 + 1];
-					c.rgbBlue = samples[j * rows + i * 3];
+					c.rgbRed = samples[j * w * 4 + i * 4];
+					c.rgbGreen = samples[j * w * 4 + i * 4 + 1];
+					c.rgbBlue = samples[j * w * 4 + i * 4 + 2];
 				}
 				else
 				{
@@ -299,9 +299,21 @@ ProducingPaletteDone:
 	
 	if (!hasPalette)
 	{
-		bmpData = fz_malloc(rows * h);
+		unsigned char *d = bmpData = fz_malloc(rows * h);
+		unsigned char *s = pixmap->samples;
+		
 		for (j = 0; j < h; j++)
-			memcpy(&bmpData[j * rows], &samples[j * rows], w * n);
+		{
+			for (i = 0; i < w; i++)
+			{
+				d[0] = s[2];
+				d[1] = s[1];
+				d[2] = s[0];
+				d += 3;
+				s += 4;
+			}
+			d += rows - w * 3;
+		}
 	}
 	
 	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);

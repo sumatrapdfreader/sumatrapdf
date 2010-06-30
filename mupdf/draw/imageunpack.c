@@ -19,17 +19,20 @@ static void decodetile(fz_pixmap *pix, int skip, float *decode)
 	int justinvert = 1;
 	unsigned int mask;
 
-	min[0] = 0;
-	max[0] = 255;
-	sub[0] = 255;
-
-	for (i = skip; i < n; i++)
+	for (i = 0; i < n-skip; i++)
 	{
-		min[i] = decode[(i - skip) * 2] * 255;
-		max[i] = decode[(i - skip) * 2 + 1] * 255;
+		min[i] = decode[i * 2] * 255;
+		max[i] = decode[i * 2 + 1] * 255;
 		sub[i] = max[i] - min[i];
 		needed |= (min[i] != 0) | (max[i] != 255);
 		justinvert &= min[i] == 255 && max[i] == 0 && sub[i] == -255;
+	}
+
+	if (skip)
+	{
+		min[i] = 0;
+		max[i] = 255;
+		sub[i] = 255;
 	}
 
 	if (fz_isbigendian())
@@ -115,8 +118,8 @@ static void init1(void)
 		{
 			x = tbit(bits, k);
 			t1pad0[i][k] = x;
-			t1pad1[i][k * 2 + 0] = 255;
-			t1pad1[i][k * 2 + 1] = x;
+			t1pad1[i][k * 2 + 0] = x;
+			t1pad1[i][k * 2 + 1] = 255;
 		}
 	}
 
@@ -178,7 +181,7 @@ static void loadtile1(byte * restrict src, int sw, byte * restrict dst, int dw, 
 			dp = dst;
 			for (x = 0; x < w; x++)
 			{
-				if ((x % pad) == 0)
+				if ((x % pad) == pad-1)
 					*dp++ = 255;
 				*dp++ = tbit(src, x);
 			}
@@ -204,14 +207,14 @@ static void loadtile1(byte * restrict src, int sw, byte * restrict dst, int dw, 
 		while (h--) \
 		{ \
 			byte *dp = dst; \
-			tpad = 0; \
+			tpad = pad; \
 			for (x = 0; x < w; x++) \
 			{ \
-				if (!tpad--) { \
-					tpad = pad-1; \
+				*dp++ = getf(src, x); \
+				if (--tpad == 0) { \
+					tpad = pad; \
 					*dp++ = 255; \
 				} \
-				*dp++ = getf(src, x); \
 			} \
 			src += sw; \
 			dst += dw; \
@@ -247,8 +250,8 @@ static void loadtile8(byte * restrict src, int sw, byte * restrict dst, int dw, 
 			int x;
 			for (x = w; x > 0; x --)
 			{
-				*dst++ = 255;
 				*dst++ = *src++;
+				*dst++ = 255;
 			}
 			src += sw;
 			dst += dw;
@@ -263,10 +266,10 @@ static void loadtile8(byte * restrict src, int sw, byte * restrict dst, int dw, 
 			int x;
 			for (x = w; x > 0; x -= 3)
 			{
+				*dp++ = *src++;
+				*dp++ = *src++;
+				*dp++ = *src++;
 				*dp++ = 255;
-				*dp++ = *src++;
-				*dp++ = *src++;
-				*dp++ = *src++;
 			}
 			src += sw;
 			dst += dw;
@@ -278,16 +281,16 @@ static void loadtile8(byte * restrict src, int sw, byte * restrict dst, int dw, 
 		while (h--)
 		{
 			byte *dp = dst;
-			int tpad = 1;
+			int tpad = pad;
 			int x;
 			for (x = w; x > 0; x--)
 			{
+				*dp++ = *src++;
 				tpad--;
 				if (tpad == 0) {
 					tpad = pad;
 					*dp++ = 255;
 				}
-				*dp++ = *src++;
 			}
 			src += sw;
 			dst += dw;

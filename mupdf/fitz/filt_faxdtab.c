@@ -1,8 +1,9 @@
 /* Tables for CCITTFaxDecode filter. */
-
-/* This file was generated automatically.  It is governed by the same terms */
-/* as the files scfetab.c and scfdgen.c from which it was derived. */
-/* Consult those files for the licensing terms and conditions. */
+/*
+This file was generated automatically. It is governed by the same terms
+as the files scfetab.c and scfdgen.c from which it was derived.
+Consult those files for the licensing terms and conditions.
+*/
 
 #include "filt_faxd.h"
 

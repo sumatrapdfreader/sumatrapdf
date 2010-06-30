@@ -72,8 +72,6 @@ fz_stdconvpixmap(fz_colorspace *srcs, fz_pixmap *src, fz_colorspace *dsts, fz_pi
 	{
 		for (x = 0; x < src->w; x++)
 		{
-			*d++ = *s++;
-
 			for (k = 0; k < src->n - 1; k++)
 				srcv[k] = *s++ / 255.0f;
 
@@ -81,6 +79,8 @@ fz_stdconvpixmap(fz_colorspace *srcs, fz_pixmap *src, fz_colorspace *dsts, fz_pi
 
 			for (k = 0; k < dst->n - 1; k++)
 				*d++ = dstv[k] * 255;
+
+			*d++ = *s++;
 		}
 	}
 }

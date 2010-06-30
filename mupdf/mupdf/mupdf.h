@@ -181,7 +181,7 @@ typedef enum pdf_itemkind_e
 	PDF_KXOBJECT,
 	PDF_KIMAGE,
 	PDF_KPATTERN,
-	PDF_KSHADE,
+	PDF_KSHADING,
 	PDF_KCMAP,
 	PDF_KFONT
 } pdf_itemkind;
@@ -254,7 +254,7 @@ void pdf_droppattern(pdf_pattern *pat);
  * Shading
  */
 
-fz_error pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *obj);
+fz_error pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *obj);
 
 /*
  * XObject

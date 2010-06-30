@@ -13,7 +13,7 @@ getmask(byte *s, int w, int h, int u, int v)
 }
 
 static inline byte *
-getargb(byte *s, int w, int h, int u, int v)
+getrgba(byte *s, int w, int h, int u, int v)
 {
 	if (u < 0) u = 0;
 	if (v < 0) v = 0;
@@ -23,7 +23,7 @@ getargb(byte *s, int w, int h, int u, int v)
 }
 
 static inline byte *
-getag(byte *s, int w, int h, int u, int v)
+getga(byte *s, int w, int h, int u, int v)
 {
 	if (u < 0) u = 0;
 	if (v < 0) v = 0;
@@ -49,14 +49,14 @@ lerp(int a, int b, int t)
 }
 
 static inline void
-lerpag(byte *dst, byte *a, byte *b, int t)
+lerpga(byte *dst, byte *a, byte *b, int t)
 {
 	dst[0] = lerp(a[0], b[0], t);
 	dst[1] = lerp(a[1], b[1], t);
 }
 
 static inline void
-lerpargb(byte *dst, byte *a, byte *b, int t)
+lerprgba(byte *dst, byte *a, byte *b, int t)
 {
 	dst[0] = lerp(a[0], b[0], t);
 	dst[1] = lerp(a[1], b[1], t);
@@ -81,7 +81,7 @@ samplemask(byte *s, int w, int h, int u, int v)
 }
 
 static inline void
-sampleag(byte *s, int w, int h, int u, int v, byte *out)
+samplega(byte *s, int w, int h, int u, int v, byte *out)
 {
 	byte ab[4];
 	byte cd[4];
@@ -89,17 +89,17 @@ sampleag(byte *s, int w, int h, int u, int v, byte *out)
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;
 	int vd = v & 0xFFFF;
-	byte *a = getag(s, w, h, ui, vi);
-	byte *b = getag(s, w, h, ui+1, vi);
-	byte *c = getag(s, w, h, ui, vi+1);
-	byte *d = getag(s, w, h, ui+1, vi+1);
-	lerpag(ab, a, b, ud);
-	lerpag(cd, c, d, ud);
-	lerpag(out, ab, cd, vd);
+	byte *a = getga(s, w, h, ui, vi);
+	byte *b = getga(s, w, h, ui+1, vi);
+	byte *c = getga(s, w, h, ui, vi+1);
+	byte *d = getga(s, w, h, ui+1, vi+1);
+	lerpga(ab, a, b, ud);
+	lerpga(cd, c, d, ud);
+	lerpga(out, ab, cd, vd);
 }
 
 static inline void
-sampleargb(byte *s, int w, int h, int u, int v, byte *out)
+samplergba(byte *s, int w, int h, int u, int v, byte *out)
 {
 	byte ab[4];
 	byte cd[4];
@@ -107,13 +107,13 @@ sampleargb(byte *s, int w, int h, int u, int v, byte *out)
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;
 	int vd = v & 0xFFFF;
-	byte *a = getargb(s, w, h, ui, vi);
-	byte *b = getargb(s, w, h, ui+1, vi);
-	byte *c = getargb(s, w, h, ui, vi+1);
-	byte *d = getargb(s, w, h, ui+1, vi+1);
-	lerpargb(ab, a, b, ud);
-	lerpargb(cd, c, d, ud);
-	lerpargb(out, ab, cd, vd);
+	byte *a = getrgba(s, w, h, ui, vi);
+	byte *b = getrgba(s, w, h, ui+1, vi);
+	byte *c = getrgba(s, w, h, ui, vi+1);
+	byte *d = getrgba(s, w, h, ui+1, vi+1);
+	lerprgba(ab, a, b, ud);
+	lerprgba(cd, c, d, ud);
+	lerprgba(out, ab, cd, vd);
 }
 
 static inline void
@@ -170,7 +170,7 @@ img_2o2(byte * restrict src, byte cov, int len, byte * restrict dst,
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
-	byte ag[2];
+	byte ga[2];
 
 	while (len--)
 	{
@@ -178,12 +178,12 @@ img_2o2(byte * restrict src, byte cov, int len, byte * restrict dst,
 		cov += *src; *src = 0; src++;
 		if (cov != 0)
 		{
-			sampleag(samples, w, h, u, v, ag);
-			sa = FZ_COMBINE(FZ_EXPAND(ag[0]), FZ_EXPAND(cov));
+			samplega(samples, w, h, u, v, ga);
+			sa = FZ_COMBINE(FZ_EXPAND(ga[1]), FZ_EXPAND(cov));
 			if (sa != 0)
 			{
-				dst[0] = FZ_BLEND(255, dst[0], sa);
-				dst[1] = FZ_BLEND(ag[1], dst[1], sa);
+				dst[0] = FZ_BLEND(ga[0], dst[0], sa);
+				dst[1] = FZ_BLEND(255, dst[1], sa);
 			}
 		}
 		dst += 2;
@@ -199,7 +199,7 @@ img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
-	byte argb[4];
+	byte rgba[4];
 
 	while (len--)
 	{
@@ -207,14 +207,14 @@ img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 		cov += *src; *src = 0; src++;
 		if (cov != 0)
 		{
-			sampleargb(samples, w, h, u, v, argb);
-			sa = FZ_COMBINE(FZ_EXPAND(argb[0]), FZ_EXPAND(cov));
+			samplergba(samples, w, h, u, v, rgba);
+			sa = FZ_COMBINE(FZ_EXPAND(rgba[3]), FZ_EXPAND(cov));
 			if (sa != 0)
 			{
-				dst[0] = FZ_BLEND(255, dst[0], sa);
-				dst[1] = FZ_BLEND(argb[1], dst[1], sa);
-				dst[2] = FZ_BLEND(argb[2], dst[2], sa);
-				dst[3] = FZ_BLEND(argb[3], dst[3], sa);
+				dst[0] = FZ_BLEND(rgba[0], dst[0], sa);
+				dst[1] = FZ_BLEND(rgba[1], dst[1], sa);
+				dst[2] = FZ_BLEND(rgba[2], dst[2], sa);
+				dst[3] = FZ_BLEND(255, dst[3], sa);
 			}
 		}
 		dst += 4;
@@ -224,18 +224,18 @@ img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
 }
 
 static void
-img_w2i1o2(byte *ag, byte * restrict src, byte cov, int len, byte * restrict dst,
+img_w2i1o2(byte *ga, byte * restrict src, byte cov, int len, byte * restrict dst,
 	fz_pixmap *image, int u, int v, int fa, int fb)
 {
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
-	int alpha = FZ_EXPAND(ag[0]);
-	byte g = ag[1];
+	byte g = ga[0];
+	byte a = ga[1];
 
-	if (alpha == 0)
+	if (a == 0)
 		return;
-	if (alpha != 256)
+	if (a != 255)
 	{
 		while (len--)
 		{
@@ -244,12 +244,12 @@ img_w2i1o2(byte *ag, byte * restrict src, byte cov, int len, byte * restrict dst
 			if (cov != 0)
 			{
 				ca = samplemask(samples, w, h, u, v);
-				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
-				ca = FZ_COMBINE(ca, alpha);
+				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
+				ca = FZ_COMBINE(ca, FZ_EXPAND(a));
 				if (ca != 0)
 				{
-					dst[0] = FZ_BLEND(255, dst[0], ca);
-					dst[1] = FZ_BLEND(g, dst[1], ca);
+					dst[0] = FZ_BLEND(g, dst[0], ca);
+					dst[1] = FZ_BLEND(255, dst[1], ca);
 				}
 			}
 			dst += 2;
@@ -266,11 +266,11 @@ img_w2i1o2(byte *ag, byte * restrict src, byte cov, int len, byte * restrict dst
 			if (cov != 0)
 			{
 				ca = samplemask(samples, w, h, u, v);
-				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
+				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
 				if (ca != 0)
 				{
-					dst[0] = FZ_BLEND(255, dst[0], ca);
-					dst[1] = FZ_BLEND(g, dst[1], ca);
+					dst[0] = FZ_BLEND(g, dst[0], ca);
+					dst[1] = FZ_BLEND(255, dst[1], ca);
 				}
 			}
 			dst += 2;
@@ -281,20 +281,20 @@ img_w2i1o2(byte *ag, byte * restrict src, byte cov, int len, byte * restrict dst
 }
 
 static void
-img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict dst,
+img_w4i1o4(byte *rgba, byte * restrict src, byte cov, int len, byte * restrict dst,
 	fz_pixmap *image, int u, int v, int fa, int fb)
 {
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h;
-	int alpha = FZ_EXPAND(argb[0]);
-	byte r = argb[1];
-	byte g = argb[2];
-	byte b = argb[3];
+	byte r = rgba[0];
+	byte g = rgba[1];
+	byte b = rgba[2];
+	byte a = rgba[3];
 
-	if (alpha == 0)
+	if (a == 0)
 		return;
-	if (alpha != 256)
+	if (a != 255)
 	{
 		while (len--)
 		{
@@ -303,14 +303,14 @@ img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict d
 			if (cov != 0)
 			{
 				ca = samplemask(samples, w, h, u, v);
-				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
-				ca = FZ_COMBINE(ca, alpha);
+				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
+				ca = FZ_COMBINE(ca, FZ_EXPAND(a));
 				if (ca != 0)
 				{
-					dst[0] = FZ_BLEND(255, dst[0], ca);
-					dst[1] = FZ_BLEND(r, dst[1], ca);
-					dst[2] = FZ_BLEND(g, dst[2], ca);
-					dst[3] = FZ_BLEND(b, dst[3], ca);
+					dst[0] = FZ_BLEND(r, dst[0], ca);
+					dst[1] = FZ_BLEND(g, dst[1], ca);
+					dst[2] = FZ_BLEND(b, dst[2], ca);
+					dst[3] = FZ_BLEND(255, dst[3], ca);
 				}
 			}
 			dst += 4;
@@ -327,13 +327,13 @@ img_w4i1o4(byte *argb, byte * restrict src, byte cov, int len, byte * restrict d
 			if (cov != 0)
 			{
 				ca = samplemask(samples, w, h, u, v);
-				ca =FZ_COMBINE(FZ_EXPAND(cov),FZ_EXPAND(ca));
+				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
 				if (ca != 0)
 				{
-					dst[0] = FZ_BLEND(255, dst[0], ca);
-					dst[1] = FZ_BLEND(r, dst[1], ca);
-					dst[2] = FZ_BLEND(g, dst[2], ca);
-					dst[3] = FZ_BLEND(b, dst[3], ca);
+					dst[0] = FZ_BLEND(r, dst[0], ca);
+					dst[1] = FZ_BLEND(g, dst[1], ca);
+					dst[2] = FZ_BLEND(b, dst[2], ca);
+					dst[3] = FZ_BLEND(255, dst[3], ca);
 				}
 			}
 			dst += 4;

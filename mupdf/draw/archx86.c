@@ -15,14 +15,6 @@ shouldn't require anything */
 
 static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int dw, int w0, int h)
 {
-	/*
-	rendering all pages of
-	x11pdf ~/doc/OpenGL/Presentations/CEDEC2003_Venus_and_Vulcan.pdf
-	%     cumulative  self	     self     total
-	time     seconds   seconds    calls ms/call ms/call  name
-	30.50     20.04    20.04      261    76.76    76.76  duff_4i1o4
-	21.67     22.02    10.95      221    49.55    49.55  duff_4i1o4mmx
-	*/
 	__m64 mzero = _mm_setzero_si64();
 	while (h--)
 	{
@@ -40,7 +32,7 @@ static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int d
 		{
 			int ts = *s++;
 			int ma = *mp++ + 1;
-			int sa = ((ts & 0xff) * ma) >> 8;
+			int sa = (((ts>>24) & 0xff) * ma) >> 8;
 			int ssa = 255 - sa;
 
 			__m64 d0 = _mm_cvtsi32_si64(*d);
@@ -50,11 +42,11 @@ static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int d
 			__m64 mma = _mm_set1_pi16(ma);
 			__m64 mssa = _mm_set1_pi16(ssa);
 
-			/* unpack 0000argb => a0r0g0b0 */
+			/* unpack 0000rgba => r0g0b0a0 */
 			__m64 d1 = _mm_unpacklo_pi8(d0, mzero);
 			__m64 s1 = _mm_unpacklo_pi8(s0, mzero);
 
-			/* s1 * ma => a0r0g0b0 */
+			/* s1 * ma => r0g0b0a0 */
 			__m64 msma = _mm_mullo_pi16(s1, mma);
 			/* d1 * mssa */
 			__m64 mdssa = _mm_mullo_pi16(d1, mssa);
@@ -78,6 +70,8 @@ static void duff_4i1o4mmx(byte *sp0, int sw, byte *mp0, int mw, byte *dp0, int d
 }
 
 #if 0 /* TODO */
+
+/* Needs to be rgba, not bgra, as well as needing finishing */
 
 static inline unsigned
 getargb(unsigned *s, int w, int h, int u, int v)
@@ -222,13 +216,13 @@ static void img_4o4mmx(FZ_PSRC, FZ_PDST, FZ_PCTM)
 void
 fz_acceleratearch(void)
 {
-#  ifdef HAVE_MMX
+#ifdef HAVE_MMX
 	if (fz_cpuflags & HAVE_MMX)
 	{
 		fz_duff_4i1o4 = duff_4i1o4mmx;
 // TODO		fz_img_4o4 = img_4o4mmx;
 	}
-#  endif
+#endif
 }
 #endif
 

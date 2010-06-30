@@ -34,7 +34,7 @@ static char *kindstr(pdf_itemkind kind)
 	case PDF_KXOBJECT: return "xobject";
 	case PDF_KIMAGE: return "image";
 	case PDF_KPATTERN: return "pattern";
-	case PDF_KSHADE: return "shading";
+	case PDF_KSHADING: return "shading";
 	case PDF_KCMAP: return "cmap";
 	case PDF_KFONT: return "font";
 	}
@@ -51,7 +51,7 @@ static int itemmaxage(pdf_itemkind kind)
 	case PDF_KXOBJECT: return 2;
 	case PDF_KIMAGE: return 10;
 	case PDF_KPATTERN: return 2;
-	case PDF_KSHADE: return 2;
+	case PDF_KSHADING: return 2;
 	case PDF_KCMAP: return 10;
 	case PDF_KFONT: return 10;
 	}
@@ -68,7 +68,7 @@ static void keepitem(pdf_itemkind kind, void *val)
 	case PDF_KXOBJECT: pdf_keepxobject(val); break;
 	case PDF_KIMAGE: pdf_keepimage(val); break;
 	case PDF_KPATTERN: pdf_keeppattern(val); break;
-	case PDF_KSHADE: fz_keepshade(val); break;
+	case PDF_KSHADING: fz_keepshade(val); break;
 	case PDF_KCMAP: pdf_keepcmap(val); break;
 	case PDF_KFONT: pdf_keepfont(val); break;
 	}
@@ -83,7 +83,7 @@ static void dropitem(pdf_itemkind kind, void *val)
 	case PDF_KXOBJECT: pdf_dropxobject(val); break;
 	case PDF_KIMAGE: pdf_dropimage(val); break;
 	case PDF_KPATTERN: pdf_droppattern(val); break;
-	case PDF_KSHADE: fz_dropshade(val); break;
+	case PDF_KSHADING: fz_dropshade(val); break;
 	case PDF_KCMAP: pdf_dropcmap(val); break;
 	case PDF_KFONT: pdf_dropfont(val); break;
 	}

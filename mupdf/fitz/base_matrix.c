@@ -22,17 +22,17 @@ void fz_invert3x3(float *dst, float *m)
 		det = 1;
 	det = 1 / det;
 
-	M3(dst,0,0) =  M3(m,1,1) * M3(m,2,2) - M3(m,1,2) * M3(m,2,1);
+	M3(dst,0,0) = M3(m,1,1) * M3(m,2,2) - M3(m,1,2) * M3(m,2,1);
 	M3(dst,0,1) = -M3(m,0,1) * M3(m,2,2) + M3(m,0,2) * M3(m,2,1);
-	M3(dst,0,2) =  M3(m,0,1) * M3(m,1,2) - M3(m,0,2) * M3(m,1,1);
+	M3(dst,0,2) = M3(m,0,1) * M3(m,1,2) - M3(m,0,2) * M3(m,1,1);
 
 	M3(dst,1,0) = -M3(m,1,0) * M3(m,2,2) + M3(m,1,2) * M3(m,2,0);
-	M3(dst,1,1) =  M3(m,0,0) * M3(m,2,2) - M3(m,0,2) * M3(m,2,0);
+	M3(dst,1,1) = M3(m,0,0) * M3(m,2,2) - M3(m,0,2) * M3(m,2,0);
 	M3(dst,1,2) = -M3(m,0,0) * M3(m,1,2) + M3(m,0,2) * M3(m,1,0);
 
-	M3(dst,2,0) =  M3(m,1,0) * M3(m,2,1) - M3(m,1,1) * M3(m,2,0);
+	M3(dst,2,0) = M3(m,1,0) * M3(m,2,1) - M3(m,1,1) * M3(m,2,0);
 	M3(dst,2,1) = -M3(m,0,0) * M3(m,2,1) + M3(m,0,1) * M3(m,2,0);
-	M3(dst,2,2) =  M3(m,0,0) * M3(m,1,1) - M3(m,0,1) * M3(m,1,0);
+	M3(dst,2,2) = M3(m,0,0) * M3(m,1,1) - M3(m,0,1) * M3(m,1,0);
 
 	for (i = 0; i < 9; i++)
 		dst[i] *= det;
@@ -55,9 +55,9 @@ fz_matrix
 fz_identity(void)
 {
 	fz_matrix m;
-	m.a =  1;  m.b =  0;
-	m.c =  0;  m.d =  1;
-	m.e =  0;  m.f =  0;
+	m.a = 1; m.b = 0;
+	m.c = 0; m.d = 1;
+	m.e = 0; m.f = 0;
 	return m;
 }
 
@@ -65,9 +65,9 @@ fz_matrix
 fz_scale(float sx, float sy)
 {
 	fz_matrix m;
-	m.a = sx;  m.b =  0;
-	m.c =  0;  m.d = sy;
-	m.e =  0;  m.f =  0;
+	m.a = sx; m.b = 0;
+	m.c = 0; m.d = sy;
+	m.e = 0; m.f = 0;
 	return m;
 }
 
@@ -109,9 +109,9 @@ fz_rotate(float theta)
 		c = cosf(theta * (float)M_PI / 180);
 	}
 
-	m.a =  c;  m.b = s;
-	m.c = -s;  m.d = c;
-	m.e =  0;  m.f = 0;
+	m.a = c; m.b = s;
+	m.c = -s; m.d = c;
+	m.e = 0; m.f = 0;
 	return m;
 }
 
@@ -119,9 +119,9 @@ fz_matrix
 fz_translate(float tx, float ty)
 {
 	fz_matrix m;
-	m.a =  1;  m.b =  0;
-	m.c =  0;  m.d =  1;
-	m.e = tx;  m.f = ty;
+	m.a = 1; m.b = 0;
+	m.c = 0; m.d = 1;
+	m.e = tx; m.f = ty;
 	return m;
 }
 

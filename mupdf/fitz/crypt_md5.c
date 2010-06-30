@@ -29,7 +29,7 @@ documentation and/or software.
 enum
 {
 	S11 = 7, S12 = 12, S13 = 17, S14 = 22,
-	S21 = 5, S22 = 9,  S23 = 14, S24 = 20,
+	S21 = 5, S22 = 9, S23 = 14, S24 = 20,
 	S31 = 4, S32 = 11, S33 = 16, S34 = 23,
 	S41 = 6, S42 = 10, S43 = 15, S44 = 21
 };
@@ -138,7 +138,7 @@ static void transform(unsigned int state[4], const unsigned char block[64])
 	GG (c, d, a, b, x[11], S23, 0x265e5a51); /* 19 */
 	GG (b, c, d, a, x[ 0], S24, 0xe9b6c7aa); /* 20 */
 	GG (a, b, c, d, x[ 5], S21, 0xd62f105d); /* 21 */
-	GG (d, a, b, c, x[10], S22,  0x2441453); /* 22 */
+	GG (d, a, b, c, x[10], S22, 0x02441453); /* 22 */
 	GG (c, d, a, b, x[15], S23, 0xd8a1e681); /* 23 */
 	GG (b, c, d, a, x[ 4], S24, 0xe7d3fbc8); /* 24 */
 	GG (a, b, c, d, x[ 9], S21, 0x21e1cde6); /* 25 */
@@ -162,7 +162,7 @@ static void transform(unsigned int state[4], const unsigned char block[64])
 	HH (a, b, c, d, x[13], S31, 0x289b7ec6); /* 41 */
 	HH (d, a, b, c, x[ 0], S32, 0xeaa127fa); /* 42 */
 	HH (c, d, a, b, x[ 3], S33, 0xd4ef3085); /* 43 */
-	HH (b, c, d, a, x[ 6], S34,  0x4881d05); /* 44 */
+	HH (b, c, d, a, x[ 6], S34, 0x04881d05); /* 44 */
 	HH (a, b, c, d, x[ 9], S31, 0xd9d4d039); /* 45 */
 	HH (d, a, b, c, x[12], S32, 0xe6db99e5); /* 46 */
 	HH (c, d, a, b, x[15], S33, 0x1fa27cf8); /* 47 */
@@ -225,7 +225,7 @@ void fz_md5update(fz_md5 *context, const unsigned char *input, const unsigned in
 
 	partlen = 64 - index;
 
-	/* Transform as many times as possible.  */
+	/* Transform as many times as possible. */
 	if (inlen >= partlen)
 	{
 		memcpy(context->buffer + index, input, partlen);

@@ -1,26 +1,13 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/* most of this mess is jeong's */
-
-#define HUGENUM 32000
-#define BIGNUM 1024
-
-#define NSEGS 32
-#define MAX_RAD_SEGS 36
-
-#define SEGMENTATION_DEPTH 3
-
-typedef struct pdf_tensorpatch_s pdf_tensorpatch;
-
-struct pdf_tensorpatch_s
-{
-	fz_point pole[4][4];
-	float color[4][FZ_MAXCOLORS];
-};
+#define HUGENUM 32000 /* how far to extend axial/radial shadings */
+#define FUNSEGS 32 /* size of sampled mesh for function-based shadings */
+#define RADSEGS 36 /* how many segments to generate for radial meshes */
+#define SUBDIV 3 /* how many levels to subdivide patches */
 
 static void
-growshademesh(fz_shade *shade, int amount)
+pdf_growmesh(fz_shade *shade, int amount)
 {
 	if (shade->meshlen + amount < shade->meshcap)
 		return;
@@ -34,55 +21,29 @@ growshademesh(fz_shade *shade, int amount)
 	shade->mesh = fz_realloc(shade->mesh, sizeof(float) * shade->meshcap);
 }
 
-/* adds triangle (x0, y0) -> (x1, y1) -> (x2, y2) to mesh */
+static void
+pdf_addvertex(fz_shade *shade, float x, float y, float *color)
+{
+	int ncomp = shade->usefunction ? 1 : shade->cs->n;
+	int i;
+	pdf_growmesh(shade, 2 + ncomp);
+	shade->mesh[shade->meshlen++] = x;
+	shade->mesh[shade->meshlen++] = y;
+	for (i = 0; i < ncomp; i++)
+		shade->mesh[shade->meshlen++] = color[i];
+}
+
 static void
 pdf_addtriangle(fz_shade *shade,
 	float x0, float y0, float *color0,
 	float x1, float y1, float *color1,
 	float x2, float y2, float *color2)
 {
-	int triangleentries;
-	int vertexentries;
-	int ncomp;
-	int i;
-
-	if (shade->usefunction)
-		ncomp = 3;
-	else
-		ncomp = 2 + shade->cs->n;
-
-	vertexentries = 2 + ncomp;
-	triangleentries = 3 * vertexentries;
-
-	growshademesh(shade, triangleentries);
-
-	shade->mesh[shade->meshlen++] = x0;
-	shade->mesh[shade->meshlen++] = y0;
-	if (shade->usefunction)
-		shade->mesh[shade->meshlen++] = *color0;
-	else
-		for (i = 0; i < shade->cs->n ; i++)
-			shade->mesh[shade->meshlen++] = color0[i];
-
-	shade->mesh[shade->meshlen++] = x1;
-	shade->mesh[shade->meshlen++] = y1;
-	if (shade->usefunction)
-		shade->mesh[shade->meshlen++] = *color1;
-	else
-		for (i = 0; i < shade->cs->n; i++)
-			shade->mesh[shade->meshlen++] = color1[i];
-
-	shade->mesh[shade->meshlen++] = x2;
-	shade->mesh[shade->meshlen++] = y2;
-	if (shade->usefunction)
-		shade->mesh[shade->meshlen++] = *color2;
-	else
-		for (i = 0; i < shade->cs->n; i++)
-			shade->mesh[shade->meshlen++] = color2[i];
+	pdf_addvertex(shade, x0, y0, color0);
+	pdf_addvertex(shade, x1, y1, color1);
+	pdf_addvertex(shade, x2, y2, color2);
 }
 
-/* adds quad triangles (x0, y0) -> (x1, y1) -> (x3, y3) and
-   (x1, y1) -> (x3, y3) -> (x2, y2) to mesh */
 static void
 pdf_addquad(fz_shade *shade,
 	float x0, float y0, float *color0,
@@ -90,31 +51,30 @@ pdf_addquad(fz_shade *shade,
 	float x2, float y2, float *color2,
 	float x3, float y3, float *color3)
 {
-	pdf_addtriangle(shade,
-			x0, y0, color0,
-			x1, y1, color1,
-			x3, y3, color3);
-
-	pdf_addtriangle(shade,
-			x1, y1, color1,
-			x3, y3, color3,
-			x2, y2, color2);
+	pdf_addtriangle(shade, x0, y0, color0, x1, y1, color1, x3, y3, color3);
+	pdf_addtriangle(shade, x1, y1, color1, x3, y3, color3, x2, y2, color2);
 }
 
+/*
+ * Subdivide and tesselate tensor-patches
+ */
+
+typedef struct pdf_tensorpatch_s pdf_tensorpatch;
+
+struct pdf_tensorpatch_s
+{
+	fz_point pole[4][4];
+	float color[4][FZ_MAXCOLORS];
+};
+
 static void
-triangulatepatch(pdf_tensorpatch p, fz_shade *shade, int ncomp)
+triangulatepatch(pdf_tensorpatch p, fz_shade *shade)
 {
 	pdf_addquad(shade,
 		p.pole[0][0].x, p.pole[0][0].y, p.color[0],
 		p.pole[0][3].x, p.pole[0][3].y, p.color[1],
 		p.pole[3][3].x, p.pole[3][3].y, p.color[2],
 		p.pole[3][0].x, p.pole[3][0].y, p.color[3]);
-}
-
-static inline void
-copyvert(float *dst, float *src, int n)
-{
-	memcpy(dst, src, n * sizeof(float));
 }
 
 static inline void
@@ -131,58 +91,53 @@ midcolor(float *c, float *c1, float *c2)
 		c[i] = (c1[i] + c2[i]) * 0.5f;
 }
 
-static inline float
-midpoint(float a, float b)
+static inline void
+splitcurve(fz_point *pole, fz_point *q0, fz_point *q1, int polestep)
 {
-	return a * 0.5f + b * 0.5f;
+	/*
+	split bezier curve given by control points pole[0]..pole[3]
+	using de casteljau algo at midpoint and build two new
+	bezier curves q0[0]..q0[3] and q1[0]..q1[3]. all indices
+	should be multiplies by polestep == 1 for vertical bezier
+	curves in patch and == 4 for horizontal bezier curves due
+	to C's multi-dimensional matrix memory layout.
+	*/
+
+	float x12 = (pole[1 * polestep].x + pole[2 * polestep].x) * 0.5f;
+	float y12 = (pole[1 * polestep].y + pole[2 * polestep].y) * 0.5f;
+
+	q0[1 * polestep].x = (pole[0 * polestep].x + pole[1 * polestep].x) * 0.5f;
+	q0[1 * polestep].y = (pole[0 * polestep].y + pole[1 * polestep].y) * 0.5f;
+	q1[2 * polestep].x = (pole[2 * polestep].x + pole[3 * polestep].x) * 0.5f;
+	q1[2 * polestep].y = (pole[2 * polestep].y + pole[3 * polestep].y) * 0.5f;
+
+	q0[2 * polestep].x = (q0[1 * polestep].x + x12) * 0.5f;
+	q0[2 * polestep].y = (q0[1 * polestep].y + y12) * 0.5f;
+	q1[1 * polestep].x = (x12 + q1[2 * polestep].x) * 0.5f;
+	q1[1 * polestep].y = (y12 + q1[2 * polestep].y) * 0.5f;
+
+	q0[3 * polestep].x = (q0[2 * polestep].x + q1[1 * polestep].x) * 0.5f;
+	q0[3 * polestep].y = (q0[2 * polestep].y + q1[1 * polestep].y) * 0.5f;
+	q1[0 * polestep].x = (q0[2 * polestep].x + q1[1 * polestep].x) * 0.5f;
+	q1[0 * polestep].y = (q0[2 * polestep].y + q1[1 * polestep].y) * 0.5f;
+
+	q0[0 * polestep].x = pole[0 * polestep].x;
+	q0[0 * polestep].y = pole[0 * polestep].y;
+	q1[3 * polestep].x = pole[3 * polestep].x;
+	q1[3 * polestep].y = pole[3 * polestep].y;
 }
 
 static inline void
-split_curve(fz_point *pole, fz_point *q0, fz_point *q1, int pole_step)
+splitstripe(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
 {
-	/* split bezier curve given by control points pole[0]..pole[3]
-	   using de casteljau algo at midpoint and build two new
-	   bezier curves q0[0]..q0[3] and q1[0]..q1[3]. all indices
-	   should be multiplies by pole_step == 1 for vertical bezier
-	   curves in patch and == 4 for horizontal bezier curves due
-	   to C's multi-dimensional matrix memory layout. */
+	/* split all horizontal bezier curves in patch,
+	 * creating two new patches with half the width. */
+	splitcurve(&p->pole[0][0], &s0->pole[0][0], &s1->pole[0][0], 4);
+	splitcurve(&p->pole[0][1], &s0->pole[0][1], &s1->pole[0][1], 4);
+	splitcurve(&p->pole[0][2], &s0->pole[0][2], &s1->pole[0][2], 4);
+	splitcurve(&p->pole[0][3], &s0->pole[0][3], &s1->pole[0][3], 4);
 
-	float x12 = midpoint(pole[1 * pole_step].x, pole[2 * pole_step].x);
-	float y12 = midpoint(pole[1 * pole_step].y, pole[2 * pole_step].y);
-
-	q0[1 * pole_step].x = midpoint(pole[0 * pole_step].x, pole[1 * pole_step].x);
-	q0[1 * pole_step].y = midpoint(pole[0 * pole_step].y, pole[1 * pole_step].y);
-	q1[2 * pole_step].x = midpoint(pole[2 * pole_step].x, pole[3 * pole_step].x);
-	q1[2 * pole_step].y = midpoint(pole[2 * pole_step].y, pole[3 * pole_step].y);
-
-	q0[2 * pole_step].x = midpoint(q0[1 * pole_step].x, x12);
-	q0[2 * pole_step].y = midpoint(q0[1 * pole_step].y, y12);
-	q1[1 * pole_step].x = midpoint(x12, q1[2 * pole_step].x);
-	q1[1 * pole_step].y = midpoint(y12, q1[2 * pole_step].y);
-
-	q0[3 * pole_step].x = midpoint(q0[2 * pole_step].x, q1[1 * pole_step].x);
-	q0[3 * pole_step].y = midpoint(q0[2 * pole_step].y, q1[1 * pole_step].y);
-	q1[0 * pole_step].x = midpoint(q0[2 * pole_step].x, q1[1 * pole_step].x);
-	q1[0 * pole_step].y = midpoint(q0[2 * pole_step].y, q1[1 * pole_step].y);
-
-	q0[0 * pole_step].x = pole[0 * pole_step].x;
-	q0[0 * pole_step].y = pole[0 * pole_step].y;
-	q1[3 * pole_step].x = pole[3 * pole_step].x;
-	q1[3 * pole_step].y = pole[3 * pole_step].y;
-}
-
-static inline void
-split_stripe(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
-{
-	/* split all horizontal bezier curves in patch, creating
-	   two new patches with half the width. */
-	split_curve(&p->pole[0][0], &s0->pole[0][0], &s1->pole[0][0], 4);
-	split_curve(&p->pole[0][1], &s0->pole[0][1], &s1->pole[0][1], 4);
-	split_curve(&p->pole[0][2], &s0->pole[0][2], &s1->pole[0][2], 4);
-	split_curve(&p->pole[0][3], &s0->pole[0][3], &s1->pole[0][3], 4);
-
-	/* bilinear interpolation to find color values of corners of
-	   the two new patches. */
+	/* bilinear interpolation to find color values of corners of the two new patches. */
 	copycolor(s0->color[0], p->color[0]);
 	copycolor(s0->color[1], p->color[1]);
 	midcolor(s0->color[2], p->color[1], p->color[2]);
@@ -195,40 +150,39 @@ split_stripe(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
 }
 
 static void
-drawstripe(pdf_tensorpatch *p, fz_shade *shade, int ncomp, int depth)
+drawstripe(pdf_tensorpatch *p, fz_shade *shade, int depth)
 {
 	pdf_tensorpatch s0, s1;
 
 	/* split patch into two half-height patches */
-	split_stripe(p, &s0, &s1);
+	splitstripe(p, &s0, &s1);
 
 	depth--;
 	if (depth == 0)
 	{
 		/* if no more subdividing, draw two new patches... */
-		triangulatepatch(s0, shade, ncomp);
-		triangulatepatch(s1, shade, ncomp);
+		triangulatepatch(s0, shade);
+		triangulatepatch(s1, shade);
 	}
 	else
 	{
 		/* ...otherwise, continue subdividing. */
-		drawstripe(&s0, shade, ncomp, depth);
-		drawstripe(&s1, shade, ncomp, depth);
+		drawstripe(&s0, shade, depth);
+		drawstripe(&s1, shade, depth);
 	}
 }
 
 static inline void
-split_patch(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
+splitpatch(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
 {
-	/* split all vertical bezier curves in patch, creating
-	   two new patches with half the height. */
-	split_curve(p->pole[0], s0->pole[0], s1->pole[0], 1);
-	split_curve(p->pole[1], s0->pole[1], s1->pole[1], 1);
-	split_curve(p->pole[2], s0->pole[2], s1->pole[2], 1);
-	split_curve(p->pole[3], s0->pole[3], s1->pole[3], 1);
+	/* split all vertical bezier curves in patch,
+	 * creating two new patches with half the height. */
+	splitcurve(p->pole[0], s0->pole[0], s1->pole[0], 1);
+	splitcurve(p->pole[1], s0->pole[1], s1->pole[1], 1);
+	splitcurve(p->pole[2], s0->pole[2], s1->pole[2], 1);
+	splitcurve(p->pole[3], s0->pole[3], s1->pole[3], 1);
 
-	/* bilinear interpolation to find color values of corners of
-	   the two new patches. */
+	/* bilinear interpolation to find color values of corners of the two new patches. */
 	copycolor(s0->color[0], p->color[0]);
 	midcolor(s0->color[1], p->color[0], p->color[1]);
 	midcolor(s0->color[2], p->color[2], p->color[3]);
@@ -241,32 +195,26 @@ split_patch(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
 }
 
 static void
-drawpatch(fz_shade *shade, pdf_tensorpatch *p, int ncomp, int depth, int origdepth)
+drawpatch(fz_shade *shade, pdf_tensorpatch *p, int depth, int origdepth)
 {
 	pdf_tensorpatch s0, s1;
 
 	/* split patch into two half-width patches */
-	split_patch(p, &s0, &s1);
+	splitpatch(p, &s0, &s1);
 
 	depth--;
 	if (depth == 0)
 	{
 		/* if no more subdividing, draw two new patches... */
-		drawstripe(&s0, shade, ncomp, origdepth);
-		drawstripe(&s1, shade, ncomp, origdepth);
+		drawstripe(&s0, shade, origdepth);
+		drawstripe(&s1, shade, origdepth);
 	}
 	else
 	{
 		/* ...otherwise, continue subdividing. */
-		drawpatch(shade, &s0, ncomp, depth, origdepth);
-		drawpatch(shade, &s1, ncomp, depth, origdepth);
+		drawpatch(shade, &s0, depth, origdepth);
+		drawpatch(shade, &s1, depth, origdepth);
 	}
-}
-
-static void
-pdf_addpatch(fz_shade *shade, pdf_tensorpatch *patch, int ncomp)
-{
-	drawpatch(shade, patch, ncomp, SEGMENTATION_DEPTH, SEGMENTATION_DEPTH);
 }
 
 static inline fz_point
@@ -278,62 +226,75 @@ pdf_computetensorinterior(
 
 	/* see equations at page 330 in pdf 1.7 */
 
-	pt.x  = -4 * a.x;
-	pt.x +=  6 * (b.x + c.x);
+	pt.x = -4 * a.x;
+	pt.x += 6 * (b.x + c.x);
 	pt.x += -2 * (d.x + e.x);
-	pt.x +=  3 * (f.x + g.x);
+	pt.x += 3 * (f.x + g.x);
 	pt.x += -1 * h.x;
 	pt.x /= 9;
 
-	pt.y  = -4 * a.y;
-	pt.y +=  6 * (b.y + c.y);
+	pt.y = -4 * a.y;
+	pt.y += 6 * (b.y + c.y);
 	pt.y += -2 * (d.y + e.y);
-	pt.y +=  3 * (f.y + g.y);
+	pt.y += 3 * (f.y + g.y);
 	pt.y += -1 * h.y;
 	pt.y /= 9;
 
 	return pt;
 }
 
-static void
-pdf_tensorinteriorfromcoons(pdf_tensorpatch *p)
-{
-	/* see equations at page 330 in pdf 1.7 */
-
-	p->pole[1][1] = pdf_computetensorinterior(
-			p->pole[0][0], p->pole[0][1], p->pole[1][0], p->pole[0][3],
-			p->pole[3][0], p->pole[3][1], p->pole[1][3], p->pole[3][3]);
-
-	p->pole[1][2] = pdf_computetensorinterior(
-			p->pole[0][3], p->pole[0][2], p->pole[1][3], p->pole[0][0],
-			p->pole[3][3], p->pole[3][2], p->pole[1][0], p->pole[3][0]);
-
-	p->pole[2][1] = pdf_computetensorinterior(
-			p->pole[3][0], p->pole[3][1], p->pole[2][0], p->pole[3][3],
-			p->pole[0][0], p->pole[0][1], p->pole[2][3], p->pole[0][3]);
-
-	p->pole[2][2] = pdf_computetensorinterior(
-			p->pole[3][3], p->pole[3][2], p->pole[2][3], p->pole[3][0],
-			p->pole[0][3], p->pole[0][2], p->pole[2][0], p->pole[0][0]);
-}
-
 static inline void
 pdf_maketensorpatch(pdf_tensorpatch *p, int type, fz_point *pt)
 {
-	if (type == 7)
+	if (type == 6)
+	{
+		/* see control point stream order at page 325 in pdf 1.7 */
+
+		p->pole[0][0] = pt[0];
+		p->pole[0][1] = pt[1];
+		p->pole[0][2] = pt[2];
+		p->pole[0][3] = pt[3];
+		p->pole[1][3] = pt[4];
+		p->pole[2][3] = pt[5];
+		p->pole[3][3] = pt[6];
+		p->pole[3][2] = pt[7];
+		p->pole[3][1] = pt[8];
+		p->pole[3][0] = pt[9];
+		p->pole[2][0] = pt[10];
+		p->pole[1][0] = pt[11];
+
+		/* see equations at page 330 in pdf 1.7 */
+
+		p->pole[1][1] = pdf_computetensorinterior(
+			p->pole[0][0], p->pole[0][1], p->pole[1][0], p->pole[0][3],
+			p->pole[3][0], p->pole[3][1], p->pole[1][3], p->pole[3][3]);
+
+		p->pole[1][2] = pdf_computetensorinterior(
+			p->pole[0][3], p->pole[0][2], p->pole[1][3], p->pole[0][0],
+			p->pole[3][3], p->pole[3][2], p->pole[1][0], p->pole[3][0]);
+
+		p->pole[2][1] = pdf_computetensorinterior(
+			p->pole[3][0], p->pole[3][1], p->pole[2][0], p->pole[3][3],
+			p->pole[0][0], p->pole[0][1], p->pole[2][3], p->pole[0][3]);
+
+		p->pole[2][2] = pdf_computetensorinterior(
+			p->pole[3][3], p->pole[3][2], p->pole[2][3], p->pole[3][0],
+			p->pole[0][3], p->pole[0][2], p->pole[2][0], p->pole[0][0]);
+	}
+	else if (type == 7)
 	{
 		/* see control point stream order at page 330 in pdf 1.7 */
 
-		p->pole[0][0] = pt[ 0];
-		p->pole[0][1] = pt[ 1];
-		p->pole[0][2] = pt[ 2];
-		p->pole[0][3] = pt[ 3];
-		p->pole[1][3] = pt[ 4];
-		p->pole[2][3] = pt[ 5];
-		p->pole[3][3] = pt[ 6];
-		p->pole[3][2] = pt[ 7];
-		p->pole[3][1] = pt[ 8];
-		p->pole[3][0] = pt[ 9];
+		p->pole[0][0] = pt[0];
+		p->pole[0][1] = pt[1];
+		p->pole[0][2] = pt[2];
+		p->pole[0][3] = pt[3];
+		p->pole[1][3] = pt[4];
+		p->pole[2][3] = pt[5];
+		p->pole[3][3] = pt[6];
+		p->pole[3][2] = pt[7];
+		p->pole[3][1] = pt[8];
+		p->pole[3][0] = pt[9];
 		p->pole[2][0] = pt[10];
 		p->pole[1][0] = pt[11];
 		p->pole[1][1] = pt[12];
@@ -341,26 +302,11 @@ pdf_maketensorpatch(pdf_tensorpatch *p, int type, fz_point *pt)
 		p->pole[2][2] = pt[14];
 		p->pole[2][1] = pt[15];
 	}
-	else if (type == 6)
-	{
-		/* see control point stream order at page 325 in pdf 1.7 */
-
-		p->pole[0][0] = pt[ 0];
-		p->pole[0][1] = pt[ 1];
-		p->pole[0][2] = pt[ 2];
-		p->pole[0][3] = pt[ 3];
-		p->pole[1][3] = pt[ 4];
-		p->pole[2][3] = pt[ 5];
-		p->pole[3][3] = pt[ 6];
-		p->pole[3][2] = pt[ 7];
-		p->pole[3][1] = pt[ 8];
-		p->pole[3][0] = pt[ 9];
-		p->pole[2][0] = pt[10];
-		p->pole[1][0] = pt[11];
-
-		pdf_tensorinteriorfromcoons(p);
-	}
 }
+
+/*
+ * Sample various functions into lookup tables
+ */
 
 static fz_error
 pdf_samplecompositeshadefunction(fz_shade *shade,
@@ -421,8 +367,12 @@ pdf_sampleshadefunction(fz_shade *shade, int funcs, pdf_function **func, float t
 	return fz_okay;
 }
 
+/*
+ * Type 1 -- Function-based shading
+ */
+
 static fz_error
-pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref,
+pdf_loadfunctionbasedshading(fz_shade *shade, pdf_xref *xref,
 	float *domain, fz_matrix matrix, pdf_function *func)
 {
 	fz_error error;
@@ -431,31 +381,26 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref,
 	float xn, yn;
 	float x0, y0, x1, y1;
 
-	pdf_logshade("load type1 shading {\n");
+	pdf_logshade("load type1 (function-based) shading\n");
 
 	x0 = domain[0];
 	x1 = domain[1];
 	y0 = domain[2];
 	y1 = domain[3];
 
-	pdf_logshade("domain %g %g %g %g\n", x0, x1, y0, y1);
-	pdf_logshade("matrix [%g %g %g %g %g %g]\n",
-			matrix.a, matrix.b, matrix.c,
-			matrix.d, matrix.e, matrix.f);
-
-	for (yy = 0; yy < NSEGS; yy++)
+	for (yy = 0; yy < FUNSEGS; yy++)
 	{
-		y = y0 + (y1 - y0) * yy / NSEGS;
-		yn = y0 + (y1 - y0) * (yy + 1) / NSEGS;
+		y = y0 + (y1 - y0) * yy / FUNSEGS;
+		yn = y0 + (y1 - y0) * (yy + 1) / FUNSEGS;
 
-		for (xx = 0; xx < NSEGS; xx++)
+		for (xx = 0; xx < FUNSEGS; xx++)
 		{
 			float vcolor[4][FZ_MAXCOLORS];
 			fz_point vcoord[4];
 			int i;
 
-			x = x0 + (x1 - x0) * xx / NSEGS;
-			xn = x0 + (x1 - x0) * (xx + 1) / NSEGS;
+			x = x0 + (x1 - x0) * xx / FUNSEGS;
+			xn = x0 + (x1 - x0) * (xx + 1) / FUNSEGS;
 
 			vcoord[0].x = x; vcoord[0].y = y;
 			vcoord[1].x = xn; vcoord[1].y = y;
@@ -485,62 +430,43 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref,
 		}
 	}
 
-	shade->meshlen = shade->meshlen / (2 + shade->cs->n) / 3;
-
-	pdf_logshade("}\n");
-
 	return fz_okay;
 }
 
+/*
+ * Type 2 -- Axial shading
+ */
+
 static fz_error
-pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
+pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref,
 	float *coords, float *domain, int funcs, pdf_function **func, int *extend)
 {
+	float tmin[1] = { 0 };
+	float tmax[1] = { 1 };
 	fz_point p1, p2, p3, p4;
 	fz_point ep1, ep2, ep3, ep4;
 	float x0, y0, x1, y1;
-	float t0, t1;
-	int e0, e1;
 	float theta;
 	float dist;
 	fz_error error;
-	float tmin, tmax;
 
-	pdf_logshade("load type2 shading {\n");
+	pdf_logshade("load type2 (axial) shading\n");
 
 	x0 = coords[0];
 	y0 = coords[1];
 	x1 = coords[2];
 	y1 = coords[3];
 
-	t0 = domain[0];
-	t1 = domain[1];
-
-	e0 = extend[0];
-	e1 = extend[1];
-
-	pdf_logshade("coords %g %g %g %g\n", x0, y0, x1, y1);
-	pdf_logshade("domain %g %g\n", t0, t1);
-	pdf_logshade("extend %d %d\n", e0, e1);
-
-	error = pdf_sampleshadefunction(shade, funcs, func, t0, t1);
+	error = pdf_sampleshadefunction(shade, funcs, func, domain[0], domain[1]);
 	if (error)
 		return fz_rethrow(error, "unable to sample shading function");
 
 	theta = atan2f(y1 - y0, x1 - x0);
 	theta += (float)M_PI * 0.5f;
 
-	pdf_logshade("theta=%g\n", theta);
-
 	dist = hypotf(x1 - x0, y1 - y0);
-
-	/* if the axis has virtually length 0 (a point),
-	do not extend as there is nothing to extend beyond */
 	if (dist < FLT_EPSILON)
-	{
-		e0 = 0;
-		e1 = 0;
-	}
+		return fz_throw("zero-sized axial shading");
 
 	p1.x = x0 + HUGENUM * cosf(theta);
 	p1.y = y0 + HUGENUM * sinf(theta);
@@ -551,73 +477,49 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref,
 	p4.x = x1 - HUGENUM * cosf(theta);
 	p4.y = y1 - HUGENUM * sinf(theta);
 
-	pdf_logshade("p1 %g %g\n", p1.x, p1.y);
-	pdf_logshade("p2 %g %g\n", p2.x, p2.y);
-	pdf_logshade("p3 %g %g\n", p3.x, p3.y);
-	pdf_logshade("p4 %g %g\n", p4.x, p4.y);
+	pdf_addquad(shade,
+		p1.x, p1.y, tmin,
+		p2.x, p2.y, tmax,
+		p4.x, p4.y, tmax,
+		p3.x, p3.y, tmin);
 
-	tmin = 0;
-	tmax = 1;
-
-	/* if the axis has virtually length 0 (a point), use the same axis
-	position t = 0 for all triangle vertices */
-	if (dist < FLT_EPSILON)
-	{
-		pdf_addquad(shade,
-			p1.x, p1.y, &tmin,
-			p2.x, p2.y, &tmin,
-			p4.x, p4.y, &tmin,
-			p3.x, p3.y, &tmin);
-	}
-	else
-	{
-		pdf_addquad(shade,
-			p1.x, p1.y, &tmin,
-			p2.x, p2.y, &tmax,
-			p4.x, p4.y, &tmax,
-			p3.x, p3.y, &tmin);
-	}
-
-	if (e0)
+	if (extend[0])
 	{
 		ep1.x = p1.x - (x1 - x0) / dist * HUGENUM;
 		ep1.y = p1.y - (y1 - y0) / dist * HUGENUM;
 		ep3.x = p3.x - (x1 - x0) / dist * HUGENUM;
 		ep3.y = p3.y - (y1 - y0) / dist * HUGENUM;
-
 		pdf_addquad(shade,
-			ep1.x, ep1.y, &tmin,
-			p1.x, p1.y, &tmin,
-			p3.x, p3.y, &tmin,
-			ep3.x, ep3.y, &tmin);
+			ep1.x, ep1.y, tmin,
+			p1.x, p1.y, tmin,
+			p3.x, p3.y, tmin,
+			ep3.x, ep3.y, tmin);
 	}
 
-	if (e1)
+	if (extend[1])
 	{
 		ep2.x = p2.x + (x1 - x0) / dist * HUGENUM;
 		ep2.y = p2.y + (y1 - y0) / dist * HUGENUM;
 		ep4.x = p4.x + (x1 - x0) / dist * HUGENUM;
 		ep4.y = p4.y + (y1 - y0) / dist * HUGENUM;
-
 		pdf_addquad(shade,
-			p2.x, p2.y, &tmax,
-			ep2.x, ep2.y, &tmax,
-			ep4.x, ep4.y, &tmax,
-			p4.x, p4.y, &tmax);
+			p2.x, p2.y, tmax,
+			ep2.x, ep2.y, tmax,
+			ep4.x, ep4.y, tmax,
+			p4.x, p4.y, tmax);
 	}
-
-	shade->meshlen = shade->meshlen / 3 / 3;
-
-	pdf_logshade("}\n");
 
 	return fz_okay;
 }
 
-static int
-buildannulusmesh(fz_shade *shade, int pos,
-	float x0, float y0, float r0,
-	float x1, float y1, float r1,
-	float c0, float c1, int nomesh)
+/*
+ * Type 3 -- Radial shading
+ */
+
+static void
+pdf_buildannulusmesh(fz_shade *shade,
+	float x0, float y0, float r0, float c0,
+	float x1, float y1, float r1, float c1)
 {
 	float dist = hypotf(x1 - x0, y1 - y0);
 	float step;
@@ -632,63 +534,39 @@ buildannulusmesh(fz_shade *shade, int pos,
 	if (!(theta >= 0 && theta <= (float)M_PI))
 		theta = 0;
 
-	step = (float)M_PI * 2.0f / MAX_RAD_SEGS;
+	step = (float)M_PI * 2 / RADSEGS;
 
-	for (i = 0; i < MAX_RAD_SEGS; theta -= step, i++)
+	for (i = 0; i < RADSEGS; theta -= step, i++)
 	{
 		fz_point pt1, pt2, pt3, pt4;
 
-		pt1.x = cos (theta) * r1 + x1;
-		pt1.y = sin (theta) * r1 + y1;
-		pt2.x = cos (theta) * r0 + x0;
-		pt2.y = sin (theta) * r0 + y0;
-		pt3.x = cos (theta+step) * r1 + x1;
-		pt3.y = sin (theta+step) * r1 + y1;
-		pt4.x = cos (theta+step) * r0 + x0;
-		pt4.y = sin (theta+step) * r0 + y0;
+		pt1.x = cosf(theta) * r1 + x1;
+		pt1.y = sinf(theta) * r1 + y1;
+		pt2.x = cosf(theta) * r0 + x0;
+		pt2.y = sinf(theta) * r0 + y0;
+		pt3.x = cosf(theta + step) * r1 + x1;
+		pt3.y = sinf(theta + step) * r1 + y1;
+		pt4.x = cosf(theta + step) * r0 + x0;
+		pt4.y = sinf(theta + step) * r0 + y0;
 
 		if (r0 > 0)
-		{
-			if (!nomesh)
-			{
-				pdf_addtriangle(shade,
-					pt1.x, pt1.y, &c1,
-					pt2.x, pt2.y, &c0,
-					pt4.x, pt4.y, &c0);
-			}
-			pos++;
-		}
-
+			pdf_addtriangle(shade, pt1.x, pt1.y, &c1, pt2.x, pt2.y, &c0, pt4.x, pt4.y, &c0);
 		if (r1 > 0)
-		{
-			if (!nomesh)
-			{
-				pdf_addtriangle(shade,
-					pt1.x, pt1.y, &c1,
-					pt3.x, pt3.y, &c1,
-					pt4.x, pt4.y, &c0);
-			}
-			pos++;
-		}
+			pdf_addtriangle(shade, pt1.x, pt1.y, &c1, pt3.x, pt3.y, &c1, pt4.x, pt4.y, &c0);
 	}
-
-	return pos;
 }
 
 static fz_error
-pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref,
+pdf_loadradialshading(fz_shade *shade, pdf_xref *xref,
 	float *coords, float *domain, int funcs, pdf_function **func, int *extend)
 {
 	float x0, y0, r0, x1, y1, r1;
-	float t0, t1;
-	int e0, e1;
 	float ex0, ey0, er0;
 	float ex1, ey1, er1;
 	float rs;
-	int i;
 	fz_error error;
 
-	pdf_logshade("load type3 shading {\n");
+	pdf_logshade("load type3 (radial) shading\n");
 
 	x0 = coords[0];
 	y0 = coords[1];
@@ -697,18 +575,7 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref,
 	y1 = coords[4];
 	r1 = coords[5];
 
-	pdf_logshade("coords %g %g %g  %g %g %g\n", x0, y0, r0, x1, y1, r1);
-
-	t0 = domain[0];
-	t1 = domain[1];
-
-	e0 = extend[0];
-	e1 = extend[1];
-
-	pdf_logshade("domain %g %g\n", t0, t1);
-	pdf_logshade("extend %d %d\n", e0, e1);
-
-	error = pdf_sampleshadefunction(shade, funcs, func, t0, t1);
+	error = pdf_sampleshadefunction(shade, funcs, func, domain[0], domain[1]);
 	if (error)
 		return fz_rethrow(error, "unable to sample shading function");
 
@@ -730,39 +597,33 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref,
 	ey1 = y1 + (y0 - y1) * rs;
 	er1 = r1 + (r0 - r1) * rs;
 
-	for (i = 0; i < 2; i++)
-	{
-		int pos = 0;
-		if (e0)
-			pos = buildannulusmesh(shade, pos,
-				ex0, ey0, er0,
-				x0, y0, r0,
-				0, 0, 1 - i);
-		pos = buildannulusmesh(shade, pos,
-			x0, y0, r0,
-			x1, y1, r1,
-			0, 1, 1 - i);
-		if (e1)
-			pos = buildannulusmesh(shade, pos,
-				x1, y1, r1,
-				ex1, ey1, er1,
-				1, 1, 1 - i);
-	}
-
-	shade->meshlen = shade->meshlen / 3 / 3;
-
-	pdf_logshade("}\n");
+	if (extend[0])
+		pdf_buildannulusmesh(shade, ex0, ey0, er0, 0, x0, y0, r0, 0);
+	pdf_buildannulusmesh(shade, x0, y0, r0, 0, x1, y1, r1, 1);
+	if (extend[1])
+		pdf_buildannulusmesh(shade, x1, y1, r1, 1, ex1, ey1, er1, 1);
 
 	return fz_okay;
 }
 
-static int
-getdata(fz_stream *stream, int bps)
+/*
+ * Type 4 & 5 -- Triangle mesh shadings
+ */
+
+struct vertex
+{
+	int flag;
+	float x, y;
+	float c[FZ_MAXCOLORS];
+};
+
+static unsigned
+readbits(fz_stream *stream, int bits)
 {
 	unsigned int v = 0;
 	int c, n;
 
-	for (n = 0; n < bps; n += 8)
+	for (n = 0; n < bits; n += 8)
 	{
 		c = fz_readbyte(stream);
 		if (c == EOF)
@@ -773,27 +634,28 @@ getdata(fz_stream *stream, int bps)
 	return v;
 }
 
+static float
+readsample(fz_stream *stream, int bits, float min, float max)
+{
+	/* we use pow(2,x) because (1<<x) would overflow the math on 32-bit samples */
+	float bitscale = 1.0f / (powf(2, bits) - 1);
+	return min + readbits(stream, bits) * (max - min) * bitscale;
+}
+
 static fz_error
 pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref,
 	int bpcoord, int bpcomp, int bpflag, float *decode,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1 / (powf(2, bpcoord) - 1);
-	float compscale = 1 / (powf(2, bpcomp) - 1);
-	int ncomp;
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
 	float c1[FZ_MAXCOLORS];
-	float cval[4][FZ_MAXCOLORS];
-	int idx, intriangle, badtriangle;
-	int a, b, c;
+	struct vertex va, vb, vc, vd;
+	int ncomp;
 	int i;
 
-	int flag[4];
-	float x[4], y[4];
-
-	pdf_logshade("load type4 shading {\n");
+	pdf_logshade("load type4 (free-form triangle mesh) shading\n");
 
 	x0 = decode[0];
 	x1 = decode[1];
@@ -804,11 +666,6 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref,
 		c0[i] = decode[4 + i * 2 + 0];
 		c1[i] = decode[4 + i * 2 + 1];
 	}
-
-	pdf_logshade("decode [%g %g %g %g", x0, x1, y0, y1);
-	for (i = 0; i < shade->cs->n; i++)
-		pdf_logshade(" %g %g", c0[i], c1[i]);
-	pdf_logshade("]\n");
 
 	if (funcs > 0)
 	{
@@ -820,95 +677,48 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref,
 	else
 		ncomp = shade->cs->n;
 
-	idx = 0;
-	intriangle = 0;
-	badtriangle = 0;
-	a = b = c = 0;
-
 	while (fz_peekbyte(stream) != EOF)
 	{
-		unsigned int t;
-
-		flag[idx] = getdata(stream, bpflag);
-
-		t = getdata(stream, bpcoord);
-		x[idx] = x0 + t * (x1 - x0) * coordscale;
-
-		t = getdata(stream, bpcoord);
-		y[idx] = y0 + t * (y1 - y0) * coordscale;
-
+		vd.flag = readbits(stream, bpflag);
+		vd.x = readsample(stream, bpcoord, x0, x1);
+		vd.y = readsample(stream, bpcoord, y0, y1);
 		for (i = 0; i < ncomp; i++)
+			vd.c[i] = readsample(stream, bpcomp, c0[i], c1[i]);
+
+		switch (vd.flag)
 		{
-			t = getdata(stream, bpcomp);
-			cval[idx][i] = c0[i] + t * (c1[i] - c0[i]) * compscale;
+		case 0: /* start new triangle */
+			va = vd;
+
+			vb.flag = readbits(stream, bpflag);
+			vb.x = readsample(stream, bpcoord, x0, x1);
+			vb.y = readsample(stream, bpcoord, y0, y1);
+			for (i = 0; i < ncomp; i++)
+				vb.c[i] = readsample(stream, bpcomp, c0[i], c1[i]);
+
+			vc.flag = readbits(stream, bpflag);
+			vc.x = readsample(stream, bpcoord, x0, x1);
+			vc.y = readsample(stream, bpcoord, y0, y1);
+			for (i = 0; i < ncomp; i++)
+				vc.c[i] = readsample(stream, bpcomp, c0[i], c1[i]);
+
+			pdf_addtriangle(shade, va.x, va.y, va.c, vb.x, vb.y, vb.c, vc.x, vc.y, vc.c);
+			break;
+
+		case 1: /* Vb, Vc, Vd */
+			va = vb;
+			vb = vc;
+			vc = vd;
+			pdf_addtriangle(shade, va.x, va.y, va.c, vb.x, vb.y, vb.c, vc.x, vc.y, vc.c);
+			break;
+
+		case 2: /* Va, Vc, Vd */
+			vb = vc;
+			vc = vd;
+			pdf_addtriangle(shade, va.x, va.y, va.c, vb.x, vb.y, vb.c, vc.x, vc.y, vc.c);
+			break;
 		}
-
-		if (!intriangle && flag[idx] == 0)
-		{
-			/* two more vertices necessary */
-			intriangle = 1;
-		}
-		else if (intriangle && idx >= 2)
-		{
-			/* collected three vertices */
-			a = 0; b = 1; c = 2;
-			intriangle = 0;
-		}
-		else if (!intriangle && flag[idx] == 1)
-		{
-			/* re-use previous b c vertices */
-			a = 1; b = 2; c = 3;
-			intriangle = 0;
-
-			if (idx < 3)
-				badtriangle = 1;
-		}
-		else if (!intriangle && flag[idx] == 2)
-		{
-			/* re-use previous a c vertices */
-			a = 0; b = 2; c = 3;
-			intriangle = 0;
-
-			if (idx < 3)
-				badtriangle = 1;
-		}
-
-		if (intriangle || badtriangle)
-		{
-			idx++;
-			badtriangle = 0;
-		}
-		else
-		{
-			pdf_addtriangle(shade,
-					x[a], y[a], cval[a],
-					x[b], y[b], cval[b],
-					x[c], y[c], cval[c]);
-
-			flag[0] = flag[a];
-			flag[1] = flag[b];
-			flag[2] = flag[c];
-
-			x[0] = x[a];
-			x[1] = x[b];
-			x[2] = x[c];
-
-			y[0] = y[a];
-			y[1] = y[b];
-			y[2] = y[c];
-
-			memmove(cval[0], cval[a], sizeof cval[0]);
-			memmove(cval[1], cval[b], sizeof cval[1]);
-			memmove(cval[2], cval[c], sizeof cval[2]);
-
-			idx = 3;
-		}
-
 	}
-
-	shade->meshlen = shade->meshlen / (2 + ncomp) / 3;
-
-	pdf_logshade("}\n");
 
 	return fz_okay;
 }
@@ -919,19 +729,16 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1 / (powf(2, bpcoord) - 1);
-	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	float x0, x1, y0, y1;
 	float c0[FZ_MAXCOLORS];
 	float c1[FZ_MAXCOLORS];
-	int i;
-	unsigned int t;
 	fz_point *pbuf;
 	float *cbuf;
 	int rows, col;
+	int i;
 
-	pdf_logshade("load type5 shading {\n");
+	pdf_logshade("load type5 (lattice-form triangle mesh) shading\n");
 
 	x0 = decode[0];
 	x1 = decode[1];
@@ -942,12 +749,6 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 		c0[i] = decode[4 + i * 2 + 0];
 		c1[i] = decode[4 + i * 2 + 1];
 	}
-
-
-	pdf_logshade("decode [%g %g %g %g", x0, x1, y0, y1);
-	for (i = 0; i < shade->cs->n; i++)
-		pdf_logshade(" %g %g", c0[i], c1[i]);
-	pdf_logshade("]\n");
 
 	if (funcs > 0)
 	{
@@ -973,17 +774,10 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 		{
 			for (col = 0; col < vprow; col++)
 			{
-				t = getdata(stream, bpcoord);
-				p->x = x0 + t * (x1 - x0) * coordscale;
-				t = getdata(stream, bpcoord);
-				p->y = y0 + t * (y1 - y0) * coordscale;
-
+				p->x = readsample(stream, bpcoord, x0, x1);
+				p->y = readsample(stream, bpcoord, y0, y1);
 				for (i = 0; i < ncomp; i++)
-				{
-					t = getdata(stream, bpcomp);
-					c[i] = c0[i] + t * (c1[i] - c0[i]) * compscale;
-				}
-
+					c[i] = readsample(stream, bpcomp, c0[i], c1[i]);
 				p++;
 				c += FZ_MAXCOLORS;
 			}
@@ -1012,15 +806,15 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref,
 
 	} while (fz_peekbyte(stream) != EOF);
 
-	shade->meshlen = shade->meshlen / (2 + ncomp) / 3 ;
-
 	free(pbuf);
 	free(cbuf);
 
-	pdf_logshade("}\n");
-
 	return fz_okay;
 }
+
+/*
+ * Type 6 & 7 -- Patch mesh shadings
+ */
 
 static fz_error
 pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
@@ -1028,8 +822,6 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1 / (powf(2, bpcoord) - 1);
-	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	fz_point p0, p1;
 	float c0[FZ_MAXCOLORS];
@@ -1039,7 +831,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 	float prevc[4][FZ_MAXCOLORS];
 	fz_point prevp[12];
 
-	pdf_logshade("load type6 shading {\n");
+	pdf_logshade("load type6 (coons patch mesh) shading\n");
 
 	ncomp = shade->cs->n;
 
@@ -1052,11 +844,6 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 		c0[i] = decode[4 + i * 2 + 0];
 		c1[i] = decode[4 + i * 2 + 1];
 	}
-
-	pdf_logshade("decode [%g %g %g %g", p0.x, p1.x, p0.y, p1.y);
-	for (i = 0; i < ncomp; i++)
-		pdf_logshade(" %g %g", c0[i], c1[i]);
-	pdf_logshade("]\n");
 
 	if (funcs > 0)
 	{
@@ -1075,12 +862,11 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 	{
 		float c[4][FZ_MAXCOLORS];
 		fz_point p[12];
-		unsigned int t;
 		int startcolor;
 		int startpt;
 		int flag;
 
-		flag = getdata(stream, bpflag);
+		flag = readbits(stream, bpflag);
 
 		if (flag == 0)
 		{
@@ -1096,19 +882,14 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 
 		for (i = startpt; i < 12; i++)
 		{
-			t = getdata(stream, bpcoord);
-			p[i].x = p0.x + t * (p1.x - p0.x) * coordscale;
-			t = getdata(stream, bpcoord);
-			p[i].y = p0.y + t * (p1.y - p0.y) * coordscale;
+			p[i].x = readsample(stream, bpcoord, p0.x, p1.x);
+			p[i].y = readsample(stream, bpcoord, p0.y, p1.y);
 		}
 
 		for (i = startcolor; i < 4; i++)
 		{
 			for (k = 0; k < ncomp; k++)
-			{
-				t = getdata(stream, bpcomp);
-				c[i][k] = c0[k] + t * (c1[k] - c0[k]) * compscale;
-			}
+				c[i][k] = readsample(stream, bpcomp, c0[k], c1[k]);
 		}
 
 		haspatch = 0;
@@ -1160,7 +941,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 			for (i = 0; i < 4; i++)
 				memcpy(patch.color[i], c[i], FZ_MAXCOLORS * sizeof(float));
 
-			pdf_addpatch(shade, &patch, ncomp);
+			drawpatch(shade, &patch, SUBDIV, SUBDIV);
 
 			for (i = 0; i < 12; i++)
 				prevp[i] = p[i];
@@ -1172,10 +953,6 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref,
 		}
 	}
 
-	shade->meshlen = shade->meshlen / (2 + ncomp) / 3;
-
-	pdf_logshade("}\n");
-
 	return fz_okay;
 }
 
@@ -1185,8 +962,6 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 	int funcs, pdf_function **func, fz_stream *stream)
 {
 	fz_error error;
-	float coordscale = 1 / (powf(2, bpcoord) - 1);
-	float compscale = 1 / (powf(2, bpcomp) - 1);
 	int ncomp;
 	fz_point p0, p1;
 	float c0[FZ_MAXCOLORS];
@@ -1196,7 +971,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 	float prevc[4][FZ_MAXCOLORS];
 	fz_point prevp[16];
 
-	pdf_logshade("load type7 shading {\n");
+	pdf_logshade("load type7 (tensor-product patch mesh) shading\n");
 
 	ncomp = shade->cs->n;
 
@@ -1209,11 +984,6 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 		c0[i] = decode[4 + i * 2 + 0];
 		c1[i] = decode[4 + i * 2 + 1];
 	}
-
-	pdf_logshade("decode [%g %g %g %g", p0.x, p1.x, p0.y, p1.y);
-	for (i = 0; i < ncomp; i++)
-		pdf_logshade(" %g %g", c0[i], c1[i]);
-	pdf_logshade("]\n");
 
 	if (funcs > 0)
 	{
@@ -1232,12 +1002,11 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 	{
 		float c[4][FZ_MAXCOLORS];
 		fz_point p[16];
-		unsigned int t;
 		int startcolor;
 		int startpt;
 		int flag;
 
-		flag = getdata(stream, bpflag);
+		flag = readbits(stream, bpflag);
 
 		if (flag == 0)
 		{
@@ -1252,19 +1021,14 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 
 		for (i = startpt; i < 16; i++)
 		{
-			t = getdata(stream, bpcoord);
-			p[i].x = p0.x + t * (p1.x - p0.x) * coordscale;
-			t = getdata(stream, bpcoord);
-			p[i].y = p0.y + t * (p1.y - p0.y) * coordscale;
+			p[i].x = readsample(stream, bpcoord, p0.x, p1.x);
+			p[i].y = readsample(stream, bpcoord, p0.y, p1.y);
 		}
 
 		for (i = startcolor; i < 4; i++)
 		{
 			for (k = 0; k < ncomp; k++)
-			{
-				t = getdata(stream, bpcomp);
-				c[i][k] = c0[k] + t * (c1[k] - c0[k]) * compscale;
-			}
+				c[i][k] = readsample(stream, bpcomp, c0[k], c1[k]);
 		}
 
 		haspatch = 0;
@@ -1316,7 +1080,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 			for (i = 0; i < 4; i++)
 				memcpy(patch.color[i], c[i], FZ_MAXCOLORS * sizeof(float));
 
-			pdf_addpatch(shade, &patch, ncomp);
+			drawpatch(shade, &patch, SUBDIV, SUBDIV);
 
 			for (i = 0; i < 16; i++)
 				prevp[i] = p[i];
@@ -1328,35 +1092,14 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref,
 		}
 	}
 
-	shade->meshlen = shade->meshlen / (2 + ncomp) / 3;
-
-	pdf_logshade("}\n");
-
 	return fz_okay;
 }
 
+/*
+ * Load all of the common shading dictionary parameters, then switch on the shading type.
+ */
 static fz_error
-parsedecode(fz_obj *obj, int ncomp, float *decode)
-{
-	int i;
-
-	decode[0] = fz_toreal(fz_arrayget(obj, 0));
-	decode[1] = fz_toreal(fz_arrayget(obj, 1));
-	decode[2] = fz_toreal(fz_arrayget(obj, 2));
-	decode[3] = fz_toreal(fz_arrayget(obj, 3));
-
-	for (i = 0; i < MIN(fz_arraylen(obj) / 2, ncomp); i++)
-	{
-		decode[4 + i * 2 + 0] = fz_toreal(fz_arrayget(obj, i * 2 + 4));
-		decode[4 + i * 2 + 1] = fz_toreal(fz_arrayget(obj, i * 2 + 5));
-	}
-
-	return fz_okay;
-}
-
-
-static fz_error
-pdf_loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix transform)
+pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix transform)
 {
 	fz_error error;
 	fz_shade *shade;
@@ -1391,11 +1134,24 @@ pdf_loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix tra
 
 	shade->cs = nil;
 
+	domain[0] = 0;
+	domain[1] = 1;
+	domain[2] = 0;
+	domain[3] = 1;
+
+	matrix = fz_identity();
+
+	funcs = 0;
+
 	obj = fz_dictgets(dict, "ShadingType");
 	type = fz_toint(obj);
-	pdf_logshade("type %d\n", type);
 
 	obj = fz_dictgets(dict, "ColorSpace");
+	if (!obj)
+	{
+		fz_dropshade(shade);
+		return fz_throw("shading colorspace is missing");
+	}
 	error = pdf_loadcolorspace(&shade->cs, xref, obj);
 	if (error)
 	{
@@ -1417,91 +1173,7 @@ pdf_loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix tra
 	if (fz_isarray(obj))
 	{
 		shade->bbox = pdf_torect(obj);
-		pdf_logshade("bbox [%g %g %g %g]\n",
-			shade->bbox.x0, shade->bbox.y0,
-			shade->bbox.x1, shade->bbox.y1);
 	}
-
-	domain[0] = 0;
-	domain[1] = 1;
-	domain[2] = 0;
-	domain[3] = 1;
-
-	obj = fz_dictgets(dict, "Domain");
-	if (fz_isarray(obj))
-	{
-		for (i = 0; i < MIN(nelem(domain), fz_arraylen(obj)); i++)
-			domain[i] = fz_toreal(fz_arrayget(obj, i));
-	}
-
-	matrix = fz_identity();
-
-	obj = fz_dictgets(dict, "Matrix");
-	if (fz_isarray(obj))
-		matrix = pdf_tomatrix(obj);
-
-	obj = fz_dictgets(dict, "Coords");
-	if (fz_isarray(obj))
-	{
-		for (i = 0; i < MIN(nelem(domain), fz_arraylen(obj)); i++)
-			coords[i] = fz_toreal(fz_arrayget(obj, i));
-	}
-
-	obj = fz_dictgets(dict, "Extend");
-	if (fz_isarray(obj))
-	{
-		extend[0] = fz_tobool(fz_arrayget(obj, 0));
-		extend[1] = fz_tobool(fz_arrayget(obj, 1));
-	}
-
-	bpcoord = fz_toint(fz_dictgets(dict, "BitsPerCoordinate"));
-	if (type >= 4 && type <= 7)
-	{
-		if (bpcoord != 1 && bpcoord != 2 && bpcoord != 4 && bpcoord != 4 &&
-			bpcoord != 8 && bpcoord != 12 && bpcoord != 16 &&
-			bpcoord != 24 && bpcoord != 32)
-			fz_warn("invalid number of bits per vertex coordinate in shading, continuing...");
-	}
-
-	bpcomp = fz_toint(fz_dictgets(dict, "BitsPerComponent"));
-	if (type >= 4 && type <= 7)
-	{
-		if (bpcomp != 1 && bpcomp != 2 && bpcomp != 4 && bpcomp != 4 &&
-			bpcomp != 8 && bpcomp != 12 && bpcomp != 16)
-			fz_warn("invalid number of bits per vertex color component in shading, continuing...");
-	}
-
-	bpflag = fz_toint(fz_dictgets(dict, "BitsPerFlag"));
-	if (type == 4 || type == 6 || type == 7)
-	{
-		if (bpflag != 2 && bpflag != 4 && bpflag != 8)
-			fz_warn("invalid number of bits per vertex flag in shading, continuing...");
-	}
-
-	vprow = fz_toint(fz_dictgets(dict, "VerticesPerRow"));
-	if (type == 5)
-	{
-		if (vprow < 2)
-		{
-			vprow = 2;
-			fz_warn("invalid number of vertices per row in shading, continuing...");
-		}
-	}
-
-	obj = fz_dictgets(dict, "Decode");
-	if (fz_isarray(obj))
-	{
-		error = parsedecode(obj, shade->cs->n, decode);
-		if (error)
-		{
-			error = fz_rethrow(error, "cannot parse shading decode (%d %d R)", fz_tonum(obj), fz_togen(obj));
-			goto cleanup;
-		}
-	}
-	else if (type >= 4 && type <= 7)
-		fz_warn("shading vertex color decoding invalid, continuing...");
-
-	funcs = 0;
 
 	obj = fz_dictgets(dict, "Function");
 	if (fz_isdict(obj))
@@ -1535,47 +1207,126 @@ pdf_loadshadedict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix tra
 		}
 	}
 
+	if (type >= 1 && type <= 3)
+	{
+		obj = fz_dictgets(dict, "Domain");
+		if (fz_isarray(obj))
+		{
+			for (i = 0; i < MIN(nelem(domain), fz_arraylen(obj)); i++)
+				domain[i] = fz_toreal(fz_arrayget(obj, i));
+		}
+
+		obj = fz_dictgets(dict, "Matrix");
+		if (fz_isarray(obj))
+			matrix = pdf_tomatrix(obj);
+
+		obj = fz_dictgets(dict, "Coords");
+		if (fz_isarray(obj))
+		{
+			for (i = 0; i < MIN(nelem(domain), fz_arraylen(obj)); i++)
+				coords[i] = fz_toreal(fz_arrayget(obj, i));
+		}
+
+		obj = fz_dictgets(dict, "Extend");
+		if (fz_isarray(obj))
+		{
+			extend[0] = fz_tobool(fz_arrayget(obj, 0));
+			extend[1] = fz_tobool(fz_arrayget(obj, 1));
+		}
+	}
+
 	if (type >= 4 && type <= 7)
 	{
+		if (type == 4 || type == 6 || type == 7)
+		{
+			bpflag = fz_toint(fz_dictgets(dict, "BitsPerFlag"));
+			if (bpflag != 2 && bpflag != 4 && bpflag != 8)
+				fz_warn("invalid number of bits per vertex flag in shading, continuing...");
+		}
+
+		if (type == 5)
+		{
+			vprow = fz_toint(fz_dictgets(dict, "VerticesPerRow"));
+			if (vprow < 2)
+			{
+				vprow = 2;
+				fz_warn("invalid number of vertices per row in shading, continuing...");
+			}
+		}
+
+		bpcoord = fz_toint(fz_dictgets(dict, "BitsPerCoordinate"));
+		if (bpcoord != 1 && bpcoord != 2 && bpcoord != 4 && bpcoord != 4 &&
+			bpcoord != 8 && bpcoord != 12 && bpcoord != 16 &&
+			bpcoord != 24 && bpcoord != 32)
+			fz_warn("invalid number of bits per vertex coordinate in shading, continuing...");
+
+		bpcomp = fz_toint(fz_dictgets(dict, "BitsPerComponent"));
+		if (bpcomp != 1 && bpcomp != 2 && bpcomp != 4 && bpcomp != 4 &&
+			bpcomp != 8 && bpcomp != 12 && bpcomp != 16)
+			fz_warn("invalid number of bits per vertex color component in shading, continuing...");
+
+		obj = fz_dictgets(dict, "Decode");
+		if (fz_isarray(obj))
+		{
+			if (fz_arraylen(obj) != 4 + shade->cs->n * 2)
+				fz_warn("shading decode array is the wrong length");
+			for (i = 0; i < 4 + shade->cs->n * 2; i++)
+				decode[i] = fz_toreal(fz_arrayget(obj, i));
+		}
+		else
+			fz_warn("shading decode array is missing");
+
 		error = pdf_openstream(&stream, xref, fz_tonum(dict), fz_togen(dict));
 		if (error)
 			return fz_rethrow(error, "cannot open shading stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
+	pdf_logshade("type %d\n", type);
+	if (type <= 3)
+	{
+		// coords
+		// domain
+		pdf_logshade("extend = [%d %d]\n", extend[0], extend[1]);
+	}
+	if (type >= 4)
+	{
+		pdf_logshade("bpflag = %d\n", bpflag);
+		pdf_logshade("bpcoord = %d\n", bpcoord);
+		pdf_logshade("bpcomp = %d\n", bpcomp);
+		pdf_logshade("vprow = %d\n", vprow);
+		pdf_logshade("decode = [%g %g %g %g ...]\n", decode[0], decode[1], decode[2], decode[3]);
+	}
+
+	error = 0;
 	switch (type)
 	{
 	case 1:
-		error = pdf_loadtype1shade(shade, xref, domain, matrix, func[0]);
-		if (error) goto cleanup;
+		error = pdf_loadfunctionbasedshading(shade, xref, domain, matrix, func[0]);
 		break;
 	case 2:
-		error = pdf_loadtype2shade(shade, xref, coords, domain, funcs, func, extend);
-		if (error) goto cleanup;
+		error = pdf_loadaxialshading(shade, xref, coords, domain, funcs, func, extend);
 		break;
 	case 3:
-		error = pdf_loadtype3shade(shade, xref, coords, domain, funcs, func, extend);
-		if (error) goto cleanup;
+		error = pdf_loadradialshading(shade, xref, coords, domain, funcs, func, extend);
 		break;
 	case 4:
 		error = pdf_loadtype4shade(shade, xref, bpcoord, bpcomp, bpflag, decode, funcs, func, stream);
-		if (error) goto cleanup;
 		break;
 	case 5:
 		error = pdf_loadtype5shade(shade, xref, bpcoord, bpcomp, vprow, decode, funcs, func, stream);
-		if (error) goto cleanup;
 		break;
 	case 6:
 		error = pdf_loadtype6shade(shade, xref, bpcoord, bpcomp, bpflag, decode, funcs, func, stream);
-		if (error) goto cleanup;
 		break;
 	case 7:
 		error = pdf_loadtype7shade(shade, xref, bpcoord, bpcomp, bpflag, decode, funcs, func, stream);
-		if (error) goto cleanup;
 		break;
 	default:
-		fz_warn("syntaxerror: unknown shading type: %d", type);
+		error = fz_throw("unknown shading type: %d", type);
 		break;
 	}
+	if (error)
+		goto cleanup;
 
 	if (stream)
 		fz_dropstream(stream);
@@ -1600,13 +1351,13 @@ cleanup:
 }
 
 fz_error
-pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
+pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	fz_matrix mat;
 	fz_obj *obj;
 
-	if ((*shadep = pdf_finditem(xref->store, PDF_KSHADE, dict)))
+	if ((*shadep = pdf_finditem(xref->store, PDF_KSHADING, dict)))
 	{
 		fz_keepshade(*shadep);
 		return fz_okay;
@@ -1644,7 +1395,7 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 		if (!obj)
 			return fz_throw("syntaxerror: missing shading dictionary");
 
-		error = pdf_loadshadedict(shadep, xref, obj, mat);
+		error = pdf_loadshadingdict(shadep, xref, obj, mat);
 		if (error)
 			return fz_rethrow(error, "cannot load shading dictionary (%d %d R)", fz_tonum(obj), fz_togen(obj));
 
@@ -1656,12 +1407,12 @@ pdf_loadshade(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 	 */
 	else
 	{
-		error = pdf_loadshadedict(shadep, xref, dict, fz_identity());
+		error = pdf_loadshadingdict(shadep, xref, dict, fz_identity());
 		if (error)
 			return fz_rethrow(error, "cannot load shading dictionary (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
-	pdf_storeitem(xref->store, PDF_KSHADE, dict, *shadep);
+	pdf_storeitem(xref->store, PDF_KSHADING, dict, *shadep);
 
 	return fz_okay;
 }

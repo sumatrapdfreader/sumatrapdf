@@ -158,15 +158,13 @@ infousage(void)
 {
 	fprintf(stderr,
 		"usage: pdfinfo [options] [file.pdf ... ]\n"
-		"  -d -\tpassword for decryption\n"
-		"  -f -\tlist fonts\n"
-		"  -i -\tlist images\n"
-		"  -m -\tlist dimensions\n"
-		"  -p -\tlist patterns\n"
-		"  -s -\tlist shadings\n"
-		"  -x -\tlist form and postscript xobjects\n"
-		"  example:\n"
-		"    pdfinfo -p mypassword a.pdf\n");
+		"\t-d -\tpassword for decryption\n"
+		"\t-f\tlist fonts\n"
+		"\t-i\tlist images\n"
+		"\t-m\tlist dimensions\n"
+		"\t-p\tlist patterns\n"
+		"\t-s\tlist shadings\n"
+		"\t-x\tlist form and postscript xobjects\n");
 	exit(1);
 }
 

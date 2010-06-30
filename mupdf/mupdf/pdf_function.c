@@ -533,7 +533,7 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	return fz_okay;
 }
 
-#define SAFE_RETHROW            if (error) return fz_rethrow(error, "runtime error in calculator function")
+#define SAFE_RETHROW		if (error) return fz_rethrow(error, "runtime error in calculator function")
 #define SAFE_PUSHINT(st, a)	{ error = pspushint(st, a); SAFE_RETHROW; }
 #define SAFE_PUSHREAL(st, a)	{ error = pspushreal(st, a); SAFE_RETHROW; }
 #define SAFE_PUSHBOOL(st, a)	{ error = pspushbool(st, a); SAFE_RETHROW; }
@@ -1610,7 +1610,7 @@ pdf_debugindent(char *prefix, int level, char *suffix)
 	printf("%s", prefix);
 
 	for (i = 0; i < level; i++)
-		printf("  ");
+		printf("\t");
 
 	printf("%s", suffix);
 }

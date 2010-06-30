@@ -392,19 +392,19 @@ fz_debugfont(fz_font *font)
 
 	if (font->ftface)
 	{
-		printf("  freetype face %p\n", font->ftface);
+		printf("\tfreetype face %p\n", font->ftface);
 		if (font->ftsubstitute)
-			printf("  substitute font\n");
+			printf("\tsubstitute font\n");
 	}
 
 	if (font->t3procs)
 	{
-		printf("  type3 matrix [%g %g %g %g]\n",
+		printf("\ttype3 matrix [%g %g %g %g]\n",
 			font->t3matrix.a, font->t3matrix.b,
 			font->t3matrix.c, font->t3matrix.d);
 	}
 
-	printf("  bbox [%g %g %g %g]\n",
+	printf("\tbbox [%g %g %g %g]\n",
 		font->bbox.x0, font->bbox.y0,
 		font->bbox.x1, font->bbox.y1);
 

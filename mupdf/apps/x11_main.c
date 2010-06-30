@@ -252,12 +252,6 @@ static void fillrect(int x, int y, int w, int h)
 		XFillRectangle(xdpy, xwin, xgc, x, y, w, h);
 }
 
-void windrawrect(pdfapp_t *app, fz_bbox rect, int color)
-{
-	XSetForeground(xdpy, xgc, WhitePixel(xdpy, xscr));
-	XFillRectangle(xdpy, xwin, xgc, rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
-}
-
 static void winblit(pdfapp_t *app)
 {
 	int x0 = gapp.panx;
@@ -283,13 +277,38 @@ static void winblit(pdfapp_t *app)
 
 	pdfapp_inverthit(&gapp);
 
-	ximage_blit(xwin, xgc,
-		x0, y0,
-		gapp.image->samples,
-		0, 0,
-		gapp.image->w,
-		gapp.image->h,
-		gapp.image->w * gapp.image->n);
+	if (gapp.image->n == 4)
+		ximage_blit(xwin, xgc,
+			x0, y0,
+			gapp.image->samples,
+			0, 0,
+			gapp.image->w,
+			gapp.image->h,
+			gapp.image->w * gapp.image->n);
+	else if (gapp.image->n == 2)
+	{
+		int i = gapp.image->w*gapp.image->h;
+		unsigned char *color = malloc(i*4);
+		if (color != NULL)
+		{
+			unsigned char *s = gapp.image->samples;
+			unsigned char *d = color;
+			for (; i > 0 ; i--)
+			{
+				d[2] = d[1] = d[0] = *s++;
+				d[3] = *s++;
+				d += 4;
+			}
+			ximage_blit(xwin, xgc,
+				x0, y0,
+				color,
+				0, 0,
+				gapp.image->w,
+				gapp.image->h,
+				gapp.image->w * 4);
+			free(color);
+		}
+	}
 
 	pdfapp_inverthit(&gapp);
 
@@ -450,7 +469,7 @@ void winreloadfile(pdfapp_t *app)
 
 	fd = open(filename, O_BINARY | O_RDONLY, 0666);
 	if (fd < 0)
-	        winerror(app, fz_throw("cannot reload file '%s'", filename));
+		winerror(app, fz_throw("cannot reload file '%s'", filename));
 
 	pdfapp_open(app, filename, fd);
 }

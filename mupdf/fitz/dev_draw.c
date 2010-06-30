@@ -59,6 +59,8 @@ blendmaskover(fz_pixmap *src, fz_pixmap *msk, fz_pixmap *dst)
 
 	if (src->n == 1 && msk->n == 1 && dst->n == 1)
 		fz_duff_1i1o1(sp, src->w, mp, msk->w, dp, dst->w, w, h);
+	else if (src->n == 2 && msk->n == 1 && dst->n == 2)
+		fz_duff_2i1o2(sp, src->w * 2, mp, msk->w, dp, dst->w * 2, w, h);
 	else if (src->n == 4 && msk->n == 1 && dst->n == 4)
 		fz_duff_4i1o4(sp, src->w * 4, mp, msk->w, dp, dst->w * 4, w, h);
 	else if (src->n == dst->n)
@@ -76,8 +78,8 @@ fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_drawdevice *dev = user;
 	float expansion = fz_matrixexpansion(ctm);
 	float flatness = 0.3f / expansion;
-	unsigned char argb[FZ_MAXCOLORS + 1];
-	float rgb[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAXCOLORS + 1];
+	float colorfv[FZ_MAXCOLORS];
 	fz_bbox bbox;
 	int i;
 
@@ -93,11 +95,11 @@ fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 
 	if (dev->model)
 	{
-		fz_convertcolor(colorspace, color, dev->model, rgb);
-		argb[0] = alpha * 255;
+		fz_convertcolor(colorspace, color, dev->model, colorfv);
 		for (i = 0; i < dev->model->n; i++)
-			argb[i + 1] = rgb[i] * 255;
-		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, argb, nil, nil);
+			colorbv[i] = colorfv[i] * 255;
+		colorbv[i] = alpha * 255;
+		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, colorbv, nil, nil);
 	}
 	else
 	{
@@ -113,8 +115,8 @@ fz_drawstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix c
 	float expansion = fz_matrixexpansion(ctm);
 	float flatness = 0.3f / expansion;
 	float linewidth = stroke->linewidth;
-	unsigned char argb[FZ_MAXCOLORS + 1];
-	float rgb[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAXCOLORS + 1];
+	float colorfv[FZ_MAXCOLORS];
 	fz_bbox bbox;
 	int i;
 
@@ -136,11 +138,11 @@ fz_drawstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix c
 
 	if (dev->model)
 	{
-		fz_convertcolor(colorspace, color, dev->model, rgb);
-		argb[0] = alpha * 255;
+		fz_convertcolor(colorspace, color, dev->model, colorfv);
 		for (i = 0; i < dev->model->n; i++)
-			argb[i + 1] = rgb[i] * 255;
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, argb, nil, nil);
+			colorbv[i] = colorfv[i] * 255;
+		colorbv[i] = alpha * 255;
+		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv, nil, nil);
 	}
 	else
 	{
@@ -243,7 +245,7 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 }
 
 static void
-drawglyph(unsigned char *argb, fz_pixmap *dst, fz_pixmap *src, int xorig, int yorig, fz_bbox scissor)
+drawglyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *src, int xorig, int yorig, fz_bbox scissor)
 {
 	unsigned char *dp, *sp;
 	int w, h;
@@ -281,10 +283,10 @@ drawglyph(unsigned char *argb, fz_pixmap *dst, fz_pixmap *src, int xorig, int yo
 		switch (dst->n)
 		{
 		case 2:
-			fz_text_w2i1o2(argb, sp, src->w, dp, dst->w * 2, w, h);
+			fz_text_w2i1o2(colorbv, sp, src->w, dp, dst->w * 2, w, h);
 			break;
 		case 4:
-			fz_text_w4i1o4(argb, sp, src->w, dp, dst->w * 4, w, h);
+			fz_text_w4i1o4(colorbv, sp, src->w, dp, dst->w * 4, w, h);
 			break;
 		default:
 			assert("Write fz_text_wni1on" != NULL);
@@ -300,18 +302,18 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_drawdevice *dev = user;
-	unsigned char argb[FZ_MAXCOLORS + 1];
-	float rgb[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAXCOLORS + 1];
+	float colorfv[FZ_MAXCOLORS];
 	fz_matrix tm, trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
 	if (dev->model)
 	{
-		fz_convertcolor(colorspace, color, dev->model, rgb);
-		argb[0] = alpha * 255;
+		fz_convertcolor(colorspace, color, dev->model, colorfv);
 		for (i = 0; i < dev->model->n; i++)
-			argb[i + 1] = rgb[i] * 255;
+			colorbv[i] = colorfv[i] * 255;
+		colorbv[i] = alpha * 255;
 	}
 
 	tm = text->trm;
@@ -334,7 +336,7 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 		if (glyph)
 		{
 			if (dev->model)
-				drawglyph(argb, dev->dest, glyph, x, y, dev->scissor);
+				drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
 			else
 				drawglyph(nil, dev->dest, glyph, x, y, dev->scissor);
 			fz_droppixmap(glyph);
@@ -448,8 +450,8 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 	fz_pixmap *dest = dev->dest;
 	fz_rect bounds;
 	fz_bbox bbox;
-	float rgb[FZ_MAXCOLORS];
-	unsigned char argb[FZ_MAXCOLORS + 1];
+	float colorfv[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAXCOLORS + 1];
 	unsigned char *s;
 	int x, y;
 
@@ -470,17 +472,18 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 	{
 		/* FIXME: Could use optimisation */
 		int i, n = dev->model->n + 1;
-		fz_convertcolor(shade->cs, shade->background, dev->model, rgb);
-		argb[n] = 255;
+
+		fz_convertcolor(shade->cs, shade->background, dev->model, colorfv);
+		colorbv[0] = 255;
 		for (i = 1; i < n; i++)
-			argb[n-i] = rgb[i-1] * 255;
+			colorbv[n-i] = colorfv[i-1] * 255;
 		for (y = bbox.y0; y < bbox.y1; y++)
 		{
 			s = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
 			for (x = bbox.x0; x < bbox.x1; x++)
 			{
 				for (i = n; i > 0; i--)
-					*s++ = argb[i];
+					*s++ = colorbv[i];
 			}
 		}
 	}
@@ -587,8 +590,8 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_drawdevice *dev = user;
-	unsigned char argb[FZ_MAXCOLORS + 1];
-	float rgb[FZ_MAXCOLORS];
+	unsigned char colorbv[FZ_MAXCOLORS + 1];
+	float colorfv[FZ_MAXCOLORS];
 	fz_bbox bbox;
 	int dx, dy;
 	fz_pixmap *scaled = nil;
@@ -608,11 +611,11 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 
 	if (dev->dest->colorspace)
 	{
-		fz_convertcolor(colorspace, color, dev->model, rgb);
-		argb[0] = alpha * 255;
+		fz_convertcolor(colorspace, color, dev->model, colorfv);
 		for (i = 0; i < dev->model->n; i++)
-			argb[i + 1] = rgb[i] * 255;
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, argb, image, &invmat);
+			colorbv[i] = colorfv[i] * 255;
+		colorbv[i] = alpha * 255;
+		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv, image, &invmat);
 	}
 	else
 	{

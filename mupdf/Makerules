@@ -39,8 +39,20 @@ LDFLAGS += -L/usr/X11R6/lib
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
 
+ifeq "$(arch)" "amd64"
+CFLAGS += -m64
+LDFLAGS += -m64
+else
+CFLAGS += -m32
+LDFLAGS += -m32
+endif
+
 ifeq "$(build)" "release"
+ifeq "$(arch)" "amd64"
 CFLAGS += -DARCH_X86_64
+else
+CFLAGS += -DARCH_X86
+endif
 DRAW_ARCH_SRC := archx86.c
 endif
 

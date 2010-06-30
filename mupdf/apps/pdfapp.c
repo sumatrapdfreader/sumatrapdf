@@ -55,6 +55,7 @@ char *pdfapp_usage(pdfapp_t *app)
 		"/\t\t-- search for text\n"
 		"n\t\t-- find next search result\n"
 		"N\t\t-- find previous search result\n"
+		"c\t\t-- toggle between color and grayscale\n"
 	;
 }
 
@@ -68,8 +69,8 @@ void pdfapp_init(pdfapp_t *app)
 
 void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 {
-	unsigned *p;
-	int x, y;
+	unsigned char *p;
+	int x, y, n;
 
 	int x0 = CLAMP(rect.x0 - app->image->x, 0, app->image->w - 1);
 	int x1 = CLAMP(rect.x1 - app->image->x, 0, app->image->w - 1);
@@ -78,11 +79,11 @@ void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 
 	for (y = y0; y < y1; y++)
 	{
-		p = (unsigned *)(app->image->samples + (y * app->image->w + x0) * 4);
+		p = app->image->samples + (y * app->image->w + x0) * app->image->n;
 		for (x = x0; x < x1; x++)
 		{
-			*p = ~0 - *p;
-			p ++;
+			for (n = app->image->n; n > 0; n--, p++)
+				*p = 255 - *p;
 		}
 	}
 }
@@ -278,6 +279,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 
 	if (drawpage)
 	{
+		fz_colorspace *colorspace;
+
 		wincursor(app, WAIT);
 
 		ctm = pdfapp_viewctm(app);
@@ -292,7 +295,15 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		/* Draw */
 		if (app->image)
 			fz_droppixmap(app->image);
-		app->image = fz_newpixmapwithrect(pdf_devicergb, bbox);
+		if (app->grayscale)
+			colorspace = pdf_devicegray;
+		else
+#ifdef _WIN32
+			colorspace = pdf_devicebgr;
+#else
+			colorspace = pdf_devicergb;
+#endif
+		app->image = fz_newpixmapwithrect(colorspace, bbox);
 		fz_clearpixmap(app->image, 0xFF);
 		idev = fz_newdrawdevice(app->cache, app->image);
 		fz_executedisplaylist(app->page->list, idev, ctm);
@@ -598,6 +609,11 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		break;
 	case 'R':
 		app->rotate += 90;
+		pdfapp_showpage(app, 0, 1);
+		break;
+
+	case 'c':
+		app->grayscale ^= 1;
 		pdfapp_showpage(app, 0, 1);
 		break;
 

@@ -14,85 +14,86 @@ extern void fz_srow4_arm(byte *src, byte *dst, int w, int denom);
 extern void fz_scol4_arm(byte *src, byte *dst, int w, int denom);
 
 static void
-path_w4i1o4_arm(byte * restrict argb, byte * restrict src, byte cov, int len, byte * restrict dst)
+path_w4i1o4_arm(byte * restrict rgba, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
-	/* The ARM code here is a hand coded implementation
-	 * of the optimized C version. */
+	/* The ARM code here is a hand coded implementation of the optimized C version. */
+
 	if (len <= 0)
 		return;
+
 	asm volatile(
-	"ldr	%0, [%0]		@ %0 = argb			\n"
+	"ldr	%0, [%0]		@ %0 = rgba			\n"
 	"mov	r11,#0							\n"
 	"mov	r8, #0xFF00						\n"
-	"and	r14,%0,#255		@ r14= alpha			\n"
-	"orr	%0, %0, #255		@ %0 = argb |= 255		\n"
+	"mov	r14,%0,lsr #24		@ r14= alpha			\n"
+	"orr	%0, %0, #0xFF000000	@ %0 = rgba |= 0xFF000000	\n"
 	"orr	r8, r8, r8, LSL #16	@ r8 = 0xFF00FF00		\n"
 	"adds	r14,r14,r14,LSR #7	@ r14 = alpha += alpha>>7	\n"
 	"beq	9f			@ if (alpha == 0) bale		\n"
-	"and	r6, %0, r8		@ r6 = rb<<8			\n"
-	"bic	%0, %0, r8		@ %0 = ag			\n"
-	"mov	r6, r6, LSR #8		@ r6 = rb			\n"
+	"and	r6, %0, r8		@ r6 = ga<<8			\n"
+	"bic	%0, %0, r8		@ %0 = rb			\n"
+	"mov	r6, r6, LSR #8		@ r6 = ga			\n"
 	"cmp	r14,#256		@ if (alpha == 256)		\n"
-	"beq	4f			@     no-alpha loop		\n"
+	"beq	4f			@	no-alpha loop		\n"
 	"B	2f			@ enter the loop		\n"
 	"1:	@ Loop used for when coverage*alpha == 0		\n"
 	"subs	%3, %3, #1		@ len--				\n"
 	"ble	9f							\n"
 	"2:								\n"
 	"ldrb	r12,[%1]		@ r12= *src			\n"
-	"ldr	r9, [%4], #4		@ r9 = dag = *dst32++		\n"
+	"ldr	r9, [%4], #4		@ r9 = drb = *dst32++		\n"
 	"strb	r11,[%1], #1		@ r11= *src++ = 0		\n"
 	"add	%2, r12, %2		@ %2 = cov += r12		\n"
 	"ands	%2, %2, #255		@ %2 = cov &= 255		\n"
 	"beq	1b			@ if coverage == 0 loop back	\n"
 	"add	r10,%2, %2, LSR #7	@ r10= ca = cov+(cov>>7)	\n"
 	"mul	r10,r14,r10		@ r10= ca *= alpha		\n"
-	"and	r7, r8, r9		@ r7 = drb =  dag     & MASK	\n"
+	"and	r7, r8, r9		@ r7 = dga = drb & MASK		\n"
 	"mov	r10,r10,LSR #8		@ r10= ca >>= 8			\n"
-	"and	r9, r8, r9, LSL #8	@ r9 = dag = (dag<<8) & MASK	\n"
-	"sub	r12,r6, r7, LSR #8	@ r12= crb = rb - (drb>>8)	\n"
-	"sub	r5, %0, r9, LSR #8	@ r5 = cag = ag - (dag>>8)	\n"
-	"mla	r7, r12,r10,r7		@ r7 = drb += crb * ca		\n"
+	"and	r9, r8, r9, LSL #8	@ r9 = drb = (drb<<8) & MASK	\n"
+	"sub	r12,r6, r7, LSR #8	@ r12= cga = ga - (dga>>8)	\n"
+	"sub	r5, %0, r9, LSR #8	@ r5 = crb = rb - (drb>>8)	\n"
+	"mla	r7, r12,r10,r7		@ r7 = dga += cga * ca		\n"
 	"subs	%3, %3, #1		@ len--				\n"
-	"mla	r9, r5, r10,r9		@ r9 = dag += cag * ca		\n"
-	"and	r7, r8, r7		@ r7 = drb &= MASK		\n"
-	"and	r9, r8, r9		@ r9 = dag &= MASK		\n"
-	"orr	r9, r7, r9, LSR #8	@ r9 = dag = drb | (dag>>8)	\n"
+	"mla	r9, r5, r10,r9		@ r9 = drb += crb * ca		\n"
+	"and	r7, r8, r7		@ r7 = dga &= MASK		\n"
+	"and	r9, r8, r9		@ r9 = drb &= MASK		\n"
+	"orr	r9, r7, r9, LSR #8	@ r9 = drb = dga | (drb>>8)	\n"
 	"str	r9, [%4, #-4]		@ dst32[-1] = r9		\n"
 	"bgt	2b							\n"
 	"b	9f							\n"
 	"@ --- Solid alpha loop	---------------------------------------	\n"
 	"3:	@ Loop used when coverage == 256			\n"
-	"orr	r9, %0, r6, LSL #8	@ r9 = argb			\n"
+	"orr	r9, %0, r6, LSL #8	@ r9 = rgba			\n"
 	"str	r9, [%4, #-4]		@ dst32[-1] = r9		\n"
 	"4:	@ Loop used for when coverage*alpha == 0		\n"
 	"subs	%3, %3, #1		@ len--				\n"
 	"ble	9f							\n"
 	"5:								\n"
 	"ldrb	r12,[%1]		@ r12= *src			\n"
-	"ldr	r9, [%4], #4		@ r9 = dag = *dst32++		\n"
+	"ldr	r9, [%4], #4		@ r9 = drb = *dst32++		\n"
 	"strb	r11,[%1], #1		@ r11= *src++ = 0		\n"
 	"add	%2, r12, %2		@ %2 = cov += r12		\n"
 	"ands	%2, %2, #255		@ %2 = cov &= 255		\n"
 	"beq	4b			@ if coverage == 0 loop back	\n"
 	"cmp	%2, #255		@ if coverage == solid		\n"
-	"beq	3b			@    loop back			\n"
+	"beq	3b			@	loop back		\n"
 	"add	r10,%2, %2, LSR #7	@ r10= ca = cov+(cov>>7)	\n"
-	"and	r7, r8, r9		@ r7 = drb =  dag     & MASK	\n"
-	"and	r9, r8, r9, LSL #8	@ r9 = dag = (dag<<8) & MASK	\n"
-	"sub	r12,r6, r7, LSR #8	@ r12= crb = rb - (drb>>8)	\n"
-	"sub	r5, %0, r9, LSR #8	@ r5 = cag = ag - (dag>>8)	\n"
-	"mla	r7, r12,r10,r7		@ r7 = drb += crb * ca		\n"
+	"and	r7, r8, r9		@ r7 = dga = drb & MASK		\n"
+	"and	r9, r8, r9, LSL #8	@ r9 = dga = (drb<<8) & MASK	\n"
+	"sub	r12,r6, r7, LSR #8	@ r12= cga = ga - (dga>>8)	\n"
+	"sub	r5, %0, r9, LSR #8	@ r5 = crb = rb - (drb>>8)	\n"
+	"mla	r7, r12,r10,r7		@ r7 = dga += cga * ca		\n"
 	"subs	%3, %3, #1		@ len--				\n"
-	"mla	r9, r5, r10,r9		@ r9 = dag += cag * ca		\n"
-	"and	r7, r8, r7		@ r7 = drb &= MASK		\n"
-	"and	r9, r8, r9		@ r9 = dag &= MASK		\n"
-	"orr	r9, r7, r9, LSR #8	@ r9 = dag = drb | (dag>>8)	\n"
+	"mla	r9, r5, r10,r9		@ r9 = drb += crb * ca		\n"
+	"and	r7, r8, r7		@ r7 = dga &= MASK		\n"
+	"and	r9, r8, r9		@ r9 = drb &= MASK		\n"
+	"orr	r9, r7, r9, LSR #8	@ r9 = drb = dga | (drb>>8)	\n"
 	"str	r9, [%4, #-4]		@ dst32[-1] = r9		\n"
 	"bgt	5b							\n"
 	"9:				@ End				\n"
 	:
-	"+r" (argb),
+	"+r" (rgba),
 	"+r" (src),
 	"+r" (cov),
 	"+r" (len),
@@ -129,20 +130,20 @@ static void loadtile8_arm(byte * restrict src, int sw, byte * restrict dst, int 
 			"2:						\n"
 			"LDRB	r4, [%[src]], #1	@ r4 = *src++	\n"
 			"SUBS	r5, r5, #1				\n"
-			"STRB	r11,[%[dst]], #1	@ *dst++ = 255	\n"
 			"STRB	r4, [%[dst]], #1	@ *dst++ = r4	\n"
+			"STRB	r11,[%[dst]], #1	@ *dst++ = 255	\n"
 			"BGT	2b					\n"
 			"ADD	%[src],%[src],%[sw]	@ src += sw	\n"
 			"ADD	%[dst],%[dst],%[dw]	@ dst += dw	\n"
 			"SUBS	%[h],%[h],#1				\n"
 			"BGT	1b					\n"
 			:
-			[src] "+r" (src),
-			[sw]  "+r" (sw),
-			[dst] "+r" (dst),
-			[dw]  "+r" (dw),
-			[h]   "+r" (h),
-			[w]   "+r" (w)
+			[src]	"+r" (src),
+			[sw]	"+r" (sw),
+			[dst]	"+r" (dst),
+			[dw]	"+r" (dw),
+			[h]	"+r" (h),
+			[w]	"+r" (w)
 			:
 			:
 			"r4","r5","r11","memory","cc"
@@ -161,22 +162,22 @@ static void loadtile8_arm(byte * restrict src, int sw, byte * restrict dst, int 
 			"LDRB	r6, [%[src]], #1	@ r6 = *src++	\n"
 			"LDRB	r7, [%[src]], #1	@ r7 = *src++	\n"
 			"SUBS	r5, r5, #3				\n"
-			"STRB	r11,[r8], #1		@ *dp++ = 255	\n"
 			"STRB	r4, [r8], #1		@ *dp++ = r4	\n"
 			"STRB	r6, [r8], #1		@ *dp++ = r6	\n"
 			"STRB	r7, [r8], #1		@ *dp++ = r7	\n"
+			"STRB	r11,[r8], #1		@ *dp++ = 255	\n"
 			"BGT	2b					\n"
 			"ADD	%[src],%[src],%[sw]	@ src += sw	\n"
 			"ADD	%[dst],%[dst],%[dw]	@ dst += dw	\n"
 			"SUBS	%[h],%[h],#1				\n"
 			"BGT	1b					\n"
 			:
-			[src] "+r" (src),
-			[sw]  "+r" (sw),
-			[dst] "+r" (dst),
-			[dw]  "+r" (dw),
-			[h]   "+r" (h),
-			[w]   "+r" (w)
+			[src]	"+r" (src),
+			[sw]	"+r" (sw),
+			[dst]	"+r" (dst),
+			[dw]	"+r" (dw),
+			[h]	"+r" (h),
+			[w]	"+r" (w)
 			:
 			:
 			"r4","r5","r6","r7","r8","r11","memory","cc"
@@ -204,13 +205,13 @@ static void loadtile8_arm(byte * restrict src, int sw, byte * restrict dst, int 
 			"subs	%[h], %[h], #1				\n"
 			"bgt	1b					\n"
 			:
-			[src] "+r" (src),
-			[sw]  "+r" (sw),
-			[dst] "+r" (dst),
-			[dw]  "+r" (dw),
-			[h]   "+r" (h),
-			[w]   "+r" (w),
-			[pad] "+r" (pad)
+			[src]	"+r" (src),
+			[sw]	"+r" (sw),
+			[dst]	"+r" (dst),
+			[dw]	"+r" (dw),
+			[h]	"+r" (h),
+			[w]	"+r" (w),
+			[pad]	"+r" (pad)
 			:
 			:
 			"r7","r8","r9","r10","r14","memory","cc"

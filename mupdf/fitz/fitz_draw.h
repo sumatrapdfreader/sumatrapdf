@@ -38,13 +38,14 @@ typedef enum fz_blendkind_e
 } fz_blendkind;
 
 /*
-pixmaps have n components per pixel. the first is always alpha.
+pixmaps have n components per pixel. the last is always alpha.
 premultiplied alpha when rendering, but non-premultiplied for colorspace
 conversions and rescaling.
 */
 
 extern fz_colorspace *pdf_devicegray;
 extern fz_colorspace *pdf_devicergb;
+extern fz_colorspace *pdf_devicebgr;
 extern fz_colorspace *pdf_devicecmyk;
 extern fz_colorspace *pdf_devicelab;
 extern fz_colorspace *pdf_devicepattern;
@@ -385,9 +386,8 @@ struct fz_shade_s
 
 	int meshlen;
 	int meshcap;
-	float *mesh; /* [x y t] or [x y c1 ... cn] * 3 * meshlen */
+	float *mesh; /* [x y t] or [x y c1 ... cn] */
 };
-
 
 fz_shade *fz_keepshade(fz_shade *shade);
 void fz_dropshade(fz_shade *shade);
@@ -451,7 +451,7 @@ fz_ael * fz_newael(void);
 void fz_freeael(fz_ael *ael);
 
 fz_error fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill,
-	fz_bbox clip, fz_pixmap *pix, unsigned char *argb, fz_pixmap *image, fz_matrix *invmat);
+	fz_bbox clip, fz_pixmap *pix, unsigned char *colorbv, fz_pixmap *image, fz_matrix *invmat);
 
 void fz_fillpath(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness);
 void fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, float flatness, float linewidth);
@@ -484,6 +484,7 @@ extern void (*fz_duff_nimon)(unsigned char*,int,int,unsigned char*,int,int,unsig
 extern void (*fz_duff_1o1)(unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_4o4)(unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_1i1o1)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
+extern void (*fz_duff_2i1o2)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_4i1o4)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 
 extern void (*fz_path_1o1)(unsigned char*,unsigned char,int,unsigned char*);

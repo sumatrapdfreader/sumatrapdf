@@ -6,7 +6,7 @@
 
 #include <windows.h>
 #include <pdftool.h>
-#include "gdidraw.h"
+#include <fitz_gdidraw.h>
 
 struct benchmark
 {

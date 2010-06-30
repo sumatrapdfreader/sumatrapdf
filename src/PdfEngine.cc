@@ -6,49 +6,33 @@
 // in SumatraPDF.cpp
 extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 
-// copied from pdf_page.c
-fz_error
-pdf_loadpageinfo(pdf_page *page, pdf_xref *xref, fz_obj *dict)
+// adapted from pdf_page.c's pdf_loadpageinfo
+fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 {
 	fz_obj *obj;
 	fz_bbox bbox;
 
-	obj = fz_dictgets(dict, "MediaBox");
+	obj = fz_dictgets(page, "MediaBox");
 	if (!fz_isarray(obj))
-		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(dict), fz_togen(dict));
+		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
 	bbox = fz_roundrect(pdf_torect(obj));
 
-	obj = fz_dictgets(dict, "CropBox");
+	obj = fz_dictgets(page, "CropBox");
 	if (fz_isarray(obj))
 	{
 		fz_bbox cropbox = fz_roundrect(pdf_torect(obj));
 		bbox = fz_intersectbbox(bbox, cropbox);
 	}
 
-	page->mediabox.x0 = MIN(bbox.x0, bbox.x1);
-	page->mediabox.y0 = MIN(bbox.y0, bbox.y1);
-	page->mediabox.x1 = MAX(bbox.x0, bbox.x1);
-	page->mediabox.y1 = MAX(bbox.y0, bbox.y1);
+	mediabox->x0 = MIN(bbox.x0, bbox.x1);
+	mediabox->y0 = MIN(bbox.y0, bbox.y1);
+	mediabox->x1 = MAX(bbox.x0, bbox.x1);
+	mediabox->y1 = MAX(bbox.y0, bbox.y1);
 
-	if (page->mediabox.x1 - page->mediabox.x0 < 1 || page->mediabox.y1 - page->mediabox.y0 < 1)
+	if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
 		return fz_throw("invalid page size");
 
-	page->rotate = fz_toint(fz_dictgets(dict, "Rotate"));
-
 	return fz_okay;
-}
-
-fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
-{
-    fz_matrix ctm;
-    ctm = fz_identity();
-    //ctm = fz_concat(ctm, fz_translate(0, -page->mediabox.y1));
-    ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
-    ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    rotate += page->rotate;
-    if (rotate != 0)
-        ctm = fz_concat(ctm, fz_rotate(rotate));
-    return ctm;
 }
 
 PdfEngine::PdfEngine() : 
@@ -84,14 +68,6 @@ PdfEngine::~PdfEngine()
         if (_xref->store) {
             pdf_freestore(_xref->store);
             _xref->store = NULL;
-        }
-        if (_xref->pagerefs) {
-            for (int i = 0; i < _xref->pagelen; i++) {
-                fz_dropobj(_xref->pagerefs[i]);
-                fz_dropobj(_xref->pageobjs[i]);
-            }
-            fz_free(_xref->pagerefs);
-            fz_free(_xref->pageobjs);
         }
         pdf_closexref(_xref);
     }
@@ -252,19 +228,19 @@ void PdfEngine::dropPdfPage(int pageNo)
 int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
-    pdf_page page;
-    if (pdf_loadpageinfo(&page, _xref, pdf_getpageobject(_xref, pageNo)) != fz_okay)
+    fz_obj *page = pdf_getpageobject(_xref, pageNo);
+    if (!page)
         return INVALID_ROTATION;
-    return page.rotate;
+    return fz_toint(fz_dictgets(page, "Rotate"));
 }
 
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    pdf_page page;
-    if (pdf_loadpageinfo(&page, _xref, pdf_getpageobject(_xref, pageNo)) != fz_okay)
+    fz_obj *page = pdf_getpageobject(_xref, pageNo);
+    fz_rect bbox;
+    if (!page || pdf_getmediabox(&bbox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
         return SizeD(0,0);
-    fz_rect bbox = page.mediabox;
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }
 
@@ -278,34 +254,15 @@ bool PdfEngine::hasPermission(int permission)
     return false;
 }
 
-static void ConvertPixmapForWindows(fz_pixmap *image)
+fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 {
-   int bmpstride = ((image->w * 3 + 3) / 4) * 4;
-   int imageh = image->h;
-   int imagew = image->w;
-   unsigned char *bmpdata = (unsigned char*)fz_malloc(image->h * bmpstride);
-   if (!bmpdata)
-       return;
-
-   unsigned char *p = bmpdata;
-   unsigned char *s = image->samples;
-   for (int y = 0; y < imageh; y++)
-   {
-       unsigned char *pl = p;
-       unsigned char *sl = s;
-       for (int x = 0; x < imagew; x++)
-       {
-           pl[0] = sl[3];
-           pl[1] = sl[2];
-           pl[2] = sl[1];
-           pl += 3;
-           sl += 4;
-       }
-       p += bmpstride;
-       s += imagew * 4;
-   }
-   fz_free(image->samples);
-   image->samples = bmpdata;
+    fz_matrix ctm = fz_identity();
+    ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
+    ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
+    rotate += page->rotate;
+    if (rotate != 0)
+        ctm = fz_concat(ctm, fz_rotate(rotate));
+    return ctm;
 }
 
 RenderedBitmap *PdfEngine::renderBitmap(
@@ -344,12 +301,11 @@ RenderedBitmap *PdfEngine::renderBitmap(
 #if CONSERVE_MEMORY
     dropPdfPage(pageNo);
 #endif
-    if (error) {
-        fz_droppixmap(image);
-        return NULL;
-    }
-    ConvertPixmapForWindows(image);
-    return new RenderedBitmap(image);
+    RenderedBitmap *bitmap = NULL;
+    if (!error)
+        bitmap = new RenderedBitmap(image);
+    fz_droppixmap(image);
+    return bitmap;
 }
 
 static int linksLinkCount(pdf_link *currLink) {

@@ -7,15 +7,15 @@ typedef unsigned char byte;
 #define MASK 0xFF00FF00;
 
 static void
-path_w4i1o4_32bit(byte * restrict argb,
+path_w4i1o4_32bit(byte * restrict rgba,
 	byte * restrict src, byte cov, int len,
 	byte * restrict dst)
 {
 	/* COLOR * coverage + DST * (256-coverage) = (COLOR - DST)*coverage + DST*256 */
 	unsigned int *dst32 = (unsigned int *)(void *)dst;
-	int alpha = argb[0];
-	unsigned int rb = argb[1] | (argb[3] << 16);
-	unsigned int ag = 255 | (argb[2] << 16);
+	int alpha = rgba[3];
+	unsigned int rb = rgba[0] | (rgba[2] << 16);
+	unsigned int ga = rgba[1] | 0xFF0000;
 
 	if (alpha == 0)
 		return;
@@ -25,23 +25,23 @@ path_w4i1o4_32bit(byte * restrict argb,
 		alpha += alpha>>7; /* alpha is now in the 0...256 range */
 		while (len--)
 		{
-			unsigned int ca, drb, dag, crb, cag;
+			unsigned int ca, drb, dga, crb, cga;
 			cov += *src; *src++ = 0;
 			ca = cov + (cov>>7); /* ca is in 0...256 range */
 			ca = (ca*alpha)>>8; /* ca is is in 0...256 range */
-			dag = *dst32++;
+			drb = *dst32++;
 			if (ca != 0)
 			{
-				drb = dag & MASK;
-				dag = (dag<<8) & MASK;
+				dga = drb & MASK;
+				drb = (drb<<8) & MASK;
+				cga = ga - (dga>>8);
 				crb = rb - (drb>>8);
-				cag = ag - (dag>>8);
+				dga += cga * ca;
 				drb += crb * ca;
-				dag += cag * ca;
+				dga &= MASK;
 				drb &= MASK;
-				dag &= MASK;
-				dag = drb | (dag>>8);
-				dst32[-1] = dag;
+				drb = dga | (drb>>8);
+				dst32[-1] = drb;
 			}
 		}
 	}
@@ -49,133 +49,42 @@ path_w4i1o4_32bit(byte * restrict argb,
 	{
 		while (len--)
 		{
-			unsigned int ca, drb, dag, crb, cag;
+			unsigned int ca, drb, dga, crb, cga;
 			cov += *src; *src++ = 0;
 			ca = cov + (cov>>7); /* ca is in 0...256 range */
-			dag = *dst32++;
+			drb = *dst32++;
 			if (ca == 0)
 				continue;
 			if (ca == 255)
 			{
-				dag = (rb<<8) | ag;
+				drb = (ga<<8) | rb;
 			}
 			else
 			{
-				drb = dag & MASK;
-				dag = (dag<<8) & MASK;
+				dga = drb & MASK;
+				drb = (drb<<8) & MASK;
+				cga = ga - (dga>>8);
 				crb = rb - (drb>>8);
-				cag = ag - (dag>>8);
+				dga += cga * ca;
 				drb += crb * ca;
-				dag += cag * ca;
+				dga &= MASK;
 				drb &= MASK;
-				dag &= MASK;
-				dag = drb | (dag>>8);
+				drb = dga |(drb>>8);
 			}
-			dst32[-1] = dag;
+			dst32[-1] = drb;
 		}
 	}
 }
 
 static void
-duff_4o4_32bit(byte * restrict sp, int sw, byte * restrict dp, int dw, int w0, int h)
-{
-	unsigned int *sp32 = (unsigned int *)(void *)sp;
-	unsigned int *dp32 = (unsigned int *)(void *)dp;
-
-	/* duff_non(sp0, sw, 4, dp0, dw, w0, h); */
-
-	sw = (sw>>2)-w0;
-	dw = (dw>>2)-w0;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			unsigned int sag = *sp32++;
-			unsigned int dag = *dp32++;
-			unsigned int srb, drb;
-			int alpha = sag & 255;
-			if (alpha == 0)
-				continue;
-			alpha += alpha>>7;
-			sag |= 0xFF;
-			drb = dag & MASK;
-			dag = (dag<<8) & MASK;
-			srb = (sag>>8) & ~MASK;
-			sag = sag & ~MASK;
-			srb -= (drb>>8);
-			sag -= (dag>>8);
-			drb += srb * alpha;
-			dag += sag * alpha;
-			drb &= MASK;
-			dag &= MASK;
-			dag = drb | (dag>>8);
-			dp32[-1] = dag;
-		}
-		sp32 += sw;
-		dp32 += dw;
-	}
-}
-
-static void
-duff_4i1o4_32bit(byte * restrict sp, int sw,
-	byte * restrict mp, int mw,
-	byte * restrict dp, int dw, int w0, int h)
-{
-	unsigned int *sp32 = (unsigned int *)(void *)sp;
-	unsigned int *dp32 = (unsigned int *)(void *)dp;
-
-	/* duff_nimon(sp, sw, 4, mp, mw, 1, dp, dw, w0, h); */
-
-	sw = (sw>>2)-w0;
-	dw = (dw>>2)-w0;
-	mw -= w0;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			unsigned int sag = *sp32++;
-			unsigned int dag = *dp32++;
-			unsigned int srb, drb, alpha, ma;
-			alpha = sag & 255;
-			ma = *mp++;
-			if (alpha == 0)
-				continue;
-			ma += ma>>7;
-			if (ma == 0)
-				continue;
-			alpha += alpha>>7;
-			alpha = (alpha*ma)>>8;
-			sag |= 0xFF;
-			drb = dag & MASK;
-			dag = (dag<<8) & MASK;
-			srb = (sag>>8) & ~MASK;
-			sag = sag & ~MASK;
-			srb -= (drb>>8);
-			sag -= (dag>>8);
-			drb += srb * alpha;
-			dag += sag * alpha;
-			drb &= MASK;
-			dag &= MASK;
-			dag = drb | (dag>>8);
-			dp32[-1] = dag;
-		}
-		sp32 += sw;
-		mp += mw;
-		dp32 += dw;
-	}
-}
-
-static void
-text_w4i1o4_32bit(byte * restrict argb,
+text_w4i1o4_32bit(byte * restrict rgba,
 	byte * restrict src, int srcw,
 	byte * restrict dst, int dstw, int w0, int h)
 {
 	unsigned int *dst32 = (unsigned int *)(void *)dst;
-	unsigned int alpha = argb[0];
-	unsigned int rb = argb[1] | (argb[3] << 16);
-	unsigned int ag = 255 | (argb[2] << 16);
+	unsigned int alpha = rgba[3];
+	unsigned int rb = rgba[0] | (rgba[2] << 16);
+	unsigned int ga = rgba[1] | 0xFF0000;
 
 	if (alpha == 0)
 		return;
@@ -185,29 +94,29 @@ text_w4i1o4_32bit(byte * restrict argb,
 
 	if (alpha != 255)
 	{
-		alpha += alpha>>7;
+		alpha += alpha>>7; /* alpha is now in the 0...256 range */
 		while (h--)
 		{
 			int w = w0;
 			while (w--)
 			{
-				unsigned int ca, drb, dag, crb, cag;
+				unsigned int ca, drb, dga, crb, cga;
 				ca = *src++;
-				dag = *dst32++;
+				drb = *dst32++;
 				ca += ca>>7;
 				ca = (ca*alpha)>>8;
 				if (ca == 0)
 					continue;
-				drb = dag & MASK;
-				dag = (dag<<8) & MASK;
+				dga = drb & MASK;
+				drb = (drb<<8) & MASK;
+				cga = ga - (dga>>8);
 				crb = rb - (drb>>8);
-				cag = ag - (dag>>8);
+				dga += cga * ca;
 				drb += crb * ca;
-				dag += cag * ca;
+				dga &= MASK;
 				drb &= MASK;
-				dag &= MASK;
-				dag = drb | (dag>>8);
-				dst32[-1] = dag;
+				drb = dga | (drb>>8);
+				dst32[-1] = drb;
 			}
 			src += srcw;
 			dst32 += dstw;
@@ -215,28 +124,27 @@ text_w4i1o4_32bit(byte * restrict argb,
 	}
 	else
 	{
-		alpha += alpha>>7;
 		while (h--)
 		{
 			int w = w0;
 			while (w--)
 			{
-				unsigned int ca, drb, dag, crb, cag;
+				unsigned int ca, drb, dga, crb, cga;
 				ca = *src++;
-				dag = *dst32++;
+				drb = *dst32++;
 				ca += ca>>7;
 				if (ca == 0)
 					continue;
-				drb = dag & MASK;
-				dag = (dag<<8) & MASK;
+				dga = drb & MASK;
+				drb = (drb<<8) & MASK;
+				cga = ga - (dga>>8);
 				crb = rb - (drb>>8);
-				cag = ag - (dag>>8);
+				dga += cga * ca;
 				drb += crb * ca;
-				dag += cag * ca;
+				dga &= MASK;
 				drb &= MASK;
-				dag &= MASK;
-				dag = drb | (dag>>8);
-				dst32[-1] = dag;
+				drb = dga | (drb>>8);
+				dst32[-1] = drb;
 			}
 			src += srcw;
 			dst32 += dstw;
@@ -313,9 +221,9 @@ img_4o4_32bit(byte * restrict src, byte cov, int len, byte * restrict dst,
 			a = (((c >>8)-(a >>8)) * vd + a ) & MASK;
 			a1 = (((c1>>8)-(a1>>8)) * vd + a1) & MASK;
 		}
-		sa = (a>>8) & 0xFF;
+		sa = (a1>>24);
 		sa = FZ_COMBINE(FZ_EXPAND(sa), FZ_EXPAND(cov));
-		a |= 0xFF00;
+		a1 |= 0xFF000000;
 		d = *dst32++;
 		d1 = d & MASK;
 		d = (d<<8) & MASK;
@@ -328,15 +236,15 @@ img_4o4_32bit(byte * restrict src, byte cov, int len, byte * restrict dst,
 }
 
 static void
-img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
+img_w4i1o4_32bit(byte *rgba, byte * restrict src, byte cov, int len,
 	byte * restrict dst, fz_pixmap *image, int u, int v, int fa, int fb)
 {
 	byte *samples = image->samples;
 	int w = image->w;
 	int h = image->h-1;
-	int alpha = FZ_EXPAND(argb[0]);
-	unsigned int rb = argb[1] | (argb[3] << 16);
-	unsigned int ag = 255 | (argb[2] << 16);
+	int alpha = FZ_EXPAND(rgba[3]);
+	unsigned int rb = rgba[0] | (rgba[2] << 16);
+	unsigned int ga = rgba[1] | 0xFF0000;
 	unsigned int *dst32 = (unsigned int *)(void *)dst;
 
 	if (alpha == 0)
@@ -345,10 +253,10 @@ img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
 	{
 		while (len--)
 		{
-			unsigned int ca, drb, dag, crb, cag;
+			unsigned int ca, drb, dga, crb, cga;
 			unsigned int a, b;
 			cov += *src; *src = 0; src++;
-			dag = *dst32++;
+			drb = *dst32++;
 			ca = FZ_COMBINE(FZ_EXPAND(cov), alpha);
 			if (ca != 0)
 			{
@@ -396,16 +304,16 @@ img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
 			}
 			if (ca != 0)
 			{
-				drb = dag & MASK;
-				dag = (dag<<8) & MASK;
+				dga = drb & MASK;
+				drb = (drb<<8) & MASK;
+				cga = ga - (dga>>8);
 				crb = rb - (drb>>8);
-				cag = ag - (dag>>8);
+				dga += cga * ca;
 				drb += crb * ca;
-				dag += cag * ca;
+				dga &= MASK;
 				drb &= MASK;
-				dag &= MASK;
-				dag = drb | (dag>>8);
-				dst32[-1] = dag;
+				drb = dga | (drb>>8);
+				dst32[-1] = drb;
 			}
 			u += fa;
 			v += fb;
@@ -415,10 +323,10 @@ img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
 	{
 		while (len--)
 		{
-			unsigned int ca, drb, dag, crb, cag;
+			unsigned int ca, drb, dga, crb, cga;
 			unsigned int a, b;
 			cov += *src; *src = 0; src++;
-			dag = *dst32++;
+			drb = *dst32++;
 			if (cov != 0)
 			{
 				int ui, ui1, vi, vi1, ud, vd;
@@ -466,21 +374,21 @@ img_w4i1o4_32bit(byte *argb, byte * restrict src, byte cov, int len,
 				{
 					if (ca == 256)
 					{
-						dag = (rb<<8) | ag;
+						drb = (ga<<8) | rb;
 					}
 					else
 					{
-						drb = dag & MASK;
-						dag = (dag<<8) & MASK;
+						dga = drb & MASK;
+						drb = (drb<<8) & MASK;
+						cga = ga - (dga>>8);
 						crb = rb - (drb>>8);
-						cag = ag - (dag>>8);
+						dga += cga * ca;
 						drb += crb * ca;
-						dag += cag * ca;
+						dga &= MASK;
 						drb &= MASK;
-						dag &= MASK;
-						dag = drb | (dag>>8);
+						drb = dga | (drb>>8);
 					}
-					dst32[-1] = dag;
+					dst32[-1] = drb;
 				}
 			}
 			u += fa;
@@ -560,10 +468,8 @@ img_1o1_32bit(byte * restrict src, byte cov, int len, byte * restrict dst,
 
 void fz_accelerate(void)
 {
-	if (sizeof(int) == 4 && sizeof(unsigned int) == 4)
+	if (sizeof(int) == 4 && sizeof(unsigned int) == 4 && !fz_isbigendian())
 	{
-		fz_duff_4o4 = duff_4o4_32bit;
-		fz_duff_4i1o4 = duff_4i1o4_32bit;
 		fz_path_w4i1o4 = path_w4i1o4_32bit;
 		fz_text_w4i1o4 = text_w4i1o4_32bit;
 		fz_img_4o4 = img_4o4_32bit;

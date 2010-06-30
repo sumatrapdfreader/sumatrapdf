@@ -114,24 +114,24 @@ pdf_debugcmap(pdf_cmap *cmap)
 	printf("cmap $%p /%s {\n", (void *) cmap, cmap->cmapname);
 
 	if (cmap->usecmapname[0])
-		printf("  usecmap /%s\n", cmap->usecmapname);
+		printf("\tusecmap /%s\n", cmap->usecmapname);
 	if (cmap->usecmap)
-		printf("  usecmap $%p\n", (void *) cmap->usecmap);
+		printf("\tusecmap $%p\n", (void *) cmap->usecmap);
 
-	printf("  wmode %d\n", cmap->wmode);
+	printf("\twmode %d\n", cmap->wmode);
 
-	printf("  codespaces {\n");
+	printf("\tcodespaces {\n");
 	for (i = 0; i < cmap->ncspace; i++)
 	{
-		printf("    <%x> <%x>\n", cmap->cspace[i].low, cmap->cspace[i].high);
+		printf("\t\t<%x> <%x>\n", cmap->cspace[i].low, cmap->cspace[i].high);
 	}
-	printf("  }\n");
+	printf("\t}\n");
 
-	printf("  ranges (%d,%d) {\n", cmap->rlen, cmap->tlen);
+	printf("\tranges (%d,%d) {\n", cmap->rlen, cmap->tlen);
 	for (i = 0; i < cmap->rlen; i++)
 	{
 		pdf_range *r = &cmap->ranges[i];
-		printf("    <%04x> <%04x> ", r->low, r->high);
+		printf("\t\t<%04x> <%04x> ", r->low, r->high);
 		if (r->flag == PDF_CMAP_TABLE)
 		{
 			printf("[ ");
@@ -150,7 +150,7 @@ pdf_debugcmap(pdf_cmap *cmap)
 		else
 			printf("%d\n", r->offset);
 	}
-	printf("  }\n}\n");
+	printf("\t}\n}\n");
 }
 
 /*

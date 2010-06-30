@@ -425,7 +425,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		}
 	}
 
-	pdf_logxref("  num=%d gen=%d size=%d\n", num, gen, size);
+	pdf_logxref("\tnum=%d gen=%d size=%d\n", num, gen, size);
 
 	obj = fz_dictgets(trailer, "W");
 	if (!obj) {
@@ -584,7 +584,7 @@ pdf_loadxref(pdf_xref *xref, char *buf, int bufsize)
 	if (!size)
 		return fz_throw("trailer missing Size entry");
 
-	pdf_logxref("  size %d at 0x%x\n", fz_toint(size), xref->startxref);
+	pdf_logxref("\tsize %d at 0x%x\n", fz_toint(size), xref->startxref);
 
 	xref->len = fz_toint(size);
 	xref->cap = xref->len + 1; /* for hack to allow broken pdf generators with off-by-one errors */

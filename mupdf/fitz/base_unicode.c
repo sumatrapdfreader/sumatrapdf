@@ -2,39 +2,38 @@
 
 enum
 {
-	UTFmax        = 4,            /* maximum bytes per rune */
-	Runesync      = 0x80,         /* cannot represent part of a UTF sequence (<) */
-	Runeself      = 0x80,         /* rune and UTF sequences are the same (<) */
-	Runeerror     = 0xFFFD,       /* decoding error in UTF */
-	Runemax       = 0x10FFFF,     /* maximum rune value */
+	UTFmax = 4, /* maximum bytes per rune */
+	Runesync = 0x80, /* cannot represent part of a UTF sequence (<) */
+	Runeself = 0x80, /* rune and UTF sequences are the same (<) */
+	Runeerror = 0xFFFD, /* decoding error in UTF */
+	Runemax = 0x10FFFF, /* maximum rune value */
 };
 
 enum
 {
-	Bit1    = 7,
-	Bitx    = 6,
-	Bit2    = 5,
-	Bit3    = 4,
-	Bit4    = 3,
-	Bit5    = 2,
+	Bit1 = 7,
+	Bitx = 6,
+	Bit2 = 5,
+	Bit3 = 4,
+	Bit4 = 3,
+	Bit5 = 2,
 
-	T1      = ((1<<(Bit1+1))-1) ^ 0xFF,     /* 0000 0000 */
-	Tx      = ((1<<(Bitx+1))-1) ^ 0xFF,     /* 1000 0000 */
-	T2      = ((1<<(Bit2+1))-1) ^ 0xFF,     /* 1100 0000 */
-	T3      = ((1<<(Bit3+1))-1) ^ 0xFF,     /* 1110 0000 */
-	T4      = ((1<<(Bit4+1))-1) ^ 0xFF,     /* 1111 0000 */
-	T5      = ((1<<(Bit5+1))-1) ^ 0xFF,     /* 1111 1000 */
+	T1 = ((1<<(Bit1+1))-1) ^ 0xFF, /* 0000 0000 */
+	Tx = ((1<<(Bitx+1))-1) ^ 0xFF, /* 1000 0000 */
+	T2 = ((1<<(Bit2+1))-1) ^ 0xFF, /* 1100 0000 */
+	T3 = ((1<<(Bit3+1))-1) ^ 0xFF, /* 1110 0000 */
+	T4 = ((1<<(Bit4+1))-1) ^ 0xFF, /* 1111 0000 */
+	T5 = ((1<<(Bit5+1))-1) ^ 0xFF, /* 1111 1000 */
 
-	Rune1   = (1<<(Bit1+0*Bitx))-1,         /* 0000 0000 0111 1111 */
-	Rune2   = (1<<(Bit2+1*Bitx))-1,         /* 0000 0111 1111 1111 */
-	Rune3   = (1<<(Bit3+2*Bitx))-1,         /* 1111 1111 1111 1111 */
-	Rune4   = (1<<(Bit4+3*Bitx))-1,
-	/* 0001 1111 1111 1111 1111 1111 */
+	Rune1 = (1<<(Bit1+0*Bitx))-1, /* 0000 0000 0111 1111 */
+	Rune2 = (1<<(Bit2+1*Bitx))-1, /* 0000 0111 1111 1111 */
+	Rune3 = (1<<(Bit3+2*Bitx))-1, /* 1111 1111 1111 1111 */
+	Rune4 = (1<<(Bit4+3*Bitx))-1, /* 0001 1111 1111 1111 1111 1111 */
 
-	Maskx   = (1<<Bitx)-1,                  /* 0011 1111 */
-	Testx   = Maskx ^ 0xFF,                 /* 1100 0000 */
+	Maskx = (1<<Bitx)-1,	/* 0011 1111 */
+	Testx = Maskx ^ 0xFF,	/* 1100 0000 */
 
-	Bad     = Runeerror,
+	Bad = Runeerror,
 };
 
 int
@@ -45,7 +44,7 @@ chartorune(int *rune, char *str)
 
 	/*
 	 * one character sequence
-	 *      00000-0007F => T1
+	 *	00000-0007F => T1
 	 */
 	c = *(unsigned char*)str;
 	if(c < Tx) {
@@ -55,7 +54,7 @@ chartorune(int *rune, char *str)
 
 	/*
 	 * two character sequence
-	 *      0080-07FF => T2 Tx
+	 *	0080-07FF => T2 Tx
 	 */
 	c1 = *(unsigned char*)(str+1) ^ Tx;
 	if(c1 & Testx)
@@ -72,7 +71,7 @@ chartorune(int *rune, char *str)
 
 	/*
 	 * three character sequence
-	 *      0800-FFFF => T3 Tx Tx
+	 *	0800-FFFF => T3 Tx Tx
 	 */
 	c2 = *(unsigned char*)(str+2) ^ Tx;
 	if(c2 & Testx)
@@ -87,7 +86,7 @@ chartorune(int *rune, char *str)
 
 	/*
 	 * four character sequence (21-bit value)
-	 *      10000-1FFFFF => T4 Tx Tx Tx
+	 *	10000-1FFFFF => T4 Tx Tx Tx
 	 */
 	c3 = *(unsigned char*)(str+3) ^ Tx;
 	if (c3 & Testx)
@@ -121,7 +120,7 @@ runetochar(char *str, int *rune)
 
 	/*
 	 * one character sequence
-	 *      00000-0007F => 00-7F
+	 *	00000-0007F => 00-7F
 	 */
 	c = *rune;
 	if(c <= Rune1) {
@@ -131,7 +130,7 @@ runetochar(char *str, int *rune)
 
 	/*
 	 * two character sequence
-	 *      0080-07FF => T2 Tx
+	 *	0080-07FF => T2 Tx
 	 */
 	if(c <= Rune2) {
 		str[0] = T2 | (c >> 1*Bitx);
@@ -150,18 +149,18 @@ runetochar(char *str, int *rune)
 
 	/*
 	 * three character sequence
-	 *      0800-FFFF => T3 Tx Tx
+	 *	0800-FFFF => T3 Tx Tx
 	 */
 	if (c <= Rune3) {
-		str[0] = T3 |  (c >> 2*Bitx);
+		str[0] = T3 | (c >> 2*Bitx);
 		str[1] = Tx | ((c >> 1*Bitx) & Maskx);
-		str[2] = Tx |  (c & Maskx);
+		str[2] = Tx | (c & Maskx);
 		return 3;
 	}
 
 	/*
 	 * four character sequence (21-bit value)
-	 *     10000-1FFFFF => T4 Tx Tx Tx
+	 *	10000-1FFFFF => T4 Tx Tx Tx
 	 */
 	str[0] = T4 | (c >> 3*Bitx);
 	str[1] = Tx | ((c >> 2*Bitx) & Maskx);
