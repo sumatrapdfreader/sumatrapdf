@@ -3934,7 +3934,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
     PdfEngine *pdfEngine = dm->pdfEngine;
     DOCINFO di = {0};
     di.cbSize = sizeof (DOCINFO);
-    di.lpszDocName = pdfEngine->fileName();
+    di.lpszDocName = dm->fileName();
 
     if (StartDoc(hdc, &di) <= 0)
         return;
@@ -3976,7 +3976,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
             double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
-            RenderedBitmap *bmp = pdfEngine->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL);
+            RenderedBitmap *bmp = dm->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL);
             if (bmp) {
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
                     (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -4015,7 +4015,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
             // try to use correct zoom values (scale down to fit the physical page, though)
             double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
-            RenderedBitmap *bmp = pdfEngine->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
+            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
             if (bmp) {
                 // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
@@ -7179,7 +7179,13 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         }
         assert(!req.abort);
         MsTimer renderTimer;
+#if 0
+        HDC hDC = GetDC(NULL);
+        bmp = req.dm->pdfEngine->renderBitmap(hDC, req.pageNo, req.zoomLevel, req.rotation, NULL);
+        ReleaseDC(NULL, hDC);
+#else
         bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req);
+#endif
         renderTimer.stop();
         LockCache();
         gCurPageRenderReq = NULL;

@@ -218,6 +218,7 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	fz_free(bmpData);
 	DeleteDC(hDC);
 	ReleaseDC(NULL, hDCMain);
+	DeleteObject(hbmp);
 
 	if (checksum)
 	{

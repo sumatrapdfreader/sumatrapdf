@@ -35,6 +35,39 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 	return fz_okay;
 }
 
+HBITMAP RenderedBitmap::createDIBitmap(HDC hdc) {
+    if (!_pixmap)
+        // clone the bitmap (callers will delete it)
+        return (HBITMAP)CopyImage(_hbmp, IMAGE_BITMAP, _width, _height, 0);
+
+    return fz_pixtobitmap(hdc, _pixmap, FALSE);
+}
+
+void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
+    if (!_pixmap) {
+        HDC bmpDC = CreateCompatibleDC(hdc);
+        HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+        StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
+            bmpDC, 0, 0, _width, _height, SRCCOPY);
+        SelectObject(bmpDC, oldBmp);
+        DeleteDC(bmpDC);
+        return;
+    }
+
+    fz_rect dest = { leftMargin, topMargin, leftMargin + pageDx, topMargin + pageDy };
+    fz_pixmaptodc(hdc, _pixmap, &dest);
+}
+
+void RenderedBitmap::invertColors() {
+    if (!_pixmap)
+        return; /* TODO */
+
+    unsigned char *bmpData = _pixmap->samples;
+    int dataLen = _width * _height * _pixmap->n;
+    for (int i = 0; i < dataLen; i++)
+        bmpData[i] = 255 - bmpData[i];
+}
+
 PdfEngine::PdfEngine() : 
         _fileName(NULL)
         , _pageCount(INVALID_PAGE_NO) 
@@ -82,7 +115,8 @@ PdfEngine::~PdfEngine()
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
     _windowInfo = win;
-    setFileName(fileName);
+    assert(!_fileName);
+    _fileName = tstr_dup(fileName);
 
     int fd = _topen(fileName, O_BINARY | O_RDONLY);
     if (-1 == fd)
@@ -259,9 +293,7 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     fz_matrix ctm = fz_identity();
     ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    rotate += page->rotate;
-    if (rotate != 0)
-        ctm = fz_concat(ctm, fz_rotate(rotate));
+    ctm = fz_concat(ctm, fz_rotate(rotate + page->rotate));
     return ctm;
 }
 
@@ -306,6 +338,46 @@ RenderedBitmap *PdfEngine::renderBitmap(
         bitmap = new RenderedBitmap(image);
     fz_droppixmap(image);
     return bitmap;
+}
+
+RenderedBitmap *PdfEngine::renderBitmap(HDC hDC, int pageNo,
+                                        double zoomReal, int rotation,
+                                        fz_rect *pageRect)
+{
+    pdf_page* page = getPdfPage(pageNo);
+    if (!page)
+        return NULL;
+    fz_matrix ctm = viewctm(page, zoomReal / 100.0, rotation);
+    if (!pageRect)
+        pageRect = &page->mediabox;
+    fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
+
+    // for now, don't render directly into the DC
+    int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
+    HDC hDCMem = CreateCompatibleDC(hDC);
+    HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
+    DeleteObject(SelectObject(hDCMem, hbmp));
+
+    RECT rc;
+    SetRect(&rc, 0, 0, w, h);
+    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
+    FillRect(hDCMem, &rc, bgBrush); // initialize white background
+    DeleteObject(bgBrush);
+
+    fz_device *dev = fz_newgdidevice(hDCMem);
+    EnterCriticalSection(&_xrefAccess);
+    fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
+    LeaveCriticalSection(&_xrefAccess);
+    fz_freedevice(dev);
+#if CONSERVE_MEMORY
+    dropPdfPage(pageNo);
+#endif
+	DeleteDC(hDCMem);
+    if (error) {
+        DeleteObject(hbmp);
+        return NULL;
+    }
+    return new RenderedBitmap(hbmp, w, h);
 }
 
 static int linksLinkCount(pdf_link *currLink) {

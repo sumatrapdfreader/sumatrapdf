@@ -2,6 +2,8 @@
 #include <fitz.h>
 #include <fitz_gdidraw.h>
 
+extern fz_colorspace *pdf_devicebgr;
+
 static void
 gdiapplytransform(HDC hDC, fz_matrix ctm)
 {
@@ -15,12 +17,9 @@ gdiapplytransform(HDC hDC, fz_matrix ctm)
 static COLORREF
 gdigetcolor(fz_colorspace *colorspace, float *color, float alpha)
 {
-	switch (colorspace->n)
-	{
-	case 1: return RGB(color[0] * 255, color[0] * 255, color[0] * 255);
-	case 3: return RGB(color[0] * 255, color[1] * 255, color[2] * 255);
-	default: return -1;
-	}
+	float bgr[3];
+	fz_convertcolor(colorspace, color, pdf_devicebgr, bgr);
+	return RGB(bgr[2] * 255, bgr[1] * 255, bgr[0] * 255);
 }
 
 static void
@@ -110,10 +109,12 @@ static HFONT
 gdigetfont(fz_font *font, float height)
 {
 	/* TODO: register font with AddFontMemResourceEx */
-	// height = (font->bbox.y1 - font->bbox.y0) / 100;
-	HFONT ft = CreateFontA(height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, font->name[6] == '+' ? font->name + 7 : font->name);
+	int weight = strstr(font->name, "-Bold") ? FW_BOLD : FW_DONTCARE;
+	BOOL italic = strstr(font->name, "-Italic") != NULL;
+	
+	HFONT ft = CreateFontA(height, 0, 0, 0, weight, italic, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, font->name[6] == '+' ? font->name + 7 : font->name);
 	if (!ft)
-		ft = CreateFontA(height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, NULL);
+		ft = CreateFontA(height, 0, 0, 0, weight, italic, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, NULL);
 	return ft;
 }
 
@@ -125,19 +126,22 @@ fz_gdifilltext(void *user, fz_text *text, fz_matrix ctm,
 	int origDC = SaveDC(hDC);
 	HFONT font;
 	int i;
+	float fontSize;
 	
-	font = gdigetfont(text->font, fz_matrixexpansion(text->trm));
+	fontSize = fz_matrixexpansion(text->trm);
+	font = gdigetfont(text->font, fontSize);
 	SelectObject(hDC, font);
 	SetTextColor(hDC, gdigetcolor(colorspace, color, alpha));
 	SetBkMode(hDC, TRANSPARENT);
-	/* TODO: adjust transform so that text isn't drawn upside down */
+	
+	ctm = fz_concat(ctm, fz_concat(fz_scale(1, -1), fz_translate(0, 2 * ctm.f)));
 	gdiapplytransform(hDC, ctm);
 	
 	for (i = 0; i < text->len; i++)
 	{
 		WCHAR out[2] = { 0 };
 		out[0] = text->els[i].ucs;
-		ExtTextOutW(hDC, text->els[i].x, text->els[i].y, 0, NULL, out, 1, NULL);
+		ExtTextOutW(hDC, text->els[i].x, -text->els[i].y - fontSize, 0, NULL, out, 1, NULL);
 	}
 	
 	DeleteObject(font);
@@ -180,12 +184,12 @@ fz_gdifillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 {
 	HDC hDC = user;
 	int origDC = SaveDC(hDC);
+	fz_matrix ctm2;
 	
-	/* TODO: what's wrong here? */
-	ctm.a /= image->w; ctm.b /= image->w;
-	ctm.c /= -image->h; ctm.d /= -image->h;
-	ctm.f -= image->h;
-	gdiapplytransform(hDC, ctm);
+	ctm2 = fz_concat(ctm, fz_scale(1.0 / image->w, -1.0 / image->h));
+	ctm2.e = ctm.e; ctm2.f = ctm.f - image->h;
+	gdiapplytransform(hDC, ctm2);
+	
 	fz_pixmaptodc(hDC, image, nil);
 	
 	RestoreDC(hDC, origDC);
@@ -228,8 +232,6 @@ fz_newgdidevice(HDC hDC)
 
 	return dev;
 }
-
-extern fz_colorspace *pdf_devicebgr;
 
 HBITMAP
 fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
@@ -326,11 +328,13 @@ fz_pixmaptodc(HDC hDC, fz_pixmap *pixmap, fz_rect *dest)
 	HDC bmpDC = CreateCompatibleDC(hDC);
 	
 	SelectObject(bmpDC, hbmp);
-	if (dest)
+	if (!dest)
+		BitBlt(hDC, 0, 0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
+	else if (dest->x1 - dest->x0 == pixmap->w && dest->y1 - dest->y0 == pixmap->h)
+		BitBlt(hDC, dest->x0, dest->y0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
+	else
 		StretchBlt(hDC, dest->x0, dest->y0, dest->x1 - dest->x0, dest->y1 - dest->y0,
 			bmpDC, 0, 0, pixmap->w, pixmap->h, SRCCOPY);
-	else
-		BitBlt(hDC, 0, 0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
 	
 	DeleteDC(bmpDC);
 	DeleteObject(hbmp);

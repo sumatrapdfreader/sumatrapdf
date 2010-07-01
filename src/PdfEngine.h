@@ -83,26 +83,35 @@ private:
 
 class RenderedBitmap {
 public:
-    RenderedBitmap(fz_pixmap *pixmap) { _pixmap = fz_keeppixmap(pixmap); }
-    ~RenderedBitmap() { fz_droppixmap(_pixmap); }
-
-    int dx() const { return _pixmap->w; }
-    int dy() const { return _pixmap->h; }
-
-    HBITMAP createDIBitmap(HDC hdc) { return fz_pixtobitmap(hdc, _pixmap, FALSE); }
-    void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
-        fz_rect dest = { leftMargin, topMargin, leftMargin + pageDx, topMargin + pageDy };
-        fz_pixmaptodc(hdc, _pixmap, &dest);
+    RenderedBitmap(fz_pixmap *pixmap) : _hbmp(NULL) {
+        _pixmap = fz_keeppixmap(pixmap);
+        _width = pixmap->w;
+        _height = pixmap->h;
     }
-    void invertColors() {
-        unsigned char *bmpData = _pixmap->samples;
-        int dataLen = dx() * dy() * _pixmap->n;
-        for (int i = 0; i < dataLen; i++)
-            bmpData[i] = 255 - bmpData[i];
+    RenderedBitmap(HBITMAP hbmp, int width, int height) : _pixmap(NULL) {
+        _hbmp = hbmp;
+        _width = width;
+        _height = height;
     }
+    ~RenderedBitmap() {
+        if (_pixmap)
+            fz_droppixmap(_pixmap);
+        else
+            DeleteObject(_hbmp);
+    }
+
+    int dx() const { return _width; }
+    int dy() const { return _height; }
+
+    HBITMAP createDIBitmap(HDC hdc);
+    void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy);
+    void invertColors();
 
 protected:
     fz_pixmap *_pixmap;
+    HBITMAP _hbmp;
+    int     _width;
+    int     _height;
 };
 
 class PdfEngine {
@@ -110,20 +119,12 @@ public:
     PdfEngine();
     ~PdfEngine();
     const TCHAR *fileName(void) const { return _fileName; };
-
-    void setFileName(const TCHAR *fileName) {
-        assert(!_fileName);
-        _fileName = (const TCHAR*)tstr_dup(fileName);
-    }
+    int pageCount(void) const { return _pageCount; }
 
     bool validPageNo(int pageNo) const {
-        if ((pageNo >= 1) && (pageNo <= pageCount()))
+        if ((pageNo >= 1) && (pageNo <= _pageCount))
             return true;
         return false;
-    }
-
-    int pageCount(void) const { 
-        return _pageCount; 
     }
 
     bool load(const TCHAR *fileName, WindowInfo *windowInfo, bool tryrepair);
@@ -133,6 +134,8 @@ public:
                          fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA);
+    RenderedBitmap *renderBitmap(HDC hDC, int pageNo, double zoomReal,
+                         int rotation, fz_rect *pageRect);
 
     bool hasPermission(int permission);
     int linkCount();
@@ -159,17 +162,17 @@ protected:
     int _pageCount;
     WindowInfo *_windowInfo;
 
-private:
-    CRITICAL_SECTION _pagesAccess;
     CRITICAL_SECTION _xrefAccess;
     pdf_xref *      _xref;
+
+    CRITICAL_SECTION _pagesAccess;
+    pdf_page **     _pages;
 
     void dropPdfPage(int pageNo);
     PdfTocItem    * buildTocTree(pdf_outline *entry);
     void            linkifyPageText(pdf_page *page);
 
-    pdf_outline *   _outline;
-    pdf_page **     _pages;
+    pdf_outline   * _outline;
     fz_glyphcache * _drawcache;
 };
 
