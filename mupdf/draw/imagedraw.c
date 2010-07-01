@@ -83,8 +83,8 @@ samplemask(byte *s, int w, int h, int u, int v)
 static inline void
 samplega(byte *s, int w, int h, int u, int v, byte *out)
 {
-	byte ab[4];
-	byte cd[4];
+	byte ab[2];
+	byte cd[2];
 	int ui = u >> 16;
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;

@@ -76,40 +76,14 @@ typedef unsigned char byte;
  * Blend pixmap regions
  */
 
-/* dst = src over dst */
-static void
-duff_non(byte * restrict sp, int sw, int sn, byte * restrict dp, int dw, int w0, int h)
-{
-	int k;
-
-	sw -= w0*sn;
-	dw -= w0*sn;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			int ssa = 255 - sp[sn-1];
-			for (k = 0; k < sn; k++)
-			{
-				dp[k] = sp[k] + fz_mul255(dp[k], ssa);
-			}
-			sp += sn;
-			dp += sn;
-		}
-		sp += sw;
-		dp += dw;
-	}
-}
-
 /* dst = src in msk over dst */
 static void
-duff_nimon(byte * restrict sp, int sw, int sn, byte * restrict mp, int mw, int mn, byte * restrict dp, int dw, int w0, int h)
+duff_ni1on(byte * restrict sp, int sw, int sn, byte * restrict mp, int mw, byte * restrict dp, int dw, int w0, int h)
 {
 	int k;
 
 	sw -= w0*sn;
-	mw -= w0*mn;
+	mw -= w0;
 	dw -= w0*sn;
 	while (h--)
 	{
@@ -117,62 +91,17 @@ duff_nimon(byte * restrict sp, int sw, int sn, byte * restrict mp, int mw, int m
 		while (w--)
 		{
 			int ma = mp[0];
-			int ssa = 255-fz_mul255(sp[sn-1], ma);
+			int ssa = 255 - fz_mul255(sp[sn-1], ma);
 			for (k = 0; k < sn; k++)
 			{
 				dp[k] = fz_mul255(sp[k], ma) + fz_mul255(dp[k], ssa);
 			}
 			sp += sn;
-			mp += mn;
+			mp ++;
 			dp += sn;
 		}
 		sp += sw;
 		mp += mw;
-		dp += dw;
-	}
-}
-
-static void
-duff_1o1(byte * restrict sp0, int sw, byte * restrict dp0, int dw, int w0, int h)
-{
-	/* duff_non(sp0, sw, 1, dp0, dw, w0, h); */
-	while (h--)
-	{
-		byte *sp = sp0;
-		byte *dp = dp0;
-		int w = w0;
-		while (w--)
-		{
-			dp[0] = sp[0] + fz_mul255(dp[0], 255 - sp[0]);
-			sp ++;
-			dp ++;
-		}
-		sp0 += sw;
-		dp0 += dw;
-	}
-}
-
-static void
-duff_4o4(byte *sp, int sw, byte *dp, int dw, int w0, int h)
-{
-	/* duff_non(sp0, sw, 4, dp0, dw, w0, h); */
-
-	sw -= w0<<2;
-	dw -= w0<<2;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			byte ssa = 255 - sp[3];
-			dp[0] = sp[0] + fz_mul255(dp[0], ssa);
-			dp[1] = sp[1] + fz_mul255(dp[1], ssa);
-			dp[2] = sp[2] + fz_mul255(dp[2], ssa);
-			dp[3] = sp[3] + fz_mul255(dp[3], ssa);
-			sp += 4;
-			dp += 4;
-		}
-		sp += sw;
 		dp += dw;
 	}
 }
@@ -301,7 +230,6 @@ path_w4i1o4(byte * restrict rgba, byte * restrict src, byte cov, int len, byte *
 	byte g = rgba[1];
 	byte b = rgba[2];
 	int a = FZ_EXPAND(rgba[3]);
-
 	while (len--)
 	{
 		int ca;
@@ -395,10 +323,7 @@ text_w4i1o4(byte * restrict rgba, byte * restrict src, int srcw, byte * restrict
  * ... and the function pointers
  */
 
-void (*fz_duff_non)(byte*,int,int,byte*,int,int,int) = duff_non;
-void (*fz_duff_nimon)(byte*,int,int,byte*,int,int,byte*,int,int,int) = duff_nimon;
-void (*fz_duff_1o1)(byte*,int,byte*,int,int,int) = duff_1o1;
-void (*fz_duff_4o4)(byte*,int,byte*,int,int,int) = duff_4o4;
+void (*fz_duff_ni1on)(byte*,int,int,byte*,int,byte*,int,int,int) = duff_ni1on;
 void (*fz_duff_1i1o1)(byte*,int,byte*,int,byte*,int,int,int) = duff_1i1o1;
 void (*fz_duff_2i1o2)(byte*,int,byte*,int,byte*,int,int,int) = duff_2i1o2;
 void (*fz_duff_4i1o4)(byte*,int,byte*,int,byte*,int,int,int) = duff_4i1o4;

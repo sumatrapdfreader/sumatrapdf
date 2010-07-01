@@ -63,9 +63,9 @@ blendmaskover(fz_pixmap *src, fz_pixmap *msk, fz_pixmap *dst)
 		fz_duff_2i1o2(sp, src->w * 2, mp, msk->w, dp, dst->w * 2, w, h);
 	else if (src->n == 4 && msk->n == 1 && dst->n == 4)
 		fz_duff_4i1o4(sp, src->w * 4, mp, msk->w, dp, dst->w * 4, w, h);
-	else if (src->n == dst->n)
-		fz_duff_nimon(sp, src->w * src->n, src->n,
-			mp, msk->w * msk->n, msk->n,
+	else if (src->n == dst->n && msk->n == 1 )
+		fz_duff_ni1on(sp, src->w * src->n, src->n,
+			mp, msk->w * msk->n,
 			dp, dst->w * dst->n, w, h);
 	else
 		assert(!"blendmaskover src and msk and dst mismatch");
@@ -452,12 +452,16 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 	fz_bbox bbox;
 	float colorfv[FZ_MAXCOLORS];
 	unsigned char colorbv[FZ_MAXCOLORS + 1];
-	unsigned char *s;
-	int x, y;
 
-	bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
-	bbox = fz_roundrect(bounds);
-	bbox = fz_intersectbbox(bbox, dev->scissor);
+	bounds = fz_boundshade(shade, ctm);
+	bbox = fz_intersectbbox(fz_roundrect(bounds), dev->scissor);
+
+	// TODO: proper clip by shade->bbox
+	if (!fz_isemptyrect(shade->bbox))
+	{
+//		bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
+//		bbox = fz_intersectbbox(fz_roundrect(bounds), bbox);
+	}
 
 	if (fz_isemptyrect(bbox))
 		return;
@@ -470,19 +474,21 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 
 	if (shade->usebackground)
 	{
-		/* FIXME: Could use optimisation */
-		int i, n = dev->model->n + 1;
-
+		unsigned char *s;
+		int x, y, n, i;
+printf("usebackground!\n");
 		fz_convertcolor(shade->cs, shade->background, dev->model, colorfv);
-		colorbv[0] = 255;
-		for (i = 1; i < n; i++)
-			colorbv[n-i] = colorfv[i-1] * 255;
+		for (i = 0; i < dev->model->n; i++)
+			colorbv[i] = colorfv[i] * 255;
+		colorbv[i] = 255;
+
+		n = dest->n;
 		for (y = bbox.y0; y < bbox.y1; y++)
 		{
 			s = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
 			for (x = bbox.x0; x < bbox.x1; x++)
 			{
-				for (i = n; i > 0; i--)
+				for (i = 0; i < n; i++)
 					*s++ = colorbv[i];
 			}
 		}

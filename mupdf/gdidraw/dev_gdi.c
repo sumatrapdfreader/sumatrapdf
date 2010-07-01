@@ -5,7 +5,7 @@
 static void
 gdiapplytransform(HDC hDC, fz_matrix ctm)
 {
-	XFORM xform = { 1, 0, 0, 1, 0, 0 };
+	XFORM xform;
 	xform.eM11 = ctm.a; xform.eM12 = ctm.b;
 	xform.eM21 = ctm.c; xform.eM22 = ctm.d;
 	xform.eDx = ctm.e; xform.eDy = ctm.f;
@@ -107,10 +107,10 @@ fz_gdiclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matri
 }
 
 static HFONT
-gdigetfont(fz_font *font)
+gdigetfont(fz_font *font, float height)
 {
 	/* TODO: register font with AddFontMemResourceEx */
-	int height = (font->bbox.y1 - font->bbox.y0) / 100;
+	// height = (font->bbox.y1 - font->bbox.y0) / 100;
 	HFONT ft = CreateFontA(height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, font->name[6] == '+' ? font->name + 7 : font->name);
 	if (!ft)
 		ft = CreateFontA(height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, NULL);
@@ -126,7 +126,7 @@ fz_gdifilltext(void *user, fz_text *text, fz_matrix ctm,
 	HFONT font;
 	int i;
 	
-	font = gdigetfont(text->font);
+	font = gdigetfont(text->font, fz_matrixexpansion(text->trm));
 	SelectObject(hDC, font);
 	SetTextColor(hDC, gdigetcolor(colorspace, color, alpha));
 	SetBkMode(hDC, TRANSPARENT);
@@ -234,19 +234,19 @@ extern fz_colorspace *pdf_devicebgr;
 HBITMAP
 fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 {
-	int w, h, rows, rows8;
+	int w, h, rows8;
 	int paletteSize = 0;
-	int hasPalette = 0;
+	BOOL hasPalette = FALSE;
 	int i, j, k;
 	BITMAPINFO *bmi;
 	HBITMAP hbmp = NULL;
-	unsigned char *samples, *bmpData;
+	unsigned char *bmpData, *source, *dest;
 	fz_pixmap *bgrPixmap;
 	
 	w = pixmap->w;
 	h = pixmap->h;
-	rows = ((w * 3 + 3) / 4) * 4;
 	
+	/* abgr is a GDI compatible format */
 	bgrPixmap = fz_newpixmap(pdf_devicebgr, pixmap->x, pixmap->y, w, h);
 	fz_convertpixmap(pixmap->colorspace, pixmap, pdf_devicebgr, bgrPixmap);
 	pixmap = bgrPixmap;
@@ -255,12 +255,12 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 	
 	bmi = fz_malloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
 	memset(bmi, 0, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-	samples = pixmap->samples;
 	
 	if (paletted)
 	{
 		rows8 = ((w + 3) / 4) * 4;	
-		bmpData = fz_malloc(rows8 * h);
+		dest = bmpData = fz_malloc(rows8 * h);
+		source = pixmap->samples;
 		
 		for (j = 0; j < h; j++)
 		{
@@ -268,9 +268,10 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 			{
 				RGBQUAD c = { 0 };
 				
-				c.rgbRed = samples[j * w * 4 + i * 4 + 2];
-				c.rgbGreen = samples[j * w * 4 + i * 4 + 1];
-				c.rgbBlue = samples[j * w * 4 + i * 4];
+				c.rgbBlue = *source++;
+				c.rgbGreen = *source++;
+				c.rgbRed = *source++;
+				source++;
 				
 				/* find this color in the palette */
 				for (k = 0; k < paletteSize; k++)
@@ -285,46 +286,32 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 					paletteSize++;
 				}
 				/* 8-bit data consists of indices into the color palette */
-				bmpData[j * rows8 + i] = k;
+				*dest++ = k;
 			}
+			dest += rows8 - w;
 		}
 ProducingPaletteDone:
 		hasPalette = paletteSize <= 256;
 		if (!hasPalette)
 			fz_free(bmpData);
 	}
-	
 	if (!hasPalette)
-	{
-		unsigned char *dest = bmpData = fz_malloc(rows * h);
-		samples = pixmap->samples;
-		
-		for (j = 0; j < h; j++)
-		{
-			for (i = 0; i < w; i++)
-			{
-				*dest++ = *samples++;
-				*dest++ = *samples++;
-				*dest++ = *samples++;
-				samples++;
-			}
-			dest += rows - w * 3;
-		}
-	}
+		bmpData = pixmap->samples;
 	
 	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi->bmiHeader.biWidth = w;
 	bmi->bmiHeader.biHeight = -h;
 	bmi->bmiHeader.biPlanes = 1;
 	bmi->bmiHeader.biCompression = BI_RGB;
-	bmi->bmiHeader.biBitCount = hasPalette ? 8 : 24;
-	bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : rows);
+	bmi->bmiHeader.biBitCount = hasPalette ? 8 : 32;
+	bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
 	bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
 	
 	hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
 	
 	fz_droppixmap(bgrPixmap);
-	fz_free(bmpData);
+	if (hasPalette)
+		fz_free(bmpData);
 	fz_free(bmi);
 	
 	return hbmp;

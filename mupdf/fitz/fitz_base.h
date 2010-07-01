@@ -41,6 +41,10 @@
 
 #ifdef _MSC_VER /* stupid stone-age compiler */
 
+#pragma warning( disable: 4244 ) /* conversion from X to Y, possible loss of data */
+#pragma warning( disable: 4996 ) /* The POSIX name for this item is deprecated */
+#pragma warning( disable: 4996 ) /* This function or variable may be unsafe */
+
 #include <io.h>
 
 extern int gettimeofday(struct timeval *tv, struct timezone *tz);

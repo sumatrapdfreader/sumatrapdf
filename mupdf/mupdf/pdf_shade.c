@@ -3,7 +3,7 @@
 
 #define HUGENUM 32000 /* how far to extend axial/radial shadings */
 #define FUNSEGS 32 /* size of sampled mesh for function-based shadings */
-#define RADSEGS 36 /* how many segments to generate for radial meshes */
+#define RADSEGS 32 /* how many segments to generate for radial meshes */
 #define SUBDIV 3 /* how many levels to subdivide patches */
 
 struct vertex
@@ -552,42 +552,48 @@ pdf_buildannulusmesh(fz_shade *shade,
 	float x0, float y0, float r0, float c0,
 	float x1, float y1, float r1, float c1)
 {
-	float dist = hypotf(x1 - x0, y1 - y0);
-	float step;
-	float theta;
+	struct vertex a, b, c, d;
+	float start = atan2(y1 - y0, x1 - x0);
+	float step = (float)M_PI * 2 / RADSEGS;
+	float angle;
 	int i;
 
-	if (dist != 0)
-		theta = asinf((r1 - r0) / dist) + (float)M_PI * 0.5f + atan2f(y1 - y0, x1 - x0);
-	else
-		theta = 0;
+	a.c[0] = c0;
+	b.c[0] = c0;
+	c.c[0] = c1;
+	d.c[0] = c1;
 
-	if (theta < 0 || theta > (float)M_PI)
-		theta = 0;
-
-	step = (float)M_PI * 2 / RADSEGS;
-
-	for (i = 0; i < RADSEGS; theta -= step, i++)
+	for (i = 0; i < RADSEGS / 2; i ++)
 	{
-		struct vertex pt1, pt2, pt3, pt4;
+		/* top side */
+		angle = start + i * step;
+		a.x = x0 + cosf(angle) * r0;
+		a.y = y0 + sinf(angle) * r0;
+		b.x = x0 + cosf(angle + step) * r0;
+		b.y = y0 + sinf(angle + step) * r0;
+		c.x = x1 + cosf(angle) * r1;
+		c.y = y1 + sinf(angle) * r1;
+		d.x = x1 + cosf(angle + step) * r1;
+		d.y = y1 + sinf(angle + step) * r1;
+		if (r1 > 0) /* a == b, c != d */
+			pdf_addtriangle(shade, &a, &c, &d);
+		if (r0 > 0) /* a != b, c == d */
+			pdf_addtriangle(shade, &a, &d, &b);
 
-		pt1.x = cosf(theta) * r1 + x1;
-		pt1.y = sinf(theta) * r1 + y1;
-		pt1.c[0] = c1;
-		pt2.x = cosf(theta) * r0 + x0;
-		pt2.y = sinf(theta) * r0 + y0;
-		pt2.c[0] = c0;
-		pt3.x = cosf(theta + step) * r1 + x1;
-		pt3.y = sinf(theta + step) * r1 + y1;
-		pt3.c[0] = c1;
-		pt4.x = cosf(theta + step) * r0 + x0;
-		pt4.y = sinf(theta + step) * r0 + y0;
-		pt4.c[0] = c0;
-
-		if (r0 > 0)
-			pdf_addtriangle(shade, &pt1, &pt2, &pt4);
-		if (r1 > 0)
-			pdf_addtriangle(shade, &pt1, &pt3, &pt4);
+		/* bottom side */
+		angle = start - i * step;
+		a.x = x0 + cosf(angle) * r0;
+		a.y = y0 + sinf(angle) * r0;
+		b.x = x0 + cosf(angle - step) * r0;
+		b.y = y0 + sinf(angle - step) * r0;
+		c.x = x1 + cosf(angle) * r1;
+		c.y = y1 + sinf(angle) * r1;
+		d.x = x1 + cosf(angle - step) * r1;
+		d.y = y1 + sinf(angle - step) * r1;
+		if (r1 > 0) /* a == b, c != d */
+			pdf_addtriangle(shade, &a, &c, &d);
+		if (r0 > 0) /* a != b, c == d */
+			pdf_addtriangle(shade, &a, &d, &b);
 	}
 }
 

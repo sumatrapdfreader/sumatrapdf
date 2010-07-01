@@ -314,8 +314,6 @@ void
 fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	unsigned char clut[256][FZ_MAXCOLORS];
-	unsigned char *s, *d;
-	unsigned char sa, ssa;
 	fz_pixmap *temp;
 	float color[FZ_MAXCOLORS];
 	float tri[3][MAXN];
@@ -366,6 +364,9 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 
 	if (shade->usefunction)
 	{
+		unsigned char *s, *d;
+		unsigned char sa, ssa, sc;
+
 		for (i = 0; i < 256; i++)
 		{
 			fz_convertcolor(shade->cs, shade->function[i], dest->colorspace, color);
@@ -373,19 +374,21 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 				clut[i][k] = color[k] * 255;
 		}
 
+		/* duff_non with lookup table for colors */
 		for (y = bbox.y0; y < bbox.y1; y++)
 		{
 			s = temp->samples + ((bbox.x0 - temp->x) + (y - temp->y) * temp->w) * temp->n;
 			d = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
 			for (x = bbox.x0; x < bbox.x1; x++)
 			{
+				sc = s[0];
 				sa = s[1];
-				ssa = 255 - sa;
+				ssa = 255 - s[1];
 				for (k = 0; k < dest->colorspace->n; k++)
-					d[k] = fz_mul255(clut[s[0]][k], sa) + fz_mul255(d[k+1], ssa);
-				d[k] = s[1] + fz_mul255(d[k], ssa);
+					d[k] = fz_mul255(clut[sc][k], sa) + fz_mul255(d[k], ssa);
+				d[k] = sa + fz_mul255(d[k], ssa);
 				s += 2;
-				d += 1 + dest->colorspace->n;
+				d += dest->n;
 			}
 		}
 

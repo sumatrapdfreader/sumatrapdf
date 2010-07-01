@@ -479,10 +479,7 @@ void fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix c
 extern void fz_accelerate(void);
 extern void fz_acceleratearch(void);
 
-extern void (*fz_duff_non)(unsigned char*,int,int,unsigned char*,int,int,int);
-extern void (*fz_duff_nimon)(unsigned char*,int,int,unsigned char*,int,int,unsigned char*,int,int,int);
-extern void (*fz_duff_1o1)(unsigned char*,int,unsigned char*,int,int,int);
-extern void (*fz_duff_4o4)(unsigned char*,int,unsigned char*,int,int,int);
+extern void (*fz_duff_ni1on)(unsigned char*,int,int,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_1i1o1)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_2i1o2)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);
 extern void (*fz_duff_4i1o4)(unsigned char*,int,unsigned char*,int,unsigned char*,int,int,int);

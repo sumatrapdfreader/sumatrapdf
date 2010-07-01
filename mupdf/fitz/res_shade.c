@@ -22,8 +22,39 @@ fz_dropshade(fz_shade *shade)
 fz_rect
 fz_boundshade(fz_shade *shade, fz_matrix ctm)
 {
+	float *v;
+	fz_rect r;
+	fz_point p;
+	int i, ncomp, nvert;
+
 	ctm = fz_concat(shade->matrix, ctm);
-	return fz_transformrect(ctm, shade->bbox);
+	ncomp = shade->usefunction ? 3 : 2 + shade->cs->n;
+	nvert = shade->meshlen / ncomp;
+	v = shade->mesh;
+
+	if (nvert == 0)
+		return fz_emptyrect;
+
+	p.x = v[0];
+	p.y = v[1];
+	v += ncomp;
+	p = fz_transformpoint(ctm, p);
+	r.x0 = r.x1 = p.x;
+	r.y0 = r.y1 = p.y;
+
+	for (i = 1; i < nvert; i++)
+	{
+		p.x = v[0];
+		p.y = v[1];
+		p = fz_transformpoint(ctm, p);
+		v += ncomp;
+		if (p.x < r.x0) r.x0 = p.x;
+		if (p.y < r.y0) r.y0 = p.y;
+		if (p.x > r.x1) r.x1 = p.x;
+		if (p.y > r.y1) r.y1 = p.y;
+	}
+
+	return r;
 }
 
 void

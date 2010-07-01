@@ -538,7 +538,7 @@ eol:
 	else {
 		unsigned char * restrict d = out->wp;
 		unsigned char * restrict s = fax->dst;
-		unsigned w = fax->stride;
+		int w = fax->stride;
 		for (i = 0; i < w; i++)
 			*d++ = *s++ ^ 0xff;
 	}

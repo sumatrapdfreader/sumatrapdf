@@ -510,7 +510,7 @@ static inline void blit(fz_pixmap *pix, int x, int y,
 
 fz_error
 fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
-	fz_pixmap *pix, unsigned char *argb, fz_pixmap *image, fz_matrix *invmat)
+	fz_pixmap *dest, unsigned char *color, fz_pixmap *image, fz_matrix *invmat)
 {
 	fz_error error;
 	unsigned char *deltas;
@@ -546,7 +546,7 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 		{
 			if (yd >= clip.y0 && yd < clip.y1)
 			{
-				blit(pix, xmin + skipx, yd, deltas, skipx, clipn, argb, image, invmat);
+				blit(dest, xmin + skipx, yd, deltas, skipx, clipn, color, image, invmat);
 			}
 		}
 		yd = yc;
@@ -575,7 +575,7 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 
 	if (yd >= clip.y0 && yd < clip.y1)
 	{
-		blit(pix, xmin + skipx, yd, deltas, skipx, clipn, argb, image, invmat);
+		blit(dest, xmin + skipx, yd, deltas, skipx, clipn, color, image, invmat);
 	}
 
 	fz_free(deltas);

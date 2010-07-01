@@ -63,7 +63,7 @@ void win32error(char *msg)
 		NULL,
 		code,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		&buf, 0, NULL);
+		(LPSTR)&buf, 0, NULL);
 	winerror(&gapp, fz_throw("%s:\n%s", msg, buf));
 }
 
@@ -224,7 +224,7 @@ dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch(message)
 	{
 	case WM_INITDIALOG:
-		SetDlgItemTextA(hwnd, 2, "MuPDF is Copyright (C) 2006-2008 artofcode, LLC");
+		SetDlgItemTextA(hwnd, 2, "MuPDF is Copyright (C) 2006-2010 Artifex Software Inc.");
 		SetDlgItemTextA(hwnd, 3, pdfapp_usage(&gapp));
 		return TRUE;
 	case WM_COMMAND:
@@ -234,7 +234,7 @@ dlogaboutproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-void winhelp()
+void winhelp(pdfapp_t*app)
 {
 	int code = DialogBoxW(NULL, L"IDD_DLOGABOUT", hwndframe, dlogaboutproc);
 	if (code <= 0)
@@ -546,7 +546,7 @@ void winreloadfile(pdfapp_t *app)
 
 void winopenuri(pdfapp_t *app, char *buf)
 {
-	ShellExecute(hwndframe, "open", buf, 0, 0, SW_SHOWNORMAL);
+	ShellExecuteA(hwndframe, "open", buf, 0, 0, SW_SHOWNORMAL);
 }
 
 void handlekey(int c)
@@ -615,7 +615,7 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SYSCOMMAND:
 		if (wParam == ID_ABOUT)
 		{
-			winhelp();
+			winhelp(&gapp);
 			return 0;
 		}
 		if (wParam == ID_DOCINFO)
