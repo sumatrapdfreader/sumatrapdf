@@ -24,7 +24,7 @@ gdigetcolor(fz_colorspace *colorspace, float *color, float alpha)
 }
 
 static void
-gdidrawpath(HDC hDC, fz_path *path)
+gdirunpath(HDC hDC, fz_path *path)
 {
 	int i = 0;
 	POINT points[3];
@@ -69,7 +69,7 @@ fz_gdifillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	gdiapplytransform(hDC, ctm);
 	
 	SetPolyFillMode(hDC, evenodd ? ALTERNATE : WINDING);
-	gdidrawpath(hDC, path);
+	gdirunpath(hDC, path);
 	FillPath(hDC);
 	
 	DeleteObject(brush);
@@ -89,7 +89,7 @@ fz_gdistrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ct
 	SetMiterLimit(hDC, stroke->miterlimit, NULL);
 	gdiapplytransform(hDC, ctm);
 	
-	gdidrawpath(hDC, path);
+	gdirunpath(hDC, path);
 	StrokePath(hDC);
 	
 	DeleteObject(pen);
@@ -109,6 +109,7 @@ fz_gdiclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matri
 static HFONT
 gdigetfont(fz_font *font)
 {
+	/* TODO: register font with AddFontMemResourceEx */
 	int height = (font->bbox.y1 - font->bbox.y0) / 100;
 	HFONT ft = CreateFontA(height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, font->name[6] == '+' ? font->name + 7 : font->name);
 	if (!ft)
@@ -128,6 +129,8 @@ fz_gdifilltext(void *user, fz_text *text, fz_matrix ctm,
 	font = gdigetfont(text->font);
 	SelectObject(hDC, font);
 	SetTextColor(hDC, gdigetcolor(colorspace, color, alpha));
+	SetBkMode(hDC, TRANSPARENT);
+	/* TODO: adjust transform so that text isn't drawn upside down */
 	gdiapplytransform(hDC, ctm);
 	
 	for (i = 0; i < text->len; i++)
@@ -178,8 +181,10 @@ fz_gdifillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 	HDC hDC = user;
 	int origDC = SaveDC(hDC);
 	
+	/* TODO: what's wrong here? */
 	ctm.a /= image->w; ctm.b /= image->w;
-	ctm.c /= image->h; ctm.d /= image->h;
+	ctm.c /= -image->h; ctm.d /= -image->h;
+	ctm.f -= image->h;
 	gdiapplytransform(hDC, ctm);
 	fz_pixmaptodc(hDC, image, nil);
 	
@@ -224,30 +229,29 @@ fz_newgdidevice(HDC hDC)
 	return dev;
 }
 
+extern fz_colorspace *pdf_devicebgr;
+
 HBITMAP
 fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 {
-	int w, h, n, rows, rows8;
+	int w, h, rows, rows8;
 	int paletteSize = 0;
 	int hasPalette = 0;
 	int i, j, k;
 	BITMAPINFO *bmi;
 	HBITMAP hbmp = NULL;
 	unsigned char *samples, *bmpData;
+	fz_pixmap *bgrPixmap;
 	
 	w = pixmap->w;
 	h = pixmap->h;
-	n = pixmap->n - 1;
-	if (n == 0)
-	{
-		n = 1;
-		paletted = TRUE;
-	}
-	rows = ((w * n + 3) / 4) * 4;
+	rows = ((w * 3 + 3) / 4) * 4;
 	
-	assert(n == 1 || n == 3);
-	if (n != 1 && n != 3)
-		return NULL;
+	bgrPixmap = fz_newpixmap(pdf_devicebgr, pixmap->x, pixmap->y, w, h);
+	fz_convertpixmap(pixmap->colorspace, pixmap, pdf_devicebgr, bgrPixmap);
+	pixmap = bgrPixmap;
+	
+	assert(pixmap->n == 4);
 	
 	bmi = fz_malloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
 	memset(bmi, 0, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
@@ -264,16 +268,9 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 			{
 				RGBQUAD c = { 0 };
 				
-				if (n == 3)
-				{
-					c.rgbRed = samples[j * w * 4 + i * 4];
-					c.rgbGreen = samples[j * w * 4 + i * 4 + 1];
-					c.rgbBlue = samples[j * w * 4 + i * 4 + 2];
-				}
-				else
-				{
-					c.rgbRed = c.rgbGreen = c.rgbBlue = samples[j * rows + i];
-				}
+				c.rgbRed = samples[j * w * 4 + i * 4 + 2];
+				c.rgbGreen = samples[j * w * 4 + i * 4 + 1];
+				c.rgbBlue = samples[j * w * 4 + i * 4];
 				
 				/* find this color in the palette */
 				for (k = 0; k < paletteSize; k++)
@@ -299,20 +296,19 @@ ProducingPaletteDone:
 	
 	if (!hasPalette)
 	{
-		unsigned char *d = bmpData = fz_malloc(rows * h);
-		unsigned char *s = pixmap->samples;
+		unsigned char *dest = bmpData = fz_malloc(rows * h);
+		samples = pixmap->samples;
 		
 		for (j = 0; j < h; j++)
 		{
 			for (i = 0; i < w; i++)
 			{
-				d[0] = s[2];
-				d[1] = s[1];
-				d[2] = s[0];
-				d += 3;
-				s += 4;
+				*dest++ = *samples++;
+				*dest++ = *samples++;
+				*dest++ = *samples++;
+				samples++;
 			}
-			d += rows - w * 3;
+			dest += rows - w * 3;
 		}
 	}
 	
@@ -321,12 +317,13 @@ ProducingPaletteDone:
 	bmi->bmiHeader.biHeight = -h;
 	bmi->bmiHeader.biPlanes = 1;
 	bmi->bmiHeader.biCompression = BI_RGB;
-	bmi->bmiHeader.biBitCount = hasPalette ? 8 : 8 * n;
+	bmi->bmiHeader.biBitCount = hasPalette ? 8 : 24;
 	bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : rows);
 	bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
 	
 	hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
 	
+	fz_droppixmap(bgrPixmap);
 	fz_free(bmpData);
 	fz_free(bmi);
 	
