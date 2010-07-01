@@ -534,7 +534,7 @@ const char *g_transTranslations[] = {
   "&Op\303\247\303\265es...",
   "&Palavra-passe:",
   "&Imprimir\tCtrl-P",
-  NULL,
+  "&Imprimir com %s...\tCtrl-P",
   "&Imprimir...(rejeitado)",
   "Le&mbrar estas defini\303\247\303\265es para cada documento",
   "&Gravar como\tCtrl-S",

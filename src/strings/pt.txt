@@ -8,7 +8,7 @@ Lang: pt Portuguese - Portugal (Português)
 
 Contributor: Ricardo Santos[bogas] (http://www.meta-morf.pt.vu)
 Contributor: Bruno Rodrigues
-Contributor: Sérgio Marques <smarquespt@gmsil.com>, 2010
+Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010
 
 &About
 &Sobre
@@ -66,6 +66,9 @@ Amp&liação:
 
 &Print\tCtrl-P
 &Imprimir\tCtrl-P
+
+&Print with %s...\tCtrl-P
+&Imprimir com %s...\tCtrl-P
 
 &Print... (denied)
 &Imprimir...(rejeitado)
@@ -456,7 +459,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&Print with %s...\tCtrl-P
 
