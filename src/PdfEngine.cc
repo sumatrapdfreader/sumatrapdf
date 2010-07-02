@@ -47,6 +47,7 @@ void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int p
     if (!_pixmap) {
         HDC bmpDC = CreateCompatibleDC(hdc);
         HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+        SetStretchBltMode(hdc, HALFTONE);
         StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
             bmpDC, 0, 0, _width, _height, SRCCOPY);
         SelectObject(bmpDC, oldBmp);
@@ -59,13 +60,40 @@ void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int p
 }
 
 void RenderedBitmap::invertColors() {
-    if (!_pixmap)
-        return; /* TODO */
+    if (!_pixmap) {
+        HDC hDC = GetDC(NULL);
+        HDC bmpDC = CreateCompatibleDC(hDC);
+        HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+        BITMAPINFO bmi = { 0 };
+
+        bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+        bmi.bmiHeader.biHeight = _height;
+        bmi.bmiHeader.biWidth = _width;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+
+        unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
+        if (GetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
+            int dataLen = _width * _height * 4;
+            for (int i = 0; i < dataLen; i++)
+                if ((i + 1) % 4) // don't invert alpha channel
+                    bmpData[i] = 255 - bmpData[i];
+            SetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
+        }
+
+        free(bmpData);
+        SelectObject(bmpDC, oldBmp);
+        DeleteDC(bmpDC);
+        ReleaseDC(NULL, hDC);
+        return;
+    }
 
     unsigned char *bmpData = _pixmap->samples;
     int dataLen = _width * _height * _pixmap->n;
     for (int i = 0; i < dataLen; i++)
-        bmpData[i] = 255 - bmpData[i];
+        if ((i + 1) % _pixmap->n) // don't invert alpha channel
+            bmpData[i] = 255 - bmpData[i];
 }
 
 PdfEngine::PdfEngine() : 
@@ -301,7 +329,8 @@ RenderedBitmap *PdfEngine::renderBitmap(
                            int pageNo, double zoomReal, int rotation,
                            fz_rect *pageRect,
                            BOOL (*abortCheckCbkA)(void *data),
-                           void *abortCheckCbkDataA)
+                           void *abortCheckCbkDataA,
+                           bool useGdi)
 {
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
@@ -311,6 +340,37 @@ RenderedBitmap *PdfEngine::renderBitmap(
     if (!pageRect)
         pageRect = &page->mediabox;
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
+
+    if (useGdi) {
+        // for now, don't render directly into the DC
+        int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
+        HDC hDC = GetDC(NULL);
+        HDC hDCMem = CreateCompatibleDC(hDC);
+        HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
+        DeleteObject(SelectObject(hDCMem, hbmp));
+
+        RECT rc;
+        SetRect(&rc, 0, 0, w, h);
+        HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
+        FillRect(hDCMem, &rc, bgBrush); // initialize white background
+        DeleteObject(bgBrush);
+
+        fz_device *dev = fz_newgdidevice(hDCMem);
+        EnterCriticalSection(&_xrefAccess);
+        fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
+        LeaveCriticalSection(&_xrefAccess);
+        fz_freedevice(dev);
+#if CONSERVE_MEMORY
+        dropPdfPage(pageNo);
+#endif
+	    DeleteDC(hDCMem);
+        ReleaseDC(NULL, hDC);
+        if (error) {
+            DeleteObject(hbmp);
+            return NULL;
+        }
+        return new RenderedBitmap(hbmp, w, h);
+    }
 
     // make sure not to request too large a pixmap, as MuPDF just aborts on OOM;
     // instead we get a 1*y sized pixmap and try to resize it manually and just
@@ -338,46 +398,6 @@ RenderedBitmap *PdfEngine::renderBitmap(
         bitmap = new RenderedBitmap(image);
     fz_droppixmap(image);
     return bitmap;
-}
-
-RenderedBitmap *PdfEngine::renderBitmap(HDC hDC, int pageNo,
-                                        double zoomReal, int rotation,
-                                        fz_rect *pageRect)
-{
-    pdf_page* page = getPdfPage(pageNo);
-    if (!page)
-        return NULL;
-    fz_matrix ctm = viewctm(page, zoomReal / 100.0, rotation);
-    if (!pageRect)
-        pageRect = &page->mediabox;
-    fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
-
-    // for now, don't render directly into the DC
-    int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
-    HDC hDCMem = CreateCompatibleDC(hDC);
-    HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
-    DeleteObject(SelectObject(hDCMem, hbmp));
-
-    RECT rc;
-    SetRect(&rc, 0, 0, w, h);
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-    FillRect(hDCMem, &rc, bgBrush); // initialize white background
-    DeleteObject(bgBrush);
-
-    fz_device *dev = fz_newgdidevice(hDCMem);
-    EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
-    LeaveCriticalSection(&_xrefAccess);
-    fz_freedevice(dev);
-#if CONSERVE_MEMORY
-    dropPdfPage(pageNo);
-#endif
-	DeleteDC(hDCMem);
-    if (error) {
-        DeleteObject(hbmp);
-        return NULL;
-    }
-    return new RenderedBitmap(hbmp, w, h);
 }
 
 static int linksLinkCount(pdf_link *currLink) {

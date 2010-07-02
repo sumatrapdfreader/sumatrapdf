@@ -130,9 +130,10 @@ public:
     RenderedBitmap *renderBitmap(int pageNo, double zoomReal, int rotation,
                          fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
                          BOOL (*abortCheckCbkA)(void *data),
-                         void *abortCheckCbkDataA) {
+                         void *abortCheckCbkDataA,
+                         bool useGdi=false) {
         if (!pdfEngine) return NULL;
-        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect, abortCheckCbkA, abortCheckCbkDataA);
+        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect, abortCheckCbkA, abortCheckCbkDataA, useGdi);
     }
 
     /* number of pages in PDF document */

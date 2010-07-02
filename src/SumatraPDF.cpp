@@ -40,6 +40,7 @@ static BOOL             gDebugShowLinks = TRUE;
 #else
 static BOOL             gDebugShowLinks = FALSE;
 #endif
+static bool             gUseGdiRenderer = false;
 
 /* default UI settings */
 
@@ -233,6 +234,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false)
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
 static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=NULL);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
+static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
 #define SEP_ITEM "-----"
@@ -1872,7 +1874,7 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         TCHAR printExtItem[256];
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
-        else if (CanViewWithAcrobat()) {
+        else if (!gUseGdiRenderer && CanViewWithAcrobat()) {
             wsprintf(printExtItem, _TR("&Print with %s...\tCtrl-P"), _T("Adobe Reader"));
             printItem = printExtItem;
         }
@@ -3314,7 +3316,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
     clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
 
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
-        win->dm->rotation(), &clipRegion, NULL, NULL);
+        win->dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
     if (bmp) {
         HDC hDC = GetDC(NULL);
         HBITMAP hBmp = bmp->createDIBitmap(hDC);
@@ -3976,7 +3978,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
             double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
-            RenderedBitmap *bmp = dm->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL);
+            RenderedBitmap *bmp = dm->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
             if (bmp) {
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
                     (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -4015,7 +4017,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
             // try to use correct zoom values (scale down to fit the physical page, though)
             double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
-            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL);
+            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, gUseGdiRenderer);
             if (bmp) {
                 // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
@@ -4109,18 +4111,8 @@ static void OnMenuPrint(WindowInfo *win)
     bool hasSelection = win->selectionOnPage && !win->selectionOnPage->next;
 
     // use an external printing tool until our printing engine improves
-    if (!hasSelection && CanViewWithAcrobat(win)) {
-        TCHAR acrobatPath[MAX_PATH];
-        if (GetAcrobatPath(acrobatPath, dimof(acrobatPath))) {
-            // Command line format:
-            //   /P <filename>
-            // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
-            TCHAR *params = tstr_printf(_T("/P \"%s\""), win->loadedFilePath);
-            exec_with_params(acrobatPath, params, FALSE);
-            free(params);
-            return;
-        }
-    }
+    if (!hasSelection && !gUseGdiRenderer && ViewWithAcrobat(win, _T("/P")))
+        return;
 
     /* printing uses the WindowInfo win that is created for the
        screen, it may be possible to create a new WindowInfo
@@ -4449,28 +4441,35 @@ static bool CanViewWithAcrobat(WindowInfo *win)
     return GetAcrobatPath() != NULL;
 }
 
-static void ViewWithAcrobat(WindowInfo *win)
+static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
 {
-    if (gRestrictedUse) return;
+    if (gRestrictedUse)
+        return false;
 
     if (!win || !win->loadedFilePath)
-        return;
+        return false;
 
     TCHAR acrobatPath[MAX_PATH];
     if (!GetAcrobatPath(acrobatPath, dimof(acrobatPath)))
-        return;
+        return false;
+    if (!args)
+        args = _T("");
 
     TCHAR *params;
     // Command line format for version 6 and later:
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
+    //   /P <filename>
+    // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->dm && HIWORD(GetFileVersion(acrobatPath)) >= 6)
-        params = tstr_printf(_T("/A \"page=%d\" \"%s\""), win->dm->currentPageNo(), win->dm->fileName());
+        params = tstr_printf(_T("/A \"page=%d\" %s \"%s\""), win->dm->currentPageNo(), args, win->dm->fileName());
     else
-        params = tstr_printf(_T("\"%s\""), win->loadedFilePath);
+        params = tstr_printf(_T("%s \"%s\""), args, win->loadedFilePath);
     exec_with_params(acrobatPath, params, FALSE);
     free(params);
+
+    return true;
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
@@ -5433,6 +5432,12 @@ static void OnChar(WindowInfo *win, int key)
             free(pageInfo);
         }
         break;
+#ifdef _DEBUG
+    case '$':
+        gUseGdiRenderer = !gUseGdiRenderer;
+        WindowInfo_Refresh(win, false);
+        break;
+#endif
     }
 }
 
@@ -7179,13 +7184,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         }
         assert(!req.abort);
         MsTimer renderTimer;
-#if 0
-        HDC hDC = GetDC(NULL);
-        bmp = req.dm->pdfEngine->renderBitmap(hDC, req.pageNo, req.zoomLevel, req.rotation, NULL);
-        ReleaseDC(NULL, hDC);
-#else
-        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req);
-#endif
+        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req, gUseGdiRenderer);
         renderTimer.stop();
         LockCache();
         gCurPageRenderReq = NULL;

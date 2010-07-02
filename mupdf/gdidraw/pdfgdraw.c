@@ -151,7 +151,7 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 		gettime(&start);
 
 	ctm = fz_identity();
-	ctm = fz_concat(ctm, fz_translate(0, -drawpage->mediabox.y1));
+	ctm = fz_concat(ctm, fz_translate(-drawpage->mediabox.x0, -drawpage->mediabox.y1));
 	ctm = fz_concat(ctm, fz_scale(drawzoom, -drawzoom));
 	ctm = fz_concat(ctm, fz_rotate(drawrotate + drawpage->rotate));
 
@@ -163,12 +163,12 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	hDC = CreateCompatibleDC(hDCMain);
 	hbmp = CreateCompatibleBitmap(hDCMain, w, h);
 	DeleteObject(SelectObject(hDC, hbmp));
-	
+
 	SetRect(&rc, 0, 0, w, h);
 	bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
 	FillRect(hDC, &rc, bgBrush);
 	DeleteObject(bgBrush);
-	
+
 	if (drawpattern)
 	{
 		if (strchr(drawpattern, '%') || fd < 0)
@@ -194,7 +194,6 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 24;
 	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = 0;
 
 	bmpDataLen = ((w * 3 + 3) / 4) * 4 * h;
 	bmpData = fz_malloc(bmpDataLen);

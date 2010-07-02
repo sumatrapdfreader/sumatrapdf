@@ -109,8 +109,8 @@ static HFONT
 gdigetfont(fz_font *font, float height)
 {
 	/* TODO: register font with AddFontMemResourceEx */
-	int weight = strstr(font->name, "-Bold") ? FW_BOLD : FW_DONTCARE;
-	BOOL italic = strstr(font->name, "-Italic") != NULL;
+	int weight = strstr(font->name, "Bold") ? FW_BOLD : FW_DONTCARE;
+	BOOL italic = strstr(font->name, "Italic") != NULL;
 	
 	HFONT ft = CreateFontA(height, 0, 0, 0, weight, italic, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, font->name[6] == '+' ? font->name + 7 : font->name);
 	if (!ft)
