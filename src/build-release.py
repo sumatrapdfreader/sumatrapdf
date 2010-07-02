@@ -33,7 +33,7 @@ args = sys.argv
 upload = test_for_flag(args, "-upload")
 upload_tmp = test_for_flag(args, "-uploadtmp")
 
-if upload:
+if upload or upload_tmp:
   try:
     import boto.s3
     from boto.s3.key import Key

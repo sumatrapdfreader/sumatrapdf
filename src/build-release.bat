@@ -33,7 +33,7 @@ zip -? >nul
 IF ERRORLEVEL 1 goto ZIP_NEEDED
 
 :BUILD
-python build-release.py %1 %2 %3
+python build-release.py %1
 goto END
 
 :VS_NEEDED
