@@ -323,8 +323,6 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 	int i, j, k;
 	int x, y;
 
-	assert(dest->n == 4);
-
 	ctm = fz_concat(shade->matrix, ctm);
 	mesh = shade->mesh;
 

@@ -436,7 +436,7 @@ void winblit()
 				0, 0, 0, gapp.image->h, color,
 				dibinf, DIB_RGB_COLORS);
 			free(color);
- 		}
+		}
 		if (gapp.image->n == 4)
 		{
 			SetDIBitsToDevice(hdc,

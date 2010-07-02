@@ -158,7 +158,8 @@ static inline int ftcidtogid(pdf_fontdesc *fontdesc, int cid)
 	return cid;
 }
 
-int pdf_fontcidtogid(pdf_fontdesc *fontdesc, int cid)
+int
+pdf_fontcidtogid(pdf_fontdesc *fontdesc, int cid)
 {
 	if (fontdesc->font->ftface)
 		return ftcidtogid(fontdesc, cid);
@@ -284,7 +285,7 @@ pdf_newfontdesc(void)
  * Simple fonts (Type1 and TrueType)
  */
 
-	static fz_error
+static fz_error
 loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
@@ -316,11 +317,10 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	fontdesc = pdf_newfontdesc();
 
 	pdf_logfont("load simple font (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), fontdesc);
-	pdf_logfont("basefont0 %s\n", basefont);
-	pdf_logfont("basefont1 %s\n", fontname);
+	pdf_logfont("basefont %s -> %s\n", basefont, fontname);
 
 	descriptor = fz_dictgets(dict, "FontDescriptor");
-	if (descriptor) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=664 */
+	if (descriptor)
 		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, nil);
 	else
 		error = pdf_loadbuiltinfont(fontdesc, fontname);
@@ -616,7 +616,7 @@ cleanup:
  * CID Fonts
  */
 
-	static fz_error
+static fz_error
 loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *encoding, fz_obj *tounicode)
 {
 	fz_error error;
@@ -891,7 +891,7 @@ cleanup:
 	return fz_rethrow(error, "cannot load cid font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 }
 
-	static fz_error
+static fz_error
 loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
@@ -934,12 +934,14 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 	fz_obj *obj1, *obj2, *obj3, *obj;
 	fz_rect bbox;
 	char *fontname;
+	char *origname;
 
 	pdf_logfont("load fontdescriptor {\n");
 
-	fontname = fz_toname(fz_dictgets(dict, "FontName"));
+	origname = fz_toname(fz_dictgets(dict, "FontName"));
+	fontname = cleanfontname(origname);
 
-	pdf_logfont("fontname '%s'\n", fontname);
+	pdf_logfont("fontname %s -> %s\n", origname, fontname);
 
 	fontdesc->flags = fz_toint(fz_dictgets(dict, "Flags"));
 	fontdesc->italicangle = fz_toreal(fz_dictgets(dict, "ItalicAngle"));
@@ -968,14 +970,20 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 		if (error)
 		{
 			fz_catch(error, "ignored error when loading embedded font, attempting to load system font");
-			error = pdf_loadsystemfont(fontdesc, fontname, collection);
+			if (origname != fontname)
+				error = pdf_loadbuiltinfont(fontdesc, fontname);
+			else
+				error = pdf_loadsystemfont(fontdesc, fontname, collection);
 			if (error)
 				return fz_rethrow(error, "cannot load font descriptor (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		}
 	}
 	else
 	{
-		error = pdf_loadsystemfont(fontdesc, fontname, collection);
+		if (origname != fontname && 0 /* prefer local fonts to the built-in ones */)
+			error = pdf_loadbuiltinfont(fontdesc, fontname);
+		else
+			error = pdf_loadsystemfont(fontdesc, fontname, collection);
 		if (error)
 			return fz_rethrow(error, "cannot load font descriptor (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
@@ -1067,8 +1075,8 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	if (error)
 		return fz_rethrow(error, "cannot load font (%d %d R)", fz_tonum(dict), fz_togen(dict));
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=958 */
-	if ((*fontdescp)->font->ftsubstitute && !(subtype && !strcmp(subtype, "Type0")))
+	/* Save the widths to stretch non-CJK substitute fonts */
+	if ((*fontdescp)->font->ftsubstitute && !(*fontdescp)->tottfcmap)
 		pdf_makewidthtable(*fontdescp);
 
 	pdf_storeitem(xref->store, PDF_KFONT, dict, *fontdescp);

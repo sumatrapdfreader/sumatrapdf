@@ -845,8 +845,9 @@ Lsetcolor:
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
+			a = fz_toreal(csi->stack[0]) / 100;
 			pdf_flushtext(csi);
-			gstate->scale = fz_toreal(csi->stack[0]) / 100;
+			gstate->scale = a;
 			break;
 		case 'L':
 			if (buf[2] != 0)
@@ -930,14 +931,16 @@ Lsetcolor:
 			if (csi->top < 6)
 				goto syntaxerror;
 
+			m.a = fz_toreal(csi->stack[0]);
+			m.b = fz_toreal(csi->stack[1]);
+			m.c = fz_toreal(csi->stack[2]);
+			m.d = fz_toreal(csi->stack[3]);
+			m.e = fz_toreal(csi->stack[4]);
+			m.f = fz_toreal(csi->stack[5]);
+
 			pdf_flushtext(csi);
 
-			csi->tm.a = fz_toreal(csi->stack[0]);
-			csi->tm.b = fz_toreal(csi->stack[1]);
-			csi->tm.c = fz_toreal(csi->stack[2]);
-			csi->tm.d = fz_toreal(csi->stack[3]);
-			csi->tm.e = fz_toreal(csi->stack[4]);
-			csi->tm.f = fz_toreal(csi->stack[5]);
+			csi->tm = m;
 			csi->tlm = csi->tm;
 			break;
 		case '*':
@@ -1026,8 +1029,6 @@ Lsetcolor:
 			break;
 		case 'm':
 		{
-			fz_matrix m;
-
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 6)

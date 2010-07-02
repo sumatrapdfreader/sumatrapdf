@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				OutputFile="$(OutDir)\mupdf.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd"
 				GenerateDebugInformation="true"
@@ -134,6 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				OutputFile="$(OutDir)\mupdf.exe"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"

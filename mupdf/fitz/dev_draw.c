@@ -459,8 +459,8 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 	// TODO: proper clip by shade->bbox
 	if (!fz_isemptyrect(shade->bbox))
 	{
-//		bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
-//		bbox = fz_intersectbbox(fz_roundrect(bounds), bbox);
+		bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
+		bbox = fz_intersectbbox(fz_roundrect(bounds), bbox);
 	}
 
 	if (fz_isemptyrect(bbox))
@@ -476,7 +476,6 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 	{
 		unsigned char *s;
 		int x, y, n, i;
-printf("usebackground!\n");
 		fz_convertcolor(shade->cs, shade->background, dev->model, colorfv);
 		for (i = 0; i < dev->model->n; i++)
 			colorbv[i] = colorfv[i] * 255;
@@ -519,8 +518,8 @@ calcimagestate(fz_drawdevice *dev, fz_pixmap *image, fz_matrix ctm,
 	else
 		*dy = sy;
 
-	w = image->w / *dx;
-	h = image->h / *dy;
+	w = (image->w + *dx - 1) / *dx;
+	h = (image->h + *dy - 1) / *dy;
 
 	path = fz_newpath();
 	fz_moveto(path, 0, 0);
