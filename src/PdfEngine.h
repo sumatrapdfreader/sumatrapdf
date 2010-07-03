@@ -135,6 +135,7 @@ public:
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA,
                          bool useGdi=false);
+    bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *ctm=NULL);
 
     bool hasPermission(int permission);
     int linkCount();

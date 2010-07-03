@@ -4015,14 +4015,21 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
 
-            // try to use correct zoom values (scale down to fit the physical page, though)
-            double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
-            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, gUseGdiRenderer);
-            if (bmp) {
-                // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
-                bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
-                    (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
-                delete bmp;
+            if (gUseGdiRenderer) {
+                // TODO: center on page
+                RECT rc = { 0, 0, printAreaWidth, printAreaHeight };
+                dm->renderPage(hdc, pageNo, &rc);
+            }
+            else {
+                // try to use correct zoom values (scale down to fit the physical page, though)
+                double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
+                RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, gUseGdiRenderer);
+                if (bmp) {
+                    // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
+                    bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
+                        (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
+                    delete bmp;
+                }
             }
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);

@@ -135,6 +135,10 @@ public:
         if (!pdfEngine) return NULL;
         return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect, abortCheckCbkA, abortCheckCbkDataA, useGdi);
     }
+    bool renderPage(HDC hDC, int pageNo, RECT *pageRect) {
+        if (!pdfEngine) return false;
+        return pdfEngine->renderPage(hDC, pdfEngine->getPdfPage(pageNo), pageRect);
+    }
 
     /* number of pages in PDF document */
     int  pageCount() const { return pdfEngine->pageCount(); }

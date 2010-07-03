@@ -325,6 +325,30 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *ctm)
+{
+    fz_matrix ctm2;
+    if (!ctm) {
+        float zoom = min(1.0 * (pageRect->right - pageRect->left) / (page->mediabox.x1 - page->mediabox.x0),
+                         1.0 * (pageRect->bottom - pageRect->top) / (page->mediabox.y1 - page->mediabox.y0));
+        ctm2 = viewctm(page, zoom, 0);
+        ctm2 = fz_concat(ctm2, fz_translate(pageRect->left, pageRect->top));
+        ctm = &ctm2;
+    }
+
+    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
+    FillRect(hDC, pageRect, bgBrush); // initialize white background
+    DeleteObject(bgBrush);
+
+    fz_device *dev = fz_newgdidevice(hDC);
+    EnterCriticalSection(&_xrefAccess);
+    fz_error error = pdf_runcontentstream(dev, *ctm, _xref, page->resources, page->contents);
+    LeaveCriticalSection(&_xrefAccess);
+    fz_freedevice(dev);
+
+    return fz_okay == error;
+}
+
 RenderedBitmap *PdfEngine::renderBitmap(
                            int pageNo, double zoomReal, int rotation,
                            fz_rect *pageRect,
@@ -337,35 +361,27 @@ RenderedBitmap *PdfEngine::renderBitmap(
         return NULL;
     zoomReal = zoomReal / 100.0;
     fz_matrix ctm = viewctm(page, zoomReal, rotation);
-    if (!pageRect)
+    if (!pageRect || useGdi)
         pageRect = &page->mediabox;
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
 
     if (useGdi) {
-        // for now, don't render directly into the DC
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
+
+        // for now, don't render directly into a DC but produce an HBITMAP instead
         HDC hDC = GetDC(NULL);
         HDC hDCMem = CreateCompatibleDC(hDC);
         HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
         DeleteObject(SelectObject(hDCMem, hbmp));
 
-        RECT rc;
-        SetRect(&rc, 0, 0, w, h);
-        HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-        FillRect(hDCMem, &rc, bgBrush); // initialize white background
-        DeleteObject(bgBrush);
-
-        fz_device *dev = fz_newgdidevice(hDCMem);
-        EnterCriticalSection(&_xrefAccess);
-        fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
-        LeaveCriticalSection(&_xrefAccess);
-        fz_freedevice(dev);
+        RECT rc = { 0, 0, w, h };
+        bool success = renderPage(hDCMem, page, &rc, &ctm);
 #if CONSERVE_MEMORY
         dropPdfPage(pageNo);
 #endif
 	    DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
-        if (error) {
+        if (!success) {
             DeleteObject(hbmp);
             return NULL;
         }
