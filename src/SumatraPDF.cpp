@@ -1892,7 +1892,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
-        IDM_COPY_SELECTION, IDM_PROPERTIES };
+        IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     assert(!fileCloseEnabled == !win->loadedFilePath);
@@ -4881,6 +4881,10 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
         return;
 
     if (presentation) {
+        assert(win->dm);
+        if (!win->dm)
+            return;
+
         if (win->fullScreen)
             win->_windowStateBeforePresentation = WIN_STATE_FULLSCREEN;
         else if (IsZoomed(win->hwndFrame))
@@ -4888,7 +4892,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
         else
             win->_windowStateBeforePresentation = WIN_STATE_NORMAL;
         win->presentation = PM_ENABLED;
-        win->_tocBeforePresentation = win->dm ? win->dm->_showToc : FALSE;
+        win->_tocBeforePresentation = win->dm->_showToc;
     }
     else {
         win->fullScreen = true;
@@ -4975,7 +4979,7 @@ static void OnMenuViewPresentation(WindowInfo *win)
 
     if (win->presentation != PM_DISABLED)
         WindowInfo_ExitFullscreen(win);
-    else
+    else if (win->dm)
         WindowInfo_EnterFullscreen(win, true);
 }
 
