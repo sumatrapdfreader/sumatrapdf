@@ -50,7 +50,7 @@ void SimultaneousSynchronousAbort(int nfw, FileWatcher **fw){
             fw[i]->hWatchingThread = NULL;
         }
     }
-    delete hp;
+    delete [] hp;
 }
 
 bool FileWatcher::IsThreadRunning()

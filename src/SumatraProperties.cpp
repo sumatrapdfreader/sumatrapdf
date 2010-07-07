@@ -263,7 +263,6 @@ void FreePdfProperties(WindowInfo *win)
 static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     SIZE            txtSize;
     int             totalDx, totalDy;
-    int             leftDy, rightDy;
     int             leftMaxDx, rightMaxDx;
     int             currY;
     int             offX, offY;
@@ -277,7 +276,6 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     /* calculate text dimensions for the left side */
     (HFONT)SelectObject(hdc, fontLeftTxt);
     leftMaxDx = 0;
-    leftDy = 0;
     for (int i = 0; i < win->pdfPropertiesCount; i++) {
         txt = win->pdfProperties[i].leftTxt;
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
@@ -296,7 +294,6 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     /* calculate text dimensions for the right side */
     (HFONT)SelectObject(hdc, fontRightTxt);
     rightMaxDx = 0;
-    rightDy = 0;
     for (int i = 0; i < win->pdfPropertiesCount; i++) {
         txt = win->pdfProperties[i].rightTxt;
         GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);

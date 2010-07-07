@@ -1435,7 +1435,7 @@ static void UpdateCurrentFileDisplayState(void)
 
 static bool Prefs_Save(void)
 {
-    TCHAR *     path;
+    TCHAR *     path = NULL;
     size_t      dataLen;
     bool        ok = false;
 
@@ -1597,10 +1597,9 @@ static void WindowInfo_Delete(WindowInfo *win)
     WindowInfo_AbortFinding(win);
     delete win->dm;
     win->dm = NULL;
-    if (win->pdfsync) {
-      delete win->pdfsync;
-      win->pdfsync = NULL;
-    }
+    delete win->pdfsync;
+    win->pdfsync = NULL;
+
     if (win->stopFindStatusThreadEvent) {
         CloseHandle(win->stopFindStatusThreadEvent);
         win->stopFindStatusThreadEvent = NULL;
@@ -1616,8 +1615,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     DeleteOldSelectionInfo(win);
 
     free(win->title);
-    if (win->loadedFilePath)
-        free(win->loadedFilePath);
+    free(win->loadedFilePath);
 
     delete win;
 }
@@ -2120,8 +2118,7 @@ static bool LoadPdfIntoWindow(
     DisplayModel *previousmodel = win->dm;
     WindowInfo_AbortFinding(win);
 
-    if (win->loadedFilePath)
-        free(win->loadedFilePath);
+    free(win->loadedFilePath);
     win->loadedFilePath = tstr_dup(fileName);
     win->dm = DisplayModel_CreateFromFileName(fileName,
         totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
@@ -3481,8 +3478,6 @@ static void OnDraggingStart(WindowInfo *win, int x, int y)
 
 static void OnDraggingStop(WindowInfo *win, int x, int y)
 {
-    int             dragDx, dragDy;
-
     assert(win);
     if (!win) return;
 
@@ -3501,6 +3496,7 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
 
     if (GetCapture() == win->hwndCanvas) {
         if (didDragMouse) {
+            int  dragDx, dragDy;
             win->linkOnLastButtonDown = NULL;
             dragDx = x - win->dragPrevPosX;
             dragDy = y - win->dragPrevPosY;
@@ -3732,7 +3728,6 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     if (-1 == curTxtPosY)
         curTxtPosY = 25;
 
-    int areaDx = rect_dx(&rc);
     int areaDy = rect_dy(&rc);
 
 #if 0
@@ -3859,10 +3854,9 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
         WindowInfo_AbortFinding(win);
         delete win->dm;
         win->dm = NULL;
-        if (win->loadedFilePath) {
-            free(win->loadedFilePath);
-            win->loadedFilePath = NULL;
-        }
+        free(win->loadedFilePath);
+        win->loadedFilePath = NULL;
+
         if (win->hwndPdfProperties) {
             DestroyWindow(win->hwndPdfProperties);
             assert(NULL == win->hwndPdfProperties);
@@ -6547,7 +6541,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int             wmId, wmEvent, current;
+    int             wmId, current;
     WindowInfo *    win;
     ULONG           ulScrollLines;                   // for mouse wheel logic
     const TCHAR *   fileName;
@@ -6581,7 +6575,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_COMMAND:
             wmId    = LOWORD(wParam);
-            wmEvent = HIWORD(wParam);
 
             fileName = RecentFileNameFromMenuItemId(wmId);
             if (fileName) {
@@ -7771,11 +7764,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 if (WS_SHOWING_PDF != win->state) {
                     // cancel printing, if there was a load error
                     exitOnPrint = printToDefaultPrinter = printDialog = FALSE;
-                    if (printerName) {
-                        free(printerName);
-                        printerName = NULL;
-                    }
-                }
+                    free(printerName);
+                    printerName = NULL;
+               }
                 else if (destName && !firstDocLoaded) {
                     char * destName_utf8 = tstr_to_utf8(destName);
                     win->dm->goToNamedDest(destName_utf8);
@@ -7815,8 +7806,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!firstDocLoaded) {
         bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState);
         /* disable benchmark mode if we couldn't open file to benchmark */
-        if (gBenchFileName)
-            free(gBenchFileName);
+        free(gBenchFileName);
         gBenchFileName = NULL;
         win = WindowInfo_CreateEmpty();
         if (!win)
@@ -7882,8 +7872,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 Exit:
     free(destName);
     free(printerName);
-    if (gBenchFileName)
-        free(gBenchFileName);
+    free(gBenchFileName);
 
     FreePageRenderThread();
 

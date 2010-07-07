@@ -50,7 +50,7 @@ public:
         }
         m_size = s;
     }
-    size_t size()
+    size_t size() const 
     {
         return m_size;
     }
@@ -164,9 +164,8 @@ public:
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
         this->dir = FilePath_GetDir(_syncfilename);
     }
-    ~Synchronizer() {
-        if (dir)
-            free(dir);
+    virtual ~Synchronizer() {
+        free(dir);
     }
 
     // conversion from one coordinate system to another
@@ -208,7 +207,7 @@ public:
     virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects) = 0;
 
     void discard_index() { this->index_discarded = true; }
-    bool is_index_discarded() { return this->index_discarded; }
+    bool is_index_discarded() const { return this->index_discarded; }
     int rebuild_index() { this->index_discarded = false; return 0; }
 
     UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
@@ -242,11 +241,9 @@ public:
         this->scanner = NULL;
         this->coordsys = TopLeft;
     }
-    ~SyncTex()
+    virtual ~SyncTex()
     {
-        if (scanner)
-          synctex_scanner_free(scanner);
-
+        synctex_scanner_free(scanner);
     }
     void discard_index() { Synchronizer::discard_index();}
     bool is_index_discarded() { return Synchronizer::is_index_discarded(); }

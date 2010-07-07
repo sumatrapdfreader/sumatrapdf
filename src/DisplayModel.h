@@ -273,7 +273,7 @@ public:
     void            setScrollState(ScrollState *state);
 
     bool            addNavPoint(bool keepForward=false);
-    bool            canNavigate(int dir);
+    bool            canNavigate(int dir) const;
     void            navigate(int dir);
 
     bool            displayStateFromModel(DisplayState *ds);
@@ -326,8 +326,6 @@ protected:
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     double          _dpiFactor;
-    /* display odd pages on the right? */
-    bool            _showCover;
 
     /* if we're in presentation mode, _pres* contains the pre-presentation values */
     bool            _presentationMode;

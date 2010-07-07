@@ -140,7 +140,7 @@ public:
     bool hasPermission(int permission);
     int linkCount();
     void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
-    bool hasTocTree() { 
+    bool hasTocTree() const { 
         return _outline != NULL; 
     }
     PdfTocItem *getTocTree();

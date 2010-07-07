@@ -17,6 +17,7 @@ PdfSearch::PdfSearch(PdfEngine *engine)
     result.len = 0;
     result.rects = NULL;
     this->engine = engine;
+    findIndex = 0;
 }
 
 PdfSearch::~PdfSearch()

@@ -56,9 +56,7 @@ void MemSegment::freeAll() {
     free(data);
     data = NULL;
     // clever trick: each segment will delete the next segment
-    if (next) {
-        delete next;
-        next = NULL;
-    }
+    delete next;
+    next = NULL;
 }
 

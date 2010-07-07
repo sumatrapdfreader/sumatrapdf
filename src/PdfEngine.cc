@@ -103,6 +103,7 @@ PdfEngine::PdfEngine() :
         , _outline(NULL)
         , _pages(NULL)
         , _drawcache(NULL)
+        , _windowInfo(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_xrefAccess);

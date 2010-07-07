@@ -1197,7 +1197,6 @@ infinite_loop:
  *  As side effect, the buffer state may have changed if the given argument string can't fit into the buffer.
  */
 synctex_status_t _synctex_match_string(synctex_scanner_t scanner, const char * the_string) {
-	size_t tested_len = 0; /*  the number of characters at the beginning of the_string that match */
 	size_t remaining_len = 0; /*  the number of remaining characters of the_string that should match */
 	size_t available = 0;
 	synctex_status_t status = 0;
@@ -1228,6 +1227,7 @@ return_OK:
 			/*  No need to goo further, this is not the expected string in the buffer. */
 			return SYNCTEX_STATUS_NOT_OK;
 	} else if(SYNCTEX_FILE) {
+		size_t tested_len = 0; /*  the number of characters at the beginning of the_string that match */
 		/*  The buffer was too small to contain remaining_len characters.
 		 *  We have to cut the string into pieces. */
 		z_off_t offset = 0L;
@@ -1377,12 +1377,12 @@ synctex_status_t _synctex_decode_string(synctex_scanner_t scanner, char ** value
 	size_t new_size = 0;
 	size_t len = 0;/*  The number of bytes to copy */
 	size_t available = 0;
-	synctex_status_t status = 0;
 	if(NULL == scanner || NULL == value_ref) {
 		return SYNCTEX_STATUS_BAD_ARGUMENT;
 	}
 	/*  The buffer must at least contain one character: the '\n' end of line marker */
 	if(SYNCTEX_CUR>=SYNCTEX_END) {
+		synctex_status_t status;
 		available = 1;
 		status = _synctex_buffer_get_available_size(scanner,&available);
 		if(status < 0) {
@@ -2907,7 +2907,7 @@ int synctex_scanner_get_tag(synctex_scanner_t scanner,const char * name) {
 				 *  try a name relative to the enclosing directory of the scanner->output file */
 				const char * relative = name;
 				const char * ptr = scanner->output;
-				while((strlen(relative) > 0) && (strlen(ptr) > 0) && (*relative == *ptr))
+				while((*relative != 0) && (*ptr != 0) && (*relative == *ptr))
 				{
 					relative += 1;
 					ptr += 1;

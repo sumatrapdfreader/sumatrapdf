@@ -179,10 +179,15 @@ static int FirstPageInARowNo(int pageNo, int columns, bool showCover)
 DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
 {
     _displayMode = displayMode;
+    _presDisplayMode = displayMode;
+    _presZoomVirtual = INVALID_ZOOM;
     _rotation = INVALID_ROTATION;
     _zoomVirtual = INVALID_ZOOM;
     _padding = &gDisplaySettings;
     _presentationMode = false;
+    _zoomReal = INVALID_ZOOM;
+    _scrollbarYDx = 0;
+    _scrollbarXDy = 0;
     // 1 PDF user space unit equals 1/72 inch
     _dpiFactor = dpi * 1.0 / 72.0;
     _showToc = TRUE;
@@ -209,15 +214,11 @@ DisplayModel::~DisplayModel()
     BitmapCache_FreeForDisplayModel(this);
     cancelRenderingForDisplayModel(this);
 
-    if (_pagesInfo)
-        free(_pagesInfo);
-    if (_links)
-        free(_links);
+    free(_pagesInfo);
+    free(_links);
     free(_navHistory);
-    if (_pdfSearch)
-        delete _pdfSearch;
-    if (pdfEngine)
-        delete pdfEngine;
+    delete _pdfSearch;
+    delete pdfEngine;
 }
 
 PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
@@ -411,10 +412,6 @@ int DisplayModel::currentPageNo(void) const
 
 void DisplayModel::setZoomVirtual(double zoomVirtual)
 {
-    int     pageNo;
-    double  minZoom = INVALID_BIG_ZOOM;
-    double  thisPageZoom;
-
     assert(ValidZoomVirtual(zoomVirtual));
     _zoomVirtual = zoomVirtual;
 
@@ -422,9 +419,10 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most PDFs all
            pages are the same size anyway */
-        for (pageNo = 1; pageNo <= pageCount(); pageNo++) {
+        double  minZoom = INVALID_BIG_ZOOM;
+        for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
             if (pageShown(pageNo)) {
-                thisPageZoom = zoomRealFromVirtualForPage(this->zoomVirtual(), pageNo);
+                double thisPageZoom = zoomRealFromVirtualForPage(this->zoomVirtual(), pageNo);
                 if (minZoom > thisPageZoom)
                     minZoom = thisPageZoom;
             }
@@ -458,12 +456,11 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
 {
     int         pageNo;
     PdfPageInfo*pageInfo = NULL;
-    double      currPosX;
     double      pageDx=0, pageDy=0;
     int         currDxInt, currDyInt;
     double      totalAreaDx, totalAreaDy;
     double      rowMaxPageDy;
-    double      offX, offY;
+    double      offX;
     double      pageOffX;
     int         pageInARow;
     int         columns;
@@ -496,7 +493,6 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     columns = columnsFromDisplayMode(displayMode());
     columnOffsets = (int *)calloc(columns, sizeof(int));
     pageInARow = 0;
-    currPosX = _padding->pageBorderLeft;
     rowMaxPageDy = 0;
     for (pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         pageInfo = getPageInfo(pageNo);
@@ -581,7 +577,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
     /* if a page is smaller than drawing area in y axis, y-center the page */
     totalAreaDy = currPosY + _padding->pageBorderBottom - _padding->betweenPagesY;
     if (totalAreaDy < drawAreaSize.dy()) {
-        offY = _padding->pageBorderTop + (drawAreaSize.dy() - totalAreaDy) / 2;
+        double offY = _padding->pageBorderTop + (drawAreaSize.dy() - totalAreaDy) / 2;
         DBG_OUT("  offY = %.2f\n", offY);
         assert(offY >= 0.0);
         totalAreaDy = drawAreaSize.dy();
@@ -1740,8 +1736,7 @@ void DisplayModel::rebuildLinks()
 {
     int count = pdfEngine->linkCount();
     assert(count > _linksCount);
-    if (_links)
-        free(_links);
+    free(_links);
     _links = (PdfLink*)malloc(count * sizeof(PdfLink));
     _linksCount = count;
     pdfEngine->fillPdfLinks(_links, _linksCount);
@@ -1832,7 +1827,7 @@ bool DisplayModel::addNavPoint(bool keepForward)
     return ss.page != 0;
 }
 
-bool DisplayModel::canNavigate(int dir)
+bool DisplayModel::canNavigate(int dir) const
 {
     return _navHistoryIx + dir >= 0 && _navHistoryIx + dir < _navHistoryEnd && (_navHistoryIx != NAV_HISTORY_LEN || _navHistoryIx + dir != 0);
 }
