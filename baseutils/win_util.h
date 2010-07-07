@@ -124,12 +124,12 @@ public:
     }
     int dx() { return rect_dx(&m_abd.rc); }
     int dy() { return rect_dy(&m_abd.rc); }
-    int x() { return m_abd.rc.left; }
-    int y() { return m_abd.rc.top; }
-    bool atTop() { return ABE_TOP == m_abd.uEdge; }
-    bool atBottom() { return ABE_BOTTOM == m_abd.uEdge; }
-    bool atLeft() { return ABE_LEFT == m_abd.uEdge; }
-    bool atRight() { return ABE_RIGHT == m_abd.uEdge; }
+    int x() const { return m_abd.rc.left; }
+    int y() const { return m_abd.rc.top; }
+    bool atTop() const { return ABE_TOP == m_abd.uEdge; }
+    bool atBottom() const{ return ABE_BOTTOM == m_abd.uEdge; }
+    bool atLeft() const { return ABE_LEFT == m_abd.uEdge; }
+    bool atRight() const { return ABE_RIGHT == m_abd.uEdge; }
     bool isHorizontal() { return atLeft() || atRight(); }
     bool isVertical() { return atBottom() || atTop(); }
 private:

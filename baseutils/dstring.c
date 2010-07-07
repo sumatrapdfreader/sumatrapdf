@@ -211,7 +211,7 @@ DStringSprintf(DString* pDs,
 {
 #ifdef _WIN32
     va_list     args;
-    char        message[256];
+    char        message[256] = {0};
     char  *     buf;
     size_t      bufCchSize;
 

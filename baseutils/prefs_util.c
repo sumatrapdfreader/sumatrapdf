@@ -41,7 +41,6 @@ TCHAR *pref_tstr_with_type(const TCHAR *txt, pref_type type)
    */
 static int prefs_serialize_pref(prefs_data *pref, TCHAR **buf_ptr, size_t *buf_len_cb_ptr)
 {
-    size_t  len_cb;
     TCHAR * name_with_type;
     int     f_ok;
 
@@ -51,7 +50,7 @@ static int prefs_serialize_pref(prefs_data *pref, TCHAR **buf_ptr, size_t *buf_l
     assert(buf_len_cb_ptr);
 
     if (!buf_ptr) {
-        len_cb  = netstr_tstrn_serialized_len_cb(TYPE_PREFIX_CCH_LEN + tstr_len(pref->name));
+        size_t len_cb  = netstr_tstrn_serialized_len_cb(TYPE_PREFIX_CCH_LEN + tstr_len(pref->name));
         if (PT_INT == pref->type)
             len_cb += netstr_int_serialized_len_cb(*pref->data.data_int);
         else if (PT_STRING == pref->type)

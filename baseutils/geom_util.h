@@ -58,10 +58,10 @@ public:
     SizeD(int dx, int dy) { m_dx = (double)dx; m_dy = (double)dy; }
     SizeD(SizeI si) { m_dx = (double)si.dx; m_dy = (double)si.dy; }
     SizeD() { m_dx = 0; m_dy = 0; }
-    int dxI() { return (int)m_dx; }
-    int dyI() { return (int)m_dy; }
-    double dx() { return m_dx; }
-    double dy() { return m_dy; }
+    int dxI() const { return (int)m_dx; }
+    int dyI() const { return (int)m_dy; }
+    double dx() const { return m_dx; }
+    double dy() const { return m_dy; }
     void setDx(double dx) { m_dx = dx; }
     void setDy(double dy) { m_dy = dy; }
     SizeI size() { return SizeI((int)dx(), (int)dy()); }

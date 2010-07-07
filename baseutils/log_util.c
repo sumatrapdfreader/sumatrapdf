@@ -50,10 +50,8 @@ void slog_file_log_stop(const TCHAR *fileName)
 {
     /* 'fileName' is currently unused. The idea is that it should match the
         name given to slog_file_log_start */
-    if (g_cur_fileName) {
-        free((void*)g_cur_fileName);
-        g_cur_fileName = NULL;
-    }
+    free((void*)g_cur_fileName);
+    g_cur_fileName = NULL;
 }
 
 /* log 'txt' to all currently enabled loggers */

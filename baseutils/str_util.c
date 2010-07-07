@@ -766,7 +766,7 @@ char *str_printf(const char *format, ...)
 char *str_printf_args(const char *format, va_list args)
 {
 #ifdef _WIN32
-    char        message[256];
+    char        message[256] = {0};
     char  *     buf;
     size_t      bufCchSize;
 
@@ -841,11 +841,10 @@ void win32_dbg_out(const char *format, ...)
 {
     char        buf[4096];
     char *      p = buf;
-    int         written;
     va_list     args;
 
     va_start(args, format);
-    written = _vsnprintf(p,sizeof(buf), format, args);
+    _vsnprintf(p,sizeof(buf), format, args);
 /*    printf(buf);
     fflush(stdout); */
     OutputDebugStringA(buf);
@@ -1168,11 +1167,10 @@ str_item *str_array_add(str_array *str_arr, const char *str)
     str_item ** tmp;
     str_item *  new_item;
     void *      data;
-    int         n;
 
     if (str_arr->items_count >= str_arr->items_allocated) {
         /* increase memory for items if necessary */
-        n = str_arr->items_allocated + STR_ARR_GROW_VALUE;
+        int n = str_arr->items_allocated + STR_ARR_GROW_VALUE;
         tmp = (str_item**)realloc(str_arr->items, n * sizeof(str_item *));
         if (!tmp)
             return NULL;

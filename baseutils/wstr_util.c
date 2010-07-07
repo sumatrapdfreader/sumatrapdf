@@ -351,7 +351,7 @@ WCHAR *wstr_escape(const WCHAR *txt)
 WCHAR *wstr_printf(const WCHAR *format, ...)
 {
     va_list     args;
-    WCHAR       message[256];
+    WCHAR       message[256] = {0};
     WCHAR  *    buf;
     size_t      bufCchSize;
 
