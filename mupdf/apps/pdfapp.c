@@ -617,7 +617,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		pdfapp_showpage(app, 0, 1);
 		break;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 	case 'a':
 		app->rotate -= 15;
 		pdfapp_showpage(app, 0, 1);

@@ -372,15 +372,6 @@ fz_buffer * fz_readall(fz_stream *stm, int sizehint);
 fz_error fz_readerror(fz_stream *stm);
 int fz_readbytex(fz_stream *stm);
 int fz_peekbytex(fz_stream *stm);
-void fz_unreadbytex(fz_stream *stm);
-
-#ifdef DEBUG
-
-#define fz_readbyte fz_readbytex
-#define fz_peekbyte fz_peekbytex
-#define fz_unreadbyte fz_unreadbytex
-
-#else
 
 static inline int fz_readbyte(fz_stream *stm)
 {
@@ -403,7 +394,5 @@ static inline void fz_unreadbyte(fz_stream *stm)
 	fz_buffer *buf = stm->buffer;
 	buf->rp--;
 }
-
-#endif
 
 #endif

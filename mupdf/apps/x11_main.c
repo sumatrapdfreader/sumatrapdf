@@ -694,11 +694,11 @@ int main(int argc, char **argv)
 
 				if (gapp.isediting)
 				{
-					char buf[sizeof(gapp.search) + 50];
-					sprintf(buf, "Search: %s", gapp.search);
+					char str[sizeof(gapp.search) + 50];
+					sprintf(str, "Search: %s", gapp.search);
 					XSetForeground(xdpy, xgc, WhitePixel(xdpy, xscr));
 					fillrect(0, 0, gapp.winw, 30);
-					windrawstring(&gapp, 10, 20, buf);
+					windrawstring(&gapp, 10, 20, str);
 				}
 
 				if (!wasshowingpage && isshowingpage)

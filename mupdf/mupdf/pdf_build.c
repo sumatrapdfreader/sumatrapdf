@@ -456,14 +456,6 @@ pdf_flushtext(pdf_csi *csi)
 		break;
 	}
 
-	/* FIXME -- stroked text is not implemented yet */
-	if (dostroke)
-	{
-		fz_warn("stroked text not supported yet; filling instead");
-		dostroke = 0;
-		dofill = 1;
-	}
-
 	if (doinvisible)
 		csi->dev->ignoretext(csi->dev->user, text, gstate->ctm);
 

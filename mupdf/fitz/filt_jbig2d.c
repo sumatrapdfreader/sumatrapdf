@@ -99,10 +99,10 @@ fz_processjbig2d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 			/* XXX memcpy(out->wp, d->page->data + d->idx, len); */
 			{
-				unsigned char * restrict in = &d->page->data[d->idx];
+				unsigned char * restrict p = &d->page->data[d->idx];
 				unsigned char * restrict o = out->wp;
 				for (i = 0; i < len; i++)
-					*o++ = 0xff ^ *in++;
+					*o++ = 0xff ^ *p++;
 			}
 
 			out->wp += len;

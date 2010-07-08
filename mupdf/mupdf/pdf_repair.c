@@ -134,6 +134,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 {
 	fz_error error;
 	fz_obj *dict, *obj;
+	fz_obj *length;
 
 	fz_obj *encrypt = nil;
 	fz_obj *id = nil;
@@ -311,8 +312,6 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		/* corrected stream length */
 		if (list[i].stmlen >= 0)
 		{
-			fz_obj *dict, *length;
-
 			pdf_logxref("correct stream length %d %d = %d\n",
 				list[i].num, list[i].gen, list[i].stmlen);
 

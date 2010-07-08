@@ -1059,7 +1059,6 @@ Lsetcolor:
 		{
 		case 0:
 		{
-			int i;
 			fz_obj *array;
 			if (csi->top < 2)
 				goto syntaxerror;
@@ -1497,7 +1496,6 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 		case PDF_TKEYWORD:
 			if (!strcmp(buf, "BI"))
 			{
-				fz_obj *obj;
 				int ch;
 
 				error = pdf_parsedict(&obj, csi->xref, file, buf, buflen);

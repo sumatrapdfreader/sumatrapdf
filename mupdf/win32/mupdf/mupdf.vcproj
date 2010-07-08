@@ -102,6 +102,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\..\thirdparty\freetype\include;..\..\thirdparty\jpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\mupdf;..\..\fitz"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"

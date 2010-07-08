@@ -42,6 +42,9 @@
 				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				WholeProgramOptimization="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;OPJ_STATIC;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -153,75 +156,11 @@
 				>
 			</File>
 			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\cio.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\dwt.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\event.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\image.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k_lib.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jp2.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jpt.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mct.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mqc.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\openjpeg.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\pi.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\raw.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t1.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t2.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tcd.c"
-				>
-			</File>
-			<File
-				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tgt.c"
-				>
-			</File>
-			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\bio.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\cio.c"
 				>
 			</File>
 			<File
@@ -229,7 +168,15 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\dwt.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\dwt.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\event.c"
 				>
 			</File>
 			<File
@@ -241,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\image.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\image.h"
 				>
 			</File>
@@ -249,7 +200,15 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\j2k_lib.c"
 				>
 			</File>
 			<File
@@ -257,7 +216,15 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jp2.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jp2.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\jpt.c"
 				>
 			</File>
 			<File
@@ -265,11 +232,23 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mct.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mct.h"
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mqc.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\mqc.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\openjpeg.c"
 				>
 			</File>
 			<File
@@ -285,11 +264,23 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\pi.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\pi.h"
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\raw.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\raw.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t1.c"
 				>
 			</File>
 			<File
@@ -301,11 +292,23 @@
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t2.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\t2.h"
 				>
 			</File>
 			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tcd.c"
+				>
+			</File>
+			<File
 				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tcd.h"
+				>
+			</File>
+			<File
+				RelativePath="../../thirdparty/openjpeg/libopenjpeg\tgt.c"
 				>
 			</File>
 			<File

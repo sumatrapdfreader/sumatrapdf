@@ -27,7 +27,7 @@ struct sctx
 };
 
 static void
-line(struct sctx *s, float x0, float y0, float x1, float y1)
+fz_addline(struct sctx *s, float x0, float y0, float x1, float y1)
 {
 	float tx0 = s->ctm->a * x0 + s->ctm->c * y0 + s->ctm->e;
 	float ty0 = s->ctm->b * x0 + s->ctm->d * y0 + s->ctm->f;
@@ -37,7 +37,7 @@ line(struct sctx *s, float x0, float y0, float x1, float y1)
 }
 
 static void
-arc(struct sctx *s,
+fz_addarc(struct sctx *s,
 	float xc, float yc,
 	float x0, float y0,
 	float x1, float y1)
@@ -72,28 +72,28 @@ arc(struct sctx *s,
 		theta = th0 + (th1 - th0) * i / n;
 		nx = cosf(theta) * r;
 		ny = sinf(theta) * r;
-		line(s, xc + ox, yc + oy, xc + nx, yc + ny);
+		fz_addline(s, xc + ox, yc + oy, xc + nx, yc + ny);
 		ox = nx;
 		oy = ny;
 	}
 
-	line(s, xc + ox, yc + oy, xc + x1, yc + y1);
+	fz_addline(s, xc + ox, yc + oy, xc + x1, yc + y1);
 }
 
 static void
-linestroke(struct sctx *s, fz_point a, fz_point b)
+fz_linestroke(struct sctx *s, fz_point a, fz_point b)
 {
 	float dx = b.x - a.x;
 	float dy = b.y - a.y;
 	float scale = s->linewidth / sqrtf(dx * dx + dy * dy);
 	float dlx = dy * scale;
 	float dly = -dx * scale;
-	line(s, a.x - dlx, a.y - dly, b.x - dlx, b.y - dly);
-	line(s, b.x + dlx, b.y + dly, a.x + dlx, a.y + dly);
+	fz_addline(s, a.x - dlx, a.y - dly, b.x - dlx, b.y - dly);
+	fz_addline(s, b.x + dlx, b.y + dly, a.x + dlx, a.y + dly);
 }
 
 static void
-linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
+fz_linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 {
 	float miterlimit = s->miterlimit;
 	float linewidth = s->linewidth;
@@ -141,8 +141,8 @@ linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 
 	if (linejoin == BEVEL)
 	{
-		line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-		line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
+		fz_addline(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
+		fz_addline(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
 	}
 
 	if (linejoin == MITER)
@@ -153,15 +153,15 @@ linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 
 		if (cross < 0)
 		{
-			line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-			line(s, b.x + dlx1, b.y + dly1, b.x + dmx, b.y + dmy);
-			line(s, b.x + dmx, b.y + dmy, b.x + dlx0, b.y + dly0);
+			fz_addline(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
+			fz_addline(s, b.x + dlx1, b.y + dly1, b.x + dmx, b.y + dmy);
+			fz_addline(s, b.x + dmx, b.y + dmy, b.x + dlx0, b.y + dly0);
 		}
 		else
 		{
-			line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-			line(s, b.x - dlx0, b.y - dly0, b.x - dmx, b.y - dmy);
-			line(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
+			fz_addline(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
+			fz_addline(s, b.x - dlx0, b.y - dly0, b.x - dmx, b.y - dmy);
+			fz_addline(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
 		}
 	}
 
@@ -169,19 +169,19 @@ linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 	{
 		if (cross < 0)
 		{
-			line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-			arc(s, b.x, b.y, dlx1, dly1, dlx0, dly0);
+			fz_addline(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
+			fz_addarc(s, b.x, b.y, dlx1, dly1, dlx0, dly0);
 		}
 		else
 		{
-			line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-			arc(s, b.x, b.y, -dlx0, -dly0, -dlx1, -dly1);
+			fz_addline(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
+			fz_addarc(s, b.x, b.y, -dlx0, -dly0, -dlx1, -dly1);
 		}
 	}
 }
 
 static void
-linecap(struct sctx *s, fz_point a, fz_point b)
+fz_linecap(struct sctx *s, fz_point a, fz_point b)
 {
 	float flatness = s->flatness;
 	float linewidth = s->linewidth;
@@ -195,7 +195,7 @@ linecap(struct sctx *s, fz_point a, fz_point b)
 	float dly = -dx * scale;
 
 	if (linecap == BUTT)
-		line(s, b.x - dlx, b.y - dly, b.x + dlx, b.y + dly);
+		fz_addline(s, b.x - dlx, b.y - dly, b.x + dlx, b.y + dly);
 
 	if (linecap == ROUND)
 	{
@@ -210,30 +210,30 @@ linecap(struct sctx *s, fz_point a, fz_point b)
 			float sth = sinf(theta);
 			float nx = b.x - dlx * cth - dly * sth;
 			float ny = b.y - dly * cth + dlx * sth;
-			line(s, ox, oy, nx, ny);
+			fz_addline(s, ox, oy, nx, ny);
 			ox = nx;
 			oy = ny;
 		}
-		line(s, ox, oy, b.x + dlx, b.y + dly);
+		fz_addline(s, ox, oy, b.x + dlx, b.y + dly);
 	}
 
 	if (linecap == SQUARE)
 	{
-		line(s, b.x - dlx, b.y - dly,
+		fz_addline(s, b.x - dlx, b.y - dly,
 			b.x - dlx - dly,
 			b.y - dly + dlx);
-		line(s, b.x - dlx - dly,
+		fz_addline(s, b.x - dlx - dly,
 			b.y - dly + dlx,
 			b.x + dlx - dly,
 			b.y + dly + dlx);
-		line(s, b.x + dlx - dly,
+		fz_addline(s, b.x + dlx - dly,
 			b.y + dly + dlx,
 			b.x + dlx, b.y + dly);
 	}
 }
 
 static void
-linedot(struct sctx *s, fz_point a)
+fz_linedot(struct sctx *s, fz_point a)
 {
 	float flatness = s->flatness;
 	float linewidth = s->linewidth;
@@ -249,34 +249,34 @@ linedot(struct sctx *s, fz_point a)
 		float sth = sinf(theta);
 		float nx = a.x - cth * linewidth;
 		float ny = a.y + sth * linewidth;
-		line(s, ox, oy, nx, ny);
+		fz_addline(s, ox, oy, nx, ny);
 		ox = nx;
 		oy = ny;
 	}
 
-	line(s, ox, oy, a.x - linewidth, a.y);
+	fz_addline(s, ox, oy, a.x - linewidth, a.y);
 }
 
 static void
-strokeflush(struct sctx *s)
+fz_strokeflush(struct sctx *s)
 {
 	if (s->sn == 2)
 	{
-		linecap(s, s->beg[1], s->beg[0]);
-		linecap(s, s->seg[0], s->seg[1]);
+		fz_linecap(s, s->beg[1], s->beg[0]);
+		fz_linecap(s, s->seg[0], s->seg[1]);
 	}
 	else if (s->dot)
 	{
-		linedot(s, s->beg[0]);
+		fz_linedot(s, s->beg[0]);
 	}
 
 	s->dot = 0;
 }
 
 static void
-strokemoveto(struct sctx *s, fz_point cur)
+fz_strokemoveto(struct sctx *s, fz_point cur)
 {
-	strokeflush(s);
+	fz_strokeflush(s);
 	s->seg[0] = cur;
 	s->beg[0] = cur;
 	s->sn = 1;
@@ -284,7 +284,7 @@ strokemoveto(struct sctx *s, fz_point cur)
 }
 
 static void
-strokelineto(struct sctx *s, fz_point cur)
+fz_strokelineto(struct sctx *s, fz_point cur)
 {
 	float dx = cur.x - s->seg[s->sn-1].x;
 	float dy = cur.y - s->seg[s->sn-1].y;
@@ -295,11 +295,11 @@ strokelineto(struct sctx *s, fz_point cur)
 		return;
 	}
 
-	linestroke(s, s->seg[s->sn-1], cur);
+	fz_linestroke(s, s->seg[s->sn-1], cur);
 
 	if (s->sn == 2)
 	{
-		linejoin(s, s->seg[0], s->seg[1], cur);
+		fz_linejoin(s, s->seg[0], s->seg[1], cur);
 		s->seg[0] = s->seg[1];
 		s->seg[1] = cur;
 	}
@@ -311,19 +311,19 @@ strokelineto(struct sctx *s, fz_point cur)
 }
 
 static void
-strokeclosepath(struct sctx *s)
+fz_strokeclosepath(struct sctx *s)
 {
 	if (s->sn == 2)
 	{
-		strokelineto(s, s->beg[0]);
+		fz_strokelineto(s, s->beg[0]);
 		if (s->seg[1].x == s->beg[0].x && s->seg[1].y == s->beg[0].y)
-			linejoin(s, s->seg[0], s->beg[0], s->beg[1]);
+			fz_linejoin(s, s->seg[0], s->beg[0], s->beg[1]);
 		else
-			linejoin(s, s->seg[1], s->beg[0], s->beg[1]);
+			fz_linejoin(s, s->seg[1], s->beg[0], s->beg[1]);
 	}
 	else if (s->dot)
 	{
-		linedot(s, s->beg[0]);
+		fz_linedot(s, s->beg[0]);
 	}
 
 	s->bn = 0;
@@ -332,7 +332,7 @@ strokeclosepath(struct sctx *s)
 }
 
 static void
-strokebezier(struct sctx *s,
+fz_strokebezier(struct sctx *s,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
@@ -355,7 +355,7 @@ strokebezier(struct sctx *s,
 		fz_point p;
 		p.x = xd;
 		p.y = yd;
-		strokelineto(s, p);
+		fz_strokelineto(s, p);
 		return;
 	}
 
@@ -383,8 +383,8 @@ strokebezier(struct sctx *s,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	strokebezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
-	strokebezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
+	fz_strokebezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
+	fz_strokebezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
 }
 
 void
@@ -423,14 +423,14 @@ fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 		case FZ_MOVETO:
 			p1.x = path->els[i++].v;
 			p1.y = path->els[i++].v;
-			strokemoveto(&s, p1);
+			fz_strokemoveto(&s, p1);
 			p0 = p1;
 			break;
 
 		case FZ_LINETO:
 			p1.x = path->els[i++].v;
 			p1.y = path->els[i++].v;
-			strokelineto(&s, p1);
+			fz_strokelineto(&s, p1);
 			p0 = p1;
 			break;
 
@@ -441,21 +441,21 @@ fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 			p2.y = path->els[i++].v;
 			p3.x = path->els[i++].v;
 			p3.y = path->els[i++].v;
-			strokebezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+			fz_strokebezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
 			p0 = p3;
 			break;
 
 		case FZ_CLOSEPATH:
-			strokeclosepath(&s);
+			fz_strokeclosepath(&s);
 			break;
 		}
 	}
 
-	strokeflush(&s);
+	fz_strokeflush(&s);
 }
 
 static void
-dashmoveto(struct sctx *s, fz_point a)
+fz_dashmoveto(struct sctx *s, fz_point a)
 {
 	s->toggle = 1;
 	s->offset = 0;
@@ -473,11 +473,11 @@ dashmoveto(struct sctx *s, fz_point a)
 	s->cur = a;
 
 	if (s->toggle)
-		strokemoveto(s, a);
+		fz_strokemoveto(s, a);
 }
 
 static void
-dashlineto(struct sctx *s, fz_point b)
+fz_dashlineto(struct sctx *s, fz_point b)
 {
 	float dx, dy;
 	float total, used, ratio;
@@ -498,9 +498,9 @@ dashlineto(struct sctx *s, fz_point b)
 		m.y = a.y + ratio * dy;
 
 		if (s->toggle)
-			strokelineto(s, m);
+			fz_strokelineto(s, m);
 		else
-			strokemoveto(s, m);
+			fz_strokemoveto(s, m);
 
 		s->toggle = !s->toggle;
 		s->phase = 0;
@@ -514,11 +514,11 @@ dashlineto(struct sctx *s, fz_point b)
 	s->cur = b;
 
 	if (s->toggle)
-		strokelineto(s, b);
+		fz_strokelineto(s, b);
 }
 
 static void
-dashbezier(struct sctx *s,
+fz_dashbezier(struct sctx *s,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
@@ -541,7 +541,7 @@ dashbezier(struct sctx *s,
 		fz_point p;
 		p.x = xd;
 		p.y = yd;
-		dashlineto(s, p);
+		fz_dashlineto(s, p);
 		return;
 	}
 
@@ -569,8 +569,8 @@ dashbezier(struct sctx *s,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	dashbezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
-	dashbezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
+	fz_dashbezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
+	fz_dashbezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
 }
 
 void
@@ -616,14 +616,14 @@ fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, f
 		case FZ_MOVETO:
 			p1.x = path->els[i++].v;
 			p1.y = path->els[i++].v;
-			dashmoveto(&s, p1);
+			fz_dashmoveto(&s, p1);
 			beg = p0 = p1;
 			break;
 
 		case FZ_LINETO:
 			p1.x = path->els[i++].v;
 			p1.y = path->els[i++].v;
-			dashlineto(&s, p1);
+			fz_dashlineto(&s, p1);
 			p0 = p1;
 			break;
 
@@ -634,15 +634,15 @@ fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, f
 			p2.y = path->els[i++].v;
 			p3.x = path->els[i++].v;
 			p3.y = path->els[i++].v;
-			dashbezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+			fz_dashbezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
 			p0 = p3;
 			break;
 
 		case FZ_CLOSEPATH:
-			dashlineto(&s, beg);
+			fz_dashlineto(&s, beg);
 			break;
 		}
 	}
 
-	strokeflush(&s);
+	fz_strokeflush(&s);
 }

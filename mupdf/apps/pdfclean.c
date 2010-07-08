@@ -22,21 +22,21 @@ static int doexpand = 0;
  * Garbage collect objects not reachable from the trailer.
  */
 
-static fz_error sweepref(pdf_xref *xref, fz_obj *ref);
+static fz_error sweepref(fz_obj *ref);
 
-static fz_error sweepobj(pdf_xref *xref, fz_obj *obj)
+static fz_error sweepobj(fz_obj *obj)
 {
 	fz_error error;
 	int i;
 
 	if (fz_isindirect(obj))
-		return sweepref(xref, obj);
+		return sweepref(obj);
 
 	if (fz_isdict(obj))
 	{
 		for (i = 0; i < fz_dictlen(obj); i++)
 		{
-			error = sweepobj(xref, fz_dictgetval(obj, i));
+			error = sweepobj(fz_dictgetval(obj, i));
 			if (error)
 				return error; /* too deeply nested for rethrow */
 		}
@@ -46,7 +46,7 @@ static fz_error sweepobj(pdf_xref *xref, fz_obj *obj)
 	{
 		for (i = 0; i < fz_arraylen(obj); i++)
 		{
-			error = sweepobj(xref, fz_arrayget(obj, i));
+			error = sweepobj(fz_arrayget(obj, i));
 			if (error)
 				return error; /* too deeply nested for rethrow */
 		}
@@ -55,7 +55,7 @@ static fz_error sweepobj(pdf_xref *xref, fz_obj *obj)
 	return fz_okay;
 }
 
-static fz_error sweepref(pdf_xref *xref, fz_obj *obj)
+static fz_error sweepref(fz_obj *obj)
 {
 	fz_error error;
 	fz_obj *len;
@@ -83,7 +83,7 @@ static fz_error sweepref(pdf_xref *xref, fz_obj *obj)
 		}
 	}
 
-	error = sweepobj(xref, fz_resolveindirect(obj));
+	error = sweepobj(fz_resolveindirect(obj));
 	if (error)
 	{
 		fz_dropobj(obj);
@@ -403,7 +403,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Sweep & mark objects from the trailer */
-	error = sweepobj(xref, xref->trailer);
+	error = sweepobj(xref->trailer);
 	if (error)
 		die(fz_rethrow(error, "cannot mark used objects"));
 

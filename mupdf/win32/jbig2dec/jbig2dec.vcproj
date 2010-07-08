@@ -101,6 +101,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -142,14 +147,6 @@
 		<Filter
 			Name="jbig2dec"
 			>
-			<File
-				RelativePath="..\..\thirdparty\jbig2dec\config.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\thirdparty\jbig2dec\config_types.h"
-				>
-			</File>
 			<File
 				RelativePath="..\..\thirdparty\jbig2dec\config_win32.h"
 				>
@@ -271,19 +268,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\thirdparty\jbig2dec\memcmp.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\thirdparty\jbig2dec\os_types.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\thirdparty\jbig2dec\sha1.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\thirdparty\jbig2dec\sha1.h"
 				>
 			</File>
 		</Filter>
