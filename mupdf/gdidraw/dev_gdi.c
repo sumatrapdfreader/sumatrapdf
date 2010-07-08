@@ -4,6 +4,15 @@
 
 extern fz_colorspace *pdf_devicebgr;
 
+typedef struct {
+	HDC hDC;
+	
+	int *clipIDs;
+	int clipIx;
+	int clipCap;
+} fz_gdidevice;
+
+
 static void
 gdiapplytransform(HDC hDC, fz_matrix ctm)
 {
@@ -20,6 +29,25 @@ gdigetcolor(fz_colorspace *colorspace, float *color, float alpha)
 	float bgr[3];
 	fz_convertcolor(colorspace, color, pdf_devicebgr, bgr);
 	return RGB(bgr[2] * 255, bgr[1] * 255, bgr[0] * 255);
+}
+
+static void
+gdipushclip(fz_gdidevice *dev)
+{
+	if (dev->clipIx >= dev->clipCap)
+	{
+		dev->clipCap *= 2;
+		dev->clipIDs = fz_realloc(dev->clipIDs, dev->clipCap * sizeof(int));
+	}
+	
+	dev->clipIDs[dev->clipIx++] = SaveDC(dev->hDC);
+}
+
+static void
+gdipopclip(fz_gdidevice *dev)
+{
+	assert(dev->clipIx > 0);
+	RestoreDC(dev->hDC, dev->clipIDs[--dev->clipIx]);
 }
 
 static void
@@ -59,10 +87,10 @@ static void
 fz_gdifillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	HDC hDC = user;
-	int origDC = SaveDC(hDC);
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
 	HBRUSH brush;
 	
+	gdipushclip(user);
 	brush = CreateSolidBrush(gdigetcolor(colorspace, color, alpha));
 	SelectObject(hDC, brush);
 	gdiapplytransform(hDC, ctm);
@@ -72,37 +100,78 @@ fz_gdifillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	FillPath(hDC);
 	
 	DeleteObject(brush);
-	RestoreDC(hDC, origDC);
+	gdipopclip(user);
+}
+
+static HPEN
+gdicreatepen(fz_strokestate *stroke, COLORREF color, float expansion)
+{
+	float linewidth = stroke->linewidth * expansion;
+	DWORD penStyle = PS_GEOMETRIC | PS_SOLID;
+	LOGBRUSH brush;
+	
+	if (linewidth < 0.1f)
+		linewidth = 1.0 / expansion;
+		
+	switch (stroke->linecap)
+	{
+	case 0: penStyle |= PS_ENDCAP_FLAT; break;
+	case 1: penStyle |= PS_ENDCAP_ROUND; break;
+	case 2: penStyle |= PS_ENDCAP_SQUARE; break;
+	}
+	switch (stroke->linejoin)
+	{
+	case 0: penStyle |= PS_JOIN_MITER; break;
+	case 1: penStyle |= PS_JOIN_ROUND; break;
+	case 2: penStyle |= PS_JOIN_BEVEL; break;
+	}
+	
+	brush.lbStyle = BS_SOLID;
+	brush.lbColor = color;
+	brush.lbHatch = 0;
+	
+	return ExtCreatePen(penStyle, linewidth, &brush, 0, NULL);
 }
 
 static void
 fz_gdistrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	HDC hDC = user;
-	int origDC = SaveDC(hDC);
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
 	HPEN pen;
 	
-	pen = CreatePen(PS_SOLID, stroke->linewidth, gdigetcolor(colorspace, color, alpha));
-	SelectObject(hDC, pen);
+	gdipushclip(user);
+	
 	SetMiterLimit(hDC, stroke->miterlimit, NULL);
+	pen = gdicreatepen(stroke, gdigetcolor(colorspace, color, alpha), fz_matrixexpansion(ctm));
+	SelectObject(hDC, pen);
 	gdiapplytransform(hDC, ctm);
 	
 	gdirunpath(hDC, path);
 	StrokePath(hDC);
 	
 	DeleteObject(pen);
-	RestoreDC(hDC, origDC);
+	gdipopclip(user);
 }
 
 static void
 fz_gdiclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 {
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
+	
+	gdipushclip(user);
+	
+	gdiapplytransform(hDC, ctm);
+	gdirunpath(hDC, path);
+	/* TODO: that's not what evenodd means */
+	SelectClipPath(hDC, evenodd ? RGN_DIFF : RGN_AND);
 }
 
 static void
 fz_gdiclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 {
+	/* TODO: what's the difference to fz_gdiclippath? */
+	fz_gdiclippath(user, path, 0, ctm);
 }
 
 static HFONT
@@ -119,19 +188,19 @@ gdigetfont(fz_font *font, float height)
 }
 
 static void
-fz_gdifilltext(void *user, fz_text *text, fz_matrix ctm,
-	fz_colorspace *colorspace, float *color, float alpha)
+gdiruntext(HDC hDC, fz_text *text, fz_matrix ctm, COLORREF color)
 {
-	HDC hDC = user;
-	int origDC = SaveDC(hDC);
+	float fontSize, angle;
 	HFONT font;
 	int i;
-	float fontSize;
 	
+	assert(text->trm.e == 0 && text->trm.f == 0);
+	/* TODO: correctly turn and size font according to text->trm */
 	fontSize = fz_matrixexpansion(text->trm);
+	angle = atanf(text->trm.a / text->trm.b) / M_PI * 180.0 - 90;
 	font = gdigetfont(text->font, fontSize);
 	SelectObject(hDC, font);
-	SetTextColor(hDC, gdigetcolor(colorspace, color, alpha));
+	SetTextColor(hDC, color);
 	SetBkMode(hDC, TRANSPARENT);
 	
 	ctm = fz_concat(ctm, fz_concat(fz_scale(1, -1), fz_translate(0, 2 * ctm.f)));
@@ -145,33 +214,71 @@ fz_gdifilltext(void *user, fz_text *text, fz_matrix ctm,
 	}
 	
 	DeleteObject(font);
-	RestoreDC(hDC, origDC);
+}
+
+static void
+fz_gdifilltext(void *user, fz_text *text, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha)
+{
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
+	
+	gdipushclip(user);
+	gdiruntext(hDC, text, ctm, gdigetcolor(colorspace, color, alpha));
+	gdipopclip(user);
 }
 
 static void
 fz_gdistroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
+	HPEN pen;
+	
+	gdipushclip(user);
+	
+	SetMiterLimit(hDC, stroke->miterlimit, NULL);
+	pen = gdicreatepen(stroke, gdigetcolor(colorspace, color, alpha), fz_matrixexpansion(ctm));
+	SelectObject(hDC, pen);
+	
+	BeginPath(hDC);
+	gdiruntext(hDC, text, ctm, gdigetcolor(colorspace, color, alpha));
+	EndPath(hDC);
+	StrokePath(hDC);
+	
+	DeleteObject(pen);
+	gdipopclip(user);
 }
 
 static void
 fz_gdicliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 {
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
+	
+	gdipushclip(user);
+	
+	BeginPath(hDC);
+	gdiruntext(hDC, text, ctm, TRANSPARENT);
+	EndPath(hDC);
+	SelectClipPath(hDC, RGN_AND);
 }
 
 static void
 fz_gdiclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
 {
+	/* TODO: what's the difference to fz_gdicliptext? */
+	fz_gdicliptext(user, text, ctm, 0);
 }
 
 static void
 fz_gdiignoretext(void *user, fz_text *text, fz_matrix ctm)
 {
+	/* TODO: print transparent text? */
 }
 
 static void
 fz_gdipopclip(void *user)
 {
+	gdipopclip(user);
 }
 
 static void
@@ -182,17 +289,17 @@ fz_gdifillshade(void *user, fz_shade *shade, fz_matrix ctm)
 static void
 fz_gdifillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 {
-	HDC hDC = user;
-	int origDC = SaveDC(hDC);
+	HDC hDC = ((fz_gdidevice *)user)->hDC;
 	fz_matrix ctm2;
 	
+	gdipushclip(user);
 	ctm2 = fz_concat(ctm, fz_scale(1.0 / image->w, -1.0 / image->h));
 	ctm2.e = ctm.e; ctm2.f = ctm.f - image->h;
 	gdiapplytransform(hDC, ctm2);
 	
 	fz_pixmaptodc(hDC, image, nil);
 	
-	RestoreDC(hDC, origDC);
+	gdipopclip(user);
 }
 
 static void
@@ -204,12 +311,28 @@ fz_gdifillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 static void
 fz_gdiclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
+	gdipushclip(user);
+}
+
+static void
+fz_gdifreeuser(void *user)
+{
+	fz_gdidevice *dev = user;
+	fz_free(dev->clipIDs);
+	fz_free(dev);
 }
 
 fz_device *
 fz_newgdidevice(HDC hDC)
 {
-	fz_device *dev = fz_newdevice(hDC);
+	fz_gdidevice *gdev = fz_malloc(sizeof(fz_gdidevice));
+	fz_device *dev = fz_newdevice(gdev);
+	dev->freeuser = fz_gdifreeuser;
+	
+	gdev->hDC = hDC;
+	gdev->clipIx = 0;
+	gdev->clipCap = 16;
+	gdev->clipIDs = fz_malloc(gdev->clipCap * sizeof(int));
 	SetGraphicsMode(hDC, GM_ADVANCED);
 
 	dev->fillpath = fz_gdifillpath;
