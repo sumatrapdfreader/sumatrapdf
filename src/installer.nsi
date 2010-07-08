@@ -46,9 +46,10 @@ Section "SumatraPDF" SecMain
     ; empirically we need to sleep a while before the file can be overwritten
     Sleep 1000
 
-    ; Copy the main executable and the uninstaller
+    ; Copy the main executable, the CJK fallback font and the uninstaller
     SetOutPath $INSTDIR
     File /oname=SumatraPDF.exe "builds\${SUMVER}\SumatraPDF-${SUMVER}.exe"
+    File "..\mupdf\fonts\droid\DroidSansFallback.ttf"
     WriteUninstaller "$INSTDIR\Uninstall.exe"
 
     ; Always create the link for all users
@@ -130,6 +131,7 @@ Section "Uninstall"
 
     ; Remove files and uninstaller
     Delete "$INSTDIR\${EXE}"
+    Delete "$INSTDIR\DroidSansFallback.ttf"
     Delete "$INSTDIR\Uninstall.exe"
     RMDir "$INSTDIR"
 SectionEnd
