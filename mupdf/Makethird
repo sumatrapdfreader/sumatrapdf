@@ -17,11 +17,20 @@ THIRD_INCS += -I$(jbig2dec_dir)
 LIBS := $(filter-out -ljbig2dec, $(LIBS))
 
 JBIG2DEC_SRC=$(addprefix $(jbig2dec_dir)/, \
-	jbig2.c jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
-	jbig2_huffman.c jbig2_segment.c jbig2_page.c \
-	jbig2_symbol_dict.c jbig2_text.c \
-	jbig2_generic.c jbig2_refinement.c jbig2_mmr.c \
-	jbig2_image.c jbig2_metadata.c )
+	jbig2.c \
+	jbig2_arith.c \
+	jbig2_arith_int.c \
+	jbig2_arith_iaid.c \
+	jbig2_huffman.c \
+	jbig2_segment.c \
+	jbig2_page.c \
+	jbig2_symbol_dict.c \
+	jbig2_text.c \
+	jbig2_generic.c \
+	jbig2_refinement.c \
+	jbig2_mmr.c \
+	jbig2_image.c \
+	jbig2_metadata.c )
 JBIG2DEC_OBJ=$(JBIG2DEC_SRC:$(jbig2dec_dir)/%.c=$(OBJDIR)/%.o)
 JBIG2DEC_LIB=$(OBJDIR)/libjbig2dec.a
 $(JBIG2DEC_LIB): $(JBIG2DEC_OBJ)
@@ -38,10 +47,24 @@ THIRD_INCS += -I$(openjpeg_dir)
 LIBS := $(filter-out -lopenjpeg, $(LIBS))
 
 OPENJPEG_SRC=$(addprefix $(openjpeg_dir)/, \
-	bio.c cio.c dwt.c event.c image.c \
-	j2k.c j2k_lib.c jp2.c jpt.c mct.c \
-	mqc.c openjpeg.c pi.c raw.c t1.c \
-	t2.c tcd.c tgt.c )
+	bio.c \
+	cio.c \
+	dwt.c \
+	event.c \
+	image.c \
+	j2k.c \
+	j2k_lib.c \
+	jp2.c \
+	jpt.c \
+	mct.c \
+	mqc.c \
+	openjpeg.c \
+	pi.c \
+	raw.c \
+	t1.c \
+	t2.c \
+	tcd.c \
+	tgt.c )
 OPENJPEG_OBJ=$(OPENJPEG_SRC:$(openjpeg_dir)/%.c=$(OBJDIR)/opj_%.o)
 OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
 $(OPENJPEG_LIB): $(OPENJPEG_OBJ)
@@ -58,14 +81,52 @@ THIRD_INCS += -I$(jpeg_dir)
 LIBS := $(filter-out -ljpeg, $(LIBS))
 
 JPEG_SRC=$(addprefix $(jpeg_dir)/, \
-	jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c \
-	jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c \
-	jcomapi.c jcparam.c jcprepct.c jcsample.c jctrans.c jdapimin.c \
-	jdapistd.c jdarith.c jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c \
-	jddctmgr.c jdhuff.c jdinput.c jdmainct.c jdmarker.c jdmaster.c \
-	jdmerge.c jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c \
-	jfdctfst.c jfdctint.c jidctflt.c jidctfst.c jidctint.c jquant1.c \
-	jquant2.c jutils.c jmemmgr.c jmemansi.c )
+	jaricom.c \
+	jcapimin.c \
+	jcapistd.c \
+	jcarith.c \
+	jccoefct.c \
+	jccolor.c \
+	jcdctmgr.c \
+	jchuff.c \
+	jcinit.c \
+	jcmainct.c \
+	jcmarker.c \
+	jcmaster.c \
+	jcomapi.c \
+	jcparam.c \
+	jcprepct.c \
+	jcsample.c \
+	jctrans.c \
+	jdapimin.c \
+	jdapistd.c \
+	jdarith.c \
+	jdatadst.c \
+	jdatasrc.c \
+	jdcoefct.c \
+	jdcolor.c \
+	jddctmgr.c \
+	jdhuff.c \
+	jdinput.c \
+	jdmainct.c \
+	jdmarker.c \
+	jdmaster.c \
+	jdmerge.c \
+	jdpostct.c \
+	jdsample.c \
+	jdtrans.c \
+	jerror.c \
+	jfdctflt.c \
+	jfdctfst.c \
+	jfdctint.c \
+	jidctflt.c \
+	jidctfst.c \
+	jidctint.c \
+	jquant1.c \
+	jquant2.c \
+	jutils.c \
+	jmemmgr.c \
+	jmemansi.c)
 JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
 JPEG_LIB=$(OBJDIR)/libjpeg.a
 $(JPEG_LIB): $(JPEG_OBJ)
@@ -82,9 +143,21 @@ THIRD_INCS += -I$(zlib_dir)
 LIBS := $(filter-out -lz, $(LIBS))
 
 ZLIB_SRC=$(addprefix $(zlib_dir)/, \
-	adler32.c compress.c crc32.c deflate.c \
-	gzclose.c gzlib.c gzread.c gzwrite.c \
-	infback.c inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c )
+	adler32.c \
+	compress.c \
+	crc32.c \
+	deflate.c \
+	gzclose.c \
+	gzlib.c \
+	gzread.c \
+	gzwrite.c \
+	infback.c \
+	inffast.c \
+	inflate.c \
+	inftrees.c \
+	trees.c \
+	uncompr.c \
+	zutil.c )
 ZLIB_OBJ=$(ZLIB_SRC:$(zlib_dir)/%.c=$(OBJDIR)/zlib_%.o)
 ZLIB_LIB=$(OBJDIR)/libz.a
 $(ZLIB_LIB): $(ZLIB_OBJ)

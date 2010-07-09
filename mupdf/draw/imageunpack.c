@@ -303,9 +303,9 @@ static void loadtile16(byte * restrict src, int sw, byte * restrict dst, int dw,
 TILE(thex)
 
 void (*fz_decodetile)(fz_pixmap *pix, int skip, float *decode) = decodetile;
-void (*fz_loadtile1)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile1;
-void (*fz_loadtile2)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile2;
-void (*fz_loadtile4)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile4;
-void (*fz_loadtile8)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile8;
-void (*fz_loadtile16)(byte*, int sw, byte*, int dw, int w, int h, int pad) = loadtile16;
+void (*fz_loadtile1)(byte*restrict, int sw, byte*restrict, int dw, int w, int h, int pad) = loadtile1;
+void (*fz_loadtile2)(byte*restrict, int sw, byte*restrict, int dw, int w, int h, int pad) = loadtile2;
+void (*fz_loadtile4)(byte*restrict, int sw, byte*restrict, int dw, int w, int h, int pad) = loadtile4;
+void (*fz_loadtile8)(byte*restrict, int sw, byte*restrict, int dw, int w, int h, int pad) = loadtile8;
+void (*fz_loadtile16)(byte*restrict, int sw, byte*restrict, int dw, int w, int h, int pad) = loadtile16;
 

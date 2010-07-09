@@ -150,8 +150,11 @@ sat(int r, int g, int b)
 static void
 setsat(int r, int g, int b, int s, int *dr, int *dg, int *db)
 {
-	int *m[3] = { &r, &g, &b }; /* min, med, max */
+	int *m[3]; /* min, med, max */
 	int *t;
+	m[0] = &r;
+	m[1] = &g;
+	m[2] = &b;
 #define SWAP(a, b) (t = a, a = b, b = t)
 	if (*m[0] > *m[1])
 		SWAP(m[0], m[1]);

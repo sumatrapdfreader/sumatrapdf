@@ -102,22 +102,22 @@ static inline void srowc(byte * restrict src, byte * restrict dst, int w, int de
 	}
 }
 
-static void srow1(byte *src, byte *dst, int w, int denom)
+static void srow1(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	srowc(src, dst, w, denom, 1);
 }
 
-static void srow2(byte *src, byte *dst, int w, int denom)
+static void srow2(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	srowc(src, dst, w, denom, 2);
 }
 
-static void srow4(byte *src, byte *dst, int w, int denom)
+static void srow4(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	srowc(src, dst, w, denom, 4);
 }
 
-static void srow5(byte *src, byte *dst, int w, int denom)
+static void srow5(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	srowc(src, dst, w, denom, 5);
 }
@@ -190,37 +190,37 @@ static inline void scolc(byte * restrict src, byte * restrict dst, int w, int de
 	}
 }
 
-static void scol1(byte *src, byte *dst, int w, int denom)
+static void scol1(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	scolc(src, dst, w, denom, 1);
 }
 
-static void scol2(byte *src, byte *dst, int w, int denom)
+static void scol2(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	scolc(src, dst, w, denom, 2);
 }
 
-static void scol4(byte *src, byte *dst, int w, int denom)
+static void scol4(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	scolc(src, dst, w, denom, 4);
 }
 
-static void scol5(byte *src, byte *dst, int w, int denom)
+static void scol5(byte * restrict src, byte * restrict dst, int w, int denom)
 {
 	scolc(src, dst, w, denom, 5);
 }
 
-void (*fz_srown)(byte *src, byte *dst, int w, int denom, int n) = srown;
-void (*fz_srow1)(byte *src, byte *dst, int w, int denom) = srow1;
-void (*fz_srow2)(byte *src, byte *dst, int w, int denom) = srow2;
-void (*fz_srow4)(byte *src, byte *dst, int w, int denom) = srow4;
-void (*fz_srow5)(byte *src, byte *dst, int w, int denom) = srow5;
+void (*fz_srown)(byte *restrict, byte *restrict, int w, int denom, int n) = srown;
+void (*fz_srow1)(byte *restrict, byte *restrict, int w, int denom) = srow1;
+void (*fz_srow2)(byte *restrict, byte *restrict, int w, int denom) = srow2;
+void (*fz_srow4)(byte *restrict, byte *restrict, int w, int denom) = srow4;
+void (*fz_srow5)(byte *restrict, byte *restrict, int w, int denom) = srow5;
 
-void (*fz_scoln)(byte *src, byte *dst, int w, int denom, int n) = scoln;
-void (*fz_scol1)(byte *src, byte *dst, int w, int denom) = scol1;
-void (*fz_scol2)(byte *src, byte *dst, int w, int denom) = scol2;
-void (*fz_scol4)(byte *src, byte *dst, int w, int denom) = scol4;
-void (*fz_scol5)(byte *src, byte *dst, int w, int denom) = scol5;
+void (*fz_scoln)(byte *restrict, byte *restrict, int w, int denom, int n) = scoln;
+void (*fz_scol1)(byte *restrict, byte *restrict, int w, int denom) = scol1;
+void (*fz_scol2)(byte *restrict, byte *restrict, int w, int denom) = scol2;
+void (*fz_scol4)(byte *restrict, byte *restrict, int w, int denom) = scol4;
+void (*fz_scol5)(byte *restrict, byte *restrict, int w, int denom) = scol5;
 
 fz_pixmap *
 fz_scalepixmap(fz_pixmap *src, int xdenom, int ydenom)
@@ -231,8 +231,8 @@ fz_scalepixmap(fz_pixmap *src, int xdenom, int ydenom)
 	int ow, oh, n;
 	int remaining;
 
-	void (*srowx)(byte *src, byte *dst, int w, int denom) = nil;
-	void (*scolx)(byte *src, byte *dst, int w, int denom) = nil;
+	void (*srowx)(byte * restrict src, byte * restrict dst, int w, int denom) = nil;
+	void (*scolx)(byte * restrict src, byte * restrict dst, int w, int denom) = nil;
 
 	ow = (src->w + xdenom - 1) / xdenom;
 	oh = (src->h + ydenom - 1) / ydenom;

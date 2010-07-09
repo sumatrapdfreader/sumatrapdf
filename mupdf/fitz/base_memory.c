@@ -1,6 +1,7 @@
 #include "fitz.h"
 
-void * fz_malloc(int n)
+void *
+fz_malloc(int n)
 {
 	void *p = malloc(n);
 	if (!p)
@@ -11,7 +12,8 @@ void * fz_malloc(int n)
 	return p;
 }
 
-void * fz_realloc(void *p, int n)
+void *
+fz_realloc(void *p, int n)
 {
 	void *np = realloc(p, n);
 	if (np == nil)
@@ -22,20 +24,17 @@ void * fz_realloc(void *p, int n)
 	return np;
 }
 
-void fz_free(void *p)
+void
+fz_free(void *p)
 {
 	free(p);
 }
 
-char * fz_strdup(char *s)
+char *
+fz_strdup(char *s)
 {
-	char *ns = malloc(strlen(s) + 1);
-	if (!ns)
-	{
-		fprintf(stderr, "fatal error: out of memory\n");
-		abort();
-	}
-	memcpy(ns, s, strlen(s) + 1);
+	int len = strlen(s) + 1;
+	char *ns = fz_malloc(len);
+	memcpy(ns, s, len);
 	return ns;
 }
-

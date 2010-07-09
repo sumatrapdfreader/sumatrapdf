@@ -289,11 +289,15 @@
 			Name="fitz"
 			>
 			<File
-				RelativePath="..\..\fitz\base_cpudep.c"
+				RelativePath="..\..\fitz\base_error.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\fitz\base_error.c"
+				RelativePath="..\..\fitz\base_geometry.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\fitz\base_getopt.c"
 				>
 			</File>
 			<File
@@ -301,15 +305,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\fitz\base_matrix.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\fitz\base_memory.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\base_rect.c"
 				>
 			</File>
 			<File
@@ -317,7 +313,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\fitz\base_unicode.c"
+				RelativePath="..\..\fitz\base_time.c"
 				>
 			</File>
 			<File
@@ -357,14 +353,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\fitz\filt_aesd.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\filt_arc4.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\fitz\filt_basic.c"
 				>
 			</File>
@@ -378,10 +366,6 @@
 			</File>
 			<File
 				RelativePath="..\..\fitz\filt_faxd.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\filt_faxdtab.c"
 				>
 			</File>
 			<File
@@ -410,22 +394,6 @@
 			</File>
 			<File
 				RelativePath="..\..\fitz\fitz.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\fitz_base.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\fitz_draw.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\fitz_res.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\fitz_stream.h"
 				>
 			</File>
 			<File
@@ -477,23 +445,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\fitz\stm_misc.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\fitz\stm_open.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\fitz\stm_read.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\util_getopt.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\util_gettimeofday.c"
 				>
 			</File>
 		</Filter>
@@ -502,10 +458,6 @@
 			>
 			<File
 				RelativePath="..\..\draw\archport.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\draw\archx86.c"
 				>
 			</File>
 			<File

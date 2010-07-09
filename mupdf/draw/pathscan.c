@@ -1,5 +1,8 @@
 #include "fitz.h"
 
+#define BBOX_MIN INT_MIN
+#define BBOX_MAX INT_MAX
+
 /* divide and floor towards -inf */
 static inline int fz_idiv(int a, int b)
 {
@@ -26,11 +29,11 @@ fz_newgel(void)
 	gel->len = 0;
 	gel->edges = fz_malloc(sizeof(fz_edge) * gel->cap);
 
-	gel->clip.x0 = gel->clip.y0 = INT_MAX;
-	gel->clip.x1 = gel->clip.y1 = INT_MIN;
+	gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
+	gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
 
-	gel->bbox.x0 = gel->bbox.y0 = INT_MAX;
-	gel->bbox.x1 = gel->bbox.y1 = INT_MIN;
+	gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
+	gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
 
 	return gel;
 }
@@ -40,8 +43,8 @@ fz_resetgel(fz_gel *gel, fz_bbox clip)
 {
 	if (fz_isinfiniterect(clip))
 	{
-		gel->clip.x0 = gel->clip.y0 = INT_MAX;
-		gel->clip.x1 = gel->clip.y1 = INT_MIN;
+		gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
+		gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
 	}
 	else {
 		gel->clip.x0 = clip.x0 * HSCALE;
@@ -50,8 +53,8 @@ fz_resetgel(fz_gel *gel, fz_bbox clip)
 		gel->clip.y1 = clip.y1 * VSCALE;
 	}
 
-	gel->bbox.x0 = gel->bbox.y0 = INT_MAX;
-	gel->bbox.x1 = gel->bbox.y1 = INT_MIN;
+	gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
+	gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
 
 	gel->len = 0;
 }

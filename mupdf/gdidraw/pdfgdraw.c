@@ -150,7 +150,7 @@ static void drawbmp(int pagenum, struct benchmark *loadtimes, struct benchmark *
 	if (benchmark)
 		gettime(&start);
 
-	ctm = fz_identity();
+	ctm = fz_identity;
 	ctm = fz_concat(ctm, fz_translate(-drawpage->mediabox.x0, -drawpage->mediabox.y1));
 	ctm = fz_concat(ctm, fz_scale(drawzoom, -drawzoom));
 	ctm = fz_concat(ctm, fz_rotate(drawrotate + drawpage->rotate));
@@ -334,7 +334,6 @@ int main(int argc, char **argv)
 	int c;
 	enum { NO_FILE_OPENED, NO_PAGES_DRAWN, DREW_PAGES } state;
 
-	fz_cpudetect();
 	fz_accelerate();
 
 	while ((c = fz_getopt(argc, argv, "p:o:r:ms")) != -1)

@@ -63,15 +63,14 @@ unsigned short * pdf_toucs2(fz_obj *src);
 
 typedef struct pdf_crypt_s pdf_crypt;
 typedef struct pdf_cryptfilter_s pdf_cryptfilter;
-typedef enum pdf_cryptmethod_e pdf_cryptmethod;
 
-enum pdf_cryptmethod_e
+typedef enum pdf_cryptmethod_e
 {
 	PDF_CRYPT_NONE,
 	PDF_CRYPT_RC4,
 	PDF_CRYPT_AESV2,
 	PDF_CRYPT_UNKNOWN,
-};
+} pdf_cryptmethod;
 
 struct pdf_cryptfilter_s
 {
@@ -183,7 +182,7 @@ typedef enum pdf_itemkind_e
 	PDF_KPATTERN,
 	PDF_KSHADING,
 	PDF_KCMAP,
-	PDF_KFONT
+	PDF_KFONT,
 } pdf_itemkind;
 
 pdf_store * pdf_newstore(void);
@@ -564,7 +563,7 @@ typedef struct pdf_csi_s pdf_csi;
 enum
 {
 	PDF_MFILL,
-	PDF_MSTROKE
+	PDF_MSTROKE,
 };
 
 enum
@@ -574,7 +573,7 @@ enum
 	PDF_MLAB,
 	PDF_MINDEXED,
 	PDF_MPATTERN,
-	PDF_MSHADE
+	PDF_MSHADE,
 };
 
 struct pdf_material_s

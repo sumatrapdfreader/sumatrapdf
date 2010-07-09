@@ -105,7 +105,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	file = fz_openfile(fd);
 	app->xref = pdf_openxref(file);
 	if (!app->xref)
-		pdfapp_error(app, fz_throw("cannot open PDF file '%s'", filename));
+		pdfapp_error(app, fz_rethrow(-1, "cannot open PDF file '%s'", filename));
 	fz_dropstream(file);
 
 	/*
@@ -200,7 +200,7 @@ void pdfapp_close(pdfapp_t *app)
 static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 {
 	fz_matrix ctm;
-	ctm = fz_identity();
+	ctm = fz_identity;
 	ctm = fz_concat(ctm, fz_translate(0, -app->page->mediabox.y1));
 	ctm = fz_concat(ctm, fz_scale(app->resolution/72.0f, -app->resolution/72.0f));
 	ctm = fz_concat(ctm, fz_rotate(app->rotate + app->page->rotate));
@@ -264,7 +264,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		/* Create display list */
 		app->page->list = fz_newdisplaylist();
 		mdev = fz_newlistdevice(app->page->list);
-		error = pdf_runcontentstream(mdev, fz_identity(), app->xref, app->page->resources, app->page->contents);
+		error = pdf_runcontentstream(mdev, fz_identity, app->xref, app->page->resources, app->page->contents);
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot draw page %d in '%s'", app->pageno, app->doctitle);

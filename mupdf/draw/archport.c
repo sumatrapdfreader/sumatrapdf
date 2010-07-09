@@ -7,9 +7,8 @@ typedef unsigned char byte;
 #define MASK 0xFF00FF00;
 
 static void
-path_w4i1o4_32bit(byte * restrict rgba,
-	byte * restrict src, byte cov, int len,
-	byte * restrict dst)
+path_w4i1o4_32bit(byte *rgba,
+	byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	/* COLOR * coverage + DST * (256-coverage) = (COLOR - DST)*coverage + DST*256 */
 	unsigned int *dst32 = (unsigned int *)(void *)dst;
@@ -77,7 +76,7 @@ path_w4i1o4_32bit(byte * restrict rgba,
 }
 
 static void
-text_w4i1o4_32bit(byte * restrict rgba,
+text_w4i1o4_32bit(byte *rgba,
 	byte * restrict src, int srcw,
 	byte * restrict dst, int dstw, int w0, int h)
 {

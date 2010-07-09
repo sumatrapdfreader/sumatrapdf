@@ -398,7 +398,7 @@ void windocopy(pdfapp_t *app)
 	*utf8 = 0;
 	*latin1 = 0;
 
-	printf("oncopy utf8=%zd latin1=%zd\n", strlen(copyutf8), strlen(copylatin1));
+	printf("oncopy utf8=%d latin1=%d\n", strlen(copyutf8), strlen(copylatin1));
 
 	XSetSelectionOwner(xdpy, XA_PRIMARY, xwin, copytime);
 
@@ -438,7 +438,7 @@ void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time
 
 	else if (target == XA_STRING)
 	{
-		printf(" -> string %zd\n", strlen(copylatin1));
+		printf(" -> string %d\n", strlen(copylatin1));
 		XChangeProperty(xdpy, requestor, property, target,
 			8, PropModeReplace,
 			(unsigned char *)copylatin1, strlen(copylatin1));
@@ -590,7 +590,6 @@ int main(int argc, char **argv)
 	if (argc - fz_optind == 1)
 		pageno = atoi(argv[fz_optind++]);
 
-	fz_cpudetect();
 	fz_accelerate();
 
 	winopen();

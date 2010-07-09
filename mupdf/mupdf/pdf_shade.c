@@ -411,7 +411,7 @@ pdf_loadfunctionbasedshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, pdf_
 		y1 = fz_toreal(fz_arrayget(obj, 3));
 	}
 
-	matrix = fz_identity();
+	matrix = fz_identity;
 	obj = fz_dictgets(dict, "Matrix");
 	if (fz_arraylen(obj) == 6)
 		matrix = pdf_tomatrix(obj);
@@ -1325,7 +1325,7 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 		}
 		else
 		{
-			mat = fz_identity();
+			mat = fz_identity;
 		}
 
 		obj = fz_dictgets(dict, "ExtGState");
@@ -1353,7 +1353,7 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 	 */
 	else
 	{
-		error = pdf_loadshadingdict(shadep, xref, dict, fz_identity());
+		error = pdf_loadshadingdict(shadep, xref, dict, fz_identity);
 		if (error)
 			return fz_rethrow(error, "cannot load shading dictionary (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}

@@ -207,7 +207,7 @@ path_1o1(byte * restrict src, byte cov, int len, byte * restrict dst)
 }
 
 static void
-path_w2i1o2(byte * restrict ga, byte * restrict src, byte cov, int len, byte * restrict dst)
+path_w2i1o2(byte *ga, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	byte g = ga[0];
 	int a = FZ_EXPAND(ga[1]);
@@ -224,7 +224,7 @@ path_w2i1o2(byte * restrict ga, byte * restrict src, byte cov, int len, byte * r
 }
 
 static void
-path_w4i1o4(byte * restrict rgba, byte * restrict src, byte cov, int len, byte * restrict dst)
+path_w4i1o4(byte *rgba, byte * restrict src, byte cov, int len, byte * restrict dst)
 {
 	byte r = rgba[0];
 	byte g = rgba[1];
@@ -268,7 +268,7 @@ text_1o1(byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, i
 }
 
 static void
-text_w2i1o2(byte * restrict ga, byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
+text_w2i1o2(byte *ga, byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
 {
 	byte g = ga[0];
 	int a = FZ_EXPAND(ga[1]);
@@ -292,7 +292,7 @@ text_w2i1o2(byte * restrict ga, byte * restrict src, int srcw, byte * restrict d
 }
 
 static void
-text_w4i1o4(byte * restrict rgba, byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
+text_w4i1o4(byte *rgba, byte * restrict src, int srcw, byte * restrict dst, int dstw, int w0, int h)
 {
 	byte r = rgba[0];
 	byte g = rgba[1];
@@ -323,15 +323,15 @@ text_w4i1o4(byte * restrict rgba, byte * restrict src, int srcw, byte * restrict
  * ... and the function pointers
  */
 
-void (*fz_duff_ni1on)(byte*,int,int,byte*,int,byte*,int,int,int) = duff_ni1on;
-void (*fz_duff_1i1o1)(byte*,int,byte*,int,byte*,int,int,int) = duff_1i1o1;
-void (*fz_duff_2i1o2)(byte*,int,byte*,int,byte*,int,int,int) = duff_2i1o2;
-void (*fz_duff_4i1o4)(byte*,int,byte*,int,byte*,int,int,int) = duff_4i1o4;
+void (*fz_duff_ni1on)(byte*restrict,int,int,byte*restrict,int,byte*restrict,int,int,int) = duff_ni1on;
+void (*fz_duff_1i1o1)(byte*restrict,int,byte*restrict,int,byte*restrict,int,int,int) = duff_1i1o1;
+void (*fz_duff_2i1o2)(byte*restrict,int,byte*restrict,int,byte*restrict,int,int,int) = duff_2i1o2;
+void (*fz_duff_4i1o4)(byte*restrict,int,byte*restrict,int,byte*restrict,int,int,int) = duff_4i1o4;
 
-void (*fz_path_1o1)(byte*,byte,int,byte*) = path_1o1;
-void (*fz_path_w2i1o2)(byte*,byte*,byte,int,byte*) = path_w2i1o2;
-void (*fz_path_w4i1o4)(byte*,byte*,byte,int,byte*) = path_w4i1o4;
+void (*fz_path_1o1)(byte*restrict,byte,int,byte*restrict) = path_1o1;
+void (*fz_path_w2i1o2)(byte*,byte*restrict,byte,int,byte*restrict) = path_w2i1o2;
+void (*fz_path_w4i1o4)(byte*,byte*restrict,byte,int,byte*restrict) = path_w4i1o4;
 
-void (*fz_text_1o1)(byte*,int,byte*,int,int,int) = text_1o1;
-void (*fz_text_w2i1o2)(byte*,byte*,int,byte*,int,int,int) = text_w2i1o2;
-void (*fz_text_w4i1o4)(byte*,byte*,int,byte*,int,int,int) = text_w4i1o4;
+void (*fz_text_1o1)(byte*restrict,int,byte*restrict,int,int,int) = text_1o1;
+void (*fz_text_w2i1o2)(byte*,byte*restrict,int,byte*restrict,int,int,int) = text_w2i1o2;
+void (*fz_text_w4i1o4)(byte*,byte*restrict,int,byte*restrict,int,int,int) = text_w4i1o4;

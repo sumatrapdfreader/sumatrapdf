@@ -343,11 +343,15 @@
 				Name="fitz"
 				>
 				<File
-					RelativePath=".\mupdf\fitz\base_cpudep.c"
+					RelativePath=".\mupdf\fitz\base_error.c"
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\base_error.c"
+					RelativePath=".\mupdf\fitz\base_geometry.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\fitz\base_getopt.c"
 					>
 				</File>
 				<File
@@ -355,15 +359,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\base_matrix.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\base_memory.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\base_rect.c"
 					>
 				</File>
 				<File
@@ -371,7 +367,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\base_unicode.c"
+					RelativePath=".\mupdf\fitz\base_time.c"
 					>
 				</File>
 				<File
@@ -415,14 +411,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\filt_aesd.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_arc4.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\filt_basic.c"
 					>
 				</File>
@@ -432,14 +420,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\filt_faxd.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_faxd.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\filt_faxdtab.c"
 					>
 				</File>
 				<File
@@ -471,23 +451,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\fitz_base.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\fitz_draw.h"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\gdidraw\fitz_gdidraw.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\fitz_res.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\fitz_stream.h"
 					>
 				</File>
 				<File
@@ -539,23 +503,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\stm_misc.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\stm_open.c"
 					>
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\stm_read.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\util_getopt.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\fitz\util_gettimeofday.c"
 					>
 				</File>
 			</Filter>
@@ -564,10 +516,6 @@
 				>
 				<File
 					RelativePath=".\mupdf\draw\archport.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\draw\archx86.c"
 					>
 				</File>
 				<File

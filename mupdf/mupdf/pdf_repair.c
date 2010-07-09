@@ -15,8 +15,7 @@ struct entry
 };
 
 static fz_error
-fz_repairobj(fz_stream *file, char *buf, int cap,
-	int *stmofsp, int *stmlenp, int *isroot, int *isinfo)
+fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, int *isroot)
 {
 	fz_error error;
 	pdf_token_e tok;
@@ -27,7 +26,6 @@ fz_repairobj(fz_stream *file, char *buf, int cap,
 	*stmofsp = 0;
 	*stmlenp = -1;
 	*isroot = 0;
-	*isinfo = 0;
 
 	stmlen = 0;
 
@@ -44,11 +42,6 @@ fz_repairobj(fz_stream *file, char *buf, int cap,
 		obj = fz_dictgets(dict, "Type");
 		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Catalog"))
 			*isroot = 1;
-
-		if (fz_dictgets(dict, "Producer"))
-			if (fz_dictgets(dict, "Creator"))
-				if (fz_dictgets(dict, "Title"))
-					*isinfo = 1;
 
 		obj = fz_dictgets(dict, "Length");
 		if (fz_isint(obj))
@@ -122,8 +115,8 @@ atobjend:
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
 			return fz_rethrow(error, "cannot scan for endobj token");
-		if (tok == PDF_TENDOBJ)
-			;
+		if (tok != PDF_TENDOBJ)
+			fz_warn("object missing 'endobj' token");
 	}
 
 	return fz_okay;
@@ -148,7 +141,6 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	int gen = 0;
 	int tmpofs, numofs = 0, genofs = 0;
 	int isroot, rootnum = 0, rootgen = 0;
-	int isinfo, infonum = 0, infogen = 0;
 	int stmlen, stmofs = 0;
 	pdf_token_e tok;
 	int len;
@@ -191,7 +183,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 		if (tok == PDF_TOBJ)
 		{
-			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &isroot, &isinfo);
+			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &isroot);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
@@ -202,12 +194,6 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 				pdf_logxref("found catalog: (%d %d R)\n", num, gen);
 				rootnum = num;
 				rootgen = gen;
-			}
-
-			if (isinfo) {
-				pdf_logxref("found info: (%d %d R)\n", num, gen);
-				infonum = num;
-				infogen = gen;
 			}
 
 			if (listlen + 1 == listcap)

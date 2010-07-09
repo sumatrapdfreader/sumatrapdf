@@ -343,8 +343,8 @@ img_w4i1o4(byte *rgba, byte * restrict src, byte cov, int len, byte * restrict d
 	}
 }
 
-void (*fz_img_1o1)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_1o1;
-void (*fz_img_2o2)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_2o2;
-void (*fz_img_4o4)(byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_4o4;
-void (*fz_img_w2i1o2)(byte*, byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_w2i1o2;
-void (*fz_img_w4i1o4)(byte*, byte*, byte, int, byte*, fz_pixmap *image, int u, int v, int fa, int fb) = img_w4i1o4;
+void (*fz_img_1o1)(byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_1o1;
+void (*fz_img_2o2)(byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_2o2;
+void (*fz_img_4o4)(byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_4o4;
+void (*fz_img_w2i1o2)(byte*, byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_w2i1o2;
+void (*fz_img_w4i1o4)(byte*, byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_w4i1o4;

@@ -19,8 +19,8 @@ pdf_newcsi(fz_device *dev, pdf_xref *xref, fz_matrix ctm)
 	csi->clipevenodd = 0;
 
 	csi->text = nil;
-	csi->tlm = fz_identity();
-	csi->tm = fz_identity();
+	csi->tlm = fz_identity;
+	csi->tm = fz_identity;
 	csi->textmode = 0;
 	csi->accumulate = 1;
 
@@ -448,8 +448,8 @@ pdf_runkeyword(pdf_csi *csi, fz_obj *rdb, char *buf)
 				goto defaultcase;
 			if (csi->top < 0)
 				goto syntaxerror;
-			csi->tm = fz_identity();
-			csi->tlm = fz_identity();
+			csi->tm = fz_identity;
+			csi->tlm = fz_identity;
 			break;
 		case 'X':
 			if (buf[2] != 0)

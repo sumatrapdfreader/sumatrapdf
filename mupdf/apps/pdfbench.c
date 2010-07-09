@@ -167,7 +167,7 @@ fz_error benchrenderpage(int pagenum)
 	fz_device *dev;
 
 	timerstart(&timer);
-	ctm = fz_identity();
+	ctm = fz_identity;
 	ctm = fz_concat(ctm, fz_translate(0, -drawpage->mediabox.y1));
 
 	bbox = fz_roundrect(fz_transformrect(ctm, drawpage->mediabox));

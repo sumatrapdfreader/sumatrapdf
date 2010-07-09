@@ -489,7 +489,7 @@ maskcolorkeyindexed(fz_pixmap *ind, fz_pixmap *pix, int *colorkey)
 fz_error
 pdf_loadtile(pdf_image *src, fz_pixmap *tile)
 {
-	void (*tilefunc)(unsigned char*,int,unsigned char*, int, int, int, int);
+	void (*tilefunc)(unsigned char*restrict,int,unsigned char*restrict, int, int, int, int);
 
 	assert(tile->x == 0); /* can't handle general tile yet, only y-banding */
 

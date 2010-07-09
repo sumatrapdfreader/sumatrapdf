@@ -184,7 +184,7 @@ static void
 fz_listpopclip(void *user)
 {
 	fz_displaynode *node;
-	node = fz_newdisplaynode(FZ_CMDPOPCLIP, fz_identity(), nil, nil, 0);
+	node = fz_newdisplaynode(FZ_CMDPOPCLIP, fz_identity, nil, nil, 0);
 	fz_appenddisplaynode(user, node);
 }
 

@@ -194,6 +194,9 @@ pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 	int x, y, x0, y0, x1, y1;
 	int oldtop;
 
+	if (!pat && (csi->dev->hints & FZ_IGNOREIMAGE))
+		return;
+
 	pdf_gsave(csi);
 	gstate = csi->gstate + csi->gtop;
 
@@ -348,7 +351,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		csi->clip = 0;
 	}
 
-	if (dofill && !(csi->dev->hints & FZ_IGNOREIMAGE))
+	if (dofill)
 	{
 		switch (gstate->fill.kind)
 		{
@@ -374,7 +377,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		}
 	}
 
-	if (dostroke && !(csi->dev->hints & FZ_IGNOREIMAGE))
+	if (dostroke)
 	{
 		switch (gstate->stroke.kind)
 		{

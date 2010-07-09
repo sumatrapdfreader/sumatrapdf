@@ -33,4 +33,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 	return 0;
 }
 
+#else
+
+void fz_gettimeofday_dummy() { }
+
 #endif

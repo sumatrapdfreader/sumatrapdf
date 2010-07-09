@@ -24,13 +24,6 @@ SYS_FREETYPE_LIB := `pkg-config --libs freetype2`
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
 
-ifeq "$(build)" "release"
-ifeq "$(shell uname -m)" "i686"
-CFLAGS += -ffast-math -mmmx -msse -msse2 -march=k8 -DARCH_X86
-DRAW_ARCH_SRC := archx86.c
-endif
-endif
-
 endif
 
 ifeq "$(OS)" "Darwin"
@@ -47,15 +40,6 @@ LDFLAGS += -m64
 else
 CFLAGS += -m32
 LDFLAGS += -m32
-endif
-
-ifeq "$(build)" "release"
-ifeq "$(arch)" "amd64"
-CFLAGS += -ffast-math -mmmx -msse -msse2 -DARCH_X86_64
-else
-CFLAGS += -ffast-math -mmmx -msse -msse2 -DARCH_X86
-endif
-DRAW_ARCH_SRC := archx86.c
 endif
 
 endif

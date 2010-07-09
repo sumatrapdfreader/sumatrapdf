@@ -1,8 +1,4 @@
-/* Linear probe hash table.
- * 2004 (C) Tor Andersson.
- * BSD license.
- *
- * Simple hashtable with open adressing linear probe.
+/* Simple hashtable with open adressing linear probe.
  * Unlike text book examples, removing entries works
  * correctly in this implementation so it wont start
  * exhibiting bad behaviour if entries are inserted

@@ -43,7 +43,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	if (obj)
 		pat->matrix = pdf_tomatrix(obj);
 	else
-		pat->matrix = fz_identity();
+		pat->matrix = fz_identity;
 
 	pdf_logrsrc("matrix [%g %g %g %g %g %g]\n",
 		pat->matrix.a, pat->matrix.b,

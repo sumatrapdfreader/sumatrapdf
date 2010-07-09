@@ -35,7 +35,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	if (obj)
 		form->matrix = pdf_tomatrix(obj);
 	else
-		form->matrix = fz_identity();
+		form->matrix = fz_identity;
 
 	pdf_logrsrc("matrix [%g %g %g %g %g %g]\n",
 		form->matrix.a, form->matrix.b,

@@ -3,40 +3,11 @@
 #define MAX4(a,b,c,d) MAX(MAX(a,b), MAX(c,d))
 #define MIN4(a,b,c,d) MIN(MIN(a,b), MIN(c,d))
 
-void fz_invert3x3(float *dst, float *m)
-{
-	float det;
-	int i;
+/*
+ * Matrices, points and affine transformations
+ */
 
-#define M3(m,i,j) (m)[3*i+j]
-#define D2(a,b,c,d) (a * d - b * c)
-#define D3(a1,a2,a3,b1,b2,b3,c1,c2,c3) \
-	(a1 * D2(b2,b3,c2,c3)) - \
-	(b1 * D2(a2,a3,c2,c3)) + \
-	(c1 * D2(a2,a3,b2,b3))
-
-	det = D3(M3(m,0,0), M3(m,1,0), M3(m,2,0),
-		M3(m,0,1), M3(m,1,1), M3(m,2,1),
-		M3(m,0,2), M3(m,1,2), M3(m,2,2));
-	if (det == 0)
-		det = 1;
-	det = 1 / det;
-
-	M3(dst,0,0) = M3(m,1,1) * M3(m,2,2) - M3(m,1,2) * M3(m,2,1);
-	M3(dst,0,1) = -M3(m,0,1) * M3(m,2,2) + M3(m,0,2) * M3(m,2,1);
-	M3(dst,0,2) = M3(m,0,1) * M3(m,1,2) - M3(m,0,2) * M3(m,1,1);
-
-	M3(dst,1,0) = -M3(m,1,0) * M3(m,2,2) + M3(m,1,2) * M3(m,2,0);
-	M3(dst,1,1) = M3(m,0,0) * M3(m,2,2) - M3(m,0,2) * M3(m,2,0);
-	M3(dst,1,2) = -M3(m,0,0) * M3(m,1,2) + M3(m,0,2) * M3(m,1,0);
-
-	M3(dst,2,0) = M3(m,1,0) * M3(m,2,1) - M3(m,1,1) * M3(m,2,0);
-	M3(dst,2,1) = -M3(m,0,0) * M3(m,2,1) + M3(m,0,1) * M3(m,2,0);
-	M3(dst,2,2) = M3(m,0,0) * M3(m,1,1) - M3(m,0,1) * M3(m,1,0);
-
-	for (i = 0; i < 9; i++)
-		dst[i] *= det;
-}
+const fz_matrix fz_identity = { 1, 0, 0, 1, 0, 0 };
 
 fz_matrix
 fz_concat(fz_matrix one, fz_matrix two)
@@ -49,16 +20,6 @@ fz_concat(fz_matrix one, fz_matrix two)
 	dst.e = one.e * two.a + one.f * two.c + two.e;
 	dst.f = one.e * two.b + one.f * two.d + two.f;
 	return dst;
-}
-
-fz_matrix
-fz_identity(void)
-{
-	fz_matrix m;
-	m.a = 1; m.b = 0;
-	m.c = 0; m.d = 1;
-	m.e = 0; m.f = 0;
-	return m;
 }
 
 fz_matrix
@@ -168,6 +129,61 @@ fz_transformvector(fz_matrix m, fz_point p)
 	t.x = p.x * m.a + p.y * m.c;
 	t.y = p.x * m.b + p.y * m.d;
 	return t;
+}
+
+/*
+ * Rectangles and bounding boxes
+ */
+
+const fz_rect fz_infiniterect = { 1, 1, -1, -1 };
+const fz_rect fz_emptyrect = { 0, 0, 0, 0 };
+const fz_rect fz_unitrect = { 0, 0, 1, 1 };
+
+const fz_bbox fz_infinitebbox = { 1, 1, -1, -1 };
+const fz_bbox fz_emptybbox = { 0, 0, 0, 0 };
+const fz_bbox fz_unitbbox = { 0, 0, 1, 1 };
+
+fz_bbox
+fz_roundrect(fz_rect f)
+{
+	fz_bbox i;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=271 */
+#define ROUND_EPSILON 0.001f
+	i.x0 = floorf(f.x0 + ROUND_EPSILON);
+	i.y0 = floorf(f.y0 + ROUND_EPSILON);
+	i.x1 = ceilf(f.x1 - ROUND_EPSILON);
+	i.y1 = ceilf(f.y1 - ROUND_EPSILON);
+	return i;
+}
+
+fz_bbox
+fz_intersectbbox(fz_bbox a, fz_bbox b)
+{
+	fz_bbox r;
+	if (fz_isinfiniterect(a)) return b;
+	if (fz_isinfiniterect(b)) return a;
+	if (fz_isemptyrect(a)) return fz_emptybbox;
+	if (fz_isemptyrect(b)) return fz_emptybbox;
+	r.x0 = MAX(a.x0, b.x0);
+	r.y0 = MAX(a.y0, b.y0);
+	r.x1 = MIN(a.x1, b.x1);
+	r.y1 = MIN(a.y1, b.y1);
+	return (r.x1 < r.x0 || r.y1 < r.y0) ? fz_emptybbox : r;
+}
+
+fz_bbox
+fz_unionbbox(fz_bbox a, fz_bbox b)
+{
+	fz_bbox r;
+	if (fz_isinfiniterect(a)) return a;
+	if (fz_isinfiniterect(b)) return b;
+	if (fz_isemptyrect(a)) return b;
+	if (fz_isemptyrect(b)) return a;
+	r.x0 = MIN(a.x0, b.x0);
+	r.y0 = MIN(a.y0, b.y0);
+	r.x1 = MAX(a.x1, b.x1);
+	r.y1 = MAX(a.y1, b.y1);
+	return r;
 }
 
 fz_rect

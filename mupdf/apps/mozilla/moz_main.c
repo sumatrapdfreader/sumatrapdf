@@ -214,7 +214,7 @@ fz_matrix pdfmoz_pagectm(pdfmoz_t *moz, int pagenum)
 
     zoom = (rc.right - rc.left) / (float) page->w;
 
-    ctm = fz_identity();
+    ctm = fz_identity;
     ctm = fz_concat(ctm, fz_translate(0, -page->page->mediabox.y1));
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
     ctm = fz_concat(ctm, fz_rotate(page->page->rotate));

@@ -1,7 +1,3 @@
-/*
- * Creation and destruction.
- */
-
 #include "fitz.h"
 
 static fz_stream *

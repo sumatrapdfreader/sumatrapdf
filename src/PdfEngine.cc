@@ -319,7 +319,7 @@ bool PdfEngine::hasPermission(int permission)
 
 fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 {
-    fz_matrix ctm = fz_identity();
+    fz_matrix ctm = fz_identity;
     ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
     ctm = fz_concat(ctm, fz_rotate(rotate + page->rotate));
@@ -555,7 +555,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     fz_textspan *text = fz_newtextspan();
     fz_device *dev = fz_newtextdevice(text);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runcontentstream(dev, fz_identity(), _xref, page->resources, page->contents);
+    fz_error error = pdf_runcontentstream(dev, fz_identity, _xref, page->resources, page->contents);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
     if (error) {

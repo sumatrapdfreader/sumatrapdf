@@ -7731,7 +7731,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SUMATRAPDF));
 
-    fz_cpudetect();
     fz_accelerate();
 
     CreatePageRenderThread();

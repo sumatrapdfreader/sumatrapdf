@@ -72,41 +72,101 @@ $(CMAPDUMP_EXE): $(OBJDIR)/cmapdump.o
 # Sources
 #
 
-FITZ_HDR := fitz/fitz.h fitz/fitz_base.h fitz/fitz_draw.h fitz/fitz_stream.h
-FITZ_SRC := $(addprefix fitz/, \
-	base_cpudep.c \
-	base_error.c base_memory.c base_string.c base_unicode.c \
-	base_hash.c base_matrix.c base_rect.c \
-	crypt_aes.c crypt_arc4.c crypt_md5.c \
-	filt_aesd.c filt_arc4.c filt_basic.c \
-	filt_dctd.c filt_faxd.c filt_faxdtab.c filt_flate.c \
-	filt_jbig2d.c filt_jpxd.c filt_lzwd.c filt_pipeline.c filt_predict.c \
-	dev_null.c dev_text.c dev_draw.c dev_bbox.c dev_list.c dev_trace.c \
-	obj_array.c obj_dict.c obj_print.c obj_simple.c \
-	res_colorspace.c res_font.c res_shade.c res_pixmap.c \
-	res_path.c res_text.c \
-	stm_buffer.c stm_filter.c stm_misc.c stm_open.c stm_read.c \
-	util_getopt.c util_gettimeofday.c )
+FITZ_HDR := fitz/fitz.h
+FITZ_SRC := \
+	fitz/base_error.c \
+	fitz/base_geometry.c \
+	fitz/base_getopt.c \
+	fitz/base_hash.c \
+	fitz/base_memory.c \
+	fitz/base_string.c \
+	fitz/base_time.c \
+	fitz/crypt_aes.c \
+	fitz/crypt_arc4.c \
+	fitz/crypt_md5.c \
+	fitz/dev_bbox.c \
+	fitz/dev_draw.c \
+	fitz/dev_list.c \
+	fitz/dev_null.c \
+	fitz/dev_text.c \
+	fitz/dev_trace.c \
+	fitz/filt_basic.c \
+	fitz/filt_dctd.c \
+	fitz/filt_faxd.c \
+	fitz/filt_flate.c \
+	fitz/filt_jbig2d.c \
+	fitz/filt_jpxd.c \
+	fitz/filt_lzwd.c \
+	fitz/filt_pipeline.c \
+	fitz/filt_predict.c \
+	fitz/obj_array.c \
+	fitz/obj_dict.c \
+	fitz/obj_print.c \
+	fitz/obj_simple.c \
+	fitz/res_colorspace.c \
+	fitz/res_font.c \
+	fitz/res_path.c \
+	fitz/res_pixmap.c \
+	fitz/res_shade.c \
+	fitz/res_text.c \
+	fitz/stm_buffer.c \
+	fitz/stm_filter.c \
+	fitz/stm_open.c \
+	fitz/stm_read.c
 FITZ_OBJ := $(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)
 $(FITZ_OBJ): $(FITZ_HDR)
 
-DRAW_SRC := $(addprefix draw/, $(DRAW_ARCH_SRC) \
-	archport.c blendmodes.c glyphcache.c \
-	imagedraw.c imagescale.c imageunpack.c meshdraw.c \
-	pathfill.c pathscan.c pathstroke.c porterduff.c )
+DRAW_SRC := $(DRAW_ARCH_SRC) \
+	draw/archport.c \
+	draw/blendmodes.c \
+	draw/glyphcache.c \
+	draw/imagedraw.c \
+	draw/imagescale.c \
+	draw/imageunpack.c \
+	draw/meshdraw.c \
+	draw/pathfill.c \
+	draw/pathscan.c \
+	draw/pathstroke.c \
+	draw/porterduff.c
 DRAW_OBJ := $(DRAW_SRC:draw/%.c=$(OBJDIR)/%.o)
 DRAW_OBJ := $(DRAW_OBJ:draw/%.s=$(OBJDIR)/%.o)
 $(DRAW_OBJ): $(FITZ_HDR)
 
 MUPDF_HDR := $(FITZ_HDR) mupdf/mupdf.h
-MUPDF_SRC := $(addprefix mupdf/, \
-	pdf_annot.c pdf_build.c pdf_cmap.c pdf_cmap_load.c pdf_cmap_parse.c \
-	pdf_cmap_table.c pdf_colorspace.c pdf_crypt.c pdf_debug.c \
-	pdf_font.c pdf_fontagl.c pdf_fontenc.c pdf_fontfile.c pdf_fontmtx.c \
-	pdf_function.c pdf_image.c pdf_interpret.c pdf_lex.c pdf_nametree.c \
-	pdf_open.c pdf_outline.c pdf_page.c pdf_pagetree.c pdf_parse.c \
-	pdf_pattern.c pdf_repair.c pdf_shade.c pdf_store.c pdf_stream.c \
-	pdf_type3.c pdf_unicode.c pdf_xobject.c pdf_xref.c )
+MUPDF_SRC := \
+	mupdf/pdf_annot.c \
+	mupdf/pdf_build.c \
+	mupdf/pdf_cmap.c \
+	mupdf/pdf_cmap_load.c \
+	mupdf/pdf_cmap_parse.c \
+	mupdf/pdf_cmap_table.c \
+	mupdf/pdf_colorspace.c \
+	mupdf/pdf_crypt.c \
+	mupdf/pdf_debug.c \
+	mupdf/pdf_font.c \
+	mupdf/pdf_fontagl.c \
+	mupdf/pdf_fontenc.c \
+	mupdf/pdf_fontfile.c \
+	mupdf/pdf_fontmtx.c \
+	mupdf/pdf_function.c \
+	mupdf/pdf_image.c \
+	mupdf/pdf_interpret.c \
+	mupdf/pdf_lex.c \
+	mupdf/pdf_nametree.c \
+	mupdf/pdf_open.c \
+	mupdf/pdf_outline.c \
+	mupdf/pdf_page.c \
+	mupdf/pdf_pagetree.c \
+	mupdf/pdf_parse.c \
+	mupdf/pdf_pattern.c \
+	mupdf/pdf_repair.c \
+	mupdf/pdf_shade.c \
+	mupdf/pdf_store.c \
+	mupdf/pdf_stream.c \
+	mupdf/pdf_type3.c \
+	mupdf/pdf_unicode.c \
+	mupdf/pdf_xobject.c \
+	mupdf/pdf_xref.c
 MUPDF_OBJ := $(MUPDF_SRC:mupdf/%.c=$(OBJDIR)/%.o)
 $(MUPDF_OBJ): $(MUPDF_HDR)
 
@@ -125,17 +185,25 @@ $(OBJDIR)/%.o: $(GENDIR)/%.c
 # Generated font file dumps
 #
 
-BASEFONT_FILES := $(addprefix fonts/, \
-	Dingbats.cff \
-	NimbusMonL-Bold.cff NimbusMonL-BoldObli.cff \
-	NimbusMonL-Regu.cff NimbusMonL-ReguObli.cff \
-	NimbusRomNo9L-Medi.cff NimbusRomNo9L-MediItal.cff \
-	NimbusRomNo9L-Regu.cff NimbusRomNo9L-ReguItal.cff \
-	NimbusSanL-Bold.cff NimbusSanL-BoldItal.cff \
-	NimbusSanL-Regu.cff NimbusSanL-ReguItal.cff \
-	StandardSymL.cff URWChanceryL-MediItal.cff )
+BASEFONT_FILES := \
+	fonts/Dingbats.cff \
+	fonts/NimbusMonL-Bold.cff \
+	fonts/NimbusMonL-BoldObli.cff \
+	fonts/NimbusMonL-Regu.cff \
+	fonts/NimbusMonL-ReguObli.cff \
+	fonts/NimbusRomNo9L-Medi.cff \
+	fonts/NimbusRomNo9L-MediItal.cff \
+	fonts/NimbusRomNo9L-Regu.cff \
+	fonts/NimbusRomNo9L-ReguItal.cff \
+	fonts/NimbusSanL-Bold.cff \
+	fonts/NimbusSanL-BoldItal.cff \
+	fonts/NimbusSanL-Regu.cff \
+	fonts/NimbusSanL-ReguItal.cff \
+	fonts/StandardSymL.cff \
+	fonts/URWChanceryL-MediItal.cff
 
-CJKFONT_FILES := fonts/droid/DroidSansFallback.ttf
+CJKFONT_FILES := \
+	fonts/droid/DroidSansFallback.ttf
 
 ifeq "$(pregen)" ""
 

@@ -33,7 +33,7 @@ fz_newglyphcache(void)
 	return cache;
 }
 
-void
+static void
 fz_evictglyphcache(fz_glyphcache *cache)
 {
 	fz_glyphkey *key;

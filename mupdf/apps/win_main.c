@@ -48,8 +48,9 @@ void winwarn(pdfapp_t *app, char *msg)
 
 void winerror(pdfapp_t *app, fz_error error)
 {
+	/* TODO: redirect stderr to a log file and display here */
 	fz_catch(error, "displaying error message to user");
-	MessageBoxA(hwndframe, fz_errorbuf, "MuPDF: Error", MB_ICONERROR);
+	MessageBoxA(hwndframe, "An error has occurred.", "MuPDF: Error", MB_ICONERROR);
 	exit(1);
 }
 
@@ -773,7 +774,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 	int fd;
 	int code;
 
-	fz_cpudetect();
 	fz_accelerate();
 
 	pdfapp_init(&gapp);

@@ -18,7 +18,7 @@ fz_newfont(void)
 	font->ftsubstitute = 0;
 	font->fthint = 0;
 
-	font->t3matrix = fz_identity();
+	font->t3matrix = fz_identity;
 	font->t3resources = nil;
 	font->t3procs = nil;
 	font->t3widths = nil;

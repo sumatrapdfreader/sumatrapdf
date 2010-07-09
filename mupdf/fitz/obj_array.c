@@ -1,7 +1,5 @@
 #include "fitz.h"
 
-void fz_freearray(fz_obj *obj);
-
 fz_obj *
 fz_newarray(int initialcap)
 {

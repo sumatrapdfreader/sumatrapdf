@@ -1,5 +1,9 @@
 #include "fitz.h"
 
+/*
+ * Identity filter.
+ */
+
 fz_filter *
 fz_newcopyfilter(void)
 {
@@ -38,6 +42,10 @@ fz_processcopyfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		}
 	}
 }
+
+/*
+ * Null filter copies data until a specified length.
+ */
 
 typedef struct fz_nullfilter_s fz_nullfilter;
 
@@ -89,6 +97,10 @@ fz_processnullfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 	return fz_throw("braindead programmer trapped in nullfilter");
 }
+
+/*
+ * ASCII Hex Decode
+ */
 
 typedef struct fz_ahxd_s fz_ahxd;
 
@@ -181,23 +193,9 @@ fz_processahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
-void
-fz_pushbackahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out, int n)
-{
-	int k;
-
-	assert(filter->process == fz_processahxd);
-	assert(out->wp - n >= out->rp);
-
-	k = 0;
-	while (k < n * 2) {
-		in->rp --;
-		if (ishex(*in->rp))
-			k ++;
-	}
-
-	out->wp -= n;
-}
+/*
+ * ASCII 85 Decode
+ */
 
 typedef struct fz_a85d_s fz_a85d;
 
@@ -314,6 +312,10 @@ fz_processa85d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
+/*
+ * Run Length Decode
+ */
+
 fz_filter *
 fz_newrld(fz_obj *params)
 {
@@ -384,3 +386,121 @@ fz_processrld(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
+/*
+ * RC4 Filter
+ */
+
+typedef struct fz_arc4c_s fz_arc4c;
+
+struct fz_arc4c_s
+{
+	fz_filter super;
+	fz_arc4 arc4;
+};
+
+fz_filter *
+fz_newarc4filter(unsigned char *key, unsigned keylen)
+{
+	FZ_NEWFILTER(fz_arc4c, f, arc4filter);
+	fz_arc4init(&f->arc4, key, keylen);
+	return (fz_filter *)f;
+}
+
+void
+fz_droparc4filter(fz_filter *f)
+{
+}
+
+fz_error
+fz_processarc4filter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
+{
+	fz_arc4c *f = (fz_arc4c*)filter;
+	int n;
+
+	while (1)
+	{
+		if (in->rp + 1 > in->wp) {
+			if (in->eof)
+				return fz_iodone;
+			return fz_ioneedin;
+		}
+		if (out->wp + 1 > out->ep)
+			return fz_ioneedout;
+
+		n = MIN(in->wp - in->rp, out->ep - out->wp);
+		fz_arc4encrypt(&f->arc4, out->wp, in->rp, n);
+		in->rp += n;
+		out->wp += n;
+	}
+}
+
+/*
+ * AES Filter
+ */
+
+typedef struct fz_aesd_s fz_aesd;
+
+struct fz_aesd_s
+{
+	fz_filter super;
+	fz_aes aes;
+	unsigned char iv[16];
+	int ivcount;
+};
+
+fz_filter *
+fz_newaesdfilter(unsigned char *key, unsigned keylen)
+{
+	FZ_NEWFILTER(fz_aesd, f, aesdfilter);
+	aes_setkey_dec(&f->aes, key, keylen * 8);
+	f->ivcount = 0;
+	return (fz_filter *)f;
+}
+
+void
+fz_dropaesdfilter(fz_filter *f)
+{
+}
+
+fz_error
+fz_processaesdfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
+{
+	fz_aesd *f = (fz_aesd*)filter;
+	int n;
+
+	while (1)
+	{
+		if (in->rp + 16 > in->wp)
+		{
+			if (in->eof)
+				return fz_iodone;
+			return fz_ioneedin;
+		}
+
+		if (f->ivcount < 16)
+		{
+			f->iv[f->ivcount++] = *in->rp++;
+		}
+		else
+		{
+			if (out->wp + 16 > out->ep)
+				return fz_ioneedout;
+
+			n = MIN(in->wp - in->rp, out->ep - out->wp);
+			n = (n / 16) * 16;
+
+			aes_crypt_cbc(&f->aes, AES_DECRYPT, n, f->iv, in->rp, out->wp);
+			in->rp += n;
+			out->wp += n;
+
+			/* Remove padding bytes */
+			if (in->eof && in->rp == in->wp)
+			{
+				int pad = out->wp[-1];
+				if (pad < 1 || pad > 16)
+					return fz_throw("aes padding out of range: %d", pad);
+				out->wp -= pad;
+			}
+		}
+	}
+}
