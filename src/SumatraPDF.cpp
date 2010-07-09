@@ -1924,7 +1924,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     if (WS_SHOWING_PDF == win->state) {
         if (win->dm->needHScroll())
             ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
-        if (win->dm->needVScroll() || (!displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
+        if (win->dm->needVScroll() || (!win->presentation && !displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
             ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
     }
     else {
