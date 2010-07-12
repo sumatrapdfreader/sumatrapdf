@@ -10,39 +10,40 @@ Contributor: Angelo Contardi
 Contributor: iBlawgger
 Contributor: Alessandro Visentin
 Contributor: Alessandro Mariani
+Contributor: Massimiliano Beltrando
 
 &About
 &Informazioni
 
 &Check for new version
-V&erifica aggiornamenti
+&Verifica aggiornamenti
 
 &Close\tCtrl-W
 &Chiudi\tCtrl-W
 
 &Custom Zoom...
-I&ngrandimento personalizzato
+&Ingrandimento personalizzato
 
 &Don't ask me again
-Non chiedermelo ancora
+&Non chiedermelo più
 
 &File
 &Dati
 
 &Find what:
-R&icerca:
+&Ricerca:
 
 &Go To
-Va&i a
+&Vai a
 
 &Go to page:
-Va&i a pagina:
+&Vai a pagina:
 
 &Help
 &Aiuto
 
 &Magnification:
-Ingrossa&mento:
+&Ingrandimento:
 
 &Manual
 &Manuale
@@ -54,37 +55,43 @@ Ingrossa&mento:
 &No
 
 &No, thanks
-N&o, grazie
+&No, grazie
 
 &Open\tCtrl-O
 &Apri\tCtrl-O
 
 &Options...
-&Opzioni
+&Opzioni...
 
 &Password:
 Parola chiave:
 
 &Print\tCtrl-P
-S&tampa\tCtrl-P
+&Stampa\tCtrl-P
+
+&Print with %s...\tCtrl-P
+&Stampa con %s...\tCtrl-P
+
+&Print... (denied)
+&Stampa... (rifiutato)
 
 &Remember these settings for each document
 &Ricorda le impostazioni per ogni documento
 
 &Save as\tCtrl-S
-&Salva come...\tCtrl-S
+&Salva con nome\tCtrl-S
 
 &Settings
-&Preferenze
+&Impostazioni
 
 &Skip this version
-Salta questa versione
+&Salta questa versione
 
 &View
-&Vedi
+&Visualizza
 
 &Visit website
-&Visita il sito Internet
+&Visita il sito
 
 &Yes
 &Sì
@@ -144,7 +151,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
 
 Change language
-Cambia lingua (Change language)
+Cambia lingua
 
 Continuous
 Pagina continua
@@ -159,7 +166,7 @@ Contribute translation
 Contribuisci alla traduzione
 
 Copy Selection\tCtrl-C
-Copia Selezione
+Copia Selezione\tCtrl-C
 
 Could not open Printer
 Stampante non accessibile
@@ -178,6 +185,9 @@ Default &Layout:
 
 Default &Zoom:
 &Ingrandimento predefinito
+
+Denied Permissions:
+Permessi rifiutati
 
 Document Properties
 Proprietà del documento
@@ -255,7 +265,7 @@ Go to page
 Vai a pagina
 
 Hint: Use the F3 key for finding again
-Ricorda: Usa F3 per trovare nuovamente
+Consiglio: Usa F3 per trovare nuovamente
 
 KB
 KB
@@ -291,7 +301,7 @@ Next Page
 Pagina successiva
 
 Next Page\tRight Arrow
-Pagina successiva\t->
+Pagina successiva\tFreccia destra
 
 No matches were found
 Nessuna corrispondenza trovata
@@ -354,7 +364,7 @@ Previous Page
 Pagina precedente
 
 Previous Page\tLeft Arrow
-Pagina precedente\t<-
+Pagina precedente\tFreccia destra
 
 Printing problem.
 Problema di stampa.
@@ -372,7 +382,7 @@ Searching %d of %d...
 In ricerca %d di %d...
 
 Select content with Ctrl+left mouse button
-Seleziona contenuti con Ctrl+tasto destro del mouse
+Seleziona contenuti con Ctrl+tasto sinistro del mouse
 
 Send by &email...
 Invia via &mail...
@@ -394,6 +404,9 @@ Pagina singola
 
 Source file %s has no synchronization point
 Il file sorgente non ha punti di sincronizzazione
+
+Subject:
+Soggetto:
 
 SumatraPDF Options
 Opzioni SumatraPDF
@@ -417,7 +430,7 @@ Unknown source file (%s)
 File sorgente ignoto
 
 View
-Vedi
+Visualizza
 
 Warning
 Avviso
@@ -443,11 +456,9 @@ Fattore ingrandimento
 [Changes detected; refreshing] %s
 [Cambiamenti rilevati; in aggiornamento] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+Copia testo
+
+printing document
+Stampa documento
 
