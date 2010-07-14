@@ -4947,7 +4947,7 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
         return;
 
     bool wasPresentation = PM_DISABLED != win->presentation;
-    if (wasPresentation) {
+    if (wasPresentation && win->dm) {
         win->dm->setPresentationMode(false);
         win->presentation = PM_DISABLED;
     }
