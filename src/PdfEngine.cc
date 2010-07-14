@@ -1,4 +1,4 @@
-/* Copyright Krzysztof Kowalczyk 2006-2009
+/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 #include <windows.h>
 #include "PdfEngine.h"
@@ -9,30 +9,30 @@ extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
 // adapted from pdf_page.c's pdf_loadpageinfo
 fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 {
-	fz_obj *obj;
-	fz_bbox bbox;
+    fz_obj *obj;
+    fz_bbox bbox;
 
-	obj = fz_dictgets(page, "MediaBox");
-	if (!fz_isarray(obj))
-		return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
-	bbox = fz_roundrect(pdf_torect(obj));
+    obj = fz_dictgets(page, "MediaBox");
+    if (!fz_isarray(obj))
+    	return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
+    bbox = fz_roundrect(pdf_torect(obj));
 
-	obj = fz_dictgets(page, "CropBox");
-	if (fz_isarray(obj))
-	{
-		fz_bbox cropbox = fz_roundrect(pdf_torect(obj));
-		bbox = fz_intersectbbox(bbox, cropbox);
-	}
+    obj = fz_dictgets(page, "CropBox");
+    if (fz_isarray(obj))
+    {
+        fz_bbox cropbox = fz_roundrect(pdf_torect(obj));
+        bbox = fz_intersectbbox(bbox, cropbox);
+    }
 
-	mediabox->x0 = MIN(bbox.x0, bbox.x1);
-	mediabox->y0 = MIN(bbox.y0, bbox.y1);
-	mediabox->x1 = MAX(bbox.x0, bbox.x1);
-	mediabox->y1 = MAX(bbox.y0, bbox.y1);
+    mediabox->x0 = MIN(bbox.x0, bbox.x1);
+    mediabox->y0 = MIN(bbox.y0, bbox.y1);
+    mediabox->x1 = MAX(bbox.x0, bbox.x1);
+    mediabox->y1 = MAX(bbox.y0, bbox.y1);
 
-	if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
-		return fz_throw("invalid page size");
+    if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
+        return fz_throw("invalid page size");
 
-	return fz_okay;
+    return fz_okay;
 }
 
 HBITMAP RenderedBitmap::createDIBitmap(HDC hdc) {
