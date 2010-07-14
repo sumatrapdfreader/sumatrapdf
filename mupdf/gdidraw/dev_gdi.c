@@ -373,7 +373,7 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 	
 	/* abgr is a GDI compatible format */
 	bgrPixmap = fz_newpixmap(pdf_devicebgr, pixmap->x, pixmap->y, w, h);
-	fz_convertpixmap(pixmap->colorspace, pixmap, pdf_devicebgr, bgrPixmap);
+	fz_convertpixmap(pixmap, bgrPixmap);
 	pixmap = bgrPixmap;
 	
 	assert(pixmap->n == 4);
