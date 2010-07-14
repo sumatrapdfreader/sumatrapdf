@@ -228,7 +228,7 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
 	}
 	else
 	{
-		pdf_logrsrc("store item %s: ... = %p\n", kindstr(kind), val);
+		pdf_logrsrc("store item %s (...) = %p\n", kindstr(kind), val);
 
 		item->next = store->root;
 		store->root = item;

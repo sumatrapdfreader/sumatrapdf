@@ -38,15 +38,11 @@ static void saveimage(int num, int gen)
 
 	xref->store = pdf_newstore();
 
-	error = pdf_loadimage(&img, xref, ref);
+	error = pdf_loadimage(&img, xref, nil, ref);
 	if (error)
 		die(error);
 
-	pix = fz_newpixmap(img->cs, 0, 0, img->w, img->h);
-
-	error = pdf_loadtile(img, pix);
-	if (error)
-		die(error);
+	pix = pdf_loadtile(img);
 
 	if (img->bpc == 1 && img->n == 0)
 	{
@@ -58,23 +54,21 @@ static void saveimage(int num, int gen)
 			for (x = 0; x < pix->w; x++)
 			{
 				int pixel = y * pix->w + x;
-				temp->samples[pixel * temp->n + 0] = 255;
+				temp->samples[pixel * temp->n + 0] = pix->samples[pixel];
 				temp->samples[pixel * temp->n + 1] = pix->samples[pixel];
 				temp->samples[pixel * temp->n + 2] = pix->samples[pixel];
-				temp->samples[pixel * temp->n + 3] = pix->samples[pixel];
+				temp->samples[pixel * temp->n + 3] = 255;
 			}
 
 		fz_droppixmap(pix);
 		pix = temp;
 	}
 
-	if (img->cs && strcmp(img->cs->name, "DeviceRGB"))
+	if (img->colorspace && strcmp(img->colorspace->name, "DeviceRGB"))
 	{
 		fz_pixmap *temp;
-
 		temp = fz_newpixmap(pdf_devicergb, pix->x, pix->y, pix->w, pix->h);
-
-		fz_convertpixmap(img->cs, pix, pdf_devicergb, temp);
+		fz_convertpixmap(pix, temp);
 		fz_droppixmap(pix);
 		pix = temp;
 	}
@@ -94,10 +88,10 @@ static void saveimage(int num, int gen)
 		{
 			unsigned char r, g, b;
 
-			samples++;
 			r = *(samples++);
 			g = *(samples++);
 			b = *(samples++);
+			samples++;
 
 			fprintf(f, "%c%c%c", r, g, b);
 		}

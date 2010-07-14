@@ -15,6 +15,10 @@ static void fz_nullfillshade(void *user, fz_shade *shade, fz_matrix ctm) {}
 static void fz_nullfillimage(void *user, fz_pixmap *image, fz_matrix ctm) {}
 static void fz_nullfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha) {}
 static void fz_nullclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm) {}
+static void fz_nullbeginmask(void *user, fz_rect r, int luminosity, fz_colorspace *cs, float *bc) {}
+static void fz_nullendmask(void *user) {}
+static void fz_nullbegingroup(void *user, fz_rect r, fz_colorspace *cs, int isolated, int knockout, fz_blendmode blendmode) {}
+static void fz_nullendgroup(void *user) {}
 
 fz_device *
 fz_newdevice(void *user)
@@ -44,6 +48,11 @@ fz_newdevice(void *user)
 	dev->clipimagemask = fz_nullclipimagemask;
 
 	dev->popclip = fz_nullpopclip;
+
+	dev->beginmask = fz_nullbeginmask;
+	dev->endmask = fz_nullendmask;
+	dev->begingroup = fz_nullbegingroup;
+	dev->endgroup = fz_nullendgroup;
 
 	return dev;
 }

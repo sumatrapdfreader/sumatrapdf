@@ -15,7 +15,7 @@ fz_tracecolor(fz_colorspace *colorspace, float *color, float alpha)
 	for (i = 0; i < colorspace->n; i++)
 		printf("%s%g", i == 0 ? "" : " ", color[i]);
 	printf("\" ");
-	if (alpha < 1.0f)
+	if (alpha < 1)
 		printf("alpha=\"%g\" ", alpha);
 }
 
@@ -227,6 +227,36 @@ fz_tracepopclip(void *user)
 	printf("</gsave>\n");
 }
 
+static void
+fz_tracebeginmask(void *user, fz_rect bbox, int luminosity, fz_colorspace *colorspace, float *color)
+{
+	printf("<mask bbox=\"%g %g %g %g\" s=\"%s\" ",
+		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
+		luminosity ? "luminosity" : "alpha");
+	fz_tracecolor(colorspace, color, 1);
+	printf(">\n");
+}
+
+static void
+fz_traceendmask(void *user)
+{
+	printf("</mask>\n");
+}
+
+static void
+fz_tracebegingroup(void *user, fz_rect bbox, fz_colorspace *colorspace, int isolated, int knockout, fz_blendmode blendmode)
+{
+	printf("<group bbox=\"%g %g %g %g\" isolated=\"%d\" knockout=\"%d\" blendmode=\"%d\">\n",
+		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
+		isolated, knockout, blendmode);
+}
+
+static void
+fz_traceendgroup(void *user)
+{
+	printf("</group>\n");
+}
+
 fz_device *fz_newtracedevice(void)
 {
 	fz_device *dev = fz_newdevice(nil);
@@ -248,6 +278,11 @@ fz_device *fz_newtracedevice(void)
 	dev->clipimagemask = fz_traceclipimagemask;
 
 	dev->popclip = fz_tracepopclip;
+
+	dev->beginmask = fz_tracebeginmask;
+	dev->endmask = fz_traceendmask;
+	dev->begingroup = fz_tracebegingroup;
+	dev->endgroup = fz_traceendgroup;
 
 	return dev;
 }

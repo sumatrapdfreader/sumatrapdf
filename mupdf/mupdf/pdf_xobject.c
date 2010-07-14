@@ -19,10 +19,10 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	form->resources = nil;
 	form->contents = nil;
 
+	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), form);
+
 	/* Store item immediately, to avoid possible recursion if objects refer back to this one */
 	pdf_storeitem(xref->store, PDF_KXOBJECT, dict, form);
-
-	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), form);
 
 	obj = fz_dictgets(dict, "BBox");
 	form->bbox = pdf_torect(obj);

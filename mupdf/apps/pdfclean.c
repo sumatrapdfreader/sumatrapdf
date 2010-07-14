@@ -14,6 +14,8 @@ static FILE *out = NULL;
 static char *uselist = NULL;
 static int *ofslist = NULL;
 static int *genlist = NULL;
+static int *newnumlist = NULL;
+static pdf_xrefentry *oldxreflist = NULL;
 
 static int dogarbage = 0;
 static int doexpand = 0;
@@ -91,6 +93,48 @@ static fz_error sweepref(fz_obj *obj)
 	}
 
 	return fz_okay;
+}
+
+static void renumberobj(fz_obj *obj)
+{
+	int i;
+
+	if (fz_isdict(obj))
+	{
+		for (i = 0; i < fz_dictlen(obj); i++)
+		{
+			fz_obj *key = fz_dictgetkey(obj, i);
+			fz_obj *val = fz_dictgetval(obj, i);
+			if (fz_isindirect(val))
+			{
+				val = fz_newindirect(newnumlist[fz_tonum(val)], 0, xref);
+				fz_dictput(obj, key, val);
+				fz_dropobj(val);
+			}
+			else
+			{
+				renumberobj(val);
+			}
+		}
+	}
+
+	if (fz_isarray(obj))
+	{
+		for (i = 0; i < fz_arraylen(obj); i++)
+		{
+			fz_obj *val = fz_arrayget(obj, i);
+			if (fz_isindirect(val))
+			{
+				val = fz_newindirect(newnumlist[fz_tonum(val)], 0, xref);
+				fz_arrayput(obj, i, val);
+				fz_dropobj(val);
+			}
+			else
+			{
+				renumberobj(val);
+			}
+		}
+	}
 }
 
 static void preloadobjstms(void)
@@ -186,7 +230,6 @@ static void saveobject(int num, int gen)
 		}
 	}
 
-
 	if (!xref->table[num].stmofs)
 	{
 		fprintf(out, "%d %d obj\n", num, gen);
@@ -200,7 +243,6 @@ static void saveobject(int num, int gen)
 		else
 			copystream(obj, num, gen);
 	}
-
 
 	fz_dropobj(obj);
 }
@@ -254,73 +296,14 @@ static void cleanusage(void)
 	fprintf(stderr,
 		"usage: pdfclean [options] input.pdf [outfile.pdf] [pages]\n"
 		"\t-p -\tpassword for decryption\n"
-		"\t-g\tgarbage collect unused objects\n"
+		"\t-g\tgarbage collect unused objects (an additional -g compacts xref)\n"
+		"\t-r\tremove unused object numbers from xref\n"
 		"\t-x\texpand compressed streams\n");
 	exit(1);
 }
 
-int main(int argc, char **argv)
+static void retainpages(int argc, char **argv)
 {
-	char *infile;
-	char *outfile = "out.pdf";
-	char *password = "";
-	fz_error error;
-	int c, num;
-	int lastfree;
-	int subset;
-
-	while ((c = fz_getopt(argc, argv, "gxp:")) != -1)
-	{
-		switch (c)
-		{
-		case 'p': password = fz_optarg; break;
-		case 'g': dogarbage ++; break;
-		case 'x': doexpand ++; break;
-		default: cleanusage(); break;
-		}
-	}
-
-	if (argc - fz_optind < 1)
-		cleanusage();
-
-	infile = argv[fz_optind++];
-
-	if (argc - fz_optind > 0 &&
-		(strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF")))
-	{
-		outfile = argv[fz_optind++];
-	}
-
-	subset = 0;
-	if (argc - fz_optind > 0)
-		subset = 1;
-
-	openxref(infile, password, 0, 0);
-
-	out = fopen(outfile, "wb");
-	if (!out)
-		die(fz_throw("cannot open output file '%s'", outfile));
-
-	fprintf(out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
-	fprintf(out, "%%\342\343\317\323\n\n");
-
-	uselist = malloc(sizeof (char) * (xref->len + 1));
-	ofslist = malloc(sizeof (int) * (xref->len + 1));
-	genlist = malloc(sizeof (int) * (xref->len + 1));
-
-	for (num = 0; num < xref->len; num++)
-	{
-		uselist[num] = 0;
-		ofslist[num] = 0;
-		genlist[num] = 0;
-	}
-
-	/* Make sure any objects hidden in compressed streams have been loaded */
-	preloadobjstms();
-
-	/* Only retain the specified subset of the pages */
-	if (subset)
-	{
 		fz_obj *root, *pages, *kids;
 		int count;
 
@@ -382,13 +365,16 @@ int main(int argc, char **argv)
 				for (page = spage; page <= epage; page++)
 				{
 					fz_obj *pageobj = pdf_getpageobject(xref, page);
+				fz_obj *pageref = pdf_getpageref(xref, page);
 
 					/* Update parent reference */
 					fz_dictputs(pageobj, "Parent", pages);
 
 					/* Store page object in new kids array */
-					fz_arraypush(kids, pageobj);
+				fz_arraypush(kids, pageref);
 					count++;
+
+				fz_dropobj(pageref);
 				}
 
 				spec = fz_strsep(&pagelist, ",");
@@ -400,12 +386,55 @@ int main(int argc, char **argv)
 		/* Update page count and kids array */
 		fz_dictputs(pages, "Count", fz_newint(count));
 		fz_dictputs(pages, "Kids", kids);
+}
+
+static void renumberxref(void)
+{
+	int num, newnum;
+
+	newnumlist = fz_malloc(xref->len * sizeof(int));
+	oldxreflist = fz_malloc(xref->len * sizeof(pdf_xrefentry));
+	for (num = 0; num < xref->len; num++)
+	{
+		newnumlist[num] = -1;
+		oldxreflist[num] = xref->table[num];
 	}
 
-	/* Sweep & mark objects from the trailer */
-	error = sweepobj(xref->trailer);
-	if (error)
-		die(fz_rethrow(error, "cannot mark used objects"));
+	newnum = 1;
+	for (num = 0; num < xref->len; num++)
+	{
+		if (xref->table[num].type == 'f')
+			uselist[num] = 0;
+		if (uselist[num])
+			newnumlist[num] = newnum++;
+	}
+
+	renumberobj(xref->trailer);
+	for (num = 0; num < xref->len; num++)
+		renumberobj(xref->table[num].obj);
+
+	for (num = 0; num < xref->len; num++)
+		uselist[num] = 0;
+
+	for (num = 0; num < xref->len; num++)
+	{
+		if (newnumlist[num] >= 0)
+		{
+			xref->table[newnumlist[num]] = oldxreflist[num];
+			uselist[newnumlist[num]] = 1;
+		}
+	}
+
+	fz_free(oldxreflist);
+	fz_free(newnumlist);
+
+	xref->len = newnum;
+}
+
+static void outputpdf()
+{
+	int lastfree;
+	int num;
 
 	for (num = 0; num < xref->len; num++)
 	{
@@ -442,9 +471,82 @@ int main(int argc, char **argv)
 	}
 
 	savexref();
+}
+
+int main(int argc, char **argv)
+{
+	char *infile;
+	char *outfile = "out.pdf";
+	char *password = "";
+	fz_error error;
+	int c, num;
+	int subset;
+
+	while ((c = fz_getopt(argc, argv, "gxp:")) != -1)
+	{
+		switch (c)
+		{
+		case 'p': password = fz_optarg; break;
+		case 'g': dogarbage ++; break;
+		case 'x': doexpand ++; break;
+		default: cleanusage(); break;
+		}
+	}
+
+	if (argc - fz_optind < 1)
+		cleanusage();
+
+	infile = argv[fz_optind++];
+
+	if (argc - fz_optind > 0 &&
+		(strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF")))
+	{
+		outfile = argv[fz_optind++];
+	}
+
+	subset = 0;
+	if (argc - fz_optind > 0)
+		subset = 1;
+
+	openxref(infile, password, 0, subset);
+
+	out = fopen(outfile, "wb");
+	if (!out)
+		die(fz_throw("cannot open output file '%s'", outfile));
+
+	fprintf(out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
+	fprintf(out, "%%\342\343\317\323\n\n");
+
+	uselist = malloc(sizeof (char) * (xref->len + 1));
+	ofslist = malloc(sizeof (int) * (xref->len + 1));
+	genlist = malloc(sizeof (int) * (xref->len + 1));
+
+	for (num = 0; num < xref->len; num++)
+	{
+		uselist[num] = 0;
+		ofslist[num] = 0;
+		genlist[num] = 0;
+	}
+
+	/* Make sure any objects hidden in compressed streams have been loaded */
+	preloadobjstms();
+
+	/* Only retain the specified subset of the pages */
+	if (subset)
+		retainpages(argc, argv);
+
+	/* Sweep & mark objects from the trailer */
+	error = sweepobj(xref->trailer);
+	if (error)
+		die(fz_rethrow(error, "cannot mark used objects"));
+
+	/* Renumber objects to shorten xref */
+	if (dogarbage >= 2)
+		renumberxref();
+
+	outputpdf();
 
 	closexref();
 
 	return 0;
 }
-

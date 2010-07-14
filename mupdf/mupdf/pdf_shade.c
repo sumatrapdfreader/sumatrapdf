@@ -467,7 +467,6 @@ pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, p
 	struct vertex ep1, ep2, ep3, ep4;
 	float x0, y0, x1, y1;
 	float theta;
-	float dist;
 
 	pdf_logshade("load type2 (axial) shading\n");
 
@@ -503,10 +502,6 @@ pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, p
 	theta = atan2f(y1 - y0, x1 - x0);
 	theta += (float)M_PI * 0.5f;
 
-	dist = hypotf(x1 - x0, y1 - y0);
-	if (dist < FLT_EPSILON)
-		return fz_throw("zero-sized axial shading");
-
 	p1.x = x0 + HUGENUM * cosf(theta);
 	p1.y = y0 + HUGENUM * sinf(theta);
 	p1.c[0] = 0;
@@ -524,22 +519,22 @@ pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, p
 
 	if (e0)
 	{
-		ep1.x = p1.x - (x1 - x0) / dist * HUGENUM;
-		ep1.y = p1.y - (y1 - y0) / dist * HUGENUM;
+		ep1.x = p1.x - (x1 - x0) * HUGENUM;
+		ep1.y = p1.y - (y1 - y0) * HUGENUM;
 		ep1.c[0] = 0;
-		ep3.x = p3.x - (x1 - x0) / dist * HUGENUM;
-		ep3.y = p3.y - (y1 - y0) / dist * HUGENUM;
+		ep3.x = p3.x - (x1 - x0) * HUGENUM;
+		ep3.y = p3.y - (y1 - y0) * HUGENUM;
 		ep3.c[0] = 0;
 		pdf_addquad(shade, &ep1, &p1, &p3, &ep3);
 	}
 
 	if (e1)
 	{
-		ep2.x = p2.x + (x1 - x0) / dist * HUGENUM;
-		ep2.y = p2.y + (y1 - y0) / dist * HUGENUM;
+		ep2.x = p2.x + (x1 - x0) * HUGENUM;
+		ep2.y = p2.y + (y1 - y0) * HUGENUM;
 		ep2.c[0] = 1;
-		ep4.x = p4.x + (x1 - x0) / dist * HUGENUM;
-		ep4.y = p4.y + (y1 - y0) / dist * HUGENUM;
+		ep4.x = p4.x + (x1 - x0) * HUGENUM;
+		ep4.y = p4.y + (y1 - y0) * HUGENUM;
 		ep4.c[0] = 1;
 		pdf_addquad(shade, &p2, &ep2, &ep4, &p4);
 	}
@@ -798,13 +793,13 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 		case 0: /* start new triangle */
 			va = vd;
 
-			flag = readbits(stream, p.bpflag);
+			readbits(stream, p.bpflag);
 			vb.x = readsample(stream, p.bpcoord, p.x0, p.x1);
 			vb.y = readsample(stream, p.bpcoord, p.y0, p.y1);
 			for (i = 0; i < ncomp; i++)
 				vb.c[i] = readsample(stream, p.bpcomp, p.c0[i], p.c1[i]);
 
-			flag = readbits(stream, p.bpflag);
+			readbits(stream, p.bpflag);
 			vc.x = readsample(stream, p.bpcoord, p.x0, p.x1);
 			vc.y = readsample(stream, p.bpcoord, p.y0, p.y1);
 			for (i = 0; i < ncomp; i++)
@@ -1243,7 +1238,6 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 			return fz_rethrow(error, "cannot open shading stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
-	error = 0;
 	switch (type)
 	{
 	case 1:

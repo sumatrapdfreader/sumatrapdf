@@ -23,6 +23,14 @@ pdf_getpageobject(pdf_xref *xref, int number)
 	return nil;
 }
 
+fz_obj *
+pdf_getpageref(pdf_xref *xref, int number)
+{
+	if (number > 0 && number <= xref->pagelen)
+		return xref->pagerefs[number - 1];
+	return nil;
+}
+
 int
 pdf_findpageobject(pdf_xref *xref, fz_obj *page)
 {

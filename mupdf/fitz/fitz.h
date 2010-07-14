@@ -42,7 +42,6 @@
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define snprintf _snprintf
-#define hypotf _hypotf
 #define strtoll _strtoi64
 
 #else /* Unix or close enough */
@@ -480,6 +479,7 @@ struct fz_buffer_s
 fz_buffer * fz_newbuffer(int size);
 fz_buffer * fz_newbufferwithmemory(unsigned char *data, int size);
 
+void fz_resizebuffer(fz_buffer *buf, int size);
 void fz_rewindbuffer(fz_buffer *buf);
 void fz_growbuffer(fz_buffer *buf);
 
@@ -659,7 +659,7 @@ static inline void fz_unreadbyte(fz_stream *stm)
 
 enum { FZ_MAXCOLORS = 32 };
 
-typedef enum fz_blendkind_e
+typedef enum fz_blendmode_e
 {
 	/* PDF 1.4 -- standard separable */
 	FZ_BNORMAL,
@@ -680,7 +680,7 @@ typedef enum fz_blendkind_e
 	FZ_BSATURATION,
 	FZ_BCOLOR,
 	FZ_BLUMINOSITY,
-} fz_blendkind;
+} fz_blendmode;
 
 /*
  * Pixmaps have n components per pixel. the last is always alpha.
@@ -717,29 +717,24 @@ extern fz_colorspace *pdf_devicegray;
 extern fz_colorspace *pdf_devicergb;
 extern fz_colorspace *pdf_devicebgr;
 extern fz_colorspace *pdf_devicecmyk;
-extern fz_colorspace *pdf_devicelab;
-extern fz_colorspace *pdf_devicepattern;
 
 struct fz_colorspace_s
 {
 	int refs;
 	char name[16];
 	int n;
-	void (*convpixmap)(fz_colorspace *ss, fz_pixmap *sp, fz_colorspace *ds, fz_pixmap *dp);
-	void (*convcolor)(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv);
 	void (*toxyz)(fz_colorspace *, float *src, float *xyz);
 	void (*fromxyz)(fz_colorspace *, float *xyz, float *dst);
-	void (*freefunc)(fz_colorspace *);
+	void (*freedata)(fz_colorspace *);
+	void *data;
 };
 
+fz_colorspace *fz_newcolorspace(char *name, int n);
 fz_colorspace *fz_keepcolorspace(fz_colorspace *cs);
 void fz_dropcolorspace(fz_colorspace *cs);
 
 void fz_convertcolor(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
-void fz_convertpixmap(fz_colorspace *srcs, fz_pixmap *srcv, fz_colorspace *dsts, fz_pixmap *dstv);
-
-void fz_stdconvcolor(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv);
-void fz_stdconvpixmap(fz_colorspace *srcs, fz_pixmap *srcv, fz_colorspace *dsts, fz_pixmap *dstv);
+void fz_convertpixmap(fz_pixmap *src, fz_pixmap *dst);
 
 /*
  * Fonts come in two variants:
@@ -930,7 +925,9 @@ typedef struct fz_glyphcache_s fz_glyphcache;
 fz_glyphcache * fz_newglyphcache(void);
 fz_pixmap * fz_renderftglyph(fz_font *font, int cid, fz_matrix trm);
 fz_pixmap * fz_rendert3glyph(fz_font *font, int cid, fz_matrix trm);
+fz_pixmap * fz_renderftstrokedglyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_strokestate *state);
 fz_pixmap * fz_renderglyph(fz_glyphcache*, fz_font*, int, fz_matrix);
+fz_pixmap * fz_renderstrokedglyph(fz_glyphcache*, fz_font*, int, fz_matrix, fz_matrix, fz_strokestate *stroke);
 void fz_freeglyphcache(fz_glyphcache *);
 
 /*
@@ -1019,6 +1016,11 @@ struct fz_device_s
 	void (*clipimagemask)(void *, fz_pixmap *img, fz_matrix ctm);
 
 	void (*popclip)(void *);
+
+	void (*beginmask)(void *, fz_rect, int luminosity, fz_colorspace *cs, float *bc);
+	void (*endmask)(void *);
+	void (*begingroup)(void *, fz_rect, fz_colorspace *, int isolated, int knockout, fz_blendmode blendmode);
+	void (*endgroup)(void *);
 };
 
 fz_device *fz_newdevice(void *user);
@@ -1084,6 +1086,10 @@ typedef enum fz_displaycommand_e
 	FZ_CMDFILLIMAGEMASK,
 	FZ_CMDCLIPIMAGEMASK,
 	FZ_CMDPOPCLIP,
+	FZ_CMDBEGINMASK,
+	FZ_CMDENDMASK,
+	FZ_CMDBEGINGROUP,
+	FZ_CMDENDGROUP,
 } fz_displaycommand;
 
 struct fz_displaylist_s
@@ -1096,14 +1102,16 @@ struct fz_displaynode_s
 {
 	fz_displaycommand cmd;
 	fz_displaynode *next;
+	fz_rect rect;
 	union {
 		fz_path *path;
 		fz_text *text;
 		fz_shade *shade;
 		fz_pixmap *image;
+		fz_blendmode blendmode;
 	} item;
 	fz_strokestate *stroke;
-	int flag; /* evenodd, accumulate, ... */
+	int flag; /* evenodd, accumulate, isolated/knockout... */
 	fz_matrix ctm;
 	fz_colorspace *colorspace;
 	float alpha;
@@ -1120,8 +1128,12 @@ void fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix ctm);
  * They can be replaced by cpu-optimized versions.
  */
 
-extern void fz_accelerate(void);
-extern void fz_acceleratearch(void);
+void fz_accelerate(void);
+void fz_acceleratearch(void);
+
+void fz_decodetile(fz_pixmap *pix, float *decode);
+void fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, int stride, int scale);
+void fz_blendpixmaps(fz_pixmap *src, fz_pixmap *dst, fz_blendmode blendmode);
 
 extern void (*fz_duff_ni1on)(unsigned char*restrict,int,int,unsigned char*restrict,int,unsigned char*restrict,int,int,int);
 extern void (*fz_duff_1i1o1)(unsigned char*restrict,int,unsigned char*restrict,int,unsigned char*restrict,int,int,int);
@@ -1142,13 +1154,6 @@ extern void (*fz_img_4o4)(unsigned char*restrict,unsigned char,int,unsigned char
 extern void (*fz_img_2o2)(unsigned char*restrict,unsigned char,int,unsigned char*restrict,fz_pixmap*,int u, int v, int fa, int fb);
 extern void (*fz_img_w2i1o2)(unsigned char*,unsigned char*restrict,unsigned char,int,unsigned char*restrict,fz_pixmap*,int u, int v, int fa, int fb);
 extern void (*fz_img_w4i1o4)(unsigned char*,unsigned char*restrict,unsigned char,int,unsigned char*restrict,fz_pixmap*,int u, int v, int fa, int fb);
-
-extern void (*fz_decodetile)(fz_pixmap *pix, int skip, float *decode);
-extern void (*fz_loadtile1)(unsigned char*restrict, int sw, unsigned char*restrict, int dw, int w, int h, int pad);
-extern void (*fz_loadtile2)(unsigned char*restrict, int sw, unsigned char*restrict, int dw, int w, int h, int pad);
-extern void (*fz_loadtile4)(unsigned char*restrict, int sw, unsigned char*restrict, int dw, int w, int h, int pad);
-extern void (*fz_loadtile8)(unsigned char*restrict, int sw, unsigned char*restrict, int dw, int w, int h, int pad);
-extern void (*fz_loadtile16)(unsigned char*restrict, int sw, unsigned char*restrict, int dw, int w, int h, int pad);
 
 extern void (*fz_srown)(unsigned char *restrict, unsigned char *restrict, int w, int denom, int n);
 extern void (*fz_srow1)(unsigned char *restrict, unsigned char *restrict, int w, int denom);

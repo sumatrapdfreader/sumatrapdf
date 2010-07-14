@@ -30,6 +30,8 @@ fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, in
 	stmlen = 0;
 
 	error = pdf_lex(&tok, file, buf, cap, &len);
+	if (error)
+		return fz_rethrow(error, "cannot parse object");
 	if (tok == PDF_TODICT)
 	{
 		fz_obj *dict, *obj;

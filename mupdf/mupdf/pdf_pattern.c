@@ -62,6 +62,8 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 		return fz_rethrow(error, "cannot load pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
+	pdf_logrsrc("}\n");
+
 	*patp = pat;
 	return fz_okay;
 }

@@ -45,8 +45,6 @@ pdf_keepmaterial(pdf_material *mat)
 {
 	if (mat->cs)
 		fz_keepcolorspace(mat->cs);
-	if (mat->indexed)
-		fz_keepcolorspace(&mat->indexed->super);
 	if (mat->pattern)
 		pdf_keeppattern(mat->pattern);
 	if (mat->shade)
@@ -59,8 +57,6 @@ pdf_dropmaterial(pdf_material *mat)
 {
 	if (mat->cs)
 		fz_dropcolorspace(mat->cs);
-	if (mat->indexed)
-		fz_dropcolorspace(&mat->indexed->super);
 	if (mat->pattern)
 		pdf_droppattern(mat->pattern);
 	if (mat->shade)
@@ -324,7 +320,7 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 
 		else if (!strcmp(s, "BM"))
 		{
-			static const struct { const char *name; fz_blendkind mode; } bm[] = {
+			static const struct { const char *name; fz_blendmode mode; } bm[] = {
 				{ "Normal", FZ_BNORMAL },
 				{ "Multiply", FZ_BMULTIPLY },
 				{ "Screen", FZ_BSCREEN },
@@ -347,6 +343,7 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 				return fz_throw("malformed BM");
 
 			gstate->blendmode = FZ_BNORMAL;
+#if 1
 			for (k = 0; k < nelem(bm); k++) {
 				if (!strcmp(bm[k].name, n)) {
 					gstate->blendmode = bm[k].mode;
@@ -355,26 +352,21 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 					break;
 				}
 			}
-
-			/* The content stream ought to be blended properly,
-			but for now, just do over and hope for something
-			*/
-			// TODO: push, pop and blend buffers
+#endif
 		}
 
 		else if (!strcmp(s, "SMask"))
 		{
 			if (fz_isdict(val))
 			{
-				/* TODO: we should do something here, like inserting a mask node for the S key in val */
-				/* TODO: how to deal with the non-recursive nature of pdf soft masks? */
-				/*
 				fz_error error;
 				fz_obj *g;
 				fz_obj *subtype;
 				pdf_xobject *xobj;
 				pdf_image *img;
 
+				fz_warn("ignoring soft mask");
+#if 0
 				g = fz_dictgets(val, "G");
 				subtype = fz_dictgets(g, "Subtype");
 
@@ -391,7 +383,7 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 				if (error)
 				return fz_rethrow(error, "cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));
 				}
-				*/
+#endif
 			}
 		}
 
@@ -582,7 +574,7 @@ Lsetcolorspace:
 				if ((csi->dev->hints & FZ_IGNOREIMAGE) == 0)
 				{
 					pdf_image *img;
-					error = pdf_loadimage(&img, csi->xref, obj);
+					error = pdf_loadimage(&img, csi->xref, rdb, obj);
 					if (error)
 						return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(obj), fz_togen(obj));
 					pdf_showimage(csi, img);
@@ -752,15 +744,7 @@ Lsetcolor:
 			case PDF_MNONE:
 				return fz_throw("cannot set color in mask objects");
 
-			case PDF_MINDEXED:
-				if (csi->top < 1)
-					goto syntaxerror;
-				v[0] = fz_toreal(csi->stack[0]);
-				pdf_setcolor(csi, what, v);
-				break;
-
 			case PDF_MCOLOR:
-			case PDF_MLAB:
 				if (csi->top < mat->cs->n)
 					goto syntaxerror;
 				for (i = 0; i < csi->top; i++)
@@ -795,8 +779,6 @@ Lsetcolor:
 
 				else if (fz_toint(patterntype) == 2)
 				{
-					if ((csi->dev->hints & FZ_IGNORESHADE) == 0)
-					{
 						fz_shade *shd;
 						error = pdf_loadshading(&shd, csi->xref, obj);
 						if (error)
@@ -804,7 +786,6 @@ Lsetcolor:
 						pdf_setshade(csi, what, shd);
 						fz_dropshade(shd);
 					}
-				}
 
 				else
 				{

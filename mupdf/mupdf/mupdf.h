@@ -209,23 +209,11 @@ pdf_function *pdf_keepfunction(pdf_function *func);
 void pdf_dropfunction(pdf_function *func);
 
 /*
- * ColorSpace
+ * Colorspace
  */
 
-typedef struct pdf_indexed_s pdf_indexed;
-
-struct pdf_indexed_s
-{
-	fz_colorspace super;	/* hmmm... */
-	fz_colorspace *base;
-	int high;
-	unsigned char *lookup;
-};
-
-void pdf_convcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv);
-void pdf_convpixmap(fz_colorspace *ss, fz_pixmap *sp, fz_colorspace *ds, fz_pixmap *dp);
-
 fz_error pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj);
+fz_pixmap *pdf_expandindexedpixmap(fz_pixmap *src);
 
 /*
  * Pattern
@@ -286,21 +274,22 @@ typedef struct pdf_image_s pdf_image;
 struct pdf_image_s
 {
 	int refs;
-	int w, h, n, a;
-	fz_colorspace *cs;
-	pdf_image *mask;			/* explicit mask with subimage */
-	int usecolorkey;		/* explicit color-keyed masking */
+	int w, h, bpc, n;
+	int imagemask;
+	int interpolate;
+	fz_colorspace *colorspace;
+	int indexed;
+	pdf_image *mask; /* explicit mask/softmask image */
+	int usecolorkey; /* color-keyed masking */
 	int colorkey[FZ_MAXCOLORS * 2];
-	pdf_indexed *indexed;
-	float decode[32];
-	int bpc;
+	float decode[FZ_MAXCOLORS * 2 + 2];
 	int stride;
 	fz_buffer *samples;
 };
 
 fz_error pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
-fz_error pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *obj);
-fz_error pdf_loadtile(pdf_image *image, fz_pixmap *tile);
+fz_error pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
+fz_pixmap *pdf_loadtile(pdf_image *image);
 pdf_image *pdf_keepimage(pdf_image *img);
 void pdf_dropimage(pdf_image *img);
 
@@ -546,6 +535,7 @@ struct pdf_page_s
 fz_error pdf_loadpagetree(pdf_xref *xref);
 int pdf_getpagecount(pdf_xref *xref);
 fz_obj * pdf_getpageobject(pdf_xref *xref, int p);
+fz_obj * pdf_getpageref(pdf_xref *xref, int p);
 int pdf_findpageobject(pdf_xref *xref, fz_obj *pageobj);
 
 /* page.c */
@@ -570,8 +560,6 @@ enum
 {
 	PDF_MNONE,
 	PDF_MCOLOR,
-	PDF_MLAB,
-	PDF_MINDEXED,
 	PDF_MPATTERN,
 	PDF_MSHADE,
 };
@@ -580,7 +568,6 @@ struct pdf_material_s
 {
 	int kind;
 	fz_colorspace *cs;
-	pdf_indexed *indexed;
 	pdf_pattern *pattern;
 	fz_shade *shade;
 	float parentalpha;
@@ -599,7 +586,7 @@ struct pdf_gstate_s
 	/* materials */
 	pdf_material stroke;
 	pdf_material fill;
-	fz_blendkind blendmode;
+	fz_blendmode blendmode;
 
 	/* text state */
 	float charspace;

@@ -53,6 +53,24 @@ fz_dropbuffer(fz_buffer *buf)
 }
 
 void
+fz_resizebuffer(fz_buffer *buf, int size)
+{
+	int rp = MIN(buf->rp - buf->bp, size);
+	int wp = MIN(buf->wp - buf->bp, size);
+
+	if (!buf->ownsdata)
+	{
+		fz_warn("assert: resize borrowed memory");
+		return;
+	}
+
+	buf->bp = fz_realloc(buf->bp, size);
+	buf->rp = buf->bp + rp;
+	buf->wp = buf->bp + wp;
+	buf->ep = buf->bp + size;
+}
+
+void
 fz_growbuffer(fz_buffer *buf)
 {
 	int rp = buf->rp - buf->bp;

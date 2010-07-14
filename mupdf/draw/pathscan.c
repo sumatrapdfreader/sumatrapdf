@@ -1,7 +1,7 @@
 #include "fitz.h"
 
-#define BBOX_MIN INT_MIN
-#define BBOX_MAX INT_MAX
+#define BBOX_MIN -(1<<20)
+#define BBOX_MAX (1<<20)
 
 /* divide and floor towards -inf */
 static inline int fz_idiv(int a, int b)
@@ -70,6 +70,8 @@ fz_bbox
 fz_boundgel(fz_gel *gel)
 {
 	fz_bbox bbox;
+	if (gel->len == 0)
+		return fz_emptybbox;
 	bbox.x0 = fz_idiv(gel->bbox.x0, HSCALE);
 	bbox.y0 = fz_idiv(gel->bbox.y0, VSCALE);
 	bbox.x1 = fz_idiv(gel->bbox.x1, HSCALE) + 1;
@@ -106,31 +108,14 @@ cliplerpx(int val, int m, int x0, int y0, int x1, int y1, int *out)
 	}
 }
 
-void
-fz_insertgel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
+static void
+fz_insertgelraw(fz_gel *gel, int x0, int y0, int x1, int y1)
 {
 	fz_edge *edge;
 	int dx, dy;
 	int winding;
 	int width;
 	int tmp;
-	int v;
-	int d;
-
-	int x0 = floorf(fx0 * HSCALE);
-	int y0 = floorf(fy0 * VSCALE);
-	int x1 = floorf(fx1 * HSCALE);
-	int y1 = floorf(fy1 * VSCALE);
-
-	d = cliplerpy(gel->clip.y0, 0, x0, y0, x1, y1, &v);
-	if (d == OUTSIDE) return;
-	if (d == LEAVE) { y1 = gel->clip.y0; x1 = v; }
-	if (d == ENTER) { y0 = gel->clip.y0; x0 = v; }
-
-	d = cliplerpy(gel->clip.y1, 1, x0, y0, x1, y1, &v);
-	if (d == OUTSIDE) return;
-	if (d == LEAVE) { y1 = gel->clip.y1; x1 = v; }
-	if (d == ENTER) { y0 = gel->clip.y1; x0 = v; }
 
 	if (y0 == y1)
 		return;
@@ -186,6 +171,65 @@ fz_insertgel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 		edge->xmove = (width / dy) * edge->xdir;
 		edge->adjup = width % dy;
 	}
+}
+
+void
+fz_insertgel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
+{
+	int x0, y0, x1, y1;
+	int d, v;
+
+	fx0 = floorf(fx0 * HSCALE);
+	fx1 = floorf(fx1 * HSCALE);
+	fy0 = floorf(fy0 * VSCALE);
+	fy1 = floorf(fy1 * VSCALE);
+
+	x0 = CLAMP(fx0, BBOX_MIN, BBOX_MAX);
+	y0 = CLAMP(fy0, BBOX_MIN, BBOX_MAX);
+	x1 = CLAMP(fx1, BBOX_MIN, BBOX_MAX);
+	y1 = CLAMP(fy1, BBOX_MIN, BBOX_MAX);
+
+	d = cliplerpy(gel->clip.y0, 0, x0, y0, x1, y1, &v);
+	if (d == OUTSIDE) return;
+	if (d == LEAVE) { y1 = gel->clip.y0; x1 = v; }
+	if (d == ENTER) { y0 = gel->clip.y0; x0 = v; }
+
+	d = cliplerpy(gel->clip.y1, 1, x0, y0, x1, y1, &v);
+	if (d == OUTSIDE) return;
+	if (d == LEAVE) { y1 = gel->clip.y1; x1 = v; }
+	if (d == ENTER) { y0 = gel->clip.y1; x0 = v; }
+
+	d = cliplerpx(gel->clip.x0, 0, x0, y0, x1, y1, &v);
+	if (d == OUTSIDE) {
+		x0 = x1 = gel->clip.x0;
+	}
+	if (d == LEAVE) {
+		fz_insertgelraw(gel, gel->clip.x0, v, gel->clip.x0, y1);
+		x1 = gel->clip.x0;
+		y1 = v;
+	}
+	if (d == ENTER) {
+		fz_insertgelraw(gel, gel->clip.x0, y0, gel->clip.x0, v);
+		x0 = gel->clip.x0;
+		y0 = v;
+	}
+
+	d = cliplerpx(gel->clip.x1, 1, x0, y0, x1, y1, &v);
+	if (d == OUTSIDE) {
+		x0 = x1 = gel->clip.x1;
+	}
+	if (d == LEAVE) {
+		fz_insertgelraw(gel, gel->clip.x1, v, gel->clip.x1, y1);
+		x1 = gel->clip.x1;
+		y1 = v;
+	}
+	if (d == ENTER) {
+		fz_insertgelraw(gel, gel->clip.x1, y0, gel->clip.x1, v);
+		x0 = gel->clip.x1;
+		y0 = v;
+	}
+
+	fz_insertgelraw(gel, x0, y0, x1, y1);
 }
 
 void
@@ -528,11 +572,11 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 	int skipx = clip.x0 - xmin;
 	int clipn = clip.x1 - clip.x0;
 
-	assert(clip.x0 >= xmin);
-	assert(clip.x1 <= xmax);
-
 	if (gel->len == 0)
 		return fz_okay;
+
+	assert(clip.x0 >= xmin);
+	assert(clip.x1 <= xmax);
 
 	deltas = fz_malloc(xmax - xmin + 1);
 	memset(deltas, 0, xmax - xmin + 1);

@@ -87,7 +87,7 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 	if (!alpha)
 		goto cleanup;
 
-	fprintf(stderr, "saving debug pixmap %s - %d\n", prefix, counter);
+	fprintf(stderr, "saving debug pixmap %s-%04d (%s)\n", prefix, counter, pix->colorspace->name);
 
 	if (pix->n > 1)
 	{
@@ -112,11 +112,11 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 		{
 			for (x = 0; x < pix->w; x++)
 			{
-				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
-				int cc = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
-				int mm = pix->samples[x * pix->n + y * pix->w * pix->n + 2];
-				int yy = pix->samples[x * pix->n + y * pix->w * pix->n + 3];
-				int kk = pix->samples[x * pix->n + y * pix->w * pix->n + 4];
+				int cc = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
+				int mm = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
+				int yy = pix->samples[x * pix->n + y * pix->w * pix->n + 2];
+				int kk = pix->samples[x * pix->n + y * pix->w * pix->n + 3];
+				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 4];
 				int r = 255 - MIN(cc + kk, 255);
 				int g = 255 - MIN(mm + kk, 255);
 				int b = 255 - MIN(yy + kk, 255);
@@ -137,10 +137,10 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 		{
 			for (x = 0; x < pix->w; x++)
 			{
-				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
-				int r = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
-				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 2];
-				int b = pix->samples[x * pix->n + y * pix->w * pix->n + 3];
+				int r = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
+				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
+				int b = pix->samples[x * pix->n + y * pix->w * pix->n + 2];
+				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 3];
 				fputc(a, alpha);
 				fputc(r, color);
 				fputc(g, color);
@@ -158,8 +158,8 @@ fz_debugpixmap(fz_pixmap *pix, char *prefix)
 		{
 			for (x = 0; x < pix->w; x++)
 			{
-				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
-				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
+				int g = pix->samples[x * pix->n + y * pix->w * pix->n + 0];
+				int a = pix->samples[x * pix->n + y * pix->w * pix->n + 1];
 				fputc(a, alpha);
 				fputc(g, color);
 			}

@@ -3,37 +3,44 @@
 OS := $(shell uname)
 OS := $(OS:MINGW%=MINGW)
 
-CFLAGS := -Wall -Ifitz -Imupdf
+CFLAGS := -Ifitz -Imupdf -Wall
 LDFLAGS :=
 CC := cc
 LD := $(CC)
 AR := ar
 
 ifeq "$(build)" "debug"
-CFLAGS += -g -O0
+CFLAGS += -pipe -g
 endif
 
 ifeq "$(build)" "release"
-CFLAGS += -O3 -DNDEBUG
+CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
+endif
+
+ifeq "$(build)" "native"
+CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -march=native -mfpmath=sse
 endif
 
 ifeq "$(OS)" "Linux"
 SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
 SYS_FREETYPE_LIB := `pkg-config --libs freetype2`
-
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
+endif
 
+ifeq "$(OS)" "FreeBSD"
+SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
+SYS_FREETYPE_LIB := `pkg-config --libs freetype2`
+X11LIBS := -lX11 -lXext
+PDFVIEW_EXE = $(X11VIEW_EXE)
 endif
 
 ifeq "$(OS)" "Darwin"
 SYS_FREETYPE_INC := -I/usr/X11R6/include/freetype2
 CFLAGS += -I/usr/X11R6/include
 LDFLAGS += -L/usr/X11R6/lib
-
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
-
 ifeq "$(arch)" "amd64"
 CFLAGS += -m64
 LDFLAGS += -m64
@@ -41,7 +48,6 @@ else
 CFLAGS += -m32
 LDFLAGS += -m32
 endif
-
 endif
 
 # MinGW build depends on thirdparty

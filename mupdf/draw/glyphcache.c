@@ -64,6 +64,14 @@ fz_freeglyphcache(fz_glyphcache *cache)
 }
 
 fz_pixmap *
+fz_renderstrokedglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix trm, fz_matrix ctm, fz_strokestate *stroke)
+{
+	if (font->ftface)
+		return fz_renderftstrokedglyph(font, cid, trm, ctm, stroke);
+	return fz_renderglyph(cache, font, cid, trm);
+}
+
+fz_pixmap *
 fz_renderglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix ctm)
 {
 	fz_glyphkey key;

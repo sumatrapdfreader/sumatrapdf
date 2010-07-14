@@ -504,7 +504,7 @@ skip:
 			if (c != '\n')
 				fz_warn("line feed missing after stream begin marker (%d %d R)", num, gen);
 			else
-				c = fz_readbyte(file);
+				fz_readbyte(file);
 		}
 		error = fz_readerror(file);
 		if (error)

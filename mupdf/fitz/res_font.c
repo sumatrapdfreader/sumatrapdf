@@ -2,6 +2,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_STROKER_H
 
 static void fz_finalizefreetype(void);
 
@@ -298,12 +299,18 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 	{
 		fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
 		if (fterr)
+		{
 			fz_warn("freetype load glyph (gid %d): %s", gid, ft_errorstring(fterr));
+			return nil;
+		}
 	}
 
 	fterr = FT_Render_Glyph(face->glyph, ft_render_mode_normal);
 	if (fterr)
+	{
 		fz_warn("freetype render glyph (gid %d): %s", gid, ft_errorstring(fterr));
+		return nil;
+	}
 
 	glyph = fz_newpixmap(NULL,
 		face->glyph->bitmap_left,
@@ -319,6 +326,99 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 	}
 
 	return glyph;
+}
+
+fz_pixmap *
+fz_renderftstrokedglyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_strokestate *state)
+{
+	FT_Face face = font->ftface;
+	float expansion = fz_matrixexpansion(ctm);
+	int linewidth = state->linewidth * expansion * 64 / 2;
+	FT_Matrix m;
+	FT_Vector v;
+	FT_Error fterr;
+	FT_Stroker stroker;
+	FT_Glyph glyph;
+	FT_BitmapGlyph bitmap;
+	fz_pixmap *pix;
+	int y;
+
+	m.xx = trm.a * 64; /* should be 65536 */
+	m.yx = trm.b * 64;
+	m.xy = trm.c * 64;
+	m.yy = trm.d * 64;
+	v.x = trm.e * 64;
+	v.y = trm.f * 64;
+
+	fterr = FT_Set_Char_Size(face, 65536, 65536, 72, 72); /* should be 64, 64 */
+	if (fterr)
+	{
+		fz_warn("FT_Set_Char_Size: %s", ft_errorstring(fterr));
+		return nil;
+	}
+
+	FT_Set_Transform(face, &m, &v);
+
+	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+	if (fterr)
+	{
+		fz_warn("FT_Load_Glyph(gid %d): %s", gid, ft_errorstring(fterr));
+		return nil;
+	}
+
+	fterr = FT_Stroker_New(fz_ftlib, &stroker);
+	if (fterr)
+	{
+		fz_warn("FT_Stroker_New: %s", ft_errorstring(fterr));
+		return nil;
+	}
+
+	FT_Stroker_Set(stroker, linewidth, state->linecap, state->linejoin, state->miterlimit * 65536);
+
+	fterr = FT_Get_Glyph(face->glyph, &glyph);
+	if (fterr)
+	{
+		fz_warn("FT_Get_Glyph: %s", ft_errorstring(fterr));
+		FT_Stroker_Done(stroker);
+		return nil;
+	}
+
+	fterr = FT_Glyph_Stroke(&glyph, stroker, 1);
+	if (fterr)
+	{
+		fz_warn("FT_Glyph_Stroke: %s", ft_errorstring(fterr));
+		FT_Done_Glyph(glyph);
+		FT_Stroker_Done(stroker);
+		return nil;
+	}
+
+	fterr = FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
+	if (fterr)
+	{
+		fz_warn("FT_Glyph_To_Bitmap: %s", ft_errorstring(fterr));
+		FT_Done_Glyph(glyph);
+		FT_Stroker_Done(stroker);
+		return nil;
+	}
+
+	bitmap = (FT_BitmapGlyph)glyph;
+	pix = fz_newpixmap(NULL,
+		bitmap->left,
+		bitmap->top - bitmap->bitmap.rows,
+		bitmap->bitmap.width,
+		bitmap->bitmap.rows);
+
+	for (y = 0; y < pix->h; y++)
+	{
+		memcpy(pix->samples + y * pix->w,
+			bitmap->bitmap.buffer + (pix->h - y - 1) * bitmap->bitmap.pitch,
+			pix->w);
+	}
+
+	FT_Done_Glyph(glyph);
+	FT_Stroker_Done(stroker);
+
+	return pix;
 }
 
 /*

@@ -20,7 +20,6 @@ pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->stroke.kind = PDF_MCOLOR;
 	gs->stroke.cs = fz_keepcolorspace(pdf_devicegray);
 	gs->stroke.v[0] = 0;
-	gs->stroke.indexed = nil;
 	gs->stroke.pattern = nil;
 	gs->stroke.shade = nil;
 	gs->stroke.parentalpha = 1;
@@ -29,7 +28,6 @@ pdf_initgstate(pdf_gstate *gs, fz_matrix ctm)
 	gs->fill.kind = PDF_MCOLOR;
 	gs->fill.cs = fz_keepcolorspace(pdf_devicegray);
 	gs->fill.v[0] = 0;
-	gs->fill.indexed = nil;
 	gs->fill.pattern = nil;
 	gs->fill.shade = nil;
 	gs->fill.parentalpha = 1;
@@ -62,29 +60,18 @@ pdf_setcolorspace(pdf_csi *csi, int what, fz_colorspace *cs)
 	mat->kind = PDF_MCOLOR;
 	mat->cs = fz_keepcolorspace(cs);
 
-	mat->v[0] = 0;	/* FIXME: default color */
-	mat->v[1] = 0;	/* FIXME: default color */
-	mat->v[2] = 0;	/* FIXME: default color */
-	mat->v[3] = 1;	/* FIXME: default color */
-
-	if (!strcmp(cs->name, "Indexed"))
-	{
-		mat->kind = PDF_MINDEXED;
-		mat->indexed = (pdf_indexed*)cs;
-		mat->cs = mat->indexed->base;
-	}
-
-	if (!strcmp(cs->name, "Lab"))
-		mat->kind = PDF_MLAB;
+	mat->v[0] = 0;
+	mat->v[1] = 0;
+	mat->v[2] = 0;
+	mat->v[3] = 1;
 }
 
 void
 pdf_setcolor(pdf_csi *csi, int what, float *v)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
-	pdf_indexed *ind;
 	pdf_material *mat;
-	int i, k;
+	int i;
 
 	pdf_flushtext(csi);
 
@@ -93,32 +80,16 @@ pdf_setcolor(pdf_csi *csi, int what, float *v)
 	switch (mat->kind)
 	{
 	case PDF_MPATTERN:
-		if (!strcmp(mat->cs->name, "Lab"))
-			goto Llab;
-		if (!strcmp(mat->cs->name, "Indexed"))
-			goto Lindexed;
-		/* fall through */
-
 	case PDF_MCOLOR:
-		for (i = 0; i < mat->cs->n; i++)
-			mat->v[i] = v[i];
-		break;
-
-	case PDF_MLAB:
-Llab:
+		if (!strcmp(mat->cs->name, "Lab"))
+		{
 		mat->v[0] = v[0] / 100;
 		mat->v[1] = (v[1] + 100) / 200;
 		mat->v[2] = (v[2] + 100) / 200;
+		}
+		for (i = 0; i < mat->cs->n; i++)
+			mat->v[i] = v[i];
 		break;
-
-	case PDF_MINDEXED:
-Lindexed:
-		ind = mat->indexed;
-		i = CLAMP(v[0], 0, ind->high);
-		for (k = 0; k < ind->base->n; k++)
-			mat->v[k] = ind->lookup[ind->base->n * i + k] / 255.0f;
-		break;
-
 	default:
 		fz_warn("color incompatible with material");
 	}
@@ -135,11 +106,6 @@ pdf_unsetpattern(pdf_csi *csi, int what)
 		if (mat->pattern)
 			pdf_droppattern(mat->pattern);
 		mat->pattern = nil;
-		if (!strcmp(mat->cs->name, "Lab"))
-			mat->kind = PDF_MLAB;
-		else if (!strcmp(mat->cs->name, "Indexed"))
-			mat->kind = PDF_MINDEXED;
-		else
 			mat->kind = PDF_MCOLOR;
 	}
 }
@@ -193,9 +159,6 @@ pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 	fz_error error;
 	int x, y, x0, y0, x1, y1;
 	int oldtop;
-
-	if (!pat && (csi->dev->hints & FZ_IGNOREIMAGE))
-		return;
 
 	pdf_gsave(csi);
 	gstate = csi->gstate + csi->gtop;
@@ -260,36 +223,41 @@ void
 pdf_showshade(pdf_csi *csi, fz_shade *shd)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+
+	if (gstate->blendmode != FZ_BNORMAL)
+	{
+		fz_rect bbox = fz_boundshade(shd, gstate->ctm);
+		csi->dev->begingroup(csi->dev->user, bbox, nil, 0, 0, gstate->blendmode);
+	}
+
 	csi->dev->fillshade(csi->dev->user, shd, gstate->ctm);
+
+	if (gstate->blendmode != FZ_BNORMAL)
+		csi->dev->endgroup(csi->dev->user);
 }
 
 void
 pdf_showimage(pdf_csi *csi, pdf_image *image)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	fz_pixmap *tile;
-	fz_error error;
-
-	tile = fz_newpixmap(image->cs, 0, 0, image->w, image->h);
-	error = pdf_loadtile(image, tile);
-	if (error)
-	{
-		fz_droppixmap(tile);
-		fz_catch(error, "cannot load image data");
-		return;
-	}
+	fz_pixmap *tile, *mask;
 
 	if (image->mask)
 	{
-		fz_pixmap *mask = fz_newpixmap(NULL, 0, 0, image->mask->w, image->mask->h);
-		error = pdf_loadtile(image->mask, mask);
-		if (error)
-			fz_catch(error, "cannot load image mask data");
+		mask = pdf_loadtile(image->mask);
 		csi->dev->clipimagemask(csi->dev->user, mask, gstate->ctm);
 		fz_droppixmap(mask);
 	}
 
-	if (image->n == 0 && image->a == 1)
+	if (gstate->blendmode != FZ_BNORMAL)
+	{
+		fz_rect bbox = fz_transformrect(gstate->ctm, fz_unitrect);
+		csi->dev->begingroup(csi->dev->user, bbox, nil, 0, 0, gstate->blendmode);
+	}
+
+	tile = pdf_loadtile(image);
+
+	if (image->imagemask)
 	{
 		fz_rect bbox;
 
@@ -298,25 +266,25 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 		case PDF_MNONE:
 			break;
 		case PDF_MCOLOR:
-		case PDF_MINDEXED:
-		case PDF_MLAB:
 			csi->dev->fillimagemask(csi->dev->user, tile, gstate->ctm,
 				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
 			break;
 		case PDF_MPATTERN:
-			bbox.x0 = 0;
-			bbox.y0 = 0;
-			bbox.x1 = 1;
-			bbox.y1 = 1;
-			bbox = fz_transformrect(gstate->ctm, bbox);
+			if (gstate->fill.pattern)
+			{
+				bbox = fz_transformrect(gstate->ctm, fz_unitrect);
 			csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
 			pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		case PDF_MSHADE:
+			if (gstate->fill.shade)
+			{
 			csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
 			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		}
 	}
@@ -324,6 +292,9 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 	{
 		csi->dev->fillimage(csi->dev->user, tile, gstate->ctm);
 	}
+
+	if (gstate->blendmode != FZ_BNORMAL)
+		csi->dev->endgroup(csi->dev->user);
 
 	if (image->mask)
 		csi->dev->popclip(csi->dev->user);
@@ -351,6 +322,16 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		csi->clip = 0;
 	}
 
+	if (gstate->blendmode != FZ_BNORMAL)
+	{
+		fz_rect bbox;
+		if (dostroke)
+			bbox = fz_boundpath(path, &gstate->strokestate, gstate->ctm);
+		else
+			bbox = fz_boundpath(path, nil, gstate->ctm);
+		csi->dev->begingroup(csi->dev->user, bbox, nil, 0, 0, gstate->blendmode);
+	}
+
 	if (dofill)
 	{
 		switch (gstate->fill.kind)
@@ -358,21 +339,25 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		case PDF_MNONE:
 			break;
 		case PDF_MCOLOR:
-		case PDF_MINDEXED:
-		case PDF_MLAB:
 			csi->dev->fillpath(csi->dev->user, path, evenodd, gstate->ctm,
 				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
 			break;
 		case PDF_MPATTERN:
+			if (gstate->fill.pattern)
+			{
 			bbox = fz_boundpath(path, nil, gstate->ctm);
 			csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
 			pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		case PDF_MSHADE:
+			if (gstate->fill.shade)
+			{
 			csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
 			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		}
 	}
@@ -384,24 +369,31 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		case PDF_MNONE:
 			break;
 		case PDF_MCOLOR:
-		case PDF_MINDEXED:
-		case PDF_MLAB:
 			csi->dev->strokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm,
 				gstate->stroke.cs, gstate->stroke.v, gstate->stroke.alpha);
 			break;
 		case PDF_MPATTERN:
+			if (gstate->stroke.pattern)
+			{
 			bbox = fz_boundpath(path, &gstate->strokestate, gstate->ctm);
 			csi->dev->clipstrokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm);
 			pdf_showpattern(csi, gstate->stroke.pattern, bbox, PDF_MFILL);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		case PDF_MSHADE:
+			if (gstate->stroke.shade)
+			{
 			csi->dev->clipstrokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm);
 			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		}
 	}
+
+	if (gstate->blendmode != FZ_BNORMAL)
+		csi->dev->endgroup(csi->dev->user);
 
 	fz_freepath(path);
 }
@@ -469,6 +461,12 @@ pdf_flushtext(pdf_csi *csi)
 		csi->accumulate = 2;
 	}
 
+	if (gstate->blendmode != FZ_BNORMAL)
+	{
+		fz_rect bbox = fz_boundtext(text, gstate->ctm);
+		csi->dev->begingroup(csi->dev->user, bbox, nil, 0, 0, gstate->blendmode);
+	}
+
 	if (dofill)
 	{
 		switch (gstate->fill.kind)
@@ -476,21 +474,25 @@ pdf_flushtext(pdf_csi *csi)
 		case PDF_MNONE:
 			break;
 		case PDF_MCOLOR:
-		case PDF_MINDEXED:
-		case PDF_MLAB:
 			csi->dev->filltext(csi->dev->user, text, gstate->ctm,
 				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
 			break;
 		case PDF_MPATTERN:
+			if (gstate->fill.pattern)
+			{
 			bbox = fz_boundtext(text, gstate->ctm);
 			csi->dev->cliptext(csi->dev->user, text, gstate->ctm, 0);
 			pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		case PDF_MSHADE:
+			if (gstate->fill.shade)
+			{
 			csi->dev->cliptext(csi->dev->user, text, gstate->ctm, 0);
 			csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		}
 	}
@@ -502,24 +504,31 @@ pdf_flushtext(pdf_csi *csi)
 		case PDF_MNONE:
 			break;
 		case PDF_MCOLOR:
-		case PDF_MINDEXED:
-		case PDF_MLAB:
 			csi->dev->stroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm,
 				gstate->stroke.cs, gstate->stroke.v, gstate->stroke.alpha);
 			break;
 		case PDF_MPATTERN:
+			if (gstate->stroke.pattern)
+			{
 			bbox = fz_boundtext(text, gstate->ctm);
 			csi->dev->clipstroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm);
 			pdf_showpattern(csi, gstate->stroke.pattern, bbox, PDF_MFILL);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		case PDF_MSHADE:
+			if (gstate->stroke.shade)
+			{
 			csi->dev->clipstroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm);
 			csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm);
 			csi->dev->popclip(csi->dev->user);
+			}
 			break;
 		}
 	}
+
+	if (gstate->blendmode != FZ_BNORMAL)
+		csi->dev->endgroup(csi->dev->user);
 
 	fz_freetext(text);
 }

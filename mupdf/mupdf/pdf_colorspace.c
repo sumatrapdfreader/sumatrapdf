@@ -1,807 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-#define noUSECAL
-
-static void initcs(fz_colorspace *cs, char *name, int n,
-	void(*to)(fz_colorspace*,float*,float*),
-	void(*from)(fz_colorspace*,float*,float*),
-	void(*freefunc)(fz_colorspace*))
-{
-	fz_strlcpy(cs->name, name, sizeof cs->name);
-	cs->refs = 1;
-	cs->convpixmap = pdf_convpixmap;
-	cs->convcolor = pdf_convcolor;
-	cs->toxyz = to;
-	cs->fromxyz = from;
-	cs->freefunc = freefunc;
-	cs->n = n;
-}
-
-/*
- * Optimized color conversions for Device colorspaces
- */
-
-static void fastgraytorgb(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = s[0];
-		d[1] = s[0];
-		d[2] = s[0];
-		d[3] = s[1];
-		s += 2;
-		d += 4;
-	}
-}
-
-static void fastgraytocmyk(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = 0;
-		d[1] = 0;
-		d[2] = 0;
-		d[3] = s[0];
-		d[4] = s[1];
-		s += 2;
-		d += 5;
-	}
-}
-
-static void fastrgbtogray(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = ((s[0]+1) * 77 + (s[1]+1) * 150 + (s[2]+1) * 28) >> 8;
-		d[1] = s[3];
-		s += 4;
-		d += 2;
-	}
-}
-
-static void fastbgrtogray(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = ((s[0]+1) * 28 + (s[1]+1) * 150 + (s[2]+1) * 77) >> 8;
-		d[1] = s[3];
-		s += 4;
-		d += 2;
-	}
-}
-
-static void fastrgbtocmyk(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		unsigned char c = 255 - s[0];
-		unsigned char m = 255 - s[1];
-		unsigned char y = 255 - s[2];
-		unsigned char k = MIN(c, MIN(m, y));
-		d[0] = c - k;
-		d[1] = m - k;
-		d[2] = y - k;
-		d[3] = k;
-		d[4] = s[3];
-		s += 4;
-		d += 5;
-	}
-}
-
-static void fastbgrtocmyk(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		unsigned char c = 255 - s[2];
-		unsigned char m = 255 - s[1];
-		unsigned char y = 255 - s[0];
-		unsigned char k = MIN(c, MIN(m, y));
-		d[0] = c - k;
-		d[1] = m - k;
-		d[2] = y - k;
-		d[3] = k;
-		d[4] = s[3];
-		s += 4;
-		d += 5;
-	}
-}
-
-static void fastcmyktogray(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		unsigned char c = fz_mul255(s[0], 77);
-		unsigned char m = fz_mul255(s[1], 150);
-		unsigned char y = fz_mul255(s[2], 28);
-		d[0] = 255 - MIN(c + m + y + s[3], 255);
-		d[1] = s[4];
-		s += 5;
-		d += 2;
-	}
-}
-
-static void fastcmyktorgb(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = 255 - MIN(s[0] + s[3], 255);
-		d[1] = 255 - MIN(s[1] + s[3], 255);
-		d[2] = 255 - MIN(s[2] + s[3], 255);
-		d[3] = s[4];
-		s += 5;
-		d += 4;
-	}
-}
-
-static void fastcmyktobgr(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = 255 - MIN(s[2] + s[3], 255);
-		d[1] = 255 - MIN(s[1] + s[3], 255);
-		d[2] = 255 - MIN(s[0] + s[3], 255);
-		d[3] = s[4];
-		s += 5;
-		d += 4;
-	}
-}
-
-static void fastrgbtobgr(fz_pixmap *src, fz_pixmap *dst)
-{
-	unsigned char *s = src->samples;
-	unsigned char *d = dst->samples;
-	int n = src->w * src->h;
-	while (n--)
-	{
-		d[0] = s[2];
-		d[1] = s[1];
-		d[2] = s[0];
-		d[3] = s[3];
-		s += 4;
-		d += 4;
-	}
-}
-
-void pdf_convpixmap(fz_colorspace *ss, fz_pixmap *sp, fz_colorspace *ds, fz_pixmap *dp)
-{
-	pdf_logimage("convert pixmap from %s to %s\n", ss->name, ds->name);
-
-	if (ss == pdf_devicegray)
-	{
-		if (ds == pdf_devicergb) fastgraytorgb(sp, dp);
-		else if (ds == pdf_devicebgr) fastgraytorgb(sp, dp); /* bgr == rgb here */
-		else if (ds == pdf_devicecmyk) fastgraytocmyk(sp, dp);
-		else fz_stdconvpixmap(ss, sp, ds, dp);
-	}
-
-	else if (ss == pdf_devicergb)
-	{
-		if (ds == pdf_devicegray) fastrgbtogray(sp, dp);
-		else if (ds == pdf_devicebgr) fastrgbtobgr(sp, dp);
-		else if (ds == pdf_devicecmyk) fastrgbtocmyk(sp, dp);
-		else fz_stdconvpixmap(ss, sp, ds, dp);
-
-	}
-
-	else if (ss == pdf_devicebgr)
-	{
-		if (ds == pdf_devicegray) fastbgrtogray(sp, dp);
-		else if (ds == pdf_devicergb) fastrgbtobgr(sp, dp); /* bgr = rgb here */
-		else if (ds == pdf_devicecmyk) fastbgrtocmyk(sp, dp);
-		else fz_stdconvpixmap(ss, sp, ds, dp);
-
-	}
-
-	else if (ss == pdf_devicecmyk)
-	{
-		if (ds == pdf_devicegray) fastcmyktogray(sp, dp);
-		else if (ds == pdf_devicebgr) fastcmyktobgr(sp, dp);
-		else if (ds == pdf_devicergb) fastcmyktorgb(sp, dp);
-		else fz_stdconvpixmap(ss, sp, ds, dp);
-	}
-
-	else fz_stdconvpixmap(ss, sp, ds, dp);
-}
-
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=756 */
-/* function adapted from Poppler's GfxState_helpers.h
-   Poppler is licensed under GPL, see http://poppler.freedesktop.org/ */
-static inline void cmykToRGBMatrixMultiplication(float *sv, float *dv)
-{
-	float c = sv[0], m = sv[1], y = sv[2], k = sv[3];
-	float c1 = 1 - c, m1 = 1 - m, y1 = 1 - y, k1 = 1 - k;
-	float r, g, b, x;
-
-	// this is a matrix multiplication, unrolled for performance
-	//                        C M Y K
-	x = c1 * m1 * y1 * k1; // 0 0 0 0
-	r = g = b = x;
-	x = c1 * m1 * y1 * k;  // 0 0 0 1
-	r += 0.1373 * x;
-	g += 0.1216 * x;
-	b += 0.1255 * x;
-	x = c1 * m1 * y  * k1; // 0 0 1 0
-	r += x;
-	g += 0.9490 * x;
-	x = c1 * m1 * y  * k;  // 0 0 1 1
-	r += 0.1098 * x;
-	g += 0.1020 * x;
-	x = c1 * m  * y1 * k1; // 0 1 0 0
-	r += 0.9255 * x;
-	b += 0.5490 * x;
-	x = c1 * m  * y1 * k;  // 0 1 0 1
-	r += 0.1412 * x;
-	x = c1 * m  * y  * k1; // 0 1 1 0
-	r += 0.9294 * x;
-	g += 0.1098 * x;
-	b += 0.1412 * x;
-	x = c1 * m  * y  * k;  // 0 1 1 1
-	r += 0.1333 * x;
-	x = c  * m1 * y1 * k1; // 1 0 0 0
-	g += 0.6784 * x;
-	b += 0.9373 * x;
-	x = c  * m1 * y1 * k;  // 1 0 0 1
-	g += 0.0588 * x;
-	b += 0.1412 * x;
-	x = c  * m1 * y  * k1; // 1 0 1 0
-	g += 0.6510 * x;
-	b += 0.3137 * x;
-	x = c  * m1 * y  * k;  // 1 0 1 1
-	g += 0.0745 * x;
-	x = c  * m  * y1 * k1; // 1 1 0 0
-	r += 0.1804 * x;
-	g += 0.1922 * x;
-	b += 0.5725 * x;
-	x = c  * m  * y1 * k;  // 1 1 0 1
-	b += 0.0078 * x;
-	x = c  * m  * y  * k1; // 1 1 1 0
-	r += 0.2118 * x;
-	g += 0.2119 * x;
-	b += 0.2235 * x;
-
-	dv[0] = MIN(MAX(r, 0), 1);
-	dv[1] = MIN(MAX(g, 0), 1);
-	dv[2] = MIN(MAX(b, 0), 1);
-}
-
-void pdf_convcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
-{
-
-	if (ss == pdf_devicegray)
-	{
-		if ((ds == pdf_devicergb) || (ds == pdf_devicebgr))
-		{
-			dv[0] = sv[0];
-			dv[1] = sv[0];
-			dv[2] = sv[0];
-		}
-		else if (ds == pdf_devicecmyk)
-		{
-			dv[0] = 0;
-			dv[1] = 0;
-			dv[2] = 0;
-			dv[3] = sv[0];
-		}
-		else
-			fz_stdconvcolor(ss, sv, ds, dv);
-	}
-
-	else if (ss == pdf_devicergb)
-	{
-		if (ds == pdf_devicegray)
-		{
-			dv[0] = sv[0] * 0.3f + sv[1] * 0.59f + sv[2] * 0.11f;
-		}
-		else if (ds == pdf_devicebgr)
-		{
-			dv[0] = sv[2];
-			dv[1] = sv[1];
-			dv[2] = sv[0];
-		}
-		else if (ds == pdf_devicecmyk)
-		{
-			float c = 1 - sv[0];
-			float m = 1 - sv[1];
-			float y = 1 - sv[2];
-			float k = MIN(c, MIN(m, y));
-			dv[0] = c - k;
-			dv[1] = m - k;
-			dv[2] = y - k;
-			dv[3] = k;
-		}
-		else
-			fz_stdconvcolor(ss, sv, ds, dv);
-	}
-
-	else if (ss == pdf_devicebgr)
-	{
-		if (ds == pdf_devicegray)
-		{
-			dv[0] = sv[0] * 0.11f + sv[1] * 0.59f + sv[2] * 0.3f;
-		}
-		else if (ds == pdf_devicebgr)
-		{
-			dv[0] = sv[2];
-			dv[1] = sv[1];
-			dv[2] = sv[0];
-		}
-		else if (ds == pdf_devicecmyk)
-		{
-			float c = 1 - sv[2];
-			float m = 1 - sv[1];
-			float y = 1 - sv[0];
-			float k = MIN(c, MIN(m, y));
-			dv[0] = c - k;
-			dv[1] = m - k;
-			dv[2] = y - k;
-			dv[3] = k;
-		}
-		else
-			fz_stdconvcolor(ss, sv, ds, dv);
-	}
-
-	else if (ss == pdf_devicecmyk)
-	{
-		if (ds == pdf_devicegray)
-		{
-			float c = sv[1] * 0.3f;
-			float m = sv[2] * 0.59f;
-			float y = sv[2] * 0.11f;
-			dv[0] = 1 - MIN(c + m + y + sv[3], 1);
-		}
-		else if (ds == pdf_devicergb)
-		{
-			/*
-			dv[0] = 1 - MIN(sv[0] + sv[3], 1);
-			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
-			dv[2] = 1 - MIN(sv[2] + sv[3], 1);
-			*/
-			cmykToRGBMatrixMultiplication(sv, dv); /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=756 */
-		}
-		else if (ds == pdf_devicebgr)
-		{
-			dv[0] = 1 - MIN(sv[2] + sv[3], 1);
-			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
-			dv[2] = 1 - MIN(sv[0] + sv[3], 1);
-		}
-		else
-			fz_stdconvcolor(ss, sv, ds, dv);
-	}
-
-	else
-		fz_stdconvcolor(ss, sv, ds, dv);
-}
-
-/*
- * CalGray
- */
-
-struct calgray
-{
-	fz_colorspace super;
-	float white[3];
-	float black[3];
-	float gamma;
-};
-
-static void graytoxyz(fz_colorspace *fzcs, float *gray, float *xyz)
-{
-	struct calgray *cs = (struct calgray *) fzcs;
-	xyz[0] = powf(gray[0], cs->gamma) * cs->white[0];
-	xyz[1] = powf(gray[0], cs->gamma) * cs->white[1];
-	xyz[2] = powf(gray[0], cs->gamma) * cs->white[2];
-}
-
-static void xyztogray(fz_colorspace *fzcs, float *xyz, float *gray)
-{
-	struct calgray *cs = (struct calgray *) fzcs;
-	float r = powf(xyz[0], 1 / cs->gamma) / cs->white[0];
-	float g = powf(xyz[1], 1 / cs->gamma) / cs->white[1];
-	float b = powf(xyz[2], 1 / cs->gamma) / cs->white[2];
-	gray[0] = r * 0.3f + g * 0.59f + b * 0.11f;
-}
-
-/*
- * CalRGB
- */
-
-struct calrgb
-{
-	fz_colorspace super;
-	float white[3];
-	float black[3];
-	float gamma[3];
-	float matrix[9];
-	float invmat[9];
-};
-
-static void rgbtoxyz(fz_colorspace *fzcs, float *rgb, float *xyz)
-{
-	struct calrgb *cs = (struct calrgb *) fzcs;
-	float a = powf(rgb[0], cs->gamma[0]) * cs->white[0];
-	float b = powf(rgb[1], cs->gamma[1]) * cs->white[1];
-	float c = powf(rgb[2], cs->gamma[2]) * cs->white[2];
-	xyz[0] = a * cs->matrix[0] + b * cs->matrix[1] + c * cs->matrix[2];
-	xyz[1] = a * cs->matrix[3] + b * cs->matrix[4] + c * cs->matrix[5];
-	xyz[2] = a * cs->matrix[6] + b * cs->matrix[7] + c * cs->matrix[8];
-}
-
-static void xyztorgb(fz_colorspace *fzcs, float *xyz, float *rgb)
-{
-	struct calrgb *cs = (struct calrgb *) fzcs;
-	float a = xyz[0] * cs->invmat[0] + xyz[1] * cs->invmat[1] + xyz[2] * cs->invmat[2];
-	float b = xyz[0] * cs->invmat[3] + xyz[1] * cs->invmat[4] + xyz[2] * cs->invmat[5];
-	float c = xyz[0] * cs->invmat[6] + xyz[1] * cs->invmat[7] + xyz[2] * cs->invmat[8];
-	rgb[0] = powf(a, 1 / cs->gamma[0]) / cs->white[0];
-	rgb[1] = powf(b, 1 / cs->gamma[1]) / cs->white[1];
-	rgb[2] = powf(c, 1 / cs->gamma[2]) / cs->white[2];
-}
-
-/*
- * DeviceCMYK piggybacks on DeviceRGB
- */
-
-static void devicecmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
-{
-	float rgb[3];
-	rgb[0] = 1 - MIN(1, cmyk[0] + cmyk[3]);
-	rgb[1] = 1 - MIN(1, cmyk[1] + cmyk[3]);
-	rgb[2] = 1 - MIN(1, cmyk[2] + cmyk[3]);
-	rgbtoxyz(pdf_devicergb, rgb, xyz);
-}
-
-static void xyztodevicecmyk(fz_colorspace *cs, float *xyz, float *cmyk)
-{
-	float rgb[3];
-	float c, m, y, k;
-	xyztorgb(pdf_devicergb, xyz, rgb);
-	c = 1 - rgb[0];
-	m = 1 - rgb[0];
-	y = 1 - rgb[0];
-	k = MIN(c, MIN(m, y));
-	cmyk[0] = c - k;
-	cmyk[1] = m - k;
-	cmyk[2] = y - k;
-	cmyk[3] = k;
-}
-
-/*
- * DeviceBGR piggybacks on DeviceRGB
- */
-
-static void bgrtoxyz(fz_colorspace *cs, float *bgr, float *xyz)
-{
-	float rgb[3];
-	rgb[0] = bgr[2];
-	rgb[1] = bgr[1];
-	rgb[2] = bgr[0];
-	rgbtoxyz(pdf_devicergb, rgb, xyz);
-}
-
-static void xyztobgr(fz_colorspace *cs, float *xyz, float *bgr)
-{
-	float rgb[3];
-	xyztorgb(pdf_devicergb, xyz, rgb);
-	bgr[0] = rgb[2];
-	bgr[1] = rgb[1];
-	bgr[2] = rgb[0];
-}
-
-/*
- * CIE Lab
- */
-
-struct cielab
-{
-	fz_colorspace super;
-	float white[3];
-	float black[3];
-	float range[4];
-};
-
-static inline float fung(float x)
-{
-	if (x >= 6.0f / 29.0f)
-		return x * x * x;
-	return (108.0f / 841.0f) * (x - (4.0f / 29.0f));
-}
-
-static inline float invg(float x)
-{
-	if (x > 0.008856f)
-		return powf(x, 1.0f / 3.0f);
-	return (7.787f * x) + (16.0f / 116.0f);
-}
-
-static void labtoxyz(fz_colorspace *fzcs, float *lab, float *xyz)
-{
-	struct cielab *cs = (struct cielab *) fzcs;
-	float lstar, astar, bstar, l, m, n;
-	float tmp[3];
-	tmp[0] = lab[0] * 100;
-	tmp[1] = lab[1] * 200 - 100;
-	tmp[2] = lab[2] * 200 - 100;
-	lstar = tmp[0];
-	astar = MAX(MIN(tmp[1], cs->range[1]), cs->range[0]);
-	bstar = MAX(MIN(tmp[2], cs->range[3]), cs->range[2]);
-	l = (lstar + 16) / 116 + astar / 500;
-	m = (lstar + 16) / 116;
-	n = (lstar + 16) / 116 - bstar / 200;
-	xyz[0] = fung(l) * cs->white[0];
-	xyz[1] = fung(m) * cs->white[1];
-	xyz[2] = fung(n) * cs->white[2];
-}
-
-static void xyztolab(fz_colorspace *fzcs, float *xyz, float *lab)
-{
-	struct cielab *cs = (struct cielab *) fzcs;
-	float tmp[3];
-	float yyn = xyz[1] / cs->white[1];
-	if (yyn < 0.008856f)
-		tmp[0] = 116.0f * yyn * (1.0f / 3.0f) - 16.0f;
-	else
-		tmp[0] = 903.3f * yyn;
-	tmp[1] = 500 * (invg(xyz[0]/cs->white[0]) - invg(xyz[1]/cs->white[1]));
-	tmp[2] = 200 * (invg(xyz[1]/cs->white[1]) - invg(xyz[2]/cs->white[2]));
-	lab[0] = tmp[0] / 100;
-	lab[1] = (tmp[1] + 100) / 200;
-	lab[2] = (tmp[2] + 100) / 200;
-}
-
-/*
- * Define global Device* colorspaces as Cal*
- */
-
-static struct calgray kdevicegray =
-{
-	{ -1, "DeviceGray", 1, pdf_convpixmap, pdf_convcolor, graytoxyz, xyztogray, nil },
-	{ 1, 1, 1 },
-	{ 0, 0, 0 },
-	1
-};
-
-static struct calrgb kdevicergb =
-{
-	{ -1, "DeviceRGB", 3, pdf_convpixmap, pdf_convcolor, rgbtoxyz, xyztorgb, nil },
-	{ 1, 1, 1 },
-	{ 0, 0, 0 },
-	{ 1, 1, 1 },
-	{ 1,0,0, 0,1,0, 0,0,1 },
-	{ 1,0,0, 0,1,0, 0,0,1 },
-};
-
-static struct calrgb kdevicebgr =
-{
-	{ -1, "DeviceBGR", 3, pdf_convpixmap, pdf_convcolor, bgrtoxyz, xyztobgr, nil },
-	{ 1, 1, 1 },
-	{ 0, 0, 0 },
-	{ 1, 1, 1 },
-	{ 1,0,0, 0,1,0, 0,0,1 },
-	{ 1,0,0, 0,1,0, 0,0,1 },
-};
-
-static fz_colorspace kdevicecmyk =
-{
-	-1, "DeviceCMYK", 4, pdf_convpixmap, pdf_convcolor, devicecmyktoxyz, xyztodevicecmyk, nil
-};
-
-static struct cielab kdevicelab =
-{
-	{ -1, "Lab", 3, pdf_convpixmap, fz_stdconvcolor, labtoxyz, xyztolab, nil },
-	{ 1, 1, 1 },
-	{ 0, 0, 0 },
-	{ -100, 100, -100, 100 },
-};
-
-static fz_colorspace kdevicepattern =
-{
-	-1, "Pattern", 0, nil, nil, nil, nil, nil
-};
-
-fz_colorspace *pdf_devicegray = &kdevicegray.super;
-fz_colorspace *pdf_devicergb = &kdevicergb.super;
-fz_colorspace *pdf_devicebgr = &kdevicebgr.super;
-fz_colorspace *pdf_devicecmyk = &kdevicecmyk;
-fz_colorspace *pdf_devicelab = &kdevicelab.super;
-fz_colorspace *pdf_devicepattern = &kdevicepattern;
-
-/*
- * Colorspace parsing
- */
-
-#ifdef USECAL
-static fz_colorspace *
-loadcalgray(pdf_xref *xref, fz_obj *dict)
-{
-	struct calgray *cs;
-	fz_obj *tmp;
-
-	cs = fz_malloc(sizeof(struct calgray));
-
-	pdf_logrsrc("load CalGray\n");
-
-	initcs((fz_colorspace*)cs, "CalGray", 1, graytoxyz, xyztogray, nil);
-
-	cs->white[0] = 1;
-	cs->white[1] = 1;
-	cs->white[2] = 1;
-
-	cs->black[0] = 0;
-	cs->black[1] = 0;
-	cs->black[2] = 0;
-
-	cs->gamma = 1;
-
-	tmp = fz_dictgets(dict, "WhitePoint");
-	if (fz_isarray(tmp))
-	{
-		cs->white[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->white[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->white[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "BlackPoint");
-	if (fz_isarray(tmp))
-	{
-		cs->black[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->black[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->black[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "Gamma");
-	if (fz_isreal(tmp))
-		cs->gamma = fz_toreal(tmp);
-
-	return (fz_colorspace*) cs;
-}
-
-static fz_colorspace *
-loadcalrgb(pdf_xref *xref, fz_obj *dict)
-{
-	struct calrgb *cs;
-	fz_obj *tmp;
-	int i;
-
-	cs = fz_malloc(sizeof(struct calrgb));
-
-	pdf_logrsrc("load CalRGB\n");
-
-	initcs((fz_colorspace*)cs, "CalRGB", 3, rgbtoxyz, xyztorgb, nil);
-
-	cs->white[0] = 1;
-	cs->white[1] = 1;
-	cs->white[2] = 1;
-
-	cs->black[0] = 0;
-	cs->black[1] = 0;
-	cs->black[2] = 0;
-
-	cs->gamma[0] = 1;
-	cs->gamma[1] = 1;
-	cs->gamma[2] = 1;
-
-	cs->matrix[0] = 1; cs->matrix[1] = 0; cs->matrix[2] = 0;
-	cs->matrix[3] = 0; cs->matrix[4] = 1; cs->matrix[5] = 0;
-	cs->matrix[6] = 0; cs->matrix[7] = 0; cs->matrix[8] = 1;
-
-	tmp = fz_dictgets(dict, "WhitePoint");
-	if (fz_isarray(tmp))
-	{
-		cs->white[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->white[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->white[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "BlackPoint");
-	if (fz_isarray(tmp))
-	{
-		cs->black[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->black[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->black[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "Gamma");
-	if (fz_isarray(tmp))
-	{
-		cs->gamma[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->gamma[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->gamma[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "Matrix");
-	if (fz_isarray(tmp))
-	{
-		for (i = 0; i < 9; i++)
-			cs->matrix[i] = fz_toreal(fz_arrayget(tmp, i));
-	}
-
-	fz_invert3x3(cs->invmat, cs->matrix);
-
-	return (fz_colorspace*) cs;
-}
-
-static fz_colorspace *
-loadlab(pdf_xref *xref, fz_obj *dict)
-{
-	struct cielab *cs;
-	fz_obj *tmp;
-
-	cs = fz_malloc(sizeof(struct cielab));
-
-	pdf_logrsrc("load Lab\n");
-
-	initcs((fz_colorspace*)cs, "Lab", 3, labtoxyz, xyztolab, nil);
-
-	cs->white[0] = 1;
-	cs->white[1] = 1;
-	cs->white[2] = 1;
-
-	cs->black[0] = 0;
-	cs->black[1] = 0;
-	cs->black[2] = 0;
-
-	cs->range[0] = -100;
-	cs->range[1] = 100;
-	cs->range[2] = -100;
-	cs->range[3] = 100;
-
-	tmp = fz_dictgets(dict, "WhitePoint");
-	if (fz_isarray(tmp))
-	{
-		cs->white[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->white[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->white[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "BlackPoint");
-	if (fz_isarray(tmp))
-	{
-		cs->black[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->black[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->black[2] = fz_toreal(fz_arrayget(tmp, 2));
-	}
-
-	tmp = fz_dictgets(dict, "Range");
-	if (fz_isarray(tmp))
-	{
-		cs->range[0] = fz_toreal(fz_arrayget(tmp, 0));
-		cs->range[1] = fz_toreal(fz_arrayget(tmp, 1));
-		cs->range[2] = fz_toreal(fz_arrayget(tmp, 2));
-		cs->range[3] = fz_toreal(fz_arrayget(tmp, 3));
-	}
-
-	return (fz_colorspace*) cs;
-}
-#endif
-
 /*
  * ICCBased
  */
@@ -826,23 +25,79 @@ loadiccbased(fz_colorspace **csp, pdf_xref *xref, fz_obj *dict)
 }
 
 /*
+ * Lab
+ */
+
+static inline float fung(float x)
+{
+	if (x >= 6.0f / 29.0f)
+		return x * x * x;
+	return (108.0f / 841.0f) * (x - (4.0f / 29.0f));
+}
+
+static inline float invg(float x)
+{
+	if (x > 0.008856f)
+		return powf(x, 1.0f / 3.0f);
+	return (7.787f * x) + (16.0f / 116.0f);
+}
+
+static void
+labtoxyz(fz_colorspace *cs, float *lab, float *xyz)
+{
+	float lstar, astar, bstar, l, m, n;
+	float tmp[3];
+	tmp[0] = lab[0] * 100;
+	tmp[1] = lab[1] * 200 - 100;
+	tmp[2] = lab[2] * 200 - 100;
+	lstar = tmp[0];
+	astar = CLAMP(tmp[1], -100, 100);
+	bstar = CLAMP(tmp[2], -100, 100);
+	l = (lstar + 16) / 116 + astar / 500;
+	m = (lstar + 16) / 116;
+	n = (lstar + 16) / 116 - bstar / 200;
+	xyz[0] = fung(l);
+	xyz[1] = fung(m);
+	xyz[2] = fung(n);
+}
+
+static void
+xyztolab(fz_colorspace *cs, float *xyz, float *lab)
+{
+	float tmp[3];
+	float yyn = xyz[1];
+	if (yyn < 0.008856f)
+		tmp[0] = 116.0f * yyn * (1.0f / 3.0f) - 16.0f;
+	else
+		tmp[0] = 903.3f * yyn;
+	tmp[1] = 500 * (invg(xyz[0]) - invg(xyz[1]));
+	tmp[2] = 200 * (invg(xyz[1]) - invg(xyz[2]));
+	lab[0] = tmp[0] / 100;
+	lab[1] = (tmp[1] + 100) / 200;
+	lab[2] = (tmp[2] + 100) / 200;
+}
+
+static fz_colorspace kdevicelab = { -1, "Lab", 3, labtoxyz, xyztolab };
+static fz_colorspace *pdf_devicelab = &kdevicelab;
+
+/*
  * Separation and DeviceN
  */
 
 struct separation
 {
-	fz_colorspace super;
 	fz_colorspace *base;
 	pdf_function *tint;
 };
 
-static void separationtoxyz(fz_colorspace *fzcs, float *sep, float *xyz)
+static void
+separationtoxyz(fz_colorspace *cs, float *color, float *xyz)
 {
-	struct separation *cs = (struct separation *)fzcs;
+	struct separation *sep = cs->data;
 	fz_error error;
 	float alt[FZ_MAXCOLORS];
 
-	error = pdf_evalfunction(cs->tint, sep, fzcs->n, alt, cs->base->n);
+	error = pdf_evalfunction(sep->tint, color, cs->n, alt, sep->base->n);
 	if (error)
 	{
 		fz_catch(error, "cannot evaluate separation function");
@@ -852,22 +107,24 @@ static void separationtoxyz(fz_colorspace *fzcs, float *sep, float *xyz)
 		return;
 	}
 
-	cs->base->toxyz(cs->base, alt, xyz);
+	sep->base->toxyz(sep->base, alt, xyz);
 }
 
 static void
-freeseparation(fz_colorspace *fzcs)
+freeseparation(fz_colorspace *cs)
 {
-	struct separation *cs = (struct separation *)fzcs;
-	fz_dropcolorspace(cs->base);
-	pdf_dropfunction(cs->tint);
+	struct separation *sep = cs->data;
+	fz_dropcolorspace(sep->base);
+	pdf_dropfunction(sep->tint);
+	fz_free(sep);
 }
 
 static fz_error
 loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 {
 	fz_error error;
-	struct separation *cs;
+	fz_colorspace *cs;
+	struct separation *sep;
 	fz_obj *nameobj = fz_arrayget(array, 1);
 	fz_obj *baseobj = fz_arrayget(array, 2);
 	fz_obj *tintobj = fz_arrayget(array, 3);
@@ -898,21 +155,18 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		return fz_rethrow(error, "cannot load tint function (%d %d R)", fz_tonum(tintobj), fz_togen(tintobj));
 	}
 
-	cs = fz_malloc(sizeof(struct separation));
+	sep = fz_malloc(sizeof(struct separation));
+	sep->base = base;
+	sep->tint = tint;
 
-	initcs((fz_colorspace*)cs,
-		n == 1 ? "Separation" : "DeviceN", n,
-		separationtoxyz, nil, freeseparation);
-
-	cs->base = fz_keepcolorspace(base);
-	cs->tint = pdf_keepfunction(tint);
-
-	fz_dropcolorspace(base);
-	pdf_dropfunction(tint);
+	cs = fz_newcolorspace(n == 1 ? "Separation" : "DeviceN", n);
+	cs->toxyz = separationtoxyz;
+	cs->freedata = freeseparation;
+	cs->data = sep;
 
 	pdf_logrsrc("}\n");
 
-	*csp = (fz_colorspace*)cs;
+	*csp = cs;
 	return fz_okay;
 }
 
@@ -920,34 +174,78 @@ loadseparation(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
  * Indexed
  */
 
-#if 0
-static void
-indexedtoxyz(fz_colorspace *fzcs, float *ind, float *xyz)
+struct indexed
 {
-	pdf_indexed *cs = (pdf_indexed *)fzcs;
-	float alt[FZ_MAXCOLORS];
-	int i, k;
-	i = ind[0] * 255;
-	i = CLAMP(i, 0, cs->high);
-	for (k = 0; k < cs->base->n; k++)
-		alt[k] = cs->lookup[i * cs->base->n + k] / 255.0f;
-	cs->base->toxyz(cs->base, alt, xyz);
-}
-#endif
+	fz_colorspace *base;
+	int high;
+	unsigned char *lookup;
+};
 
 static void
-freeindexed(fz_colorspace *fzcs)
+indexedtoxyz(fz_colorspace *cs, float *color, float *xyz)
 {
-	pdf_indexed *cs = (pdf_indexed *)fzcs;
-	if (cs->base) fz_dropcolorspace(cs->base);
-	if (cs->lookup) fz_free(cs->lookup);
+	struct indexed *idx = cs->data;
+	float alt[FZ_MAXCOLORS];
+	int i, k;
+	i = color[0] * 255;
+	i = CLAMP(i, 0, idx->high);
+	for (k = 0; k < idx->base->n; k++)
+		alt[k] = idx->lookup[i * idx->base->n + k] / 255.0f;
+	idx->base->toxyz(idx->base, alt, xyz);
+}
+
+static void
+freeindexed(fz_colorspace *cs)
+{
+	struct indexed *idx = cs->data;
+	if (idx->base)
+		fz_dropcolorspace(idx->base);
+	fz_free(idx->lookup);
+	fz_free(idx);
+}
+
+fz_pixmap *
+pdf_expandindexedpixmap(fz_pixmap *src)
+{
+	struct indexed *idx;
+	fz_pixmap *dst;
+	unsigned char *s, *d;
+	int y, x, k, n, high;
+	unsigned char *lookup;
+
+	assert(src->colorspace->toxyz == indexedtoxyz);
+	assert(src->n == 2);
+
+	idx = src->colorspace->data;
+	high = idx->high;
+	lookup = idx->lookup;
+	n = idx->base->n;
+
+	dst = fz_newpixmap(idx->base, src->x, src->y, src->w, src->h);
+	s = src->samples;
+	d = dst->samples;
+
+	for (y = 0; y < src->h; y++)
+	{
+		for (x = 0; x < src->w; x++)
+		{
+			int v = *s++;
+			v = MIN(v, high);
+			for (k = 0; k < n; k++)
+				*d++ = lookup[v * n + k];
+			*d++ = *s++;
+		}
+	}
+
+	return dst;
 }
 
 static fz_error
 loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 {
 	fz_error error;
-	pdf_indexed *cs;
+	fz_colorspace *cs;
+	struct indexed *idx;
 	fz_obj *baseobj = fz_arrayget(array, 1);
 	fz_obj *highobj = fz_arrayget(array, 2);
 	fz_obj *lookup = fz_arrayget(array, 3);
@@ -962,17 +260,16 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 	pdf_logrsrc("base %s\n", base->name);
 
-	cs = fz_malloc(sizeof(pdf_indexed));
+	idx = fz_malloc(sizeof(struct indexed));
+	idx->base = base;
+	idx->high = fz_toint(highobj);
+	n = base->n * (idx->high + 1);
+	idx->lookup = fz_malloc(n);
 
-	initcs((fz_colorspace*)cs, "Indexed", 1, nil, nil, freeindexed);
-
-	cs->base = fz_keepcolorspace(base);
-	cs->high = fz_toint(highobj);
-
-	fz_dropcolorspace(base);
-
-	n = base->n * (cs->high + 1);
-	cs->lookup = fz_malloc(n);
+	cs = fz_newcolorspace("Indexed", 1);
+	cs->toxyz = indexedtoxyz;
+	cs->freedata = freeindexed;
+	cs->data = idx;
 
 	if (fz_isstring(lookup) && fz_tostrlen(lookup) == n)
 	{
@@ -983,7 +280,7 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 
 		buf = (unsigned char *) fz_tostrbuf(lookup);
 		for (i = 0; i < n; i++)
-			cs->lookup[i] = buf[i];
+			idx->lookup[i] = buf[i];
 	}
 	else if (fz_isindirect(lookup))
 	{
@@ -995,24 +292,24 @@ loadindexed(fz_colorspace **csp, pdf_xref *xref, fz_obj *array)
 		error = pdf_loadstream(&buf, xref, fz_tonum(lookup), fz_togen(lookup));
 		if (error)
 		{
-			fz_dropcolorspace((fz_colorspace*)cs);
+			fz_dropcolorspace(cs);
 			return fz_rethrow(error, "cannot load colorpsace lookup table (%d %d R)", fz_tonum(lookup), fz_togen(lookup));
 		}
 
 		for (i = 0; i < n && i < (buf->wp - buf->rp); i++)
-			cs->lookup[i] = buf->rp[i];
+			idx->lookup[i] = buf->rp[i];
 
 		fz_dropbuffer(buf);
 	}
 	else
 	{
-		fz_dropcolorspace((fz_colorspace*)cs);
+		fz_dropcolorspace(cs);
 		return fz_throw("cannot parse colorspace lookup table");
 	}
 
 	pdf_logrsrc("}\n");
 
-	*csp = (fz_colorspace*)cs;
+	*csp = cs;
 	return fz_okay;
 }
 
@@ -1025,20 +322,20 @@ pdf_loadcolorspaceimp(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 {
 	if (fz_isname(obj))
 	{
-		if (!strcmp(fz_toname(obj), "DeviceGray"))
+		if (!strcmp(fz_toname(obj), "Pattern"))
 			*csp = pdf_devicegray;
-		else if (!strcmp(fz_toname(obj), "DeviceRGB"))
-			*csp = pdf_devicergb;
-		else if (!strcmp(fz_toname(obj), "DeviceCMYK"))
-			*csp = pdf_devicecmyk;
 		else if (!strcmp(fz_toname(obj), "G"))
 			*csp = pdf_devicegray;
 		else if (!strcmp(fz_toname(obj), "RGB"))
 			*csp = pdf_devicergb;
 		else if (!strcmp(fz_toname(obj), "CMYK"))
 			*csp = pdf_devicecmyk;
-		else if (!strcmp(fz_toname(obj), "Pattern"))
-			*csp = pdf_devicepattern;
+		else if (!strcmp(fz_toname(obj), "DeviceGray"))
+			*csp = pdf_devicegray;
+		else if (!strcmp(fz_toname(obj), "DeviceRGB"))
+			*csp = pdf_devicergb;
+		else if (!strcmp(fz_toname(obj), "DeviceCMYK"))
+			*csp = pdf_devicecmyk;
 		else
 			return fz_throw("unknown colorspace: %s", fz_toname(obj));
 		return fz_okay;
@@ -1050,49 +347,15 @@ pdf_loadcolorspaceimp(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 
 		if (fz_isname(name))
 		{
-			if (!strcmp(fz_toname(name), "CalCMYK"))
-				*csp = pdf_devicecmyk;
-
-#ifdef USECAL
-			else if (!strcmp(fz_toname(name), "CalGray"))
-				*csp = loadcalgray(xref, fz_arrayget(obj, 1));
-			else if (!strcmp(fz_toname(name), "CalRGB"))
-				*csp = loadcalrgb(xref, fz_arrayget(obj, 1));
-			else if (!strcmp(fz_toname(name), "Lab"))
-				*csp = loadlab(xref, fz_arrayget(obj, 1));
-#else
-			else if (!strcmp(fz_toname(name), "CalGray"))
-				*csp = pdf_devicegray;
-			else if (!strcmp(fz_toname(name), "CalRGB"))
-				*csp = pdf_devicergb;
-			else if (!strcmp(fz_toname(name), "Lab"))
-				*csp = pdf_devicelab;
-#endif
-
-			else if (!strcmp(fz_toname(name), "ICCBased"))
-				return loadiccbased(csp, xref, fz_arrayget(obj, 1));
-
-			else if (!strcmp(fz_toname(name), "Indexed"))
-				return loadindexed(csp, xref, obj);
-
-			else if (!strcmp(fz_toname(name), "I"))
-				return loadindexed(csp, xref, obj);
-
-			else if (!strcmp(fz_toname(name), "Separation"))
-				return loadseparation(csp, xref, obj);
-
-			else if (!strcmp(fz_toname(name), "DeviceN"))
-				return loadseparation(csp, xref, obj);
-
 			/* load base colorspace instead */
-			else if (!strcmp(fz_toname(name), "Pattern"))
+			if (!strcmp(fz_toname(name), "Pattern"))
 			{
 				fz_error error;
 
 				obj = fz_arrayget(obj, 1);
 				if (!obj)
 				{
-					*csp = pdf_devicepattern;
+					*csp = pdf_devicegray;
 					return fz_okay;
 				}
 
@@ -1101,18 +364,40 @@ pdf_loadcolorspaceimp(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 					return fz_rethrow(error, "cannot load pattern (%d %d R)", fz_tonum(obj), fz_togen(obj));
 			}
 
-			else if (!strcmp(fz_toname(name), "DeviceGray"))
-				*csp = pdf_devicegray;
-			else if (!strcmp(fz_toname(name), "DeviceRGB"))
-				*csp = pdf_devicergb;
-			else if (!strcmp(fz_toname(name), "DeviceCMYK"))
-				*csp = pdf_devicecmyk;
 			else if (!strcmp(fz_toname(name), "G"))
 				*csp = pdf_devicegray;
 			else if (!strcmp(fz_toname(name), "RGB"))
 				*csp = pdf_devicergb;
 			else if (!strcmp(fz_toname(name), "CMYK"))
 				*csp = pdf_devicecmyk;
+			else if (!strcmp(fz_toname(name), "DeviceGray"))
+				*csp = pdf_devicegray;
+			else if (!strcmp(fz_toname(name), "DeviceRGB"))
+				*csp = pdf_devicergb;
+			else if (!strcmp(fz_toname(name), "DeviceCMYK"))
+				*csp = pdf_devicecmyk;
+			else if (!strcmp(fz_toname(name), "CalGray"))
+				*csp = pdf_devicegray;
+			else if (!strcmp(fz_toname(name), "CalRGB"))
+				*csp = pdf_devicergb;
+			else if (!strcmp(fz_toname(name), "CalCMYK"))
+				*csp = pdf_devicecmyk;
+			else if (!strcmp(fz_toname(name), "Lab"))
+				*csp = pdf_devicelab;
+
+			else if (!strcmp(fz_toname(name), "ICCBased"))
+				return loadiccbased(csp, xref, fz_arrayget(obj, 1));
+
+			else if (!strcmp(fz_toname(name), "Indexed"))
+				return loadindexed(csp, xref, obj);
+			else if (!strcmp(fz_toname(name), "I"))
+				return loadindexed(csp, xref, obj);
+
+			else if (!strcmp(fz_toname(name), "Separation"))
+				return loadseparation(csp, xref, obj);
+
+			else if (!strcmp(fz_toname(name), "DeviceN"))
+				return loadseparation(csp, xref, obj);
 
 			else
 				return fz_throw("syntaxerror: unknown colorspace %s", fz_toname(name));
@@ -1143,4 +428,3 @@ pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 
 	return fz_okay;
 }
-

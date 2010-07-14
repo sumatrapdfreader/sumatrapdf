@@ -290,7 +290,7 @@ fz_readline(fz_stream *stm, char *mem, int n)
 		if (c == '\r') {
 			c = fz_peekbyte(stm);
 			if (c == '\n')
-				c = fz_readbyte(stm);
+				fz_readbyte(stm);
 			break;
 		}
 		if (c == '\n')

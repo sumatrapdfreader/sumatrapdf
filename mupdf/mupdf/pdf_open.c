@@ -91,7 +91,7 @@ static fz_error
 pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 {
 	fz_error error;
-	int ofs, len;
+	int len;
 	char *s;
 	int n;
 	int t;
@@ -117,7 +117,7 @@ pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 			return fz_rethrow(error, "cannot read xref count");
 
 		s = buf;
-		ofs = atoi(fz_strsep(&s, " "));
+		atoi(fz_strsep(&s, " ")); /* ignore ofs */
 		if (!s)
 			return fz_throw("invalid range marker in xref");
 		len = atoi(fz_strsep(&s, " "));

@@ -259,8 +259,6 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		if (error)
 			pdfapp_error(app, error);
 
-		ctm = pdfapp_viewctm(app);
-
 		/* Create display list */
 		app->page->list = fz_newdisplaylist();
 		mdev = fz_newlistdevice(app->page->list);
