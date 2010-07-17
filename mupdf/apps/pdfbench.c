@@ -103,16 +103,16 @@ void closexref(void)
 		pdf_freestore(xref->store);
 		xref->store = nil;
 	}
-	pdf_closexref(xref);
+	pdf_freexref(xref);
 	xref = nil;
 }
 
 fz_error openxref(char *filename, char *password)
 {
-	fz_stream *file = fz_openfile(open(filename, O_BINARY | O_RDONLY, 0666));
-	xref = pdf_openxref(file);
-	fz_dropstream(file);
-	if (!xref)
+	fz_error error;
+	
+	error = pdf_openxref(&xref, filename, password);
+	if (error)
 	{
 		return fz_throw("pdf_openxref() failed");
 	}
@@ -174,10 +174,10 @@ fz_error benchrenderpage(int pagenum)
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	pix = fz_newpixmapwithrect(pdf_devicergb, bbox);
+	pix = fz_newpixmapwithrect(fz_devicergb, bbox);
 	fz_clearpixmap(pix, 0xFF);
 	dev = fz_newdrawdevice(drawcache, pix);
-	error = pdf_runcontentstream(dev, ctm, xref, drawpage->resources, drawpage->contents);
+	error = pdf_runpage(xref, drawpage, dev, ctm);
 	fz_freedevice(dev);
 	if (error)
 	{
