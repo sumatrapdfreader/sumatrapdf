@@ -65,6 +65,12 @@ A&brir\tCtrl-O
 &Print\tCtrl-P
 &Imprimir\tCtrl-P
 
+&Print with %s...\tCtrl-P
+&Imprimir com %s...\tCtrl-P
+
+&Print... (denied)
+&Imprimir... (negado)
+
 &Remember these settings for each document
 Lembrar estas preferências para cada documento
 
@@ -104,8 +110,14 @@ Avançado
 All files
 Todos os arquivos
 
+Application:
+Aplicativo:
+
 Associate with PDF files?
 Associar com arquivos PDF?
+
+Author:
+Autor:
 
 Automatic
 Automático
@@ -121,6 +133,9 @@ Ver como Livro
 
 Bookmarks\tF12
 Marcadores\tF12
+
+Bytes
+Bytes
 
 Cancel
 Cancelar
@@ -158,11 +173,20 @@ Não foi possível acionar a impressora
 Couldn't render the page
 Não foi possível renderizar a página
 
+Created:
+Criado:
+
 Default &Layout:
 &Visualização Padrão
 
 Default &Zoom:
 &Zoom Padrão
+
+Denied Permissions:
+Permissões negadas:
+
+Document Properties
+Propriedades do Documento
 
 Download
 Baixar
@@ -184,6 +208,12 @@ Página dupla
 
 Failed to save a file
 Erro ao salvar o arquivo.
+
+File Size:
+Tamanho do arquivo:
+
+File:
+Arquivo:
 
 Find
 Localizar
@@ -224,14 +254,23 @@ Texto encontrado na página %d
 Fullscreen\tCtrl-L
 Tela cheia\tCtrl-L
 
+GB
+GB
+
 Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
 Dica: tecle F3 para achar a próxima ocorrência
 
+KB
+KB
+
 Last Page\tEnd
 Última página\tEnd
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Não é possível alterar o leitor PDF padrão no modo portátil
@@ -244,6 +283,9 @@ Tornar o SumatraPDF o leitor PDF padrão
 
 Match case
 Diferenciar minúsculas e maiúsculas
+
+Modified:
+Modificado:
 
 New version %s is available. Download new version?
 A versão %s está disponível. Baixar a nova versão?
@@ -272,6 +314,9 @@ Nenhum arquivo de sincronização foi encontrado
 No synchronization info at this position
 Não há informação de sincronização nesta posição
 
+Number of Pages:
+Número de páginas:
+
 OK
 OK
 
@@ -281,11 +326,23 @@ Abrir
 Open in &Adobe Reader
 Abrir no &Adobe Reader
 
+P&roperties...\tCtrl-D
+Propriedades...\tCtrl-D
+
 PDF Document
 Documento PDF
 
+PDF Producer:
+Produtor do PDF:
+
+PDF Version:
+Versão do PDF:
+
 PDF documents
 Documentos PDF
+
+Page Size:
+Tamanho da página:
 
 Page number %u inexistant
 A página %u não existe
@@ -344,6 +401,9 @@ Página única
 Source file %s has no synchronization point
 O arquivo fonte %s não tem ponto de sincronização
 
+Subject:
+Assunto:
+
 SumatraPDF Options
 Opções do SumatraPDF
 
@@ -358,6 +418,9 @@ Não foi possível abrir o arquivo de sincronização
 
 Text documents
 Documentos de texto
+
+Title:
+Título:
 
 Unknown source file (%s)
 Arquivo fonte desconhecido (%s)
@@ -389,28 +452,9 @@ Proporção de Zoom
 [Changes detected; refreshing] %s
 [Mudanças detectadas; atualizando] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Application:
-#Author:
-#Bytes
-#Created:
-#Denied Permissions:
-#Document Properties
-#File Size:
-#File:
-#GB
-#KB
-#MB
-#Modified:
-#Number of Pages:
-#P&roperties...\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Subject:
-#Title:
-#copying text
-#printing document
+copying text
+copiando texto
+
+printing document
+imprimindo documento
 
