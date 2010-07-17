@@ -172,7 +172,6 @@
     <ClCompile Include="mupdf\mupdf\pdf_interpret.c" />
     <ClCompile Include="mupdf\mupdf\pdf_lex.c" />
     <ClCompile Include="mupdf\mupdf\pdf_nametree.c" />
-    <ClCompile Include="mupdf\mupdf\pdf_open.c" />
     <ClCompile Include="mupdf\mupdf\pdf_outline.c" />
     <ClCompile Include="mupdf\mupdf\pdf_page.c" />
     <ClCompile Include="mupdf\mupdf\pdf_pagetree.c" />

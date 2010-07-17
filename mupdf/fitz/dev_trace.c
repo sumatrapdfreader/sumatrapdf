@@ -230,10 +230,11 @@ fz_tracepopclip(void *user)
 static void
 fz_tracebeginmask(void *user, fz_rect bbox, int luminosity, fz_colorspace *colorspace, float *color)
 {
+	printf("<gsave>\n");
 	printf("<mask bbox=\"%g %g %g %g\" s=\"%s\" ",
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
 		luminosity ? "luminosity" : "alpha");
-	fz_tracecolor(colorspace, color, 1);
+//	fz_tracecolor(colorspace, color, 1);
 	printf(">\n");
 }
 
@@ -244,11 +245,11 @@ fz_traceendmask(void *user)
 }
 
 static void
-fz_tracebegingroup(void *user, fz_rect bbox, fz_colorspace *colorspace, int isolated, int knockout, fz_blendmode blendmode)
+fz_tracebegingroup(void *user, fz_rect bbox, int isolated, int knockout, fz_blendmode blendmode)
 {
-	printf("<group bbox=\"%g %g %g %g\" isolated=\"%d\" knockout=\"%d\" blendmode=\"%d\">\n",
+	printf("<group bbox=\"%g %g %g %g\" isolated=\"%d\" knockout=\"%d\" blendmode=\"%s\">\n",
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
-		isolated, knockout, blendmode);
+		isolated, knockout, fz_blendnames[blendmode]);
 }
 
 static void

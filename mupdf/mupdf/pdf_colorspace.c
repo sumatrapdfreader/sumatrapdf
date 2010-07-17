@@ -414,7 +414,7 @@ pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 {
 	fz_error error;
 
-	if ((*csp = pdf_finditem(xref->store, PDF_KCOLORSPACE, obj)))
+	if ((*csp = pdf_finditem(xref->store, fz_dropcolorspace, obj)))
 	{
 		fz_keepcolorspace(*csp);
 		return fz_okay;
@@ -424,7 +424,7 @@ pdf_loadcolorspace(fz_colorspace **csp, pdf_xref *xref, fz_obj *obj)
 	if (error)
 		return fz_rethrow(error, "cannot load colorspace (%d %d R)", fz_tonum(obj), fz_togen(obj));
 
-	pdf_storeitem(xref->store, PDF_KCOLORSPACE, obj, *csp);
+	pdf_storeitem(xref->store, fz_keepcolorspace, fz_dropcolorspace, obj, *csp);
 
 	return fz_okay;
 }

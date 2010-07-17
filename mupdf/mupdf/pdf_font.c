@@ -1035,7 +1035,7 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	fz_obj *dfonts;
 	fz_obj *charprocs;
 
-	if ((*fontdescp = pdf_finditem(xref->store, PDF_KFONT, dict)))
+	if ((*fontdescp = pdf_finditem(xref->store, pdf_dropfont, dict)))
 	{
 		pdf_keepfont(*fontdescp);
 		return fz_okay;
@@ -1077,7 +1077,7 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	if ((*fontdescp)->font->ftsubstitute && !(*fontdescp)->tottfcmap)
 		pdf_makewidthtable(*fontdescp);
 
-	pdf_storeitem(xref->store, PDF_KFONT, dict, *fontdescp);
+	pdf_storeitem(xref->store, pdf_keepfont, pdf_dropfont, dict, *fontdescp);
 
 	return fz_okay;
 }

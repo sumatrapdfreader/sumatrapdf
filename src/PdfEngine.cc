@@ -131,7 +131,7 @@ PdfEngine::~PdfEngine()
             pdf_freestore(_xref->store);
             _xref->store = NULL;
         }
-        pdf_closexref(_xref);
+        pdf_freexref(_xref);
     }
     LeaveCriticalSection(&_xrefAccess);
     DeleteCriticalSection(&_xrefAccess);
@@ -143,6 +143,9 @@ PdfEngine::~PdfEngine()
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
+	char *password = NULL;
+	fz_error error;
+    pdf_xref *xref = NULL;
     _windowInfo = win;
     assert(!_fileName);
     _fileName = tstr_dup(fileName);
@@ -151,7 +154,12 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     if (-1 == fd)
         return false;
     fz_stream *file = fz_openfile(fd);
-    pdf_xref *xref = pdf_openxref(file);
+	// TODO: not sure how to handle passwords
+	error = pdf_openxrefwithstream(&xref, file, password);
+	if (error)
+	{
+		return false;
+	}
     fz_dropstream(file);
     if (!xref)
         return false;
@@ -343,7 +351,7 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *c
 
     fz_device *dev = fz_newgdidevice(hDC);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runcontentstream(dev, *ctm, _xref, page->resources, page->contents);
+    fz_error error = pdf_runpage(_xref, page, dev, *ctm);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
 
@@ -404,7 +412,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         _drawcache = fz_newglyphcache();
     fz_device *dev = fz_newdrawdevice(_drawcache, image);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runcontentstream(dev, ctm, _xref, page->resources, page->contents);
+    fz_error error = pdf_runpage(_xref, page, dev, ctm);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
 #if CONSERVE_MEMORY
@@ -555,7 +563,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     fz_textspan *text = fz_newtextspan();
     fz_device *dev = fz_newtextdevice(text);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runcontentstream(dev, fz_identity, _xref, page->resources, page->contents);
+    fz_error error = pdf_runpage(_xref, page, dev, fz_identity);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
     if (error) {

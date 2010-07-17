@@ -2,13 +2,13 @@
 #include "mupdf.h"
 
 static pdf_csi *
-pdf_newcsi(fz_device *dev, pdf_xref *xref, fz_matrix ctm)
+pdf_newcsi(pdf_xref *xref, fz_device *dev, fz_matrix ctm)
 {
 	pdf_csi *csi;
 
 	csi = fz_malloc(sizeof(pdf_csi));
-	csi->dev = dev;
 	csi->xref = xref;
+	csi->dev = dev;
 
 	csi->top = 0;
 	csi->xbalance = 0;
@@ -83,6 +83,8 @@ pdf_gsave(pdf_csi *csi)
 	pdf_keepmaterial(&gs->fill);
 	if (gs->font)
 		pdf_keepfont(gs->font);
+	if (gs->softmask)
+		pdf_keepxobject(gs->softmask);
 }
 
 void
@@ -101,6 +103,8 @@ pdf_grestore(pdf_csi *csi)
 	pdf_dropmaterial(&gs->fill);
 	if (gs->font)
 		pdf_dropfont(gs->font);
+	if (gs->softmask)
+		pdf_dropxobject(gs->softmask);
 
 	csi->gtop --;
 
@@ -140,38 +144,52 @@ pdf_freecsi(pdf_csi *csi)
  * Push gstate, set transform, clip, run, pop gstate.
  */
 
-static fz_error
+fz_error
 pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 {
 	fz_error error;
 	pdf_gstate *gstate;
 	fz_matrix oldtopctm;
 	int oldtop;
+	int popmask;
 
 	pdf_gsave(csi);
 
 	gstate = csi->gstate + csi->gtop;
 	oldtop = csi->gtop;
-
-	gstate->stroke.parentalpha = gstate->stroke.alpha;
-	gstate->fill.parentalpha = gstate->fill.alpha;
-
-	/* reset alpha to 1.0 when starting a new Transparency group */
-	if (xobj->transparency)
-	{
-		gstate->blendmode = FZ_BNORMAL;
-		gstate->stroke.alpha = gstate->stroke.parentalpha;
-		gstate->fill.alpha = gstate->fill.parentalpha;
-	}
+	popmask = 0;
 
 	/* apply xobject's transform matrix */
 	gstate->ctm = fz_concat(xobj->matrix, gstate->ctm);
 
-	if (xobj->isolated || xobj->knockout)
+	/* apply soft mask, create transparency group and reset state */
+	if (xobj->transparency)
 	{
-		/* The xobject's contents ought to be blended properly,
-		but for now, just do over and hope for something */
-		// TODO: push, pop and blend buffers
+		if (gstate->softmask)
+		{
+			pdf_xobject *softmask = gstate->softmask;
+			fz_rect bbox = fz_transformrect(gstate->ctm, xobj->bbox);
+
+			gstate->softmask = nil;
+			popmask = 1;
+
+			csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity, nil, nil);
+			pdf_runxobject(csi, nil, softmask);
+			csi->dev->endmask(csi->dev->user);
+
+			pdf_dropxobject(softmask);
+	}
+
+		if (gstate->fill.alpha < 1)
+			fz_warn("ignoring ca for xobject: %g", gstate->fill.alpha);
+
+		csi->dev->begingroup(csi->dev->user,
+			fz_transformrect(gstate->ctm, xobj->bbox),
+			xobj->isolated, xobj->knockout, gstate->blendmode);
+
+		gstate->blendmode = FZ_BNORMAL;
+		gstate->stroke.alpha = 1;
+		gstate->fill.alpha = 1;
 	}
 
 	/* clip to the bounds */
@@ -202,6 +220,15 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 		pdf_grestore(csi);
 
 	pdf_grestore(csi);
+
+	/* wrap up transparency stacks */
+
+	if (xobj->transparency)
+	{
+		csi->dev->endgroup(csi->dev->user);
+		if (popmask)
+			csi->dev->popclip(csi->dev->user);
+	}
 
 	return fz_okay;
 }
@@ -256,7 +283,7 @@ FindEndImageMarker:
  */
 
 static fz_error
-pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgstate)
+pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstate)
 {
 	int i, k;
 
@@ -279,7 +306,7 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 					gstate->font = nil;
 				}
 
-				error = pdf_loadfont(&gstate->font, xref, rdb, font);
+				error = pdf_loadfont(&gstate->font, csi->xref, rdb, font);
 				if (error)
 					return fz_rethrow(error, "cannot load font (%d %d R)", fz_tonum(font), fz_togen(font));
 				if (!gstate->font)
@@ -314,45 +341,20 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 		}
 
 		else if (!strcmp(s, "CA"))
-			gstate->stroke.alpha = gstate->stroke.parentalpha * fz_toreal(val);
+			gstate->stroke.alpha = fz_toreal(val);
+
 		else if (!strcmp(s, "ca"))
-			gstate->fill.alpha = gstate->fill.parentalpha * fz_toreal(val);
+			gstate->fill.alpha = fz_toreal(val);
 
 		else if (!strcmp(s, "BM"))
 		{
-			static const struct { const char *name; fz_blendmode mode; } bm[] = {
-				{ "Normal", FZ_BNORMAL },
-				{ "Multiply", FZ_BMULTIPLY },
-				{ "Screen", FZ_BSCREEN },
-				{ "Overlay", FZ_BOVERLAY },
-				{ "Darken", FZ_BDARKEN },
-				{ "Lighten", FZ_BLIGHTEN },
-				{ "Colordodge", FZ_BCOLORDODGE },
-				{ "Hardlight", FZ_BHARDLIGHT },
-				{ "Softlight", FZ_BSOFTLIGHT },
-				{ "Difference", FZ_BDIFFERENCE },
-				{ "Exclusion", FZ_BEXCLUSION },
-				{ "Hue", FZ_BHUE },
-				{ "Saturation", FZ_BSATURATION },
-				{ "Color", FZ_BCOLOR },
-				{ "Luminosity", FZ_BLUMINOSITY }
-			};
-
-			char *n = fz_toname(val);
 			if (!fz_isname(val))
 				return fz_throw("malformed BM");
 
 			gstate->blendmode = FZ_BNORMAL;
-#if 1
-			for (k = 0; k < nelem(bm); k++) {
-				if (!strcmp(bm[k].name, n)) {
-					gstate->blendmode = bm[k].mode;
-					if (gstate->blendmode != FZ_BNORMAL)
-						fz_warn("ignoring blend mode %s", n);
-					break;
-				}
-			}
-#endif
+			for (k = 0; fz_blendnames[k]; k++)
+				if (!strcmp(fz_blendnames[k], fz_toname(val)))
+					gstate->blendmode = k;
 		}
 
 		else if (!strcmp(s, "SMask"))
@@ -360,30 +362,30 @@ pdf_runextgstate(pdf_gstate *gstate, pdf_xref *xref, fz_obj *rdb, fz_obj *extgst
 			if (fz_isdict(val))
 			{
 				fz_error error;
-				fz_obj *g;
-				fz_obj *subtype;
 				pdf_xobject *xobj;
-				pdf_image *img;
+				fz_obj *group, *luminosity;
 
-				fz_warn("ignoring soft mask");
-#if 0
-				g = fz_dictgets(val, "G");
-				subtype = fz_dictgets(g, "Subtype");
+				fz_warn("not ignoring soft mask");
 
-				if (!strcmp(fz_toname(subtype), "Form"))
+				if (gstate->softmask)
 				{
-				error = pdf_loadxobject(&xobj, xref, g);
-				if (error)
-				return fz_rethrow(error, "cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));
+					pdf_dropxobject(gstate->softmask);
+					gstate->softmask = nil;
 				}
 
-				else if (!strcmp(fz_toname(subtype), "Image"))
-				{
-				error = pdf_loadimage(&img, xref, g);
+				group = fz_dictgets(val, "G");
+				error = pdf_loadxobject(&xobj, csi->xref, group);
 				if (error)
 				return fz_rethrow(error, "cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));
-				}
-#endif
+
+				gstate->softmaskctm = fz_concat(xobj->matrix, gstate->ctm);
+				gstate->softmask = xobj;
+
+				luminosity = fz_dictgets(val, "S");
+				if (fz_isname(luminosity) && !strcmp(fz_toname(luminosity), "Luminosity"))
+					gstate->luminosity = 1;
+				else
+					gstate->luminosity = 0;
 			}
 		}
 
@@ -1112,7 +1114,7 @@ Lsetcolor:
 			if (!obj)
 				return fz_throw("cannot find extgstate resource /%s", fz_toname(csi->stack[0]));
 
-			error = pdf_runextgstate(gstate, csi->xref, rdb, obj);
+			error = pdf_runextgstate(csi, gstate, rdb, obj);
 			if (error)
 				return fz_rethrow(error, "cannot set ExtGState (%d %d R)", fz_tonum(obj), fz_togen(obj));
 			break;
@@ -1518,7 +1520,6 @@ pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 {
 	fz_stream *file;
 	fz_error error;
-
 	contents->rp = contents->bp;
 	file = fz_openbuffer(contents);
 	error = pdf_runcsifile(csi, rdb, file, csi->xref->scratch, sizeof csi->xref->scratch);
@@ -1530,13 +1531,33 @@ pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 }
 
 fz_error
-pdf_runcontentstream(fz_device *dev, fz_matrix ctm,
-	pdf_xref *xref, fz_obj *resources, fz_buffer *contents)
+pdf_runcontents(pdf_xref *xref, fz_obj *resources, fz_buffer *contents,
+	fz_device *dev, fz_matrix ctm)
 {
-	pdf_csi *csi = pdf_newcsi(dev, xref, ctm);
+	pdf_csi *csi = pdf_newcsi(xref, dev, ctm);
 	fz_error error = pdf_runcsibuffer(csi, resources, contents);
 	pdf_freecsi(csi);
 	if (error)
 		return fz_rethrow(error, "cannot parse content stream");
+	return fz_okay;
+}
+
+fz_error
+pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
+{
+	fz_error error;
+
+	if (page->transparency)
+		dev->begingroup(dev->user,
+			fz_transformrect(ctm, page->mediabox),
+			0, 0, FZ_BNORMAL);
+
+	error = pdf_runcontents(xref, page->resources, page->contents, dev, ctm);
+	if (error)
+		return fz_rethrow(error, "cannot parse page content stream");
+
+	if (page->transparency)
+		dev->endgroup(dev->user);
+
 	return fz_okay;
 }

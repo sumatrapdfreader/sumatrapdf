@@ -3,11 +3,9 @@
 OS := $(shell uname)
 OS := $(OS:MINGW%=MINGW)
 
+CC ?= cc
 CFLAGS := -Ifitz -Imupdf -Wall
 LDFLAGS :=
-CC := cc
-LD := $(CC)
-AR := ar
 
 ifeq "$(build)" "debug"
 CFLAGS += -pipe -g
@@ -23,18 +21,17 @@ endif
 
 ifeq "$(OS)" "Linux"
 SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
-SYS_FREETYPE_LIB := `pkg-config --libs freetype2`
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
 endif
 
 ifeq "$(OS)" "FreeBSD"
 SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
-SYS_FREETYPE_LIB := `pkg-config --libs freetype2`
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
 endif
 
+# Mac OS X build depends on some thirdparty libs
 ifeq "$(OS)" "Darwin"
 SYS_FREETYPE_INC := -I/usr/X11R6/include/freetype2
 CFLAGS += -I/usr/X11R6/include
@@ -50,9 +47,9 @@ LDFLAGS += -m32
 endif
 endif
 
-# MinGW build depends on thirdparty
+# MinGW build depends on thirdparty libs
 ifeq "$(OS)" "MINGW"
-CC = gcc
+CC := gcc
 W32LIBS := -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows
 PDFVIEW_EXE = $(WINVIEW_EXE)
 endif

@@ -8,7 +8,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	pdf_pattern *pat;
 	fz_obj *obj;
 
-	if ((*patp = pdf_finditem(xref->store, PDF_KPATTERN, dict)))
+	if ((*patp = pdf_finditem(xref->store, pdf_droppattern, dict)))
 	{
 		pdf_keeppattern(*patp);
 		return fz_okay;
@@ -22,7 +22,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	pat->contents = nil;
 
 	/* Store pattern now, to avoid possible recursion if objects refer back to this one */
-	pdf_storeitem(xref->store, PDF_KPATTERN, dict, pat);
+	pdf_storeitem(xref->store, pdf_keeppattern, pdf_droppattern, dict, pat);
 
 	pat->ismask = fz_toint(fz_dictgets(dict, "PaintType")) == 2;
 	pat->xstep = fz_toreal(fz_dictgets(dict, "XStep"));
@@ -57,7 +57,7 @@ pdf_loadpattern(pdf_pattern **patp, pdf_xref *xref, fz_obj *dict)
 	error = pdf_loadstream(&pat->contents, xref, fz_tonum(dict), fz_togen(dict));
 	if (error)
 	{
-		pdf_removeitem(xref->store, PDF_KPATTERN, dict);
+		pdf_removeitem(xref->store, pdf_droppattern, dict);
 		pdf_droppattern(pat);
 		return fz_rethrow(error, "cannot load pattern stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}

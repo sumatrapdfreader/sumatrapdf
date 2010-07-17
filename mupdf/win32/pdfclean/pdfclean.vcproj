@@ -176,14 +176,6 @@
 			RelativePath="..\..\apps\pdfclean.c"
 			>
 		</File>
-		<File
-			RelativePath="..\..\apps\pdftool.c"
-			>
-		</File>
-		<File
-			RelativePath="..\..\apps\pdftool.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

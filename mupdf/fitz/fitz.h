@@ -682,6 +682,8 @@ typedef enum fz_blendmode_e
 	FZ_BLUMINOSITY,
 } fz_blendmode;
 
+extern const char *fz_blendnames[];
+
 /*
  * Pixmaps have n components per pixel. the last is always alpha.
  * premultiplied alpha when rendering, but non-premultiplied for colorspace
@@ -701,13 +703,18 @@ struct fz_pixmap_s
 
 fz_pixmap * fz_newpixmapwithrect(fz_colorspace *, fz_bbox bbox);
 fz_pixmap * fz_newpixmap(fz_colorspace *, int x, int y, int w, int h);
-fz_pixmap *fz_keeppixmap(fz_pixmap *map);
-void fz_droppixmap(fz_pixmap *map);
-
-void fz_debugpixmap(fz_pixmap *map, char *prefix);
-void fz_clearpixmap(fz_pixmap *map, unsigned char value);
+fz_pixmap *fz_keeppixmap(fz_pixmap *pix);
+void fz_droppixmap(fz_pixmap *pix);
+void fz_clearpixmap(fz_pixmap *pix, int value);
+void fz_gammapixmap(fz_pixmap *pix, float gamma);
+fz_pixmap *fz_alphafromgray(fz_pixmap *gray, int luminosity);
+fz_bbox fz_boundpixmap(fz_pixmap *pix);
 
 fz_pixmap * fz_scalepixmap(fz_pixmap *src, int xdenom, int ydenom);
+
+fz_error fz_writepnm(fz_pixmap *pixmap, char *filename);
+fz_error fz_writepam(fz_pixmap *pixmap, char *filename, int savealpha);
+fz_error fz_writepng(fz_pixmap *pixmap, char *filename, int savealpha);
 
 /*
  * Colorspace resources.
@@ -762,8 +769,8 @@ struct fz_font_s
 	fz_buffer **t3procs; /* has 256 entries if used */
 	float *t3widths; /* has 256 entries if used */
 	void *t3xref; /* a pdf_xref for the callback */
-	fz_error (*t3runcontentstream)(struct fz_device_s *dev, fz_matrix ctm,
-		struct pdf_xref_s *xref, fz_obj *resources, fz_buffer *contents);
+	fz_error (*t3run)(struct pdf_xref_s *xref, fz_obj *resources, fz_buffer *contents,
+		struct fz_device_s *dev, fz_matrix ctm);
 
 	fz_rect bbox;
 
@@ -1019,7 +1026,7 @@ struct fz_device_s
 
 	void (*beginmask)(void *, fz_rect, int luminosity, fz_colorspace *cs, float *bc);
 	void (*endmask)(void *);
-	void (*begingroup)(void *, fz_rect, fz_colorspace *, int isolated, int knockout, fz_blendmode blendmode);
+	void (*begingroup)(void *, fz_rect, int isolated, int knockout, fz_blendmode blendmode);
 	void (*endgroup)(void *);
 };
 

@@ -14,7 +14,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 	fz_obj *wmode;
 	fz_obj *obj;
 
-	if ((*cmapp = pdf_finditem(xref->store, PDF_KCMAP, stmobj)))
+	if ((*cmapp = pdf_finditem(xref->store, pdf_dropcmap, stmobj)))
 	{
 		pdf_keepcmap(*cmapp);
 		return fz_okay;
@@ -73,7 +73,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 
 	pdf_logfont("}\n");
 
-	pdf_storeitem(xref->store, PDF_KCMAP, stmobj, cmap);
+	pdf_storeitem(xref->store, pdf_keepcmap, pdf_dropcmap, stmobj, cmap);
 
 	*cmapp = cmap;
 	return fz_okay;

@@ -204,7 +204,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	fz_error error;
 	pdf_image *img;
 
-	if ((*imgp = pdf_finditem(xref->store, PDF_KIMAGE, dict)))
+	if ((*imgp = pdf_finditem(xref->store, pdf_dropimage, dict)))
 		{
 		pdf_keepimage(*imgp);
 		return fz_okay;
@@ -242,7 +242,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 
 	pdf_logimage("}\n");
 
-	pdf_storeitem(xref->store, PDF_KIMAGE, dict, img);
+	pdf_storeitem(xref->store, pdf_keepimage, pdf_dropimage, dict, img);
 
 	*imgp = img;
 	return fz_okay;

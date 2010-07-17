@@ -103,9 +103,9 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	 */
 
 	file = fz_openfile(fd);
-	app->xref = pdf_openxref(file);
-	if (!app->xref)
-		pdfapp_error(app, fz_rethrow(-1, "cannot open PDF file '%s'", filename));
+	error = pdf_openxrefwithstream(&app->xref, file, NULL);
+	if (error)
+		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
 	fz_dropstream(file);
 
 	/*
@@ -189,12 +189,15 @@ void pdfapp_close(pdfapp_t *app)
 		pdf_freeoutline(app->outline);
 	app->outline = nil;
 
+	if (app->xref)
+	{
 	if (app->xref->store)
 		pdf_freestore(app->xref->store);
 	app->xref->store = nil;
 
-	pdf_closexref(app->xref);
+		pdf_freexref(app->xref);
 	app->xref = nil;
+	}
 }
 
 static fz_matrix pdfapp_viewctm(pdfapp_t *app)
@@ -252,8 +255,6 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 			pdf_freepage(app->page);
 		app->page = nil;
 
-		pdf_flushxref(app->xref, 0);
-
 		obj = pdf_getpageobject(app->xref, app->pageno);
 		error = pdf_loadpage(&app->page, app->xref, obj);
 		if (error)
@@ -262,7 +263,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		/* Create display list */
 		app->page->list = fz_newdisplaylist();
 		mdev = fz_newlistdevice(app->page->list);
-		error = pdf_runcontentstream(mdev, fz_identity, app->xref, app->page->resources, app->page->contents);
+		error = pdf_runpage(app->xref, app->page, mdev, fz_identity);
 		if (error)
 		{
 			error = fz_rethrow(error, "cannot draw page %d in '%s'", app->pageno, app->doctitle);

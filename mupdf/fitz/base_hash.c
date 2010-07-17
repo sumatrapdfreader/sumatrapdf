@@ -131,7 +131,7 @@ fz_hashfind(fz_hashtable *table, void *key)
 		if (!ents[pos].val)
 			return nil;
 
-		if (memcmp(key, &ents[pos].key, table->keylen) == 0)
+		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 			return ents[pos].val;
 
 		pos = (pos + 1) % size;
@@ -164,7 +164,7 @@ fz_hashinsert(fz_hashtable *table, void *key, void *val)
 			return;
 		}
 
-		if (memcmp(key, &ents[pos].key, table->keylen) == 0)
+		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 			fz_warn("assert: overwrite hash slot");
 
 		pos = (pos + 1) % size;
@@ -187,7 +187,7 @@ fz_hashremove(fz_hashtable *table, void *key)
 			return;
 		}
 
-		if (memcmp(key, &ents[pos].key, table->keylen) == 0)
+		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
 			ents[pos].val = nil;
 
@@ -238,4 +238,3 @@ fz_debughash(fz_hashtable *table)
 		}
 	}
 }
-

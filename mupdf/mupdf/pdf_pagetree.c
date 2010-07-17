@@ -46,11 +46,13 @@ pdf_findpageobject(pdf_xref *xref, fz_obj *page)
 void
 pdf_loadpagetreenode(pdf_xref *xref, fz_obj *node, struct info info)
 {
-	fz_obj *dict;
-	fz_obj *kids;
-	fz_obj *count;
-	fz_obj *obj;
+	fz_obj *dict, *kids, *count;
+	fz_obj *obj, *tmp;
 	int i, n;
+
+	/* prevent infinite recursion */
+	if (fz_dictgets(node, ".seen"))
+		return;
 
 	kids = fz_dictgets(node, "Kids");
 	count = fz_dictgets(node, "Count");
@@ -70,12 +72,18 @@ pdf_loadpagetreenode(pdf_xref *xref, fz_obj *node, struct info info)
 		if (obj)
 			info.rotate = obj;
 
+		tmp = fz_newnull();
+		fz_dictputs(node, ".seen", tmp);
+		fz_dropobj(tmp);
+
 		n = fz_arraylen(kids);
 		for (i = 0; i < n; i++)
 		{
 			obj = fz_arrayget(kids, i);
 			pdf_loadpagetreenode(xref, obj, info);
 		}
+
+		fz_dictdels(node, ".seen");
 	}
 	else
 	{

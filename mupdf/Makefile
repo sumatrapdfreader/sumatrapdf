@@ -11,6 +11,11 @@ prefix ?= /usr/local
 OBJDIR := build/$(build)
 GENDIR := build/generated
 
+$(OBJDIR):
+	mkdir -p $@
+$(GENDIR):
+	mkdir -p $@
+
 # If no pregen directory is supplied, then generate (dump) the
 # font and cmap .c files as part of the build.
 # If it is supplied, then just use the files from that directory.
@@ -27,34 +32,30 @@ endif
 
 LIBS := -lfreetype -ljbig2dec -lopenjpeg -ljpeg -lz -lm
 
--include Makerules
--include Makethird
+include Makerules
+include Makethird
 
 CFLAGS += $(THIRD_INCS) $(SYS_FREETYPE_INC)
-LDFLAGS += $(SYS_FREETYPE_LIB)
 
 #
 # Build commands
 #
 
-SILENT := @
 ifneq "$(verbose)" ""
-SILENT :=
+
+GENFILE_CMD = $(firstword $^) $@ $(wordlist 2, 999, $^)
+CC_CMD = $(CC) -o $@ -c $< $(CFLAGS)
+LD_CMD = $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
+AR_CMD = ar cru $@ $^
+
+else
+
+GENFILE_CMD = @ echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
+CC_CMD = @ echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
+LD_CMD = @ echo LD $@ && $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
+AR_CMD = @ echo AR $@ && ar cru $@ $^
+
 endif
-
-GENFILE_CMD = $(SILENT) echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
-CC_CMD = $(SILENT) echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
-LD_CMD = $(SILENT) echo LD $@ && $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = $(SILENT) echo AR $@ && $(AR) cru $@ $^
-
-#
-# Directories
-#
-
-DIRS = $(OBJDIR) $(GENDIR)
-
-$(DIRS):
-	mkdir -p $@
 
 #
 # Code generation tools
@@ -153,7 +154,6 @@ MUPDF_SRC := \
 	mupdf/pdf_interpret.c \
 	mupdf/pdf_lex.c \
 	mupdf/pdf_nametree.c \
-	mupdf/pdf_open.c \
 	mupdf/pdf_outline.c \
 	mupdf/pdf_page.c \
 	mupdf/pdf_pagetree.c \
@@ -219,6 +219,7 @@ FONT_SRC := \
 	$(GENDIR)/font_cjk.c
 
 FONT_OBJ := $(FONT_SRC:$(GENDIR)/%.c=$(OBJDIR)/%.o)
+
 
 #
 # Generated CMap file dumps
@@ -303,51 +304,45 @@ $(MUPDF_LIB): $(FITZ_OBJ) $(DRAW_OBJ) $(MUPDF_OBJ) $(CMAP_OBJ) $(FONT_OBJ)
 
 APPS = $(PDFSHOW_EXE) $(PDFCLEAN_EXE) $(PDFDRAW_EXE) $(PDFEXTRACT_EXE) $(PDFINFO_EXE) $(PDFVIEW_EXE)
 
-PDFAPP_HDR = apps/pdfapp.h
-PDFTOOL_HDR = apps/pdftool.h
-
 $(OBJDIR)/%.o: apps/%.c
 	$(CC_CMD)
 
-PDFSHOW_SRC=apps/pdfshow.c apps/pdftool.c
+PDFSHOW_SRC=apps/pdfshow.c
 PDFSHOW_OBJ=$(PDFSHOW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFSHOW_EXE=$(OBJDIR)/pdfshow
-
-$(PDFSHOW_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFSHOW_OBJ): $(MUPDF_HDR)
 $(PDFSHOW_EXE): $(PDFSHOW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
-PDFCLEAN_SRC=apps/pdfclean.c apps/pdftool.c
+PDFCLEAN_SRC=apps/pdfclean.c
 PDFCLEAN_OBJ=$(PDFCLEAN_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFCLEAN_EXE=$(OBJDIR)/pdfclean
-
-$(PDFCLEAN_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFCLEAN_OBJ): $(MUPDF_HDR)
 $(PDFCLEAN_EXE): $(PDFCLEAN_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
-PDFDRAW_SRC=apps/pdfdraw.c apps/pdftool.c
+PDFDRAW_SRC=apps/pdfdraw.c
 PDFDRAW_OBJ=$(PDFDRAW_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFDRAW_EXE=$(OBJDIR)/pdfdraw
-
-$(PDFDRAW_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFDRAW_OBJ): $(MUPDF_HDR)
 $(PDFDRAW_EXE): $(PDFDRAW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
-PDFEXTRACT_SRC=apps/pdfextract.c apps/pdftool.c
+PDFEXTRACT_SRC=apps/pdfextract.c
 PDFEXTRACT_OBJ=$(PDFEXTRACT_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFEXTRACT_EXE=$(OBJDIR)/pdfextract
-
-$(PDFEXTRACT_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFEXTRACT_OBJ): $(MUPDF_HDR)
 $(PDFEXTRACT_EXE): $(PDFEXTRACT_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
 
-PDFINFO_SRC=apps/pdfinfo.c apps/pdftool.c
+PDFINFO_SRC=apps/pdfinfo.c
 PDFINFO_OBJ=$(PDFINFO_SRC:apps/%.c=$(OBJDIR)/%.o)
 PDFINFO_EXE=$(OBJDIR)/pdfinfo
-
-$(PDFINFO_OBJ): $(MUPDF_HDR) $(PDFTOOL_HDR)
+$(PDFINFO_OBJ): $(MUPDF_HDR)
 $(PDFINFO_EXE): $(PDFINFO_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD)
+
+PDFAPP_HDR = apps/pdfapp.h
 
 X11VIEW_SRC=apps/x11_main.c apps/x11_image.c apps/pdfapp.c
 X11VIEW_OBJ=$(X11VIEW_SRC:apps/%.c=$(OBJDIR)/%.o)
@@ -370,20 +365,12 @@ $(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)
 	$(LD_CMD) $(W32LIBS)
 
 #
-# Installation and tarball packaging
-#
-
-dist: $(DIRS) $(APPS)
-	mkdir -p mupdf-dist
-	cp README COPYING $(APPS) mupdf-dist
-	tar cvf mupdf-dist.tar mupdf-dist
-	rm -rf mupdf-dist
-
-#
 # Default rules
 #
 
-all: $(DIRS) $(THIRD_LIBS) $(MUPDF_LIB) $(APPS)
+.PHONY: default all pregen clean nuke install
+
+all: $(OBJDIR) $(GENDIR) $(THIRD_LIBS) $(MUPDF_LIB) $(APPS)
 
 clean:
 	rm -rf $(OBJDIR)/*
@@ -391,7 +378,7 @@ clean:
 nuke:
 	rm -rf build
 
-install: $(DIRS) $(APPS) $(MUPDF_LIB)
+install: $(OBJDIR) $(GENDIR) $(MUPDF_LIB) $(APPS)
 	install -d $(prefix)/bin $(prefix)/lib $(prefix)/include
 	install $(APPS) $(prefix)/bin
 	install $(MUPDF_LIB) $(prefix)/lib

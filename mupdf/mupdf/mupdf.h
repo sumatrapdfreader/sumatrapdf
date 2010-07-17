@@ -134,7 +134,6 @@ struct pdf_xref_s
 	fz_obj **pagerefs;
 
 	struct pdf_store_s *store;
-	struct pdf_outline_s *outlines;
 
 	char scratch[65536];
 };
@@ -148,11 +147,6 @@ struct pdf_xrefentry_s
 	int type;	/* 0=unset (f)ree i(n)use (o)bjstm */
 };
 
-pdf_xref * pdf_openxref(fz_stream *file);
-void pdf_closexref(pdf_xref *);
-void pdf_debugxref(pdf_xref *);
-void pdf_flushxref(pdf_xref *, int force);
-
 fz_error pdf_cacheobject(pdf_xref *, int num, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
 
@@ -164,8 +158,13 @@ fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int num, int gen);
 fz_error pdf_openstream(fz_stream **stmp, pdf_xref *, int num, int gen);
 fz_error pdf_openstreamat(fz_stream **stmp, pdf_xref *xref, int num, int gen, fz_obj *dict, int stmofs);
 
+fz_error pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password);
+fz_error pdf_openxref(pdf_xref **xrefp, char *filename, char *password);
+void pdf_freexref(pdf_xref *);
+
 /* private */
-extern fz_error pdf_repairxref(pdf_xref *xref, char *buf, int bufsize);
+fz_error pdf_repairxref(pdf_xref *xref, char *buf, int bufsize);
+void pdf_debugxref(pdf_xref *);
 
 /*
  * Resource store
@@ -173,29 +172,14 @@ extern fz_error pdf_repairxref(pdf_xref *xref, char *buf, int bufsize);
 
 typedef struct pdf_store_s pdf_store;
 
-typedef enum pdf_itemkind_e
-{
-	PDF_KCOLORSPACE,
-	PDF_KFUNCTION,
-	PDF_KXOBJECT,
-	PDF_KIMAGE,
-	PDF_KPATTERN,
-	PDF_KSHADING,
-	PDF_KCMAP,
-	PDF_KFONT,
-} pdf_itemkind;
-
 pdf_store * pdf_newstore(void);
-void pdf_emptystore(pdf_store *store);
 void pdf_freestore(pdf_store *store);
 void pdf_debugstore(pdf_store *store);
 
-void pdf_agestoreditems(pdf_store *store);
-void pdf_evictageditems(pdf_store *store);
-
-void pdf_storeitem(pdf_store *store, pdf_itemkind tag, fz_obj *key, void *val);
-void *pdf_finditem(pdf_store *store, pdf_itemkind tag, fz_obj *key);
-void pdf_removeitem(pdf_store *store, pdf_itemkind tag, fz_obj *key);
+void pdf_storeitem(pdf_store *store, void *keepfn, void *dropfn, fz_obj *key, void *val);
+void *pdf_finditem(pdf_store *store, void *dropfn, fz_obj *key);
+void pdf_removeitem(pdf_store *store, void *dropfn, fz_obj *key);
+void pdf_agestore(pdf_store *store, int maxage);
 
 /*
  * Functions
@@ -524,6 +508,7 @@ struct pdf_page_s
 {
 	fz_rect mediabox;
 	int rotate;
+	int transparency;
 	fz_obj *resources;
 	fz_buffer *contents;
 	fz_displaylist *list;
@@ -570,7 +555,6 @@ struct pdf_material_s
 	fz_colorspace *cs;
 	pdf_pattern *pattern;
 	fz_shade *shade;
-	float parentalpha;
 	float alpha;
 	float v[32];
 };
@@ -586,7 +570,6 @@ struct pdf_gstate_s
 	/* materials */
 	pdf_material stroke;
 	pdf_material fill;
-	fz_blendmode blendmode;
 
 	/* text state */
 	float charspace;
@@ -597,6 +580,12 @@ struct pdf_gstate_s
 	float size;
 	int render;
 	float rise;
+
+	/* transparency */
+	fz_blendmode blendmode;
+	pdf_xobject *softmask;
+	fz_matrix softmaskctm;
+	int luminosity;
 };
 
 struct pdf_csi_s
@@ -643,7 +632,9 @@ void pdf_showshade(pdf_csi*, fz_shade *shd);
 void pdf_gsave(pdf_csi *csi);
 void pdf_grestore(pdf_csi *csi);
 fz_error pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
-fz_error pdf_runcontentstream(fz_device *dev, fz_matrix ctm, pdf_xref *xref, fz_obj *resources, fz_buffer *contents);
+fz_error pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj);
+fz_error pdf_runcontents(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm);
+fz_error pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm);
 
 pdf_material * pdf_keepmaterial(pdf_material *mat);
 pdf_material * pdf_dropmaterial(pdf_material *mat);

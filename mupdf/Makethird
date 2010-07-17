@@ -174,7 +174,6 @@ THIRD_INCS += -I$(freetype_dir)/include
 LIBS := $(filter-out -lfreetype, $(LIBS))
 
 SYS_FREETYPE_INC :=
-SYS_FREETYPE_LIB :=
 
 FREETYPE_OBJ=$(addprefix $(OBJDIR)/ft_, \
 	autofit.o ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftdebug.o ftgasp.o \

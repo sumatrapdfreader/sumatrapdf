@@ -269,10 +269,10 @@ fz_listendmask(void *user)
 }
 
 static void
-fz_listbegingroup(void *user, fz_rect rect, fz_colorspace *colorspace, int isolated, int knockout, fz_blendmode blendmode)
+fz_listbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode)
 {
 	fz_displaynode *node;
-	node = fz_newdisplaynode(FZ_CMDBEGINGROUP, fz_identity, colorspace, nil, 0);
+	node = fz_newdisplaynode(FZ_CMDBEGINGROUP, fz_identity, nil, nil, 0);
 	node->rect = rect;
 	node->item.blendmode = blendmode;
 	node->flag |= isolated ? ISOLATED : 0;
@@ -338,6 +338,7 @@ fz_freedisplaylist(fz_displaylist *list)
 		fz_freedisplaynode(node);
 		node = next;
 	}
+	fz_free(list);
 }
 
 void
@@ -406,8 +407,9 @@ fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
 			break;
 		case FZ_CMDBEGINGROUP:
 			bbox = fz_transformrect(topctm, node->rect);
-			dev->begingroup(dev->user, bbox, node->colorspace,
-				node->flag & ISOLATED, node->flag & KNOCKOUT, node->item.blendmode);
+			dev->begingroup(dev->user, bbox,
+				node->flag & ISOLATED, node->flag & KNOCKOUT,
+				node->item.blendmode);
 			break;
 		case FZ_CMDENDGROUP:
 			dev->endgroup(dev->user);

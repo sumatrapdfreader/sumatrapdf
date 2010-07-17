@@ -17,7 +17,7 @@ static void fz_nullfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm, fz
 static void fz_nullclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm) {}
 static void fz_nullbeginmask(void *user, fz_rect r, int luminosity, fz_colorspace *cs, float *bc) {}
 static void fz_nullendmask(void *user) {}
-static void fz_nullbegingroup(void *user, fz_rect r, fz_colorspace *cs, int isolated, int knockout, fz_blendmode blendmode) {}
+static void fz_nullbegingroup(void *user, fz_rect r, int isolated, int knockout, fz_blendmode blendmode) {}
 static void fz_nullendgroup(void *user) {}
 
 fz_device *

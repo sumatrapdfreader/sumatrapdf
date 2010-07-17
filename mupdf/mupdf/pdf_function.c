@@ -1436,7 +1436,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 	fz_obj *obj;
 	int i;
 
-	if ((*funcp = pdf_finditem(xref->store, PDF_KFUNCTION, dict)))
+	if ((*funcp = pdf_finditem(xref->store, pdf_dropfunction, dict)))
 	{
 		pdf_keepfunction(*funcp);
 		return fz_okay;
@@ -1533,7 +1533,7 @@ pdf_loadfunction(pdf_function **funcp, pdf_xref *xref, fz_obj *dict)
 
 	pdf_logrsrc("}\n");
 
-	pdf_storeitem(xref->store, PDF_KFUNCTION, dict, func);
+	pdf_storeitem(xref->store, pdf_keepfunction, pdf_dropfunction, dict, func);
 
 	*funcp = func;
 	return fz_okay;

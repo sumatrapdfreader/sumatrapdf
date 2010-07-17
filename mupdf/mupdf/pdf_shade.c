@@ -1297,7 +1297,7 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 	fz_matrix mat;
 	fz_obj *obj;
 
-	if ((*shadep = pdf_finditem(xref->store, PDF_KSHADING, dict)))
+	if ((*shadep = pdf_finditem(xref->store, fz_dropshade, dict)))
 	{
 		fz_keepshade(*shadep);
 		return fz_okay;
@@ -1352,7 +1352,7 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 			return fz_rethrow(error, "cannot load shading dictionary (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
-	pdf_storeitem(xref->store, PDF_KSHADING, dict, *shadep);
+	pdf_storeitem(xref->store, fz_keepshade, fz_dropshade, dict, *shadep);
 
 	return fz_okay;
 }

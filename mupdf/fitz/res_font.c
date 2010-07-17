@@ -24,7 +24,7 @@ fz_newfont(void)
 	font->t3procs = nil;
 	font->t3widths = nil;
 	font->t3xref = nil;
-	font->t3runcontentstream = nil;
+	font->t3run = nil;
 
 	font->bbox.x0 = 0;
 	font->bbox.y0 = 0;
@@ -466,17 +466,17 @@ fz_rendert3glyph(fz_font *font, int gid, fz_matrix trm)
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_newbboxdevice(&bbox);
-	error = font->t3runcontentstream(dev, ctm, font->t3xref, font->t3resources, contents);
+	error = font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
 	if (error)
 		fz_catch(error, "cannot draw type3 glyph");
 	fz_freedevice(dev);
 
 	glyph = fz_newpixmap(nil, bbox.x0-1, bbox.y0-1, bbox.x1 - bbox.x0 + 1, bbox.y1 - bbox.y0 + 1);
-	fz_clearpixmap(glyph, 0x00);
+	fz_clearpixmap(glyph, 0);
 
 	cache = fz_newglyphcache();
 	dev = fz_newdrawdevice(cache, glyph);
-	error = font->t3runcontentstream(dev, ctm, font->t3xref, font->t3resources, contents);
+	error = font->t3run(font->t3xref, font->t3resources, contents, dev, ctm);
 	if (error)
 		fz_catch(error, "cannot draw type3 glyph");
 	fz_freedevice(dev);

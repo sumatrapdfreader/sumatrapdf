@@ -159,7 +159,7 @@ MUPDF_OBJS = \
 	$(O)\pdf_colorspace.obj $(O)\pdf_crypt.obj $(O)\pdf_debug.obj \
 	$(O)\pdf_font.obj $(O)\pdf_fontagl.obj $(O)\pdf_fontenc.obj $(O)\pdf_fontmtx.obj $(O)\pdf_function.obj \
 	$(O)\pdf_image.obj $(O)\pdf_interpret.obj $(O)\pdf_lex.obj $(O)\pdf_nametree.obj \
-	$(O)\pdf_open.obj $(O)\pdf_outline.obj $(O)\pdf_page.obj $(O)\pdf_pagetree.obj \
+	$(O)\pdf_outline.obj $(O)\pdf_page.obj $(O)\pdf_pagetree.obj \
 	$(O)\pdf_parse.obj $(O)\pdf_pattern.obj $(O)\pdf_repair.obj $(O)\pdf_shade.obj \
 	$(O)\pdf_store.obj $(O)\pdf_stream.obj $(O)\pdf_type3.obj $(O)\pdf_unicode.obj \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfile.obj \
@@ -209,32 +209,32 @@ PDFBENCH_APP = $(O)\pdfbench.exe
 PDFBENCH_PDB = $(O)\pdfbench.pdb
 PDFBENCH_MAP = $(O)\pdfbench.map
 
-PDFDRAW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfdraw.obj
+PDFDRAW_OBJS = $(LIBS_OBJS) $(O)\pdfdraw.obj
 PDFDRAW_APP = $(O)\pdfdraw.exe
 PDFDRAW_PDB = $(O)\pdfdraw.pdb
 PDFDRAW_MAP = $(O)\pdfdraw.map
 
-PDFGDRAW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfgdraw.obj
+PDFGDRAW_OBJS = $(LIBS_OBJS) $(O)\pdfgdraw.obj
 PDFGDRAW_APP = $(O)\pdfgdraw.exe
 PDFGDRAW_PDB = $(O)\pdfgdraw.pdb
 PDFGDRAW_MAP = $(O)\pdfgdraw.map
 
-PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfshow.obj
+PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
 PDFSHOW_PDB = $(O)\pdfshow.pdb
 PDFSHOW_MAP = $(O)\pdfshow.map
 
-PDFCLEAN_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfclean.obj
+PDFCLEAN_OBJS = $(LIBS_OBJS) $(O)\pdfclean.obj
 PDFCLEAN_APP = $(O)\pdfclean.exe
 PDFCLEAN_PDB = $(O)\pdfclean.pdb
 PDFCLEAN_MAP = $(O)\pdfclean.map
 
-PDFINFO_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfinfo.obj
+PDFINFO_OBJS = $(LIBS_OBJS) $(O)\pdfinfo.obj
 PDFINFO_APP = $(O)\pdfinfo.exe
 PDFINFO_PDB = $(O)\pdfinfo.pdb
 PDFINFO_MAP = $(O)\pdfinfo.map
 
-PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdftool.obj $(O)\pdfextract.obj
+PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 PDFEXTRACT_PDB = $(O)\pdfextract.pdb
 PDFEXTRACT_MAP = $(O)\pdfextract.map
