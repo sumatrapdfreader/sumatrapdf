@@ -3,9 +3,7 @@
 #define MAX4(a,b,c,d) MAX(MAX(a,b), MAX(c,d))
 #define MIN4(a,b,c,d) MIN(MIN(a,b), MIN(c,d))
 
-/*
- * Matrices, points and affine transformations
- */
+/* Matrices, points and affine transformations */
 
 const fz_matrix fz_identity = { 1, 0, 0, 1, 0, 0 };
 
@@ -131,9 +129,7 @@ fz_transformvector(fz_matrix m, fz_point p)
 	return t;
 }
 
-/*
- * Rectangles and bounding boxes
- */
+/* Rectangles and bounding boxes */
 
 const fz_rect fz_infiniterect = { 1, 1, -1, -1 };
 const fz_rect fz_emptyrect = { 0, 0, 0, 0 };
@@ -208,4 +204,3 @@ fz_transformrect(fz_matrix m, fz_rect r)
 	r.y1 = MAX4(s.y, t.y, u.y, v.y);
 	return r;
 }
-

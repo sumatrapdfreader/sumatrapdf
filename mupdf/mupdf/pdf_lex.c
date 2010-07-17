@@ -23,11 +23,6 @@
 #define RANGE_A_F \
 	'A':case'B':case'C':case'D':case'E':case'F'
 
-/*
- * pdf_lex will use fz_peekbyte and fz_readbyte.
- * have to check for file errors with fz_readerror() after lexing.
- */
-
 static inline int
 iswhite(int ch)
 {

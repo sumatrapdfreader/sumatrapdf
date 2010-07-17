@@ -120,4 +120,3 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 		return fz_throw("zlib error: inflate: %s", zp->msg);
 	}
 }
-

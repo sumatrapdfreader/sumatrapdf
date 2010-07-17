@@ -78,9 +78,9 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 		img->n = img->colorspace->n;
 	}
 	else
-		{
+	{
 		img->n = 1;
-		}
+	}
 
 	obj = fz_dictgetsa(dict, "Decode", "D");
 	if (obj)
@@ -93,17 +93,17 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 		for (i = 0; i < img->n * 2; i++)
 		{
 			if (i & 1)
-	{
-		if (img->indexed)
+			{
+				if (img->indexed)
 					img->decode[i] = (1 << img->bpc) - 1;
-		else
+				else
 					img->decode[i] = 1;
-	}
-	else
-	{
+			}
+			else
+			{
 				img->decode[i] = 0;
 			}
-	}
+		}
 	}
 
 	/* Not allowed for inline images */
@@ -115,13 +115,13 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 		{
 			pdf_dropimage(img);
 			return fz_rethrow(error, "cannot load image mask/softmask");
-	}
+		}
 		img->mask->imagemask = 1; /* TODO: this triggers bit inversion later. should we? */
 		if (img->mask->colorspace)
-	{
+		{
 			fz_dropcolorspace(img->mask->colorspace);
 			img->mask->colorspace = nil;
-	}
+		}
 	}
 	else if (fz_isarray(obj))
 	{
@@ -174,20 +174,20 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 
 	img->samples = fz_newbuffer(img->h * img->stride);
 	error = fz_read(&n, file, img->samples->bp, img->h * img->stride);
-		if (error)
-		{
-			pdf_dropimage(img);
+	if (error)
+	{
+		pdf_dropimage(img);
 		return fz_rethrow(error, "cannot load inline image data");
-		}
+	}
 	img->samples->wp += n;
 
 	if (img->imagemask)
-		{
+	{
 		/* 0=opaque and 1=transparent so we need to invert */
 		unsigned char *p;
 		for (p = img->samples->bp; p < img->samples->ep; p++)
 			*p = ~*p;
-		}
+	}
 
 	fz_dropstream(subfile);
 	fz_dropfilter(filter);
@@ -205,19 +205,19 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	pdf_image *img;
 
 	if ((*imgp = pdf_finditem(xref->store, pdf_dropimage, dict)))
-		{
+	{
 		pdf_keepimage(*imgp);
 		return fz_okay;
-		}
+	}
 
 	pdf_logimage("load image (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
 	error = pdf_loadimageheader(&img, xref, rdb, dict);
-		if (error)
+	if (error)
 		return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(dict), fz_togen(dict));
 
 	error = pdf_loadstream(&img->samples, xref, fz_tonum(dict), fz_togen(dict));
-			if (error)
+	if (error)
 	{
 		pdf_dropimage(img);
 		return fz_rethrow(error, "cannot load image data (%d %d R)", fz_tonum(dict), fz_togen(dict));
@@ -289,7 +289,7 @@ pdf_loadtile(pdf_image *img /* ...bbox/y+h should go here... */)
 		pdf_maskcolorkey(tile, img->n, img->colorkey, scale);
 
 	if (img->indexed)
-		{
+	{
 		fz_pixmap *conv;
 		float decode[4];
 

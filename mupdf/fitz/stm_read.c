@@ -271,9 +271,7 @@ fz_peekbytex(fz_stream *stm)
 	return buf->rp < buf->wp ? *buf->rp : EOF ;
 }
 
-/*
- * Read a line terminated by LF or CR or CRLF.
- */
+/* Read a line terminated by LF or CR or CRLF. */
 
 fz_error
 fz_readline(fz_stream *stm, char *mem, int n)
@@ -334,10 +332,7 @@ fz_fillbuf(fz_stream *stm, fz_buffer *buf)
 	return 0;
 }
 
-/*
- * Utility function to consume all the contents of an input stream into
- * a freshly allocated buffer.
- */
+/* Read the contents of an input stream into a new buffer. */
 
 fz_buffer *
 fz_readall(fz_stream *stm, int sizehint)

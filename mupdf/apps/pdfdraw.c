@@ -108,16 +108,16 @@ static void drawpage(pdf_xref *xref, int pagenum)
 	fz_freedevice(dev);
 
 	if (showxml)
-		{
+	{
 		dev = fz_newtracedevice();
 		printf("<page number=\"%d\">\n", pagenum);
 		fz_executedisplaylist(list, dev, fz_identity);
 		printf("</page>\n");
 		fz_freedevice(dev);
-		}
+	}
 
 	if (showtext)
-		{
+	{
 		fz_textspan *text = fz_newtextspan();
 		dev = fz_newtextdevice(text);
 		fz_executedisplaylist(list, dev, fz_identity);
@@ -137,9 +137,9 @@ static void drawpage(pdf_xref *xref, int pagenum)
 	if (output || showmd5 || showtime)
 	{
 		float zoom;
-	fz_matrix ctm;
-	fz_bbox bbox;
-	fz_pixmap *pix;
+		fz_matrix ctm;
+		fz_bbox bbox;
+		fz_pixmap *pix;
 
 		zoom = resolution / 72;
 		ctm = fz_translate(0, -page->mediabox.y1);
@@ -157,7 +157,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 			fz_clearpixmap(pix, 0xff);
 
 		dev = fz_newdrawdevice(glyphcache, pix);
-			fz_executedisplaylist(list, dev, ctm);
+		fz_executedisplaylist(list, dev, ctm);
 		fz_freedevice(dev);
 
 		if (output)
@@ -170,10 +170,10 @@ static void drawpage(pdf_xref *xref, int pagenum)
 				fz_writepam(pix, buf, savealpha);
 			else if (strstr(output, ".png"))
 				fz_writepng(pix, buf, savealpha);
-					}
+		}
 
 		if (showmd5)
-				{
+		{
 			fz_md5 md5;
 			unsigned char digest[16];
 			int i;
@@ -190,7 +190,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		fz_droppixmap(pix);
 	}
 
-		fz_freedisplaylist(list);
+	fz_freedisplaylist(list);
 	pdf_freepage(page);
 
 	if (showtime)
@@ -215,7 +215,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 	}
 
 	if (showmd5 || showtime)
-	printf("\n");
+		printf("\n");
 
 	pdf_agestore(xref->store, 3);
 }
@@ -247,7 +247,7 @@ static void drawrange(pdf_xref *xref, char *range)
 		epage = CLAMP(epage, 1, pdf_getpagecount(xref));
 
 		if (spage < epage)
-		for (page = spage; page <= epage; page++)
+			for (page = spage; page <= epage; page++)
 				drawpage(xref, page);
 		else
 			for (page = spage; page >= epage; page--)
@@ -287,18 +287,24 @@ int main(int argc, char **argv)
 	if (fz_optind == argc)
 		usage();
 
+	if (!showtext && !showxml && !showtime && !showmd5 && !output)
+	{
+		printf("nothing to do\n");
+		exit(0);
+	}
+
 	if (accelerate)
 		fz_accelerate();
 
 	glyphcache = fz_newglyphcache();
 
-	colorspace = pdf_devicergb;
+	colorspace = fz_devicergb;
 	if (grayscale)
-		colorspace = pdf_devicegray;
+		colorspace = fz_devicegray;
 	if (output && strstr(output, ".pgm"))
-		colorspace = pdf_devicegray;
+		colorspace = fz_devicegray;
 	if (output && strstr(output, ".ppm"))
-		colorspace = pdf_devicergb;
+		colorspace = fz_devicergb;
 
 	timing.count = 0;
 	timing.total = 0;
@@ -334,15 +340,15 @@ int main(int argc, char **argv)
 			printf("</document>\n");
 
 		pdf_freexref(xref);
-		}
+	}
 
 	if (showtime)
-		{
+	{
 		printf("total %dms / %d pages for an average of %dms\n",
 			timing.total, timing.count, timing.total / timing.count);
 		printf("fastest page %d: %dms\n", timing.minpage, timing.min);
 		printf("slowest page %d: %dms\n", timing.maxpage, timing.max);
-		}
+	}
 
 	fz_freeglyphcache(glyphcache);
 

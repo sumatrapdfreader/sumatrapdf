@@ -117,4 +117,3 @@ fz_freearray(fz_obj *obj)
 	fz_free(obj->u.a.items);
 	fz_free(obj);
 }
-

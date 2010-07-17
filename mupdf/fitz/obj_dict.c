@@ -289,4 +289,3 @@ fz_sortdict(fz_obj *obj)
 		obj->u.d.sorted = 1;
 	}
 }
-

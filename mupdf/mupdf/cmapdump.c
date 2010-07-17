@@ -106,7 +106,7 @@ main(int argc, char **argv)
 			return 1;
 		}
 
-		fprintf(fo, "/*\n * %s\n */\n\n", cmap->cmapname);
+		fprintf(fo, "/* %s */\n\n", cmap->cmapname);
 
 		fprintf(fo, "static const pdf_range pdf_cmap_%s_ranges[] =\n{\n", name);
 		if (cmap->rlen == 0)
@@ -181,4 +181,3 @@ main(int argc, char **argv)
 
 	return 0;
 }
-

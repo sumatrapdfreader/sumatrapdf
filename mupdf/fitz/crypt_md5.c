@@ -270,4 +270,3 @@ void fz_md5final(fz_md5 *context, unsigned char digest[16])
 	/* Zeroize sensitive information */
 	memset(context, 0, sizeof(fz_md5));
 }
-

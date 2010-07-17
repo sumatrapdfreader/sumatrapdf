@@ -89,4 +89,3 @@ void pdf_logshade(char *fmt, ...)
 
 void pdf_logpage(char *fmt, ...)
 {va_list ap;va_start(ap,fmt);pdflog(PDF_LPAGE,"page",fmt,ap);va_end(ap);}
-

@@ -17,9 +17,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	memset(crypt, 0x00, sizeof(pdf_crypt));
 	crypt->cf = nil;
 
-	/*
-	 * Common to all security handlers (PDF 1.7 table 3.18)
-	 */
+	/* Common to all security handlers (PDF 1.7 table 3.18) */
 
 	obj = fz_dictgets(dict, "Filter");
 	if (!fz_isname(obj))
@@ -122,9 +120,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 		}
 	}
 
-	/*
-	 * Standard security handler (PDF 1.7 table 3.19)
-	 */
+	/* Standard security handler (PDF 1.7 table 3.19) */
 
 	obj = fz_dictgets(dict, "R");
 	if (fz_isint(obj))
@@ -167,9 +163,7 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	if (fz_isbool(obj))
 		crypt->encryptmetadata = fz_tobool(obj);
 
-	/*
-	 * Extract file identifier string
-	 */
+	/* Extract file identifier string */
 
 	crypt->idlength = 0;
 
@@ -457,7 +451,6 @@ pdf_authenticateownerpassword(pdf_crypt *crypt, unsigned char *ownerpass, int pw
 	return pdf_authenticateuserpassword(crypt, userpass, 32);
 }
 
-
 int
 pdf_authenticatepassword(pdf_xref *xref, char *password)
 {
@@ -611,4 +604,3 @@ pdf_cryptstream(pdf_crypt * crypt, pdf_cryptfilter * stmf, int num, int gen)
 
 	return fz_newcopyfilter();
 }
-

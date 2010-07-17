@@ -31,7 +31,6 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 	/* fprintf(stdout, "openjpeg info: %s", msg); */
 }
 
-
 fz_filter *
 fz_newjpxd(fz_obj *params)
 {
@@ -165,4 +164,3 @@ output:
 
 	return fz_iodone;
 }
-

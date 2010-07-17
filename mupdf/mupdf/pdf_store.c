@@ -96,11 +96,11 @@ pdf_finditem(pdf_store *store, void *dropfunc, fz_obj *key)
 		for (item = store->root; item; item = item->next)
 		{
 			if (item->dropfunc == dropfunc && !fz_objcmp(item->key, key))
-		{
-			item->age = 0;
-			return item->val;
+			{
+				item->age = 0;
+				return item->val;
+			}
 		}
-	}
 	}
 
 	return nil;
@@ -120,7 +120,7 @@ pdf_removeitem(pdf_store *store, void *dropfunc, fz_obj *key)
 		item = fz_hashfind(store->hash, &refkey);
 		if (item)
 		{
-		fz_hashremove(store->hash, &refkey);
+			fz_hashremove(store->hash, &refkey);
 			((void(*)(void*))item->dropfunc)(item->val);
 			fz_dropobj(item->key);
 			fz_free(item);
@@ -164,8 +164,8 @@ again:
 		{
 			fz_hashremove(store->hash, refkey);
 			((void(*)(void*))item->dropfunc)(item->val);
-		fz_dropobj(item->key);
-		fz_free(item);
+			fz_dropobj(item->key);
+			fz_free(item);
 			goto again; /* items with same hash may move into place */
 		}
 	}
@@ -175,18 +175,18 @@ again:
 	{
 		next = item->next;
 		if (++item->age > maxage)
-			{
-				if (!prev)
+		{
+			if (!prev)
 				store->root = next;
-				else
+			else
 				prev->next = next;
 			((void(*)(void*))item->dropfunc)(item->val);
-				fz_dropobj(item->key);
-				fz_free(item);
-			}
+			fz_dropobj(item->key);
+			fz_free(item);
+		}
 		else
 			prev = item;
-		}
+	}
 }
 
 void
@@ -213,7 +213,7 @@ pdf_debugstore(pdf_store *store)
 		item = fz_hashgetval(store->hash, i);
 		if (item)
 			printf("store[%d] (%d %d R) = %p\n", i, refkey->num, refkey->gen, item->val);
-		}
+	}
 
 	for (item = store->root; item; item = next)
 	{

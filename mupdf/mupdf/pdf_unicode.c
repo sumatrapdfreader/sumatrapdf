@@ -1,9 +1,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/*
- * ToUnicode map for fonts
- */
+/* Load or synthesize ToUnicode map for fonts */
 
 fz_error
 pdf_loadtounicode(pdf_fontdesc *font, pdf_xref *xref,

@@ -136,4 +136,3 @@ notfound:
 	v.x = h.w / 2;
 	return v;
 }
-

@@ -328,7 +328,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 
 	if (shade->usefunction)
 	{
-		temp = fz_newpixmapwithrect(pdf_devicegray, bbox);
+		temp = fz_newpixmapwithrect(fz_devicegray, bbox);
 		fz_clearpixmap(temp, 0);
 		ntris = shade->meshlen / 9;
 	}
@@ -393,4 +393,3 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 		fz_droppixmap(temp);
 	}
 }
-

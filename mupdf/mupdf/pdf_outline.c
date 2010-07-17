@@ -113,4 +113,3 @@ pdf_debugoutline(pdf_outline *outline, int level)
 		outline = outline->next;
 	}
 }
-

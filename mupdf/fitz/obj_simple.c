@@ -350,4 +350,3 @@ char *fz_objkindstr(fz_obj *obj)
 	}
 	return "<unknown>";
 }
-

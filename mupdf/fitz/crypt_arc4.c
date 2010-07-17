@@ -96,4 +96,3 @@ fz_arc4encrypt(fz_arc4 *arc4, unsigned char *dest, const unsigned char *src, con
 		dest[i] = src[i] ^ x;
 	}
 }
-

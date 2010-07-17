@@ -530,4 +530,3 @@ skip:
 	*op = obj;
 	return fz_okay;
 }
-

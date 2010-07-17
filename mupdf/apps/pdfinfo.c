@@ -592,9 +592,9 @@ gatherresourceinfo(int page, fz_obj *rsrc)
 		}
 	}
 
-		xobj = fz_dictgets(rsrc, "XObject");
-		if (xobj)
-		{
+	xobj = fz_dictgets(rsrc, "XObject");
+	if (xobj)
+	{
 		gatherimages(page, pageref, pageobj, xobj);
 		gatherforms(page, pageref, pageobj, xobj);
 		gatherpsobjs(page, pageref, pageobj, xobj);
@@ -608,13 +608,13 @@ gatherresourceinfo(int page, fz_obj *rsrc)
 		}
 	}
 
-		shade = fz_dictgets(rsrc, "Shading");
-		if (shade)
+	shade = fz_dictgets(rsrc, "Shading");
+	if (shade)
 		gathershadings(page, pageref, pageobj, shade);
 
-		pattern = fz_dictgets(rsrc, "Pattern");
-		if (pattern)
-		{
+	pattern = fz_dictgets(rsrc, "Pattern");
+	if (pattern)
+	{
 		gatherpatterns(page, pageref, pageobj, pattern);
 
 		for (i = 0; i < fz_dictlen(pattern); i++)
@@ -699,14 +699,14 @@ printinfo(char *filename, int show, int page)
 
 			if (fz_isarray(image[i].u.image.filter))
 				for (j = 0; j < fz_arraylen(image[i].u.image.filter); j++)
-			{
+				{
 					fz_obj *obj = fz_arrayget(image[i].u.image.filter, j);
 					char *filter = fz_strdup(fz_toname(obj));
 
 					if (strstr(filter, "Decode"))
 						*(strstr(filter, "Decode")) = '\0';
 
-				printf("%s%s",
+					printf("%s%s",
 							filter,
 							j == fz_arraylen(image[i].u.image.filter) - 1 ? "" : " ");
 					fz_free(filter);
@@ -812,19 +812,19 @@ printinfo(char *filename, int show, int page)
 		{
 			if (fz_toint(pattern[i].u.pattern.type) == 1)
 			{
-			char *painttype[] =
-			{
-				"",
-				"Colored",
-				"Uncolored",
-			};
-			char *tilingtype[] =
-			{
-				"",
+				char *painttype[] =
+				{
+					"",
+					"Colored",
+					"Uncolored",
+				};
+				char *tilingtype[] =
+				{
+					"",
 					"Constant",
-				"No distortion",
+					"No distortion",
 					"Constant/fast tiling",
-			};
+				};
 
 				printf(PAGE_FMT "Tiling %s %s (%d %d R)\n",
 						pattern[i].page,
@@ -832,7 +832,7 @@ printinfo(char *filename, int show, int page)
 						painttype[fz_toint(pattern[i].u.pattern.paint)],
 						tilingtype[fz_toint(pattern[i].u.pattern.tiling)],
 						fz_tonum(pattern[i].u.pattern.obj), fz_togen(pattern[i].u.pattern.obj));
-		}
+			}
 			else
 			{
 				printf(PAGE_FMT "Shading %d %d R (%d %d R)\n",
@@ -1011,4 +1011,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-

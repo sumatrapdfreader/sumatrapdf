@@ -182,7 +182,6 @@ bad:
 	return 1;
 }
 
-
 int
 runetochar(char *str, int *rune)
 {
@@ -240,11 +239,9 @@ runetochar(char *str, int *rune)
 	return 4;
 }
 
-
 int
 runelen(int c)
 {
 	char str[10];
 	return runetochar(str, &c);
 }
-

@@ -133,4 +133,3 @@ pdf_loadsystemcmap(pdf_cmap **cmapp, char *cmapname)
 
 	return fz_throw("no builtin cmap file: %s", cmapname);
 }
-

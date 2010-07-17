@@ -1,8 +1,6 @@
 #include "fitz.h"
 
-/*
- * Identity filter.
- */
+/* Identity filter */
 
 fz_filter *
 fz_newcopyfilter(void)
@@ -43,9 +41,7 @@ fz_processcopyfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
-/*
- * Null filter copies data until a specified length.
- */
+/* Null filter copies data until a specified length */
 
 typedef struct fz_nullfilter_s fz_nullfilter;
 
@@ -98,9 +94,7 @@ fz_processnullfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	return fz_throw("braindead programmer trapped in nullfilter");
 }
 
-/*
- * ASCII Hex Decode
- */
+/* ASCII Hex Decode */
 
 typedef struct fz_ahxd_s fz_ahxd;
 
@@ -193,9 +187,7 @@ fz_processahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
-/*
- * ASCII 85 Decode
- */
+/* ASCII 85 Decode */
 
 typedef struct fz_a85d_s fz_a85d;
 
@@ -312,9 +304,7 @@ fz_processa85d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
-/*
- * Run Length Decode
- */
+/* Run Length Decode */
 
 fz_filter *
 fz_newrld(fz_obj *params)
@@ -386,9 +376,7 @@ fz_processrld(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
-/*
- * RC4 Filter
- */
+/* RC4 Filter */
 
 typedef struct fz_arc4c_s fz_arc4c;
 
@@ -434,9 +422,7 @@ fz_processarc4filter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 	}
 }
 
-/*
- * AES Filter
- */
+/* AES Filter */
 
 typedef struct fz_aesd_s fz_aesd;
 

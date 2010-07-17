@@ -455,4 +455,3 @@ pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen)
 	*bufp = buf;
 	return fz_okay;
 }
-

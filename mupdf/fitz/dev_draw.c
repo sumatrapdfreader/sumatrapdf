@@ -19,10 +19,10 @@ struct fz_drawdevice_s
 
 	int top;
 	struct {
-	fz_bbox scissor;
+		fz_bbox scissor;
 		fz_pixmap *dest;
 		fz_pixmap *mask;
-	fz_blendmode blendmode;
+		fz_blendmode blendmode;
 		int luminosity;
 	} stack[STACKSIZE];
 };
@@ -833,13 +833,13 @@ fz_drawbeginmask(void *user, fz_rect rect, int luminosity, fz_colorspace *colors
 
 	bbox = fz_roundrect(rect);
 	bbox = fz_intersectbbox(bbox, dev->scissor);
-	dest = fz_newpixmapwithrect(pdf_devicegray, bbox);
+	dest = fz_newpixmapwithrect(fz_devicegray, bbox);
 
 	if (luminosity)
 		fz_clearpixmap(dest, 255);
 	else
 		fz_clearpixmap(dest, 0);
-	
+
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].dest = dev->dest;
 	dev->stack[dev->top].luminosity = luminosity;

@@ -256,4 +256,3 @@ needoutput:
 	in->rp = in->wp - d->src.super.bytes_in_buffer;
 	return fz_ioneedout;
 }
-

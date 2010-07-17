@@ -287,4 +287,3 @@ fz_device *fz_newtracedevice(void)
 
 	return dev;
 }
-

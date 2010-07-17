@@ -400,7 +400,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
     // make sure not to request too large a pixmap, as MuPDF just aborts on OOM;
     // instead we get a 1*y sized pixmap and try to resize it manually and just
     // fail to render if we run out of memory.
-    fz_pixmap *image = fz_newpixmap(pdf_devicergb, bbox.x0, bbox.y0, 1, bbox.y1 - bbox.y0);
+    fz_pixmap *image = fz_newpixmap(fz_devicergb, bbox.x0, bbox.y0, 1, bbox.y1 - bbox.y0);
     image->w = bbox.x1 - bbox.x0;
     free(image->samples);
     image->samples = (unsigned char *)malloc(image->w * image->h * image->n);

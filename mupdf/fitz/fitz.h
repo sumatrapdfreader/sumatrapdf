@@ -720,10 +720,10 @@ fz_error fz_writepng(fz_pixmap *pixmap, char *filename, int savealpha);
  * Colorspace resources.
  */
 
-extern fz_colorspace *pdf_devicegray;
-extern fz_colorspace *pdf_devicergb;
-extern fz_colorspace *pdf_devicebgr;
-extern fz_colorspace *pdf_devicecmyk;
+extern fz_colorspace *fz_devicegray;
+extern fz_colorspace *fz_devicergb;
+extern fz_colorspace *fz_devicebgr;
+extern fz_colorspace *fz_devicecmyk;
 
 struct fz_colorspace_s
 {

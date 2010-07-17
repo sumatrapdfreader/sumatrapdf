@@ -200,10 +200,10 @@ fz_writepam(fz_pixmap *pixmap, char *filename, int savealpha)
 
 	sp = pixmap->samples;
 	for (y = 0; y < pixmap->h; y++)
-		{
+	{
 		w = pixmap->w;
 		while (w--)
-			{
+		{
 			for (k = 0; k < dn; k++)
 				putc(sp[k], fp);
 			sp += sn;
@@ -312,11 +312,11 @@ fz_writepng(fz_pixmap *pixmap, char *filename, int savealpha)
 
 	fp = fopen(filename, "wb");
 	if (!fp)
-		{
+	{
 		fz_free(udata);
 		fz_free(cdata);
 		return fz_throw("cannot open file '%s': %s", filename, strerror(errno));
-		}
+	}
 
 	big32(head+0, pixmap->w);
 	big32(head+4, pixmap->h);

@@ -61,9 +61,7 @@ pdf_addquad(fz_shade *shade,
 	pdf_addtriangle(shade, v1, v3, v2);
 }
 
-/*
- * Subdivide and tesselate tensor-patches
- */
+/* Subdivide and tesselate tensor-patches */
 
 typedef struct pdf_tensorpatch_s pdf_tensorpatch;
 
@@ -144,14 +142,16 @@ splitcurve(fz_point *pole, fz_point *q0, fz_point *q1, int polestep)
 static inline void
 splitstripe(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
 {
-	/* split all horizontal bezier curves in patch,
-	 * creating two new patches with half the width. */
+	/*
+	split all horizontal bezier curves in patch,
+	creating two new patches with half the width.
+	*/
 	splitcurve(&p->pole[0][0], &s0->pole[0][0], &s1->pole[0][0], 4);
 	splitcurve(&p->pole[0][1], &s0->pole[0][1], &s1->pole[0][1], 4);
 	splitcurve(&p->pole[0][2], &s0->pole[0][2], &s1->pole[0][2], 4);
 	splitcurve(&p->pole[0][3], &s0->pole[0][3], &s1->pole[0][3], 4);
 
-	/* bilinear interpolation to find color values of corners of the two new patches. */
+	/* interpolate the colors for the two new patches. */
 	memcpy(s0->color[0], p->color[0], sizeof(s0->color[0]));
 	memcpy(s0->color[1], p->color[1], sizeof(s0->color[1]));
 	midcolor(s0->color[2], p->color[1], p->color[2]);
@@ -189,14 +189,16 @@ drawstripe(pdf_tensorpatch *p, fz_shade *shade, int depth)
 static inline void
 splitpatch(pdf_tensorpatch *p, pdf_tensorpatch *s0, pdf_tensorpatch *s1)
 {
-	/* split all vertical bezier curves in patch,
-	 * creating two new patches with half the height. */
+	/*
+	split all vertical bezier curves in patch,
+	creating two new patches with half the height.
+	*/
 	splitcurve(p->pole[0], s0->pole[0], s1->pole[0], 1);
 	splitcurve(p->pole[1], s0->pole[1], s1->pole[1], 1);
 	splitcurve(p->pole[2], s0->pole[2], s1->pole[2], 1);
 	splitcurve(p->pole[3], s0->pole[3], s1->pole[3], 1);
 
-	/* bilinear interpolation to find color values of corners of the two new patches. */
+	/* interpolate the colors for the two new patches. */
 	memcpy(s0->color[0], p->color[0], sizeof(s0->color[0]));
 	midcolor(s0->color[1], p->color[0], p->color[1]);
 	midcolor(s0->color[2], p->color[2], p->color[3]);
@@ -318,9 +320,7 @@ pdf_maketensorpatch(pdf_tensorpatch *p, int type, fz_point *pt)
 	}
 }
 
-/*
- * Sample various functions into lookup tables
- */
+/* Sample various functions into lookup tables */
 
 static fz_error
 pdf_samplecompositeshadefunction(fz_shade *shade,
@@ -381,9 +381,7 @@ pdf_sampleshadefunction(fz_shade *shade, int funcs, pdf_function **func, float t
 	return fz_okay;
 }
 
-/*
- * Type 1-3 -- Function-based, axial and radial shadings
- */
+/* Type 1-3 -- Function-based, axial and radial shadings */
 
 static fz_error
 pdf_loadfunctionbasedshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, pdf_function *func)
@@ -664,9 +662,7 @@ pdf_loadradialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, 
 	return fz_okay;
 }
 
-/*
- * Type 4-7 -- Triangle and patch mesh shadings
- */
+/* Type 4-7 -- Triangle and patch mesh shadings */
 
 static inline unsigned int
 readbits(fz_stream *stream, int bits)
@@ -880,9 +876,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 	return fz_okay;
 }
 
-/*
- * Type 6 & 7 -- Patch mesh shadings
- */
+/* Type 6 & 7 -- Patch mesh shadings */
 
 static fz_error
 pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
@@ -1134,9 +1128,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict,
 	return fz_okay;
 }
 
-/*
- * Load all of the shading dictionary parameters, then switch on the shading type.
- */
+/* Load all of the shading dictionary parameters, then switch on the shading type. */
 
 static fz_error
 pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix transform)
@@ -1303,9 +1295,7 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 		return fz_okay;
 	}
 
-	/*
-	 * Type 2 pattern dictionary
-	 */
+	/* Type 2 pattern dictionary */
 	if (fz_dictgets(dict, "PatternType"))
 	{
 		pdf_logshade("load shading pattern (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
@@ -1342,9 +1332,7 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 		pdf_logshade("}\n");
 	}
 
-	/*
-	 * Naked shading dictionary
-	 */
+	/* Naked shading dictionary */
 	else
 	{
 		error = pdf_loadshadingdict(shadep, xref, dict, fz_identity);
@@ -1356,4 +1344,3 @@ pdf_loadshading(fz_shade **shadep, pdf_xref *xref, fz_obj *dict)
 
 	return fz_okay;
 }
-

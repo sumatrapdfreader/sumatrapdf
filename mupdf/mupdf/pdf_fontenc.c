@@ -1,7 +1,3 @@
-/*
- * Built-in font tables
- */
-
 #include "fitz.h"
 #include "mupdf.h"
 
@@ -374,4 +370,3 @@ const char * const pdf_zapfdingbats[256] = { _notdef, _notdef,
 	"a186", "a195", "a187", "a188", "a189", "a190", "a191", _notdef };
 
 #endif
-

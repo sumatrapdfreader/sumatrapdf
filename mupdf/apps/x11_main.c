@@ -578,7 +578,7 @@ int main(int argc, char **argv)
 		pageno = atoi(argv[fz_optind++]);
 
 	if (accelerate)
-	fz_accelerate();
+		fz_accelerate();
 
 	winopen();
 

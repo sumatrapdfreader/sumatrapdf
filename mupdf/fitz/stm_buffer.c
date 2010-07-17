@@ -102,4 +102,3 @@ fz_rewindbuffer(fz_buffer *buf)
 	buf->wp = buf->bp + (buf->wp - buf->rp);
 	buf->rp = buf->bp;
 }
-

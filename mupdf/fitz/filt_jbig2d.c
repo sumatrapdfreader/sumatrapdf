@@ -120,4 +120,3 @@ fz_processjbig2d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		}
 	}
 }
-

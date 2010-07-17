@@ -2,8 +2,6 @@
 #include <fitz.h>
 #include <fitz_gdidraw.h>
 
-extern fz_colorspace *pdf_devicebgr;
-
 typedef struct {
 	HDC hDC;
 	
@@ -27,7 +25,7 @@ static COLORREF
 gdigetcolor(fz_colorspace *colorspace, float *color, float alpha)
 {
 	float bgr[3];
-	fz_convertcolor(colorspace, color, pdf_devicebgr, bgr);
+	fz_convertcolor(colorspace, color, fz_devicebgr, bgr);
 	return RGB(bgr[2] * 255, bgr[1] * 255, bgr[0] * 255);
 }
 
@@ -372,7 +370,7 @@ fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 	h = pixmap->h;
 	
 	/* abgr is a GDI compatible format */
-	bgrPixmap = fz_newpixmap(pdf_devicebgr, pixmap->x, pixmap->y, w, h);
+	bgrPixmap = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, w, h);
 	fz_convertpixmap(pixmap, bgrPixmap);
 	pixmap = bgrPixmap;
 	

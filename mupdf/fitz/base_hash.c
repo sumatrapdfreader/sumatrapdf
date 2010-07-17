@@ -1,11 +1,12 @@
-/* Simple hashtable with open adressing linear probe.
- * Unlike text book examples, removing entries works
- * correctly in this implementation so it wont start
- * exhibiting bad behaviour if entries are inserted
- * and removed frequently.
- */
-
 #include "fitz.h"
+
+/*
+Simple hashtable with open adressing linear probe.
+Unlike text book examples, removing entries works
+correctly in this implementation, so it wont start
+exhibiting bad behaviour if entries are inserted
+and removed frequently.
+*/
 
 enum { MAXKEYLEN = 48 };
 typedef struct fz_hashentry_s fz_hashentry;

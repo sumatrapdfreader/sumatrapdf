@@ -682,4 +682,3 @@ ximage_convert_func_t ximage_convert_funcs[] = {
 	ximage_convert_rgb555_br,
 	ximage_convert_bgr233,
 };
-

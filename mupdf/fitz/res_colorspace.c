@@ -36,9 +36,7 @@ fz_dropcolorspace(fz_colorspace *cs)
 	}
 }
 
-/*
- * Fast Device color spaces
- */
+/* Device colorspace definitions */
 
 static void graytoxyz(fz_colorspace *cs, float *gray, float *xyz)
 {
@@ -108,14 +106,12 @@ static fz_colorspace kdevicergb = { -1, "DeviceRGB", 3, rgbtoxyz, xyztorgb };
 static fz_colorspace kdevicebgr = { -1, "DeviceRGB", 3, bgrtoxyz, xyztobgr };
 static fz_colorspace kdevicecmyk = { -1, "DeviceCMYK", 4, cmyktoxyz, xyztocmyk };
 
-fz_colorspace *pdf_devicegray = &kdevicegray;
-fz_colorspace *pdf_devicergb = &kdevicergb;
-fz_colorspace *pdf_devicebgr = &kdevicebgr;
-fz_colorspace *pdf_devicecmyk = &kdevicecmyk;
+fz_colorspace *fz_devicegray = &kdevicegray;
+fz_colorspace *fz_devicergb = &kdevicergb;
+fz_colorspace *fz_devicebgr = &kdevicebgr;
+fz_colorspace *fz_devicecmyk = &kdevicecmyk;
 
-/*
- * Pixmap color conversions
- */
+/* Fast pixmap color conversions */
 
 static void fastgraytorgb(fz_pixmap *src, fz_pixmap *dst)
 {
@@ -327,44 +323,42 @@ fz_convertpixmap(fz_pixmap *sp, fz_pixmap *dp)
 
 	assert(ss && ds);
 
-	if (ss == pdf_devicegray)
+	if (ss == fz_devicegray)
 	{
-		if (ds == pdf_devicergb) fastgraytorgb(sp, dp);
-		else if (ds == pdf_devicebgr) fastgraytorgb(sp, dp); /* bgr == rgb here */
-		else if (ds == pdf_devicecmyk) fastgraytocmyk(sp, dp);
+		if (ds == fz_devicergb) fastgraytorgb(sp, dp);
+		else if (ds == fz_devicebgr) fastgraytorgb(sp, dp); /* bgr == rgb here */
+		else if (ds == fz_devicecmyk) fastgraytocmyk(sp, dp);
 		else fz_stdconvpixmap(sp, dp);
 	}
 
-	else if (ss == pdf_devicergb)
+	else if (ss == fz_devicergb)
 	{
-		if (ds == pdf_devicegray) fastrgbtogray(sp, dp);
-		else if (ds == pdf_devicebgr) fastrgbtobgr(sp, dp);
-		else if (ds == pdf_devicecmyk) fastrgbtocmyk(sp, dp);
+		if (ds == fz_devicegray) fastrgbtogray(sp, dp);
+		else if (ds == fz_devicebgr) fastrgbtobgr(sp, dp);
+		else if (ds == fz_devicecmyk) fastrgbtocmyk(sp, dp);
 		else fz_stdconvpixmap(sp, dp);
 	}
 
-	else if (ss == pdf_devicebgr)
+	else if (ss == fz_devicebgr)
 	{
-		if (ds == pdf_devicegray) fastbgrtogray(sp, dp);
-		else if (ds == pdf_devicergb) fastrgbtobgr(sp, dp); /* bgr = rgb here */
-		else if (ds == pdf_devicecmyk) fastbgrtocmyk(sp, dp);
+		if (ds == fz_devicegray) fastbgrtogray(sp, dp);
+		else if (ds == fz_devicergb) fastrgbtobgr(sp, dp); /* bgr = rgb here */
+		else if (ds == fz_devicecmyk) fastbgrtocmyk(sp, dp);
 		else fz_stdconvpixmap(sp, dp);
 	}
 
-	else if (ss == pdf_devicecmyk)
+	else if (ss == fz_devicecmyk)
 	{
-		if (ds == pdf_devicegray) fastcmyktogray(sp, dp);
-		else if (ds == pdf_devicebgr) fastcmyktobgr(sp, dp);
-		else if (ds == pdf_devicergb) fastcmyktorgb(sp, dp);
+		if (ds == fz_devicegray) fastcmyktogray(sp, dp);
+		else if (ds == fz_devicebgr) fastcmyktobgr(sp, dp);
+		else if (ds == fz_devicergb) fastcmyktorgb(sp, dp);
 		else fz_stdconvpixmap(sp, dp);
 	}
 
 	else fz_stdconvpixmap(sp, dp);
 }
 
-/*
- * Convert a single color
- */
+/* Convert a single color */
 
 static void
 fz_stdconvcolor(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *dstv)
@@ -390,15 +384,15 @@ fz_stdconvcolor(fz_colorspace *srcs, float *srcv, fz_colorspace *dsts, float *ds
 void
 fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 {
-	if (ss == pdf_devicegray)
+	if (ss == fz_devicegray)
 	{
-		if ((ds == pdf_devicergb) || (ds == pdf_devicebgr))
+		if ((ds == fz_devicergb) || (ds == fz_devicebgr))
 		{
 			dv[0] = sv[0];
 			dv[1] = sv[0];
 			dv[2] = sv[0];
 		}
-		else if (ds == pdf_devicecmyk)
+		else if (ds == fz_devicecmyk)
 		{
 			dv[0] = 0;
 			dv[1] = 0;
@@ -409,19 +403,19 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 			fz_stdconvcolor(ss, sv, ds, dv);
 	}
 
-	else if (ss == pdf_devicergb)
+	else if (ss == fz_devicergb)
 	{
-		if (ds == pdf_devicegray)
+		if (ds == fz_devicegray)
 		{
 			dv[0] = sv[0] * 0.3f + sv[1] * 0.59f + sv[2] * 0.11f;
 		}
-		else if (ds == pdf_devicebgr)
+		else if (ds == fz_devicebgr)
 		{
 			dv[0] = sv[2];
 			dv[1] = sv[1];
 			dv[2] = sv[0];
 		}
-		else if (ds == pdf_devicecmyk)
+		else if (ds == fz_devicecmyk)
 		{
 			float c = 1 - sv[0];
 			float m = 1 - sv[1];
@@ -436,19 +430,19 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 			fz_stdconvcolor(ss, sv, ds, dv);
 	}
 
-	else if (ss == pdf_devicebgr)
+	else if (ss == fz_devicebgr)
 	{
-		if (ds == pdf_devicegray)
+		if (ds == fz_devicegray)
 		{
 			dv[0] = sv[0] * 0.11f + sv[1] * 0.59f + sv[2] * 0.3f;
 		}
-		else if (ds == pdf_devicebgr)
+		else if (ds == fz_devicebgr)
 		{
 			dv[0] = sv[2];
 			dv[1] = sv[1];
 			dv[2] = sv[0];
 		}
-		else if (ds == pdf_devicecmyk)
+		else if (ds == fz_devicecmyk)
 		{
 			float c = 1 - sv[2];
 			float m = 1 - sv[1];
@@ -463,22 +457,22 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 			fz_stdconvcolor(ss, sv, ds, dv);
 	}
 
-	else if (ss == pdf_devicecmyk)
+	else if (ss == fz_devicecmyk)
 	{
-		if (ds == pdf_devicegray)
+		if (ds == fz_devicegray)
 		{
 			float c = sv[1] * 0.3f;
 			float m = sv[2] * 0.59f;
 			float y = sv[2] * 0.11f;
 			dv[0] = 1 - MIN(c + m + y + sv[3], 1);
 		}
-		else if (ds == pdf_devicergb)
+		else if (ds == fz_devicergb)
 		{
 			dv[0] = 1 - MIN(sv[0] + sv[3], 1);
 			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
 			dv[2] = 1 - MIN(sv[2] + sv[3], 1);
 		}
-		else if (ds == pdf_devicebgr)
+		else if (ds == fz_devicebgr)
 		{
 			dv[0] = 1 - MIN(sv[2] + sv[3], 1);
 			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
@@ -491,4 +485,3 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 	else
 		fz_stdconvcolor(ss, sv, ds, dv);
 }
-

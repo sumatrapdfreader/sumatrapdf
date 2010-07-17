@@ -23,9 +23,9 @@ fz_newdisplaynode(fz_displaycommand cmd, fz_matrix ctm,
 		node->colorspace = fz_keepcolorspace(colorspace);
 		if (color)
 		{
-		for (i = 0; i < node->colorspace->n; i++)
-			node->color[i] = color[i];
-	}
+			for (i = 0; i < node->colorspace->n; i++)
+				node->color[i] = color[i];
+		}
 	}
 	else
 	{
@@ -417,4 +417,3 @@ fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
 		}
 	}
 }
-

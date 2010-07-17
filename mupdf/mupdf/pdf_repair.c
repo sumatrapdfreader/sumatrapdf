@@ -1,9 +1,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/*
- * open pdf and scan objects to reconstruct xref table
- */
+/* Scan file for objects and reconstruct xref table */
 
 struct entry
 {

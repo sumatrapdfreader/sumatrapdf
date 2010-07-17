@@ -154,4 +154,3 @@ pdf_loadannots(pdf_link **lp, pdf_xref *xref, fz_obj *annots)
 
 	*lp = link;
 }
-

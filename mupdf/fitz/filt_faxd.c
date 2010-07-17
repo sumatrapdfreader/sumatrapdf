@@ -751,4 +751,3 @@ rtc:
 
 	return fz_iodone;
 }
-

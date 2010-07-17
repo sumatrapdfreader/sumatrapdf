@@ -145,13 +145,13 @@ static void showobject(int num, int gen)
 		}
 		else
 		{
-		printf("%d %d obj\n", num, gen);
-		fz_debugobj(obj);
-		printf("stream\n");
-		showstream(num, gen);
-		printf("endstream\n");
-		printf("endobj\n\n");
-	}
+			printf("%d %d obj\n", num, gen);
+			fz_debugobj(obj);
+			printf("stream\n");
+			showstream(num, gen);
+			printf("endstream\n");
+			printf("endobj\n\n");
+		}
 	}
 	else
 	{
@@ -208,4 +208,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-

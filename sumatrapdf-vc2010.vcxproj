@@ -61,6 +61,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="mupdf\gdidraw\dev_gdi.c" />
     <ClCompile Include="src\AppPrefs.cc" />
     <ClCompile Include="src\DisplayModel.cc" />
     <ClCompile Include="src\DisplayState.cc" />
@@ -206,6 +207,7 @@
     <ClCompile Include="ext\jbig2dec\jbig2_text.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mupdf\gdidraw\fitz_gdidraw.h" />
     <ClInclude Include="src\AppPrefs.h" />
     <ClInclude Include="src\DisplayModel.h" />
     <ClInclude Include="src\DisplayState.h" />

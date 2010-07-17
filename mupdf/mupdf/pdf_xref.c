@@ -254,10 +254,10 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 			fz_warn("broken xref section, proceeding anyway.");
 			xref->cap = ofs + len;
 			xref->table = fz_realloc(xref->table, xref->cap * sizeof(pdf_xrefentry));
-	}
+		}
 
 		if ((ofs + len) > xref->len)
-	{
+		{
 			for (i = xref->len; i < (ofs + len); i++)
 			{
 				xref->table[i].ofs = 0;
@@ -286,7 +286,7 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 				xref->table[ofs + i].gen = atoi(s + 11);
 				xref->table[ofs + i].type = s[17];
 			}
-	}
+		}
 	}
 
 	error = pdf_lex(&tok, xref->file, buf, cap, &n);
@@ -328,7 +328,7 @@ pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, i
 			if (error)
 				return fz_rethrow(error, "truncated xref stream");
 			return fz_throw("truncated xref stream");
-	}
+		}
 
 		for (n = 0; n < w0; n++)
 			a = (a << 8) + fz_readbyte(stm);
@@ -387,13 +387,13 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	}
 
 	if (size > xref->len)
-		{
+	{
 		for (i = xref->len; i < xref->cap; i++)
-			{
+		{
 			xref->table[i].ofs = 0;
 			xref->table[i].gen = 0;
 			xref->table[i].stmofs = 0;
-				xref->table[i].obj = nil;
+			xref->table[i].obj = nil;
 			xref->table[i].type = 0;
 		}
 		xref->len = size;
@@ -490,15 +490,15 @@ pdf_readxref(fz_obj **trailerp, pdf_xref *xref, int ofs, char *buf, int cap)
 		error = pdf_readoldxref(trailerp, xref, buf, cap);
 		if (error)
 			return fz_rethrow(error, "cannot read xref (ofs=%d)", ofs);
-			}
+	}
 	else if (c >= '0' && c <= '9')
 	{
 		error = pdf_readnewxref(trailerp, xref, buf, cap);
 		if (error)
 			return fz_rethrow(error, "cannot read xref (ofs=%d)", ofs);
-		}
-		else
-		{
+	}
+	else
+	{
 		return fz_throw("cannot recognize xref format");
 	}
 

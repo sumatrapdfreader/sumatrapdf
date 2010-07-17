@@ -249,12 +249,13 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		trm = fz_concat(fz_scale(scale, 1), trm);
 	}
 
-	/* freetype mutilates complex glyphs if they are loaded
-	 * with FT_Set_Char_Size 1.0. it rounds the coordinates
-	 * before applying transformation. to get more precision in
-	 * freetype, we shift part of the scale in the matrix
-	 * into FT_Set_Char_Size instead
-	 */
+	/*
+	Freetype mutilates complex glyphs if they are loaded
+	with FT_Set_Char_Size 1.0. it rounds the coordinates
+	before applying transformation. to get more precision in
+	freetype, we shift part of the scale in the matrix
+	into FT_Set_Char_Size instead
+	*/
 
 	m.xx = trm.a * 64; /* should be 65536 */
 	m.yx = trm.b * 64;
@@ -270,13 +271,14 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 
 	if (font->fthint)
 	{
-		/* Enable hinting, but keep the huge char size so that
-		 * it is hinted for a character. This will in effect nullify
-		 * the effect of grid fitting. This form of hinting should
-		 * only be used for DynaLab and similar tricky TrueType fonts,
-		 * so that we get the correct outline shape.
-		 */
-#ifdef USE_HINTING
+		/*
+		Enable hinting, but keep the huge char size so that
+		it is hinted for a character. This will in effect nullify
+		the effect of grid fitting. This form of hinting should
+		only be used for DynaLab and similar tricky TrueType fonts,
+		so that we get the correct outline shape.
+		*/
+#ifdef GRIDFIT
 		/* If you really want grid fitting, enable this code. */
 		float scale = fz_matrixexpansion(trm);
 		m.xx = trm.a * 65536 / scale;
@@ -510,4 +512,3 @@ fz_debugfont(fz_font *font)
 
 	printf("}\n");
 }
-

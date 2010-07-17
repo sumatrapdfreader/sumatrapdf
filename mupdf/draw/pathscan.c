@@ -628,4 +628,3 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 	fz_free(deltas);
 	return fz_okay;
 }
-

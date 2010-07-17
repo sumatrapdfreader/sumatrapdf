@@ -173,6 +173,16 @@ static void renumberxref(void)
 		{
 			xref->table[newnumlist[num]] = oldxreflist[num];
 			uselist[newnumlist[num]] = 1;
+			xref->table[num].obj = nil;
+		}
+	}
+
+	for (num = newnum; num < xref->len; num++)
+	{
+		if (xref->table[num].obj)
+		{
+			fz_dropobj(xref->table[num].obj);
+			xref->table[num].obj = nil;
 		}
 	}
 
@@ -198,13 +208,24 @@ static void removeduplicateobjs(void)
 	{
 		for (other = 1; other < num; other++)
 		{
-			fz_obj *a = fz_resolveindirect(xref->table[num].obj);
-			fz_obj *b = fz_resolveindirect(xref->table[other].obj);
+			fz_obj *a, *b;
 
+			/*
+			pdf_isstream calls pdf_cacheobject and ensures
+			that the xref table has the objects loaded
+			*/
 			if (num == other ||
 				pdf_isstream(xref, num, 0) ||
-				pdf_isstream(xref, other, 0) ||
-				fz_objcmp(a, b))
+				pdf_isstream(xref, other, 0))
+				continue;
+
+			a = xref->table[num].obj;
+			b = xref->table[other].obj;
+
+			a = fz_resolveindirect(a);
+			b = fz_resolveindirect(b);
+
+			if (fz_objcmp(a, b))
 				continue;
 
 			newnumlist[num] = num < other ? num : other;
@@ -226,7 +247,7 @@ static void removeduplicateobjs(void)
 static void retainpages(int argc, char **argv)
 {
 	fz_error error;
-	fz_obj *root, *pages, *kids;
+	fz_obj *root, *pages, *type, *kids, *countobj;
 	int count;
 
 	/* Load the old page tree */
@@ -237,6 +258,7 @@ static void retainpages(int argc, char **argv)
 	/* Snatch pages entry from root dict */
 	root = fz_dictgets(xref->trailer, "Root");
 	pages = fz_keepobj(fz_dictgets(root, "Pages"));
+	type = fz_keepobj(fz_dictgets(root, "Type"));
 
 	/* Then empty the root dict */
 	while (fz_dictlen(root) > 0)
@@ -247,12 +269,11 @@ static void retainpages(int argc, char **argv)
 
 	/* And only retain pages and type entries */
 	fz_dictputs(root, "Pages", pages);
-	fz_dictputs(root, "Type", fz_newname("Catalog"));
+	fz_dictputs(root, "Type", type);
 	fz_dropobj(pages);
+	fz_dropobj(type);
 
-	/* Create a new kids array too add into pages dict
-	 * since each element must be replaced to point to
-	 * a retained page */
+	/* Create a new kids array with only the pages we want to keep. */
 	kids = fz_newarray(1);
 	count = 0;
 
@@ -311,8 +332,11 @@ static void retainpages(int argc, char **argv)
 	}
 
 	/* Update page count and kids array */
-	fz_dictputs(pages, "Count", fz_newint(count));
+	countobj = fz_newint(count);
+	fz_dictputs(pages, "Count", countobj);
+	fz_dropobj(countobj);
 	fz_dictputs(pages, "Kids", kids);
+	fz_dropobj(kids);
 }
 
 /*
@@ -474,6 +498,8 @@ static void writexref(void)
 	fz_fprintobj(out, trailer, !doexpand);
 	fprintf(out, "\n");
 
+	fz_dropobj(trailer);
+
 	fprintf(out, "startxref\n%d\n%%%%EOF\n", startxref);
 }
 
@@ -565,9 +591,9 @@ int main(int argc, char **argv)
 	fprintf(out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
 	fprintf(out, "%%\316\274\341\277\246\n\n");
 
-	uselist = malloc(sizeof (char) * (xref->len + 1));
-	ofslist = malloc(sizeof (int) * (xref->len + 1));
-	genlist = malloc(sizeof (int) * (xref->len + 1));
+	uselist = fz_malloc(sizeof (char) * (xref->len + 1));
+	ofslist = fz_malloc(sizeof (int) * (xref->len + 1));
+	genlist = fz_malloc(sizeof (int) * (xref->len + 1));
 
 	for (num = 0; num < xref->len; num++)
 	{
@@ -595,6 +621,13 @@ int main(int argc, char **argv)
 		renumberxref();
 
 	writepdf();
+
+	if (fclose(out))
+		die(fz_throw("cannot close output file '%s'", outfile));
+
+	fz_free(uselist);
+	fz_free(ofslist);
+	fz_free(genlist);
 
 	pdf_freexref(xref);
 

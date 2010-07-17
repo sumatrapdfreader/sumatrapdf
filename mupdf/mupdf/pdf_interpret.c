@@ -139,11 +139,6 @@ pdf_freecsi(pdf_csi *csi)
 	fz_free(csi);
 }
 
-/*
- * Do some magic to call the xobject subroutine.
- * Push gstate, set transform, clip, run, pop gstate.
- */
-
 fz_error
 pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 {
@@ -178,7 +173,7 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 			csi->dev->endmask(csi->dev->user);
 
 			pdf_dropxobject(softmask);
-	}
+		}
 
 		if (gstate->fill.alpha < 1)
 			fz_warn("ignoring ca for xobject: %g", gstate->fill.alpha);
@@ -233,10 +228,6 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 	return fz_okay;
 }
 
-/*
- * Decode inline image and insert into page.
- */
-
 static fz_error
 pdf_runinlineimage(pdf_csi *csi, fz_obj *rdb, fz_stream *file, fz_obj *dict)
 {
@@ -277,10 +268,6 @@ FindEndImageMarker:
 	pdf_dropimage(img);
 	return fz_okay;
 }
-
-/*
- * Set gstate params from an ExtGState dictionary.
- */
 
 static fz_error
 pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstate)
@@ -376,7 +363,7 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 				group = fz_dictgets(val, "G");
 				error = pdf_loadxobject(&xobj, csi->xref, group);
 				if (error)
-				return fz_rethrow(error, "cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));
+					return fz_rethrow(error, "cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));
 
 				gstate->softmaskctm = fz_concat(xobj->matrix, gstate->ctm);
 				gstate->softmask = xobj;
@@ -399,9 +386,7 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 	return fz_okay;
 }
 
-/*
- * The meat of the interpreter...
- */
+/* TODO: split pdf_runkeyword into more manageable pieces */
 
 static fz_error
 pdf_runkeyword(pdf_csi *csi, fz_obj *rdb, char *buf)
@@ -489,11 +474,11 @@ Lsetcolorspace:
 			else
 			{
 				if (!strcmp(fz_toname(obj), "DeviceGray"))
-					cs = fz_keepcolorspace(pdf_devicegray);
+					cs = fz_keepcolorspace(fz_devicegray);
 				else if (!strcmp(fz_toname(obj), "DeviceRGB"))
-					cs = fz_keepcolorspace(pdf_devicergb);
+					cs = fz_keepcolorspace(fz_devicergb);
 				else if (!strcmp(fz_toname(obj), "DeviceCMYK"))
-					cs = fz_keepcolorspace(pdf_devicecmyk);
+					cs = fz_keepcolorspace(fz_devicecmyk);
 				else
 				{
 					fz_obj *dict = fz_dictgets(rdb, "ColorSpace");
@@ -546,7 +531,7 @@ Lsetcolorspace:
 				return fz_throw("cannot find xobject resource: '%s'", fz_toname(csi->stack[0]));
 
 			subtype = fz_dictgets(obj, "Subtype");
-			if (!subtype)
+			if (!fz_isname(subtype))
 				return fz_throw("no XObject subtype specified");
 
 			if (!strcmp(fz_toname(subtype), "Form") && fz_dictgets(obj, "Subtype2"))
@@ -644,7 +629,7 @@ Lsetcolorspace:
 			goto syntaxerror;
 
 		v[0] = fz_toreal(csi->stack[0]);
-		pdf_setcolorspace(csi, PDF_MSTROKE, pdf_devicegray);
+		pdf_setcolorspace(csi, PDF_MSTROKE, fz_devicegray);
 		pdf_setcolor(csi, PDF_MSTROKE, v);
 		break;
 
@@ -667,7 +652,7 @@ Lsetcolorspace:
 		v[2] = fz_toreal(csi->stack[2]);
 		v[3] = fz_toreal(csi->stack[3]);
 
-		pdf_setcolorspace(csi, PDF_MSTROKE, pdf_devicecmyk);
+		pdf_setcolorspace(csi, PDF_MSTROKE, fz_devicecmyk);
 		pdf_setcolor(csi, PDF_MSTROKE, v);
 		break;
 
@@ -708,7 +693,7 @@ Lsetcolorspace:
 		v[1] = fz_toreal(csi->stack[1]);
 		v[2] = fz_toreal(csi->stack[2]);
 
-		pdf_setcolorspace(csi, PDF_MSTROKE, pdf_devicergb);
+		pdf_setcolorspace(csi, PDF_MSTROKE, fz_devicergb);
 		pdf_setcolor(csi, PDF_MSTROKE, v);
 		break;
 
@@ -781,13 +766,13 @@ Lsetcolor:
 
 				else if (fz_toint(patterntype) == 2)
 				{
-						fz_shade *shd;
-						error = pdf_loadshading(&shd, csi->xref, obj);
-						if (error)
-							return fz_rethrow(error, "cannot load shading (%d %d R)", fz_tonum(obj), fz_togen(obj));
-						pdf_setshade(csi, what, shd);
-						fz_dropshade(shd);
-					}
+					fz_shade *shd;
+					error = pdf_loadshading(&shd, csi->xref, obj);
+					if (error)
+						return fz_rethrow(error, "cannot load shading (%d %d R)", fz_tonum(obj), fz_togen(obj));
+					pdf_setshade(csi, what, shd);
+					fz_dropshade(shd);
+				}
 
 				else
 				{
@@ -1093,7 +1078,7 @@ Lsetcolor:
 				goto syntaxerror;
 
 			v[0] = fz_toreal(csi->stack[0]);
-			pdf_setcolorspace(csi, PDF_MFILL, pdf_devicegray);
+			pdf_setcolorspace(csi, PDF_MFILL, fz_devicegray);
 			pdf_setcolor(csi, PDF_MFILL, v);
 			break;
 		case 's':
@@ -1159,7 +1144,7 @@ Lsetcolor:
 		v[2] = fz_toreal(csi->stack[2]);
 		v[3] = fz_toreal(csi->stack[3]);
 
-		pdf_setcolorspace(csi, PDF_MFILL, pdf_devicecmyk);
+		pdf_setcolorspace(csi, PDF_MFILL, fz_devicecmyk);
 		pdf_setcolor(csi, PDF_MFILL, v);
 		break;
 
@@ -1235,7 +1220,7 @@ Lsetcolor:
 			v[1] = fz_toreal(csi->stack[1]);
 			v[2] = fz_toreal(csi->stack[2]);
 
-			pdf_setcolorspace(csi, PDF_MFILL, pdf_devicergb);
+			pdf_setcolorspace(csi, PDF_MFILL, fz_devicergb);
 			pdf_setcolor(csi, PDF_MFILL, v);
 			break;
 		default:

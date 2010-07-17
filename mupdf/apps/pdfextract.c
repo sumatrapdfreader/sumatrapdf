@@ -54,10 +54,10 @@ static void saveimage(int num)
 
 	pix = pdf_loadtile(img);
 
-	if (dorgb && img->colorspace && img->colorspace != pdf_devicergb)
+	if (dorgb && img->colorspace && img->colorspace != fz_devicergb)
 	{
 		fz_pixmap *temp;
-		temp = fz_newpixmap(pdf_devicergb, pix->x, pix->y, pix->w, pix->h);
+		temp = fz_newpixmap(fz_devicergb, pix->x, pix->y, pix->w, pix->h);
 		fz_convertpixmap(pix, temp);
 		fz_droppixmap(pix);
 		pix = temp;
@@ -70,11 +70,11 @@ static void saveimage(int num)
 		fz_writepng(pix, name, 0);
 	}
 	else
-		{
+	{
 		sprintf(name, "img-%04d.pam", num);
 		printf("extracting image %s\n", name);
 		fz_writepam(pix, name, 0);
-		}
+	}
 
 	fz_droppixmap(pix);
 	pdf_dropimage(img);
@@ -212,14 +212,13 @@ int main(int argc, char **argv)
 	else
 	{
 		while (fz_optind < argc)
-	{
+		{
 			showobject(atoi(argv[fz_optind]));
-		fz_optind++;
-	}
+			fz_optind++;
+		}
 	}
 
 	pdf_freexref(xref);
 
 	return 0;
 }
-

@@ -113,5 +113,3 @@ fz_debugshade(fz_shade *shade)
 
 	printf("}\n");
 }
-
-

@@ -56,7 +56,7 @@ static inline void fmtputc(struct fmt *fmt, int c)
 	fmt->last = c;
 }
 
-static void fmtindent(struct fmt *fmt)
+static inline void fmtindent(struct fmt *fmt)
 {
 	int i = fmt->indent;
 	while (i--) {
@@ -78,8 +78,7 @@ static inline void fmtsep(struct fmt *fmt)
 
 static void fmtstr(struct fmt *fmt, fz_obj *obj)
 {
-	int i;
-	int c;
+	int i, c;
 
 	fmtputc(fmt, '(');
 	for (i = 0; i < obj->u.s.len; i++)
@@ -113,9 +112,7 @@ static void fmtstr(struct fmt *fmt, fz_obj *obj)
 
 static void fmthex(struct fmt *fmt, fz_obj *obj)
 {
-	int i;
-	int b;
-	int c;
+	int i,  b, c;
 
 	fmtputc(fmt, '<');
 	for (i = 0; i < obj->u.s.len; i++) {
@@ -221,68 +218,59 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 {
 	char buf[256];
 
-	if (!obj) {
+	if (!obj)
 		fmtputs(fmt, "<nil>");
-		return;
-	}
-
-	switch (obj->kind)
-	{
-	case FZ_NULL:
+	else if (fz_isnull(obj))
 		fmtputs(fmt, "null");
-		break;
-	case FZ_BOOL:
+	else if (fz_isbool(obj))
 		fmtputs(fmt, fz_tobool(obj) ? "true" : "false");
-		break;
-	case FZ_INT:
+	else if (fz_isint(obj))
+	{
 		sprintf(buf, "%d", fz_toint(obj));
 		fmtputs(fmt, buf);
-		break;
-	case FZ_REAL:
+	}
+	else if (fz_isreal(obj))
+	{
 		sprintf(buf, "%g", fz_toreal(obj));
 		if (strchr(buf, 'e')) /* bad news! */
 			sprintf(buf, fabsf(fz_toreal(obj)) > 1 ? "%1.1f" : "%1.8f", fz_toreal(obj));
 		fmtputs(fmt, buf);
-		break;
-	case FZ_STRING:
-		{
-			int added = 0;
-			int i, c;
-			for (i = 0; i < obj->u.s.len; i++) {
-				c = (unsigned char)obj->u.s.buf[i];
-				if (strchr("()\\\n\r\t\b\f", c))
-					added ++;
-				else if (c < 8)
-					added ++;
-				else if (c < 32)
-					added += 2;
-				else if (c >= 127)
-					added += 3;
-			}
-			if (added < obj->u.s.len)
-				fmtstr(fmt, obj);
-			else
-				fmthex(fmt, obj);
-		}
-		break;
-	case FZ_NAME:
-		fmtname(fmt, obj);
-		break;
-	case FZ_ARRAY:
-		fmtarray(fmt, obj);
-		break;
-	case FZ_DICT:
-		fmtdict(fmt, obj);
-		break;
-	case FZ_INDIRECT:
-		sprintf(buf, "%d %d R", obj->u.r.num, obj->u.r.gen);
-		fmtputs(fmt, buf);
-		break;
-	default:
-		sprintf(buf, "<unknown object type %d>", obj->kind);
-		fmtputs(fmt, buf);
-		break;
 	}
+	else if (fz_isstring(obj))
+	{
+		char *str = fz_tostrbuf(obj);
+		int len = fz_tostrlen(obj);
+		int added = 0;
+		int i, c;
+		for (i = 0; i < len; i++) {
+			c = (unsigned char)str[i];
+			if (strchr("()\\\n\r\t\b\f", c))
+				added ++;
+			else if (c < 8)
+				added ++;
+			else if (c < 32)
+				added += 2;
+			else if (c >= 127)
+				added += 3;
+		}
+		if (added < obj->u.s.len)
+			fmtstr(fmt, obj);
+		else
+			fmthex(fmt, obj);
+	}
+	else if (fz_isname(obj))
+		fmtname(fmt, obj);
+	else if (fz_isarray(obj))
+		fmtarray(fmt, obj);
+	else if (fz_isdict(obj))
+		fmtdict(fmt, obj);
+	else if (fz_isindirect(obj))
+	{
+		sprintf(buf, "%d %d R", fz_tonum(obj), fz_togen(obj));
+		fmtputs(fmt, buf);
+	}
+	else
+		fmtputs(fmt, "<unknown object>");
 }
 
 int
@@ -337,4 +325,3 @@ fz_debugobj(fz_obj *obj)
 {
 	fz_fprintobj(stdout, obj, 0);
 }
-

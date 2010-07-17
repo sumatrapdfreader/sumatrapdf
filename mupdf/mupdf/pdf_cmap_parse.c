@@ -488,4 +488,3 @@ cleanup:
 	pdf_dropcmap(cmap);
 	return error; /* already rethrown */
 }
-

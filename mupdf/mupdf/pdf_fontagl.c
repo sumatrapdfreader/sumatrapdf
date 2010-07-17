@@ -5059,7 +5059,6 @@ static char *agldupnames[] = {
 "alefmaksuramedialarabic", "yehmedialarabic", 0,
 };
 
-
 #include "fitz.h"
 #include "mupdf.h"
 
@@ -5118,4 +5117,3 @@ char **pdf_lookupaglnames(int ucs)
 	}
 	return aglnoname;
 }
-

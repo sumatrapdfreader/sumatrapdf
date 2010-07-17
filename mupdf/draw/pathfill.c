@@ -118,4 +118,3 @@ fz_fillpath(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 	if (i && (cx != bx || cy != by))
 		line(gel, &ctm, cx, cy, bx, by);
 }
-

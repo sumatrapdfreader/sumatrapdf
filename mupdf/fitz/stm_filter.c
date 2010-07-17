@@ -53,4 +53,3 @@ fz_dropfilter(fz_filter *f)
 		fz_free(f);
 	}
 }
-

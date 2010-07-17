@@ -1615,7 +1615,6 @@ pdf_debugindent(char *prefix, int level, char *suffix)
 	printf("%s", suffix);
 }
 
-
 void
 pdf_debugpsfunccode(psobj *funccode, psobj *code, int level)
 {

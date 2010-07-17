@@ -207,4 +207,3 @@ fz_debugpath(fz_path *path, int indent)
 		}
 	}
 }
-
