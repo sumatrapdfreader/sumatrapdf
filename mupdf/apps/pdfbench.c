@@ -114,7 +114,7 @@ fz_error openxref(char *filename, char *password)
 	error = pdf_openxref(&xref, filename, password);
 	if (error)
 	{
-		return fz_throw("pdf_openxref() failed");
+		return fz_rethrow(error, "pdf_openxref() failed");
 	}
 
 	if (pdf_needspassword(xref))
@@ -125,6 +125,12 @@ fz_error openxref(char *filename, char *password)
 			logbench("Warning: pdf_setpassword() failed, incorrect password\n");
 			return fz_throw("invalid password");
 		}
+	}
+
+	error = pdf_loadpagetree(xref);
+	if (error)
+	{
+		return fz_rethrow(error, "cannot load page tree: %s", filename);
 	}
 
 	pagecount = pdf_getpagecount(xref);
