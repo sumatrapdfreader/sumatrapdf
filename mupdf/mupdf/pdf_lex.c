@@ -457,11 +457,21 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 			*sl = lexnumber(f, buf, n, tok);
 			goto cleanupokay;
 		default: /* isregular(c) */
-			fz_unreadbyte(f);
-			lexname(f, buf, n);
-			*sl = strlen(buf);
-			*tok = pdf_tokenfromkeyword(buf);
-			goto cleanupokay;
+			/* sumatra: without this check we can have infinite loop. It used to be handled by
+			   isregular() call but is no longer handled by any of the above cases */
+			if (c == ')')
+			{
+				*tok = PDF_TERROR;
+				return fz_throw("lexical error");
+			}
+			else
+			{
+				fz_unreadbyte(f);
+				lexname(f, buf, n);
+				*sl = strlen(buf);
+				*tok = pdf_tokenfromkeyword(buf);
+				goto cleanupokay;
+			}
 		}
 	}
 
