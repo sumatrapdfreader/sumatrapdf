@@ -47,7 +47,9 @@ pdf_readstartxref(pdf_xref *xref)
 	if (error)
 		return fz_rethrow(error, "cannot seek to end of file");
 
-	t = MAX(0, fz_tell(xref->file) - ((int)sizeof buf));
+	xref->filesize = fz_tell(xref->file);
+
+	t = MAX(0, xref->filesize - (int)sizeof buf);
 	error = fz_seek(xref->file, t, 0);
 	if (error)
 		return fz_rethrow(error, "cannot seek to offset %d", t);
@@ -269,12 +271,12 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 			xref->len = ofs + len;
 		}
 
-		for (i = 0; i < len; i++)
+		for (i = ofs; i < ofs + len; i++)
 		{
 			error = fz_read(&n, xref->file, (unsigned char *) buf, 20);
 			if (error)
 				return fz_rethrow(error, "cannot read xref table");
-			if (!xref->table[ofs + i].type)
+			if (!xref->table[i].type)
 			{
 				s = buf;
 
@@ -282,9 +284,12 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 				while (*s != '\0' && iswhite(*s))
 					s++;
 
-				xref->table[ofs + i].ofs = atoi(s);
-				xref->table[ofs + i].gen = atoi(s + 11);
-				xref->table[ofs + i].type = s[17];
+				xref->table[i].ofs = atoi(s);
+				xref->table[i].gen = atoi(s + 11);
+				xref->table[i].type = s[17];
+
+				if (xref->table[i].ofs < 0 || xref->table[i].ofs >= xref->filesize)
+					return fz_throw("object offset out of range: %d", xref->table[i].ofs);
 			}
 		}
 	}
@@ -347,6 +352,9 @@ pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, i
 			xref->table[i].type = t == 0 ? 'f' : t == 1 ? 'n' : t == 2 ? 'o' : 0;
 			xref->table[i].ofs = w1 ? b : 0;
 			xref->table[i].gen = w2 ? c : 0;
+
+			if (xref->table[i].ofs < 0 || xref->table[i].ofs >= xref->filesize)
+				return fz_throw("object offset out of range: %d", xref->table[i].ofs);
 		}
 	}
 
