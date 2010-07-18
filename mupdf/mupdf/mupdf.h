@@ -121,6 +121,7 @@ struct pdf_xref_s
 	fz_stream *file;
 	int version;
 	int startxref;
+	int filesize;
 	pdf_crypt *crypt;
 	fz_obj *trailer;
 
