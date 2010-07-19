@@ -1,7 +1,4 @@
 fitz/fitz.h usr/include
-fitz/fitz_base.h usr/include
-fitz/fitz_draw.h usr/include
-fitz/fitz_stream.h usr/include
 mupdf/mupdf.h usr/include
 debian/mupdf.pc usr/lib/pkgconfig
 debian/tmp/usr/lib/libmupdf.a

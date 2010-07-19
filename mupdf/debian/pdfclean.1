@@ -1,35 +1,31 @@
-.TH PDFCLEAN 1 "March 24, 2010"
+.TH PDFCLEAN 1 "July 19, 2010"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
-pdfclean \- garbage collect, decompress and pretty print a PDF file
+pdfclean \- pretty print, decompress and garbage collect PDF files
 .SH SYNOPSIS
 .B pdfclean
 .RI [ options ]
-.RI PDFfile
-.RI [ output ]
+.RI input.pdf
+.RI [ output.pdf ]
 .SH DESCRIPTION
-This manual page briefly describes the
 .B pdfclean
-command. Unless any options that modify the behaviour are specified the
-input PDF file is pretty printed and stored under the output PDF file name
-(out.pdf if no file name is given).
+pretty prints and rewrites the contents of a PDF file.
+If no output file is specified, the new file will be written to "out.pdf" in
+the current directory.
 .PP
 .SH OPTIONS
-A description of each of the supported options is included below.
 .TP
 .B \-p password
-Uses the given password during decryption of an encrypted PDF file.
-The password is tried both as user and owner password.
+Use the specified password if the file is encrypted.
 .TP
 .B \-g
-Enables garbage collection of PDF objects that have no references from
-other objects.
+Garbage collect objects that have no references from other objects.
+Give the option twice to renumber all objects and compact the cross reference table.
+Give it three times to merge and reuse duplicate objects.
 .TP
-.B \-x
-Expands compressed PDF object streams. This may make a file much larger,
-but provides easy access to all PDF object streams. Note that encrypted
-files requires the password to be set using
-.B \-p .
+.B \-d
+Decompress streams. This will make the output file larger, but provides
+easy access for reading and editing the contents with a text editor.
 .SH SEE ALSO
 .BR mupdf (1),
 .BR pdfdraw (1).
@@ -37,5 +33,3 @@ files requires the password to be set using
 .SH AUTHOR
 MuPDF was written by Tor Andersson <tor@ghostscript.com>.
 MuPDF is Copyright 2006-2010 Artifex Software, Inc.
-.PP
-This manual page was written by Sebastian Rasmussen <sebras@hotmail.com>.

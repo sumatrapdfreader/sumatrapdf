@@ -554,13 +554,13 @@ int main(int argc, char **argv)
 	int c, num;
 	int subset;
 
-	while ((c = fz_getopt(argc, argv, "gxp:")) != -1)
+	while ((c = fz_getopt(argc, argv, "gdp:")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'g': dogarbage ++; break;
-		case 'x': doexpand ++; break;
+		case 'd': doexpand ++; break;
 		default: usage(); break;
 		}
 	}

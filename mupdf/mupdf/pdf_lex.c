@@ -418,6 +418,9 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 			*sl = lexstring(f, buf, n);
 			*tok = PDF_TSTRING;
 			goto cleanupokay;
+		case ')':
+			*tok = PDF_TERROR;
+			goto cleanuperror;
 		case '<':
 			c = fz_readbyte(f);
 			if (c == '<')
@@ -456,22 +459,12 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 			fz_unreadbyte(f);
 			*sl = lexnumber(f, buf, n, tok);
 			goto cleanupokay;
-		default: /* isregular(c) */
-			/* sumatra: without this check we can have infinite loop. It used to be handled by
-			   isregular() call but is no longer handled by any of the above cases */
-			if (c == ')')
-			{
-				*tok = PDF_TERROR;
-				return fz_throw("lexical error");
-			}
-			else
-			{
+		default: /* isregular: !isdelim && !iswhite && c != EOF */
 				fz_unreadbyte(f);
 				lexname(f, buf, n);
 				*sl = strlen(buf);
 				*tok = pdf_tokenfromkeyword(buf);
 				goto cleanupokay;
-			}
 		}
 	}
 

@@ -1,57 +1,61 @@
-.TH PDFDRAW 1 "April 15, 2010"
+.TH PDFDRAW 1 "July 19, 2010"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
-pdfdraw \- renderer tool to convert a PDF file to PNM image files
+pdfdraw \- render PDF documents
 .SH SYNOPSIS
 .B pdfdraw
 .RI [ options ]
-.RI [ PDFfile\ pages ]
+.RI [ file.pdf\ [ pages ] ]
 .B ...
 .SH DESCRIPTION
-This manual page briefly describes the
 .B pdfdraw
-command. Unless any options that modify the behaviour are specified each
-page of each PDF file is rendered and a MD5 checksum over the resulting
-pixels is computed and printed. If the
-.RI pages
-argument is missing all pages will be rendered, but it could be specified
-and in that case this controls what pages to render. The argument can be
-given as a single integer representing the page number, by a range, e.g.
-1-3, comma-separates page numbers and ranges, e.g. 1-3,5,7-9. Additionally
-the last element in the comma-separated list can be specified as an open
-range, e.g. 9-, which means that all pages in the PDF file starting from
-that page ar rendered.
-.PP
+will render a PDF document to image files.
+The supported image formats are: png, ppm, pam and png.
+Select the pages to be rendered by specifying a comma
+separated list of ranges and individual page numbers (for example: 1,5,10-15).
+In no pages are specified all the pages will be rendered.
 .SH OPTIONS
-A description of each of the supported options is included below.
 .TP
-.B \-b bands
-Each page is rendered in the given number of separate bands. The default is
-to render the entire page in one go.
+.B \-o output
+The image format is deduced from the output file name.
+Embed %d in the name to indicate the page number (for example: "page%d.png").
 .TP
 .B \-p password
-Uses the given password during decryption of an encrypted PDF file.
-The password is tried both as user and owner password.
-.TP
-.B \-o pattern
-Enables generation of PNM files, one per page. Each file is given a name
-represented by the specified pattern where %d represents the page number,
-e.g. output%03d.pnm.
+Use the specified password if the file is encrypted.
 .TP
 .B \-r resolution
-Specified the resolution when rendering each page, specified in dots per
-inch. The deafult is 72dpi.
+Render the page at the specified resolution.
+The default resolution is 72 dpi.
+.TP
+.B \-a
+Save the alpha channel.
+The default behavior is to render each page with a white background.
+With this option, the page background is transparent.
+Only supported for pam and png output formats.
+.TP
+.B \-g
+Render in grayscale.
+The default is to render a full color RGB image.
+If the output format is pgm or ppm this option is ignored.
 .TP
 .B \-m
-Enables benchmarking, causing rendering time to be printed for each page as
-well as summary statistics after all pages in each PDF file have been
-rendered.
+Show timing information.
+Take the time it takes for each page to render and print
+a summary at the end.
+.TP
+.B \-5
+Print an MD5 checksum of the rendered image data for each page.
 .TP
 .B \-t
-Print the text on the page in UTF-8.
+Print the text contents of each page in UTF-8 encoding.
+Give the option twice to print detailed information
+about the location of each character in XML format.
 .TP
 .B \-x
-Print an XML representation of the page graphics.
+Print the display list used to render each page.
+.TP
+.B \-A
+Disable the use of accelerated functions.
 .SH SEE ALSO
 .BR mupdf (1),
 .BR pdfclean (1).
@@ -59,5 +63,3 @@ Print an XML representation of the page graphics.
 .SH AUTHOR
 MuPDF was written by Tor Andersson <tor@ghostscript.com>.
 MuPDF is Copyright 2006-2010 Artifex Software, Inc.
-.PP
-This manual page was written by Sebastian Rasmussen <sebras@hotmail.com>.
