@@ -220,6 +220,11 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 
 	if (!obj)
 		fmtputs(fmt, "<nil>");
+	else if (fz_isindirect(obj))
+	{
+		sprintf(buf, "%d %d R", fz_tonum(obj), fz_togen(obj));
+		fmtputs(fmt, buf);
+	}
 	else if (fz_isnull(obj))
 		fmtputs(fmt, "null");
 	else if (fz_isbool(obj))
@@ -264,11 +269,6 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 		fmtarray(fmt, obj);
 	else if (fz_isdict(obj))
 		fmtdict(fmt, obj);
-	else if (fz_isindirect(obj))
-	{
-		sprintf(buf, "%d %d R", fz_tonum(obj), fz_togen(obj));
-		fmtputs(fmt, buf);
-	}
 	else
 		fmtputs(fmt, "<unknown object>");
 }

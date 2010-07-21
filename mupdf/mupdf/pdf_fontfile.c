@@ -53,12 +53,11 @@ enum
 enum { CNS, GB, Japan, Korea };
 enum { MINCHO, GOTHIC };
 
-static const struct
-{
+static const struct {
 	const char *name;
 	const unsigned char *cff;
 	const unsigned int *len;
-	} basefonts[] = {
+} basefonts[] = {
 	{ "Courier",
 		pdf_font_NimbusMonL_Regu_cff_buf,
 		&pdf_font_NimbusMonL_Regu_cff_len },

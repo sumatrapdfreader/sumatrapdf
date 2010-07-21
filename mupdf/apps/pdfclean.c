@@ -41,7 +41,7 @@ static void usage(void)
 		"\t-g\tgarbage collect unused objects\n"
 		"\t-gg\tin addition to -g compact xref table\n"
 		"\t-ggg\tin addition to -gg merge duplicate objects\n"
-		"\t-x\texpand compressed streams\n"
+		"\t-d\tdecompress streams\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
 }
