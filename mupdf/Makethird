@@ -70,7 +70,7 @@ OPENJPEG_LIB=$(OBJDIR)/libopenjpeg.a
 $(OPENJPEG_LIB): $(OPENJPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/opj_%.o: $(openjpeg_dir)/%.c
-	$(CC_CMD)
+	$(CC_CMD) -DOPJ_STATIC
 
 endif
 

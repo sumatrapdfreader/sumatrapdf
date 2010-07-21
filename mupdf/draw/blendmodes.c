@@ -131,12 +131,15 @@ fz_luminosity_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 	if ((r | g | b) & 0x100)
 	{
 		y = (rs * 77 + gs * 151 + bs * 28 + 0x80) >> 8;
-		if (delta > 0) {
+		if (delta > 0)
+		{
 			int max;
 			max = r > g ? r : g;
 			max = b > max ? b : max;
 			scale = ((255 - y) << 16) / (max - y);
-		} else {
+		}
+		else
+		{
 			int min;
 			min = r < g ? r : g;
 			min = b < min ? b : min;
@@ -165,7 +168,8 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 	minb = minb < bb ? minb : bb;
 	maxb = rb > gb ? rb : gb;
 	maxb = maxb > bb ? maxb : bb;
-	if (minb == maxb) {
+	if (minb == maxb)
+	{
 		/* backdrop has zero saturation, avoid divide by 0 */
 		*rd = gb;
 		*gd = gb;
@@ -184,7 +188,8 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 	g = y + ((((gb - y) * scale) + 0x8000) >> 16);
 	b = y + ((((bb - y) * scale) + 0x8000) >> 16);
 
-	if ((r | g | b) & 0x100) {
+	if ((r | g | b) & 0x100)
+	{
 		int scalemin, scalemax;
 		int min, max;
 
@@ -228,10 +233,10 @@ fz_hue_rgb(int *rr, int *rg, int *rb, int br, int bg, int bb, int sr, int sg, in
 	fz_saturation_rgb(rr, rg, rb, tr, tg, tb, br, bg, bb);
 }
 
-/* Blending functions */
+/* Blending loops */
 
-static void
-fz_blendseparable(byte * restrict sp, byte * restrict bp, int n, int w, fz_blendmode blendmode)
+void
+fz_blendseparable(byte * restrict bp, byte * restrict sp, int n, int w, fz_blendmode blendmode)
 {
 	int k;
 	int n1 = n - 1;
@@ -241,15 +246,15 @@ fz_blendseparable(byte * restrict sp, byte * restrict bp, int n, int w, fz_blend
 		int ba = bp[n1];
 		int saba = fz_mul255(sa, ba);
 
+		/* ugh, division to get non-premul components */
+		int invsa = sa ? 255 * 256 / sa : 0;
+		int invba = ba ? 255 * 256 / ba : 0;
+
 		for (k = 0; k < n1; k++)
 		{
-			int sc = sp[k];
-			int bc = bp[k];
+			int sc = (sp[k] * invsa) >> 8;
+			int bc = (bp[k] * invba) >> 8;
 			int rc;
-
-			/* ugh, division to get non-premul components */
-			if (sa) sc = sc * 255 / sa;
-			if (ba) bc = bc * 255 / ba;
 
 			switch (blendmode)
 			{
@@ -278,36 +283,28 @@ fz_blendseparable(byte * restrict sp, byte * restrict bp, int n, int w, fz_blend
 	}
 }
 
-static void
-fz_blendnonseparable(byte * restrict sp, byte * restrict bp, int w, fz_blendmode blendmode)
+void
+fz_blendnonseparable(byte * restrict bp, byte * restrict sp, int w, fz_blendmode blendmode)
 {
 	while (w--)
 	{
-		int rr, rg, rb, saba;
+		int rr, rg, rb;
 
-		int sr = sp[0];
-		int sg = sp[1];
-		int sb = sp[2];
 		int sa = sp[3];
-
-		int br = bp[0];
-		int bg = bp[1];
-		int bb = bp[2];
 		int ba = bp[3];
-
-		saba = fz_mul255(sa, ba);
+		int saba = fz_mul255(sa, ba);
 
 		/* ugh, division to get non-premul components */
-		if (sa) {
-			sr = sr * 255 / sa;
-			sg = sg * 255 / sa;
-			sb = sb * 255 / sa;
-		}
-		if (ba) {
-			br = br * 255 / ba;
-			bg = bg * 255 / ba;
-			bb = bb * 255 / ba;
-		}
+		int invsa = sa ? 255 * 256 / sa : 0;
+		int invba = ba ? 255 * 256 / ba : 0;
+
+		int sr = (sp[0] * invsa) >> 8;
+		int sg = (sp[1] * invsa) >> 8;
+		int sb = (sp[2] * invsa) >> 8;
+
+		int br = (bp[0] * invba) >> 8;
+		int bg = (bp[1] * invba) >> 8;
+		int bb = (bp[2] * invba) >> 8;
 
 		switch (blendmode)
 		{
@@ -337,40 +334,32 @@ fz_blendnonseparable(byte * restrict sp, byte * restrict bp, int w, fz_blendmode
 }
 
 void
-fz_blendpixmaps(fz_pixmap *src, fz_pixmap *dst, fz_blendmode blendmode)
+fz_blendpixmapswithmode(fz_pixmap *dst, fz_pixmap *src, fz_blendmode blendmode)
 {
 	unsigned char *sp, *dp;
-	fz_bbox sr, dr;
+	fz_bbox bbox;
 	int x, y, w, h, n;
 
-	assert(src->n == dst->n);
+	bbox = fz_boundpixmap(dst);
+	bbox = fz_intersectbbox(bbox, fz_boundpixmap(src));
 
-	sr.x0 = src->x;
-	sr.y0 = src->y;
-	sr.x1 = src->x + src->w;
-	sr.y1 = src->y + src->h;
-
-	dr.x0 = dst->x;
-	dr.y0 = dst->y;
-	dr.x1 = dst->x + dst->w;
-	dr.y1 = dst->y + dst->h;
-
-	dr = fz_intersectbbox(sr, dr);
-	x = dr.x0;
-	y = dr.y0;
-	w = dr.x1 - dr.x0;
-	h = dr.y1 - dr.y0;
+	x = bbox.x0;
+	y = bbox.y0;
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
 
 	n = src->n;
 	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * n;
 	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * n;
 
+	assert(src->n == dst->n);
+
 	while (h--)
 	{
 		if (n == 4 && blendmode >= FZ_BHUE)
-			fz_blendnonseparable(sp, dp, w, blendmode);
+			fz_blendnonseparable(dp, sp, w, blendmode);
 		else
-			fz_blendseparable(sp, dp, n, w, blendmode);
+			fz_blendseparable(dp, sp, n, w, blendmode);
 		sp += src->w * n;
 		dp += dst->w * n;
 	}

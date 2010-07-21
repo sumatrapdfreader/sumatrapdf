@@ -73,124 +73,7 @@ and stick to using the premultiplied form.
 typedef unsigned char byte;
 
 /*
- * Blend pixmap regions
- */
-
-/* dst = src in msk over dst */
-static void
-duff_ni1on(byte * restrict sp, int sw, int sn, byte * restrict mp, int mw, byte * restrict dp, int dw, int w0, int h)
-{
-	int k;
-
-	sw -= w0*sn;
-	mw -= w0;
-	dw -= w0*sn;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			int ma = mp[0];
-			int ssa = 255 - fz_mul255(sp[sn-1], ma);
-			for (k = 0; k < sn; k++)
-			{
-				dp[k] = fz_mul255(sp[k], ma) + fz_mul255(dp[k], ssa);
-			}
-			sp += sn;
-			mp ++;
-			dp += sn;
-		}
-		sp += sw;
-		mp += mw;
-		dp += dw;
-	}
-}
-
-static void
-duff_1i1o1(byte * restrict sp, int sw, byte * restrict mp, int mw, byte * restrict dp, int dw, int w0, int h)
-{
-	/* duff_nimon(sp0, sw, 1, mp0, mw, 1, dp0, dw, w0, h); */
-
-	sw -= w0;
-	dw -= w0;
-	mw -= w0;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			byte ma = mp[0];
-			byte sa = fz_mul255(sp[0], ma);
-			byte ssa = 255 - sa;
-			dp[0] = sa + fz_mul255(dp[0], ssa);
-			sp ++;
-			mp ++;
-			dp ++;
-		}
-		sp += sw;
-		mp += mw;
-		dp += dw;
-	}
-}
-
-static void
-duff_2i1o2(byte * restrict sp, int sw, byte * restrict mp, int mw, byte * restrict dp, int dw, int w0, int h)
-{
-
-	/* duff_nimon(sp, sw, 2, mp, mw, 1, dp, dw, w0, h); */
-	sw -= w0<<1;
-	dw -= w0<<1;
-	mw -= w0;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			byte ma = mp[0];
-			byte ssa = 255 - fz_mul255(sp[1], ma);
-			dp[0] = fz_mul255(sp[0], ma) + fz_mul255(dp[0], ssa);
-			dp[1] = fz_mul255(sp[1], ma) + fz_mul255(dp[1], ssa);
-			sp += 2;
-			mp += 1;
-			dp += 2;
-		}
-		sp += sw;
-		mp += mw;
-		dp += dw;
-	}
-}
-
-static void
-duff_4i1o4(byte * restrict sp, int sw, byte * restrict mp, int mw, byte * restrict dp, int dw, int w0, int h)
-{
-	/* duff_nimon(sp, sw, 4, mp, mw, 1, dp, dw, w0, h); */
-
-	sw -= w0<<2;
-	dw -= w0<<2;
-	mw -= w0;
-	while (h--)
-	{
-		int w = w0;
-		while (w--)
-		{
-			byte ma = mp[0];
-			byte ssa = 255 - fz_mul255(sp[3], ma);
-			dp[0] = fz_mul255(sp[0], ma) + fz_mul255(dp[0], ssa);
-			dp[1] = fz_mul255(sp[1], ma) + fz_mul255(dp[1], ssa);
-			dp[2] = fz_mul255(sp[2], ma) + fz_mul255(dp[2], ssa);
-			dp[3] = fz_mul255(sp[3], ma) + fz_mul255(dp[3], ssa);
-			sp += 4;
-			mp += 1;
-			dp += 4;
-		}
-		sp += sw;
-		mp += mw;
-		dp += dw;
-	}
-}
-
-/*
- * Path masks
+ * Path drawing (the source colors are not premultiplied)
  */
 
 static void
@@ -243,8 +126,12 @@ path_w4i1o4(byte *rgba, byte * restrict src, byte cov, int len, byte * restrict 
 	}
 }
 
+void (*fz_path_1o1)(byte*restrict,byte,int,byte*restrict) = path_1o1;
+void (*fz_path_w2i1o2)(byte*,byte*restrict,byte,int,byte*restrict) = path_w2i1o2;
+void (*fz_path_w4i1o4)(byte*,byte*restrict,byte,int,byte*restrict) = path_w4i1o4;
+
 /*
- * Text masks
+ * Text drawing (the source colors are not premultiplied)
  */
 
 static void
@@ -319,19 +206,159 @@ text_w4i1o4(byte *rgba, byte * restrict src, int srcw, byte * restrict dst, int 
 	}
 }
 
-/*
- * ... and the function pointers
- */
-
-void (*fz_duff_ni1on)(byte*restrict,int,int,byte*restrict,int,byte*restrict,int,int,int) = duff_ni1on;
-void (*fz_duff_1i1o1)(byte*restrict,int,byte*restrict,int,byte*restrict,int,int,int) = duff_1i1o1;
-void (*fz_duff_2i1o2)(byte*restrict,int,byte*restrict,int,byte*restrict,int,int,int) = duff_2i1o2;
-void (*fz_duff_4i1o4)(byte*restrict,int,byte*restrict,int,byte*restrict,int,int,int) = duff_4i1o4;
-
-void (*fz_path_1o1)(byte*restrict,byte,int,byte*restrict) = path_1o1;
-void (*fz_path_w2i1o2)(byte*,byte*restrict,byte,int,byte*restrict) = path_w2i1o2;
-void (*fz_path_w4i1o4)(byte*,byte*restrict,byte,int,byte*restrict) = path_w4i1o4;
-
 void (*fz_text_1o1)(byte*restrict,int,byte*restrict,int,int,int) = text_1o1;
 void (*fz_text_w2i1o2)(byte*,byte*restrict,int,byte*restrict,int,int,int) = text_w2i1o2;
 void (*fz_text_w4i1o4)(byte*,byte*restrict,int,byte*restrict,int,int,int) = text_w4i1o4;
+
+/*
+ * Pixmap blending
+ */
+
+void
+fz_blendwithmask(byte * restrict dp, byte * restrict sp, byte * restrict mp, int n, int w)
+{
+	int k;
+
+	switch (n)
+	{
+	case 2:
+		while (w--)
+		{
+			int ma = *mp++;
+			int masa = fz_mul255(sp[1], ma);
+			int t = 255 - masa;
+			dp[0] = fz_mul255(sp[0], ma) + fz_mul255(dp[0], t);
+			sp += 2;
+			dp += 2;
+		}
+		break;
+	case 4:
+		while (w--)
+		{
+			int ma = *mp++;
+			int masa = fz_mul255(sp[3], ma);
+			int t = 255 - masa;
+			dp[0] = fz_mul255(sp[0], ma) + fz_mul255(dp[0], t);
+			dp[1] = fz_mul255(sp[1], ma) + fz_mul255(dp[1], t);
+			dp[2] = fz_mul255(sp[2], ma) + fz_mul255(dp[2], t);
+			dp[3] = fz_mul255(sp[3], ma) + fz_mul255(dp[3], t);
+			sp += 4;
+			dp += 4;
+		}
+		break;
+	default:
+		while (w--)
+		{
+			int ma = *mp++;
+			int masa = fz_mul255(sp[n-1], ma);
+			int t = 255 - masa;
+			for (k = 0; k < n; k++)
+				dp[k] = fz_mul255(sp[k], ma) + fz_mul255(dp[k], t);
+			sp += n;
+			dp += n;
+		}
+	}
+}
+
+void
+fz_blendwithalpha(byte * restrict dp, byte * restrict sp, int ma, int n, int w)
+{
+	int k;
+
+	while (w--)
+	{
+		int masa = fz_mul255(sp[n-1], ma);
+		int t = 255 - masa;
+		for (k = 0; k < n; k++)
+			dp[k] = fz_mul255(sp[k], ma) + fz_mul255(dp[k], t);
+		sp += n;
+		dp += n;
+	}
+}
+
+void
+fz_blendnormal(byte * restrict dp, byte * restrict sp, int n, int w)
+{
+	int k;
+
+	while (w--)
+	{
+		int t = 255 - sp[n-1];
+		for (k = 0; k < n; k++)
+			dp[k] = sp[k] + fz_mul255(dp[k], t);
+		sp += n;
+		dp += n;
+	}
+}
+
+void
+fz_blendpixmapswithmask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk)
+{
+	unsigned char *sp, *dp, *mp;
+	fz_bbox bbox;
+	int x, y, w, h, n;
+
+	bbox = fz_boundpixmap(dst);
+	bbox = fz_intersectbbox(bbox, fz_boundpixmap(src));
+	bbox = fz_intersectbbox(bbox, fz_boundpixmap(msk));
+
+	x = bbox.x0;
+	y = bbox.y0;
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
+
+	n = src->n;
+	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
+	mp = msk->samples + ((y - msk->y) * msk->w + (x - msk->x)) * msk->n;
+	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+
+	assert(dst->n == src->n);
+	assert(msk->n == 1);
+
+	while (h--)
+	{
+		fz_blendwithmask(dp, sp, mp, n, w);
+		sp += src->w * n;
+		dp += dst->w * n;
+		mp += msk->w;
+	}
+}
+
+void
+fz_blendpixmapswithalpha(fz_pixmap *dst, fz_pixmap *src, float alpha)
+{
+	unsigned char *sp, *dp;
+	fz_bbox bbox;
+	int x, y, w, h, n, a;
+
+	bbox = fz_boundpixmap(dst);
+	bbox = fz_intersectbbox(bbox, fz_boundpixmap(src));
+
+	x = bbox.x0;
+	y = bbox.y0;
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
+
+	a = alpha * 255;
+	n = src->n;
+	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
+	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+
+	assert(dst->n == src->n);
+
+	while (h--)
+	{
+		if (a == 255)
+			fz_blendnormal(dp, sp, n, w);
+		else
+			fz_blendwithalpha(dp, sp, a, n, w);
+		sp += src->w * n;
+		dp += dst->w * n;
+	}
+}
+
+void
+fz_blendpixmaps(fz_pixmap *dst, fz_pixmap *src)
+{
+	fz_blendpixmapswithalpha(dst, src, 1);
+}

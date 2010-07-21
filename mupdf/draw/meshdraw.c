@@ -314,20 +314,26 @@ void
 fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	unsigned char clut[256][FZ_MAXCOLORS];
-	fz_pixmap *temp;
+	fz_pixmap *temp, *conv;
 	float color[FZ_MAXCOLORS];
 	float tri[3][MAXN];
 	fz_point p;
 	float *mesh;
 	int ntris;
 	int i, j, k;
-	int x, y;
 
 	ctm = fz_concat(shade->matrix, ctm);
 	mesh = shade->mesh;
 
 	if (shade->usefunction)
 	{
+		for (i = 0; i < 256; i++)
+		{
+			fz_convertcolor(shade->cs, shade->function[i], dest->colorspace, color);
+			for (k = 0; k < dest->colorspace->n; k++)
+				clut[i][k] = color[k] * 255;
+		}
+		conv = fz_newpixmapwithrect(dest->colorspace, bbox);
 		temp = fz_newpixmapwithrect(fz_devicegray, bbox);
 		fz_clearpixmap(temp, 0);
 		ntris = shade->meshlen / 9;
@@ -362,34 +368,18 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 
 	if (shade->usefunction)
 	{
-		unsigned char *s, *d;
-		unsigned char sa, ssa, sc;
-
-		for (i = 0; i < 256; i++)
+		unsigned char *s = temp->samples;
+		unsigned char *d = conv->samples;
+		int len = temp->w * temp->h;
+		while (len--)
 		{
-			fz_convertcolor(shade->cs, shade->function[i], dest->colorspace, color);
-			for (k = 0; k < dest->colorspace->n; k++)
-				clut[i][k] = color[k] * 255;
+			int v = *s++;
+			for (k = 0; k < conv->n - 1; k++)
+				*d++ = clut[v][k];
+			*d++ = *s++;
 		}
-
-		/* duff_non with lookup table for colors */
-		for (y = bbox.y0; y < bbox.y1; y++)
-		{
-			s = temp->samples + ((bbox.x0 - temp->x) + (y - temp->y) * temp->w) * temp->n;
-			d = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
-			for (x = bbox.x0; x < bbox.x1; x++)
-			{
-				sc = s[0];
-				sa = s[1];
-				ssa = 255 - s[1];
-				for (k = 0; k < dest->colorspace->n; k++)
-					d[k] = fz_mul255(clut[sc][k], sa) + fz_mul255(d[k], ssa);
-				d[k] = sa + fz_mul255(d[k], ssa);
-				s += 2;
-				d += dest->n;
-			}
-		}
-
+		fz_blendpixmaps(dest, conv);
+		fz_droppixmap(conv);
 		fz_droppixmap(temp);
 	}
 }

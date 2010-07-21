@@ -48,7 +48,9 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #include <unistd.h>
 
+#ifndef O_BINARY
 #define O_BINARY 0
+#endif
 
 #endif
 
@@ -1140,12 +1142,14 @@ void fz_acceleratearch(void);
 
 void fz_decodetile(fz_pixmap *pix, float *decode);
 void fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, int stride, int scale);
-void fz_blendpixmaps(fz_pixmap *src, fz_pixmap *dst, fz_blendmode blendmode);
 
-extern void (*fz_duff_ni1on)(unsigned char*restrict,int,int,unsigned char*restrict,int,unsigned char*restrict,int,int,int);
-extern void (*fz_duff_1i1o1)(unsigned char*restrict,int,unsigned char*restrict,int,unsigned char*restrict,int,int,int);
-extern void (*fz_duff_2i1o2)(unsigned char*restrict,int,unsigned char*restrict,int,unsigned char*restrict,int,int,int);
-extern void (*fz_duff_4i1o4)(unsigned char*restrict,int,unsigned char*restrict,int,unsigned char*restrict,int,int,int);
+void fz_blendpixmapswithmode(fz_pixmap *dst, fz_pixmap *src, fz_blendmode blendmode);
+void fz_blendpixmapswithmask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
+void fz_blendpixmapswithalpha(fz_pixmap *dst, fz_pixmap *src, float alpha);
+void fz_blendpixmaps(fz_pixmap *dst, fz_pixmap *src);
+
+void fz_blendnormal(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w);
+void fz_blendwithmask(unsigned char * restrict dp, unsigned char * restrict sp, unsigned char * restrict mp, int n, int w);
 
 extern void (*fz_path_1o1)(unsigned char*restrict,unsigned char,int,unsigned char*restrict);
 extern void (*fz_path_w2i1o2)(unsigned char*,unsigned char*restrict,unsigned char,int,unsigned char*restrict);

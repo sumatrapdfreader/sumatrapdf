@@ -335,8 +335,8 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 
 		else if (!strcmp(s, "BM"))
 		{
-			if (!fz_isname(val))
-				return fz_throw("malformed BM");
+			if (fz_isarray(val))
+				val = fz_arrayget(val, 0);
 
 			gstate->blendmode = FZ_BNORMAL;
 			for (k = 0; fz_blendnames[k]; k++)

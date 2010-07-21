@@ -24,55 +24,9 @@ struct fz_drawdevice_s
 		fz_pixmap *mask;
 		fz_blendmode blendmode;
 		int luminosity;
+		float alpha;
 	} stack[STACKSIZE];
 };
-
-static void
-blendmaskover(fz_pixmap *src, fz_pixmap *msk, fz_pixmap *dst)
-{
-	unsigned char *sp, *dp, *mp;
-	fz_bbox sr, dr, mr;
-	int x, y, w, h;
-
-	sr.x0 = src->x;
-	sr.y0 = src->y;
-	sr.x1 = src->x + src->w;
-	sr.y1 = src->y + src->h;
-
-	dr.x0 = dst->x;
-	dr.y0 = dst->y;
-	dr.x1 = dst->x + dst->w;
-	dr.y1 = dst->y + dst->h;
-
-	mr.x0 = msk->x;
-	mr.y0 = msk->y;
-	mr.x1 = msk->x + msk->w;
-	mr.y1 = msk->y + msk->h;
-
-	dr = fz_intersectbbox(sr, dr);
-	dr = fz_intersectbbox(dr, mr);
-	x = dr.x0;
-	y = dr.y0;
-	w = dr.x1 - dr.x0;
-	h = dr.y1 - dr.y0;
-
-	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
-	mp = msk->samples + ((y - msk->y) * msk->w + (x - msk->x)) * msk->n;
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
-
-	if (src->n == 1 && msk->n == 1 && dst->n == 1)
-		fz_duff_1i1o1(sp, src->w, mp, msk->w, dp, dst->w, w, h);
-	else if (src->n == 2 && msk->n == 1 && dst->n == 2)
-		fz_duff_2i1o2(sp, src->w * 2, mp, msk->w, dp, dst->w * 2, w, h);
-	else if (src->n == 4 && msk->n == 1 && dst->n == 4)
-		fz_duff_4i1o4(sp, src->w * 4, mp, msk->w, dp, dst->w * 4, w, h);
-	else if (src->n == dst->n && msk->n == 1 )
-		fz_duff_ni1on(sp, src->w * src->n, src->n,
-			mp, msk->w * msk->n,
-			dp, dst->w * dst->n, w, h);
-	else
-		assert(!"blendmaskover src and msk and dst mismatch");
-}
 
 static void
 fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
@@ -808,7 +762,7 @@ fz_drawpopclip(void *user)
 		if (mask && dest)
 		{
 			fz_pixmap *scratch = dev->dest;
-			blendmaskover(scratch, mask, dest);
+			fz_blendpixmapswithmask(dest, scratch, mask);
 			fz_droppixmap(mask);
 			fz_droppixmap(scratch);
 			dev->dest = dest;
@@ -935,7 +889,7 @@ fz_drawendgroup(void *user)
 		blendmode = dev->stack[dev->top].blendmode;
 		dev->dest = dev->stack[dev->top].dest;
 		dev->scissor = dev->stack[dev->top].scissor;
-		fz_blendpixmaps(group, dev->dest, blendmode);
+		fz_blendpixmapswithmode(dev->dest, group, blendmode);
 		fz_droppixmap(group);
 	}
 }
