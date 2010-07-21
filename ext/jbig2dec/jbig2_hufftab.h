@@ -21,6 +21,7 @@
 
 /* types are in jbig2_huffman.h, you must include that first */
 
+#define JBIG2_COUNTOF(x) (sizeof((x)) / sizeof((x)[0]))
 
 /* Table B.1 */
 const Jbig2HuffmanLine
@@ -33,7 +34,7 @@ jbig2_huffman_lines_A[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_A = { FALSE, 5, jbig2_huffman_lines_A };
+jbig2_huffman_params_A = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_A), jbig2_huffman_lines_A };
 
 /* Table B.2 */
 const Jbig2HuffmanLine
@@ -45,11 +46,11 @@ jbig2_huffman_lines_B[] = {
   { 5, 6, 11 },
   { 0, 32, -1 }, /* low */
   { 6, 32, 75 }, /* high */
-  { 6, 0, 0 }
+  { 6, 0, 0 }    /* OOB */
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_B = { TRUE, 8, jbig2_huffman_lines_B };
+jbig2_huffman_params_B = { TRUE, JBIG2_COUNTOF(jbig2_huffman_lines_B), jbig2_huffman_lines_B };
 
 /* Table B.3 */
 const Jbig2HuffmanLine
@@ -66,7 +67,7 @@ jbig2_huffman_lines_C[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_C = { TRUE, 9, jbig2_huffman_lines_C };
+jbig2_huffman_params_C = { TRUE, JBIG2_COUNTOF(jbig2_huffman_lines_C), jbig2_huffman_lines_C };
 
 /* Table B.4 */
 const Jbig2HuffmanLine
@@ -81,7 +82,7 @@ jbig2_huffman_lines_D[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_D = { FALSE, 7, jbig2_huffman_lines_D };
+jbig2_huffman_params_D = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_D), jbig2_huffman_lines_D };
 
 /* Table B.5 */
 const Jbig2HuffmanLine
@@ -97,7 +98,7 @@ jbig2_huffman_lines_E[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_E = { FALSE, 8, jbig2_huffman_lines_E };
+jbig2_huffman_params_E = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_E), jbig2_huffman_lines_E };
 
 /* Table B.6 */
 const Jbig2HuffmanLine
@@ -119,7 +120,7 @@ jbig2_huffman_lines_F[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_F = { FALSE, 14, jbig2_huffman_lines_F };
+jbig2_huffman_params_F = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_F), jbig2_huffman_lines_F };
 
 /* Table B.7 */
 const Jbig2HuffmanLine
@@ -142,7 +143,7 @@ jbig2_huffman_lines_G[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_G = { FALSE, 15, jbig2_huffman_lines_G };
+jbig2_huffman_params_G = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_G), jbig2_huffman_lines_G };
 
 /* Table B.8 */
 const Jbig2HuffmanLine
@@ -171,7 +172,7 @@ jbig2_huffman_lines_H[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_H = { TRUE, 21, jbig2_huffman_lines_H };
+jbig2_huffman_params_H = { TRUE, JBIG2_COUNTOF(jbig2_huffman_lines_H), jbig2_huffman_lines_H };
 
 /* Table B.9 */
 const Jbig2HuffmanLine
@@ -201,7 +202,7 @@ jbig2_huffman_lines_I[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_I = { TRUE, 22, jbig2_huffman_lines_I };
+jbig2_huffman_params_I = { TRUE, JBIG2_COUNTOF(jbig2_huffman_lines_I), jbig2_huffman_lines_I };
 
 /* Table B.10 */
 const Jbig2HuffmanLine
@@ -230,14 +231,14 @@ jbig2_huffman_lines_J[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_J = { TRUE, 21, jbig2_huffman_lines_J };
+jbig2_huffman_params_J = { TRUE, JBIG2_COUNTOF(jbig2_huffman_lines_J), jbig2_huffman_lines_J };
 
 /* Table B.11 */
 const Jbig2HuffmanLine
 jbig2_huffman_lines_K[] = {
 	{1, 0, 1},
 	{2, 1, 2},
-	{4, 0, 3},
+	{4, 0, 4},
 	{4, 1, 5},
 	{5, 1, 7},
 	{5, 2, 9},
@@ -247,11 +248,12 @@ jbig2_huffman_lines_K[] = {
 	{7, 4, 29},
 	{7, 5, 45},
 	{7, 6, 77},
+	{0, 32, -1}, /* low */
 	{7, 32, 141} /* high */
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_K = { FALSE, 13, jbig2_huffman_lines_K };
+jbig2_huffman_params_K = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_K), jbig2_huffman_lines_K };
 
 /* Table B.12 */
 const Jbig2HuffmanLine
@@ -268,11 +270,13 @@ jbig2_huffman_lines_L[] = {
 	{7, 3, 17},
 	{7, 4, 25},
 	{8, 5, 41},
-	{8, 32, 73}
+	{8, 32, 73},
+	{0, 32, -1}, /* low */
+	{0, 32, 0}   /* high */
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_L = { FALSE, 13, jbig2_huffman_lines_L };
+jbig2_huffman_params_L = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_L), jbig2_huffman_lines_L };
 
 
 /* Table B.13 */
@@ -290,11 +294,12 @@ jbig2_huffman_lines_M[] = {
 	{6, 4, 29},
 	{6, 5, 45},
 	{7, 6, 77},
+	{0, 32, -1}, /* low */
 	{7, 32, 141} /* high */
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_M = { FALSE, 13, jbig2_huffman_lines_M };
+jbig2_huffman_params_M = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_M), jbig2_huffman_lines_M };
 
 /* Table B.14 */
 const Jbig2HuffmanLine
@@ -302,14 +307,14 @@ jbig2_huffman_lines_N[] = {
   { 3, 0, -2 },
   { 3, 0, -1 },
   { 1, 0, 0 },
-  { 3, 3, 1 },
-  { 3, 6, 2 },
+  { 3, 0, 1 },
+  { 3, 0, 2 },
   { 0, 32, -1 }, /* low */
   { 0, 32, 3 }, /* high */
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_N = { FALSE, 7, jbig2_huffman_lines_N };
+jbig2_huffman_params_N = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_N), jbig2_huffman_lines_N };
 
 /* Table B.15 */
 const Jbig2HuffmanLine
@@ -330,6 +335,8 @@ jbig2_huffman_lines_O[] = {
 };
 
 const Jbig2HuffmanParams
-jbig2_huffman_params_O = { FALSE, 13, jbig2_huffman_lines_O };
+jbig2_huffman_params_O = { FALSE, JBIG2_COUNTOF(jbig2_huffman_lines_O), jbig2_huffman_lines_O };
+
+#undef JBIG2_COUNTOF
 
 #endif /* JBIG2_HUFFTAB_H */

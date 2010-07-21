@@ -831,7 +831,7 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
   else
     {
       int stats_size = jbig2_generic_stats_size(ctx, params.GBTEMPLATE);
-      GB_stats = jbig2_alloc(ctx->allocator, stats_size);
+      GB_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
       memset(GB_stats, 0, stats_size);
 
       ws = jbig2_word_stream_buf_new(ctx,

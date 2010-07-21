@@ -33,7 +33,7 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
 	Jbig2Image	*image;
 	int		stride;
 
-	image = (Jbig2Image *)jbig2_alloc(ctx->allocator, sizeof(*image));
+	image = jbig2_new(ctx, Jbig2Image, 1);
 	if (image == NULL) {
 		jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
 			       "could not allocate image structure");
@@ -41,7 +41,7 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
 	}
 
 	stride = ((width - 1) >> 3) + 1; /* generate a byte-aligned stride */
-	image->data = (uint8_t *)jbig2_alloc(ctx->allocator, stride*height);
+	image->data = jbig2_new(ctx, uint8_t, stride*height);
 	if (image->data == NULL) {
                 jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
                     "could not allocate image data buffer! [%d bytes]\n", stride*height);
@@ -84,8 +84,7 @@ Jbig2Image *jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image,
 {
 	if (width == image->width) {
 	    /* use the same stride, just change the length */
-	    image->data = jbig2_realloc(ctx->allocator,
-                image->data, image->stride*height);
+	    image->data = jbig2_renew(ctx, image->data, uint8_t, image->stride*height);
             if (image->data == NULL) {
                 jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
                     "could not resize image buffer!");

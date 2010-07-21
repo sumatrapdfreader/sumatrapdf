@@ -17,7 +17,7 @@
 
 /* update package version here */
 #define PACKAGE "jbig2dec"
-#define VERSION "0.3"
+#define VERSION "0.11"
 
 #if defined(_MSC_VER) || (defined(__BORLANDC__) && defined(__WIN32__))
   /* Microsoft Visual C++ or Borland C++ */

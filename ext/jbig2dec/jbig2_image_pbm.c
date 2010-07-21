@@ -22,6 +22,7 @@
 #include <ctype.h>
 
 #include "jbig2.h"
+#include "jbig2_priv.h"
 #include "jbig2_image.h"
 
 /* take an image structure and write it to a file in pbm format */

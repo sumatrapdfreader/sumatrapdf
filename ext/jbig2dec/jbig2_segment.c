@@ -22,6 +22,7 @@
 
 #include "jbig2.h"
 #include "jbig2_priv.h"
+#include "jbig2_huffman.h"
 #include "jbig2_symbol_dict.h"
 #include "jbig2_metadata.h"
 
@@ -42,8 +43,7 @@ jbig2_parse_segment_header (Jbig2Ctx *ctx, uint8_t *buf, size_t buf_size,
   if (buf_size < 11)
     return NULL;
 
-  result = (Jbig2Segment *)jbig2_alloc(ctx->allocator,
-					     sizeof(Jbig2Segment));
+  result = jbig2_new(ctx, Jbig2Segment, 1);
 
   /* 7.2.2 */
   result->number = jbig2_get_int32(buf);
@@ -83,7 +83,8 @@ jbig2_parse_segment_header (Jbig2Ctx *ctx, uint8_t *buf, size_t buf_size,
     {
       int i;
 
-      referred_to_segments = jbig2_alloc(ctx->allocator, referred_to_segment_count * referred_to_segment_size * sizeof(uint32_t));
+      referred_to_segments = jbig2_new(ctx, uint32_t,
+        referred_to_segment_count * referred_to_segment_size);
 
       for (i = 0; i < referred_to_segment_count; i++) {
         referred_to_segments[i] =
@@ -135,16 +136,20 @@ jbig2_free_segment (Jbig2Ctx *ctx, Jbig2Segment *segment)
     switch (segment->flags & 63) {
 	case 0:  /* symbol dictionary */
 	  if (segment->result != NULL)
-	    jbig2_sd_release(ctx, segment->result);
+	    jbig2_sd_release(ctx, (Jbig2SymbolDict*)segment->result);
 	  break;
 	case 4:  /* intermediate text region */
 	case 40: /* intermediate refinement region */
 	  if (segment->result != NULL)
-	    jbig2_image_release(ctx, segment->result);
+	    jbig2_image_release(ctx, (Jbig2Image*)segment->result);
+	  break;
+	case 53: /* user-supplied huffman table */
+	  if (segment->result != NULL)
+		jbig2_table_free(ctx, (Jbig2HuffmanParams*)segment->result);
 	  break;
 	case 62:
 	  if (segment->result != NULL)
-	    jbig2_metadata_free(ctx, segment->result);
+	    jbig2_metadata_free(ctx, (Jbig2Metadata*)segment->result);
 	  break;
 	default:
 	  /* anything else is probably an undefined pointer */
@@ -185,7 +190,7 @@ jbig2_get_region_segment_info(Jbig2RegionSegmentInfo *info,
   info->x = jbig2_get_int32(segment_data + 8);
   info->y = jbig2_get_int32(segment_data + 12);
   info->flags = segment_data[16];
-  info->op = info->flags & 0x7;
+  info->op = (Jbig2ComposeOp)(info->flags & 0x7);
 }
 
 /* dispatch code for extension segment parsing */
@@ -282,9 +287,8 @@ int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
     case 52:
       return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
         "unhandled segment type 'profile'");
-    case 53:
-      return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
-        "unhandled table segment");
+    case 53: /* user-supplied huffman table */
+      return jbig2_table(ctx, segment, segment_data);
     case 62:
       return jbig2_parse_extension_segment(ctx, segment, segment_data);
     default:

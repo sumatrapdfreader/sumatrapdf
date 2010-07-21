@@ -16,7 +16,13 @@
 /* library internals */
 
 typedef uint8_t byte;
-typedef int bool;
+
+#define bool int
+
+#ifdef __cplusplus
+#define template template_C
+#define new new_C
+#endif
 
 #ifndef TRUE
 #define TRUE 1

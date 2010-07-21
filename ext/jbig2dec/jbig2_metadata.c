@@ -28,14 +28,14 @@
 /* metadata key,value list object */
 Jbig2Metadata *jbig2_metadata_new(Jbig2Ctx *ctx, Jbig2Encoding encoding)
 {
-    Jbig2Metadata *md = jbig2_alloc(ctx->allocator, sizeof(Jbig2Metadata));
+    Jbig2Metadata *md = jbig2_new(ctx, Jbig2Metadata, 1);
 
     if (md != NULL) {
         md->encoding = encoding;
         md->entries = 0;
         md->max_entries = 4;
-        md->keys = jbig2_alloc(ctx->allocator, md->max_entries*sizeof(char*));
-        md->values = jbig2_alloc(ctx->allocator, md->max_entries*sizeof(char*));
+        md->keys = jbig2_new(ctx, char*, md->max_entries);
+        md->values = jbig2_new(ctx, char*, md->max_entries);
         if (md->keys == NULL || md->values == NULL) {
             jbig2_metadata_free(ctx, md);
             md = NULL;
@@ -64,7 +64,7 @@ void jbig2_metadata_free(Jbig2Ctx *ctx, Jbig2Metadata *md)
 
 static char *jbig2_strndup(Jbig2Ctx *ctx, const char *c, const int len)
 {
-    char *s = jbig2_alloc(ctx->allocator, len*sizeof(char));
+    char *s = jbig2_new(ctx, char, len);
     if (s == NULL) {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
             "unable to duplicate comment string");
@@ -83,8 +83,8 @@ int jbig2_metadata_add(Jbig2Ctx *ctx, Jbig2Metadata *md,
     /* grow the array if necessary */
     if (md->entries == md->max_entries) {
         md->max_entries >>= 2;
-        keys = jbig2_realloc(ctx->allocator, md->keys, md->max_entries);
-        values = jbig2_realloc(ctx->allocator, md->values, md->max_entries);
+        keys = jbig2_renew(ctx, md->keys, char*, md->max_entries);
+        values = jbig2_renew(ctx, md->values, char*, md->max_entries);
         if (keys == NULL || values == NULL) {
             jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
                 "unable to resize metadata structure");

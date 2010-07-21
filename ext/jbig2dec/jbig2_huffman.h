@@ -101,5 +101,18 @@ extern const Jbig2HuffmanParams jbig2_huffman_params_M; /* Table B.13 */
 extern const Jbig2HuffmanParams jbig2_huffman_params_N; /* Table B.14 */
 extern const Jbig2HuffmanParams jbig2_huffman_params_O; /* Table B.15 */
 
+/* Routines to handle "code table segment (53)" */
+
+/* Parse a code table segment, store Jbig2HuffmanParams in segment->result */
+int
+jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data);
+
+/* free Jbig2HuffmanParams allocated by jbig2_huffman_table() */
+void
+jbig2_table_free(Jbig2Ctx *ctx, Jbig2HuffmanParams *params);
+
+/* find a user supplied table used by 'segment' and by 'index' */
+const Jbig2HuffmanParams *
+jbig2_find_table(Jbig2Ctx *ctx, Jbig2Segment *segment, int index);
 
 #endif /* JBIG2_HUFFMAN_H */

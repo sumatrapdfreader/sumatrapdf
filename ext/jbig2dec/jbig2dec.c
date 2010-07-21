@@ -39,6 +39,7 @@
 #include "sha1.h"
 
 #include "jbig2.h"
+#include "jbig2_priv.h"
 #include "jbig2_image.h"
 
 typedef enum {
@@ -67,7 +68,7 @@ static int print_usage(void);
 static void
 hash_init(jbig2dec_params_t *params)
 {
-    params->hash_ctx = malloc(sizeof(SHA1_CTX));
+    params->hash_ctx = (SHA1_CTX*)malloc(sizeof(SHA1_CTX));
     if (params->hash_ctx == NULL) {
         fprintf(stderr, "unable to allocate hash state\n");
         params->hash = 0;
@@ -141,7 +142,7 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
 
 	while (1) {
 		option = getopt_long(argc, argv,
-			"Vh?qvdo:t:", long_options, &option_idx);
+			"Vh?qv:do:t:", long_options, &option_idx);
 		if (option == -1) break;
 
 		switch (option) {
@@ -235,7 +236,7 @@ static int
 error_callback(void *error_callback_data, const char *buf, Jbig2Severity severity,
 	       int32_t seg_idx)
 {
-    const jbig2dec_params_t *params = error_callback_data;
+    const jbig2dec_params_t *params = (jbig2dec_params_t *)error_callback_data;
     char *type;
     char segment[22];
 
@@ -296,7 +297,7 @@ make_output_filename(const char *input_filename, const char *extension)
       len -= strlen(e);
 
     /* allocate enough space for the base + ext */
-    output_filename = malloc(len + strlen(extension) + 1);
+    output_filename = (char*)malloc(len + strlen(extension) + 1);
     if (output_filename == NULL) {
         fprintf(stderr, "couldn't allocate memory for output_filename\n");
         exit (1);
@@ -435,7 +436,7 @@ main (int argc, char **argv)
   /* any other number of arguments */
     return print_usage();
 
-  ctx = jbig2_ctx_new(NULL, f_page != NULL ? JBIG2_OPTIONS_EMBEDDED : 0,
+  ctx = jbig2_ctx_new(NULL, (Jbig2Options)(f_page != NULL ? JBIG2_OPTIONS_EMBEDDED : 0),
 		      NULL,
 		      error_callback, &params);
 

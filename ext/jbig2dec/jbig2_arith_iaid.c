@@ -47,7 +47,7 @@ jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, int SBSYMCODELEN)
   int ctx_size = 1 << SBSYMCODELEN;
 
   result->SBSYMCODELEN = SBSYMCODELEN;
-  result->IAIDx = jbig2_alloc(ctx->allocator, ctx_size);
+  result->IAIDx = jbig2_new(ctx, Jbig2ArithCx, ctx_size);
   memset(result->IAIDx, 0, ctx_size);
 
   return result;

@@ -40,12 +40,23 @@
 # include "config_types.h"
 #elif defined(_WIN32) || defined(__WIN32__)
 # include "config_win32.h"
+#else
+   typedef unsigned char  uint8_t;
+   typedef unsigned short uint16_t;
+   typedef unsigned int   uint32_t;
+   typedef signed char    int8_t;
+   typedef signed short   int16_t;
+   typedef signed int     int32_t;
 #endif
 
 #if defined(HAVE_STDINT_H) || defined(__MACOS__)
 # include <stdint.h>
 #elif defined(__VMS)
 # include <inttypes.h>
+#endif
+
+#ifdef __hpux
+#include <sys/_inttypes.h>
 #endif
 
 #endif /* _JBIG2_OS_TYPES_H */

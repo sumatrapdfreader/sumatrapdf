@@ -377,8 +377,8 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
        rules say to use the first one available, and not to
        reuse any intermediate result, so we simply clone it
        and free the original to keep track of this. */
-    params.reference = jbig2_image_clone(ctx, ref->result);
-    jbig2_image_release(ctx, ref->result);
+    params.reference = jbig2_image_clone(ctx, (Jbig2Image*)ref->result);
+    jbig2_image_release(ctx, (Jbig2Image*)ref->result);
     ref->result = NULL;
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
       "found reference bitmap in segment %d", ref->number);
@@ -409,7 +409,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
           rsi.width, rsi.height);
 
     stats_size = params.GRTEMPLATE ? 1 << 10 : 1 << 13;
-    GR_stats = jbig2_alloc(ctx->allocator, stats_size);
+    GR_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
     memset(GR_stats, 0, stats_size);
 
     ws = jbig2_word_stream_buf_new(ctx, segment_data + offset,
