@@ -10,6 +10,7 @@ Contributor: Linus Persson
 Contributor: Cecilia B
 Contributor: Sebastian Rasmussen
 Contributor: Simon B.
+Contributor: Tommy G.
 
 &About
 &Om
@@ -67,6 +68,12 @@ Matcha &versaler/gemener
 
 &Print\tCtrl-P
 Skriv &ut...\tCtrl-P
+
+&Print with %s...\tCtrl-P
+&Skriv ut med %s...\tCtrl-P
+
+&Print... (denied)
+&Utskrift... (nekad)
 
 &Remember these settings for each document
 Kom ihåg dessa inställningar för &varje dokument
@@ -178,6 +185,9 @@ Förvalt &utseende
 
 Default &Zoom:
 Förvalt &zoomläge
+
+Denied Permissions:
+Saknade Tillstånd:
 
 Document Properties
 Dokumentegenskaper
@@ -395,6 +405,9 @@ Enkel sida
 Source file %s has no synchronization point
 Källfilen %s har ingen synkroniseringspunkt
 
+Subject:
+Ämne:
+
 SumatraPDF Options
 SumatraPDF Inställningar
 
@@ -443,11 +456,9 @@ Zoomfaktor
 [Changes detected; refreshing] %s
 [Ändringar detekterade; uppdaterar] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+kopierar text
+
+printing document
+skriver ut dokumentet
 
