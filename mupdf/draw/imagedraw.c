@@ -1,6 +1,10 @@
 #include "fitz.h"
 
+#define noNEAREST
+
 typedef unsigned char byte;
+
+/* Sample image and clamp to edge */
 
 static inline byte
 getmask(byte *s, int w, int h, int u, int v)
@@ -13,16 +17,6 @@ getmask(byte *s, int w, int h, int u, int v)
 }
 
 static inline byte *
-getrgba(byte *s, int w, int h, int u, int v)
-{
-	if (u < 0) u = 0;
-	if (v < 0) v = 0;
-	if (u >= w) u = w - 1;
-	if (v >= h) v = h - 1;
-	return s + ((w * v + u) << 2);
-}
-
-static inline byte *
 getga(byte *s, int w, int h, int u, int v)
 {
 	if (u < 0) u = 0;
@@ -30,6 +24,16 @@ getga(byte *s, int w, int h, int u, int v)
 	if (u >= w) u = w - 1;
 	if (v >= h) v = h - 1;
 	return s + ((w * v + u) << 1);
+}
+
+static inline byte *
+getrgba(byte *s, int w, int h, int u, int v)
+{
+	if (u < 0) u = 0;
+	if (v < 0) v = 0;
+	if (u >= w) u = w - 1;
+	if (v >= h) v = h - 1;
+	return s + ((w * v + u) << 2);
 }
 
 static inline int
@@ -41,6 +45,8 @@ getcolor(byte *s, int w, int h, int n, int u, int v, int k)
 	if (v >= h) v = h - 1;
 	return s[w * v * n + u + k];
 }
+
+/* Bi-linear interpolation of sample */
 
 static inline int
 lerp(int a, int b, int t)
@@ -67,6 +73,9 @@ lerprgba(byte *dst, byte *a, byte *b, int t)
 static inline int
 samplemask(byte *s, int w, int h, int u, int v)
 {
+#ifdef NEAREST
+	return getmask(s, w, h, u >> 16, v >> 16);
+#else
 	int ui = u >> 16;
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;
@@ -78,13 +87,20 @@ samplemask(byte *s, int w, int h, int u, int v)
 	int ab = lerp(a, b, ud);
 	int cd = lerp(c, d, ud);
 	return lerp(ab, cd, vd);
+#endif
 }
 
 static inline void
-samplega(byte *s, int w, int h, int u, int v, byte *out)
+samplega(byte *s, int w, int h, int u, int v, int *gout, int *aout)
 {
+#ifdef NEAREST
+	byte *ga = getga(s, w, h, u >> 16, v >> 16);
+	*gout = ga[0];
+	*aout = ga[1];
+#else
 	byte ab[2];
 	byte cd[2];
+	byte abcd[2];
 	int ui = u >> 16;
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;
@@ -95,14 +111,25 @@ samplega(byte *s, int w, int h, int u, int v, byte *out)
 	byte *d = getga(s, w, h, ui+1, vi+1);
 	lerpga(ab, a, b, ud);
 	lerpga(cd, c, d, ud);
-	lerpga(out, ab, cd, vd);
+	lerpga(abcd, ab, cd, vd);
+	*gout = abcd[0];
+	*aout = abcd[0];
+#endif
 }
 
 static inline void
-samplergba(byte *s, int w, int h, int u, int v, byte *out)
+samplergba(byte *s, int w, int h, int u, int v, int *rout, int *gout, int *bout, int *aout)
 {
+#ifdef NEAREST
+	byte *rgba = getrgba(s, w, h, u >> 16, v >> 16);
+	*rout = rgba[0];
+	*gout = rgba[1];
+	*bout = rgba[2];
+	*aout = rgba[3];
+#else
 	byte ab[4];
 	byte cd[4];
+	byte abcd[4];
 	int ui = u >> 16;
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;
@@ -113,12 +140,22 @@ samplergba(byte *s, int w, int h, int u, int v, byte *out)
 	byte *d = getrgba(s, w, h, ui+1, vi+1);
 	lerprgba(ab, a, b, ud);
 	lerprgba(cd, c, d, ud);
-	lerprgba(out, ab, cd, vd);
+	lerprgba(abcd, ab, cd, vd);
+	*rout = abcd[0];
+	*gout = abcd[1];
+	*bout = abcd[2];
+	*aout = abcd[3];
+#endif
 }
 
 static inline void
 samplecolor(byte *s, int w, int h, int n, int u, int v, byte *out)
 {
+#ifdef NEAREST
+	int k;
+	for (k = 0; k < n; k++)
+		out[k] = getcolor(s, w, h, n, u >> 16, v >> 16, k);
+#else
 	int ui = u >> 16;
 	int vi = v >> 16;
 	int ud = u & 0xFFFF;
@@ -134,217 +171,190 @@ samplecolor(byte *s, int w, int h, int n, int u, int v, byte *out)
 		int cd = lerp(c, d, ud);
 		out[k] = lerp(ab, cd, vd);
 	}
+#endif
 }
 
-static void
-img_1o1(byte * restrict src, byte cov, int len, byte * restrict dst,
-	fz_pixmap *image, int u, int v, int fa, int fb)
-{
-	byte *samples = image->samples;
-	int w = image->w;
-	int h = image->h;
+/* Blend source image scanline over destination */
 
-	while (len--)
+static inline void
+fz_blendscan1(unsigned char *dp, unsigned char *sp, int sw, int sh,
+	int u, int v, int fa, int fb, int w)
+{
+	while (w--)
 	{
-		int sa;
-		cov += *src; *src = 0; src++;
-		if (cov != 0)
+		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
 		{
-			sa = samplemask(samples, w, h, u, v);
-			sa = FZ_COMBINE(FZ_EXPAND(sa), FZ_EXPAND(cov));
-			if (sa != 0)
-			{
-				dst[0] = FZ_BLEND(255, dst[0], sa);
-			}
+			int a = samplemask(sp, sw, sh, u, v);
+			dp[0] = a + fz_mul255(dp[0], 255 - a);
 		}
-		dst++;
+		dp ++;
 		u += fa;
 		v += fb;
 	}
 }
 
-static void
-img_2o2(byte * restrict src, byte cov, int len, byte * restrict dst,
-	fz_pixmap *image, int u, int v, int fa, int fb)
+static inline void
+fz_blendscan2(unsigned char *dp, unsigned char *sp, int sw, int sh,
+	int u, int v, int fa, int fb, int w)
 {
-	byte *samples = image->samples;
-	int w = image->w;
-	int h = image->h;
-	byte ga[2];
-
-	while (len--)
+	while (w--)
 	{
-		int sa;
-		cov += *src; *src = 0; src++;
-		if (cov != 0)
+		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
 		{
-			samplega(samples, w, h, u, v, ga);
-			sa = FZ_COMBINE(FZ_EXPAND(ga[1]), FZ_EXPAND(cov));
-			if (sa != 0)
-			{
-				dst[0] = FZ_BLEND(ga[0], dst[0], sa);
-				dst[1] = FZ_BLEND(255, dst[1], sa);
-			}
+			int g, a, t;
+			samplega(sp, sw, sh, u, v, &g, &a);
+			t = 255 - a;
+			dp[0] = g + fz_mul255(dp[0], t);
+			dp[1] = a + fz_mul255(dp[1], t);
 		}
-		dst += 2;
+		dp += 2;
 		u += fa;
 		v += fb;
 	}
 }
 
-static void
-img_4o4(byte * restrict src, byte cov, int len, byte * restrict dst,
-	fz_pixmap *image, int u, int v, int fa, int fb)
+static inline void
+fz_blendscan4(unsigned char *dp, unsigned char *sp, int sw, int sh,
+	int u, int v, int fa, int fb, int w)
 {
-	byte *samples = image->samples;
-	int w = image->w;
-	int h = image->h;
-	byte rgba[4];
-
-	while (len--)
+	while (w--)
 	{
-		int sa;
-		cov += *src; *src = 0; src++;
-		if (cov != 0)
+		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
 		{
-			samplergba(samples, w, h, u, v, rgba);
-			sa = FZ_COMBINE(FZ_EXPAND(rgba[3]), FZ_EXPAND(cov));
-			if (sa != 0)
-			{
-				dst[0] = FZ_BLEND(rgba[0], dst[0], sa);
-				dst[1] = FZ_BLEND(rgba[1], dst[1], sa);
-				dst[2] = FZ_BLEND(rgba[2], dst[2], sa);
-				dst[3] = FZ_BLEND(255, dst[3], sa);
-			}
+			int r, g, b, a, t;
+			samplergba(sp, sw, sh, u, v, &r, &g, &b, &a);
+			t = 255 - a;
+			dp[0] = r + fz_mul255(dp[0], t);
+			dp[1] = g + fz_mul255(dp[1], t);
+			dp[2] = b + fz_mul255(dp[2], t);
+			dp[3] = a + fz_mul255(dp[3], t);
 		}
-		dst += 4;
+		dp += 4;
 		u += fa;
 		v += fb;
 	}
 }
 
-static void
-img_w2i1o2(byte *ga, byte * restrict src, byte cov, int len, byte * restrict dst,
-	fz_pixmap *image, int u, int v, int fa, int fb)
+static inline void
+fz_blendscan(unsigned char *dp, unsigned char *sp, int sw, int sh,
+	int u, int v, int fa, int fb, int w, int n)
 {
-	byte *samples = image->samples;
-	int w = image->w;
-	int h = image->h;
-	byte g = ga[0];
-	byte a = ga[1];
-
-	if (a == 0)
-		return;
-	if (a != 255)
+	while (w--)
 	{
-		while (len--)
+		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
 		{
-			int ca;
-			cov += *src; *src = 0; src++;
-			if (cov != 0)
-			{
-				ca = samplemask(samples, w, h, u, v);
-				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
-				ca = FZ_COMBINE(ca, FZ_EXPAND(a));
-				if (ca != 0)
-				{
-					dst[0] = FZ_BLEND(g, dst[0], ca);
-					dst[1] = FZ_BLEND(255, dst[1], ca);
-				}
-			}
-			dst += 2;
-			u += fa;
-			v += fb;
+			unsigned char color[FZ_MAXCOLORS+1];
+			int k, t;
+			samplecolor(sp, sw, sh, n, u, v, color);
+			t = 255 - color[n-1];
+			for (k = 0; k < n; k++)
+				dp[k] = color[k] + fz_mul255(dp[k], t);
 		}
-	}
-	else
-	{
-		while (len--)
-		{
-			int ca;
-			cov += *src; *src = 0; src++;
-			if (cov != 0)
-			{
-				ca = samplemask(samples, w, h, u, v);
-				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
-				if (ca != 0)
-				{
-					dst[0] = FZ_BLEND(g, dst[0], ca);
-					dst[1] = FZ_BLEND(255, dst[1], ca);
-				}
-			}
-			dst += 2;
-			u += fa;
-			v += fb;
-		}
+		dp += n;
+		u += fa;
+		v += fb;
 	}
 }
 
-static void
-img_w4i1o4(byte *rgba, byte * restrict src, byte cov, int len, byte * restrict dst,
-	fz_pixmap *image, int u, int v, int fa, int fb)
-{
-	byte *samples = image->samples;
-	int w = image->w;
-	int h = image->h;
-	byte r = rgba[0];
-	byte g = rgba[1];
-	byte b = rgba[2];
-	byte a = rgba[3];
+/* Blend non-premultiplied color in image mask over destination */
 
-	if (a == 0)
-		return;
-	if (a != 255)
+static inline void
+fz_blendscanwithcolor(unsigned char *dp, unsigned char *sp, int sw, int sh,
+	int u, int v, int fa, int fb, int w, int n, unsigned char *color)
+{
+	int sa = color[n-1];
+	while (w--)
 	{
-		while (len--)
+		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
 		{
-			int ca;
-			cov += *src; *src = 0; src++;
-			if (cov != 0)
-			{
-				ca = samplemask(samples, w, h, u, v);
-				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
-				ca = FZ_COMBINE(ca, FZ_EXPAND(a));
-				if (ca != 0)
-				{
-					dst[0] = FZ_BLEND(r, dst[0], ca);
-					dst[1] = FZ_BLEND(g, dst[1], ca);
-					dst[2] = FZ_BLEND(b, dst[2], ca);
-					dst[3] = FZ_BLEND(255, dst[3], ca);
-				}
-			}
-			dst += 4;
-			u += fa;
-			v += fb;
+			int ma = samplemask(sp, sw, sh, u, v);
+			int masa = fz_mul255(sa, ma);
+			int t = 255 - masa;
+			int k;
+			for (k = 0; k < n; k++)
+				dp[k] = fz_mul255(color[k], ma) + fz_mul255(dp[k], t);
 		}
-	}
-	else
-	{
-		while (len--)
-		{
-			int ca;
-			cov += *src; *src = 0; src++;
-			if (cov != 0)
-			{
-				ca = samplemask(samples, w, h, u, v);
-				ca = FZ_COMBINE(FZ_EXPAND(cov), FZ_EXPAND(ca));
-				if (ca != 0)
-				{
-					dst[0] = FZ_BLEND(r, dst[0], ca);
-					dst[1] = FZ_BLEND(g, dst[1], ca);
-					dst[2] = FZ_BLEND(b, dst[2], ca);
-					dst[3] = FZ_BLEND(255, dst[3], ca);
-				}
-			}
-			dst += 4;
-			u += fa;
-			v += fb;
-		}
+		dp += n;
+		u += fa;
+		v += fb;
 	}
 }
 
-void (*fz_img_1o1)(byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_1o1;
-void (*fz_img_2o2)(byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_2o2;
-void (*fz_img_4o4)(byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_4o4;
-void (*fz_img_w2i1o2)(byte*, byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_w2i1o2;
-void (*fz_img_w4i1o4)(byte*, byte*restrict, byte, int, byte*restrict, fz_pixmap *image, int u, int v, int fa, int fb) = img_w4i1o4;
+/* Draw an image with an affine transform on destination */
+
+static void
+fz_blendimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
+	unsigned char *color)
+{
+	unsigned char *dp, *sp;
+	int u, v, fa, fb, fc, fd;
+	int x, y, w, h;
+	int sw, sh, n;
+	fz_matrix inv;
+	fz_bbox bbox;
+
+	/* map from screen space (x,y) to image space (u,v) */
+	inv = fz_scale(1.0f / img->w, -1.0f / img->h);
+	inv = fz_concat(inv, fz_translate(0, 1));
+	inv = fz_concat(inv, ctm);
+	inv = fz_invertmatrix(inv);
+	inv.e -= 0.5f;
+	inv.f -= 0.5f;
+
+	fa = inv.a * 65536;
+	fb = inv.b * 65536;
+	fc = inv.c * 65536;
+	fd = inv.d * 65536;
+
+	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
+	bbox = fz_intersectbbox(bbox, scissor);
+	x = bbox.x0;
+	y = bbox.y0;
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
+
+	dp = dst->samples + ((bbox.y0 - dst->y) * dst->w + (bbox.x0 - dst->x)) * dst->n;
+	n = dst->n;
+	sp = img->samples;
+	sw = img->w;
+	sh = img->h;
+
+	u = (inv.a * (x+0.5f) + inv.c * (y+0.5f) + inv.e) * 65536;
+	v = (inv.b * (x+0.5f) + inv.d * (y+0.5f) + inv.f) * 65536;
+
+	while (h--)
+	{
+		if (color)
+		{
+			fz_blendscanwithcolor(dp, sp, sw, sh, u, v, fa, fb, w, n, color);
+		}
+		else
+		{
+			switch (n)
+			{
+			case 1: fz_blendscan1(dp, sp, sw, sh, u, v, fa, fb, w); break;
+			case 2: fz_blendscan2(dp, sp, sw, sh, u, v, fa, fb, w); break;
+			case 4: fz_blendscan4(dp, sp, sw, sh, u, v, fa, fb, w); break;
+			default: fz_blendscan(dp, sp, sw, sh, u, v, fa, fb, w, n); break;
+			}
+		}
+		dp += dst->w * n;
+		u += fc;
+		v += fd;
+	}
+}
+
+void
+fz_blendimagewithcolor(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
+	unsigned char *color)
+{
+	assert(img->n == 1);
+	fz_blendimageimp(dst, scissor, img, ctm, color);
+}
+
+void
+fz_blendimage(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm)
+{
+	assert(dst->n == img->n);
+	fz_blendimageimp(dst, scissor, img, ctm, nil);
+}

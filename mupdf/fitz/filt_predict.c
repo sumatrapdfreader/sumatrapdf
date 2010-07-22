@@ -112,9 +112,9 @@ paeth(int a, int b, int c)
 {
 	/* The definitions of ac and bc are correct, not a typo. */
 	int ac = b - c, bc = a - c, abcc = ac + bc;
-	int pa = (ac < 0 ? -ac : ac);
-	int pb = (bc < 0 ? -bc : bc);
-	int pc = (abcc < 0 ? -abcc : abcc);
+	int pa = ABS(ac);
+	int pb = ABS(bc);
+	int pc = ABS(abcc);
 	return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
 }
 

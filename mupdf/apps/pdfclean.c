@@ -228,7 +228,7 @@ static void removeduplicateobjs(void)
 			if (fz_objcmp(a, b))
 				continue;
 
-			newnumlist[num] = num < other ? num : other;
+			newnumlist[num] = MIN(num, other);
 			break;
 		}
 	}

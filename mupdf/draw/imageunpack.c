@@ -1,8 +1,6 @@
 #include "fitz.h"
 
-/*
- * Unpack image samples and optionally pad pixels with opaque alpha
- */
+/* Unpack image samples and optionally pad pixels with opaque alpha */
 
 #define get1(buf,x) ((buf[x >> 3] >> ( 7 - (x & 7) ) ) & 1 )
 #define get2(buf,x) ((buf[x >> 2] >> ( ( 3 - (x & 3) ) << 1 ) ) & 3 )
@@ -57,7 +55,8 @@ fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, in
 	if (dst->n > n)
 		pad = 255;
 
-	initget1tables();
+	if (depth == 1)
+		initget1tables();
 
 	for (y = 0; y < dst->h; y++)
 	{
@@ -159,9 +158,7 @@ fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, in
 	}
 }
 
-/*
- * Apply decode parameters and scale integers
- */
+/* Apply decode array */
 
 void
 fz_decodetile(fz_pixmap *pix, float *decode)

@@ -85,6 +85,7 @@ fz_renderglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix ctm)
 		return nil;
 	}
 
+	memset(&key, 0, sizeof key);
 	key.font = font;
 	key.cid = cid;
 	key.a = ctm.a * 65536;

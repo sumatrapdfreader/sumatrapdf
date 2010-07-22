@@ -4,6 +4,8 @@ typedef unsigned char byte;
 
 /* These C implementations use SWAR (SIMD-within-a-register) techniques. */
 
+#if 0 /* TODO: move into porterduff.c functions */
+
 #define MASK 0xFF00FF00;
 
 static void
@@ -465,19 +467,17 @@ img_1o1_32bit(byte * restrict src, byte cov, int len, byte * restrict dst,
 	}
 }
 
+#endif
+
 void fz_accelerate(void)
 {
 	if (sizeof(int) == 4 && sizeof(unsigned int) == 4 && !fz_isbigendian())
 	{
-		fz_path_w4i1o4 = path_w4i1o4_32bit;
-		fz_text_w4i1o4 = text_w4i1o4_32bit;
-		fz_img_4o4 = img_4o4_32bit;
-		fz_img_w4i1o4 = img_w4i1o4_32bit;
-		fz_img_1o1 = img_1o1_32bit;
-	}
-
-	if (sizeof(int) == 8)
-	{
+//		fz_path_w4i1o4 = path_w4i1o4_32bit;
+//		fz_text_w4i1o4 = text_w4i1o4_32bit;
+//		fz_img_4o4 = img_4o4_32bit;
+//		fz_img_w4i1o4 = img_w4i1o4_32bit;
+//		fz_img_1o1 = img_1o1_32bit;
 	}
 
 #ifdef HAVE_CPUDEP

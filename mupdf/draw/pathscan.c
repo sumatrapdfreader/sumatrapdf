@@ -145,7 +145,7 @@ fz_insertgelraw(fz_gel *gel, int x0, int y0, int x1, int y1)
 
 	dy = y1 - y0;
 	dx = x1 - x0;
-	width = dx < 0 ? -dx : dx;
+	width = ABS(dx);
 
 	edge->xdir = dx > 0 ? 1 : -1;
 	edge->ydir = winding;
@@ -457,7 +457,8 @@ evenodd(fz_ael *ael, unsigned char *list, int xofs)
 	}
 }
 
-static inline void toalpha(unsigned char *list, int n)
+static inline void
+undelta(unsigned char *list, int n)
 {
 	int d = 0;
 	while (n--)
@@ -467,97 +468,22 @@ static inline void toalpha(unsigned char *list, int n)
 	}
 }
 
-static inline void blit(fz_pixmap *pix, int x, int y,
-	unsigned char *list, int skipx, int len,
-	unsigned char *color, fz_pixmap *image, fz_matrix *invmat)
+static inline void
+blit(fz_pixmap *dest, int x, int y, unsigned char *mp, int w, unsigned char *color)
 {
-	unsigned char *dst;
-	unsigned char cov;
+	unsigned char *dp;
 
-	dst = pix->samples + ( (y - pix->y) * pix->w + (x - pix->x) ) * pix->n;
-	cov = 0;
+	dp = dest->samples + ( (y - dest->y) * dest->w + (x - dest->x) ) * dest->n;
 
-	while (skipx--)
-	{
-		cov += *list;
-		*list = 0;
-		++list;
-	}
-
-	if (image)
-	{
-		int u = (invmat->a * (x + 0.5f) + invmat->c * (y + 0.5f) + invmat->e) * 65536;
-		int v = (invmat->b * (x + 0.5f) + invmat->d * (y + 0.5f) + invmat->f) * 65536;
-		int fa = invmat->a * 65536;
-		int fb = invmat->b * 65536;
-		if (color)
-		{
-			assert(image->n == 1);
-			switch (pix->n)
-			{
-				case 2:
-					fz_img_w2i1o2(color, list, cov, len, dst, image, u, v, fa, fb);
-					break;
-				case 4:
-					fz_img_w4i1o4(color, list, cov, len, dst, image, u, v, fa, fb);
-					break;
-				default:
-					assert("Write fz_img_wni1on" != NULL);
-					//fz_img_wni1on(color, list, cov, len, dst, image, u, v, fa, fb);
-					break;
-			}
-		}
-		else if (image->colorspace)
-		{
-			assert(image->colorspace->n == image->n - 1);
-			assert(image->n == pix->n);
-			switch (pix->n)
-			{
-				case 2:
-					fz_img_2o2(list, cov, len, dst, image, u, v, fa, fb);
-					break;
-				case 4:
-					fz_img_4o4(list, cov, len, dst, image, u, v, fa, fb);
-					break;
-				default:
-					assert("Write fz_img_non" != NULL);
-					//fz_img_non(list, cov, len, dst, image, u, v, fa, fb);
-					break;
-			}
-		}
-		else
-		{
-			assert(image->n == 1);
-			assert(image->n == pix->n);
-			fz_img_1o1(list, cov, len, dst, image, u, v, fa, fb);
-		}
-	}
+	if (color)
+		fz_blendwithcolormask(dp, color, mp, dest->n, w);
 	else
-	{
-		if (color)
-		{
-			switch (pix->n)
-			{
-				case 2:
-					fz_path_w2i1o2(color, list, cov, len, dst);
-					break;
-				case 4:
-					fz_path_w4i1o4(color, list, cov, len, dst);
-					break;
-				default:
-					assert("Write fz_path_wni1on" != NULL);
-					//fz_path_wni1on(color, list, cov, len, dst);
-					break;
-			}
-		}
-		else
-			fz_path_1o1(list, cov, len, dst);
-	}
+		fz_blendmasks(dp, mp, w);
 }
 
 fz_error
 fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
-	fz_pixmap *dest, unsigned char *color, fz_pixmap *image, fz_matrix *invmat)
+	fz_pixmap *dest, unsigned char *color)
 {
 	fz_error error;
 	unsigned char *deltas;
@@ -593,7 +519,9 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 		{
 			if (yd >= clip.y0 && yd < clip.y1)
 			{
-				blit(dest, xmin + skipx, yd, deltas, skipx, clipn, color, image, invmat);
+				undelta(deltas, skipx + clipn);
+				blit(dest, xmin + skipx, yd, deltas + skipx, clipn, color);
+				memset(deltas, 0, skipx + clipn);
 			}
 		}
 		yd = yc;
@@ -622,7 +550,8 @@ fz_scanconvert(fz_gel *gel, fz_ael *ael, int eofill, fz_bbox clip,
 
 	if (yd >= clip.y0 && yd < clip.y1)
 	{
-		blit(dest, xmin + skipx, yd, deltas, skipx, clipn, color, image, invmat);
+		undelta(deltas, skipx + clipn);
+		blit(dest, xmin + skipx, yd, deltas + skipx, clipn, color);
 	}
 
 	fz_free(deltas);

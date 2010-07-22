@@ -473,6 +473,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\draw\imagesmooth.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\draw\imageunpack.c"
 				>
 			</File>

@@ -134,15 +134,13 @@ fz_luminosity_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		if (delta > 0)
 		{
 			int max;
-			max = r > g ? r : g;
-			max = b > max ? b : max;
+			max = MAX(r, MAX(g, b));
 			scale = ((255 - y) << 16) / (max - y);
 		}
 		else
 		{
 			int min;
-			min = r < g ? r : g;
-			min = b < min ? b : min;
+			min = MIN(r, MIN(g, b));
 			scale = (y << 16) / (y - min);
 		}
 		r = y + (((r - y) * scale + 0x8000) >> 16);
@@ -164,10 +162,8 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 	int scale;
 	int r, g, b;
 
-	minb = rb < gb ? rb : gb;
-	minb = minb < bb ? minb : bb;
-	maxb = rb > gb ? rb : gb;
-	maxb = maxb > bb ? maxb : bb;
+	minb = MIN(rb, MIN(gb, bb));
+	maxb = MAX(rb, MAX(gb, bb));
 	if (minb == maxb)
 	{
 		/* backdrop has zero saturation, avoid divide by 0 */
@@ -177,10 +173,8 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		return;
 	}
 
-	mins = rs < gs ? rs : gs;
-	mins = mins < bs ? mins : bs;
-	maxs = rs > gs ? rs : gs;
-	maxs = maxs > bs ? maxs : bs;
+	mins = MIN(rs, MIN(gs, bs));
+	maxs = MAX(rs, MAX(gs, bs));
 
 	scale = ((maxs - mins) << 16) / (maxb - minb);
 	y = (rb * 77 + gb * 151 + bb * 28 + 0x80) >> 8;
@@ -193,10 +187,8 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		int scalemin, scalemax;
 		int min, max;
 
-		min = r < g ? r : g;
-		min = min < b ? min : b;
-		max = r > g ? r : g;
-		max = max > b ? max : b;
+		min = MIN(r, MIN(g, b));
+		max = MAX(r, MAX(g, b));
 
 		if (min < 0)
 			scalemin = (y << 16) / (y - min);
@@ -208,7 +200,7 @@ fz_saturation_rgb(int *rd, int *gd, int *bd, int rb, int gb, int bb, int rs, int
 		else
 			scalemax = 0x10000;
 
-		scale = scalemin < scalemax ? scalemin : scalemax;
+		scale = MIN(scalemin, scalemax);
 		r = y + (((r - y) * scale + 0x8000) >> 16);
 		g = y + (((g - y) * scale + 0x8000) >> 16);
 		b = y + (((b - y) * scale + 0x8000) >> 16);

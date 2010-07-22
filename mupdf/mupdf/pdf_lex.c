@@ -460,11 +460,11 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 			*sl = lexnumber(f, buf, n, tok);
 			goto cleanupokay;
 		default: /* isregular: !isdelim && !iswhite && c != EOF */
-				fz_unreadbyte(f);
-				lexname(f, buf, n);
-				*sl = strlen(buf);
-				*tok = pdf_tokenfromkeyword(buf);
-				goto cleanupokay;
+			fz_unreadbyte(f);
+			lexname(f, buf, n);
+			*sl = strlen(buf);
+			*tok = pdf_tokenfromkeyword(buf);
+			goto cleanupokay;
 		}
 	}
 

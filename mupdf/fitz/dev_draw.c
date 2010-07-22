@@ -6,6 +6,8 @@
 
 #define STACKSIZE 96
 
+#define noSMOOTHSCALE
+
 typedef struct fz_drawdevice_s fz_drawdevice;
 
 struct fz_drawdevice_s
@@ -57,11 +59,11 @@ fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 		for (i = 0; i < model->n; i++)
 			colorbv[i] = colorfv[i] * 255;
 		colorbv[i] = alpha * 255;
-		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, colorbv, nil, nil);
+		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, colorbv);
 	}
 	else
 	{
-		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, nil, nil, nil);
+		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, nil);
 	}
 }
 
@@ -101,11 +103,11 @@ fz_drawstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix c
 		for (i = 0; i < model->n; i++)
 			colorbv[i] = colorfv[i] * 255;
 		colorbv[i] = alpha * 255;
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv, nil, nil);
+		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv);
 	}
 	else
 	{
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, nil, nil, nil);
+		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, nil);
 	}
 }
 
@@ -148,7 +150,7 @@ fz_drawclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	fz_clearpixmap(mask, 0);
 	fz_clearpixmap(dest, 0);
 
-	fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, mask, nil, nil, nil);
+	fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, mask, nil);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -195,7 +197,7 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 	fz_clearpixmap(dest, 0);
 
 	if (!fz_isemptyrect(bbox))
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, mask, nil, nil, nil);
+		fz_scanconvert(dev->gel, dev->ael, 0, bbox, mask, nil);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -206,57 +208,39 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 }
 
 static void
-drawglyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *src,
+drawglyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	int xorig, int yorig, fz_bbox scissor)
 {
-	unsigned char *dp, *sp;
-	int w, h;
+	unsigned char *dp, *mp;
+	fz_bbox bbox;
+	int x, y, w, h;
 
-	int dx0 = scissor.x0;
-	int dy0 = scissor.y0;
-	int dx1 = scissor.x1;
-	int dy1 = scissor.y1;
+	bbox = fz_boundpixmap(msk);
+	bbox.x0 += xorig;
+	bbox.y0 += yorig;
+	bbox.x1 += xorig;
+	bbox.y1 += yorig;
 
-	int x0 = xorig + src->x;
-	int y0 = yorig + src->y;
-	int x1 = x0 + src->w;
-	int y1 = y0 + src->h;
+	bbox = fz_intersectbbox(bbox, scissor); /* scissor < dst */
+	x = bbox.x0;
+	y = bbox.y0;
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
 
-	int sx0 = 0;
-	int sy0 = 0;
-	int sx1 = src->w;
-	int sy1 = src->h;
+	mp = msk->samples + ((y - msk->y - yorig) * msk->w + (x - msk->x - xorig));
+	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 
-	if (x1 <= dx0 || x0 >= dx1) return;
-	if (y1 <= dy0 || y0 >= dy1) return;
-	if (x0 < dx0) { sx0 += dx0 - x0; x0 = dx0; }
-	if (y0 < dy0) { sy0 += dy0 - y0; y0 = dy0; }
-	if (x1 > dx1) { sx1 += dx1 - x1; }
-	if (y1 > dy1) { sy1 += dy1 - y1; }
+	assert(msk->n == 1);
 
-	sp = src->samples + (sy0 * src->w + sx0);
-	dp = dst->samples + ((y0 - dst->y) * dst->w + (x0 - dst->x)) * dst->n;
-
-	w = sx1 - sx0;
-	h = sy1 - sy0;
-
-	if (dst->colorspace)
+	while (h--)
 	{
-		switch (dst->n)
-		{
-		case 2:
-			fz_text_w2i1o2(colorbv, sp, src->w, dp, dst->w * 2, w, h);
-			break;
-		case 4:
-			fz_text_w4i1o4(colorbv, sp, src->w, dp, dst->w * 4, w, h);
-			break;
-		default:
-			assert("Write fz_text_wni1on" != NULL);
-			break;
-		}
+		if (dst->colorspace)
+			fz_blendwithcolormask(dp, colorbv, mp, dst->n, w);
+		else
+			fz_blendmasks(dp, mp, w);
+		dp += dst->w * dst->n;
+		mp += msk->w;
 	}
-	else
-		fz_text_1o1(sp, src->w, dp, dst->w, w, h);
 }
 
 static void
@@ -557,56 +541,14 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 	fz_rendershade(shade, ctm, dev->dest, bbox);
 }
 
-static inline void
-calcimagestate(fz_drawdevice *dev, fz_pixmap *image, fz_matrix ctm,
-	fz_bbox *bbox, fz_matrix *invmat, int *dx, int *dy)
+static int
+fz_calcimagescale(fz_pixmap *image, fz_matrix ctm, int *dx, int *dy)
 {
-	float sx, sy;
-	fz_path *path;
-	fz_matrix mat;
-	int w, h;
-
-	sx = image->w / sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
-	sy = image->h / sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
-
-	if (sx < 1)
-		*dx = 1;
-	else
-		*dx = sx;
-
-	if (sy < 1)
-		*dy = 1;
-	else
-		*dy = sy;
-
-	w = (image->w + *dx - 1) / *dx;
-	h = (image->h + *dy - 1) / *dy;
-
-	path = fz_newpath();
-	fz_moveto(path, 0, 0);
-	fz_lineto(path, 1, 0);
-	fz_lineto(path, 1, 1);
-	fz_lineto(path, 0, 1);
-	fz_closepath(path);
-
-	fz_resetgel(dev->gel, dev->scissor);
-	fz_fillpath(dev->gel, path, ctm, 1);
-	fz_sortgel(dev->gel);
-
-	fz_freepath(path);
-
-	*bbox = fz_boundgel(dev->gel);
-	*bbox = fz_intersectbbox(*bbox, dev->scissor);
-
-	mat.a = 1.0f / w;
-	mat.b = 0;
-	mat.c = 0;
-	mat.d = -1.0f / h;
-	mat.e = 0;
-	mat.f = 1;
-	*invmat = fz_invertmatrix(fz_concat(mat, ctm));
-	invmat->e -= 0.5f;
-	invmat->f -= 0.5f;
+	float sx = image->w / sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	float sy = image->h / sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
+	*dx = sx > 1 ? sx : 1;
+	*dy = sy > 1 ? sy : 1;
+	return *dx > 1 || *dy > 1;
 }
 
 static void
@@ -614,11 +556,9 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 {
 	fz_drawdevice *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
-	fz_bbox bbox;
-	int dx, dy;
-	fz_pixmap *scaled = nil;
 	fz_pixmap *converted = nil;
-	fz_matrix invmat;
+	fz_pixmap *scaled = nil;
+	int dx, dy;
 
 	if (!model)
 	{
@@ -626,16 +566,8 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 		return;
 	}
 
-	calcimagestate(dev, image, ctm, &bbox, &invmat, &dx, &dy);
-
-	if (fz_isemptyrect(bbox) || image->w == 0 || image->h == 0)
+	if (image->w == 0 || image->h == 0)
 		return;
-
-	if (dx != 1 || dy != 1)
-	{
-		scaled = fz_scalepixmap(image, dx, dy);
-		image = scaled;
-	}
 
 	if (image->colorspace != model)
 	{
@@ -644,7 +576,23 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 		image = converted;
 	}
 
-	fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, nil, image, &invmat);
+#ifdef SMOOTHSCALE
+	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
+	if (dx < image->w && dy < image->h)
+	{
+		scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+		image = scaled;
+	}
+#else
+	if (fz_calcimagescale(image, ctm, &dx, &dy))
+	{
+		scaled = fz_scalepixmap(image, dx, dy);
+		image = scaled;
+	}
+#endif
+
+	fz_blendimage(dev->dest, dev->scissor, image, ctm);
 
 	if (scaled)
 		fz_droppixmap(scaled);
@@ -660,22 +608,28 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *model = dev->dest->colorspace;
 	unsigned char colorbv[FZ_MAXCOLORS + 1];
 	float colorfv[FZ_MAXCOLORS];
-	fz_bbox bbox;
-	int dx, dy;
 	fz_pixmap *scaled = nil;
-	fz_matrix invmat;
+	int dx, dy;
 	int i;
 
-	calcimagestate(dev, image, ctm, &bbox, &invmat, &dx, &dy);
-
-	if (fz_isemptyrect(bbox) || image->w == 0 || image->h == 0)
+	if (image->w == 0 || image->h == 0)
 		return;
 
-	if (dx != 1 || dy != 1)
+#ifdef SMOOTHSCALE
+	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
+	if (dx < image->w && dy < image->h)
+	{
+		scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+		image = scaled;
+	}
+#else
+	if (fz_calcimagescale(image, ctm, &dx, &dy))
 	{
 		scaled = fz_scalepixmap(image, dx, dy);
 		image = scaled;
 	}
+#endif
 
 	if (dev->dest->colorspace)
 	{
@@ -683,11 +637,11 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 		for (i = 0; i < model->n; i++)
 			colorbv[i] = colorfv[i] * 255;
 		colorbv[i] = alpha * 255;
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv, image, &invmat);
+		fz_blendimagewithcolor(dev->dest, dev->scissor, image, ctm, colorbv);
 	}
 	else
 	{
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, nil, image, &invmat);
+		fz_blendimage(dev->dest, dev->scissor, image, ctm);
 	}
 
 	if (scaled)
@@ -701,9 +655,8 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_bbox bbox;
 	fz_pixmap *mask, *dest;
-	int dx, dy;
 	fz_pixmap *scaled = nil;
-	fz_matrix invmat;
+	int dx, dy;
 
 	if (dev->top == STACKSIZE)
 	{
@@ -711,23 +664,18 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 		return;
 	}
 
-	calcimagestate(dev, image, ctm, &bbox, &invmat, &dx, &dy);
-
-	if (fz_isemptyrect(bbox) || image->w == 0 || image->h == 0)
+	if (image->w == 0 || image->h == 0)
 	{
 		dev->stack[dev->top].scissor = dev->scissor;
 		dev->stack[dev->top].mask = nil;
 		dev->stack[dev->top].dest = nil;
-		dev->scissor = bbox;
+		dev->scissor = fz_emptybbox;
 		dev->top++;
 		return;
 	}
 
-	if (dx != 1 || dy != 1)
-	{
-		scaled = fz_scalepixmap(image, dx, dy);
-		image = scaled;
-	}
+	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
+	bbox = fz_intersectbbox(bbox, dev->scissor);
 
 	mask = fz_newpixmapwithrect(nil, bbox);
 	dest = fz_newpixmapwithrect(model, bbox);
@@ -735,7 +683,26 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	fz_clearpixmap(mask, 0);
 	fz_clearpixmap(dest, 0);
 
-	fz_scanconvert(dev->gel, dev->ael, 0, bbox, mask, nil, image, &invmat);
+#ifdef SMOOTHSCALE
+	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
+	if (dx < image->w && dy < image->h)
+	{
+		scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+		image = scaled;
+	}
+#else
+	if (fz_calcimagescale(image, ctm, &dx, &dy))
+	{
+		scaled = fz_scalepixmap(image, dx, dy);
+		image = scaled;
+	}
+#endif
+
+	fz_blendimage(mask, bbox, image, ctm);
+
+	if (scaled)
+		fz_droppixmap(scaled);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -743,9 +710,6 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	dev->scissor = bbox;
 	dev->dest = dest;
 	dev->top++;
-
-	if (scaled)
-		fz_droppixmap(scaled);
 }
 
 static void
