@@ -249,7 +249,7 @@ buildrawfilter(pdf_xref *xref, fz_obj *stmobj, int num, int gen)
  * constraining to stream length, and without decryption.
  */
 fz_filter *
-pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj)
+pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj, int length)
 {
 	fz_obj *filters;
 	fz_obj *params;
@@ -264,7 +264,7 @@ pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj)
 		return buildfilterchain(xref, nil, filters, params, 0, 0);
 	}
 
-	return fz_newcopyfilter();
+	return fz_newnullfilter(length);
 }
 
 /*

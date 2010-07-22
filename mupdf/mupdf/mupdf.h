@@ -152,7 +152,7 @@ fz_error pdf_cacheobject(pdf_xref *, int num, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
 
 int pdf_isstream(pdf_xref *xref, int num, int gen);
-fz_filter * pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj);
+fz_filter * pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj, int length);
 fz_error pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
 fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
 fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int num, int gen);

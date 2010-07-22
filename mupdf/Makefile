@@ -46,14 +46,14 @@ ifneq "$(verbose)" ""
 GENFILE_CMD = $(firstword $^) $@ $(wordlist 2, 999, $^)
 CC_CMD = $(CC) -o $@ -c $< $(CFLAGS)
 LD_CMD = $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = ar cru $@ $^
+AR_CMD = rm -f $@ && ar cru $@ $^
 
 else
 
 GENFILE_CMD = @ echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
 CC_CMD = @ echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
 LD_CMD = @ echo LD $@ && $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = @ echo AR $@ && ar cru $@ $^
+AR_CMD = @ echo AR $@ && rm -f $@ && ar cru $@ $^
 
 endif
 
@@ -384,4 +384,3 @@ install: $(OBJDIR) $(GENDIR) $(MUPDF_LIB) $(APPS)
 	install $(APPS) $(prefix)/bin
 	install $(MUPDF_LIB) $(prefix)/lib
 	install $(MUPDF_HDR) $(prefix)/include
-

@@ -108,7 +108,7 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 
 	/* Not allowed for inline images */
 	obj = fz_dictgetsa(dict, "SMask", "Mask");
-	if (pdf_isstream(xref, fz_tonum(obj), fz_togen(obj)))
+	if (fz_isdict(obj))
 	{
 		error = pdf_loadimage(&img->mask, xref, rdb, obj);
 		if (error)
@@ -169,17 +169,20 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	if (error)
 		return fz_rethrow(error, "cannot load inline image");
 
-	filter = pdf_buildinlinefilter(xref, dict);
+	filter = pdf_buildinlinefilter(xref, dict, img->stride * img->h);
 	subfile = fz_openfilter(filter, file);
 
 	img->samples = fz_newbuffer(img->h * img->stride);
-	error = fz_read(&n, file, img->samples->bp, img->h * img->stride);
+	error = fz_read(&n, subfile, img->samples->bp, img->h * img->stride);
 	if (error)
 	{
 		pdf_dropimage(img);
 		return fz_rethrow(error, "cannot load inline image data");
 	}
 	img->samples->wp += n;
+
+	fz_dropstream(subfile);
+	fz_dropfilter(filter);
 
 	if (img->imagemask)
 	{
@@ -188,9 +191,6 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 		for (p = img->samples->bp; p < img->samples->ep; p++)
 			*p = ~*p;
 	}
-
-	fz_dropstream(subfile);
-	fz_dropfilter(filter);
 
 	pdf_logimage("}\n");
 

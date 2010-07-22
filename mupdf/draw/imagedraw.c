@@ -176,13 +176,17 @@ samplecolor(byte *s, int w, int h, int n, int u, int v, byte *out)
 
 /* Blend source image scanline over destination */
 
+#define INSIDEU u >= 0 && u <= (sw << 16)
+#define INSIDEV v >= 0 && v <= (sh << 16)
+#define INSIDE INSIDEU && INSIDEV
+
 static inline void
 fz_blendscan1(unsigned char *dp, unsigned char *sp, int sw, int sh,
 	int u, int v, int fa, int fb, int w)
 {
 	while (w--)
 	{
-		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
+		if (INSIDE)
 		{
 			int a = samplemask(sp, sw, sh, u, v);
 			dp[0] = a + fz_mul255(dp[0], 255 - a);
@@ -199,7 +203,7 @@ fz_blendscan2(unsigned char *dp, unsigned char *sp, int sw, int sh,
 {
 	while (w--)
 	{
-		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
+		if (INSIDE)
 		{
 			int g, a, t;
 			samplega(sp, sw, sh, u, v, &g, &a);
@@ -219,7 +223,7 @@ fz_blendscan4(unsigned char *dp, unsigned char *sp, int sw, int sh,
 {
 	while (w--)
 	{
-		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
+		if (INSIDE)
 		{
 			int r, g, b, a, t;
 			samplergba(sp, sw, sh, u, v, &r, &g, &b, &a);
@@ -241,7 +245,7 @@ fz_blendscan(unsigned char *dp, unsigned char *sp, int sw, int sh,
 {
 	while (w--)
 	{
-		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
+		if (INSIDE)
 		{
 			unsigned char color[FZ_MAXCOLORS+1];
 			int k, t;
@@ -265,7 +269,7 @@ fz_blendscanwithcolor(unsigned char *dp, unsigned char *sp, int sw, int sh,
 	int sa = color[n-1];
 	while (w--)
 	{
-		if (u >= 0 && u < sw << 16 && v >= 0 && v < sh << 16)
+		if (INSIDE)
 		{
 			int ma = samplemask(sp, sw, sh, u, v);
 			int masa = fz_mul255(sa, ma);
@@ -282,6 +286,11 @@ fz_blendscanwithcolor(unsigned char *dp, unsigned char *sp, int sw, int sh,
 
 /* Draw an image with an affine transform on destination */
 
+static inline float roundup(float x)
+{
+	return (x < 0) ? floorf(x) : ceilf(x);
+}
+
 static void
 fz_blendimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 	unsigned char *color)
@@ -293,18 +302,16 @@ fz_blendimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 	fz_matrix inv;
 	fz_bbox bbox;
 
-	/* map from screen space (x,y) to image space (u,v) */
-	inv = fz_scale(1.0f / img->w, -1.0f / img->h);
-	inv = fz_concat(inv, fz_translate(0, 1));
-	inv = fz_concat(inv, ctm);
-	inv = fz_invertmatrix(inv);
-	inv.e -= 0.5f;
-	inv.f -= 0.5f;
-
-	fa = inv.a * 65536;
-	fb = inv.b * 65536;
-	fc = inv.c * 65536;
-	fd = inv.d * 65536;
+	/* grid fit the image */
+	if (fz_isrectilinear(ctm))
+	{
+		ctm.a = roundup(ctm.a);
+		ctm.b = roundup(ctm.b);
+		ctm.c = roundup(ctm.c);
+		ctm.d = roundup(ctm.d);
+		ctm.e = floorf(ctm.e) + 0.5f;
+		ctm.f = floorf(ctm.f) + 0.5f;
+	}
 
 	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
 	bbox = fz_intersectbbox(bbox, scissor);
@@ -313,14 +320,24 @@ fz_blendimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	dp = dst->samples + ((bbox.y0 - dst->y) * dst->w + (bbox.x0 - dst->x)) * dst->n;
+	/* map from screen space (x,y) to image space (u,v) */
+	inv = fz_scale(1.0f / img->w, -1.0f / img->h);
+	inv = fz_concat(inv, fz_translate(0, 1));
+	inv = fz_concat(inv, ctm);
+	inv = fz_invertmatrix(inv);
+
+	fa = inv.a * 65536;
+	fb = inv.b * 65536;
+	fc = inv.c * 65536;
+	fd = inv.d * 65536;
+	u = (fa * x) + (fc * y) + inv.e * 65536;
+	v = (fb * x) + (fd * y) + inv.f * 65536;
+
+	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 	n = dst->n;
 	sp = img->samples;
 	sw = img->w;
 	sh = img->h;
-
-	u = (inv.a * (x+0.5f) + inv.c * (y+0.5f) + inv.e) * 65536;
-	v = (inv.b * (x+0.5f) + inv.d * (y+0.5f) + inv.f) * 65536;
 
 	while (h--)
 	{
