@@ -226,15 +226,12 @@ pdf_showshade(pdf_csi *csi, fz_shade *shd)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_rect bbox;
 
-	if (gstate->fill.alpha < 1)
-		fz_warn("ignoring ca for shading: %g", gstate->fill.alpha);
-
 	bbox = fz_boundshade(shd, gstate->ctm);
 
 	if (gstate->blendmode != FZ_BNORMAL)
-		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode);
+		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 
-	csi->dev->fillshade(csi->dev->user, shd, gstate->ctm);
+	csi->dev->fillshade(csi->dev->user, shd, gstate->ctm, gstate->fill.alpha);
 
 	if (gstate->blendmode != FZ_BNORMAL)
 		csi->dev->endgroup(csi->dev->user);
@@ -247,13 +244,10 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 	fz_pixmap *tile, *mask;
 	fz_rect bbox;
 
-	if (gstate->fill.alpha < 1)
-		fz_warn("ignoring ca for image: %g", gstate->fill.alpha);
-
 	bbox = fz_transformrect(gstate->ctm, fz_unitrect);
 
 	if (gstate->blendmode != FZ_BNORMAL)
-		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode);
+		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 
 	if (image->mask)
 	{
@@ -287,7 +281,7 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 			if (gstate->fill.shade)
 			{
 				csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
-				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm);
+				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm, gstate->fill.alpha);
 				csi->dev->popclip(csi->dev->user);
 			}
 			break;
@@ -295,7 +289,7 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 	}
 	else
 	{
-		csi->dev->fillimage(csi->dev->user, tile, gstate->ctm);
+		csi->dev->fillimage(csi->dev->user, tile, gstate->ctm, gstate->fill.alpha);
 	}
 
 	if (image->mask)
@@ -333,7 +327,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 		bbox = fz_boundpath(path, nil, gstate->ctm);
 
 	if (gstate->blendmode != FZ_BNORMAL)
-		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode);
+		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 
 	if (dofill)
 	{
@@ -357,7 +351,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 			if (gstate->fill.shade)
 			{
 				csi->dev->clippath(csi->dev->user, path, evenodd, gstate->ctm);
-				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm);
+				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm, gstate->fill.alpha);
 				csi->dev->popclip(csi->dev->user);
 			}
 			break;
@@ -386,7 +380,7 @@ pdf_showpath(pdf_csi *csi, int doclose, int dofill, int dostroke, int evenodd)
 			if (gstate->stroke.shade)
 			{
 				csi->dev->clipstrokepath(csi->dev->user, path, &gstate->strokestate, gstate->ctm);
-				csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm);
+				csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm, gstate->stroke.alpha);
 				csi->dev->popclip(csi->dev->user);
 			}
 			break;
@@ -431,7 +425,7 @@ pdf_flushtext(pdf_csi *csi)
 	bbox = fz_boundtext(text, gstate->ctm);
 
 	if (gstate->blendmode != FZ_BNORMAL)
-		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode);
+		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 
 	if (doinvisible)
 		csi->dev->ignoretext(csi->dev->user, text, gstate->ctm);
@@ -465,7 +459,7 @@ pdf_flushtext(pdf_csi *csi)
 			if (gstate->fill.shade)
 			{
 				csi->dev->cliptext(csi->dev->user, text, gstate->ctm, 0);
-				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm);
+				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, csi->topctm, gstate->fill.alpha);
 				csi->dev->popclip(csi->dev->user);
 			}
 			break;
@@ -494,7 +488,7 @@ pdf_flushtext(pdf_csi *csi)
 			if (gstate->stroke.shade)
 			{
 				csi->dev->clipstroketext(csi->dev->user, text, &gstate->strokestate, gstate->ctm);
-				csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm);
+				csi->dev->fillshade(csi->dev->user, gstate->stroke.shade, csi->topctm, gstate->stroke.alpha);
 				csi->dev->popclip(csi->dev->user);
 			}
 			break;

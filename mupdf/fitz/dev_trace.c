@@ -187,17 +187,17 @@ fz_traceignoretext(void *user, fz_text *text, fz_matrix ctm)
 }
 
 static void
-fz_tracefillimage(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_tracefillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
-	printf("<fillimage ");
+	printf("<fillimage alpha=\"%g\" ", alpha);
 	fz_tracematrix(ctm);
 	printf("/>\n");
 }
 
 static void
-fz_tracefillshade(void *user, fz_shade *shade, fz_matrix ctm)
+fz_tracefillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
-	printf("<fillshade ");
+	printf("<fillshade alpha=\"%g\" ", alpha);
 	fz_tracematrix(ctm);
 	printf("/>\n");
 }
@@ -245,11 +245,11 @@ fz_traceendmask(void *user)
 }
 
 static void
-fz_tracebegingroup(void *user, fz_rect bbox, int isolated, int knockout, fz_blendmode blendmode)
+fz_tracebegingroup(void *user, fz_rect bbox, int isolated, int knockout, fz_blendmode blendmode, float alpha)
 {
-	printf("<group bbox=\"%g %g %g %g\" isolated=\"%d\" knockout=\"%d\" blendmode=\"%s\">\n",
+	printf("<group bbox=\"%g %g %g %g\" isolated=\"%d\" knockout=\"%d\" blendmode=\"%s\" alpha=\"%g\">\n",
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
-		isolated, knockout, fz_blendnames[blendmode]);
+		isolated, knockout, fz_blendnames[blendmode], alpha);
 }
 
 static void

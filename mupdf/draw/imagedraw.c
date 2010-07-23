@@ -113,7 +113,7 @@ samplega(byte *s, int w, int h, int u, int v, int *gout, int *aout)
 	lerpga(cd, c, d, ud);
 	lerpga(abcd, ab, cd, vd);
 	*gout = abcd[0];
-	*aout = abcd[0];
+	*aout = abcd[1];
 #endif
 }
 

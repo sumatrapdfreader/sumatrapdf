@@ -25,8 +25,6 @@ zfree(void *opaque, void *ptr)
 fz_filter *
 fz_newflated(fz_obj *params)
 {
-	fz_obj *obj;
-	int zipfmt;
 	int ei;
 
 	FZ_NEWFILTER(fz_flate, f, flated);
@@ -37,21 +35,7 @@ fz_newflated(fz_obj *params)
 	f->z.next_in = nil;
 	f->z.avail_in = 0;
 
-	zipfmt = 0;
-
-	if (params)
-	{
-		obj = fz_dictgets(params, "ZIP");
-		if (obj) zipfmt = fz_tobool(obj);
-	}
-
-	if (zipfmt)
-	{
-		/* if windowbits is negative the zlib header is skipped */
-		ei = inflateInit2(&f->z, -15);
-	}
-	else
-		ei = inflateInit(&f->z);
+	ei = inflateInit(&f->z);
 
 	if (ei != Z_OK)
 	{
@@ -89,11 +73,7 @@ fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
 	zp->next_out = out->wp;
 	zp->avail_out = out->ep - out->wp;
 
-	err = inflate(zp, Z_NO_FLUSH);
-
-	/* Make sure we call it with Z_FINISH at the end of input */
-	if (err == Z_OK && in->eof && zp->avail_in == 0 && zp->avail_out > 0)
-		err = inflate(zp, Z_FINISH);
+	err = inflate(zp, Z_SYNC_FLUSH);
 
 	in->rp = in->wp - zp->avail_in;
 	out->wp = out->ep - zp->avail_out;

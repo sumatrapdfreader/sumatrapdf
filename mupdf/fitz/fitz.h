@@ -1020,8 +1020,8 @@ struct fz_device_s
 	void (*clipstroketext)(void *, fz_text *, fz_strokestate *, fz_matrix);
 	void (*ignoretext)(void *, fz_text *, fz_matrix);
 
-	void (*fillshade)(void *, fz_shade *shd, fz_matrix ctm);
-	void (*fillimage)(void *, fz_pixmap *img, fz_matrix ctm);
+	void (*fillshade)(void *, fz_shade *shd, fz_matrix ctm, float alpha);
+	void (*fillimage)(void *, fz_pixmap *img, fz_matrix ctm, float alpha);
 	void (*fillimagemask)(void *, fz_pixmap *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
 	void (*clipimagemask)(void *, fz_pixmap *img, fz_matrix ctm);
 
@@ -1029,7 +1029,7 @@ struct fz_device_s
 
 	void (*beginmask)(void *, fz_rect, int luminosity, fz_colorspace *cs, float *bc);
 	void (*endmask)(void *);
-	void (*begingroup)(void *, fz_rect, int isolated, int knockout, fz_blendmode blendmode);
+	void (*begingroup)(void *, fz_rect, int isolated, int knockout, fz_blendmode blendmode, float alpha);
 	void (*endgroup)(void *);
 };
 

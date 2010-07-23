@@ -210,20 +210,20 @@ fz_listpopclip(void *user)
 }
 
 static void
-fz_listfillshade(void *user, fz_shade *shade, fz_matrix ctm)
+fz_listfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
 	fz_displaynode *node;
-	node = fz_newdisplaynode(FZ_CMDFILLSHADE, ctm, nil, nil, 0);
+	node = fz_newdisplaynode(FZ_CMDFILLSHADE, ctm, nil, nil, alpha);
 	node->rect = fz_boundshade(shade, ctm);
 	node->item.shade = fz_keepshade(shade);
 	fz_appenddisplaynode(user, node);
 }
 
 static void
-fz_listfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_listfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	fz_displaynode *node;
-	node = fz_newdisplaynode(FZ_CMDFILLIMAGE, ctm, nil, nil, 0);
+	node = fz_newdisplaynode(FZ_CMDFILLIMAGE, ctm, nil, nil, alpha);
 	node->rect = fz_transformrect(ctm, fz_unitrect);
 	node->item.image = fz_keeppixmap(image);
 	fz_appenddisplaynode(user, node);
@@ -269,10 +269,10 @@ fz_listendmask(void *user)
 }
 
 static void
-fz_listbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode)
+fz_listbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode, float alpha)
 {
 	fz_displaynode *node;
-	node = fz_newdisplaynode(FZ_CMDBEGINGROUP, fz_identity, nil, nil, 0);
+	node = fz_newdisplaynode(FZ_CMDBEGINGROUP, fz_identity, nil, nil, alpha);
 	node->rect = rect;
 	node->item.blendmode = blendmode;
 	node->flag |= isolated ? ISOLATED : 0;
@@ -383,10 +383,10 @@ fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
 			dev->ignoretext(dev->user, node->item.text, ctm);
 			break;
 		case FZ_CMDFILLSHADE:
-			dev->fillshade(dev->user, node->item.shade, ctm);
+			dev->fillshade(dev->user, node->item.shade, ctm, node->alpha);
 			break;
 		case FZ_CMDFILLIMAGE:
-			dev->fillimage(dev->user, node->item.image, ctm);
+			dev->fillimage(dev->user, node->item.image, ctm, node->alpha);
 			break;
 		case FZ_CMDFILLIMAGEMASK:
 			dev->fillimagemask(dev->user, node->item.image, ctm,
@@ -409,7 +409,7 @@ fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
 			bbox = fz_transformrect(topctm, node->rect);
 			dev->begingroup(dev->user, bbox,
 				node->flag & ISOLATED, node->flag & KNOCKOUT,
-				node->item.blendmode);
+				node->item.blendmode, node->alpha);
 			break;
 		case FZ_CMDENDGROUP:
 			dev->endgroup(dev->user);

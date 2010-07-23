@@ -488,7 +488,7 @@ fz_drawignoretext(void *user, fz_text *text, fz_matrix ctm)
 }
 
 static void
-fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
+fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
 	fz_drawdevice *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
@@ -517,6 +517,12 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 		return;
 	}
 
+	if (alpha < 1)
+	{
+		dest = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
+		fz_clearpixmap(dest, 0);
+	}
+
 	if (shade->usebackground)
 	{
 		unsigned char *s;
@@ -538,7 +544,13 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 		}
 	}
 
-	fz_rendershade(shade, ctm, dev->dest, bbox);
+	fz_rendershade(shade, ctm, dest, bbox);
+
+	if (alpha < 1)
+	{
+		fz_blendpixmapswithalpha(dev->dest, dest, alpha);
+		fz_droppixmap(dest);
+	}
 }
 
 static int
@@ -552,7 +564,7 @@ fz_calcimagescale(fz_pixmap *image, fz_matrix ctm, int *dx, int *dy)
 }
 
 static void
-fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	fz_drawdevice *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
@@ -592,7 +604,21 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
 	}
 #endif
 
-	fz_blendimage(dev->dest, dev->scissor, image, ctm);
+	if (alpha < 1)
+	{
+		fz_pixmap *temp;
+		fz_bbox bbox;
+		bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
+		bbox = fz_intersectbbox(bbox, dev->scissor);
+		temp = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
+		fz_blendimage(temp, bbox, image, ctm);
+		fz_blendpixmapswithalpha(dev->dest, temp, alpha);
+		fz_droppixmap(temp);
+	}
+	else
+	{
+		fz_blendimage(dev->dest, dev->scissor, image, ctm);
+	}
 
 	if (scaled)
 		fz_droppixmap(scaled);
@@ -812,7 +838,7 @@ fz_drawendmask(void *user)
 }
 
 static void
-fz_drawbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode)
+fz_drawbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blendmode blendmode, float alpha)
 {
 	fz_drawdevice *dev = user;
 	fz_colorspace *model = dev->dest->colorspace;
@@ -831,6 +857,7 @@ fz_drawbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blend
 
 	fz_clearpixmap(dest, 0);
 
+	dev->stack[dev->top].alpha = alpha;
 	dev->stack[dev->top].blendmode = blendmode;
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].dest = dev->dest;
@@ -846,14 +873,40 @@ fz_drawendgroup(void *user)
 	fz_drawdevice *dev = user;
 	fz_pixmap *group = dev->dest;
 	fz_blendmode blendmode;
+	float alpha;
 
 	if (dev->top > 0)
 	{
 		dev->top--;
+		alpha = dev->stack[dev->top].alpha;
 		blendmode = dev->stack[dev->top].blendmode;
 		dev->dest = dev->stack[dev->top].dest;
 		dev->scissor = dev->stack[dev->top].scissor;
-		fz_blendpixmapswithmode(dev->dest, group, blendmode);
+
+		/* TODO: blend mode + constant alpha */
+		if (blendmode == FZ_BNORMAL)
+		{
+			if (alpha < 1)
+				fz_blendpixmapswithalpha(dev->dest, group, alpha);
+			else
+				fz_blendpixmaps(dev->dest, group);
+		}
+		else
+		{
+			if (alpha < 1)
+			{
+				unsigned char *p = group->samples;
+				int n = group->w * group->h * group->n;
+				int a = alpha * 255;
+				while (n--)
+				{
+					*p = fz_mul255(*p, a);
+					p++;
+				}
+			}
+			fz_blendpixmapswithmode(dev->dest, group, blendmode);
+		}
+
 		fz_droppixmap(group);
 	}
 }

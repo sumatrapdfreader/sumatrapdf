@@ -175,12 +175,9 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 			pdf_dropxobject(softmask);
 		}
 
-		if (gstate->fill.alpha < 1)
-			fz_warn("ignoring ca for xobject: %g", gstate->fill.alpha);
-
 		csi->dev->begingroup(csi->dev->user,
 			fz_transformrect(gstate->ctm, xobj->bbox),
-			xobj->isolated, xobj->knockout, gstate->blendmode);
+			xobj->isolated, xobj->knockout, gstate->blendmode, gstate->fill.alpha);
 
 		gstate->blendmode = FZ_BNORMAL;
 		gstate->stroke.alpha = 1;
@@ -1535,7 +1532,7 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 	if (page->transparency)
 		dev->begingroup(dev->user,
 			fz_transformrect(ctm, page->mediabox),
-			0, 0, FZ_BNORMAL);
+			0, 0, FZ_BNORMAL, 1);
 
 	error = pdf_runcontents(xref, page->resources, page->contents, dev, ctm);
 	if (error)

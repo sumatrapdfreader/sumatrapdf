@@ -119,13 +119,13 @@ paeth(int a, int b, int c)
 }
 
 static inline void
-fz_predictnone(fz_predict *p, unsigned char *in, unsigned char *out)
+fz_predictnone(fz_predict *p, unsigned char *in, int len, unsigned char *out)
 {
-	memcpy(out, in, p->stride);
+	memcpy(out, in, len);
 }
 
 static void
-fz_predicttiff(fz_predict *p, unsigned char *in, unsigned char *out)
+fz_predicttiff(fz_predict *p, unsigned char *in, int len, unsigned char *out)
 {
 	int left[MAXC];
 	int i, k;
@@ -147,7 +147,7 @@ fz_predicttiff(fz_predict *p, unsigned char *in, unsigned char *out)
 }
 
 static void
-fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predictor)
+fz_predictpng(fz_predict *p, unsigned char *in, int len, unsigned char *out, int predictor)
 {
 	int bpp = p->bpp;
 	int i;
@@ -156,14 +156,14 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 	switch (predictor)
 	{
 	case 0:
-		memcpy(out, in, p->stride);
+		memcpy(out, in, len);
 		break;
 	case 1:
 		for (i = bpp; i > 0; i--)
 		{
 			*out++ = *in++;
 		}
-		for (i = p->stride - bpp; i > 0; i--)
+		for (i = len - bpp; i > 0; i--)
 		{
 			*out = *in++ + out[-bpp];
 			out++;
@@ -174,7 +174,7 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 		{
 			*out++ = *in++ + *ref++;
 		}
-		for (i = p->stride - bpp; i > 0; i--)
+		for (i = len - bpp; i > 0; i--)
 		{
 			*out++ = *in++ + *ref++;
 		}
@@ -184,7 +184,7 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 		{
 			*out++ = *in++ + (*ref++) / 2;
 		}
-		for (i = p->stride - bpp; i > 0; i--)
+		for (i = len - bpp; i > 0; i--)
 		{
 			*out = *in++ + (out[-bpp] + *ref++)/2;
 			out++;
@@ -195,7 +195,7 @@ fz_predictpng(fz_predict *p, unsigned char *in, unsigned char *out, int predicto
 		{
 			*out++ = *in++ + paeth(0, *ref++, 0);
 		}
-		for (i = p->stride - bpp; i > 0; i --)
+		for (i = len - bpp; i > 0; i --)
 		{
 			*out = *in++ + paeth(out[-bpp], *ref, ref[-bpp]);
 			ref++;
@@ -209,54 +209,58 @@ fz_error
 fz_processpredict(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 {
 	fz_predict *dec = (fz_predict*)filter;
+	int remaining, toconsume, toproduce;
 	int ispng = dec->predictor >= 10;
-	int predictor;
 
 	dec->ref = dec->refbuf;
 	while (1)
 	{
-		if (in->rp + dec->stride + ispng > in->wp)
+		remaining = in->wp - in->rp;
+		toconsume = MIN(remaining, dec->stride + ispng);
+		toproduce = MIN(remaining - ispng, dec->stride);
+
+		if (remaining < dec->stride + ispng && !in->eof)
 		{
-			if (in->eof)
-				return fz_iodone;
-			if (dec->refbuf != dec->ref)
-			{
-				memcpy(dec->refbuf, dec->ref, dec->stride);
-			}
 			return fz_ioneedin;
 		}
 
-		if (out->wp + dec->stride > out->ep)
+		if (out->wp + toproduce > out->ep)
 		{
-			if (dec->refbuf != dec->ref)
-			{
-				memcpy(dec->refbuf, dec->ref, dec->stride);
-			}
 			return fz_ioneedout;
 		}
 
-		if (dec->predictor == 1)
+		if (toconsume > 0)
 		{
-			fz_predictnone(dec, in->rp, out->wp);
-		}
-		else if (dec->predictor == 2)
-		{
-			if (dec->bpc != 8)
-				memset(out->wp, 0, dec->stride);
-			fz_predicttiff(dec, in->rp, out->wp);
-		}
-		else
-		{
-			predictor = *in->rp++;
-			fz_predictpng(dec, in->rp, out->wp, predictor);
+			if (dec->predictor == 1)
+			{
+				fz_predictnone(dec, in->rp, toconsume, out->wp);
+			}
+			else if (dec->predictor == 2)
+			{
+				if (dec->bpc != 8)
+					memset(out->wp, 0, toconsume);
+				fz_predicttiff(dec, in->rp, toconsume, out->wp);
+			}
+			else
+			{
+				int predictor = *in->rp++;
+				toconsume -= ispng;
+				fz_predictpng(dec, in->rp, toconsume, out->wp, predictor);
+			}
+
+			if (dec->refbuf)
+			{
+				memcpy(dec->refbuf, out->wp, toproduce);
+				dec->ref = dec->refbuf;
+			}
+
+			in->rp += toconsume;
+			out->wp += toproduce;
 		}
 
-		if (dec->refbuf)
+		if (in->eof && (in->wp - in->rp <= 0))
 		{
-			dec->ref = out->wp;
+			return fz_iodone;
 		}
-
-		in->rp += dec->stride;
-		out->wp += dec->stride;
 	}
 }

@@ -131,7 +131,7 @@ mitchell(fz_scalefilter *filter, float x)
 	if (x >= 2)
 		return 0;
 	if (x >= 1)
-		return (32 + x*(60 + x*(36 - 7*x)))/18;
+		return (32 + x*(-60 + x*(36 - 7*x)))/18;
 	return (16 + x*x*(-36 + 21*x))/18;
 }
 
@@ -271,13 +271,14 @@ add_weight(fz_weights *weights, int j, int i, fz_scalefilter *filter,
 {
 	float dist = j + 0.5f - (x + (i + 0.5f)*dst_w/src_w);
 	float f;
-	int min, len, index;
+	int min, len, index, weight;
 
 	dist *= G;
 	if (dist < 0)
 		dist = -dist;
 	f = filter->fn(filter, dist)*F;
-	if (f == 0)
+	weight = (int)(256*f+0.5f);
+	if (weight == 0)
 		return;
 
 	/* wrap i back into range */
@@ -345,14 +346,14 @@ add_weight(fz_weights *weights, int j, int i, fz_scalefilter *filter,
 			weights->index[index+len-1] = 0;
 		}
 		assert(len-1 == i-min);
-		weights->index[index+i-min] = (int)(256*f+0.5f);
+		weights->index[index+i-min] = weight;
 		weights->index[index-1] = len;
 		assert(len <= weights->max_len);
 	}
 	else
 	{
 		/* Infrequent case */
-		weights->index[index+i-min] += (int)(256*f+0.5f);
+		weights->index[index+i-min] += weight;
 	}
 }
 
