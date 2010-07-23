@@ -46,14 +46,14 @@ ifneq "$(verbose)" ""
 GENFILE_CMD = $(firstword $^) $@ $(wordlist 2, 999, $^)
 CC_CMD = $(CC) -o $@ -c $< $(CFLAGS)
 LD_CMD = $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = rm -f $@ && ar cru $@ $^
+AR_CMD = rm -f $@ && $(AR) cru $@ $^
 
 else
 
 GENFILE_CMD = @ echo GENFILE $@ && $(firstword $^) $@ $(wordlist 2, 999, $^)
 CC_CMD = @ echo CC $@ && $(CC) -o $@ -c $< $(CFLAGS)
 LD_CMD = @ echo LD $@ && $(CC) -o $@ $^ $(LDFLAGS) $(LIBS)
-AR_CMD = @ echo AR $@ && rm -f $@ && ar cru $@ $^
+AR_CMD = @ echo AR $@ && rm -f $@ && $(AR) cru $@ $^
 
 endif
 
@@ -359,7 +359,7 @@ WINVIEW_OBJ=$(WINVIEW_SRC:apps/%.c=$(OBJDIR)/%.o) $(WINVIEW_RES:apps/%.rc=$(OBJD
 WINVIEW_EXE=$(OBJDIR)/mupdf.exe
 
 $(OBJDIR)/%.o: apps/%.rc
-	windres -i $< -o $@ --include-dir=apps
+	$(WINDRES) -i $< -o $@ --include-dir=apps
 
 $(WINVIEW_OBJ): $(MUPDF_HDR) $(PDFAPP_HDR)
 $(WINVIEW_EXE): $(WINVIEW_OBJ) $(MUPDF_LIB) $(THIRD_LIBS)

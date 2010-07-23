@@ -1,6 +1,6 @@
 # Configuration for the Makefile
 
-OS := $(shell uname)
+OS ?= $(shell uname)
 OS := $(OS:MINGW%=MINGW)
 
 CC ?= cc
@@ -27,6 +27,7 @@ endif
 
 ifeq "$(OS)" "FreeBSD"
 SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
+LDFLAGS += -L/usr/local/lib
 X11LIBS := -lX11 -lXext
 PDFVIEW_EXE = $(X11VIEW_EXE)
 endif
@@ -49,7 +50,7 @@ endif
 
 # MinGW build depends on thirdparty libs
 ifeq "$(OS)" "MINGW"
-CC := gcc
+WINDRES ?= windres
 W32LIBS := -lgdi32 -lcomdlg32 -luser32 -ladvapi32 -lshell32 -mwindows
 PDFVIEW_EXE = $(WINVIEW_EXE)
 endif
