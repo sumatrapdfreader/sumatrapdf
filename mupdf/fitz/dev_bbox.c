@@ -46,7 +46,7 @@ fz_bboxstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix c
 }
 
 static void
-fz_bboxfillshade(void *user, fz_shade *shade, fz_matrix ctm)
+fz_bboxfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
 	fz_bboxdevice *bdev = user;
 	fz_bbox bbox = fz_roundrect(fz_boundshade(shade, ctm));
@@ -54,7 +54,7 @@ fz_bboxfillshade(void *user, fz_shade *shade, fz_matrix ctm)
 }
 
 static void
-fz_bboxfillimage(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_bboxfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	fz_bboxdevice *bdev = user;
 	fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
@@ -65,7 +65,7 @@ static void
 fz_bboxfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_bboxfillimage(user, image, ctm);
+	fz_bboxfillimage(user, image, ctm, alpha);
 }
 
 static void

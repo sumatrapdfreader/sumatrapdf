@@ -883,7 +883,6 @@ fz_drawendgroup(void *user)
 		dev->dest = dev->stack[dev->top].dest;
 		dev->scissor = dev->stack[dev->top].scissor;
 
-		/* TODO: blend mode + constant alpha */
 		if (blendmode == FZ_BNORMAL)
 		{
 			if (alpha < 1)

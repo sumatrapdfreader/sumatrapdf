@@ -1,5 +1,7 @@
 #include "fitz.h"
 
+#define SLOWCMYK
+
 fz_colorspace *
 fz_newcolorspace(char *name, int n)
 {
@@ -83,9 +85,28 @@ static void xyztobgr(fz_colorspace *cs, float *xyz, float *bgr)
 
 static void cmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
 {
+#ifdef SLOWCMYK /* from xpdf */
+	float c = CLAMP(cmyk[0] + cmyk[3], 0, 1);
+	float m = CLAMP(cmyk[1] + cmyk[3], 0, 1);
+	float y = CLAMP(cmyk[2] + cmyk[3], 0, 1);
+	float aw = (1-c) * (1-m) * (1-y);
+	float ac = c * (1-m) * (1-y);
+	float am = (1-c) * m * (1-y);
+	float ay = (1-c) * (1-m) * y;
+	float ar = (1-c) * m * y;
+	float ag = c * (1-m) * y;
+	float ab = c * m * (1-y);
+	float r = aw + 0.9137*am + 0.9961*ay + 0.9882*ar;
+	float g = aw + 0.6196*ac + ay + 0.5176*ag;
+	float b = aw + 0.7804*ac + 0.5412*am + 0.0667*ar + 0.2118*ag + 0.4863*ab;
+	xyz[0] = CLAMP(r, 0, 1);
+	xyz[1] = CLAMP(g, 0, 1);
+	xyz[2] = CLAMP(b, 0, 1);
+#else
 	xyz[0] = 1 - MIN(1, cmyk[0] + cmyk[3]);
 	xyz[1] = 1 - MIN(1, cmyk[1] + cmyk[3]);
 	xyz[2] = 1 - MIN(1, cmyk[2] + cmyk[3]);
+#endif
 }
 
 static void xyztocmyk(fz_colorspace *cs, float *xyz, float *cmyk)
@@ -240,9 +261,21 @@ static void fastcmyktorgb(fz_pixmap *src, fz_pixmap *dst)
 	int n = src->w * src->h;
 	while (n--)
 	{
+#ifdef SLOWCMYK
+		float cmyk[4], rgb[3];
+		cmyk[0] = s[0] / 255.0f;
+		cmyk[1] = s[1] / 255.0f;
+		cmyk[2] = s[2] / 255.0f;
+		cmyk[3] = s[3] / 255.0f;
+		cmyktoxyz(nil, cmyk, rgb);
+		d[0] = rgb[0] * 255;
+		d[1] = rgb[1] * 255;
+		d[2] = rgb[2] * 255;
+#else
 		d[0] = 255 - MIN(s[0] + s[3], 255);
 		d[1] = 255 - MIN(s[1] + s[3], 255);
 		d[2] = 255 - MIN(s[2] + s[3], 255);
+#endif
 		d[3] = s[4];
 		s += 5;
 		d += 4;
@@ -256,9 +289,21 @@ static void fastcmyktobgr(fz_pixmap *src, fz_pixmap *dst)
 	int n = src->w * src->h;
 	while (n--)
 	{
+#ifdef SLOWCMYK
+		float cmyk[4], rgb[3];
+		cmyk[0] = s[0] / 255.0f;
+		cmyk[1] = s[1] / 255.0f;
+		cmyk[2] = s[2] / 255.0f;
+		cmyk[3] = s[3] / 255.0f;
+		cmyktoxyz(nil, cmyk, rgb);
+		d[0] = rgb[2] * 255;
+		d[1] = rgb[1] * 255;
+		d[2] = rgb[0] * 255;
+#else
 		d[0] = 255 - MIN(s[2] + s[3], 255);
 		d[1] = 255 - MIN(s[1] + s[3], 255);
 		d[2] = 255 - MIN(s[0] + s[3], 255);
+#endif
 		d[3] = s[4];
 		s += 5;
 		d += 4;
@@ -461,22 +506,34 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 	{
 		if (ds == fz_devicegray)
 		{
-			float c = sv[1] * 0.3f;
-			float m = sv[2] * 0.59f;
+			float c = sv[0] * 0.3f;
+			float m = sv[1] * 0.59f;
 			float y = sv[2] * 0.11f;
 			dv[0] = 1 - MIN(c + m + y + sv[3], 1);
 		}
 		else if (ds == fz_devicergb)
 		{
+#ifdef SLOWCMYK
+			cmyktoxyz(nil, sv, dv);
+#else
 			dv[0] = 1 - MIN(sv[0] + sv[3], 1);
 			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
 			dv[2] = 1 - MIN(sv[2] + sv[3], 1);
+#endif
 		}
 		else if (ds == fz_devicebgr)
 		{
+#ifdef SLOWCMYK
+			float rgb[3];
+			cmyktoxyz(nil, sv, rgb);
+			dv[0] = rgb[2];
+			dv[1] = rgb[1];
+			dv[2] = rgb[0];
+#else
 			dv[0] = 1 - MIN(sv[2] + sv[3], 1);
 			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
 			dv[2] = 1 - MIN(sv[0] + sv[3], 1);
+#endif
 		}
 		else
 			fz_stdconvcolor(ss, sv, ds, dv);
