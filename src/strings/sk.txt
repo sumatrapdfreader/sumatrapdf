@@ -8,15 +8,19 @@ Lang: sk Slovak (Slovenčina)
 
 Contributor: Radoslav Zelenák (radoslav.zelenak@elkop.sk)
 Contributor: Bernard Holý - TREVERT
+Contributor: Dalibor
 
 &About
 &O programe...
 
 &Check for new version
-Skontrolovať novú verziu
+&Skontrolovať novú verziu
 
 &Close\tCtrl-W
 Zatvoriť\tCtrl-W
+
+&Custom Zoom...
+Vlastná zmena veľkosti...
 
 &Don't ask me again
 Nepýtať sa znova
@@ -24,23 +28,56 @@ Nepýtať sa znova
 &File
 Súbor
 
+&Find what:
+&Vyhľadať:
+
 &Go To
 Ísť na
 
 &Help
 Nápoveda
 
+&Magnification:
+Zobrazenie:
+
 &Manual
 Príručka
+
+&Match case
+Podľa zadaných kritérií
+
+&No
+Nie
+
+&No, thanks
+Nie, ďakujem
 
 &Open\tCtrl-O
 Otvoriť\tCtrl-O
 
+&Options...
+Možnosti...
+
+&Password:
+Heslo:
+
 &Print\tCtrl-P
 Tlačiť\tCtrl-P
 
+&Print with %s...\tCtrl-P
+Vytlačiť s %s...\tCtrl-P
+
+&Print... (denied)
+&Tlač... (odmietnutá)
+
+&Remember these settings for each document
+Zapamätať si tieto nastavenia pre každý dokument
+
 &Save as\tCtrl-S
 Uložiť ako...\tCtrl-S
+
+&Settings
+Nastavenia
 
 &Skip this version
 Preskočiť túto verziu.
@@ -51,8 +88,14 @@ Preskočiť túto verziu.
 &Visit website
 &Navštíviť webovú stránku
 
+&Yes
+Áno
+
 &Zoom
-&Zväčšenie
+Zväčšenie
+
+(of %d)
+(z %d)
 
 About SumatraPDF
 O programe SumatraPDF
@@ -60,17 +103,53 @@ O programe SumatraPDF
 Act&ual Size\tCtrl-1
 Skutočná veľkosť\tCtrl-1
 
+Advanced
+Pokročilé
+
+All files
+Všetky súbory
+
+Application:
+Program:
+
 Associate with PDF files?
 Asociovať s PDF súbormi?
+
+Author:
+Tvorca:
+
+Automatic
+Automatická
+
+Automatically check for &updates
+Automaticky kontrolovať & aktualizácie
+
+Back\tAlt+Left Arrow
+Naspäť\tAlt+Left Arrow
+
+Book view
+Zobraziť ako knihu
 
 Bookmarks\tF12
 Záložky\tF12
 
+Bytes
+Bajtov
+
+Cancel
+Zrušiť
+
+Cannot print this file
+Tento súbor nie je možné vytlačiť
+
 Change language
-Zmeniť jazyk (Change language)
+Zmeniť jazyk
 
 Continuous
 Priebežne
+
+Continuous book view
+Prebiežný knižný pohľad
 
 Continuous facing
 Dve strany priebežne
@@ -78,8 +157,32 @@ Dve strany priebežne
 Contribute translation
 Prispieť k prekladu programu
 
+Copy Selection\tCtrl-C
+Kopírovať vybrané\tCtrl-C
+
 Could not open Printer
 Nie je možné otvoriť tlačiareň.
+
+Couldn't render the page
+Nepodarilo sa načítať stranu
+
+Created:
+Vytvorený:
+
+Default &Layout:
+Predvolené umiestnenie:
+
+Default &Zoom:
+Predvolená veľkosť
+
+Denied Permissions:
+Odmietnuté povolenia:
+
+Document Properties
+Vlastnosti dokumentu
+
+Download
+Stiahnuť
 
 E&xit\tCtrl-Q
 &Ukončiť\tCtrl-Q
@@ -98,6 +201,15 @@ Dve strany
 
 Failed to save a file
 Zlyhanie pri ukladaní súboru.
+
+File Size:
+Veľksoť súboru:
+
+File:
+Súbor:
+
+Find
+Hľadať
 
 Find Next
 Hľadať ďalšie
@@ -126,14 +238,35 @@ Na šírku obrazovky\tCtrl-2
 Fit Width
 Na šírku obrazovky
 
+Forward\tAlt+Right Arrow
+Dopredu\tAlt+Right Arrow
+
+Found text at page %d
+Text bol nájdený na strane %d
+
 Fullscreen\tCtrl-L
 Na celú obrazovku\tCtrl-L
+
+GB
+GB
 
 Go to page
 Ísť na stranu
 
+Hint: Use the F3 key for finding again
+Rada: Použite klávesu F3 pre ďalšie hľadanie
+
+KB
+KB
+
 Last Page\tEnd
 Posledná strana\tEnd
+
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+Hlavný prehliadač PDF dokumentov nemôže byť zmenený, pokiaľ nie je nainštalovaný
 
 Make SumatraPDF default application for PDF files?
 Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
@@ -143,6 +276,9 @@ Nastaviť SumatraPDF ako predvolený PDF prehliadač
 
 Match case
 Rozlišovať veľké/malé písmená
+
+Modified:
+Upravené:
 
 New version %s is available. Download new version?
 Nová verzia %s je dispozícii. Stiahnuť novú verziu?
@@ -156,17 +292,56 @@ Next Page
 Next Page\tRight Arrow
 Ďaľšia strana\t->
 
+No matches were found
+Nenájdené podľa zodpovedajúcich kritérií
+
 No new version available.
 Nie je k dispozícia nová verzia.
 
+No result found around line %u in file %s
+Nenájdené žiadne výsledky na riadku %u v súbore %s
+
+Number of Pages:
+Počet strán:
+
+OK
+V poriadku
+
 Open
 Otvoriť
+
+Open in &Adobe Reader
+Otvoriť v programe Adobe Reader
+
+P&roperties...\tCtrl-D
+Vlastnosti...\tCtrl-D
+
+PDF Document
+PDF Dokument
+
+PDF Producer:
+Vytvorené v:
+
+PDF Version:
+PDF Verzia:
+
+PDF documents
+PDF dokumenty
+
+Page Size:
+Veľkosť strany:
+
+Page number %u inexistant
+Číslo strany %u neexistuje
 
 Page...\tCtrl-G
 Strana...\tCtrl-G
 
 Page:
 Strana:
+
+Please wait - rendering...
+Prosím počkajte - zobrazovanie...
 
 Previous Page
 Predchádzajúca strana
@@ -177,14 +352,32 @@ Predchádzajúca strana\t<-
 Printing problem.
 Problém pri tlači.
 
+Remember &opened files
+Zapamätaťsi &otvorené súbory
+
 Rotate left\tCtrl-Shift--
 Otočiť vľavo\tCtrl-Shift--
 
 Rotate right\tCtrl-Shift-+
 Otočiť vpravo\tCtrl-Shift-+
 
+Searching %d of %d...
+Vyhľadáva sa %d z/zo %d...
+
+Select content with Ctrl+left mouse button
+Označiť obsah s  Ctrl+ľavé tlačitlo myši
+
+Send by &email...
+Odoslané od &email...
+
 Set inverse search command-line
 Nastaviť inverzné vyhľadávanie
+
+Show pages continuously
+Zobraziť strany priebežne
+
+Show the &bookmarks sidebar when available
+Zobraziť bočný panel záložiek pokiaľ je dostupný
 
 Show toolbar
 Zobraziť panel nástrojov
@@ -192,8 +385,32 @@ Zobraziť panel nástrojov
 Single page
 Jedna strana
 
+Subject:
+Predmet:
+
+SumatraPDF Options
+Nastavenia SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF je váš predvolený prehliadač PDF súborov
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF by teraz mala byť vaším predvolený prehliadačom PDF súborov
+
+Text documents
+Textové dokumenty
+
+Title:
+Názov:
+
+Unknown source file (%s)
+Neznámy zdrojový súbor (%s)
+
 View
 Zobraziť
+
+Warning
+Upozornenie
 
 You have the latest version.
 Používate najnovšiu verziu.
@@ -201,95 +418,33 @@ Používate najnovšiu verziu.
 You have version %s
 Používate verziu %s
 
+Zoom
+Zmeniť veľkosť
+
 Zoom In
 Zvačšiť
 
 Zoom Out
 Zmenšiť
 
+Zoom factor
+Veľkosť zobrazenia
+
+[Changes detected; refreshing] %s
+[Zmeny boli zistené, znovu sa načítava] %s
+
+copying text
+prebieha kopírovanie textu
+
+printing document
+prebieha tlač dokumentu
+
 # Untranslated:
-#&Custom Zoom...
-#&Find what:
 #&Go to page:
-#&Magnification:
-#&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#&Remember these settings for each document
-#&Settings
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Author:
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
-#Bytes
-#Cancel
-#Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Download
-#File Size:
-#File:
-#Find
-#Forward\tAlt+Right Arrow
-#Found text at page %d
-#GB
-#Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
-#Modified:
-#No matches were found
-#No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties...\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Please wait - rendering...
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
-#Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
 
