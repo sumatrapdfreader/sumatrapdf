@@ -1142,6 +1142,7 @@ void fz_accelerate(void);
 void fz_acceleratearch(void);
 
 void fz_decodetile(fz_pixmap *pix, float *decode);
+void fz_decodeindexedtile(fz_pixmap *pix, float *decode, int maxval);
 void fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, int stride, int scale);
 
 void fz_blendpixmapswithmode(fz_pixmap *dst, fz_pixmap *src, fz_blendmode blendmode);

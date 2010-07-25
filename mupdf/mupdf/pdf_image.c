@@ -53,7 +53,7 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	if (img->h == 0)
 		fz_warn("image height is zero");
 	if (img->bpc == 0)
-		fz_warn("image bit depth is zero"); /* okay for JPX */
+		img->bpc = 8; /* for JPX */
 
 	obj = fz_dictgetsa(dict, "ColorSpace", "CS");
 	if (obj)
@@ -90,20 +90,9 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	}
 	else
 	{
+		float maxval = img->indexed ? (1 << img->bpc) - 1 : 1;
 		for (i = 0; i < img->n * 2; i++)
-		{
-			if (i & 1)
-			{
-				if (img->indexed)
-					img->decode[i] = (1 << img->bpc) - 1;
-				else
-					img->decode[i] = 1;
-			}
-			else
-			{
-				img->decode[i] = 0;
-			}
-		}
+			img->decode[i] = i & 1 ? maxval : 0;
 	}
 
 	/* Not allowed for inline images */
@@ -116,7 +105,7 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 			pdf_dropimage(img);
 			return fz_rethrow(error, "cannot load image mask/softmask");
 		}
-		img->mask->imagemask = 1; /* TODO: this triggers bit inversion later. should we? */
+		img->mask->imagemask = 1;
 		if (img->mask->colorspace)
 		{
 			fz_dropcolorspace(img->mask->colorspace);
@@ -137,12 +126,6 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 			fz_dropcolorspace(img->colorspace);
 			img->colorspace = nil;
 		}
-	}
-	else
-	{
-		/* add an entry for alpha channel */
-		img->decode[img->n * 2] = 0;
-		img->decode[img->n * 2 + 1] = 1;
 	}
 
 	img->stride = (img->w * img->n * img->bpc + 7) / 8;
@@ -249,7 +232,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 }
 
 static void
-pdf_maskcolorkey(fz_pixmap *pix, int n, int *colorkey, int scale)
+pdf_maskcolorkey(fz_pixmap *pix, int n, int *colorkey)
 {
 	unsigned char *p = pix->samples;
 	int len = pix->w * pix->h;
@@ -258,7 +241,7 @@ pdf_maskcolorkey(fz_pixmap *pix, int n, int *colorkey, int scale)
 	{
 		t = 1;
 		for (k = 0; k < n; k++)
-			if (p[k] < colorkey[k * 2] * scale || p[k] > colorkey[k * 2 + 1] * scale)
+			if (p[k] < colorkey[k * 2] || p[k] > colorkey[k * 2 + 1])
 				t = 0;
 		if (t)
 			for (k = 0; k < pix->n; k++)
@@ -276,29 +259,26 @@ pdf_loadtile(pdf_image *img /* ...bbox/y+h should go here... */)
 	tile = fz_newpixmap(img->colorspace, 0, 0, img->w, img->h);
 
 	scale = 1;
-	switch (img->bpc)
+	if (!img->indexed)
 	{
-	case 1: scale = 255; break;
-	case 2: scale = 85; break;
-	case 4: scale = 17; break;
+		switch (img->bpc)
+		{
+		case 1: scale = 255; break;
+		case 2: scale = 85; break;
+		case 4: scale = 17; break;
+		}
 	}
 
 	fz_unpacktile(tile, img->samples->bp, img->n, img->bpc, img->stride, scale);
 
 	if (img->usecolorkey)
-		pdf_maskcolorkey(tile, img->n, img->colorkey, scale);
+		pdf_maskcolorkey(tile, img->n, img->colorkey);
 
 	if (img->indexed)
 	{
 		fz_pixmap *conv;
-		float decode[4];
 
-		decode[0] = img->decode[0] * scale / 255;
-		decode[1] = img->decode[1] * scale / 255;
-		decode[2] = img->decode[2];
-		decode[3] = img->decode[3];
-
-		fz_decodetile(tile, decode);
+		fz_decodeindexedtile(tile, img->decode, (1 << img->bpc) - 1);
 
 		conv = pdf_expandindexedpixmap(tile);
 		fz_droppixmap(tile);

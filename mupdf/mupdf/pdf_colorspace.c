@@ -222,10 +222,11 @@ pdf_expandindexedpixmap(fz_pixmap *src)
 		for (x = 0; x < src->w; x++)
 		{
 			int v = *s++;
+			int a = *s++;
 			v = MIN(v, high);
 			for (k = 0; k < n; k++)
-				*d++ = lookup[v * n + k];
-			*d++ = *s++;
+				*d++ = fz_mul255(lookup[v * n + k], a);
+			*d++ = a;
 		}
 	}
 

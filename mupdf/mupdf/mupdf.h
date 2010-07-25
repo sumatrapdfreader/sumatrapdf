@@ -267,7 +267,7 @@ struct pdf_image_s
 	pdf_image *mask; /* explicit mask/softmask image */
 	int usecolorkey; /* color-keyed masking */
 	int colorkey[FZ_MAXCOLORS * 2];
-	float decode[FZ_MAXCOLORS * 2 + 2];
+	float decode[FZ_MAXCOLORS * 2];
 	int stride;
 	fz_buffer *samples;
 };
