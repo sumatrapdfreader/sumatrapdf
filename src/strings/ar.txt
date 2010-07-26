@@ -8,30 +8,79 @@ Lang: ar Arabic (الْعَرَبيّة)
 
 Contributor: Mohammed Al-Foulad (http://www.mbsee.info)
 Contributor: Boubker Talibi
+Contributor: Felark (felark@hotmail.com)
 
 &About
 حول البرنامج
 
+&Check for new version
+&تحقق من وجود تحديثات
+
 &Close\tCtrl-W
-&إغلاق\tCtrl-W
+&إنهاء\tCtrl-W
+
+&Custom Zoom...
+&تنسيق التقريب
+
+&Don't ask me again
+&لا تسألني مرةً أخرى
 
 &File
-ملف
+&ملف
+
+&Find what:
+&ابحث عن:
 
 &Go To
 &الذهاب إلى
 
+&Go to page:
+&انتقل إلى صفحة
+
 &Help
 &مساعدة
+
+&Magnification:
+&التقريب
+
+&Manual
+&يدوي
+
+&Match case
+&مطابقة
+
+&No
+&كلا
+
+&No, thanks
+&كلا ، شكراً
 
 &Open\tCtrl-O
 &فتح\tCtrl-O
 
+&Options...
+&خيارات
+
+&Password:
+&كلمة المرور
+
 &Print\tCtrl-P
 &طباعة\tCtrl-P
 
+&Print... (denied)
+&تم رفض الطباعة
+
+&Remember these settings for each document
+&تذكر هذه الإعدادات لكل مستند
+
 &Save as\tCtrl-S
-&حفظ كـ\tCtrl-S
+&حفظ باسم...\tCtrl-S
+
+&Settings
+&الإعدادات
+
+&Skip this version
+&تخطي هذا الإصدار
 
 &View
 &العرض
@@ -39,8 +88,14 @@ Contributor: Boubker Talibi
 &Visit website
 &زيارة موقع البرنامج
 
+&Yes
+&نعم
+
 &Zoom
 التقريب
+
+(of %d)
+(من %d)
 
 About SumatraPDF
 SumatraPDF حول برنامج
@@ -48,8 +103,56 @@ SumatraPDF حول برنامج
 Act&ual Size\tCtrl-1
 الحجم الحقيقي\tCtrl-1
 
+Advanced
+متقدم
+
+All files
+كل الملفات
+
+Application:
+التطبيق
+
+Associate with PDF files?
+ربط مع ملفات البي دي إف
+
+Author:
+المؤلف
+
+Automatic
+آلي
+
+Automatically check for &updates
+تحقق من التحديثات آلياً
+
+Back\tAlt+Left Arrow
+الخلف\tAlt+Left Arrow
+
+Book view
+عرض الكتاب
+
+Bookmarks\tF12
+المفضلة\tF12
+
+Bytes
+بايتات
+
+Cancel
+اإلغاء
+
+Cannot print this file
+لايمكن طباعة هذا الملف
+
+Cannot start inverse search command. Please check the command line in the settings.
+لايمكن البدء في البحث في الاتجاه المعاكس. يرجى التحقق من الأمر في الإعدادات
+
+Change language
+تغيير اللغة
+
 Continuous
 صفحات متتالية
+
+Continuous book view
+عرض الكتاب باستمرار
 
 Continuous facing
 صفحات متقابلة متتالية
@@ -57,11 +160,44 @@ Continuous facing
 Contribute translation
 ساهم في ترجمة البرنامج
 
+Copy Selection\tCtrl-C
+نسخ المحدد\tCtrl-C
+
 Could not open Printer
 تعذر فتح الطابعة
 
+Couldn't initialize printer
+لايمكن تشغيل الطابعة
+
+Couldn't render the page
+لايمكن تجزئة هذه الصفحة
+
+Created:
+الإنشاء
+
+Default &Layout:
+الشكل الافتراضي
+
+Default &Zoom:
+التقريب الافتراضي
+
+Denied Permissions:
+لاتوجد امتيازات
+
+Document Properties
+خصائص المستند
+
+Download
+تحميل
+
 E&xit\tCtrl-Q
 إغلاق البرنامج\tCtrl-Q
+
+Enter password
+ادخل كلمة المرور
+
+Enter password for %s
+كلمة المرور لـ %s
 
 Error loading PDF file.
 هناك خطأ في تشغيل الملف
@@ -71,6 +207,18 @@ Facing
 
 Failed to save a file
 فشل حفظ الملف
+
+File Size:
+حجم الملف
+
+File:
+الملف
+
+Find
+بحث
+
+Find Next
+بحث عن التالي
 
 Find Previous
 البحث عن السابق
@@ -96,11 +244,38 @@ Fit Widt&h\tCtrl-2
 Fit Width
 مناسب لعرض الشاشة
 
+Forward\tAlt+Right Arrow
+لخلف\tAlt+السهم الأيمن
+
+Found text at page %d
+تم العثور على النص في صفحة %d
+
 Fullscreen\tCtrl-L
 بحجم الشاشة\tCtrl-L
 
+GB
+ج.ب
+
+Go to page
+اذهب لصفحة
+
+Hint: Use the F3 key for finding again
+للبحث مرةً أخرى ، اضغط F3
+
+KB
+ك.ب
+
 Last Page\tEnd
 الصفحة الأخيرة\tEnd
+
+MB
+م.ب
+
+Main PDF reader can't be changed in portable mode
+لايمكن تغيير قاريء ملفات البي دي إف في وضح النسخة المحمولة
+
+Make SumatraPDF default application for PDF files?
+هل تريد جعل قاريء سومطره للبي دي إف ، التطبيق الافتراضي؟
 
 Make SumatraPDF my main PDF reader
 PDF جعل هذا البرنامج القارىء الرئيسي لملفات
@@ -108,17 +283,77 @@ PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 Match case
 مناسبة الخط
 
+Modified:
+التعديل
+
+New version %s is available. Download new version?
+يوجد نسخة جديدة    %s . هل تريد تحميلها؟
+
+New version available.
+يوجد نسخة جديدة
+
 Next Page
 الصفحة التالية
 
 Next Page\tRight Arrow
 الصفحة التالية\t->
 
+No matches were found
+لم يتم العثور على نتائج
+
+No new version available.
+لايوجد نسخة جديدة
+
+No result found around line %u in file %s
+لم يتم العثور على نتائج حول السطر %u في الملف %s
+
+No synchronization file found
+لاتوجد مزامنة للملف
+
+No synchronization info at this position
+لاتوجد معلومات المزامنة في هذا الموقع
+
+Number of Pages:
+عدد الصفحات
+
+OK
+حسناً
+
 Open
 فتح
 
+Open in &Adobe Reader
+فتح الملف بـ أدوبي ريدر
+
+P&roperties...\tCtrl-D
+الخصائص...\tCtrl-D
+
+PDF Document
+مستند البي دي إف
+
+PDF Producer:
+مُنتِج البي دي إف
+
+PDF Version:
+إصدار البي دبي إف
+
+PDF documents
+مستندات البي دي إف
+
+Page Size:
+حجم الصفحة
+
+Page number %u inexistant
+رقم الصفحة الحالية %u
+
 Page...\tCtrl-G
 صفحة محددة\tCtrl-G
+
+Page:
+الصفحة
+
+Please wait - rendering...
+الرجاء الانتظار ، جاري التجزئة
 
 Previous Page
 الصفحة السابقة
@@ -129,11 +364,32 @@ Previous Page\tLeft Arrow
 Printing problem.
 يوجد مشكلة في الطباعة
 
+Remember &opened files
+تذكر الملفات المفتوحة
+
 Rotate left\tCtrl-Shift--
 دوران لليسار\tCtrl-Shift--
 
 Rotate right\tCtrl-Shift-+
 دوران لليمين\tCtrl-Shift-+
+
+Searching %d of %d...
+يتم البحث %d من %d...
+
+Select content with Ctrl+left mouse button
+اختر المحتوى باضغط على زر الفأرة الأيسر و Ctrl
+
+Send by &email...
+إرسال بلإيميل
+
+Set inverse search command-line
+أمر البحث عن نص باتجاه معاكس
+
+Show pages continuously
+عرض الصفحات باستمرار
+
+Show the &bookmarks sidebar when available
+عرض المفضلة في الشريط الجانبي عند وجودها
 
 Show toolbar
 عرض شريط الأدوات
@@ -141,8 +397,47 @@ Show toolbar
 Single page
 صفحة واحدة
 
+Source file %s has no synchronization point
+الملف المصدر %s لم تتم مزامنته عند هذه النقطة
+
+Subject:
+الموضوع
+
+SumatraPDF Options
+خيارات قارئ سومطره للبي دي إف
+
+SumatraPDF is your main PDF reader
+قارئ سومطره للبي دي إف هو الافتراضي
+
+SumatraPDF should now be your main PDF reader
+فارئ سومطره للبي دي إف
+
+Synchronization file cannot be opened
+لايمكن فتح مزامنة الملف
+
+Text documents
+مستند نصي
+
+Title:
+العنوان
+
+Unknown source file (%s)
+ملف مصدري غير معروف (%s)
+
 View
 العرض
+
+Warning
+تحذير
+
+You have the latest version.
+لديك آخر نسخة
+
+You have version %s
+لديك النسخة %s
+
+Zoom
+التقريب
 
 Zoom In
 تكبير
@@ -150,108 +445,18 @@ Zoom In
 Zoom Out
 تصغير
 
+Zoom factor
+معايرة التقريب
+
+[Changes detected; refreshing] %s
+جاري التحديث بعد التغييرات %s
+
+copying text
+يتم حالياً نسخ النص
+
+printing document
+تتم حالياً الطباعة
+
 # Untranslated:
-#&Check for new version
-#&Custom Zoom...
-#&Don't ask me again
-#&Find what:
-#&Go to page:
-#&Magnification:
-#&Manual
-#&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
 #&Print with %s...\tCtrl-P
-#&Print... (denied)
-#&Remember these settings for each document
-#&Settings
-#&Skip this version
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Associate with PDF files?
-#Author:
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
-#Bookmarks\tF12
-#Bytes
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Change language
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#File Size:
-#File:
-#Find
-#Find Next
-#Forward\tAlt+Right Arrow
-#Found text at page %d
-#GB
-#Go to page
-#Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
-#Make SumatraPDF default application for PDF files?
-#Modified:
-#New version %s is available. Download new version?
-#New version available.
-#No matches were found
-#No new version available.
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties...\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Page:
-#Please wait - rendering...
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Set inverse search command-line
-#Show pages continuously
-#Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
 
