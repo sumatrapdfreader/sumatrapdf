@@ -5,6 +5,8 @@ fz_newbuffer(int size)
 {
 	fz_buffer *b;
 
+	size = size > 1 ? size : 16;
+
 	b = fz_malloc(sizeof(fz_buffer));
 	b->refs = 1;
 	b->ownsdata = 1;

@@ -946,6 +946,28 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int num, int gen)
 	return fz_okay;
 }
 
+/* Replace numbered object -- for use by pdfclean and similar tools */
+void
+pdf_updateobject(pdf_xref *xref, int num, int gen, fz_obj *newobj)
+{
+	pdf_xrefentry *x;
+
+	if (num < 0 || num >= xref->len)
+	{
+		fz_warn("object out of range (%d %d R); xref size %d", num, gen, xref->len);
+		return;
+	}
+
+	x = &xref->table[num];
+
+	if (x->obj)
+		fz_dropobj(x->obj);
+
+	x->obj = fz_keepobj(newobj);
+	x->type = 'n';
+	x->ofs = 0;
+}
+
 /*
  * Convenience function to open a file then call pdf_openxrefwithstream.
   */

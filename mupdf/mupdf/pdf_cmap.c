@@ -181,7 +181,7 @@ addtable(pdf_cmap *cmap, int value)
 {
 	if (cmap->tlen + 1 > cmap->tcap)
 	{
-		cmap->tcap = cmap->tcap == 0 ? 256 : (cmap->tcap * 3) / 2;
+		cmap->tcap = cmap->tcap > 1 ? (cmap->tcap * 3) / 2 : 256;
 		cmap->table = fz_realloc(cmap->table, cmap->tcap * sizeof(unsigned short));
 	}
 	cmap->table[cmap->tlen++] = value;
@@ -195,7 +195,7 @@ addrange(pdf_cmap *cmap, int low, int high, int flag, int offset)
 {
 	if (cmap->rlen + 1 > cmap->rcap)
 	{
-		cmap->rcap = cmap->rcap == 0 ? 256 : (cmap->rcap * 3) / 2;
+		cmap->rcap = cmap->rcap > 1 ? (cmap->rcap * 3) / 2 : 256;
 		cmap->ranges = fz_realloc(cmap->ranges, cmap->rcap * sizeof(pdf_range));
 	}
 	cmap->ranges[cmap->rlen].low = low;

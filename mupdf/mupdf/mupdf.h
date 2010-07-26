@@ -150,6 +150,7 @@ struct pdf_xrefentry_s
 
 fz_error pdf_cacheobject(pdf_xref *, int num, int gen);
 fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
+void pdf_updateobject( pdf_xref *xref, int num, int gen, fz_obj *newobj);
 
 int pdf_isstream(pdf_xref *xref, int num, int gen);
 fz_filter * pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj, int length);

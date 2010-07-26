@@ -30,7 +30,7 @@ fz_newdict(int initialcap)
 
 	obj->u.d.sorted = 1;
 	obj->u.d.len = 0;
-	obj->u.d.cap = initialcap > 0 ? initialcap : 10;
+	obj->u.d.cap = initialcap > 1 ? initialcap : 10;
 
 	obj->u.d.items = fz_malloc(sizeof(fz_keyval) * obj->u.d.cap);
 	for (i = 0; i < obj->u.d.cap; i++)

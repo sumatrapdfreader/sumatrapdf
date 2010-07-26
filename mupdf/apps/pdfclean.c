@@ -171,9 +171,12 @@ static void renumberxref(void)
 	{
 		if (newnumlist[num] >= 0)
 		{
-			xref->table[newnumlist[num]] = oldxreflist[num];
 			uselist[newnumlist[num]] = 1;
-			xref->table[num].obj = nil;
+			if (newnumlist[num] != num)
+			{
+				xref->table[newnumlist[num]] = oldxreflist[num];
+				xref->table[num].obj = nil;
+			}
 		}
 	}
 

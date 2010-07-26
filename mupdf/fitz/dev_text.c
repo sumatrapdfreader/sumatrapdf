@@ -69,7 +69,7 @@ fz_addtextcharimp(fz_textspan *span, int c, fz_bbox bbox)
 {
 	if (span->len + 1 >= span->cap)
 	{
-		span->cap = span->cap ? (span->cap * 3) / 2 : 80;
+		span->cap = span->cap > 1 ? (span->cap * 3) / 2 : 80;
 		span->text = fz_realloc(span->text, sizeof(fz_textchar) * span->cap);
 	}
 	span->text[span->len].c = c;
