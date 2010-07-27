@@ -888,13 +888,12 @@ pdf_cacheobject(pdf_xref *xref, int num, int gen)
 	if (x->obj)
 		return fz_okay;
 
-	if (x->type == 'f' || x->type == 'd')
+	if (x->type == 'f')
 	{
 		x->obj = fz_newnull();
 		return fz_okay;
 	}
-
-	if (x->type == 'n')
+	else if (x->type == 'n')
 	{
 		error = fz_seek(xref->file, x->ofs, 0);
 		if (error)
@@ -911,7 +910,6 @@ pdf_cacheobject(pdf_xref *xref, int num, int gen)
 		if (xref->crypt)
 			pdf_cryptobj(xref->crypt, x->obj, num, gen);
 	}
-
 	else if (x->type == 'o')
 	{
 		if (!x->obj)
@@ -919,7 +917,13 @@ pdf_cacheobject(pdf_xref *xref, int num, int gen)
 			error = pdf_loadobjstm(xref, x->ofs, 0, xref->scratch, sizeof xref->scratch);
 			if (error)
 				return fz_rethrow(error, "cannot load object stream containing object (%d %d R)", num, gen);
+			if (!x->obj)
+				return fz_throw("object (%d %d R) was not found in its object stream", num, gen);
 		}
+	}
+	else
+	{
+		return fz_throw("assert: corrupt xref struct");
 	}
 
 	return fz_okay;
@@ -934,14 +938,9 @@ pdf_loadobject(fz_obj **objp, pdf_xref *xref, int num, int gen)
 	if (error)
 		return fz_rethrow(error, "cannot load object (%d %d R) into cache", num, gen);
 
-	if (xref->table[num].obj)
-		*objp = fz_keepobj(xref->table[num].obj);
-	else
-	{
-		fz_warn("cannot load missing object (%d %d R), assuming null object", num, gen);
-		xref->table[num].obj = fz_newnull();
-		*objp = fz_keepobj(xref->table[num].obj);
-	}
+	assert(xref->table[num].obj);
+
+	*objp = fz_keepobj(xref->table[num].obj);
 
 	return fz_okay;
 }

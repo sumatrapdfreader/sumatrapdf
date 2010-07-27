@@ -257,12 +257,10 @@ pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj, int length)
 	filters = fz_dictgetsa(stmobj, "Filter", "F");
 	params = fz_dictgetsa(stmobj, "DecodeParms", "DP");
 
-	if (filters)
-	{
-		if (fz_isname(filters))
-			return buildonefilter(xref, filters, params, 0, 0);
+	if (fz_isname(filters))
+		return buildonefilter(xref, filters, params, 0, 0);
+	if (fz_arraylen(filters) > 0)
 		return buildfilterchain(xref, nil, filters, params, 0, 0);
-	}
 
 	return fz_newnullfilter(length);
 }

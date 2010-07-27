@@ -74,7 +74,6 @@ fz_newindirect(int num, int gen, pdf_xref *xref)
 	o->u.r.num = num;
 	o->u.r.gen = gen;
 	o->u.r.xref = xref;
-	o->u.r.obj = nil;
 	return o;
 }
 
@@ -93,23 +92,11 @@ fz_dropobj(fz_obj *o)
 	if (--o->refs == 0)
 	{
 		if (o->kind == FZ_ARRAY)
-		{
 			fz_freearray(o);
-		}
 		else if (o->kind == FZ_DICT)
-		{
 			fz_freedict(o);
-		}
-		else if (o->kind == FZ_INDIRECT)
-		{
-			if (o->u.r.obj)
-				fz_dropobj(o->u.r.obj);
-			fz_free(o);
-		}
 		else
-		{
 			fz_free(o);
-		}
 	}
 }
 
@@ -234,22 +221,23 @@ int fz_togen(fz_obj *obj)
 
 fz_obj *fz_resolveindirect(fz_obj *ref)
 {
-	int error;
-
 	if (fz_isindirect(ref))
 	{
-		if (!ref->u.r.obj && ref->u.r.xref)
+		pdf_xref *xref = ref->u.r.xref;
+		int num = fz_tonum(ref);
+		int gen = fz_togen(ref);
+		if (xref)
 		{
-			error = pdf_loadobject(&ref->u.r.obj, ref->u.r.xref, fz_tonum(ref), fz_togen(ref));
+			fz_error error = pdf_cacheobject(xref, num, gen);
 			if (error)
 			{
-				fz_catch(error, "cannot resolve reference (%d %d R); ignoring error", fz_tonum(ref), fz_togen(ref));
-				ref->u.r.obj = fz_keepobj(ref);
+				fz_catch(error, "cannot load object (%d %d R) into cache", num, gen);
+				return ref;
 			}
+			if (xref->table[num].obj)
+				return xref->table[num].obj;
 		}
-		return ref->u.r.obj;
 	}
-
 	return ref;
 }
 

@@ -377,7 +377,6 @@ struct fz_obj_s
 			int num;
 			int gen;
 			struct pdf_xref_s *xref;
-			fz_obj *obj;
 		} r;
 	} u;
 };
