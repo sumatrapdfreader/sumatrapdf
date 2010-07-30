@@ -208,13 +208,17 @@ pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 			gstate->ctm = fz_concat(fz_translate(x * pat->xstep, y * pat->ystep), ptm);
 			csi->topctm = gstate->ctm;
 			error = pdf_runcsibuffer(csi, pat->resources, pat->contents);
-			if (error)
-				fz_catch(error, "cannot render pattern tile");
 			while (oldtop < csi->gtop)
 				pdf_grestore(csi);
+			if (error)
+			{
+				fz_catch(error, "cannot render pattern tile");
+				goto cleanup;
+			}
 		}
 	}
 
+cleanup:
 	csi->topctm = oldtopctm;
 
 	pdf_grestore(csi);
