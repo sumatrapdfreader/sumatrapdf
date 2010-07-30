@@ -12,6 +12,7 @@ Contributor: Stephan Paternotte
 Contributor: Marco La Fors
 Contributor: Wim Benes
 Contributor: Ricki Yani Setiawan
+Contributor: Jaap Ginder
 
 &About
 &Over
@@ -69,6 +70,12 @@ Hoofd-/kleine letters toepassen
 
 &Print\tCtrl-P
 &Afdrukken\tCtrl-P
+
+&Print with %s...\tCtrl-P
+Afdrukken met %s...\tCtrl-P
+
+&Print... (denied)
+Afdrukken... (geweigerd)
 
 &Remember these settings for each document
 &Bewaar deze instellingen voor elk document
@@ -128,7 +135,7 @@ Back\tAlt+Left Arrow
 Terug\tAlt+<-
 
 Book view
-Boekbeeld
+Boekaanzicht
 
 Bookmarks\tF12
 Bladwijzers\tF12
@@ -146,13 +153,13 @@ Cannot start inverse search command. Please check the command line in the settin
 Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
 
 Change language
-Taal kiezen (Change language)
+Wijzig taal
 
 Continuous
 Doorlopend
 
 Continuous book view
-Doorgaand boekbeeld
+Doorlopend boekaanzicht
 
 Continuous facing
 Dubbele pagina doorlopend
@@ -170,16 +177,19 @@ Couldn't initialize printer
 Kan de printer niet initialiseren
 
 Couldn't render the page
-Deze pagina kan niet worden weergegeven
+Kan deze pagina niet weergegeven
 
 Created:
 Gemaakt:
 
 Default &Layout:
-Standaard &Layout:
+Standaard opmaak:
 
 Default &Zoom:
 Standaard &Zoom:
+
+Denied Permissions:
+Geweigerde toegang:
 
 Document Properties
 Documenteigenschappen
@@ -314,7 +324,7 @@ Number of Pages:
 Aantal pagina's:
 
 OK
-Oke
+OK
 
 Open
 Openen
@@ -362,7 +372,7 @@ Printing problem.
 Probleem bij het afdrukken.
 
 Remember &opened files
-Herinner ge&opende bestanden
+Onthoud ge&opende bestanden
 
 Rotate left\tCtrl-Shift--
 Linksom draaien\tCtrl-Shift--
@@ -383,7 +393,7 @@ Set inverse search command-line
 Omgekeerde zoekrichting instellen
 
 Show pages continuously
-Toon pagina's continue
+Toon pagina's doorlopend
 
 Show the &bookmarks sidebar when available
 Toon de &bladwijzerwerkbalk indien beschikbaar
@@ -396,6 +406,9 @@ Enkele pagina
 
 Source file %s has no synchronization point
 Bestand %s heeft geen synchronisatiepunt
+
+Subject:
+Onderwerp:
 
 SumatraPDF Options
 SumatraPDF Opties
@@ -445,11 +458,9 @@ Zoomfactor
 [Changes detected; refreshing] %s
 [Bestand gewijzigd; verversen] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
+copying text
+kopieren tekst
+
+printing document
+afdrukken bestand
 
