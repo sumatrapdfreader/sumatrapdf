@@ -169,7 +169,9 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 			popmask = 1;
 
 			csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity, nil, nil);
-			pdf_runxobject(csi, nil, softmask);
+			error = pdf_runxobject(csi, nil, softmask);
+			if (error)
+				return fz_rethrow(error, "cannot run softmask");
 			csi->dev->endmask(csi->dev->user);
 
 			pdf_dropxobject(softmask);

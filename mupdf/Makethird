@@ -80,6 +80,10 @@ THIRD_LIBS += $(JPEG_LIB)
 THIRD_INCS += -I$(jpeg_dir)
 LIBS := $(filter-out -ljpeg, $(LIBS))
 
+# jconfig.h does not exist in the pristine source
+$(jpeg_dir)/jconfig.h:
+	cp $(jpeg_dir)/jconfig.txt $(jpeg_dir)/jconfig.h
+
 JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jaricom.c \
 	jcapimin.c \
@@ -129,6 +133,7 @@ JPEG_SRC=$(addprefix $(jpeg_dir)/, \
 	jmemansi.c)
 JPEG_OBJ=$(JPEG_SRC:$(jpeg_dir)/%.c=$(OBJDIR)/jpeg_%.o)
 JPEG_LIB=$(OBJDIR)/libjpeg.a
+$(JPEG_OBJ): $(jpeg_dir)/jconfig.h
 $(JPEG_LIB): $(JPEG_OBJ)
 	 $(AR_CMD)
 $(OBJDIR)/jpeg_%.o: $(jpeg_dir)/%.c

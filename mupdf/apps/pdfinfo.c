@@ -736,13 +736,13 @@ printinfo(char *filename, int show, int page)
 					cs[3 + j] = '\0';
 				}
 				if (strstr(cs, "ICC"))
-					fz_strlcpy(cs, "ICC", 3);
+					fz_strlcpy(cs, "ICC", 4);
 				if (strstr(cs, "Indexed"))
-					fz_strlcpy(cs, "Idx", 3);
+					fz_strlcpy(cs, "Idx", 4);
 				if (strstr(cs, "Pattern"))
-					fz_strlcpy(cs, "Pat", 3);
+					fz_strlcpy(cs, "Pat", 4);
 				if (strstr(cs, "Separation"))
-					fz_strlcpy(cs, "Sep", 3);
+					fz_strlcpy(cs, "Sep", 4);
 			}
 			if (image[i].u.image.altcs)
 			{
@@ -755,13 +755,13 @@ printinfo(char *filename, int show, int page)
 					altcs[j + 6] = '\0';
 				}
 				if (strstr(altcs, "ICC"))
-					fz_strlcpy(altcs, "ICC", 3);
+					fz_strlcpy(altcs, "ICC", 4);
 				if (strstr(altcs, "Indexed"))
-					fz_strlcpy(altcs, "Idx", 3);
+					fz_strlcpy(altcs, "Idx", 4);
 				if (strstr(altcs, "Pattern"))
-					fz_strlcpy(altcs, "Pat", 3);
+					fz_strlcpy(altcs, "Pat", 4);
 				if (strstr(altcs, "Separation"))
-					fz_strlcpy(altcs, "Sep", 3);
+					fz_strlcpy(altcs, "Sep", 4);
 			}
 
 			printf(" ] %dx%d %dbpc %s%s%s (%d %d R)\n",
