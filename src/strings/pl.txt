@@ -9,29 +9,77 @@ Lang: pl Polish (Polski)
 &About
 O programie
 
+&Check for new version
+&Sprawdź w poszukiwaniu nowej wersji
+
 &Close\tCtrl-W
 &Zamknij\tCtrl-W
+
+&Custom Zoom...
+&Dopasuj powiększenie...
+
+&Don't ask me again
+&Nie pytaj ponownie
 
 &File
 Plik
 
+&Find what:
+&Szukaj:
+
 &Go To
 Idź do
+
+&Go to page:
+&Idź do strony:
 
 &Help
 &Pomoc
 
+&Magnification:
+&Powiększenie
+
 &Manual
-Instrukcja obslugi
+Instrukcja obsługi
+
+&Match case
+&Dopasuj przypadki
+
+&No
+&Nie
+
+&No, thanks
+&Nie, dziękuję
 
 &Open\tCtrl-O
 Otwórz\tCtrl-O
 
+&Options...
+&Opcje...
+
+&Password:
+&Hasło
+
 &Print\tCtrl-P
 Drukuj\tCtrl-P
 
+&Print with %s...\tCtrl-P
+&Zapisz z %s...\tCtrl-P
+
+&Print... (denied)
+&Drukuj... (odmowa)
+
+&Remember these settings for each document
+&Zapamiętaj te ustawienia dla każdego dokumentu
+
 &Save as\tCtrl-S
 Zapisz jako\tCtrl-S
+
+&Settings
+&Ustawienia
+
+&Skip this version
+&Pomiń tę wersję
 
 &View
 &Widok
@@ -39,8 +87,14 @@ Zapisz jako\tCtrl-S
 &Visit website
 Strona www
 
+&Yes
+&Tak
+
 &Zoom
 Powiększenie
+
+(of %d)
+(z %d)
 
 About SumatraPDF
 O programie
@@ -48,23 +102,101 @@ O programie
 Act&ual Size\tCtrl-1
 Prawdziwy rozmiar\tCtrl-1
 
+Advanced
+Zaawansowane
+
+All files
+Wszystkie pliki
+
+Application:
+Aplikacja:
+
+Associate with PDF files?
+Skojarzyć z plikami PDF?
+
+Author:
+Autor:
+
+Automatic
+Automatycznie
+
+Automatically check for &updates
+Automatycznie sprawdzaj aktualizacje
+
+Back\tAlt+Left Arrow
+Wstecz\tAlt+Kewa strzałka
+
+Book view
+Widok książki
+
+Bookmarks\tF12
+Zakładki\tF12
+
+Bytes
+Bajtów
+
+Cancel
+Anuluj
+
+Cannot print this file
+Nie można wydrukować tego pliku
+
+Cannot start inverse search command. Please check the command line in the settings.
+Nie można uruchomić polecenia odwrotnego wyszukiwania. Sprawdź z lini poleceń w ustawieniach.
+
 Change language
 Zmien język (Change language)
 
 Continuous
 Ciągły
 
+Continuous book view
+Kontynuuj widok książki
+
 Continuous facing
 Ciągły na przeciwko
 
 Contribute translation
-Pomóż przy translacji
+Pomóż przy tłumaczeniu
+
+Copy Selection\tCtrl-C
+Kopiuj zaznaczone\tCtrl-C
 
 Could not open Printer
 Drukarka niedostępna.
 
+Couldn't initialize printer
+Nie można zinicjalizować drukarki
+
+Couldn't render the page
+Nie można zrenderować strony
+
+Created:
+Utworzone:
+
+Default &Layout:
+Domyślny &układ:
+
+Default &Zoom:
+Domyślne &powiększenie:
+
+Denied Permissions:
+Dostęp zablokowany:
+
+Document Properties
+Właściwości dokumentu
+
+Download
+Pobierz
+
 E&xit\tCtrl-Q
 Wyjdź\tCtrl-Q
+
+Enter password
+Podaj hasło
+
+Enter password for %s
+Podaj hasło dla %s
 
 Error loading PDF file.
 Problem przy otwarzaniu pliku.
@@ -74,6 +206,21 @@ Na przeciwko
 
 Failed to save a file
 Problem przy zapisywaniu pliku.
+
+File Size:
+Rozmiar pliku:
+
+File:
+Plik:
+
+Find
+Szukaj
+
+Find Next
+Szukaj następny
+
+Find Previous
+Szukaj poprzedni
 
 Find...\tCtrl-F
 Szukaj...\tCtrl-F
@@ -96,14 +243,53 @@ Dopasuj do szerokości\tCtrl-2
 Fit Width
 Dopasuj do szerokości
 
+Forward\tAlt+Right Arrow
+Dalej \tAlt+Prawa strzałka
+
+Found text at page %d
+Znaleziono tekst na stronie %d
+
 Fullscreen\tCtrl-L
 Na cały ekran\tCtrl-L
+
+GB
+GB
+
+Go to page
+Idź do strony
+
+Hint: Use the F3 key for finding again
+Wskazówka: Użyj klawisza F3, aby wyszukać ponownie
+
+KB
+KB
 
 Last Page\tEnd
 Ostatnia strona\tEnd
 
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+Główny czytnik PDF nie może zostać zmieniony na tryb przenośny
+
+Make SumatraPDF default application for PDF files?
+Ustawić SumatraPDF jako domyślną aplikację dla plików PDF?
+
 Make SumatraPDF my main PDF reader
-Zrób domyślnym programem dla PDF
+Ustaw SumatraPDF jako domyślny czytnik PDF
+
+Match case
+Dopasuj przypadki
+
+Modified:
+Zmodyfikowano:
+
+New version %s is available. Download new version?
+Nowa wersja %s jest dostępna. Pobrać nową wersję?
+
+New version available.
+Nowa wersja jest dostępna.
 
 Next Page
 Następna strona
@@ -111,14 +297,62 @@ Następna strona
 Next Page\tRight Arrow
 Następna strona\t->
 
+No matches were found
+Nie znaleziono dopasowań
+
+No new version available.
+Brak dostępnych nowych wersji.
+
+No result found around line %u in file %s
+Brak wyników w wierszu %u w pliku %s
+
+No synchronization file found
+Synchronizacji pliku nie znaleziono
+
+No synchronization info at this position
+Brak informacji o synchronizacji na tej pozycji
+
+Number of Pages:
+Liczba stron:
+
+OK
+OK
+
 Open
 Otwórz
+
+Open in &Adobe Reader
+Otwórz w &Adobe Reader
+
+P&roperties...\tCtrl-D
+Właściwości...\tCtrl-D
+
+PDF Document
+Dokument PDF
+
+PDF Producer:
+Producent PDF:
+
+PDF Version:
+Wersja PDF:
+
+PDF documents
+Dokumenty PDF
+
+Page Size:
+Rozmiar strony:
+
+Page number %u inexistant
+Numer strony %u ze wszystkich
 
 Page...\tCtrl-G
 Strona...\tCtrl-G
 
 Page:
 Strona:
+
+Please wait - rendering...
+Proszę czekać - renderowanie...
 
 Previous Page
 Poprzednia strona
@@ -129,17 +363,65 @@ Poprzednia strona\t<-
 Printing problem.
 Problem z drukowaniem.
 
+Remember &opened files
+Zapmiętaj &otwarte pliki
+
 Rotate left\tCtrl-Shift--
 Obróć w lewo\tCtrl-Shift--
 
 Rotate right\tCtrl-Shift-+
 Obróć w prawo\tCtrl-Shift-+
 
+Searching %d of %d...
+Szukanie %d z %d...
+
+Select content with Ctrl+left mouse button
+Wybierz materiał za pomocą Ctrl+Lewy przycisk myszy
+
+Send by &email...
+Wyślij przez &email...
+
+Set inverse search command-line
+Ustaw odwrotne wyszukiwanie lini poleceń
+
+Show pages continuously
+Pokaż strony kontynuując
+
+Show the &bookmarks sidebar when available
+Pokaż &zakładki na bocznym pasku, kiedy dostępne
+
 Show toolbar
-Pokaż toolbar
+Pokaż pasek narzędzi
 
 Single page
-Jedna strona
+Pojedyncza strona
+
+Source file %s has no synchronization point
+Źródło pliku %s ma niezsynchronizowany punkt
+
+Subject:
+Temat:
+
+SumatraPDF Options
+Opcje SumatraPDF
+
+SumatraPDF is your main PDF reader
+SumatraPDF jest twoim domyślnym czytnikiem PDF
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF jest teraz twoim domyślnym czytnikiem PDF
+
+Synchronization file cannot be opened
+Synchronizacja pliku nie może zostać otwarta
+
+Text documents
+Dokumenty tekstowe
+
+Title:
+Tytuł:
+
+Unknown source file (%s)
+Nieznane źródło pliku (%s)
 
 View
 Widok
@@ -147,112 +429,30 @@ Widok
 Warning
 Uwaga
 
+You have the latest version.
+Posiadasz najnowszą wersję.
+
+You have version %s
+Posiadasz wersję %s
+
+Zoom
+Powiększenie
+
 Zoom In
 Powiększ
 
 Zoom Out
 Pomniejsz
 
-# Untranslated:
-#&Check for new version
-#&Custom Zoom...
-#&Don't ask me again
-#&Find what:
-#&Go to page:
-#&Magnification:
-#&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#&Remember these settings for each document
-#&Settings
-#&Skip this version
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Associate with PDF files?
-#Author:
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
-#Bookmarks\tF12
-#Bytes
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#File Size:
-#File:
-#Find
-#Find Next
-#Find Previous
-#Forward\tAlt+Right Arrow
-#Found text at page %d
-#GB
-#Go to page
-#Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
-#Make SumatraPDF default application for PDF files?
-#Match case
-#Modified:
-#New version %s is available. Download new version?
-#New version available.
-#No matches were found
-#No new version available.
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties...\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Please wait - rendering...
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Set inverse search command-line
-#Show pages continuously
-#Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
+Zoom factor
+Narzędzie powiększania
+
+[Changes detected; refreshing] %s
+[Wykryto zmiany; odświeżanie] %s
+
+copying text
+kopiowanie teksty
+
+printing document
+drukowanie dokumentu
 
