@@ -10,7 +10,6 @@
 #include "../fitz/base_memory.c"
 #include "../fitz/base_string.c"
 #include "../fitz/stm_buffer.c"
-#include "../fitz/stm_filter.c"
 #include "../fitz/stm_open.c"
 #include "../fitz/stm_read.c"
 
@@ -170,7 +169,7 @@ main(int argc, char **argv)
 
 		fprintf(fo, "};\n\n");
 
-		fz_dropstream(fi);
+		fz_close(fi);
 	}
 
 	if (fclose(fo))

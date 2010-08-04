@@ -381,10 +381,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\fitz\filt_pipeline.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\fitz\filt_predict.c"
 				>
 			</File>
@@ -434,10 +430,6 @@
 			</File>
 			<File
 				RelativePath="..\..\fitz\stm_buffer.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\fitz\stm_filter.c"
 				>
 			</File>
 			<File

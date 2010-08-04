@@ -22,18 +22,19 @@ pdf_dropimage(pdf_image *img)
 		if (img->mask)
 			pdf_dropimage(img->mask);
 		if (img->samples)
-			fz_dropbuffer(img->samples);
+			fz_free(img->samples);
 		fz_free(img);
 	}
 }
 
 static fz_error
-pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+pdf_loadimageimp(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm)
 {
 	pdf_image *img;
+	fz_stream *stm;
 	fz_error error;
 	fz_obj *obj, *res;
-	int i;
+	int i, n;
 
 	img = fz_malloc(sizeof(pdf_image));
 	memset(img, 0, sizeof(pdf_image));
@@ -129,6 +130,47 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	}
 
 	img->stride = (img->w * img->n * img->bpc + 7) / 8;
+	img->samples = fz_malloc(img->h * img->stride);
+
+	if (cstm)
+	{
+		stm = pdf_openinlinestream(cstm, xref, dict, img->stride * img->h);
+	}
+	else
+	{
+		error = pdf_openstream(&stm, xref, fz_tonum(dict), fz_togen(dict));
+		if (error)
+		{
+			pdf_dropimage(img);
+			return fz_rethrow(error, "cannot open image data stream (%d 0 R)", fz_tonum(dict));
+		}
+	}
+
+	n = fz_read(stm, img->samples, img->h * img->stride);
+	if (n < 0)
+	{
+		fz_close(stm);
+		pdf_dropimage(img);
+		return fz_rethrow(n, "cannot read image data");
+	}
+
+	fz_close(stm);
+
+	/* Pad truncated images */
+	if (n < img->stride * img->h)
+	{
+		fz_warn("padding truncated image (%d 0 R)", fz_tonum(dict));
+		memset(img->samples + n, 0, img->stride * img->h - n);
+	}
+
+	if (img->imagemask)
+	{
+		/* 0=opaque and 1=transparent so we need to invert */
+		unsigned char *p = img->samples;
+		n = img->h * img->stride;
+		for (i = 0; i < n; i++)
+			p[i] = ~p[i];
+	}
 
 	pdf_logimage("size %dx%d n=%d bpc=%d (imagemask=%d)\n", img->w, img->h, img->n, img->bpc, img->imagemask);
 
@@ -137,43 +179,16 @@ pdf_loadimageheader(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 }
 
 fz_error
-pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
-	fz_obj *rdb, fz_obj *dict, fz_stream *file)
+pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file)
 {
 	fz_error error;
 	pdf_image *img;
-	fz_filter *filter;
-	fz_stream *subfile;
-	int n;
 
 	pdf_logimage("load inline image {\n");
 
-	error = pdf_loadimageheader(&img, xref, rdb, dict);
+	error = pdf_loadimageimp(&img, xref, rdb, dict, file);
 	if (error)
 		return fz_rethrow(error, "cannot load inline image");
-
-	filter = pdf_buildinlinefilter(xref, dict, img->stride * img->h);
-	subfile = fz_openfilter(filter, file);
-
-	img->samples = fz_newbuffer(img->h * img->stride);
-	error = fz_read(&n, subfile, img->samples->bp, img->h * img->stride);
-	if (error)
-	{
-		pdf_dropimage(img);
-		return fz_rethrow(error, "cannot load inline image data");
-	}
-	img->samples->wp += n;
-
-	fz_dropstream(subfile);
-	fz_dropfilter(filter);
-
-	if (img->imagemask)
-	{
-		/* 0=opaque and 1=transparent so we need to invert */
-		unsigned char *p;
-		for (p = img->samples->bp; p < img->samples->ep; p++)
-			*p = ~*p;
-	}
 
 	pdf_logimage("}\n");
 
@@ -181,11 +196,24 @@ pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref,
 	return fz_okay;
 }
 
+static int
+pdf_isjpximage(fz_obj *filter)
+{
+	int i;
+	if (!strcmp(fz_toname(filter), "JPXDecode"))
+		return 1;
+	for (i = 0; i < fz_arraylen(filter); i++)
+		if (!strcmp(fz_toname(fz_arrayget(filter, i)), "JPXDecode"))
+			return 1;
+	return 0;
+}
+
 fz_error
 pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 {
 	fz_error error;
 	pdf_image *img;
+	fz_obj *obj;
 
 	if ((*imgp = pdf_finditem(xref->store, pdf_dropimage, dict)))
 	{
@@ -195,37 +223,24 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 
 	pdf_logimage("load image (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
 
-	error = pdf_loadimageheader(&img, xref, rdb, dict);
-	if (error)
-		return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(dict), fz_togen(dict));
-
-	error = pdf_loadstream(&img->samples, xref, fz_tonum(dict), fz_togen(dict));
-	if (error)
+	/* special case for JPEG2000 images */
+	obj = fz_dictgets(dict, "Filter");
+	if (pdf_isjpximage(obj))
 	{
-		pdf_dropimage(img);
-		return fz_rethrow(error, "cannot load image data (%d %d R)", fz_tonum(dict), fz_togen(dict));
+		error = pdf_loadjpximage(&img, xref, rdb, dict);
+		if (error)
+			return fz_rethrow(error, "cannot load jpx image");
 	}
-
-	/* Pad truncated images */
-	if (img->samples->wp - img->samples->bp < img->stride * img->h)
+	else
 	{
-		fz_warn("padding truncated image");
-		fz_resizebuffer(img->samples, img->stride * img->h);
-		memset(img->samples->wp, 0, img->samples->ep - img->samples->wp);
-		img->samples->wp = img->samples->bp + img->stride * img->h;
+		error = pdf_loadimageimp(&img, xref, rdb, dict, nil);
+		if (error)
+			return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
-
-	if (img->imagemask)
-	{
-		/* 0=opaque and 1=transparent so we need to invert */
-		unsigned char *p;
-		for (p = img->samples->bp; p < img->samples->ep; p++)
-			*p = ~*p;
-	}
-
-	pdf_logimage("}\n");
 
 	pdf_storeitem(xref->store, pdf_keepimage, pdf_dropimage, dict, img);
+
+	pdf_logimage("}\n");
 
 	*imgp = img;
 	return fz_okay;
@@ -269,7 +284,7 @@ pdf_loadtile(pdf_image *img /* ...bbox/y+h should go here... */)
 		}
 	}
 
-	fz_unpacktile(tile, img->samples->bp, img->n, img->bpc, img->stride, scale);
+	fz_unpacktile(tile, img->samples, img->n, img->bpc, img->stride, scale);
 
 	if (img->usecolorkey)
 		pdf_maskcolorkey(tile, img->n, img->colorkey);

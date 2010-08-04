@@ -104,7 +104,7 @@ fz_error pdf_newcrypt(pdf_crypt **cp, fz_obj *enc, fz_obj *id);
 void pdf_freecrypt(pdf_crypt *crypt);
 
 fz_error pdf_parsecryptfilter(pdf_cryptfilter *cf, fz_obj *dict, int defaultlength);
-fz_filter * pdf_cryptstream(pdf_crypt *crypt, pdf_cryptfilter *cf, int num, int gen);
+fz_stream * pdf_opencrypt(fz_stream *chain, pdf_crypt *crypt, pdf_cryptfilter *cf, int num, int gen);
 void pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen);
 
 int pdf_needspassword(pdf_xref *xref);
@@ -153,7 +153,7 @@ fz_error pdf_loadobject(fz_obj **objp, pdf_xref *, int num, int gen);
 void pdf_updateobject( pdf_xref *xref, int num, int gen, fz_obj *newobj);
 
 int pdf_isstream(pdf_xref *xref, int num, int gen);
-fz_filter * pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj, int length);
+fz_stream * pdf_openinlinestream(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int length);
 fz_error pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
 fz_error pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen);
 fz_error pdf_openrawstream(fz_stream **stmp, pdf_xref *, int num, int gen);
@@ -270,7 +270,7 @@ struct pdf_image_s
 	int colorkey[FZ_MAXCOLORS * 2];
 	float decode[FZ_MAXCOLORS * 2];
 	int stride;
-	fz_buffer *samples;
+	unsigned char *samples;
 };
 
 fz_error pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
@@ -278,6 +278,8 @@ fz_error pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *ob
 fz_pixmap *pdf_loadtile(pdf_image *image);
 pdf_image *pdf_keepimage(pdf_image *img);
 void pdf_dropimage(pdf_image *img);
+
+fz_error pdf_loadjpximage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict);
 
 /*
  * CMap

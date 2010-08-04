@@ -35,17 +35,15 @@ pdf_streamhascrypt(fz_obj *stm)
 	filters = fz_dictgetsa(stm, "Filter", "F");
 	if (filters)
 	{
-		if (fz_isname(filters))
-			if (!strcmp(fz_toname(filters), "Crypt"))
-				return 1;
+		if (!strcmp(fz_toname(filters), "Crypt"))
+			return 1;
 		if (fz_isarray(filters))
 		{
 			for (i = 0; i < fz_arraylen(filters); i++)
 			{
 				obj = fz_arrayget(filters, i);
-				if (fz_isname(obj))
-					if (!strcmp(fz_toname(obj), "Crypt"))
-						return 1;
+				if (!strcmp(fz_toname(obj), "Crypt"))
+					return 1;
 			}
 		}
 	}
@@ -55,60 +53,43 @@ pdf_streamhascrypt(fz_obj *stm)
 /*
  * Create a filter given a name and param dictionary.
  */
-static fz_filter *
-buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
+static fz_stream *
+buildfilter(fz_stream *chain, pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 {
-	fz_filter *decompress;
-	fz_filter *predict;
-	fz_filter *pipe;
 	fz_error error;
 	char *s;
 
 	s = fz_toname(f);
 
 	if (!strcmp(s, "ASCIIHexDecode") || !strcmp(s, "AHx"))
-		return fz_newahxd(p);
+		return fz_openahxd(chain);
 
 	else if (!strcmp(s, "ASCII85Decode") || !strcmp(s, "A85"))
-		return fz_newa85d(p);
+		return fz_opena85d(chain);
 
 	else if (!strcmp(s, "CCITTFaxDecode") || !strcmp(s, "CCF"))
-		return fz_newfaxd(p);
+		return fz_openfaxd(chain, p);
 
 	else if (!strcmp(s, "DCTDecode") || !strcmp(s, "DCT"))
-		return fz_newdctd(p);
+		return fz_opendctd(chain, p);
 
 	else if (!strcmp(s, "RunLengthDecode") || !strcmp(s, "RL"))
-		return fz_newrld(p);
+		return fz_openrld(chain);
 
 	else if (!strcmp(s, "FlateDecode") || !strcmp(s, "Fl"))
 	{
 		fz_obj *obj = fz_dictgets(p, "Predictor");
-		if (obj)
-		{
-			decompress = fz_newflated(p);
-			predict = fz_newpredictd(p);
-			pipe = fz_newpipeline(decompress, predict);
-			fz_dropfilter(decompress);
-			fz_dropfilter(predict);
-			return pipe;
-		}
-		return fz_newflated(p);
+		if (fz_toint(obj) > 1)
+			return fz_openpredict(fz_openflated(chain), p);
+		return fz_openflated(chain);
 	}
 
 	else if (!strcmp(s, "LZWDecode") || !strcmp(s, "LZW"))
 	{
 		fz_obj *obj = fz_dictgets(p, "Predictor");
-		if (obj)
-		{
-			decompress = fz_newlzwd(p);
-			predict = fz_newpredictd(p);
-			pipe = fz_newpipeline(decompress, predict);
-			fz_dropfilter(decompress);
-			fz_dropfilter(predict);
-			return pipe;
-		}
-		return fz_newlzwd(p);
+		if (fz_toint(obj) > 1)
+			return fz_openpredict(fz_openlzwd(chain, p), p);
+		return fz_openlzwd(chain, p);
 	}
 
 	else if (!strcmp(s, "JBIG2Decode"))
@@ -117,29 +98,18 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 		if (obj)
 		{
 			fz_buffer *globals;
-			fz_filter *dec;
-
-			dec = fz_newjbig2d(p);
-
 			error = pdf_loadstream(&globals, xref, fz_tonum(obj), fz_togen(obj));
 			if (error)
 				fz_catch(error, "cannot load jbig2 global segments");
-			else
-			{
-				error = fz_setjbig2dglobalstream(dec, globals->rp, globals->wp - globals->rp);
-				if (error)
-					fz_catch(error, "cannot apply jbig2 global segments");
-			}
-
+			chain = fz_openjbig2d(chain, globals);
 			fz_dropbuffer(globals);
-
-			return dec;
+			return chain;
 		}
-		return fz_newjbig2d(p);
+		return fz_openjbig2d(chain, nil);
 	}
 
 	else if (!strcmp(s, "JPXDecode"))
-		return fz_newjpxd(p);
+		return chain; /* JPX decoding is special cased in the image loading code */
 
 	else if (!strcmp(s, "Crypt"))
 	{
@@ -149,7 +119,7 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 		if (!xref->crypt)
 		{
 			fz_warn("crypt filter in unencrypted document");
-			return fz_newcopyfilter();
+			return chain;
 		}
 
 		name = fz_dictgets(p, "Name");
@@ -162,14 +132,15 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
 				if (error)
 					fz_catch(error, "cannot parse crypt filter (%d %d R)", fz_tonum(obj), fz_togen(obj));
 				else
-					return pdf_cryptstream(xref->crypt, &cf, num, gen);
+					return pdf_opencrypt(chain, xref->crypt, &cf, num, gen);
 			}
 		}
-		return fz_newcopyfilter();
+
+		return chain;
 	}
 
 	fz_warn("unknown filter name (%s)", s);
-	return fz_newcopyfilter();
+	return chain;
 }
 
 /*
@@ -177,12 +148,9 @@ buildonefilter(pdf_xref * xref, fz_obj * f, fz_obj * p, int num, int gen)
  * If head is given, start filter chain with it.
  * Assume ownership of head.
  */
-static fz_filter *
-buildfilterchain(pdf_xref *xref, fz_filter *head,
-	fz_obj *fs, fz_obj *ps, int num, int gen)
+static fz_stream *
+buildfilterchain(fz_stream *chain, pdf_xref *xref, fz_obj *fs, fz_obj *ps, int num, int gen)
 {
-	fz_filter *newhead;
-	fz_filter *tail;
 	fz_obj *f;
 	fz_obj *p;
 	int i;
@@ -190,24 +158,11 @@ buildfilterchain(pdf_xref *xref, fz_filter *head,
 	for (i = 0; i < fz_arraylen(fs); i++)
 	{
 		f = fz_arrayget(fs, i);
-		if (fz_isarray(ps))
-			p = fz_arrayget(ps, i);
-		else
-			p = nil;
-
-		tail = buildonefilter(xref, f, p, num, gen);
-		if (head)
-		{
-			newhead = fz_newpipeline(head, tail);
-			fz_dropfilter(head);
-			fz_dropfilter(tail);
-			head = newhead;
-		}
-		else
-			head = tail;
+		p = fz_arrayget(ps, i);
+		chain = buildfilter(chain, xref, f, p, num, gen);
 	}
 
-	return head;
+	return chain;
 }
 
 /*
@@ -215,90 +170,70 @@ buildfilterchain(pdf_xref *xref, fz_filter *head,
  * This is a null filter to constrain reading to the
  * stream length, followed by a decryption filter.
  */
-static fz_filter *
-buildrawfilter(pdf_xref *xref, fz_obj *stmobj, int num, int gen)
+static fz_stream *
+pdf_openrawfilter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, int gen)
 {
-	fz_filter *base;
-	fz_obj *stmlen;
-	int len;
 	int hascrypt;
+	int len;
+
+	/* don't close chain when we close this filter */
+	fz_keepstream(chain);
+
+	len = fz_toint(fz_dictgets(stmobj, "Length"));
+	chain = fz_opennull(chain, len);
 
 	hascrypt = pdf_streamhascrypt(stmobj);
-
-	stmlen = fz_dictgets(stmobj, "Length");
-	len = fz_toint(stmlen);
-
-	base = fz_newnullfilter(len);
-
 	if (xref->crypt && !hascrypt)
-	{
-		fz_filter *crypt;
-		fz_filter *pipe;
-		crypt = pdf_cryptstream(xref->crypt, &xref->crypt->stmf, num, gen);
-		pipe = fz_newpipeline(base, crypt);
-		fz_dropfilter(base);
-		fz_dropfilter(crypt);
-		return pipe;
-	}
+		chain = pdf_opencrypt(chain, xref->crypt, &xref->crypt->stmf, num, gen);
 
-	return base;
-}
-
-/*
- * Construct a filter to decode a stream, without
- * constraining to stream length, and without decryption.
- */
-fz_filter *
-pdf_buildinlinefilter(pdf_xref *xref, fz_obj *stmobj, int length)
-{
-	fz_obj *filters;
-	fz_obj *params;
-
-	filters = fz_dictgetsa(stmobj, "Filter", "F");
-	params = fz_dictgetsa(stmobj, "DecodeParms", "DP");
-
-	if (fz_isname(filters))
-		return buildonefilter(xref, filters, params, 0, 0);
-	if (fz_arraylen(filters) > 0)
-		return buildfilterchain(xref, nil, filters, params, 0, 0);
-
-	return fz_newnullfilter(length);
+	return chain;
 }
 
 /*
  * Construct a filter to decode a stream, constraining
  * to stream length and decrypting.
  */
-static fz_filter *
-pdf_buildfilter(pdf_xref *xref, fz_obj *stmobj, int num, int gen)
+static fz_stream *
+pdf_openfilter(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int num, int gen)
 {
-	fz_filter *base, *pipe, *tmp;
 	fz_obj *filters;
 	fz_obj *params;
 
 	filters = fz_dictgetsa(stmobj, "Filter", "F");
 	params = fz_dictgetsa(stmobj, "DecodeParms", "DP");
 
-	base = buildrawfilter(xref, stmobj, num, gen);
+	chain = pdf_openrawfilter(chain, xref, stmobj, num, gen);
 
-	if (filters)
-	{
-		if (fz_isname(filters))
-		{
-			tmp = buildonefilter(xref, filters, params, num, gen);
-			pipe = fz_newpipeline(base, tmp);
-			fz_dropfilter(base);
-			fz_dropfilter(tmp);
-			return pipe;
-		}
-		else
-		{
-			/* The pipeline chain takes ownership of base */
-			return buildfilterchain(xref, base, filters, params, num, gen);
-		}
-	}
+	if (fz_isname(filters))
+		return buildfilter(chain, xref, filters, params, num, gen);
+	if (fz_arraylen(filters) > 0)
+		return buildfilterchain(chain, xref, filters, params, num, gen);
 
-	return base;
+	return chain;
+}
+
+/*
+ * Construct a filter to decode a stream, without
+ * constraining to stream length, and without decryption.
+ */
+fz_stream *
+pdf_openinlinestream(fz_stream *chain, pdf_xref *xref, fz_obj *stmobj, int length)
+{
+	fz_obj *filters;
+	fz_obj *params;
+
+	filters = fz_dictgetsa(stmobj, "Filter", "F");
+	params = fz_dictgetsa(stmobj, "DecodeParms", "DP");
+
+	/* don't close chain when we close this filter */
+	fz_keepstream(chain);
+
+	if (fz_isname(filters))
+		return buildfilter(chain, xref, filters, params, 0, 0);
+	if (fz_arraylen(filters) > 0)
+		return buildfilterchain(chain, xref, filters, params, 0, 0);
+
+	return fz_opennull(chain, length);
 }
 
 /*
@@ -310,7 +245,6 @@ pdf_openrawstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 {
 	pdf_xrefentry *x;
 	fz_error error;
-	fz_filter *filter;
 
 	if (num < 0 || num >= xref->len)
 		return fz_throw("object id out of range (%d %d R)", num, gen);
@@ -323,14 +257,8 @@ pdf_openrawstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 
 	if (x->stmofs)
 	{
-		filter = buildrawfilter(xref, x->obj, num, gen);
-
-		error = fz_seek(xref->file, x->stmofs, 0);
-		if (error)
-			return fz_rethrow(error, "cannot seek to stream");
-
-		*stmp = fz_openfilter(filter, xref->file);
-		fz_dropfilter(filter);
+		*stmp = pdf_openrawfilter(xref->file, xref, x->obj, num, gen);
+		fz_seek(xref->file, x->stmofs, 0);
 		return fz_okay;
 	}
 
@@ -347,7 +275,6 @@ pdf_openstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 {
 	pdf_xrefentry *x;
 	fz_error error;
-	fz_filter *filter;
 
 	if (num < 0 || num >= xref->len)
 		return fz_throw("object id out of range (%d %d R)", num, gen);
@@ -360,14 +287,8 @@ pdf_openstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 
 	if (x->stmofs)
 	{
-		filter = pdf_buildfilter(xref, x->obj, num, gen);
-
-		error = fz_seek(xref->file, x->stmofs, 0);
-		if (error)
-			return fz_rethrow(error, "cannot seek to stream");
-
-		*stmp = fz_openfilter(filter, xref->file);
-		fz_dropfilter(filter);
+		*stmp = pdf_openfilter(xref->file, xref, x->obj, num, gen);
+		fz_seek(xref->file, x->stmofs, 0);
 		return fz_okay;
 	}
 
@@ -377,22 +298,12 @@ pdf_openstream(fz_stream **stmp, pdf_xref *xref, int num, int gen)
 fz_error
 pdf_openstreamat(fz_stream **stmp, pdf_xref *xref, int num, int gen, fz_obj *dict, int stmofs)
 {
-	fz_error error;
-	fz_filter *filter;
-
 	if (stmofs)
 	{
-		filter = pdf_buildfilter(xref, dict, num, gen);
-
-		error = fz_seek(xref->file, stmofs, 0);
-		if (error)
-			return fz_rethrow(error, "cannot seek to stream");
-
-		*stmp = fz_openfilter(filter, xref->file);
-		fz_dropfilter(filter);
+		*stmp = pdf_openfilter(xref->file, xref, dict, num, gen);
+		fz_seek(xref->file, stmofs, 0);
 		return fz_okay;
 	}
-
 	return fz_throw("object is not a stream");
 }
 
@@ -404,25 +315,44 @@ pdf_loadrawstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen)
 {
 	fz_error error;
 	fz_stream *stm;
-	fz_buffer *buf;
+	fz_obj *dict;
+	int len;
+
+	error = pdf_loadobject(&dict, xref, num, gen);
+	if (error)
+		return fz_rethrow(error, "cannot load stream dictionary (%d %d R)", num, gen);
+
+	len = fz_toint(fz_dictgets(dict, "Length"));
+
+	fz_dropobj(dict);
 
 	error = pdf_openrawstream(&stm, xref, num, gen);
 	if (error)
 		return fz_rethrow(error, "cannot open raw stream (%d %d R)", num, gen);
 
-	buf = fz_readall(stm, 0);
-	error = fz_readerror(stm);
+	error = fz_readall(bufp, stm, len);
 	if (error)
 	{
-		fz_dropbuffer(buf);
-		fz_dropstream(stm);
+		fz_close(stm);
 		return fz_rethrow(error, "cannot read raw stream (%d %d R)", num, gen);
 	}
 
-	fz_dropstream(stm);
-
-	*bufp = buf;
+	fz_close(stm);
 	return fz_okay;
+}
+
+static int
+pdf_guessfilterlength(int len, char *filter)
+{
+	if (!strcmp(filter, "ASCIIHexDecode"))
+		return len / 2;
+	if (!strcmp(filter, "ASCII85Decode"))
+		return len * 4 / 5;
+	if (!strcmp(filter, "FlateDecode"))
+		return len * 3;
+	if (!strcmp(filter, "LZWDecode"))
+		return len * 2;
+	return len;
 }
 
 /*
@@ -433,23 +363,32 @@ pdf_loadstream(fz_buffer **bufp, pdf_xref *xref, int num, int gen)
 {
 	fz_error error;
 	fz_stream *stm;
-	fz_buffer *buf;
+	fz_obj *dict, *obj;
+	int i, len;
 
 	error = pdf_openstream(&stm, xref, num, gen);
 	if (error)
 		return fz_rethrow(error, "cannot open stream (%d %d R)", num, gen);
 
-	buf = fz_readall(stm, 0);
-	error = fz_readerror(stm);
+	error = pdf_loadobject(&dict, xref, num, gen);
+	if (error)
+		return fz_rethrow(error, "cannot load stream dictionary (%d %d R)", num, gen);
+
+	len = fz_toint(fz_dictgets(dict, "Length"));
+	obj = fz_dictgets(dict, "Filter");
+	len = pdf_guessfilterlength(len, fz_toname(obj));
+	for (i = 0; i < fz_arraylen(obj); i++)
+		len = pdf_guessfilterlength(len, fz_toname(fz_arrayget(obj, i)));
+
+	fz_dropobj(dict);
+
+	error = fz_readall(bufp, stm, len);
 	if (error)
 	{
-		fz_dropbuffer(buf);
-		fz_dropstream(stm);
+		fz_close(stm);
 		return fz_rethrow(error, "cannot read raw stream (%d %d R)", num, gen);
 	}
 
-	fz_dropstream(stm);
-
-	*bufp = buf;
+	fz_close(stm);
 	return fz_okay;
 }

@@ -98,7 +98,6 @@ FITZ_SRC := \
 	fitz/filt_jbig2d.c \
 	fitz/filt_jpxd.c \
 	fitz/filt_lzwd.c \
-	fitz/filt_pipeline.c \
 	fitz/filt_predict.c \
 	fitz/obj_array.c \
 	fitz/obj_dict.c \
@@ -111,7 +110,6 @@ FITZ_SRC := \
 	fitz/res_shade.c \
 	fitz/res_text.c \
 	fitz/stm_buffer.c \
-	fitz/stm_filter.c \
 	fitz/stm_open.c \
 	fitz/stm_read.c
 FITZ_OBJ := $(FITZ_SRC:fitz/%.c=$(OBJDIR)/%.o)

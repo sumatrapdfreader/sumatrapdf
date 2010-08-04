@@ -92,8 +92,8 @@ static void savefont(fz_obj *dict, int num)
 	fz_obj *obj;
 	char *ext = "";
 	FILE *f;
-	unsigned char *p;
 	char *fontname = "font";
+	int n;
 
 	obj = fz_dictgets(dict, "FontName");
 	if (obj)
@@ -148,13 +148,14 @@ static void savefont(fz_obj *dict, int num)
 
 	f = fopen(name, "wb");
 	if (f == NULL)
-		die(fz_throw("Error creating image file"));
+		die(fz_throw("Error creating font file"));
 
-	for (p = buf->rp; p < buf->wp; p ++)
-		fprintf(f, "%c", *p);
+	n = fwrite(buf, 1, buf->len, f);
+	if (n < buf->len)
+		die(fz_throw("Error writing font file"));
 
 	if (fclose(f) < 0)
-		die(fz_throw("Error closing image file"));
+		die(fz_throw("Error closing font file"));
 
 	fz_dropbuffer(buf);
 }

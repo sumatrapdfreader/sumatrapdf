@@ -160,7 +160,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 	{
 		return false;
 	}
-    fz_dropstream(file);
+    fz_close(file);
     if (!xref)
         return false;
 

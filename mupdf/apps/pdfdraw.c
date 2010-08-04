@@ -149,7 +149,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 		/* TODO: banded rendering and multi-page ppm */
 
-		pix = fz_newpixmap(colorspace, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
+		pix = fz_newpixmapwithrect(colorspace, bbox);
 
 		if (savealpha)
 			fz_clearpixmap(pix, 0x00);

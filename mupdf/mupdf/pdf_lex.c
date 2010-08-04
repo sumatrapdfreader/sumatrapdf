@@ -392,17 +392,14 @@ pdf_tokenfromkeyword(char *key)
 fz_error
 pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 {
-	fz_error error;
-	int c;
-
 	while (1)
 	{
-		c = fz_readbyte(f);
+		int c = fz_readbyte(f);
 		switch (c)
 		{
 		case EOF:
 			*tok = PDF_TEOF;
-			goto cleanupokay;
+			return fz_okay;
 		case ISWHITE:
 			lexwhite(f);
 			break;
@@ -413,11 +410,11 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 			lexname(f, buf, n);
 			*sl = strlen(buf);
 			*tok = PDF_TNAME;
-			goto cleanupokay;
+			return fz_okay;
 		case '(':
 			*sl = lexstring(f, buf, n);
 			*tok = PDF_TSTRING;
-			goto cleanupokay;
+			return fz_okay;
 		case ')':
 			*tok = PDF_TERROR;
 			goto cleanuperror;
@@ -433,57 +430,42 @@ pdf_lex(pdf_token_e *tok, fz_stream *f, char *buf, int n, int *sl)
 				*sl = lexhexstring(f, buf, n);
 				*tok = PDF_TSTRING;
 			}
-			goto cleanupokay;
+			return fz_okay;
 		case '>':
 			c = fz_readbyte(f);
 			if (c == '>')
 			{
 				*tok = PDF_TCDICT;
-				goto cleanupokay;
+				return fz_okay;
 			}
 			*tok = PDF_TERROR;
 			goto cleanuperror;
 		case '[':
 			*tok = PDF_TOARRAY;
-			goto cleanupokay;
+			return fz_okay;
 		case ']':
 			*tok = PDF_TCARRAY;
-			goto cleanupokay;
+			return fz_okay;
 		case '{':
 			*tok = PDF_TOBRACE;
-			goto cleanupokay;
+			return fz_okay;
 		case '}':
 			*tok = PDF_TCBRACE;
-			goto cleanupokay;
+			return fz_okay;
 		case ISNUMBER:
 			fz_unreadbyte(f);
 			*sl = lexnumber(f, buf, n, tok);
-			goto cleanupokay;
+			return fz_okay;
 		default: /* isregular: !isdelim && !iswhite && c != EOF */
 			fz_unreadbyte(f);
 			lexname(f, buf, n);
 			*sl = strlen(buf);
 			*tok = pdf_tokenfromkeyword(buf);
-			goto cleanupokay;
+			return fz_okay;
 		}
 	}
 
-cleanupokay:
-	error = fz_readerror(f);
-	if (error)
-	{
-		*tok = PDF_TERROR;
-		return fz_rethrow(error, "cannot read token");
-	}
-	return fz_okay;
-
 cleanuperror:
-	error = fz_readerror(f);
-	if (error)
-	{
-		*tok = PDF_TERROR;
-		return fz_rethrow(error, "cannot read token");
-	}
 	*tok = PDF_TERROR;
 	return fz_throw("lexical error");
 }

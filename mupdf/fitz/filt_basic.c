@@ -1,97 +1,51 @@
 #include "fitz.h"
 
-/* Identity filter */
+/* Pretend we have a filter that just copies data forever */
 
-fz_filter *
-fz_newcopyfilter(void)
+fz_stream *
+fz_opencopy(fz_stream *chain)
 {
-	FZ_NEWFILTER(fz_filter, f, copyfilter);
-	return f;
+	return fz_keepstream(chain);
 }
 
-void
-fz_dropcopyfilter(fz_filter *f)
+/* Null filter copies a specified amount of data */
+
+struct nullfilter
 {
-}
-
-fz_error
-fz_processcopyfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
-{
-	int n;
-
-	while (1)
-	{
-		if (in->rp + 1 > in->wp)
-		{
-			if (in->eof)
-				return fz_iodone;
-			return fz_ioneedin;
-		}
-
-		if (out->wp + 1 > out->ep)
-			return fz_ioneedout;
-
-		n = MIN(in->wp - in->rp, out->ep - out->wp);
-		if (n)
-		{
-			memcpy(out->wp, in->rp, n);
-			in->rp += n;
-			out->wp += n;
-		}
-	}
-}
-
-/* Null filter copies data until a specified length */
-
-typedef struct fz_nullfilter_s fz_nullfilter;
-
-struct fz_nullfilter_s
-{
-	fz_filter super;
-	int len;
-	int cur;
+	fz_stream *chain;
+	int remain;
 };
 
-fz_filter *
-fz_newnullfilter(int len)
+static int
+readnull(fz_stream *stm, unsigned char *buf, int len)
 {
-	FZ_NEWFILTER(fz_nullfilter, f, nullfilter);
-	f->len = len;
-	f->cur = 0;
-	return (fz_filter *)f;
+	struct nullfilter *state = stm->state;
+	int amount = MIN(len, state->remain);
+	int n = fz_read(state->chain, buf, amount);
+	if (n < 0)
+		return fz_rethrow(n, "read error in null filter");
+	state->remain -= n;
+	return n;
 }
 
-void
-fz_dropnullfilter(fz_filter *f)
+static void
+closenull(fz_stream *stm)
 {
+	struct nullfilter *state = stm->state;
+	fz_close(state->chain);
+	fz_free(state);
 }
 
-fz_error
-fz_processnullfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
+fz_stream *
+fz_opennull(fz_stream *chain, int len)
 {
-	fz_nullfilter *f = (fz_nullfilter*)filter;
-	int n;
+	struct nullfilter *state;
 
-	n = MIN(in->wp - in->rp, out->ep - out->wp);
-	if (f->len >= 0)
-		n = MIN(n, f->len - f->cur);
+	state = fz_malloc(sizeof(struct nullfilter));
+	state->chain = chain;
+	state->remain = len;
 
-	if (n)
-	{
-		memcpy(out->wp, in->rp, n);
-		in->rp += n;
-		out->wp += n;
-		f->cur += n;
-	}
-
-	if (f->cur == f->len)
-		return fz_iodone;
-	if (in->rp == in->wp)
-		return fz_ioneedin;
-	if (out->wp == out->ep)
-		return fz_ioneedout;
-
-	return fz_throw("braindead programmer trapped in nullfilter");
+	return fz_newstream(state, readnull, closenull);
 }
 
 /* ASCII Hex Decode */
@@ -100,9 +54,8 @@ typedef struct fz_ahxd_s fz_ahxd;
 
 struct fz_ahxd_s
 {
-	fz_filter super;
-	int odd;
-	int a;
+	fz_stream *chain;
+	int eod;
 };
 
 static inline int iswhite(int a)
@@ -133,58 +86,72 @@ static inline int fromhex(int a)
 	return 0;
 }
 
-fz_filter *
-fz_newahxd(fz_obj *params)
+static int
+readahxd(fz_stream *stm, unsigned char *buf, int len)
 {
-	FZ_NEWFILTER(fz_ahxd, f, ahxd);
-	f->odd = 0;
-	f->a = 0;
-	return (fz_filter *)f;
-}
+	fz_ahxd *state = stm->state;
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
+	int a, b, c, odd;
 
-void
-fz_dropahxd(fz_filter *f)
-{
-}
+	odd = 0;
 
-fz_error
-fz_processahxd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
-{
-	fz_ahxd *f = (fz_ahxd*)filter;
-	int b, c;
-
-	while (1)
+	while (p < ep)
 	{
-		if (in->rp == in->wp)
-			return fz_ioneedin;
+		if (state->eod)
+			return p - buf;
 
-		if (out->wp == out->ep)
-			return fz_ioneedout;
+		c = fz_readbyte(state->chain);
+		if (c < 0)
+			return p - buf;
 
-		c = *in->rp++;
-
-		if (ishex(c)) {
-			if (!f->odd) {
-				f->a = fromhex(c);
-				f->odd = 1;
+		if (ishex(c))
+		{
+			if (!odd)
+			{
+				a = fromhex(c);
+				odd = 1;
 			}
-			else {
+			else
+			{
 				b = fromhex(c);
-				*out->wp++ = (f->a << 4) | b;
-				f->odd = 0;
+				*p++ = (a << 4) | b;
+				odd = 0;
 			}
 		}
-
-		else if (c == '>') {
-			if (f->odd)
-				*out->wp++ = (f->a << 4);
-			return fz_iodone;
+		else if (c == '>')
+		{
+			if (odd)
+				*p++ = (a << 4);
+			state->eod = 1;
 		}
-
-		else if (!iswhite(c)) {
+		else if (!iswhite(c))
+		{
 			return fz_throw("bad data in ahxd: '%c'", c);
 		}
 	}
+
+	return p - buf;
+}
+
+static void
+closeahxd(fz_stream *stm)
+{
+	fz_ahxd *state = stm->state;
+	fz_close(state->chain);
+	fz_free(state);
+}
+
+fz_stream *
+fz_openahxd(fz_stream *chain)
+{
+	fz_ahxd *state;
+
+	state = fz_malloc(sizeof(fz_ahxd));
+	state->chain = chain;
+	state->eod = 0;
+
+	return fz_newstream(state, readahxd, closeahxd);
 }
 
 /* ASCII 85 Decode */
@@ -193,187 +160,215 @@ typedef struct fz_a85d_s fz_a85d;
 
 struct fz_a85d_s
 {
-	fz_filter super;
-	unsigned long word;
-	int count;
+	fz_stream *chain;
+	unsigned char bp[4];
+	unsigned char *rp, *wp;
+	int eod;
 };
 
-fz_filter *
-fz_newa85d(fz_obj *params)
+static int
+reada85d(fz_stream *stm, unsigned char *buf, int len)
 {
-	FZ_NEWFILTER(fz_a85d, f, a85d);
-	f->word = 0;
-	f->count = 0;
-	return (fz_filter *)f;
-}
-
-void
-fz_dropa85d(fz_filter *f)
-{
-}
-
-fz_error
-fz_processa85d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
-{
-	fz_a85d *f = (fz_a85d*)filter;
+	fz_a85d *state = stm->state;
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
+	int count = 0;
+	int word = 0;
 	int c;
 
-	while (1)
+	while (state->rp < state->wp && p < ep)
+		*p++ = *state->rp++;
+
+	while (p < ep)
 	{
-		if (in->rp == in->wp)
-			return fz_ioneedin;
+		if (state->eod)
+			return p - buf;
 
-		c = *in->rp++;
+		c = fz_readbyte(state->chain);
+		if (c < 0)
+			return p - buf;
 
-		if (c >= '!' && c <= 'u') {
-			if (f->count == 4) {
-				if (out->wp + 4 > out->ep) {
-					in->rp --;
-					return fz_ioneedout;
-				}
+		if (c >= '!' && c <= 'u')
+		{
+			if (count == 4)
+			{
+				word = word * 85 + (c - '!');
 
-				f->word = f->word * 85 + (c - '!');
+				state->bp[0] = (word >> 24) & 0xff;
+				state->bp[1] = (word >> 16) & 0xff;
+				state->bp[2] = (word >> 8) & 0xff;
+				state->bp[3] = (word) & 0xff;
+				state->rp = state->bp;
+				state->wp = state->bp + 4;
 
-				*out->wp++ = (f->word >> 24) & 0xff;
-				*out->wp++ = (f->word >> 16) & 0xff;
-				*out->wp++ = (f->word >> 8) & 0xff;
-				*out->wp++ = (f->word) & 0xff;
-
-				f->word = 0;
-				f->count = 0;
+				word = 0;
+				count = 0;
 			}
-			else {
-				f->word = f->word * 85 + (c - '!');
-				f->count ++;
+			else
+			{
+				word = word * 85 + (c - '!');
+				count ++;
 			}
 		}
 
-		else if (c == 'z' && f->count == 0) {
-			if (out->wp + 4 > out->ep) {
-				in->rp --;
-				return fz_ioneedout;
-			}
-			*out->wp++ = 0;
-			*out->wp++ = 0;
-			*out->wp++ = 0;
-			*out->wp++ = 0;
+		else if (c == 'z' && count == 0)
+		{
+			state->bp[0] = 0;
+			state->bp[1] = 0;
+			state->bp[2] = 0;
+			state->bp[3] = 0;
+			state->rp = state->bp;
+			state->wp = state->bp + 4;
 		}
 
-		else if (c == '~') {
-			if (in->rp == in->wp) {
-				in->rp --;
-				return fz_ioneedin;
-			}
-
-			c = *in->rp++;
-
-			if (c != '>') {
+		else if (c == '~')
+		{
+			c = fz_readbyte(state->chain);
+			if (c != '>')
 				return fz_throw("bad eod marker in a85d");
-			}
 
-			if (out->wp + f->count - 1 > out->ep) {
-				in->rp -= 2;
-				return fz_ioneedout;
-			}
-
-			switch (f->count) {
+			switch (count) {
 			case 0:
 				break;
 			case 1:
 				return fz_throw("partial final byte in a85d");
 			case 2:
-				f->word = f->word * (85L * 85 * 85) + 0xffffffL;
-				goto o1;
+				word = word * (85 * 85 * 85) + 0xffffff;
+				state->bp[0] = word >> 24;
+				state->rp = state->bp;
+				state->wp = state->bp + 1;
+				break;
 			case 3:
-				f->word = f->word * (85L * 85) + 0xffffL;
-				goto o2;
+				word = word * (85 * 85) + 0xffff;
+				state->bp[0] = word >> 24;
+				state->bp[1] = word >> 16;
+				state->rp = state->bp;
+				state->wp = state->bp + 2;
+				break;
 			case 4:
-				f->word = f->word * 85 + 0xffL;
-				*(out->wp+2) = f->word >> 8;
-				o2:				*(out->wp+1) = f->word >> 16;
-				o1:				*(out->wp+0) = f->word >> 24;
-				out->wp += f->count - 1;
+				word = word * 85 + 0xff;
+				state->bp[0] = word >> 24;
+				state->bp[1] = word >> 16;
+				state->bp[2] = word >> 8;
+				state->rp = state->bp;
+				state->wp = state->bp + 3;
 				break;
 			}
-			return fz_iodone;
+			state->eod = 1;
 		}
 
-		else if (!iswhite(c)) {
+		else if (!iswhite(c))
+		{
 			return fz_throw("bad data in a85d: '%c'", c);
 		}
+
+		while (state->rp < state->wp && p < ep)
+			*p++ = *state->rp++;
 	}
+
+	return p - buf;
+}
+
+static void
+closea85d(fz_stream *stm)
+{
+	fz_a85d *state = stm->state;
+	fz_close(state->chain);
+	fz_free(state);
+}
+
+fz_stream *
+fz_opena85d(fz_stream *chain)
+{
+	fz_a85d *state;
+
+	state = fz_malloc(sizeof(fz_a85d));
+	state->chain = chain;
+	state->rp = state->bp;
+	state->wp = state->bp;
+	state->eod = 0;
+
+	return fz_newstream(state, reada85d, closea85d);
 }
 
 /* Run Length Decode */
 
-fz_filter *
-fz_newrld(fz_obj *params)
-{
-	FZ_NEWFILTER(fz_filter, f, rld);
-	return f;
-}
+typedef struct fz_rld_s fz_rld;
 
-void
-fz_droprld(fz_filter *rld)
+struct fz_rld_s
 {
-}
+	fz_stream *chain;
+	int run, n, c;
+};
 
-fz_error
-fz_processrld(fz_filter *filter, fz_buffer *in, fz_buffer *out)
+static int
+readrld(fz_stream *stm, unsigned char *buf, int len)
 {
-	int run, i;
-	unsigned char c;
+	fz_rld *state = stm->state;
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
 
-	while (1)
+	while (p < ep)
 	{
-		if (in->rp == in->wp)
+		if (state->run == 128)
+			return p - buf;
+
+		if (state->n == 0)
 		{
-			if (in->eof)
+			state->run = fz_readbyte(state->chain);
+			if (state->run < 0)
+				state->run = 128;
+			if (state->run < 128)
+				state->n = state->run + 1;
+			if (state->run > 128)
 			{
-				return fz_iodone;
+				state->n = 257 - state->run;
+				state->c = fz_readbyte(state->chain);
+				if (state->c < 0)
+					return fz_throw("premature end of data in run length decode");
 			}
-			return fz_ioneedin;
 		}
 
-		if (out->wp == out->ep)
-			return fz_ioneedout;
-
-		run = *in->rp++;
-
-		if (run == 128)
+		if (state->run < 128)
 		{
-			return fz_iodone;
+			while (p < ep && state->n--)
+			{
+				int c = fz_readbyte(state->chain);
+				if (c < 0)
+					return fz_throw("premature end of data in run length decode");
+				*p++ = c;
+			}
 		}
 
-		else if (run < 128) {
-			run = run + 1;
-			if (in->rp + run > in->wp) {
-				in->rp --;
-				return fz_ioneedin;
-			}
-			if (out->wp + run > out->ep) {
-				in->rp --;
-				return fz_ioneedout;
-			}
-			for (i = 0; i < run; i++)
-				*out->wp++ = *in->rp++;
-		}
-
-		else if (run > 128) {
-			run = 257 - run;
-			if (in->rp + 1 > in->wp) {
-				in->rp --;
-				return fz_ioneedin;
-			}
-			if (out->wp + run > out->ep) {
-				in->rp --;
-				return fz_ioneedout;
-			}
-			c = *in->rp++;
-			for (i = 0; i < run; i++)
-				*out->wp++ = c;
+		if (state->run > 128)
+		{
+			while (p < ep && state->n--)
+				*p++ = state->c;
 		}
 	}
+
+	return p - buf;
+}
+
+static void
+closerld(fz_stream *stm)
+{
+	fz_rld *state = stm->state;
+	fz_close(state->chain);
+	fz_free(state);
+}
+
+fz_stream *
+fz_openrld(fz_stream *chain)
+{
+	fz_rld *state;
+
+	state = fz_malloc(sizeof(fz_rld));
+	state->run = 0;
+	state->n = 0;
+	state->c = 0;
+
+	return fz_newstream(state, readrld, closerld);
 }
 
 /* RC4 Filter */
@@ -382,44 +377,43 @@ typedef struct fz_arc4c_s fz_arc4c;
 
 struct fz_arc4c_s
 {
-	fz_filter super;
+	fz_stream *chain;
 	fz_arc4 arc4;
 };
 
-fz_filter *
-fz_newarc4filter(unsigned char *key, unsigned keylen)
+static int
+readarc4(fz_stream *stm, unsigned char *buf, int len)
 {
-	FZ_NEWFILTER(fz_arc4c, f, arc4filter);
-	fz_arc4init(&f->arc4, key, keylen);
-	return (fz_filter *)f;
-}
-
-void
-fz_droparc4filter(fz_filter *f)
-{
-}
-
-fz_error
-fz_processarc4filter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
-{
-	fz_arc4c *f = (fz_arc4c*)filter;
+	fz_arc4c *state = stm->state;
 	int n;
 
-	while (1)
-	{
-		if (in->rp + 1 > in->wp) {
-			if (in->eof)
-				return fz_iodone;
-			return fz_ioneedin;
-		}
-		if (out->wp + 1 > out->ep)
-			return fz_ioneedout;
+	n = fz_read(state->chain, buf, len);
+	if (n < 0)
+		return fz_rethrow(n, "read error in arc4 filter");
 
-		n = MIN(in->wp - in->rp, out->ep - out->wp);
-		fz_arc4encrypt(&f->arc4, out->wp, in->rp, n);
-		in->rp += n;
-		out->wp += n;
-	}
+	fz_arc4encrypt(&state->arc4, buf, buf, n);
+
+	return n;
+}
+
+static void
+closearc4(fz_stream *stm)
+{
+	fz_arc4c *state = stm->state;
+	fz_close(state->chain);
+	fz_free(state);
+}
+
+fz_stream *
+fz_openarc4(fz_stream *chain, unsigned char *key, unsigned keylen)
+{
+	fz_arc4c *state;
+
+	state = fz_malloc(sizeof(fz_arc4c));
+	state->chain = chain;
+	fz_arc4init(&state->arc4, key, keylen);
+
+	return fz_newstream(state, readarc4, closearc4);
 }
 
 /* AES Filter */
@@ -428,65 +422,81 @@ typedef struct fz_aesd_s fz_aesd;
 
 struct fz_aesd_s
 {
-	fz_filter super;
+	fz_stream *chain;
 	fz_aes aes;
 	unsigned char iv[16];
 	int ivcount;
+	unsigned char bp[16];
+	unsigned char *rp, *wp;
 };
 
-fz_filter *
-fz_newaesdfilter(unsigned char *key, unsigned keylen)
+static int
+readaesd(fz_stream *stm, unsigned char *buf, int len)
 {
-	FZ_NEWFILTER(fz_aesd, f, aesdfilter);
-	aes_setkey_dec(&f->aes, key, keylen * 8);
-	f->ivcount = 0;
-	return (fz_filter *)f;
-}
+	fz_aesd *state = stm->state;
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
 
-void
-fz_dropaesdfilter(fz_filter *f)
-{
-}
-
-fz_error
-fz_processaesdfilter(fz_filter *filter, fz_buffer *in, fz_buffer *out)
-{
-	fz_aesd *f = (fz_aesd*)filter;
-	int n;
-
-	while (1)
+	while (state->ivcount < 16)
 	{
-		if (in->rp + 16 > in->wp)
-		{
-			if (in->eof)
-				return fz_iodone;
-			return fz_ioneedin;
-		}
-
-		if (f->ivcount < 16)
-		{
-			f->iv[f->ivcount++] = *in->rp++;
-		}
-		else
-		{
-			if (out->wp + 16 > out->ep)
-				return fz_ioneedout;
-
-			n = MIN(in->wp - in->rp, out->ep - out->wp);
-			n = (n / 16) * 16;
-
-			aes_crypt_cbc(&f->aes, AES_DECRYPT, n, f->iv, in->rp, out->wp);
-			in->rp += n;
-			out->wp += n;
-
-			/* Remove padding bytes */
-			if (in->eof && in->rp == in->wp)
-			{
-				int pad = out->wp[-1];
-				if (pad < 1 || pad > 16)
-					return fz_throw("aes padding out of range: %d", pad);
-				out->wp -= pad;
-			}
-		}
+		int c = fz_readbyte(state->chain);
+		if (c < 0)
+			return fz_throw("premature end in aes filter");
+		state->iv[state->ivcount++] = c;
 	}
+
+	while (state->rp < state->wp && p < ep)
+		*p++ = *state->rp++;
+
+	while (p < ep)
+	{
+		int n = fz_read(state->chain, state->bp, 16);
+		if (n < 0)
+			return fz_rethrow(n, "read error in aes filter");
+		else if (n == 0)
+			return p - buf;
+		else if (n < 16)
+			return fz_throw("partial block in aes filter");
+
+		aes_crypt_cbc(&state->aes, AES_DECRYPT, 16, state->iv, state->bp, state->bp);
+		state->rp = state->bp;
+		state->wp = state->bp + 16;
+
+		/* strip padding at end of file */
+		if (fz_peekbyte(state->chain) == EOF)
+		{
+			int pad = state->bp[15];
+			if (pad < 1 || pad > 16)
+				return fz_throw("aes padding out of range: %d", pad);
+			state->wp -= pad;
+		}
+
+		while (state->rp < state->wp && p < ep)
+			*p++ = *state->rp++;
+	}
+
+	return p - buf;
+}
+
+static void
+closeaesd(fz_stream *stm)
+{
+	fz_aesd *state = stm->state;
+	fz_close(state->chain);
+	fz_free(state);
+}
+
+fz_stream *
+fz_openaesd(fz_stream *chain, unsigned char *key, unsigned keylen)
+{
+	fz_aesd *state;
+
+	state = fz_malloc(sizeof(fz_aesd));
+	state->chain = chain;
+	aes_setkey_dec(&state->aes, key, keylen * 8);
+	state->ivcount = 0;
+	state->rp = state->bp;
+	state->wp = state->bp;
+
+	return fz_newstream(state, readaesd, closeaesd);
 }

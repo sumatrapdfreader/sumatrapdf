@@ -17,8 +17,7 @@ static FILE *out = NULL;
 static char *uselist = NULL;
 static int *ofslist = NULL;
 static int *genlist = NULL;
-static int *newnumlist = NULL;
-static pdf_xrefentry *oldxreflist = NULL;
+static int *renumbermap = NULL;
 
 static int dogarbage = 0;
 static int doexpand = 0;
@@ -71,6 +70,7 @@ static void sweepobj(fz_obj *obj)
 static void sweepref(fz_obj *obj)
 {
 	int num = fz_tonum(obj);
+	int gen = fz_tonum(obj);
 
 	if (num < 0 || num >= xref->len)
 		return;
@@ -80,11 +80,12 @@ static void sweepref(fz_obj *obj)
 	uselist[num] = 1;
 
 	/* Bake in /Length in stream objects */
-	if (xref->table[num].stmofs)
+	if (pdf_isstream(xref, num, gen))
 	{
 		fz_obj *len = fz_dictgets(obj, "Length");
 		if (fz_isindirect(len))
 		{
+			uselist[fz_tonum(len)] = 0;
 			len = fz_resolveindirect(len);
 			fz_dictputs(obj, "Length", len);
 		}
@@ -94,7 +95,80 @@ static void sweepref(fz_obj *obj)
 }
 
 /*
- * Renumber objects to compact the xref table
+ * Scan for and remove duplicate objects (slow)
+ */
+
+static void removeduplicateobjs(void)
+{
+	int num, other;
+
+	for (num = 1; num < xref->len; num++)
+	{
+		/* Only compare an object to objects preceeding it */
+		for (other = 1; other < num; other++)
+		{
+			fz_obj *a, *b;
+
+			if (num == other || !uselist[num] || !uselist[other])
+				continue;
+
+			/*
+			 * Comparing stream objects data contents would take too long.
+			 *
+			 * pdf_isstream calls pdf_cacheobject and ensures
+			 * that the xref table has the objects loaded.
+			 */
+			if (pdf_isstream(xref, num, 0) || pdf_isstream(xref, other, 0))
+				continue;
+
+			a = xref->table[num].obj;
+			b = xref->table[other].obj;
+
+			a = fz_resolveindirect(a);
+			b = fz_resolveindirect(b);
+
+			if (fz_objcmp(a, b))
+				continue;
+
+			/* Keep the lowest numbered object */
+			renumbermap[num] = MIN(num, other);
+			renumbermap[other] = MIN(num, other);
+			uselist[MAX(num, other)] = 0;
+
+			/* One duplicate was found, do not look for another */
+			break;
+		}
+	}
+}
+
+/*
+ * Renumber objects sequentially so the xref is more compact
+ */
+
+static void compactxref(void)
+{
+	int num, newnum;
+
+	/*
+	 * Update renumbermap in-place, clustering all used
+	 * objects together at low object ids. Objects that
+	 * already should be renumbered will have their new
+	 * object ids be updated to reflect the compaction.
+	 */
+
+	newnum = 1;
+	for (num = 1; num < xref->len; num++)
+	{
+		if (uselist[num] && renumbermap[num] == num)
+			renumbermap[num] = newnum++;
+		else if (renumbermap[num] != num)
+			renumbermap[num] = renumbermap[renumbermap[num]];
+	}
+}
+
+/*
+ * Update indirect objects according to renumbering established when
+ * removing duplicate objects and compacting the xref.
  */
 
 static void renumberobj(fz_obj *obj)
@@ -109,7 +183,7 @@ static void renumberobj(fz_obj *obj)
 			fz_obj *val = fz_dictgetval(obj, i);
 			if (fz_isindirect(val))
 			{
-				val = fz_newindirect(newnumlist[fz_tonum(val)], 0, xref);
+				val = fz_newindirect(renumbermap[fz_tonum(val)], 0, xref);
 				fz_dictput(obj, key, val);
 				fz_dropobj(val);
 			}
@@ -120,14 +194,14 @@ static void renumberobj(fz_obj *obj)
 		}
 	}
 
-	if (fz_isarray(obj))
+	else if (fz_isarray(obj))
 	{
 		for (i = 0; i < fz_arraylen(obj); i++)
 		{
 			fz_obj *val = fz_arrayget(obj, i);
 			if (fz_isindirect(val))
 			{
-				val = fz_newindirect(newnumlist[fz_tonum(val)], 0, xref);
+				val = fz_newindirect(renumbermap[fz_tonum(val)], 0, xref);
 				fz_arrayput(obj, i, val);
 				fz_dropobj(val);
 			}
@@ -139,108 +213,60 @@ static void renumberobj(fz_obj *obj)
 	}
 }
 
-static void renumberxref(void)
+static void renumberobjs(void)
 {
-	int num, newnum;
+	pdf_xrefentry *oldxref;
+	int newlen;
+	int num;
 
-	newnumlist = fz_malloc(xref->len * sizeof(int));
-	oldxreflist = fz_malloc(xref->len * sizeof(pdf_xrefentry));
-	for (num = 0; num < xref->len; num++)
-	{
-		newnumlist[num] = -1;
-		oldxreflist[num] = xref->table[num];
-	}
-
-	newnum = 1;
-	for (num = 0; num < xref->len; num++)
-	{
-		if (xref->table[num].type == 'f')
-			uselist[num] = 0;
-		if (uselist[num])
-			newnumlist[num] = newnum++;
-	}
-
+	/* Apply renumber map to indirect references in all objects in xref */
 	renumberobj(xref->trailer);
 	for (num = 0; num < xref->len; num++)
-		renumberobj(xref->table[num].obj);
-
-	for (num = 0; num < xref->len; num++)
-		uselist[num] = 0;
-
-	for (num = 0; num < xref->len; num++)
 	{
-		if (newnumlist[num] >= 0)
+		fz_obj *obj = xref->table[num].obj;
+
+		if (fz_isindirect(obj))
 		{
-			uselist[newnumlist[num]] = 1;
-			if (newnumlist[num] != num)
-			{
-				xref->table[newnumlist[num]] = oldxreflist[num];
-				xref->table[num].obj = nil;
-			}
+			obj = fz_newindirect(renumbermap[fz_tonum(obj)], 0, xref);
+			pdf_updateobject(xref, num, 0, obj);
+			fz_dropobj(obj);
+		}
+		else
+		{
+			renumberobj(obj);
 		}
 	}
 
-	for (num = newnum; num < xref->len; num++)
-	{
-		if (xref->table[num].obj)
-		{
-			fz_dropobj(xref->table[num].obj);
-			xref->table[num].obj = nil;
-		}
-	}
+	/* Create new table for the reordered, compacted xref */
+	oldxref = xref->table;
+	xref->table = fz_malloc(xref->cap * sizeof (pdf_xrefentry));
+	xref->table[0] = oldxref[num];
 
-	fz_free(oldxreflist);
-	fz_free(newnumlist);
-
-	xref->len = newnum;
-}
-
-/*
- * Scan and remove duplicate objects (slow)
- */
-
-static void removeduplicateobjs(void)
-{
-	int num, other;
-
-	newnumlist = fz_malloc(xref->len * sizeof(int));
-	for (num = 0; num < xref->len; num++)
-		newnumlist[num] = num;
-
+	/* Move used objects into the new compacted xref */
+	newlen = 0;
 	for (num = 1; num < xref->len; num++)
 	{
-		for (other = 1; other < num; other++)
+		if (uselist[num])
 		{
-			fz_obj *a, *b;
-
-			/*
-			pdf_isstream calls pdf_cacheobject and ensures
-			that the xref table has the objects loaded
-			*/
-			if (num == other ||
-				pdf_isstream(xref, num, 0) ||
-				pdf_isstream(xref, other, 0))
-				continue;
-
-			a = xref->table[num].obj;
-			b = xref->table[other].obj;
-
-			a = fz_resolveindirect(a);
-			b = fz_resolveindirect(b);
-
-			if (fz_objcmp(a, b))
-				continue;
-
-			newnumlist[num] = MIN(num, other);
-			break;
+			if (newlen < renumbermap[num])
+				newlen = renumbermap[num];
+			xref->table[renumbermap[num]] = oldxref[num];
+		}
+		else
+		{
+			if (oldxref[num].obj)
+				fz_dropobj(oldxref[num].obj);
 		}
 	}
 
-	renumberobj(xref->trailer);
-	for (num = 0; num < xref->len; num++)
-		renumberobj(xref->table[num].obj);
+	fz_free(oldxref);
 
-	fz_free(newnumlist);
+	/* Update the used objects count in compacted xref */
+	xref->len = newlen + 1;
+
+	/* Update list of used objects to fit with compacted xref */
+	for (num = 1; num < xref->len; num++)
+		uselist[num] = 1;
 }
 
 /*
@@ -250,35 +276,28 @@ static void removeduplicateobjs(void)
 static void retainpages(int argc, char **argv)
 {
 	fz_error error;
-	fz_obj *root, *pages, *type, *kids, *countobj;
-	int count;
+	fz_obj *oldroot, *root, *pages, *kids, *countobj, *parent;
 
 	/* Load the old page tree */
 	error = pdf_loadpagetree(xref);
 	if (error)
 		die(fz_rethrow(error, "cannot load page tree"));
 
-	/* Snatch pages entry from root dict */
-	root = fz_dictgets(xref->trailer, "Root");
-	pages = fz_keepobj(fz_dictgets(root, "Pages"));
-	type = fz_keepobj(fz_dictgets(root, "Type"));
+	/* Keep only pages/type entry to avoid references to unretained pages */
+	oldroot = fz_dictgets(xref->trailer, "Root");
+	pages = fz_dictgets(oldroot, "Pages");
 
-	/* Then empty the root dict */
-	while (fz_dictlen(root) > 0)
-	{
-		fz_obj *key = fz_dictgetkey(root, 0);
-		fz_dictdel(root, key);
-	}
+	root = fz_newdict(2);
+	fz_dictputs(root, "Type", fz_dictgets(oldroot, "Type"));
+	fz_dictputs(root, "Pages", fz_dictgets(oldroot, "Pages"));
 
-	/* And only retain pages and type entries */
-	fz_dictputs(root, "Pages", pages);
-	fz_dictputs(root, "Type", type);
-	fz_dropobj(pages);
-	fz_dropobj(type);
+	pdf_updateobject(xref, fz_tonum(oldroot), fz_togen(oldroot), root);
 
-	/* Create a new kids array with only the pages we want to keep. */
+	fz_dropobj(root);
+
+	/* Create a new kids array with only the pages we want to keep */
+	parent = fz_newindirect(fz_tonum(pages), fz_togen(pages), xref);
 	kids = fz_newarray(1);
-	count = 0;
 
 	/* Retain pages specified */
 	while (argc - fz_optind)
@@ -318,14 +337,10 @@ static void retainpages(int argc, char **argv)
 				fz_obj *pageobj = pdf_getpageobject(xref, page);
 				fz_obj *pageref = pdf_getpageref(xref, page);
 
-				/* Update parent reference */
-				fz_dictputs(pageobj, "Parent", pages);
+				fz_dictputs(pageobj, "Parent", parent);
 
 				/* Store page object in new kids array */
 				fz_arraypush(kids, pageref);
-				count++;
-
-				fz_dropobj(pageref);
 			}
 
 			spec = fz_strsep(&pagelist, ",");
@@ -334,8 +349,10 @@ static void retainpages(int argc, char **argv)
 		fz_optind++;
 	}
 
+	fz_dropobj(parent);
+
 	/* Update page count and kids array */
-	countobj = fz_newint(count);
+	countobj = fz_newint(fz_arraylen(kids));
 	fz_dictputs(pages, "Count", countobj);
 	fz_dropobj(countobj);
 	fz_dictputs(pages, "Kids", kids);
@@ -380,7 +397,7 @@ static void copystream(fz_obj *obj, int num, int gen)
 	fprintf(out, "%d %d obj\n", num, gen);
 	fz_fprintobj(out, obj, !doexpand);
 	fprintf(out, "stream\n");
-	fwrite(buf->rp, 1, buf->wp - buf->rp, out);
+	fwrite(buf->data, 1, buf->len, out);
 	fprintf(out, "endstream\nendobj\n\n");
 
 	fz_dropbuffer(buf);
@@ -400,14 +417,14 @@ static void expandstream(fz_obj *obj, int num, int gen)
 	fz_dictdels(newdict, "Filter");
 	fz_dictdels(newdict, "DecodeParms");
 
-	newlen = fz_newint(buf->wp - buf->rp);
+	newlen = fz_newint(buf->len);
 	fz_dictputs(newdict, "Length", newlen);
 	fz_dropobj(newlen);
 
 	fprintf(out, "%d %d obj\n", num, gen);
 	fz_fprintobj(out, newdict, !doexpand);
 	fprintf(out, "stream\n");
-	fwrite(buf->rp, 1, buf->wp - buf->rp, out);
+	fwrite(buf->data, 1, buf->len, out);
 	fprintf(out, "endstream\nendobj\n\n");
 
 	fz_dropobj(newdict);
@@ -443,7 +460,7 @@ static void writeobject(int num, int gen)
 		}
 	}
 
-	if (!xref->table[num].stmofs)
+	if (!pdf_isstream(xref, num, gen))
 	{
 		fprintf(out, "%d %d obj\n", num, gen);
 		fz_fprintobj(out, obj, !doexpand);
@@ -514,9 +531,6 @@ static void writepdf(void)
 	for (num = 0; num < xref->len; num++)
 	{
 		if (xref->table[num].type == 'f')
-			uselist[num] = 0;
-
-		if (xref->table[num].type == 'f')
 			genlist[num] = xref->table[num].gen;
 		if (xref->table[num].type == 'n')
 			genlist[num] = xref->table[num].gen;
@@ -528,6 +542,7 @@ static void writepdf(void)
 
 		if (xref->table[num].type == 'n' || xref->table[num].type == 'o')
 		{
+			uselist[num] = 1;
 			ofslist[num] = ftell(out);
 			writeobject(num, genlist[num]);
 		}
@@ -597,12 +612,14 @@ int main(int argc, char **argv)
 	uselist = fz_malloc(sizeof (char) * (xref->len + 1));
 	ofslist = fz_malloc(sizeof (int) * (xref->len + 1));
 	genlist = fz_malloc(sizeof (int) * (xref->len + 1));
+	renumbermap = fz_malloc(sizeof (int) * (xref->len + 1));
 
 	for (num = 0; num < xref->len; num++)
 	{
 		uselist[num] = 0;
 		ofslist[num] = 0;
 		genlist[num] = 0;
+		renumbermap[num] = num;
 	}
 
 	/* Make sure any objects hidden in compressed streams have been loaded */
@@ -612,16 +629,21 @@ int main(int argc, char **argv)
 	if (subset)
 		retainpages(argc, argv);
 
-	/* Coalesce identical objects */
+	/* Sweep & mark objects from the trailer */
+	if (dogarbage >= 1)
+		sweepobj(xref->trailer);
+
+	/* Coalesce and renumber duplicate objects */
 	if (dogarbage >= 3)
 		removeduplicateobjs();
 
-	/* Sweep & mark objects from the trailer */
-	sweepobj(xref->trailer);
-
-	/* Renumber objects to shorten xref */
+	/* Compact xref by renumbering and removing unused objects */
 	if (dogarbage >= 2)
-		renumberxref();
+		compactxref();
+
+	/* Make renumbering affect all indirect references and update xref */
+	if (dogarbage >= 2)
+		renumberobjs();
 
 	writepdf();
 
@@ -631,6 +653,7 @@ int main(int argc, char **argv)
 	fz_free(uselist);
 	fz_free(ofslist);
 	fz_free(genlist);
+	fz_free(renumbermap);
 
 	pdf_freexref(xref);
 

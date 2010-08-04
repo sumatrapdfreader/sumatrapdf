@@ -6,97 +6,92 @@ typedef struct fz_flate_s fz_flate;
 
 struct fz_flate_s
 {
-	fz_filter super;
+	fz_stream *chain;
 	z_stream z;
 };
 
-static void *
-zmalloc(void *opaque, unsigned int items, unsigned int size)
+static void * zmalloc(void *opaque, unsigned int items, unsigned int size)
 {
 	return fz_malloc(items * size);
 }
 
-static void
-zfree(void *opaque, void *ptr)
+static void zfree(void *opaque, void *ptr)
 {
 	fz_free(ptr);
 }
 
-fz_filter *
-fz_newflated(fz_obj *params)
+static int
+readflated(fz_stream *stm, unsigned char *outbuf, int outlen)
 {
-	int ei;
+	fz_flate *state = stm->state;
+	fz_stream *chain = state->chain;
+	z_streamp zp = &state->z;
+	int code;
 
-	FZ_NEWFILTER(fz_flate, f, flated);
+	if (chain->rp == chain->wp)
+		fz_fillbuffer(chain);
 
-	f->z.zalloc = zmalloc;
-	f->z.zfree = zfree;
-	f->z.opaque = nil;
-	f->z.next_in = nil;
-	f->z.avail_in = 0;
+	zp->next_in = chain->rp;
+	zp->avail_in = chain->wp - chain->rp;
+	zp->next_out = outbuf;
+	zp->avail_out = outlen;
 
-	ei = inflateInit(&f->z);
+	code = inflate(zp, Z_SYNC_FLUSH);
 
-	if (ei != Z_OK)
+	chain->rp = chain->wp - zp->avail_in;
+
+	if (code == Z_STREAM_END || code == Z_OK)
 	{
-		fz_warn("zlib error: inflateInit: %s", f->z.msg);
+		return outlen - zp->avail_out;
 	}
-
-	return (fz_filter*)f;
-}
-
-void
-fz_dropflated(fz_filter *f)
-{
-	z_streamp zp = &((fz_flate*)f)->z;
-	int err;
-
-	err = inflateEnd(zp);
-	if (err != Z_OK)
-		fz_warn("inflateEnd: %s", zp->msg);
-}
-
-fz_error
-fz_processflated(fz_filter *f, fz_buffer *in, fz_buffer *out)
-{
-	z_streamp zp = &((fz_flate*)f)->z;
-	int err;
-
-	if (in->rp == in->wp && !in->eof)
-		return fz_ioneedin;
-	if (out->wp == out->ep)
-		return fz_ioneedout;
-
-	zp->next_in = in->rp;
-	zp->avail_in = in->wp - in->rp;
-
-	zp->next_out = out->wp;
-	zp->avail_out = out->ep - out->wp;
-
-	err = inflate(zp, Z_SYNC_FLUSH);
-
-	in->rp = in->wp - zp->avail_in;
-	out->wp = out->ep - zp->avail_out;
-
-	if (err == Z_DATA_ERROR && in->eof && in->rp == in->wp)
+	else if (code == Z_BUF_ERROR)
+	{
+		fz_warn("premature end of data in flate filter");
+		return outlen - zp->avail_out;
+	}
+	else if (code == Z_DATA_ERROR && zp->avail_in == 0)
 	{
 		fz_warn("ignoring zlib error: %s", zp->msg);
-		return fz_iodone;
-	}
-	else if (err == Z_STREAM_END || err == Z_BUF_ERROR)
-	{
-		return fz_iodone;
-	}
-	else if (err == Z_OK)
-	{
-		if (in->rp == in->wp && !in->eof)
-			return fz_ioneedin;
-		if (out->wp == out->ep)
-			return fz_ioneedout;
-		return fz_ioneedin; /* hmm, what's going on here? */
+		return outlen - zp->avail_out;
 	}
 	else
 	{
-		return fz_throw("zlib error: inflate: %s", zp->msg);
+		return fz_throw("zlib error: %s", zp->msg);
 	}
+}
+
+static void
+closeflated(fz_stream *stm)
+{
+	fz_flate *state = stm->state;
+	int code;
+
+	code = inflateEnd(&state->z);
+	if (code != Z_OK)
+		fz_warn("zlib error: inflateEnd: %s", state->z.msg);
+
+	fz_close(state->chain);
+	fz_free(state);
+}
+
+fz_stream *
+fz_openflated(fz_stream *chain)
+{
+	fz_flate *state;
+	int code;
+
+	state = fz_malloc(sizeof(fz_flate));
+	state->chain = chain;
+
+	state->z.zalloc = zmalloc;
+	state->z.zfree = zfree;
+	state->z.opaque = nil;
+	state->z.next_in = nil;
+	state->z.avail_in = 0;
+
+	code = inflateInit(&state->z);
+	if (code != Z_OK)
+		fz_warn("zlib error: inflateInit: %s", state->z.msg);
+
+	return fz_newstream(state, readflated, closeflated);
 }

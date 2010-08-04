@@ -506,12 +506,6 @@ skip:
 			else
 				fz_readbyte(file);
 		}
-		error = fz_readerror(file);
-		if (error)
-		{
-			fz_dropobj(obj);
-			return fz_rethrow(error, "cannot parse indirect object (%d %d R)", num, gen);
-		}
 		stmofs = fz_tell(file);
 	}
 	else if (tok == PDF_TENDOBJ)

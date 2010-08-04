@@ -111,9 +111,9 @@ static void showstream(int num, int gen)
 
 	while (1)
 	{
-		error = fz_read(&n, stm, buf, sizeof buf);
-		if (error)
-			die(error);
+		n = fz_read(stm, buf, sizeof buf);
+		if (n < 0)
+			die(n);
 		if (n == 0)
 			break;
 		if (showbinary)
@@ -122,7 +122,7 @@ static void showstream(int num, int gen)
 			showsafe(buf, n);
 	}
 
-	fz_dropstream(stm);
+	fz_close(stm);
 }
 
 static void showobject(int num, int gen)

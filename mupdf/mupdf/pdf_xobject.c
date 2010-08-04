@@ -75,7 +75,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 		return fz_rethrow(error, "cannot load xobject content stream (%d %d R)", fz_tonum(dict), fz_togen(dict));
 	}
 
-	pdf_logrsrc("stream %d bytes\n", form->contents->wp - form->contents->rp);
+	pdf_logrsrc("stream %d bytes\n", form->contents->len);
 	pdf_logrsrc("}\n");
 
 	*formp = form;

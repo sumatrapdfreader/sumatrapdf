@@ -1,17 +1,5 @@
 #include "fitz.h"
 
-/* TODO: complete rewrite with error checking and use fitz memctx */
-
-/*
-<rillian> so to use a global_ctx, you run your global data through a normal ctx
-<rillian> then call jbig2_make_global_ctx with the normal context
-<rillian> that does the (currently null) conversion
-<maskros> make_global_ctx after i fed it all the global stream data?
-<rillian> maskros: yes
-<rillian> and you pass the new global ctx object to jbig2_ctx_new() when you
-+create the per-page ctx
-*/
-
 #ifdef _WIN32 /* Microsoft Visual C++ */
 
 typedef signed char int8_t;
@@ -33,90 +21,83 @@ typedef struct fz_jbig2d_s fz_jbig2d;
 
 struct fz_jbig2d_s
 {
-	fz_filter super;
+	fz_stream *chain;
 	Jbig2Ctx *ctx;
 	Jbig2GlobalCtx *gctx;
 	Jbig2Image *page;
 	int idx;
 };
 
-fz_filter *
-fz_newjbig2d(fz_obj *params)
+static void
+closejbig2d(fz_stream *stm)
 {
-	FZ_NEWFILTER(fz_jbig2d, d, jbig2d);
-	d->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, nil, nil, nil);
-	d->gctx = nil;
-	d->page = nil;
-	d->idx = 0;
-	return (fz_filter*)d;
+	fz_jbig2d *state = stm->state;
+	if (state->page)
+		jbig2_release_page(state->ctx, state->page);
+	if (state->gctx)
+		jbig2_global_ctx_free(state->gctx);
+	jbig2_ctx_free(state->ctx);
+	fz_close(state->chain);
+	fz_free(state);
 }
 
-void
-fz_dropjbig2d(fz_filter *filter)
+static int
+readjbig2d(fz_stream *stm, unsigned char *buf, int len)
 {
-	fz_jbig2d *d = (fz_jbig2d*)filter;
-	if (d->gctx)
-		jbig2_global_ctx_free(d->gctx);
-	jbig2_ctx_free(d->ctx);
-}
+	fz_jbig2d *state = stm->state;
+	unsigned char tmp[4096];
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
+	unsigned char *s;
+	int x, w, n;
 
-fz_error
-fz_setjbig2dglobalstream(fz_filter *filter, unsigned char *buf, int len)
-{
-	fz_jbig2d *d = (fz_jbig2d*)filter;
-	jbig2_data_in(d->ctx, buf, len);
-	d->gctx = jbig2_make_global_ctx(d->ctx);
-	d->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, d->gctx, nil, nil);
-	return fz_okay;
-}
-
-fz_error
-fz_processjbig2d(fz_filter *filter, fz_buffer *in, fz_buffer *out)
-{
-	fz_jbig2d *d = (fz_jbig2d*)filter;
-	int len;
-	int i;
-
-	while (1)
+	if (!state->page)
 	{
-		if (in->rp == in->wp) {
-			if (!in->eof)
-				return fz_ioneedin;
-
-			if (!d->page) {
-				jbig2_complete_page(d->ctx);
-				d->page = jbig2_page_out(d->ctx);
-				if (!d->page)
-					return fz_throw("jbig2_page_out failed");
-			}
-
-			if (out->wp == out->ep)
-				return fz_ioneedout;
-
-			len = out->ep - out->wp;
-			if (d->idx + len > d->page->height * d->page->stride)
-				len = d->page->height * d->page->stride - d->idx;
-
-			/* XXX memcpy(out->wp, d->page->data + d->idx, len); */
-			{
-				unsigned char * restrict p = &d->page->data[d->idx];
-				unsigned char * restrict o = out->wp;
-				for (i = 0; i < len; i++)
-					*o++ = 0xff ^ *p++;
-			}
-
-			out->wp += len;
-			d->idx += len;
-
-			if (d->idx == d->page->height * d->page->stride) {
-				jbig2_release_page(d->ctx, d->page);
-				return fz_iodone;
-			}
+		while (1)
+		{
+			n = fz_read(state->chain, tmp, sizeof tmp);
+			if (n < 0)
+				return fz_rethrow(n, "read error in jbig2 filter");
+			if (n == 0)
+				break;
+			jbig2_data_in(state->ctx, tmp, n);
 		}
-		else {
-			len = in->wp - in->rp;
-			jbig2_data_in(d->ctx, in->rp, len);
-			in->rp += len;
-		}
+
+		jbig2_complete_page(state->ctx);
+
+		state->page = jbig2_page_out(state->ctx);
+		if (!state->page)
+			return fz_throw("jbig2_page_out failed");
 	}
+
+	s = state->page->data;
+	w = state->page->height * state->page->stride;
+	x = state->idx;
+	while (p < ep && x < w)
+		*p++ = s[x++] ^ 0xff;
+	state->idx = x;
+
+	return p - buf;
+}
+
+fz_stream *
+fz_openjbig2d(fz_stream *chain, fz_buffer *globals)
+{
+	fz_jbig2d *state;
+
+	state = fz_malloc(sizeof(fz_jbig2d));
+	state->chain = chain;
+	state->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, nil, nil, nil);
+	state->gctx = nil;
+	state->page = nil;
+	state->idx = 0;
+
+	if (globals)
+	{
+		jbig2_data_in(state->ctx, globals->data, globals->len);
+		state->gctx = jbig2_make_global_ctx(state->ctx);
+		state->ctx = jbig2_ctx_new(nil, JBIG2_OPTIONS_EMBEDDED, state->gctx, nil, nil);
+	}
+
+	return fz_newstream(state, readjbig2d, closejbig2d);
 }

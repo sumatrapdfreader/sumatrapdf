@@ -36,7 +36,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 		goto cleanup;
 	}
 
-	fz_dropstream(file);
+	fz_close(file);
 
 	wmode = fz_dictgets(stmobj, "WMode");
 	if (fz_isint(wmode))
@@ -80,7 +80,7 @@ pdf_loadembeddedcmap(pdf_cmap **cmapp, pdf_xref *xref, fz_obj *stmobj)
 
 cleanup:
 	if (file)
-		fz_dropstream(file);
+		fz_close(file);
 	if (cmap)
 		pdf_dropcmap(cmap);
 	return error; /* already rethrown */

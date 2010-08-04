@@ -1261,7 +1261,7 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 		goto cleanup;
 
 	if (stream)
-		fz_dropstream(stream);
+		fz_close(stream);
 	for (i = 0; i < funcs; i++)
 		if (func[i])
 			pdf_dropfunction(func[i]);
@@ -1273,7 +1273,7 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 
 cleanup:
 	if (stream)
-		fz_dropstream(stream);
+		fz_close(stream);
 	for (i = 0; i < funcs; i++)
 		if (func[i])
 			pdf_dropfunction(func[i]);

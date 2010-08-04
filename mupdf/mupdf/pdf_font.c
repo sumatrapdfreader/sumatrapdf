@@ -728,10 +728,10 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 			if (error)
 				goto cleanup;
 
-			fontdesc->ncidtogid = (buf->wp - buf->rp) / 2;
+			fontdesc->ncidtogid = (buf->len) / 2;
 			fontdesc->cidtogid = fz_malloc(fontdesc->ncidtogid * sizeof(unsigned short));
 			for (i = 0; i < fontdesc->ncidtogid; i++)
-				fontdesc->cidtogid[i] = (buf->rp[i * 2] << 8) + buf->rp[i * 2 + 1];
+				fontdesc->cidtogid[i] = (buf->data[i * 2] << 8) + buf->data[i * 2 + 1];
 
 			fz_dropbuffer(buf);
 		}

@@ -9,7 +9,8 @@ enum
 	NUMCODES = (1 << MAXBITS),
 	LZW_CLEAR = 256,
 	LZW_EOD = 257,
-	LZW_FIRST = 258
+	LZW_FIRST = 258,
+	MAXLENGTH = 4097
 };
 
 typedef struct lzw_code_s lzw_code;
@@ -26,69 +27,23 @@ typedef struct fz_lzwd_s fz_lzwd;
 
 struct fz_lzwd_s
 {
-	fz_filter super;
+	fz_stream *chain;
+	int eod;
 
 	int earlychange;
 
 	unsigned int word;		/* bits loaded from data */
 	int bidx;
 
-	int resume;			/* resume output of code from needout */
 	int codebits;			/* num bits/code */
 	int code;			/* current code */
 	int oldcode;			/* previously recognized code */
 	int nextcode;			/* next free entry */
 	lzw_code table[NUMCODES];
+
+	unsigned char bp[MAXLENGTH];
+	unsigned char *rp, *wp;
 };
-
-fz_filter *
-fz_newlzwd(fz_obj *params)
-{
-	int i;
-
-	FZ_NEWFILTER(fz_lzwd, lzw, lzwd);
-
-	lzw->earlychange = 1;
-
-	if (params)
-	{
-		fz_obj *obj;
-		obj = fz_dictgets(params, "EarlyChange");
-		if (obj) lzw->earlychange = fz_toint(obj) != 0;
-	}
-
-	lzw->bidx = 32;
-	lzw->word = 0;
-
-	for (i = 0; i < 256; i++)
-	{
-		lzw->table[i].value = i;
-		lzw->table[i].firstchar = i;
-		lzw->table[i].length = 1;
-		lzw->table[i].prev = -1;
-	}
-
-	for (i = 256; i < NUMCODES; i++)
-	{
-		lzw->table[i].value = 0;
-		lzw->table[i].firstchar = 0;
-		lzw->table[i].length = 0;
-		lzw->table[i].prev = -1;
-	}
-
-	lzw->codebits = MINBITS;
-	lzw->code = -1;
-	lzw->nextcode = LZW_FIRST;
-	lzw->oldcode = -1;
-	lzw->resume = 0;
-
-	return (fz_filter *)lzw;
-}
-
-void
-fz_droplzwd(fz_filter *filter)
-{
-}
 
 static inline void eatbits(fz_lzwd *lzw, int nbits)
 {
@@ -96,54 +51,50 @@ static inline void eatbits(fz_lzwd *lzw, int nbits)
 	lzw->bidx += nbits;
 }
 
-static inline fz_error fillbits(fz_lzwd *lzw, fz_buffer *in)
+static inline int fillbits(fz_lzwd *lzw)
 {
 	while (lzw->bidx >= 8)
 	{
-		if (in->rp + 1 > in->wp)
-			return fz_ioneedin;
+		int c = fz_readbyte(lzw->chain);
+		if (c == EOF)
+			return EOF;
 		lzw->bidx -= 8;
-		lzw->word |= *in->rp << lzw->bidx;
-		in->rp ++;
+		lzw->word |= c << lzw->bidx;
 	}
-	return fz_okay;
+	return 0;
 }
 
-static inline void unstuff(fz_lzwd *lzw, fz_buffer *in)
+static inline void unstuff(fz_lzwd *lzw)
 {
 	int i = (32 - lzw->bidx) / 8;
-	while (i-- && in->rp > in->bp)
-		in->rp --;
+	while (i--)
+		fz_unreadbyte(lzw->chain);
 }
 
-fz_error
-fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
+static int
+readlzwd(fz_stream *stm, unsigned char *buf, int len)
 {
-	fz_lzwd *lzw = (fz_lzwd*)filter;
+	fz_lzwd *lzw = stm->state;
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
 	unsigned char *s;
-	int len;
+	int codelen;
 
-	if (lzw->resume)
-	{
-		lzw->resume = 0;
-		goto output;
-	}
+	while (lzw->rp < lzw->wp && p < ep)
+		*p++ = *lzw->rp++;
 
-	while (1)
+	while (p < ep)
 	{
-		if (fillbits(lzw, in))
+		if (lzw->eod)
+			return 0;
+
+		if (fillbits(lzw))
 		{
-			if (in->eof)
+			if (lzw->bidx > 32 - lzw->codebits)
 			{
-				if (lzw->bidx > 32 - lzw->codebits)
-				{
-					unstuff(lzw, in);
-					return fz_iodone;
-				}
-			}
-			else
-			{
-				return fz_ioneedin;
+				unstuff(lzw);
+				lzw->eod = 1;
+				return p - buf;
 			}
 		}
 
@@ -153,8 +104,9 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 
 		if (lzw->code == LZW_EOD)
 		{
-			unstuff(lzw, in);
-			return fz_iodone;
+			unstuff(lzw);
+			lzw->eod = 1;
+			return p - buf;
 		}
 
 		if (lzw->code == LZW_CLEAR)
@@ -195,36 +147,88 @@ fz_processlzwd(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 		lzw->oldcode = lzw->code;
 
 output:
+
 		/* code maps to a string, copy to output (in reverse...) */
 		if (lzw->code > 255)
 		{
-			if (out->wp + lzw->table[lzw->code].length > out->ep)
-			{
-				lzw->resume = 1;
-				return fz_ioneedout;
-			}
+			codelen = lzw->table[lzw->code].length;
+			lzw->rp = lzw->bp;
+			lzw->wp = lzw->bp + codelen;
 
-			len = lzw->table[lzw->code].length;
-			s = out->wp + len;
+			assert(codelen < MAXLENGTH);
 
-			do
-			{
+			s = lzw->wp;
+			do {
 				*(--s) = lzw->table[lzw->code].value;
 				lzw->code = lzw->table[lzw->code].prev;
-			} while (lzw->code >= 0 && s > out->wp);
-			out->wp += len;
+			} while (lzw->code >= 0 && s > lzw->bp);
 		}
 
 		/* ... or just a single character */
 		else
 		{
-			if (out->wp + 1 > out->ep)
-			{
-				lzw->resume = 1;
-				return fz_ioneedout;
-			}
-
-			*out->wp++ = lzw->code;
+			lzw->bp[0] = lzw->code;
+			lzw->rp = lzw->bp;
+			lzw->wp = lzw->bp + 1;
 		}
+
+		/* copy to output */
+		while (lzw->rp < lzw->wp && p < ep)
+			*p++ = *lzw->rp++;
 	}
+
+	return p - buf;
+}
+
+static void
+closelzwd(fz_stream *stm)
+{
+	fz_lzwd *lzw = stm->state;
+	fz_close(lzw->chain);
+	fz_free(lzw);
+}
+
+fz_stream *
+fz_openlzwd(fz_stream *chain, fz_obj *params)
+{
+	fz_lzwd *lzw;
+	fz_obj *obj;
+	int i;
+
+	lzw = fz_malloc(sizeof(fz_lzwd));
+	lzw->chain = chain;
+	lzw->eod = 0;
+	lzw->earlychange = 1;
+
+	obj = fz_dictgets(params, "EarlyChange");
+	if (obj)
+		lzw->earlychange = !!fz_toint(obj);
+
+	lzw->bidx = 32;
+	lzw->word = 0;
+
+	for (i = 0; i < 256; i++)
+	{
+		lzw->table[i].value = i;
+		lzw->table[i].firstchar = i;
+		lzw->table[i].length = 1;
+		lzw->table[i].prev = -1;
+	}
+
+	for (i = 256; i < NUMCODES; i++)
+	{
+		lzw->table[i].value = 0;
+		lzw->table[i].firstchar = 0;
+		lzw->table[i].length = 0;
+		lzw->table[i].prev = -1;
+	}
+
+	lzw->codebits = MINBITS;
+	lzw->code = -1;
+	lzw->nextcode = LZW_FIRST;
+	lzw->oldcode = -1;
+	lzw->rp = lzw->bp;
+	lzw->wp = lzw->bp;
+
+	return fz_newstream(lzw, readlzwd, closelzwd);
 }

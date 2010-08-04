@@ -1474,9 +1474,6 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 				if (ch == '\r')
 					if (fz_peekbyte(file) == '\n')
 						fz_readbyte(file);
-				error = fz_readerror(file);
-				if (error)
-					return fz_rethrow(error, "cannot parse whitespace before inline image");
 
 				error = pdf_runinlineimage(csi, rdb, file, obj);
 				fz_dropobj(obj);
@@ -1504,11 +1501,9 @@ pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 {
 	fz_stream *file;
 	fz_error error;
-	contents->rp = contents->bp;
 	file = fz_openbuffer(contents);
 	error = pdf_runcsifile(csi, rdb, file, csi->xref->scratch, sizeof csi->xref->scratch);
-	fz_dropstream(file);
-	contents->rp = contents->bp;
+	fz_close(file);
 	if (error)
 		return fz_rethrow(error, "cannot parse content stream");
 	return fz_okay;

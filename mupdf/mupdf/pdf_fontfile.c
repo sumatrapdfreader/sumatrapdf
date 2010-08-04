@@ -347,13 +347,10 @@ insertmapping(pdf_fontlistMS *fl, char *facename, char *path, int index)
 static fz_error
 safe_read(fz_stream *file, char *buf, int size)
 {
-	int bytesRead;
-	fz_error err = fz_read(&bytesRead, file, buf, size);
-	if (err)
-		return err;
-
-	if (bytesRead != size)
+	int n = fz_read(file, buf, size);
+	if (n != size) /* covers n < 0 case */
 		return fz_throw("ioerror");
+
 	return fz_okay;
 }
 
@@ -477,7 +474,7 @@ parseTTFs(char *path)
 		return fz_throw("fonterror : %s not found", path);
 
 	err = parseTTF(file, 0, 0, path);
-	fz_dropstream(file);
+	fz_close(file);
 	return err;
 }
 
@@ -527,7 +524,7 @@ cleanup:
 	if (offsettable)
 		fz_free(offsettable);
 	if (file)
-		fz_dropstream(file);
+		fz_close(file);
 
 	return err;
 }
@@ -952,14 +949,14 @@ pdf_loadembeddedfont(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *stmref)
 	if (error)
 		return fz_rethrow(error, "cannot load font stream (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 
-	error = fz_newfontfrombuffer(&fontdesc->font, buf->rp, buf->wp - buf->rp, 0);
+	error = fz_newfontfrombuffer(&fontdesc->font, buf->data, buf->len, 0);
 	if (error)
 	{
 		fz_dropbuffer(buf);
 		return fz_rethrow(error, "cannot load embedded font (%d %d R)", fz_tonum(stmref), fz_togen(stmref));
 	}
 
-	fontdesc->buffer = buf->rp; /* save the buffer so we can free it later */
+	fontdesc->buffer = buf->data; /* save the buffer so we can free it later */
 	fz_free(buf); /* only free the fz_buffer struct, not the contained data */
 
 	fontdesc->isembedded = 1;

@@ -508,13 +508,13 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	error = pdf_lex(&tok, stream, buf, sizeof buf, &len);
 	if (error)
 	{
-		fz_dropstream(stream);
+		fz_close(stream);
 		return fz_rethrow(error, "stream is not a calculator function");
 	}
 
 	if (tok != PDF_TOBRACE)
 	{
-		fz_dropstream(stream);
+		fz_close(stream);
 		return fz_throw("stream is not a calculator function");
 	}
 
@@ -525,11 +525,11 @@ loadpostscriptfunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, in
 	error = parsecode(func, stream, &codeptr);
 	if (error)
 	{
-		fz_dropstream(stream);
+		fz_close(stream);
 		return fz_rethrow(error, "cannot parse calculator function (%d %d R)", num, gen);
 	}
 
-	fz_dropstream(stream);
+	fz_close(stream);
 	return fz_okay;
 }
 
@@ -1057,10 +1057,7 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 		{
 			if (fz_peekbyte(stream) == EOF && bits == 0)
 			{
-				error = fz_readerror(stream);
-				fz_dropstream(stream);
-				if (error)
-					return fz_rethrow(error, "truncated sample stream");
+				fz_close(stream);
 				return fz_throw("truncated sample stream");
 			}
 
@@ -1089,13 +1086,9 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 
 			func->u.sa.samples[i] = s;
 		}
-
-		error = fz_readerror(stream);
-		if (error)
-			return fz_rethrow(error, "truncated sample stream");
 	}
 
-	fz_dropstream(stream);
+	fz_close(stream);
 
 	pdf_logrsrc("}\n");
 

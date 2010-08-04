@@ -9,9 +9,11 @@ pdf_loadpagecontentsarray(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 	fz_error error;
 	fz_buffer *big;
 	fz_buffer *one;
-	int i, n;
+	int i;
 
 	pdf_logpage("multiple content streams: %d\n", fz_arraylen(list));
+
+	/* TODO: openstream, read, close into big buffer at once */
 
 	big = fz_newbuffer(32 * 1024);
 
@@ -25,12 +27,11 @@ pdf_loadpagecontentsarray(fz_buffer **bigbufp, pdf_xref *xref, fz_obj *list)
 			return fz_rethrow(error, "cannot load content stream part %d/%d (%d %d R)", i + 1, fz_arraylen(list), fz_tonum(stm), fz_togen(stm));
 		}
 
-		n = one->wp - one->rp;
-		while (big->wp + n + 1 > big->ep)
-			fz_growbuffer(big);
-		memcpy(big->wp, one->rp, n);
-		big->wp += n;
-		*big->wp++ = ' ';
+		if (big->len + one->len + 1 > big->cap)
+			fz_resizebuffer(big, big->len + one->len + 1);
+		memcpy(big->data + big->len, one->data, one->len);
+		big->data[big->len + one->len] = ' ';
+		big->len += one->len + 1;
 
 		fz_dropbuffer(one);
 	}
@@ -48,13 +49,13 @@ pdf_loadpagecontents(fz_buffer **bufp, pdf_xref *xref, fz_obj *obj)
 	{
 		error = pdf_loadpagecontentsarray(bufp, xref, obj);
 		if (error)
-			return fz_rethrow(error, "cannot load content stream array (%d %d R)", fz_tonum(obj), fz_togen(obj));
+			return fz_rethrow(error, "cannot load content stream array (%d 0 R)", fz_tonum(obj));
 	}
 	else if (pdf_isstream(xref, fz_tonum(obj), fz_togen(obj)))
 	{
 		error = pdf_loadstream(bufp, xref, fz_tonum(obj), fz_togen(obj));
 		if (error)
-			return fz_rethrow(error, "cannot load content stream (%d %d R)", fz_tonum(obj), fz_togen(obj));
+			return fz_rethrow(error, "cannot load content stream (%d 0 R)", fz_tonum(obj));
 	}
 	else
 	{

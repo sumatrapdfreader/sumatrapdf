@@ -15,16 +15,10 @@ static inline int iswhite(int ch)
 static fz_error
 pdf_loadversion(pdf_xref *xref)
 {
-	fz_error error;
 	char buf[20];
 
-	error = fz_seek(xref->file, 0, 0);
-	if (error)
-		return fz_rethrow(error, "cannot seek to beginning of file");
-
-	error = fz_readline(xref->file, buf, sizeof buf);
-	if (error)
-		return fz_rethrow(error, "cannot read version marker");
+	fz_seek(xref->file, 0, 0);
+	fz_readline(xref->file, buf, sizeof buf);
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		return fz_throw("cannot recognize version marker");
 
@@ -38,25 +32,20 @@ pdf_loadversion(pdf_xref *xref)
 static fz_error
 pdf_readstartxref(pdf_xref *xref)
 {
-	fz_error error;
 	unsigned char buf[1024];
 	int t, n;
 	int i;
 
-	error = fz_seek(xref->file, 0, 2);
-	if (error)
-		return fz_rethrow(error, "cannot seek to end of file");
+	fz_seek(xref->file, 0, 2);
 
 	xref->filesize = fz_tell(xref->file);
 
 	t = MAX(0, xref->filesize - (int)sizeof buf);
-	error = fz_seek(xref->file, t, 0);
-	if (error)
-		return fz_rethrow(error, "cannot seek to offset %d", t);
+	fz_seek(xref->file, t, 0);
 
-	error = fz_read(&n, xref->file, buf, sizeof buf);
-	if (error)
-		return fz_rethrow(error, "cannot read from file");
+	n = fz_read(xref->file, buf, sizeof buf);
+	if (n < 0)
+		return fz_rethrow(n, "cannot read from file");
 
 	for (i = n - 9; i >= 0; i--)
 	{
@@ -91,9 +80,7 @@ pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 
 	pdf_logxref("load old xref format trailer\n");
 
-	error = fz_readline(xref->file, buf, cap);
-	if (error)
-		return fz_rethrow(error, "cannot read xref marker");
+	fz_readline(xref->file, buf, cap);
 	if (strncmp(buf, "xref", 4) != 0)
 		return fz_throw("cannot find xref marker");
 
@@ -103,10 +90,7 @@ pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 		if (!(c >= '0' && c <= '9'))
 			break;
 
-		error = fz_readline(xref->file, buf, cap);
-		if (error)
-			return fz_rethrow(error, "cannot read xref count");
-
+		fz_readline(xref->file, buf, cap);
 		s = buf;
 		fz_strsep(&s, " "); /* ignore ofs */
 		if (!s)
@@ -115,24 +99,14 @@ pdf_readoldtrailer(pdf_xref *xref, char *buf, int cap)
 
 		/* broken pdfs where the section is not on a separate line */
 		if (s && *s != '\0')
-		{
-			error = fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
-			if (error)
-				return fz_rethrow(error, "cannot seek in file");
-		}
+			fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
 
 		t = fz_tell(xref->file);
 		if (t < 0)
 			return fz_throw("cannot tell in file");
 
-		error = fz_seek(xref->file, t + 20 * len, 0);
-		if (error)
-			return fz_rethrow(error, "cannot seek in file");
+		fz_seek(xref->file, t + 20 * len, 0);
 	}
-
-	error = fz_readerror(xref->file);
-	if (error)
-		return fz_rethrow(error, "cannot read from file");
 
 	error = pdf_lex(&tok, xref->file, buf, cap, &n);
 	if (error)
@@ -171,18 +145,12 @@ pdf_readtrailer(pdf_xref *xref, char *buf, int cap)
 	fz_error error;
 	int c;
 
-	error = fz_seek(xref->file, xref->startxref, 0);
-	if (error)
-		return fz_rethrow(error, "cannot seek to startxref");
+	fz_seek(xref->file, xref->startxref, 0);
 
 	while (iswhite(fz_peekbyte(xref->file)))
 		fz_readbyte(xref->file);
 
 	c = fz_peekbyte(xref->file);
-	error = fz_readerror(xref->file);
-	if (error)
-		return fz_rethrow(error, "cannot read trailer");
-
 	if (c == 'x')
 	{
 		error = pdf_readoldtrailer(xref, buf, cap);
@@ -220,9 +188,7 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 	pdf_logxref("load old xref format\n");
 
-	error = fz_readline(xref->file, buf, cap);
-	if (error)
-		return fz_rethrow(error, "cannot read xref marker");
+	fz_readline(xref->file, buf, cap);
 	if (strncmp(buf, "xref", 4) != 0)
 		return fz_throw("cannot find xref marker");
 
@@ -232,10 +198,7 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		if (!(c >= '0' && c <= '9'))
 			break;
 
-		error = fz_readline(xref->file, buf, cap);
-		if (error)
-			return fz_rethrow(error, "cannot read xref count");
-
+		fz_readline(xref->file, buf, cap);
 		s = buf;
 		ofs = atoi(fz_strsep(&s, " "));
 		len = atoi(fz_strsep(&s, " "));
@@ -244,14 +207,11 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		if (s && *s != '\0')
 		{
 			fz_warn("broken xref section. proceeding anyway.");
-			error = fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
-			if (error)
-				return fz_rethrow(error, "cannot seek to xref");
+			fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
 		}
 
-		/* broken pdfs where size in trailer undershoots
-		entries in xref sections */
-		if ((ofs + len) > xref->cap)
+		/* broken pdfs where size in trailer undershoots entries in xref sections */
+		if (ofs + len > xref->cap)
 		{
 			fz_warn("broken xref section, proceeding anyway.");
 			xref->cap = ofs + len;
@@ -273,9 +233,9 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 		for (i = ofs; i < ofs + len; i++)
 		{
-			error = fz_read(&n, xref->file, (unsigned char *) buf, 20);
-			if (error)
-				return fz_rethrow(error, "cannot read xref table");
+			n = fz_read(xref->file, (unsigned char *) buf, 20);
+			if (n < 0)
+				return fz_rethrow(n, "cannot read xref table");
 			if (!xref->table[i].type)
 			{
 				s = buf;
@@ -315,7 +275,6 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 static fz_error
 pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, int w1, int w2)
 {
-	fz_error error;
 	int i, n;
 
 	if (i0 < 0 || i0 + i1 > xref->len)
@@ -328,12 +287,7 @@ pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, i
 		int c = 0;
 
 		if (fz_peekbyte(stm) == EOF)
-		{
-			error = fz_readerror(stm);
-			if (error)
-				return fz_rethrow(error, "truncated xref stream");
 			return fz_throw("truncated xref stream");
-		}
 
 		for (n = 0; n < w0; n++)
 			a = (a << 8) + fz_readbyte(stm);
@@ -341,10 +295,6 @@ pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, i
 			b = (b << 8) + fz_readbyte(stm);
 		for (n = 0; n < w2; n++)
 			c = (c << 8) + fz_readbyte(stm);
-
-		error = fz_readerror(stm);
-		if (error)
-			return fz_rethrow(error, "truncated xref stream");
 
 		if (!xref->table[i].type)
 		{
@@ -447,7 +397,7 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		error = pdf_readnewxrefsection(xref, stm, 0, size, w0, w1, w2);
 		if (error)
 		{
-			fz_dropstream(stm);
+			fz_close(stm);
 			fz_dropobj(trailer);
 			return fz_rethrow(error, "cannot read xref stream (%d %d R)", num, gen);
 		}
@@ -461,14 +411,14 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 			error = pdf_readnewxrefsection(xref, stm, i0, i1, w0, w1, w2);
 			if (error)
 			{
-				fz_dropstream(stm);
+				fz_close(stm);
 				fz_dropobj(trailer);
 				return fz_rethrow(error, "cannot read xref stream section (%d %d R)", num, gen);
 			}
 		}
 	}
 
-	fz_dropstream(stm);
+	fz_close(stm);
 
 	*trailerp = trailer;
 
@@ -481,18 +431,12 @@ pdf_readxref(fz_obj **trailerp, pdf_xref *xref, int ofs, char *buf, int cap)
 	fz_error error;
 	int c;
 
-	error = fz_seek(xref->file, ofs, 0);
-	if (error)
-		return fz_rethrow(error, "cannot seek to xref");
+	fz_seek(xref->file, ofs, 0);
 
 	while (iswhite(fz_peekbyte(xref->file)))
 		fz_readbyte(xref->file);
 
 	c = fz_peekbyte(xref->file);
-	error = fz_readerror(xref->file);
-	if (error)
-		return fz_rethrow(error, "cannot read trailer");
-
 	if (c == 'x')
 	{
 		error = pdf_readoldxref(trailerp, xref, buf, cap);
@@ -728,7 +672,7 @@ pdf_freexref(pdf_xref *xref)
 	}
 
 	if (xref->file)
-		fz_dropstream(xref->file);
+		fz_close(xref->file);
 	if (xref->trailer)
 		fz_dropobj(xref->trailer);
 	if (xref->crypt)
@@ -812,21 +756,11 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 		ofsbuf[i] = atoi(buf);
 	}
 
-	error = fz_seek(stm, first, 0);
-	if (error)
-	{
-		error = fz_rethrow(error, "cannot seek in object stream (%d %d R)", num, gen);
-		goto cleanupstm;
-	}
+	fz_seek(stm, first, 0);
 
 	for (i = 0; i < count; i++)
 	{
-		error = fz_seek(stm, first + ofsbuf[i], 0);
-		if (error)
-		{
-			error = fz_rethrow(error, "cannot seek in object stream (%d %d R)", num, gen);
-			goto cleanupstm;
-		}
+		fz_seek(stm, first + ofsbuf[i], 0);
 
 		error = pdf_parsestmobj(&obj, xref, stm, buf, cap);
 		if (error)
@@ -854,14 +788,14 @@ pdf_loadobjstm(pdf_xref *xref, int num, int gen, char *buf, int cap)
 		}
 	}
 
-	fz_dropstream(stm);
+	fz_close(stm);
 	fz_free(ofsbuf);
 	fz_free(numbuf);
 	fz_dropobj(objstm);
 	return fz_okay;
 
 cleanupstm:
-	fz_dropstream(stm);
+	fz_close(stm);
 cleanupbuf:
 	fz_free(ofsbuf);
 	fz_free(numbuf);
@@ -895,9 +829,7 @@ pdf_cacheobject(pdf_xref *xref, int num, int gen)
 	}
 	else if (x->type == 'n')
 	{
-		error = fz_seek(xref->file, x->ofs, 0);
-		if (error)
-			return fz_rethrow(error, "cannot seek to object (%d %d R) offset %d", num, gen, x->ofs);
+		fz_seek(xref->file, x->ofs, 0);
 
 		error = pdf_parseindobj(&x->obj, xref, xref->file, xref->scratch, sizeof xref->scratch,
 			&rnum, &rgen, &x->stmofs);
@@ -987,7 +919,7 @@ pdf_openxref(pdf_xref **xrefp, char *filename, char *password)
 	error = pdf_openxrefwithstream(&xref, file, password);
 	if (error)
 		return fz_rethrow(error, "cannot load document '%s'", filename);
-	fz_dropstream(file);
+	fz_close(file);
 
 	*xrefp = xref;
 	return fz_okay;

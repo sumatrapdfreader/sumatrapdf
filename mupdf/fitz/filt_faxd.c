@@ -261,11 +261,13 @@ findchangingcolor(const unsigned char *line, int x, int w, int color)
 	return x;
 }
 
-static const unsigned char lm[8] =
-{ 0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01 };
+static const unsigned char lm[8] = {
+	0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01
+};
 
-static const unsigned char rm[8] =
-{ 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
+static const unsigned char rm[8] = {
+	0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE
+};
 
 static inline void
 setbits(unsigned char *line, int x0, int x1)
@@ -300,12 +302,13 @@ typedef enum fax_stage_e
 	SNORMAL,	/* neutral state, waiting for any code */
 	SMAKEUP,	/* got a 1d makeup code, waiting for terminating code */
 	SEOL,		/* at eol, needs output buffer space */
-	SH1, SH2	/* in H part 1 and 2 (both makeup and terminating codes) */
+	SH1, SH2,	/* in H part 1 and 2 (both makeup and terminating codes) */
+	SDONE		/* all done */
 } fax_stage_e;
 
 struct fz_faxd_s
 {
-	fz_filter super;
+	fz_stream *chain;
 
 	int k;
 	int endofline;
@@ -326,95 +329,31 @@ struct fz_faxd_s
 	int a, c, dim, eolc;
 	unsigned char *ref;
 	unsigned char *dst;
+	unsigned char *rp, *wp;
 };
 
-fz_filter *
-fz_newfaxd(fz_obj *params)
-{
-	fz_obj *obj;
-
-	FZ_NEWFILTER(fz_faxd, fax, faxd);
-
-	fax->ref = nil;
-	fax->dst = nil;
-
-	fax->k = 0;
-	fax->endofline = 0;
-	fax->encodedbytealign = 0;
-	fax->columns = 1728;
-	fax->rows = 0;
-	fax->endofblock = 1;
-	fax->blackis1 = 0;
-
-	obj = fz_dictgets(params, "K");
-	if (obj) fax->k = fz_toint(obj);
-
-	obj = fz_dictgets(params, "EndOfLine");
-	if (obj) fax->endofline = fz_tobool(obj);
-
-	obj = fz_dictgets(params, "EncodedByteAlign");
-	if (obj) fax->encodedbytealign = fz_tobool(obj);
-
-	obj = fz_dictgets(params, "Columns");
-	if (obj) fax->columns = fz_toint(obj);
-
-	obj = fz_dictgets(params, "Rows");
-	if (obj) fax->rows = fz_toint(obj);
-
-	obj = fz_dictgets(params, "EndOfBlock");
-	if (obj) fax->endofblock = fz_tobool(obj);
-
-	obj = fz_dictgets(params, "BlackIs1");
-	if (obj) fax->blackis1 = fz_tobool(obj);
-
-	fax->stride = ((fax->columns - 1) >> 3) + 1;
-	fax->ridx = 0;
-	fax->bidx = 32;
-	fax->word = 0;
-
-	fax->stage = SNORMAL;
-	fax->a = -1;
-	fax->c = 0;
-	fax->dim = fax->k < 0 ? 2 : 1;
-	fax->eolc = 0;
-
-	fax->ref = fz_malloc(fax->stride);
-	fax->dst = fz_malloc(fax->stride);
-
-	memset(fax->ref, 0, fax->stride);
-	memset(fax->dst, 0, fax->stride);
-
-	return (fz_filter*)fax;
-}
-
-void
-fz_dropfaxd(fz_filter *p)
-{
-	fz_faxd *fax = (fz_faxd*) p;
-	fz_free(fax->ref);
-	fz_free(fax->dst);
-}
-
-static inline void eatbits(fz_faxd *fax, int nbits)
+static inline void
+eatbits(fz_faxd *fax, int nbits)
 {
 	fax->word <<= nbits;
 	fax->bidx += nbits;
 }
 
-static inline fz_error fillbits(fz_faxd *fax, fz_buffer *in)
+static inline int
+fillbits(fz_faxd *fax)
 {
 	while (fax->bidx >= 8)
 	{
-		if (in->rp + 1 > in->wp)
-			return fz_ioneedin;
+		int c = fz_readbyte(fax->chain);
+		if (c == EOF)
+			return EOF;
 		fax->bidx -= 8;
-		fax->word |= *in->rp << fax->bidx;
-		in->rp ++;
+		fax->word |= c << fax->bidx;
 	}
-	return fz_okay;
+	return 0;
 }
 
-static int
+static inline int
 getcode(fz_faxd *fax, const cfd_node *table, int initialbits)
 {
 	unsigned int word = fax->word;
@@ -602,33 +541,31 @@ dec2d(fz_faxd *fax)
 	return 0;
 }
 
-fz_error
-fz_processfaxd(fz_filter *f, fz_buffer *in, fz_buffer *out)
+static int
+readfaxd(fz_stream *stm, unsigned char *buf, int len)
 {
-	fz_faxd *fax = (fz_faxd*)f;
+	fz_faxd *fax = stm->state;
+	unsigned char *p = buf;
+	unsigned char *ep = buf + len;
+	unsigned char *tmp;
 	fz_error error;
 	int i;
-	unsigned char *tmp;
+
+	if (fax->stage == SDONE)
+		return 0;
 
 	if (fax->stage == SEOL)
 		goto eol;
 
 loop:
 
-	if (fillbits(fax, in))
+	if (fillbits(fax))
 	{
-		if (in->eof)
+		if (fax->bidx > 31)
 		{
-			if (fax->bidx > 31)
-			{
-				if (fax->a > 0)
-					goto eol;
-				goto rtc;
-			}
-		}
-		else
-		{
-			return fz_ioneedin;
+			if (fax->a > 0)
+				goto eol;
+			goto rtc;
 		}
 	}
 
@@ -667,14 +604,15 @@ loop:
 	{
 		fax->eolc = 0;
 		error = dec1d(fax);
-		if (error) return error; /* can be fz_io* or real error */
-
+		if (error)
+			return fz_rethrow(error, "cannot decode 1d code");
 	}
 	else if (fax->dim == 2)
 	{
 		fax->eolc = 0;
 		error = dec2d(fax);
-		if (error) return error; /* can be fz_io* or real error */
+		if (error)
+			return fz_rethrow(error, "cannot decode 2d code");
 	}
 
 	/* no eol check after makeup codes nor in the middle of an H code */
@@ -694,24 +632,28 @@ loop:
 
 eol:
 	fax->stage = SEOL;
-	if (out->wp + fax->stride > out->ep)
-		return fz_ioneedout;
 
 	if (fax->blackis1)
-		memcpy(out->wp, fax->dst, fax->stride);
-	else {
-		unsigned char * restrict d = out->wp;
-		unsigned char * restrict s = fax->dst;
-		int w = fax->stride;
-		for (i = 0; i < w; i++)
-			*d++ = *s++ ^ 0xff;
+	{
+		while (fax->rp < fax->wp && p < ep)
+			*p++ = *fax->rp++;
 	}
+	else
+	{
+		while (fax->rp < fax->wp && p < ep)
+			*p++ = *fax->rp++ ^ 0xff;
+	}
+
+	if (fax->rp < fax->wp)
+		return p - buf;
+
+	fax->rp = fax->dst;
+	fax->wp = fax->dst + fax->stride;
 
 	tmp = fax->ref;
 	fax->ref = fax->dst;
 	fax->dst = tmp;
 	memset(fax->dst, 0, fax->stride);
-	out->wp += fax->stride;
 
 	fax->stage = SNORMAL;
 	fax->c = 0;
@@ -745,9 +687,85 @@ eol:
 	goto loop;
 
 rtc:
-	i = (32 - fax->bidx) / 8;
-	while (i-- && in->rp > in->bp)
-		in->rp --;
+	fax->stage = SDONE;
 
-	return fz_iodone;
+	/* try to put back any extra bytes we read */
+	i = (32 - fax->bidx) / 8;
+	while (i--)
+		fz_unreadbyte(fax->chain);
+
+	return p - buf;
+}
+
+static void
+closefaxd(fz_stream *stm)
+{
+	fz_faxd *fax = stm->state;
+	fz_close(fax->chain);
+	fz_free(fax->ref);
+	fz_free(fax->dst);
+	fz_free(fax);
+}
+
+fz_stream *
+fz_openfaxd(fz_stream *chain, fz_obj *params)
+{
+	fz_faxd *fax;
+	fz_obj *obj;
+
+	fax = fz_malloc(sizeof(fz_faxd));
+	fax->chain = chain;
+
+	fax->ref = nil;
+	fax->dst = nil;
+
+	fax->k = 0;
+	fax->endofline = 0;
+	fax->encodedbytealign = 0;
+	fax->columns = 1728;
+	fax->rows = 0;
+	fax->endofblock = 1;
+	fax->blackis1 = 0;
+
+	obj = fz_dictgets(params, "K");
+	if (obj) fax->k = fz_toint(obj);
+
+	obj = fz_dictgets(params, "EndOfLine");
+	if (obj) fax->endofline = fz_tobool(obj);
+
+	obj = fz_dictgets(params, "EncodedByteAlign");
+	if (obj) fax->encodedbytealign = fz_tobool(obj);
+
+	obj = fz_dictgets(params, "Columns");
+	if (obj) fax->columns = fz_toint(obj);
+
+	obj = fz_dictgets(params, "Rows");
+	if (obj) fax->rows = fz_toint(obj);
+
+	obj = fz_dictgets(params, "EndOfBlock");
+	if (obj) fax->endofblock = fz_tobool(obj);
+
+	obj = fz_dictgets(params, "BlackIs1");
+	if (obj) fax->blackis1 = fz_tobool(obj);
+
+	fax->stride = ((fax->columns - 1) >> 3) + 1;
+	fax->ridx = 0;
+	fax->bidx = 32;
+	fax->word = 0;
+
+	fax->stage = SNORMAL;
+	fax->a = -1;
+	fax->c = 0;
+	fax->dim = fax->k < 0 ? 2 : 1;
+	fax->eolc = 0;
+
+	fax->ref = fz_malloc(fax->stride);
+	fax->dst = fz_malloc(fax->stride);
+	fax->rp = fax->dst;
+	fax->wp = fax->dst + fax->stride;
+
+	memset(fax->ref, 0, fax->stride);
+	memset(fax->dst, 0, fax->stride);
+
+	return fz_newstream(fax, readfaxd, closefaxd);
 }

@@ -69,32 +69,24 @@ fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, in
 				fz_readbyte(file);
 		}
 
-		error = fz_readerror(file);
-		if (error)
-			return fz_rethrow(error, "cannot read from file");
-
 		*stmofsp = fz_tell(file);
 		if (*stmofsp < 0)
 			return fz_throw("cannot seek in file");
 
 		if (stmlen > 0)
 		{
-			error = fz_seek(file, *stmofsp + stmlen, 0);
-			if (error)
-				return fz_rethrow(error, "cannot seek in file");
+			fz_seek(file, *stmofsp + stmlen, 0);
 			error = pdf_lex(&tok, file, buf, cap, &len);
 			if (error)
 				fz_catch(error, "cannot find endstream token, falling back to scanning");
 			if (tok == PDF_TENDSTREAM)
 				goto atobjend;
-			error = fz_seek(file, *stmofsp, 0);
-			if (error)
-				return fz_rethrow(error, "cannot seek in file");
+			fz_seek(file, *stmofsp, 0);
 		}
 
-		error = fz_read(&n, file, (unsigned char *) buf, 9);
-		if (error)
-			return fz_rethrow(error, "cannot read from file");
+		n = fz_read(file, (unsigned char *) buf, 9);
+		if (n < 0)
+			return fz_rethrow(n, "cannot read from file");
 
 		while (memcmp(buf, "endstream", 9) != 0)
 		{
@@ -104,10 +96,6 @@ fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, in
 			memmove(buf, buf + 1, 8);
 			buf[8] = c;
 		}
-
-		error = fz_readerror(file);
-		if (error)
-			return fz_rethrow(error, "cannot read from file");
 
 		*stmlenp = fz_tell(file) - *stmofsp - 9;
 
@@ -149,9 +137,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	pdf_logxref("repairxref %p\n", xref);
 
-	error = fz_seek(xref->file, 0, 0);
-	if (error)
-		return fz_rethrow(error, "cannot seek to beginning of file");
+	fz_seek(xref->file, 0, 0);
 
 	listlen = 0;
 	listcap = 1024;
