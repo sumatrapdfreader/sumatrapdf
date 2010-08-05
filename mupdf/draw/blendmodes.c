@@ -326,11 +326,23 @@ fz_blendnonseparable(byte * restrict bp, byte * restrict sp, int w, fz_blendmode
 }
 
 void
-fz_blendpixmapswithmode(fz_pixmap *dst, fz_pixmap *src, fz_blendmode blendmode)
+fz_blendpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_blendmode blendmode)
 {
 	unsigned char *sp, *dp;
 	fz_bbox bbox;
 	int x, y, w, h, n;
+
+	/* TODO: fix this hack! */
+	if (alpha < 255)
+	{
+		sp = src->samples;
+		n = src->w * src->h * src->n;
+		while (n--)
+		{
+			*sp = fz_mul255(*sp, alpha);
+			sp++;
+		}
+	}
 
 	bbox = fz_boundpixmap(dst);
 	bbox = fz_intersectbbox(bbox, fz_boundpixmap(src));

@@ -1036,6 +1036,50 @@ void fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix ctm);
  * They can be replaced by cpu-optimized versions.
  */
 
+/*
+These are the blending primitives:
+
+span over span					(text and path drawing to clip mask)
+span in alpha over span
+span in span over span
+color in span over span			(text and path drawing)
+
+	fz_paintspan(dp, sp);
+		fz_paintspanalpha(dp, sp, alpha)
+	fz_paintspanmask(dp, sp, mask);
+	fz_paintspancolor(dp, color, mask);
+
+pixmap over pixmap			(shading with function lookup)
+pixmap in alpha over pixmap	(xobject/shading with ca)
+pixmap in pixmap over pixmap	(xobject with softmask / clip)
+
+	fz_paintpixmap()
+		fz_paintpixmapalpha()
+	fz_paintpixmapmask()
+
+affine over span
+affine in alpha over span
+color in affine over span
+
+	fz_paintaffine()
+		fz_paintaffinealpha()
+	fz_paintaffinecolor()
+
+image over pixmap				(image fill)
+image in alpha over pixmap		(image fill with ca)
+color in image over pixmap		(image mask fill)
+
+	fz_paintimage()
+		fz_paintimagealpha()
+	fz_paintimagecolor()
+
+pixmap BLEND pixmap
+pixmap in alpha BLEND pixmap
+
+	fz_blendpixmap()
+		fz_blendpixmapalpha()
+*/
+
 void fz_accelerate(void);
 void fz_acceleratearch(void);
 
@@ -1043,18 +1087,20 @@ void fz_decodetile(fz_pixmap *pix, float *decode);
 void fz_decodeindexedtile(fz_pixmap *pix, float *decode, int maxval);
 void fz_unpacktile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, int stride, int scale);
 
-void fz_blendpixmapswithmode(fz_pixmap *dst, fz_pixmap *src, fz_blendmode blendmode);
-void fz_blendpixmapswithmask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
-void fz_blendpixmapswithalpha(fz_pixmap *dst, fz_pixmap *src, float alpha);
-void fz_blendpixmaps(fz_pixmap *dst, fz_pixmap *src);
+void fz_paintspan(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w, int alpha);
+void fz_paintspancolor(unsigned char * restrict dp, unsigned char * restrict mp, int n, int w, unsigned char *color);
+void fz_paintspanmask(unsigned char * restrict dp, unsigned char * restrict sp, unsigned char * restrict mp, int n, int w);
 
-void fz_blendmasks(unsigned char * restrict dp, unsigned char * restrict sp, int w);
-void fz_blendwithcolormask(unsigned char * restrict dp, unsigned char * restrict sp, unsigned char * restrict mp, int n, int w);
-void fz_blendnormal(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w);
-void fz_blendwithmask(unsigned char * restrict dp, unsigned char * restrict sp, unsigned char * restrict mp, int n, int w);
+void fz_paintaffine(unsigned char *dp, unsigned char *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha);
+void fz_paintaffinecolor(unsigned char *dp, unsigned char *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, unsigned char *color);
 
-void fz_blendimage(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm);
-void fz_blendimagewithcolor(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm, unsigned char *colorbv);
+void fz_paintimage(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm, int alpha);
+void fz_paintimagecolor(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm, unsigned char *colorbv);
+
+void fz_paintpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha);
+void fz_paintpixmapmask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
+
+void fz_blendpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_blendmode blendmode);
 
 extern void (*fz_srown)(unsigned char *restrict, unsigned char *restrict, int w, int denom, int n);
 extern void (*fz_srow1)(unsigned char *restrict, unsigned char *restrict, int w, int denom);

@@ -476,9 +476,9 @@ blit(fz_pixmap *dest, int x, int y, unsigned char *mp, int w, unsigned char *col
 	dp = dest->samples + ( (y - dest->y) * dest->w + (x - dest->x) ) * dest->n;
 
 	if (color)
-		fz_blendwithcolormask(dp, color, mp, dest->n, w);
+		fz_paintspancolor(dp, mp, dest->n, w, color);
 	else
-		fz_blendmasks(dp, mp, w);
+		fz_paintspan(dp, mp, 1, w, 255);
 }
 
 fz_error

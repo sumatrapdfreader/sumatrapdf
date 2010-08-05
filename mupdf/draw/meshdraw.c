@@ -378,7 +378,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 				*d++ = clut[v][k];
 			*d++ = *s++;
 		}
-		fz_blendpixmaps(dest, conv);
+		fz_paintpixmap(dest, conv, 255);
 		fz_droppixmap(conv);
 		fz_droppixmap(temp);
 	}

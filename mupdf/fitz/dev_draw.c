@@ -53,18 +53,12 @@ fz_drawfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	if (fz_isemptyrect(bbox))
 		return;
 
-	if (model)
-	{
-		fz_convertcolor(colorspace, color, model, colorfv);
-		for (i = 0; i < model->n; i++)
-			colorbv[i] = colorfv[i] * 255;
-		colorbv[i] = alpha * 255;
-		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, colorbv);
-	}
-	else
-	{
-		fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, nil);
-	}
+	fz_convertcolor(colorspace, color, model, colorfv);
+	for (i = 0; i < model->n; i++)
+		colorbv[i] = colorfv[i] * 255;
+	colorbv[i] = alpha * 255;
+
+	fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, dev->dest, colorbv);
 }
 
 static void
@@ -97,18 +91,12 @@ fz_drawstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix c
 	if (fz_isemptyrect(bbox))
 		return;
 
-	if (model)
-	{
-		fz_convertcolor(colorspace, color, model, colorfv);
-		for (i = 0; i < model->n; i++)
-			colorbv[i] = colorfv[i] * 255;
-		colorbv[i] = alpha * 255;
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv);
-	}
-	else
-	{
-		fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, nil);
-	}
+	fz_convertcolor(colorspace, color, model, colorfv);
+	for (i = 0; i < model->n; i++)
+		colorbv[i] = colorfv[i] * 255;
+	colorbv[i] = alpha * 255;
+
+	fz_scanconvert(dev->gel, dev->ael, 0, bbox, dev->dest, colorbv);
 }
 
 static void
@@ -235,9 +223,9 @@ drawglyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	while (h--)
 	{
 		if (dst->colorspace)
-			fz_blendwithcolormask(dp, colorbv, mp, dst->n, w);
+			fz_paintspancolor(dp, mp, dst->n, w, colorbv);
 		else
-			fz_blendmasks(dp, mp, w);
+			fz_paintspan(dp, mp, 1, w, 255);
 		dp += dst->w * dst->n;
 		mp += msk->w;
 	}
@@ -255,13 +243,10 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
-	if (model)
-	{
-		fz_convertcolor(colorspace, color, model, colorfv);
-		for (i = 0; i < model->n; i++)
-			colorbv[i] = colorfv[i] * 255;
-		colorbv[i] = alpha * 255;
-	}
+	fz_convertcolor(colorspace, color, model, colorfv);
+	for (i = 0; i < model->n; i++)
+		colorbv[i] = colorfv[i] * 255;
+	colorbv[i] = alpha * 255;
 
 	tm = text->trm;
 
@@ -282,10 +267,7 @@ fz_drawfilltext(void *user, fz_text *text, fz_matrix ctm,
 		glyph = fz_renderglyph(dev->cache, text->font, gid, trm);
 		if (glyph)
 		{
-			if (model)
-				drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
-			else
-				drawglyph(nil, dev->dest, glyph, x, y, dev->scissor);
+			drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
 			fz_droppixmap(glyph);
 		}
 	}
@@ -303,13 +285,10 @@ fz_drawstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix c
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 
-	if (model)
-	{
-		fz_convertcolor(colorspace, color, model, colorfv);
-		for (i = 0; i < model->n; i++)
-			colorbv[i] = colorfv[i] * 255;
-		colorbv[i] = alpha * 255;
-	}
+	fz_convertcolor(colorspace, color, model, colorfv);
+	for (i = 0; i < model->n; i++)
+		colorbv[i] = colorfv[i] * 255;
+	colorbv[i] = alpha * 255;
 
 	tm = text->trm;
 
@@ -330,10 +309,7 @@ fz_drawstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix c
 		glyph = fz_renderstrokedglyph(dev->cache, text->font, gid, trm, ctm, stroke);
 		if (glyph)
 		{
-			if (model)
-				drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
-			else
-				drawglyph(nil, dev->dest, glyph, x, y, dev->scissor);
+			drawglyph(colorbv, dev->dest, glyph, x, y, dev->scissor);
 			fz_droppixmap(glyph);
 		}
 	}
@@ -413,7 +389,7 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 			glyph = fz_renderglyph(dev->cache, text->font, gid, trm);
 			if (glyph)
 			{
-				drawglyph(NULL, mask, glyph, x, y, bbox);
+				drawglyph(nil, mask, glyph, x, y, bbox);
 				fz_droppixmap(glyph);
 			}
 		}
@@ -475,7 +451,7 @@ fz_drawclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matr
 			glyph = fz_renderstrokedglyph(dev->cache, text->font, gid, trm, ctm, stroke);
 			if (glyph)
 			{
-				drawglyph(NULL, mask, glyph, x, y, bbox);
+				drawglyph(nil, mask, glyph, x, y, bbox);
 				fz_droppixmap(glyph);
 			}
 		}
@@ -548,7 +524,7 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 
 	if (alpha < 1)
 	{
-		fz_blendpixmapswithalpha(dev->dest, dest, alpha);
+		fz_paintpixmap(dev->dest, dest, alpha * 255);
 		fz_droppixmap(dest);
 	}
 }
@@ -604,21 +580,7 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	}
 #endif
 
-	if (alpha < 1)
-	{
-		fz_pixmap *temp;
-		fz_bbox bbox;
-		bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
-		bbox = fz_intersectbbox(bbox, dev->scissor);
-		temp = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
-		fz_blendimage(temp, bbox, image, ctm);
-		fz_blendpixmapswithalpha(dev->dest, temp, alpha);
-		fz_droppixmap(temp);
-	}
-	else
-	{
-		fz_blendimage(dev->dest, dev->scissor, image, ctm);
-	}
+	fz_paintimage(dev->dest, dev->scissor, image, ctm, alpha * 255);
 
 	if (scaled)
 		fz_droppixmap(scaled);
@@ -657,18 +619,12 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	}
 #endif
 
-	if (dev->dest->colorspace)
-	{
-		fz_convertcolor(colorspace, color, model, colorfv);
-		for (i = 0; i < model->n; i++)
-			colorbv[i] = colorfv[i] * 255;
-		colorbv[i] = alpha * 255;
-		fz_blendimagewithcolor(dev->dest, dev->scissor, image, ctm, colorbv);
-	}
-	else
-	{
-		fz_blendimage(dev->dest, dev->scissor, image, ctm);
-	}
+	fz_convertcolor(colorspace, color, model, colorfv);
+	for (i = 0; i < model->n; i++)
+		colorbv[i] = colorfv[i] * 255;
+	colorbv[i] = alpha * 255;
+
+	fz_paintimagecolor(dev->dest, dev->scissor, image, ctm, colorbv);
 
 	if (scaled)
 		fz_droppixmap(scaled);
@@ -725,7 +681,7 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	}
 #endif
 
-	fz_blendimage(mask, bbox, image, ctm);
+	fz_paintimage(mask, bbox, image, ctm, 255);
 
 	if (scaled)
 		fz_droppixmap(scaled);
@@ -752,7 +708,7 @@ fz_drawpopclip(void *user)
 		if (mask && dest)
 		{
 			fz_pixmap *scratch = dev->dest;
-			fz_blendpixmapswithmask(dest, scratch, mask);
+			fz_paintpixmapmask(dest, scratch, mask);
 			fz_droppixmap(mask);
 			fz_droppixmap(scratch);
 			dev->dest = dest;
@@ -884,27 +840,9 @@ fz_drawendgroup(void *user)
 		dev->scissor = dev->stack[dev->top].scissor;
 
 		if (blendmode == FZ_BNORMAL)
-		{
-			if (alpha < 1)
-				fz_blendpixmapswithalpha(dev->dest, group, alpha);
-			else
-				fz_blendpixmaps(dev->dest, group);
-		}
+			fz_paintpixmap(dev->dest, group, alpha * 255);
 		else
-		{
-			if (alpha < 1)
-			{
-				unsigned char *p = group->samples;
-				int n = group->w * group->h * group->n;
-				int a = alpha * 255;
-				while (n--)
-				{
-					*p = fz_mul255(*p, a);
-					p++;
-				}
-			}
-			fz_blendpixmapswithmode(dev->dest, group, blendmode);
-		}
+			fz_blendpixmap(dev->dest, group, alpha * 255, blendmode);
 
 		fz_droppixmap(group);
 	}
