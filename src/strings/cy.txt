@@ -67,7 +67,7 @@ Contributor: Glenn Wall
 &Argraffu\tCtrl-P
 
 &Print with %s...\tCtrl-P
-&Argraffu gyda %s...\Ctrl-P
+&Argraffu gyda %s...\tCtrl-P
 
 &Print... (denied)
 &Argraffu... (gwrthodwyd)

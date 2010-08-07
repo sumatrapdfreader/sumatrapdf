@@ -7299,7 +7299,7 @@ const char *g_transTranslations[] = {
   "&Dewisiadau...",
   "&Cyfrinair:",
   "&Argraffu\tCtrl-P",
-  "&Argraffu gyda %s...\Ctrl-P",
+  "&Argraffu gyda %s...\tCtrl-P",
   "&Argraffu... (gwrthodwyd)",
   "C&ofio'r gosodiadau hyn ar gyfer pob dogfen",
   "&Cadw fel...\tCtrl-S",
