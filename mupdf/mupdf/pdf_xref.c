@@ -247,9 +247,6 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 				xref->table[i].ofs = atoi(s);
 				xref->table[i].gen = atoi(s + 11);
 				xref->table[i].type = s[17];
-
-				if (xref->table[i].ofs < 0 || xref->table[i].ofs >= xref->filesize)
-					return fz_throw("object offset out of range: %d", xref->table[i].ofs);
 			}
 		}
 	}
@@ -302,9 +299,6 @@ pdf_readnewxrefsection(pdf_xref *xref, fz_stream *stm, int i0, int i1, int w0, i
 			xref->table[i].type = t == 0 ? 'f' : t == 1 ? 'n' : t == 2 ? 'o' : 0;
 			xref->table[i].ofs = w1 ? b : 0;
 			xref->table[i].gen = w2 ? c : 0;
-
-			if (xref->table[i].ofs < 0 || xref->table[i].ofs >= xref->filesize)
-				return fz_throw("object offset out of range: %d", xref->table[i].ofs);
 		}
 	}
 
@@ -545,21 +539,13 @@ pdf_loadxref(pdf_xref *xref, char *buf, int bufsize)
 
 	/* broken pdfs where first object is not free */
 	if (xref->table[0].type != 'f')
-	{
-		fz_warn("first object in xref is not free");
-		xref->table[0].type = 'f';
-	}
+		return fz_throw("first object in xref is not free");
 
-	/* broken pdfs where freed objects have offset and gen set to 0 but still exist */
+	/* broken pdfs where object offsets are out of range */
 	for (i = 0; i < xref->len; i++)
-	{
-		if (xref->table[i].type == 'n' && xref->table[i].ofs == 0 &&
-			xref->table[i].gen == 0 && xref->table[i].obj == nil)
-		{
-			fz_warn("object (%d %d R) has invalid offset, assumed missing", i, xref->table[i].gen);
-			xref->table[i].type = 'f';
-		}
-	}
+		if (xref->table[i].type == 'n')
+			if (xref->table[i].ofs <= 0 || xref->table[i].ofs >= xref->filesize)
+				return fz_throw("object offset out of range: %d", xref->table[i].ofs);
 
 	return fz_okay;
 }

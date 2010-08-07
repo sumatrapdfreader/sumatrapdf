@@ -57,13 +57,13 @@ fz_paintaffinealphaN(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, i
 			for (k = 0; k < n; k++)
 			{
 				x = bilerp(a[k], b[k], c[k], d[k], uf, vf);
-				dp[k] = x + fz_mul255(dp[k], t);
+				dp[k] = fz_mul255(x, alpha) + fz_mul255(dp[k], t);
 			}
 #else
 			byte *sample = sp + ((vi * sw + ui) * n);
 			int t = 255 - fz_mul255(sample[n-1], alpha);
 			for (k = 0; k < n; k++)
-				dp[k] = sample[k] + fz_mul255(dp[k], t);
+				dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
 #endif
 		}
 		dp += n;
@@ -160,7 +160,7 @@ fz_paintaffine(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb,
 			default: fz_paintaffineN(dp, sp, sw, sh, u, v, fa, fb, w, n); break;
 		}
 	}
-	else	if (alpha > 0)
+	else if (alpha > 0)
 	{
 		switch (n)
 		{

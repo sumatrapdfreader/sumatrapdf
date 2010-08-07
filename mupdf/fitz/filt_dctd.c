@@ -24,8 +24,6 @@ static void error_exit(j_common_ptr cinfo)
 {
 	fz_dctd *state = cinfo->client_data;
 	cinfo->err->format_message(cinfo, state->msg);
-	if (state->cinfo.src)
-		state->chain->rp = state->chain->wp - state->cinfo.src->bytes_in_buffer;
 	longjmp(state->jb, 1);
 }
 
@@ -45,12 +43,10 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo)
 	fz_dctd *state = cinfo->client_data;
 	fz_stream *chain = state->chain;
 
-	if (chain->rp == chain->wp)
-		fz_fillbuffer(chain);
-
+	chain->rp = chain->wp;
+	fz_fillbuffer(chain);
 	src->next_input_byte = chain->rp;
 	src->bytes_in_buffer = chain->wp - chain->rp;
-	chain->rp = chain->wp;
 
 	if (src->bytes_in_buffer == 0)
 	{
@@ -87,7 +83,11 @@ readdctd(fz_stream *stm, unsigned char *buf, int len)
 	unsigned char *ep = buf + len;
 
 	if (setjmp(state->jb))
+	{
+		if (cinfo->src)
+			state->chain->rp = state->chain->wp - cinfo->src->bytes_in_buffer;
 		return fz_throw("jpeg error: %s", state->msg);
+	}
 
 	if (!state->init)
 	{
@@ -104,7 +104,7 @@ readdctd(fz_stream *stm, unsigned char *buf, int len)
 		cinfo->src->resync_to_restart = jpeg_resync_to_restart;
 		cinfo->src->term_source = term_source;
 		cinfo->src->next_input_byte = state->chain->rp;
-		cinfo->src->bytes_in_buffer = 0;
+		cinfo->src->bytes_in_buffer = state->chain->wp - state->chain->rp;
 
 		jpeg_read_header(cinfo, 1);
 
@@ -175,7 +175,6 @@ readdctd(fz_stream *stm, unsigned char *buf, int len)
 			*p++ = *state->rp++;
 	}
 
-	state->chain->rp = state->chain->wp - cinfo->src->bytes_in_buffer;
 	return p - buf;
 }
 
@@ -184,10 +183,8 @@ closedctd(fz_stream *stm)
 {
 	fz_dctd *state = stm->state;
 	if (state->init)
-	{
 		jpeg_finish_decompress(&state->cinfo);
-		state->chain->rp = state->chain->wp - state->cinfo.src->bytes_in_buffer;
-	}
+	state->chain->rp = state->chain->wp - state->cinfo.src->bytes_in_buffer;
 	jpeg_destroy_decompress(&state->cinfo);
 	fz_free(state->scanline);
 	fz_close(state->chain);
@@ -201,6 +198,7 @@ fz_opendctd(fz_stream *chain, fz_obj *params)
 	fz_obj *obj;
 
 	state = fz_malloc(sizeof(fz_dctd));
+	memset(state, 0, sizeof(fz_dctd));
 	state->chain = chain;
 	state->colortransform = -1; /* unset */
 	state->init = 0;
