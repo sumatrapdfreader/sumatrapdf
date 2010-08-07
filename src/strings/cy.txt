@@ -66,6 +66,12 @@ Contributor: Glenn Wall
 &Print\tCtrl-P
 &Argraffu\tCtrl-P
 
+&Print with %s...\tCtrl-P
+&Argraffu gyda %s...\Ctrl-P
+
+&Print... (denied)
+&Argraffu... (gwrthodwyd)
+
 &Remember these settings for each document
 C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 
@@ -105,8 +111,14 @@ Uwch
 All files
 Pob ffeil
 
+Application:
+Rhaglen:
+
 Associate with PDF files?
 Cysylltu gyda ffeiliau PDF?
+
+Author:
+Awdur:
 
 Automatic
 Awtomatig
@@ -114,11 +126,17 @@ Awtomatig
 Automatically check for &updates
 Gwirio'n awtomatig am &ddiweddariadau
 
+Back\tAlt+Left Arrow
+Nôl\Alt+Saeth Chwith
+
 Book view
 Golwg llyfr
 
 Bookmarks\tF12
 Nodau Tudalen\tF12
+
+Bytes
+Beit
 
 Cancel
 Diddymu
@@ -156,11 +174,20 @@ Methu cychwyn yr argraffydd
 Couldn't render the page
 Methu cyflwyno'r dudalen
 
+Created:
+Crëwyd:
+
 Default &Layout:
 &Cynllun Rhagosodedig:
 
 Default &Zoom:
 C&hwyddo Rhagosodedig:
+
+Denied Permissions:
+Gwrthodwyd Caniatâd:
+
+Document Properties
+Priodweddau Dogfen
 
 Download
 Llwytho i Lawr
@@ -182,6 +209,12 @@ Wynebu
 
 Failed to save a file
 Methwyd cadw ffeil
+
+File Size:
+Maint Ffeil:
+
+File:
+Ffeil:
 
 Find
 Canfod
@@ -213,11 +246,17 @@ Fit Widt&h\tCtrl-2
 Fit Width
 Fitio'r Lled
 
+Forward\tAlt+Right Arrow
+Ymlaen\tAlt+Saeth Dde
+
 Found text at page %d
 Canfod testun ar dudalen %d
 
 Fullscreen\tCtrl-L
 Sgrin Lawn\tCtrl-L
+
+GB
+GB
 
 Go to page
 Mynd i dudalen
@@ -227,6 +266,9 @@ Cyngor: Defnyddiwch bysell F3 i ganfod eto
 
 Last Page\tEnd
 Tudalen Olaf\tEnd
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
@@ -239,6 +281,9 @@ Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 
 Match case
 Cydweddu Maint
+
+Modified:
+Newidwyd:
 
 New version %s is available. Download new version?
 Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr??
@@ -267,6 +312,9 @@ Heb ganfod ffeil cydweddu
 No synchronization info at this position
 Dim gwybodaeth cydweddu yn y fan hon
 
+Number of Pages:
+Nifer o Dudalennau:
+
 OK
 Iawn
 
@@ -276,11 +324,23 @@ Agor
 Open in &Adobe Reader
 Agor yn &Adobe Reader
 
+P&roperties...\tCtrl-D
+P&riodweddau...\tCtrl-D
+
 PDF Document
 Dogfen PDF
 
+PDF Producer:
+Cynhyrchydd PDF:
+
+PDF Version:
+PDF Fersiwn:
+
 PDF documents
 Dogfennau PDF
+
+Page Size:
+Maint Tudalen:
 
 Page number %u inexistant
 Nid yw tudalen rhif %u yn bodoli
@@ -318,6 +378,9 @@ Chwilio am %d o %d...
 Select content with Ctrl+left mouse button
 Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 
+Send by &email...
+Anfon drwy &e-bost...
+
 Set inverse search command-line
 Gosod linell-orchymyn chwilio gwrthdro
 
@@ -336,6 +399,9 @@ Tudalen unigol
 Source file %s has no synchronization point
 Does dim pwynt cydweddu yn ffeil %s
 
+Subject:
+Pwnc:
+
 SumatraPDF Options
 Dewisiadau SumatraPDF
 
@@ -350,6 +416,9 @@ Methu agor ffeil cydweddu
 
 Text documents
 Dogfennau testun
+
+Title:
+Teitl:
 
 Unknown source file (%s)
 Ffeil ffynhonnell anhysbys (%s)
@@ -381,31 +450,12 @@ Ffactor Chwyddo
 [Changes detected; refreshing] %s
 [Newidiadau wedi eu canfod; adnewyddu]
 
+copying text
+copïo testun
+
+printing document
+argraffu dogfen
+
 # Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Application:
-#Author:
-#Back\tAlt+Left Arrow
-#Bytes
-#Created:
-#Denied Permissions:
-#Document Properties
-#File Size:
-#File:
-#Forward\tAlt+Right Arrow
-#GB
 #KB
-#MB
-#Modified:
-#Number of Pages:
-#P&roperties...\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Send by &email...
-#Subject:
-#Title:
-#copying text
-#printing document
 
