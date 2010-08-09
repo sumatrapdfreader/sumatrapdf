@@ -280,12 +280,12 @@ static int
 ornatecharacter(int ornate, int character)
 {
 	static wchar_t *ornates[] = {
-		L" \xA8\xB4`^",
-		L"a\xE4\xE1\xE0\xE2", L"A\xC4\xC1\xC0\xC2",
-		L"e\xEB\xE9\xE8\xEA", L"E\xCB\xC9\xC8\xCA",
-		L"i\xEF\xED\xEC\xEE", L"I\xCF\xCD\xCC\xCE",
-		L"o\xF6\xF3\xF2\xF4", L"O\xD6\xD3\xD2\xD4",
-		L"u\xFC\xFA\xF9\xFB", L"U\xDC\xDA\xD9\xDB",
+		L" \xA8\xB4`^\u02DA",
+		L"a\xE4\xE1\xE0\xE2\xE5", L"A\xC4\xC1\xC0\xC2\0",
+		L"e\xEB\xE9\xE8\xEA\0", L"E\xCB\xC9\xC8\xCA\0",
+		L"i\xEF\xED\xEC\xEE\0", L"I\xCF\xCD\xCC\xCE\0",
+		L"o\xF6\xF3\xF2\xF4\0", L"O\xD6\xD3\xD2\xD4\0",
+		L"u\xFC\xFA\xF9\xFB\0", L"U\xDC\xDA\xD9\xDB\0",
 		nil
 	};
 	int i, j;
@@ -314,6 +314,7 @@ fixuptextspan(fz_textspan *span)
 			case 0x00B4: /* ´ */
 			case 0x0060: /* ` */
 			case 0x005E: /* ^ */
+			case 0x02DA: /* ° */
 				if (span->next && span->next->len > 0 && (i + 1 == span->len || i + 2 == span->len && span->text[i + 1].c == 32))
 				{
 					mergetwospans(span);

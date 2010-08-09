@@ -803,9 +803,10 @@ loadsystemcidfont(pdf_fontdesc *fontdesc, int ros, int kind)
 #endif
 #endif
 #if !defined(NOCJK) && !defined(NOCJKFONT)
-	/* We only have one builtin fallback font, we'd really like
-	 * to have one for each combination of ROS and Kind.
-	 */
+	/*
+	We only have one builtin fallback font.
+	We'd really like to have one for each combination of ROS and Kind.
+	*/
 	pdf_logfont("loading builtin CJK font\n");
 	error = fz_newfontfrombuffer(&fontdesc->font,
 		(unsigned char *)pdf_font_DroidSansFallback_ttf_buf,

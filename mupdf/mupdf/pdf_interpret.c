@@ -248,9 +248,9 @@ FindEndImageMarker:
 		return fz_rethrow(error, "syntax error after inline image");
 	}
 
-	/* sumatra: apparently Adobe Reader silently ignores trailing garbage */
+	/* SumatraPDF: apparently Adobe Reader silently ignores trailing garbage */
 	/* (this might even still be too conservative in what we tolerate) */
-	if ((tok == PDF_TKEYWORD) && (0 != strcmp("EI", buf)))
+	if (tok == PDF_TKEYWORD && strcmp("EI", buf))
 	{
 		fz_warn("ignoring garbage after inline image");
 		goto FindEndImageMarker;

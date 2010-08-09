@@ -280,12 +280,12 @@ fz_gdipopclip(void *user)
 }
 
 static void
-fz_gdifillshade(void *user, fz_shade *shade, fz_matrix ctm)
+fz_gdifillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
 }
 
 static void
-fz_gdifillimage(void *user, fz_pixmap *image, fz_matrix ctm)
+fz_gdifillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	HDC hDC = ((fz_gdidevice *)user)->hDC;
 	fz_matrix ctm2;

@@ -7332,7 +7332,7 @@ const char *g_transTranslations[] = {
   "Awdur:",
   "Awtomatig",
   "Gwirio'n awtomatig am &ddiweddariadau",
-  "N\303\264l\Alt+Saeth Chwith",
+  "N\303\264l\tAlt+Saeth Chwith",
   "Golwg llyfr",
   "Nodau Tudalen\tF12",
   "Beit",

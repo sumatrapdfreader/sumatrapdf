@@ -127,7 +127,7 @@ Automatically check for &updates
 Gwirio'n awtomatig am &ddiweddariadau
 
 Back\tAlt+Left Arrow
-Nôl\Alt+Saeth Chwith
+Nôl\tAlt+Saeth Chwith
 
 Book view
 Golwg llyfr
