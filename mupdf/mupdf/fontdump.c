@@ -56,6 +56,7 @@ main(int argc, char **argv)
 		fi = fopen(argv[i], "rb");
 		if (!fi)
 		{
+			fclose(fo);
 			fprintf(stderr, "fontdump: could not open input file '%s'\n", argv[i]);
 			return 1;
 		}

@@ -272,7 +272,7 @@ int main(int argc, char **argv)
 		{
 		case 'o': output = fz_optarg; break;
 		case 'p': password = fz_optarg; break;
-		case 'r': resolution = atof(fz_optarg) / 72; break;
+		case 'r': resolution = atof(fz_optarg); break;
 		case 'A': accelerate = 0; break;
 		case 'a': savealpha = 1; break;
 		case 'm': showtime++; break;

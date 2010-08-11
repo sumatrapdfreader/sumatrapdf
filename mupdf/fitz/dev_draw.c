@@ -532,8 +532,8 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 static int
 fz_calcimagescale(fz_pixmap *image, fz_matrix ctm, int *dx, int *dy)
 {
-	float sx = image->w / sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
-	float sy = image->h / sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
+	float sx = image->w / sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) * 0.66f;
+	float sy = image->h / sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) * 0.66f;
 	*dx = sx > 1 ? sx : 1;
 	*dy = sy > 1 ? sy : 1;
 	return *dx > 1 || *dy > 1;

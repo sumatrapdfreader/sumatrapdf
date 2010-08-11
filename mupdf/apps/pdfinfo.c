@@ -731,9 +731,9 @@ printinfo(char *filename, int show, int page)
 
 				if (!strncmp(cs, "Device", 6))
 				{
-					for (j = 0; cs[j + 6] != '\0'; j++)
-						cs[3 + j] = cs[j + 6];
-					cs[3 + j] = '\0';
+					int len = strlen(cs + 6);
+					memmove(cs + 3, cs + 6, len + 1);
+					cs[3 + len + 1] = '\0';
 				}
 				if (strstr(cs, "ICC"))
 					fz_strlcpy(cs, "ICC", 4);
@@ -750,9 +750,9 @@ printinfo(char *filename, int show, int page)
 
 				if (!strncmp(altcs, "Device", 6))
 				{
-					for (j = 0; altcs[j + 6] != '\0'; j++)
-						altcs[3 + j] = altcs[j + 6];
-					altcs[j + 6] = '\0';
+					int len = strlen(altcs + 6);
+					memmove(altcs + 3, altcs + 6, len + 1);
+					altcs[3 + len + 1] = '\0';
 				}
 				if (strstr(altcs, "ICC"))
 					fz_strlcpy(altcs, "ICC", 4);

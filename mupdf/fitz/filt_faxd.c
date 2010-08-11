@@ -549,7 +549,6 @@ readfaxd(fz_stream *stm, unsigned char *buf, int len)
 	unsigned char *ep = buf + len;
 	unsigned char *tmp;
 	fz_error error;
-	int i;
 
 	if (fax->stage == SDONE)
 		return 0;
@@ -688,12 +687,6 @@ eol:
 
 rtc:
 	fax->stage = SDONE;
-
-	/* try to put back any extra bytes we read */
-	i = (32 - fax->bidx) / 8;
-	while (i--)
-		fz_unreadbyte(fax->chain);
-
 	return p - buf;
 }
 
@@ -701,6 +694,13 @@ static void
 closefaxd(fz_stream *stm)
 {
 	fz_faxd *fax = stm->state;
+	int i;
+
+	/* if we read any extra bytes, try to put them back */
+	i = (32 - fax->bidx) / 8;
+	while (i--)
+		fz_unreadbyte(fax->chain);
+
 	fz_close(fax->chain);
 	fz_free(fax->ref);
 	fz_free(fax->dst);

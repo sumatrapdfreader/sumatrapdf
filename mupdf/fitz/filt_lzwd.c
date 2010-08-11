@@ -64,13 +64,6 @@ static inline int fillbits(fz_lzwd *lzw)
 	return 0;
 }
 
-static inline void unstuff(fz_lzwd *lzw)
-{
-	int i = (32 - lzw->bidx) / 8;
-	while (i--)
-		fz_unreadbyte(lzw->chain);
-}
-
 static int
 readlzwd(fz_stream *stm, unsigned char *buf, int len)
 {
@@ -92,7 +85,6 @@ readlzwd(fz_stream *stm, unsigned char *buf, int len)
 		{
 			if (lzw->bidx > 32 - lzw->codebits)
 			{
-				unstuff(lzw);
 				lzw->eod = 1;
 				return p - buf;
 			}
@@ -104,7 +96,6 @@ readlzwd(fz_stream *stm, unsigned char *buf, int len)
 
 		if (lzw->code == LZW_EOD)
 		{
-			unstuff(lzw);
 			lzw->eod = 1;
 			return p - buf;
 		}
@@ -184,6 +175,13 @@ static void
 closelzwd(fz_stream *stm)
 {
 	fz_lzwd *lzw = stm->state;
+	int i;
+
+	/* if we read any extra bytes, try to put them back */
+	i = (32 - lzw->bidx) / 8;
+	while (i--)
+		fz_unreadbyte(lzw->chain);
+
 	fz_close(lzw->chain);
 	fz_free(lzw);
 }
