@@ -240,7 +240,7 @@ static void renumberobjs(void)
 	/* Create new table for the reordered, compacted xref */
 	oldxref = xref->table;
 	xref->table = fz_malloc(xref->cap * sizeof (pdf_xrefentry));
-	xref->table[0] = oldxref[num];
+	xref->table[0] = oldxref[0];
 
 	/* Move used objects into the new compacted xref */
 	newlen = 0;

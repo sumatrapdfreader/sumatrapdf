@@ -723,8 +723,6 @@ fz_drawbeginmask(void *user, fz_rect rect, int luminosity, fz_colorspace *colors
 	fz_pixmap *dest;
 	fz_bbox bbox;
 
-	fz_warn("fz_drawbeginmask");
-
 	if (dev->top == STACKSIZE)
 	{
 		fz_warn("assert: too many buffers on stack");
@@ -757,8 +755,6 @@ fz_drawendmask(void *user)
 	fz_pixmap *temp, *dest;
 	fz_bbox bbox;
 	int luminosity;
-
-	fz_warn("fz_drawendmask");
 
 	if (dev->top == STACKSIZE)
 	{

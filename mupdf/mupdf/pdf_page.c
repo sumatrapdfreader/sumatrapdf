@@ -118,11 +118,11 @@ pdf_resourcesuseblending(fz_obj *rdb)
 	int i;
 
 	/* stop on cyclic resource dependencies */
-	if (fz_dictgets(rdb, ".seen"))
-		return 0;
+	if (fz_dictgets(rdb, ".useBM"))
+		return fz_tobool(fz_dictgets(rdb, ".useBM"));
 
-	tmp = fz_newnull();
-	fz_dictputs(rdb, ".seen", tmp);
+	tmp = fz_newbool(0);
+	fz_dictputs(rdb, ".useBM", tmp);
 	fz_dropobj(tmp);
 
 	dict = fz_dictgets(rdb, "ExtGState");
@@ -140,11 +140,12 @@ pdf_resourcesuseblending(fz_obj *rdb)
 		if (pdf_xobjectusesblending(fz_dictgetval(dict, i)))
 			goto found;
 
-	fz_dictdels(rdb, ".seen");
 	return 0;
 
 found:
-	fz_dictdels(rdb, ".seen");
+	tmp = fz_newbool(1);
+	fz_dictputs(rdb, ".useBM", tmp);
+	fz_dropobj(tmp);
 	return 1;
 }
 

@@ -351,8 +351,6 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 				pdf_xobject *xobj;
 				fz_obj *group, *luminosity;
 
-				fz_warn("not ignoring soft mask");
-
 				if (gstate->softmask)
 				{
 					pdf_dropxobject(gstate->softmask);
