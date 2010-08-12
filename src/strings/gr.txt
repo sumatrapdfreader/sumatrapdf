@@ -66,6 +66,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Print\tCtrl-P
 &Εκτύπωση\tCtrl-P
 
+&Print... (denied)
+&Εκτύπωση...(απαγορεύεται)
+
 &Remember these settings for each document
 &Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 
@@ -176,6 +179,9 @@ Default &Layout:
 
 Default &Zoom:
 Προκαθορισμένο &ζουμ:
+
+Denied Permissions:
+Απαγορευμένα δικαιώματα:
 
 Document Properties
 Ιδιότητες εγγράφου
@@ -393,6 +399,9 @@ Single page
 Source file %s has no synchronization point
 Το αρχείο προέλευσης %s δεν λεχει σημείο συγχρονισμού
 
+Subject:
+Θέμα:
+
 SumatraPDF Options
 Επιλογές SumatraPDF
 
@@ -441,11 +450,12 @@ Zoom factor
 [Changes detected; refreshing] %s
 [Ανιχνέυτηκαν αλλαγές, ανανέωση…] %s
 
+copying text
+αντιγραφή κειμένου
+
+printing document
+εκτύπωση εγγράφου
+
 # Untranslated:
 #&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Denied Permissions:
-#Subject:
-#copying text
-#printing document
 
