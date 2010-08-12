@@ -7,15 +7,16 @@
 Lang: vn Vietnamese (Việt Nam)
 
 Contributor: Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong)
+Contributor: Tào Trần Vương Thắng
 
 &About
-&Giới thiệu
+Giới thiệu
 
 &Check for new version
 Kiểm tra có phiên bản mới
 
 &Close\tCtrl-W
-&Đóng tệp\tCtrl-W
+Đóng tập tin\tCtrl-W
 
 &Custom Zoom...
 Thu phóng &tuỳ ý...
@@ -24,16 +25,16 @@ Thu phóng &tuỳ ý...
 Không hỏi lại
 
 &File
-&Tệp tin
+Tập tin
 
 &Find what:
 Tìm cái gì:
 
 &Go To
-&Nhảy đến
+Nhảy đến
 
 &Go to page:
-&Nhảy đến trang:
+Nhảy đến trang:
 
 &Help
 Trợ &giúp
@@ -42,43 +43,49 @@ Trợ &giúp
 Phóng đại:
 
 &Manual
-&Hướng dẫn sử dụng
+Hướng dẫn sử dụng
 
 &Match case
-Phân biệt chữ &Hoa
+Phân biệt &HOA-thường
 
 &No
-&Không
+Không
 
 &No, thanks
-&Không, cảm ơn
+Không, cảm ơn
 
 &Open\tCtrl-O
-&Mở tệp\tCtrl-O
+Mở tập tin\tCtrl-O
 
 &Options...
-&Tuỳ chọn
+Tuỳ chọn
 
 &Password:
-&Mật mã:
+Mật mã:
 
 &Print\tCtrl-P
-&In\tCtrl-P
+In\tCtrl-P
+
+&Print with %s...\tCtrl-P
+In bằng %s...\tCtrl-P
+
+&Print... (denied)
+&In... (bị từ chối)
 
 &Remember these settings for each document
-Nhớ cài đặt này cho mọi tệp
+Nhớ cài đặt này cho mọi tập tin
 
 &Save as\tCtrl-S
-&Sao lưu\tCtrl-S
+Lưu thành\tCtrl-S
 
 &Settings
-&Cài đặt
+Cài đặt
 
 &Skip this version
 Bỏ qua phiên bản này.
 
 &View
-&Khung nhìn
+Hiển thị
 
 &Visit website
 Thăm &website
@@ -99,13 +106,19 @@ Act&ual Size\tCtrl-1
 Kích thướ&c thật\tCtrl-1
 
 Advanced
-Cao cấp
+Nâng cao
 
 All files
-Các loại tệp
+Mọi tập tin
+
+Application:
+Ứng dụng:
 
 Associate with PDF files?
-Liên kết với tệp PDF?
+Liên kết với tập tin PDF?
+
+Author:
+Tác giả
 
 Automatic
 Tự động
@@ -113,14 +126,23 @@ Tự động
 Automatically check for &updates
 Tự động kiểm tra có phiên bản mới
 
+Back\tAlt+Left Arrow
+Trở về\tAlt+<-
+
+Book view
+Xem dạng sách
+
 Bookmarks\tF12
 Chỉ dấu sách\tF12
 
+Bytes
+Bytes
+
 Cancel
-Huỷ
+Hủy
 
 Cannot print this file
-Không in được tệp này
+Không in được tập tin này
 
 Cannot start inverse search command. Please check the command line in the settings.
 Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
@@ -129,16 +151,19 @@ Change language
 Đổi ngôn ngữ (Change language)
 
 Continuous
-Liên tục
+Liên tiếp
+
+Continuous book view
+Xem sách liên tiếp
 
 Continuous facing
-Liên tục trang kép
+Trang kép liên tiếp
 
 Contribute translation
 Đóng góp dịch thuật
 
 Copy Selection\tCtrl-C
-Copy phần đánh dấu
+Chép phần đánh dấu
 
 Could not open Printer
 Không mở được máy in.
@@ -149,11 +174,20 @@ Không khởi động được máy in
 Couldn't render the page
 Không hiện được trang
 
+Created:
+Ngày tạo:
+
 Default &Layout:
 Khung nhìn mặc định
 
 Default &Zoom:
 Kích thước mặc định
+
+Denied Permissions:
+Các quyền bị từ chối
+
+Document Properties
+Thuộc tính tập tin
 
 Download
 Tải xuống
@@ -168,22 +202,28 @@ Enter password for %s
 Nhật mật khẩu cho %s
 
 Error loading PDF file.
-Lỗi nạp tệp PDF.
+Không mở được tập tin PDF.
 
 Facing
 Trang kép
 
 Failed to save a file
-Không lưu được tệp.
+Không lưu được tập tin.
+
+File Size:
+Kích thước:
+
+File:
+Tập tin:
 
 Find
 Tìm kiếm
 
 Find Next
-Tìm phía sau
+Tìm xuống
 
 Find Previous
-Tìm phía trước
+Tìm lên
 
 Find...\tCtrl-F
 Tìm kiếm...\tCtrl-F
@@ -206,11 +246,17 @@ Vừa chiều &rộng\tCtrl-2
 Fit Width
 Vừa chiều rộng
 
+Forward\tAlt+Right Arrow
+Tiếp tục\tAlt+->
+
 Found text at page %d
 Tìm thấy từ ở trang %d
 
 Fullscreen\tCtrl-L
 Toàn màn hình\tCtrl-L
+
+GB
+GB
 
 Go to page
 Nhảy đến trang
@@ -218,11 +264,17 @@ Nhảy đến trang
 Hint: Use the F3 key for finding again
 Gợi ý: Nhấn phím F3 để tìm tiếp
 
+KB
+KB
+
 Last Page\tEnd
 Trang cuối\tEnd
 
+MB
+MB
+
 Main PDF reader can't be changed in portable mode
-Không thay đổi được trình đọc PDF chính trong chế độ di động
+Không thay đổi được trình đọc PDF chính ở chế độ di động
 
 Make SumatraPDF default application for PDF files?
 Đặt SumatraPDF làm trình đọc PDF mặc định?
@@ -231,7 +283,10 @@ Make SumatraPDF my main PDF reader
 Đặt SumatraPDF làm trình đọc PDF chính
 
 Match case
-Phân biệt chữ Hoa
+Phân biệt HOA-thường
+
+Modified:
+Ngày chỉnh sửa
 
 New version %s is available. Download new version?
 Đã có phiên bản mới %s. Download phiên bản mới?
@@ -252,28 +307,46 @@ No new version available.
 Không có phiên bản mới.
 
 No result found around line %u in file %s
-Không tìm thấy kết ở dòng %u trong tệp %s
+Không tìm thấy quanh dòng %u trong tập tin %s
+
+No synchronization file found
+Không tìm thấy tập tin đồng bộ nào
 
 No synchronization info at this position
 Không có thông tin đồng bộ ở chỗ này
+
+Number of Pages:
+Số trang:
 
 OK
 Đồng ý
 
 Open
-Mở tệp
+Mở tập tin
 
 Open in &Adobe Reader
 Mở bằng Adobe Reader
 
+P&roperties...\tCtrl-D
+Thuộc tính
+
 PDF Document
-Tệp PDF
+Tập tin PDF
+
+PDF Producer:
+Phần mềm tạo PDF:
+
+PDF Version:
+Phiên bản PDF:
 
 PDF documents
-Tệp PDF
+Tập tin PDF
+
+Page Size:
+Kích thước trang:
 
 Page number %u inexistant
-Trang số %u không tồn tại
+Trang %u không tồn tại
 
 Page...\tCtrl-G
 Trang...\tCtrl-G
@@ -294,7 +367,7 @@ Printing problem.
 Lỗi in.
 
 Remember &opened files
-Nhớ danh sách tệp đã mở
+Nhớ các tập tin đã mở
 
 Rotate left\tCtrl-Shift--
 Quay trái\tCtrl-Shift--
@@ -308,8 +381,14 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Đánh dấu nội dung bằng Ctrl+phím chuột trái
 
+Send by &email...
+Gưi qua &email...
+
 Set inverse search command-line
 Đặt dòng lệnh tìm kiếm ngược
+
+Show pages continuously
+Xem trang liên tiếp
 
 Show the &bookmarks sidebar when available
 Hiện chỉ dấu sách nếu có
@@ -321,7 +400,10 @@ Single page
 Trang đơn
 
 Source file %s has no synchronization point
-Tệp nguồn %s không có điểm đồng bộ
+Tập tin nguồn %s không có điểm đồng bộ
+
+Subject:
+Chủ đề:
 
 SumatraPDF Options
 Tuỳ chọn SumatraPDF
@@ -333,13 +415,19 @@ SumatraPDF should now be your main PDF reader
 SumatraPDF giờ là trình đọc PDF chính của bạn
 
 Synchronization file cannot be opened
-Không mở được tệp đồng bộ
+Không mở được tập tin đồng bộ
+
+Text documents
+Tập tin văn bản
+
+Title:
+Tựa đề
 
 Unknown source file (%s)
-Không rõ tệp nguồn (%s)
+Không rõ tập tin nguồn (%s)
 
 View
-Khung nhìn
+Hiển thị
 
 Warning
 Cảnh báo
@@ -365,36 +453,9 @@ Hệ số thu phóng
 [Changes detected; refreshing] %s
 [Phát hiện thay đổi; đang cập nhật] %s
 
-# Untranslated:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#Application:
-#Author:
-#Back\tAlt+Left Arrow
-#Book view
-#Bytes
-#Continuous book view
-#Created:
-#Denied Permissions:
-#Document Properties
-#File Size:
-#File:
-#Forward\tAlt+Right Arrow
-#GB
-#KB
-#MB
-#Modified:
-#No synchronization file found
-#Number of Pages:
-#P&roperties...\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Send by &email...
-#Show pages continuously
-#Subject:
-#Text documents
-#Title:
-#copying text
-#printing document
+copying text
+đang chép văn bản
+
+printing document
+đang in tập tin
 
