@@ -8,6 +8,7 @@ Lang: fa Persian (فارسی)
 
 Contributor: Adham Beyki (odinay@gmail.com)
 Contributor: Mardi Az Pansad Dastgah Artesh
+Contributor: Ali Nayeri
 
 &About
 درباره
@@ -18,29 +19,68 @@ Contributor: Mardi Az Pansad Dastgah Artesh
 &Close\tCtrl-W
 بستن\tCtrl-W
 
+&Custom Zoom...
+ابعاد نمایش مخصوص
+
 &Don't ask me again
 این پاسخ را به یاد بسپار و دوباره از من نپرس
 
 &File
 فايل
 
+&Find what:
+:جستجو برای
+
 &Go To
 برو به
+
+&Go to page:
+:برو به صفحه
 
 &Help
 راهنما
 
+&Magnification:
+درشت نمایی
+
 &Manual
 کتابچه راهنما در اینترنت
 
+&Match case
+با توجه به قالب حروف
+
+&No
+خیر
+
+&No, thanks
+نه، متشکرم
+
 &Open\tCtrl-O
-گشودن\tCtrl-O
+باز کردن\tCtrl-O
+
+&Options...
+گزینه ها
+
+&Password:
+کلمه عبور
 
 &Print\tCtrl-P
 چاپ\tCtrl-P
 
+&Print with %s...\tCtrl-P
+... %s چاپ با\tCtrl-P
+
+&Print... (denied)
+(چاپ ... (رد شد
+
+&Remember these settings for each document
+این تنظیمات را برای هر سند بخاطر بسپار
+
 &Save as\tCtrl-S
-...ذخيره به نام دیگر\tCtrl-S
+...ذخیره بعنوان\tCtrl-S
+
+&Settings
+تنظیمات
 
 &Skip this version
 از این نسخه چشم پوشی کن
@@ -51,20 +91,62 @@ Contributor: Mardi Az Pansad Dastgah Artesh
 &Visit website
 بازديد از وب‌سايت
 
+&Yes
+بلی
+
 &Zoom
-تغيير بزرگی
+تغییر ابعاد نمایش
+
+(of %d)
+(%d از)
 
 About SumatraPDF
-SumatraPDF دربارۀ برنامۀ
+SumatraPDF درباره برنامه
 
 Act&ual Size\tCtrl-1
-بزرگی خودش\tCtrl-1
+ابعاد اصلی‌\tCtrl-1
+
+Advanced
+امکانات پیشرفته
+
+All files
+تمام فایلها
+
+Application:
+:نرم‌افزار
 
 Associate with PDF files?
 قرار بدهیم ؟ PDF ایا این برنامه را نمایشگر همیشگی فایل های
 
+Author:
+:مولف
+
+Automatic
+خودکار
+
+Automatically check for &updates
+جستجو خودکار برای نسخه جدید
+
+Back\tAlt+Left Arrow
+عقب\tAlt+Left Arrow
+
+Book view
+نمایش کتابی‌
+
 Bookmarks\tF12
 نشان یادگاری سرکتاب\tF12
+
+Bytes
+Bytes
+
+Cancel
+لغو
+
+Cannot print this file
+این فایل قابل به چاپ نیست
+
+Cannot start inverse search command. Please check the command line in the settings.
+.جستجو معکوس قابل اجرا نیست. لطفا تنظیمات خط فرمان را بازبینی کنید
 
 Change language
 تغییر زبان (Change language)
@@ -72,32 +154,71 @@ Change language
 Continuous
 نمايش پيوسته
 
+Continuous book view
+نمایش کتابی‌ پیوسته
+
 Continuous facing
-نمايش دوصفحه‌اي پيوسته
+نمایش دو صفحه‌ای پیوسته
 
 Contribute translation
-در ترجمۀ اين برنامه کمک کنيد
+در ترجمه این برنامه کمک کنید
+
+Copy Selection\tCtrl-C
+رونوشت مورد منتخب
 
 Could not open Printer
 برنامه قادر به يافتن چاپگر نيست
 
+Couldn't initialize printer
+متأسفانه چاپگر منتخب در دسترس نیست
+
+Couldn't render the page
+متأسفانه صفحه قابل نمایش نیست
+
+Created:
+:بوجود آمده
+
+Default &Layout:
+:نحوه نمایش
+
+Default &Zoom:
+:ابعاد نمایش
+
+Denied Permissions:
+:دسترسی ممنوع
+
+Document Properties
+ویژگیهای سند
+
+Download
+بارگیری
+
 E&xit\tCtrl-Q
-بستن برنامه\tCtrl-Q
+خروج\tCtrl-Q
 
 Enter password
-اسم رمز را وارد کنید
+کلمه عبور را وارد کنید
 
 Enter password for %s
-%s اسم رمز را وارد کنید برای
+را وارد کنید %s کلمه عبور برای
 
 Error loading PDF file.
-گشودن فايل با مشکل مواجه شد
+باز کردن فایل با مشکل مواجه شد
 
 Facing
-نمايش دوصفحه‌اي
+نمایش دو صفحه‌ای
 
 Failed to save a file
 ذخيره کردن فايل با مشکل روبرو شد
+
+File Size:
+:حجم فایل
+
+File:
+:فايل
+
+Find
+جستجو
 
 Find Next
 جستجو روبه جلو
@@ -106,7 +227,7 @@ Find Previous
 جستجو روبه عقب
 
 Find...\tCtrl-F
-جستجو...\tCtrl-F
+...جستجو\tCtrl-F
 
 Find:
 جستجو:
@@ -126,29 +247,53 @@ Fit Widt&h\tCtrl-2
 Fit Width
 به بزرگی پهنای پنجره
 
+Forward\tAlt+Right Arrow
+جلو\tAlt+Right Arrow
+
+Found text at page %d
+پیدا شد %d متن در صفحه
+
 Fullscreen\tCtrl-L
 تمام‌صفحه\tCtrl-L
+
+GB
+GB
 
 Go to page
 برو به صفحه
 
+Hint: Use the F3 key for finding again
+استفاده کنید F3 اشاره: برای جستجو مجدد از کلید
+
+KB
+KB
+
 Last Page\tEnd
-صفحه پایانی\tEnd
+صفحه آخر\tEnd
+
+MB
+MB
+
+Main PDF reader can't be changed in portable mode
+باشد PDF نسخه همراه برنامه نمی‌تواند مجری استاندارد فایلهای
 
 Make SumatraPDF default application for PDF files?
-قرار بدهیم ؟ PDF ایا این برنامه را مجری استاندارد فایل های
+قرار بدهیم؟ PDF ایا این برنامه را مجری استاندارد فایل های
 
 Make SumatraPDF my main PDF reader
-PDF به برنامه‌ي پيش‌فرض مرور اسناد SumatraPDF تبديل
+PDF بعنوان مرورگر اصلی‌ اسناد SumatraPDF انتخاب
 
 Match case
-با توجه به کوچکي و بزرگي حروف
+با توجه به قالب حروف
+
+Modified:
+:اصلاح شده
 
 New version %s is available. Download new version?
-نسخۀ تازه تری پیدا شده است ، ایا می خواهید آنرا پیاده کنید ؟
+موجود می‌باشد. آیا می‌خواهید آن را بارگیری کنید؟ (%s) نسخه تازه
 
 New version available.
-نسخه تازه یافت شده
+.نسخه تازه موجود می‌باشد
 
 Next Page
 صفحه بعدی
@@ -159,14 +304,50 @@ Next Page\tRight Arrow
 No new version available.
 نسخه تازه دردسترس نمی باشد
 
+No synchronization file found
+فایل همگام سازی موجود نیست
+
+Number of Pages:
+تعداد صفحات
+
+OK
+قبول
+
 Open
-گشودن
+باز کردن
+
+Open in &Adobe Reader
+Adobe Reader باز کردن در
+
+P&roperties...\tCtrl-D
+...ویزگیها\tCtrl-D
+
+PDF Document
+PDF سند
+
+PDF Producer:
+:PDF برنامه مبدل
+
+PDF Version:
+:PDF نسخه
+
+PDF documents
+PDF اسناد
+
+Page Size:
+:ابعاد صفحه
+
+Page number %u inexistant
+موجود نیست %u صفحه
 
 Page...\tCtrl-G
 ...صفحه\tCtrl-G
 
 Page:
 صفحه:
+
+Please wait - rendering...
+... لطفا صبر کنید
 
 Previous Page
 صفحه قبلی
@@ -177,119 +358,99 @@ Previous Page\tLeft Arrow
 Printing problem.
 مشکل در چاپ
 
+Remember &opened files
+فایلهای باز شده را بخاطر بسپار
+
 Rotate left\tCtrl-Shift--
 چرخاندن به چپ\tCtrl-Shift--
 
 Rotate right\tCtrl-Shift-+
 چرخاندن به راست\tCtrl-Shift-+
 
+Searching %d of %d...
+... %d از %d در حال جستجو
+
+Select content with Ctrl+left mouse button
+و دکمه سمت چپ موس انتخاب کنید Ctrl متن مورد نظر را با
+
+Send by &email...
+... ارسال با پست الکترونیکی‌
+
 Set inverse search command-line
 تنظیم وارانه جستجو
+
+Show pages continuously
+نمایش پیوسته صفحات
 
 Show toolbar
 نمايش نوار ابزار
 
 Single page
-نمايش تک‌صفحه‌اي
+نمایش تک صفحه‌ای
+
+Source file %s has no synchronization point
+نقاط همگام سازی ندارد %s فایل
+
+Subject:
+:موضوع
+
+SumatraPDF Options
+SumatraPDF گزینه ها
+
+SumatraPDF is your main PDF reader
+شماست PDF مرورگر اصلی SumatraPDF
+
+SumatraPDF should now be your main PDF reader
+شماست PDF اکنون مرورگر اصلی SumatraPDF
+
+Synchronization file cannot be opened
+فایل همگام سازی باز نمی‌شود
+
+Text documents
+سند متنی
+
+Title:
+:عنوان
+
+Unknown source file (%s)
+نامعلوم است (%s) فایل منبع
 
 View
 نمايش
 
+Warning
+هشدار
+
 You have the latest version.
-نسخۀ شما تازه ترین نسخه می باشد
+.نسخه شما تازه‌ترین نسخه می‌باشد
 
 You have version %s
-شماره نسخه شما %s
+را استفاد می‌کنید %s شما هماکنون نسکه شماره
+
+Zoom
+ابعاد نمایش
 
 Zoom In
-بزرگ‌نمايي
+بزرگ نمایی
 
 Zoom Out
-کوچک‌نمايي
+کوچک نمایی
+
+Zoom factor
+ضریب ابعاد نمایش
+
+[Changes detected; refreshing] %s
+%s [تغییرات شناسایی شد]
+
+copying text
+در حل رونوش متن
+
+printing document
+در حل چاپ سند
 
 # Untranslated:
-#&Custom Zoom...
-#&Find what:
-#&Go to page:
-#&Magnification:
-#&Match case
-#&No
-#&No, thanks
-#&Options...
-#&Password:
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#&Remember these settings for each document
-#&Settings
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Author:
-#Automatic
-#Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
-#Bytes
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
-#Copy Selection\tCtrl-C
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Download
-#File Size:
-#File:
-#Find
-#Forward\tAlt+Right Arrow
-#Found text at page %d
-#GB
-#Hint: Use the F3 key for finding again
-#KB
-#MB
-#Main PDF reader can't be changed in portable mode
-#Modified:
 #No matches were found
 #No result found around line %u in file %s
-#No synchronization file found
 #No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties...\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Please wait - rendering...
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
 #Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
 
