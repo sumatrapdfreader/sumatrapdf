@@ -255,31 +255,8 @@ void pdf_dropxobject(pdf_xobject *xobj);
  * Image
  */
 
-typedef struct pdf_image_s pdf_image;
-
-struct pdf_image_s
-{
-	int refs;
-	int w, h, bpc, n;
-	int imagemask;
-	int interpolate;
-	fz_colorspace *colorspace;
-	int indexed;
-	pdf_image *mask; /* explicit mask/softmask image */
-	int usecolorkey; /* color-keyed masking */
-	int colorkey[FZ_MAXCOLORS * 2];
-	float decode[FZ_MAXCOLORS * 2];
-	int stride;
-	unsigned char *samples;
-};
-
-fz_error pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
-fz_error pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
-fz_pixmap *pdf_loadtile(pdf_image *image);
-pdf_image *pdf_keepimage(pdf_image *img);
-void pdf_dropimage(pdf_image *img);
-
-fz_error pdf_loadjpximage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict);
+fz_error pdf_loadinlineimage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file);
+fz_error pdf_loadimage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *obj);
 
 /*
  * CMap
@@ -629,8 +606,8 @@ void pdf_setshade(pdf_csi *csi, int what, fz_shade *shade);
 void pdf_showpath(pdf_csi*, int close, int fill, int stroke, int evenodd);
 void pdf_showtext(pdf_csi*, fz_obj *text);
 void pdf_flushtext(pdf_csi*);
-void pdf_showimage(pdf_csi*, pdf_image *img);
-void pdf_showshade(pdf_csi*, fz_shade *shd);
+void pdf_showimage(pdf_csi*, fz_pixmap *image);
+void pdf_showshade(pdf_csi*, fz_shade *shade);
 
 /* interpret.c */
 void pdf_gsave(pdf_csi *csi);

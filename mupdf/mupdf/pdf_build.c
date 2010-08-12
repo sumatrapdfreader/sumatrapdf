@@ -242,10 +242,9 @@ pdf_showshade(pdf_csi *csi, fz_shade *shd)
 }
 
 void
-pdf_showimage(pdf_csi *csi, pdf_image *image)
+pdf_showimage(pdf_csi *csi, fz_pixmap *image)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	fz_pixmap *tile, *mask;
 	fz_rect bbox;
 
 	bbox = fz_transformrect(gstate->ctm, fz_unitrect);
@@ -254,15 +253,9 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 
 	if (image->mask)
-	{
-		mask = pdf_loadtile(image->mask);
-		csi->dev->clipimagemask(csi->dev->user, mask, gstate->ctm);
-		fz_droppixmap(mask);
-	}
+		csi->dev->clipimagemask(csi->dev->user, image->mask, gstate->ctm);
 
-	tile = pdf_loadtile(image);
-
-	if (image->imagemask)
+	if (!image->colorspace)
 	{
 
 		switch (gstate->fill.kind)
@@ -270,13 +263,13 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 		case PDF_MNONE:
 			break;
 		case PDF_MCOLOR:
-			csi->dev->fillimagemask(csi->dev->user, tile, gstate->ctm,
+			csi->dev->fillimagemask(csi->dev->user, image, gstate->ctm,
 				gstate->fill.cs, gstate->fill.v, gstate->fill.alpha);
 			break;
 		case PDF_MPATTERN:
 			if (gstate->fill.pattern)
 			{
-				csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
+				csi->dev->clipimagemask(csi->dev->user, image, gstate->ctm);
 				pdf_showpattern(csi, gstate->fill.pattern, bbox, PDF_MFILL);
 				csi->dev->popclip(csi->dev->user);
 			}
@@ -284,7 +277,7 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 		case PDF_MSHADE:
 			if (gstate->fill.shade)
 			{
-				csi->dev->clipimagemask(csi->dev->user, tile, gstate->ctm);
+				csi->dev->clipimagemask(csi->dev->user, image, gstate->ctm);
 				csi->dev->fillshade(csi->dev->user, gstate->fill.shade, gstate->ctm, gstate->fill.alpha);
 				csi->dev->popclip(csi->dev->user);
 			}
@@ -293,7 +286,7 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 	}
 	else
 	{
-		csi->dev->fillimage(csi->dev->user, tile, gstate->ctm, gstate->fill.alpha);
+		csi->dev->fillimage(csi->dev->user, image, gstate->ctm, gstate->fill.alpha);
 	}
 
 	if (image->mask)
@@ -301,8 +294,6 @@ pdf_showimage(pdf_csi *csi, pdf_image *image)
 
 	if (gstate->blendmode != FZ_BNORMAL)
 		csi->dev->endgroup(csi->dev->user);
-
-	fz_droppixmap(tile);
 }
 
 void

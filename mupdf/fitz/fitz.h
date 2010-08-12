@@ -597,6 +597,7 @@ struct fz_pixmap_s
 {
 	int refs;
 	int x, y, w, h, n;
+	fz_pixmap *mask; /* explicit soft/image mask */
 	fz_colorspace *colorspace;
 	unsigned char *samples;
 };
@@ -616,6 +617,8 @@ fz_pixmap * fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, floa
 fz_error fz_writepnm(fz_pixmap *pixmap, char *filename);
 fz_error fz_writepam(fz_pixmap *pixmap, char *filename, int savealpha);
 fz_error fz_writepng(fz_pixmap *pixmap, char *filename, int savealpha);
+
+fz_error fz_loadjpximage(fz_pixmap **imgp, unsigned char *data, int size);
 
 /*
  * Colorspace resources.

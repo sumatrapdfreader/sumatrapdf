@@ -1,250 +1,8 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-/* TODO: special case JPXDecode image loading */
 /* TODO: store JPEG compressed samples */
 /* TODO: store flate compressed samples */
-
-pdf_image *
-pdf_keepimage(pdf_image *image)
-{
-	image->refs ++;
-	return image;
-}
-
-void
-pdf_dropimage(pdf_image *img)
-{
-	if (img && --img->refs == 0)
-	{
-		if (img->colorspace)
-			fz_dropcolorspace(img->colorspace);
-		if (img->mask)
-			pdf_dropimage(img->mask);
-		if (img->samples)
-			fz_free(img->samples);
-		fz_free(img);
-	}
-}
-
-static fz_error
-pdf_loadimageimp(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm)
-{
-	pdf_image *img;
-	fz_stream *stm;
-	fz_error error;
-	fz_obj *obj, *res;
-	int i, n;
-
-	img = fz_malloc(sizeof(pdf_image));
-	memset(img, 0, sizeof(pdf_image));
-
-	img->refs = 1;
-	img->w = fz_toint(fz_dictgetsa(dict, "Width", "W"));
-	img->h = fz_toint(fz_dictgetsa(dict, "Height", "H"));
-	img->bpc = fz_toint(fz_dictgetsa(dict, "BitsPerComponent", "BPC"));
-	img->imagemask = fz_tobool(fz_dictgetsa(dict, "ImageMask", "IM"));
-	img->interpolate = fz_tobool(fz_dictgetsa(dict, "Interpolate", "I"));
-
-	if (img->imagemask)
-		img->bpc = 1;
-
-	if (img->w == 0)
-		fz_warn("image width is zero");
-	if (img->h == 0)
-		fz_warn("image height is zero");
-	if (img->bpc == 0)
-		img->bpc = 8; /* for JPX */
-
-	obj = fz_dictgetsa(dict, "ColorSpace", "CS");
-	if (obj)
-	{
-		if (fz_isname(obj))
-		{
-			res = fz_dictget(fz_dictgets(rdb, "ColorSpace"), obj);
-			if (res)
-				obj = res;
-		}
-
-		error = pdf_loadcolorspace(&img->colorspace, xref, obj);
-		if (error)
-		{
-			pdf_dropimage(img);
-			return fz_rethrow(error, "cannot load image colorspace");
-		}
-
-		if (!strcmp(img->colorspace->name, "Indexed"))
-			img->indexed = 1;
-
-		img->n = img->colorspace->n;
-	}
-	else
-	{
-		img->n = 1;
-	}
-
-	obj = fz_dictgetsa(dict, "Decode", "D");
-	if (obj)
-	{
-		for (i = 0; i < img->n * 2; i++)
-			img->decode[i] = fz_toreal(fz_arrayget(obj, i));
-	}
-	else
-	{
-		float maxval = img->indexed ? (1 << img->bpc) - 1 : 1;
-		for (i = 0; i < img->n * 2; i++)
-			img->decode[i] = i & 1 ? maxval : 0;
-	}
-
-	/* Not allowed for inline images */
-	obj = fz_dictgetsa(dict, "SMask", "Mask");
-	if (fz_isdict(obj))
-	{
-		error = pdf_loadimage(&img->mask, xref, rdb, obj);
-		if (error)
-		{
-			pdf_dropimage(img);
-			return fz_rethrow(error, "cannot load image mask/softmask");
-		}
-		img->mask->imagemask = 1;
-		if (img->mask->colorspace)
-		{
-			fz_dropcolorspace(img->mask->colorspace);
-			img->mask->colorspace = nil;
-		}
-	}
-	else if (fz_isarray(obj))
-	{
-		img->usecolorkey = 1;
-		for (i = 0; i < img->n * 2; i++)
-			img->colorkey[i] = fz_toint(fz_arrayget(obj, i));
-	}
-
-	if (img->imagemask)
-	{
-		if (img->colorspace)
-		{
-			fz_dropcolorspace(img->colorspace);
-			img->colorspace = nil;
-		}
-	}
-
-	img->stride = (img->w * img->n * img->bpc + 7) / 8;
-	img->samples = fz_malloc(img->h * img->stride);
-
-	if (cstm)
-	{
-		stm = pdf_openinlinestream(cstm, xref, dict, img->stride * img->h);
-	}
-	else
-	{
-		error = pdf_openstream(&stm, xref, fz_tonum(dict), fz_togen(dict));
-		if (error)
-		{
-			pdf_dropimage(img);
-			return fz_rethrow(error, "cannot open image data stream (%d 0 R)", fz_tonum(dict));
-		}
-	}
-
-	n = fz_read(stm, img->samples, img->h * img->stride);
-	if (n < 0)
-	{
-		fz_close(stm);
-		pdf_dropimage(img);
-		return fz_rethrow(n, "cannot read image data");
-	}
-
-	fz_close(stm);
-
-	/* Pad truncated images */
-	if (n < img->stride * img->h)
-	{
-		fz_warn("padding truncated image (%d 0 R)", fz_tonum(dict));
-		memset(img->samples + n, 0, img->stride * img->h - n);
-	}
-
-	if (img->imagemask)
-	{
-		/* 0=opaque and 1=transparent so we need to invert */
-		unsigned char *p = img->samples;
-		n = img->h * img->stride;
-		for (i = 0; i < n; i++)
-			p[i] = ~p[i];
-	}
-
-	pdf_logimage("size %dx%d n=%d bpc=%d (imagemask=%d)\n", img->w, img->h, img->n, img->bpc, img->imagemask);
-
-	*imgp = img;
-	return fz_okay;
-}
-
-fz_error
-pdf_loadinlineimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file)
-{
-	fz_error error;
-	pdf_image *img;
-
-	pdf_logimage("load inline image {\n");
-
-	error = pdf_loadimageimp(&img, xref, rdb, dict, file);
-	if (error)
-		return fz_rethrow(error, "cannot load inline image");
-
-	pdf_logimage("}\n");
-
-	*imgp = img;
-	return fz_okay;
-}
-
-static int
-pdf_isjpximage(fz_obj *filter)
-{
-	int i;
-	if (!strcmp(fz_toname(filter), "JPXDecode"))
-		return 1;
-	for (i = 0; i < fz_arraylen(filter); i++)
-		if (!strcmp(fz_toname(fz_arrayget(filter, i)), "JPXDecode"))
-			return 1;
-	return 0;
-}
-
-fz_error
-pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
-{
-	fz_error error;
-	pdf_image *img;
-	fz_obj *obj;
-
-	if ((*imgp = pdf_finditem(xref->store, pdf_dropimage, dict)))
-	{
-		pdf_keepimage(*imgp);
-		return fz_okay;
-	}
-
-	pdf_logimage("load image (%d %d R) {\n", fz_tonum(dict), fz_togen(dict));
-
-	/* special case for JPEG2000 images */
-	obj = fz_dictgets(dict, "Filter");
-	if (pdf_isjpximage(obj))
-	{
-		error = pdf_loadjpximage(&img, xref, rdb, dict);
-		if (error)
-			return fz_rethrow(error, "cannot load jpx image");
-	}
-	else
-	{
-		error = pdf_loadimageimp(&img, xref, rdb, dict, nil);
-		if (error)
-			return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(dict), fz_togen(dict));
-	}
-
-	pdf_storeitem(xref->store, pdf_keepimage, pdf_dropimage, dict, img);
-
-	pdf_logimage("}\n");
-
-	*imgp = img;
-	return fz_okay;
-}
 
 static void
 pdf_maskcolorkey(fz_pixmap *pix, int n, int *colorkey)
@@ -265,18 +23,182 @@ pdf_maskcolorkey(fz_pixmap *pix, int n, int *colorkey)
 	}
 }
 
-fz_pixmap *
-pdf_loadtile(pdf_image *img /* ...bbox/y+h should go here... */)
+static fz_error
+pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *cstm, int forcemask)
 {
+	fz_stream *stm;
 	fz_pixmap *tile;
-	int scale;
+	fz_obj *obj, *res;
+	fz_error error;
 
-	tile = fz_newpixmap(img->colorspace, 0, 0, img->w, img->h);
+	int w, h, bpc, n;
+	int imagemask;
+	int interpolate;
+	int indexed;
+	fz_colorspace *colorspace;
+	fz_pixmap *mask; /* explicit mask/softmask image */
+	int usecolorkey;
+	int colorkey[FZ_MAXCOLORS * 2];
+	float decode[FZ_MAXCOLORS * 2];
+
+	int scale;
+	int stride;
+	unsigned char *samples;
+	int i, len;
+
+	w = fz_toint(fz_dictgetsa(dict, "Width", "W"));
+	h = fz_toint(fz_dictgetsa(dict, "Height", "H"));
+	bpc = fz_toint(fz_dictgetsa(dict, "BitsPerComponent", "BPC"));
+	imagemask = fz_tobool(fz_dictgetsa(dict, "ImageMask", "IM"));
+	interpolate = fz_tobool(fz_dictgetsa(dict, "Interpolate", "I"));
+
+	indexed = 0;
+	usecolorkey = 0;
+	colorspace = nil;
+	mask = nil;
+
+	if (imagemask)
+		bpc = 1;
+
+	if (w == 0)
+		return fz_throw("image width is zero");
+	if (h == 0)
+		return fz_throw("image height is zero");
+	if (bpc == 0)
+		return fz_throw("image depth is zero");
+
+	obj = fz_dictgetsa(dict, "ColorSpace", "CS");
+	if (obj && !imagemask && !forcemask)
+	{
+		if (fz_isname(obj))
+		{
+			res = fz_dictget(fz_dictgets(rdb, "ColorSpace"), obj);
+			if (res)
+				obj = res;
+		}
+
+		error = pdf_loadcolorspace(&colorspace, xref, obj);
+		if (error)
+			return fz_rethrow(error, "cannot load image colorspace");
+
+		if (!strcmp(colorspace->name, "Indexed"))
+			indexed = 1;
+
+		n = colorspace->n;
+	}
+	else
+	{
+		n = 1;
+	}
+
+	obj = fz_dictgetsa(dict, "Decode", "D");
+	if (obj)
+	{
+		for (i = 0; i < n * 2; i++)
+			decode[i] = fz_toreal(fz_arrayget(obj, i));
+	}
+	else
+	{
+		float maxval = indexed ? (1 << bpc) - 1 : 1;
+		for (i = 0; i < n * 2; i++)
+			decode[i] = i & 1 ? maxval : 0;
+	}
+
+	obj = fz_dictgetsa(dict, "SMask", "Mask");
+	if (fz_isdict(obj))
+	{
+		/* Not allowed for inline images */
+		if (!cstm)
+		{
+			error = pdf_loadimageimp(&mask, xref, rdb, obj, nil, 1);
+			if (error)
+			{
+				if (colorspace)
+					fz_dropcolorspace(colorspace);
+				return fz_rethrow(error, "cannot load image mask/softmask");
+			}
+		}
+	}
+	else if (fz_isarray(obj))
+	{
+		usecolorkey = 1;
+		for (i = 0; i < n * 2; i++)
+			colorkey[i] = fz_toint(fz_arrayget(obj, i));
+	}
+
+	stride = (w * n * bpc + 7) / 8;
+	samples = fz_malloc(h * stride);
+
+	if (cstm)
+	{
+		stm = pdf_openinlinestream(cstm, xref, dict, stride * h);
+	}
+	else
+	{
+		error = pdf_openstream(&stm, xref, fz_tonum(dict), fz_togen(dict));
+		if (error)
+		{
+			if (colorspace)
+				fz_dropcolorspace(colorspace);
+			if (mask)
+				fz_droppixmap(mask);
+			return fz_rethrow(error, "cannot open image data stream (%d 0 R)", fz_tonum(dict));
+		}
+	}
+
+	len = fz_read(stm, samples, h * stride);
+	if (len < 0)
+	{
+		fz_close(stm);
+		if (colorspace)
+			fz_dropcolorspace(colorspace);
+		if (mask)
+			fz_droppixmap(mask);
+		return fz_rethrow(n, "cannot read image data");
+	}
+
+	/* Make sure we read the EOF marker (for inline images only) */
+	if (cstm)
+	{
+		unsigned char tbuf[512];
+		int tlen = fz_read(stm, tbuf, sizeof tbuf);
+		if (tlen < 0)
+			fz_catch(tlen, "ignoring error at end of image");
+		if (tlen > 0)
+			fz_warn("ignoring garbage at end of image");
+	}
+
+	fz_close(stm);
+
+	/* Pad truncated images */
+	if (len < stride * h)
+	{
+		fz_warn("padding truncated image (%d 0 R)", fz_tonum(dict));
+		memset(samples + len, 0, stride * h - len);
+	}
+
+	/* Invert 1-bit image masks */
+	if (imagemask)
+	{
+		/* 0=opaque and 1=transparent so we need to invert */
+		unsigned char *p = samples;
+		len = h * stride;
+		for (i = 0; i < len; i++)
+			p[i] = ~p[i];
+	}
+
+	pdf_logimage("size %dx%d n=%d bpc=%d imagemask=%d indexed=%d\n", w, h, n, bpc, imagemask, indexed);
+
+	/* Unpack samples into pixmap */
+
+	tile = fz_newpixmap(colorspace, 0, 0, w, h);
+
+	tile->mask = mask;
 
 	scale = 1;
-	if (!img->indexed)
+	if (!indexed)
 	{
-		switch (img->bpc)
+		switch (bpc)
 		{
 		case 1: scale = 255; break;
 		case 2: scale = 85; break;
@@ -284,16 +206,16 @@ pdf_loadtile(pdf_image *img /* ...bbox/y+h should go here... */)
 		}
 	}
 
-	fz_unpacktile(tile, img->samples, img->n, img->bpc, img->stride, scale);
+	fz_unpacktile(tile, samples, n, bpc, stride, scale);
 
-	if (img->usecolorkey)
-		pdf_maskcolorkey(tile, img->n, img->colorkey);
+	if (usecolorkey)
+		pdf_maskcolorkey(tile, n, colorkey);
 
-	if (img->indexed)
+	if (indexed)
 	{
 		fz_pixmap *conv;
 
-		fz_decodeindexedtile(tile, img->decode, (1 << img->bpc) - 1);
+		fz_decodeindexedtile(tile, decode, (1 << bpc) - 1);
 
 		conv = pdf_expandindexedpixmap(tile);
 		fz_droppixmap(tile);
@@ -301,8 +223,116 @@ pdf_loadtile(pdf_image *img /* ...bbox/y+h should go here... */)
 	}
 	else
 	{
-		fz_decodetile(tile, img->decode);
+		fz_decodetile(tile, decode);
 	}
 
-	return tile;
+	if (colorspace)
+		fz_dropcolorspace(colorspace);
+
+	fz_free(samples);
+
+	*imgp = tile;
+	return fz_okay;
+}
+
+fz_error
+pdf_loadinlineimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz_stream *file)
+{
+	fz_error error;
+
+	pdf_logimage("load inline image {\n");
+
+	error = pdf_loadimageimp(pixp, xref, rdb, dict, file, 0);
+	if (error)
+		return fz_rethrow(error, "cannot load inline image");
+
+	pdf_logimage("}\n");
+	
+	return fz_okay;
+}
+
+static int
+pdf_isjpximage(fz_obj *filter)
+{
+	int i;
+	if (!strcmp(fz_toname(filter), "JPXDecode"))
+		return 1;
+	for (i = 0; i < fz_arraylen(filter); i++)
+		if (!strcmp(fz_toname(fz_arrayget(filter, i)), "JPXDecode"))
+			return 1;
+	return 0;
+}
+
+static fz_error
+pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+{
+	fz_error error;
+	fz_buffer *buf;
+	fz_pixmap *img;
+	fz_obj *obj;
+
+	pdf_logimage("jpeg2000\n");
+
+	error = pdf_loadstream(&buf, xref, fz_tonum(dict), fz_togen(dict));
+	if (error)
+		return fz_rethrow(error, "cannot load jpx image data");
+
+	error = fz_loadjpximage(&img, buf->data, buf->len);
+	if (error)
+	{
+		fz_dropbuffer(buf);
+		return fz_rethrow(error, "cannot load jpx image");
+	}
+
+	fz_dropbuffer(buf);
+
+	obj = fz_dictgetsa(dict, "SMask", "Mask");
+	if (fz_isdict(obj))
+	{
+		error = pdf_loadimageimp(&img->mask, xref, rdb, obj, nil, 1);
+		if (error)
+		{
+			fz_droppixmap(img);
+			return fz_rethrow(error, "cannot load image mask/softmask");
+		}
+	}
+
+	*imgp = img;
+	return fz_okay;
+}
+
+fz_error
+pdf_loadimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+{
+	fz_error error;
+	fz_obj *obj;
+
+	if ((*pixp = pdf_finditem(xref->store, fz_droppixmap, dict)))
+	{
+		fz_keeppixmap(*pixp);
+		return fz_okay;
+	}
+
+	pdf_logimage("load image (%d 0 R) {\n", fz_tonum(dict));
+
+	/* special case for JPEG2000 images */
+	obj = fz_dictgets(dict, "Filter");
+	if (pdf_isjpximage(obj))
+	{
+		error = pdf_loadjpximage(pixp, xref, rdb, dict);
+		if (error)
+			return fz_rethrow(error, "cannot load jpx image (%d 0 R)", fz_tonum(dict));
+	}
+	else
+	{
+		error = pdf_loadimageimp(pixp, xref, rdb, dict, nil, 0);
+		if (error)
+			return fz_rethrow(error, "cannot load image (%d 0 R)", fz_tonum(dict));
+	}
+
+	pdf_storeitem(xref->store, fz_keeppixmap, fz_droppixmap, dict, *pixp);
+
+	pdf_logimage("}\n");
+
+	return fz_okay;
 }

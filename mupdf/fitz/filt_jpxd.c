@@ -1,5 +1,4 @@
 #include "fitz.h"
-#include "mupdf.h"
 
 #define OPJ_STATIC
 #include <openjpeg.h>
@@ -16,40 +15,29 @@ static void fz_opj_warning_callback(const char *msg, void *client_data)
 
 static void fz_opj_info_callback(const char *msg, void *client_data)
 {
-	char buf[80];
-	int len = fz_strlcpy(buf, msg, sizeof buf);
-	if (len > 0) buf[len-1] = 0;
-	pdf_logimage("%s\n", buf);
+	/* fprintf(stderr, "openjpeg info: %s", msg); */
 }
 
 fz_error
-pdf_loadjpximage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+fz_loadjpximage(fz_pixmap **imgp, unsigned char *data, int size)
 {
-	pdf_image *img;
+	fz_pixmap *img;
 	opj_event_mgr_t evtmgr;
 	opj_dparameters_t params;
 	opj_dinfo_t *info;
 	opj_cio_t *cio;
 	opj_image_t *jpx;
-	fz_error error;
-	fz_buffer *buf;
+	fz_colorspace *colorspace;
 	unsigned char *p;
 	int format;
 	int n, w, h, depth, sgnd;
 	int x, y, k, v;
 
-	error = pdf_loadstream(&buf, xref, fz_tonum(dict), fz_togen(dict));
-	if (error)
-		return fz_throw("read error in jpx image");
-
-	if (buf->len < 2)
-	{
-		fz_dropbuffer(buf);
+	if (size < 2)
 		return fz_throw("not enough data to determine image format");
-	}
 
 	/* Check for SOC marker -- if found we have a bare J2K stream */
-	if (buf->data[0] == 0xFF && buf->data[1] == 0x4F)
+	if (data[0] == 0xFF && data[1] == 0x4F)
 		format = CODEC_J2K;
 	else
 		format = CODEC_JP2;
@@ -65,13 +53,12 @@ pdf_loadjpximage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	opj_set_event_mgr((opj_common_ptr)info, &evtmgr, stderr);
 	opj_setup_decoder(info, &params);
 
-	cio = opj_cio_open((opj_common_ptr)info, buf->data, buf->len);
+	cio = opj_cio_open((opj_common_ptr)info, data, size);
 
 	jpx = opj_decode(info, cio);
 
 	opj_cio_close(cio);
 	opj_destroy_decompress(info);
-	fz_dropbuffer(buf);
 
 	if (!jpx)
 		return fz_throw("opj_decode failed");
@@ -92,33 +79,18 @@ pdf_loadjpximage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	depth = jpx->comps[0].prec;
 	sgnd = jpx->comps[0].sgnd;
 
-	img = fz_malloc(sizeof(pdf_image));
-	memset(img, 0, sizeof(pdf_image));
-	img->refs = 1;
-	img->w = w;
-	img->h = h;
-	img->bpc = 8;
-	img->n = n;
-	img->stride = w * n;
-	img->samples = fz_malloc(w * n * h);
-
 	switch (n)
 	{
-	case 1: img->colorspace = fz_devicegray; break;
-	case 3: img->colorspace = fz_devicergb; break;
-	case 4: img->colorspace = fz_devicecmyk; break;
+	case 1: colorspace = fz_devicegray; break;
+	case 3: colorspace = fz_devicergb; break;
+	case 4: colorspace = fz_devicecmyk; break;
 	default:
 		/* TODO: SMaskInData */
 		opj_image_destroy(jpx);
-		fz_free(img);
 		return fz_throw("unknown jpx colorspace (%d components)", n);
 	}
 
-	for (k = 0; k < n; k++)
-	{
-		img->decode[k * 2] = 0;
-		img->decode[k * 2 + 1] = 1;
-	}
+	img = fz_newpixmap(colorspace, 0, 0, w, h);
 
 	p = img->samples;
 	for (y = 0; y < h; y++)
@@ -134,6 +106,7 @@ pdf_loadjpximage(pdf_image **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 					v = v >> (depth - 8);
 				*p++ = v;
 			}
+			*p++ = 255; /* TODO: SMaskInData */
 		}
 	}
 

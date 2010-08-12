@@ -39,8 +39,7 @@ static int isfontdesc(fz_obj *obj)
 static void saveimage(int num)
 {
 	fz_error error;
-	pdf_image *img;
-	fz_pixmap *pix;
+	fz_pixmap *img;
 	fz_obj *ref;
 	char name[1024];
 
@@ -52,33 +51,29 @@ static void saveimage(int num)
 	if (error)
 		die(error);
 
-	pix = pdf_loadtile(img);
-
 	if (dorgb && img->colorspace && img->colorspace != fz_devicergb)
 	{
 		fz_pixmap *temp;
-		temp = fz_newpixmap(fz_devicergb, pix->x, pix->y, pix->w, pix->h);
-		fz_convertpixmap(pix, temp);
-		fz_droppixmap(pix);
-		pix = temp;
+		temp = fz_newpixmap(fz_devicergb, img->x, img->y, img->w, img->h);
+		fz_convertpixmap(img, temp);
+		fz_droppixmap(img);
+		img = temp;
 	}
 
-	if (pix->n <= 4)
+	if (img->n <= 4)
 	{
 		sprintf(name, "img-%04d.png", num);
 		printf("extracting image %s\n", name);
-		fz_writepng(pix, name, 0);
+		fz_writepng(img, name, 0);
 	}
 	else
 	{
 		sprintf(name, "img-%04d.pam", num);
 		printf("extracting image %s\n", name);
-		fz_writepam(pix, name, 0);
+		fz_writepam(img, name, 0);
 	}
 
-	fz_droppixmap(pix);
-	pdf_dropimage(img);
-
+	fz_droppixmap(img);
 	fz_dropobj(ref);
 }
 

@@ -11,6 +11,7 @@ fz_newpixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
 	pix->y = y;
 	pix->w = w;
 	pix->h = h;
+	pix->mask = nil;
 	pix->colorspace = nil;
 	pix->n = 1;
 
@@ -43,6 +44,8 @@ fz_droppixmap(fz_pixmap *pix)
 {
 	if (pix && --pix->refs == 0)
 	{
+		if (pix->mask)
+			fz_droppixmap(pix->mask);
 		if (pix->colorspace)
 			fz_dropcolorspace(pix->colorspace);
 		fz_free(pix->samples);

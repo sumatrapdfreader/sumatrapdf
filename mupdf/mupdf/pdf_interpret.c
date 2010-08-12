@@ -231,7 +231,7 @@ static fz_error
 pdf_runinlineimage(pdf_csi *csi, fz_obj *rdb, fz_stream *file, fz_obj *dict)
 {
 	fz_error error;
-	pdf_image *img;
+	fz_pixmap *img;
 	char buf[256];
 	pdf_token_e tok;
 	int len;
@@ -244,7 +244,7 @@ FindEndImageMarker:
 	error = pdf_lex(&tok, file, buf, sizeof buf, &len);
 	if (error)
 	{
-		pdf_dropimage(img);
+		fz_droppixmap(img);
 		return fz_rethrow(error, "syntax error after inline image");
 	}
 
@@ -258,13 +258,13 @@ FindEndImageMarker:
 
 	if (tok != PDF_TKEYWORD || strcmp("EI", buf))
 	{
-		pdf_dropimage(img);
+		fz_droppixmap(img);
 		return fz_throw("syntax error after inline image");
 	}
 
 	pdf_showimage(csi, img);
 
-	pdf_dropimage(img);
+	fz_droppixmap(img);
 	return fz_okay;
 }
 
@@ -557,12 +557,12 @@ Lsetcolorspace:
 			{
 				if ((csi->dev->hints & FZ_IGNOREIMAGE) == 0)
 				{
-					pdf_image *img;
+					fz_pixmap *img;
 					error = pdf_loadimage(&img, csi->xref, rdb, obj);
 					if (error)
 						return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(obj), fz_togen(obj));
 					pdf_showimage(csi, img);
-					pdf_dropimage(img);
+					fz_droppixmap(img);
 				}
 			}
 

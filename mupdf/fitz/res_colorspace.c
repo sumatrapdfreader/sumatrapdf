@@ -83,10 +83,11 @@ static void xyztobgr(fz_colorspace *cs, float *xyz, float *bgr)
 	bgr[2] = xyz[0];
 }
 
+#if 1
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=756 */
 /* function adapted from Poppler's GfxState_helpers.h
    Poppler is licensed under GPL, see http://poppler.freedesktop.org/ */
-static inline void cmykToRGBMatrixMultiplication(float *sv, float *dv)
+static inline void cmyktoxyz(fz_colorspace *cs, float *sv, float *dv)
 {
 	float c = sv[0], m = sv[1], y = sv[2], k = sv[3];
 	float c1 = 1 - c, m1 = 1 - m, y1 = 1 - y, k1 = 1 - k;
@@ -143,7 +144,7 @@ static inline void cmykToRGBMatrixMultiplication(float *sv, float *dv)
 	dv[1] = MIN(MAX(g, 0), 1);
 	dv[2] = MIN(MAX(b, 0), 1);
 }
-
+#else
 static void cmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
 {
 #ifdef SLOWCMYK /* from xpdf */
@@ -169,6 +170,7 @@ static void cmyktoxyz(fz_colorspace *cs, float *cmyk, float *xyz)
 	xyz[2] = 1 - MIN(1, cmyk[2] + cmyk[3]);
 #endif
 }
+#endif
 
 static void xyztocmyk(fz_colorspace *cs, float *xyz, float *cmyk)
 {
@@ -575,7 +577,7 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 		else if (ds == fz_devicergb)
 		{
 #ifdef SLOWCMYK
-			cmykToRGBMatrixMultiplication(sv, dv); // cmyktoxyz(nil, sv, dv);
+			cmyktoxyz(nil, sv, dv);
 #else
 			dv[0] = 1 - MIN(sv[0] + sv[3], 1);
 			dv[1] = 1 - MIN(sv[1] + sv[3], 1);
@@ -586,7 +588,7 @@ fz_convertcolor(fz_colorspace *ss, float *sv, fz_colorspace *ds, float *dv)
 		{
 #ifdef SLOWCMYK
 			float rgb[3];
-			cmykToRGBMatrixMultiplication(sv, rgb); // cmyktoxyz(nil, sv, rgb);
+			cmyktoxyz(nil, sv, rgb);
 			dv[0] = rgb[2];
 			dv[1] = rgb[1];
 			dv[2] = rgb[0];

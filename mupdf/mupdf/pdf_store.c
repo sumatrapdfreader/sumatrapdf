@@ -157,7 +157,6 @@ pdf_agestore(pdf_store *store, int maxage)
 
 	for (i = 0; i < fz_hashlen(store->hash); i++)
 	{
-again:
 		refkey = fz_hashgetkey(store->hash, i);
 		item = fz_hashgetval(store->hash, i);
 		if (item && ++item->age > maxage)
@@ -166,7 +165,7 @@ again:
 			((void(*)(void*))item->dropfunc)(item->val);
 			fz_dropobj(item->key);
 			fz_free(item);
-			goto again; /* items with same hash may move into place */
+			i--; /* items with same hash may move into place */
 		}
 	}
 
