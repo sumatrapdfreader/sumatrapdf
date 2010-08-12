@@ -5420,6 +5420,7 @@ static void OnChar(WindowInfo *win, int key)
         }
         break;
     case '.':
+    	// for Logitech's wireless presenters which target PowerPoint's shortcuts
         if (win->presentation)
             ChangePresentationMode(win, PM_BLACK_SCREEN);
         break;
