@@ -11,6 +11,7 @@ Contributor: laclasse
 Contributor: phoenix
 Contributor: pconno
 Contributor: didier
+Contributor: bernard
 
 &About
 À propos
@@ -31,25 +32,25 @@ Ne plus me demander
 &Fichier
 
 &Find what:
-Rechercher quoi:
+Rechercher quoi :
 
 &Go To
 Atteindre
 
 &Go to page:
-Aller à la page:
+Aller à la page :
 
 &Help
 Aide
 
 &Magnification:
-Grossissement:
+Grossissement :
 
 &Manual
 Manuel
 
 &Match case
-Respecter la casse:
+Respecter la casse :
 
 &No
 &Non
@@ -64,16 +65,19 @@ Non, merci
 &Options...
 
 &Password:
-Mot de passe:
+Mot de passe :
 
 &Print\tCtrl-P
 &Imprimer\tCtrl-P
+
+&Print with %s...\tCtrl-P
+&Imprimer avec %s...\tCtrl-P
 
 &Print... (denied)
 &Imprimer.. (Interdit)
 
 &Remember these settings for each document
-Se rappeler de ces paramètres pour chaque document
+Se rappeler ces paramètres pour chaque document
 
 &Save as\tCtrl-S
 &Enregistrer sous\tCtrl-S
@@ -100,7 +104,7 @@ Zoom
 (de %d)
 
 About SumatraPDF
-A propos de SumatraPDF
+À propos de SumatraPDF
 
 Act&ual Size\tCtrl-1
 Taille réelle\tCtrl-1
@@ -112,13 +116,13 @@ All files
 Tous les fichiers
 
 Application:
-Application:
+Application :
 
 Associate with PDF files?
 Associer aux fichiers PDF ?
 
 Author:
-Auteur:
+Auteur :
 
 Automatic
 Automatique
@@ -175,16 +179,16 @@ Couldn't render the page
 Impossible de générer la page
 
 Created:
-Créé:
+Créé :
 
 Default &Layout:
-Mise en page par défaut
+Mise en page par défaut :
 
 Default &Zoom:
-&Zoom par défaut
+&Zoom par défaut :
 
 Denied Permissions:
-Interdictions:
+Interdictions :
 
 Document Properties
 Propriétés du document
@@ -208,13 +212,13 @@ Facing
 Page double
 
 Failed to save a file
-Echec d'enregistrement du fichier
+Échec d'enregistrement du fichier
 
 File Size:
-Taille du fichier:
+Taille du fichier :
 
 File:
-Fichier:
+Fichier :
 
 Find
 Rechercher
@@ -229,7 +233,7 @@ Find...\tCtrl-F
 Rechercher...\tCtrl-F
 
 Find:
-Rechercher:
+Rechercher :
 
 First Page\tHome
 Première page\tHome
@@ -262,7 +266,7 @@ Go to page
 Aller à la page
 
 Hint: Use the F3 key for finding again
-Remarque: Utilisez la touche F3 pour trouver de nouveau
+Remarque : utilisez la touche F3 pour trouver de nouveau
 
 KB
 Ko
@@ -286,7 +290,7 @@ Match case
 Respecter la casse
 
 Modified:
-Modifié:
+Modifié :
 
 New version %s is available. Download new version?
 La version %s est disponible. Télécharger la nouvelle version ?
@@ -316,7 +320,7 @@ No synchronization info at this position
 Pas de synchronisation des informations à cette position
 
 Number of Pages:
-Nombre de pages:
+Nombre de pages :
 
 OK
 OK
@@ -334,16 +338,16 @@ PDF Document
 Document PDF
 
 PDF Producer:
-PDF produit par:
+PDF produit par :
 
 PDF Version:
-Version du PDF:
+Version du PDF :
 
 PDF documents
 Documents PDF
 
 Page Size:
-Taille de la page:
+Taille de la page :
 
 Page number %u inexistant
 La page %u n'existe pas
@@ -367,7 +371,7 @@ Printing problem.
 Problème d'impression.
 
 Remember &opened files
-Se rappeler des fichiers ouverts
+Se rappeler les fichiers ouverts
 
 Rotate left\tCtrl-Shift--
 Rotation antihoraire\tCtrl-Shift--
@@ -382,7 +386,7 @@ Select content with Ctrl+left mouse button
 Sélectionner avec Ctrl+bouton gauche de la souris
 
 Send by &email...
-Envoyer par &email...
+Envoyer par &courriel...
 
 Set inverse search command-line
 Configurer la recherche inverse
@@ -403,7 +407,7 @@ Source file %s has no synchronization point
 Le fichier source %s n'a pas de point de synchronisation
 
 Subject:
-Objet:
+Objet :
 
 SumatraPDF Options
 SumatraPDF Options
@@ -421,10 +425,10 @@ Text documents
 Documents texte
 
 Title:
-Titre:
+Titre :
 
 Unknown source file (%s)
-Fichier source unconnu (%s)
+Fichier source inconnu (%s)
 
 View
 Affichage
@@ -458,7 +462,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#&Print with %s...\tCtrl-P
 
