@@ -331,19 +331,23 @@ readrld(fz_stream *stm, unsigned char *buf, int len)
 
 		if (state->run < 128)
 		{
-			while (p < ep && state->n--)
+			while (p < ep && state->n)
 			{
 				int c = fz_readbyte(state->chain);
 				if (c < 0)
 					return fz_throw("premature end of data in run length decode");
 				*p++ = c;
+				state->n--;
 			}
 		}
 
 		if (state->run > 128)
 		{
-			while (p < ep && state->n--)
+			while (p < ep && state->n)
+			{
 				*p++ = state->c;
+				state->n--;
+			}
 		}
 	}
 
@@ -364,6 +368,7 @@ fz_openrld(fz_stream *chain)
 	fz_rld *state;
 
 	state = fz_malloc(sizeof(fz_rld));
+	state->chain = chain;
 	state->run = 0;
 	state->n = 0;
 	state->c = 0;

@@ -1,5 +1,7 @@
 #include "fitz.h"
 
+#define MAXDEPTH 8
+
 enum { BUTT = 0, ROUND = 1, SQUARE = 2, MITER = 0, BEVEL = 2 };
 
 struct sctx
@@ -336,7 +338,7 @@ fz_strokebezier(struct sctx *s,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
-	float xd, float yd)
+	float xd, float yd, int depth)
 {
 	float dmax;
 	float xab, yab;
@@ -351,7 +353,8 @@ fz_strokebezier(struct sctx *s,
 	dmax = MAX(dmax, ABS(ya - yb));
 	dmax = MAX(dmax, ABS(xd - xc));
 	dmax = MAX(dmax, ABS(yd - yc));
-	if (dmax < s->flatness) {
+	if (dmax < s->flatness || depth >= MAXDEPTH)
+	{
 		fz_point p;
 		p.x = xd;
 		p.y = yd;
@@ -383,8 +386,8 @@ fz_strokebezier(struct sctx *s,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	fz_strokebezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
-	fz_strokebezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
+	fz_strokebezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
+	fz_strokebezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
 }
 
 void
@@ -441,7 +444,7 @@ fz_strokepath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 			p2.y = path->els[i++].v;
 			p3.x = path->els[i++].v;
 			p3.y = path->els[i++].v;
-			fz_strokebezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+			fz_strokebezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, 0);
 			p0 = p3;
 			break;
 
@@ -522,7 +525,7 @@ fz_dashbezier(struct sctx *s,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
-	float xd, float yd)
+	float xd, float yd, int depth)
 {
 	float dmax;
 	float xab, yab;
@@ -537,7 +540,8 @@ fz_dashbezier(struct sctx *s,
 	dmax = MAX(dmax, ABS(ya - yb));
 	dmax = MAX(dmax, ABS(xd - xc));
 	dmax = MAX(dmax, ABS(yd - yc));
-	if (dmax < s->flatness) {
+	if (dmax < s->flatness || depth >= MAXDEPTH)
+	{
 		fz_point p;
 		p.x = xd;
 		p.y = yd;
@@ -569,8 +573,8 @@ fz_dashbezier(struct sctx *s,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	fz_dashbezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
-	fz_dashbezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
+	fz_dashbezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
+	fz_dashbezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
 }
 
 void
@@ -634,7 +638,7 @@ fz_dashpath(fz_gel *gel, fz_path *path, fz_strokestate *stroke, fz_matrix ctm, f
 			p2.y = path->els[i++].v;
 			p3.x = path->els[i++].v;
 			p3.y = path->els[i++].v;
-			fz_dashbezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+			fz_dashbezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, 0);
 			p0 = p3;
 			break;
 

@@ -1,5 +1,7 @@
 #include "fitz.h"
 
+#define MAXDEPTH 8
+
 static void
 line(fz_gel *gel, fz_matrix *ctm, float x0, float y0, float x1, float y1)
 {
@@ -15,7 +17,7 @@ bezier(fz_gel *gel, fz_matrix *ctm, float flatness,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
-	float xd, float yd)
+	float xd, float yd, int depth)
 {
 	float dmax;
 	float xab, yab;
@@ -30,7 +32,8 @@ bezier(fz_gel *gel, fz_matrix *ctm, float flatness,
 	dmax = MAX(dmax, ABS(ya - yb));
 	dmax = MAX(dmax, ABS(xd - xc));
 	dmax = MAX(dmax, ABS(yd - yc));
-	if (dmax < flatness) {
+	if (dmax < flatness || depth >= MAXDEPTH)
+	{
 		line(gel, ctm, xa, ya, xd, yd);
 		return;
 	}
@@ -59,8 +62,8 @@ bezier(fz_gel *gel, fz_matrix *ctm, float flatness,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	bezier(gel, ctm, flatness, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd);
-	bezier(gel, ctm, flatness, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd);
+	bezier(gel, ctm, flatness, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
+	bezier(gel, ctm, flatness, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
 }
 
 void
@@ -102,7 +105,7 @@ fz_fillpath(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 			y2 = path->els[i++].v;
 			x3 = path->els[i++].v;
 			y3 = path->els[i++].v;
-			bezier(gel, &ctm, flatness, cx, cy, x1, y1, x2, y2, x3, y3);
+			bezier(gel, &ctm, flatness, cx, cy, x1, y1, x2, y2, x3, y3, 0);
 			cx = x3;
 			cy = y3;
 			break;

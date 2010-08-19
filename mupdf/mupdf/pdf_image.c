@@ -269,7 +269,7 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	fz_error error;
 	fz_buffer *buf;
 	fz_pixmap *img;
-	fz_obj *obj;
+	fz_obj *obj, *res;
 
 	pdf_logimage("jpeg2000\n");
 
@@ -294,6 +294,32 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 		{
 			fz_droppixmap(img);
 			return fz_rethrow(error, "cannot load image mask/softmask");
+		}
+	}
+
+	obj = fz_dictgets(dict, "ColorSpace");
+	if (obj)
+	{
+		if (fz_isname(obj))
+		{
+			res = fz_dictget(fz_dictgets(rdb, "ColorSpace"), obj);
+			if (res)
+				obj = res;
+		}
+
+		fz_dropcolorspace(img->colorspace);
+		img->colorspace = nil;
+
+		error = pdf_loadcolorspace(&img->colorspace, xref, obj);
+		if (error)
+			return fz_rethrow(error, "cannot load image colorspace");
+
+		if (!strcmp(img->colorspace->name, "Indexed"))
+		{
+			fz_pixmap *conv;
+			conv = pdf_expandindexedpixmap(img);
+			fz_droppixmap(img);
+			img = conv;
 		}
 	}
 

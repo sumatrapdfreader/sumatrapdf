@@ -1343,7 +1343,7 @@ defaultcase:
 	return fz_okay;
 
 syntaxerror:
-	return fz_throw("syntaxerror near '%s'", buf);
+	return fz_throw("syntax error near '%s' with %d items on the stack", buf, csi->top);
 }
 
 static fz_error
@@ -1482,7 +1482,7 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			{
 				error = pdf_runkeyword(csi, rdb, buf);
 				if (error)
-					return fz_rethrow(error, "cannot run '%s'", buf);
+					return fz_rethrow(error, "cannot run keyword '%s'", buf);
 				pdf_clearstack(csi);
 			}
 			break;

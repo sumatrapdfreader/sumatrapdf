@@ -111,6 +111,11 @@ fz_addtext(fz_text *text, int gid, int ucs, float x, float y)
 	text->len++;
 }
 
+static int isxmlmeta(int c)
+{
+	return c < 32 || c >= 128 || c == '&' || c == '<' || c == '>' || c == '\'' || c == '"';
+}
+
 void fz_debugtext(fz_text *text, int indent)
 {
 	int i, n;
@@ -118,7 +123,7 @@ void fz_debugtext(fz_text *text, int indent)
 	{
 		for (n = 0; n < indent; n++)
 			putchar(' ');
-		if (text->els[i].ucs >= 32 && text->els[i].ucs < 128)
+		if (!isxmlmeta(text->els[i].ucs))
 			printf("<g ucs=\"%c\" gid=\"%d\" x=\"%g\" y=\"%g\" />\n",
 				text->els[i].ucs, text->els[i].gid, text->els[i].x, text->els[i].y);
 		else
