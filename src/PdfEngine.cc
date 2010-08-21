@@ -235,9 +235,6 @@ PdfTocItem *PdfEngine::getTocTree()
 
 int PdfEngine::findPageNo(fz_obj *dest)
 {
-    if (fz_isint(dest))
-        return fz_toint(dest) + 1;
-
     if (fz_isdict(dest)) {
         // The destination is linked from a Go-To action's D array
         fz_obj * D = fz_dictgets(dest, "D");
@@ -246,6 +243,8 @@ int PdfEngine::findPageNo(fz_obj *dest)
     }
     if (fz_isarray(dest))
         dest = fz_arrayget(dest, 0);
+    if (fz_isint(dest))
+        return fz_toint(dest) + 1;
 
     return pdf_findpageobject(_xref, dest);
 }
