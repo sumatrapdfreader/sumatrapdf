@@ -318,6 +318,9 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	pdf_logfont("basefont %s -> %s\n", basefont, fontname);
 
 	descriptor = fz_dictgets(dict, "FontDescriptor");
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1014 */
+	if (descriptor && basefont && !strchr(basefont, '+'))
+		fz_dictputs(descriptor, "FontName", fz_dictgets(dict, "BaseFont"));
 	if (descriptor)
 		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, nil);
 	else
