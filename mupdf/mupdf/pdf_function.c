@@ -65,8 +65,14 @@ struct pdf_function_s
 
 #define RADIAN 57.2957795
 
-#define LERP(x, xmin, xmax, ymin, ymax) \
-	(ymin) + ((x) - (xmin)) * ((ymax) - (ymin)) / ((xmax) - (xmin))
+static inline float LERP(float x, float xmin, float xmax, float ymin, float ymax)
+{
+	if (xmin == xmax)
+		return ymin;
+	if (ymin == ymax)
+		return ymin;
+	return ymin + (x - xmin) * (ymax - ymin) / (xmax - xmin);
+}
 
 enum { PSBOOL, PSINT, PSREAL, PSOPERATOR, PSBLOCK };
 
