@@ -88,7 +88,7 @@ FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
 	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
-LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib
+LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG
@@ -139,7 +139,7 @@ OPENJPEG_OBJS = \
 FITZ_DRAW_OBJS = \
 	$(O)\archport.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\imagesmooth.obj $(O)\pathfill.obj \
 	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
-	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\dev_gdi.obj
+	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\dev_gdi.obj $(O)\dev_gdiplus.obj
 
 FITZ_OBJS = \
 	$(O)\base_error.obj $(O)\base_geometry.obj $(O)\base_getopt.obj $(O)\base_hash.obj \
@@ -641,6 +641,9 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 
 {$(FITZ_DIR)\gdidraw\}.c{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(FITZ_DIR)\gdidraw\}.cpp{$(O)}.obj::
+	$(CC) $(FITZ_CFLAGS) /TP /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # files generated during build process (fonts and cmaps)
 {$(O)\}.c{$(O)}.obj::

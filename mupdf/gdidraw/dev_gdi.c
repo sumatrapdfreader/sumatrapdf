@@ -4,6 +4,7 @@
 
 typedef struct {
 	HDC hDC;
+	fz_device *gdiPlus;
 	
 	int *clipIDs;
 	int clipIx;
@@ -85,19 +86,9 @@ static void
 fz_gdifillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	HDC hDC = ((fz_gdidevice *)user)->hDC;
-	HBRUSH brush;
-	
+	fz_device *gdev = ((fz_gdidevice *)user)->gdiPlus;
 	gdipushclip(user);
-	brush = CreateSolidBrush(gdigetcolor(colorspace, color, alpha));
-	SelectObject(hDC, brush);
-	gdiapplytransform(hDC, ctm);
-	
-	SetPolyFillMode(hDC, evenodd ? ALTERNATE : WINDING);
-	gdirunpath(hDC, path);
-	FillPath(hDC);
-	
-	DeleteObject(brush);
+	gdev->fillpath(gdev->user, path, evenodd, ctm, colorspace, color, alpha);
 	gdipopclip(user);
 }
 
@@ -135,20 +126,9 @@ static void
 fz_gdistrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	HDC hDC = ((fz_gdidevice *)user)->hDC;
-	HPEN pen;
-	
+	fz_device *gdev = ((fz_gdidevice *)user)->gdiPlus;
 	gdipushclip(user);
-	
-	SetMiterLimit(hDC, stroke->miterlimit, NULL);
-	pen = gdicreatepen(stroke, gdigetcolor(colorspace, color, alpha), fz_matrixexpansion(ctm));
-	SelectObject(hDC, pen);
-	gdiapplytransform(hDC, ctm);
-	
-	gdirunpath(hDC, path);
-	StrokePath(hDC);
-	
-	DeleteObject(pen);
+	gdev->strokepath(gdev->user, path, stroke, ctm, colorspace, color, alpha);
 	gdipopclip(user);
 }
 
@@ -316,6 +296,7 @@ static void
 fz_gdifreeuser(void *user)
 {
 	fz_gdidevice *dev = user;
+	fz_freedevice(dev->gdiPlus);
 	fz_free(dev->clipIDs);
 	fz_free(dev);
 }
@@ -331,6 +312,7 @@ fz_newgdidevice(HDC hDC)
 	gdev->clipIx = 0;
 	gdev->clipCap = 16;
 	gdev->clipIDs = fz_malloc(gdev->clipCap * sizeof(int));
+	gdev->gdiPlus = fz_newgdiplusdevice(hDC);
 	SetGraphicsMode(hDC, GM_ADVANCED);
 
 	dev->fillpath = fz_gdifillpath;
