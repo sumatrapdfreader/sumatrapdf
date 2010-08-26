@@ -129,7 +129,7 @@ pdf_loadtype3font(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj 
 		fz_warn("no resource dictionary for type 3 font!");
 
 	fontdesc->font->t3xref = xref;
-	fontdesc->font->t3run = pdf_runcontents;
+	fontdesc->font->t3run = pdf_runglyph;
 
 	/* CharProcs */
 

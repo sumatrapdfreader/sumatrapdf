@@ -441,6 +441,7 @@ void pdf_debugfont(pdf_fontdesc *fontdesc);
  */
 
 typedef struct pdf_link_s pdf_link;
+typedef struct pdf_annot_s pdf_annot;
 typedef struct pdf_outline_s pdf_outline;
 
 typedef enum pdf_linkkind_e
@@ -458,6 +459,14 @@ struct pdf_link_s
 	pdf_link *next;
 };
 
+struct pdf_annot_s
+{
+	fz_obj *obj;
+	fz_rect rect;
+	pdf_xobject *ap;
+	pdf_annot *next;
+};
+
 struct pdf_outline_s
 {
 	char *title;
@@ -469,15 +478,16 @@ struct pdf_outline_s
 
 fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest);
 
-pdf_link *pdf_newlink(pdf_linkkind kind, fz_rect rect, fz_obj *dest);
-pdf_link *pdf_loadlink(pdf_xref *xref, fz_obj *dict);
-void pdf_freelink(pdf_link *link);
-
 pdf_outline *pdf_loadoutline(pdf_xref *xref);
 void pdf_debugoutline(pdf_outline *outline, int level);
 void pdf_freeoutline(pdf_outline *outline);
 
-void pdf_loadannots(pdf_link **, pdf_xref *, fz_obj *annots);
+pdf_link *pdf_loadlink(pdf_xref *xref, fz_obj *dict);
+void pdf_loadlinks(pdf_link **, pdf_xref *, fz_obj *annots);
+void pdf_freelink(pdf_link *link);
+
+void pdf_loadannots(pdf_annot **, pdf_xref *, fz_obj *annots);
+void pdf_freeannot(pdf_annot *link);
 
 /*
  * Page tree, pages and related objects
@@ -495,6 +505,7 @@ struct pdf_page_s
 	fz_displaylist *list;
 	fz_textspan *text;
 	pdf_link *links;
+	pdf_annot *annots;
 };
 
 /* pagetree.c */
@@ -614,8 +625,8 @@ void pdf_gsave(pdf_csi *csi);
 void pdf_grestore(pdf_csi *csi);
 fz_error pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents);
 fz_error pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj);
-fz_error pdf_runcontents(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm);
 fz_error pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm);
+fz_error pdf_runglyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm);
 
 pdf_material * pdf_keepmaterial(pdf_material *mat);
 pdf_material * pdf_dropmaterial(pdf_material *mat);

@@ -543,10 +543,12 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             char *uri = tstr_to_utf8(start);
             char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, strlen(httpUri));
-            pdf_link *link = pdf_newlink(PDF_LURI, bbox, dest);
+            pdf_link *link = (pdf_link *)malloc(sizeof(pdf_link));
+            link->kind = PDF_LURI;
+            link->rect = bbox;
+            link->dest = dest;
             link->next = page->links;
             page->links = link;
-            fz_dropobj(dest);
             if (httpUri != uri)
                 free(httpUri);
             free(uri);

@@ -171,6 +171,7 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 	page->list = nil;
 	page->text = nil;
 	page->links = nil;
+	page->annots = nil;
 
 	obj = fz_dictgets(dict, "MediaBox");
 	if (!fz_isarray(obj))
@@ -199,7 +200,10 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	obj = fz_dictgets(dict, "Annots");
 	if (obj)
-		pdf_loadannots(&page->links, xref, obj);
+	{
+		pdf_loadlinks(&page->links, xref, obj);
+		pdf_loadannots(&page->annots, xref, obj);
+	}
 
 	page->resources = fz_dictgets(dict, "Resources");
 	if (page->resources)
@@ -236,5 +240,7 @@ pdf_freepage(pdf_page *page)
 		fz_freetextspan(page->text);
 	if (page->links)
 		pdf_freelink(page->links);
+	if (page->annots)
+		pdf_freeannot(page->annots);
 	fz_free(page);
 }

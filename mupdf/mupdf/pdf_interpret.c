@@ -1508,33 +1508,48 @@ pdf_runcsibuffer(pdf_csi *csi, fz_obj *rdb, fz_buffer *contents)
 }
 
 fz_error
-pdf_runcontents(pdf_xref *xref, fz_obj *resources, fz_buffer *contents,
-	fz_device *dev, fz_matrix ctm)
-{
-	pdf_csi *csi = pdf_newcsi(xref, dev, ctm);
-	fz_error error = pdf_runcsibuffer(csi, resources, contents);
-	pdf_freecsi(csi);
-	if (error)
-		return fz_rethrow(error, "cannot parse content stream");
-	return fz_okay;
-}
-
-fz_error
 pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 {
+	pdf_csi *csi;
 	fz_error error;
+	pdf_annot *annot;
+	fz_matrix atm;
 
 	if (page->transparency)
 		dev->begingroup(dev->user,
 			fz_transformrect(ctm, page->mediabox),
 			0, 0, FZ_BNORMAL, 1);
 
-	error = pdf_runcontents(xref, page->resources, page->contents, dev, ctm);
+	csi = pdf_newcsi(xref, dev, ctm);
+	error = pdf_runcsibuffer(csi, page->resources, page->contents);
+	pdf_freecsi(csi);
 	if (error)
 		return fz_rethrow(error, "cannot parse page content stream");
 
 	if (page->transparency)
 		dev->endgroup(dev->user);
 
+	for (annot = page->annots; annot; annot = annot->next)
+	{
+		atm = fz_concat(ctm, fz_translate(annot->rect.x0, annot->rect.y0));
+		csi = pdf_newcsi(xref, dev, atm);
+		error = pdf_runxobject(csi, page->resources, annot->ap);
+		pdf_freecsi(csi);
+		if (error)
+			return fz_rethrow(error, "cannot parse annotation appearance stream");
+	}
+
+	return fz_okay;
+}
+
+fz_error
+pdf_runglyph(pdf_xref *xref, fz_obj *resources, fz_buffer *contents,
+	fz_device *dev, fz_matrix ctm)
+{
+	pdf_csi *csi = pdf_newcsi(xref, dev, ctm);
+	fz_error error = pdf_runcsibuffer(csi, resources, contents);
+	pdf_freecsi(csi);
+	if (error)
+		return fz_rethrow(error, "cannot parse glyph content stream");
 	return fz_okay;
 }

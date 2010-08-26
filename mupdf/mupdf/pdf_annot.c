@@ -1,17 +1,6 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-pdf_link *
-pdf_newlink(pdf_linkkind kind, fz_rect bbox, fz_obj *dest)
-{
-	pdf_link *link = fz_malloc(sizeof(pdf_link));
-	link->kind = kind;
-	link->rect = bbox;
-	link->dest = fz_keepobj(dest);
-	link->next = nil;
-	return link;
-}
-
 void
 pdf_freelink(pdf_link *link)
 {
@@ -116,14 +105,19 @@ pdf_loadlink(pdf_xref *xref, fz_obj *dict)
 
 	if (dest)
 	{
-		return pdf_newlink(kind, bbox, dest);
+		pdf_link *link = fz_malloc(sizeof(pdf_link));
+		link->kind = kind;
+		link->rect = bbox;
+		link->dest = fz_keepobj(dest);
+		link->next = nil;
+		return link;
 	}
 
 	return nil;
 }
 
 void
-pdf_loadannots(pdf_link **lp, pdf_xref *xref, fz_obj *annots)
+pdf_loadlinks(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 {
 	pdf_link *link;
 	fz_obj *subtype;
@@ -132,7 +126,7 @@ pdf_loadannots(pdf_link **lp, pdf_xref *xref, fz_obj *annots)
 
 	link = nil;
 
-	pdf_logpage("load annotations {\n");
+	pdf_logpage("load link annotations {\n");
 
 	for (i = 0; i < fz_arraylen(annots); i++)
 	{
@@ -152,5 +146,67 @@ pdf_loadannots(pdf_link **lp, pdf_xref *xref, fz_obj *annots)
 
 	pdf_logpage("}\n");
 
-	*lp = link;
+	*linkp = link;
+}
+
+void
+pdf_freeannot(pdf_annot *annot)
+{
+	if (annot->next)
+		pdf_freeannot(annot->next);
+	if (annot->ap)
+		pdf_dropxobject(annot->ap);
+	if (annot->obj)
+		fz_dropobj(annot->obj);
+	fz_free(annot);
+}
+
+void
+pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
+{
+	pdf_annot *head, *annot;
+	fz_obj *obj, *ap, *as, *n, *rect;
+	pdf_xobject *form;
+	fz_error error;
+	int i;
+
+	head = nil;
+
+	pdf_logpage("load appearance annotations {\n");
+
+	for (i = 0; i < fz_arraylen(annots); i++)
+	{
+		obj = fz_arrayget(annots, i);
+
+		rect = fz_dictgets(obj, "Rect");
+		ap = fz_dictgets(obj, "AP");
+		as = fz_dictgets(obj, "AS");
+		if (fz_isdict(ap))
+		{
+			n = fz_dictgets(ap, "N"); /* normal state */
+			if (fz_isindirect(n) && !pdf_isstream(xref, fz_tonum(n), fz_togen(n)))
+				n = fz_dictget(n, as);
+
+			if (fz_isindirect(n) && pdf_isstream(xref, fz_tonum(n), fz_togen(n)))
+			{
+				error = pdf_loadxobject(&form, xref, n);
+				if (error)
+				{
+					fz_catch(error, "ignoring broken annotation");
+					continue;
+				}
+
+				annot = fz_malloc(sizeof (pdf_annot));
+				annot->obj = fz_keepobj(obj);
+				annot->rect = pdf_torect(rect);
+				annot->ap = form;
+				annot->next = head;
+				head = annot;
+			}
+		}
+	}
+
+	pdf_logpage("}\n");
+
+	*headp = head;
 }
