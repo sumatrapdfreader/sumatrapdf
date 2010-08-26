@@ -1531,7 +1531,7 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 
 	for (annot = page->annots; annot; annot = annot->next)
 	{
-		atm = fz_concat(ctm, fz_translate(annot->rect.x0, annot->rect.y0));
+		atm = fz_concat(fz_translate(annot->rect.x0, annot->rect.y0), ctm);
 		csi = pdf_newcsi(xref, dev, atm);
 		error = pdf_runxobject(csi, page->resources, annot->ap);
 		pdf_freecsi(csi);
