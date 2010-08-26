@@ -8,6 +8,7 @@ Lang: cz Czech (Čeština)
 
 Contributor: Kristian Vrhel
 Contributor: Jiri Saneistr
+Contributor: Pavel Zampach
 
 &About
 &O programu
@@ -42,6 +43,9 @@ Jdi na &stránku:
 &Magnification:
 &Zvětšení
 
+&Manual
+&Manuál
+
 &Match case
 Rozlišovat velká/malá písmena
 
@@ -63,6 +67,12 @@ Rozlišovat velká/malá písmena
 &Print\tCtrl-P
 &Tisk\tCtrl-P
 
+&Print with %s...\tCtrl-P
+&Tisk s %s...\tCtrl-P
+
+&Print... (denied)
+&Tisk... (odmítnuto)
+
 &Remember these settings for each document
 &Pamatuj si tato nastavení pro každý dokument
 
@@ -71,6 +81,9 @@ Rozlišovat velká/malá písmena
 
 &Settings
 &Nastavení
+
+&Skip this version
+&Přeskoč tuto verzi
 
 &View
 &Zobrazit
@@ -99,11 +112,32 @@ Rozšířené
 All files
 Všechny soubory
 
+Application:
+Aplikace:
+
+Associate with PDF files?
+Přiřadit k PDF souborům?
+
+Author:
+Autor:
+
+Automatic
+Automaticky
+
 Automatically check for &updates
 &Kontroluj aktualizace automaticky
 
 Back\tAlt+Left Arrow
 Zpět\tAlt+<-
+
+Book view
+Zobrazit jako knihu
+
+Bookmarks\tF12
+Záložky\tF12
+
+Bytes
+Bytů
 
 Cancel
 Zrušit
@@ -119,6 +153,9 @@ Změň jazyk
 
 Continuous
 Průběžně
+
+Continuous book view
+Průběžné zobrazení
 
 Continuous facing
 Průběžně protilehlé
@@ -138,14 +175,32 @@ Tiskárna nebyla inicializována
 Couldn't render the page
 Stránku nebylo možno vyrenderovat
 
+Created:
+Vytvořeno:
+
 Default &Layout:
 &Výchozí rozmístění
+
+Default &Zoom:
+Výchozí &zvětšení
+
+Denied Permissions:
+Odmítnuto:
+
+Document Properties
+Vlastnosti dokumentu
 
 Download
 Stažení
 
 E&xit\tCtrl-Q
 &Konec\tCtrl-Q
+
+Enter password
+Vložte heslo
+
+Enter password for %s
+Vložte heslo pro %s
 
 Error loading PDF file.
 Chyba při načítání PDF souboru.
@@ -156,8 +211,26 @@ Protilehlé
 Failed to save a file
 Uložení souboru selhalo
 
+File Size:
+Velikost souboru:
+
+File:
+Soubor:
+
 Find
 Hledat
+
+Find Next
+Najdi další
+
+Find Previous
+Najdi předchozí
+
+Find...\tCtrl-F
+Najít...\tCtrl-F
+
+Find:
+Najít:
 
 First Page\tHome
 První stránka\tHome
@@ -180,17 +253,47 @@ Vpřed\tAlt+->
 Found text at page %d
 Text nalezen na stránce %d
 
+Fullscreen\tCtrl-L
+Celá obrazovka\tCtrl-L
+
+GB
+GB
+
+Go to page
+Jdi na stránku
+
 Hint: Use the F3 key for finding again
 Nápověda: Použijte klávesu F3 pro další hledání
+
+KB
+KB
 
 Last Page\tEnd
 Poslední stránka\tEnd
 
+MB
+MB
+
 Main PDF reader can't be changed in portable mode
 Výchozí čtečka PDF nemůže být změněna v přenosném režimu
 
+Make SumatraPDF default application for PDF files?
+Nastavit SumatraPDF jako výchozí aplikaci pro soubory PDF?
+
 Make SumatraPDF my main PDF reader
 Nastavit SumatraPDF jako výchozí PDF čtečku
+
+Match case
+Rozlišovat velká/malá písmena
+
+Modified:
+Upraveno:
+
+New version %s is available. Download new version?
+Nová verze %s je k dispozici. Stáhnout novou verzi?
+
+New version available.
+Nová verze je k dispozici.
 
 Next Page
 Další stránka
@@ -201,6 +304,9 @@ Další stránka\t->
 No matches were found
 Žádná shoda nebyla nalezena
 
+No new version available.
+Nová verze není k dispozici.
+
 No result found around line %u in file %s
 Žádné výsledky nenalezeny okolo řádky %u v souboru %s
 
@@ -209,6 +315,9 @@ Synchronizační soubor nebyl nalezen
 
 No synchronization info at this position
 Chybí synchronizace pro tuto pozici
+
+Number of Pages:
+Čísla stránek:
 
 OK
 OK
@@ -219,11 +328,23 @@ Otevřít
 Open in &Adobe Reader
 Otevřít v &Adobe Reader
 
+P&roperties...\tCtrl-D
+&Vlastnosti...\tCtrl-D
+
 PDF Document
 Dokument PDF
 
+PDF Producer:
+PDF vytvořil:
+
+PDF Version:
+Verze PDF:
+
 PDF documents
 PDF dokumenty
+
+Page Size:
+Velikost stránky:
 
 Page number %u inexistant
 Stránka číslo %u neexistuje
@@ -261,6 +382,15 @@ Hledám %d of %d...
 Select content with Ctrl+left mouse button
 Vybrat obsah s Ctrl+levé tlačítko myši
 
+Send by &email...
+Poslat &e-mailem...
+
+Set inverse search command-line
+Nastavit zpětné hledání
+
+Show pages continuously
+Průběžné zobrazení stránek
+
 Show the &bookmarks sidebar when available
 &Zobraz záložky, jsou-li dostupné
 
@@ -272,6 +402,9 @@ Jedna stránka
 
 Source file %s has no synchronization point
 Zdrojový soubor %s nemá synchronizační bod
+
+Subject:
+Předmět:
 
 SumatraPDF Options
 &Nastavení SumatraPDF
@@ -288,6 +421,9 @@ Synchronizační soubor nelze otevřít
 Text documents
 Textové dokumenty
 
+Title:
+Titulek:
+
 Unknown source file (%s)
 Neznámý zdrojový soubor (%s)
 
@@ -296,6 +432,12 @@ Zobrazit
 
 Warning
 Varování
+
+You have the latest version.
+Máte poslední verzi.
+
+You have version %s
+Máte verzi %s
 
 Zoom
 Přiblížení
@@ -310,56 +452,11 @@ Zoom factor
 Měřítko přiblížení
 
 [Changes detected; refreshing] %s
-Zjištěna změna; obnovuji] %s
+[Zjištěna změna; obnovuji] %s
 
-# Untranslated:
-#&Manual
-#&Print with %s...\tCtrl-P
-#&Print... (denied)
-#&Skip this version
-#Application:
-#Associate with PDF files?
-#Author:
-#Automatic
-#Book view
-#Bookmarks\tF12
-#Bytes
-#Continuous book view
-#Created:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Enter password
-#Enter password for %s
-#File Size:
-#File:
-#Find Next
-#Find Previous
-#Find...\tCtrl-F
-#Find:
-#Fullscreen\tCtrl-L
-#GB
-#Go to page
-#KB
-#MB
-#Make SumatraPDF default application for PDF files?
-#Match case
-#Modified:
-#New version %s is available. Download new version?
-#New version available.
-#No new version available.
-#Number of Pages:
-#P&roperties...\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Send by &email...
-#Set inverse search command-line
-#Show pages continuously
-#Subject:
-#Title:
-#You have the latest version.
-#You have version %s
-#copying text
-#printing document
+copying text
+kopírování textu
+
+printing document
+tisk dokumentu
 
