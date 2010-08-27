@@ -13,34 +13,59 @@ static LONG m_gdiplusUsage = 0;
 
 class userData
 {
+	std::vector<Region *> regions;
 public:
 	Graphics *graphics;
-	std::vector<Region *> regions;
-	
+
 	userData(HDC hDC)
 	{
 		graphics = new Graphics(hDC);
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
+		graphics->SetPageScale(96.0 / GetDeviceCaps(hDC, LOGPIXELSY));
 	}
-	~userData() {
+
+	~userData()
+	{
 		delete graphics;
 		assert(regions.size() == 0);
 	}
-	
+
 	void pushClip()
 	{
 		Region *region = new Region();
 		graphics->GetClip(region);
 		regions.push_back(region);
 	}
-	
+
 	void popClip()
 	{
 		assert(regions.size() > 0);
 		Region *region = regions.back();
-		regions.pop_back();
 		graphics->SetClip(region);
 		delete region;
+		regions.pop_back();
+	}
+};
+
+class PixmapBitmap
+{
+	fz_pixmap *pix;
+public:
+	Bitmap *bmp;
+
+	PixmapBitmap(fz_pixmap *pixmap)
+	{
+		pix = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
+		fz_convertpixmap(pixmap, pix);
+		assert(pix->n == 4);
+		
+		bmp = new Bitmap(pix->w, pix->h, pix->w * 4, PixelFormat32bppARGB, pix->samples);
+	}
+
+	~PixmapBitmap()
+	{
+		fz_droppixmap(pix);
+		delete bmp;
 	}
 };
 
@@ -102,7 +127,7 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 	if (linewidth < 0.1f)
 		linewidth = 1.0 / fz_matrixexpansion(ctm);
 	
-	Pen *pen = new Pen(brush, linewidth);
+	Pen *pen = new Pen(brush, linewidth / 2);
 	
 	pen->SetMiterLimit(stroke->miterlimit);
 	switch (stroke->linecap)
@@ -128,36 +153,14 @@ gdiplusgetfont(fz_font *font, float height)
 	WCHAR fontName[LF_FACESIZE];
 	
 	MultiByteToWideChar(CP_UTF8, 0, font->name + (strlen(font->name) > 7 && font->name[6] == '+' ? 7 : 0), -1, fontName, LF_FACESIZE);
+	FontFamily family(fontName);
 	FontStyle style = strstr(font->name, "BoldItalic") ? FontStyleBoldItalic :
 		strstr(font->name, "Bold") ? FontStyleBold :
 		strstr(font->name, "Italic") ? FontStyleItalic : FontStyleRegular;
 	
-	return new Font(fontName, height, style);
-}
-
-static Bitmap *
-fz_pixtobitmap2(fz_pixmap *pixmap)
-{
-	/* abgr is a GDI+ compatible format */
-	fz_pixmap *bgrPixmap = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
-	fz_convertpixmap(pixmap, bgrPixmap);
-	assert(bgrPixmap->n == 4);
-	
-	BITMAPINFO bmi = { 0 };
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = pixmap->w;
-	bmi.bmiHeader.biHeight = pixmap->h;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biBitCount = 32;
-	bmi.bmiHeader.biSizeImage = pixmap->w * pixmap->h * 4;
-	bmi.bmiHeader.biClrUsed = 0;
-	
-	Bitmap *bmp = new Bitmap(&bmi, bgrPixmap->samples);
-	
-	fz_droppixmap(bgrPixmap);
-	
-	return bmp;
+	if (family.IsAvailable())
+		return new Font(&family, height, style);
+	return new Font(L"Arial", height, style);
 }
 
 extern "C" static void
@@ -217,9 +220,8 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 {
 	assert(text->trm.e == 0 && text->trm.f == 0);
 	/* TODO: correctly turn and size font according to text->trm */
-	float fontSize = fz_matrixexpansion(text->trm) / 1.414;
-	float angle = atanf(text->trm.a / text->trm.b) / M_PI * 180.0 - 90;
-	Font *font = gdiplusgetfont(text->font, fontSize);
+	float fontSize = fz_matrixexpansion(text->trm);
+	Font *font = gdiplusgetfont(text->font, fontSize / (gpath ? 1 : M_SQRT2));
 	
 	ctm = fz_concat(ctm, fz_concat(fz_scale(1, -1), fz_translate(0, 2 * ctm.f)));
 	gdiplusapplytransform(graphics, ctm);
@@ -302,6 +304,7 @@ fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
 extern "C" static void
 fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
+	Graphics *graphics = ((userData *)user)->graphics;
 }
 
 extern "C" static void
@@ -309,16 +312,27 @@ fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	Graphics *graphics = ((userData *)user)->graphics;
 	
-	fz_matrix ctm2 = fz_concat(ctm, fz_scale(1.0 / image->w, -1.0 / image->h));
-	ctm2.e = ctm.e; ctm2.f = ctm.f - image->h;
+	fz_matrix ctm2 = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
+	ctm2.e = ctm.e; ctm2.f = ctm.f;
 	gdiplusapplytransform(graphics, ctm2);
 	
-	/* TODO: why doesn't this work yet? */
-	Bitmap *bmp = fz_pixtobitmap2(image);
-	CachedBitmap *cbmp = new CachedBitmap(bmp, graphics);
-	graphics->DrawCachedBitmap(cbmp, 0, 0);
+	PixmapBitmap *bmp = new PixmapBitmap(image);
+	RectF destination(0, image->h, image->w, -image->h);
+	ImageAttributes imgAttrs;
 	
-	delete cbmp;
+	if (alpha != 1.0f)
+	{
+		ColorMatrix matrix = { 
+			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, alpha, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+		};
+		imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+	}
+	graphics->DrawImage(bmp->bmp, destination, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
+	
 	delete bmp;
 }
 
