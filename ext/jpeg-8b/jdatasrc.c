@@ -2,7 +2,7 @@
  * jdatasrc.c
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
- * Modified 2009 by Guido Vollbeding.
+ * Modified 2009-2010 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -163,7 +163,7 @@ skip_input_data (j_decompress_ptr cinfo, long num_bytes)
   if (num_bytes > 0) {
     while (num_bytes > (long) src->bytes_in_buffer) {
       num_bytes -= (long) src->bytes_in_buffer;
-      (void) fill_input_buffer(cinfo);
+      (void) (*src->fill_input_buffer) (cinfo);
       /* note we assume that fill_input_buffer will never return FALSE,
        * so suspension need not be handled.
        */
