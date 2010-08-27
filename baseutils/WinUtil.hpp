@@ -7,15 +7,17 @@
 
 class WinLibrary {
 public:
-    WinLibrary(const char *libName) {
-        _hlib = LoadLibraryA(libName);
+    WinLibrary(const TCHAR *libName) {
+        _hlib = _LoadSystemLibrary(libName);
     }
     ~WinLibrary() { if (_hlib) FreeLibrary(_hlib); }
     FARPROC GetProcAddr(const char *procName) {
         if (!_hlib) return NULL;
         return GetProcAddress(_hlib, procName);
     }
+private:
     HMODULE _hlib;
+    HMODULE _LoadSystemLibrary(const TCHAR *libName);
 };
 
 class WinProcess {

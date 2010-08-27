@@ -6,20 +6,28 @@
 #include "base_util.h"
 #include "WinUtil.hpp"
 #include "str_util.h"
+#include <Shlwapi.h>
 
 #define DONT_INHERIT_HANDLES FALSE
 
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
 // that is compatible with earlier windows versions.
 bool IsAppThemed(void) {
-    WinLibrary lib("uxtheme.dll");
-    FARPROC fp = lib.GetProcAddr("IsAppThemed");
-    if (!fp) 
+    WinLibrary lib(_T("uxtheme.dll"));
+    FARPROC pIsAppThemed = lib.GetProcAddr("IsAppThemed");
+    if (!pIsAppThemed) 
         return false;
-    if (fp())
+    if (pIsAppThemed())
         return true;
-    else
-        return false;
+    return false;
+}
+
+// Loads a DLL explicitly from the system's library collection
+HMODULE WinLibrary::_LoadSystemLibrary(const TCHAR *libName) {
+    TCHAR dllPath[MAX_PATH];
+    GetSystemDirectory(dllPath, dimof(dllPath));
+    PathAppend(dllPath, libName);
+    return LoadLibrary(dllPath);
 }
 
 // Given name of the command to exececute 'cmd', and its arguments 'args'

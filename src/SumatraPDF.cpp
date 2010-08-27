@@ -7510,21 +7510,13 @@ typedef HRESULT (WINAPI *_NtSetInformationProcess)(
 
 static void EnableNx(void)
 {
-   HMODULE ntdll;
-   DWORD dep_mode;
-   _NtSetInformationProcess ntsip;
+    WinLibrary lib(_T("ntdll.dll"));
+    _NtSetInformationProcess ntsip;
+    DWORD dep_mode = 13; /* ENABLE | DISABLE_ATL | PERMANENT */
 
-   ntdll = LoadLibrary(_T("ntdll.dll"));
-   if (ntdll == NULL)
-       return;
-
-   ntsip = (_NtSetInformationProcess)GetProcAddress(ntdll, "NtSetInformationProcess");
-   if (ntsip != NULL)
-   {
-       dep_mode = 13; /* ENABLE | DISABLE_ATL | PERMANENT */
-       ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS,
-           &dep_mode, sizeof(dep_mode));
-   }
+    ntsip = (_NtSetInformationProcess)lib.GetProcAddr("NtSetInformationProcess");
+    if (ntsip)
+        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &dep_mode, sizeof(dep_mode));
 }
 
 typedef BOOL (WINAPI *procSetProcessDPIAware)(VOID);
@@ -7560,12 +7552,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     EnableNx();
 #ifdef _DEBUG
     // in release builds, DPI-awareness is enabled through the manifest
-    HMODULE hUser32 = LoadLibrary(_T("user32.dll"));
-    if (hUser32) {
+    {
+        WinLibrary lib(_T("user32.dll"));
         procSetProcessDPIAware SetProcessDPIAware;
-        if ((SetProcessDPIAware = GetProcAddress(hUser32, "SetProcessDPIAware")))
+        if ((SetProcessDPIAware = lib.GetProcAddr("SetProcessDPIAware")))
             SetProcessDPIAware();
-        FreeLibrary(hUser32);
     }
 #endif
 

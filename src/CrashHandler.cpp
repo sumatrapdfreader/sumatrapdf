@@ -4,6 +4,7 @@
 #include <process.h>
 #include "CrashHandler.h"
 #include "str_util.h"
+#include "WinUtil.hpp"
 
 typedef BOOL WINAPI MiniDumpWriteProc(
   HANDLE hProcess,
@@ -33,11 +34,8 @@ static bool InitDbgHelpDll()
     wasHere = true;
 #endif
 
-    HMODULE hdll = LoadLibraryA("DBGHELP.DLL");
-    if (NULL == hdll)
-        return false;
-
-    g_minidDumpWriteProc = (MiniDumpWriteProc*)GetProcAddress(hdll, "MiniDumpWriteDump");
+    WinLibrary lib(_T("DBGHELP.DLL"));
+    g_minidDumpWriteProc = (MiniDumpWriteProc*)lib.GetProcAddr("MiniDumpWriteDump");
     return (g_minidDumpWriteProc != NULL);
 }
 
