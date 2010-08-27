@@ -57,8 +57,6 @@ public:
 	{
 		pix = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
 		fz_convertpixmap(pixmap, pix);
-		assert(pix->n == 4);
-		
 		bmp = new Bitmap(pix->w, pix->h, pix->w * 4, PixelFormat32bppARGB, pix->samples);
 	}
 
@@ -127,7 +125,7 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 	if (linewidth < 0.1f)
 		linewidth = 1.0 / fz_matrixexpansion(ctm);
 	
-	Pen *pen = new Pen(brush, linewidth / 2);
+	Pen *pen = new Pen(brush, linewidth / (2 * M_SQRT2));
 	
 	pen->SetMiterLimit(stroke->miterlimit);
 	switch (stroke->linecap)
@@ -149,14 +147,15 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 static Font *
 gdiplusgetfont(fz_font *font, float height)
 {
-	/* TODO: register font with PrivateFontCollection::AddMemoryFont */
+	/* TODO: use embedded fonts when available */
 	WCHAR fontName[LF_FACESIZE];
 	
 	MultiByteToWideChar(CP_UTF8, 0, font->name + (strlen(font->name) > 7 && font->name[6] == '+' ? 7 : 0), -1, fontName, LF_FACESIZE);
 	FontFamily family(fontName);
-	FontStyle style = strstr(font->name, "BoldItalic") ? FontStyleBoldItalic :
-		strstr(font->name, "Bold") ? FontStyleBold :
-		strstr(font->name, "Italic") ? FontStyleItalic : FontStyleRegular;
+	FontStyle style =
+		strstr(font->name, "BoldItalic") || strstr(font->name, "BoldOblique") ? FontStyleBoldItalic :
+		strstr(font->name, "Italic") || strstr(font->name, "Oblique") ? FontStyleItalic :
+		strstr(font->name, "Bold") ? FontStyleBold : FontStyleRegular;
 	
 	if (family.IsAvailable())
 		return new Font(&family, height, style);
@@ -245,6 +244,10 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 }
 
 extern "C" static void
+fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha);
+
+extern "C" static void
 fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
@@ -252,6 +255,23 @@ fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
 	
 	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
 	gdiplusruntext(graphics, text, ctm, brush);
+#if 0
+	fz_glyphcache *cache = fz_newglyphcache();
+	for (int i = 0; i < text->len; i++)
+	{
+		if (text->els[i].gid < 0)
+			continue;
+		fz_matrix tm = fz_concat(ctm, text->trm);
+		tm.e = text->trm.e; tm.f = text->trm.f;
+		fz_pixmap *glyph = fz_renderglyph(cache, text->font, text->els[i].gid, tm);
+		
+		tm = fz_concat(fz_scale(glyph->w, glyph->h), fz_translate(text->els[i].x, text->els[i].y));
+		tm = fz_concat(tm, ctm);
+		fz_gdiplusfillimagemask(user, glyph, tm, colorspace, color, alpha);
+		fz_droppixmap(glyph);
+	}
+	fz_freeglyphcache(cache);
+#endif
 	
 	delete brush;
 }
@@ -298,12 +318,13 @@ fz_gdiplusclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_m
 extern "C" static void
 fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
 {
-	/* TODO: print transparent text? */
+	/* TODO: anything to do here? */
 }
 
 extern "C" static void
 fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
+	/* TODO: implement shading */
 	Graphics *graphics = ((userData *)user)->graphics;
 }
 
@@ -340,13 +361,34 @@ extern "C" static void
 fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_gdiplusfillimage(user, image, ctm, alpha);
+	float bgr[3];
+	fz_convertcolor(colorspace, color, fz_devicebgr, bgr);
+	
+	fz_pixmap *img2 = fz_newpixmap(fz_devicebgr, image->x, image->y, image->w, image->h);
+	for (int i = 0; i < img2->w * img2->h; i++)
+	{
+		img2->samples[i * 4] = bgr[2] * 255;
+		img2->samples[i * 4 + 1] = bgr[1] * 255;
+		img2->samples[i * 4 + 2] = bgr[0] * 255;
+		img2->samples[i * 4 + 3] = image->samples[i];
+	}
+	
+	fz_gdiplusfillimage(user, img2, ctm, alpha);
+	fz_droppixmap(img2);
 }
 
 extern "C" static void
 fz_gdiplusclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
+	Graphics *graphics = ((userData *)user)->graphics;
+	
+	fz_matrix ctm2 = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
+	ctm2.e = ctm.e; ctm2.f = ctm.f;
+	gdiplusapplytransform(graphics, ctm2);
+	
+	RectF destination(0, image->h, image->w, -image->h);
 	((userData *)user)->pushClip();
+	graphics->SetClip(destination);
 }
 
 extern "C" static void
