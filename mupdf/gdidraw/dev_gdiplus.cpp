@@ -4,11 +4,45 @@ extern "C" {
 #include <fitz.h>
 #include <fitz_gdidraw.h>
 }
+#include <vector>
 
 using namespace Gdiplus;
 
 static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
+
+class userData
+{
+public:
+	Graphics *graphics;
+	std::vector<Region *> regions;
+	
+	userData(HDC hDC)
+	{
+		graphics = new Graphics(hDC);
+		graphics->SetSmoothingMode(SmoothingModeHighQuality);
+	}
+	~userData() {
+		delete graphics;
+		assert(regions.size() == 0);
+	}
+	
+	void pushClip()
+	{
+		Region *region = new Region();
+		graphics->GetClip(region);
+		regions.push_back(region);
+	}
+	
+	void popClip()
+	{
+		assert(regions.size() > 0);
+		Region *region = regions.back();
+		regions.pop_back();
+		graphics->SetClip(region);
+		delete region;
+	}
+};
 
 
 static void
@@ -31,9 +65,8 @@ gdiplusgetpath(fz_path *path, FillMode fillMode=FillModeAlternate)
 {
 	GraphicsPath *gpath = new GraphicsPath(fillMode);
 	POINT points[4] = { 0 };
-	int i = 0;
 	
-	while (i < path->len)
+	for (int i = 0; i < path->len; )
 	{
 		switch (path->els[i++].k)
 		{
@@ -63,38 +96,43 @@ gdiplusgetpath(fz_path *path, FillMode fillMode=FillModeAlternate)
 }
 
 static Pen *
-gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke=NULL)
+gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 {
-	float linewidth = 0;
-	
-	if (stroke)
-	{
-		linewidth = stroke->linewidth * fz_matrixexpansion(ctm);
-		if (linewidth < 0.1f)
-			linewidth = 1.0 / fz_matrixexpansion(ctm);
-	}
+	float linewidth = stroke->linewidth * fz_matrixexpansion(ctm);
+	if (linewidth < 0.1f)
+		linewidth = 1.0 / fz_matrixexpansion(ctm);
 	
 	Pen *pen = new Pen(brush, linewidth);
 	
-	if (stroke)
+	pen->SetMiterLimit(stroke->miterlimit);
+	switch (stroke->linecap)
 	{
-		pen->SetMiterLimit(stroke->miterlimit);
-		
-		switch (stroke->linecap)
-		{
-		case 0: pen->SetStartCap(LineCapFlat); pen->SetEndCap(LineCapFlat); break;
-		case 1: pen->SetStartCap(LineCapRound); pen->SetEndCap(LineCapRound); break;
-		case 2: pen->SetStartCap(LineCapSquare); pen->SetEndCap(LineCapSquare); break;
-		}
-		switch (stroke->linejoin)
-		{
-		case 0: pen->SetLineJoin(LineJoinMiter); break;
-		case 1: pen->SetLineJoin(LineJoinRound); break;
-		case 2: pen->SetLineJoin(LineJoinBevel); break;
-		}
+	case 0: pen->SetStartCap(LineCapFlat); pen->SetEndCap(LineCapFlat); break;
+	case 1: pen->SetStartCap(LineCapRound); pen->SetEndCap(LineCapRound); break;
+	case 2: pen->SetStartCap(LineCapSquare); pen->SetEndCap(LineCapSquare); break;
+	}
+	switch (stroke->linejoin)
+	{
+	case 0: pen->SetLineJoin(LineJoinMiter); break;
+	case 1: pen->SetLineJoin(LineJoinRound); break;
+	case 2: pen->SetLineJoin(LineJoinBevel); break;
 	}
 	
 	return pen;
+}
+
+static Font *
+gdiplusgetfont(fz_font *font, float height)
+{
+	/* TODO: register font with PrivateFontCollection::AddMemoryFont */
+	WCHAR fontName[LF_FACESIZE];
+	
+	MultiByteToWideChar(CP_UTF8, 0, font->name + (strlen(font->name) > 7 && font->name[6] == '+' ? 7 : 0), -1, fontName, LF_FACESIZE);
+	FontStyle style = strstr(font->name, "BoldItalic") ? FontStyleBoldItalic :
+		strstr(font->name, "Bold") ? FontStyleBold :
+		strstr(font->name, "Italic") ? FontStyleItalic : FontStyleRegular;
+	
+	return new Font(fontName, height, style);
 }
 
 static Bitmap *
@@ -126,7 +164,7 @@ extern "C" static void
 fz_gdiplusfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	Graphics *graphics = (Graphics *)user;
+	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
 	GraphicsPath *gpath = gdiplusgetpath(path, evenodd ? FillModeAlternate : FillModeWinding);
@@ -141,7 +179,7 @@ extern "C" static void
 fz_gdiplusstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	Graphics *graphics = (Graphics *)user;
+	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
 	GraphicsPath *gpath = gdiplusgetpath(path);
@@ -155,9 +193,121 @@ fz_gdiplusstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matri
 }
 
 extern "C" static void
+fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
+{
+	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, ctm);
+	
+	GraphicsPath *gpath = gdiplusgetpath(path, evenodd ? FillModeAlternate : FillModeWinding);
+	((userData *)user)->pushClip();
+	graphics->SetClip(gpath);
+	
+	delete gpath;
+}
+
+extern "C" static void
+fz_gdiplusclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
+{
+	/* TODO: what's the difference to fz_gdiplusclippath? */
+	fz_gdiplusclippath(user, path, 0, ctm);
+}
+
+static void
+gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
+{
+	assert(text->trm.e == 0 && text->trm.f == 0);
+	/* TODO: correctly turn and size font according to text->trm */
+	float fontSize = fz_matrixexpansion(text->trm) / 1.414;
+	float angle = atanf(text->trm.a / text->trm.b) / M_PI * 180.0 - 90;
+	Font *font = gdiplusgetfont(text->font, fontSize);
+	
+	ctm = fz_concat(ctm, fz_concat(fz_scale(1, -1), fz_translate(0, 2 * ctm.f)));
+	gdiplusapplytransform(graphics, ctm);
+	
+	FontFamily fontFamily;
+	if (gpath)
+		font->GetFamily(&fontFamily);
+	
+	for (int i = 0; i < text->len; i++)
+	{
+		WCHAR out[2] = { 0 };
+		out[0] = text->els[i].ucs;
+		PointF origin(text->els[i].x, -text->els[i].y - fontSize);
+		if (!gpath)
+			graphics->DrawString(out, 1, font, origin, brush);
+		else
+			gpath->AddString(out, 1, &fontFamily, font->GetStyle(), font->GetSize(), origin, NULL);
+	}
+	
+	delete font;
+}
+
+extern "C" static void
+fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha)
+{
+	Graphics *graphics = ((userData *)user)->graphics;
+	
+	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
+	gdiplusruntext(graphics, text, ctm, brush);
+	
+	delete brush;
+}
+
+extern "C" static void
+fz_gdiplusstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha)
+{
+	Graphics *graphics = ((userData *)user)->graphics;
+	
+	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
+	GraphicsPath *gpath = new GraphicsPath();
+	gdiplusruntext(graphics, text, ctm, brush, gpath);
+	
+	Pen *pen = gdiplusgetpen(brush, ctm, stroke);
+	graphics->DrawPath(pen, gpath);
+	
+	delete gpath;
+	delete pen;
+	delete brush;
+}
+
+extern "C" static void
+fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
+{
+	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, ctm);
+	
+	GraphicsPath *gpath = new GraphicsPath();
+	gdiplusruntext(graphics, text, ctm, NULL, gpath);
+	((userData *)user)->pushClip();
+	graphics->SetClip(gpath, accumulate ? CombineModeUnion : CombineModeReplace);
+	
+	delete gpath;
+}
+
+extern "C" static void
+fz_gdiplusclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
+{
+	/* TODO: what's the difference to fz_gdipluscliptext? */
+	fz_gdipluscliptext(user, text, ctm, 0);
+}
+
+extern "C" static void
+fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
+{
+	/* TODO: print transparent text? */
+}
+
+extern "C" static void
+fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
+{
+}
+
+extern "C" static void
 fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
-	Graphics *graphics = (Graphics *)user;
+	Graphics *graphics = ((userData *)user)->graphics;
 	
 	fz_matrix ctm2 = fz_concat(ctm, fz_scale(1.0 / image->w, -1.0 / image->h));
 	ctm2.e = ctm.e; ctm2.f = ctm.f - image->h;
@@ -173,10 +323,28 @@ fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 }
 
 extern "C" static void
+fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha)
+{
+	fz_gdiplusfillimage(user, image, ctm, alpha);
+}
+
+extern "C" static void
+fz_gdiplusclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
+{
+	((userData *)user)->pushClip();
+}
+
+extern "C" static void
+fz_gdipluspopclip(void *user)
+{
+	((userData *)user)->popClip();
+}
+
+extern "C" static void
 fz_gdiplusfreeuser(void *user)
 {
-	Graphics *graphics = (Graphics *)user;
-	delete graphics;
+	delete (userData *)user;
 	
 	if (InterlockedDecrement(&m_gdiplusUsage) == 0)
 		GdiplusShutdown(m_gdiplusToken);
@@ -191,31 +359,26 @@ fz_newgdiplusdevice(HDC hDC)
 		GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
 	}
 	
-	Graphics *graphics = new Graphics(hDC);
-	graphics->SetSmoothingMode(SmoothingModeHighQuality);
-	
-	fz_device *dev = fz_newdevice(graphics);
+	fz_device *dev = fz_newdevice(new userData(hDC));
 	dev->freeuser = fz_gdiplusfreeuser;
 	
 	dev->fillpath = fz_gdiplusfillpath;
 	dev->strokepath = fz_gdiplusstrokepath;
-/*
 	dev->clippath = fz_gdiplusclippath;
 	dev->clipstrokepath = fz_gdiplusclipstrokepath;
-
+	
 	dev->filltext = fz_gdiplusfilltext;
 	dev->stroketext = fz_gdiplusstroketext;
 	dev->cliptext = fz_gdipluscliptext;
 	dev->clipstroketext = fz_gdiplusclipstroketext;
 	dev->ignoretext = fz_gdiplusignoretext;
-
+	
 	dev->fillshade = fz_gdiplusfillshade;
 	dev->fillimage = fz_gdiplusfillimage;
 	dev->fillimagemask = fz_gdiplusfillimagemask;
 	dev->clipimagemask = fz_gdiplusclipimagemask;
-
+	
 	dev->popclip = fz_gdipluspopclip;
-*/
 	
 	return dev;
 }

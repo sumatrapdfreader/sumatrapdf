@@ -373,6 +373,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         pageRect = &page->mediabox;
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
 
+#ifdef _DEBUG
     if (useGdi) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
 
@@ -395,6 +396,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         }
         return new RenderedBitmap(hbmp, w, h);
     }
+#endif
 
     // make sure not to request too large a pixmap, as MuPDF just aborts on OOM;
     // instead we get a 1*y sized pixmap and try to resize it manually and just

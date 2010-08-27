@@ -88,7 +88,10 @@ FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf \
 	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
-LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib
+LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib
+!if "$(CFG)"!="rel"
+LIBS = $(LIBS) gdiplus.lib
+!endif
 
 LD = link.exe
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG
@@ -138,7 +141,11 @@ OPENJPEG_OBJS = \
 FITZ_DRAW_OBJS = \
 	$(O)\archport.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\imagesmooth.obj $(O)\pathfill.obj \
 	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
-	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\dev_gdi.obj $(O)\dev_gdiplus.obj
+	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\dev_gdi.obj
+
+!if "$(CFG)"!="rel"
+FITZ_DRAW_OBJS = $(FITZ_DRAW_OBJS) $(O)\dev_gdiplus.obj
+!endif
 
 FITZ_OBJS = \
 	$(O)\base_error.obj $(O)\base_geometry.obj $(O)\base_getopt.obj $(O)\base_hash.obj \
