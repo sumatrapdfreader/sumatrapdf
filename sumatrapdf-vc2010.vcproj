@@ -391,10 +391,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\gdidraw\dev_gdi.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\gdidraw\dev_gdiplus.cpp"
 					>
 				</File>

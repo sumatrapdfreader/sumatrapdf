@@ -285,38 +285,77 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 static void
 gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
-	/* TODO: correctly turn and size font according to text->trm */
 	float fontSize = fz_matrixexpansion(text->trm);
 	Font *font = gdiplusgetfont(text->font, fontSize / (gpath ? 1 : M_SQRT2) * 96.0 / graphics->GetDpiY());
 	
 	if (!font)
 	{
-		if (text->font->ftface)
-			gdiplusrendertext(graphics, text, ctm, brush, gpath);
-		/* TODO: render Type 3 glyphs (fz_rendert3glyph) */
+		gdiplusrendertext(graphics, text, ctm, brush, gpath);
 		return;
 	}
 	
-	ctm = fz_concat(fz_scale(1, -1), ctm);
-	gdiplusapplytransform(graphics, ctm);
+	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, 1.0 / fontSize));
 	assert(text->trm.e == 0 && text->trm.f == 0);
+	ctm = fz_concat(fz_scale(1, -1), ctm);
 	
 	FontFamily fontFamily;
 	if (gpath)
+	{
 		font->GetFamily(&fontFamily);
+		gdiplusapplytransform(graphics, ctm);
+	}
 	
 	for (int i = 0; i < text->len; i++)
 	{
 		WCHAR out[2] = { 0 };
 		out[0] = text->els[i].ucs;
-		PointF origin(text->els[i].x, -text->els[i].y - fontSize);
 		if (!gpath)
-			graphics->DrawString(out, 1, font, origin, brush);
+		{
+			fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
+			ctm2 = fz_concat(fz_scale(-1, 1), fz_concat(rotate, ctm2));
+			ctm2 = fz_concat(fz_translate(0, -fontSize), ctm2);
+			
+			gdiplusapplytransform(graphics, ctm2);
+			graphics->DrawString(out, 1, font, PointF(0, 0), brush);
+		}
 		else
+		{
+			/* TODO: correctly rotate glyphs according to text->trm */
+			PointF origin(text->els[i].x, -text->els[i].y - fontSize);
 			gpath->AddString(out, 1, &fontFamily, font->GetStyle(), font->GetSize(), origin, NULL);
+		}
 	}
 	
 	delete font;
+}
+
+#define T3RES 3.0
+
+static void
+gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha)
+{
+	/* TODO: the first scan line doesn't seem to be drawn for most/all Type 3 glyphs */
+	fz_matrix size = fz_concat(fz_scale(T3RES, T3RES), text->trm);
+	float fontSize = fz_matrixexpansion(size);
+	ctm = fz_concat(fz_scale(1, -1), ctm);
+	
+	fz_glyphcache *cache = fz_newglyphcache();
+	
+	for (int i = 0; i < text->len; i++)
+	{
+		fz_pixmap *glyph = fz_renderglyph(cache, text->font, text->els[i].gid, size);
+		
+		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
+		ctm2 = fz_concat(fz_translate(-glyph->x / T3RES, -glyph->y / T3RES - glyph->h / T3RES), ctm2);
+		ctm2 = fz_concat(text->trm, ctm2);
+		ctm2 = fz_concat(fz_scale(glyph->w / fontSize, glyph->h / fontSize), ctm2);
+		
+		fz_gdiplusfillimagemask(user, glyph, ctm2, colorspace, color, alpha);
+		fz_droppixmap(glyph);
+	}
+	
+	fz_freeglyphcache(cache);
 }
 
 extern "C" static void
@@ -326,7 +365,10 @@ fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
 	Graphics *graphics = ((userData *)user)->graphics;
 	
 	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
-	gdiplusruntext(graphics, text, ctm, brush);
+	if (text->font->ftface)
+		gdiplusruntext(graphics, text, ctm, brush);
+	else
+		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha);
 	
 	delete brush;
 }
@@ -339,7 +381,10 @@ fz_gdiplusstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matri
 	
 	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
 	GraphicsPath *gpath = new GraphicsPath();
-	gdiplusruntext(graphics, text, ctm, brush, gpath);
+	if (text->font->ftface)
+		gdiplusruntext(graphics, text, ctm, brush, gpath);
+	else
+		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha/*, gpath */);
 	
 	Pen *pen = gdiplusgetpen(brush, ctm, stroke);
 	graphics->DrawPath(pen, gpath);
@@ -356,7 +401,11 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	gdiplusapplytransform(graphics, ctm);
 	
 	GraphicsPath *gpath = new GraphicsPath();
-	gdiplusruntext(graphics, text, ctm, NULL, gpath);
+	float black[3] = { 0 };
+	if (text->font->ftface)
+		gdiplusruntext(graphics, text, ctm, NULL, gpath);
+	else
+		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0/*, gpath */);
 	((userData *)user)->pushClip();
 	graphics->SetClip(gpath, accumulate ? CombineModeUnion : CombineModeReplace);
 	
