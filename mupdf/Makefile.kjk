@@ -127,8 +127,7 @@ VPATH+=$(OUTDIR)
 ZLIB_SRC = \
 	adler32.c crc32.c inflate.c zutil.c \
 	inffast.c inftrees.c deflate.c compress.c \
-	trees.c \
-	gzio.c
+	trees.c gzlib.c gzread.c gzwrite.c gzclose.c
 
 JPEG_SRC = \
 	jaricom.c jcomapi.c jutils.c jerror.c jmemmgr.c \
