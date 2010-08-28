@@ -141,7 +141,7 @@ OPENJPEG_OBJS = \
 FITZ_DRAW_OBJS = \
 	$(O)\archport.obj $(O)\blendmodes.obj $(O)\imagescale.obj $(O)\imagesmooth.obj $(O)\pathfill.obj \
 	$(O)\glyphcache.obj $(O)\imageunpack.obj $(O)\pathscan.obj $(O)\porterduff.obj \
-	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj $(O)\dev_gdi.obj
+	$(O)\imagedraw.obj $(O)\meshdraw.obj $(O)\pathstroke.obj
 
 !if "$(CFG)"!="rel"
 FITZ_DRAW_OBJS = $(FITZ_DRAW_OBJS) $(O)\dev_gdiplus.obj

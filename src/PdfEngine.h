@@ -25,8 +25,8 @@ class WindowInfo;
 
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
-/* It seems that PDF documents are encoded assuming DPI of 72.0 */
-#define PDF_FILE_DPI        72
+/* one PDF user space unit equals 1/72 inch */
+#define PDF_FILE_DPI        72.0
 
 class PdfTocItem {
 public:

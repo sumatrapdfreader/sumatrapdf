@@ -3952,7 +3952,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
     int printAreaHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
     int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / 72.0, GetDeviceCaps(hdc, LOGPIXELSY) / 72.0);
+    double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
+                           GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
     bool bPrintPortrait = printAreaWidth < printAreaHeight;
     if (devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
@@ -5424,7 +5425,7 @@ static void OnChar(WindowInfo *win, int key)
         }
         break;
     case '.':
-    	// for Logitech's wireless presenters which target PowerPoint's shortcuts
+        // for Logitech's wireless presenters which target PowerPoint's shortcuts
         if (win->presentation)
             ChangePresentationMode(win, PM_BLACK_SCREEN);
         break;

@@ -188,8 +188,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _zoomReal = INVALID_ZOOM;
     _scrollbarYDx = 0;
     _scrollbarXDy = 0;
-    // 1 PDF user space unit equals 1/72 inch
-    _dpiFactor = dpi * 1.0 / 72.0;
+    _dpiFactor = dpi * 1.0 / PDF_FILE_DPI;
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;

@@ -14,7 +14,7 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 
     obj = fz_dictgets(page, "MediaBox");
     if (!fz_isarray(obj))
-    	return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
+        return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
     bbox = fz_roundrect(pdf_torect(obj));
 
     obj = fz_dictgets(page, "CropBox");
@@ -33,6 +33,111 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
         return fz_throw("invalid page size");
 
     return fz_okay;
+}
+
+HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
+{
+    int w, h, rows8;
+    int paletteSize = 0;
+    BOOL hasPalette = FALSE;
+    int i, j, k;
+    BITMAPINFO *bmi;
+    HBITMAP hbmp = NULL;
+    unsigned char *bmpData, *source, *dest;
+    fz_pixmap *bgrPixmap;
+    
+    w = pixmap->w;
+    h = pixmap->h;
+    
+    /* abgr is a GDI compatible format */
+    bgrPixmap = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, w, h);
+    fz_convertpixmap(pixmap, bgrPixmap);
+    pixmap = bgrPixmap;
+    
+    assert(pixmap->n == 4);
+    
+    bmi = (BITMAPINFO *)malloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    memset(bmi, 0, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    
+    if (paletted)
+    {
+        rows8 = ((w + 3) / 4) * 4;    
+        dest = bmpData = (unsigned char *)malloc(rows8 * h);
+        source = pixmap->samples;
+        
+        for (j = 0; j < h; j++)
+        {
+            for (i = 0; i < w; i++)
+            {
+                RGBQUAD c = { 0 };
+                
+                c.rgbBlue = *source++;
+                c.rgbGreen = *source++;
+                c.rgbRed = *source++;
+                source++;
+                
+                /* find this color in the palette */
+                for (k = 0; k < paletteSize; k++)
+                    if (*(int *)&bmi->bmiColors[k] == *(int *)&c)
+                        break;
+                /* add it to the palette if it isn't in there and if there's still space left */
+                if (k == paletteSize)
+                {
+                    if (k >= 256)
+                        goto ProducingPaletteDone;
+                    *(int *)&bmi->bmiColors[paletteSize] = *(int *)&c;
+                    paletteSize++;
+                }
+                /* 8-bit data consists of indices into the color palette */
+                *dest++ = k;
+            }
+            dest += rows8 - w;
+        }
+ProducingPaletteDone:
+        hasPalette = paletteSize <= 256;
+        if (!hasPalette)
+            free(bmpData);
+    }
+    if (!hasPalette)
+        bmpData = pixmap->samples;
+    
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = w;
+    bmi->bmiHeader.biHeight = -h;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biCompression = BI_RGB;
+    bmi->bmiHeader.biBitCount = hasPalette ? 8 : 32;
+    bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
+    bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
+    
+    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
+    
+    fz_droppixmap(bgrPixmap);
+    if (hasPalette)
+        free(bmpData);
+    free(bmi);
+    
+    return hbmp;
+}
+
+void fz_pixmaptodc(HDC hDC, fz_pixmap *pixmap, fz_rect *dest)
+{
+    // Try to extract a 256 color palette so that we can use 8-bit images instead of 24-bit ones.
+    // This should e.g. speed up printing for most monochrome documents by saving spool resources.
+    HBITMAP hbmp = fz_pixtobitmap(hDC, pixmap, TRUE);
+    HDC bmpDC = CreateCompatibleDC(hDC);
+    
+    SelectObject(bmpDC, hbmp);
+    if (!dest)
+        BitBlt(hDC, 0, 0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
+    else if (dest->x1 - dest->x0 == pixmap->w && dest->y1 - dest->y0 == pixmap->h)
+        BitBlt(hDC, dest->x0, dest->y0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
+    else
+        StretchBlt(hDC, dest->x0, dest->y0, dest->x1 - dest->x0, dest->y1 - dest->y0,
+            bmpDC, 0, 0, pixmap->w, pixmap->h, SRCCOPY);
+    
+    DeleteDC(bmpDC);
+    DeleteObject(hbmp);
 }
 
 HBITMAP RenderedBitmap::createDIBitmap(HDC hdc) {
@@ -143,8 +248,8 @@ PdfEngine::~PdfEngine()
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
-	char *password = NULL;
-	fz_error error;
+    char *password = NULL;
+    fz_error error;
     pdf_xref *xref = NULL;
     _windowInfo = win;
     assert(!_fileName);
@@ -154,12 +259,10 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     if (-1 == fd)
         return false;
     fz_stream *file = fz_openfile(fd);
-	// TODO: not sure how to handle passwords
-	error = pdf_openxrefwithstream(&xref, file, password);
-	if (error)
-	{
-		return false;
-	}
+    // TODO: not sure how to handle passwords
+    error = pdf_openxrefwithstream(&xref, file, password);
+    if (error)
+        return false;
     fz_close(file);
     if (!xref)
         return false;
@@ -350,13 +453,17 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *c
     FillRect(hDC, pageRect, bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_device *dev = fz_newgdidevice(hDC);
+#ifdef DEBUG
+    fz_device *dev = fz_newgdiplusdevice(hDC);
     EnterCriticalSection(&_xrefAccess);
     fz_error error = pdf_runpage(_xref, page, dev, *ctm);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
 
     return fz_okay == error;
+#else
+    return false;
+#endif
 }
 
 RenderedBitmap *PdfEngine::renderBitmap(
@@ -375,7 +482,6 @@ RenderedBitmap *PdfEngine::renderBitmap(
         pageRect = &page->mediabox;
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
 
-#ifdef _DEBUG
     if (useGdi) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate(-bbox.x0, -bbox.y0));
@@ -391,7 +497,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
 #if CONSERVE_MEMORY
         dropPdfPage(pageNo);
 #endif
-	    DeleteDC(hDCMem);
+        DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {
             DeleteObject(hbmp);
@@ -399,7 +505,6 @@ RenderedBitmap *PdfEngine::renderBitmap(
         }
         return new RenderedBitmap(hbmp, w, h);
     }
-#endif
 
     // make sure not to request too large a pixmap, as MuPDF just aborts on OOM;
     // instead we get a 1*y sized pixmap and try to resize it manually and just

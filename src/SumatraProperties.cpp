@@ -203,8 +203,8 @@ static TCHAR *FormatPdfPageSize(double width, double height) {
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
 
-    width *= (isMetric ? 2.54 : 1.0) / 72;
-    height *= (isMetric ? 2.54 : 1.0) / 72;
+    width *= (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
+    height *= (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
 
     if (((int)(width * 100)) % 100 == 99)
         width += 0.01;
