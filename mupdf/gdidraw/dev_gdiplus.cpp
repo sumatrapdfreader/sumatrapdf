@@ -3,6 +3,10 @@
 extern "C" {
 #include <fitz.h>
 #include <fitz_gdidraw.h>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
 }
 #include <vector>
 
@@ -21,7 +25,7 @@ public:
 	{
 		graphics = new Graphics(hDC);
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
-		graphics->SetPageScale(96.0 / GetDeviceCaps(hDC, LOGPIXELSY));
+		graphics->SetPageScale(96.0 / graphics->GetDpiY());
 	}
 
 	~userData()
@@ -40,6 +44,8 @@ public:
 	void popClip()
 	{
 		assert(regions.size() > 0);
+		if (regions.size() == 0)
+			return;
 		Region *region = regions.back();
 		graphics->SetClip(region);
 		delete region;
@@ -84,9 +90,9 @@ gdiplusgetbrush(fz_colorspace *colorspace, float *color, float alpha)
 }
 
 static GraphicsPath *
-gdiplusgetpath(fz_path *path, FillMode fillMode=FillModeAlternate)
+gdiplusgetpath(fz_path *path, int evenodd=1)
 {
-	GraphicsPath *gpath = new GraphicsPath(fillMode);
+	GraphicsPath *gpath = new GraphicsPath(evenodd ? FillModeAlternate : FillModeWinding);
 	POINT points[4] = { 0 };
 	
 	for (int i = 0; i < path->len; )
@@ -150,16 +156,16 @@ gdiplusgetfont(fz_font *font, float height)
 	/* TODO: use embedded fonts when available */
 	WCHAR fontName[LF_FACESIZE];
 	
-	MultiByteToWideChar(CP_UTF8, 0, font->name + (strlen(font->name) > 7 && font->name[6] == '+' ? 7 : 0), -1, fontName, LF_FACESIZE);
+	MultiByteToWideChar(CP_UTF8, 0, font->name, -1, fontName, LF_FACESIZE);
 	FontFamily family(fontName);
 	FontStyle style =
 		strstr(font->name, "BoldItalic") || strstr(font->name, "BoldOblique") ? FontStyleBoldItalic :
 		strstr(font->name, "Italic") || strstr(font->name, "Oblique") ? FontStyleItalic :
 		strstr(font->name, "Bold") ? FontStyleBold : FontStyleRegular;
 	
-	if (family.IsAvailable())
-		return new Font(&family, height, style);
-	return new Font(L"Arial", height, style);
+	if (!family.IsAvailable())
+		return NULL;
+	return new Font(&family, height, style);
 }
 
 extern "C" static void
@@ -169,7 +175,7 @@ fz_gdiplusfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
-	GraphicsPath *gpath = gdiplusgetpath(path, evenodd ? FillModeAlternate : FillModeWinding);
+	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
 	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
 	graphics->FillPath(brush, gpath);
 	
@@ -200,7 +206,7 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
-	GraphicsPath *gpath = gdiplusgetpath(path, evenodd ? FillModeAlternate : FillModeWinding);
+	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
 	((userData *)user)->pushClip();
 	graphics->SetClip(gpath);
 	
@@ -214,16 +220,77 @@ fz_gdiplusclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_m
 	fz_gdiplusclippath(user, path, 0, ctm);
 }
 
+extern "C" static int move_to(const FT_Vector *to, void *user)
+{
+	fz_moveto((fz_path *)user, to->x, to->y); return 0;
+}
+extern "C" static int line_to(const FT_Vector *to, void *user)
+{
+	fz_lineto((fz_path *)user, to->x, to->y); return 0;
+}
+extern "C" static int cubic_to(const FT_Vector *ctrl1, const FT_Vector *ctrl2, const FT_Vector *to, void *user)
+{
+	fz_curveto((fz_path *)user, ctrl1->x, ctrl1->y, ctrl2->x, ctrl2->y, to->x, to->y); return 0;
+}
+extern "C" static int conic_to(const FT_Vector *ctrl, const FT_Vector *to, void *user)
+{
+	return cubic_to(ctrl, ctrl, to, user);
+}
+static FT_Outline_Funcs OutlineFuncs = {
+	move_to, line_to, conic_to, cubic_to, 0, 0 /* shift, delta */
+};
+
+static void
+gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
+{
+	gdiplusapplytransform(graphics, ctm);
+	
+	Matrix trm(text->trm.a, text->trm.b, text->trm.c, text->trm.d, text->trm.e, text->trm.f);
+	FT_Face face = (FT_Face)text->font->ftface;
+	FT_Outline *outline = &face->glyph->outline;
+	
+	for (int i = 0; i < text->len; i++)
+	{
+		int fterr = FT_Load_Glyph(face, text->els[i].gid, FT_LOAD_NO_SCALE);
+		if (fterr)
+			continue;
+		
+		fz_path *path = fz_newpath();
+		FT_Outline_Decompose(outline, &OutlineFuncs, path);
+		GraphicsPath *gpath2 = gdiplusgetpath(path, (outline->flags & FT_OUTLINE_EVEN_ODD_FILL));
+		fz_freepath(path);
+		
+		Matrix matrix;
+		matrix.Translate(text->els[i].x, text->els[i].y);
+		matrix.Scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM);
+		matrix.Multiply(&trm);
+		gpath2->Transform(&matrix);
+		
+		if (!gpath)
+			graphics->FillPath(brush, gpath2);
+		else
+			gpath->AddPath(gpath2, FALSE);
+		
+		delete gpath2;
+	}
+}
+
 static void
 gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
-	assert(text->trm.e == 0 && text->trm.f == 0);
 	/* TODO: correctly turn and size font according to text->trm */
-	float fontSize = fz_matrixexpansion(text->trm);
+	float fontSize = fz_matrixexpansion(text->trm) * 96.0 / graphics->GetDpiY();
 	Font *font = gdiplusgetfont(text->font, fontSize / (gpath ? 1 : M_SQRT2));
+	
+	if (!font)
+	{
+		gdiplusrendertext(graphics, text, ctm, brush, gpath);
+		return;
+	}
 	
 	ctm = fz_concat(ctm, fz_concat(fz_scale(1, -1), fz_translate(0, 2 * ctm.f)));
 	gdiplusapplytransform(graphics, ctm);
+	assert(text->trm.e == 0 && text->trm.f == 0);
 	
 	FontFamily fontFamily;
 	if (gpath)
@@ -255,23 +322,6 @@ fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
 	
 	Brush *brush = gdiplusgetbrush(colorspace, color, alpha);
 	gdiplusruntext(graphics, text, ctm, brush);
-#if 0
-	fz_glyphcache *cache = fz_newglyphcache();
-	for (int i = 0; i < text->len; i++)
-	{
-		if (text->els[i].gid < 0)
-			continue;
-		fz_matrix tm = fz_concat(ctm, text->trm);
-		tm.e = text->trm.e; tm.f = text->trm.f;
-		fz_pixmap *glyph = fz_renderglyph(cache, text->font, text->els[i].gid, tm);
-		
-		tm = fz_concat(fz_scale(glyph->w, glyph->h), fz_translate(text->els[i].x, text->els[i].y));
-		tm = fz_concat(tm, ctm);
-		fz_gdiplusfillimagemask(user, glyph, tm, colorspace, color, alpha);
-		fz_droppixmap(glyph);
-	}
-	fz_freeglyphcache(cache);
-#endif
 	
 	delete brush;
 }
@@ -324,7 +374,7 @@ fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
 extern "C" static void
 fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
-	/* TODO: implement shading */
+	/* TODO: implement shading (or use fz_rendershade) */
 	Graphics *graphics = ((userData *)user)->graphics;
 }
 
