@@ -40,6 +40,8 @@ static BOOL             gDebugShowLinks = TRUE;
 #else
 static BOOL             gDebugShowLinks = FALSE;
 #endif
+
+#define USE_GDI_FOR_PRINTING
 static bool             gUseGdiRenderer = false;
 
 /* default UI settings */
@@ -4018,7 +4020,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
             // try to use correct zoom values (scale down to fit the physical page, though)
             double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
-#ifdef DEBUG
+#ifdef USE_GDI_FOR_PRINTING
             RECT rc;
             rc.left = (printAreaWidth - pSize.dx() * zoom) / 2;
             rc.top = (printAreaHeight - pSize.dy() * zoom) / 2;

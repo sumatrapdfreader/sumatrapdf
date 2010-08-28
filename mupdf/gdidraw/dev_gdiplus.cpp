@@ -8,16 +8,18 @@ extern "C" {
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 }
-#include <vector>
 
 using namespace Gdiplus;
 
 static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
 
+#define MAX_CLIP_DEPTH 16
+
 class userData
 {
-	std::vector<Region *> regions;
+	Region clips[MAX_CLIP_DEPTH];
+	int clipCount;
 public:
 	Graphics *graphics;
 
@@ -28,30 +30,28 @@ public:
 		graphics->SetPageUnit(UnitPoint);
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
 		graphics->SetPageScale(72.0 / graphics->GetDpiY());
+		
+		clipCount = 0;
 	}
 
 	~userData()
 	{
 		delete graphics;
-		assert(regions.size() == 0);
+		assert(clipCount == 0);
 	}
 
 	void pushClip()
 	{
-		Region *region = new Region();
-		graphics->GetClip(region);
-		regions.push_back(region);
+		assert(clipCount < MAX_CLIP_DEPTH);
+		if (clipCount < MAX_CLIP_DEPTH)
+			graphics->GetClip(&clips[clipCount++]);
 	}
 
 	void popClip()
 	{
-		assert(regions.size() > 0);
-		if (regions.size() == 0)
-			return;
-		Region *region = regions.back();
-		graphics->SetClip(region);
-		delete region;
-		regions.pop_back();
+		assert(clipCount > 0);
+		if (clipCount > 0)
+			graphics->SetClip(&clips[--clipCount]);
 	}
 };
 

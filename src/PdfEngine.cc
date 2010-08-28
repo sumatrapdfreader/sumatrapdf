@@ -453,7 +453,6 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *c
     FillRect(hDC, pageRect, bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-#ifdef DEBUG
     fz_device *dev = fz_newgdiplusdevice(hDC);
     EnterCriticalSection(&_xrefAccess);
     fz_error error = pdf_runpage(_xref, page, dev, *ctm);
@@ -461,9 +460,6 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *c
     fz_freedevice(dev);
 
     return fz_okay == error;
-#else
-    return false;
-#endif
 }
 
 RenderedBitmap *PdfEngine::renderBitmap(
