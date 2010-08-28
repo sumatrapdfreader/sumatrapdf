@@ -378,6 +378,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
 #ifdef _DEBUG
     if (useGdi) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
+        ctm = fz_concat(ctm, fz_translate(-bbox.x0, -bbox.y0));
 
         // for now, don't render directly into a DC but produce an HBITMAP instead
         HDC hDC = GetDC(NULL);

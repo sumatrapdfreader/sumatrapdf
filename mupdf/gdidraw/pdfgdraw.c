@@ -103,6 +103,7 @@ static void drawbmp(pdf_page *page, fz_displaylist *list, int pagenum)
 	ctm = fz_concat(ctm, fz_rotate(page->rotate));
 	bbox = fz_roundrect(fz_transformrect(ctm, page->mediabox));
 
+	ctm = fz_concat(ctm, fz_translate(-bbox.x0, -bbox.y0));
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
