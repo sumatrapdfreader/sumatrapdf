@@ -63,9 +63,6 @@ Otwórz\tCtrl-O
 &Print\tCtrl-P
 Drukuj\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Zapisz z %s...\tCtrl-P
-
 &Print... (denied)
 &Drukuj... (odmowa)
 
@@ -353,6 +350,9 @@ Strona:
 
 Please wait - rendering...
 Proszę czekać - renderowanie...
+
+Pr&int with Adobe Reader...
+Zapisz z Adobe Reader...
 
 Previous Page
 Poprzednia strona

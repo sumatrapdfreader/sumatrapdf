@@ -67,9 +67,6 @@ Contributor: Ali Nayeri
 &Print\tCtrl-P
 چاپ\tCtrl-P
 
-&Print with %s...\tCtrl-P
-... %s چاپ با\tCtrl-P
-
 &Print... (denied)
 (چاپ ... (رد شد
 
@@ -348,6 +345,9 @@ Page:
 
 Please wait - rendering...
 ... لطفا صبر کنید
+
+Pr&int with Adobe Reader...
+... Adobe Reader چاپ با
 
 Previous Page
 صفحه قبلی

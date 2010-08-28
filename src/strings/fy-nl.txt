@@ -441,9 +441,9 @@ Zoomfaktor
 [Bestân wizige; ferfarskje] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Denied Permissions:
+#Pr&int with Adobe Reader...
 #Subject:
 #copying text
 #printing document

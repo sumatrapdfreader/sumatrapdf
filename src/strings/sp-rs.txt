@@ -376,7 +376,6 @@ Faktor uvećanja
 [Promene su primećene; osvežavam] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -399,6 +398,7 @@ Faktor uvećanja
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Send by &email...
 #Subject:
 #Title:

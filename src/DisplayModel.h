@@ -135,9 +135,9 @@ public:
         if (!pdfEngine) return NULL;
         return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect, abortCheckCbkA, abortCheckCbkDataA, useGdi);
     }
-    bool renderPage(HDC hDC, int pageNo, RECT *pageRect) {
+    bool renderPage(HDC hDC, int pageNo, RECT *pageRect, double zoomReal=0, int rotation=0) {
         if (!pdfEngine) return false;
-        return pdfEngine->renderPage(hDC, pdfEngine->getPdfPage(pageNo), pageRect);
+        return pdfEngine->renderPage(hDC, pdfEngine->getPdfPage(pageNo), pageRect, NULL, zoomReal, rotation);
     }
 
     /* number of pages in PDF document */

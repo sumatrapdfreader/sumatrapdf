@@ -65,9 +65,6 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Print\tCtrl-P
 &Տպել\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Տպել %s-ի հետ...\tCtrl-P
-
 &Print... (denied)
 &Տպել... (մերժված)
 
@@ -355,6 +352,9 @@ Page:
 
 Please wait - rendering...
 Խնդրում ենք սպասել...
+
+Pr&int with Adobe Reader...
+Տպել Adobe Reader-ի հետ...
 
 Previous Page
 Նախորդ էջը

@@ -64,9 +64,6 @@ Heslo:
 &Print\tCtrl-P
 Tlačiť\tCtrl-P
 
-&Print with %s...\tCtrl-P
-Vytlačiť s %s...\tCtrl-P
-
 &Print... (denied)
 &Tlač... (odmietnutá)
 
@@ -342,6 +339,9 @@ Strana:
 
 Please wait - rendering...
 Prosím počkajte - zobrazovanie...
+
+Pr&int with Adobe Reader...
+Vytlačiť s Adobe Reader...
 
 Previous Page
 Predchádzajúca strana

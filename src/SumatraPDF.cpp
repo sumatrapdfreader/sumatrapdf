@@ -982,6 +982,7 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
+    { _TRN("Pr&int with Adobe Reader..."),          IDM_PRINT_WITH_ACROBAT,     MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &email..."),                    IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("P&roperties...\tCtrl-D"),               IDM_PROPERTIES,             0 },
@@ -1132,10 +1133,12 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     if (noAcrobat || noEmail) {
         for (int i = 0; i < dimof(menuDefFile); i++) {
             if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
-                if (noAcrobat)
+                if (noAcrobat) {
                     menuDefFile[i].m_title = NULL;
-                if (noEmail)
                     menuDefFile[i + 1].m_title = NULL;
+                }
+                if (noEmail)
+                    menuDefFile[i + 2].m_title = NULL;
                 if (noAcrobat && noEmail)
                     menuDefFile[i - 1].m_title = NULL;
             }
@@ -1869,20 +1872,19 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
     assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
         const TCHAR *printItem = Translations_GetTranslation(menuDefFile[ix].m_title);
-        TCHAR printExtItem[256];
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
-        else if (!gUseGdiRenderer && CanViewWithAcrobat()) {
-            wsprintf(printExtItem, _TR("&Print with %s...\tCtrl-P"), _T("Adobe Reader"));
-            printItem = printExtItem;
-        }
         ModifyMenu(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
-    if (filePrintEnabled && filePrintAllowed)
+    if (filePrintEnabled && filePrintAllowed) {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
-    else
+        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
+    }
+    else {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
+    }
 }
 
 static void MenuUpdateStateForWindow(WindowInfo *win) {
@@ -1900,10 +1902,14 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     else
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 
-    if (CanViewWithAcrobat(win))
+    if (CanViewWithAcrobat(win)) {
         EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
-    else
+        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
+    }
+    else {
         EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
+    }
 
     MenuUpdatePrintItem(win);
     MenuUpdateBookmarksStateForWindow(win);
@@ -4009,22 +4015,25 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
 
-            if (gUseGdiRenderer) {
-                // TODO: center on page
-                RECT rc = { 0, 0, printAreaWidth, printAreaHeight };
-                dm->renderPage(hdc, pageNo, &rc);
+            // try to use correct zoom values (scale down to fit the physical page, though)
+            double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
+#ifdef DEBUG
+            RECT rc;
+            rc.left = (printAreaWidth - pSize.dx() * zoom) / 2;
+            rc.top = (printAreaHeight - pSize.dy() * zoom) / 2;
+            rc.right = printAreaWidth - rc.left;
+            rc.bottom = printAreaHeight - rc.top;
+            OffsetRect(&rc, -leftMargin, -topMargin);
+            dm->renderPage(hdc, pageNo, &rc, 100.0 * zoom, rotation);
+#else
+            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, gUseGdiRenderer);
+            if (bmp) {
+                // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
+                bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
+                    (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
+                delete bmp;
             }
-            else {
-                // try to use correct zoom values (scale down to fit the physical page, though)
-                double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
-                RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, gUseGdiRenderer);
-                if (bmp) {
-                    // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
-                    bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
-                        (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
-                    delete bmp;
-                }
-            }
+#endif
             if (EndPage(hdc) <= 0) {
                 AbortDoc(hdc);
                 return;
@@ -4109,12 +4118,6 @@ static void OnMenuPrint(WindowInfo *win)
     assert(dm);
     if (!dm) return;
 
-    bool hasSelection = win->selectionOnPage && !win->selectionOnPage->next;
-
-    // use an external printing tool until our printing engine improves
-    if (!hasSelection && !gUseGdiRenderer && ViewWithAcrobat(win, _T("/P")))
-        return;
-
     /* printing uses the WindowInfo win that is created for the
        screen, it may be possible to create a new WindowInfo
        for printing to so we don't mess with the screen one,
@@ -4128,6 +4131,7 @@ static void OnMenuPrint(WindowInfo *win)
     pd.hDevMode    = NULL;   
     pd.hDevNames   = NULL;   
     pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE;
+    bool hasSelection = win->selectionOnPage && !win->selectionOnPage->next;
     if (!hasSelection)
         pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
@@ -6754,6 +6758,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_WITH_ACROBAT:
                     ViewWithAcrobat(win);
+                    break;
+
+                case IDM_PRINT_WITH_ACROBAT:
+                    ViewWithAcrobat(win, _T("/P"));
                     break;
 
                 case IDM_SEND_BY_EMAIL:

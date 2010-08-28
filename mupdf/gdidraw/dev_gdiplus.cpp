@@ -23,9 +23,11 @@ public:
 
 	userData(HDC hDC)
 	{
+		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = new Graphics(hDC);
+		graphics->SetPageUnit(UnitPoint);
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
-		graphics->SetPageScale(96.0 / graphics->GetDpiY());
+		graphics->SetPageScale(72.0 / graphics->GetDpiY());
 	}
 
 	~userData()
@@ -169,6 +171,10 @@ gdiplusgetfont(fz_font *font, float height)
 }
 
 extern "C" static void
+fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
+	fz_colorspace *colorspace, float *color, float alpha);
+
+extern "C" static void
 fz_gdiplusfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
@@ -248,6 +254,7 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 	Matrix trm(text->trm.a, text->trm.b, text->trm.c, text->trm.d, text->trm.e, text->trm.f);
 	FT_Face face = (FT_Face)text->font->ftface;
 	FT_Outline *outline = &face->glyph->outline;
+	FT_Set_Transform(face, NULL, NULL);
 	
 	for (int i = 0; i < text->len; i++)
 	{
@@ -279,16 +286,18 @@ static void
 gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
 	/* TODO: correctly turn and size font according to text->trm */
-	float fontSize = fz_matrixexpansion(text->trm) * 96.0 / graphics->GetDpiY();
-	Font *font = gdiplusgetfont(text->font, fontSize / (gpath ? 1 : M_SQRT2));
+	float fontSize = fz_matrixexpansion(text->trm);
+	Font *font = gdiplusgetfont(text->font, fontSize / (gpath ? 1 : M_SQRT2) * 96.0 / graphics->GetDpiY());
 	
 	if (!font)
 	{
-		gdiplusrendertext(graphics, text, ctm, brush, gpath);
+		if (text->font->ftface)
+			gdiplusrendertext(graphics, text, ctm, brush, gpath);
+		/* TODO: render Type 3 glyphs (fz_rendert3glyph) */
 		return;
 	}
 	
-	ctm = fz_concat(ctm, fz_concat(fz_scale(1, -1), fz_translate(0, 2 * ctm.f)));
+	ctm = fz_concat(fz_scale(1, -1), ctm);
 	gdiplusapplytransform(graphics, ctm);
 	assert(text->trm.e == 0 && text->trm.f == 0);
 	
@@ -309,10 +318,6 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 	
 	delete font;
 }
-
-extern "C" static void
-fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
-	fz_colorspace *colorspace, float *color, float alpha);
 
 extern "C" static void
 fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
@@ -383,9 +388,8 @@ fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	Graphics *graphics = ((userData *)user)->graphics;
 	
-	fz_matrix ctm2 = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
-	ctm2.e = ctm.e; ctm2.f = ctm.f;
-	gdiplusapplytransform(graphics, ctm2);
+	ctm = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
+	gdiplusapplytransform(graphics, ctm);
 	
 	PixmapBitmap *bmp = new PixmapBitmap(image);
 	RectF destination(0, image->h, image->w, -image->h);
@@ -432,9 +436,8 @@ fz_gdiplusclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
 	Graphics *graphics = ((userData *)user)->graphics;
 	
-	fz_matrix ctm2 = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
-	ctm2.e = ctm.e; ctm2.f = ctm.f;
-	gdiplusapplytransform(graphics, ctm2);
+	ctm = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
+	gdiplusapplytransform(graphics, ctm);
 	
 	RectF destination(0, image->h, image->w, -image->h);
 	((userData *)user)->pushClip();

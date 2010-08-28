@@ -458,5 +458,5 @@ printing document
 تتم حالياً الطباعة
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
+#Pr&int with Adobe Reader...
 

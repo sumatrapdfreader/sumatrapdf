@@ -390,7 +390,6 @@ Zoom factor
 [変更が検出されました。更新しています] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -409,6 +408,7 @@ Zoom factor
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Subject:
 #Title:
 #copying text

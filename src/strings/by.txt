@@ -337,7 +337,6 @@ Zoom Out
 #&Custom Zoom...
 #&Magnification:
 #&Manual
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -366,6 +365,7 @@ Zoom Out
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Select content with Ctrl+left mouse button
 #Send by &email...
 #Show pages continuously

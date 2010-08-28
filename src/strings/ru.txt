@@ -67,9 +67,6 @@ Contributor: Victor Kozyakin
 &Print\tCtrl-P
 Печать\tCtrl-P
 
-&Print with %s...\tCtrl-P
-Печатать с помощью %s...\tCtrl-P
-
 &Print... (denied)
 Печать... (отмена)
 
@@ -357,6 +354,9 @@ Page:
 
 Please wait - rendering...
 Формируется изображение, подождите...
+
+Pr&int with Adobe Reader...
+Печатать с помощью Adobe Reader...
 
 Previous Page
 Предыдущая страница

@@ -112,7 +112,7 @@ static void drawbmp(pdf_page *page, fz_displaylist *list, int pagenum)
 	DeleteObject(SelectObject(hDC, hbmp));
 
 	SetRect(&rc, 0, 0, w, h);
-	bgBrush = CreateSolidBrush(savealpha ? RGB(0, 0, 0) : RGB(0xFF,0xFF,0xFF));
+	bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
 	FillRect(hDC, &rc, bgBrush);
 	DeleteObject(bgBrush);
 
@@ -124,10 +124,10 @@ static void drawbmp(pdf_page *page, fz_displaylist *list, int pagenum)
 	bmi.bmiHeader.biHeight = h;
 	bmi.bmiHeader.biWidth = w;
 	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = savealpha ? 32 : 24;
+	bmi.bmiHeader.biBitCount = 24;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
-	bmpDataLen = savealpha ? w * h * 4 : ((w * 3 + 3) / 4) * 4 * h;
+	bmpDataLen = ((w * 3 + 3) / 4) * 4 * h;
 	bmpData = fz_malloc(bmpDataLen);
 	if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS))
 		die(fz_throw("gdierror: cannot draw page %d in PDF file '%s'", pagenum, filename));

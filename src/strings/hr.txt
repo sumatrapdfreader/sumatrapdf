@@ -456,5 +456,5 @@ printing document
 ispisujem dokument
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
+#Pr&int with Adobe Reader...
 

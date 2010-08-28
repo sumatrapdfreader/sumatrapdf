@@ -366,7 +366,6 @@ Zoom factor
 [检测到改动；刷新中] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -390,6 +389,7 @@ Zoom factor
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Send by &email...
 #Show pages continuously
 #Subject:

@@ -67,9 +67,6 @@ Ban&tuan
 &Print\tCtrl-P
 &Cetak\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Cetak dengan %s...\tCtrl-P
-
 &Print... (denied)
 &Cetak... (ditolak)
 
@@ -357,6 +354,9 @@ Halaman:
 
 Please wait - rendering...
 Harap tunggu - sedang dalam proses...
+
+Pr&int with Adobe Reader...
+Cetak dengan Adobe Reader...
 
 Previous Page
 Halaman Sebelumnya

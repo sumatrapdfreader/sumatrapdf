@@ -333,13 +333,15 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *ctm)
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *ctm, double zoomReal, int rotation)
 {
     fz_matrix ctm2;
     if (!ctm) {
-        float zoom = min(1.0 * (pageRect->right - pageRect->left) / (page->mediabox.x1 - page->mediabox.x0),
-                         1.0 * (pageRect->bottom - pageRect->top) / (page->mediabox.y1 - page->mediabox.y0));
-        ctm2 = viewctm(page, zoom, 0);
+        float zoom = zoomReal / 100.0;
+        if (!zoom)
+            zoom = min(1.0 * (pageRect->right - pageRect->left) / (page->mediabox.x1 - page->mediabox.x0),
+                       1.0 * (pageRect->bottom - pageRect->top) / (page->mediabox.y1 - page->mediabox.y0));
+        ctm2 = viewctm(page, zoom, rotation);
         ctm2 = fz_concat(ctm2, fz_translate(pageRect->left, pageRect->top));
         ctm = &ctm2;
     }

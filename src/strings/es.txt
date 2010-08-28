@@ -458,5 +458,5 @@ printing document
 impresión de documento
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
+#Pr&int with Adobe Reader...
 

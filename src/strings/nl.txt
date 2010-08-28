@@ -71,9 +71,6 @@ Hoofd-/kleine letters toepassen
 &Print\tCtrl-P
 &Afdrukken\tCtrl-P
 
-&Print with %s...\tCtrl-P
-Afdrukken met %s...\tCtrl-P
-
 &Print... (denied)
 Afdrukken... (geweigerd)
 
@@ -361,6 +358,9 @@ Pagina:
 
 Please wait - rendering...
 Een ogenblik geduld - weergeven...
+
+Pr&int with Adobe Reader...
+Afdrukken met Adobe Reader...
 
 Previous Page
 Vorige pagina

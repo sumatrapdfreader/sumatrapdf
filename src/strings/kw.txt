@@ -392,7 +392,6 @@ Faktor-zoum
 [Nowythyansow kevys; owth arnowytha] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -411,6 +410,7 @@ Faktor-zoum
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Subject:
 #Title:
 #copying text

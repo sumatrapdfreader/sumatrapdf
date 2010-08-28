@@ -66,9 +66,6 @@ Contributor: Glenn Wall
 &Print\tCtrl-P
 &Argraffu\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Argraffu gyda %s...\tCtrl-P
-
 &Print... (denied)
 &Argraffu... (gwrthodwyd)
 
@@ -353,6 +350,9 @@ Tudalen:
 
 Please wait - rendering...
 Arhoswch, wrthi'n cyflwyno...
+
+Pr&int with Adobe Reader...
+Argraffu gyda Adobe Reader...
 
 Previous Page
 Tudalen Flaenorol

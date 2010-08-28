@@ -66,9 +66,6 @@ Mật mã:
 &Print\tCtrl-P
 In\tCtrl-P
 
-&Print with %s...\tCtrl-P
-In bằng %s...\tCtrl-P
-
 &Print... (denied)
 &In... (bị từ chối)
 
@@ -356,6 +353,9 @@ Trang:
 
 Please wait - rendering...
 Xin chờ đợi, đang hiện...
+
+Pr&int with Adobe Reader...
+In bằng Adobe Reader...
 
 Previous Page
 Trang trước

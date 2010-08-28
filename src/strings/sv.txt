@@ -69,9 +69,6 @@ Matcha &versaler/gemener
 &Print\tCtrl-P
 Skriv &ut...\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Skriv ut med %s...\tCtrl-P
-
 &Print... (denied)
 &Utskrift... (nekad)
 
@@ -359,6 +356,9 @@ Sida:
 
 Please wait - rendering...
 Ett ögonblick - förbereder...
+
+Pr&int with Adobe Reader...
+Skriv ut med Adobe Reader...
 
 Previous Page
 Föregående sida

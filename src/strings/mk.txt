@@ -65,9 +65,6 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Print\tCtrl-P
 &Печати\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Печати со %s...\tCtrl-P
-
 &Print... (denied)
 &Печати... (denied)
 
@@ -355,6 +352,9 @@ Page:
 
 Please wait - rendering...
 Те молам почекај - создавам приказ...
+
+Pr&int with Adobe Reader...
+Печати со Adobe Reader...
 
 Previous Page
 Претходна страница

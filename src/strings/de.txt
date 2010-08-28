@@ -68,9 +68,6 @@ Nicht &wieder fragen.
 &Print\tCtrl-P
 &Drucken…\tStrg+P
 
-&Print with %s...\tCtrl-P
-&Drucken mit %s…\tStrg+P
-
 &Print... (denied)
 &Drucken… (verweigert)
 
@@ -358,6 +355,9 @@ Seite:
 
 Please wait - rendering...
 Bitte einen Moment Geduld…
+
+Pr&int with Adobe Reader...
+Mit Adobe Reader d&rucken...
 
 Previous Page
 &Vorherige Seite

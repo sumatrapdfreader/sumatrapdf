@@ -67,9 +67,6 @@ Amp&liação:
 &Print\tCtrl-P
 &Imprimir\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Imprimir com %s...\tCtrl-P
-
 &Print... (denied)
 &Imprimir...(rejeitado)
 
@@ -357,6 +354,9 @@ Página:
 
 Please wait - rendering...
 Por favor aguarde - a processar...
+
+Pr&int with Adobe Reader...
+Imprimir com Adobe Reader...
 
 Previous Page
 Página Anterior

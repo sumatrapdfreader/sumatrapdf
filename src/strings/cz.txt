@@ -67,9 +67,6 @@ Rozlišovat velká/malá písmena
 &Print\tCtrl-P
 &Tisk\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Tisk s %s...\tCtrl-P
-
 &Print... (denied)
 &Tisk... (odmítnuto)
 
@@ -357,6 +354,9 @@ Stránka:
 
 Please wait - rendering...
 Prosím čekejte - renderuji...
+
+Pr&int with Adobe Reader...
+Tisk s Adobe Reader...
 
 Previous Page
 Předchozí stránka

@@ -367,7 +367,6 @@ Faktor povečave
 [Spremembe zaznane; osvežitev poteka] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -391,6 +390,7 @@ Faktor povečave
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Send by &email...
 #Show pages continuously
 #Subject:

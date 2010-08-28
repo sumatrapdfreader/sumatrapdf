@@ -214,7 +214,6 @@ Féithigh Amach
 #&No, thanks
 #&Options...
 #&Password:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #&Remember these settings for each document
 #&Settings
@@ -268,6 +267,7 @@ Féithigh Amach
 #Page Size:
 #Page number %u inexistant
 #Please wait - rendering...
+#Pr&int with Adobe Reader...
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button

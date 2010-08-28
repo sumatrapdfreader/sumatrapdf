@@ -381,7 +381,6 @@ Zoom factor
 [Намерени са промени; обновявам] %s
 
 # Untranslated:
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #Application:
 #Author:
@@ -401,6 +400,7 @@ Zoom factor
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Pr&int with Adobe Reader...
 #Send by &email...
 #Subject:
 #Text documents

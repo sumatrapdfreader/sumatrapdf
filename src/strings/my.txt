@@ -311,7 +311,6 @@ mencetak dokumen
 #&Don't ask me again
 #&Find what:
 #&Match case
-#&Print with %s...\tCtrl-P
 #(of %d)
 #Advanced
 #Associate with PDF files?
@@ -341,6 +340,7 @@ mencetak dokumen
 #PDF Producer:
 #Page number %u inexistant
 #Please wait - rendering...
+#Pr&int with Adobe Reader...
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button

@@ -355,7 +355,6 @@ Paliitin/Lumayo
 #&Custom Zoom...
 #&Magnification:
 #&Match case
-#&Print with %s...\tCtrl-P
 #&Print... (denied)
 #&Remember these settings for each document
 #Advanced
@@ -376,6 +375,7 @@ Paliitin/Lumayo
 #No synchronization info at this position
 #P&roperties...\tCtrl-D
 #PDF documents
+#Pr&int with Adobe Reader...
 #Show pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point

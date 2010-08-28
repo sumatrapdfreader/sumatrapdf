@@ -63,9 +63,6 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Print\tCtrl-P
 列印(&P)\tCtrl-P
 
-&Print with %s...\tCtrl-P
-以 %s 列印...(&P)\tCtrl-P
-
 &Print... (denied)
 列印... (已中斷)
 
@@ -344,6 +341,9 @@ Page:
 
 Please wait - rendering...
 請稍等——產生中
+
+Pr&int with Adobe Reader...
+以 Adobe Reader 列印...
 
 Previous Page
 上一頁

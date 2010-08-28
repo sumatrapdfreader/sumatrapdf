@@ -69,9 +69,6 @@ Parola chiave:
 &Print\tCtrl-P
 &Stampa\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Stampa con %s...\tCtrl-P
-
 &Print... (denied)
 &Stampa... (rifiutato)
 
@@ -359,6 +356,9 @@ Pagina:
 
 Please wait - rendering...
 Prego attendere - sto renderizzando...
+
+Pr&int with Adobe Reader...
+Stampa con Adobe Reader...
 
 Previous Page
 Pagina precedente

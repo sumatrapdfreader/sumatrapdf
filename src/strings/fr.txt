@@ -70,9 +70,6 @@ Mot de passe :
 &Print\tCtrl-P
 &Imprimer\tCtrl-P
 
-&Print with %s...\tCtrl-P
-&Imprimer avec %s...\tCtrl-P
-
 &Print... (denied)
 &Imprimer.. (Interdit)
 
@@ -360,6 +357,9 @@ Page:
 
 Please wait - rendering...
 Patientez s'il vous plaît - génération...
+
+Pr&int with Adobe Reader...
+Imprimer avec Adobe Reader...
 
 Previous Page
 Page précédente
