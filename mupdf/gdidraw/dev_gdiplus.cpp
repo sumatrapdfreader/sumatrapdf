@@ -14,7 +14,7 @@ using namespace Gdiplus;
 static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
 
-#define MAX_CLIP_DEPTH 16
+#define MAX_CLIP_DEPTH 32
 
 class userData
 {
@@ -95,27 +95,27 @@ static GraphicsPath *
 gdiplusgetpath(fz_path *path, int evenodd=1)
 {
 	GraphicsPath *gpath = new GraphicsPath(evenodd ? FillModeAlternate : FillModeWinding);
-	POINT points[4] = { 0 };
+	PointF points[3], origin = PointF(0, 0);
 	
 	for (int i = 0; i < path->len; )
 	{
 		switch (path->els[i++].k)
 		{
 		case FZ_MOVETO:
-			points[0].x = path->els[i++].v; points[0].y = path->els[i++].v;
+			origin.X = path->els[i++].v; origin.Y = path->els[i++].v;
 			gpath->StartFigure();
 			break;
 		case FZ_LINETO:
-			points[1].x = path->els[i++].v; points[1].y = path->els[i++].v;
-			gpath->AddLine(points[0].x, points[0].y, points[1].x, points[1].y);
-			points[0] = points[1];
+			points[0].X = path->els[i++].v; points[0].Y = path->els[i++].v;
+			gpath->AddLine(origin.X, origin.Y, points[0].X, points[0].Y);
+			origin = points[0];
 			break;
 		case FZ_CURVETO:
-			points[1].x = path->els[i++].v; points[1].y = path->els[i++].v;
-			points[2].x = path->els[i++].v; points[2].y = path->els[i++].v;
-			points[3].x = path->els[i++].v; points[3].y = path->els[i++].v;
-			gpath->AddBezier(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
-			points[0] = points[3];
+			points[0].X = path->els[i++].v; points[0].Y = path->els[i++].v;
+			points[1].X = path->els[i++].v; points[1].Y = path->els[i++].v;
+			points[2].X = path->els[i++].v; points[2].Y = path->els[i++].v;
+			gpath->AddBezier(origin.X, origin.Y, points[0].X, points[0].Y, points[1].X, points[1].Y, points[2].X, points[2].Y);
+			origin = points[2];
 			break;
 		case FZ_CLOSEPATH:
 			gpath->CloseFigure();
@@ -129,11 +129,7 @@ gdiplusgetpath(fz_path *path, int evenodd=1)
 static Pen *
 gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 {
-	float linewidth = stroke->linewidth * fz_matrixexpansion(ctm);
-	if (linewidth < 0.1f)
-		linewidth = 1.0 / fz_matrixexpansion(ctm);
-	
-	Pen *pen = new Pen(brush, linewidth / (2 * M_SQRT2));
+	Pen *pen = new Pen(brush, stroke->linewidth);
 	
 	pen->SetMiterLimit(stroke->miterlimit);
 	switch (stroke->linecap)
@@ -147,6 +143,13 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 	case 0: pen->SetLineJoin(LineJoinMiter); break;
 	case 1: pen->SetLineJoin(LineJoinRound); break;
 	case 2: pen->SetLineJoin(LineJoinBevel); break;
+	}
+	if (stroke->dashlen > 0)
+	{
+		REAL dashlist[nelem(stroke->dashlist)];
+		for (int i = 0; i < stroke->dashlen; i++)
+			dashlist[i] = stroke->dashlist[i] ? stroke->dashlist[i] * 2 : 0.1;
+		pen->SetDashPattern(dashlist, stroke->dashlen);
 	}
 	
 	return pen;
@@ -169,6 +172,9 @@ gdiplusgetfont(fz_font *font, float height)
 		return NULL;
 	return new Font(&family, height, style);
 }
+
+extern "C" static void
+fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha);
 
 extern "C" static void
 fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
@@ -329,14 +335,13 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 	delete font;
 }
 
-#define T3RES 3.0
-
 static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	/* TODO: the first scan line doesn't seem to be drawn for most/all Type 3 glyphs */
-	fz_matrix size = fz_concat(fz_scale(T3RES, T3RES), text->trm);
+	float res = fz_matrixexpansion(ctm) * 3;
+	fz_matrix size = fz_concat(fz_scale(res, res), text->trm);
 	float fontSize = fz_matrixexpansion(size);
 	ctm = fz_concat(fz_scale(1, -1), ctm);
 	
@@ -347,7 +352,7 @@ gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 		fz_pixmap *glyph = fz_renderglyph(cache, text->font, text->els[i].gid, size);
 		
 		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
-		ctm2 = fz_concat(fz_translate(-glyph->x / T3RES, -glyph->y / T3RES - glyph->h / T3RES), ctm2);
+		ctm2 = fz_concat(fz_translate(-glyph->x / res, -(glyph->y + glyph->h) / res), ctm2);
 		ctm2 = fz_concat(text->trm, ctm2);
 		ctm2 = fz_concat(fz_scale(glyph->w / fontSize, glyph->h / fontSize), ctm2);
 		
@@ -428,8 +433,49 @@ fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
 extern "C" static void
 fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
-	/* TODO: implement shading (or use fz_rendershade) */
 	Graphics *graphics = ((userData *)user)->graphics;
+	
+	Rect clipRect;
+	graphics->GetClipBounds(&clipRect);
+	fz_rect clip = { clipRect.X, clipRect.Y, clipRect.X + clipRect.Width, clipRect.Y + clipRect.Height };
+	clip = fz_transformrect(ctm, clip);
+	
+	fz_rect bounds = fz_boundshade(shade, ctm);
+	fz_bbox bbox = fz_intersectbbox(fz_roundrect(bounds), fz_roundrect(clip));
+	
+	if (!fz_isemptyrect(shade->bbox))
+	{
+		bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
+		bbox = fz_intersectbbox(fz_roundrect(bounds), bbox);
+	}
+	
+	if (fz_isemptyrect(bbox))
+		return;
+	
+	fz_pixmap *dest = fz_newpixmapwithrect(fz_devicergb, bbox);
+	fz_clearpixmap(dest, 0);
+	
+	if (shade->usebackground)
+	{
+		float colorfv[4];
+		fz_convertcolor(shade->cs, shade->background, fz_devicergb, colorfv);
+		colorfv[3] = 1.0;
+		
+		for (int y = bbox.y0; y < bbox.y1; y++)
+		{
+			unsigned char *s = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * 4;
+			for (int x = bbox.x0; x < bbox.x1; x++)
+				for (int i = 0; i < 4; i++)
+					*s++ = colorfv[i] * 255;
+		}
+	}
+	
+	fz_rendershade(shade, ctm, dest, bbox);
+	
+	ctm = fz_concat(fz_scale(dest->w, -dest->h), fz_translate(dest->x, dest->y + dest->h));
+	fz_gdiplusfillimage(user, dest, ctm, alpha);
+	
+	fz_droppixmap(dest);
 }
 
 extern "C" static void
