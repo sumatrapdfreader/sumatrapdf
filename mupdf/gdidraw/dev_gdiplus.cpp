@@ -24,6 +24,7 @@ class userData
 	float _alpha;
 public:
 	Graphics *graphics;
+	fz_glyphcache *cache;
 
 	userData(HDC hDC)
 	{
@@ -34,6 +35,8 @@ public:
 		graphics->SetPageScale(72.0 / graphics->GetDpiY());
 		graphics->SetCompositingMode(CompositingModeSourceOver);
 		
+		cache = NULL;
+		
 		clipCount = 0;
 		_alpha = 1.0;
 	}
@@ -41,6 +44,8 @@ public:
 	~userData()
 	{
 		delete graphics;
+		if (cache)
+			fz_freeglyphcache(cache);
 		assert(clipCount == 0);
 	}
 
@@ -189,21 +194,39 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 }
 
 static Font *
-gdiplusgetfont(fz_font *font, float height)
+gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 {
-	/* TODO: use embedded fonts when available */
-	WCHAR fontName[LF_FACESIZE];
+	WCHAR familyName[LF_FACESIZE];
 	
-	MultiByteToWideChar(CP_UTF8, 0, font->name, -1, fontName, LF_FACESIZE);
-	FontFamily family(fontName);
-	FontStyle style =
-		strstr(font->name, "BoldItalic") || strstr(font->name, "BoldOblique") ? FontStyleBoldItalic :
-		strstr(font->name, "Italic") || strstr(font->name, "Oblique") ? FontStyleItalic :
-		strstr(font->name, "Bold") ? FontStyleBold : FontStyleRegular;
+	assert(collection->GetFamilyCount() == 0);
+	if (font->_data_len != 0)
+	{
+		collection->AddMemoryFont(font->_data, font->_data_len);
+	}
+	else
+	{
+		WCHAR fontPath[MAX_PATH];
+		MultiByteToWideChar(CP_ACP, 0, font->_data, -1, fontPath, nelem(fontPath));
+		collection->AddFontFile(fontPath);
+	}
 	
-	if (!family.IsAvailable())
-		return NULL;
-	return new Font(&family, height, style);
+	if (collection->GetFamilyCount() > 0)
+	{
+		FontFamily family;
+		int found = 0;
+		
+		collection->GetFamilies(1, &family, &found);
+		assert(found == 1);
+		family.GetFamilyName(familyName);
+		return new Font(familyName, height, FontStyleRegular, UnitPixel, collection);
+	}
+	
+	MultiByteToWideChar(CP_UTF8, 0, font->name, -1, familyName, nelem(familyName));
+	FontFamily family(familyName);
+	if (family.IsAvailable())
+		return new Font(&family, height, FontStyleRegular);
+	
+	return NULL;
 }
 
 extern "C" static void
@@ -323,8 +346,9 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 static void
 gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
+	PrivateFontCollection collection;
 	float fontSize = fz_matrixexpansion(text->trm);
-	Font *font = gdiplusgetfont(text->font, fontSize / (gpath ? 1 : M_SQRT2) * 96.0 / graphics->GetDpiY());
+	Font *font = gdiplusgetfont(&collection, text->font, fontSize / (gpath ? 1 : M_SQRT2) * 96.0 / graphics->GetDpiY());
 	
 	if (!font)
 	{
@@ -372,16 +396,18 @@ gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	/* TODO: the first scan line doesn't seem to be drawn for most/all Type 3 glyphs */
+	userData *data = (userData *)user;
+	if (!data->cache)
+		data->cache = fz_newglyphcache();
+	
 	float res = fz_matrixexpansion(ctm) * 3;
 	fz_matrix size = fz_concat(fz_scale(res, res), text->trm);
 	float fontSize = fz_matrixexpansion(size);
 	ctm = fz_concat(fz_scale(1, -1), ctm);
 	
-	fz_glyphcache *cache = fz_newglyphcache();
-	
 	for (int i = 0; i < text->len; i++)
 	{
-		fz_pixmap *glyph = fz_renderglyph(cache, text->font, text->els[i].gid, size);
+		fz_pixmap *glyph = fz_renderglyph(data->cache, text->font, text->els[i].gid, size);
 		
 		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
 		ctm2 = fz_concat(fz_translate(-glyph->x / res, -(glyph->y + glyph->h) / res), ctm2);
@@ -391,8 +417,6 @@ gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 		fz_gdiplusfillimagemask(user, glyph, ctm2, colorspace, color, alpha);
 		fz_droppixmap(glyph);
 	}
-	
-	fz_freeglyphcache(cache);
 }
 
 extern "C" static void
