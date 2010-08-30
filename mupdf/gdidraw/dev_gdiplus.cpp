@@ -210,7 +210,7 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 		collection->AddFontFile(fontPath);
 	}
 	
-	if (collection->GetFamilyCount() > 0)
+	if (collection->GetFamilyCount() > 0 && 0)
 	{
 		FontFamily family;
 		int found = 0;
@@ -218,7 +218,8 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 		collection->GetFamilies(1, &family, &found);
 		assert(found == 1);
 		family.GetFamilyName(familyName);
-		return new Font(familyName, height, FontStyleRegular, UnitPixel, collection);
+		if (family.IsStyleAvailable(FontStyleRegular))
+			return new Font(familyName, height, FontStyleRegular, UnitPixel, collection);
 	}
 	
 	MultiByteToWideChar(CP_UTF8, 0, font->name, -1, familyName, nelem(familyName));
