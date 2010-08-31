@@ -7,6 +7,7 @@ extern "C" {
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
+#include FT_ADVANCES_H
 }
 
 using namespace Gdiplus;
@@ -199,6 +200,7 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 	WCHAR familyName[LF_FACESIZE];
 	
 	assert(collection->GetFamilyCount() == 0);
+	/* TODO: PrivateFontCollection's destructor crashes for some fonts */ if (true) ; else
 	if (font->_data_len != 0)
 	{
 		collection->AddMemoryFont(font->_data, font->_data_len);
@@ -210,7 +212,7 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 		collection->AddFontFile(fontPath);
 	}
 	
-	if (collection->GetFamilyCount() > 0 && 0)
+	if (collection->GetFamilyCount() > 0)
 	{
 		FontFamily family;
 		int found = 0;
@@ -218,8 +220,11 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 		collection->GetFamilies(1, &family, &found);
 		assert(found == 1);
 		family.GetFamilyName(familyName);
-		if (family.IsStyleAvailable(FontStyleRegular))
-			return new Font(familyName, height, FontStyleRegular, UnitPixel, collection);
+		
+		FontStyle styles[] = { FontStyleRegular, FontStyleBold, FontStyleItalic, FontStyleBoldItalic };
+		for (int i = 0; i < nelem(styles); i++)
+			if (family.IsStyleAvailable(styles[i]))
+				return new Font(familyName, height, styles[i], UnitPixel, collection);
 	}
 	
 	MultiByteToWideChar(CP_UTF8, 0, font->name, -1, familyName, nelem(familyName));
@@ -316,11 +321,13 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 	Matrix trm(text->trm.a, text->trm.b, text->trm.c, text->trm.d, text->trm.e, text->trm.f);
 	FT_Face face = (FT_Face)text->font->ftface;
 	FT_Outline *outline = &face->glyph->outline;
+	FT_Set_Char_Size(face, 1000, 1000, 72, 72);
 	FT_Set_Transform(face, NULL, NULL);
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		int fterr = FT_Load_Glyph(face, text->els[i].gid, FT_LOAD_NO_SCALE);
+		int gid = text->els[i].gid;
+		FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
 		if (fterr)
 			continue;
 		
@@ -333,6 +340,15 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 		matrix.Translate(text->els[i].x, text->els[i].y);
 		matrix.Scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM);
 		matrix.Multiply(&trm);
+		
+		if (text->font->ftsubstitute && gid < text->font->widthcount)
+		{
+			FT_Fixed advance = 0;
+			FT_Get_Advance(face, gid, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP, &advance);
+			if (advance)
+				matrix.Scale((float)text->font->widthtable[gid] / advance * 1024, 1);
+		}
+		
 		gpath2->Transform(&matrix);
 		
 		if (!gpath)
@@ -351,6 +367,12 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 	float fontSize = fz_matrixexpansion(text->trm);
 	Font *font = gdiplusgetfont(&collection, text->font, fontSize / (gpath ? 1 : M_SQRT2) * 96.0 / graphics->GetDpiY());
 	
+	if (font && text->len > 0 && text->els[0].ucs == '?')
+	{
+		/* TODO: output text by glyph ID instead of character code */
+		delete font;
+		font = NULL;
+	}
 	if (!font)
 	{
 		gdiplusrendertext(graphics, text, ctm, brush, gpath);
