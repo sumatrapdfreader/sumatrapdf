@@ -1482,7 +1482,8 @@ pdf_runcsifile(pdf_csi *csi, fz_obj *rdb, fz_stream *file, char *buf, int buflen
 			{
 				error = pdf_runkeyword(csi, rdb, buf);
 				if (error)
-					return fz_rethrow(error, "cannot run keyword '%s'", buf);
+					/* SumatraPDF: is this too lenient? */
+					fz_catch(error, "couldn't run keyword '%s', continuing anyway", buf);
 				pdf_clearstack(csi);
 			}
 			break;

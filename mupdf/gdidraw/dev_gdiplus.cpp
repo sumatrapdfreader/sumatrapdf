@@ -10,6 +10,10 @@ extern "C" {
 #include FT_ADVANCES_H
 }
 
+// TODO: using the GDI+ font APIs leads to crashes (e.g. in ~PrivateFontCollection)
+//       and to misrenderings (e.g. of stroked text)
+// #define USE_GDI_FONT_API
+
 using namespace Gdiplus;
 
 static ULONG_PTR m_gdiplusToken;
@@ -50,26 +54,28 @@ public:
 		assert(clipCount == 0);
 	}
 
-	void pushClip(GraphicsPath *gpath, CombineMode combineMode=CombineModeReplace)
-	{
-		assert(clipCount < MAX_CLIP_DEPTH);
-		if (clipCount < MAX_CLIP_DEPTH)
-		{
-			graphics->GetClip(&clips[clipCount++]);
-			clipAlpha[clipCount - 1] = 1.0;
-		}
-		graphics->SetClip(gpath, combineMode);
-	}
-
-	void pushClip(RectF rect, float alpha=1.0)
+	void pushClip(float alpha=1.0)
 	{
 		assert(clipCount < MAX_CLIP_DEPTH);
 		if (clipCount < MAX_CLIP_DEPTH)
 		{
 			graphics->GetClip(&clips[clipCount++]);
 			clipAlpha[clipCount - 1] = alpha;
-			_alpha *= alpha;
 		}
+	}
+
+	void pushClip(GraphicsPath *gpath, CombineMode combineMode=CombineModeReplace)
+	{
+		pushClip(1.0);
+		graphics->SetClip(gpath, combineMode);
+	}
+
+	void pushClip(RectF rect, float alpha=1.0)
+	{
+		if (clipCount < MAX_CLIP_DEPTH)
+			_alpha *= alpha;
+		
+		pushClip(alpha);
 		graphics->SetClip(rect);
 	}
 
@@ -194,13 +200,13 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 	return pen;
 }
 
+#ifdef USE_GDI_FONT_API
 static Font *
 gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 {
 	WCHAR familyName[LF_FACESIZE];
 	
 	assert(collection->GetFamilyCount() == 0);
-	/* TODO: PrivateFontCollection's destructor crashes for some fonts */ if (true) ; else
 	if (font->_data_len != 0)
 	{
 		collection->AddMemoryFont(font->_data, font->_data_len);
@@ -234,6 +240,7 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 	
 	return NULL;
 }
+#endif
 
 extern "C" static void
 fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha);
@@ -280,6 +287,7 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
+	// TODO: this cuts off parts of certain documents
 	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
 	((userData *)user)->pushClip(gpath);
 	
@@ -289,7 +297,7 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 extern "C" static void
 fz_gdiplusclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 {
-	/* TODO: what's the difference to fz_gdiplusclippath? */
+	// TODO: what's the difference to fz_gdiplusclippath?
 	fz_gdiplusclippath(user, path, 0, ctm);
 }
 
@@ -307,7 +315,22 @@ extern "C" static int cubic_to(const FT_Vector *ctrl1, const FT_Vector *ctrl2, c
 }
 extern "C" static int conic_to(const FT_Vector *ctrl, const FT_Vector *to, void *user)
 {
-	return cubic_to(ctrl, ctrl, to, user);
+	FT_Vector from, ctrl1, ctrl2;
+	fz_path *path = (fz_path *)user;
+	
+	assert(path->len > 0);
+	if (path->len == 0)
+		fz_moveto(path, 0, 0);
+	
+	// cf. http://fontforge.sourceforge.net/bezier.html
+	from.x = path->els[path->len - 2].v;
+	from.y = path->els[path->len - 1].v;
+	ctrl1.x = from.x + 2/3 * (ctrl->x - from.x);
+	ctrl1.y = from.y + 2/3 * (ctrl->y - from.y);
+	ctrl2.x = ctrl1.x + 1/3 * (to->x - from.x);
+	ctrl2.y = ctrl1.y + 1/3 * (to->y - from.y);
+	
+	return cubic_to(&ctrl1, &ctrl2, to, user);
 }
 static FT_Outline_Funcs OutlineFuncs = {
 	move_to, line_to, conic_to, cubic_to, 0, 0 /* shift, delta */
@@ -363,13 +386,14 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 static void
 gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
+#ifdef USE_GDI_FONT_API
 	PrivateFontCollection collection;
 	float fontSize = fz_matrixexpansion(text->trm);
-	Font *font = gdiplusgetfont(&collection, text->font, fontSize / (gpath ? 1 : M_SQRT2) * 96.0 / graphics->GetDpiY());
+	Font *font = gdiplusgetfont(&collection, text->font, fontSize / (gpath ? 1 : M_SQRT2 /* ??? */) * 96.0 / graphics->GetDpiY());
 	
 	if (font && text->len > 0 && text->els[0].ucs == '?')
 	{
-		/* TODO: output text by glyph ID instead of character code */
+		// TODO: output text by glyph ID instead of character code
 		delete font;
 		font = NULL;
 	}
@@ -405,20 +429,23 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 		}
 		else
 		{
-			/* TODO: correctly rotate glyphs according to text->trm */
+			// TODO: correctly rotate glyphs according to text->trm
 			PointF origin(text->els[i].x, -text->els[i].y - fontSize);
 			gpath->AddString(out, 1, &fontFamily, font->GetStyle(), font->GetSize(), origin, NULL);
 		}
 	}
 	
 	delete font;
+#else
+	gdiplusrendertext(graphics, text, ctm, brush, gpath);
+#endif
 }
 
 static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	/* TODO: the first scan line doesn't seem to be drawn for most/all Type 3 glyphs */
+	// TODO: the first scan line doesn't seem to be drawn for most/all Type 3 glyphs
 	userData *data = (userData *)user;
 	if (!data->cache)
 		data->cache = fz_newglyphcache();
@@ -498,14 +525,14 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 extern "C" static void
 fz_gdiplusclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
 {
-	/* TODO: what's the difference to fz_gdipluscliptext? */
+	// TODO: what's the difference to fz_gdipluscliptext?
 	fz_gdipluscliptext(user, text, ctm, 0);
 }
 
 extern "C" static void
 fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
 {
-	/* TODO: anything to do here? */
+	// TODO: anything to do here?
 }
 
 extern "C" static void
@@ -568,7 +595,7 @@ fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	RectF destination(0, image->h, image->w, -image->h);
 	ImageAttributes imgAttrs;
 	
-	alpha *= ((userData *)user)->getAlpha();
+	alpha = ((userData *)user)->getAlpha(alpha);
 	if (alpha != 1.0f)
 	{
 		ColorMatrix matrix = { 
@@ -627,7 +654,7 @@ extern "C" static void
 fz_gdiplusbeginmask(void *user, fz_rect rect, int luminosity,
 	fz_colorspace *colorspace, float *colorfv)
 {
-	/* TODO: implement masking */
+	// TODO: implement masking
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
 	((userData *)user)->pushClip(clip);
 }
@@ -642,7 +669,7 @@ extern "C" static void
 fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 	fz_blendmode blendmode, float alpha)
 {
-	/* TODO: implement blending */
+	// TODO: implement blending
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
 	((userData *)user)->pushClip(clip, alpha);
 }
