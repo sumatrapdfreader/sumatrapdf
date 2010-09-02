@@ -100,6 +100,9 @@ static bool             gUseGdiRenderer = false;
 #define SMOOTHSCROLL_DELAY_IN_MS    20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
+#define HIDE_CURSOR_TIMER_ID        3
+#define HIDE_CURSOR_DELAY_IN_MS     3000
+
 #define FIND_STATUS_WIDTH       200 // Default width for the find status window
 #define FIND_STATUS_MARGIN      8
 #define FIND_STATUS_PROGRESS_HEIGHT 5
@@ -3475,12 +3478,11 @@ static void OnDraggingStart(WindowInfo *win, int x, int y)
 
     SetCapture(win->hwndCanvas);
     win->mouseAction = MA_MAYBEDRAGGING;
-    win->dragPrevPosX = x;
-    win->dragPrevPosY = y;
-    win->dragStartX = x;
-    win->dragStartY = y;
+    win->dragStartX = win->dragPrevPosX = x;
+    win->dragStartY = win->dragPrevPosY = y;
     win->linkOnLastButtonDown = win->dm->linkAtPosition(x, y);
-    SetCursor(gCursorDrag);
+    if (GetCursor())
+        SetCursor(gCursorDrag);
     DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
 }
 
@@ -3513,7 +3515,8 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
             win->dragPrevPosX = x;
             win->dragPrevPosY = y;
         }
-        SetCursor(gCursorArrow);
+        if (GetCursor())
+            SetCursor(gCursorArrow);
         ReleaseCapture();
     }
 
@@ -3549,10 +3552,21 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     assert(win->dm);
     if (!win->dm) return;
 
+    if (win->presentation) {
+        SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
+        // shortly display the cursor if the mouse has moved and the cursor is hidden
+        if ((x != win->dragPrevPosX || y != win->dragPrevPosY) && !GetCursor()) {
+            if (win->mouseAction == MA_IDLE)
+                SetCursor(gCursorArrow);
+            else
+                SendMessage(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+        }
+    }
+
     switch (win->mouseAction) {
     case MA_SCROLLING:
-        win->yScrollSpeed = (y - win->dragPrevPosY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-        win->xScrollSpeed = (x - win->dragPrevPosX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        win->yScrollSpeed = (y - win->dragStartY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        win->xScrollSpeed = (x - win->dragStartX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
         break;
     case MA_SELECTING:
         win->selectionRect.dx = x - win->selectionRect.x;
@@ -3572,10 +3586,11 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         dragDy = win->dragPrevPosY - y;
         DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
         WinMoveDocBy(win, dragDx, dragDy);
-        win->dragPrevPosX = x;
-        win->dragPrevPosY = y;
         break;
     }
+
+    win->dragPrevPosX = x;
+    win->dragPrevPosY = y;
 }
 
 static void OnSelectionStart(WindowInfo *win, int x, int y)
@@ -3676,8 +3691,8 @@ static void OnMouseMiddleButtonDown(WindowInfo *win, int x, int y, int key)
 
         // record current mouse position, distance mouse moves
         // from this poition is speed to shift document
-        win->dragPrevPosY = y; 
-        win->dragPrevPosX = x;
+        win->dragStartX = x;
+        win->dragStartY = y; 
         SetCursor(gCursorScroll);
     } else {
         win->mouseAction = MA_IDLE;
@@ -4901,6 +4916,8 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
             win->_windowStateBeforePresentation = WIN_STATE_NORMAL;
         win->presentation = PM_ENABLED;
         win->_tocBeforePresentation = win->dm->_showToc;
+
+        SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
         win->fullScreen = true;
@@ -4960,6 +4977,11 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
     }
     else
         win->fullScreen = false;
+
+    if (wasPresentation) {
+        KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
+        SetCursor(gCursorArrow);
+    }
 
     if (win->dm && (wasPresentation ? win->_tocBeforePresentation : win->_tocBeforeFullScreen))
         win->ShowTocBox();
@@ -6484,7 +6506,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         return TRUE;
                     }
                 }
-            } else if (win && (MA_DRAGGING == win->mouseAction || MA_MAYBEDRAGGING == win->mouseAction)) {
+            } else if (win && (MA_DRAGGING == win->mouseAction || MA_MAYBEDRAGGING == win->mouseAction && !win->presentation)) {
                 SetCursor(gCursorDrag);
                 return TRUE;
             } else if (win && MA_SCROLLING == win->mouseAction) {
@@ -6499,29 +6521,43 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         SetCursor(gCursorHand);
                         return TRUE;
                     }
+                    else if (GetCursor() == gCursorHand) {
+                        SetCursor(gCursorArrow);
+                        return TRUE;
+                    }
                 }
             }
             CreateInfotipForPdfLink(win, NULL);
+            if (win && win->presentation)
+                return TRUE;
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_TIMER:
             assert(win);
             if (win) {
-                if (REPAINT_TIMER_ID == wParam) {
+                switch (wParam) {
+                case REPAINT_TIMER_ID:
                     KillTimer(hwnd, REPAINT_TIMER_ID);
                     WindowInfo_RedrawAll(win);
-                } else if (SMOOTHSCROLL_TIMER_ID == wParam) {
+                    break;
+                case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
                         WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
-                    else
-                    {
+                    else {
                         KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
                         win->yScrollSpeed = 0;
                         win->xScrollSpeed = 0;
                     }
-                }
-                else
+                    break;
+                case HIDE_CURSOR_TIMER_ID:
+                    KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
+                    if (win->presentation)
+                        SetCursor(NULL);
+                    break;
+                case ABOUT_ANIM_TIMER_ID:
                     AnimState_NextFrame(&win->animState);
+                    break;
+                }
             }
             break;
 
