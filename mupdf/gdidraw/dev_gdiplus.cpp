@@ -24,9 +24,8 @@ static LONG m_gdiplusUsage = 0;
 class userData
 {
 	Region clips[MAX_CLIP_DEPTH];
-	float clipAlpha[MAX_CLIP_DEPTH];
+	float clipAlpha[MAX_CLIP_DEPTH + 1];
 	int clipCount;
-	float _alpha;
 public:
 	Graphics *graphics;
 	fz_glyphcache *cache;
@@ -41,9 +40,8 @@ public:
 		graphics->SetCompositingMode(CompositingModeSourceOver);
 		
 		cache = NULL;
-		
 		clipCount = 0;
-		_alpha = 1.0;
+		clipAlpha[clipCount] = 1.0;
 	}
 
 	~userData()
@@ -54,42 +52,28 @@ public:
 		assert(clipCount == 0);
 	}
 
-	void pushClip(float alpha=1.0)
+	void pushClip(Region *rgn, float alpha=1.0, CombineMode combineMode=CombineModeReplace)
 	{
 		assert(clipCount < MAX_CLIP_DEPTH);
 		if (clipCount < MAX_CLIP_DEPTH)
 		{
 			graphics->GetClip(&clips[clipCount++]);
-			clipAlpha[clipCount - 1] = alpha;
+			clipAlpha[clipCount] = clipAlpha[clipCount - 1] * alpha;
 		}
-	}
-
-	void pushClip(GraphicsPath *gpath, CombineMode combineMode=CombineModeReplace)
-	{
-		pushClip(1.0);
-		graphics->SetClip(gpath, combineMode);
-	}
-
-	void pushClip(RectF rect, float alpha=1.0)
-	{
-		if (clipCount < MAX_CLIP_DEPTH)
-			_alpha *= alpha;
 		
-		pushClip(alpha);
-		graphics->SetClip(rect);
+		if (combineMode == CombineModeReplace)
+			rgn->Intersect(&clips[clipCount - 1]);
+		graphics->SetClip(rgn, combineMode);
 	}
 
 	void popClip()
 	{
 		assert(clipCount > 0);
 		if (clipCount > 0)
-		{
 			graphics->SetClip(&clips[--clipCount]);
-			_alpha /= clipAlpha[clipCount];
-		}
 	}
 
-	float getAlpha(float alpha=1.0) { return _alpha * alpha; }
+	float getAlpha(float alpha=1.0) { return clipAlpha[clipCount] * alpha; }
 };
 
 class PixmapBitmap
@@ -287,9 +271,12 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
-	// TODO: this cuts off parts of certain documents
+	// TODO: evenodd clipping is too aggressive (and thus disabled)
 	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
-	((userData *)user)->pushClip(gpath);
+	if (evenodd)
+		((userData *)user)->pushClip(&Region());
+	else
+		((userData *)user)->pushClip(&Region(gpath));
 	
 	delete gpath;
 }
@@ -517,7 +504,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 		gdiplusruntext(graphics, text, ctm, NULL, gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0/*, gpath */);
-	((userData *)user)->pushClip(gpath, accumulate ? CombineModeUnion : CombineModeReplace);
+	((userData *)user)->pushClip(&Region(gpath), 1.0, accumulate ? CombineModeUnion : CombineModeReplace);
 	
 	delete gpath;
 }
@@ -641,7 +628,7 @@ fz_gdiplusclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	gdiplusapplytransform(graphics, ctm);
 	
 	RectF destination(0, image->h, image->w, -image->h);
-	((userData *)user)->pushClip(destination);
+	((userData *)user)->pushClip(&Region(destination));
 }
 
 extern "C" static void
@@ -656,7 +643,7 @@ fz_gdiplusbeginmask(void *user, fz_rect rect, int luminosity,
 {
 	// TODO: implement masking
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
-	((userData *)user)->pushClip(clip);
+	((userData *)user)->pushClip(&Region(clip));
 }
 
 extern "C" static void
@@ -671,7 +658,7 @@ fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 {
 	// TODO: implement blending
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
-	((userData *)user)->pushClip(clip, alpha);
+	((userData *)user)->pushClip(&Region(clip), alpha);
 }
 
 extern "C" static void
