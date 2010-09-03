@@ -142,7 +142,7 @@ public:
     int linkCount();
     void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
     bool hasTocTree() const { 
-        return _outline != NULL; 
+        return _outline != NULL || _attachments != NULL; 
     }
     PdfTocItem *getTocTree();
     fz_matrix viewctm (pdf_page *page, float zoom, int rotate);
@@ -174,6 +174,7 @@ protected:
     void            linkifyPageText(pdf_page *page);
 
     pdf_outline   * _outline;
+    pdf_outline   * _attachments;
     fz_glyphcache * _drawcache;
 };
 

@@ -1198,8 +1198,6 @@ static void AddFileToHistory(const TCHAR *filePath)
     FileHistoryList_Node_InsertHead(&gFileHistoryRoot, node);
 }
 
-extern "C" TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
-
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box.
    Caller needs to free() the result. */

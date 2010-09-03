@@ -1534,7 +1534,7 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
             return utf8_to_tstr(fz_tostrbuf(link->dest));
         case PDF_LLAUNCH:
             obj = fz_dictgets(link->dest, "Type");
-            if (fz_isname(obj) && !strcmp(fz_toname(obj), "FileSpec"))
+            if (fz_isname(obj) && !strcmp(fz_toname(obj), "Filespec"))
                 return utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
             // fall through
         default:
@@ -1554,6 +1554,19 @@ void DisplayModel::goToTocLink(pdf_link* link)
         free(path);
     } else if (PDF_LGOTO == link->kind) {
         goToPdfDest(link->dest);
+    } else if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
+        fz_obj *embedded = fz_dictgets(fz_dictgets(link->dest, "EF"), "F");
+        path = getLinkPath(link);
+        if (path) {
+            tstr_trans_chars(path, _T("/"), _T("\\"));
+            if (tstr_endswithi(path, _T(".pdf"))) {
+                // TODO: load embedded PDF (in new window)
+                free(path);
+                return;
+            }
+        }
+        // TODO: offer to save the attachment to disk
+        free(path);
     } else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         tstr_trans_chars(path, _T("/"), _T("\\"));
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
