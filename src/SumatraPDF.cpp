@@ -5769,7 +5769,7 @@ SIZE TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
 
 #define TOOLBAR_MIN_ICON_SIZE 16
 #define FIND_BOX_WIDTH 160
-#define FIND_BOX_PADDING 3
+
 static void UpdateToolbarFindText(WindowInfo *win)
 {
     const TCHAR *text = _TR("Find:");
@@ -5788,10 +5788,11 @@ static void UpdateToolbarFindText(WindowInfo *win)
     SIZE size = TextSizeInHwnd(win->hwndFindText, text);
     size.cx += 6;
 
+    int padding = GetSystemMetrics(SM_CXEDGE);
     MoveWindow(win->hwndFindText, pos_x, (findWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
     MoveWindow(win->hwndFindBg, pos_x + size.cx, pos_y, findWndDx, findWndDy, false);
-    MoveWindow(win->hwndFindBox, pos_x + size.cx + FIND_BOX_PADDING, (findWndDy - size.cy + 1) / 2 + pos_y,
-        findWndDx - 1.5 * FIND_BOX_PADDING, size.cy, false);
+    MoveWindow(win->hwndFindBox, pos_x + size.cx + padding, (findWndDy - size.cy + 1) / 2 + pos_y,
+        findWndDx - 2 * padding, size.cy, false);
 
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
@@ -5807,7 +5808,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
-                            0, 1, FIND_BOX_WIDTH * win->uiDPIFactor - 2, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
+                            0, 1, FIND_BOX_WIDTH * win->uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE), TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
@@ -5916,10 +5917,11 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     size2.cx += 6;
 
+    int padding = GetSystemMetrics(SM_CXEDGE);
     MoveWindow(win->hwndPageText, pos_x, (pageWndDy - size.cy + 1) / 2 + pos_y, size.cx, size.cy, true);
     MoveWindow(win->hwndPageBg, pos_x + size.cx, pos_y, pageWndDx, pageWndDy, false);
-    MoveWindow(win->hwndPageBox, pos_x + size.cx + FIND_BOX_PADDING, (pageWndDy - size.cy + 1) / 2 + pos_y,
-        pageWndDx - 1.5 * FIND_BOX_PADDING, size.cy, false);
+    MoveWindow(win->hwndPageBox, pos_x + size.cx + padding, (pageWndDy - size.cy + 1) / 2 + pos_y,
+        pageWndDx - 2 * padding, size.cy, false);
     MoveWindow(win->hwndPageTotal, pos_x + size.cx + pageWndDx, (pageWndDy - size.cy + 1) / 2 + pos_y, size2.cx, size.cy, false);
 
     TBBUTTONINFO bi;
@@ -5936,7 +5938,7 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, PAGE_BOX_WIDTH * win->uiDPIFactor - 2, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
+                            0, 1, PAGE_BOX_WIDTH * win->uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE), TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
