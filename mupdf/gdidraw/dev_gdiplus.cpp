@@ -89,7 +89,7 @@ public:
 		pix = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
 		fz_convertpixmap(pixmap, pix);
 		
-		if (pixmap->mask)
+		if (pixmap->mask && pixmap->mask->n == 1 && pix->w * pix->h <= pixmap->mask->w * pixmap->mask->h)
 			for (int i = 0; i < pix->w * pix->h; i++)
 				pix->samples[i * 4 + 3] *= pixmap->mask->samples[i] / 255.0;
 		

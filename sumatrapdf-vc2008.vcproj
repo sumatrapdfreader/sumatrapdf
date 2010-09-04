@@ -651,10 +651,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\mupdf\pdf_open.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\mupdf\pdf_outline.c"
 					>
 				</File>
