@@ -492,9 +492,11 @@ void OnMenuProperties(WindowInfo *win)
     free(tmp);
 
     fileSize = WinFileSizeGet(win->dm->fileName());
-    tmp = FormatPdfSize(fileSize);
-    AddPdfProperty(win, _TR("File Size:"), tmp);
-    free(tmp);
+    if (fileSize != INVALID_FILE_SIZE) {
+        tmp = FormatPdfSize(fileSize);
+        AddPdfProperty(win, _TR("File Size:"), tmp);
+        free(tmp);
+    }
 
     tmp = tstr_printf(_T("%d"), dm->pageCount());
     AddPdfProperty(win, _TR("Number of Pages:"), tmp);

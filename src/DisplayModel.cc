@@ -1528,18 +1528,31 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
 
 TCHAR *DisplayModel::getLinkPath(pdf_link *link)
 {
+    TCHAR *path = NULL;
     fz_obj *obj;
+
     switch (link ? link->kind : -1) {
         case PDF_LURI:
-            return utf8_to_tstr(fz_tostrbuf(link->dest));
+            path = utf8_to_tstr(fz_tostrbuf(link->dest));
+            break;
         case PDF_LLAUNCH:
             obj = fz_dictgets(link->dest, "Type");
-            if (fz_isname(obj) && !strcmp(fz_toname(obj), "Filespec"))
-                return utf8_to_tstr(fz_tostrbuf(fz_dictgets(link->dest, "F")));
-            // fall through
-        default:
-            return NULL;
+            if (!fz_isname(obj) || strcmp(fz_toname(obj), "Filespec") != 0)
+                break;
+            obj = fz_dictgets(link->dest, "UF"); 
+            if (!fz_isstring(obj))
+                obj = fz_dictgets(link->dest, "F"); 
+
+            if (fz_isstring(obj)) {
+                WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
+                path = wstr_to_tstr(ucs2);
+                free(ucs2);
+                tstr_trans_chars(path, _T("/"), _T("\\"));
+            }
+            break;
     }
+
+    return path;
 }
 
 void DisplayModel::goToTocLink(pdf_link* link)
@@ -1555,26 +1568,27 @@ void DisplayModel::goToTocLink(pdf_link* link)
     } else if (PDF_LGOTO == link->kind) {
         goToPdfDest(link->dest);
     } else if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
-        fz_obj *embedded = fz_dictgets(fz_dictgets(link->dest, "EF"), "F");
+        fz_obj *embeddedList = fz_dictgets(link->dest, "EF");
+        fz_obj *embedded = fz_dictgets(embeddedList, "UF");
+        if (!embedded)
+            embedded = fz_dictgets(embeddedList, "F");
         path = getLinkPath(link);
-        if (path) {
-            tstr_trans_chars(path, _T("/"), _T("\\"));
-            if (tstr_endswithi(path, _T(".pdf"))) {
-                // TODO: load embedded PDF (in new window)
-                free(path);
-                return;
-            }
+        if (path && tstr_endswithi(path, _T(".pdf"))) {
+            TCHAR *combinedPath = tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded));
+            SetForegroundWindow(LoadPdf(combinedPath)->hwndFrame);
+            free(combinedPath);
+            free(path);
+            return;
         }
         // TODO: offer to save the attachment to disk
         free(path);
     } else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
-        tstr_trans_chars(path, _T("/"), _T("\\"));
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
             TCHAR *basePath = FilePath_GetDir(fileName());
             TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
             /* TODO: The new window gets pushed to the background */
-            LoadPdf(combinedPath);
+            SetForegroundWindow(LoadPdf(combinedPath)->hwndFrame);
             free(combinedPath);
             free(basePath);
         }

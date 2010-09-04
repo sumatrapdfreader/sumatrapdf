@@ -1882,7 +1882,8 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
 
     if (filePrintEnabled && filePrintAllowed) {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
-        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
+        if (CanViewWithAcrobat(win))
+            EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
     }
     else {
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
@@ -1935,6 +1936,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
             ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
         if (win->dm->needVScroll() || (!win->presentation && !displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
             ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
+        if (!CanSendAsEmailAttachment(win))
+            EnableMenuItem(hmenu, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_GRAYED);
     }
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
@@ -4238,6 +4241,8 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     // Remove the extension so that it can be re-added depending on the chosen filter
     tstr_copy(dstFileName, dimof(dstFileName), FilePath_GetBaseName(srcFileName));
+    // TODO: fix saving embedded PDF documents
+    tstr_trans_chars(dstFileName, _T(":"), _T("_"));
     if (tstr_endswithi(dstFileName, _T(".pdf")))
         dstFileName[lstrlen(dstFileName) - 4] = 0;
 

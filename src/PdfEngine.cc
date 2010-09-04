@@ -309,23 +309,39 @@ PdfEngine::~PdfEngine()
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
-    char *password = NULL;
     fz_error error;
     pdf_xref *xref = NULL;
     _windowInfo = win;
     assert(!_fileName);
     _fileName = tstr_dup(fileName);
 
-    int fd = _topen(fileName, O_BINARY | O_RDONLY);
+    // File names ending in :<digits>:<digits> are interpreted as containing
+    // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
+    TCHAR *embedMarks = NULL;
+    int colonCount = 0;
+    for (TCHAR *c = (TCHAR *)_fileName + tstr_len(_fileName); c > _fileName; c--) {
+        if (*c != ':')
+            continue;
+        if (!_istdigit(*(c + 1)))
+            break;
+        if (++colonCount % 2 == 0)
+            embedMarks = c;
+    }
+
+    if (embedMarks)
+        *embedMarks = '\0';
+    int fd = _topen(_fileName, O_BINARY | O_RDONLY);
+    if (embedMarks)
+        *embedMarks = ':';
+
     if (-1 == fd)
         return false;
     fz_stream *file = fz_openfile(fd);
+OpenEmbeddedFile:
     // TODO: not sure how to handle passwords
-    error = pdf_openxrefwithstream(&xref, file, password);
-    if (error)
-        return false;
+    error = pdf_openxrefwithstream(&xref, file, NULL);
     fz_close(file);
-    if (!xref)
+    if (error || !xref)
         return false;
 
     if (pdf_needspassword(xref)) {
@@ -335,7 +351,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 
         bool okay = false;
         for (int i = 0; !okay && i < 3; i++) {
-            TCHAR *pwd = GetPasswordForFile(win, fileName);
+            TCHAR *pwd = GetPasswordForFile(win, _fileName);
             if (!pwd)
                 // password not given
                 return false;
@@ -356,17 +372,36 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
             return false;
     }
 
-    if (pdf_loadpagetree(xref) != fz_okay)
+    if (embedMarks && *embedMarks) {
+        int num = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
+        int gen = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
+        if (!pdf_isstream(xref, num, gen))
+            return false;
+
+        fz_buffer *buffer;
+        error = pdf_loadstream(&buffer, xref, num, gen);
+        if (error)
+            return false;
+        file = fz_openbuffer(buffer);
+        fz_dropbuffer(buffer);
+
+        pdf_freexref(xref);
+        goto OpenEmbeddedFile;
+    }
+
+    error = pdf_loadpagetree(xref);
+    if (error)
         return false;
+
     EnterCriticalSection(&_xrefAccess);
     _xref = xref;
     _pageCount = pdf_getpagecount(_xref);
     _outline = pdf_loadoutline(_xref);
-    _attachments = pdf_loadattachments(_xref);
     // silently ignore errors from pdf_loadoutline()
     // this information is not critical and checking the
     // error might prevent loading some pdfs that would
     // otherwise get displayed
+    _attachments = pdf_loadattachments(_xref);
     LeaveCriticalSection(&_xrefAccess);
 
     _pages = (pdf_page **)calloc(_pageCount, sizeof(pdf_page *));
