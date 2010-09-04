@@ -458,5 +458,6 @@ tulostetaan asiakirjaa
 
 # Untranslated:
 #&Remember the password for this document
+#Attachment: %s
 #Pr&int with Adobe Reader...
 

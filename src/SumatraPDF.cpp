@@ -70,6 +70,7 @@ static bool             gUseGdiRenderer = false;
 #define WM_APP_FIND_UPDATE     (WM_APP + 13)
 #define WM_APP_FIND_END        (WM_APP + 14)
 #define WM_APP_REPAINT_TOC     (WM_APP + 15)
+#define WM_APP_GOTO_TOC_LINK   (WM_APP + 16)
 
 #ifdef SVN_PRE_RELEASE_VER
 #define ABOUT_BG_COLOR          RGB(255,0,0)
@@ -5564,7 +5565,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
     if (win->dm && item.lParam && (allowExternal || PDF_LGOTO == ((pdf_link *)item.lParam)->kind))
-        win->dm->goToTocLink((pdf_link *)item.lParam);
+        PostMessage(win->hwndFrame, WM_APP_GOTO_TOC_LINK, 0, item.lParam);
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
@@ -6444,6 +6445,12 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
         tstr_cat_s(nmit->pszText, nmit->cchTextMax, _T("\r\n"));
     }
 
+    if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
+        TCHAR *comment = tstr_printf(_TR("Attachment: %s"), path);
+        free(path);
+        path = comment;
+    }
+
     tstr_cat_s(nmit->pszText, nmit->cchTextMax, path);
     free(path);
 }
@@ -7086,6 +7093,11 @@ InitMouseWheelInfo:
                         break;
                 }
             }
+            break;
+
+        case WM_APP_GOTO_TOC_LINK:
+            if (win && win->dm && lParam)
+                win->dm->goToTocLink((pdf_link *)lParam);
             break;
 
         default:

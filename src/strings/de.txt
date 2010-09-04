@@ -119,6 +119,9 @@ Anwendung:
 Associate with PDF files?
 Mit PDF-Dateien verknüpfen?
 
+Attachment: %s
+Anhang: %s
+
 Author:
 Autor:
 

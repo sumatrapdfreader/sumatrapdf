@@ -449,6 +449,7 @@ printing document
 #&Remember the password for this document
 #&Yes
 #(of %d)
+#Attachment: %s
 #No result found around line %u in file %s
 #Searching %d of %d...
 

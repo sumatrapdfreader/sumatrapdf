@@ -458,5 +458,6 @@ argraffu dogfen
 
 # Untranslated:
 #&Remember the password for this document
+#Attachment: %s
 #KB
 

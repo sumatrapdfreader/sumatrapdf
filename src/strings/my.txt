@@ -315,6 +315,7 @@ mencetak dokumen
 #(of %d)
 #Advanced
 #Associate with PDF files?
+#Attachment: %s
 #Author:
 #Back\tAlt+Left Arrow
 #Cannot start inverse search command. Please check the command line in the settings.

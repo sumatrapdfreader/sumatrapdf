@@ -225,6 +225,7 @@ Afastar zoom
 #Advanced
 #All files
 #Application:
+#Attachment: %s
 #Author:
 #Automatic
 #Automatically check for &updates

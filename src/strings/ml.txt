@@ -173,6 +173,7 @@ Zoom Out
 #All files
 #Application:
 #Associate with PDF files?
+#Attachment: %s
 #Author:
 #Automatic
 #Automatically check for &updates

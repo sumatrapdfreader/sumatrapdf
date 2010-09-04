@@ -379,6 +379,7 @@ Zoom factor
 #&Print... (denied)
 #&Remember the password for this document
 #Application:
+#Attachment: %s
 #Author:
 #Back\tAlt+Left Arrow
 #Book view

@@ -450,6 +450,7 @@ printing document
 
 # Untranslated:
 #&Remember the password for this document
+#Attachment: %s
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position

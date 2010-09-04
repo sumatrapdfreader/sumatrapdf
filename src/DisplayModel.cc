@@ -1578,7 +1578,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (path && tstr_endswithi(path, _T(".pdf"))) {
             // open embedded PDF documents in a new window
             TCHAR *combinedPath = tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded));
-            SetForegroundWindow(LoadPdf(combinedPath)->hwndFrame);
+            LoadPdf(combinedPath);
             free(combinedPath);
         } else {
             // offer to save other attachments to a file
@@ -1592,8 +1592,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
         if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
             TCHAR *basePath = FilePath_GetDir(fileName());
             TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
-            /* TODO: The new window gets pushed to the background */
-            SetForegroundWindow(LoadPdf(combinedPath)->hwndFrame);
+            LoadPdf(combinedPath);
             free(combinedPath);
             free(basePath);
         }

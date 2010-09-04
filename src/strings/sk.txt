@@ -442,6 +442,7 @@ prebieha tlač dokumentu
 # Untranslated:
 #&Go to page:
 #&Remember the password for this document
+#Attachment: %s
 #Cannot start inverse search command. Please check the command line in the settings.
 #Couldn't initialize printer
 #No synchronization file found

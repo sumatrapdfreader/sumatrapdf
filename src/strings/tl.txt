@@ -359,6 +359,7 @@ Paliitin/Lumayo
 #&Remember the password for this document
 #&Remember these settings for each document
 #Advanced
+#Attachment: %s
 #Automatically check for &updates
 #Book view
 #Cannot start inverse search command. Please check the command line in the settings.
