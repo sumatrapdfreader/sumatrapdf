@@ -69,6 +69,20 @@ Section "SumatraPDF" SecMain
     WriteRegStr   HKLM "${REG_PATH_UNINST}" "UrlInfoAbout"   "http://blog.kowalczyk.info/software/sumatrapdf/"
     WriteRegDWORD HKLM "${REG_PATH_UNINST}" "NoModify"        1
     WriteRegDWORD HKLM "${REG_PATH_UNINST}" "NoRepair"        1
+
+    ; based on http://stackoverflow.com/questions/317647/using-the-estimatedsize-value-inside-a-program-uninstall-key-to-correctly-display
+    ; get cumulative size of all files in and under install dir
+    ; report the total in KB (decimal)
+    ; place the answer into $0  ($1 and $2 get other info we don't care about)
+    ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+    
+    ; Convert the decimal KB value in $0 to DWORD
+    ; put it right back into $0
+    IntFmt $0 "0x%08X" $0
+    
+    ; Create/Write the reg key with the dword value
+    WriteRegDWORD HKLM "${REG_PATH_UNINST}" "EstimatedSize" "$0"
+
 SectionEnd
 
 ; Optional section (unselected by default)
