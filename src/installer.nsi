@@ -64,6 +64,9 @@ Section "SumatraPDF" SecMain
     WriteRegStr   HKLM "${REG_PATH_UNINST}" "DisplayName"     "${APP}"
     WriteRegStr   HKLM "${REG_PATH_UNINST}" "DisplayVersion"  ${SUMVER}
     WriteRegStr   HKLM "${REG_PATH_UNINST}" "UninstallString" '"$INSTDIR\uninstall.exe"'
+    WriteRegStr   HKLM "${REG_PATH_UNINST}" "DisplayIcon"    "$INSTDIR\${EXE}"
+    WriteRegStr   HKLM "${REG_PATH_UNINST}" "Publisher"      "Krzysztof Kowalczyk"
+    WriteRegStr   HKLM "${REG_PATH_UNINST}" "UrlInfoAbout"   "http://blog.kowalczyk.info/software/sumatrapdf/"
     WriteRegDWORD HKLM "${REG_PATH_UNINST}" "NoModify"        1
     WriteRegDWORD HKLM "${REG_PATH_UNINST}" "NoRepair"        1
 SectionEnd
