@@ -4289,7 +4289,13 @@ static void OnMenuSaveAs(WindowInfo *win)
         write_to_file(realDstFileName, textUTF8BOM, str_len(textUTF8BOM));
         free(textUTF8BOM);
     }
-    // Just copy the file when saving as PDF file
+    // Recreate inexistant PDF files from memory...
+    else if (!file_exists(srcFileName)) {
+        fz_buffer *data = win->dm->pdfEngine->getStreamData();
+        write_to_file(realDstFileName, data->data, data->len);
+        fz_dropbuffer(data);
+    }
+    // ... else just copy the file
     else {
         BOOL ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
         if (ok) {
@@ -4312,6 +4318,34 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     if (realDstFileName != dstFileName)
         free(realDstFileName);
+}
+
+bool DisplayModel::saveStreamAs(fz_buffer *data, const TCHAR *fileName)
+{
+    if (gRestrictedUse)
+        return false;
+
+    TCHAR dstFileName[MAX_PATH] = { 0 };
+    if (fileName)
+        tstr_copy(dstFileName, dimof(dstFileName), fileName);
+
+    TCHAR fileFilter[256] = { 0 };
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
+    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
+    tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
+
+    OPENFILENAME ofn = { 0 };
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = ((WindowInfo *)_pdfSearch->tracker)->hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = fileFilter;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+
+    if (FALSE == GetSaveFileName(&ofn))
+        return false;
+    return !!write_to_file(dstFileName, data->data, data->len);
 }
 
 static void OnMenuOpen(WindowInfo *win)

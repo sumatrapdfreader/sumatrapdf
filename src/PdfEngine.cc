@@ -861,3 +861,22 @@ char *PdfEngine::getPageLayoutName(void)
 {
     return fz_toname(fz_dictgets(fz_dictgets(_xref->trailer, "Root"), "PageLayout"));
 }
+
+fz_buffer *PdfEngine::getStreamData(int num, int gen)
+{
+    fz_stream *stream = NULL;
+    fz_buffer *data = NULL;
+
+    if (num)
+        pdf_openstream(&stream, _xref, num, gen);
+    else
+        stream = fz_keepstream(_xref->file);
+
+    if (stream) {
+        fz_seek(stream, 0, 0);
+        fz_readall(&data, stream, 1024);
+        fz_close(stream);
+    }
+
+    return data;
+}

@@ -276,6 +276,8 @@ public:
     bool            canNavigate(int dir) const;
     void            navigate(int dir);
 
+    bool            saveStreamAs(fz_buffer *data, const TCHAR *fileName);
+
     bool            displayStateFromModel(DisplayState *ds);
 
 protected:

@@ -1576,13 +1576,16 @@ void DisplayModel::goToTocLink(pdf_link* link)
             embedded = fz_dictgets(embeddedList, "F");
         path = getLinkPath(link);
         if (path && tstr_endswithi(path, _T(".pdf"))) {
+            // open embedded PDF documents in a new window
             TCHAR *combinedPath = tstr_printf(_T("%s:%d:%d"), fileName(), fz_tonum(embedded), fz_togen(embedded));
             SetForegroundWindow(LoadPdf(combinedPath)->hwndFrame);
             free(combinedPath);
-            free(path);
-            return;
+        } else {
+            // offer to save other attachments to a file
+            fz_buffer *data = pdfEngine->getStreamData(fz_tonum(embedded), fz_togen(embedded));
+            saveStreamAs(data, path);
+            fz_dropbuffer(data);
         }
-        // TODO: offer to save the attachment to disk
         free(path);
     } else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */

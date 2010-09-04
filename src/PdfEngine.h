@@ -158,6 +158,7 @@ public:
     fz_obj   * getPdfInfo(void) { return _xref ? fz_dictgets(_xref->trailer, "Info") : NULL; }
     int        getPdfVersion(void) const { return _xref->version; }
     char     * getDecryptionKey(void) const { return _decryptionKey ? fz_strdup(_decryptionKey) : NULL; }
+    fz_buffer* getStreamData(int num=0, int gen=0);
 
 protected:
     const TCHAR *_fileName;
