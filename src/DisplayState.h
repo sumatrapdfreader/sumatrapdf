@@ -61,6 +61,7 @@ enum DisplayMode {
 #define PRINT_COMMANDLINE           "PrintCommandLine"
 #define GLOBAL_PREFS_ONLY_STR       "GlobalPrefsOnly"
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
+#define DECRYPTION_KEY_STR          "Decryption Key"
 
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
@@ -68,6 +69,9 @@ enum DisplayMode {
 
 typedef struct DisplayState {
     const TCHAR *       filePath;
+    const char *        decryptionKey; // hex encoded MD5 fingerprint of file content (32 chars) followed by crypt key (64 chars)
+    BOOL                useGlobalValues;
+
     enum DisplayMode    displayMode;
     int                 scrollX;
     int                 scrollY;
@@ -80,7 +84,6 @@ typedef struct DisplayState {
     int                 windowDx;
     int                 windowDy;
     BOOL                showToc;
-    BOOL                useGlobalValues;
 } DisplayState;
 
 void    normalizeRotation(int *rotation);

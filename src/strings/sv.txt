@@ -462,3 +462,6 @@ kopierar text
 printing document
 skriver ut dokumentet
 
+# Untranslated:
+#&Remember the password for this document
+

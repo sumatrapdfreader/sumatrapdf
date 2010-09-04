@@ -451,6 +451,7 @@ printing document
 கோப்பு அக்சிடப்படுகிறது
 
 # Untranslated:
+#&Remember the password for this document
 #Cannot start inverse search command. Please check the command line in the settings.
 #Pr&int with Adobe Reader...
 #Set inverse search command-line

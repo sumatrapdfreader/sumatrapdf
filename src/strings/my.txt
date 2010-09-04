@@ -311,6 +311,7 @@ mencetak dokumen
 #&Don't ask me again
 #&Find what:
 #&Match case
+#&Remember the password for this document
 #(of %d)
 #Advanced
 #Associate with PDF files?

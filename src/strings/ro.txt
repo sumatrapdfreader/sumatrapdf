@@ -172,6 +172,7 @@ Micşorează
 #&Options...
 #&Password:
 #&Print... (denied)
+#&Remember the password for this document
 #&Remember these settings for each document
 #&Settings
 #&Skip this version

@@ -109,6 +109,9 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     const char *filePath = dict_get_str(dict, FILE_STR);
     if (filePath)
         ds->filePath = utf8_to_tstr(filePath);
+    const char *decryptionKey = dict_get_str(dict, DECRYPTION_KEY_STR);
+    if (decryptionKey)
+        ds->decryptionKey = str_dup(decryptionKey);
     if (gGlobalPrefs.m_globalPrefsOnly) {
         ds->useGlobalValues = TRUE;
         return true;
@@ -139,6 +142,8 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     
     DICT_NEW(prefs);
     DICT_ADD_TSTR(prefs, FILE_STR, ds->filePath);
+    if (ds->decryptionKey)
+        DICT_ADD_STR(prefs, DECRYPTION_KEY_STR, ds->decryptionKey);
 
     if (gGlobalPrefs.m_globalPrefsOnly || ds->useGlobalValues) {
         DICT_ADD_INT64(prefs, USE_GLOBAL_VALUES_STR, TRUE);

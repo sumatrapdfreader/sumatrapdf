@@ -457,5 +457,6 @@ printing document
 tulostetaan asiakirjaa
 
 # Untranslated:
+#&Remember the password for this document
 #Pr&int with Adobe Reader...
 

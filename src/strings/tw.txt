@@ -446,6 +446,7 @@ printing document
 
 # Untranslated:
 #&No
+#&Remember the password for this document
 #&Yes
 #(of %d)
 #No result found around line %u in file %s

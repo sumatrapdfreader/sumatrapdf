@@ -458,5 +458,6 @@ printing document
 impresión de documento
 
 # Untranslated:
+#&Remember the password for this document
 #Pr&int with Adobe Reader...
 

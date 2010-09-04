@@ -39,6 +39,7 @@ static void CenterDialog(HWND hDlg)
 typedef struct {
     const TCHAR *  fileName;   /* name of the file for which we need the password */
     TCHAR *        pwdOut;     /* password entered by the user */
+    bool *         remember;   /* remember the password (encrypted) or ask again? */
 } Dialog_GetPassword_Data;
 
 static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -51,13 +52,17 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
         assert(data);
         assert(data->fileName);
         assert(!data->pwdOut);
+
         win_set_text(hDlg, _TR("Enter password"));
         SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
+
         TCHAR *txt = tstr_printf(_TR("Enter password for %s"), data->fileName);
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         free(txt);
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, _T(""));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
+        SetDlgItemText(hDlg, IDC_REMEMBER_PASSWORD, _TR("&Remember the password for this document"));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
@@ -75,6 +80,8 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
                     assert(data);
                     data->pwdOut = win_get_text(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    if (data->remember)
+                        *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 
@@ -92,22 +99,24 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
    NULL if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-TCHAR *Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName)
+TCHAR *Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *rememberPassword)
 {
     int                     dialogResult;
-    Dialog_GetPassword_Data data;
+    Dialog_GetPassword_Data data = { 0 };
     
     assert(fileName);
     if (!fileName) return NULL;
 
     data.fileName = fileName;
-    data.pwdOut = NULL;
+    data.remember = rememberPassword;
+
     dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), win->hwndFrame, Dialog_GetPassword_Proc, (LPARAM)&data);
-    if (DIALOG_OK_PRESSED == dialogResult) {
-        return data.pwdOut;
+    if (DIALOG_OK_PRESSED != dialogResult) {
+        free((void*)data.pwdOut);
+        return NULL;
     }
-    free((void*)data.pwdOut);
-    return NULL;
+
+    return data.pwdOut;
 }
 
 /* For passing data to/from GoToPage dialog */

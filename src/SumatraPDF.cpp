@@ -1199,12 +1199,24 @@ static void AddFileToHistory(const TCHAR *filePath)
 }
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
-   dialog box.
+   dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName)
+TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
+                          pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
 {
+    FileHistoryList *fileFromHistory = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    if (fileFromHistory && fileFromHistory->state.decryptionKey) {
+        DisplayState *ds = &fileFromHistory->state;
+        char *fingerprint = mem_to_hexstr(decryptionKey, 16);
+        *saveKey = memcmp(fingerprint, ds->decryptionKey, str_len(fingerprint)) == 0;
+        free(fingerprint);
+        if (*saveKey && hexstr_to_mem(ds->decryptionKey + 32, xref->crypt->key, sizeof(xref->crypt->key)))
+            return NULL;
+    }
+
+    *saveKey = false;
     fileName = FilePath_GetBaseName(fileName);
-    return Dialog_GetPassword(win, fileName);
+    return Dialog_GetPassword(win, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
 
 /* Return true if this program has been started from "Program Files" directory

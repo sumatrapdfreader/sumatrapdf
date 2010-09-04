@@ -458,3 +458,6 @@ copying text
 printing document
 печатам документ
 
+# Untranslated:
+#&Remember the password for this document
+

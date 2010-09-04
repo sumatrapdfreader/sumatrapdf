@@ -458,3 +458,6 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#&Remember the password for this document
+

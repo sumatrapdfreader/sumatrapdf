@@ -464,3 +464,6 @@ kopieren tekst
 printing document
 afdrukken bestand
 
+# Untranslated:
+#&Remember the password for this document
+

@@ -460,3 +460,6 @@ menyalin teks
 printing document
 mencetak dokumen
 
+# Untranslated:
+#&Remember the password for this document
+

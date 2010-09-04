@@ -444,6 +444,7 @@ Zoom til
 
 # Untranslated:
 #&Print... (denied)
+#&Remember the password for this document
 #Denied Permissions:
 #Pr&int with Adobe Reader...
 #Subject:

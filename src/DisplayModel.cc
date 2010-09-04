@@ -126,6 +126,8 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     ds->scrollX = presMode ? 0 : floor(ss.x + 0.5);
     ds->scrollY = presMode ? 0 : floor(ss.y + 0.5);
 
+    ds->decryptionKey = pdfEngine->getDecryptionKey();
+
     return true;
 }
 
@@ -233,12 +235,12 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
 bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair)
 { 
     assert(fileName);
-    pdfEngine = new PdfEngine();
-    if (!pdfEngine->load(fileName, win, tryrepair)) {
+    PdfEngine *engine = new PdfEngine();
+    if (!engine->load(fileName, win, tryrepair)) {
         delete pdfEngine;
-        pdfEngine = NULL;
         return false;
     }
+    pdfEngine = engine;
 
     if (validPageNo(startPage))
         _startPage = startPage;

@@ -149,6 +149,7 @@
 #define IDC_DIALOG_GET_PASSWORD_EDIT    1004
 #define IDC_GET_PASSWORD_EDIT           1004
 #define IDC_GET_PASSWORD_LABEL          1005
+#define IDC_REMEMBER_PASSWORD           1006
 #define IDC_TOOLBAR                     1006
 #define IDC_REBAR                       1007
 #define IDC_DONT_ASK_ME_AGAIN           1008

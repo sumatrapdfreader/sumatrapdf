@@ -356,6 +356,7 @@ Paliitin/Lumayo
 #&Magnification:
 #&Match case
 #&Print... (denied)
+#&Remember the password for this document
 #&Remember these settings for each document
 #Advanced
 #Automatically check for &updates

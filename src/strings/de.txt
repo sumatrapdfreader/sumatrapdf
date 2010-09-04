@@ -71,6 +71,9 @@ Nicht &wieder fragen.
 &Print... (denied)
 &Drucken… (verweigert)
 
+&Remember the password for this document
+Passwort für dieses Dokument &merken
+
 &Remember these settings for each document
 Ansicht-&Einstellungen für jedes Dokument merken
 

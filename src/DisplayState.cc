@@ -85,6 +85,7 @@ void DisplayState_Init(DisplayState *ds)
 void DisplayState_Free(DisplayState *ds)
 {
     free((void*)ds->filePath);
+    free((void*)ds->decryptionKey);
     DisplayState_Init(ds);
 }
 

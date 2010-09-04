@@ -458,5 +458,6 @@ printing document
 تتم حالياً الطباعة
 
 # Untranslated:
+#&Remember the password for this document
 #Pr&int with Adobe Reader...
 

@@ -462,3 +462,6 @@ Copia testo
 printing document
 Stampa documento
 
+# Untranslated:
+#&Remember the password for this document
+

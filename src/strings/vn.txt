@@ -459,3 +459,6 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#&Remember the password for this document
+

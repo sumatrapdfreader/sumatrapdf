@@ -13,7 +13,7 @@ class WindowInfo;
 
 int     Dialog_GoToPage(WindowInfo *win);
 TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
-TCHAR * Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName);
+TCHAR * Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *rememberPassword);
 int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 

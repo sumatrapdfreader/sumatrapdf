@@ -460,3 +460,6 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#&Remember the password for this document
+

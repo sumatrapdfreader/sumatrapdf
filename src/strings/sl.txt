@@ -368,6 +368,7 @@ Faktor povečave
 
 # Untranslated:
 #&Print... (denied)
+#&Remember the password for this document
 #Application:
 #Author:
 #Back\tAlt+Left Arrow

@@ -460,3 +460,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#&Remember the password for this document
+

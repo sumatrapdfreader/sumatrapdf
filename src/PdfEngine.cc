@@ -4,7 +4,7 @@
 #include "PdfEngine.h"
 
 // in SumatraPDF.cpp
-TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName);
+TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey);
 
 // adapted from pdf_page.c's pdf_loadpageinfo
 fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
@@ -57,7 +57,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     assert(pixmap->n == 4);
     
     bmi = (BITMAPINFO *)malloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    memset(bmi, 0, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    memzero(bmi, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
     
     if (paletted)
     {
@@ -143,13 +143,13 @@ void fz_pixmaptodc(HDC hDC, fz_pixmap *pixmap, fz_rect *dest)
 pdf_outline *pdf_newoutline(char *title, fz_obj *dest)
 {
     pdf_outline *node = (pdf_outline *)fz_malloc(sizeof(pdf_outline));
-    memset(node, 0, sizeof(pdf_outline));
+    memzero(node, sizeof(pdf_outline));
     node->title = title;
 
     fz_obj *type = fz_dictgets(dest, "Type");
     if (fz_isname(type) && !strcmp(fz_toname(type), "Filespec")) {
         node->link = (pdf_link *)fz_malloc(sizeof(pdf_link));
-        memset(node->link, 0, sizeof(pdf_link));
+        memzero(node->link, sizeof(pdf_link));
 
         node->link->kind = PDF_LLAUNCH;
         node->link->dest = fz_keepobj(dest);
@@ -195,6 +195,24 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
     pdf_freeoutline(root);
 
     return first;
+}
+
+void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
+{
+    fz_seek(file, 0, 2);
+    int fileLen = fz_tell(file);
+
+    fz_buffer *buffer;
+    fz_seek(file, 0, 0);
+    fz_readall(&buffer, file, fileLen);
+    assert(fileLen == buffer->len);
+
+    fz_md5 md5;
+    fz_md5init(&md5);
+    fz_md5update(&md5, buffer->data, buffer->len);
+    fz_md5final(&md5, digest);
+
+    fz_dropbuffer(buffer);
 }
 
 
@@ -268,6 +286,7 @@ PdfEngine::PdfEngine() :
         , _pages(NULL)
         , _drawcache(NULL)
         , _windowInfo(NULL)
+        , _decryptionKey(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_xrefAccess);
@@ -305,12 +324,12 @@ PdfEngine::~PdfEngine()
     if (_drawcache)
         fz_freeglyphcache(_drawcache);
     free((void*)_fileName);
+    free((void*)_decryptionKey);
 }
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
     fz_error error;
-    pdf_xref *xref = NULL;
     _windowInfo = win;
     assert(!_fileName);
     _fileName = tstr_dup(fileName);
@@ -339,30 +358,35 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     fz_stream *file = fz_openfile(fd);
 OpenEmbeddedFile:
     // TODO: not sure how to handle passwords
-    error = pdf_openxrefwithstream(&xref, file, NULL);
+    error = pdf_openxrefwithstream(&_xref, file, NULL);
     fz_close(file);
-    if (error || !xref)
+    if (error || !_xref)
         return false;
 
-    if (pdf_needspassword(xref)) {
+    if (pdf_needspassword(_xref)) {
         if (!win)
             // win might not be given if called from pdfbench.cc
             return false;
 
-        bool okay = false;
+        unsigned char digest[16 + 32] = { 0 };
+        pdf_streamfingerprint(_xref->file, digest);
+
+        bool okay = false, saveKey = false;
         for (int i = 0; !okay && i < 3; i++) {
-            TCHAR *pwd = GetPasswordForFile(win, _fileName);
-            if (!pwd)
-                // password not given
-                return false;
+            TCHAR *pwd = GetPasswordForFile(win, _fileName, _xref, digest, &saveKey);
+            if (!pwd) {
+                // password not given or encryption key has been remembered
+                okay = saveKey;
+                break;
+            }
 
             char *pwd_utf8 = tstr_to_utf8(pwd);
             char *pwd_ansi = tstr_to_multibyte(pwd, CP_ACP);
             if (pwd_utf8)
-                okay = !!pdf_authenticatepassword(xref, pwd_utf8);
+                okay = !!pdf_authenticatepassword(_xref, pwd_utf8);
             // for some documents, only the ANSI-encoded password works
             if (!okay && pwd_ansi)
-                okay = !!pdf_authenticatepassword(xref, pwd_ansi);
+                okay = !!pdf_authenticatepassword(_xref, pwd_ansi);
 
             free(pwd_utf8);
             free(pwd_ansi);
@@ -370,31 +394,36 @@ OpenEmbeddedFile:
         }
         if (!okay)
             return false;
+
+        if (saveKey) {
+            memcpy(digest + 16, _xref->crypt->key, 32);
+            _decryptionKey = mem_to_hexstr(digest, sizeof(digest));
+        }
     }
 
     if (embedMarks && *embedMarks) {
         int num = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
         int gen = _ttoi(embedMarks + 1); embedMarks = _tcschr(embedMarks + 1, ':');
-        if (!pdf_isstream(xref, num, gen))
+        if (!pdf_isstream(_xref, num, gen))
             return false;
 
         fz_buffer *buffer;
-        error = pdf_loadstream(&buffer, xref, num, gen);
+        error = pdf_loadstream(&buffer, _xref, num, gen);
         if (error)
             return false;
         file = fz_openbuffer(buffer);
         fz_dropbuffer(buffer);
 
-        pdf_freexref(xref);
+        pdf_freexref(_xref);
+        _xref = NULL;
         goto OpenEmbeddedFile;
     }
 
-    error = pdf_loadpagetree(xref);
+    error = pdf_loadpagetree(_xref);
     if (error)
         return false;
 
     EnterCriticalSection(&_xrefAccess);
-    _xref = xref;
     _pageCount = pdf_getpagecount(_xref);
     _outline = pdf_loadoutline(_xref);
     // silently ignore errors from pdf_loadoutline()
@@ -812,7 +841,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
         dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
 #endif
         if (destRect) {
-            memset(destRect, 0, lineSepLen * sizeof(fz_bbox));
+            memzero(destRect, lineSepLen * sizeof(fz_bbox));
             destRect += lineSepLen;
         }
     }

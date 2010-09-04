@@ -338,6 +338,7 @@ Zoom Out
 #&Magnification:
 #&Manual
 #&Print... (denied)
+#&Remember the password for this document
 #Application:
 #Author:
 #Automatic

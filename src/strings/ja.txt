@@ -391,6 +391,7 @@ Zoom factor
 
 # Untranslated:
 #&Print... (denied)
+#&Remember the password for this document
 #Application:
 #Author:
 #Bytes

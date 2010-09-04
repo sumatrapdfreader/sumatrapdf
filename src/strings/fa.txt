@@ -449,6 +449,7 @@ printing document
 در حل چاپ سند
 
 # Untranslated:
+#&Remember the password for this document
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position
