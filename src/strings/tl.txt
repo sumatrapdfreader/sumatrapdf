@@ -12,8 +12,11 @@ Contributor: Mark Angelo F. Racca
 &About
 Tungkol S&a...
 
-&Check for new version
-Tignan kung may bagong &bersyon
+&Actual Size\tCtrl-1
+Tunay na Laki\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Bumalik\tAlt+Left Arrow
 
 &Close\tCtrl-W
 Isara\tCtrl-W
@@ -27,6 +30,9 @@ Huwag mo na akong tanunging muli
 &Find what:
 Hanapin ang:
 
+&First Page\tHome
+Unang Pahina\tHome
+
 &Go To
 Pumun&ta Sa...
 
@@ -36,8 +42,14 @@ Pumunta sa pahina:
 &Help
 Tulong
 
+&Last Page\tEnd
+Huling Pahina\tEnd
+
 &Manual
 Gabay
+
+&Next Page\tRight Arrow
+Sunod na Pahina\t->
 
 &No
 Hindi
@@ -54,10 +66,13 @@ Mga Pagpipilian
 &Password:
 &Password:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Naunang Pahina\t<-
+
+&Print...\tCtrl-P
 I-&print\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 I-save Bilang...\tCtrl-S
 
 &Settings
@@ -68,9 +83,6 @@ Laktawan ang bersyong ito
 
 &View
 Tignan
-
-&Visit website
-Puntahan ang Websa&yt
 
 &Yes
 Oo
@@ -83,9 +95,6 @@ I-&zoom
 
 About SumatraPDF
 Tungkol sa SumatraPDF
-
-Act&ual Size\tCtrl-1
-Tunay na Laki\tCtrl-1
 
 All files
 Lahat ng files
@@ -102,10 +111,7 @@ May gawa:
 Automatic
 Awtomatiko
 
-Back\tAlt+Left Arrow
-Bumalik\tAlt+Left Arrow
-
-Bookmarks\tF12
+Book&marks\tF12
 Mga Pananda\tF12
 
 Bytes
@@ -117,8 +123,11 @@ Ikansela
 Cannot print this file
 Hindi mai-print ang file
 
-Change language
+Change Language
 Ibahin ang Wika
+
+Check for &Updates
+Tignan kung may bagong &bersyon
 
 Continuous
 Tuloy-tuloy
@@ -126,7 +135,7 @@ Tuloy-tuloy
 Continuous facing
 Tuloy-tuloy na Magkaharap
 
-Contribute translation
+Contribute Translation
 Magbigay ng Saling-wika
 
 Could not open Printer
@@ -153,6 +162,9 @@ Ipasok ang password ng %s
 Error loading PDF file.
 Hindi mabuksan ang PDF file.
 
+F&ullscreen\tCtrl-L
+Pagkasyahin sa buong screen\tCtrl-L
+
 Facing
 Magkaharap
 
@@ -165,6 +177,9 @@ Laki ng file:
 File:
 File:
 
+Fin&d...\tCtrl-F
+Hanapin...\tCtrl-F
+
 Find
 Hanapin
 
@@ -174,32 +189,23 @@ Hanapin ang Susunod
 Find Previous
 Hanapin ang Nauna
 
-Find...\tCtrl-F
-Hanapin...\tCtrl-F
-
 Find:
 Hanapin:
-
-First Page\tHome
-Unang Pahina\tHome
 
 Fit &Page\tCtrl-0
 Ipagkasya ang &Pahina\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Ipagkasya ang Lapad\tCtrl-2
+
 Fit Page
 Ipagkasya ang Pahina
-
-Fit Widt&h\tCtrl-2
-&Ipagkasya ang Lapad\tCtrl-2
 
 Fit Width
 Ipagkasya ang Lapad
 
 Found text at page %d
 Nakita ang salita sa pahina %d
-
-Fullscreen\tCtrl-L
-Pagkasyahin sa buong screen\tCtrl-L
 
 GB
 GB
@@ -210,9 +216,6 @@ Pumunta sa Pahina
 KB
 KB
 
-Last Page\tEnd
-Huling Pahina\tEnd
-
 MB
 MB
 
@@ -222,7 +225,7 @@ Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
 Make SumatraPDF my main PDF reader
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files
 
-Match case
+Match Case
 Ipantay ang Laki ng Titik
 
 Modified:
@@ -236,9 +239,6 @@ Mayroong bagong bersyon.
 
 Next Page
 Sunod na Pahina
-
-Next Page\tRight Arrow
-Sunod na Pahina\t->
 
 No matches were found
 Walang makitang kapareha
@@ -270,14 +270,14 @@ Gumawa ng PDF:
 PDF Version:
 Bersyon ng PDF:
 
+Pa&ge...\tCtrl-G
+Pahina...\tCtrl-G
+
 Page Size:
 Laki ng Page
 
 Page number %u inexistant
 Walang pahinang %u
-
-Page...\tCtrl-G
-Pahina...\tCtrl-G
 
 Page:
 Pahina:
@@ -288,19 +288,16 @@ Maghintay - pinapakita...
 Previous Page
 Naunang Pahina
 
-Previous Page\tLeft Arrow
-Naunang Pahina\t<-
-
 Printing problem.
 May Problema sa Pagpi-print.
 
 Remember &opened files
 Alalahanin ang mga binuksang files
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Iikot Pakaliwa\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Iikot Pakanan\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -309,16 +306,16 @@ Hinahanap: $d ng #d...
 Select content with Ctrl+left mouse button
 Mamili ng content gamit ang Ctrl+left mouse button
 
-Send by &email...
+Send by &E-mail...
 Ipadala sa &email...
 
 Set inverse search command-line
 Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 
-Show toolbar
+Show &Toolbar
 Ipakita ang toolbar
 
-Single page
+Single Page
 Iisang Pahina
 
 SumatraPDF is your main PDF reader
@@ -332,6 +329,9 @@ Pamagat:
 
 View
 Tignan
+
+Visit &Website
+Puntahan ang Websa&yt
 
 Warning
 Babala
@@ -352,7 +352,7 @@ Paliitin/Lumayo
 [May napansing pagbabago; nagre-refresh] %s
 
 # Untranslated:
-#&Custom Zoom...
+#&Copy Selection\tCtrl-C
 #&Magnification:
 #&Match case
 #&Print... (denied)
@@ -361,25 +361,25 @@ Paliitin/Lumayo
 #Advanced
 #Attachment: %s
 #Automatically check for &updates
-#Book view
+#Book View
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
-#Forward\tAlt+Right Arrow
+#F&orward\tAlt+Right Arrow
 #Hint: Use the F3 key for finding again
 #Main PDF reader can't be changed in portable mode
 #No synchronization file found
 #No synchronization info at this position
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF documents
 #Pr&int with Adobe Reader...
-#Show pages continuously
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

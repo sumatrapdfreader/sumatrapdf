@@ -13,14 +13,17 @@ Contributor: Felark (felark@hotmail.com)
 &About
 حول البرنامج
 
-&Check for new version
-&تحقق من وجود تحديثات
+&Actual Size\tCtrl-1
+الحجم الحقيقي\tCtrl-1
+
+&Back\tAlt+Left Arrow
+الخلف\tAlt+Left Arrow
 
 &Close\tCtrl-W
 &إنهاء\tCtrl-W
 
-&Custom Zoom...
-&تنسيق التقريب
+&Copy Selection\tCtrl-C
+نسخ المحدد\tCtrl-C
 
 &Don't ask me again
 &لا تسألني مرةً أخرى
@@ -31,6 +34,9 @@ Contributor: Felark (felark@hotmail.com)
 &Find what:
 &ابحث عن:
 
+&First Page\tHome
+الصفحة الأولى\tHome
+
 &Go To
 &الذهاب إلى
 
@@ -40,6 +46,9 @@ Contributor: Felark (felark@hotmail.com)
 &Help
 &مساعدة
 
+&Last Page\tEnd
+الصفحة الأخيرة\tEnd
+
 &Magnification:
 &التقريب
 
@@ -48,6 +57,9 @@ Contributor: Felark (felark@hotmail.com)
 
 &Match case
 &مطابقة
+
+&Next Page\tRight Arrow
+الصفحة التالية\t->
 
 &No
 &كلا
@@ -64,7 +76,10 @@ Contributor: Felark (felark@hotmail.com)
 &Password:
 &كلمة المرور
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+الصفحة السابقة\t<-
+
+&Print...\tCtrl-P
 &طباعة\tCtrl-P
 
 &Print... (denied)
@@ -73,7 +88,7 @@ Contributor: Felark (felark@hotmail.com)
 &Remember these settings for each document
 &تذكر هذه الإعدادات لكل مستند
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &حفظ باسم...\tCtrl-S
 
 &Settings
@@ -84,9 +99,6 @@ Contributor: Felark (felark@hotmail.com)
 
 &View
 &العرض
-
-&Visit website
-&زيارة موقع البرنامج
 
 &Yes
 &نعم
@@ -99,9 +111,6 @@ Contributor: Felark (felark@hotmail.com)
 
 About SumatraPDF
 SumatraPDF حول برنامج
-
-Act&ual Size\tCtrl-1
-الحجم الحقيقي\tCtrl-1
 
 Advanced
 متقدم
@@ -124,13 +133,10 @@ Automatic
 Automatically check for &updates
 تحقق من التحديثات آلياً
 
-Back\tAlt+Left Arrow
-الخلف\tAlt+Left Arrow
-
-Book view
+Book View
 عرض الكتاب
 
-Bookmarks\tF12
+Book&marks\tF12
 المفضلة\tF12
 
 Bytes
@@ -145,8 +151,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 لايمكن البدء في البحث في الاتجاه المعاكس. يرجى التحقق من الأمر في الإعدادات
 
-Change language
+Change Language
 تغيير اللغة
+
+Check for &Updates
+&تحقق من وجود تحديثات
 
 Continuous
 صفحات متتالية
@@ -157,11 +166,8 @@ Continuous book view
 Continuous facing
 صفحات متقابلة متتالية
 
-Contribute translation
+Contribute Translation
 ساهم في ترجمة البرنامج
-
-Copy Selection\tCtrl-C
-نسخ المحدد\tCtrl-C
 
 Could not open Printer
 تعذر فتح الطابعة
@@ -174,6 +180,9 @@ Couldn't render the page
 
 Created:
 الإنشاء
+
+Custom &Zoom...
+&تنسيق التقريب
 
 Default &Layout:
 الشكل الافتراضي
@@ -202,6 +211,12 @@ Enter password for %s
 Error loading PDF file.
 هناك خطأ في تشغيل الملف
 
+F&orward\tAlt+Right Arrow
+لخلف\tAlt+السهم الأيمن
+
+F&ullscreen\tCtrl-L
+بحجم الشاشة\tCtrl-L
+
 Facing
 صفحتان متقابلتان
 
@@ -214,6 +229,9 @@ File Size:
 File:
 الملف
 
+Fin&d...\tCtrl-F
+بحث...\tCtrl-F
+
 Find
 بحث
 
@@ -223,35 +241,23 @@ Find Next
 Find Previous
 البحث عن السابق
 
-Find...\tCtrl-F
-بحث...\tCtrl-F
-
 Find:
 بحث
-
-First Page\tHome
-الصفحة الأولى\tHome
 
 Fit &Page\tCtrl-0
 مناسب للشاشة\tCtrl-0
 
+Fit &Width\tCtrl-2
+مناسب لعرض الشاشة\tCtrl-2
+
 Fit Page
 مناسب للشاشة
-
-Fit Widt&h\tCtrl-2
-مناسب لعرض الشاشة\tCtrl-2
 
 Fit Width
 مناسب لعرض الشاشة
 
-Forward\tAlt+Right Arrow
-لخلف\tAlt+السهم الأيمن
-
 Found text at page %d
 تم العثور على النص في صفحة %d
-
-Fullscreen\tCtrl-L
-بحجم الشاشة\tCtrl-L
 
 GB
 ج.ب
@@ -265,9 +271,6 @@ Hint: Use the F3 key for finding again
 KB
 ك.ب
 
-Last Page\tEnd
-الصفحة الأخيرة\tEnd
-
 MB
 م.ب
 
@@ -280,7 +283,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 PDF جعل هذا البرنامج القارىء الرئيسي لملفات
 
-Match case
+Match Case
 مناسبة الخط
 
 Modified:
@@ -294,9 +297,6 @@ New version available.
 
 Next Page
 الصفحة التالية
-
-Next Page\tRight Arrow
-الصفحة التالية\t->
 
 No matches were found
 لم يتم العثور على نتائج
@@ -325,7 +325,7 @@ Open
 Open in &Adobe Reader
 فتح الملف بـ أدوبي ريدر
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 الخصائص...\tCtrl-D
 
 PDF Document
@@ -340,14 +340,14 @@ PDF Version:
 PDF documents
 مستندات البي دي إف
 
+Pa&ge...\tCtrl-G
+صفحة محددة\tCtrl-G
+
 Page Size:
 حجم الصفحة
 
 Page number %u inexistant
 رقم الصفحة الحالية %u
-
-Page...\tCtrl-G
-صفحة محددة\tCtrl-G
 
 Page:
 الصفحة
@@ -358,19 +358,16 @@ Please wait - rendering...
 Previous Page
 الصفحة السابقة
 
-Previous Page\tLeft Arrow
-الصفحة السابقة\t<-
-
 Printing problem.
 يوجد مشكلة في الطباعة
 
 Remember &opened files
 تذكر الملفات المفتوحة
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 دوران لليسار\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 دوران لليمين\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -379,22 +376,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 اختر المحتوى باضغط على زر الفأرة الأيسر و Ctrl
 
-Send by &email...
+Send by &E-mail...
 إرسال بلإيميل
 
 Set inverse search command-line
 أمر البحث عن نص باتجاه معاكس
 
-Show pages continuously
+Show &Toolbar
+عرض شريط الأدوات
+
+Show &pages continuously
 عرض الصفحات باستمرار
 
 Show the &bookmarks sidebar when available
 عرض المفضلة في الشريط الجانبي عند وجودها
 
-Show toolbar
-عرض شريط الأدوات
-
-Single page
+Single Page
 صفحة واحدة
 
 Source file %s has no synchronization point
@@ -426,6 +423,9 @@ Unknown source file (%s)
 
 View
 العرض
+
+Visit &Website
+&زيارة موقع البرنامج
 
 Warning
 تحذير

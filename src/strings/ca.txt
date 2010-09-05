@@ -12,14 +12,17 @@ Contributor: Raúl Álvarez
 &About
 &Quant a...
 
-&Check for new version
-&Comprova si hi ha una versió nova
+&Actual Size\tCtrl-1
+Mida &real\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Enrera\tAlt+Left Arrow
 
 &Close\tCtrl-W
 &Tanca\tCtrl-W
 
-&Custom Zoom...
-Zoom per defe&cte...
+&Copy Selection\tCtrl-C
+Copia la selecció\tCtrl-C
 
 &Don't ask me again
 No ho tornis a preguntar
@@ -30,6 +33,9 @@ No ho tornis a preguntar
 &Find what:
 Text a trobar:
 
+&First Page\tHome
+Primera pàgina\tInici
+
 &Go To
 &Vés a
 
@@ -39,6 +45,9 @@ Ves a la pàgina:
 &Help
 &Ajuda
 
+&Last Page\tEnd
+Última pàgina\tFinal
+
 &Magnification:
 Nivell d'augment:
 
@@ -47,6 +56,9 @@ Nivell d'augment:
 
 &Match case
 Respecta les &MAJUSCULES i minuscules
+
+&Next Page\tRight Arrow
+Pàgina següent\t->
 
 &No
 &No
@@ -63,13 +75,16 @@ Respecta les &MAJUSCULES i minuscules
 &Password:
 &Paraula de pas:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Pàgina anterior\t<-
+
+&Print...\tCtrl-P
 &Imprimeix...\tCtrl-P
 
 &Remember these settings for each document
 Conserva aquestes p&referencies per a cada document
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Anomena i de&sa...\tCtrl-S
 
 &Settings
@@ -80,9 +95,6 @@ Omet aquesta versió
 
 &View
 &Visualitza
-
-&Visit website
-Visiteu el lloc &web
 
 &Yes
 Si
@@ -95,9 +107,6 @@ Si
 
 About SumatraPDF
 Quant al SumatraPDF
-
-Act&ual Size\tCtrl-1
-Mida &real\tCtrl-1
 
 Advanced
 Avançats
@@ -120,13 +129,10 @@ Automàtic
 Automatically check for &updates
 Comprova les act&ualitzacions automaticament
 
-Back\tAlt+Left Arrow
-Enrera\tAlt+Left Arrow
-
-Book view
+Book View
 Vista de llibre
 
-Bookmarks\tF12
+Book&marks\tF12
 Punts d'interés\tF12
 
 Bytes
@@ -141,8 +147,11 @@ No es pot imprimir el fitxer
 Cannot start inverse search command. Please check the command line in the settings.
 No es pot iniciar la cerca inversa. Comprovi la linia de comandes a les preferencies.
 
-Change language
-Canvia la llengua (Change language)
+Change Language
+Canvia la llengua (Change Language)
+
+Check for &Updates
+&Comprova si hi ha una versió nova
 
 Continuous
 Contínua
@@ -153,11 +162,8 @@ Vista contínua de llibre
 Continuous facing
 Pàgina doble contínua
 
-Contribute translation
+Contribute Translation
 Contribuïu en la traducció
-
-Copy Selection\tCtrl-C
-Copia la selecció\tCtrl-C
 
 Could not open Printer
 No s'ha pogut accedir a la impressora.
@@ -170,6 +176,9 @@ No es pot representar la pàgina
 
 Created:
 Creat:
+
+Custom &Zoom...
+Zoom per defe&cte...
 
 Default &Layout:
 Vista per defecte:
@@ -195,6 +204,12 @@ Introduiu la constrasenya per a %s
 Error loading PDF file.
 S'ha produït un error en carregar el fitxer.
 
+F&orward\tAlt+Right Arrow
+Endavant\tAlt+Right Arrow
+
+F&ullscreen\tCtrl-L
+Pantalla completa\tCtrl-L
+
 Facing
 Pàgina doble
 
@@ -207,6 +222,9 @@ Mida del fitxer:
 File:
 Fitxer:
 
+Fin&d...\tCtrl-F
+Cerca...\tCtrl-F
+
 Find
 Cerca
 
@@ -216,35 +234,23 @@ Cerca següent
 Find Previous
 Cerca anterior
 
-Find...\tCtrl-F
-Cerca...\tCtrl-F
-
 Find:
 Cerca:
-
-First Page\tHome
-Primera pàgina\tInici
 
 Fit &Page\tCtrl-0
 Ajusta a la pàgina\tCtrl-0
 
+Fit &Width\tCtrl-2
+Ajusta a l'am&plada\tCtrl-2
+
 Fit Page
 Ajusta a la pàgina
-
-Fit Widt&h\tCtrl-2
-Ajusta a l'am&plada\tCtrl-2
 
 Fit Width
 Ajusta a l'amplada
 
-Forward\tAlt+Right Arrow
-Endavant\tAlt+Right Arrow
-
 Found text at page %d
 S'ha trobat el text a la pagina %d
-
-Fullscreen\tCtrl-L
-Pantalla completa\tCtrl-L
 
 GB
 GB
@@ -258,9 +264,6 @@ Suggeriment: Feu servir la tecla F3 per tornar a cercar
 KB
 KB
 
-Last Page\tEnd
-Última pàgina\tFinal
-
 MB
 MB
 
@@ -273,7 +276,7 @@ Voleu que el SumatraPDF sigui el visor predeterminat de fitxers PDF?
 Make SumatraPDF my main PDF reader
 Fes el SumatraPDF el lector de PDF predeterminat
 
-Match case
+Match Case
 Distigeix la caixa
 
 Modified:
@@ -287,9 +290,6 @@ Hi ha una versió nova.
 
 Next Page
 Pàgina següent
-
-Next Page\tRight Arrow
-Pàgina següent\t->
 
 No matches were found
 No s'han trobat coincidencies
@@ -318,7 +318,7 @@ Obre
 Open in &Adobe Reader
 Obre amb Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 P&ropietats...\tCtrl-D
 
 PDF Document
@@ -333,14 +333,14 @@ Versió de PDF:
 PDF documents
 Documents PDF
 
+Pa&ge...\tCtrl-G
+Pàgina...\tCtrl-G
+
 Page Size:
 Mida de pàgina:
 
 Page number %u inexistant
 La pàgina %u no existeix
-
-Page...\tCtrl-G
-Pàgina...\tCtrl-G
 
 Page:
 Pàgina:
@@ -351,19 +351,16 @@ Representant - un moment siusplau...
 Previous Page
 Pàgina anterior
 
-Previous Page\tLeft Arrow
-Pàgina anterior\t<-
-
 Printing problem.
 S'ha produït un problema en la impressió.
 
 Remember &opened files
 Recordar fitxers oberts
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Gira a l'esquerra\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Gira a la dreta\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -372,22 +369,22 @@ Cercant %d de %d...
 Select content with Ctrl+left mouse button
 Seleccionar contigut amb la combinació Ctrl+botó secundari del ratolí
 
-Send by &email...
+Send by &E-mail...
 Envia per correu-e...
 
 Set inverse search command-line
 Cerca cap enrere
 
-Show pages continuously
+Show &Toolbar
+Mostra la barra d'eines
+
+Show &pages continuously
 Mostra les pàgines de forma contínua
 
 Show the &bookmarks sidebar when available
 Mostra la barra lateral de punts d'interes quan estigui disponible
 
-Show toolbar
-Mostra la barra d'eines
-
-Single page
+Single Page
 Pàgina única
 
 Source file %s has no synchronization point
@@ -416,6 +413,9 @@ Fitxer origen desconegut (%s)
 
 View
 Visualitza
+
+Visit &Website
+Visiteu el lloc &web
 
 Warning
 Atenció

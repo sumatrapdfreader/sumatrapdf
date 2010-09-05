@@ -11,11 +11,17 @@ Contributor: Maxin B. John (maxinbjohn@gmail.com)
 &About
 പറ്റി
 
+&Actual Size\tCtrl-1
+ശരിയായ വലിപ്പം\tCtrl-1
+
 &Close\tCtrl-W
 അടയ്ക്കുക\tCtrl-W
 
 &File
 ഫയല്‍
+
+&First Page\tHome
+ആദ്യ താള്‍\tHome
 
 &Go To
 അവിടെ സന്ദര്‍ശിക്കുക
@@ -23,20 +29,26 @@ Contributor: Maxin B. John (maxinbjohn@gmail.com)
 &Help
 സഹായം
 
+&Last Page\tEnd
+അവസാന താള്‍\tEnd
+
+&Next Page\tRight Arrow
+അടുത്ത താള്‍\t->
+
 &Open\tCtrl-O
 തുറക്കുക\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+മുന്‍പുള്ള താള്‍\t<-
+
+&Print...\tCtrl-P
 അച്ചടി\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 എന്ന പേരില്‍ സൂക്ഷിക്കുക\tCtrl-S
 
 &View
 കാഴ്ച്ച
-
-&Visit website
-വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 
 &Zoom
 വലുതാക്കുക
@@ -44,16 +56,13 @@ Contributor: Maxin B. John (maxinbjohn@gmail.com)
 About SumatraPDF
 സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
 
-Act&ual Size\tCtrl-1
-ശരിയായ വലിപ്പം\tCtrl-1
-
 Continuous
 തുടര്‍ച്ച
 
 Continuous facing
 തുടര്‍ച്ചയായി കാണിക്കുക
 
-Contribute translation
+Contribute Translation
 മാക്സിന്‍ ബി ജൊണ്‍
 
 Could not open Printer
@@ -65,11 +74,17 @@ E&xit\tCtrl-Q
 Error loading PDF file.
 PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
 
+F&ullscreen\tCtrl-L
+മുഴുവന്‍ കാണിക്കുക\tCtrl-L
+
 Facing
 തിരിച്ച്
 
 Failed to save a file
 ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
+
+Fin&d...\tCtrl-F
+കണ്ടെത്തുക...\tCtrl-F
 
 Find Next
 അടുത്തത് കണ്ടെത്തുക
@@ -77,32 +92,20 @@ Find Next
 Find Previous
  മുന്‍പുള്ളത് കണ്ടെത്തുക
 
-Find...\tCtrl-F
-കണ്ടെത്തുക...\tCtrl-F
-
 Find:
 കണ്ടെത്തുക:
-
-First Page\tHome
-ആദ്യ താള്‍\tHome
 
 Fit &Page\tCtrl-0
 വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl-0
 
+Fit &Width\tCtrl-2
+അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
+
 Fit Page
 വലിപ്പം പൊരുത്തപ്പെടുത്തുക
 
-Fit Widt&h\tCtrl-2
-അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl-2
-
 Fit Width
 അകലം പൊരുത്തപ്പെടുത്തുക
-
-Fullscreen\tCtrl-L
-മുഴുവന്‍ കാണിക്കുക\tCtrl-L
-
-Last Page\tEnd
-അവസാന താള്‍\tEnd
 
 Make SumatraPDF my main PDF reader
 സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
@@ -110,38 +113,35 @@ Make SumatraPDF my main PDF reader
 Next Page
 അടുത്ത താള്‍
 
-Next Page\tRight Arrow
-അടുത്ത താള്‍\t->
-
 Open
 തുറക്കുക
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 താള്‍...\tCtrl-G
 
 Previous Page
 മുന്‍പുള്ള താള്‍
 
-Previous Page\tLeft Arrow
-മുന്‍പുള്ള താള്‍\t<-
-
 Printing problem.
 അച്ചടിയില് തകരാര്‍
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
  ഇടത്തേക്കു ചരിക്കുക\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 വലത്തേക്കു ചരിക്കുക\tCtrl-Shift-+
 
-Show toolbar
+Show &Toolbar
 റ്റുള്‍ബാര്‍  കാണിക്കുക
 
-Single page
+Single Page
 ഒറ്റ താള്‍
 
 View
 കാഴ്ച്ച
+
+Visit &Website
+വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 
 Zoom In
 വലുതാക്കുക
@@ -150,8 +150,8 @@ Zoom Out
 ചെറുതാക്കുക
 
 # Untranslated:
-#&Check for new version
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Don't ask me again
 #&Find what:
 #&Go to page:
@@ -177,20 +177,20 @@ Zoom Out
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
+#Book&marks\tF12
 #Bookmarks
-#Bookmarks\tF12
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Change language
+#Change Language
+#Check for &Updates
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
@@ -198,10 +198,10 @@ Zoom Out
 #Download
 #Enter password
 #Enter password for %s
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Go to page
@@ -210,7 +210,7 @@ Zoom Out
 #MB
 #Main PDF reader can't be changed in portable mode
 #Make SumatraPDF default application for PDF files?
-#Match case
+#Match Case
 #Modified:
 #New version %s is available. Download new version?
 #New version available.
@@ -222,7 +222,7 @@ Zoom Out
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -235,9 +235,9 @@ Zoom Out
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
+#Send by &E-mail...
 #Set inverse search command-line
-#Show pages continuously
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

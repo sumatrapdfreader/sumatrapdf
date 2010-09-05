@@ -12,14 +12,17 @@ Contributor: Jakob Wadsager
 &About
 &Om
 
-&Check for new version
-&Tjek for ny version
+&Actual Size\tCtrl-1
+Akt&uel størrelse\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Tilbage\tAlt+<-
 
 &Close\tCtrl-W
 &Luk\tCtrl-W
 
-&Custom Zoom...
-&Brugerdefineret zoom...
+&Copy Selection\tCtrl-C
+Kopier markering\tCtrl-C
 
 &Don't ask me again
 &Spørg mig ikke igen
@@ -30,6 +33,9 @@ Contributor: Jakob Wadsager
 &Find what:
 &Find hvad:
 
+&First Page\tHome
+Første side\tHome
+
 &Go To
 &Gå til
 
@@ -39,6 +45,9 @@ Contributor: Jakob Wadsager
 &Help
 &Hjælp
 
+&Last Page\tEnd
+Sidste side\tEnd
+
 &Magnification:
 &Forstørrelse:
 
@@ -47,6 +56,9 @@ Contributor: Jakob Wadsager
 
 &Match case
 &Versalfølsom søgning
+
+&Next Page\tRight Arrow
+Næste side\t->
 
 &No
 &Nej
@@ -63,13 +75,16 @@ Nej, tak
 &Password:
 &Kodeord:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Forrige side\t<-
+
+&Print...\tCtrl-P
 &Udskriv\tCtrl-P
 
 &Remember these settings for each document
 &Husk disse indstillinger for hvert dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Gem som\tCtrl-S
 
 &Settings
@@ -80,9 +95,6 @@ Nej, tak
 
 &View
 &Vis
-
-&Visit website
-&Besøg webside
 
 &Yes
 &Ja
@@ -95,9 +107,6 @@ Nej, tak
 
 About SumatraPDF
 Om SumatraPDF
-
-Act&ual Size\tCtrl-1
-Akt&uel størrelse\tCtrl-1
 
 Advanced
 Advanceret
@@ -114,13 +123,10 @@ Automatisk
 Automatically check for &updates
 Tjek automatisk for &opdateringer
 
-Back\tAlt+Left Arrow
-Tilbage\tAlt+<-
-
-Book view
+Book View
 Bog-visning
 
-Bookmarks\tF12
+Book&marks\tF12
 Bogmærker\tF12
 
 Cancel
@@ -132,8 +138,11 @@ Kan ikke printe denne fil
 Cannot start inverse search command. Please check the command line in the settings.
 Kan ikke starte invers søgning kommandoen. Tjek venligst kommandolinjen i indstillingerne.
 
-Change language
+Change Language
 Skift sprog
+
+Check for &Updates
+&Tjek for ny version
 
 Continuous
 Fortløbende
@@ -144,11 +153,8 @@ Fortløbende bog-visning
 Continuous facing
 Fortløbende modstående
 
-Contribute translation
+Contribute Translation
 Bidgrag med oversættelse
-
-Copy Selection\tCtrl-C
-Kopier markering\tCtrl-C
 
 Could not open Printer
 Kunne ikke åbne printer
@@ -158,6 +164,9 @@ Kunne ikke starte printer
 
 Couldn't render the page
 Kunne ikke vise siden
+
+Custom &Zoom...
+&Brugerdefineret zoom...
 
 Default &Layout:
 Standard &Layout:
@@ -180,11 +189,20 @@ Indtast kodeord for %s
 Error loading PDF file.
 Fejl ved åbning af PDF-fil.
 
+F&orward\tAlt+Right Arrow
+Fremad\tAlt+->
+
+F&ullscreen\tCtrl-L
+Fuldskærmsvisning\tCtrl-L
+
 Facing
 Modstående
 
 Failed to save a file
 Kunne ikke gemme filen.
+
+Fin&d...\tCtrl-F
+Find...\tCtrl-F
 
 Find
 Find
@@ -195,44 +213,29 @@ Find næste
 Find Previous
 Find forrige
 
-Find...\tCtrl-F
-Find...\tCtrl-F
-
 Find:
 Find:
-
-First Page\tHome
-Første side\tHome
 
 Fit &Page\tCtrl-0
 Tilpas &side\tCtrl-0
 
+Fit &Width\tCtrl-2
+Tilpas &bredde\tCtrl-2
+
 Fit Page
 Tilpas side
-
-Fit Widt&h\tCtrl-2
-Tilpas &bredde\tCtrl-2
 
 Fit Width
 Tilpas bredde
 
-Forward\tAlt+Right Arrow
-Fremad\tAlt+->
-
 Found text at page %d
 Fandt tekst på side %d
-
-Fullscreen\tCtrl-L
-Fuldskærmsvisning\tCtrl-L
 
 Go to page
 Gå til side
 
 Hint: Use the F3 key for finding again
 Vink: Brug F3 knappen for at finde igen
-
-Last Page\tEnd
-Sidste side\tEnd
 
 Main PDF reader can't be changed in portable mode
 Standard PDF læser kan ikke ændres i mobil tilstand
@@ -243,7 +246,7 @@ Gør SumatraPDF standardprogram for PDF-filer
 Make SumatraPDF my main PDF reader
 Gør SumatraPDF til min standard PDF læser
 
-Match case
+Match Case
 &Versalfølsom søgning
 
 New version %s is available. Download new version?
@@ -254,9 +257,6 @@ Ny version tilgængelig
 
 Next Page
 Næste side
-
-Next Page\tRight Arrow
-Næste side\t->
 
 No matches were found
 Ingen resultater blev fundet
@@ -288,11 +288,11 @@ PDF dokument
 PDF documents
 PDF dokumenter
 
+Pa&ge...\tCtrl-G
+Side...\tCtrl-G
+
 Page number %u inexistant
 Side nummer %u eksisterer ikke
-
-Page...\tCtrl-G
-Side...\tCtrl-G
 
 Page:
 Side:
@@ -303,19 +303,16 @@ Vent venligst - renderer...
 Previous Page
 Forrige side
 
-Previous Page\tLeft Arrow
-Forrige side\t<-
-
 Printing problem.
 Printer problem
 
 Remember &opened files
 Husk &åbnede filer
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Roter mod vestre\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Roter mod højre\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -324,22 +321,22 @@ Søgning %d af %d...
 Select content with Ctrl+left mouse button
 Vælg indhold med Ctrl+venstre museknap
 
-Send by &email...
+Send by &E-mail...
 Send med &email...
 
 Set inverse search command-line
 Sæt invers søgning komando-linje
 
-Show pages continuously
+Show &Toolbar
+Vis værktøjslinie
+
+Show &pages continuously
 Vis sider fortløbende
 
 Show the &bookmarks sidebar when available
 Vis bogmærkesidepanelet når tilgængeligt
 
-Show toolbar
-Vis værktøjslinie
-
-Single page
+Single Page
 Enkelt side
 
 Source file %s has no synchronization point
@@ -365,6 +362,9 @@ Ukendt kildefil (%s)
 
 View
 Vis
+
+Visit &Website
+&Besøg webside
 
 Warning
 Advarsel
@@ -408,7 +408,7 @@ Zoom faktor
 #MB
 #Modified:
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:

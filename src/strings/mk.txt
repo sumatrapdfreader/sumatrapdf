@@ -11,14 +11,17 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &About
 &За SumatraPDF...
 
-&Check for new version
-&Провери за нова верзија
+&Actual Size\tCtrl-1
+Ре&ална големина\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Назад\tAlt+Left Arrow
 
 &Close\tCtrl-W
 &Затвори\tCtrl-W
 
-&Custom Zoom...
-&Зумирање по избор...
+&Copy Selection\tCtrl-C
+Копирај селекција\tCtrl-C
 
 &Don't ask me again
 Не ме прашувај повторно
@@ -29,6 +32,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Find what:
 &Најди што:
 
+&First Page\tHome
+Прва страница\tHome
+
 &Go To
 П&ојди на
 
@@ -38,6 +44,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Help
 &Помош
 
+&Last Page\tEnd
+Последна страница\tEnd
+
 &Magnification:
 &Зголемување
 
@@ -46,6 +55,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 &Match case
 &Разликувај мали и големи букви
+
+&Next Page\tRight Arrow
+Следна страница\t->
 
 &No
 &Не
@@ -62,7 +74,10 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Password:
 &Лозинка:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Претходна страница\t<-
+
+&Print...\tCtrl-P
 &Печати\tCtrl-P
 
 &Print... (denied)
@@ -71,7 +86,7 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Remember these settings for each document
 &Запомни ги овие поставувања за секој документ
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Зачувај како...\tCtrl-S
 
 &Settings
@@ -82,9 +97,6 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 &View
 &Поглед
-
-&Visit website
-Посети веб-сајт
 
 &Yes
 &Да
@@ -97,9 +109,6 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 About SumatraPDF
 За SumatraPDF
-
-Act&ual Size\tCtrl-1
-Ре&ална големина\tCtrl-1
 
 Advanced
 Напредно
@@ -122,13 +131,10 @@ Automatic
 Automatically check for &updates
 Проверувај за &надградби автоматски
 
-Back\tAlt+Left Arrow
-Назад\tAlt+Left Arrow
-
-Book view
+Book View
 Книга
 
-Bookmarks\tF12
+Book&marks\tF12
 Обележувачи\tF12
 
 Bytes
@@ -143,8 +149,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Не можам да започнам со обратното пребарување. Провери ја командната линија во поставувањата.
 
-Change language
-Смени јазик (Change language)
+Change Language
+Смени јазик (Change Language)
+
+Check for &Updates
+&Провери за нова верзија
 
 Continuous
 Непрекинат приказ
@@ -155,11 +164,8 @@ Continuous book view
 Continuous facing
 Непрекинат приказ со две страници
 
-Contribute translation
+Contribute Translation
 Учествувај во преведувањето на оваа апликација
-
-Copy Selection\tCtrl-C
-Копирај селекција\tCtrl-C
 
 Could not open Printer
 Не можам да пристапам до печатачот
@@ -172,6 +178,9 @@ Couldn't render the page
 
 Created:
 Создадено на:
+
+Custom &Zoom...
+&Зумирање по избор...
 
 Default &Layout:
 Основен &изглед:
@@ -200,6 +209,12 @@ Enter password for %s
 Error loading PDF file.
 Грешка при вчитување на PDF документот.
 
+F&orward\tAlt+Right Arrow
+Напред\tAlt+Right Arrow
+
+F&ullscreen\tCtrl-L
+На цел екран\tCtrl-L
+
 Facing
 Две страници
 
@@ -212,6 +227,9 @@ File Size:
 File:
 Датотека:
 
+Fin&d...\tCtrl-F
+Најди...\tCtrl-F
+
 Find
 Најди
 
@@ -221,35 +239,23 @@ Find Next
 Find Previous
 Најди претходно
 
-Find...\tCtrl-F
-Најди...\tCtrl-F
-
 Find:
 Најди:
-
-First Page\tHome
-Прва страница\tHome
 
 Fit &Page\tCtrl-0
 Прилагоди на &страница\tCtrl-0
 
+Fit &Width\tCtrl-2
+Прилагоди на &ширина\tCtrl-2
+
 Fit Page
 Прилагоди на страница
-
-Fit Widt&h\tCtrl-2
-Прилагоди на &ширина\tCtrl-2
 
 Fit Width
 Прилагоди на ширина
 
-Forward\tAlt+Right Arrow
-Напред\tAlt+Right Arrow
-
 Found text at page %d
 Пронајдов текст на страница %d
-
-Fullscreen\tCtrl-L
-На цел екран\tCtrl-L
 
 GB
 GB
@@ -263,9 +269,6 @@ Hint: Use the F3 key for finding again
 KB
 KB
 
-Last Page\tEnd
-Последна страница\tEnd
-
 MB
 MB
 
@@ -278,7 +281,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Направи го SumatraPDF основен PDF читач
 
-Match case
+Match Case
 Разликувај мали и големи букви
 
 Modified:
@@ -292,9 +295,6 @@ New version available.
 
 Next Page
 Следна страница
-
-Next Page\tRight Arrow
-Следна страница\t->
 
 No matches were found
 Не се пронајдени совпаѓања
@@ -323,7 +323,7 @@ Open
 Open in &Adobe Reader
 Отвори со &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 С&војства...\tCtrl-D
 
 PDF Document
@@ -338,14 +338,14 @@ PDF Version:
 PDF documents
 PDF документи
 
+Pa&ge...\tCtrl-G
+Страница...\tCtrl-G
+
 Page Size:
 Големина на страница:
 
 Page number %u inexistant
 Страница со број %u не постои
-
-Page...\tCtrl-G
-Страница...\tCtrl-G
 
 Page:
 Страница:
@@ -359,19 +359,16 @@ Pr&int with Adobe Reader...
 Previous Page
 Претходна страница
 
-Previous Page\tLeft Arrow
-Претходна страница\t<-
-
 Printing problem.
 Проблем при печатење.
 
 Remember &opened files
 Запомни ги &отворените датотеки
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Ротирај на лево\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Ротирај на десно\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -380,22 +377,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Селектирај со Ctrl и левото копче на глувчето
 
-Send by &email...
+Send by &E-mail...
 Испрати по &е-пошта...
 
 Set inverse search command-line
 Активирај инверзно пребарување
 
-Show pages continuously
+Show &Toolbar
+Прикажи алатник
+
+Show &pages continuously
 Прикажувај страници непрекинато
 
 Show the &bookmarks sidebar when available
 Прикажи го алатникот со &обележувачи кога е достапен
 
-Show toolbar
-Прикажи алатник
-
-Single page
+Single Page
 Една страница
 
 Source file %s has no synchronization point
@@ -427,6 +424,9 @@ Unknown source file (%s)
 
 View
 Поглед
+
+Visit &Website
+Посети веб-сајт
 
 Warning
 Предупредување

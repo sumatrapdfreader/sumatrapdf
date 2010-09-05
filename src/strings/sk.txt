@@ -13,14 +13,17 @@ Contributor: Dalibor
 &About
 &O programe...
 
-&Check for new version
-&Skontrolovať novú verziu
+&Actual Size\tCtrl-1
+Skutočná veľkosť\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Naspäť\tAlt+Left Arrow
 
 &Close\tCtrl-W
 Zatvoriť\tCtrl-W
 
-&Custom Zoom...
-Vlastná zmena veľkosti...
+&Copy Selection\tCtrl-C
+Kopírovať vybrané\tCtrl-C
 
 &Don't ask me again
 Nepýtať sa znova
@@ -31,11 +34,17 @@ Súbor
 &Find what:
 &Vyhľadať:
 
+&First Page\tHome
+Prvá strana\tHome
+
 &Go To
 Ísť na
 
 &Help
 Nápoveda
+
+&Last Page\tEnd
+Posledná strana\tEnd
 
 &Magnification:
 Zobrazenie:
@@ -45,6 +54,9 @@ Príručka
 
 &Match case
 Podľa zadaných kritérií
+
+&Next Page\tRight Arrow
+Ďaľšia strana\t->
 
 &No
 Nie
@@ -61,7 +73,10 @@ Možnosti...
 &Password:
 Heslo:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Predchádzajúca strana\t<-
+
+&Print...\tCtrl-P
 Tlačiť\tCtrl-P
 
 &Print... (denied)
@@ -70,7 +85,7 @@ Tlačiť\tCtrl-P
 &Remember these settings for each document
 Zapamätať si tieto nastavenia pre každý dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Uložiť ako...\tCtrl-S
 
 &Settings
@@ -81,9 +96,6 @@ Preskočiť túto verziu.
 
 &View
 &Zobraziť
-
-&Visit website
-&Navštíviť webovú stránku
 
 &Yes
 Áno
@@ -96,9 +108,6 @@ Zväčšenie
 
 About SumatraPDF
 O programe SumatraPDF
-
-Act&ual Size\tCtrl-1
-Skutočná veľkosť\tCtrl-1
 
 Advanced
 Pokročilé
@@ -121,13 +130,10 @@ Automatická
 Automatically check for &updates
 Automaticky kontrolovať & aktualizácie
 
-Back\tAlt+Left Arrow
-Naspäť\tAlt+Left Arrow
-
-Book view
+Book View
 Zobraziť ako knihu
 
-Bookmarks\tF12
+Book&marks\tF12
 Záložky\tF12
 
 Bytes
@@ -139,8 +145,11 @@ Zrušiť
 Cannot print this file
 Tento súbor nie je možné vytlačiť
 
-Change language
+Change Language
 Zmeniť jazyk
+
+Check for &Updates
+&Skontrolovať novú verziu
 
 Continuous
 Priebežne
@@ -151,11 +160,8 @@ Prebiežný knižný pohľad
 Continuous facing
 Dve strany priebežne
 
-Contribute translation
+Contribute Translation
 Prispieť k prekladu programu
-
-Copy Selection\tCtrl-C
-Kopírovať vybrané\tCtrl-C
 
 Could not open Printer
 Nie je možné otvoriť tlačiareň.
@@ -165,6 +171,9 @@ Nepodarilo sa načítať stranu
 
 Created:
 Vytvorený:
+
+Custom &Zoom...
+Vlastná zmena veľkosti...
 
 Default &Layout:
 Predvolené umiestnenie:
@@ -193,6 +202,12 @@ Zadať heslo pre %s
 Error loading PDF file.
 Chyba pri pokuse načítať PDF súbor.
 
+F&orward\tAlt+Right Arrow
+Dopredu\tAlt+Right Arrow
+
+F&ullscreen\tCtrl-L
+Na celú obrazovku\tCtrl-L
+
 Facing
 Dve strany
 
@@ -205,6 +220,9 @@ Veľksoť súboru:
 File:
 Súbor:
 
+Fin&d...\tCtrl-F
+Hľadať...\tCtrl-F
+
 Find
 Hľadať
 
@@ -214,35 +232,23 @@ Hľadať ďalšie
 Find Previous
 Hľadať predchádzajúce
 
-Find...\tCtrl-F
-Hľadať...\tCtrl-F
-
 Find:
 Hľadať:
-
-First Page\tHome
-Prvá strana\tHome
 
 Fit &Page\tCtrl-0
 Prispôsobiť strane\tCtrl-0
 
+Fit &Width\tCtrl-2
+Na šírku obrazovky\tCtrl-2
+
 Fit Page
 Prispôsobiť strane
-
-Fit Widt&h\tCtrl-2
-Na šírku obrazovky\tCtrl-2
 
 Fit Width
 Na šírku obrazovky
 
-Forward\tAlt+Right Arrow
-Dopredu\tAlt+Right Arrow
-
 Found text at page %d
 Text bol nájdený na strane %d
-
-Fullscreen\tCtrl-L
-Na celú obrazovku\tCtrl-L
 
 GB
 GB
@@ -256,9 +262,6 @@ Rada: Použite klávesu F3 pre ďalšie hľadanie
 KB
 KB
 
-Last Page\tEnd
-Posledná strana\tEnd
-
 MB
 MB
 
@@ -271,7 +274,7 @@ Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 Make SumatraPDF my main PDF reader
 Nastaviť SumatraPDF ako predvolený PDF prehliadač
 
-Match case
+Match Case
 Rozlišovať veľké/malé písmená
 
 Modified:
@@ -285,9 +288,6 @@ Je k dispozícia nová verzia.
 
 Next Page
 Ďaľšia strana
-
-Next Page\tRight Arrow
-Ďaľšia strana\t->
 
 No matches were found
 Nenájdené podľa zodpovedajúcich kritérií
@@ -310,7 +310,7 @@ Otvoriť
 Open in &Adobe Reader
 Otvoriť v programe Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 Vlastnosti...\tCtrl-D
 
 PDF Document
@@ -325,14 +325,14 @@ PDF Verzia:
 PDF documents
 PDF dokumenty
 
+Pa&ge...\tCtrl-G
+Strana...\tCtrl-G
+
 Page Size:
 Veľkosť strany:
 
 Page number %u inexistant
 Číslo strany %u neexistuje
-
-Page...\tCtrl-G
-Strana...\tCtrl-G
 
 Page:
 Strana:
@@ -346,19 +346,16 @@ Vytlačiť s Adobe Reader...
 Previous Page
 Predchádzajúca strana
 
-Previous Page\tLeft Arrow
-Predchádzajúca strana\t<-
-
 Printing problem.
 Problém pri tlači.
 
 Remember &opened files
 Zapamätaťsi &otvorené súbory
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Otočiť vľavo\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Otočiť vpravo\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -367,22 +364,22 @@ Vyhľadáva sa %d z/zo %d...
 Select content with Ctrl+left mouse button
 Označiť obsah s  Ctrl+ľavé tlačitlo myši
 
-Send by &email...
+Send by &E-mail...
 Odoslané od &email...
 
 Set inverse search command-line
 Nastaviť inverzné vyhľadávanie
 
-Show pages continuously
+Show &Toolbar
+Zobraziť panel nástrojov
+
+Show &pages continuously
 Zobraziť strany priebežne
 
 Show the &bookmarks sidebar when available
 Zobraziť bočný panel záložiek pokiaľ je dostupný
 
-Show toolbar
-Zobraziť panel nástrojov
-
-Single page
+Single Page
 Jedna strana
 
 Subject:
@@ -408,6 +405,9 @@ Neznámy zdrojový súbor (%s)
 
 View
 Zobraziť
+
+Visit &Website
+&Navštíviť webovú stránku
 
 Warning
 Upozornenie

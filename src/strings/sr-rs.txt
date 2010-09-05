@@ -12,14 +12,14 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &About
 О програму
 
-&Check for new version
-Провери постојање новије верзије
+&Actual Size\tCtrl-1
+Стварна величина\tCtrl-1
 
 &Close\tCtrl-W
 Затвори\tCtrl-W
 
-&Custom Zoom...
-Изборно увећање...
+&Copy Selection\tCtrl-C
+Копирај изабрано
 
 &Don't ask me again
 Не питај ме поново
@@ -30,6 +30,9 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &Find what:
 Појам:
 
+&First Page\tHome
+Прва страна\tHome
+
 &Go To
 Иди на
 
@@ -39,6 +42,9 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &Help
 Помоћ
 
+&Last Page\tEnd
+Последња страна\tEnd
+
 &Magnification:
 Увећање:
 
@@ -47,6 +53,9 @@ Contributor: Slavko Majski (shobra@gmail.com)
 
 &Match case
 Разликуј мала и велика слова
+
+&Next Page\tRight Arrow
+Следећа страна\t->
 
 &No
 Не
@@ -63,13 +72,16 @@ Contributor: Slavko Majski (shobra@gmail.com)
 &Password:
 Лозинка
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Претходна страна\t<-
+
+&Print...\tCtrl-P
 Штампај\tCtrl-P
 
 &Remember these settings for each document
 Запамти ова подешавања за сваки појединачни документ
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Сачувај као...\tCtrl-S
 
 &Settings
@@ -80,9 +92,6 @@ Contributor: Slavko Majski (shobra@gmail.com)
 
 &View
 Приказ
-
-&Visit website
-Посети Интернет страну
 
 &Yes
 Да
@@ -95,9 +104,6 @@ Contributor: Slavko Majski (shobra@gmail.com)
 
 About SumatraPDF
 О програму SumatraPDF
-
-Act&ual Size\tCtrl-1
-Стварна величина\tCtrl-1
 
 Advanced
 Додатно
@@ -114,7 +120,7 @@ Automatic
 Automatically check for &updates
 Аутоматски проверавај доступност нове верзије
 
-Bookmarks\tF12
+Book&marks\tF12
 Белешке\tF12
 
 Cancel
@@ -126,8 +132,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Не могу да започнем команду инверзне претраге. Проверите командну линију у опцијама.
 
-Change language
-Промени језик (Change language)
+Change Language
+Промени језик (Change Language)
+
+Check for &Updates
+Провери постојање новије верзије
 
 Continuous
 Непрекидно
@@ -135,11 +144,8 @@ Continuous
 Continuous facing
 Непрекидно, две стране
 
-Contribute translation
+Contribute Translation
 Помози у превођењу овог програма
-
-Copy Selection\tCtrl-C
-Копирај изабрано
 
 Could not open Printer
 Штампач није пронађен
@@ -149,6 +155,9 @@ Couldn't initialize printer
 
 Couldn't render the page
 Немогуће приказивање стране
+
+Custom &Zoom...
+Изборно увећање...
 
 Default &Layout:
 Подразумевани приказ
@@ -171,11 +180,17 @@ Enter password for %s
 Error loading PDF file.
 Грешка при учитавању PDF документа
 
+F&ullscreen\tCtrl-L
+Цео екран\tCtrl-L
+
 Facing
 Две стране
 
 Failed to save a file
 Грешка при снимању PDF документа
+
+Fin&d...\tCtrl-F
+Пронађи...\tCtrl-F
 
 Find
 Пронађи
@@ -186,23 +201,17 @@ Find Next
 Find Previous
 Пронађи претходно
 
-Find...\tCtrl-F
-Пронађи...\tCtrl-F
-
 Find:
 Пронађи:
-
-First Page\tHome
-Прва страна\tHome
 
 Fit &Page\tCtrl-0
 Прилагоди страни\tCtrl-0
 
+Fit &Width\tCtrl-2
+Прилагоди ширини\tCtrl-2
+
 Fit Page
 Прилагоди страни
-
-Fit Widt&h\tCtrl-2
-Прилагоди ширини\tCtrl-2
 
 Fit Width
 Прилагоди ширини
@@ -210,17 +219,11 @@ Fit Width
 Found text at page %d
 Текст је пронађен на страни %d
 
-Fullscreen\tCtrl-L
-Цео екран\tCtrl-L
-
 Go to page
 Иди на страну
 
 Hint: Use the F3 key for finding again
 Савет: Користите тастер F3 за наставак претраге
-
-Last Page\tEnd
-Последња страна\tEnd
 
 Main PDF reader can't be changed in portable mode
 Главни PDF читач не може бити промењен у преносивном мôду
@@ -231,7 +234,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Нека SumatraPFD буде главни PDF читач
 
-Match case
+Match Case
 Разликуј мала и велика слова
 
 New version %s is available. Download new version?
@@ -242,9 +245,6 @@ New version available.
 
 Next Page
 Следећа страна
-
-Next Page\tRight Arrow
-Следећа страна\t->
 
 No matches were found
 Појам није пронађен
@@ -276,11 +276,11 @@ PDF документ
 PDF documents
 PDF документи
 
+Pa&ge...\tCtrl-G
+Страна...\tCtrl-G
+
 Page number %u inexistant
 Страна број %u не постоји
-
-Page...\tCtrl-G
-Страна...\tCtrl-G
 
 Page:
 Страна:
@@ -291,19 +291,16 @@ Please wait - rendering...
 Previous Page
 Претходна страна
 
-Previous Page\tLeft Arrow
-Претходна страна\t<-
-
 Printing problem.
 Проблем при штампању
 
 Remember &opened files
 Запамти отворене датотеке
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Ротирај улево\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Ротирај удесно\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -315,16 +312,16 @@ Select content with Ctrl+left mouse button
 Set inverse search command-line
 Омогући инверзну претрагу
 
-Show pages continuously
+Show &Toolbar
+Прикажи траку са алатима
+
+Show &pages continuously
 Непрекидни приказ страна
 
 Show the &bookmarks sidebar when available
 Прикажи траку са белешкама када је доступна
 
-Show toolbar
-Прикажи траку са алатима
-
-Single page
+Single Page
 Једна страна
 
 Source file %s has no synchronization point
@@ -351,6 +348,9 @@ Unknown source file (%s)
 View
 Приказ
 
+Visit &Website
+Посети Интернет страну
+
 Warning
 Упозорење
 
@@ -376,33 +376,33 @@ Zoom factor
 [Промене су примећене; освежавам] %s
 
 # Untranslated:
+#&Back\tAlt+Left Arrow
 #&Print... (denied)
 #&Remember the password for this document
 #Application:
 #Attachment: %s
 #Author:
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Continuous book view
 #Created:
 #Denied Permissions:
 #Document Properties
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#Forward\tAlt+Right Arrow
 #GB
 #KB
 #MB
 #Modified:
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:
 #Pr&int with Adobe Reader...
-#Send by &email...
+#Send by &E-mail...
 #Subject:
 #Title:
 #copying text

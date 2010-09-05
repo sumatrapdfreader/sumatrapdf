@@ -11,8 +11,8 @@ Contributor: Daniel Bohdan
 &About
 П&ро програму...
 
-&Check for new version
-Перевірити, чи є нова версія
+&Actual Size\tCtrl-1
+Справжній розмір\tCtrl-1
 
 &Close\tCtrl-W
 &Закрити\tCtrl-W
@@ -23,19 +23,31 @@ Contributor: Daniel Bohdan
 &File
 &Файл
 
+&First Page\tHome
+Перша сторінка\tHome
+
 &Go To
 &Перейти
 
 &Help
 &Допомога
 
+&Last Page\tEnd
+Остання сторінка\tEnd
+
+&Next Page\tRight Arrow
+Наступна сторінка\t->
+
 &Open\tCtrl-O
 Відкрити\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Попередня сторінка\t<-
+
+&Print...\tCtrl-P
 &Друкувати\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Зб&ерегти як...\tCtrl-S
 
 &Skip this version
@@ -44,26 +56,23 @@ Contributor: Daniel Bohdan
 &View
 Ви&гляд
 
-&Visit website
-Відкрити сайт
-
 &Zoom
 &Збільшення
 
 About SumatraPDF
 Про програму SumatraPDF
 
-Act&ual Size\tCtrl-1
-Справжній розмір\tCtrl-1
-
 Associate with PDF files?
 Асоціювати з PDF-файлами?
 
-Bookmarks\tF12
+Book&marks\tF12
 Закладки\tF12
 
-Change language
-Змінити мову (Change language)
+Change Language
+Змінити мову (Change Language)
+
+Check for &Updates
+Перевірити, чи є нова версія
 
 Continuous
 Протяжний
@@ -71,7 +80,7 @@ Continuous
 Continuous facing
 Дві протяжні сторінки
 
-Contribute translation
+Contribute Translation
 Допоможіть перекласти
 
 Could not open Printer
@@ -89,11 +98,17 @@ Enter password for %s
 Error loading PDF file.
 Помилка відкриття документу.
 
+F&ullscreen\tCtrl-L
+На цілий екран\tCtrl-L
+
 Facing
 Дві сторінки
 
 Failed to save a file
 Не можна зберегти файл.
+
+Fin&d...\tCtrl-F
+Знайти...\tCtrl-F
 
 Find Next
 Знайти наступне
@@ -101,35 +116,23 @@ Find Next
 Find Previous
 Знайти попереднє
 
-Find...\tCtrl-F
-Знайти...\tCtrl-F
-
 Find:
 Знайти:
-
-First Page\tHome
-Перша сторінка\tHome
 
 Fit &Page\tCtrl-0
 Припа&сувати сторінку\tCtrl-0
 
+Fit &Width\tCtrl-2
+Припасувати до &ширини\tCtrl-2
+
 Fit Page
 Припасувати сторінку
-
-Fit Widt&h\tCtrl-2
-Припасувати до &ширини\tCtrl-2
 
 Fit Width
 Припасувати до ширини
 
-Fullscreen\tCtrl-L
-На цілий екран\tCtrl-L
-
 Go to page
 Перейти на сторінку
-
-Last Page\tEnd
-Остання сторінка\tEnd
 
 Make SumatraPDF default application for PDF files?
 Зробити SumatraPDF типовою програмою для PDF-файлів?
@@ -137,7 +140,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Зробити SumatraPDF типовим переглядачем PDF
 
-Match case
+Match Case
 Розрізняти малу й велику літери
 
 New version %s is available. Download new version?
@@ -149,44 +152,41 @@ New version available.
 Next Page
 Наступна сторінка
 
-Next Page\tRight Arrow
-Наступна сторінка\t->
-
 No new version available.
 Новішої версії немає.
 
 Open
 Відкрити
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 До сторінки...\tCtrl-G
 
 Previous Page
 Попередня сторінка
 
-Previous Page\tLeft Arrow
-Попередня сторінка\t<-
-
 Printing problem.
 Помилка друкування.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Повернути ліворуч\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Повернути праворуч\tCtrl-Shift-+
 
 Set inverse search command-line
 Установити зворотній пошук.
 
-Show toolbar
+Show &Toolbar
 Показати пенал
 
-Single page
+Single Page
 Одна сторінка
 
 View
 Вигляд
+
+Visit &Website
+Відкрити сайт
 
 You have the latest version.
 Ви вже маєте найновішу версію.
@@ -201,7 +201,8 @@ Zoom Out
 Зменшити
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -224,27 +225,26 @@ Zoom Out
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -259,7 +259,7 @@ Zoom Out
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -272,8 +272,8 @@ Zoom Out
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

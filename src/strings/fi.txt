@@ -12,14 +12,17 @@ Contributor: Olli
 &About
 &Tietoja
 
-&Check for new version
-Tarkista, onko päivityksiä saatavilla
+&Actual Size\tCtrl-1
+&Todellinen koko\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Takaisin\tAlt+Vasen nuoli
 
 &Close\tCtrl-W
 &Sulje\tCtrl-W
 
-&Custom Zoom...
-&Mukautettu lähennys...
+&Copy Selection\tCtrl-C
+Kopioi valinta\tCtrl-C
 
 &Don't ask me again
 Älä kysy uudestaan
@@ -30,6 +33,9 @@ Tarkista, onko päivityksiä saatavilla
 &Find what:
 &Etsittävä
 
+&First Page\tHome
+Ensimmäinen sivu\tHome
+
 &Go To
 &Siirry
 
@@ -39,6 +45,9 @@ Tarkista, onko päivityksiä saatavilla
 &Help
 &Ohje
 
+&Last Page\tEnd
+Viimeinen sivu\tEnd
+
 &Magnification:
 &Suurennus:
 
@@ -47,6 +56,9 @@ Käyttöohje
 
 &Match case
 Sama kirjainkoko
+
+&Next Page\tRight Arrow
+Seuraava sivu\t->
 
 &No
 &Ei
@@ -63,7 +75,10 @@ Sama kirjainkoko
 &Password:
 &Salasana
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Edellinen sivu\t<-
+
+&Print...\tCtrl-P
 &Tulosta\tCtrl-P
 
 &Print... (denied)
@@ -72,7 +87,7 @@ Sama kirjainkoko
 &Remember these settings for each document
 &Muista nämä asetukset jokaiselle asiakirjalle
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Tallenna nimellä\tCtrl-S
 
 &Settings
@@ -83,9 +98,6 @@ Ohita tämä versio
 
 &View
 &Näytä
-
-&Visit website
-Vieraile ohjelman kotisivuilla
 
 &Yes
 &Kyllä
@@ -98,9 +110,6 @@ Vieraile ohjelman kotisivuilla
 
 About SumatraPDF
 Tietoja SumatraPDF:stä
-
-Act&ual Size\tCtrl-1
-&Todellinen koko\tCtrl-1
 
 Advanced
 Kehittynyt
@@ -123,13 +132,10 @@ Automaattinen
 Automatically check for &updates
 Tarkista pä&ivitykset automaattisesti
 
-Back\tAlt+Left Arrow
-Takaisin\tAlt+Vasen nuoli
-
-Book view
+Book View
 Kirjanäkymä
 
-Bookmarks\tF12
+Book&marks\tF12
 Kirjanmerkit\tF12
 
 Bytes
@@ -144,8 +150,11 @@ Tämän tiedoston tulostus epäonnistui
 Cannot start inverse search command. Please check the command line in the settings.
 Käänteisen hakukomennon aloitus epäonnistui. Tarkista komentorivi asetuksissa.
 
-Change language
-Valitse kieli (Change language)
+Change Language
+Valitse kieli (Change Language)
+
+Check for &Updates
+Tarkista, onko päivityksiä saatavilla
 
 Continuous
 Peräkkäin
@@ -156,11 +165,8 @@ Jatkuva kirjanäkymä
 Continuous facing
 Peräkkäin ja rinnakkain
 
-Contribute translation
+Contribute Translation
 Osallistu suomennosprojektiin
-
-Copy Selection\tCtrl-C
-Kopioi valinta\tCtrl-C
 
 Could not open Printer
 Tulostinta ei löydy
@@ -173,6 +179,9 @@ Sivun tulkinta epäonnistui
 
 Created:
 Tehty:
+
+Custom &Zoom...
+&Mukautettu lähennys...
 
 Default &Layout:
 Oletus&tyyli:
@@ -201,6 +210,12 @@ Kirjoita tiedoston %s salasana
 Error loading PDF file.
 Tiedoston avaus epäonnistui
 
+F&orward\tAlt+Right Arrow
+Seuraava\tAlt+Oikea nuoli
+
+F&ullscreen\tCtrl-L
+Koko näyttö\tCtrl-L
+
 Facing
 Rinnakkain
 
@@ -213,6 +228,9 @@ Tiedoston koko:
 File:
 Tiedosto:
 
+Fin&d...\tCtrl-F
+Etsi...\tCtrl-F
+
 Find
 Etsi
 
@@ -222,35 +240,23 @@ Etsi seuraava
 Find Previous
 Etsi edellinen
 
-Find...\tCtrl-F
-Etsi...\tCtrl-F
-
 Find:
 Etsi:
-
-First Page\tHome
-Ensimmäinen sivu\tHome
 
 Fit &Page\tCtrl-0
 Sovita sivu pystysuunnassa\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Sovita sivu vaakasuunnassa\tCtrl-2
+
 Fit Page
 Sovita sivu pystysuunnassa
-
-Fit Widt&h\tCtrl-2
-&Sovita sivu vaakasuunnassa\tCtrl-2
 
 Fit Width
 Sovita sivu vaakasuunnassa
 
-Forward\tAlt+Right Arrow
-Seuraava\tAlt+Oikea nuoli
-
 Found text at page %d
 Tekstiä löytyi sivulta %d
-
-Fullscreen\tCtrl-L
-Koko näyttö\tCtrl-L
 
 GB
 Gt
@@ -264,9 +270,6 @@ Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
 KB
 Kt
 
-Last Page\tEnd
-Viimeinen sivu\tEnd
-
 MB
 Mt
 
@@ -279,7 +282,7 @@ Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma?
 Make SumatraPDF my main PDF reader
 Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
 
-Match case
+Match Case
 Sama kirjainkoko
 
 Modified:
@@ -293,9 +296,6 @@ Uusi versio saatavilla.
 
 Next Page
 Seuraava sivu
-
-Next Page\tRight Arrow
-Seuraava sivu\t->
 
 No matches were found
 Osumia ei löytynyt
@@ -324,7 +324,7 @@ Avaa
 Open in &Adobe Reader
 Avaa &Adobe Readerissa
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 O&minaisuudet...\tCtrl-D
 
 PDF Document
@@ -339,14 +339,14 @@ PDF-versio:
 PDF documents
 PDF-asiakirjat
 
+Pa&ge...\tCtrl-G
+Sivulle...\tCtrl-G
+
 Page Size:
 Sivun koko:
 
 Page number %u inexistant
 Sivunumeroa %u ei ole olemassa
-
-Page...\tCtrl-G
-Sivulle...\tCtrl-G
 
 Page:
 Sivu:
@@ -357,19 +357,16 @@ Odota - tulkitaan...
 Previous Page
 Edellinen sivu
 
-Previous Page\tLeft Arrow
-Edellinen sivu\t<-
-
 Printing problem.
 Tulostusongelma
 
 Remember &opened files
 Muista &avatut tiedostot
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Käännä vasemmalle\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Käännä oikealle\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -378,22 +375,22 @@ Etsitään %d/%d...
 Select content with Ctrl+left mouse button
 Valitse sisältöä Ctrl+vasemmanpuoleinen hiiren painike
 
-Send by &email...
+Send by &E-mail...
 Lähetä &sähköpostilla
 
 Set inverse search command-line
 Aseta käänteinen haku komentorivillä
 
-Show pages continuously
+Show &Toolbar
+Näytä työkalupalkki
+
+Show &pages continuously
 Näytä sivut jatkuvasti
 
 Show the &bookmarks sidebar when available
 Näytä &kirjanmerkit sivupalkissa, kun saatavilla
 
-Show toolbar
-Näytä työkalupalkki
-
-Single page
+Single Page
 Yksittäinen sivu
 
 Source file %s has no synchronization point
@@ -425,6 +422,9 @@ Tuntematon lähdetiedosto (%s)
 
 View
 Näytä
+
+Visit &Website
+Vieraile ohjelman kotisivuilla
 
 Warning
 Varoitus

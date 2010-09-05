@@ -11,8 +11,8 @@ Contributor: Vicent Adam
 &About
 Al voltant de
 
-&Check for new version
-&Comprovar actualisacions
+&Actual Size\tCtrl-1
+Tam&any Real\tCtrl-1
 
 &Close\tCtrl-W
 &Tancar\tCtrl-W
@@ -23,19 +23,31 @@ No tornar a preguntar
 &File
 &Archiu
 
+&First Page\tHome
+Primera Pàgina\tInici
+
 &Go To
 &Anar a
 
 &Help
 &Ajuda
 
+&Last Page\tEnd
+Última Pàgina\tFi
+
+&Next Page\tRight Arrow
+Pàgina Següent\t->
+
 &Open\tCtrl-O
 Obrir\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Pàgina Anterior\t<-
+
+&Print...\tCtrl-P
 &Imprimir\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Guardar com...\tCtrl-S
 
 &Skip this version
@@ -44,26 +56,23 @@ Botar-se esta versió.
 &View
 &Vore
 
-&Visit website
-&Visitar Lloc Web
-
 &Zoom
 &Zoom
 
 About SumatraPDF
 Al voltant de SumatraPDF
 
-Act&ual Size\tCtrl-1
-Tam&any Real\tCtrl-1
-
 Associate with PDF files?
 ¿Associar en archius PDF?
 
-Bookmarks\tF12
+Book&marks\tF12
 Marcadors\tF12
 
-Change language
-Canviar Idioma (Change language)
+Change Language
+Canviar Idioma (Change Language)
+
+Check for &Updates
+&Comprovar actualisacions
 
 Continuous
 Contínua
@@ -71,7 +80,7 @@ Contínua
 Continuous facing
 Pàgina Doble Contínua
 
-Contribute translation
+Contribute Translation
 Contribuir en la traducció
 
 Could not open Printer
@@ -89,11 +98,17 @@ Posar contrasenya per a %s
 Error loading PDF file.
 Erro al Carregar l'Archiu PDF.
 
+F&ullscreen\tCtrl-L
+Pantalla Completa\tCtrl-L
+
 Facing
 Pàgina Doble
 
 Failed to save a file
 Erro al Guardar l'Archiu
+
+Fin&d...\tCtrl-F
+Buscar...\tCtrl-F
 
 Find Next
 Busca Següent
@@ -101,35 +116,23 @@ Busca Següent
 Find Previous
 Busca Anterior
 
-Find...\tCtrl-F
-Buscar...\tCtrl-F
-
 Find:
 Buscar:
-
-First Page\tHome
-Primera Pàgina\tInici
 
 Fit &Page\tCtrl-0
 Ajustar &Pàgina\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Amplària de la Pàgina\tCtrl-2
+
 Fit Page
 Ajustar Pàgina
-
-Fit Widt&h\tCtrl-2
-&Amplària de la Pàgina\tCtrl-2
 
 Fit Width
 Amplària de la Pàgina
 
-Fullscreen\tCtrl-L
-Pantalla Completa\tCtrl-L
-
 Go to page
 Anar a la pàgina
-
-Last Page\tEnd
-Última Pàgina\tFi
 
 Make SumatraPDF default application for PDF files?
 ¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?
@@ -137,7 +140,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Convertir SumatraPDF en llector PDF per defecte
 
-Match case
+Match Case
 Distinguir MAYÚSCULES i minúscules
 
 New version %s is available. Download new version?
@@ -149,16 +152,13 @@ Nova versió disponible.
 Next Page
 Pàgina Següent
 
-Next Page\tRight Arrow
-Pàgina Següent\t->
-
 No new version available.
 No hi han noves versions.
 
 Open
 Obrir
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Pàgina...\tCtrl-G
 
 Page:
@@ -167,29 +167,29 @@ Pàgina:
 Previous Page
 Pàgina Anterior
 
-Previous Page\tLeft Arrow
-Pàgina Anterior\t<-
-
 Printing problem.
 Erro d'impressió.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Girar a l'esquerra\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Girar a la dreta\tCtrl-Shift-+
 
 Set inverse search command-line
 Establir busca inversa
 
-Show toolbar
+Show &Toolbar
 Mostrar barra de ferramentes
 
-Single page
+Single Page
 Pàgina Única
 
 View
 Vore
+
+Visit &Website
+&Visitar Lloc Web
 
 You have the latest version.
 Està es l'última versió.
@@ -204,7 +204,8 @@ Zoom Out
 Alluntar
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -227,27 +228,26 @@ Alluntar
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -262,7 +262,7 @@ Alluntar
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -274,8 +274,8 @@ Alluntar
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

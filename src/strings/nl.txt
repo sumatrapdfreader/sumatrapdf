@@ -17,14 +17,17 @@ Contributor: Jaap Ginder
 &About
 &Over
 
-&Check for new version
-&Controleren op updates
+&Actual Size\tCtrl-1
+Ware grootte\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Terug\tAlt+<-
 
 &Close\tCtrl-W
 &Sluiten\tCtrl-W
 
-&Custom Zoom...
-&Aangepaste Zoom...
+&Copy Selection\tCtrl-C
+Kopieer selectie\tCtrl-C
 
 &Don't ask me again
 Niet meer vragen
@@ -35,6 +38,9 @@ Niet meer vragen
 &Find what:
 &Zoek naar:
 
+&First Page\tHome
+Eerste pagina\tHome
+
 &Go To
 &Ga naar
 
@@ -44,6 +50,9 @@ Niet meer vragen
 &Help
 &Help
 
+&Last Page\tEnd
+Laatste pagina\tEnd
+
 &Magnification:
 &Vergroting:
 
@@ -52,6 +61,9 @@ Handleiding
 
 &Match case
 Hoofd-/kleine letters toepassen
+
+&Next Page\tRight Arrow
+Volgende pagina\t->
 
 &No
 &Nee
@@ -68,7 +80,10 @@ Hoofd-/kleine letters toepassen
 &Password:
 &Wachtwoord:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Vorige pagina\t<-
+
+&Print...\tCtrl-P
 &Afdrukken\tCtrl-P
 
 &Print... (denied)
@@ -77,7 +92,7 @@ Afdrukken... (geweigerd)
 &Remember these settings for each document
 &Bewaar deze instellingen voor elk document
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Opslaan als...\tCtrl-S
 
 &Settings
@@ -88,9 +103,6 @@ Deze versie overslaan
 
 &View
 &Beeld
-
-&Visit website
-Bezoek de &website
 
 &Yes
 &Ja
@@ -103,9 +115,6 @@ Bezoek de &website
 
 About SumatraPDF
 Over SumatraPDF
-
-Act&ual Size\tCtrl-1
-Ware grootte\tCtrl-1
 
 Advanced
 Geavanceerd
@@ -128,13 +137,10 @@ Automatisch
 Automatically check for &updates
 Automatisch controleren op &updates
 
-Back\tAlt+Left Arrow
-Terug\tAlt+<-
-
-Book view
+Book View
 Boekaanzicht
 
-Bookmarks\tF12
+Book&marks\tF12
 Bladwijzers\tF12
 
 Bytes
@@ -149,8 +155,11 @@ Dit bestand kan niet worden afgedrukt
 Cannot start inverse search command. Please check the command line in the settings.
 Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
 
-Change language
+Change Language
 Wijzig taal
+
+Check for &Updates
+&Controleren op updates
 
 Continuous
 Doorlopend
@@ -161,11 +170,8 @@ Doorlopend boekaanzicht
 Continuous facing
 Dubbele pagina doorlopend
 
-Contribute translation
+Contribute Translation
 Help met vertalen
-
-Copy Selection\tCtrl-C
-Kopieer selectie\tCtrl-C
 
 Could not open Printer
 Printer niet gevonden
@@ -178,6 +184,9 @@ Kan deze pagina niet weergegeven
 
 Created:
 Gemaakt:
+
+Custom &Zoom...
+&Aangepaste Zoom...
 
 Default &Layout:
 Standaard opmaak:
@@ -206,6 +215,12 @@ Wachtwoord invoeren voor %s
 Error loading PDF file.
 Fout bij laden PDF bestand.
 
+F&orward\tAlt+Right Arrow
+Verder\tAlt+->
+
+F&ullscreen\tCtrl-L
+Volledig scherm\tCtrl-L
+
 Facing
 Dubbele pagina
 
@@ -218,6 +233,9 @@ Bestandsgrootte
 File:
 Bestand:
 
+Fin&d...\tCtrl-F
+Zoeken...\tCtrl-F
+
 Find
 Zoeken
 
@@ -227,35 +245,23 @@ Volgende
 Find Previous
 Vorige
 
-Find...\tCtrl-F
-Zoeken...\tCtrl-F
-
 Find:
 Zoeken:
-
-First Page\tHome
-Eerste pagina\tHome
 
 Fit &Page\tCtrl-0
 Hele &pagina\tCtrl-0
 
+Fit &Width\tCtrl-2
+Passend in &breedte\tCtrl-2
+
 Fit Page
 Hele pagina
-
-Fit Widt&h\tCtrl-2
-Passend in &breedte\tCtrl-2
 
 Fit Width
 Passend in breedte
 
-Forward\tAlt+Right Arrow
-Verder\tAlt+->
-
 Found text at page %d
 Tekst gevonden op pagina %d
-
-Fullscreen\tCtrl-L
-Volledig scherm\tCtrl-L
 
 GB
 GB
@@ -269,9 +275,6 @@ Tip: Gebruik de funtietoets F3 om verder te zoeken
 KB
 KB
 
-Last Page\tEnd
-Laatste pagina\tEnd
-
 MB
 MB
 
@@ -284,7 +287,7 @@ SumatraPDF als standaardlezer van PDF-bestanden instellen?
 Make SumatraPDF my main PDF reader
 SumatraPDF als standaard PDF-lezer instellen
 
-Match case
+Match Case
 Hoofdlettergevoelig
 
 Modified:
@@ -298,9 +301,6 @@ Nieuwe versie beschikbaar.
 
 Next Page
 Volgende pagina
-
-Next Page\tRight Arrow
-Volgende pagina\t->
 
 No matches were found
 Geen zoekresultaat gevonden
@@ -329,7 +329,7 @@ Openen
 Open in &Adobe Reader
 Openen met &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 E&igenschappen...\tCtrl-D
 
 PDF Document
@@ -344,14 +344,14 @@ PDF-versie:
 PDF documents
 PDF-bestanden
 
+Pa&ge...\tCtrl-G
+Pagina...\tCtrl-G
+
 Page Size:
 Paginagrootte:
 
 Page number %u inexistant
 Paginanummer %u bestaat niet
-
-Page...\tCtrl-G
-Pagina...\tCtrl-G
 
 Page:
 Pagina:
@@ -365,19 +365,16 @@ Afdrukken met Adobe Reader...
 Previous Page
 Vorige pagina
 
-Previous Page\tLeft Arrow
-Vorige pagina\t<-
-
 Printing problem.
 Probleem bij het afdrukken.
 
 Remember &opened files
 Onthoud ge&opende bestanden
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Linksom draaien\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Rechtsom draaien\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -386,22 +383,22 @@ Zoek %d van %d...
 Select content with Ctrl+left mouse button
 Selecteer inhoud met Ctrl+linker muisknop
 
-Send by &email...
+Send by &E-mail...
 Verzend per &e-mail...
 
 Set inverse search command-line
 Omgekeerde zoekrichting instellen
 
-Show pages continuously
+Show &Toolbar
+Werkbalk tonen
+
+Show &pages continuously
 Toon pagina's doorlopend
 
 Show the &bookmarks sidebar when available
 Toon de &bladwijzerwerkbalk indien beschikbaar
 
-Show toolbar
-Werkbalk tonen
-
-Single page
+Single Page
 Enkele pagina
 
 Source file %s has no synchronization point
@@ -433,6 +430,9 @@ Onbekend bronbestand (%s)
 
 View
 Beeld
+
+Visit &Website
+Bezoek de &website
 
 Warning
 Waarschuwing

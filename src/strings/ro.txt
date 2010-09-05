@@ -11,11 +11,17 @@ Contributor: Elly Câmpeanu
 &About
 &Despre
 
+&Actual Size\tCtrl-1
+Mărime &actuală\tCtrl-1
+
 &Close\tCtrl-W
 Înc&hidere\tCtrl-W
 
 &File
 &Fişier
+
+&First Page\tHome
+Prima pagină\tHome
 
 &Go To
 Sal&t la...
@@ -23,20 +29,26 @@ Sal&t la...
 &Help
 A&jutor
 
+&Last Page\tEnd
+Ultima pagină\tEnd
+
+&Next Page\tRight Arrow
+Pagina următoare\t->
+
 &Open\tCtrl-O
 &Deschidere\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Pagina anterioară\t<-
+
+&Print...\tCtrl-P
 I&mprimare\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Salvare c&a...\tCtrl-S
 
 &View
 &Vizualizare
-
-&Visit website
-&Vizitează website-ul
 
 &Zoom
 &Panoramare
@@ -44,10 +56,7 @@ Salvare c&a...\tCtrl-S
 About SumatraPDF
 Despre SumatraPDF
 
-Act&ual Size\tCtrl-1
-Mărime &actuală\tCtrl-1
-
-Bookmarks\tF12
+Book&marks\tF12
 Marcaje\tF12
 
 Continuous
@@ -56,7 +65,7 @@ Continuu
 Continuous facing
 Pagină dublă continuu
 
-Contribute translation
+Contribute Translation
 Contribuie la traducere
 
 Could not open Printer
@@ -68,11 +77,17 @@ E&xit\tCtrl-Q
 Error loading PDF file.
 Erroare la încărcarea unui fişier PDF.
 
+F&ullscreen\tCtrl-L
+Ecran complet\tCtrl-L
+
 Facing
 Două pagini
 
 Failed to save a file
 Eroare la salvarea unui fişier
+
+Fin&d...\tCtrl-F
+Caută...\tCtrl-F
 
 Find Next
 Caută înainte
@@ -80,49 +95,34 @@ Caută înainte
 Find Previous
 Caută înapoi
 
-Find...\tCtrl-F
-Caută...\tCtrl-F
-
 Find:
 Caută:
-
-First Page\tHome
-Prima pagină\tHome
 
 Fit &Page\tCtrl-0
 &Pagină întreagă\tCtrl-0
 
+Fit &Width\tCtrl-2
+Lăţime pagină
+
 Fit Page
 Pagină întreagă
-
-Fit Widt&h\tCtrl-2
-Lăţime pagină
 
 Fit Width
 Lăţime pagină
 
-Fullscreen\tCtrl-L
-Ecran complet\tCtrl-L
-
-Last Page\tEnd
-Ultima pagină\tEnd
-
 Make SumatraPDF my main PDF reader
 Fă SumatraPDF un cititor implicit de PDF
 
-Match case
+Match Case
 Potrivire litere mari şi mici
 
 Next Page
 Pagina următoare
 
-Next Page\tRight Arrow
-Pagina următoare\t->
-
 Open
 Deschide
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Pagina...\tCtrl-G
 
 Page:
@@ -131,26 +131,26 @@ Pagina:
 Previous Page
 Pagina anterioară
 
-Previous Page\tLeft Arrow
-Pagina anterioară\t<-
-
 Printing problem.
 Problemă la imprimare.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Roteşte spre stânga\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Roteşte spre dreapta\tCtrl-Shift-+
 
-Show toolbar
+Show &Toolbar
 Arată bara de instrumente
 
-Single page
+Single Page
 O singură pagină
 
 View
 Vizualizare
+
+Visit &Website
+&Vizitează website-ul
 
 Zoom In
 Măreşte
@@ -159,8 +159,8 @@ Zoom Out
 Micşorează
 
 # Untranslated:
-#&Check for new version
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Don't ask me again
 #&Find what:
 #&Go to page:
@@ -186,19 +186,19 @@ Micşorează
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Change language
+#Change Language
+#Check for &Updates
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
@@ -206,10 +206,10 @@ Micşorează
 #Download
 #Enter password
 #Enter password for %s
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Go to page
@@ -229,7 +229,7 @@ Micşorează
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -241,9 +241,9 @@ Micşorează
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
+#Send by &E-mail...
 #Set inverse search command-line
-#Show pages continuously
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

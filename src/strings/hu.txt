@@ -12,14 +12,17 @@ Contributor: Lázár Viktor
 &About
 Név&jegy
 
-&Check for new version
-Újabb &verzió keresése
+&Actual Size\tCtrl-1
+&Eredeti méret\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Ugrás vissza\tAlt+<-
 
 &Close\tCtrl-W
 Be&zárás\tCtrl-W
 
-&Custom Zoom...
-... Egyéni méret
+&Copy Selection\tCtrl-C
+Kép/Szöveg másolása\tCtrl-C
 
 &Don't ask me again
 Ne kérdezze meg többé
@@ -30,6 +33,9 @@ Ne kérdezze meg többé
 &Find what:
 Mit keres:
 
+&First Page\tHome
+Első oldal\tHome
+
 &Go To
 U&grás
 
@@ -39,6 +45,9 @@ U&grás
 &Help
 &Súgó
 
+&Last Page\tEnd
+Utolsó oldal\tEnd
+
 &Magnification:
 Nagyítás:
 
@@ -47,6 +56,9 @@ Nagyítás:
 
 &Match case
 Kis- és nagybetűk megkülönböztetése
+
+&Next Page\tRight Arrow
+Következő oldal\t->
 
 &No
 &Nem
@@ -63,13 +75,16 @@ Megny&itás\tCtrl-O
 &Password:
 &Jelszó:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Előző oldal\t<-
+
+&Print...\tCtrl-P
 Nyomt&atás\tCtrl-P
 
 &Remember these settings for each document
 Eltérő nézet-beállítások megjegyzése dokumentumonként
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Ment&és másként...\tCtrl-S
 
 &Settings
@@ -80,9 +95,6 @@ Verzió kihagyása
 
 &View
 &Nézet
-
-&Visit website
-&Weboldal
 
 &Yes
 &Igen
@@ -95,9 +107,6 @@ Verzió kihagyása
 
 About SumatraPDF
 SumatraPDF névjegye
-
-Act&ual Size\tCtrl-1
-&Eredeti méret\tCtrl-1
 
 Advanced
 További programbeállítások
@@ -120,13 +129,10 @@ Automatikus
 Automatically check for &updates
 &Program&frissítések automatikus keresése bekapcsoláskor
 
-Back\tAlt+Left Arrow
-Ugrás vissza\tAlt+<-
-
-Book view
+Book View
 Könyv(Oldalpár címlappal)
 
-Bookmarks\tF12
+Book&marks\tF12
 Könyvjelzők\tF12
 
 Bytes
@@ -138,8 +144,11 @@ Mégse
 Cannot print this file
 Ez a file nem nyomtatható
 
-Change language
-Nyelv kiválasztása (Change language)
+Change Language
+Nyelv kiválasztása (Change Language)
+
+Check for &Updates
+Újabb &verzió keresése
 
 Continuous
 Folyamatos
@@ -150,11 +159,8 @@ Folyamatos könyv
 Continuous facing
 Folyamatos oldalpár
 
-Contribute translation
+Contribute Translation
 &Járulj hozzá a fordításhoz
-
-Copy Selection\tCtrl-C
-Kép/Szöveg másolása\tCtrl-C
 
 Could not open Printer
 Nem lehet megnyitni a nyomtatót.
@@ -167,6 +173,9 @@ Oldalfeldolgozási hiba
 
 Created:
 Készült:
+
+Custom &Zoom...
+... Egyéni méret
 
 Default &Layout:
 Oldalmegjelenítési mód:
@@ -192,6 +201,12 @@ Enter password for %s
 Error loading PDF file.
 Hiba a PDF betöltése közben.
 
+F&orward\tAlt+Right Arrow
+Ugrás előre\tAlt+->
+
+F&ullscreen\tCtrl-L
+Teljes képernyő\tCtrl+L
+
 Facing
 Oldalpár
 
@@ -204,6 +219,9 @@ Méret:
 File:
 Fájl:
 
+Fin&d...\tCtrl-F
+Keresés...\tCtrl-F
+
 Find
 Keresés
 
@@ -213,35 +231,23 @@ Következő keresése
 Find Previous
 Előző keresése
 
-Find...\tCtrl-F
-Keresés...\tCtrl-F
-
 Find:
 Keresés:
-
-First Page\tHome
-Első oldal\tHome
 
 Fit &Page\tCtrl-0
 &Teljes oldal\tCtrl-0
 
+Fit &Width\tCtrl-2
+Oldal&szélesség\tCtrl-2
+
 Fit Page
 Teljes oldal
-
-Fit Widt&h\tCtrl-2
-Oldal&szélesség\tCtrl-2
 
 Fit Width
 Oldalszélesség
 
-Forward\tAlt+Right Arrow
-Ugrás előre\tAlt+->
-
 Found text at page %d
 Találat a(z) %d. oldalon
-
-Fullscreen\tCtrl-L
-Teljes képernyő\tCtrl+L
 
 GB
 Gb
@@ -255,9 +261,6 @@ Tipp: Nyomja meg az F3-at a következő találathoz
 KB
 Kb
 
-Last Page\tEnd
-Utolsó oldal\tEnd
-
 MB
 Mb
 
@@ -270,7 +273,7 @@ Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 Make SumatraPDF my main PDF reader
 SumatraPDF mint alapértelmezett PDF olvasó
 
-Match case
+Match Case
 Kis- és nagybetűk megkülönböztetése
 
 Modified:
@@ -284,9 +287,6 @@ New version available.
 
 Next Page
 Következő oldal
-
-Next Page\tRight Arrow
-Következő oldal\t->
 
 No matches were found
 Nem található a dokumentumban
@@ -309,7 +309,7 @@ Megny&itás
 Open in &Adobe Reader
 Megnyitás &Adobe Acrobat-ban
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 &Tulajdonságok\tCtrl-D
 
 PDF Document
@@ -324,14 +324,14 @@ PDF verzió:
 PDF documents
 PDF dokumentumok
 
+Pa&ge...\tCtrl-G
+Megadott oldal...\tCtrl-G
+
 Page Size:
 Oldalméret
 
 Page number %u inexistant
 A(z) %u oldalszám nem létezik
-
-Page...\tCtrl-G
-Megadott oldal...\tCtrl-G
 
 Page:
 Oldal:
@@ -342,19 +342,16 @@ Feldolgozás, kérem várjon
 Previous Page
 Előző oldal
 
-Previous Page\tLeft Arrow
-Előző oldal\t<-
-
 Printing problem.
 Nyomtatási probléma.
 
 Remember &opened files
 Korábban megnyitott file-ok listájának tárolása
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Forgatás balra\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Forgatás jobbra\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -363,19 +360,19 @@ Keresés a(z) %d./%d oldalon
 Select content with Ctrl+left mouse button
 Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 
-Send by &email...
+Send by &E-mail...
 Fájl küldése &e-mail-ben
 
-Show pages continuously
+Show &Toolbar
+Eszköztár
+
+Show &pages continuously
 Folyamatos nézet
 
 Show the &bookmarks sidebar when available
 Dokumentumba ágyazott könyvjelzők mutatása
 
-Show toolbar
-Eszköztár
-
-Single page
+Single Page
 Egy oldalas
 
 Source file %s has no synchronization point
@@ -401,6 +398,9 @@ Ismeretlen forrásfájl (%s)
 
 View
 Alapértelmezett nézet
+
+Visit &Website
+&Weboldal
 
 Warning
 Figyelmeztetés

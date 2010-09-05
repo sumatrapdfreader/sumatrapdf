@@ -12,14 +12,17 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &About
 &Σχετικά...
 
-&Check for new version
-&Έλεγχος για νέα έκδοση
+&Actual Size\tCtrl-1
+Πραγματικό μέγεθος\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Πίσω\tAlt+<-
 
 &Close\tCtrl-W
 &Κλείσιμο\tCtrl-W
 
-&Custom Zoom...
-&Ορισμός ζουμ...
+&Copy Selection\tCtrl-C
+Αντιγραφή επιλεγμένων\tCtrl-C
 
 &Don't ask me again
 &Να μην ερωτηθώ ξανά
@@ -30,6 +33,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Find what:
 &Εύρεση του:
 
+&First Page\tHome
+Πρώτη σελίδα\tHome
+
 &Go To
 &Μετάβαση
 
@@ -39,6 +45,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Help
 &Βοήθεια
 
+&Last Page\tEnd
+Τελευταία σελίδα\tEnd
+
 &Magnification:
 &Μεγέθυνση:
 
@@ -47,6 +56,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 
 &Match case
 Ταίριασμα πεζών/κεφαλαίων
+
+&Next Page\tRight Arrow
+Επόμενη σελίδα\t->
 
 &No
 Ό&χι
@@ -63,7 +75,10 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Password:
 &Κωδικός:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Προηγούμενη σελίδα\t<-
+
+&Print...\tCtrl-P
 &Εκτύπωση\tCtrl-P
 
 &Print... (denied)
@@ -72,7 +87,7 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Remember these settings for each document
 &Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Αποθήκευση ως\tCtrl-S
 
 &Settings
@@ -83,9 +98,6 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 
 &View
 &Προβολή
-
-&Visit website
-&Ιστοσελίδα προγράμματος
 
 &Yes
 &Ναι
@@ -98,9 +110,6 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 
 About SumatraPDF
 Σχετικά με το SumatraPDF
-
-Act&ual Size\tCtrl-1
-Πραγματικό μέγεθος\tCtrl-1
 
 Advanced
 Προχωρημένα
@@ -123,13 +132,10 @@ Automatic
 Automatically check for &updates
 Αυτόματος έλεγχος για ενημερώσεις
 
-Back\tAlt+Left Arrow
-Πίσω\tAlt+<-
-
-Book view
+Book View
 Προβολή βιβλίου
 
-Bookmarks\tF12
+Book&marks\tF12
 Σελιδοδείκτες\tF12
 
 Bytes
@@ -144,8 +150,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ επιλέξτε τη γραμμή εντολών στις ρυθμίσεις.
 
-Change language
-Αλλαγή γλώσσας (Change language)
+Change Language
+Αλλαγή γλώσσας (Change Language)
+
+Check for &Updates
+&Έλεγχος για νέα έκδοση
 
 Continuous
 Μια σελίδα, συνεχόμενα
@@ -156,11 +165,8 @@ Continuous book view
 Continuous facing
 Δύο σελίδες, συνεχόμενα
 
-Contribute translation
+Contribute Translation
 Βοηθήστε στη μετάφραση
-
-Copy Selection\tCtrl-C
-Αντιγραφή επιλεγμένων\tCtrl-C
 
 Could not open Printer
 Απέτυχε το άνοιγμα του εκτυπωτή
@@ -173,6 +179,9 @@ Couldn't render the page
 
 Created:
 Δημιουργήθηκε:
+
+Custom &Zoom...
+&Ορισμός ζουμ...
 
 Default &Layout:
 Προκαθορισμένη &διαμόρφωση:
@@ -201,6 +210,12 @@ Enter password for %s
 Error loading PDF file.
 Σφάλμα κατά τη φόρτωση του αρχείου PDF.
 
+F&orward\tAlt+Right Arrow
+Εμπρός\tAlt+->
+
+F&ullscreen\tCtrl-L
+Πλήρης οθόνη\tCtrl-L
+
 Facing
 Δύο σελίδες
 
@@ -213,6 +228,9 @@ File Size:
 File:
 Αρχείο:
 
+Fin&d...\tCtrl-F
+Εύρεση...\tCtrl-F
+
 Find
 Εύρεση
 
@@ -222,35 +240,23 @@ Find Next
 Find Previous
 Εύρεση προηγούμενου
 
-Find...\tCtrl-F
-Εύρεση...\tCtrl-F
-
 Find:
 Εύρεση:
-
-First Page\tHome
-Πρώτη σελίδα\tHome
 
 Fit &Page\tCtrl-0
 Ολόκληρη σελίδα\tCtrl-0
 
+Fit &Width\tCtrl-2
+Στο πλάτος παραθύρου\tCtrl-2
+
 Fit Page
 Ολόκληρη σελίδα
-
-Fit Widt&h\tCtrl-2
-Στο πλάτος παραθύρου\tCtrl-2
 
 Fit Width
 Πλάτος παραθύρου
 
-Forward\tAlt+Right Arrow
-Εμπρός\tAlt+->
-
 Found text at page %d
 Το κείμενο βρέθηκε στη σελίδα %d
-
-Fullscreen\tCtrl-L
-Πλήρης οθόνη\tCtrl-L
 
 GB
 GB
@@ -264,9 +270,6 @@ Hint: Use the F3 key for finding again
 KB
 KB
 
-Last Page\tEnd
-Τελευταία σελίδα\tEnd
-
 MB
 MB
 
@@ -279,7 +282,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Συσχετισμός του SumatraPDF με αρχεία PDF
 
-Match case
+Match Case
 Αντιστοίχιση πεζών-κεφαλαίων
 
 Modified:
@@ -293,9 +296,6 @@ New version available.
 
 Next Page
 Επόμενη σελίδα
-
-Next Page\tRight Arrow
-Επόμενη σελίδα\t->
 
 No matches were found
 Δε βρέθηκε το κείμενο
@@ -324,7 +324,7 @@ Open
 Open in &Adobe Reader
 Άνοιγμα με &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 &Ιδιότητες...\tCtrl-D
 
 PDF Document
@@ -339,14 +339,14 @@ PDF Version:
 PDF documents
 Αρχεία PDF
 
+Pa&ge...\tCtrl-G
+Σελίδα...\tCtrl-G
+
 Page Size:
 Μέγεθος σελίδας:
 
 Page number %u inexistant
 Δεν υπάρχει σελίδα με αριθμό %u
-
-Page...\tCtrl-G
-Σελίδα...\tCtrl-G
 
 Page:
 Σελίδα:
@@ -357,19 +357,16 @@ Please wait - rendering...
 Previous Page
 Προηγούμενη σελίδα
 
-Previous Page\tLeft Arrow
-Προηγούμενη σελίδα\t<-
-
 Printing problem.
 Πρόβλημα εκτύπωσης
 
 Remember &opened files
 Απομνημόνευη πρόσφατων αρχείων
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Περιστροφή αριστερά\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Περιστροφή δεξιά\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -378,22 +375,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 
-Send by &email...
+Send by &E-mail...
 Αποστολή με &email...
 
 Set inverse search command-line
 Ενφάνιση γραμμής αντίστροφης αναζήτησης
 
-Show pages continuously
+Show &Toolbar
+Εμφάνιση γραμμής εργαλείων
+
+Show &pages continuously
 Συνεχής εμφάνιση σελίδων
 
 Show the &bookmarks sidebar when available
 Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 
-Show toolbar
-Εμφάνιση γραμμής εργαλείων
-
-Single page
+Single Page
 Μία σελίδα
 
 Source file %s has no synchronization point
@@ -425,6 +422,9 @@ Unknown source file (%s)
 
 View
 Προβολή
+
+Visit &Website
+&Ιστοσελίδα προγράμματος
 
 Warning
 Προειδοποίηση

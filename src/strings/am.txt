@@ -11,14 +11,17 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &About
 &Մասին
 
-&Check for new version
-&Ստուգել նոր տարբերակները
+&Actual Size\tCtrl-1
+Իրական &չափը\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Հետ\tAlt+<-
 
 &Close\tCtrl-W
 &Փակել\tCtrl-W
 
-&Custom Zoom...
-&Ընտրված չափը
+&Copy Selection\tCtrl-C
+Պատճենել ընտրվածը\tCtrl-C
 
 &Don't ask me again
 &Այլևս չհարցնել
@@ -29,6 +32,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Find what:
 &Ինչ փնտրել.
 
+&First Page\tHome
+Առաջին էջը\tHome
+
 &Go To
 &Անցնել
 
@@ -38,6 +44,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Help
 &Օգնություն
 
+&Last Page\tEnd
+Վերջին էջը\tEnd
+
 &Magnification:
 &Մեժացնել
 
@@ -46,6 +55,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 
 &Match case
 &Հաշվի առնել գրանցումները
+
+&Next Page\tRight Arrow
+Հաջորդ էջը\t->
 
 &No
 &Ոչ
@@ -62,7 +74,10 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Password:
 &Գաղտնաբառը
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Նախորդ էջը\t<-
+
+&Print...\tCtrl-P
 &Տպել\tCtrl-P
 
 &Print... (denied)
@@ -71,7 +86,7 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Remember these settings for each document
 Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Պահպանել որպես\tCtrl-S
 
 &Settings
@@ -82,9 +97,6 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 
 &View
 &Դիտել
-
-&Visit website
-&Այցելել Ինտերնետում
 
 &Yes
 &Այո
@@ -97,9 +109,6 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 
 About SumatraPDF
 SumatraPDF-ի մասին
-
-Act&ual Size\tCtrl-1
-Իրական &չափը\tCtrl-1
 
 Advanced
 Ընդլայնված
@@ -122,13 +131,10 @@ Automatic
 Automatically check for &updates
 Ինքնաշխատ ստուգել &թարմացումները
 
-Back\tAlt+Left Arrow
-Հետ\tAlt+<-
-
-Book view
+Book View
 Գրքի նման
 
-Bookmarks\tF12
+Book&marks\tF12
 Ընտրյալները\tF12
 
 Bytes
@@ -143,8 +149,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Հնարավոր չէ որոնել։Ստուգեք հրամանների տողի կարգավորումները։
 
-Change language
-Փոխել լեզուն (Change language)
+Change Language
+Փոխել լեզուն (Change Language)
+
+Check for &Updates
+&Ստուգել նոր տարբերակները
 
 Continuous
 Անդադար
@@ -155,11 +164,8 @@ Continuous book view
 Continuous facing
 Անդադար երկու էջով
 
-Contribute translation
+Contribute Translation
 Օգնել թարգմանել
-
-Copy Selection\tCtrl-C
-Պատճենել ընտրվածը\tCtrl-C
 
 Could not open Printer
 Տպիչը հասանելի չէ
@@ -172,6 +178,9 @@ Couldn't render the page
 
 Created:
 Ստեղծված է.
+
+Custom &Zoom...
+&Ընտրված չափը
 
 Default &Layout:
 Չափը &Լռելայն
@@ -200,6 +209,12 @@ Enter password for %s
 Error loading PDF file.
 Սխալ՝ PDF ֆայլը բեռնելիս։
 
+F&orward\tAlt+Right Arrow
+Առաջ\tAlt+->
+
+F&ullscreen\tCtrl-L
+Ամբողջ էկրանով\tCtrl-L
+
 Facing
 Երկու էջ
 
@@ -212,6 +227,9 @@ File Size:
 File:
 Ֆայլ.
 
+Fin&d...\tCtrl-F
+Փնտրել...\tCtrl-F
+
 Find
 Փնտրել
 
@@ -221,35 +239,23 @@ Find Next
 Find Previous
 Գտնել նախորդը
 
-Find...\tCtrl-F
-Փնտրել...\tCtrl-F
-
 Find:
 Փնտրել.
-
-First Page\tHome
-Առաջին էջը\tHome
 
 Fit &Page\tCtrl-0
 Էջի &չափով\tCtrl-0
 
+Fit &Width\tCtrl-2
+Հավասարեցնել &լայնությամբ\tCtrl-2
+
 Fit Page
 Ձգել էջը
-
-Fit Widt&h\tCtrl-2
-Հավասարեցնել &լայնությամբ\tCtrl-2
 
 Fit Width
 Ձգել լայնությամբ
 
-Forward\tAlt+Right Arrow
-Առաջ\tAlt+->
-
 Found text at page %d
 Տեքստը գտնվել է %d էջում
-
-Fullscreen\tCtrl-L
-Ամբողջ էկրանով\tCtrl-L
 
 GB
 ԳԲ
@@ -263,9 +269,6 @@ Hint: Use the F3 key for finding again
 KB
 ԿԲ
 
-Last Page\tEnd
-Վերջին էջը\tEnd
-
 MB
 ՄԲ
 
@@ -278,7 +281,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Ասոցացնել PDF ֆայլերը SumatraPDF-ի հետ
 
-Match case
+Match Case
 Հաշվի առնել գրանցումները
 
 Modified:
@@ -292,9 +295,6 @@ New version available.
 
 Next Page
 Հաջորդ էջը
-
-Next Page\tRight Arrow
-Հաջորդ էջը\t->
 
 No matches were found
 Օրինակներ չի գտնվել
@@ -323,7 +323,7 @@ Open
 Open in &Adobe Reader
 Բացել &Adobe Reader-ում
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 Հ&ատկություններ...\tCtrl-D
 
 PDF Document
@@ -338,14 +338,14 @@ PDF-ի տարբերակը.
 PDF documents
 PDF փաստաթղթեր
 
+Pa&ge...\tCtrl-G
+Էջը...\tCtrl-G
+
 Page Size:
 Էջի չափը.
 
 Page number %u inexistant
 %u էջը գոյություն չունի
-
-Page...\tCtrl-G
-Էջը...\tCtrl-G
 
 Page:
 Էջը.
@@ -359,19 +359,16 @@ Pr&int with Adobe Reader...
 Previous Page
 Նախորդ էջը
 
-Previous Page\tLeft Arrow
-Նախորդ էջը\t<-
-
 Printing problem.
 Սխալ տպելիս
 
 Remember &opened files
 Հիշել &բացված ֆայլերը
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Շրջել ձախ\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Շրջել աջ\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -380,22 +377,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
 
-Send by &email...
+Send by &E-mail...
 Ուղարկել &email-ով
 
 Set inverse search command-line
 Նշել փնտրման հրամանների տողը
 
-Show pages continuously
+Show &Toolbar
+Ցույց տալ գործիքները
+
+Show &pages continuously
 Անընդհատ ցույց տալ էջերը
 
 Show the &bookmarks sidebar when available
 Հնարավորության դեպքում ցույց տալ &Ընտրյալները
 
-Show toolbar
-Ցույց տալ գործիքները
-
-Single page
+Single Page
 &Մեկ էջ
 
 Source file %s has no synchronization point
@@ -427,6 +424,9 @@ Unknown source file (%s)
 
 View
 Դիտել
+
+Visit &Website
+&Այցելել Ինտերնետում
 
 Warning
 Զգուշացում

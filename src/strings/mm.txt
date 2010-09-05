@@ -11,8 +11,8 @@ Contributor: Mohammed Ottama
 &About
 အကြောင်း
 
-&Check for new version
-အမျိုးအစား သစ်စုံစမ်းရန်
+&Actual Size\tCtrl-1
+ပုံမှန် အရွယ်\tCtrl-1
 
 &Close\tCtrl-W
 &ပိတ်ပါ\tCtrl-W
@@ -23,22 +23,34 @@ Contributor: Mohammed Ottama
 &File
 &ဖိုင်
 
+&First Page\tHome
+ပထမ စာမျက်နှာ\tHome
+
 &Go To
 သို့ သွား
 
 &Help
 &အကူအညီ
 
+&Last Page\tEnd
+နောက်ဆုံး စာမျက်နှာ\tEnd
+
 &Manual
 &ကိုယ်တိုင်
+
+&Next Page\tRight Arrow
+နောက် တမျက်နှာ\t->
 
 &Open\tCtrl-O
 &ဖွင့်ပါ\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+ပြီးတဲ့ စာမျက်နှာ\t<-
+
+&Print...\tCtrl-P
 &ပုံနှိပ်ပါ\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &ကဲ့သို့ သိမ်းပါ.....\tCtrl-S
 
 &Skip this version
@@ -47,26 +59,23 @@ Contributor: Mohammed Ottama
 &View
 &မြင်ကွင်း
 
-&Visit website
-&ဝဘ်ဌာနေ သို့
-
 &Zoom
 ချဲ့ထွင်
 
 About SumatraPDF
 စူမာတရာ အကြောင်း
 
-Act&ual Size\tCtrl-1
-ပုံမှန် အရွယ်\tCtrl-1
-
 Associate with PDF files?
 PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 
-Bookmarks\tF12
+Book&marks\tF12
 စာမျက်နှာ မှတ်သား\tF12
 
-Change language
-စာ စကား ပြောင်းရန် (Change language)
+Change Language
+စာ စကား ပြောင်းရန် (Change Language)
+
+Check for &Updates
+အမျိုးအစား သစ်စုံစမ်းရန်
 
 Continuous
 ဆက်တိုက်
@@ -89,11 +98,17 @@ Enter password for %s
 Error loading PDF file.
 ဖိုင် ဖွင့်ရာ အမှားအယွင်းရှိ
 
+F&ullscreen\tCtrl-L
+မြင်ကွင်း ပြည့်\tCtrl-L
+
 Facing
  အရှေ့မျက်နှာ
 
 Failed to save a file
 ဖိုင် သိမ်းမရပါ
+
+Fin&d...\tCtrl-F
+ရှာပါ\tCtrl-F
 
 Find Next
 နောက်တခု ရှာပါ
@@ -101,35 +116,23 @@ Find Next
 Find Previous
 ပြီးခဲ့တာ ရှာပါ
 
-Find...\tCtrl-F
-ရှာပါ\tCtrl-F
-
 Find:
 ရှာပါ
-
-First Page\tHome
-ပထမ စာမျက်နှာ\tHome
 
 Fit &Page\tCtrl-0
 စာမျက်နှာ ပြည့်\tCtrl-O
 
+Fit &Width\tCtrl-2
+အလျားနှင့်အမြင့် အပြည့်
+
 Fit Page
 စာမျက်နှာ ပြည့်
-
-Fit Widt&h\tCtrl-2
-အလျားနှင့်အမြင့် အပြည့်
 
 Fit Width
 အလျားနှင့်အမြင့် အပြည့်
 
-Fullscreen\tCtrl-L
-မြင်ကွင်း ပြည့်\tCtrl-L
-
 Go to page
 သွားရန် စာမျက်နှာ
-
-Last Page\tEnd
-နောက်ဆုံး စာမျက်နှာ\tEnd
 
 Make SumatraPDF default application for PDF files?
 SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
@@ -137,7 +140,7 @@ SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အ
 Make SumatraPDF my main PDF reader
 စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
 
-Match case
+Match Case
 တူညီ သော
 
 New version %s is available. Download new version?
@@ -149,16 +152,13 @@ New version available.
 Next Page
 နောက် တမျက်နှာ
 
-Next Page\tRight Arrow
-နောက် တမျက်နှာ\t->
-
 No new version available.
 အမျိုးအစားသစ် မရှိပါ
 
 Open
 ဖွင့်ပါ
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 စာမျက်နှာ...\tCtrl-G
 
 Page:
@@ -167,29 +167,29 @@ Page:
 Previous Page
 ပြီးတဲ့ စာမျက်နှာ
 
-Previous Page\tLeft Arrow
-ပြီးတဲ့ စာမျက်နှာ\t<-
-
 Printing problem.
 ပုံနှိပ် ကရိယာ ပြသာနာ
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 ဘယ်သို့ လှဲ့\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 ညာသို့ လှဲ့\tCtrl-Shift-+
 
 Set inverse search command-line
 command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
 
-Show toolbar
+Show &Toolbar
 တူးလ်ဘား ပြပါ
 
-Single page
+Single Page
  တ မျက်နှာ
 
 View
 မြင်ကွင်း
+
+Visit &Website
+&ဝဘ်ဌာနေ သို့
 
 You have the latest version.
 သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
@@ -204,7 +204,8 @@ Zoom Out
 ချဲ့ပါ
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -226,28 +227,27 @@ Zoom Out
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Contribute translation
-#Copy Selection\tCtrl-C
+#Contribute Translation
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -262,7 +262,7 @@ Zoom Out
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -274,8 +274,8 @@ Zoom Out
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

@@ -12,8 +12,8 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &About
 Аб праграме
 
-&Check for new version
-Праверыць наяўнасць новай версіі
+&Actual Size\tCtrl-1
+Рэальны памер\tCtrl-1
 
 &Close\tCtrl-W
 Зачыніць\tCtrl-W
@@ -27,6 +27,9 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &Find what:
 &Узор:
 
+&First Page\tHome
+Першая старонка\tHome
+
 &Go To
 Перайсці да
 
@@ -36,8 +39,14 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &Help
 Дапамога
 
+&Last Page\tEnd
+Апошняя старонка\tEnd
+
 &Match case
 &Улічваць рэгістр
+
+&Next Page\tRight Arrow
+Наступная старонка\t->
 
 &No
 Нет
@@ -54,13 +63,16 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 &Password:
 &Пароль:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Папярэдняя старонка\t<-
+
+&Print...\tCtrl-P
 Друкаваць\tCtrl-P
 
 &Remember these settings for each document
 Запомніць гэтыя параметры для &кожнага дакумента
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Захаваць як\tCtrl-S
 
 &Settings
@@ -71,9 +83,6 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 
 &View
 Выгляд
-
-&Visit website
-Наведаць сайт
 
 &Yes
 Да
@@ -87,9 +96,6 @@ Contributor: Drive DRKA (drka2003@mail.ru)
 About SumatraPDF
 Аб SumatraPDF
 
-Act&ual Size\tCtrl-1
-Рэальны памер\tCtrl-1
-
 Advanced
 Дадаткова
 
@@ -102,7 +108,7 @@ Associate with PDF files?
 Automatically check for &updates
 &Аўтаматычная праверка абнаўленняў
 
-Bookmarks\tF12
+Book&marks\tF12
 Закладкі\tF12
 
 Cancel
@@ -111,8 +117,11 @@ Cancel
 Cannot print this file
 Не атрымалася раздрукаваць гэты файл
 
-Change language
-Змяніць мову (Change language)
+Change Language
+Змяніць мову (Change Language)
+
+Check for &Updates
+Праверыць наяўнасць новай версіі
 
 Continuous
 Працягла
@@ -120,7 +129,7 @@ Continuous
 Continuous facing
 Працягла дзьве старонкі
 
-Contribute translation
+Contribute Translation
 Дапамагчы з перакладам
 
 Could not open Printer
@@ -150,11 +159,17 @@ Enter password for %s
 Error loading PDF file.
 Памылка пры адчыненні файла.
 
+F&ullscreen\tCtrl-L
+Поўны экран\tCtrl-L
+
 Facing
 Дзьве старонкі
 
 Failed to save a file
 Немагчыма захаваць файл
+
+Fin&d...\tCtrl-F
+Знайсці...\tCtrl-F
 
 Find
 Знайсці
@@ -165,23 +180,17 @@ Find Next
 Find Previous
 Знайсці папярэдняе
 
-Find...\tCtrl-F
-Знайсці...\tCtrl-F
-
 Find:
 Знайсці:
-
-First Page\tHome
-Першая старонка\tHome
 
 Fit &Page\tCtrl-0
 Змясціць старонку\tCtrl-0
 
+Fit &Width\tCtrl-2
+Змясціць па шырыне
+
 Fit Page
 Змясціць старонку
-
-Fit Widt&h\tCtrl-2
-Змясціць па шырыне
 
 Fit Width
 Змясціць па шырыне
@@ -189,14 +198,8 @@ Fit Width
 Found text at page %d
 Тэкст знойдзены на стар. %d
 
-Fullscreen\tCtrl-L
-Поўны экран\tCtrl-L
-
 Go to page
 Перайсці на старонку
-
-Last Page\tEnd
-Апошняя старонка\tEnd
 
 Main PDF reader can't be changed in portable mode
 У мабільным рэжыме змяніць PDF-в'юер нельга
@@ -207,7 +210,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 
-Match case
+Match Case
 Улічваць рэгістр
 
 New version %s is available. Download new version?
@@ -218,9 +221,6 @@ New version available.
 
 Next Page
 Наступная старонка
-
-Next Page\tRight Arrow
-Наступная старонка\t->
 
 No matches were found
 Узор не знойдзены
@@ -249,11 +249,11 @@ PDF-дaкумент
 PDF documents
 PDF-дакументы
 
+Pa&ge...\tCtrl-G
+Старонка...\tCtrl-G
+
 Page number %u inexistant
 Старонка %u не існуе
-
-Page...\tCtrl-G
-Старонка...\tCtrl-G
 
 Page:
 Старонка:
@@ -264,19 +264,16 @@ Please wait - rendering...
 Previous Page
 Папярэдняя старонка
 
-Previous Page\tLeft Arrow
-Папярэдняя старонка\t<-
-
 Printing problem.
 Памылка з друкаваннем.
 
 Remember &opened files
 &Запомніць адкрытыя файлы
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Павярнуць налева\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Павярнуць направа\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -285,13 +282,13 @@ Searching %d of %d...
 Set inverse search command-line
 Задаць каманду зваротнага пошуку
 
+Show &Toolbar
+Паказ панэлі прылад
+
 Show the &bookmarks sidebar when available
 Паказваць панэль &закладак (пры магчымасці)
 
-Show toolbar
-Паказ панэлі прылад
-
-Single page
+Single Page
 Адна старонка
 
 Source file %s has no synchronization point
@@ -315,6 +312,9 @@ Unknown source file (%s)
 View
 Выгляд
 
+Visit &Website
+Наведаць сайт
+
 Warning
 Папярэджанне
 
@@ -334,7 +334,8 @@ Zoom Out
 [Выяўлены змены; адбываецца абнаўленне] %s
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Magnification:
 #&Manual
 #&Print... (denied)
@@ -343,20 +344,19 @@ Zoom Out
 #Attachment: %s
 #Author:
 #Automatic
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Created:
+#Custom &Zoom...
 #Denied Permissions:
 #Document Properties
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#Forward\tAlt+Right Arrow
 #GB
 #Hint: Use the F3 key for finding again
 #KB
@@ -364,14 +364,14 @@ Zoom Out
 #Modified:
 #No synchronization file found
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:
 #Pr&int with Adobe Reader...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Subject:
 #Text documents
 #Title:

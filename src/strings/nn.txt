@@ -11,8 +11,8 @@ Contributor: Jon Stødle
 &About
 &Om
 
-&Check for new version
-&Sjå etter ny versjon
+&Actual Size\tCtrl-1
+F&aktisk storleik\tCtrl-1
 
 &Close\tCtrl-W
 &Lukk\tCtrl-W
@@ -23,19 +23,31 @@ Ikkje spør meg igjen
 &File
 &Fil
 
+&First Page\tHome
+Fyrste side\tHome
+
 &Go To
 &Gå til
 
 &Help
 &Hjelp
 
+&Last Page\tEnd
+Siste side\tEnd
+
+&Next Page\tRight Arrow
+Neste side\t->
+
 &Open\tCtrl-O
 &Opne\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Førre side\t<-
+
+&Print...\tCtrl-P
 Skriv &ut\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Lagre &som\tCtrl-S
 
 &Skip this version
@@ -44,26 +56,23 @@ Hopp over denne versjonen
 &View
 &Vis
 
-&Visit website
-Vitj &heimeside
-
 &Zoom
 &Zoom
 
 About SumatraPDF
 Om SumatraPDF
 
-Act&ual Size\tCtrl-1
-F&aktisk storleik\tCtrl-1
-
 Associate with PDF files?
 Tilknytte PDF-filer?
 
-Bookmarks\tF12
+Book&marks\tF12
 Bokmerker\tF12
 
-Change language
-Byt språk (Change language)
+Change Language
+Byt språk (Change Language)
+
+Check for &Updates
+&Sjå etter ny versjon
 
 Continuous
 Kontinuerleg
@@ -71,7 +80,7 @@ Kontinuerleg
 Continuous facing
 Kontunuerleg motståande
 
-Contribute translation
+Contribute Translation
 Delta med omsetjing
 
 Could not open Printer
@@ -89,11 +98,17 @@ Skriv inn passord for %s
 Error loading PDF file.
 Feil under lasting av PDF-fil
 
+F&ullscreen\tCtrl-L
+Full skjerm\tCtrl-L
+
 Facing
 Motståande
 
 Failed to save a file
 Feil under lagring av fil
+
+Fin&d...\tCtrl-F
+Finn...\tCtrl-F
 
 Find Next
 Finn neste
@@ -101,35 +116,23 @@ Finn neste
 Find Previous
 Finn førre
 
-Find...\tCtrl-F
-Finn...\tCtrl-F
-
 Find:
 Finn
-
-First Page\tHome
-Fyrste side\tHome
 
 Fit &Page\tCtrl-0
 Tilpass &side\tCtrl-0
 
+Fit &Width\tCtrl-2
+Tilpass &breidde\tCtrl-2
+
 Fit Page
 Tilpass side
-
-Fit Widt&h\tCtrl-2
-Tilpass &breidde\tCtrl-2
 
 Fit Width
 Tilpass breidde
 
-Fullscreen\tCtrl-L
-Full skjerm\tCtrl-L
-
 Go to page
 Gå til side
-
-Last Page\tEnd
-Siste side\tEnd
 
 Make SumatraPDF default application for PDF files?
 Gjere SumatraPDF til standardprogram for PDF-filer?
@@ -137,7 +140,7 @@ Gjere SumatraPDF til standardprogram for PDF-filer?
 Make SumatraPDF my main PDF reader
 Bruk SumatraPDF som standard PDF-lesar
 
-Match case
+Match Case
 Skil mellom store/små bokstavar
 
 New version %s is available. Download new version?
@@ -149,16 +152,13 @@ Ny versjon tilgjengeleg.
 Next Page
 Neste side
 
-Next Page\tRight Arrow
-Neste side\t->
-
 No new version available.
 Ingen nye versjonar.
 
 Open
 Opne
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Side...\tCtrl-G
 
 Page:
@@ -167,29 +167,29 @@ Side:
 Previous Page
 Førre side
 
-Previous Page\tLeft Arrow
-Førre side\t<-
-
 Printing problem.
 Skrivarfeil
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Roter til venstre\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Roter til høgre\tCtrl-Shift-+
 
 Set inverse search command-line
 Velg motsatt søk-kommandolinje
 
-Show toolbar
+Show &Toolbar
 Vis verktylinje
 
-Single page
+Single Page
 Enkel side
 
 View
 Vis
+
+Visit &Website
+Vitj &heimeside
 
 You have the latest version.
 Du har den siste versjonen.
@@ -204,7 +204,8 @@ Zoom Out
 Zoom ut
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -227,27 +228,26 @@ Zoom ut
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -262,7 +262,7 @@ Zoom ut
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -274,8 +274,8 @@ Zoom ut
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

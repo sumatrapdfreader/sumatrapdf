@@ -12,8 +12,8 @@ Contributor: Karnes Kim (karnes@gmail.com)
 &About
 정보(&A)...
 
-&Check for new version
-새 버전 확인
+&Actual Size\tCtrl-1
+본래 크기(&U)\tCtrl-1
 
 &Close\tCtrl-W
 닫기(&C)\tCtrl-W
@@ -24,22 +24,34 @@ Contributor: Karnes Kim (karnes@gmail.com)
 &File
 파일(&F)
 
+&First Page\tHome
+첫 장\tHome
+
 &Go To
 이동(&G)
 
 &Help
 도움말(&H)
 
+&Last Page\tEnd
+마지막 장\tEnd
+
 &Manual
 사용설명서
+
+&Next Page\tRight Arrow
+다음 장\t->
 
 &Open\tCtrl-O
 열기(&O)...\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+이전 장\t<-
+
+&Print...\tCtrl-P
 인쇄(&P)...\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 다른 이름으로 저장(&S)...\tCtrl-S
 
 &Skip this version
@@ -48,26 +60,23 @@ Contributor: Karnes Kim (karnes@gmail.com)
 &View
 보기(&V)
 
-&Visit website
-웹 사이트 방문(&V)
-
 &Zoom
 확대(&Z)
 
 About SumatraPDF
 SumatraPDF 정보
 
-Act&ual Size\tCtrl-1
-본래 크기(&U)\tCtrl-1
-
 Associate with PDF files?
 PDF 파일 연결을 설정할까요?
 
-Bookmarks\tF12
+Book&marks\tF12
 책갈피\tF12
 
-Change language
-언어 변경 (Change language)
+Change Language
+언어 변경 (Change Language)
+
+Check for &Updates
+새 버전 확인
 
 Continuous
 한 장씩 연속
@@ -75,7 +84,7 @@ Continuous
 Continuous facing
 여러 장씩 연속
 
-Contribute translation
+Contribute Translation
 번역 기여
 
 Could not open Printer
@@ -93,11 +102,17 @@ Enter password for %s
 Error loading PDF file.
 PDF 파일을 읽을 수 없습니다.
 
+F&ullscreen\tCtrl-L
+전체 화면\tCtrl-L
+
 Facing
 여러 장씩
 
 Failed to save a file
 파일을 저장할 수 없습니다.
+
+Fin&d...\tCtrl-F
+찾기...\tCtrl-F
 
 Find Next
 다음 찾기
@@ -105,35 +120,23 @@ Find Next
 Find Previous
 이전 찾기
 
-Find...\tCtrl-F
-찾기...\tCtrl-F
-
 Find:
 찾기:
-
-First Page\tHome
-첫 장\tHome
 
 Fit &Page\tCtrl-0
 창 크기에 맞춤(&P)\tCtrl-0
 
+Fit &Width\tCtrl-2
+꽉 찬 화면(&H)\tCtrl-2
+
 Fit Page
 창 크기에 맞춤
-
-Fit Widt&h\tCtrl-2
-꽉 찬 화면(&H)\tCtrl-2
 
 Fit Width
 꽉 찬 화면
 
-Fullscreen\tCtrl-L
-전체 화면\tCtrl-L
-
 Go to page
 페이지로 가기
-
-Last Page\tEnd
-마지막 장\tEnd
 
 Make SumatraPDF default application for PDF files?
 SumatraPDF를 기본 PDF 뷰어로 설정할까요?
@@ -141,7 +144,7 @@ SumatraPDF를 기본 PDF 뷰어로 설정할까요?
 Make SumatraPDF my main PDF reader
 SumatraPDF를 기본 PDF 뷰어로 설정
 
-Match case
+Match Case
 대/소문자 구분
 
 New version %s is available. Download new version?
@@ -153,16 +156,13 @@ New version available.
 Next Page
 다음 장
 
-Next Page\tRight Arrow
-다음 장\t->
-
 No new version available.
 새로운 버전이 없습니다.
 
 Open
 열기
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 쪽...\tCtrl-G
 
 Page:
@@ -171,29 +171,29 @@ Page:
 Previous Page
 이전 장
 
-Previous Page\tLeft Arrow
-이전 장\t<-
-
 Printing problem.
 인쇄를 할 수 없습니다.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 왼쪽으로 회전\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 오른쪽으로 회전\tCtrl-Shift-+
 
 Set inverse search command-line
 역탐색 명령 설정
 
-Show toolbar
+Show &Toolbar
 도구 모음 보기
 
-Single page
+Single Page
 한 장씩
 
 View
 보기
+
+Visit &Website
+웹 사이트 방문(&V)
 
 You have the latest version.
 최신 버전입니다.
@@ -208,7 +208,8 @@ Zoom Out
 축소
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -230,27 +231,26 @@ Zoom Out
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -265,7 +265,7 @@ Zoom Out
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -277,8 +277,8 @@ Zoom Out
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

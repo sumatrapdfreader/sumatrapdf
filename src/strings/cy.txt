@@ -12,14 +12,17 @@ Contributor: Glenn Wall
 &About
 &Ynghylch...
 
-&Check for new version
-&Gwirio am fersiwn newydd
+&Actual Size\tCtrl-1
+&Gwir Faint\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Nôl\tAlt+Saeth Chwith
 
 &Close\tCtrl-W
 &Cau\tCtrl-W
 
-&Custom Zoom...
-&Addasu Chwyddo...
+&Copy Selection\tCtrl-C
+Copïo'r Dewis\tCtrl-C
 
 &Don't ask me again
 &Peidio gofyn eto
@@ -30,6 +33,9 @@ Contributor: Glenn Wall
 &Find what:
 &Canfod beth:
 
+&First Page\tHome
+Tudalen Gyntaf\tHome
+
 &Go To
 &Mynd
 
@@ -39,6 +45,9 @@ Contributor: Glenn Wall
 &Help
 &Cymorth
 
+&Last Page\tEnd
+Tudalen Olaf\tEnd
+
 &Magnification:
 &Chwyddiad:
 
@@ -47,6 +56,9 @@ Contributor: Glenn Wall
 
 &Match case
 &Cydweddu maint
+
+&Next Page\tRight Arrow
+Tudalen Nesaf\t->
 
 &No
 &Na
@@ -63,7 +75,10 @@ Contributor: Glenn Wall
 &Password:
 &Cyfrinair:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Tudalen Flaenorol\t<-
+
+&Print...\tCtrl-P
 &Argraffu\tCtrl-P
 
 &Print... (denied)
@@ -72,7 +87,7 @@ Contributor: Glenn Wall
 &Remember these settings for each document
 C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Cadw fel...\tCtrl-S
 
 &Settings
@@ -83,9 +98,6 @@ C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 
 &View
 &Gweld
-
-&Visit website
-&Ymweld â'r Wefan
 
 &Yes
 &Iawn
@@ -98,9 +110,6 @@ C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 
 About SumatraPDF
 Ynghylch SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Gwir Faint\tCtrl-1
 
 Advanced
 Uwch
@@ -123,13 +132,10 @@ Awtomatig
 Automatically check for &updates
 Gwirio'n awtomatig am &ddiweddariadau
 
-Back\tAlt+Left Arrow
-Nôl\tAlt+Saeth Chwith
-
-Book view
+Book View
 Golwg llyfr
 
-Bookmarks\tF12
+Book&marks\tF12
 Nodau Tudalen\tF12
 
 Bytes
@@ -144,8 +150,11 @@ Methu argraffu'r ffeil
 Cannot start inverse search command. Please check the command line in the settings.
 Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 
-Change language
-Newid iaith (Change language)
+Change Language
+Newid iaith (Change Language)
+
+Check for &Updates
+&Gwirio am fersiwn newydd
 
 Continuous
 Didor
@@ -156,11 +165,8 @@ Golwg llyfr didor
 Continuous facing
 Gwynebu'n Ddidor
 
-Contribute translation
+Contribute Translation
 Cyfrannu cyfieithiad.
-
-Copy Selection\tCtrl-C
-Copïo'r Dewis\tCtrl-C
 
 Could not open Printer
 Methu agor Argraffydd
@@ -173,6 +179,9 @@ Methu cyflwyno'r dudalen
 
 Created:
 Crëwyd:
+
+Custom &Zoom...
+&Addasu Chwyddo...
 
 Default &Layout:
 &Cynllun Rhagosodedig:
@@ -201,6 +210,12 @@ Rhoi cyfrinair ar gyfer %s
 Error loading PDF file.
 Gwall wrth lwytho ffeil.
 
+F&orward\tAlt+Right Arrow
+Ymlaen\tAlt+Saeth Dde
+
+F&ullscreen\tCtrl-L
+Sgrin Lawn\tCtrl-L
+
 Facing
 Wynebu
 
@@ -213,6 +228,9 @@ Maint Ffeil:
 File:
 Ffeil:
 
+Fin&d...\tCtrl-F
+Canfod...\tCtrl-F
+
 Find
 Canfod
 
@@ -222,35 +240,23 @@ Canfod y Nesaf
 Find Previous
 Canfod y Blaenorol
 
-Find...\tCtrl-F
-Canfod...\tCtrl-F
-
 Find:
 Canfod:
-
-First Page\tHome
-Tudalen Gyntaf\tHome
 
 Fit &Page\tCtrl-0
 &Ffitio'r Dudalen\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Fitio'r Lled\tCtrl-2
+
 Fit Page
 Ffitio'r Dudalen
-
-Fit Widt&h\tCtrl-2
-&Fitio'r Lled\tCtrl-2
 
 Fit Width
 Fitio'r Lled
 
-Forward\tAlt+Right Arrow
-Ymlaen\tAlt+Saeth Dde
-
 Found text at page %d
 Canfod testun ar dudalen %d
-
-Fullscreen\tCtrl-L
-Sgrin Lawn\tCtrl-L
 
 GB
 GB
@@ -260,9 +266,6 @@ Mynd i dudalen
 
 Hint: Use the F3 key for finding again
 Cyngor: Defnyddiwch bysell F3 i ganfod eto
-
-Last Page\tEnd
-Tudalen Olaf\tEnd
 
 MB
 MB
@@ -276,7 +279,7 @@ Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 Make SumatraPDF my main PDF reader
 Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 
-Match case
+Match Case
 Cydweddu Maint
 
 Modified:
@@ -290,9 +293,6 @@ Mae fersiwn newydd ar gael.
 
 Next Page
 Tudalen Nesaf
-
-Next Page\tRight Arrow
-Tudalen Nesaf\t->
 
 No matches were found
 Heb ganfod cyfatebiad
@@ -321,7 +321,7 @@ Agor
 Open in &Adobe Reader
 Agor yn &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 P&riodweddau...\tCtrl-D
 
 PDF Document
@@ -336,14 +336,14 @@ PDF Fersiwn:
 PDF documents
 Dogfennau PDF
 
+Pa&ge...\tCtrl-G
+Tudalen...\tCtrl-G
+
 Page Size:
 Maint Tudalen:
 
 Page number %u inexistant
 Nid yw tudalen rhif %u yn bodoli
-
-Page...\tCtrl-G
-Tudalen...\tCtrl-G
 
 Page:
 Tudalen:
@@ -357,19 +357,16 @@ Argraffu gyda Adobe Reader...
 Previous Page
 Tudalen Flaenorol
 
-Previous Page\tLeft Arrow
-Tudalen Flaenorol\t<-
-
 Printing problem.
 Anhawster argraffu
 
 Remember &opened files
 Co&fio ffeiliau ar agor
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Troi i'r chwith\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Troi i'r dde\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -378,22 +375,22 @@ Chwilio am %d o %d...
 Select content with Ctrl+left mouse button
 Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 
-Send by &email...
+Send by &E-mail...
 Anfon drwy &e-bost...
 
 Set inverse search command-line
 Gosod linell-orchymyn chwilio gwrthdro
 
-Show pages continuously
+Show &Toolbar
+Dangos y bar offer
+
+Show &pages continuously
 Dangos tudalennau'n ddidor
 
 Show the &bookmarks sidebar when available
 Dangos bar ochr y &nodau tudalen pan yw ar gael
 
-Show toolbar
-Dangos y bar offer
-
-Single page
+Single Page
 Tudalen unigol
 
 Source file %s has no synchronization point
@@ -425,6 +422,9 @@ Ffeil ffynhonnell anhysbys (%s)
 
 View
 Gweld
+
+Visit &Website
+&Ymweld â'r Wefan
 
 Warning
 Rhybudd

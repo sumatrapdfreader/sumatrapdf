@@ -14,14 +14,17 @@ Contributor: Andreas Hopp (teraflop@arcor.de)
 &About
 &Über SumatraPDF
 
-&Check for new version
-Nach &neuer Version suchen
+&Actual Size\tCtrl-1
+&Tatsächliche Größe\tStrg+1
+
+&Back\tAlt+Left Arrow
+&Zurück\tAlt+<-
 
 &Close\tCtrl-W
 &Schließen\tStrg+W
 
-&Custom Zoom...
-&Zoomfaktor…
+&Copy Selection\tCtrl-C
+Auswahl &kopieren\tStrg+C
 
 &Don't ask me again
 Nicht &wieder fragen.
@@ -32,6 +35,9 @@ Nicht &wieder fragen.
 &Find what:
 &Suchen nach:
 
+&First Page\tHome
+&Erste Seite\tPos1
+
 &Go To
 &Gehe zu
 
@@ -41,6 +47,9 @@ Nicht &wieder fragen.
 &Help
 &Hilfe
 
+&Last Page\tEnd
+&Letzte Seite\tEnde
+
 &Magnification:
 &Vergrößerung:
 
@@ -49,6 +58,9 @@ Nicht &wieder fragen.
 
 &Match case
 &Groß-/Kleinschreibung beachten
+
+&Next Page\tRight Arrow
+&Nächste Seite\t->
 
 &No
 &Nein
@@ -65,7 +77,10 @@ Nicht &wieder fragen.
 &Password:
 &Passwort:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+&Vorherige Seite\t<-
+
+&Print...\tCtrl-P
 &Drucken…\tStrg+P
 
 &Print... (denied)
@@ -77,7 +92,7 @@ Passwort für dieses Dokument &merken
 &Remember these settings for each document
 Ansicht-&Einstellungen für jedes Dokument merken
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Speichern &unter…\tStrg+S
 
 &Settings
@@ -88,9 +103,6 @@ Speichern &unter…\tStrg+S
 
 &View
 &Ansicht
-
-&Visit website
-&SumatraPDF im Internet
 
 &Yes
 &Ja
@@ -103,9 +115,6 @@ Speichern &unter…\tStrg+S
 
 About SumatraPDF
 Über SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Tatsächliche Größe\tStrg+1
 
 Advanced
 Weiteres
@@ -131,17 +140,14 @@ Automatisch
 Automatically check for &updates
 &Automatisch nach Updates suchen
 
-Back\tAlt+Left Arrow
-&Zurück\tAlt+<-
-
-Book view
+Book View
 Buchansicht
+
+Book&marks\tF12
+Lese&zeichen\tF12
 
 Bookmarks
 Lesezeichen
-
-Bookmarks\tF12
-Lesezeichen\tF12
 
 Bytes
 Byte
@@ -155,8 +161,11 @@ Datei kann nicht gedruckt werden
 Cannot start inverse search command. Please check the command line in the settings.
 Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
 
-Change language
-Sprache ändern… (Change language)
+Change Language
+&Sprache ändern… (Change Language)
+
+Check for &Updates
+Nach &neuer Version suchen
 
 Continuous
 Fortlaufend
@@ -167,11 +176,8 @@ Fortlaufende Buchansicht
 Continuous facing
 Fortlaufende Doppelseiten
 
-Contribute translation
+Contribute Translation
 Übersetzung beisteuern
-
-Copy Selection\tCtrl-C
-Auswahl kopieren\tStrg+C
 
 Could not open Printer
 Konnte den Drucker nicht ansprechen.
@@ -184,6 +190,9 @@ Diese Seite kann leider nicht angezeigt werden
 
 Created:
 Erstellt am:
+
+Custom &Zoom...
+&Zoomfaktor…
 
 Default &Layout:
 &Standardlayout:
@@ -212,6 +221,12 @@ Bitte Passwort für %s eingeben
 Error loading PDF file.
 Fehler beim Öffnen der Datei!
 
+F&orward\tAlt+Right Arrow
+Vor&wärts\tAlt+->
+
+F&ullscreen\tCtrl-L
+&Vollbild\tStrg+L
+
 Facing
 Doppelseite
 
@@ -224,6 +239,9 @@ Dateigröße:
 File:
 Datei:
 
+Fin&d...\tCtrl-F
+S&uchen…\tStrg+F
+
 Find
 Suchen
 
@@ -233,35 +251,23 @@ Weitersuchen
 Find Previous
 Rückwärts suchen
 
-Find...\tCtrl-F
-S&uchen…\tStrg+F
-
 Find:
 Suchen:
-
-First Page\tHome
-&Erste Seite\tPos1
 
 Fit &Page\tCtrl-0
 An &Seite anpassen\tStrg+0
 
+Fit &Width\tCtrl-2
+An &Breite anpassen\tStrg+2
+
 Fit Page
 An Seite anpassen
-
-Fit Widt&h\tCtrl-2
-An &Breite anpassen\tStrg+2
 
 Fit Width
 An Breite anpassen
 
-Forward\tAlt+Right Arrow
-Vor&wärts\tAlt+->
-
 Found text at page %d
 Text auf Seite %d gefunden
-
-Fullscreen\tCtrl-L
-Vollbild\tStrg+L
 
 GB
 GB
@@ -275,9 +281,6 @@ Tipp: F3-Taste verwenden, um weiterzusuchen
 KB
 KB
 
-Last Page\tEnd
-&Letzte Seite\tEnde
-
 MB
 MB
 
@@ -290,7 +293,7 @@ SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
 Make SumatraPDF my main PDF reader
 Standardmäßig PDF-Dateien mit SumatraPDF öffnen
 
-Match case
+Match Case
 Groß-/Kleinschreibung beachten
 
 Modified:
@@ -304,9 +307,6 @@ Neuere Version vorhanden.
 
 Next Page
 &Nächste Seite
-
-Next Page\tRight Arrow
-&Nächste Seite\t->
 
 No matches were found
 Suchbegriff nicht gefunden
@@ -335,8 +335,8 @@ Open
 Open in &Adobe Reader
 Mit &Adobe Reader öffnen
 
-P&roperties...\tCtrl-D
-Ei&genschaften...\tStrg+D
+P&roperties\tCtrl-D
+Ei&genschaften\tStrg+D
 
 PDF Document
 PDF-Dokument
@@ -350,14 +350,14 @@ PDF Version:
 PDF documents
 PDF-Dokumente
 
+Pa&ge...\tCtrl-G
+&Seite…\tStrg+G
+
 Page Size:
 Seitengröße:
 
 Page number %u inexistant
 Seite %u nicht vorhanden
-
-Page...\tCtrl-G
-&Seite…\tStrg+G
 
 Page:
 Seite:
@@ -366,13 +366,10 @@ Please wait - rendering...
 Bitte einen Moment Geduld…
 
 Pr&int with Adobe Reader...
-Mit Adobe Reader d&rucken...
+Mit Adobe Reader d&rucken…
 
 Previous Page
 &Vorherige Seite
-
-Previous Page\tLeft Arrow
-&Vorherige Seite\t<-
 
 Printing problem.
 Druckerproblem
@@ -380,11 +377,11 @@ Druckerproblem
 Remember &opened files
 Liste der &zuletzt geöffneten Dokumente anlegen
 
-Rotate left\tCtrl-Shift--
-Drehung links\tStrg+Umschalt+-
+Rotate &Left\tCtrl-Shift--
+Drehung &links\tStrg+Umschalt+-
 
-Rotate right\tCtrl-Shift-+
-Drehung rechts\tStrg+Umschalt++
+Rotate &Right\tCtrl-Shift-+
+Drehung &rechts\tStrg+Umschalt++
 
 Searching %d of %d...
 Suche auf Seite %d von %d…
@@ -392,22 +389,22 @@ Suche auf Seite %d von %d…
 Select content with Ctrl+left mouse button
 Inhalte mit Strg+linker Maustaste auswählen
 
-Send by &email...
+Send by &E-mail...
 Per &E-Mail versenden…
 
 Set inverse search command-line
 Befehlszeile für die Inverssuche setzen
 
-Show pages continuously
-Seiten fortlaufend anzeigen
+Show &Toolbar
+&Werkzeugleiste anzeigen
+
+Show &pages continuously
+Seiten &fortlaufend anzeigen
 
 Show the &bookmarks sidebar when available
 &Lesezeichenleiste beim Start anzeigen
 
-Show toolbar
-Werkzeugleiste anzeigen
-
-Single page
+Single Page
 Einzelne Seite
 
 Source file %s has no synchronization point
@@ -439,6 +436,9 @@ Unbekannte Datei (%s)
 
 View
 Ansicht
+
+Visit &Website
+&SumatraPDF im Internet
 
 Warning
 Warnung

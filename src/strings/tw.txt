@@ -12,14 +12,17 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &About
 關於(&A)
 
-&Check for new version
-檢查是否有新版本(&C)
+&Actual Size\tCtrl-1
+實際大小(&U)\tCtrl-1
+
+&Back\tAlt+Left Arrow
+上一停頓頁面\tAlt+<-
 
 &Close\tCtrl-W
 關閉(&C)\tCtrl-W
 
-&Custom Zoom...
-自訂縮放(&C)...
+&Copy Selection\tCtrl-C
+截取範圍\tCtrl-C
 
 &Don't ask me again
 不要再問我
@@ -30,6 +33,9 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Find what:
 尋找：(&F)
 
+&First Page\tHome
+首頁\tHome
+
 &Go To
 移至(&G)
 
@@ -39,6 +45,9 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Help
 說明(&H)
 
+&Last Page\tEnd
+尾頁\tEnd
+
 &Magnification:
 倍率(&M)
 
@@ -47,6 +56,9 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 
 &Match case
 區別大小寫(&M)
+
+&Next Page\tRight Arrow
+下一頁\t->
 
 &No, thanks
 不用了，謝謝(&N)
@@ -60,7 +72,10 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Password:
 密碼: (&P)
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+上一頁\t<-
+
+&Print...\tCtrl-P
 列印(&P)\tCtrl-P
 
 &Print... (denied)
@@ -69,7 +84,7 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &Remember these settings for each document
 儲存檔案檢視設定(&R)
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 另存新檔(&S)\tCtrl-S
 
 &Settings
@@ -81,17 +96,11 @@ Contributor: theowoo (http://grnrnat.net.ru/)
 &View
 檢視(&V)
 
-&Visit website
-瀏覽官網(&V)
-
 &Zoom
 縮放(&Z)
 
 About SumatraPDF
 關於 SumatraPDF
-
-Act&ual Size\tCtrl-1
-實際大小(&U)\tCtrl-1
 
 Advanced
 進階
@@ -114,13 +123,10 @@ Automatic
 Automatically check for &updates
 自動檢查軟體更新(&U)
 
-Back\tAlt+Left Arrow
-上一停頓頁面\tAlt+<-
-
-Book view
+Book View
 書本模式
 
-Bookmarks\tF12
+Book&marks\tF12
 書籤\tF12
 
 Bytes
@@ -135,8 +141,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 無法進行逆向搜尋。請檢查設定裡的命令列。
 
-Change language
+Change Language
 變更語系
+
+Check for &Updates
+檢查是否有新版本(&C)
 
 Continuous
 連續頁面
@@ -147,11 +156,8 @@ Continuous book view
 Continuous facing
 連續雙頁模式
 
-Contribute translation
+Contribute Translation
 提供翻譯
-
-Copy Selection\tCtrl-C
-截取範圍\tCtrl-C
 
 Could not open Printer
 無法開啟印表機。
@@ -164,6 +170,9 @@ Couldn't render the page
 
 Created:
 檔案建立日期：
+
+Custom &Zoom...
+自訂縮放(&C)...
 
 Default &Layout:
 預設閱覽模式：(L)
@@ -192,6 +201,12 @@ Enter password for %s
 Error loading PDF file.
 讀取PDF檔案時發失錯誤。
 
+F&orward\tAlt+Right Arrow
+下一停頓頁面\tAlt+->
+
+F&ullscreen\tCtrl-L
+全螢幕顯示\tCtrl-L
+
 Facing
 雙頁模式
 
@@ -204,6 +219,9 @@ File Size:
 File:
 檔案：
 
+Fin&d...\tCtrl-F
+尋找...\tCtrl-F
+
 Find
 尋找
 
@@ -213,35 +231,23 @@ Find Next
 Find Previous
 向上尋找
 
-Find...\tCtrl-F
-尋找...\tCtrl-F
-
 Find:
 尋找：
-
-First Page\tHome
-首頁\tHome
 
 Fit &Page\tCtrl-0
 合適頁面(&P)\tCtrl-0
 
+Fit &Width\tCtrl-2
+合適寬度(&H)\tCtrl-2
+
 Fit Page
 合適頁面
-
-Fit Widt&h\tCtrl-2
-合適寬度(&H)\tCtrl-2
 
 Fit Width
 合適寬度
 
-Forward\tAlt+Right Arrow
-下一停頓頁面\tAlt+->
-
 Found text at page %d
 於第 %d 頁找到目標
-
-Fullscreen\tCtrl-L
-全螢幕顯示\tCtrl-L
 
 GB
 GB
@@ -255,9 +261,6 @@ Hint: Use the F3 key for finding again
 KB
 KB
 
-Last Page\tEnd
-尾頁\tEnd
-
 MB
 MB
 
@@ -270,7 +273,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 把 SumatraPDF 作為預設的PDF閱讀工具
 
-Match case
+Match Case
 符合大小寫
 
 Modified:
@@ -284,9 +287,6 @@ New version available.
 
 Next Page
 下一頁
-
-Next Page\tRight Arrow
-下一頁\t->
 
 No matches were found
 找不到結果
@@ -312,7 +312,7 @@ Open
 Open in &Adobe Reader
 以 Adobe Reader 開啟(&A)
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 屬性...(&R)\tCtrl-D
 
 PDF Document
@@ -327,14 +327,14 @@ PDF 版本：
 PDF documents
 PDF 文件
 
+Pa&ge...\tCtrl-G
+頁面...\tCtrl-G
+
 Page Size:
 頁面大小：
 
 Page number %u inexistant
 第 %u 頁不存在
-
-Page...\tCtrl-G
-頁面...\tCtrl-G
 
 Page:
 頁面：
@@ -348,40 +348,37 @@ Pr&int with Adobe Reader...
 Previous Page
 上一頁
 
-Previous Page\tLeft Arrow
-上一頁\t<-
-
 Printing problem.
 列印問題
 
 Remember &opened files
 儲存最近開啟檔案
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 頁面左旋\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 頁面右旋\tCtrl-Shift-+
 
 Select content with Ctrl+left mouse button
 按 Ctrl+滑鼠左鍵截取內容
 
-Send by &email...
+Send by &E-mail...
 發送電郵...(&E)
 
 Set inverse search command-line
 設定反搜尋命令列
 
-Show pages continuously
+Show &Toolbar
+顯示工具列
+
+Show &pages continuously
 連續顯示頁面
 
 Show the &bookmarks sidebar when available
 顯示書籤欄(&B)
 
-Show toolbar
-顯示工具列
-
-Single page
+Single Page
 單頁模式
 
 Source file %s has no synchronization point
@@ -413,6 +410,9 @@ Unknown source file (%s)
 
 View
 檢視
+
+Visit &Website
+瀏覽官網(&V)
 
 Warning
 警告

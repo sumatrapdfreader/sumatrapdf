@@ -15,14 +15,17 @@ Contributor: Tommy G.
 &About
 &Om
 
-&Check for new version
-&Sök efter ny version
+&Actual Size\tCtrl-1
+&Verklig storlek\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Tillbaka\tAlt+Pil vänster
 
 &Close\tCtrl-W
 &Stäng\tCtrl-W
 
-&Custom Zoom...
-&Anpassad zoom...
+&Copy Selection\tCtrl-C
+Kopiera markering\tCtrl-C
 
 &Don't ask me again
 Fråga mig inte igen
@@ -33,6 +36,9 @@ Fråga mig inte igen
 &Find what:
 &Sök efter:
 
+&First Page\tHome
+Första sidan\tHome
+
 &Go To
 &Gå till
 
@@ -42,6 +48,9 @@ Fråga mig inte igen
 &Help
 &Hjälp
 
+&Last Page\tEnd
+Sista sidan\tEnd
+
 &Magnification:
 &Förstoring:
 
@@ -50,6 +59,9 @@ Fråga mig inte igen
 
 &Match case
 Matcha &versaler/gemener
+
+&Next Page\tRight Arrow
+Nästa sida\t->
 
 &No
 &Nej
@@ -66,7 +78,10 @@ Matcha &versaler/gemener
 &Password:
 &Lösenord:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Föregående sida\t<-
+
+&Print...\tCtrl-P
 Skriv &ut...\tCtrl-P
 
 &Print... (denied)
@@ -75,7 +90,7 @@ Skriv &ut...\tCtrl-P
 &Remember these settings for each document
 Kom ihåg dessa inställningar för &varje dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Spara so&m...\tCtrl-S
 
 &Settings
@@ -86,9 +101,6 @@ Hoppa över denna version
 
 &View
 Vi&sa
-
-&Visit website
-Besök webbplats
 
 &Yes
 &Ja
@@ -101,9 +113,6 @@ Besök webbplats
 
 About SumatraPDF
 Om SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Verklig storlek\tCtrl-1
 
 Advanced
 Avancerad
@@ -126,13 +135,10 @@ Automatiskt
 Automatically check for &updates
 Sök automatisk efter &uppdateringar
 
-Back\tAlt+Left Arrow
-Tillbaka\tAlt+Pil vänster
-
-Book view
+Book View
 Bokuppslag
 
-Bookmarks\tF12
+Book&marks\tF12
 Bokmärken\tF12
 
 Bytes
@@ -147,8 +153,11 @@ Kan ej skriva ut denna fil
 Cannot start inverse search command. Please check the command line in the settings.
 Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 
-Change language
-Byt språk (Change language)
+Change Language
+Byt språk (Change Language)
+
+Check for &Updates
+&Sök efter ny version
 
 Continuous
 Fortlöpande
@@ -159,11 +168,8 @@ Fortlöpande bokuppslag
 Continuous facing
 Fortlöpande uppslag
 
-Contribute translation
+Contribute Translation
 Bidra med översättning
-
-Copy Selection\tCtrl-C
-Kopiera markering\tCtrl-C
 
 Could not open Printer
 Kan inte anropa skrivaren.
@@ -176,6 +182,9 @@ Kunde ej visa sidan
 
 Created:
 Skapad:
+
+Custom &Zoom...
+&Anpassad zoom...
 
 Default &Layout:
 Förvalt &utseende
@@ -204,6 +213,12 @@ Ange lösenord för %s
 Error loading PDF file.
 Kan inte öppna PDF-filen.
 
+F&orward\tAlt+Right Arrow
+Framåt\tAlt+Pil höger
+
+F&ullscreen\tCtrl-L
+Fullskärm\tCtrl-L
+
 Facing
 Uppslag
 
@@ -216,6 +231,9 @@ Filstorlek:
 File:
 Fil:
 
+Fin&d...\tCtrl-F
+Sök...\tCtrl-F
+
 Find
 Sök
 
@@ -225,35 +243,23 @@ Sök nästa
 Find Previous
 Sök föregående
 
-Find...\tCtrl-F
-Sök...\tCtrl-F
-
 Find:
 Sök
-
-First Page\tHome
-Första sidan\tHome
 
 Fit &Page\tCtrl-0
 Anpassa efter &helsida\tCtrl-0
 
+Fit &Width\tCtrl-2
+Anpassa efter &bredd\tCtrl-2
+
 Fit Page
 Anpassa efter helsida
-
-Fit Widt&h\tCtrl-2
-Anpassa efter &bredd\tCtrl-2
 
 Fit Width
 Anpassa efter bredd
 
-Forward\tAlt+Right Arrow
-Framåt\tAlt+Pil höger
-
 Found text at page %d
 Hittade text på sidan %d
-
-Fullscreen\tCtrl-L
-Fullskärm\tCtrl-L
 
 GB
 GB
@@ -267,9 +273,6 @@ Tips: Tryck F3 för att söka vidare
 KB
 KB
 
-Last Page\tEnd
-Sista sidan\tEnd
-
 MB
 MB
 
@@ -282,7 +285,7 @@ Ställa in SumatraPDF som standardprogram för PDF-filer?
 Make SumatraPDF my main PDF reader
 Använd SumatraPDF som standardläsare för PDF
 
-Match case
+Match Case
 Matcha versaler/gemener
 
 Modified:
@@ -296,9 +299,6 @@ Nyare version tillgänglig.
 
 Next Page
 Nästa sida
-
-Next Page\tRight Arrow
-Nästa sida\t->
 
 No matches were found
 Inga träffar hittades
@@ -327,7 +327,7 @@ Open
 Open in &Adobe Reader
 Öppna i Adobe &Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 &Egenskaper...\tCtrl-D
 
 PDF Document
@@ -342,14 +342,14 @@ PDF-version:
 PDF documents
 PDF-dokument
 
+Pa&ge...\tCtrl-G
+Sida...\tCtrl-G
+
 Page Size:
 Sidstorlek:
 
 Page number %u inexistant
 Sidnummer %u finns ej
-
-Page...\tCtrl-G
-Sida...\tCtrl-G
 
 Page:
 Sida:
@@ -363,19 +363,16 @@ Skriv ut med Adobe Reader...
 Previous Page
 Föregående sida
 
-Previous Page\tLeft Arrow
-Föregående sida\t<-
-
 Printing problem.
 Utskriftsproblem.
 
 Remember &opened files
 Kom ihåg öppnade &filer
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Rotera åt vänster\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Rotera åt höger\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -384,22 +381,22 @@ Söker %d av %d...
 Select content with Ctrl+left mouse button
 Markera med Ctrl + vänster musknapp
 
-Send by &email...
+Send by &E-mail...
 S&kicka som epost...
 
 Set inverse search command-line
 Sätt motsatt sök-kommandorad
 
-Show pages continuously
+Show &Toolbar
+Visa verktygsfält
+
+Show &pages continuously
 Visa sidor fortlöpande
 
 Show the &bookmarks sidebar when available
 Visa &bokmärken när de finns
 
-Show toolbar
-Visa verktygsfält
-
-Single page
+Single Page
 Enkel sida
 
 Source file %s has no synchronization point
@@ -431,6 +428,9 @@ Okänd källfil (%s)
 
 View
 Visa
+
+Visit &Website
+Besök webbplats
 
 Warning
 Varning

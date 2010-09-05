@@ -13,14 +13,17 @@ Contributor: BJ Hill
 &About
 &Om
 
-&Check for new version
-&Se etter ny versjon...
+&Actual Size\tCtrl-1
+Fak&tisk størrelse\tCtrl+1
+
+&Back\tAlt+Left Arrow
+Tilbake\tAlt+Pil venstre
 
 &Close\tCtrl-W
 &Lukk\tCtrl+W
 
-&Custom Zoom...
-&Egendefinert zoom...
+&Copy Selection\tCtrl-C
+Kopier merket tekst\tCtrl+C
 
 &Don't ask me again
 &Ikke spør meg igjen.
@@ -31,6 +34,9 @@ Contributor: BJ Hill
 &Find what:
 &Søk etter:
 
+&First Page\tHome
+Første side\tHome
+
 &Go To
 &Gå til
 
@@ -40,6 +46,9 @@ Contributor: BJ Hill
 &Help
 &Hjelp
 
+&Last Page\tEnd
+Siste side\tEnd
+
 &Magnification:
 &Forstørrelse:
 
@@ -48,6 +57,9 @@ Contributor: BJ Hill
 
 &Match case
 &Skill mellom store og små bokstaver
+
+&Next Page\tRight Arrow
+Neste side\tPil høyre
 
 &No
 &Nei
@@ -64,13 +76,16 @@ Contributor: BJ Hill
 &Password:
 &Passord:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Forrige side\tPil venstre
+
+&Print...\tCtrl-P
 &Skriv ut...\tCtrl+P
 
 &Remember these settings for each document
 &Husk disse innstillingene for hvert dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Lagre &som...\tCtrl+S
 
 &Settings
@@ -81,9 +96,6 @@ Lagre &som...\tCtrl+S
 
 &View
 &Vis
-
-&Visit website
-&Besøk hjemmeside
 
 &Yes
 &Ja
@@ -96,9 +108,6 @@ Lagre &som...\tCtrl+S
 
 About SumatraPDF
 Om SumatraPDF
-
-Act&ual Size\tCtrl-1
-Fak&tisk størrelse\tCtrl+1
 
 Advanced
 Avansert
@@ -121,13 +130,10 @@ Automatisk
 Automatically check for &updates
 Automatisk sjekk for &oppdateringer
 
-Back\tAlt+Left Arrow
-Tilbake\tAlt+Pil venstre
-
-Book view
+Book View
 Bokvisning
 
-Bookmarks\tF12
+Book&marks\tF12
 Bokmerker\tF12
 
 Bytes
@@ -142,8 +148,11 @@ Kan ikke skrive ut filen
 Cannot start inverse search command. Please check the command line in the settings.
 Kan ikke starte inversert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
 
-Change language
+Change Language
 Endre språk
+
+Check for &Updates
+&Se etter ny versjon...
 
 Continuous
 Kontinuerlig
@@ -154,11 +163,8 @@ Kontinuerlig bokvisning
 Continuous facing
 Kontinuerlig - motst&ående
 
-Contribute translation
+Contribute Translation
 Bidra med oversetting
-
-Copy Selection\tCtrl-C
-Kopier merket tekst\tCtrl+C
 
 Could not open Printer
 Kunne ikke åpne skriveren.
@@ -171,6 +177,9 @@ Kunne ikke vise siden
 
 Created:
 Opprettet:
+
+Custom &Zoom...
+&Egendefinert zoom...
 
 Default &Layout:
 Standard sideoppsett:
@@ -196,6 +205,12 @@ Skriv inn passord for %s
 Error loading PDF file.
 Feil ved åpning av PDF fil.
 
+F&orward\tAlt+Right Arrow
+Fremover\tAlt+Pil høyre
+
+F&ullscreen\tCtrl-L
+Fullskjerm\tCtrl+L
+
 Facing
 Motstående
 
@@ -208,6 +223,9 @@ Filstørrelse:
 File:
 Fil:
 
+Fin&d...\tCtrl-F
+Søk etter...\tCtrl+F
+
 Find
 Søk etter
 
@@ -217,35 +235,23 @@ Neste
 Find Previous
 Forrige
 
-Find...\tCtrl-F
-Søk etter...\tCtrl+F
-
 Find:
 Søk etter:
-
-First Page\tHome
-Første side\tHome
 
 Fit &Page\tCtrl-0
 Tilpass &side\tCtrl+0
 
+Fit &Width\tCtrl-2
+Tilpass til bredd&e\tCtrl+2
+
 Fit Page
 Tilpass side
-
-Fit Widt&h\tCtrl-2
-Tilpass til bredd&e\tCtrl+2
 
 Fit Width
 Tilpass til bredde
 
-Forward\tAlt+Right Arrow
-Fremover\tAlt+Pil høyre
-
 Found text at page %d
 Fant tekst på side &d
-
-Fullscreen\tCtrl-L
-Fullskjerm\tCtrl+L
 
 GB
 GB
@@ -259,9 +265,6 @@ Tips: Bruk F3 tasten for søk etter neste
 KB
 KB
 
-Last Page\tEnd
-Siste side\tEnd
-
 MB
 MB
 
@@ -274,7 +277,7 @@ Gjør SumatraPDF standard åpningsprogram for PDF filer?
 Make SumatraPDF my main PDF reader
 Bruk SumatraPDF som standard PDF-leser
 
-Match case
+Match Case
 Skill mellom store og små bokstaver
 
 Modified:
@@ -288,9 +291,6 @@ Ny versjon tilgjenglig.
 
 Next Page
 Neste side
-
-Next Page\tRight Arrow
-Neste side\tPil høyre
 
 No matches were found
 Søkeelementet ble ikke funnet
@@ -319,7 +319,7 @@ Open
 Open in &Adobe Reader
 Åpne i &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 E&genskaper...\tCtrl-D
 
 PDF Document
@@ -334,14 +334,14 @@ PDF-versjon:
 PDF documents
 PDF dokumenter (*.pdf)
 
+Pa&ge...\tCtrl-G
+Side...\tCtrl+G
+
 Page Size:
 Sidestørrelse:
 
 Page number %u inexistant
 Sidetallet '%u' finnes ikke i dokumentet.
-
-Page...\tCtrl-G
-Side...\tCtrl+G
 
 Page:
 Side:
@@ -352,19 +352,16 @@ Vennligst vent - arbeider...
 Previous Page
 Forrige side
 
-Previous Page\tLeft Arrow
-Forrige side\tPil venstre
-
 Printing problem.
 Problem med utskrift.
 
 Remember &opened files
 Husk &åpnede filer
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Roter mot klokken\tCtrl+Shift+Minus
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Roter med klokken\tCtrl+Shift+Pluss
 
 Searching %d of %d...
@@ -373,22 +370,22 @@ Søker &d av &d...
 Select content with Ctrl+left mouse button
 Velg innhold med Ctrl+Venstre museknapp
 
-Send by &email...
+Send by &E-mail...
 Send med e-post...
 
 Set inverse search command-line
 Sett invertert søke kommandolinje
 
-Show pages continuously
+Show &Toolbar
+Vis verktøylinje
+
+Show &pages continuously
 Vis sider kontinuerlig
 
 Show the &bookmarks sidebar when available
 Vis &bookmerker-fanen når tilgjengelig
 
-Show toolbar
-Vis verktøylinje
-
-Single page
+Single Page
 Enkeltside
 
 Source file %s has no synchronization point
@@ -417,6 +414,9 @@ Ukjent kildefil (&s)
 
 View
 Vis
+
+Visit &Website
+&Besøk hjemmeside
 
 Warning
 Advarsel

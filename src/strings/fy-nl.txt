@@ -11,14 +11,17 @@ Contributor: Wim Benes
 &About
 &Oer
 
-&Check for new version
-&Kontrolearje op fernijings
+&Actual Size\tCtrl-1
+Wiere grutte\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Tebek\tAlt+<-
 
 &Close\tCtrl-W
 &Ofslute\tCtrl-W
 
-&Custom Zoom...
-&Oanpaste Zoom...
+&Copy Selection\tCtrl-C
+Kopiearje seleksje\tCtrl-C
 
 &Don't ask me again
 Net mear freegje
@@ -29,6 +32,9 @@ Net mear freegje
 &Find what:
 &Sykje nei:
 
+&First Page\tHome
+Earste side\tHome
+
 &Go To
 &Gean nei
 
@@ -38,6 +44,9 @@ Net mear freegje
 &Help
 &Help
 
+&Last Page\tEnd
+Lêste side\tEnd
+
 &Magnification:
 &Fergrutting:
 
@@ -46,6 +55,9 @@ Utlis
 
 &Match case
 Haad-/lytse letters tapasse
+
+&Next Page\tRight Arrow
+Folgjende side\t->
 
 &No
 &Nee
@@ -62,13 +74,16 @@ Haad-/lytse letters tapasse
 &Password:
 &Wachtwurd:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Foarige side\t<-
+
+&Print...\tCtrl-P
 &Ofdrukke\tCtrl-P
 
 &Remember these settings for each document
 &Bewarje dizze ynstellingen foar elk dokumint
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Bewarje as...\tCtrl-S
 
 &Settings
@@ -79,9 +94,6 @@ Dizze ferzje oerslaan
 
 &View
 &Byld
-
-&Visit website
-Besykje it &webstee
 
 &Yes
 &Ja
@@ -94,9 +106,6 @@ Besykje it &webstee
 
 About SumatraPDF
 Oer SumatraPDF
-
-Act&ual Size\tCtrl-1
-Wiere grutte\tCtrl-1
 
 Advanced
 Avansearre
@@ -119,13 +128,10 @@ Automatysk
 Automatically check for &updates
 Automatysk kontrolearje op &fernijings
 
-Back\tAlt+Left Arrow
-Tebek\tAlt+<-
-
-Book view
+Book View
 Boekbyld
 
-Bookmarks\tF12
+Book&marks\tF12
 Blêdwizers\tF12
 
 Bytes
@@ -140,8 +146,11 @@ Dit bestân kin net ôfdrukt wurde
 Cannot start inverse search command. Please check the command line in the settings.
 Kin de omkearde sykrjochting net starte. Kontrolearje de opdrachtrigel yn de ynstellingen.
 
-Change language
-Taal kieze (Change language)
+Change Language
+Taal kieze (Change Language)
+
+Check for &Updates
+&Kontrolearje op fernijings
 
 Continuous
 Trochrinnend
@@ -152,11 +161,8 @@ Fierder mei boekbyld
 Continuous facing
 Dûbele side trochrinnend
 
-Contribute translation
+Contribute Translation
 Help mei oersetten
-
-Copy Selection\tCtrl-C
-Kopiearje seleksje\tCtrl-C
 
 Could not open Printer
 Printer net fûn
@@ -169,6 +175,9 @@ Dizze side kin net werjûn wurde
 
 Created:
 Makke:
+
+Custom &Zoom...
+&Oanpaste Zoom...
 
 Default &Layout:
 Standert &Layout:
@@ -194,6 +203,12 @@ Wachtwurd ynfiere foar %s
 Error loading PDF file.
 Flater by laden PDF bestân.
 
+F&orward\tAlt+Right Arrow
+Fierder\tAlt+->
+
+F&ullscreen\tCtrl-L
+Folslein skerm\tCtrl-L
+
 Facing
 Dûbele side
 
@@ -206,6 +221,9 @@ Bestânsgrutte
 File:
 Bestân:
 
+Fin&d...\tCtrl-F
+Sykje...\tCtrl-F
+
 Find
 Sykje
 
@@ -215,35 +233,23 @@ Folgjende
 Find Previous
 Foarige
 
-Find...\tCtrl-F
-Sykje...\tCtrl-F
-
 Find:
 Sykje:
-
-First Page\tHome
-Earste side\tHome
 
 Fit &Page\tCtrl-0
 Folsleine &side\tCtrl-0
 
+Fit &Width\tCtrl-2
+Passend yn &breedte\tCtrl-2
+
 Fit Page
 Folsleine side
-
-Fit Widt&h\tCtrl-2
-Passend yn &breedte\tCtrl-2
 
 Fit Width
 Passend yn breedte
 
-Forward\tAlt+Right Arrow
-Fierder\tAlt+->
-
 Found text at page %d
 Tekst fûn op side %d
-
-Fullscreen\tCtrl-L
-Folslein skerm\tCtrl-L
 
 GB
 GB
@@ -257,9 +263,6 @@ Tip: Brûk de funksjetoets F3 om fierder te sykjen
 KB
 KB
 
-Last Page\tEnd
-Lêste side\tEnd
-
 MB
 MB
 
@@ -272,7 +275,7 @@ SumatraPDF as standertlêzer fan PDF-bestannen ynstelle?
 Make SumatraPDF my main PDF reader
 SumatraPDF as standert PDF-lêzer ynstelle
 
-Match case
+Match Case
 Haadlettergefoelich
 
 Modified:
@@ -286,9 +289,6 @@ Nije ferzje beskikber.
 
 Next Page
 Folgjende side
-
-Next Page\tRight Arrow
-Folgjende side\t->
 
 No matches were found
 Gjin sykresultaat fûn
@@ -317,7 +317,7 @@ Iepenje
 Open in &Adobe Reader
 Iepenje mei &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 E&igenskippen...\tCtrl-D
 
 PDF Document
@@ -332,14 +332,14 @@ PDF-ferzje:
 PDF documents
 PDF-bestannen
 
+Pa&ge...\tCtrl-G
+Side...\tCtrl-G
+
 Page Size:
 Sidegrutte:
 
 Page number %u inexistant
 Sidenûmer %u bestiet net
-
-Page...\tCtrl-G
-Side...\tCtrl-G
 
 Page:
 Side:
@@ -350,19 +350,16 @@ In amerijke asjobleaft - werjaan...
 Previous Page
 Foarige side
 
-Previous Page\tLeft Arrow
-Foarige side\t<-
-
 Printing problem.
 Probleem by it ôfdrukken.
 
 Remember &opened files
 Unthâld &iepene bestannen
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Linksom draaie\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Rjochtsom draaie\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -371,22 +368,22 @@ Sykje %d fan %d...
 Select content with Ctrl+left mouse button
 Selektearje ynhâld mei Ctrl+linker mûsknop
 
-Send by &email...
+Send by &E-mail...
 Ferstjoer per &e-mail...
 
 Set inverse search command-line
 Omkearde sykrjochting ynstelle
 
-Show pages continuously
+Show &Toolbar
+Arkbalke toane
+
+Show &pages continuously
 Toan sides kontinue
 
 Show the &bookmarks sidebar when available
 Toan de &blêdwizerarkbalke as beskikber
 
-Show toolbar
-Arkbalke toane
-
-Single page
+Single Page
 Inkele side
 
 Source file %s has no synchronization point
@@ -415,6 +412,9 @@ Unbekend boarnebestân (%s)
 
 View
 Byld
+
+Visit &Website
+Besykje it &webstee
 
 Warning
 Warskôging

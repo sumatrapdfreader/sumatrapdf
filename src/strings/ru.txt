@@ -13,14 +13,17 @@ Contributor: Victor Kozyakin
 &About
 О программе...
 
-&Check for new version
-Проверить наличие новой версии
+&Actual Size\tCtrl-1
+Реальный размер\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Назад\tAlt+<-
 
 &Close\tCtrl-W
 Закрыть\tCtrl-W
 
-&Custom Zoom...
-Указать масштаб...
+&Copy Selection\tCtrl-C
+Скопировать выделенное\tCtrl-C
 
 &Don't ask me again
 Больше не спрашивать
@@ -31,6 +34,9 @@ Contributor: Victor Kozyakin
 &Find what:
 &Найти:
 
+&First Page\tHome
+Первая страница\tHome
+
 &Go To
 Переход
 
@@ -40,6 +46,9 @@ Contributor: Victor Kozyakin
 &Help
 Справка
 
+&Last Page\tEnd
+Последняя страница\tEnd
+
 &Magnification:
 Масштабирование:
 
@@ -48,6 +57,9 @@ Contributor: Victor Kozyakin
 
 &Match case
 &Учитывать регистр
+
+&Next Page\tRight Arrow
+Следующая страница\t->
 
 &No
 Нет
@@ -64,7 +76,10 @@ Contributor: Victor Kozyakin
 &Password:
 &Пароль:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Предыдущая страница\t<-
+
+&Print...\tCtrl-P
 Печать\tCtrl-P
 
 &Print... (denied)
@@ -73,7 +88,7 @@ Contributor: Victor Kozyakin
 &Remember these settings for each document
 Запомнить эти параметры для &каждого документа
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Сохранить как...\tCtrl-S
 
 &Settings
@@ -84,9 +99,6 @@ Contributor: Victor Kozyakin
 
 &View
 Вид
-
-&Visit website
-Посетить веб-сайт программы
 
 &Yes
 Да
@@ -99,9 +111,6 @@ Contributor: Victor Kozyakin
 
 About SumatraPDF
 О программе SumatraPDF
-
-Act&ual Size\tCtrl-1
-Реальный размер\tCtrl-1
 
 Advanced
 Дополнительно
@@ -124,13 +133,10 @@ Automatic
 Automatically check for &updates
 &Автоматически проверять обновления
 
-Back\tAlt+Left Arrow
-Назад\tAlt+<-
-
-Book view
+Book View
 В разворот
 
-Bookmarks\tF12
+Book&marks\tF12
 Закладки\tF12
 
 Bytes
@@ -145,8 +151,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Ошибка команды обратного поиска. Проверьте параметры командной строки.
 
-Change language
-Изменить язык (Change language)
+Change Language
+Изменить язык (Change Language)
+
+Check for &Updates
+Проверить наличие новой версии
 
 Continuous
 Непрерывно
@@ -157,11 +166,8 @@ Continuous book view
 Continuous facing
 Попарно непрерывно
 
-Contribute translation
+Contribute Translation
 Помочь с переводом
-
-Copy Selection\tCtrl-C
-Скопировать выделенное\tCtrl-C
 
 Could not open Printer
 Принтер недоступен
@@ -174,6 +180,9 @@ Couldn't render the page
 
 Created:
 Создан:
+
+Custom &Zoom...
+Указать масштаб...
 
 Default &Layout:
 &Компоновка по умолчанию
@@ -202,6 +211,12 @@ Enter password for %s
 Error loading PDF file.
 Ошибка открытия PDF-файла.
 
+F&orward\tAlt+Right Arrow
+Вперед\tAlt+->
+
+F&ullscreen\tCtrl-L
+Полный экран\tCtrl-L
+
 Facing
 Попарно
 
@@ -214,6 +229,9 @@ File Size:
 File:
 Файл:
 
+Fin&d...\tCtrl-F
+Найти...\tCtrl-F
+
 Find
 Поиск
 
@@ -223,35 +241,23 @@ Find Next
 Find Previous
 Найти предыдущее
 
-Find...\tCtrl-F
-Найти...\tCtrl-F
-
 Find:
 Найти:
-
-First Page\tHome
-Первая страница\tHome
 
 Fit &Page\tCtrl-0
 По размеру страницы\tCtrl-0
 
+Fit &Width\tCtrl-2
+Заполнение по ширине\tCtrl-2
+
 Fit Page
 По размеру страницы
-
-Fit Widt&h\tCtrl-2
-Заполнение по ширине\tCtrl-2
 
 Fit Width
 Заполнение по ширине
 
-Forward\tAlt+Right Arrow
-Вперед\tAlt+->
-
 Found text at page %d
 Текст найден на стр. %d
-
-Fullscreen\tCtrl-L
-Полный экран\tCtrl-L
 
 GB
 Гб
@@ -265,9 +271,6 @@ Hint: Use the F3 key for finding again
 KB
 Кб
 
-Last Page\tEnd
-Последняя страница\tEnd
-
 MB
 Мб
 
@@ -280,7 +283,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Ассоциировать SumatraPDF с файлами PDF
 
-Match case
+Match Case
 Учитывать регистр
 
 Modified:
@@ -294,9 +297,6 @@ New version available.
 
 Next Page
 Следующая страница
-
-Next Page\tRight Arrow
-Следующая страница\t->
 
 No matches were found
 Совпадений не найдено
@@ -325,7 +325,7 @@ Open
 Open in &Adobe Reader
 Открыть в &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 Свойства...\tCtrl-D
 
 PDF Document
@@ -340,14 +340,14 @@ PDF Version:
 PDF documents
 PDF-документы
 
+Pa&ge...\tCtrl-G
+Указанная страница...\tCtrl-G
+
 Page Size:
 Формат страницы:
 
 Page number %u inexistant
 Страница %u не существует
-
-Page...\tCtrl-G
-Указанная страница...\tCtrl-G
 
 Page:
 Страница:
@@ -361,19 +361,16 @@ Pr&int with Adobe Reader...
 Previous Page
 Предыдущая страница
 
-Previous Page\tLeft Arrow
-Предыдущая страница\t<-
-
 Printing problem.
 Ошибка при печати.
 
 Remember &opened files
 &Запоминать открытые файлы
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Повернуть влево\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Повернуть вправо\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -382,22 +379,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Выберите содержимое, нажав Ctrl и левую кнопку мыши
 
-Send by &email...
+Send by &E-mail...
 Послать по &email...
 
 Set inverse search command-line
 Задать команду обратного поиска
 
-Show pages continuously
+Show &Toolbar
+Панель инструментов
+
+Show &pages continuously
 Непрерывно
 
 Show the &bookmarks sidebar when available
 Показывать панель &закладок (по возможности)
 
-Show toolbar
-Панель инструментов
-
-Single page
+Single Page
 Постранично
 
 Source file %s has no synchronization point
@@ -429,6 +426,9 @@ Unknown source file (%s)
 
 View
 Вид
+
+Visit &Website
+Посетить веб-сайт программы
 
 Warning
 Внимание

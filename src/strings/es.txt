@@ -13,14 +13,17 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 &About
 &Acerca de...
 
-&Check for new version
-&Comprobar actualizaciones
+&Actual Size\tCtrl-1
+Tamaño Real\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Atrás\tAlt+<-
 
 &Close\tCtrl-W
 &Cerrar\tCtrl-W
 
-&Custom Zoom...
-&Zoom personalizado...
+&Copy Selection\tCtrl-C
+Copiar Selección\tCtrl-C
 
 &Don't ask me again
 &No volver a preguntar
@@ -31,6 +34,9 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 &Find what:
 &Encontrar:
 
+&First Page\tHome
+Primera página\tInicio
+
 &Go To
 &Ir a
 
@@ -40,6 +46,9 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 &Help
 &Ayuda
 
+&Last Page\tEnd
+Última página\tFin
+
 &Magnification:
 &Aumento:
 
@@ -48,6 +57,9 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 
 &Match case
 &Coincidir mayúsculas y minúsculas
+
+&Next Page\tRight Arrow
+Página siguiente\t->
 
 &No
 &No
@@ -64,7 +76,10 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 &Password:
 &Contraseña:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Página anterior\t<-
+
+&Print...\tCtrl-P
 &Imprimir\tCtrl-P
 
 &Print... (denied)
@@ -73,7 +88,7 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 &Remember these settings for each document
 &Recordar estas configuraciones para cada documento
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Guardar como...\tCtrl-S
 
 &Settings
@@ -84,9 +99,6 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 
 &View
 &Ver
-
-&Visit website
-&Visitar Sitio Web
 
 &Yes
 &Sí
@@ -99,9 +111,6 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 
 About SumatraPDF
 Acerca de SumatraPDF
-
-Act&ual Size\tCtrl-1
-Tamaño Real\tCtrl-1
 
 Advanced
 Avanzado
@@ -124,13 +133,10 @@ Automático
 Automatically check for &updates
 Revisar &actualizaciones automáticamente
 
-Back\tAlt+Left Arrow
-Atrás\tAlt+<-
-
-Book view
+Book View
 Vista de libro
 
-Bookmarks\tF12
+Book&marks\tF12
 Marcadores\tF12
 
 Bytes
@@ -145,8 +151,11 @@ No se puede imprimir este archivo
 Cannot start inverse search command. Please check the command line in the settings.
 No se puede iniciar el comando de búsqueda inversa. Verifique la línea de comandos en las opciones.
 
-Change language
-Cambiar Idioma (Change language)
+Change Language
+Cambiar Idioma (Change Language)
+
+Check for &Updates
+&Comprobar actualizaciones
 
 Continuous
 Continua
@@ -157,11 +166,8 @@ Vista continua de libro
 Continuous facing
 Página doble continua
 
-Contribute translation
+Contribute Translation
 Contribuir en la traducción
-
-Copy Selection\tCtrl-C
-Copiar Selección\tCtrl-C
 
 Could not open Printer
 Impresora no accesible
@@ -174,6 +180,9 @@ No se pudo renderizar la página
 
 Created:
 Creado:
+
+Custom &Zoom...
+&Zoom personalizado...
 
 Default &Layout:
 &Vista Predeterminada:
@@ -202,6 +211,12 @@ Introduzca contraseña para %s
 Error loading PDF file.
 Error al Cargar el Archivo PDF.
 
+F&orward\tAlt+Right Arrow
+Adelante\tAlt+->
+
+F&ullscreen\tCtrl-L
+Pantalla completa\tCtrl-L
+
 Facing
 Página doble
 
@@ -214,6 +229,9 @@ Tamaño del Archivo:
 File:
 Archivo:
 
+Fin&d...\tCtrl-F
+Buscar...\tCtrl-F
+
 Find
 Buscar
 
@@ -223,35 +241,23 @@ Buscar Siguiente
 Find Previous
 Buscar Anterior
 
-Find...\tCtrl-F
-Buscar...\tCtrl-F
-
 Find:
 Buscar:
-
-First Page\tHome
-Primera página\tInicio
 
 Fit &Page\tCtrl-0
 Ajustar &Página\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Ancho de Página\tCtrl-2
+
 Fit Page
 Ajustar Página
-
-Fit Widt&h\tCtrl-2
-&Ancho de Página\tCtrl-2
 
 Fit Width
 Ancho de Página
 
-Forward\tAlt+Right Arrow
-Adelante\tAlt+->
-
 Found text at page %d
 Se encontró el texto en la página %d
-
-Fullscreen\tCtrl-L
-Pantalla completa\tCtrl-L
 
 GB
 GB
@@ -265,9 +271,6 @@ Usar "F3" para mostrar el siguiente resultado
 KB
 KB
 
-Last Page\tEnd
-Última página\tFin
-
 MB
 MB
 
@@ -280,7 +283,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Hacer SumatraPDF el lector PDF por defecto
 
-Match case
+Match Case
 Coincidir mayúsculas y minúsculas
 
 Modified:
@@ -294,9 +297,6 @@ Nueva versión disponible.
 
 Next Page
 Página siguiente
-
-Next Page\tRight Arrow
-Página siguiente\t->
 
 No matches were found
 No se encontraron coincidencias
@@ -325,7 +325,7 @@ Abrir
 Open in &Adobe Reader
 Abrir en &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 P&ropriedades...\tCtrl-D
 
 PDF Document
@@ -340,14 +340,14 @@ Versión PDF:
 PDF documents
 Documentos PDF
 
+Pa&ge...\tCtrl-G
+Página...\tCtrl-G
+
 Page Size:
 Tamaño de Página:
 
 Page number %u inexistant
 La página &u no existe
-
-Page...\tCtrl-G
-Página...\tCtrl-G
 
 Page:
 Página:
@@ -358,19 +358,16 @@ Renderizando - Espere por favor...
 Previous Page
 Página anterior
 
-Previous Page\tLeft Arrow
-Página anterior\t<-
-
 Printing problem.
 Problema de impresión.
 
 Remember &opened files
 Recordar archiv&os abiertos
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Girar a la izquierda\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Girar a la derecha\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -379,22 +376,22 @@ Buscando %d de %d…
 Select content with Ctrl+left mouse button
 Seleccionar con Ctrl+Click
 
-Send by &email...
+Send by &E-mail...
 Enviar por correo electrónico
 
 Set inverse search command-line
 Establecer búsqueda inversa
 
-Show pages continuously
+Show &Toolbar
+Mostrar barra de herramientas
+
+Show &pages continuously
 Mostrar paginas continuamente
 
 Show the &bookmarks sidebar when available
 Mostrar la barra de marcadores cuando esté disponible
 
-Show toolbar
-Mostrar barra de herramientas
-
-Single page
+Single Page
 Página única
 
 Source file %s has no synchronization point
@@ -426,6 +423,9 @@ Archivo fuente desconocido (%s)
 
 View
 Vista del Documento
+
+Visit &Website
+&Visitar Sitio Web
 
 Warning
 Advertencia

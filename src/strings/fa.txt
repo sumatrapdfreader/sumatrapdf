@@ -13,14 +13,17 @@ Contributor: Ali Nayeri
 &About
 درباره
 
-&Check for new version
-چک کردن نسخه تازه تر
+&Actual Size\tCtrl-1
+ابعاد اصلی‌\tCtrl-1
+
+&Back\tAlt+Left Arrow
+عقب\tAlt+Left Arrow
 
 &Close\tCtrl-W
 بستن\tCtrl-W
 
-&Custom Zoom...
-ابعاد نمایش مخصوص
+&Copy Selection\tCtrl-C
+رونوشت مورد منتخب
 
 &Don't ask me again
 این پاسخ را به یاد بسپار و دوباره از من نپرس
@@ -31,6 +34,9 @@ Contributor: Ali Nayeri
 &Find what:
 :جستجو برای
 
+&First Page\tHome
+صفحه نخست\tHome
+
 &Go To
 برو به
 
@@ -40,6 +46,9 @@ Contributor: Ali Nayeri
 &Help
 راهنما
 
+&Last Page\tEnd
+صفحه آخر\tEnd
+
 &Magnification:
 درشت نمایی
 
@@ -48,6 +57,9 @@ Contributor: Ali Nayeri
 
 &Match case
 با توجه به قالب حروف
+
+&Next Page\tRight Arrow
+صفحه بعدی\t->
 
 &No
 خیر
@@ -64,7 +76,10 @@ Contributor: Ali Nayeri
 &Password:
 کلمه عبور
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+صفحه قبلی\t<-
+
+&Print...\tCtrl-P
 چاپ\tCtrl-P
 
 &Print... (denied)
@@ -73,7 +88,7 @@ Contributor: Ali Nayeri
 &Remember these settings for each document
 این تنظیمات را برای هر سند بخاطر بسپار
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 ...ذخیره بعنوان\tCtrl-S
 
 &Settings
@@ -84,9 +99,6 @@ Contributor: Ali Nayeri
 
 &View
 نمايش
-
-&Visit website
-بازديد از وب‌سايت
 
 &Yes
 بلی
@@ -99,9 +111,6 @@ Contributor: Ali Nayeri
 
 About SumatraPDF
 SumatraPDF درباره برنامه
-
-Act&ual Size\tCtrl-1
-ابعاد اصلی‌\tCtrl-1
 
 Advanced
 امکانات پیشرفته
@@ -124,13 +133,10 @@ Automatic
 Automatically check for &updates
 جستجو خودکار برای نسخه جدید
 
-Back\tAlt+Left Arrow
-عقب\tAlt+Left Arrow
-
-Book view
+Book View
 نمایش کتابی‌
 
-Bookmarks\tF12
+Book&marks\tF12
 نشان یادگاری سرکتاب\tF12
 
 Bytes
@@ -145,8 +151,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 .جستجو معکوس قابل اجرا نیست. لطفا تنظیمات خط فرمان را بازبینی کنید
 
-Change language
-تغییر زبان (Change language)
+Change Language
+تغییر زبان (Change Language)
+
+Check for &Updates
+چک کردن نسخه تازه تر
 
 Continuous
 نمايش پيوسته
@@ -157,11 +166,8 @@ Continuous book view
 Continuous facing
 نمایش دو صفحه‌ای پیوسته
 
-Contribute translation
+Contribute Translation
 در ترجمه این برنامه کمک کنید
-
-Copy Selection\tCtrl-C
-رونوشت مورد منتخب
 
 Could not open Printer
 برنامه قادر به يافتن چاپگر نيست
@@ -174,6 +180,9 @@ Couldn't render the page
 
 Created:
 :بوجود آمده
+
+Custom &Zoom...
+ابعاد نمایش مخصوص
 
 Default &Layout:
 :نحوه نمایش
@@ -202,6 +211,12 @@ Enter password for %s
 Error loading PDF file.
 باز کردن فایل با مشکل مواجه شد
 
+F&orward\tAlt+Right Arrow
+جلو\tAlt+Right Arrow
+
+F&ullscreen\tCtrl-L
+تمام‌صفحه\tCtrl-L
+
 Facing
 نمایش دو صفحه‌ای
 
@@ -214,6 +229,9 @@ File Size:
 File:
 :فايل
 
+Fin&d...\tCtrl-F
+...جستجو\tCtrl-F
+
 Find
 جستجو
 
@@ -223,35 +241,23 @@ Find Next
 Find Previous
 جستجو روبه عقب
 
-Find...\tCtrl-F
-...جستجو\tCtrl-F
-
 Find:
 جستجو:
-
-First Page\tHome
-صفحه نخست\tHome
 
 Fit &Page\tCtrl-0
 به بزرگی پنجره\tCtrl-0
 
+Fit &Width\tCtrl-2
+به بزرگی پهنای پنجره\tCtrl-2
+
 Fit Page
 به بزرگی پنجره
-
-Fit Widt&h\tCtrl-2
-به بزرگی پهنای پنجره\tCtrl-2
 
 Fit Width
 به بزرگی پهنای پنجره
 
-Forward\tAlt+Right Arrow
-جلو\tAlt+Right Arrow
-
 Found text at page %d
 پیدا شد %d متن در صفحه
-
-Fullscreen\tCtrl-L
-تمام‌صفحه\tCtrl-L
 
 GB
 GB
@@ -265,9 +271,6 @@ Hint: Use the F3 key for finding again
 KB
 KB
 
-Last Page\tEnd
-صفحه آخر\tEnd
-
 MB
 MB
 
@@ -280,7 +283,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 PDF بعنوان مرورگر اصلی‌ اسناد SumatraPDF انتخاب
 
-Match case
+Match Case
 با توجه به قالب حروف
 
 Modified:
@@ -294,9 +297,6 @@ New version available.
 
 Next Page
 صفحه بعدی
-
-Next Page\tRight Arrow
-صفحه بعدی\t->
 
 No new version available.
 نسخه تازه دردسترس نمی باشد
@@ -316,7 +316,7 @@ Open
 Open in &Adobe Reader
 Adobe Reader باز کردن در
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 ...ویزگیها\tCtrl-D
 
 PDF Document
@@ -331,14 +331,14 @@ PDF Version:
 PDF documents
 PDF اسناد
 
+Pa&ge...\tCtrl-G
+...صفحه\tCtrl-G
+
 Page Size:
 :ابعاد صفحه
 
 Page number %u inexistant
 موجود نیست %u صفحه
-
-Page...\tCtrl-G
-...صفحه\tCtrl-G
 
 Page:
 صفحه:
@@ -352,19 +352,16 @@ Pr&int with Adobe Reader...
 Previous Page
 صفحه قبلی
 
-Previous Page\tLeft Arrow
-صفحه قبلی\t<-
-
 Printing problem.
 مشکل در چاپ
 
 Remember &opened files
 فایلهای باز شده را بخاطر بسپار
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 چرخاندن به چپ\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 چرخاندن به راست\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -373,19 +370,19 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 و دکمه سمت چپ موس انتخاب کنید Ctrl متن مورد نظر را با
 
-Send by &email...
+Send by &E-mail...
 ... ارسال با پست الکترونیکی‌
 
 Set inverse search command-line
 تنظیم وارانه جستجو
 
-Show pages continuously
-نمایش پیوسته صفحات
-
-Show toolbar
+Show &Toolbar
 نمايش نوار ابزار
 
-Single page
+Show &pages continuously
+نمایش پیوسته صفحات
+
+Single Page
 نمایش تک صفحه‌ای
 
 Source file %s has no synchronization point
@@ -417,6 +414,9 @@ Unknown source file (%s)
 
 View
 نمايش
+
+Visit &Website
+بازديد از وب‌سايت
 
 Warning
 هشدار

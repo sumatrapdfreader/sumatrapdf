@@ -9,14 +9,17 @@ Lang: pl Polish (Polski)
 &About
 O programie
 
-&Check for new version
-&Sprawdź w poszukiwaniu nowej wersji
+&Actual Size\tCtrl-1
+Prawdziwy rozmiar\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Wstecz\tAlt+Kewa strzałka
 
 &Close\tCtrl-W
 &Zamknij\tCtrl-W
 
-&Custom Zoom...
-&Dopasuj powiększenie...
+&Copy Selection\tCtrl-C
+Kopiuj zaznaczone\tCtrl-C
 
 &Don't ask me again
 &Nie pytaj ponownie
@@ -27,6 +30,9 @@ Plik
 &Find what:
 &Szukaj:
 
+&First Page\tHome
+Pierwsza strona\tHome
+
 &Go To
 Idź do
 
@@ -36,6 +42,9 @@ Idź do
 &Help
 &Pomoc
 
+&Last Page\tEnd
+Ostatnia strona\tEnd
+
 &Magnification:
 &Powiększenie
 
@@ -44,6 +53,9 @@ Instrukcja obsługi
 
 &Match case
 &Dopasuj przypadki
+
+&Next Page\tRight Arrow
+Następna strona\t->
 
 &No
 &Nie
@@ -60,7 +72,10 @@ Otwórz\tCtrl-O
 &Password:
 &Hasło
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Poprzednia strona\t<-
+
+&Print...\tCtrl-P
 Drukuj\tCtrl-P
 
 &Print... (denied)
@@ -69,7 +84,7 @@ Drukuj\tCtrl-P
 &Remember these settings for each document
 &Zapamiętaj te ustawienia dla każdego dokumentu
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Zapisz jako\tCtrl-S
 
 &Settings
@@ -80,9 +95,6 @@ Zapisz jako\tCtrl-S
 
 &View
 &Widok
-
-&Visit website
-Strona www
 
 &Yes
 &Tak
@@ -95,9 +107,6 @@ Powiększenie
 
 About SumatraPDF
 O programie
-
-Act&ual Size\tCtrl-1
-Prawdziwy rozmiar\tCtrl-1
 
 Advanced
 Zaawansowane
@@ -120,13 +129,10 @@ Automatycznie
 Automatically check for &updates
 Automatycznie sprawdzaj aktualizacje
 
-Back\tAlt+Left Arrow
-Wstecz\tAlt+Kewa strzałka
-
-Book view
+Book View
 Widok książki
 
-Bookmarks\tF12
+Book&marks\tF12
 Zakładki\tF12
 
 Bytes
@@ -141,8 +147,11 @@ Nie można wydrukować tego pliku
 Cannot start inverse search command. Please check the command line in the settings.
 Nie można uruchomić polecenia odwrotnego wyszukiwania. Sprawdź z lini poleceń w ustawieniach.
 
-Change language
-Zmien język (Change language)
+Change Language
+Zmien język (Change Language)
+
+Check for &Updates
+&Sprawdź w poszukiwaniu nowej wersji
 
 Continuous
 Ciągły
@@ -153,11 +162,8 @@ Kontynuuj widok książki
 Continuous facing
 Ciągły na przeciwko
 
-Contribute translation
+Contribute Translation
 Pomóż przy tłumaczeniu
-
-Copy Selection\tCtrl-C
-Kopiuj zaznaczone\tCtrl-C
 
 Could not open Printer
 Drukarka niedostępna.
@@ -170,6 +176,9 @@ Nie można zrenderować strony
 
 Created:
 Utworzone:
+
+Custom &Zoom...
+&Dopasuj powiększenie...
 
 Default &Layout:
 Domyślny &układ:
@@ -198,6 +207,12 @@ Podaj hasło dla %s
 Error loading PDF file.
 Problem przy otwarzaniu pliku.
 
+F&orward\tAlt+Right Arrow
+Dalej \tAlt+Prawa strzałka
+
+F&ullscreen\tCtrl-L
+Na cały ekran\tCtrl-L
+
 Facing
 Na przeciwko
 
@@ -210,6 +225,9 @@ Rozmiar pliku:
 File:
 Plik:
 
+Fin&d...\tCtrl-F
+Szukaj...\tCtrl-F
+
 Find
 Szukaj
 
@@ -219,35 +237,23 @@ Szukaj następny
 Find Previous
 Szukaj poprzedni
 
-Find...\tCtrl-F
-Szukaj...\tCtrl-F
-
 Find:
 Szukaj:
-
-First Page\tHome
-Pierwsza strona\tHome
 
 Fit &Page\tCtrl-0
 Dopasuj do strony\tCtrl-0
 
+Fit &Width\tCtrl-2
+Dopasuj do szerokości\tCtrl-2
+
 Fit Page
 Dopasuj do strony
-
-Fit Widt&h\tCtrl-2
-Dopasuj do szerokości\tCtrl-2
 
 Fit Width
 Dopasuj do szerokości
 
-Forward\tAlt+Right Arrow
-Dalej \tAlt+Prawa strzałka
-
 Found text at page %d
 Znaleziono tekst na stronie %d
-
-Fullscreen\tCtrl-L
-Na cały ekran\tCtrl-L
 
 GB
 GB
@@ -261,9 +267,6 @@ Wskazówka: Użyj klawisza F3, aby wyszukać ponownie
 KB
 KB
 
-Last Page\tEnd
-Ostatnia strona\tEnd
-
 MB
 MB
 
@@ -276,7 +279,7 @@ Ustawić SumatraPDF jako domyślną aplikację dla plików PDF?
 Make SumatraPDF my main PDF reader
 Ustaw SumatraPDF jako domyślny czytnik PDF
 
-Match case
+Match Case
 Dopasuj przypadki
 
 Modified:
@@ -290,9 +293,6 @@ Nowa wersja jest dostępna.
 
 Next Page
 Następna strona
-
-Next Page\tRight Arrow
-Następna strona\t->
 
 No matches were found
 Nie znaleziono dopasowań
@@ -321,7 +321,7 @@ Otwórz
 Open in &Adobe Reader
 Otwórz w &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 Właściwości...\tCtrl-D
 
 PDF Document
@@ -336,14 +336,14 @@ Wersja PDF:
 PDF documents
 Dokumenty PDF
 
+Pa&ge...\tCtrl-G
+Strona...\tCtrl-G
+
 Page Size:
 Rozmiar strony:
 
 Page number %u inexistant
 Numer strony %u ze wszystkich
-
-Page...\tCtrl-G
-Strona...\tCtrl-G
 
 Page:
 Strona:
@@ -357,19 +357,16 @@ Zapisz z Adobe Reader...
 Previous Page
 Poprzednia strona
 
-Previous Page\tLeft Arrow
-Poprzednia strona\t<-
-
 Printing problem.
 Problem z drukowaniem.
 
 Remember &opened files
 Zapmiętaj &otwarte pliki
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Obróć w lewo\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Obróć w prawo\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -378,22 +375,22 @@ Szukanie %d z %d...
 Select content with Ctrl+left mouse button
 Wybierz materiał za pomocą Ctrl+Lewy przycisk myszy
 
-Send by &email...
+Send by &E-mail...
 Wyślij przez &email...
 
 Set inverse search command-line
 Ustaw odwrotne wyszukiwanie lini poleceń
 
-Show pages continuously
+Show &Toolbar
+Pokaż pasek narzędzi
+
+Show &pages continuously
 Pokaż strony kontynuując
 
 Show the &bookmarks sidebar when available
 Pokaż &zakładki na bocznym pasku, kiedy dostępne
 
-Show toolbar
-Pokaż pasek narzędzi
-
-Single page
+Single Page
 Pojedyncza strona
 
 Source file %s has no synchronization point
@@ -425,6 +422,9 @@ Nieznane źródło pliku (%s)
 
 View
 Widok
+
+Visit &Website
+Strona www
 
 Warning
 Uwaga

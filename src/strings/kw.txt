@@ -13,14 +13,17 @@ Contributor: Ben Bruch
 &About
 &A-dro dhe...
 
-&Check for new version
-&Checkya rag versyon nowyth
+&Actual Size\tCtrl-1
+&Braster gwir\tCtrl-1
+
+&Back\tAlt+Left Arrow
+War-lergh\tAlt+<-
 
 &Close\tCtrl-W
 &Degea\tCtrl-W
 
-&Custom Zoom...
-&Zoum arbennik...
+&Copy Selection\tCtrl-C
+Dasskrifa Dewis\tCtrl-C
 
 &Don't ask me again
 &Na wovyn orthiv arta
@@ -31,6 +34,9 @@ Contributor: Ben Bruch
 &Find what:
 &Kavos pyth:
 
+&First Page\tHome
+Kynsa Folen\tHome
+
 &Go To
 &Mos dhe
 
@@ -40,6 +46,9 @@ Contributor: Ben Bruch
 &Help
 &Gweres
 
+&Last Page\tEnd
+Diwettha folen\tEnd
+
 &Magnification:
 &Brasheans:
 
@@ -48,6 +57,9 @@ Contributor: Ben Bruch
 
 &Match case
 An &Keth kas
+
+&Next Page\tRight Arrow
+Nessa Folen\t->
 
 &No
 &Na
@@ -64,13 +76,16 @@ An &Keth kas
 &Password:
 &Ger-tremena:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Folen kyns\t<-
+
+&Print...\tCtrl-P
 &Pryntya\tCtrl-P
 
 &Remember these settings for each document
 Gwitha an etholy&ow ma rag pub restren
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Gwitha avel...\tCtrl-S
 
 &Settings
@@ -81,9 +96,6 @@ Gwitha an etholy&ow ma rag pub restren
 
 &View
 &Gweles
-
-&Visit website
-&Mos dhe'n wiasva
 
 &Yes
 &Ya
@@ -96,9 +108,6 @@ Gwitha an etholy&ow ma rag pub restren
 
 About SumatraPDF
 A-dro dhe SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Braster gwir\tCtrl-1
 
 Advanced
 Avonsyes
@@ -115,13 +124,10 @@ Awtomatek
 Automatically check for &updates
 Checkya rag nowythyansow yn awtomatek
 
-Back\tAlt+Left Arrow
-War-lergh\tAlt+<-
-
-Book view
+Book View
 Gwel-lyver
 
-Bookmarks\tF12
+Book&marks\tF12
 Lyververkyow\tF12
 
 Cancel
@@ -133,8 +139,11 @@ Ny yllir pryntya an restren ma
 Cannot start inverse search command. Please check the command line in the settings.
 Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
 
-Change language
-Chanjya yeth (Change language)
+Change Language
+Chanjya yeth (Change Language)
+
+Check for &Updates
+&Checkya rag versyon nowyth
 
 Continuous
 Heb aswa
@@ -145,11 +154,8 @@ Gwel-lyver heb aswa
 Continuous facing
 A-dal heb aswa
 
-Contribute translation
+Contribute Translation
 Keworra treylyans
-
-Copy Selection\tCtrl-C
-Dasskrifa Dewis\tCtrl-C
 
 Could not open Printer
 Ny yllys ygeri pryntyer
@@ -159,6 +165,9 @@ Ny yllys darbari pryntyer
 
 Couldn't render the page
 Ny yllys rendra folen
+
+Custom &Zoom...
+&Zoum arbennik...
 
 Default &Layout:
 &Delinyans savonek:
@@ -181,11 +190,20 @@ Ri ger-tremena rag %s
 Error loading PDF file.
 Gwall ow karga restren PDF.
 
+F&orward\tAlt+Right Arrow
+Yn-rag\tAlt+->
+
+F&ullscreen\tCtrl-L
+Skrin Leun\tCtrl-L
+
 Facing
 A-dal
 
 Failed to save a file
 Gwithyans restren a fyllis
+
+Fin&d...\tCtrl-F
+Kavos...\tCtrl-F
 
 Find
 Kavos
@@ -196,44 +214,29 @@ Kavos Nessa
 Find Previous
 Kavos Kyns
 
-Find...\tCtrl-F
-Kavos...\tCtrl-F
-
 Find:
 Kavos:
-
-First Page\tHome
-Kynsa Folen\tHome
 
 Fit &Page\tCtrl-0
 Desedha &Folen\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Desedha Les\tCtrl-2
+
 Fit Page
 Desedha Folen
-
-Fit Widt&h\tCtrl-2
-&Desedha Les\tCtrl-2
 
 Fit Width
 Desedha Les
 
-Forward\tAlt+Right Arrow
-Yn-rag\tAlt+->
-
 Found text at page %d
 Tekst kevys war folen %d
-
-Fullscreen\tCtrl-L
-Skrin Leun\tCtrl-L
 
 Go to page
 Mos dhe folen
 
 Hint: Use the F3 key for finding again
 Hynt: Devnydhya alhwedhen F3 rag daskavos
-
-Last Page\tEnd
-Diwettha folen\tEnd
 
 Main PDF reader can't be changed in portable mode
 Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
@@ -244,7 +247,7 @@ Gul SumatraPDF towlen savonek rag restrennow PDF?
 Make SumatraPDF my main PDF reader
 Gwra SumatraPDF ow fennredyer PDF
 
-Match case
+Match Case
 An keth kas
 
 New version %s is available. Download new version?
@@ -255,9 +258,6 @@ Versyon nowyth parys.
 
 Next Page
 Nessa Folen
-
-Next Page\tRight Arrow
-Nessa Folen\t->
 
 No matches were found
 Ny veu keyvys par vyth
@@ -289,11 +289,11 @@ Restren PDF
 PDF documents
 Restrennow PDF
 
+Pa&ge...\tCtrl-G
+Folen...\tCtrl-G
+
 Page number %u inexistant
 Nyns eus folen %u
-
-Page...\tCtrl-G
-Folen...\tCtrl-G
 
 Page:
 Folen:
@@ -304,19 +304,16 @@ Gortos, mar pleg - ow rendra...
 Previous Page
 Folen kyns
 
-Previous Page\tLeft Arrow
-Folen kyns\t<-
-
 Printing problem.
 Kaletter ow pryntya
 
 Remember &opened files
 Kovhe restrennow ygerys
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Treylya a-gledh\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Treylya a-dhyhow\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -325,22 +322,22 @@ Ow hwilas %d a %d...
 Select content with Ctrl+left mouse button
 Dewis dalgh gans Ctrl+boton-logosen kledh
 
-Send by &email...
+Send by &E-mail...
 Danvon der &e-bost...
 
 Set inverse search command-line
 Settya linen-arhadow gorthhwilas
 
-Show pages continuously
+Show &Toolbar
+Diskwedhes toulvar
+
+Show &pages continuously
 Diskwedhes folennow heb aswa
 
 Show the &bookmarks sidebar when available
 Diskwedhes &amalvar an lyververkyow mars eus onan 
 
-Show toolbar
-Diskwedhes toulvar
-
-Single page
+Single Page
 Unn folen hepken
 
 Source file %s has no synchronization point
@@ -366,6 +363,9 @@ Restren-bennfenten anaswonnys (%s)
 
 View
 Gwel
+
+Visit &Website
+&Mos dhe'n wiasva
 
 Warning
 Gwarnyans
@@ -409,7 +409,7 @@ Faktor-zoum
 #MB
 #Modified:
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:

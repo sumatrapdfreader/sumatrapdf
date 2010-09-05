@@ -212,7 +212,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { -1,  IDM_FIND_FIRST,        NULL,                   0,             },
     { 5,   IDM_FIND_PREV,         _TRN("Find Previous"),  0,             },
     { 6,   IDM_FIND_NEXT,         _TRN("Find Next"),      0,             },
-    { 7,   IDM_FIND_MATCH,        _TRN("Match case"),     0,             },
+    { 7,   IDM_FIND_MATCH,        _TRN("Match Case"),     0,             },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -982,88 +982,88 @@ enum menuFlags {
 };
 
 MenuDef menuDefFile[] = {
-    { _TRN("&Open\tCtrl-O"),                        IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
-    { _TRN("&Close\tCtrl-W"),                       IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
-    { _TRN("&Save as\tCtrl-S"),                     IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
-    { _TRN("&Print\tCtrl-P"),                       IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM,                                     0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("Open in &Adobe Reader"),                IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
-    { _TRN("Pr&int with Adobe Reader..."),          IDM_PRINT_WITH_ACROBAT,     MF_NOT_IN_RESTRICTED },
-    { _TRN("Send by &email..."),                    IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("P&roperties...\tCtrl-D"),               IDM_PROPERTIES,             0 },
-    { SEP_ITEM ,                                    0,                          MF_NOT_IN_RESTRICTED },
-    { _TRN("E&xit\tCtrl-Q"),                        IDM_EXIT,                   0 }
+    { _TRN("&Open\tCtrl-O"),                IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
+    { _TRN("&Close\tCtrl-W"),               IDM_CLOSE,                  MF_NOT_IN_RESTRICTED },
+    { _TRN("&Save As...\tCtrl-S"),          IDM_SAVEAS,                 MF_NOT_IN_RESTRICTED },
+    { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
+    { _TRN("Pr&int with Adobe Reader..."),  IDM_PRINT_WITH_ACROBAT,     MF_NOT_IN_RESTRICTED },
+    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },
+    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("E&xit\tCtrl-Q"),                IDM_EXIT,                   0 }
 };
 
 MenuDef menuDefView[] = {
-    { _TRN("Single page"),                 IDM_VIEW_SINGLE_PAGE,        0  },
-    { _TRN("Facing"),                      IDM_VIEW_FACING,             0  },
-    { _TRN("Book view"),                   IDM_VIEW_BOOK,               0  },
-    { _TRN("Show pages continuously"),     IDM_VIEW_CONTINUOUS,         0  },
+    { _TRN("Single Page"),                  IDM_VIEW_SINGLE_PAGE,       0  },
+    { _TRN("Facing"),                       IDM_VIEW_FACING,            0  },
+    { _TRN("Book View"),                    IDM_VIEW_BOOK,              0  },
+    { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Rotate left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,        0  },
-    { _TRN("Rotate right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,       0  },
+    { _TRN("Rotate &Left\tCtrl-Shift--"),   IDM_VIEW_ROTATE_LEFT,       0  },
+    { _TRN("Rotate &Right\tCtrl-Shift-+"),  IDM_VIEW_ROTATE_RIGHT,      0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Fullscreen\tCtrl-L"),          IDM_VIEW_PRESENTATION_MODE,  0  },
+    { _TRN("F&ullscreen\tCtrl-L"),          IDM_VIEW_PRESENTATION_MODE, 0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Bookmarks\tF12"),              IDM_VIEW_BOOKMARKS,          0  },
-    { _TRN("Show toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR,  0  },
+    { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0  },
+    { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0  },
     { SEP_ITEM, 0, 0  },
-    { _TRN("Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,          0  },
+    { _TRN("&Copy Selection\tCtrl-C"),      IDM_COPY_SELECTION,         0  },
 };
 
 MenuDef menuDefGoTo[] = {
-    { _TRN("Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,          0  },
-    { _TRN("Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,          0  },
-    { _TRN("First Page\tHome"),            IDM_GOTO_FIRST_PAGE,         0  },
-    { _TRN("Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,          0  },
-    { _TRN("Page...\tCtrl-G"),             IDM_GOTO_PAGE,               0  },
-    { SEP_ITEM ,                           0,                           0  },
-    { _TRN("Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,           0  },
-    { _TRN("Forward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,        0  },
-    { SEP_ITEM ,                           0,                           0  },
-    { _TRN("Find...\tCtrl-F"),             IDM_FIND_FIRST,              0  },
+    { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0  },
+    { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0  },
+    { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0  },
+    { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0  },
+    { _TRN("Pa&ge...\tCtrl-G"),             IDM_GOTO_PAGE,              0  },
+    { SEP_ITEM,                             0,                          0  },
+    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0  },
+    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0  },
+    { SEP_ITEM,                             0,                          0  },
+    { _TRN("Fin&d...\tCtrl-F"),             IDM_FIND_FIRST,             0  },
 };
 
 MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl-0"),           IDM_ZOOM_FIT_PAGE,           0  },
-    { _TRN("Act&ual Size\tCtrl-1"),        IDM_ZOOM_ACTUAL_SIZE,        0  },
-    { _TRN("Fit Widt&h\tCtrl-2"),          IDM_ZOOM_FIT_WIDTH,          0  },
-    { _TRN("&Custom Zoom..."),             IDM_ZOOM_CUSTOM,             0  },
+    { _TRN("Fit &Page\tCtrl-0"),            IDM_ZOOM_FIT_PAGE,          0  },
+    { _TRN("&Actual Size\tCtrl-1"),         IDM_ZOOM_ACTUAL_SIZE,       0  },
+    { _TRN("Fit &Width\tCtrl-2"),           IDM_ZOOM_FIT_WIDTH,         0  },
+    { _TRN("Custom &Zoom..."),              IDM_ZOOM_CUSTOM,            0  },
     { SEP_ITEM },
 #ifndef BUILD_RM_VERSION
-    { _TRN("6400%"),                       IDM_ZOOM_6400,               0  },
-    { _TRN("3200%"),                       IDM_ZOOM_3200,               0  },
-    { _TRN("1600%"),                       IDM_ZOOM_1600,               0  },
-    { _TRN("800%"),                        IDM_ZOOM_800,                0  },
+    { _TRN("6400%"),                        IDM_ZOOM_6400,              0  },
+    { _TRN("3200%"),                        IDM_ZOOM_3200,              0  },
+    { _TRN("1600%"),                        IDM_ZOOM_1600,              0  },
+    { _TRN("800%"),                         IDM_ZOOM_800,               0  },
 #endif
-    { _TRN("400%"),                        IDM_ZOOM_400,                0  },
-    { _TRN("200%"),                        IDM_ZOOM_200,                0  },
-    { _TRN("150%"),                        IDM_ZOOM_150,                0  },
-    { _TRN("125%"),                        IDM_ZOOM_125,                0  },
-    { _TRN("100%"),                        IDM_ZOOM_100,                0  },
-    { _TRN("50%"),                         IDM_ZOOM_50,                 0  },
-    { _TRN("25%"),                         IDM_ZOOM_25,                 0  },
-    { _TRN("12.5%"),                       IDM_ZOOM_12_5,               0  },
-    { _TRN("8.33%"),                       IDM_ZOOM_8_33,               0  },
+    { _TRN("400%"),                         IDM_ZOOM_400,               0  },
+    { _TRN("200%"),                         IDM_ZOOM_200,               0  },
+    { _TRN("150%"),                         IDM_ZOOM_150,               0  },
+    { _TRN("125%"),                         IDM_ZOOM_125,               0  },
+    { _TRN("100%"),                         IDM_ZOOM_100,               0  },
+    { _TRN("50%"),                          IDM_ZOOM_50,                0  },
+    { _TRN("25%"),                          IDM_ZOOM_25,                0  },
+    { _TRN("12.5%"),                        IDM_ZOOM_12_5,              0  },
+    { _TRN("8.33%"),                        IDM_ZOOM_8_33,              0  },
 };
 
 MenuDef menuDefLang[] = {
-    { _TRN("Change language"),             IDM_CHANGE_LANGUAGE,         0  },
+    { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
-    { _TRN("Contribute translation"),      IDM_CONTRIBUTE_TRANSLATION,  MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM ,                           0,                           MF_NOT_IN_RESTRICTED },
+    { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
 #endif
-    { _TRN("&Options..."),                 IDM_SETTINGS,                MF_NOT_IN_RESTRICTED }
+    { _TRN("&Options..."),                  IDM_SETTINGS,               MF_NOT_IN_RESTRICTED }
 };
 
 MenuDef menuDefHelp[] = {
-    { _TRN("&Visit website"),              IDM_VISIT_WEBSITE,       MF_NOT_IN_RESTRICTED },
-    { _TRN("&Manual"),                     IDM_MANUAL,              MF_NOT_IN_RESTRICTED },
-    { _TRN("&Check for new version"),      IDM_CHECK_UPDATE,        MF_NOT_IN_RESTRICTED },
-    { SEP_ITEM ,                           0,                       MF_NOT_IN_RESTRICTED },
-    { _TRN("&About"),                      IDM_ABOUT,               0  }
+    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_NOT_IN_RESTRICTED },
+    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_NOT_IN_RESTRICTED },
+    { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
+    { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
+    { _TRN("&About"),                       IDM_ABOUT,                  0  }
 };
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node, UINT index)

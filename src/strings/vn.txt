@@ -12,14 +12,17 @@ Contributor: Tào Trần Vương Thắng
 &About
 Giới thiệu
 
-&Check for new version
-Kiểm tra có phiên bản mới
+&Actual Size\tCtrl-1
+Kích thướ&c thật\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Trở về\tAlt+<-
 
 &Close\tCtrl-W
 Đóng tập tin\tCtrl-W
 
-&Custom Zoom...
-Thu phóng &tuỳ ý...
+&Copy Selection\tCtrl-C
+Chép phần đánh dấu
 
 &Don't ask me again
 Không hỏi lại
@@ -30,6 +33,9 @@ Tập tin
 &Find what:
 Tìm cái gì:
 
+&First Page\tHome
+Trang đầu\tHome
+
 &Go To
 Nhảy đến
 
@@ -39,6 +45,9 @@ Nhảy đến trang:
 &Help
 Trợ &giúp
 
+&Last Page\tEnd
+Trang cuối\tEnd
+
 &Magnification:
 Phóng đại:
 
@@ -47,6 +56,9 @@ Hướng dẫn sử dụng
 
 &Match case
 Phân biệt &HOA-thường
+
+&Next Page\tRight Arrow
+Trang sau\t->
 
 &No
 Không
@@ -63,7 +75,10 @@ Tuỳ chọn
 &Password:
 Mật mã:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Trang trước\t<-
+
+&Print...\tCtrl-P
 In\tCtrl-P
 
 &Print... (denied)
@@ -72,7 +87,7 @@ In\tCtrl-P
 &Remember these settings for each document
 Nhớ cài đặt này cho mọi tập tin
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Lưu thành\tCtrl-S
 
 &Settings
@@ -83,9 +98,6 @@ Bỏ qua phiên bản này.
 
 &View
 Hiển thị
-
-&Visit website
-Thăm &website
 
 &Yes
 Đồng ý
@@ -98,9 +110,6 @@ Thu-&Phóng
 
 About SumatraPDF
 Giới thiệu SumatraPDF
-
-Act&ual Size\tCtrl-1
-Kích thướ&c thật\tCtrl-1
 
 Advanced
 Nâng cao
@@ -123,13 +132,10 @@ Tự động
 Automatically check for &updates
 Tự động kiểm tra có phiên bản mới
 
-Back\tAlt+Left Arrow
-Trở về\tAlt+<-
-
-Book view
+Book View
 Xem dạng sách
 
-Bookmarks\tF12
+Book&marks\tF12
 Chỉ dấu sách\tF12
 
 Bytes
@@ -144,8 +150,11 @@ Không in được tập tin này
 Cannot start inverse search command. Please check the command line in the settings.
 Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
 
-Change language
-Đổi ngôn ngữ (Change language)
+Change Language
+Đổi ngôn ngữ (Change Language)
+
+Check for &Updates
+Kiểm tra có phiên bản mới
 
 Continuous
 Liên tiếp
@@ -156,11 +165,8 @@ Xem sách liên tiếp
 Continuous facing
 Trang kép liên tiếp
 
-Contribute translation
+Contribute Translation
 Đóng góp dịch thuật
-
-Copy Selection\tCtrl-C
-Chép phần đánh dấu
 
 Could not open Printer
 Không mở được máy in.
@@ -173,6 +179,9 @@ Không hiện được trang
 
 Created:
 Ngày tạo:
+
+Custom &Zoom...
+Thu phóng &tuỳ ý...
 
 Default &Layout:
 Khung nhìn mặc định
@@ -201,6 +210,12 @@ Nhật mật khẩu cho %s
 Error loading PDF file.
 Không mở được tập tin PDF.
 
+F&orward\tAlt+Right Arrow
+Tiếp tục\tAlt+->
+
+F&ullscreen\tCtrl-L
+Toàn màn hình\tCtrl-L
+
 Facing
 Trang kép
 
@@ -213,6 +228,9 @@ Kích thước:
 File:
 Tập tin:
 
+Fin&d...\tCtrl-F
+Tìm kiếm...\tCtrl-F
+
 Find
 Tìm kiếm
 
@@ -222,35 +240,23 @@ Tìm xuống
 Find Previous
 Tìm lên
 
-Find...\tCtrl-F
-Tìm kiếm...\tCtrl-F
-
 Find:
 Tìm kiếm:
-
-First Page\tHome
-Trang đầu\tHome
 
 Fit &Page\tCtrl-0
 Vừa &trang\tCtrl-0
 
+Fit &Width\tCtrl-2
+Vừa chiều &rộng\tCtrl-2
+
 Fit Page
 Vừa trang
-
-Fit Widt&h\tCtrl-2
-Vừa chiều &rộng\tCtrl-2
 
 Fit Width
 Vừa chiều rộng
 
-Forward\tAlt+Right Arrow
-Tiếp tục\tAlt+->
-
 Found text at page %d
 Tìm thấy từ ở trang %d
-
-Fullscreen\tCtrl-L
-Toàn màn hình\tCtrl-L
 
 GB
 GB
@@ -264,9 +270,6 @@ Gợi ý: Nhấn phím F3 để tìm tiếp
 KB
 KB
 
-Last Page\tEnd
-Trang cuối\tEnd
-
 MB
 MB
 
@@ -279,7 +282,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Đặt SumatraPDF làm trình đọc PDF chính
 
-Match case
+Match Case
 Phân biệt HOA-thường
 
 Modified:
@@ -293,9 +296,6 @@ New version available.
 
 Next Page
 Trang sau
-
-Next Page\tRight Arrow
-Trang sau\t->
 
 No matches were found
 Không tìm thấy
@@ -324,7 +324,7 @@ Mở tập tin
 Open in &Adobe Reader
 Mở bằng Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 Thuộc tính
 
 PDF Document
@@ -339,14 +339,14 @@ Phiên bản PDF:
 PDF documents
 Tập tin PDF
 
+Pa&ge...\tCtrl-G
+Trang...\tCtrl-G
+
 Page Size:
 Kích thước trang:
 
 Page number %u inexistant
 Trang %u không tồn tại
-
-Page...\tCtrl-G
-Trang...\tCtrl-G
 
 Page:
 Trang:
@@ -360,19 +360,16 @@ In bằng Adobe Reader...
 Previous Page
 Trang trước
 
-Previous Page\tLeft Arrow
-Trang trước\t<-
-
 Printing problem.
 Lỗi in.
 
 Remember &opened files
 Nhớ các tập tin đã mở
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Quay trái\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Quay phải\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -381,22 +378,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Đánh dấu nội dung bằng Ctrl+phím chuột trái
 
-Send by &email...
+Send by &E-mail...
 Gưi qua &email...
 
 Set inverse search command-line
 Đặt dòng lệnh tìm kiếm ngược
 
-Show pages continuously
+Show &Toolbar
+Hiện thanh công cụ
+
+Show &pages continuously
 Xem trang liên tiếp
 
 Show the &bookmarks sidebar when available
 Hiện chỉ dấu sách nếu có
 
-Show toolbar
-Hiện thanh công cụ
-
-Single page
+Single Page
 Trang đơn
 
 Source file %s has no synchronization point
@@ -428,6 +425,9 @@ Không rõ tập tin nguồn (%s)
 
 View
 Hiển thị
+
+Visit &Website
+Thăm &website
 
 Warning
 Cảnh báo

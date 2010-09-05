@@ -11,8 +11,8 @@ Contributor: Brian Musarurwa
 &About
 &Nezve...
 
-&Check for new version
-&Tsvaga version idzva
+&Actual Size\tCtrl-1
+Saizi chaiyo\tCtrl-1
 
 &Close\tCtrl-W
 &Vhara\tCtrl-0
@@ -23,19 +23,31 @@ Usandivhunze futi
 &File
 &Faira
 
+&First Page\tHome
+Peji yekutanga\tHome
+
 &Go To
 Enda ku...
 
 &Help
 &Rubatsiro
 
+&Last Page\tEnd
+Peji yekupedzisira\tEnd
+
+&Next Page\tRight Arrow
+Peji yemberi\t->
+
 &Open\tCtrl-O
 Vhura\tCtrl-0
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Peji yesure\t<-
+
+&Print...\tCtrl-P
 &Printa\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Sevha se...\tCtrl-S
 
 &Skip this version
@@ -44,26 +56,23 @@ Siyana neversion irori.
 &View
 &Maonero
 
-&Visit website
-&Shanyira dande-mtande
-
 &Zoom
 &Zuma
 
 About SumatraPDF
 NezveSumatraPDF
 
-Act&ual Size\tCtrl-1
-Saizi chaiyo\tCtrl-1
-
 Associate with PDF files?
 Ita zvifambidzane ne PDF
 
-Bookmarks\tF12
+Book&marks\tF12
 Mabhukumaki\tF12
 
-Change language
-Chinja mutauro (Change language)
+Change Language
+Chinja mutauro (Change Language)
+
+Check for &Updates
+&Tsvaga version idzva
 
 Continuous
 Continuous
@@ -71,7 +80,7 @@ Continuous
 Continuous facing
 Facing iriContinous
 
-Contribute translation
+Contribute Translation
 Batsira kuturikira
 
 Could not open Printer
@@ -89,11 +98,17 @@ Isa password ya %s
 Error loading PDF file.
 Tatadza kulodha faira rePDF
 
+F&ullscreen\tCtrl-L
+Zadza Screen\tCtrl-L
+
 Facing
 Facing
 
 Failed to save a file
 Tatadza kuseva faira
+
+Fin&d...\tCtrl-F
+Wana...\tCtrl-F
 
 Find Next
 Wana pamberi
@@ -101,40 +116,28 @@ Wana pamberi
 Find Previous
 Wana pashure
 
-Find...\tCtrl-F
-Wana...\tCtrl-F
-
 Find:
 Wana:
-
-First Page\tHome
-Peji yekutanga\tHome
 
 Fit &Page\tCtrl-0
 Kwanisa &Peji\tCtrl-0
 
+Fit &Width\tCtrl-2
+Kwanisa hupamhu\tCtrl-2
+
 Fit Page
 Kwanisa Peji
-
-Fit Widt&h\tCtrl-2
-Kwanisa hupamhu\tCtrl-2
 
 Fit Width
 Kwanisa hupamhu
 
-Fullscreen\tCtrl-L
-Zadza Screen\tCtrl-L
-
 Go to page
 Enda kupeji
-
-Last Page\tEnd
-Peji yekupedzisira\tEnd
 
 Make SumatraPDF my main PDF reader
 Ita SumatraPDF igovhura maPDF ese
 
-Match case
+Match Case
 Fananidza kesi
 
 New version %s is available. Download new version?
@@ -146,16 +149,13 @@ Version idzva ririkuwanika
 Next Page
 Peji yemberi
 
-Next Page\tRight Arrow
-Peji yemberi\t->
-
 No new version available.
 Hapana version idzva.
 
 Open
 Vhura
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Peji...\tCtrl-G
 
 Page:
@@ -164,26 +164,26 @@ Peji:
 Previous Page
 Peji yesure
 
-Previous Page\tLeft Arrow
-Peji yesure\t<-
-
 Printing problem.
 Dambudziko pakuprinta
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Tenderedza kuruboshwe\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Tenderedza kurudyi\tCtrl-Shift-+
 
-Show toolbar
+Show &Toolbar
 Ratidza Toolbar
 
-Single page
+Single Page
 Peji imwechete
 
 View
 Maonero
+
+Visit &Website
+&Shanyira dande-mtande
 
 You have the latest version.
 Pane version idzva.
@@ -198,7 +198,8 @@ Zoom Out
 Duputsa
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -221,27 +222,26 @@ Duputsa
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -257,7 +257,7 @@ Duputsa
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -269,9 +269,9 @@ Duputsa
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
+#Send by &E-mail...
 #Set inverse search command-line
-#Show pages continuously
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

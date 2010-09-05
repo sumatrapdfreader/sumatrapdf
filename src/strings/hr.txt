@@ -11,14 +11,17 @@ Contributor: Krunoslav Tomorad (cygnus77@gmail.com)
 &About
 &O programu...
 
-&Check for new version
-Provjeri dostupnost nove inačice
+&Actual Size\tCtrl-1
+Stvarna veličina\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Natrag\tAlt+<-
 
 &Close\tCtrl-W
 &Zatvori\tCtrl-W
 
-&Custom Zoom...
-&Prilagođeno uvećanje...
+&Copy Selection\tCtrl-C
+Kopiraj odabir\tCtrl-C
 
 &Don't ask me again
 Ubuduće nemoj pitati
@@ -29,6 +32,9 @@ Ubuduće nemoj pitati
 &Find what:
 &Što tražiti:
 
+&First Page\tHome
+Prva stranica\tHome
+
 &Go To
 Idi na
 
@@ -38,6 +44,9 @@ Idi na
 &Help
 &Pomoć
 
+&Last Page\tEnd
+Poslijednja stranica\tEnd
+
 &Magnification:
 &Uvećanje:
 
@@ -46,6 +55,9 @@ Korisnički priručnik
 
 &Match case
 Razlikuj velika i mala slova
+
+&Next Page\tRight Arrow
+Sljedeća stranica\t->
 
 &No
 &Ne
@@ -62,7 +74,10 @@ Mogućnosti...
 &Password:
 &Zaporka:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Prethodna stranica\t<-
+
+&Print...\tCtrl-P
 &Ispiši\tCtrl-P
 
 &Print... (denied)
@@ -71,7 +86,7 @@ Mogućnosti...
 &Remember these settings for each document
 &Upamti ove postavke za svaki pojedini dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Spremi kao...\tCtrl-S
 
 &Settings
@@ -82,9 +97,6 @@ Mogućnosti...
 
 &View
 &Pogled
-
-&Visit website
-&Posjeti internetsku stranicu
 
 &Yes
 &Da
@@ -97,9 +109,6 @@ Mogućnosti...
 
 About SumatraPDF
 O SumatriPDF
-
-Act&ual Size\tCtrl-1
-Stvarna veličina\tCtrl-1
 
 Advanced
 Napredno
@@ -122,13 +131,10 @@ Automatsko
 Automatically check for &updates
 Provjeravaj &nadogradnje automatski
 
-Back\tAlt+Left Arrow
-Natrag\tAlt+<-
-
-Book view
+Book View
 Knjiški pogled
 
-Bookmarks\tF12
+Book&marks\tF12
 Straničnik\tF12
 
 Bytes
@@ -143,8 +149,11 @@ Ne mogu ispisati ovu datoteku
 Cannot start inverse search command. Please check the command line in the settings.
 Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredbeni redak u postavkama.
 
-Change language
-Promijeni jezik (Change language)
+Change Language
+Promijeni jezik (Change Language)
+
+Check for &Updates
+Provjeri dostupnost nove inačice
 
 Continuous
 Slijedno
@@ -155,11 +164,8 @@ Slijedni knjiški pogled
 Continuous facing
 Dvije stranice slijedno
 
-Contribute translation
+Contribute Translation
 Pomozi prijevodom
-
-Copy Selection\tCtrl-C
-Kopiraj odabir\tCtrl-C
 
 Could not open Printer
 Ne mogu pristupiti pisaču
@@ -172,6 +178,9 @@ Nije moguće iscrtati stranicu
 
 Created:
 Stvoreno:
+
+Custom &Zoom...
+&Prilagođeno uvećanje...
 
 Default &Layout:
 Pretpostavljeni &izgled:
@@ -200,6 +209,12 @@ Unesi zaporku za %s
 Error loading PDF file.
 Greška prilikom učitavanja PDF datoteke.
 
+F&orward\tAlt+Right Arrow
+Naprijed\tAlt+->
+
+F&ullscreen\tCtrl-L
+Cijeli zaslon\tCtrl-L
+
 Facing
 Dvije stranice
 
@@ -212,6 +227,9 @@ Veličina datoteke:
 File:
 Datoteka:
 
+Fin&d...\tCtrl-F
+Pronađi...\tCtrl-F
+
 Find
 Pronađi
 
@@ -221,35 +239,23 @@ Pronađi slijedeće
 Find Previous
 Pronađi prethodno
 
-Find...\tCtrl-F
-Pronađi...\tCtrl-F
-
 Find:
 Pronađi:
-
-First Page\tHome
-Prva stranica\tHome
 
 Fit &Page\tCtrl-0
 Prilagodi &stranici\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Namjesti po širini\tCtrl-2
+
 Fit Page
 Prilagodi stranici
-
-Fit Widt&h\tCtrl-2
-&Namjesti po širini\tCtrl-2
 
 Fit Width
 Namjesti po širini
 
-Forward\tAlt+Right Arrow
-Naprijed\tAlt+->
-
 Found text at page %d
 Tekst je pronađen na %d. stranici
-
-Fullscreen\tCtrl-L
-Cijeli zaslon\tCtrl-L
 
 GB
 GiB
@@ -263,9 +269,6 @@ Pomoć: upotrijebite tipku F3 za ponovnu pretragu
 KB
 KiB
 
-Last Page\tEnd
-Poslijednja stranica\tEnd
-
 MB
 MiB
 
@@ -278,7 +281,7 @@ Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 Make SumatraPDF my main PDF reader
 Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka
 
-Match case
+Match Case
 Razlikuj velika i mala slova
 
 Modified:
@@ -292,9 +295,6 @@ Dostupna je nova inačica.
 
 Next Page
 Sljedeća stranica
-
-Next Page\tRight Arrow
-Sljedeća stranica\t->
 
 No matches were found
 Pojam nije pronađen
@@ -323,7 +323,7 @@ Otvori
 Open in &Adobe Reader
 Otvori u programu &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 S&vojstva...\tCtrl-D
 
 PDF Document
@@ -338,14 +338,14 @@ Inačica PDF-a:
 PDF documents
 PDF dokumenti
 
+Pa&ge...\tCtrl-G
+Stranica...\tCtrl-G
+
 Page Size:
 Veličina stranice:
 
 Page number %u inexistant
 Stranica %u ne postoji
-
-Page...\tCtrl-G
-Stranica...\tCtrl-G
 
 Page:
 Stranica:
@@ -356,19 +356,16 @@ Molim pričekajte, iscrtavam...
 Previous Page
 Prethodna stranica
 
-Previous Page\tLeft Arrow
-Prethodna stranica\t<-
-
 Printing problem.
 Problem prilikom ispisivanja.
 
 Remember &opened files
 Upamti &otvorene datoteke
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Zaokreni nalijevo\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Zaokreni nadesno\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -377,22 +374,22 @@ Pretražujem %d. stranicu (od %d)...
 Select content with Ctrl+left mouse button
 Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
 
-Send by &email...
+Send by &E-mail...
 Pošalji &e-poštom...
 
 Set inverse search command-line
 Omogući unazadnu pretragu
 
-Show pages continuously
+Show &Toolbar
+Prikaži alatnu traku
+
+Show &pages continuously
 Prikaži stranice slijedno
 
 Show the &bookmarks sidebar when available
 Prikaži traku &straničnika kad je dostupna
 
-Show toolbar
-Prikaži alatnu traku
-
-Single page
+Single Page
 Jedna stranica
 
 Source file %s has no synchronization point
@@ -424,6 +421,9 @@ Nepoznata izvorna datoteka (%s)
 
 View
 Pogled
+
+Visit &Website
+&Posjeti internetsku stranicu
 
 Warning
 Upozorenje

@@ -11,8 +11,8 @@ Contributor: Pieter Kotzé
 &About
 &Omtrent
 
-&Check for new version
-Kyk Vir Nuwe Uitgawe
+&Actual Size\tCtrl-1
+&Gewone Grootte\tCtrl-1
 
 &Close\tCtrl-W
 Maak Toe\tCtrl-W
@@ -23,22 +23,34 @@ Moet My Nie Weer Vra Nie
 &File
 &Lêer
 
+&First Page\tHome
+Eerste Bladsy\tHome
+
 &Go To
 &Gaan Na
 
 &Help
 Hulp
 
+&Last Page\tEnd
+Laaste Bladsy\tEnd
+
 &Manual
 Handleiding
+
+&Next Page\tRight Arrow
+Volgende Bladsy\t->
 
 &Open\tCtrl-O
 &Maak Oop\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Vorige Bladsy\t<-
+
+&Print...\tCtrl-P
 &Druk\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Stoor As\tCtrl-S
 
 &Skip this version
@@ -47,26 +59,23 @@ Slaan Dié Weergawe Oor.
 &View
 &Vertoon
 
-&Visit website
-&Besoek Webtuiste
-
 &Zoom
 &Zoem
 
 About SumatraPDF
 Omtrent SumatraPDF
 
-Act&ual Size\tCtrl-1
-&Gewone Grootte\tCtrl-1
-
 Associate with PDF files?
 Assosieer Met PDF lêers?
 
-Bookmarks\tF12
+Book&marks\tF12
 Boekmerke\tF12
 
-Change language
-Verander Taal (Change language)
+Change Language
+Verander Taal (Change Language)
+
+Check for &Updates
+Kyk Vir Nuwe Uitgawe
 
 Continuous
 Aanmekaar
@@ -74,7 +83,7 @@ Aanmekaar
 Continuous facing
 Vertoon Aanmekaar
 
-Contribute translation
+Contribute Translation
 Dra By Tot Ñ Vertaling.
 
 Could not open Printer
@@ -92,11 +101,17 @@ Tik Wagwoord In Vir %s
 Error loading PDF file.
 Daar was ñ fout terwyl die PDF lêer gelaai is.
 
+F&ullscreen\tCtrl-L
+Volskerm\tCtrl-L
+
 Facing
 Teenoor
 
 Failed to save a file
 Kon nie die lêer stoor nie!
+
+Fin&d...\tCtrl-F
+Soek...\tCtrl-F
 
 Find Next
 Soek Volgende
@@ -104,35 +119,23 @@ Soek Volgende
 Find Previous
 Soek Vorige
 
-Find...\tCtrl-F
-Soek...\tCtrl-F
-
 Find:
 Soek:
-
-First Page\tHome
-Eerste Bladsy\tHome
 
 Fit &Page\tCtrl-0
 &Pas Blad In\tCtrl-0
 
+Fit &Width\tCtrl-2
+Pas In Breedte\tCtrl-2
+
 Fit Page
 Pas Blad In
-
-Fit Widt&h\tCtrl-2
-Pas In Breedte\tCtrl-2
 
 Fit Width
 Pas In Breedte
 
-Fullscreen\tCtrl-L
-Volskerm\tCtrl-L
-
 Go to page
 Gaan Na Bladsy
-
-Last Page\tEnd
-Laaste Bladsy\tEnd
 
 Make SumatraPDF default application for PDF files?
 Maak Sumatra Die Automatiese Program Vir PDF Lêers?
@@ -140,7 +143,7 @@ Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 Make SumatraPDF my main PDF reader
 Maak Sumatra Die Automatiese PDF Leser
 
-Match case
+Match Case
 Vind Bypassende Klein Letters / Hoofletters
 
 New version %s is available. Download new version?
@@ -152,16 +155,13 @@ Nuwe Weergawe Beskikbaar.
 Next Page
 Volgende Bladsy
 
-Next Page\tRight Arrow
-Volgende Bladsy\t->
-
 No new version available.
 Geen Nuwe Weergawe Is Beskikbaar Nie.
 
 Open
 Maak Oop
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Bladsy...\tCtrl-G
 
 Page:
@@ -170,29 +170,29 @@ Bladsy:
 Previous Page
 Vorige Bladsy
 
-Previous Page\tLeft Arrow
-Vorige Bladsy\t<-
-
 Printing problem.
 Druk Probleem.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Draai Links\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Draai Regs\tCtrl-Shift-+
 
 Set inverse search command-line
 Stel Die Teenoorgestelde Soek Command-Line
 
-Show toolbar
+Show &Toolbar
 Vertoon Toolbar
 
-Single page
+Single Page
 Enkele Bladsy
 
 View
 Vertoon
+
+Visit &Website
+&Besoek Webtuiste
 
 You have the latest version.
 Jy Het Die Nuutste Uitgawe.
@@ -207,7 +207,8 @@ Zoom Out
 Zoem Uit
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -229,27 +230,26 @@ Zoem Uit
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -264,7 +264,7 @@ Zoem Uit
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -276,8 +276,8 @@ Zoem Uit
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

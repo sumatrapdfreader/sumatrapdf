@@ -12,14 +12,17 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &About
 אודות
 
-&Check for new version
-בדוק לגרסה חדשה
+&Actual Size\tCtrl-1
+גודל מקור\tCtrl-1
+
+&Back\tAlt+Left Arrow
+חזור\tAlt+<-
 
 &Close\tCtrl-W
 &סגור\tCtrl-W
 
-&Custom Zoom...
-זום משתמש...
+&Copy Selection\tCtrl-C
+העתק בחירה\tCtrl-C
 
 &Don't ask me again
 אל תשאל שנית
@@ -30,6 +33,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Find what:
 מה למצוא:
 
+&First Page\tHome
+דף ראשון\tHome
+
 &Go To
 לך ל
 
@@ -39,6 +45,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Help
 עזרה
 
+&Last Page\tEnd
+דף אחרון\tEnd
+
 &Magnification:
 הגדלה
 
@@ -47,6 +56,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Match case
 התאם אות גדולה/קטנה
+
+&Next Page\tRight Arrow
+דף הבא\t->
 
 &No
 לא
@@ -63,13 +75,16 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Password:
 סיסמה:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+דף קודם\t<-
+
+&Print...\tCtrl-P
 הדפס\tCtrl-P
 
 &Remember these settings for each document
 זכור הגדרות אלו לכל מסמך
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 שמירה בשם\tCtrl-S
 
 &Settings
@@ -80,9 +95,6 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &View
 &תצוגה
-
-&Visit website
-בקר באתר
 
 &Yes
 כן
@@ -95,9 +107,6 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 About SumatraPDF
 PDF אודות סומטרה
-
-Act&ual Size\tCtrl-1
-גודל מקור\tCtrl-1
 
 Advanced
 מתקדם
@@ -120,13 +129,10 @@ Automatic
 Automatically check for &updates
 בדוק אוטומטית לעדכונים
 
-Back\tAlt+Left Arrow
-חזור\tAlt+<-
-
-Book view
+Book View
 תצוגת ספר
 
-Bookmarks\tF12
+Book&marks\tF12
 סימניה\tF12
 
 Bytes
@@ -141,8 +147,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 לא ניתן להריץ פקודת חיפוש הפוך. אנא בדוק הפקודה בהגדרות
 
-Change language
+Change Language
 שנה שפה
+
+Check for &Updates
+בדוק לגרסה חדשה
 
 Continuous
 רציף
@@ -153,11 +162,8 @@ Continuous book view
 Continuous facing
 המשך תצוגה רציפה
 
-Contribute translation
+Contribute Translation
 עזור לתרגם
-
-Copy Selection\tCtrl-C
-העתק בחירה\tCtrl-C
 
 Could not open Printer
 לא ניתן לפתוח מדפסת
@@ -170,6 +176,9 @@ Couldn't render the page
 
 Created:
 נוצר:
+
+Custom &Zoom...
+זום משתמש...
 
 Default &Layout:
 סידור ברירת מחדל:
@@ -195,6 +204,12 @@ Enter password for %s
 Error loading PDF file.
 PDF שגיאה בהעלאת קובץ
 
+F&orward\tAlt+Right Arrow
+קדימה\tAlt+ ?
+
+F&ullscreen\tCtrl-L
+מסך מלא\tCtrl-L
+
 Facing
 דף כפול
 
@@ -207,6 +222,9 @@ File Size:
 File:
 קובץ:
 
+Fin&d...\tCtrl-F
+חפש...\tCtrl-F
+
 Find
 חפש
 
@@ -216,35 +234,23 @@ Find Next
 Find Previous
 חפש קודם
 
-Find...\tCtrl-F
-חפש...\tCtrl-F
-
 Find:
 חפש:
-
-First Page\tHome
-דף ראשון\tHome
 
 Fit &Page\tCtrl-0
 התאם דף\tCtrl-0
 
+Fit &Width\tCtrl-2
+התאם רוחב\tCtrl-2
+
 Fit Page
 התאם דף
-
-Fit Widt&h\tCtrl-2
-התאם רוחב\tCtrl-2
 
 Fit Width
 התאם רוחב
 
-Forward\tAlt+Right Arrow
-קדימה\tAlt+ ?
-
 Found text at page %d
 %d חפש מלל בעמוד
-
-Fullscreen\tCtrl-L
-מסך מלא\tCtrl-L
 
 GB
 GB
@@ -258,9 +264,6 @@ F3 רמז: לחיפוש הבא, השתמש במקש
 KB
 KB
 
-Last Page\tEnd
-דף אחרון\tEnd
-
 MB
 MB
 
@@ -273,7 +276,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 PDF הפוך את סומטרה לברירת מחדל עבור קבצי
 
-Match case
+Match Case
 התאם לאותיות קטנות/גדולות
 
 Modified:
@@ -287,9 +290,6 @@ New version available.
 
 Next Page
 דף הבא
-
-Next Page\tRight Arrow
-דף הבא\t->
 
 No matches were found
 לא נמצאו התאמות
@@ -318,7 +318,7 @@ Open
 Open in &Adobe Reader
 Adobe פתח בקורא
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 תכונות...\tCtrl-D
 
 PDF Document
@@ -333,14 +333,14 @@ PDF מהדורת:
 PDF documents
 PDF מסמך
 
+Pa&ge...\tCtrl-G
+דף...\tCtrl-G
+
 Page Size:
 גודל עמוד:
 
 Page number %u inexistant
 לא קיים %u עמוד מספר
-
-Page...\tCtrl-G
-דף...\tCtrl-G
 
 Page:
 עמוד:
@@ -351,19 +351,16 @@ Please wait - rendering...
 Previous Page
 דף קודם
 
-Previous Page\tLeft Arrow
-דף קודם\t<-
-
 Printing problem.
 בעיית הדפסה
 
 Remember &opened files
 זכור קבצים פתוחים
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 סובב שמאלה\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 סובב ימינה\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -372,22 +369,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 וכפתור עכבר שמאל Ctrl בחר תוכן עם
 
-Send by &email...
+Send by &E-mail...
 שלח אימייל
 
 Set inverse search command-line
 קבע פקודת חיפוש הפוך
 
-Show pages continuously
+Show &Toolbar
+הצג שורת תפריט
+
+Show &pages continuously
 הצג דפים ברציפות
 
 Show the &bookmarks sidebar when available
 הצג סרגל-צד סימניות כשזמין
 
-Show toolbar
-הצג שורת תפריט
-
-Single page
+Single Page
 דף יחיד
 
 Source file %s has no synchronization point
@@ -416,6 +413,9 @@ Unknown source file (%s)
 
 View
 תצוגה
+
+Visit &Website
+בקר באתר
 
 Warning
 אזהרה

@@ -9,8 +9,8 @@ Lang: ga Irish (Gaeilge)
 &About
 Maidir le
 
-&Check for new version
-Téigh ar thóir leagan nua
+&Actual Size\tCtrl-1
+Fíormhéid\tCtrl-1
 
 &Close\tCtrl-W
 &Dún\tCtrl-W
@@ -21,22 +21,34 @@ Ná fiafraigh dom arís
 &File
 &Comhad
 
+&First Page\tHome
+An Chéad Leathanach\tHome
+
 &Go To
 Téigh Chuig...
 
 &Help
 C&abhair
 
+&Last Page\tEnd
+An Leathanach Deiridh\tEnd
+
 &Manual
 Lámhleabhar
+
+&Next Page\tRight Arrow
+Leathanach Ar Aghaidh\t->
 
 &Open\tCtrl-O
 &Oscail\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Leathanach Roimhe\t<-
+
+&Print...\tCtrl-P
 Clóbhuail\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Cuir i dtaisce mar...\tCtrl-S
 
 &Skip this version
@@ -45,26 +57,23 @@ Ná bac leis an leagan seo.
 &View
 Amharc
 
-&Visit website
-Tabhair cuairt ar an suíomh idirlín
-
 &Zoom
 Féithigh
 
 About SumatraPDF
 Maidir le SumatraPDF
 
-Act&ual Size\tCtrl-1
-Fíormhéid\tCtrl-1
-
 Associate with PDF files?
 Comhthiomsaigh le comhaid PDF?
 
-Bookmarks\tF12
+Book&marks\tF12
 Astail\tF12
 
-Change language
-Athraigh an Teanga (Change language)
+Change Language
+Athraigh an Teanga (Change Language)
+
+Check for &Updates
+Téigh ar thóir leagan nua
 
 Continuous
 Ar Leanúint
@@ -72,7 +81,7 @@ Ar Leanúint
 Continuous facing
 Dhá Leathanach Ar Leanúint
 
-Contribute translation
+Contribute Translation
 Aistrigh É Seo
 
 Could not open Printer
@@ -90,11 +99,17 @@ Cuir isteach focal faire le haghaidh %s
 Error loading PDF file.
 Tharla botún ag luchtú comhad PDF.
 
+F&ullscreen\tCtrl-L
+Lánscáileán\tCtrl-L
+
 Facing
 Dhá Leathanach
 
 Failed to save a file
 Theip air comhad a chur i dtaisce
+
+Fin&d...\tCtrl-F
+Aimsigh...\tCtrl-F
 
 Find Next
 Aimsigh Ar Aghaidh
@@ -102,35 +117,23 @@ Aimsigh Ar Aghaidh
 Find Previous
 Aimsigh Roimhe
 
-Find...\tCtrl-F
-Aimsigh...\tCtrl-F
-
 Find:
 Aimsigh:
-
-First Page\tHome
-An Chéad Leathanach\tHome
 
 Fit &Page\tCtrl-0
 Oiriúnaigh don Lch\tCtrl-0
 
+Fit &Width\tCtrl-2
+Oiriúnaigh don Leithead\tCtrl-2
+
 Fit Page
 Oiriúnaigh don Lch
-
-Fit Widt&h\tCtrl-2
-Oiriúnaigh don Leithead\tCtrl-2
 
 Fit Width
 Oiriúnaigh don Leithead
 
-Fullscreen\tCtrl-L
-Lánscáileán\tCtrl-L
-
 Go to page
 Téigh chuig lch
-
-Last Page\tEnd
-An Leathanach Deiridh\tEnd
 
 Make SumatraPDF default application for PDF files?
 Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
@@ -138,7 +141,7 @@ Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?
 Make SumatraPDF my main PDF reader
 Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 
-Match case
+Match Case
 Comhoiriúnaigh an cás
 
 New version %s is available. Download new version?
@@ -150,16 +153,13 @@ Tá leagan nua ar fáil.
 Next Page
 Leathanach Ar Aghaidh
 
-Next Page\tRight Arrow
-Leathanach Ar Aghaidh\t->
-
 No new version available.
 Níl leagan nua ar fáil.
 
 Open
 Oscail
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Leathanach...\tCtrl-G
 
 Page:
@@ -168,29 +168,29 @@ Leathanach:
 Previous Page
 Leathanach Roimhe
 
-Previous Page\tLeft Arrow
-Leathanach Roimhe\t<-
-
 Printing problem.
 Botún Clóbhuailte
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Rothlaigh Tuathalach\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Rothlaigh Deiseal\tCtrl-Shift-+
 
 Set inverse search command-line
 Socruigh líne na n-orduithe cuardaigh inbhéarta
 
-Show toolbar
+Show &Toolbar
 Taispeáin an Barra Uirlisí
 
-Single page
+Single Page
 Leathanach Amháin
 
 View
 Amharc
+
+Visit &Website
+Tabhair cuairt ar an suíomh idirlín
 
 You have the latest version.
 Tá an leagan is úire agat
@@ -205,7 +205,8 @@ Zoom Out
 Féithigh Amach
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -227,27 +228,26 @@ Féithigh Amach
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -262,7 +262,7 @@ Féithigh Amach
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -274,8 +274,8 @@ Féithigh Amach
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

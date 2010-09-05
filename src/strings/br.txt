@@ -11,14 +11,17 @@ Contributor: Francisco Fuchs (pontocinza.blogspot.com)
 &About
 S&obre o SumatraPDF
 
-&Check for new version
-Procurar atualizações
+&Actual Size\tCtrl-1
+&Tamanho real\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Voltar\tAlt+<-
 
 &Close\tCtrl-W
 &Fechar\tCtrl-W
 
-&Custom Zoom...
-&Zoom personalizado...
+&Copy Selection\tCtrl-C
+Copiar seleção\tCtrl-C
 
 &Don't ask me again
 Não perguntar novamente
@@ -29,6 +32,9 @@ Não perguntar novamente
 &Find what:
 &Localizar o quê:
 
+&First Page\tHome
+Primeira página\tHome
+
 &Go To
 Ir &para
 
@@ -38,6 +44,9 @@ Ir &para
 &Help
 A&juda
 
+&Last Page\tEnd
+Última página\tEnd
+
 &Magnification:
 Aumento:
 
@@ -46,6 +55,9 @@ Manual
 
 &Match case
 Diferenciar minúsculas e maiúsculas
+
+&Next Page\tRight Arrow
+Página seguinte\t->
 
 &No
 &Não
@@ -62,7 +74,10 @@ A&brir\tCtrl-O
 &Password:
 &Senha:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Página anterior\t<-
+
+&Print...\tCtrl-P
 &Imprimir\tCtrl-P
 
 &Print... (denied)
@@ -71,7 +86,7 @@ A&brir\tCtrl-O
 &Remember these settings for each document
 Lembrar estas preferências para cada documento
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Salvar como...\tCtrl-S
 
 &Settings
@@ -82,9 +97,6 @@ Ignorar esta versão
 
 &View
 &Ver
-
-&Visit website
-&Visitar a página do SumatraPDF
 
 &Yes
 &Sim
@@ -97,9 +109,6 @@ Ignorar esta versão
 
 About SumatraPDF
 Sobre o SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Tamanho real\tCtrl-1
 
 Advanced
 Avançado
@@ -122,13 +131,10 @@ Automático
 Automatically check for &updates
 &Procurar atualizações automaticamente
 
-Back\tAlt+Left Arrow
-Voltar\tAlt+<-
-
-Book view
+Book View
 Ver como Livro
 
-Bookmarks\tF12
+Book&marks\tF12
 Marcadores\tF12
 
 Bytes
@@ -143,8 +149,11 @@ Não foi possível imprimir este arquivo
 Cannot start inverse search command. Please check the command line in the settings.
 Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
 
-Change language
-Mudar o idioma (Change language)
+Change Language
+Mudar o idioma (Change Language)
+
+Check for &Updates
+Procurar atualizações
 
 Continuous
 Contínuo
@@ -155,11 +164,8 @@ Ver como Livro contínuo
 Continuous facing
 Página dupla contínua
 
-Contribute translation
+Contribute Translation
 Contribuir na tradução
-
-Copy Selection\tCtrl-C
-Copiar seleção\tCtrl-C
 
 Could not open Printer
 Erro ao acessar a impressora.
@@ -172,6 +178,9 @@ Não foi possível renderizar a página
 
 Created:
 Criado:
+
+Custom &Zoom...
+&Zoom personalizado...
 
 Default &Layout:
 &Visualização Padrão
@@ -200,6 +209,12 @@ Digite a senha de %s
 Error loading PDF file.
 Erro ao abrir o arquivo PDF.
 
+F&orward\tAlt+Right Arrow
+Avançar\tAlt+->
+
+F&ullscreen\tCtrl-L
+Tela cheia\tCtrl-L
+
 Facing
 Página dupla
 
@@ -212,6 +227,9 @@ Tamanho do arquivo:
 File:
 Arquivo:
 
+Fin&d...\tCtrl-F
+Localizar...\tCtrl-F
+
 Find
 Localizar
 
@@ -221,35 +239,23 @@ Localizar próximo
 Find Previous
 Localizar anterior
 
-Find...\tCtrl-F
-Localizar...\tCtrl-F
-
 Find:
 Localizar:
-
-First Page\tHome
-Primeira página\tHome
 
 Fit &Page\tCtrl-0
 &Página inteira\tCtrl-0
 
+Fit &Width\tCtrl-2
+Ajustar pela l&argura\tCtrl-2
+
 Fit Page
 Página inteira
-
-Fit Widt&h\tCtrl-2
-Ajustar pela l&argura\tCtrl-2
 
 Fit Width
 Ajustar pela largura
 
-Forward\tAlt+Right Arrow
-Avançar\tAlt+->
-
 Found text at page %d
 Texto encontrado na página %d
-
-Fullscreen\tCtrl-L
-Tela cheia\tCtrl-L
 
 GB
 GB
@@ -263,9 +269,6 @@ Dica: tecle F3 para achar a próxima ocorrência
 KB
 KB
 
-Last Page\tEnd
-Última página\tEnd
-
 MB
 MB
 
@@ -278,7 +281,7 @@ Fazer do SumatraPDF o programa padrão para arquivos PDF?
 Make SumatraPDF my main PDF reader
 Tornar o SumatraPDF o leitor PDF padrão
 
-Match case
+Match Case
 Diferenciar minúsculas e maiúsculas
 
 Modified:
@@ -292,9 +295,6 @@ Uma versão nova está disponível.
 
 Next Page
 Página seguinte
-
-Next Page\tRight Arrow
-Página seguinte\t->
 
 No matches were found
 Nenhuma ocorrência encontrada
@@ -323,7 +323,7 @@ Abrir
 Open in &Adobe Reader
 Abrir no &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 Propriedades...\tCtrl-D
 
 PDF Document
@@ -338,14 +338,14 @@ Versão do PDF:
 PDF documents
 Documentos PDF
 
+Pa&ge...\tCtrl-G
+Página...\tCtrl-G
+
 Page Size:
 Tamanho da página:
 
 Page number %u inexistant
 A página %u não existe
-
-Page...\tCtrl-G
-Página...\tCtrl-G
 
 Page:
 Página:
@@ -359,19 +359,16 @@ Imprimir com Adobe Reader...
 Previous Page
 Página anterior
 
-Previous Page\tLeft Arrow
-Página anterior\t<-
-
 Printing problem.
 Problema de impressão.
 
 Remember &opened files
 &Lembrar arquivos abertos
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Girar à esquerda\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Girar à direita\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -380,22 +377,22 @@ Localizando %d de %d...
 Select content with Ctrl+left mouse button
 Selecionar com Ctrl+Botão esquerdo do mouse
 
-Send by &email...
+Send by &E-mail...
 Enviar por email...
 
 Set inverse search command-line
 Configurar pesquisa inversa
 
-Show pages continuously
+Show &Toolbar
+Mostrar barra de ferramentas
+
+Show &pages continuously
 Exibir páginas de modo contínuo
 
 Show the &bookmarks sidebar when available
 Mostrar barra lateral de marcadores quando disponível
 
-Show toolbar
-Mostrar barra de ferramentas
-
-Single page
+Single Page
 Página única
 
 Source file %s has no synchronization point
@@ -427,6 +424,9 @@ Arquivo fonte desconhecido (%s)
 
 View
 Exibir
+
+Visit &Website
+&Visitar a página do SumatraPDF
 
 Warning
 Aviso

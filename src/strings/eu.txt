@@ -11,8 +11,8 @@ Contributor: Igor G. Olaizola
 &About
 Ho&Ni buruz...
 
-&Check for new version
-Bertsio berriagorik ba ote den begiratu
+&Actual Size\tCtrl-1
+&Berezko neurria\tCtrl-1
 
 &Close\tCtrl-W
 &Itxi\tCtrl-W
@@ -23,19 +23,31 @@ Ez berriz galdetu
 &File
 &Fitxategia
 
+&First Page\tHome
+Lehendabiziko orria \tHome
+
 &Go To
 ...ra &Joan
 
 &Help
 &Laguntza
 
+&Last Page\tEnd
+Azken orria\tEnd
+
+&Next Page\tRight Arrow
+Hurrengo orria\t->
+
 &Open\tCtrl-O
 Ireki\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Aurreko orria\t<-
+
+&Print...\tCtrl-P
 &Inprimatu\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 ... bezala &Gorde\tCtrl-S
 
 &Skip this version
@@ -44,26 +56,23 @@ Bertsio berria saihestu
 &View
 I&kusi
 
-&Visit website
-&Web orria bisitatu
-
 &Zoom
 &Zoom-a
 
 About SumatraPDF
 SumatraPDF-taz
 
-Act&ual Size\tCtrl-1
-&Berezko neurria\tCtrl-1
-
 Associate with PDF files?
 PDF fitxategiekin lotu?
 
-Bookmarks\tF12
+Book&marks\tF12
 Markagailuak\tF12
 
-Change language
-Hizkuntza aldatu (Change language)
+Change Language
+Hizkuntza aldatu (Change Language)
+
+Check for &Updates
+Bertsio berriagorik ba ote den begiratu
 
 Continuous
 Jarraian
@@ -71,7 +80,7 @@ Jarraian
 Continuous facing
 Bi aldetatik jarraian
 
-Contribute translation
+Contribute Translation
 Lagun gaitzazu itzulpenekin
 
 Could not open Printer
@@ -89,11 +98,17 @@ Enter password for %s
 Error loading PDF file.
 PDF fitxategia kargargatzerakoan errorea suertatu da
 
+F&ullscreen\tCtrl-L
+Pantaila osoan\tCtrl-L
+
 Facing
 Bi aldetatik
 
 Failed to save a file
 Fitxategia ezin izan da gorde
+
+Fin&d...\tCtrl-F
+Bilatu...\tCtrl-F
 
 Find Next
 Hurrengoa bilatu
@@ -101,35 +116,23 @@ Hurrengoa bilatu
 Find Previous
 Aurrekoa bilatu
 
-Find...\tCtrl-F
-Bilatu...\tCtrl-F
-
 Find:
 Bilatu:
-
-First Page\tHome
-Lehendabiziko orria \tHome
 
 Fit &Page\tCtrl-0
 Orriaren neurria egokitu\tCtrl-O
 
+Fit &Width\tCtrl-2
+Orriaren zabalera egokitu\tCtrl-2
+
 Fit Page
 Orriaren neurria egokitu
-
-Fit Widt&h\tCtrl-2
-Orriaren zabalera egokitu\tCtrl-2
 
 Fit Width
 Orriaren zabalera egokitu
 
-Fullscreen\tCtrl-L
-Pantaila osoan\tCtrl-L
-
 Go to page
 ...garren orrira joan
-
-Last Page\tEnd
-Azken orria\tEnd
 
 Make SumatraPDF default application for PDF files?
 PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?
@@ -137,7 +140,7 @@ PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu
 Make SumatraPDF my main PDF reader
 SumatraPDF erabili besterik ezean PDFak irakurtzeko
 
-Match case
+Match Case
 Hizki handiak edo txikiak bereizi
 
 New version %s is available. Download new version?
@@ -149,44 +152,41 @@ Bertsio berria eskuragarri duzu.
 Next Page
 Hurrengo orria
 
-Next Page\tRight Arrow
-Hurrengo orria\t->
-
 No new version available.
 Ez dago bertsio berririk.
 
 Open
 Ireki
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 ...garren orria\tCtrl-G
 
 Previous Page
 Aurreko orria
 
-Previous Page\tLeft Arrow
-Aurreko orria\t<-
-
 Printing problem.
 Arazoak inprimatze lanetan
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Ezkerrerantz biratu\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Eskubirantz biratu\tCtrl-Shift-+
 
 Set inverse search command-line
 Alderantzizko bilaketa ezarri
 
-Show toolbar
+Show &Toolbar
 Lanabes barra azaldu
 
-Single page
+Single Page
 Orri bakarra
 
 View
 Ikusi
+
+Visit &Website
+&Web orria bisitatu
 
 You have the latest version.
 Azkeneko bertsioa da daukazuna.
@@ -201,7 +201,8 @@ Zoom Out
 Zoom-a urruneratu
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -224,27 +225,26 @@ Zoom-a urruneratu
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -259,7 +259,7 @@ Zoom-a urruneratu
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -272,8 +272,8 @@ Zoom-a urruneratu
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

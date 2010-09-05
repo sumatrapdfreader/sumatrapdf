@@ -15,14 +15,17 @@ Contributor: Massimiliano Beltrando
 &About
 &Informazioni
 
-&Check for new version
-&Verifica aggiornamenti
+&Actual Size\tCtrl-1
+&Dimensioni reali\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Indietro\tAlt+Freccia sinistra
 
 &Close\tCtrl-W
 &Chiudi\tCtrl-W
 
-&Custom Zoom...
-&Ingrandimento personalizzato
+&Copy Selection\tCtrl-C
+Copia Selezione\tCtrl-C
 
 &Don't ask me again
 &Non chiedermelo più
@@ -33,6 +36,9 @@ Contributor: Massimiliano Beltrando
 &Find what:
 &Ricerca:
 
+&First Page\tHome
+Prima pagina\tHome
+
 &Go To
 &Vai a
 
@@ -42,6 +48,9 @@ Contributor: Massimiliano Beltrando
 &Help
 &Aiuto
 
+&Last Page\tEnd
+Ultima pagina\tEnd
+
 &Magnification:
 &Ingrandimento:
 
@@ -50,6 +59,9 @@ Contributor: Massimiliano Beltrando
 
 &Match case
 &Maiuscole/minuscole
+
+&Next Page\tRight Arrow
+Pagina successiva\tFreccia destra
 
 &No
 &No
@@ -66,7 +78,10 @@ Contributor: Massimiliano Beltrando
 &Password:
 Parola chiave:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Pagina precedente\tFreccia destra
+
+&Print...\tCtrl-P
 &Stampa\tCtrl-P
 
 &Print... (denied)
@@ -75,7 +90,7 @@ Parola chiave:
 &Remember these settings for each document
 &Ricorda le impostazioni per ogni documento
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Salva con nome\tCtrl-S
 
 &Settings
@@ -86,9 +101,6 @@ Parola chiave:
 
 &View
 &Visualizza
-
-&Visit website
-&Visita il sito
 
 &Yes
 &Sì
@@ -101,9 +113,6 @@ Parola chiave:
 
 About SumatraPDF
 Informazioni su SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Dimensioni reali\tCtrl-1
 
 Advanced
 Avanzate
@@ -126,13 +135,10 @@ Automatico
 Automatically check for &updates
 Verifica &automaticamente aggiornamenti
 
-Back\tAlt+Left Arrow
-Indietro\tAlt+Freccia sinistra
-
-Book view
+Book View
 Vista libro
 
-Bookmarks\tF12
+Book&marks\tF12
 Segnalibri\tF12
 
 Bytes
@@ -147,8 +153,11 @@ Impossibile stampare il file
 Cannot start inverse search command. Please check the command line in the settings.
 Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
 
-Change language
+Change Language
 Cambia lingua
+
+Check for &Updates
+&Verifica aggiornamenti
 
 Continuous
 Pagina continua
@@ -159,11 +168,8 @@ Vista libro continua
 Continuous facing
 Pagine affiancate continue
 
-Contribute translation
+Contribute Translation
 Contribuisci alla traduzione
-
-Copy Selection\tCtrl-C
-Copia Selezione\tCtrl-C
 
 Could not open Printer
 Stampante non accessibile
@@ -176,6 +182,9 @@ Impossibile renderizzare la pagina
 
 Created:
 Creato:
+
+Custom &Zoom...
+&Ingrandimento personalizzato
 
 Default &Layout:
 &Vista predeffinita
@@ -204,6 +213,12 @@ Inserisci password per %s
 Error loading PDF file.
 Errore durante l'apertura del file.
 
+F&orward\tAlt+Right Arrow
+Avanti\tAlt+Freccia destra
+
+F&ullscreen\tCtrl-L
+Schermo intero\tCtrl-L
+
 Facing
 Pagine affiancate
 
@@ -216,6 +231,9 @@ Dimensione del file
 File:
 File:
 
+Fin&d...\tCtrl-F
+Trova...\tCtrl-F
+
 Find
 Trova
 
@@ -225,35 +243,23 @@ Trova successivo
 Find Previous
 Trova precedente
 
-Find...\tCtrl-F
-Trova...\tCtrl-F
-
 Find:
 Trova:
-
-First Page\tHome
-Prima pagina\tHome
 
 Fit &Page\tCtrl-0
 &Pagina intera\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Larghezza pagina\tCtrl-2
+
 Fit Page
 Pagina intera
-
-Fit Widt&h\tCtrl-2
-&Larghezza pagina\tCtrl-2
 
 Fit Width
 Larghezza pagina
 
-Forward\tAlt+Right Arrow
-Avanti\tAlt+Freccia destra
-
 Found text at page %d
 Testo trovato a pagina %d
-
-Fullscreen\tCtrl-L
-Schermo intero\tCtrl-L
 
 GB
 GB
@@ -267,9 +273,6 @@ Consiglio: Usa F3 per trovare nuovamente
 KB
 KB
 
-Last Page\tEnd
-Ultima pagina\tEnd
-
 MB
 MB
 
@@ -282,7 +285,7 @@ Impostare SumatraPDF come programma predefinito per i file PDF?
 Make SumatraPDF my main PDF reader
 Imposta SumatraPDF come lettore PDF predefinito
 
-Match case
+Match Case
 Maiuscole/minuscole
 
 Modified:
@@ -296,9 +299,6 @@ E' disponibile una nuova versione.
 
 Next Page
 Pagina successiva
-
-Next Page\tRight Arrow
-Pagina successiva\tFreccia destra
 
 No matches were found
 Nessuna corrispondenza trovata
@@ -327,7 +327,7 @@ Apri
 Open in &Adobe Reader
 Apri in &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 P&roprietà...\tCtrl-D
 
 PDF Document
@@ -342,14 +342,14 @@ Versione PDF:
 PDF documents
 Documenti PDF
 
+Pa&ge...\tCtrl-G
+Pagina...\tCtrl-G
+
 Page Size:
 Dimensione pagina:
 
 Page number %u inexistant
 Pagina numero  %u inesistente
-
-Page...\tCtrl-G
-Pagina...\tCtrl-G
 
 Page:
 Pagina:
@@ -363,19 +363,16 @@ Stampa con Adobe Reader...
 Previous Page
 Pagina precedente
 
-Previous Page\tLeft Arrow
-Pagina precedente\tFreccia destra
-
 Printing problem.
 Problema di stampa.
 
 Remember &opened files
 R&icorda i file aperti
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Ruota a sinistra\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Ruota a destra\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -384,22 +381,22 @@ In ricerca %d di %d...
 Select content with Ctrl+left mouse button
 Seleziona contenuti con Ctrl+tasto sinistro del mouse
 
-Send by &email...
+Send by &E-mail...
 Invia via &mail...
 
 Set inverse search command-line
 Imposta comando di ricerca inversa
 
-Show pages continuously
+Show &Toolbar
+Mostra barra strumenti
+
+Show &pages continuously
 Mostra le pagine in modo continuo
 
 Show the &bookmarks sidebar when available
 Mostra la &barra dei segnalibri quando è disponibile
 
-Show toolbar
-Mostra barra strumenti
-
-Single page
+Single Page
 Pagina singola
 
 Source file %s has no synchronization point
@@ -431,6 +428,9 @@ File sorgente ignoto
 
 View
 Visualizza
+
+Visit &Website
+&Visita il sito
 
 Warning
 Avviso

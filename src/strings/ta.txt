@@ -12,14 +12,17 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &About
 பற்றி
 
-&Check for new version
-புதிய பதிப்பை தேடு
+&Actual Size\tCtrl-1
+மெய் அளவு\tCtrl-1
+
+&Back\tAlt+Left Arrow
+பின்\tAlt+Left Arrow
 
 &Close\tCtrl-W
 மூடு\tCtrl-W
 
-&Custom Zoom...
-விருப்பிற்கேற்ற பெருக்கம்
+&Copy Selection\tCtrl-C
+தேர்வுசெய்ததை நகல் செய்
 
 &Don't ask me again
 மரு படியும் கேட்காதே
@@ -30,6 +33,9 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Find what:
 எதை தேடவும்
 
+&First Page\tHome
+முதல் பக்கம்\tHome
+
 &Go To
 அங்கு செல்
 
@@ -39,6 +45,9 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Help
 உதவி
 
+&Last Page\tEnd
+இறுதி பக்கம்\tEnd
+
 &Magnification:
 பெரிதாக்கம்
 
@@ -47,6 +56,9 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 
 &Match case
 தட்டுப் பொருத்தம்
+
+&Next Page\tRight Arrow
+அடுத்த பக்கம்\t->
 
 &No
 இல்லை
@@ -63,7 +75,10 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Password:
 கடவுச்சொல்
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+முந்தைய பக்கம்\tLeft Arrow
+
+&Print...\tCtrl-P
 அச்சிடு\tCtrl-P
 
 &Print... (denied)
@@ -72,7 +87,7 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 &Remember these settings for each document
 அமைப்புகளை ஞாபகம் கொள்
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 எனச் சேமி\tCtrl-S
 
 &Settings
@@ -83,9 +98,6 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 
 &View
 நோக்கு
-
-&Visit website
-வலைத்தளம் செல்
 
 &Yes
 ஆம்
@@ -98,9 +110,6 @@ Contributor: N. Ejaz Ahamed (ejaz_nasar@yahoo.co.in)
 
 About SumatraPDF
 SumatraPDF பற்றி
-
-Act&ual Size\tCtrl-1
-மெய் அளவு\tCtrl-1
 
 Advanced
 மேம்பட்ட அமைப்புகள்
@@ -123,13 +132,10 @@ Automatic
 Automatically check for &updates
 தானாக புதுப்பித்த பதிப்பை தேடு
 
-Back\tAlt+Left Arrow
-பின்\tAlt+Left Arrow
-
-Book view
+Book View
 ஏடு வடிவி நோக்கு
 
-Bookmarks\tF12
+Book&marks\tF12
 புத்தகக்குறி
 
 Bytes
@@ -141,8 +147,11 @@ Cancel
 Cannot print this file
 கோப்பை அச்சிட முடியவில்லை
 
-Change language
+Change Language
 மொழியை மாற்று
+
+Check for &Updates
+புதிய பதிப்பை தேடு
 
 Continuous
 தொடர்
@@ -153,11 +162,8 @@ Continuous book view
 Continuous facing
 தொடர் முகப்பு
 
-Contribute translation
+Contribute Translation
 மொழிபெயர்ப்புக்கு பங்களி
-
-Copy Selection\tCtrl-C
-தேர்வுசெய்ததை நகல் செய்
 
 Could not open Printer
 அச்சுப்பொறியை திறக்க முடியவில்லை
@@ -170,6 +176,9 @@ Couldn't render the page
 
 Created:
 உருவாக்கப்பட்டது
+
+Custom &Zoom...
+விருப்பிற்கேற்ற பெருக்கம்
 
 Default &Layout:
 கோட நிலை வடிவமைப்பு
@@ -198,6 +207,12 @@ Enter password for %s
 Error loading PDF file.
 PDF கோப்பு ஏற்று பிழை
 
+F&orward\tAlt+Right Arrow
+முன்னோகி\tAlt+Right Arrow
+
+F&ullscreen\tCtrl-L
+முழுத்திரை
+
 Facing
 முகப்பு
 
@@ -210,6 +225,9 @@ File Size:
 File:
 கோப்பு
 
+Fin&d...\tCtrl-F
+தேடு...\tCtrl-F
+
 Find
 தேடு
 
@@ -219,35 +237,23 @@ Find Next
 Find Previous
 முந்தையதை தேடு
 
-Find...\tCtrl-F
-தேடு...\tCtrl-F
-
 Find:
 தேடு:
-
-First Page\tHome
-முதல் பக்கம்\tHome
 
 Fit &Page\tCtrl-0
 பக்கம் பொருந்தவை\tCtrl-0
 
+Fit &Width\tCtrl-2
+அகலம் பொருந்தவை\tCtrl-2
+
 Fit Page
 பக்கம் பொருந்தவை
-
-Fit Widt&h\tCtrl-2
-அகலம் பொருந்தவை\tCtrl-2
 
 Fit Width
 அகலம் பொருந்தவை
 
-Forward\tAlt+Right Arrow
-முன்னோகி\tAlt+Right Arrow
-
 Found text at page %d
 வாசகத்தை %d பக்கத்தில் கண்டுபிடிக்கப்பட்டுள்ளது
-
-Fullscreen\tCtrl-L
-முழுத்திரை
 
 GB
 GB
@@ -261,9 +267,6 @@ Hint: Use the F3 key for finding again
 KB
 KB
 
-Last Page\tEnd
-இறுதி பக்கம்\tEnd
-
 MB
 MB
 
@@ -276,7 +279,7 @@ SumatraPDFயை கோட நிலை PDF படிப்பியாக ம�
 Make SumatraPDF my main PDF reader
 SumatraPDFயை முன்னிருப்பு PDF படிப்பியாக பதிவு செய்
 
-Match case
+Match Case
 தட்டுப்பொருத்தம்
 
 Modified:
@@ -290,9 +293,6 @@ New version available.
 
 Next Page
 அடுத்த பக்கம்
-
-Next Page\tRight Arrow
-அடுத்த பக்கம்\t->
 
 No matches were found
 ஒரு பொருத்தமும் இல்லை
@@ -321,7 +321,7 @@ Open
 Open in &Adobe Reader
 &Adobe Reader இல் திற
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 பண்புகள்...\tCtrl-D
 
 PDF Document
@@ -336,14 +336,14 @@ PDF பதிப்பு
 PDF documents
 PDF கோப்புகள்
 
+Pa&ge...\tCtrl-G
+பக்கம்...\tCtrl-G
+
 Page Size:
 பக்க அளவு
 
 Page number %u inexistant
 பக்க எண் %u இருக்கவில்லை
-
-Page...\tCtrl-G
-பக்கம்...\tCtrl-G
 
 Page:
 பக்கம்:
@@ -354,19 +354,16 @@ Please wait - rendering...
 Previous Page
 முந்தைய பக்கம்
 
-Previous Page\tLeft Arrow
-முந்தைய பக்கம்\tLeft Arrow
-
 Printing problem.
 அச்சுப்பொறி சிக்கல்
 
 Remember &opened files
 திறந்த &கோப்புகளை நினைவுகொள்
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 இடதுப்புறம் சுழற்று\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 வலப்புறம் சுழற்று\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -375,19 +372,19 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 உள்ளடகத்தை தேர்வு செய்ய Ctrl+இடது சுட்டெலி பொத்தானை அழுத்து
 
-Send by &email...
+Send by &E-mail...
 மின்மடல்லாக அனுப்பு...
 
-Show pages continuously
+Show &Toolbar
+கருவிப்பட்டை காண்பி
+
+Show &pages continuously
 பக்கங்களை தொடர்ச்சியாக காட்டு
 
 Show the &bookmarks sidebar when available
 புத்தககுறி பட்டை இருந்தல் காட்டு
 
-Show toolbar
-கருவிப்பட்டை காண்பி
-
-Single page
+Single Page
 ஒற்றைப் பக்கம்
 
 Source file %s has no synchronization point
@@ -419,6 +416,9 @@ Unknown source file (%s)
 
 View
 நோக்கு
+
+Visit &Website
+வலைத்தளம் செல்
 
 Warning
 எக்சரிக்கை

@@ -13,14 +13,17 @@ Contributor: Tri R.A. Wibowo
 &About
 &Tentang
 
-&Check for new version
-&Periksa versi baru
+&Actual Size\tCtrl-1
+&Ukuran Sebenarnya\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Kembali\tAlt+<-
 
 &Close\tCtrl-W
 &Tutup\tCtrl-W
 
-&Custom Zoom...
-&Pembesaran khusus
+&Copy Selection\tCtrl-C
+Gandakan hasil seleksi\tCtrl-C
 
 &Don't ask me again
 &Jangan ulangi pertanyaan ini
@@ -31,6 +34,9 @@ Contributor: Tri R.A. Wibowo
 &Find what:
 &Cari :
 
+&First Page\tHome
+Halaman Pertama\tHome
+
 &Go To
 &Pergi ke
 
@@ -40,6 +46,9 @@ Contributor: Tri R.A. Wibowo
 &Help
 Ban&tuan
 
+&Last Page\tEnd
+Halaman Terakhir\tEnd
+
 &Magnification:
 &Pembesaran
 
@@ -48,6 +57,9 @@ Ban&tuan
 
 &Match case
 &Samakan jenis
+
+&Next Page\tRight Arrow
+Halaman Berikutnya\t->
 
 &No
 &Tidak
@@ -64,7 +76,10 @@ Ban&tuan
 &Password:
 &Kata kunci"
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Halaman Sebelumnya\t<-
+
+&Print...\tCtrl-P
 &Cetak\tCtrl-P
 
 &Print... (denied)
@@ -73,7 +88,7 @@ Ban&tuan
 &Remember these settings for each document
 &Ingat pengaturan ini untuk tiap dokumen
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Simpan sebagai\tCtrl-S
 
 &Settings
@@ -84,9 +99,6 @@ Ban&tuan
 
 &View
 &Lihat
-
-&Visit website
-&Kunjungi Halaman Web
 
 &Yes
 &Ya
@@ -99,9 +111,6 @@ Ban&tuan
 
 About SumatraPDF
 Tentang SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Ukuran Sebenarnya\tCtrl-1
 
 Advanced
 Tingkat lanjut
@@ -124,13 +133,10 @@ Otomatis
 Automatically check for &updates
 Periksa &pemutakhiran secara otomatis
 
-Back\tAlt+Left Arrow
-Kembali\tAlt+<-
-
-Book view
+Book View
 Tampilan buku
 
-Bookmarks\tF12
+Book&marks\tF12
 Kutipan\tF12
 
 Bytes
@@ -145,8 +151,11 @@ Tidak dapat mencetak berkas ini
 Cannot start inverse search command. Please check the command line in the settings.
 Tidak dapat memulai perintah pencarian mundur. Harap periksa baris perintah di bagian pengaturan.
 
-Change language
+Change Language
 Ubah bahasa
+
+Check for &Updates
+&Periksa versi baru
 
 Continuous
 Bersambung
@@ -157,11 +166,8 @@ Tampilan buku secara kontinu
 Continuous facing
 Dua Halaman Bersambung
 
-Contribute translation
+Contribute Translation
 Membantu alihbahasa
-
-Copy Selection\tCtrl-C
-Gandakan hasil seleksi\tCtrl-C
 
 Could not open Printer
 Tidak dapat membuka printer
@@ -174,6 +180,9 @@ Tidak dapat menampilkan halaman
 
 Created:
 Dibuat:
+
+Custom &Zoom...
+&Pembesaran khusus
 
 Default &Layout:
 Tampilan &Standar
@@ -202,6 +211,12 @@ Masukkan kata kunci untuk %s
 Error loading PDF file.
 Kesalahan dalam memanggil berkas PDF.
 
+F&orward\tAlt+Right Arrow
+Berikutnya\tAlt+->
+
+F&ullscreen\tCtrl-L
+Selayar Penuh\tCtrl-L
+
 Facing
 Dua Halaman
 
@@ -214,6 +229,9 @@ Ukuran Berkas:
 File:
 Berkas:
 
+Fin&d...\tCtrl-F
+Temukan...\tCtrl-F
+
 Find
 Cari
 
@@ -223,35 +241,23 @@ Temukan Sesudah
 Find Previous
 Temukan Sebelum
 
-Find...\tCtrl-F
-Temukan...\tCtrl-F
-
 Find:
 Temukan:
-
-First Page\tHome
-Halaman Pertama\tHome
 
 Fit &Page\tCtrl-0
 &Sesuaikan\tCtrl-0
 
+Fit &Width\tCtrl-2
+Sesuaikan dengan &Lebar\tCtrl-2
+
 Fit Page
 Sesuaikan
-
-Fit Widt&h\tCtrl-2
-Sesuaikan dengan &Lebar\tCtrl-2
 
 Fit Width
 Sesuaikan dengan Lebar
 
-Forward\tAlt+Right Arrow
-Berikutnya\tAlt+->
-
 Found text at page %d
 Teks ditemukan pada halaman %d
-
-Fullscreen\tCtrl-L
-Selayar Penuh\tCtrl-L
 
 GB
 GB
@@ -265,9 +271,6 @@ Tips : Gunakan tombol F3 untuk mengulangi pencarian
 KB
 KB
 
-Last Page\tEnd
-Halaman Terakhir\tEnd
-
 MB
 MB
 
@@ -280,7 +283,7 @@ Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?
 Make SumatraPDF my main PDF reader
 Jadikan SumatraPDF sebagai pembaca-PDF utama
 
-Match case
+Match Case
 Cocokkan Huruf Besar-Kecilnya
 
 Modified:
@@ -294,9 +297,6 @@ Versi baru telah tersedia
 
 Next Page
 Halaman Berikutnya
-
-Next Page\tRight Arrow
-Halaman Berikutnya\t->
 
 No matches were found
 Tidak ada persamaan ditemukan
@@ -325,7 +325,7 @@ Buka
 Open in &Adobe Reader
 Buka di &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 P&roperti...\tCtrl-D
 
 PDF Document
@@ -340,14 +340,14 @@ Versi PDF:
 PDF documents
 Berkas-berkas dokumen
 
+Pa&ge...\tCtrl-G
+Halaman...\tCtrl-G
+
 Page Size:
 Ukuran Halaman:
 
 Page number %u inexistant
 Halaman %u tidak tersedia
-
-Page...\tCtrl-G
-Halaman...\tCtrl-G
 
 Page:
 Halaman:
@@ -361,19 +361,16 @@ Cetak dengan Adobe Reader...
 Previous Page
 Halaman Sebelumnya
 
-Previous Page\tLeft Arrow
-Halaman Sebelumnya\t<-
-
 Printing problem.
 Masalahan Pencetakkan.
 
 Remember &opened files
 Ingat &berkas yang pernah terbuka
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Putar ke kiri\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Putar ke Kanan\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -382,22 +379,22 @@ Sedang mencari %d dari %d
 Select content with Ctrl+left mouse button
 Pilih konten dengan tombol Ctrl+left pada mouse
 
-Send by &email...
+Send by &E-mail...
 Kirim dengan &email
 
 Set inverse search command-line
 Tetapkan perintah pencarian mundur
 
-Show pages continuously
+Show &Toolbar
+Perlihatkan toolbar
+
+Show &pages continuously
 Tampilkan halaman secara kontinu
 
 Show the &bookmarks sidebar when available
 Tampilkan kolom &kutipan jika tersedia
 
-Show toolbar
-Perlihatkan toolbar
-
-Single page
+Single Page
 Satu Halaman
 
 Source file %s has no synchronization point
@@ -429,6 +426,9 @@ Berkas asal (%s) tidak diketahui
 
 View
 Lihat
+
+Visit &Website
+&Kunjungi Halaman Web
 
 Warning
 Peringatan

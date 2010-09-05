@@ -11,14 +11,14 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &About
 关于(&A)
 
-&Check for new version
-检查是否有新版本(&C)
+&Actual Size\tCtrl-1
+实际大小(&U)\tCtrl-1
 
 &Close\tCtrl-W
 关闭(&C)\tCtrl-W
 
-&Custom Zoom...
-自定义缩放...
+&Copy Selection\tCtrl-C
+复制选择内容\tCtrl-C
 
 &Don't ask me again
 以后不再询问
@@ -29,6 +29,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Find what:
 查找(&F):
 
+&First Page\tHome
+第一页\tHome
+
 &Go To
 转到(&G)
 
@@ -38,6 +41,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Help
 帮助(&H)
 
+&Last Page\tEnd
+最后一页\tEnd
+
 &Magnification:
 放大率(&M):
 
@@ -46,6 +52,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 
 &Match case
 大小写匹配(&M)
+
+&Next Page\tRight Arrow
+下一页\t->
 
 &No
 否(&N)
@@ -62,13 +71,16 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Password:
 密码(&P)
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+上一页\t<-
+
+&Print...\tCtrl-P
 打印(&P)\tCtrl-P
 
 &Remember these settings for each document
 为每一个文档记住这些设置(&R)
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 另存为(&S)\tCtrl-S
 
 &Settings
@@ -79,9 +91,6 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 
 &View
 查看(&V)
-
-&Visit website
-访问网站(&V)
 
 &Yes
 是(&Y)
@@ -94,9 +103,6 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 
 About SumatraPDF
 关于 SumatraPDF
-
-Act&ual Size\tCtrl-1
-实际大小(&U)\tCtrl-1
 
 Advanced
 高级
@@ -113,7 +119,7 @@ Automatic
 Automatically check for &updates
 自动检查更新(&u)
 
-Bookmarks\tF12
+Book&marks\tF12
 书签\tF12
 
 Cancel
@@ -125,8 +131,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 无法运行反向搜索命令。请检查设置中的命令行。
 
-Change language
-改变语言 (Change language)
+Change Language
+改变语言 (Change Language)
+
+Check for &Updates
+检查是否有新版本(&C)
 
 Continuous
 连续页面
@@ -134,11 +143,8 @@ Continuous
 Continuous facing
 连续平铺页面
 
-Contribute translation
+Contribute Translation
 提供翻译
-
-Copy Selection\tCtrl-C
-复制选择内容\tCtrl-C
 
 Could not open Printer
 无法打开打印机
@@ -148,6 +154,9 @@ Couldn't initialize printer
 
 Couldn't render the page
 不能渲染该页面
+
+Custom &Zoom...
+自定义缩放...
 
 Default &Layout:
 默认布局(&L)
@@ -170,11 +179,17 @@ Enter password for %s
 Error loading PDF file.
 载入 PDF 文件时发生错误。
 
+F&ullscreen\tCtrl-L
+全屏\tCtrl-L
+
 Facing
 平铺页面
 
 Failed to save a file
 保存文件失败
+
+Fin&d...\tCtrl-F
+查找...\tCtrl-F
 
 Find
 查找
@@ -185,23 +200,17 @@ Find Next
 Find Previous
 上一个
 
-Find...\tCtrl-F
-查找...\tCtrl-F
-
 Find:
 查找：
-
-First Page\tHome
-第一页\tHome
 
 Fit &Page\tCtrl-0
 适合页面(&P)\tCtrl-0
 
+Fit &Width\tCtrl-2
+适合宽度(&H)\tCtrl-2
+
 Fit Page
 适合页面
-
-Fit Widt&h\tCtrl-2
-适合宽度(&H)\tCtrl-2
 
 Fit Width
 适合宽度
@@ -209,17 +218,11 @@ Fit Width
 Found text at page %d
 在第%d页找到文本
 
-Fullscreen\tCtrl-L
-全屏\tCtrl-L
-
 Go to page
 转到页面
 
 Hint: Use the F3 key for finding again
 提示：按F3键再次查找
-
-Last Page\tEnd
-最后一页\tEnd
 
 Main PDF reader can't be changed in portable mode
 便携模式不能改变默认 PDF 阅读器
@@ -230,7 +233,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 将 SumatraPDF 设置为默认的 PDF 阅读器
 
-Match case
+Match Case
 大小写匹配
 
 New version %s is available. Download new version?
@@ -241,9 +244,6 @@ New version available.
 
 Next Page
 下一页
-
-Next Page\tRight Arrow
-下一页\t->
 
 No matches were found
 没有找到匹配项
@@ -272,11 +272,11 @@ PDF 文档
 PDF documents
 PDF 文档
 
+Pa&ge...\tCtrl-G
+页面...\tCtrl-G
+
 Page number %u inexistant
 页号 %u 不存在
-
-Page...\tCtrl-G
-页面...\tCtrl-G
 
 Page:
 页数：
@@ -287,19 +287,16 @@ Please wait - rendering...
 Previous Page
 上一页
 
-Previous Page\tLeft Arrow
-上一页\t<-
-
 Printing problem.
 打印问题。
 
 Remember &opened files
 记住已打开的文件(&o)
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 向左旋转\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 向右旋转\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -311,13 +308,13 @@ Select content with Ctrl+left mouse button
 Set inverse search command-line
 设置反向搜索命令行
 
+Show &Toolbar
+显示工具栏
+
 Show the &bookmarks sidebar when available
 若可用则显示书签侧边栏(&b)
 
-Show toolbar
-显示工具栏
-
-Single page
+Single Page
 单个页面
 
 Source file %s has no synchronization point
@@ -340,6 +337,9 @@ Unknown source file (%s)
 
 View
 查看
+
+Visit &Website
+访问网站(&V)
 
 Warning
 警告
@@ -366,35 +366,35 @@ Zoom factor
 [检测到改动；刷新中] %s
 
 # Untranslated:
+#&Back\tAlt+Left Arrow
 #&Print... (denied)
 #&Remember the password for this document
 #Application:
 #Attachment: %s
 #Author:
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Continuous book view
 #Created:
 #Denied Permissions:
 #Document Properties
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#Forward\tAlt+Right Arrow
 #GB
 #KB
 #MB
 #Modified:
 #No synchronization file found
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:
 #Pr&int with Adobe Reader...
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Subject:
 #Text documents
 #Title:

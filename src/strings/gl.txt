@@ -11,8 +11,8 @@ Contributor: Xulio Gómez Díaz
 &About
 Arred&or de
 
-&Check for new version
-&Comprobar nova versión
+&Actual Size\tCtrl-1
+&Tamaño real\tCtrl-1
 
 &Close\tCtrl-W
 &Pechar\tCtrl-W
@@ -23,22 +23,34 @@ Non preguntar de novo
 &File
 &Arquivo
 
+&First Page\tHome
+Primeira páxina\tHome
+
 &Go To
 Ir &a
 
 &Help
 A&xuda
 
+&Last Page\tEnd
+Última páxina\tEnd
+
 &Manual
 Manual de Instruccións
+
+&Next Page\tRight Arrow
+Páxina seguinte\t->
 
 &Open\tCtrl-O
 A&brir\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Páxina anterior\t<-
+
+&Print...\tCtrl-P
 &Imprimir\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Salvar como...\tCtrl-S
 
 &Skip this version
@@ -47,26 +59,23 @@ Ignorar esta versión
 &View
 &Ver
 
-&Visit website
-Visitar o &Website
-
 &Zoom
 &Zoom
 
 About SumatraPDF
 Arredor do SumatraPDF
 
-Act&ual Size\tCtrl-1
-&Tamaño real\tCtrl-1
-
 Associate with PDF files?
 Asociar con arquivos PDF?
 
-Bookmarks\tF12
+Book&marks\tF12
 Preferidos\tF12
 
-Change language
-Cambiar lingua (Change language)
+Change Language
+Cambiar lingua (Change Language)
+
+Check for &Updates
+&Comprobar nova versión
 
 Continuous
 Contínuo
@@ -74,7 +83,7 @@ Contínuo
 Continuous facing
 Páxina dobre continua
 
-Contribute translation
+Contribute Translation
 Contribuir na traducción
 
 Could not open Printer
@@ -92,11 +101,17 @@ Introduza contrasinal para %s
 Error loading PDF file.
 Erro ao abrir o arquivo PDF.
 
+F&ullscreen\tCtrl-L
+A toda pantalla\tCtrl-L
+
 Facing
 Páxina dobre
 
 Failed to save a file
 Erro ao salvar o arquivo.
+
+Fin&d...\tCtrl-F
+Procura...\tCtrl-F
 
 Find Next
 Atopar Seguinte
@@ -104,35 +119,23 @@ Atopar Seguinte
 Find Previous
 Atopar Anterior
 
-Find...\tCtrl-F
-Procura...\tCtrl-F
-
 Find:
 Procura:
-
-First Page\tHome
-Primeira páxina\tHome
 
 Fit &Page\tCtrl-0
 &Páxina enteira\tCtrl-0
 
+Fit &Width\tCtrl-2
+Axustar ao ancho\tCtrl-2
+
 Fit Page
 Páxina enteira
-
-Fit Widt&h\tCtrl-2
-Axustar ao ancho\tCtrl-2
 
 Fit Width
 Axustar ao ancho
 
-Fullscreen\tCtrl-L
-A toda pantalla\tCtrl-L
-
 Go to page
 Ir a páxina
-
-Last Page\tEnd
-Última páxina\tEnd
 
 Make SumatraPDF default application for PDF files?
 Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
@@ -140,7 +143,7 @@ Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
 Make SumatraPDF my main PDF reader
 Facer do SumatraPDF o leitor PDF por defecto
 
-Match case
+Match Case
 Coincidir maiúsculas e minúsculas
 
 New version %s is available. Download new version?
@@ -152,16 +155,13 @@ Nova versión dispoñible
 Next Page
 Páxina seguinte
 
-Next Page\tRight Arrow
-Páxina seguinte\t->
-
 No new version available.
 Non hai nova versión dispoñible
 
 Open
 Abrir
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Páxina...\tCtrl-G
 
 Page:
@@ -170,29 +170,29 @@ Páxina:
 Previous Page
 Páxina anterior
 
-Previous Page\tLeft Arrow
-Páxina anterior\t<-
-
 Printing problem.
 Problema de impresión.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Xirar á esquerda\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Xirar á dereita\tCtrl-Shift-+
 
 Set inverse search command-line
 Establecer procura inversa
 
-Show toolbar
+Show &Toolbar
 Amosar barra de ferramentas
 
-Single page
+Single Page
 Unha soa páxina
 
 View
 Ver
+
+Visit &Website
+Visitar o &Website
 
 You have the latest version.
 Ten vostede a última versión
@@ -207,7 +207,8 @@ Zoom Out
 Afastar zoom
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -229,27 +230,26 @@ Afastar zoom
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -264,7 +264,7 @@ Afastar zoom
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -276,8 +276,8 @@ Afastar zoom
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

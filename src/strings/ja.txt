@@ -11,14 +11,17 @@ Contributor: Nardog (nardog.takoweb.com)
 &About
 バージョン情報(&A)
 
-&Check for new version
-新しいバージョンのチェック(&C)
+&Actual Size\tCtrl-1
+実際のサイズ(&U)\tCtrl-1
+
+&Back\tAlt+Left Arrow
+前に戻る\tAlt+←
 
 &Close\tCtrl-W
 閉じる(&C)\tCtrl-W
 
-&Custom Zoom...
-カスタム ズーム(&C)...
+&Copy Selection\tCtrl-C
+選択範囲のコピー\tCtrl-C
 
 &Don't ask me again
 再び質問しない(&D)
@@ -29,6 +32,9 @@ Contributor: Nardog (nardog.takoweb.com)
 &Find what:
 検索する文字列(&F):
 
+&First Page\tHome
+最初のページ\tHome
+
 &Go To
 移動(&G)
 
@@ -38,6 +44,9 @@ Contributor: Nardog (nardog.takoweb.com)
 &Help
 ヘルプ(&H)
 
+&Last Page\tEnd
+最後のページ\tEnd
+
 &Magnification:
 拡大率(&M):
 
@@ -46,6 +55,9 @@ Contributor: Nardog (nardog.takoweb.com)
 
 &Match case
 大文字と小文字を区別する(&M)
+
+&Next Page\tRight Arrow
+次のページ\t→
 
 &No
 いいえ(&N)
@@ -62,13 +74,16 @@ Contributor: Nardog (nardog.takoweb.com)
 &Password:
 パスワード(&P):
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+前のページ\t←
+
+&Print...\tCtrl-P
 印刷(&P)\tCtrl-P
 
 &Remember these settings for each document
 ドキュメントごとにこれらの設定を記憶する(&R)
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 名前を付けて保存(&S)\tCtrl-S
 
 &Settings
@@ -79,9 +94,6 @@ Contributor: Nardog (nardog.takoweb.com)
 
 &View
 表示(&V)
-
-&Visit website
-Web サイトの訪問(&V)
 
 &Yes
 はい(&Y)
@@ -94,9 +106,6 @@ Web サイトの訪問(&V)
 
 About SumatraPDF
 SumatraPDF のバージョン情報
-
-Act&ual Size\tCtrl-1
-実際のサイズ(&U)\tCtrl-1
 
 Advanced
 詳細設定
@@ -113,13 +122,10 @@ Automatic
 Automatically check for &updates
 自動的にチェックする(&U)
 
-Back\tAlt+Left Arrow
-前に戻る\tAlt+←
-
-Book view
+Book View
 ブック ビュー
 
-Bookmarks\tF12
+Book&marks\tF12
 ブックマーク(&B)\tF12
 
 Cancel
@@ -131,8 +137,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 逆順検索コマンドを開始できません。設定でコマンド ラインをチェックしてください。
 
-Change language
-言語の変更 (Change language)
+Change Language
+言語の変更 (Change Language)
+
+Check for &Updates
+新しいバージョンのチェック(&C)
 
 Continuous
 連続
@@ -143,11 +152,8 @@ Continuous book view
 Continuous facing
 連続見返し
 
-Contribute translation
+Contribute Translation
 翻訳の提供
-
-Copy Selection\tCtrl-C
-選択範囲のコピー\tCtrl-C
 
 Could not open Printer
 プリンターを開くことができませんでした
@@ -157,6 +163,9 @@ Couldn't initialize printer
 
 Couldn't render the page
 ページを描画できませんでした
+
+Custom &Zoom...
+カスタム ズーム(&C)...
 
 Default &Layout:
 既定のレイアウト(&L):
@@ -179,11 +188,20 @@ Enter password for %s
 Error loading PDF file.
 PDF ファイルの読み込みエラーです。
 
+F&orward\tAlt+Right Arrow
+次に進む\tAlt+→
+
+F&ullscreen\tCtrl-L
+全画面表示\tCtrl-L
+
 Facing
 見返し
 
 Failed to save a file
 ファイルの保存に失敗しました
+
+Fin&d...\tCtrl-F
+検索...\tCtrl-F
 
 Find
 検索
@@ -194,44 +212,29 @@ Find Next
 Find Previous
 前を検索
 
-Find...\tCtrl-F
-検索...\tCtrl-F
-
 Find:
 検索:
-
-First Page\tHome
-最初のページ\tHome
 
 Fit &Page\tCtrl-0
 ページに合わせる(&P)\tCtrl-0
 
+Fit &Width\tCtrl-2
+幅に合わせる(&H)\tCtrl-2
+
 Fit Page
 ページに合わせる
-
-Fit Widt&h\tCtrl-2
-幅に合わせる(&H)\tCtrl-2
 
 Fit Width
 幅に合わせる
 
-Forward\tAlt+Right Arrow
-次に進む\tAlt+→
-
 Found text at page %d
 ページ %d でテキストが見つかりました
-
-Fullscreen\tCtrl-L
-全画面表示\tCtrl-L
 
 Go to page
 ページへ移動
 
 Hint: Use the F3 key for finding again
 ヒント: 再び検索するには F3 キーを使用します
-
-Last Page\tEnd
-最後のページ\tEnd
 
 Main PDF reader can't be changed in portable mode
 メイン PDF リーダーはポータブル モードでは変更できません
@@ -242,7 +245,7 @@ SumatraPDF を PDF ファイルの既定のアプリケーションにします�
 Make SumatraPDF my main PDF reader
 SumatraPDF をメイン PDF リーダーにする
 
-Match case
+Match Case
 大文字と小文字を区別する
 
 New version %s is available. Download new version?
@@ -253,9 +256,6 @@ New version available.
 
 Next Page
 次のページ
-
-Next Page\tRight Arrow
-次のページ\t→
 
 No matches were found
 一致が見つかりませんでした
@@ -287,11 +287,11 @@ PDF ドキュメント
 PDF documents
 PDF ドキュメント
 
+Pa&ge...\tCtrl-G
+ページ指定...\tCtrl-G
+
 Page number %u inexistant
 ページ番号 %u が存在しません
-
-Page...\tCtrl-G
-ページ指定...\tCtrl-G
 
 Page:
 ページ:
@@ -302,19 +302,16 @@ Please wait - rendering...
 Previous Page
 前のページ
 
-Previous Page\tLeft Arrow
-前のページ\t←
-
 Printing problem.
 印刷の問題です。
 
 Remember &opened files
 開かれたファイルを記憶する(&O)
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 左に回転\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 右に回転\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -323,22 +320,22 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 Ctrl+左マウス ボタンで内容を選択します
 
-Send by &email...
+Send by &E-mail...
 電子メールで送信(&E)...
 
 Set inverse search command-line
 逆順検索コマンドラインの設定
 
-Show pages continuously
+Show &Toolbar
+ツール バーの表示
+
+Show &pages continuously
 連続してページを表示します
 
 Show the &bookmarks sidebar when available
 利用可能ならブックマーク サイド バーを表示する(&B)
 
-Show toolbar
-ツール バーの表示
-
-Single page
+Single Page
 単一のページ
 
 Source file %s has no synchronization point
@@ -364,6 +361,9 @@ Unknown source file (%s)
 
 View
 表示
+
+Visit &Website
+Web サイトの訪問(&V)
 
 Warning
 警告
@@ -407,7 +407,7 @@ Zoom factor
 #MB
 #Modified:
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:

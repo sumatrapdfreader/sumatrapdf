@@ -9,8 +9,8 @@ Lang: hi Hindi (हिंदी)
 &About
 Sumatra के बारे में(&A)
 
-&Check for new version
-नए संसकरण के लिए जांच करें(&C)
+&Actual Size\tCtrl-1
+सही आकार(&u)\tCtrl-1
 
 &Close\tCtrl-W
 बंद करें(&C)\tCtrl-W
@@ -21,22 +21,34 @@ Sumatra के बारे में(&A)
 &File
 फाईल(&F)
 
+&First Page\tHome
+पहले पृष्ठ पर\tHome
+
 &Go To
 जाए(&G)
 
 &Help
 सहायता(&H)
 
+&Last Page\tEnd
+अन्तिम पृष्ठ पर\tHome
+
 &Manual
 नियम-पुस्तक(&M)
+
+&Next Page\tRight Arrow
+अगले पृष्ठ पर\t->
 
 &Open\tCtrl-O
 फाईल खोलें(&O)\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+पिछले पृष्ठ पर\t<-
+
+&Print...\tCtrl-P
 परिंट करें(&P)\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 इस तरह संभालें(&S)\tCtrl-S
 
 &Skip this version
@@ -45,26 +57,23 @@ Sumatra के बारे में(&A)
 &View
 देखें(&V)
 
-&Visit website
-वेबसाइट देखें(&V)
-
 &Zoom
 बडा करें(&Z)
 
 About SumatraPDF
 Sumatra के बारे में
 
-Act&ual Size\tCtrl-1
-सही आकार(&u)\tCtrl-1
-
 Associate with PDF files?
 PDF फाईलों से संबंध बनाइए?
 
-Bookmarks\tF12
+Book&marks\tF12
 संभाले हुए चिह्न\tF12
 
-Change language
-भाषा बदलें (Change language)
+Change Language
+भाषा बदलें (Change Language)
+
+Check for &Updates
+नए संसकरण के लिए जांच करें(&C)
 
 Continuous
 निरन्तर
@@ -72,7 +81,7 @@ Continuous
 Continuous facing
 निरन्तर पुस्तक
 
-Contribute translation
+Contribute Translation
 अनुवाद करने में मदद करें
 
 Could not open Printer
@@ -90,11 +99,17 @@ Enter password for %s
 Error loading PDF file.
 फाईल खोली नहीं जा सकी
 
+F&ullscreen\tCtrl-L
+पूरा परदा\tCtrl-L
+
 Facing
 पुस्तक
 
 Failed to save a file
 फाईल संभाली नहीं जा सकी
+
+Fin&d...\tCtrl-F
+खोज...\tCtrl-F
 
 Find Next
 अगला खोजें
@@ -102,35 +117,23 @@ Find Next
 Find Previous
 पुराना खोजें
 
-Find...\tCtrl-F
-खोज...\tCtrl-F
-
 Find:
 खोज:
-
-First Page\tHome
-पहले पृष्ठ पर\tHome
 
 Fit &Page\tCtrl-0
 अनुरूप करें(&P)\tCtrl-0
 
+Fit &Width\tCtrl-2
+चौड़ाई के अनुसार(&h)\tCtrl-2
+
 Fit Page
 अनुरूप करें
-
-Fit Widt&h\tCtrl-2
-चौड़ाई के अनुसार(&h)\tCtrl-2
 
 Fit Width
 चौड़ाई के अनुसार
 
-Fullscreen\tCtrl-L
-पूरा परदा\tCtrl-L
-
 Go to page
 पृष्ठ संख्या पर जाए(&G)
-
-Last Page\tEnd
-अन्तिम पृष्ठ पर\tHome
 
 Make SumatraPDF default application for PDF files?
 सभी PDF फाईलें SumatraPDF में खोलें ?
@@ -138,7 +141,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 सभी PDF फाईलें SumatraPDF में खोलें
 
-Match case
+Match Case
 अक्षर आकार मिलाएं
 
 New version %s is available. Download new version?
@@ -150,16 +153,13 @@ New version available.
 Next Page
 अगले पृष्ठ पर
 
-Next Page\tRight Arrow
-अगले पृष्ठ पर\t->
-
 No new version available.
 नया संसकरण उपलब्ध है
 
 Open
 खोलें
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 पृष्ठ संख्या पर\tCtrl-G
 
 Page:
@@ -168,29 +168,29 @@ Page:
 Previous Page
 पिछले पृष्ठ पर
 
-Previous Page\tLeft Arrow
-पिछले पृष्ठ पर\t<-
-
 Printing problem.
 परिंट करने में गलती
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 बांयी ओर घूमाओ\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 दांयी ओर घूमाओ\tCtrl-Shift-+
 
 Set inverse search command-line
 उलटी command-line खोज सैट करें
 
-Show toolbar
+Show &Toolbar
 औजार वाली पट्टी दिखाओ
 
-Single page
+Single Page
 एक पृष्ठ
 
 View
 देखें
+
+Visit &Website
+वेबसाइट देखें(&V)
 
 You have the latest version.
 आपके पास पहले से ही नया संसकरण है
@@ -205,7 +205,8 @@ Zoom Out
 छोटा करें
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -227,27 +228,26 @@ Zoom Out
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -262,7 +262,7 @@ Zoom Out
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -274,8 +274,8 @@ Zoom Out
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

@@ -11,11 +11,17 @@ Contributor: Hakan ATAÇ
 &About
 &Hakkında
 
+&Actual Size\tCtrl-1
+Gerçek Boyut\tCtrl-1
+
 &Close\tCtrl-W
 Kapa&t\tCtrl-W
 
 &File
 &Dosya
+
+&First Page\tHome
+İlk Sayfa\tHome
 
 &Go To
 &Git
@@ -23,20 +29,26 @@ Kapa&t\tCtrl-W
 &Help
 &Yardım
 
+&Last Page\tEnd
+Son Sayfa\tEnd
+
+&Next Page\tRight Arrow
+Sonraki Sayfa\t->
+
 &Open\tCtrl-O
 &Aç\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Önceki Sayfa\t<-
+
+&Print...\tCtrl-P
 &Yazdır\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Farklı kaydet\tCtrl-S
 
 &View
 &Göster
-
-&Visit website
-&Web sayfası
 
 &Zoom
 &Yakınlaştırma
@@ -44,10 +56,7 @@ Kapa&t\tCtrl-W
 About SumatraPDF
 SumatraPDF hakkında
 
-Act&ual Size\tCtrl-1
-Gerçek Boyut\tCtrl-1
-
-Bookmarks\tF12
+Book&marks\tF12
 Yer imleri\tF12
 
 Continuous
@@ -56,7 +65,7 @@ Devamlı
 Continuous facing
 Devamlı çift sayfa
 
-Contribute translation
+Contribute Translation
 Çeviriye katkıda bulunun.
 
 Could not open Printer
@@ -68,11 +77,17 @@ E&xit\tCtrl-Q
 Error loading PDF file.
 Dosya yüklenirken hata çıktı.
 
+F&ullscreen\tCtrl-L
+Tam Ekran\tCtrl-L
+
 Facing
 Çift sayfa
 
 Failed to save a file
 Dosya kaydedilirken hata çıktı.
+
+Fin&d...\tCtrl-F
+Bul...\tCtrl-F
 
 Find Next
 Sonrakini Bul
@@ -80,49 +95,34 @@ Sonrakini Bul
 Find Previous
 Öncekini bul
 
-Find...\tCtrl-F
-Bul...\tCtrl-F
-
 Find:
 Bul:
-
-First Page\tHome
-İlk Sayfa\tHome
 
 Fit &Page\tCtrl-0
 &Sayfaya sığdır\tCtrl-0
 
+Fit &Width\tCtrl-2
+Genişliğe &sığdır\tCtrl-2
+
 Fit Page
 Sayfaya sığdır
-
-Fit Widt&h\tCtrl-2
-Genişliğe &sığdır\tCtrl-2
 
 Fit Width
 Genişliğe sığdır
 
-Fullscreen\tCtrl-L
-Tam Ekran\tCtrl-L
-
-Last Page\tEnd
-Son Sayfa\tEnd
-
 Make SumatraPDF my main PDF reader
 &Varsayılan PDF okuyucusu yap
 
-Match case
+Match Case
 Büyük/Küçük harf eşleştir
 
 Next Page
 Sonraki Sayfa
 
-Next Page\tRight Arrow
-Sonraki Sayfa\t->
-
 Open
 &Aç
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 Sayfa...\tCtrl-G
 
 Page:
@@ -131,26 +131,26 @@ Sayfa:
 Previous Page
 Önceki Sayfa
 
-Previous Page\tLeft Arrow
-Önceki Sayfa\t<-
-
 Printing problem.
 Yazdırma problemi.
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Sola çevir\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Sağa çevir\tCtrl-Shift-+
 
-Show toolbar
+Show &Toolbar
 Araç kutusunu göster
 
-Single page
+Single Page
 Tek sayfa
 
 View
 Göster
+
+Visit &Website
+&Web sayfası
 
 Zoom In
 Yakınlaştır
@@ -159,8 +159,8 @@ Zoom Out
 Uzaklaştır
 
 # Untranslated:
-#&Check for new version
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Don't ask me again
 #&Find what:
 #&Go to page:
@@ -186,19 +186,19 @@ Uzaklaştır
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Change language
+#Change Language
+#Check for &Updates
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
@@ -206,10 +206,10 @@ Uzaklaştır
 #Download
 #Enter password
 #Enter password for %s
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Go to page
@@ -229,7 +229,7 @@ Uzaklaştır
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -241,9 +241,9 @@ Uzaklaştır
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
+#Send by &E-mail...
 #Set inverse search command-line
-#Show pages continuously
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

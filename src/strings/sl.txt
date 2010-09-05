@@ -12,14 +12,14 @@ Contributor: Martin Srebotnjak
 &About
 &O programu ...
 
-&Check for new version
-&Preveri obstoj nove različice
+&Actual Size\tCtrl-1
+&Dejanska velikost\tCtrl-1
 
 &Close\tCtrl-W
 &Zapri\tCtrl-W
 
-&Custom Zoom...
-Povečava po &meri ...
+&Copy Selection\tCtrl-C
+Kopiraj izbor\tCtrl-C
 
 &Don't ask me again
 &Ne sprašuj več
@@ -30,6 +30,9 @@ Povečava po &meri ...
 &Find what:
 &Najdi:
 
+&First Page\tHome
+Prva stran\tHome
+
 &Go To
 Po&jdi na
 
@@ -39,6 +42,9 @@ Pojdi na &stran:
 &Help
 Po&moč
 
+&Last Page\tEnd
+Zadnja stran\tEnd
+
 &Magnification:
 &Povečanje:
 
@@ -47,6 +53,9 @@ P&riročnik
 
 &Match case
 Razlikuj &med velikimi/malimi črkami
+
+&Next Page\tRight Arrow
+Naslednja stran\t->
 
 &No
 &Ne
@@ -63,13 +72,16 @@ Razlikuj &med velikimi/malimi črkami
 &Password:
 &Geslo:
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Predhodna stran\t<-
+
+&Print...\tCtrl-P
 &Natisni\tCtrl-P
 
 &Remember these settings for each document
 Zapomni si te &nastavitve za vsak dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 Shrani &kot\tCtrl-S
 
 &Settings
@@ -80,9 +92,6 @@ Shrani &kot\tCtrl-S
 
 &View
 &Pogled
-
-&Visit website
-Ob&išči domačo stran
 
 &Yes
 &Da
@@ -95,9 +104,6 @@ Po&večava
 
 About SumatraPDF
 O programu SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Dejanska velikost\tCtrl-1
 
 Advanced
 Napredno
@@ -114,7 +120,7 @@ Samodejno
 Automatically check for &updates
 Samodejno preveri &obstoj posodobitev
 
-Bookmarks\tF12
+Book&marks\tF12
 Zaznamki\tF12
 
 Cancel
@@ -126,8 +132,11 @@ Te datoteke ni mogoče natisniti
 Cannot start inverse search command. Please check the command line in the settings.
 Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
 
-Change language
-Spremeni jezik (Change language)
+Change Language
+Spremeni jezik (Change Language)
+
+Check for &Updates
+&Preveri obstoj nove različice
 
 Continuous
 Nepretrgano
@@ -135,11 +144,8 @@ Nepretrgano
 Continuous facing
 Nepretrgano dvostransko
 
-Contribute translation
+Contribute Translation
 Prispevajte prevod
-
-Copy Selection\tCtrl-C
-Kopiraj izbor\tCtrl-C
 
 Could not open Printer
 Do tiskalnika ni mogoče dostopati.
@@ -149,6 +155,9 @@ Tiskalnika ni mogoče inicializirati
 
 Couldn't render the page
 Strani ni mogoče upodobiti
+
+Custom &Zoom...
+Povečava po &meri ...
 
 Default &Layout:
 &Privzeta postavitev:
@@ -171,11 +180,17 @@ Vnesite geslo za %s
 Error loading PDF file.
 Napaka pri branju datoteke PDF.
 
+F&ullscreen\tCtrl-L
+Celozaslonsko\tCtrl-L
+
 Facing
 Dvostransko
 
 Failed to save a file
 Shranjevanje datoteke ni uspelo.
+
+Fin&d...\tCtrl-F
+Najdi ...\tCtrl-F
 
 Find
 Išči
@@ -186,23 +201,17 @@ Najdi naslednje
 Find Previous
 Najdi prejšnje
 
-Find...\tCtrl-F
-Najdi ...\tCtrl-F
-
 Find:
 Najdi:
-
-First Page\tHome
-Prva stran\tHome
 
 Fit &Page\tCtrl-0
 &Prilagodi strani\tCtrl-0
 
+Fit &Width\tCtrl-2
+P&rilagodi po širini\tCtrl-2
+
 Fit Page
 Prilagodi strani
-
-Fit Widt&h\tCtrl-2
-P&rilagodi po širini\tCtrl-2
 
 Fit Width
 Prilagodi po širini
@@ -210,17 +219,11 @@ Prilagodi po širini
 Found text at page %d
 Besedilo najdeno na strani %d
 
-Fullscreen\tCtrl-L
-Celozaslonsko\tCtrl-L
-
 Go to page
 Pojdi na stran
 
 Hint: Use the F3 key for finding again
 Namig: Uporabite tipko F3 za ponovno iskanje
-
-Last Page\tEnd
-Zadnja stran\tEnd
 
 Main PDF reader can't be changed in portable mode
 Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
@@ -231,7 +234,7 @@ Naj bo SumatraPDF privezti program za datoteke PDF?
 Make SumatraPDF my main PDF reader
 SumatraPDF naj bo privzeti bralnik PDF
 
-Match case
+Match Case
 Razlikuj med velikimi/malimi črkami
 
 New version %s is available. Download new version?
@@ -242,9 +245,6 @@ Na voljo je nova različica.
 
 Next Page
 Naslednja stran
-
-Next Page\tRight Arrow
-Naslednja stran\t->
 
 No matches were found
 Ni zadetkov
@@ -273,11 +273,11 @@ Dokument PDF
 PDF documents
 Dokumenti PDF
 
+Pa&ge...\tCtrl-G
+Stran ...\tCtrl-G
+
 Page number %u inexistant
 Stran številka %u ne obstaja
-
-Page...\tCtrl-G
-Stran ...\tCtrl-G
 
 Page:
 Stran:
@@ -288,19 +288,16 @@ Počakajte trenutek, upodobitev poteka ...
 Previous Page
 Predhodna stran
 
-Previous Page\tLeft Arrow
-Predhodna stran\t<-
-
 Printing problem.
 Težave pri tiskanju.
 
 Remember &opened files
 &Zapomni si odprte datoteke
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Zasukaj v levo\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Zasukaj v desno\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -312,13 +309,13 @@ Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
 Set inverse search command-line
 Nastavi obratno iskanje ukazne vrstice
 
+Show &Toolbar
+Pokaži orodno vrstico
+
 Show the &bookmarks sidebar when available
 Pokaži podokno z &zaznamki, če so na voljo
 
-Show toolbar
-Pokaži orodno vrstico
-
-Single page
+Single Page
 Enostransko
 
 Source file %s has no synchronization point
@@ -341,6 +338,9 @@ Neznana izvorna datoteka (%s)
 
 View
 Pogled
+
+Visit &Website
+Ob&išči domačo stran
 
 Warning
 Opozorilo
@@ -367,35 +367,35 @@ Faktor povečave
 [Spremembe zaznane; osvežitev poteka] %s
 
 # Untranslated:
+#&Back\tAlt+Left Arrow
 #&Print... (denied)
 #&Remember the password for this document
 #Application:
 #Attachment: %s
 #Author:
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Continuous book view
 #Created:
 #Denied Permissions:
 #Document Properties
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#Forward\tAlt+Right Arrow
 #GB
 #KB
 #MB
 #Modified:
 #No synchronization file found
 #Number of Pages:
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:
 #Pr&int with Adobe Reader...
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Subject:
 #Text documents
 #Title:

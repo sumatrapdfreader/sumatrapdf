@@ -12,8 +12,8 @@ Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
 &About
 &আমাদের সম্পর্কে
 
-&Check for new version
-নতুন সংস্করণের জন্য নিরীক্ষা করুন
+&Actual Size\tCtrl-1
+বাস্তবিক আকার\tCtrl-1
 
 &Close\tCtrl-W
 &বন্ধ\tCtrl-W
@@ -24,22 +24,34 @@ Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
 &File
 &সঞ্চিকা
 
+&First Page\tHome
+প্রথম পৃষ্ঠা\tHome
+
 &Go To
 এতে চলুন...
 
 &Help
 &সাহায্য
 
+&Last Page\tEnd
+শেষ পৃষ্ঠা\tEnd
+
 &Manual
 নির্দেশ নথিপত্র
+
+&Next Page\tRight Arrow
+পরবর্তী পৃষ্ঠা\t->
 
 &Open\tCtrl-O
 &উন্মীলন\tCtrl-O
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+পূর্ববর্তী পৃষ্ঠা\t<-
+
+&Print...\tCtrl-P
 &মুদ্রন\tCtrl-P
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &সংরক্ষণ এই রূপে...\tCtrl-S
 
 &Skip this version
@@ -48,26 +60,23 @@ Contributor: Shabab Mustafa (shabab.mustafa@gmail.com)
 &View
 দর্শন
 
-&Visit website
-&আমাদের অন্তর্জালস্থান দর্শন করুন
-
 &Zoom
 &বিবর্ধন
 
 About SumatraPDF
 সুমাত্রাপিডিএফ-এর সম্পর্কে
 
-Act&ual Size\tCtrl-1
-বাস্তবিক আকার\tCtrl-1
-
 Associate with PDF files?
 পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 
-Bookmarks\tF12
+Book&marks\tF12
 পৃষ্ঠাস্মারকসমূহ\tF12
 
-Change language
-ভাষা পরিবর্তন (Change language)
+Change Language
+ভাষা পরিবর্তন (Change Language)
+
+Check for &Updates
+নতুন সংস্করণের জন্য নিরীক্ষা করুন
 
 Continuous
 ক্রমাগত...
@@ -75,7 +84,7 @@ Continuous
 Continuous facing
 ক্রমাগত দুটি পৃষ্ঠায়
 
-Contribute translation
+Contribute Translation
 অনুবাদ প্রদান করুন
 
 Could not open Printer
@@ -93,11 +102,17 @@ Enter password for %s
 Error loading PDF file.
 পিডিএফ সঞ্চিকা ভরণে ত্রুটি
 
+F&ullscreen\tCtrl-L
+পূর্ণ পর্দা\tCtrl-L
+
 Facing
 দুটি পৃষ্ঠায়
 
 Failed to save a file
 সঞ্চিকা সংরক্ষণে ব্যর্থ
+
+Fin&d...\tCtrl-F
+অনুসন্ধান...\tCtrl-F
 
 Find Next
 পরবর্তী অনুসন্ধান
@@ -105,35 +120,23 @@ Find Next
 Find Previous
 পূর্ববর্তী অনুসন্ধান
 
-Find...\tCtrl-F
-অনুসন্ধান...\tCtrl-F
-
 Find:
 অনুসন্ধান:
-
-First Page\tHome
-প্রথম পৃষ্ঠা\tHome
 
 Fit &Page\tCtrl-0
 পৃষ্ঠা অনুরূপ\tCtrl-0
 
+Fit &Width\tCtrl-2
+প্রস্থ অনুরূপ\tCtrl-2
+
 Fit Page
 পৃষ্ঠা অনুরূপ
-
-Fit Widt&h\tCtrl-2
-প্রস্থ অনুরূপ\tCtrl-2
 
 Fit Width
 প্রস্থ অনুরূপ
 
-Fullscreen\tCtrl-L
-পূর্ণ পর্দা\tCtrl-L
-
 Go to page
 এর পৃষ্ঠায় চলুন
-
-Last Page\tEnd
-শেষ পৃষ্ঠা\tEnd
 
 Make SumatraPDF default application for PDF files?
 সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
@@ -141,7 +144,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ
 
-Match case
+Match Case
 অক্ষরের আকার মেলান
 
 New version %s is available. Download new version?
@@ -153,16 +156,13 @@ New version available.
 Next Page
 পরবর্তী পৃষ্ঠা
 
-Next Page\tRight Arrow
-পরবর্তী পৃষ্ঠা\t->
-
 No new version available.
 নতুন সংস্করণ অনুপলব্ধ
 
 Open
 উন্মীলন
 
-Page...\tCtrl-G
+Pa&ge...\tCtrl-G
 পৃষ্ঠা সংখ্যা...\tCtrl-G
 
 Page:
@@ -171,29 +171,29 @@ Page:
 Previous Page
 পূর্ববর্তী পৃষ্ঠা
 
-Previous Page\tLeft Arrow
-পূর্ববর্তী পৃষ্ঠা\t<-
-
 Printing problem.
 মুদ্রণ করতে সমস্যা হয়েছে
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 বামদিকে বিবর্তন\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 ডানদিকে বিবর্তন\tCtrl-Shift-+
 
 Set inverse search command-line
 সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 
-Show toolbar
+Show &Toolbar
 উপকরণপট্টি প্রদর্শন
 
-Single page
+Single Page
 একটি পৃষ্ঠায়
 
 View
 দর্শন
+
+Visit &Website
+&আমাদের অন্তর্জালস্থান দর্শন করুন
 
 You have the latest version.
 আপনার এই সংস্করণটি সর্বাধুনিক।
@@ -208,7 +208,8 @@ Zoom Out
 ক্ষুদ্র বিবর্ধন
 
 # Untranslated:
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Find what:
 #&Go to page:
 #&Magnification:
@@ -230,27 +231,26 @@ Zoom Out
 #Author:
 #Automatic
 #Automatically check for &updates
-#Back\tAlt+Left Arrow
-#Book view
+#Book View
 #Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
-#Copy Selection\tCtrl-C
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
 #Download
+#F&orward\tAlt+Right Arrow
 #File Size:
 #File:
 #Find
-#Forward\tAlt+Right Arrow
 #Found text at page %d
 #GB
 #Hint: Use the F3 key for finding again
@@ -265,7 +265,7 @@ Zoom Out
 #Number of Pages:
 #OK
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Document
 #PDF Producer:
 #PDF Version:
@@ -277,8 +277,8 @@ Zoom Out
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
-#Show pages continuously
+#Send by &E-mail...
+#Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:

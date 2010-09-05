@@ -13,14 +13,17 @@ Contributor: Pavel Zampach
 &About
 &O programu
 
-&Check for new version
-&Zkontroluj existenci nové verze
+&Actual Size\tCtrl-1
+Skutečná velikost\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Zpět\tAlt+<-
 
 &Close\tCtrl-W
 &Zavřít\tCtrl-W
 
-&Custom Zoom...
-&Volitelné přiblížení...
+&Copy Selection\tCtrl-C
+Zkopírovat výběr\tCtrl-C
 
 &Don't ask me again
 &Neptej se mě znovu
@@ -31,6 +34,9 @@ Contributor: Pavel Zampach
 &Find what:
 Hledat &co:
 
+&First Page\tHome
+První stránka\tHome
+
 &Go To
 Jdi na
 
@@ -40,6 +46,9 @@ Jdi na &stránku:
 &Help
 &Nápověda
 
+&Last Page\tEnd
+Poslední stránka\tEnd
+
 &Magnification:
 &Zvětšení
 
@@ -48,6 +57,9 @@ Jdi na &stránku:
 
 &Match case
 Rozlišovat velká/malá písmena
+
+&Next Page\tRight Arrow
+Další stránka\t->
 
 &No
 &Ne
@@ -64,7 +76,10 @@ Rozlišovat velká/malá písmena
 &Password:
 &Heslo
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Předchozí stránka\t<-
+
+&Print...\tCtrl-P
 &Tisk\tCtrl-P
 
 &Print... (denied)
@@ -73,7 +88,7 @@ Rozlišovat velká/malá písmena
 &Remember these settings for each document
 &Pamatuj si tato nastavení pro každý dokument
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Uložit jako\tCtrl-S
 
 &Settings
@@ -84,9 +99,6 @@ Rozlišovat velká/malá písmena
 
 &View
 &Zobrazit
-
-&Visit website
-&Navštívit webovou stránku
 
 &Yes
 &Ano
@@ -99,9 +111,6 @@ Rozlišovat velká/malá písmena
 
 About SumatraPDF
 O programu SumatraPDF
-
-Act&ual Size\tCtrl-1
-Skutečná velikost\tCtrl-1
 
 Advanced
 Rozšířené
@@ -124,13 +133,10 @@ Automaticky
 Automatically check for &updates
 &Kontroluj aktualizace automaticky
 
-Back\tAlt+Left Arrow
-Zpět\tAlt+<-
-
-Book view
+Book View
 Zobrazit jako knihu
 
-Bookmarks\tF12
+Book&marks\tF12
 Záložky\tF12
 
 Bytes
@@ -145,8 +151,11 @@ Tento soubor nelze vytisknout
 Cannot start inverse search command. Please check the command line in the settings.
 Nelze spustit inverzní příkaz hledání. Zkontrolujte příkazový řádek v nastavení.
 
-Change language
+Change Language
 Změň jazyk
+
+Check for &Updates
+&Zkontroluj existenci nové verze
 
 Continuous
 Průběžně
@@ -157,11 +166,8 @@ Průběžné zobrazení
 Continuous facing
 Průběžně protilehlé
 
-Contribute translation
+Contribute Translation
 Zašli překlad
-
-Copy Selection\tCtrl-C
-Zkopírovat výběr\tCtrl-C
 
 Could not open Printer
 Není možné otevřít tiskárnu
@@ -174,6 +180,9 @@ Stránku nebylo možno vyrenderovat
 
 Created:
 Vytvořeno:
+
+Custom &Zoom...
+&Volitelné přiblížení...
 
 Default &Layout:
 &Výchozí rozmístění
@@ -202,6 +211,12 @@ Vložte heslo pro %s
 Error loading PDF file.
 Chyba při načítání PDF souboru.
 
+F&orward\tAlt+Right Arrow
+Vpřed\tAlt+->
+
+F&ullscreen\tCtrl-L
+Celá obrazovka\tCtrl-L
+
 Facing
 Protilehlé
 
@@ -214,6 +229,9 @@ Velikost souboru:
 File:
 Soubor:
 
+Fin&d...\tCtrl-F
+Najít...\tCtrl-F
+
 Find
 Hledat
 
@@ -223,35 +241,23 @@ Najdi další
 Find Previous
 Najdi předchozí
 
-Find...\tCtrl-F
-Najít...\tCtrl-F
-
 Find:
 Najít:
-
-First Page\tHome
-První stránka\tHome
 
 Fit &Page\tCtrl-0
 Přizpůsobit stránce\tCtrl-0
 
+Fit &Width\tCtrl-2
+Podle šířky\tCtrl-2
+
 Fit Page
 Přizpůsobit stránce
-
-Fit Widt&h\tCtrl-2
-Podle šířky\tCtrl-2
 
 Fit Width
 Podle šířky
 
-Forward\tAlt+Right Arrow
-Vpřed\tAlt+->
-
 Found text at page %d
 Text nalezen na stránce %d
-
-Fullscreen\tCtrl-L
-Celá obrazovka\tCtrl-L
 
 GB
 GB
@@ -265,9 +271,6 @@ Nápověda: Použijte klávesu F3 pro další hledání
 KB
 KB
 
-Last Page\tEnd
-Poslední stránka\tEnd
-
 MB
 MB
 
@@ -280,7 +283,7 @@ Nastavit SumatraPDF jako výchozí aplikaci pro soubory PDF?
 Make SumatraPDF my main PDF reader
 Nastavit SumatraPDF jako výchozí PDF čtečku
 
-Match case
+Match Case
 Rozlišovat velká/malá písmena
 
 Modified:
@@ -294,9 +297,6 @@ Nová verze je k dispozici.
 
 Next Page
 Další stránka
-
-Next Page\tRight Arrow
-Další stránka\t->
 
 No matches were found
 Žádná shoda nebyla nalezena
@@ -325,7 +325,7 @@ Otevřít
 Open in &Adobe Reader
 Otevřít v &Adobe Reader
 
-P&roperties...\tCtrl-D
+P&roperties\tCtrl-D
 &Vlastnosti...\tCtrl-D
 
 PDF Document
@@ -340,14 +340,14 @@ Verze PDF:
 PDF documents
 PDF dokumenty
 
+Pa&ge...\tCtrl-G
+Stránka...\tCtrl-G
+
 Page Size:
 Velikost stránky:
 
 Page number %u inexistant
 Stránka číslo %u neexistuje
-
-Page...\tCtrl-G
-Stránka...\tCtrl-G
 
 Page:
 Stránka:
@@ -361,19 +361,16 @@ Tisk s Adobe Reader...
 Previous Page
 Předchozí stránka
 
-Previous Page\tLeft Arrow
-Předchozí stránka\t<-
-
 Printing problem.
 Problém s tiskem
 
 Remember &opened files
 Pamatu&j si otevřené soubory
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Otočit zobrazení doleva\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Otočit zobrazení doprava\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -382,22 +379,22 @@ Hledám %d of %d...
 Select content with Ctrl+left mouse button
 Vybrat obsah s Ctrl+levé tlačítko myši
 
-Send by &email...
+Send by &E-mail...
 Poslat &e-mailem...
 
 Set inverse search command-line
 Nastavit zpětné hledání
 
-Show pages continuously
+Show &Toolbar
+Zobrazit lištu nástrojů
+
+Show &pages continuously
 Průběžné zobrazení stránek
 
 Show the &bookmarks sidebar when available
 &Zobraz záložky, jsou-li dostupné
 
-Show toolbar
-Zobrazit lištu nástrojů
-
-Single page
+Single Page
 Jedna stránka
 
 Source file %s has no synchronization point
@@ -429,6 +426,9 @@ Neznámý zdrojový soubor (%s)
 
 View
 Zobrazit
+
+Visit &Website
+&Navštívit webovou stránku
 
 Warning
 Varování

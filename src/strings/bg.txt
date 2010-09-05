@@ -11,14 +11,17 @@ Contributor: Христо Бенев (http://hbcom.info)
 &About
 Относно програмата...
 
-&Check for new version
-Проверка за нова версия
+&Actual Size\tCtrl-1
+Едно към едно\tCtrl-1
+
+&Back\tAlt+Left Arrow
+Назад\tAlt+<-
 
 &Close\tCtrl-W
 Затвори\tCtrl-W
 
-&Custom Zoom...
-Увеличение по избор...
+&Copy Selection\tCtrl-C
+Копирай избраното\tCtrl-C
 
 &Don't ask me again
 Не питай отново
@@ -29,6 +32,9 @@ Contributor: Христо Бенев (http://hbcom.info)
 &Find what:
 Търсене на:
 
+&First Page\tHome
+Начална страница\tHome
+
 &Go To
 Отиди &на
 
@@ -38,6 +44,9 @@ Contributor: Христо Бенев (http://hbcom.info)
 &Help
 Помо&щ
 
+&Last Page\tEnd
+Последна страница\tEnd
+
 &Magnification:
 Увеличение:
 
@@ -46,6 +55,9 @@ Contributor: Христо Бенев (http://hbcom.info)
 
 &Match case
 Същия текст
+
+&Next Page\tRight Arrow
+Следваща страница\t->
 
 &No
 Не
@@ -62,13 +74,16 @@ Contributor: Христо Бенев (http://hbcom.info)
 &Password:
 Парола
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Предишна страница\t<-
+
+&Print...\tCtrl-P
 От&печатай\tCtrl-P
 
 &Remember these settings for each document
 Запази настройките за всеки документ
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Запиши като...\tCtrl-S
 
 &Settings
@@ -79,9 +94,6 @@ Contributor: Христо Бенев (http://hbcom.info)
 
 &View
 &Виж
-
-&Visit website
-Посетете сайта
 
 &Yes
 Да
@@ -94,9 +106,6 @@ Contributor: Христо Бенев (http://hbcom.info)
 
 About SumatraPDF
 Относно SumatraPDF
-
-Act&ual Size\tCtrl-1
-Едно към едно\tCtrl-1
 
 Advanced
 Допълнителни
@@ -113,13 +122,10 @@ Automatic
 Automatically check for &updates
 Автоматично проверявай за обновления
 
-Back\tAlt+Left Arrow
-Назад\tAlt+<-
-
-Book view
+Book View
 Като книга
 
-Bookmarks\tF12
+Book&marks\tF12
 Етикети\tF12
 
 Cancel
@@ -131,8 +137,11 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Обратното търсене не може да започне. Моля проверете параметрите в настройките.
 
-Change language
-Смени езика (Change language)
+Change Language
+Смени езика (Change Language)
+
+Check for &Updates
+Проверка за нова версия
 
 Continuous
 Непрекъснати
@@ -143,11 +152,8 @@ Continuous book view
 Continuous facing
 Две непрекъснати
 
-Contribute translation
+Contribute Translation
 Допринеси за превода
-
-Copy Selection\tCtrl-C
-Копирай избраното\tCtrl-C
 
 Could not open Printer
 Принтера не е достъпен
@@ -157,6 +163,9 @@ Couldn't initialize printer
 
 Couldn't render the page
 Страницата не може да се изобрази
+
+Custom &Zoom...
+Увеличение по избор...
 
 Default &Layout:
 Раположение по подразбиране
@@ -179,11 +188,20 @@ Enter password for %s
 Error loading PDF file.
 Грешка при зареждане на файла.
 
+F&orward\tAlt+Right Arrow
+Напред\tAlt+->
+
+F&ullscreen\tCtrl-L
+Цял Екран\tCtrl-L
+
 Facing
 Две страници
 
 Failed to save a file
 Грешка при записване на файла
+
+Fin&d...\tCtrl-F
+Търси...\tCtrl-F
 
 Find
 Търси
@@ -194,44 +212,29 @@ Find Next
 Find Previous
 Намери предишното
 
-Find...\tCtrl-F
-Търси...\tCtrl-F
-
 Find:
 Търси:
-
-First Page\tHome
-Начална страница\tHome
 
 Fit &Page\tCtrl-0
 Оразмери страницата\tCtrl-0
 
+Fit &Width\tCtrl-2
+Оразмери по ширина\tCtrl-2
+
 Fit Page
 Оразмери страницата
-
-Fit Widt&h\tCtrl-2
-Оразмери по ширина\tCtrl-2
 
 Fit Width
 Оразмери по ширина
 
-Forward\tAlt+Right Arrow
-Напред\tAlt+->
-
 Found text at page %d
 Текста е намерен на страница %d
-
-Fullscreen\tCtrl-L
-Цял Екран\tCtrl-L
 
 Go to page
 Към страница
 
 Hint: Use the F3 key for finding again
 Съвет: Използвайте F3 за повторно търсене
-
-Last Page\tEnd
-Последна страница\tEnd
 
 Main PDF reader can't be changed in portable mode
 PDF четеца не може да бъде сменен в преносим режим
@@ -242,7 +245,7 @@ Make SumatraPDF default application for PDF files?
 Make SumatraPDF my main PDF reader
 Направи SumatraPDF четец на PDF по подразбиране
 
-Match case
+Match Case
 Точно същите букви
 
 New version %s is available. Download new version?
@@ -253,9 +256,6 @@ New version available.
 
 Next Page
 Следваща страница
-
-Next Page\tRight Arrow
-Следваща страница\t->
 
 No matches were found
 Няма съвпадения
@@ -284,11 +284,11 @@ PDF документ
 PDF documents
 PDF документи
 
+Pa&ge...\tCtrl-G
+Страница...\tCtrl-G
+
 Page number %u inexistant
 Страница номер не съществува
-
-Page...\tCtrl-G
-Страница...\tCtrl-G
 
 Page:
 Страница:
@@ -299,19 +299,16 @@ Please wait - rendering...
 Previous Page
 Предишна страница
 
-Previous Page\tLeft Arrow
-Предишна страница\t<-
-
 Printing problem.
 Проблем при печатане.
 
 Remember &opened files
 Запомни отворените файлове
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Завърти наляво\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Завърти надясно\tCtrl-Shift-+
 
 Searching %d of %d...
@@ -323,16 +320,16 @@ Select content with Ctrl+left mouse button
 Set inverse search command-line
 Активирай обратно търсене
 
-Show pages continuously
+Show &Toolbar
+Покажи лентата с инструменти
+
+Show &pages continuously
 Непрекъснати
 
 Show the &bookmarks sidebar when available
 Покажи показалеца в станичната колона когато е възможно
 
-Show toolbar
-Покажи лентата с инструменти
-
-Single page
+Single Page
 Единична страница
 
 Source file %s has no synchronization point
@@ -355,6 +352,9 @@ Unknown source file (%s)
 
 View
 Виж
+
+Visit &Website
+Посетете сайта
 
 Warning
 Внимание
@@ -399,12 +399,12 @@ Zoom factor
 #Modified:
 #Number of Pages:
 #OK
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #PDF Version:
 #Page Size:
 #Pr&int with Adobe Reader...
-#Send by &email...
+#Send by &E-mail...
 #Subject:
 #Text documents
 #Title:

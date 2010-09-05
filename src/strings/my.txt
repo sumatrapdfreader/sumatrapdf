@@ -11,11 +11,17 @@ Contributor: Masley b. Mastil
 &About
 &Mengenai
 
+&Actual Size\tCtrl-1
+&Saiz sebenar\tCtrl-1
+
 &Close\tCtrl-W
 &Tutup\tCtrl-W
 
 &File
 &Fail
+
+&First Page\tHome
+Mukasurat pertama\tHome
 
 &Go To
 &Pergi Ke
@@ -26,11 +32,17 @@ Contributor: Masley b. Mastil
 &Help
 &Bantuan
 
+&Last Page\tEnd
+Mukasurat terakhir
+
 &Magnification:
 &Pembesaran:
 
 &Manual
 &Manual
+
+&Next Page\tRight Arrow
+Mukasurat seterusnya\t->
 
 &No
 &Tidak
@@ -47,7 +59,10 @@ Contributor: Masley b. Mastil
 &Password:
 &Kata laluan
 
-&Print\tCtrl-P
+&Previous Page\tLeft Arrow
+Mukasurat sebelumnya\t<-
+
+&Print...\tCtrl-P
 &Cetak\tCtrl-P
 
 &Print... (denied)
@@ -56,7 +71,7 @@ Contributor: Masley b. Mastil
 &Remember these settings for each document
 &Ingat tetapan-tetapan ini untuk setiap dokumen
 
-&Save as\tCtrl-S
+&Save As...\tCtrl-S
 &Simpan sebagai\tCtrl-S
 
 &Settings
@@ -68,9 +83,6 @@ Contributor: Masley b. Mastil
 &View
 &Lihat
 
-&Visit website
-&Lawat lamanweb
-
 &Yes
 &Ya
 
@@ -79,9 +91,6 @@ Contributor: Masley b. Mastil
 
 About SumatraPDF
 Mengenai SumatraPDF
-
-Act&ual Size\tCtrl-1
-&Saiz sebenar\tCtrl-1
 
 All files
 Semua fail
@@ -95,10 +104,10 @@ Automatik
 Automatically check for &updates
 Semak &kemas kini secara automatik
 
-Book view
+Book View
 Paparan buku
 
-Bookmarks\tF12
+Book&marks\tF12
 Penanda\tF12
 
 Bytes
@@ -110,7 +119,7 @@ Batal
 Cannot print this file
 Tidak boleh cetak fail ini
 
-Change language
+Change Language
 Tukar bahasa
 
 Continuous
@@ -122,7 +131,7 @@ Paparan buku berterusan
 Continuous facing
 Dua belah mukasurat bersambung
 
-Contribute translation
+Contribute Translation
 Menyumbangkan alihbahasa
 
 Could not open Printer
@@ -143,6 +152,9 @@ Masukkan kata laluan untuk %s
 Error loading PDF file.
 Masalah memuatkan fail PDF
 
+F&ullscreen\tCtrl-L
+Mukasurat Penuh\tCtrl-L
+
 Facing
 Dua belah mukasurat
 
@@ -155,6 +167,9 @@ Saiz fail:
 File:
 Fail:
 
+Fin&d...\tCtrl-F
+Cari...\tCtrl-F
+
 Find
 Cari
 
@@ -164,29 +179,20 @@ Cari selepas
 Find Previous
 Cari sebelum
 
-Find...\tCtrl-F
-Cari...\tCtrl-F
-
 Find:
 Cari:
-
-First Page\tHome
-Mukasurat pertama\tHome
 
 Fit &Page\tCtrl-0
 &Muatkan mukasurat\tCtrl-0
 
+Fit &Width\tCtrl-2
+&Muatkan lebar\tCtrl-2
+
 Fit Page
 Muatkan mukasurat
 
-Fit Widt&h\tCtrl-2
-&Muatkan lebar\tCtrl-2
-
 Fit Width
 Muatkan lebar
-
-Fullscreen\tCtrl-L
-Mukasurat Penuh\tCtrl-L
 
 GB
 GB
@@ -197,9 +203,6 @@ Pergi ke mukasurat
 KB
 KB
 
-Last Page\tEnd
-Mukasurat terakhir
-
 MB
 MB
 
@@ -209,14 +212,11 @@ Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 Make SumatraPDF my main PDF reader
 Jadikan SumatraPDF pembaca utama PDF
 
-Match case
+Match Case
 Hampir sama
 
 Next Page
 Mukasurat seterusnya
-
-Next Page\tRight Arrow
-Mukasurat seterusnya\t->
 
 No matches were found
 Tiada padanan dijumpai
@@ -242,11 +242,11 @@ Versi PDF:
 PDF documents
 Dokumen-dokumen PDF
 
+Pa&ge...\tCtrl-G
+Mukasurat...\tCtrl-G
+
 Page Size:
 Saiz mukasurat
-
-Page...\tCtrl-G
-Mukasurat...\tCtrl-G
 
 Page:
 Mukasurat:
@@ -254,25 +254,22 @@ Mukasurat:
 Previous Page
 Mukasurat sebelumnya
 
-Previous Page\tLeft Arrow
-Mukasurat sebelumnya\t<-
-
 Printing problem.
 Masalah mencetak
 
-Rotate left\tCtrl-Shift--
+Rotate &Left\tCtrl-Shift--
 Ubah ke kiri\tCtrl-Shift--
 
-Rotate right\tCtrl-Shift-+
+Rotate &Right\tCtrl-Shift-+
 Ubah ke kanan\tCtrl-Shift-+
 
-Show pages continuously
-Papar mukasurat secara berterusan
-
-Show toolbar
+Show &Toolbar
 Tunjukkan Bar Alat
 
-Single page
+Show &pages continuously
+Papar mukasurat secara berterusan
+
+Single Page
 Satu Mukasurat
 
 Subject:
@@ -290,6 +287,9 @@ Tajuk:
 View
 Lihat
 
+Visit &Website
+&Lawat lamanweb
+
 Warning
 Amaran
 
@@ -306,8 +306,8 @@ printing document
 mencetak dokumen
 
 # Untranslated:
-#&Check for new version
-#&Custom Zoom...
+#&Back\tAlt+Left Arrow
+#&Copy Selection\tCtrl-C
 #&Don't ask me again
 #&Find what:
 #&Match case
@@ -317,18 +317,18 @@ mencetak dokumen
 #Associate with PDF files?
 #Attachment: %s
 #Author:
-#Back\tAlt+Left Arrow
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
-#Copy Selection\tCtrl-C
+#Check for &Updates
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
+#Custom &Zoom...
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
-#Forward\tAlt+Right Arrow
+#F&orward\tAlt+Right Arrow
 #Found text at page %d
 #Hint: Use the F3 key for finding again
 #Make SumatraPDF default application for PDF files?
@@ -339,7 +339,7 @@ mencetak dokumen
 #No synchronization file found
 #No synchronization info at this position
 #Open in &Adobe Reader
-#P&roperties...\tCtrl-D
+#P&roperties\tCtrl-D
 #PDF Producer:
 #Page number %u inexistant
 #Please wait - rendering...
@@ -347,7 +347,7 @@ mencetak dokumen
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &email...
+#Send by &E-mail...
 #Set inverse search command-line
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
