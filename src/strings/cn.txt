@@ -373,6 +373,7 @@ Zoom factor
 #Author:
 #Back\tAlt+Left Arrow
 #Book view
+#Bookmarks
 #Bytes
 #Continuous book view
 #Created:

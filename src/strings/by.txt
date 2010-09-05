@@ -345,6 +345,7 @@ Zoom Out
 #Automatic
 #Back\tAlt+Left Arrow
 #Book view
+#Bookmarks
 #Bytes
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view

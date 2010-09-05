@@ -460,5 +460,6 @@ impresión de documento
 # Untranslated:
 #&Remember the password for this document
 #Attachment: %s
+#Bookmarks
 #Pr&int with Adobe Reader...
 

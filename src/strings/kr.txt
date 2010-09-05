@@ -232,6 +232,7 @@ Zoom Out
 #Automatically check for &updates
 #Back\tAlt+Left Arrow
 #Book view
+#Bookmarks
 #Bytes
 #Cancel
 #Cannot print this file

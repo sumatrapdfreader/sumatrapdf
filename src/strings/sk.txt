@@ -443,6 +443,7 @@ prebieha tlač dokumentu
 #&Go to page:
 #&Remember the password for this document
 #Attachment: %s
+#Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Couldn't initialize printer
 #No synchronization file found

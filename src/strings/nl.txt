@@ -467,4 +467,5 @@ afdrukken bestand
 # Untranslated:
 #&Remember the password for this document
 #Attachment: %s
+#Bookmarks
 

@@ -1656,6 +1656,8 @@ WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
             return win;
         if (hwnd == win->hwndTocBox)
             return win;
+        if (hwnd == win->hwndTocTree)
+            return win;
         if (hwnd == win->hwndSpliter)
             return win;
         if (hwnd == win->hwndPdfProperties)
@@ -2440,7 +2442,7 @@ static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, 
         item.hItem = hItem;
         item.mask = TVIF_PARAM | TVIF_STATE;
         item.stateMask = TVIS_EXPANDED;
-        TreeView_GetItem(win->hwndTocBox, &item);
+        TreeView_GetItem(win->hwndTocTree, &item);
 
         // return if this item is on the specified page (or on a latter page)
         if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
@@ -2454,11 +2456,11 @@ static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, 
         // find any child item closer to the specified page
         HTREEITEM hSubItem = NULL;
         if ((item.state & TVIS_EXPANDED))
-            hSubItem = WindowInfo_TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocBox, hItem), pageNo);
+            hSubItem = WindowInfo_TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo);
         if (hSubItem)
             hCurrItem = hSubItem;
 
-        hItem = TreeView_GetNextSibling(win->hwndTocBox, hItem);
+        hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
     }
 
     return hCurrItem;
@@ -2468,15 +2470,15 @@ static void WindowInfo_UpdateTocSelection(WindowInfo *win, int currPageNo)
 {
     if (!win->dm || !win->dm->_showToc || !win->tocLoaded)
         return;
-    if (GetFocus() == win->hwndTocBox)
+    if (GetFocus() == win->hwndTocTree)
         return;
 
-    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocBox);
+    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
     if (!hRoot)
         return;
     HTREEITEM hCurrItem = WindowInfo_TreeItemForPageNo(win, hRoot, currPageNo);
     if (hCurrItem)
-        TreeView_SelectItem(win->hwndTocBox, hCurrItem);
+        TreeView_SelectItem(win->hwndTocTree, hCurrItem);
     win->currPageNo = currPageNo;
 }
 
@@ -5304,12 +5306,12 @@ static void AdvanceFocus(WindowInfo *win)
 
     if (current == win->hwndFrame) {
         if ((!hasToolbar || reversed) && hasToC)
-            next = win->hwndTocBox;
+            next = win->hwndTocTree;
         else if (!reversed && hasToolbar)
             next = win->hwndPageBox;
         else if (reversed && hasToolbar)
             next = win->hwndFindBox;
-    } else if (current == win->hwndTocBox) {
+    } else if (current == win->hwndTocTree) {
         if (reversed && hasToolbar)
             next = win->hwndFindBox;
     } else if (current == win->hwndPageBox) {
@@ -5319,7 +5321,7 @@ static void AdvanceFocus(WindowInfo *win)
         if (reversed)
             next = win->hwndPageBox;
         else if (hasToC)
-            next = win->hwndTocBox;
+            next = win->hwndTocTree;
     }
 
     SetFocus(next);
@@ -6155,10 +6157,6 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
             ReleaseCapture();
             resizing = false;
             break;
-        case WM_COMMAND:
-            if (HIWORD(wParam) == STN_CLICKED)
-                win->ToggleTocBox();
-            break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
@@ -6178,8 +6176,8 @@ bool WindowInfo::FindUpdateStatus(int current, int total)
     return !findCanceled;
 }
 
-static WNDPROC DefWndProcTocBox = NULL;
-static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static WNDPROC DefWndProcTocTree = NULL;
+static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
     switch (message) {
@@ -6199,6 +6197,106 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
             break;
 #endif
     }
+    return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
+}
+
+static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit);
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
+static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
+#endif
+
+static WNDPROC DefWndProcTocBox = NULL;
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    switch (message) {
+    case WM_SIZE: {
+        RECT rc;
+        GetWindowRect(hwnd, &rc);
+
+        HWND titleLabel = GetDlgItem(hwnd, 0);
+        TCHAR *text = win_get_text(titleLabel);
+        SIZE size = TextSizeInHwnd(titleLabel, text);
+        free(text);
+
+        int offset = 2 * win->uiDPIFactor;
+        if (size.cy < 16) size.cy = 16;
+        size.cy += 2 * offset;
+
+        HWND closeIcon = GetDlgItem(hwnd, 1);
+        MoveWindow(titleLabel, offset, offset, rect_dx(&rc) - 2 * offset, size.cy - 2 * offset, true);
+        MoveWindow(closeIcon, rect_dx(&rc) - 16, (size.cy - 16) / 2, 16, 16, true);
+        MoveWindow(win->hwndTocTree, 0, size.cy, rect_dx(&rc), rect_dy(&rc) - size.cy, true);
+        break;
+    }
+    case WM_COMMAND:
+        if (HIWORD(wParam) == STN_CLICKED)
+            win->ToggleTocBox();
+        break;
+    case WM_NOTIFY:
+        if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
+            LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
+            switch (pnmtv->hdr.code) 
+            {
+            case TVN_SELCHANGED: 
+                // When the focus is set to the toc window the first item in the treeview is automatically
+                // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
+                // We have to ignore this message to prevent the current page to be changed.
+                if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
+                    GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
+                // The case pnmtv->action==TVC_UNKNOWN is ignored because 
+                // it corresponds to a notification sent by
+                // the function TreeView_DeleteAllItems after deletion of the item.
+                break;
+            case TVN_KEYDOWN: {
+                TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
+                if (VK_TAB == ptvkd->wVKey) {
+                    AdvanceFocus(win);
+                    return 1;
+                }
+                break;
+            }
+            case NM_CLICK: {
+                // Determine which item has been clicked (if any)
+                TVHITTESTINFO ht = {0};
+                DWORD pos = GetMessagePos();
+                ht.pt.x = GET_X_LPARAM(pos);
+                ht.pt.y = GET_Y_LPARAM(pos);
+                MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
+                TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
+
+                // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
+                if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
+                    GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+                break;
+            }
+            case NM_RETURN:
+                GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
+                break;
+            case NM_CUSTOMDRAW:
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
+                switch (((LPNMCUSTOMDRAW)lParam)->dwDrawStage) {
+                    case CDDS_PREPAINT:
+                        return CDRF_NOTIFYITEMDRAW;
+                    case CDDS_ITEMPREPAINT:
+                        return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+                    case CDDS_ITEMPOSTPAINT:
+                        RelayoutTocItem((LPNMTVCUSTOMDRAW)lParam);
+                        // fall through
+                    default:
+                        return CDRF_DODEFAULT;
+                }
+                break;
+#else
+                return CDRF_DODEFAULT;
+#endif
+            case TVN_GETINFOTIP:
+                CustomizeToCInfoTip(win, (LPNMTVGETINFOTIP)lParam);
+                break;
+            }
+        }
+        break;
+    }
     return CallWindowProc(DefWndProcTocBox, hwnd, message, wParam, lParam);
 }
 
@@ -6208,24 +6306,34 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
                                 win->hwndFrame, (HMENU)0, hInst, NULL);
     win->hwndSpliter = spliter;
     
+    win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+                        0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE_TITLE, hInst, NULL);
+    HWND titleLabel = CreateWindow(WC_STATIC, _TR("Bookmarks"), WS_VISIBLE | WS_CHILD,
+                        0,0,0,0, win->hwndTocBox, (HMENU)0, hInst, NULL);
+    SetWindowFont(titleLabel, gDefaultGuiFont, true);
+
     HWND closeToc = CreateWindow(WC_STATIC, _T(""),
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                        0, 0, 5, 9, spliter, (HMENU)0, hInst, NULL);
+                        0, 0, 16, 16, win->hwndTocBox, (HMENU)1, hInst, NULL);
     SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
     SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
 
-    win->hwndTocBox = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
+    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                         TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
-                        WS_TABSTOP|WS_CHILD,
-                        0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
+                        WS_TABSTOP|WS_VISIBLE|WS_CHILD,
+                        0,0,0,0, win->hwndTocBox, (HMENU)IDC_PDF_TOC_TREE, hInst, NULL);
 
-    assert(win->hwndTocBox);
-    if (!win->hwndTocBox)
+    assert(win->hwndTocTree);
+    if (!win->hwndTocTree)
         SeeLastError();
     else
-        TreeView_SetUnicodeFormat(win->hwndTocBox, true);
+        TreeView_SetUnicodeFormat(win->hwndTocTree, true);
         
+    if (NULL == DefWndProcTocTree)
+        DefWndProcTocTree = (WNDPROC)GetWindowLong(win->hwndTocTree, GWL_WNDPROC);
+    SetWindowLong(win->hwndTocTree, GWL_WNDPROC, (LONG)WndProcTocTree);
+
     if (NULL == DefWndProcTocBox)
         DefWndProcTocBox = (WNDPROC)GetWindowLong(win->hwndTocBox, GWL_WNDPROC);
     SetWindowLong(win->hwndTocBox, GWL_WNDPROC, (LONG)WndProcTocBox);
@@ -6338,7 +6446,7 @@ void WindowInfo::LoadTocTree()
 
     PdfTocItem *toc = dm->getTocTree();
     if (toc) {
-        PopulateTocTreeView(hwndTocBox, toc);
+        PopulateTocTreeView(hwndTocTree, toc);
         delete toc;
     }
     tocLoaded = true;
@@ -6350,7 +6458,7 @@ void WindowInfo::ToggleTocBox()
         return;
     if (!dm->_showToc) {
         ShowTocBox();
-        SetFocus(hwndTocBox);
+        SetFocus(hwndTocTree);
     } else {
         HideTocBox();
     }
@@ -6405,7 +6513,7 @@ void WindowInfo::HideTocBox()
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
 
-    if (GetFocus() == hwndTocBox)
+    if (GetFocus() == hwndTocTree)
         SetFocus(hwndFrame);
 
     SetWindowPos(hwndCanvas, NULL, 0, cy, cw, ch - cy, SWP_NOZORDER);
@@ -6418,7 +6526,7 @@ void WindowInfo::HideTocBox()
 void WindowInfo::ClearTocBox()
 {
     if (!tocLoaded) return;
-    TreeView_DeleteAllItems(hwndTocBox);
+    TreeView_DeleteAllItems(hwndTocTree);
     tocLoaded = false;
     currPageNo = 0;
 }
@@ -6873,7 +6981,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     if (win->hwndFrame != GetFocus())
                         SetFocus(win->hwndFrame);
                     else if (win->dm && win->dm->_showToc)
-                        SetFocus(win->hwndTocBox);
+                        SetFocus(win->hwndTocTree);
                     break;
 
                 case IDM_GOTO_NAV_BACK:
@@ -7028,70 +7136,6 @@ InitMouseWheelInfo:
             } else {
                 ClearSearch(win);
                 WindowInfo_HideFindStatus(win, !!lParam);
-            }
-            break;
-
-        case WM_NOTIFY:
-            if (LOWORD(wParam) == IDC_PDF_TOC_TREE) {
-                LPNMTREEVIEW pnmtv = (LPNMTREEVIEW) lParam;
-                switch (pnmtv->hdr.code) 
-                {
-                    case TVN_SELCHANGED: 
-                        // When the focus is set to the toc window the first item in the treeview is automatically
-                        // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
-                        // We have to ignore this message to prevent the current page to be changed.
-                        if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
-                            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
-                        // The case pnmtv->action==TVC_UNKNOWN is ignored because 
-                        // it corresponds to a notification sent by
-                        // the function TreeView_DeleteAllItems after deletion of the item.
-                        break;
-                    case TVN_KEYDOWN: {
-                        TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)lParam;
-                        if (VK_TAB == ptvkd->wVKey) {
-                            AdvanceFocus(win);
-                            return 1;
-                        }
-                        break;
-                    }
-                    case NM_CLICK: {
-                        // Determine which item has been clicked (if any)
-                        TVHITTESTINFO ht = {0};
-                        DWORD pos = GetMessagePos();
-                        ht.pt.x = GET_X_LPARAM(pos);
-                        ht.pt.y = GET_Y_LPARAM(pos);
-                        MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
-                        TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
-
-                        // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
-                        if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
-                            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
-                        break;
-                    }
-                    case NM_RETURN:
-                        GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
-                        break;
-                    case NM_CUSTOMDRAW:
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-                        switch (((LPNMCUSTOMDRAW)lParam)->dwDrawStage) {
-                            case CDDS_PREPAINT:
-                                return CDRF_NOTIFYITEMDRAW;
-                            case CDDS_ITEMPREPAINT:
-                                return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-                            case CDDS_ITEMPOSTPAINT:
-                                RelayoutTocItem((LPNMTVCUSTOMDRAW)lParam);
-                                // fall through
-                            default:
-                                return CDRF_DODEFAULT;
-                        }
-                        break;
-#else
-                        return CDRF_DODEFAULT;
-#endif
-                    case TVN_GETINFOTIP:
-                        CustomizeToCInfoTip(win, (LPNMTVGETINFOTIP)lParam);
-                        break;
-                }
             }
             break;
 

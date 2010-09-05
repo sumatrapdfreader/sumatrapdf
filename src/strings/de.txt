@@ -137,6 +137,9 @@ Back\tAlt+Left Arrow
 Book view
 Buchansicht
 
+Bookmarks
+Lesezeichen
+
 Bookmarks\tF12
 Lesezeichen\tF12
 

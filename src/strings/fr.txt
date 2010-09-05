@@ -466,4 +466,5 @@ imprimer le document
 # Untranslated:
 #&Remember the password for this document
 #Attachment: %s
+#Bookmarks
 

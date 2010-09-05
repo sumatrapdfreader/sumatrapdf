@@ -395,6 +395,7 @@ Zoom factor
 #Application:
 #Attachment: %s
 #Author:
+#Bookmarks
 #Bytes
 #Created:
 #Denied Permissions:

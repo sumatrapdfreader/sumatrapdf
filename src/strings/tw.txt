@@ -450,6 +450,7 @@ printing document
 #&Yes
 #(of %d)
 #Attachment: %s
+#Bookmarks
 #No result found around line %u in file %s
 #Searching %d of %d...
 

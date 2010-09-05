@@ -179,6 +179,7 @@ Zoom Out
 #Automatically check for &updates
 #Back\tAlt+Left Arrow
 #Book view
+#Bookmarks
 #Bookmarks\tF12
 #Bytes
 #Cancel

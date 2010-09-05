@@ -362,6 +362,7 @@ Paliitin/Lumayo
 #Attachment: %s
 #Automatically check for &updates
 #Book view
+#Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
 #Copy Selection\tCtrl-C

@@ -453,6 +453,7 @@ printing document
 # Untranslated:
 #&Remember the password for this document
 #Attachment: %s
+#Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Pr&int with Adobe Reader...
 #Set inverse search command-line

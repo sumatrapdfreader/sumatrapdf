@@ -444,6 +444,7 @@ Zoomfaktor
 #&Print... (denied)
 #&Remember the password for this document
 #Attachment: %s
+#Bookmarks
 #Denied Permissions:
 #Pr&int with Adobe Reader...
 #Subject:

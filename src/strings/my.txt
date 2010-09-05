@@ -318,6 +318,7 @@ mencetak dokumen
 #Attachment: %s
 #Author:
 #Back\tAlt+Left Arrow
+#Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Copy Selection\tCtrl-C
 #Couldn't initialize printer

@@ -176,6 +176,7 @@ public:
         hwndPageBg = NULL;
         hwndPageTotal = NULL;
         hwndTocBox = NULL;
+        hwndTocTree = NULL;
         hwndSpliter = NULL;
         hwndInfotip = NULL;
         hwndPdfProperties = NULL;
@@ -242,6 +243,7 @@ public:
     HWND            hwndPageBg;
     HWND            hwndPageTotal;
     HWND            hwndTocBox;
+    HWND            hwndTocTree;
     HWND            hwndSpliter;
     HWND            hwndInfotip;
     HWND            hwndPdfProperties;

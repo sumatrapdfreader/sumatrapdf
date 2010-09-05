@@ -175,6 +175,7 @@
 #define IDC_SECTION_INVERSESEARCH       1040
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
+#define IDC_PDF_TOC_TREE_TITLE          1043
 #define IDB_TOOLBAR                     2000
 #define IDB_CLOSE_TOC                   2007
 #define IDT_FILE_NEW                    3000
