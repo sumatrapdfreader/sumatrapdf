@@ -34,8 +34,6 @@ fz_newfont(void)
 	font->widthcount = 0;
 	font->widthtable = nil;
 
-	font->_data = nil;
-
 	return font;
 }
 
@@ -75,8 +73,6 @@ fz_dropfont(fz_font *font)
 
 		if (font->widthtable)
 			fz_free(font->widthtable);
-		if (font->_data && font->_data_len == 0)
-			fz_free(font->_data);
 
 		fz_free(font);
 	}
@@ -188,9 +184,6 @@ fz_newfontfromfile(fz_font **fontp, char *path, int index)
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
 	}
 
-	font->_data = fz_strdup(path);
-	font->_data_len = 0;
-
 	*fontp = font;
 	return fz_okay;
 }
@@ -214,9 +207,6 @@ fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 		fz_free(font);
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
 	}
-
-	font->_data = data;
-	font->_data_len = len;
 
 	*fontp = font;
 	return fz_okay;

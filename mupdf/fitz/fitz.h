@@ -681,9 +681,6 @@ struct fz_font_s
 	/* substitute metrics */
 	int widthcount;
 	int *widthtable;
-
-	const char *_data; /* font file content or file path */
-	int _data_len;     /* 0 for file paths               */
 };
 
 fz_error fz_newfreetypefont(fz_font **fontp, char *name, int substitute);

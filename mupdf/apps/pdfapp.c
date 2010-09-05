@@ -274,6 +274,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		/* Zero search hit position */
 		app->hit = -1;
 		app->hitlen = 0;
+
+		pdf_agestore(app->xref->store, 3);
 	}
 
 	if (drawpage)
