@@ -14,8 +14,13 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
 
     obj = fz_dictgets(page, "MediaBox");
     if (!fz_isarray(obj))
-        return fz_throw("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
-    bbox = fz_roundrect(pdf_torect(obj));
+    {
+        fz_warn("cannot find page bounds (%d %d R)", fz_tonum(page), fz_togen(page));
+        bbox.x0 = 0; bbox.x1 = 612;
+        bbox.y0 = 0; bbox.y1 = 792;
+    }
+    else
+        bbox = fz_roundrect(pdf_torect(obj));
 
     obj = fz_dictgets(page, "CropBox");
     if (fz_isarray(obj))
