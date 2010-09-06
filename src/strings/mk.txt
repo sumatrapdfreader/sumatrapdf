@@ -257,20 +257,11 @@ Fit Width
 Found text at page %d
 Пронајдов текст на страница %d
 
-GB
-GB
-
 Go to page
 Појди на страница
 
 Hint: Use the F3 key for finding again
 Совет: За повторно пребарување користи F3 од тастатурата
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Основниот PDF читач не може да се промени во мобилен режим на работа

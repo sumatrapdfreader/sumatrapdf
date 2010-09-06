@@ -362,10 +362,7 @@ Zoom Out
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#GB
 #Hint: Use the F3 key for finding again
-#KB
-#MB
 #Modified:
 #No synchronization file found
 #Number of Pages:

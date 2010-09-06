@@ -249,20 +249,11 @@ Fit Width
 Found text at page %d
 於第 %d 頁找到目標
 
-GB
-GB
-
 Go to page
 移至頁面
 
 Hint: Use the F3 key for finding again
 提示：按F3重新尋找
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 不能在便攜模式更改預設 PDF 閱讀器

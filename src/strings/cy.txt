@@ -258,17 +258,11 @@ Fitio'r Lled
 Found text at page %d
 Canfod testun ar dudalen %d
 
-GB
-GB
-
 Go to page
 Mynd i dudalen
 
 Hint: Use the F3 key for finding again
 Cyngor: Defnyddiwch bysell F3 i ganfod eto
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
@@ -465,7 +459,6 @@ argraffu dogfen
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
-#KB
 #Page scaling
 #Print range
 

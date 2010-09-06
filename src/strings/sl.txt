@@ -388,9 +388,6 @@ Faktor povečave
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#GB
-#KB
-#MB
 #Modified:
 #No synchronization file found
 #Number of Pages:

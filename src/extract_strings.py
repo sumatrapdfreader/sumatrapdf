@@ -16,7 +16,7 @@ STRINGS_PATH = os.path.realpath("strings")
 STRINGS_FILE = os.path.join(STRINGS_PATH, "strings_obsolete.txt")
 
 # strings that don't need to be translated
-TRANSLATION_EXCEPTIONS = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%"]
+TRANSLATION_EXCEPTIONS = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%", "KB", "MB", "GB"]
 
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
 

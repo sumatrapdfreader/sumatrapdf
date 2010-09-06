@@ -261,20 +261,11 @@ Larghezza pagina
 Found text at page %d
 Testo trovato a pagina %d
 
-GB
-GB
-
 Go to page
 Vai a pagina
 
 Hint: Use the F3 key for finding again
 Consiglio: Usa F3 per trovare nuovamente
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Il lettore PDF predefinito non può cambiare alla modalità portable

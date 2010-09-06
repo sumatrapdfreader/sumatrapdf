@@ -397,9 +397,6 @@ Zoom factor
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
-#GB
-#KB
-#MB
 #Modified:
 #Number of Pages:
 #P&roperties\tCtrl-D

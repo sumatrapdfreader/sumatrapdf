@@ -251,20 +251,11 @@ Passend yn breedte
 Found text at page %d
 Tekst fûn op side %d
 
-GB
-GB
-
 Go to page
 Gean nei side
 
 Hint: Use the F3 key for finding again
 Tip: Brûk de funksjetoets F3 om fierder te sykjen
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Standert PDF-lêzer kin net oanpast wurde yn portable moadus

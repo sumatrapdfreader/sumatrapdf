@@ -253,20 +253,11 @@ Tilpass til bredde
 Found text at page %d
 Fant tekst på side &d
 
-GB
-GB
-
 Go to page
 Gå til side
 
 Hint: Use the F3 key for finding again
 Tips: Bruk F3 tasten for søk etter neste
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Standard pdf-leser kan ikke endres i flyttbar modus

@@ -398,9 +398,6 @@ Zoom factor
 #Document Properties
 #File Size:
 #File:
-#GB
-#KB
-#MB
 #Modified:
 #Number of Pages:
 #OK

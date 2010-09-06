@@ -252,20 +252,11 @@ Fit Width
 Found text at page %d
 %d חפש מלל בעמוד
 
-GB
-GB
-
 Go to page
 עבור לעמוד
 
 Hint: Use the F3 key for finding again
 F3 רמז: לחיפוש הבא, השתמש במקש
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 PDF לא ניתן לשנות במצב נייד את קורא ה

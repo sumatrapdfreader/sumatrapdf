@@ -259,20 +259,11 @@ Podle šířky
 Found text at page %d
 Text nalezen na stránce %d
 
-GB
-GB
-
 Go to page
 Jdi na stránku
 
 Hint: Use the F3 key for finding again
 Nápověda: Použijte klávesu F3 pro další hledání
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Výchozí čtečka PDF nemůže být změněna v přenosném režimu

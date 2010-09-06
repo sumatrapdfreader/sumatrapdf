@@ -408,9 +408,6 @@ Zoom faktor
 #Document Properties
 #File Size:
 #File:
-#GB
-#KB
-#MB
 #Modified:
 #Number of Pages:
 #P&roperties\tCtrl-D

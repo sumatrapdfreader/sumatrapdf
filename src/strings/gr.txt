@@ -258,20 +258,11 @@ Fit Width
 Found text at page %d
 Το κείμενο βρέθηκε στη σελίδα %d
 
-GB
-GB
-
 Go to page
 Μετάβαση στη σελίδα
 
 Hint: Use the F3 key for finding again
 Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
-
-KB
-KB
-
-MB
-MB
 
 Main PDF reader can't be changed in portable mode
 Δε μπορεί να γίνει συσχετισμός σε portable mode
