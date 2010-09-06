@@ -85,6 +85,9 @@ Contributor: Victor Kozyakin
 &Print... (denied)
 Печать... (отмена)
 
+&Remember the password for this document
+Запомнить пароль для этого документа
+
 &Remember these settings for each document
 Запомнить эти параметры для &каждого документа
 
@@ -124,6 +127,9 @@ Application:
 Associate with PDF files?
 Ассоциировать с PDF-файлами?
 
+Attachment: %s
+Вложение: %s
+
 Author:
 Автор:
 
@@ -138,6 +144,9 @@ Book View
 
 Book&marks\tF12
 Закладки\tF12
+
+Bookmarks
+Закладки
 
 Bytes
 Байт
@@ -459,9 +468,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#&Remember the password for this document
-#Attachment: %s
-#Bookmarks
 
