@@ -427,15 +427,22 @@ Nagyítás mértéke
 [a file megváltozott; frissítés] %s
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
 #&Print... (denied)
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Denied Permissions:
 #No result found around line %u in file %s
 #No synchronization file found
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Set inverse search command-line
 #Subject:
 #Text documents

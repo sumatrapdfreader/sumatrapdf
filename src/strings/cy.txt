@@ -457,8 +457,15 @@ printing document
 argraffu dogfen
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
 #KB
+#Page scaling
+#Print range
 

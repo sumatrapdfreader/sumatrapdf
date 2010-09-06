@@ -235,6 +235,20 @@ BEGIN
 END
 
 
+IDD_PROPSHEET_PRINT_ADVANCED DIALOGEX 0, 0, 292, 109
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Print range",IDC_SECTION_PRINT_RANGE,7,7,278,52
+    CONTROL         "&All selected pages",IDC_PRINT_RANGE_ALL,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP,13,18,266,9
+    CONTROL         "&Odd pages only",IDC_PRINT_RANGE_ODD,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,13,31,266,9
+    CONTROL         "&Even pages only",IDC_PRINT_RANGE_EVEN,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,13,44,266,9
+    GROUPBOX        "Page scaling",IDC_SECTION_PRINT_SCALE,6,62,280,40
+    CONTROL         "&Shrink pages to printable area (if necessary)",IDC_PRINT_SCALE_SHRINK,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP,13,74,266,9
+    CONTROL         "&Fit pages to printable area",IDC_PRINT_SCALE_FIT,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,13,87,266,9
+END
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //

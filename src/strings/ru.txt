@@ -469,3 +469,12 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
+#&Shrink pages to printable area (if necessary)
+#Page scaling
+#Print range
+

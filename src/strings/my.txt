@@ -306,12 +306,17 @@ printing document
 mencetak dokumen
 
 # Untranslated:
+#&All selected pages
 #&Back\tAlt+Left Arrow
 #&Copy Selection\tCtrl-C
 #&Don't ask me again
+#&Even pages only
 #&Find what:
+#&Fit pages to printable area
 #&Match case
+#&Odd pages only
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #(of %d)
 #Advanced
 #Associate with PDF files?
@@ -342,8 +347,10 @@ mencetak dokumen
 #P&roperties\tCtrl-D
 #PDF Producer:
 #Page number %u inexistant
+#Page scaling
 #Please wait - rendering...
 #Pr&int with Adobe Reader...
+#Print range
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button

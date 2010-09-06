@@ -14,6 +14,8 @@
 #define IDD_DIALOG_SETTINGS             136
 #define IDD_DIALOG_FIND                 137
 #define IDD_DIALOG_CUSTOM_ZOOM          138
+#define IDD_PROPSHEET_PRINT_ADVANCED    139
+
 #define IDM_OPEN                        400
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
@@ -176,6 +178,13 @@
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
 #define IDC_PDF_TOC_TREE_TITLE          1043
+#define IDC_SECTION_PRINT_RANGE         1050
+#define IDC_PRINT_RANGE_ALL             1051
+#define IDC_PRINT_RANGE_EVEN            1052
+#define IDC_PRINT_RANGE_ODD             1053
+#define IDC_SECTION_PRINT_SCALE         1060
+#define IDC_PRINT_SCALE_SHRINK          1061
+#define IDC_PRINT_SCALE_FIT             1062
 #define IDB_TOOLBAR                     2000
 #define IDB_CLOSE_TOC                   2007
 #define IDT_FILE_NEW                    3000

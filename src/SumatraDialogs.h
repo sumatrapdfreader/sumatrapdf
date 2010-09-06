@@ -29,4 +29,14 @@ int     Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);
 int     Dialog_CustomZoom(HWND hwnd, double *currZoom);
 int     Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
 
+enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };
+enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };
+
+typedef struct {
+    enum PrintRangeAdv range;
+    enum PrintScaleAdv scale;
+} Print_Advanced_Data;
+
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data *data);
+
 #endif

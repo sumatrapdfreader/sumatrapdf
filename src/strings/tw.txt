@@ -445,12 +445,19 @@ printing document
 文件列印中
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
 #&No
+#&Odd pages only
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #&Yes
 #(of %d)
 #Attachment: %s
 #Bookmarks
 #No result found around line %u in file %s
+#Page scaling
+#Print range
 #Searching %d of %d...
 

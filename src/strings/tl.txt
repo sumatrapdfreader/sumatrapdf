@@ -352,12 +352,17 @@ Paliitin/Lumayo
 [May napansing pagbabago; nagre-refresh] %s
 
 # Untranslated:
+#&All selected pages
 #&Copy Selection\tCtrl-C
+#&Even pages only
+#&Fit pages to printable area
 #&Magnification:
 #&Match case
+#&Odd pages only
 #&Print... (denied)
 #&Remember the password for this document
 #&Remember these settings for each document
+#&Shrink pages to printable area (if necessary)
 #Advanced
 #Attachment: %s
 #Automatically check for &updates
@@ -378,7 +383,9 @@ Paliitin/Lumayo
 #No synchronization info at this position
 #P&roperties\tCtrl-D
 #PDF documents
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point

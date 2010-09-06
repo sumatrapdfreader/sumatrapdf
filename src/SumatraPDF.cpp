@@ -3961,7 +3961,11 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 
 // TODO: make it run in a background thread by constructing new PdfEngine()
 // from a file name - this should be thread safe
-static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPageRanges, LPPRINTPAGERANGE pr, SelectionOnPage *sel=NULL) {
+static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
+                          int nPageRanges, LPPRINTPAGERANGE pr,
+                          enum PrintRangeAdv rangeAdv=PrintRangeAll,
+                          enum PrintScaleAdv scaleAdv=PrintScaleShrink,
+                          SelectionOnPage *sel=NULL) {
 
     assert(dm);
     if (!dm) return;
@@ -4012,6 +4016,10 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
             SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
             double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
+            if (PrintScaleShrink == scaleAdv)
+                // try to use correct zoom values (scale down to fit the physical page, though)
+                zoom = min(dpiFactor, zoom);
+
             RenderedBitmap *bmp = dm->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
             if (bmp) {
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
@@ -4028,6 +4036,10 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
 
         assert(pr->nFromPage <= pr->nToPage);
         for (DWORD pageNo = pr->nFromPage; pageNo <= pr->nToPage; pageNo++) {
+            if ((PrintRangeEven == rangeAdv && pageNo % 2 != 0) ||
+                (PrintRangeOdd == rangeAdv && pageNo % 2 == 0))
+                continue;
+
             DBG_OUT(" printing:  drawing bitmap for page %d\n", pageNo);
 
             StartPage(hdc);
@@ -4049,8 +4061,11 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode, int nPag
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
 
-            // try to use correct zoom values (scale down to fit the physical page, though)
-            double zoom = min(dpiFactor, min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy()));
+            double zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
+            if (PrintScaleShrink == scaleAdv)
+                // try to use correct zoom values (scale down to fit the physical page, though)
+                zoom = min(dpiFactor, zoom);
+
 #ifdef USE_GDI_FOR_PRINTING
             RECT rc;
             rc.left = (printAreaWidth - pSize.dx() * zoom) / 2;
@@ -4181,6 +4196,12 @@ static void OnMenuPrint(WindowInfo *win)
     pd.nStartPage = START_PAGE_GENERAL;
     pd.lpCallback = new ApplyButtonDiablingCallback();
 
+    // TODO: remember these (and maybe all of PRINTDLGEX) at least for this document/WindowInfo?
+    Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
+    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(ghinst, &advanced);
+    pd.lphPropertyPages = &hPsp;
+    pd.nPropertyPages = 1;
+
     if (PrintDlgEx(&pd) == S_OK) {
         if (pd.dwResultAction==PD_RESULT_PRINT) {
             if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
@@ -4198,7 +4219,8 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nFromPage=1;
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
-                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges, win->selectionOnPage);
+                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges,
+                              advanced.range, advanced.scale, win->selectionOnPage);
             }
         }
     }

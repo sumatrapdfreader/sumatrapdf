@@ -205,20 +205,25 @@ Zoom Out
 छोटा करें
 
 # Untranslated:
+#&All selected pages
 #&Back\tAlt+Left Arrow
 #&Copy Selection\tCtrl-C
+#&Even pages only
 #&Find what:
+#&Fit pages to printable area
 #&Go to page:
 #&Magnification:
 #&Match case
 #&No
 #&No, thanks
+#&Odd pages only
 #&Options...
 #&Password:
 #&Print... (denied)
 #&Remember the password for this document
 #&Remember these settings for each document
 #&Settings
+#&Shrink pages to printable area (if necessary)
 #&Yes
 #(of %d)
 #Advanced
@@ -269,8 +274,10 @@ Zoom Out
 #PDF documents
 #Page Size:
 #Page number %u inexistant
+#Page scaling
 #Please wait - rendering...
 #Pr&int with Adobe Reader...
+#Print range
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button

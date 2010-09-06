@@ -440,14 +440,21 @@ printing document
 prebieha tlač dokumentu
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
 #&Go to page:
+#&Odd pages only
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Couldn't initialize printer
 #No synchronization file found
 #No synchronization info at this position
+#Page scaling
+#Print range
 #Source file %s has no synchronization point
 #Synchronization file cannot be opened
 

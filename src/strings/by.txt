@@ -334,12 +334,17 @@ Zoom Out
 [Выяўлены змены; адбываецца абнаўленне] %s
 
 # Untranslated:
+#&All selected pages
 #&Back\tAlt+Left Arrow
 #&Copy Selection\tCtrl-C
+#&Even pages only
+#&Fit pages to printable area
 #&Magnification:
 #&Manual
+#&Odd pages only
 #&Print... (denied)
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Application:
 #Attachment: %s
 #Author:
@@ -368,7 +373,9 @@ Zoom Out
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Show &pages continuously

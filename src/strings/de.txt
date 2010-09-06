@@ -17,6 +17,9 @@ Contributor: Andreas Hopp (teraflop@arcor.de)
 &Actual Size\tCtrl-1
 &Tatsächliche Größe\tStrg+1
 
+&All selected pages
+&Alle angegebenen Seiten
+
 &Back\tAlt+Left Arrow
 &Zurück\tAlt+<-
 
@@ -29,6 +32,9 @@ Auswahl &kopieren\tStrg+C
 &Don't ask me again
 Nicht &wieder fragen.
 
+&Even pages only
+Nur &gerade Seiten
+
 &File
 &Datei
 
@@ -37,6 +43,9 @@ Nicht &wieder fragen.
 
 &First Page\tHome
 &Erste Seite\tPos1
+
+&Fit pages to printable area
+Seiten in Druckbereich &einpassen
 
 &Go To
 &Gehe zu
@@ -68,6 +77,9 @@ Nicht &wieder fragen.
 &No, thanks
 &Nein danke
 
+&Odd pages only
+Nur &ungerade Seiten
+
 &Open\tCtrl-O
 Ö&ffnen…\tStrg+O
 
@@ -97,6 +109,9 @@ Speichern &unter…\tStrg+S
 
 &Settings
 &Einstellungen
+
+&Shrink pages to printable area (if necessary)
+Seiten auf Druckbereich &verkleinern (falls nötig)
 
 &Skip this version
 &Diese Version überspringen.
@@ -359,6 +374,9 @@ Seitengröße:
 Page number %u inexistant
 Seite %u nicht vorhanden
 
+Page scaling
+Druckbereich
+
 Page:
 Seite:
 
@@ -370,6 +388,9 @@ Mit Adobe Reader d&rucken…
 
 Previous Page
 &Vorherige Seite
+
+Print range
+Anpassen der Seitengröße
 
 Printing problem.
 Druckerproblem

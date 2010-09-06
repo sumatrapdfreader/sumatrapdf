@@ -748,3 +748,67 @@ int Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
     int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_SETTINGS), hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
     return dialogResult;
 }
+
+static BOOL CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    Print_Advanced_Data *data;
+
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        data = (Print_Advanced_Data *)((PROPSHEETPAGE *)lParam)->lParam;
+        assert(data);
+        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+
+        SetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, _TR("Print range"));
+        SetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, _TR("&All selected pages"));
+        SetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, _TR("&Even pages only"));
+        SetDlgItemText(hDlg, IDC_PRINT_RANGE_ODD, _TR("&Odd pages only"));
+        SetDlgItemText(hDlg, IDC_SECTION_PRINT_SCALE, _TR("Page scaling"));
+        SetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, _TR("&Shrink pages to printable area (if necessary)"));
+        SetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, _TR("&Fit pages to printable area"));
+
+        CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
+            data->range == PrintRangeEven ? IDC_PRINT_RANGE_EVEN :
+            data->range == PrintRangeOdd ? IDC_PRINT_RANGE_ODD : IDC_PRINT_RANGE_ALL);
+        CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_FIT,
+            data->scale == PrintScaleFit ? IDC_PRINT_SCALE_FIT : IDC_PRINT_SCALE_SHRINK);
+
+        return FALSE;
+
+    case WM_NOTIFY:
+        if (((LPNMHDR)lParam)->code == PSN_APPLY) {
+            data = (Print_Advanced_Data *)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            assert(data);
+            if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN))
+                data->range = PrintRangeEven;
+            else if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_ODD))
+                data->range = PrintRangeOdd;
+            else
+                data->range = PrintRangeAll;
+            if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT))
+                data->scale = PrintScaleFit;
+            else
+                data->scale = PrintScaleShrink;
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(HINSTANCE hInst, Print_Advanced_Data *data)
+{
+    PROPSHEETPAGE psp;
+    ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_USETITLE | PSP_PREMATURE;
+    psp.hInstance = hInst;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPSHEET_PRINT_ADVANCED);
+    psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
+    psp.lParam = (LPARAM)data;
+    psp.pszTitle = _TR("Advanced");
+
+    return CreatePropertySheetPage(&psp);
+}

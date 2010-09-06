@@ -442,12 +442,19 @@ Factor de zoom
 [S'han detectat canvis; actualitzant] %s
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
 #&Print... (denied)
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
 #Denied Permissions:
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Subject:
 #copying text
 #printing document

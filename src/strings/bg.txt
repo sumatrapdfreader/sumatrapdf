@@ -381,8 +381,13 @@ Zoom factor
 [Намерени са промени; обновявам] %s
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
 #&Print... (denied)
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Application:
 #Attachment: %s
 #Author:
@@ -403,7 +408,9 @@ Zoom factor
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Send by &E-mail...
 #Subject:
 #Text documents

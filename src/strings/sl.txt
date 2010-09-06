@@ -367,9 +367,14 @@ Faktor povečave
 [Spremembe zaznane; osvežitev poteka] %s
 
 # Untranslated:
+#&All selected pages
 #&Back\tAlt+Left Arrow
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
 #&Print... (denied)
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Application:
 #Attachment: %s
 #Author:
@@ -393,7 +398,9 @@ Faktor povečave
 #PDF Producer:
 #PDF Version:
 #Page Size:
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Send by &E-mail...
 #Show &pages continuously
 #Subject:

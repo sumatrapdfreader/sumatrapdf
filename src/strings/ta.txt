@@ -451,10 +451,17 @@ printing document
 கோப்பு அக்சிடப்படுகிறது
 
 # Untranslated:
+#&All selected pages
+#&Even pages only
+#&Fit pages to printable area
+#&Odd pages only
 #&Remember the password for this document
+#&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
+#Page scaling
 #Pr&int with Adobe Reader...
+#Print range
 #Set inverse search command-line
 
