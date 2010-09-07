@@ -61,8 +61,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     
     assert(pixmap->n == 4);
     
-    bmi = (BITMAPINFO *)malloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    memzero(bmi, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    bmi = (BITMAPINFO *)zmalloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
     
     if (paletted)
     {
@@ -147,15 +146,12 @@ void fz_pixmaptodc(HDC hDC, fz_pixmap *pixmap, fz_rect *dest)
 
 pdf_outline *pdf_newoutline(char *title, fz_obj *dest)
 {
-    pdf_outline *node = (pdf_outline *)fz_malloc(sizeof(pdf_outline));
-    memzero(node, sizeof(pdf_outline));
+    pdf_outline *node = (pdf_outline *)zmalloc(sizeof(pdf_outline));
     node->title = title;
 
     fz_obj *type = fz_dictgets(dest, "Type");
     if (fz_isname(type) && !strcmp(fz_toname(type), "Filespec")) {
-        node->link = (pdf_link *)fz_malloc(sizeof(pdf_link));
-        memzero(node->link, sizeof(pdf_link));
-
+        node->link = (pdf_link *)zmalloc(sizeof(pdf_link));
         node->link->kind = PDF_LLAUNCH;
         node->link->dest = fz_keepobj(dest);
     }
@@ -788,7 +784,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             char *uri = tstr_to_utf8(start);
             char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
             fz_obj *dest = fz_newstring(httpUri, strlen(httpUri));
-            pdf_link *link = (pdf_link *)malloc(sizeof(pdf_link));
+            pdf_link *link = (pdf_link *)zmalloc(sizeof(pdf_link));
             link->kind = PDF_LURI;
             link->rect = bbox;
             link->dest = dest;
@@ -847,7 +843,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
         dest += MultiByteToWideChar(CP_ACP, 0, lineSep, -1, dest, lineSepLen + 1);
 #endif
         if (destRect) {
-            memzero(destRect, lineSepLen * sizeof(fz_bbox));
+            ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
             destRect += lineSepLen;
         }
     }

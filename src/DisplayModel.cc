@@ -46,7 +46,6 @@
 #include "SumatraPDF.h"
 #include "DisplayModel.h"
 #include "tstr_util.h"
-#include "strlist_util.h"
 
 #include <assert.h>
 #include <math.h>
@@ -1668,16 +1667,12 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 /* extract all text from the document (caller needs to free() the result) */
 TCHAR *DisplayModel::extractAllText(void)
 {
-    TStrList *pages = NULL;
+    VStrList pages;
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
-        TStrList_InsertAndOwn(&pages, pdfEngine->ExtractPageText(pageNo));
+        pages.push_back(pdfEngine->ExtractPageText(pageNo));
 
-    TStrList_Reverse(&pages);
-    TCHAR *content = TStrList_Join(pages, NULL);
-    TStrList_Destroy(&pages);
-
-    return content;
+    return pages.join();
 }
 
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)

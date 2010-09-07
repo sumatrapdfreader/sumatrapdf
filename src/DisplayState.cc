@@ -74,7 +74,7 @@ bool DisplayModeEnumFromName(const char *txt, DisplayMode *resOut)
 
 void DisplayState_Init(DisplayState *ds)
 {
-    memzero(ds, sizeof(DisplayState));
+    ZeroMemory(ds, sizeof(DisplayState));
     ds->displayMode = DM_AUTOMATIC;
     ds->pageNo = 1;
     ds->zoomVirtual = 100.0;

@@ -72,7 +72,7 @@ SUMATRA_MANIFEST = $(O)\sumtrapdf.manifest.res
 
 BASEUTILS_OBJS = \
 	$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj $(O)\geom_util.obj \
-	$(O)\str_util.obj $(O)\strlist_util.obj $(O)\win_util.obj $(O)\WinUtil.obj $(O)\wstr_util.obj \
+	$(O)\str_util.obj $(O)\win_util.obj $(O)\WinUtil.obj $(O)\wstr_util.obj \
 	$(O)\dialogsizer_set.obj
 
 SUMATRA_OBJS = \

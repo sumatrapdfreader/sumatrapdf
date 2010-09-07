@@ -37,11 +37,10 @@ etc...
 FileHistoryList *FileHistoryList_Node_Create(void)
 {
     FileHistoryList *node;
-    node = (FileHistoryList*)malloc(sizeof(FileHistoryList));
+    node = (FileHistoryList*)zmalloc(sizeof(FileHistoryList));
     if (!node)
         return NULL;
 
-    memzero(node, sizeof(node));
     DisplayState_Init(&(node->state));
     node->menuId = INVALID_MENU_ID;
     return node;

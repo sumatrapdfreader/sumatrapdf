@@ -58,7 +58,6 @@
 #include "file_util.h"
 #include "geom_util.h"
 #include "str_strsafe.h"
-#include "strlist_util.h"
 #include "win_util.h"
 #include "tstr_util.h"
 #include "Http.h"
@@ -193,8 +192,8 @@ public:
         showSelection = false;
         showForwardSearchMark = false;
         mouseAction = MA_IDLE;
-        memzero(&animState, sizeof(animState));
-        memzero(&selectionRect, sizeof(selectionRect));
+        ZeroMemory(&animState, sizeof(animState));
+        ZeroMemory(&selectionRect, sizeof(selectionRect));
         fwdsearchmarkRects.clear();
         needrefresh = false;
         pdfsync = NULL;
@@ -341,6 +340,48 @@ public:
     virtual bool FindUpdateStatus(int count, int total);
     void FocusPageNoEdit();
 
+};
+
+class VStrList : public vector<TCHAR *>
+{
+public:
+    ~VStrList() { clearFree(); }
+
+    TCHAR *join(TCHAR *joint=NULL)
+    {
+        int len = 0;
+        int jointLen = joint ? lstrlen(joint) : 0;
+        TCHAR *result, *tmp;
+
+        for (size_t i = size(); i > 0; i--)
+            len += lstrlen(operator[](i - 1)) + jointLen;
+        len -= jointLen;
+        if (len <= 0)
+            return tstr_dup(_T(""));
+
+        result = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+        if (!result)
+            return NULL;
+
+        tmp = result;
+        for (size_t i = 0; i < size(); i++) {
+            if (jointLen > 0 && i > 0) {
+                lstrcpy(tmp, joint);
+                tmp += jointLen;
+            }
+            lstrcpy(tmp, operator[](i));
+            tmp += lstrlen(operator[](i));
+        }
+
+        return result;
+    }
+
+    void clearFree()
+    {
+        for (size_t i = 0; i < size(); i++)
+            free(operator[](i));
+        clear();
+    }
 };
 
 WindowInfo* WindowInfo_FindByHwnd(HWND hwnd);

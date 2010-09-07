@@ -21,7 +21,7 @@ public:
 
     FileWatcher() {
         hDir = NULL;
-        memzero(&this->overl, sizeof(this->overl));
+        ZeroMemory(&this->overl, sizeof(this->overl));
         curBuffer = 0;
         pszFilename = NULL;
         hWatchingThread = NULL;

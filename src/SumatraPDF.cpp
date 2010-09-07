@@ -3307,13 +3307,10 @@ static void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
 
     if (win->dm->pdfEngine->hasPermission(PDF_PERM_COPY)) {
-        TStrList *selections = NULL;
+        VStrList selections;
         for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next)
-            TStrList_InsertAndOwn(&selections, win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
-
-        TStrList_Reverse(&selections);
-        TCHAR *selText = TStrList_Join(selections, NULL);
-        TStrList_Destroy(&selections);
+            selections.push_back(win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
+        TCHAR *selText = selections.join();
 
         EmptyClipboard();
         HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(selText) + 1) * sizeof(TCHAR));
@@ -5788,18 +5785,16 @@ static void Find(WindowInfo *win, PdfSearchDirection direction)
 {
     WindowInfo_AbortFinding(win);
 
-    FindThreadData *ftd = (FindThreadData *)malloc(sizeof(FindThreadData));
-    ftd->win = win;
-    ftd->direction = direction;
-    GetWindowText(win->hwndFindBox, ftd->text, dimof(ftd->text));
-    ftd->wasModified = Edit_GetModify(win->hwndFindBox);
+    FindThreadData ftd;
+    ftd.win = win;
+    ftd.direction = direction;
+    GetWindowText(win->hwndFindBox, ftd.text, dimof(ftd.text));
+    ftd.wasModified = Edit_GetModify(win->hwndFindBox);
     Edit_SetModify(win->hwndFindBox, FALSE);
 
-    bool hasText = lstrlen(ftd->text) > 0;
+    bool hasText = lstrlen(ftd.text) > 0;
     if (hasText)
-        win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
-    else
-        free(ftd);
+        win->findThread = CreateThread(NULL, 0, FindThread, _memdup(&ftd), 0, 0);
 }
 
 static WNDPROC DefWndProcToolbar = NULL;
@@ -7314,39 +7309,18 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static TStrList *TStrList_FromCmdLine(TCHAR *cmdLine, bool addExe=false)
+static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
 {
-    TCHAR *      exePath;
-    TStrList *   strList = NULL;
-    TCHAR *      txt;
-
-    assert(cmdLine);
-
-    if (!cmdLine)
-        return NULL;
-
-    if (addExe)
-    {
-        exePath = ExePathGet();
-        if (!exePath)
-            return NULL;
-        if (!TStrList_InsertAndOwn(&strList, exePath)) {
-            free((void*)exePath);
-            return NULL;
-        }
-    }
+    assert(strList && cmdLine);
+    if (!strList || !cmdLine)
+        return;
 
     for (;;) {
-        txt = tstr_parse_possibly_quoted(&cmdLine);
+        TCHAR *txt = tstr_parse_possibly_quoted(&cmdLine);
         if (!txt)
             break;
-        if (!TStrList_InsertAndOwn(&strList, txt)) {
-            free((void*)txt);
-            break;
-        }
+        strList->push_back(txt);
     }
-    TStrList_Reverse(&strList);
-    return strList;
 }
 
 static void u_DoAllTests(void)
@@ -7558,7 +7532,7 @@ static void EnumeratePrinters()
     if (!fOk) {
         info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
         fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
-        5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
+            5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
     if (!info5Arr)
         return;
@@ -7594,7 +7568,7 @@ TCHAR *GetDefaultPrinterName()
     return NULL;
 }
 
-#define is_arg(txt) tstr_ieq(_T(txt), currArg->str)
+#define is_arg(txt) tstr_ieq(_T(txt), argListRoot[i])
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
 static void ParseColor(int *destColor, const TCHAR* txt)
@@ -7741,8 +7715,8 @@ typedef BOOL (WINAPI *procSetProcessDPIAware)(VOID);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    TStrList *          argListRoot;
-    TStrList *          fileNames = NULL;
+    VStrList            argListRoot;
+    VStrList            fileNames;
     TCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
@@ -7753,7 +7727,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     bool                enterPresentation = false;
     TCHAR *             destName = NULL;
     int                 pageNumber = 0;
-    TCHAR *             cmdLine;
     bool                firstDocLoaded = false;
 #ifdef BUILD_RM_VERSION
     bool                deleteFilesOnClose = false; // Delete the files which were passed into the program by command line.
@@ -7789,11 +7762,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     SerializableGlobalPrefs_Init();
 
-    cmdLine  = GetCommandLine();
-    argListRoot = TStrList_FromCmdLine(cmdLine);
-    assert(argListRoot);
-    if (!argListRoot)
-        return 0;
+    VStrList_FromCmdLine(&argListRoot, GetCommandLine());
 
 #ifndef BUILD_RM_VERSION
     bool prefsLoaded = Prefs_Load();
@@ -7816,7 +7785,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     bool reuse_instance = false;
     TCHAR *printerName = NULL;
     TCHAR *newWindowTitle = NULL;
-    for (TStrList *currArg = argListRoot->next; currArg; currArg = currArg->next) {
+    size_t argCount = argListRoot.size();
+    for (size_t i = 1; i < argCount; i++) {
         if (is_arg("-register-for-pdf")) {
             AssociateExeWithPdfExtension();
             return 0;
@@ -7826,13 +7796,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             /* this is for testing only, exit immediately */
             goto Exit;
         }
-        else if (is_arg("-bench") && currArg->next) {
-            currArg = currArg->next;
-            gBenchFileName = tstr_dup(currArg->str);
-            if (currArg->next) {
-                currArg = currArg->next;
-                benchPageNumStr = tstr_dup(currArg->str);
-            }
+        else if (is_arg("-bench") && ++i < argCount) {
+            gBenchFileName = tstr_dup(argListRoot[i]);
+            if (++i < argCount)
+                benchPageNumStr = tstr_dup(argListRoot[i]);
             break;
         }
         else if (is_arg("-exit-on-print")) {
@@ -7841,33 +7808,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-print-to-default")) {
             printToDefaultPrinter = true;
         }
-        else if (is_arg("-print-to") && currArg->next) {
-            currArg = currArg->next;
-            printerName = tstr_dup(currArg->str);
+        else if (is_arg("-print-to") && ++i < argCount) {
+            printerName = tstr_dup(argListRoot[i]);
         }
         else if (is_arg("-print-dialog")) {
             printDialog = true;
         }
-        else if (is_arg("-bgcolor") && currArg->next) {
-            currArg = currArg->next;
-            ParseColor(&gGlobalPrefs.m_bgColor, currArg->str);
+        else if (is_arg("-bgcolor") && ++i < argCount) {
+            ParseColor(&gGlobalPrefs.m_bgColor, argListRoot[i]);
         }
-        else if (is_arg("-inverse-search") && currArg->next) {
-            currArg = currArg->next;
+        else if (is_arg("-inverse-search") && ++i < argCount) {
             free(gGlobalPrefs.m_inverseSearchCmdLine);
-            gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(currArg->str);
+            gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(argListRoot[i]);
         }
-        else if (is_arg("-fwdsearch-offset") && currArg->next) {
-            currArg = currArg->next;
-            gGlobalPrefs.m_fwdsearchOffset = _ttoi(currArg->str);
+        else if (is_arg("-fwdsearch-offset") && ++i < argCount) {
+            gGlobalPrefs.m_fwdsearchOffset = _ttoi(argListRoot[i]);
         }
-        else if (is_arg("-fwdsearch-width") && currArg->next) {
-            currArg = currArg->next;
-            gGlobalPrefs.m_fwdsearchWidth = _ttoi(currArg->str);
+        else if (is_arg("-fwdsearch-width") && ++i < argCount) {
+            gGlobalPrefs.m_fwdsearchWidth = _ttoi(argListRoot[i]);
         }
-        else if (is_arg("-fwdsearch-color") && currArg->next) {
-            currArg = currArg->next;
-            ParseColor(&gGlobalPrefs.m_fwdsearchColor, currArg->str);
+        else if (is_arg("-fwdsearch-color") && ++i < argCount) {
+            ParseColor(&gGlobalPrefs.m_fwdsearchColor, argListRoot[i]);
         }
         else if (is_arg("-esc-to-exit")) {
             gGlobalPrefs.m_escToExit = TRUE;
@@ -7880,26 +7841,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             // in another process
             reuse_instance = FindWindow(FRAME_CLASS_NAME, 0) != NULL;
         }
-        else if (is_arg("-lang") && currArg->next) {
-            currArg = currArg->next;
-            char * s = tstr_to_multibyte(currArg->str, CP_ACP);
+        else if (is_arg("-lang") && ++i < argCount) {
+            char *s = tstr_to_multibyte(argListRoot[i], CP_ACP);
             CurrLangNameSet(s);
             free(s);
         }
-        else if (is_arg("-nameddest") && currArg->next) {
-            currArg = currArg->next;
-            destName = tstr_dup(currArg->str);
+        else if (is_arg("-nameddest") && ++i < argCount) {
+            destName = tstr_dup(argListRoot[i]);
         }
-        else if (is_arg("-page") && currArg->next) {
-            currArg = currArg->next;
-            pageNumber = _ttoi(currArg->str);
+        else if (is_arg("-page") && ++i < argCount) {
+            pageNumber = _ttoi(argListRoot[i]);
         }
         else if (is_arg("-restrict")) {
             gRestrictedUse = true;
         }
-        else if (is_arg("-title") && currArg->next) {
-            currArg = currArg->next;
-            newWindowTitle = tstr_dup(currArg->str); 
+        else if (is_arg("-title") && ++i < argCount) {
+            newWindowTitle = tstr_dup(argListRoot[i]); 
         }
         else if (is_arg("-invertcolors")) {
             gGlobalPrefs.m_invertColors = TRUE;
@@ -7919,11 +7876,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
         else {
             // Remember this argument as a filename to open
-            TStrList_InsertAndOwn(&fileNames, tstr_dup(currArg->str));
+            fileNames.push_back(tstr_dup(argListRoot[i]));
         }
     }
-    TStrList_Destroy(&argListRoot);
-    TStrList_Reverse(&fileNames);
+    argListRoot.clearFree();
 
     if (benchPageNumStr) {
         gBenchPageNum = _ttoi(benchPageNumStr);
@@ -7949,11 +7905,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (win && WS_SHOWING_PDF == win->state)
             firstDocLoaded = true;
     } else {
-        for (TStrList *currArg = fileNames; currArg; currArg = currArg->next) {
+        for (size_t i = 0; i < fileNames.size(); i++) {
             if (reuse_instance) {
                 // delegate file opening to a previously running instance by sending a DDE message 
                 TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
-                GetFullPathName(currArg->str, dimof(fullpath), fullpath, NULL);
+                GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
                 wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
                 if (destName && !firstDocLoaded) {
@@ -7967,7 +7923,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             }
             else {
                 bool showWin = !exitOnPrint;
-                win = LoadPdf(currArg->str, NULL, showWin, newWindowTitle);
+                win = LoadPdf(fileNames[i], NULL, showWin, newWindowTitle);
                 if (!win)
                     goto Exit;
                 if (WS_SHOWING_PDF != win->state) {
@@ -8103,10 +8059,10 @@ Exit:
     {
         // Delete the files which where passed to the command line.
         // This only really makes sense if we are in restricted use.
-        for (TStrList *currArg = fileNames; currArg; currArg = currArg->next)
+        for (size_t i = 0; i < fileNames.size(); i++)
         {
             TCHAR fullpath[MAX_PATH];
-            GetFullPathName(currArg->str, dimof(fullpath), fullpath, NULL);
+            GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
 
             int error = DeleteFile(fullpath);
 
@@ -8123,7 +8079,6 @@ Exit:
         }
     }
 #endif // BUILD_RM_VERSION
-    TStrList_Destroy(&fileNames);
 
     CoUninitialize();
 

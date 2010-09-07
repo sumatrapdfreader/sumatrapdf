@@ -223,19 +223,17 @@ static TCHAR *FormatPdfPageSize(double width, double height) {
 // returns a list of permissions denied by this document (NULL if everything's permitted)
 // Caller needs to free the result
 static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
-    TStrList *denials = NULL;
+    VStrList denials;
+
     if (!pdfEngine->hasPermission(PDF_PERM_PRINT))
-        TStrList_Insert(&denials, (TCHAR *)_TR("printing document"));
+        denials.push_back(tstr_dup(_TR("printing document")));
     if (!pdfEngine->hasPermission(PDF_PERM_COPY))
-        TStrList_Insert(&denials, (TCHAR *)_TR("copying text"));
+        denials.push_back(tstr_dup(_TR("copying text")));
 
-    TStrList_Reverse(&denials);
-    TCHAR *denialList = TStrList_Join(denials, _T(", "));
-    TStrList_Destroy(&denials);
-
-    if (!*denialList) {
+    TCHAR *denialList = denials.join(_T(", "));
+    if (denialList && !*denialList) {
         free(denialList);
-        return NULL;
+        denialList = NULL;
     }
 
     return denialList;
