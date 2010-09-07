@@ -583,7 +583,8 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *c
             zoom = min(1.0 * (pageRect->right - pageRect->left) / (page->mediabox.x1 - page->mediabox.x0),
                        1.0 * (pageRect->bottom - pageRect->top) / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
-        ctm2 = fz_concat(ctm2, fz_translate(pageRect->left, pageRect->top));
+        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, page->mediabox));
+        ctm2 = fz_concat(ctm2, fz_translate(-bbox.x0, -bbox.y0));
         ctm = &ctm2;
     }
 
