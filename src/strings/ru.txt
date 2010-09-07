@@ -16,6 +16,9 @@ Contributor: Victor Kozyakin
 &Actual Size\tCtrl-1
 Реальный размер\tCtrl-1
 
+&All selected pages
+Все выбранные страницы
+
 &Back\tAlt+Left Arrow
 Назад\tAlt+<-
 
@@ -28,6 +31,9 @@ Contributor: Victor Kozyakin
 &Don't ask me again
 Больше не спрашивать
 
+&Even pages only
+Только четные страницы
+
 &File
 Файл
 
@@ -36,6 +42,9 @@ Contributor: Victor Kozyakin
 
 &First Page\tHome
 Первая страница\tHome
+
+&Fit pages to printable area
+Подогнать страницы под область печати
 
 &Go To
 Переход
@@ -67,6 +76,9 @@ Contributor: Victor Kozyakin
 &No, thanks
 Нет, спасибо
 
+&Odd pages only
+Только нечетные страницы
+
 &Open\tCtrl-O
 Открыть\tCtrl-O
 
@@ -96,6 +108,9 @@ Contributor: Victor Kozyakin
 
 &Settings
 Настройки
+
+&Shrink pages to printable area (if necessary)
+Уменьшить страницы до области печати (если нужно)
 
 &Skip this version
 Пропустить эту версию.
@@ -358,6 +373,9 @@ Page Size:
 Page number %u inexistant
 Страница %u не существует
 
+Page scaling
+Масштабирование страниц
+
 Page:
 Страница:
 
@@ -369,6 +387,9 @@ Pr&int with Adobe Reader...
 
 Previous Page
 Предыдущая страница
+
+Print range
+Диапазон печати
 
 Printing problem.
 Ошибка при печати.
@@ -468,13 +489,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Shrink pages to printable area (if necessary)
-#Page scaling
-#Print range
 
