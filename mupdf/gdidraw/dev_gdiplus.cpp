@@ -28,7 +28,7 @@ class userData
 	int clipCount;
 public:
 	Graphics *graphics;
-	fz_glyphcache *cache;
+	fz_device *dev;
 
 	userData(HDC hDC)
 	{
@@ -38,8 +38,9 @@ public:
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
 		graphics->SetPageScale(72.0 / graphics->GetDpiY());
 		graphics->SetCompositingMode(CompositingModeSourceOver);
+		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
 		
-		cache = NULL;
+		dev = NULL;
 		clipCount = 0;
 		clipAlpha[clipCount] = 1.0;
 	}
@@ -47,8 +48,6 @@ public:
 	~userData()
 	{
 		delete graphics;
-		if (cache)
-			fz_freeglyphcache(cache);
 		assert(clipCount == 0);
 	}
 
@@ -432,27 +431,19 @@ static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	// TODO: the first scan line doesn't seem to be drawn for most/all Type 3 glyphs
-	userData *data = (userData *)user;
-	if (!data->cache)
-		data->cache = fz_newglyphcache();
-	
-	float res = fz_matrixexpansion(ctm) * 3;
-	fz_matrix size = fz_concat(fz_scale(res, res), text->trm);
-	float fontSize = fz_matrixexpansion(size);
-	ctm = fz_concat(fz_scale(1, -1), ctm);
+	fz_font *font = text->font;
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		fz_pixmap *glyph = fz_renderglyph(data->cache, text->font, text->els[i].gid, size);
+		int gid = text->els[i].gid;
+		if (gid < 0 || gid > 255 || !font->t3procs[gid])
+			continue;
 		
-		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
-		ctm2 = fz_concat(fz_translate(-glyph->x / res, -(glyph->y + glyph->h) / res), ctm2);
+		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, text->els[i].y), ctm);
 		ctm2 = fz_concat(text->trm, ctm2);
-		ctm2 = fz_concat(fz_scale(glyph->w / fontSize, glyph->h / fontSize), ctm2);
+		ctm2 = fz_concat(font->t3matrix, ctm2);
 		
-		fz_gdiplusfillimagemask(user, glyph, ctm2, colorspace, color, alpha);
-		fz_droppixmap(glyph);
+		font->t3run((pdf_xref_s *)font->t3xref, font->t3resources, font->t3procs[gid], ((userData *)user)->dev, ctm2);
 	}
 }
 
@@ -686,6 +677,7 @@ fz_newgdiplusdevice(HDC hDC)
 	}
 	
 	fz_device *dev = fz_newdevice(new userData(hDC));
+	((userData *)dev->user)->dev = dev;
 	dev->freeuser = fz_gdiplusfreeuser;
 	
 	dev->fillpath = fz_gdiplusfillpath;
