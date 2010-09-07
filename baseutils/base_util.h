@@ -108,6 +108,8 @@ void        swap_double(double *one, double *two);
 
 void        memzero(void *data, size_t len);
 void *      zmalloc(size_t size);
+void *      memdup(void *data, size_t len);
+#define     _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
 void        sleep_milliseconds(int milliseconds);
 

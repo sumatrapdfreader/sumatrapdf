@@ -29,6 +29,14 @@ void *zmalloc(size_t len)
     return data;
 }
 
+void *memdup(void *data, size_t len)
+{
+    void *dup = malloc(len);
+    if (dup)
+        memcpy(dup, data, len);
+    return dup;
+}
+
 /* TODO: probably should move to some other file */
 void sleep_milliseconds(int milliseconds)
 {

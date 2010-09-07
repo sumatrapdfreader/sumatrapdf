@@ -3372,30 +3372,29 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
 
     for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
         PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-        if (!pageInfo->visible)
-            continue;
-        assert(pageInfo->shown);
+        assert(!pageInfo->visible || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
-        pageOnScreen.x = pageInfo->screenX;
-        pageOnScreen.y = pageInfo->screenY;
-        pageOnScreen.dx = pageInfo->bitmapDx;
-        pageOnScreen.dy = pageInfo->bitmapDy;
+        pageOnScreen.x = pageInfo->screenX - pageInfo->bitmapX;
+        pageOnScreen.y = pageInfo->screenY - pageInfo->bitmapY;
+        pageOnScreen.dx = pageInfo->currDx;
+        pageOnScreen.dy = pageInfo->currDy;
 
         if (!RectI_Intersect(&win->selectionRect, &pageOnScreen, &intersect))
             continue;
 
         /* selection intersects with a page <pageNo> on the screen */
-        SelectionOnPage *selOnPage = (SelectionOnPage*)malloc(sizeof(SelectionOnPage));
-        RectD_FromRectI(&selOnPage->selectionPage, &intersect);
+        SelectionOnPage selOnPage = { 0 };
+        RectD_FromRectI(&selOnPage.selectionPage, &intersect);
 
-        win->dm->rectCvtScreenToUser (&selOnPage->pageNo, &selOnPage->selectionPage);
+        if (!win->dm->rectCvtScreenToUser(&selOnPage.pageNo, &selOnPage.selectionPage))
+            continue;
 
-        assert (pageNo == selOnPage->pageNo);
+        assert (pageNo == selOnPage.pageNo);
 
-        selOnPage->next = win->selectionOnPage;
-        win->selectionOnPage = selOnPage;
+        selOnPage.next = win->selectionOnPage;
+        win->selectionOnPage = (SelectionOnPage *)_memdup(&selOnPage);
     }
 }
 
@@ -3557,6 +3556,35 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
     win->linkOnLastButtonDown = NULL;
 }
 
+#define SELECT_AUTOSCROLL_AREA_WIDTH 15
+#define SELECT_AUTOSCROLL_STEP_LENGTH 10
+
+static void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
+{
+    int dx = 0, dy = 0;
+
+    if (x < SELECT_AUTOSCROLL_AREA_WIDTH * win->uiDPIFactor)
+        dx = -SELECT_AUTOSCROLL_STEP_LENGTH;
+    else if (x > (win->winDx() - SELECT_AUTOSCROLL_AREA_WIDTH) * win->uiDPIFactor)
+        dx = SELECT_AUTOSCROLL_STEP_LENGTH;
+    if (y < SELECT_AUTOSCROLL_AREA_WIDTH * win->uiDPIFactor)
+        dy = -SELECT_AUTOSCROLL_STEP_LENGTH;
+    else if (y > (win->winDy() - SELECT_AUTOSCROLL_AREA_WIDTH) * win->uiDPIFactor)
+        dy = SELECT_AUTOSCROLL_STEP_LENGTH;
+
+    if (dx != 0 || dy != 0) {
+        int oldX = win->dm->areaOffset.x, oldY = win->dm->areaOffset.y;
+        WinMoveDocBy(win, dx, dy);
+
+        dx = win->dm->areaOffset.x - oldX;
+        dy = win->dm->areaOffset.y - oldY;
+        win->selectionRect.x -= dx;
+        win->selectionRect.y -= dy;
+        win->selectionRect.dx += dx;
+        win->selectionRect.dy += dy;
+    }
+}
+
 static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
 {
     int dragDx, dragDy;
@@ -3588,6 +3616,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         win->selectionRect.dx = x - win->selectionRect.x;
         win->selectionRect.dy = y - win->selectionRect.y;
         triggerRepaintDisplayNow(win);
+        OnSelectionEdgeAutoscroll(win, x, y);
         break;
     case MA_MAYBEDRAGGING:
         // have we already started a proper drag?
@@ -3621,6 +3650,9 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
         win->showSelection = true;
         win->mouseAction = MA_SELECTING;
 
+        SetCapture(win->hwndCanvas);
+        SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+
         triggerRepaintDisplayNow(win);
     }
 }
@@ -3635,6 +3667,10 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
         win->selectionRect.dy = abs (y - win->selectionRect.y);
         win->selectionRect.x = min (win->selectionRect.x, x);
         win->selectionRect.y = min (win->selectionRect.y, y);
+
+        if (GetCapture() == win->hwndCanvas)
+            ReleaseCapture();
+        KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
 
         if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
             DeleteOldSelectionInfo(win);
@@ -6731,6 +6767,12 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
                         WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
+                    else if (MA_SELECTING == win->mouseAction) {
+                        POINT pt;
+                        GetCursorPos(&pt);
+                        ScreenToClient(win->hwndCanvas, &pt);
+                        OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
+                    }
                     else {
                         KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
                         win->yScrollSpeed = 0;

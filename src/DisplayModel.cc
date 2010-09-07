@@ -715,17 +715,15 @@ int DisplayModel::getPageNoByPoint (double x, double y)
 {
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        if (!pageInfo->visible)
-            continue;
-        assert(pageInfo->shown);
+        assert(!pageInfo->visible || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
         RectI pageOnScreen;
-        pageOnScreen.x = pageInfo->screenX;
-        pageOnScreen.y = pageInfo->screenY;
-        pageOnScreen.dx = pageInfo->bitmapDx;
-        pageOnScreen.dy = pageInfo->bitmapDy;
+        pageOnScreen.x = pageInfo->screenX - pageInfo->bitmapX;
+        pageOnScreen.y = pageInfo->screenY - pageInfo->bitmapY;
+        pageOnScreen.dx = pageInfo->currDx;
+        pageOnScreen.dy = pageInfo->currDy;
 
         if (RectI_Inside (&pageOnScreen, (int)x, (int)y))
             return pageNo;
