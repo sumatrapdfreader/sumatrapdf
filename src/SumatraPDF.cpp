@@ -7568,8 +7568,6 @@ TCHAR *GetDefaultPrinterName()
     return NULL;
 }
 
-#define is_arg(txt) tstr_ieq(_T(txt), argListRoot[i])
-
 /* Parse 'txt' as hex color and return the result in 'destColor' */
 static void ParseColor(int *destColor, const TCHAR* txt)
 {
@@ -7715,7 +7713,7 @@ typedef BOOL (WINAPI *procSetProcessDPIAware)(VOID);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    VStrList            argListRoot;
+    VStrList            argList;
     VStrList            fileNames;
     TCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
@@ -7728,6 +7726,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     TCHAR *             destName = NULL;
     int                 pageNumber = 0;
     bool                firstDocLoaded = false;
+    bool                reuse_instance = false;
+    TCHAR *             printerName = NULL;
+    TCHAR *             newWindowTitle = NULL;
 #ifdef BUILD_RM_VERSION
     bool                deleteFilesOnClose = false; // Delete the files which were passed into the program by command line.
 #endif
@@ -7761,15 +7762,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CoInitialize(NULL);
 
     SerializableGlobalPrefs_Init();
-
-    VStrList_FromCmdLine(&argListRoot, GetCommandLine());
-
 #ifndef BUILD_RM_VERSION
     bool prefsLoaded = Prefs_Load();
 #else
     bool prefsLoaded = false;
 #endif
-
     if (!prefsLoaded) {
         // assume that this is because prefs file didn't exist i.e. this is
         // the first time Sumatra is launched.
@@ -7782,24 +7779,25 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     we assume that all arguments are PDF file names.
     -bench can be followed by file or directory name. If file, it can additionally be followed by
     a number which we interpret as page number */
-    bool reuse_instance = false;
-    TCHAR *printerName = NULL;
-    TCHAR *newWindowTitle = NULL;
-    size_t argCount = argListRoot.size();
+#define is_arg(txt) tstr_ieq(_T(txt), argList[i])
+#define is_arg_with_param(txt) (is_arg(txt) && i < argCount - 1)
+
+    VStrList_FromCmdLine(&argList, GetCommandLine());
+    size_t argCount = argList.size();
     for (size_t i = 1; i < argCount; i++) {
         if (is_arg("-register-for-pdf")) {
             AssociateExeWithPdfExtension();
-            return 0;
+            goto Exit;
         }
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             goto Exit;
         }
-        else if (is_arg("-bench") && ++i < argCount) {
-            gBenchFileName = tstr_dup(argListRoot[i]);
-            if (++i < argCount)
-                benchPageNumStr = tstr_dup(argListRoot[i]);
+        else if (is_arg_with_param("-bench")) {
+            gBenchFileName = tstr_dup(argList[++i]);
+            if (i < argCount - 1)
+                benchPageNumStr = tstr_dup(argList[++i]);
             break;
         }
         else if (is_arg("-exit-on-print")) {
@@ -7808,27 +7806,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-print-to-default")) {
             printToDefaultPrinter = true;
         }
-        else if (is_arg("-print-to") && ++i < argCount) {
-            printerName = tstr_dup(argListRoot[i]);
+        else if (is_arg_with_param("-print-to")) {
+            printerName = tstr_dup(argList[++i]);
         }
         else if (is_arg("-print-dialog")) {
             printDialog = true;
         }
-        else if (is_arg("-bgcolor") && ++i < argCount) {
-            ParseColor(&gGlobalPrefs.m_bgColor, argListRoot[i]);
+        else if (is_arg_with_param("-bgcolor")) {
+            ParseColor(&gGlobalPrefs.m_bgColor, argList[++i]);
         }
-        else if (is_arg("-inverse-search") && ++i < argCount) {
+        else if (is_arg_with_param("-inverse-search")) {
             free(gGlobalPrefs.m_inverseSearchCmdLine);
-            gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(argListRoot[i]);
+            gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(argList[++i]);
         }
-        else if (is_arg("-fwdsearch-offset") && ++i < argCount) {
-            gGlobalPrefs.m_fwdsearchOffset = _ttoi(argListRoot[i]);
+        else if (is_arg_with_param("-fwdsearch-offset")) {
+            gGlobalPrefs.m_fwdsearchOffset = _ttoi(argList[++i]);
         }
-        else if (is_arg("-fwdsearch-width") && ++i < argCount) {
-            gGlobalPrefs.m_fwdsearchWidth = _ttoi(argListRoot[i]);
+        else if (is_arg_with_param("-fwdsearch-width")) {
+            gGlobalPrefs.m_fwdsearchWidth = _ttoi(argList[++i]);
         }
-        else if (is_arg("-fwdsearch-color") && ++i < argCount) {
-            ParseColor(&gGlobalPrefs.m_fwdsearchColor, argListRoot[i]);
+        else if (is_arg_with_param("-fwdsearch-color")) {
+            ParseColor(&gGlobalPrefs.m_fwdsearchColor, argList[++i]);
         }
         else if (is_arg("-esc-to-exit")) {
             gGlobalPrefs.m_escToExit = TRUE;
@@ -7841,22 +7839,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             // in another process
             reuse_instance = FindWindow(FRAME_CLASS_NAME, 0) != NULL;
         }
-        else if (is_arg("-lang") && ++i < argCount) {
-            char *s = tstr_to_multibyte(argListRoot[i], CP_ACP);
+        else if (is_arg_with_param("-lang")) {
+            char *s = tstr_to_multibyte(argList[++i], CP_ACP);
             CurrLangNameSet(s);
             free(s);
         }
-        else if (is_arg("-nameddest") && ++i < argCount) {
-            destName = tstr_dup(argListRoot[i]);
+        else if (is_arg_with_param("-nameddest")) {
+            destName = tstr_dup(argList[++i]);
         }
-        else if (is_arg("-page") && ++i < argCount) {
-            pageNumber = _ttoi(argListRoot[i]);
+        else if (is_arg_with_param("-page")) {
+            pageNumber = _ttoi(argList[++i]);
         }
         else if (is_arg("-restrict")) {
             gRestrictedUse = true;
         }
-        else if (is_arg("-title") && ++i < argCount) {
-            newWindowTitle = tstr_dup(argListRoot[i]); 
+        else if (is_arg_with_param("-title")) {
+            newWindowTitle = tstr_dup(argList[++i]); 
         }
         else if (is_arg("-invertcolors")) {
             gGlobalPrefs.m_invertColors = TRUE;
@@ -7876,10 +7874,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
         else {
             // Remember this argument as a filename to open
-            fileNames.push_back(tstr_dup(argListRoot[i]));
+            fileNames.push_back(tstr_dup(argList[i]));
         }
     }
-    argListRoot.clearFree();
+    argList.clearFree();
 
     if (benchPageNumStr) {
         gBenchPageNum = _ttoi(benchPageNumStr);
