@@ -15,6 +15,9 @@ Giới thiệu
 &Actual Size\tCtrl-1
 Kích thướ&c thật\tCtrl-1
 
+&All selected pages
+Tất cả các tr&ang được chọn
+
 &Back\tAlt+Left Arrow
 Trở về\tAlt+<-
 
@@ -27,6 +30,9 @@ Chép phần đánh dấu
 &Don't ask me again
 Không hỏi lại
 
+&Even pages only
+Chỉ những trang lẻ
+
 &File
 Tập tin
 
@@ -35,6 +41,9 @@ Tìm cái gì:
 
 &First Page\tHome
 Trang đầu\tHome
+
+&Fit pages to printable area
+Vừa trang in
 
 &Go To
 Nhảy đến
@@ -66,6 +75,9 @@ Không
 &No, thanks
 Không, cảm ơn
 
+&Odd pages only
+Chỉ những trang chẵn
+
 &Open\tCtrl-O
 Mở tập tin\tCtrl-O
 
@@ -84,6 +96,9 @@ In\tCtrl-P
 &Print... (denied)
 &In... (bị từ chối)
 
+&Remember the password for this document
+Nhớ mật khẩu cho tập tin này
+
 &Remember these settings for each document
 Nhớ cài đặt này cho mọi tập tin
 
@@ -92,6 +107,9 @@ Lưu thành\tCtrl-S
 
 &Settings
 Cài đặt
+
+&Shrink pages to printable area (if necessary)
+Nén vừa trang in (nếu cần thiết)
 
 &Skip this version
 Bỏ qua phiên bản này.
@@ -123,6 +141,9 @@ Application:
 Associate with PDF files?
 Liên kết với tập tin PDF?
 
+Attachment: %s
+Đính kèm: %s
+
 Author:
 Tác giả
 
@@ -137,6 +158,9 @@ Xem dạng sách
 
 Book&marks\tF12
 Chỉ dấu sách\tF12
+
+Bookmarks
+Chỉ dấu sách
 
 Bytes
 Bytes
@@ -339,6 +363,9 @@ Kích thước trang:
 Page number %u inexistant
 Trang %u không tồn tại
 
+Page scaling
+Thước đo trang
+
 Page:
 Trang:
 
@@ -350,6 +377,9 @@ In bằng Adobe Reader...
 
 Previous Page
 Trang trước
+
+Print range
+Giới hạn vùng in
 
 Printing problem.
 Lỗi in.
@@ -449,16 +479,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Print range
 
