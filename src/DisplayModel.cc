@@ -719,8 +719,8 @@ int DisplayModel::getPageNoByPoint (double x, double y)
             continue;
 
         RectI pageOnScreen;
-        pageOnScreen.x = pageInfo->screenX - pageInfo->bitmapX;
-        pageOnScreen.y = pageInfo->screenY - pageInfo->bitmapY;
+        pageOnScreen.x = pageInfo->currPosX - areaOffset.x;
+        pageOnScreen.y = pageInfo->currPosY - areaOffset.y;
         pageOnScreen.dx = pageInfo->currDx;
         pageOnScreen.dy = pageInfo->currDy;
 
@@ -1480,8 +1480,8 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
     if (rot == 180 || rot == 270)
         vy += pageInfo->currDy;
 
-    *x = tp.x + 0.5 + pageInfo->screenX - pageInfo->bitmapX + vx;
-    *y = tp.y + 0.5 + pageInfo->screenY - pageInfo->bitmapY + vy;
+    *x = tp.x + 0.5 + pageInfo->currPosX - areaOffset.x + vx;
+    *y = tp.y + 0.5 + pageInfo->currPosY - areaOffset.y + vy;
     return true;
 }
 
@@ -1504,8 +1504,8 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
 
     const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
 
-    p.x = *x - 0.5 - pageInfo->screenX + pageInfo->bitmapX;
-    p.y = *y - 0.5 - pageInfo->screenY + pageInfo->bitmapY;
+    p.x = *x - 0.5 - pageInfo->currPosX + areaOffset.x;
+    p.y = *y - 0.5 - pageInfo->currPosY + areaOffset.y;
 
     fz_matrix ctm = pdfEngine->viewctm(page, zoom, rot);
     fz_matrix invCtm = fz_invertmatrix(ctm);

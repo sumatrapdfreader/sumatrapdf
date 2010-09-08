@@ -3373,8 +3373,8 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
         if (!pageInfo->shown)
             continue;
 
-        pageOnScreen.x = pageInfo->screenX - pageInfo->bitmapX;
-        pageOnScreen.y = pageInfo->screenY - pageInfo->bitmapY;
+        pageOnScreen.x = pageInfo->currPosX - win->dm->areaOffset.x;
+        pageOnScreen.y = pageInfo->currPosY - win->dm->areaOffset.y;
         pageOnScreen.dx = pageInfo->currDx;
         pageOnScreen.dy = pageInfo->currDy;
 
@@ -5150,8 +5150,11 @@ static void OnMenuViewFullscreen(WindowInfo *win)
         WindowInfo_EnterFullscreen(win);
 }
 
-static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result)
+static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result, bool wasModified)
 {
+    win->dm->goToPage(result->page, 0, wasModified);
+    win->dm->MapResultRectToScreen(result);
+
     PdfPageInfo *pdfPage = win->dm->getPageInfo(result->page);
     RectI pageOnScreen = {
         pdfPage->screenX,
@@ -7192,9 +7195,8 @@ InitMouseWheelInfo:
         case WM_APP_FIND_END:
             if (wParam) {
                 PdfSearchResult *rect = (PdfSearchResult *)wParam;
-                win->dm->goToPage(rect->page, 0, !!lParam); // lParam == wasModified
-                win->dm->MapResultRectToScreen(rect);
-                WindowInfo_ShowSearchResult(win, rect);
+                bool wasModified = !!lParam;
+                WindowInfo_ShowSearchResult(win, rect, wasModified);
                 WindowInfo_HideFindStatus(win);
             } else {
                 ClearSearch(win);
