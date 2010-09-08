@@ -1617,8 +1617,8 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             // and the page line's left margin
             PdfPageInfo * pageInfo = getPageInfo(pageNo);
             // TODO: These values are not up-to-date, if the page has not been shown yet
-            scrollX += pageInfo->bitmapX + pageInfo->currPosX;
-            scrollY += pageInfo->bitmapY;
+            scrollX -= pageInfo->currPosX - areaOffset.x;
+            scrollY -= pageInfo->currPosY - areaOffset.y;
         }
         goToPage(pageNo, scrollY, true, scrollX);
     }
