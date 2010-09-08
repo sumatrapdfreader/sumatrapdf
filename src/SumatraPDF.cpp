@@ -3388,10 +3388,6 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
         if (!win->dm->rectCvtScreenToUser(&selOnPage.pageNo, &selOnPage.selectionPage))
             continue;
 
-        // TODO: this assert fires in debug mode when doing multi-page selection in
-        // continous mode. In my case pageNo seemed to be bogus (it was 534 while I
-        // was selecting from page 5-6 in a document with 540 pages). Also selOnPage.pageNo
-        // was 1
         assert(pageNo == selOnPage.pageNo);
 
         selOnPage.next = win->selectionOnPage;
