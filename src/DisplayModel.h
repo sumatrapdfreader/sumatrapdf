@@ -280,6 +280,7 @@ public:
 
     bool            displayStateFromModel(DisplayState *ds);
 
+    void            ageStore() const { pdfEngine->ageStore(); }
 protected:
 
     void            startRenderingPage(int pageNo);

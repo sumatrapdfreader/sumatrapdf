@@ -144,6 +144,10 @@ public:
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }
+    void ageStore() {
+        if (_xref && _xref->store)
+            pdf_agestore(_xref->store, 3);
+    }
     PdfTocItem *getTocTree();
     fz_matrix viewctm (pdf_page *page, float zoom, int rotate);
 

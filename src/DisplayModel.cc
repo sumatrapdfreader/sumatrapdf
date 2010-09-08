@@ -948,7 +948,6 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     repaintDisplay(true);
 }
 
-
 void DisplayModel::changeDisplayMode(DisplayMode displayMode)
 {
     if (_displayMode == displayMode)
