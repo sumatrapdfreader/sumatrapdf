@@ -7715,7 +7715,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
     VStrList            argList;
     VStrList            fileNames;
-    TCHAR *             benchPageNumStr = NULL;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
     WindowInfo*         win;
@@ -7797,7 +7796,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg_with_param("-bench")) {
             gBenchFileName = tstr_dup(argList[++i]);
             if (i < argCount - 1)
-                benchPageNumStr = tstr_dup(argList[++i]);
+                gBenchPageNum = _ttoi(argList[++i]);
+            if (gBenchPageNum < 1)
+                gBenchPageNum = INVALID_PAGE_NO;
             break;
         }
         else if (is_arg("-exit-on-print")) {
@@ -7879,17 +7880,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
     argList.clearFree();
 
-    if (benchPageNumStr) {
-        gBenchPageNum = _ttoi(benchPageNumStr);
-        if (gBenchPageNum < 1)
-            gBenchPageNum = INVALID_PAGE_NO;
-        free(benchPageNumStr);
-    }
-
     LoadString(hInstance, IDS_APP_TITLE, gWindowTitle, MAX_LOADSTRING);
     if (!RegisterWinClass(hInstance))
         goto Exit;
-
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
@@ -7962,8 +7955,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }
 
-    if (((printerName || printDialog) && exitOnPrint)
-          || reuse_instance)
+    if (reuse_instance || ((printerName || printDialog) && exitOnPrint))
         goto Exit;
  
     if (!firstDocLoaded) {
@@ -8062,18 +8054,12 @@ Exit:
             TCHAR fullpath[MAX_PATH];
             GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
 
-            int error = DeleteFile(fullpath);
-
             // Sumatra holds the lock on the file (open stream), it should have lost it by the time
             // we reach here, but sometimes it's a little slow, so loop around till we can do it.
-            while (error != 0)
-            {
-                error = GetLastError();
-                if (error == 32)
-                    error = DeleteFile(fullpath);
-                else
-                    error = 0;
-            }
+            do {
+                if (DeleteFile(fullpath) == 0)
+                    break;
+            } while (GetLastError() == 32);
         }
     }
 #endif // BUILD_RM_VERSION
