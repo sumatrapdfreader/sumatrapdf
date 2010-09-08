@@ -34,6 +34,7 @@ fz_newfont(void)
 	font->widthcount = 0;
 	font->widthtable = nil;
 
+	/* SumatraPDF */
 	font->_data = nil;
 
 	return font;

@@ -175,7 +175,8 @@ pdf_loadpage(pdf_page **pagep, pdf_xref *xref, fz_obj *dict)
 
 	obj = fz_dictgets(dict, "MediaBox");
 	if (!fz_isarray(obj))
-	{ /* SumatraPDF: Adobe Reader seems to default to "Letter" in absence of a MediaBox */
+	{
+		/* SumatraPDF: Adobe Reader seems to default to "Letter" in absence of a MediaBox */
 		fz_warn("cannot find page bounds (%d %d R)", fz_tonum(dict), fz_togen(dict));
 		bbox.x0 = 0; bbox.x1 = 612;
 		bbox.y0 = 0; bbox.y1 = 792;

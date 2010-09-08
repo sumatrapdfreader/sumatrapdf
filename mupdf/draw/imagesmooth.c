@@ -1,6 +1,6 @@
 /*
 This code does smooth scaling of a pixmap.
- 
+
 This function returns a new pixmap representing the area starting at (0,0)
 given by taking the source pixmap src, scaling it to width w, and height h,
 and then positioning it at (frac(x),frac(y)).
@@ -9,6 +9,7 @@ and then positioning it at (frac(x),frac(y)).
 #include "fitz.h"
 
 #ifdef DEBUG_SCALING
+#ifdef WIN32
 #include <windows.h>
 static void debug_print(const char *fmt, ...)
 {
@@ -20,6 +21,16 @@ static void debug_print(const char *fmt, ...)
 	OutputDebugStringA(text);
 }
 #define DBUG(A) debug_print A
+#else
+static void debug_print(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+}
+#define DBUG(A) debug_print A
+#endif
 #else
 #define DBUG(A) do {} while(0==1)
 #endif
@@ -108,7 +119,7 @@ lanczos3(fz_scalefilter *filter, float f)
 
 /*
 The Mitchell family of filters is defined:
- 
+
 	f(x) =	1 { (12-9B-6C)x^3 + (-18+12B+6C)x^2 + (6-2B)	for x < 1
 		- {
 		6 { (-B-6C)x^3+(6B+30C)x^2+(-12B-48C)x+(8B+24C)	for 1<=x<=2
@@ -243,6 +254,8 @@ fz_newweights(fz_scalefilter *filter, int src_w, float dst_w, int dst_w_i)
 		 * 2*filterwidth*src_w/dst_w src pixels
 		 * contributing to each dst pixel. */
 		max_len = (int)ceilf((2 * filter->width * src_w)/dst_w);
+		if (max_len > src_w)
+			max_len = src_w;
 	}
 	else
 	{
@@ -269,7 +282,7 @@ static void
 add_weight(fz_weights *weights, int j, int i, fz_scalefilter *filter,
 	float x, float F, float G, int src_w, float dst_w)
 {
-	float dist = j + 0.5f - (x + (i + 0.5f)*dst_w/src_w);
+	float dist = j - x + 0.5f - ((i + 0.5f)*dst_w/src_w);
 	float f;
 	int min, len, index, weight;
 
@@ -293,14 +306,25 @@ add_weight(fz_weights *weights, int j, int i, fz_scalefilter *filter,
 			break;
 	}
 	while (1);
-#else
+#elif defined(WRAP)
 	if (i < 0)
 		i = 0;
 	else if (i >= src_w)
 		i = src_w-1;
+#else
+	if (i < 0)
+	{
+		i = 0;
+		weight = 0;
+	}
+	else if (i >= src_w)
+	{
+		i = src_w-1;
+		weight = 0;
+	}
 #endif
 
-	DBUG(("add_weight[%d][%d] = %g dist=%g\n",j,i,f,dist));
+	DBUG(("add_weight[%d][%d] = %d(%g) dist=%g\n",j,i,weight,f,dist));
 
 	if (weights->count != j)
 	{
@@ -365,7 +389,7 @@ reorder_weights(fz_weights *weights, int j, int src_w)
 	int len = weights->index[idx++];
 	int max = weights->max_len;
 	int tmp = idx+max;
-	int i;
+	int i, off;
 
 	/* Copy into the temporary area */
 	memcpy(&weights->index[tmp], &weights->index[idx], sizeof(int)*len);
@@ -373,12 +397,14 @@ reorder_weights(fz_weights *weights, int j, int src_w)
 	/* Pad out if required */
 	assert(len <= max);
 	assert(min+len <= src_w);
+	off = 0;
 	if (len < max)
 	{
 		memset(&weights->index[tmp+len], 0, sizeof(int)*(max-len));
 		len = max;
 		if (min + len > src_w)
 		{
+			off = min + len - src_w;
 			min = src_w - len;
 			weights->index[idx-2] = min;
 		}
@@ -388,12 +414,12 @@ reorder_weights(fz_weights *weights, int j, int src_w)
 	/* Copy back into the proper places */
 	for (i = 0; i < len; i++)
 	{
-		weights->index[idx+((min+i) % max)] = weights->index[tmp+i];
+		weights->index[idx+((min+i+off) % max)] = weights->index[tmp+i];
 	}
 }
 
 static void
-check_weights(fz_weights *weights, int j)
+check_weights(fz_weights *weights, int j, int w)
 {
 	int idx, len;
 	int sum = 0;
@@ -415,15 +441,15 @@ check_weights(fz_weights *weights, int j)
 			maxidx = idx;
 		}
 	}
-	weights->index[maxidx-1] += 256-sum;
+	if (((j != 0) && (j != w-1)) || (sum > 256))
+		weights->index[maxidx-1] += 256-sum;
 	DBUG(("total weight %d = %d\n", j, sum));
 }
 
 static fz_weights *
-make_weights(int src_w, float x, float dst_w, fz_scalefilter *filter, int vertical)
+make_weights(int src_w, float x, float dst_w, fz_scalefilter *filter, int vertical, int dst_w_int)
 {
 	fz_weights *weights;
-	int dst_w_int = (int)ceilf(x + dst_w);
 	float F, G;
 	float window;
 	int j;
@@ -448,7 +474,7 @@ make_weights(int src_w, float x, float dst_w, fz_scalefilter *filter, int vertic
 	for (j = 0; j < dst_w_int; j++)
 	{
 		/* find the position of the centre of dst[j] in src space */
-		float centre = (j+0.5f)*src_w/dst_w - 0.5f;
+		float centre = (j - x + 0.5f)*src_w/dst_w - 0.5f;
 		int l, r;
 		l = ceilf(centre - window);
 		r = floorf(centre + window);
@@ -457,7 +483,7 @@ make_weights(int src_w, float x, float dst_w, fz_scalefilter *filter, int vertic
 		{
 			add_weight(weights, j, l, filter, x, F, G, src_w, dst_w);
 		}
-		check_weights(weights, j);
+		check_weights(weights, j, dst_w_int);
 		if (vertical)
 		{
 			reorder_weights(weights, j, src_w);
@@ -468,25 +494,47 @@ make_weights(int src_w, float x, float dst_w, fz_scalefilter *filter, int vertic
 }
 
 static void
-scale_row_to_temp(int *dst, unsigned char *src, fz_weights *weights, int n)
+scale_row_to_temp(int *dst, unsigned char *src, fz_weights *weights, int n, int flip_x)
 {
 	int *contrib = &weights->index[weights->index[0]];
 	int min, len, i, j;
 
-	for (i=weights->count; i > 0; i--)
+	if (flip_x)
 	{
-		min = *contrib++;
-		len = *contrib++;
-		min *= n;
-		for (j = 0; j < n; j++)
-			dst[j] = 0;
-		while (len-- > 0)
+		dst += (weights->count-1)*n;
+		for (i=weights->count; i > 0; i--)
 		{
+			min = *contrib++;
+			len = *contrib++;
+			min *= n;
 			for (j = 0; j < n; j++)
-				dst[j] += src[min++] * *contrib;
-			contrib++;
+				dst[j] = 0;
+			while (len-- > 0)
+			{
+				for (j = 0; j < n; j++)
+					dst[j] += src[min++] * *contrib;
+				contrib++;
+			}
+			dst -= n;
 		}
-		dst += n;
+	}
+	else
+	{
+		for (i=weights->count; i > 0; i--)
+		{
+			min = *contrib++;
+			len = *contrib++;
+			min *= n;
+			for (j = 0; j < n; j++)
+				dst[j] = 0;
+			while (len-- > 0)
+			{
+				for (j = 0; j < n; j++)
+					dst[j] += src[min++] * *contrib;
+				contrib++;
+			}
+			dst += n;
+		}
 	}
 }
 
@@ -520,6 +568,169 @@ scale_row_from_temp(unsigned char *dst, int *src, fz_weights *weights, int width
 	}
 }
 
+static void
+duplicate_single_pixel(unsigned char *dst, unsigned char *src, int n, int w, int h)
+{
+	int i;
+
+	for (i = n; i > 0; i--)
+		*dst++ = *src++;
+	for (i = (w*h-1)*n; i > 0; i--)
+	{
+		*dst = dst[-n];
+		dst++;
+	}
+}
+
+static void
+scale_single_row(unsigned char *dst, unsigned char *src, fz_weights *weights, int src_w, int n, int h, int flip_x)
+{
+	int *contrib = &weights->index[weights->index[0]];
+	int min, len, i, j, val;
+	int tmp[FZ_MAXCOLORS];
+
+	/* Scale a single row */
+	if (flip_x)
+	{
+		src_w = (src_w-1)*n;
+		for (i=weights->count; i > 0; i--)
+		{
+			min = *contrib++;
+			len = *contrib++;
+			min *= n;
+			for (j = 0; j < n; j++)
+				tmp[j] = 0;
+			while (len-- > 0)
+			{
+				for (j = 0; j < n; j++)
+					tmp[j] += src[src_w-min+j] * *contrib;
+				contrib++;
+			}
+			for (j = 0; j < n; j++)
+			{
+				val = (tmp[j]+(1<<15))>>16;
+				if (val < 0)
+					val = 0;
+				else if (val > 255)
+					val = 255;
+				*dst++ = val;
+			}
+		}
+		dst += (weights->count+1)*n;
+	}
+	else
+	{
+		for (i=weights->count; i > 0; i--)
+		{
+			min = *contrib++;
+			len = *contrib++;
+			min *= n;
+			for (j = 0; j < n; j++)
+				tmp[j] = 0;
+			while (len-- > 0)
+			{
+				for (j = 0; j < n; j++)
+					tmp[j] += src[min++] * *contrib;
+				contrib++;
+			}
+			for (j = 0; j < n; j++)
+			{
+				val = (tmp[j]+(1<<15))>>16;
+				if (val < 0)
+					val = 0;
+				else if (val > 255)
+					val = 255;
+				*dst++ = val;
+			}
+		}
+	}
+	/* And then duplicate it h times */
+	n *= weights->count;
+	while (--h > 0)
+	{
+		memcpy(dst, dst-n, n);
+		dst += n;
+	}
+}
+
+static void
+scale_single_col(unsigned char *dst, unsigned char *src, fz_weights *weights, int src_w, int n, int w, int flip_y)
+{
+	int *contrib = &weights->index[weights->index[0]];
+	int min, len, i, j, val;
+	int tmp[FZ_MAXCOLORS];
+
+	if (flip_y)
+	{
+		src_w = (src_w-1)*n;
+		w = (w-1)*n;
+		for (i=weights->count; i > 0; i--)
+		{
+			/* Scale the next pixel in the column */
+			min = *contrib++;
+			len = *contrib++;
+			min = (src_w-min)*n;
+			for (j = 0; j < n; j++)
+				tmp[j] = 0;
+			while (len-- > 0)
+			{
+				for (j = 0; j < n; j++)
+					tmp[j] += src[src_w-min+j] * *contrib;
+				contrib++;
+			}
+			for (j = 0; j < n; j++)
+			{
+				val = (tmp[j]+(1<<15))>>16;
+				if (val < 0)
+					val = 0;
+				else if (val > 255)
+					val = 255;
+				*dst++ = val;
+			}
+			/* And then duplicate it across the row */
+			for (j = w; j > 0; j--)
+			{
+				*dst = dst[-n];
+				dst++;
+			}
+		}
+	}
+	else
+	{
+		w = (w-1)*n;
+		for (i=weights->count; i > 0; i--)
+		{
+			/* Scale the next pixel in the column */
+			min = *contrib++;
+			len = *contrib++;
+			min *= n;
+			for (j = 0; j < n; j++)
+				tmp[j] = 0;
+			while (len-- > 0)
+			{
+				for (j = 0; j < n; j++)
+					tmp[j] += src[min++] * *contrib;
+				contrib++;
+			}
+			for (j = 0; j < n; j++)
+			{
+				val = (tmp[j]+(1<<15))>>16;
+				if (val < 0)
+					val = 0;
+				else if (val > 255)
+					val = 255;
+				*dst++ = val;
+			}
+			/* And then duplicate it across the row */
+			for (j = w; j > 0; j--)
+			{
+				*dst = dst[-n];
+				dst++;
+			}
+		}
+	}
+}
+
 fz_pixmap *
 fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 {
@@ -529,56 +740,134 @@ fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 	fz_pixmap *output = NULL;
 	int *temp = NULL;
 	int max_row, temp_span, temp_rows, row;
-
-	x -= floorf(x);
-	y -= floorf(y);
+	int dst_w_int, dst_h_int, dst_x_int, dst_y_int;
+	int flip_x, flip_y;
 
 	DBUG(("Scale: (%d,%d) to (%g,%g) at (%g,%g)\n",src->w,src->h,w,h,x,y));
+
+	/* Find the destination bbox, width/height, and sub pixel offset,
+	 * allowing for whether we're flipping or not. */
+	flip_x = (w < 0);
+	if (flip_x)
+	{
+		float tmp;
+		w = -w;
+		dst_x_int = floor(x-w);
+		tmp = ceilf(x);
+		dst_w_int = (int)tmp;
+		x = tmp - x;
+		dst_w_int -= dst_x_int;
+	}
+	else
+	{
+		dst_x_int = floor(x);
+		x -= (float)dst_x_int;
+		dst_w_int = (int)ceilf(x + w);
+	}
+	flip_y = (h < 0);
+	if (flip_y)
+	{
+		float tmp;
+		h = -h;
+		dst_y_int = floor(y-h);
+		tmp = ceilf(y);
+		dst_h_int = (int)tmp;
+		y = tmp - y;
+		dst_h_int -= dst_y_int;
+	}
+	else
+	{
+		dst_y_int = floor(y);
+		y -= (float)dst_y_int;
+		dst_h_int = (int)ceilf(y + h);
+	}
+
+	DBUG(("Result image: (%d,%d) at (%d,%d) (subpix=%g,%g)\n", dst_w_int, dst_h_int, dst_x_int, dst_y_int, x, y));
+
 	/* Step 1: Calculate the weights for columns and rows */
-	contrib_cols = make_weights(src->w, x, w, filter, 0);
-	if (contrib_cols == NULL)
-		goto cleanup;
-	contrib_rows = make_weights(src->h, y, h, filter, 1);
-	if (contrib_rows == NULL)
-		goto cleanup;
+	if (src->w == 1)
+	{
+		contrib_cols = NULL;
+	}
+	else
+	{
+		contrib_cols = make_weights(src->w, x, w, filter, 0, dst_w_int);
+		if (contrib_cols == NULL)
+			goto cleanup;
+	}
+	if (src->h == 1)
+	{
+		contrib_rows = NULL;
+	}
+	else
+	{
+		contrib_rows = make_weights(src->h, y, h, filter, 1, dst_h_int);
+		if (contrib_rows == NULL)
+			goto cleanup;
+	}
 
-	temp_span = contrib_cols->count * src->n;
-	temp_rows = contrib_rows->max_len;
-	temp = fz_malloc(sizeof(int)*temp_span*temp_rows);
-	if (temp == NULL)
-		goto cleanup;
-
-	output = fz_newpixmap(src->colorspace, 0, 0, contrib_cols->count, contrib_rows->count);
+	assert(contrib_cols == NULL || contrib_cols->count == dst_w_int);
+	assert(contrib_rows == NULL || contrib_rows->count == dst_h_int);
+	output = fz_newpixmap(src->colorspace, dst_x_int, dst_y_int, dst_w_int, dst_h_int);
 	if (output == NULL)
 		goto cleanup;
 
 	/* Step 2: Apply the weights */
-	max_row = 0;
-	for (row = 0; row < contrib_rows->count; row++)
+	if (contrib_rows == NULL)
 	{
-		/*
-		Which source rows do we need to have scaled into the temporary
-		buffer in order to be able to do the final scale?
-		*/
-		int row_index = contrib_rows->index[row];
-		int row_min = contrib_rows->index[row_index++];
-		int row_len = contrib_rows->index[row_index++];
-		while (max_row < row_min+row_len)
+		/* Only 1 source pixel high. */
+		if (contrib_cols == NULL)
 		{
-			/* Scale another row */
-			assert(max_row < src->h);
-			DBUG(("scaling row %d to temp\n", max_row));
-			scale_row_to_temp(&temp[temp_span*(max_row % temp_rows)], &src->samples[max_row*src->w*src->n], contrib_cols, src->n);
-			max_row++;
+			/* Only 1 pixel in the entire image! */
+			duplicate_single_pixel(output->samples, src->samples, src->n, w, h);
 		}
+		else
+		{
+			/* Scale the row once, then copy it. */
+			scale_single_row(output->samples, src->samples, contrib_cols, src->w, src->n, h, flip_x);
+		}
+	}
+	else if (contrib_cols == NULL)
+	{
+		/* Only 1 source pixel wide. Scale the col and duplicate. */
+		scale_single_col(output->samples, src->samples, contrib_rows, src->h, src->n, w, flip_y);
+	}
+	else
+	{
+		temp_span = contrib_cols->count * src->n;
+		temp_rows = contrib_rows->max_len;
+		temp = fz_malloc(sizeof(int)*temp_span*temp_rows);
+		if (temp == NULL)
+			goto cleanup;
 
-		DBUG(("scaling row %d from temp\n", row));
-		scale_row_from_temp(&output->samples[row*output->w*output->n], temp, contrib_rows, temp_span, row);
+		max_row = 0;
+		for (row = 0; row < contrib_rows->count; row++)
+		{
+			/*
+			Which source rows do we need to have scaled into the
+			temporary buffer in order to be able to do the final
+			scale?
+			*/
+			int row_index = contrib_rows->index[row];
+			int row_min = contrib_rows->index[row_index++];
+			int row_len = contrib_rows->index[row_index++];
+			while (max_row < row_min+row_len)
+			{
+				/* Scale another row */
+				assert(max_row < src->h);
+				DBUG(("scaling row %d to temp\n", max_row));
+				scale_row_to_temp(&temp[temp_span*(max_row % temp_rows)], &src->samples[(flip_y ? (src->h-1-max_row): max_row)*src->w*src->n], contrib_cols, src->n, flip_x);
+				max_row++;
+			}
+
+			DBUG(("scaling row %d from temp\n", row));
+			scale_row_from_temp(&output->samples[row*output->w*output->n], temp, contrib_rows, temp_span, row);
+		}
+		fz_free(temp);
 	}
 
 cleanup:
 	fz_free(contrib_rows);
 	fz_free(contrib_cols);
-	fz_free(temp);
 	return output;
 }

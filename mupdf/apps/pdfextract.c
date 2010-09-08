@@ -145,6 +145,7 @@ static void savefont(fz_obj *dict, int num)
 	if (f == NULL)
 		die(fz_throw("Error creating font file"));
 
+	/* SumatraPDF */
 	n = fwrite(buf->data, 1, buf->len, f);
 	if (n < buf->len)
 		die(fz_throw("Error writing font file"));

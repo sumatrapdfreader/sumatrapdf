@@ -6,7 +6,7 @@
 
 #define STACKSIZE 96
 
-#define noSMOOTHSCALE
+#define SMOOTHSCALE
 
 typedef struct fz_drawdevice_s fz_drawdevice;
 
@@ -539,6 +539,38 @@ fz_calcimagescale(fz_pixmap *image, fz_matrix ctm, int *dx, int *dy)
 	return *dx > 1 || *dy > 1;
 }
 
+static fz_pixmap *
+fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y)
+{
+	fz_pixmap *scaled;
+
+	if ((ctm->a != 0) && (ctm->b == 0) && (ctm->c == 0) && (ctm->d != 0))
+	{
+		/* Unrotated or X flip or Yflip or XYflip */
+		scaled = fz_smoothscalepixmap(image, ctm->e, ctm->f, ctm->a, ctm->d);
+		if (scaled == NULL)
+			return NULL;
+		ctm->a = scaled->w;
+		ctm->d = scaled->h;
+		ctm->e = scaled->x;
+		ctm->f = scaled->y;
+		return scaled;
+	}
+	if ((ctm->a == 0) && (ctm->b != 0) && (ctm->c != 0) && (ctm->d == 0))
+	{
+		/* Other orthogonal flip/rotation cases */
+		scaled = fz_smoothscalepixmap(image, ctm->f, ctm->e, ctm->b, ctm->c);
+		if (scaled == NULL)
+			return NULL;
+		ctm->b = scaled->w;
+		ctm->c = scaled->h;
+		ctm->f = scaled->x;
+		ctm->e = scaled->y;
+		return scaled;
+	}
+	return NULL;
+}
+
 static void
 fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
@@ -569,8 +601,17 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
-		image = scaled;
+		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y);
+		if (scaled == NULL)
+		{
+			if (dx < 1)
+				dx = 1;
+			if (dy < 1)
+				dy = 1;
+			scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+		}
+		if (scaled != NULL)
+			image = scaled;
 	}
 #else
 	if (fz_calcimagescale(image, ctm, &dx, &dy))
@@ -608,8 +649,17 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
-		image = scaled;
+		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y);
+		if (scaled == NULL)
+		{
+			if (dx < 1)
+				dx = 1;
+			if (dy < 1)
+				dy = 1;
+			scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+		}
+		if (scaled != NULL)
+			image = scaled;
 	}
 #else
 	if (fz_calcimagescale(image, ctm, &dx, &dy))
@@ -670,8 +720,17 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
-		image = scaled;
+		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y);
+		if (scaled == NULL)
+		{
+			if (dx < 1)
+				dx = 1;
+			if (dy < 1)
+				dy = 1;
+			scaled = fz_smoothscalepixmap(image, image->x, image->y, dx, dy);
+		}
+		if (scaled != NULL)
+			image = scaled;
 	}
 #else
 	if (fz_calcimagescale(image, ctm, &dx, &dy))

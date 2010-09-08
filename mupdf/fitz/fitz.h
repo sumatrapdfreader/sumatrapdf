@@ -682,6 +682,7 @@ struct fz_font_s
 	int widthcount;
 	int *widthtable;
 
+	/* SumatraPDF */
 	const char *_data; /* font file content or file path */
 	int _data_len;     /* 0 for file paths               */
 };
