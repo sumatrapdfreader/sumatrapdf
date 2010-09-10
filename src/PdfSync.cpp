@@ -150,7 +150,7 @@ FILE *Pdfsync::opensyncfile()
 // read a line from a stream (exclude the end-of-line mark)
 LPSTR fgetline(LPSTR dst, size_t cchDst, FILE *fp)
 {
-    if (!fgets(dst, cchDst, fp))
+    if (!fgets(dst, (int)cchDst, fp))
         return NULL;
 
     LPSTR end =  dst+str_len(dst)-1;
@@ -570,7 +570,7 @@ UINT Pdfsync::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
                     UINT recordNumber = 0, xPosition = 0, yPosition = 0;
                     fscanf(fp, "%u %u %u\n", &recordNumber, &xPosition, &yPosition);
                     if (recordNumber == record) {
-                        *page = sheet;
+                        *page = (UINT)sheet;
                         rects.clear();
                         RectI rc;
                         rc.x = (UINT)SYNCCOORDINATE_TO_PDFCOORDINATE(xPosition);

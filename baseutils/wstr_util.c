@@ -80,7 +80,7 @@ WCHAR *wstr_cat(const WCHAR *str1, const WCHAR *str2)
     return wstr_cat4(str1, str2, NULL, NULL);
 }
 
-WCHAR *wstr_dupn(const WCHAR *str, int str_len_cch)
+WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
 {
     WCHAR *copy;
 
@@ -99,7 +99,7 @@ WCHAR *wstr_dup(const WCHAR *str)
     return wstr_cat4(str, NULL, NULL, NULL);
 }
 
-int wstr_copyn(WCHAR *dst, int dst_cch_size, const WCHAR *src, int src_cch_size)
+int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
     WCHAR *end = dst + dst_cch_size - 1;
     if (0 == dst_cch_size) {
