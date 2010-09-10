@@ -1765,11 +1765,11 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
 
     InvalidateRect(win->hwndToolbar, NULL, true);
     if (!win->dm) {  // Avoid focus on Find box
-        SetClassLong(win->hwndFindBox, GCL_HCURSOR, (LONG)gCursorArrow);
+        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
         HideCaret(NULL);
     }
     else {
-        SetClassLong(win->hwndFindBox, GCL_HCURSOR, (LONG)gCursorIBeam);
+        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorIBeam);
         ShowCaret(NULL);
     }
 }
@@ -4132,7 +4132,7 @@ static LRESULT CALLBACK DisableApplyBtnWndProc(HWND hWnd, UINT uiMsg, WPARAM wPa
     if (uiMsg == WM_ENABLE)
         EnableWindow(hWnd, FALSE);
 
-    WNDPROC nextWndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWL_USERDATA);
+    WNDPROC nextWndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_USERDATA);
     return CallWindowProc(nextWndProc, hWnd, uiMsg, wParam, lParam);
 }
 
@@ -4156,8 +4156,8 @@ public:
         if (uiMsg == WM_INITDIALOG) {
             HWND hPropSheetContainer = GetParent(GetParent(hDlg));
             HWND hApplyButton = GetDlgItem(hPropSheetContainer, ID_APPLY_NOW);
-            WNDPROC nextWndProc = (WNDPROC)SetWindowLongPtr(hApplyButton, GWL_WNDPROC, (LONG_PTR)DisableApplyBtnWndProc);
-            SetWindowLongPtr(hApplyButton, GWL_USERDATA, (LONG_PTR)nextWndProc);
+            WNDPROC nextWndProc = (WNDPROC)SetWindowLongPtr(hApplyButton, GWLP_WNDPROC, (LONG_PTR)DisableApplyBtnWndProc);
+            SetWindowLongPtr(hApplyButton, GWLP_USERDATA, (LONG_PTR)nextWndProc);
         }
         return S_FALSE;
     };
@@ -5917,12 +5917,12 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
     SetWindowFont(status, gDefaultGuiFont, true);
 
     if (!DefWndProcToolbar)
-        DefWndProcToolbar = (WNDPROC)GetWindowLong(win->hwndToolbar, GWL_WNDPROC);
-    SetWindowLong(win->hwndToolbar, GWL_WNDPROC, (LONG)WndProcToolbar);
+        DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
 
     if (!DefWndProcFindBox)
-        DefWndProcFindBox = (WNDPROC)GetWindowLong(find, GWL_WNDPROC);
-    SetWindowLong(find, GWL_WNDPROC, (LONG)WndProcFindBox);
+        DefWndProcFindBox = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
+    SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcFindBox);
 
     win->hwndFindText = label;
     win->hwndFindBox = find;
@@ -6047,8 +6047,8 @@ static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
     SetWindowFont(total, gDefaultGuiFont, true);
 
     if (!DefWndProcPageBox)
-        DefWndProcPageBox = (WNDPROC)GetWindowLong(page, GWL_WNDPROC);
-    SetWindowLong(page, GWL_WNDPROC, (LONG)WndProcPageBox);
+        DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
+    SetWindowLongPtr(page, GWLP_WNDPROC, (LONG_PTR)WndProcPageBox);
 
     win->hwndPageText = label;
     win->hwndPageBox = page;
@@ -6357,7 +6357,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
                         SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 16, 16, win->hwndTocBox, (HMENU)1, hInst, NULL);
     SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
-    SetClassLong(closeToc, GCL_HCURSOR, (LONG)gCursorHand);
+    SetClassLongPtr(closeToc, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
                         TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
@@ -6372,12 +6372,12 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
         TreeView_SetUnicodeFormat(win->hwndTocTree, true);
         
     if (NULL == DefWndProcTocTree)
-        DefWndProcTocTree = (WNDPROC)GetWindowLong(win->hwndTocTree, GWL_WNDPROC);
-    SetWindowLong(win->hwndTocTree, GWL_WNDPROC, (LONG)WndProcTocTree);
+        DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC, (LONG_PTR)WndProcTocTree);
 
     if (NULL == DefWndProcTocBox)
-        DefWndProcTocBox = (WNDPROC)GetWindowLong(win->hwndTocBox, GWL_WNDPROC);
-    SetWindowLong(win->hwndTocBox, GWL_WNDPROC, (LONG)WndProcTocBox);
+        DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
+    SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
 }
 
 static HTREEITEM AddTocItemToView(HWND hwnd, PdfTocItem *entry, HTREEITEM parent)

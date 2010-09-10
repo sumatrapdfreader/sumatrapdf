@@ -433,14 +433,14 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_LBUTTONDOWN:
             url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            SetWindowLong(hwnd, GWL_USERDATA, (LONG)url);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)url);
             break;
 
         case WM_LBUTTONUP:
             url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url && url == (const TCHAR *)GetWindowLong(hwnd, GWL_USERDATA))
+            if (url && url == (const TCHAR *)GetWindowLongPtr(hwnd, GWLP_USERDATA))
                 LaunchBrowser(url);
-            SetWindowLong(hwnd, GWL_USERDATA, 0);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
             break;
 
         case WM_CHAR:

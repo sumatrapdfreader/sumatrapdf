@@ -54,7 +54,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
         assert(!data->pwdOut);
 
         win_set_text(hDlg, _TR("Enter password"));
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
 
         TCHAR *txt = tstr_printf(_TR("Enter password for %s"), data->fileName);
@@ -77,7 +77,7 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+                    data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     assert(data);
                     data->pwdOut = win_get_text(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     if (data->remember)
@@ -136,7 +136,7 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
     {
         data = (Dialog_GoToPage_Data*)lParam;
         assert(data);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         assert(INVALID_PAGE_NO != data->currPageNo);
         assert(data->pageCount >= 1);
         win_set_text(hDlg, _TR("Go to page"));
@@ -165,7 +165,7 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+                    data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     assert(data);
                     data->pageEnteredOut = INVALID_PAGE_NO;
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
@@ -223,7 +223,7 @@ static BOOL CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LP
     case WM_INITDIALOG:
         data = (Dialog_Find_Data*)lParam;
         assert(data);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
         win_set_text(hDlg, _TR("Find"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Find what:"));
@@ -243,7 +243,7 @@ static BOOL CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LP
         switch (LOWORD(wParam))
         {
         case IDOK:
-            data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
             data->searchTerm = win_get_text(GetDlgItem(hDlg, IDC_FIND_EDIT));
             data->matchCase = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_MATCH_CASE);
@@ -290,7 +290,7 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
     {
         data = (Dialog_PdfAssociate_Data*)lParam;
         assert(data);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win_set_text(hDlg, _TR("Associate with PDF files?"));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("Make SumatraPDF default application for PDF files?"));
         SetDlgItemText(hDlg, IDC_DONT_ASK_ME_AGAIN, _TR("&Don't ask me again"));
@@ -306,7 +306,7 @@ static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wP
     switch (message)
     {
         case WM_COMMAND:
-            data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
             data->dontAskAgain = FALSE;
             switch (LOWORD(wParam))
@@ -367,7 +367,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
         DialogSizer_Set(hDlg, sz, TRUE, NULL);
         data = (Dialog_ChangeLanguage_Data*)lParam;
         assert(data);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         /* TODO: for some reason this doesn't work well e.g. when using
            russion translation, the russian part of window title is garbage (?)
            not russian text. Maybe I need to change the font ? */
@@ -393,7 +393,7 @@ static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM 
     switch (message)
     {
         case WM_COMMAND:
-            data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
             if (HIWORD(wParam) == LBN_DBLCLK) {
                 assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
@@ -445,7 +445,7 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
     {
         data = (Dialog_NewVersion_Data*)lParam;
         assert(NULL != data);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win_set_text(hDlg, _TR("New version available."));
 
         txt = tstr_printf(_TR("You have version %s"), data->currVersion);
@@ -469,7 +469,7 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
     switch (message)
     {
         case WM_COMMAND:
-            data = (Dialog_NewVersion_Data*)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            data = (Dialog_NewVersion_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
             data->skipThisVersion= FALSE;
             switch (LOWORD(wParam))
@@ -560,7 +560,7 @@ static BOOL CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wPar
     case WM_INITDIALOG:
         currZoom = (double *)lParam;
         assert(currZoom);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)currZoom);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)currZoom);
 
         SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
 
@@ -576,7 +576,7 @@ static BOOL CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wPar
         switch (LOWORD(wParam))
         {
         case IDOK:
-            currZoom = (double *)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            currZoom = (double *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(currZoom);
             *currZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
             EndDialog(hDlg, DIALOG_OK_PRESSED);
@@ -606,7 +606,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
     case WM_INITDIALOG:
         prefs = (SerializableGlobalPrefs *)lParam;
         assert(prefs);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)prefs);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)prefs);
 
         // Fill the page layouts into the select box
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Automatic"));
@@ -694,7 +694,7 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
         switch (LOWORD(wParam))
         {
         case IDOK:
-            prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(prefs);
             prefs->m_defaultDisplayMode = (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST);
             prefs->m_defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->m_defaultZoom);
@@ -758,7 +758,7 @@ static BOOL CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARAM w
     case WM_INITDIALOG:
         data = (Print_Advanced_Data *)((PROPSHEETPAGE *)lParam)->lParam;
         assert(data);
-        SetWindowLongPtr(hDlg, GWL_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
         SetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, _TR("Print range"));
         SetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, _TR("&All selected pages"));
@@ -778,7 +778,7 @@ static BOOL CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARAM w
 
     case WM_NOTIFY:
         if (((LPNMHDR)lParam)->code == PSN_APPLY) {
-            data = (Print_Advanced_Data *)GetWindowLongPtr(hDlg, GWL_USERDATA);
+            data = (Print_Advanced_Data *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(data);
             if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN))
                 data->range = PrintRangeEven;
