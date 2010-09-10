@@ -4025,41 +4025,52 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
 
     // print all the pages the user requested
     for (int i = 0; i < nPageRanges; i++) {
-        if (-1 == pr->nToPage && 0 < pr->nFromPage) {
+        if (-1 == pr->nFromPage && -1 == pr->nToPage) {
             // print with minimal margins as required by the printer
             printAreaWidth = GetDeviceCaps(hdc, HORZRES);
             printAreaHeight = GetDeviceCaps(hdc, VERTRES);
 
-            assert(1 == nPageRanges && sel && !sel->next);
+            assert(1 == nPageRanges && sel);
             DBG_OUT(" printing:  drawing bitmap for selection\n");
-            StartPage(hdc);
 
-            RectD * r = &sel->selectionPage;
-            fz_rect clipRegion;
-            clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
-            clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
+            for (; sel; sel = sel->next) {
+                StartPage(hdc);
 
-            int rotation = pdfEngine->pageRotation(pr->nFromPage) + dm->rotation();
-            // Swap width and height for rotated documents
-            SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
+                RectD * r = &sel->selectionPage;
+                fz_rect clipRegion;
+                clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
+                clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
 
-            double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
-            if (PrintScaleShrink == scaleAdv)
-                // try to use correct zoom values (scale down to fit the physical page, though)
-                zoom = min(dpiFactor, zoom);
+                int rotation = pdfEngine->pageRotation(sel->pageNo) + dm->rotation();
+                // Swap width and height for rotated documents
+                SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
-            RenderedBitmap *bmp = dm->renderBitmap(pr->nFromPage, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
-            if (bmp) {
-                bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
-                    (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
-                delete bmp;
+                double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
+                if (PrintScaleShrink == scaleAdv)
+                    // try to use correct zoom values (scale down to fit the physical page, though)
+                    zoom = min(dpiFactor, zoom);
+
+#ifdef USE_GDI_FOR_PRINTING
+                RECT rc;
+                rc.left = (printAreaWidth - sSize.dx() * zoom) / 2;
+                rc.top = (printAreaHeight - sSize.dy() * zoom) / 2;
+                rc.right = printAreaWidth - rc.left;
+                rc.bottom = printAreaHeight - rc.top;
+                dm->renderPage(hdc, sel->pageNo, &rc, 100.0 * zoom, dm->rotation(), &clipRegion);
+#else
+                RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
+                if (bmp) {
+                    bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
+                        (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
+                    delete bmp;
+                }
+#endif
+                if (EndPage(hdc) <= 0) {
+                    AbortDoc(hdc);
+                    return;
+                }
             }
-            if (EndPage(hdc) <= 0) {
-                AbortDoc(hdc);
-                return;
-            }
-
-            continue;
+            break;
         }
 
         assert(pr->nFromPage <= pr->nToPage);
@@ -4208,8 +4219,7 @@ static void OnMenuPrint(WindowInfo *win)
     pd.hDevMode    = NULL;   
     pd.hDevNames   = NULL;   
     pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE;
-    bool hasSelection = win->selectionOnPage && !win->selectionOnPage->next;
-    if (!hasSelection)
+    if (!win->selectionOnPage)
         pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
     /* by default print all pages */
@@ -4237,11 +4247,10 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.nPageRanges=1;
                     pd.lpPageRanges->nFromPage=dm->currentPageNo();
                     pd.lpPageRanges->nToPage  =dm->currentPageNo();
-                } else if (hasSelection && (pd.Flags & PD_SELECTION)) {
-                    // TODO: Implement printing multiple selections?
+                } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
                     pd.nPageRanges=1;
-                    pd.lpPageRanges->nFromPage=dm->currentPageNo();
-                    pd.lpPageRanges->nToPage  =-1; // hint for PrintToDevice
+                    pd.lpPageRanges->nFromPage=-1; // hint for PrintToDevice
+                    pd.lpPageRanges->nToPage  =-1;
                 } else if (!(pd.Flags & PD_PAGENUMS)) {
                     pd.nPageRanges=1;
                     pd.lpPageRanges->nFromPage=1;

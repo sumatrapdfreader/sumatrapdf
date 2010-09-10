@@ -570,22 +570,25 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *ctm, double zoomReal, int rotation)
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, double zoomReal, int rotation, fz_rect *pageRect)
 {
     fz_matrix ctm2;
     if (!ctm) {
         float zoom = zoomReal / 100.0;
         if (!zoom)
-            zoom = min(1.0 * (pageRect->right - pageRect->left) / (page->mediabox.x1 - page->mediabox.x0),
-                       1.0 * (pageRect->bottom - pageRect->top) / (page->mediabox.y1 - page->mediabox.y0));
+            zoom = min(1.0 * (screenRect->right - screenRect->left) / (page->mediabox.x1 - page->mediabox.x0),
+                       1.0 * (screenRect->bottom - screenRect->top) / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
-        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, page->mediabox));
-        ctm2 = fz_concat(ctm2, fz_translate(-bbox.x0, -bbox.y0));
+        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, pageRect ? *pageRect : page->mediabox));
+        ctm2 = fz_concat(ctm2, fz_translate(screenRect->left - bbox.x0, screenRect->top - bbox.y0));
         ctm = &ctm2;
     }
 
+    HRGN clip = CreateRectRgnIndirect(screenRect);
+    SelectClipRgn(hDC, clip);
+
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-    FillRect(hDC, pageRect, bgBrush); // initialize white background
+    FillRect(hDC, screenRect, bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
     fz_device *dev = fz_newgdiplusdevice(hDC);
@@ -593,6 +596,9 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *pageRect, fz_matrix *c
     fz_error error = pdf_runpage(_xref, page, dev, *ctm);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
+
+    SelectClipRgn(hDC, NULL);
+    DeleteObject(clip);
 
     return fz_okay == error;
 }
@@ -609,7 +615,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         return NULL;
     zoomReal = zoomReal / 100.0;
     fz_matrix ctm = viewctm(page, zoomReal, rotation);
-    if (!pageRect || useGdi)
+    if (!pageRect)
         pageRect = &page->mediabox;
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
 

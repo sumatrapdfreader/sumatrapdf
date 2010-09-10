@@ -135,11 +135,13 @@ public:
                          void *abortCheckCbkDataA,
                          bool useGdi=false) {
         if (!pdfEngine) return NULL;
-        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect, abortCheckCbkA, abortCheckCbkDataA, useGdi);
+        return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect,
+            abortCheckCbkA, abortCheckCbkDataA, useGdi);
     }
-    bool renderPage(HDC hDC, int pageNo, RECT *pageRect, double zoomReal=0, int rotation=0) {
+    bool renderPage(HDC hDC, int pageNo, RECT *screenRect, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL) {
         if (!pdfEngine) return false;
-        return pdfEngine->renderPage(hDC, pdfEngine->getPdfPage(pageNo), pageRect, NULL, zoomReal, rotation);
+        return pdfEngine->renderPage(hDC, pdfEngine->getPdfPage(pageNo), screenRect,
+            NULL, zoomReal, rotation, pageRect);
     }
 
     /* number of pages in PDF document */
