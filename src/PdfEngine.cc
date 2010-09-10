@@ -832,7 +832,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
                 *dest = '?';
             dest++;
             if (destRect)
-                memcpy(destRect++, &span->text[i].bbox, sizeof(fz_bbox));
+                *destRect++ = span->text[i].bbox;
         }
         if (!span->eol)
             continue;

@@ -3367,20 +3367,14 @@ static void DeleteOldSelectionInfo (WindowInfo *win) {
 }
 
 static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
-    RectI pageOnScreen, intersect;
-
     for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
         PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
         assert(!pageInfo->visible || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
-        pageOnScreen.x = pageInfo->currPosX - win->dm->areaOffset.x;
-        pageOnScreen.y = pageInfo->currPosY - win->dm->areaOffset.y;
-        pageOnScreen.dx = pageInfo->currDx;
-        pageOnScreen.dy = pageInfo->currDy;
-
-        if (!RectI_Intersect(&win->selectionRect, &pageOnScreen, &intersect))
+        RectI intersect;
+        if (!RectI_Intersect(&win->selectionRect, &pageInfo->pageOnScreen, &intersect))
             continue;
 
         /* selection intersects with a page <pageNo> on the screen */
@@ -5153,14 +5147,6 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     win->dm->goToPage(result->page, 0, wasModified);
     win->dm->MapResultRectToScreen(result);
 
-    PdfPageInfo *pdfPage = win->dm->getPageInfo(result->page);
-    RectI pageOnScreen = {
-        pdfPage->screenX,
-        pdfPage->screenY,
-        pdfPage->bitmapDx,
-        pdfPage->bitmapDy
-    };
-
     DeleteOldSelectionInfo(win);
     for (int i = 0; i < result->len; i++) {
         RectI rect = {
@@ -5172,15 +5158,12 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
         assert(result->rects[i].bottom >= result->rects[i].top);
         assert(result->rects[i].right >= result->rects[i].left);
 
-        RectI intersect;
-        if (RectI_Intersect(&rect, &pageOnScreen, &intersect)) {
-            SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
-            RectD_FromRectI(&selOnPage->selectionPage, &intersect);
-            selOnPage->pageNo = result->page;
-            win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
-            selOnPage->next = win->selectionOnPage;
-            win->selectionOnPage = selOnPage;
-        }
+        SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
+        RectD_FromRectI(&selOnPage->selectionPage, &rect);
+        selOnPage->pageNo = result->page;
+        win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
+        selOnPage->next = win->selectionOnPage;
+        win->selectionOnPage = selOnPage;
     }
 
     win->showSelection = true;
@@ -7489,14 +7472,6 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
         goto Exit;
     }
 
-    PdfPageInfo * pageInfo = pageInfo = win->dm->getPageInfo(1);
-
-    if (pageInfo->bitmapDx > pageInfo->bitmapDy) {
-        devMode->dmOrientation = DMORIENT_LANDSCAPE;
-    } else {
-        devMode->dmOrientation = DMORIENT_PORTRAIT;
-    }
-
     /*
      * Merge the new settings with the old.
      * This gives the driver an opportunity to update any private
@@ -7723,7 +7698,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     HACCEL              hAccelTable;
     WindowInfo*         win;
     bool                exitOnPrint = false;
-    bool                printToDefaultPrinter = false;
     bool                printDialog = false;
     bool                enterPresentation = false;
     TCHAR *             destName = NULL;
@@ -7808,10 +7782,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-exit-on-print")) {
             exitOnPrint = true;
         }
-        else if (is_arg("-print-to-default")) {
-            printToDefaultPrinter = true;
+        else if (is_arg("-print-to-default") && !printerName) {
+            printerName = GetDefaultPrinterName();
         }
-        else if (is_arg_with_param("-print-to")) {
+        else if (is_arg_with_param("-print-to") && !printerName) {
             printerName = tstr_dup(argList[++i]);
         }
         else if (is_arg("-print-dialog")) {
@@ -7923,7 +7897,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                     goto Exit;
                 if (WS_SHOWING_PDF != win->state) {
                     // cancel printing, if there was a load error
-                    exitOnPrint = printToDefaultPrinter = printDialog = FALSE;
+                    exitOnPrint = printDialog = FALSE;
                     free(printerName);
                     printerName = NULL;
                }
@@ -7943,12 +7917,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             if (exitOnPrint)
                 ShowWindow(win->hwndFrame, SW_HIDE);
 
-            if (printToDefaultPrinter) {
-                printerName = GetDefaultPrinterName();
-                if (printerName)
-                    PrintFile(win, printerName);
-                free(printerName);
-            } else if (printerName) {
+            if (printerName) {
                 // note: this prints all of PDF files. Another option would be to
                 // print only the first one
                 PrintFile(win, printerName);
@@ -7958,6 +7927,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             firstDocLoaded = true;
         }
     }
+
+    free(destName);
+    free(printerName);
 
     if (reuse_instance || ((printerName || printDialog) && exitOnPrint))
         goto Exit;
@@ -8029,8 +8001,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
     
 Exit:
-    free(destName);
-    free(printerName);
     free(gBenchFileName);
 
     FreePageRenderThread();

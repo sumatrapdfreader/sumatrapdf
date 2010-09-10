@@ -66,6 +66,8 @@ typedef struct PdfPageInfo {
     int             bitmapX, bitmapY, bitmapDx, bitmapDy;
     /* where it should be blitted on the screen */
     int             screenX, screenY;
+    /* position of page relative to visible draw area */
+    RectI           pageOnScreen;
 } PdfPageInfo;
 
 /* When searching, we can be in one of those states. The state determines what

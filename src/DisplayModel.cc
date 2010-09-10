@@ -655,6 +655,7 @@ void DisplayModel::recalcVisibleParts(void)
         pageRect.dx = (int)pageInfo->currDx;
         pageRect.dy = (int)pageInfo->currDy;
         pageInfo->visible = 0;
+
         if (pageRect.dx * pageRect.dy > 0 && RectI_Intersect(&pageRect, &drawAreaRect, &intersect)) {
             pageInfo->visible = 1.0 * intersect.dx * intersect.dy / (pageRect.dx * pageRect.dy);
             
@@ -675,6 +676,12 @@ void DisplayModel::recalcVisibleParts(void)
                           pageInfo->bitmapDx, pageInfo->bitmapDy,
                           pageInfo->screenX, pageInfo->screenY); */
         }
+
+        pageInfo->pageOnScreen = pageRect;
+        pageInfo->pageOnScreen.x -= areaOffset.x;
+        pageInfo->pageOnScreen.y -= areaOffset.y;
+        assert(max(pageInfo->pageOnScreen.x, 0) == pageInfo->screenX || !pageInfo->visible);
+        assert(max(pageInfo->pageOnScreen.y, 0) == pageInfo->screenY || !pageInfo->visible);
     }
 }
 
@@ -718,13 +725,7 @@ int DisplayModel::getPageNoByPoint (double x, double y)
         if (!pageInfo->shown)
             continue;
 
-        RectI pageOnScreen;
-        pageOnScreen.x = pageInfo->currPosX - areaOffset.x;
-        pageOnScreen.y = pageInfo->currPosY - areaOffset.y;
-        pageOnScreen.dx = pageInfo->currDx;
-        pageOnScreen.dy = pageInfo->currDy;
-
-        if (RectI_Inside (&pageOnScreen, (int)x, (int)y))
+        if (RectI_Inside(&pageInfo->pageOnScreen, (int)x, (int)y))
             return pageNo;
     }
     return POINT_OUT_OF_PAGE;
@@ -1616,8 +1617,10 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
             // and the page line's left margin
             PdfPageInfo * pageInfo = getPageInfo(pageNo);
             // TODO: These values are not up-to-date, if the page has not been shown yet
-            scrollX -= pageInfo->currPosX - areaOffset.x;
-            scrollY -= pageInfo->currPosY - areaOffset.y;
+            if (pageInfo->shown) {
+                scrollX -= pageInfo->pageOnScreen.x;
+                scrollY -= pageInfo->pageOnScreen.y;
+            }
         }
         goToPage(pageNo, scrollY, true, scrollX);
     }
@@ -1676,49 +1679,20 @@ TCHAR *DisplayModel::extractAllText(void)
 
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
 {
-    PdfPageInfo *pageInfo = getPageInfo(res->page);
     pdf_page *page = pdfEngine->getPdfPage(res->page);
-    if(!page)
+    if (!page)
         return;
-    int rot = rotation();
-    normalizeRotation (&rot);
-
-    int dispRot = rot + pageInfo->rotation;
-    normalizeRotation(&dispRot);
-    double vx = pageInfo->screenX - pageInfo->bitmapX,
-           vy = pageInfo->screenY - pageInfo->bitmapY;
-    if (dispRot == 90 || dispRot == 180)
-        vx += pageInfo->currDx;
-    if (dispRot == 180 || dispRot == 270)
-        vy += pageInfo->currDy;
 
     RECT extremes = { 0 };
     for (int i = 0; i < res->len; i++) {
         RECT *rect = &res->rects[i];
-        double left = rect->left, top = rect->top, right = rect->right, bottom = rect->bottom;
-        fz_matrix ctm = pdfEngine->viewctm(page, zoomReal() * 0.01, rot);
-        fz_point tp, p1 = {left, top}, p2 = {right, bottom};
-
-        tp = fz_transformpoint(ctm, p1);
-        left = tp.x - 0.5 + vx;
-        top = tp.y - 0.5 + vy;
-
-        tp = fz_transformpoint(ctm, p2);
-        right = tp.x + 0.5 + vx;
-        bottom = tp.y + 0.5 + vy;
-
-        if (left > right)
-            swap_double(&left, &right);
-        if (top > bottom)
-            swap_double(&top, &bottom);
-
-        rect->left = (int)floor(left);
-        rect->top = (int)floor(top);
-        rect->right = (int)ceil(right) + 5;
-        rect->bottom = (int)ceil(bottom) + 5;
+        RectD rectD;
+        RectD_FromXY(&rectD, rect->left, rect->right, rect->top, rect->bottom);
+        rectCvtUserToScreen(res->page, &rectD);
+        SetRect(rect, floor(rectD.x), floor(rectD.y), ceil(rectD.x + rectD.dx), ceil(rectD.y + rectD.dy));
 
         if (0 == i) {
-            memcpy(&extremes, rect, sizeof(RECT));
+            extremes = *rect;
         } else {
             extremes.left = min(rect->left, extremes.left);
             extremes.right = max(rect->right, extremes.right);
@@ -1727,9 +1701,12 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
         }
     }
 
+    PdfPageInfo *pageInfo = getPageInfo(res->page);
     int sx = 0, sy = 0;
     if (extremes.bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
-        sy = extremes.bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy;
+        sy = extremes.bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy + 5;
+    if (sy < 0)
+        sy = 0;
 
     if (extremes.left < pageInfo->screenX + pageInfo->bitmapX) {
         sx = extremes.left - pageInfo->screenX - pageInfo->bitmapX - 5;
@@ -1739,19 +1716,13 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
         sx = extremes.right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
     }
 
-    if (sy < 0)
-        sy = 0;
     if (sx != 0)
         scrollXBy(sx);
     if (sy != 0)
         scrollYBy(sy, false);
 
-    for (int i = 0; i < res->len; i++) {
-        res->rects[i].left -= sx;
-        res->rects[i].right -= sx;
-        res->rects[i].top -= sy;
-        res->rects[i].bottom -= sy;
-    }
+    for (int i = 0; i < res->len; i++)
+        OffsetRect(&res->rects[i], -sx, -sy);
 }
 
 void DisplayModel::rebuildLinks()
@@ -1841,7 +1812,7 @@ bool DisplayModel::addNavPoint(bool keepForward)
         memmove(_navHistory, _navHistory + 1, (NAV_HISTORY_LEN - 1) * sizeof(ScrollState));
         _navHistoryIx--;
     }
-    memcpy(&_navHistory[_navHistoryIx], &ss, sizeof(ss));
+    _navHistory[_navHistoryIx] = ss;
     _navHistoryIx++;
     if (!keepForward || _navHistoryIx > _navHistoryEnd)
         _navHistoryEnd = _navHistoryIx;
