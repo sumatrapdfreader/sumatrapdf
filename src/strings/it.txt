@@ -18,6 +18,9 @@ Contributor: Massimiliano Beltrando
 &Actual Size\tCtrl-1
 &Dimensioni reali\tCtrl-1
 
+&All selected pages
+Tutte le pagine selezionate
+
 &Back\tAlt+Left Arrow
 Indietro\tAlt+Freccia sinistra
 
@@ -30,6 +33,9 @@ Copia Selezione\tCtrl-C
 &Don't ask me again
 &Non chiedermelo più
 
+&Even pages only
+Solo pagine pari
+
 &File
 &Dati
 
@@ -38,6 +44,9 @@ Copia Selezione\tCtrl-C
 
 &First Page\tHome
 Prima pagina\tHome
+
+&Fit pages to printable area
+Aggiusta dimensioni pagine alla zona stampabile
 
 &Go To
 &Vai a
@@ -69,6 +78,9 @@ Pagina successiva\tFreccia destra
 &No, thanks
 &No, grazie
 
+&Odd pages only
+Solo pagine dispari
+
 &Open\tCtrl-O
 &Apri\tCtrl-O
 
@@ -87,6 +99,9 @@ Pagina precedente\tFreccia destra
 &Print... (denied)
 &Stampa... (rifiutato)
 
+&Remember the password for this document
+Ricorda la password per questo documento
+
 &Remember these settings for each document
 &Ricorda le impostazioni per ogni documento
 
@@ -95,6 +110,9 @@ Pagina precedente\tFreccia destra
 
 &Settings
 &Impostazioni
+
+&Shrink pages to printable area (if necessary)
+Riduci le pagine alla zona stampabile (se necessario)
 
 &Skip this version
 &Salta questa versione
@@ -126,6 +144,9 @@ Applicazione:
 Associate with PDF files?
 Associare ai file PDF?
 
+Attachment: %s
+Allegato: %s
+
 Author:
 Autore:
 
@@ -140,6 +161,9 @@ Vista libro
 
 Book&marks\tF12
 Segnalibri\tF12
+
+Bookmarks
+Segnalibri
 
 Bytes
 Byte
@@ -342,6 +366,9 @@ Dimensione pagina:
 Page number %u inexistant
 Pagina numero  %u inesistente
 
+Page scaling
+Dimensionamento pagina
+
 Page:
 Pagina:
 
@@ -353,6 +380,9 @@ Stampa con Adobe Reader...
 
 Previous Page
 Pagina precedente
+
+Print range
+Stampare pagine
 
 Printing problem.
 Problema di stampa.
@@ -452,16 +482,4 @@ Copia testo
 
 printing document
 Stampa documento
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Print range
 
