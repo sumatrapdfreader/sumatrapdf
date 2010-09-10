@@ -722,7 +722,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         else if (editor_rules[i].Type == BinaryDir)
         {
             // remove trailing path separator (TODO: move to function in file_util.c)
-            int len = tstr_len(path);
+            size_t len = tstr_len(path);
             if (*path && char_is_dir_sep(path[len-1]))
                 path[len-1] = 0;
             cmd = tstr_printf(_T("\"%s\\%s\" %s"), path, editor_rules[i].BinaryFilename, editor_rules[i].InverseSearchArgs);
@@ -1332,7 +1332,7 @@ double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0,
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
-    for (size_t i=0; i < dimof(gItemZoom); i++) {
+    for (int i = 0; i < dimof(gItemZoom); i++) {
         if (virtualZoom == gItemZoom[i])
             return gItemId[i];
     }
@@ -1341,10 +1341,9 @@ static UINT MenuIdFromVirtualZoom(double virtualZoom)
 
 static double ZoomMenuItemToZoom(UINT menuItemId)
 {
-    for (size_t i=0; i<dimof(gItemId); i++) {
-        if (menuItemId == gItemId[i]) {
+    for (int i = 0; i < dimof(gItemId); i++) {
+        if (menuItemId == gItemId[i])
             return gItemZoom[i];
-        }
     }
     assert(0);
     return 100.0;
@@ -1354,7 +1353,7 @@ static void ZoomMenuItemCheck(HMENU hmenu, UINT menuItemId, BOOL canZoom)
 {
     assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
 
-    for (size_t i = 0; i < dimof(gItemId); i++)
+    for (int i = 0; i < dimof(gItemId); i++)
         EnableMenuItem(hmenu, gItemId[i], MF_BYCOMMAND | (canZoom ? MF_ENABLED : MF_GRAYED));
 
     if (IDM_ZOOM_100 == menuItemId)
@@ -1796,7 +1795,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     const LPARAM enable = (LPARAM)MAKELONG(1,0);
     const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
-    for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+    for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         if (TbIsSepId(gToolbarButtons[i].bmpIndex))
             continue;
 
@@ -1939,7 +1938,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
-    for (size_t i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
+    for (int i = 0; i < dimof(menusToDisableIfNoPdf); i++) {
         UINT menuId = menusToDisableIfNoPdf[i];
         if (WS_SHOWING_PDF == win->state)
             EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_ENABLED);
@@ -5643,7 +5642,7 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
     TBBUTTONINFO buttonInfo;
     HWND hwnd = win->hwndToolbar;
     LRESULT res;
-    for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+    for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         WPARAM buttonId = (WPARAM)i;
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
@@ -6096,7 +6095,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     ImageList_AddMasked(himl, hbmp, RGB(255, 0, 255));
     DeleteObject(hbmp);
 
-    for (size_t i=0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+    for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
         if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
             tbButtons[i].fsStyle = BTNS_CHECK;
@@ -7617,7 +7616,7 @@ void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
         goto exit;
     }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (tstr_len(command) + 1) * sizeof(TCHAR), 0, 0, dataFormat, 0);
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(tstr_len(command) + 1) * sizeof(TCHAR), 0, 0, dataFormat, 0);
     if (hddedata == 0) {
         DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
     }

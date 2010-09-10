@@ -11,14 +11,15 @@
 
 WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)
 {
-    int len = wstr_len(dest), count = dst_cch_size - len;
+    size_t len = wstr_len(dest);
+    int count = dst_cch_size - len;
     int ret = _snwprintf(dest + len, count, L"%s", src);
     return (ret<count ) ? dest : NULL;
 }
 
 WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
-    int len = wstr_len(dst);
+    size_t len = wstr_len(dst);
     if (dst_cch_size > len + src_cch_size) {
         memcpy(dst + len, src, src_cch_size * sizeof *src);
         dst[len] = 0;

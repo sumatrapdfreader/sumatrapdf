@@ -515,11 +515,11 @@ BOOL dict_get_double_from_str(benc_dict* dict, const char* key, double* valOut)
     return str_to_double(str, valOut);
 }
 
-static benc_array * _parse_array(const char** dataInOut, int* lenInOut)
+static benc_array * _parse_array(const char** dataInOut, size_t* lenInOut)
 {
     char            c;
     const char *    data = *dataInOut;
-    int             len = *lenInOut;
+    size_t          len = *lenInOut;
     benc_obj *      bobj;
 
     benc_array *bobj_arr = benc_array_new();
@@ -821,9 +821,9 @@ static size_t _serialize_str(benc_str* bobj, char* data)
 
 static size_t _serialize_array(benc_array* arr, char* data)
 {
-    int i;
+    size_t i;
     size_t len;
-    int arr_len = benc_array_len(arr);
+    size_t arr_len = benc_array_len(arr);
     char *start = data;
     *data++ = 'l';
     for (i = 0; i < arr_len; i++) {

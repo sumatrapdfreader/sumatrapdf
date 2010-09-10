@@ -114,10 +114,10 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
 // PDFSYNC synchronizer
 int Pdfsync::get_record_section(int record_index)
 {
-    int leftsection = 0,
-        rightsection = record_sections.size()-1;
-    if (rightsection < 0)
+    size_t leftsection = 0, rightsection = record_sections.size();
+    if (rightsection == 0)
         return -1; // no section in the table
+    rightsection--;
     while (1) {
         int n = rightsection-leftsection+1;
         // a single section?
@@ -224,7 +224,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                 // read the filename
                 fgetline(buff, dimof(buff), fp);
                 PSTR pfilename = buff;
-                int len = str_len(buff);
+                size_t len = str_len(buff);
                 // if the filename contains quotes then remove them
                 if (str_startswithi(buff, "\"") && str_endswith_char(buff,'"')) {
                     pfilename++;
@@ -268,7 +268,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                         sec.startpos = linepos;
                         sec.firstrecord = recordNumber;
                         record_sections.push_back(sec);
-                        cur_recordsec = record_sections.size()-1;
+                        cur_recordsec = (int)record_sections.size()-1;
                     }
 #ifndef NDEBUG
                     record_sections[cur_recordsec].highestrecord = recordNumber;
@@ -296,7 +296,7 @@ int Pdfsync::scan_and_build_index(FILE *fp)
                     sec.endpos = -1;
 #endif
                     pline_sections.push_back(sec);
-                    cur_plinesec = pline_sections.size()-1;
+                    cur_plinesec = (int)pline_sections.size()-1;
 
                     assert(cur_sheetNumber != (UINT)-1);
                     pdfsheet_index[cur_sheetNumber] = cur_plinesec;

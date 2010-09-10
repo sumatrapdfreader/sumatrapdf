@@ -30,14 +30,15 @@ void strcpy_s(char *dst, size_t dstLen, const char *src)
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
 {
-    int len = str_len(dst), count = dst_cch_size - len;
+    size_t len = str_len(dst);
+    int count = dst_cch_size - len;
     int ret = _snprintf(dst + len, count, "%s", src);
     return (ret<count ) ? dst : NULL;
 }
 
 char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
 {
-    int len = str_len(dst);
+    size_t len = str_len(dst);
     if (dst_cch_size > len + src_cch_size) {
         memcpy(dst + len, src, src_cch_size * sizeof *src);
         dst[len] = 0;
