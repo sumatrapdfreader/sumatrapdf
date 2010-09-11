@@ -70,7 +70,7 @@ static void sweepobj(fz_obj *obj)
 static void sweepref(fz_obj *obj)
 {
 	int num = fz_tonum(obj);
-	int gen = fz_tonum(obj);
+	int gen = fz_togen(obj);
 
 	if (num < 0 || num >= xref->len)
 		return;

@@ -836,10 +836,6 @@ Lsetcolor:
 				return fz_throw("cannot find Font dictionary");
 
 			obj = fz_dictget(dict, csi->stack[0]);
-			/* lacking a font, just fall back to any font, so that we can go on */
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=424 */
-			if (!obj && (obj = fz_dictgetval(dict, 0)))
-				fz_warn("cannot find font resource: %s; substituting with: %s", fz_toname(csi->stack[0]), fz_toname(fz_dictgetkey(dict, 0)));
 			if (!obj)
 				return fz_throw("cannot find font resource: %s", fz_toname(csi->stack[0]));
 
