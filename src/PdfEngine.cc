@@ -144,58 +144,30 @@ void fz_pixmaptodc(HDC hDC, fz_pixmap *pixmap, fz_rect *dest)
     DeleteObject(hbmp);
 }
 
-pdf_outline *pdf_newoutline(char *title, fz_obj *dest)
-{
-    pdf_outline *node = (pdf_outline *)zmalloc(sizeof(pdf_outline));
-    node->title = title;
-
-    fz_obj *type = fz_dictgets(dest, "Type");
-    if (fz_isname(type) && !strcmp(fz_toname(type), "Filespec")) {
-        node->link = (pdf_link *)zmalloc(sizeof(pdf_link));
-        node->link->kind = PDF_LLAUNCH;
-        node->link->dest = fz_keepobj(dest);
-    }
-
-    return node;
-}
-
-void pdf_loadattachmentsimp(pdf_xref *xref, pdf_outline *current, fz_obj *node)
-{
-    fz_obj *kids = fz_dictgets(node, "Kids");
-    fz_obj *names = fz_dictgets(node, "Names");
-
-    if (!names && !kids)
-        fz_warn("Ignoring name tree node without names nor kids (%d %d R)", fz_tonum(node), fz_togen(node));
-
-    if (fz_isarray(kids))
-        for (int i = 0; i < fz_arraylen(kids); i++)
-            pdf_loadattachmentsimp(xref, current, fz_arrayget(kids, i));
-
-    if (fz_isarray(names)) {
-        for (int i = 0; i < fz_arraylen(names) - 1; i += 2) {
-            fz_obj *name = fz_arrayget(names, i);
-            fz_obj *dest = fz_arrayget(names, i + 1);
-
-            current = current->next = pdf_newoutline(pdf_toutf8(name), dest);
-        }
-    }
-}
-
 pdf_outline *pdf_loadattachments(pdf_xref *xref)
 {
-    fz_obj *names = fz_dictgets(fz_dictgets(xref->trailer, "Root"), "Names");
-    fz_obj *obj = fz_dictgets(names, "EmbeddedFiles");
-    if (!obj)
+    fz_obj *dict = pdf_loadnametree(xref, "EmbeddedFiles");
+    if (!dict)
         return NULL;
 
-    pdf_outline *root = pdf_newoutline(NULL, NULL);
-    pdf_loadattachmentsimp(xref, root, obj);
+    pdf_outline root = { 0 }, *node = &root;
+    for (int i = 0; i < fz_dictlen(dict); i++) {
+        node = node->next = (pdf_outline *)zmalloc(sizeof(pdf_outline));
 
-    pdf_outline *first = root->next;
-    root->next = NULL;
-    pdf_freeoutline(root);
+        fz_obj *name = fz_dictgetkey(dict, i);
+        fz_obj *dest = fz_dictgetval(dict, i);
+        fz_obj *type = fz_dictgets(dest, "Type");
 
-    return first;
+        node->title = strdup(fz_toname(name));
+        if (fz_isname(type) && !strcmp(fz_toname(type), "Filespec")) {
+            node->link = (pdf_link *)zmalloc(sizeof(pdf_link));
+            node->link->kind = PDF_LLAUNCH;
+            node->link->dest = fz_keepobj(dest);
+        }
+    }
+    fz_dropobj(dict);
+
+    return root.next;
 }
 
 void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)

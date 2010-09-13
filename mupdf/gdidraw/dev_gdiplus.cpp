@@ -311,10 +311,10 @@ extern "C" static int conic_to(const FT_Vector *ctrl, const FT_Vector *to, void 
 	// cf. http://fontforge.sourceforge.net/bezier.html
 	from.x = path->els[path->len - 2].v;
 	from.y = path->els[path->len - 1].v;
-	ctrl1.x = from.x + 2/3 * (ctrl->x - from.x);
-	ctrl1.y = from.y + 2/3 * (ctrl->y - from.y);
-	ctrl2.x = ctrl1.x + 1/3 * (to->x - from.x);
-	ctrl2.y = ctrl1.y + 1/3 * (to->y - from.y);
+	ctrl1.x = from.x + 2.0/3 * (ctrl->x - from.x);
+	ctrl1.y = from.y + 2.0/3 * (ctrl->y - from.y);
+	ctrl2.x = ctrl1.x + 1.0/3 * (to->x - from.x);
+	ctrl2.y = ctrl1.y + 1.0/3 * (to->y - from.y);
 	
 	return cubic_to(&ctrl1, &ctrl2, to, user);
 }

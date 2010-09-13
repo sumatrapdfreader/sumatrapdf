@@ -98,6 +98,15 @@ pdf_toucs2(fz_obj *src)
 	return dst;
 }
 
+fz_obj *
+pdf_toutf8name(fz_obj *src)
+{
+	char *buf = pdf_toutf8(src);
+	fz_obj *dst = fz_newname(buf);
+	fz_free(buf);
+	return dst;
+}
+
 fz_error
 pdf_parsearray(fz_obj **op, pdf_xref *xref, fz_stream *file, char *buf, int cap)
 {

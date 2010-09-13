@@ -2,12 +2,10 @@
 #include "mupdf.h"
 
 static fz_obj *
-pdf_lookupdestimp(fz_obj *node, fz_obj *nameddest)
+pdf_lookupnameimp(fz_obj *node, fz_obj *needle)
 {
-	fz_obj *kids, *names;
-
-	kids = fz_dictgets(node, "Kids");
-	names = fz_dictgets(node, "Names");
+	fz_obj *kids = fz_dictgets(node, "Kids");
+	fz_obj *names = fz_dictgets(node, "Names");
 
 	if (fz_isarray(kids))
 	{
@@ -22,12 +20,12 @@ pdf_lookupdestimp(fz_obj *node, fz_obj *nameddest)
 			fz_obj *first = fz_arrayget(limits, 0);
 			fz_obj *last = fz_arrayget(limits, 1);
 
-			if (fz_objcmp(nameddest, first) < 0)
+			if (fz_objcmp(needle, first) < 0)
 				r = m - 1;
-			else if (fz_objcmp(nameddest, last) > 0)
+			else if (fz_objcmp(needle, last) > 0)
 				l = m + 1;
 			else
-				return pdf_lookupdestimp(kid, nameddest);
+				return pdf_lookupnameimp(kid, needle);
 		}
 	}
 
@@ -43,7 +41,7 @@ pdf_lookupdestimp(fz_obj *node, fz_obj *nameddest)
 			fz_obj *key = fz_arrayget(names, m * 2);
 			fz_obj *val = fz_arrayget(names, m * 2 + 1);
 
-			c = fz_objcmp(nameddest, key);
+			c = fz_objcmp(needle, key);
 			if (c < 0)
 				r = m - 1;
 			else if (c > 0)
@@ -57,7 +55,16 @@ pdf_lookupdestimp(fz_obj *node, fz_obj *nameddest)
 }
 
 fz_obj *
-pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest)
+pdf_lookupname(pdf_xref *xref, char *which, fz_obj *needle)
+{
+	fz_obj *root = fz_dictgets(xref->trailer, "Root");
+	fz_obj *names = fz_dictgets(root, "Names");
+	fz_obj *tree = fz_dictgets(names, which);
+	return pdf_lookupnameimp(tree, needle);
+}
+
+fz_obj *
+pdf_lookupdest(pdf_xref *xref, fz_obj *needle)
 {
 	fz_obj *root = fz_dictgets(xref->trailer, "Root");
 	fz_obj *dests = fz_dictgets(root, "Dests");
@@ -67,24 +74,66 @@ pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest)
 	/* PDF 1.1 has destinations in a dictionary */
 	if (dests)
 	{
-		if (fz_isname(nameddest))
-			dest = fz_dictget(dests, nameddest);
+		if (fz_isname(needle))
+			return fz_dictget(dests, needle);
 		else
-			dest = fz_dictgets(dests, fz_tostrbuf(nameddest));
+			return fz_dictgets(dests, fz_tostrbuf(needle));
 	}
 
 	/* PDF 1.2 has destinations in a name tree */
 	if (names && !dest)
 	{
-		fz_obj *desttree = fz_dictgets(names, "Dests");
-		if (desttree)
-			dest = pdf_lookupdestimp(desttree, nameddest);
+		fz_obj *tree = fz_dictgets(names, "Dests");
+		return pdf_lookupnameimp(tree, needle);
 	}
 
-	if (fz_isdict(dest))
-		return dest;
-	if (fz_isarray(dest))
-		return dest;
+	return nil;
+}
 
+static void
+pdf_loadnametreeimp(fz_obj *dict, pdf_xref *xref, fz_obj *node)
+{
+	fz_obj *kids = fz_dictgets(node, "Kids");
+	fz_obj *names = fz_dictgets(node, "Names");
+	int i;
+
+	if (kids)
+	{
+		for (i = 0; i < fz_arraylen(kids); i++)
+			pdf_loadnametreeimp(dict, xref, fz_arrayget(kids, i));
+	}
+
+	if (names)
+	{
+		for (i = 0; i + 1 < fz_arraylen(names); i += 2)
+		{
+			fz_obj *key = fz_arrayget(names, i);
+			fz_obj *val = fz_arrayget(names, i + 1);
+			if (fz_isstring(key))
+			{
+				key = pdf_toutf8name(key);
+				fz_dictput(dict, key, val);
+				fz_dropobj(key);
+			}
+			else if (fz_isname(key))
+			{
+				fz_dictput(dict, key, val);
+			}
+		}
+	}
+}
+
+fz_obj *
+pdf_loadnametree(pdf_xref *xref, char *which)
+{
+	fz_obj *root = fz_dictgets(xref->trailer, "Root");
+	fz_obj *names = fz_dictgets(root, "Names");
+	fz_obj *tree = fz_dictgets(names, which);
+	if (fz_isdict(tree))
+	{
+		fz_obj *dict = fz_newdict(100);
+		pdf_loadnametreeimp(dict, xref, tree);
+		return dict;
+	}
 	return nil;
 }

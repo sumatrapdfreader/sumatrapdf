@@ -45,6 +45,8 @@ fz_rect pdf_torect(fz_obj *array);
 fz_matrix pdf_tomatrix(fz_obj *array);
 char * pdf_toutf8(fz_obj *src);
 unsigned short * pdf_toucs2(fz_obj *src);
+fz_obj * pdf_toutf8name(fz_obj *src);
+
 
 /*
  * Encryption
@@ -476,7 +478,10 @@ struct pdf_outline_s
 	pdf_outline *next;
 };
 
-fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *nameddest);
+fz_obj *pdf_lookupdest(pdf_xref *xref, fz_obj *needle);
+fz_obj *pdf_lookupname(pdf_xref *xref, char *which, fz_obj *needle);
+fz_obj *pdf_loadnametree(pdf_xref *xref, char *which);
+
 
 pdf_outline *pdf_loadoutline(pdf_xref *xref);
 void pdf_debugoutline(pdf_outline *outline, int level);
