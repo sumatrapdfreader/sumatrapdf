@@ -1679,10 +1679,6 @@ TCHAR *DisplayModel::extractAllText(void)
 
 void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
 {
-    pdf_page *page = pdfEngine->getPdfPage(res->page);
-    if (!page)
-        return;
-
     RECT extremes = { 0 };
     for (int i = 0; i < res->len; i++) {
         RECT *rect = &res->rects[i];

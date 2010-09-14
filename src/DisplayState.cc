@@ -11,10 +11,9 @@ void normalizeRotation(int *rotation)
 {
     assert(rotation);
     if (!rotation) return;
-    while (*rotation < 0)
+    *rotation = *rotation % 360;
+    if (*rotation < 0)
         *rotation += 360;
-    while (*rotation >= 360)
-        *rotation -= 360;
 }
 
 BOOL validRotation(int rotation)

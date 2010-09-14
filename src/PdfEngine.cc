@@ -461,7 +461,10 @@ int PdfEngine::findPageNo(fz_obj *dest)
 fz_obj *PdfEngine::getNamedDest(const char *name)
 {
     fz_obj *nameobj = fz_newstring((char*)name, strlen(name));
-    return pdf_lookupdest(_xref, nameobj);
+    fz_obj *dest = pdf_lookupdest(_xref, nameobj);
+    fz_dropobj(nameobj);
+
+    return dest;
 }
 
 pdf_page *PdfEngine::getPdfPage(int pageNo)
@@ -518,7 +521,7 @@ SizeD PdfEngine::pageSize(int pageNo)
     assert(validPageNo(pageNo));
     fz_obj *page = pdf_getpageobject(_xref, pageNo);
     fz_rect bbox;
-    if (!page || pdf_getmediabox(&bbox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
+    if (!page || pdf_getmediabox(&bbox, page) != fz_okay)
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }
