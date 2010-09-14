@@ -10,10 +10,6 @@ extern "C" {
 #include FT_ADVANCES_H
 }
 
-// TODO: using the GDI+ font APIs leads to crashes (e.g. in ~PrivateFontCollection)
-//       and to misrenderings (e.g. of stroked text)
-// #define USE_GDI_FONT_API
-
 using namespace Gdiplus;
 
 static ULONG_PTR m_gdiplusToken;
@@ -183,13 +179,11 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 	return pen;
 }
 
-#ifdef USE_GDI_FONT_API
 static Font *
-gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
+gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, float *out_ascent)
 {
-	WCHAR familyName[LF_FACESIZE];
-	
 	assert(collection->GetFamilyCount() == 0);
+	
 	if (font->_data_len != 0)
 	{
 		collection->AddMemoryFont(font->_data, font->_data_len);
@@ -201,29 +195,29 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height)
 		collection->AddFontFile(fontPath);
 	}
 	
-	if (collection->GetFamilyCount() > 0)
-	{
-		FontFamily family;
-		int found = 0;
-		
-		collection->GetFamilies(1, &family, &found);
-		assert(found == 1);
-		family.GetFamilyName(familyName);
-		
-		FontStyle styles[] = { FontStyleRegular, FontStyleBold, FontStyleItalic, FontStyleBoldItalic };
-		for (int i = 0; i < nelem(styles); i++)
-			if (family.IsStyleAvailable(styles[i]))
-				return new Font(familyName, height, styles[i], UnitPixel, collection);
-	}
+	if (collection->GetFamilyCount() == 0)
+		return NULL;
 	
-	MultiByteToWideChar(CP_UTF8, 0, font->name, -1, familyName, nelem(familyName));
-	FontFamily family(familyName);
-	if (family.IsAvailable())
-		return new Font(&family, height, FontStyleRegular);
+	FontFamily family;
+	int found = 0;
+	collection->GetFamilies(1, &family, &found);
+	assert(found == 1);
+	
+	WCHAR familyName[LF_FACESIZE];
+	family.GetFamilyName(familyName);
+	
+	FontStyle styles[] = { FontStyleRegular, FontStyleBold, FontStyleItalic, FontStyleBoldItalic };
+	for (int i = 0; i < nelem(styles); i++)
+	{
+		if (family.IsStyleAvailable(styles[i]))
+		{
+			*out_ascent = 1.0 * family.GetCellAscent(styles[i]) / family.GetEmHeight(styles[i]);
+			return new Font(familyName, height, styles[i], UnitPixel, collection);
+		}
+	}
 	
 	return NULL;
 }
-#endif
 
 extern "C" static void
 fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha);
@@ -370,12 +364,11 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 }
 
 static void
-gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
+gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 {
-#ifdef USE_GDI_FONT_API
 	PrivateFontCollection collection;
-	float fontSize = fz_matrixexpansion(text->trm);
-	Font *font = gdiplusgetfont(&collection, text->font, fontSize / (gpath ? 1 : M_SQRT2 /* ??? */) * 96.0 / graphics->GetDpiY());
+	float fontSize = fz_matrixexpansion(text->trm), cellAscent = 0;
+	Font *font = gdiplusgetfont(&collection, text->font, fontSize, &cellAscent);
 	
 	if (font && text->len > 0 && text->els[0].ucs == '?')
 	{
@@ -385,46 +378,28 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, G
 	}
 	if (!font)
 	{
-		gdiplusrendertext(graphics, text, ctm, brush, gpath);
+		gdiplusrendertext(graphics, text, ctm, brush);
 		return;
 	}
 	
+	const StringFormat *format = StringFormat::GenericTypographic();
 	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, 1.0 / fontSize));
 	assert(text->trm.e == 0 && text->trm.f == 0);
 	ctm = fz_concat(fz_scale(1, -1), ctm);
 	
-	FontFamily fontFamily;
-	if (gpath)
-	{
-		font->GetFamily(&fontFamily);
-		gdiplusapplytransform(graphics, ctm);
-	}
-	
 	for (int i = 0; i < text->len; i++)
 	{
-		WCHAR out[2] = { 0 };
-		out[0] = text->els[i].ucs;
-		if (!gpath)
-		{
-			fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
-			ctm2 = fz_concat(fz_scale(-1, 1), fz_concat(rotate, ctm2));
-			ctm2 = fz_concat(fz_translate(0, -fontSize), ctm2);
-			
-			gdiplusapplytransform(graphics, ctm2);
-			graphics->DrawString(out, 1, font, PointF(0, 0), brush);
-		}
-		else
-		{
-			// TODO: correctly rotate glyphs according to text->trm
-			PointF origin(text->els[i].x, -text->els[i].y - fontSize);
-			gpath->AddString(out, 1, &fontFamily, font->GetStyle(), font->GetSize(), origin, NULL);
-		}
+		WCHAR out = text->els[i].ucs;
+		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
+		ctm2 = fz_concat(fz_scale(-1, 1), fz_concat(rotate, ctm2));
+		ctm2 = fz_concat(fz_translate(0, -fontSize * cellAscent), ctm2);
+		
+		gdiplusapplytransform(graphics, ctm2);
+		graphics->DrawString(&out, 1, font, PointF(0, 0), format, brush);
 	}
 	
+	delete format;
 	delete font;
-#else
-	gdiplusrendertext(graphics, text, ctm, brush, gpath);
-#endif
 }
 
 static void
@@ -471,7 +446,7 @@ fz_gdiplusstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matri
 	Brush *brush = gdiplusgetbrush(user, colorspace, color, alpha);
 	GraphicsPath *gpath = new GraphicsPath();
 	if (text->font->ftface)
-		gdiplusruntext(graphics, text, ctm, brush, gpath);
+		gdiplusrendertext(graphics, text, ctm, brush, gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha/*, gpath */);
 	
@@ -492,7 +467,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	GraphicsPath *gpath = new GraphicsPath();
 	float black[3] = { 0 };
 	if (text->font->ftface)
-		gdiplusruntext(graphics, text, ctm, NULL, gpath);
+		gdiplusrendertext(graphics, text, ctm, NULL, gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0/*, gpath */);
 	((userData *)user)->pushClip(&Region(gpath), 1.0, accumulate ? CombineModeUnion : CombineModeReplace);
