@@ -826,8 +826,6 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     assert(dm);
     if (!dm) goto Exit;
 
-    dm->ageStore();
-
     LockCache();
     int rotation = dm->rotation();
     normalizeRotation(&rotation);

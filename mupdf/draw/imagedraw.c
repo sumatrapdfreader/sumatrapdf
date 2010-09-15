@@ -1,6 +1,7 @@
 #include "fitz.h"
 
-#define noLINEAR
+/* SumatraPDF: fix image rendering issue (paired with a define in dev_draw.c) */
+#define LINEAR
 
 typedef unsigned char byte;
 

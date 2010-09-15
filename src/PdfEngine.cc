@@ -863,3 +863,11 @@ fz_buffer *PdfEngine::getStreamData(int num, int gen)
 
     return data;
 }
+
+void PdfEngine::ageStore()
+{
+    EnterCriticalSection(&_xrefAccess);
+    if (_xref && _xref->store)
+        pdf_agestore(_xref->store, 3);
+    LeaveCriticalSection(&_xrefAccess);
+}

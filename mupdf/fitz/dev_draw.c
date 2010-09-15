@@ -6,7 +6,8 @@
 
 #define STACKSIZE 96
 
-#define SMOOTHSCALE
+/* SumatraPDF: fix image rendering issue (paired with a define in imagedraw.c) */
+#define noSMOOTHSCALE
 
 typedef struct fz_drawdevice_s fz_drawdevice;
 

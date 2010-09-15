@@ -1365,6 +1365,7 @@ void BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel, int rotatio
     entry->bitmap = bitmap;
     entry->renderTime = renderTime;
     gBitmapCache[gBitmapCacheCount++] = entry;
+    dm->ageStore();
 UnlockAndExit:
     UnlockCache();
 }
