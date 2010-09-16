@@ -88,6 +88,9 @@ Most compilers implement their own version of this keyword ...
 
 /* MSVC does not have lrintf */
 #ifdef _MSC_VER
+
+/* MSVC 64bits doesn't support _asm */
+#if !defined(_WIN64)
 static INLINE long lrintf(float f){
 	int i;
 
@@ -98,6 +101,23 @@ static INLINE long lrintf(float f){
 
 	return i;
 }
+#else
+static INLINE long lrintf(float x){
+  int r;
+  if (x>=0.f)
+  {
+     x+=0.5f;
+  }
+  else
+  {
+     x-=0.5f;
+  }
+  r = (int)(x);
+  if ( x != (float)(r) ) return r;
+  return 2*(r/2);
+}
+#endif
+
 #endif
 
 #include "j2k_lib.h"
