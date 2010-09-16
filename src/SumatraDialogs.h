@@ -14,7 +14,7 @@ class WindowInfo;
 int     Dialog_GoToPage(WindowInfo *win);
 TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
 TCHAR * Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *rememberPassword);
-int     Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
+INT_PTR Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
 
 /* For passing data to/from 'new version available' dialog */
@@ -24,10 +24,10 @@ typedef struct {
     BOOL skipThisVersion;
 } Dialog_NewVersion_Data;
 
-int     Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);
+INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);
 
-int     Dialog_CustomZoom(HWND hwnd, double *currZoom);
-int     Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
+INT_PTR Dialog_CustomZoom(HWND hwnd, double *currZoom);
+INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
 
 enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };
 enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };

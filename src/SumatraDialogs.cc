@@ -42,7 +42,7 @@ typedef struct {
     bool *         remember;   /* remember the password (encrypted) or ask again? */
 } Dialog_GetPassword_Data;
 
-static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_GetPassword_Data *  data;
 
@@ -101,7 +101,6 @@ static BOOL CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT message, WPARAM wPa
 */
 TCHAR *Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *rememberPassword)
 {
-    int                     dialogResult;
     Dialog_GetPassword_Data data = { 0 };
     
     assert(fileName);
@@ -110,7 +109,7 @@ TCHAR *Dialog_GetPassword(WindowInfo *win, const TCHAR *fileName, bool *remember
     data.fileName = fileName;
     data.remember = rememberPassword;
 
-    dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), win->hwndFrame, Dialog_GetPassword_Proc, (LPARAM)&data);
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GET_PASSWORD), win->hwndFrame, Dialog_GetPassword_Proc, (LPARAM)&data);
     if (DIALOG_OK_PRESSED != dialogResult) {
         free((void*)data.pwdOut);
         return NULL;
@@ -126,7 +125,7 @@ typedef struct {
     int     pageEnteredOut;  /* page number entered by user */
 } Dialog_GoToPage_Data;
 
-static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND                    editPageNo;
     TCHAR *                 newPageNoTxt;
@@ -191,7 +190,6 @@ static BOOL CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT message, WPARAM wParam
    page number or there was an error. */
 int Dialog_GoToPage(WindowInfo *win)
 {
-    int                     dialogResult;
     Dialog_GoToPage_Data    data;
     
     assert(win);
@@ -199,7 +197,7 @@ int Dialog_GoToPage(WindowInfo *win)
 
     data.currPageNo = win->dm->currentPageNo();
     data.pageCount = win->dm->pageCount();
-    dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), win->hwndFrame, Dialog_GoToPage_Proc, (LPARAM)&data);
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_GOTO_PAGE), win->hwndFrame, Dialog_GoToPage_Proc, (LPARAM)&data);
     if (DIALOG_OK_PRESSED == dialogResult) {
         if (win->dm->validPageNo(data.pageEnteredOut)) {
             return data.pageEnteredOut;
@@ -214,7 +212,7 @@ typedef struct {
     bool    matchCase;
 } Dialog_Find_Data;
 
-static BOOL CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_Find_Data * data;
 
@@ -268,7 +266,7 @@ TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
     data.searchTerm = (TCHAR *)previousSearch;
     data.matchCase = matchCase ? *matchCase : false;
 
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_FIND), hwnd, Dialog_Find_Proc, (LPARAM)&data);
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_FIND), hwnd, Dialog_Find_Proc, (LPARAM)&data);
     if (dialogResult != DIALOG_OK_PRESSED)
         return NULL;
 
@@ -282,7 +280,7 @@ typedef struct {
     BOOL    dontAskAgain;
 } Dialog_PdfAssociate_Data;
 
-static BOOL CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_PdfAssociate_Data *  data;
 
@@ -340,7 +338,7 @@ int Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
     assert(dontAskAgainOut);
 
     Dialog_PdfAssociate_Data data;
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_PDF_ASSOCIATE), hwnd, Dialog_PdfAssociate_Proc, (LPARAM)&data);
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_PDF_ASSOCIATE), hwnd, Dialog_PdfAssociate_Proc, (LPARAM)&data);
     if (dontAskAgainOut)
         *dontAskAgainOut = data.dontAskAgain;
     return dialogResult;
@@ -351,7 +349,7 @@ typedef struct {
     int langId;
 } Dialog_ChangeLanguage_Data;
 
-static BOOL CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
@@ -430,13 +428,13 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 {
     Dialog_ChangeLanguage_Data data;
     data.langId = currLangId;
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
+    INT_PTR dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CHANGE_LANGUAGE), hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (DIALOG_CANCEL_PRESSED == dialogResult)
         return -1;
     return data.langId;
 }
 
-static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Dialog_NewVersion_Data *  data;
     TCHAR *txt;
@@ -494,10 +492,9 @@ static BOOL CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM wPar
     return FALSE;
 }
 
-int Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
+INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
 {
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
-    return dialogResult;
+    return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
 }
 
 static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 0,
@@ -551,7 +548,7 @@ static double GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, double defaultZoo
     return newZoom;
 }
 
-static BOOL CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     double *currZoom;
 
@@ -591,13 +588,12 @@ static BOOL CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wPar
     return FALSE;
 }
 
-int Dialog_CustomZoom(HWND hwnd, double *currZoom)
+INT_PTR Dialog_CustomZoom(HWND hwnd, double *currZoom)
 {
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM), hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
-    return dialogResult;
+    return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM), hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
 }
 
-static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     SerializableGlobalPrefs *prefs;
 
@@ -743,13 +739,12 @@ static BOOL CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wParam
     return FALSE;
 }
 
-int Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
+INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
 {
-    int dialogResult = DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_SETTINGS), hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
-    return dialogResult;
+    return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_SETTINGS), hwnd, Dialog_Settings_Proc, (LPARAM)prefs);
 }
 
-static BOOL CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Print_Advanced_Data *data;
 

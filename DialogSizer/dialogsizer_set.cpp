@@ -150,7 +150,7 @@ static DialogData * AddDialogData(HWND hwnd)
 
     // Because we have successffuly created our data we need to subclass the control now, if not
     // we could end up in a situation where our data was never freed.
-    SetProp(hwnd, pcszWindowProcPropertyName, reinterpret_cast<HANDLE>(SetWindowLong(hwnd, GWL_WNDPROC, reinterpret_cast<LONG>(SizingProc)))) ;
+    SetProp(hwnd, pcszWindowProcPropertyName, reinterpret_cast<HANDLE>(SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG>(SizingProc)))) ;
     return pdd;
 }
 
@@ -330,7 +330,7 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
                 RemoveProp(hwnd, pcszDialogDataPropertyName);
             }
 
-            SetWindowLong(hwnd, GWL_WNDPROC, (LONG)pOldProc);
+            SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG)pOldProc);
             RemoveProp(hwnd, pcszWindowProcPropertyName);
         }
         break;

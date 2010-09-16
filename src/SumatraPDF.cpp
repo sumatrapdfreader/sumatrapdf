@@ -2750,7 +2750,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
     if (!gGlobalPrefs.m_pdfAssociateDontAskAgain) {
-        int result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
+        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
         if (DIALOG_NO_PRESSED == result) {
             gGlobalPrefs.m_pdfAssociateShouldAssociate = FALSE;
         } else {
@@ -2939,7 +2939,7 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
     data.currVersion = UPDATE_CHECK_VER;
     data.newVersion = newVersion;
     data.skipThisVersion = FALSE;
-    int res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
+    INT_PTR res = Dialog_NewVersionAvailable(win->hwndFrame, &data);
     if (data.skipThisVersion) {
         tstr_dup_replace(&gGlobalPrefs.m_versionToSkip, newVersion);
     }
@@ -7730,7 +7730,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     {
         WinLibrary lib(_T("user32.dll"));
         procSetProcessDPIAware SetProcessDPIAware;
-        if ((SetProcessDPIAware = lib.GetProcAddr("SetProcessDPIAware")))
+        SetProcessDPIAware = (procSetProcessDPIAware)lib.GetProcAddr("SetProcessDPIAware");
+        if (SetProcessDPIAware)
             SetProcessDPIAware();
     }
 #endif
