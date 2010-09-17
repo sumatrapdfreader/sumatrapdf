@@ -1138,7 +1138,7 @@ const char *g_transTranslations[] = {
   "Abbrechen",
   "Datei kann nicht gedruckt werden",
   "Fehler beim Ausf\303\274hren des Befehls f\303\274r die Inverssuche. Bitte \303\274berpr\303\274fen Sie die Einstellung.",
-  "&Sprache \303\244ndern\342\200\246 (Change Language)",
+  "Sprache \303\244ndern\342\200\246 (Change Language)",
   "Nach &neuer Version suchen",
   "Fortlaufend",
   "Fortlaufende Buchansicht",

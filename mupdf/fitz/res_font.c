@@ -76,8 +76,9 @@ fz_dropfont(fz_font *font)
 
 		if (font->widthtable)
 			fz_free(font->widthtable);
+		/* SumatraPDF */
 		if (font->_data && font->_data_len == 0)
-			fz_free(font->_data);
+			fz_free((void *)font->_data);
 
 		fz_free(font);
 	}

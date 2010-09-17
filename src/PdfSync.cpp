@@ -119,7 +119,7 @@ int Pdfsync::get_record_section(int record_index)
         return -1; // no section in the table
     rightsection--;
     while (1) {
-        int n = rightsection-leftsection+1;
+        int n = (int)(rightsection - leftsection + 1);
         // a single section?
         if (n == 1)
             return leftsection;

@@ -12,8 +12,8 @@
 WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)
 {
     size_t len = wstr_len(dest);
-    int count = dst_cch_size - len;
-    int ret = _snwprintf(dest + len, count, L"%s", src);
+    size_t count = dst_cch_size - len;
+    size_t ret = _snwprintf(dest + len, count, L"%s", src);
     return (ret<count ) ? dest : NULL;
 }
 
@@ -120,7 +120,7 @@ int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch
         return FALSE;
 }
 
-int wstr_copy(WCHAR *dst, int dst_cch_size, const WCHAR *src)
+int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
 {
     WCHAR *end = dst + dst_cch_size - 1;
     if (0 == dst_cch_size)

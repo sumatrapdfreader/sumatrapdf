@@ -177,7 +177,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
 
 Change Language
-&Sprache ändern… (Change Language)
+Sprache ändern… (Change Language)
 
 Check for &Updates
 Nach &neuer Version suchen

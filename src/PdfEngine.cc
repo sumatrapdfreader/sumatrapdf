@@ -460,7 +460,7 @@ int PdfEngine::findPageNo(fz_obj *dest)
 
 fz_obj *PdfEngine::getNamedDest(const char *name)
 {
-    fz_obj *nameobj = fz_newstring((char*)name, strlen(name));
+    fz_obj *nameobj = fz_newstring((char*)name, (int)strlen(name));
     fz_obj *dest = pdf_lookupdest(_xref, nameobj);
     fz_dropobj(nameobj);
 
@@ -764,7 +764,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         if (*start && (tstr_startswith(start, _T("http")) || _tcschr(start + 5, '.') != NULL)) {
             char *uri = tstr_to_utf8(start);
             char *httpUri = str_startswith(uri, "http") ? uri : str_cat("http://", uri);
-            fz_obj *dest = fz_newstring(httpUri, strlen(httpUri));
+            fz_obj *dest = fz_newstring(httpUri, (int)strlen(httpUri));
             pdf_link *link = (pdf_link *)zmalloc(sizeof(pdf_link));
             link->kind = PDF_LURI;
             link->rect = bbox;
