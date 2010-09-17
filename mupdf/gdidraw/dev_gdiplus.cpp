@@ -186,7 +186,8 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, f
 	
 	if (font->_data_len != 0)
 	{
-		collection->AddMemoryFont(font->_data, font->_data_len);
+		// TODO: ensure correct Unicode tables for embedded fonts (else the wrong glyphs will be rendered)
+		// collection->AddMemoryFont(font->_data, font->_data_len);
 	}
 	else
 	{
