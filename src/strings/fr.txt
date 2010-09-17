@@ -19,6 +19,9 @@ Contributor: bernard
 &Actual Size\tCtrl-1
 Taille réelle\tCtrl-1
 
+&All selected pages
+Toutes les pages sélectionnées
+
 &Back\tAlt+Left Arrow
 Retour\tAlt+<-
 
@@ -31,6 +34,9 @@ Copier la sélection
 &Don't ask me again
 Ne plus me demander
 
+&Even pages only
+Seulement les pages paires
+
 &File
 &Fichier
 
@@ -39,6 +45,9 @@ Rechercher quoi :
 
 &First Page\tHome
 Première page\tHome
+
+&Fit pages to printable area
+Ajuster les pages à la zone d'impression
 
 &Go To
 Atteindre
@@ -70,6 +79,9 @@ Page suivante\t->
 &No, thanks
 Non, merci
 
+&Odd pages only
+Seulement les pages impaires
+
 &Open\tCtrl-O
 &Ouvrir\tCtrl-O
 
@@ -88,6 +100,9 @@ Page précédente\t<-
 &Print... (denied)
 &Imprimer.. (Interdit)
 
+&Remember the password for this document
+Se rappeler le mot de passe pour ce document
+
 &Remember these settings for each document
 Se rappeler ces paramètres pour chaque document
 
@@ -96,6 +111,9 @@ Se rappeler ces paramètres pour chaque document
 
 &Settings
 &Préférences
+
+&Shrink pages to printable area (if necessary)
+Réduire les pages à la zone d'impression (si nécessaire)
 
 &Skip this version
 Ignorer cette version
@@ -127,6 +145,9 @@ Application :
 Associate with PDF files?
 Associer aux fichiers PDF ?
 
+Attachment: %s
+Fichier attaché : %s
+
 Author:
 Auteur :
 
@@ -141,6 +162,9 @@ Comme livre
 
 Book&marks\tF12
 Signets\tF12
+
+Bookmarks
+Signets
 
 Bytes
 Octets
@@ -352,6 +376,9 @@ Taille de la page :
 Page number %u inexistant
 La page %u n'existe pas
 
+Page scaling
+Mise à l'échelle de la page
+
 Page:
 Page:
 
@@ -363,6 +390,9 @@ Imprimer avec Adobe Reader...
 
 Previous Page
 Page précédente
+
+Print range
+Imprimer...
 
 Printing problem.
 Problème d'impression.
@@ -462,16 +492,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Print range
 
