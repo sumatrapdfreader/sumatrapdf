@@ -14,31 +14,40 @@ Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010
 &Sobre
 
 &Actual Size\tCtrl-1
-&Tamanho Real\tCtrl-1
+&Tamanho real\tCtrl-1
+
+&All selected pages
+&Todas as páginas selecionadas
 
 &Back\tAlt+Left Arrow
-Retroceder\tAlt+<-
+&Voltar\tAlt+<-
 
 &Close\tCtrl-W
 &Fechar\tCtrl-W
 
 &Copy Selection\tCtrl-C
-Copiar Selecção\tCtrl-C
+&Copiar seleção\tCtrl-C
 
 &Don't ask me again
 &Não perguntar novamente
+
+&Even pages only
+Apenas as páginas &pares
 
 &File
 &Ficheiro
 
 &Find what:
-O que &procurar:
+&Localizar:
 
 &First Page\tHome
-Primeira Página\tHome
+Primeira pá&gina\tHome
+
+&Fit pages to printable area
+A&justar páginas à área de impressão
 
 &Go To
-Ir &Para
+Ir &para
 
 &Go to page:
 Ir pa&ra a página:
@@ -47,7 +56,7 @@ Ir pa&ra a página:
 &Ajuda
 
 &Last Page\tEnd
-Última Página\tEnd
+Ú&ltima página\tEnd
 
 &Magnification:
 Amp&liação:
@@ -56,16 +65,19 @@ Amp&liação:
 &Manual
 
 &Match case
-&Sensível à capitalização
+Sensível a &maiúsculas
 
 &Next Page\tRight Arrow
-Página Seguinte\t->
+Página &seguinte\t->
 
 &No
 &Não
 
 &No, thanks
 &Não, obrigado(a)
+
+&Odd pages only
+Apenas páginas í&mpares
 
 &Open\tCtrl-O
 &Abrir\tCtrl-O
@@ -74,10 +86,10 @@ Página Seguinte\t->
 &Opções...
 
 &Password:
-&Palavra-passe:
+&Palavra passe:
 
 &Previous Page\tLeft Arrow
-Página Anterior\t<-
+Página &anterior\t<-
 
 &Print...\tCtrl-P
 &Imprimir\tCtrl-P
@@ -85,14 +97,20 @@ Página Anterior\t<-
 &Print... (denied)
 &Imprimir...(rejeitado)
 
+&Remember the password for this document
+Lembrar a palavra passe deste documento
+
 &Remember these settings for each document
-Le&mbrar estas definições para cada documento
+Le&mbrar estas definições para todos os documentos
 
 &Save As...\tCtrl-S
 &Gravar como\tCtrl-S
 
 &Settings
 &Definições
+
+&Shrink pages to printable area (if necessary)
+&Reduzir páginas para a área de impressão (se necessário)
 
 &Skip this version
 Ignorar &esta versão
@@ -104,7 +122,7 @@ Ignorar &esta versão
 &Sim
 
 &Zoom
-&Zoom
+&Ampliação
 
 (of %d)
 (de %d)
@@ -124,6 +142,9 @@ Aplicação:
 Associate with PDF files?
 Associar a ficheiros PDF?
 
+Attachment: %s
+Anexos: %s
+
 Author:
 Autor:
 
@@ -137,10 +158,13 @@ Book View
 Como livro
 
 Book&marks\tF12
-Marcadores\tF12
+&Marcadores\tF12
+
+Bookmarks
+Marcadores
 
 Bytes
-Bytes
+"Bytes"
 
 Cancel
 Cancelar
@@ -149,13 +173,13 @@ Cannot print this file
 Não foi possível imprimir este ficheiro
 
 Cannot start inverse search command. Please check the command line in the settings.
-Não é possível iniciar o comando da procura inversa. Verifique a linha de comandos nas definições.
+Não é possível iniciar o comando da pesquisa inversa. Verifique a linha de comandos nas definições.
 
 Change Language
 Mudar idioma
 
 Check for &Updates
-Verificar por &novas versões
+Verificar por act&ualizações
 
 Continuous
 Página única contínua
@@ -167,10 +191,10 @@ Continuous facing
 Página dupla contínua
 
 Contribute Translation
-Contribuir na tradução
+Ajudar na tradução
 
 Could not open Printer
-Não foi possível abrir a Impressora
+Não foi possível abrir a impressora
 
 Couldn't initialize printer
 Não foi possível inicializar a impressora
@@ -185,16 +209,16 @@ Custom &Zoom...
 &Personalizado...
 
 Default &Layout:
-Dispo&sição por Omissão:
+E&xibição por omissão:
 
 Default &Zoom:
-&Zoom por Omissão:
+&Ampliação por omissão:
 
 Denied Permissions:
-Permissões Rejeitadas:
+Permissões rejeitadas:
 
 Document Properties
-Propriedades do Documento
+Propriedades do documento
 
 Download
 Transferir
@@ -203,10 +227,10 @@ E&xit\tCtrl-Q
 &Sair\tCtrl-Q
 
 Enter password
-Introduza a palavra-passe
+Indique a palavra passe
 
 Enter password for %s
-Introduza a palavra-passe para %s
+Indique a palavra passe para %s
 
 Error loading PDF file.
 Erro ao carregar o PDF.
@@ -215,7 +239,7 @@ F&orward\tAlt+Right Arrow
 Avançar\tAlt+->
 
 F&ullscreen\tCtrl-L
-Ecrã completo\tCtrl-L
+Ecrã co&mpleto\tCtrl-L
 
 Facing
 Página dupla
@@ -224,37 +248,37 @@ Failed to save a file
 Erro ao gravar o ficheiro
 
 File Size:
-Tamanho do Ficheiro:
+Tamanho do ficheiro:
 
 File:
 Ficheiro:
 
 Fin&d...\tCtrl-F
-Procurar...\tCtrl-F
+Locali&zar...\tCtrl-F
 
 Find
-Procurar
+Localizar
 
 Find Next
-Procurar Seguinte
+Localizar seguinte
 
 Find Previous
-Procurar Anterior
+Localizar anterior
 
 Find:
-Procurar:
+Localizar:
 
 Fit &Page\tCtrl-0
-&Ajustar à Página\tCtrl-0
+&Ajustar à página\tCtrl-0
 
 Fit &Width\tCtrl-2
-Ajustar à &Largura\tCtrl-2
+Ajustar à &largura\tCtrl-2
 
 Fit Page
-Ajustar à Página
+Ajustar à página
 
 Fit Width
-Ajustar à Largura
+Ajustar à largura
 
 Found text at page %d
 Texto encontrado na página %d
@@ -263,31 +287,31 @@ Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
-Dica: prima F3 para procurar a seguinte
+Dica: utilize F3 para procurar a seguinte
 
 Main PDF reader can't be changed in portable mode
 No modo portátil, não é possivel alterar o leitor de PDFs
 
 Make SumatraPDF default application for PDF files?
-Tornar SumatraPDF a aplicação por omissão para PDFs?
+Tornar SumatraPDF a aplicação omissa para PDFs?
 
 Make SumatraPDF my main PDF reader
-Tornar SumatraPDF o leitor de PDFs por omissão
+Tornar SumatraPDF o leitor de PDFs omisso
 
 Match Case
-Sensível à capitalização
+Sensível a maiúsculas
 
 Modified:
 Modificado:
 
 New version %s is available. Download new version?
-Nova versão %s disponível. Transferir nova versão?
+Está disponível a versão %s. Transferir nova versão?
 
 New version available.
 Nova versão disponível.
 
 Next Page
-Página Seguinte
+Página seguinte
 
 No matches were found
 Nenhuma ocorrência encontrada
@@ -305,7 +329,7 @@ No synchronization info at this position
 Não há informação de sincronização nesta posição
 
 Number of Pages:
-Número de Páginas:
+Número de páginas:
 
 OK
 OK
@@ -332,13 +356,16 @@ PDF documents
 Documentos PDF
 
 Pa&ge...\tCtrl-G
-Página...\tCtrl-G
+Pá&gina...\tCtrl-G
 
 Page Size:
-Tamanho da Página:
+Tamanho da página:
 
 Page number %u inexistant
 A página %u não existe
+
+Page scaling
+Ajustamento de páginas
 
 Page:
 Página:
@@ -347,10 +374,13 @@ Please wait - rendering...
 Por favor aguarde - a processar...
 
 Pr&int with Adobe Reader...
-Imprimir com Adobe Reader...
+Impr&imir com Adobe Reader...
 
 Previous Page
-Página Anterior
+Página anterior
+
+Print range
+Intervalo de impressão
 
 Printing problem.
 Problema de impressão.
@@ -359,28 +389,28 @@ Remember &opened files
 Lembrar ficheiros abert&os
 
 Rotate &Left\tCtrl-Shift--
-Rodar à esquerda\tCtrl-Shift--
+Rodar à &esquerda\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Rodar à direita\tCtrl-Shift-+
+Rodar à &direita\tCtrl-Shift-+
 
 Searching %d of %d...
-Procurando %d de %d...
+Pesquisando %d de %d...
 
 Select content with Ctrl+left mouse button
-Seleccionar conteúdo com Ctrl+Botão esquerdo do rato
+Selecione o conteúdo com Ctrl+botão esquerdo do rato
 
 Send by &E-mail...
-&Enviar por e-mail...
+&Enviar por correio...
 
 Set inverse search command-line
-Definir linha de comando para procura inversa
+Definir linha de comandos para procura inversa
 
 Show &Toolbar
-Mostrar barra de ferramentas
+Mostrar barra de ferramen&tas
 
 Show &pages continuously
-Mostrar páginas contínuas
+Mostrar &páginas contínuas
 
 Show the &bookmarks sidebar when available
 Mostrar &barra de marcadores quando disponível
@@ -398,10 +428,10 @@ SumatraPDF Options
 Opções do SumatraPDF
 
 SumatraPDF is your main PDF reader
-SumatraPDF é o leitor de PDFs por omissão
+SumatraPDF é o leitor de PDFs omisso
 
 SumatraPDF should now be your main PDF reader
-SumatraPDF deve agora ser o leitor de PDFs por omissão
+SumatraPDF deve agora ser o leitor de PDFs omisso
 
 Synchronization file cannot be opened
 Não foi possível abrir o ficheiro de sincronização
@@ -431,7 +461,7 @@ You have version %s
 Tem a versão %s
 
 Zoom
-Zoom
+Ampliação
 
 Zoom In
 Ampliar
@@ -440,7 +470,7 @@ Zoom Out
 Reduzir
 
 Zoom factor
-Factor de Zoom
+Fator de ampliação
 
 [Changes detected; refreshing] %s
 [Mudanças detectadas; actualizando] %s
@@ -450,16 +480,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Print range
 
