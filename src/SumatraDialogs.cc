@@ -333,7 +333,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT message, WPARAM
    Returns DIALOG_YES_PRESSED if "Yes" button was pressed or
    DIALOG_NO_PRESSED if "No" button was pressed.
    Returns the state of "don't ask me again" checkbox" in <dontAskAgain> */
-int Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
+INT_PTR Dialog_PdfAssociate(HWND hwnd, BOOL *dontAskAgainOut)
 {
     assert(dontAskAgainOut);
 
