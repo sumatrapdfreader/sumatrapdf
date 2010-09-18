@@ -16,6 +16,9 @@ Contributor: pragmart [http://putolinux.wordpress.com]
 &Actual Size\tCtrl-1
 Tamaño Real\tCtrl-1
 
+&All selected pages
+&Todas las páginas seleccionadas
+
 &Back\tAlt+Left Arrow
 Atrás\tAlt+<-
 
@@ -28,6 +31,9 @@ Copiar Selección\tCtrl-C
 &Don't ask me again
 &No volver a preguntar
 
+&Even pages only
+&Sólo páginas pares
+
 &File
 &Archivo
 
@@ -36,6 +42,9 @@ Copiar Selección\tCtrl-C
 
 &First Page\tHome
 Primera página\tInicio
+
+&Fit pages to printable area
+&Ajustar páginas al área de impresión
 
 &Go To
 &Ir a
@@ -67,6 +76,9 @@ Página siguiente\t->
 &No, thanks
 &No, gracias
 
+&Odd pages only
+&Sólo páginas impares
+
 &Open\tCtrl-O
 &Abrir\tCtrl-O
 
@@ -85,6 +97,9 @@ Página anterior\t<-
 &Print... (denied)
 &Imprimir... (denegado)
 
+&Remember the password for this document
+&Recordar la contraseña para este documento
+
 &Remember these settings for each document
 &Recordar estas configuraciones para cada documento
 
@@ -93,6 +108,9 @@ Página anterior\t<-
 
 &Settings
 &Configuración
+
+&Shrink pages to printable area (if necessary)
+&Reducir el tamaño del área de impresión de páginas (si es necesario)
 
 &Skip this version
 &Ignorar esta versión
@@ -124,6 +142,9 @@ Aplicación:
 Associate with PDF files?
 ¿Asociar con archivos PDF?
 
+Attachment: %s
+Adjunto: %s
+
 Author:
 Autor:
 
@@ -138,6 +159,9 @@ Vista de libro
 
 Book&marks\tF12
 Marcadores\tF12
+
+Bookmarks
+Marcadores
 
 Bytes
 Bytes
@@ -340,14 +364,23 @@ Tamaño de Página:
 Page number %u inexistant
 La página &u no existe
 
+Page scaling
+Escalado de página
+
 Page:
 Página:
 
 Please wait - rendering...
 Renderizando - Espere por favor...
 
+Pr&int with Adobe Reader...
+Imprimir con Adobe Reader...
+
 Previous Page
 Página anterior
+
+Print range
+Imprimir rango
 
 Printing problem.
 Problema de impresión.
@@ -447,17 +480,4 @@ copiado de texto
 
 printing document
 impresión de documento
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Pr&int with Adobe Reader...
-#Print range
 
