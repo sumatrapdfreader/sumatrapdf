@@ -47,7 +47,7 @@ public:
 		assert(clipCount == 0);
 	}
 
-	void pushClip(Region *rgn, float alpha=1.0, CombineMode combineMode=CombineModeReplace)
+	void pushClip(Region *rgn, float alpha=1.0, CombineMode combineMode=CombineModeIntersect)
 	{
 		assert(clipCount < MAX_CLIP_DEPTH);
 		if (clipCount < MAX_CLIP_DEPTH)
@@ -55,9 +55,6 @@ public:
 			graphics->GetClip(&clips[clipCount++]);
 			clipAlpha[clipCount] = clipAlpha[clipCount - 1] * alpha;
 		}
-		
-		if (combineMode == CombineModeReplace)
-			rgn->Intersect(&clips[clipCount - 1]);
 		graphics->SetClip(rgn, combineMode);
 	}
 
@@ -102,8 +99,7 @@ public:
 static void
 gdiplusapplytransform(Graphics *graphics, fz_matrix ctm)
 {
-	Matrix matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f);
-	graphics->SetTransform(&matrix);
+	graphics->SetTransform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 }
 
 static Brush *
@@ -264,7 +260,7 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
-	// TODO: evenodd clipping is too aggressive (and thus disabled)
+	// TODO: clipping is sometimes wrong
 	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
 	if (evenodd)
 		((userData *)user)->pushClip(&Region());
@@ -500,7 +496,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 		gdiplusrendertext(graphics, text, ctm, NULL, gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0/*, gpath */);
-	((userData *)user)->pushClip(&Region(gpath), 1.0, accumulate ? CombineModeUnion : CombineModeReplace);
+	((userData *)user)->pushClip(&Region(gpath), 1.0, accumulate ? CombineModeUnion : CombineModeIntersect);
 	
 	delete gpath;
 }
@@ -637,6 +633,9 @@ extern "C" static void
 fz_gdiplusbeginmask(void *user, fz_rect rect, int luminosity,
 	fz_colorspace *colorspace, float *colorfv)
 {
+	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, fz_identity);
+	
 	// TODO: implement masking
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
 	((userData *)user)->pushClip(&Region(clip));
@@ -652,6 +651,9 @@ extern "C" static void
 fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 	fz_blendmode blendmode, float alpha)
 {
+	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, fz_identity);
+	
 	// TODO: implement blending
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
 	((userData *)user)->pushClip(&Region(clip), alpha);
