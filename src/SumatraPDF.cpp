@@ -18,8 +18,8 @@
 #define IDM_ZOOM_FIRST                  IDM_ZOOM_FIT_PAGE
 #define IDM_ZOOM_LAST                   IDM_ZOOM_CUSTOM
 
-// this sucks but I don't know any other way
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
+// this sucks but I don't know a better way
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Only enable for stress-testing the logic. On
