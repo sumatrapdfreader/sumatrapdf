@@ -186,8 +186,7 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, f
 	
 	if (font->_data_len != 0)
 	{
-		// TODO: ensure correct Unicode tables for embedded fonts (else the wrong glyphs will be rendered)
-		// collection->AddMemoryFont(font->_data, font->_data_len);
+		collection->AddMemoryFont(font->_data, font->_data_len);
 	}
 	else
 	{
@@ -317,6 +316,34 @@ static FT_Outline_Funcs OutlineFuncs = {
 	move_to, line_to, conic_to, cubic_to, 0, 0 /* shift, delta */
 };
 
+static float
+ftgetwidthscale(fz_font *font, int gid)
+{
+	if (font->ftsubstitute && gid < font->widthcount)
+	{
+		FT_Fixed advance = 0;
+		FT_Get_Advance((FT_Face)font->ftface, gid, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP, &advance);
+		if (advance)
+			return 1024.0 * font->widthtable[gid] / advance;
+	}
+	
+	return 1.0;
+}
+
+static WCHAR ftgetcharcode(fz_font *font, fz_textel *el)
+{
+	FT_Face face = (FT_Face)font->ftface;
+	if (el->gid == FT_Get_Char_Index(face, el->ucs))
+		return el->ucs;
+	
+	FT_UInt gid;
+	WCHAR ucs = FT_Get_First_Char(face, &gid);
+	while (gid != 0 && gid != el->gid)
+		ucs = FT_Get_Next_Char(face, ucs, &gid);
+	
+	return ucs;
+}
+
 static void
 gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
@@ -345,13 +372,9 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 		matrix.Scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM);
 		matrix.Multiply(&trm);
 		
-		if (text->font->ftsubstitute && gid < text->font->widthcount)
-		{
-			FT_Fixed advance = 0;
-			FT_Get_Advance(face, gid, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP, &advance);
-			if (advance)
-				matrix.Scale((float)text->font->widthtable[gid] / advance * 1024, 1);
-		}
+		float widthScale = ftgetwidthscale(text->font, gid);
+		if (widthScale != 1.0)
+			matrix.Scale(widthScale, 1);
 		
 		gpath2->Transform(&matrix);
 		
@@ -369,14 +392,8 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 {
 	PrivateFontCollection collection;
 	float fontSize = fz_matrixexpansion(text->trm), cellAscent = 0;
-	Font *font = gdiplusgetfont(&collection, text->font, fontSize, &cellAscent);
 	
-	if (font && text->len > 0 && text->els[0].ucs == '?')
-	{
-		// TODO: output text by glyph ID instead of character code
-		delete font;
-		font = NULL;
-	}
+	Font *font = gdiplusgetfont(&collection, text->font, fontSize, &cellAscent);
 	if (!font)
 	{
 		gdiplusrendertext(graphics, text, ctm, brush);
@@ -384,16 +401,28 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 	}
 	
 	const StringFormat *format = StringFormat::GenericTypographic();
-	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, 1.0 / fontSize));
+	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, -1.0 / fontSize));
 	assert(text->trm.e == 0 && text->trm.f == 0);
-	ctm = fz_concat(fz_scale(1, -1), ctm);
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		WCHAR out = text->els[i].ucs;
-		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, -text->els[i].y), ctm);
+		WCHAR out = ftgetcharcode(text->font, &text->els[i]);
+		if (!out)
+		{
+			fz_text t2 = *text;
+			t2.len = 1;
+			t2.els = &text->els[i];
+			gdiplusrendertext(graphics, &t2, ctm, brush);
+			continue;
+		}
+		
+		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, text->els[i].y), ctm);
 		ctm2 = fz_concat(fz_scale(-1, 1), fz_concat(rotate, ctm2));
 		ctm2 = fz_concat(fz_translate(0, -fontSize * cellAscent), ctm2);
+		
+		float widthScale = ftgetwidthscale(text->font, text->els[i].gid);
+		if (widthScale != 1.0)
+			ctm2 = fz_concat(fz_scale(widthScale, 1), ctm2);
 		
 		gdiplusapplytransform(graphics, ctm2);
 		graphics->DrawString(&out, 1, font, PointF(0, 0), format, brush);
