@@ -114,34 +114,40 @@ gdiplusgetbrush(void *user, fz_colorspace *colorspace, float *color, float alpha
 static GraphicsPath *
 gdiplusgetpath(fz_path *path, int evenodd=1)
 {
-	GraphicsPath *gpath = new GraphicsPath(evenodd ? FillModeAlternate : FillModeWinding);
-	PointF points[3], origin = PointF(0, 0);
+	PointF *points = new PointF[path->len / 2];
+	BYTE *types = new BYTE[path->len / 2];
+	int len = 0;
 	
 	for (int i = 0; i < path->len; )
 	{
 		switch (path->els[i++].k)
 		{
 		case FZ_MOVETO:
-			origin.X = path->els[i++].v; origin.Y = path->els[i++].v;
-			gpath->StartFigure();
+			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
+			types[len++] = PathPointTypeStart;
 			break;
 		case FZ_LINETO:
-			points[0].X = path->els[i++].v; points[0].Y = path->els[i++].v;
-			gpath->AddLine(origin.X, origin.Y, points[0].X, points[0].Y);
-			origin = points[0];
+			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
+			types[len++] = PathPointTypeLine;
 			break;
 		case FZ_CURVETO:
-			points[0].X = path->els[i++].v; points[0].Y = path->els[i++].v;
-			points[1].X = path->els[i++].v; points[1].Y = path->els[i++].v;
-			points[2].X = path->els[i++].v; points[2].Y = path->els[i++].v;
-			gpath->AddBezier(origin.X, origin.Y, points[0].X, points[0].Y, points[1].X, points[1].Y, points[2].X, points[2].Y);
-			origin = points[2];
+			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
+			types[len++] = PathPointTypeBezier;
+			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
+			types[len++] = PathPointTypeBezier;
+			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
+			types[len++] = PathPointTypeBezier;
 			break;
 		case FZ_CLOSEPATH:
-			gpath->CloseFigure();
+			types[len - 1] = types[len - 1] | PathPointTypeCloseSubpath;
 			break;
 		}
 	}
+	
+	GraphicsPath *gpath = new GraphicsPath(points, types, len, evenodd ? FillModeAlternate : FillModeWinding);
+	
+	delete points;
+	delete types;
 	
 	return gpath;
 }
@@ -260,7 +266,7 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
-	// TODO: clipping is sometimes wrong
+	// TODO: evenodd clipping is sometimes wrong (and thus disabled)
 	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
 	if (evenodd)
 		((userData *)user)->pushClip(&Region());
@@ -518,6 +524,7 @@ extern "C" static void
 fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 {
 	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, ctm);
 	
 	Rect clipRect;
 	graphics->GetClipBounds(&clipRect);
