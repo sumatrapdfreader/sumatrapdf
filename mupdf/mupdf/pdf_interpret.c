@@ -1528,6 +1528,10 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 
 	for (annot = page->annots; annot; annot = annot->next)
 	{
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1044 */
+		int flags = fz_toint(fz_dictgets(annot->obj, "F"));
+		if ((flags & 2))
+			continue;
 		atm = fz_concat(fz_translate(annot->rect.x0, annot->rect.y0), ctm);
 		csi = pdf_newcsi(xref, dev, atm);
 		error = pdf_runxobject(csi, page->resources, annot->ap);
