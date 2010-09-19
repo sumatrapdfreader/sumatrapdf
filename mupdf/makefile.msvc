@@ -212,11 +212,6 @@ PDFDRAW_APP = $(O)\pdfdraw.exe
 PDFDRAW_PDB = $(O)\pdfdraw.pdb
 PDFDRAW_MAP = $(O)\pdfdraw.map
 
-PDFGDRAW_OBJS = $(LIBS_OBJS) $(O)\pdfgdraw.obj
-PDFGDRAW_APP = $(O)\pdfgdraw.exe
-PDFGDRAW_PDB = $(O)\pdfgdraw.pdb
-PDFGDRAW_MAP = $(O)\pdfgdraw.map
-
 PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
 PDFSHOW_PDB = $(O)\pdfshow.pdb
@@ -247,7 +242,7 @@ FONTDUMP_APP = $(O)\fontdump.exe
 FONTDUMP_PDB = $(O)\fontdump.pdb
 FONTDUMP_MAP = $(O)\fontdump.map
 
-all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFGDRAW_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
+all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -492,12 +487,6 @@ $(PDFDRAW_APP): $(PDFDRAW_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFDRAW_APP) /PDB:$(PDFDRAW_PDB) \
 	$(PDFDRAW_OBJS) $(LIBS) \
 	/MAP:$(PDFDRAW_MAP) \
-	/SUBSYSTEM:CONSOLE
-
-$(PDFGDRAW_APP): $(PDFGDRAW_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFGDRAW_APP) /PDB:$(PDFGDRAW_PDB) \
-	$(PDFGDRAW_OBJS) $(LIBS) \
-	/MAP:$(PDFGDRAW_MAP) \
 	/SUBSYSTEM:CONSOLE
 
 $(PDFSHOW_APP): $(PDFSHOW_OBJS)
