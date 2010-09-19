@@ -49,12 +49,13 @@ public:
 
 	void pushClip(Region *rgn, float alpha=1.0, CombineMode combineMode=CombineModeIntersect)
 	{
-		assert(clipCount < MAX_CLIP_DEPTH);
 		if (clipCount < MAX_CLIP_DEPTH)
 		{
 			graphics->GetClip(&clips[clipCount++]);
 			clipAlpha[clipCount] = clipAlpha[clipCount - 1] * alpha;
 		}
+		else
+			fz_warn("assert: too many clip regions on stack");
 		graphics->SetClip(rgn, combineMode);
 	}
 
@@ -267,9 +268,10 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	gdiplusapplytransform(graphics, ctm);
 	
 	// TODO: evenodd clipping is sometimes wrong (and thus disabled)
+	//       winding clipping isn't always correct, either
 	GraphicsPath *gpath = gdiplusgetpath(path, evenodd);
 	if (evenodd)
-		((userData *)user)->pushClip(&Region());
+		((userData *)user)->pushClip(&Region(/*gpath*/));
 	else
 		((userData *)user)->pushClip(&Region(gpath));
 	
@@ -279,6 +281,13 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 extern "C" static void
 fz_gdiplusclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 {
+	// TODO: what about empty paths?
+	if (path->len == 0)
+	{
+		((userData *)user)->pushClip(&Region());
+		return;
+	}
+	
 	Graphics *graphics = ((userData *)user)->graphics;
 	gdiplusapplytransform(graphics, ctm);
 	
