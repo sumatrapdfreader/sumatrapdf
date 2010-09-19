@@ -15,6 +15,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Actual Size\tCtrl-1
 Πραγματικό μέγεθος\tCtrl-1
 
+&All selected pages
+'Ο&λες οι επιλεγμένες
+
 &Back\tAlt+Left Arrow
 Πίσω\tAlt+<-
 
@@ -27,6 +30,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Don't ask me again
 &Να μην ερωτηθώ ξανά
 
+&Even pages only
+&Μόνο οι μονές
+
 &File
 &Αρχείο
 
@@ -35,6 +41,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 
 &First Page\tHome
 Πρώτη σελίδα\tHome
+
+&Fit pages to printable area
+Προσαρμογή σελίδων σε &εκτυπώσιμη περιοχή
 
 &Go To
 &Μετάβαση
@@ -66,6 +75,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &No, thanks
 &Όχι, ευχαριστώ
 
+&Odd pages only
+&Μόνο οι ζυγές
+
 &Open\tCtrl-O
 &Άνοιγμα\tCtrl-O
 
@@ -84,6 +96,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Print... (denied)
 &Εκτύπωση...(απαγορεύεται)
 
+&Remember the password for this document
+&Απομνημόνευση κωδικού για αυτό το έγγραφο
+
 &Remember these settings for each document
 &Απομνημόνευση ρυθμίσεων για κάθε έγγραφο
 
@@ -92,6 +107,9 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 
 &Settings
 &Ρυθμίσεις
+
+&Shrink pages to printable area (if necessary)
+Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (εαν χρειάζεται)
 
 &Skip this version
 &Παράβλεψη αυτής της έκδοσης
@@ -123,6 +141,9 @@ Application:
 Associate with PDF files?
 Να γίνει συσχετισμός με τα αρχεία PDF;
 
+Attachment: %s
+Επισύναψη: %s
+
 Author:
 Δημιουργός:
 
@@ -137,6 +158,9 @@ Book View
 
 Book&marks\tF12
 Σελιδοδείκτες\tF12
+
+Bookmarks
+Σελιδοδείκτες
 
 Bytes
 Bytes
@@ -339,14 +363,23 @@ Page Size:
 Page number %u inexistant
 Δεν υπάρχει σελίδα με αριθμό %u
 
+Page scaling
+Κλίμακα σελίδας
+
 Page:
 Σελίδα:
 
 Please wait - rendering...
 Φόρτωση, παρακαλώ περιμένετε...
 
+Pr&int with Adobe Reader...
+Εκτύπωση με Adobe Reader...
+
 Previous Page
 Προηγούμενη σελίδα
+
+Print range
+Εύρος εκτύπωσης
 
 Printing problem.
 Πρόβλημα εκτύπωσης
@@ -446,17 +479,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Pr&int with Adobe Reader...
-#Print range
 
