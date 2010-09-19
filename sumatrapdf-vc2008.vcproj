@@ -379,7 +379,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\gdidraw\dev_gdiplus.cpp"
+					RelativePath=".\mupdf\fitz\dev_gdiplus.cpp"
 					>
 				</File>
 				<File
@@ -436,10 +436,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\fitz\fitz.h"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\gdidraw\fitz_gdidraw.h"
 					>
 				</File>
 				<File

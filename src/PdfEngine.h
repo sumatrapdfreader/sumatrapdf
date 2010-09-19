@@ -5,7 +5,6 @@
 
 extern "C" {
 #include <fitz.h>
-#include <fitz_gdidraw.h>
 #include <mupdf.h>
 }
 

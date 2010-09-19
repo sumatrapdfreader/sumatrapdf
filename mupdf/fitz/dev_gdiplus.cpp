@@ -2,7 +2,6 @@
 #include <gdiplus.h>
 extern "C" {
 #include <fitz.h>
-#include <fitz_gdidraw.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -454,8 +453,12 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 
 static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
-	fz_colorspace *colorspace, float *color, float alpha)
+	fz_colorspace *colorspace, float *color, float alpha, GraphicsPath *gpath=NULL)
 {
+	// TODO: implement adding to a GraphicsPath instead of drawing directly
+	if (gpath)
+		fz_warn("stroking Type 3 glyphs is not supported");
+	
 	fz_font *font = text->font;
 	
 	for (int i = 0; i < text->len; i++)
@@ -498,7 +501,7 @@ fz_gdiplusstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matri
 	if (text->font->ftface)
 		gdiplusrendertext(graphics, text, ctm, brush, gpath);
 	else
-		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha/*, gpath */);
+		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha, gpath);
 	
 	Pen *pen = gdiplusgetpen(brush, ctm, stroke);
 	graphics->DrawPath(pen, gpath);
@@ -519,7 +522,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	if (text->font->ftface)
 		gdiplusrendertext(graphics, text, ctm, NULL, gpath);
 	else
-		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0/*, gpath */);
+		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0, gpath);
 	((userData *)user)->pushClip(&Region(gpath), 1.0, accumulate ? CombineModeUnion : CombineModeIntersect);
 	
 	delete gpath;
@@ -528,14 +531,27 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 extern "C" static void
 fz_gdiplusclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
 {
-	// TODO: what's the difference to fz_gdipluscliptext?
-	fz_gdipluscliptext(user, text, ctm, 0);
+	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, ctm);
+	
+	GraphicsPath *gpath = new GraphicsPath();
+	float black[3] = { 0 };
+	if (text->font->ftface)
+		gdiplusrendertext(graphics, text, ctm, NULL, gpath);
+	else
+		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0, gpath);
+	Pen *pen = gdiplusgetpen(&SolidBrush(Color()), ctm, stroke);
+	
+	gpath->Widen(pen);
+	((userData *)user)->pushClip(&Region(gpath));
+	
+	delete pen;
+	delete gpath;
 }
 
 extern "C" static void
 fz_gdiplusignoretext(void *user, fz_text *text, fz_matrix ctm)
 {
-	// TODO: anything to do here?
 }
 
 extern "C" static void
@@ -700,7 +716,7 @@ fz_gdiplusfreeuser(void *user)
 }
 
 fz_device *
-fz_newgdiplusdevice(HDC hDC)
+fz_newgdiplusdevice(void *hDC)
 {
 	if (InterlockedIncrement(&m_gdiplusUsage) == 1)
 	{
@@ -708,7 +724,7 @@ fz_newgdiplusdevice(HDC hDC)
 		GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
 	}
 	
-	fz_device *dev = fz_newdevice(new userData(hDC));
+	fz_device *dev = fz_newdevice(new userData((HDC)hDC));
 	((userData *)dev->user)->dev = dev;
 	dev->freeuser = fz_gdiplusfreeuser;
 	
