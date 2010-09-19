@@ -279,8 +279,17 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 extern "C" static void
 fz_gdiplusclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 {
-	// TODO: what's the difference to fz_gdiplusclippath?
-	fz_gdiplusclippath(user, path, 0, ctm);
+	Graphics *graphics = ((userData *)user)->graphics;
+	gdiplusapplytransform(graphics, ctm);
+	
+	GraphicsPath *gpath = gdiplusgetpath(path);
+	Pen *pen = gdiplusgetpen(&SolidBrush(Color()), ctm, stroke);
+	
+	gpath->Widen(pen);
+	((userData *)user)->pushClip(&Region(gpath));
+	
+	delete pen;
+	delete gpath;
 }
 
 extern "C" static int move_to(const FT_Vector *to, void *user)
