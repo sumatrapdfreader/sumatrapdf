@@ -68,7 +68,7 @@ Grossissement :
 Manuel
 
 &Match case
-Respecter la casse :
+Respecter la casse
 
 &Next Page\tRight Arrow
 Page suivante\t->
@@ -179,7 +179,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 
 Change Language
-Changer la langue (Change Language)
+Changer de langue (Change Language)
 
 Check for &Updates
 Vérifier les mises à jour
@@ -371,16 +371,16 @@ Pa&ge...\tCtrl-G
 Page...\tCtrl-G
 
 Page Size:
-Taille de la page :
+Dimensions de la page :
 
 Page number %u inexistant
 La page %u n'existe pas
 
 Page scaling
-Mise à l'échelle de la page
+Mise à l'échelle
 
 Page:
-Page:
+Page :
 
 Please wait - rendering...
 Patientez s'il vous plaît - génération...
