@@ -14,18 +14,25 @@ using namespace Gdiplus;
 static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
 
-#define MAX_CLIP_DEPTH 32
+class userDataStackItem
+{
+public:
+	Region clip;
+	float alpha;
+	userDataStackItem *next, *prev;
+
+	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
+		alpha(_alpha), next(NULL), prev(_prev) { }
+};
 
 class userData
 {
-	Region clips[MAX_CLIP_DEPTH];
-	float clipAlpha[MAX_CLIP_DEPTH + 1];
-	int clipCount;
+	userDataStackItem *stack;
 public:
 	Graphics *graphics;
 	fz_device *dev;
 
-	userData(HDC hDC)
+	userData(HDC hDC) : stack(new userDataStackItem()), dev(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = new Graphics(hDC);
@@ -34,51 +41,49 @@ public:
 		graphics->SetPageScale(72.0 / graphics->GetDpiY());
 		graphics->SetCompositingMode(CompositingModeSourceOver);
 		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
-		
-		dev = NULL;
-		clipCount = 0;
-		clipAlpha[clipCount] = 1.0;
 	}
 
 	~userData()
 	{
 		delete graphics;
-		assert(clipCount == 0);
+		assert(stack && !stack->next && !stack->prev);
+		delete stack;
 	}
 
-	void pushClip(Region *clipRegion=NULL, float alpha=1.0, int accumulate=0)
+	void pushClip(Region *clipRegion=NULL, float alpha=1.0, bool accumulate=false)
 	{
-		if (accumulate)
+		if (accumulate && clipRegion)
 		{
 			graphics->SetClip(clipRegion, CombineModeUnion);
 			return;
 		}
 		
-		if (clipCount < MAX_CLIP_DEPTH)
-		{
-			graphics->GetClip(&clips[clipCount++]);
-			clipAlpha[clipCount] = clipAlpha[clipCount - 1] * alpha;
-		}
-		else
-			fz_warn("assert: too many clip regions on stack");
+		userDataStackItem *next = new userDataStackItem(stack->alpha * alpha, stack);
+		stack = stack->next = next;
+		graphics->GetClip(&stack->clip);
 		
 		if (clipRegion)
 			graphics->SetClip(clipRegion, CombineModeIntersect);
 	}
 
-	void pushClip(GraphicsPath *gpath, float alpha=1.0, int accumulate=0)
+	void pushClip(GraphicsPath *gpath, float alpha=1.0, bool accumulate=false)
 	{
 		pushClip(&Region(gpath), alpha, accumulate);
 	}
 
 	void popClip()
 	{
-		assert(clipCount > 0);
-		if (clipCount > 0)
-			graphics->SetClip(&clips[--clipCount]);
+		assert(stack->prev);
+		if (!stack->prev)
+			return;
+		
+		graphics->SetClip(&stack->clip);
+		stack = stack->prev;
+		delete stack->next;
+		stack->next = NULL;
 	}
 
-	float getAlpha(float alpha=1.0) { return clipAlpha[clipCount] * alpha; }
+	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
 };
 
 class PixmapBitmap
