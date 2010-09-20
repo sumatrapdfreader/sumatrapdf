@@ -468,6 +468,8 @@ static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha, GraphicsPath *gpath=NULL)
 {
+	// TODO: Type 3 glyphs are rendered with one pixel cut off (why?)
+	
 	if (gpath)
 		fz_warn("stroking Type 3 glyphs is not supported");
 	
@@ -479,9 +481,15 @@ gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 		if (gid < 0 || gid > 255 || !font->t3procs[gid])
 			continue;
 		
+		fz_bbox bbox;
+		fz_device *dev = fz_newbboxdevice(&bbox);
+		font->t3run((pdf_xref_s *)font->t3xref, font->t3resources, font->t3procs[gid], dev, fz_concat(font->t3matrix, text->trm));
+		fz_freedevice(dev);
+		
 		fz_matrix ctm2 = fz_concat(fz_translate(text->els[i].x, text->els[i].y), ctm);
 		ctm2 = fz_concat(text->trm, ctm2);
 		ctm2 = fz_concat(font->t3matrix, ctm2);
+		ctm2 = fz_concat(fz_translate(bbox.x0, bbox.y0), ctm2);
 		
 		font->t3run((pdf_xref_s *)font->t3xref, font->t3resources, font->t3procs[gid], ((userData *)user)->dev, ctm2);
 	}
@@ -607,7 +615,6 @@ extern "C" static void
 fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
 	PixmapBitmap bmp(image);
-	RectF destination(0, image->h, image->w, -image->h);
 	ImageAttributes imgAttrs;
 	
 	alpha = ((userData *)user)->getAlpha(alpha);
@@ -623,13 +630,11 @@ fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 		imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
 	}
 	
-	ctm = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
-	
 	Graphics *graphics = ((userData *)user)->graphics;
 	Matrix oldTransform;
 	graphics->GetTransform(&oldTransform);
 	gdiplusapplytransform(graphics, ctm);
-	graphics->DrawImage(bmp.bmp, destination, 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
+	graphics->DrawImage(bmp.bmp, Rect(0, 1, 1, -1), 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
 	graphics->SetTransform(&oldTransform);
 }
 
@@ -656,9 +661,7 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 extern "C" static void
 fz_gdiplusclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
-	ctm = fz_concat(fz_scale(1.0 / image->w, 1.0 / image->h), ctm);
-	
-	Region clip(RectF(0, image->h, image->w, -image->h));
+	Region clip(Rect(0, 1, 1, -1));
 	gdiplusapplytransform(&clip, ctm);
 	((userData *)user)->pushClip(&clip);
 }
@@ -682,6 +685,7 @@ extern "C" static void
 fz_gdiplusendmask(void *user)
 {
 	// fz_gdipluspopclip(user);
+	// fz_gdiplusclipimagemask(user, mask, fz_identity);
 }
 
 extern "C" static void
