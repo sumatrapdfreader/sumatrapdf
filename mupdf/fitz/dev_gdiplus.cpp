@@ -463,7 +463,6 @@ static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha, GraphicsPath *gpath=NULL)
 {
-	// TODO: implement adding to a GraphicsPath instead of drawing directly
 	if (gpath)
 		fz_warn("stroking Type 3 glyphs is not supported");
 	
@@ -528,7 +527,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
 	
-	((userData *)user)->pushClip(&gpath, 1.0, accumulate);
+	((userData *)user)->pushClip(&gpath, 1.0, accumulate == 2);
 }
 
 extern "C" static void
