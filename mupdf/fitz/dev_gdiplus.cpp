@@ -37,10 +37,11 @@ public:
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = new Graphics(hDC);
 		graphics->SetPageUnit(UnitPoint);
-		graphics->SetSmoothingMode(SmoothingModeHighQuality);
 		graphics->SetPageScale(72.0 / graphics->GetDpiY());
 		graphics->SetCompositingMode(CompositingModeSourceOver);
 		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
+		graphics->SetSmoothingMode(SmoothingModeHighQuality);
+		graphics->SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
 	}
 
 	~userData()
