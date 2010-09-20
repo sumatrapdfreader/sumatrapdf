@@ -153,10 +153,9 @@ gdiplusgetpath(fz_path *path, fz_matrix ctm, int evenodd=1)
 		switch (path->els[i++].k)
 		{
 		case FZ_MOVETO:
-			if (len > 0 && types[len - 1] == PathPointTypeStart)
-				len--;
 			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
-			types[len++] = PathPointTypeStart;
+			if (i < path->len && path->els[i].k != FZ_MOVETO)
+				types[len++] = PathPointTypeStart;
 			break;
 		case FZ_LINETO:
 			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
