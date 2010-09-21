@@ -79,18 +79,12 @@ public:
 
 	void pushClip(Region *clipRegion=NULL, float alpha=1.0, bool accumulate=false)
 	{
-		if (accumulate && clipRegion)
-		{
-			graphics->SetClip(clipRegion, CombineModeUnion);
-			return;
-		}
-		
 		userDataStackItem *next = new userDataStackItem(stack->alpha * alpha, stack);
 		stack = stack->next = next;
 		graphics->GetClip(&stack->clip);
 		
 		if (clipRegion)
-			graphics->SetClip(clipRegion, CombineModeIntersect);
+			graphics->SetClip(clipRegion, !accumulate ? CombineModeIntersect : CombineModeUnion);
 	}
 
 	void pushClip(GraphicsPath *gpath, float alpha=1.0, bool accumulate=false)
