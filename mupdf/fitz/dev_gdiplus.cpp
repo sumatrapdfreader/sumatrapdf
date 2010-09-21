@@ -14,15 +14,41 @@ using namespace Gdiplus;
 static ULONG_PTR m_gdiplusToken;
 static LONG m_gdiplusUsage = 0;
 
+class PixmapBitmap : public Bitmap
+{
+public:
+	PixmapBitmap(fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h, PixelFormat32bppARGB)
+	{
+		fz_pixmap *pix = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
+		
+		if (!pixmap->colorspace)
+			for (int i = 0; i < pix->w * pix->h; i++)
+				pix->samples[i * 4 + 3] = pixmap->samples[i];
+		else
+			fz_convertpixmap(pixmap, pix);
+		
+		BitmapData data;
+		LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
+		memcpy(data.Scan0, pix->samples, pix->w * pix->h * pix->n);
+		UnlockBits(&data);
+		
+		fz_droppixmap(pix);
+	}
+};
+
 class userDataStackItem
 {
 public:
 	Region clip;
 	float alpha;
+	Graphics *saveG;
+	Bitmap *layer, *mask;
+	RectF bounds;
+	bool luminosity;
 	userDataStackItem *next, *prev;
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
-		alpha(_alpha), next(NULL), prev(_prev) { }
+		alpha(_alpha), saveG(NULL), layer(NULL), mask(NULL), luminosity(false), next(NULL), prev(_prev) { }
 };
 
 class userData
@@ -72,11 +98,68 @@ public:
 		pushClip(&Region(gpath), alpha, accumulate);
 	}
 
+	void pushClipMask(fz_pixmap *mask, fz_matrix ctm)
+	{
+		Region clipRegion(Rect(0, 0, 1, 1));
+		Matrix transform(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f);
+		clipRegion.Transform(&transform);
+		pushClip(&clipRegion);
+		
+		clipRegion.GetBounds(&stack->bounds, graphics);
+		stack->saveG = graphics;
+		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+		graphics = new Graphics(stack->layer);
+		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
+		
+		if (mask)
+		{
+			assert(mask->n == 1 && !mask->colorspace);
+			stack->mask = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+			Graphics g2(stack->mask);
+			g2.SetTransform(&transform);
+			g2.TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
+			g2.DrawImage(&PixmapBitmap(mask), Rect(0, 1, 1, -1), 0, 0, mask->w, mask->h, UnitPixel);
+		}
+	}
+
+	void recordClipMask(fz_rect rect, bool luminosity, float *color)
+	{
+		RectF rectf(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
+		pushClipMask(NULL, fz_concat(fz_scale(rectf.Width, rectf.Height), fz_translate(rectf.X, rectf.Y)));
+		if (luminosity)
+			graphics->FillRectangle(&SolidBrush(Color(255, color[0] * 255, color[1] * 255, color[2] * 255)), rectf);
+		stack->luminosity = luminosity;
+	}
+
+	void applyClipMask()
+	{
+		assert(stack->layer && !stack->mask);
+		stack->mask = stack->layer;
+		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+		delete graphics;
+		graphics = new Graphics(stack->layer);
+		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
+	}
+
 	void popClip()
 	{
 		assert(stack->prev);
 		if (!stack->prev)
 			return;
+		
+		assert(!stack->layer == !stack->saveG);
+		if (stack->layer)
+		{
+			delete graphics;
+			graphics = stack->saveG;
+			if (stack->mask)
+			{
+				_applyMask(stack->layer, stack->mask, stack->luminosity);
+				delete stack->mask;
+			}
+			graphics->DrawImage(stack->layer, stack->bounds);
+			delete stack->layer;
+		}
 		
 		graphics->SetClip(&stack->clip);
 		stack = stack->prev;
@@ -85,32 +168,35 @@ public:
 	}
 
 	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
-};
 
-class PixmapBitmap
-{
-	fz_pixmap *pix;
-public:
-	Bitmap *bmp;
-
-	PixmapBitmap(fz_pixmap *pixmap)
+protected:
+	void _applyMask(Bitmap *bitmap, Bitmap *mask, bool luminosity=false)
 	{
-		assert(!pixmap->mask || pixmap->w == pixmap->mask->w && pixmap->h == pixmap->mask->h && pixmap->mask->n == 1);
+		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+		assert(bounds.Width == mask->GetWidth() && bounds.Height == mask->GetHeight());
 		
-		pix = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, pixmap->w, pixmap->h);
-		fz_convertpixmap(pixmap, pix);
+		BitmapData data, dataMask;
+		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
+		mask->LockBits(&bounds, ImageLockModeRead, PixelFormat32bppARGB, &dataMask);
+		LPBYTE maskScan0 = (LPBYTE)dataMask.Scan0;
 		
-		if (pixmap->mask && pixmap->mask->n == 1 && pix->w * pix->h <= pixmap->mask->w * pixmap->mask->h)
-			for (int i = 0; i < pix->w * pix->h; i++)
-				pix->samples[i * 4 + 3] *= pixmap->mask->samples[i] / 255.0;
+		for (int i = 0; i < bounds.Width * bounds.Height; i++)
+		{
+			BYTE alpha = maskScan0[i * 4 + 3];
+			if (luminosity)
+			{
+				float color[3], gray;
+				color[0] = maskScan0[i * 4] / 255.0;
+				color[1] = maskScan0[i * 4 + 1] / 255.0;
+				color[2] = maskScan0[i * 4 + 2] / 255.0;
+				fz_convertcolor(fz_devicergb, color, fz_devicegray, &gray);
+				alpha = gray * 255;
+			}
+			((LPBYTE)data.Scan0)[i * 4 + 3] *= alpha / 255.0;
+		}
 		
-		bmp = new Bitmap(pix->w, pix->h, pix->w * 4, PixelFormat32bppARGB, pix->samples);
-	}
-
-	~PixmapBitmap()
-	{
-		fz_droppixmap(pix);
-		delete bmp;
+		mask->UnlockBits(&dataMask);
+		bitmap->UnlockBits(&data);
 	}
 };
 
@@ -121,25 +207,32 @@ gdiplusapplytransform(Graphics *graphics, fz_matrix ctm)
 	graphics->SetTransform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 }
 
+static fz_matrix
+gdiplusgettransform(Graphics *graphics)
+{
+	fz_matrix ctm;
+	Matrix matrix;
+	
+	graphics->GetTransform(&matrix);
+	assert(sizeof(fz_matrix) == 6 * sizeof(REAL));
+	matrix.GetElements((REAL *)&ctm);
+	
+	return ctm;
+}
+
 static void
 gdiplusapplytransform(GraphicsPath *gpath, fz_matrix ctm)
 {
 	gpath->Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 }
 
-static void
-gdiplusapplytransform(Region *rgn, fz_matrix ctm)
-{
-	rgn->Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
-}
-
 static Brush *
 gdiplusgetbrush(void *user, fz_colorspace *colorspace, float *color, float alpha)
 {
-	float bgr[3];
-	fz_convertcolor(colorspace, color, fz_devicebgr, bgr);
+	float rgb[3];
+	fz_convertcolor(colorspace, color, fz_devicergb, rgb);
 	return new SolidBrush(Color(((userData *)user)->getAlpha(alpha) * 255,
-		bgr[2] * 255, bgr[1] * 255, bgr[0] * 255));
+		rgb[0] * 255, rgb[1] * 255, rgb[2] * 255));
 }
 
 static GraphicsPath *
@@ -428,12 +521,10 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 		return;
 	}
 	
-	Matrix oldTransform;
-	graphics->GetTransform(&oldTransform);
-	
 	const StringFormat *format = StringFormat::GenericTypographic();
 	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, -1.0 / fontSize));
 	assert(text->trm.e == 0 && text->trm.f == 0);
+	fz_matrix oldCtm = gdiplusgettransform(graphics);
 	
 	for (int i = 0; i < text->len; i++)
 	{
@@ -454,11 +545,11 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 		if (widthScale != 1.0)
 			ctm2 = fz_concat(fz_scale(widthScale, 1), ctm2);
 		
-		gdiplusapplytransform(graphics, ctm2);
+		gdiplusapplytransform(graphics, fz_concat(ctm2, oldCtm));
 		graphics->DrawString(&out, 1, font, PointF(0, 0), format, brush);
 	}
 	
-	graphics->SetTransform(&oldTransform);
+	gdiplusapplytransform(graphics, oldCtm);
 	
 	delete format;
 	delete font;
@@ -537,7 +628,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	if (text->font->ftface)
 		gdiplusrendertext(((userData *)user)->graphics, text, ctm, NULL, &gpath);
 	else
-		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0, &gpath);
+		gdiplusrunt3text(user, text, ctm, fz_devicergb, black, 1.0, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
 	
 	((userData *)user)->pushClip(&gpath, 1.0, accumulate == 2);
@@ -551,7 +642,7 @@ fz_gdiplusclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_m
 	if (text->font->ftface)
 		gdiplusrendertext(((userData *)user)->graphics, text, ctm, NULL, &gpath);
 	else
-		gdiplusrunt3text(user, text, ctm, fz_devicebgr, black, 1.0, &gpath);
+		gdiplusrunt3text(user, text, ctm, fz_devicergb, black, 1.0, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
 	Pen *pen = gdiplusgetpen(&SolidBrush(Color()), ctm, stroke);
 	
@@ -631,26 +722,25 @@ fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	}
 	
 	Graphics *graphics = ((userData *)user)->graphics;
-	Matrix oldTransform;
-	graphics->GetTransform(&oldTransform);
-	gdiplusapplytransform(graphics, ctm);
-	graphics->DrawImage(bmp.bmp, Rect(0, 1, 1, -1), 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
-	graphics->SetTransform(&oldTransform);
+	fz_matrix oldCtm = gdiplusgettransform(graphics);
+	gdiplusapplytransform(graphics, fz_concat(ctm, oldCtm));
+	graphics->DrawImage(&bmp, Rect(0, 1, 1, -1), 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
+	gdiplusapplytransform(graphics, oldCtm);
 }
 
 extern "C" static void
 fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	float bgr[3];
-	fz_convertcolor(colorspace, color, fz_devicebgr, bgr);
+	float rgb[3];
+	fz_convertcolor(colorspace, color, fz_devicergb, rgb);
 	
-	fz_pixmap *img2 = fz_newpixmap(fz_devicebgr, image->x, image->y, image->w, image->h);
+	fz_pixmap *img2 = fz_newpixmap(fz_devicergb, image->x, image->y, image->w, image->h);
 	for (int i = 0; i < img2->w * img2->h; i++)
 	{
-		img2->samples[i * 4] = bgr[2] * 255;
-		img2->samples[i * 4 + 1] = bgr[1] * 255;
-		img2->samples[i * 4 + 2] = bgr[0] * 255;
+		img2->samples[i * 4] = rgb[0] * 255;
+		img2->samples[i * 4 + 1] = rgb[1] * 255;
+		img2->samples[i * 4 + 2] = rgb[2] * 255;
 		img2->samples[i * 4 + 3] = image->samples[i];
 	}
 	
@@ -661,9 +751,7 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 extern "C" static void
 fz_gdiplusclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
-	Region clip(Rect(0, 1, 1, -1));
-	gdiplusapplytransform(&clip, ctm);
-	((userData *)user)->pushClip(&clip);
+	((userData *)user)->pushClipMask(image, ctm);
 }
 
 extern "C" static void
@@ -676,16 +764,17 @@ extern "C" static void
 fz_gdiplusbeginmask(void *user, fz_rect rect, int luminosity,
 	fz_colorspace *colorspace, float *colorfv)
 {
-	// TODO: implement masking
-	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
-	((userData *)user)->pushClip(&Region(clip));
+	float rgb[3] = { 0 };
+	if (luminosity && colorspace && colorfv)
+		fz_convertcolor(colorspace, colorfv, fz_devicergb, rgb);
+	
+	((userData *)user)->recordClipMask(rect, luminosity == 1, rgb);
 }
 
 extern "C" static void
 fz_gdiplusendmask(void *user)
 {
-	// fz_gdipluspopclip(user);
-	// fz_gdiplusclipimagemask(user, mask, fz_identity);
+	((userData *)user)->applyClipMask();
 }
 
 extern "C" static void
@@ -693,6 +782,9 @@ fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 	fz_blendmode blendmode, float alpha)
 {
 	// TODO: implement blending
+	if (blendmode != FZ_BNORMAL)
+		fz_warn("blending not implemented for GDI+");
+	
 	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
 	((userData *)user)->pushClip(&Region(clip), alpha);
 }
