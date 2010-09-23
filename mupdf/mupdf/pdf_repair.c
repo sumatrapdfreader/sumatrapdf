@@ -131,9 +131,8 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	int isroot, rootnum = 0, rootgen = 0;
 	int stmlen, stmofs = 0;
 	pdf_token_e tok;
-	int len;
 	int next;
-	int i;
+	int i, n;
 
 	pdf_logxref("repairxref %p\n", xref);
 
@@ -142,6 +141,21 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	listlen = 0;
 	listcap = 1024;
 	list = fz_malloc(listcap * sizeof(struct entry));
+
+	/* look for '%PDF' version marker within first kilobyte of file */
+	n = fz_read(xref->file, (unsigned char *)buf, MAX(bufsize, 1024));
+	if (n < 0)
+		return fz_rethrow(n, "cannot read from file");
+
+	fz_seek(xref->file, 0, 0);
+	for (i = 0; i < n - 4; i++)
+	{
+		if (memcmp(buf + i, "%PDF", 4) == 0)
+		{
+			fz_seek(xref->file, i, 0);
+			break;
+		}
+	}
 
 	while (1)
 	{
@@ -152,7 +166,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 			goto cleanup;
 		}
 
-		error = pdf_lex(&tok, xref->file, buf, bufsize, &len);
+		error = pdf_lex(&tok, xref->file, buf, bufsize, &n);
 		if (error)
 		{
 			fz_catch(error, "ignoring the rest of the file");
