@@ -837,7 +837,8 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		if (btn == 1 && state == 1)
 		{
 			if (link->kind == PDF_LURI)
-				pdfapp_gotouri(app, link->dest);
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=275 */
+				pdfapp_gotouri(app, fz_arrayget(link->dest, 0));
 			else if (link->kind == PDF_LGOTO)
 				pdfapp_gotopage(app, link->dest);
 			return;
