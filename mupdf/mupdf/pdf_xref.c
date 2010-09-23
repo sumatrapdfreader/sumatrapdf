@@ -242,16 +242,16 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 
 				/* broken pdfs where line start with white space */
 				while (*s != '\0' && iswhite(*s))
-				{
-					/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1048 */
-					if (iswhite(fz_peekbyte(xref->file)))
-						fz_read(xref->file, (unsigned char *) buf, 1);
 					s++;
-				}
 
 				xref->table[i].ofs = atoi(s);
 				xref->table[i].gen = atoi(s + 11);
 				xref->table[i].type = s[17];
+
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1048 */
+				if (s[17] != 'f' && s[17] != 'n' && s[17] != 'o')
+					return fz_throw("unexpected xref type %#x (%d %d R)",
+						s[17], i, xref->table[i].gen);
 			}
 		}
 	}
