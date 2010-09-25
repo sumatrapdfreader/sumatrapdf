@@ -493,6 +493,9 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 		if (fterr)
 			continue;
 		
+		fz_path *path = fz_newpath();
+		FT_Outline_Decompose(outline, &OutlineFuncs, path);
+		
 		fz_matrix ctm2 = fz_translate(text->els[i].x, text->els[i].y);
 		ctm2 = fz_concat(fz_scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM), ctm2);
 		ctm2 = fz_concat(text->trm, ctm2);
@@ -500,13 +503,11 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 		if (widthScale != 1.0)
 			ctm2 = fz_concat(fz_scale(widthScale, 1), ctm2);
 		
-		fz_path *path = fz_newpath();
-		FT_Outline_Decompose(outline, &OutlineFuncs, path);
 		GraphicsPath *gpath2 = gdiplusgetpath(path, ctm2, (outline->flags & FT_OUTLINE_EVEN_ODD_FILL));
-		fz_freepath(path);
-		
 		tpath->AddPath(gpath2, FALSE);
 		delete gpath2;
+		
+		fz_freepath(path);
 	}
 	
 	if (!gpath)
