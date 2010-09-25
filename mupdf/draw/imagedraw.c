@@ -203,9 +203,8 @@ fz_paintimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 		ctm.b = roundup(ctm.b);
 		ctm.c = roundup(ctm.c);
 		ctm.d = roundup(ctm.d);
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1045 */
-		ctm.e = floorf(ctm.e) + 0.5f;
-		ctm.f = floorf(ctm.f) + 0.5f;
+		ctm.e = floorf(ctm.e);// + 0.5f;
+		ctm.f = floorf(ctm.f);// + 0.5f;
 	}
 
 	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
@@ -228,9 +227,8 @@ fz_paintimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 
 	/* Calculate initial texture positions. Do a half step to start. */
 	/* Also, convert from texture space to sample space (subtract 1/2) */
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1045 */
-	u = (fa * x) + (fc * y) + inv.e * 65536;// + ((fa+fc)>>1) - 32768;
-	v = (fb * x) + (fd * y) + inv.f * 65536;// + ((fb+fd)>>1) - 32768;
+	u = (fa * x) + (fc * y) + inv.e * 65536 + ((fa+fc)>>1) - 32768;
+	v = (fb * x) + (fd * y) + inv.f * 65536 + ((fb+fd)>>1) - 32768;
 
 	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 	n = dst->n;
