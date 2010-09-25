@@ -43,13 +43,21 @@ public:
 	float alpha;
 	Graphics *saveG;
 	Bitmap *layer, *mask;
-	RectF bounds;
+	Rect bounds;
 	bool luminosity;
 	userDataStackItem *next, *prev;
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), saveG(NULL), layer(NULL), mask(NULL), luminosity(false), next(NULL), prev(_prev) { }
 };
+
+static PointF
+gdiplustransformpoint(fz_matrix ctm, float x, float y)
+{
+	fz_point point = { x, y };
+	point = fz_transformpoint(ctm, point);
+	return PointF(point.x, point.y);
+}
 
 class userData
 {
@@ -89,11 +97,14 @@ public:
 	void pushClipMask(fz_pixmap *mask, fz_matrix ctm)
 	{
 		Region clipRegion(Rect(0, 0, 1, 1));
-		Matrix transform(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f);
-		clipRegion.Transform(&transform);
+		clipRegion.Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 		pushClip(&clipRegion);
 		
-		clipRegion.GetBounds(&stack->bounds, graphics);
+		RectF bounds;
+		clipRegion.GetBounds(&bounds, graphics);
+		stack->bounds.X = floorf(bounds.X); stack->bounds.Width = ceilf(bounds.Width) + 1;
+		stack->bounds.Y = floorf(bounds.Y); stack->bounds.Height = ceilf(bounds.Height) + 1;
+		
 		stack->saveG = graphics;
 		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
 		graphics = _setup(new Graphics(stack->layer));
@@ -103,11 +114,11 @@ public:
 		{
 			assert(mask->n == 1 && !mask->colorspace);
 			stack->mask = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+			
 			Graphics g2(stack->mask);
 			_setup(&g2);
-			g2.SetTransform(&transform);
-			g2.TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
-			g2.DrawImage(&PixmapBitmap(mask), Rect(0, 1, 1, -1), 0, 0, mask->w, mask->h, UnitPixel);
+			ctm = fz_concat(ctm, fz_translate(-stack->bounds.X, -stack->bounds.Y));
+			drawPixmap(mask, ctm, 1.0f, &g2);
 		}
 	}
 
@@ -156,6 +167,33 @@ public:
 		stack->next = NULL;
 	}
 
+	void drawPixmap(fz_pixmap *image, fz_matrix ctm, float alpha=1.0, Graphics *graphics=NULL)
+	{
+		if (!graphics)
+		{
+			graphics = this->graphics;
+			alpha = getAlpha(alpha);
+		}
+		
+		PointF corners[3] = {
+			gdiplustransformpoint(ctm, 0, 1),
+			gdiplustransformpoint(ctm, 1, 1),
+			gdiplustransformpoint(ctm, 0, 0)
+		};
+		
+		ImageAttributes imgAttrs;
+		ColorMatrix matrix = { 
+			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, alpha, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+		};
+		imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+		
+		graphics->DrawImage(&PixmapBitmap(image), corners, 3, -0.5, -0.5, image->w, image->h, UnitPixel, &imgAttrs);
+	}
+
 	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
 
 protected:
@@ -166,7 +204,7 @@ protected:
 		graphics->SetCompositingMode(CompositingModeSourceOver);
 		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
-		graphics->SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+		graphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
 		
 		return graphics;
 	}
@@ -225,14 +263,6 @@ static void
 gdiplusapplytransform(GraphicsPath *gpath, fz_matrix ctm)
 {
 	gpath->Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
-}
-
-static PointF
-gdiplustransformpoint(fz_matrix ctm, float x, float y)
-{
-	fz_point point = { x, y };
-	point = fz_transformpoint(ctm, point);
-	return PointF(point.x, point.y);
 }
 
 static Brush *
@@ -358,9 +388,6 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, f
 }
 
 extern "C" static void
-fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha);
-
-extern "C" static void
 fz_gdiplusfillpath(void *user, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
@@ -461,7 +488,8 @@ ftgetwidthscale(fz_font *font, int gid)
 	return 1.0;
 }
 
-static WCHAR ftgetcharcode(fz_font *font, fz_textel *el)
+static WCHAR
+ftgetcharcode(fz_font *font, fz_textel *el)
 {
 	FT_Face face = (FT_Face)font->ftface;
 	if (el->gid == FT_Get_Char_Index(face, el->ucs))
@@ -495,6 +523,7 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 		
 		fz_path *path = fz_newpath();
 		FT_Outline_Decompose(outline, &OutlineFuncs, path);
+		int evenodd = outline->flags & FT_OUTLINE_EVEN_ODD_FILL;
 		
 		fz_matrix ctm2 = fz_translate(text->els[i].x, text->els[i].y);
 		ctm2 = fz_concat(fz_scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM), ctm2);
@@ -503,7 +532,7 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 		if (widthScale != 1.0)
 			ctm2 = fz_concat(fz_scale(widthScale, 1), ctm2);
 		
-		GraphicsPath *gpath2 = gdiplusgetpath(path, ctm2, (outline->flags & FT_OUTLINE_EVEN_ODD_FILL));
+		GraphicsPath *gpath2 = gdiplusgetpath(path, ctm2, evenodd);
 		tpath->AddPath(gpath2, FALSE);
 		delete gpath2;
 		
@@ -707,7 +736,7 @@ fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 	fz_rendershade(shade, ctm, dest, bbox);
 	
 	ctm = fz_concat(fz_scale(dest->w, -dest->h), fz_translate(dest->x, dest->y + dest->h));
-	fz_gdiplusfillimage(user, dest, ctm, alpha);
+	((userData *)user)->drawPixmap(dest, ctm, alpha);
 	
 	fz_droppixmap(dest);
 }
@@ -715,23 +744,7 @@ fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 extern "C" static void
 fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
-	PointF corners[3] = {
-		gdiplustransformpoint(ctm, 0, 1),
-		gdiplustransformpoint(ctm, 1, 1),
-		gdiplustransformpoint(ctm, 0, 0)
-	};
-	
-	ImageAttributes imgAttrs;
-	ColorMatrix matrix = { 
-		1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, ((userData *)user)->getAlpha(alpha), 0.0f,
-		0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-	};
-	imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-	
-	((userData *)user)->graphics->DrawImage(&PixmapBitmap(image), corners, 3, -0.5, -0.5, image->w, image->h, UnitPixel, &imgAttrs);
+	((userData *)user)->drawPixmap(image, ctm, alpha);
 }
 
 extern "C" static void
@@ -750,7 +763,7 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 		img2->samples[i * 4 + 3] = image->samples[i];
 	}
 	
-	fz_gdiplusfillimage(user, img2, ctm, alpha);
+	((userData *)user)->drawPixmap(img2, ctm, alpha);
 	fz_droppixmap(img2);
 }
 
