@@ -61,13 +61,7 @@ public:
 	userData(HDC hDC) : stack(new userDataStackItem()), dev(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
-		graphics = new Graphics(hDC);
-		graphics->SetPageUnit(UnitPoint);
-		graphics->SetPageScale(72.0 / graphics->GetDpiY());
-		graphics->SetCompositingMode(CompositingModeSourceOver);
-		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
-		graphics->SetSmoothingMode(SmoothingModeHighQuality);
-		graphics->SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+		graphics = _setup(new Graphics(hDC));
 	}
 
 	~userData()
@@ -102,7 +96,7 @@ public:
 		clipRegion.GetBounds(&stack->bounds, graphics);
 		stack->saveG = graphics;
 		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
-		graphics = new Graphics(stack->layer);
+		graphics = _setup(new Graphics(stack->layer));
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
 		
 		if (mask)
@@ -110,6 +104,7 @@ public:
 			assert(mask->n == 1 && !mask->colorspace);
 			stack->mask = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
 			Graphics g2(stack->mask);
+			_setup(&g2);
 			g2.SetTransform(&transform);
 			g2.TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
 			g2.DrawImage(&PixmapBitmap(mask), Rect(0, 1, 1, -1), 0, 0, mask->w, mask->h, UnitPixel);
@@ -131,7 +126,7 @@ public:
 		stack->mask = stack->layer;
 		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
 		delete graphics;
-		graphics = new Graphics(stack->layer);
+		graphics = _setup(new Graphics(stack->layer));
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
 	}
 
@@ -164,6 +159,18 @@ public:
 	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
 
 protected:
+	Graphics *_setup(Graphics *graphics)
+	{
+		graphics->SetPageUnit(UnitPoint);
+		graphics->SetPageScale(72.0 / graphics->GetDpiY());
+		graphics->SetCompositingMode(CompositingModeSourceOver);
+		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
+		graphics->SetSmoothingMode(SmoothingModeHighQuality);
+		graphics->SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+		
+		return graphics;
+	}
+
 	void _applyMask(Bitmap *bitmap, Bitmap *mask, bool luminosity=false)
 	{
 		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
@@ -218,6 +225,14 @@ static void
 gdiplusapplytransform(GraphicsPath *gpath, fz_matrix ctm)
 {
 	gpath->Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
+}
+
+static PointF
+gdiplustransformpoint(fz_matrix ctm, float x, float y)
+{
+	fz_point point = { x, y };
+	point = fz_transformpoint(ctm, point);
+	return PointF(point.x, point.y);
 }
 
 static Brush *
@@ -699,27 +714,23 @@ fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 extern "C" static void
 fz_gdiplusfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 {
-	PixmapBitmap bmp(image);
+	PointF corners[3] = {
+		gdiplustransformpoint(ctm, 0, 1),
+		gdiplustransformpoint(ctm, 1, 1),
+		gdiplustransformpoint(ctm, 0, 0)
+	};
+	
 	ImageAttributes imgAttrs;
+	ColorMatrix matrix = { 
+		1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, ((userData *)user)->getAlpha(alpha), 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+	};
+	imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
 	
-	alpha = ((userData *)user)->getAlpha(alpha);
-	if (alpha != 1.0f)
-	{
-		ColorMatrix matrix = { 
-			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, alpha, 0.0f,
-			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-		};
-		imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-	}
-	
-	Graphics *graphics = ((userData *)user)->graphics;
-	fz_matrix oldCtm = gdiplusgettransform(graphics);
-	gdiplusapplytransform(graphics, fz_concat(ctm, oldCtm));
-	graphics->DrawImage(&bmp, Rect(0, 1, 1, -1), 0, 0, image->w, image->h, UnitPixel, &imgAttrs);
-	gdiplusapplytransform(graphics, oldCtm);
+	((userData *)user)->graphics->DrawImage(&PixmapBitmap(image), corners, 3, -0.5, -0.5, image->w, image->h, UnitPixel, &imgAttrs);
 }
 
 extern "C" static void
