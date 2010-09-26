@@ -21,6 +21,11 @@
 // this sucks but I don't know a better way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
+// Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
+// (using FreeType for fonts) at the expense of higher memory/spooler requirements.
+#define USE_GDI_FOR_RENDERING
+#define USE_GDI_FOR_PRINTING
+
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Only enable for stress-testing the logic. On
    desktop machine we usually have plenty memory */
@@ -40,9 +45,11 @@ static BOOL             gDebugShowLinks = TRUE;
 #else
 static BOOL             gDebugShowLinks = FALSE;
 #endif
-
-#define USE_GDI_FOR_PRINTING
+#ifdef USE_GDI_FOR_RENDERING
+static bool             gUseGdiRenderer = true;
+#else
 static bool             gUseGdiRenderer = false;
+#endif
 
 /* default UI settings */
 
