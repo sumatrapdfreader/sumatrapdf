@@ -64,7 +64,7 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 	struct jpeg_source_mgr *src = cinfo->src;
 	if (num_bytes > 0)
 	{
-		while (num_bytes > src->bytes_in_buffer)
+		while ((size_t)num_bytes > src->bytes_in_buffer)
 		{
 			num_bytes -= src->bytes_in_buffer;
 			(void) src->fill_input_buffer(cinfo);

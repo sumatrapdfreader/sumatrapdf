@@ -125,7 +125,7 @@ $(SUMATRA_OBJS): $(SUMATRA_HEADERS)
 
 # sumatra directories
 {baseutils\}.c{$(O)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {baseutils\}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
@@ -140,4 +140,4 @@ $(SUMATRA_OBJS): $(SUMATRA_HEADERS)
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {src\}.c{$(O)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<

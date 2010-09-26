@@ -45,7 +45,7 @@ CFLAGS = $(CFLAGS) /wd4244 /wd4996
 # 4995 - 'sprintf': name was marked as #pragma deprecated
 CFLAGS = $(CFLAGS) /wd4995
 
-CFLAGS = $(CFLAGS) /W3 /GR- /Zi /GS /Gy
+CFLAGS = $(CFLAGS) /W3 /WX /GR- /Zi /GS /Gy
 
 !if "$(CFG)"=="rel"
 CFLAGS = $(CFLAGS) /Os /Ox /GL /D "NDEBUG"
@@ -77,9 +77,7 @@ OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DI
 JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 
 # fitz flags
-FITZ_CFLAGS = $(CFLAGS) /TC \
-	/D "NEED_MATH" \
-	/D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
+FITZ_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
@@ -609,28 +607,28 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 
 # fitz directories
 {$(FITZ_DIR)\apps\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\mupdf\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\draw\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\fitz\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\fitz\}.cpp{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /TP /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\fonts\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FITZ_DIR)\cmaps\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # files generated during build process (fonts and cmaps)
 {$(O)\}.c{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 force: ;
