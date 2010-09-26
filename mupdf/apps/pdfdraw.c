@@ -123,7 +123,10 @@ static void drawbmp(pdf_page *page, fz_displaylist *list, int pagenum)
 	FillRect(hDC, &rc, bgBrush);
 	DeleteObject(bgBrush);
 
-	dev = fz_newgdiplusdevice(hDC);
+	bbox.x0 = 0; bbox.x1 = w;
+	bbox.y0 = 0; bbox.y1 = h;
+
+	dev = fz_newgdiplusdevice(hDC, bbox);
 	fz_executedisplaylist(list, dev, ctm);
 	fz_freedevice(dev);
 

@@ -559,21 +559,16 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix 
         ctm = &ctm2;
     }
 
-    HRGN clip = CreateRectRgnIndirect(screenRect);
-    SelectClipRgn(hDC, clip);
-
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
     FillRect(hDC, screenRect, bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
-    fz_device *dev = fz_newgdiplusdevice(hDC);
+    fz_bbox clipBox = { screenRect->left, screenRect->top, screenRect->right, screenRect->bottom };
+    fz_device *dev = fz_newgdiplusdevice(hDC, clipBox);
     EnterCriticalSection(&_xrefAccess);
     fz_error error = pdf_runpage(_xref, page, dev, *ctm);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
-
-    SelectClipRgn(hDC, NULL);
-    DeleteObject(clip);
 
     return fz_okay == error;
 }

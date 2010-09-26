@@ -36,6 +36,19 @@ public:
 	}
 };
 
+typedef BYTE (* seperableBlend)(BYTE s, BYTE bg);
+static BYTE BlendNormal(BYTE s, BYTE bg)     { return s; }
+static BYTE BlendMultiply(BYTE s, BYTE bg)   { return s / 255.0 * bg; }
+static BYTE BlendScreen(BYTE s, BYTE bg)     { return 255 - (255 - s) / 255.0 * (255 - bg); }
+static BYTE BlendHardLight(BYTE s, BYTE bg)  { return s <= 127 ? s * 2.0 / 255 * bg : BlendScreen((s - 128) * 2 + 1, bg); }
+static BYTE BlendOverlay(BYTE s, BYTE bg)    { return BlendHardLight(bg, s); }
+static BYTE BlendDarken(BYTE s, BYTE bg)     { return MIN(s, bg); }
+static BYTE BlendLighten(BYTE s, BYTE bg)    { return MAX(s, bg); }
+static BYTE BlendColorDodge(BYTE s, BYTE bg) { return bg == 0 ? 0 : bg >= 255 - s ? 255 : (510 * bg + 255 - s) / 2.0 / (255 - s); }
+static BYTE BlendColorBurn(BYTE s, BYTE bg)  { return bg == 255 ? 255 : 255 - bg >= s ? 0 : 255 - (510 * (255 - bg) + s) / 2.0 / s; }
+static BYTE BlendDifference(BYTE s, BYTE bg) { return ABS(s - bg); }
+static BYTE BlendExclusion(BYTE s, BYTE bg)  { return s + bg - s * bg * 2.0 / 255; }
+
 class userDataStackItem
 {
 public:
@@ -45,10 +58,11 @@ public:
 	Bitmap *layer, *mask;
 	Rect bounds;
 	bool luminosity;
-	userDataStackItem *next, *prev;
+	fz_blendmode blendmode;
+	userDataStackItem *prev;
 
-	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
-		alpha(_alpha), saveG(NULL), layer(NULL), mask(NULL), luminosity(false), next(NULL), prev(_prev) { }
+	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) : alpha(_alpha), prev(_prev), 
+		saveG(NULL), layer(NULL), mask(NULL), luminosity(false), blendmode(FZ_BNORMAL) { }
 };
 
 static PointF
@@ -66,23 +80,26 @@ public:
 	Graphics *graphics;
 	fz_device *dev;
 
-	userData(HDC hDC) : stack(new userDataStackItem()), dev(NULL)
+	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
+		graphics->GetClip(&stack->clip);
+		graphics->SetClip(Rect(clip.x0, clip.y0, clip.x0 + clip.x1, clip.y0 + clip.y1));
 	}
 
 	~userData()
 	{
-		delete graphics;
-		assert(stack && !stack->next && !stack->prev);
+		assert(stack && !stack->prev);
+		if (stack)
+			graphics->SetClip(&stack->clip);
 		delete stack;
+		delete graphics;
 	}
 
 	void pushClip(Region *clipRegion=NULL, float alpha=1.0, bool accumulate=false)
 	{
-		userDataStackItem *next = new userDataStackItem(stack->alpha * alpha, stack);
-		stack = stack->next = next;
+		stack = new userDataStackItem(stack->alpha * alpha, stack);
 		graphics->GetClip(&stack->clip);
 		
 		if (clipRegion)
@@ -131,6 +148,13 @@ public:
 		stack->luminosity = luminosity;
 	}
 
+	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha)
+	{
+		recordClipMask(rect, 0, NULL);
+		stack->alpha *= alpha;
+		stack->blendmode = blendmode;
+	}
+
 	void applyClipMask()
 	{
 		assert(stack->layer && !stack->mask);
@@ -157,14 +181,16 @@ public:
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
 				delete stack->mask;
 			}
+			if (stack->blendmode != FZ_BNORMAL)
+				_blend(stack->layer, stack->bounds, stack->blendmode);
 			graphics->DrawImage(stack->layer, stack->bounds);
 			delete stack->layer;
 		}
 		
 		graphics->SetClip(&stack->clip);
-		stack = stack->prev;
-		delete stack->next;
-		stack->next = NULL;
+		userDataStackItem *prev = stack->prev;
+		delete stack;
+		stack = prev;
 	}
 
 	void drawPixmap(fz_pixmap *image, fz_matrix ctm, float alpha=1.0, Graphics *graphics=NULL)
@@ -235,6 +261,75 @@ protected:
 		}
 		
 		mask->UnlockBits(&dataMask);
+		bitmap->UnlockBits(&data);
+	}
+
+	void _blend(Bitmap *bitmap, Rect clipBounds, fz_blendmode blendmode)
+	{
+		userDataStackItem *bgStack = stack->prev;
+		while (bgStack && !bgStack->layer)
+			bgStack = bgStack->prev;
+		assert(bgStack);
+		if (!bgStack)
+		{
+			fz_warn("background stack required for blending");
+			return;
+		}
+		
+		switch (blendmode)
+		{
+		case FZ_BNORMAL:
+		case FZ_BMULTIPLY:
+		case FZ_BSCREEN:
+		case FZ_BOVERLAY:
+		case FZ_BDARKEN:
+		case FZ_BLIGHTEN:
+		case FZ_BCOLORDODGE:
+		case FZ_BCOLORBURN:
+		case FZ_BHARDLIGHT:
+		// case FZ_BSOFTLIGHT:
+		case FZ_BDIFFERENCE:
+		case FZ_BEXCLUSION:
+			break;
+		default:
+			fz_warn("blend mode %d not implemented for GDI+", blendmode);
+			return;
+		}
+		
+		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+		Rect *boundsBg = bounds.Clone();
+		boundsBg->Offset(clipBounds.X - bgStack->bounds.X, clipBounds.Y - bgStack->bounds.Y);
+		assert(clipBounds.Width == boundsBg->Width && clipBounds.Height == boundsBg->Height);
+		
+		BitmapData data, dataBg;
+		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
+		bgStack->layer->LockBits(boundsBg, ImageLockModeRead, PixelFormat32bppARGB, &dataBg);
+		delete boundsBg;
+		
+		seperableBlend funcs[] = {
+			BlendNormal,
+			BlendMultiply,
+			BlendScreen,
+			BlendOverlay,
+			BlendDarken,
+			BlendLighten,
+			BlendColorDodge,
+			BlendColorBurn,
+			BlendHardLight,
+			NULL, // FZ_BSOFTLIGHT
+			BlendDifference,
+			BlendExclusion,
+			NULL // FZ_BHUE, FZ_BSATURATION, FZ_BCOLOR, FZ_BLUMINOSITY
+		};
+		
+		LPBYTE Scan0 = (LPBYTE)data.Scan0, bgScan0 = (LPBYTE)dataBg.Scan0;
+		for (int row = 0; row < bounds.Height; row++)
+			for (int col = 0; col < bounds.Width; col++)
+				if (bgScan0[row * dataBg.Stride + col * 4 + 3] > 0)
+					for (int i = 0; i < 3; i++)
+						Scan0[row * data.Stride + col * 4 + i] = funcs[blendmode](Scan0[row * data.Stride + col * 4 + i], bgScan0[row * dataBg.Stride + col * 4 + i]);
+		
+		bgStack->layer->UnlockBits(&dataBg);
 		bitmap->UnlockBits(&data);
 	}
 };
@@ -598,8 +693,6 @@ static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha, GraphicsPath *gpath=NULL)
 {
-	// TODO: Type 3 glyphs are rendered with one pixel cut off (why?)
-	
 	if (gpath)
 		fz_warn("stroking Type 3 glyphs is not supported");
 	
@@ -642,18 +735,16 @@ extern "C" static void
 fz_gdiplusstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	Graphics *graphics = ((userData *)user)->graphics;
-	
-	Brush *brush = gdiplusgetbrush(user, colorspace, color, alpha);
 	GraphicsPath gpath;
 	if (text->font->ftface)
-		gdiplusrendertext(graphics, text, ctm, brush, &gpath);
+		gdiplusrendertext(((userData *)user)->graphics, text, ctm, NULL, &gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
 	
+	Brush *brush = gdiplusgetbrush(user, colorspace, color, alpha);
 	Pen *pen = gdiplusgetpen(brush, ctm, stroke);
-	graphics->DrawPath(pen, &gpath);
+	((userData *)user)->graphics->DrawPath(pen, &gpath);
 	
 	delete pen;
 	delete brush;
@@ -764,6 +855,7 @@ fz_gdiplusfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	}
 	
 	((userData *)user)->drawPixmap(img2, ctm, alpha);
+	
 	fz_droppixmap(img2);
 }
 
@@ -800,18 +892,13 @@ extern "C" static void
 fz_gdiplusbegingroup(void *user, fz_rect rect, int isolated, int knockout,
 	fz_blendmode blendmode, float alpha)
 {
-	// TODO: implement blending
-	if (blendmode != FZ_BNORMAL)
-		fz_warn("blending not implemented for GDI+");
-	
-	RectF clip(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
-	((userData *)user)->pushClip(&Region(clip), alpha);
+	((userData *)user)->pushClipBlend(rect, blendmode, alpha);
 }
 
 extern "C" static void
 fz_gdiplusendgroup(void *user)
 {
-	fz_gdipluspopclip(user);
+	((userData *)user)->popClip();
 }
 
 extern "C" static void
@@ -824,7 +911,7 @@ fz_gdiplusfreeuser(void *user)
 }
 
 fz_device *
-fz_newgdiplusdevice(void *hDC)
+fz_newgdiplusdevice(void *hDC, fz_bbox baseClip)
 {
 	if (InterlockedIncrement(&m_gdiplusUsage) == 1)
 	{
@@ -832,7 +919,7 @@ fz_newgdiplusdevice(void *hDC)
 		GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
 	}
 	
-	fz_device *dev = fz_newdevice(new userData((HDC)hDC));
+	fz_device *dev = fz_newdevice(new userData((HDC)hDC, baseClip));
 	((userData *)dev->user)->dev = dev;
 	dev->freeuser = fz_gdiplusfreeuser;
 	
