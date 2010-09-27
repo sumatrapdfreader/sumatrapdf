@@ -794,7 +794,12 @@ fz_drawbeginmask(void *user, fz_rect rect, int luminosity, fz_colorspace *colors
 	dest = fz_newpixmapwithrect(fz_devicegray, bbox);
 
 	if (luminosity)
-		fz_clearpixmap(dest, 255);
+	{
+		/* SumatraPDF: pass a Luminosity softmask's background color */
+		float gray = 1.0;
+		fz_convertcolor(colorspace, colorfv, fz_devicegray, &gray);
+		fz_clearpixmap(dest, gray * 255);
+	}
 	else
 		fz_clearpixmap(dest, 0);
 

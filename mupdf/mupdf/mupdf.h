@@ -247,6 +247,7 @@ struct pdf_xobject_s
 	int transparency;
 	fz_obj *resources;
 	fz_buffer *contents;
+	float backcolor[3]; /* SumatraPDF: a Luminosity softmask's background color */
 };
 
 fz_error pdf_loadxobject(pdf_xobject **xobjp, pdf_xref *xref, fz_obj *obj);

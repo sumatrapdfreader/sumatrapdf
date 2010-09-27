@@ -150,7 +150,7 @@ public:
 
 	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha)
 	{
-		recordClipMask(rect, 0, NULL);
+		recordClipMask(rect, false, NULL);
 		stack->alpha *= alpha;
 		stack->blendmode = blendmode;
 	}
@@ -182,7 +182,7 @@ public:
 				delete stack->mask;
 			}
 			if (stack->blendmode != FZ_BNORMAL)
-				_blend(stack->layer, stack->bounds, stack->blendmode);
+				_applyBlend(stack->layer, stack->bounds, stack->blendmode);
 			graphics->DrawImage(stack->layer, stack->bounds);
 			delete stack->layer;
 		}
@@ -243,28 +243,33 @@ protected:
 		BitmapData data, dataMask;
 		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
 		mask->LockBits(&bounds, ImageLockModeRead, PixelFormat32bppARGB, &dataMask);
-		LPBYTE maskScan0 = (LPBYTE)dataMask.Scan0;
 		
-		for (int i = 0; i < bounds.Width * bounds.Height; i++)
+		for (int row = 0; row < bounds.Height; row++)
 		{
-			BYTE alpha = maskScan0[i * 4 + 3];
-			if (luminosity)
+			LPBYTE Scan0 = (LPBYTE)data.Scan0 + row * data.Stride;
+			LPBYTE maskScan0 = (LPBYTE)dataMask.Scan0 + row * dataMask.Stride;
+			
+			for (int col = 0; col < bounds.Width; col++)
 			{
-				float color[3], gray;
-				color[0] = maskScan0[i * 4] / 255.0;
-				color[1] = maskScan0[i * 4 + 1] / 255.0;
-				color[2] = maskScan0[i * 4 + 2] / 255.0;
-				fz_convertcolor(fz_devicergb, color, fz_devicegray, &gray);
-				alpha = gray * 255;
+				BYTE alpha = maskScan0[col * 4 + 3];
+				if (luminosity)
+				{
+					float color[3], gray;
+					color[0] = maskScan0[col * 4] / 255.0;
+					color[1] = maskScan0[col * 4 + 1] / 255.0;
+					color[2] = maskScan0[col * 4 + 2] / 255.0;
+					fz_convertcolor(fz_devicergb, color, fz_devicegray, &gray);
+					alpha = gray * 255;
+				}
+				Scan0[col * 4 + 3] *= alpha / 255.0;
 			}
-			((LPBYTE)data.Scan0)[i * 4 + 3] *= alpha / 255.0;
 		}
 		
 		mask->UnlockBits(&dataMask);
 		bitmap->UnlockBits(&data);
 	}
 
-	void _blend(Bitmap *bitmap, Rect clipBounds, fz_blendmode blendmode)
+	void _applyBlend(Bitmap *bitmap, Rect clipBounds, fz_blendmode blendmode)
 	{
 		userDataStackItem *bgStack = stack->prev;
 		while (bgStack && !bgStack->layer)
@@ -298,8 +303,13 @@ protected:
 		
 		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
 		Rect *boundsBg = bounds.Clone();
-		boundsBg->Offset(clipBounds.X - bgStack->bounds.X, clipBounds.Y - bgStack->bounds.Y);
+		boundsBg->Offset(MAX(clipBounds.X - bgStack->bounds.X, 0), MAX(clipBounds.Y - bgStack->bounds.Y, 0));
 		assert(clipBounds.Width == boundsBg->Width && clipBounds.Height == boundsBg->Height);
+		
+		if (boundsBg->X + boundsBg->Width > (INT)bgStack->layer->GetWidth())
+			boundsBg->Width = bounds.Width = bgStack->layer->GetWidth() - boundsBg->X;
+		if (boundsBg->Y + boundsBg->Height > (INT)bgStack->layer->GetHeight())
+			boundsBg->Height = bounds.Height = bgStack->layer->GetHeight() - boundsBg->Y;
 		
 		BitmapData data, dataBg;
 		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
