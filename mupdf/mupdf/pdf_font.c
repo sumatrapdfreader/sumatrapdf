@@ -1065,6 +1065,10 @@ pdf_loadfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict
 	if ((*fontdescp)->font->ftsubstitute && !(*fontdescp)->tottfcmap)
 		pdf_makewidthtable(*fontdescp);
 
+	/* SumatraPDF: this font renders wrong without hinting */
+	if (strstr((*fontdescp)->font->name, "MingLiU"))
+		(*fontdescp)->font->fthint = 1;
+
 	pdf_storeitem(xref->store, pdf_keepfont, pdf_dropfont, dict, *fontdescp);
 
 	return fz_okay;

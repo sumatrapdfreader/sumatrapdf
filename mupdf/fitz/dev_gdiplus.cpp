@@ -575,7 +575,7 @@ ftgetwidthscale(fz_font *font, int gid)
 	if (font->ftsubstitute && gid < font->widthcount)
 	{
 		FT_Fixed advance = 0;
-		FT_Get_Advance((FT_Face)font->ftface, gid, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP, &advance);
+		FT_Get_Advance((FT_Face)font->ftface, gid, FT_LOAD_NO_BITMAP | (font->fthint ? 0 : FT_LOAD_NO_HINTING), &advance);
 		if (advance)
 			return 1024.0 * font->widthtable[gid] / advance;
 	}
@@ -606,13 +606,13 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 	Matrix trm(text->trm.a, text->trm.b, text->trm.c, text->trm.d, text->trm.e, text->trm.f);
 	FT_Face face = (FT_Face)text->font->ftface;
 	FT_Outline *outline = &face->glyph->outline;
-	FT_Set_Char_Size(face, 1000, 1000, 72, 72);
+	FT_Set_Char_Size(face, face->units_per_EM, face->units_per_EM, 72, 72);
 	FT_Set_Transform(face, NULL, NULL);
 	
 	for (int i = 0; i < text->len; i++)
 	{
 		int gid = text->els[i].gid;
-		FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
+		FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | (text->font->fthint ? 0 : FT_LOAD_NO_HINTING));
 		if (fterr)
 			continue;
 		
