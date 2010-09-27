@@ -6,13 +6,16 @@
 
 Lang: am Armenian (Հայերեն)
 
-Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
+Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 
 &About
 &Մասին
 
 &Actual Size\tCtrl-1
 Իրական &չափը\tCtrl-1
+
+&All selected pages
+&Ընտրված բոլոր էջերը
 
 &Back\tAlt+Left Arrow
 Հետ\tAlt+<-
@@ -26,6 +29,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Don't ask me again
 &Այլևս չհարցնել
 
+&Even pages only
+&Միայն զույգ էջերը
+
 &File
 &Ֆայլ
 
@@ -34,6 +40,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 
 &First Page\tHome
 Առաջին էջը\tHome
+
+&Fit pages to printable area
+&Հարմարեցնել էջերը տպման համար
 
 &Go To
 &Անցնել
@@ -63,7 +72,10 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Ոչ
 
 &No, thanks
-&Ոչ,շնորհակալություն։
+&Ոչ
+
+&Odd pages only
+&Միայն կենտ էջերը
 
 &Open\tCtrl-O
 Բացել\tCtrl-O
@@ -83,6 +95,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Print... (denied)
 &Տպել... (մերժված)
 
+&Remember the password for this document
+&Հիշել փաստաթղթի գաղտնաբառը
+
 &Remember these settings for each document
 Հիշել այս կարգավորումները &բոլոր փաստաթղթերի համար
 
@@ -91,6 +106,9 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 
 &Settings
 &Կարգավորումներ
+
+&Shrink pages to printable area (if necessary)
+&Հարմարեցնել էջը տպելու համար (եթե պահանջվում է)
 
 &Skip this version
 &Բաց թողնել այս տարբերակը
@@ -105,7 +123,7 @@ Contributor: Hrant Ohanyan (hrantohanyan@mail.am)
 &Չափը
 
 (of %d)
-(%d-ից)
+(%d-ը)
 
 About SumatraPDF
 SumatraPDF-ի մասին
@@ -122,6 +140,9 @@ Application:
 Associate with PDF files?
 Ասոցացնե՞լ PDF ֆայլերի հետ։
 
+Attachment: %s
+Կցորդ. %s
+
 Author:
 Հեղինակը.
 
@@ -135,7 +156,10 @@ Book View
 Գրքի նման
 
 Book&marks\tF12
-Ընտրյալները\tF12
+Էջերը\tF12
+
+Bookmarks
+Էջեր
 
 Bytes
 Բայթ
@@ -347,6 +371,9 @@ Page Size:
 Page number %u inexistant
 %u էջը գոյություն չունի
 
+Page scaling
+Էջի շարժը
+
 Page:
 Էջը.
 
@@ -358,6 +385,9 @@ Pr&int with Adobe Reader...
 
 Previous Page
 Նախորդ էջը
+
+Print range
+Տպելու կարգը
 
 Printing problem.
 Սխալ տպելիս
@@ -387,10 +417,10 @@ Show &Toolbar
 Ցույց տալ գործիքները
 
 Show &pages continuously
-Անընդհատ ցույց տալ էջերը
+Էջերը &ցույց տալ շարունակական
 
 Show the &bookmarks sidebar when available
-Հնարավորության դեպքում ցույց տալ &Ընտրյալները
+Հնարավորության դեպքում ցույց տալ &Էջերը
 
 Single Page
 &Մեկ էջ
@@ -426,7 +456,7 @@ View
 Դիտել
 
 Visit &Website
-&Այցելել Ինտերնետում
+&Ծրագրի կայքը
 
 Warning
 Զգուշացում
@@ -457,16 +487,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Page scaling
-#Print range
 
