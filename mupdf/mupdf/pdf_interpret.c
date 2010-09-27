@@ -232,34 +232,21 @@ pdf_runinlineimage(pdf_csi *csi, fz_obj *rdb, fz_stream *file, fz_obj *dict)
 {
 	fz_error error;
 	fz_pixmap *img;
-	char buf[256];
-	pdf_token_e tok;
-	int len;
+	int ch;
 
 	error = pdf_loadinlineimage(&img, csi->xref, rdb, dict, file);
 	if (error)
 		return fz_rethrow(error, "cannot load inline image");
 
-FindEndImageMarker:
-	error = pdf_lex(&tok, file, buf, sizeof buf, &len);
-	if (error)
+	/* find EI */
+	ch = fz_readbyte(file);
+	while (ch != 'E' && ch != EOF)
+		ch = fz_readbyte(file);
+	ch = fz_readbyte(file);
+	if (ch != 'I')
 	{
 		fz_droppixmap(img);
 		return fz_rethrow(error, "syntax error after inline image");
-	}
-
-	/* SumatraPDF: apparently Adobe Reader silently ignores trailing garbage */
-	/* (this might even still be too conservative in what we tolerate) */
-	if (tok == PDF_TKEYWORD && strcmp("EI", buf))
-	{
-		fz_warn("ignoring garbage after inline image");
-		goto FindEndImageMarker;
-	}
-
-	if (tok != PDF_TKEYWORD || strcmp("EI", buf))
-	{
-		fz_droppixmap(img);
-		return fz_throw("syntax error after inline image");
 	}
 
 	pdf_showimage(csi, img);

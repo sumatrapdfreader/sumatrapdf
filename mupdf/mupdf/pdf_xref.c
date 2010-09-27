@@ -247,11 +247,8 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 				xref->table[i].ofs = atoi(s);
 				xref->table[i].gen = atoi(s + 11);
 				xref->table[i].type = s[17];
-
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1048 */
 				if (s[17] != 'f' && s[17] != 'n' && s[17] != 'o')
-					return fz_throw("unexpected xref type %#x (%d %d R)",
-						s[17], i, xref->table[i].gen);
+					return fz_throw("unexpected xref type: %#x (%d %d R)", s[17], i, xref->table[i].gen);
 			}
 		}
 	}
@@ -484,7 +481,7 @@ pdf_readxrefsections(pdf_xref *xref, int ofs, char *buf, int cap)
 	prev = fz_dictgets(trailer, "Prev");
 	if (prev)
 	{
-		pdf_logxref("load prev at 0x%x\n", fz_toint(prev));
+		pdf_logxref("load prev at %#x\n", fz_toint(prev));
 		error = pdf_readxrefsections(xref, fz_toint(prev), buf, cap);
 		if (error)
 		{
@@ -524,7 +521,7 @@ pdf_loadxref(pdf_xref *xref, char *buf, int bufsize)
 	if (!size)
 		return fz_throw("trailer missing Size entry");
 
-	pdf_logxref("\tsize %d at 0x%x\n", fz_toint(size), xref->startxref);
+	pdf_logxref("\tsize %d at %#x\n", fz_toint(size), xref->startxref);
 
 	xref->len = fz_toint(size);
 	xref->cap = xref->len + 1; /* for hack to allow broken pdf generators with off-by-one errors */
