@@ -3337,10 +3337,13 @@ static void CopySelectionToClipboard(WindowInfo *win)
 
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
         win->dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
-    if (bmp) {
-        HBITMAP hBmp = bmp->getBitmap();
-        if (hBmp && !SetClipboardData(CF_BITMAP, hBmp))
-            SeeLastError();
+    if (bmp && bmp->getBitmap()) {
+        HBITMAP hBmp = (HBITMAP)CopyImage(bmp->getBitmap(), IMAGE_BITMAP, bmp->dx(), bmp->dy(), 0);
+        if (hBmp) {
+            if (!SetClipboardData(CF_BITMAP, hBmp))
+                SeeLastError();
+            DeleteObject(hBmp);
+        }
         delete bmp;
     }
 
