@@ -719,6 +719,10 @@ bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
 
 int DisplayModel::getPageNoByPoint (double x, double y) 
 {
+    // no reasonable answer possible, if zoom hasn't been set yet
+    if (!zoomReal())
+        return POINT_OUT_OF_PAGE;
+
     for (int pageNo = 1; pageNo <= pageCount(); ++pageNo) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
         assert(!pageInfo->visible || pageInfo->shown);
