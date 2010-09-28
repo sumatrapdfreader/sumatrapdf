@@ -114,7 +114,14 @@ ProducingPaletteDone:
     bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
     
-    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
+    if (!hasPalette) {
+        VOID *dibData;
+        hbmp = CreateDIBSection(NULL, bmi, DIB_RGB_COLORS, &dibData, NULL, 0);
+        memcpy(dibData, bmpData, bmi->bmiHeader.biSizeImage);
+        GdiFlush();
+    }
+    else
+        hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
     
     fz_droppixmap(bgrPixmap);
     if (hasPalette)
@@ -122,26 +129,6 @@ ProducingPaletteDone:
     free(bmi);
     
     return hbmp;
-}
-
-void fz_pixmaptodc(HDC hDC, fz_pixmap *pixmap, fz_rect *dest)
-{
-    // Try to extract a 256 color palette so that we can use 8-bit images instead of 24-bit ones.
-    // This should e.g. speed up printing for most monochrome documents by saving spool resources.
-    HBITMAP hbmp = fz_pixtobitmap(hDC, pixmap, TRUE);
-    HDC bmpDC = CreateCompatibleDC(hDC);
-    
-    SelectObject(bmpDC, hbmp);
-    if (!dest)
-        BitBlt(hDC, 0, 0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
-    else if (dest->x1 - dest->x0 == pixmap->w && dest->y1 - dest->y0 == pixmap->h)
-        BitBlt(hDC, dest->x0, dest->y0, pixmap->w, pixmap->h, bmpDC, 0, 0, SRCCOPY);
-    else
-        StretchBlt(hDC, dest->x0, dest->y0, dest->x1 - dest->x0, dest->y1 - dest->y0,
-            bmpDC, 0, 0, pixmap->w, pixmap->h, SRCCOPY);
-    
-    DeleteDC(bmpDC);
-    DeleteObject(hbmp);
 }
 
 pdf_outline *pdf_loadattachments(pdf_xref *xref)
@@ -189,65 +176,48 @@ void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
 }
 
 
-HBITMAP RenderedBitmap::createDIBitmap(HDC hdc) {
-    if (!_pixmap)
-        // clone the bitmap (callers will delete it)
-        return (HBITMAP)CopyImage(_hbmp, IMAGE_BITMAP, _width, _height, 0);
-
-    return fz_pixtobitmap(hdc, _pixmap, FALSE);
+RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) {
+    _hbmp = fz_pixtobitmap(hDC, pixmap, FALSE);
+    _width = pixmap->w;
+    _height = pixmap->h;
 }
 
 void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
-    if (!_pixmap) {
-        HDC bmpDC = CreateCompatibleDC(hdc);
-        HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
-        SetStretchBltMode(hdc, HALFTONE);
-        StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
-            bmpDC, 0, 0, _width, _height, SRCCOPY);
-        SelectObject(bmpDC, oldBmp);
-        DeleteDC(bmpDC);
-        return;
-    }
-
-    fz_rect dest = { leftMargin, topMargin, leftMargin + pageDx, topMargin + pageDy };
-    fz_pixmaptodc(hdc, _pixmap, &dest);
+    HDC bmpDC = CreateCompatibleDC(hdc);
+    HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+    SetStretchBltMode(hdc, HALFTONE);
+    StretchBlt(hdc, leftMargin, topMargin, pageDx, pageDy,
+        bmpDC, 0, 0, _width, _height, SRCCOPY);
+    SelectObject(bmpDC, oldBmp);
+    DeleteDC(bmpDC);
 }
 
 void RenderedBitmap::invertColors() {
-    if (!_pixmap) {
-        HDC hDC = GetDC(NULL);
-        HDC bmpDC = CreateCompatibleDC(hDC);
-        HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
-        BITMAPINFO bmi = { 0 };
+    HDC hDC = GetDC(NULL);
+    HDC bmpDC = CreateCompatibleDC(hDC);
+    HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
+    BITMAPINFO bmi = { 0 };
 
-        bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-        bmi.bmiHeader.biHeight = _height;
-        bmi.bmiHeader.biWidth = _width;
-        bmi.bmiHeader.biPlanes = 1;
-        bmi.bmiHeader.biBitCount = 32;
-        bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biHeight = _height;
+    bmi.bmiHeader.biWidth = _width;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
 
-        unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
-        if (GetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
-            int dataLen = _width * _height * 4;
-            for (int i = 0; i < dataLen; i++)
-                if ((i + 1) % 4) // don't invert alpha channel
-                    bmpData[i] = 255 - bmpData[i];
-            SetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
-        }
-
-        free(bmpData);
-        SelectObject(bmpDC, oldBmp);
-        DeleteDC(bmpDC);
-        ReleaseDC(NULL, hDC);
-        return;
+    unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
+    if (GetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
+        int dataLen = _width * _height * 4;
+        for (int i = 0; i < dataLen; i++)
+            if ((i + 1) % 4) // don't invert alpha channel
+                bmpData[i] = 255 - bmpData[i];
+        SetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
     }
 
-    unsigned char *bmpData = _pixmap->samples;
-    int dataLen = _width * _height * _pixmap->n;
-    for (int i = 0; i < dataLen; i++)
-        if ((i + 1) % _pixmap->n) // don't invert alpha channel
-            bmpData[i] = 255 - bmpData[i];
+    free(bmpData);
+    SelectObject(bmpDC, oldBmp);
+    DeleteDC(bmpDC);
+    ReleaseDC(NULL, hDC);
 }
 
 PdfEngine::PdfEngine() : 

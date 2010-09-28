@@ -82,32 +82,20 @@ private:
 
 class RenderedBitmap {
 public:
-    RenderedBitmap(fz_pixmap *pixmap) : _hbmp(NULL) {
-        _pixmap = fz_keeppixmap(pixmap);
-        _width = pixmap->w;
-        _height = pixmap->h;
-    }
-    RenderedBitmap(HBITMAP hbmp, int width, int height) : _pixmap(NULL) {
-        _hbmp = hbmp;
-        _width = width;
-        _height = height;
-    }
-    ~RenderedBitmap() {
-        if (_pixmap)
-            fz_droppixmap(_pixmap);
-        else
-            DeleteObject(_hbmp);
-    }
+    RenderedBitmap(HBITMAP hbmp, int width, int height) :
+        _hbmp(hbmp), _width(width), _height(height) { }
+    RenderedBitmap(fz_pixmap *pixmap, HDC hDC=NULL);
+    ~RenderedBitmap() { DeleteObject(_hbmp); }
 
+    // callers must not delete this (use CopyImage if you have to modify it)
+    HBITMAP getBitmap() const { return _hbmp; }
     int dx() const { return _width; }
     int dy() const { return _height; }
 
-    HBITMAP createDIBitmap(HDC hdc);
     void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy);
     void invertColors();
 
 protected:
-    fz_pixmap *_pixmap;
     HBITMAP _hbmp;
     int     _width;
     int     _height;

@@ -3175,7 +3175,6 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
 static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
     RECT                bounds;
-    RenderedBitmap *    renderedBmp = NULL;
 
     assert(win);
     if (!win) return;
@@ -3199,12 +3198,12 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         LockCache();
         BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
-        if (entry)
-            renderedBmp = entry->bitmap;
+        RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
+        HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
 
         PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, &bounds);
 
-        if (!entry || BITMAP_CANNOT_RENDER == renderedBmp) {
+        if (!entry || BITMAP_CANNOT_RENDER == renderedBmp || !hbmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? COL_WHITE : COL_BLACK);
@@ -3224,17 +3223,10 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         DBG_OUT("page %d ", pageNo);
 
-        HBITMAP hbmp = renderedBmp->createDIBitmap(hdc);
-        int renderedBmpDx = renderedBmp->dx();
-        int renderedBmpDy = renderedBmp->dy();
-        renderedBmp = NULL; // could be invalid, as soon as the cache is unlocked
-
-        UnlockCache();
-        if (!hbmp)
-            continue;
-
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
+            int renderedBmpDx = renderedBmp->dx();
+            int renderedBmpDy = renderedBmp->dy();
             int xSrc = (int)pageInfo->bitmapX;
             int ySrc = (int)pageInfo->bitmapY;
 
@@ -3247,7 +3239,8 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                     bmpDC, xSrc, ySrc, SRCCOPY);
             DeleteDC(bmpDC);
         }
-        DeleteObject(hbmp);
+
+        UnlockCache();
     }
 
     if (win->showSelection)
@@ -3345,14 +3338,9 @@ static void CopySelectionToClipboard(WindowInfo *win)
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
         win->dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
     if (bmp) {
-        HDC hDC = GetDC(NULL);
-        HBITMAP hBmp = bmp->createDIBitmap(hDC);
-        if (hBmp) {
-            if (!SetClipboardData(CF_BITMAP, hBmp))
-                SeeLastError();
-            DeleteObject(hBmp);
-        }
-        ReleaseDC(NULL, hDC);
+        HBITMAP hBmp = bmp->getBitmap();
+        if (hBmp && !SetClipboardData(CF_BITMAP, hBmp))
+            SeeLastError();
         delete bmp;
     }
 
@@ -3980,6 +3968,10 @@ static void OnMenuCustomZoom(WindowInfo *win)
 
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 {
+#ifdef USE_GDI_FOR_PRINTING
+    // suppose the printer supports enough of GDI(+) for reasonable results
+    return true;
+#else
     // most printers can support stretchdibits,
     // whereas a lot of printers do not support bitblt
     // quit if printer doesn't support StretchDIBits
@@ -3990,6 +3982,7 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 
     MessageBox(hwndForMsgBox, _T("This printer doesn't support the StretchDIBits function"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
     return false;
+#endif
 }
 
 // TODO: make it run in a background thread by constructing new PdfEngine()
@@ -4185,6 +4178,8 @@ protected:
 
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
+
+TODO: The following doesn't apply for USE_GDI_FOR_PRINTING
 
 Creates a new dummy page for each page with a large zoom factor,
 and then uses StretchDIBits to copy this to the printer's dc.
