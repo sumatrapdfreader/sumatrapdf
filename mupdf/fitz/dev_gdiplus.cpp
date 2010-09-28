@@ -73,14 +73,21 @@ gdiplustransformpoint(fz_matrix ctm, float x, float y)
 	return PointF(point.x, point.y);
 }
 
+typedef struct {
+	fz_path *path;
+	int evenodd;
+	float widthScale;
+} ftglyph;
+
 class userData
 {
 	userDataStackItem *stack;
 public:
 	Graphics *graphics;
 	fz_device *dev;
+	fz_hashtable *outlines;
 
-	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL)
+	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL), outlines(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
@@ -95,6 +102,20 @@ public:
 			graphics->SetClip(&stack->clip);
 		delete stack;
 		delete graphics;
+		
+		if (outlines)
+		{
+			for (int i = 0; i < fz_hashlen(outlines); i++)
+			{
+				ftglyph *glyph = (ftglyph *)fz_hashgetval(outlines, i);
+				if (glyph)
+				{
+					fz_freepath(glyph->path);
+					delete glyph;
+				}
+			}
+			fz_freehash(outlines);
+		}
 	}
 
 	void pushClip(Region *clipRegion=NULL, float alpha=1.0, bool accumulate=false)
@@ -608,40 +629,65 @@ ftgetcharcode(fz_font *font, fz_textel *el)
 	return ucs;
 }
 
+typedef struct {
+	FT_Face face;
+	int gid;
+} ftglyphkey;
+
+static ftglyph *
+ftrenderglyph(fz_font *font, int gid, fz_hashtable *outlines)
+{
+	FT_Face face = (FT_Face)font->ftface;
+	ftglyphkey key = { face, gid };
+	
+	ftglyph *glyph = (ftglyph *)fz_hashfind(outlines, &key);
+	if (glyph)
+		return glyph;
+	
+	FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | (font->fthint ? 0 : FT_LOAD_NO_HINTING));
+	if (fterr)
+		return NULL;
+	
+	glyph = new ftglyph;
+	glyph->path = fz_newpath();
+	FT_Outline_Decompose(&face->glyph->outline, &OutlineFuncs, glyph->path);
+	
+	glyph->evenodd = face->glyph->outline.flags & FT_OUTLINE_EVEN_ODD_FILL;
+	glyph->widthScale = ftgetwidthscale(font, gid);
+	
+	fz_hashinsert(outlines, &key, glyph);
+	
+	return glyph;
+}
+
 static void
-gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
+gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
 	GraphicsPath *tpath = gpath ? gpath : new GraphicsPath();
+	Graphics *graphics = user->graphics;
 	
-	Matrix trm(text->trm.a, text->trm.b, text->trm.c, text->trm.d, text->trm.e, text->trm.f);
+	if (!user->outlines)
+		user->outlines = fz_newhash(509, sizeof(ftglyphkey));
+	
 	FT_Face face = (FT_Face)text->font->ftface;
-	FT_Outline *outline = &face->glyph->outline;
 	FT_Set_Char_Size(face, face->units_per_EM, face->units_per_EM, 72, 72);
 	FT_Set_Transform(face, NULL, NULL);
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		int gid = text->els[i].gid;
-		FT_Error fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | (text->font->fthint ? 0 : FT_LOAD_NO_HINTING));
-		if (fterr)
+		ftglyph *glyph = ftrenderglyph(text->font, text->els[i].gid, user->outlines);
+		if (!glyph)
 			continue;
-		
-		fz_path *path = fz_newpath();
-		FT_Outline_Decompose(outline, &OutlineFuncs, path);
-		int evenodd = outline->flags & FT_OUTLINE_EVEN_ODD_FILL;
 		
 		fz_matrix ctm2 = fz_translate(text->els[i].x, text->els[i].y);
 		ctm2 = fz_concat(fz_scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM), ctm2);
 		ctm2 = fz_concat(text->trm, ctm2);
-		float widthScale = ftgetwidthscale(text->font, gid);
-		if (widthScale != 1.0)
-			ctm2 = fz_concat(fz_scale(widthScale, 1), ctm2);
+		if (glyph->widthScale != 1.0)
+			ctm2 = fz_concat(fz_scale(glyph->widthScale, 1), ctm2);
 		
-		GraphicsPath *gpath2 = gdiplusgetpath(path, ctm2, evenodd);
+		GraphicsPath *gpath2 = gdiplusgetpath(glyph->path, ctm2, glyph->evenodd);
 		tpath->AddPath(gpath2, FALSE);
 		delete gpath2;
-		
-		fz_freepath(path);
 	}
 	
 	if (!gpath)
@@ -653,7 +699,7 @@ gdiplusrendertext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush
 }
 
 static void
-gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
+gdiplusruntext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush)
 {
 	PrivateFontCollection collection;
 	float fontSize = fz_matrixexpansion(text->trm), cellAscent = 0;
@@ -661,9 +707,11 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 	Font *font = gdiplusgetfont(&collection, text->font, fontSize, &cellAscent);
 	if (!font)
 	{
-		gdiplusrendertext(graphics, text, ctm, brush);
+		gdiplusrendertext(user, text, ctm, brush);
 		return;
 	}
+	
+	Graphics *graphics = user->graphics;
 	
 	const StringFormat *format = StringFormat::GenericTypographic();
 	fz_matrix rotate = fz_concat(text->trm, fz_scale(-1.0 / fontSize, -1.0 / fontSize));
@@ -678,7 +726,7 @@ gdiplusruntext(Graphics *graphics, fz_text *text, fz_matrix ctm, Brush *brush)
 			fz_text t2 = *text;
 			t2.len = 1;
 			t2.els = &text->els[i];
-			gdiplusrendertext(graphics, &t2, ctm, brush);
+			gdiplusrendertext(user, &t2, ctm, brush);
 			continue;
 		}
 		
@@ -734,7 +782,7 @@ fz_gdiplusfilltext(void *user, fz_text *text, fz_matrix ctm,
 {
 	Brush *brush = gdiplusgetbrush(user, colorspace, color, alpha);
 	if (text->font->ftface)
-		gdiplusruntext(((userData *)user)->graphics, text, ctm, brush);
+		gdiplusruntext((userData *)user, text, ctm, brush);
 	else
 		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha);
 	
@@ -747,7 +795,7 @@ fz_gdiplusstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matri
 {
 	GraphicsPath gpath;
 	if (text->font->ftface)
-		gdiplusrendertext(((userData *)user)->graphics, text, ctm, NULL, &gpath);
+		gdiplusrendertext((userData *)user, text, ctm, NULL, &gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, colorspace, color, alpha, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
@@ -766,7 +814,7 @@ fz_gdipluscliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	GraphicsPath gpath;
 	float black[3] = { 0 };
 	if (text->font->ftface)
-		gdiplusrendertext(((userData *)user)->graphics, text, ctm, NULL, &gpath);
+		gdiplusrendertext((userData *)user, text, ctm, NULL, &gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, fz_devicergb, black, 1.0, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
@@ -780,7 +828,7 @@ fz_gdiplusclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_m
 	GraphicsPath gpath;
 	float black[3] = { 0 };
 	if (text->font->ftface)
-		gdiplusrendertext(((userData *)user)->graphics, text, ctm, NULL, &gpath);
+		gdiplusrendertext((userData *)user, text, ctm, NULL, &gpath);
 	else
 		gdiplusrunt3text(user, text, ctm, fz_devicergb, black, 1.0, &gpath);
 	gdiplusapplytransform(&gpath, ctm);
