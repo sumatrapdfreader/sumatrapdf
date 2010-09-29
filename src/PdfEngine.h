@@ -160,7 +160,6 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
 
-    void dropPdfPage(int pageNo);
     PdfTocItem    * buildTocTree(pdf_outline *entry);
     void            linkifyPageText(pdf_page *page);
 

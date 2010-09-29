@@ -254,13 +254,8 @@ PdfEngine::~PdfEngine()
         pdf_freeoutline(_attachments);
 
     EnterCriticalSection(&_xrefAccess);
-    if (_xref) {
-        if (_xref->store) {
-            pdf_freestore(_xref->store);
-            _xref->store = NULL;
-        }
+    if (_xref)
         pdf_freexref(_xref);
-    }
     LeaveCriticalSection(&_xrefAccess);
     DeleteCriticalSection(&_xrefAccess);
 
@@ -463,20 +458,6 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     return page;
 }
 
-void PdfEngine::dropPdfPage(int pageNo)
-{
-    assert(_pages);
-    if (!_pages) return;
-    EnterCriticalSection(&_pagesAccess);
-    pdf_page *page = _pages[pageNo-1];
-    assert(page);
-    if (page) {
-        pdf_freepage(page);
-        _pages[pageNo-1] = NULL;
-    }
-    LeaveCriticalSection(&_pagesAccess);
-}
-
 int PdfEngine::pageRotation(int pageNo)
 {
     assert(validPageNo(pageNo));
@@ -571,9 +552,6 @@ RenderedBitmap *PdfEngine::renderBitmap(
 
         RECT rc = { 0, 0, w, h };
         bool success = renderPage(hDCMem, page, &rc, &ctm);
-#if CONSERVE_MEMORY
-        dropPdfPage(pageNo);
-#endif
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {
@@ -601,9 +579,6 @@ RenderedBitmap *PdfEngine::renderBitmap(
     fz_error error = pdf_runpage(_xref, page, dev, ctm);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
-#if CONSERVE_MEMORY
-    dropPdfPage(pageNo);
-#endif
     RenderedBitmap *bitmap = NULL;
     if (!error)
         bitmap = new RenderedBitmap(image);
