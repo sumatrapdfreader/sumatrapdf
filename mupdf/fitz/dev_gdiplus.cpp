@@ -743,7 +743,6 @@ gdiplusruntext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush)
 	
 	gdiplusapplytransform(graphics, oldCtm);
 	
-	delete format;
 	delete font;
 }
 
