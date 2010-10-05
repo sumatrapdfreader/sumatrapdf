@@ -672,7 +672,6 @@ ftrenderglyph(fz_font *font, int gid, fz_hashtable *outlines)
 static void
 gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, GraphicsPath *gpath=NULL)
 {
-	GraphicsPath *tpath = gpath ? gpath : new GraphicsPath();
 	Graphics *graphics = user->graphics;
 	
 	if (!user->outlines)
@@ -693,17 +692,15 @@ gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, Gr
 		ctm2 = fz_concat(text->trm, ctm2);
 		if (glyph->widthScale != 1.0)
 			ctm2 = fz_concat(fz_scale(glyph->widthScale, 1), ctm2);
+		if (!gpath)
+			ctm2 = fz_concat(ctm2, ctm);
 		
 		GraphicsPath *gpath2 = gdiplusgetpath(glyph->path, ctm2, glyph->evenodd);
-		tpath->AddPath(gpath2, FALSE);
+		if (!gpath)
+			graphics->FillPath(brush, gpath2);
+		else
+			gpath->AddPath(gpath2, FALSE);
 		delete gpath2;
-	}
-	
-	if (!gpath)
-	{
-		gdiplusapplytransform(tpath, ctm);
-		graphics->FillPath(brush, tpath);
-		delete tpath;
 	}
 }
 
