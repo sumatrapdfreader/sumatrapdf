@@ -462,12 +462,21 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 	case 1: pen->SetLineJoin(LineJoinRound); break;
 	case 2: pen->SetLineJoin(LineJoinBevel); break;
 	}
+	
 	if (stroke->dashlen > 0)
 	{
-		REAL dashlist[nelem(stroke->dashlist)];
-		for (int i = 0; i < stroke->dashlen; i++)
-			dashlist[i] = stroke->dashlist[i] ? stroke->dashlist[i] : 0.1;
-		pen->SetDashPattern(dashlist, stroke->dashlen);
+		REAL dashlist[nelem(stroke->dashlist) + 1];
+		int dashCount = stroke->dashlen;
+		for (int i = 0; i < dashCount; i++)
+			dashlist[i] = stroke->dashlist[i] ? stroke->dashlist[i] * 2 : 0.1 /* ??? */;
+		if (dashCount % 2 == 1)
+		{
+			dashlist[dashCount] = dashlist[dashCount - 1];
+			dashCount++;
+		}
+		pen->SetDashPattern(dashlist, dashCount);
+		pen->SetDashOffset(stroke->dashphase);
+		pen->SetDashCap(DashCapRound);
 	}
 	
 	return pen;
