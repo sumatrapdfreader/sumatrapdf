@@ -467,6 +467,5 @@ printing document
 #Attachment: %s
 #Bookmarks
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 

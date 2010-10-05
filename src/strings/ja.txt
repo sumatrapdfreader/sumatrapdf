@@ -414,7 +414,6 @@ Zoom factor
 #PDF Version:
 #Page Size:
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Subject:
 #Title:

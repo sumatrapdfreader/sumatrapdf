@@ -441,7 +441,6 @@ Nagyítás mértéke
 #No result found around line %u in file %s
 #No synchronization file found
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Set inverse search command-line
 #Subject:

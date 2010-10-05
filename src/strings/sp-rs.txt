@@ -404,7 +404,6 @@ Faktor uvećanja
 #PDF Version:
 #Page Size:
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Send by &E-mail...
 #Subject:

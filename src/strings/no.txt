@@ -445,7 +445,6 @@ Zoom til
 #Bookmarks
 #Denied Permissions:
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Subject:
 #copying text

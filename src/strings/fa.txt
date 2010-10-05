@@ -337,9 +337,6 @@ Page:
 Please wait - rendering...
 ... لطفا صبر کنید
 
-Pr&int with Adobe Reader...
-... Adobe Reader چاپ با
-
 Previous Page
 صفحه قبلی
 

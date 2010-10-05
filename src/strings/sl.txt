@@ -396,7 +396,6 @@ Faktor povečave
 #PDF Version:
 #Page Size:
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Send by &E-mail...
 #Show &pages continuously

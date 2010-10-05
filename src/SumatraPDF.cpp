@@ -995,7 +995,6 @@ MenuDef menuDefFile[] = {
     { _TRN("&Print...\tCtrl-P"),            IDM_PRINT,                  MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_NOT_IN_RESTRICTED },
-    { _TRN("Pr&int with Adobe Reader..."),  IDM_PRINT_WITH_ACROBAT,     MF_NOT_IN_RESTRICTED },
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("P&roperties\tCtrl-D"),          IDM_PROPERTIES,             0 },
@@ -1901,15 +1900,10 @@ static void MenuUpdatePrintItem(WindowInfo *win) {
         ModifyMenu(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
     }
 
-    if (filePrintEnabled && filePrintAllowed) {
+    if (filePrintEnabled && filePrintAllowed)
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_ENABLED);
-        if (CanViewWithAcrobat(win))
-            EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
-    }
-    else {
+    else
         EnableMenuItem(hmenu, IDM_PRINT, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
-    }
 }
 
 static void MenuUpdateStateForWindow(WindowInfo *win) {
@@ -1927,14 +1921,10 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     else
         EnableMenuItem(hmenu, IDM_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 
-    if (CanViewWithAcrobat(win)) {
+    if (CanViewWithAcrobat(win))
         EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
-        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_ENABLED);
-    }
-    else {
+    else
         EnableMenuItem(hmenu, IDM_VIEW_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(hmenu, IDM_PRINT_WITH_ACROBAT, MF_BYCOMMAND | MF_GRAYED);
-    }
 
     MenuUpdatePrintItem(win);
     MenuUpdateBookmarksStateForWindow(win);
@@ -4197,6 +4187,9 @@ So far have tested printing from XP to
 #define MAXPAGERANGES 10
 static void OnMenuPrint(WindowInfo *win)
 {
+    // In order to print with Adobe Reader instead:
+    // ViewWithAcrobat(win, _T("/P"));
+
     PRINTDLGEX       pd;
     LPPRINTPAGERANGE ppr = NULL;
 
@@ -7021,10 +7014,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDM_VIEW_WITH_ACROBAT:
                     ViewWithAcrobat(win);
-                    break;
-
-                case IDM_PRINT_WITH_ACROBAT:
-                    ViewWithAcrobat(win, _T("/P"));
                     break;
 
                 case IDM_SEND_BY_EMAIL:

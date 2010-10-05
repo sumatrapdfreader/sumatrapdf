@@ -375,7 +375,6 @@ Paliitin/Lumayo
 #P&roperties\tCtrl-D
 #PDF documents
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Show &pages continuously
 #Show the &bookmarks sidebar when available

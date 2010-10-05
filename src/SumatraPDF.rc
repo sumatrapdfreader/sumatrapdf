@@ -77,7 +77,6 @@ BEGIN
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
     "P",            IDM_PRINT,              VIRTKEY, CONTROL
-    "P",            IDM_PRINT_WITH_ACROBAT, VIRTKEY, SHIFT, CONTROL
     "Q",            IDM_EXIT,               VIRTKEY, CONTROL
     "W",            IDM_CLOSE,              VIRTKEY, CONTROL
     "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL

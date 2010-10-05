@@ -371,7 +371,6 @@ Zoom Out
 #PDF Version:
 #Page Size:
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...

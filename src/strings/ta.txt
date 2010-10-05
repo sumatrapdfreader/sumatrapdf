@@ -452,7 +452,6 @@ printing document
 #Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
 #Page scaling
-#Pr&int with Adobe Reader...
 #Print range
 #Set inverse search command-line
 
