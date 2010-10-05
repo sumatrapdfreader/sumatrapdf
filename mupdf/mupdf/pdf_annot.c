@@ -162,6 +162,26 @@ pdf_freeannot(pdf_annot *annot)
 }
 
 void
+pdf_transformannot(pdf_annot *annot)
+{
+	fz_matrix matrix = annot->ap->matrix;
+	fz_rect bbox = annot->ap->bbox;
+	fz_rect rect = annot->rect;
+	float w, h, x, y;
+	fz_matrix a, aa;
+
+	bbox = fz_transformrect(matrix, bbox);
+	w = (rect.x1 - rect.x0) / (bbox.x1 - bbox.x0);
+	h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
+	x = rect.x0 - bbox.x0;
+	y = rect.y0 - bbox.y0;
+	a = fz_concat(fz_scale(w, h), fz_translate(x, y));
+	aa = fz_concat(a, matrix);
+
+	annot->ap->matrix = aa;
+}
+
+void
 pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
 {
 	pdf_annot *head, *annot;
@@ -201,6 +221,9 @@ pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
 				annot->rect = pdf_torect(rect);
 				annot->ap = form;
 				annot->next = head;
+
+				pdf_transformannot(annot);
+
 				head = annot;
 			}
 		}

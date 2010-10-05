@@ -1549,7 +1549,7 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (flags & (1 << 5)) /* NoView */
 			continue;
 
-		atm = fz_concat(fz_translate(annot->rect.x0, annot->rect.y0), ctm);
+		atm = ctm; // fz_concat(ctm, fz_translate(annot->rect.x0, annot->rect.y0));
 		csi = pdf_newcsi(xref, dev, atm);
 		error = pdf_runxobject(csi, page->resources, annot->ap);
 		pdf_freecsi(csi);
