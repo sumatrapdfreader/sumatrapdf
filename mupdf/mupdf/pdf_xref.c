@@ -584,6 +584,9 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 			xref->len = 0;
 			xref->cap = 0;
 		}
+		/* SumatraPDF: fix memory leak */
+		if (xref->trailer)
+			fz_dropobj(xref->trailer);
 		error = pdf_repairxref(xref, xref->scratch, sizeof xref->scratch);
 		if (error)
 		{

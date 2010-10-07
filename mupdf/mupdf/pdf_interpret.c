@@ -1520,7 +1520,6 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 	pdf_csi *csi;
 	fz_error error;
 	pdf_annot *annot;
-	fz_matrix atm;
 	int flags;
 
 	if (page->transparency)
@@ -1549,8 +1548,7 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (flags & (1 << 5)) /* NoView */
 			continue;
 
-		atm = ctm; // fz_concat(ctm, fz_translate(annot->rect.x0, annot->rect.y0));
-		csi = pdf_newcsi(xref, dev, atm);
+		csi = pdf_newcsi(xref, dev, ctm);
 		error = pdf_runxobject(csi, page->resources, annot->ap);
 		pdf_freecsi(csi);
 		if (error)
