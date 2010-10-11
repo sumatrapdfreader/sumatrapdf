@@ -15,6 +15,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Actual Size\tCtrl-1
 גודל מקור\tCtrl-1
 
+&All selected pages
+כל העמודים הנבחרים
+
 &Back\tAlt+Left Arrow
 חזור\tAlt+<-
 
@@ -27,6 +30,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Don't ask me again
 אל תשאל שנית
 
+&Even pages only
+עמודים זוגיים בלבד
+
 &File
 &קובץ
 
@@ -35,6 +41,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &First Page\tHome
 דף ראשון\tHome
+
+&Fit pages to printable area
+הגדל עמודים עד גודל אזור ההדפסה
 
 &Go To
 לך ל
@@ -66,6 +75,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &No, thanks
 לא, תודה
 
+&Odd pages only
+עמודים אי-זוגיים בלבד
+
 &Open\tCtrl-O
 &פתח\tCtrl-O
 
@@ -81,6 +93,12 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Print...\tCtrl-P
 הדפס\tCtrl-P
 
+&Print... (denied)
+הדפס... (התקבל סירוב)
+
+&Remember the password for this document
+אנא זכור את הסיסמא למסמך זה
+
 &Remember these settings for each document
 זכור הגדרות אלו לכל מסמך
 
@@ -89,6 +107,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 
 &Settings
 הגדרות
+
+&Shrink pages to printable area (if necessary)
+כווץ עמודים עד גודל אזור ההדפסה
 
 &Skip this version
 דלג מהדורה זו
@@ -120,6 +141,9 @@ Application:
 Associate with PDF files?
 ?PDF לשייך לקבצי
 
+Attachment: %s
+מצורף:
+
 Author:
 עורך:
 
@@ -134,6 +158,9 @@ Book View
 
 Book&marks\tF12
 סימניה\tF12
+
+Bookmarks
+מועדפים
 
 Bytes
 ביטים
@@ -185,6 +212,9 @@ Default &Layout:
 
 Default &Zoom:
 זום ברירת ברירת מחדל:
+
+Denied Permissions:
+הרשאות חסרות:
 
 Document Properties
 תכונות מסמך
@@ -333,6 +363,9 @@ Page Size:
 Page number %u inexistant
 לא קיים %u עמוד מספר
 
+Page scaling
+מתיחת עמודים
+
 Page:
 עמוד:
 
@@ -341,6 +374,9 @@ Please wait - rendering...
 
 Previous Page
 דף קודם
+
+Print range
+הדפס טווח
 
 Printing problem.
 בעיית הדפסה
@@ -380,6 +416,9 @@ Single Page
 
 Source file %s has no synchronization point
 %s אין נקודת סנכרון לקובץ מקור
+
+Subject:
+נושא:
 
 SumatraPDF Options
 SumatraPDF אפשרויות
@@ -432,20 +471,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [מרענן ; נתגלו שינויים] %s
 
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Denied Permissions:
-#Page scaling
-#Print range
-#Subject:
-#copying text
-#printing document
+copying text
+מעתיק טקסט
+
+printing document
+מדפיס מסמך
 
