@@ -950,7 +950,7 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     renderVisibleParts();
     setScrollbarsState();
     pageChanged();
-    repaintDisplay(true);
+    repaintDisplay();
 }
 
 void DisplayModel::changeDisplayMode(DisplayMode displayMode)
@@ -1086,7 +1086,7 @@ void DisplayModel::scrollXTo(int xOff)
     
     if (currentPageNo() != currPageNo)
         pageChanged();
-    repaintDisplay(false);
+    repaintDisplay();
 }
 
 void DisplayModel::scrollXBy(int dx)
@@ -1111,7 +1111,7 @@ void DisplayModel::scrollYTo(int yOff)
     int newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
         pageChanged();
-    repaintDisplay(false);
+    repaintDisplay();
 }
 
 /* Scroll the doc in y-axis by 'dy'. If 'changePage' is TRUE, automatically
@@ -1167,7 +1167,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     newPageNo = currentPageNo();
     if (newPageNo != currPageNo)
         pageChanged();
-    repaintDisplay(false);
+    repaintDisplay();
 }
 
 void DisplayModel::zoomTo(double zoomVirtual)

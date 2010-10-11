@@ -301,7 +301,7 @@ protected:
     /* called when a page number changes */
     void            pageChanged(void);
     /* called when we decide that the display needs to be redrawn */
-    void            repaintDisplay(bool delayed);
+    void            repaintDisplay();
 
     void            goToPdfDest(fz_obj *dest);
 

@@ -71,12 +71,13 @@ static bool             gUseGdiRenderer = false;
 #define WM_VSCROLL_HANDLED 0
 #define WM_HSCROLL_HANDLED 0
 
-#define WM_APP_REPAINT_DELAYED (WM_APP + 10)
 #define WM_APP_REPAINT_NOW     (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
 #define WM_APP_FIND_UPDATE     (WM_APP + 13)
 #define WM_APP_FIND_END        (WM_APP + 14)
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
 #define WM_APP_REPAINT_TOC     (WM_APP + 15)
+#endif
 #define WM_APP_GOTO_TOC_LINK   (WM_APP + 16)
 
 #ifdef SVN_PRE_RELEASE_VER
@@ -100,10 +101,6 @@ static bool             gUseGdiRenderer = false;
 #define SPLITTER_DX  5
 #define SPLITTER_MIN_WIDTH 150
 
-#define REPAINT_TIMER_ID    1
-/* Time to delay painting when going to a new page (prevents flickering) */
-#define REPAINT_DELAY_IN_MS 200
-
 #define SMOOTHSCROLL_TIMER_ID       2
 #define SMOOTHSCROLL_DELAY_IN_MS    20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
@@ -114,10 +111,6 @@ static bool             gUseGdiRenderer = false;
 #define FIND_STATUS_WIDTH       200 // Default width for the find status window
 #define FIND_STATUS_MARGIN      8
 #define FIND_STATUS_PROGRESS_HEIGHT 5
-
-/* A special "pointer" vlaue indicating that we tried to render this bitmap
-   but couldn't (e.g. due to lack of memory) */
-#define BITMAP_CANNOT_RENDER (RenderedBitmap*)NULL
 
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
@@ -838,10 +831,6 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     normalizeRotation(&rotation);
     double zoomLevel = dm->zoomReal(pageNo);
 
-    if (BitmapCache_Exists(dm, pageNo, zoomLevel, rotation)) {
-        goto LeaveCsAndExit;
-    }
-
     if (gCurPageRenderReq && 
         (gCurPageRenderReq->pageNo == pageNo) && (gCurPageRenderReq->dm == dm)) {
         if ((gCurPageRenderReq->zoomLevel != zoomLevel) || (gCurPageRenderReq->rotation != rotation)) {
@@ -881,6 +870,12 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
         }
     }
 
+    if (BitmapCache_Exists(dm, pageNo, zoomLevel, rotation)) {
+        /* This page has already been rendered in the correct dimensions
+           and isn't about to be rerendered in different dimensions */
+        goto LeaveCsAndExit;
+    }
+
     PageRenderRequest* newRequest;
     /* add request to the queue */
     if (gPageRenderRequestsCount == MAX_PAGE_REQUESTS) {
@@ -899,10 +894,6 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     newRequest->abort = FALSE;
 
     UnlockCache();
-    // remove the previous rendering from the cache to prevent a race condition,
-    // where BitmapCache_Exists finds a previous rendering of wrong dimensions
-    // leaving us with no rendering at all
-    BitmapCache_FreePage(dm, pageNo);
 
     /* tell rendering thread there's a new request to render */
     LONG  prevCount;
@@ -2500,25 +2491,17 @@ void DisplayModel::pageChanged()
 }
 
 /* Call from non-UI thread to cause repainting of the display */
-static void triggerRepaintDisplayPotentiallyDelayed(WindowInfo *win, bool delayed)
+static void triggerRepaintDisplayNow(WindowInfo* win)
 {
     assert(win);
     if (!win) return;
-    if (delayed)
-        PostMessage(win->hwndCanvas, WM_APP_REPAINT_DELAYED, 0, 0);
-    else
-        PostMessage(win->hwndCanvas, WM_APP_REPAINT_NOW, 0, 0);
+    PostMessage(win->hwndCanvas, WM_APP_REPAINT_NOW, 0, 0);
 }
 
-static void triggerRepaintDisplayNow(WindowInfo* win)
-{
-    triggerRepaintDisplayPotentiallyDelayed(win, false);
-}
-
-void DisplayModel::repaintDisplay(bool delayed)
+void DisplayModel::repaintDisplay()
 {
     WindowInfo* win = (WindowInfo*)appData();
-    triggerRepaintDisplayPotentiallyDelayed(win, delayed);
+    triggerRepaintDisplayNow(win);
 }
 
 void DisplayModel::setScrollbarsState(void)
@@ -3188,12 +3171,14 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         LockCache();
         BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
+        if (!entry)
+            entry = BitmapCache_Find(dm, pageNo);
         RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
         HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
 
         PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, &bounds);
 
-        if (!entry || BITMAP_CANNOT_RENDER == renderedBmp || !hbmp) {
+        if (!hbmp) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? COL_WHITE : COL_BLACK);
@@ -3219,11 +3204,12 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             int renderedBmpDy = renderedBmp->dy();
             int xSrc = (int)pageInfo->bitmapX;
             int ySrc = (int)pageInfo->bitmapY;
+            float factor = min(1.0 * renderedBmpDx / pageInfo->currDx, 1.0 * renderedBmpDy / pageInfo->currDy);
 
             SelectObject(bmpDC, hbmp);
-            if ((renderedBmpDx < pageInfo->currDx) || (renderedBmpDy < pageInfo->currDy))
+            if (factor != 1.0)
                 StretchBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
-                    bmpDC, xSrc, ySrc, renderedBmpDx, renderedBmpDy, SRCCOPY);
+                    bmpDC, xSrc * factor, ySrc * factor, rect_dx(&bounds) * factor, rect_dy(&bounds) * factor, SRCCOPY);
             else
                 BitBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
                     bmpDC, xSrc, ySrc, SRCCOPY);
@@ -6648,11 +6634,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
     win = WindowInfo_FindByHwnd(hwnd);
     switch (message)
     {
-        case WM_APP_REPAINT_DELAYED:
-            if (win)
-                SetTimer(hwnd, REPAINT_TIMER_ID, REPAINT_DELAY_IN_MS, NULL);
-            break;
-
         case WM_APP_REPAINT_NOW:
             if (win)
                 WindowInfo_RedrawAll(win);
@@ -6747,10 +6728,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             assert(win);
             if (win) {
                 switch (wParam) {
-                case REPAINT_TIMER_ID:
-                    KillTimer(hwnd, REPAINT_TIMER_ID);
-                    WindowInfo_RedrawAll(win);
-                    break;
                 case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
                         WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
