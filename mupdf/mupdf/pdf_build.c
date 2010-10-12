@@ -639,7 +639,9 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 			buf = pdf_decodecmap(fontdesc->encoding, buf, &cpt);
 			cid = pdf_lookupcmap(fontdesc->encoding, cpt);
 			if (cid == -1)
-				cid = 0;
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=983 */
+				fz_warn("no CID for code point %#06x", cpt);
+			else
 
 			pdf_showglyph(csi, cid);
 
