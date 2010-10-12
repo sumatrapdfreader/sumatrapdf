@@ -13,19 +13,25 @@ Contributor: Jakob Wadsager
 &Om
 
 &Actual Size\tCtrl-1
-Akt&uel størrelse\tCtrl-1
+&Aktuel størrelse\tCtrl-1
+
+&All selected pages
+&Alle valgte sider
 
 &Back\tAlt+Left Arrow
-Tilbage\tAlt+<-
+&Tilbage\tAlt+<-
 
 &Close\tCtrl-W
 &Luk\tCtrl-W
 
 &Copy Selection\tCtrl-C
-Kopier markering\tCtrl-C
+&Kopier markering\tCtrl-C
 
 &Don't ask me again
 &Spørg mig ikke igen
+
+&Even pages only
+&Kun lige sider
 
 &File
 &Filer
@@ -34,7 +40,10 @@ Kopier markering\tCtrl-C
 &Find hvad:
 
 &First Page\tHome
-Første side\tHome
+&Første side\tHome
+
+&Fit pages to printable area
+Tilpas sider til printbart område
 
 &Go To
 &Gå til
@@ -58,37 +67,49 @@ Sidste side\tEnd
 &Versalfølsom søgning
 
 &Next Page\tRight Arrow
-Næste side\t->
+&Næste side\t->
 
 &No
 &Nej
 
 &No, thanks
-Nej, tak
+&Nej, tak
+
+&Odd pages only
+&Kun ulige sider
 
 &Open\tCtrl-O
 &Åbn\tCtrl-O
 
 &Options...
-&Valgmuligheder
+&Valgmuligheder...
 
 &Password:
 &Kodeord:
 
 &Previous Page\tLeft Arrow
-Forrige side\t<-
+&Forrige side\t<-
 
 &Print...\tCtrl-P
 &Udskriv\tCtrl-P
+
+&Print... (denied)
+&Udskriv... (nægtet)
+
+&Remember the password for this document
+&Husk kodeordet for dette dokument
 
 &Remember these settings for each document
 &Husk disse indstillinger for hvert dokument
 
 &Save As...\tCtrl-S
-&Gem som\tCtrl-S
+&Gem som...\tCtrl-S
 
 &Settings
 &Indstillinger
+
+&Shrink pages to printable area (if necessary)
+krymp sider til printbart område
 
 &Skip this version
 &Spring over denne version
@@ -114,8 +135,17 @@ Advanceret
 All files
 Alle filer
 
+Application:
+Program:
+
 Associate with PDF files?
 Associer med PDF-filer?
+
+Attachment: %s
+Bilag: %s
+
+Author:
+Forfatter:
 
 Automatic
 Automatisk
@@ -127,22 +157,28 @@ Book View
 Bog-visning
 
 Book&marks\tF12
-Bogmærker\tF12
+Bog&mærker\tF12
+
+Bookmarks
+Bogmærker
+
+Bytes
+Bytes
 
 Cancel
-Annuler
+Annuller
 
 Cannot print this file
 Kan ikke printe denne fil
 
 Cannot start inverse search command. Please check the command line in the settings.
-Kan ikke starte invers søgning kommandoen. Tjek venligst kommandolinjen i indstillingerne.
+Kan ikke starte invers søgning kommando. Tjek venligst kommandolinjen i indstillingerne.
 
 Change Language
 Skift sprog
 
 Check for &Updates
-&Tjek for ny version
+Tjek for ny &version
 
 Continuous
 Fortløbende
@@ -165,8 +201,11 @@ Kunne ikke starte printer
 Couldn't render the page
 Kunne ikke vise siden
 
+Created:
+Oprettet:
+
 Custom &Zoom...
-&Brugerdefineret zoom...
+Brugerdefineret &zoom...
 
 Default &Layout:
 Standard &Layout:
@@ -174,11 +213,17 @@ Standard &Layout:
 Default &Zoom:
 Standard &Zoom
 
+Denied Permissions:
+Nægtede tilladelser:
+
+Document Properties
+dokumentegenskaber
+
 Download
 Hent
 
 E&xit\tCtrl-Q
-&Slut\tCtrl-Q
+S&lut\tCtrl-Q
 
 Enter password
 Indtast kodeord
@@ -190,19 +235,25 @@ Error loading PDF file.
 Fejl ved åbning af PDF-fil.
 
 F&orward\tAlt+Right Arrow
-Fremad\tAlt+->
+F&remad\tAlt+->
 
 F&ullscreen\tCtrl-L
-Fuldskærmsvisning\tCtrl-L
+F&uldskærmsvisning\tCtrl-L
 
 Facing
 Modstående
 
 Failed to save a file
-Kunne ikke gemme filen.
+Kunne ikke gemme filen
+
+File Size:
+Filstørrelse:
+
+File:
+Fil:
 
 Fin&d...\tCtrl-F
-Find...\tCtrl-F
+Fin&d...\tCtrl-F
 
 Find
 Find
@@ -238,22 +289,25 @@ Hint: Use the F3 key for finding again
 Vink: Brug F3 knappen for at finde igen
 
 Main PDF reader can't be changed in portable mode
-Standard PDF læser kan ikke ændres i mobil tilstand
+Standard PDF-læser kan ikke ændres i mobil tilstand
 
 Make SumatraPDF default application for PDF files?
 Gør SumatraPDF standardprogram for PDF-filer
 
 Make SumatraPDF my main PDF reader
-Gør SumatraPDF til min standard PDF læser
+Gør SumatraPDF til min standard PDF-læser
 
 Match Case
-&Versalfølsom søgning
+Versalfølsom søgning
+
+Modified:
+Ændret:
 
 New version %s is available. Download new version?
 Ny version %s er tilgængelig. Hent ny version?
 
 New version available.
-Ny version tilgængelig
+Ny version tilgængelig.
 
 Next Page
 Næste side
@@ -262,7 +316,7 @@ No matches were found
 Ingen resultater blev fundet
 
 No new version available.
-Ingen ny version tilgængelig
+Ingen ny version tilgængelig.
 
 No result found around line %u in file %s
 Intet resultat fundet omkring linje %u i filen %s
@@ -273,6 +327,9 @@ Ingen synkroniseringsfil fundet
 No synchronization info at this position
 Ingen synkroniseringsinformation på denne position
 
+Number of Pages:
+Antal sider:
+
 OK
 OK
 
@@ -282,17 +339,32 @@ Open
 Open in &Adobe Reader
 Åben i &Adobe Reader
 
+P&roperties\tCtrl-D
+E&genskaber\tCtrl-D
+
 PDF Document
-PDF dokument
+PDF-dokument
+
+PDF Producer:
+PDF-producent:
+
+PDF Version:
+PDF-version:
 
 PDF documents
-PDF dokumenter
+PDF-dokumenter
 
 Pa&ge...\tCtrl-G
 Side...\tCtrl-G
 
+Page Size:
+Sidestørrelse:
+
 Page number %u inexistant
 Side nummer %u eksisterer ikke
+
+Page scaling
+Sideskalering
 
 Page:
 Side:
@@ -303,17 +375,20 @@ Vent venligst - renderer...
 Previous Page
 Forrige side
 
+Print range
+Udskrivnings-rækkevidde
+
 Printing problem.
-Printer problem
+Printer problem.
 
 Remember &opened files
 Husk &åbnede filer
 
 Rotate &Left\tCtrl-Shift--
-Roter mod vestre\tCtrl-Shift--
+Roter mod &venstre\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Roter mod højre\tCtrl-Shift-+
+Roter mod &højre\tCtrl-Shift-+
 
 Searching %d of %d...
 Søgning %d af %d...
@@ -328,19 +403,22 @@ Set inverse search command-line
 Sæt invers søgning komando-linje
 
 Show &Toolbar
-Vis værktøjslinie
+Vis &værktøjslinie
 
 Show &pages continuously
-Vis sider fortløbende
+Vis &sider fortløbende
 
 Show the &bookmarks sidebar when available
-Vis bogmærkesidepanelet når tilgængeligt
+Vis &bogmærkesidepanelet når tilgængeligt
 
 Single Page
 Enkelt side
 
 Source file %s has no synchronization point
 Kildefilen %s har ingen synkroniseringspunkter
+
+Subject:
+Emne:
 
 SumatraPDF Options
 SumatraPDF valgmuligheder
@@ -349,13 +427,16 @@ SumatraPDF is your main PDF reader
 SumatraPDF er din standard PDF-læser
 
 SumatraPDF should now be your main PDF reader
-SumatraPDF skulle nu være din standard PDF læser
+SumatraPDF skulle nu være din standard PDF-læser
 
 Synchronization file cannot be opened
 Symkroniseringsfil kan ikke åbnes
 
 Text documents
 Tekstdokumenter
+
+Title:
+Titel:
 
 Unknown source file (%s)
 Ukendt kildefil (%s)
@@ -364,7 +445,7 @@ View
 Vis
 
 Visit &Website
-&Besøg webside
+Besøg &webside
 
 Warning
 Advarsel
@@ -390,34 +471,9 @@ Zoom faktor
 [Changes detected; refreshing] %s
 [Ændringer detekteret; opdaterer] %s
 
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Application:
-#Attachment: %s
-#Author:
-#Bookmarks
-#Bytes
-#Created:
-#Denied Permissions:
-#Document Properties
-#File Size:
-#File:
-#Modified:
-#Number of Pages:
-#P&roperties\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Page scaling
-#Print range
-#Subject:
-#Title:
-#copying text
-#printing document
+copying text
+kopierer tekst
+
+printing document
+printer dokument
 
