@@ -468,7 +468,7 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 		REAL dashlist[nelem(stroke->dashlist) + 1];
 		int dashCount = stroke->dashlen;
 		for (int i = 0; i < dashCount; i++)
-			dashlist[i] = stroke->dashlist[i] ? stroke->dashlist[i] * 2 : 0.1 /* ??? */;
+			dashlist[i] = stroke->dashlist[i] ? stroke->dashlist[i] / stroke->linewidth : 0.1 /* ??? */;
 		if (dashCount % 2 == 1)
 		{
 			dashlist[dashCount] = dashlist[dashCount - 1];
@@ -476,7 +476,7 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 		}
 		pen->SetDashPattern(dashlist, dashCount);
 		pen->SetDashOffset(stroke->dashphase);
-		pen->SetDashCap(DashCapRound);
+		pen->SetDashCap(DashCapFlat);
 	}
 	
 	return pen;
