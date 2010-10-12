@@ -610,7 +610,9 @@ struct pdf_csi_s
 
 	/* graphics state */
 	fz_matrix topctm;
-	pdf_gstate gstate[32];
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1063 */
+	pdf_gstate *gstate;
+	int gcapacity;
 	int gtop;
 };
 
