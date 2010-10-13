@@ -122,8 +122,10 @@ public:
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA,
                          bool useGdi=false);
-    bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect,
-                         fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL);
+    bool PdfEngine::renderPage(HDC hDC, int pageNo, RECT *screenRect,
+                         fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL) {
+        return renderPage(hDC, getPdfPage(pageNo), screenRect, ctm, zoomReal, rotation, pageRect);
+    }
 
     bool hasPermission(int permission);
     int linkCount();
@@ -133,13 +135,11 @@ public:
     }
     void ageStore();
     PdfTocItem *getTocTree();
-    fz_matrix viewctm (pdf_page *page, float zoom, int rotate);
+    fz_matrix viewctm(int pageNo, float zoom, int rotate);
 
-    pdf_page * getPdfPage(int pageNo);
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
-    TCHAR    * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL);
     TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL) {
         return ExtractPageText(getPdfPage(pageNo), lineSep, coords_out);
     };
@@ -159,6 +159,11 @@ protected:
 
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
+    pdf_page      * getPdfPage(int pageNo);
+    fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
+    bool            renderPage(HDC hDC, pdf_page *page, RECT *screenRect,
+                               fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL);
+    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL);
 
     PdfTocItem    * buildTocTree(pdf_outline *entry);
     void            linkifyPageText(pdf_page *page);

@@ -68,6 +68,7 @@ IDI_PDFDOC              ICON                    "PdfDoc.ico"
 
 IDC_SUMATRAPDF ACCELERATORS 
 BEGIN
+    "A",            IDM_SELECT_ALL,         VIRTKEY, CONTROL
     "C",            IDM_COPY_SELECTION,     VIRTKEY, CONTROL
     "D",            IDM_PROPERTIES,         VIRTKEY, CONTROL
     "F",            IDM_FIND_FIRST,         VIRTKEY, CONTROL

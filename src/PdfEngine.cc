@@ -496,8 +496,23 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
     return ctm;
 }
 
+fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
+{
+    pdf_page partialPage;
+    fz_obj *page = pdf_getpageobject(_xref, pageNo);
+
+    if (!page || pdf_getmediabox(&partialPage.mediabox, page) != fz_okay)
+        return fz_identity;
+    partialPage.rotate = fz_toint(fz_dictgets(page, "Rotate"));
+
+    return viewctm(&partialPage, zoom, rotate);
+}
+
 bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, double zoomReal, int rotation, fz_rect *pageRect)
 {
+    if (!page)
+        return false;
+
     fz_matrix ctm2;
     if (!ctm) {
         float zoom = zoomReal / 100.0;
@@ -723,6 +738,9 @@ void PdfEngine::linkifyPageText(pdf_page *page)
 
 TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coords_out)
 {
+    if (!page)
+        return NULL;
+
     fz_textspan *text = fz_newtextspan();
     fz_device *dev = fz_newtextdevice(text);
     EnterCriticalSection(&_xrefAccess);

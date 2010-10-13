@@ -1457,13 +1457,9 @@ Error:
 
 bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
 {
-    pdf_page *page = pdfEngine->getPdfPage(pageNo);
     double zoom = zoomReal();
     int rot = rotation();
     fz_point p;
-    // assert(page);
-    if(!page)
-        return false;
 
     normalizeRotation(&rot);
     zoom *= 0.01;
@@ -1471,8 +1467,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
     p.x = *x;
     p.y = *y;
 
-    fz_matrix ctm = pdfEngine->viewctm(page, zoom, rot);
-
+    fz_matrix ctm = pdfEngine->viewctm(pageNo, zoom, rot);
     fz_point tp = fz_transformpoint(ctm, p);
 
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
@@ -1503,16 +1498,11 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
     if (*pageNo == POINT_OUT_OF_PAGE) 
         return false;
 
-    pdf_page *page = pdfEngine->getPdfPage(*pageNo);
-    if (!page)
-        return false;
-
     const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
-
     p.x = *x - 0.5 - pageInfo->currPosX + areaOffset.x;
     p.y = *y - 0.5 - pageInfo->currPosY + areaOffset.y;
 
-    fz_matrix ctm = pdfEngine->viewctm(page, zoom, rot);
+    fz_matrix ctm = pdfEngine->viewctm(*pageNo, zoom, rot);
     fz_matrix invCtm = fz_invertmatrix(ctm);
 
     fz_point tp = fz_transformpoint(invCtm, p);

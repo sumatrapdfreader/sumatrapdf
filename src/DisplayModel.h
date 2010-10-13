@@ -140,8 +140,7 @@ public:
     }
     bool renderPage(HDC hDC, int pageNo, RECT *screenRect, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL) {
         if (!pdfEngine) return false;
-        return pdfEngine->renderPage(hDC, pdfEngine->getPdfPage(pageNo), screenRect,
-            NULL, zoomReal, rotation, pageRect);
+        return pdfEngine->renderPage(hDC, pageNo, screenRect, NULL, zoomReal, rotation, pageRect);
     }
 
     /* number of pages in PDF document */

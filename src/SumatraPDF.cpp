@@ -3362,6 +3362,23 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
+static void OnSelectAll(WindowInfo *win)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm) return;
+
+    DeleteOldSelectionInfo(win);
+
+    win->selectionRect.x = INT_MIN / 2;
+    win->selectionRect.y = INT_MIN / 2;
+    win->selectionRect.dx = INT_MAX;
+    win->selectionRect.dy = INT_MAX;
+    ConvertSelectionRectToSelectionOnPage(win);
+
+    win->showSelection = true;
+    triggerRepaintDisplayNow(win);
+}
+
 static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 {
     assert(win);
@@ -7028,6 +7045,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                         CopySelectionToClipboard(win);
                     else
                         WindowInfo_ShowMessage_Asynch(win, _TR("Select content with Ctrl+left mouse button"), true);
+                    break;
+
+                case IDM_SELECT_ALL:
+                    if (win->dm)
+                        OnSelectAll(win);
                     break;
 
                 default:
