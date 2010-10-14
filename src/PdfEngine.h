@@ -93,7 +93,8 @@ public:
     int dy() const { return _height; }
 
     void stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy);
-    void invertColors();
+    void grayOut(float alpha);
+    void invertColors() { grayOut(-1); }
 
 protected:
     HBITMAP _hbmp;

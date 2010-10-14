@@ -192,7 +192,7 @@ void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int p
     DeleteDC(bmpDC);
 }
 
-void RenderedBitmap::invertColors() {
+void RenderedBitmap::grayOut(float alpha) {
     HDC hDC = GetDC(NULL);
     HDC bmpDC = CreateCompatibleDC(hDC);
     HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
@@ -209,8 +209,8 @@ void RenderedBitmap::invertColors() {
     if (GetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
         int dataLen = _width * _height * 4;
         for (int i = 0; i < dataLen; i++)
-            if ((i + 1) % 4) // don't invert alpha channel
-                bmpData[i] = 255 - bmpData[i];
+            if ((i + 1) % 4) // don't affect the alpha channel
+                bmpData[i] = bmpData[i] * alpha + (alpha > 0 ? 0 : 255);
         SetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
     }
 
