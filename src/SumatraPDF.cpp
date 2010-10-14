@@ -559,7 +559,7 @@ static bool WasKeyDown(int virtKey)
 
 void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 {
-    if (!WininetInit())
+    if (gRestrictedUse || !WininetInit())
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
