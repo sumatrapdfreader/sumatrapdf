@@ -243,6 +243,9 @@ ensurespanlength(fz_textspan *span, int mincap)
 static void
 mergetwospans(fz_textspan *span)
 {
+	if (!span->next || span->font != span->next->font || span->size != span->next->size || span->wmode != span->next->wmode)
+		return;
+
 	ensurespanlength(span, span->len + span->next->len);
 	memcpy(&span->text[span->len], &span->next->text[0], span->next->len * sizeof(fz_textchar));
 	span->len += span->next->len;
@@ -251,6 +254,7 @@ mergetwospans(fz_textspan *span)
 	if (span->next->next)
 	{
 		fz_textspan *newNext = span->next->next;
+		span->eol = span->next->eol;
 		span->next->next = nil;
 		fz_freetextspan(span->next);
 		span->next = newNext;
@@ -295,16 +299,46 @@ ornatecharacter(int ornate, int character)
 	return ornates[0][i] && ornates[j] ? ornates[j][i] : 0;
 }
 
+static float
+calcbboxoverlap(fz_bbox bbox1, fz_bbox bbox2)
+{
+	fz_bbox intersect = fz_intersectbbox(bbox1, bbox2);
+	int area1, area2, area3;
+
+	if (fz_isemptyrect(intersect))
+		return 0;
+
+	area1 = (bbox1.x1 - bbox1.x0) * (bbox1.y1 - bbox1.y0);
+	area2 = (bbox2.x1 - bbox2.x0) * (bbox2.y1 - bbox2.y0);
+	area3 = (intersect.x1 - intersect.x0) * (intersect.y1 - intersect.y0);
+
+	return 1.0 * area3 / MAX(area1, area2);
+}
+
+static int
+doglyphsoverlap(fz_textspan *span, int i, fz_textspan *span2, int j)
+{
+	return
+		i < span->len && j < span2->len && span->text[i].c == span2->text[j].c &&
+		(calcbboxoverlap(span->text[i].bbox, span2->text[j].bbox) > 0.7f ||
+		 // bboxes of slim glyphs sometimes don't overlap enough, so
+		 // check if the overlapping continues with the following glyph
+		 i + 1 < span->len && j + 1 < span2->len && span->text[i + 1].c == span2->text[j + 1].c &&
+		 calcbboxoverlap(span->text[i + 1].bbox, span2->text[j + 1].bbox) > 0.7f);
+}
+
 /* TODO: Complete these lists... */
 #define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
 #define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
 
 static void
-fixuptextspan(fz_textspan *span)
+fixuptextspan(fz_textspan *head)
 {
-	for (; span; span = span->next)
+	fz_textspan *span;
+	int i;
+
+	for (span = head; span; span = span->next)
 	{
-		int i;
 		for (i = 0; i < span->len; i++)
 		{
 			switch (span->text[i].c)
@@ -347,13 +381,41 @@ fixuptextspan(fz_textspan *span)
 			}
 		}
 	}
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=734 */
+	/* remove duplicate character sequences in (almost) the same spot */
+	for (span = head; span; span = span->next)
+	{
+		if (span->size < 5) /* doglyphsoverlap fails too often for small fonts */
+			continue;
+		for (i = 0; i < span->len; i++)
+		{
+			fz_textspan *span2;
+			int newlines, j;
+			for (span2 = span, j = i + 1, newlines = 0; span2 && newlines < 2; newlines += span2->eol, span2 = span2->next, j = 0)
+				for (; j < span2->len; j++)
+					if (span->text[i].c != 32 && doglyphsoverlap(span, i, span2, j))
+						goto fixup_delete_duplicates;
+			continue;
+
+fixup_delete_duplicates:
+			do
+				deletecharacter(span, i);
+			while (doglyphsoverlap(span, i, span2, ++j));
+
+			if (i < span->len && span->text[i].c == 32)
+				deletecharacter(span, i);
+			else if (i == span->len && span->eol)
+				span->eol = 0;
+			i--;
+		}
+	}
 }
 /***** various string fixups *****/
 
 static void
 fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *pen)
 {
-	fz_textspan *firstSpan = *last;
 	fz_font *font = text->font;
 	FT_Face face = font->ftface;
 	fz_matrix tm = text->trm;
@@ -495,8 +557,6 @@ fz_textextractspan(fz_textspan **last, fz_text *text, fz_matrix ctm, fz_point *p
 
 		fz_addtextchar(last, font, size, text->wmode, text->els[i].ucs, fz_roundrect(rect));
 	}
-
-	fixuptextspan(firstSpan);
 }
 
 static void
@@ -545,6 +605,7 @@ fz_textfreeuser(void *user)
 
 	/* TODO: unicode NFC normalization */
 	/* TODO: bidi logical reordering */
+	fixuptextspan(tdev->head);
 
 	fz_free(tdev);
 }
