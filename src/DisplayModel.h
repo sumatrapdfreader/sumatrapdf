@@ -398,6 +398,7 @@ void              BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel
 bool              BitmapCache_FreePage(DisplayModel *dm, int pageNo);
 void              BitmapCache_FreeAll(void);
 bool              BitmapCache_FreeForDisplayModel(DisplayModel *dm);
+void              BitmapCache_KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
 bool              BitmapCache_FreeNotVisible(void);
 
 #endif

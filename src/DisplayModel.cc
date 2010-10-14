@@ -1338,6 +1338,21 @@ bool BitmapCache_FreeForDisplayModel(DisplayModel *dm) {
     return freedSomething;
 }
 
+void BitmapCache_KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm) {
+    LockCache();
+    for (int i = 0; i < gBitmapCacheCount; i++)
+    {
+        // keep the cached bitmaps for visible pages to avoid flickering during a reload
+        if (gBitmapCache[i]->dm == oldDm && oldDm->pageVisible(gBitmapCache[i]->pageNo))
+        {
+            gBitmapCache[i]->dm = newDm;
+            // make sure that the page is rerendered eventually
+            gBitmapCache[i]->zoomLevel = -1;
+        }
+    }
+    UnlockCache();
+}
+
 void BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel, int rotation, 
     RenderedBitmap *bitmap, double renderTime) {
     assert(gBitmapCacheCount <= MAX_BITMAPS_CACHED);

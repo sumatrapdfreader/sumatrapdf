@@ -2179,6 +2179,8 @@ static bool LoadPdfIntoWindow(
         }
     } else {
         ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
+        if (previousmodel && tstr_eq(win->dm->fileName(), previousmodel->fileName()))
+            BitmapCache_KeepForDisplayModel(previousmodel, win->dm);
         delete previousmodel;
         win->needrefresh = false;
     }
