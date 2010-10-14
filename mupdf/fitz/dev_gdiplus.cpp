@@ -323,14 +323,12 @@ protected:
 		}
 		
 		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+		assert(bounds.Width == clipBounds.Width && bounds.Height == clipBounds.Height);
+		bounds.Offset(clipBounds.X, clipBounds.Y);
+		bounds.Intersect(bgStack->bounds);
 		Rect *boundsBg = bounds.Clone();
-		boundsBg->Offset(MAX(clipBounds.X - bgStack->bounds.X, 0), MAX(clipBounds.Y - bgStack->bounds.Y, 0));
-		assert(clipBounds.Width == boundsBg->Width && clipBounds.Height == boundsBg->Height);
-		
-		if (boundsBg->X + boundsBg->Width > (INT)bgStack->layer->GetWidth())
-			boundsBg->Width = bounds.Width = bgStack->layer->GetWidth() - boundsBg->X;
-		if (boundsBg->Y + boundsBg->Height > (INT)bgStack->layer->GetHeight())
-			boundsBg->Height = bounds.Height = bgStack->layer->GetHeight() - boundsBg->Y;
+		bounds.Offset(-clipBounds.X, -clipBounds.Y);
+		boundsBg->Offset(-bgStack->bounds.X, -bgStack->bounds.Y);
 		
 		BitmapData data, dataBg;
 		bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
