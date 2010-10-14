@@ -201,6 +201,10 @@ static inline int fz_mul255(int a, int b)
  * to give a single value in the same range as A was. */
 #define FZ_COMBINE(A,B) (((A)*(B))>>8)
 
+/* Combine values A and C (in the same (any) range) and B and D (in the
+ * 0..256 range), to give a single value in the same range as A and C were.  */
+#define FZ_COMBINE2(A,B,C,D) (((A)*(B)+(C)*(D))>>8)
+
 /* Blend SRC and DST (in the same range) together according to
  * AMOUNT (in the 0...256 range). */
 #define FZ_BLEND(SRC, DST, AMOUNT) ((((SRC)-(DST))*(AMOUNT) + ((DST)<<8))>>8)

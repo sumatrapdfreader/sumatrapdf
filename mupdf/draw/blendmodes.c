@@ -1,6 +1,6 @@
 #include "fitz.h"
 
-/* PDF 1.4 blend modes. These are slow.  */
+/* PDF 1.4 blend modes. These are slow. */
 
 typedef unsigned char byte;
 

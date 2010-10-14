@@ -112,7 +112,7 @@ static void fmtstr(struct fmt *fmt, fz_obj *obj)
 
 static void fmthex(struct fmt *fmt, fz_obj *obj)
 {
-	int i,  b, c;
+	int i, b, c;
 
 	fmtputc(fmt, '<');
 	for (i = 0; i < obj->u.s.len; i++) {

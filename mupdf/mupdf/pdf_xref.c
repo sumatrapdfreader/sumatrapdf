@@ -892,7 +892,7 @@ pdf_updateobject(pdf_xref *xref, int num, int gen, fz_obj *newobj)
 
 /*
  * Convenience function to open a file then call pdf_openxrefwithstream.
-  */
+ */
 
 fz_error
 pdf_openxref(pdf_xref **xrefp, char *filename, char *password)
