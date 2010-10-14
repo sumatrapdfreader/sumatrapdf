@@ -66,6 +66,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_NEW(prefs);
     DICT_ADD_INT64(prefs, SHOW_TOOLBAR_STR, gGlobalPrefs.m_showToolbar);
     DICT_ADD_INT64(prefs, SHOW_TOC_STR, gGlobalPrefs.m_showToc);
+    DICT_ADD_INT64(prefs, TOC_DX_STR, gGlobalPrefs.m_tocDx);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_DONT_ASK_STR, gGlobalPrefs.m_pdfAssociateDontAskAgain);
     DICT_ADD_INT64(prefs, PDF_ASSOCIATE_ASSOCIATE_STR, gGlobalPrefs.m_pdfAssociateShouldAssociate);
 
@@ -130,6 +131,7 @@ static bool DisplayState_Deserialize(benc_dict* dict, DisplayState *ds)
     dict_get_int(dict, WINDOW_DX_STR, &ds->windowDx);
     dict_get_int(dict, WINDOW_DY_STR, &ds->windowDy);
     dict_get_bool(dict, SHOW_TOC_STR, &ds->showToc);
+    dict_get_int(dict, TOC_DX_STR, &ds->tocDx);
     dict_get_double_from_str(dict, ZOOM_VIRTUAL_STR, &ds->zoomVirtual);
     dict_get_bool(dict, USE_GLOBAL_VALUES_STR, &ds->useGlobalValues);
     return true;
@@ -165,6 +167,7 @@ static benc_dict* DisplayState_Serialize(DisplayState *ds)
     DICT_ADD_INT64(prefs, WINDOW_DY_STR, ds->windowDy);
 
     DICT_ADD_INT64(prefs, SHOW_TOC_STR, ds->showToc);
+    DICT_ADD_INT64(prefs, TOC_DX_STR, ds->tocDx);
 
     txt = str_printf("%.4f", ds->zoomVirtual);
     if (txt) {
@@ -433,6 +436,7 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
 
     dict_get_bool(global, SHOW_TOOLBAR_STR, &gGlobalPrefs.m_showToolbar);
     dict_get_bool(global, SHOW_TOC_STR, &gGlobalPrefs.m_showToc);
+    dict_get_int(global, TOC_DX_STR, &gGlobalPrefs.m_tocDx);
     dict_get_bool(global, PDF_ASSOCIATE_DONT_ASK_STR, &gGlobalPrefs.m_pdfAssociateDontAskAgain);
     dict_get_bool(global, PDF_ASSOCIATE_ASSOCIATE_STR, &gGlobalPrefs.m_pdfAssociateShouldAssociate);
     dict_get_bool(global, ESC_TO_EXIT_STR, &gGlobalPrefs.m_escToExit);

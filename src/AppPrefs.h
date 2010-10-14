@@ -20,6 +20,8 @@ enum {
 
 /* Most of the global settings that we persist in preferences file. */
 typedef struct {
+    int  m_globalPrefsOnly;
+
     BOOL m_showToolbar;
     /* If false, we won't ask the user if he wants Sumatra to handle PDF files */
     BOOL m_pdfAssociateDontAskAgain;
@@ -57,7 +59,8 @@ typedef struct {
     int  m_windowDy;
 
     int  m_showToc;
-    int  m_globalPrefsOnly;
+    int  m_tocDx;
+
     /* Forward search highlighting settings  */
     int  m_fwdsearchOffset; /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
     int  m_fwdsearchColor;  /* highlight color of the forward-search for both the standard and margin style*/

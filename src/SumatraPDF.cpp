@@ -160,6 +160,7 @@ static int                          gReBarDyFrame;
        bool                         gRestrictedUse = false;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
+    0, // int  m_globalPrefsOnly
     TRUE, // BOOL m_showToolbar
     FALSE, // BOOL m_pdfAssociateDontAskAgain
     FALSE, // BOOL m_pdfAssociateShouldAssociate
@@ -182,7 +183,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     DEFAULT_WIN_POS, // int  m_windowDx
     DEFAULT_WIN_POS, // int  m_windowDy
     1, // int  m_showToc
-    0, // int  m_globalPrefsOnly
+    0, // int  m_tocDx
     0, // int  m_fwdsearchOffset
     COL_FWDSEARCH_BG, // int  m_fwdsearchColor
     15, // int  m_fwdsearchWidth
@@ -1369,12 +1370,15 @@ static void MenuUpdateZoom(WindowInfo* win)
 
 static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
 {
+    RECT r;
+    if (GetWindowRect(win->hwndTocBox, &r))
+        gGlobalPrefs.m_tocDx = ds->tocDx = rect_dx(&r);
+
     // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
     //       the non-maximized dimensions for proper restoration)
     if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen || win->presentation)
         return;
 
-    RECT r;
     if (!GetWindowRect(win->hwndFrame, &r))
         return;
 
@@ -1404,6 +1408,10 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
             gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
         else
             gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
+        
+        RECT rc;
+        if (GetWindowRect(win->hwndTocBox, &rc))
+            gGlobalPrefs.m_tocDx = rect_dx(&rc);
     }
 
     if (WS_SHOWING_PDF != win->state)
@@ -2053,6 +2061,24 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     return win;
 }
 
+static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int defaultDx=0)
+{
+    RECT rc;
+    if (!GetWindowRect(win->hwndTocBox, &rc))
+        return;
+
+    int width = rect_dx(&rc);
+    if (ds && !gGlobalPrefs.m_globalPrefsOnly)
+        width = ds->tocDx;
+    else if (!defaultDx)
+        width = gGlobalPrefs.m_tocDx;
+    // else assume the correct width has been set previously
+    if (!width) // first time
+        width = defaultDx;
+
+    SetWindowPos(win->hwndTocBox, NULL, rc.left, rc.top, width, rect_dy(&rc), SWP_NOZORDER);
+}
+
 static void RecalcSelectionPosition (WindowInfo *win) {
     SelectionOnPage *   selOnPage = win->selectionOnPage;
     RectD               selD;
@@ -2176,6 +2202,7 @@ static bool LoadPdfIntoWindow(
     else {
         win->dm->_showToc = gGlobalPrefs.m_showToc;
     }
+    UpdateTocWidth(win, state);
 
     // Review needed: Is the following block really necessary?
     /*
@@ -4718,11 +4745,13 @@ static void RememberWindowPosition(WindowInfo *win)
     else if (!IsIconic(win->hwndFrame))
         gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
 
+    RECT rc;
+    gGlobalPrefs.m_tocDx = GetWindowRect(win->hwndTocBox, &rc) ? rect_dx(&rc) : 0;
+
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
     if (WIN_STATE_NORMAL != gGlobalPrefs.m_windowState || IsIconic(win->hwndFrame) || win->presentation)
         return;
 
-    RECT rc;
     GetWindowRect(win->hwndFrame, &rc);
     gGlobalPrefs.m_windowPosX = rc.left;
     gGlobalPrefs.m_windowPosY = rc.top;
@@ -6355,7 +6384,7 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     win->hwndSpliter = spliter;
     
     win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
-                        0,0,0,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE_TITLE, hInst, NULL);
+                        0,0,gGlobalPrefs.m_tocDx,0, win->hwndFrame, (HMENU)IDC_PDF_TOC_TREE_TITLE, hInst, NULL);
     HWND titleLabel = CreateWindow(WC_STATIC, _TR("Bookmarks"), WS_VISIBLE | WS_CHILD,
                         0,0,0,0, win->hwndTocBox, (HMENU)0, hInst, NULL);
     SetWindowFont(titleLabel, gDefaultGuiFont, true);
@@ -6529,6 +6558,7 @@ void WindowInfo::ShowTocBox()
     int cw, ch, cx, cy;
 
     GetClientRect(hwndFrame, &rframe);
+    UpdateTocWidth(this, NULL, rect_dx(&rframe) / 4);
     GetWindowRect(hwndTocBox, &rtoc);
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
@@ -6538,8 +6568,6 @@ void WindowInfo::ShowTocBox()
     ch = rect_dy(&rframe) - cy;
 
     cx = rect_dx(&rtoc);
-    if (cx == 0) // first time
-        cx = rect_dx(&rframe) / 4;
     cw = rect_dx(&rframe) - cx - SPLITTER_DX;
 
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
