@@ -15,6 +15,9 @@ Név&jegy
 &Actual Size\tCtrl-1
 &Eredeti méret\tCtrl-1
 
+&All selected pages
+Az összes kiválasztott oldal
+
 &Back\tAlt+Left Arrow
 Ugrás vissza\tAlt+<-
 
@@ -27,6 +30,9 @@ Kép/Szöveg másolása\tCtrl-C
 &Don't ask me again
 Ne kérdezze meg többé
 
+&Even pages only
+Csak a páros oldalak
+
 &File
 &Fájl
 
@@ -35,6 +41,9 @@ Mit keres:
 
 &First Page\tHome
 Első oldal\tHome
+
+&Fit pages to printable area
+Oldalméret illesztése a nyomtatható területhez
 
 &Go To
 U&grás
@@ -66,6 +75,9 @@ Következő oldal\t->
 &No, thanks
 Köszönöm,&nem
 
+&Odd pages only
+Csak a páratlan oldalak
+
 &Open\tCtrl-O
 Megny&itás\tCtrl-O
 
@@ -81,6 +93,12 @@ Előző oldal\t<-
 &Print...\tCtrl-P
 Nyomt&atás\tCtrl-P
 
+&Print... (denied)
+Nyomtatás... (tiltott)
+
+&Remember the password for this document
+Jelszó megjegyzése a dokumentumhoz
+
 &Remember these settings for each document
 Eltérő nézet-beállítások megjegyzése dokumentumonként
 
@@ -89,6 +107,9 @@ Ment&és másként...\tCtrl-S
 
 &Settings
 &Beállítások
+
+&Shrink pages to printable area (if necessary)
+Oldalak széleinek levágása a nyomtatható méretre
 
 &Skip this version
 Verzió kihagyása
@@ -120,6 +141,9 @@ Alkalmazás:
 Associate with PDF files?
 Társítsuk a PDF fájlokkal?
 
+Attachment: %s
+Csatolmány: %s
+
 Author:
 Készítő:
 
@@ -134,6 +158,9 @@ Könyv(Oldalpár címlappal)
 
 Book&marks\tF12
 Könyvjelzők\tF12
+
+Bookmarks
+Könyvjelzők
 
 Bytes
 bájt
@@ -182,6 +209,9 @@ Oldalmegjelenítési mód:
 
 Default &Zoom:
 Alap nagyítás:
+
+Denied Permissions:
+Tiltott műveletek:
 
 Document Properties
 A dokumentum tulajdonságai
@@ -333,6 +363,9 @@ Oldalméret
 Page number %u inexistant
 A(z) %u oldalszám nem létezik
 
+Page scaling
+Lapmérethez igazítás
+
 Page:
 Oldal:
 
@@ -341,6 +374,9 @@ Feldolgozás, kérem várjon
 
 Previous Page
 Előző oldal
+
+Print range
+Nyomtatási tartomány
 
 Printing problem.
 Nyomtatási probléma.
@@ -378,6 +414,9 @@ Egy oldalas
 Source file %s has no synchronization point
 A '%s' forrásfájlban nincs szinkronizációs hely
 
+Subject:
+Tárgy:
+
 SumatraPDF Options
 A SumatraPDF beállításai
 
@@ -389,6 +428,9 @@ Mostantól a Sumatra az alapértelmezett PDF-olvasója
 
 Synchronization file cannot be opened
 Nem sikerült megnyitni a szinkronizációs fájlt
+
+Text documents
+Szöveges fájlok
 
 Title:
 Cím:
@@ -427,24 +469,10 @@ Nagyítás mértéke
 [a file megváltozott; frissítés] %s
 
 # Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
 #Cannot start inverse search command. Please check the command line in the settings.
-#Denied Permissions:
 #No result found around line %u in file %s
 #No synchronization file found
-#Page scaling
-#Print range
 #Set inverse search command-line
-#Subject:
-#Text documents
 #copying text
 #printing document
 
