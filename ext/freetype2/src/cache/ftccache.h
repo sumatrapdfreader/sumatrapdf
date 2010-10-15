@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType internal cache interface (specification).                   */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009 by       */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -205,7 +205,7 @@ FT_BEGIN_HEADER
     FT_UFast              _idx;                                          \
                                                                          \
                                                                          \
-    error = 0;                                                           \
+    error = FTC_Err_Ok;                                                  \
     node  = NULL;                                                        \
     _idx  = _hash & _cache->mask;                                        \
     if ( _idx < _cache->p )                                              \
@@ -288,7 +288,7 @@ FT_BEGIN_HEADER
 
 
 #define FTC_CACHE_TRYLOOP_END()                                   \
-      if ( !error || error != FT_Err_Out_Of_Memory )              \
+      if ( !error || error != FTC_Err_Out_Of_Memory )             \
         break;                                                    \
                                                                   \
       _try_done = FTC_Manager_FlushN( _try_manager, _try_count ); \

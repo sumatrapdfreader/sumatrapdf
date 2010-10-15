@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2007, 2008, 2009 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2005, 2007, 2008, 2009, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1122,13 +1122,13 @@
 
     if ( Dx > 0 )
     {
-      Ix = ( ras.precision * Dx ) / Dy;
+      Ix = SMulDiv( ras.precision, Dx,  Dy);
       Rx = ( ras.precision * Dx ) % Dy;
       Dx = 1;
     }
     else
     {
-      Ix = -( ( ras.precision * -Dx ) / Dy );
+      Ix = SMulDiv( ras.precision, -Dx,  Dy) * -1;
       Rx =    ( ras.precision * -Dx ) % Dy;
       Dx = -1;
     }
@@ -1931,18 +1931,21 @@
           y1 = SCALED( point[-2].y );
           x2 = SCALED( point[-1].x );
           y2 = SCALED( point[-1].y );
-          x3 = SCALED( point[ 0].x );
-          y3 = SCALED( point[ 0].y );
 
           if ( flipped )
           {
             SWAP_( x1, y1 );
             SWAP_( x2, y2 );
-            SWAP_( x3, y3 );
           }
 
           if ( point <= limit )
           {
+            x3 = SCALED( point[0].x );
+            y3 = SCALED( point[0].y );
+
+            if ( flipped )
+              SWAP_( x3, y3 );
+
             if ( Cubic_To( RAS_VARS x1, y1, x2, y2, x3, y3 ) )
               goto Fail;
             continue;
@@ -2495,7 +2498,7 @@
           PByte  p;
 
 
-          p = bits - e1*ras.target.pitch;
+          p = bits - e1 * ras.target.pitch;
           if ( ras.target.pitch > 0 )
             p += ( ras.target.rows - 1 ) * ras.target.pitch;
 
@@ -3382,6 +3385,7 @@
                 FT_Raster  *araster )
   {
      static TRaster  the_raster;
+     FT_UNUSED( memory );
 
 
      *araster = (FT_Raster)&the_raster;
@@ -3400,7 +3404,7 @@
   }
 
 
-#else /* _STANDALONE_ */
+#else /* !_STANDALONE_ */
 
 
   static int
@@ -3408,7 +3412,7 @@
                 PRaster    *araster )
   {
     FT_Error  error;
-    PRaster   raster;
+    PRaster   raster = NULL;
 
 
     *araster = 0;
@@ -3432,7 +3436,7 @@
   }
 
 
-#endif /* _STANDALONE_ */
+#endif /* !_STANDALONE_ */
 
 
   static void
@@ -3447,9 +3451,8 @@
         PWorker  worker = (PWorker)pool_base;
 
 
-        raster->buffer      = pool_base + ( (sizeof ( *worker ) + 7 ) & ~7 );
-        raster->buffer_size = ( ( pool_base + pool_size ) -
-                                (char*)raster->buffer ) / sizeof ( Long );
+        raster->buffer      = pool_base + ( ( sizeof ( *worker ) + 7 ) & ~7 );
+        raster->buffer_size = pool_base + pool_size - (char*)raster->buffer;
         raster->worker      = worker;
       }
       else

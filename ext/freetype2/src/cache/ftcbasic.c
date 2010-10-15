@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType basic cache interface (body).                           */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007, 2009 by                        */
+/*  Copyright 2003, 2004, 2005, 2006, 2007, 2009, 2010 by                  */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -834,7 +834,7 @@
 
 
     if ( !desc )
-      return FT_Err_Invalid_Argument;
+      return FTC_Err_Invalid_Argument;
 
     ftc_image_type_from_old_desc( &type0, desc );
 
