@@ -29,7 +29,9 @@
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Only enable for stress-testing the logic. On
    desktop machine we usually have plenty memory */
-//#define CONSERVE_MEMORY 1
+#ifndef USE_GDI_FOR_RENDERING
+#define CONSERVE_MEMORY
+#endif
 
 /* Next action for the benchmark mode */
 #define MSG_BENCH_NEXT_ACTION WM_USER + 1
@@ -7353,8 +7355,6 @@ static void u_DoAllTests(void)
     printf("Not running tests\n");
 #endif
 }
-
-#define CONSERVE_MEMORY 1
 
 static DWORD WINAPI PageRenderThread(PVOID data)
 {
