@@ -1348,8 +1348,7 @@ void BitmapCache_KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm) {
             gBitmapCache[i]->dm = newDm;
             // make sure that the page is rerendered eventually
             gBitmapCache[i]->zoomLevel = -1;
-            // add a slight visual hint that the page might be out of date
-            gBitmapCache[i]->bitmap->grayOut(0.97f);
+            gBitmapCache[i]->bitmap->outOfDate = true;
         }
     }
     UnlockCache();

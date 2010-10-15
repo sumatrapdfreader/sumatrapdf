@@ -137,6 +137,7 @@ static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
 static HFONT                        gDefaultGuiFont;
+static HBITMAP                      gBitmapReloadingCue;
 
 static TCHAR *                      gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
@@ -911,6 +912,8 @@ LeaveCsAndExit:
     return;
 }
 
+#define RENDER_DELAY_UNDEFINED ((UINT)-1)
+
 UINT RenderQueue_GetDelay(DisplayModel *dm, int pageNo)
 {
     bool foundReq = false;
@@ -930,7 +933,7 @@ UINT RenderQueue_GetDelay(DisplayModel *dm, int pageNo)
     UnlockCache();
 
     if (!foundReq)
-        return (UINT)-1;
+        return RENDER_DELAY_UNDEFINED;
     return GetTickCount() - timestamp;
 }
 
@@ -3228,8 +3231,14 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 
         LockCache();
         BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
-        if (!entry)
+        UINT renderDelay = 0;
+
+        if (!entry) {
             entry = BitmapCache_Find(dm, pageNo);
+            renderDelay = RenderQueue_GetDelay(dm, pageNo);
+            if (RENDER_DELAY_UNDEFINED == renderDelay && gPageRenderRequestsCount < MAX_PAGE_REQUESTS)
+                RenderQueue_Add(dm, pageNo);
+        }
         RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
         HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
 
@@ -3240,10 +3249,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? COL_WHITE : COL_BLACK);
             if (!entry) {
-                UINT renderDelay = RenderQueue_GetDelay(dm, pageNo);
-                if (renderDelay == (UINT)-1 && gPageRenderRequestsCount < MAX_PAGE_REQUESTS)
-                    RenderQueue_Add(dm, pageNo);
-                else if (renderDelay >= REPAINT_MESSAGE_DELAY_IN_MS)
+                if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     triggerRepaintDisplay(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
                     DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
@@ -3275,6 +3281,16 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             else
                 BitBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
                     bmpDC, xSrc, ySrc, SRCCOPY);
+
+            if (renderedBmp->outOfDate) {
+                SelectObject(bmpDC, gBitmapReloadingCue);
+                int size = 16 * win->uiDPIFactor;
+                int cx = min(rect_dx(&bounds), 2 * size), cy = min(rect_dy(&bounds), 2 * size);
+                StretchBlt(hdc, bounds.right - min((cx + size) / 2, cx),
+                    bounds.top + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
+                    bmpDC, 0, 0, 16, 16, SRCCOPY);
+            }
+
             DeleteDC(bmpDC);
         }
 
@@ -7367,6 +7383,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
+    gBitmapReloadingCue = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_RELOADING_CUE));
     
     return TRUE;
 }
@@ -8086,6 +8103,7 @@ Exit:
     DeleteObject(gBrushBlack);
     DeleteObject(gBrushShadow);
     DeleteObject(gDefaultGuiFont);
+    DeleteBitmap(gBitmapReloadingCue);
 
     Translations_FreeData();
     CurrLangNameFree();

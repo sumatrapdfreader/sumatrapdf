@@ -186,6 +186,7 @@
 #define IDC_PRINT_SCALE_SHRINK          1061
 #define IDC_PRINT_SCALE_FIT             1062
 #define IDB_TOOLBAR                     2000
+#define IDB_RELOADING_CUE               2010
 #define IDT_FILE_NEW                    3000
 #define IDT_FILE_OPEN                   3001
 #define IDT_FILE_METAPATH               3002

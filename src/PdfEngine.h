@@ -82,9 +82,11 @@ private:
 
 class RenderedBitmap {
 public:
+    bool outOfDate;
+
     RenderedBitmap(HBITMAP hbmp, int width, int height) :
-        _hbmp(hbmp), _width(width), _height(height) { }
-    RenderedBitmap(fz_pixmap *pixmap, HDC hDC=NULL);
+        _hbmp(hbmp), _width(width), _height(height), outOfDate(false) { }
+    RenderedBitmap(fz_pixmap *pixmap, HDC hDC);
     ~RenderedBitmap() { DeleteObject(_hbmp); }
 
     // callers must not delete this (use CopyImage if you have to modify it)

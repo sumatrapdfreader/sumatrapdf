@@ -48,7 +48,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     int i, j, k;
     BITMAPINFO *bmi;
     HBITMAP hbmp = NULL;
-    unsigned char *bmpData, *source, *dest;
+    unsigned char *bmpData = NULL, *source, *dest;
     fz_pixmap *bgrPixmap;
     
     w = pixmap->w;
@@ -98,12 +98,8 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
             dest += rows8 - w;
         }
 ProducingPaletteDone:
-        hasPalette = paletteSize <= 256;
-        if (!hasPalette)
-            free(bmpData);
+        hasPalette = paletteSize < 256;
     }
-    if (!hasPalette)
-        bmpData = pixmap->samples;
     
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = w;
@@ -114,19 +110,20 @@ ProducingPaletteDone:
     bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
     
-    if (!hasPalette) {
+    if (!hasPalette)
+    {
         VOID *dibData;
-        hbmp = CreateDIBSection(NULL, bmi, DIB_RGB_COLORS, &dibData, NULL, 0);
-        memcpy(dibData, bmpData, bmi->bmiHeader.biSizeImage);
+        hbmp = CreateDIBSection(hDC, bmi, DIB_RGB_COLORS, &dibData, NULL, 0);
+        memcpy(dibData, pixmap->samples, bmi->bmiHeader.biSizeImage);
         GdiFlush();
     }
     else
         hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
     
     fz_droppixmap(bgrPixmap);
-    if (hasPalette)
-        free(bmpData);
     free(bmi);
+    if (bmpData)
+        free(bmpData);
     
     return hbmp;
 }
@@ -176,11 +173,9 @@ void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
 }
 
 
-RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) {
-    _hbmp = fz_pixtobitmap(hDC, pixmap, FALSE);
-    _width = pixmap->w;
-    _height = pixmap->h;
-}
+RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
+    _hbmp(fz_pixtobitmap(hDC, pixmap, TRUE)),
+    _width(pixmap->w), _height(pixmap->h), outOfDate(false) { }
 
 void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int pageDx, int pageDy) {
     HDC bmpDC = CreateCompatibleDC(hdc);
@@ -194,8 +189,6 @@ void RenderedBitmap::stretchDIBits(HDC hdc, int leftMargin, int topMargin, int p
 
 void RenderedBitmap::grayOut(float alpha) {
     HDC hDC = GetDC(NULL);
-    HDC bmpDC = CreateCompatibleDC(hDC);
-    HGDIOBJ oldBmp = SelectObject(bmpDC, _hbmp);
     BITMAPINFO bmi = { 0 };
 
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -206,17 +199,15 @@ void RenderedBitmap::grayOut(float alpha) {
     bmi.bmiHeader.biCompression = BI_RGB;
 
     unsigned char *bmpData = (unsigned char *)malloc(_width * _height * 4);
-    if (GetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
+    if (GetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS)) {
         int dataLen = _width * _height * 4;
         for (int i = 0; i < dataLen; i++)
             if ((i + 1) % 4) // don't affect the alpha channel
                 bmpData[i] = bmpData[i] * alpha + (alpha > 0 ? 0 : 255);
-        SetDIBits(bmpDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
+        SetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
     }
 
     free(bmpData);
-    SelectObject(bmpDC, oldBmp);
-    DeleteDC(bmpDC);
     ReleaseDC(NULL, hDC);
 }
 
@@ -595,8 +586,11 @@ RenderedBitmap *PdfEngine::renderBitmap(
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
     RenderedBitmap *bitmap = NULL;
-    if (!error)
-        bitmap = new RenderedBitmap(image);
+    if (!error) {
+        HDC hDC = GetDC(NULL);
+        bitmap = new RenderedBitmap(image, hDC);
+        ReleaseDC(NULL, hDC);
+    }
     fz_droppixmap(image);
     return bitmap;
 }
