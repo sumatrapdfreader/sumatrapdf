@@ -380,6 +380,7 @@ typedef struct {
     double          zoomLevel;
     int             rotation;
     int             abort;
+    DWORD           timestamp;
 } PageRenderRequest;
 
 /* Lock protecting both bitmap cache and page render queue */

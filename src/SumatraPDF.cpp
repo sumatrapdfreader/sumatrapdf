@@ -73,7 +73,7 @@ static bool             gUseGdiRenderer = false;
 #define WM_VSCROLL_HANDLED 0
 #define WM_HSCROLL_HANDLED 0
 
-#define WM_APP_REPAINT_NOW     (WM_APP + 11)
+#define WM_APP_REPAINT_CANVAS  (WM_APP + 11)
 #define WM_APP_URL_DOWNLOADED  (WM_APP + 12)
 #define WM_APP_FIND_UPDATE     (WM_APP + 13)
 #define WM_APP_FIND_END        (WM_APP + 14)
@@ -102,6 +102,9 @@ static bool             gUseGdiRenderer = false;
 
 #define SPLITTER_DX  5
 #define SPLITTER_MIN_WIDTH 150
+
+#define REPAINT_TIMER_ID            1
+#define REPAINT_MESSAGE_DELAY_IN_MS 1000
 
 #define SMOOTHSCROLL_TIMER_ID       2
 #define SMOOTHSCROLL_DELAY_IN_MS    20
@@ -894,6 +897,7 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     newRequest->zoomLevel = zoomLevel;
     newRequest->rotation = rotation;
     newRequest->abort = FALSE;
+    newRequest->timestamp = GetTickCount();
 
     UnlockCache();
 
@@ -905,6 +909,29 @@ Exit:
 LeaveCsAndExit:
     UnlockCache();
     return;
+}
+
+UINT RenderQueue_GetDelay(DisplayModel *dm, int pageNo)
+{
+    bool foundReq = false;
+    DWORD timestamp;
+
+    LockCache();
+    if (gCurPageRenderReq && gCurPageRenderReq->pageNo == pageNo && gCurPageRenderReq->dm == dm) {
+        timestamp = gCurPageRenderReq->timestamp;
+        foundReq = true;
+    }
+    for (int i = 0; !foundReq && i < gPageRenderRequestsCount; i++) {
+        if (gPageRenderRequests[i].pageNo == pageNo && gPageRenderRequests[i].dm == dm) {
+            timestamp = gPageRenderRequests[i].timestamp;
+            foundReq = true;
+        }
+    }
+    UnlockCache();
+
+    if (!foundReq)
+        return (UINT)-1;
+    return GetTickCount() - timestamp;
 }
 
 void RenderQueue_Pop(PageRenderRequest *req)
@@ -2521,17 +2548,17 @@ void DisplayModel::pageChanged()
 }
 
 /* Call from non-UI thread to cause repainting of the display */
-static void triggerRepaintDisplayNow(WindowInfo* win)
+static void triggerRepaintDisplay(WindowInfo* win, UINT delay=0)
 {
     assert(win);
     if (!win) return;
-    PostMessage(win->hwndCanvas, WM_APP_REPAINT_NOW, 0, 0);
+    PostMessage(win->hwndCanvas, WM_APP_REPAINT_CANVAS, delay, 0);
 }
 
 void DisplayModel::repaintDisplay()
 {
     WindowInfo* win = (WindowInfo*)appData();
-    triggerRepaintDisplayNow(win);
+    triggerRepaintDisplay(win);
 }
 
 void DisplayModel::setScrollbarsState(void)
@@ -3213,8 +3240,13 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
             SetTextColor(hdc, gGlobalPrefs.m_invertColors ? COL_WHITE : COL_BLACK);
             if (!entry) {
-                /* TODO: assert is queued for rendering ? */
-                DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
+                UINT renderDelay = RenderQueue_GetDelay(dm, pageNo);
+                if (renderDelay == (UINT)-1 && gPageRenderRequestsCount < MAX_PAGE_REQUESTS)
+                    RenderQueue_Add(dm, pageNo);
+                else if (renderDelay >= REPAINT_MESSAGE_DELAY_IN_MS)
+                    triggerRepaintDisplay(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
+                else
+                    DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
             } else {
                 DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
@@ -3406,7 +3438,7 @@ static void OnSelectAll(WindowInfo *win)
     ConvertSelectionRectToSelectionOnPage(win);
 
     win->showSelection = true;
-    triggerRepaintDisplayNow(win);
+    triggerRepaintDisplay(win);
 }
 
 static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
@@ -3626,7 +3658,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     case MA_SELECTING:
         win->selectionRect.dx = x - win->selectionRect.x;
         win->selectionRect.dy = y - win->selectionRect.y;
-        triggerRepaintDisplayNow(win);
+        triggerRepaintDisplay(win);
         OnSelectionEdgeAutoscroll(win, x, y);
         break;
     case MA_MAYBEDRAGGING:
@@ -3664,7 +3696,7 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
         SetCapture(win->hwndCanvas);
         SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
 
-        triggerRepaintDisplayNow(win);
+        triggerRepaintDisplay(win);
     }
 }
 
@@ -3688,7 +3720,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
         } else {
             ConvertSelectionRectToSelectionOnPage (win);
         }
-        triggerRepaintDisplayNow(win);
+        triggerRepaintDisplay(win);
     }
 }
 
@@ -5205,7 +5237,7 @@ static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result
     }
 
     win->showSelection = true;
-    triggerRepaintDisplayNow(win);
+    triggerRepaintDisplay(win);
 }
 
 // Show a message for 3000 millisecond at most
@@ -5465,7 +5497,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
 static void ClearSearch(WindowInfo *win)
 {
     DeleteOldSelectionInfo(win);
-    triggerRepaintDisplayNow(win);
+    triggerRepaintDisplay(win);
 }
 
 static void OnChar(WindowInfo *win, int key)
@@ -6688,9 +6720,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
     win = WindowInfo_FindByHwnd(hwnd);
     switch (message)
     {
-        case WM_APP_REPAINT_NOW:
-            if (win)
-                WindowInfo_RedrawAll(win);
+        case WM_APP_REPAINT_CANVAS:
+            if (win) {
+                if (!wParam)
+                    WndProcCanvas(hwnd, WM_TIMER, REPAINT_TIMER_ID, 0);
+                else if (!win->delayedRepaintTimer)
+                    win->delayedRepaintTimer = SetTimer(hwnd, REPAINT_TIMER_ID, (UINT)wParam, NULL);
+            }
             break;
 
         case WM_VSCROLL:
@@ -6782,6 +6818,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             assert(win);
             if (win) {
                 switch (wParam) {
+                case REPAINT_TIMER_ID:
+                    win->delayedRepaintTimer = 0;
+                    KillTimer(hwnd, REPAINT_TIMER_ID);
+                    WindowInfo_RedrawAll(win);
+                    break;
                 case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
                         WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
@@ -7421,7 +7462,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         BitmapCache_FreeNotVisible();
 #endif
         WindowInfo* win = (WindowInfo*)req.dm->appData();
-        triggerRepaintDisplayNow(win);
+        triggerRepaintDisplay(win);
     }
     DBG_OUT("PageRenderThread() finished\n");
     return 0;
