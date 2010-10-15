@@ -132,7 +132,6 @@ static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
 static HBRUSH                       gBrushShadow;
 static HFONT                        gDefaultGuiFont;
-static HBITMAP                      gBitmapCloseToc;
 
 static TCHAR *                      gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
@@ -3959,7 +3958,6 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 
     if (lastWindow && quitIfLast) {
         assert(0 == WindowInfoList_Len());
-        DeleteBitmap(gBitmapCloseToc);
         PostQuitMessage(0);
     } else {
         MenuToolbarUpdateStateForAllWindows();
@@ -6308,6 +6306,14 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         MoveWindow(win->hwndTocTree, 0, size.cy, rect_dx(&rc), rect_dy(&rc) - size.cy, true);
         break;
     }
+    case WM_DRAWITEM:
+        if (1 == wParam) // close button
+        {
+            DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
+            DrawFrameControl(dis->hDC, &dis->rcItem, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+            return TRUE;
+        }
+        break;
     case WM_COMMAND:
         if (HIWORD(wParam) == STN_CLICKED)
             win->ToggleTocBox();
@@ -6392,9 +6398,8 @@ static void CreateTocBox(WindowInfo *win, HINSTANCE hInst)
     SetWindowFont(titleLabel, gDefaultGuiFont, true);
 
     HWND closeToc = CreateWindow(WC_STATIC, _T(""),
-                        SS_BITMAP | SS_CENTERIMAGE | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
+                        SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                         0, 0, 16, 16, win->hwndTocBox, (HMENU)1, hInst, NULL);
-    SendMessage(closeToc, STM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)gBitmapCloseToc);
     SetClassLongPtr(closeToc, GCLP_HCURSOR, (LONG_PTR)gCursorHand);
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
@@ -7320,8 +7325,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     
-    gBitmapCloseToc = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_CLOSE_TOC));
-
     return TRUE;
 }
 
