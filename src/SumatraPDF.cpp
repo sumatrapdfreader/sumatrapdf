@@ -2021,7 +2021,7 @@ static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
 
     // make sure that the window is neither too small nor bigger than the monitor
     if (*dx < MIN_WIN_DX || *dx > rect_dx(&mi.rcWork))
-        *dx = rect_dy(&mi.rcWork) * DEF_PAGE_RATIO;
+        *dx = min(rect_dy(&mi.rcWork) * DEF_PAGE_RATIO, rect_dx(&mi.rcWork));
     if (*dy < MIN_WIN_DY || *dy > rect_dy(&mi.rcWork))
         *dy = rect_dy(&mi.rcWork);
 
@@ -2039,15 +2039,18 @@ static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
 static WindowInfo* WindowInfo_CreateEmpty(void) {
     HWND        hwndFrame, hwndCanvas;
     WindowInfo* win;
+    int         winX, winY, winDx, winDy;
 
-    RECT workArea;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    int winX = CW_USEDEFAULT;
-    int winY = CW_USEDEFAULT;
-    int winDy = rect_dy(&workArea);
-    int winDx = winDy * DEF_PAGE_RATIO;
-
-    if (DEFAULT_WIN_POS != gGlobalPrefs.m_windowPosX) {
+    if (DEFAULT_WIN_POS == gGlobalPrefs.m_windowPosX) {
+        // center the window on the primary monitor
+        RECT workArea;
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+        winY = workArea.top;
+        winDy = rect_dy(&workArea);
+        winDx = min(winDy * DEF_PAGE_RATIO, rect_dx(&workArea));
+        winX = (rect_dx(&workArea) - winDx) / 2;
+    }
+    else {
         winX = gGlobalPrefs.m_windowPosX;
         winY = gGlobalPrefs.m_windowPosY;
         winDx = gGlobalPrefs.m_windowDx;
