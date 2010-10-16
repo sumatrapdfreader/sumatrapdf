@@ -48,9 +48,10 @@ static void __stdcall InternetCallbackProc(HINTERNET hInternet,
             // Check for errors.
             if (LPINTERNET_ASYNC_RESULT(statusInfo)->dwError != 0)
             {
+                _snprintf(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
                 if (!ctx->autoCheck)
                     PostMessage(ctx->hwndToNotify, ctx->msg, 0, LPINTERNET_ASYNC_RESULT(statusInfo)->dwError);
-                _snprintf(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
+                delete ctx;
                 break;
             }
 
