@@ -249,9 +249,6 @@ Sledeća strana
 No matches were found
 Pojam nije pronađen
 
-No new version available.
-Novija verzija nije dostupna.
-
 No result found around line %u in file %s
 Rezultati oko linije %u u datoteci %s nisu pronađeni
 
@@ -390,6 +387,8 @@ Faktor uvećanja
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Continuous book view
 #Created:
 #Denied Permissions:

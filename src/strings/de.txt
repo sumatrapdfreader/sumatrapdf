@@ -167,6 +167,9 @@ Lesezeichen
 Bytes
 Byte
 
+Can't connect to the Internet (error %#x).
+Keine Verbindung zum Internet möglich (Fehler %#x).
+
 Cancel
 Abbrechen
 
@@ -181,6 +184,9 @@ Sprache ändern… (Change Language)
 
 Check for &Updates
 Nach &neuer Version suchen
+
+Check for Updates
+Nach Updates suchen
 
 Continuous
 Fortlaufend
@@ -316,9 +322,6 @@ Next Page
 
 No matches were found
 Suchbegriff nicht gefunden
-
-No new version available.
-Keine neuere Version vorhanden.
 
 No result found around line %u in file %s
 In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden

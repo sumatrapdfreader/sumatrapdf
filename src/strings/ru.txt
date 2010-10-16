@@ -325,9 +325,6 @@ Next Page
 No matches were found
 Совпадений не найдено
 
-No new version available.
-Обновлений не обнаружено
-
 No result found around line %u in file %s
 Результат, соответствующий строке %u в файле %s, не найден
 
@@ -486,4 +483,8 @@ copying text
 
 printing document
 печатается документ
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

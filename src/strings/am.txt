@@ -323,9 +323,6 @@ Next Page
 No matches were found
 Օրինակներ չի գտնվել
 
-No new version available.
-Նոր տարբերակներ չկան։
-
 No result found around line %u in file %s
 %s ֆայլում %u տողին համապատասխան արդյունքը չի գտնվել
 
@@ -484,4 +481,8 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

@@ -285,9 +285,6 @@ Pàgina següent
 No matches were found
 No s'han trobat coincidencies
 
-No new version available.
-No hi ha cap versió nova.
-
 No result found around line %u in file %s
 No s'ha trobat un resultat de la cerca vàl·lid a la linia %u al fitxer %s
 
@@ -442,6 +439,8 @@ Factor de zoom
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Denied Permissions:
 #Page scaling
 #Print range

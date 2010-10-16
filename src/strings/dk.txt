@@ -315,9 +315,6 @@ Næste side
 No matches were found
 Ingen resultater blev fundet
 
-No new version available.
-Ingen ny version tilgængelig.
-
 No result found around line %u in file %s
 Intet resultat fundet omkring linje %u i filen %s
 
@@ -476,4 +473,8 @@ kopierer tekst
 
 printing document
 printer dokument
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

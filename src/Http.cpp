@@ -48,6 +48,7 @@ static void __stdcall InternetCallbackProc(HINTERNET hInternet,
             // Check for errors.
             if (LPINTERNET_ASYNC_RESULT(statusInfo)->dwError != 0)
             {
+                PostMessage(ctx->hwndToNotify, ctx->msg, 0, LPINTERNET_ASYNC_RESULT(statusInfo)->dwError);
                 _snprintf(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
                 break;
             }
@@ -85,6 +86,7 @@ static void __stdcall InternetCallbackProc(HINTERNET hInternet,
                 // read the whole file
                 PostMessage(ctx->hwndToNotify, ctx->msg, (WPARAM) ctx, 0);
             } else {
+                PostMessage(ctx->hwndToNotify, ctx->msg, 0, 0);
                 delete ctx;
             }
         }

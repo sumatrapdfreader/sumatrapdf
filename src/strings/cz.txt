@@ -292,9 +292,6 @@ Další stránka
 No matches were found
 Žádná shoda nebyla nalezena
 
-No new version available.
-Nová verze není k dispozici.
-
 No result found around line %u in file %s
 Žádné výsledky nenalezeny okolo řádky %u v souboru %s
 
@@ -457,6 +454,8 @@ tisk dokumentu
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

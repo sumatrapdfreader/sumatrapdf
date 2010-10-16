@@ -249,9 +249,6 @@ Naslednja stran
 No matches were found
 Ni zadetkov
 
-No new version available.
-Novejša različica ni na voljo.
-
 No result found around line %u in file %s
 Okoli vrstice %u v datoteki %s ni zadetkov
 
@@ -381,6 +378,8 @@ Faktor povečave
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Continuous book view
 #Created:
 #Denied Permissions:

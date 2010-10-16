@@ -262,9 +262,6 @@ Nessa Folen
 No matches were found
 Ny veu keyvys par vyth
 
-No new version available.
-Nyns eus versyon nowyth kavadow.
-
 No result found around line %u in file %s
 Ny veu kevys sywyans vyth a-dro dhe linen %u y'n restren %s
 
@@ -404,6 +401,8 @@ Faktor-zoum
 #Author:
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Created:
 #Denied Permissions:
 #Document Properties

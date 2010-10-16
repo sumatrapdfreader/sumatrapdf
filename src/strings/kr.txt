@@ -156,9 +156,6 @@ New version available.
 Next Page
 다음 장
 
-No new version available.
-새로운 버전이 없습니다.
-
 Open
 열기
 
@@ -239,9 +236,11 @@ Zoom Out
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

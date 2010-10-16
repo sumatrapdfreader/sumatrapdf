@@ -292,9 +292,6 @@ Halaman Berikutnya
 No matches were found
 Tidak ada persamaan ditemukan
 
-No new version available.
-Versi baru tidak tersedia
-
 No result found around line %u in file %s
 Tidak ada hasil ditemukan pada baris %u di dalam berkas %s
 
@@ -457,6 +454,8 @@ mencetak dokumen
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

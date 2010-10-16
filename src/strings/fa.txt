@@ -289,9 +289,6 @@ New version available.
 Next Page
 صفحه بعدی
 
-No new version available.
-نسخه تازه دردسترس نمی باشد
-
 No synchronization file found
 فایل همگام سازی موجود نیست
 
@@ -445,6 +442,8 @@ printing document
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position

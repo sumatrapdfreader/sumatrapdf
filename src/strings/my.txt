@@ -212,9 +212,6 @@ Mukasurat seterusnya
 No matches were found
 Tiada padanan dijumpai
 
-No new version available.
-Tidak terdapat versi terbaru
-
 Number of Pages:
 Jumlah mukasurat:
 
@@ -314,8 +311,10 @@ mencetak dokumen
 #Attachment: %s
 #Author:
 #Bookmarks
+#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for &Updates
+#Check for Updates
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:

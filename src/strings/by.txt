@@ -225,9 +225,6 @@ Next Page
 No matches were found
 Узор не знойдзены
 
-No new version available.
-Абнаўленняў не выяўлена.
-
 No result found around line %u in file %s
 Вынік, які адпавядае радку %u у файле %s, не знойдзены
 
@@ -352,7 +349,9 @@ Zoom Out
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Created:

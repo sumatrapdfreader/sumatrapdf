@@ -328,9 +328,6 @@ Page suivante
 No matches were found
 Aucun résultat n'a été trouvé
 
-No new version available.
-Pas de nouvelle version disponible
-
 No result found around line %u in file %s
 Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 
@@ -489,4 +486,8 @@ copier le text
 
 printing document
 imprimer le document
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

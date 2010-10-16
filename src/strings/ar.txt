@@ -301,9 +301,6 @@ Next Page
 No matches were found
 لم يتم العثور على نتائج
 
-No new version available.
-لايوجد نسخة جديدة
-
 No result found around line %u in file %s
 لم يتم العثور على نتائج حول السطر %u في الملف %s
 
@@ -466,6 +463,8 @@ printing document
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

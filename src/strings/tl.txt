@@ -234,9 +234,6 @@ Sunod na Pahina
 No matches were found
 Walang makitang kapareha
 
-No new version available.
-Wala pang bagong bersyon sa ngayon.
-
 No result found around line %u in file %s
 Walang resultang mahanap sa linya %s ng file %s
 
@@ -359,7 +356,9 @@ Paliitin/Lumayo
 #Automatically check for &updates
 #Book View
 #Bookmarks
+#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Custom &Zoom...

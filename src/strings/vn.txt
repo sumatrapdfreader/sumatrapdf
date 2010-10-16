@@ -315,9 +315,6 @@ Trang sau
 No matches were found
 Không tìm thấy
 
-No new version available.
-Không có phiên bản mới.
-
 No result found around line %u in file %s
 Không tìm thấy quanh dòng %u trong tập tin %s
 
@@ -476,4 +473,8 @@ copying text
 
 printing document
 đang in tập tin
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

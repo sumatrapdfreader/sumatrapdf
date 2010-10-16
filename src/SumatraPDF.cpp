@@ -3051,7 +3051,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     } else {
         /* if automated => don't notify that there is no new version */
         if (!ctx->autoCheck) {
-            MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("No new version available."), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
         }
     }
     free(verTxt);
@@ -5887,7 +5887,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
-    if (!win || !win->dm)
+    if (!win)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     if (WM_ERASEBKGND == message) {
@@ -7251,9 +7251,13 @@ InitMouseWheelInfo:
         case WM_APP_URL_DOWNLOADED:
             assert(win);
             ctx = (HttpReqCtx*)wParam;
-            if (win)
+            if (win && ctx)
                 OnUrlDownloaded(win, ctx);
-            else
+            else if (win) {
+                TCHAR buf[256];
+                wsprintf(buf, _TR("Can't connect to the Internet (error %#x)."), lParam);
+                MessageBox(win->hwndFrame, buf, _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
+            } else if (ctx)
                 delete ctx;
             break;
 

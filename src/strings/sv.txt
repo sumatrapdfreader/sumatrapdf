@@ -294,9 +294,6 @@ Nästa sida
 No matches were found
 Inga träffar hittades
 
-No new version available.
-Ingen ny version tillgänglig.
-
 No result found around line %u in file %s
 Inget resultat hittades vid rad %u i filen %s
 
@@ -459,6 +456,8 @@ skriver ut dokumentet
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

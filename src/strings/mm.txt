@@ -152,9 +152,6 @@ New version available.
 Next Page
 နောက် တမျက်နှာ
 
-No new version available.
-အမျိုးအစားသစ် မရှိပါ
-
 Open
 ဖွင့်ပါ
 
@@ -235,9 +232,11 @@ Zoom Out
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Contribute Translation
 #Couldn't initialize printer

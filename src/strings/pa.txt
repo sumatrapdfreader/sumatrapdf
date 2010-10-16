@@ -153,9 +153,6 @@ New version available.
 Next Page
 ਅਗਲੇ ਪੰਨੇ ਤੇ
 
-No new version available.
-ਨਵਾ ਵਰਜਨ ਓੁਪਲਭਧ ਨਹੀਂ ਹੈ
-
 Open
 ਖੋਲੋ
 
@@ -236,9 +233,11 @@ Zoom Out
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

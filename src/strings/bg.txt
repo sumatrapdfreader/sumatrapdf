@@ -260,9 +260,6 @@ Next Page
 No matches were found
 Няма съвпадения
 
-No new version available.
-Няма нова версия.
-
 No result found around line %u in file %s
 Няма резултати около линия %u във файла %s
 
@@ -393,6 +390,8 @@ Zoom factor
 #Author:
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Created:
 #Denied Permissions:
 #Document Properties

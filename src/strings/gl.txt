@@ -155,9 +155,6 @@ Nova versión dispoñible
 Next Page
 Páxina seguinte
 
-No new version available.
-Non hai nova versión dispoñible
-
 Open
 Abrir
 
@@ -238,9 +235,11 @@ Afastar zoom
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

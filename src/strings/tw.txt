@@ -282,9 +282,6 @@ Next Page
 No matches were found
 找不到結果
 
-No new version available.
-沒有新版本
-
 No synchronization file found
 找不到同步檔案
 
@@ -444,6 +441,8 @@ printing document
 #(of %d)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #No result found around line %u in file %s
 #Page scaling
 #Print range

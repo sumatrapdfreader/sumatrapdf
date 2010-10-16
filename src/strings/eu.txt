@@ -152,9 +152,6 @@ Bertsio berria eskuragarri duzu.
 Next Page
 Hurrengo orria
 
-No new version available.
-Ez dago bertsio berririk.
-
 Open
 Ireki
 
@@ -233,9 +230,11 @@ Zoom-a urruneratu
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

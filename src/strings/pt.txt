@@ -316,9 +316,6 @@ Página seguinte
 No matches were found
 Nenhuma ocorrência encontrada
 
-No new version available.
-Não existe uma nova versão.
-
 No result found around line %u in file %s
 Nenhum resultado próximo da linha %u no ficheiro %s
 
@@ -477,4 +474,8 @@ copiando texto
 
 printing document
 imprimindo documento
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

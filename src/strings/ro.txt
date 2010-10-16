@@ -194,11 +194,13 @@ Micşorează
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Change Language
 #Check for &Updates
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page
@@ -224,7 +226,6 @@ Micşorează
 #New version %s is available. Download new version?
 #New version available.
 #No matches were found
-#No new version available.
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position

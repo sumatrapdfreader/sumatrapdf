@@ -248,9 +248,6 @@ Next Page
 No matches were found
 没有找到匹配项
 
-No new version available.
-未发现新版本。
-
 No result found around line %u in file %s
 第 %u 行附近未找到同步记录 (文件: %s)
 
@@ -380,6 +377,8 @@ Zoom factor
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Continuous book view
 #Created:
 #Denied Permissions:

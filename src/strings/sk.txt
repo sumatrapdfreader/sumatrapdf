@@ -283,9 +283,6 @@ Next Page
 No matches were found
 Nenájdené podľa zodpovedajúcich kritérií
 
-No new version available.
-Nie je k dispozícia nová verzia.
-
 No result found around line %u in file %s
 Nenájdené žiadne výsledky na riadku %u v súbore %s
 
@@ -437,7 +434,9 @@ prebieha tlač dokumentu
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Couldn't initialize printer
 #No synchronization file found
 #No synchronization info at this position

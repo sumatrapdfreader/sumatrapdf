@@ -316,9 +316,6 @@ Página siguiente
 No matches were found
 No se encontraron coincidencias
 
-No new version available.
-No hay una nueva versión.
-
 No result found around line %u in file %s
 No se encontró resultado cerca de la línea %u en el archivo %s
 
@@ -477,4 +474,8 @@ copiado de texto
 
 printing document
 impresión de documento
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

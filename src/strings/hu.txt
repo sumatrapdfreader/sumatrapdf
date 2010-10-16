@@ -321,9 +321,6 @@ Következő oldal
 No matches were found
 Nem található a dokumentumban
 
-No new version available.
-Nincs újabb verzió.
-
 No synchronization info at this position
 Nem található szinkronizálási információ az adott pozícióhoz
 
@@ -469,7 +466,9 @@ Nagyítás mértéke
 [a file megváltozott; frissítés] %s
 
 # Untranslated:
+#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #No result found around line %u in file %s
 #No synchronization file found
 #Set inverse search command-line

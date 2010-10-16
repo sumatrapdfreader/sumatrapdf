@@ -315,9 +315,6 @@ Next Page
 No matches were found
 Δε βρέθηκε το κείμενο
 
-No new version available.
-Δεν υπάρχει νεα έκδοση.
-
 No result found around line %u in file %s
 Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s
 
@@ -476,4 +473,8 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

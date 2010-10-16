@@ -300,9 +300,6 @@ Seuraava sivu
 No matches were found
 Osumia ei löytynyt
 
-No new version available.
-Ei uudempia versioita saatavilla.
-
 No result found around line %u in file %s
 Tulosta ei löytynyt rivin %u ympäriltä tiedostossa %s
 
@@ -465,6 +462,8 @@ tulostetaan asiakirjaa
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

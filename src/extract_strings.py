@@ -264,7 +264,7 @@ def extract_strings_from_c_files():
     for f in files:
         file_content = file(f, "rb").read()
         strings += re.findall(translation_pattern, file_content)
-    return strings
+    return seq_uniq(strings)
 
 (SS_ONLY_IN_C, SS_ONLY_IN_TXT, SS_IN_BOTH) = range(3)
 

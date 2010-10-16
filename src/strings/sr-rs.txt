@@ -249,9 +249,6 @@ Next Page
 No matches were found
 Појам није пронађен
 
-No new version available.
-Новија верија није доступна.
-
 No result found around line %u in file %s
 Резултати око линије %u у датотеци %s нису пронађени
 
@@ -390,6 +387,8 @@ Zoom factor
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Continuous book view
 #Created:
 #Denied Permissions:

@@ -152,9 +152,6 @@ Nova versió disponible.
 Next Page
 Pàgina Següent
 
-No new version available.
-No hi han noves versions.
-
 Open
 Obrir
 
@@ -236,9 +233,11 @@ Alluntar
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

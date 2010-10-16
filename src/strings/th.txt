@@ -140,9 +140,6 @@ New version available.
 Next Page
 หน้าถัดไป
 
-No new version available.
-ไม่มีเวอร์ชั่นใหม่
-
 Open
 เปิด
 
@@ -220,9 +217,11 @@ Zoom Out
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

@@ -152,9 +152,6 @@ Ny versjon tilgjengeleg.
 Next Page
 Neste side
 
-No new version available.
-Ingen nye versjonar.
-
 Open
 Opne
 
@@ -236,9 +233,11 @@ Zoom ut
 #Book View
 #Bookmarks
 #Bytes
+#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Continuous book view
 #Couldn't initialize printer
 #Couldn't render the page

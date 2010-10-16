@@ -318,9 +318,6 @@ Pagina successiva
 No matches were found
 Nessuna corrispondenza trovata
 
-No new version available.
-Nessun aggiornamento disponibile
-
 No result found around line %u in file %s
 Nessun risultato trovato intorno alla riga %u nel file %s
 
@@ -479,4 +476,8 @@ Copia testo
 
 printing document
 Stampa documento
+
+# Untranslated:
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 

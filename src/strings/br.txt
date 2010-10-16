@@ -290,9 +290,6 @@ Página seguinte
 No matches were found
 Nenhuma ocorrência encontrada
 
-No new version available.
-Nenhuma atualização disponível.
-
 No result found around line %u in file %s
 Nenhum resultado próximo à linha %u no arquivo %s
 
@@ -455,6 +452,8 @@ imprimindo documento
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

@@ -288,9 +288,6 @@ Next Page
 No matches were found
 ஒரு பொருத்தமும் இல்லை
 
-No new version available.
-புதிய பதிப்பு எதுவம் இல்லை
-
 No result found around line %u in file %s
 முடிவுகள் எதுவும் கோப்பு %s இல் உள்ள வரி %u கண்டுபிடிக்க முடியவில்லை
 
@@ -450,7 +447,9 @@ printing document
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
+#Check for Updates
 #Page scaling
 #Print range
 #Set inverse search command-line

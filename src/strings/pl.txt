@@ -288,9 +288,6 @@ Następna strona
 No matches were found
 Nie znaleziono dopasowań
 
-No new version available.
-Brak dostępnych nowych wersji.
-
 No result found around line %u in file %s
 Brak wyników w wierszu %u w pliku %s
 
@@ -453,6 +450,8 @@ drukowanie dokumentu
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 

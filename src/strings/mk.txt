@@ -290,9 +290,6 @@ Next Page
 No matches were found
 Не се пронајдени совпаѓања
 
-No new version available.
-Нема понова верзија.
-
 No result found around line %u in file %s
 Не најдов резултати околу линијата %u во датотеката %s
 
@@ -455,6 +452,8 @@ printing document
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
+#Check for Updates
 #Page scaling
 #Print range
 
