@@ -211,44 +211,44 @@ public:
 
     void discard_index() { this->index_discarded = true; }
     bool is_index_discarded() const
-	{
-		// was the index manually discarded?
-		if (this->index_discarded)
-			return true;
+    {
+        // was the index manually discarded?
+        if (this->index_discarded)
+            return true;
 
-		// has the synchronization file been changed on disk?
+        // has the synchronization file been changed on disk?
         struct _stat newstamp;
         if (_tstat(syncfilepath, &newstamp) == 0
             && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0
             ) {
-            DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
-                    
-            // update time stamp
-			memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
+                DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
 
-            return true; // the file has changed!
+                // update time stamp
+                memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
+
+                return true; // the file has changed!
         }
         else {
-			return false;
+            return false;
         }
-	}
+    }
 
     int rebuild_index()
-	{
-		this->index_discarded = false;
-		// save sync file timestamp
-		_tstat(syncfilepath, &syncfileTimestamp);
-		return 0;
-	}
+    {
+        this->index_discarded = false;
+        // save sync file timestamp
+        _tstat(syncfilepath, &syncfileTimestamp);
+        return 0;
+    }
 
     UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
 
 private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
-	struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
+    struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
 
 protected:
-	TCHAR syncfilepath[MAX_PATH]; // path  to the synchronization file
+    TCHAR syncfilepath[MAX_PATH]; // path  to the synchronization file
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
     PTSTR dir;            // directory where the syncfile lies
 };

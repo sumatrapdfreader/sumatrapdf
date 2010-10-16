@@ -340,7 +340,7 @@ int Pdfsync::rebuild_index()
 
     scan_and_build_index(fp);
     fclose(fp);
-	
+
     return Synchronizer::rebuild_index();
 }
 
