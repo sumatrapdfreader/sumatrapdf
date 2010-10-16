@@ -139,9 +139,9 @@ int Pdfsync::get_record_section(int record_index)
 FILE *Pdfsync::opensyncfile()
 {
     FILE *fp;
-    fp = _tfopen(syncfilename, _T("rb"));
+    fp = _tfopen(syncfilepath, _T("rb"));
     if (NULL == fp) {
-        DBG_OUT("The syncfile %s cannot be opened\n", syncfilename);
+        DBG_OUT("The syncfile %s cannot be opened\n", syncfilepath);
         return NULL;
     }
     return fp;
@@ -340,7 +340,7 @@ int Pdfsync::rebuild_index()
 
     scan_and_build_index(fp);
     fclose(fp);
-    
+	
     return Synchronizer::rebuild_index();
 }
 
@@ -607,7 +607,7 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = tstr_to_multibyte(this->syncfilename, CP_ACP);
+    char *mb_syncfname = tstr_to_multibyte(this->syncfilepath, CP_ACP);
     if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 

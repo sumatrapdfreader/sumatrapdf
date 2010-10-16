@@ -7,6 +7,7 @@
 
 #include <windows.h>
 #include <assert.h>
+#include <time.h>
 
 #include "base_util.h"
 #include "tstr_util.h"
@@ -159,10 +160,12 @@ typedef enum { TopLeft,    // origin at the top-left corner
 class Synchronizer
 {
 public:
-    Synchronizer(LPCTSTR _syncfilename) {
+    Synchronizer(LPCTSTR _syncfilepath) {
         this->index_discarded = true;
         this->coordsys = BottomLeft; // by default set the internal coordinate system to bottom-left
-        this->dir = FilePath_GetDir(_syncfilename);
+        this->dir = FilePath_GetDir(_syncfilepath);
+        tstr_copy(this->syncfilepath, dimof(this->syncfilepath), _syncfilepath);
+		_tstat(_syncfilepath, &syncfileTimestamp);
     }
     virtual ~Synchronizer() {
         free(dir);
@@ -207,15 +210,45 @@ public:
     virtual UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects) = 0;
 
     void discard_index() { this->index_discarded = true; }
-    bool is_index_discarded() const { return this->index_discarded; }
-    int rebuild_index() { this->index_discarded = false; return 0; }
+    bool is_index_discarded() const
+	{
+		// was the index manually discarded?
+		if (this->index_discarded)
+			return true;
+
+		// has the synchronization file been changed on disk?
+        struct _stat newstamp;
+        if (_tstat(syncfilepath, &newstamp) == 0
+            && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0
+            ) {
+            DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
+                    
+            // update time stamp
+			memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
+
+            return true; // the file has changed!
+        }
+        else {
+			return false;
+        }
+	}
+
+    int rebuild_index()
+	{
+		this->index_discarded = false;
+		// save sync file timestamp
+		_tstat(syncfilepath, &syncfileTimestamp);
+		return 0;
+	}
 
     UINT prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT line, UINT col, PTSTR cmdline, UINT cchCmdline);
 
 private:
     bool index_discarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
+	struct _stat syncfileTimestamp; // time stamp of sync file when index was last built
 
 protected:
+	TCHAR syncfilepath[MAX_PATH]; // path  to the synchronization file
     CoordSystem coordsys; // system used internally by the syncfile for the PDF coordinates
     PTSTR dir;            // directory where the syncfile lies
 };
@@ -236,7 +269,6 @@ public:
                u2 = dimof(SYNCTEXGZ_EXTENSION)-1;
         assert((n>u1 && _tcsicmp(_syncfilename+(n-u1),SYNCTEX_EXTENSION)==0)
                ||(n>u2 && _tcsicmp(_syncfilename+(n-u2),SYNCTEXGZ_EXTENSION)==0));
-        tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
         
         this->scanner = NULL;
         this->coordsys = TopLeft;
@@ -253,7 +285,6 @@ public:
     int rebuild_index();
 
 private:
-    TCHAR syncfilename[MAX_PATH];
     synctex_scanner_t scanner;
 };
 #endif
@@ -269,7 +300,6 @@ public:
         size_t n = lstrlen(_syncfilename);
         size_t u = dimof(PDFSYNC_EXTENSION)-1;
         assert(n>u && _tcsicmp(_syncfilename+(n-u), PDFSYNC_EXTENSION) == 0 );
-        tstr_copy(this->syncfilename, dimof(this->syncfilename), _syncfilename);
         this->coordsys = BottomLeft;
     }
 
@@ -288,7 +318,6 @@ private:
     vector<plines_section> pline_sections;
     vector<record_section> record_sections;
     vector<src_file> srcfiles;
-    TCHAR syncfilename[MAX_PATH];
 };
 
 
