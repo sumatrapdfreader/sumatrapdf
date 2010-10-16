@@ -6313,6 +6313,19 @@ bool WindowInfo::FindUpdateStatus(int current, int total)
     return !findCanceled;
 }
 
+static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
+{
+    while (hItem) {
+        TreeView_Expand(hTree, hItem, flag);
+        HTREEITEM child = TreeView_GetChild(hTree, hItem);
+        if (child)
+            TreeView_ExpandRecursively(hTree, child, flag);
+        if (subtree)
+            break;
+        hItem = TreeView_GetNextSibling(hTree, hItem);
+    }
+}
+
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -6322,6 +6335,24 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
+        case WM_KEYDOWN:
+            // consistently expand/collapse whole (sub)trees
+            if (VK_MULTIPLY == wParam && WasKeyDown(VK_SHIFT))
+                TreeView_ExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND);
+            else if (VK_MULTIPLY == wParam)
+                TreeView_ExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, true);
+            else if (VK_DIVIDE == wParam && WasKeyDown(VK_SHIFT)) {
+                HTREEITEM root = TreeView_GetRoot(hwnd);
+                if (!TreeView_GetNextSibling(hwnd, root))
+                    root = TreeView_GetChild(hwnd, root);
+                TreeView_ExpandRecursively(hwnd, root, TVE_COLLAPSE);
+            }
+            else if (VK_DIVIDE == wParam)
+                TreeView_ExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+            else
+                break;
+            TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
+            return 0;
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
         case WM_SIZE:
         case WM_HSCROLL:
