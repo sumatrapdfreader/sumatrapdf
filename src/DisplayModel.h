@@ -377,8 +377,8 @@ typedef struct {
 typedef struct {
     DisplayModel *  dm;
     int             pageNo;
-    double          zoomLevel;
     int             rotation;
+    double          zoomLevel;
     int             abort;
     DWORD           timestamp;
 } PageRenderRequest;
@@ -391,13 +391,11 @@ void              RenderQueue_Add(DisplayModel *dm, int pageNo);
 extern void       RenderQueue_RemoveForDisplayModel(DisplayModel *dm);
 extern void       cancelRenderingForDisplayModel(DisplayModel *dm);
 
-BitmapCacheEntry *BitmapCache_Find(DisplayModel *dm, int pageNo, double zoomLevel, int rotation);
-BitmapCacheEntry *BitmapCache_Find(DisplayModel *dm, int pageNo);
-bool              BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rotation);
-void              BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel, int rotation, 
+BitmapCacheEntry *BitmapCache_Find(DisplayModel *dm, int pageNo, int rotation, double zoomLevel=INVALID_ZOOM);
+bool              BitmapCache_Exists(DisplayModel *dm, int pageNo, int rotation, double zoomLevel);
+void              BitmapCache_Add(DisplayModel *dm, int pageNo, int rotation, double zoomLevel,
                                   RenderedBitmap *bitmap, double renderTime);
-bool              BitmapCache_FreePage(DisplayModel *dm, int pageNo);
-void              BitmapCache_FreeAll(void);
+bool              BitmapCache_FreePage(DisplayModel *dm=NULL, int pageNo=-1);
 bool              BitmapCache_FreeForDisplayModel(DisplayModel *dm);
 void              BitmapCache_KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
 bool              BitmapCache_FreeNotVisible(void);

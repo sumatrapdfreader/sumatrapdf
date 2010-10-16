@@ -23,7 +23,9 @@
 
 // Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
 // (using FreeType for fonts) at the expense of higher memory/spooler requirements.
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
 #define USE_GDI_FOR_RENDERING
+#endif
 #define USE_GDI_FOR_PRINTING
 
 /* Define if you want to conserve memory by always freeing cached bitmaps
@@ -876,7 +878,7 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
         }
     }
 
-    if (BitmapCache_Exists(dm, pageNo, zoomLevel, rotation)) {
+    if (BitmapCache_Exists(dm, pageNo, rotation, zoomLevel)) {
         /* This page has already been rendered in the correct dimensions
            and isn't about to be rerendered in different dimensions */
         goto LeaveCsAndExit;
@@ -3230,11 +3232,11 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             continue;
 
         LockCache();
-        BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->zoomReal(), dm->rotation());
+        BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->rotation(), dm->zoomReal());
         UINT renderDelay = 0;
 
         if (!entry) {
-            entry = BitmapCache_Find(dm, pageNo);
+            entry = BitmapCache_Find(dm, pageNo, dm->rotation());
             renderDelay = RenderQueue_GetDelay(dm, pageNo);
             if (RENDER_DELAY_UNDEFINED == renderDelay && gPageRenderRequestsCount < MAX_PAGE_REQUESTS)
                 RenderQueue_Add(dm, pageNo);
@@ -7474,7 +7476,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         else
             DBG_OUT("PageRenderThread(): failed to render a bitmap of page %d\n", req.pageNo);
         double renderTime = renderTimer.timeInMs();
-        BitmapCache_Add(req.dm, req.pageNo, req.zoomLevel, req.rotation, bmp, renderTime);
+        BitmapCache_Add(req.dm, req.pageNo, req.rotation, req.zoomLevel, bmp, renderTime);
 #ifdef CONSERVE_MEMORY
         BitmapCache_FreeNotVisible();
 #endif
