@@ -92,7 +92,21 @@ pdf_loadlink(pdf_xref *xref, fz_obj *dict)
 		{
 			kind = PDF_LLAUNCH;
 			dest = fz_dictgets(action, "F");
-			pdf_logpage("action launch (%d %d R)\n", fz_tonum(dest), fz_togen(dest));
+			pdf_logpage("action %s (%d %d R)\n", fz_toname(obj), fz_tonum(dest), fz_togen(dest));
+		}
+		/* SumatraPDF: add support for named actions */
+		else if (fz_isname(obj) && !strcmp(fz_toname(obj), "Named"))
+		{
+			kind = PDF_LNAMED;
+			dest = fz_dictgets(action, "N");
+			pdf_logpage("action %s (%d %d R)\n", fz_toname(obj), fz_tonum(dest), fz_togen(dest));
+		}
+		/* SumatraPDF: add support for more complex actions */
+		else if (fz_isname(obj) && (!strcmp(fz_toname(obj), "GoToR")))
+		{
+			kind = PDF_LACTION;
+			dest = action;
+			pdf_logpage("action %s (%d %d R)\n", fz_toname(obj), fz_tonum(dest), fz_togen(dest));
 		}
 		else
 		{

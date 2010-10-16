@@ -1516,9 +1516,11 @@ void DisplayModel::goToTocLink(pdf_link* link)
             launch_url(path);
         /* else: unsupported uri type */
         free(path);
-    } else if (PDF_LGOTO == link->kind) {
+    }
+    else if (PDF_LGOTO == link->kind) {
         goToPdfDest(link->dest);
-    } else if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
+    }
+    else if (PDF_LLAUNCH == link->kind && fz_dictgets(link->dest, "EF")) {
         fz_obj *embeddedList = fz_dictgets(link->dest, "EF");
         fz_obj *embedded = fz_dictgets(embeddedList, "UF");
         if (!embedded)
@@ -1536,7 +1538,8 @@ void DisplayModel::goToTocLink(pdf_link* link)
             fz_dropbuffer(data);
         }
         free(path);
-    } else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
+    }
+    else if (PDF_LLAUNCH == link->kind && (path = getLinkPath(link))) {
         /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
         if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
             TCHAR *basePath = FilePath_GetDir(fileName());
@@ -1546,6 +1549,47 @@ void DisplayModel::goToTocLink(pdf_link* link)
             free(basePath);
         }
         free(path);
+    }
+    else if (PDF_LNAMED == link->kind) {
+        char *name = fz_toname(link->dest);
+        if (!strcmp(name, "NextPage"))
+            goToNextPage(0);
+        else if (!strcmp(name, "PrevPage"))
+            goToPrevPage(0);
+        else if (!strcmp(name, "FirstPage"))
+            goToFirstPage();
+        else if (!strcmp(name, "LastPage"))
+            goToLastPage();
+        // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
+        else if (!strcmp(name, "FullScreen"))
+            PostMessage(((WindowInfo *)appData())->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+        else if (!strcmp(name, "GoBack"))
+            navigate(-1);
+        else if (!strcmp(name, "GoForward"))
+            navigate(1);
+        else if (!strcmp(name, "Print"))
+            PostMessage(((WindowInfo *)appData())->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+    }
+    else if (PDF_LACTION == link->kind) {
+        char *type = fz_toname(fz_dictgets(link->dest, "S"));
+        if (!strcmp(type, "GoToR") && fz_dictgets(link->dest, "F") && fz_dictgets(link->dest, "D")) {
+            pdf_link simple = { PDF_LLAUNCH, 0 };
+            simple.dest = fz_dictgets(link->dest, "F");
+            path = getLinkPath(&simple);
+            if (path && !tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
+                TCHAR *basePath = FilePath_GetDir(fileName());
+                TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
+                // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
+                WindowInfo *newWin = LoadPdf(combinedPath);
+                if (newWin && newWin->dm)
+                    newWin->dm->goToPdfDest(fz_dictgets(link->dest, "D"));
+                free(combinedPath);
+                free(basePath);
+            }
+            if (path)
+                free(path);
+        }
+        /* else unsupported action */
     }
 }
 
