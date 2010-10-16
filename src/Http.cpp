@@ -48,7 +48,8 @@ static void __stdcall InternetCallbackProc(HINTERNET hInternet,
             // Check for errors.
             if (LPINTERNET_ASYNC_RESULT(statusInfo)->dwError != 0)
             {
-                PostMessage(ctx->hwndToNotify, ctx->msg, 0, LPINTERNET_ASYNC_RESULT(statusInfo)->dwError);
+                if (!ctx->autoCheck)
+                    PostMessage(ctx->hwndToNotify, ctx->msg, 0, LPINTERNET_ASYNC_RESULT(statusInfo)->dwError);
                 _snprintf(buf, 256, "REQUEST_COMPLETE (%d) Error (%d) encountered", statusLen, GetLastError());
                 break;
             }
@@ -70,23 +71,25 @@ static void __stdcall InternetCallbackProc(HINTERNET hInternet,
             while (TRUE) {
                 ib.dwBufferLength = 1024;
                 ok = InternetReadFileEx(ctx->httpFile, &ib, IRF_ASYNC, (LPARAM)ctx);
-                if (ok || (!ok && GetLastError()==ERROR_IO_PENDING)) {
+                if (ok || GetLastError() == ERROR_IO_PENDING) {
                     DWORD readSize = ib.dwBufferLength;
                     if (readSize > 0) {
                         ctx->data.add(ib.lpvBuffer, readSize);
                     }
                 }
-                if (ok || GetLastError()!=ERROR_IO_PENDING)
+                if (ok || GetLastError() != ERROR_IO_PENDING)
                     break; // read the whole file or error
             }
+            DWORD error = GetLastError();
             free(ib.lpvBuffer);
             InternetCloseHandle(ctx->httpFile);
-            ctx->httpFile = 0;
+            ctx->httpFile = NULL;
             if (ok) {
                 // read the whole file
                 PostMessage(ctx->hwndToNotify, ctx->msg, (WPARAM) ctx, 0);
             } else {
-                PostMessage(ctx->hwndToNotify, ctx->msg, 0, 0);
+                if (!ctx->autoCheck)
+                    PostMessage(ctx->hwndToNotify, ctx->msg, 0, error);
                 delete ctx;
             }
         }
