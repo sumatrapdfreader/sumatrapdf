@@ -30,11 +30,11 @@
 
 #define THREAD_BASED_FILEWATCH
 
-#ifdef _DEBUG
+#ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif
 #include <stdlib.h>
-#ifdef _DEBUG
+#ifdef DEBUG
 #include <crtdbg.h>
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #define new DEBUG_NEW

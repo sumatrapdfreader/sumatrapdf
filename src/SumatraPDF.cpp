@@ -487,6 +487,7 @@ DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
 }
 
 #ifdef DEBUG
+// TODO: move these into their own app / hide them behind a command line flag / drop them?
 void u_hexstr()
 {
     unsigned char buf[6] = {1, 2, 33, 255, 0, 18};
@@ -534,6 +535,14 @@ void u_testMemSegment()
     assert(str_eq("a", data));
     assert(1 == size);
     free(data);
+}
+
+static void u_DoAllTests(void)
+{
+    DBG_OUT("Running tests\n");
+    u_RectI_Intersect();
+    u_testMemSegment();
+    u_hexstr();
 }
 #endif
 
@@ -592,13 +601,12 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 }
 
 static void SeeLastError(void) {
-    TCHAR *msgBuf = NULL;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    CHAR *msgBuf = NULL;
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&msgBuf, 0, NULL);
+        (LPSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    _tprintf(_T("SeeLastError(): %s\n"), msgBuf);
-    OutputDebugString(msgBuf);
+    DBG_OUT("SeeLastError(): %s\n", msgBuf);
     LocalFree(msgBuf);
 }
 
@@ -5650,7 +5658,7 @@ static void OnChar(WindowInfo *win, int key)
             free(pageInfo);
         }
         break;
-#ifdef _DEBUG
+#ifdef DEBUG
     case '$':
         gUseGdiRenderer = !gUseGdiRenderer;
         WindowInfo_Refresh(win, false);
@@ -7408,18 +7416,6 @@ static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
     }
 }
 
-static void u_DoAllTests(void)
-{
-#ifdef DEBUG
-    DBG_OUT("Running tests\n");
-    u_RectI_Intersect();
-    u_testMemSegment();
-    u_hexstr();
-#else
-    printf("Not running tests\n");
-#endif
-}
-
 static DWORD WINAPI PageRenderThread(PVOID data)
 {
     PageRenderRequest   req;
@@ -7598,6 +7594,7 @@ Exit:
     DeleteDC(hdcPrint);
 }
 
+#ifdef DEBUG
 static void EnumeratePrinters()
 {
     PRINTER_INFO_5 *info5Arr = NULL;
@@ -7631,6 +7628,7 @@ static void EnumeratePrinters()
     }
     free(info5Arr);
 }
+#endif
 
 /* Get the name of default printer or NULL if not exists.
    The caller needs to free() the result */
@@ -7806,16 +7804,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     bool                deleteFilesOnClose = false; // Delete the files which were passed into the program by command line.
 #endif
 
-#ifdef _DEBUG
+#ifdef DEBUG
     // Memory leak detection
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     //_CrtSetBreakAlloc(421);
 #endif
 
-    UNREFERENCED_PARAMETER(hPrevInstance);
-
     EnableNx();
-#ifdef _DEBUG
+
+#ifdef DEBUG
     // in release builds, DPI-awareness is enabled through the manifest
     {
         WinLibrary lib(_T("user32.dll"));
@@ -7824,9 +7821,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (SetProcessDPIAware)
             SetProcessDPIAware();
     }
-#endif
 
     u_DoAllTests();
+#endif
 
     INITCOMMONCONTROLSEX cex;
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -7862,19 +7859,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         if (is_arg("-register-for-pdf")) {
             AssociateExeWithPdfExtension();
             goto Exit;
-        }
-        else if (is_arg("-enum-printers")) {
-            EnumeratePrinters();
-            /* this is for testing only, exit immediately */
-            goto Exit;
-        }
-        else if (is_arg_with_param("-bench")) {
-            gBenchFileName = tstr_dup(argList[++i]);
-            if (i < argCount - 1)
-                gBenchPageNum = _ttoi(argList[++i]);
-            if (gBenchPageNum < 1)
-                gBenchPageNum = INVALID_PAGE_NO;
-            break;
         }
         else if (is_arg("-exit-on-print")) {
             exitOnPrint = true;
@@ -7943,9 +7927,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             deleteFilesOnClose = true;
         }
 #endif
+        else if (is_arg_with_param("-bench")) {
+            gBenchFileName = tstr_dup(argList[++i]);
+            if (i < argCount - 1)
+                gBenchPageNum = _ttoi(argList[++i]);
+            if (gBenchPageNum < 1)
+                gBenchPageNum = INVALID_PAGE_NO;
+            break;
+        }
 #ifdef DEBUG
         else if (is_arg("-console")) {
             RedirectIOToConsole();
+        }
+        else if (is_arg("-enum-printers")) {
+            EnumeratePrinters();
+            /* this is for testing only, exit immediately */
+            goto Exit;
         }
 #endif
         else {
