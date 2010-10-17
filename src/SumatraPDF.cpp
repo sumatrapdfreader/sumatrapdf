@@ -35,8 +35,14 @@
 #define CONSERVE_MEMORY
 #endif
 
+/* undefine if you don't want to use memory consuming double-buffering for rendering the PDF */
+#define DOUBLE_BUFFER
+
+/* Define if you want page numbers to be displayed in the ToC sidebar */
+// #define DISPLAY_TOC_PAGE_NUMBERS
+
 /* Next action for the benchmark mode */
-#define MSG_BENCH_NEXT_ACTION WM_USER + 1
+#define MSG_BENCH_NEXT_ACTION (WM_USER + 1)
 
 #define ZOOM_IN_FACTOR      1.2
 #define ZOOM_OUT_FACTOR     1.0 / ZOOM_IN_FACTOR
@@ -49,6 +55,10 @@ static BOOL             gDebugShowLinks = TRUE;
 #else
 static BOOL             gDebugShowLinks = FALSE;
 #endif
+
+/* if true, we're rendering everything with the GDI+ back-end,
+   otherwise Fitz is used at least for screen rendering.
+   In Debug builds, you can switch between the two by hitting the '$' key */
 #ifdef USE_GDI_FOR_RENDERING
 static bool             gUseGdiRenderer = true;
 #else
@@ -61,9 +71,6 @@ static bool             gUseGdiRenderer = false;
 #define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
-
-/* define if want to use double-buffering for rendering the PDF. Takes more memory!. */
-#define DOUBLE_BUFFER 1
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
@@ -96,7 +103,6 @@ static bool             gUseGdiRenderer = false;
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
-#define PDF_DOC_NAME            _T("Adobe PDF Document")
 #define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
 
 /* Default size for the window, happens to be american A4 size (I think) */
@@ -143,12 +149,6 @@ static HBITMAP                      gBitmapReloadingCue;
 
 static TCHAR *                      gBenchFileName;
 static int                          gBenchPageNum = INVALID_PAGE_NO;
-
-#ifdef DOUBLE_BUFFER
-static bool                         gUseDoubleBuffer = true;
-#else
-static bool                         gUseDoubleBuffer = false;
-#endif
 
 #define MAX_PAGE_REQUESTS 8
 static PageRenderRequest            gPageRenderRequests[MAX_PAGE_REQUESTS];
@@ -1600,7 +1600,9 @@ static bool WindowInfo_DoubleBuffer_New(WindowInfo *win)
     win->hdc = GetDC(win->hwndCanvas);
     win->hdcToDraw = win->hdc;
     win->GetCanvasSize();
-    if (!gUseDoubleBuffer || (0 == win->winDx()) || (0 == win->winDy()))
+
+#ifdef DOUBLE_BUFFER
+    if (0 == win->winDx() || 0 == win->winDy())
         return true;
 
     win->hdcDoubleBuffer = CreateCompatibleDC(win->hdc);
@@ -1619,7 +1621,9 @@ static bool WindowInfo_DoubleBuffer_New(WindowInfo *win)
     rect_set(&r, 0, 0, win->winDx(), win->winDy());
     FillRect(win->hdcDoubleBuffer, &r, win->presentation ? gBrushBlack : gBrushBg);
     win->hdcToDraw = win->hdcDoubleBuffer;
-    return TRUE;
+#endif
+
+    return true;
 }
 
 static void WindowInfo_DoubleBuffer_Show(WindowInfo *win, HDC hdc)
