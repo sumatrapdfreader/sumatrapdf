@@ -6253,49 +6253,45 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static POINT cur;
-    static bool resizing = false;
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
 
     switch (message)
     {
         case WM_MOUSEMOVE:
-            if (resizing) {
-                short dx, ty = 0, tw;
+            if (win->resizingTocBox) {
                 POINT pcur;
-
                 GetCursorPos(&pcur);
-                dx = (short)(pcur.x - cur.x);
-                cur = pcur;
+                ScreenToClient(win->hwndFrame, &pcur);
+                int tocWidth = pcur.x;
 
                 RECT r;
-                GetWindowRect(win->hwndTocBox, &r);
-                tw = rect_dx(&r) + dx;
-                if (tw <= SPLITTER_MIN_WIDTH) break;
-
                 GetClientRect(win->hwndFrame, &r);
-                int width = rect_dx(&r) - tw - SPLITTER_DX;
+                int width = rect_dx(&r) - tocWidth - SPLITTER_DX;
                 int height = rect_dy(&r);
 
+                // TODO: ensure that the window is always wide enough for both
+                if (tocWidth <= SPLITTER_MIN_WIDTH || width <= SPLITTER_MIN_WIDTH)
+                    break;
+
+                int tocY = 0;
                 if (gGlobalPrefs.m_showToolbar && !win->fullScreen && !win->presentation) {
-                    ty = gReBarDy + gReBarDyFrame;
-                    height -= ty;
+                    tocY = gReBarDy + gReBarDyFrame;
+                    height -= tocY;
                 }
 
-                MoveWindow(win->hwndTocBox, 0, ty, tw, height, true);
-                MoveWindow(win->hwndCanvas, tw + SPLITTER_DX, ty, width, height, true);
-                MoveWindow(hwnd, tw, ty, SPLITTER_DX, height, true);
+                MoveWindow(win->hwndTocBox, 0, tocY, tocWidth, height, true);
+                MoveWindow(win->hwndCanvas, tocWidth + SPLITTER_DX, tocY, width, height, true);
+                MoveWindow(hwnd, tocWidth, tocY, SPLITTER_DX, height, true);
                 return 0;
             }
             break;
         case WM_LBUTTONDOWN:
             SetCapture(hwnd);
-            GetCursorPos(&cur);
-            resizing = true;
+            win->resizingTocBox = true;
             break;
         case WM_LBUTTONUP:
             ReleaseCapture();
-            resizing = false;
+            win->resizingTocBox = false;
             break;
     }
     return DefWindowProc(hwnd, message, wParam, lParam);

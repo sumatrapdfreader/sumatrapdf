@@ -210,6 +210,7 @@ public:
         yScrollSpeed = 0;
         wheelAccumDelta = 0;
         delayedRepaintTimer = 0;
+        resizingTocBox = false;
     }
     
     void GetCanvasSize() { 
@@ -328,6 +329,7 @@ public:
 
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
+    bool            resizingTocBox;
 
     PdfPropertiesLayoutEl   pdfProperties[MAX_PDF_PROPERTIES];
     int                     pdfPropertiesCount;
