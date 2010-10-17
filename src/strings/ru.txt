@@ -166,6 +166,9 @@ Bookmarks
 Bytes
 Байт
 
+Can't connect to the Internet (error %#x).
+Отсутствует соединение с Интернетом (ошибка %#x).
+
 Cancel
 Отмена
 
@@ -180,6 +183,9 @@ Change Language
 
 Check for &Updates
 Проверить наличие новой версии
+
+Check for Updates
+Проверка обновлений
 
 Continuous
 Непрерывно
@@ -231,6 +237,9 @@ Enter password
 
 Enter password for %s
 Введите пароль для %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Введите командную строку, которая будет исполнена при двойном щелчке в PDF документе:
 
 Error loading PDF file.
 Ошибка открытия PDF-файла.
@@ -483,9 +492,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
 
