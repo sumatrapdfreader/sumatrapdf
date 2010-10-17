@@ -401,7 +401,6 @@ Faktor-zoum
 #Author:
 #Bookmarks
 #Bytes
-#Can't connect to the Internet (error %#x).
 #Check for Updates
 #Created:
 #Denied Permissions:

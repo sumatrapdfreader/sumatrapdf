@@ -167,9 +167,6 @@ Lesezeichen
 Bytes
 Byte
 
-Can't connect to the Internet (error %#x).
-Keine Verbindung zum Internet möglich (Fehler %#x).
-
 Cancel
 Abbrechen
 

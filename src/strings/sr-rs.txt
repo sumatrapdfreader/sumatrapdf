@@ -387,7 +387,6 @@ Zoom factor
 #Book View
 #Bookmarks
 #Bytes
-#Can't connect to the Internet (error %#x).
 #Check for Updates
 #Continuous book view
 #Created:

@@ -356,7 +356,6 @@ Paliitin/Lumayo
 #Automatically check for &updates
 #Book View
 #Bookmarks
-#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for Updates
 #Continuous book view

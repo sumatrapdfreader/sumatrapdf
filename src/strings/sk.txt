@@ -434,7 +434,6 @@ prebieha tlač dokumentu
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
-#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for Updates
 #Couldn't initialize printer

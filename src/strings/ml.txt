@@ -186,7 +186,6 @@ Zoom Out
 #Book&marks\tF12
 #Bookmarks
 #Bytes
-#Can't connect to the Internet (error %#x).
 #Cancel
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.

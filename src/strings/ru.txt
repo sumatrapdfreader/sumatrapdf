@@ -166,9 +166,6 @@ Bookmarks
 Bytes
 Байт
 
-Can't connect to the Internet (error %#x).
-Отсутствует соединение с Интернетом (ошибка %#x).
-
 Cancel
 Отмена
 
