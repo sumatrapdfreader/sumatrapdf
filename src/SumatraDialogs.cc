@@ -663,7 +663,10 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
 
             SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
             // Fill the combo with the list of possible inverse search commands
-            free(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+            TCHAR *inverseSearch = AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE));
+            // Try to select a correct default when first showing this dialog
+            if (!prefs->m_inverseSearchCmdLine)
+                prefs->m_inverseSearchCmdLine = inverseSearch;
             // Find the index of the active command line    
             LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->m_inverseSearchCmdLine);
             if (CB_ERR == ind)
@@ -676,6 +679,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
                 // select the active command
                 SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM) ind , 0);
             }
+            if (prefs->m_inverseSearchCmdLine == inverseSearch)
+                prefs->m_inverseSearchCmdLine = NULL;
+            free(inverseSearch);
         }
 #else
         ShowWindow(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), SW_HIDE);

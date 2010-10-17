@@ -771,8 +771,6 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 }
 
 static void SerializableGlobalPrefs_Init() {
-    // Detect a text editor and use it as the default inverse search handler
-    gGlobalPrefs.m_inverseSearchCmdLine = AutoDetectInverseSearchCommands();
 }
 
 static void SerializableGlobalPrefs_Deinit()
@@ -3479,17 +3477,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     win->fwdsearchmarkRects.clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
-    // No inverse search command configured
-    if (!gGlobalPrefs.m_inverseSearchCmdLine || !*gGlobalPrefs.m_inverseSearchCmdLine)
-    {
-#ifdef _TEX_ENHANCEMENT
-        WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
-#endif
-        return;
-    }
-
     // On double-clicking no error message will be shown to the user if the PDF does not have a synchronization file is present.)
-
     if (!win->pdfsync) {
         UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
 
@@ -3529,9 +3517,14 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
         return;
     }
 
+    TCHAR *inverseSearch = gGlobalPrefs.m_inverseSearchCmdLine;
+    if (!inverseSearch)
+        // Detect a text editor and use it as the default inverse search handler for now
+        inverseSearch = AutoDetectInverseSearchCommands();
+
     TCHAR cmdline[MAX_PATH];
-    if (win->pdfsync->prepare_commandline(gGlobalPrefs.m_inverseSearchCmdLine,
-      srcfilepath, line, col, cmdline, dimof(cmdline)) ) {
+    if (inverseSearch && win->pdfsync->prepare_commandline(inverseSearch,
+      srcfilepath, line, col, cmdline, dimof(cmdline)) && *cmdline) {
         //ShellExecute(NULL, NULL, cmdline, cmdline, NULL, SW_SHOWNORMAL);
         STARTUPINFO si = {0};
         PROCESS_INFORMATION pi = {0};
@@ -3544,6 +3537,13 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
         }
     }
+#ifdef _TEX_ENHANCEMENT
+    else
+        WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
+#endif
+
+    if (inverseSearch != gGlobalPrefs.m_inverseSearchCmdLine)
+        free(inverseSearch);
 }
 
 static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
