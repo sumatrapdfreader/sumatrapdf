@@ -73,12 +73,6 @@ gdiplustransformpoint(fz_matrix ctm, float x, float y)
 	return PointF(point.x, point.y);
 }
 
-typedef struct {
-	fz_path *path;
-	int evenodd;
-	float widthScale;
-} ftglyph;
-
 class userData
 {
 	userDataStackItem *stack;
@@ -107,12 +101,9 @@ public:
 		{
 			for (int i = 0; i < fz_hashlen(outlines); i++)
 			{
-				ftglyph *glyph = (ftglyph *)fz_hashgetval(outlines, i);
+				GraphicsPath *glyph = (GraphicsPath *)fz_hashgetval(outlines, i);
 				if (glyph)
-				{
-					fz_freepath(glyph->path);
 					delete glyph;
-				}
 			}
 			fz_freehash(outlines);
 		}
@@ -648,13 +639,13 @@ typedef struct {
 	int gid;
 } ftglyphkey;
 
-static ftglyph *
+static GraphicsPath *
 ftrenderglyph(fz_font *font, int gid, fz_hashtable *outlines)
 {
 	FT_Face face = (FT_Face)font->ftface;
 	ftglyphkey key = { face, gid };
 	
-	ftglyph *glyph = (ftglyph *)fz_hashfind(outlines, &key);
+	GraphicsPath *glyph = (GraphicsPath *)fz_hashfind(outlines, &key);
 	if (glyph)
 		return glyph;
 	
@@ -662,13 +653,13 @@ ftrenderglyph(fz_font *font, int gid, fz_hashtable *outlines)
 	if (fterr)
 		return NULL;
 	
-	glyph = new ftglyph;
-	glyph->path = fz_newpath();
-	FT_Outline_Decompose(&face->glyph->outline, &OutlineFuncs, glyph->path);
+	fz_path *path = fz_newpath();
+	FT_Outline_Decompose(&face->glyph->outline, &OutlineFuncs, path);
+	int evenodd = face->glyph->outline.flags & FT_OUTLINE_EVEN_ODD_FILL;
 	
-	glyph->evenodd = face->glyph->outline.flags & FT_OUTLINE_EVEN_ODD_FILL;
-	glyph->widthScale = ftgetwidthscale(font, gid);
+	glyph = gdiplusgetpath(path, fz_scale(ftgetwidthscale(font, gid), 1), evenodd);
 	
+	fz_freepath(path);
 	fz_hashinsert(outlines, &key, glyph);
 	
 	return glyph;
@@ -688,19 +679,18 @@ gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, Gr
 	
 	for (int i = 0; i < text->len; i++)
 	{
-		ftglyph *glyph = ftrenderglyph(text->font, text->els[i].gid, user->outlines);
+		GraphicsPath *glyph = ftrenderglyph(text->font, text->els[i].gid, user->outlines);
 		if (!glyph)
 			continue;
 		
 		fz_matrix ctm2 = fz_translate(text->els[i].x, text->els[i].y);
 		ctm2 = fz_concat(fz_scale(1.0 / face->units_per_EM, 1.0 / face->units_per_EM), ctm2);
 		ctm2 = fz_concat(text->trm, ctm2);
-		if (glyph->widthScale != 1.0)
-			ctm2 = fz_concat(fz_scale(glyph->widthScale, 1), ctm2);
 		if (!gpath)
 			ctm2 = fz_concat(ctm2, ctm);
 		
-		GraphicsPath *gpath2 = gdiplusgetpath(glyph->path, ctm2, glyph->evenodd);
+		GraphicsPath *gpath2 = glyph->Clone();
+		gdiplusapplytransform(gpath2, ctm2);
 		if (!gpath)
 			graphics->FillPath(brush, gpath2);
 		else
