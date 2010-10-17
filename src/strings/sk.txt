@@ -438,6 +438,7 @@ prebieha tlač dokumentu
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for Updates
 #Couldn't initialize printer
+#Enter the command-line to invoke when you double-click on the PDF document:
 #No synchronization file found
 #No synchronization info at this position
 #Page scaling

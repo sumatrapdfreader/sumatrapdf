@@ -366,6 +366,7 @@ Paliitin/Lumayo
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
+#Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
 #Hint: Use the F3 key for finding again
 #Main PDF reader can't be changed in portable mode

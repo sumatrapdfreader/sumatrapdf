@@ -242,6 +242,7 @@ Duputsa
 #Denied Permissions:
 #Document Properties
 #Download
+#Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:

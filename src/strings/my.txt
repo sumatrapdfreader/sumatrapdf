@@ -323,6 +323,7 @@ mencetak dokumen
 #Default &Zoom:
 #Denied Permissions:
 #Document Properties
+#Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
 #Found text at page %d
 #Hint: Use the F3 key for finding again

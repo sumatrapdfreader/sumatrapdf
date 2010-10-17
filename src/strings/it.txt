@@ -480,4 +480,5 @@ Stampa documento
 # Untranslated:
 #Can't connect to the Internet (error %#x).
 #Check for Updates
+#Enter the command-line to invoke when you double-click on the PDF document:
 

@@ -662,6 +662,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             MoveWindow(GetDlgItem(hDlg, IDCANCEL), rc.left, rc.top + addHeight, rect_dx(&rc), rect_dy(&rc), TRUE);
 
             SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
+            SetDlgItemText(hDlg, IDC_CMDLINE_LABEL, _TR("Enter the command-line to invoke when you double-click on the PDF document:"));
             // Fill the combo with the list of possible inverse search commands
             TCHAR *inverseSearch = AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE));
             // Try to select a correct default when first showing this dialog

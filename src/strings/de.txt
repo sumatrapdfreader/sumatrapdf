@@ -239,6 +239,9 @@ Bitte Passwort eingeben
 Enter password for %s
 Bitte Passwort für %s eingeben
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
+
 Error loading PDF file.
 Fehler beim Öffnen der Datei!
 

@@ -395,6 +395,7 @@ Zoom factor
 #Created:
 #Denied Permissions:
 #Document Properties
+#Enter the command-line to invoke when you double-click on the PDF document:
 #File Size:
 #File:
 #Modified:
