@@ -165,6 +165,9 @@ Chỉ dấu sách
 Bytes
 Bytes
 
+Can't connect to the Internet (error %#x).
+Không thể kết nối Internet (lỗi %#x).
+
 Cancel
 Hủy
 
@@ -178,6 +181,9 @@ Change Language
 Đổi ngôn ngữ (Change Language)
 
 Check for &Updates
+Kiểm tra có phiên bản mới
+
+Check for Updates
 Kiểm tra có phiên bản mới
 
 Continuous
@@ -229,7 +235,7 @@ Enter password
 Nhập mật khẩu
 
 Enter password for %s
-Nhật mật khẩu cho %s
+Nhập mật khẩu cho %s
 
 Error loading PDF file.
 Không mở được tập tin PDF.
@@ -286,7 +292,7 @@ Go to page
 Nhảy đến trang
 
 Hint: Use the F3 key for finding again
-Gợi ý: Nhấn phím F3 để tìm tiếp
+Gợi ý: Nhấn phím F3 để tìm lại
 
 Main PDF reader can't be changed in portable mode
 Không thay đổi được trình đọc PDF chính ở chế độ di động
@@ -394,7 +400,7 @@ Select content with Ctrl+left mouse button
 Đánh dấu nội dung bằng Ctrl+phím chuột trái
 
 Send by &E-mail...
-Gưi qua &email...
+Gửi qua &email...
 
 Set inverse search command-line
 Đặt dòng lệnh tìm kiếm ngược
@@ -475,7 +481,5 @@ printing document
 đang in tập tin
 
 # Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
 #Enter the command-line to invoke when you double-click on the PDF document:
 
