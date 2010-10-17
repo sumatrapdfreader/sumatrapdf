@@ -2039,7 +2039,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     WindowInfo* win;
     int         winX, winY, winDx, winDy;
 
-    if (DEFAULT_WIN_POS == gGlobalPrefs.m_windowPosX) {
+    if (DEFAULT_WIN_POS == gGlobalPrefs.m_windowPosX && DEFAULT_WIN_POS == gGlobalPrefs.m_windowDx) {
         // center the window on the primary monitor
         RECT workArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
