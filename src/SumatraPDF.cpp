@@ -3481,7 +3481,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
     win->fwdsearchmarkRects.clear();
     InvalidateRect(win->hwndCanvas, NULL, FALSE);
 
-    // On double-clicking no error message will be shown to the user if the PDF does not have a synchronization file is present.)
+    // On double-clicking no error message will be shown to the user if the PDF does not have a synchronization file
     if (!win->pdfsync) {
         UINT err = CreateSynchronizer(win->watcher.filepath(), &win->pdfsync);
 
@@ -5275,8 +5275,10 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             rcRes.right = overallrc.x + overallrc.dx;
             rcRes.bottom = overallrc.y + overallrc.dy;
             PdfSearchResult res = { page, 1, &rcRes };
-            win->dm->goToPage(page, 0, true);
-            win->dm->MapResultRectToScreen(&res);
+            if (!win->dm->pageVisible(page))
+                win->dm->goToPage(page, 0, true);
+            if(!win->dm->MapResultRectToScreen(&res))
+                triggerRepaintDisplay(win);
             if (IsIconic(win->hwndFrame))
                 ShowWindowAsync(win->hwndFrame, SW_RESTORE);
             return;

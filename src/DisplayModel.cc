@@ -1673,7 +1673,8 @@ TCHAR *DisplayModel::extractAllText(void)
     return pages.join();
 }
 
-void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
+// returns true if it was necessary to scroll the display (horizontally or vertically)
+BOOL DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
 {
     RECT extremes = { 0 };
     for (int i = 0; i < res->len; i++) {
@@ -1695,17 +1696,47 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
 
     PdfPageInfo *pageInfo = getPageInfo(res->page);
     int sx = 0, sy = 0;
-    if (extremes.bottom > pageInfo->screenY + pageInfo->bitmapY + pageInfo->bitmapDy)
-        sy = extremes.bottom - pageInfo->screenY - pageInfo->bitmapY - pageInfo->bitmapDy + 5;
-    if (sy < 0)
-        sy = 0;
+    //
+    // Vertical scroll
+    //
 
-    if (extremes.left < pageInfo->screenX + pageInfo->bitmapX) {
-        sx = extremes.left - pageInfo->screenX - pageInfo->bitmapX - 5;
+    // scroll up to move top of selection into visible area
+    if (extremes.top < 0) {
+        sy = extremes.top - 5;
+        if (sy + pageInfo->screenY + pageInfo->bitmapY < 0)
+            sy = -(pageInfo->screenY + pageInfo->bitmapY);
+    }
+    // scroll down to move top of selection into visible area
+    else if (extremes.top >= drawAreaSize.dy()) {
+        sy = extremes.top - drawAreaSize.dy() + 5;
+    }
+
+    // scroll up to move bottom of selection into visible area
+    // (if selection height fits)
+    if (extremes.bottom > drawAreaSize.dy()
+        && extremes.bottom - extremes.top <= drawAreaSize.dy() + 5) {
+        sy = extremes.bottom - drawAreaSize.dy() + 5;
+    }
+
+    //
+    // Horizontal scroll
+    //
+
+    // scroll left to move left of selection into visible area
+    if (extremes.left < 0) {
+        sx = extremes.left - 5;
         if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
             sx = -(pageInfo->screenX + pageInfo->bitmapX);
-    } else if (extremes.right > pageInfo->screenX + pageInfo->bitmapDx) {
-        sx = extremes.right - (pageInfo->screenX + pageInfo->bitmapDx) + 5;
+    }
+    // scroll right to move left of selection into visible area
+    else if (extremes.left >= drawAreaSize.dx()) {
+        sx = extremes.left - drawAreaSize.dx() + 5;
+    }
+    // scroll left to move right of selection into visible area
+    // (if selection width fits)
+    if (extremes.right > drawAreaSize.dx()
+               && extremes.right-extremes.left <= drawAreaSize.dx() - 5) {
+        sx = extremes.right - drawAreaSize.dx() + 5;
     }
 
     if (sx != 0)
@@ -1715,6 +1746,8 @@ void DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
 
     for (int i = 0; i < res->len; i++)
         OffsetRect(&res->rects[i], -sx, -sy);
+
+    return sx != 0 || sy != 0;
 }
 
 void DisplayModel::rebuildLinks()
