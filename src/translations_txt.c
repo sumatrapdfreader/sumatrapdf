@@ -1766,8 +1766,8 @@ const char *g_transTranslations[] = {
   "Kicsiny\303\255t\303\251s",
   "Nagy\303\255t\303\241s m\303\251rt\303\251ke",
   "[a file megv\303\241ltozott; friss\303\255t\303\251s] %s",
-  NULL,
-  NULL,
+  "Tartalom v\303\241g\303\263lapra",
+  "Nyomtat\303\241s",
 
   /* Translations for language lt */
   "Apie",

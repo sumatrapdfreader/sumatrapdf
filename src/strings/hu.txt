@@ -465,6 +465,12 @@ Nagyítás mértéke
 [Changes detected; refreshing] %s
 [a file megváltozott; frissítés] %s
 
+copying text
+Tartalom vágólapra
+
+printing document
+Nyomtatás
+
 # Untranslated:
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
@@ -472,6 +478,4 @@ Nagyítás mértéke
 #No result found around line %u in file %s
 #No synchronization file found
 #Set inverse search command-line
-#copying text
-#printing document
 
