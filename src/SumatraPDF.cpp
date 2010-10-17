@@ -3829,90 +3829,6 @@ static void OnMouseRightButtonClick(WindowInfo *win, int x, int y, int key)
         win->dm->goToPrevPage(0);
 }
 
-#define ABOUT_ANIM_TIMER_ID 15
-
-static void AnimState_AnimStop(AnimState *state)
-{
-    KillTimer(state->hwnd, ABOUT_ANIM_TIMER_ID);
-}
-
-static void AnimState_NextFrame(AnimState *state)
-{
-    state->frame += 1;
-    InvalidateRect(state->hwnd, NULL, FALSE);
-    UpdateWindow(state->hwnd);
-}
-
-static void AnimState_AnimStart(AnimState *state, HWND hwnd, UINT freqInMs)
-{
-    assert(IsWindow(hwnd));
-    AnimState_AnimStop(state);
-    state->frame = 0;
-    state->hwnd = hwnd;
-    SetTimer(state->hwnd, ABOUT_ANIM_TIMER_ID, freqInMs, NULL);
-    AnimState_NextFrame(state);
-}
-
-#define ANIM_FONT_NAME _T("Georgia")
-#define ANIM_FONT_SIZE_START 20
-#define SCROLL_SPEED 3
-
-static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
-{
-    AnimState *     state = &(win->animState);
-    RECT            rc;
-    HFONT           fontArial24 = NULL;
-    HFONT           origFont = NULL;
-    int             curFontSize;
-    static int      curTxtPosX = -1;
-    static int      curTxtPosY = -1;
-    static int      curDir = SCROLL_SPEED;
-
-    GetClientRect(win->hwndCanvas, &rc);
-
-    if (-1 == curTxtPosX)
-        curTxtPosX = 40;
-    if (-1 == curTxtPosY)
-        curTxtPosY = 25;
-
-    int areaDy = rect_dy(&rc);
-
-#if 0
-    if (state->frame % 24 <= 12) {
-        curFontSize = ANIM_FONT_SIZE_START + (state->frame % 24);
-    } else {
-        curFontSize = ANIM_FONT_SIZE_START + 12 - (24 - (state->frame % 24));
-    }
-#else
-    curFontSize = ANIM_FONT_SIZE_START;
-#endif
-
-    curTxtPosY += curDir;
-    if (curTxtPosY < 20)
-        curDir = SCROLL_SPEED;
-    else if (curTxtPosY > areaDy - 40)
-        curDir = -SCROLL_SPEED;
-
-    fontArial24 = Win32_Font_GetSimple(hdc, ANIM_FONT_NAME, curFontSize);
-    assert(fontArial24);
-
-    origFont = (HFONT)SelectObject(hdc, fontArial24);
-    
-    SetBkMode(hdc, TRANSPARENT);
-    FillRect(hdc, &rc, gBrushBg);
-    //DStringSprintf(&txt, "Welcome to animation %d", state->frame);
-    //DrawText (hdc, txt.pString, -1, &rc, DT_SINGLELINE);
-    TCHAR * txt = _T("Welcome to animation");
-    TextOut(hdc, curTxtPosX, curTxtPosY, txt, lstrlen(txt));
-    WindowInfo_DoubleBuffer_Show(win, hdc);
-    if (state->frame > 99)
-        state->frame = 0;
-
-    if (origFont)
-        SelectObject(hdc, origFont);
-    Win32_Font_Delete(fontArial24);
-}
-
 static void WindowInfo_DoubleBuffer_Resize_IfNeeded(WindowInfo *win)
 {
     WinResizeIfNeeded(win, false);
@@ -5696,9 +5612,6 @@ static void OnMenuContributeTranslation()
     LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
 }
 
-#define FRAMES_PER_SECS 60
-#define ANIM_FREQ_IN_MS  1000 / FRAMES_PER_SECS
-
 static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
     if (!hItem)
@@ -6898,9 +6811,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
                     if (win->presentation)
                         SetCursor(NULL);
-                    break;
-                case ABOUT_ANIM_TIMER_ID:
-                    AnimState_NextFrame(&win->animState);
                     break;
                 }
             }

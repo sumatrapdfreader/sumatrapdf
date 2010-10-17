@@ -96,13 +96,6 @@ enum WinState {
     WS_ABOUT
 };
 
-/* When doing "about" animation, remembers the current animation state */
-typedef struct {
-    HWND        hwnd;
-    int         frame;
-    UINT_PTR    timerId;
-} AnimState;
-
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
     MA_IDLE = 0,
@@ -192,7 +185,6 @@ public:
         showSelection = false;
         showForwardSearchMark = false;
         mouseAction = MA_IDLE;
-        ZeroMemory(&animState, sizeof(animState));
         ZeroMemory(&selectionRect, sizeof(selectionRect));
         fwdsearchmarkRects.clear();
         needrefresh = false;
@@ -286,8 +278,6 @@ public:
        the speed at which we should scroll, which depends on the distance
        of the mouse from the point where the user middle clicked. */
     int             xScrollSpeed, yScrollSpeed;
-
-    AnimState       animState;
 
     /* when doing a forward search, the result location is highlighted with
      * a rectangular mark in the document. These variables indicate the position of the mark
