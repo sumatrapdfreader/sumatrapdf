@@ -439,6 +439,7 @@ Factor de zoom
 #&Shrink pages to printable area (if necessary)
 #Attachment: %s
 #Bookmarks
+#Can't connect to the Internet (error %#x).
 #Check for Updates
 #Denied Permissions:
 #Enter the command-line to invoke when you double-click on the PDF document:

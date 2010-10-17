@@ -7205,7 +7205,11 @@ InitMouseWheelInfo:
             ctx = (HttpReqCtx*)wParam;
             if (win && ctx)
                 OnUrlDownloaded(win, ctx);
-            else if (ctx)
+            else if (win) {
+                TCHAR buf[256];
+                wsprintf(buf, _TR("Can't connect to the Internet (error %#x)."), lParam);
+                MessageBox(win->hwndFrame, buf, _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
+            } else if (ctx)
                 delete ctx;
             break;
 

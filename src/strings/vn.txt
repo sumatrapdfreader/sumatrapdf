@@ -165,6 +165,9 @@ Chỉ dấu sách
 Bytes
 Bytes
 
+Can't connect to the Internet (error %#x).
+Không thể kết nối Internet (lỗi %#x).
+
 Cancel
 Hủy
 
