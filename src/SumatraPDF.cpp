@@ -7206,6 +7206,9 @@ InitMouseWheelInfo:
             if (win && ctx)
                 OnUrlDownloaded(win, ctx);
             else if (win) {
+                // OnUrlDownloaded always gives feedback for !ctx->autocheck,
+                // we only get here under that condition, so also give feedback
+                // so that the user knows that the requested operation has terminated
                 TCHAR buf[256];
                 wsprintf(buf, _TR("Can't connect to the Internet (error %#x)."), lParam);
                 MessageBox(win->hwndFrame, buf, _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
