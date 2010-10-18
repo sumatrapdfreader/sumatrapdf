@@ -411,7 +411,7 @@ fz_stdconvpixmap(fz_pixmap *src, fz_pixmap *dst)
 	dstn = ds->n;
 
 	/* Brute-force for small images */
-	if (src->w * src->h < 256)
+	if (src->w * src->h < 256 || srcn != 1 /* SumatraPDF: memoizing doesn't work so well after all */)
 	{
 		for (y = 0; y < src->h; y++)
 		{
