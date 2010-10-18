@@ -638,13 +638,10 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 		{
 			buf = pdf_decodecmap(fontdesc->encoding, buf, &cpt);
 			cid = pdf_lookupcmap(fontdesc->encoding, cpt);
-			if (cid == -1)
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=983 */
-				fz_warn("no CID for code point %#06x", cpt);
+			if (cid >= 0)
+				pdf_showglyph(csi, cid);
 			else
-
-			pdf_showglyph(csi, cid);
-
+				fz_warn("cannot encode character with code point %#x", cpt);
 			if (cpt == 32)
 				pdf_showspace(csi, gstate->wordspace);
 		}

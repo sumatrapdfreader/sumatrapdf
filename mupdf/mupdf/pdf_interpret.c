@@ -25,9 +25,6 @@ pdf_newcsi(pdf_xref *xref, fz_device *dev, fz_matrix ctm)
 	csi->accumulate = 1;
 
 	csi->topctm = ctm;
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1063 */
-	csi->gcapacity = 32;
-	csi->gstate = fz_malloc(csi->gcapacity * sizeof(pdf_gstate));
 	pdf_initgstate(&csi->gstate[0], ctm);
 	csi->gtop = 0;
 
@@ -72,12 +69,10 @@ pdf_gsave(pdf_csi *csi)
 {
 	pdf_gstate *gs = csi->gstate + csi->gtop;
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1063 */
-	if (csi->gtop == csi->gcapacity - 1)
+	if (csi->gtop == nelem(csi->gstate) - 1)
 	{
-		csi->gcapacity *= 2;
-		csi->gstate = fz_realloc(csi->gstate, csi->gcapacity * sizeof(pdf_gstate));
-		gs = csi->gstate + csi->gtop;
+		fz_warn("gstate overflow in content stream");
+		return;
 	}
 
 	memcpy(&csi->gstate[csi->gtop + 1], &csi->gstate[csi->gtop], sizeof(pdf_gstate));
@@ -140,7 +135,6 @@ pdf_freecsi(pdf_csi *csi)
 	if (csi->array) fz_dropobj(csi->array);
 
 	pdf_clearstack(csi);
-	fz_free(csi->gstate); /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1063 */
 
 	fz_free(csi);
 }
