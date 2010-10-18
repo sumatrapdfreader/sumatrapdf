@@ -2250,6 +2250,8 @@ static bool LoadPdfIntoWindow(
             ss.x = state->scrollX;
             ss.y = state->scrollY;
         }
+        else if (startPage > win->dm->pageCount())
+            ss.page = win->dm->pageCount();
         zoomVirtual = state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
