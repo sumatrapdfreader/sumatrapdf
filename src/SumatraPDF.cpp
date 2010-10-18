@@ -125,6 +125,12 @@ static bool             gUseGdiRenderer = false;
 #define FIND_STATUS_MARGIN      8
 #define FIND_STATUS_PROGRESS_HEIGHT 5
 
+#define HIDE_FWDSRCHMARK_TIMER_ID                4
+#define HIDE_FWDSRCHMARK_DELAY_IN_MS             400
+#define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS     100
+#define HIDE_FWDSRCHMARK_STEPS                   5
+
+
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
@@ -194,6 +200,7 @@ SerializableGlobalPrefs             gGlobalPrefs = {
     0, // int  m_fwdsearchOffset
     COL_FWDSEARCH_BG, // int  m_fwdsearchColor
     15, // int  m_fwdsearchWidth
+    0, // bool m_fwdsearchPermanent
     FALSE, // BOOL m_invertColors
 };
 
@@ -3079,7 +3086,7 @@ static void DrawCenteredText(HDC hdc, RECT *r, const TCHAR *txt)
     DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
-static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor, int margin = 1) {
+static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor, BYTE alpha = 0x5f, int margin = 1) {
     HBITMAP hbitmap;       // bitmap handle
     BITMAPINFO bmi;        // bitmap header
     VOID *pvBits;          // pointer to DIB section
@@ -3111,7 +3118,7 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWO
     }
     bf.BlendOp = AC_SRC_OVER;
     bf.BlendFlags = 0;
-    bf.SourceConstantAlpha = 0x5f;
+    bf.SourceConstantAlpha = alpha;
     bf.AlphaFormat = AC_SRC_ALPHA;
 
     AlphaBlend(hdc, rect->x, rect->y, rect->dx, rect->dy, rectDC, 0, 0, rect->dx, rect->dy, bf);
@@ -3173,7 +3180,8 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
             recD.dy += 8;
         }
         RectI_FromRectD(&recI, &recD);
-        PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue, 0);
+        BYTE alpha = 0x5f * (double) (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmarkHideStep) / HIDE_FWDSRCHMARK_STEPS;
+        PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue, alpha, 0);
     }
 }
 
@@ -5267,7 +5275,12 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             }
             win->fwdsearchmarkPage = page;
             win->showForwardSearchMark = true;
-
+            if (!gGlobalPrefs.m_fwdsearchPermanent) 
+            {
+                win->fwdsearchmarkHideStep = 0;
+                SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
+            }
+            
             // Scroll to show the overall highlighted zone
             RECT rcRes;
             rcRes.left = overallrc.x;
@@ -6818,6 +6831,26 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     if (win->presentation)
                         SetCursor(NULL);
                     break;
+                case HIDE_FWDSRCHMARK_TIMER_ID:
+                    {
+                        win->fwdsearchmarkHideStep++;
+                        if( win->fwdsearchmarkHideStep == 1 )
+                        {
+                            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
+                        }
+                        else if( win->fwdsearchmarkHideStep >= HIDE_FWDSRCHMARK_STEPS )
+                        {
+                            KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
+                            win->showForwardSearchMark = false;
+                            win->fwdsearchmarkHideStep = 0;
+                            triggerRepaintDisplay(win);
+                        }
+                        else
+                        {
+                            triggerRepaintDisplay(win);
+                        }
+                    }
+                    break;
                 }
             }
             break;
@@ -7836,6 +7869,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
             ParseColor(&gGlobalPrefs.m_fwdsearchColor, argList[++i]);
+        }
+        else if (is_arg_with_param("-fwdsearch-permanent")) {
+            gGlobalPrefs.m_fwdsearchPermanent = _ttoi(argList[++i]);
         }
         else if (is_arg("-esc-to-exit")) {
             gGlobalPrefs.m_escToExit = TRUE;

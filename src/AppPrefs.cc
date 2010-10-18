@@ -97,6 +97,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_INT64(prefs, FWDSEARCH_OFFSET, gGlobalPrefs.m_fwdsearchOffset);
     DICT_ADD_INT64(prefs, FWDSEARCH_COLOR, gGlobalPrefs.m_fwdsearchColor);
     DICT_ADD_INT64(prefs, FWDSEARCH_WIDTH, gGlobalPrefs.m_fwdsearchWidth);
+    DICT_ADD_INT64(prefs, FWDSEARCH_PERMANENT, gGlobalPrefs.m_fwdsearchPermanent);
     return prefs;
 Error:
     benc_obj_delete((benc_obj*)prefs);
@@ -467,6 +468,8 @@ bool Prefs_Deserialize(const char *prefsTxt, size_t prefsTxtLen, FileHistoryList
     dict_get_int(global, FWDSEARCH_OFFSET, &gGlobalPrefs.m_fwdsearchOffset);
     dict_get_int(global, FWDSEARCH_COLOR, &gGlobalPrefs.m_fwdsearchColor);
     dict_get_int(global, FWDSEARCH_WIDTH, &gGlobalPrefs.m_fwdsearchWidth);
+    dict_get_int(global, FWDSEARCH_PERMANENT, &gGlobalPrefs.m_fwdsearchPermanent);
+    
 
     benc_array* fileHistory = benc_obj_as_array(benc_dict_find2(prefs, FILE_HISTORY_STR));
     if (!fileHistory)

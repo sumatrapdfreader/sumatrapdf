@@ -67,6 +67,8 @@ enum DisplayMode {
 #define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
 #define FWDSEARCH_WIDTH             "ForwardSearch_HighlightWidth"
+#define FWDSEARCH_PERMANENT         "ForwardSearch_HighlightPermanent"
+
 
 typedef struct DisplayState {
     const TCHAR *       filePath;

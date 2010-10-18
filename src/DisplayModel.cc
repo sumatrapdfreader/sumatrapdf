@@ -1700,19 +1700,19 @@ BOOL DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
     // Vertical scroll
     //
 
-    // scroll up to move top of selection into visible area
+    // scroll up to make top side of selection visible
     if (extremes.top < 0) {
         sy = extremes.top - 5;
         if (sy + pageInfo->screenY + pageInfo->bitmapY < 0)
             sy = -(pageInfo->screenY + pageInfo->bitmapY);
     }
-    // scroll down to move top of selection into visible area
+    // scroll down to make top side of selection visible
     else if (extremes.top >= drawAreaSize.dy()) {
         sy = extremes.top - drawAreaSize.dy() + 5;
     }
 
-    // scroll up to move bottom of selection into visible area
-    // (if selection height fits)
+    // scroll up to make bottom side of selection visible
+    // (if selection height fits in visible area)
     if (extremes.bottom > drawAreaSize.dy()
         && extremes.bottom - extremes.top <= drawAreaSize.dy() + 5) {
         sy = extremes.bottom - drawAreaSize.dy() + 5;
@@ -1722,18 +1722,18 @@ BOOL DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
     // Horizontal scroll
     //
 
-    // scroll left to move left of selection into visible area
+    // scroll left to make left side of selection visible
     if (extremes.left < 0) {
         sx = extremes.left - 5;
         if (sx + pageInfo->screenX + pageInfo->bitmapX < 0)
             sx = -(pageInfo->screenX + pageInfo->bitmapX);
     }
-    // scroll right to move left of selection into visible area
+    // scroll right to make left side of selection visible
     else if (extremes.left >= drawAreaSize.dx()) {
         sx = extremes.left - drawAreaSize.dx() + 5;
     }
-    // scroll left to move right of selection into visible area
-    // (if selection width fits)
+    // scroll left to make right side of selection visible
+    // (if selection width fits in visible area)
     if (extremes.right > drawAreaSize.dx()
                && extremes.right-extremes.left <= drawAreaSize.dx() - 5) {
         sx = extremes.right - drawAreaSize.dx() + 5;

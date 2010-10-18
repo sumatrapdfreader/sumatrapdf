@@ -62,9 +62,11 @@ typedef struct {
     int  m_tocDx;
 
     /* Forward search highlighting settings  */
-    int  m_fwdsearchOffset; /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
-    int  m_fwdsearchColor;  /* highlight color of the forward-search for both the standard and margin style*/
-    int  m_fwdsearchWidth;  /* width of the coloured blocks for the margin style */
+    int  m_fwdsearchOffset;    /* if <=0 then use the standard (inline) highlighting style, otherwise use the margin highlight (i.e., coloured block on the left side of the page) */
+    int  m_fwdsearchColor;     /* highlight color of the forward-search for both the standard and margin style*/
+    int  m_fwdsearchWidth;     /* width of the coloured blocks for the margin style */
+    BOOL m_fwdsearchPermanent; /* if false then highlights are hidden automatically after a short period of time,
+                                  if true then highlights remain until the next forward search */
 
     BOOL m_invertColors; /* invert all colors for accessibility reasons (experimental!) */
 } SerializableGlobalPrefs;

@@ -187,6 +187,7 @@ public:
         mouseAction = MA_IDLE;
         ZeroMemory(&selectionRect, sizeof(selectionRect));
         fwdsearchmarkRects.clear();
+        fwdsearchmarkHideStep = 0;
         needrefresh = false;
         pdfsync = NULL;
         findStatusThread = NULL;
@@ -280,11 +281,12 @@ public:
     int             xScrollSpeed, yScrollSpeed;
 
     /* when doing a forward search, the result location is highlighted with
-     * a rectangular mark in the document. These variables indicate the position of the mark
-     * and whether it is visible or not. */
-    bool            showForwardSearchMark; // is the mark visible?
+     * rectangular marks in the document. These variables indicate the position of the markers
+     * and whether they should be shown. */
+    bool            showForwardSearchMark; // are the markers visible?
     vector<RectI>   fwdsearchmarkRects;    // location of the markers in user coordinates
     int             fwdsearchmarkPage;     // page 
+    int             fwdsearchmarkHideStep; // value used to gradually hide the markers
 
     bool            showSelection;
 
