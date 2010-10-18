@@ -372,7 +372,7 @@ Page number %u inexistant
 Seite %u nicht vorhanden
 
 Page scaling
-Druckbereich
+Anpassen der Seitengröße
 
 Page:
 Seite:
@@ -384,7 +384,7 @@ Previous Page
 &Vorherige Seite
 
 Print range
-Anpassen der Seitengröße
+Druckbereich
 
 Printing problem.
 Druckerproblem
