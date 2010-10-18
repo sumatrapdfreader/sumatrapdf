@@ -237,6 +237,9 @@ Nhập mật khẩu
 Enter password for %s
 Nhập mật khẩu cho %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
+
 Error loading PDF file.
 Không mở được tập tin PDF.
 
@@ -479,7 +482,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Enter the command-line to invoke when you double-click on the PDF document:
 
