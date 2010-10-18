@@ -128,6 +128,7 @@ public:
 		Region clipRegion(Rect(0, 0, 1, 1));
 		clipRegion.Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 		pushClip(&clipRegion);
+		graphics->GetClip(&clipRegion);
 		
 		RectF bounds;
 		clipRegion.GetBounds(&bounds, graphics);
@@ -137,7 +138,8 @@ public:
 		stack->saveG = graphics;
 		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
 		graphics = _setup(new Graphics(stack->layer));
-		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
+		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
+		graphics->SetClip(&Region(stack->bounds));
 		
 		if (mask)
 		{
@@ -146,7 +148,7 @@ public:
 			
 			Graphics g2(stack->mask);
 			_setup(&g2);
-			ctm = fz_concat(ctm, fz_translate(-stack->bounds.X, -stack->bounds.Y));
+			g2.TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
 			drawPixmap(mask, ctm, 1.0f, &g2);
 		}
 	}
@@ -174,7 +176,8 @@ public:
 		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
 		delete graphics;
 		graphics = _setup(new Graphics(stack->layer));
-		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y, MatrixOrderAppend);
+		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
+		graphics->SetClip(&Region(stack->bounds));
 	}
 
 	void popClip()
