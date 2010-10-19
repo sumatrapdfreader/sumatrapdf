@@ -90,6 +90,7 @@ static bool             gUseGdiRenderer = false;
 #define WM_APP_REPAINT_TOC     (WM_APP + 15)
 #endif
 #define WM_APP_GOTO_TOC_LINK   (WM_APP + 16)
+#define WM_APP_AUTO_RELOAD     (WM_APP + 17)
 
 #ifdef SVN_PRE_RELEASE_VER
 #define ABOUT_BG_COLOR          RGB(255,0,0)
@@ -130,6 +131,8 @@ static bool             gUseGdiRenderer = false;
 #define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS     100
 #define HIDE_FWDSRCHMARK_STEPS                   5
 
+#define AUTO_RELOAD_TIMER_ID        5
+#define AUTO_RELOAD_DELAY_IN_MS     100
 
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
@@ -2362,7 +2365,7 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
 {
     // We cannot called WindowInfo_Refresh directly as it could cause race conditions between the watching thread and the main thread
     // Instead we just post a message to the main thread to trigger a reload
-    PostMessage(((WindowInfo *)param)->hwndFrame, WM_COMMAND, IDM_REFRESH, TRUE);
+    PostMessage(((WindowInfo *)param)->hwndFrame, WM_APP_AUTO_RELOAD, 0, 0);
 }
 
 static void CheckPositionAndSize(DisplayState* ds)
@@ -6853,6 +6856,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         }
                     }
                     break;
+                case AUTO_RELOAD_TIMER_ID:
+                    KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
+                    WindowInfo_Refresh(win, true);
+                    break;
                 }
             }
             break;
@@ -7279,6 +7286,11 @@ InitMouseWheelInfo:
         case WM_APP_GOTO_TOC_LINK:
             if (win && win->dm && lParam)
                 win->dm->goToTocLink((pdf_link *)lParam);
+            break;
+
+        case WM_APP_AUTO_RELOAD:
+            // delay the reload slightly, in case we get another request immediately ofter this one
+            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
             break;
 
         default:
