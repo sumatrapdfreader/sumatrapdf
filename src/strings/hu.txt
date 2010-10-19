@@ -8,6 +8,7 @@ Lang: hu Hungarian (Magyar)
 
 Contributor: Richard Magyar (magyar_richard@yahoo.com)
 Contributor: Lázár Viktor
+Contributor: Cs. Gergely, NoIP (info@mthq.org)
 
 &About
 Név&jegy
@@ -165,17 +166,26 @@ Könyvjelzők
 Bytes
 bájt
 
+Can't connect to the Internet (error %#x).
+Nem sikerült kapcsolódni az Internetre (hiba %#x).
+
 Cancel
 Mégse
 
 Cannot print this file
 Ez a file nem nyomtatható
 
+Cannot start inverse search command. Please check the command line in the settings.
+Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorsban, a beállításokat.
+
 Change Language
 Nyelv kiválasztása (Change Language)
 
 Check for &Updates
 Újabb &verzió keresése
+
+Check for Updates
+Frissítések keresése
 
 Continuous
 Folyamatos
@@ -227,6 +237,9 @@ Enter password
 
 Enter password for %s
 Írja be a(z) %s jelszavát
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 
 Error loading PDF file.
 Hiba a PDF betöltése közben.
@@ -310,7 +323,7 @@ Modified:
 Módosítva:
 
 New version %s is available. Download new version?
-Új verzió érhető el (%s). Kívánja letölteni?
+Új verzió érhető el: (%s). Kívánja letölteni?
 
 New version available.
 Új verzió érhető el.
@@ -320,6 +333,12 @@ Következő oldal
 
 No matches were found
 Nem található a dokumentumban
+
+No result found around line %u in file %s
+Nincs találat a %u. sor körül ebben a fájlban: %s
+
+No synchronization file found
+Nem található szinkronizációs fájl
 
 No synchronization info at this position
 Nem található szinkronizálási információ az adott pozícióhoz
@@ -396,6 +415,9 @@ Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
 Send by &E-mail...
 Fájl küldése &e-mail-ben
 
+Set inverse search command-line
+Fordított keresés parancsának beállítása
+
 Show &Toolbar
 Eszköztár
 
@@ -470,13 +492,4 @@ Tartalom vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Cannot start inverse search command. Please check the command line in the settings.
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
-#No result found around line %u in file %s
-#No synchronization file found
-#Set inverse search command-line
 
