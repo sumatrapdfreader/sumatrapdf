@@ -630,11 +630,15 @@ ftgetcharcode(fz_font *font, fz_textel *el)
 		return el->ucs;
 	
 	FT_UInt gid;
-	WCHAR ucs = FT_Get_First_Char(face, &gid);
-	while (gid != 0 && gid != el->gid)
-		ucs = FT_Get_Next_Char(face, ucs, &gid);
+	WCHAR ucs = FT_Get_First_Char(face, &gid), prev = ucs - 1;
+	while (gid != 0 && ucs != prev)
+	{
+		if (gid == el->gid && ucs < 256)
+			return ucs;
+		ucs = FT_Get_Next_Char(face, (prev = ucs), &gid);
+	}
 	
-	return ucs;
+	return 0;
 }
 
 typedef struct {
@@ -730,6 +734,7 @@ gdiplusruntext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush)
 			fz_text t2 = *text;
 			t2.len = 1;
 			t2.els = &text->els[i];
+			gdiplusapplytransform(graphics, oldCtm);
 			gdiplusrendertext(user, &t2, ctm, brush);
 			continue;
 		}
