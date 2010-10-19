@@ -166,6 +166,9 @@ Marcadores
 Bytes
 "Bytes"
 
+Can't connect to the Internet (error %#x).
+Não foi possível ligar à internet (erro:%#x).
+
 Cancel
 Cancelar
 
@@ -180,6 +183,9 @@ Mudar idioma
 
 Check for &Updates
 Verificar por act&ualizações
+
+Check for Updates
+Verificar atualizações
 
 Continuous
 Página única contínua
@@ -231,6 +237,9 @@ Indique a palavra passe
 
 Enter password for %s
 Indique a palavra passe para %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Insira a linha de comandos a invocar se fizer duplo clique no documento PDF:
 
 Error loading PDF file.
 Erro ao carregar o PDF.
@@ -474,9 +483,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
 
