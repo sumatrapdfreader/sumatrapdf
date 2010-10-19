@@ -411,7 +411,7 @@ fz_stdconvpixmap(fz_pixmap *src, fz_pixmap *dst)
 	dstn = ds->n;
 
 	/* Brute-force for small images */
-	if (src->w * src->h < 256 || srcn != 1 /* SumatraPDF: memoizing doesn't work so well after all */)
+	if (src->w * src->h < 256)
 	{
 		for (y = 0; y < src->h; y++)
 		{
@@ -482,9 +482,10 @@ fz_stdconvpixmap(fz_pixmap *src, fz_pixmap *dst)
 					fz_convertcolor(ss, srcv, ds, dstv);
 					for (k = 0; k < dstn; k++)
 						*d++ = dstv[k] * 255;
-					*d++ = *s++;
 
 					fz_hashinsert(lookup, s - srcn, d - dstn);
+
+					*d++ = *s++;
 				}
 			}
 		}
