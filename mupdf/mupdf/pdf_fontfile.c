@@ -248,7 +248,7 @@ decodeunicodeBMP(char* source, int sourcelen, char* dest, int destlen)
 	int converted, i;
 
 	if (sourcelen % 2 != 0)
-		return fz_throw("fonterror");
+		return fz_throw("fonterror : invalid unicode string");
 
 	memset(tmp, 0, sizeof(tmp));
 	for (i = 0; i < sourcelen / 2; i++)
@@ -256,7 +256,7 @@ decodeunicodeBMP(char* source, int sourcelen, char* dest, int destlen)
 
 	converted = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, dest, destlen, NULL, NULL);
 	if (converted == 0)
-		return fz_throw("fonterror");
+		return fz_throw("fonterror : invalid unicode string");
 
 	return fz_okay;
 }
@@ -279,9 +279,9 @@ decodeplatformstring(int platform, int enctype, char* source, int sourcelen, cha
 		{
 		case TT_MAC_ID_ROMAN:
 			if (sourcelen + 1 > destlen)
-				return fz_throw("fonterror : short buf lenth");
+				return fz_throw("fonterror : short buf length");
 			// TODO: Convert to UTF-8 from what encoding?
-			memcpy(source, dest, sourcelen);
+			memcpy(dest, source, sourcelen);
 			dest[sourcelen] = 0;
 			return fz_okay;
 		}
@@ -435,7 +435,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 			err = read_ttf_string(file, tblOffset, &ttRecord, szStyle, MAX_FACENAME);
 		else if (TT_NAME_ID_PS_NAME == nameId)
 			err = read_ttf_string(file, tblOffset, &ttRecord, szPSName, MAX_FACENAME);
-		if (err) return err;
+		if (err) fz_catch(err, "ignoring face name decoding fonterror");
 	}
 
 	if (szPSName[0])
