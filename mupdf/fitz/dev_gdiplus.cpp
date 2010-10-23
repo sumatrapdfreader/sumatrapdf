@@ -485,6 +485,8 @@ static Font *
 gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, float *out_ascent)
 {
 	assert(collection->GetFamilyCount() == 0);
+	if (!font->_data)
+		return NULL;
 	
 	if (font->_data_len != 0)
 	{
@@ -498,7 +500,13 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, f
 	}
 	
 	if (collection->GetFamilyCount() == 0)
+	{
+		if (font->_data_len == 0)
+			fz_free((void *)font->_data);
+		font->_data = NULL;
+		
 		return NULL;
+	}
 	
 	FontFamily family;
 	int found = 0;

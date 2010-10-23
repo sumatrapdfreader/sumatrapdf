@@ -190,6 +190,7 @@ fz_newfontfromfile(fz_font **fontp, char *path, int index)
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
 	}
 
+	/* SumatraPDF */
 	font->_data = fz_strdup(path);
 	font->_data_len = 0;
 
@@ -217,6 +218,7 @@ fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
 	}
 
+	/* SumatraPDF */
 	font->_data = data;
 	font->_data_len = len;
 
