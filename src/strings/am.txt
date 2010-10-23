@@ -164,6 +164,9 @@ Bookmarks
 Bytes
 Բայթ
 
+Can't connect to the Internet (error %#x).
+Հնարավոր չէ կապնվել (սխալ %#x)։
+
 Cancel
 Մերժել
 
@@ -178,6 +181,9 @@ Change Language
 
 Check for &Updates
 &Ստուգել նոր տարբերակները
+
+Check for Updates
+Ստուգել թարմացումները
 
 Continuous
 Անդադար
@@ -229,6 +235,9 @@ Enter password
 
 Enter password for %s
 Գրել գաղտնագիրը՝ %s-ի համար
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Մուտքագրեք հրաման, որը կկատարվի PDF փաստաթղթում մկնիկի կրկնակի սեղման ժամանակ. 
 
 Error loading PDF file.
 Սխալ՝ PDF ֆայլը բեռնելիս։
@@ -481,9 +490,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
 
