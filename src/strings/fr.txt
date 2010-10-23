@@ -169,6 +169,9 @@ Signets
 Bytes
 Octets
 
+Can't connect to the Internet (error %#x).
+Impossible de se connecter à Internet (error %#x)
+
 Cancel
 Annuler
 
@@ -183,6 +186,9 @@ Changer de langue (Change Language)
 
 Check for &Updates
 Vérifier les mises à jour
+
+Check for Updates
+Vérifier les mise à jours
 
 Continuous
 Continue
@@ -234,6 +240,9 @@ Entrer le mot de passe
 
 Enter password for %s
 Entrer le mot de passe pour %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF:
 
 Error loading PDF file.
 Erreur à l'ouverture du fichier PDF.
@@ -486,9 +495,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
 
