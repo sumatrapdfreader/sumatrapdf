@@ -16,6 +16,9 @@ Contributor: Felark (felark@hotmail.com)
 &Actual Size\tCtrl-1
 الحجم الحقيقي\tCtrl-1
 
+&All selected pages
+&كل الصفحات المحددة
+
 &Back\tAlt+Left Arrow
 الخلف\tAlt+Left Arrow
 
@@ -28,6 +31,9 @@ Contributor: Felark (felark@hotmail.com)
 &Don't ask me again
 &لا تسألني مرةً أخرى
 
+&Even pages only
+وحتى الصفحات فقط
+
 &File
 &ملف
 
@@ -36,6 +42,9 @@ Contributor: Felark (felark@hotmail.com)
 
 &First Page\tHome
 الصفحة الأولى\tHome
+
+&Fit pages to printable area
+&محاذاة الصفحات لناحية الطباعة
 
 &Go To
 &الذهاب إلى
@@ -67,6 +76,9 @@ Contributor: Felark (felark@hotmail.com)
 &No, thanks
 &كلا ، شكراً
 
+&Odd pages only
+&الصفحات الفردية فقط
+
 &Open\tCtrl-O
 &فتح\tCtrl-O
 
@@ -85,6 +97,9 @@ Contributor: Felark (felark@hotmail.com)
 &Print... (denied)
 &تم رفض الطباعة
 
+&Remember the password for this document
+&تذكر كلمة المرور لهذا المستند
+
 &Remember these settings for each document
 &تذكر هذه الإعدادات لكل مستند
 
@@ -93,6 +108,9 @@ Contributor: Felark (felark@hotmail.com)
 
 &Settings
 &الإعدادات
+
+&Shrink pages to printable area (if necessary)
+&مناسبة الصفحات لناحية الطباعة (عند الضرورة)
 
 &Skip this version
 &تخطي هذا الإصدار
@@ -124,6 +142,9 @@ Application:
 Associate with PDF files?
 ربط مع ملفات البي دي إف
 
+Attachment: %s
+المرفقات: %s
+
 Author:
 المؤلف
 
@@ -139,8 +160,14 @@ Book View
 Book&marks\tF12
 المفضلة\tF12
 
+Bookmarks
+العلامات
+
 Bytes
 بايتات
+
+Can't connect to the Internet (error %#x).
+لم يتم التمكن من الإتصال بالإنترنت (%#x خطأ).
 
 Cancel
 اإلغاء
@@ -156,6 +183,9 @@ Change Language
 
 Check for &Updates
 &تحقق من وجود تحديثات
+
+Check for Updates
+البحث عن النحديثات
 
 Continuous
 صفحات متتالية
@@ -207,6 +237,9 @@ Enter password
 
 Enter password for %s
 كلمة المرور لـ %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+الدخول لاستدعاء سطر الأوامر عند النقر المزدوج على المستند
 
 Error loading PDF file.
 هناك خطأ في تشغيل الملف
@@ -346,6 +379,9 @@ Page Size:
 Page number %u inexistant
 رقم الصفحة الحالية %u
 
+Page scaling
+تحجيم الصفحة
+
 Page:
 الصفحة
 
@@ -354,6 +390,9 @@ Please wait - rendering...
 
 Previous Page
 الصفحة السابقة
+
+Print range
+نطاق الطباعة
 
 Printing problem.
 يوجد مشكلة في الطباعة
@@ -453,19 +492,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Page scaling
-#Print range
 
