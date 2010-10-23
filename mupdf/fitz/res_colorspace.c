@@ -410,8 +410,29 @@ fz_stdconvpixmap(fz_pixmap *src, fz_pixmap *dst)
 	srcn = ss->n;
 	dstn = ds->n;
 
+	/* Special case for Lab colorspace (scaling of components to float) */
+	if (!strcmp(ss->name, "Lab") && srcn == 3)
+	{
+		for (y = 0; y < src->h; y++)
+		{
+			for (x = 0; x < src->w; x++)
+			{
+				srcv[0] = *s++ / 255.0f * 100;
+				srcv[1] = *s++ - 128;
+				srcv[2] = *s++ - 128;
+
+				fz_convertcolor(ss, srcv, ds, dstv);
+
+				for (k = 0; k < dstn; k++)
+					*d++ = dstv[k] * 255;
+
+				*d++ = *s++;
+			}
+		}
+	}
+
 	/* Brute-force for small images */
-	if (src->w * src->h < 256)
+	else if (src->w * src->h < 256)
 	{
 		for (y = 0; y < src->h; y++)
 		{

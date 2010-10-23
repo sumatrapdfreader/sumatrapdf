@@ -41,17 +41,14 @@ static inline float invg(float x)
 static void
 labtoxyz(fz_colorspace *cs, float *lab, float *xyz)
 {
+	/* input is in range (0..100, -128..127, -128..127) not (0..1, 0..1, 0..1) */
 	float lstar, astar, bstar, l, m, n;
-	float tmp[3];
-	tmp[0] = lab[0] * 100;
-	tmp[1] = lab[1] * 200 - 100;
-	tmp[2] = lab[2] * 200 - 100;
-	lstar = tmp[0];
-	astar = CLAMP(tmp[1], -100, 100);
-	bstar = CLAMP(tmp[2], -100, 100);
-	l = (lstar + 16) / 116 + astar / 500;
+	lstar = lab[0];
+	astar = lab[1];
+	bstar = lab[2];
 	m = (lstar + 16) / 116;
-	n = (lstar + 16) / 116 - bstar / 200;
+	l = m + astar / 500;
+	n = m - bstar / 200;
 	xyz[0] = fung(l);
 	xyz[1] = fung(m);
 	xyz[2] = fung(n);
@@ -60,17 +57,17 @@ labtoxyz(fz_colorspace *cs, float *lab, float *xyz)
 static void
 xyztolab(fz_colorspace *cs, float *xyz, float *lab)
 {
-	float tmp[3];
+	float lstar, astar, bstar;
 	float yyn = xyz[1];
 	if (yyn < 0.008856f)
-		tmp[0] = 116.0f * yyn * (1.0f / 3.0f) - 16.0f;
+		lstar = 116.0f * yyn * (1.0f / 3.0f) - 16.0f;
 	else
-		tmp[0] = 903.3f * yyn;
-	tmp[1] = 500 * (invg(xyz[0]) - invg(xyz[1]));
-	tmp[2] = 200 * (invg(xyz[1]) - invg(xyz[2]));
-	lab[0] = tmp[0] / 100;
-	lab[1] = (tmp[1] + 100) / 200;
-	lab[2] = (tmp[2] + 100) / 200;
+		lstar = 903.3f * yyn;
+	astar = 500 * (invg(xyz[0]) - invg(xyz[1]));
+	bstar = 200 * (invg(xyz[1]) - invg(xyz[2]));
+	lab[0] = lstar;
+	lab[1] = astar;
+	lab[2] = bstar;
 }
 
 static fz_colorspace kdevicelab = { -1, "Lab", 3, labtoxyz, xyztolab };

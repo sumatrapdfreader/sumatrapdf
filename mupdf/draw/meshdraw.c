@@ -374,9 +374,10 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 		while (len--)
 		{
 			int v = *s++;
+			int a = *s++;
 			for (k = 0; k < conv->n - 1; k++)
-				*d++ = clut[v][k];
-			*d++ = *s++;
+				*d++ = fz_mul255(clut[v][k], a);
+			*d++ = a;
 		}
 		fz_paintpixmap(dest, conv, 255);
 		fz_droppixmap(conv);
