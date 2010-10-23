@@ -9,6 +9,7 @@ Lang: es Spanish (Español)
 Contributor: Jose Virgili
 Contributor: LinoSP [http://reactos.wordpress.com]
 Contributor: pragmart [http://putolinux.wordpress.com]
+Contributor: Pedro Sanchez
 
 &About
 &Acerca de...
@@ -166,6 +167,9 @@ Marcadores
 Bytes
 Bytes
 
+Can't connect to the Internet (error %#x).
+No se puede conectar a Internet (error %#x).
+
 Cancel
 Cancelar
 
@@ -180,6 +184,9 @@ Cambiar Idioma (Change Language)
 
 Check for &Updates
 &Comprobar actualizaciones
+
+Check for Updates
+Comprobar Actualizaciones
 
 Continuous
 Continua
@@ -231,6 +238,9 @@ Introduzca contraseña
 
 Enter password for %s
 Introduzca contraseña para %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Introduzca el comando para ejecutar al hacer doble-clic en el documento PDF:
 
 Error loading PDF file.
 Error al Cargar el Archivo PDF.
@@ -474,9 +484,4 @@ copiado de texto
 
 printing document
 impresión de documento
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Enter the command-line to invoke when you double-click on the PDF document:
 
