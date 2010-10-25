@@ -234,7 +234,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
     assert(fileName);
     PdfEngine *engine = new PdfEngine();
     if (!engine->load(fileName, win, tryrepair)) {
-        delete pdfEngine;
+        delete engine;
         return false;
     }
     pdfEngine = engine;
@@ -1501,6 +1501,18 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
                 tstr_trans_chars(path, _T("/"), _T("\\"));
             }
             break;
+        case PDF_LACTION:
+            obj = fz_dictgets(link->dest, "S");
+            if (!strcmp(fz_toname(obj), "GoToR")) {
+                obj = fz_dictgets(link->dest, "F");
+                if (fz_isstring(obj)) {
+                    WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
+                    path = wstr_to_tstr(ucs2);
+                    free(ucs2);
+                    tstr_trans_chars(path, _T("/"), _T("\\"));
+                }
+            }
+            break;
     }
 
     return path;
@@ -1572,11 +1584,9 @@ void DisplayModel::goToTocLink(pdf_link* link)
     }
     else if (PDF_LACTION == link->kind) {
         char *type = fz_toname(fz_dictgets(link->dest, "S"));
-        if (!strcmp(type, "GoToR") && fz_dictgets(link->dest, "F") && fz_dictgets(link->dest, "D")) {
-            pdf_link simple = { PDF_LLAUNCH, 0 };
-            simple.dest = fz_dictgets(link->dest, "F");
-            path = getLinkPath(&simple);
-            if (path && !tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
+        if (!strcmp(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
+            /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
+            if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
                 TCHAR *basePath = FilePath_GetDir(fileName());
                 TCHAR *combinedPath = tstr_cat3(basePath, _T(DIR_SEP_STR), path);
                 // TODO: respect fz_tobool(fz_dictgets(link->dest, "NewWindow"))
@@ -1586,8 +1596,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
                 free(combinedPath);
                 free(basePath);
             }
-            if (path)
-                free(path);
+            free(path);
         }
         /* else unsupported action */
     }
