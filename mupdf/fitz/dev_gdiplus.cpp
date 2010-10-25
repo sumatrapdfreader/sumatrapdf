@@ -296,22 +296,24 @@ protected:
 			return;
 		}
 		
-		switch (blendmode)
+		seperableBlend funcs[] = {
+			BlendNormal,
+			BlendMultiply,
+			BlendScreen,
+			BlendOverlay,
+			BlendDarken,
+			BlendLighten,
+			BlendColorDodge,
+			BlendColorBurn,
+			BlendHardLight,
+			NULL, // FZ_BSOFTLIGHT
+			BlendDifference,
+			BlendExclusion,
+			NULL // FZ_BHUE, FZ_BSATURATION, FZ_BCOLOR, FZ_BLUMINOSITY
+		};
+		
+		if (blendmode >= nelem(funcs) || !funcs[blendmode])
 		{
-		case FZ_BNORMAL:
-		case FZ_BMULTIPLY:
-		case FZ_BSCREEN:
-		case FZ_BOVERLAY:
-		case FZ_BDARKEN:
-		case FZ_BLIGHTEN:
-		case FZ_BCOLORDODGE:
-		case FZ_BCOLORBURN:
-		case FZ_BHARDLIGHT:
-		// case FZ_BSOFTLIGHT:
-		case FZ_BDIFFERENCE:
-		case FZ_BEXCLUSION:
-			break;
-		default:
 			fz_warn("blend mode %d not implemented for GDI+", blendmode);
 			return;
 		}
@@ -329,28 +331,30 @@ protected:
 		bgStack->layer->LockBits(boundsBg, ImageLockModeRead, PixelFormat32bppARGB, &dataBg);
 		delete boundsBg;
 		
-		seperableBlend funcs[] = {
-			BlendNormal,
-			BlendMultiply,
-			BlendScreen,
-			BlendOverlay,
-			BlendDarken,
-			BlendLighten,
-			BlendColorDodge,
-			BlendColorBurn,
-			BlendHardLight,
-			NULL, // FZ_BSOFTLIGHT
-			BlendDifference,
-			BlendExclusion,
-			NULL // FZ_BHUE, FZ_BSATURATION, FZ_BCOLOR, FZ_BLUMINOSITY
-		};
-		
 		LPBYTE Scan0 = (LPBYTE)data.Scan0, bgScan0 = (LPBYTE)dataBg.Scan0;
 		for (int row = 0; row < bounds.Height; row++)
+		{
 			for (int col = 0; col < bounds.Width; col++)
+			{
 				if (bgScan0[row * dataBg.Stride + col * 4 + 3] > 0)
+				{
+					BYTE alpha = Scan0[row * data.Stride + col * 4 + 3];
+					BYTE bgAlpha = bgScan0[row * dataBg.Stride + col * 4 + 3];
+					BYTE newAlpha = BlendScreen(alpha, bgAlpha);
+					
 					for (int i = 0; i < 3; i++)
-						Scan0[row * data.Stride + col * 4 + i] = funcs[blendmode](Scan0[row * data.Stride + col * 4 + i], bgScan0[row * dataBg.Stride + col * 4 + i]);
+					{
+						BYTE color = Scan0[row * data.Stride + col * 4 + i];
+						BYTE bgColor = bgScan0[row * dataBg.Stride + col * 4 + i];
+						// basic compositing formula
+						BYTE newColor = (1 - 1.0 * alpha / newAlpha) * bgColor + 1.0 * alpha / newAlpha * ((255 - bgAlpha) * color + bgAlpha * funcs[blendmode](color, bgColor)) / 255;
+						
+						Scan0[row * data.Stride + col * 4 + i] = newColor;
+					}
+					Scan0[row * data.Stride + col * 4 + 3] = newAlpha;
+				}
+			}
+		}
 		
 		bgStack->layer->UnlockBits(&dataBg);
 		bitmap->UnlockBits(&data);
