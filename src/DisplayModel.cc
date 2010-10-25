@@ -1503,6 +1503,8 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
             break;
         case PDF_LACTION:
             obj = fz_dictgets(link->dest, "S");
+            if (!fz_isname(obj))
+                break;
             if (!strcmp(fz_toname(obj), "GoToR")) {
                 obj = fz_dictgets(link->dest, "F");
                 if (fz_isstring(obj)) {
@@ -1584,7 +1586,7 @@ void DisplayModel::goToTocLink(pdf_link* link)
     }
     else if (PDF_LACTION == link->kind) {
         char *type = fz_toname(fz_dictgets(link->dest, "S"));
-        if (!strcmp(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
+        if (type && !strcmp(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
                 TCHAR *basePath = FilePath_GetDir(fileName());
