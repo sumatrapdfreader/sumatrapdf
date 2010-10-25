@@ -200,6 +200,9 @@ Fortlaufende Doppelseiten
 Contribute Translation
 Übersetzung beisteuern
 
+Copying text was denied (copying as image only)
+Text kopieren verweigert (nur als Bild kopiert)
+
 Could not open Printer
 Konnte den Drucker nicht ansprechen.
 

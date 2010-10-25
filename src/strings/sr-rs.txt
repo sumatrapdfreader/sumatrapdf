@@ -390,6 +390,7 @@ Zoom factor
 #Can't connect to the Internet (error %#x).
 #Check for Updates
 #Continuous book view
+#Copying text was denied (copying as image only)
 #Created:
 #Denied Permissions:
 #Document Properties

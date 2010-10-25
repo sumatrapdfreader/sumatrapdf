@@ -496,3 +496,6 @@ copier le text
 printing document
 imprimer le document
 
+# Untranslated:
+#Copying text was denied (copying as image only)
+

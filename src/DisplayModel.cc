@@ -1674,12 +1674,12 @@ TCHAR *DisplayModel::getTextInRegion(int pageNo, RectD *region)
 }
 
 /* extract all text from the document (caller needs to free() the result) */
-TCHAR *DisplayModel::extractAllText(void)
+TCHAR *DisplayModel::extractAllText(RenderTarget target)
 {
     VStrList pages;
 
     for (int pageNo = 1; pageNo <= pageCount(); pageNo++)
-        pages.push_back(pdfEngine->ExtractPageText(pageNo));
+        pages.push_back(pdfEngine->ExtractPageText(pageNo, _T(DOS_NEWLINE), NULL, target));
 
     return pages.join();
 }

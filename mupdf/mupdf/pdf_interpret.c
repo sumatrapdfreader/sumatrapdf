@@ -139,6 +139,34 @@ pdf_freecsi(pdf_csi *csi)
 	fz_free(csi);
 }
 
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
+static int
+pdf_isinvisibleocg(pdf_xref *xref, fz_obj *xobj)
+{
+	char targetState[16];
+	fz_obj *obj = fz_dictgets(xobj, "OC");
+	fz_obj *target = fz_dictgets(xref->trailer, "_MuPDF_OCG_Usage");
+
+	if (!obj || !fz_isdict(obj) || !fz_isname(target))
+		return 0;
+
+	obj = fz_dictgets(obj, "OCGs");
+	if (fz_isarray(obj))
+		obj = fz_arrayget(obj, 0);
+	if (!obj || !fz_isdict(obj))
+		return 0;
+
+	obj = fz_dictget(fz_dictgets(obj, "Usage"), target);
+	if (!obj)
+		return 0;
+
+	fz_strlcpy(targetState, fz_toname(target), nelem(targetState));
+	fz_strlcat(targetState, "State", nelem(targetState));
+	obj = fz_dictgets(obj, targetState);
+
+	return fz_isname(obj) && !strcmp(fz_toname(obj), "OFF");
+}
+
 fz_error
 pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 {
@@ -540,6 +568,10 @@ Lsetcolorspace:
 			subtype = fz_dictgets(obj, "Subtype");
 			if (!fz_isname(subtype))
 				return fz_throw("no XObject subtype specified");
+
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
+			if (pdf_isinvisibleocg(csi->xref, obj))
+				break;
 
 			if (!strcmp(fz_toname(subtype), "Form") && fz_dictgets(obj, "Subtype2"))
 				subtype = fz_dictgets(obj, "Subtype2");
@@ -1546,6 +1578,10 @@ pdf_runpage(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm)
 		if (flags & (1 << 1)) /* Hidden */
 			continue;
 		if (flags & (1 << 5)) /* NoView */
+			continue;
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1076 */
+		if (pdf_isinvisibleocg(xref, annot->obj))
 			continue;
 
 		csi = pdf_newcsi(xref, dev, ctm);

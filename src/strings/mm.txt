@@ -239,6 +239,7 @@ Zoom Out
 #Check for Updates
 #Continuous book view
 #Contribute Translation
+#Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:

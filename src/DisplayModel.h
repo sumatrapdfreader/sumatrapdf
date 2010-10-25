@@ -133,14 +133,15 @@ public:
                          fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA,
+                         RenderTarget target=Target_View,
                          bool useGdi=false) {
         if (!pdfEngine) return NULL;
         return pdfEngine->renderBitmap(pageNo, zoomReal, rotation, pageRect,
-            abortCheckCbkA, abortCheckCbkDataA, useGdi);
+            abortCheckCbkA, abortCheckCbkDataA, target, useGdi);
     }
-    bool renderPage(HDC hDC, int pageNo, RECT *screenRect, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL) {
+    bool renderPage(HDC hDC, int pageNo, RECT *screenRect, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
         if (!pdfEngine) return false;
-        return pdfEngine->renderPage(hDC, pageNo, screenRect, NULL, zoomReal, rotation, pageRect);
+        return pdfEngine->renderPage(hDC, pageNo, screenRect, NULL, zoomReal, rotation, pageRect, target);
     }
 
     /* number of pages in PDF document */
@@ -242,7 +243,7 @@ public:
     void            rotateBy(int rotation);
 
     TCHAR *         getTextInRegion(int pageNo, RectD *region);
-    TCHAR *         extractAllText(void);
+    TCHAR *         extractAllText(RenderTarget target=Target_View);
 
     void            clearSearchHit(void);
     void            setSearchHit(int pageNo, RectD *hitRect);

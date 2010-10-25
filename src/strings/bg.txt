@@ -392,6 +392,7 @@ Zoom factor
 #Bytes
 #Can't connect to the Internet (error %#x).
 #Check for Updates
+#Copying text was denied (copying as image only)
 #Created:
 #Denied Permissions:
 #Document Properties

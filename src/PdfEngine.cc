@@ -40,6 +40,24 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
     return fz_okay;
 }
 
+fz_error pdf_runpagefortarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target)
+{
+    fz_obj *targetName = fz_newname(
+        target == Target_View ? "View" :
+        target == Target_Print ? "Print" :
+        target == Target_Export ? "Export" :
+        "<unknown>"
+    );
+    fz_dictputs(xref->trailer, "_MuPDF_OCG_Usage", targetName);
+
+    fz_error error = pdf_runpage(xref, page, dev, ctm);
+
+    fz_dictdels(xref->trailer, "_MuPDF_OCG_Usage");
+    fz_dropobj(targetName);
+
+    return error;
+}
+
 HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 {
     int w, h, rows8;
@@ -499,7 +517,7 @@ fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
     return viewctm(&partialPage, zoom, rotate);
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, double zoomReal, int rotation, fz_rect *pageRect)
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, double zoomReal, int rotation, fz_rect *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
@@ -523,7 +541,7 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix 
     fz_bbox clipBox = { screenRect->left, screenRect->top, screenRect->right, screenRect->bottom };
     fz_device *dev = fz_newgdiplusdevice(hDC, clipBox);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpage(_xref, page, dev, *ctm);
+    fz_error error = pdf_runpagefortarget(_xref, page, dev, *ctm, target);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
 
@@ -535,6 +553,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
                            fz_rect *pageRect,
                            BOOL (*abortCheckCbkA)(void *data),
                            void *abortCheckCbkDataA,
+                           RenderTarget target,
                            bool useGdi)
 {
     pdf_page* page = getPdfPage(pageNo);
@@ -557,7 +576,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RECT rc = { 0, 0, w, h };
-        bool success = renderPage(hDCMem, page, &rc, &ctm);
+        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, NULL, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {
@@ -582,7 +601,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         _drawcache = fz_newglyphcache();
     fz_device *dev = fz_newdrawdevice(_drawcache, image);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpage(_xref, page, dev, ctm);
+    fz_error error = pdf_runpagefortarget(_xref, page, dev, ctm, target);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
     RenderedBitmap *bitmap = NULL;
@@ -730,7 +749,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     free(pageText);
 }
 
-TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coords_out)
+TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target)
 {
     if (!page)
         return NULL;
@@ -738,7 +757,7 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
     fz_textspan *text = fz_newtextspan();
     fz_device *dev = fz_newtextdevice(text);
     EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpage(_xref, page, dev, fz_identity);
+    fz_error error = pdf_runpagefortarget(_xref, page, dev, fz_identity, target);
     LeaveCriticalSection(&_xrefAccess);
     fz_freedevice(dev);
     if (error) {

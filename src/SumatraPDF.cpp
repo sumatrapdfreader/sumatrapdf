@@ -3386,6 +3386,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
     if (!win) return;
     if (!win->selectionOnPage) return;
     if (!OpenClipboard(NULL)) return;
+    EmptyClipboard();
 
     if (win->dm->pdfEngine->hasPermission(PDF_PERM_COPY)) {
         VStrList selections;
@@ -3393,7 +3394,6 @@ static void CopySelectionToClipboard(WindowInfo *win)
             selections.push_back(win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
         TCHAR *selText = selections.join();
 
-        EmptyClipboard();
         HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(selText) + 1) * sizeof(TCHAR));
         if (handle) {
             TCHAR *globalText = (TCHAR *)GlobalLock(handle);
@@ -3409,6 +3409,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
         }
         free(selText);
     }
+    else
+        WindowInfo_ShowMessage_Asynch(win, _TR("Copying text was denied (copying as image only)"), true);
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = win->selectionOnPage;
@@ -3418,14 +3420,10 @@ static void CopySelectionToClipboard(WindowInfo *win)
     clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
 
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
-        win->dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
-    if (bmp && bmp->getBitmap()) {
-        HBITMAP hBmp = (HBITMAP)CopyImage(bmp->getBitmap(), IMAGE_BITMAP, bmp->dx(), bmp->dy(), 0);
-        if (hBmp) {
-            if (!SetClipboardData(CF_BITMAP, hBmp))
-                SeeLastError();
-            DeleteObject(hBmp);
-        }
+        win->dm->rotation(), &clipRegion, NULL, NULL, Target_Export, gUseGdiRenderer);
+    if (bmp) {
+        if (!SetClipboardData(CF_BITMAP, bmp->getBitmap()))
+            SeeLastError();
         delete bmp;
     }
 
@@ -4073,9 +4071,9 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 rc.top = (printAreaHeight - sSize.dy() * zoom) / 2;
                 rc.right = printAreaWidth - rc.left;
                 rc.bottom = printAreaHeight - rc.top;
-                dm->renderPage(hdc, sel->pageNo, &rc, 100.0 * zoom, dm->rotation(), &clipRegion);
+                dm->renderPage(hdc, sel->pageNo, &rc, 100.0 * zoom, dm->rotation(), &clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, gUseGdiRenderer);
+                RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, Target_Print, gUseGdiRenderer);
                 if (bmp) {
                     bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
                         (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -4129,9 +4127,9 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
             rc.right = printAreaWidth - rc.left;
             rc.bottom = printAreaHeight - rc.top;
             OffsetRect(&rc, -leftMargin, -topMargin);
-            dm->renderPage(hdc, pageNo, &rc, 100.0 * zoom, rotation);
+            dm->renderPage(hdc, pageNo, &rc, 100.0 * zoom, rotation, NULL, Target_Print);
 #else
-            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, gUseGdiRenderer);
+            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
                 // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
@@ -4365,7 +4363,7 @@ static void OnMenuSaveAs(WindowInfo *win)
     }
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && tstr_endswithi(realDstFileName, _T(".txt"))) {
-        TCHAR *text = win->dm->extractAllText();
+        TCHAR *text = win->dm->extractAllText(Target_Export);
         char *textUTF8 = tstr_to_utf8(text);
         char *textUTF8BOM = str_cat("\xEF\xBB\xBF", textUTF8);
         free(textUTF8);
@@ -7456,7 +7454,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         }
         assert(!req.abort);
         MsTimer renderTimer;
-        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req, gUseGdiRenderer);
+        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req, Target_View, gUseGdiRenderer);
         renderTimer.stop();
         LockCache();
         gCurPageRenderReq = NULL;

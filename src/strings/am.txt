@@ -491,3 +491,6 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#Copying text was denied (copying as image only)
+

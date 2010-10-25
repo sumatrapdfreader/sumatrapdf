@@ -483,3 +483,6 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Copying text was denied (copying as image only)
+

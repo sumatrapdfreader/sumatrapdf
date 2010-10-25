@@ -437,6 +437,7 @@ prebieha tlač dokumentu
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for Updates
+#Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Enter the command-line to invoke when you double-click on the PDF document:
 #No synchronization file found

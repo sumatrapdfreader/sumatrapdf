@@ -484,3 +484,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Copying text was denied (copying as image only)
+

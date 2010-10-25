@@ -202,6 +202,7 @@ Uzaklaştır
 #Check for &Updates
 #Check for Updates
 #Continuous book view
+#Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:

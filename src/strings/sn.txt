@@ -233,6 +233,7 @@ Duputsa
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for Updates
 #Continuous book view
+#Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:

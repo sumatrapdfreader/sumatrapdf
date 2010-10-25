@@ -27,6 +27,9 @@ class WindowInfo;
 /* one PDF user space unit equals 1/72 inch */
 #define PDF_FILE_DPI        72.0
 
+/* certain OCGs will only be rendered for some of these (e.g. watermarks) */
+enum RenderTarget { Target_View, Target_Print, Target_Export };
+
 class PdfTocItem {
 public:
     TCHAR *title;
@@ -124,10 +127,12 @@ public:
                          fz_rect *pageRect, /* if NULL: defaults to the page's mediabox */
                          BOOL (*abortCheckCbkA)(void *data),
                          void *abortCheckCbkDataA,
+                         RenderTarget target=Target_View,
                          bool useGdi=false);
     bool PdfEngine::renderPage(HDC hDC, int pageNo, RECT *screenRect,
-                         fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL) {
-        return renderPage(hDC, getPdfPage(pageNo), screenRect, ctm, zoomReal, rotation, pageRect);
+                         fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0,
+                         fz_rect *pageRect=NULL, RenderTarget target=Target_View) {
+        return renderPage(hDC, getPdfPage(pageNo), screenRect, ctm, zoomReal, rotation, pageRect, target);
     }
 
     bool hasPermission(int permission);
@@ -143,8 +148,8 @@ public:
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
-    TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL) {
-        return ExtractPageText(getPdfPage(pageNo), lineSep, coords_out);
+    TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL, RenderTarget target=Target_View) {
+        return ExtractPageText(getPdfPage(pageNo), lineSep, coords_out, target);
     };
     fz_obj   * getPdfInfo(void) { return _xref ? fz_dictgets(_xref->trailer, "Info") : NULL; }
     int        getPdfVersion(void) const { return _xref->version; }
@@ -165,8 +170,9 @@ protected:
     pdf_page      * getPdfPage(int pageNo);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
     bool            renderPage(HDC hDC, pdf_page *page, RECT *screenRect,
-                               fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0, fz_rect *pageRect=NULL);
-    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL);
+                               fz_matrix *ctm=NULL, double zoomReal=0, int rotation=0,
+                               fz_rect *pageRect=NULL, RenderTarget target=Target_View);
+    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL, RenderTarget target=Target_View);
 
     PdfTocItem    * buildTocTree(pdf_outline *entry);
     void            linkifyPageText(pdf_page *page);
