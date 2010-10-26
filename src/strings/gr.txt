@@ -165,6 +165,9 @@ Bookmarks
 Bytes
 Bytes
 
+Can't connect to the Internet (error %#x).
+Δεν είναι δυνατή η σύνδεση με το Internet (σφάλμα %#x).
+
 Cancel
 Άκυρο
 
@@ -180,6 +183,9 @@ Change Language
 Check for &Updates
 &Έλεγχος για νέα έκδοση
 
+Check for Updates
+Έλεγχος για ενημερώσεις
+
 Continuous
 Μια σελίδα, συνεχόμενα
 
@@ -191,6 +197,9 @@ Continuous facing
 
 Contribute Translation
 Βοηθήστε στη μετάφραση
+
+Copying text was denied (copying as image only)
+Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
 
 Could not open Printer
 Απέτυχε το άνοιγμα του εκτυπωτή
@@ -230,6 +239,9 @@ Enter password
 
 Enter password for %s
 Εισάγετε κωδικό για το %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 
 Error loading PDF file.
 Σφάλμα κατά τη φόρτωση του αρχείου PDF.
@@ -473,10 +485,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
 
