@@ -199,6 +199,9 @@ Continuous facing
 Contribute Translation
 Помочь с переводом
 
+Copying text was denied (copying as image only)
+Скопировать текст невозможно (копируется как изображение)
+
 Could not open Printer
 Принтер недоступен
 
@@ -492,7 +495,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Copying text was denied (copying as image only)
 
