@@ -1168,17 +1168,34 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     repaintDisplay();
 }
 
-void DisplayModel::zoomTo(double zoomVirtual)
+void DisplayModel::zoomTo(double zoomVirtual, POINT *fixPt)
 {
     ScrollState ss;
     if (getScrollState(&ss)) {
+        ScrollState center;
+        if (fixPt) {
+            center.x = fixPt->x;
+            center.y = fixPt->y;
+            if (!cvtScreenToUser(&center.page, &center.x, &center.y))
+                fixPt = NULL;
+        }
+
         //DBG_OUT("DisplayModel::zoomTo() zoomVirtual=%.6f\n", _zoomVirtual);
         relayout(zoomVirtual, rotation());
         setScrollState(&ss);
+
+        if (fixPt) {
+            // scroll so that the fix point remains in the same screen location after zooming
+            cvtUserToScreen(center.page, &center.x, &center.y);
+            if ((int)(center.x - fixPt->x) != 0)
+                scrollXBy(center.x - fixPt->x);
+            if ((int)(center.y - fixPt->y) != 0)
+                scrollYBy(center.y - fixPt->y, false);
+        }
     }
 }
 
-void DisplayModel::zoomBy(double zoomFactor)
+void DisplayModel::zoomBy(double zoomFactor, POINT *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
     double newZoom = _zoomReal / _dpiFactor * zoomFactor;
@@ -1187,7 +1204,7 @@ void DisplayModel::zoomBy(double zoomFactor)
         return;
     if (newZoom < ZOOM_MIN)
         return;
-    zoomTo(newZoom);
+    zoomTo(newZoom, fixPt);
 }
 
 void DisplayModel::rotateBy(int newRotation)
@@ -1414,6 +1431,10 @@ Error:
 
 bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
 {
+    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    if (!pageInfo)
+        return false;
+
     double zoom = zoomReal();
     int rot = rotation();
     fz_point p;
@@ -1426,8 +1447,6 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
 
     fz_matrix ctm = pdfEngine->viewctm(pageNo, zoom, rot);
     fz_point tp = fz_transformpoint(ctm, p);
-
-    PdfPageInfo *pageInfo = getPageInfo(pageNo);
 
     rot += pageInfo->rotation;
     normalizeRotation(&rot);
@@ -1788,7 +1807,7 @@ int DisplayModel::getLinkCount()
 
 bool DisplayModel::getScrollState(ScrollState *state)
 {
-    state->page = currentPageNo();
+    state->page = firstVisiblePageNo();
     if (state->page <= 0)
         return false;
 

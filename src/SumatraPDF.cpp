@@ -2699,6 +2699,39 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
         dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
+static void WindowInfo_ZoomToSelection(WindowInfo *win, double factor, bool relative)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm)
+        return;
+
+    POINT pt;
+    bool zoomToPt = win->showSelection && win->selectionOnPage;
+
+    if (zoomToPt) {
+        RectI selRect = win->selectionOnPage->selectionCanvas;
+        for (SelectionOnPage *sel = win->selectionOnPage->next; sel; sel = sel->next)
+            selRect = RectI_Union(selRect, sel->selectionCanvas);
+
+        RECT rc;
+        GetClientRect(win->hwndCanvas, &rc);
+        pt.x = 2 * selRect.x + selRect.dx - rect_dx(&rc) / 2;
+        pt.y = 2 * selRect.y + selRect.dy - rect_dy(&rc) / 2;
+
+        pt.x = CLAMP(pt.x, selRect.x, selRect.x + selRect.dx);
+        pt.y = CLAMP(pt.y, selRect.y, selRect.y + selRect.dy);
+
+        ScrollState ss = { 0, pt.x, pt.y };
+        if (!win->dm->cvtScreenToUser(&ss.page, &ss.x, &ss.y) || !win->dm->pageVisible(ss.page))
+            zoomToPt = false;
+    }
+
+    if (relative)
+        win->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
+    else
+        win->dm->zoomTo(factor, zoomToPt ? &pt : NULL);
+}
+
 /*
 Structure of registry entries for associating Sumatra with PDF files.
 
@@ -3967,7 +4000,7 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
         return;
 
     double zoom = ZoomMenuItemToZoom(menuId);
-    win->dm->zoomTo(zoom);
+    WindowInfo_ZoomToSelection(win, zoom, false);
     ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 }
 
@@ -3979,7 +4012,7 @@ static void OnMenuCustomZoom(WindowInfo *win)
     double zoom = win->dm->zoomVirtual();
     if (DIALOG_CANCEL_PRESSED == Dialog_CustomZoom(win->hwndFrame, &zoom))
         return;
-    win->dm->zoomTo(zoom);
+    WindowInfo_ZoomToSelection(win, zoom, false);
     MenuUpdateZoom(win);
 }
 
@@ -5537,10 +5570,10 @@ static void OnChar(WindowInfo *win, int key)
         WindowInfo_ToggleZoom(win);
         break;
     case '+':
-        win->dm->zoomBy(ZOOM_IN_FACTOR);
+        WindowInfo_ZoomToSelection(win, ZOOM_IN_FACTOR, true);
         break;
     case '-':
-        win->dm->zoomBy(ZOOM_OUT_FACTOR);
+        WindowInfo_ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
         break;
     case '/':
         OnMenuFind(win);
@@ -6960,12 +6993,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDT_VIEW_ZOOMIN:
                     if (win->dm)
-                        win->dm->zoomBy(ZOOM_IN_FACTOR);
+                        WindowInfo_ZoomToSelection(win, ZOOM_IN_FACTOR, true);
                     break;
 
                 case IDT_VIEW_ZOOMOUT:
                     if (win->dm)
-                        win->dm->zoomBy(ZOOM_OUT_FACTOR);
+                        WindowInfo_ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
                     break;
 
                 case IDM_ZOOM_6400:
@@ -7189,10 +7222,13 @@ InitMouseWheelInfo:
             // Note: not all mouse drivers correctly report the Ctrl key's state
             if ((LOWORD(wParam) & MK_CONTROL) || WasKeyDown(VK_CONTROL))
             {
-                if (GET_WHEEL_DELTA_WPARAM(wParam) < 0)
-                    win->dm->zoomBy(ZOOM_OUT_FACTOR);
-                else
-                    win->dm->zoomBy(ZOOM_IN_FACTOR);
+                POINT pt;
+                GetCursorPos(&pt);
+                ScreenToClient(win->hwndCanvas, &pt);
+
+                short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+                double factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
+                win->dm->zoomBy(factor, &pt);
                 return 0;
             }
 

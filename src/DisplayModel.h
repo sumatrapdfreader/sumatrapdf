@@ -238,8 +238,8 @@ public:
     void            scrollYTo(int yOff);
     void            scrollYBy(int dy, bool changePage);
 
-    void            zoomTo(double zoomVirtual);
-    void            zoomBy(double zoomFactor);
+    void            zoomTo(double zoomVirtual, POINT *fixPt=NULL);
+    void            zoomBy(double zoomFactor, POINT *fixPt=NULL);
     void            rotateBy(int rotation);
 
     TCHAR *         getTextInRegion(int pageNo, RectD *region);
