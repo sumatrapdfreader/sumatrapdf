@@ -141,7 +141,7 @@ fz_paintspancolor(byte * restrict dp, byte * restrict mp, int n, int w, byte *co
 static inline void
 fz_paintspanmask2(byte * restrict dp, byte * restrict sp, byte * restrict mp, int w)
 {
-	do
+	while (w--)
 	{
 		int masa;
 		int ma = *mp++;
@@ -154,13 +154,12 @@ fz_paintspanmask2(byte * restrict dp, byte * restrict sp, byte * restrict mp, in
 		*dp = FZ_COMBINE2(*sp, ma, *dp, masa);
 		sp++; dp++;
 	}
-	while (--w);
 }
 
 static inline void
 fz_paintspanmask4(byte * restrict dp, byte * restrict sp, byte * restrict mp, int w)
 {
-	do
+	while (w--)
 	{
 		int masa;
 		int ma = *mp++;
@@ -177,7 +176,6 @@ fz_paintspanmask4(byte * restrict dp, byte * restrict sp, byte * restrict mp, in
 		*dp = FZ_COMBINE2(*sp, ma, *dp, masa);
 		sp++; dp++;
 	}
-	while (--w);
 }
 
 static inline void
@@ -192,12 +190,11 @@ fz_paintspanmaskN(byte * restrict dp, byte * restrict sp, byte * restrict mp, in
 		masa = FZ_COMBINE(sp[n-1], ma);
 		masa = 255-masa;
 		masa = FZ_EXPAND(masa);
-		do
+		while (k--)
 		{
 			*dp = FZ_COMBINE2(*sp, ma, *dp, masa);
 			sp++; dp++;
 		}
-		while (--k);
 	}
 }
 
@@ -218,7 +215,7 @@ static inline void
 fz_paintspan2alpha(byte * restrict dp, byte * restrict sp, int w, int alpha)
 {
 	alpha = FZ_EXPAND(alpha);
-	do
+	while (w--)
 	{
 		int masa = FZ_COMBINE(sp[1], alpha);
 		*dp = FZ_BLEND(*sp, *dp, masa);
@@ -226,14 +223,13 @@ fz_paintspan2alpha(byte * restrict dp, byte * restrict sp, int w, int alpha)
 		*dp = FZ_BLEND(*sp, *dp, masa);
 		dp++; sp++;
 	}
-	while (--w);
 }
 
 static inline void
 fz_paintspan4alpha(byte * restrict dp, byte * restrict sp, int w, int alpha)
 {
 	alpha = FZ_EXPAND(alpha);
-	do
+	while (w--)
 	{
 		int masa = FZ_COMBINE(sp[3], alpha);
 		*dp = FZ_BLEND(*sp, *dp, masa);
@@ -245,25 +241,22 @@ fz_paintspan4alpha(byte * restrict dp, byte * restrict sp, int w, int alpha)
 		*dp = FZ_BLEND(*sp, *dp, masa);
 		sp++; dp++;
 	}
-	while (--w);
 }
 
 static inline void
 fz_paintspanNalpha(byte * restrict dp, byte * restrict sp, int n, int w, int alpha)
 {
 	alpha = FZ_EXPAND(alpha);
-	do
+	while (w--)
 	{
 		int masa = FZ_COMBINE(sp[n-1], alpha);
 		int k = n;
-		do
+		while (k--)
 		{
 			*dp = FZ_BLEND(*sp++, *dp, masa);
 			dp++;
 		}
-		while(--k);
 	}
-	while (--w);
 }
 
 /* Blend source over destination */
@@ -271,19 +264,18 @@ fz_paintspanNalpha(byte * restrict dp, byte * restrict sp, int n, int w, int alp
 static inline void
 fz_paintspan1(byte * restrict dp, byte * restrict sp, int w)
 {
-	do
+	while (w--)
 	{
 		int t = FZ_EXPAND(255 - sp[0]);
 		*dp = *sp++ + FZ_COMBINE(*dp, t);
 		dp ++;
 	}
-	while (--w);
 }
 
 static inline void
 fz_paintspan2(byte * restrict dp, byte * restrict sp, int w)
 {
-	do
+	while (w--)
 	{
 		int t = FZ_EXPAND(255 - sp[1]);
 		*dp = *sp++ + FZ_COMBINE(*dp, t);
@@ -291,13 +283,12 @@ fz_paintspan2(byte * restrict dp, byte * restrict sp, int w)
 		*dp = *sp++ + FZ_COMBINE(*dp, t);
 		dp++;
 	}
-	while (--w);
 }
 
 static inline void
 fz_paintspan4(byte * restrict dp, byte * restrict sp, int w)
 {
-	do
+	while (w--)
 	{
 		int t = FZ_EXPAND(255 - sp[3]);
 		*dp = *sp++ + FZ_COMBINE(*dp, t);
@@ -309,24 +300,21 @@ fz_paintspan4(byte * restrict dp, byte * restrict sp, int w)
 		*dp = *sp++ + FZ_COMBINE(*dp, t);
 		dp++;
 	}
-	while (--w);
 }
 
 static inline void
 fz_paintspanN(byte * restrict dp, byte * restrict sp, int n, int w)
 {
-	do
+	while (w--)
 	{
 		int k = n;
 		int t = FZ_EXPAND(255 - sp[n-1]);
-		do
+		while (k--)
 		{
 			*dp = *sp++ + FZ_COMBINE(*dp, t);
 			dp++;
 		}
-		while (--k);
 	}
-	while (--w);
 }
 
 void
@@ -380,13 +368,12 @@ fz_paintpixmap(fz_pixmap *dst, fz_pixmap *src, int alpha)
 	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
 	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 
-	do
+	while (h--)
 	{
 		fz_paintspan(dp, sp, n, w, alpha);
 		sp += src->w * n;
 		dp += dst->w * n;
 	}
-	while (--h);
 }
 
 void
@@ -415,12 +402,11 @@ fz_paintpixmapmask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk)
 	mp = msk->samples + ((y - msk->y) * msk->w + (x - msk->x)) * msk->n;
 	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
 
-	do
+	while (h--)
 	{
 		fz_paintspanmask(dp, sp, mp, n, w);
 		sp += src->w * n;
 		dp += dst->w * n;
 		mp += msk->w;
 	}
-	while (--h);
 }

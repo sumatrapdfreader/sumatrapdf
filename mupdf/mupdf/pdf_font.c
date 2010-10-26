@@ -318,11 +318,8 @@ loadsimplefont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
 	pdf_logfont("basefont %s -> %s\n", basefont, fontname);
 
 	descriptor = fz_dictgets(dict, "FontDescriptor");
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1014 */
-	if (descriptor && basefont && !strchr(basefont, '+'))
-		fz_dictputs(descriptor, "FontName", fz_dictgets(dict, "BaseFont"));
 	if (descriptor)
-		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, nil);
+		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, nil, basefont);
 	else
 		error = pdf_loadbuiltinfont(fontdesc, fontname);
 	if (error)
@@ -667,7 +664,7 @@ loadcidfont(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict, fz_obj *enco
 
 	descriptor = fz_dictgets(dict, "FontDescriptor");
 	if (descriptor)
-		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, collection);
+		error = pdf_loadfontdescriptor(fontdesc, xref, descriptor, collection, basefont);
 	else
 		error = fz_throw("syntaxerror: missing font descriptor");
 	if (error)
@@ -914,7 +911,7 @@ loadtype0(pdf_fontdesc **fontdescp, pdf_xref *xref, fz_obj *dict)
  */
 
 fz_error
-pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection)
+pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, char *collection, char *basefont)
 {
 	fz_error error;
 	fz_obj *obj1, *obj2, *obj3, *obj;
@@ -924,7 +921,11 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 
 	pdf_logfont("load fontdescriptor {\n");
 
-	origname = fz_toname(fz_dictgets(dict, "FontName"));
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1014 */
+	if (!strchr(basefont, ',') || strchr(basefont, '+'))
+		origname = fz_toname(fz_dictgets(dict, "FontName"));
+	else
+		origname = basefont;
 	fontname = cleanfontname(origname);
 
 	pdf_logfont("fontname %s -> %s\n", origname, fontname);
@@ -966,7 +967,7 @@ pdf_loadfontdescriptor(pdf_fontdesc *fontdesc, pdf_xref *xref, fz_obj *dict, cha
 	}
 	else
 	{
-		if (origname != fontname && 0 /* prefer local fonts to the built-in ones */)
+		if (origname != fontname && 0 /* SumatraPDF: prefer system fonts to the built-in ones */)
 			error = pdf_loadbuiltinfont(fontdesc, fontname);
 		else
 			error = pdf_loadsystemfont(fontdesc, fontname, collection);

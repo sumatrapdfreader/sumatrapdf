@@ -28,90 +28,53 @@ mouse button selects an area and copies the enclosed text to the clipboard
 buffer. Using the scroll-wheel while pressing Control zooms in/out, if
 Shift is pressed on the other hand then the page is panned.
 .TP
-.B PAGE NAVIGATION
-These commands relate to the actual page number in the PDF file, not to
-numbers given by any kind of page label.
+.B L, R
+Rotate page left (clockwise) or right (counter-clockwise).
 .TP
-.B f, space
-Go to the next page without paning to top of page. If a number has been
-entered, go that number of pages forward instead of just one page.
+.B h, j, k, l
+Scroll page left, down, up, or right.
 .TP
-.B b, backspace
-Go to the previous page without paning to top of page. If a number has been
-entered, go that number of pages backwards instead of just one page.
-.TP
-.B g, return
-Go to the page number specified. If no number has been entered, go to the
-first page.
-.TP
-.B G
-Go to the last page.
-.TP
-.B t
-Tag the viewed page and record it in the history. When clicking links
-within a PDF file to follow the link pages are automatically tagged.
-.TP
-.B m
-Return to the previously tagged page in the history.
-.TP
-.B p
-Go to the previous page and pan to bottom of page. If a number has been
-entered, go that number of pages backwards instead of just one page.
-.TP
-.B n
-Go to the next page and pan to top of page. If a number has been entered,
-go that number of pages forward instead of just one page.
-.TP
-.B B
-Go ten pages backwards and pan to top of page.
-.TP
-.B F
-Go ten pages forward and pan to top of page.
-.TP
-.B PAN PAGE
+.B \+, \-
+Zoom in or out.
 .TP
 .B w
-Shrinkwrap window frame to page size.
-.TP
-.B d
-Pan the shown page down 1/10th of its height.
-.TP
-.B u
-Pan the shown page up 1/10th of its height.
-.TP
-.B ,
-Pan the shown page right 1/10th of its width.
-.TP
-.B .
-Pan the shown page left 1/10th of its width.
-.TP
-.B 0\-9
-Entered numbers are used by some commands.
-.TP
-.B ZOOM AND ROTATE PAGE
-.TP
-.B \+, \=
-Zoom in.
-.TP
-.B \-
-Zoom out.
-.TP
-.B <
-Rotate page counter-clockwise or left by 90\(de.
-.TP
-.B >
-Rotate page clockwise or right by 90\(de.
-.TP
-.B a
-Rotate page counter-clockwise or left by 15\(de.
-.TP
-.B s
-Rotate page clockwise or right by 15\(de.
-.TP
-.B FILE HANDLING
+Shrinkwrap window to fit the page.
 .TP
 .B r
-Reload the file and display the same page, if still present.
+Reload file.
+.TP
+.B . pgdn right space
+Go to the next page
+.TP
+.B , pgup left b
+Go to the previous page
+.TP
+.B <, >
+Skip back/forth 10 pages at a time.
+.TP
+.B m
+Mark page for snap back.
+.TP
+.B t
+Pop back to the latest mark.
+.TP
+.B [0-9]m
+Save the current page number in the numbered register.
+.TP
+.B [0-9]t
+Go to the page saved in the numbered register.
+.TP
+.B 123g
+Go to page 123.
+.TP
+.B /
+Search for text.
+.TP
+.B n, N
+Find the next/previous search result.
+.TP
+.B c
+Toggle between color and grayscale rendering.
 .SH SEE ALSO
 .BR pdfclean (1),
 .BR pdfdraw (1),
