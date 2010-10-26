@@ -147,7 +147,8 @@ pdf_loadlinks(pdf_link **linkp, pdf_xref *xref, fz_obj *annots)
 		obj = fz_arrayget(annots, i);
 
 		subtype = fz_dictgets(obj, "Subtype");
-		if (fz_isname(subtype) && !strcmp(fz_toname(subtype), "Link"))
+		// SumatraPDF: all annotations can act as links
+		// if (fz_isname(subtype) && !strcmp(fz_toname(subtype), "Link"))
 		{
 			pdf_link *temp = pdf_loadlink(xref, obj);
 			if (temp)
