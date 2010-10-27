@@ -693,7 +693,8 @@ gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, Gr
 		user->outlines = fz_newhash(509, sizeof(ftglyphkey));
 	
 	FT_Face face = (FT_Face)text->font->ftface;
-	FT_Set_Char_Size(face, 64 * face->units_per_EM, 64 * face->units_per_EM, 72, 72);
+	FT_UShort charSize = CLAMP(face->units_per_EM, 1000, 65536);
+	FT_Set_Char_Size(face, charSize, charSize, 72, 72);
 	FT_Set_Transform(face, NULL, NULL);
 	
 	for (int i = 0; i < text->len; i++)
@@ -703,7 +704,7 @@ gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, Gr
 			continue;
 		
 		fz_matrix ctm2 = fz_translate(text->els[i].x, text->els[i].y);
-		ctm2 = fz_concat(fz_scale(1.0 / 64 / face->units_per_EM, 1.0 / 64 / face->units_per_EM), ctm2);
+		ctm2 = fz_concat(fz_scale(1.0 / charSize, 1.0 / charSize), ctm2);
 		ctm2 = fz_concat(text->trm, ctm2);
 		if (!gpath)
 			ctm2 = fz_concat(ctm2, ctm);
