@@ -202,6 +202,9 @@ Continue - Page double
 Contribute Translation
 Contribuer à la traduction
 
+Copying text was denied (copying as image only)
+La copie en texte est refusée (seul une capture d’écran est faite)
+
 Could not open Printer
 Impossible d'accéder à l'imprimante
 
@@ -495,7 +498,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#Copying text was denied (copying as image only)
 

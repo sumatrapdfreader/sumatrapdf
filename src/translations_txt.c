@@ -5583,7 +5583,7 @@ const char *g_transTranslations[] = {
   "Continue comme livre",
   "Continue - Page double",
   "Contribuer \303\240 la traduction",
-  NULL,
+  "La copie en texte est refus\303\251e (seul une capture d\342\200\231\303\251cran est faite)",
   "Impossible d'acc\303\251der \303\240 l'imprimante",
   "Impossible d'initialiser l'imprimante",
   "Impossible de g\303\251n\303\251rer la page",
