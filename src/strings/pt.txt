@@ -110,7 +110,7 @@ Le&mbrar estas definições para todos os documentos
 &Definições
 
 &Shrink pages to printable area (if necessary)
-&Reduzir páginas para a área de impressão (se necessário)
+&Reduzir páginas à área de impressão (se necessário)
 
 &Skip this version
 Ignorar &esta versão
@@ -152,7 +152,7 @@ Automatic
 Automático
 
 Automatically check for &updates
-Verificar act&ualizações automaticamente
+Verificar at&ualizações automaticamente
 
 Book View
 Como livro
@@ -167,7 +167,7 @@ Bytes
 "Bytes"
 
 Can't connect to the Internet (error %#x).
-Não foi possível ligar à internet (erro:%#x).
+Não foi possível ligar à internet (erro %#x).
 
 Cancel
 Cancelar
@@ -182,7 +182,7 @@ Change Language
 Mudar idioma
 
 Check for &Updates
-Verificar por act&ualizações
+Verificar at&ualizações
 
 Check for Updates
 Verificar atualizações
@@ -198,6 +198,9 @@ Página dupla contínua
 
 Contribute Translation
 Ajudar na tradução
+
+Copying text was denied (copying as image only)
+A cópia do texto foi rejeitada (copie como imagem)
 
 Could not open Printer
 Não foi possível abrir a impressora
@@ -239,7 +242,7 @@ Enter password for %s
 Indique a palavra passe para %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Insira a linha de comandos a invocar se fizer duplo clique no documento PDF:
+Insira a linha de comandos a invocar ao fazer duplo clique no documento PDF:
 
 Error loading PDF file.
 Erro ao carregar o PDF.
@@ -326,7 +329,7 @@ No matches were found
 Nenhuma ocorrência encontrada
 
 No result found around line %u in file %s
-Nenhum resultado próximo da linha %u no ficheiro %s
+Nenhum resultado perto da linha %u no ficheiro %s
 
 No synchronization file found
 Nenhum ficheiro de sincronização encontrado
@@ -371,13 +374,13 @@ Page number %u inexistant
 A página %u não existe
 
 Page scaling
-Ajustamento de páginas
+Ajuste de páginas
 
 Page:
 Página:
 
 Please wait - rendering...
-Por favor aguarde - a processar...
+Por favor, aguarde - a processar...
 
 Previous Page
 Página anterior
@@ -422,7 +425,7 @@ Single Page
 Página única
 
 Source file %s has no synchronization point
-O ficheiro fonte %s não tem ponto de sincronização
+O ficheiro %s não tem ponto de sincronização
 
 Subject:
 Assunto:
@@ -446,7 +449,7 @@ Title:
 Título:
 
 Unknown source file (%s)
-Ficheiro fonte (%s) desconhecido
+O ficheiro (%s) é desconhecido
 
 View
 Ver
@@ -476,14 +479,11 @@ Zoom factor
 Fator de ampliação
 
 [Changes detected; refreshing] %s
-[Mudanças detectadas; actualizando] %s
+[Mudanças detetadas; atualizando] %s
 
 copying text
 copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Copying text was denied (copying as image only)
 
