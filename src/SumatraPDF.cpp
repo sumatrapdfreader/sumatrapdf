@@ -168,7 +168,6 @@ static HANDLE                       gPageRenderSem;
 static HANDLE                       gPageRenderClearQueue;
 static HANDLE                       gPageRenderQueueCleared;
 static PageRenderRequest *          gCurPageRenderReq;
-static bool                         gSuspendRendering = false;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -5804,13 +5803,6 @@ static DWORD WINAPI FindThread(LPVOID data)
     FindThreadData *ftd = (FindThreadData *)data;
     WindowInfo *win = ftd->win;
 
-    // Suspend page rendering while finding, since MuPDF isn't thread-safe
-    LockCache();
-    gSuspendRendering = true;
-    UnlockCache();
-    while (gCurPageRenderReq)
-        Sleep(10);
-
     PdfSearchResult *rect;
     if (ftd->wasModified || win->dm->lastFoundPage() != win->dm->currentPageNo())
         rect = win->dm->Find(ftd->direction, ftd->text);
@@ -5823,7 +5815,6 @@ static DWORD WINAPI FindThread(LPVOID data)
         if (!ftd->wasModified || win->dm->currentPageNo() != startPage)
             rect = win->dm->Find(ftd->direction, ftd->text, startPage);
     }
-    gSuspendRendering = false;
     free(ftd);
 
     if (win->findCanceled)
@@ -7462,7 +7453,6 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         LockCache();
         gCurPageRenderReq = NULL;
         int count = gPageRenderRequestsCount;
-        bool suspended = gSuspendRendering;
         UnlockCache();
         if (0 == count) {
             HANDLE handles[2] = { gPageRenderSem, gPageRenderClearQueue };
@@ -7481,7 +7471,7 @@ static DWORD WINAPI PageRenderThread(PVOID data)
                 continue;
             }
         }
-        if (0 == gPageRenderRequestsCount || suspended) {
+        if (0 == gPageRenderRequestsCount) {
             continue;
         }
         LockCache();
