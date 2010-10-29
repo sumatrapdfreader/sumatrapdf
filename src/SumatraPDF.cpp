@@ -1076,7 +1076,7 @@ MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl-0"),            IDM_ZOOM_FIT_PAGE,          0  },
     { _TRN("&Actual Size\tCtrl-1"),         IDM_ZOOM_ACTUAL_SIZE,       0  },
     { _TRN("Fit &Width\tCtrl-2"),           IDM_ZOOM_FIT_WIDTH,         0  },
-    { _TRN("Custom &Zoom..."),              IDM_ZOOM_CUSTOM,            0  },
+    { _TRN("Custom &Zoom...\tCtrl-Y"),      IDM_ZOOM_CUSTOM,            0  },
     { SEP_ITEM },
 #ifndef BUILD_RM_VERSION
     { _TRN("6400%"),                        IDM_ZOOM_6400,              0  },

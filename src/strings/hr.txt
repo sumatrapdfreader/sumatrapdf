@@ -179,8 +179,8 @@ Nije moguće iscrtati stranicu
 Created:
 Stvoreno:
 
-Custom &Zoom...
-&Prilagođeno uvećanje...
+Custom &Zoom...\tCtrl-Y
+&Prilagođeno uvećanje...\tCtrl-Y
 
 Default &Layout:
 Pretpostavljeni &izgled:

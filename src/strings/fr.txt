@@ -217,8 +217,8 @@ Impossible de générer la page
 Created:
 Créé :
 
-Custom &Zoom...
-Zoom personnalisé...
+Custom &Zoom...\tCtrl-Y
+Zoom personnalisé...\tCtrl-Y
 
 Default &Layout:
 Mise en page par défaut :

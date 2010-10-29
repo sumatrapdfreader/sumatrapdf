@@ -172,8 +172,8 @@ Nepodarilo sa načítať stranu
 Created:
 Vytvorený:
 
-Custom &Zoom...
-Vlastná zmena veľkosti...
+Custom &Zoom...\tCtrl-Y
+Vlastná zmena veľkosti...\tCtrl-Y
 
 Default &Layout:
 Predvolené umiestnenie:

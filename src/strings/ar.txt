@@ -211,8 +211,8 @@ Couldn't render the page
 Created:
 الإنشاء
 
-Custom &Zoom...
-&تنسيق التقريب
+Custom &Zoom...\tCtrl-Y
+&تنسيق التقريب\tCtrl-Y
 
 Default &Layout:
 الشكل الافتراضي

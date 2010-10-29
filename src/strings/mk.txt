@@ -179,8 +179,8 @@ Couldn't render the page
 Created:
 Создадено на:
 
-Custom &Zoom...
-&Зумирање по избор...
+Custom &Zoom...\tCtrl-Y
+&Зумирање по избор...\tCtrl-Y
 
 Default &Layout:
 Основен &изглед:

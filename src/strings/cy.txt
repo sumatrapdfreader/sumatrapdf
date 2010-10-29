@@ -180,8 +180,8 @@ Methu cyflwyno'r dudalen
 Created:
 Crëwyd:
 
-Custom &Zoom...
-&Addasu Chwyddo...
+Custom &Zoom...\tCtrl-Y
+&Addasu Chwyddo...\tCtrl-Y
 
 Default &Layout:
 &Cynllun Rhagosodedig:

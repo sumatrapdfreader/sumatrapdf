@@ -156,8 +156,8 @@ Tiskalnika ni mogoče inicializirati
 Couldn't render the page
 Strani ni mogoče upodobiti
 
-Custom &Zoom...
-Povečava po &meri ...
+Custom &Zoom...\tCtrl-Y
+Povečava po &meri ...\tCtrl-Y
 
 Default &Layout:
 &Privzeta postavitev:

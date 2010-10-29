@@ -212,8 +212,8 @@ No se pudo renderizar la página
 Created:
 Creado:
 
-Custom &Zoom...
-&Zoom personalizado...
+Custom &Zoom...\tCtrl-Y
+&Zoom personalizado...\tCtrl-Y
 
 Default &Layout:
 &Vista Predeterminada:

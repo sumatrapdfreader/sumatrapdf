@@ -156,8 +156,8 @@ Couldn't initialize printer
 Couldn't render the page
 Немогуће приказивање стране
 
-Custom &Zoom...
-Изборно увећање...
+Custom &Zoom...\tCtrl-Y
+Изборно увећање...\tCtrl-Y
 
 Default &Layout:
 Подразумевани приказ

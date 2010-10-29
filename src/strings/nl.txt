@@ -185,8 +185,8 @@ Kan deze pagina niet weergegeven
 Created:
 Gemaakt:
 
-Custom &Zoom...
-&Aangepaste Zoom...
+Custom &Zoom...\tCtrl-Y
+&Aangepaste Zoom...\tCtrl-Y
 
 Default &Layout:
 Standaard opmaak:

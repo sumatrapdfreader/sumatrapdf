@@ -166,8 +166,8 @@ Ny yllys darbari pryntyer
 Couldn't render the page
 Ny yllys rendra folen
 
-Custom &Zoom...
-&Zoum arbennik...
+Custom &Zoom...\tCtrl-Y
+&Zoum arbennik...\tCtrl-Y
 
 Default &Layout:
 &Delinyans savonek:

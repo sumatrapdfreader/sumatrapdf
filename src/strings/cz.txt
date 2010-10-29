@@ -181,8 +181,8 @@ Stránku nebylo možno vyrenderovat
 Created:
 Vytvořeno:
 
-Custom &Zoom...
-&Volitelné přiblížení...
+Custom &Zoom...\tCtrl-Y
+&Volitelné přiblížení...\tCtrl-Y
 
 Default &Layout:
 &Výchozí rozmístění

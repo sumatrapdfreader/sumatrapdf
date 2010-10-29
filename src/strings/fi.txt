@@ -180,8 +180,8 @@ Sivun tulkinta epäonnistui
 Created:
 Tehty:
 
-Custom &Zoom...
-&Mukautettu lähennys...
+Custom &Zoom...\tCtrl-Y
+&Mukautettu lähennys...\tCtrl-Y
 
 Default &Layout:
 Oletus&tyyli:

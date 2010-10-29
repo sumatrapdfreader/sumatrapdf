@@ -214,8 +214,8 @@ Couldn't render the page
 Created:
 Создан:
 
-Custom &Zoom...
-Указать масштаб...
+Custom &Zoom...\tCtrl-Y
+Указать масштаб...\tCtrl-Y
 
 Default &Layout:
 &Компоновка по умолчанию

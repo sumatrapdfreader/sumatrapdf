@@ -204,8 +204,8 @@ Kunne ikke vise siden
 Created:
 Oprettet:
 
-Custom &Zoom...
-Brugerdefineret &zoom...
+Custom &Zoom...\tCtrl-Y
+Brugerdefineret &zoom...\tCtrl-Y
 
 Default &Layout:
 Standard &Layout:

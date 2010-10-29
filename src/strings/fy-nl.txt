@@ -176,8 +176,8 @@ Dizze side kin net werjûn wurde
 Created:
 Makke:
 
-Custom &Zoom...
-&Oanpaste Zoom...
+Custom &Zoom...\tCtrl-Y
+&Oanpaste Zoom...\tCtrl-Y
 
 Default &Layout:
 Standert &Layout:

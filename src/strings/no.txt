@@ -178,8 +178,8 @@ Kunne ikke vise siden
 Created:
 Opprettet:
 
-Custom &Zoom...
-&Egendefinert zoom...
+Custom &Zoom...\tCtrl-Y
+&Egendefinert zoom...\tCtrl-Y
 
 Default &Layout:
 Standard sideoppsett:

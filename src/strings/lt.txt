@@ -200,7 +200,7 @@ Sumažinti
 #Couldn't initialize printer
 #Couldn't render the page
 #Created:
-#Custom &Zoom...
+#Custom &Zoom...\tCtrl-Y
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:

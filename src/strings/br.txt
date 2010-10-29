@@ -179,8 +179,8 @@ Não foi possível renderizar a página
 Created:
 Criado:
 
-Custom &Zoom...
-&Zoom personalizado...
+Custom &Zoom...\tCtrl-Y
+&Zoom personalizado...\tCtrl-Y
 
 Default &Layout:
 &Visualização Padrão

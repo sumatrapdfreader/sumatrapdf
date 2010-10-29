@@ -177,8 +177,8 @@ Couldn't render the page
 Created:
 உருவாக்கப்பட்டது
 
-Custom &Zoom...
-விருப்பிற்கேற்ற பெருக்கம்
+Custom &Zoom...\tCtrl-Y
+விருப்பிற்கேற்ற பெருக்கம்\tCtrl-Y
 
 Default &Layout:
 கோட நிலை வடிவமைப்பு

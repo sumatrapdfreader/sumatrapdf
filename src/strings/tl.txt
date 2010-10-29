@@ -362,7 +362,7 @@ Paliitin/Lumayo
 #Continuous book view
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
-#Custom &Zoom...
+#Custom &Zoom...\tCtrl-Y
 #Default &Layout:
 #Default &Zoom:
 #Denied Permissions:

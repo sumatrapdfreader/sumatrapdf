@@ -209,8 +209,8 @@ Couldn't render the page
 Created:
 Ստեղծված է.
 
-Custom &Zoom...
-&Ընտրված չափը
+Custom &Zoom...\tCtrl-Y
+&Ընտրված չափը\tCtrl-Y
 
 Default &Layout:
 Չափը &Լռելայն

@@ -215,8 +215,8 @@ Diese Seite kann leider nicht angezeigt werden
 Created:
 Erstellt am:
 
-Custom &Zoom...
-&Zoomfaktor…
+Custom &Zoom...\tCtrl-Y
+&Zoomfaktor…\tStrg+Y
 
 Default &Layout:
 &Standardlayout:

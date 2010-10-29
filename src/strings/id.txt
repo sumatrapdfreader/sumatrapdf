@@ -181,8 +181,8 @@ Tidak dapat menampilkan halaman
 Created:
 Dibuat:
 
-Custom &Zoom...
-&Pembesaran khusus
+Custom &Zoom...\tCtrl-Y
+&Pembesaran khusus\tCtrl-Y
 
 Default &Layout:
 Tampilan &Standar

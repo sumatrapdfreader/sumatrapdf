@@ -171,8 +171,8 @@ Couldn't render the page
 Created:
 檔案建立日期：
 
-Custom &Zoom...
-自訂縮放(&C)...
+Custom &Zoom...\tCtrl-Y
+自訂縮放(&C)...\tCtrl-Y
 
 Default &Layout:
 預設閱覽模式：(L)

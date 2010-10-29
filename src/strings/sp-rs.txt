@@ -156,8 +156,8 @@ Nije moguće pokrenuti štampač
 Couldn't render the page
 Nemoguće prikazivanje strane
 
-Custom &Zoom...
-Izborno uvećanje...
+Custom &Zoom...\tCtrl-Y
+Izborno uvećanje...\tCtrl-Y
 
 Default &Layout:
 Podrazumevani prikaz

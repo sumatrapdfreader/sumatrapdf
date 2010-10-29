@@ -164,8 +164,8 @@ Couldn't initialize printer
 Couldn't render the page
 ページを描画できませんでした
 
-Custom &Zoom...
-カスタム ズーム(&C)...
+Custom &Zoom...\tCtrl-Y
+カスタム ズーム(&C)...\tCtrl-Y
 
 Default &Layout:
 既定のレイアウト(&L):

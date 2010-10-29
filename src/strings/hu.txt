@@ -211,8 +211,8 @@ Oldalfeldolgozási hiba
 Created:
 Készült:
 
-Custom &Zoom...
-... Egyéni méret
+Custom &Zoom...\tCtrl-Y
+... Egyéni méret\tCtrl-Y
 
 Default &Layout:
 Oldalmegjelenítési mód:

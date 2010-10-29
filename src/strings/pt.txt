@@ -214,8 +214,8 @@ Não foi possível processar a página
 Created:
 Criado:
 
-Custom &Zoom...
-&Personalizado...
+Custom &Zoom...\tCtrl-Y
+&Personalizado...\tCtrl-Y
 
 Default &Layout:
 E&xibição por omissão:

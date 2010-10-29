@@ -213,8 +213,8 @@ Couldn't render the page
 Created:
 Δημιουργήθηκε:
 
-Custom &Zoom...
-&Ορισμός ζουμ...
+Custom &Zoom...\tCtrl-Y
+&Ορισμός ζουμ...\tCtrl-Y
 
 Default &Layout:
 Προκαθορισμένη &διαμόρφωση:

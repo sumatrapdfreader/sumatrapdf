@@ -208,8 +208,8 @@ Couldn't render the page
 Created:
 생성:
 
-Custom &Zoom...
-사용자 지정 확대율
+Custom &Zoom...\tCtrl-Y
+사용자 지정 확대율\tCtrl-Y
 
 Default &Layout:
 기본 구성:

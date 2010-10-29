@@ -183,8 +183,8 @@ Kunde ej visa sidan
 Created:
 Skapad:
 
-Custom &Zoom...
-&Anpassad zoom...
+Custom &Zoom...\tCtrl-Y
+&Anpassad zoom...\tCtrl-Y
 
 Default &Layout:
 Förvalt &utseende

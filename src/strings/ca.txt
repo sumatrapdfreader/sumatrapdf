@@ -177,8 +177,8 @@ No es pot representar la pàgina
 Created:
 Creat:
 
-Custom &Zoom...
-Zoom per defe&cte...
+Custom &Zoom...\tCtrl-Y
+Zoom per defe&cte...\tCtrl-Y
 
 Default &Layout:
 Vista per defecte:

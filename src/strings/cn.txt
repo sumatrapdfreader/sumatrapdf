@@ -155,8 +155,8 @@ Couldn't initialize printer
 Couldn't render the page
 不能渲染该页面
 
-Custom &Zoom...
-自定义缩放...
+Custom &Zoom...\tCtrl-Y
+自定义缩放...\tCtrl-Y
 
 Default &Layout:
 默认布局(&L)

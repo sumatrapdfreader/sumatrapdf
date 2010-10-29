@@ -356,7 +356,7 @@ Zoom Out
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Created:
-#Custom &Zoom...
+#Custom &Zoom...\tCtrl-Y
 #Denied Permissions:
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:

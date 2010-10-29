@@ -164,8 +164,8 @@ Couldn't initialize printer
 Couldn't render the page
 Страницата не може да се изобрази
 
-Custom &Zoom...
-Увеличение по избор...
+Custom &Zoom...\tCtrl-Y
+Увеличение по избор...\tCtrl-Y
 
 Default &Layout:
 Раположение по подразбиране

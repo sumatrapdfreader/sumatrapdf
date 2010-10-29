@@ -207,8 +207,8 @@ Impossibile renderizzare la pagina
 Created:
 Creato:
 
-Custom &Zoom...
-&Ingrandimento personalizzato
+Custom &Zoom...\tCtrl-Y
+&Ingrandimento personalizzato\tCtrl-Y
 
 Default &Layout:
 &Vista predeffinita

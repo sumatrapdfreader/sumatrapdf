@@ -181,8 +181,8 @@ Couldn't render the page
 Created:
 :بوجود آمده
 
-Custom &Zoom...
-ابعاد نمایش مخصوص
+Custom &Zoom...\tCtrl-Y
+ابعاد نمایش مخصوص\tCtrl-Y
 
 Default &Layout:
 :نحوه نمایش

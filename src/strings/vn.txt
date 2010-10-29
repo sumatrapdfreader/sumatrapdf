@@ -210,8 +210,8 @@ Không hiện được trang
 Created:
 Ngày tạo:
 
-Custom &Zoom...
-Thu phóng &tuỳ ý...
+Custom &Zoom...\tCtrl-Y
+Thu phóng &tuỳ ý...\tCtrl-Y
 
 Default &Layout:
 Khung nhìn mặc định

@@ -204,8 +204,8 @@ Couldn't render the page
 Created:
 נוצר:
 
-Custom &Zoom...
-זום משתמש...
+Custom &Zoom...\tCtrl-Y
+זום משתמש...\tCtrl-Y
 
 Default &Layout:
 סידור ברירת מחדל:
