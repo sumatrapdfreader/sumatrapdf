@@ -3368,33 +3368,30 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     if (!gDebugShowLinks)
         return;
 
-    dm->recalcLinksCanvasPos();
-    RectI drawAreaRect;
     /* debug code to visualize links */
-    drawAreaRect.x = 0;
-    drawAreaRect.y = 0;
-    drawAreaRect.dx = dm->drawAreaSize.dxI();
-    drawAreaRect.dy = dm->drawAreaSize.dyI();
+    fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
+    SelectObject(hdc, pen);
 
-    int linkCount = dm->_linksCount;
-    for (int linkNo = 0; linkNo < linkCount; ++linkNo) {
-        PdfLink *pdfLink = &dm->_links[linkNo];
+    for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
+        PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
+        if (!pageInfo->shown || !pageInfo->visible)
+            continue;
 
-        RectI rectLink, intersect;
-        rectLink.x = pdfLink->rectCanvas.x;
-        rectLink.y = pdfLink->rectCanvas.y;
-        rectLink.dx = pdfLink->rectCanvas.dx;
-        rectLink.dy = pdfLink->rectCanvas.dy;
+        pdf_link *links = NULL;
+        int linkCount = dm->getPdfLinks(pageNo, &links);
+        for (int i = 0; i < linkCount; i++) {
+            fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
+            if (fz_isemptyrect(isect))
+                continue;
 
-        if (RectI_Intersect(&rectLink, &drawAreaRect, &intersect)) {
             RECT rectScreen;
-            rect_set(&rectScreen, intersect.x, intersect.y, intersect.dx, intersect.dy);
-            HPEN pe = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
-            SelectObject(hdc, pe);
+            rect_set(&rectScreen, isect.x0, isect.y0, isect.x1 - isect.x0, isect.y1 - isect.y0);
             PaintRectangle(hdc, &rectScreen);
-            DeletePen(pe);
         }
+        free(links);
     }
+    DeletePen(pen);
 }
 
 static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
@@ -3615,7 +3612,7 @@ static void OnDraggingStart(WindowInfo *win, int x, int y)
     win->mouseAction = MA_MAYBEDRAGGING;
     win->dragStartX = win->dragPrevPosX = x;
     win->dragStartY = win->dragPrevPosY = y;
-    win->linkOnLastButtonDown = win->dm->linkAtPosition(x, y);
+    win->linkOnLastButtonDown = win->dm->getLinkAtPosition(x, y);
     if (GetCursor())
         SetCursor(gCursorDrag);
     DBG_OUT(" dragging start, x=%d, y=%d\n", x, y);
@@ -3655,8 +3652,8 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
         ReleaseCapture();
     }
 
-    if (win->linkOnLastButtonDown && win->dm->linkAtPosition(x, y) == win->linkOnLastButtonDown) {
-        win->dm->handleLink(win->linkOnLastButtonDown);
+    if (win->linkOnLastButtonDown && win->dm->getLinkAtPosition(x, y) == win->linkOnLastButtonDown) {
+        win->dm->goToTocLink(win->linkOnLastButtonDown);
         SetCursor(gCursorArrow);
     }
     else if (didDragMouse)
@@ -6709,27 +6706,29 @@ static void CustomizeToCInfoTip(WindowInfo *win, LPNMTVGETINFOTIP nmit)
     free(path);
 }
 
-static void CreateInfotipForPdfLink(WindowInfo *win, PdfLink *link, AboutLayoutInfoEl *aboutEl=NULL)
+static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, void *linkObj)
 {
-    if (!link && !aboutEl && !win->infotipVisible)
+    if (!linkObj && !win->infotipVisible)
         return;
 
     TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
     ti.hwnd = win->hwndCanvas;
     ti.uFlags = TTF_SUBCLASS;
+ 
+    pdf_link *link = (pdf_link *)linkObj;
+    if (pageNo > 0 && (ti.lpszText = win->dm->getLinkPath(link))) {
+        fz_rect rect = win->dm->rectCvtUserToScreen(pageNo, link->rect);
+        rect_set(&ti.rect, rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
 
-    if (link) {
-        rect_set(&ti.rect, link->rectCanvas.x, link->rectCanvas.y, link->rectCanvas.dx, link->rectCanvas.dy);
-        ti.lpszText = win->dm->getLinkPath(link->link);
-        if (ti.lpszText) {
-            SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
-            free(ti.lpszText);
-            win->infotipVisible = true;
-            return;
-        }
+        SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
+        free(ti.lpszText);
+        win->infotipVisible = true;
+        return;
     }
-    if (aboutEl && aboutEl->url) {
+
+    AboutLayoutInfoEl *aboutEl = (AboutLayoutInfoEl *)linkObj;
+    if (-1 == pageNo && aboutEl->url) {
         rect_set(&ti.rect, aboutEl->rightTxtPosX, aboutEl->rightTxtPosY, aboutEl->rightTxtDx, aboutEl->rightTxtDy);
         ti.lpszText = (TCHAR *)aboutEl->url;
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
@@ -6812,7 +6811,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
                     AboutLayoutInfoEl *aboutEl;
                     if (AboutGetLink(win, pt.x, pt.y, &aboutEl)) {
-                        CreateInfotipForPdfLink(win, NULL, aboutEl);
+                        CreateInfotipForPdfLink(win, -1, aboutEl);
                         SetCursor(gCursorHand);
                         return TRUE;
                     }
@@ -6826,9 +6825,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             } else if (win && WS_SHOWING_PDF == win->state) {
                 POINT pt;
                 if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
-                    PdfLink * link = win->dm->linkAtPosition(pt.x, pt.y);
+                    pdf_link *link = win->dm->getLinkAtPosition(pt.x, pt.y);
                     if (link) {
-                        CreateInfotipForPdfLink(win, link);
+                        int pageNo = win->dm->getPageNoByPoint(pt.x, pt.y);
+                        CreateInfotipForPdfLink(win, pageNo, link);
                         SetCursor(gCursorHand);
                         return TRUE;
                     }
@@ -6838,7 +6838,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     }
                 }
             }
-            CreateInfotipForPdfLink(win, NULL);
+            CreateInfotipForPdfLink(win, 0, NULL);
             if (win && win->presentation)
                 return TRUE;
             return DefWindowProc(hwnd, message, wParam, lParam);

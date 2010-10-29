@@ -4,8 +4,6 @@
 void
 pdf_freelink(pdf_link *link)
 {
-	if (!link)
-		return;
 	if (link->next)
 		pdf_freelink(link->next);
 	if (link->dest)

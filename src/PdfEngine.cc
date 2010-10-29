@@ -190,6 +190,11 @@ void pdf_streamfingerprint(fz_stream *file, unsigned char *digest)
     fz_dropbuffer(buffer);
 }
 
+bool fz_isptinrect(fz_rect rect, double x, double y)
+{
+    return MIN(rect.x0, rect.x1) <= x && MAX(rect.x0, rect.x1) >= x &&
+           MIN(rect.y0, rect.y1) <= y && MAX(rect.y0, rect.y1) >= y;
+}
 
 RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
     _hbmp(fz_pixtobitmap(hDC, pixmap, TRUE)),
@@ -614,79 +619,34 @@ RenderedBitmap *PdfEngine::renderBitmap(
     return bitmap;
 }
 
-static int linksLinkCount(pdf_link *currLink) {
-    if (!currLink)
-        return 0;
-    int count = 1;
-    while (currLink->next) {
-        ++count;
-        currLink = currLink->next;
-    }
-    return count;
-}
-
-/* Return number of all links in all loaded pages */
-int PdfEngine::linkCount() {
-    if (!_pages)
-        return 0;
-    int count = 0;
-
-    for (int i=0; i < _pageCount; i++)
-    {
-        pdf_page *page = _pages[i];
-        if (page)
-            count += linksLinkCount(page->links);
-    }
-    return count;
-}
-
-void PdfEngine::fillPdfLinks(PdfLink *pdfLinks, int linkCount)
+pdf_link *PdfEngine::getLinkAtPosition(int pageNo, double x, double y)
 {
-    pdf_link *link = 0;
-    int pageNo;
-    PdfLink *pdfLink = pdfLinks;
-    int linkNo = 0;
-    float tmp;
+    pdf_page *page = getPdfPage(pageNo);
+    if (!page)
+        return NULL;
 
-    for (pageNo=0; pageNo < _pageCount; pageNo++)
-    {
-        pdf_page *page = _pages[pageNo];
-        if (!page)
-            continue;
-        link = page->links;
-        while (link)
-        {
-            assert(link);
-            pdfLink->pageNo = pageNo + 1;
-            pdfLink->link = link;
-            pdfLink->rectPage.x = link->rect.x0;
-            pdfLink->rectPage.y = link->rect.y0;
+    for (pdf_link *link = page->links; link; link = link->next)
+        if (fz_isptinrect(link->rect, x, y))
+            return link;
 
-            // there are PDFs that have x,y positions in reverse order, so
-            // fix them up
-            if (link->rect.x0 > link->rect.x1) {
-                tmp = link->rect.x0;
-                link->rect.x0 = link->rect.x1;
-                link->rect.x1 = tmp;
-            }
-            assert(link->rect.x1 >= link->rect.x0);
-            pdfLink->rectPage.dx = link->rect.x1 - link->rect.x0;
-            assert(pdfLink->rectPage.dx >= 0);
+    return NULL;
+}
 
-            if (link->rect.y0 > link->rect.y1) {
-                tmp = link->rect.y0;
-                link->rect.y0 = link->rect.y1;
-                link->rect.y1 = tmp;
-            }
-            assert(link->rect.y1 >= link->rect.y0);
-            pdfLink->rectPage.dy = link->rect.y1 - link->rect.y0;
-            assert(pdfLink->rectPage.dy >= 0);
-            link = link->next;
-            linkNo++;
-            pdfLink++;
-        }
-    }
-    assert(linkCount == linkNo);
+int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
+{
+    pdf_page *page = getPdfPage(pageNo);
+    if (!page)
+        return -1;
+
+    int count = 0;
+    for (pdf_link *link = page->links; link; link = link->next)
+        count++;
+
+    pdf_link *linkPtr = *links = (pdf_link *)calloc(count, sizeof(pdf_link));
+    for (pdf_link *link = page->links; link; link = link->next)
+        *linkPtr++ = *link;
+
+    return count;
 }
 
 void PdfEngine::linkifyPageText(pdf_page *page)
@@ -695,6 +655,23 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     TCHAR *pageText = ExtractPageText(page, _T(" "), &coords);
     if (!pageText)
         return;
+
+    // there are PDFs that have x,y positions in reverse order, so fix them up
+    for (pdf_link *link = page->links; link; link = link->next) {
+        if (link->rect.x0 > link->rect.x1) {
+            double tmp = link->rect.x0;
+            link->rect.x0 = link->rect.x1;
+            link->rect.x1 = tmp;
+        }
+        assert(link->rect.x1 >= link->rect.x0);
+
+        if (link->rect.y0 > link->rect.y1) {
+            double tmp = link->rect.y0;
+            link->rect.y0 = link->rect.y1;
+            link->rect.y1 = tmp;
+        }
+        assert(link->rect.y1 >= link->rect.y0);
+    }
 
     pdf_link *firstLink = page->links;
     for (TCHAR *start = pageText; *start; start++) {
@@ -724,7 +701,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         bbox.y1 = coords[end - pageText - 1].y1;
         for (pdf_link *link = firstLink; link && *start; link = link->next) {
             fz_bbox isect = fz_intersectbbox(fz_roundrect(bbox), fz_roundrect(link->rect));
-            if ((isect.x1 - isect.x0) != 0 && (isect.y1 - isect.y0) != 0)
+            if (!fz_isemptyrect(isect))
                 start = end;
         }
 

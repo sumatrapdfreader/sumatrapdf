@@ -230,7 +230,6 @@ public:
     bool            goToNextPage(int scrollY);
     bool            goToFirstPage(void);
     bool            goToLastPage(void);
-    void            goToTocLink(pdf_link *link);
 
     void            scrollXTo(int xOff);
     void            scrollXBy(int dx);
@@ -247,17 +246,17 @@ public:
 
     void            clearSearchHit(void);
     void            setSearchHit(int pageNo, RectD *hitRect);
-    void            recalcLinksCanvasPos(void);
 
-    int             getLinkCount(void);
-    PdfLink *       linkAtPosition(int x, int y);
+    pdf_link *      getLinkAtPosition(int x, int y);
+    int             getPdfLinks(int pageNo, pdf_link **links);
     TCHAR *         getLinkPath(pdf_link *link);
-    void            handleLink(PdfLink *pdfLink);
+    void            goToTocLink(pdf_link *link);
     void            goToNamedDest(const char *name);
 
     bool            cvtUserToScreen(int pageNo, double *x, double *y);
     bool            cvtScreenToUser(int *pageNo, double *x, double *y);
     bool            rectCvtUserToScreen(int pageNo, RectD *r);
+    fz_rect         rectCvtUserToScreen(int pageNo, fz_rect rect);
     bool            rectCvtScreenToUser(int *pageNo, RectD *r);
 
     void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
@@ -270,8 +269,6 @@ public:
     int             getPageNoByPoint (double x, double y);
 
     BOOL            MapResultRectToScreen(PdfSearchResult *res);
-
-    void            rebuildLinks();
 
     bool            getScrollState(ScrollState *state);
     void            setScrollState(ScrollState *state);
@@ -344,9 +341,6 @@ protected:
     int             _navHistoryEnd;
 
 public:
-    /* an array of 'totalLinksCount' size, each entry describing a link */
-    PdfLink *       _links;
-    int             _linksCount;
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            _dontRenderFlag;
 };

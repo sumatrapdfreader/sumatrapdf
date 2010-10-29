@@ -262,7 +262,7 @@ public:
     HDC             hdcDoubleBuffer;
     HBITMAP         bmpDoubleBuffer;
 
-    PdfLink *       linkOnLastButtonDown;
+    pdf_link *      linkOnLastButtonDown;
     const TCHAR *   url;
 
     MouseAction     mouseAction;

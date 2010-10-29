@@ -12,14 +12,6 @@ extern "C" {
 #include "geom_util.h"
 #include "tstr_util.h"
 
-/* Describes a link on PDF page. */
-typedef struct PdfLink {
-    int             pageNo;     /* on which Pdf page the link exists. 1..pageCount */
-    RectD           rectPage;   /* position of the link on the page */
-    RectI           rectCanvas; /* position of the link on canvas */
-    pdf_link *      link;
-} PdfLink;
-
 class WindowInfo;
 
 #define INVALID_PAGE_NO     -1
@@ -136,8 +128,8 @@ public:
     }
 
     bool hasPermission(int permission);
-    int linkCount();
-    void fillPdfLinks(PdfLink *pdfLinks, int linkCount);
+    int getPdfLinks(int pageNo, pdf_link **links);
+    pdf_link *getLinkAtPosition(int pageNo, double x, double y);
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }

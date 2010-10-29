@@ -195,9 +195,6 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _pdfSearch = NULL;
     _pagesInfo = NULL;
 
-    _links = NULL;
-    _linksCount = 0;
-
     _navHistory = (ScrollState *)malloc(NAV_HISTORY_LEN * sizeof(ScrollState));
     _navHistoryIx = 0;
     _navHistoryEnd = 0;
@@ -216,7 +213,6 @@ DisplayModel::~DisplayModel()
     cancelRenderingForDisplayModel(this);
 
     free(_pagesInfo);
-    free(_links);
     free(_navHistory);
     delete _pdfSearch;
     delete pdfEngine;
@@ -703,6 +699,20 @@ bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
     return ok;
 }
 
+fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
+{
+    double x0 = rect.x0; double x1 = rect.x1;
+    double y0 = rect.y0; double y1 = rect.y1;
+
+    if (!cvtUserToScreen(pageNo, &x0, &y0) || !cvtUserToScreen(pageNo, &x1, &y1))
+        return fz_emptyrect;
+    
+    rect.x0 = MIN(x0, x1); rect.x1 = MAX(x0, x1);
+    rect.y0 = MIN(y0, y1); rect.y1 = MAX(y0, y1);
+    
+    return rect;
+}
+
 /* Map rectangle <r> on the page <pageNo> to point on the screen. */
 bool DisplayModel::rectCvtScreenToUser(int *pageNo, RectD *r)
 {
@@ -751,77 +761,6 @@ void DisplayModel::recalcSearchHitCanvasPos(void)
     searchHitRectCanvas.dy = (int)rect.dy;
 }
 
-/* Recalculates the position of each link on the canvas i.e. applies current
-   rotation and zoom level and offsets it by the offset of each page in
-   the canvas.
-   TODO: applying rotation and zoom level could be split into a separate
-         function for speedup, since it only has to change after rotation/zoomLevel
-         changes while this function has to be called after each scrolling.
-         But I'm not sure if this would be a significant speedup */
-void DisplayModel::recalcLinksCanvasPos(void)
-{
-    PdfLink *       pdfLink;
-    PdfPageInfo *   pageInfo;
-    int             linkNo;
-    RectD           rect;
-    int             linkCount = getLinkCount();
-    // TODO: calling it here is a bit of a hack
-    recalcSearchHitCanvasPos();
-
-    DBG_OUT("DisplayModel::recalcLinksCanvasPos() linkCount=%d\n", linkCount);
-
-    if (0 == linkCount)
-        return;
-
-    for (linkNo = 0; linkNo < linkCount; linkNo++) {
-        pdfLink = &_links[linkNo];
-        pageInfo = getPageInfo(pdfLink->pageNo);
-        if (!pageInfo->visible) {
-            /* hack: make the links on pages that are not shown invisible by
-                     moving it off canvas. A better solution would probably be
-                     not adding those links in the first place */
-            pdfLink->rectCanvas.x = -100;
-            pdfLink->rectCanvas.y = -100;
-            pdfLink->rectCanvas.dx = 0;
-            pdfLink->rectCanvas.dy = 0;
-            continue;
-        }
-
-        rect = pdfLink->rectPage;
-        rectCvtUserToScreen(pdfLink->pageNo, &rect);
-
-#if 0 // this version is correct but needs to be made generic, not specific to poppler
-        /* hack: in PDFs that have a crop-box (like treo700psprint_UG.pdf)
-           we need to shift links by the offset of crop-box. Since we do it
-           after conversion involving ctm, we need to apply current zoom and
-           rotation. This is probably not the best place to be doing this
-           but it's the only one we managed to make work */
-        double offX = dm->pdfDoc->getCatalog()->getPage(pdfLink->pageNo)->getCropBox()->x1;
-        double offY = dm->pdfDoc->getCatalog()->getPage(pdfLink->pageNo)->getCropBox()->y1;
-        if (flippedRotation(dm->rotation)) {
-            double tmp = offX;
-            offX = offY;
-            offY = tmp;
-        }
-        offX = offX * dm->zoomReal * 0.01;
-        offY = offY * dm->zoomReal * 0.01;
-#else
-        pdfLink->rectCanvas.x = (int)rect.x;
-        pdfLink->rectCanvas.y = (int)rect.y;
-        pdfLink->rectCanvas.dx = (int)rect.dx;
-        assert(pdfLink->rectCanvas.dx >= 0);
-        pdfLink->rectCanvas.dy = (int)rect.dy;
-        assert(pdfLink->rectCanvas.dy >= 0);
-#endif
-        DBG_OUT("  link on page (x=%d, y=%d, dx=%d, dy=%d),\n",
-            (int)pdfLink->rectPage.x, (int)pdfLink->rectPage.y,
-            (int)pdfLink->rectPage.dx, (int)pdfLink->rectPage.dy);
-        DBG_OUT("        screen (x=%d, y=%d, dx=%d, dy=%d)\n",
-                (int)rect.x, (int)rect.y,
-                (int)rect.dx, (int)rect.dy);
-    }
-}
-
 void DisplayModel::clearSearchHit(void)
 {
     DBG_OUT("DisplayModel::clearSearchHit()\n");
@@ -838,30 +777,31 @@ void DisplayModel::setSearchHit(int pageNo, RectD *hitRect)
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
    a link or NULL if there is no link at this position.
-   Note: DisplayModelSplash owns this memory so it should not be changed by the
-   caller and caller should not reference it after it has changed (i.e. process
-   it immediately since it will become invalid after each _relayout()).
+   Note: PdfEngine owns this memory so it should not be changed by the
+   caller and caller should not reference it after it has changed.
    TODO: this function is called frequently from UI code so make sure that
          it's fast enough for a decent number of link.
          Possible speed improvement: remember which links are visible after
          scrolling and skip the _Inside test for those invisible.
-         Another way: build another list with only those visible, so we don't
+         Another way: build a list with only those visible, so we don't
          even have to traverse those that are invisible.
    */
-PdfLink *DisplayModel::linkAtPosition(int x, int y)
+pdf_link *DisplayModel::getLinkAtPosition(int x, int y)
 {
-    int linkCount = getLinkCount();
-    if (0 == linkCount) return NULL;
+    int pageNo = INVALID_PAGE_NO;
+    double posX = x, posY = y;
+    if (!cvtScreenToUser(&pageNo, &posX, &posY))
+        return NULL;
 
-    int canvasPosX = x;
-    int canvasPosY = y;
-    for (int i = 0; i < linkCount; i++) {
-        PdfLink *currLink = &_links[i];
+    return pdfEngine->getLinkAtPosition(pageNo, posX, posY);
+}
 
-        if (RectI_Inside(&(currLink->rectCanvas), canvasPosX, canvasPosY))
-            return currLink;
-    }
-    return NULL;
+int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
+{
+    int count = pdfEngine->getPdfLinks(pageNo, links);
+    for (int i = 0; i < count; i++)
+        (*links)[i].rect = rectCvtUserToScreen(pageNo, (*links)[i].rect);
+    return count;
 }
 
 /* Send the request to render a given page to a rendering thread */
@@ -947,7 +887,6 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     areaOffset.y = limitValue(areaOffset.y, 0, _canvasSize.dy() - drawAreaSize.dy());
 
     recalcVisibleParts();
-    recalcLinksCanvasPos();
     renderVisibleParts();
     setScrollbarsState();
     pageChanged();
@@ -1082,7 +1021,6 @@ void DisplayModel::scrollXTo(int xOff)
     int currPageNo = currentPageNo();
     areaOffset.x = (double)xOff;
     recalcVisibleParts();
-    recalcLinksCanvasPos();
     setScrollbarsState();
     
     if (currentPageNo() != currPageNo)
@@ -1106,7 +1044,6 @@ void DisplayModel::scrollYTo(int yOff)
     int currPageNo = currentPageNo();
     areaOffset.y = (double)yOff;
     recalcVisibleParts();
-    recalcLinksCanvasPos();
     renderVisibleParts();
 
     int newPageNo = currentPageNo();
@@ -1162,7 +1099,6 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     currPageNo = currentPageNo();
     areaOffset.y = (double)newYOff;
     recalcVisibleParts();
-    recalcLinksCanvasPos();
     renderVisibleParts();
     setScrollbarsState();
     newPageNo = currentPageNo();
@@ -1626,11 +1562,6 @@ void DisplayModel::goToTocLink(pdf_link* link)
     }
 }
 
-void DisplayModel::handleLink(PdfLink *link)
-{
-    goToTocLink(link->link);
-}
-
 void DisplayModel::goToPdfDest(fz_obj *dest)
 {
     int pageNo = pdfEngine->findPageNo(dest);
@@ -1781,31 +1712,6 @@ BOOL DisplayModel::MapResultRectToScreen(PdfSearchResult *res)
         OffsetRect(&res->rects[i], -sx, -sy);
 
     return sx != 0 || sy != 0;
-}
-
-void DisplayModel::rebuildLinks()
-{
-    int count = pdfEngine->linkCount();
-    assert(count > _linksCount);
-    free(_links);
-    _links = (PdfLink*)malloc(count * sizeof(PdfLink));
-    _linksCount = count;
-    pdfEngine->fillPdfLinks(_links, _linksCount);
-    recalcLinksCanvasPos();
-}
-
-int DisplayModel::getLinkCount()
-{
-    /* TODO: let's hope it's not too expensive. An alternative would be
-       to update link count only when it could have changed i.e. after
-       loading a page */
-    int count = pdfEngine->linkCount();
-    if (count != _linksCount)
-    {
-        assert(count > _linksCount);
-        rebuildLinks();
-    }
-    return count;
 }
 
 bool DisplayModel::getScrollState(ScrollState *state)
