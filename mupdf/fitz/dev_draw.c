@@ -6,8 +6,7 @@
 
 #define STACKSIZE 96
 
-/* SumatraPDF: fix image rendering issue (paired with a define in imagedraw.c) */
-#define noSMOOTHSCALE
+#define SMOOTHSCALE
 
 typedef struct fz_drawdevice_s fz_drawdevice;
 
@@ -541,7 +540,7 @@ fz_calcimagescale(fz_pixmap *image, fz_matrix ctm, int *dx, int *dy)
 }
 
 static fz_pixmap *
-fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y)
+fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy)
 {
 	fz_pixmap *scaled;
 
@@ -567,6 +566,12 @@ fz_smoothtransformpixmap(fz_pixmap *image, fz_matrix *ctm, int x, int y)
 		ctm->c = scaled->h;
 		ctm->f = scaled->x;
 		ctm->e = scaled->y;
+		return scaled;
+	}
+	/* Downscale, non rectilinear case */
+	if ((dx > 0) && (dy > 0))
+	{
+		scaled = fz_smoothscalepixmap(image, 0, 0, (float)dx, (float)dy);
 		return scaled;
 	}
 	return NULL;
@@ -598,11 +603,11 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	}
 
 #ifdef SMOOTHSCALE
-	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
-	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
+	dx = sqrtf(ctm.a * ctm.a + ctm.c * ctm.c);
+	dy = sqrtf(ctm.b * ctm.b + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y);
+		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
 		if (scaled == NULL)
 		{
 			if (dx < 1)
@@ -650,7 +655,7 @@ fz_drawfillimagemask(void *user, fz_pixmap *image, fz_matrix ctm,
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y);
+		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
 		if (scaled == NULL)
 		{
 			if (dx < 1)
@@ -721,7 +726,7 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
-		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y);
+		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);
 		if (scaled == NULL)
 		{
 			if (dx < 1)

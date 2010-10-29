@@ -250,6 +250,7 @@ struct fz_weights_s
 	int max_len;
 	int n;
 	int flip;
+	int new_line;
 	int index[1];
 };
 
@@ -289,6 +290,26 @@ newweights(fz_scalefilter *filter, int src_w, float dst_w, int dst_w_i, int n, i
 	weights->n = n;
 	weights->flip = flip;
 	return weights;
+}
+
+static void
+init_weights(fz_weights *weights, int j)
+{
+	int index;
+
+	assert(weights->count == j-1);
+	weights->count++;
+	weights->new_line = 1;
+	if (j == 0)
+		index = weights->index[0];
+	else
+	{
+		index = weights->index[j-1];
+		index += 2 + weights->index[index+1];
+	}
+	weights->index[j] = index; /* row pointer */
+	weights->index[index] = 0; /* min */
+	weights->index[index+1] = 0; /* len */
 }
 
 static void
@@ -339,19 +360,11 @@ add_weight(fz_weights *weights, int j, int i, fz_scalefilter *filter,
 
 	DBUG(("add_weight[%d][%d] = %d(%g) dist=%g\n",j,i,weight,f,dist));
 
-	if (weights->count != j)
+	if (weights->new_line)
 	{
 		/* New line */
-		assert(weights->count == j-1);
-		weights->count++;
-		if (j == 0)
-			index = weights->index[0];
-		else
-		{
-			index = weights->index[j-1];
-			index += 2 + weights->index[index+1];
-		}
-		weights->index[j] = index; /* row pointer */
+		weights->new_line = 0;
+		index = weights->index[j]; /* row pointer */
 		weights->index[index] = i; /* min */
 		weights->index[index+1] = 0; /* len */
 	}
@@ -492,6 +505,7 @@ make_weights(int src_w, float x, float dst_w, fz_scalefilter *filter, int vertic
 		l = ceilf(centre - window);
 		r = floorf(centre + window);
 		DBUG(("%d: centre=%g l=%d r=%d\n", j, centre, l, r));
+		init_weights(weights, j);
 		for (; l <= r; l++)
 		{
 			add_weight(weights, j, l, filter, x, F, G, src_w, dst_w);
