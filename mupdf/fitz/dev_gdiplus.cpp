@@ -566,6 +566,7 @@ fz_gdiplusclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 {
 	GraphicsPath *gpath = gdiplusgetpath(path, ctm, evenodd);
 	
+	// TODO: clipping non-rectangular areas doesn't result in anti-aliased edges
 	((userData *)user)->pushClip(gpath);
 	
 	delete gpath;
@@ -772,6 +773,7 @@ static void
 gdiplusrunt3text(void *user, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha, GraphicsPath *gpath=NULL)
 {
+	// TODO: type 3 glyphs are rendered slightly cropped
 	if (gpath)
 		fz_warn("stroking Type 3 glyphs is not supported");
 	
