@@ -55,7 +55,9 @@
 #define PREDICTIVE_RENDER 1
 #endif
 
-#define MAX_BITMAPS_CACHED 128
+// keep this value reasonably low, else we'll run
+// out of GDI memory when caching many larger bitmaps
+#define MAX_BITMAPS_CACHED 64
 
 static CRITICAL_SECTION     cacheMutex;
 static int cacheMutexInitialized = 0;
