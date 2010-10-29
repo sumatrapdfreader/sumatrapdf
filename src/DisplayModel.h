@@ -347,6 +347,8 @@ public:
     /* an array of 'totalLinksCount' size, each entry describing a link */
     PdfLink *       _links;
     int             _linksCount;
+    /* allow resizing a window without triggering a new rendering (needed for window destruction) */
+    bool            _dontRenderFlag;
 };
 
 bool                displayModeContinuous(DisplayMode displayMode);

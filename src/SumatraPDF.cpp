@@ -848,7 +848,7 @@ void cancelRenderingForDisplayModel(DisplayModel *dm) {
 void RenderQueue_Add(DisplayModel *dm, int pageNo) {
     DBG_OUT("RenderQueue_Add(pageNo=%d)\n", pageNo);
     assert(dm);
-    if (!dm) goto Exit;
+    if (!dm || dm->_dontRenderFlag) goto Exit;
 
     LockCache();
     int rotation = dm->rotation();
@@ -3937,6 +3937,11 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast)
 {
     assert(win);
     if (!win)  return;
+
+    if (win->dm)
+        win->dm->_dontRenderFlag = true;
+    if (win->presentation)
+        WindowInfo_ExitFullscreen(win);
 
     bool lastWindow = false;
     if (1 == WindowInfoList_Len())
@@ -7486,6 +7491,10 @@ static DWORD WINAPI PageRenderThread(PVOID data)
         DBG_OUT("PageRenderThread(): dequeued %d\n", req.pageNo);
         if (!req.dm->pageVisibleNearby(req.pageNo)) {
             DBG_OUT("PageRenderThread(): not rendering because not visible\n");
+            continue;
+        }
+        if (req.dm->_dontRenderFlag) {
+            DBG_OUT("PageRenderThread(): not rendering because of _dontRenderFlag\n");
             continue;
         }
         assert(!req.abort);

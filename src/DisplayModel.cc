@@ -204,10 +204,13 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     
     searchHitPageNo = INVALID_PAGE_NO;
     searchState.searchState = eSsNone;
+
+    _dontRenderFlag = false;
 }
 
 DisplayModel::~DisplayModel()
 {
+    _dontRenderFlag = true;
     RenderQueue_RemoveForDisplayModel(this);
     BitmapCache_FreeForDisplayModel(this);
     cancelRenderingForDisplayModel(this);
