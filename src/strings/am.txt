@@ -492,5 +492,6 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#&Use original page sizes
 #Copying text was denied (copying as image only)
 

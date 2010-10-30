@@ -437,6 +437,7 @@ Factor de zoom
 #&Print... (denied)
 #&Remember the password for this document
 #&Shrink pages to printable area (if necessary)
+#&Use original page sizes
 #Attachment: %s
 #Bookmarks
 #Can't connect to the Internet (error %#x).

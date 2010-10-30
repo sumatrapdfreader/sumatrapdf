@@ -181,6 +181,7 @@ Micşorează
 #&Settings
 #&Shrink pages to printable area (if necessary)
 #&Skip this version
+#&Use original page sizes
 #&Yes
 #(of %d)
 #Advanced

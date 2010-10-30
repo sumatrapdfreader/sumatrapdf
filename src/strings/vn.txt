@@ -484,5 +484,6 @@ printing document
 đang in tập tin
 
 # Untranslated:
+#&Use original page sizes
 #Copying text was denied (copying as image only)
 

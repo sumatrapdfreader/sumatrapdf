@@ -372,6 +372,7 @@ Faktor povečave
 #&Print... (denied)
 #&Remember the password for this document
 #&Shrink pages to printable area (if necessary)
+#&Use original page sizes
 #Application:
 #Attachment: %s
 #Author:

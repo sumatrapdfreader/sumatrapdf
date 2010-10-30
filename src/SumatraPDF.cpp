@@ -4098,6 +4098,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 if (PrintScaleShrink == scaleAdv)
                     // try to use correct zoom values (scale down to fit the physical page, though)
                     zoom = min(dpiFactor, zoom);
+                else if (PrintScaleNone == scaleAdv)
+                    zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
                 RECT rc;
@@ -4153,6 +4155,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
             if (PrintScaleShrink == scaleAdv)
                 // try to use correct zoom values (scale down to fit the physical page, though)
                 zoom = min(dpiFactor, zoom);
+            else if (PrintScaleNone == scaleAdv)
+                zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
             RECT rc;
@@ -6300,7 +6304,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
             if (VK_MULTIPLY == wParam && WasKeyDown(VK_SHIFT))
                 TreeView_ExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND);
             else if (VK_MULTIPLY == wParam)
-                TreeView_ExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, true);
+                TreeView_ExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
             else if (VK_DIVIDE == wParam && WasKeyDown(VK_SHIFT)) {
                 HTREEITEM root = TreeView_GetRoot(hwnd);
                 if (!TreeView_GetNextSibling(hwnd, root))

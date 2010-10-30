@@ -486,3 +486,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#&Use original page sizes
+

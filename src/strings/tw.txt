@@ -437,6 +437,7 @@ printing document
 #&Odd pages only
 #&Remember the password for this document
 #&Shrink pages to printable area (if necessary)
+#&Use original page sizes
 #&Yes
 #(of %d)
 #Attachment: %s

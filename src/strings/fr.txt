@@ -499,3 +499,6 @@ copier le text
 printing document
 imprimer le document
 
+# Untranslated:
+#&Use original page sizes
+

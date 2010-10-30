@@ -440,6 +440,7 @@ printing document
 문서 인쇄중
 
 # Untranslated:
+#&Use original page sizes
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
 #Denied Permissions:

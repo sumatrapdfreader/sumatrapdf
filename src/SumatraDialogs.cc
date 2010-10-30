@@ -769,12 +769,14 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARA
         SetDlgItemText(hDlg, IDC_SECTION_PRINT_SCALE, _TR("Page scaling"));
         SetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, _TR("&Shrink pages to printable area (if necessary)"));
         SetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, _TR("&Fit pages to printable area"));
+        SetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, _TR("&Use original page sizes"));
 
         CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
             data->range == PrintRangeEven ? IDC_PRINT_RANGE_EVEN :
             data->range == PrintRangeOdd ? IDC_PRINT_RANGE_ODD : IDC_PRINT_RANGE_ALL);
         CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_FIT,
-            data->scale == PrintScaleFit ? IDC_PRINT_SCALE_FIT : IDC_PRINT_SCALE_SHRINK);
+            data->scale == PrintScaleFit ? IDC_PRINT_SCALE_FIT :
+            data->scale == PrintScaleShrink ? IDC_PRINT_SCALE_SHRINK : IDC_PRINT_SCALE_NONE);
 
         return FALSE;
 
@@ -790,8 +792,10 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT message, WPARA
                 data->range = PrintRangeAll;
             if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT))
                 data->scale = PrintScaleFit;
-            else
+            else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_SHRINK))
                 data->scale = PrintScaleShrink;
+            else
+                data->scale = PrintScaleNone;
             return TRUE;
         }
         break;

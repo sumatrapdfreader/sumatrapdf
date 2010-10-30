@@ -116,6 +116,9 @@ Seiten auf Druckbereich &verkleinern (falls nötig)
 &Skip this version
 &Diese Version überspringen.
 
+&Use original page sizes
+Seitengröße &nicht anpassen
+
 &View
 &Ansicht
 

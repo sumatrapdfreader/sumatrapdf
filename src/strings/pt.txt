@@ -487,3 +487,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#&Use original page sizes
+

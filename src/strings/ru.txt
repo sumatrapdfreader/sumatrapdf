@@ -496,3 +496,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#&Use original page sizes
+

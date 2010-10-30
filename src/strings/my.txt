@@ -305,6 +305,7 @@ mencetak dokumen
 #&Odd pages only
 #&Remember the password for this document
 #&Shrink pages to printable area (if necessary)
+#&Use original page sizes
 #(of %d)
 #Advanced
 #Associate with PDF files?

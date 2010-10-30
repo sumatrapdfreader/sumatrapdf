@@ -351,6 +351,7 @@ Paliitin/Lumayo
 #&Remember the password for this document
 #&Remember these settings for each document
 #&Shrink pages to printable area (if necessary)
+#&Use original page sizes
 #Advanced
 #Attachment: %s
 #Automatically check for &updates

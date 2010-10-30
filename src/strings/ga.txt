@@ -221,6 +221,7 @@ Féithigh Amach
 #&Remember these settings for each document
 #&Settings
 #&Shrink pages to printable area (if necessary)
+#&Use original page sizes
 #&Yes
 #(of %d)
 #Advanced
