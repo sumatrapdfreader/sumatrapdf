@@ -115,6 +115,9 @@ Contributor: Victor Kozyakin
 &Skip this version
 Пропустить эту версию.
 
+&Use original page sizes
+Использовать оригиналный размер страниц
+
 &View
 Вид
 
@@ -495,7 +498,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#&Use original page sizes
 
