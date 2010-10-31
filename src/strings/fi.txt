@@ -467,6 +467,8 @@ tulostetaan asiakirjaa
 #Check for Updates
 #Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Fit &Content\tCtrl-3
+#Fit Content
 #Page scaling
 #Print range
 

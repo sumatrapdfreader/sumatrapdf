@@ -133,15 +133,22 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
 /* Given 'pageInfo', which should contain correct information about
    pageDx, pageDy and rotation, return a page size after applying a global
    rotation */
-void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
-    double *pageDxOut, double *pageDyOut)
+static void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
+    double *pageDxOut, double *pageDyOut, bool fitToContent=false)
 {
     assert(pageInfo && pageDxOut && pageDyOut);
     if (!pageInfo || !pageDxOut || !pageDyOut)
         return;
 
-    *pageDxOut = pageInfo->pageDx;
-    *pageDyOut = pageInfo->pageDy;
+    if (fitToContent) {
+        if (fz_isemptyrect(pageInfo->contentBox))
+            return pageSizeAfterRotation(pageInfo, rotation, pageDxOut, pageDyOut);
+        *pageDxOut = pageInfo->contentBox.x1 - pageInfo->contentBox.x0;
+        *pageDyOut = pageInfo->contentBox.y1 - pageInfo->contentBox.y0;
+    } else {
+        *pageDxOut = pageInfo->pageDx;
+        *pageDyOut = pageInfo->pageDy;
+    }
 
     rotation += pageInfo->rotation;
     if (rotationFlipped(rotation))
@@ -323,8 +330,8 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
     return false;
 }
 
-/* Given a zoom level that can include a "virtual" zoom levels like ZOOM_FIT_WIDTH
-   and ZOOM_FIT_PAGE, calculate an absolute zoom level */
+/* Given a zoom level that can include a "virtual" zoom levels like ZOOM_FIT_WIDTH,
+   ZOOM_FIT_PAGE or ZOOM_FIT_CONTENT, calculate an absolute zoom level */
 double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
 {
     double          zoomX, zoomY, pageDx, pageDy;
@@ -332,10 +339,14 @@ double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
     int             areaForPageDxInt;
     int             columns;
 
-    if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE)
+    if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE && zoomVirtual != ZOOM_FIT_CONTENT)
         return zoomVirtual * this->_dpiFactor;
 
-    pageSizeAfterRotation(getPageInfo(pageNo), rotation(), &pageDx, &pageDy);
+    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
+    if (fitToContent && fz_isemptyrect(pageInfo->contentBox))
+        pageInfo->contentBox = pdfEngine->pageContentSize(pageNo);
+    pageSizeAfterRotation(pageInfo, rotation(), &pageDx, &pageDy, fitToContent);
 
     assert(0 != (int)pageDx);
     assert(0 != (int)pageDy);
@@ -357,7 +368,7 @@ double DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
     if (ZOOM_FIT_WIDTH == zoomVirtual)
         return zoomX;
 
-    assert(ZOOM_FIT_PAGE == zoomVirtual);
+    assert(ZOOM_FIT_PAGE == zoomVirtual || ZOOM_FIT_CONTENT == zoomVirtual);
     if (zoomX < zoomY)
         return zoomX;
     return zoomY;
@@ -421,13 +432,15 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         double  minZoom = INVALID_BIG_ZOOM;
         for (int pageNo = 1; pageNo <= pageCount(); pageNo++) {
             if (pageShown(pageNo)) {
-                double thisPageZoom = zoomRealFromVirtualForPage(this->zoomVirtual(), pageNo);
+                double thisPageZoom = zoomRealFromVirtualForPage(zoomVirtual, pageNo);
                 if (minZoom > thisPageZoom)
                     minZoom = thisPageZoom;
             }
         }
         assert(minZoom != INVALID_BIG_ZOOM);
         this->_zoomReal = minZoom;
+    } else if (ZOOM_FIT_CONTENT == zoomVirtual) {
+        this->_zoomReal = zoomRealFromVirtualForPage(zoomVirtual, currentPageNo());
     } else
         this->_zoomReal = zoomVirtual * this->_dpiFactor;
 }
@@ -842,12 +855,39 @@ void DisplayModel::changeTotalDrawAreaSize(SizeD totalDrawAreaSize)
     setTotalDrawAreaSize(totalDrawAreaSize);
     relayout(zoomVirtual(), rotation());
     if (isDocLoaded) {
-        setScrollState(&ss);
+        // when fitting to content, let goToPage do the necessary scrolling
+        if (_zoomVirtual != ZOOM_FIT_CONTENT)
+            setScrollState(&ss);
+        else
+            goToPage(ss.page, 0);
     } else {
         recalcVisibleParts();
         renderVisibleParts();
         setScrollbarsState();
     }
+}
+
+/* get the (screen) coordinates of the point where a page's actual
+   content begins (relative to the page's top left corner) */
+void DisplayModel::getContentStart(int pageNo, int *x, int *y)
+{
+    PdfPageInfo *pageInfo = getPageInfo(pageNo);
+    if (fz_isemptyrect(pageInfo->contentBox))
+        pageInfo->contentBox = pdfEngine->pageContentSize(pageNo);
+    if (fz_isemptyrect(pageInfo->contentBox)) {
+        *x = *y = 0;
+        return;
+    }
+
+    fz_matrix ctm = pdfEngine->viewctm(pageNo, _zoomReal * 0.01, _rotation);
+    fz_rect rect = { pageInfo->contentBox.x0, pageInfo->contentBox.y0,
+        pageInfo->contentBox.x1, pageInfo->contentBox.y1 };
+    rect = fz_transformrect(ctm, rect);
+
+    *x = min(rect.x0, rect.x1);
+    if (*x < 0) *x += pageInfo->currDx;
+    *y = min(rect.y0, rect.y1);
+    if (*y < 0) *y += pageInfo->currDy;
 }
 
 void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
@@ -867,9 +907,20 @@ void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         /* in single page mode going to another page involves recalculating
            the size of canvas */
         changeStartPage(pageNo);
+    } else if (ZOOM_FIT_CONTENT == _zoomVirtual) {
+        // make sure that setZoomVirtual uses the correct page to calculate
+        // the zoom level for (visibility will be recalculated below anyway)
+        for (int i =  pageCount(); i > 0; i--)
+            getPageInfo(i)->visible = (i == pageNo ? 1 : 0);
+        relayout(_zoomVirtual, _rotation);
     }
     //DBG_OUT("DisplayModel::goToPage(pageNo=%d, scrollY=%d)\n", pageNo, scrollY);
     PdfPageInfo * pageInfo = getPageInfo(pageNo);
+
+    if (ZOOM_FIT_CONTENT == _zoomVirtual && 0 == scrollY && -1 == scrollX)
+        // scroll down to where the actual content starts
+        getContentStart(pageNo, &scrollX, &scrollY);
+
     if (-1 != scrollX)
         areaOffset.x = (double)scrollX;
     // make sure to not display the blank space beside the first page in cover mode
@@ -962,8 +1013,14 @@ bool DisplayModel::goToPrevPage(int scrollY)
     int currPageNo = currentPageNo();
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
 
+    int topX, topY;
+    if (0 == scrollY && _zoomVirtual == ZOOM_FIT_CONTENT)
+        getContentStart(currPageNo, &topX, &topY);
+
     PdfPageInfo * pageInfo = getPageInfo(currPageNo);
-    if (pageInfo->bitmapY > scrollY && displayModeContinuous(displayMode())) {
+    if (_zoomVirtual == ZOOM_FIT_CONTENT && pageInfo->bitmapY <= topY)
+        ; // continue, even though the current page isn't fully visible
+    else if (pageInfo->bitmapY > scrollY && displayModeContinuous(displayMode())) {
         /* the current page isn't fully visible, so show it first */
         goToPage(currPageNo, scrollY);
         return true;

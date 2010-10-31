@@ -45,6 +45,9 @@ typedef struct PdfPageInfo {
     double          pageDy;
     int             rotation;
 
+    /* data that is calculated when needed. actual content size within a page */
+    fz_bbox         contentBox;
+
     /* data that needs to be set before DisplayModel_relayout().
        Determines whether a given page should be shown on the screen. */
     bool            shown;
@@ -163,10 +166,9 @@ public:
     const TCHAR *fileName(void) const { return pdfEngine->fileName(); }
 
     /* a "virtual" zoom level. Can be either a real zoom level in percent
-       (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE
-       or ZOOM_FIT_WIDTH, whose real value depends on draw area size */
+       (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
+       ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     double zoomVirtual(void) const { return _zoomVirtual; }
-    void setZoomVirtual(double zoomVirtual);
 
     double zoomReal(void) const { return _zoomReal; }
     double zoomReal(int pageNo);
@@ -290,6 +292,8 @@ protected:
     double          zoomRealFromVirtualForPage(double zoomVirtual, int pageNo);
     int             firstVisiblePageNo(void) const;
     void            changeStartPage(int startPage);
+    void            getContentStart(int pageNo, int *x, int *y);
+    void            setZoomVirtual(double zoomVirtual);
     void            recalcVisibleParts(void);
     void            recalcSearchHitCanvasPos(void);
     void            renderVisibleParts(void);
@@ -323,7 +327,7 @@ protected:
     DisplaySettings * _padding;
 
     /* real zoom value calculated from zoomVirtual. Same as zoomVirtual except
-       for ZOOM_FIT_PAGE and ZOOM_FIT_WIDTH */
+       for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     double          _zoomReal;
     double          _zoomVirtual;
     int             _rotation;
@@ -349,7 +353,6 @@ bool                displayModeContinuous(DisplayMode displayMode);
 bool                displayModeFacing(DisplayMode displayMode);
 bool                displayModeShowCover(DisplayMode displayMode);
 int                 columnsFromDisplayMode(DisplayMode displayMode);
-void                pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation, double *pageDxOut, double *pageDyOut);
 
 DisplayModel *DisplayModel_CreateFromFileName(
   const TCHAR *fileName,

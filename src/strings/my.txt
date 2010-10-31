@@ -327,6 +327,8 @@ mencetak dokumen
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
+#Fit &Content\tCtrl-3
+#Fit Content
 #Found text at page %d
 #Hint: Use the F3 key for finding again
 #Make SumatraPDF default application for PDF files?

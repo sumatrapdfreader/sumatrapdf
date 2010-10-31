@@ -499,3 +499,7 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Fit &Content\tCtrl-3
+#Fit Content
+

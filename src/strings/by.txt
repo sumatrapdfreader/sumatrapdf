@@ -364,6 +364,8 @@ Zoom Out
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
+#Fit &Content\tCtrl-3
+#Fit Content
 #Hint: Use the F3 key for finding again
 #Modified:
 #No synchronization file found

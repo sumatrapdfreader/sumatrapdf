@@ -446,6 +446,8 @@ printing document
 #Check for Updates
 #Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Fit &Content\tCtrl-3
+#Fit Content
 #No result found around line %u in file %s
 #Page scaling
 #Print range

@@ -220,6 +220,8 @@ Micşorează
 #File Size:
 #File:
 #Find
+#Fit &Content\tCtrl-3
+#Fit Content
 #Found text at page %d
 #Go to page
 #Hint: Use the F3 key for finding again

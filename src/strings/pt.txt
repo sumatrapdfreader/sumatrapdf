@@ -489,4 +489,6 @@ imprimindo documento
 
 # Untranslated:
 #&Use original page sizes
+#Fit &Content\tCtrl-3
+#Fit Content
 

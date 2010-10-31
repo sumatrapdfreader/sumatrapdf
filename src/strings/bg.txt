@@ -400,6 +400,8 @@ Zoom factor
 #Enter the command-line to invoke when you double-click on the PDF document:
 #File Size:
 #File:
+#Fit &Content\tCtrl-3
+#Fit Content
 #Modified:
 #Number of Pages:
 #OK

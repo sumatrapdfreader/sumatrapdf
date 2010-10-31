@@ -441,6 +441,8 @@ prebieha tlač dokumentu
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Fit &Content\tCtrl-3
+#Fit Content
 #No synchronization file found
 #No synchronization info at this position
 #Page scaling

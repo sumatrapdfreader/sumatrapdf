@@ -68,7 +68,8 @@
 #define IDM_ZOOM_25                     453
 #define IDM_ZOOM_12_5                   454
 #define IDM_ZOOM_8_33                   455
-#define IDM_ZOOM_CUSTOM                 456
+#define IDM_ZOOM_FIT_CONTENT            456
+#define IDM_ZOOM_CUSTOM                 457
 
 #define IDM_CONTRIBUTE_TRANSLATION      460
 #define IDM_LANG_EN                     461

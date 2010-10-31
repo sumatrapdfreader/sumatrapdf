@@ -284,11 +284,17 @@ Rückwärts suchen
 Find:
 Suchen:
 
+Fit &Content\tCtrl-3
+An &Inhalt anpassen\tStrg+3
+
 Fit &Page\tCtrl-0
 An &Seite anpassen\tStrg+0
 
 Fit &Width\tCtrl-2
 An &Breite anpassen\tStrg+2
+
+Fit Content
+An Inhalt anpassen
 
 Fit Page
 An Seite anpassen

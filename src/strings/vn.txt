@@ -486,4 +486,6 @@ printing document
 # Untranslated:
 #&Use original page sizes
 #Copying text was denied (copying as image only)
+#Fit &Content\tCtrl-3
+#Fit Content
 

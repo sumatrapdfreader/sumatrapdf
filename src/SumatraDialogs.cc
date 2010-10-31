@@ -497,7 +497,7 @@ INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
     return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
 }
 
-static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, 0,
+static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_FIT_CONTENT, 0,
     6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 125.0, 100.0, 50.0, 25.0, 12.5, 8.33 };
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, double currZoom)
@@ -505,6 +505,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, double currZoom)
     // Fill the possible zoom settings into the select box
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Page"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Content"));
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("-"));
 #ifndef BUILD_RM_VERSION
     SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("6400%"));

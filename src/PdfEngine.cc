@@ -484,11 +484,32 @@ int PdfEngine::pageRotation(int pageNo)
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_obj *page = pdf_getpageobject(_xref, pageNo);
     fz_rect bbox;
-    if (!page || pdf_getmediabox(&bbox, page) != fz_okay)
+    if (pdf_getmediabox(&bbox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
         return SizeD(0,0);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
+}
+
+fz_bbox PdfEngine::pageContentSize(int pageNo)
+{
+    assert(validPageNo(pageNo));
+    pdf_page *page = getPdfPage(pageNo);
+    if (!page)
+        return fz_emptybbox;
+
+    fz_bbox bbox;
+    fz_device *dev = fz_newbboxdevice(&bbox);
+    EnterCriticalSection(&_xrefAccess);
+    fz_error error = pdf_runpage(_xref, page, dev, fz_identity);
+    LeaveCriticalSection(&_xrefAccess);
+    fz_freedevice(dev);
+    if (error != fz_okay)
+        return fz_emptybbox;
+
+    fz_rect mediabox;
+    if (pdf_getmediabox(&mediabox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
+        return fz_emptybbox;
+    return fz_intersectbbox(bbox, fz_roundrect(mediabox));
 }
 
 bool PdfEngine::hasPermission(int permission)

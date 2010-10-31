@@ -389,6 +389,8 @@ Zoom factor
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
+#Fit &Content\tCtrl-3
+#Fit Content
 #Modified:
 #No synchronization file found
 #Number of Pages:

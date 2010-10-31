@@ -446,6 +446,8 @@ printing document
 #Denied Permissions:
 #Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
+#Fit &Content\tCtrl-3
+#Fit Content
 #Main PDF reader can't be changed in portable mode
 #No matches were found
 #No result found around line %u in file %s

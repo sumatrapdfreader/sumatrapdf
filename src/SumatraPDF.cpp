@@ -29,11 +29,9 @@
 #define USE_GDI_FOR_PRINTING
 
 /* Define if you want to conserve memory by always freeing cached bitmaps
-   for pages not visible. Only enable for stress-testing the logic. On
-   desktop machine we usually have plenty memory */
-#ifndef USE_GDI_FOR_RENDERING
+   for pages not visible. Disabling this might lead to pages not rendering
+   due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
-#endif
 
 /* undefine if you don't want to use memory consuming double-buffering for rendering the PDF */
 #define DOUBLE_BUFFER
@@ -1076,6 +1074,7 @@ MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl-0"),            IDM_ZOOM_FIT_PAGE,          0  },
     { _TRN("&Actual Size\tCtrl-1"),         IDM_ZOOM_ACTUAL_SIZE,       0  },
     { _TRN("Fit &Width\tCtrl-2"),           IDM_ZOOM_FIT_WIDTH,         0  },
+    { _TRN("Fit &Content\tCtrl-3"),         IDM_ZOOM_FIT_CONTENT,       0  },
     { _TRN("Custom &Zoom...\tCtrl-Y"),      IDM_ZOOM_CUSTOM,            0  },
     { SEP_ITEM },
 #ifndef BUILD_RM_VERSION
@@ -1369,10 +1368,11 @@ unsigned short gItemId[] = {
     IDM_ZOOM_6400, IDM_ZOOM_3200, IDM_ZOOM_1600, IDM_ZOOM_800, IDM_ZOOM_400,
     IDM_ZOOM_200, IDM_ZOOM_150, IDM_ZOOM_125, IDM_ZOOM_100, IDM_ZOOM_50,
     IDM_ZOOM_25, IDM_ZOOM_12_5, IDM_ZOOM_8_33, IDM_ZOOM_FIT_PAGE, 
-    IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_ACTUAL_SIZE, IDM_ZOOM_CUSTOM };
+    IDM_ZOOM_FIT_WIDTH, IDM_ZOOM_FIT_CONTENT, IDM_ZOOM_ACTUAL_SIZE, IDM_ZOOM_CUSTOM };
 
 double gItemZoom[] = { 6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 
-    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_ACTUAL_SIZE, 0 };
+    125.0, 100.0, 50.0, 25.0, 12.5, 8.33, ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_FIT_CONTENT,
+    ZOOM_ACTUAL_SIZE, 0 };
 
 static UINT MenuIdFromVirtualZoom(double virtualZoom)
 {
@@ -2552,7 +2552,6 @@ static void WindowInfo_UpdateTocSelection(WindowInfo *win, int currPageNo)
     HTREEITEM hCurrItem = WindowInfo_TreeItemForPageNo(win, hRoot, currPageNo);
     if (hCurrItem)
         TreeView_SelectItem(win->hwndTocTree, hCurrItem);
-    win->currPageNo = currPageNo;
 }
 
 // The current page edit box is updated with the current page number
@@ -2571,8 +2570,13 @@ void DisplayModel::pageChanged()
             SetWindowText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
-        if (currPageNo != win->currPageNo)
+        if (currPageNo != win->currPageNo) {
             WindowInfo_UpdateTocSelection(win, currPageNo);
+            if (ZOOM_FIT_CONTENT == _zoomVirtual)
+                // re-allow hiding the scroll bars
+                win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
+            win->currPageNo = currPageNo;
+        }
     }
 }
 
@@ -2604,6 +2608,23 @@ void DisplayModel::setScrollbarsState(void)
     int canvasDy = _canvasSize.dyI();
     int drawAreaDx = drawAreaSize.dxI();
     int drawAreaDy = drawAreaSize.dyI();
+
+    // When hiding the scroll bars and fitting content, it could be that we'd have to
+    // display the scroll bars right again for the new zoom. Make sure we haven't just done
+    // that - or if so, force the scroll bars to remain visible.
+    if (ZOOM_FIT_CONTENT == win->dm->zoomVirtual()) {
+        if ((win->prevCanvasBR.y != drawAreaDy || win->prevCanvasBR.x != drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) &&
+            (win->prevCanvasBR.x != drawAreaDx || win->prevCanvasBR.y != drawAreaDy + GetSystemMetrics(SM_CYHSCROLL))) {
+            win->prevCanvasBR.x = drawAreaDx;
+            win->prevCanvasBR.y = drawAreaDy;
+        }
+        else {
+            if (drawAreaDx == canvasDx)
+                canvasDx++;
+            if (drawAreaDy == canvasDy)
+                canvasDy++;
+        }
+    }
 
     if (drawAreaDx >= canvasDx) {
         si.nPos = 0;
@@ -2695,6 +2716,8 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
     if (ZOOM_FIT_PAGE == dm->zoomVirtual())
         dm->zoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == dm->zoomVirtual())
+        dm->zoomTo(ZOOM_FIT_CONTENT);
+    else if (ZOOM_FIT_CONTENT == dm->zoomVirtual())
         dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
@@ -7016,6 +7039,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                 case IDM_ZOOM_8_33:
                 case IDM_ZOOM_FIT_PAGE:
                 case IDM_ZOOM_FIT_WIDTH:
+                case IDM_ZOOM_FIT_CONTENT:
                 case IDM_ZOOM_ACTUAL_SIZE:
                     OnMenuZoom(win, (UINT)wmId);
                     break;
@@ -8173,4 +8197,3 @@ Exit:
 
     return msg.wParam;
 }
-

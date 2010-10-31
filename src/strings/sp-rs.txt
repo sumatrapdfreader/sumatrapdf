@@ -399,6 +399,8 @@ Faktor uvećanja
 #F&orward\tAlt+Right Arrow
 #File Size:
 #File:
+#Fit &Content\tCtrl-3
+#Fit Content
 #Modified:
 #Number of Pages:
 #P&roperties\tCtrl-D
