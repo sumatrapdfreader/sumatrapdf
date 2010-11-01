@@ -113,6 +113,9 @@ Contributor: Hrant Ohanyan »»» http://haysoft.org (hrantohanyan@mail.am)
 &Skip this version
 &Բաց թողնել այս տարբերակը
 
+&Use original page sizes
+&Օգտագործել էջերի իրական չափը
+
 &View
 &Դիտել
 
@@ -197,6 +200,9 @@ Continuous facing
 Contribute Translation
 Օգնել թարգմանել
 
+Copying text was denied (copying as image only)
+Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
+
 Could not open Printer
 Տպիչը հասանելի չէ
 
@@ -275,11 +281,17 @@ Find Previous
 Find:
 Փնտրել.
 
+Fit &Content\tCtrl-3
+Հարմարեցնել &բովանդակությունը\tCtrl-3
+
 Fit &Page\tCtrl-0
 Էջի &չափով\tCtrl-0
 
 Fit &Width\tCtrl-2
 Հավասարեցնել &լայնությամբ\tCtrl-2
+
+Fit Content
+Հարմարեցնել բովանդակությունը
 
 Fit Page
 Ձգել էջը
@@ -438,10 +450,10 @@ SumatraPDF Options
 Ընտրանքներ
 
 SumatraPDF is your main PDF reader
-PDF ֆայլերը ասոցացվել են SumatraPDF-ի հետ
+PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 
 SumatraPDF should now be your main PDF reader
-PDF ֆայլերը ասոցացվեցին SumatraPDF-ի հետ
+PDF ֆայլերը ասոցիացվեցին SumatraPDF-ի հետ
 
 Synchronization file cannot be opened
 Հնարավոր չէ բացել սինխրոնիզացման ֆայլը
@@ -490,10 +502,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#&Use original page sizes
-#Copying text was denied (copying as image only)
-#Fit &Content\tCtrl-3
-#Fit Content
 
