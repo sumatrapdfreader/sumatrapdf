@@ -48,7 +48,7 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
 !if "$(TEXBUILD)"=="1"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=_T(\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\")" /D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")" /D "CURR_VERSION=\"$(VERSION)\""
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO_URL=_T(\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\")" /D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")" /D "CURR_VERSION=$(VERSION)"
 !endif
 
 # Make it easy to compile as ANSI or UNICODE application
@@ -110,7 +110,7 @@ cleanall: force
 	-rmdir /S /Q obj-*
 
 $(SUMATRA_RES): src\SumatraPDF.rc
-	rc /r /fo$(SUMATRA_RES) src\SumatraPDF.rc
+	rc /r /fo$(SUMATRA_RES) $(EXTCFLAGS) src\SumatraPDF.rc
 
 $(SUMATRA_MANIFEST): src\SumatraPDF.manifest.rc
 	rc /r /fo$(SUMATRA_MANIFEST) src\SumatraPDF.manifest.rc

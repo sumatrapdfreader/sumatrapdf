@@ -94,12 +94,12 @@ def ensure_path_exists(path):
     sys.exit(1)
 
 # version line is in the format:
-# #define CURR_VERSION "1.1"
+# #define CURR_VERSION 1.1
 def extract_sumatra_version(file_path):
   fo = open(file_path, "r")
   d = fo.read()
   fo.close()
-  m = re.search('CURR_VERSION "([^"]+)"', d)
+  m = re.search('CURR_VERSION (\\d+(?:\\.\\d+)*)', d)
   ver = m.group(1)
   return ver
 

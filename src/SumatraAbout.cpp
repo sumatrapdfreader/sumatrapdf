@@ -25,20 +25,14 @@
 #define VERSION_TXT_FONT        _T("Arial Black")
 #define VERSION_TXT_FONT_SIZE   12
 
+#define VERSION_TXT             _T("v") CURR_VERSION_STR
 #ifdef SVN_PRE_RELEASE_VER
- #define VERSION_TXT            _T("v") _T(CURR_VERSION) _T(".") _T(QM(SVN_PRE_RELEASE_VER))
  #define VERSION_SUB_TXT        _T("Pre-release")
 #else
- #ifdef DEBUG
-  #define VERSION_TXT           _T("v") _T(CURR_VERSION) _T(" (dbg)")
+ #if defined(DEBUG) || !defined(BUILD_RM_VERSION)
   #define VERSION_SUB_TXT       _T("")
  #else
-  #define VERSION_TXT           _T("v") _T(CURR_VERSION)
-  #ifdef BUILD_RM_VERSION
-   #define VERSION_SUB_TXT      _T("Adapted by RM")
-  #else
-   #define VERSION_SUB_TXT      _T("")
-  #endif
+  #define VERSION_SUB_TXT       _T("Adapted by RM")
  #endif
 #endif
 

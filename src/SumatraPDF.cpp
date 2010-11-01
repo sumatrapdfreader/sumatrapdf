@@ -572,7 +572,7 @@ static bool WasKeyDown(int virtKey)
 
 #ifndef SVN_UPDATE_LINK
 #ifdef SVN_PRE_RELEASE_VER
-#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/prerelase.html")
+#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/prerelease.html")
 #else
 #define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf")
 #endif

@@ -39,14 +39,19 @@ BEGIN
     //language ID = U.S. English, char set = Windows, Multilingual
 
     BEGIN
-      VALUE "FileDescription", "SumatraPDF\0"
+      VALUE "FileDescription",  "SumatraPDF"
       VALUE "FileVersion",      VER_RESOURCE_STR
-      VALUE "OriginalFilename", "SumatraPDF.exe\0"
-      VALUE "ProductName",      "SumatraPDF\0"
+      VALUE "LegalCopyright",   COPYRIGHT_STR
+      VALUE "OriginalFilename", "SumatraPDF.exe"
+      VALUE "ProductName",      "SumatraPDF"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "Comments",         "SumatraPDF viewer\0"
-      VALUE "CompanyName",      "Krzysztof Kowalczyk\0"
+      VALUE "Comments",         "SumatraPDF viewer"
+      VALUE "CompanyName",      "Krzysztof Kowalczyk"
     END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1252
   END
 END
 
