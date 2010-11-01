@@ -115,6 +115,9 @@ Oldalak széleinek levágása a nyomtatható méretre
 &Skip this version
 Verzió kihagyása
 
+&Use original page sizes
+Ne igazítson a lapmérethez(eredeti oldalméret használata)
+
 &View
 &Nézet
 
@@ -176,7 +179,7 @@ Cannot print this file
 Ez a file nem nyomtatható
 
 Cannot start inverse search command. Please check the command line in the settings.
-Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorsban, a beállításokat.
+Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban, a beállításokat.
 
 Change Language
 Nyelv kiválasztása (Change Language)
@@ -198,6 +201,9 @@ Folyamatos oldalpár
 
 Contribute Translation
 &Járulj hozzá a fordításhoz
+
+Copying text was denied (copying as image only)
+Szöveg másolása tiltott(csak képként másolva)
 
 Could not open Printer
 Nem lehet megnyitni a nyomtatót.
@@ -494,8 +500,6 @@ printing document
 Nyomtatás
 
 # Untranslated:
-#&Use original page sizes
-#Copying text was denied (copying as image only)
 #Fit &Content\tCtrl-3
 #Fit Content
 
