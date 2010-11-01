@@ -283,17 +283,23 @@ Find Previous
 Find:
 Найти:
 
+Fit &Content\tCtrl-3
+По содержимиму\tCtrl-3
+
 Fit &Page\tCtrl-0
 По размеру страницы\tCtrl-0
 
 Fit &Width\tCtrl-2
-Заполнение по ширине\tCtrl-2
+По ширине\tCtrl-2
+
+Fit Content
+По содержимому
 
 Fit Page
 По размеру страницы
 
 Fit Width
-Заполнение по ширине
+По ширине
 
 Found text at page %d
 Текст найден на стр. %d
@@ -498,8 +504,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Fit &Content\tCtrl-3
-#Fit Content
 

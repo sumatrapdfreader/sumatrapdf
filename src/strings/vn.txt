@@ -114,6 +114,9 @@ Nén vừa trang in (nếu cần thiết)
 &Skip this version
 Bỏ qua phiên bản này.
 
+&Use original page sizes
+Sử dụng kích thước trang gốc
+
 &View
 Hiển thị
 
@@ -198,6 +201,9 @@ Trang kép liên tiếp
 Contribute Translation
 Đóng góp dịch thuật
 
+Copying text was denied (copying as image only)
+Chép văn bản bị từ chối (chỉ được chép như hình ảnh)
+
 Could not open Printer
 Không mở được máy in.
 
@@ -276,11 +282,17 @@ Tìm lên
 Find:
 Tìm kiếm:
 
+Fit &Content\tCtrl-3
+Vừa nội dung\tCtrl-3
+
 Fit &Page\tCtrl-0
 Vừa &trang\tCtrl-0
 
 Fit &Width\tCtrl-2
 Vừa chiều &rộng\tCtrl-2
+
+Fit Content
+Vừa nội dung
 
 Fit Page
 Vừa trang
@@ -482,10 +494,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#&Use original page sizes
-#Copying text was denied (copying as image only)
-#Fit &Content\tCtrl-3
-#Fit Content
 
