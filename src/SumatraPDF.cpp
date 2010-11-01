@@ -5480,12 +5480,14 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
 
     if (VK_PRIOR == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+        if (win->dm->zoomVirtual() != ZOOM_FIT_CONTENT)
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToPrevPage(-1);
     } else if (VK_NEXT == key) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
+        if (win->dm->zoomVirtual() != ZOOM_FIT_CONTENT)
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
             win->dm->goToNextPage(0);
     } else if (VK_UP == key) {

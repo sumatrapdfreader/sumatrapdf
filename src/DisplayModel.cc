@@ -440,7 +440,10 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
         assert(minZoom != INVALID_BIG_ZOOM);
         this->_zoomReal = minZoom;
     } else if (ZOOM_FIT_CONTENT == zoomVirtual) {
-        this->_zoomReal = zoomRealFromVirtualForPage(zoomVirtual, currentPageNo());
+        double newZoom = zoomRealFromVirtualForPage(zoomVirtual, currentPageNo());
+        // don't zoom in by just a few pixels (throwing away a prerendered page)
+        if (newZoom < this->_zoomReal || this->_zoomReal / newZoom < 0.95)
+            this->_zoomReal = newZoom;
     } else
         this->_zoomReal = zoomVirtual * this->_dpiFactor;
 }
@@ -1014,12 +1017,12 @@ bool DisplayModel::goToPrevPage(int scrollY)
     DBG_OUT("DisplayModel::goToPrevPage(scrollY=%d), currPageNo=%d\n", scrollY, currPageNo);
 
     int topX, topY;
-    if (0 == scrollY && _zoomVirtual == ZOOM_FIT_CONTENT)
+    if ((0 == scrollY || -1 == scrollY) && _zoomVirtual == ZOOM_FIT_CONTENT)
         getContentStart(currPageNo, &topX, &topY);
 
     PdfPageInfo * pageInfo = getPageInfo(currPageNo);
     if (_zoomVirtual == ZOOM_FIT_CONTENT && pageInfo->bitmapY <= topY)
-        ; // continue, even though the current page isn't fully visible
+        scrollY = 0; // continue, even though the current page isn't fully visible
     else if (pageInfo->bitmapY > scrollY && displayModeContinuous(displayMode())) {
         /* the current page isn't fully visible, so show it first */
         goToPage(currPageNo, scrollY);
