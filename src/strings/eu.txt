@@ -14,8 +14,14 @@ Ho&Ni buruz...
 &Actual Size\tCtrl-1
 &Berezko neurria\tCtrl-1
 
+&All selected pages
+Aukeratutako orri guztuak
+
 &Close\tCtrl-W
 &Itxi\tCtrl-W
+
+&Copy Selection\tCtrl-C
+Aukeratua kopiatu\tCtrl-C
 
 &Don't ask me again
 Ez berriz galdetu
@@ -29,6 +35,9 @@ Lehendabiziko orria \tHome
 &Go To
 ...ra &Joan
 
+&Go to page:
+Orrira joan:
+
 &Help
 &Laguntza
 
@@ -38,14 +47,32 @@ Azken orria\tEnd
 &Next Page\tRight Arrow
 Hurrengo orria\t->
 
+&No
+Ez
+
+&No, thanks
+Ez, Eskerrik Asko
+
 &Open\tCtrl-O
 Ireki\tCtrl-O
+
+&Options...
+Aukerak...
+
+&Password:
+Pasahitza
 
 &Previous Page\tLeft Arrow
 Aurreko orria\t<-
 
 &Print...\tCtrl-P
 &Inprimatu\tCtrl-P
+
+&Print... (denied)
+Imprimatu... (ezeztua)
+
+&Remember the password for this document
+Orri honetako pasahitza gogoratu
 
 &Save As...\tCtrl-S
 ... bezala &Gorde\tCtrl-S
@@ -56,14 +83,32 @@ Bertsio berria saihestu
 &View
 I&kusi
 
+&Yes
+Bai
+
 &Zoom
 &Zoom-a
 
 About SumatraPDF
 SumatraPDF-taz
 
+All files
+Documentu guztiak
+
+Application:
+Aplikazioa:
+
 Associate with PDF files?
 PDF fitxategiekin lotu?
+
+Attachment: %s
+Itsatsia: %s
+
+Author:
+Sortzailea:
+
+Automatic
+Automatikoa
 
 Book&marks\tF12
 Markagailuak\tF12
@@ -86,6 +131,21 @@ Lagun gaitzazu itzulpenekin
 Could not open Printer
 Ezin da inprimagailua ireki
 
+Created:
+Sortua:
+
+Custom &Zoom...\tCtrl-Y
+Zooma Aldatu...\tCtrl-Y
+
+Default &Zoom:
+Berezko zooma:
+
+Document Properties
+Dokumentuaren Propietateak
+
+Download
+Deskargatu
+
 E&xit\tCtrl-Q
 &Irten\tCtrl-Q
 
@@ -107,8 +167,17 @@ Bi aldetatik
 Failed to save a file
 Fitxategia ezin izan da gorde
 
+File Size:
+Documentuaren neurria:
+
+File:
+Documentua:
+
 Fin&d...\tCtrl-F
 Bilatu...\tCtrl-F
+
+Find
+Bilatu
 
 Find Next
 Hurrengoa bilatu
@@ -143,6 +212,9 @@ SumatraPDF erabili besterik ezean PDFak irakurtzeko
 Match Case
 Hizki handiak edo txikiak bereizi
 
+Modified:
+Aldatua:
+
 New version %s is available. Download new version?
 %s bertsio berria eskuragarri dago. Jeisterik nahi?
 
@@ -152,11 +224,38 @@ Bertsio berria eskuragarri duzu.
 Next Page
 Hurrengo orria
 
+Number of Pages:
+Orri Kopurua:
+
 Open
 Ireki
 
+Open in &Adobe Reader
+Adobe Reader-ekin ireki
+
+P&roperties\tCtrl-D
+Propietateak\tCtrl-D
+
+PDF Document
+PDF Documentua
+
+PDF Producer:
+PDF sortzailea
+
+PDF Version:
+PDF Bertzioa:
+
+PDF documents
+PDF dokumentuak
+
 Pa&ge...\tCtrl-G
 ...garren orria\tCtrl-G
+
+Page Size:
+Orri Tamaina:
+
+Page:
+Orria
 
 Previous Page
 Aurreko orria
@@ -170,6 +269,9 @@ Ezkerrerantz biratu\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Eskubirantz biratu\tCtrl-Shift-+
 
+Send by &E-mail...
+E-mailez bidali...
+
 Set inverse search command-line
 Alderantzizko bilaketa ezarri
 
@@ -179,11 +281,26 @@ Lanabes barra azaldu
 Single Page
 Orri bakarra
 
+Subject:
+Gaia:
+
+Text documents
+Textu dokumentuak
+
+Title:
+Titulua:
+
+Unknown source file (%s)
+(%s) iturri desesaguna 
+
 View
 Ikusi
 
 Visit &Website
 &Web orria bisitatu
+
+Warning
+Oharra
 
 You have the latest version.
 Azkeneko bertsioa da daukazuna.
@@ -191,42 +308,36 @@ Azkeneko bertsioa da daukazuna.
 You have version %s
 %s bertsioa daukazu.
 
+Zoom
+Zooma
+
 Zoom In
 Zoom-a hurbildu
 
 Zoom Out
 Zoom-a urruneratu
 
+copying text
+Textua Kopiatzen
+
+printing document
+documentua imprimatzen
+
 # Untranslated:
-#&All selected pages
 #&Back\tAlt+Left Arrow
-#&Copy Selection\tCtrl-C
 #&Even pages only
 #&Find what:
 #&Fit pages to printable area
-#&Go to page:
 #&Magnification:
 #&Manual
 #&Match case
-#&No
-#&No, thanks
 #&Odd pages only
-#&Options...
-#&Password:
-#&Print... (denied)
-#&Remember the password for this document
 #&Remember these settings for each document
 #&Settings
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
-#&Yes
 #(of %d)
 #Advanced
-#All files
-#Application:
-#Attachment: %s
-#Author:
-#Automatic
 #Automatically check for &updates
 #Book View
 #Bookmarks
@@ -240,61 +351,34 @@ Zoom-a urruneratu
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
-#Created:
-#Custom &Zoom...\tCtrl-Y
 #Default &Layout:
-#Default &Zoom:
 #Denied Permissions:
-#Document Properties
-#Download
 #Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
-#File Size:
-#File:
-#Find
 #Fit &Content\tCtrl-3
 #Fit Content
 #Found text at page %d
 #Hint: Use the F3 key for finding again
 #Main PDF reader can't be changed in portable mode
-#Modified:
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#Number of Pages:
 #OK
-#Open in &Adobe Reader
-#P&roperties\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
 #Page number %u inexistant
 #Page scaling
-#Page:
 #Please wait - rendering...
 #Print range
 #Remember &opened files
 #Searching %d of %d...
 #Select content with Ctrl+left mouse button
-#Send by &E-mail...
 #Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
-#Subject:
 #SumatraPDF Options
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#Zoom
 #Zoom factor
 #[Changes detected; refreshing] %s
-#copying text
-#printing document
 
