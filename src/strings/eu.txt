@@ -44,6 +44,9 @@ Orrira joan:
 &Last Page\tEnd
 Azken orria\tEnd
 
+&Magnification:
+Handitzea:
+
 &Next Page\tRight Arrow
 Hurrengo orria\t->
 
@@ -74,11 +77,20 @@ Imprimatu... (ezeztua)
 &Remember the password for this document
 Orri honetako pasahitza gogoratu
 
+&Remember these settings for each document
+Aldaketak hauek gogoratu dokumentu guztietarako
+
 &Save As...\tCtrl-S
 ... bezala &Gorde\tCtrl-S
 
+&Settings
+Aldaketak
+
 &Skip this version
 Bertsio berria saihestu
+
+&Use original page sizes
+Jatorrizko orri tamaina erabili
 
 &View
 I&kusi
@@ -93,7 +105,7 @@ About SumatraPDF
 SumatraPDF-taz
 
 All files
-Documentu guztiak
+Dokumentu guztiak
 
 Application:
 Aplikazioa:
@@ -105,19 +117,40 @@ Attachment: %s
 Itsatsia: %s
 
 Author:
-Sortzailea:
+Egilea:
 
 Automatic
 Automatikoa
 
+Automatically check for &updates
+Automatikoki begiratu egunerapenak
+
+Book View
+Liburu bezala ikusi
+
 Book&marks\tF12
 Markagailuak\tF12
+
+Bytes
+Byte
+
+Can't connect to the Internet (error %#x).
+Ezinezkoa da Internetera konektatu (%#x errorea).
+
+Cancel
+Ezeztatu
+
+Cannot print this file
+Ezinezkoa da artxiboa imprimatu
 
 Change Language
 Hizkuntza aldatu (Change Language)
 
 Check for &Updates
 Bertsio berriagorik ba ote den begiratu
+
+Check for Updates
+Egunerapenak begiratu
 
 Continuous
 Jarraian
@@ -139,6 +172,9 @@ Zooma Aldatu...\tCtrl-Y
 
 Default &Zoom:
 Berezko zooma:
+
+Denied Permissions:
+Baimen ezeztua:
 
 Document Properties
 Dokumentuaren Propietateak
@@ -168,10 +204,10 @@ Failed to save a file
 Fitxategia ezin izan da gorde
 
 File Size:
-Documentuaren neurria:
+Dokumentuaren neurria:
 
 File:
-Documentua:
+Dokumentua:
 
 Fin&d...\tCtrl-F
 Bilatu...\tCtrl-F
@@ -200,6 +236,9 @@ Orriaren neurria egokitu
 Fit Width
 Orriaren zabalera egokitu
 
+Found text at page %d
+Textua aurkito %d orrian
+
 Go to page
 ...garren orrira joan
 
@@ -224,8 +263,14 @@ Bertsio berria eskuragarri duzu.
 Next Page
 Hurrengo orria
 
+No matches were found
+Ez dira Aurkito amaitzik
+
 Number of Pages:
 Orri Kopurua:
+
+OK
+Ondo
 
 Open
 Ireki
@@ -237,7 +282,7 @@ P&roperties\tCtrl-D
 Propietateak\tCtrl-D
 
 PDF Document
-PDF Documentua
+PDF Dokumentua
 
 PDF Producer:
 PDF sortzailea
@@ -254,6 +299,9 @@ Pa&ge...\tCtrl-G
 Page Size:
 Orri Tamaina:
 
+Page number %u inexistant
+Ez da %u zenbaki orririk existitzen
+
 Page:
 Orria
 
@@ -268,6 +316,9 @@ Ezkerrerantz biratu\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
 Eskubirantz biratu\tCtrl-Shift-+
+
+Searching %d of %d...
+%d-tik %d Bilatzen...
 
 Send by &E-mail...
 E-mailez bidali...
@@ -321,56 +372,39 @@ copying text
 Textua Kopiatzen
 
 printing document
-documentua imprimatzen
+dokumentua imprimatzen
 
 # Untranslated:
 #&Back\tAlt+Left Arrow
 #&Even pages only
 #&Find what:
 #&Fit pages to printable area
-#&Magnification:
 #&Manual
 #&Match case
 #&Odd pages only
-#&Remember these settings for each document
-#&Settings
 #&Shrink pages to printable area (if necessary)
-#&Use original page sizes
 #(of %d)
 #Advanced
-#Automatically check for &updates
-#Book View
 #Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Cancel
-#Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
-#Check for Updates
 #Continuous book view
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page
 #Default &Layout:
-#Denied Permissions:
 #Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
 #Fit &Content\tCtrl-3
 #Fit Content
-#Found text at page %d
 #Hint: Use the F3 key for finding again
 #Main PDF reader can't be changed in portable mode
-#No matches were found
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
-#OK
-#Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
 #Print range
 #Remember &opened files
-#Searching %d of %d...
 #Select content with Ctrl+left mouse button
 #Show &pages continuously
 #Show the &bookmarks sidebar when available
