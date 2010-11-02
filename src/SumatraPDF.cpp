@@ -24,7 +24,7 @@
 // Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
 // (using FreeType for fonts) at the expense of higher memory/spooler requirements.
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-#define USE_GDI_FOR_RENDERING
+// #define USE_GDI_FOR_RENDERING
 #endif
 #define USE_GDI_FOR_PRINTING
 
