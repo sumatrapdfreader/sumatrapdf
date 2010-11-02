@@ -232,7 +232,22 @@ public:
 		};
 		imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
 		
-		graphics->DrawImage(&PixmapBitmap(image), corners, 3, -0.5, -0.5, image->w, image->h, UnitPixel, &imgAttrs);
+		float scale = 2.0 * fz_matrixexpansion(ctm) / sqrtf(image->w * image->w + image->h * image->h);
+		if (scale < 1.0 && MIN(image->w, image->h) > 10)
+		{
+			float w = image->w * scale;
+			float h = image->h * scale;
+			Bitmap *scaled = new Bitmap(w, h);
+			
+			Graphics g2(scaled);
+			_setup(&g2);
+			g2.DrawImage(&PixmapBitmap(image), -0.5f, -0.5f, w, h);
+			
+			graphics->DrawImage(scaled, corners, 3, -0.5f, -0.5f, w, h, UnitPixel, &imgAttrs);
+			delete scaled;
+		}
+		else
+			graphics->DrawImage(&PixmapBitmap(image), corners, 3, -0.5f, -0.5f, image->w, image->h, UnitPixel, &imgAttrs);
 	}
 
 	float getAlpha(float alpha=1.0) { return stack->alpha * alpha; }
