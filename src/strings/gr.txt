@@ -109,10 +109,13 @@ Contributor: George Georgiou (geonetor@yahoo.gr)
 &Ρυθμίσεις
 
 &Shrink pages to printable area (if necessary)
-Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (εαν χρειάζεται)
+Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (εάν χρειάζεται)
 
 &Skip this version
 &Παράβλεψη αυτής της έκδοσης
+
+&Use original page sizes
+&Χρησιμοποίηση μεγέθους αρχικών σελίδων
 
 &View
 &Προβολή
@@ -223,7 +226,7 @@ Default &Zoom:
 Προκαθορισμένο &ζουμ:
 
 Denied Permissions:
-Απαγορευμένα δικαιώματα:
+Απαγόρευση δικαιωμάτων:
 
 Document Properties
 Ιδιότητες εγγράφου
@@ -279,11 +282,17 @@ Find Previous
 Find:
 Εύρεση:
 
+Fit &Content\tCtrl-3
+Προσαρμογή &Περιεχόμενα\tCtrl-3
+
 Fit &Page\tCtrl-0
 Ολόκληρη σελίδα\tCtrl-0
 
 Fit &Width\tCtrl-2
 Στο πλάτος παραθύρου\tCtrl-2
+
+Fit Content
+Προσαρμογή Περιεχομένων
 
 Fit Page
 Ολόκληρη σελίδα
@@ -409,7 +418,7 @@ Send by &E-mail...
 Αποστολή με &email...
 
 Set inverse search command-line
-Ενφάνιση γραμμής αντίστροφης αναζήτησης
+Εμφάνιση γραμμής αντίστροφης αναζήτησης
 
 Show &Toolbar
 Εμφάνιση γραμμής εργαλείων
@@ -421,10 +430,10 @@ Show the &bookmarks sidebar when available
 Εμφάνιση πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 
 Single Page
-Μία σελίδα
+Μονή σελίδα
 
 Source file %s has no synchronization point
-Το αρχείο προέλευσης %s δεν λεχει σημείο συγχρονισμού
+Το αρχείο προέλευσης %s δεν έχει σημείο συγχρονισμού
 
 Subject:
 Θέμα:
@@ -469,7 +478,7 @@ Zoom
 Ζουμ
 
 Zoom In
-Μεγένθυση
+Μεγέθυνση
 
 Zoom Out
 Σμίκρυνση
@@ -485,9 +494,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#&Use original page sizes
-#Fit &Content\tCtrl-3
-#Fit Content
 
