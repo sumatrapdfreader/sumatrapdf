@@ -1,7 +1,7 @@
 #include "fitz.h"
 
 fz_pixmap *
-fz_newpixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
+fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsigned char *samples)
 {
 	fz_pixmap *pix;
 
@@ -21,9 +21,24 @@ fz_newpixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
 		pix->n = 1 + colorspace->n;
 	}
 
-	pix->samples = fz_malloc(pix->w * pix->h * pix->n);
+	if (samples)
+	{
+		pix->samples = samples;
+		pix->freesamples = 0;
+	}
+	else
+	{
+		pix->samples = fz_malloc(pix->w * pix->h * pix->n);
+		pix->freesamples = 1;
+	}
 
 	return pix;
+}
+
+fz_pixmap *
+fz_newpixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
+{
+	return fz_newpixmapwithdata(colorspace, x, y, w, h, NULL);
 }
 
 fz_pixmap *
@@ -48,7 +63,8 @@ fz_droppixmap(fz_pixmap *pix)
 			fz_droppixmap(pix->mask);
 		if (pix->colorspace)
 			fz_dropcolorspace(pix->colorspace);
-		fz_free(pix->samples);
+		if (pix->freesamples)
+			fz_free(pix->samples);
 		fz_free(pix);
 	}
 }

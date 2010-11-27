@@ -18,6 +18,9 @@ Contributor: Tommy G.
 &Actual Size\tCtrl-1
 &Verklig storlek\tCtrl-1
 
+&All selected pages
+&Alla valda sidor
+
 &Back\tAlt+Left Arrow
 Tillbaka\tAlt+Pil vänster
 
@@ -30,6 +33,9 @@ Kopiera markering\tCtrl-C
 &Don't ask me again
 Fråga mig inte igen
 
+&Even pages only
+Endast &jämna sidor
+
 &File
 &Arkiv
 
@@ -38,6 +44,9 @@ Fråga mig inte igen
 
 &First Page\tHome
 Första sidan\tHome
+
+&Fit pages to printable area
+Anpassa sidor till utskrivbart &område
 
 &Go To
 &Gå till
@@ -69,6 +78,9 @@ Nästa sida\t->
 &No, thanks
 &Nej, tack
 
+&Odd pages only
+Endast &udda sidor
+
 &Open\tCtrl-O
 &Öppna...\tCtrl-O
 
@@ -87,6 +99,9 @@ Skriv &ut...\tCtrl-P
 &Print... (denied)
 &Utskrift... (nekad)
 
+&Remember the password for this document
+&Minns lösenordet för detta dokument
+
 &Remember these settings for each document
 Kom ihåg dessa inställningar för &varje dokument
 
@@ -96,8 +111,14 @@ Spara so&m...\tCtrl-S
 &Settings
 Alternati&v
 
+&Shrink pages to printable area (if necessary)
+&Krymp sidor (om nödvändigt) så de ryms
+
 &Skip this version
 Hoppa över denna version
+
+&Use original page sizes
+Använd u&rsprunglig sidstorlek
 
 &View
 Vi&sa
@@ -126,6 +147,9 @@ Programvara:
 Associate with PDF files?
 Koppla ihop med PDF-filer?
 
+Attachment: %s
+Bilagor: %s
+
 Author:
 Författare:
 
@@ -141,8 +165,14 @@ Bokuppslag
 Book&marks\tF12
 Bokmärken\tF12
 
+Bookmarks
+Bokmärken
+
 Bytes
 Byte
+
+Can't connect to the Internet (error %#x).
+Kan ej ansluta till internet (fel %#x).
 
 Cancel
 Avbryt
@@ -159,6 +189,9 @@ Byt språk (Change Language)
 Check for &Updates
 &Sök efter ny version
 
+Check for Updates
+Sök uppdateringar
+
 Continuous
 Fortlöpande
 
@@ -170,6 +203,9 @@ Fortlöpande uppslag
 
 Contribute Translation
 Bidra med översättning
+
+Copying text was denied (copying as image only)
+Textkopiering tilläts ej (kopierar som bild)
 
 Could not open Printer
 Kan inte anropa skrivaren.
@@ -210,6 +246,9 @@ Ange lösenord
 Enter password for %s
 Ange lösenord för %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
+
 Error loading PDF file.
 Kan inte öppna PDF-filen.
 
@@ -246,11 +285,17 @@ Sök föregående
 Find:
 Sök
 
+Fit &Content\tCtrl-3
+Passa &innehåll\tCtrl-3
+
 Fit &Page\tCtrl-0
 Anpassa efter &helsida\tCtrl-0
 
 Fit &Width\tCtrl-2
 Anpassa efter &bredd\tCtrl-2
+
+Fit Content
+Passa innehåll
 
 Fit Page
 Anpassa efter helsida
@@ -339,6 +384,9 @@ Sidstorlek:
 Page number %u inexistant
 Sidnummer %u finns ej
 
+Page scaling
+Skala om vid utskrift
+
 Page:
 Sida:
 
@@ -347,6 +395,9 @@ Ett ögonblick - förbereder...
 
 Previous Page
 Föregående sida
+
+Print range
+Skriv ut urval
 
 Printing problem.
 Utskriftsproblem.
@@ -446,23 +497,4 @@ kopierar text
 
 printing document
 skriver ut dokumentet
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Page scaling
-#Print range
 

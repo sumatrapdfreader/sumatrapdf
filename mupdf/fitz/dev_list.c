@@ -344,11 +344,48 @@ fz_freedisplaylist(fz_displaylist *list)
 void
 fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
 {
+	fz_executedisplaylist2(list, dev, topctm, fz_infinitebbox);
+}
+
+/* SumatraPDF: accelerate execution through a prior visibility check */
+void
+fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix topctm, fz_bbox bounds)
+{
 	fz_displaynode *node;
 	fz_rect bbox;
+	unsigned int clipped = 0; /* SumatraPDF */
 	for (node = list->first; node; node = node->next)
 	{
 		fz_matrix ctm = fz_concat(node->ctm, topctm);
+		/* SumatraPDF: accelerate execution through a prior visibility check */
+		if (clipped || fz_isemptyrect(fz_intersectbbox(fz_roundrect(node->rect), bounds)))
+		{
+			switch (node->cmd)
+			{
+			case FZ_CMDCLIPPATH:
+			case FZ_CMDCLIPSTROKEPATH:
+			case FZ_CMDCLIPTEXT:
+			case FZ_CMDCLIPSTROKETEXT:
+			case FZ_CMDCLIPIMAGEMASK:
+			case FZ_CMDBEGINMASK:
+			case FZ_CMDBEGINGROUP:
+				clipped++;
+				continue;
+			case FZ_CMDPOPCLIP:
+			case FZ_CMDENDGROUP:
+				if (!clipped)
+					break;
+				clipped--;
+				continue;
+			case FZ_CMDENDMASK:
+				if (!clipped)
+					break;
+				continue;
+			default:
+				continue;
+			}
+		}
+
 		switch (node->cmd)
 		{
 		case FZ_CMDFILLPATH:
@@ -416,4 +453,5 @@ fz_executedisplaylist(fz_displaylist *list, fz_device *dev, fz_matrix topctm)
 			break;
 		}
 	}
+	assert(clipped == 0); /* SumatraPDF */
 }

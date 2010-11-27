@@ -6,6 +6,7 @@
 
 #include <Wininet.h>
 #include "MemSegment.h"
+#include "tstr_util.h"
 
 // based on information in http://www.codeproject.com/KB/IP/asyncwininet.aspx
 class HttpReqCtx {

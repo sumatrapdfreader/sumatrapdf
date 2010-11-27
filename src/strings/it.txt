@@ -11,6 +11,7 @@ Contributor: iBlawgger
 Contributor: Alessandro Visentin
 Contributor: Alessandro Mariani
 Contributor: Massimiliano Beltrando
+Contributor: Mirco Scottà
 
 &About
 &Informazioni
@@ -37,7 +38,7 @@ Copia Selezione\tCtrl-C
 Solo pagine pari
 
 &File
-&Dati
+&File
 
 &Find what:
 &Ricerca:
@@ -46,7 +47,7 @@ Solo pagine pari
 Prima pagina\tHome
 
 &Fit pages to printable area
-Aggiusta dimensioni pagine alla zona stampabile
+Adatta le pagine alla zona stampabile
 
 &Go To
 &Vai a
@@ -88,7 +89,7 @@ Solo pagine dispari
 &Opzioni...
 
 &Password:
-Parola chiave:
+&Password:
 
 &Previous Page\tLeft Arrow
 Pagina precedente\tFreccia destra
@@ -106,7 +107,7 @@ Ricorda la password per questo documento
 &Ricorda le impostazioni per ogni documento
 
 &Save As...\tCtrl-S
-&Salva con nome\tCtrl-S
+&Salva come...\tCtrl-S
 
 &Settings
 &Impostazioni
@@ -116,6 +117,9 @@ Riduci le pagine alla zona stampabile (se necessario)
 
 &Skip this version
 &Salta questa versione
+
+&Use original page sizes
+&Usa la larghezza originale
 
 &View
 &Visualizza
@@ -154,7 +158,7 @@ Automatic
 Automatico
 
 Automatically check for &updates
-Verifica &automaticamente aggiornamenti
+Controlla &automaticamente aggiornamenti
 
 Book View
 Vista libro
@@ -168,6 +172,9 @@ Segnalibri
 Bytes
 Byte
 
+Can't connect to the Internet (error %#x).
+Impossibile connettersi a Internet (errore %#x).
+
 Cancel
 Annulla
 
@@ -175,13 +182,16 @@ Cannot print this file
 Impossibile stampare il file
 
 Cannot start inverse search command. Please check the command line in the settings.
-Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle preferenze
+Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni
 
 Change Language
 Cambia lingua
 
 Check for &Updates
-&Verifica aggiornamenti
+&Controlla aggiornamenti
+
+Check for Updates
+Controlla aggiornamenti
 
 Continuous
 Pagina continua
@@ -194,6 +204,9 @@ Pagine affiancate continue
 
 Contribute Translation
 Contribuisci alla traduzione
+
+Copying text was denied (copying as image only)
+Impossibile copiare il testo (copia solo come immagine)
 
 Could not open Printer
 Stampante non accessibile
@@ -211,7 +224,7 @@ Custom &Zoom...\tCtrl-Y
 &Ingrandimento personalizzato\tCtrl-Y
 
 Default &Layout:
-&Vista predeffinita
+&Vista predefinita:
 
 Default &Zoom:
 &Ingrandimento predefinito
@@ -234,6 +247,9 @@ Inserisci password
 Enter password for %s
 Inserisci password per %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Inserire la linea di comando da eseguire quando fai doppio clic su un documento PDF:
+
 Error loading PDF file.
 Errore durante l'apertura del file.
 
@@ -247,7 +263,7 @@ Facing
 Pagine affiancate
 
 Failed to save a file
-Salvataggio del file fallito!
+Salvataggio del file fallito
 
 File Size:
 Dimensione del file
@@ -270,11 +286,17 @@ Trova precedente
 Find:
 Trova:
 
+Fit &Content\tCtrl-3
+&Contenuto\tCtrl-3
+
 Fit &Page\tCtrl-0
 &Pagina intera\tCtrl-0
 
 Fit &Width\tCtrl-2
 &Larghezza pagina\tCtrl-2
+
+Fit Content
+Contenuto
 
 Fit Page
 Pagina intera
@@ -289,10 +311,10 @@ Go to page
 Vai a pagina
 
 Hint: Use the F3 key for finding again
-Consiglio: Usa F3 per trovare nuovamente
+Consiglio: Usa F3 per trovare il successivo
 
 Main PDF reader can't be changed in portable mode
-Il lettore PDF predefinito non può cambiare alla modalità portable
+Il lettore PDF predefinito non è modificabile in modalità "portable"
 
 Make SumatraPDF default application for PDF files?
 Impostare SumatraPDF come programma predefinito per i file PDF?
@@ -325,7 +347,7 @@ No synchronization file found
 Non è stato trovato il file di sincronizzazione
 
 No synchronization info at this position
-Niente informazioni di sincronizzazione in questa posizione
+Nessuna informazione di sincronizzazione in questa posizione
 
 Number of Pages:
 Numero di pagine:
@@ -337,10 +359,10 @@ Open
 Apri
 
 Open in &Adobe Reader
-Apri in &Adobe Reader
+Apri con &Adobe Reader
 
 P&roperties\tCtrl-D
-P&roprietà...\tCtrl-D
+P&roprietà\tCtrl-D
 
 PDF Document
 Documento PDF
@@ -361,7 +383,7 @@ Page Size:
 Dimensione pagina:
 
 Page number %u inexistant
-Pagina numero  %u inesistente
+Pagina numero %u inesistente
 
 Page scaling
 Dimensionamento pagina
@@ -397,7 +419,7 @@ Select content with Ctrl+left mouse button
 Seleziona contenuti con Ctrl+tasto sinistro del mouse
 
 Send by &E-mail...
-Invia via &mail...
+Invia per &mail...
 
 Set inverse search command-line
 Imposta comando di ricerca inversa
@@ -472,17 +494,8 @@ Fattore ingrandimento
 [Cambiamenti rilevati; in aggiornamento] %s
 
 copying text
-Copia testo
+copia testo
 
 printing document
-Stampa documento
-
-# Untranslated:
-#&Use original page sizes
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
+stampa documento
 

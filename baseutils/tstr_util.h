@@ -45,6 +45,7 @@
   #define wstr_to_tstr(src)                           wstr_dup((LPCWSTR)src);
   #define tstr_to_wstr(src)                           wstr_dup((LPCWSTR)src);
   #define hex_tstr_decode_byte                        hex_wstr_decode_byte
+  #define DBG_OUT_T     DBG_OUT_W
 #else
   #define tstr_len      strlen
   #define tstr_dup      str_dup
@@ -77,6 +78,7 @@
   #define wstr_to_tstr(src)                           wstr_to_multibyte((src), CP_ACP)
   #define tstr_to_wstr(src)                           multibyte_to_wstr((src), CP_ACP)
   #define hex_tstr_decode_byte                        hex_str_decode_byte
+  #define DBG_OUT_T     DBG_OUT
 #endif
 
 #define utf8_to_tstr(src) multibyte_to_tstr((src), CP_UTF8)

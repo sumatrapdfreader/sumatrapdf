@@ -1,13 +1,13 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv3 */
 
-#include "FileHistory.h"
-#include "tstr_util.h"
-
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "FileHistory.h"
+#include "tstr_util.h"
 
 /* Handling of file history list.
 
@@ -50,7 +50,7 @@ FileHistoryList *FileHistoryList_Node_CreateFromFilePath(const TCHAR *filePath)
 {
     FileHistoryList *node;
 
-    DBG_OUT("FileHistoryList_Node_CreateFromFilePath() file='%s'\n", filePath);
+    DBG_OUT_T("FileHistoryList_Node_CreateFromFilePath() file='%s'\n", filePath);
     node = FileHistoryList_Node_Create();
     if (!node)
         return NULL;
@@ -144,7 +144,7 @@ BOOL FileHistoryList_Node_RemoveByFilePath(FileHistoryList **root, const TCHAR *
     assert(filePath);
     if (!filePath) return FALSE;
 
-    /* TODO: traversing the list twice, but it's small so we don't care */
+    /* traversing the list twice, but it's small so we don't care */
     node = FileHistoryList_Node_FindByFilePath(root, filePath);
     if (!node)
         return FALSE;

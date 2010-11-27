@@ -36,7 +36,7 @@ const WCHAR *FilePath_GetBaseNameW(const WCHAR *path)
 {
     const WCHAR *fileBaseName = path + wstrlen(path);
     while (fileBaseName > path) {
-        if (char_is_dir_sep(fileBaseName[-1])) {
+        if (fileBaseName[-1] < UCHAR_MAX && char_is_dir_sep((char)fileBaseName[-1])) {
             return fileBaseName;
         }
         --fileBaseName;

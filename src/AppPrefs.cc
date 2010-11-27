@@ -391,7 +391,7 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     // first.
 #if 0
     if (!file_exists(state->filePath)) {
-        DBG_OUT("FileHistory_Add() file '%s' doesn't exist anymore\n", state->filePath);
+        DBG_OUT_T(_T("FileHistory_Add() file '%s' doesn't exist anymore\n"), state->filePath);
         return;
     }
 #endif

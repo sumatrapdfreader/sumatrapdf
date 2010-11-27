@@ -507,11 +507,11 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, f
 	if (!font->_data)
 		return NULL;
 	
-	if (font->_data_len != 0)
+	if (font->_data_len > 0)
 	{
 		collection->AddMemoryFont(font->_data, font->_data_len);
 	}
-	else
+	else if (font->_data_len == 0)
 	{
 		WCHAR fontPath[MAX_PATH];
 		MultiByteToWideChar(CP_ACP, 0, font->_data, -1, fontPath, nelem(fontPath));
@@ -520,10 +520,7 @@ gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, f
 	
 	if (collection->GetFamilyCount() == 0)
 	{
-		if (font->_data_len == 0)
-			fz_free((void *)font->_data);
-		font->_data = NULL;
-		
+		font->_data_len = -1;
 		return NULL;
 	}
 	

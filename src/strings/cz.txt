@@ -9,57 +9,67 @@ Lang: cz Czech (Čeština)
 Contributor: Kristian Vrhel
 Contributor: Jiri Saneistr
 Contributor: Pavel Zampach
+Contributor: Martin Ruzicka
 
 &About
 &O programu
 
 &Actual Size\tCtrl-1
-Skutečná velikost\tCtrl-1
+Skutečná velikost\tCtrl+1
+
+&All selected pages
+Vše&chny vybrané stránky
 
 &Back\tAlt+Left Arrow
-Zpět\tAlt+<-
+Zpět\tAlt+Šipka vlevo
 
 &Close\tCtrl-W
-&Zavřít\tCtrl-W
+&Zavřít\tCtrl+W
 
 &Copy Selection\tCtrl-C
-Zkopírovat výběr\tCtrl-C
+&Kopírovat výběr\tCtrl+C
 
 &Don't ask me again
-&Neptej se mě znovu
+&Příště se již neptat
+
+&Even pages only
+Pouz&e sudé stránky
 
 &File
 &Soubor
 
 &Find what:
-Hledat &co:
+&Najít:
 
 &First Page\tHome
 První stránka\tHome
 
+&Fit pages to printable area
+Přizpůsobit &stránky na tisknutelnou plochu
+
 &Go To
-Jdi na
+&Přejít
 
 &Go to page:
-Jdi na &stránku:
+&Přejít na stránku:
 
 &Help
-&Nápověda
+Náp&ověda
 
 &Last Page\tEnd
 Poslední stránka\tEnd
 
 &Magnification:
-&Zvětšení
+&Zvětšení:
 
 &Manual
-&Manuál
+&Příručka
 
 &Match case
-Rozlišovat velká/malá písmena
+&Rozlišovat velikost písmen
 
 &Next Page\tRight Arrow
-Další stránka\t->
+Další stránka\tŠipka vpravo
 
 &No
 &Ne
@@ -67,35 +77,44 @@ Další stránka\t->
 &No, thanks
 &Ne, děkuji
 
+&Odd pages only
+&Pouze liché stránky
+
 &Open\tCtrl-O
-&Otevřít\tCtrl-O
+&Otevřít...\tCtrl+O
 
 &Options...
-&Nastavení
+&Možnosti...
 
 &Password:
-&Heslo
+&Heslo:
 
 &Previous Page\tLeft Arrow
-Předchozí stránka\t<-
+&Předchozí stránka\tŠipka vlevo
 
 &Print...\tCtrl-P
-&Tisk\tCtrl-P
+&Tisk...\tCtrl+P
 
 &Print... (denied)
-&Tisk... (odmítnuto)
+&Tisk... (odepřen)
+
+&Remember the password for this document
+&Pamatovat si heslo tohoto dokumentu
 
 &Remember these settings for each document
-&Pamatuj si tato nastavení pro každý dokument
+&Pamatovat si tato nastavení pro každý dokument
 
 &Save As...\tCtrl-S
-&Uložit jako\tCtrl-S
+&Uložit jako...\tCtrl+S
 
 &Settings
 &Nastavení
 
+&Shrink pages to printable area (if necessary)
+&Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
+
 &Skip this version
-&Přeskoč tuto verzi
+&Přeskočit tuto verzi
 
 &View
 &Zobrazit
@@ -104,7 +123,7 @@ Předchozí stránka\t<-
 &Ano
 
 &Zoom
-&Zvětšení
+Z&většení
 
 (of %d)
 (z %d)
@@ -113,7 +132,7 @@ About SumatraPDF
 O programu SumatraPDF
 
 Advanced
-Rozšířené
+Upřesnit
 
 All files
 Všechny soubory
@@ -122,7 +141,10 @@ Application:
 Aplikace:
 
 Associate with PDF files?
-Přiřadit k PDF souborům?
+Přidružit k PDF souborům?
+
+Attachment: %s
+Příloha: %s
 
 Author:
 Autor:
@@ -131,97 +153,106 @@ Automatic
 Automaticky
 
 Automatically check for &updates
-&Kontroluj aktualizace automaticky
+&Automaticky kontrolovat aktualizace
 
 Book View
-Zobrazit jako knihu
+Kniha
 
 Book&marks\tF12
 Záložky\tF12
 
+Bookmarks
+Záložky
+
 Bytes
-Bytů
+bajtů
 
 Cancel
-Zrušit
+Storno
 
 Cannot print this file
 Tento soubor nelze vytisknout
 
 Cannot start inverse search command. Please check the command line in the settings.
-Nelze spustit inverzní příkaz hledání. Zkontrolujte příkazový řádek v nastavení.
+Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 
 Change Language
-Změň jazyk
+&Změnit jazyk
 
 Check for &Updates
-&Zkontroluj existenci nové verze
+&Zkontrolovat aktualizace
+
+Check for Updates
+Zkontrolovat aktualizace
 
 Continuous
-Průběžně
+Jedna stránka průběžně
 
 Continuous book view
-Průběžné zobrazení
+Kniha průběžně
 
 Continuous facing
-Průběžně protilehlé
+Dvojstránky průběžně
 
 Contribute Translation
-Zašli překlad
+Zaslat překlad
+
+Copying text was denied (copying as image only)
+Kopírování textu bylo odepřeno (lze kopírovat jako obraz)
 
 Could not open Printer
-Není možné otevřít tiskárnu
+Tiskárnu nelze otevřít
 
 Couldn't initialize printer
-Tiskárna nebyla inicializována
+Tiskárnu nelze inicializovat
 
 Couldn't render the page
-Stránku nebylo možno vyrenderovat
+Stránku nelze vykreslit
 
 Created:
 Vytvořeno:
 
 Custom &Zoom...\tCtrl-Y
-&Volitelné přiblížení...\tCtrl-Y
+Vlastní &měřítko...\tCtrl+Y
 
 Default &Layout:
-&Výchozí rozmístění
+Výchozí &uspořádání:
 
 Default &Zoom:
-Výchozí &zvětšení
+Výchozí &zvětšení:
 
 Denied Permissions:
-Odmítnuto:
+Odepřená oprávnění:
 
 Document Properties
 Vlastnosti dokumentu
 
 Download
-Stažení
+Stáhnout
 
 E&xit\tCtrl-Q
-&Konec\tCtrl-Q
+&Konec\tCtrl+Q
 
 Enter password
-Vložte heslo
+Zadejte heslo
 
 Enter password for %s
-Vložte heslo pro %s
+Zadejte heslo pro %s
 
 Error loading PDF file.
-Chyba při načítání PDF souboru.
+Při načítání PDF souboru došlo k chybě.
 
 F&orward\tAlt+Right Arrow
-Vpřed\tAlt+->
+Vpřed\tAlt+Šipka vpravo
 
 F&ullscreen\tCtrl-L
-Celá obrazovka\tCtrl-L
+Celá obrazovka\tCtrl+L
 
 Facing
-Protilehlé
+Dvojstránky
 
 Failed to save a file
-Uložení souboru selhalo
+Při ukládání došlo k chybě
 
 File Size:
 Velikost souboru:
@@ -230,55 +261,61 @@ File:
 Soubor:
 
 Fin&d...\tCtrl-F
-Najít...\tCtrl-F
+Najít...\tCtrl+F
 
 Find
-Hledat
+Najít
 
 Find Next
-Najdi další
+Najít další
 
 Find Previous
-Najdi předchozí
+Najít předchozí
 
 Find:
 Najít:
 
+Fit &Content\tCtrl-3
+Přizpůsobit &obsah\tCtrl+3
+
 Fit &Page\tCtrl-0
-Přizpůsobit stránce\tCtrl-0
+Podle &stránky\tCtrl+0
 
 Fit &Width\tCtrl-2
-Podle šířky\tCtrl-2
+&Podle šířky\tCtrl+2
+
+Fit Content
+Přizpůsobit obsah
 
 Fit Page
-Přizpůsobit stránce
+Podle stránky
 
 Fit Width
 Podle šířky
 
 Found text at page %d
-Text nalezen na stránce %d
+Položka nalezena na stránce %d
 
 Go to page
-Jdi na stránku
+Přejít na stránku
 
 Hint: Use the F3 key for finding again
-Nápověda: Použijte klávesu F3 pro další hledání
+Nápověda: Klávesou F3 vyhledáte další výskyt
 
 Main PDF reader can't be changed in portable mode
-Výchozí čtečka PDF nemůže být změněna v přenosném režimu
+V přenosném režimu nelze měnit výchozí PDF prohlížeč
 
 Make SumatraPDF default application for PDF files?
-Nastavit SumatraPDF jako výchozí aplikaci pro soubory PDF?
+Nastavit SumatraPDF jako výchozí prohlížeč PDF souborů?
 
 Make SumatraPDF my main PDF reader
-Nastavit SumatraPDF jako výchozí PDF čtečku
+Nastavit SumatraPDF jako výchozí PDF prohlížeč
 
 Match Case
-Rozlišovat velká/malá písmena
+Rozlišovat velikost písmen
 
 Modified:
-Upraveno:
+Změněno:
 
 New version %s is available. Download new version?
 Nová verze %s je k dispozici. Stáhnout novou verzi?
@@ -290,19 +327,19 @@ Next Page
 Další stránka
 
 No matches were found
-Žádná shoda nebyla nalezena
+Žádná položka nebyla nalezena
 
 No result found around line %u in file %s
-Žádné výsledky nenalezeny okolo řádky %u v souboru %s
+Kolem řádku %u v souboru %s nenalezen žádný výsledek
 
 No synchronization file found
-Synchronizační soubor nebyl nalezen
+Soubor synchronizace nenalezen
 
 No synchronization info at this position
-Chybí synchronizace pro tuto pozici
+Na této pozici není informace o synchronizaci
 
 Number of Pages:
-Čísla stránek:
+Počet stránek:
 
 OK
 OK
@@ -311,16 +348,16 @@ Open
 Otevřít
 
 Open in &Adobe Reader
-Otevřít v &Adobe Reader
+Otevřít v programu &Adobe Reader
 
 P&roperties\tCtrl-D
-&Vlastnosti...\tCtrl-D
+&Vlastnosti...\tCtrl+D
 
 PDF Document
-Dokument PDF
+PDF dokument
 
 PDF Producer:
-PDF vytvořil:
+Producent PDF:
 
 PDF Version:
 Verze PDF:
@@ -329,7 +366,7 @@ PDF documents
 PDF dokumenty
 
 Pa&ge...\tCtrl-G
-Stránka...\tCtrl-G
+Stránka...\tCtrl+G
 
 Page Size:
 Velikost stránky:
@@ -337,107 +374,113 @@ Velikost stránky:
 Page number %u inexistant
 Stránka číslo %u neexistuje
 
+Page scaling
+Měřítko stránky
+
 Page:
 Stránka:
 
 Please wait - rendering...
-Prosím čekejte - renderuji...
+Prosím čekejte, probíhá vykreslování...
 
 Previous Page
 Předchozí stránka
 
+Print range
+Rozsah tisku
+
 Printing problem.
-Problém s tiskem
+Potíže s tiskem
 
 Remember &opened files
-Pamatu&j si otevřené soubory
+Pamatovat si &otevřené soubory
 
 Rotate &Left\tCtrl-Shift--
-Otočit zobrazení doleva\tCtrl-Shift--
+Otočit doleva\tCtrl+Shift+Num-
 
 Rotate &Right\tCtrl-Shift-+
-Otočit zobrazení doprava\tCtrl-Shift-+
+Otočit doprava\tCtrl+Shift+Num+
 
 Searching %d of %d...
-Hledám %d of %d...
+Prohledává se %d z %d...
 
 Select content with Ctrl+left mouse button
-Vybrat obsah s Ctrl+levé tlačítko myši
+Vybrat obsah klávesou Ctrl a levým tlačítkem myši
 
 Send by &E-mail...
-Poslat &e-mailem...
+Odeslat &e-mailem...
 
 Set inverse search command-line
-Nastavit zpětné hledání
+Nastavit inverzní vyhledávání z příkazového řádku
 
 Show &Toolbar
-Zobrazit lištu nástrojů
+Zobrazit panel nástrojů
 
 Show &pages continuously
-Průběžné zobrazení stránek
+Zobrazit stránky průběžně
 
 Show the &bookmarks sidebar when available
-&Zobraz záložky, jsou-li dostupné
+Zo&brazit záložky v postranním panelu, jsou-li dostupné
 
 Single Page
 Jedna stránka
 
 Source file %s has no synchronization point
-Zdrojový soubor %s nemá synchronizační bod
+Zdrojový soubor %s nemá bod synchronizace
 
 Subject:
 Předmět:
 
 SumatraPDF Options
-&Nastavení SumatraPDF
+Možnosti programu SumatraPDF
 
 SumatraPDF is your main PDF reader
-SumatraPDF je výchozí PDF čtečka
+SumatraPDF je výchozím PDF prohlížečem
 
 SumatraPDF should now be your main PDF reader
-SumatraPDF by měl být výchozí čtečkou PDF
+SumatraPDF by měl být výchozím PDF prohlížečem
 
 Synchronization file cannot be opened
-Synchronizační soubor nelze otevřít
+Soubor synchronizace nelze otevřít
 
 Text documents
 Textové dokumenty
 
 Title:
-Titulek:
+Název:
 
 Unknown source file (%s)
 Neznámý zdrojový soubor (%s)
 
 View
-Zobrazit
+Zobrazení
 
 Visit &Website
 &Navštívit webovou stránku
 
 Warning
-Varování
+Upozornění
 
 You have the latest version.
-Máte poslední verzi.
+Používáte nejnovější verzi.
 
 You have version %s
-Máte verzi %s
+Používáte verzi %s
 
 Zoom
-Přiblížení
-
-Zoom In
 Zvětšení
 
+Zoom In
+Zvětšit
+
 Zoom Out
-Zmenšení
+Zmenšit
 
 Zoom factor
 Měřítko přiblížení
 
 [Changes detected; refreshing] %s
-[Zjištěna změna; obnovuji] %s
+[Zjištěna změna; probíhá aktualizace] %s
 
 copying text
 kopírování textu
@@ -446,21 +489,7 @@ printing document
 tisk dokumentu
 
 # Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
 #&Use original page sizes
-#Attachment: %s
-#Bookmarks
 #Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Page scaling
-#Print range
 

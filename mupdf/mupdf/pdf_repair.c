@@ -145,7 +145,11 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 	/* look for '%PDF' version marker within first kilobyte of file */
 	n = fz_read(xref->file, (unsigned char *)buf, MAX(bufsize, 1024));
 	if (n < 0)
-		return fz_rethrow(n, "cannot read from file");
+	{
+		/* SumatraPDF: fix memory leak */
+		error = fz_rethrow(n, "cannot read from file");
+		goto cleanup;
+	}
 
 	fz_seek(xref->file, 0, 0);
 	for (i = 0; i < n - 4; i++)
@@ -220,7 +224,11 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		{
 			error = pdf_parsedict(&dict, xref, xref->file, buf, bufsize);
 			if (error)
-				return fz_rethrow(error, "cannot parse object");
+			{
+				/* SumatraPDF: fix memory leak */
+				error = fz_rethrow(error, "cannot parse object");
+				goto cleanup;
+			}
 
 			obj = fz_dictgets(dict, "Encrypt");
 			if (obj)

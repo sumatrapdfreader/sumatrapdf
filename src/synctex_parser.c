@@ -70,6 +70,10 @@ Thu Jun 19 09:39:21 UTC 2008
 #       endif
 #   endif
 
+#ifdef _MSC_VER
+#pragma warning( disable: 4244 ) /* conversion from X to Y, possible loss of data */
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

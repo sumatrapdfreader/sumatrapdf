@@ -42,12 +42,21 @@ WCHAR *multibyte_to_wstr(const char *src, UINT CodePage);
 WCHAR *utf8_to_wstr(const char *utf8);
 WCHAR *str_to_wstr_simplistic(const char *s);
 
-
 WCHAR *wstr_parse_possibly_quoted(WCHAR **txt);
 int hex_wstr_decode_byte(const WCHAR **txt);
 
+#ifdef _WIN32
+void win32_dbg_outW(const WCHAR *format, ...);
+#endif
 #ifdef DEBUG
-void wstr_util_test(void);
+  #ifdef _WIN32
+    #define DBG_OUT_W(format, ...) win32_dbg_outW(L##format, __VA_ARGS__)
+  #else
+    #define DBG_OUT_W(format, ...) wprintf(L##format, __VA_ARGS__)
+  #endif
+  void wstr_util_test(void);
+#else
+  #define DBG_OUT_W(format, ...) ((void)0)
 #endif
 
 #ifdef __cplusplus

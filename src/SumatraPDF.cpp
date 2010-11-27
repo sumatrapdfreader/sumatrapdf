@@ -2,13 +2,21 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "RenderCache.h"
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
+#include "SumatraProperties.h"
+#include "SumatraAbout.h"
 #include "FileHistory.h"
 
+#include <shlobj.h>
 #include "WinUtil.hpp"
+#include "Http.h"
+#include "CrashHandler.h"
 
+#include "translations.h"
 #include "Version.h"
 
 // those are defined here instead of resource.h to avoid
@@ -28,19 +36,14 @@
 #endif
 #define USE_GDI_FOR_PRINTING
 
-/* Define if you want to conserve memory by always freeing cached bitmaps
-   for pages not visible. Disabling this might lead to pages not rendering
-   due to insufficient (GDI) memory. */
-#define CONSERVE_MEMORY
-
 /* undefine if you don't want to use memory consuming double-buffering for rendering the PDF */
 #define DOUBLE_BUFFER
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
 
-/* Next action for the benchmark mode */
-#define MSG_BENCH_NEXT_ACTION (WM_USER + 1)
+/* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
+#define THREAD_BASED_FILEWATCH
 
 #define ZOOM_IN_FACTOR      1.2
 #define ZOOM_OUT_FACTOR     1.0 / ZOOM_IN_FACTOR
@@ -96,7 +99,11 @@ static bool             gUseGdiRenderer = false;
 #define ABOUT_BG_COLOR          RGB(255,242,0)
 #endif
 
-#define COL_FWDSEARCH_BG        RGB(101,129,255)
+#define COL_WINDOW_BG           RGB(0xcc, 0xcc, 0xcc)
+#define COL_WINDOW_SHADOW       RGB(0x40, 0x40, 0x40)
+#define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
+#define COL_FWDSEARCH_BG        RGB(0x65, 0x81 ,0xff)
+#define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
@@ -132,6 +139,10 @@ static bool             gUseGdiRenderer = false;
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
+#ifndef THREAD_BASED_FILEWATCH
+#define FILEWATCH_DELAY_IN_MS       1000
+#endif
+
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
@@ -154,18 +165,7 @@ static HBRUSH                       gBrushShadow;
 static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
-static TCHAR *                      gBenchFileName;
-static int                          gBenchPageNum = INVALID_PAGE_NO;
-
-#define MAX_PAGE_REQUESTS 8
-static PageRenderRequest            gPageRenderRequests[MAX_PAGE_REQUESTS];
-static int                          gPageRenderRequestsCount = 0;
-
-static HANDLE                       gPageRenderThreadHandle;
-static HANDLE                       gPageRenderSem;
-static HANDLE                       gPageRenderClearQueue;
-static HANDLE                       gPageRenderQueueCleared;
-static PageRenderRequest *          gCurPageRenderReq;
+static RenderCache                  gRenderCache;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -608,12 +608,12 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 }
 
 static void SeeLastError(void) {
-    CHAR *msgBuf = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    TCHAR *msgBuf = NULL;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&msgBuf, 0, NULL);
+        (LPTSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
-    DBG_OUT("SeeLastError(): %s\n", msgBuf);
+    DBG_OUT_T("SeeLastError(): %s\n", msgBuf);
     LocalFree(msgBuf);
 }
 
@@ -791,183 +791,6 @@ void LaunchBrowser(const TCHAR *url)
 {
     if (gRestrictedUse) return;
     launch_url(url);
-}
-
-static BOOL pageRenderAbortCb(void *data)
-{
-    PageRenderRequest *req = (PageRenderRequest*)data;
-    if (!req->abort)
-        return FALSE;
-
-    DBG_OUT("Rendering of page %d aborted\n", req->pageNo);
-    return TRUE;
-}
-
-void RenderQueue_RemoveForDisplayModel(DisplayModel *dm) {
-    LockCache();
-    int reqCount = gPageRenderRequestsCount;
-    int curPos = 0;
-    for (int i = 0; i < reqCount; i++) {
-        PageRenderRequest *req = &(gPageRenderRequests[i]);
-        bool shouldRemove = (req->dm == dm);
-        if (i != curPos)
-            gPageRenderRequests[curPos] = gPageRenderRequests[i];
-        if (shouldRemove)
-            --gPageRenderRequestsCount;
-        else
-            ++curPos;
-    }
-    UnlockCache();
-}
-
-/* Wait until rendering of a page beloging to <dm> has finished. */
-/* TODO: this might take some time, would be good to show a dialog to let the
-   user know he has to wait until we finish */
-void cancelRenderingForDisplayModel(DisplayModel *dm) {
-
-    DBG_OUT("cancelRenderingForDisplayModel()\n");
-    bool renderingFinished = false;;
-    for (;;) {
-        LockCache();
-        if (!gCurPageRenderReq || (gCurPageRenderReq->dm != dm))
-            renderingFinished = true;
-        else
-            gCurPageRenderReq->abort = TRUE;
-        UnlockCache();
-        if (renderingFinished)
-            break;
-        /* TODO: busy loop is not good, but I don't have a better idea */
-        sleep_milliseconds(500);
-    }
-}
-
-/* Render a bitmap for page <pageNo> in <dm>. */
-void RenderQueue_Add(DisplayModel *dm, int pageNo) {
-    DBG_OUT("RenderQueue_Add(pageNo=%d)\n", pageNo);
-    assert(dm);
-    if (!dm || dm->_dontRenderFlag) goto Exit;
-
-    LockCache();
-    int rotation = dm->rotation();
-    normalizeRotation(&rotation);
-    double zoomLevel = dm->zoomReal(pageNo);
-
-    if (gCurPageRenderReq && 
-        (gCurPageRenderReq->pageNo == pageNo) && (gCurPageRenderReq->dm == dm)) {
-        if ((gCurPageRenderReq->zoomLevel != zoomLevel) || (gCurPageRenderReq->rotation != rotation)) {
-            /* Currently rendered page is for the same page but with different zoom
-            or rotation, so abort it */
-            DBG_OUT("  aborting rendering\n");
-            gCurPageRenderReq->abort = TRUE;
-        } else {
-            /* we're already rendering exactly the same page */
-            DBG_OUT("  already rendering this page\n");
-            goto LeaveCsAndExit;
-        }
-    }
-
-    for (int i=0; i < gPageRenderRequestsCount; i++) {
-        PageRenderRequest* req = &(gPageRenderRequests[i]);
-        if ((req->pageNo == pageNo) && (req->dm == dm)) {
-            if ((req->zoomLevel == zoomLevel) && (req->rotation == rotation)) {
-                /* Request with exactly the same parameters already queued for
-                   rendering. Move it to the top of the queue so that it'll
-                   be rendered faster. */
-                PageRenderRequest tmp;
-                tmp = gPageRenderRequests[gPageRenderRequestsCount-1];
-                gPageRenderRequests[gPageRenderRequestsCount-1] = *req;
-                *req = tmp;
-                DBG_OUT("  already queued\n");
-                goto LeaveCsAndExit;
-            } else {
-                /* There was a request queued for the same page but with different
-                   zoom or rotation, so only replace this request */
-                DBG_OUT("Replacing request for page %d with new request\n", req->pageNo);
-                req->zoomLevel = zoomLevel;
-                req->rotation = rotation;
-                goto LeaveCsAndExit;
-            
-            }
-        }
-    }
-
-    if (BitmapCache_Exists(dm, pageNo, rotation, zoomLevel)) {
-        /* This page has already been rendered in the correct dimensions
-           and isn't about to be rerendered in different dimensions */
-        goto LeaveCsAndExit;
-    }
-
-    PageRenderRequest* newRequest;
-    /* add request to the queue */
-    if (gPageRenderRequestsCount == MAX_PAGE_REQUESTS) {
-        /* queue is full -> remove the oldest items on the queue */
-        memmove(&(gPageRenderRequests[0]), &(gPageRenderRequests[1]), sizeof(PageRenderRequest)*(MAX_PAGE_REQUESTS-1));
-        newRequest = &(gPageRenderRequests[MAX_PAGE_REQUESTS-1]);
-    } else {
-        newRequest = &(gPageRenderRequests[gPageRenderRequestsCount]);
-        gPageRenderRequestsCount++;
-    }
-    assert(gPageRenderRequestsCount <= MAX_PAGE_REQUESTS);
-    newRequest->dm = dm;
-    newRequest->pageNo = pageNo;
-    newRequest->zoomLevel = zoomLevel;
-    newRequest->rotation = rotation;
-    newRequest->abort = FALSE;
-    newRequest->timestamp = GetTickCount();
-
-    UnlockCache();
-
-    /* tell rendering thread there's a new request to render */
-    LONG  prevCount;
-    ReleaseSemaphore(gPageRenderSem, 1, &prevCount);
-Exit:
-    return;
-LeaveCsAndExit:
-    UnlockCache();
-    return;
-}
-
-#define RENDER_DELAY_UNDEFINED ((UINT)-1)
-
-UINT RenderQueue_GetDelay(DisplayModel *dm, int pageNo)
-{
-    bool foundReq = false;
-    DWORD timestamp;
-
-    LockCache();
-    if (gCurPageRenderReq && gCurPageRenderReq->pageNo == pageNo && gCurPageRenderReq->dm == dm) {
-        timestamp = gCurPageRenderReq->timestamp;
-        foundReq = true;
-    }
-    for (int i = 0; !foundReq && i < gPageRenderRequestsCount; i++) {
-        if (gPageRenderRequests[i].pageNo == pageNo && gPageRenderRequests[i].dm == dm) {
-            timestamp = gPageRenderRequests[i].timestamp;
-            foundReq = true;
-        }
-    }
-    UnlockCache();
-
-    if (!foundReq)
-        return RENDER_DELAY_UNDEFINED;
-    return GetTickCount() - timestamp;
-}
-
-void RenderQueue_Pop(PageRenderRequest *req)
-{
-    LockCache();
-    assert(gPageRenderRequestsCount > 0);
-    assert(gPageRenderRequestsCount <= MAX_PAGE_REQUESTS);
-    --gPageRenderRequestsCount;
-    *req = gPageRenderRequests[gPageRenderRequestsCount];
-    assert(gPageRenderRequestsCount >= 0);
-    UnlockCache();
-}
-
-void RenderQueue_Clear()
-{
-    LockCache();
-    gPageRenderRequestsCount = 0;
-    UnlockCache();
 }
 
 static void MenuUpdateDisplayMode(WindowInfo *win)
@@ -1416,102 +1239,90 @@ static void MenuUpdateZoom(WindowInfo* win)
     ZoomMenuItemCheck(win->hMenu, menuId, NULL != win->dm);
 }
 
-static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds)
+static void RememberWindowPosition(WindowInfo *win)
 {
-    RECT r;
-    if (GetWindowRect(win->hwndTocBox, &r))
-        gGlobalPrefs.m_tocDx = ds->tocDx = rect_dx(&r);
+    // update global windowState for next default launch when either
+    // no pdf is opened or a document without window dimension information
+    if (win->presentation)
+        gGlobalPrefs.m_windowState = win->_windowStateBeforePresentation;
+    else if (win->fullScreen)
+        gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
+    else if (IsZoomed(win->hwndFrame))
+        gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
+    else if (!IsIconic(win->hwndFrame))
+        gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
 
-    // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
-    //       the non-maximized dimensions for proper restoration)
-    if (IsZoomed(win->hwndFrame) || IsIconic(win->hwndFrame) || win->fullScreen || win->presentation)
-        return;
+    RECT rc;
+    gGlobalPrefs.m_tocDx = GetWindowRect(win->hwndTocBox, &rc) ? rect_dx(&rc) : 0;
 
-    if (!GetWindowRect(win->hwndFrame, &r))
-        return;
+    /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
+    if (WIN_STATE_NORMAL == gGlobalPrefs.m_windowState &&
+        !IsIconic(win->hwndFrame) && !win->presentation) {
+        // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
+        //       the non-maximized dimensions for proper restoration)
+        GetWindowRect(win->hwndFrame, &rc);
+        gGlobalPrefs.m_windowPosX = rc.left;
+        gGlobalPrefs.m_windowPosY = rc.top;
+        gGlobalPrefs.m_windowDx = rect_dx(&rc);
+        gGlobalPrefs.m_windowDy = rect_dy(&rc);
+    }
+}
 
-    ds->windowX = r.left;
-    ds->windowY = r.top;
-    ds->windowDx = rect_dx(&r);
-    ds->windowDy = rect_dy(&r);
+static void UpdateDisplayStateWindowRect(WindowInfo *win, DisplayState *ds, bool updateGlobal=true)
+{
+    if (updateGlobal)
+        RememberWindowPosition(win);
+
+    ds->windowState = gGlobalPrefs.m_windowState;
+    ds->windowX = gGlobalPrefs.m_windowPosX;
+    ds->windowY = gGlobalPrefs.m_windowPosY;
+    ds->windowDx = gGlobalPrefs.m_windowDx;
+    ds->windowDy = gGlobalPrefs.m_windowDy;
+    ds->tocDx = gGlobalPrefs.m_tocDx;
 }
 
 static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
 {
-    DisplayState     ds;
-    const TCHAR *    fileName = NULL;
-    FileHistoryList* node = NULL;
-
     if (!win)
         return;
 
-    if (WS_ABOUT == win->state || gGlobalPrefs.m_globalPrefsOnly)
-    {
-        // update global windowState for next default launch when no pdf opened
-        if (win->presentation)
-            gGlobalPrefs.m_windowState = win->_windowStateBeforePresentation;
-        else if (win->fullScreen)
-            gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
-        else if (IsZoomed(win->hwndFrame))
-            gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
-        else
-            gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-        
-        RECT rc;
-        if (GetWindowRect(win->hwndTocBox, &rc))
-            gGlobalPrefs.m_tocDx = rect_dx(&rc);
-    }
-
+    RememberWindowPosition(win);
     if (WS_SHOWING_PDF != win->state)
         return;
     if (!win->dm)
         return;
 
-    fileName = win->dm->fileName();
+    const TCHAR *fileName = win->dm->fileName();
     assert(fileName);
     if (!fileName)
         return;
 
-    node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
+    FileHistoryList* node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
     assert(node || !gGlobalPrefs.m_rememberOpenedFiles);
     if (!node)
         return;
 
+    DisplayState ds;
     DisplayState_Init(&ds);
     ds.useGlobalValues = gGlobalPrefs.m_globalPrefsOnly;
-
-    // Update pdf-specific windowState
-    if (win->presentation)
-        ds.windowState = win->_windowStateBeforePresentation;
-    else if (win->fullScreen)
-        ds.windowState = WIN_STATE_FULLSCREEN;
-    else if (IsZoomed(win->hwndFrame))
-        ds.windowState = WIN_STATE_MAXIMIZED;
-    else
-        ds.windowState = WIN_STATE_NORMAL;
+    UpdateDisplayStateWindowRect(win, &ds, false);
 
     if (!win->dm->displayStateFromModel(&ds))
         return;
 
-    UpdateDisplayStateWindowRect(win, &ds);
     DisplayState_Free(&(node->state));
     node->state = ds;
 }
 
-static void UpdateCurrentFileDisplayState(void)
-{
-    for (WindowInfo *currWin = gWindowList; currWin; currWin = currWin->next)
-        UpdateCurrentFileDisplayStateForWin(currWin);
-}
-
-static bool Prefs_Save(void)
+static BOOL Prefs_Save(void)
 {
     TCHAR *     path = NULL;
     size_t      dataLen;
-    bool        ok = false;
+    BOOL        ok = false;
 
     /* mark currently shown files as visible */
-    UpdateCurrentFileDisplayState();
+    for (WindowInfo *currWin = gWindowList; currWin; currWin = currWin->next)
+        UpdateCurrentFileDisplayStateForWin(currWin);
 
     const char *data = Prefs_Serialize(&gFileHistoryRoot, &dataLen);
     if (!data)
@@ -1523,8 +1334,7 @@ static bool Prefs_Save(void)
     /* TODO: consider 2-step process:
         * write to a temp file
         * rename temp file to final file */
-    if (write_to_file(path, (void*)data, dataLen))
-        ok = true;
+    ok = write_to_file(path, (void*)data, dataLen);
 
 Exit:
     free((void*)data);
@@ -1559,35 +1369,6 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     DisplayState_Free(&ds);
 }
 
-#ifndef THREAD_BASED_FILEWATCH
-static void WindowInfo_RefreshUpdatedFiles(bool autorefresh) {
-    for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
-        if (curr->watcher.HasChanged())
-            WindowInfo_Refresh(curr, autorefresh);
-    }
-}
-#endif
-
-static bool WindowInfo_Dib_Init(WindowInfo *win) {
-    assert(NULL == win->dibInfo);
-    win->dibInfo = (BITMAPINFO*)malloc(sizeof(BITMAPINFO) + 12);
-    if (!win->dibInfo)
-        return false;
-    win->dibInfo->bmiHeader.biSize = sizeof(win->dibInfo->bmiHeader);
-    win->dibInfo->bmiHeader.biPlanes = 1;
-    win->dibInfo->bmiHeader.biBitCount = 24;
-    win->dibInfo->bmiHeader.biCompression = BI_RGB;
-    win->dibInfo->bmiHeader.biXPelsPerMeter = 2834;
-    win->dibInfo->bmiHeader.biYPelsPerMeter = 2834;
-    win->dibInfo->bmiHeader.biClrUsed = 0;
-    win->dibInfo->bmiHeader.biClrImportant = 0;
-    return true;
-}
-
-static void WindowInfo_Dib_Deinit(WindowInfo *win) {
-    free((void*)win->dibInfo);
-    win->dibInfo = NULL;
-}
 
 static void WindowInfo_DoubleBuffer_Delete(WindowInfo *win) {
     if (win->bmpDoubleBuffer) {
@@ -1623,11 +1404,9 @@ static bool WindowInfo_DoubleBuffer_New(WindowInfo *win)
         WindowInfo_DoubleBuffer_Delete(win);
         return false;
     }
-    /* TODO: do I need this ? */
     SelectObject(win->hdcDoubleBuffer, win->bmpDoubleBuffer);
     /* fill out everything with background color */
-    RECT r;
-    rect_set(&r, 0, 0, win->winDx(), win->winDy());
+    RECT r = { 0, 0, win->winDx(), win->winDy() };
     FillRect(win->hdcDoubleBuffer, &r, win->presentation ? gBrushBlack : gBrushBg);
     win->hdcToDraw = win->hdcDoubleBuffer;
 #endif
@@ -1665,10 +1444,6 @@ static void WindowInfo_Delete(WindowInfo *win)
     }
     WindowInfoList_Remove(win);
 
-    if (win->dm) {
-        RenderQueue_RemoveForDisplayModel(win->dm);
-        cancelRenderingForDisplayModel(win->dm);
-    }
     WindowInfo_AbortFinding(win);
     delete win->dm;
     win->dm = NULL;
@@ -1683,8 +1458,6 @@ static void WindowInfo_Delete(WindowInfo *win)
         CloseHandle(win->findStatusThread);
         win->findStatusThread = NULL;
     }
-    FreePdfProperties(win);
-    WindowInfo_Dib_Deinit(win);
     WindowInfo_DoubleBuffer_Delete(win);
     DragAcceptFiles(win->hwndCanvas, FALSE);
     DeleteOldSelectionInfo(win);
@@ -1719,33 +1492,6 @@ WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
         if (hwnd == win->hwndPdfProperties)
             return win;
     }
-    return NULL;
-}
-
-static WindowInfo *WindowInfo_New(HWND hwndFrame) {
-    WindowInfo * win = WindowInfo_FindByHwnd(hwndFrame);
-    assert(!win);
-
-    win = new WindowInfo();
-    if (!win)
-        return NULL;
-
-    if (!WindowInfo_Dib_Init(win))
-        goto Error;
-
-    win->state = WS_ABOUT;
-    win->hwndFrame = hwndFrame;
-    win->mouseAction = MA_IDLE;
-    
-    HDC hdc = GetDC(hwndFrame);
-    win->dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-    // round untypical resolutions up to the nearest quarter
-    win->uiDPIFactor = ceil(win->dpi * 4.0 / USER_DEFAULT_SCREEN_DPI) / 4.0;
-    ReleaseDC(hwndFrame, hdc);
-
-    return win;
-Error:
-    WindowInfo_Delete(win);
     return NULL;
 }
 
@@ -2079,7 +1825,8 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     if (!hwndFrame)
         return NULL;
 
-    win = WindowInfo_New(hwndFrame);
+    assert(!WindowInfo_FindByHwnd(hwndFrame));
+    win = new WindowInfo(hwndFrame);
 
     hwndCanvas = CreateWindowEx(
             WS_EX_STATICEDGE, 
@@ -2149,19 +1896,12 @@ static void RecalcSelectionPosition (WindowInfo *win) {
             selOnPage->selectionCanvas.dx = 0;
             selOnPage->selectionCanvas.dy = 0;
         } else {//page is visible
-            RectD_Copy (&selD, &selOnPage->selectionPage);
+            selD = selOnPage->selectionPage;
             win->dm->rectCvtUserToScreen (selOnPage->pageNo, &selD);
             RectI_FromRectD (&selOnPage->selectionCanvas, &selD);
         }
         selOnPage = selOnPage->next;
     }
-}
-
-// Clear all the requests from the PageRender queue.
-static void ClearPageRenderRequests()
-{
-    SetEvent(gPageRenderClearQueue);
-    WaitForSingleObject(gPageRenderQueueCleared, INFINITE);
 }
 
 static bool LoadPdfIntoWindow(
@@ -2178,17 +1918,9 @@ static bool LoadPdfIntoWindow(
     if (placeWindow && (gGlobalPrefs.m_globalPrefsOnly || state && state->useGlobalValues))
         state = NULL;
 
-    /* In theory I should get scrollbars sizes using Win32_GetScrollbarSize(&scrollbarYDx, &scrollbarXDy);
-       but scrollbars are not part of the client area on windows so it's better
-       not to have them taken into account by DisplayModelSplash code.
-       TODO: I think it's broken anyway and DisplayModelSplash needs to know if
-             scrollbars are part of client area in order to accomodate windows
-             UI properly */
     DisplayMode displayMode = gGlobalPrefs.m_defaultDisplayMode;
     int startPage = 1;
     ScrollState ss = { 1, -1, -1 };
-    int scrollbarYDx = 0;
-    int scrollbarXDy = 0;
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState;
     int showType = gGlobalPrefs.m_windowState == WIN_STATE_MAXIMIZED || showAsFullScreen ? SW_MAXIMIZE : SW_NORMAL;
 
@@ -2208,34 +1940,31 @@ static bool LoadPdfIntoWindow(
        i.e. GetCanvasSize() caches size of canvas and some code might depend
        on this being a cached value, not the real value at the time of calling */
     win->GetCanvasSize();
-    SizeD totalDrawAreaSize(win->winSize());
 
     DisplayModel *previousmodel = win->dm;
     WindowInfo_AbortFinding(win);
 
     free(win->loadedFilePath);
     win->loadedFilePath = tstr_dup(fileName);
-    win->dm = DisplayModel_CreateFromFileName(fileName,
-        totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win, tryrepair);
+    win->dm = DisplayModel_CreateFromFileName(fileName, win->winSize(),
+        displayMode, startPage, win, tryrepair);
 
     if (!win->dm) {
-        //DBG_OUT("failed to load file %s\n", fileName); <- fileName is now Unicode
+        DBG_OUT_T("failed to load file %s\n", fileName);
         win->needrefresh = true;
         // if there is an error while reading the pdf and pdfrepair is not requested
         // then fallback to the previous state
         if (!tryrepair) {
             win->dm = previousmodel;
         } else {
-            ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
             delete previousmodel;
             win->state = WS_ERROR_LOADING_PDF;
             win_set_text(win->hwndFrame, FilePath_GetBaseName(fileName));
             goto Error;
         }
     } else {
-        ClearPageRenderRequests(); // This is necessary because the PageRenderThread may still try to access the 'previousmodel'
         if (previousmodel && tstr_eq(win->dm->fileName(), previousmodel->fileName()))
-            BitmapCache_KeepForDisplayModel(previousmodel, win->dm);
+            gRenderCache.KeepForDisplayModel(previousmodel, win->dm);
         delete previousmodel;
         win->needrefresh = false;
     }
@@ -2300,9 +2029,9 @@ static bool LoadPdfIntoWindow(
             title = win->title;
 
         if (win->needrefresh) {
-            TCHAR buf[256];
-            StringCchPrintf(buf, dimof(buf), _TR("[Changes detected; refreshing] %s"), title);
-            win_set_text(win->hwndFrame, buf);
+            TCHAR *msg = tstr_printf(_TR("[Changes detected; refreshing] %s"), title);
+            win_set_text(win->hwndFrame, msg);
+            free(msg);
         }
         else
             win_set_text(win->hwndFrame, title);
@@ -2356,6 +2085,9 @@ Error:
     // This should only happen after everything else is ready
     if ((is_new_window || placeWindow) && showWin && showAsFullScreen)
         WindowInfo_EnterFullscreen(win);
+    if (!is_new_window && win->presentation && win->dm)
+        win->dm->setPresentationMode(true);
+
     return true;
 }
 
@@ -2366,6 +2098,15 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
     // Instead we just post a message to the main thread to trigger a reload
     PostMessage(((WindowInfo *)param)->hwndFrame, WM_APP_AUTO_RELOAD, 0, 0);
 }
+
+#ifndef THREAD_BASED_FILEWATCH
+static void WindowInfo_RefreshUpdatedFiles(void) {
+    for (WindowInfo *curr = gWindowList; curr; curr = curr->next) {
+        if (curr->watcher.HasChanged())
+            OnFileChange(curr->watcher.filepath(), (LPARAM)curr);
+    }
+}
+#endif
 
 static void CheckPositionAndSize(DisplayState* ds)
 {
@@ -2452,12 +2193,11 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
         goto exit;
     }
 
-    // Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection.
 #ifdef THREAD_BASED_FILEWATCH
     if (!win->watcher.IsThreadRunning())
         win->watcher.StartWatchThread(fullpath, &OnFileChange, (LPARAM)win);
 #else
-        win->watcher.Init(fullpath);
+    win->watcher.Init(fullpath);
 #endif
 
     CreateSynchronizer(fullpath, &win->pdfsync);
@@ -2564,9 +2304,9 @@ void DisplayModel::pageChanged()
     int currPageNo = currentPageNo();
     int pageCount = win->dm->pageCount();
     if (pageCount > 0) {
-        TCHAR buf[256];
         if (INVALID_PAGE_NO != currPageNo) {
-            HRESULT hr = StringCchPrintf(buf, dimof(buf), _T("%d"), currPageNo);
+            TCHAR buf[64];
+            _stprintf_s(buf, dimof(buf), _T("%d"), currPageNo);
             SetWindowText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
@@ -2590,8 +2330,20 @@ static void triggerRepaintDisplay(WindowInfo* win, UINT delay=0)
 
 void DisplayModel::repaintDisplay()
 {
-    WindowInfo* win = (WindowInfo*)appData();
+    WindowInfo* win = (WindowInfo *)appData();
     triggerRepaintDisplay(win);
+}
+
+/* Send the request to render a given page to a rendering thread */
+void DisplayModel::startRenderingPage(int pageNo)
+{
+    gRenderCache.Render(this, pageNo);
+}
+
+void DisplayModel::clearAllRenderings(void)
+{
+    gRenderCache.CancelRendering(this);
+    gRenderCache.FreeForDisplayModel(this);
 }
 
 void DisplayModel::setScrollbarsState(void)
@@ -2612,17 +2364,18 @@ void DisplayModel::setScrollbarsState(void)
     // When hiding the scroll bars and fitting content, it could be that we'd have to
     // display the scroll bars right again for the new zoom. Make sure we haven't just done
     // that - or if so, force the scroll bars to remain visible.
-    if (ZOOM_FIT_CONTENT == win->dm->zoomVirtual()) {
-        if ((win->prevCanvasBR.y != drawAreaDy || win->prevCanvasBR.x != drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) &&
-            (win->prevCanvasBR.x != drawAreaDx || win->prevCanvasBR.y != drawAreaDy + GetSystemMetrics(SM_CYHSCROLL))) {
-            win->prevCanvasBR.x = drawAreaDx;
-            win->prevCanvasBR.y = drawAreaDy;
-        }
-        else {
-            if (drawAreaDx == canvasDx)
-                canvasDx++;
+    if (ZOOM_FIT_CONTENT == _zoomVirtual) {
+        if (win->prevCanvasBR.y == drawAreaDy && win->prevCanvasBR.x == drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) {
             if (drawAreaDy == canvasDy)
                 canvasDy++;
+        }
+        else if (win->prevCanvasBR.x == drawAreaDx && win->prevCanvasBR.y == drawAreaDy + GetSystemMetrics(SM_CYHSCROLL)) {
+            if (drawAreaDx == canvasDx)
+                canvasDx++;
+        }
+        else {
+            win->prevCanvasBR.x = drawAreaDx;
+            win->prevCanvasBR.y = drawAreaDy;
         }
     }
 
@@ -2642,7 +2395,7 @@ void DisplayModel::setScrollbarsState(void)
     // When hiding the scroll bars and fitting width, it could be that we'd have to
     // display the scroll bars right again for the new width. Make sure we haven't just done
     // that - or if so, force the vertical scroll bar to remain visible.
-    if (ZOOM_FIT_WIDTH == win->dm->zoomVirtual()) {
+    if (ZOOM_FIT_WIDTH == _zoomVirtual || ZOOM_FIT_PAGE == _zoomVirtual) {
         if (win->prevCanvasBR.y != drawAreaDy || win->prevCanvasBR.x != drawAreaDx + GetSystemMetrics(SM_CXVSCROLL)) {
             win->prevCanvasBR.x = drawAreaDx;
             win->prevCanvasBR.y = drawAreaDy;
@@ -2658,21 +2411,21 @@ void DisplayModel::setScrollbarsState(void)
         si.nMax = 99;
         si.nPage = 100;
 
-        if (!win->fullScreen && !win->presentation && ZOOM_FIT_PAGE == win->dm->zoomVirtual()) {
-            switch (win->dm->displayMode()) {
+        if (!win->fullScreen && !win->presentation && ZOOM_FIT_PAGE == _zoomVirtual) {
+            switch (displayMode()) {
                 case DM_SINGLE_PAGE:
-                    si.nPos = win->dm->currentPageNo() - 1;
-                    si.nMax = win->dm->pageCount() - 1;
+                    si.nPos = currentPageNo() - 1;
+                    si.nMax = pageCount() - 1;
                     si.nPage = 1;
                     break;
                 case DM_FACING:
-                    si.nPos = (win->dm->currentPageNo() + 1) / 2 - 1;
-                    si.nMax = (win->dm->pageCount() + 1) / 2 - 1;
+                    si.nPos = (currentPageNo() + 1) / 2 - 1;
+                    si.nMax = (pageCount() + 1) / 2 - 1;
                     si.nPage = 1;
                     break;
                 case DM_BOOK_VIEW:
-                    si.nPos = win->dm->currentPageNo() / 2;
-                    si.nMax = win->dm->pageCount() / 2;
+                    si.nPos = currentPageNo() / 2;
+                    si.nMax = pageCount() / 2;
                     si.nPage = 1;
                     break;
             }
@@ -2683,7 +2436,7 @@ void DisplayModel::setScrollbarsState(void)
         si.nMax = canvasDy-1;
         si.nPage = drawAreaDy;
 
-        if (ZOOM_FIT_PAGE != win->dm->zoomVirtual()) {
+        if (ZOOM_FIT_PAGE != _zoomVirtual) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage *= 0.95;
             si.nMax -= drawAreaDy - si.nPage;
@@ -2713,6 +2466,7 @@ static void WindowInfo_ToggleZoom(WindowInfo *win)
     assert(dm);
     if (!dm) return;
 
+    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     if (ZOOM_FIT_PAGE == dm->zoomVirtual())
         dm->zoomTo(ZOOM_FIT_WIDTH);
     else if (ZOOM_FIT_WIDTH == dm->zoomVirtual())
@@ -2748,6 +2502,7 @@ static void WindowInfo_ZoomToSelection(WindowInfo *win, double factor, bool rela
             zoomToPt = false;
     }
 
+    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     if (relative)
         win->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
     else
@@ -2782,6 +2537,7 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
     bool ok;
     TCHAR exePath[MAX_PATH];
+    TCHAR cmdPath[MAX_PATH * 2];
     TCHAR previousPdfHandler[MAX_PATH + 8];
 
     // Remember the previous default app for the Uninstaller
@@ -2798,9 +2554,12 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
-    TCHAR *cmd_path = tstr_cat3(_T("\""), exePath, _T("\" \"%1\"")); // "${exePath}" "%1"
-    ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmd_path);
-    free(cmd_path);
+    _stprintf_s(cmdPath, dimof(cmdPath), _T("\"%s\" \"%%1\""), exePath); // "${exePath}" "%1"
+    ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
+
+    // also register for printing
+    _stprintf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to-default -exit-on-print "%1"
+    WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
@@ -2968,35 +2727,14 @@ static void PaintRectangle(HDC hdc, RECT * rect)
 
 static void WinResizeIfNeeded(WindowInfo *win, bool resizeWindow=true)
 {
-    RECT    rc;
+    RECT rc;
     GetClientRect(win->hwndCanvas, &rc);
-    int win_dx = rect_dx(&rc);
-    int win_dy = rect_dy(&rc);
 
-    if (win->hdcToDraw &&
-        (win_dx == win->winDx()) &&
-        (win_dy == win->winDy()))
-    {
-        return;
+    if (!win->hdcToDraw || win->winDx() != rect_dx(&rc) || win->winDy() != rect_dy(&rc)) {
+        WindowInfo_DoubleBuffer_New(win);
+        if (resizeWindow)
+            WindowInfo_ResizeToWindow(win);
     }
-
-    WindowInfo_DoubleBuffer_New(win);
-    if (resizeWindow)
-        WindowInfo_ResizeToWindow(win);
-}
-
-static void PostBenchNextAction(HWND hwnd)
-{
-    PostMessage(hwnd, MSG_BENCH_NEXT_ACTION, 0, 0);
-}
-
-static void OnBenchNextAction(WindowInfo *win)
-{
-    if (!win->dm)
-        return;
-
-    if (win->dm->goToNextPage(0))
-        PostBenchNextAction(win->hwndFrame);
 }
 
 #ifdef SVN_PRE_RELEASE_VER
@@ -3112,7 +2850,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     }
         
     TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
-    /* TODO: too hackish */
+    /* reduce the string to a single line */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0){
         bool showDialog = true;
@@ -3146,71 +2884,87 @@ static void DrawCenteredText(HDC hdc, RECT *r, const TCHAR *txt)
     DrawText(hdc, txt, lstrlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
-static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, DWORD selectionColor, BYTE alpha = 0x5f, int margin = 1) {
-    HBITMAP hbitmap;       // bitmap handle
-    BITMAPINFO bmi;        // bitmap header
-    VOID *pvBits;          // pointer to DIB section
-    BLENDFUNCTION bf;      // structure for alpha blending
+static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect, COLORREF selectionColor, BYTE alpha = 0x5f, int margin = 1) {
+    // don't draw selection parts not visible on screen
+    RectI screen = { -margin, -margin, win->winDx() + 2 * margin, win->winDy() + 2 * margin };
+    RectI isect;
+    if (!RectI_Intersect(rect, &screen, &isect) || isect.dx * isect.dy == 0)
+        return;
+    rect = &isect;
+
     HDC rectDC = CreateCompatibleDC(hdc);
-    const DWORD selectionColorBlack = 0xff000000;
-
-    ZeroMemory(&bmi, sizeof(BITMAPINFO));
-
-    bmi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = rect->dx;
-    bmi.bmiHeader.biHeight = rect->dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage = rect->dx * rect->dy * 4;
-
-    hbitmap = CreateDIBSection (rectDC, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0x0);
+    HBITMAP hbitmap = CreateCompatibleBitmap(hdc, rect->dx, rect->dy);
     SelectObject(rectDC, hbitmap);
+    if (!hbitmap)
+        DBG_OUT("    selection rectangle too big to be drawn\n");
 
-    for (int y = 0; y < rect->dy; y++) {
-        for (int x = 0; x < rect->dx; x++) {
-            if (x < margin || x > rect->dx - margin - 1 
-                    || y < margin || y > rect->dy - margin - 1)
-                ((UINT32 *)pvBits)[x + y * rect->dx] = selectionColorBlack;
-            else
-                ((UINT32 *)pvBits)[x + y * rect->dx] = selectionColor;
-        }
+    // draw selection border
+    RECT rc = { 0, 0, rect->dx, rect->dy };
+    if (margin) {
+        FillRect(rectDC, &rc, gBrushBlack);
+        InflateRect(&rc, -margin, -margin);
     }
-    bf.BlendOp = AC_SRC_OVER;
-    bf.BlendFlags = 0;
-    bf.SourceConstantAlpha = alpha;
-    bf.AlphaFormat = AC_SRC_ALPHA;
-
+    // fill selection
+    HBRUSH brush = CreateSolidBrush(selectionColor);
+    FillRect(rectDC, &rc, brush);
+    DeleteObject(brush);
+    // blend selection rectangle over content
+    BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
     AlphaBlend(hdc, rect->x, rect->y, rect->dx, rect->dy, rectDC, 0, 0, rect->dx, rect->dy, bf);
-    DeleteObject (hbitmap);
-    DeleteDC (rectDC);
+
+    DeleteObject(hbitmap);
+    DeleteDC(rectDC);
+}
+
+static void UpdateTextSelection(WindowInfo *win, bool select=true)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm) return;
+
+    if (select) {
+        int pageNo;
+        double dX = win->selectionRect.x + win->selectionRect.dx;
+        double dY = win->selectionRect.y + win->selectionRect.dy;
+        if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY))
+            win->dm->textSelection->SelectUpTo(pageNo, dX, dY);
+    }
+
+    DeleteOldSelectionInfo(win);
+
+    PdfSel *result = &win->dm->textSelection->result;
+    for (int i = result->len - 1; i >= 0; i--) {
+        SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
+        RectD_FromRectI(&selOnPage->selectionPage, &result->rects[i]);
+        selOnPage->pageNo = result->pages[i];
+        selOnPage->next = win->selectionOnPage;
+        win->selectionOnPage = selOnPage;
+    }
+    win->showSelection = true;
 }
 
 static void PaintSelection (WindowInfo *win, HDC hdc) {
-    const DWORD selectionColorYellow = 0xfff5fc0c;
     if (win->mouseAction == MA_SELECTING) {
         // during selecting
-        RectI selRect;
+        RectI selRect = win->selectionRect;
+        if (selRect.dx < 0) {
+            selRect.x += selRect.dx;
+            selRect.dx *= -1;
+        }
+        if (selRect.dy < 0) {
+            selRect.y += selRect.dy;
+            selRect.dy *= -1;
+        }
 
-        selRect.x = min (win->selectionRect.x, 
-            win->selectionRect.x + win->selectionRect.dx);
-        selRect.y = min (win->selectionRect.y, 
-            win->selectionRect.y + win->selectionRect.dy);
-        selRect.dx = abs (win->selectionRect.dx);
-        selRect.dy = abs (win->selectionRect.dy);
-
-        if (selRect.dx != 0 && selRect.dy != 0)
-            PaintTransparentRectangle (win, hdc, &selRect, selectionColorYellow);
+        PaintTransparentRectangle(win, hdc, &selRect, COL_SELECTION_RECT);
     } else {
+        if (MA_SELECTING_TEXT == win->mouseAction)
+            UpdateTextSelection(win);
+
         // after selection is done
-        SelectionOnPage *selOnPage = win->selectionOnPage;
         // TODO: Move recalcing to better place
         RecalcSelectionPosition(win);
-        while (selOnPage != NULL) {
-            if (selOnPage->selectionCanvas.dx != 0 && selOnPage->selectionCanvas.dy != 0)
-                PaintTransparentRectangle(win, hdc, &selOnPage->selectionCanvas, selectionColorYellow);
-            selOnPage = selOnPage->next;
-        }
+        for (SelectionOnPage *sel = win->selectionOnPage; sel; sel = sel->next)
+            PaintTransparentRectangle(win, hdc, &sel->selectionCanvas, COL_SELECTION_RECT);
     }
 }
 
@@ -3219,11 +2973,6 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
     if (!pageInfo->visible)
         return;
     
-    const DWORD selectionColorBlue = 0xff000000 | 
-        (GetRValue(gGlobalPrefs.m_fwdsearchColor) << 16) |
-        (GetGValue(gGlobalPrefs.m_fwdsearchColor) << 8) | 
-        GetBValue(gGlobalPrefs.m_fwdsearchColor);
-
     RectD recD;
     RectI recI;
 
@@ -3234,14 +2983,14 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
         win->dm->rectCvtUserToScreen(win->fwdsearchmarkPage, &recD);
         if (gGlobalPrefs.m_fwdsearchOffset > 0)
         {
-            recD.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal() / 100.0;
-            recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal() / 100.0;
+            recD.x = pageInfo->screenX + (double)gGlobalPrefs.m_fwdsearchOffset * win->dm->zoomReal();
+            recD.dx = (gGlobalPrefs.m_fwdsearchWidth > 0 ? (double)gGlobalPrefs.m_fwdsearchWidth : 15.0) * win->dm->zoomReal();
             recD.y -= 4;
             recD.dy += 8;
         }
         RectI_FromRectD(&recI, &recD);
         BYTE alpha = 0x5f * (double) (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmarkHideStep) / HIDE_FWDSRCHMARK_STEPS;
-        PaintTransparentRectangle(win, hdc, &recI, selectionColorBlue, alpha, 0);
+        PaintTransparentRectangle(win, hdc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
 }
 
@@ -3251,10 +3000,10 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
 {
     int xDest = pageInfo->screenX;
     int yDest = pageInfo->screenY;
-    int bmpDx = pageInfo->bitmapDx;
-    int bmpDy = pageInfo->bitmapDy;
+    int bmpDx = pageInfo->bitmap.dx;
+    int bmpDy = pageInfo->bitmap.dy;
 
-    rect_set(bounds, xDest, yDest, bmpDx, bmpDy);
+    SetRect(bounds, xDest, yDest, xDest + bmpDx, yDest + bmpDy);
 
     // Frame info
     int fx = xDest - BORDER_SIZE, fy = yDest - BORDER_SIZE;
@@ -3264,19 +3013,18 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
     int sx = fx + SHADOW_OFFSET, sy = fy + SHADOW_OFFSET, sw = fw, sh = fh;
     if (xDest <= 0) {
         // the left of the page isn't visible, so start the shadow at the left
-        int diff = min(pageInfo->bitmapX, SHADOW_OFFSET);
+        int diff = min(pageInfo->bitmap.x, SHADOW_OFFSET);
         sx -= diff; sw += diff;
     }
     if (yDest <= 0) {
         // the top of the page isn't visible, so start the shadow at the top
-        int diff = min(pageInfo->bitmapY, SHADOW_OFFSET);
+        int diff = min(pageInfo->bitmap.y, SHADOW_OFFSET);
         sy -= diff; sh += diff;
     }
 
     // Draw shadow
     if (!presentation) {
-        RECT rc;
-        rect_set(&rc, sx, sy, sw, sh);
+        RECT rc = { sx, sy, sx + sw, sy + sh };
         FillRect(hdc, &rc, gBrushShadow);
     }
 
@@ -3312,26 +3060,16 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (!pageInfo->shown)
             continue;
 
-        LockCache();
-        BitmapCacheEntry *entry = BitmapCache_Find(dm, pageNo, dm->rotation(), dm->zoomReal());
-        UINT renderDelay = 0;
-
-        if (!entry) {
-            entry = BitmapCache_Find(dm, pageNo, dm->rotation());
-            renderDelay = RenderQueue_GetDelay(dm, pageNo);
-            if (RENDER_DELAY_UNDEFINED == renderDelay && gPageRenderRequestsCount < MAX_PAGE_REQUESTS)
-                RenderQueue_Add(dm, pageNo);
-        }
-        RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
-        HBITMAP hbmp = renderedBmp ? renderedBmp->getBitmap() : NULL;
-
         PaintPageFrameAndShadow(hdc, pageInfo, PM_ENABLED == win->presentation, &bounds);
 
-        if (!hbmp) {
+        bool renderOutOfDateCue = false;
+        UINT renderDelay = gRenderCache.Paint(hdc, &bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+
+        if (renderDelay) {
             HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
             HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
-            SetTextColor(hdc, gGlobalPrefs.m_invertColors ? COL_WHITE : COL_BLACK);
-            if (!entry) {
+            SetTextColor(hdc, gGlobalPrefs.m_invertColors ? WIN_COL_WHITE : WIN_COL_BLACK);
+            if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     triggerRepaintDisplay(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 else
@@ -3343,41 +3081,23 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             }
             SelectObject(hdc, origFont);
             Win32_Font_Delete(fontRightTxt);
-            UnlockCache();
             continue;
         }
 
-        DBG_OUT("page %d ", pageNo);
+        if (!renderOutOfDateCue)
+            continue;
 
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
-            int renderedBmpDx = renderedBmp->dx();
-            int renderedBmpDy = renderedBmp->dy();
-            int xSrc = (int)pageInfo->bitmapX;
-            int ySrc = (int)pageInfo->bitmapY;
-            float factor = min(1.0 * renderedBmpDx / pageInfo->currDx, 1.0 * renderedBmpDy / pageInfo->currDy);
-
-            SelectObject(bmpDC, hbmp);
-            if (factor != 1.0)
-                StretchBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
-                    bmpDC, xSrc * factor, ySrc * factor, rect_dx(&bounds) * factor, rect_dy(&bounds) * factor, SRCCOPY);
-            else
-                BitBlt(hdc, bounds.left, bounds.top, rect_dx(&bounds), rect_dy(&bounds),
-                    bmpDC, xSrc, ySrc, SRCCOPY);
-
-            if (renderedBmp->outOfDate) {
-                SelectObject(bmpDC, gBitmapReloadingCue);
-                int size = 16 * win->uiDPIFactor;
-                int cx = min(rect_dx(&bounds), 2 * size), cy = min(rect_dy(&bounds), 2 * size);
-                StretchBlt(hdc, bounds.right - min((cx + size) / 2, cx),
-                    bounds.top + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
-                    bmpDC, 0, 0, 16, 16, SRCCOPY);
-            }
+            SelectObject(bmpDC, gBitmapReloadingCue);
+            int size = 16 * win->uiDPIFactor;
+            int cx = min(rect_dx(&bounds), 2 * size), cy = min(rect_dy(&bounds), 2 * size);
+            StretchBlt(hdc, bounds.right - min((cx + size) / 2, cx),
+                bounds.top + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
+                bmpDC, 0, 0, 16, 16, SRCCOPY);
 
             DeleteDC(bmpDC);
         }
-
-        UnlockCache();
     }
 
     if (win->showSelection)
@@ -3407,8 +3127,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             if (fz_isemptyrect(isect))
                 continue;
 
-            RECT rectScreen;
-            rect_set(&rectScreen, isect.x0, isect.y0, isect.x1 - isect.x0, isect.y1 - isect.y0);
+            RECT rectScreen = { isect.x0, isect.y0, isect.x1, isect.y1 };
             PaintRectangle(hdc, &rectScreen);
         }
         free(links);
@@ -3441,10 +3160,16 @@ static void CopySelectionToClipboard(WindowInfo *win)
     EmptyClipboard();
 
     if (win->dm->pdfEngine->hasPermission(PDF_PERM_COPY)) {
-        VStrList selections;
-        for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next)
-            selections.push_back(win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
-        TCHAR *selText = selections.join();
+        TCHAR *selText;
+        if (win->dm->textSelection->result.len > 0) {
+            selText = win->dm->textSelection->ExtractText();
+        }
+        else {
+            VStrList selections;
+            for (SelectionOnPage *selOnPage = win->selectionOnPage; selOnPage; selOnPage = selOnPage->next)
+                selections.push_back(win->dm->getTextInRegion(selOnPage->pageNo, &selOnPage->selectionPage));
+            selText = selections.join();
+        }
 
         HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(selText) + 1) * sizeof(TCHAR));
         if (handle) {
@@ -3494,6 +3219,7 @@ static void DeleteOldSelectionInfo (WindowInfo *win) {
 }
 
 static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
+    win->dm->textSelection->Reset();
     for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
         PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
         assert(!pageInfo->visible || pageInfo->shown);
@@ -3518,18 +3244,25 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
-static void OnSelectAll(WindowInfo *win)
+static void OnSelectAll(WindowInfo *win, bool textOnly=false)
 {
     assert(win && win->dm);
     if (!win || !win->dm) return;
 
-    DeleteOldSelectionInfo(win);
-
-    win->selectionRect.x = INT_MIN / 2;
-    win->selectionRect.y = INT_MIN / 2;
-    win->selectionRect.dx = INT_MAX;
-    win->selectionRect.dy = INT_MAX;
-    ConvertSelectionRectToSelectionOnPage(win);
+    if (textOnly) {
+        int pageNo;
+        for (pageNo = 1; !win->dm->getPageInfo(pageNo)->shown; pageNo++);
+        win->dm->textSelection->StartAt(pageNo, 0);
+        for (pageNo = win->dm->pageCount(); !win->dm->getPageInfo(pageNo)->shown; pageNo--);
+        win->dm->textSelection->SelectUpTo(pageNo, -1);
+        RectI_FromXY(&win->selectionRect, INT_MIN / 2, INT_MAX, INT_MIN / 2, INT_MAX);
+        UpdateTextSelection(win);
+    }
+    else {
+        DeleteOldSelectionInfo(win);
+        RectI_FromXY(&win->selectionRect, INT_MIN / 2, INT_MAX, INT_MIN / 2, INT_MAX);
+        ConvertSelectionRectToSelectionOnPage(win);
+    }
 
     win->showSelection = true;
     triggerRepaintDisplay(win);
@@ -3575,7 +3308,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 
     const PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
     TCHAR srcfilepath[MAX_PATH];
-    win->pdfsync->convert_coord_to_internal(&x, &y, (UINT)pageInfo->pageDy, BottomLeft);
+    win->pdfsync->convert_coord_to_internal(&x, &y, pageInfo->page.dyI(), BottomLeft);
     UINT line, col;
     UINT err = win->pdfsync->pdf_to_source(pageNo, x, y, srcfilepath, dimof(srcfilepath),&line,&col); // record 101
     if (err != PDFSYNCERR_SUCCESS) {
@@ -3600,7 +3333,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         } else {
-            DBG_OUT("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
+            DBG_OUT_T("CreateProcess failed (%d): '%s'.\n", GetLastError(), cmdline);
             WindowInfo_ShowMessage_Asynch(win, _TR("Cannot start inverse search command. Please check the command line in the settings."), true);
         }
     }
@@ -3751,6 +3484,10 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         win->yScrollSpeed = (y - win->dragStartY) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
         win->xScrollSpeed = (x - win->dragStartX) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
         break;
+    case MA_SELECTING_TEXT:
+        if (GetCursor())
+            SetCursor(gCursorIBeam);
+        /* fall through */
     case MA_SELECTING:
         win->selectionRect.dx = x - win->selectionRect.x;
         win->selectionRect.dy = y - win->selectionRect.y;
@@ -3789,6 +3526,16 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
         win->showSelection = true;
         win->mouseAction = MA_SELECTING;
 
+        // Ctrl+Shift+drag initiates text selection
+        if (WasKeyDown(VK_CONTROL) && WasKeyDown(VK_SHIFT)) {
+            int pageNo;
+            double dX = x, dY = y;
+            if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
+                win->dm->textSelection->StartAt(pageNo, dX, dY);
+                win->mouseAction = MA_SELECTING_TEXT;
+            }
+        }
+
         SetCapture(win->hwndCanvas);
         SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
 
@@ -3798,9 +3545,13 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
 
 static void OnSelectionStop(WindowInfo *win, int x, int y)
 {
-    if (WS_SHOWING_PDF == win->state && win->mouseAction == MA_SELECTING) {
+    if (WS_SHOWING_PDF == win->state && (win->mouseAction == MA_SELECTING || win->mouseAction == MA_SELECTING_TEXT)) {
         assert (win->dm);
         if (!win->dm) return;
+
+        // update the text selection before changing the selectionRect
+        if (MA_SELECTING_TEXT == win->mouseAction)
+            UpdateTextSelection(win);
 
         win->selectionRect.dx = abs (x - win->selectionRect.x);
         win->selectionRect.dy = abs (y - win->selectionRect.y);
@@ -3813,7 +3564,7 @@ static void OnSelectionStop(WindowInfo *win, int x, int y)
 
         if (win->selectionRect.dx == 0 || win->selectionRect.dy == 0) {
             DeleteOldSelectionInfo(win);
-        } else {
+        } else if (win->mouseAction == MA_SELECTING) {
             ConvertSelectionRectToSelectionOnPage (win);
         }
         triggerRepaintDisplay(win);
@@ -3862,7 +3613,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y, int key)
         return;
     }
 
-    if (MA_SELECTING == win->mouseAction)
+    if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction)
         OnSelectionStop(win, x, y);
     else
         OnDraggingStop(win, x, y);
@@ -4059,8 +3810,7 @@ static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 #endif
 }
 
-// TODO: make it run in a background thread by constructing new PdfEngine()
-// from a file name - this should be thread safe
+// TODO: make it run in a background thread
 static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                           int nPageRanges, LPPRINTPAGERANGE pr,
                           enum PrintRangeAdv rangeAdv=PrintRangeAll,
@@ -4078,17 +3828,15 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
     if (StartDoc(hdc, &di) <= 0)
         return;
 
-    // rendering for the same DisplayModel is not thread-safe
-    // TODO: in fitz, propably rendering anything might not be thread-safe
-    RenderQueue_RemoveForDisplayModel(dm);
-    cancelRenderingForDisplayModel(dm);
-
     SetMapMode(hdc, MM_TEXT);
 
     int printAreaWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
     int printAreaHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
     int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
+    int rightMargin = printAreaWidth - leftMargin - GetDeviceCaps(hdc, HORZRES);
+    int bottomMargin = printAreaHeight - topMargin - GetDeviceCaps(hdc, VERTRES);
+
     double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
                            GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
     bool bPrintPortrait = printAreaWidth < printAreaHeight;
@@ -4099,8 +3847,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
     for (int i = 0; i < nPageRanges; i++) {
         if (-1 == pr->nFromPage && -1 == pr->nToPage) {
             // print with minimal margins as required by the printer
-            printAreaWidth = GetDeviceCaps(hdc, HORZRES);
-            printAreaHeight = GetDeviceCaps(hdc, VERTRES);
+            printAreaWidth -= leftMargin + rightMargin;
+            printAreaHeight -= topMargin + bottomMargin;
 
             assert(1 == nPageRanges && sel);
             DBG_OUT(" printing:  drawing bitmap for selection\n");
@@ -4130,9 +3878,9 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 rc.top = (printAreaHeight - sSize.dy() * zoom) / 2;
                 rc.right = printAreaWidth - rc.left;
                 rc.bottom = printAreaHeight - rc.top;
-                dm->renderPage(hdc, sel->pageNo, &rc, 100.0 * zoom, dm->rotation(), &clipRegion, Target_Print);
+                dm->renderPage(hdc, sel->pageNo, &rc, zoom, dm->rotation(), &clipRegion, Target_Print);
 #else
-                RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, 100.0 * zoom, dm->rotation(), &clipRegion, NULL, NULL, Target_Print, gUseGdiRenderer);
+                RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, zoom, dm->rotation(), &clipRegion, NULL, NULL, Target_Print, gUseGdiRenderer);
                 if (bmp) {
                     bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
                         (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
@@ -4173,8 +3921,18 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 rotation = (rotation + 90) % 360;
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
-
             double zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
+
+            if (scaleAdv != PrintScaleNone) {
+                // make sure to fit all content into the printable area when scaling
+                fz_rect cbox = dm->getContentBox(pageNo, pdfEngine->viewctm(pageNo, 1.0, rotation), Target_Print);
+                zoom = min((0.5 * printAreaWidth - leftMargin) / (0.5 * pSize.dx() - cbox.x0),
+                       min((0.5 * printAreaWidth - rightMargin) / (cbox.x1 - 0.5 * pSize.dx()),
+                       min((0.5 * printAreaHeight - topMargin) / (0.5 * pSize.dy() - cbox.y0),
+                       min((0.5 * printAreaHeight - bottomMargin) / (cbox.y1 - 0.5 * pSize.dy()),
+                       zoom))));
+            }
+
             if (PrintScaleShrink == scaleAdv)
                 // try to use correct zoom values (scale down to fit the physical page, though)
                 zoom = min(dpiFactor, zoom);
@@ -4188,11 +3946,10 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
             rc.right = printAreaWidth - rc.left;
             rc.bottom = printAreaHeight - rc.top;
             OffsetRect(&rc, -leftMargin, -topMargin);
-            dm->renderPage(hdc, pageNo, &rc, 100.0 * zoom, rotation, NULL, Target_Print);
+            dm->renderPage(hdc, pageNo, &rc, zoom, rotation, NULL, Target_Print);
 #else
-            RenderedBitmap *bmp = dm->renderBitmap(pageNo, 100.0 * zoom, rotation, NULL, NULL, NULL, Target_Print, gUseGdiRenderer);
+            RenderedBitmap *bmp = dm->renderBitmap(pageNo, zoom, rotation, NULL, NULL, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
-                // TODO: convert images to grayscale for monochrome printers, so that we always have an 8-bit palette?
                 bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
                     (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
                 delete bmp;
@@ -4257,7 +4014,7 @@ protected:
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
 
-TODO: The following doesn't apply for USE_GDI_FOR_PRINTING
+Note: The following doesn't apply for USE_GDI_FOR_PRINTING
 
 Creates a new dummy page for each page with a large zoom factor,
 and then uses StretchDIBits to copy this to the printer's dc.
@@ -4287,13 +4044,11 @@ static void OnMenuPrint(WindowInfo *win)
     assert(dm);
     if (!dm) return;
 
-    /* printing uses the WindowInfo win that is created for the
-       screen, it may be possible to create a new WindowInfo
-       for printing to so we don't mess with the screen one,
+    /* printing uses the WindowInfo' dm that is created for the
+       screen, it may be possible to create a new PdfEngine
+       for printing so we don't mess with the screen one,
        but the user is not inconvenienced too much, and this
-       way we only need to concern ourselves with one dm.
-       TODO: don't re-use WindowInfo, use a different, synchronious
-       way of creating a bitmap */
+       way we only need to concern ourselves with one dm. */
     ZeroMemory(&pd, sizeof(PRINTDLGEX));
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win->hwndFrame;
@@ -4530,6 +4285,7 @@ static void RotateLeft(WindowInfo *win)
 {
     if (!WindowInfo_PdfLoaded(win))
         return;
+    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     win->dm->rotateBy(-90);
 }
 
@@ -4537,6 +4293,7 @@ static void RotateRight(WindowInfo *win)
 {
     if (!WindowInfo_PdfLoaded(win))
         return;
+    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     win->dm->rotateBy(90);
 }
 
@@ -4781,39 +4538,6 @@ static void OnMenuViewBook(WindowInfo *win)
     SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
 }
 
-static void RememberWindowPosition(WindowInfo *win)
-{
-    /* If the window being moved or resized doesn't show a PDF document,
-       remember its position so that it can be persisted (we assume that
-       position of this window is what the user wants to be a position
-       of all new windows) */
-    if (win->state != WS_ABOUT && !gGlobalPrefs.m_globalPrefsOnly)
-        return;
-    
-    // update global windowState for next default launch when no pdf opened
-    if (win->presentation)
-        gGlobalPrefs.m_windowState = win->_windowStateBeforePresentation;
-    else if (win->fullScreen)
-        gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
-    else if (IsZoomed(win->hwndFrame))
-        gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
-    else if (!IsIconic(win->hwndFrame))
-        gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-
-    RECT rc;
-    gGlobalPrefs.m_tocDx = GetWindowRect(win->hwndTocBox, &rc) ? rect_dx(&rc) : 0;
-
-    /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
-    if (WIN_STATE_NORMAL != gGlobalPrefs.m_windowState || IsIconic(win->hwndFrame) || win->presentation)
-        return;
-
-    GetWindowRect(win->hwndFrame, &rc);
-    gGlobalPrefs.m_windowPosX = rc.left;
-    gGlobalPrefs.m_windowPosY = rc.top;
-    gGlobalPrefs.m_windowDx = rect_dx(&rc);
-    gGlobalPrefs.m_windowDy = rect_dy(&rc);
-}
-
 static void AdjustWindowEdge(WindowInfo *win)
 {
     DWORD exStyle = GetWindowLong(win->hwndCanvas, GWL_EXSTYLE);
@@ -4934,7 +4658,7 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
         gGlobalPrefs.m_showToolbar = TRUE;
 
     // Move the focus out of the toolbar
-    // TODO: do this for all windows
+    // TODO: do this for all windows?
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
         SetFocus(win->hwndFrame);
 
@@ -5213,15 +4937,7 @@ static void OnMenuViewFullscreen(WindowInfo *win)
     if (!win)
         return;
 
-    if (!win->dm || gGlobalPrefs.m_globalPrefsOnly) {
-        /* not showing a PDF document */
-        if (gGlobalPrefs.m_windowState != WIN_STATE_FULLSCREEN)
-            gGlobalPrefs.m_windowState = WIN_STATE_FULLSCREEN;
-        else if (IsZoomed(win->hwndFrame))
-            gGlobalPrefs.m_windowState = WIN_STATE_MAXIMIZED;
-        else
-            gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
-    }
+    RememberWindowPosition(win);
 
     if (win->presentation) {
         WindowInfo_ExitFullscreen(win);
@@ -5233,31 +4949,19 @@ static void OnMenuViewFullscreen(WindowInfo *win)
         WindowInfo_EnterFullscreen(win);
 }
 
-static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSearchResult *result, bool wasModified)
+static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSel *result, bool wasModified)
 {
-    win->dm->goToPage(result->page, 0, wasModified);
-    win->dm->MapResultRectToScreen(result);
+    assert(result->len > 0);
+    win->dm->goToPage(result->pages[0], 0, wasModified);
 
-    DeleteOldSelectionInfo(win);
-    for (int i = 0; i < result->len; i++) {
-        RectI rect = {
-            result->rects[i].left,
-            result->rects[i].top,
-            result->rects[i].right - result->rects[i].left,
-            result->rects[i].bottom - result->rects[i].top
-        };
-        assert(result->rects[i].bottom >= result->rects[i].top);
-        assert(result->rects[i].right >= result->rects[i].left);
+    PdfSelection *sel = win->dm->textSelection;
+    sel->Reset();
+    sel->result.pages = (int *)memdup(result->pages, result->len * sizeof(int));
+    sel->result.rects = (RectI *)memdup(result->rects, result->len * sizeof(RectI));
+    sel->result.len = result->len;
 
-        SelectionOnPage *selOnPage = (SelectionOnPage *)malloc(sizeof(SelectionOnPage));
-        RectD_FromRectI(&selOnPage->selectionPage, &rect);
-        selOnPage->pageNo = result->page;
-        win->dm->rectCvtScreenToUser(&selOnPage->pageNo, &selOnPage->selectionPage);
-        selOnPage->next = win->selectionOnPage;
-        win->selectionOnPage = selOnPage;
-    }
-
-    win->showSelection = true;
+    UpdateTextSelection(win, false);
+    win->dm->ShowResultRectToScreen(result);
     triggerRepaintDisplay(win);
 }
 
@@ -5327,13 +5031,13 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
 
             RectI overallrc;
             RectI rc = rects[0];
-            win->pdfsync->convert_coord_from_internal(&rc, (int)pi->pageDy, BottomLeft);
+            win->pdfsync->convert_coord_from_internal(&rc, pi->page.dyI(), BottomLeft);
 
             overallrc = rc;
             for (UINT i = 0; i <rects.size(); i++)
             {
                 rc = rects[i];
-                win->pdfsync->convert_coord_from_internal(&rc, (int)pi->pageDy, BottomLeft);
+                win->pdfsync->convert_coord_from_internal(&rc, pi->page.dyI(), BottomLeft);
                 overallrc = RectI_Union(overallrc, rc);
                 win->fwdsearchmarkRects.push_back(rc);
             }
@@ -5346,15 +5050,11 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
             }
             
             // Scroll to show the overall highlighted zone
-            RECT rcRes;
-            rcRes.left = overallrc.x;
-            rcRes.top = overallrc.y;
-            rcRes.right = overallrc.x + overallrc.dx;
-            rcRes.bottom = overallrc.y + overallrc.dy;
-            PdfSearchResult res = { page, 1, &rcRes };
+            int pageNo = page;
+            PdfSel res = { 1, &pageNo, &overallrc };
             if (!win->dm->pageVisible(page))
                 win->dm->goToPage(page, 0, true);
-            if(!win->dm->MapResultRectToScreen(&res))
+            if (!win->dm->ShowResultRectToScreen(&res))
                 triggerRepaintDisplay(win);
             if (IsIconic(win->hwndFrame))
                 ShowWindowAsync(win->hwndFrame, SW_RESTORE);
@@ -5527,6 +5227,7 @@ static bool OnKeydown(WindowInfo *win, int key, LPARAM lparam, bool inTextfield=
 static void ClearSearch(WindowInfo *win)
 {
     DeleteOldSelectionInfo(win);
+    win->dm->textSelection->Reset();
     triggerRepaintDisplay(win);
 }
 
@@ -5669,13 +5370,6 @@ static void OnChar(WindowInfo *win, int key)
         break;
 #endif
     }
-}
-
-static bool IsBenchMode(void)
-{
-    if (NULL != gBenchFileName)
-        return true;
-    return false;
 }
 
 /* Find a file in a file history list that has a given 'menuId'.
@@ -5832,7 +5526,7 @@ static DWORD WINAPI FindThread(LPVOID data)
     FindThreadData *ftd = (FindThreadData *)data;
     WindowInfo *win = ftd->win;
 
-    PdfSearchResult *rect;
+    PdfSel *rect;
     if (ftd->wasModified || win->dm->lastFoundPage() != win->dm->currentPageNo())
         rect = win->dm->Find(ftd->direction, ftd->text);
     else
@@ -6089,13 +5783,13 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     int pos_x = r.right + 10;
     int pos_y = (r.bottom - pageWndDy) / 2;
 
-    TCHAR buf[256];
+    TCHAR buf[64];
     if (0 == pageCount) {
         buf[0] = 0;
     } else if (-1 == pageCount) {
         GetWindowText(win->hwndPageTotal, buf, sizeof(buf));
     } else {
-        StringCchPrintf(buf, dimof(buf), _T(" / %d"), pageCount);
+        _stprintf_s(buf, dimof(buf), _T(" / %d"), pageCount);
     }
     win_set_text(win->hwndPageTotal, buf);
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
@@ -6739,7 +6433,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, void *linkObj)
     pdf_link *link = (pdf_link *)linkObj;
     if (pageNo > 0 && (ti.lpszText = win->dm->getLinkPath(link))) {
         fz_rect rect = win->dm->rectCvtUserToScreen(pageNo, link->rect);
-        rect_set(&ti.rect, rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0);
+        SetRect(&ti.rect, rect.x0, rect.y0, rect.x1, rect.y1);
 
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         free(ti.lpszText);
@@ -6749,7 +6443,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, void *linkObj)
 
     AboutLayoutInfoEl *aboutEl = (AboutLayoutInfoEl *)linkObj;
     if (-1 == pageNo && aboutEl->url) {
-        rect_set(&ti.rect, aboutEl->rightTxtPosX, aboutEl->rightTxtPosY, aboutEl->rightTxtDx, aboutEl->rightTxtDy);
+        ti.rect = RECT_FromRectI(&aboutEl->rightPos);
         ti.lpszText = (TCHAR *)aboutEl->url;
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         win->infotipVisible = true;
@@ -6842,6 +6536,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
             } else if (win && MA_SCROLLING == win->mouseAction) {
                 SetCursor(gCursorScroll);
                 return TRUE;
+            } else if (win && MA_SELECTING_TEXT == win->mouseAction) {
+                SetCursor(gCursorIBeam);
+                return TRUE;
             } else if (win && WS_SHOWING_PDF == win->state) {
                 POINT pt;
                 if (GetCursorPos(&pt) && ScreenToClient(hwnd, &pt)) {
@@ -6875,7 +6572,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
                         WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
-                    else if (MA_SELECTING == win->mouseAction) {
+                    else if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction) {
                         POINT pt;
                         GetCursorPos(&pt);
                         ScreenToClient(win->hwndCanvas, &pt);
@@ -7189,7 +6886,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
                         SendMessage(GetFocus(), WM_COPY, 0, 0);
                     else if (win->hwndPdfProperties == GetForegroundWindow())
-                        CopyPropertiesToClipboard(win);
+                        CopyPropertiesToClipboard(win->hwndPdfProperties);
                     else if (win->selectionOnPage)
                         CopySelectionToClipboard(win);
                     else
@@ -7242,7 +6939,7 @@ InitMouseWheelInfo:
 
         // TODO: I don't understand why WndProcCanvas() doesn't receive this message
         case WM_MOUSEWHEEL:
-            if (!win || !win->dm) /* TODO: check for pdfDoc as well ? */
+            if (!win || !win->dm)
                 break;
 
             // Note: not all mouse drivers correctly report the Ctrl key's state
@@ -7299,11 +6996,6 @@ InitMouseWheelInfo:
         case WM_DDE_TERMINATE:
             return OnDDETerminate(hwnd, wParam, lParam);
 
-        case MSG_BENCH_NEXT_ACTION:
-            if (win)
-                OnBenchNextAction(win);
-            break;
-
         case WM_APP_URL_DOWNLOADED:
             assert(win);
             ctx = (HttpReqCtx*)wParam;
@@ -7333,13 +7025,13 @@ InitMouseWheelInfo:
 
         case WM_APP_FIND_END:
             if (wParam) {
-                PdfSearchResult *rect = (PdfSearchResult *)wParam;
                 bool wasModified = !!lParam;
-                WindowInfo_ShowSearchResult(win, rect, wasModified);
+                WindowInfo_ShowSearchResult(win, (PdfSel *)wParam, wasModified);
                 WindowInfo_HideFindStatus(win);
             } else {
+                bool wasCanceled = !!lParam;
                 ClearSearch(win);
-                WindowInfo_HideFindStatus(win, !!lParam);
+                WindowInfo_HideFindStatus(win, wasCanceled);
             }
             break;
 
@@ -7445,8 +7137,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gCursorDrag  = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gBrushBg     = CreateSolidBrush(COL_WINDOW_BG);
-    gBrushWhite  = CreateSolidBrush(COL_WHITE);
-    gBrushBlack  = CreateSolidBrush(COL_BLACK);
+    gBrushWhite  = CreateSolidBrush(WIN_COL_WHITE);
+    gBrushBlack  = CreateSolidBrush(WIN_COL_BLACK);
     gBrushShadow = CreateSolidBrush(COL_WINDOW_SHADOW);
 
     NONCLIENTMETRICS ncm = {0};
@@ -7470,100 +7162,6 @@ static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
             break;
         strList->push_back(txt);
     }
-}
-
-static DWORD WINAPI PageRenderThread(PVOID data)
-{
-    PageRenderRequest   req;
-    RenderedBitmap *    bmp;
-
-    DBG_OUT("PageRenderThread() started\n");
-    while (1) {
-        //DBG_OUT("Worker: wait\n");
-        LockCache();
-        gCurPageRenderReq = NULL;
-        int count = gPageRenderRequestsCount;
-        UnlockCache();
-        if (0 == count) {
-            HANDLE handles[2] = { gPageRenderSem, gPageRenderClearQueue };
-            DWORD waitResult = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
-            // Is it a page render request?
-            if (WAIT_OBJECT_0 == waitResult) {
-            }
-            // is it a 'clear requests' request?
-            else if (WAIT_OBJECT_0+1 == waitResult) {
-                RenderQueue_Clear();
-                // Signal that the queue is cleared
-                SetEvent(gPageRenderQueueCleared);
-            }
-            else {
-                DBG_OUT("  WaitForSingleObject() failed\n");
-                continue;
-            }
-        }
-        if (0 == gPageRenderRequestsCount) {
-            continue;
-        }
-        LockCache();
-        RenderQueue_Pop(&req);
-        gCurPageRenderReq = &req;
-        UnlockCache();
-        DBG_OUT("PageRenderThread(): dequeued %d\n", req.pageNo);
-        if (!req.dm->pageVisibleNearby(req.pageNo)) {
-            DBG_OUT("PageRenderThread(): not rendering because not visible\n");
-            continue;
-        }
-        if (req.dm->_dontRenderFlag) {
-            DBG_OUT("PageRenderThread(): not rendering because of _dontRenderFlag\n");
-            continue;
-        }
-        assert(!req.abort);
-        MsTimer renderTimer;
-        bmp = req.dm->renderBitmap(req.pageNo, req.zoomLevel, req.rotation, NULL, pageRenderAbortCb, (void*)&req, Target_View, gUseGdiRenderer);
-        renderTimer.stop();
-        LockCache();
-        gCurPageRenderReq = NULL;
-        UnlockCache();
-        if (req.abort) {
-            delete bmp;
-            continue;
-        }
-        if (bmp && gGlobalPrefs.m_invertColors)
-            bmp->invertColors();
-        if (bmp)
-            DBG_OUT("PageRenderThread(): finished rendering %d\n", req.pageNo);
-        else
-            DBG_OUT("PageRenderThread(): failed to render a bitmap of page %d\n", req.pageNo);
-        double renderTime = renderTimer.timeInMs();
-        BitmapCache_Add(req.dm, req.pageNo, req.rotation, req.zoomLevel, bmp, renderTime);
-#ifdef CONSERVE_MEMORY
-        BitmapCache_FreeNotVisible();
-#endif
-        WindowInfo* win = (WindowInfo*)req.dm->appData();
-        triggerRepaintDisplay(win);
-    }
-    DBG_OUT("PageRenderThread() finished\n");
-    return 0;
-}
-
-static void CreatePageRenderThread(void)
-{
-    LONG semMaxCount = 1000; /* don't really know what the limit should be */
-    assert(NULL == gPageRenderThreadHandle);
-
-    gPageRenderSem = CreateSemaphore(NULL, 0, semMaxCount, NULL);
-    gPageRenderClearQueue = CreateEvent(NULL, FALSE, FALSE, NULL);
-    gPageRenderQueueCleared = CreateEvent(NULL, FALSE, FALSE, NULL);
-    gPageRenderThreadHandle = CreateThread(NULL, 0, PageRenderThread, NULL, 0, 0);
-    assert(NULL != gPageRenderThreadHandle);
-}
-
-static void FreePageRenderThread(void)
-{
-    CloseHandle(gPageRenderThreadHandle);
-    CloseHandle(gPageRenderQueueCleared);
-    CloseHandle(gPageRenderClearQueue);
-    CloseHandle(gPageRenderSem);
 }
 
 static void PrintFile(WindowInfo *win, const TCHAR *printerName)
@@ -7737,7 +7335,7 @@ HDDEDATA CALLBACK DdeCallback(UINT uType,
 
 void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 {
-    DBG_OUT("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
+    DBG_OUT_T("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
@@ -7785,7 +7383,6 @@ exit:
     DdeUninitialize(inst);
 }
 
-#ifdef DEBUG
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
 void RedirectIOToConsole(void)
 {
@@ -7815,7 +7412,6 @@ void RedirectIOToConsole(void)
     *stdin = *(FILE *)_fdopen(hConHandle, "r");
     setvbuf(stdin, NULL, _IONBF, 0);
 }
-#endif
 
 #define PROCESS_EXECUTE_FLAGS 0x22
 
@@ -7905,10 +7501,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             CurrLangNameSet(lang);
     }
 
-    /* parse argument list. If -bench was given, then we're in benchmarking mode. Otherwise
-    we assume that all arguments are PDF file names.
-    -bench can be followed by file or directory name. If file, it can additionally be followed by
-    a number which we interpret as page number */
+    /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
 #define is_arg(txt) tstr_ieq(_T(txt), argList[i])
 #define is_arg_with_param(txt) (is_arg(txt) && i < argCount - 1)
 
@@ -7984,23 +7577,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-presentation")) {
             enterPresentation = true;
         }
+        else if (is_arg("-console")) {
+            RedirectIOToConsole();
+        }
+        else if (is_arg_with_param("-crashdump")) {
+            InstallCrashHandler(argList[++i]);
+        }
 #ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             deleteFilesOnClose = true;
         }
 #endif
-        else if (is_arg_with_param("-bench")) {
-            gBenchFileName = tstr_dup(argList[++i]);
-            if (i < argCount - 1)
-                gBenchPageNum = _ttoi(argList[++i]);
-            if (gBenchPageNum < 1)
-                gBenchPageNum = INVALID_PAGE_NO;
-            break;
-        }
 #ifdef DEBUG
-        else if (is_arg("-console")) {
-            RedirectIOToConsole();
-        }
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
@@ -8024,64 +7612,60 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     fz_accelerate();
 
-    CreatePageRenderThread();
-    if (NULL != gBenchFileName) {
-        win = LoadPdf(gBenchFileName);
-        if (win && WS_SHOWING_PDF == win->state)
-            firstDocLoaded = true;
-    } else {
-        for (size_t i = 0; i < fileNames.size(); i++) {
-            if (reuse_instance) {
-                // delegate file opening to a previously running instance by sending a DDE message 
-                TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
-                GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
-                wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
+    gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
+    gRenderCache.useGdiRenderer = &gUseGdiRenderer;
+
+    for (size_t i = 0; i < fileNames.size(); i++) {
+        if (reuse_instance) {
+            // delegate file opening to a previously running instance by sending a DDE message 
+            TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
+            GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
+            wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
+            DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
+            if (destName && !firstDocLoaded) {
+                wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, destName);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
-                if (destName && !firstDocLoaded) {
-                    wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, destName);
-                    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
-                }
-                else if (pageNumber > 0 && !firstDocLoaded) {
-                    wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, pageNumber);
-                    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
-                }
             }
-            else {
-                bool showWin = !exitOnPrint;
-                win = LoadPdf(fileNames[i], NULL, showWin, newWindowTitle);
-                if (!win)
-                    goto Exit;
-                if (WS_SHOWING_PDF != win->state) {
-                    // cancel printing, if there was a load error
-                    exitOnPrint = printDialog = FALSE;
-                    free(printerName);
-                    printerName = NULL;
-               }
-                else if (destName && !firstDocLoaded) {
-                    char * destName_utf8 = tstr_to_utf8(destName);
-                    win->dm->goToNamedDest(destName_utf8);
-                    free(destName_utf8);
-                }
-                else if (pageNumber > 0 && !firstDocLoaded) {
-                    if (win->dm->validPageNo(pageNumber))
-                        win->dm->goToPage(pageNumber, 0);
-                }
-                if (WS_SHOWING_PDF == win->state && enterPresentation && !firstDocLoaded)
-                    WindowInfo_EnterFullscreen(win, true);
+            else if (pageNumber > 0 && !firstDocLoaded) {
+                wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, pageNumber);
+                DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
-
-            if (exitOnPrint)
-                ShowWindow(win->hwndFrame, SW_HIDE);
-
-            if (printerName) {
-                // note: this prints all of PDF files. Another option would be to
-                // print only the first one
-                PrintFile(win, printerName);
-            } else if (printDialog) {
-                OnMenuPrint(win);
-            }
-            firstDocLoaded = true;
         }
+        else {
+            bool showWin = !exitOnPrint;
+            win = LoadPdf(fileNames[i], NULL, showWin, newWindowTitle);
+            if (!win)
+                goto Exit;
+            if (WS_SHOWING_PDF != win->state) {
+                // cancel printing, if there was a load error
+                exitOnPrint = printDialog = FALSE;
+                free(printerName);
+                printerName = NULL;
+           }
+            else if (destName && !firstDocLoaded) {
+                char * destName_utf8 = tstr_to_utf8(destName);
+                win->dm->goToNamedDest(destName_utf8);
+                free(destName_utf8);
+            }
+            else if (pageNumber > 0 && !firstDocLoaded) {
+                if (win->dm->validPageNo(pageNumber))
+                    win->dm->goToPage(pageNumber, 0);
+            }
+            if (WS_SHOWING_PDF == win->state && enterPresentation && !firstDocLoaded)
+                WindowInfo_EnterFullscreen(win, true);
+        }
+
+        if (exitOnPrint)
+            ShowWindow(win->hwndFrame, SW_HIDE);
+
+        if (printerName) {
+            // note: this prints all of PDF files. Another option would be to
+            // print only the first one
+            PrintFile(win, printerName);
+        } else if (printDialog) {
+            OnMenuPrint(win);
+        }
+        firstDocLoaded = true;
     }
 
     free(destName);
@@ -8092,9 +7676,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
  
     if (!firstDocLoaded) {
         bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs.m_windowState);
-        /* disable benchmark mode if we couldn't open file to benchmark */
-        free(gBenchFileName);
-        gBenchFileName = NULL;
         win = WindowInfo_CreateEmpty();
         if (!win)
             goto Exit;
@@ -8110,13 +7691,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             WindowInfo_EnterFullscreen(win);
     }
 
-    if (IsBenchMode()) {
-        assert(win);
-        assert(firstDocLoaded);
-        if (win)
-            PostBenchNextAction(win->hwndFrame);
-    }
-
     if (!firstDocLoaded)
         MenuToolbarUpdateStateForAllWindows();
 
@@ -8128,8 +7702,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs.m_enableAutoUpdate)
         DownloadSumatraUpdateInfo(gWindowList, true);
 
-#ifdef THREAD_BASED_FILEWATCH
+#ifndef THREAD_BASED_FILEWATCH
+    const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
+#endif
+
     while (GetMessage(&msg, NULL, 0, 0)) {
+#ifndef THREAD_BASED_FILEWATCH
+        if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
+            WindowInfo_RefreshUpdatedFiles();
+            continue;
+        }
+#endif
         // Make sure to dispatch the accelerator to the correct window
         win = WindowInfo_FindByHwnd(msg.hwnd);
         if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
@@ -8137,30 +7720,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             DispatchMessage(&msg);
         }
     }
-#else
-    while (1) {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-            if (GetMessage(&msg, NULL, 0, 0)) {
-                // Make sure to dispatch the accelerator to the correct window
-                win = WindowInfo_FindByHwnd(msg.hwnd);
-                if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
-                    TranslateMessage(&msg);
-                    DispatchMessage(&msg);
-                }
-            }
-        }
-        else {
-            WindowInfo_RefreshUpdatedFiles();
-            Sleep(50); // TODO: why is it here?
-        }
-    }
+
+#ifndef THREAD_BASED_FILEWATCH
+    KillTimer(NULL, timerID);
 #endif
     
 Exit:
-    free(gBenchFileName);
-
-    FreePageRenderThread();
-
     WindowInfoList_DeleteAll();
     FileHistoryList_Free(&gFileHistoryRoot);
     DeleteObject(gBrushBg);

@@ -100,7 +100,7 @@ MenuDef g_menuDefLang[LANGS_COUNT] = {
     { "Japanese (\346\227\245\346\234\254\350\252\236)", IDM_LANG_JA },
     { "Korean (\355\225\234\352\265\255\354\226\264)", IDM_LANG_KR },
     { "Lithuanian (Lietuvi\305\263)", IDM_LANG_LT },
-    { "Macedonian (\320\234\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)", IDM_LANG_MK },
+    { "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)", IDM_LANG_MK },
     { "Malayalam (\340\264\256\340\264\262\340\264\257\340\264\276\340\264\263\340\264\202)", IDM_LANG_ML },
     { "Malaysian (Bahasa Melayu)", IDM_LANG_MY },
     { "Norwegian (Norsk)", IDM_LANG_NO },

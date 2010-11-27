@@ -1,10 +1,10 @@
-﻿# Translations for Macedonian (Македонски) (mk) language
+﻿# Translations for Macedonian (македонски) (mk) language
 
 # Lines at the beginning starting with # are comments
 # This file must be in utf-8 encoding. Make sure you use a proper
 # text editor (notepad++ or notepad2 will work) and set utf8 encoding.
 
-Lang: mk Macedonian (Македонски)
+Lang: mk Macedonian (македонски)
 
 Contributor: Гоце Митевски (http://www.nicer2.com)
 
@@ -12,7 +12,10 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &За SumatraPDF...
 
 &Actual Size\tCtrl-1
-Ре&ална големина\tCtrl-1
+&Реална големина\tCtrl-1
+
+&All selected pages
+&Сите означени страници
 
 &Back\tAlt+Left Arrow
 Назад\tAlt+Left Arrow
@@ -26,6 +29,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Don't ask me again
 Не ме прашувај повторно
 
+&Even pages only
+Само &парни страници
+
 &File
 &Датотека
 
@@ -34,6 +40,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 
 &First Page\tHome
 Прва страница\tHome
+
+&Fit pages to printable area
+&Прилагоди страници на зона за печатење
 
 &Go To
 П&ојди на
@@ -65,6 +74,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &No, thanks
 &Не, благодарам
 
+&Odd pages only
+Само &непарни страници
+
 &Open\tCtrl-O
 &Отвори\tCtrl-O
 
@@ -83,6 +95,9 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Print... (denied)
 &Печати... (denied)
 
+&Remember the password for this document
+&Запомни ја лозинката за овој документ
+
 &Remember these settings for each document
 &Запомни ги овие поставувања за секој документ
 
@@ -92,8 +107,14 @@ Contributor: Гоце Митевски (http://www.nicer2.com)
 &Settings
 &Поставувања
 
+&Shrink pages to printable area (if necessary)
+&Намали страници според зона за печатење (ако е потребно)
+
 &Skip this version
 &Прескокни ја оваа верзија
+
+&Use original page sizes
+&Користи оригинални димензии на страници
 
 &View
 &Поглед
@@ -111,7 +132,7 @@ About SumatraPDF
 За SumatraPDF
 
 Advanced
-Напредно
+Напредни
 
 All files
 Сите датотеки
@@ -121,6 +142,9 @@ Application:
 
 Associate with PDF files?
 Да управувам со PDF датотеки?
+
+Attachment: %s
+Прилог: %s
 
 Author:
 Автор:
@@ -137,8 +161,14 @@ Book View
 Book&marks\tF12
 Обележувачи\tF12
 
+Bookmarks
+Обележувачи
+
 Bytes
 бајти
+
+Can't connect to the Internet (error %#x).
+Не можам да се поврзам на Интернет (грешка %#x).
 
 Cancel
 Откажи
@@ -153,7 +183,10 @@ Change Language
 Смени јазик (Change Language)
 
 Check for &Updates
-&Провери за нова верзија
+&Провери за надградби
+
+Check for Updates
+Провери за надградби
 
 Continuous
 Непрекинат приказ
@@ -166,6 +199,9 @@ Continuous facing
 
 Contribute Translation
 Учествувај во преведувањето на оваа апликација
+
+Copying text was denied (copying as image only)
+Копирањето на текстот беше одбиено (копирање само во вид на слика)
 
 Could not open Printer
 Не можам да пристапам до печатачот
@@ -206,6 +242,9 @@ Enter password
 Enter password for %s
 Внеси лозинка за %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Внесете команда, за да се извршува при секое двојно кликнунвање на PDF документот:
+
 Error loading PDF file.
 Грешка при вчитување на PDF документот.
 
@@ -242,11 +281,17 @@ Find Previous
 Find:
 Најди:
 
+Fit &Content\tCtrl-3
+Прилагоди на &содржина\tCtrl-3
+
 Fit &Page\tCtrl-0
 Прилагоди на &страница\tCtrl-0
 
 Fit &Width\tCtrl-2
 Прилагоди на &ширина\tCtrl-2
+
+Fit Content
+Прилагоди на содржина
 
 Fit Page
 Прилагоди на страница
@@ -261,7 +306,7 @@ Go to page
 Појди на страница
 
 Hint: Use the F3 key for finding again
-Совет: За повторно пребарување користи F3 од тастатурата
+Совет: За повторно пребарување користете F3 од тастатурата
 
 Main PDF reader can't be changed in portable mode
 Основниот PDF читач не може да се промени во мобилен режим на работа
@@ -270,7 +315,7 @@ Make SumatraPDF default application for PDF files?
 Дали да ја направам SumatraPDF основна апликација за PDF датотеки?
 
 Make SumatraPDF my main PDF reader
-Направи го SumatraPDF основен PDF читач
+Направи ја SumatraPDF основен PDF читач
 
 Match Case
 Разликувај мали и големи букви
@@ -279,7 +324,7 @@ Modified:
 Изменето на:
 
 New version %s is available. Download new version?
-Нова верзија %s е достапна. Сакаш да ја преземам?
+Нова верзија %s е достапна. Сакате да ја преземам?
 
 New version available.
 Достапна е нова верзија.
@@ -335,14 +380,20 @@ Page Size:
 Page number %u inexistant
 Страница со број %u не постои
 
+Page scaling
+Размер на страница
+
 Page:
 Страница:
 
 Please wait - rendering...
-Те молам почекај - создавам приказ...
+Ве молам почекајте - создавам приказ...
 
 Previous Page
 Претходна страница
+
+Print range
+Опсег за печатење
 
 Printing problem.
 Проблем при печатење.
@@ -390,10 +441,10 @@ SumatraPDF Options
 Поставувања на SumatraPDF
 
 SumatraPDF is your main PDF reader
-SumatraPDF е твој основен PDF читач
+SumatraPDF е Ваш основен PDF читач
 
 SumatraPDF should now be your main PDF reader
-Сега SumatraPDF би требало да е твојот основен PDF читач
+Сега SumatraPDF би требало да е Ваш основен PDF читач
 
 Synchronization file cannot be opened
 Синхронизациската датотека не може да се отвори
@@ -417,10 +468,10 @@ Warning
 Предупредување
 
 You have the latest version.
-Ја имаш најновата верзија.
+Ја имате најновата верзија.
 
 You have version %s
-Ја имаш верзијата %s
+Ја имате верзијата %s
 
 Zoom
 Зумирање
@@ -442,23 +493,4 @@ copying text
 
 printing document
 печатам документ
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Page scaling
-#Print range
 

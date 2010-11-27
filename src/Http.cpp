@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
-
+#include "base_util.h"
 #include "Http.h"
 
 static HINTERNET g_hOpen = NULL;

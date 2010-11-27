@@ -15,14 +15,20 @@ Tungkol S&a...
 &Actual Size\tCtrl-1
 Tunay na Laki\tCtrl-1
 
+&All selected pages
+&Lahat ng napiling pahina
+
 &Back\tAlt+Left Arrow
 Bumalik\tAlt+Left Arrow
 
 &Close\tCtrl-W
 Isara\tCtrl-W
 
+&Copy Selection\tCtrl-C
+&Kopyahin ang Napili\tCtrl-C
+
 &Don't ask me again
-Huwag mo na akong tanunging muli
+Huwag na akong tanunging muli
 
 &File
 &File
@@ -44,6 +50,9 @@ Tulong
 
 &Last Page\tEnd
 Huling Pahina\tEnd
+
+&Magnification:
+&Laki
 
 &Manual
 Gabay
@@ -72,6 +81,15 @@ Naunang Pahina\t<-
 &Print...\tCtrl-P
 I-&print\tCtrl-P
 
+&Print... (denied)
+&I-print... (hindi maaari)
+
+&Remember the password for this document
+Tandaan ang password para sa dokumentong ito
+
+&Remember these settings for each document
+Tandaan ang settings ng bawat dokumento
+
 &Save As...\tCtrl-S
 I-save Bilang...\tCtrl-S
 
@@ -81,6 +99,9 @@ Mga Setting
 &Skip this version
 Laktawan ang bersyong ito
 
+&Use original page sizes
+Gamitin ang orihinal na laki ng mga pahina
+
 &View
 Tignan
 
@@ -88,7 +109,7 @@ Tignan
 Oo
 
 &Zoom
-I-&zoom
+Baguhin ang laki
 
 (of %d)
 (ng %d)
@@ -103,7 +124,10 @@ Application:
 Pangalan ng aplikasyon:
 
 Associate with PDF files?
-Isanib sa Salansan na PDF?
+I-associate sa mga PDF file?
+
+Attachment: %s
+Naka-attach: %s
 
 Author:
 May gawa:
@@ -111,11 +135,20 @@ May gawa:
 Automatic
 Awtomatiko
 
+Automatically check for &updates
+Awtomatikong tignan kung may mga &updates
+
 Book&marks\tF12
 Mga Pananda\tF12
 
+Bookmarks
+Mga Pananda
+
 Bytes
 Bytes
+
+Can't connect to the Internet (error %#x).
+Hindi makakonekta sa Internet (error %#x).
 
 Cancel
 Ikansela
@@ -129,6 +162,9 @@ Ibahin ang Wika
 Check for &Updates
 Tignan kung may bagong &bersyon
 
+Check for Updates
+Tingnan kung may bagong bersyon
+
 Continuous
 Tuloy-tuloy
 
@@ -138,8 +174,14 @@ Tuloy-tuloy na Magkaharap
 Contribute Translation
 Magbigay ng Saling-wika
 
+Copying text was denied (copying as image only)
+Hindi maaaring kopyahin ang mensahe (kinopya bilang isang imahe lamang)
+
 Could not open Printer
 Hindi mabuksan ang Printer
+
+Couldn't initialize printer
+Hindi ma-initialize ang printer
 
 Couldn't render the page
 Hindi maipakita ang pahina
@@ -192,11 +234,17 @@ Hanapin ang Nauna
 Find:
 Hanapin:
 
+Fit &Content\tCtrl-3
+Pagkasyahin ang laman\tCtrl-3
+
 Fit &Page\tCtrl-0
 Ipagkasya ang &Pahina\tCtrl-0
 
 Fit &Width\tCtrl-2
 &Ipagkasya ang Lapad\tCtrl-2
+
+Fit Content
+Pagkasyahin ang laman
 
 Fit Page
 Ipagkasya ang Pahina
@@ -209,6 +257,9 @@ Nakita ang salita sa pahina %d
 
 Go to page
 Pumunta sa Pahina
+
+Hint: Use the F3 key for finding again
+Payo: Pindutin ang F3 para maghanap muli
 
 Make SumatraPDF default application for PDF files?
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
@@ -303,8 +354,17 @@ Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 Show &Toolbar
 Ipakita ang toolbar
 
+Show &pages continuously
+Ipakita nang tuloy-tuloy ang mga &pahina
+
+Show the &bookmarks sidebar when available
+Ipakita ang &bookmarks sidebar kung naangkop
+
 Single Page
 Iisang Pahina
+
+SumatraPDF Options
+Mga Opsyon para sa SumatraPDF
 
 SumatraPDF is your main PDF reader
 SumatraPDF ang iyong default na pambasa ng mga PDF file
@@ -314,6 +374,9 @@ SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
 
 Title:
 Pamagat:
+
+Unknown source file (%s)
+Hindi alam na source file (%s)
 
 View
 Tignan
@@ -330,39 +393,37 @@ Ito ang pinakabagong bersyon.
 You have version %s
 Ang bersyong nasa iyo ay %s
 
+Zoom
+Laki
+
 Zoom In
-Palakihin/Lumapit
+Palakihin
 
 Zoom Out
-Paliitin/Lumayo
+Paliitin
+
+Zoom factor
+Antas ng laki
 
 [Changes detected; refreshing] %s
 [May napansing pagbabago; nagre-refresh] %s
 
+copying text
+kinokopya ang mensahe
+
+printing document
+ipini-print ang dokumento
+
 # Untranslated:
-#&All selected pages
-#&Copy Selection\tCtrl-C
 #&Even pages only
 #&Fit pages to printable area
-#&Magnification:
 #&Match case
 #&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Remember these settings for each document
 #&Shrink pages to printable area (if necessary)
-#&Use original page sizes
 #Advanced
-#Attachment: %s
-#Automatically check for &updates
 #Book View
-#Bookmarks
-#Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
-#Check for Updates
 #Continuous book view
-#Copying text was denied (copying as image only)
-#Couldn't initialize printer
 #Custom &Zoom...\tCtrl-Y
 #Default &Layout:
 #Default &Zoom:
@@ -370,9 +431,6 @@ Paliitin/Lumayo
 #Document Properties
 #Enter the command-line to invoke when you double-click on the PDF document:
 #F&orward\tAlt+Right Arrow
-#Fit &Content\tCtrl-3
-#Fit Content
-#Hint: Use the F3 key for finding again
 #Main PDF reader can't be changed in portable mode
 #No synchronization file found
 #No synchronization info at this position
@@ -380,16 +438,8 @@ Paliitin/Lumayo
 #PDF documents
 #Page scaling
 #Print range
-#Show &pages continuously
-#Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #Subject:
-#SumatraPDF Options
 #Synchronization file cannot be opened
 #Text documents
-#Unknown source file (%s)
-#Zoom
-#Zoom factor
-#copying text
-#printing document
 

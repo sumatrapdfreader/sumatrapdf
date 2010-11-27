@@ -1,147 +1,105 @@
-#include "SumatraPDF.h"
-
+#include <windows.h>
 #include <dbghelp.h>
-#include <process.h>
 #include "CrashHandler.h"
-#include "str_util.h"
+
+#include "base_util.h"
+#include "tstr_util.h"
 #include "WinUtil.hpp"
 
 typedef BOOL WINAPI MiniDumpWriteProc(
-  HANDLE hProcess,
-  DWORD ProcessId,
-  HANDLE hFile,
-  LONG DumpType,
-  PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
-  void * UserStreamParam,
-  void * CallbackParam
+    HANDLE hProcess,
+    DWORD ProcessId,
+    HANDLE hFile,
+    LONG DumpType,
+    PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+    PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
+    PMINIDUMP_CALLBACK_INFORMATION CallbackParam
 );
 
-typedef struct {
-    DWORD                threadId;
-    EXCEPTION_POINTERS * exceptionInfo;
-} DumpThreadInfo;
-
 static TCHAR g_crashDumpPath[MAX_PATH];
-static TCHAR g_exePath[MAX_PATH];
+static HANDLE g_dumpEvent = NULL;
+static HANDLE g_dumpThread = NULL;
+static MINIDUMP_EXCEPTION_INFORMATION mei = { 0 };
 
-static MiniDumpWriteProc *g_minidDumpWriteProc = NULL;
-
-static bool InitDbgHelpDll()
-{
-#ifdef DEBUG
-    static bool wasHere = false;
-    assert(!wasHere);
-    wasHere = true;
-#endif
-
-    WinLibrary lib(_T("DBGHELP.DLL"));
-    g_minidDumpWriteProc = (MiniDumpWriteProc*)lib.GetProcAddr("MiniDumpWriteDump");
-    return (g_minidDumpWriteProc != NULL);
-}
-
-static void GenPaths(const TCHAR *crashDumpDir, const TCHAR *crashDumpBasename)
-{
-    _tcscpy_s(g_crashDumpPath, dimof(g_crashDumpPath), crashDumpDir);
-    if (!tstr_endswithi(g_crashDumpPath, DIR_SEP_TSTR))
-        _tcscat_s(g_crashDumpPath, dimof(g_crashDumpPath), DIR_SEP_TSTR);
-    _tcscat_s(g_crashDumpPath, dimof(g_crashDumpPath), crashDumpBasename);
-    _tcscat_s(g_crashDumpPath, dimof(g_crashDumpPath), _T(".dmp"));
-    GetModuleFileName(NULL, g_exePath, dimof(g_exePath));
-}
-
-static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, MINIDUMP_CALLBACK_INPUT* input, MINIDUMP_CALLBACK_OUTPUT* output)
+static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
 {
     if (!input || !output) 
         return FALSE; 
 
-    ULONG ct = input->CallbackType;
-    if (ModuleCallback == ct) {
+    switch (input->CallbackType) {
+    case ModuleCallback:
         if (!(output->ModuleWriteFlags & ModuleReferencedByMemory))
             output->ModuleWriteFlags &= ~ModuleWriteModule; 
         return TRUE;
-    } else if ( (IncludeModuleCallback == ct) ||
-            (IncludeThreadCallback == ct) ||
-            (ThreadCallback == ct) ||
-            (ThreadExCallback == ct)) {
+    case IncludeModuleCallback:
+    case IncludeThreadCallback:
+    case ThreadCallback:
+    case ThreadExCallback:
         return TRUE;
+    default:
+        return FALSE;
     }
-
-    return FALSE;
 }
 
-static unsigned WINAPI CrushDumpThread(void* data)
+static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
-    HANDLE dumpFile = INVALID_HANDLE_VALUE;
-    DumpThreadInfo *dti = (DumpThreadInfo*)data;
-    if (!dti)
+    WaitForSingleObject(g_dumpEvent, INFINITE);
+
+    WinLibrary lib(_T("DBGHELP.DLL"));
+    MiniDumpWriteProc *pMiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
+    if (!pMiniDumpWriteDump)
         return 0;
 
-    dumpFile = CreateFile(g_crashDumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+    HANDLE dumpFile = CreateFile(g_crashDumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
     if (INVALID_HANDLE_VALUE == dumpFile)
         return 0;
 
-    MINIDUMP_CALLBACK_INFORMATION mci; 
-    mci.CallbackRoutine	 = (MINIDUMP_CALLBACK_ROUTINE)OpenMiniDumpCallback; 
-
-    MINIDUMP_EXCEPTION_INFORMATION excInfo;
-    excInfo.ThreadId = dti->threadId;
-    excInfo.ExceptionPointers = dti->exceptionInfo;
-    excInfo.ClientPointers = FALSE;
-
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
-    //type |= MiniDumpWithDataSegs|MiniDumpWithHandleData|MiniDumpWithPrivateReadWriteMemory;
-    BOOL ok = g_minidDumpWriteProc(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &excInfo, NULL, &mci);
-    ///BOOL ok = minidDumpWriteProc(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &excInfo, NULL, NULL);
-    UNUSED_VAR(ok);
+    // set the SUMATRAPDF_FULLDUMP environment variable for far more complete minidumps
+    if (GetEnvironmentVariable(_T("SUMATRAPDF_FULLDUMP"), NULL, 0))
+        type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
+    MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL }; 
 
-    if (dumpFile != INVALID_HANDLE_VALUE)
-        CloseHandle(dumpFile);
+    pMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &mei, NULL, &mci);
 
-    exec_with_params(g_exePath, CMD_ARG_SEND_CRASHDUMP, TRUE /* hidden */);
+    CloseHandle(dumpFile);
+
+    // exec_with_params(g_exePath, CMD_ARG_SEND_CRASHDUMP, TRUE /* hidden */);
     return 0;
 }
 
-static LONG WINAPI OpenDnsCrashHandler(EXCEPTION_POINTERS *exceptionInfo)
+static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 {
+    if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode))
+        return EXCEPTION_CONTINUE_SEARCH;
+
     static bool wasHere = false;
     if (wasHere)
         return EXCEPTION_CONTINUE_SEARCH;
-
-    if (exceptionInfo && (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode))
-        return EXCEPTION_CONTINUE_SEARCH;
-
     wasHere = true;
 
-    // we either forgot to call InitDbgHelpDll() or it failed to obtain address of
-    // MiniDumpWriteDump(), so nothing we can do
-    if (NULL == g_minidDumpWriteProc)
-        return EXCEPTION_CONTINUE_SEARCH;
-
+    mei.ThreadId = GetCurrentThreadId();
+    mei.ExceptionPointers = exceptionInfo;
     // per msdn (which is backed by my experience), MiniDumpWriteDump() doesn't
     // write callstack for the calling thread correctly. We use msdn-recommended
     // work-around of spinning a thread to do the writing
-    DumpThreadInfo dti;
-    dti.exceptionInfo = exceptionInfo;
-    dti.threadId = ::GetCurrentThreadId();
-
-    unsigned tid;
-    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, CrushDumpThread, &dti, 0, &tid) ;
-    if ((HANDLE)-1 != hThread )
-    {
-        WaitForSingleObject(hThread, INFINITE);
-        CloseHandle(hThread);
-    }
+    SetEvent(g_dumpEvent);
+    WaitForSingleObject(g_dumpThread, INFINITE);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpDir, const TCHAR *crashDumpBaseName)
+void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
-    // do as much work as possible here (as opposed to in crash handler)
-    // the downside is that startup time might suffer due to loading of dbghelp.dll
-    bool ok = InitDbgHelpDll();
-    if (!ok)
-        return;
-    GenPaths(crashDumpDir, crashDumpBaseName);
-    SetUnhandledExceptionFilter(OpenDnsCrashHandler);
+    GetFullPathName(crashDumpPath, dimof(g_crashDumpPath), g_crashDumpPath, NULL);
+    if (!tstr_endswithi(g_crashDumpPath, _T(".dmp")) &&
+        !tstr_endswithi(g_crashDumpPath, _T(".mdmp")))
+        _tcscat_s(g_crashDumpPath, dimof(g_crashDumpPath), _T(".dmp"));
+
+    if (!g_dumpEvent && !g_dumpThread) {
+        g_dumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        g_dumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
+
+        SetUnhandledExceptionFilter(DumpExceptionHandler);
+    }
 }

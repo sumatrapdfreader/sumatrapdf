@@ -12,82 +12,9 @@
 #include "base_util.h"
 #include "tstr_util.h"
 #include "file_util.h"
+#include "vstrlist.h"
 #ifdef SYNCTEX_FEATURE
 #include "synctex_parser.h"
-#endif
-
-#ifdef USE_STL
-#include <vector>
-#include <stack>
-using namespace std;
-#else
-#define ALLOC_INCREMENT  10
-template <class _Ty>
-class vector {
-public:
-    _Ty &operator[](size_t i) const
-    {
-        assert(i<m_size);
-        return m_data[i];
-    }
-    void clear()
-    {
-        m_size = 0;
-    }
-    void push_back(_Ty v)
-    {
-        if (m_size>=m_allocsize) {
-            m_allocsize += ALLOC_INCREMENT;
-            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
-        }
-        m_data[m_size] = v;
-        m_size++;
-    }
-    void resize(size_t s)
-    {
-        if (s>m_allocsize) {
-            m_allocsize = s+ALLOC_INCREMENT-s%ALLOC_INCREMENT;
-            m_data = (_Ty *)realloc(m_data, sizeof(_Ty) * m_allocsize); 
-        }
-        m_size = s;
-    }
-    size_t size() const 
-    {
-        return m_size;
-    }
-    vector()
-    {
-        m_allocsize = ALLOC_INCREMENT;
-        m_size = 0;
-        m_data = (_Ty *)malloc(sizeof(_Ty) * m_allocsize); 
-    }
-    ~vector()
-    {
-        for (size_t i=0; i<m_size; i++)
-            m_data[i].~_Ty();
-        free(m_data);
-    }
-private:
-    _Ty *m_data;
-    size_t m_allocsize, m_size;
-};
-
-template <class _Ty>
-class stack : public vector<_Ty> {
-public:
-    void push(_Ty v) {
-        push_back(v);
-    }
-    void pop() {
-        assert(this->size()>0);
-        resize(this->size()-1);
-    }
-    _Ty &top() {
-        assert(this->size()>0);
-        return (*this)[this->size()-1];
-    }
-};
-
 #endif
 
 // size of the mark highlighting the location calculated by forward-search
@@ -221,7 +148,7 @@ public:
         if (_tstat(syncfilepath, &newstamp) == 0
             && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0
             ) {
-                DBG_OUT("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
+                DBG_OUT_T("PdfSync:sync file has changed, rebuilding index: %s\n", syncfilepath);
 
                 // update time stamp
                 memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));

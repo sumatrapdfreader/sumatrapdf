@@ -36,14 +36,8 @@ CC = cl.exe
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
 CFLAGS = $(CFLAGS) /D "WIN32"  /D "_WIN32"
-#CFLAGS = $(CFLAGS) /D "_WIN32_WINNT=0x0500"
-#CFLAGS = $(CFLAGS) /D "WIN32_LEAN_AND_MEAN"
-CFLAGS = $(CFLAGS) /D "_SCL_SECURE_NO_DEPRECATE" /D "_CRT_SECURE_NO_DEPRECATE"
-
-# disable "warning C4244: 'argument' : conversion from 'foo' to 'bar', possible loss of data"
-CFLAGS = $(CFLAGS) /wd4244 /wd4996
-# 4995 - 'sprintf': name was marked as #pragma deprecated
-CFLAGS = $(CFLAGS) /wd4995
+# suppress warning C4996: 'function': was declared deprecated
+CFLAGS = $(CFLAGS) /wd4996
 
 CFLAGS = $(CFLAGS) /W3 /WX /GR- /Zi /GS /Gy
 
@@ -630,5 +624,8 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 # files generated during build process (fonts and cmaps)
 {$(O)\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+$(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(FITZ_DIR)\fitz\fitz.h
+$(MUPDF_OBJS): $(FITZ_DIR)\fitz\fitz.h $(FITZ_DIR)\mupdf\mupdf.h
 
 force: ;

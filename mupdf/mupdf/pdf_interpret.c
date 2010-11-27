@@ -374,6 +374,9 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 				}
 
 				group = fz_dictgets(val, "G");
+				/* SumatraPDF: the document from http://bugs.ghostscript.com/show_bug.cgi?id=691786 crashes here */
+				if (!group)
+					return fz_throw("cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));
 				error = pdf_loadxobject(&xobj, csi->xref, group);
 				if (error)
 					return fz_rethrow(error, "cannot load xobject (%d %d R)", fz_tonum(val), fz_togen(val));

@@ -1,6 +1,8 @@
 #ifndef CRASH_HANDLER_H__
 #define CRASH_HANDLER_H__
 
-void InstallCrashHandler(const TCHAR *crashDumpDir, const TCHAR *crashDumpBaseName);
+// #define CMD_ARG_SEND_CRASHDUMP  _T("/sendcrashdump")
+
+void InstallCrashHandler(const TCHAR *crashDumpPath);
 
 #endif

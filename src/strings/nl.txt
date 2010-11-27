@@ -6,7 +6,7 @@
 
 Lang: nl Dutch (Nederlands)
 
-Contributor: Barry Haveman (http://webstek.info)
+Contributor: Barry Haveman
 Contributor: Kristof Bal
 Contributor: Stephan Paternotte
 Contributor: Marco La Fors
@@ -18,7 +18,10 @@ Contributor: Jaap Ginder
 &Over
 
 &Actual Size\tCtrl-1
-Ware grootte\tCtrl-1
+W&are grootte\tCtrl-1
+
+&All selected pages
+&Alle geselecteerde pagina's
 
 &Back\tAlt+Left Arrow
 Terug\tAlt+<-
@@ -32,6 +35,9 @@ Kopieer selectie\tCtrl-C
 &Don't ask me again
 Niet meer vragen
 
+&Even pages only
+Alleen &Even pagina's
+
 &File
 &Bestand
 
@@ -40,6 +46,9 @@ Niet meer vragen
 
 &First Page\tHome
 Eerste pagina\tHome
+
+&Fit pages to printable area
+Pagina's in afdrukgebied passen
 
 &Go To
 &Ga naar
@@ -51,7 +60,7 @@ Eerste pagina\tHome
 &Help
 
 &Last Page\tEnd
-Laatste pagina\tEnd
+&Laatste pagina\tEnd
 
 &Magnification:
 &Vergroting:
@@ -71,6 +80,9 @@ Volgende pagina\t->
 &No, thanks
 &Nee, bedankt
 
+&Odd pages only
+Alleen &Oneven pagina's
+
 &Open\tCtrl-O
 &Open\tCtrl-O
 
@@ -87,10 +99,13 @@ Vorige pagina\t<-
 &Afdrukken\tCtrl-P
 
 &Print... (denied)
-Afdrukken... (geweigerd)
+Afdrukken... (niet toegestaan)
+
+&Remember the password for this document
+Wachtwoord onthouden voor dit bestand
 
 &Remember these settings for each document
-&Bewaar deze instellingen voor elk document
+&Bewaar deze instellingen voor elk bestand
 
 &Save As...\tCtrl-S
 &Opslaan als...\tCtrl-S
@@ -98,8 +113,14 @@ Afdrukken... (geweigerd)
 &Settings
 &Instellingen
 
+&Shrink pages to printable area (if necessary)
+Pagina's verkleinen tot afdrukgebied (indien nodig)
+
 &Skip this version
 Deze versie overslaan
+
+&Use original page sizes
+Originele paginagrootte gebruiken
 
 &View
 &Beeld
@@ -123,10 +144,13 @@ All files
 Alle bestanden
 
 Application:
-Applicatie:
+Programma:
 
 Associate with PDF files?
 Associëren met PDF-bestanden?
+
+Attachment: %s
+Bijlage: %s
 
 Author:
 Auteur:
@@ -143,8 +167,14 @@ Boekaanzicht
 Book&marks\tF12
 Bladwijzers\tF12
 
+Bookmarks
+Bladwijzers
+
 Bytes
 Bytes
+
+Can't connect to the Internet (error %#x).
+Geen verbinding maken met internet (fout %#x).
 
 Cancel
 Annuleren
@@ -156,10 +186,13 @@ Cannot start inverse search command. Please check the command line in the settin
 Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
 
 Change Language
-Wijzig taal
+Taal wijzigen
 
 Check for &Updates
-&Controleren op updates
+Controleren op &Updates
+
+Check for Updates
+Controleren op updates
 
 Continuous
 Doorlopend
@@ -172,6 +205,9 @@ Dubbele pagina doorlopend
 
 Contribute Translation
 Help met vertalen
+
+Copying text was denied (copying as image only)
+Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 
 Could not open Printer
 Printer niet gevonden
@@ -195,10 +231,10 @@ Default &Zoom:
 Standaard &Zoom:
 
 Denied Permissions:
-Geweigerde toegang:
+Niet toegestaan:
 
 Document Properties
-Documenteigenschappen
+Bestandseigenschappen
 
 Download
 Downloaden
@@ -211,6 +247,9 @@ Wachtwoord invoeren
 
 Enter password for %s
 Wachtwoord invoeren voor %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-bestand:
 
 Error loading PDF file.
 Fout bij laden PDF bestand.
@@ -248,11 +287,17 @@ Vorige
 Find:
 Zoeken:
 
+Fit &Content\tCtrl-3
+Passend maken\tCtrl-3
+
 Fit &Page\tCtrl-0
 Hele &pagina\tCtrl-0
 
 Fit &Width\tCtrl-2
 Passend in &breedte\tCtrl-2
+
+Fit Content
+Passend maken
 
 Fit Page
 Hele pagina
@@ -333,7 +378,7 @@ PDF documents
 PDF-bestanden
 
 Pa&ge...\tCtrl-G
-Pagina...\tCtrl-G
+Pa&gina...\tCtrl-G
 
 Page Size:
 Paginagrootte:
@@ -341,14 +386,20 @@ Paginagrootte:
 Page number %u inexistant
 Paginanummer %u bestaat niet
 
+Page scaling
+Pagina schalen
+
 Page:
 Pagina:
 
 Please wait - rendering...
-Een ogenblik geduld - weergeven...
+Een ogenblik - weergeven...
 
 Previous Page
 Vorige pagina
+
+Print range
+Bereik afdrukken
 
 Printing problem.
 Probleem bij het afdrukken.
@@ -405,7 +456,7 @@ Synchronization file cannot be opened
 Het synchronisatiebestand kan niet worden geopend
 
 Text documents
-Tekstdocumenten
+Tekstbestanden
 
 Title:
 Titel:
@@ -444,27 +495,8 @@ Zoomfactor
 [Bestand gewijzigd; verversen] %s
 
 copying text
-kopieren tekst
+tekst kopieren
 
 printing document
-afdrukken bestand
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Page scaling
-#Print range
+bestand afdrukken
 

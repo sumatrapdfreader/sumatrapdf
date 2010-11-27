@@ -1,6 +1,5 @@
 /* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
-#include <windows.h>
 #include "PdfEngine.h"
 
 // in SumatraPDF.cpp
@@ -58,6 +57,20 @@ fz_error pdf_runpagefortarget(pdf_xref *xref, pdf_page *page, fz_device *dev, fz
     return error;
 }
 
+fz_pixmap *fz_newpixmap_nullonoom(fz_colorspace *colorspace, int x, int y, int w, int h)
+{
+    // allocate the memory needed for the pixmap ourselves, as MuPDF just aborts on OOM
+    unsigned char *samples = (unsigned char *)malloc(w * h * (colorspace->n + 1));
+    if (!samples)
+        return NULL;
+
+    fz_pixmap *image = fz_newpixmapwithdata(colorspace, x, y, w, h, samples);
+    // tell MuPDF to free the memory when discarding the pixmap
+    image->freesamples = 1;
+
+    return image;
+}
+
 HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
 {
     int w, h, rows8;
@@ -73,7 +86,9 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     h = pixmap->h;
     
     /* abgr is a GDI compatible format */
-    bgrPixmap = fz_newpixmap(fz_devicebgr, pixmap->x, pixmap->y, w, h);
+    bgrPixmap = fz_newpixmap_nullonoom(fz_devicebgr, pixmap->x, pixmap->y, w, h);
+    if (!bgrPixmap)
+        return NULL;
     fz_convertpixmap(pixmap, bgrPixmap);
     pixmap = bgrPixmap;
     
@@ -242,16 +257,18 @@ PdfEngine::PdfEngine() :
         , _attachments(NULL)
         , _pages(NULL)
         , _drawcache(NULL)
-        , _windowInfo(NULL)
         , _decryptionKey(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&_xrefAccess);
+    ZeroMemory(&_runCache, sizeof(_runCache));
 }
 
 PdfEngine::~PdfEngine()
 {
     EnterCriticalSection(&_pagesAccess);
+    EnterCriticalSection(&_xrefAccess);
+
     if (_pages) {
         for (int i=0; i < _pageCount; i++) {
             if (_pages[i])
@@ -259,30 +276,35 @@ PdfEngine::~PdfEngine()
         }
         free(_pages);
     }
-    LeaveCriticalSection(&_pagesAccess);
-    DeleteCriticalSection(&_pagesAccess);
 
     if (_outline)
         pdf_freeoutline(_outline);
     if (_attachments)
         pdf_freeoutline(_attachments);
 
-    EnterCriticalSection(&_xrefAccess);
-    if (_xref)
+    if (_xref) {
         pdf_freexref(_xref);
-    LeaveCriticalSection(&_xrefAccess);
-    DeleteCriticalSection(&_xrefAccess);
+        _xref = NULL;
+    }
 
     if (_drawcache)
         fz_freeglyphcache(_drawcache);
+    while (_runCache[0]) {
+        assert(_runCache[0]->refs == 1);
+        dropPageRun(_runCache[0], true);
+    }
     free((void*)_fileName);
     free((void*)_decryptionKey);
+
+    LeaveCriticalSection(&_xrefAccess);
+    DeleteCriticalSection(&_xrefAccess);
+    LeaveCriticalSection(&_pagesAccess);
+    DeleteCriticalSection(&_pagesAccess);
 }
 
 bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
 {
     fz_error error;
-    _windowInfo = win;
     assert(!_fileName);
     _fileName = tstr_dup(fileName);
 
@@ -309,16 +331,14 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
         return false;
     fz_stream *file = fz_openfile(fd);
 OpenEmbeddedFile:
-    // TODO: not sure how to handle passwords
+    // don't pass in a password so that _xref isn't thrown away if it was wrong
     error = pdf_openxrefwithstream(&_xref, file, NULL);
     fz_close(file);
     if (error || !_xref)
         return false;
 
     if (pdf_needspassword(_xref)) {
-        if (!win)
-            // win might not be given if called from pdfbench.cc
-            return false;
+        assert(win);
 
         unsigned char digest[16 + 32] = { 0 };
         pdf_streamfingerprint(_xref->file, digest);
@@ -451,25 +471,108 @@ pdf_page *PdfEngine::getPdfPage(int pageNo)
     if (!_pages)
         return NULL;
 
-    bool needsLinkification = false;
-
     EnterCriticalSection(&_pagesAccess);
+
     pdf_page *page = _pages[pageNo-1];
     if (!page) {
         EnterCriticalSection(&_xrefAccess);
         fz_obj * obj = pdf_getpageobject(_xref, pageNo);
         fz_error error = pdf_loadpage(&page, _xref, obj);
-        if (!error) {
-            _pages[pageNo-1] = page;
-            needsLinkification = true;
-        }
         LeaveCriticalSection(&_xrefAccess);
+        if (!error) {
+            linkifyPageText(page);
+            _pages[pageNo-1] = page;
+        }
     }
+
     LeaveCriticalSection(&_pagesAccess);
 
-    if (needsLinkification)
-        linkifyPageText(page);
     return page;
+}
+
+PdfPageRun *PdfEngine::getPageRun(pdf_page *page, bool tryOnly)
+{
+    PdfPageRun *result = NULL;
+    int i;
+
+    EnterCriticalSection(&_pagesAccess);
+    for (i = 0; i < MAX_PAGE_RUN_CACHE && _runCache[i] && !result; i++)
+        if (_runCache[i]->page == page)
+            result = _runCache[i];
+    if (!result && !tryOnly) {
+        if (MAX_PAGE_RUN_CACHE == i) {
+            dropPageRun(_runCache[0], true);
+            i--;
+        }
+
+        fz_displaylist *list = fz_newdisplaylist();
+        fz_device *dev = fz_newlistdevice(list);
+        EnterCriticalSection(&_xrefAccess);
+        fz_error error = pdf_runpagefortarget(_xref, page, dev, fz_identity, Target_View);
+        LeaveCriticalSection(&_xrefAccess);
+        fz_freedevice(dev);
+
+        if (fz_okay == error) {
+            PdfPageRun newRun = { page, list, 1 };
+            result = _runCache[i] = (PdfPageRun *)_memdup(&newRun);
+        }
+        else
+            fz_freedisplaylist(list);
+    }
+    else {
+        // keep the list Least Recently Used first
+        for (; i < MAX_PAGE_RUN_CACHE && _runCache[i]; i++) {
+            _runCache[i-1] = _runCache[i];
+            _runCache[i] = result;
+        }
+    }
+
+    if (result)
+        result->refs++;
+    LeaveCriticalSection(&_pagesAccess);
+    return result;
+}
+
+fz_error PdfEngine::runPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_rect bounds, bool cacheRun)
+{
+    fz_error error = fz_okay;
+    PdfPageRun *run;
+
+    if (Target_View == target && (run = getPageRun(page, !cacheRun))) {
+        EnterCriticalSection(&_xrefAccess);
+        fz_executedisplaylist2(run->list, dev, ctm, fz_roundrect(bounds));
+        LeaveCriticalSection(&_xrefAccess);
+        dropPageRun(run);
+    }
+    else {
+        EnterCriticalSection(&_xrefAccess);
+        error = pdf_runpagefortarget(_xref, page, dev, ctm, target);
+        LeaveCriticalSection(&_xrefAccess);
+    }
+    fz_freedevice(dev);
+
+    return error;
+}
+
+void PdfEngine::dropPageRun(PdfPageRun *run, bool forceRemove)
+{
+    EnterCriticalSection(&_pagesAccess);
+    run->refs--;
+
+    if (0 == run->refs || forceRemove) {
+        int i;
+        for (i = 0; i < MAX_PAGE_RUN_CACHE && _runCache[i] != run; i++);
+        if (i < MAX_PAGE_RUN_CACHE) {
+            memmove(&_runCache[i], &_runCache[i+1], (MAX_PAGE_RUN_CACHE - i - 1) * sizeof(PdfPageRun *));
+            _runCache[MAX_PAGE_RUN_CACHE-1] = NULL;
+        }
+        if (0 == run->refs) {
+            fz_freedisplaylist(run->list);
+            free(run);
+        }
+    }
+
+    LeaveCriticalSection(&_pagesAccess);
 }
 
 int PdfEngine::pageRotation(int pageNo)
@@ -481,16 +584,22 @@ int PdfEngine::pageRotation(int pageNo)
     return fz_toint(fz_dictgets(page, "Rotate"));
 }
 
+fz_rect PdfEngine::pageMediabox(int pageNo)
+{
+    fz_rect mediabox;
+    if (pdf_getmediabox(&mediabox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
+        return fz_emptyrect;
+    return mediabox;
+}
+
 SizeD PdfEngine::pageSize(int pageNo)
 {
     assert(validPageNo(pageNo));
-    fz_rect bbox;
-    if (pdf_getmediabox(&bbox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
-        return SizeD(0,0);
+    fz_rect bbox = pageMediabox(pageNo);
     return SizeD(fabs(bbox.x1 - bbox.x0), fabs(bbox.y1 - bbox.y0));
 }
 
-fz_bbox PdfEngine::pageContentSize(int pageNo)
+fz_bbox PdfEngine::pageContentBox(int pageNo, RenderTarget target)
 {
     assert(validPageNo(pageNo));
     pdf_page *page = getPdfPage(pageNo);
@@ -498,18 +607,11 @@ fz_bbox PdfEngine::pageContentSize(int pageNo)
         return fz_emptybbox;
 
     fz_bbox bbox;
-    fz_device *dev = fz_newbboxdevice(&bbox);
-    EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpage(_xref, page, dev, fz_identity);
-    LeaveCriticalSection(&_xrefAccess);
-    fz_freedevice(dev);
+    fz_error error = runPage(page, fz_newbboxdevice(&bbox), fz_identity, target, page->mediabox, false);
     if (error != fz_okay)
         return fz_emptybbox;
 
-    fz_rect mediabox;
-    if (pdf_getmediabox(&mediabox, pdf_getpageobject(_xref, pageNo)) != fz_okay)
-        return fz_emptybbox;
-    return fz_intersectbbox(bbox, fz_roundrect(mediabox));
+    return fz_intersectbbox(bbox, fz_roundrect(pageMediabox(pageNo)));
 }
 
 bool PdfEngine::hasPermission(int permission)
@@ -525,9 +627,20 @@ bool PdfEngine::hasPermission(int permission)
 fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
 {
     fz_matrix ctm = fz_identity;
-    ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
+
+    rotate = (rotate + page->rotate) % 360;
+    if (rotate < 0) rotate = rotate + 360;
+    if (90 == rotate)
+        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y0));
+    else if (180 == rotate)
+        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x1, -page->mediabox.y0));
+    else if (270 == rotate)
+        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x1, -page->mediabox.y1));
+    else // if (0 == rotate)
+        ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
+
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    ctm = fz_concat(ctm, fz_rotate(rotate + page->rotate));
+    ctm = fz_concat(ctm, fz_rotate(rotate));
     return ctm;
 }
 
@@ -543,19 +656,20 @@ fz_matrix PdfEngine::viewctm(int pageNo, float zoom, int rotate)
     return viewctm(&partialPage, zoom, rotate);
 }
 
-bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, double zoomReal, int rotation, fz_rect *pageRect, RenderTarget target)
+bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix *ctm, float zoom, int rotation, fz_rect *pageRect, RenderTarget target)
 {
     if (!page)
         return false;
 
     fz_matrix ctm2;
+    if (!pageRect)
+        pageRect = &page->mediabox;
     if (!ctm) {
-        float zoom = zoomReal / 100.0;
         if (!zoom)
             zoom = min(1.0 * (screenRect->right - screenRect->left) / (page->mediabox.x1 - page->mediabox.x0),
                        1.0 * (screenRect->bottom - screenRect->top) / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
-        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, pageRect ? *pageRect : page->mediabox));
+        fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, *pageRect));
         ctm2 = fz_concat(ctm2, fz_translate(screenRect->left - bbox.x0, screenRect->top - bbox.y0));
         ctm = &ctm2;
     }
@@ -565,17 +679,13 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix 
     DeleteObject(bgBrush);
 
     fz_bbox clipBox = { screenRect->left, screenRect->top, screenRect->right, screenRect->bottom };
-    fz_device *dev = fz_newgdiplusdevice(hDC, clipBox);
-    EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpagefortarget(_xref, page, dev, *ctm, target);
-    LeaveCriticalSection(&_xrefAccess);
-    fz_freedevice(dev);
+    fz_error error = runPage(page, fz_newgdiplusdevice(hDC, clipBox), *ctm, target, *pageRect);
 
     return fz_okay == error;
 }
 
 RenderedBitmap *PdfEngine::renderBitmap(
-                           int pageNo, double zoomReal, int rotation,
+                           int pageNo, float zoom, int rotation,
                            fz_rect *pageRect,
                            BOOL (*abortCheckCbkA)(void *data),
                            void *abortCheckCbkDataA,
@@ -585,11 +695,14 @@ RenderedBitmap *PdfEngine::renderBitmap(
     pdf_page* page = getPdfPage(pageNo);
     if (!page)
         return NULL;
-    zoomReal = zoomReal / 100.0;
-    fz_matrix ctm = viewctm(page, zoomReal, rotation);
+    fz_matrix ctm = viewctm(page, zoom, rotation);
     if (!pageRect)
         pageRect = &page->mediabox;
     fz_bbox bbox = fz_roundrect(fz_transformrect(ctm, *pageRect));
+
+    // GDI+ seems to render quicker and more reliable at high zoom levels
+    if (zoom > 40.0)
+        useGdi = true;
 
     if (useGdi) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
@@ -602,7 +715,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RECT rc = { 0, 0, w, h };
-        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, NULL, target);
+        bool success = renderPage(hDCMem, page, &rc, &ctm, 0, 0, pageRect, target);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!success) {
@@ -612,24 +725,16 @@ RenderedBitmap *PdfEngine::renderBitmap(
         return new RenderedBitmap(hbmp, w, h);
     }
 
-    // make sure not to request too large a pixmap, as MuPDF just aborts on OOM;
-    // instead we get a 1*y sized pixmap and try to resize it manually and just
-    // fail to render if we run out of memory.
-    fz_pixmap *image = fz_newpixmap(fz_devicergb, bbox.x0, bbox.y0, 1, bbox.y1 - bbox.y0);
-    image->w = bbox.x1 - bbox.x0;
-    free(image->samples);
-    image->samples = (unsigned char *)malloc(image->w * image->h * image->n);
-    if (!image->samples)
+    fz_pixmap *image = fz_newpixmap_nullonoom(fz_devicergb,
+        bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
+    if (!image)
         return NULL;
 
     fz_clearpixmap(image, 0xFF); // initialize white background
     if (!_drawcache)
         _drawcache = fz_newglyphcache();
-    fz_device *dev = fz_newdrawdevice(_drawcache, image);
-    EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpagefortarget(_xref, page, dev, ctm, target);
-    LeaveCriticalSection(&_xrefAccess);
-    fz_freedevice(dev);
+
+    fz_error error = runPage(page, fz_newdrawdevice(_drawcache, image), ctm, target, *pageRect);
     RenderedBitmap *bitmap = NULL;
     if (!error) {
         HDC hDC = GetDC(NULL);
@@ -673,7 +778,7 @@ int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
 void PdfEngine::linkifyPageText(pdf_page *page)
 {
     fz_bbox *coords;
-    TCHAR *pageText = ExtractPageText(page, _T(" "), &coords);
+    TCHAR *pageText = ExtractPageText(page, _T(" "), &coords, Target_View, true);
     if (!pageText)
         return;
 
@@ -747,18 +852,14 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     free(pageText);
 }
 
-TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target)
+TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target, bool cacheRun)
 {
     if (!page)
         return NULL;
 
     fz_textspan *text = fz_newtextspan();
-    fz_device *dev = fz_newtextdevice(text);
-    EnterCriticalSection(&_xrefAccess);
-    fz_error error = pdf_runpagefortarget(_xref, page, dev, fz_identity, target);
-    LeaveCriticalSection(&_xrefAccess);
-    fz_freedevice(dev);
-    if (error) {
+    fz_error error = runPage(page, fz_newtextdevice(text), fz_identity, target, page->mediabox, cacheRun);
+    if (fz_okay != error) {
         fz_freetextspan(text);
         return NULL;
     }

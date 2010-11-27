@@ -102,7 +102,7 @@ Nur &ungerade Seiten
 Passwort für dieses Dokument &merken
 
 &Remember these settings for each document
-Ansicht-&Einstellungen für jedes Dokument merken
+Ansicht-&Einstellungen für jedes Dokument einzeln merken
 
 &Save As...\tCtrl-S
 Speichern &unter…\tStrg+S

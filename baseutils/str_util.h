@@ -29,7 +29,12 @@ extern "C"
   #define DIR_SEP_STR  "/"
 #endif
 
-void no_op(void);
+#define no_op() ((void)0)
+
+#ifdef _WIN32
+  void    win32_dbg_out(const char *format, ...);
+  void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
+#endif
 
 #ifdef DEBUG
   #ifdef _WIN32

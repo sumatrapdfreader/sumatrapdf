@@ -267,7 +267,7 @@ SumatraPDF Options
 Tetapan-tetapan SumatraPDF
 
 SumatraPDF is your main PDF reader
-Sumatra PDF ialah pembaca PDF utama anda 
+SumatraPDF ialah pembaca PDF utama anda 
 
 Title:
 Tajuk:

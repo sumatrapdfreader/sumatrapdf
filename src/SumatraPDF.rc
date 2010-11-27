@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
+#include "Resource.h"
+#include "Version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -22,8 +23,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
-
-#include "Version.h"
 
 VS_VERSION_INFO    VERSIONINFO     MOVEABLE IMPURE LOADONCALL DISCARDABLE
   FILEVERSION    VER_RESOURCE
@@ -330,7 +329,7 @@ IDC_CURSORDRAG          CURSOR                  "dragcursor.cur"
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "Sumatra PDF"
+    IDS_APP_TITLE           "SumatraPDF"
 END
 
 #endif    // English (U.S.) resources

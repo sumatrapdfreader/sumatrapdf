@@ -283,11 +283,17 @@ Előző keresése
 Find:
 Keresés:
 
+Fit &Content\tCtrl-3
+&Tartalom\tCtrl-3
+
 Fit &Page\tCtrl-0
 &Teljes oldal\tCtrl-0
 
 Fit &Width\tCtrl-2
 Oldal&szélesség\tCtrl-2
+
+Fit Content
+Tartalom
 
 Fit Page
 Teljes oldal
@@ -494,12 +500,8 @@ Nagyítás mértéke
 [a file megváltozott; frissítés] %s
 
 copying text
-Tartalom vágólapra
+Szöveg vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#Fit &Content\tCtrl-3
-#Fit Content
 

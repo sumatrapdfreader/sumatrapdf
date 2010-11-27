@@ -287,6 +287,7 @@ skip:
 		error = pdf_lex(&tok, file, buf, cap, &len);
 		if (error)
 		{
+			fz_dropobj(key); /* SumatraPDF: fix memory leak */
 			fz_dropobj(dict);
 			return fz_rethrow(error, "cannot parse dict");
 		}
@@ -360,6 +361,9 @@ skip:
 			return fz_throw("invalid indirect reference in dict");
 
 		default:
+			/* SumatraPDF: fix memory leak */
+			fz_dropobj(key);
+			fz_dropobj(dict);
 			return fz_throw("unknown token in dict");
 		}
 

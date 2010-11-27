@@ -2,6 +2,8 @@
 #ifndef _FILE_WATCH_H__
 #define _FILE_WATCH_H__
 
+#include "base_util.h"
+
 typedef void (__cdecl *WATCHCALLBACK) (PCTSTR filename, LPARAM param);
 
 // information concerning a directory being watched

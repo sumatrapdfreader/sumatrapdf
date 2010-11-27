@@ -98,6 +98,7 @@ fz_addtextchar(fz_textspan **last, fz_font *font, float size, int wmode, int c, 
 		span->size = size;
 	}
 
+	if (c == 32) /* SumatraPDF: don't add a new span just for a space */; else
 	if (span->font != font || span->size != size || span->wmode != wmode)
 	{
 		span = fz_newtextspan();

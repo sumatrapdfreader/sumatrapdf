@@ -1,11 +1,7 @@
 /* Copyright Krzysztof Kowalczyk 2006-2009
    License: GPLv3 */
 #include "DisplayState.h"
-#include "tstr_util.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "str_util.h"
 
 void normalizeRotation(int *rotation)
 {

@@ -2,6 +2,9 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "SumatraAbout.h"
+#include "translations.h"
 #include "Version.h"
 #include "AppPrefs.h"
 
@@ -17,7 +20,7 @@
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
 #ifndef SUMATRA_TXT
-#define SUMATRA_TXT             _T("Sumatra PDF")
+#define SUMATRA_TXT             _T("SumatraPDF")
 #endif
 #define SUMATRA_TXT_FONT        _T("Arial Black")
 #define SUMATRA_TXT_FONT_SIZE   24
@@ -39,55 +42,29 @@
 static HWND gHwndAbout;
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { _T("website"), _T("SumatraPDF website"), _T("http://blog.kowalczyk.info/software/sumatrapdf"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("forums"), _T("SumatraPDF forums"), _T("http://blog.kowalczyk.info/forum_sumatra"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("programming"), _T("Krzysztof Kowalczyk"), _T("http://blog.kowalczyk.info"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("programming"), _T("Simon B\xFCnzli"), _T("http://www.zeniko.ch/#SumatraPDF"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-    
-    { _T("programming"), _T("William Blum"), _T("http://william.famille-blum.org/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
+    { _T("website"),        _T("SumatraPDF website"),   _T("http://blog.kowalczyk.info/software/sumatrapdf"), 0 },
+    { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra"), 0 },
+    { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info"), 0 },
+    { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF"), 0 },
+    { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/"), 0 },
 #ifdef _TEX_ENHANCEMENT
-    { _T("note"), _T("TeX build"), _T("http://william.famille-blum.org/software/sumatra/index.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
+    { _T("note"),           _T("TeX build"),            _T("http://william.famille-blum.org/software/sumatra/index.html"), 0 },
 #endif 
 #ifdef SVN_PRE_RELEASE_VER
-    { _T("a note"), _T("Pre-release version, for testing only!"), NULL,
-    0, 0, 0, 0, 0, 0, 0, 0 },
+    { _T("a note"),         _T("Pre-release version, for testing only!"), NULL, 0 },
 #endif
 #ifdef DEBUG
-    { _T("a note"), _T("Debug version, for testing only!"), NULL,
-    0, 0, 0, 0, 0, 0, 0, 0 },
+    { _T("a note"),         _T("Debug version, for testing only!"), NULL, 0 },
 #endif
-    { _T("pdf rendering"), _T("MuPDF"), _T("http://mupdf.com"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("program icon"), _T("Zenon"), _T("http://www.flashvidz.tk/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("toolbar icons"), _T("Mark James"), _T("http://www.famfamfam.com/lab/icons/silk/"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("translators"), _T("The Translators"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
-    { _T("translations"), _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
-
+    { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com"), 0 },
+    { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/"), 0 },
+    { _T("toolbar icons"),  _T("Mark James"),           _T("http://www.famfamfam.com/lab/icons/silk/"), 0 },
+    { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"), 0 },
+    { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"), 0 },
 #ifdef _TEX_ENHANCEMENT
-    { _T("SyncTeX"), _T("J\xE9rome Laurens"), _T("http://itexmac.sourceforge.net/SyncTeX.html"),
-    0, 0, 0, 0, 0, 0, 0, 0 },
+    { _T("SyncTeX"),        _T("J\xE9rome Laurens"),    _T("http://itexmac.sourceforge.net/SyncTeX.html"), 0 },
 #endif 
-
-    { NULL, NULL, NULL,
-    0, 0, 0, 0, 0, 0, 0, 0 }
+    { NULL, NULL, NULL, 0 }
 };
 
 /* Draws the about screen a remember some state for hyperlinking.
@@ -106,8 +83,8 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
-    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLACK);
+    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
+    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
 
     HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
@@ -164,39 +141,32 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
     /* render text on the left*/
     leftLargestDx = 0;
     SelectObject(hdc, fontLeftTxt);
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].leftTxt;
-        x = gAboutLayoutInfo[i].leftTxtPosX;
-        y = gAboutLayoutInfo[i].leftTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-
-        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
-            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, lstrlen(el->leftTxt));
+        if (leftLargestDx < el->leftPos.dx)
+            leftLargestDx = el->leftPos.dx;
     }
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        bool hasUrl = !gRestrictedUse && gAboutLayoutInfo[i].url;
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        bool hasUrl = !gRestrictedUse && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
 
-        txt = gAboutLayoutInfo[i].rightTxt;
-        x = gAboutLayoutInfo[i].rightTxtPosX;
-        y = gAboutLayoutInfo[i].rightTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
+        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, lstrlen(el->rightTxt));
 
         if (!hasUrl)
             continue;
 
-        int underlineY = y + gAboutLayoutInfo[i].rightTxtDy - 3;
+        int underlineY = el->rightPos.y + el->rightPos.dy - 3;
         SelectObject(hdc, penLinkLine);
-        MoveToEx(hdc, x, underlineY, NULL);
-        LineTo(hdc, x + gAboutLayoutInfo[i].rightTxtDx, underlineY);    
+        MoveToEx(hdc, el->rightPos.x, underlineY, NULL);
+        LineTo(hdc, el->rightPos.x + el->rightPos.dx, underlineY);    
     }
 
     linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
     linePosY = 4;
-    lineDy = (dimof(gAboutLayoutInfo)-1) * (gAboutLayoutInfo[0].rightTxtDy + ABOUT_TXT_DY);
+    lineDy = (dimof(gAboutLayoutInfo)-1) * (gAboutLayoutInfo[0].rightPos.dy + ABOUT_TXT_DY);
 
     SelectObject(hdc, penDivideLine);
     MoveToEx(hdc, linePosX + offX, linePosY + offY, NULL);
@@ -251,36 +221,34 @@ void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     SelectObject(hdc, fontLeftTxt);
     leftLargestDx = 0;
     leftDy = 0;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].leftTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        gAboutLayoutInfo[i].leftTxtDx = (int)txtSize.cx;
-        gAboutLayoutInfo[i].leftTxtDy = (int)txtSize.cy;
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        GetTextExtentPoint32(hdc, el->leftTxt, lstrlen(el->leftTxt), &txtSize);
+        el->leftPos.dx = txtSize.cx;
+        el->leftPos.dy = txtSize.cy;
 
-        if (0 == i)
-            leftDy = gAboutLayoutInfo[i].leftTxtDy;
+        if (el == &gAboutLayoutInfo[0])
+            leftDy = el->leftPos.dy;
         else
-            assert(leftDy == gAboutLayoutInfo[i].leftTxtDy);
-        if (leftLargestDx < gAboutLayoutInfo[i].leftTxtDx)
-            leftLargestDx = gAboutLayoutInfo[i].leftTxtDx;
+            assert(leftDy == el->leftPos.dy);
+        if (leftLargestDx < el->leftPos.dx)
+            leftLargestDx = el->leftPos.dx;
     }
 
     /* calculate right text dimensions */
     SelectObject(hdc, fontRightTxt);
     rightLargestDx = 0;
     rightDy = 0;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        txt = gAboutLayoutInfo[i].rightTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        gAboutLayoutInfo[i].rightTxtDx = (int)txtSize.cx;
-        gAboutLayoutInfo[i].rightTxtDy = (int)txtSize.cy;
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        GetTextExtentPoint32(hdc, el->rightTxt, lstrlen(el->rightTxt), &txtSize);
+        el->rightPos.dx = txtSize.cx;
+        el->rightPos.dy = txtSize.cy;
 
-        if (0 == i)
-            rightDy = gAboutLayoutInfo[i].rightTxtDy;
+        if (el == &gAboutLayoutInfo[0])
+            rightDy = el->rightPos.dy;
         else
-            assert(rightDy == gAboutLayoutInfo[i].rightTxtDy);
-        if (rightLargestDx < gAboutLayoutInfo[i].rightTxtDx)
-            rightLargestDx = gAboutLayoutInfo[i].rightTxtDx;
+            assert(rightDy == el->rightPos.dy);
+        if (rightLargestDx < el->rightPos.dx)
+            rightLargestDx = el->rightPos.dx;
     }
 
     /* calculate total dimension and position */
@@ -312,11 +280,11 @@ void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
     linePosY = 4;
 
     currY = offY + boxDy + linePosY;
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt != NULL; i++) {
-        gAboutLayoutInfo[i].leftTxtPosX = offX + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - gAboutLayoutInfo[i].leftTxtDx;
-        gAboutLayoutInfo[i].leftTxtPosY = currY + (rightDy - leftDy) / 2;
-        gAboutLayoutInfo[i].rightTxtPosX = offX + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
-        gAboutLayoutInfo[i].rightTxtPosY = currY;
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        el->leftPos.x = offX + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - el->leftPos.dx;
+        el->leftPos.y = currY + (rightDy - leftDy) / 2;
+        el->rightPos.x = offX + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
+        el->rightPos.y = currY;
         currY += rightDy + ABOUT_TXT_DY;
     }
 
@@ -337,7 +305,7 @@ void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el)
+const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el_out)
 {
     if (gRestrictedUse) return NULL;
 
@@ -347,16 +315,16 @@ const TCHAR *AboutGetLink(WindowInfo *win, int x, int y, AboutLayoutInfoEl **el)
     else
         OnPaintAbout(gHwndAbout);
 
-    for (int i = 0; gAboutLayoutInfo[i].leftTxt; i++) {
-        if ((x < gAboutLayoutInfo[i].rightTxtPosX) ||
-            (x > gAboutLayoutInfo[i].rightTxtPosX + gAboutLayoutInfo[i].rightTxtDx))
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        if ((x < el->rightPos.x) ||
+            (x > el->rightPos.x + el->rightPos.dx))
             continue;
-        if ((y < gAboutLayoutInfo[i].rightTxtPosY) ||
-            (y > gAboutLayoutInfo[i].rightTxtPosY + gAboutLayoutInfo[i].rightTxtDy))
+        if ((y < el->rightPos.y) ||
+            (y > el->rightPos.y + el->rightPos.dy))
             continue;
-        if (el)
-            *el = &gAboutLayoutInfo[i];
-        return gAboutLayoutInfo[i].url;
+        if (el_out)
+            *el_out = el;
+        return el->url;
     }
     return NULL;
 }
@@ -447,11 +415,8 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             gHwndAbout = NULL;
             break;
 
-        /* TODO: handle mouse move/down/up so that links work */
-
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
 }
-

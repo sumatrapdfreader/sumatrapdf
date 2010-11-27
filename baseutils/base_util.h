@@ -19,10 +19,10 @@
    so I'll make sure to set WIN32 always*/
 #ifdef _WINDOWS
  #ifndef WIN32
-  #define WIN32 1
+  #define WIN32
  #endif
  #ifndef _WIN32
-  #define _WIN32 1
+  #define _WIN32
  #endif
 #endif
 
@@ -37,6 +37,10 @@
 #include <assert.h>
 #include <stdio.h>
 
+#ifndef _UNICODE
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
 #include <wchar.h>
 #include <string.h>
 
@@ -77,7 +81,6 @@
 #define SAZA(struct_name, n) (struct_name *)zmalloc(sizeof(struct_name) * (n))
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
-#define UNUSED_VAR( x )  (x) = (x)
 
 #ifdef __cplusplus
 extern "C"
@@ -94,17 +97,9 @@ typedef struct ms_timer {
 #endif
 } ms_timer;
 
-#ifdef _WIN32
-  void    win32_dbg_out(const char *format, ...);
-  void    win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen);
-#endif
-
 /* TODO: consider using standard C macros for SWAP and MIN */
 void        swap_int(int *one, int *two);
 void        swap_double(double *one, double *two);
-
-#define number_min(one,two) ((one) < (two) ? (one) : (two))
-#define number_max(one,two) ((one) > (two) ? (one) : (two))
 
 void        memzero(void *data, size_t len);
 void *      zmalloc(size_t size);
@@ -116,29 +111,6 @@ void        sleep_milliseconds(int milliseconds);
 void        ms_timer_start(ms_timer *timer);
 void        ms_timer_stop(ms_timer *timer);
 double      ms_timer_time_in_ms(ms_timer *timer);
-
-#define LIST_REVERSE_FUNC_PROTO(func_name, TYPE) \
-void func_name(TYPE **root)
-
-#define LIST_REVERSE_FUNC(func_name, TYPE) \
-void func_name(TYPE **root) \
-{ \
-    TYPE * cur; \
-    TYPE * next; \
-    TYPE * new_first = NULL; \
-\
-    if (!root) \
-        return; \
-\
-    cur = *root; \
-    while (cur) { \
-        next = cur->next; \
-        cur->next = new_first; \
-        new_first = cur; \
-        cur = next; \
-    } \
-    *root = new_first; \
-}
 
 #ifdef __cplusplus
 }

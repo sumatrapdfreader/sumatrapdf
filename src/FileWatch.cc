@@ -1,13 +1,8 @@
 // By william blum, 2008
 #include "SumatraPDF.h"
 #include "FileWatch.h"
-#include "file_util.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <assert.h>
-#include <time.h>
 #include "tstr_util.h"
-#include "base_util.h"
+#include "file_util.h"
 
 // Get the directory name from a full file path and copy it to pszDir
 bool GetDirectory(LPCTSTR pszFile, PTSTR pszDir, size_t cchDir)
@@ -142,7 +137,6 @@ void FileWatcher::Init(LPCTSTR filefullpath)
          NULL, /* bytes returned */
          &overl, /* overlapped buffer */
          NULL); /* completion routine */
-
 }
 
 // Start watching a file for changes
@@ -223,13 +217,14 @@ bool FileWatcher::ReadDir()
     FILE_NOTIFY_INFORMATION *pFileNotify;
     pFileNotify = (PFILE_NOTIFY_INFORMATION)&buffer[1-curBuffer];
     while (pFileNotify) {
-        // Note: the ReadDirectoryChangesW API fills the buffer with
-        // WCHAR strings.
+        // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
         pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(WCHAR), _MAX_FNAME-1)] = 0;
         TCHAR *ptNotifyFilename = wstr_to_tstr(pFileNotify->FileName);
+        bool isWatchedFile = !_tcsicmp(ptNotifyFilename, pszFilename);
+        free(ptNotifyFilename);
 
         // is it the file that is being watched?
-        if (_tcsicmp(ptNotifyFilename, pszFilename) == 0) {
+        if (isWatchedFile) {
             // file modified?
             if (pFileNotify->Action == FILE_ACTION_MODIFIED) {
 
@@ -245,7 +240,7 @@ bool FileWatcher::ReadDir()
                 if (_tstat(szFilepath, &newstamp) == 0
                     && difftime(newstamp.st_mtime, timestamp.st_mtime) > 0
                     ) {
-                    DBG_OUT("FileWatch:change notification in %s\n", pszFilename);
+                    DBG_OUT_T("FileWatch:change notification in %s\n", pszFilename);
 
                     // Check that the file has not already been reopened for writing.
                     // We try to open the file with write access and no write-sharing 
@@ -268,21 +263,19 @@ bool FileWatcher::ReadDir()
                 }
                 else {
                     // false positive: the time stamp has not changed
-                    DBG_OUT("FileWatch:spurious change notification in %s\n", pszFilename);
+                    DBG_OUT_T("FileWatch:spurious change notification in %s\n", pszFilename);
                 }
 #else 
                 ////
                 // We do not check for timestamp change: all notifications are reported.
                 //
-                DBG_OUT("FileWatch:change detected in %s\n", pszFilename);
+                DBG_OUT_T("FileWatch:change detected in %s\n", pszFilename);
                 return true; // report the notification.
 #endif
             }
             //else {} // file touched but not modified.
             
         }
-
-        free(ptNotifyFilename);
 
         // step to the next entry if there is one
         if (pFileNotify->NextEntryOffset)

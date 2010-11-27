@@ -29,7 +29,7 @@
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;_DEBUG;SYNCTEX_FEATURE"
-				IncludeSearchPath=""
+				IncludeSearchPath="baseutils;mupdf\mupdf;mupdf\fitz"
 				ForcedIncludes=""
 				AssemblySearchPath=""
 				ForcedUsingAssemblies=""
@@ -71,6 +71,14 @@
 			</File>
 			<File
 				RelativePath=".\src\AppPrefs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CrashHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CrashHandler.h"
 				>
 			</File>
 			<File
@@ -122,6 +130,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\MemSegment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\MemSegment.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\PdfEngine.cc"
 				>
 			</File>
@@ -138,6 +154,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\PdfSelection.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\PdfSelection.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\PdfSync.cpp"
 				>
 			</File>
@@ -146,7 +170,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\PdftestWinPreview.cc"
+				RelativePath=".\src\RenderCache.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\RenderCache.h"
 				>
 			</File>
 			<File
@@ -155,6 +183,10 @@
 			</File>
 			<File
 				RelativePath=".\src\SumatraAbout.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraAbout.h"
 				>
 			</File>
 			<File
@@ -175,6 +207,10 @@
 			</File>
 			<File
 				RelativePath=".\src\SumatraProperties.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SumatraProperties.h"
 				>
 			</File>
 			<File
@@ -211,6 +247,10 @@
 			</File>
 			<File
 				RelativePath=".\src\Version.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\WindowInfo.h"
 				>
 			</File>
 		</Filter>
@@ -284,10 +324,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\baseutils\str_strsafe.h"
-				>
-			</File>
-			<File
 				RelativePath=".\baseutils\str_util.c"
 				>
 			</File>
@@ -297,6 +333,10 @@
 			</File>
 			<File
 				RelativePath=".\baseutils\tstr_util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\baseutils\vstrlist.h"
 				>
 			</File>
 			<File

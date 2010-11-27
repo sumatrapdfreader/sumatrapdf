@@ -41,7 +41,7 @@ Apenas as páginas &pares
 &Localizar:
 
 &First Page\tHome
-Primeira pá&gina\tHome
+Primeira &página\tHome
 
 &Fit pages to printable area
 A&justar páginas à área de impressão
@@ -56,10 +56,10 @@ Ir pa&ra a página:
 &Ajuda
 
 &Last Page\tEnd
-Ú&ltima página\tEnd
+Última pá&gina\tEnd
 
 &Magnification:
-Amp&liação:
+&Ampliação:
 
 &Manual
 &Manual
@@ -114,6 +114,9 @@ Le&mbrar estas definições para todos os documentos
 
 &Skip this version
 Ignorar &esta versão
+
+&Use original page sizes
+&Utilizar o tamanho original
 
 &View
 &Ver
@@ -179,7 +182,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Não é possível iniciar o comando da pesquisa inversa. Verifique a linha de comandos nas definições.
 
 Change Language
-Mudar idioma
+&Mudar idioma
 
 Check for &Updates
 Verificar at&ualizações
@@ -215,7 +218,7 @@ Created:
 Criado:
 
 Custom &Zoom...\tCtrl-Y
-&Personalizado...\tCtrl-Y
+&Personalizar...\tCtrl-Y
 
 Default &Layout:
 E&xibição por omissão:
@@ -248,7 +251,7 @@ Error loading PDF file.
 Erro ao carregar o PDF.
 
 F&orward\tAlt+Right Arrow
-Avançar\tAlt+->
+A&vançar\tAlt+->
 
 F&ullscreen\tCtrl-L
 Ecrã co&mpleto\tCtrl-L
@@ -266,7 +269,7 @@ File:
 Ficheiro:
 
 Fin&d...\tCtrl-F
-Locali&zar...\tCtrl-F
+&Localizar...\tCtrl-F
 
 Find
 Localizar
@@ -280,11 +283,17 @@ Localizar anterior
 Find:
 Localizar:
 
+Fit &Content\tCtrl-3
+Ajustar ao &conteúdo\tCtrl-3
+
 Fit &Page\tCtrl-0
 &Ajustar à página\tCtrl-0
 
 Fit &Width\tCtrl-2
 Ajustar à &largura\tCtrl-2
+
+Fit Content
+Ajustar ao conteúdo
 
 Fit Page
 Ajustar à página
@@ -302,7 +311,7 @@ Hint: Use the F3 key for finding again
 Dica: utilize F3 para procurar a seguinte
 
 Main PDF reader can't be changed in portable mode
-No modo portátil, não é possivel alterar o leitor de PDFs
+No modo portátil, não é possível alterar o leitor de PDFs
 
 Make SumatraPDF default application for PDF files?
 Tornar SumatraPDF a aplicação omissa para PDFs?
@@ -365,7 +374,7 @@ PDF documents
 Documentos PDF
 
 Pa&ge...\tCtrl-G
-Pá&gina...\tCtrl-G
+Pági&na...\tCtrl-G
 
 Page Size:
 Tamanho da página:
@@ -486,9 +495,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&Use original page sizes
-#Fit &Content\tCtrl-3
-#Fit Content
 

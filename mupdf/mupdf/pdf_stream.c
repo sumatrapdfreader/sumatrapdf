@@ -350,6 +350,8 @@ pdf_guessfilterlength(int len, char *filter)
 		return len * 4 / 5;
 	if (!strcmp(filter, "FlateDecode"))
 		return len * 3;
+	if (!strcmp(filter, "RunLengthDecode"))
+		return len * 3;
 	if (!strcmp(filter, "LZWDecode"))
 		return len * 2;
 	return len;

@@ -48,7 +48,7 @@ WCHAR * win_get_textw(HWND hwnd);
 void    win_set_texta(HWND hwnd, const char *txt);
 void    win_set_textw(HWND hwnd, const WCHAR *txt);
 
-#ifdef UNICODE
+#ifdef _UNICODE
 #define win_set_text win_set_textw
 #else
 #define win_set_text win_set_texta

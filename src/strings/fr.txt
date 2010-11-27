@@ -118,6 +118,9 @@ Réduire les pages à la zone d'impression (si nécessaire)
 &Skip this version
 Ignorer cette version
 
+&Use original page sizes
+&Utiliser les dimensions d'origine
+
 &View
 &Affichage
 
@@ -283,11 +286,17 @@ Occurrence précédente
 Find:
 Rechercher :
 
+Fit &Content\tCtrl-3
+Ajuster au &contenu\tCtrl-3
+
 Fit &Page\tCtrl-0
 Page entière\tCtrl-0
 
 Fit &Width\tCtrl-2
 Pleine largeur
+
+Fit Content
+Ajuster au contenu
 
 Fit Page
 Page entière
@@ -498,9 +507,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#&Use original page sizes
-#Fit &Content\tCtrl-3
-#Fit Content
 

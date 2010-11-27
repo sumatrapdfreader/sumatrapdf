@@ -4,7 +4,6 @@
 /* The most basic things, including string handling functions */
 #include "base_util.h"
 #include "str_util.h"
-#include "str_strsafe.h"
 
 /* TODO: should probably be based on MSVC version */
 #if defined(__GNUC__) || !defined(_WIN32) || (_MSC_VER < 1400)
@@ -46,11 +45,6 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
     }
     else
         return NULL;
-}
-
-void no_op(void)
-{
-    /* This really is a no-op, just to silence the compiler */
 }
 
 int char_is_ws_or_zero(char c)
@@ -158,7 +152,7 @@ char *str_cat(const char *str1, const char *str2)
 
 char *str_dup(const char *str)
 {
-    return str_cat4(str, NULL, NULL, NULL);
+    return str_dupn(str, strlen(str));
 }
 
 char *str_dupn(const char *str, size_t str_len_cch)
@@ -167,11 +161,9 @@ char *str_dupn(const char *str, size_t str_len_cch)
 
     if (!str)
         return NULL;
-    copy = (char*)malloc(str_len_cch+1);
-    if (!copy)
-        return NULL;
-    memcpy(copy, str, str_len_cch);
-    copy[str_len_cch] = 0;
+    copy = memdup((void *)str, str_len_cch + 1);
+    if (copy)
+        copy[str_len_cch] = 0;
     return copy;
 }
 
@@ -766,122 +758,60 @@ char *str_printf(const char *format, ...)
 
 char *str_printf_args(const char *format, va_list args)
 {
-#ifdef _WIN32
-    char        message[256] = {0};
-    char  *     buf;
-    size_t      bufCchSize;
+    char   message[256];
+    size_t bufCchSize = dimof(message);
+    char * buf = message;
 
-    buf = &(message[0]);
-    bufCchSize = sizeof(message);
-
-# ifndef DISABLE_STRSAFE
     for (;;)
     {
-        /* TODO: this only works on windows with recent C library */
-        HRESULT hr = StringCchVPrintfA(buf, bufCchSize, format, args);
-        if (S_OK == hr)
+#ifdef __GNUC__
+        if (vsnprintf(buf, bufCchSize, format, args) < bufCchSize)
             break;
-        if (STRSAFE_E_INSUFFICIENT_BUFFER != hr)
-        {
-            /* any error other than buffer not big enough:
-               a) should not happen
-               b) means we give up */
-            assert(FALSE);
-            goto Error;
-        }
+#else
+        int count = vsprintf_s(buf, bufCchSize, format, args);
+        if (0 <= count && (size_t)count < bufCchSize)
+            break;
+#endif
         /* we have to make the buffer bigger. The algorithm used to calculate
            the new size is arbitrary (aka. educated guess) */
-        if (buf != &(message[0]))
+        if (buf != message)
             free(buf);
         if (bufCchSize < 4*1024)
             bufCchSize += bufCchSize;
         else
             bufCchSize += 1024;
-        buf = (char *)malloc(bufCchSize*sizeof(char));
-        if (NULL == buf)
-            goto Error;
+        buf = (char *)malloc(bufCchSize);
+        if (!buf)
+            break;
     }
-# else /* strsafe is disabled */
-    {
-        int len = vsnprintf(buf, bufCchSize, format, args);
-        
-        if(len >= bufCchSize)
-        {
-            bufCchSize = len + 1;
-            buf = (char *)malloc(bufCchSize*sizeof(char));
-            if (NULL == buf)
-                goto Error;
-            
-            len = vsnprintf(buf, bufCchSize, format, args);
-        }
-        
-        if(len < 0)
-            goto Error;
-    }
-# endif
 
-    /* free the buffer if it was dynamically allocated */
-    if (buf == &(message[0]))
-        return str_dup(buf);
+    if (buf == message)
+        buf = str_dup(message);
 
     return buf;
-Error:
-    if (buf != &(message[0]))
-        free((void*)buf);
-
-    return NULL;
-#else
-    char*   buf;
-    int     len = vasprintf(&buf, format, args);
-    return buf;
-#endif
 }
 
 #ifdef _WIN32
-void win32_dbg_out(const char *format, ...) 
+void win32_dbg_out(const char *format, ...)
 {
     char        buf[4096];
     char *      p = buf;
     va_list     args;
 
     va_start(args, format);
-    _vsnprintf(p,sizeof(buf), format, args);
-/*    printf(buf);
-    fflush(stdout); */
+    _vsnprintf(p, sizeof(buf), format, args);
     OutputDebugStringA(buf);
     va_end(args);
 }
 
 void win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen)
 {
-    unsigned char    buf[64+1];
-    unsigned char *  curPos;
-    int              bufCharsLeft;
+    char *hexStr;
+    if (!data) dataLen = 0;
 
-    if (dsc) win32_dbg_out(dsc); /* a bit dangerous if contains formatting codes */
-    if (!data) return;
-
-    bufCharsLeft = sizeof(buf)-1;
-    curPos = buf;
-    while (dataLen > 0) {
-        if (bufCharsLeft <= 1) {
-            *curPos = 0;
-            win32_dbg_out((char*)buf);
-            bufCharsLeft = sizeof(buf)-1;
-            curPos = buf;
-        }
-        char_to_hex(*data, curPos);
-        curPos += 2;
-        bufCharsLeft -= 2;
-        --dataLen;
-        ++data;
-    }
-
-    if (curPos != buf) {
-        *curPos = 0;
-        win32_dbg_out(buf);
-    }
-    win32_dbg_out("\n");
+    hexStr = mem_to_hexstr(data, dataLen);
+    win32_dbg_out("%s%s\n", dsc ? dsc : "", hexStr);
+    free(hexStr);
 }
 #endif
 

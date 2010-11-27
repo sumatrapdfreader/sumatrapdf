@@ -2,7 +2,10 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "SumatraProperties.h"
 #include "AppPrefs.h"
+#include "translations.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
@@ -69,8 +72,8 @@ static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
     pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wDay);
     pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wHour);
     pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wMinute);
-    // TODO: I don't know how to calculate wDayOfWeek and it doesn't
-    //       matter anyway because we don't display day of the week
+    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wSecond);
+    // don't bother about the day of week, we won't display it anyway
     return pdfDate != NULL;
 }
 
@@ -198,14 +201,13 @@ static TCHAR *FormatPdfSize(uint64_t size) {
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
 // Caller needs to free the result
-static TCHAR *FormatPdfPageSize(double width, double height) {
+static TCHAR *FormatPdfPageSize(SizeD size) {
     TCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
 
-    width *= (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
-    height *= (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
-
+    double width = size.dx() * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
+    double height = size.dy() * (isMetric ? 2.54 : 1.0) / PDF_FILE_DPI;
     if (((int)(width * 100)) % 100 == 99)
         width += 0.01;
     if (((int)(height * 100)) % 100 == 99)
@@ -239,23 +241,33 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
     return denialList;
 }
 
-static void AddPdfProperty(WindowInfo *win, const TCHAR *left, const TCHAR *right) {
-    if (win->pdfPropertiesCount >= MAX_PDF_PROPERTIES) {
-        return;
+static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, const TCHAR *right) {
+    PdfPropertyEl *el = (PdfPropertyEl *)malloc(sizeof(PdfPropertyEl));
+    el->leftTxt = left;
+    el->rightTxt = tstr_dup(right);
+    el->next = NULL;
+
+    if (!layoutData->last) {
+        layoutData->first = layoutData->last = el;
     }
-    win->pdfProperties[win->pdfPropertiesCount].leftTxt = left;
-    win->pdfProperties[win->pdfPropertiesCount].rightTxt = tstr_dup(right);
-    ++win->pdfPropertiesCount;
+    else {
+        layoutData->last->next = el;
+        layoutData->last = layoutData->last->next;
+    }
 }
 
-void FreePdfProperties(WindowInfo *win)
+static void FreePdfProperties(HWND hwnd)
 {
-    // free the text on the right. Text on left is static, so doesn't need to
-    // be freed
-    for (int i=0; i<win->pdfPropertiesCount; i++) {
-        free((void*)win->pdfProperties[i].rightTxt);
+    // free the text on the right. Text on left is static, so doesn't need to be freed
+    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    assert(layoutData);
+    for (PdfPropertyEl *el = layoutData->first; el; ) {
+        PdfPropertyEl *tofree = el;
+        el = el->next;
+        free((void *)tofree->rightTxt);
+        free(tofree);
     }
-    win->pdfPropertiesCount = 0;
+    free(layoutData);
 }
 
 static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
@@ -264,9 +276,9 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     int             leftMaxDx, rightMaxDx;
     int             currY;
     int             offX, offY;
-    const TCHAR *   txt;
     WindowInfo *    win = WindowInfo_FindByHwnd(hwnd);
 
+    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
     HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
     HFONT origFont = (HFONT)SelectObject(hdc, fontLeftTxt);
@@ -274,45 +286,37 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     /* calculate text dimensions for the left side */
     (HFONT)SelectObject(hdc, fontLeftTxt);
     leftMaxDx = 0;
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].leftTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        win->pdfProperties[i].leftTxtDx = (int)txtSize.cx;
-        win->pdfProperties[i].leftTxtDy = (int)txtSize.cy;
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+        GetTextExtentPoint32(hdc, el->leftTxt, lstrlen(el->leftTxt), &txtSize);
+        el->leftPos.dx = txtSize.cx;
+        el->leftPos.dy = txtSize.cy;
 
-        if (i > 0) {
-            assert(win->pdfProperties[i-1].leftTxtDy == win->pdfProperties[i].leftTxtDy);
-        }
-
-        if (win->pdfProperties[i].leftTxtDx > leftMaxDx) {
-            leftMaxDx = win->pdfProperties[i].leftTxtDx;
-        }
+        assert(el->leftPos.dy == layoutData->first->leftPos.dy);
+        if (el->leftPos.dx > leftMaxDx)
+            leftMaxDx = el->leftPos.dx;
     }
 
     /* calculate text dimensions for the right side */
     (HFONT)SelectObject(hdc, fontRightTxt);
     rightMaxDx = 0;
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].rightTxt;
-        GetTextExtentPoint32(hdc, txt, lstrlen(txt), &txtSize);
-        win->pdfProperties[i].rightTxtDx = (int)txtSize.cx;
-        win->pdfProperties[i].rightTxtDy = (int)txtSize.cy;
+    int lineCount = 0;
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+        GetTextExtentPoint32(hdc, el->rightTxt, lstrlen(el->rightTxt), &txtSize);
+        el->rightPos.dx = txtSize.cx;
+        el->rightPos.dy = txtSize.cy;
 
-        if (i > 0) {
-            assert(win->pdfProperties[i-1].rightTxtDy == win->pdfProperties[i].rightTxtDy);
-        }
-
-        if (win->pdfProperties[i].rightTxtDx > rightMaxDx) {
-            rightMaxDx = win->pdfProperties[i].rightTxtDx;
-        }
+        assert(el->rightPos.dy == layoutData->first->rightPos.dy);
+        if (el->rightPos.dx > rightMaxDx)
+            rightMaxDx = el->rightPos.dx;
+        lineCount++;
     }
 
-    int textDy = win->pdfProperties[0].rightTxtDy;
-
+    assert(lineCount > 0);
+    int textDy = lineCount > 0 ? layoutData->first->rightPos.dy : 0;
     totalDx = leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX + rightMaxDx;
 
     totalDy = 4;
-    totalDy += (win->pdfPropertiesCount * (textDy + PROPERTIES_TXT_DY_PADDING));
+    totalDy += lineCount * (textDy + PROPERTIES_TXT_DY_PADDING);
     totalDy += 4;
 
     RECT rc;
@@ -328,11 +332,11 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     }
 
     currY = offY;
-    for (int i=0; i < win->pdfPropertiesCount; i++) {
-        win->pdfProperties[i].leftTxtPosX = offX + leftMaxDx - win->pdfProperties[i].leftTxtDx;
-        win->pdfProperties[i].leftTxtPosY = offY + currY;
-        win->pdfProperties[i].rightTxtPosX = offX + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
-        win->pdfProperties[i].rightTxtPosY = offY + currY;
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+        el->leftPos.x = offX + leftMaxDx - el->leftPos.dx;
+        el->leftPos.y = offY + currY;
+        el->rightPos.x = offX + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
+        el->rightPos.y = offY + currY;
         currY += (textDy + PROPERTIES_TXT_DY_PADDING);
     }
 
@@ -341,7 +345,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     Win32_Font_Delete(fontRightTxt);
 }
 
-static void CreatePropertiesWindow(WindowInfo *win) {
+static void CreatePropertiesWindow(WindowInfo *win, PdfPropertiesLayout *layoutData) {
     win->hwndPdfProperties = CreateWindow(
            PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
@@ -351,6 +355,9 @@ static void CreatePropertiesWindow(WindowInfo *win) {
            ghinst, NULL);
     if (!win->hwndPdfProperties)
         return;
+
+    assert(!GetWindowLongPtr(win->hwndPdfProperties, GWLP_USERDATA));
+    SetWindowLongPtr(win->hwndPdfProperties, GWLP_USERDATA, (LONG_PTR)layoutData);
 
     // get the dimensions required for the about box's content
     RECT rc;
@@ -421,7 +428,11 @@ void OnMenuProperties(WindowInfo *win)
         return;
     }
 
-    FreePdfProperties(win);
+    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)malloc(sizeof(PdfPropertiesLayout));
+    assert(layoutData);
+    if (!layoutData)
+        return;
+    layoutData->first = layoutData->last = NULL;
 
     info = dm->pdfEngine->getPdfInfo();
     if (fz_isdict(info)) {
@@ -453,40 +464,40 @@ void OnMenuProperties(WindowInfo *win)
     }
 
     if (win->dm->fileName()) {
-        AddPdfProperty(win, _TR("File:"), win->dm->fileName());
+        AddPdfProperty(layoutData, _TR("File:"), win->dm->fileName());
     }
     if (titleStr) {
-        AddPdfProperty(win, _TR("Title:"), titleStr);
+        AddPdfProperty(layoutData, _TR("Title:"), titleStr);
         free(titleStr);
     }
     if (subjectStr) {
-        AddPdfProperty(win, _TR("Subject:"), subjectStr);
+        AddPdfProperty(layoutData, _TR("Subject:"), subjectStr);
         free(subjectStr);
     }
     if (authorStr) {
-        AddPdfProperty(win, _TR("Author:"), authorStr);
+        AddPdfProperty(layoutData, _TR("Author:"), authorStr);
         free(authorStr);
     }
     if (creationDateStr) {
-        AddPdfProperty(win, _TR("Created:"), creationDateStr);
+        AddPdfProperty(layoutData, _TR("Created:"), creationDateStr);
         free(creationDateStr);
     }
     if (modDateStr) {
-        AddPdfProperty(win, _TR("Modified:"), modDateStr);
+        AddPdfProperty(layoutData, _TR("Modified:"), modDateStr);
         free(modDateStr);
     }
     if (creatorStr) {
-        AddPdfProperty(win, _TR("Application:"), creatorStr);
+        AddPdfProperty(layoutData, _TR("Application:"), creatorStr);
         free(creatorStr);
     }
     if (producerStr) {
-        AddPdfProperty(win, _TR("PDF Producer:"), producerStr);
+        AddPdfProperty(layoutData, _TR("PDF Producer:"), producerStr);
         free(producerStr);
     }
 
     int version = win->dm->pdfEngine->getPdfVersion();
     tmp = tstr_printf(_T("%d.%d"), version / 10, version % 10);
-    AddPdfProperty(win, _TR("PDF Version:"), tmp);
+    AddPdfProperty(layoutData, _TR("PDF Version:"), tmp);
     free(tmp);
 
     fileSize = WinFileSizeGet(win->dm->fileName());
@@ -496,41 +507,40 @@ void OnMenuProperties(WindowInfo *win)
         fz_dropbuffer(data);
     }
     tmp = FormatPdfSize(fileSize);
-    AddPdfProperty(win, _TR("File Size:"), tmp);
+    AddPdfProperty(layoutData, _TR("File Size:"), tmp);
     free(tmp);
 
     tmp = tstr_printf(_T("%d"), dm->pageCount());
-    AddPdfProperty(win, _TR("Number of Pages:"), tmp);
+    AddPdfProperty(layoutData, _TR("Number of Pages:"), tmp);
     free(tmp);
 
-    tmp = FormatPdfPageSize(dm->getPageInfo(dm->currentPageNo())->pageDx, dm->getPageInfo(dm->currentPageNo())->pageDy);
-    AddPdfProperty(win, _TR("Page Size:"), tmp);
+    tmp = FormatPdfPageSize(dm->getPageInfo(dm->currentPageNo())->page);
+    AddPdfProperty(layoutData, _TR("Page Size:"), tmp);
     free(tmp);
 
     tmp = FormatPdfPermissions(dm->pdfEngine);
     if (tmp) {
-        AddPdfProperty(win, _TR("Denied Permissions:"), tmp);
+        AddPdfProperty(layoutData, _TR("Denied Permissions:"), tmp);
         free(tmp);
     }
 
     // TODO: this is about linearlized PDF. Looks like mupdf would
     // have to be extended to detect linearlized PDF. The rules are described
     // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    //AddPdfProperty(win, _T("Fast Web View:"), _T("No"));
+    //AddPdfProperty(layoutData, _T("Fast Web View:"), _T("No"));
 
     // TODO: probably needs to extend mupdf to get this information.
     // Tagged PDF rules are described in 14.8.2 of
     // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    //AddPdfProperty(win, _T("Tagged PDF:"), _T("No"));
+    //AddPdfProperty(layoutData, _T("Tagged PDF:"), _T("No"));
 
-    CreatePropertiesWindow(win);
+    CreatePropertiesWindow(win, layoutData);
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 {
-    const TCHAR *txt;
-    int          x, y;
     WindowInfo * win = WindowInfo_FindByHwnd(hwnd);
+    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     HBRUSH brushBg = CreateSolidBrush(gGlobalPrefs.m_bgColor);
 #if 0
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
@@ -552,25 +562,17 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
     SelectObject(hdc, penBorder);
 #endif
 
-    SetTextColor(hdc, COL_BLACK);
+    SetTextColor(hdc, WIN_COL_BLACK);
 
     /* render text on the left*/
     (HFONT)SelectObject(hdc, fontLeftTxt);
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].leftTxt;
-        x = win->pdfProperties[i].leftTxtPosX;
-        y = win->pdfProperties[i].leftTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-    }
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next)
+        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, lstrlen(el->leftTxt));
 
     /* render text on the right */
     (HFONT)SelectObject(hdc, fontRightTxt);
-    for (int i = 0; i < win->pdfPropertiesCount; i++) {
-        txt = win->pdfProperties[i].rightTxt;
-        x = win->pdfProperties[i].rightTxtPosX;
-        y = win->pdfProperties[i].rightTxtPosY;
-        TextOut(hdc, x, y, txt, lstrlen(txt));
-    }
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next)
+        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, lstrlen(el->rightTxt));
 
     SelectObject(hdc, origFont);
     Win32_Font_Delete(fontLeftTxt);
@@ -592,13 +594,14 @@ static void OnPaintProperties(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-void CopyPropertiesToClipboard(WindowInfo *win)
+void CopyPropertiesToClipboard(HWND hwnd)
 {
     TCHAR *result = tstr_dup(_T(""));
 
     // just concatenate all the properties into a multi-line string
-    for (INT i = 0; i < win->pdfPropertiesCount; i++) {
-        TCHAR *newResult = tstr_printf(_T("%s%s %s\r\n"), result, win->pdfProperties[i].leftTxt, win->pdfProperties[i].rightTxt);
+    PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+        TCHAR *newResult = tstr_printf(_T("%s%s %s\r\n"), result, el->leftTxt, el->rightTxt);
         free(result);
         if (!newResult)
             return;
@@ -628,6 +631,7 @@ void CopyPropertiesToClipboard(WindowInfo *win)
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+
     switch (message)
     {
         case WM_CREATE:
@@ -647,6 +651,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
             break;
 
         case WM_DESTROY:
+            FreePdfProperties(hwnd);
             assert(win->hwndPdfProperties);
             win->hwndPdfProperties = NULL;
             break;
@@ -657,4 +662,3 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
     }
     return 0;
 }
-
