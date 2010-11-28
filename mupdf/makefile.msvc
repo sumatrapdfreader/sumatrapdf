@@ -1,8 +1,8 @@
 # nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
-# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live in ext dir> (default: empty)
-#  e.g. ..\sumatrapdf\
+# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ..\ext)
+#  e.g. ..\sumatrapdf\ext
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -22,11 +22,15 @@ O = obj-$(CFG)-win
 FITZ_DIR=.
 !endif
 
-ZLIB_DIR=$(EXTLIBSDIR)ext\zlib-1.2.5
-FREETYPE_DIR=$(EXTLIBSDIR)ext\freetype2
-JPEG_DIR=$(EXTLIBSDIR)ext\jpeg-8b
-OPENJPEG_DIR=$(EXTLIBSDIR)ext\openjpeg-1.3\libopenjpeg
-JBIG2_DIR=$(EXTLIBSDIR)ext\jbig2dec
+!if "$(EXTLIBSDIR)"==""
+EXTLIBSDIR=..\ext
+!endif
+
+ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
+FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
+JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
+OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg-1.3\libopenjpeg
+JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
 
 CC = cl.exe
 

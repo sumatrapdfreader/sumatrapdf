@@ -1,8 +1,8 @@
 # nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
-# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live in ext dir> (default: empty)
-#  e.g. ..\sumatrapdf\
+# EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ext)
+#  e.g. ..\sumatrapdf\ext
 # EXB=rm (default: no setting) This is an EXternal Build, i.e. not base SumatraPDF.
 # EXTCFLAGS=$CFLAGS
 # FITZ_DIR=mupdf
@@ -21,6 +21,10 @@ O = obj-$(CFG)
 
 !if "$(FITZ_DIR)"==""
 FITZ_DIR=mupdf
+!endif
+
+!if "$(EXTLIBSDIR)"==""
+EXTLIBSDIR=ext
 !endif
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
