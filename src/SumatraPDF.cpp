@@ -1007,12 +1007,10 @@ static void WindowInfo_RebuildMenu(WindowInfo *win)
     if (noAcrobat || noEmail) {
         for (int i = 0; i < dimof(menuDefFile); i++) {
             if (IDM_VIEW_WITH_ACROBAT == menuDefFile[i].m_id) {
-                if (noAcrobat) {
+                if (noAcrobat)
                     menuDefFile[i].m_title = NULL;
-                    menuDefFile[i + 1].m_title = NULL;
-                }
                 if (noEmail)
-                    menuDefFile[i + 2].m_title = NULL;
+                    menuDefFile[i + 1].m_title = NULL;
                 if (noAcrobat && noEmail)
                     menuDefFile[i - 1].m_title = NULL;
             }
