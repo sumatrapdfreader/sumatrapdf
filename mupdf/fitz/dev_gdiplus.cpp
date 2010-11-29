@@ -900,7 +900,7 @@ fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 		return;
 	
 	fz_pixmap *dest = fz_newpixmapwithrect(fz_devicergb, bbox);
-	fz_clearpixmap(dest, 0);
+	fz_clearpixmap(dest);
 	
 	if (shade->usebackground)
 	{

@@ -18,6 +18,7 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 	form->refs = 1;
 	form->resources = nil;
 	form->contents = nil;
+	form->colorspace = nil;
 
 	pdf_logrsrc("load xobject (%d %d R) ptr=%p {\n", fz_tonum(dict), fz_togen(dict), form);
 
@@ -57,6 +58,15 @@ pdf_loadxobject(pdf_xobject **formp, pdf_xref *xref, fz_obj *dict)
 		obj = fz_dictgets(attrs, "S");
 		if (fz_isname(obj) && !strcmp(fz_toname(obj), "Transparency"))
 			form->transparency = 1;
+
+		obj = fz_dictgets(attrs, "CS");
+		if (obj)
+		{
+			error = pdf_loadcolorspace(&form->colorspace, xref, obj);
+			if (error)
+				fz_catch(error, "cannot load xobject colorspace");
+			pdf_logrsrc("colorspace %s\n", form->colorspace->name);
+		}
 	}
 
 	pdf_logrsrc("isolated %d\n", form->isolated);
@@ -94,6 +104,8 @@ pdf_dropxobject(pdf_xobject *xobj)
 {
 	if (xobj && --xobj->refs == 0)
 	{
+		if (xobj->colorspace)
+			fz_dropcolorspace(xobj->colorspace);
 		if (xobj->resources)
 			fz_dropobj(xobj->resources);
 		if (xobj->contents)

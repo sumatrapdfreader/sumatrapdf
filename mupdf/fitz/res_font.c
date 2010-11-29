@@ -491,7 +491,7 @@ fz_rendert3glyph(fz_font *font, int gid, fz_matrix trm)
 	fz_freedevice(dev);
 
 	glyph = fz_newpixmap(fz_devicegray, bbox.x0-1, bbox.y0-1, bbox.x1 - bbox.x0 + 1, bbox.y1 - bbox.y0 + 1);
-	fz_clearpixmap(glyph, 0);
+	fz_clearpixmap(glyph);
 
 	cache = fz_newglyphcache();
 	dev = fz_newdrawdevice(cache, glyph);

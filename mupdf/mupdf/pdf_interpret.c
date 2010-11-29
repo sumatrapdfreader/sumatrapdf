@@ -196,8 +196,7 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 			gstate->softmask = nil;
 			popmask = 1;
 
-			/* SumatraPDF: pass a Luminosity softmask's background color */
-			csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity, fz_devicergb, softmask->backcolor);
+			csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity, softmask->colorspace, gstate->softmaskbc);
 			error = pdf_runxobject(csi, resources, softmask);
 			if (error)
 				return fz_rethrow(error, "cannot run softmask");
@@ -365,7 +364,7 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 			{
 				fz_error error;
 				pdf_xobject *xobj;
-				fz_obj *group, *luminosity;
+				fz_obj *group, *luminosity, *bc;
 
 				if (gstate->softmask)
 				{
@@ -383,34 +382,27 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 
 				gstate->softmaskctm = fz_concat(xobj->matrix, gstate->ctm);
 				gstate->softmask = xobj;
+				gstate->softmaskbc[0] = 0;
+
+				bc = fz_dictgets(val, "BC");
+				if (fz_isarray(bc))
+				{
+					fz_colorspace *cs;
+					int i;
+
+					cs = xobj->colorspace;
+					if (!cs)
+						cs = fz_devicegray;
+
+					for (i = 0; i < cs->n; i++)
+						gstate->softmaskbc[i] = fz_toreal(fz_arrayget(bc, i));
+				}
 
 				luminosity = fz_dictgets(val, "S");
 				if (fz_isname(luminosity) && !strcmp(fz_toname(luminosity), "Luminosity"))
 					gstate->luminosity = 1;
 				else
 					gstate->luminosity = 0;
-
-				/* SumatraPDF: pass a Luminosity softmask's background color */
-				if (gstate->luminosity)
-				{
-					fz_colorspace *colorspace = nil;
-					fz_obj *cs = fz_dictgets(fz_dictgets(group, "Group"), "CS");
-					fz_obj *color = fz_dictgets(val, "BC");
-					if (cs && fz_isarray(color))
-						pdf_loadcolorspace(&colorspace, csi->xref, cs);
-
-					if (colorspace)
-					{
-						int c;
-						float bcolor[4] = { 0 };
-						for (c = 0; c < 4; c++)
-							bcolor[c] = fz_toint(fz_arrayget(color, c));
-						fz_convertcolor(colorspace, bcolor, fz_devicergb, xobj->backcolor);
-						fz_dropcolorspace(colorspace);
-					}
-					else
-						memset(xobj->backcolor, 0, sizeof(xobj->backcolor));
-				}
 			}
 		}
 

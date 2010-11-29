@@ -305,7 +305,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 			colorspace = fz_devicergb;
 #endif
 		app->image = fz_newpixmapwithrect(colorspace, bbox);
-		fz_clearpixmap(app->image, 0xFF);
+		fz_clearpixmapwithcolor(app->image, 255);
 		idev = fz_newdrawdevice(app->cache, app->image);
 		fz_executedisplaylist(app->page->list, idev, ctm);
 		fz_freedevice(idev);

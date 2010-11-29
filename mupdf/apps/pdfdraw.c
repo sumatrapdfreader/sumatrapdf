@@ -264,9 +264,9 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		pix = fz_newpixmapwithrect(colorspace, bbox);
 
 		if (savealpha)
-			fz_clearpixmap(pix, 0x00);
+			fz_clearpixmap(pix);
 		else
-			fz_clearpixmap(pix, 0xff);
+			fz_clearpixmapwithcolor(pix, 255);
 
 		dev = fz_newdrawdevice(glyphcache, pix);
 		fz_executedisplaylist(list, dev, ctm);

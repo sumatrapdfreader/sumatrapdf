@@ -203,7 +203,8 @@ static inline int fz_mul255(int a, int b)
 
 /* Combine values A and C (in the same (any) range) and B and D (in the
  * 0..256 range), to give a single value in the same range as A and C were.  */
-#define FZ_COMBINE2(A,B,C,D) (((A)*(B)+(C)*(D))>>8)
+/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691802#c7 */
+#define FZ_COMBINE2(A,B,C,D) ((((A)*(B))>>8)+(((C)*(D))>>8))
 
 /* Blend SRC and DST (in the same range) together according to
  * AMOUNT (in the 0...256 range). */
@@ -605,7 +606,8 @@ fz_pixmap * fz_newpixmapwithrect(fz_colorspace *, fz_bbox bbox);
 fz_pixmap * fz_newpixmap(fz_colorspace *, int x, int y, int w, int h);
 fz_pixmap *fz_keeppixmap(fz_pixmap *pix);
 void fz_droppixmap(fz_pixmap *pix);
-void fz_clearpixmap(fz_pixmap *pix, int value);
+void fz_clearpixmap(fz_pixmap *pix);
+void fz_clearpixmapwithcolor(fz_pixmap *pix, int value);
 void fz_gammapixmap(fz_pixmap *pix, float gamma);
 fz_pixmap *fz_alphafromgray(fz_pixmap *gray, int luminosity);
 fz_bbox fz_boundpixmap(fz_pixmap *pix);

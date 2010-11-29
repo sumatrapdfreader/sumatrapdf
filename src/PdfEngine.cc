@@ -730,7 +730,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
     if (!image)
         return NULL;
 
-    fz_clearpixmap(image, 0xFF); // initialize white background
+    fz_clearpixmapwithcolor(image, 255); // initialize white background
     if (!_drawcache)
         _drawcache = fz_newglyphcache();
 

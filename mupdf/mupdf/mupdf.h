@@ -245,9 +245,9 @@ struct pdf_xobject_s
 	int isolated;
 	int knockout;
 	int transparency;
+	fz_colorspace *colorspace;
 	fz_obj *resources;
 	fz_buffer *contents;
-	float backcolor[3]; /* SumatraPDF: a Luminosity softmask's background color */
 };
 
 fz_error pdf_loadxobject(pdf_xobject **xobjp, pdf_xref *xref, fz_obj *obj);
@@ -585,6 +585,7 @@ struct pdf_gstate_s
 	fz_blendmode blendmode;
 	pdf_xobject *softmask;
 	fz_matrix softmaskctm;
+	float softmaskbc[FZ_MAXCOLORS];
 	int luminosity;
 };
 

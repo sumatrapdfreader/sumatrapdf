@@ -335,7 +335,7 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 		}
 		conv = fz_newpixmapwithrect(dest->colorspace, bbox);
 		temp = fz_newpixmapwithrect(fz_devicegray, bbox);
-		fz_clearpixmap(temp, 0);
+		fz_clearpixmap(temp);
 		ntris = shade->meshlen / 9;
 	}
 	else

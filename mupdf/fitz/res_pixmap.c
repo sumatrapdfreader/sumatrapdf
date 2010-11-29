@@ -70,9 +70,30 @@ fz_droppixmap(fz_pixmap *pix)
 }
 
 void
-fz_clearpixmap(fz_pixmap *pix, int value)
+fz_clearpixmap(fz_pixmap *pix)
 {
-	memset(pix->samples, value, pix->w * pix->h * pix->n);
+	memset(pix->samples, 0, pix->w * pix->h * pix->n);
+}
+
+void
+fz_clearpixmapwithcolor(fz_pixmap *pix, int value)
+{
+	if (value == 255)
+		memset(pix->samples, 255, pix->w * pix->h * pix->n);
+	else
+	{
+		int k, x, y;
+		unsigned char *s = pix->samples;
+		for (y = 0; y < pix->h; y++)
+		{
+			for (x = 0; x < pix->w; x++)
+			{
+				for (k = 0; k < pix->n - 1; k++)
+					*s++ = value;
+				*s++ = 255;
+			}
+		}
+	}
 }
 
 fz_bbox

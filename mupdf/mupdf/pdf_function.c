@@ -36,7 +36,7 @@ struct pdf_function_s
 			int size[MAXM];
 			float encode[MAXM][2];
 			float decode[MAXN][2];
-			int *samples;
+			float *samples;
 		} sa;
 
 		struct {
@@ -1046,52 +1046,51 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 
 	pdf_logrsrc("samplecount %d\n", samplecount);
 
-	func->u.sa.samples = fz_malloc(samplecount * sizeof(int));
+	func->u.sa.samples = fz_malloc(samplecount * sizeof(float));
 
 	error = pdf_openstream(&stream, xref, num, gen);
 	if (error)
 		return fz_rethrow(error, "cannot open samples stream (%d %d R)", num, gen);
 
 	/* read samples */
+	for (i = 0; i < samplecount; ++i)
 	{
-		unsigned int bitmask = (1 << bps) - 1;
-		unsigned int buf = 0;
-		int bits = 0;
-		int s;
+		float s;
 
-		for (i = 0; i < samplecount; ++i)
+		if (fz_peekbyte(stream) == EOF)
 		{
-			if (fz_peekbyte(stream) == EOF && bits == 0)
-			{
-				fz_close(stream);
-				return fz_throw("truncated sample stream");
-			}
-
-			if (bps == 8) {
-				s = fz_readbyte(stream);
-			}
-			else if (bps == 16) {
-				s = fz_readbyte(stream);
-				s = (s << 8) + fz_readbyte(stream);
-			}
-			else if (bps == 32) {
-				s = fz_readbyte(stream);
-				s = (s << 8) + fz_readbyte(stream);
-				s = (s << 8) + fz_readbyte(stream);
-				s = (s << 8) + fz_readbyte(stream);
-			}
-			else {
-				while (bits < bps)
-				{
-					buf = (buf << 8) | (fz_readbyte(stream) & 0xff);
-					bits += 8;
-				}
-				s = (buf >> (bits - bps)) & bitmask;
-				bits -= bps;
-			}
-
-			func->u.sa.samples[i] = s;
+			fz_close(stream);
+			return fz_throw("truncated sample stream");
 		}
+
+		if (bps == 8) {
+			s = fz_readbyte(stream) / 255.0f;
+		}
+		else if (bps == 16) {
+			int x = fz_readbyte(stream);
+			x = (x << 8) + fz_readbyte(stream);
+			s = x / 65535.0f;
+		}
+		/* SumatraPDF: readd the case bps == 24 */
+		else if (bps == 24) {
+			unsigned int x = fz_readbyte(stream);
+			x = (x << 8) + fz_readbyte(stream);
+			x = (x << 8) + fz_readbyte(stream);
+			s = x / 16777215.0f;
+		}
+		else if (bps == 32) {
+			unsigned int x = fz_readbyte(stream);
+			x = (x << 8) + fz_readbyte(stream);
+			x = (x << 8) + fz_readbyte(stream);
+			x = (x << 8) + fz_readbyte(stream);
+			s = x / 4294967295.0f;
+		}
+		else {
+			fz_close(stream);
+			return fz_throw("sample stream bit depth %d unsupported", bps);
+		}
+
+		func->u.sa.samples[i] = s;
 	}
 
 	fz_close(stream);
@@ -1104,15 +1103,10 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 static fz_error
 evalsamplefunc(pdf_function *func, float *in, float *out)
 {
-	float x;
-	int e[2][MAXM];
+	int e0[MAXM], e1[MAXM];
 	float efrac[MAXM];
-	float static0[1 << 4];
-	float static1[1 << 4];
-	float *s0 = static0;
-	float *s1 = static1;
-	int i, j, k;
-	int idx;
+	float x;
+	int i;
 
 	/* encode input coordinates */
 	for (i = 0; i < func->m; i++)
@@ -1121,46 +1115,73 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 		x = LERP(x, func->domain[i][0], func->domain[i][1],
 			func->u.sa.encode[i][0], func->u.sa.encode[i][1]);
 		x = CLAMP(x, 0, func->u.sa.size[i] - 1);
-		e[0][i] = floorf(x);
-		e[1][i] = ceilf(x);
+		e0[i] = floorf(x);
+		e1[i] = ceilf(x);
 		efrac[i] = x - floorf(x);
 	}
 
-	if (func->m > 4)
-	{
-		s0 = fz_malloc((1 << func->m) * 2 * sizeof(float));
-		s1 = s0 + (1 << func->m);
-	}
-
-	/* FIXME i think this is wrong... test with 2 samples it gets wrong idxs */
 	for (i = 0; i < func->n; i++)
 	{
-		/* pull 2^m values out of the sample array */
-		for (j = 0; j < (1 << func->m); ++j)
+		if (func->m == 1)
 		{
-			idx = 0;
-			for (k = func->m - 1; k >= 0; --k)
-				idx = idx * func->u.sa.size[k] + e[(j >> k) & 1][k];
-			idx = idx * func->n + i;
-			s0[j] = func->u.sa.samples[idx];
+			float a = func->u.sa.samples[e0[0] * func->n + i];
+			float b = func->u.sa.samples[e1[0] * func->n + i];
+
+			float ab = a + (b - a) * efrac[0];
+
+			out[i] = LERP(ab, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 
-		/* do m sets of interpolations */
-		for (j = 0; j < func->m; ++j)
+		else if (func->m == 2)
 		{
-			for (k = 0; k < (1 << (func->m - j)); k += 2)
-				s1[k >> 1] = (1 - efrac[j]) * s0[k] + efrac[j] * s0[k+1];
-			memcpy(s0, s1, (1 << (func->m - j - 1)) * sizeof(float));
+			float a = func->u.sa.samples[(e0[0] +  e0[1] * func->u.sa.size[0]) * func->n + i];
+			float b = func->u.sa.samples[(e1[0] +  e0[1] * func->u.sa.size[0]) * func->n + i];
+			float c = func->u.sa.samples[(e0[0] +  e1[1] * func->u.sa.size[0]) * func->n + i];
+			float d = func->u.sa.samples[(e1[0] +  e1[1] * func->u.sa.size[0]) * func->n + i];
+
+			float ab = a + (b - a) * efrac[0];
+			float cd = c + (d - c) * efrac[0];
+			float abcd = ab + (cd - ab) * efrac[1];
+
+			out[i] = LERP(abcd, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 
-		/* decode output values */
-		out[i] = LERP(s0[0], 0, (1 << func->u.sa.bps) - 1,
-			func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
-		out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
+		/* SumatraPDF: readd the case func->m == 4 */
+		else if (func->m == 4)
+		{
+			float s0[1 << 4];
+			float s1[1 << 4];
+			int j, k;
+
+			/* pull 2^m values out of the sample array */
+			for (j = 0; j < (1 << func->m); ++j)
+			{
+				int idx = 0;
+				for (k = func->m - 1; k >= 0; --k)
+                    idx = idx * func->u.sa.size[k] + (((j >> k) & 1) ? e1 : e0)[k];
+				idx = idx * func->n + i;
+				s0[j] = func->u.sa.samples[idx];
+ 			}
+
+			/* do m sets of interpolations */
+			for (j = 0; j < func->m; ++j)
+			{
+				for (k = 0; k < (1 << (func->m - j)); k += 2)
+					s1[k >> 1] = (1 - efrac[j]) * s0[k] + efrac[j] * s0[k+1];
+				memcpy(s0, s1, (1 << (func->m - j - 1)) * sizeof(float));
+ 			}
+
+			out[i] = LERP(s0[0], 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
+		}
+
+		else
+		{
+			return fz_throw("sampled %d-d functions not implemented", func->m);
+		}
 	}
-
-	if (func->m > 4)
-		fz_free(s0);
 
 	return fz_okay;
 }

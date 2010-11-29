@@ -135,8 +135,8 @@ fz_drawclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 	mask = fz_newpixmapwithrect(nil, bbox);
 	dest = fz_newpixmapwithrect(model, bbox);
 
-	fz_clearpixmap(mask, 0);
-	fz_clearpixmap(dest, 0);
+	fz_clearpixmap(mask);
+	fz_clearpixmap(dest);
 
 	fz_scanconvert(dev->gel, dev->ael, evenodd, bbox, mask, nil);
 
@@ -181,8 +181,8 @@ fz_drawclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matr
 	mask = fz_newpixmapwithrect(nil, bbox);
 	dest = fz_newpixmapwithrect(model, bbox);
 
-	fz_clearpixmap(mask, 0);
-	fz_clearpixmap(dest, 0);
+	fz_clearpixmap(mask);
+	fz_clearpixmap(dest);
 
 	if (!fz_isemptyrect(bbox))
 		fz_scanconvert(dev->gel, dev->ael, 0, bbox, mask, nil);
@@ -353,8 +353,8 @@ fz_drawcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 		mask = fz_newpixmapwithrect(nil, bbox);
 		dest = fz_newpixmapwithrect(model, bbox);
 
-		fz_clearpixmap(mask, 0);
-		fz_clearpixmap(dest, 0);
+		fz_clearpixmap(mask);
+		fz_clearpixmap(dest);
 
 		dev->stack[dev->top].scissor = dev->scissor;
 		dev->stack[dev->top].mask = mask;
@@ -420,8 +420,8 @@ fz_drawclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matr
 	mask = fz_newpixmapwithrect(nil, bbox);
 	dest = fz_newpixmapwithrect(model, bbox);
 
-	fz_clearpixmap(mask, 0);
-	fz_clearpixmap(dest, 0);
+	fz_clearpixmap(mask);
+	fz_clearpixmap(dest);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].mask = mask;
@@ -496,7 +496,7 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 	if (alpha < 1)
 	{
 		dest = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
-		fz_clearpixmap(dest, 0);
+		fz_clearpixmap(dest);
 	}
 
 	if (shade->usebackground)
@@ -718,8 +718,8 @@ fz_drawclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 	mask = fz_newpixmapwithrect(nil, bbox);
 	dest = fz_newpixmapwithrect(model, bbox);
 
-	fz_clearpixmap(mask, 0);
-	fz_clearpixmap(dest, 0);
+	fz_clearpixmap(mask);
+	fz_clearpixmap(dest);
 
 #ifdef SMOOTHSCALE
 	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
@@ -800,13 +800,14 @@ fz_drawbeginmask(void *user, fz_rect rect, int luminosity, fz_colorspace *colors
 
 	if (luminosity)
 	{
-		/* SumatraPDF: pass a Luminosity softmask's background color */
-		float gray = 1.0;
-		fz_convertcolor(colorspace, colorfv, fz_devicegray, &gray);
-		fz_clearpixmap(dest, gray * 255);
+		float bc;
+		if (!colorspace)
+			colorspace = fz_devicegray;
+		fz_convertcolor(colorspace, colorfv, fz_devicegray, &bc);
+		fz_clearpixmapwithcolor(dest, bc * 255);
 	}
 	else
-		fz_clearpixmap(dest, 0);
+		fz_clearpixmap(dest);
 
 	dev->stack[dev->top].scissor = dev->scissor;
 	dev->stack[dev->top].dest = dev->dest;
@@ -847,7 +848,7 @@ fz_drawendmask(void *user)
 		/* create new dest scratch buffer */
 		bbox = fz_boundpixmap(temp);
 		dest = fz_newpixmapwithrect(dev->dest->colorspace, bbox);
-		fz_clearpixmap(dest, 0);
+		fz_clearpixmap(dest);
 
 		/* push soft mask as clip mask */
 		dev->stack[dev->top].scissor = dev->scissor;
@@ -877,7 +878,7 @@ fz_drawbegingroup(void *user, fz_rect rect, int isolated, int knockout, fz_blend
 	bbox = fz_intersectbbox(bbox, dev->scissor);
 	dest = fz_newpixmapwithrect(model, bbox);
 
-	fz_clearpixmap(dest, 0);
+	fz_clearpixmap(dest);
 
 	dev->stack[dev->top].alpha = alpha;
 	dev->stack[dev->top].blendmode = blendmode;
