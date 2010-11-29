@@ -834,6 +834,8 @@ static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool k
             case DM_BOOK_VIEW: displayMode = DM_CONTINUOUS_BOOK_VIEW; break;
         }
     }
+
+    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     win->dm->changeDisplayMode(displayMode);
     MenuUpdateDisplayMode(win);
 }
