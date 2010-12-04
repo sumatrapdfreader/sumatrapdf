@@ -20,7 +20,7 @@ Contributor: Felark (felark@hotmail.com)
 &كل الصفحات المحددة
 
 &Back\tAlt+Left Arrow
-الخلف\tAlt+Left Arrow
+الخلف\tAlt+السهم الأيسر
 
 &Close\tCtrl-W
 &إنهاء\tCtrl-W
@@ -83,10 +83,10 @@ Contributor: Felark (felark@hotmail.com)
 &فتح\tCtrl-O
 
 &Options...
-&خيارات
+&خيارات...
 
 &Password:
-&كلمة المرور
+&كلمة المرور:
 
 &Previous Page\tLeft Arrow
 الصفحة السابقة\t<-
@@ -114,6 +114,9 @@ Contributor: Felark (felark@hotmail.com)
 
 &Skip this version
 &تخطي هذا الإصدار
+
+&Use original page sizes
+استخدام الحجم الأصلي للصفحة
 
 &View
 &العرض
@@ -170,7 +173,7 @@ Can't connect to the Internet (error %#x).
 لم يتم التمكن من الإتصال بالإنترنت (%#x خطأ).
 
 Cancel
-اإلغاء
+إلغاء
 
 Cannot print this file
 لايمكن طباعة هذا الملف
@@ -198,6 +201,9 @@ Continuous facing
 
 Contribute Translation
 ساهم في ترجمة البرنامج
+
+Copying text was denied (copying as image only)
+تعذر نسخ النص (النسخ كصورة فقط)
 
 Could not open Printer
 تعذر فتح الطابعة
@@ -277,11 +283,17 @@ Find Previous
 Find:
 بحث
 
+Fit &Content\tCtrl-3
+مناسبة المحتوى\tCtrl-3
+
 Fit &Page\tCtrl-0
 مناسب للشاشة\tCtrl-0
 
 Fit &Width\tCtrl-2
 مناسب لعرض الشاشة\tCtrl-2
+
+Fit Content
+مناسبة المحتوى
 
 Fit Page
 مناسب للشاشة
@@ -353,7 +365,7 @@ Open
 فتح
 
 Open in &Adobe Reader
-فتح الملف بـ أدوبي ريدر
+فتح الملف بـ Adobe Reader
 
 P&roperties\tCtrl-D
 الخصائص...\tCtrl-D
@@ -410,10 +422,10 @@ Searching %d of %d...
 يتم البحث %d من %d...
 
 Select content with Ctrl+left mouse button
-اختر المحتوى باضغط على زر الفأرة الأيسر و Ctrl
+اختر المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
 
 Send by &E-mail...
-إرسال بلإيميل
+إرسال بالإيميل
 
 Set inverse search command-line
 أمر البحث عن نص باتجاه معاكس
@@ -440,16 +452,16 @@ SumatraPDF Options
 خيارات قارئ سومطره للبي دي إف
 
 SumatraPDF is your main PDF reader
-قارئ سومطره للبي دي إف هو الافتراضي
+قارئ SumatraPDF هو الافتراضي
 
 SumatraPDF should now be your main PDF reader
-فارئ سومطره للبي دي إف
+قارئ SumatraPDF يجب أن يكون القارئ الافتراضي
 
 Synchronization file cannot be opened
 لايمكن فتح مزامنة الملف
 
 Text documents
-مستند نصي
+مستندات نصية
 
 Title:
 العنوان
@@ -473,7 +485,7 @@ You have version %s
 لديك النسخة %s
 
 Zoom
-التقريب
+تقريب
 
 Zoom In
 تكبير
@@ -492,10 +504,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#&Use original page sizes
-#Copying text was denied (copying as image only)
-#Fit &Content\tCtrl-3
-#Fit Content
 
