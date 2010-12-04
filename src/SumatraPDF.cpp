@@ -1189,11 +1189,6 @@ static bool Prefs_Load(void)
         assert(ok);
     }
 
-    // always display the toolbar when embedded (as there's no menubar in that case)
-    if (gPluginMode) {
-        gGlobalPrefs.m_showToolbar = TRUE;
-    }
-
     free(prefsFilename);
     free(prefsTxt);
     return ok;
@@ -7675,6 +7670,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         assert(!reuse_instance);
         assert(!exitOnPrint);
         reuse_instance = exitOnPrint = false;
+        // always display the toolbar when embedded (as there's no menubar in that case)
+        gGlobalPrefs.m_showToolbar = TRUE;
     }
 
     for (size_t i = 0; i < fileNames.size(); i++) {
