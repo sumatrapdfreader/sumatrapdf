@@ -170,6 +170,13 @@ static RenderCache                  gRenderCache;
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
 
+// in plugin mode, the window's frame isn't drawn and closing and
+// fullscreen are disabled, so that SumatraPDF can be displayed
+// embedded (e.g. in a web browser)
+       bool                         gPluginMode = false;
+// in restricted mode, all commands that could affect the OS are
+// disabled (such as opening files, printing, following URLs), so
+// that SumatraPDF can be used as a PDF reader on locked down systems
        bool                         gRestrictedUse = false;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
@@ -1182,6 +1189,11 @@ static bool Prefs_Load(void)
         assert(ok);
     }
 
+    // always display the toolbar when embedded (as there's no menubar in that case)
+    if (gPluginMode) {
+        gGlobalPrefs.m_showToolbar = TRUE;
+    }
+
     free(prefsFilename);
     free(prefsTxt);
     return ok;
@@ -1319,6 +1331,10 @@ static BOOL Prefs_Save(void)
     TCHAR *     path = NULL;
     size_t      dataLen;
     BOOL        ok = false;
+
+    // don't save preferences for plugin windows
+    if (gPluginMode)
+        return FALSE;
 
     /* mark currently shown files as visible */
     for (WindowInfo *currWin = gWindowList; currWin; currWin = currWin->next)
@@ -1614,6 +1630,12 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
         {
             switch (cmdId)
             {
+                case IDM_OPEN:
+                    // don'opening different files isn't allowed in plugin mode
+                    if (win->pluginParent)
+                        buttonState = disable;
+                    break;
+
                 case IDM_FIND_NEXT:
                 case IDM_FIND_PREV: 
                     // TODO: Update on whether there's more to find, not just on whether there is text.
@@ -2622,7 +2644,7 @@ void AssociateExeWithPdfExtension(void)
 // here we just make sure that we're still registered
 static bool RegisterForPdfExtentions(HWND hwnd)
 {
-    if (IsRunningInPortableMode() || gRestrictedUse)
+    if (IsRunningInPortableMode() || gRestrictedUse || gPluginMode)
         return false;
 
     if (IsExeAssociatedWithPdfExtension())
@@ -3695,6 +3717,9 @@ static void OnPaint(WindowInfo *win)
 
 static void OnMenuExit(void)
 {
+    if (gPluginMode)
+        return;
+
     Prefs_Save();
     PostQuitMessage(0);
 }
@@ -3703,10 +3728,14 @@ static void OnMenuExit(void)
    Closes the window unless this is the last window in which
    case it switches to empty window and disables the "File\Close"
    menu item. */
-static void CloseWindow(WindowInfo *win, bool quitIfLast)
+static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
 {
     assert(win);
     if (!win)  return;
+    // when used as an embedded plugin, closing should happen automatically
+    // when the parent window is destroyed (cf. WM_DESTROY)
+    if (win->pluginParent && !forceClose)
+        return;
 
     if (win->dm)
         win->dm->_dontRenderFlag = true;
@@ -4252,6 +4281,9 @@ static void OnMenuOpen(WindowInfo *win)
     TCHAR         fileName[260];
 
     if (gRestrictedUse) return;
+    // don't allow opening different files in plugin mode
+    if (win->pluginParent)
+        return;
 
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
@@ -4574,20 +4606,6 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         WinResizeIfNeeded(win);
 }
 
-static void ReloadPdfDocument(WindowInfo *win)
-{
-    if (WS_SHOWING_PDF != win->state)
-        return;
-    const TCHAR *fileName = NULL;
-    if (win->dm)
-        fileName = (const TCHAR*)tstr_dup(win->dm->fileName());
-    CloseWindow(win, false);
-    if (fileName) {
-        LoadPdf(fileName, win);
-        free((void*)fileName);
-    }
-}
-
 static void RebuildProgramMenus(void)
 {
     for (WindowInfo *win = gWindowList; win; win = win->next) {
@@ -4818,7 +4836,8 @@ static void OnMenuViewRotateRight(WindowInfo *win)
 
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
 {
-    if ((presentation ? win->presentation : win->fullScreen) || !IsWindowVisible(win->hwndFrame)) 
+    if ((presentation ? win->presentation : win->fullScreen) ||
+        !IsWindowVisible(win->hwndFrame) || gPluginMode)
         return;
 
     if (presentation) {
@@ -6986,7 +7005,7 @@ InitMouseWheelInfo:
         case WM_DESTROY:
             /* WM_DESTROY might be sent as a result of File\Close, in which case CloseWindow() has already been called */
             if (win)
-                CloseWindow(win, TRUE);
+                CloseWindow(win, TRUE, true);
             break;
 
         case WM_DDE_INITIATE:
@@ -7383,6 +7402,24 @@ exit:
     DdeUninitialize(inst);
 }
 
+static void MakePluginWindow(WindowInfo *win, HWND hwndParent)
+{
+    assert(IsWindow(hwndParent));
+    assert(gPluginMode);
+    win->pluginParent = hwndParent;
+
+    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
+    ws &= ~(WS_POPUP|WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    ws |= WS_CHILD;
+    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
+
+    RECT rc;
+    SetParent(win->hwndFrame, hwndParent);
+    GetClientRect(hwndParent, &rc);
+    MoveWindow(win->hwndFrame, 0, 0, rect_dx(&rc), rect_dy(&rc), FALSE);
+    // from here on, we depend on the plugin's host to resize us
+}
+
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
 void RedirectIOToConsole(void)
 {
@@ -7455,6 +7492,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     bool                reuse_instance = false;
     TCHAR *             printerName = NULL;
     TCHAR *             newWindowTitle = NULL;
+    HWND                hwndPluginParent = NULL;
 #ifdef BUILD_RM_VERSION
     bool                deleteFilesOnClose = false; // Delete the files which were passed into the program by command line.
 #endif
@@ -7583,6 +7621,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg_with_param("-crashdump")) {
             InstallCrashHandler(argList[++i]);
         }
+        else if (is_arg_with_param("-plugin")) {
+            hwndPluginParent = (HWND)_ttoi(argList[++i]);
+        }
 #ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             deleteFilesOnClose = true;
@@ -7614,6 +7655,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
     gRenderCache.useGdiRenderer = &gUseGdiRenderer;
+
+    if (hwndPluginParent && !IsWindow(hwndPluginParent))
+        hwndPluginParent = NULL;
+    if (hwndPluginParent) {
+        gPluginMode = true;
+        assert(fileNames.size() == 1);
+        // TODO: prevent plugins from being used as DDE targets
+        assert(!reuse_instance);
+        assert(!exitOnPrint);
+        reuse_instance = exitOnPrint = false;
+    }
 
     for (size_t i = 0; i < fileNames.size(); i++) {
         if (reuse_instance) {
@@ -7651,6 +7703,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 if (win->dm->validPageNo(pageNumber))
                     win->dm->goToPage(pageNumber, 0);
             }
+            if (hwndPluginParent)
+                MakePluginWindow(win, hwndPluginParent);
             if (WS_SHOWING_PDF == win->state && enterPresentation && !firstDocLoaded)
                 WindowInfo_EnterFullscreen(win, true);
         }

@@ -105,6 +105,7 @@ public:
         wheelAccumDelta = 0;
         delayedRepaintTimer = 0;
         resizingTocBox = false;
+        pluginParent = NULL;
 
         HDC hdcFrame = GetDC(hwndFrame);
         dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);
@@ -226,6 +227,9 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
     bool            resizingTocBox;
+
+    // (browser) parent, when displayed as a frame-less plugin
+    HWND            pluginParent;
 
     void ShowTocBox();
     void HideTocBox();
