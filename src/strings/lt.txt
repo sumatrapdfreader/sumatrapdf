@@ -7,264 +7,491 @@
 Lang: lt Lithuanian (Lietuvių)
 
 Contributor: Viktoras Jakovlevas
+Contributor: Arnoldas Viburys
 
 &About
 Apie
 
 &Actual Size\tCtrl-1
-Tikrasis dydis\tCtrl-1
+&Originalus\tCtrl-1
+
+&All selected pages
+&Visi pažymėti puslapiai
+
+&Back\tAlt+Left Arrow
+Atgal
 
 &Close\tCtrl-W
 &Užverti\tCtrl-W
 
+&Copy Selection\tCtrl-C
+&Kopijuoti pažymėtą sritį
+
+&Don't ask me again
+&Daugiau nebeklausti
+
+&Even pages only
+Tik &lyginiai puslapiai
+
 &File
 &Failas
 
+&Find what:
+&Surasti
+
 &First Page\tHome
-Pirmas puslapis\tHome
+Pi&rmąjį puslapį\tHome
+
+&Fit pages to printable area
+Pritaikyti puslapių dydį prie spausdinamo ploto 
 
 &Go To
-&Eiti
+&Eiti į
+
+&Go to page:
+&Eiti į puslapį:
 
 &Help
-&Pagalba
+&Žinynas
 
 &Last Page\tEnd
-Paskutinis puslapis\tEnd
+Pa&skutinįjį puslapį\tEnd
+
+&Magnification:
+&Mastelis
+
+&Manual
+&Rankinis
+
+&Match case
+&Skirti didžiąsias ir mažąsias raides
 
 &Next Page\tRight Arrow
-Kitas puslapis\t->
+&Kitas puslapis\t->
+
+&No
+&Ne
+
+&No, thanks
+Ačiū, &ne
+
+&Odd pages only
+&Tik nelyginiai puslapiai
 
 &Open\tCtrl-O
 &Atverti\tCtrl-O
 
+&Options...
+&Nuostatos
+
+&Password:
+&Slaptažodis:
+
 &Previous Page\tLeft Arrow
-Ankstesnis puslapis\t<-
+&Ankstesnis puslapis\t<-
 
 &Print...\tCtrl-P
-&Spausdinti\tCtrl-P
+&Spausdinti...\tCtrl-P
+
+&Print... (denied)
+&Spausdinti... (neprieinama)
+
+&Remember the password for this document
+Įsiminti šio dokumento &slaptažodį
+
+&Remember these settings for each document
+Įsiminti šias &nuostatas kiekvienam dokumentui
 
 &Save As...\tCtrl-S
-&Įrašyti kaip...\tCtrl-S
+Į&rašyti kaip...\tCtrl-S
+
+&Settings
+&Nuostatos
+
+&Shrink pages to printable area (if necessary)
+&Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
+
+&Skip this version
+Pralei&sti šią versiją
+
+&Use original page sizes
+Na&udoti originalius puslapių dydžius
 
 &View
-Peržiūra
+&Rodymas
+
+&Yes
+&Taip
 
 &Zoom
 Artinimas
 
+(of %d)
+(iš %d)
+
 About SumatraPDF
 Apie SumatraPDF
+
+Advanced
+Išsamiai
+
+All files
+Visi failai
+
+Application:
+Programa:
+
+Associate with PDF files?
+Susieti su PDF failais?
+
+Attachment: %s
+Priedai: %s
+
+Author:
+Autorius:
+
+Automatic
+Automatinis
+
+Automatically check for &updates
+Automatiškai tikrinti, ar yra na&ujinimų
+
+Book View
+Kaip knygos
 
 Book&marks\tF12
 Žymės\tF12
 
+Bookmarks
+Žymės
+
+Bytes
+baitų
+
+Can't connect to the Internet (error %#x).
+Ryšys su internetu nutrūko (klaida %#x).
+
+Cancel
+Atšaukti
+
+Cannot print this file
+Nepavyko išspausdinti failo
+
+Cannot start inverse search command. Please check the command line in the settings.
+Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
+
+Change Language
+Keisti kalbą
+
+Check for &Updates
+Tikrinti, ar yra na&ujinimų
+
+Check for Updates
+Tikrinti, ar yra na&ujinimų
+
 Continuous
-Besitęsiantis
+Nenutrūkstama
+
+Continuous book view
+Nenutrūkstama knygos peržiūra
 
 Continuous facing
-Besitęsiantis puslapiavimas
+Nenutrūkstama dviejų puslapių
 
 Contribute Translation
-Pasiklydę vertime
+Prisidėti prie vertimo
+
+Copying text was denied (copying as image only)
+Teksto kopijavimas neprieinamas (kopijuojamas tik ekrano vaizdas)
 
 Could not open Printer
 Nepavyko atverti spausdintuvo
 
+Couldn't initialize printer
+Nepavyko prisijungti prie spausdintuvo
+
+Couldn't render the page
+Nepavyko atvaizduoti puslapio
+
+Created:
+Sukurta
+
+Custom &Zoom...\tCtrl-Y
+Pasirinkti &mastelį...\tCtrl-Y
+
+Default &Layout:
+Numatytasis &išdėstymas:
+
+Default &Zoom:
+Numatytasis &mastelis
+
+Denied Permissions:
+Neprieinami leidimai:
+
+Document Properties
+Dokumento savybės
+
+Download
+Atsisiųsti
+
 E&xit\tCtrl-Q
-Baigti darbą\tCtrl-Q
+&Baigti darbą\tCtrl-Q
+
+Enter password
+Įveskite slaptažodį
+
+Enter password for %s
+Įveskite %s slaptažodį
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 
 Error loading PDF file.
-Klaida įkeliant PDF dokumentą
+PDF failo įkelties klaida
+
+F&orward\tAlt+Right Arrow
+&Pirmyn\tAlt+Right Arrow
 
 F&ullscreen\tCtrl-L
-Visame ekrane\tCtrl-L
+&Visas ekranas\tCtrl-L
 
 Facing
 Puslapiavimas
 
 Failed to save a file
-Nepavyko išsaugoti failo
+Failo įrašyti nepavyko
 
-Fin&d...\tCtrl-F
-Ieškoti...\tCtrl-F
+File Size:
+Failo dydis:
+
+File:
+Failas:
+
+Find
+Ieškoti
 
 Find Next
-Rasti ankstesnį
+Rasti kitą
 
 Find Previous
-Rasti kitą
+Rasti ankstesnį
 
 Find:
 Ieškoti:
 
+Fit &Content\tCtrl-3
+Visas puslapio &turinys\tCtrl-3
+
 Fit &Page\tCtrl-0
-Pritaikyti lange\tCtrl-0
+Visas &puslapis\tCtrl-0
 
 Fit &Width\tCtrl-2
-Pritaikyti plotį\tCtrl-2
+Visas puslapio pl&otis\tCtrl-2
+
+Fit Content
+Visas puslapio turinys
 
 Fit Page
-Pritaikyti lange
+Visas puslapis
 
 Fit Width
-Pritaikyti plotį
+Visas puslapio plotis
+
+Found text at page %d
+Ieškoti teksto %d puslapyje
+
+Go to page
+Eiti į puslapį
+
+Hint: Use the F3 key for finding again
+Patarimas: ieškodami kito atitikmens naudokite klavišą F3
+
+Main PDF reader can't be changed in portable mode
+Naudojant portatyvią programą negalima pakeisti numatytosios PDF skaityklės
+
+Make SumatraPDF default application for PDF files?
+Nustatyti SumatraPDF kaip numatytąją PDF skaityklę?
 
 Make SumatraPDF my main PDF reader
-Parinkti SumatraPDF numatytuoju PDF dokumentų skaitytuvu
+Nustatyti SumatraPDF kaip numatytąją PDF skaityklę
+
+Match Case
+Skirti didžiąsias ir mažąsias raides
+
+Modified:
+Keista:
+
+New version %s is available. Download new version?
+Yra nauja %s versija. Atsiųsti naują versiją?
+
+New version available.
+Yra nauja versija.
 
 Next Page
 Kitas puslapis
 
+No matches were found
+Nerasta atitikmenų
+
+No result found around line %u in file %s
+Nieko nerasta failo %s %u eilutėje
+
+No synchronization file found
+Sinchronizacijos failas nerastas
+
+No synchronization info at this position
+Nėra sinchronizacijos informacijos šioje pozicijoje
+
+Number of Pages:
+Puslapių skaičius:
+
+OK
+Gerai
+
 Open
 Atverti
 
+Open in &Adobe Reader
+Atverti su &Adobe Reader
+
+P&roperties\tCtrl-D
+&Savybės
+
+PDF Document
+PDF dokumentas
+
+PDF Producer:
+PDF leidėjas:
+
+PDF Version:
+PDF versija:
+
+PDF documents
+PDf dokumentai
+
 Pa&ge...\tCtrl-G
-Puslapis...\tCtrl-G
+P&uslapis...\tCtrl-G
+
+Page Size:
+Puslapio dydis:
+
+Page number %u inexistant
+Puslapio numerio %u nėra
+
+Page scaling
+Puslapio mastelis
+
+Page:
+Puslapis:
+
+Please wait - rendering...
+Prašome palaukti – atvaizduojama...
 
 Previous Page
 Ankstesnis puslapis
 
+Print range
+Spausdinimo intervalas
+
 Printing problem.
-Spausdinimo klaida
+Spausdinimo problema.
+
+Remember &opened files
+Įsiminti &atvertus failus
 
 Rotate &Left\tCtrl-Shift--
-Pasukti kairėn\tCtrl-Shift--
+Pasukti į &kairę\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-Pasukti dešinėn\tCtrl-Shift-+
+Pasukti į &dešinę\tCtrl-Shift-+
+
+Searching %d of %d...
+Ieškoma %d iš %d...
+
+Select content with Ctrl+left mouse button
+Turinį žymėkite su Ctrl+kairiuoju pelės klavišu
+
+Send by &E-mail...
+Siųsti el. &paštu...
+
+Set inverse search command-line
+Nustatyti atvirkščios paieškos komandinę eilutę
 
 Show &Toolbar
-Rodyti įrankinę
+Rodyti &priemonių juostą
+
+Show &pages continuously
+&Puslapius rodyti nenutrūkstamai
+
+Show the &bookmarks sidebar when available
+Rodyti &žymų parankinę, kai yra žymų
 
 Single Page
-Vienas puslapis
+Atskirais puslapiais
+
+Source file %s has no synchronization point
+Pradinis failas %s  neturi sinchronizacijos taško
+
+Subject:
+Tema:
+
+SumatraPDF Options
+SumatraPDF nuostatos
+
+SumatraPDF is your main PDF reader
+SumatraPDF yra numatytoji PDF skaityklė
+
+SumatraPDF should now be your main PDF reader
+Dabar SumatraPDF bus numatytoji PDF skaityklė
+
+Synchronization file cannot be opened
+Sinchronizacijos failas negali būti atvertas
+
+Text documents
+Tekstiniai dokumentai
+
+Title:
+Pavadinimas:
+
+Unknown source file (%s)
+Nežinomas pradinis failas (%s)
 
 View
-Peržiūra
+Rodymas
 
 Visit &Website
-Aplankyti svetainę
+&Interneto svetainė
+
+Warning
+Įspėjimas
+
+You have the latest version.
+Turite naujausią versiją
+
+You have version %s
+Turite %s versiją
+
+Zoom
+Mastelis
 
 Zoom In
-Priartinti
+Padidinti
 
 Zoom Out
 Sumažinti
 
+Zoom factor
+Mastelis
+
+[Changes detected; refreshing] %s
+[Aptikta pakitimų; atnaujinama] %s
+
+copying text
+kopijuojamas tekstas
+
+printing document
+spausdinamas dokumentas
+
 # Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Copy Selection\tCtrl-C
-#&Don't ask me again
-#&Even pages only
-#&Find what:
-#&Fit pages to printable area
-#&Go to page:
-#&Magnification:
-#&Manual
-#&Match case
-#&No
-#&No, thanks
-#&Odd pages only
-#&Options...
-#&Password:
-#&Print... (denied)
-#&Remember the password for this document
-#&Remember these settings for each document
-#&Settings
-#&Shrink pages to printable area (if necessary)
-#&Skip this version
-#&Use original page sizes
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Associate with PDF files?
-#Attachment: %s
-#Author:
-#Automatic
-#Automatically check for &updates
-#Book View
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Change Language
-#Check for &Updates
-#Check for Updates
-#Continuous book view
-#Copying text was denied (copying as image only)
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Custom &Zoom...\tCtrl-Y
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#Enter the command-line to invoke when you double-click on the PDF document:
-#F&orward\tAlt+Right Arrow
-#File Size:
-#File:
-#Find
-#Fit &Content\tCtrl-3
-#Fit Content
-#Found text at page %d
-#Go to page
-#Hint: Use the F3 key for finding again
-#Main PDF reader can't be changed in portable mode
-#Make SumatraPDF default application for PDF files?
-#Match Case
-#Modified:
-#New version %s is available. Download new version?
-#New version available.
-#No matches were found
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Page scaling
-#Page:
-#Please wait - rendering...
-#Print range
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &E-mail...
-#Set inverse search command-line
-#Show &pages continuously
-#Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
+#Fin&d...\tCtrl-F
 
