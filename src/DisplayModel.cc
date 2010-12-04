@@ -483,7 +483,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
 
 //    DBG_OUT("DisplayModel::relayout(), pageCount=%d, zoomReal=%.6f, zoomVirtual=%.2f\n", pageCount, dm->zoomReal, dm->zoomVirtual);
 
-    if (0 == currZoomReal)
+    if (0 == currZoomReal || INVALID_ZOOM == currZoomReal)
         newAreaOffsetX = 0.0;
     else
         newAreaOffsetX = areaOffset.x * _zoomReal / currZoomReal;

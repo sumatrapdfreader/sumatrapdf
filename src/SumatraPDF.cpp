@@ -1762,10 +1762,12 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     /* Hide scrollbars if not showing a PDF */
     /* TODO: doesn't really fit the name of the function */
     if (WS_SHOWING_PDF == win->state) {
+        /* TODO: Isn't all of this handled by DisplayModel::setScrollbarsState ?
         if (win->dm->needHScroll())
             ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
-        if (win->dm->needVScroll() || (!win->presentation && !displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
+        if (win->dm->needVScroll() || (win->dm->zoomVirtual() == ZOOM_FIT_PAGE && !win->fullScreen && !win->presentation && !displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
             ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
+        */
         if (!CanSendAsEmailAttachment(win))
             EnableMenuItem(hmenu, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_GRAYED);
     }
@@ -1989,6 +1991,7 @@ static bool LoadPdfIntoWindow(
             gRenderCache.KeepForDisplayModel(previousmodel, win->dm);
         delete previousmodel;
         win->needrefresh = false;
+        win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     }
 
     win->dm->setAppData((void*)win);
@@ -2422,7 +2425,12 @@ void DisplayModel::setScrollbarsState(void)
             win->prevCanvasBR.x = drawAreaDx;
             win->prevCanvasBR.y = drawAreaDy;
         }
-        else if (drawAreaDy == canvasDy) {
+        else if (drawAreaDy == canvasDy &&
+                 // don't force a scrollbar to show if we're going to
+                 // show it anyway (see a dozen lines below)
+                 (_zoomVirtual != ZOOM_FIT_PAGE || win->fullScreen ||
+                  win->presentation || displayModeContinuous(win->dm->displayMode()) ||
+                  win->dm->pageCount() == 1)) {
             canvasDy++;
         }
     }
@@ -2433,7 +2441,7 @@ void DisplayModel::setScrollbarsState(void)
         si.nMax = 99;
         si.nPage = 100;
 
-        if (!win->fullScreen && !win->presentation && ZOOM_FIT_PAGE == _zoomVirtual) {
+        if (ZOOM_FIT_PAGE == _zoomVirtual && !win->fullScreen && !win->presentation) {
             switch (displayMode()) {
                 case DM_SINGLE_PAGE:
                     si.nPos = currentPageNo() - 1;
@@ -3060,7 +3068,8 @@ static void PaintPageFrameAndShadow(HDC hdc, PdfPageInfo * pageInfo, bool presen
 
 static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
 {
-    RECT                bounds;
+    RECT bounds;
+    bool rendering = false;
 
     assert(win);
     if (!win) return;
@@ -3097,6 +3106,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
                 else
                     DrawCenteredText(hdc, &bounds, _TR("Please wait - rendering..."));
                 DBG_OUT("drawing empty %d ", pageNo);
+                rendering = true;
             } else {
                 DrawCenteredText(hdc, &bounds, _TR("Couldn't render the page"));
                 DBG_OUT("   missing bitmap on visible page %d\n", pageNo);
@@ -3129,32 +3139,32 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         PaintForwardSearchMark(win, hdc);
 
     DBG_OUT("\n");
-    if (!gDebugShowLinks)
-        return;
 
-    /* debug code to visualize links */
-    fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
-    SelectObject(hdc, pen);
+    if (gDebugShowLinks && !rendering) {
+        /* debug code to visualize links (can block while rendering) */
+        fz_bbox drawAreaRect = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
+        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
+        SelectObject(hdc, pen);
 
-    for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
-        PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
-        if (!pageInfo->shown || !pageInfo->visible)
-            continue;
-
-        pdf_link *links = NULL;
-        int linkCount = dm->getPdfLinks(pageNo, &links);
-        for (int i = 0; i < linkCount; i++) {
-            fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
-            if (fz_isemptyrect(isect))
+        for (int pageNo = win->dm->pageCount(); pageNo >= 1; --pageNo) {
+            PdfPageInfo *pageInfo = win->dm->getPageInfo(pageNo);
+            if (!pageInfo->shown || !pageInfo->visible)
                 continue;
 
-            RECT rectScreen = { isect.x0, isect.y0, isect.x1, isect.y1 };
-            PaintRectangle(hdc, &rectScreen);
+            pdf_link *links = NULL;
+            int linkCount = dm->getPdfLinks(pageNo, &links);
+            for (int i = 0; i < linkCount; i++) {
+                fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
+                if (fz_isemptyrect(isect))
+                    continue;
+
+                RECT rectScreen = { isect.x0, isect.y0, isect.x1, isect.y1 };
+                PaintRectangle(hdc, &rectScreen);
+            }
+            free(links);
         }
-        free(links);
+        DeletePen(pen);
     }
-    DeletePen(pen);
 }
 
 static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
