@@ -181,6 +181,7 @@ fz_paintspanmask4(byte * restrict dp, byte * restrict sp, byte * restrict mp, in
 static inline void
 fz_paintspanmaskN(byte * restrict dp, byte * restrict sp, byte * restrict mp, int n, int w)
 {
+	n--;
 	while (w--)
 	{
 		int k = n;

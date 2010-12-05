@@ -110,6 +110,59 @@ atobjend:
 	return fz_okay;
 }
 
+static fz_error
+pdf_repairobjstm(pdf_xref *xref, int num, int gen)
+{
+	fz_error error;
+	fz_obj *obj;
+	fz_stream *stm;
+	pdf_token_e tok;
+	int i, n, count;
+	char buf[256];
+
+	error = pdf_loadobject(&obj, xref, num, gen);
+	if (error)
+		return fz_rethrow(error, "cannot load object stream object (%d %d R)", num, gen);
+
+	count = fz_toint(fz_dictgets(obj, "N"));
+
+	fz_dropobj(obj);
+
+	error = pdf_openstream(&stm, xref, num, gen);
+	if (error)
+		return fz_rethrow(error, "cannot open object stream object (%d %d R)", num, gen);
+
+	for (i = 0; i < count; i++)
+	{
+		error = pdf_lex(&tok, stm, buf, sizeof buf, &n);
+		if (error || tok != PDF_TINT)
+		{
+			fz_close(stm);
+			return fz_rethrow(error, "corrupt object stream (%d %d R)", num, gen);
+		}
+
+		n = atoi(buf);
+		if (n >= xref->len)
+			pdf_resizexref(xref, n + 1);
+
+		xref->table[n].ofs = num;
+		xref->table[n].gen = i;
+		xref->table[n].stmofs = 0;
+		xref->table[n].obj = nil;
+		xref->table[n].type = 'o';
+
+		error = pdf_lex(&tok, stm, buf, sizeof buf, &n);
+		if (error || tok != PDF_TINT)
+		{
+			fz_close(stm);
+			return fz_rethrow(error, "corrupt object stream (%d %d R)", num, gen);
+		}
+	}
+
+	fz_close(stm);
+	return fz_okay;
+}
+
 fz_error
 pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 {
@@ -276,24 +329,13 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		fz_dropobj(id);
 	}
 
-	xref->len = maxnum + 1;
-	xref->cap = xref->len;
-	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
+	pdf_resizexref(xref, maxnum + 1);
 
 	xref->table[0].type = 'f';
 	xref->table[0].ofs = 0;
 	xref->table[0].gen = 65535;
 	xref->table[0].stmofs = 0;
 	xref->table[0].obj = nil;
-
-	for (i = 1; i < xref->len; i++)
-	{
-		xref->table[i].type = 'f';
-		xref->table[i].ofs = 0;
-		xref->table[i].gen = 0;
-		xref->table[i].stmofs = 0;
-		xref->table[i].obj = nil;
-	}
 
 	for (i = 0; i < listlen; i++)
 	{
@@ -322,6 +364,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 			fz_dropobj(dict);
 		}
+
 	}
 
 	next = 0;
@@ -342,4 +385,24 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 cleanup:
 	fz_free(list);
 	return error; /* already rethrown */
+}
+
+fz_error
+pdf_repairobjstms(pdf_xref *xref)
+{
+	fz_obj *dict;
+	int i;
+
+	for (i = 0; i < xref->len; i++)
+	{
+		if (xref->table[i].stmofs)
+		{
+			pdf_loadobject(&dict, xref, i, 0);
+			if (!strcmp(fz_toname(fz_dictgets(dict, "Type")), "ObjStm"))
+				pdf_repairobjstm(xref, i, 0);
+			fz_dropobj(dict);
+		}
+	}
+
+	return fz_okay;
 }

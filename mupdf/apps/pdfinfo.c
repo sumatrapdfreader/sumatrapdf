@@ -290,7 +290,6 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 		fz_obj *height;
 		fz_obj *bpc = nil;
 		fz_obj *filter = nil;
-		fz_obj *mask;
 		fz_obj *cs = nil;
 		fz_obj *altcs;
 		int k;
@@ -307,7 +306,6 @@ gatherimages(int page, fz_obj *pageref, fz_obj *pageobj, fz_obj *dict)
 			continue;
 
 		filter = fz_dictgets(imagedict, "Filter");
-		mask = fz_dictgets(imagedict, "ImageMask");
 
 		altcs = nil;
 		cs = fz_dictgets(imagedict, "ColorSpace");

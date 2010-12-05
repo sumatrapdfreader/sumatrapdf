@@ -203,8 +203,7 @@ static inline int fz_mul255(int a, int b)
 
 /* Combine values A and C (in the same (any) range) and B and D (in the
  * 0..256 range), to give a single value in the same range as A and C were.  */
-/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691802#c7 */
-#define FZ_COMBINE2(A,B,C,D) ((((A)*(B))>>8)+(((C)*(D))>>8))
+#define FZ_COMBINE2(A,B,C,D) (FZ_COMBINE((A), (B)) + FZ_COMBINE((C), (D)))
 
 /* Blend SRC and DST (in the same range) together according to
  * AMOUNT (in the 0...256 range). */
@@ -431,6 +430,7 @@ int fz_arraylen(fz_obj *array);
 fz_obj *fz_arrayget(fz_obj *array, int i);
 void fz_arrayput(fz_obj *array, int i, fz_obj *obj);
 void fz_arraypush(fz_obj *array, fz_obj *obj);
+void fz_arrayinsert(fz_obj *array, fz_obj *obj);
 
 int fz_dictlen(fz_obj *dict);
 fz_obj *fz_dictgetkey(fz_obj *dict, int idx);
@@ -447,6 +447,7 @@ void fz_sortdict(fz_obj *dict);
 int fz_sprintobj(char *s, int n, fz_obj *obj, int tight);
 int fz_fprintobj(FILE *fp, fz_obj *obj, int tight);
 void fz_debugobj(fz_obj *obj);
+void fz_debugref(fz_obj *obj);
 
 char *fz_objkindstr(fz_obj *obj);
 

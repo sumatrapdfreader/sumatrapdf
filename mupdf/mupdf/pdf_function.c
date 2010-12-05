@@ -1071,7 +1071,6 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 			x = (x << 8) + fz_readbyte(stream);
 			s = x / 65535.0f;
 		}
-		/* SumatraPDF: readd the case bps == 24 */
 		else if (bps == 24) {
 			unsigned int x = fz_readbyte(stream);
 			x = (x << 8) + fz_readbyte(stream);
@@ -1106,7 +1105,7 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 	int e0[MAXM], e1[MAXM];
 	float efrac[MAXM];
 	float x;
-	int i;
+	int i, k;
 
 	/* encode input coordinates */
 	for (i = 0; i < func->m; i++)
@@ -1135,10 +1134,13 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 
 		else if (func->m == 2)
 		{
-			float a = func->u.sa.samples[(e0[0] +  e0[1] * func->u.sa.size[0]) * func->n + i];
-			float b = func->u.sa.samples[(e1[0] +  e0[1] * func->u.sa.size[0]) * func->n + i];
-			float c = func->u.sa.samples[(e0[0] +  e1[1] * func->u.sa.size[0]) * func->n + i];
-			float d = func->u.sa.samples[(e1[0] +  e1[1] * func->u.sa.size[0]) * func->n + i];
+			int s0 = func->n;
+			int s1 = s0 * func->u.sa.size[0];
+
+			float a = func->u.sa.samples[e0[0] * s0 +  e0[1] * s1 + i];
+			float b = func->u.sa.samples[e1[0] * s0 +  e0[1] * s1 + i];
+			float c = func->u.sa.samples[e0[0] * s0 +  e1[1] * s1 + i];
+			float d = func->u.sa.samples[e1[0] * s0 +  e1[1] * s1 + i];
 
 			float ab = a + (b - a) * efrac[0];
 			float cd = c + (d - c) * efrac[0];
@@ -1148,38 +1150,52 @@ evalsamplefunc(pdf_function *func, float *in, float *out)
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 
-		/* SumatraPDF: readd the case func->m == 4 */
-		else if (func->m == 4)
+		else if (func->m == 3)
 		{
-			float s0[1 << 4];
-			float s1[1 << 4];
-			int j, k;
+			int s0 = func->n;
+			int s1 = s0 * func->u.sa.size[0];
+			int s2 = s1 * func->u.sa.size[1];
 
-			/* pull 2^m values out of the sample array */
-			for (j = 0; j < (1 << func->m); ++j)
-			{
-				int idx = 0;
-				for (k = func->m - 1; k >= 0; --k)
-                    idx = idx * func->u.sa.size[k] + (((j >> k) & 1) ? e1 : e0)[k];
-				idx = idx * func->n + i;
-				s0[j] = func->u.sa.samples[idx];
- 			}
+			float a = func->u.sa.samples[e0[0] * s0 +  e0[1] * s1 + e0[2] * s2 + i];
+			float b = func->u.sa.samples[e1[0] * s0 +  e0[1] * s1 + e0[2] * s2 + i];
+			float c = func->u.sa.samples[e0[0] * s0 +  e1[1] * s1 + e0[2] * s2 + i];
+			float d = func->u.sa.samples[e1[0] * s0 +  e1[1] * s1 + e0[2] * s2 + i];
 
-			/* do m sets of interpolations */
-			for (j = 0; j < func->m; ++j)
-			{
-				for (k = 0; k < (1 << (func->m - j)); k += 2)
-					s1[k >> 1] = (1 - efrac[j]) * s0[k] + efrac[j] * s0[k+1];
-				memcpy(s0, s1, (1 << (func->m - j - 1)) * sizeof(float));
- 			}
+			float ab = a + (b - a) * efrac[0];
+			float cd = c + (d - c) * efrac[0];
+			float abcd = ab + (cd - ab) * efrac[1];
 
-			out[i] = LERP(s0[0], 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			float e = func->u.sa.samples[e0[0] * s0 +  e0[1] * s1 + e1[2] * s2 + i];
+			float f = func->u.sa.samples[e1[0] * s0 +  e0[1] * s1 + e1[2] * s2 + i];
+			float g = func->u.sa.samples[e0[0] * s0 +  e1[1] * s1 + e1[2] * s2 + i];
+			float h = func->u.sa.samples[e1[0] * s0 +  e1[1] * s1 + e1[2] * s2 + i];
+
+			float ef = e + (f - e) * efrac[0];
+			float gh = g + (h - g) * efrac[0];
+			float efgh = ef + (gh - ef) * efrac[1];
+
+			float abcdefgh = abcd + (efgh - abcd) * efrac[2];
+
+			out[i] = LERP(abcdefgh, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
 			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 
 		else
 		{
-			return fz_throw("sampled %d-d functions not implemented", func->m);
+			int idx = 0;
+			int scale = func->n;
+			float x;
+
+			for (k = 0; k < func->m; k++)
+			{
+				idx = idx + e0[k] * scale;
+				scale = scale * func->u.sa.size[k];
+			}
+
+			x = func->u.sa.samples[idx + i];
+
+			out[i] = LERP(x, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
+			out[i] = CLAMP(out[i], func->range[i][0], func->range[i][1]);
 		}
 	}
 

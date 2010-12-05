@@ -21,6 +21,7 @@ static int *renumbermap = NULL;
 
 static int dogarbage = 0;
 static int doexpand = 0;
+static int doascii = 0;
 
 static pdf_xref *xref = NULL;
 
@@ -41,6 +42,7 @@ static void usage(void)
 		"\t-gg\tin addition to -g compact xref table\n"
 		"\t-ggg\tin addition to -gg merge duplicate objects\n"
 		"\t-d\tdecompress streams\n"
+		"\t-a\tascii hex encode binary streams\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
 }
@@ -239,7 +241,7 @@ static void renumberobjs(void)
 
 	/* Create new table for the reordered, compacted xref */
 	oldxref = xref->table;
-	xref->table = fz_malloc(xref->cap * sizeof (pdf_xrefentry));
+	xref->table = fz_malloc(xref->len * sizeof (pdf_xrefentry));
 	xref->table[0] = oldxref[0];
 
 	/* Move used objects into the new compacted xref */
@@ -385,14 +387,117 @@ static void preloadobjstms(void)
  * Save streams and objects to the output
  */
 
+static inline int isbinary(int c)
+{
+	if (c == '\n' || c == '\r' || c == '\t')
+		return 0;
+	return c < 32 || c > 127;
+}
+
+static int isbinarystream(fz_buffer *buf)
+{
+	int i;
+	for (i = 0; i < buf->len; i++)
+		if (isbinary(buf->data[i]))
+			return 1;
+	return 0;
+}
+
+static fz_buffer *hexbuf(unsigned char *p, int n)
+{
+	static const char hex[16] = "0123456789abcdef";
+	fz_buffer *buf;
+	int x = 0;
+
+	buf = fz_newbuffer(n * 2 + (n / 32) + 2);
+
+	while (n--)
+	{
+		buf->data[buf->len++] = hex[*p >> 4];
+		buf->data[buf->len++] = hex[*p & 15];
+		if (++x == 32)
+		{
+			buf->data[buf->len++] = '\n';
+			x = 0;
+		}
+		p++;
+	}
+
+	buf->data[buf->len++] = '>';
+	buf->data[buf->len++] = '\n';
+
+	return buf;
+}
+
+static void addhexfilter(fz_obj *dict)
+{
+	fz_obj *f, *dp, *newf, *newdp;
+	fz_obj *ahx, *nullobj;
+
+	ahx = fz_newname("ASCIIHexDecode");
+	nullobj = fz_newnull();
+	newf = newdp = nil;
+
+	f = fz_dictgets(dict, "Filter");
+	dp = fz_dictgets(dict, "DecodeParms");
+
+	if (fz_isname(f))
+	{
+		newf = fz_newarray(2);
+		fz_arraypush(newf, ahx);
+		fz_arraypush(newf, f);
+		f = newf;
+		if (fz_isdict(dp))
+		{
+			newdp = fz_newarray(2);
+			fz_arraypush(newdp, nullobj);
+			fz_arraypush(newdp, dp);
+			dp = newdp;
+		}
+	}
+	else if (fz_isarray(f))
+	{
+		fz_arrayinsert(f, ahx);
+		if (fz_isarray(dp))
+			fz_arrayinsert(dp, nullobj);
+	}
+	else
+		f = ahx;
+
+	fz_dictputs(dict, "Filter", f);
+	if (dp)
+		fz_dictputs(dict, "DecodeParms", dp);
+
+	fz_dropobj(ahx);
+	fz_dropobj(nullobj);
+	if (newf)
+		fz_dropobj(newf);
+	if (newdp)
+		fz_dropobj(newdp);
+}
+
 static void copystream(fz_obj *obj, int num, int gen)
 {
 	fz_error error;
-	fz_buffer *buf;
+	fz_buffer *buf, *tmp;
+	fz_obj *newlen;
 
 	error = pdf_loadrawstream(&buf, xref, num, gen);
 	if (error)
 		die(error);
+
+	if (doascii && isbinarystream(buf))
+	{
+		tmp = hexbuf(buf->data, buf->len);
+		fz_dropbuffer(buf);
+		buf = tmp;
+
+		addhexfilter(obj);
+
+		newlen = fz_newint(buf->len);
+		fz_dictputs(obj, "Length", newlen);
+		fz_dropobj(newlen);
+	}
 
 	fprintf(out, "%d %d obj\n", num, gen);
 	fz_fprintobj(out, obj, !doexpand);
@@ -406,28 +511,34 @@ static void copystream(fz_obj *obj, int num, int gen)
 static void expandstream(fz_obj *obj, int num, int gen)
 {
 	fz_error error;
-	fz_buffer *buf;
-	fz_obj *newdict, *newlen;
+	fz_buffer *buf, *tmp;
+	fz_obj *newlen;
 
 	error = pdf_loadstream(&buf, xref, num, gen);
 	if (error)
 		die(error);
 
-	newdict = fz_copydict(obj);
-	fz_dictdels(newdict, "Filter");
-	fz_dictdels(newdict, "DecodeParms");
+	fz_dictdels(obj, "Filter");
+	fz_dictdels(obj, "DecodeParms");
+
+	if (doascii && isbinarystream(buf))
+	{
+		tmp = hexbuf(buf->data, buf->len);
+		fz_dropbuffer(buf);
+		buf = tmp;
+
+		addhexfilter(obj);
+	}
 
 	newlen = fz_newint(buf->len);
-	fz_dictputs(newdict, "Length", newlen);
+	fz_dictputs(obj, "Length", newlen);
 	fz_dropobj(newlen);
 
 	fprintf(out, "%d %d obj\n", num, gen);
-	fz_fprintobj(out, newdict, !doexpand);
+	fz_fprintobj(out, obj, !doexpand);
 	fprintf(out, "stream\n");
 	fwrite(buf->data, 1, buf->len, out);
 	fprintf(out, "endstream\nendobj\n\n");
-
-	fz_dropobj(newdict);
 
 	fz_dropbuffer(buf);
 }
@@ -468,7 +579,7 @@ static void writeobject(int num, int gen)
 	}
 	else
 	{
-		if (doexpand)
+		if (doexpand && !pdf_isjpximage(obj))
 			expandstream(obj, num, gen);
 		else
 			copystream(obj, num, gen);
@@ -572,13 +683,14 @@ int main(int argc, char **argv)
 	int c, num;
 	int subset;
 
-	while ((c = fz_getopt(argc, argv, "gdp:")) != -1)
+	while ((c = fz_getopt(argc, argv, "adgp:")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'g': dogarbage ++; break;
 		case 'd': doexpand ++; break;
+		case 'a': doascii ++; break;
 		default: usage(); break;
 		}
 	}

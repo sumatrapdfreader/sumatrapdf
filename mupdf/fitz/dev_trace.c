@@ -106,7 +106,6 @@ fz_tracestrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix 
 static void
 fz_traceclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 {
-	printf("<gsave>\n");
 	printf("<clippath ");
 	if (evenodd)
 		printf("winding=\"eofill\" ");
@@ -121,7 +120,6 @@ fz_traceclippath(void *user, fz_path *path, int evenodd, fz_matrix ctm)
 static void
 fz_traceclipstrokepath(void *user, fz_path *path, fz_strokestate *stroke, fz_matrix ctm)
 {
-	printf("<gsave>\n");
 	printf("<clipstrokepath ");
 	fz_tracematrix(ctm);
 	printf(">\n");
@@ -156,7 +154,6 @@ fz_tracestroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix 
 static void
 fz_tracecliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 {
-	printf("<gsave>\n");
 	printf("<cliptext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	printf("accumulate=\"%d\" ", accumulate);
 	fz_tracematrix(fz_concat(ctm, text->trm));
@@ -168,7 +165,6 @@ fz_tracecliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 static void
 fz_traceclipstroketext(void *user, fz_text *text, fz_strokestate *stroke, fz_matrix ctm)
 {
-	printf("<gsave>\n");
 	printf("<clipstroketext font=\"%s\" wmode=\"%d\" ", text->font->name, text->wmode);
 	fz_tracematrix(fz_concat(ctm, text->trm));
 	printf(">\n");
@@ -215,7 +211,6 @@ fz_colorspace *colorspace, float *color, float alpha)
 static void
 fz_traceclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 {
-	printf("<gsave>\n");
 	printf("<clipimagemask ");
 	fz_tracematrix(ctm);
 	printf("/>\n");
@@ -224,13 +219,12 @@ fz_traceclipimagemask(void *user, fz_pixmap *image, fz_matrix ctm)
 static void
 fz_tracepopclip(void *user)
 {
-	printf("</gsave>\n");
+	printf("<popclip />\n");
 }
 
 static void
 fz_tracebeginmask(void *user, fz_rect bbox, int luminosity, fz_colorspace *colorspace, float *color)
 {
-	printf("<gsave>\n");
 	printf("<mask bbox=\"%g %g %g %g\" s=\"%s\" ",
 		bbox.x0, bbox.y0, bbox.x1, bbox.y1,
 		luminosity ? "luminosity" : "alpha");

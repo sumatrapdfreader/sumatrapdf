@@ -191,12 +191,13 @@ pdf_runxobject(pdf_csi *csi, fz_obj *resources, pdf_xobject *xobj)
 		if (gstate->softmask)
 		{
 			pdf_xobject *softmask = gstate->softmask;
-			fz_rect bbox = fz_transformrect(gstate->ctm, xobj->bbox);
+			fz_rect bbox = fz_transformrect(gstate->ctm, softmask->bbox);
 
 			gstate->softmask = nil;
 			popmask = 1;
 
-			csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity, softmask->colorspace, gstate->softmaskbc);
+			csi->dev->beginmask(csi->dev->user, bbox, gstate->luminosity,
+				softmask->colorspace, gstate->softmaskbc);
 			error = pdf_runxobject(csi, resources, softmask);
 			if (error)
 				return fz_rethrow(error, "cannot run softmask");

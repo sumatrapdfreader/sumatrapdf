@@ -251,10 +251,13 @@ pdf_loadinlineimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict,
 	return fz_okay;
 }
 
-static int
-pdf_isjpximage(fz_obj *filter)
+int
+pdf_isjpximage(fz_obj *dict)
 {
+	fz_obj *filter;
 	int i;
+
+	filter = fz_dictgets(dict, "Filter");
 	if (!strcmp(fz_toname(filter), "JPXDecode"))
 		return 1;
 	for (i = 0; i < fz_arraylen(filter); i++)
@@ -331,7 +334,6 @@ fz_error
 pdf_loadimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 {
 	fz_error error;
-	fz_obj *obj;
 
 	if ((*pixp = pdf_finditem(xref->store, fz_droppixmap, dict)))
 	{
@@ -342,8 +344,7 @@ pdf_loadimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	pdf_logimage("load image (%d 0 R) {\n", fz_tonum(dict));
 
 	/* special case for JPEG2000 images */
-	obj = fz_dictgets(dict, "Filter");
-	if (pdf_isjpximage(obj))
+	if (pdf_isjpximage(dict))
 	{
 		error = pdf_loadjpximage(pixp, xref, rdb, dict);
 		if (error)

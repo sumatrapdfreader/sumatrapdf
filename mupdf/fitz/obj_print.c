@@ -325,3 +325,12 @@ fz_debugobj(fz_obj *obj)
 {
 	fz_fprintobj(stdout, obj, 0);
 }
+
+void
+fz_debugref(fz_obj *ref)
+{
+	fz_obj *obj;
+	obj = fz_resolveindirect(ref);
+	fz_debugobj(obj);
+}
+

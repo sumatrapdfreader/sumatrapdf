@@ -175,6 +175,23 @@ pdf_readtrailer(pdf_xref *xref, char *buf, int cap)
  * xref tables
  */
 
+void
+pdf_resizexref(pdf_xref *xref, int newlen)
+{
+	int i;
+
+	xref->table = fz_realloc(xref->table, newlen * sizeof(pdf_xrefentry));
+	for (i = xref->len; i < newlen; i++)
+	{
+		xref->table[i].type = 0;
+		xref->table[i].ofs = 0;
+		xref->table[i].gen = 0;
+		xref->table[i].stmofs = 0;
+		xref->table[i].obj = nil;
+	}
+	xref->len = newlen;
+}
+
 static fz_error
 pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 {
@@ -211,24 +228,10 @@ pdf_readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		}
 
 		/* broken pdfs where size in trailer undershoots entries in xref sections */
-		if (ofs + len > xref->cap)
+		if (ofs + len > xref->len)
 		{
 			fz_warn("broken xref section, proceeding anyway.");
-			xref->cap = ofs + len;
-			xref->table = fz_realloc(xref->table, xref->cap * sizeof(pdf_xrefentry));
-		}
-
-		if ((ofs + len) > xref->len)
-		{
-			for (i = xref->len; i < (ofs + len); i++)
-			{
-				xref->table[i].ofs = 0;
-				xref->table[i].gen = 0;
-				xref->table[i].stmofs = 0;
-				xref->table[i].obj = nil;
-				xref->table[i].type = 0;
-			}
-			xref->len = ofs + len;
+			pdf_resizexref(xref, ofs + len);
 		}
 
 		for (i = ofs; i < ofs + len; i++)
@@ -318,7 +321,6 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	int num, gen, stmofs;
 	int size, w0, w1, w2;
 	int t;
-	int i;
 
 	pdf_logxref("load new xref format\n");
 
@@ -334,38 +336,15 @@ pdf_readnewxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 	}
 	size = fz_toint(obj);
 
-	if (size >= xref->cap)
-	{
-		xref->cap = size + 1; /* for hack to allow broken pdf generators with off-by-one errors */
-		xref->table = fz_realloc(xref->table, xref->cap * sizeof(pdf_xrefentry));
-	}
-
 	if (size > xref->len)
 	{
-		for (i = xref->len; i < xref->cap; i++)
-		{
-			xref->table[i].ofs = 0;
-			xref->table[i].gen = 0;
-			xref->table[i].stmofs = 0;
-			xref->table[i].obj = nil;
-			xref->table[i].type = 0;
-		}
-		xref->len = size;
+		pdf_resizexref(xref, size);
 	}
 
 	if (num < 0 || num >= xref->len)
 	{
-		if (num == xref->len && num < xref->cap)
-		{
-			/* allow broken pdf files that have off-by-one errors in the xref */
-			fz_warn("object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
-			xref->len ++;
-		}
-		else
-		{
-			fz_dropobj(trailer);
-			return fz_throw("object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
-		}
+		fz_dropobj(trailer);
+		return fz_throw("object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
 	}
 
 	pdf_logxref("\tnum=%d gen=%d size=%d\n", num, gen, size);
@@ -523,17 +502,7 @@ pdf_loadxref(pdf_xref *xref, char *buf, int bufsize)
 
 	pdf_logxref("\tsize %d at %#x\n", fz_toint(size), xref->startxref);
 
-	xref->len = fz_toint(size);
-	xref->cap = xref->len + 1; /* for hack to allow broken pdf generators with off-by-one errors */
-	xref->table = fz_malloc(xref->cap * sizeof(pdf_xrefentry));
-	for (i = 0; i < xref->cap; i++)
-	{
-		xref->table[i].ofs = 0;
-		xref->table[i].gen = 0;
-		xref->table[i].stmofs = 0;
-		xref->table[i].obj = nil;
-		xref->table[i].type = 0;
-	}
+	pdf_resizexref(xref, fz_toint(size));
 
 	error = pdf_readxrefsections(xref, xref->startxref, buf, bufsize);
 	if (error)
@@ -547,7 +516,7 @@ pdf_loadxref(pdf_xref *xref, char *buf, int bufsize)
 	for (i = 0; i < xref->len; i++)
 		if (xref->table[i].type == 'n')
 			if (xref->table[i].ofs <= 0 || xref->table[i].ofs >= xref->filesize)
-				return fz_throw("object offset out of range: %d", xref->table[i].ofs);
+				return fz_throw("object offset out of range: %d (%d 0 R)", xref->table[i].ofs, i);
 
 	return fz_okay;
 }
@@ -564,6 +533,8 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 	fz_error error;
 	fz_obj *encrypt;
 	fz_obj *id;
+
+	int repaired = 0;
 
 	xref = fz_malloc(sizeof(pdf_xref));
 
@@ -582,7 +553,6 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 			fz_free(xref->table);
 			xref->table = NULL;
 			xref->len = 0;
-			xref->cap = 0;
 		}
 		/* SumatraPDF: fix memory leak */
 		if (xref->trailer)
@@ -596,6 +566,7 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 			pdf_freexref(xref);
 			return fz_rethrow(error, "cannot repair document");
 		}
+		repaired = 1;
 	}
 
 	encrypt = fz_dictgets(xref->trailer, "Encrypt");
@@ -621,6 +592,16 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 				pdf_freexref(xref);
 				return fz_throw("invalid password");
 			}
+		}
+	}
+
+	if (repaired)
+	{
+		error = pdf_repairobjstms(xref);
+		if (error)
+		{
+			pdf_freexref(xref);
+			return fz_rethrow(error, "cannot repair document");
 		}
 	}
 

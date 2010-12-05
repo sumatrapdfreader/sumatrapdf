@@ -104,6 +104,29 @@ fz_arraypush(fz_obj *obj, fz_obj *item)
 }
 
 void
+fz_arrayinsert(fz_obj *obj, fz_obj *item)
+{
+	obj = fz_resolveindirect(obj);
+
+	if (!fz_isarray(obj))
+		fz_warn("assert: not an array (%s)", fz_objkindstr(obj));
+	else
+	{
+		if (obj->u.a.len + 1 > obj->u.a.cap)
+		{
+			int i;
+			obj->u.a.cap = (obj->u.a.cap * 3) / 2;
+			obj->u.a.items = fz_realloc(obj->u.a.items, sizeof (fz_obj*) * obj->u.a.cap);
+			for (i = obj->u.a.len ; i < obj->u.a.cap; i++)
+				obj->u.a.items[i] = nil;
+		}
+		memmove(obj->u.a.items + 1, obj->u.a.items, obj->u.a.len * sizeof(fz_obj*));
+		obj->u.a.items[0] = fz_keepobj(item);
+		obj->u.a.len++;
+	}
+}
+
+void
 fz_freearray(fz_obj *obj)
 {
 	int i;
