@@ -126,6 +126,9 @@ pdf_freecsi(pdf_csi *csi)
 	pdf_dropmaterial(&csi->gstate[0].stroke);
 	if (csi->gstate[0].font)
 		pdf_dropfont(csi->gstate[0].font);
+	/* SumatraPDF: fix memory leak */
+	if (csi->gstate[0].softmask)
+		pdf_dropxobject(csi->gstate[0].softmask);
 
 	while (csi->gstate[0].clipdepth--)
 		csi->dev->popclip(csi->dev->user);
@@ -383,7 +386,7 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 
 				gstate->softmaskctm = fz_concat(xobj->matrix, gstate->ctm);
 				gstate->softmask = xobj;
-				gstate->softmaskbc[0] = 0;
+				memset(gstate->softmaskbc, 0, sizeof(gstate->softmaskbc)); // gstate->softmaskbc[0] = 0;
 
 				bc = fz_dictgets(val, "BC");
 				if (fz_isarray(bc))

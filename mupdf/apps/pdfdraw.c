@@ -89,7 +89,7 @@ static int isrange(char *s)
 }
 
 #ifdef GDI_PLUS_BMP_RENDERER
-static void drawbmp(pdf_page *page, fz_displaylist *list, int pagenum)
+static void drawbmp(pdf_xref *xref, pdf_page *page, fz_displaylist *list, int pagenum)
 {
 	float zoom;
 	fz_matrix ctm;
@@ -129,7 +129,10 @@ static void drawbmp(pdf_page *page, fz_displaylist *list, int pagenum)
 	bbox.y0 = 0; bbox.y1 = h;
 
 	dev = fz_newgdiplusdevice(hDC, bbox);
-	fz_executedisplaylist(list, dev, ctm);
+	if (list)
+		fz_executedisplaylist2(list, dev, ctm, bbox);
+	else
+		pdf_runpage(xref, page, dev, ctm);
 	fz_freedevice(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -255,7 +258,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 
 #ifdef GDI_PLUS_BMP_RENDERER
 	if (output && strstr(output, ".bmp"))
-		drawbmp(page, list, pagenum);
+		drawbmp(xref, page, list, pagenum);
 	else
 #endif
 	if (output || showmd5 || showtime)
