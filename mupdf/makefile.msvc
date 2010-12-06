@@ -14,12 +14,12 @@ CFG=dbg
 O = obj-$(CFG)-win
 !endif
 
-# To over-ride location of fitz/mupdf sources, define FITZ_DIR
+# To over-ride location of fitz/mupdf sources, define MUPDF_DIR
 # e.g.:
-#FITZ_DIR=..\mupdf
+#MUPDF_DIR=..\mupdf
 
-!if "$(FITZ_DIR)"==""
-FITZ_DIR=.
+!if "$(MUPDF_DIR)"==""
+MUPDF_DIR=.
 !endif
 
 !if "$(EXTLIBSDIR)"==""
@@ -79,7 +79,7 @@ FITZ_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC"
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
-FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(FITZ_DIR)/fitz /I$(FITZ_DIR)/mupdf /I$(FITZ_DIR)/apps \
+FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
@@ -250,8 +250,8 @@ cleanall: force
 $(O): force
 	@if not exist $(O) mkdir $(O)
 
-$(PDFAPP_RES): $(FITZ_DIR)\apps\win_res.rc
-	rc /r /fo$(PDFAPP_RES) $(FITZ_DIR)\apps\win_res.rc
+$(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
+	rc /r /fo$(PDFAPP_RES) $(MUPDF_DIR)\apps\win_res.rc
 
 $(O)\cmap_tounicode.obj: $(O)\cmap_tounicode.c
 $(O)\cmap_cns.obj: $(O)\cmap_cns.c
@@ -261,168 +261,168 @@ $(O)\cmap_korea.obj: $(O)\cmap_korea.c
 
 $(O)\cmap_tounicode.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_tounicode.c \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-UCS2 \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-UCS2 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-UCS2 \
-	$(FITZ_DIR)\cmaps\Adobe-Korea1-UCS2
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-UCS2 \
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-UCS2 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-UCS2 \
+	$(MUPDF_DIR)\cmaps\Adobe-Korea1-UCS2
 
 $(O)\cmap_cns.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_cns.c \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-0 \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-1 \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-2 \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-3 \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-4 \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-5 \
-	$(FITZ_DIR)\cmaps\Adobe-CNS1-6 \
-	$(FITZ_DIR)\cmaps\B5-H \
-	$(FITZ_DIR)\cmaps\B5-V \
-	$(FITZ_DIR)\cmaps\B5pc-H \
-	$(FITZ_DIR)\cmaps\B5pc-V \
-	$(FITZ_DIR)\cmaps\CNS-EUC-H \
-	$(FITZ_DIR)\cmaps\CNS-EUC-V \
-	$(FITZ_DIR)\cmaps\CNS1-H \
-	$(FITZ_DIR)\cmaps\CNS1-V \
-	$(FITZ_DIR)\cmaps\CNS2-H \
-	$(FITZ_DIR)\cmaps\CNS2-V \
-	$(FITZ_DIR)\cmaps\ETen-B5-H \
-	$(FITZ_DIR)\cmaps\ETen-B5-V \
-	$(FITZ_DIR)\cmaps\ETenms-B5-H \
-	$(FITZ_DIR)\cmaps\ETenms-B5-V \
-	$(FITZ_DIR)\cmaps\ETHK-B5-H \
-	$(FITZ_DIR)\cmaps\ETHK-B5-V \
-	$(FITZ_DIR)\cmaps\HKdla-B5-H \
-	$(FITZ_DIR)\cmaps\HKdla-B5-V \
-	$(FITZ_DIR)\cmaps\HKdlb-B5-H \
-	$(FITZ_DIR)\cmaps\HKdlb-B5-V \
-	$(FITZ_DIR)\cmaps\HKgccs-B5-H \
-	$(FITZ_DIR)\cmaps\HKgccs-B5-V \
-	$(FITZ_DIR)\cmaps\HKm314-B5-H \
-	$(FITZ_DIR)\cmaps\HKm314-B5-V \
-	$(FITZ_DIR)\cmaps\HKm471-B5-H \
-	$(FITZ_DIR)\cmaps\HKm471-B5-V \
-	$(FITZ_DIR)\cmaps\HKscs-B5-H \
-	$(FITZ_DIR)\cmaps\HKscs-B5-V \
-	$(FITZ_DIR)\cmaps\UniCNS-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniCNS-UCS2-V \
-	$(FITZ_DIR)\cmaps\UniCNS-UTF16-H \
-	$(FITZ_DIR)\cmaps\UniCNS-UTF16-V
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-0 \
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-1 \
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-2 \
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-3 \
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-4 \
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-5 \
+	$(MUPDF_DIR)\cmaps\Adobe-CNS1-6 \
+	$(MUPDF_DIR)\cmaps\B5-H \
+	$(MUPDF_DIR)\cmaps\B5-V \
+	$(MUPDF_DIR)\cmaps\B5pc-H \
+	$(MUPDF_DIR)\cmaps\B5pc-V \
+	$(MUPDF_DIR)\cmaps\CNS-EUC-H \
+	$(MUPDF_DIR)\cmaps\CNS-EUC-V \
+	$(MUPDF_DIR)\cmaps\CNS1-H \
+	$(MUPDF_DIR)\cmaps\CNS1-V \
+	$(MUPDF_DIR)\cmaps\CNS2-H \
+	$(MUPDF_DIR)\cmaps\CNS2-V \
+	$(MUPDF_DIR)\cmaps\ETen-B5-H \
+	$(MUPDF_DIR)\cmaps\ETen-B5-V \
+	$(MUPDF_DIR)\cmaps\ETenms-B5-H \
+	$(MUPDF_DIR)\cmaps\ETenms-B5-V \
+	$(MUPDF_DIR)\cmaps\ETHK-B5-H \
+	$(MUPDF_DIR)\cmaps\ETHK-B5-V \
+	$(MUPDF_DIR)\cmaps\HKdla-B5-H \
+	$(MUPDF_DIR)\cmaps\HKdla-B5-V \
+	$(MUPDF_DIR)\cmaps\HKdlb-B5-H \
+	$(MUPDF_DIR)\cmaps\HKdlb-B5-V \
+	$(MUPDF_DIR)\cmaps\HKgccs-B5-H \
+	$(MUPDF_DIR)\cmaps\HKgccs-B5-V \
+	$(MUPDF_DIR)\cmaps\HKm314-B5-H \
+	$(MUPDF_DIR)\cmaps\HKm314-B5-V \
+	$(MUPDF_DIR)\cmaps\HKm471-B5-H \
+	$(MUPDF_DIR)\cmaps\HKm471-B5-V \
+	$(MUPDF_DIR)\cmaps\HKscs-B5-H \
+	$(MUPDF_DIR)\cmaps\HKscs-B5-V \
+	$(MUPDF_DIR)\cmaps\UniCNS-UCS2-H \
+	$(MUPDF_DIR)\cmaps\UniCNS-UCS2-V \
+	$(MUPDF_DIR)\cmaps\UniCNS-UTF16-H \
+	$(MUPDF_DIR)\cmaps\UniCNS-UTF16-V
 
 $(O)\cmap_gb.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_gb.c \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-0 \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-1 \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-2 \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-3 \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-4 \
-	$(FITZ_DIR)\cmaps\Adobe-GB1-5 \
-	$(FITZ_DIR)\cmaps\GB-EUC-H \
-	$(FITZ_DIR)\cmaps\GB-EUC-V \
-	$(FITZ_DIR)\cmaps\GB-H \
-	$(FITZ_DIR)\cmaps\GB-V \
-	$(FITZ_DIR)\cmaps\GBK-EUC-H \
-	$(FITZ_DIR)\cmaps\GBK-EUC-V \
-	$(FITZ_DIR)\cmaps\GBK2K-H \
-	$(FITZ_DIR)\cmaps\GBK2K-V \
-	$(FITZ_DIR)\cmaps\GBKp-EUC-H \
-	$(FITZ_DIR)\cmaps\GBKp-EUC-V \
-	$(FITZ_DIR)\cmaps\GBpc-EUC-H \
-	$(FITZ_DIR)\cmaps\GBpc-EUC-V \
-	$(FITZ_DIR)\cmaps\GBT-EUC-H \
-	$(FITZ_DIR)\cmaps\GBT-EUC-V \
-	$(FITZ_DIR)\cmaps\GBT-H \
-	$(FITZ_DIR)\cmaps\GBT-V \
-	$(FITZ_DIR)\cmaps\GBTpc-EUC-H \
-	$(FITZ_DIR)\cmaps\GBTpc-EUC-V \
-	$(FITZ_DIR)\cmaps\UniGB-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniGB-UCS2-V \
-	$(FITZ_DIR)\cmaps\UniGB-UTF16-H \
-	$(FITZ_DIR)\cmaps\UniGB-UTF16-V
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-0 \
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-1 \
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-2 \
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-3 \
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-4 \
+	$(MUPDF_DIR)\cmaps\Adobe-GB1-5 \
+	$(MUPDF_DIR)\cmaps\GB-EUC-H \
+	$(MUPDF_DIR)\cmaps\GB-EUC-V \
+	$(MUPDF_DIR)\cmaps\GB-H \
+	$(MUPDF_DIR)\cmaps\GB-V \
+	$(MUPDF_DIR)\cmaps\GBK-EUC-H \
+	$(MUPDF_DIR)\cmaps\GBK-EUC-V \
+	$(MUPDF_DIR)\cmaps\GBK2K-H \
+	$(MUPDF_DIR)\cmaps\GBK2K-V \
+	$(MUPDF_DIR)\cmaps\GBKp-EUC-H \
+	$(MUPDF_DIR)\cmaps\GBKp-EUC-V \
+	$(MUPDF_DIR)\cmaps\GBpc-EUC-H \
+	$(MUPDF_DIR)\cmaps\GBpc-EUC-V \
+	$(MUPDF_DIR)\cmaps\GBT-EUC-H \
+	$(MUPDF_DIR)\cmaps\GBT-EUC-V \
+	$(MUPDF_DIR)\cmaps\GBT-H \
+	$(MUPDF_DIR)\cmaps\GBT-V \
+	$(MUPDF_DIR)\cmaps\GBTpc-EUC-H \
+	$(MUPDF_DIR)\cmaps\GBTpc-EUC-V \
+	$(MUPDF_DIR)\cmaps\UniGB-UCS2-H \
+	$(MUPDF_DIR)\cmaps\UniGB-UCS2-V \
+	$(MUPDF_DIR)\cmaps\UniGB-UTF16-H \
+	$(MUPDF_DIR)\cmaps\UniGB-UTF16-V
 
 $(O)\cmap_japan.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_japan.c \
-	$(FITZ_DIR)\cmaps\78-EUC-H \
-	$(FITZ_DIR)\cmaps\78-EUC-V \
-	$(FITZ_DIR)\cmaps\78-H \
-	$(FITZ_DIR)\cmaps\78-RKSJ-H \
-	$(FITZ_DIR)\cmaps\78-RKSJ-V \
-	$(FITZ_DIR)\cmaps\78-V \
-	$(FITZ_DIR)\cmaps\78ms-RKSJ-H \
-	$(FITZ_DIR)\cmaps\78ms-RKSJ-V \
-	$(FITZ_DIR)\cmaps\83pv-RKSJ-H \
-	$(FITZ_DIR)\cmaps\90ms-RKSJ-H \
-	$(FITZ_DIR)\cmaps\90ms-RKSJ-V \
-	$(FITZ_DIR)\cmaps\90msp-RKSJ-H \
-	$(FITZ_DIR)\cmaps\90msp-RKSJ-V \
-	$(FITZ_DIR)\cmaps\90pv-RKSJ-H \
-	$(FITZ_DIR)\cmaps\90pv-RKSJ-V \
-	$(FITZ_DIR)\cmaps\Add-H \
-	$(FITZ_DIR)\cmaps\Add-RKSJ-H \
-	$(FITZ_DIR)\cmaps\Add-RKSJ-V \
-	$(FITZ_DIR)\cmaps\Add-V \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-0 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-1 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-2 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-3 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-4 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-5 \
-	$(FITZ_DIR)\cmaps\Adobe-Japan1-6 \
-	$(FITZ_DIR)\cmaps\EUC-H \
-	$(FITZ_DIR)\cmaps\EUC-V \
-	$(FITZ_DIR)\cmaps\Ext-H \
-	$(FITZ_DIR)\cmaps\Ext-RKSJ-H \
-	$(FITZ_DIR)\cmaps\Ext-RKSJ-V \
-	$(FITZ_DIR)\cmaps\Ext-V \
-	$(FITZ_DIR)\cmaps\H \
-	$(FITZ_DIR)\cmaps\Hankaku \
-	$(FITZ_DIR)\cmaps\Hiragana \
-	$(FITZ_DIR)\cmaps\Katakana \
-	$(FITZ_DIR)\cmaps\NWP-H \
-	$(FITZ_DIR)\cmaps\NWP-V \
-	$(FITZ_DIR)\cmaps\RKSJ-H \
-	$(FITZ_DIR)\cmaps\RKSJ-V \
-	$(FITZ_DIR)\cmaps\Roman \
-	$(FITZ_DIR)\cmaps\UniJIS-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniJIS-UCS2-HW-H \
-	$(FITZ_DIR)\cmaps\UniJIS-UCS2-HW-V \
-	$(FITZ_DIR)\cmaps\UniJIS-UCS2-V \
-	$(FITZ_DIR)\cmaps\UniJISPro-UCS2-HW-V \
-	$(FITZ_DIR)\cmaps\UniJISPro-UCS2-V \
-	$(FITZ_DIR)\cmaps\V \
-	$(FITZ_DIR)\cmaps\WP-Symbol \
-	$(FITZ_DIR)\cmaps\Adobe-Japan2-0 \
-	$(FITZ_DIR)\cmaps\Hojo-EUC-H \
-	$(FITZ_DIR)\cmaps\Hojo-EUC-V \
-	$(FITZ_DIR)\cmaps\Hojo-H \
-	$(FITZ_DIR)\cmaps\Hojo-V \
-	$(FITZ_DIR)\cmaps\UniHojo-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniHojo-UCS2-V \
-	$(FITZ_DIR)\cmaps\UniHojo-UTF16-H \
-	$(FITZ_DIR)\cmaps\UniHojo-UTF16-V \
-	$(FITZ_DIR)\cmaps\UniJIS-UTF16-H \
-	$(FITZ_DIR)\cmaps\UniJIS-UTF16-V
+	$(MUPDF_DIR)\cmaps\78-EUC-H \
+	$(MUPDF_DIR)\cmaps\78-EUC-V \
+	$(MUPDF_DIR)\cmaps\78-H \
+	$(MUPDF_DIR)\cmaps\78-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\78-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\78-V \
+	$(MUPDF_DIR)\cmaps\78ms-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\78ms-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\83pv-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\90ms-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\90ms-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\90msp-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\90msp-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\90pv-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\90pv-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\Add-H \
+	$(MUPDF_DIR)\cmaps\Add-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\Add-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\Add-V \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-0 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-1 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-2 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-3 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-4 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-5 \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan1-6 \
+	$(MUPDF_DIR)\cmaps\EUC-H \
+	$(MUPDF_DIR)\cmaps\EUC-V \
+	$(MUPDF_DIR)\cmaps\Ext-H \
+	$(MUPDF_DIR)\cmaps\Ext-RKSJ-H \
+	$(MUPDF_DIR)\cmaps\Ext-RKSJ-V \
+	$(MUPDF_DIR)\cmaps\Ext-V \
+	$(MUPDF_DIR)\cmaps\H \
+	$(MUPDF_DIR)\cmaps\Hankaku \
+	$(MUPDF_DIR)\cmaps\Hiragana \
+	$(MUPDF_DIR)\cmaps\Katakana \
+	$(MUPDF_DIR)\cmaps\NWP-H \
+	$(MUPDF_DIR)\cmaps\NWP-V \
+	$(MUPDF_DIR)\cmaps\RKSJ-H \
+	$(MUPDF_DIR)\cmaps\RKSJ-V \
+	$(MUPDF_DIR)\cmaps\Roman \
+	$(MUPDF_DIR)\cmaps\UniJIS-UCS2-H \
+	$(MUPDF_DIR)\cmaps\UniJIS-UCS2-HW-H \
+	$(MUPDF_DIR)\cmaps\UniJIS-UCS2-HW-V \
+	$(MUPDF_DIR)\cmaps\UniJIS-UCS2-V \
+	$(MUPDF_DIR)\cmaps\UniJISPro-UCS2-HW-V \
+	$(MUPDF_DIR)\cmaps\UniJISPro-UCS2-V \
+	$(MUPDF_DIR)\cmaps\V \
+	$(MUPDF_DIR)\cmaps\WP-Symbol \
+	$(MUPDF_DIR)\cmaps\Adobe-Japan2-0 \
+	$(MUPDF_DIR)\cmaps\Hojo-EUC-H \
+	$(MUPDF_DIR)\cmaps\Hojo-EUC-V \
+	$(MUPDF_DIR)\cmaps\Hojo-H \
+	$(MUPDF_DIR)\cmaps\Hojo-V \
+	$(MUPDF_DIR)\cmaps\UniHojo-UCS2-H \
+	$(MUPDF_DIR)\cmaps\UniHojo-UCS2-V \
+	$(MUPDF_DIR)\cmaps\UniHojo-UTF16-H \
+	$(MUPDF_DIR)\cmaps\UniHojo-UTF16-V \
+	$(MUPDF_DIR)\cmaps\UniJIS-UTF16-H \
+	$(MUPDF_DIR)\cmaps\UniJIS-UTF16-V
 
 $(O)\cmap_korea.c: $(CMAPDUMP_APP)
 	$(CMAPDUMP_APP) $(O)\cmap_korea.c \
-	$(FITZ_DIR)\cmaps\Adobe-Korea1-0 \
-	$(FITZ_DIR)\cmaps\Adobe-Korea1-1 \
-	$(FITZ_DIR)\cmaps\Adobe-Korea1-2 \
-	$(FITZ_DIR)\cmaps\KSC-EUC-H \
-	$(FITZ_DIR)\cmaps\KSC-EUC-V \
-	$(FITZ_DIR)\cmaps\KSC-H \
-	$(FITZ_DIR)\cmaps\KSC-Johab-H \
-	$(FITZ_DIR)\cmaps\KSC-Johab-V \
-	$(FITZ_DIR)\cmaps\KSC-V \
-	$(FITZ_DIR)\cmaps\KSCms-UHC-H \
-	$(FITZ_DIR)\cmaps\KSCms-UHC-HW-H \
-	$(FITZ_DIR)\cmaps\KSCms-UHC-HW-V \
-	$(FITZ_DIR)\cmaps\KSCms-UHC-V \
-	$(FITZ_DIR)\cmaps\KSCpc-EUC-H \
-	$(FITZ_DIR)\cmaps\KSCpc-EUC-V \
-	$(FITZ_DIR)\cmaps\UniKS-UCS2-H \
-	$(FITZ_DIR)\cmaps\UniKS-UCS2-V \
-	$(FITZ_DIR)\cmaps\UniKS-UTF16-H \
-	$(FITZ_DIR)\cmaps\UniKS-UTF16-V
+	$(MUPDF_DIR)\cmaps\Adobe-Korea1-0 \
+	$(MUPDF_DIR)\cmaps\Adobe-Korea1-1 \
+	$(MUPDF_DIR)\cmaps\Adobe-Korea1-2 \
+	$(MUPDF_DIR)\cmaps\KSC-EUC-H \
+	$(MUPDF_DIR)\cmaps\KSC-EUC-V \
+	$(MUPDF_DIR)\cmaps\KSC-H \
+	$(MUPDF_DIR)\cmaps\KSC-Johab-H \
+	$(MUPDF_DIR)\cmaps\KSC-Johab-V \
+	$(MUPDF_DIR)\cmaps\KSC-V \
+	$(MUPDF_DIR)\cmaps\KSCms-UHC-H \
+	$(MUPDF_DIR)\cmaps\KSCms-UHC-HW-H \
+	$(MUPDF_DIR)\cmaps\KSCms-UHC-HW-V \
+	$(MUPDF_DIR)\cmaps\KSCms-UHC-V \
+	$(MUPDF_DIR)\cmaps\KSCpc-EUC-H \
+	$(MUPDF_DIR)\cmaps\KSCpc-EUC-V \
+	$(MUPDF_DIR)\cmaps\UniKS-UCS2-H \
+	$(MUPDF_DIR)\cmaps\UniKS-UCS2-V \
+	$(MUPDF_DIR)\cmaps\UniKS-UTF16-H \
+	$(MUPDF_DIR)\cmaps\UniKS-UTF16-V
 
 $(O)\font_misc.obj: $(O)\font_misc.c
 $(O)\font_mono.obj: $(O)\font_mono.c
@@ -432,34 +432,34 @@ $(O)\font_cjk.obj: $(O)\font_cjk.c
 
 $(O)\font_misc.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_misc.c \
-	$(FITZ_DIR)\fonts\Dingbats.cff \
-	$(FITZ_DIR)\fonts\StandardSymL.cff \
-	$(FITZ_DIR)\fonts\URWChanceryL-MediItal.cff
+	$(MUPDF_DIR)\fonts\Dingbats.cff \
+	$(MUPDF_DIR)\fonts\StandardSymL.cff \
+	$(MUPDF_DIR)\fonts\URWChanceryL-MediItal.cff
 
 $(O)\font_mono.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_mono.c \
-	$(FITZ_DIR)\fonts\NimbusMonL-Regu.cff \
-	$(FITZ_DIR)\fonts\NimbusMonL-ReguObli.cff \
-	$(FITZ_DIR)\fonts\NimbusMonL-Bold.cff \
-	$(FITZ_DIR)\fonts\NimbusMonL-BoldObli.cff
+	$(MUPDF_DIR)\fonts\NimbusMonL-Regu.cff \
+	$(MUPDF_DIR)\fonts\NimbusMonL-ReguObli.cff \
+	$(MUPDF_DIR)\fonts\NimbusMonL-Bold.cff \
+	$(MUPDF_DIR)\fonts\NimbusMonL-BoldObli.cff
 
 $(O)\font_serif.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_serif.c \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-Regu.cff \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-ReguItal.cff \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-Medi.cff \
-	$(FITZ_DIR)\fonts\NimbusRomNo9L-MediItal.cff
+	$(MUPDF_DIR)\fonts\NimbusRomNo9L-Regu.cff \
+	$(MUPDF_DIR)\fonts\NimbusRomNo9L-ReguItal.cff \
+	$(MUPDF_DIR)\fonts\NimbusRomNo9L-Medi.cff \
+	$(MUPDF_DIR)\fonts\NimbusRomNo9L-MediItal.cff
 
 $(O)\font_sans.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_sans.c \
-	$(FITZ_DIR)\fonts\NimbusSanL-Bold.cff \
-	$(FITZ_DIR)\fonts\NimbusSanL-BoldItal.cff \
-	$(FITZ_DIR)\fonts\NimbusSanL-Regu.cff \
-	$(FITZ_DIR)\fonts\NimbusSanL-ReguItal.cff
+	$(MUPDF_DIR)\fonts\NimbusSanL-Bold.cff \
+	$(MUPDF_DIR)\fonts\NimbusSanL-BoldItal.cff \
+	$(MUPDF_DIR)\fonts\NimbusSanL-Regu.cff \
+	$(MUPDF_DIR)\fonts\NimbusSanL-ReguItal.cff
 
 $(O)\font_cjk.c: $(FONTDUMP_APP)
 	$(FONTDUMP_APP) $(O)\font_cjk.c \
-	$(FITZ_DIR)\fonts\droid\DroidSansFallback.ttf
+	$(MUPDF_DIR)\fonts\droid\DroidSansFallback.ttf
 
 $(PDFBENCH_APP): $(PDFBENCH_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(PDFBENCH_APP) /PDB:$(PDFBENCH_PDB) \
@@ -604,32 +604,32 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # fitz directories
-{$(FITZ_DIR)\apps\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\apps\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(FITZ_DIR)\mupdf\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\mupdf\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(FITZ_DIR)\draw\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\draw\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(FITZ_DIR)\fitz\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\fitz\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(FITZ_DIR)\fitz\}.cpp{$(O)}.obj::
+{$(MUPDF_DIR)\fitz\}.cpp{$(O)}.obj::
 	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(FITZ_DIR)\fonts\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\fonts\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(FITZ_DIR)\cmaps\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\cmaps\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # files generated during build process (fonts and cmaps)
 {$(O)\}.c{$(O)}.obj::
 	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-$(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(FITZ_DIR)\fitz\fitz.h
-$(MUPDF_OBJS): $(FITZ_DIR)\fitz\fitz.h $(FITZ_DIR)\mupdf\mupdf.h
+$(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
+$(MUPDF_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
 
 force: ;

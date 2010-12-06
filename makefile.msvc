@@ -5,7 +5,7 @@
 #  e.g. ..\sumatrapdf\ext
 # EXB=rm (default: no setting) This is an EXternal Build, i.e. not base SumatraPDF.
 # EXTCFLAGS=$CFLAGS
-# FITZ_DIR=mupdf
+# MUPDF_DIR=mupdf
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -19,8 +19,8 @@ O = obj-rm-$(CFG)
 O = obj-$(CFG)
 !endif
 
-!if "$(FITZ_DIR)"==""
-FITZ_DIR=mupdf
+!if "$(MUPDF_DIR)"==""
+MUPDF_DIR=mupdf
 !endif
 
 !if "$(EXTLIBSDIR)"==""
@@ -34,7 +34,7 @@ SumatraPDF: $(O) $(SUMATRA_APP)
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
-!INCLUDE $(FITZ_DIR)\makefile.msvc
+!INCLUDE $(MUPDF_DIR)\makefile.msvc
 
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 
@@ -44,7 +44,7 @@ CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
 !endif
 
 SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc \
-	/I$(FITZ_DIR)\fitz /I$(FITZ_DIR)\mupdf \
+	/I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
 	/I$(ZLIB_DIR) /Isrc /IDialogSizer 
 
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS"
@@ -142,7 +142,7 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
 BASEUTILS_H =  baseutils\base_util.h baseutils\tstr_util.h baseutils\str_util.h baseutils\wstr_util.h \
                baseutils\geom_util.h
 APPPREFS_H =   src\AppPrefs.h src\DisplayState.h
-PDFENGINE_H =  $(BASEUTILS_H) src\PdfEngine.h $(FITZ_DIR)\fitz\fitz.h $(FITZ_DIR)\mupdf\mupdf.h
+PDFENGINE_H =  $(BASEUTILS_H) src\PdfEngine.h $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
 DISPLAYMODEL_H=$(PDFENGINE_H) src\DisplayModel.h src\PdfSearch.h src\DisplayState.h src\PdfSelection.h \
                baseutils\vstrlist.h
 SUMATRAPDF_H = $(BASEUTILS_H) src\SumatraPDF.h baseutils\win_util.h src\Resource.h
