@@ -7643,7 +7643,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
         else {
             // Remember this argument as a filename to open
-            fileNames.push_back(tstr_dup(argList[i]));
+            TCHAR *filepath = NULL;
+            if (tstr_endswithi(argList[i], _T(".lnk")))
+                filepath = ResolveLnk(argList[i]);
+            if (!filepath)
+                filepath = tstr_dup(argList[i]);
+            fileNames.push_back(filepath);
         }
     }
     argList.clearFree();
