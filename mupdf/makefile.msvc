@@ -28,9 +28,14 @@ EXTLIBSDIR=..\ext
 
 ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
 FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
+
+# if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
 JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
+#JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
+
 OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg-1.3\libopenjpeg
 JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
+NASM=$(EXTLIBSDIR)\..\src\bin\nasm.exe
 
 CC = cl.exe
 
@@ -58,23 +63,19 @@ CFLAGS = $(CFLAGS) /Od /RTCs /RTCu
 CFLAGS = $(CFLAGS) /MDd /EHsc
 !endif
 
-# zlib flags
 ZLIB_CFLAGS = $(CFLAGS)
 
-# freetype flags
-FT_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
+FREETYPE_CFLAGS = $(CFLAGS) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2"
 
-# jbig2 flags
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
-# openjpeg flags
 OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR)
 
-# libjpeg Flags
 JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 
-# fitz flags
+JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)/simd
+
 FITZ_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
@@ -115,6 +116,9 @@ JPEG_OBJS = \
 	$(O)\jdcoefct.obj $(O)\jdpostct.obj $(O)\jddctmgr.obj $(O)\jidctfst.obj $(O)\jidctflt.obj \
 	$(O)\jidctint.obj $(O)\jdsample.obj $(O)\jdcolor.obj $(O)\jquant1.obj $(O)\jquant2.obj \
 	$(O)\jdmerge.obj $(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
+
+JPEG_TURBO_OBJS = \
+  $(O)\jsimd_i386.obj
 
 JBIG2_OBJS = \
 	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
@@ -182,15 +186,20 @@ CMAP_OBJS = \
 LIBS_OBJS = \
 	$(ZLIB_OBJS) \
 	$(FT_OBJS) \
-	$(JPEG_OBJS) \
 	$(JBIG2_OBJS) \
+	$(OPENJPEG_OBJS) \
 	$(FITZ_DRAW_OBJS) \
 	$(FITZ_OBJS) \
 	$(MUPDF_OBJS) \
 	$(FONT_OBJS) \
 	$(CMAP_OBJS)
 
-LIBS_OBJS = $(LIBS_OBJS) $(OPENJPEG_OBJS)
+!if "$(JPEG_TURBO_DIR)"==""
+LIBS_OBJS = $(LIBS_OBJS) $(JPEG_OBJS)
+!else
+LIBS_OBJS = $(LIBS_OBJS) $(JPEG_TURBO_OBJS)
+!endif
+
 
 PDFAPP_RES = $(O)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(O)\win_main.obj $(O)\pdfapp.obj $(PDFAPP_RES)
@@ -516,76 +525,76 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 
 # freetype directories
 {$(FREETYPE_DIR)\builds\win32}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\builds\unix}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\autofit}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\base}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\bdf}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\cache}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\cff}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\cid}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\gxvalid}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\gzip}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\lzw}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\otvalid}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\pcf}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\pfr}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\psaux}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\pshinter}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\psnames}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\raster}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\sfnt}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\smooth}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\truetype}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\type1}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\type42}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(FREETYPE_DIR)\src\winfonts}.c{$(O)}.obj::
-	$(CC) $(FT_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # zlib directories
 {$(ZLIB_DIR)}.c{$(O)}.obj::
@@ -594,6 +603,13 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 # libjpeg directories
 {$(JPEG_DIR)}.c{$(O)}.obj::
 	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+# jpeg-turbo directories
+{$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(JPEG_TURBO_DIR)\simd}.c{$(O)}.obj::
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # openjpeg directories
 {$(OPENJPEG_DIR)}.c{$(O)}.obj::
