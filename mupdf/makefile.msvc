@@ -76,11 +76,11 @@ JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 
 JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)/simd
 
-FITZ_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
+MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
-FITZ_CFLAGS = $(FITZ_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
-FITZ_CFLAGS = $(FITZ_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/apps \
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR)
 
@@ -171,7 +171,7 @@ FONT_OBJS = \
 
 # Make it easy to compile a CJK font in
 !if "$(WITHCJKFONT)"==""
-FITZ_CFLAGS = $(FITZ_CFLAGS) /D "NOCJKFONT"
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
 !else
 FONT_OBJS = $(FONT_OBJS) $(O)\font_cjk.obj
 !endif
@@ -619,31 +619,31 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 {$(JBIG2_DIR)\}.c{$(O)}.obj::
 	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-# fitz directories
+# mupdf directories
 {$(MUPDF_DIR)\apps\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(MUPDF_DIR)\mupdf\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(MUPDF_DIR)\draw\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(MUPDF_DIR)\fitz\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(MUPDF_DIR)\fitz\}.cpp{$(O)}.obj::
-	$(CC) $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(MUPDF_DIR)\fonts\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(MUPDF_DIR)\cmaps\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # files generated during build process (fonts and cmaps)
 {$(O)\}.c{$(O)}.obj::
-	$(CC) /TC $(FITZ_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
 $(MUPDF_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
