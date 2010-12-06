@@ -293,6 +293,13 @@ pdf_runextgstate(pdf_csi *csi, pdf_gstate *gstate, fz_obj *rdb, fz_obj *extgstat
 {
 	int i, k;
 
+	/* SumatraPDF: reset softmask so that we don't keep it accidentally */
+	if (gstate->softmask)
+	{
+		pdf_dropxobject(gstate->softmask);
+		gstate->softmask = nil;
+	}
+
 	for (i = 0; i < fz_dictlen(extgstate); i++)
 	{
 		fz_obj *key = fz_dictgetkey(extgstate, i);
