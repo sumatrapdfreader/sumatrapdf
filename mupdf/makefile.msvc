@@ -35,7 +35,9 @@ JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
 
 OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg-1.3\libopenjpeg
 JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
-NASM=$(EXTLIBSDIR)\..\src\bin\nasm.exe
+
+# nasm.exe must be in PATH
+NASM=nasm.exe
 
 CC = cl.exe
 
@@ -74,15 +76,21 @@ OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DI
 
 JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
 
-JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)/simd
+JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
+JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win32
 
 MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/apps \
-	/I$(FREETYPE_DIR)/include /I$(JPEG_DIR) /I$(ZLIB_DIR) \
-	/I$(JBIG2_DIR)
+	/I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) /I$(JBIG2_DIR)
+
+!if "$(JPEG_TURBO_DIR)"==""
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_DIR)
+!else
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_TURBO_DIR)
+!endif
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib
 
@@ -118,7 +126,7 @@ JPEG_OBJS = \
 	$(O)\jdmerge.obj $(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
 
 JPEG_TURBO_OBJS = \
-  $(O)\jsimd_i386.obj
+  $(O)\jsimd_i386.obj $(O)\jsimdcpu.obj
 
 JBIG2_OBJS = \
 	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
@@ -605,44 +613,47 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # jpeg-turbo directories
-{$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
-	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+#{$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
+#	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(JPEG_TURBO_DIR)\simd}.c{$(O)}.obj::
 	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+{$(JPEG_TURBO_DIR)\simd}.asm{$(O)}.obj:
+  $(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
 
 # openjpeg directories
 {$(OPENJPEG_DIR)}.c{$(O)}.obj::
 	$(CC) $(OPENJPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # jbig2 directories
-{$(JBIG2_DIR)\}.c{$(O)}.obj::
+{$(JBIG2_DIR)}.c{$(O)}.obj::
 	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # mupdf directories
-{$(MUPDF_DIR)\apps\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\apps}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(MUPDF_DIR)\mupdf\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\mupdf}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(MUPDF_DIR)\draw\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\draw}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(MUPDF_DIR)\fitz\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\fitz}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(MUPDF_DIR)\fitz\}.cpp{$(O)}.obj::
+{$(MUPDF_DIR)\fitz}.cpp{$(O)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(MUPDF_DIR)\fonts\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\fonts}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{$(MUPDF_DIR)\cmaps\}.c{$(O)}.obj::
+{$(MUPDF_DIR)\cmaps}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 # files generated during build process (fonts and cmaps)
-{$(O)\}.c{$(O)}.obj::
+{$(O)}.c{$(O)}.obj::
 	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h

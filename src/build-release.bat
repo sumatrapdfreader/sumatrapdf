@@ -28,6 +28,11 @@ rem check if makensis exists
 makensis /version >nul
 IF ERRORLEVEL 1 goto NSIS_NEEDED
 
+rem add nasm.exe to the path and verify it exists
+set PATH=%PATH%;bin
+nasm -v >nul
+IF ERRORLEVEL 1 goto NASM_NEEDED
+
 rem check if zip exists
 zip -? >nul
 IF ERRORLEVEL 1 goto ZIP_NEEDED
@@ -43,6 +48,10 @@ goto END
 :NSIS_NEEDED
 echo NSIS doesn't seem to installed in %ProgramFiles% or %ProgramFiles(x86)%\NSIS
 echo Get it from http://nsis.sourceforge.net/Download
+goto END
+
+:NASM_NEEDED
+echo nasm.exe doesn't seem to be in the PATH. It's in bin directory
 goto END
 
 :ZIP_NEEDED
