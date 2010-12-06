@@ -241,9 +241,9 @@ public:
     virtual bool FindUpdateStatus(int count, int total);
     void FocusPageNoEdit();
 
+    static WindowInfo *FindByHwnd(HWND hwnd);
 };
 
-WindowInfo* WindowInfo_FindByHwnd(HWND hwnd);
 WindowInfo* WindowInfoList_Find(LPTSTR file);
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, TCHAR *windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);

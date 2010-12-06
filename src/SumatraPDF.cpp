@@ -1479,7 +1479,7 @@ static void WindowInfo_Delete(WindowInfo *win)
     delete win;
 }
 
-WindowInfo* WindowInfo_FindByHwnd(HWND hwnd)
+WindowInfo* WindowInfo::FindByHwnd(HWND hwnd)
 {
     for (WindowInfo *win = gWindowList; win; win = win->next) {
         if (hwnd == win->hwndFrame)
@@ -1844,7 +1844,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     if (!hwndFrame)
         return NULL;
 
-    assert(!WindowInfo_FindByHwnd(hwndFrame));
+    assert(NULL == WindowInfo::FindByHwnd(hwndFrame));
     win = new WindowInfo(hwndFrame);
 
     hwndCanvas = CreateWindowEx(
@@ -5483,7 +5483,7 @@ static void UpdateToolbarToolText(void)
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5605,7 +5605,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
     if (!win)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5743,7 +5743,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5961,7 +5961,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
 
     switch (message)
     {
@@ -6036,7 +6036,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
     switch (message) {
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
@@ -6083,7 +6083,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo_FindByHwnd(hwnd);
+    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
     switch (message) {
     case WM_SIZE: {
         RECT rc;
@@ -6483,7 +6483,7 @@ static int      gDeltaPerLine;      // for mouse wheel logic
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *    win;
-    win = WindowInfo_FindByHwnd(hwnd);
+    win = WindowInfo::FindByHwnd(hwnd);
     switch (message)
     {
         case WM_APP_REPAINT_CANVAS:
@@ -6671,7 +6671,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     const TCHAR *   fileName;
     HttpReqCtx *    ctx;
 
-    win = WindowInfo_FindByHwnd(hwnd);
+    win = WindowInfo::FindByHwnd(hwnd);
 
     switch (message)
     {
@@ -7775,7 +7775,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
 #endif
         // Make sure to dispatch the accelerator to the correct window
-        win = WindowInfo_FindByHwnd(msg.hwnd);
+        win = WindowInfo::FindByHwnd(msg.hwnd);
         if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
