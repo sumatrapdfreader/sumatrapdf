@@ -4,5 +4,5 @@
 @rem this is for Visual Studio 2008 aka vs9
 call "%ProgramFiles%\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
 
-nmake -f makefile.msvc EXTLIBSDIR=..\ CFG=dbg
-nmake -f makefile.msvc EXTLIBSDIR=..\ CFG=rel
+nmake -f makefile.msvc EXTLIBSDIR=..\ext CFG=dbg
+@rem nmake -f makefile.msvc EXTLIBSDIR=..\ext CFG=rel

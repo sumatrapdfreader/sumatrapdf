@@ -181,7 +181,7 @@ fz_error benchrenderpage(int pagenum)
 	h = bbox.y1 - bbox.y0;
 
 	pix = fz_newpixmapwithrect(fz_devicergb, bbox);
-	fz_clearpixmap(pix, 0xFF);
+	fz_clearpixmapwithcolor(pix, 0xFF);
 	dev = fz_newdrawdevice(drawcache, pix);
 	error = pdf_runpage(xref, drawpage, dev, ctm);
 	fz_freedevice(dev);
