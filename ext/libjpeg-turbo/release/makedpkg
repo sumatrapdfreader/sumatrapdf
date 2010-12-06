@@ -1,0 +1,94 @@
+#!/bin/sh
+
+set -u
+set -e
+trap onexit INT
+trap onexit TERM
+trap onexit EXIT
+
+TMPDIR=
+
+onexit()
+{
+	if [ ! "$TMPDIR" = "" ]; then
+		sudo rm -rf $TMPDIR
+	fi
+}
+
+usage()
+{
+	echo "$0 <package name> <version> <build> <DEB architecture> <source dir.>"
+	exit 1
+}
+
+makedeb()
+{
+	SUPPLEMENT=$1
+	DIRNAME=$PACKAGE_NAME
+
+	if [ $SUPPLEMENT = 1 ]; then
+		PACKAGE_NAME=$PACKAGE_NAME\32
+		DEBARCH=amd64
+		__LIB=lib32
+	else
+		__LIB=lib
+	fi
+
+	umask 022
+	rm -f $PACKAGE_NAME\_$DEBARCH.deb
+	TMPDIR=`mktemp -d /tmp/$PACKAGE_NAME-build.XXXXXX`
+	mkdir $TMPDIR/DEBIAN
+	(cat $SRCDIR/release/deb-control.tmpl | sed s/{__PKGNAME}/$PACKAGE_NAME/g \
+		| sed s/{__VERSION}/$VERSION/g | sed s/{__BUILD}/$BUILD/g \
+		| sed s/{__ARCH}/$DEBARCH/g > $TMPDIR/DEBIAN/control)
+
+	make install prefix=$TMPDIR/opt/$DIRNAME libdir=$TMPDIR/opt/$DIRNAME/$__LIB mandir=$TMPDIR/opt/$DIRNAME/man
+	rm -f $TMPDIR/opt/$DIRNAME/$__LIB/*.la
+
+	if [ $SUPPLEMENT = 1 ]; then
+		rm -rf $TMPDIR/opt/$DIRNAME/include
+		rm -rf $TMPDIR/opt/$DIRNAME/man
+		rm -rf $TMPDIR/opt/$DIRNAME/bin
+	fi
+
+	mkdir -p $TMPDIR/usr/$__LIB
+	mv $TMPDIR/opt/$DIRNAME/$__LIB/libturbojpeg.* $TMPDIR/usr/$__LIB
+	ln -fs /usr/$__LIB/libturbojpeg.a $TMPDIR/opt/$DIRNAME/$__LIB/
+	/sbin/ldconfig -n $TMPDIR/opt/$DIRNAME/$__LIB
+	/sbin/ldconfig -n $TMPDIR/usr/$__LIB
+
+	if [ ! $SUPPLEMENT = 1 ]; then
+		if [ "$DEBARCH" = "amd64" ]; then
+			ln -fs lib $TMPDIR/opt/$DIRNAME/lib64
+		else
+			if [ ! "$__LIB" = "lib32" ]; then
+				ln -fs lib $TMPDIR/opt/$DIRNAME/lib32
+			fi
+		fi
+		mkdir -p $TMPDIR/usr/include
+		mv $TMPDIR/opt/$DIRNAME/include/turbojpeg.h $TMPDIR/usr/include
+		ln -fs /usr/include/turbojpeg.h $TMPDIR/opt/$DIRNAME/include/
+		mkdir -p $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+		install -m 644 $SRCDIR/LICENSE.txt $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+		install -m 644 $SRCDIR/LGPL.txt $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+		install -m 644 $SRCDIR/README-turbo.txt $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+		install -m 644 $SRCDIR/README $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+		install -m 644 $SRCDIR/libjpeg.txt $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+		install -m 644 $SRCDIR/usage.txt $TMPDIR/usr/share/doc/$DIRNAME-$VERSION
+	fi
+
+	sudo chown -Rh root:root $TMPDIR/*
+	dpkg -b $TMPDIR $PACKAGE_NAME\_$DEBARCH.deb
+}
+
+if [ $# -lt 5 ]; then usage $0; fi
+PACKAGE_NAME=$1
+VERSION=$2
+BUILD=$3
+DEBARCH=$4
+SRCDIR=$5
+
+makedeb 0
+if [ "$DEBARCH" = "i386" ]; then makedeb 1; fi
+
+exit

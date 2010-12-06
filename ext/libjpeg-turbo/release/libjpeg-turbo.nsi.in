@@ -1,0 +1,126 @@
+!include x64.nsh
+Name "@CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@"
+OutFile "@CMAKE_BINARY_DIR@\${BUILDDIR}@INST_NAME@.exe"
+InstallDir c:\@INST_NAME@
+
+SetCompressor bzip2
+
+Page directory
+Page instfiles
+
+UninstPage uninstConfirm
+UninstPage instfiles
+
+Section "@CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@ (required)"
+!ifdef WIN64
+	${If} ${RunningX64}
+	${DisableX64FSRedirection}
+	${Endif}
+!endif
+	SectionIn RO
+!ifdef GCC
+	IfFileExists $SYSDIR/libturbojpeg.dll exists 0
+!else
+	IfFileExists $SYSDIR/turbojpeg.dll exists 0
+!endif
+	goto notexists
+	exists:
+!ifdef GCC
+	MessageBox MB_OK "An existing version of the @CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@ is already installed.  Please uninstall it first."
+!else
+	MessageBox MB_OK "An existing version of the @CMAKE_PROJECT_NAME@ SDK for @INST_PLATFORM@ or the TurboJPEG SDK is already installed.  Please uninstall it first."
+!endif
+	quit
+
+	notexists:
+	SetOutPath $SYSDIR
+!ifdef GCC
+	File "@CMAKE_BINARY_DIR@\libturbojpeg.dll"
+!else
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}turbojpeg.dll"
+!endif
+	SetOutPath $INSTDIR\bin
+!ifdef GCC
+	File "/oname=libjpeg-@DLL_VERSION@.dll" "@CMAKE_BINARY_DIR@\sharedlib\libjpeg-*.dll" 
+!else
+	File "@CMAKE_BINARY_DIR@\sharedlib\${BUILDDIR}jpeg@DLL_VERSION@.dll"
+!endif
+	SetOutPath $INSTDIR\lib
+!ifdef GCC
+	File "@CMAKE_BINARY_DIR@\libturbojpeg.dll.a"
+	File "@CMAKE_BINARY_DIR@\libturbojpeg.a"
+	File "@CMAKE_BINARY_DIR@\sharedlib\libjpeg.dll.a"
+	File "@CMAKE_BINARY_DIR@\libjpeg.a"
+!else
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}turbojpeg.lib"
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}turbojpeg-static.lib"
+	File "@CMAKE_BINARY_DIR@\sharedlib\${BUILDDIR}jpeg.lib"
+	File "@CMAKE_BINARY_DIR@\${BUILDDIR}jpeg-static.lib"
+!endif
+	SetOutPath $INSTDIR\include
+	File "@CMAKE_BINARY_DIR@\jconfig.h"
+	File "@CMAKE_SOURCE_DIR@\jerror.h"
+	File "@CMAKE_SOURCE_DIR@\jmorecfg.h"
+	File "@CMAKE_SOURCE_DIR@\jpeglib.h"
+	File "@CMAKE_SOURCE_DIR@\turbojpeg.h"
+	SetOutPath $INSTDIR
+	File "@CMAKE_SOURCE_DIR@\README"
+	File "@CMAKE_SOURCE_DIR@\README-turbo.txt"
+	File "@CMAKE_SOURCE_DIR@\libjpeg.txt"
+	File "@CMAKE_SOURCE_DIR@\LGPL.txt"
+	File "@CMAKE_SOURCE_DIR@\LICENSE.txt"
+
+	WriteRegStr HKLM "SOFTWARE\@INST_NAME@ @VERSION@" "Install_Dir" "$INSTDIR"
+
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "DisplayName" "@CMAKE_PROJECT_NAME@ SDK v@VERSION@ for @INST_PLATFORM@"
+	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "UninstallString" '"$INSTDIR\uninstall_@VERSION@.exe"'
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "NoModify" 1
+	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@" "NoRepair" 1
+	WriteUninstaller "uninstall_@VERSION@.exe"
+SectionEnd
+
+Section "Uninstall"
+!ifdef WIN64
+	${If} ${RunningX64}
+	${DisableX64FSRedirection}
+	${Endif}
+!endif
+
+	SetShellVarContext all
+
+	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\@INST_NAME@ @VERSION@"
+	DeleteRegKey HKLM "SOFTWARE\@INST_NAME@ @VERSION@"
+
+!ifdef GCC
+	Delete $INSTDIR\bin\libjpeg-@DLL_VERSION@.dll
+	Delete $SYSDIR\libturbojpeg.dll
+	Delete $INSTDIR\lib\libturbojpeg.dll.a"
+	Delete $INSTDIR\lib\libturbojpeg.a"
+	Delete $INSTDIR\lib\libjpeg.dll.a"
+	Delete $INSTDIR\lib\libjpeg.a"
+!else
+	Delete $INSTDIR\bin\jpeg@DLL_VERSION@.dll
+	Delete $SYSDIR\turbojpeg.dll
+	Delete $INSTDIR\lib\jpeg.lib
+	Delete $INSTDIR\lib\jpeg-static.lib
+	Delete $INSTDIR\lib\turbojpeg.lib
+	Delete $INSTDIR\lib\turbojpeg-static.lib
+!endif
+	Delete $INSTDIR\include\jconfig.h"
+	Delete $INSTDIR\include\jerror.h"
+	Delete $INSTDIR\include\jmorecfg.h"
+	Delete $INSTDIR\include\jpeglib.h"
+	Delete $INSTDIR\include\turbojpeg.h"
+	Delete $INSTDIR\uninstall_@VERSION@.exe
+	Delete $INSTDIR\README
+	Delete $INSTDIR\README-turbo.txt
+	Delete $INSTDIR\libjpeg.txt
+	Delete $INSTDIR\LGPL.txt
+	Delete $INSTDIR\LICENSE.txt
+
+	RMDir "$INSTDIR\include"
+	RMDir "$INSTDIR\lib"
+	RMDir "$INSTDIR\bin"
+	RMDir "$INSTDIR"
+
+SectionEnd

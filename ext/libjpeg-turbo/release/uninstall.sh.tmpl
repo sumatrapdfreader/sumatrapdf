@@ -1,0 +1,77 @@
+# Copyright (C)2009-2010 D. R. Commander
+# Copyright (C)2009 Sun Microsystems, Inc.
+#
+# This library is free software and may be redistributed and/or modified under
+# the terms of the wxWindows Library License, Version 3.1 or (at your option)
+# any later version.  The full license is in the LICENSE.txt file included
+# with this distribution.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# wxWindows Library License for more details.
+
+#!/bin/sh
+
+error()
+{
+	echo $1
+	exit -1
+}
+
+if [ ! "`id -u`" = "0" ]; then
+	error "This command must be run as root"
+fi
+
+PKGNAME={__APPNAME}
+MACPKGNAME=com.$PKGNAME.$PKGNAME
+RCPT=/Library/Receipts/$PKGNAME.pkg
+
+LSBOM=
+if [ -d $RCPT ]; then
+	LSBOM='lsbom -s -f -l '$RCPT'/Contents/Archive.bom'
+else
+	LSBOM='pkgutil --files '$MACPKGNAME
+fi
+
+echo Removing files ...
+$LSBOM >/dev/null || error "Could not list package contents"
+RETCODE=0
+PWD=`pwd`
+cd /
+$LSBOM | while read line; do
+	if [ ! -d "$line" ]; then rm "$line" 2>&1 || RETCODE=-1; fi
+done
+cd $PWD
+
+echo Removing directories ...
+rmdir /opt/$PKGNAME/bin 2>&1 || RETCODE=-1
+if [ -d /opt/$PKGNAME/bin ]; then
+	rmdir /opt/$PKGNAME/bin 2>&1 || RETCODE=-1
+fi
+if [ -d /opt/$PKGNAME/lib ]; then
+	rmdir /opt/$PKGNAME/lib 2>&1 || RETCODE=-1
+fi
+if [ -d /opt/$PKGNAME/include ]; then
+	rmdir /opt/$PKGNAME/include 2>&1 || RETCODE=-1
+fi
+rm /opt/$PKGNAME/lib32 2>&1 || RETCODE=-1
+rm /opt/$PKGNAME/lib64 2>&1 || RETCODE=-1
+if [ -d /opt/$PKGNAME/man/man1 ]; then
+	rmdir /opt/$PKGNAME/man/man1 2>&1 || RETCODE=-1
+fi
+if [ -d /opt/$PKGNAME/man ]; then
+	rmdir /opt/$PKGNAME/man 2>&1 || RETCODE=-1
+fi
+rmdir /opt/$PKGNAME 2>&1 || RETCODE=-1
+rmdir /Library/Documentation/$PKGNAME 2>&1 || RETCODE=-1
+
+if [ -d $RCPT ]; then
+	echo Removing package receipt $RCPT ...
+	rm -r $RCPT 2>&1 || RETCODE=-1
+else
+	echo Forgetting package $MACPKGNAME
+	pkgutil --forget $MACPKGNAME
+fi
+
+exit $RETCODE

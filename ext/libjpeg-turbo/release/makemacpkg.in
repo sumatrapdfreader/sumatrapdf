@@ -1,0 +1,166 @@
+#!/bin/sh
+
+set -u
+set -e
+trap onexit INT
+trap onexit TERM
+trap onexit EXIT
+
+TMPDIR=
+
+onexit()
+{
+	if [ ! "$TMPDIR" = "" ]; then
+		sudo rm -rf $TMPDIR
+	fi
+}
+
+usage()
+{
+	echo "$0 [universal [32-bit build dir]]"
+	exit 1
+}
+
+UNIVERSAL=0
+
+PACKAGE_NAME=@PACKAGE_NAME@
+VERSION=@VERSION@
+BUILD=@BUILD@
+SRCDIR=@srcdir@
+BUILDDIR32=@srcdir@/osxx86
+if [ $# -gt 0 ]; then
+	if [ "$1" = "universal" ]; then
+		UNIVERSAL=1
+		if [ $# -gt 1 ]; then BUILDDIR32=$2; fi
+	fi
+fi
+PACKAGEMAKER=/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker
+
+if [ -f $PACKAGE_NAME.dmg ]; then
+	rm -f $PACKAGE_NAME.dmg
+fi
+
+umask 022
+TMPDIR=`mktemp -d /tmp/$PACKAGE_NAME-build.XXXXXX`
+PKGROOT=$TMPDIR/pkg/Package_Root
+mkdir -p $PKGROOT
+mkdir -p $PKGROOT/opt/$PACKAGE_NAME/bin
+make install DESTDIR=$PKGROOT mandir=/opt/$PACKAGE_NAME/man
+rm -f $PKGROOT/opt/$PACKAGE_NAME/lib/*.la
+mkdir -p $PKGROOT/usr/lib
+mv $PKGROOT/opt/$PACKAGE_NAME/lib/libturbojpeg.* $PKGROOT/usr/lib
+mkdir -p $PKGROOT/usr/include
+mv $PKGROOT/opt/$PACKAGE_NAME/include/turbojpeg.h $PKGROOT/usr/include
+
+if [ $UNIVERSAL = 1 ]; then
+	if [ ! -d $BUILDDIR32 ]; then
+		echo ERROR: 32-bit build directory $BUILDDIR32 does not exist
+		exit 1
+	fi
+	if [ ! -f $BUILDDIR32/Makefile ]; then
+		echo ERROR: 32-bit build directory $BUILDDIR32 is not configured
+		exit 1
+	fi
+	mkdir -p $TMPDIR/dist.x86
+	pushd $BUILDDIR32
+	make install DESTDIR=$TMPDIR/dist.x86
+	popd
+	if [ ! -h $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib -a \
+		! -h $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib ]; then
+		lipo -create \
+			-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib \
+			-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib \
+			-output $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib
+	elif [ ! -h $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@.dylib -a \
+		! -h $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@.dylib ]; then
+		lipo -create \
+			-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@.dylib \
+			-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@.dylib \
+			-output $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@.dylib
+	fi
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libjpeg.a \
+		-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.a \
+		-output $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.a
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libturbojpeg.dylib \
+		-arch x86_64 $PKGROOT/usr/lib/libturbojpeg.dylib \
+		-output $PKGROOT/usr/lib/libturbojpeg.dylib
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/lib/libturbojpeg.a \
+		-arch x86_64 $PKGROOT/usr/lib/libturbojpeg.a \
+		-output $PKGROOT/usr/lib/libturbojpeg.a
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/bin/cjpeg \
+		-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/bin/cjpeg \
+		-output $PKGROOT/opt/$PACKAGE_NAME/bin/cjpeg
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/bin/djpeg \
+		-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/bin/djpeg \
+		-output $PKGROOT/opt/$PACKAGE_NAME/bin/djpeg
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/bin/jpegtran \
+		-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/bin/jpegtran \
+		-output $PKGROOT/opt/$PACKAGE_NAME/bin/jpegtran
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/bin/rdjpgcom \
+		-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/bin/rdjpgcom \
+		-output $PKGROOT/opt/$PACKAGE_NAME/bin/rdjpgcom
+	lipo -create \
+		-arch i386 $TMPDIR/dist.x86/opt/$PACKAGE_NAME/bin/wrjpgcom \
+		-arch x86_64 $PKGROOT/opt/$PACKAGE_NAME/bin/wrjpgcom \
+		-output $PKGROOT/opt/$PACKAGE_NAME/bin/wrjpgcom
+
+fi
+
+install_name_tool -id /opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib $PKGROOT/opt/$PACKAGE_NAME/lib/libjpeg.@SO_MAJOR_VERSION@.dylib
+install_name_tool -id libturbojpeg.dylib $PKGROOT/usr/lib/libturbojpeg.dylib
+
+ln -fs /usr/include/turbojpeg.h $PKGROOT/opt/$PACKAGE_NAME/include/
+ln -fs /usr/lib/libturbojpeg.a $PKGROOT/opt/$PACKAGE_NAME/lib/
+if [ ! -h $PKGROOT/opt/$PACKAGE_NAME/lib32 ]; then
+	ln -fs lib $PKGROOT/opt/$PACKAGE_NAME/lib32
+fi
+if [ ! -h $PKGROOT/opt/$PACKAGE_NAME/lib64 ]; then
+	ln -fs lib $PKGROOT/opt/$PACKAGE_NAME/lib64
+fi
+
+mkdir -p $PKGROOT/Library/Documentation/$PACKAGE_NAME
+chmod 1775 $PKGROOT/Library
+chmod 775 $PKGROOT/Library/Documentation 
+mkdir -p $TMPDIR/pkg/Resources 
+
+(cat $SRCDIR/release/Description.plist.tmpl | sed s/{__VERSION}/$VERSION/g \
+	| sed s/{__APPNAME}/$PACKAGE_NAME/g \
+	> $TMPDIR/pkg/Description.plist) 
+(cat $SRCDIR/release/Info.plist.tmpl | sed s/{__VERSION}/$VERSION/g	\
+	| sed s/{__BUILD}/$BUILD/g > $TMPDIR/pkg/Info.plist) 
+(cat $SRCDIR/release/uninstall.sh.tmpl \
+	| sed s/{__APPNAME}/$PACKAGE_NAME/g \
+	> $PKGROOT/opt/$PACKAGE_NAME/bin/uninstall) 
+chmod 755 $PKGROOT/opt/$PACKAGE_NAME/bin/uninstall
+
+install -m 644 $SRCDIR/LICENSE.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/LICENSE.txt 
+install -m 644 $SRCDIR/LGPL.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/LGPL.txt 
+install -m 644 $SRCDIR/README-turbo.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/README-turbo.txt 
+install -m 644 $SRCDIR/README $PKGROOT/Library/Documentation/$PACKAGE_NAME/README 
+install -m 644 $SRCDIR/libjpeg.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/libjpeg.txt 
+install -m 644 $SRCDIR/usage.txt $PKGROOT/Library/Documentation/$PACKAGE_NAME/usage.txt 
+
+sudo chown -R root:admin $PKGROOT 
+sudo chown -R root:0 $PKGROOT/usr 
+cp $SRCDIR/release/License.rtf $SRCDIR/release/Welcome.rtf $SRCDIR/release/ReadMe.rtf $TMPDIR/pkg/Resources/ 
+
+mkdir $TMPDIR/dmg
+$PACKAGEMAKER -build -v -p $TMPDIR/dmg/$PACKAGE_NAME.pkg \
+	-f $PKGROOT -r $TMPDIR/pkg/Resources \
+	-i $TMPDIR/pkg/Info.plist -d $TMPDIR/pkg/Description.plist 
+install -m 644 $SRCDIR/release/uninstall.applescript $TMPDIR 
+sudo osacompile -t APPL -o "$TMPDIR/dmg/Uninstall $PACKAGE_NAME.app" $TMPDIR/uninstall.applescript 
+sudo chown -R $USER "$TMPDIR/dmg/Uninstall $PACKAGE_NAME.app" 
+hdiutil create -fs HFS+ -volname $PACKAGE_NAME-$VERSION \
+	-srcfolder "$TMPDIR/dmg" \
+	$TMPDIR/$PACKAGE_NAME.dmg 
+cp $TMPDIR/$PACKAGE_NAME.dmg . 
+
+exit

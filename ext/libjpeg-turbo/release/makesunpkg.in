@@ -1,0 +1,138 @@
+#!/bin/sh
+
+set -u
+set -e
+trap onexit INT
+trap onexit TERM
+trap onexit EXIT
+
+TMPDIR=
+
+onexit()
+{
+	if [ ! "$TMPDIR" = "" ]; then
+		rm -rf $TMPDIR
+	fi
+}
+
+usage()
+{
+	echo "$0 [combined [32-bit build dir.]]"
+	exit 1
+}
+
+COMBINED=0
+
+PACKAGE_NAME=@PACKAGE_NAME@
+VERSION=@VERSION@
+BUILD=@BUILD@
+PKGARCH=@DEBARCH@
+SRCDIR=@srcdir@
+BUILDDIR32=@srcdir@/solx86
+if [ $# -gt 0 ]; then
+	if [ "$1" = "combined" ]; then
+		COMBINED=1
+		if [ $# -gt 1 ]; then	BUILDDIR32=$2; fi
+	fi
+fi
+
+umask 022
+TMPDIR=`mktemp -d /tmp/$PACKAGE_NAME-build.XXXXXX`
+rm -f $PACKAGE_NAME.pkg.bz2
+cp $SRCDIR/release/copyright $TMPDIR
+touch $TMPDIR/depend
+cat $SRCDIR/release/pkginfo.tmpl | sed s/{__VERSION}/$VERSION/g \
+	| sed s/{__BUILD}/$BUILD/g | sed s/{__APPNAME}/$PACKAGE_NAME/g \
+	| sed s/{__PKGNAME}/$PACKAGE_NAME/g > $TMPDIR/pkginfo 
+
+if [ "$PKGARCH" = "i386" ]; then
+	__LIB=lib
+else
+	__LIB=lib/$PKGARCH
+fi
+
+if [ $COMBINED = 1 ]; then
+	if [ ! -d $BUILDDIR32 ]; then
+		echo ERROR: 32-bit build directory $BUILDDIR32 does not exist
+		exit 1
+	fi
+	if [ ! -f $BUILDDIR32/Makefile ]; then
+		echo ERROR: 32-bit build directory $BUILDDIR32 is not configured
+		exit 1
+	fi
+	PWD=`pwd`
+	cd $BUILDDIR32
+	make install DESTDIR=$TMPDIR mandir=/opt/$PACKAGE_NAME/man AM_MAKEFLAGS="mandir=/opt/$PACKAGE_NAME/man"
+	cd $PWD
+fi
+# This mess is to work around a bug in /usr/ccs/bin/make
+make install DESTDIR=$TMPDIR libdir=/opt/$PACKAGE_NAME/$__LIB mandir=/opt/$PACKAGE_NAME/man AM_MAKEFLAGS="libdir=/opt/$PACKAGE_NAME/$__LIB mandir=/opt/$PACKAGE_NAME/man"
+rm -f $TMPDIR/opt/$PACKAGE_NAME/$__LIB/*.la
+mkdir -p $TMPDIR/opt/$PACKAGE_NAME/doc
+cp $SRCDIR/LICENSE.txt $SRCDIR/LGPL.txt $SRCDIR/README-turbo.txt $SRCDIR/README $SRCDIR/libjpeg.txt $SRCDIR/usage.txt $TMPDIR/opt/$PACKAGE_NAME/doc
+chmod 644 $TMPDIR/opt/$PACKAGE_NAME/doc/*
+
+cat >$TMPDIR/proto <<EOF
+i copyright
+i depend
+i pkginfo
+d none $PACKAGE_NAME 0755 root bin
+d none $PACKAGE_NAME/bin 0755 root bin
+f none $PACKAGE_NAME/bin/cjpeg 0755 root bin
+f none $PACKAGE_NAME/bin/djpeg 0755 root bin
+f none $PACKAGE_NAME/bin/jpegtran 0755 root bin
+f none $PACKAGE_NAME/bin/rdjpgcom 0755 root bin
+f none $PACKAGE_NAME/bin/wrjpgcom 0755 root bin
+d none $PACKAGE_NAME/lib 0755 root bin
+EOF
+if [ $COMBINED = 1 ]; then
+cat >>$TMPDIR/proto <<EOF
+f none $PACKAGE_NAME/lib/libjpeg.so.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@ 0755 root bin
+s none $PACKAGE_NAME/lib/libjpeg.so.@SO_MAJOR_VERSION@=libjpeg.so.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@
+s none $PACKAGE_NAME/lib/libjpeg.so=libjpeg.so.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@
+f none $PACKAGE_NAME/lib/libjpeg.a 0644 root bin
+f none $PACKAGE_NAME/lib/libturbojpeg.so 0755 root bin
+f none $PACKAGE_NAME/lib/libturbojpeg.a 0644 root bin
+EOF
+fi
+if [ "${__LIB}" != "lib" ]; then
+echo d none $PACKAGE_NAME/${__LIB} 0755 root bin >>$TMPDIR/proto
+echo s none $PACKAGE_NAME/lib64=${__LIB} >>$TMPDIR/proto
+echo s none $PACKAGE_NAME/lib/64=$PKGARCH >>$TMPDIR/proto
+fi
+cat >>$TMPDIR/proto <<EOF
+f none $PACKAGE_NAME/${__LIB}/libjpeg.so.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@ 0755 root bin
+s none $PACKAGE_NAME/${__LIB}/libjpeg.so.@SO_MAJOR_VERSION@=libjpeg.so.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@
+s none $PACKAGE_NAME/${__LIB}/libjpeg.so=libjpeg.so.@SO_MAJOR_VERSION@.0.@SO_MINOR_VERSION@
+f none $PACKAGE_NAME/${__LIB}/libjpeg.a 0644 root bin
+f none $PACKAGE_NAME/${__LIB}/libturbojpeg.so 0755 root bin
+f none $PACKAGE_NAME/${__LIB}/libturbojpeg.a 0644 root bin
+s none $PACKAGE_NAME/lib32=lib
+d none $PACKAGE_NAME/man 0755 root bin
+d none $PACKAGE_NAME/man/man1 0755 root bin
+d none $PACKAGE_NAME/man/man1/cjpeg.1 0644 root bin
+d none $PACKAGE_NAME/man/man1/djpeg.1 0644 root bin
+d none $PACKAGE_NAME/man/man1/jpegtran.1 0644 root bin
+d none $PACKAGE_NAME/man/man1/rdjpgcom.1 0644 root bin
+d none $PACKAGE_NAME/man/man1/wrjpgcom.1 0644 root bin
+d none $PACKAGE_NAME/include 0755 root bin
+f none $PACKAGE_NAME/include/jconfig.h 0644 root bin
+f none $PACKAGE_NAME/include/jerror.h 0644 root bin
+f none $PACKAGE_NAME/include/jmorecfg.h 0644 root bin
+f none $PACKAGE_NAME/include/jpeglib.h 0644 root bin
+f none $PACKAGE_NAME/include/turbojpeg.h 0644 root bin
+d none $PACKAGE_NAME/doc 0755 root bin
+f none $PACKAGE_NAME/doc/LGPL.txt 0644 root bin
+f none $PACKAGE_NAME/doc/libjpeg.txt 0644 root bin
+f none $PACKAGE_NAME/doc/LICENSE.txt 0644 root bin
+f none $PACKAGE_NAME/doc/README 0644 root bin
+f none $PACKAGE_NAME/doc/README-turbo.txt 0644 root bin
+f none $PACKAGE_NAME/doc/usage.txt 0644 root bin
+EOF
+
+pkgmk -o -r $TMPDIR/opt -d $TMPDIR -a i386 -f $TMPDIR/proto
+pkgtrans -s $TMPDIR $TMPDIR/$PACKAGE_NAME.pkg $PACKAGE_NAME
+bzip2 $TMPDIR/$PACKAGE_NAME.pkg
+cp $TMPDIR/$PACKAGE_NAME.pkg.bz2 . 
+
+exit

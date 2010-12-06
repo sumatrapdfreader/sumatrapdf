@@ -1,0 +1,23 @@
+Package: {__PKGNAME}
+Version: {__VERSION}-{__BUILD}
+Section: misc
+Priority: optional
+Architecture: {__ARCH}
+Essential: no
+Maintainer: The libjpeg-turbo Project [http://libjpeg-turbo.VirtualGL.org]
+Description: A toolkit for displaying OpenGL applications to thin clients
+ libjpeg-turbo is a high-speed version of libjpeg for x86 and x86-64 processors
+ which uses SIMD instructions (MMX, SSE2, etc.) to accelerate baseline JPEG
+ compression and decompression.  libjpeg-turbo is generally 2-4x as fast
+ as the unmodified version of libjpeg, all else being equal.  libjpeg-turbo
+ also includes a wrapper library for the TurboJPEG API used by VirtualGL and
+ TurboVNC.
+ .
+ libjpeg-turbo was originally based on libjpeg/SIMD by Miyasaka Masaru, but
+ the TigerVNC and VirtualGL projects made numerous enhancements to the codec,
+ including improved support for Mac OS X, 64-bit support, support for 32-bit
+ and big endian pixel formats, accelerated Huffman encoding/decoding, and
+ various bug fixes.  The goal was to produce a fully open source codec that
+ could replace the partially closed source TurboJPEG/IPP codec used by
+ VirtualGL and TurboVNC.  libjpeg-turbo generally performs in the range of
+ 80-120% of TurboJPEG/IPP.  It is faster in some areas but slower in others.

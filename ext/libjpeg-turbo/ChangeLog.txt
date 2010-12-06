@@ -1,0 +1,81 @@
+Significant changes since 1.0.1
+===============================
+
+[1] Added emulation of the libjpeg v7 and v8b APIs and ABIs.  See
+README-turbo.txt for more details.  This feature was sponsored by CamTrace SAS.
+
+[2] Created a new CMake-based build system for the Visual C++ and MinGW builds.
+
+[3] TurboJPEG/OSS can now compress from/decompress to grayscale bitmaps.
+
+[4] jpgtest can now be used to test decompression performance only.
+
+[5] If the default install prefix (/opt/libjpeg-turbo) is used, then
+'make install' now creates /opt/libjpeg-turbo/lib32 and
+/opt/libjpeg-turbo/lib64 sym links to duplicate the behavior of the binary
+packages.
+
+[6] All symbols in the libjpeg-turbo dynamic library are now versioned, even
+when the library is built with libjpeg v6b emulation.
+
+[7] Added arithmetic encoding and decoding support (can be disabled via
+configure or CMake options)
+
+[8] TurboJPEG/OSS can now leverage the SIMD-accelerated color conversion
+routines in libjpeg-turbo to generate planar YUV images from RGB input.
+
+
+Significant changes since 1.0.0
+===============================
+
+[1] The Huffman decoder will now handle erroneous Huffman codes (for instance,
+from a corrupt JPEG image.)  Previously, these would cause libjpeg-turbo to
+crash under certain circumstances.
+
+[2] Fixed typo in SIMD dispatch routines which was causing 4:2:2 upsampling to
+be used instead of 4:2:0 when decompressing JPEG images using SSE2 code.
+
+[3] configure script will now automatically determine whether the
+INCOMPLETE_TYPES_BROKEN macro should be defined.
+
+
+Significant changes since 0.0.93
+================================
+
+[1] 2983700: Further FreeBSD build tweaks (no longer necessary to specify
+--host when configuring on a 64-bit system)
+
+[2] Created sym. links in the Unix/Linux packages so that the TurboJPEG
+include file can always be found in /opt/libjpeg-turbo/include, the 32-bit
+static libraries can always be found in /opt/libjpeg-turbo/lib32, and the
+64-bit static libraries can always be found in /opt/libjpeg-turbo/lib64.
+
+[3] The Unix/Linux distribution packages now include the libjpeg run-time
+programs (cjpeg, etc.) and man pages.
+
+[4] Created a 32-bit supplementary package for amd64 Debian systems which
+contains just the 32-bit libjpeg-turbo libraries.
+
+[5] Moved the libraries from */lib32 to */lib in the i386 Debian package.
+
+[6] Include distribution package for Cygwin
+
+[7] No longer necessary to specify --without-simd on non-x86 architectures, and
+unit tests now work on those architectures.
+
+
+Significant changes since 0.0.91
+================================
+
+[1] 2982659, Fixed x86-64 build on FreeBSD systems
+
+[2] 2988188: Added support for Windows 64-bit systems
+
+
+Significant changes since 0.0.90
+================================
+
+[1] Added documentation to .deb packages
+
+[2] 2968313: Fixed data corruption issues when decompressing large JPEG images
+and/or using buffered I/O with the libjpeg-turbo decompressor
