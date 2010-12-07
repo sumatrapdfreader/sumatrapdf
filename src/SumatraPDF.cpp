@@ -7173,6 +7173,7 @@ static void MakePluginWindow(WindowInfo *win, HWND hwndParent)
     GetClientRect(hwndParent, &rc);
     MoveWindow(win->hwndFrame, 0, 0, rect_dx(&rc), rect_dy(&rc), FALSE);
     // from here on, we depend on the plugin's host to resize us
+    SetFocus(win->hwndFrame);
 }
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
