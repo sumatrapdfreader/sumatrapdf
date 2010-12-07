@@ -682,4 +682,7 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 				pdf_showspace(csi, gstate->wordspace);
 		}
 	}
+
+	/* SumatraPDF: make sure that the text is drawn with the correct ExtGState */
+	pdf_flushtext(csi);
 }
