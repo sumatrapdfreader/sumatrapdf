@@ -29,7 +29,7 @@ makensis /version >nul
 IF ERRORLEVEL 1 goto NSIS_NEEDED
 
 rem add nasm.exe to the path and verify it exists
-set PATH=%PATH%;bin
+set PATH=%PATH%;%CD%\bin
 nasm -v >nul
 IF ERRORLEVEL 1 goto NASM_NEEDED
 

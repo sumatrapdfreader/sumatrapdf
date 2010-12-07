@@ -9,8 +9,8 @@ call "%ProgramFiles%\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
 @nasm -v >nul
 @IF ERRORLEVEL 1 goto NASM_NEEDED
 
-nmake -f makefile.msvc EXTLIBSDIR=..\ext CFG=dbg
-@rem nmake -f makefile.msvc EXTLIBSDIR=..\ext CFG=rel
+@rem nmake -f makefile.msvc EXTLIBSDIR=..\ext CFG=dbg
+nmake -f makefile.msvc EXTLIBSDIR=..\ext CFG=rel
 @goto END
 
 :NASM_NEEDED

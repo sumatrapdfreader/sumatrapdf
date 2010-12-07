@@ -126,7 +126,26 @@ JPEG_OBJS = \
 	$(O)\jdmerge.obj $(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
 
 JPEG_TURBO_OBJS = \
-  $(O)\jsimd_i386.obj $(O)\jsimdcpu.obj
+  $(O)\jsimdcpu.obj $(O)\jccolmmx.obj $(O)\jdcolmmx.obj $(O)\jcsammmx.obj \
+  $(O)\jdsammmx.obj $(O)\jdmermmx.obj $(O)\jcqntmmx.obj $(O)\jfmmxfst.obj $(O)\jfmmxint.obj \
+  $(O)\jimmxred.obj $(O)\jimmxint.obj $(O)\jimmxfst.obj $(O)\jcqnt3dn.obj $(O)\jf3dnflt.obj \
+  $(O)\ji3dnflt.obj $(O)\jcqntsse.obj $(O)\jfsseflt.obj $(O)\jisseflt.obj $(O)\jccolss2.obj \
+  $(O)\jdcolss2.obj $(O)\jcsamss2.obj $(O)\jdsamss2.obj $(O)\jdmerss2.obj $(O)\jcqnts2i.obj \
+  $(O)\jfss2fst.obj $(O)\jfss2int.obj $(O)\jiss2red.obj $(O)\jiss2int.obj $(O)\jiss2fst.obj \
+  $(O)\jcqnts2f.obj $(O)\jiss2flt.obj \
+  $(O)\jsimd_i386.obj $(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jccoefct.obj $(O)\jccolor.obj \
+  $(O)\jcdctmgr.obj $(O)\jchuff.obj $(O)\jcinit.obj $(O)\jcmainct.obj $(O)\jcmarker.obj \
+  $(O)\jcmaster.obj $(O)\jcomapi.obj $(O)\jcparam.obj \
+  $(O)\jcprepct.obj $(O)\jcsample.obj $(O)\jctrans.obj $(O)\jdapimin.obj $(O)\jdapistd.obj \
+  $(O)\jdatadst.obj $(O)\jdatasrc.obj $(O)\jdcoefct.obj $(O)\jdcolor.obj $(O)\jddctmgr.obj \
+  $(O)\jdhuff.obj $(O)\jdinput.obj $(O)\jdmainct.obj $(O)\jdmarker.obj $(O)\jdmaster.obj \
+  $(O)\jdmerge.obj $(O)\jdpostct.obj $(O)\jdsample.obj $(O)\jdtrans.obj $(O)\jerror.obj \
+  $(O)\jfdctflt.obj $(O)\jfdctint.obj $(O)\jidctflt.obj $(O)\jidctfst.obj $(O)\jidctint.obj \
+  $(O)\jquant1.obj $(O)\jquant2.obj $(O)\jutils.obj $(O)\jmemmgr.obj $(O)\jmemnobs.obj \
+  $(O)\jaricom.obj $(O)\jcarith.obj $(O)\jdarith.obj $(O)\jfdctfst.obj
+
+#TODO: do I need those? They show up in mac compilation log but don't seem to be necessary
+#$(O)\jidctred.obj $(O)\jdphuff.obj $(O)\jcphuff.obj
 
 JBIG2_OBJS = \
 	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
