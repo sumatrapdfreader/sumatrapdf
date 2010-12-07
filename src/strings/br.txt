@@ -14,6 +14,9 @@ S&obre o SumatraPDF
 &Actual Size\tCtrl-1
 &Tamanho real\tCtrl-1
 
+&All selected pages
+Tod&as as páginas selecionadas
+
 &Back\tAlt+Left Arrow
 Voltar\tAlt+<-
 
@@ -26,6 +29,9 @@ Copiar seleção\tCtrl-C
 &Don't ask me again
 Não perguntar novamente
 
+&Even pages only
+Apenas as páginas par&es
+
 &File
 &Arquivo
 
@@ -34,6 +40,9 @@ Não perguntar novamente
 
 &First Page\tHome
 Primeira página\tHome
+
+&Fit pages to printable area
+Ajustar páginas à área de impressão
 
 &Go To
 Ir &para
@@ -65,6 +74,9 @@ Página seguinte\t->
 &No, thanks
 &Não, obrigado
 
+&Odd pages only
+Apenas as páginas ímpares
+
 &Open\tCtrl-O
 A&brir\tCtrl-O
 
@@ -83,6 +95,9 @@ Página anterior\t<-
 &Print... (denied)
 &Imprimir... (negado)
 
+&Remember the password for this document
+Lembra&r a senha deste documento
+
 &Remember these settings for each document
 Lembrar estas preferências para cada documento
 
@@ -92,8 +107,14 @@ Lembrar estas preferências para cada documento
 &Settings
 &Preferências
 
+&Shrink pages to printable area (if necessary)
+Reduzir página&s à área de impressão (se necessário)
+
 &Skip this version
 Ignorar esta versão
+
+&Use original page sizes
+&Usar tamanhos de página originais
 
 &View
 &Ver
@@ -122,6 +143,9 @@ Aplicativo:
 Associate with PDF files?
 Associar com arquivos PDF?
 
+Attachment: %s
+Anexo: %s
+
 Author:
 Autor:
 
@@ -132,13 +156,19 @@ Automatically check for &updates
 &Procurar atualizações automaticamente
 
 Book View
-Ver como Livro
+Ver como livro
 
 Book&marks\tF12
 Marcadores\tF12
 
+Bookmarks
+Marcadores
+
 Bytes
 Bytes
+
+Can't connect to the Internet (error %#x).
+Falha na conexão à Internet (erro %#x).
 
 Cancel
 Cancelar
@@ -147,7 +177,7 @@ Cannot print this file
 Não foi possível imprimir este arquivo
 
 Cannot start inverse search command. Please check the command line in the settings.
-Não é possível acionar a pesquisa reversa. Verifique a linha de comando usada nas preferências.
+Não é possível acionar a pesquisa inversa. Verifique a linha de comando nas preferências.
 
 Change Language
 Mudar o idioma (Change Language)
@@ -155,17 +185,23 @@ Mudar o idioma (Change Language)
 Check for &Updates
 Procurar atualizações
 
+Check for Updates
+Procurar atualizações
+
 Continuous
 Contínuo
 
 Continuous book view
-Ver como Livro contínuo
+Ver como livro contínuo
 
 Continuous facing
 Página dupla contínua
 
 Contribute Translation
-Contribuir na tradução
+Contribute Translation
+
+Copying text was denied (copying as image only)
+Cópia de texto negada (copiando somente como imagem)
 
 Could not open Printer
 Erro ao acessar a impressora.
@@ -206,6 +242,9 @@ Digite a senha
 Enter password for %s
 Digite a senha de %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:
+
 Error loading PDF file.
 Erro ao abrir o arquivo PDF.
 
@@ -242,11 +281,17 @@ Localizar anterior
 Find:
 Localizar:
 
+Fit &Content\tCtrl-3
+Ajustar ao &conteúdo\tCtrl-3
+
 Fit &Page\tCtrl-0
 &Página inteira\tCtrl-0
 
 Fit &Width\tCtrl-2
 Ajustar pela l&argura\tCtrl-2
+
+Fit Content
+Ajustar ao conteúdo
 
 Fit Page
 Página inteira
@@ -335,6 +380,9 @@ Tamanho da página:
 Page number %u inexistant
 A página %u não existe
 
+Page scaling
+Ajuste da página
+
 Page:
 Página:
 
@@ -343,6 +391,9 @@ Por favor aguarde, renderizando...
 
 Previous Page
 Página anterior
+
+Print range
+Intervalo de impressão
 
 Printing problem.
 Problema de impressão.
@@ -442,23 +493,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Attachment: %s
-#Bookmarks
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Page scaling
-#Print range
 
