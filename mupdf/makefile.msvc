@@ -3,6 +3,7 @@
 # CFG=dbg|rel (default: dbg)
 # EXTLIBSDIR=<directory where zlib/freetype/jpeg lib live> (default: ..\ext)
 #  e.g. ..\sumatrapdf\ext
+# NASM=<path to nasm.exe> (default: nasm.exe)
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -31,13 +32,15 @@ FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
 
 # if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
 JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
-#JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
+JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
 
 OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg-1.3\libopenjpeg
 JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
 
-# nasm.exe must be in PATH
+# full path to NASM can be passed in or we'll assume it's in PATH
+!if "$(NASM)"==""
 NASM=nasm.exe
+!endif
 
 CC = cl.exe
 
