@@ -31,8 +31,14 @@ ZLIB_DIR=$(EXTLIBSDIR)\zlib-1.2.5
 FREETYPE_DIR=$(EXTLIBSDIR)\freetype2
 
 # if JPEG_TURBO_DIR is defined, we use libjpeg-turbo, otherwise we use libpjeg
-JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
+#JPEG_DIR=$(EXTLIBSDIR)\jpeg-8b
 JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
+
+!if "$(JPEG_DIR)" != ""
+!if "$(JPEG_TURBO_DIR)"!=""
+!error Can't set both JPEG_DIR and JPEG_TURBO_DIR
+!endif
+!endif
 
 OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg-1.3\libopenjpeg
 JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
@@ -77,10 +83,13 @@ JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /I$(JBIG2_DIR) /wd4018
 
 OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR)
 
+!if "$(JPEG_TURBO_DIR)"==""
 JPEG_CFLAGS = $(CFLAGS) /I$(JPEG_DIR)
-
+!else
 JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
+JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018
 JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win32
+!endif
 
 MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC" /D "USE_HINTING"
 
@@ -116,6 +125,7 @@ ZLIB_OBJS = \
 	$(O)\inffast.obj $(O)\inftrees.obj $(O)\deflate.obj $(O)\compress.obj \
 	$(O)\trees.obj $(O)\gzlib.obj $(O)\gzread.obj $(O)\gzwrite.obj $(O)\gzclose.obj
 
+!if "$(JPEG_TURBO_DIR)"==""
 JPEG_OBJS = \
 	$(O)\jaricom.obj $(O)\jcomapi.obj $(O)\jutils.obj $(O)\jerror.obj $(O)\jmemmgr.obj \
 	$(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jcarith.obj $(O)\jctrans.obj $(O)\jcparam.obj \
@@ -127,7 +137,7 @@ JPEG_OBJS = \
 	$(O)\jdcoefct.obj $(O)\jdpostct.obj $(O)\jddctmgr.obj $(O)\jidctfst.obj $(O)\jidctflt.obj \
 	$(O)\jidctint.obj $(O)\jdsample.obj $(O)\jdcolor.obj $(O)\jquant1.obj $(O)\jquant2.obj \
 	$(O)\jdmerge.obj $(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
-
+!else
 JPEG_TURBO_OBJS = \
   $(O)\jsimdcpu.obj $(O)\jccolmmx.obj $(O)\jdcolmmx.obj $(O)\jcsammmx.obj \
   $(O)\jdsammmx.obj $(O)\jdmermmx.obj $(O)\jcqntmmx.obj $(O)\jfmmxfst.obj $(O)\jfmmxint.obj \
@@ -145,10 +155,11 @@ JPEG_TURBO_OBJS = \
   $(O)\jdmerge.obj $(O)\jdpostct.obj $(O)\jdsample.obj $(O)\jdtrans.obj $(O)\jerror.obj \
   $(O)\jfdctflt.obj $(O)\jfdctint.obj $(O)\jidctflt.obj $(O)\jidctfst.obj $(O)\jidctint.obj \
   $(O)\jquant1.obj $(O)\jquant2.obj $(O)\jutils.obj $(O)\jmemmgr.obj $(O)\jmemnobs.obj \
-  $(O)\jaricom.obj $(O)\jcarith.obj $(O)\jdarith.obj $(O)\jfdctfst.obj
+  $(O)\jaricom.obj $(O)\jcarith.obj $(O)\jdarith.obj $(O)\jfdctfst.obj \
+  $(O)\jidctred.obj $(O)\jdphuff.obj $(O)\jcphuff.obj
 
 #TODO: do I need those? They show up in mac compilation log but don't seem to be necessary
-#$(O)\jidctred.obj $(O)\jdphuff.obj $(O)\jcphuff.obj
+!endif
 
 JBIG2_OBJS = \
 	$(O)\jbig2.obj $(O)\jbig2_arith.obj \
@@ -229,7 +240,6 @@ LIBS_OBJS = $(LIBS_OBJS) $(JPEG_OBJS)
 !else
 LIBS_OBJS = $(LIBS_OBJS) $(JPEG_TURBO_OBJS)
 !endif
-
 
 PDFAPP_RES = $(O)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(O)\win_main.obj $(O)\pdfapp.obj $(PDFAPP_RES)
@@ -630,19 +640,21 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 {$(ZLIB_DIR)}.c{$(O)}.obj::
 	$(CC) $(ZLIB_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
+!if "$(JPEG_TURBO_OBJS)"==""
 # libjpeg directories
 {$(JPEG_DIR)}.c{$(O)}.obj::
 	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
-
+!else
 # jpeg-turbo directories
-#{$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
-#	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+{$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(JPEG_TURBO_DIR)\simd}.c{$(O)}.obj::
 	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 {$(JPEG_TURBO_DIR)\simd}.asm{$(O)}.obj:
   $(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
+!endif
 
 # openjpeg directories
 {$(OPENJPEG_DIR)}.c{$(O)}.obj::
