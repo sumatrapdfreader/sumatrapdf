@@ -4,9 +4,11 @@
 #ifndef _WINDOWINFO_H_
 #define _WINDOWINFO_H_
 
+#include <shlobj.h>
 #include "DisplayModel.h"
 #include "FileWatch.h"
 #include "PdfSync.h"
+#include "vstrlist.h"
 
 /* Current state of a window:
   - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF
@@ -49,70 +51,8 @@ typedef struct SelectionOnPage {
 class WindowInfo : public PdfSearchTracker
 {
 public:
-    WindowInfo(HWND hwnd) {
-        state = WS_ABOUT;
-        hwndFrame = hwnd;
-
-        dm = NULL;
-        next = NULL;
-        linkOnLastButtonDown = NULL;
-        url = NULL;
-        selectionOnPage = NULL;
-        tocLoaded = false;
-        fullScreen = false;
-        presentation = PM_DISABLED;
-        hwndCanvas = NULL;
-        hwndToolbar = NULL;
-        hwndReBar = NULL;
-        hwndFindText = NULL;
-        hwndFindBox = NULL;
-        hwndFindBg = NULL;
-        hwndPageText = NULL;
-        hwndPageBox = NULL;
-        hwndPageBg = NULL;
-        hwndPageTotal = NULL;
-        hwndTocBox = NULL;
-        hwndTocTree = NULL;
-        hwndSpliter = NULL;
-        hwndInfotip = NULL;
-        hwndPdfProperties = NULL;
-
-        infotipVisible = false;
-        hMenu = NULL;
-        hdc = NULL;
-        findThread = NULL;
-        findCanceled = false;
-        findPercent = 0;
-        findStatusVisible = false;
-        showSelection = false;
-        showForwardSearchMark = false;
-        mouseAction = MA_IDLE;
-        ZeroMemory(&selectionRect, sizeof(selectionRect));
-        fwdsearchmarkRects.clear();
-        fwdsearchmarkHideStep = 0;
-        needrefresh = false;
-        pdfsync = NULL;
-        findStatusThread = NULL;
-        stopFindStatusThreadEvent = NULL;
-        hdcToDraw = NULL;
-        hdcDoubleBuffer = NULL;
-        bmpDoubleBuffer = NULL;
-        title = NULL;
-        loadedFilePath = NULL;
-        currPageNo = 0;
-        xScrollSpeed = 0;
-        yScrollSpeed = 0;
-        wheelAccumDelta = 0;
-        delayedRepaintTimer = 0;
-        resizingTocBox = false;
-        pluginParent = NULL;
-
-        HDC hdcFrame = GetDC(hwndFrame);
-        dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);
-        // round untypical resolutions up to the nearest quarter
-        uiDPIFactor = ceil(dpi * 4.0 / USER_DEFAULT_SCREEN_DPI) / 4.0;
-        ReleaseDC(hwndFrame, hdcFrame);
-    }
+    WindowInfo(HWND hwnd);
+    ~WindowInfo();
     
     void GetCanvasSize() { 
         GetClientRect(hwndCanvas, &canvasRc);
@@ -239,12 +179,34 @@ public:
 
     void FindStart();
     virtual bool FindUpdateStatus(int count, int total);
+    void AbortFinding();
     void FocusPageNoEdit();
 
-    static WindowInfo *FindByHwnd(HWND hwnd);
+    bool DoubleBuffer_New();
+    void DoubleBuffer_Show(HDC hdc);
+    void DoubleBuffer_Delete();
+    void RedrawAll(bool update=false);
+
+    bool PdfLoaded() const { return this->dm != NULL; }
+    HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
+    void UpdateTocSelection(int currPageNo);
+
+    void ResizeToWindow();
+    void ToggleZoom();
+    void ZoomToSelection(double factor, bool relative);
 };
 
-WindowInfo* WindowInfoList_Find(LPTSTR file);
+class WindowInfoList : public vector<WindowInfo *>
+{
+public:
+    void remove(WindowInfo *win);
+    WindowInfo * find(HWND hwnd);
+    WindowInfo * find(TCHAR *filepath);
+
+    static WindowInfo * Find(HWND hwnd);
+    static WindowInfo * Find(TCHAR *filepath);
+};
+
 WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, TCHAR *windowTitle=NULL);
 void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UINT line, UINT col, UINT ret, UINT page, vector<RectI> &rects);
 

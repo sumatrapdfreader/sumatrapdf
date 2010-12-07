@@ -250,6 +250,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\WindowInfo.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\WindowInfo.h"
 				>
 			</File>

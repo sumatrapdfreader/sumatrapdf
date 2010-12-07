@@ -151,8 +151,6 @@ static FileHistoryList *            gFileHistoryRoot = NULL;
        HINSTANCE                    ghinst = NULL;
 static TCHAR                        gWindowTitle[MAX_LOADSTRING];
 
-static WindowInfo*                  gWindowList;
-
 static HCURSOR                      gCursorArrow;
        HCURSOR                      gCursorHand;
 static HCURSOR                      gCursorDrag;
@@ -166,6 +164,7 @@ static HFONT                        gDefaultGuiFont;
 static HBITMAP                      gBitmapReloadingCue;
 
 static RenderCache                  gRenderCache;
+static WindowInfoList               gWindowList;
 
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
@@ -1332,8 +1331,8 @@ static BOOL Prefs_Save(void)
         return FALSE;
 
     /* mark currently shown files as visible */
-    for (WindowInfo *currWin = gWindowList; currWin; currWin = currWin->next)
-        UpdateCurrentFileDisplayStateForWin(currWin);
+    for (size_t i = 0; i < gWindowList.size(); i++)
+        UpdateCurrentFileDisplayStateForWin(gWindowList[i]);
 
     const char *data = Prefs_Serialize(&gFileHistoryRoot, &dataLen);
     if (!data)
@@ -1380,70 +1379,6 @@ static void WindowInfo_Refresh(WindowInfo* win, bool autorefresh) {
     DisplayState_Free(&ds);
 }
 
-
-static void WindowInfo_DoubleBuffer_Delete(WindowInfo *win) {
-    if (win->bmpDoubleBuffer) {
-        DeleteObject(win->bmpDoubleBuffer);
-        win->bmpDoubleBuffer = NULL;
-    }
-
-    if (win->hdcDoubleBuffer) {
-        DeleteDC(win->hdcDoubleBuffer);
-        win->hdcDoubleBuffer = NULL;
-    }
-    win->hdcToDraw = NULL;
-}
-
-static bool WindowInfo_DoubleBuffer_New(WindowInfo *win)
-{
-    WindowInfo_DoubleBuffer_Delete(win);
-
-    win->hdc = GetDC(win->hwndCanvas);
-    win->hdcToDraw = win->hdc;
-    win->GetCanvasSize();
-
-#ifdef DOUBLE_BUFFER
-    if (0 == win->winDx() || 0 == win->winDy())
-        return true;
-
-    win->hdcDoubleBuffer = CreateCompatibleDC(win->hdc);
-    if (!win->hdcDoubleBuffer)
-        return false;
-
-    win->bmpDoubleBuffer = CreateCompatibleBitmap(win->hdc, win->winDx(), win->winDy());
-    if (!win->bmpDoubleBuffer) {
-        WindowInfo_DoubleBuffer_Delete(win);
-        return false;
-    }
-    SelectObject(win->hdcDoubleBuffer, win->bmpDoubleBuffer);
-    /* fill out everything with background color */
-    RECT r = { 0, 0, win->winDx(), win->winDy() };
-    FillRect(win->hdcDoubleBuffer, &r, win->presentation ? gBrushBlack : gBrushBg);
-    win->hdcToDraw = win->hdcDoubleBuffer;
-#endif
-
-    return true;
-}
-
-static void WindowInfo_DoubleBuffer_Show(WindowInfo *win, HDC hdc)
-{
-    if (win->hdc != win->hdcToDraw) {
-        assert(win->hdcToDraw == win->hdcDoubleBuffer);
-        BitBlt(hdc, 0, 0, win->winDx(), win->winDy(), win->hdcDoubleBuffer, 0, 0, SRCCOPY);
-    }
-}
-
-static void WindowInfo_AbortFinding(WindowInfo *win)
-{
-    if (win->findThread) {
-        win->findCanceled = true;
-        WaitForSingleObject(win->findThread, INFINITE);
-    }
-    win->findCanceled = false;
-}
-
-static void WindowInfoList_Remove(WindowInfo *to_remove);
-
 static void WindowInfo_Delete(WindowInfo *win)
 {
     // must DestroyWindow(win->hwndPdfProperties) before removing win from
@@ -1453,112 +1388,14 @@ static void WindowInfo_Delete(WindowInfo *win)
         DestroyWindow(win->hwndPdfProperties);
         assert(NULL == win->hwndPdfProperties);
     }
-    WindowInfoList_Remove(win);
+    gWindowList.remove(win);
 
-    WindowInfo_AbortFinding(win);
-    delete win->dm;
-    win->dm = NULL;
-    delete win->pdfsync;
-    win->pdfsync = NULL;
-
-    if (win->stopFindStatusThreadEvent) {
-        CloseHandle(win->stopFindStatusThreadEvent);
-        win->stopFindStatusThreadEvent = NULL;
-    }
-    if (win->findStatusThread) {
-        CloseHandle(win->findStatusThread);
-        win->findStatusThread = NULL;
-    }
-    WindowInfo_DoubleBuffer_Delete(win);
     DragAcceptFiles(win->hwndCanvas, FALSE);
     DeleteOldSelectionInfo(win);
-
-    free(win->title);
-    free(win->loadedFilePath);
 
     delete win;
 }
 
-WindowInfo* WindowInfo::FindByHwnd(HWND hwnd)
-{
-    for (WindowInfo *win = gWindowList; win; win = win->next) {
-        if (hwnd == win->hwndFrame)
-            return win;
-        if (hwnd == win->hwndCanvas)
-            return win;
-        if (hwnd == win->hwndReBar)
-            return win;
-        if (hwnd == win->hwndFindBox)
-            return win;
-        if (hwnd == win->hwndFindStatus)
-            return win;
-        if (hwnd == win->hwndPageBox)
-            return win;
-        if (hwnd == win->hwndTocBox)
-            return win;
-        if (hwnd == win->hwndTocTree)
-            return win;
-        if (hwnd == win->hwndSpliter)
-            return win;
-        if (hwnd == win->hwndPdfProperties)
-            return win;
-    }
-    return NULL;
-}
-
-static void WindowInfoList_Add(WindowInfo *win) {
-    win->next = gWindowList;
-    gWindowList = win;
-}
-
-static void WindowInfoList_Remove(WindowInfo *to_remove) {
-    assert(to_remove);
-    if (!to_remove)
-        return;
-    if (gWindowList == to_remove) {
-        gWindowList = to_remove->next;
-        return;
-    }
-    for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
-        if (to_remove == curr->next) {
-            curr->next = to_remove->next;
-            return;
-        }
-    }
-}
-
-static void WindowInfoList_DeleteAll(void) {
-    WindowInfo* curr = gWindowList;
-    while (curr) {
-        WindowInfo* next = curr->next;
-        WindowInfo_Delete(curr);
-        curr = next;
-    }
-    gWindowList = NULL;
-}
-
-static int WindowInfoList_Len(void) {
-    int len = 0;
-    for (WindowInfo* curr = gWindowList; curr; curr = curr->next)
-        ++len;
-    return len;
-}
-
-// Find the first windows showing a given PDF file 
-WindowInfo* WindowInfoList_Find(TCHAR * file) {
-    TCHAR * normFile = FilePath_Normalize(file, FALSE);
-    if (!normFile)
-        return NULL;
-
-    for (WindowInfo* curr = gWindowList; curr; curr = curr->next) {
-        if (curr->loadedFilePath && tstr_ieq(curr->loadedFilePath, normFile)) {
-            free(normFile);
-            return curr;
-        }
-    }
-    free(normFile);
-    return NULL;
-}
 
 static void UpdateToolbarBg(HWND hwnd, BOOL enabled)
 {
@@ -1585,17 +1422,10 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     }
 }
 
-static void WindowInfo_RedrawAll(WindowInfo *win, bool update=false) {
-    InvalidateRect(win->hwndCanvas, NULL, false);
-    if (update)
-        UpdateWindow(win->hwndCanvas);
-}
-
 static bool FileCloseMenuEnabled(void) {
-    for (WindowInfo* win = gWindowList; win; win = win->next) {
-        if (win->state != WS_ABOUT)
+    for (size_t i = 0; i < gWindowList.size(); i++)
+        if (gWindowList[i]->state != WS_ABOUT)
             return true;
-    }
     return false;
 }
 
@@ -1653,17 +1483,9 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     }
 }
 
-static BOOL WindowInfo_PdfLoaded(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return FALSE;
-    if (!win->dm) return FALSE;
-    return TRUE;
-}
-
 static void MenuUpdateBookmarksStateForWindow(WindowInfo *win) {
     HMENU hmenu = win->hMenu;
-    BOOL documentSpecific = WindowInfo_PdfLoaded(win);
+    BOOL documentSpecific = win->PdfLoaded();
     BOOL enabled = WS_SHOWING_PDF == win->state && win->dm && win->dm->hasTocTree();
 
     if (documentSpecific ? win->dm->_showToc : gGlobalPrefs.m_showToc)
@@ -1776,9 +1598,9 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
 /* Disable/enable menu items and toolbar buttons depending on wheter a
    given window shows a PDF file or not. */
 static void MenuToolbarUpdateStateForAllWindows(void) {
-    for (WindowInfo* win = gWindowList; win; win = win->next) {
-        MenuUpdateStateForWindow(win);
-        ToolbarUpdateStateForWindow(win);
+    for (size_t i = 0; i < gWindowList.size(); i++) {
+        MenuUpdateStateForWindow(gWindowList[i]);
+        ToolbarUpdateStateForWindow(gWindowList[i]);
     }
 }
 
@@ -1844,7 +1666,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     if (!hwndFrame)
         return NULL;
 
-    assert(NULL == WindowInfo::FindByHwnd(hwndFrame));
+    assert(NULL == gWindowList.Find(hwndFrame));
     win = new WindowInfo(hwndFrame);
 
     hwndCanvas = CreateWindowEx(
@@ -1878,7 +1700,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     DragAcceptFiles(win->hwndCanvas, TRUE);
 
     win->stopFindStatusThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    WindowInfoList_Add(win);
+    gWindowList.push_back(win);
     return win;
 }
 
@@ -1961,7 +1783,7 @@ static bool LoadPdfIntoWindow(
     win->GetCanvasSize();
 
     DisplayModel *previousmodel = win->dm;
-    WindowInfo_AbortFinding(win);
+    win->AbortFinding();
 
     free(win->loadedFilePath);
     win->loadedFilePath = tstr_dup(fileName);
@@ -2031,7 +1853,7 @@ static bool LoadPdfIntoWindow(
     // win->dm->setScrollState(&ss);
 
     if (!is_new_window) {
-        WindowInfo_RedrawAll(win);
+        win->RedrawAll();
         OnMenuFindMatchCase(win); 
     }
     WindowInfo_UpdateFindbox(win);
@@ -2094,12 +1916,12 @@ Error:
         } else {
             // Hide the now useless ToC sidebar and force an update afterwards
             win->HideTocBox();
-            WindowInfo_RedrawAll(win, true);
+            win->RedrawAll(true);
         }
     }
     MenuToolbarUpdateStateForAllWindows();
     if (win->state == WS_ERROR_LOADING_PDF) {
-        WindowInfo_RedrawAll(win);
+        win->RedrawAll();
         return false;
     }
     // This should only happen after everything else is ready
@@ -2119,11 +1941,22 @@ static void OnFileChange(const TCHAR * filename, LPARAM param)
     PostMessage(((WindowInfo *)param)->hwndFrame, WM_APP_AUTO_RELOAD, 0, 0);
 }
 
+WindowInfo* WindowInfoList::Find(HWND hwnd)
+{
+    return gWindowList.find(hwnd);
+}
+
+WindowInfo* WindowInfoList::Find(LPTSTR file)
+{
+    return gWindowList.find(file);
+}
+
 #ifndef THREAD_BASED_FILEWATCH
-static void WindowInfo_RefreshUpdatedFiles(void) {
-    for (WindowInfo *curr = gWindowList; curr; curr = curr->next) {
-        if (curr->watcher.HasChanged())
-            OnFileChange(curr->watcher.filepath(), (LPARAM)curr);
+static void WindowInfoList_RefreshUpdatedFiles(void) {
+    for (size_t i = 0; i < gWindowList.size(); i++) {
+        WindowInfo *win = gWindowList[i];
+        if (win->watcher.HasChanged())
+            OnFileChange(win->watcher.filepath(), (LPARAM)win);
     }
 }
 #endif
@@ -2181,8 +2014,8 @@ WindowInfo* LoadPdf(const TCHAR *fileName, WindowInfo *win, bool showWin, TCHAR 
     if (!fileName) return NULL;
 
     bool is_new_window = false;
-    if (!win && 1 == WindowInfoList_Len() && WS_ABOUT == gWindowList->state) {
-        win = gWindowList;
+    if (!win && 1 == gWindowList.size() && WS_ABOUT == gWindowList[0]->state) {
+        win = gWindowList[0];
     }
     else if (!win || WS_SHOWING_PDF == win->state) {
         is_new_window = true;
@@ -2266,54 +2099,6 @@ void Win32_Font_Delete(HFONT font)
     DeleteObject(font);
 }
 
-static HTREEITEM WindowInfo_TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
-{
-    HTREEITEM hCurrItem = NULL;
-
-    while (hItem) {
-        TVITEM item;
-        item.hItem = hItem;
-        item.mask = TVIF_PARAM | TVIF_STATE;
-        item.stateMask = TVIS_EXPANDED;
-        TreeView_GetItem(win->hwndTocTree, &item);
-
-        // return if this item is on the specified page (or on a latter page)
-        if (item.lParam && PDF_LGOTO == ((pdf_link *)item.lParam)->kind) {
-            int page = win->dm->pdfEngine->findPageNo(((pdf_link *)item.lParam)->dest);
-            if (page <= pageNo)
-                hCurrItem = hItem;
-            if (page >= pageNo)
-                break;
-        }
-
-        // find any child item closer to the specified page
-        HTREEITEM hSubItem = NULL;
-        if ((item.state & TVIS_EXPANDED))
-            hSubItem = WindowInfo_TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo);
-        if (hSubItem)
-            hCurrItem = hSubItem;
-
-        hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
-    }
-
-    return hCurrItem;
-}
-
-static void WindowInfo_UpdateTocSelection(WindowInfo *win, int currPageNo)
-{
-    if (!win->dm || !win->dm->_showToc || !win->tocLoaded)
-        return;
-    if (GetFocus() == win->hwndTocTree)
-        return;
-
-    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
-    if (!hRoot)
-        return;
-    HTREEITEM hCurrItem = WindowInfo_TreeItemForPageNo(win, hRoot, currPageNo);
-    if (hCurrItem)
-        TreeView_SelectItem(win->hwndTocTree, hCurrItem);
-}
-
 // The current page edit box is updated with the current page number
 void DisplayModel::pageChanged()
 {
@@ -2331,7 +2116,7 @@ void DisplayModel::pageChanged()
             ToolbarUpdateStateForWindow(win);
         }
         if (currPageNo != win->currPageNo) {
-            WindowInfo_UpdateTocSelection(win, currPageNo);
+            win->UpdateTocSelection(currPageNo);
             if (ZOOM_FIT_CONTENT == _zoomVirtual)
                 // re-allow hiding the scroll bars
                 win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
@@ -2468,70 +2253,6 @@ void DisplayModel::setScrollbarsState(void)
         }
     }
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
-}
-
-static void WindowInfo_ResizeToWindow(WindowInfo *win)
-{
-    assert(win);
-    if (!win) return;
-    assert(win->dm);
-    if (!win->dm) return;
-
-    win->dm->changeTotalDrawAreaSize(win->winSize());
-}
-
-static void WindowInfo_ToggleZoom(WindowInfo *win)
-{
-    DisplayModel *  dm;
-
-    assert(win);
-    if (!win) return;
-
-    dm = win->dm;
-    assert(dm);
-    if (!dm) return;
-
-    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
-    if (ZOOM_FIT_PAGE == dm->zoomVirtual())
-        dm->zoomTo(ZOOM_FIT_WIDTH);
-    else if (ZOOM_FIT_WIDTH == dm->zoomVirtual())
-        dm->zoomTo(ZOOM_FIT_CONTENT);
-    else if (ZOOM_FIT_CONTENT == dm->zoomVirtual())
-        dm->zoomTo(ZOOM_FIT_PAGE);
-}
-
-static void WindowInfo_ZoomToSelection(WindowInfo *win, double factor, bool relative)
-{
-    assert(win && win->dm);
-    if (!win || !win->dm)
-        return;
-
-    POINT pt;
-    bool zoomToPt = win->showSelection && win->selectionOnPage;
-
-    if (zoomToPt) {
-        RectI selRect = win->selectionOnPage->selectionCanvas;
-        for (SelectionOnPage *sel = win->selectionOnPage->next; sel; sel = sel->next)
-            selRect = RectI_Union(selRect, sel->selectionCanvas);
-
-        RECT rc;
-        GetClientRect(win->hwndCanvas, &rc);
-        pt.x = 2 * selRect.x + selRect.dx - rect_dx(&rc) / 2;
-        pt.y = 2 * selRect.y + selRect.dy - rect_dy(&rc) / 2;
-
-        pt.x = CLAMP(pt.x, selRect.x, selRect.x + selRect.dx);
-        pt.y = CLAMP(pt.y, selRect.y, selRect.y + selRect.dy);
-
-        ScrollState ss = { 0, pt.x, pt.y };
-        if (!win->dm->cvtScreenToUser(&ss.page, &ss.x, &ss.y) || !win->dm->pageVisible(ss.page))
-            zoomToPt = false;
-    }
-
-    win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
-    if (relative)
-        win->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
-    else
-        win->dm->zoomTo(factor, zoomToPt ? &pt : NULL);
 }
 
 /*
@@ -2738,7 +2459,7 @@ static void OnDropFiles(WindowInfo *win, HDROP hDrop)
     DragFinish(hDrop);
 
     if (files_count > 0)
-        WindowInfo_RedrawAll(win);
+        win->RedrawAll();
 }
 
 static void PaintRectangle(HDC hdc, RECT * rect)
@@ -2756,10 +2477,41 @@ static void WinResizeIfNeeded(WindowInfo *win, bool resizeWindow=true)
     GetClientRect(win->hwndCanvas, &rc);
 
     if (!win->hdcToDraw || win->winDx() != rect_dx(&rc) || win->winDy() != rect_dy(&rc)) {
-        WindowInfo_DoubleBuffer_New(win);
+        win->DoubleBuffer_New();
         if (resizeWindow)
-            WindowInfo_ResizeToWindow(win);
+            win->ResizeToWindow();
     }
+}
+
+bool WindowInfo::DoubleBuffer_New()
+{
+    this->DoubleBuffer_Delete();
+
+    this->hdc = GetDC(this->hwndCanvas);
+    this->hdcToDraw = this->hdc;
+    this->GetCanvasSize();
+
+#ifdef DOUBLE_BUFFER
+    if (0 == this->winDx() || 0 == this->winDy())
+        return true;
+
+    this->hdcDoubleBuffer = CreateCompatibleDC(this->hdc);
+    if (!this->hdcDoubleBuffer)
+        return false;
+
+    this->bmpDoubleBuffer = CreateCompatibleBitmap(this->hdc, this->winDx(), this->winDy());
+    if (!this->bmpDoubleBuffer) {
+        this->DoubleBuffer_Delete();
+        return false;
+    }
+    SelectObject(this->hdcDoubleBuffer, this->bmpDoubleBuffer);
+    /* fill out everything with background color */
+    RECT r = { 0, 0, this->winDx(), this->winDy() };
+    FillRect(this->hdcDoubleBuffer, &r, this->presentation ? gBrushBlack : gBrushBg);
+    this->hdcToDraw = this->hdcDoubleBuffer;
+#endif
+
+    return true;
 }
 
 #ifdef SVN_PRE_RELEASE_VER
@@ -3376,7 +3128,7 @@ static void OnInverseSearch(WindowInfo *win, UINT x, UINT y)
 static void ChangePresentationMode(WindowInfo *win, PresentationMode mode)
 {
     win->presentation = mode;
-    WindowInfo_RedrawAll(win);
+    win->RedrawAll();
 }
 
 static void OnDraggingStart(WindowInfo *win, int x, int y)
@@ -3674,11 +3426,6 @@ static void OnMouseRightButtonClick(WindowInfo *win, int x, int y, int key)
         win->dm->goToPrevPage(0);
 }
 
-static void WindowInfo_DoubleBuffer_Resize_IfNeeded(WindowInfo *win)
-{
-    WinResizeIfNeeded(win, false);
-}
-
 static void OnPaint(WindowInfo *win)
 {
     PAINTSTRUCT ps;
@@ -3688,10 +3435,10 @@ static void OnPaint(WindowInfo *win)
     GetClientRect(win->hwndCanvas, &rc);
 
     if (WS_ABOUT == win->state) {
-        WindowInfo_DoubleBuffer_Resize_IfNeeded(win);
+        WinResizeIfNeeded(win, false);
         UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
         DrawAbout(win->hwndCanvas, win->hdcToDraw, &rc);
-        WindowInfo_DoubleBuffer_Show(win, hdc);
+        win->DoubleBuffer_Show(hdc);
     } else if (WS_ERROR_LOADING_PDF == win->state) {
         HFONT fontRightTxt = Win32_Font_GetSimple(hdc, _T("MS Shell Dlg"), 14);
         HFONT origFont = (HFONT)SelectObject(hdc, fontRightTxt); /* Just to remember the orig font */
@@ -3712,7 +3459,7 @@ static void OnPaint(WindowInfo *win)
         default:
             WinResizeIfNeeded(win);
             WindowInfo_Paint(win, hdc, &ps);
-            WindowInfo_DoubleBuffer_Show(win, hdc);
+            win->DoubleBuffer_Show(hdc);
         }
     } else
         assert(0);
@@ -3748,7 +3495,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         WindowInfo_ExitFullscreen(win);
 
     bool lastWindow = false;
-    if (1 == WindowInfoList_Len())
+    if (1 == gWindowList.size())
         lastWindow = true;
 
     if (lastWindow)
@@ -3771,7 +3518,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
             MenuUpdateBookmarksStateForWindow(win);
         }
         win->ClearTocBox();
-        WindowInfo_AbortFinding(win);
+        win->AbortFinding();
         delete win->dm;
         win->dm = NULL;
         free(win->loadedFilePath);
@@ -3783,7 +3530,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
         }
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
-        WindowInfo_RedrawAll(win);
+        win->RedrawAll();
         WindowInfo_UpdateFindbox(win);
         DeleteOldSelectionInfo(win);
     } else {
@@ -3793,7 +3540,7 @@ static void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false)
     }
 
     if (lastWindow && quitIfLast) {
-        assert(0 == WindowInfoList_Len());
+        assert(0 == gWindowList.size());
         PostQuitMessage(0);
     } else {
         MenuToolbarUpdateStateForAllWindows();
@@ -3809,7 +3556,7 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
         return;
 
     double zoom = ZoomMenuItemToZoom(menuId);
-    WindowInfo_ZoomToSelection(win, zoom, false);
+    win->ZoomToSelection(zoom, false);
     ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 }
 
@@ -3821,7 +3568,7 @@ static void OnMenuCustomZoom(WindowInfo *win)
     double zoom = win->dm->zoomVirtual();
     if (DIALOG_CANCEL_PRESSED == Dialog_CustomZoom(win->hwndFrame, &zoom))
         return;
-    WindowInfo_ZoomToSelection(win, zoom, false);
+    win->ZoomToSelection(zoom, false);
     MenuUpdateZoom(win);
 }
 
@@ -4320,7 +4067,7 @@ static void OnMenuOpen(WindowInfo *win)
 
 static void RotateLeft(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
     win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     win->dm->rotateBy(-90);
@@ -4328,7 +4075,7 @@ static void RotateLeft(WindowInfo *win)
 
 static void RotateRight(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
     win->prevCanvasBR.x = win->prevCanvasBR.y = -1;
     win->dm->rotateBy(90);
@@ -4516,7 +4263,7 @@ DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00,
 static bool CanSendAsEmailAttachment(WindowInfo *win)
 {
     // Requirements: a valid filename and access to SendMail's IDropTarget interface
-    if (win && (!WindowInfo_PdfLoaded(win) || !file_exists(win->dm->fileName())))
+    if (win && (!win->PdfLoaded() || !file_exists(win->dm->fileName())))
         return false;
 
     IDropTarget *pDropTarget = NULL;
@@ -4613,7 +4360,8 @@ static void OnSize(WindowInfo *win, int dx, int dy)
 
 static void RebuildProgramMenus(void)
 {
-    for (WindowInfo *win = gWindowList; win; win = win->next) {
+    for (size_t i = 0; i < gWindowList.size(); i++) {
+        WindowInfo *win = gWindowList[i];
         WindowInfo_RebuildMenu(win);
         // Setting the menu for a full screen window messes things up
         if (!win->fullScreen && PM_DISABLED == win->presentation)
@@ -4685,7 +4433,8 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
         SetFocus(win->hwndFrame);
 
-    for (win = gWindowList; win; win = win->next) {
+    for (size_t i = 0; i < gWindowList.size(); i++) {
+        WindowInfo *win = gWindowList[i];
         if (gGlobalPrefs.m_showToolbar)
             ShowWindow(win->hwndReBar, SW_SHOW);
         else
@@ -4707,7 +4456,8 @@ static void OnMenuSettings(WindowInfo *win)
     if (!gGlobalPrefs.m_rememberOpenedFiles)
         FileHistoryList_Free(&gFileHistoryRoot);
 
-    for (win = gWindowList; win; win = win->next) {
+    for (size_t i = 0; i < gWindowList.size(); i++) {
+        WindowInfo *win = gWindowList[i];
         RebuildProgramMenus();
         MenuUpdateBookmarksStateForWindow(win);
         MenuUpdateDisplayMode(win);
@@ -4743,28 +4493,28 @@ static void OnMenuViewContinuous(WindowInfo *win)
 
 static void OnMenuGoToNextPage(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
     win->dm->goToNextPage(0);
 }
 
 static void OnMenuGoToPrevPage(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
     win->dm->goToPrevPage(0);
 }
 
 static void OnMenuGoToLastPage(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
     win->dm->goToLastPage();
 }
 
 static void OnMenuGoToFirstPage(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
     win->dm->goToFirstPage();
 }
@@ -4779,7 +4529,7 @@ void WindowInfo::FocusPageNoEdit()
 
 static void OnMenuGoToPage(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
@@ -4795,7 +4545,7 @@ static void OnMenuGoToPage(WindowInfo *win)
 
 static void OnMenuFind(WindowInfo *win)
 {
-    if (!WindowInfo_PdfLoaded(win))
+    if (!win || !win->PdfLoaded())
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
@@ -5271,7 +5021,7 @@ static void OnChar(WindowInfo *win, int key)
     switch (key) {
     case VK_ESCAPE:
         if (win->findThread)
-            WindowInfo_AbortFinding(win);
+            win->AbortFinding();
         else if (win->presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs.m_escToExit)
@@ -5322,13 +5072,13 @@ static void OnChar(WindowInfo *win, int key)
         win->dm->goToPrevPage(0);
         break;
     case 'z':
-        WindowInfo_ToggleZoom(win);
+        win->ToggleZoom();
         break;
     case '+':
-        WindowInfo_ZoomToSelection(win, ZOOM_IN_FACTOR, true);
+        win->ZoomToSelection(ZOOM_IN_FACTOR, true);
         break;
     case '-':
-        WindowInfo_ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
+        win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
         break;
     case '/':
         OnMenuFind(win);
@@ -5472,7 +5222,8 @@ static void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win)
 
 static void UpdateToolbarToolText(void)
 {
-    for (WindowInfo *win = gWindowList; win; win = win->next) {
+    for (size_t i = 0; i < gWindowList.size(); i++) {
+        WindowInfo *win = gWindowList[i];
         UpdateToolbarPageText(win, -1);
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
@@ -5483,7 +5234,7 @@ static void UpdateToolbarToolText(void)
 static WNDPROC DefWndProcFindBox = NULL;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo *win = gWindowList.Find(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5491,7 +5242,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         if (VK_ESCAPE == wParam)
         {
             if (win->findThread)
-                WindowInfo_AbortFinding(win);
+                win->AbortFinding();
             else
                 SetFocus(win->hwndFrame);
             return 1;
@@ -5578,7 +5329,7 @@ static DWORD WINAPI FindThread(LPVOID data)
 
 static void Find(WindowInfo *win, PdfSearchDirection direction)
 {
-    WindowInfo_AbortFinding(win);
+    win->AbortFinding();
 
     FindThreadData ftd;
     ftd.win = win;
@@ -5605,7 +5356,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 
 static LRESULT CALLBACK WndProcFindStatus(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo *win = gWindowList.Find(hwnd);
     if (!win)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5743,7 +5494,7 @@ static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 static WNDPROC DefWndProcPageBox = NULL;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo *win = gWindowList.Find(hwnd);
     if (!win || !win->dm)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -5961,7 +5712,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
 static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo *win = gWindowList.Find(hwnd);
 
     switch (message)
     {
@@ -6036,7 +5787,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static WNDPROC DefWndProcTocTree = NULL;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo *win = gWindowList.Find(hwnd);
     switch (message) {
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.m_escToExit)
@@ -6083,7 +5834,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo *win = gWindowList.Find(hwnd);
     switch (message) {
     case WM_SIZE: {
         RECT rc;
@@ -6380,7 +6131,7 @@ void WindowInfo::ShowTocBox()
     SetWindowPos(hwndCanvas, NULL, cx + SPLITTER_DX, cy, cw, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
 
     dm->_showToc = TRUE;
-    WindowInfo_UpdateTocSelection(this, dm->currentPageNo());
+    this->UpdateTocSelection(dm->currentPageNo());
 }
 
 void WindowInfo::HideTocBox()
@@ -6482,8 +6233,7 @@ static int      gDeltaPerLine;      // for mouse wheel logic
 
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *    win;
-    win = WindowInfo::FindByHwnd(hwnd);
+    WindowInfo * win = gWindowList.Find(hwnd);
     switch (message)
     {
         case WM_APP_REPAINT_CANVAS:
@@ -6591,7 +6341,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                 case REPAINT_TIMER_ID:
                     win->delayedRepaintTimer = 0;
                     KillTimer(hwnd, REPAINT_TIMER_ID);
-                    WindowInfo_RedrawAll(win);
+                    win->RedrawAll();
                     break;
                 case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
@@ -6671,7 +6421,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     const TCHAR *   fileName;
     HttpReqCtx *    ctx;
 
-    win = WindowInfo::FindByHwnd(hwnd);
+    win = gWindowList.Find(hwnd);
 
     switch (message)
     {
@@ -6739,12 +6489,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
                 case IDT_VIEW_ZOOMIN:
                     if (win->dm)
-                        WindowInfo_ZoomToSelection(win, ZOOM_IN_FACTOR, true);
+                        win->ZoomToSelection(ZOOM_IN_FACTOR, true);
                     break;
 
                 case IDT_VIEW_ZOOMOUT:
                     if (win->dm)
-                        WindowInfo_ZoomToSelection(win, ZOOM_OUT_FACTOR, true);
+                        win->ZoomToSelection(ZOOM_OUT_FACTOR, true);
                     break;
 
                 case IDM_ZOOM_6400:
@@ -7766,7 +7516,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (gGlobalPrefs.m_enableAutoUpdate)
-        DownloadSumatraUpdateInfo(gWindowList, true);
+        DownloadSumatraUpdateInfo(gWindowList[0], true);
 
 #ifndef THREAD_BASED_FILEWATCH
     const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
@@ -7775,12 +7525,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     while (GetMessage(&msg, NULL, 0, 0)) {
 #ifndef THREAD_BASED_FILEWATCH
         if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
-            WindowInfo_RefreshUpdatedFiles();
+            WindowInfoList_RefreshUpdatedFiles();
             continue;
         }
 #endif
         // Make sure to dispatch the accelerator to the correct window
-        win = WindowInfo::FindByHwnd(msg.hwnd);
+        win = gWindowList.Find(msg.hwnd);
         if (!TranslateAccelerator(win ? win->hwndFrame : msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -7792,7 +7542,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
     
 Exit:
-    WindowInfoList_DeleteAll();
+    while (gWindowList.size() > 0)
+        WindowInfo_Delete(gWindowList[0]);
     FileHistoryList_Free(&gFileHistoryRoot);
     DeleteObject(gBrushBg);
     DeleteObject(gBrushWhite);

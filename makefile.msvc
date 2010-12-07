@@ -85,7 +85,7 @@ SUMATRA_OBJS = \
 	$(O)\PdfSearch.obj $(O)\SumatraAbout.obj $(O)\SumatraDialogs.obj $(O)\SumatraProperties.obj \
 	$(O)\SumatraPDF.obj $(O)\translations.obj $(O)\translations_txt.obj $(O)\LangMenuDef.obj \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
-    $(O)\RenderCache.obj $(O)\PdfSelection.obj $(SUMATRA_RES)
+    $(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(SUMATRA_RES)
 
 # Don't include a manifest in Debug builds (it could override the external manifest)
 !if "$(CFG)"=="rel"
@@ -170,6 +170,7 @@ $(O)\SumatraPDF.obj:   $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\FileHis
                        src\translations.h src\Version.h src\CrashHandler.h
 $(O)\SumatraProperties.obj: $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\translations.h
 $(O)\translations.obj: $(BASEUTILS_H)
+$(O)\WindowInfo.obj:   $(WINDOWINFO_H) baseutils\win_util.h baseutils\file_util.h
 
 # all objs depend on the equally named header
 $(SUMATRA_OBJS): src\$$(@B).h

@@ -39,6 +39,13 @@ public:
         }
         m_size = s;
     }
+    void erase(size_t i)
+    {
+        if (i < m_size) {
+            memcpy(m_data + i, m_data + i + 1, sizeof(_Ty) * (m_size - i - 1));
+            m_size--;
+        }
+    }
     size_t size() const 
     {
         return m_size;
@@ -51,8 +58,6 @@ public:
     }
     ~vector()
     {
-        for (size_t i=0; i<m_size; i++)
-            m_data[i].~_Ty();
         free(m_data);
     }
 private:
@@ -68,7 +73,7 @@ public:
     }
     void pop() {
         assert(this->size()>0);
-        resize(this->size()-1);
+        erase(this->size()-1);
     }
     _Ty &top() {
         assert(this->size()>0);
@@ -90,7 +95,7 @@ public:
         TCHAR *result, *tmp;
 
         for (size_t i = size(); i > 0; i--)
-            len += lstrlen(operator[](i - 1)) + jointLen;
+            len += lstrlen((*this)[i - 1]) + jointLen;
         len -= jointLen;
         if (len <= 0)
             return (TCHAR *)calloc(1, sizeof(TCHAR));
@@ -105,8 +110,8 @@ public:
                 lstrcpy(tmp, joint);
                 tmp += jointLen;
             }
-            lstrcpy(tmp, operator[](i));
-            tmp += lstrlen(operator[](i));
+            lstrcpy(tmp, (*this)[i]);
+            tmp += lstrlen((*this)[i]);
         }
 
         return result;
@@ -115,7 +120,7 @@ public:
     void clearFree()
     {
         for (size_t i = 0; i < size(); i++)
-            free(operator[](i));
+            free((*this)[i]);
         clear();
     }
 };
