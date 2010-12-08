@@ -125,7 +125,7 @@ END
 // Bitmap
 //
 
-IDB_TOOLBAR             BITMAP                  "toolbar_8.bmp"
+IDB_TOOLBAR             BITMAP                  "toolbar_10.bmp"
 IDB_RELOADING_CUE       BITMAP                  "reloading.bmp"
 
 /////////////////////////////////////////////////////////////////////////////

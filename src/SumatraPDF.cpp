@@ -228,12 +228,15 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { 1,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,             },
     { 2,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,             },
     { -1,  NULL,                  NULL,                   0,             },
-    { 3,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,             },
-    { 4,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,             },
+    { 3,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width"),      0,             },
+    { 4,   IDT_VIEW_FIT_PAGE,     _TRN("Fit Page"),       0,             },
+    { 5,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,             },
+    { 6,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,             },
     { -1,  IDM_FIND_FIRST,        NULL,                   0,             },
-    { 5,   IDM_FIND_PREV,         _TRN("Find Previous"),  0,             },
-    { 6,   IDM_FIND_NEXT,         _TRN("Find Next"),      0,             },
-    { 7,   IDM_FIND_MATCH,        _TRN("Match Case"),     0,             },
+    { 7,   IDM_FIND_PREV,         _TRN("Find Previous"),  0,             },
+    { 8,   IDM_FIND_NEXT,         _TRN("Find Next"),      0,             },
+    // TODO: is this button really used often enough?
+    { 9,   IDM_FIND_MATCH,        _TRN("Match Case"),     0,             },
 };
 
 #define DEFAULT_LANGUAGE "en"
@@ -826,6 +829,7 @@ static void MenuUpdateDisplayMode(WindowInfo *win)
     if (displayModeContinuous(displayMode))
         CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_CHECKED);
 
+    win->UpdateToolbarState();
 }
 
 static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
@@ -1429,8 +1433,8 @@ static bool FileCloseMenuEnabled(void) {
     return false;
 }
 
-bool TbIsSepId(int bmpIndex) {
-    return bmpIndex < 0;
+bool TbIsSeparator(ToolbarButtonInfo *tbi) {
+    return tbi->bmpIndex < 0;
 }
  
 static void ToolbarUpdateStateForWindow(WindowInfo *win) {
@@ -1438,7 +1442,7 @@ static void ToolbarUpdateStateForWindow(WindowInfo *win) {
     const LPARAM disable = (LPARAM)MAKELONG(0,0);
 
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
-        if (TbIsSepId(gToolbarButtons[i].bmpIndex))
+        if (TbIsSeparator(&gToolbarButtons[i]))
             continue;
 
         int cmdId = gToolbarButtons[i].cmdId;
@@ -4322,6 +4326,26 @@ static void OnMenuViewBook(WindowInfo *win)
     SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
 }
 
+static void OnMenuFitWidthContinuous(WindowInfo *win)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm) return;
+
+    if (win->dm->displayMode() != DM_CONTINUOUS)
+        SwitchToDisplayMode(win, DM_CONTINUOUS, false);
+    OnMenuZoom(win, IDM_ZOOM_FIT_WIDTH);
+}
+
+static void OnMenuFitSinglePage(WindowInfo *win)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm) return;
+
+    if (win->dm->displayMode() != DM_SINGLE_PAGE)
+        SwitchToDisplayMode(win, DM_SINGLE_PAGE, false);
+    OnMenuZoom(win, IDM_ZOOM_FIT_PAGE);
+}
+
 static void AdjustWindowEdge(WindowInfo *win)
 {
     DWORD exStyle = GetWindowLong(win->hwndCanvas, GWL_EXSTYLE);
@@ -5181,7 +5205,7 @@ static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL
 static TBBUTTON TbButtonFromButtonInfo(int i) {
     TBBUTTON tbButton = {0};
     tbButton.idCommand = gToolbarButtons[i].cmdId;
-    if (TbIsSepId(gToolbarButtons[i].bmpIndex)) {
+    if (TbIsSeparator(&gToolbarButtons[i])) {
         tbButton.fsStyle = TBSTYLE_SEP;
     } else {
         tbButton.iBitmap = gToolbarButtons[i].bmpIndex;
@@ -5639,7 +5663,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     HIMAGELIST himl = 0;
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
 
-    HBITMAP hbmp = LoadExternalBitmap(hInst, _T("toolbar_8.bmp"), IDB_TOOLBAR);
+    HBITMAP hbmp = LoadExternalBitmap(hInst, _T("toolbar_10.bmp"), IDB_TOOLBAR);
     BITMAP bmp;
     GetObject(hbmp, sizeof(BITMAP), &bmp);
     // stretch the toolbar bitmaps for higher DPI settings
@@ -6487,6 +6511,16 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     WindowInfo_Refresh(win, !!lParam);
                     break;
 
+                case IDT_VIEW_FIT_WIDTH:
+                    if (win->dm)
+                        OnMenuFitWidthContinuous(win);
+                    break;
+
+                case IDT_VIEW_FIT_PAGE:
+                    if (win->dm)
+                        OnMenuFitSinglePage(win);
+                    break;
+
                 case IDT_VIEW_ZOOMIN:
                     if (win->dm)
                         win->ZoomToSelection(ZOOM_IN_FACTOR, true);
@@ -6764,6 +6798,8 @@ InitMouseWheelInfo:
             break;
 
         case WM_DDE_INITIATE:
+            if (gPluginMode)
+                break;
             return OnDDEInitiate(hwnd, wParam, lParam);
         case WM_DDE_EXECUTE:
             return OnDDExecute(hwnd, wParam, lParam);
@@ -7422,9 +7458,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (hwndPluginParent) {
         gPluginMode = true;
         assert(fileNames.size() == 1);
-        // TODO: prevent plugins from being used as DDE targets
-        assert(!reuse_instance);
-        assert(!exitOnPrint);
         reuse_instance = exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.m_showToolbar = TRUE;

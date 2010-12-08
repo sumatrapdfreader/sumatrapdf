@@ -190,6 +190,7 @@ public:
     bool PdfLoaded() const { return this->dm != NULL; }
     HTREEITEM TreeItemForPageNo(HTREEITEM hItem, int pageNo);
     void UpdateTocSelection(int currPageNo);
+    void UpdateToolbarState();
 
     void ResizeToWindow();
     void ToggleZoom();

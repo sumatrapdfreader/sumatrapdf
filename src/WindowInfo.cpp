@@ -1,4 +1,5 @@
 #include "WindowInfo.h"
+#include "Resource.h"
 #include "win_util.h"
 #include "file_util.h"
 #include "tstr_util.h"
@@ -193,6 +194,28 @@ void WindowInfo::ZoomToSelection(double factor, bool relative)
         this->dm->zoomBy(factor, zoomToPt ? &pt : NULL);
     else
         this->dm->zoomTo(factor, zoomToPt ? &pt : NULL);
+
+    this->UpdateToolbarState();
+}
+
+void WindowInfo::UpdateToolbarState()
+{
+    if (!this->dm)
+        return;
+
+    DWORD state = SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
+    if (this->dm->displayMode() == DM_CONTINUOUS && this->dm->zoomVirtual() == ZOOM_FIT_WIDTH)
+        state |= TBSTATE_CHECKED;
+    else
+        state &= ~TBSTATE_CHECKED;
+    SendMessage(this->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
+
+    state = SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
+    if (this->dm->displayMode() == DM_SINGLE_PAGE && this->dm->zoomVirtual() == ZOOM_FIT_PAGE)
+        state |= TBSTATE_CHECKED;
+    else
+        state &= ~TBSTATE_CHECKED;
+    SendMessage(this->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
 }
 
 /* :::::: WindowInfoList :::::: */

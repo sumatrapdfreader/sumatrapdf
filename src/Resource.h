@@ -215,6 +215,8 @@
 #define IDT_FILE_PRINT                  3023
 #define IDT_FILE_OPENFAV                3024
 #define IDT_FILE_ADDTOFAV               3025
+#define IDT_VIEW_FIT_WIDTH              3026
+#define IDT_VIEW_FIT_PAGE               3027
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
