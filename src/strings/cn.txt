@@ -14,6 +14,12 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Actual Size\tCtrl-1
 实际大小(&U)\tCtrl-1
 
+&All selected pages
+所有选择的页面(&A)
+
+&Back\tAlt+Left Arrow
+上一视图(&B)\tAlt+Left Arrow
+
 &Close\tCtrl-W
 关闭(&C)\tCtrl-W
 
@@ -23,6 +29,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &Don't ask me again
 以后不再询问
 
+&Even pages only
+仅偶数页(&E)
+
 &File
 文件(&F)
 
@@ -31,6 +40,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 
 &First Page\tHome
 第一页\tHome
+
+&Fit pages to printable area
+适应页面到可打印区域(&F)
 
 &Go To
 转到(&G)
@@ -62,6 +74,9 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 &No, thanks
 不，谢谢(&N)
 
+&Odd pages only
+仅奇数页(&O)
+
 &Open\tCtrl-O
 打开(&O)\tCtrl-O
 
@@ -75,19 +90,31 @@ Contributor: WangKing (http://wkismet.spaces.live.com)
 上一页\t<-
 
 &Print...\tCtrl-P
-打印(&P)\tCtrl-P
+打印(&P)...\tCtrl-P
+
+&Print... (denied)
+打印(&P)...(已中断)
+
+&Remember the password for this document
+记住本文档的密码(&R)
 
 &Remember these settings for each document
 为每一个文档记住这些设置(&R)
 
 &Save As...\tCtrl-S
-另存为(&S)\tCtrl-S
+另存为(&S)...\tCtrl-S
 
 &Settings
 设置(&S)
 
+&Shrink pages to printable area (if necessary)
+缩小页面到可打印区域 (如果需要) (&S)
+
 &Skip this version
 跳过此版本
+
+&Use original page sizes
+使用原始页面大小(&U)
 
 &View
 查看(&V)
@@ -110,41 +137,71 @@ Advanced
 All files
 所有文件
 
+Application:
+应用程序:
+
 Associate with PDF files?
 是否关联 PDF 文件？
+
+Attachment: %s
+附件: %s
+
+Author:
+作者:
 
 Automatic
 自动
 
 Automatically check for &updates
-自动检查更新(&u)
+自动检查更新(&U)
+
+Book View
+书籍视图
 
 Book&marks\tF12
-书签\tF12
+书签(&M)\tF12
+
+Bookmarks
+书签
+
+Bytes
+字节
+
+Can't connect to the Internet (error %#x).
+无法连接因特网 (错误 %#x).
 
 Cancel
 取消
 
 Cannot print this file
-不能打印此文件
+无法打印此文件
 
 Cannot start inverse search command. Please check the command line in the settings.
 无法运行反向搜索命令。请检查设置中的命令行。
 
 Change Language
-改变语言 (Change Language)
+更改语言 (Change Language)
 
 Check for &Updates
-检查是否有新版本(&C)
+检查是否有新版本(&U)
+
+Check for Updates
+检查是否有新版本
 
 Continuous
 连续页面
+
+Continuous book view
+连续书籍视图
 
 Continuous facing
 连续平铺页面
 
 Contribute Translation
 提供翻译
+
+Copying text was denied (copying as image only)
+无法复制文本 (只能作为图像复制)
 
 Could not open Printer
 无法打开打印机
@@ -153,16 +210,25 @@ Couldn't initialize printer
 不能初始化打印机
 
 Couldn't render the page
-不能渲染该页面
+无法渲染该页面
+
+Created:
+创建时间:
 
 Custom &Zoom...\tCtrl-Y
-自定义缩放...\tCtrl-Y
+自定义缩放(&Z)...\tCtrl-Y
 
 Default &Layout:
 默认布局(&L)
 
 Default &Zoom:
 默认缩放(&Z)
+
+Denied Permissions:
+权限不足:
+
+Document Properties
+文档属性:
 
 Download
 下载
@@ -176,11 +242,17 @@ Enter password
 Enter password for %s
 输入 %s 的密码
 
+Enter the command-line to invoke when you double-click on the PDF document:
+双击PDF文档时输入命令行调用
+
 Error loading PDF file.
 载入 PDF 文件时发生错误。
 
+F&orward\tAlt+Right Arrow
+上一视图(&O)\tAlt+Right Arrow
+
 F&ullscreen\tCtrl-L
-全屏\tCtrl-L
+全屏(&U)\tCtrl-L
 
 Facing
 平铺页面
@@ -188,8 +260,14 @@ Facing
 Failed to save a file
 保存文件失败
 
+File Size:
+文件大小:
+
+File:
+文件:
+
 Fin&d...\tCtrl-F
-查找...\tCtrl-F
+查找(&D)...\tCtrl-F
 
 Find
 查找
@@ -203,11 +281,17 @@ Find Previous
 Find:
 查找：
 
+Fit &Content\tCtrl-3
+适应内容\tCtrl-3
+
 Fit &Page\tCtrl-0
 适合页面(&P)\tCtrl-0
 
 Fit &Width\tCtrl-2
 适合宽度(&H)\tCtrl-2
+
+Fit Content
+适应内容
 
 Fit Page
 适合页面
@@ -236,6 +320,9 @@ Make SumatraPDF my main PDF reader
 Match Case
 大小写匹配
 
+Modified:
+修改时间:
+
 New version %s is available. Download new version?
 发现新版本 %s。是否立即下载？
 
@@ -251,8 +338,14 @@ No matches were found
 No result found around line %u in file %s
 第 %u 行附近未找到同步记录 (文件: %s)
 
+No synchronization file found
+未发现同步文件
+
 No synchronization info at this position
 此位置没有同步信息
+
+Number of Pages:
+页数:
 
 OK
 确定
@@ -263,17 +356,32 @@ Open
 Open in &Adobe Reader
 在&Adobe Reader中打开
 
+P&roperties\tCtrl-D
+属性(&R)\tCtrl-D
+
 PDF Document
 PDF 文档
+
+PDF Producer:
+PDF 制作程序:
+
+PDF Version:
+PDF 版本:
 
 PDF documents
 PDF 文档
 
 Pa&ge...\tCtrl-G
-页面...\tCtrl-G
+页面(&G))...\tCtrl-G
+
+Page Size:
+页面大小:
 
 Page number %u inexistant
-页号 %u 不存在
+页码 %u 不存在
+
+Page scaling
+页面缩放比例
 
 Page:
 页数：
@@ -284,17 +392,20 @@ Please wait - rendering...
 Previous Page
 上一页
 
+Print range
+打印范围
+
 Printing problem.
 打印问题。
 
 Remember &opened files
-记住已打开的文件(&o)
+记住已打开的文件(&O)
 
 Rotate &Left\tCtrl-Shift--
-向左旋转\tCtrl-Shift--
+向左旋转(&L)\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-向右旋转\tCtrl-Shift-+
+向右旋转(&R)\tCtrl-Shift-+
 
 Searching %d of %d...
 正在搜索第%d页/共%d页
@@ -302,20 +413,29 @@ Searching %d of %d...
 Select content with Ctrl+left mouse button
 使用Ctrl+鼠标左键选择内容
 
+Send by &E-mail...
+通过E-mail发送(&E)...
+
 Set inverse search command-line
 设置反向搜索命令行
 
 Show &Toolbar
-显示工具栏
+显示工具栏(&T)
+
+Show &pages continuously
+连续显示页面(&P)
 
 Show the &bookmarks sidebar when available
-若可用则显示书签侧边栏(&b)
+若可用则显示书签侧边栏(&B)
 
 Single Page
 单个页面
 
 Source file %s has no synchronization point
 源文件 %s 没有同步点
+
+Subject:
+主题:
 
 SumatraPDF Options
 SumatraPDF 选项
@@ -327,7 +447,13 @@ SumatraPDF should now be your main PDF reader
 现在 SumatraPDF 应该是你的默认 PDF 阅读器了
 
 Synchronization file cannot be opened
-不能打开同步文件
+无法打开同步文件
+
+Text documents
+文本文档
+
+Title:
+标题:
 
 Unknown source file (%s)
 未知的源文件 (%s)
@@ -336,7 +462,7 @@ View
 查看
 
 Visit &Website
-访问网站(&V)
+访问网站(&W)
 
 Warning
 警告
@@ -362,49 +488,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [检测到改动；刷新中] %s
 
-# Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Application:
-#Attachment: %s
-#Author:
-#Book View
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Continuous book view
-#Copying text was denied (copying as image only)
-#Created:
-#Denied Permissions:
-#Document Properties
-#Enter the command-line to invoke when you double-click on the PDF document:
-#F&orward\tAlt+Right Arrow
-#File Size:
-#File:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Modified:
-#No synchronization file found
-#Number of Pages:
-#P&roperties\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Page scaling
-#Print range
-#Send by &E-mail...
-#Show &pages continuously
-#Subject:
-#Text documents
-#Title:
-#copying text
-#printing document
+copying text
+正在复制文本
+
+printing document
+正在打印文档
 
