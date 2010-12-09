@@ -8,6 +8,7 @@ Lang: dk Danish (Dansk)
 
 Contributor: Lars J. Helbo
 Contributor: Jakob Wadsager
+Contributor: Mikkel Vestergaard
 
 &About
 &Om
@@ -43,7 +44,7 @@ Contributor: Jakob Wadsager
 &Første side\tHome
 
 &Fit pages to printable area
-Tilpas sider til printbart område
+&Tilpas sider til printbart område
 
 &Go To
 &Gå til
@@ -55,7 +56,7 @@ Tilpas sider til printbart område
 &Hjælp
 
 &Last Page\tEnd
-Sidste side\tEnd
+&Sidste side\tEnd
 
 &Magnification:
 &Forstørrelse:
@@ -114,6 +115,9 @@ krymp sider til printbart område
 &Skip this version
 &Spring over denne version
 
+&Use original page sizes
+&Brug original sidestørrelser
+
 &View
 &Vis
 
@@ -165,6 +169,9 @@ Bogmærker
 Bytes
 Bytes
 
+Can't connect to the Internet (error %#x).
+Kan ikke forbinde til internettet (fejl %#x).
+
 Cancel
 Annuller
 
@@ -180,6 +187,9 @@ Skift sprog
 Check for &Updates
 Tjek for ny &version
 
+Check for Updates
+Tjek efter opdateringer
+
 Continuous
 Fortløbende
 
@@ -191,6 +201,9 @@ Fortløbende modstående
 
 Contribute Translation
 Bidgrag med oversættelse
+
+Copying text was denied (copying as image only)
+Kopiering af tekst blev nægtet (kopierer kun som billede)
 
 Could not open Printer
 Kunne ikke åbne printer
@@ -231,6 +244,9 @@ Indtast kodeord
 Enter password for %s
 Indtast kodeord for %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet:
+
 Error loading PDF file.
 Fejl ved åbning af PDF-fil.
 
@@ -267,11 +283,17 @@ Find forrige
 Find:
 Find:
 
+Fit &Content\tCtrl-3
+Tilpas &indhold\tCrtl-3
+
 Fit &Page\tCtrl-0
 Tilpas &side\tCtrl-0
 
 Fit &Width\tCtrl-2
 Tilpas &bredde\tCtrl-2
+
+Fit Content
+Tilpas indhold
 
 Fit Page
 Tilpas side
@@ -473,13 +495,4 @@ kopierer tekst
 
 printing document
 printer dokument
-
-# Untranslated:
-#&Use original page sizes
-#Can't connect to the Internet (error %#x).
-#Check for Updates
-#Copying text was denied (copying as image only)
-#Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
 
