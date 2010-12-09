@@ -329,9 +329,6 @@ Modificado:
 New version %s is available. Download new version?
 Está disponible la nueva versión %s. ¿Desea descargarla?
 
-New version available.
-Nueva versión disponible.
-
 Next Page
 Página siguiente
 
@@ -496,4 +493,7 @@ copiado de texto
 
 printing document
 impresión de documento
+
+# Untranslated:
+#SumatraPDF Update
 

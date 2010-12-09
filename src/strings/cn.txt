@@ -326,9 +326,6 @@ Modified:
 New version %s is available. Download new version?
 发现新版本 %s。是否立即下载？
 
-New version available.
-发现新版本。
-
 Next Page
 下一页
 
@@ -493,4 +490,7 @@ copying text
 
 printing document
 正在打印文档
+
+# Untranslated:
+#SumatraPDF Update
 

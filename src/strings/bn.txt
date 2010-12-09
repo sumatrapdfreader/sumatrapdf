@@ -150,9 +150,6 @@ Match Case
 New version %s is available. Download new version?
 নতুন সংস্করণ %s উপলব্ধ হয়েছে। নতুন সংস্করণ অধঃভরণ করা হবে?
 
-New version available.
-নতুন সংস্করণ উপলব্ধ হয়েছে।
-
 Next Page
 পরবর্তী পৃষ্ঠা
 
@@ -290,6 +287,7 @@ Zoom Out
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

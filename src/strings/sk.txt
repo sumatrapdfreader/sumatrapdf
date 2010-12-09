@@ -274,9 +274,6 @@ Upravené:
 New version %s is available. Download new version?
 Nová verzia %s je dispozícii. Stiahnuť novú verziu?
 
-New version available.
-Je k dispozícia nová verzia.
-
 Next Page
 Ďaľšia strana
 
@@ -448,5 +445,6 @@ prebieha tlač dokumentu
 #Page scaling
 #Print range
 #Source file %s has no synchronization point
+#SumatraPDF Update
 #Synchronization file cannot be opened
 

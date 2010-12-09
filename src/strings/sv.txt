@@ -330,9 +330,6 @@ Modified:
 New version %s is available. Download new version?
 Nyare version %s tillgänglig. Ladda ner den?
 
-New version available.
-Nyare version tillgänglig.
-
 Next Page
 Nästa sida
 
@@ -497,4 +494,7 @@ kopierar text
 
 printing document
 skriver ut dokumentet
+
+# Untranslated:
+#SumatraPDF Update
 

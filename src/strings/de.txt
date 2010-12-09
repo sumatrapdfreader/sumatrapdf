@@ -327,10 +327,7 @@ Modified:
 Geändert am:
 
 New version %s is available. Download new version?
-Es ist eine neue Version vorhanden. Möchten Sie diese herunterladen?
-
-New version available.
-Neuere Version vorhanden.
+Es ist die neue Version %s vorhanden. Möchten Sie diese herunterladen?
 
 Next Page
 &Nächste Seite
@@ -443,6 +440,9 @@ Thema:
 SumatraPDF Options
 SumatraPDF Optionen
 
+SumatraPDF Update
+SumatraPDF Update
+
 SumatraPDF is your main PDF reader
 PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
 
@@ -474,7 +474,7 @@ You have the latest version.
 Sie haben die neuste Version installiert.
 
 You have version %s
-Sie haben Version %s
+Sie haben Version %s.
 
 Zoom
 Zoom

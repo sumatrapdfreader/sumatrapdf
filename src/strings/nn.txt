@@ -146,9 +146,6 @@ Skil mellom store/små bokstavar
 New version %s is available. Download new version?
 Ny versjon (ver. %s) tilgjengeleg. Laste ned?
 
-New version available.
-Ny versjon tilgjengeleg.
-
 Next Page
 Neste side
 
@@ -287,6 +284,7 @@ Zoom ut
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

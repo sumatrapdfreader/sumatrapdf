@@ -335,9 +335,6 @@ Modified:
 New version %s is available. Download new version?
 Նոր՝ %s տարբերակը հասանելի է։ Բեռնե՞լ նոր տարբերակը։
 
-New version available.
-Հասանելի է նոր տարբերակ
-
 Next Page
 Հաջորդ էջը
 
@@ -502,4 +499,7 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
+
+# Untranslated:
+#SumatraPDF Update
 

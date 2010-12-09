@@ -279,9 +279,6 @@ Zmodyfikowano:
 New version %s is available. Download new version?
 Nowa wersja %s jest dostępna. Pobrać nową wersję?
 
-New version available.
-Nowa wersja jest dostępna.
-
 Next Page
 Następna strona
 
@@ -459,4 +456,5 @@ drukowanie dokumentu
 #Fit Content
 #Page scaling
 #Print range
+#SumatraPDF Update
 

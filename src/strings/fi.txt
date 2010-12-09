@@ -291,9 +291,6 @@ Muuttanut:
 New version %s is available. Download new version?
 Uudempi versio %s saatavilla. Ladataanko uudempi versio?
 
-New version available.
-Uusi versio saatavilla.
-
 Next Page
 Seuraava sivu
 
@@ -471,4 +468,5 @@ tulostetaan asiakirjaa
 #Fit Content
 #Page scaling
 #Print range
+#SumatraPDF Update
 

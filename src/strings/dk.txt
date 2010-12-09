@@ -328,9 +328,6 @@ Modified:
 New version %s is available. Download new version?
 Ny version %s er tilgængelig. Hent ny version?
 
-New version available.
-Ny version tilgængelig.
-
 Next Page
 Næste side
 
@@ -495,4 +492,7 @@ kopierer tekst
 
 printing document
 printer dokument
+
+# Untranslated:
+#SumatraPDF Update
 

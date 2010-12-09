@@ -149,9 +149,6 @@ Coincidir maiúsculas e minúsculas
 New version %s is available. Download new version?
 A nova versión %s está dispoñible. ¿Desexa obtela?
 
-New version available.
-Nova versión dispoñible
-
 Next Page
 Páxina seguinte
 
@@ -289,6 +286,7 @@ Afastar zoom
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

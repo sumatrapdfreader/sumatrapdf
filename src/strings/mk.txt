@@ -326,9 +326,6 @@ Modified:
 New version %s is available. Download new version?
 Нова верзија %s е достапна. Сакате да ја преземам?
 
-New version available.
-Достапна е нова верзија.
-
 Next Page
 Следна страница
 
@@ -493,4 +490,7 @@ copying text
 
 printing document
 печатам документ
+
+# Untranslated:
+#SumatraPDF Update
 

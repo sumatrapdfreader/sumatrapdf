@@ -332,9 +332,6 @@ Aangepast:
 New version %s is available. Download new version?
 Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?
 
-New version available.
-Nieuwe versie beschikbaar.
-
 Next Page
 Volgende pagina
 
@@ -499,4 +496,7 @@ tekst kopieren
 
 printing document
 bestand afdrukken
+
+# Untranslated:
+#SumatraPDF Update
 

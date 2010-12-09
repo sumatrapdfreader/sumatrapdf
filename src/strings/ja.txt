@@ -251,9 +251,6 @@ Match Case
 New version %s is available. Download new version?
 新しいバージョン %s が利用可能です。新しいバージョンをダウンロードしますか？
 
-New version available.
-新しいバージョンが利用可能です。
-
 Next Page
 次のページ
 
@@ -420,6 +417,7 @@ Zoom factor
 #Page scaling
 #Print range
 #Subject:
+#SumatraPDF Update
 #Title:
 #copying text
 #printing document

@@ -146,9 +146,6 @@ Distinguir MAYÚSCULES i minúscules
 New version %s is available. Download new version?
 Una nova versió %s está disponible. ¿Vols descarregar-la?
 
-New version available.
-Nova versió disponible.
-
 Next Page
 Pàgina Següent
 
@@ -287,6 +284,7 @@ Alluntar
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

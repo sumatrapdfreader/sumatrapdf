@@ -324,9 +324,6 @@ Keista:
 New version %s is available. Download new version?
 Yra nauja %s versija. Atsiųsti naują versiją?
 
-New version available.
-Yra nauja versija.
-
 Next Page
 Kitas puslapis
 
@@ -494,4 +491,5 @@ spausdinamas dokumentas
 
 # Untranslated:
 #Fin&d...\tCtrl-F
+#SumatraPDF Update
 

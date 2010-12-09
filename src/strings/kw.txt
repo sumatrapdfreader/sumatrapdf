@@ -253,9 +253,6 @@ An keth kas
 New version %s is available. Download new version?
 Versyon nowyth %s yw parys. Iskarga versyon nowyth?
 
-New version available.
-Versyon nowyth parys.
-
 Next Page
 Nessa Folen
 
@@ -422,6 +419,7 @@ Faktor-zoum
 #Page scaling
 #Print range
 #Subject:
+#SumatraPDF Update
 #Title:
 #copying text
 #printing document

@@ -337,9 +337,6 @@ Modified:
 New version %s is available. Download new version?
 Доступна новая версия: %s. Загрузить её?
 
-New version available.
-Доступна новая версия.
-
 Next Page
 Следующая страница
 
@@ -504,4 +501,7 @@ copying text
 
 printing document
 печатается документ
+
+# Untranslated:
+#SumatraPDF Update
 

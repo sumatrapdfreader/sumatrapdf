@@ -240,9 +240,6 @@ Razlikuj mala i velika slova
 New version %s is available. Download new version?
 Dostupna je verzija %s. Preuzeti novu verziju?
 
-New version available.
-Novija verzija je dostupna.
-
 Next Page
 Sledeća strana
 
@@ -411,6 +408,7 @@ Faktor uvećanja
 #Print range
 #Send by &E-mail...
 #Subject:
+#SumatraPDF Update
 #Title:
 #copying text
 #printing document

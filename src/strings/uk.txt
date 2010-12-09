@@ -146,9 +146,6 @@ Match Case
 New version %s is available. Download new version?
 Нова версія %s є доступною. Завантажити нову версію?
 
-New version available.
-Доступна нова версія.
-
 Next Page
 Наступна сторінка
 
@@ -285,6 +282,7 @@ Zoom Out
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

@@ -283,9 +283,6 @@ Dimodifikasi:
 New version %s is available. Download new version?
 Versi baru %s telah tersedia. Unduh versi baru ini?
 
-New version available.
-Versi baru telah tersedia
-
 Next Page
 Halaman Berikutnya
 
@@ -463,4 +460,5 @@ mencetak dokumen
 #Fit Content
 #Page scaling
 #Print range
+#SumatraPDF Update
 

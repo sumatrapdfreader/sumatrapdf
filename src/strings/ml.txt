@@ -222,7 +222,6 @@ Zoom Out
 #Match Case
 #Modified:
 #New version %s is available. Download new version?
-#New version available.
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization file found
@@ -251,6 +250,7 @@ Zoom Out
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

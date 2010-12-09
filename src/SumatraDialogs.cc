@@ -438,7 +438,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT message, WPARAM w
         data = (Dialog_NewVersion_Data*)lParam;
         assert(NULL != data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        win_set_text(hDlg, _TR("New version available."));
+        win_set_text(hDlg, _TR("SumatraPDF Update"));
 
         txt = tstr_printf(_TR("You have version %s"), data->currVersion);
         SetDlgItemText(hDlg, IDC_YOU_HAVE, txt);

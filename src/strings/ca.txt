@@ -276,9 +276,6 @@ Modificat:
 New version %s is available. Download new version?
 Hi ha disponible una versió nova. Voleu descarregar-la?
 
-New version available.
-Hi ha una versió nova.
-
 Next Page
 Pàgina següent
 
@@ -450,6 +447,7 @@ Factor de zoom
 #Page scaling
 #Print range
 #Subject:
+#SumatraPDF Update
 #copying text
 #printing document
 

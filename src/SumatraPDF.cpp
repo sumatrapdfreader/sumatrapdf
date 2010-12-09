@@ -2519,61 +2519,49 @@ bool WindowInfo::DoubleBuffer_New()
     return true;
 }
 
-#ifdef SVN_PRE_RELEASE_VER
-int CompareVersion(TCHAR *txt1, TCHAR *txt2)
-{
-    int num1 = _ttoi(txt1);
-    int num2 = _ttoi(txt2);
-    if (num1 > num2)
-        return 1;
-    if (num1 == num2)
-        return 0;
-    return -1;
-}
-#else
 // extract the next (positive) number from the string *txt
 static int ExtractNextNumber(TCHAR **txt)
 {
-    // skip non numeric characters
-    int val = -1;
-    while(**txt && ((val < 0) || (val > 9)))
-        val = *((*txt)++) - '0';
-    if (val == -1)
-        return -1;
+    int val = 0;
+    // skip non numeric characters (should only be dots)
+    for (; **txt && !_istdigit(**txt); (*txt)++);
+    for (; **txt && _istdigit(**txt); (*txt)++)
+        val = val * 10 + (**txt - '0');
 
-    TCHAR c;
-    int n;
-    while(**txt){
-        c = *((*txt)++);
-        n = c - '0';
-        if ((n < 0) || (n > 9))
-            break;
-        val = 10 * val + n;
-    }
     return val;
 }
-// compare two version string. Return 0 if they are the same, 1 if the first is greater than the second and
-// -1 otherwise.
+
+// compare two version string. Return 0 if they are the same,
+// > 0 if the first is greater than the second and < 0 otherwise.
 // e.g. 
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
-int CompareVersion(TCHAR *txt1, TCHAR *txt2)
+//   1.2.0 is the same as 1.2
+static int CompareVersion(TCHAR *txt1, TCHAR *txt2)
 {
-    int v1, v2;
-    while (1) {
-        v1 = ExtractNextNumber(&txt1);
-        v2 = ExtractNextNumber(&txt2);
-        if (v1 == v2) {
-            if (v1==-1)
-                return 0;
-        }
-        else if (v1 > v2)
-            return 1;
-        else
-            return -1;
+    while (*txt1 || *txt2) {
+        int v1 = ExtractNextNumber(&txt1);
+        int v2 = ExtractNextNumber(&txt2);
+        if (v1 != v2)
+            return v1 - v2;
     }
+
+    return 0;
 }
-#endif
+
+// the only valid chars are 0-9, . and newlines.
+// Return false if it contains anything else.
+static bool ValidProgramVersion(char *txt)
+{
+    for (; *txt; txt++) {
+        if (isdigit(*txt))
+            continue;
+        if (*txt == '.' || *txt == '\r' || *txt == '\n')
+            continue;
+        return false;
+    }
+    return true;
+}
 
 static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
 {
@@ -2586,29 +2574,6 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
         tstr_dup_replace(&gGlobalPrefs.m_versionToSkip, newVersion);
     }
     return DIALOG_OK_PRESSED == res;
-}
-
-static bool ValiProgramVersionChar(char c)
-{
-    if (c >= '0' && c <= '9')
-        return true;
-    if (c == '.' || c == '\r' || c == '\n')
-        return true;
-    return false;
-}
-
-// the only valid chars are 0-9, . and newlines. Return false if contains
-// anything else
-static bool ValidProgramVersion(char *txt)
-{
-    char c = *txt++;
-    while (c != 0) {
-        if (!ValiProgramVersionChar(c)) {
-            return false;
-        }
-        c = *txt++;
-    }
-    return true;
 }
 
 static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
@@ -2628,11 +2593,11 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     if (!ValidProgramVersion(txt)) {
         goto Exit;
     }
-        
+
     TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
-    /* reduce the string to a single line */
+    /* reduce the string to a single line (resp. drop the newline) */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
-    if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0){
+    if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0) {
         bool showDialog = true;
         // if automated, respect gGlobalPrefs.m_versionToSkip
         if (ctx->notifyErrors && gGlobalPrefs.m_versionToSkip) {
@@ -2649,7 +2614,8 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     } else {
         /* if automated => don't notify that there is no new version */
         if (!ctx->notifyErrors) {
-            MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
+            MessageBox(win->hwndFrame, _TR("You have the latest version."),
+                       _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
         }
     }
     free(verTxt);

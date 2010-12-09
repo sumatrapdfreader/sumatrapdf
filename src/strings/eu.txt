@@ -257,9 +257,6 @@ Aldatua:
 New version %s is available. Download new version?
 %s bertsio berria eskuragarri dago. Jeisterik nahi?
 
-New version available.
-Bertsio berria eskuragarri duzu.
-
 Next Page
 Hurrengo orria
 
@@ -410,6 +407,7 @@ dokumentua imprimatzen
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

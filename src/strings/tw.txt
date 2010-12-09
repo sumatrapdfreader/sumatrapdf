@@ -273,9 +273,6 @@ Modified:
 New version %s is available. Download new version?
 最新版本 %s。 是否下載?
 
-New version available.
-新的可用版本。
-
 Next Page
 下一頁
 
@@ -452,4 +449,5 @@ printing document
 #Page scaling
 #Print range
 #Searching %d of %d...
+#SumatraPDF Update
 

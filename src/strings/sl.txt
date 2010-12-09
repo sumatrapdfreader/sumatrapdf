@@ -328,9 +328,6 @@ Spremenjeno:
 New version %s is available. Download new version?
 Na voljo je nova različica %s. Jo želite prenesti?
 
-New version available.
-Na voljo je nova različica.
-
 Next Page
 Naslednja stran
 
@@ -495,4 +492,7 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
+
+# Untranslated:
+#SumatraPDF Update
 

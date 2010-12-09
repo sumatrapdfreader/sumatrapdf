@@ -282,9 +282,6 @@ Newidwyd:
 New version %s is available. Download new version?
 Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr??
 
-New version available.
-Mae fersiwn newydd ar gael.
-
 Next Page
 Tudalen Nesaf
 
@@ -462,4 +459,5 @@ argraffu dogfen
 #Fit Content
 #Page scaling
 #Print range
+#SumatraPDF Update
 

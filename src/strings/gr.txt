@@ -327,9 +327,6 @@ Modified:
 New version %s is available. Download new version?
 Νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 
-New version available.
-Νέα έκδοση διαθέσιμη
-
 Next Page
 Επόμενη σελίδα
 
@@ -494,4 +491,7 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
+
+# Untranslated:
+#SumatraPDF Update
 

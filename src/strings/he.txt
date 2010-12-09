@@ -306,9 +306,6 @@ Modified:
 New version %s is available. Download new version?
 ?%s מהדורה חדשה זמינה. להוריד מהדורה
 
-New version available.
-מהדורה חדשה זמינה
-
 Next Page
 דף הבא
 
@@ -482,4 +479,5 @@ printing document
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit &Content\tCtrl-3
 #Fit Content
+#SumatraPDF Update
 

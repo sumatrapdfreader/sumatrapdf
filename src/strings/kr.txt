@@ -301,9 +301,6 @@ Modified:
 New version %s is available. Download new version?
 새 버전 %s 이 나왔습니다. 다운로드하시겠습니까?
 
-New version available.
-새로운 버전이 나왔습니다.
-
 Next Page
 다음 장
 
@@ -457,6 +454,7 @@ printing document
 #Show &pages continuously
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
+#SumatraPDF Update
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
 

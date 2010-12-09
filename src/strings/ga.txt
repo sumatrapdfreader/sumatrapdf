@@ -147,9 +147,6 @@ Comhoiriúnaigh an cás
 New version %s is available. Download new version?
 Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 
-New version available.
-Tá leagan nua ar fáil.
-
 Next Page
 Leathanach Ar Aghaidh
 
@@ -287,6 +284,7 @@ Féithigh Amach
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

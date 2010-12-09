@@ -279,9 +279,6 @@ Modified:
 New version %s is available. Download new version?
 புதிய பதிப்பு %s பதிவிறக்க இருக்கிறது. பதிவிரக்கம் செய்யவா?
 
-New version available.
-புதிய பதிப்பு இருக்கிறது
-
 Next Page
 அடுத்த பக்கம்
 
@@ -458,4 +455,5 @@ printing document
 #Page scaling
 #Print range
 #Set inverse search command-line
+#SumatraPDF Update
 

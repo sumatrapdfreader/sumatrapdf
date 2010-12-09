@@ -327,9 +327,6 @@ Ngày chỉnh sửa
 New version %s is available. Download new version?
 Đã có phiên bản mới %s. Download phiên bản mới?
 
-New version available.
-Đã có phiên bản mới.
-
 Next Page
 Trang sau
 
@@ -494,4 +491,7 @@ copying text
 
 printing document
 đang in tập tin
+
+# Untranslated:
+#SumatraPDF Update
 

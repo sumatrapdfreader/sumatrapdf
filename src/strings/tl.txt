@@ -276,9 +276,6 @@ Nabago noong:
 New version %s is available. Download new version?
 May bagong bersyon: %s. I-download?
 
-New version available.
-Mayroong bagong bersyon.
-
 Next Page
 Sunod na Pahina
 
@@ -440,6 +437,7 @@ ipini-print ang dokumento
 #Print range
 #Source file %s has no synchronization point
 #Subject:
+#SumatraPDF Update
 #Synchronization file cannot be opened
 #Text documents
 

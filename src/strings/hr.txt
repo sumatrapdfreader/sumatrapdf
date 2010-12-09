@@ -290,9 +290,6 @@ Promijenjeno:
 New version %s is available. Download new version?
 Dostupna je nova inačica (%s). Preuzeti novu inačicu?
 
-New version available.
-Dostupna je nova inačica.
-
 Next Page
 Sljedeća stranica
 
@@ -470,4 +467,5 @@ ispisujem dokument
 #Fit Content
 #Page scaling
 #Print range
+#SumatraPDF Update
 

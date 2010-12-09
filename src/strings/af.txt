@@ -149,9 +149,6 @@ Vind Bypassende Klein Letters / Hoofletters
 New version %s is available. Download new version?
 Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 
-New version available.
-Nuwe Weergawe Beskikbaar.
-
 Next Page
 Volgende Bladsy
 
@@ -289,6 +286,7 @@ Zoem Uit
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

@@ -134,9 +134,6 @@ Make SumatraPDF my main PDF reader
 New version %s is available. Download new version?
 เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
 
-New version available.
-เวอร์ชั่นใหม่ออกแล้ว
-
 Next Page
 หน้าถัดไป
 
@@ -277,6 +274,7 @@ Zoom Out
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Options
+#SumatraPDF Update
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

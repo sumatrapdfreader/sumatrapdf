@@ -277,9 +277,6 @@ Endret:
 New version %s is available. Download new version?
 Ny versjon %s er tilgjenglig. Vil du laste ned ny versjon?
 
-New version available.
-Ny versjon tilgjenglig.
-
 Next Page
 Neste side
 
@@ -451,6 +448,7 @@ Zoom til
 #Page scaling
 #Print range
 #Subject:
+#SumatraPDF Update
 #copying text
 #printing document
 

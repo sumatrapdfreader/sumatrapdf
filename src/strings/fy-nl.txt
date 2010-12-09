@@ -275,9 +275,6 @@ Oanpast:
 New version %s is available. Download new version?
 Nije ferzje %s is beskikber. Wolle jo dizze ynlade?
 
-New version available.
-Nije ferzje beskikber.
-
 Next Page
 Folgjende side
 
@@ -449,6 +446,7 @@ Zoomfaktor
 #Page scaling
 #Print range
 #Subject:
+#SumatraPDF Update
 #copying text
 #printing document
 

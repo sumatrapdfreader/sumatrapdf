@@ -283,9 +283,6 @@ Modified:
 New version %s is available. Download new version?
 موجود می‌باشد. آیا می‌خواهید آن را بارگیری کنید؟ (%s) نسخه تازه
 
-New version available.
-.نسخه تازه موجود می‌باشد
-
 Next Page
 صفحه بعدی
 
@@ -455,4 +452,5 @@ printing document
 #Page scaling
 #Print range
 #Show the &bookmarks sidebar when available
+#SumatraPDF Update
 

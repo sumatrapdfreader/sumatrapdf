@@ -320,9 +320,6 @@ Změněno:
 New version %s is available. Download new version?
 Nová verze %s je k dispozici. Stáhnout novou verzi?
 
-New version available.
-Nová verze je k dispozici.
-
 Next Page
 Další stránka
 
@@ -492,4 +489,5 @@ tisk dokumentu
 #&Use original page sizes
 #Can't connect to the Internet (error %#x).
 #Enter the command-line to invoke when you double-click on the PDF document:
+#SumatraPDF Update
 

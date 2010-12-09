@@ -240,9 +240,6 @@ Match Case
 New version %s is available. Download new version?
 Доступна је верзија %s. Преузети нову верзију?
 
-New version available.
-Новија верзија је доступна.
-
 Next Page
 Следећа страна
 
@@ -411,6 +408,7 @@ Zoom factor
 #Print range
 #Send by &E-mail...
 #Subject:
+#SumatraPDF Update
 #Title:
 #copying text
 #printing document
