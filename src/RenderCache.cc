@@ -12,7 +12,8 @@
 static DWORD WINAPI PageRenderThread(LPVOID data);
 
 RenderCache::RenderCache(void)
-    : _cacheCount(0), _requestCount(0), invertColors(NULL), useGdiRenderer(NULL)
+    : _cacheCount(0), _requestCount(0), invertColors(NULL), useGdiRenderer(NULL),
+      maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
 {
     InitializeCriticalSection(&_cacheAccess);
     InitializeCriticalSection(&_requestAccess);
@@ -251,14 +252,14 @@ bool RenderCache::FreeNotVisible(void)
 
 
 // determine the count of tiles required for a page at a given zoom level
-static USHORT GetTileRes(DisplayModel *dm, int pageNo)
+USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 {
     fz_rect mediabox = dm->pdfEngine->pageMediabox(pageNo);
     fz_matrix ctm = dm->pdfEngine->viewctm(pageNo, dm->zoomReal(), dm->rotation());
     fz_rect pixelbox = fz_transformrect(ctm, mediabox);
 
-    double factorW = (pixelbox.x1 - pixelbox.x0) / TILE_MAX_W;
-    double factorH = (pixelbox.y1 - pixelbox.y0) / TILE_MAX_H;
+    double factorW = (pixelbox.x1 - pixelbox.x0) / (maxTileSize.dx + 1);
+    double factorH = (pixelbox.y1 - pixelbox.y0) / (maxTileSize.dy + 1);
     USHORT res = 0;
     if (factorW > 1 || factorH > 1)
         res = ceill(log(max(factorW, factorH)) / log(2.0));

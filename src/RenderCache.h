@@ -10,10 +10,6 @@
 #define RENDER_DELAY_FAILED    ((UINT)-2)
 #define INVALID_TILE_RES       ((USHORT)-1)
 
-// TODO: figure out more optimal tile size (e.g. screen or canvas size?)
-#define TILE_MAX_W 1000
-#define TILE_MAX_H 1000
-
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
  * A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
 typedef struct TilePosition {
@@ -69,6 +65,8 @@ private:
     CRITICAL_SECTION    _requestAccess;
     HANDLE              _renderThread;
 
+    const SizeI         maxTileSize;
+
 public:
     /* point these to the actual preferences for live updates */
     BOOL              * invertColors;
@@ -95,6 +93,8 @@ public:
     bool                FreeNotVisible(void);
 
 private:
+    USHORT              GetTileRes(DisplayModel *dm, int pageNo);
+
     bool                IsRenderQueueFull(void) const {
                             return _requestCount == MAX_PAGE_REQUESTS;
                         }
