@@ -62,9 +62,6 @@ public:
     int winDy() const { return canvasRc.bottom - canvasRc.top; }
     SizeI winSize() const { return SizeI(winDx(), winDy()); }
 
-    /* points to the next element in the list or the first element if
-       this is the first element */
-    WindowInfo *    next;
     WinState        state;
     bool            needrefresh; // true if the view of the PDF is not synchronized with the content of the file on disk
     TCHAR *         loadedFilePath;

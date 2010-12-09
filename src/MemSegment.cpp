@@ -2,61 +2,45 @@
 #include <assert.h>
 #include "MemSegment.h"
 
-void *MemSegment::getData(DWORD *sizeOut) {
-    DWORD totalSize = dataSize;
-    MemSegment *curr = next;
-    while (curr) {
-        totalSize += curr->dataSize;
-        curr = curr->next;
-    }
-    if (0 == dataSize)
-        return NULL;
-    char *buf = (char*)malloc(totalSize + 1); // +1 for 0 termination
-    if (!buf)
-        return NULL;
+char *MemSegment::getData(DWORD *sizeOut)
+{
+    char *buf = (char *)malloc(totalSize + 1); // +1 for 0 termination
     buf[totalSize] = 0;
-    // the chunks are linked in reverse order, so we must reassemble them properly
-    char *end = buf + totalSize;
-    curr = next;
-    while (curr) {
-        end -= curr->dataSize;
-        memcpy(end, curr->data, curr->dataSize);
-        curr = curr->next;
+
+    char *end = buf;
+    for (size_t i = 0; i < this->size(); i++) {
+        DataSegment *seg = (*this)[i];
+        memcpy(end, seg->data, seg->len);
+        end += seg->len;
     }
-    end -= dataSize;
-    memcpy(end, data, dataSize);
-    assert(end == buf);
-    *sizeOut = totalSize;
-    return (void*)buf;
+
+    assert(end == buf + totalSize);
+    if (sizeOut)
+        *sizeOut = totalSize;
+    return buf;
 }
 
-bool MemSegment::add(const void *buf, DWORD size) {
-    assert(size > 0);
-    if (!data) {
-        dataSize = size;
-        data = malloc(size);
-        if (!data)
-            return false;
-        memcpy(data, buf, size);
-    } else {
-        MemSegment *ms = new MemSegment(buf, size);
-        if (!ms)
-            return false;
-        if (!ms->data) {
-            delete ms;
-            return false;
-        }
-        ms->next = next;
-        next = ms;
-    }
+bool MemSegment::add(const void *buf, DWORD size)
+{
+    void *data = malloc(size);
+    if (!data)
+        return false;
+
+    DataSegment *seg = new DataSegment;
+    seg->len = size;
+    seg->data = data;
+    memcpy(seg->data, buf, size);
+    totalSize += size;
+    this->push_back(seg);
     return true;
 }
 
-void MemSegment::freeAll() {
-    free(data);
-    data = NULL;
-    // clever trick: each segment will delete the next segment
-    delete next;
-    next = NULL;
+void MemSegment::clearFree()
+{
+    for (size_t i = 0; i < this->size(); i++) {
+        DataSegment *seg = (*this)[i];
+        free(seg->data);
+        delete seg;
+    }
+    this->clear();
 }
-

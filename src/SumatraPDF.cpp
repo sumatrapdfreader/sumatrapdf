@@ -544,9 +544,10 @@ void u_testMemSegment()
     assert(7 == size);
     free(data);
 
-    ms = new MemSegment("a", 1);
+    ms = new MemSegment();
+    ms->add("a", 1);
     data = (char*)ms->getData(&size);
-    ms->freeAll();
+    ms->clearFree();
     delete ms;
     assert(str_eq("a", data));
     assert(1 == size);
@@ -591,7 +592,7 @@ static bool WasKeyDown(int virtKey)
 
 void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
 {
-    if (gRestrictedUse || !WininetInit())
+    if (gRestrictedUse)
         return;
     assert(win);
     HWND hwndToNotify = win->hwndFrame;
@@ -2612,10 +2613,7 @@ static bool ValidProgramVersion(char *txt)
 
 static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
-    DWORD dataSize;
-    char *txt = (char*)ctx->data.getData(&dataSize);
-    TCHAR *url = ctx->url;
-    if (!tstr_startswith(url, SUMATRA_UPDATE_INFO_URL)) {
+    if (!tstr_startswith(ctx->url, SUMATRA_UPDATE_INFO_URL)) {
         goto Exit;
     }
 
@@ -2626,6 +2624,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     // be bigger than our version number which will make program ask
     // to upgrade every time
     // to fix that, we reject text that doesn't look like comes from us
+    char *txt = (char*)ctx->data.getData();
     if (!ValidProgramVersion(txt)) {
         goto Exit;
     }
@@ -2636,7 +2635,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0){
         bool showDialog = true;
         // if automated, respect gGlobalPrefs.m_versionToSkip
-        if (ctx->autoCheck && gGlobalPrefs.m_versionToSkip) {
+        if (ctx->notifyErrors && gGlobalPrefs.m_versionToSkip) {
             if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt)) {
                 showDialog = false;
             }
@@ -2649,7 +2648,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         }
     } else {
         /* if automated => don't notify that there is no new version */
-        if (!ctx->autoCheck) {
+        if (!ctx->notifyErrors) {
             MessageBox(win->hwndFrame, _TR("You have the latest version."), _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
         }
     }
@@ -7588,7 +7587,6 @@ Exit:
 
     Translations_FreeData();
     CurrLangNameFree();
-    WininetDeinit();
     SerializableGlobalPrefs_Deinit();
 
 #ifdef BUILD_RM_VERSION

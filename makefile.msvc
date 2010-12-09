@@ -155,8 +155,9 @@ $(O)\DisplayModel.obj: $(SUMATRAPDF_H) $(WINDOWINFO_H)
 $(O)\DisplayState.obj: $(BASEUTILS_H)
 $(O)\FileHistory.obj:  baseutils\tstr_util.h src\DisplayState.h
 $(O)\FileWatch.obj:    $(SUMATRAPDF_H) baseutils\file_util.h
-$(O)\Http.obj:         $(SUMATRAPDF_H) src\MemSegment.h
+$(O)\Http.obj:         $(SUMATRAPDF_H) src\MemSegment.h baseutils\vstrlist.h src\Version.h
 $(O)\LangMenuDef.obj:  src\Resource.h
+$(O)\MemSegment.obj:   baseutils\vstrlist.h
 $(O)\PdfEngine.obj:    $(PDFENGINE_H)
 $(O)\PdfSearch.obj:    $(PDFENGINE_H) src\PdfSelection.h
 $(O)\PdfSelection.obj: $(PDFENGINE_H)
