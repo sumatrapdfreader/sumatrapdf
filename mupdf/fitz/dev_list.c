@@ -176,6 +176,9 @@ fz_listcliptext(void *user, fz_text *text, fz_matrix ctm, int accumulate)
 	node->rect = fz_boundtext(text, ctm);
 	node->item.text = fz_clonetext(text);
 	node->flag = accumulate;
+	// SumatraPDF: when accumulating, be conservative about clipping
+	if (accumulate)
+		node->rect = fz_infiniterect;
 	fz_appenddisplaynode(user, node);
 }
 
