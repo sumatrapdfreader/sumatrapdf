@@ -981,7 +981,7 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
                 AppendMenu(m, MF_SEPARATOR, 0, NULL);
                 continue;
             }
-            if (~md.m_flags & MF_NO_TRANSLATE) {
+            if (MF_NO_TRANSLATE == (md.m_flags & MF_NO_TRANSLATE)) {
                 TCHAR *tmp = utf8_to_tstr(title);
                 AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
                 free(tmp);
