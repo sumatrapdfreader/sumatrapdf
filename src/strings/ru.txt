@@ -448,6 +448,9 @@ Subject:
 SumatraPDF Options
 Параметры SumatraPDF
 
+SumatraPDF Update
+Обновление SumatraPDF
+
 SumatraPDF is your main PDF reader
 SumatraPDF ассоциирована с файлами PDF
 
@@ -501,7 +504,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#SumatraPDF Update
 
