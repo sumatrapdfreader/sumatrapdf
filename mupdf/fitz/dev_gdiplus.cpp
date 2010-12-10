@@ -49,11 +49,10 @@ static BYTE BlendColorBurn(BYTE s, BYTE bg)  { return bg == 255 ? 255 : 255 - bg
 static BYTE BlendDifference(BYTE s, BYTE bg) { return ABS(s - bg); }
 static BYTE BlendExclusion(BYTE s, BYTE bg)  { return s + bg - s * bg * 2.0 / 255; }
 
-class userDataStackItem
+struct userDataStackItem
 {
-public:
 	Region clip;
-	float alpha;
+	float alpha, layerAlpha;
 	Graphics *saveG;
 	Bitmap *layer, *mask;
 	Rect bounds;
@@ -61,8 +60,9 @@ public:
 	fz_blendmode blendmode;
 	userDataStackItem *prev;
 
-	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) : alpha(_alpha), prev(_prev), 
-		saveG(NULL), layer(NULL), mask(NULL), luminosity(false), blendmode(FZ_BNORMAL) { }
+	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
+		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
+		luminosity(false), blendmode(FZ_BNORMAL), layerAlpha(1.0) { }
 };
 
 static PointF
@@ -129,6 +129,8 @@ public:
 		clipRegion.Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 		pushClip(&clipRegion);
 		graphics->GetClip(&clipRegion);
+		stack->layerAlpha = stack->alpha;
+		stack->alpha = 1.0;
 		
 		RectF bounds;
 		clipRegion.GetBounds(&bounds, graphics);
@@ -165,7 +167,7 @@ public:
 	void pushClipBlend(fz_rect rect, fz_blendmode blendmode, float alpha)
 	{
 		recordClipMask(rect, false, NULL);
-		stack->alpha *= alpha;
+		stack->layerAlpha *= alpha;
 		stack->blendmode = blendmode;
 	}
 
@@ -198,7 +200,10 @@ public:
 			}
 			if (stack->blendmode != FZ_BNORMAL)
 				_applyBlend(stack->layer, stack->bounds, stack->blendmode);
-			graphics->DrawImage(stack->layer, stack->bounds);
+			
+			ImageAttributes imgAttrs;
+			_setDrawAttributes(&imgAttrs, stack->layerAlpha);
+			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &imgAttrs);
 			delete stack->layer;
 		}
 		
@@ -244,15 +249,7 @@ public:
 		};
 		
 		ImageAttributes imgAttrs;
-		ColorMatrix matrix = { 
-			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, alpha, 0.0f,
-			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-		};
-		imgAttrs.SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-		// imgAttrs.SetWrapMode(WrapModeClamp);
+		_setDrawAttributes(&imgAttrs, alpha);
 		
 		float scale = 2.0 * fz_matrixexpansion(ctm) / sqrtf(image->w * image->w + image->h * image->h);
 		if (scale < 1.0 && MIN(image->w, image->h) > 10)
@@ -408,6 +405,19 @@ protected:
 				return false;
 		
 		return true;
+	}
+
+	void _setDrawAttributes(ImageAttributes *imgAttrs, float alpha)
+	{
+		ColorMatrix matrix = { 
+			1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, alpha, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+		};
+		imgAttrs->SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+		// imgAttrs.SetWrapMode(WrapModeClamp);
 	}
 };
 
