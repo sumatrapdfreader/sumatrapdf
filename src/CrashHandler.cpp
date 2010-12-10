@@ -48,11 +48,21 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     WinLibrary lib(_T("DBGHELP.DLL"));
     MiniDumpWriteProc *pMiniDumpWriteDump = (MiniDumpWriteProc *)lib.GetProcAddr("MiniDumpWriteDump");
     if (!pMiniDumpWriteDump)
+    {
+#ifdef SVN_PRE_RELEASE_VER
+        MessageBox(NULL, _T("No dbghelp.dll"), _T("Sumatra crashed"), MB_ICONINFORMATION | MB_OK);
+#endif
         return 0;
+    }
 
     HANDLE dumpFile = CreateFile(g_crashDumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
     if (INVALID_HANDLE_VALUE == dumpFile)
+    {
+#ifdef SVN_PRE_RELEASE_VER
+        MessageBox(NULL, _T("Couldn't create a crashdump file"), _T("Sumatra crashed"), MB_ICONINFORMATION | MB_OK);
+#endif
         return 0;
+    }
 
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
     // set the SUMATRAPDF_FULLDUMP environment variable for far more complete minidumps
@@ -63,6 +73,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     pMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &mei, NULL, &mci);
 
     CloseHandle(dumpFile);
+
 
     // exec_with_params(g_exePath, CMD_ARG_SEND_CRASHDUMP, TRUE /* hidden */);
     return 0;
@@ -85,17 +96,15 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     // work-around of spinning a thread to do the writing
     SetEvent(g_dumpEvent);
     WaitForSingleObject(g_dumpThread, INFINITE);
-
+    MessageBox(NULL, g_crashDumpPath, _T("Sumatra crashed"), MB_ICONINFORMATION | MB_OK);
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
 void InstallCrashHandler(const TCHAR *crashDumpPath)
 {
-    GetFullPathName(crashDumpPath, dimof(g_crashDumpPath), g_crashDumpPath, NULL);
-    if (!tstr_endswithi(g_crashDumpPath, _T(".dmp")) &&
-        !tstr_endswithi(g_crashDumpPath, _T(".mdmp")))
-        _tcscat_s(g_crashDumpPath, dimof(g_crashDumpPath), _T(".dmp"));
-
+    if (NULL == crashDumpPath)
+        return;
+    tstr_copy(g_crashDumpPath, dimof(g_crashDumpPath), crashDumpPath);
     if (!g_dumpEvent && !g_dumpThread) {
         g_dumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         g_dumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);

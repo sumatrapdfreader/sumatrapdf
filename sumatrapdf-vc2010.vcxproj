@@ -113,6 +113,7 @@
     <ClCompile Include="ext\libjpeg-turbo\jutils.c" />
     <ClCompile Include="ext\libjpeg-turbo\simd\jsimd_i386.c" />
     <ClCompile Include="src\AppPrefs.cc" />
+    <ClCompile Include="src\CrashHandler.cpp" />
     <ClCompile Include="src\DisplayModel.cc" />
     <ClCompile Include="src\DisplayState.cc" />
     <ClCompile Include="src\FileHistory.cc" />
@@ -230,6 +231,7 @@
     <ClInclude Include="ext\libjpeg-turbo\jversion.h" />
     <ClInclude Include="ext\libjpeg-turbo\simd\jsimd.h" />
     <ClInclude Include="src\AppPrefs.h" />
+    <ClInclude Include="src\CrashHandler.h" />
     <ClInclude Include="src\DisplayModel.h" />
     <ClInclude Include="src\DisplayState.h" />
     <ClInclude Include="src\FileHistory.h" />

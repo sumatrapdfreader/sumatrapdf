@@ -262,7 +262,6 @@ static void DeleteOldSelectionInfo(WindowInfo *win);
 static void ClearSearch(WindowInfo *win);
 static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation=false);
 static void WindowInfo_ExitFullscreen(WindowInfo *win);
-static bool GetAcrobatPath(TCHAR * buffer=NULL, int bufSize=NULL);
 static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
@@ -859,7 +858,8 @@ static UINT AllocNewMenuId(void)
 }
 
 enum menuFlags {
-    MF_NOT_IN_RESTRICTED = 0x1 
+    MF_NOT_IN_RESTRICTED = 0x1,
+    MF_NO_TRANSLATE      = 0x2
 };
 
 MenuDef menuDefFile[] = {
@@ -914,20 +914,20 @@ MenuDef menuDefZoom[] = {
     { _TRN("Custom &Zoom...\tCtrl-Y"),      IDM_ZOOM_CUSTOM,            0  },
     { SEP_ITEM },
 #ifndef BUILD_RM_VERSION
-    { _TRN("6400%"),                        IDM_ZOOM_6400,              0  },
-    { _TRN("3200%"),                        IDM_ZOOM_3200,              0  },
-    { _TRN("1600%"),                        IDM_ZOOM_1600,              0  },
-    { _TRN("800%"),                         IDM_ZOOM_800,               0  },
+    { "6400%",                              IDM_ZOOM_6400,              MF_NO_TRANSLATE  },
+    { "3200%",                              IDM_ZOOM_3200,              MF_NO_TRANSLATE  },
+    { "1600%",                              IDM_ZOOM_1600,              MF_NO_TRANSLATE  },
+    { "800%",                               IDM_ZOOM_800,               MF_NO_TRANSLATE  },
 #endif
-    { _TRN("400%"),                         IDM_ZOOM_400,               0  },
-    { _TRN("200%"),                         IDM_ZOOM_200,               0  },
-    { _TRN("150%"),                         IDM_ZOOM_150,               0  },
-    { _TRN("125%"),                         IDM_ZOOM_125,               0  },
-    { _TRN("100%"),                         IDM_ZOOM_100,               0  },
-    { _TRN("50%"),                          IDM_ZOOM_50,                0  },
-    { _TRN("25%"),                          IDM_ZOOM_25,                0  },
-    { _TRN("12.5%"),                        IDM_ZOOM_12_5,              0  },
-    { _TRN("8.33%"),                        IDM_ZOOM_8_33,              0  },
+    { "400%",                             IDM_ZOOM_400,                 MF_NO_TRANSLATE  },
+    { "200%",                             IDM_ZOOM_200,                 MF_NO_TRANSLATE  },
+    { "150%",                             IDM_ZOOM_150,                 MF_NO_TRANSLATE  },
+    { "125%",                             IDM_ZOOM_125,                 MF_NO_TRANSLATE  },
+    { "100%",                             IDM_ZOOM_100,                 MF_NO_TRANSLATE  },
+    { "50%",                              IDM_ZOOM_50,                  MF_NO_TRANSLATE  },
+    { "25%",                              IDM_ZOOM_25,                  MF_NO_TRANSLATE  },
+    { "12.5%",                            IDM_ZOOM_12_5,                MF_NO_TRANSLATE  },
+    { "8.33%",                            IDM_ZOOM_8_33,                MF_NO_TRANSLATE  },
 };
 
 MenuDef menuDefLang[] = {
@@ -945,6 +945,10 @@ MenuDef menuDefHelp[] = {
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_NOT_IN_RESTRICTED },
     { SEP_ITEM,                             0,                          MF_NOT_IN_RESTRICTED },
     { _TRN("&About"),                       IDM_ABOUT,                  0  }
+#if 0
+    ,{ SEP_ITEM,                            0,                          MF_NOT_IN_RESTRICTED },
+    { "Crash me",                           IDM_CRASH_ME,               MF_NO_TRANSLATE  }
+#endif
 };
 
 static void AddFileMenuItem(HMENU menuFile, FileHistoryList *node, UINT index)
@@ -977,8 +981,14 @@ static HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuItems)
                 AppendMenu(m, MF_SEPARATOR, 0, NULL);
                 continue;
             }
-            const TCHAR *ttitle =  Translations_GetTranslation(title);
-            AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, ttitle);
+            if (~md.m_flags & MF_NO_TRANSLATE) {
+                TCHAR *tmp = utf8_to_tstr(title);
+                AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
+                free(tmp);
+            } else {
+                const TCHAR *tmp =  Translations_GetTranslation(title);
+                AppendMenu(m, MF_STRING, (UINT_PTR)md.m_id, tmp);
+            }
         }
     }
     return m;
@@ -1121,7 +1131,7 @@ bool IsRunningInPortableMode(void)
 }
 
 /* Caller needs to free() the result. */
-static TCHAR * AppGetAppDir(void)
+static TCHAR *AppGetAppDir(void)
 {
     TCHAR dir[MAX_PATH];
     TCHAR * appDir;
@@ -1136,7 +1146,7 @@ static TCHAR * AppGetAppDir(void)
 
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
-static TCHAR * AppGenDataFilename(TCHAR *pFilename)
+static TCHAR *AppGenDataFilename(TCHAR *pFilename)
 {
     assert(pFilename);
     if (!pFilename) return NULL;
@@ -1165,9 +1175,29 @@ static TCHAR * AppGenDataFilename(TCHAR *pFilename)
 }
 
 /* Caller needs to free() the result. */
-static TCHAR * Prefs_GetFileName()
+static TCHAR *Prefs_GetFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
+}
+
+/* Caller needs to free() the result */
+static TCHAR *GetUniqueCrashDumpPath()
+{
+    TCHAR *path;
+    TCHAR *fileName;
+    for (int n=0; n<=20; n++) {
+        if (n == 0) {
+            fileName = tstr_dup(_T("SumatraPDF.dmp"));
+        } else {
+            fileName = tstr_printf(_T("SumatraPDF-%d.dmp"), n);
+        }
+        path = AppGenDataFilename(fileName);
+        free(fileName);
+        if (!file_exists(path) || (n==20))
+            return path;
+        free(path);
+    }
+    return NULL;
 }
 
 /* Load preferences from the preferences file.
@@ -2992,6 +3022,13 @@ static void ConvertSelectionRectToSelectionOnPage (WindowInfo *win) {
     }
 }
 
+// for testing only
+static void CrashMe()
+{
+    char *p = NULL;
+    *p = 0;
+}
+
 static void OnSelectAll(WindowInfo *win, bool textOnly=false)
 {
     assert(win && win->dm);
@@ -3544,7 +3581,7 @@ static void OnMenuCustomZoom(WindowInfo *win)
 static bool CheckPrinterStretchDibSupport(HWND hwndForMsgBox, HDC hdc)
 {
 #ifdef USE_GDI_FOR_PRINTING
-    // suppose the printer supports enough of GDI(+) for reasonable results
+    // assume the printer supports enough of GDI(+) for reasonable results
     return true;
 #else
     // most printers can support stretchdibits,
@@ -4127,7 +4164,7 @@ static void OnHScroll(WindowInfo *win, WPARAM wParam)
         win->dm->scrollXTo(si.nPos);
 }
 
-static bool GetAcrobatPath(TCHAR * buffer, int bufSize)
+static bool GetAcrobatPath(TCHAR *buffer=NULL, int bufSize=0)
 {
     TCHAR path[MAX_PATH];
 
@@ -6671,6 +6708,10 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                         OnSelectAll(win);
                     break;
 
+                case IDM_CRASH_ME:
+                    CrashMe();
+                    break;
+
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
@@ -7375,9 +7416,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         else if (is_arg("-console")) {
             RedirectIOToConsole();
         }
-        else if (is_arg_with_param("-crashdump")) {
-            InstallCrashHandler(argList[++i]);
-        }
         else if (is_arg_with_param("-plugin")) {
             hwndPluginParent = (HWND)_ttoi(argList[++i]);
         }
@@ -7404,6 +7442,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }
     argList.clearFree();
+
+    TCHAR *crashDumpPath = GetUniqueCrashDumpPath();
+    InstallCrashHandler(crashDumpPath);
+    free(crashDumpPath);
 
     LoadString(hInstance, IDS_APP_TITLE, gWindowTitle, MAX_LOADSTRING);
     if (!RegisterWinClass(hInstance))
