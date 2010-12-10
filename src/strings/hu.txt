@@ -187,9 +187,6 @@ Nyelv kiválasztása (Change Language)
 Check for &Updates
 Újabb &verzió keresése
 
-Check for Updates
-Frissítések keresése
-
 Continuous
 Folyamatos
 

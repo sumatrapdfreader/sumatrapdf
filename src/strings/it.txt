@@ -190,9 +190,6 @@ Cambia lingua
 Check for &Updates
 &Controlla aggiornamenti
 
-Check for Updates
-Controlla aggiornamenti
-
 Continuous
 Pagina continua
 

@@ -182,9 +182,6 @@ Change Language
 Check for &Updates
 &Zkontrolovat aktualizace
 
-Check for Updates
-Zkontrolovat aktualizace
-
 Continuous
 Jedna stránka průběžně
 

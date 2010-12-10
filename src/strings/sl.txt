@@ -187,9 +187,6 @@ Spremeni jezik (Change Language)
 Check for &Updates
 &Preveri za posodobitve
 
-Check for Updates
-Preveri za posodobitve
-
 Continuous
 Nepretrgano
 

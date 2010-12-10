@@ -186,9 +186,6 @@ Change Language
 Check for &Updates
 Kiểm tra có phiên bản mới
 
-Check for Updates
-Kiểm tra có phiên bản mới
-
 Continuous
 Liên tiếp
 

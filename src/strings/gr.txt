@@ -186,9 +186,6 @@ Change Language
 Check for &Updates
 &Έλεγχος για νέα έκδοση
 
-Check for Updates
-Έλεγχος για ενημερώσεις
-
 Continuous
 Μια σελίδα, συνεχόμενα
 

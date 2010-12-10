@@ -17,13 +17,12 @@ public:
     TCHAR *       url;
     MemSegment    data;
     /* true for automated check, false for check triggered from menu */
-    bool          notifyErrors;
+    bool          silent;
 
     HANDLE        hThread;
 
-    HttpReqCtx(const TCHAR *url, HWND hwnd, UINT msg, bool notifyErrors=false)
-        : hwndToNotify(hwnd), msg(msg), url(NULL),
-          notifyErrors(notifyErrors), hThread(NULL) {
+    HttpReqCtx(const TCHAR *url, HWND hwnd, UINT msg, bool silent=false)
+        : hwndToNotify(hwnd), msg(msg), url(NULL), silent(silent), hThread(NULL) {
         assert(url);
         this->url = tstr_dup(url);
     }
@@ -34,6 +33,6 @@ public:
     }
 };
 
-void StartHttpDownload(const TCHAR *url, HWND hwndToNotify, UINT msg, bool autoCheck);
+void StartHttpDownload(const TCHAR *url, HWND hwndToNotify, UINT msg, bool silent);
 #endif
 

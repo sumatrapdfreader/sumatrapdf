@@ -186,9 +186,6 @@ Keisti kalbą
 Check for &Updates
 Tikrinti, ar yra na&ujinimų
 
-Check for Updates
-Tikrinti, ar yra na&ujinimų
-
 Continuous
 Nenutrūkstama
 

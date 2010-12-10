@@ -188,9 +188,6 @@ Cambiar Idioma (Change Language)
 Check for &Updates
 &Comprobar actualizaciones
 
-Check for Updates
-Comprobar Actualizaciones
-
 Continuous
 Continua
 

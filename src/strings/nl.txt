@@ -191,9 +191,6 @@ Taal wijzigen
 Check for &Updates
 Controleren op &Updates
 
-Check for Updates
-Controleren op updates
-
 Continuous
 Doorlopend
 

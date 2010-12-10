@@ -185,9 +185,6 @@ Change Language
 Check for &Updates
 &Провери за надградби
 
-Check for Updates
-Провери за надградби
-
 Continuous
 Непрекинат приказ
 

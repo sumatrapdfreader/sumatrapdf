@@ -189,9 +189,6 @@ Byt språk (Change Language)
 Check for &Updates
 &Sök efter ny version
 
-Check for Updates
-Sök uppdateringar
-
 Continuous
 Fortlöpande
 

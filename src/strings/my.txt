@@ -315,7 +315,6 @@ mencetak dokumen
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Check for &Updates
-#Check for Updates
 #Copying text was denied (copying as image only)
 #Couldn't initialize printer
 #Couldn't render the page

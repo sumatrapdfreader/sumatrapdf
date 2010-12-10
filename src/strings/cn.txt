@@ -185,9 +185,6 @@ Change Language
 Check for &Updates
 检查是否有新版本(&U)
 
-Check for Updates
-检查是否有新版本
-
 Continuous
 连续页面
 

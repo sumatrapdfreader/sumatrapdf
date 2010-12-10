@@ -2630,7 +2630,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0) {
         bool showDialog = true;
         // if automated, respect gGlobalPrefs.m_versionToSkip
-        if (ctx->notifyErrors && gGlobalPrefs.m_versionToSkip) {
+        if (ctx->silent && gGlobalPrefs.m_versionToSkip) {
             if (tstr_ieq(gGlobalPrefs.m_versionToSkip, verTxt)) {
                 showDialog = false;
             }
@@ -2643,7 +2643,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         }
     } else {
         /* if automated => don't notify that there is no new version */
-        if (!ctx->notifyErrors) {
+        if (!ctx->silent) {
             MessageBox(win->hwndFrame, _TR("You have the latest version."),
                        _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK);
         }
@@ -6818,12 +6818,12 @@ InitMouseWheelInfo:
             if (win && ctx)
                 OnUrlDownloaded(win, ctx);
             else if (win) {
-                // OnUrlDownloaded always gives feedback for !ctx->autocheck,
+                // OnUrlDownloaded always gives feedback for !ctx->silent,
                 // we only get here under that condition, so also give feedback
                 // so that the user knows that the requested operation has terminated
-                TCHAR buf[256];
-                wsprintf(buf, _TR("Can't connect to the Internet (error %#x)."), lParam);
-                MessageBox(win->hwndFrame, buf, _TR("Check for Updates"), MB_ICONEXCLAMATION | MB_OK);
+                TCHAR *msg = tstr_printf(_TR("Can't connect to the Internet (error %#x)."), lParam);
+                MessageBox(win->hwndFrame, msg, _TR("SumatraPDF Update"), MB_ICONEXCLAMATION | MB_OK);
+                free(msg);
             } else if (ctx)
                 delete ctx;
             break;

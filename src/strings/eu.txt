@@ -149,9 +149,6 @@ Hizkuntza aldatu (Change Language)
 Check for &Updates
 Bertsio berriagorik ba ote den begiratu
 
-Check for Updates
-Egunerapenak begiratu
-
 Continuous
 Jarraian
 

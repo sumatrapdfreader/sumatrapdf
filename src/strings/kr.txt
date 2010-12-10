@@ -181,9 +181,6 @@ Change Language
 Check for &Updates
 새 버전 확인
 
-Check for Updates
-업데이트 검사
-
 Continuous
 한 장씩 연속
 

@@ -187,9 +187,6 @@ Change Language
 Check for &Updates
 Проверить наличие новой версии
 
-Check for Updates
-Проверка обновлений
-
 Continuous
 Непрерывно
 

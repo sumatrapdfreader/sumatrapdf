@@ -162,9 +162,6 @@ Ibahin ang Wika
 Check for &Updates
 Tignan kung may bagong &bersyon
 
-Check for Updates
-Tingnan kung may bagong bersyon
-
 Continuous
 Tuloy-tuloy
 

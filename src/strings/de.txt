@@ -188,9 +188,6 @@ Sprache ändern… (Change Language)
 Check for &Updates
 Nach &neuer Version suchen
 
-Check for Updates
-Nach Updates suchen
-
 Continuous
 Fortlaufend
 

@@ -187,9 +187,6 @@ Change Language
 Check for &Updates
 &تحقق من وجود تحديثات
 
-Check for Updates
-البحث عن النحديثات
-
 Continuous
 صفحات متتالية
 

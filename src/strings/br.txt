@@ -185,9 +185,6 @@ Mudar o idioma (Change Language)
 Check for &Updates
 Procurar atualizações
 
-Check for Updates
-Procurar atualizações
-
 Continuous
 Contínuo
 

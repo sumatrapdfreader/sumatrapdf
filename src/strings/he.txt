@@ -474,7 +474,6 @@ printing document
 # Untranslated:
 #&Use original page sizes
 #Can't connect to the Internet (error %#x).
-#Check for Updates
 #Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit &Content\tCtrl-3

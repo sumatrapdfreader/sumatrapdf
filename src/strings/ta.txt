@@ -447,7 +447,6 @@ printing document
 #Bookmarks
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
-#Check for Updates
 #Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit &Content\tCtrl-3

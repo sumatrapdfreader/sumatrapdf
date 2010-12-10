@@ -187,9 +187,6 @@ Change Language
 Check for &Updates
 Verificar at&ualizações
 
-Check for Updates
-Verificar atualizações
-
 Continuous
 Página única contínua
 

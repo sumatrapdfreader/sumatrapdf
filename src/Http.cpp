@@ -48,14 +48,14 @@ DownloadError:
     if (hInet)
         InternetCloseHandle(hInet);
 
-    if (!ctx->notifyErrors)
+    if (!ctx->silent)
         PostMessage(ctx->hwndToNotify, ctx->msg, 0, dwError);
     delete ctx;
     return 1;
 }
 
-void StartHttpDownload(const TCHAR *url, HWND hwndToNotify, UINT msg, bool autoCheck)
+void StartHttpDownload(const TCHAR *url, HWND hwndToNotify, UINT msg, bool silent)
 {
-    HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, msg, autoCheck);
+    HttpReqCtx *ctx = new HttpReqCtx(url, hwndToNotify, msg, silent);
     ctx->hThread = CreateThread(NULL, 0, HttpDownloadThread, ctx, 0, 0);
 }

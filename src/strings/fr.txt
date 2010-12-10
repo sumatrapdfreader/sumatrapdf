@@ -190,9 +190,6 @@ Changer de langue (Change Language)
 Check for &Updates
 Vérifier les mises à jour
 
-Check for Updates
-Vérifier les mise à jours
-
 Continuous
 Continue
 

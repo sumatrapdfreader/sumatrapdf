@@ -187,9 +187,6 @@ Skift sprog
 Check for &Updates
 Tjek for ny &version
 
-Check for Updates
-Tjek efter opdateringer
-
 Continuous
 Fortløbende
 
