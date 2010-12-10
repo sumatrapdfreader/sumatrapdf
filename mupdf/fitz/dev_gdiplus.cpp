@@ -216,6 +216,27 @@ public:
 			alpha = getAlpha(alpha);
 		}
 		
+		if (_hasSingleColor(image))
+		{
+			PointF corners[4] = {
+				gdiplustransformpoint(ctm, 0, 0),
+				gdiplustransformpoint(ctm, 0, 1),
+				gdiplustransformpoint(ctm, 1, 1),
+				gdiplustransformpoint(ctm, 1, 0)
+			};
+			
+			float srcv[FZ_MAXCOLORS], rgb[3];
+			for (int k = 0; k < image->colorspace->n; k++)
+				srcv[k] = image->samples[k] / 255.0f;
+			fz_convertcolor(image->colorspace, srcv, fz_devicergb, rgb);
+			SolidBrush brush(Color(alpha * image->samples[image->colorspace->n],
+				rgb[0] * 255, rgb[1] * 255, rgb[2] * 255));
+			
+			graphics->FillPolygon(&brush, corners, 4);
+			
+			return;
+		}
+		
 		PointF corners[3] = {
 			gdiplustransformpoint(ctm, 0, 1),
 			gdiplustransformpoint(ctm, 1, 1),
@@ -375,6 +396,18 @@ protected:
 		
 		bgStack->layer->UnlockBits(&dataBg);
 		bitmap->UnlockBits(&data);
+	}
+
+	bool _hasSingleColor(fz_pixmap *image)
+	{
+		if (image->w > 2 || image->h > 2 || !image->colorspace)
+			return false;
+		
+		for (int i = 1; i < image->w * image->h; i++)
+			if (memcmp(image->samples + i * image->n, image->samples, image->n) != 0)
+				return false;
+		
+		return true;
 	}
 };
 
