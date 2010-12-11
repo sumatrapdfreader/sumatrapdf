@@ -105,6 +105,7 @@ static bool             gUseGdiRenderer = false;
 #define COL_FWDSEARCH_BG        RGB(0x65, 0x81 ,0xff)
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
+#define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
@@ -1626,7 +1627,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     else {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         if (WS_ABOUT == win->state)
-            win_set_text(win->hwndFrame, gWindowTitle);
+            win_set_text(win->hwndFrame, SUMATRA_WINDOW_TITLE);
     }
 }
 
@@ -1693,7 +1694,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
     }
 
     hwndFrame = CreateWindow(
-            FRAME_CLASS_NAME, gWindowTitle,
+            FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
             WS_OVERLAPPEDWINDOW,
             winX, winY, winDx, winDy,
             NULL, NULL,
@@ -7316,7 +7317,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     u_DoAllTests();
 #endif
 
-    INITCOMMONCONTROLSEX cex;
+    INITCOMMONCONTROLSEX cex = {0};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
     InitCommonControlsEx(&cex);
@@ -7447,7 +7448,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InstallCrashHandler(crashDumpPath);
     free(crashDumpPath);
 
-    LoadString(hInstance, IDS_APP_TITLE, gWindowTitle, MAX_LOADSTRING);
     if (!RegisterWinClass(hInstance))
         goto Exit;
     if (!InstanceInit(hInstance, nCmdShow))
