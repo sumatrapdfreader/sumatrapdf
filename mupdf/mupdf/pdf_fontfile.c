@@ -568,7 +568,13 @@ pdf_createfontlistMS()
 			if (!stricmp(fileExt, ".ttc"))
 				parseTTCs(szPathAnsi);
 			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
+			{
+			        // TODO: this is temporary, to find out on which
+			        // font we crash
+				OutputDebugStringA(szPathAnsi);
+				OutputDebugStringA("\n");
 				parseTTFs(szPathAnsi);
+			}
 			// ignore errors occurring while parsing a given font file
 		}
 	} while (FindNextFile(hList, &FileData));
