@@ -7,13 +7,13 @@
 
 WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)
 {
-    return wstr_catn_s(dest, dst_cch_size, src, wstrlen(src) + 1);
+    return wstr_catn_s(dest, dst_cch_size, src, wstrlen(src));
 }
 
 WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
     WCHAR *dstEnd = dst + wstrlen(dst);
-    size_t len = min(src_cch_size, dst_cch_size - (dstEnd - dst));
+    size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
     
     wcsncpy(dstEnd, src, len);
     dstEnd[len - 1] = '\0';
@@ -93,7 +93,7 @@ WCHAR *wstr_dup(const WCHAR *str)
 
 int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
-    size_t len = min(src_cch_size, dst_cch_size);
+    size_t len = min(src_cch_size + 1, dst_cch_size);
     
     wcsncpy(dst, src, len);
     dst[len - 1] = '\0';
@@ -105,7 +105,7 @@ int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch
 
 int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
 {
-    return wstr_copyn(dst, dst_cch_size, src, wstrlen(src) + 1);
+    return wstr_copyn(dst, dst_cch_size, src, wstrlen(src));
 }
 
 int wstr_eq(const WCHAR *str1, const WCHAR *str2)

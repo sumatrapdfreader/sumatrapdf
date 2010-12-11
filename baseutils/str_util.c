@@ -7,13 +7,13 @@
 
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
 {
-    return str_catn_s(dst, dst_cch_size, src, strlen(src) + 1);
+    return str_catn_s(dst, dst_cch_size, src, strlen(src));
 }
 
 char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
 {
     char *dstEnd = dst + strlen(dst);
-    size_t len = min(src_cch_size, dst_cch_size - (dstEnd - dst));
+    size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
     
     strncpy(dstEnd, src, len);
     dstEnd[len - 1] = '\0';
@@ -145,7 +145,7 @@ char *str_dupn(const char *str, size_t str_len_cch)
 
 int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
 {
-    size_t len = min(src_cch_size, dst_cch_size);
+    size_t len = min(src_cch_size + 1, dst_cch_size);
     
     strncpy(dst, src, len);
     dst[len - 1] = '\0';
@@ -157,7 +157,7 @@ int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_si
 
 int str_copy(char *dst, size_t dst_cch_size, const char *src)
 {
-    return str_copyn(dst, dst_cch_size, src, strlen(src) + 1);
+    return str_copyn(dst, dst_cch_size, src, strlen(src));
 }
 
 int str_eq(const char *str1, const char *str2)
