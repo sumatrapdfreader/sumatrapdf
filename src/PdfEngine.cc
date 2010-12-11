@@ -934,6 +934,26 @@ fz_buffer *PdfEngine::getStreamData(int num, int gen)
     return data;
 }
 
+bool PdfEngine::isImagePage(int pageNo)
+{
+    pdf_page *page = getPdfPage(pageNo);
+    // pages containing a single image usually contain about 50
+    // characters worth of instructions, so don't bother checking
+    // more instruction-heavy pages
+    if (!page || !page->contents || page->contents->len > 100)
+        return false;
+
+    PdfPageRun *run = getPageRun(page);
+    if (!run)
+        return false;
+
+    bool hasSingleImage = run->list->first && !run->list->first->next &&
+                          run->list->first->cmd == FZ_CMDFILLIMAGE;
+    dropPageRun(run);
+
+    return hasSingleImage;
+}
+
 void PdfEngine::ageStore()
 {
     EnterCriticalSection(&_xrefAccess);

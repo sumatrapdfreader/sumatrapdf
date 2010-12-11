@@ -260,6 +260,16 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 
     double factorW = (pixelbox.x1 - pixelbox.x0) / (maxTileSize.dx + 1);
     double factorH = (pixelbox.y1 - pixelbox.y0) / (maxTileSize.dy + 1);
+
+    // use larger tiles when fitting page or width or when rendering pages
+    // containing a single image (MuPDF isn't that much faster for rendering
+    // individual tiles than for rendering the whole image in a single pass)
+    if (dm->zoomVirtual() == ZOOM_FIT_PAGE || dm->zoomVirtual() == ZOOM_FIT_WIDTH ||
+        dm->pdfEngine->isImagePage(pageNo)) {
+        factorW /= 3.0;
+        factorH /= 3.0;
+    }
+
     USHORT res = 0;
     if (factorW > 1 || factorH > 1)
         res = ceill(log(max(factorW, factorH)) / log(2.0));

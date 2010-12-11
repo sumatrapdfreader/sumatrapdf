@@ -157,6 +157,7 @@ public:
     int        getPdfVersion(void) const { return _xref->version; }
     char     * getDecryptionKey(void) const { return _decryptionKey ? fz_strdup(_decryptionKey) : NULL; }
     fz_buffer* getStreamData(int num=0, int gen=0);
+    bool       isImagePage(int pageNo);
 
 protected:
     const TCHAR *_fileName;
