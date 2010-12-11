@@ -571,6 +571,7 @@ pdf_createfontlistMS()
 			{
 			        // TODO: this is temporary, to find out on which
 			        // font we crash
+			        OutputDebugStringA("font: ");
 				OutputDebugStringA(szPathAnsi);
 				OutputDebugStringA("\n");
 				parseTTFs(szPathAnsi);
