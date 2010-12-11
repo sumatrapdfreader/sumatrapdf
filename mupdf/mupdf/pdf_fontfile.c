@@ -557,7 +557,8 @@ pdf_createfontlistMS()
 		if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			// Get the full path for sub directory
-			_stprintf_s(szFile, MAX_PATH, _T("%s%s"), szFontDir, FileData.cFileName);
+			_sntprintf(szFile, MAX_PATH, _T("%s%s"), szFontDir, FileData.cFileName);
+			szFile[MAX_PATH - 1] = '\0';
 #ifdef _UNICODE
 			// FreeType uses fopen and thus requires the path to be in the ANSI code page
 			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, NULL);
@@ -569,9 +570,9 @@ pdf_createfontlistMS()
 				parseTTCs(szPathAnsi);
 			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
 			{
-			        // TODO: this is temporary, to find out on which
-			        // font we crash
-			        OutputDebugStringA("font: ");
+				// TODO: this is temporary, to find out on which
+				// font we crash
+				OutputDebugStringA("font: ");
 				OutputDebugStringA(szPathAnsi);
 				OutputDebugStringA("\n");
 				parseTTFs(szPathAnsi);

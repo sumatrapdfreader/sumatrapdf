@@ -90,10 +90,10 @@ UINT Synchronizer::prepare_commandline(LPCTSTR pattern, LPCTSTR filename, UINT l
             tstr_copy(out, cchOut, filename);
         }
         else if (*perc == 'l') {
-            _sntprintf(out, cchOut, _T("%d"), line);
+            tstr_printf_s(out, cchOut, _T("%d"), line);
         }
         else if (*perc == 'c') {
-            _sntprintf(out, cchOut, _T("%d"), col);
+            tstr_printf_s(out, cchOut, _T("%d"), col);
         }
         else {
             tstr_copyn(out, cchOut, perc-1, 2);
@@ -416,13 +416,15 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     int sec = this->get_record_section(selected_record);
 
     // get the file name from the record section
-    PSTR srcFilename = this->srcfiles[record_sections[sec].srcfile].filename;
+    PSTR srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
+    PTSTR srcFilename = multibyte_to_tstr(srcFilenameA, CP_ACP);
 
     // Convert the source filepath to an absolute path
-    if (PathIsRelativeA(srcFilename))
-        _sntprintf(srcfilepath, cchFilepath, _T("%s\\%S"), this->dir, srcFilename, dimof(srcFilename));
+    if (PathIsRelative(srcFilename))
+        tstr_printf_s(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcFilename);
     else
-        _sntprintf(srcfilepath, cchFilepath, _T("%S"), srcFilename, dimof(srcFilename));
+        tstr_printf_s(srcfilepath, cchFilepath, _T("%s"), srcFilename);
+    free(srcFilename);
 
     // find the record declaration in the section
     fsetpos(fp, &record_sections[sec].startpos);
@@ -645,7 +647,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
             // Convert the source filepath to an absolute path
             if (PathIsRelative(srcfilename))
-                _sntprintf(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcfilename, dimof(srcfilename));
+                tstr_printf_s(srcfilepath, cchFilepath, _T("%s\\%s"), this->dir, srcfilename);
             else
                 tstr_copy(srcfilepath, cchFilepath, srcfilename);
 
@@ -666,7 +668,7 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     // convert the source file to an absolute path
     TCHAR srcfilepath[MAX_PATH];
     if (PathIsRelative(srcfilename))
-        _sntprintf(srcfilepath, dimof(srcfilepath), _T("%s\\%s"), this->dir, srcfilename, dimof(srcfilename));
+        tstr_printf_s(srcfilepath, dimof(srcfilepath), _T("%s\\%s"), this->dir, srcfilename);
     else
         tstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 

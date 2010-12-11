@@ -7,22 +7,20 @@
 
 WCHAR * wstr_cat_s(WCHAR * dest, size_t dst_cch_size, const WCHAR * src)
 {
-    size_t len = wstr_len(dest);
-    size_t count = dst_cch_size - len;
-    size_t ret = _snwprintf(dest + len, count, L"%s", src);
-    return (ret<count ) ? dest : NULL;
+    return wstr_catn_s(dest, dst_cch_size, src, wstrlen(src) + 1);
 }
 
 WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
-    size_t len = wstr_len(dst);
-    if (dst_cch_size > len + src_cch_size) {
-        memcpy(dst + len, src, src_cch_size * sizeof *src);
-        dst[len] = 0;
-        return dst;
-    }
-    else
+    WCHAR *dstEnd = dst + wstrlen(dst);
+    size_t len = min(src_cch_size, dst_cch_size - (dstEnd - dst));
+    
+    wcsncpy(dstEnd, src, len);
+    dstEnd[len - 1] = '\0';
+    
+    if (src_cch_size > len)
         return NULL;
+    return dst;
 }
 
 WCHAR *wstr_cat4(const WCHAR *str1, const WCHAR *str2, const WCHAR *str3, const WCHAR *str4)
@@ -95,39 +93,19 @@ WCHAR *wstr_dup(const WCHAR *str)
 
 int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
-    WCHAR *end = dst + dst_cch_size - 1;
-    if (0 == dst_cch_size) {
-        if (0 == src_cch_size)
-            return TRUE;
-        else
-            return FALSE;
-    }
-
-    while ((dst < end) && (src_cch_size > 0)) {
-        *dst++ = *src++;
-        --src_cch_size;
-    }
-    *dst = 0;
-    if (0 == src_cch_size)
-        return TRUE;
-    else
+    size_t len = min(src_cch_size, dst_cch_size);
+    
+    wcsncpy(dst, src, len);
+    dst[len - 1] = '\0';
+    
+    if (src_cch_size > dst_cch_size)
         return FALSE;
+    return TRUE;
 }
 
 int wstr_copy(WCHAR *dst, size_t dst_cch_size, const WCHAR *src)
 {
-    WCHAR *end = dst + dst_cch_size - 1;
-    if (0 == dst_cch_size)
-        return FALSE;
-
-    while ((dst < end) && *src) {
-        *dst++ = *src++;
-    }
-    *dst = 0;
-    if (0 == *src)
-        return TRUE;
-    else
-        return FALSE;
+    return wstr_copyn(dst, dst_cch_size, src, wstrlen(src) + 1);
 }
 
 int wstr_eq(const WCHAR *str1, const WCHAR *str2)
@@ -353,14 +331,9 @@ WCHAR *wstr_printf(const WCHAR *format, ...)
     va_start(args, format);
     for (;;)
     {
-#ifdef __GNUC__
-        if (vsnwprintf(buf, bufCchSize, format, args) < bufCchSize)
-            break;
-#else
-        int count = vswprintf_s(buf, bufCchSize, format, args);
+        int count = _vsnwprintf(buf, bufCchSize, format, args);
         if (0 <= count && (size_t)count < bufCchSize)
             break;
-#endif
         /* we have to make the buffer bigger. The algorithm used to calculate
            the new size is arbitrary (aka. educated guess) */
         if (buf != message)
@@ -381,6 +354,19 @@ WCHAR *wstr_printf(const WCHAR *format, ...)
     return buf;
 }
 
+int wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...)
+{
+    va_list args;
+    int count;
+
+    va_start(args, format);
+    count = _vsnwprintf(out, out_cch_size, format, args);
+    if (count < 0 || (size_t)count >= out_cch_size)
+        out[out_cch_size - 1] = '\0';
+    va_end(args);
+
+    return count;
+}
 
 /* Find character 'c' in string 'txt'.
    Return pointer to this character or NULL if not found */

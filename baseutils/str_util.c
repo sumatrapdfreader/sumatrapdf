@@ -5,46 +5,22 @@
 #include "base_util.h"
 #include "str_util.h"
 
-/* TODO: should probably be based on MSVC version */
-#if defined(__GNUC__) || !defined(_WIN32) || (_MSC_VER < 1400)
-void strcpy_s(char *dst, size_t dstLen, const char *src)
-{
-    size_t  toCopy;
-
-    assert(dst);
-    assert(src);
-    assert(dstLen > 0);
-
-    if (!dst || !src || dstLen <= 0)
-        return;
-
-    toCopy = strlen(src);
-    if (toCopy > (dstLen-1))
-        toCopy = dstLen - 1;
-
-    strncpy(dst, src, toCopy);
-    dst[toCopy] = 0;
-}
-#endif
-
 char * str_cat_s(char * dst, size_t dst_cch_size, const char * src)
 {
-    size_t len = str_len(dst);
-    size_t count = dst_cch_size - len;
-    size_t ret = _snprintf(dst + len, count, "%s", src);
-    return (ret<count ) ? dst : NULL;
+    return str_catn_s(dst, dst_cch_size, src, strlen(src) + 1);
 }
 
 char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
 {
-    size_t len = str_len(dst);
-    if (dst_cch_size > len + src_cch_size) {
-        memcpy(dst + len, src, src_cch_size * sizeof *src);
-        dst[len] = 0;
-        return dst;
-    }
-    else
+    char *dstEnd = dst + strlen(dst);
+    size_t len = min(src_cch_size, dst_cch_size - (dstEnd - dst));
+    
+    strncpy(dstEnd, src, len);
+    dstEnd[len - 1] = '\0';
+    
+    if (src_cch_size > len)
         return NULL;
+    return dst;
 }
 
 int char_is_ws_or_zero(char c)
@@ -169,39 +145,19 @@ char *str_dupn(const char *str, size_t str_len_cch)
 
 int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size)
 {
-    char *end = dst + dst_cch_size - 1;
-    if (0 == dst_cch_size) {
-        if (0 == src_cch_size)
-            return TRUE;
-        else
-            return FALSE;
-    }
-
-    while ((dst < end) && (src_cch_size > 0)) {
-        *dst++ = *src++;
-        --src_cch_size;
-    }
-    *dst = 0;
-    if (0 == src_cch_size)
-        return TRUE;
-    else
+    size_t len = min(src_cch_size, dst_cch_size);
+    
+    strncpy(dst, src, len);
+    dst[len - 1] = '\0';
+    
+    if (src_cch_size > dst_cch_size)
         return FALSE;
+    return TRUE;
 }
 
 int str_copy(char *dst, size_t dst_cch_size, const char *src)
 {
-    char *end = dst + dst_cch_size - 1;
-    if (0 == dst_cch_size)
-        return FALSE;
-
-    while ((dst < end) && *src) {
-        *dst++ = *src++;
-    }
-    *dst = 0;
-    if (0 == *src)
-        return TRUE;
-    else
-        return FALSE;
+    return str_copyn(dst, dst_cch_size, src, strlen(src) + 1);
 }
 
 int str_eq(const char *str1, const char *str2)
@@ -764,14 +720,9 @@ char *str_printf_args(const char *format, va_list args)
 
     for (;;)
     {
-#ifdef __GNUC__
-        if (vsnprintf(buf, bufCchSize, format, args) < bufCchSize)
-            break;
-#else
-        int count = vsprintf_s(buf, bufCchSize, format, args);
+        int count = vsnprintf(buf, bufCchSize, format, args);
         if (0 <= count && (size_t)count < bufCchSize)
             break;
-#endif
         /* we have to make the buffer bigger. The algorithm used to calculate
            the new size is arbitrary (aka. educated guess) */
         if (buf != message)
@@ -789,6 +740,20 @@ char *str_printf_args(const char *format, va_list args)
         buf = str_dup(message);
 
     return buf;
+}
+
+int str_printf_s(char *out, size_t out_cch_size, const char *format, ...)
+{
+    va_list args;
+    int count;
+
+    va_start(args, format);
+    count = vsnprintf(out, out_cch_size, format, args);
+    if (count < 0 || (size_t)count >= out_cch_size)
+        out[out_cch_size - 1] = '\0';
+    va_end(args);
+
+    return count;
 }
 
 #ifdef _WIN32

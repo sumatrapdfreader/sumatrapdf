@@ -32,6 +32,7 @@ WCHAR   wchar_needs_url_escape(WCHAR c);
 int     wstr_contains(const WCHAR *str, WCHAR c);
 WCHAR  *wstr_escape(const WCHAR *txt);
 WCHAR * wstr_printf(const WCHAR *format, ...);
+int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);
 const WCHAR *wstr_find_char(const WCHAR *txt, WCHAR c);
 BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src);
 int     wstr_trans_chars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);

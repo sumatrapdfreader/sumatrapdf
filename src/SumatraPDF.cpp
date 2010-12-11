@@ -2147,7 +2147,7 @@ void DisplayModel::pageChanged()
     if (pageCount > 0) {
         if (INVALID_PAGE_NO != currPageNo) {
             TCHAR buf[64];
-            _stprintf_s(buf, dimof(buf), _T("%d"), currPageNo);
+            tstr_printf_s(buf, dimof(buf), _T("%d"), currPageNo);
             SetWindowText(win->hwndPageBox, buf);
             ToolbarUpdateStateForWindow(win);
         }
@@ -2319,7 +2319,7 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
     bool ok;
     TCHAR exePath[MAX_PATH];
-    TCHAR cmdPath[MAX_PATH * 2];
+    TCHAR cmdPath[MAX_PATH * 2 + 64];
     TCHAR previousPdfHandler[MAX_PATH + 8];
 
     // Remember the previous default app for the Uninstaller
@@ -2336,11 +2336,11 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell"), NULL, _T("open"));
 
-    _stprintf_s(cmdPath, dimof(cmdPath), _T("\"%s\" \"%%1\""), exePath); // "${exePath}" "%1"
+    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" \"%%1\""), exePath); // "${exePath}" "%1"
     ok = WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
-    _stprintf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to-default -exit-on-print "%1"
+    tstr_printf_s(cmdPath, dimof(cmdPath), _T("\"%s\" -print-to-default -exit-on-print \"%%1\""), exePath); // "${exePath}" -print-to-default -exit-on-print "%1"
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\shell\\print\\command"), NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
@@ -4865,21 +4865,21 @@ void WindowInfo_ShowForwardSearchResult(WindowInfo *win, LPCTSTR srcfilename, UI
 
     TCHAR buf[MAX_PATH];    
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND )
-        _sntprintf(buf, dimof(buf), _TR("No synchronization file found"));
+        tstr_printf_s(buf, dimof(buf), _TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        _sntprintf(buf, dimof(buf), _TR("Synchronization file cannot be opened"));
+        tstr_printf_s(buf, dimof(buf), _TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
-        _sntprintf(buf, dimof(buf), _TR("Page number %u inexistant"), page);
+        tstr_printf_s(buf, dimof(buf), _TR("Page number %u inexistant"), page);
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        _sntprintf(buf, dimof(buf), _TR("No synchronization info at this position"));
+        tstr_printf_s(buf, dimof(buf), _TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
-        _sntprintf(buf, dimof(buf), _TR("Unknown source file (%s)"), srcfilename);
+        tstr_printf_s(buf, dimof(buf), _TR("Unknown source file (%s)"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
-        _sntprintf(buf, dimof(buf), _TR("Source file %s has no synchronization point"), srcfilename);
+        tstr_printf_s(buf, dimof(buf), _TR("Source file %s has no synchronization point"), srcfilename);
     else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
-        _sntprintf(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
+        tstr_printf_s(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
-        _sntprintf(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
+        tstr_printf_s(buf, dimof(buf), _TR("No result found around line %u in file %s"), line, srcfilename);
 
     WindowInfo_ShowMessage_Asynch(win, buf, true);
 }
@@ -5591,7 +5591,7 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     } else if (-1 == pageCount) {
         GetWindowText(win->hwndPageTotal, buf, sizeof(buf));
     } else {
-        _stprintf_s(buf, dimof(buf), _T(" / %d"), pageCount);
+        tstr_printf_s(buf, dimof(buf), _T(" / %d"), pageCount);
     }
     win_set_text(win->hwndPageTotal, buf);
     SIZE size2 = TextSizeInHwnd(win->hwndPageTotal, buf);

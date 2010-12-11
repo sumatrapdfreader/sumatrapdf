@@ -126,7 +126,7 @@ Error:
 static TCHAR *FormatNumWithThousandSep(uint64_t num) {
     TCHAR buf[32], buf2[64], thousandSep[4];
 
-    _sntprintf(buf, dimof(buf), _T("%I64d"), num);
+    tstr_printf_s(buf, dimof(buf), _T("%I64d"), num);
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
     
     TCHAR *src = buf, *dst = buf2;

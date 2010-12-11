@@ -54,11 +54,6 @@ int char_is_ws(char c);
 int char_is_digit(char c);
 int char_is_dir_sep(char c);
 
-/* TODO: should probably be based on MSVC version */
-#if defined(__GNUC__) || !defined(_WIN32) || (_MSC_VER < 1400)
-void strcpy_s(char *dst, size_t dstLen, const char *src);
-#endif
-
 #define str_len strlen
 int     str_eq(const char *str1, const char *str2);
 int     str_ieq(const char *str1, const char *str2);
@@ -84,6 +79,7 @@ int     char_needs_url_escape(char c);
 int     str_contains(const char *str, char c);
 char *  str_printf_args(const char *format, va_list args);
 char *  str_printf(const char *format, ...);
+int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
 const char *str_find_char(const char *txt, char c);
 char *  str_split_iter(char **txt, char c);
 char *  str_normalize_newline(const char *txt, const char *replace);
