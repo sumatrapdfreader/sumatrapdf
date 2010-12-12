@@ -684,5 +684,6 @@ pdf_showtext(pdf_csi *csi, fz_obj *text)
 	}
 
 	/* SumatraPDF: make sure that the text is drawn with the correct ExtGState */
-	pdf_flushtext(csi);
+	if (!fz_isstring(text) || fz_tostrlen(text) > 1)
+		pdf_flushtext(csi);
 }
