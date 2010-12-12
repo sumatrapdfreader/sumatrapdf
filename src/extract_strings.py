@@ -139,6 +139,8 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
         if curr_orig is None:
             curr_orig = l
         else:
+            if curr_trans != None:
+                print("curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path)))
             assert curr_trans is None, "curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path))
             curr_trans = l
         #print l

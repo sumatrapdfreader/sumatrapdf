@@ -114,6 +114,9 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 &Skip this version
 דלג מהדורה זו
 
+&Use original page sizes
+השתמש במידות דף מקוריות
+
 &View
 &תצוגה
 
@@ -165,6 +168,9 @@ Bookmarks
 Bytes
 ביטים
 
+Can't connect to the Internet (error %#x).
+לא יכול להתקשר לאינטרנט (error %#x).
+
 Cancel
 בטל
 
@@ -191,6 +197,9 @@ Continuous facing
 
 Contribute Translation
 עזור לתרגם
+
+Copying text was denied (copying as image only)
+העתקת טקסט נדחית (מועתק רק כתמונה)
 
 Could not open Printer
 לא ניתן לפתוח מדפסת
@@ -267,11 +276,17 @@ Find Previous
 Find:
 חפש:
 
+Fit &Content\tCtrl-3
+התאם לתוכן\tCtrl-3
+
 Fit &Page\tCtrl-0
 התאם דף\tCtrl-0
 
 Fit &Width\tCtrl-2
 התאם רוחב\tCtrl-2
+
+Fit Content
+התאם לתוכן
 
 Fit Page
 התאם דף
@@ -417,6 +432,9 @@ Subject:
 SumatraPDF Options
 SumatraPDF אפשרויות
 
+SumatraPDF Update
+SumatraPDF עדכון
+
 SumatraPDF is your main PDF reader
 SumatraPDF ראשי הינו PDF קורא
 
@@ -472,11 +490,5 @@ printing document
 מדפיס מסמך
 
 # Untranslated:
-#&Use original page sizes
-#Can't connect to the Internet (error %#x).
-#Copying text was denied (copying as image only)
 #Enter the command-line to invoke when you double-click on the PDF document:
-#Fit &Content\tCtrl-3
-#Fit Content
-#SumatraPDF Update
 
