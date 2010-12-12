@@ -5121,9 +5121,7 @@ static void OnChar(WindowInfo *win, int key)
         }
         break;
     case 'b':
-        if (win->presentation)
-            ChangePresentationMode(win, PM_BLACK_SCREEN);
-        else {
+        {
             // experimental "e-book view": flip a single page
             bool forward = !WasKeyDown(VK_SHIFT);
             bool alreadyFacing = displayModeFacing(win->dm->displayMode());

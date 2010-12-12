@@ -1198,9 +1198,9 @@ void DisplayModel::zoomBy(double zoomFactor, POINT *fixPt)
     double newZoom = 100.0 * _zoomReal / _dpiFactor * zoomFactor;
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     if (newZoom > ZOOM_MAX)
-        return;
+        newZoom = ZOOM_MAX;
     if (newZoom < ZOOM_MIN)
-        return;
+        newZoom = ZOOM_MIN;
     zoomTo(newZoom, fixPt);
 }
 
