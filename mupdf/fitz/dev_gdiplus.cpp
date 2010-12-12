@@ -469,7 +469,10 @@ gdiplusgetpath(fz_path *path, fz_matrix ctm, int evenodd=1)
 		{
 		case FZ_MOVETO:
 			points[len].X = path->els[i++].v; points[len].Y = path->els[i++].v;
-			if (i < path->len && path->els[i].k != FZ_MOVETO)
+			// empty paths seem to confuse GDI+, so filter them out
+			if (i < path->len && path->els[i].k == FZ_CLOSEPATH)
+				i++;
+			else if (i < path->len && path->els[i].k != FZ_MOVETO)
 				types[len++] = PathPointTypeStart;
 			break;
 		case FZ_LINETO:
