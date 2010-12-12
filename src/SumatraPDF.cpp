@@ -3926,15 +3926,14 @@ static void OnMenuSaveAs(WindowInfo *win)
 
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
-    TCHAR fileFilter[256] = {0};
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("PDF documents"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.pdf\1"));
+    TCHAR fileFilter[256];
+    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1"), _TR("PDF documents"));
     if (hasCopyPerm) {
-        tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("Text documents"));
-        tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.txt\1"));
+        tstr_cat_s(fileFilter, dimof(fileFilter), _TR("Text documents"));
+        tstr_cat_s(fileFilter, dimof(fileFilter), _T("\1*.txt\1"));
     }
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
+    tstr_cat_s(fileFilter, dimof(fileFilter), _TR("All files"));
+    tstr_cat_s(fileFilter, dimof(fileFilter), _T("\1*.*\1"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     // Remove the extension so that it can be re-added depending on the chosen filter
@@ -4015,9 +4014,10 @@ bool DisplayModel::saveStreamAs(fz_buffer *data, const TCHAR *fileName)
     if (fileName)
         tstr_copy(dstFileName, dimof(dstFileName), fileName);
 
-    TCHAR fileFilter[256] = { 0 };
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
+    // Prepare the file filters (slightly hacky because
+    // translations can't contain the \0 character)
+    TCHAR fileFilter[256];
+    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.*\1"), _TR("All files"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -4034,11 +4034,36 @@ bool DisplayModel::saveStreamAs(fz_buffer *data, const TCHAR *fileName)
     return !!write_to_file(dstFileName, data->data, data->len);
 }
 
+// code adapted from http://support.microsoft.com/kb/131462/en-us
+static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uiMsg) {
+    case WM_INITDIALOG:
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        break;
+    case WM_NOTIFY:
+        if (((LPOFNOTIFY)lParam)->hdr.code == CDN_SELCHANGE) {
+            LPOPENFILENAME lpofn = (LPOPENFILENAME)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+            // make sure that the filename buffer is large enough to hold
+            // all the selected filenames
+            int cbLength = CommDlg_OpenSave_GetSpec(GetParent(hDlg), NULL, 0) + MAX_PATH;
+            if (cbLength >= 0 && lpofn->nMaxFile < (DWORD)cbLength) {
+                TCHAR *oldBuffer = lpofn->lpstrFile;
+                lpofn->lpstrFile = (LPTSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(TCHAR));
+                if (lpofn->lpstrFile)
+                    lpofn->nMaxFile = cbLength;
+                else
+                    lpofn->lpstrFile = oldBuffer;
+            }
+        }
+        break;
+    }
+
+    return 0;
+} 
+
 static void OnMenuOpen(WindowInfo *win)
 {
-    OPENFILENAME  ofn = {0};
-    TCHAR         fileName[260];
-
     if (gRestrictedUse) return;
     // don't allow opening different files in plugin mode
     if (win->pluginParent)
@@ -4046,30 +4071,48 @@ static void OnMenuOpen(WindowInfo *win)
 
     // Prepare the file filters (slightly hacky because
     // translations can't contain the \0 character)
-    TCHAR fileFilter[256] = {0};
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("PDF documents"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.pdf\1"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _TR("All files"));
-    tstr_cat_s(fileFilter, sizeof(fileFilter), _T("\1*.*\1"));
+    TCHAR fileFilter[256];
+    tstr_printf_s(fileFilter, dimof(fileFilter), _T("%s\1*.pdf\1%s\1*.*\1"),
+        _TR("PDF documents"), _TR("All files"));
     tstr_trans_chars(fileFilter, _T("\1"), _T("\0"));
 
+    OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    ofn.lpstrFile = fileName;
+    ofn.nMaxFile = MAX_PATH / 2;
+    ofn.lpstrFile = (LPTSTR)malloc(ofn.nMaxFile * sizeof(TCHAR));;
 
     // Set lpstrFile[0] to '\0' so that GetOpenFileName does not
     // use the contents of szFile to initialize itself.
-    ofn.lpstrFile[0] = L'\0';
-    ofn.nMaxFile = dimof(fileName);
+    ofn.lpstrFile[0] = _T('\0');
     ofn.lpstrFilter = fileFilter;
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpfnHook = FileOpenHook;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
+                OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLEHOOK ;
 
-    if (FALSE != GetOpenFileName(&ofn))
-        LoadPdf(fileName, win);
+    if (FALSE != GetOpenFileName(&ofn)) {
+        TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
+        if (*(fileName - 1)) {
+            // special case: single filename without NULL separator
+            LoadPdf(ofn.lpstrFile, win);
+        }
+        else {
+            while (*fileName) {
+                TCHAR *filePath = tstr_cat3(ofn.lpstrFile, DIR_SEP_TSTR, fileName);
+                if (filePath) {
+                    LoadPdf(filePath, win);
+                    free(filePath);
+                }
+                fileName += lstrlen(fileName) + 1;
+            }
+        }
+    }
+
+    free(ofn.lpstrFile);
 }
 
 static void RotateLeft(WindowInfo *win)

@@ -10,7 +10,7 @@
 #include "wstr_util.h"
 
 #ifdef WIN32
-#define DIR_SEP_TSTR _T("/")
+#define DIR_SEP_TSTR _T(DIR_SEP_STR)
 #endif
 
 #ifdef _UNICODE
