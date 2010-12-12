@@ -79,9 +79,9 @@ class userData
 public:
 	Graphics *graphics;
 	fz_device *dev;
-	fz_hashtable *outlines;
+	fz_hashtable *outlines, *fontCollections;
 
-	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL), outlines(NULL)
+	userData(HDC hDC, fz_bbox clip) : stack(new userDataStackItem()), dev(NULL), outlines(NULL), fontCollections(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
@@ -100,12 +100,14 @@ public:
 		if (outlines)
 		{
 			for (int i = 0; i < fz_hashlen(outlines); i++)
-			{
-				GraphicsPath *glyph = (GraphicsPath *)fz_hashgetval(outlines, i);
-				if (glyph)
-					delete glyph;
-			}
+				delete (GraphicsPath *)fz_hashgetval(outlines, i);
 			fz_freehash(outlines);
+		}
+		if (fontCollections)
+		{
+			for (int i = 0; i < fz_hashlen(fontCollections); i++)
+				delete (PrivateFontCollection *)fz_hashgetval(fontCollections, i);
+			fz_freehash(fontCollections);
 		}
 	}
 
@@ -549,27 +551,39 @@ gdiplusgetpen(Brush *brush, fz_matrix ctm, fz_strokestate *stroke)
 }
 
 static Font *
-gdiplusgetfont(PrivateFontCollection *collection, fz_font *font, float height, float *out_ascent)
+gdiplusgetfont(userData *user, fz_font *font, float height, float *out_ascent)
 {
-	assert(collection->GetFamilyCount() == 0);
-	if (!font->_data)
+	if (!font->_data || font->_data_len < 0)
 		return NULL;
 	
-	if (font->_data_len > 0)
-	{
-		collection->AddMemoryFont(font->_data, font->_data_len);
-	}
-	else if (font->_data_len == 0)
-	{
-		WCHAR fontPath[MAX_PATH];
-		MultiByteToWideChar(CP_ACP, 0, font->_data, -1, fontPath, nelem(fontPath));
-		collection->AddFontFile(fontPath);
-	}
+	if (!user->fontCollections)
+		user->fontCollections = fz_newhash(13, sizeof(font->name));
+	PrivateFontCollection *collection = (PrivateFontCollection *)fz_hashfind(user->fontCollections, font->name);
 	
-	if (collection->GetFamilyCount() == 0)
+	if (!collection)
 	{
-		font->_data_len = -1;
-		return NULL;
+		collection = new PrivateFontCollection();
+		assert(collection->GetFamilyCount() == 0);
+		
+		/* TODO: memory fonts seem to get substituted in release builds * /
+		if (font->_data_len > 0)
+		{
+			collection->AddMemoryFont(font->_data, font->_data_len);
+		}
+		else */ if (font->_data_len == 0)
+		{
+			WCHAR fontPath[MAX_PATH];
+			MultiByteToWideChar(CP_ACP, 0, font->_data, -1, fontPath, nelem(fontPath));
+			collection->AddFontFile(fontPath);
+		}
+		if (collection->GetFamilyCount() == 0)
+		{
+			font->_data_len = -1;
+			delete collection;
+			return NULL;
+		}
+		
+		fz_hashinsert(user->fontCollections, font->name, collection);
 	}
 	
 	FontFamily family;
@@ -783,10 +797,8 @@ gdiplusrendertext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush, Gr
 static void
 gdiplusruntext(userData *user, fz_text *text, fz_matrix ctm, Brush *brush)
 {
-	PrivateFontCollection collection;
 	float fontSize = fz_matrixexpansion(text->trm), cellAscent = 0;
-	
-	Font *font = gdiplusgetfont(&collection, text->font, fontSize, &cellAscent);
+	Font *font = gdiplusgetfont(user, text->font, fontSize, &cellAscent);
 	if (!font)
 	{
 		gdiplusrendertext(user, text, ctm, brush);
