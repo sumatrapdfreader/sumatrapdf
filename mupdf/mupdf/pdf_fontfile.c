@@ -556,27 +556,24 @@ pdf_createfontlistMS()
 	{
 		if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
+			BOOL isNonAnsiPath = FALSE;
 			// Get the full path for sub directory
 			_sntprintf(szFile, MAX_PATH, _T("%s%s"), szFontDir, FileData.cFileName);
 			szFile[MAX_PATH - 1] = '\0';
 #ifdef _UNICODE
 			// FreeType uses fopen and thus requires the path to be in the ANSI code page
-			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, NULL);
+			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
 #else
 			strcpy(szPathAnsi, szFile);
+			isNonAnsiPath = strchr(szPathAnsi, '?') != NULL;
 #endif
 			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
-			if (!stricmp(fileExt, ".ttc"))
+			if (isNonAnsiPath)
+				fz_warn("ignoring font with non-ANSI filename: %s", szFile);
+			else if (!stricmp(fileExt, ".ttc"))
 				parseTTCs(szPathAnsi);
 			else if (!stricmp(fileExt, ".ttf") || !stricmp(fileExt, ".otf"))
-			{
-				// TODO: this is temporary, to find out on which
-				// font we crash
-				OutputDebugStringA("font: ");
-				OutputDebugStringA(szPathAnsi);
-				OutputDebugStringA("\n");
 				parseTTFs(szPathAnsi);
-			}
 			// ignore errors occurring while parsing a given font file
 		}
 	} while (FindNextFile(hList, &FileData));
@@ -596,12 +593,17 @@ pdf_createfontlistMS()
 		hFile = CreateFile(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
+			BOOL isNonAnsiPath = FALSE;
 #ifdef _UNICODE
-			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, NULL);
+			WideCharToMultiByte(CP_ACP, 0, szFile, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
 #else
 			strcpy(szPathAnsi, szFile);
+			isNonAnsiPath = strchr(szPathAnsi, '?') != NULL;
 #endif
-			insertmapping(&fontlistMS, "DroidSansFallback", szPathAnsi, 0);
+			if (!isNonAnsiPath)
+				insertmapping(&fontlistMS, "DroidSansFallback", szPathAnsi, 0);
+            else
+				fz_warn("ignoring font with non-ANSI filename: %s", szPathAnsi);
 			CloseHandle(hFile);
 		}
 	}
