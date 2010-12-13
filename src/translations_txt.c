@@ -5727,7 +5727,7 @@ const char *g_transTranslations[] = {
   "Le fichier source %s n'a pas de point de synchronisation",
   "Objet :",
   NULL,
-  NULL,
+  "Mise \303\240 jour de SumatraPDF",
   "SumatraPDF est votre lecteur de PDF",
   "SumatraPDF doit maintenant \303\252tre votre lecteur de PDF",
   "Le fichier de synchronisation ne peut pas \303\252tre ouvert",

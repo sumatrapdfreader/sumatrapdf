@@ -448,6 +448,9 @@ Objet :
 SumatraPDF Options
 SumatraPDF Options
 
+SumatraPDF Update
+Mise à jour de SumatraPDF
+
 SumatraPDF is your main PDF reader
 SumatraPDF est votre lecteur de PDF
 
@@ -501,7 +504,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#SumatraPDF Update
 
