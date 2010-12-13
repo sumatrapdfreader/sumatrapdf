@@ -61,7 +61,7 @@ Contributor: Amos Kotter http://sites.google.com/site/hillasystem/
 הגדלה
 
 &Manual
-ידני
+מדריך
 
 &Match case
 התאם אות גדולה/קטנה
