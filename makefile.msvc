@@ -28,9 +28,10 @@ EXTLIBSDIR=ext
 !endif
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
+INSTALLER_APP = $(O)\SumatraPDF-installer.exe
 
-# default target only builds SumatraPDF.exe
-SumatraPDF: $(O) $(SUMATRA_APP)
+# default target
+SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP)
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -47,6 +48,8 @@ SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc \
 	/I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
 	/I$(ZLIB_DIR) /Isrc /IDialogSizer 
 
+INSTALLER_CFLAGS = $(CFLAGS) /D "_WINDOWS" $(EXTCFLAGS) /Ibaseutils /Ibaseutils/msvc /Isrc/installer
+
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
@@ -59,20 +62,26 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D "SUMATRA_UPDATE_INFO
 !if "$(_ANSI)"==""
 FITZ_CFLAGS = $(FITZ_CFLAGS) /D "UNICODE" /D "_UNICODE"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
+INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
 
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
 
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
+INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 !if "$(CFG)"=="rel" && "$(EXB)"=="rm"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /GL /MT /O2
+INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /GL /MT /O2
 !endif
 
 SUMATRA_RES = $(O)\sumatrapdf.res
 SUMATRA_MANIFEST = $(O)\sumatrapdf.manifest.res
+
+INSTALLER_RES = $(O)\Installer.res
+INSTALLER_MANIFEST = $(O)\installer.manifest.res
 
 BASEUTILS_OBJS = \
 	$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj $(O)\geom_util.obj \
@@ -85,15 +94,22 @@ SUMATRA_OBJS = \
 	$(O)\PdfSearch.obj $(O)\SumatraAbout.obj $(O)\SumatraDialogs.obj $(O)\SumatraProperties.obj \
 	$(O)\SumatraPDF.obj $(O)\translations.obj $(O)\translations_txt.obj $(O)\LangMenuDef.obj \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
-    $(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(SUMATRA_RES)
+  $(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(SUMATRA_RES)
+
+INSTALLER_OBJS = \
+  $(BASEUTILS_OBJS) $(O)\Installer.obj $(INSTALLER_RES)
 
 # Don't include a manifest in Debug builds (it could override the external manifest)
 !if "$(CFG)"=="rel"
 SUMATRA_OBJS = $(SUMATRA_OBJS) $(SUMATRA_MANIFEST)
+INSTALLER_OBJS = $(INSTALLER_OBJS) $(INSTALLER_MANIFEST)
 !endif
 
 SUMATRA_PDB = $(O)\SumatraPDF.pdb
 SUMATRA_MAP = $(O)\SumatraPDF.map
+
+INSTALLER_PDB = $(O)\SumatraPDF-installer.pdb
+INSTALLER_MAP = $(O)\SumatraPDF-installer.map
 
 ##### SumatraPDF-specific build rules #####
 
@@ -117,24 +133,39 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
 	$(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(LIBS) \
 	/MAP:$(SUMATRA_MAP)
 
+$(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h
+	rc /r /fo$(INSTALLER_RES) $(EXTCFLAGS) src\installer\Installer.rc
+
+$(INSTALLER_MANIFEST): src\Installer\Installer.manifest.rc
+	rc /r /fo$(INSTALLER_MANIFEST) src\Installer\Installer.manifest.rc
+
+$(INSTALLER_APP): $(INSTALLER_OBJS)
+	$(LD) $(LDFLAGS) /OUT:$(INSTALLER_APP) /PDB:$(INSTALLER_PDB) \
+	$(INSTALLER_OBJS) $(LIBS) \
+	/MAP:$(INSTALLER_MAP)
+
 # sumatra directories
-{baseutils\}.c{$(O)}.obj::
+{baseutils}.c{$(O)}.obj::
 	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{baseutils\}.cpp{$(O)}.obj::
+{baseutils}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{DialogSizer\}.cpp{$(O)}.obj::
+{DialogSizer}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{src\}.cc{$(O)}.obj::
+{src}.cc{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{src\}.cpp{$(O)}.obj::
+{src}.cpp{$(O)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
-{src\}.c{$(O)}.obj::
+{src}.c{$(O)}.obj::
 	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+
+# Installer directories
+{src\installer}.cpp{$(O)}.obj::
+	$(CC) $(INSTALLER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
 
 ## Header-dependencies for src\*
 # TODO: keep these lists up-to-date automatically
