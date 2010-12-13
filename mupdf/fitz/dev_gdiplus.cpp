@@ -86,7 +86,7 @@ public:
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
 		graphics->GetClip(&stack->clip);
-		graphics->SetClip(Rect(clip.x0, clip.y0, clip.x0 + clip.x1, clip.y0 + clip.y1));
+		graphics->SetClip(Rect(clip.x0, clip.y0, clip.x1 - clip.x0, clip.y1 - clip.y0));
 	}
 
 	~userData()

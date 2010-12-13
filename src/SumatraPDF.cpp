@@ -3618,26 +3618,23 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
 
     SetMapMode(hdc, MM_TEXT);
 
-    int printAreaWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
-    int printAreaHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
-    int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    int paperWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
+    int paperHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
+    int printableWidth = GetDeviceCaps(hdc, HORZRES);
+    int printableHeight = GetDeviceCaps(hdc, VERTRES);
     int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    int rightMargin = printAreaWidth - leftMargin - GetDeviceCaps(hdc, HORZRES);
-    int bottomMargin = printAreaHeight - topMargin - GetDeviceCaps(hdc, VERTRES);
-
+    int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
+    int rightMargin = paperWidth - printableWidth - leftMargin;
+    int bottomMargin = paperHeight - printableHeight - topMargin;
     double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
                            GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
-    bool bPrintPortrait = printAreaWidth < printAreaHeight;
+    bool bPrintPortrait = paperWidth < paperHeight;
     if (devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
 
     // print all the pages the user requested
     for (int i = 0; i < nPageRanges; i++) {
         if (-1 == pr->nFromPage && -1 == pr->nToPage) {
-            // print with minimal margins as required by the printer
-            printAreaWidth -= leftMargin + rightMargin;
-            printAreaHeight -= topMargin + bottomMargin;
-
             assert(1 == nPageRanges && sel);
             DBG_OUT(" printing:  drawing bitmap for selection\n");
 
@@ -3653,25 +3650,26 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 // Swap width and height for rotated documents
                 SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
-                double zoom = min((double)printAreaWidth / sSize.dx(), (double)printAreaHeight / sSize.dy());
+                double zoom = min((double)printableWidth / sSize.dx(), (double)printableHeight / sSize.dy());
+                // use the correct zoom values, if the page fits otherwise
+                // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv)
-                    // try to use correct zoom values (scale down to fit the physical page, though)
                     zoom = min(dpiFactor, zoom);
                 else if (PrintScaleNone == scaleAdv)
                     zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
                 RECT rc;
-                rc.left = (printAreaWidth - sSize.dx() * zoom) / 2;
-                rc.top = (printAreaHeight - sSize.dy() * zoom) / 2;
-                rc.right = printAreaWidth - rc.left;
-                rc.bottom = printAreaHeight - rc.top;
+                rc.left = (printableWidth - sSize.dx() * zoom) / 2;
+                rc.top = (printableHeight - sSize.dy() * zoom) / 2;
+                rc.right = printableWidth - rc.left;
+                rc.bottom = printableHeight - rc.top;
                 dm->renderPage(hdc, sel->pageNo, &rc, zoom, dm->rotation(), &clipRegion, Target_Print);
 #else
                 RenderedBitmap *bmp = dm->renderBitmap(sel->pageNo, zoom, dm->rotation(), &clipRegion, NULL, NULL, Target_Print, gUseGdiRenderer);
                 if (bmp) {
-                    bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2,
-                        (printAreaHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
+                    bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2,
+                        (printableHeight - bmp->dy()) / 2, bmp->dx(), bmp->dy());
                     delete bmp;
                 }
 #endif
@@ -3709,37 +3707,50 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
                 rotation = (rotation + 90) % 360;
                 pSize = SizeD(pSize.dy(), pSize.dx());
             }
-            double zoom = min((double)printAreaWidth / pSize.dx(), (double)printAreaHeight / pSize.dy());
+
+            // dpiFactor means no physical zoom
+            double zoom = dpiFactor;
+            // offset of the top-left corner of the page from the printable area
+            // (positive values move the page into the left/top margins, etc.);
+            // offset adjustments are needed because the GDI coordinate system
+            // starts at the corner of the printable area and because the page
+            // is consequently scaled from the center of the printable area;
+            // default to centering the document page on the paper page
+            int horizOffset = leftMargin + 0.5 * (printableWidth - paperWidth);;
+            int vertOffset = topMargin + 0.5 * (printableHeight - paperHeight);
 
             if (scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
+                // and the whole document page on the physical paper
                 fz_rect cbox = dm->getContentBox(pageNo, pdfEngine->viewctm(pageNo, 1.0, rotation), Target_Print);
-                zoom = min((0.5 * printAreaWidth - leftMargin) / (0.5 * pSize.dx() - cbox.x0),
-                       min((0.5 * printAreaWidth - rightMargin) / (cbox.x1 - 0.5 * pSize.dx()),
-                       min((0.5 * printAreaHeight - topMargin) / (0.5 * pSize.dy() - cbox.y0),
-                       min((0.5 * printAreaHeight - bottomMargin) / (cbox.y1 - 0.5 * pSize.dy()),
-                       zoom))));
+                zoom = min((double)printableWidth / (cbox.x1 - cbox.x0),
+                       min((double)printableHeight / (cbox.y1 - cbox.y0),
+                       min((double)paperWidth / pSize.dx(),
+                           (double)paperHeight / pSize.dy())));
+                // use the correct zoom values, if the page fits otherwise
+                // and the user didn't ask for anything else (default setting)
+                if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
+                    zoom = dpiFactor;
+                // make sure that no content lies in the non-printable paper margins
+                if (leftMargin > cbox.x0 * zoom || rightMargin > (pSize.dx() - cbox.x1) * zoom)
+                    horizOffset = 0.5 * (cbox.x0 - (pSize.dx() - cbox.x1)) * zoom;
+                if (topMargin > cbox.y0 * zoom || bottomMargin > (pSize.dy() - cbox.y1) * zoom)
+                    vertOffset = 0.5 * (cbox.y0 - (pSize.dy() - cbox.y1)) * zoom;
             }
-
-            if (PrintScaleShrink == scaleAdv)
-                // try to use correct zoom values (scale down to fit the physical page, though)
-                zoom = min(dpiFactor, zoom);
-            else if (PrintScaleNone == scaleAdv)
-                zoom = dpiFactor;
 
 #ifdef USE_GDI_FOR_PRINTING
             RECT rc;
-            rc.left = (printAreaWidth - pSize.dx() * zoom) / 2;
-            rc.top = (printAreaHeight - pSize.dy() * zoom) / 2;
-            rc.right = printAreaWidth - rc.left;
-            rc.bottom = printAreaHeight - rc.top;
-            OffsetRect(&rc, -leftMargin, -topMargin);
+            rc.left = (printableWidth - pSize.dx() * zoom) / 2;
+            rc.top = (printableHeight - pSize.dy() * zoom) / 2;
+            rc.right = printableWidth - rc.left;
+            rc.bottom = printableHeight - rc.top;
+            OffsetRect(&rc, -horizOffset, -vertOffset);
             dm->renderPage(hdc, pageNo, &rc, zoom, rotation, NULL, Target_Print);
 #else
             RenderedBitmap *bmp = dm->renderBitmap(pageNo, zoom, rotation, NULL, NULL, NULL, Target_Print, gUseGdiRenderer);
             if (bmp) {
-                bmp->stretchDIBits(hdc, (printAreaWidth - bmp->dx()) / 2 - leftMargin,
-                    (printAreaHeight - bmp->dy()) / 2 - topMargin, bmp->dx(), bmp->dy());
+                bmp->stretchDIBits(hdc, (printableWidth - bmp->dx()) / 2 - horizOffset,
+                    (printableHeight - bmp->dy()) / 2 - vertOffset, bmp->dx(), bmp->dy());
                 delete bmp;
             }
 #endif
