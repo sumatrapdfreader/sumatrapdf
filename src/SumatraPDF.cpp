@@ -5181,6 +5181,10 @@ static void OnChar(WindowInfo *win, int key)
             bool alreadyFacing = displayModeFacing(win->dm->displayMode());
             int currPage = win->dm->currentPageNo();
 
+            if (alreadyFacing && (forward ? win->dm->lastBookPageVisible()
+                                          : win->dm->firstBookPageVisible()))
+                break;
+
             DisplayMode newMode = DM_BOOK_VIEW;
             if (displayModeShowCover(win->dm->displayMode()))
                 newMode = DM_FACING;
@@ -6819,6 +6823,7 @@ InitMouseWheelInfo:
                 short delta = GET_WHEEL_DELTA_WPARAM(wParam);
                 double factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
                 win->dm->zoomBy(factor, &pt);
+                win->UpdateToolbarState();
                 return 0;
             }
 

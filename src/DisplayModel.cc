@@ -322,6 +322,35 @@ bool DisplayModel::pageVisibleNearby(int pageNo)
     return false;
 }
 
+/* Return true if the first page is fully visible and alone on a line in
+   show cover mode (i.e. it's not possible to flip to a previous page) */
+bool DisplayModel::firstBookPageVisible()
+{
+    if (!displayModeShowCover(displayMode()))
+        return false;
+    if (currentPageNo() != 1)
+        return false;
+    return true;
+}
+
+/* Return true if the last page is fully visible and alone on a line in
+   facing or show cover mode (i.e. it's not possible to flip to a next page) */
+bool DisplayModel::lastBookPageVisible()
+{
+    int count = pageCount();
+    DisplayMode mode = displayMode();
+    if (!displayModeFacing(mode))
+        return false;
+    if (currentPageNo() == count)
+        return true;
+    if (getPageInfo(count)->visible < 1.0)
+        return false;
+    if (FirstPageInARowNo(count, columnsFromDisplayMode(mode),
+                          displayModeShowCover(mode)) < count)
+        return false;
+    return true;
+}
+
 /* Given a zoom level that can include a "virtual" zoom levels like ZOOM_FIT_WIDTH,
    ZOOM_FIT_PAGE or ZOOM_FIT_CONTENT, calculate an absolute zoom level */
 float DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)

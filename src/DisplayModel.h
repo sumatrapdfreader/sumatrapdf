@@ -209,6 +209,8 @@ public:
     bool            pageShown(int pageNo);
     bool            pageVisible(int pageNo);
     bool            pageVisibleNearby(int pageNo);
+    bool            firstBookPageVisible();
+    bool            lastBookPageVisible();
     void            relayout(double zoomVirtual, int rotation);
 
     void            goToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
