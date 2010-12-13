@@ -435,6 +435,9 @@ Chủ đề:
 SumatraPDF Options
 Tuỳ chọn SumatraPDF
 
+SumatraPDF Update
+Cập nhật SumatraPDF
+
 SumatraPDF is your main PDF reader
 SumatraPDF là trình đọc PDF chính của bạn
 
@@ -488,7 +491,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#SumatraPDF Update
 
