@@ -27,6 +27,7 @@
 #include <tchar.h>
 #include <shlobj.h>
 #include <gdiplus.h>
+#include <psapi.h>
 
 #include "Resource.h"
 #include "base_util.h"
@@ -52,6 +53,11 @@ static ULONG_PTR        gGdiplusToken;
 static NONCLIENTMETRICS gNonClientMetrics = { sizeof (NONCLIENTMETRICS) };
 
 int gBallX, gBallY;
+
+#define APP                 "SumatraPDF"
+#define EXE                 "SumatraPDF.exe"
+
+#define REG_PATH_UNINST     "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP
 
 #define INSTALLER_PART_FILE "kifi"
 #define INSTALLER_PART_END  "kien"
@@ -121,6 +127,70 @@ DWORD SeekBackwards(HANDLE h, LONG distance, char *errMsg)
 DWORD GetFilePos(HANDLE h)
 {
     return SeekBackwards(h, 0, "");
+}
+
+#define TEN_SECONDS_IN_MS 10*1000
+
+// Kill a process with given <processId> if it's named <processName>.
+// If <waitUntilTerminated> is TRUE, will wait until process is fully killed.
+// Returns TRUE if killed a process
+BOOL KillProcIdWithName(DWORD processId, char *processName, BOOL waitUntilTerminated)
+{
+    HANDLE      hProcess = NULL;
+    char        currentProcessName[1024];
+    HMODULE     modulesArray[1024];
+    DWORD       modulesCount;
+    BOOL        killed = FALSE;
+
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId);
+    if (!hProcess)
+        return FALSE;
+
+    BOOL ok = EnumProcessModules(hProcess, modulesArray, sizeof(HMODULE)*1024, &modulesCount);
+    if (!ok)
+        goto Exit;
+
+    if (0 == GetModuleBaseNameA(hProcess, modulesArray[0], currentProcessName, 1024))
+        goto Exit;
+
+    if (!str_ieq(currentProcessName, processName))
+        goto Exit;
+
+    killed = TerminateProcess(hProcess, 0);
+    if (!killed)
+        goto Exit;
+
+    if (waitUntilTerminated)
+        WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
+
+    UpdateWindow(FindWindowA(NULL, "Shell_TrayWnd"));    
+    UpdateWindow(GetDesktopWindow());
+
+Exit:
+    CloseHandle(hProcess);
+    return killed;
+}
+
+#define MAX_PROCESSES 1024
+
+static int KillProcess(char *processName, BOOL waitUntilTerminated)
+{
+    DWORD  pidsArray[MAX_PROCESSES];
+    DWORD  cbPidsArraySize;
+    int    killedCount = 0;
+
+    if (!EnumProcesses(pidsArray, MAX_PROCESSES, &cbPidsArraySize))
+        return FALSE;
+
+    int processesCount = cbPidsArraySize / sizeof(DWORD);
+
+    for (int i = 0; i < processesCount; i++)
+    {
+        if (KillProcIdWithName(pidsArray[i], processName, waitUntilTerminated)) 
+            killedCount++;
+    }
+
+    return killedCount;
 }
 
 /* Load information about parts embedded in the installer.
@@ -286,11 +356,11 @@ void DrawMain(HWND hwnd, HDC hdc, RECT *rect)
     ::FillRect(hdc, &rc, brushBg);
 
     Rect ellipseRect(gBallX-5, gBallY-5, 10, 10);
-    Graphics graphics(hdc);
-    graphics.SetCompositingQuality(CompositingQualityHighQuality);
-    graphics.SetSmoothingMode(SmoothingModeHighQuality);
+    Graphics g(hdc);
+    g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetSmoothingMode(SmoothingModeHighQuality);
     SolidBrush blackBrush(Color(255, 0, 0, 0));
-    graphics.FillEllipse(&blackBrush, ellipseRect);
+    g.FillEllipse(&blackBrush, ellipseRect);
 
     ::DeleteObject(brushBg);
 }
@@ -309,7 +379,23 @@ void OnButtonInstall()
     EmbeddedPart *parts = LoadEmbeddedPartsInfo();
     if (NULL == parts)
         return;
-    /* TODO: do the rest */
+
+    /* if the app is running, we have to kill it so that we can over-write the executable */
+    KillProcess(EXE, TRUE);
+
+    /* TODO:
+        - copy files to destination directory
+        - create uninstaller
+        - set necessary registry settings
+        - launch the program
+    */
+}
+
+void OnUninstall()
+{
+    /* if the app is running, we have to kill it to delete the files */
+    KillProcess(EXE, TRUE);
+
 }
 
 void OnMouseMove(HWND hwnd, int x, int y)
@@ -407,10 +493,11 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
 
 static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
+    ghinst = hInstance;
+
     GdiplusStartupInput gdiplusStartupInput;
     GdiplusStartup(&gGdiplusToken, &gdiplusStartupInput, NULL);
     
-    ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
 
     gHwndFrame = CreateWindow(

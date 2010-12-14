@@ -67,6 +67,8 @@ INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
 
+LIBS_INSTALLER = $(LIBS) psapi.lib
+
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
@@ -141,7 +143,7 @@ $(INSTALLER_MANIFEST): src\Installer\Installer.manifest.rc
 
 $(INSTALLER_APP): $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(INSTALLER_APP) /PDB:$(INSTALLER_PDB) \
-	$(INSTALLER_OBJS) $(LIBS) \
+	$(INSTALLER_OBJS) $(LIBS_INSTALLER) \
 	/MAP:$(INSTALLER_MAP)
 
 # sumatra directories
