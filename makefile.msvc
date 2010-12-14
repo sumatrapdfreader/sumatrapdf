@@ -28,7 +28,7 @@ EXTLIBSDIR=ext
 !endif
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
-INSTALLER_APP = $(O)\SumatraPDF-installer.exe
+INSTALLER_APP = $(O)\Installer.exe
 
 # default target
 SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP)

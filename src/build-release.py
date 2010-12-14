@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import sys
+import struct
 import time
 
 def test_for_flag(args, arg):
@@ -32,6 +33,7 @@ def test_for_flag(args, arg):
 args = sys.argv
 upload = test_for_flag(args, "-upload")
 upload_tmp = test_for_flag(args, "-uploadtmp")
+testing = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
 
 if upload or upload_tmp:
   try:
@@ -134,6 +136,62 @@ def direxists(path):
     #print("%s path exists but is not a dir" % path)
     return False
 
+def build_installer_nsis(builds_dir, ver):
+  os.chdir(SCRIPT_DIR)
+  run_cmd_throw("makensis", "/DSUMVER=%s" % ver, "installer")
+  local_installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
+  shutil.move("SumatraPDF-%s-install.exe" % ver, local_installer_exe)
+  ensure_path_exists(local_installer_exe)
+  return local_installer_exe
+
+def write_with_size(fo, data):
+  fo.write(data)
+  fo.write(struct.pack("<I", len(data)))
+
+INSTALLER_HEADER_FILE = "kifi"
+INSTALLER_HEADER_END = "kien"
+
+def append_installer_file(fo, path, name_in_installer):
+  fi = open(path, "rb")
+  data = fi.read()
+  fi.close()
+  assert len(data) == os.path.getsize(path)
+  log("Len of %s: %d" % (path, len(data)))
+  write_with_size(fo, data)
+  write_with_size(fo, name_in_installer)
+  fo.write(INSTALLER_HEADER_FILE)
+
+def mark_installer_end(fo):
+  fo.write(INSTALLER_HEADER_END)
+
+# construct a full installer by appending data at the end of installer executable.
+# appended data is in the format:
+#  $data - data as binary. In our case it's Sumatra's binary
+#  $data_size - as 32-bit integer
+#  $data-name - name of the data. In our case it's name of the file to be written out
+#  $data-name-len - length of $data-name, as 32-bit integer
+#  $header - 4 byte, unique header of this section ('kifi' - kjk installer file info)
+# this format is designed to be read backwards (because it's easier for the installer to
+# seek to the end of itself than parse pe header to figure out where the executable ends
+# and data starts)
+def build_installer_native(builds_dir, ver):
+  installer_template_exe = os.path.join(builds_dir, "Installer.exe")
+  installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install-native.exe" % ver)
+  exe = os.path.join(builds_dir, "SumatraPDF-%s.exe" % ver)
+
+  shutil.copy(installer_template_exe, installer_exe)
+
+  fo = open(installer_exe, "ab")
+  # append installer data to installer exe
+  mark_installer_end(fo) # this are read backwards so end marker is written first
+  append_installer_file(fo, exe, "SumatraPDF.exe")
+  # TOD: write compressed
+  font_name =  "DroidSansFallback.ttf"
+  font_path = os.path.join(SCRIPT_DIR, "..", "mupdf", "fonts", "droid", font_name)
+  append_installer_file(fo, font_path, font_name)
+  fo.close()
+  return installer_exe
+
 def main():
   log("Starting build-release.py")
 
@@ -168,19 +226,19 @@ def main():
   if not TESTING and os.path.exists(objdir):
     shutil.rmtree(objdir, ignore_errors=True)
 
-  log("compiling started")
   #run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel", "cleanall")
   run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=rel")
-  log("compiling finished")
 
   tmp_exe = os.path.join(srcdir, objdir, "SumatraPDF.exe")
   tmp_pdb = os.path.join(srcdir, objdir, "SumatraPDF.pdb")
+  tmp_installer = os.path.join(srcdir, objdir, "Installer.exe")
+
   ensure_path_exists(tmp_exe)
   ensure_path_exists(tmp_pdb)
 
   builds_dir = os.path.join(SCRIPT_DIR, "builds", ver)
 
-  if TESTING and os.path.exists(builds_dir):
+  if testing and os.path.exists(builds_dir):
     shutil.rmtree(builds_dir)
 
   if not os.path.exists(builds_dir):
@@ -193,33 +251,28 @@ def main():
   local_exe = os.path.join(builds_dir, "SumatraPDF-%s.exe" % ver)
   local_exe_uncompr = os.path.join(builds_dir, "SumatraPDF-uncompr.exe")
   local_pdb = os.path.join(builds_dir, "SumatraPDF-%s.pdb" % ver)
+  local_installer = os.path.join(builds_dir, "Installer.exe")
   shutil.copy(tmp_exe, local_exe)
   shutil.copy(tmp_exe, local_exe_uncompr)
   shutil.copy(tmp_pdb, local_pdb)
+  shutil.copy(tmp_installer, local_installer)
 
   os.chdir(builds_dir)
 
-  if TESTING:
+  if testing:
     compression_type = "-1"
   else:
     compression_type = "--ultra-brute"
-  log("upx started")
   run_cmd_throw("upx", compression_type, "--compress-icons=0", "SumatraPDF-%s.exe" % ver)
-  log("upx finished")
 
-  log("zip started")
   shutil.copy("SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
   run_cmd_throw("zip", "-0", "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
-  log("zip finished")
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
 
-  os.chdir(SCRIPT_DIR)
-  run_cmd_throw("makensis", "/DSUMVER=%s" % ver, "installer")
-  local_installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
-  shutil.move("SumatraPDF-%s-install.exe" % ver, local_installer_exe)
-  ensure_path_exists(local_installer_exe)
+  local_installer_exe = build_installer_nsis(builds_dir, ver)
+  local_installer_native_exe = build_installer_native(builds_dir, ver)
 
   if upload or upload_tmp:
     s3UploadFilePublic(local_exe_uncompr, remote_exe)
