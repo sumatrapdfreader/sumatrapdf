@@ -849,8 +849,10 @@ void DisplayModel::renderVisibleParts(void)
     }
     
 #ifdef PREDICTIVE_RENDER
-    if (0 != lastVisible && lastVisible != pageCount())
+    if (0 < lastVisible && lastVisible < pageCount())
         startRenderingPage(lastVisible+1);
+    if (lastVisible > 1)
+        startRenderingPage(lastVisible-1);
 #endif
 }
 

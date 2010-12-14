@@ -1612,15 +1612,8 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         else
             EnableMenuItem(hmenu, menuId, MF_BYCOMMAND | MF_GRAYED);
     }
-    /* Hide scrollbars if not showing a PDF */
-    /* TODO: doesn't really fit the name of the function */
+
     if (WS_SHOWING_PDF == win->state) {
-        /* TODO: Isn't all of this handled by DisplayModel::setScrollbarsState ?
-        if (win->dm->needHScroll())
-            ShowScrollBar(win->hwndCanvas, SB_HORZ, TRUE);
-        if (win->dm->needVScroll() || (win->dm->zoomVirtual() == ZOOM_FIT_PAGE && !win->fullScreen && !win->presentation && !displayModeContinuous(win->dm->displayMode()) && win->dm->pageCount() > 1))
-            ShowScrollBar(win->hwndCanvas, SB_VERT, TRUE);
-        */
         if (!CanSendAsEmailAttachment(win))
             EnableMenuItem(hmenu, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_GRAYED);
     }
@@ -2241,12 +2234,7 @@ void DisplayModel::setScrollbarsState(void)
             win->prevCanvasBR.x = drawAreaDx;
             win->prevCanvasBR.y = drawAreaDy;
         }
-        else if (drawAreaDy == canvasDy &&
-                 // don't force a scrollbar to show if we're going to
-                 // show it anyway (see a dozen lines below)
-                 (_zoomVirtual != ZOOM_FIT_PAGE || win->fullScreen ||
-                  win->presentation || displayModeContinuous(win->dm->displayMode()) ||
-                  win->dm->pageCount() == 1)) {
+        else if (drawAreaDy == canvasDy) {
             canvasDy++;
         }
     }
@@ -2256,26 +2244,6 @@ void DisplayModel::setScrollbarsState(void)
         si.nMin = 0;
         si.nMax = 99;
         si.nPage = 100;
-
-        if (ZOOM_FIT_PAGE == _zoomVirtual && !win->fullScreen && !win->presentation) {
-            switch (displayMode()) {
-                case DM_SINGLE_PAGE:
-                    si.nPos = currentPageNo() - 1;
-                    si.nMax = pageCount() - 1;
-                    si.nPage = 1;
-                    break;
-                case DM_FACING:
-                    si.nPos = (currentPageNo() + 1) / 2 - 1;
-                    si.nMax = (pageCount() + 1) / 2 - 1;
-                    si.nPage = 1;
-                    break;
-                case DM_BOOK_VIEW:
-                    si.nPos = currentPageNo() / 2;
-                    si.nMax = pageCount() / 2;
-                    si.nPage = 1;
-                    break;
-            }
-        }
     } else {
         si.nPos = (int)areaOffset.y;
         si.nMin = 0;
@@ -4175,14 +4143,7 @@ static void OnVScroll(WindowInfo *win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (win->dm && (si.nPos != iVertPos)) {
-        if (DM_SINGLE_PAGE == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
-            win->dm->goToPage(si.nPos + 1, 0);
-        else if (DM_FACING == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
-            win->dm->goToPage(si.nPos * 2 + 1, 0);
-        else if (DM_BOOK_VIEW == win->dm->displayMode() && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
-            win->dm->goToPage(si.nPos * 2 + (si.nPos > 0 ? 0 : 1), 0);
-        else
-            win->dm->scrollYTo(si.nPos);
+        win->dm->scrollYTo(si.nPos);
     }
 }
 
@@ -6832,10 +6793,6 @@ InitMouseWheelInfo:
 
             win->wheelAccumDelta += GET_WHEEL_DELTA_WPARAM(wParam);     // 120 or -120
             current = GetScrollPos(win->hwndCanvas, SB_VERT);
-
-            // In non-continuous, page fitting view mode, SB_LINEUP/DOWN already means page up/down
-            if (!displayModeContinuous(win->dm->displayMode()) && ZOOM_FIT_PAGE == win->dm->zoomVirtual())
-                win->wheelAccumDelta = gDeltaPerLine * (win->wheelAccumDelta > 0 ? 1 : -1);
 
             while (win->wheelAccumDelta >= gDeltaPerLine) {
                 SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
