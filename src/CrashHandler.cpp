@@ -50,7 +50,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     if (!pMiniDumpWriteDump)
     {
 #ifdef SVN_PRE_RELEASE_VER
-        MessageBox(NULL, _T("No dbghelp.dll"), _T("Sumatra crashed"), MB_ICONINFORMATION | MB_OK);
+        ::MessageBoxA(NULL, "No dbghelp.dll", "Sumatra crashed", MB_ICONINFORMATION | MB_OK);
 #endif
         return 0;
     }
@@ -59,7 +59,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     if (INVALID_HANDLE_VALUE == dumpFile)
     {
 #ifdef SVN_PRE_RELEASE_VER
-        MessageBox(NULL, _T("Couldn't create a crashdump file"), _T("Sumatra crashed"), MB_ICONINFORMATION | MB_OK);
+        ::MessageBoxA(NULL, "Couldn't create a crashdump file", "Sumatra crashed", MB_ICONINFORMATION | MB_OK);
 #endif
         return 0;
     }
@@ -73,7 +73,6 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     pMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, type, &mei, NULL, &mci);
 
     CloseHandle(dumpFile);
-
 
     // exec_with_params(g_exePath, CMD_ARG_SEND_CRASHDUMP, TRUE /* hidden */);
     return 0;
