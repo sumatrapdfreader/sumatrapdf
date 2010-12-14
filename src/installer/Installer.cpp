@@ -30,6 +30,7 @@
 
 #include "Resource.h"
 #include "base_util.h"
+#include "str_util.h"
 #include "win_util.h"
 
 using namespace Gdiplus;
@@ -51,6 +52,181 @@ static ULONG_PTR        gGdiplusToken;
 static NONCLIENTMETRICS gNonClientMetrics = { sizeof (NONCLIENTMETRICS) };
 
 int gBallX, gBallY;
+
+#define INSTALLER_PART_FILE "kifi"
+#define INSTALLER_PART_END  "kien"
+
+struct EmbeddedPart {
+    EmbeddedPart *  next;
+    char            type[5];     // we only use 4, 5th is for 0-termination
+    // fields valid if type is INSTALLER_PART_FILE
+    uint32_t        fileSize;    // size of the file
+    uint32_t        fileOffset;  // offset in the executable of the file start
+    char *          fileName;    // name of the file
+};
+
+void FreeEmbeddedParts(EmbeddedPart *root)
+{
+    EmbeddedPart *p = root;
+
+    while (p) {
+        EmbeddedPart *next = p->next;
+        free(p->fileName);
+        free(p);
+        p = next;
+    }
+}
+
+void ShowLastError(char *msg)
+{
+    char *msgBuf, *errorMsg;
+    if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPSTR)&msgBuf, 0, NULL)) {
+        errorMsg = str_printf("%s\n\n%s", msg, msgBuf);
+        LocalFree(msgBuf);
+    } else {
+        errorMsg = str_printf("%s\n\nError %d", msg, (int)GetLastError());
+    }
+    ::MessageBoxA(gHwndFrame, errorMsg, "Installer failed", MB_OK | MB_ICONEXCLAMATION);
+    free(errorMsg);
+}
+
+BOOL ReadData(HANDLE h, LPVOID data, DWORD size, char *errMsg)
+{
+    DWORD bytesRead;
+    BOOL ok = ReadFile(h, data, size, &bytesRead, NULL);
+    char *msg;
+    if (!ok || (bytesRead != size)) {        
+        if (!ok) {
+            msg = str_printf("%s: ok=%d", errMsg, ok);
+        } else {
+            msg = str_printf("%s: bytesRead=%d, wanted=%d", errMsg, (int)bytesRead, (int)size);
+        }
+        ShowLastError(msg);
+        return FALSE;
+    }
+    return TRUE;        
+}
+
+#define SEEK_FAILED INVALID_SET_FILE_POINTER
+
+DWORD SeekBackwards(HANDLE h, LONG distance, char *errMsg)
+{
+    DWORD res = SetFilePointer(h, -distance, NULL, FILE_CURRENT);
+    if (INVALID_SET_FILE_POINTER == res) {
+        ShowLastError(errMsg);
+    }
+    return res;
+}
+
+DWORD GetFilePos(HANDLE h)
+{
+    return SeekBackwards(h, 0, "");
+}
+
+/* Load information about parts embedded in the installer.
+   The format of the data is:
+
+   For a part that is a file:
+     $fileData      - blob
+     $fileDataLen   - length of $data, 32-bit unsigned integer, little-endian
+     $fileName      - ascii string, name of the file (without terminating zero!)
+     $fileNameLne   - length of $fileName, 32-bit unsigned integer, little-endian
+     'kifi'         - 4 byte unique header
+
+   For a part that signifies end of parts:
+     'kien'         - 4 byte unique header
+
+   Data is laid out so that it can be read sequentially from the end, because
+   it's easier for the installer to seek to the end of itself than parse
+   PE header to figure out where the data starts. */
+
+EmbeddedPart *LoadEmbeddedPartsInfo() {
+    EmbeddedPart *  root = NULL;
+    EmbeddedPart *  part;
+    DWORD           res;
+    char *           msg;
+
+    TCHAR exePath[MAX_PATH] = {0};
+    GetModuleFileName(NULL, exePath, dimof(exePath));
+
+    HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE)
+    {
+        ::MessageBoxA(gHwndFrame, "Couldn't open myself for reading", "Installer failed",  MB_ICONINFORMATION | MB_OK);
+        goto Error;
+    }
+
+    // position at the header of the last part
+    res = SetFilePointer(h, -4, NULL, FILE_END);
+    if (INVALID_SET_FILE_POINTER == res) {
+        ::MessageBoxA(gHwndFrame, "Couldn't seek to end", "Installer failed", MB_ICONINFORMATION | MB_OK);
+        goto Error;
+    }
+
+ReadNextPart:
+    part = SAZ(EmbeddedPart);
+    part->next = root;
+    root = part;
+
+    res = GetFilePos(h);
+#if 0
+    msg = str_printf("Curr pos: %d", (int)res);
+    ::MessageBoxA(gHwndFrame, msg, "Info", MB_ICONINFORMATION | MB_OK);
+    free(msg);
+#endif
+
+    // at this point we have to be positioned in the file at the beginning of the header
+    if (!ReadData(h, (LPVOID)part->type, 4, "Couldn't read the header"))
+        goto Error;
+
+    if (str_eqn(part->type, INSTALLER_PART_END, 4)) {
+        goto Exit;
+    }
+
+    if (str_eqn(part->type, INSTALLER_PART_FILE, 4)) {
+        uint32_t nameLen;
+        if (SEEK_FAILED == SeekBackwards(h, 8, "Couldn't seek to file name size"))
+            goto Error;
+
+        if (!ReadData(h, (LPVOID)&nameLen, 4, "Couldn't read file name size"))
+            goto Error;
+        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, "Couldn't seek to file name"))
+            goto Error;
+
+        part->fileName = (char*)zmalloc(nameLen+1);
+        if (!ReadData(h, (LPVOID)part->fileName, nameLen, "Couldn't read file name"))
+            goto Error;
+        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, "Couldn't seek to file size"))
+            goto Error;
+
+        if (!ReadData(h, (LPVOID)&part->fileSize, 4, "Couldn't read file size"))
+            goto Error;
+        res = SeekBackwards(h, 4 + part->fileSize + 4,  "Couldn't seek to header");
+        if (SEEK_FAILED == res)
+            goto Error;
+
+        part->fileOffset = res + 4;
+#if 0
+        msg = str_printf("Found file '%s' of size %d at offset %d", part->fileName, part->fileSize, part->fileOffset);
+        ::MessageBoxA(gHwndFrame, msg, "Installer", MB_ICONINFORMATION | MB_OK);
+        free(msg);
+#endif
+        goto ReadNextPart;
+    }
+
+    msg = str_printf("Unknown part: %s", part->type);
+    ::MessageBoxA(gHwndFrame, msg, "Installer failed", MB_ICONINFORMATION | MB_OK);
+    free(msg);
+    goto Error;
+
+Exit:
+    CloseHandle(h);
+    return root;
+Error:
+    FreeEmbeddedParts(root);
+    root = NULL;
+    goto Exit;
+}
 
 inline void SetFont(HWND hwnd, HFONT font)
 {
@@ -130,7 +306,10 @@ void OnPaintMain(HWND hwnd)
 
 void OnButtonInstall()
 {
-    OutputDebugStringA("OnButtonInstall()");
+    EmbeddedPart *parts = LoadEmbeddedPartsInfo();
+    if (NULL == parts)
+        return;
+    /* TODO: do the rest */
 }
 
 void OnMouseMove(HWND hwnd, int x, int y)

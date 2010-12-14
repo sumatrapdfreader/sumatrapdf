@@ -144,25 +144,34 @@ def build_installer_nsis(builds_dir, ver):
   ensure_path_exists(local_installer_exe)
   return local_installer_exe
 
-def write_with_size(fo, data):
+def write_no_size(fo, data):
+  log("Writing %d bytes at %d '%s'" % (len(data), fo.tell(), data))
   fo.write(data)
-  fo.write(struct.pack("<I", len(data)))
+  
+def write_with_size(fo, data, name=None):
+  if name:
+    log("Writing %d bytes at %d (data of name %s)" % (len(data), fo.tell(), name))
+  else:
+    log("Writing %d bytes at %d (data)" % (len(data), fo.tell()))
+  fo.write(data)
+  tmp = struct.pack("<I", len(data))
+  log("Writing %d bytes at %d (data size)" % (len(tmp), fo.tell()))
+  fo.write(tmp)
 
 INSTALLER_HEADER_FILE = "kifi"
-INSTALLER_HEADER_END = "kien"
+INSTALLER_HEADER_END  = "kien"
 
 def append_installer_file(fo, path, name_in_installer):
   fi = open(path, "rb")
   data = fi.read()
   fi.close()
   assert len(data) == os.path.getsize(path)
-  log("Len of %s: %d" % (path, len(data)))
-  write_with_size(fo, data)
+  write_with_size(fo, data, name_in_installer)
   write_with_size(fo, name_in_installer)
-  fo.write(INSTALLER_HEADER_FILE)
+  write_no_size(fo, INSTALLER_HEADER_FILE)
 
 def mark_installer_end(fo):
-  fo.write(INSTALLER_HEADER_END)
+  write_no_size(fo, INSTALLER_HEADER_END)
 
 # construct a full installer by appending data at the end of installer executable.
 # appended data is in the format:
