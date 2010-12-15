@@ -26,9 +26,6 @@
 #define IDM_ZOOM_FIRST                  IDM_ZOOM_FIT_PAGE
 #define IDM_ZOOM_LAST                   IDM_ZOOM_CUSTOM
 
-// this sucks but I don't know a better way
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-
 // Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
 // (using FreeType for fonts) at the expense of higher memory/spooler requirements.
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
