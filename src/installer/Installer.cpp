@@ -32,12 +32,10 @@
 #include "Resource.h"
 #include "base_util.h"
 #include "str_util.h"
+#include "tstr_util.h"
 #include "win_util.h"
 
 using namespace Gdiplus;
-
-// this sucks but I don't know a better way
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define INSATLLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_INSTALLER_FRAME")
 #define ID_BUTTON_INSTALL 1
@@ -55,12 +53,38 @@ static NONCLIENTMETRICS gNonClientMetrics = { sizeof (NONCLIENTMETRICS) };
 int gBallX, gBallY;
 
 #define APP                 "SumatraPDF"
+#define TAPP                _T("SumatraPDF")
 #define EXE                 "SumatraPDF.exe"
 
+// This is in HKLM. Note that on 64bit windows, if installing 32bit app
+// the installer has to be 32bit as well, so that it goes into proper
+// place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 #define REG_PATH_UNINST     "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP
 
-#define INSTALLER_PART_FILE "kifi"
-#define INSTALLER_PART_END  "kien"
+// Keys we'll set in REG_PATH_UNINST path
+
+// REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
+#define DISPLAY_ICON "DisplayIcon"
+// REG_SZ, e.g "SumatraPDF"
+#define DISPLAY_NAME "DisplayName"
+// REG_SZ, e.g. "1.2"
+#define DISPLAY_VERSION "DisplayVersion"
+// REG_DWORD, get size of installed directory after copying files
+#define ESTIMATED_SIZE "EstimatedSize"
+// REG_DWORD, set to 1
+#define NO_MODIFY "NoModify"
+// REG_DWORD, set to 1
+#define NO_REPAIR "NoRepair"
+// REG_SZ, e.g. "Krzysztof Kowalczyk"
+#define PUBLISHER "Publisher"
+// REG_SZ, path to uninstaller exe
+#define UNINSTALL_STRING "UninstallString"
+// REG_SZ, e.g. "http://blog.kowalczyk/info/software/sumatrapdf/
+#define URL_INFO_ABOUT "UrlInfoAbout"
+
+#define INSTALLER_PART_FILE         "kifi"
+#define INSTALLER_PART_END          "kien"
+#define INSTALLER_PART_UNINSTALLER  "kiun"
 
 struct EmbeddedPart {
     EmbeddedPart *  next;
@@ -193,6 +217,18 @@ static int KillProcess(char *processName, BOOL waitUntilTerminated)
     return killedCount;
 }
 
+TCHAR *GetExePath()
+{
+    static TCHAR exePath[MAX_PATH];
+    GetModuleFileName(NULL, exePath, dimof(exePath));
+    return exePath;
+}
+
+void NotifyFailed(char *msg)
+{
+    ::MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
+}
+
 /* Load information about parts embedded in the installer.
    The format of the data is:
 
@@ -216,20 +252,18 @@ EmbeddedPart *LoadEmbeddedPartsInfo() {
     DWORD           res;
     char *           msg;
 
-    TCHAR exePath[MAX_PATH] = {0};
-    GetModuleFileName(NULL, exePath, dimof(exePath));
-
-    HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    TCHAR *exePath = GetExePath();
+    HANDLE h = ::CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE)
     {
-        ::MessageBoxA(gHwndFrame, "Couldn't open myself for reading", "Installer failed",  MB_ICONINFORMATION | MB_OK);
+        NotifyFailed("Couldn't open myself for reading");
         goto Error;
     }
 
     // position at the header of the last part
     res = SetFilePointer(h, -4, NULL, FILE_END);
     if (INVALID_SET_FILE_POINTER == res) {
-        ::MessageBoxA(gHwndFrame, "Couldn't seek to end", "Installer failed", MB_ICONINFORMATION | MB_OK);
+        NotifyFailed("Couldn't seek to end");
         goto Error;
     }
 
@@ -285,7 +319,7 @@ ReadNextPart:
     }
 
     msg = str_printf("Unknown part: %s", part->type);
-    ::MessageBoxA(gHwndFrame, msg, "Installer failed", MB_ICONINFORMATION | MB_OK);
+    NotifyFailed(msg);
     free(msg);
     goto Error;
 
@@ -296,6 +330,164 @@ Error:
     FreeEmbeddedParts(root);
     root = NULL;
     goto Exit;
+}
+
+TCHAR *GetInstallationDir()
+{
+    static TCHAR installationDir[MAX_PATH];
+    static BOOL alreadyCalculated = FALSE;
+    if (alreadyCalculated)
+        return installationDir;
+    BOOL ok = SHGetSpecialFolderPath(NULL, installationDir, CSIDL_PROGRAM_FILES, FALSE);
+    if (!ok)
+        return NULL;
+    tstr_cat_s(installationDir, dimof(installationDir), _T("\\"));
+    tstr_cat_s(installationDir, dimof(installationDir), TAPP);
+    return installationDir;    
+}
+
+BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
+{
+    BOOL    ok;
+    DWORD   bytesTransferred;
+    char *  buf[1024*8];
+    DWORD   toCopyLeft = size;
+
+    while (0 != toCopyLeft) {
+        DWORD toRead = dimof(buf);
+        if (toRead > toCopyLeft)
+            toRead = toCopyLeft;
+
+        ok = ReadFile(hSrc, (LPVOID)buf, toRead, &bytesTransferred, NULL);
+        if (!ok || (toRead != bytesTransferred)) {
+            NotifyFailed("Failed to read from file part");
+            goto Error;
+        }
+
+        ok = WriteFile(hDst, (LPVOID)buf, toRead, &bytesTransferred, NULL);
+        if (!ok || (toRead != bytesTransferred)) {
+            NotifyFailed("Failed to write to hDst");
+            goto Error;
+        }
+
+        toCopyLeft -= toRead;
+    }       
+    return TRUE;
+Error:
+    return FALSE;
+}
+
+BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
+{
+    TCHAR * dstName = NULL, *dstPath = NULL;
+    HANDLE  hDst = INVALID_HANDLE_VALUE, hSrc = INVALID_HANDLE_VALUE;
+    BOOL    ok = TRUE;
+
+    if (!str_ieq(INSTALLER_PART_FILE, p->type)) // double-check
+        return FALSE;
+
+    dstName = utf8_to_tstr(p->fileName);
+    dstPath = tstr_cat3(dir, _T("\\"), dstName);
+    TCHAR *exePath = GetExePath();
+
+    hSrc = ::CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSrc == INVALID_HANDLE_VALUE) {
+        NotifyFailed("Couldn't open myself for reading");
+        goto Error;
+    }
+
+    DWORD res = SetFilePointer(hSrc, p->fileOffset, NULL, FILE_BEGIN);
+    if (INVALID_SET_FILE_POINTER == res) {
+        ShowLastError("Couldn't seek to file part");
+        goto Error;
+    }
+
+    hDst = ::CreateFile(dstPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hDst == INVALID_HANDLE_VALUE) {
+        // leaks but we don't care
+        ShowLastError(str_printf("Couldn't open %s for writing", tstr_to_utf8(dstPath)));
+        goto Error;
+    }
+
+    ok = CopyFileData(hSrc, hDst, p->fileSize);
+
+Exit:
+    CloseHandle(hDst);
+    CloseHandle(hSrc);
+    free(dstPath);
+    free(dstName);
+
+    return ok;
+Error:
+    ok = FALSE;
+    goto Exit;
+}
+
+void InstallCopyFiles(EmbeddedPart *root)
+{
+    TCHAR *installDir = GetInstallationDir();
+    EmbeddedPart *p = root;
+    while (p) {
+        EmbeddedPart *next = p->next;
+        if (str_ieq(INSTALLER_PART_FILE, p->type))
+            ExtractPartFile(installDir, p);
+        p = next;
+    }
+
+}
+
+void CreateUninstaller()
+{
+    TCHAR *installDir = GetInstallationDir();
+    TCHAR *uninstallerPath = tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
+
+    // TODO: finish me:
+    // copy myself (just the template part) to uninstallerPath
+    // append INSTALLER_PART_END and INSTALLER_PART_UNINSTALLER markers
+
+    free(uninstallerPath);
+}
+
+BOOL IsUninstaller(EmbeddedPart *root)
+{
+    EmbeddedPart *p = root;
+    while (p) {
+        EmbeddedPart *next = p->next;
+        if (str_ieq(p->type, INSTALLER_PART_UNINSTALLER))
+            return TRUE;
+        p = next;
+    }
+    return FALSE;
+}
+
+void OnButtonInstall()
+{
+    EmbeddedPart *parts = LoadEmbeddedPartsInfo();
+    if (NULL == parts)
+        return;
+
+    if (IsUninstaller(parts)) {
+        // shouldn't happen
+        return;
+    }
+
+    /* if the app is running, we have to kill it so that we can over-write the executable */
+    KillProcess(EXE, TRUE);
+
+    InstallCopyFiles(parts);
+    CreateUninstaller();
+
+    /* TODO:
+        - set necessary registry settings
+        - launch the program
+    */
+}
+
+void OnUninstall()
+{
+    /* if the app is running, we have to kill it to delete the files */
+    KillProcess(EXE, TRUE);
+
 }
 
 inline void SetFont(HWND hwnd, HFONT font)
@@ -372,30 +564,6 @@ void OnPaintMain(HWND hwnd)
     HDC hdc = ::BeginPaint(hwnd, &ps);
     DrawMain(hwnd, hdc, &rc);
     ::EndPaint(hwnd, &ps);
-}
-
-void OnButtonInstall()
-{
-    EmbeddedPart *parts = LoadEmbeddedPartsInfo();
-    if (NULL == parts)
-        return;
-
-    /* if the app is running, we have to kill it so that we can over-write the executable */
-    KillProcess(EXE, TRUE);
-
-    /* TODO:
-        - copy files to destination directory
-        - create uninstaller
-        - set necessary registry settings
-        - launch the program
-    */
-}
-
-void OnUninstall()
-{
-    /* if the app is running, we have to kill it to delete the files */
-    KillProcess(EXE, TRUE);
-
 }
 
 void OnMouseMove(HWND hwnd, int x, int y)

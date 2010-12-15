@@ -2,7 +2,6 @@
 #include "Resource.h"
 #include "../Version.h"
 
-
 VS_VERSION_INFO    VERSIONINFO     MOVEABLE IMPURE LOADONCALL DISCARDABLE
   FILEVERSION    VER_RESOURCE
   PRODUCTVERSION VER_RESOURCE
@@ -35,3 +34,4 @@ END
 
 IDI_SUMATRAPDF          ICON                    "..\SumatraPDF-smaller.ico"
 
+1                       RT_MANIFEST             "Installer.exe.manifest"

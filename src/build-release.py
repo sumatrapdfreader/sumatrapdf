@@ -34,6 +34,7 @@ args = sys.argv
 upload = test_for_flag(args, "-upload")
 upload_tmp = test_for_flag(args, "-uploadtmp")
 testing = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
+build_test_installer = test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
 
 if upload or upload_tmp:
   try:
@@ -201,6 +202,25 @@ def build_installer_native(builds_dir, ver):
   fo.close()
   return installer_exe
 
+def build_installer_for_testing():
+  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
+  objdir = os.path.join(os.getcwd(), "obj-dbg")
+  installer_template_exe = os.path.join(objdir, "Installer.exe")
+  installer_exe = os.path.join(objdir, "SumatraPDF-installer-native.exe")
+  exe = os.path.join(objdir, "SumatraPDF.exe")
+
+  shutil.copy(installer_template_exe, installer_exe)
+  fo = open(installer_exe, "ab")
+  # append installer data to installer exe
+  mark_installer_end(fo) # this are read backwards so end marker is written first
+  append_installer_file(fo, exe, "SumatraPDF.exe")
+  # TODO: write compressed
+  font_name =  "DroidSansFallback.ttf"
+  font_path = os.path.join(os.getcwd(), "mupdf", "fonts", "droid", font_name)
+  append_installer_file(fo, font_path, font_name)
+  fo.close()
+  return installer_exe
+
 def main():
   log("Starting build-release.py")
 
@@ -216,6 +236,10 @@ def main():
 
   os.chdir("..")
   srcdir = os.getcwd()
+
+  if build_test_installer:
+    build_installer_for_testing()
+    sys.exit(0)
 
   ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)
