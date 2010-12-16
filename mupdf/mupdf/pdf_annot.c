@@ -22,7 +22,7 @@ resolvedest(pdf_xref *xref, fz_obj *dest)
 
 	else if (fz_isarray(dest))
 	{
-		return dest; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=275 */
+		return dest;
 	}
 
 	else if (fz_isdict(dest))
@@ -217,11 +217,12 @@ pdf_loadannots(pdf_annot **headp, pdf_xref *xref, fz_obj *annots)
 		if (fz_isdict(ap))
 		{
 			n = fz_dictgets(ap, "N"); /* normal state */
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1059 */
-			if (!fz_isindirect(n) || !pdf_isstream(xref, fz_tonum(n), fz_togen(n)))
+
+			/* lookup current state in sub-dictionary */
+			if (!pdf_isstream(xref, fz_tonum(n), fz_togen(n)))
 				n = fz_dictget(n, as);
 
-			if (fz_isindirect(n) && pdf_isstream(xref, fz_tonum(n), fz_togen(n)))
+			if (pdf_isstream(xref, fz_tonum(n), fz_togen(n)))
 			{
 				error = pdf_loadxobject(&form, xref, n);
 				if (error)

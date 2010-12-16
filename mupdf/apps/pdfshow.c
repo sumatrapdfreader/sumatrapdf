@@ -177,12 +177,17 @@ static void showgrep(char *filename)
 			if (error)
 				die(error);
 
+			fz_sortdict(obj);
+
 			printf("%s:%d: ", filename, i);
 			fz_fprintobj(stdout, obj, 1);
 
 			fz_dropobj(obj);
 		}
 	}
+
+	printf("%s:trailer: ", filename);
+	fz_fprintobj(stdout, xref->trailer, 1);
 }
 
 int main(int argc, char **argv)

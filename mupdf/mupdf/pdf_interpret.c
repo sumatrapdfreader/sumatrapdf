@@ -449,24 +449,24 @@ pdf_runkeyword(pdf_csi *csi, fz_obj *rdb, char *buf)
 	case 'B':
 		switch(buf[1])
 		{
-		case 0:
+		case 0: /* "B" */
 			if (csi->top < 0)
 				goto syntaxerror;
 			pdf_showpath(csi, 0, 1, 1, 0);
 			break;
-		case 'D':
+		case 'D': /* "BDC" */
 			if ((buf[2] != 'C') || (buf[3] != 0))
 				goto defaultcase;
 			if (csi->top < 2)
 				goto syntaxerror;
 			break;
-		case 'M':
+		case 'M': /* "BMC" */
 			if ((buf[2] != 'C') || (buf[3] != 0))
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			break;
-		case 'T':
+		case 'T': /* "BT" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -474,14 +474,14 @@ pdf_runkeyword(pdf_csi *csi, fz_obj *rdb, char *buf)
 			csi->tm = fz_identity;
 			csi->tlm = fz_identity;
 			break;
-		case 'X':
+		case 'X': /* "BX" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
 				goto syntaxerror;
 			csi->xbalance ++;
 			break;
-		case '*':
+		case '*': /* "B*" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -493,7 +493,7 @@ pdf_runkeyword(pdf_csi *csi, fz_obj *rdb, char *buf)
 		}
 		break;
 
-	case 'C':
+	case 'C': /* "CS" */
 		if ((buf[1] == 'S') && (buf[2] == 0))
 		{
 			fz_colorspace *cs;
@@ -549,13 +549,13 @@ Lsetcolorspace:
 	case 'D':
 		switch (buf[1])
 		{
-		case 'P':
+		case 'P': /* "Dp" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 2)
 				goto syntaxerror;
 			break;
-		case 'o':
+		case 'o': /* "Do" */
 		{
 			fz_obj *dict;
 			fz_obj *obj;
@@ -636,20 +636,20 @@ Lsetcolorspace:
 	case 'E':
 		switch (buf[1])
 		{
-		case 'X':
+		case 'X': /* "EX" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
 				goto syntaxerror;
 			csi->xbalance --;
 			break;
-		case 'M':
+		case 'M': /* "EW" */
 			if ((buf[2] != 'C') || (buf[3] != 0))
 				goto defaultcase;
 			if (csi->top < 0)
 				goto syntaxerror;
 			break;
-		case 'T':
+		case 'T': /* "ET" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -662,7 +662,7 @@ Lsetcolorspace:
 		}
 		break;
 
-	case 'F':
+	case 'F': /* "F" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 0)
@@ -670,7 +670,7 @@ Lsetcolorspace:
 		pdf_showpath(csi, 0, 1, 0, 0);
 		break;
 
-	case 'G':
+	case 'G': /* "G" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 1)
@@ -681,7 +681,7 @@ Lsetcolorspace:
 		pdf_setcolor(csi, PDF_MSTROKE, v);
 		break;
 
-	case 'J':
+	case 'J': /* "J" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 1)
@@ -689,7 +689,7 @@ Lsetcolorspace:
 		gstate->strokestate.linecap = fz_toint(csi->stack[0]);
 		break;
 
-	case 'K':
+	case 'K': /* "K" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 4)
@@ -707,12 +707,12 @@ Lsetcolorspace:
 	case 'M':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "M" */
 			if (csi->top < 1)
 				goto syntaxerror;
 			gstate->strokestate.miterlimit = fz_toreal(csi->stack[0]);
 			break;
-		case 'P':
+		case 'P': /* "Mp" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
@@ -723,7 +723,7 @@ Lsetcolorspace:
 		}
 		break;
 
-	case 'Q':
+	case 'Q': /* "Q" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 0)
@@ -731,7 +731,7 @@ Lsetcolorspace:
 		pdf_grestore(csi);
 		break;
 
-	case 'R':
+	case 'R': /* "RG" */
 		if ((buf[1] != 'G') || (buf[2] != 0))
 			goto defaultcase;
 		if (csi->top < 3)
@@ -748,14 +748,13 @@ Lsetcolorspace:
 	case 'S':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "S" */
 			if (csi->top < 0)
 				goto syntaxerror;
 			pdf_showpath(csi, 0, 0, 1, 0);
 			break;
-		case 'C':
+		case 'C': /* "SC" or "SCN" */
 		{
-			/* SC or SCN */
 			pdf_material *mat;
 			fz_obj *patterntype;
 			fz_obj *dict;
@@ -842,21 +841,21 @@ Lsetcolor:
 	case 'T':
 		switch (buf[1])
 		{
-		case 'c':
+		case 'c': /* "Tc" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			gstate->charspace = fz_toreal(csi->stack[0]);
 			break;
-		case 'w':
+		case 'w': /* "Tw" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			gstate->wordspace = fz_toreal(csi->stack[0]);
 			break;
-		case 'z':
+		case 'z': /* "Tz" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
@@ -865,14 +864,14 @@ Lsetcolor:
 			pdf_flushtext(csi);
 			gstate->scale = a;
 			break;
-		case 'L':
+		case 'L': /* "TL" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			gstate->leading = fz_toreal(csi->stack[0]);
 			break;
-		case 'f':
+		case 'f': /* "Tf" */
 		{
 			fz_obj *dict;
 			fz_obj *obj;
@@ -904,21 +903,21 @@ Lsetcolor:
 
 			break;
 		}
-		case 'r':
+		case 'r': /* "Tr" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			gstate->render = fz_toint(csi->stack[0]);
 			break;
-		case 's':
+		case 's': /* "Ts" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			gstate->rise = fz_toreal(csi->stack[0]);
 			break;
-		case 'd':
+		case 'd': /* "Td" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 2)
@@ -927,7 +926,7 @@ Lsetcolor:
 			csi->tlm = fz_concat(m, csi->tlm);
 			csi->tm = csi->tlm;
 			break;
-		case 'D':
+		case 'D': /* "TD" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 2)
@@ -937,7 +936,7 @@ Lsetcolor:
 			csi->tlm = fz_concat(m, csi->tlm);
 			csi->tm = csi->tlm;
 			break;
-		case 'm':
+		case 'm': /* "Tm" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 6)
@@ -955,7 +954,7 @@ Lsetcolor:
 			csi->tm = m;
 			csi->tlm = csi->tm;
 			break;
-		case '*':
+		case '*': /* "T*" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -964,14 +963,14 @@ Lsetcolor:
 			csi->tlm = fz_concat(m, csi->tlm);
 			csi->tm = csi->tlm;
 			break;
-		case 'j':
+		case 'j': /* "Tj" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			pdf_showtext(csi, csi->stack[0]);
 			break;
-		case 'J':
+		case 'J': /* "TJ" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
@@ -986,13 +985,13 @@ Lsetcolor:
 	case 'W':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "W" */
 			if (csi->top < 0)
 				goto syntaxerror;
 			csi->clip = 1;
 			csi->clipevenodd = 0;
 			break;
-		case '*':
+		case '*': /* "W*" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -1008,12 +1007,12 @@ Lsetcolor:
 	case 'b':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "b" */
 			if (csi->top < 0)
 				goto syntaxerror;
 			pdf_showpath(csi, 1, 1, 1, 0);
 			break;
-		case '*':
+		case '*': /* "b*" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -1028,7 +1027,7 @@ Lsetcolor:
 	case 'c':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "c" */
 			if (csi->top < 6)
 				goto syntaxerror;
 			a = fz_toreal(csi->stack[0]);
@@ -1039,7 +1038,7 @@ Lsetcolor:
 			f = fz_toreal(csi->stack[5]);
 			fz_curveto(csi->path, a, b, c, d, e, f);
 			break;
-		case 'm':
+		case 'm': /* "cm" */
 		{
 			if (buf[2] != 0)
 				goto defaultcase;
@@ -1056,7 +1055,7 @@ Lsetcolor:
 			gstate->ctm = fz_concat(m, gstate->ctm);
 			break;
 		}
-		case 's':
+		case 's': /* "cs" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			what = PDF_MFILL;
@@ -1069,7 +1068,7 @@ Lsetcolor:
 	case 'd':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "d" */
 		{
 			fz_obj *array;
 			if (csi->top < 2)
@@ -1083,8 +1082,8 @@ Lsetcolor:
 			gstate->strokestate.dashphase = fz_toreal(csi->stack[1]);
 			break;
 		}
-		case '0':
-		case '1':
+		case '0': /* "d0" */
+		case '1': /* "d1" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			/* we don't care about setcharwidth and setcachedevice */
@@ -1097,12 +1096,12 @@ Lsetcolor:
 	case 'f':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "f" */
 			if (csi->top < 0)
 				goto syntaxerror;
 			pdf_showpath(csi, 0, 1, 0, 0);
 			break;
-		case '*':
+		case '*': /* "f*" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 0)
@@ -1117,7 +1116,7 @@ Lsetcolor:
 	case 'g':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "g" */
 			if (csi->top < 1)
 				goto syntaxerror;
 
@@ -1125,7 +1124,7 @@ Lsetcolor:
 			pdf_setcolorspace(csi, PDF_MFILL, fz_devicegray);
 			pdf_setcolor(csi, PDF_MFILL, v);
 			break;
-		case 's':
+		case 's': /* "gs" */
 		{
 			fz_obj *dict;
 			fz_obj *obj;
@@ -1153,7 +1152,7 @@ Lsetcolor:
 		}
 		break;
 
-	case 'h':
+	case 'h': /* "h" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 0)
@@ -1161,7 +1160,7 @@ Lsetcolor:
 		fz_closepath(csi->path);
 		break;
 
-	case 'i':
+	case 'i': /* "i" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 1)
@@ -1169,7 +1168,7 @@ Lsetcolor:
 		/* flatness */
 		break;
 
-	case 'j':
+	case 'j': /* "j" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 1)
@@ -1177,7 +1176,7 @@ Lsetcolor:
 		gstate->strokestate.linejoin = fz_toint(csi->stack[0]);
 		break;
 
-	case 'k':
+	case 'k': /* "k" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 4)
@@ -1192,7 +1191,7 @@ Lsetcolor:
 		pdf_setcolor(csi, PDF_MFILL, v);
 		break;
 
-	case 'l':
+	case 'l': /* "l" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 2)
@@ -1202,7 +1201,7 @@ Lsetcolor:
 		fz_lineto(csi->path, a, b);
 		break;
 
-	case 'm':
+	case 'm': /* "m" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 2)
@@ -1212,7 +1211,7 @@ Lsetcolor:
 		fz_moveto(csi->path, a, b);
 		break;
 
-	case 'n':
+	case 'n': /* "n" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 0)
@@ -1220,7 +1219,7 @@ Lsetcolor:
 		pdf_showpath(csi, 0, 0, 0, csi->clipevenodd);
 		break;
 
-	case 'q':
+	case 'q': /* "q" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 0)
@@ -1231,13 +1230,13 @@ Lsetcolor:
 	case 'r':
 		switch (buf[1])
 		{
-		case 'i':
+		case 'i': /* "ri" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 1)
 				goto syntaxerror;
 			break;
-		case 'e':
+		case 'e': /* "re" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 4)
@@ -1254,7 +1253,7 @@ Lsetcolor:
 			fz_lineto(csi->path, x, y + h);
 			fz_closepath(csi->path);
 			break;
-		case 'g':
+		case 'g': /* "rg" */
 			if (buf[2] != 0)
 				goto defaultcase;
 			if (csi->top < 3)
@@ -1275,17 +1274,17 @@ Lsetcolor:
 	case 's':
 		switch (buf[1])
 		{
-		case 0:
+		case 0: /* "s" */
 			if (csi->top < 0)
 				goto syntaxerror;
 			pdf_showpath(csi, 1, 0, 1, 0);
 			break;
-		case 'c':
+		case 'c': /* "sc" or "scn" */
 			if ((buf[2] != 0) && ((buf[2] != 'n') || (buf[3] != 0)))
 				goto defaultcase;
 			what = PDF_MFILL;
 			goto Lsetcolor;
-		case 'h':
+		case 'h': /* "sh" */
 		{
 			fz_obj *dict;
 			fz_obj *obj;
@@ -1319,7 +1318,7 @@ Lsetcolor:
 		}
 		break;
 
-	case 'v':
+	case 'v': /* "v" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 4)
@@ -1331,7 +1330,7 @@ Lsetcolor:
 		fz_curvetov(csi->path, a, b, c, d);
 		break;
 
-	case 'w':
+	case 'w': /* "w" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 1)
@@ -1339,7 +1338,7 @@ Lsetcolor:
 		gstate->strokestate.linewidth = fz_toreal(csi->stack[0]);
 		break;
 
-	case 'y':
+	case 'y': /* "y" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 4)
@@ -1351,7 +1350,7 @@ Lsetcolor:
 		fz_curvetoy(csi->path, a, b, c, d);
 		break;
 
-	case '\'':
+	case '\'': /* "'" */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 1)
@@ -1364,7 +1363,7 @@ Lsetcolor:
 		pdf_showtext(csi, csi->stack[0]);
 		break;
 
-	case '"':
+	case '"': /* """ */
 		if (buf[1] != 0)
 			goto defaultcase;
 		if (csi->top < 3)

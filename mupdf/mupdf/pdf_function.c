@@ -1063,9 +1063,28 @@ loadsamplefunc(pdf_function *func, pdf_xref *xref, fz_obj *dict, int num, int ge
 			return fz_throw("truncated sample stream");
 		}
 
-		if (bps == 8) {
+		if (bps == 1) {
+			int x = fz_peekbyte(stream);
+			s = (x >> (7 - (i & 0x7))) & 0x01;
+			if ((i & 0x07) == 7)
+				fz_readbyte(stream);
+		}
+		else if (bps == 2) {
+			int x = fz_peekbyte(stream);
+			s = ((x >> (3 - (i & 0x3))) & 0x03) / 4.0f;
+			if ((i & 0x3) == 3)
+				fz_readbyte(stream);
+		}
+		else if (bps == 4) {
+			int x = fz_peekbyte(stream);
+			s = ((x >> (1 - (i & 0x1))) & 0x0f) / 16.0f;
+			if ((i & 0x1) == 1)
+				fz_readbyte(stream);
+		}
+		else if (bps == 8) {
 			s = fz_readbyte(stream) / 255.0f;
 		}
+		/* 12 bit sampled function not supported yet */
 		else if (bps == 16) {
 			int x = fz_readbyte(stream);
 			x = (x << 8) + fz_readbyte(stream);

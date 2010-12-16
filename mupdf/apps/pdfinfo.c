@@ -892,7 +892,7 @@ showinfo(char *filename, int show, char *pagelist)
 		dash = strchr(spec, '-');
 
 		if (dash == spec)
-			spage = epage = 1;
+			spage = epage = pagecount;
 		else
 			spage = epage = atoi(spec);
 

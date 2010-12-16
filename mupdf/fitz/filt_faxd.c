@@ -197,27 +197,6 @@ printline(FILE *f, unsigned char *line, int w)
 }
 
 static inline int
-getrun(const unsigned char *line, int x, int w, int c)
-{
-	int z;
-	int b;
-
-	if (x < 0)
-		x = 0;
-
-	z = x;
-	while (z < w)
-	{
-		b = getbit(line, z);
-		if (c != b)
-			break;
-		z ++;
-	}
-
-	return z - x;
-}
-
-static inline int
 findchanging(const unsigned char *line, int x, int w)
 {
 	int a, b;

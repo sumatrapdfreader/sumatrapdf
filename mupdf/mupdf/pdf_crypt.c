@@ -182,19 +182,6 @@ pdf_newcrypt(pdf_crypt **cryptp, fz_obj *dict, fz_obj *id)
 	else
 		fz_warn("missing file identifier, may not be able to do decryption");
 
-#if 0
-	{
-		int i;
-		printf("crypt: v=%d length=%d\n", crypt->v, crypt->length);
-		printf("crypt: stmf method=%d length=%d\n", crypt->stmf.method, crypt->stmf.length);
-		printf("crypt: strf method=%d length=%d\n", crypt->strf.method, crypt->strf.length);
-		printf("crypt: r=%d\n", crypt->r);
-		printf("crypt: o=<"); for (i = 0; i < 32; i++) printf("%02X", crypt->o[i]); printf(">\n");
-		printf("crypt: u=<"); for (i = 0; i < 32; i++) printf("%02X", crypt->u[i]); printf(">\n");
-		printf("crypt: p=0x%08X\n", crypt->p);
-	}
-#endif
-
 	*cryptp = crypt;
 	return fz_okay;
 }
@@ -603,4 +590,28 @@ pdf_opencrypt(fz_stream *chain, pdf_crypt *crypt, pdf_cryptfilter *stmf, int num
 		return fz_openaesd(chain, key, len);
 
 	return fz_opencopy(chain);
+}
+
+void pdf_debugcrypt(pdf_crypt *crypt)
+{
+	int i;
+
+	printf("crypt {\n");
+
+	printf("\tv=%d length=%d\n", crypt->v, crypt->length);
+	printf("\tstmf method=%d length=%d\n", crypt->stmf.method, crypt->stmf.length);
+	printf("\tstrf method=%d length=%d\n", crypt->strf.method, crypt->strf.length);
+	printf("\tr=%d\n", crypt->r);
+
+	printf("\to=<");
+	for (i = 0; i < 32; i++)
+		printf("%02X", crypt->o[i]);
+	printf(">\n");
+
+	printf("\tu=<");
+	for (i = 0; i < 32; i++)
+		printf("%02X", crypt->u[i]);
+	printf(">\n");
+
+	printf("}\n");
 }

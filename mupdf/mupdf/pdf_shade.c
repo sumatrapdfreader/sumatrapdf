@@ -741,12 +741,12 @@ pdf_loadmeshparams(pdf_xref *xref, fz_obj *dict, struct meshparams *p)
 	if (p->bpflag != 2 && p->bpflag != 4 && p->bpflag != 8)
 		p->bpflag = 8;
 
-	if (p->bpcoord != 1 && p->bpcoord != 2 && p->bpcoord != 4 && p->bpcoord != 4 &&
+	if (p->bpcoord != 1 && p->bpcoord != 2 && p->bpcoord != 4 &&
 		p->bpcoord != 8 && p->bpcoord != 12 && p->bpcoord != 16 &&
 		p->bpcoord != 24 && p->bpcoord != 32)
 		p->bpcoord = 8;
 
-	if (p->bpcomp != 1 && p->bpcomp != 2 && p->bpcomp != 4 && p->bpcomp != 4 &&
+	if (p->bpcomp != 1 && p->bpcomp != 2 && p->bpcomp != 4 &&
 		p->bpcomp != 8 && p->bpcomp != 12 && p->bpcomp != 16)
 		p->bpcomp = 8;
 }

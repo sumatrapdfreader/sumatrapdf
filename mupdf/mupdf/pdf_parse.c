@@ -279,7 +279,7 @@ skip:
 		if (tok != PDF_TNAME)
 		{
 			fz_dropobj(dict);
-			return fz_throw("invalid key in dict");;
+			return fz_throw("invalid key in dict");
 		}
 
 		key = fz_newname(buf);

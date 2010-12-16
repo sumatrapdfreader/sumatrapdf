@@ -112,6 +112,8 @@ void pdf_cryptobj(pdf_crypt *crypt, fz_obj *obj, int num, int gen);
 int pdf_needspassword(pdf_xref *xref);
 int pdf_authenticatepassword(pdf_xref *xref, char *pw);
 
+void pdf_debugcrypt(pdf_crypt *crypt);
+
 /*
  * xref and object / stream api
  */
