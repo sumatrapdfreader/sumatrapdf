@@ -3225,13 +3225,13 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
     if (!win->dm) return;
 
     if (win->presentation) {
-        SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
         // shortly display the cursor if the mouse has moved and the cursor is hidden
         if ((x != win->dragPrevPosX || y != win->dragPrevPosY) && !GetCursor()) {
             if (win->mouseAction == MA_IDLE)
                 SetCursor(gCursorArrow);
             else
                 SendMessage(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+            SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
         }
     }
 
@@ -5128,14 +5128,7 @@ static void OnChar(WindowInfo *win, int key)
         OnMenuFind(win);
         break;
     case 'c':
-        {
-            DisplayMode newMode = DM_CONTINUOUS;
-            if (displayModeShowCover(win->dm->displayMode()))
-                newMode = DM_CONTINUOUS_BOOK_VIEW;
-            else if (displayModeFacing(win->dm->displayMode()))
-                newMode = DM_CONTINUOUS_FACING;
-            SwitchToDisplayMode(win, newMode, false);
-        }
+        OnMenuViewContinuous(win);
         break;
     case 'b':
         {
