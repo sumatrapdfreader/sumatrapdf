@@ -35,6 +35,11 @@
 #include "tstr_util.h"
 #include "win_util.h"
 
+#ifdef DEBUG
+// debug builds use a manifest created by the linker instead of our own, so ensure visual styles this way
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#endif
+
 using namespace Gdiplus;
 
 #define INSATLLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_INSTALLER_FRAME")

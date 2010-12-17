@@ -75,7 +75,7 @@ INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 !if "$(CFG)"=="rel" && "$(EXB)"=="rm"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /GL /MT /O2
+SUMATRA_CFLAGS   = $(SUMATRA_CFLAGS) /GL /MT /O2
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /GL /MT /O2
 !endif
 
@@ -83,7 +83,7 @@ SUMATRA_RES = $(O)\sumatrapdf.res
 SUMATRA_MANIFEST = $(O)\sumatrapdf.manifest.res
 
 INSTALLER_RES = $(O)\Installer.res
-INSTALLER_MANIFEST = $(O)\installer.manifest.res
+INSTALLER_MANIFEST = $(O)\Installer.manifest.res
 
 BASEUTILS_OBJS = \
 	$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj $(O)\geom_util.obj \
@@ -138,8 +138,8 @@ $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h
 	rc /r /fo$(INSTALLER_RES) $(EXTCFLAGS) src\installer\Installer.rc
 
-$(INSTALLER_MANIFEST): src\Installer\Installer.manifest.rc
-	rc /r /fo$(INSTALLER_MANIFEST) src\Installer\Installer.manifest.rc
+$(INSTALLER_MANIFEST): src\installer\Installer.manifest.rc
+	rc /r /fo$(INSTALLER_MANIFEST) src\installer\Installer.manifest.rc
 
 $(INSTALLER_APP): $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) /OUT:$(INSTALLER_APP) /PDB:$(INSTALLER_PDB) \
