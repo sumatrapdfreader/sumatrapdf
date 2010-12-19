@@ -428,17 +428,19 @@ Error:
     goto Exit;
 }
 
-void InstallCopyFiles(EmbeddedPart *root)
+BOOL InstallCopyFiles(EmbeddedPart *root)
 {
     TCHAR *installDir = GetInstallationDir();
     EmbeddedPart *p = root;
     while (p) {
         EmbeddedPart *next = p->next;
-        if (str_ieq(INSTALLER_PART_FILE, p->type))
-            ExtractPartFile(installDir, p);
+        if (str_ieq(INSTALLER_PART_FILE, p->type)) {
+            if (!ExtractPartFile(installDir, p))
+                return FALSE;
+        }
         p = next;
     }
-
+    return TRUE;
 }
 
 void CreateUninstaller()
@@ -479,7 +481,10 @@ void OnButtonInstall()
     /* if the app is running, we have to kill it so that we can over-write the executable */
     KillProcess(EXE, TRUE);
 
-    InstallCopyFiles(parts);
+    if (!InstallCopyFiles(parts)) {
+        // TODO: notify about failure in the UI
+        return;
+    }
     CreateUninstaller();
 
     /* TODO:
