@@ -174,6 +174,15 @@ def append_installer_file(fo, path, name_in_installer):
 def mark_installer_end(fo):
   write_no_size(fo, INSTALLER_HEADER_END)
 
+def copy_installer_manifest(src, dst):
+  fo = open(src, "r")
+  d = fo.read()
+  fo.close()
+  d = d.replace("asInvoker", "requireAdministrator")
+  fo = open(dst, "w")
+  fo.write(d)
+  fo.close()
+
 # construct a full installer by appending data at the end of installer executable.
 # appended data is in the format:
 #  $data - data as binary. In our case it's Sumatra's binary
@@ -208,7 +217,7 @@ def build_installer_for_testing():
   installer_template_exe = os.path.join(objdir, "Installer.exe")
   installer_exe = os.path.join(objdir, "SumatraPDF-installer.exe")
   shutil.copy(installer_template_exe, installer_exe)
-  shutil.copy(os.path.join(objdir, "Installer.exe.manifest"), os.path.join(objdir, "SumatraPDF-installer.exe.manifest"))
+  copy_installer_manifest(os.path.join(objdir, "Installer.exe.manifest"), os.path.join(objdir, "SumatraPDF-installer.exe.manifest"))
 
   exe = os.path.join(objdir, "SumatraPDF.exe")
   fo = open(installer_exe, "ab")
