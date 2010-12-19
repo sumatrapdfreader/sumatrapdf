@@ -442,6 +442,8 @@ printing document
 #F&orward\tAlt+Right Arrow
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #Main PDF reader can't be changed in portable mode
 #No matches were found
 #No result found around line %u in file %s

@@ -505,3 +505,7 @@ copier le text
 printing document
 imprimer le document
 
+# Untranslated:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
+

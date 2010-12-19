@@ -500,5 +500,7 @@ printing document
 Nyomtatás
 
 # Untranslated:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #SumatraPDF Update
 

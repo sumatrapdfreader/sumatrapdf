@@ -498,5 +498,7 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #SumatraPDF Update
 

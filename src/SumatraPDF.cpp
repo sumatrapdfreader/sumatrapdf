@@ -231,8 +231,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { 1,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0,             },
     { 2,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0,             },
     { -1,  NULL,                  NULL,                   0,             },
-    { 3,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width"),      0,             },
-    { 4,   IDT_VIEW_FIT_PAGE,     _TRN("Fit Page"),       0,             },
+    { 3,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0, },
+    { 4,   IDT_VIEW_FIT_PAGE,     _TRN("Fit a Single Page"),    0,       },
     { 5,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0,             },
     { 6,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0,             },
     { -1,  IDM_FIND_FIRST,        NULL,                   0,             },
@@ -4346,26 +4346,6 @@ static void OnMenuViewBook(WindowInfo *win)
     SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
 }
 
-static void OnMenuFitWidthContinuous(WindowInfo *win)
-{
-    assert(win && win->dm);
-    if (!win || !win->dm) return;
-
-    if (win->dm->displayMode() != DM_CONTINUOUS)
-        SwitchToDisplayMode(win, DM_CONTINUOUS, false);
-    OnMenuZoom(win, IDM_ZOOM_FIT_WIDTH);
-}
-
-static void OnMenuFitSinglePage(WindowInfo *win)
-{
-    assert(win && win->dm);
-    if (!win || !win->dm) return;
-
-    if (win->dm->displayMode() != DM_SINGLE_PAGE)
-        SwitchToDisplayMode(win, DM_SINGLE_PAGE, false);
-    OnMenuZoom(win, IDM_ZOOM_FIT_PAGE);
-}
-
 static void AdjustWindowEdge(WindowInfo *win)
 {
     DWORD exStyle = GetWindowLong(win->hwndCanvas, GWL_EXSTYLE);
@@ -4533,6 +4513,26 @@ static void OnMenuViewContinuous(WindowInfo *win)
             break;
     }
     SwitchToDisplayMode(win, newMode, false);
+}
+
+static void OnMenuFitWidthContinuous(WindowInfo *win)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm) return;
+
+    if (!displayModeContinuous(win->dm->displayMode()))
+        OnMenuViewContinuous(win);
+    OnMenuZoom(win, IDM_ZOOM_FIT_WIDTH);
+}
+
+static void OnMenuFitSinglePage(WindowInfo *win)
+{
+    assert(win && win->dm);
+    if (!win || !win->dm) return;
+
+    if (displayModeContinuous(win->dm->displayMode()))
+        OnMenuViewContinuous(win);
+    OnMenuZoom(win, IDM_ZOOM_FIT_PAGE);
 }
 
 static void OnMenuGoToNextPage(WindowInfo *win)

@@ -494,5 +494,7 @@ printing document
 stampa documento
 
 # Untranslated:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #SumatraPDF Update
 

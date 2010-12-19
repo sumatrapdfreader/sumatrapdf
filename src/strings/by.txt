@@ -362,6 +362,8 @@ Zoom Out
 #File:
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #Hint: Use the F3 key for finding again
 #Modified:
 #No synchronization file found

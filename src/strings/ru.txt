@@ -502,3 +502,7 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
+

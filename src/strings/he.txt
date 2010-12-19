@@ -491,4 +491,6 @@ printing document
 
 # Untranslated:
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 

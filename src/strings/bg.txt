@@ -398,6 +398,8 @@ Zoom factor
 #File:
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #Modified:
 #Number of Pages:
 #OK

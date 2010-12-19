@@ -493,5 +493,7 @@ printing document
 skriver ut dokumentet
 
 # Untranslated:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #SumatraPDF Update
 

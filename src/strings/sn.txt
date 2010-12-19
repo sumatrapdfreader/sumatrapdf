@@ -247,6 +247,8 @@ Duputsa
 #Find
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #Found text at page %d
 #Hint: Use the F3 key for finding again
 #Main PDF reader can't be changed in portable mode

@@ -486,5 +486,7 @@ tisk dokumentu
 #&Use original page sizes
 #Can't connect to the Internet (error %#x).
 #Enter the command-line to invoke when you double-click on the PDF document:
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #SumatraPDF Update
 

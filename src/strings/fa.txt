@@ -445,6 +445,8 @@ printing document
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position

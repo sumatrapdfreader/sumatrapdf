@@ -221,6 +221,8 @@ Uzaklaştır
 #Find
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #Found text at page %d
 #Go to page
 #Hint: Use the F3 key for finding again

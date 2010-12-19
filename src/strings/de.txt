@@ -299,6 +299,12 @@ An Seite anpassen
 Fit Width
 An Breite anpassen
 
+Fit Width and Show Pages Continuously
+An Breite anpassen und Seiten fortlaufend anzeigen
+
+Fit a Single Page
+An eine einzelne Seite anpassen
+
 Found text at page %d
 Text auf Seite %d gefunden
 

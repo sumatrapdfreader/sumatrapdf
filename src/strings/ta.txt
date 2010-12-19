@@ -451,6 +451,8 @@ printing document
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit &Content\tCtrl-3
 #Fit Content
+#Fit Width and Show Pages Continuously
+#Fit a Single Page
 #Page scaling
 #Print range
 #Set inverse search command-line
