@@ -45,6 +45,7 @@ using namespace Gdiplus;
 #define INSATLLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_INSTALLER_FRAME")
 #define ID_BUTTON_INSTALL 1
 #define ABOUT_BG_COLOR          RGB(255,242,0)
+#define INVALID_SIZE DWORD(-1)
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
@@ -234,6 +235,11 @@ void NotifyFailed(char *msg)
     ::MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
 }
 
+DWORD GetFilePointer(HANDLE h)
+{
+    return ::SetFilePointer(h, 0, NULL, FILE_CURRENT);
+}
+
 /* Load information about parts embedded in the installer.
    The format of the data is:
 
@@ -289,6 +295,11 @@ ReadNextPart:
         goto Error;
 
     if (str_eqn(part->type, INSTALLER_PART_END, 4)) {
+        part->fileSize = GetFilePointer(h);
+        goto Exit;
+    }
+
+    if (str_eqn(part->type, INSTALLER_PART_UNINSTALLER, 4)) {
         goto Exit;
     }
 
@@ -382,11 +393,37 @@ Error:
     return FALSE;
 }
 
+BOOL OpenFileForReading(TCHAR *s, HANDLE *hOut)
+{
+    *hOut = ::CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (*hOut == INVALID_HANDLE_VALUE) {
+        char *msg1 = tstr_to_utf8(s);
+        char *msg2 = str_printf("Couldn't open %s for reading", msg1);
+        NotifyFailed(msg2);
+        free(msg2); free(msg1);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+BOOL OpenFileForWriting(TCHAR *s, HANDLE *hOut)
+{
+    *hOut = ::CreateFile(s, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (*hOut == INVALID_HANDLE_VALUE) {
+        char *msg1 = tstr_to_utf8(s);
+        char *msg2 = str_printf("Couldn't open %s for writing", msg1);
+        ShowLastError(msg2);
+        free(msg2); free(msg1);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
 {
     TCHAR * dstName = NULL, *dstPath = NULL;
     HANDLE  hDst = INVALID_HANDLE_VALUE, hSrc = INVALID_HANDLE_VALUE;
-    BOOL    ok = TRUE;
+    BOOL    ok = FALSE;
 
     if (!str_ieq(INSTALLER_PART_FILE, p->type)) // double-check
         return FALSE;
@@ -395,11 +432,8 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
     dstPath = tstr_cat3(dir, _T("\\"), dstName);
     TCHAR *exePath = GetExePath();
 
-    hSrc = ::CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hSrc == INVALID_HANDLE_VALUE) {
-        NotifyFailed("Couldn't open myself for reading");
+    if (!OpenFileForReading(exePath, &hSrc))
         goto Error;
-    }
 
     DWORD res = SetFilePointer(hSrc, p->fileOffset, NULL, FILE_BEGIN);
     if (INVALID_SET_FILE_POINTER == res) {
@@ -407,25 +441,15 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
         goto Error;
     }
 
-    hDst = ::CreateFile(dstPath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hDst == INVALID_HANDLE_VALUE) {
-        // leaks but we don't care
-        ShowLastError(str_printf("Couldn't open %s for writing", tstr_to_utf8(dstPath)));
+    if (!OpenFileForWriting(dstPath, &hDst))
         goto Error;
-    }
 
     ok = CopyFileData(hSrc, hDst, p->fileSize);
 
-Exit:
-    CloseHandle(hDst);
-    CloseHandle(hSrc);
-    free(dstPath);
-    free(dstName);
-
-    return ok;
 Error:
-    ok = FALSE;
-    goto Exit;
+    CloseHandle(hDst); CloseHandle(hSrc);
+    free(dstPath); free(dstName);
+    return ok;
 }
 
 BOOL InstallCopyFiles(EmbeddedPart *root)
@@ -443,16 +467,54 @@ BOOL InstallCopyFiles(EmbeddedPart *root)
     return TRUE;
 }
 
-void CreateUninstaller()
+DWORD GetInstallerTemplateSize(EmbeddedPart *parts)
+{
+    EmbeddedPart *p = parts;
+    while (p) {
+        EmbeddedPart *next = p->next;
+        if (str_ieq(INSTALLER_PART_END, p->type))
+            return p->fileSize;
+        p = next;
+    }
+    return INVALID_SIZE;
+}
+
+BOOL CreateUninstaller(EmbeddedPart *parts)
 {
     TCHAR *installDir = GetInstallationDir();
     TCHAR *uninstallerPath = tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
+    HANDLE hSrc = INVALID_HANDLE_VALUE, hDst = INVALID_HANDLE_VALUE;
+    BOOL ok = FALSE;
+    DWORD bytesTransferred;
 
-    // TODO: finish me:
-    // copy myself (just the template part) to uninstallerPath
-    // append INSTALLER_PART_END and INSTALLER_PART_UNINSTALLER markers
+    TCHAR *exePath = GetExePath();
+    DWORD installerTemplateSize = GetInstallerTemplateSize(parts);
+    if (INVALID_SIZE == installerTemplateSize)
+        goto Error;
 
+    if (!OpenFileForReading(exePath, &hSrc))
+        goto Error;
+
+    if (!OpenFileForWriting(uninstallerPath, &hDst))
+        goto Error;
+
+    ok = CopyFileData(hSrc, hDst, installerTemplateSize);
+    if (!ok)
+        goto Error;
+
+    ok = WriteFile(hDst, (LPVOID)INSTALLER_PART_UNINSTALLER, 4, &bytesTransferred, NULL);
+    if (!ok || (4 != bytesTransferred)) {
+        NotifyFailed("Failed to write to hDst");
+        goto Error;
+    }
+
+Exit:
     free(uninstallerPath);
+    CloseHandle(hSrc); CloseHandle(hDst);
+    return ok;
+Error:
+    ok = FALSE;
+    goto Exit;
 }
 
 BOOL IsUninstaller(EmbeddedPart *root)
@@ -485,7 +547,7 @@ void OnButtonInstall()
         // TODO: notify about failure in the UI
         return;
     }
-    CreateUninstaller();
+    CreateUninstaller(parts);
 
     /* TODO:
         - set necessary registry settings
