@@ -529,37 +529,69 @@ BOOL IsUninstaller(EmbeddedPart *root)
     return FALSE;
 }
 
+// Process all messages currently in a message queue.
+// Required when a change of state done during message processing is followed
+// by a lengthy process done on gui thread and we want the change to be
+// visually shown (e.g. when disabling a button)
+// Note: in a very unlikely scenario probably can swallow WM_QUIT. Wonder what
+// would happen then.
+void ProcessMessageLoop(HWND hwnd)
+{
+    MSG msg;
+    BOOL hasMsg;
+    for (;;) {
+        hasMsg = ::PeekMessage(&msg, hwnd,  0, 0, PM_REMOVE);
+        if (!hasMsg)
+            return;
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+} 
+
 void OnButtonInstall()
 {
+    char *msg = NULL;
+
+    ::EnableWindow(gHwndButtonInstall, FALSE);
+    ProcessMessageLoop(gHwndFrame);
+
+    // TODO: do it on a background thread so that UI is still responsive
     EmbeddedPart *parts = LoadEmbeddedPartsInfo();
-    if (NULL == parts)
-        return;
+    if (NULL == parts) {
+        msg = "Didn't find embedded parts";
+        goto Error;
+    }
 
     if (IsUninstaller(parts)) {
-        // shouldn't happen
-        return;
+        msg = "This is uninstaller, not an installer";
+        goto Error;
     }
 
     /* if the app is running, we have to kill it so that we can over-write the executable */
     KillProcess(EXE, TRUE);
 
-    if (!InstallCopyFiles(parts)) {
-        // TODO: notify about failure in the UI
-        return;
-    }
-    CreateUninstaller(parts);
+    if (!InstallCopyFiles(parts))
+        goto Error;
+
+    if (!CreateUninstaller(parts))
+        goto Error;
 
     /* TODO:
         - set necessary registry settings
         - launch the program
     */
+    return;
+Error:
+    ::EnableWindow(gHwndButtonInstall, FALSE);
+    if (msg)
+        NotifyFailed(msg);
+    return;
 }
 
 void OnUninstall()
 {
     /* if the app is running, we have to kill it to delete the files */
     KillProcess(EXE, TRUE);
-
 }
 
 inline void SetFont(HWND hwnd, HFONT font)
