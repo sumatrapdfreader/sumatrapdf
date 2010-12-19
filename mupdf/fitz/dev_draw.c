@@ -470,19 +470,15 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 	fz_colorspace *model = dev->dest->colorspace;
 	fz_pixmap *dest = dev->dest;
 	fz_rect bounds;
-	fz_bbox bbox;
+	fz_bbox bbox, scissor;
 	float colorfv[FZ_MAXCOLORS];
 	unsigned char colorbv[FZ_MAXCOLORS + 1];
 
 	bounds = fz_boundshade(shade, ctm);
 	bbox = fz_intersectbbox(fz_roundrect(bounds), dev->scissor);
+	scissor = dev->scissor;
 
 	// TODO: proper clip by shade->bbox
-	if (!fz_isemptyrect(shade->bbox))
-	{
-		bounds = fz_transformrect(fz_concat(shade->matrix, ctm), shade->bbox);
-		bbox = fz_intersectbbox(fz_roundrect(bounds), bbox);
-	}
 
 	if (fz_isemptyrect(bbox))
 		return;
@@ -509,10 +505,10 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 		colorbv[i] = 255;
 
 		n = dest->n;
-		for (y = bbox.y0; y < bbox.y1; y++)
+		for (y = scissor.y0; y < scissor.y1; y++)
 		{
-			s = dest->samples + ((bbox.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
-			for (x = bbox.x0; x < bbox.x1; x++)
+			s = dest->samples + ((scissor.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
+			for (x = scissor.x0; x < scissor.x1; x++)
 			{
 				for (i = 0; i < n; i++)
 					*s++ = colorbv[i];
