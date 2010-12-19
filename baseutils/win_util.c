@@ -4,11 +4,6 @@
 #include "win_util.h"
 #include "tstr_util.h"
 
-#ifdef _WIN32_WCE
-#include <aygshell.h>
-#include <Shlobj.h>
-#endif
-
 // Hmm, why have to redefine here (?!)
 #ifdef __GNUC__
 #define LVM_GETSELECTIONMARK     (LVM_FIRST+66)
@@ -259,29 +254,6 @@ int font_get_dy(HWND hwnd, HFONT font)
     ReleaseDC(hwnd, hdc);
     return font_dy;
 }
-
-#ifdef _WIN32_WCE
-/* see http://pocketpcdn.com/articles/wordcompletion.html for details
-   edit boxes on pocket pc by default have spelling suggestion/completion.
-   Sometimes we want/need to disable that and this is a function to do it. */
-void sip_completion_disable(void)
-{
-    SIPINFO     info;
-
-    SHSipInfo(SPI_GETSIPINFO, 0, &info, 0);
-    info.fdwFlags |= SIPF_DISABLECOMPLETION;
-    SHSipInfo(SPI_SETSIPINFO, 0, &info, 0);
-}
-
-void sip_completion_enable(void)
-{
-    SIPINFO     info;
-
-    SHSipInfo(SPI_GETSIPINFO, 0, &info, 0);
-    info.fdwFlags &= ~SIPF_DISABLECOMPLETION;
-    SHSipInfo(SPI_SETSIPINFO, 0, &info, 0);
-}
-#endif
 
 void launch_url(const TCHAR *url)
 {

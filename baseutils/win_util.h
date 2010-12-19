@@ -88,11 +88,6 @@ int     screen_get_menu_dy(void);
 int     screen_get_caption_dy(void);
 void rect_shift_to_work_area(RECT *rect, BOOL bFully);
 
-#ifdef _WIN32_WCE
-void    sip_completion_disable(void);
-void    sip_completion_enable(void);
-#endif
-
 void    launch_url(const TCHAR *url);
 void    exec_with_params(const TCHAR *exe, const TCHAR *params, BOOL hidden);
 
