@@ -206,10 +206,11 @@ def build_installer_for_testing():
   run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
   objdir = os.path.join(os.getcwd(), "obj-dbg")
   installer_template_exe = os.path.join(objdir, "Installer.exe")
-  installer_exe = os.path.join(objdir, "SumatraPDF-installer-native.exe")
-  exe = os.path.join(objdir, "SumatraPDF.exe")
-
+  installer_exe = os.path.join(objdir, "SumatraPDF-installer.exe")
   shutil.copy(installer_template_exe, installer_exe)
+  shutil.copy(os.path.join(objdir, "Installer.exe.manifest"), os.path.join(objdir, "SumatraPDF-installer.exe.manifest"))
+
+  exe = os.path.join(objdir, "SumatraPDF.exe")
   fo = open(installer_exe, "ab")
   # append installer data to installer exe
   mark_installer_end(fo) # this are read backwards so end marker is written first
