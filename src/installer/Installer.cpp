@@ -776,7 +776,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
             INSATLLER_FRAME_CLASS_NAME, _T("SumatraPDF Installer"),
             //WS_OVERLAPPEDWINDOW,
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-            -1, -1, 320, 480,
+            CW_USEDEFAULT, CW_USEDEFAULT, 320, 480,
             NULL, NULL,
             ghinst, NULL);
     if (!gHwndFrame)
