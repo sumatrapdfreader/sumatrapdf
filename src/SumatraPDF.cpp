@@ -619,47 +619,6 @@ void DownloadSumatraUpdateInfo(WindowInfo *win, bool autoCheck)
     gGlobalPrefs.m_lastUpdateTime = GetSystemTimeAsStr();
 }
 
-static void SeeLastError(void) {
-    TCHAR *msgBuf = NULL;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&msgBuf, 0, NULL);
-    if (!msgBuf) return;
-    DBG_OUT_T("SeeLastError(): %s\n", msgBuf);
-    LocalFree(msgBuf);
-}
-
-static bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen)
-{
-    HKEY keyTmp = NULL;
-    LONG res = RegOpenKeyEx(keySub, keyName, 0, KEY_READ, &keyTmp);
-
-    if (ERROR_SUCCESS == res) {
-        bufLen *= sizeof(TCHAR); // we need the buffer size in bytes not TCHARs
-        res = RegQueryValueEx(keyTmp, valName, NULL, NULL, (BYTE *)buffer, &bufLen);
-        RegCloseKey(keyTmp);
-    }
-
-    if (ERROR_SUCCESS != res)
-        SeeLastError();
-    return ERROR_SUCCESS == res;
-}
-
-static bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
-{
-    HKEY keyTmp = NULL;
-    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
-
-    if (ERROR_SUCCESS == res) {
-        res = RegSetValueEx(keyTmp, valName, 0, REG_SZ, (const BYTE*)value, (lstrlen(value)+1) * sizeof(TCHAR));
-        RegCloseKey(keyTmp);
-    }
-
-    if (ERROR_SUCCESS != res)
-        SeeLastError();
-    return ERROR_SUCCESS == res;
-}
-
 // List of rules used to detect TeX editors.
 
 // type of path information retrieved from the registy

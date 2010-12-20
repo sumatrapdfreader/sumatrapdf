@@ -33,4 +33,7 @@ bool IsAppThemed(void);
 bool WindowsVerVistaOrGreater();
 bool WindowsVer2000OrGreater();
 
+void SeeLastError(void);
+bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen);
+bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
 #endif
