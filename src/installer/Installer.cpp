@@ -555,9 +555,32 @@ void ProcessMessageLoop(HWND hwnd)
     }
 } 
 
+// Note: doesn't recurse and the size might overflow, but it's good enough for
+// our purpose
+DWORD GetDirSize(TCHAR *dir)
+{
+    LARGE_INTEGER size;
+    DWORD totalSize = 0;
+    WIN32_FIND_DATA findData;
+
+    HANDLE h = FindFirstFile(dir, &findData);
+    if (h == INVALID_HANDLE_VALUE)
+        return 0;
+
+    do {
+        if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            size.LowPart  = findData.nFileSizeLow;
+            size.HighPart = findData.nFileSizeHigh;
+            totalSize += (DWORD)size.QuadPart;
+        }
+    } while (FindNextFile(h, &findData) != 0);
+    FindClose(h);
+    return totalSize;
+}
+
 DWORD GetInstallationDirectorySize()
 {
-    return 0; // TODO: write me
+    return GetDirSize(GetInstallationDir());
 }
 
 void WriteUninstallerRegistryInfo()
