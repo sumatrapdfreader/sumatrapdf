@@ -70,6 +70,7 @@ pdf_loadimageimp(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict, fz
 	obj = fz_dictgetsa(dict, "ColorSpace", "CS");
 	if (obj && !imagemask && !forcemask)
 	{
+		/* colorspace resource lookup is only done for inline images */
 		if (fz_isname(obj))
 		{
 			res = fz_dictget(fz_dictgets(rdb, "ColorSpace"), obj);
@@ -267,12 +268,12 @@ pdf_isjpximage(fz_obj *dict)
 }
 
 static fz_error
-pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 	fz_buffer *buf;
 	fz_pixmap *img;
-	fz_obj *obj, *res;
+	fz_obj *obj;
 
 	pdf_logimage("jpeg2000\n");
 
@@ -292,7 +293,7 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	obj = fz_dictgetsa(dict, "SMask", "Mask");
 	if (fz_isdict(obj))
 	{
-		error = pdf_loadimageimp(&img->mask, xref, rdb, obj, nil, 1);
+		error = pdf_loadimageimp(&img->mask, xref, nil, obj, nil, 1);
 		if (error)
 		{
 			fz_droppixmap(img);
@@ -303,13 +304,6 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	obj = fz_dictgets(dict, "ColorSpace");
 	if (obj)
 	{
-		if (fz_isname(obj))
-		{
-			res = fz_dictget(fz_dictgets(rdb, "ColorSpace"), obj);
-			if (res)
-				obj = res;
-		}
-
 		fz_dropcolorspace(img->colorspace);
 		img->colorspace = nil;
 
@@ -331,7 +325,7 @@ pdf_loadjpximage(fz_pixmap **imgp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 }
 
 fz_error
-pdf_loadimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
+pdf_loadimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *dict)
 {
 	fz_error error;
 
@@ -346,13 +340,13 @@ pdf_loadimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict)
 	/* special case for JPEG2000 images */
 	if (pdf_isjpximage(dict))
 	{
-		error = pdf_loadjpximage(pixp, xref, rdb, dict);
+		error = pdf_loadjpximage(pixp, xref, dict);
 		if (error)
 			return fz_rethrow(error, "cannot load jpx image (%d 0 R)", fz_tonum(dict));
 	}
 	else
 	{
-		error = pdf_loadimageimp(pixp, xref, rdb, dict, nil, 0);
+		error = pdf_loadimageimp(pixp, xref, nil, dict, nil, 0);
 		if (error)
 			return fz_rethrow(error, "cannot load image (%d 0 R)", fz_tonum(dict));
 	}

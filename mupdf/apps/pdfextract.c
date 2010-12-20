@@ -47,7 +47,7 @@ static void saveimage(int num)
 
 	/* TODO: detect DCTD and save as jpeg */
 
-	error = pdf_loadimage(&img, xref, nil, ref);
+	error = pdf_loadimage(&img, xref, ref);
 	if (error)
 		die(error);
 

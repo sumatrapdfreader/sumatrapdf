@@ -609,7 +609,7 @@ Lsetcolorspace:
 				if ((csi->dev->hints & FZ_IGNOREIMAGE) == 0)
 				{
 					fz_pixmap *img;
-					error = pdf_loadimage(&img, csi->xref, rdb, obj);
+					error = pdf_loadimage(&img, csi->xref, obj);
 					if (error)
 						return fz_rethrow(error, "cannot load image (%d %d R)", fz_tonum(obj), fz_togen(obj));
 					pdf_showimage(csi, img);

@@ -182,8 +182,18 @@ static void
 closedctd(fz_stream *stm)
 {
 	fz_dctd *state = stm->state;
+
+	if (setjmp(state->jb))
+	{
+		state->chain->rp = state->chain->wp - state->cinfo.src->bytes_in_buffer;
+		fz_warn("jpeg error: %s", state->msg);
+		goto skip;
+	}
+
 	if (state->init)
 		jpeg_finish_decompress(&state->cinfo);
+
+skip:
 	state->chain->rp = state->chain->wp - state->cinfo.src->bytes_in_buffer;
 	jpeg_destroy_decompress(&state->cinfo);
 	fz_free(state->scanline);
