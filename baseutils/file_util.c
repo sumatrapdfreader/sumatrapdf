@@ -294,7 +294,7 @@ static BOOL FileList_InsertFileInfo(FileList *fl, FileInfo *fi)
     assert(fi);
     if (!fi)
         return FALSE;
-    /* TODO: use scheme where we also track of the last node, so that
+    /* TODO: use scheme where we also track the last node, so that
        insert is O(1) and not O(n) */
     assert(!fi->next);
     fi->next = NULL;

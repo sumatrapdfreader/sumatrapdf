@@ -197,3 +197,19 @@ bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const 
     return ERROR_SUCCESS == res;
 }
 
+bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value)
+{
+    HKEY keyTmp = NULL;
+    LONG res = RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &keyTmp, NULL);
+
+    if (ERROR_SUCCESS == res) {
+        res = RegSetValueEx(keyTmp, valName, 0, REG_DWORD, (const BYTE*)value, sizeof(DWORD));
+        RegCloseKey(keyTmp);
+    }
+
+    if (ERROR_SUCCESS != res)
+        SeeLastError();
+    return ERROR_SUCCESS == res;
+}
+
+

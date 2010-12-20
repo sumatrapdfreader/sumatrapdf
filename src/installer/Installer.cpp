@@ -34,6 +34,8 @@
 #include "str_util.h"
 #include "tstr_util.h"
 #include "win_util.h"
+#include "WinUtil.hpp"
+#include "../Version.h"
 
 #ifdef DEBUG
 // debug builds use a manifest created by the linker instead of our own, so ensure visual styles this way
@@ -65,28 +67,28 @@ int gBallX, gBallY;
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-#define REG_PATH_UNINST     "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP
+#define REG_PATH_UNINST     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") TAPP
 
 // Keys we'll set in REG_PATH_UNINST path
 
 // REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
-#define DISPLAY_ICON "DisplayIcon"
+#define DISPLAY_ICON _T("DisplayIcon")
 // REG_SZ, e.g "SumatraPDF"
-#define DISPLAY_NAME "DisplayName"
+#define DISPLAY_NAME _T("DisplayName")
 // REG_SZ, e.g. "1.2"
-#define DISPLAY_VERSION "DisplayVersion"
+#define DISPLAY_VERSION _T("DisplayVersion")
 // REG_DWORD, get size of installed directory after copying files
-#define ESTIMATED_SIZE "EstimatedSize"
+#define ESTIMATED_SIZE _T("EstimatedSize")
 // REG_DWORD, set to 1
-#define NO_MODIFY "NoModify"
+#define NO_MODIFY _T("NoModify")
 // REG_DWORD, set to 1
-#define NO_REPAIR "NoRepair"
+#define NO_REPAIR _T("NoRepair")
 // REG_SZ, e.g. "Krzysztof Kowalczyk"
-#define PUBLISHER "Publisher"
+#define PUBLISHER _T("Publisher")
 // REG_SZ, path to uninstaller exe
-#define UNINSTALL_STRING "UninstallString"
-// REG_SZ, e.g. "http://blog.kowalczyk/info/software/sumatrapdf/
-#define URL_INFO_ABOUT "UrlInfoAbout"
+#define UNINSTALL_STRING _T("UninstallString")
+// REG_SZ, e.g. "http://blog.kowalczyk/info/software/sumatrapdf/"
+#define URL_INFO_ABOUT _T("UrlInfoAbout")
 
 #define INSTALLER_PART_FILE         "kifi"
 #define INSTALLER_PART_END          "kien"
@@ -479,10 +481,15 @@ DWORD GetInstallerTemplateSize(EmbeddedPart *parts)
     return INVALID_SIZE;
 }
 
-BOOL CreateUninstaller(EmbeddedPart *parts)
+TCHAR *GetUninstallerPath()
 {
     TCHAR *installDir = GetInstallationDir();
-    TCHAR *uninstallerPath = tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
+    return tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
+}
+
+BOOL CreateUninstaller(EmbeddedPart *parts)
+{
+    TCHAR *uninstallerPath = GetUninstallerPath();
     HANDLE hSrc = INVALID_HANDLE_VALUE, hDst = INVALID_HANDLE_VALUE;
     BOOL ok = FALSE;
     DWORD bytesTransferred;
@@ -548,6 +555,28 @@ void ProcessMessageLoop(HWND hwnd)
     }
 } 
 
+DWORD GetInstallationDirectorySize()
+{
+    return 0; // TODO: write me
+}
+
+void WriteUninstallerRegistryInfo()
+{
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    TCHAR *uninstallerPath = GetUninstallerPath();
+
+    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, GetExePath());
+    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
+    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetInstallationDirectorySize());
+    WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
+    WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
+    WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T("Krzysztof Kowalczyk"));
+    WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
+    WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
+    free(uninstallerPath);
+}
+
 void OnButtonInstall()
 {
     char *msg = NULL;
@@ -576,8 +605,9 @@ void OnButtonInstall()
     if (!CreateUninstaller(parts))
         goto Error;
 
+    WriteUninstallerRegistryInfo();
+
     /* TODO:
-        - set necessary registry settings
         - launch the program
     */
     return;
