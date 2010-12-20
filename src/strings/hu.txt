@@ -298,6 +298,12 @@ Teljes oldal
 Fit Width
 Oldalszélesség
 
+Fit Width and Show Pages Continuously
+Oldalszélességhez igazítás + folyamatos nézet
+
+Fit a Single Page
+Teljes oldalankénti nézet
+
 Found text at page %d
 Találat a(z) %d. oldalon
 
@@ -445,6 +451,9 @@ Tárgy:
 SumatraPDF Options
 A SumatraPDF beállításai
 
+SumatraPDF Update
+SumatraPDF: programfrissítés keresése
+
 SumatraPDF is your main PDF reader
 A Sumatra az alapértelmezett PDF-olvasója
 
@@ -498,9 +507,4 @@ Szöveg vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#SumatraPDF Update
 
