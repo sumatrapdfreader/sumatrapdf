@@ -53,7 +53,7 @@ Ir &para
 Ir pa&ra a página:
 
 &Help
-&Ajuda
+Aj&uda
 
 &Last Page\tEnd
 Última pá&gina\tEnd
@@ -101,7 +101,7 @@ Página &anterior\t<-
 Lembrar a palavra passe deste documento
 
 &Remember these settings for each document
-Le&mbrar estas definições para todos os documentos
+&Lembrar estas definições para todos os documentos
 
 &Save As...\tCtrl-S
 &Gravar como\tCtrl-S
@@ -155,13 +155,13 @@ Automatic
 Automático
 
 Automatically check for &updates
-Verificar at&ualizações automaticamente
+&Verificar atualizações automaticamente
 
 Book View
 Como livro
 
 Book&marks\tF12
-&Marcadores\tF12
+M&arcadores\tF12
 
 Bookmarks
 Marcadores
@@ -218,7 +218,7 @@ Custom &Zoom...\tCtrl-Y
 &Personalizar...\tCtrl-Y
 
 Default &Layout:
-E&xibição por omissão:
+&Exibição por omissão:
 
 Default &Zoom:
 &Ampliação por omissão:
@@ -248,7 +248,7 @@ Error loading PDF file.
 Erro ao carregar o PDF.
 
 F&orward\tAlt+Right Arrow
-A&vançar\tAlt+->
+Ava&nçar\tAlt+->
 
 F&ullscreen\tCtrl-L
 Ecrã co&mpleto\tCtrl-L
@@ -297,6 +297,12 @@ Ajustar à página
 
 Fit Width
 Ajustar à largura
+
+Fit Width and Show Pages Continuously
+Ajustar largura e mostrar páginas contínuas
+
+Fit a Single Page
+Ajustar a uma página
 
 Found text at page %d
 Texto encontrado na página %d
@@ -422,7 +428,7 @@ Show &pages continuously
 Mostrar &páginas contínuas
 
 Show the &bookmarks sidebar when available
-Mostrar &barra de marcadores quando disponível
+&Mostrar barra de marcadores quando disponível
 
 Single Page
 Página única
@@ -435,6 +441,9 @@ Assunto:
 
 SumatraPDF Options
 Opções do SumatraPDF
+
+SumatraPDF Update
+Atualização do SumatraPDF
 
 SumatraPDF is your main PDF reader
 SumatraPDF é o leitor de PDFs omisso
@@ -470,7 +479,7 @@ You have version %s
 Tem a versão %s
 
 Zoom
-Ampliação
+Ajustar
 
 Zoom In
 Ampliar
@@ -479,7 +488,7 @@ Zoom Out
 Reduzir
 
 Zoom factor
-Fator de ampliação
+Tamanho
 
 [Changes detected; refreshing] %s
 [Mudanças detetadas; atualizando] %s
@@ -489,9 +498,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#SumatraPDF Update
 
