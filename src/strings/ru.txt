@@ -298,6 +298,12 @@ Fit Page
 Fit Width
 По ширине
 
+Fit Width and Show Pages Continuously
+Подогнать по ширине и показывать непрерывно
+
+Fit a Single Page
+Подогнать по размеру страницы
+
 Found text at page %d
 Текст найден на стр. %d
 
@@ -501,8 +507,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
 
