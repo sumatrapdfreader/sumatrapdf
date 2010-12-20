@@ -3,7 +3,7 @@
 # How:
 #   * extract version from Version.h
 #   * build with nmake, sending svn version as argument
-#   * compress with upx
+#   * compress with mpress
 #   * build an installer
 #   * upload to s3 kjkpub bucket. Uploaded files:
 #       sumatrapdf/rel/SumatraPDF-<ver>.exe
@@ -302,11 +302,9 @@ def main():
 
   os.chdir(builds_dir)
 
-  if testing:
-    compression_type = "-1"
-  else:
-    compression_type = "--ultra-brute"
-  run_cmd_throw("upx", compression_type, "--compress-icons=0", "SumatraPDF-%s.exe" % ver)
+  mpress = os.path.join(SCRIPT_DIR, "bin", "mpress")
+  run_cmd_throw(mpress, "-s", "-r", "SumatraPDF-%s.exe" % ver)
+  #run_cmd_throw("upx", compression_type, "--compress-icons=0", "SumatraPDF-%s.exe" % ver)
 
   shutil.copy("SumatraPDF-%s.exe" % ver, "SumatraPDF.exe")
   run_cmd_throw("zip", "-0", "SumatraPDF-%s.zip" % ver, "SumatraPDF.exe")
