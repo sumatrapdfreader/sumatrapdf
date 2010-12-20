@@ -466,10 +466,12 @@ fz_obj *PdfEngine::getNamedDest(const char *name)
     return dest;
 }
 
-pdf_page *PdfEngine::getPdfPage(int pageNo)
+pdf_page *PdfEngine::getPdfPage(int pageNo, bool failIfBusy)
 {
     if (!_pages)
         return NULL;
+    if (failIfBusy)
+        return _pages[pageNo-1];
 
     EnterCriticalSection(&_pagesAccess);
 
@@ -747,7 +749,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
 
 pdf_link *PdfEngine::getLinkAtPosition(int pageNo, double x, double y)
 {
-    pdf_page *page = getPdfPage(pageNo);
+    pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
         return NULL;
 
@@ -760,7 +762,7 @@ pdf_link *PdfEngine::getLinkAtPosition(int pageNo, double x, double y)
 
 int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
 {
-    pdf_page *page = getPdfPage(pageNo);
+    pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
         return -1;
 
@@ -936,7 +938,7 @@ fz_buffer *PdfEngine::getStreamData(int num, int gen)
 
 bool PdfEngine::isImagePage(int pageNo)
 {
-    pdf_page *page = getPdfPage(pageNo);
+    pdf_page *page = getPdfPage(pageNo, true);
     // pages containing a single image usually contain about 50
     // characters worth of instructions, so don't bother checking
     // more instruction-heavy pages

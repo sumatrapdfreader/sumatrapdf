@@ -171,7 +171,7 @@ protected:
 
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
-    pdf_page      * getPdfPage(int pageNo);
+    pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
     bool            renderPage(HDC hDC, pdf_page *page, RECT *screenRect,
                                fz_matrix *ctm=NULL, float zoom=0, int rotation=0,
