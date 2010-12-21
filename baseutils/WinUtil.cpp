@@ -12,7 +12,7 @@
 
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
 // that is compatible with earlier windows versions.
-bool IsAppThemed(void) {
+bool IsAppThemed() {
     WinLibrary lib(_T("uxtheme.dll"));
     FARPROC pIsAppThemed = lib.GetProcAddr("IsAppThemed");
     if (!pIsAppThemed) 
@@ -156,10 +156,12 @@ bool WindowsVerVistaOrGreater()
     return false;
 }
 
-void SeeLastError(void) {
+void SeeLastError(DWORD err) {
     char *msgBuf = NULL;
+    if (err == 0)
+        err = GetLastError();
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPSTR)&msgBuf, 0, NULL);
     if (!msgBuf) return;
     DBG_OUT("SeeLastError(): %s\n", msgBuf);

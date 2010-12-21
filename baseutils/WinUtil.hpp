@@ -10,7 +10,7 @@ public:
     WinLibrary(const TCHAR *libName) {
         _hlib = _LoadSystemLibrary(libName);
     }
-    ~WinLibrary() { if (_hlib) FreeLibrary(_hlib); }
+    ~WinLibrary() { FreeLibrary(_hlib); }
     FARPROC GetProcAddr(const char *procName) {
         if (!_hlib) return NULL;
         return GetProcAddress(_hlib, procName);
@@ -29,11 +29,11 @@ private:
     PROCESS_INFORMATION m_processInfo;
 };
 
-bool IsAppThemed(void);
+bool IsAppThemed();
 bool WindowsVerVistaOrGreater();
 bool WindowsVer2000OrGreater();
 
-void SeeLastError(void);
+void SeeLastError(DWORD err=0);
 bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *buffer, DWORD bufLen);
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
