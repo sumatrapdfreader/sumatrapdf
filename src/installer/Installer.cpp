@@ -29,6 +29,7 @@
 #include <gdiplus.h>
 #include <psapi.h>
 #include <Shlwapi.h>
+#include <objidl.h>
 
 #include "Resource.h"
 #include "base_util.h"
@@ -67,7 +68,7 @@ int gBallX, gBallY;
 
 #define APP                 "SumatraPDF"
 #define TAPP                _T("SumatraPDF")
-#define EXE                 "SumatraPDF.exe"
+#define EXENAME             "SumatraPDF.exe"
 
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
@@ -134,6 +135,11 @@ void ShowLastError(char *msg)
     }
     ::MessageBoxA(gHwndFrame, errorMsg, "Installer failed", MB_OK | MB_ICONEXCLAMATION);
     free(errorMsg);
+}
+
+void NotifyFailed(char *msg)
+{
+    ::MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
 }
 
 BOOL ReadData(HANDLE h, LPVOID data, DWORD size, char *errMsg)
@@ -240,9 +246,42 @@ TCHAR *GetExePath()
     return exePath;
 }
 
-void NotifyFailed(char *msg)
+TCHAR *GetInstallationDir()
 {
-    ::MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
+    static TCHAR dir[MAX_PATH];
+    BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
+    if (!ok)
+        return NULL;
+    tstr_cat_s(dir, dimof(dir), _T("\\"));
+    tstr_cat_s(dir, dimof(dir), TAPP);
+    return dir;    
+}
+
+TCHAR *GetUninstallerPath()
+{
+    TCHAR *installDir = GetInstallationDir();
+    return tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
+}
+
+TCHAR *GetInstalledExePath()
+{
+    TCHAR *installDir = GetInstallationDir();
+    return tstr_cat(installDir, _T("\\SumatraPDF.exe"));
+}
+
+TCHAR *GetStartMenuProgramsPath()
+{
+    static TCHAR dir[MAX_PATH];
+    // CSIDL_COMMON_PROGRAMS => installing for all users
+    BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_COMMON_PROGRAMS, FALSE);
+    if (!ok)
+        return NULL;
+    return dir;
+}
+
+TCHAR *GetShortcutPath()
+{
+    return tstr_cat(GetStartMenuProgramsPath(), _T("\\SumatraPDF.lnk"));
 }
 
 DWORD GetFilePointer(HANDLE h)
@@ -359,20 +398,6 @@ Error:
     FreeEmbeddedParts(root);
     root = NULL;
     goto Exit;
-}
-
-TCHAR *GetInstallationDir()
-{
-    static TCHAR installationDir[MAX_PATH];
-    static BOOL alreadyCalculated = FALSE;
-    if (alreadyCalculated)
-        return installationDir;
-    BOOL ok = SHGetSpecialFolderPath(NULL, installationDir, CSIDL_PROGRAM_FILES, FALSE);
-    if (!ok)
-        return NULL;
-    tstr_cat_s(installationDir, dimof(installationDir), _T("\\"));
-    tstr_cat_s(installationDir, dimof(installationDir), TAPP);
-    return installationDir;    
 }
 
 BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
@@ -492,12 +517,6 @@ DWORD GetInstallerTemplateSize(EmbeddedPart *parts)
     return INVALID_SIZE;
 }
 
-TCHAR *GetUninstallerPath()
-{
-    TCHAR *installDir = GetInstallationDir();
-    return tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
-}
-
 BOOL CreateUninstaller(EmbeddedPart *parts)
 {
     TCHAR *uninstallerPath = GetUninstallerPath();
@@ -606,8 +625,8 @@ void WriteUninstallerRegistryInfo()
 {
     HKEY hkey = HKEY_LOCAL_MACHINE;
     TCHAR *uninstallerPath = GetUninstallerPath();
-
-    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, GetExePath());
+    TCHAR *installedExePath = GetInstalledExePath();
+    WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
     WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, GetInstallationDirectorySize());
@@ -617,13 +636,16 @@ void WriteUninstallerRegistryInfo()
     WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
     WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk/info/software/sumatrapdf/"));
     free(uninstallerPath);
+    free(installedExePath);
 }
 
 void RemoveUninstallerRegistryInfo()
 {
     BOOL ok = TRUE;
-    if (ERROR_SUCCESS != SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_UNINST)) {
-        SeeLastError();
+    LSTATUS res;
+    res = SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_UNINST);
+    if ((ERROR_SUCCESS != res) && (res != ERROR_FILE_NOT_FOUND)) {
+        SeeLastError(res);
         ok = FALSE;
     }
 
@@ -631,8 +653,9 @@ void RemoveUninstallerRegistryInfo()
     // but we're not setting or using it (I assume it's used by nsis to remember
     // installation directory to better support the case when they allow
     // changing it, but we don't so it's not needed).
-    if (ERROR_SUCCESS != SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE)) {
-        SeeLastError();
+    res = SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE);
+    if ((ERROR_SUCCESS != res) && (res != ERROR_FILE_NOT_FOUND)) {
+        SeeLastError(res);
         ok = FALSE;
     }
 
@@ -662,14 +685,14 @@ void RemoveDirectoryWithFiles(TCHAR *dir)
                     ::SetFileAttributes(path, attrs);
                 }
                 ::DeleteFile(path);
-                free(path);
             }
+            free(path);
         } while (FindNextFile(h, &findData) != 0);
         FindClose(h);
     }
 
     if (!::RemoveDirectory(dir)) {
-        if (ERROR_PATH_NOT_FOUND != GetLastError()) {
+        if (ERROR_FILE_NOT_FOUND != GetLastError()) {
             SeeLastError();
             NotifyFailed("Couldn't remove installation directory");
         }
@@ -682,32 +705,89 @@ void RemoveInstallationDirectory()
     RemoveDirectoryWithFiles(GetInstallationDir());
 }
 
+void CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHAR *description)
+{
+    IShellLink* sl = NULL;
+    IPersistFile* pf = NULL;
+
+    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
+    if (FAILED(hr)) 
+        goto Exit;
+
+    hr = sl->QueryInterface(IID_IPersistFile, (void **)&pf);
+    if (FAILED(hr))
+        goto Exit;
+
+    hr = sl->SetPath(exePath);
+    sl->SetWorkingDirectory(workingDir);
+    //sl->SetShowCmd(SW_SHOWNORMAL);
+    //sl->SetHotkey(0);
+    sl->SetIconLocation(exePath, 0);
+    //sl->SetArguments(_T(""));
+    if (description)
+        sl->SetDescription(description);
+
+#ifndef _UNICODE
+#error "must be compiled as Unicode!"
+#endif
+    hr = pf->Save(shortcutPath,TRUE);
+
+Exit:
+    if (pf)
+      pf->Release();
+    if (sl)
+      sl->Release();
+
+    if (FAILED(hr)) {
+        SeeLastError();
+        NotifyFailed("Failed to create a shortcut");
+    }    
+}
+
 void UnregisterFromBeingDefaultViewer()
 {
     // TODO: write me
 }
 
-void CreateShortcut()
+void CreateAppShortcut()
 {
-    /* TODO: write equivalent of this nsis snippet:
-; Always create the link for all users
-SetShellVarContext all
-CreateShortCut "$SMPROGRAMS\SumatraPDF.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\${EXE}" 0
-    */
+    TCHAR *workingDir = GetInstallationDir();
+    TCHAR *installedExePath = GetInstalledExePath();
+    TCHAR *shortcutPath = GetShortcutPath();
+    CreateShortcut(shortcutPath, installedExePath, workingDir, NULL);
+    free(installedExePath);
+    free(shortcutPath);
 }
 
 void RemoveShortcut()
 {
-    /* TODO: write equivalent of thsi nsis snippet:
-SetShellVarContext all
-Delete "$SMPROGRAMS\SumatraPDF.lnk"
-    */
+    TCHAR *p = GetShortcutPath();
+    BOOL ok = ::DeleteFile(p);
+    if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
+        SeeLastError();
+        NotifyFailed("Couldn't remove the shortcut");
+    }
+    free(p);
+}
+
+BOOL CreateInstallationDirectory()
+{
+    TCHAR *dir = GetInstallationDir();
+    BOOL ok = CreateDirectory(dir, NULL);
+    if (!ok && (GetLastError() != ERROR_ALREADY_EXISTS)) {
+        SeeLastError();
+        NotifyFailed("Couldn't create installation directory");
+    } else {
+        ok = TRUE;
+    }
+    return ok;
 }
 
 void OnButtonInstall()
 {
     char *msg = NULL;
 
+    // disable the button during installation
     ::EnableWindow(gHwndButtonInstall, FALSE);
     ProcessMessageLoop(gHwndFrame);
 
@@ -724,7 +804,10 @@ void OnButtonInstall()
     }
 
     /* if the app is running, we have to kill it so that we can over-write the executable */
-    KillProcess(EXE, TRUE);
+    KillProcess(EXENAME, TRUE);
+
+    if (!CreateInstallationDirectory())
+        goto Error;
 
     if (!InstallCopyFiles(parts))
         goto Error;
@@ -733,27 +816,34 @@ void OnButtonInstall()
         goto Error;
 
     WriteUninstallerRegistryInfo();
-    CreateShortcut();
+    CreateAppShortcut();
 
     /* TODO:
         - launch the program
     */
+Exit:
+    ::EnableWindow(gHwndButtonInstall, TRUE);
     return;
 Error:
-    ::EnableWindow(gHwndButtonInstall, FALSE);
     if (msg)
         NotifyFailed(msg);
-    return;
+    goto Exit;
 }
 
 void OnButtonUninstall()
 {
+    // disable the button during uninstallation
+    ::EnableWindow(gHwndButtonUninstall, FALSE);
+    ProcessMessageLoop(gHwndFrame);
+
     /* if the app is running, we have to kill it to delete the files */
-    KillProcess(EXE, TRUE);
+    KillProcess(EXENAME, TRUE);
     RemoveUninstallerRegistryInfo();
     RemoveShortcut();
     UnregisterFromBeingDefaultViewer();
     RemoveInstallationDirectory();
+
+    ::EnableWindow(gHwndButtonUninstall, TRUE);
 }
 
 inline void SetFont(HWND hwnd, HFONT font)
@@ -1069,6 +1159,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
     MSG msg = {0};
 
+    CoInitialize(NULL);
+
     INITCOMMONCONTROLSEX cex = {0};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
@@ -1080,7 +1172,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    CoInitialize(NULL);
 
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
