@@ -248,9 +248,6 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 Առաջ\tAlt+->
 
-F&ullscreen\tCtrl-Shift-L
-Ամբողջ էկրանով\tCtrl-Shift-L
-
 Facing
 Երկու էջ
 
@@ -295,6 +292,12 @@ Fit Page
 
 Fit Width
 Ձգել լայնությամբ
+
+Fit Width and Show Pages Continuously
+Ձգել լայնությամբ և ցույց տալ էջերը անդադար
+
+Fit a Single Page
+Ձգել մեկ էջի չափով
 
 Found text at page %d
 Տեքստը գտնվել է %d էջում
@@ -443,6 +446,9 @@ Subject:
 SumatraPDF Options
 Ընտրանքներ
 
+SumatraPDF Update
+SumatraPDF-ի թարմացումները
+
 SumatraPDF is your main PDF reader
 PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 
@@ -498,8 +504,6 @@ printing document
 փաստաթուղթը տպվում է
 
 # Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
+#F&ullscreen\tCtrl-Shift-L
 #Pr&esentation\tCtrl-L
-#SumatraPDF Update
 
