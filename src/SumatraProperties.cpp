@@ -274,8 +274,6 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     SIZE            txtSize;
     int             totalDx, totalDy;
     int             leftMaxDx, rightMaxDx;
-    int             currY;
-    int             offX, offY;
     WindowInfo *    win = WindowInfoList::Find(hwnd);
 
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -321,22 +319,22 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
 
     RECT rc;
     GetClientRect(hwnd, &rc);
-    offX = (rect_dx(&rc) - totalDx) / 2;
-    offY = (rect_dy(&rc) - totalDy) / 2;
 
+    int offset = PROPERTIES_RECT_PADDING;
     if (rect) {
-        rect->left = offX;
-        rect->top = offY;
-        rect->right = offX + totalDx;
-        rect->bottom = offY + totalDy;
+        rect->left = 0;
+        rect->top = 0;
+        rect->right = totalDx;
+        rect->bottom = totalDy + offset;
     }
 
-    currY = offY;
+    int currY = 0;
     for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
-        el->leftPos.x = offX + leftMaxDx - el->leftPos.dx;
-        el->leftPos.y = offY + currY;
-        el->rightPos.x = offX + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
-        el->rightPos.y = offY + currY;
+        el->leftPos.x = offset;
+        el->leftPos.dx = leftMaxDx;
+        el->leftPos.y = offset + currY;
+        el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
+        el->rightPos.y = offset + currY;
         currY += (textDy + PROPERTIES_TXT_DY_PADDING);
     }
 
@@ -365,7 +363,6 @@ static void CreatePropertiesWindow(WindowInfo *win, PdfPropertiesLayout *layoutD
     HDC hdc = BeginPaint(win->hwndPdfProperties, &ps);
     UpdatePropertiesLayout(win->hwndPdfProperties, hdc, &rc);
     EndPaint(win->hwndPdfProperties, &ps);
-    InflateRect(&rc, PROPERTIES_RECT_PADDING, PROPERTIES_RECT_PADDING);
 
     // resize the new window to just match these dimensions
     RECT wRc, cRc;
@@ -553,9 +550,9 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 
     SetBkMode(hdc, TRANSPARENT);
 
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    FillRect(hdc, &rc, brushBg);
+    RECT rcClient;
+    GetClientRect(hwnd, &rcClient);
+    FillRect(hdc, &rcClient, brushBg);
 
 #if 0
     SelectObject(hdc, brushBg);
@@ -566,13 +563,19 @@ static void DrawProperties(HWND hwnd, HDC hdc, RECT *rect)
 
     /* render text on the left*/
     (HFONT)SelectObject(hdc, fontLeftTxt);
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next)
-        TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, lstrlen(el->leftTxt));
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+        RECT rc = RECT_FromRectI(&el->leftPos);
+        DrawText(hdc, el->leftTxt, -1, &rc, DT_RIGHT);
+    }
 
     /* render text on the right */
     (HFONT)SelectObject(hdc, fontRightTxt);
-    for (PdfPropertyEl *el = layoutData->first; el; el = el->next)
-        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, lstrlen(el->rightTxt));
+    for (PdfPropertyEl *el = layoutData->first; el; el = el->next) {
+        RECT rc = RECT_FromRectI(&el->rightPos);
+        if (rc.right > rcClient.right - PROPERTIES_RECT_PADDING)
+            rc.right = rcClient.right - PROPERTIES_RECT_PADDING;
+        DrawText(hdc, el->rightTxt, -1, &rc, DT_LEFT | DT_PATH_ELLIPSIS);
+    }
 
     SelectObject(hdc, origFont);
     Win32_Font_Delete(fontLeftTxt);
