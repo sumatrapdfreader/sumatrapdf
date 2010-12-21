@@ -188,13 +188,13 @@ Check for &Updates
 Проверить наличие новой версии
 
 Continuous
-Непрерывно
+Разрешить прокрутку
 
 Continuous book view
-В разворот непрерывно
+Прокуртка в разворот
 
 Continuous facing
-Попарно непрерывно
+Прокрутка по две страницы
 
 Contribute Translation
 Помочь с переводом
@@ -254,7 +254,7 @@ F&ullscreen\tCtrl-Shift-L
 Полный экран\tCtrl-Shift-L
 
 Facing
-Попарно
+По две страницы
 
 Failed to save a file
 Ошибка сохранения файла
@@ -299,10 +299,10 @@ Fit Width
 По ширине
 
 Fit Width and Show Pages Continuously
-Подогнать по ширине и показывать непрерывно
+Подогнать по ширине окна и разрешить прокрутку
 
 Fit a Single Page
-Подогнать по размеру страницы
+Подогнать страницу по размеру окна
 
 Found text at page %d
 Текст найден на стр. %d
@@ -400,6 +400,9 @@ Page:
 Please wait - rendering...
 Формируется изображение, подождите...
 
+Pr&esentation\tCtrl-L
+Презентация\tCtrl-L
+
 Previous Page
 Предыдущая страница
 
@@ -434,7 +437,7 @@ Show &Toolbar
 Панель инструментов
 
 Show &pages continuously
-Непрерывно
+Разрешить прокрутку
 
 Show the &bookmarks sidebar when available
 Показывать панель &закладок (по возможности)
@@ -507,7 +510,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Pr&esentation\tCtrl-L
 
