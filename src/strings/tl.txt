@@ -201,8 +201,8 @@ Ipasok ang password ng %s
 Error loading PDF file.
 Hindi mabuksan ang PDF file.
 
-F&ullscreen\tCtrl-L
-Pagkasyahin sa buong screen\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Pagkasyahin sa buong screen\tCtrl-Shift-L
 
 Facing
 Magkaharap
@@ -433,6 +433,7 @@ ipini-print ang dokumento
 #P&roperties\tCtrl-D
 #PDF documents
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Source file %s has no synchronization point
 #Subject:

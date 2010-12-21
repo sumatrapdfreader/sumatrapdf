@@ -250,8 +250,8 @@ Fejl ved åbning af PDF-fil.
 F&orward\tAlt+Right Arrow
 F&remad\tAlt+->
 
-F&ullscreen\tCtrl-L
-F&uldskærmsvisning\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+F&uldskærmsvisning\tCtrl-Shift-L
 
 Facing
 Modstående
@@ -493,5 +493,6 @@ printer dokument
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

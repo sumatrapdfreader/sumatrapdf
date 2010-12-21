@@ -249,8 +249,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 Εμπρός\tAlt+->
 
-F&ullscreen\tCtrl-L
-Πλήρης οθόνη\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Πλήρης οθόνη\tCtrl-Shift-L
 
 Facing
 Δύο σελίδες
@@ -492,5 +492,6 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

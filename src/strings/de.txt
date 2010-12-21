@@ -251,8 +251,8 @@ Fehler beim Öffnen der Datei!
 F&orward\tAlt+Right Arrow
 Vor&wärts\tAlt+->
 
-F&ullscreen\tCtrl-L
-&Vollbild\tStrg+L
+F&ullscreen\tCtrl-Shift-L
+&Vollbild\tStrg+Umschalt+L
 
 Facing
 Doppelseite
@@ -391,6 +391,9 @@ Seite:
 
 Please wait - rendering...
 Bitte einen Moment Geduld…
+
+Pr&esentation\tCtrl-L
+&Präsentation\tStrg+L
 
 Previous Page
 &Vorherige Seite

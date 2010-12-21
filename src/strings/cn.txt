@@ -248,8 +248,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 下一视图(&O)\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
-全屏(&U)\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+全屏(&U)\tCtrl-Shift-L
 
 Facing
 平铺页面
@@ -491,5 +491,6 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

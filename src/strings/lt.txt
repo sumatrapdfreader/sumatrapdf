@@ -249,8 +249,8 @@ PDF failo įkelties klaida
 F&orward\tAlt+Right Arrow
 &Pirmyn\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
-&Visas ekranas\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+&Visas ekranas\tCtrl-Shift-L
 
 Facing
 Puslapiavimas
@@ -490,5 +490,6 @@ spausdinamas dokumentas
 #Fin&d...\tCtrl-F
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

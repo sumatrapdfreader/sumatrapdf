@@ -101,8 +101,8 @@ Tik Wagwoord In Vir %s
 Error loading PDF file.
 Daar was ñ fout terwyl die PDF lêer gelaai is.
 
-F&ullscreen\tCtrl-L
-Volskerm\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Volskerm\tCtrl-Shift-L
 
 Facing
 Teenoor
@@ -277,6 +277,7 @@ Zoem Uit
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

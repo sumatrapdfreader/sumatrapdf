@@ -246,8 +246,8 @@ PDF שגיאה בהעלאת קובץ
 F&orward\tAlt+Right Arrow
 קדימה\tAlt+ ?
 
-F&ullscreen\tCtrl-L
-מסך מלא\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+מסך מלא\tCtrl-Shift-L
 
 Facing
 דף כפול
@@ -493,4 +493,5 @@ printing document
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 

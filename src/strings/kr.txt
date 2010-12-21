@@ -232,8 +232,8 @@ Enter password for %s
 Error loading PDF file.
 PDF 파일을 읽을 수 없습니다.
 
-F&ullscreen\tCtrl-L
-전체 화면\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+전체 화면\tCtrl-Shift-L
 
 Facing
 여러 장씩
@@ -449,6 +449,7 @@ printing document
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Pr&esentation\tCtrl-L
 #Select content with Ctrl+left mouse button
 #Show &pages continuously
 #Show the &bookmarks sidebar when available

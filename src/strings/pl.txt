@@ -210,8 +210,8 @@ Problem przy otwarzaniu pliku.
 F&orward\tAlt+Right Arrow
 Dalej \tAlt+Prawa strzałka
 
-F&ullscreen\tCtrl-L
-Na cały ekran\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Na cały ekran\tCtrl-Shift-L
 
 Facing
 Na przeciwko
@@ -456,6 +456,7 @@ drukowanie dokumentu
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #SumatraPDF Update
 

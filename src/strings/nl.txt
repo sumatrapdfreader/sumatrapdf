@@ -254,8 +254,8 @@ Fout bij laden PDF bestand.
 F&orward\tAlt+Right Arrow
 Verder\tAlt+->
 
-F&ullscreen\tCtrl-L
-Volledig scherm\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Volledig scherm\tCtrl-Shift-L
 
 Facing
 Dubbele pagina
@@ -497,5 +497,6 @@ bestand afdrukken
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

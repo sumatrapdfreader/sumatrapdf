@@ -98,8 +98,8 @@ Posar contrasenya per a %s
 Error loading PDF file.
 Erro al Carregar l'Archiu PDF.
 
-F&ullscreen\tCtrl-L
-Pantalla Completa\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Pantalla Completa\tCtrl-Shift-L
 
 Facing
 Pàgina Doble
@@ -275,6 +275,7 @@ Alluntar
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

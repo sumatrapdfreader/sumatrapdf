@@ -212,8 +212,8 @@ Greška prilikom učitavanja PDF datoteke.
 F&orward\tAlt+Right Arrow
 Naprijed\tAlt+->
 
-F&ullscreen\tCtrl-L
-Cijeli zaslon\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Cijeli zaslon\tCtrl-Shift-L
 
 Facing
 Dvije stranice
@@ -467,6 +467,7 @@ ispisujem dokument
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #SumatraPDF Update
 

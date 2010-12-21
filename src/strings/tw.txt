@@ -204,8 +204,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 下一停頓頁面\tAlt+->
 
-F&ullscreen\tCtrl-L
-全螢幕顯示\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+全螢幕顯示\tCtrl-Shift-L
 
 Facing
 雙頁模式
@@ -448,6 +448,7 @@ printing document
 #Fit a Single Page
 #No result found around line %u in file %s
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Searching %d of %d...
 #SumatraPDF Update

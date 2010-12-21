@@ -180,8 +180,8 @@ Unesite lozinku za %s
 Error loading PDF file.
 Greška pri učitavanju PDF dokumenta
 
-F&ullscreen\tCtrl-L
-Ceo ekran\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Ceo ekran\tCtrl-Shift-L
 
 Facing
 Dve strane
@@ -406,6 +406,7 @@ Faktor uvećanja
 #PDF Version:
 #Page Size:
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Send by &E-mail...
 #Subject:

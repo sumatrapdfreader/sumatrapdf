@@ -213,8 +213,8 @@ Gwall wrth lwytho ffeil.
 F&orward\tAlt+Right Arrow
 Ymlaen\tAlt+Saeth Dde
 
-F&ullscreen\tCtrl-L
-Sgrin Lawn\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Sgrin Lawn\tCtrl-Shift-L
 
 Facing
 Wynebu
@@ -459,6 +459,7 @@ argraffu dogfen
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #SumatraPDF Update
 

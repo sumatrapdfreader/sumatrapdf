@@ -253,8 +253,8 @@ Erreur à l'ouverture du fichier PDF.
 F&orward\tAlt+Right Arrow
 Avancer\tAlt+->
 
-F&ullscreen\tCtrl-L
-Plein écran\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Plein écran\tCtrl-Shift-L
 
 Facing
 Page double
@@ -508,4 +508,5 @@ imprimer le document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 

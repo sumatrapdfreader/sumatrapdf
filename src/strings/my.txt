@@ -152,8 +152,8 @@ Masukkan kata laluan untuk %s
 Error loading PDF file.
 Masalah memuatkan fail PDF
 
-F&ullscreen\tCtrl-L
-Mukasurat Penuh\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Mukasurat Penuh\tCtrl-Shift-L
 
 Facing
 Dua belah mukasurat
@@ -344,6 +344,7 @@ mencetak dokumen
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

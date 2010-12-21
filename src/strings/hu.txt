@@ -250,8 +250,8 @@ Hiba a PDF betöltése közben.
 F&orward\tAlt+Right Arrow
 Ugrás előre\tAlt+->
 
-F&ullscreen\tCtrl-L
-Teljes képernyő\tCtrl+L
+F&ullscreen\tCtrl-Shift-L
+Teljes képernyő\tCtrl+Shift+L
 
 Facing
 Oldalpár
@@ -507,4 +507,7 @@ Szöveg vágólapra
 
 printing document
 Nyomtatás
+
+# Untranslated:
+#Pr&esentation\tCtrl-L
 

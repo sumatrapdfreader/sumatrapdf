@@ -250,8 +250,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 Вперед\tAlt+->
 
-F&ullscreen\tCtrl-L
-Полный экран\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Полный экран\tCtrl-Shift-L
 
 Facing
 Попарно
@@ -507,4 +507,7 @@ copying text
 
 printing document
 печатается документ
+
+# Untranslated:
+#Pr&esentation\tCtrl-L
 

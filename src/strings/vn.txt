@@ -249,8 +249,8 @@ Không mở được tập tin PDF.
 F&orward\tAlt+Right Arrow
 Tiếp tục\tAlt+->
 
-F&ullscreen\tCtrl-L
-Toàn màn hình\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Toàn màn hình\tCtrl-Shift-L
 
 Facing
 Trang kép
@@ -495,4 +495,5 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 

@@ -252,8 +252,8 @@ Kan inte öppna PDF-filen.
 F&orward\tAlt+Right Arrow
 Framåt\tAlt+Pil höger
 
-F&ullscreen\tCtrl-L
-Fullskärm\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Fullskärm\tCtrl-Shift-L
 
 Facing
 Uppslag
@@ -495,5 +495,6 @@ skriver ut dokumentet
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

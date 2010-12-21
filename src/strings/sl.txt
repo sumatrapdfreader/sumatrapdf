@@ -250,8 +250,8 @@ Napaka pri branju datoteke PDF.
 F&orward\tAlt+Right Arrow
 Naprej\tAlt+Desna puščica
 
-F&ullscreen\tCtrl-L
-Celozaslonsko\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Celozaslonsko\tCtrl-Shift-L
 
 Facing
 Dvostransko
@@ -493,5 +493,6 @@ tiskanje dokumenta
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

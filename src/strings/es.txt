@@ -251,8 +251,8 @@ Error al Cargar el Archivo PDF.
 F&orward\tAlt+Right Arrow
 Adelante\tAlt+->
 
-F&ullscreen\tCtrl-L
-Pantalla completa\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Pantalla completa\tCtrl-Shift-L
 
 Facing
 Página doble
@@ -494,5 +494,6 @@ impresión de documento
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

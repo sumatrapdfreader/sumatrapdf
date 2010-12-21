@@ -205,8 +205,8 @@ Chyba pri pokuse načítať PDF súbor.
 F&orward\tAlt+Right Arrow
 Dopredu\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
-Na celú obrazovku\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Na celú obrazovku\tCtrl-Shift-L
 
 Facing
 Dve strany
@@ -444,6 +444,7 @@ prebieha tlač dokumentu
 #No synchronization file found
 #No synchronization info at this position
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Source file %s has no synchronization point
 #SumatraPDF Update

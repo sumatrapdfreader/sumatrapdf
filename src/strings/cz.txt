@@ -242,8 +242,8 @@ Při načítání PDF souboru došlo k chybě.
 F&orward\tAlt+Right Arrow
 Vpřed\tAlt+Šipka vpravo
 
-F&ullscreen\tCtrl-L
-Celá obrazovka\tCtrl+L
+F&ullscreen\tCtrl-Shift-L
+Celá obrazovka\tCtrl+Shift+L
 
 Facing
 Dvojstránky
@@ -488,5 +488,6 @@ tisk dokumentu
 #Enter the command-line to invoke when you double-click on the PDF document:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

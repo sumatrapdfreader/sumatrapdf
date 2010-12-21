@@ -210,7 +210,7 @@ PDF கோப்பு ஏற்று பிழை
 F&orward\tAlt+Right Arrow
 முன்னோகி\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
 முழுத்திரை
 
 Facing
@@ -454,6 +454,7 @@ printing document
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Set inverse search command-line
 #SumatraPDF Update

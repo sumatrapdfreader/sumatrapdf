@@ -77,8 +77,8 @@ E&xit\tCtrl-Q
 Error loading PDF file.
 Dosya yüklenirken hata çıktı.
 
-F&ullscreen\tCtrl-L
-Tam Ekran\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Tam Ekran\tCtrl-Shift-L
 
 Facing
 Çift sayfa
@@ -246,6 +246,7 @@ Uzaklaştır
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

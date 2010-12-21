@@ -98,8 +98,8 @@ Enter password for %s
 Error loading PDF file.
 Помилка відкриття документу.
 
-F&ullscreen\tCtrl-L
-На цілий екран\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+На цілий екран\tCtrl-Shift-L
 
 Facing
 Дві сторінки
@@ -273,6 +273,7 @@ Zoom Out
 #Page scaling
 #Page:
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

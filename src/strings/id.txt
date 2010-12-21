@@ -214,8 +214,8 @@ Kesalahan dalam memanggil berkas PDF.
 F&orward\tAlt+Right Arrow
 Berikutnya\tAlt+->
 
-F&ullscreen\tCtrl-L
-Selayar Penuh\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Selayar Penuh\tCtrl-Shift-L
 
 Facing
 Dua Halaman
@@ -460,6 +460,7 @@ mencetak dokumen
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #SumatraPDF Update
 

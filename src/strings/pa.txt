@@ -99,8 +99,8 @@ Enter password for %s
 Error loading PDF file.
 PDF ਫਾਈਲ ਖੋਲੀ ਨਹੀ ਜਾ ਸਕੀ ।
 
-F&ullscreen\tCtrl-L
-ਪੂਰੀ ਸਕਰੀਨ\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+ਪੂਰੀ ਸਕਰੀਨ\tCtrl-Shift-L
 
 Facing
 ਕਿਤਾਬ
@@ -275,6 +275,7 @@ Zoom Out
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

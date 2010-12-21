@@ -159,8 +159,8 @@ Enter password for %s
 Error loading PDF file.
 Памылка пры адчыненні файла.
 
-F&ullscreen\tCtrl-L
-Поўны экран\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Поўны экран\tCtrl-Shift-L
 
 Facing
 Дзьве старонкі
@@ -373,6 +373,7 @@ Zoom Out
 #PDF Version:
 #Page Size:
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...

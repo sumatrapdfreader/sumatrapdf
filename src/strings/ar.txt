@@ -250,8 +250,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 لخلف\tAlt+السهم الأيمن
 
-F&ullscreen\tCtrl-L
-بحجم الشاشة\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+بحجم الشاشة\tCtrl-Shift-L
 
 Facing
 صفحتان متقابلتان
@@ -502,5 +502,6 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

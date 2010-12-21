@@ -74,8 +74,8 @@ E&xit\tCtrl-Q
 Error loading PDF file.
 PDF ഫയല്‍ തുറക്കാന്‍ സാധിച്ചില്ല
 
-F&ullscreen\tCtrl-L
-മുഴുവന്‍ കാണിക്കുക\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+മുഴുവന്‍ കാണിക്കുക\tCtrl-Shift-L
 
 Facing
 തിരിച്ച്
@@ -240,6 +240,7 @@ Zoom Out
 #Page scaling
 #Page:
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

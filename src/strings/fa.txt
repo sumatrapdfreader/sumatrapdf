@@ -214,8 +214,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 جلو\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
-تمام‌صفحه\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+تمام‌صفحه\tCtrl-Shift-L
 
 Facing
 نمایش دو صفحه‌ای
@@ -451,6 +451,7 @@ printing document
 #No result found around line %u in file %s
 #No synchronization info at this position
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Show the &bookmarks sidebar when available
 #SumatraPDF Update

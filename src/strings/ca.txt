@@ -207,8 +207,8 @@ S'ha produït un error en carregar el fitxer.
 F&orward\tAlt+Right Arrow
 Endavant\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
-Pantalla completa\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Pantalla completa\tCtrl-Shift-L
 
 Facing
 Pàgina doble
@@ -446,6 +446,7 @@ Factor de zoom
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Subject:
 #SumatraPDF Update

@@ -77,8 +77,8 @@ E&xit\tCtrl-Q
 Error loading PDF file.
 Erroare la încărcarea unui fişier PDF.
 
-F&ullscreen\tCtrl-L
-Ecran complet\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Ecran complet\tCtrl-Shift-L
 
 Facing
 Două pagini
@@ -246,6 +246,7 @@ Micşorează
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

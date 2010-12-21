@@ -250,8 +250,8 @@ Erro ao carregar o PDF.
 F&orward\tAlt+Right Arrow
 Ava&nçar\tAlt+->
 
-F&ullscreen\tCtrl-L
-Ecrã co&mpleto\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Ecrã co&mpleto\tCtrl-Shift-L
 
 Facing
 Página dupla
@@ -498,4 +498,7 @@ copiando texto
 
 printing document
 imprimindo documento
+
+# Untranslated:
+#Pr&esentation\tCtrl-L
 

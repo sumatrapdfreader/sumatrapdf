@@ -191,8 +191,8 @@ Enter password for %s
 Error loading PDF file.
 PDF fitxategia kargargatzerakoan errorea suertatu da
 
-F&ullscreen\tCtrl-L
-Pantaila osoan\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Pantaila osoan\tCtrl-Shift-L
 
 Facing
 Bi aldetatik
@@ -399,6 +399,7 @@ dokumentua imprimatzen
 #No synchronization info at this position
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Select content with Ctrl+left mouse button

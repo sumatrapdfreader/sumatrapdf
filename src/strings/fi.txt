@@ -213,8 +213,8 @@ Tiedoston avaus epäonnistui
 F&orward\tAlt+Right Arrow
 Seuraava\tAlt+Oikea nuoli
 
-F&ullscreen\tCtrl-L
-Koko näyttö\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Koko näyttö\tCtrl-Shift-L
 
 Facing
 Rinnakkain
@@ -468,6 +468,7 @@ tulostetaan asiakirjaa
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #SumatraPDF Update
 

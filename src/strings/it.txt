@@ -253,8 +253,8 @@ Errore durante l'apertura del file.
 F&orward\tAlt+Right Arrow
 Avanti\tAlt+Freccia destra
 
-F&ullscreen\tCtrl-L
-Schermo intero\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Schermo intero\tCtrl-Shift-L
 
 Facing
 Pagine affiancate
@@ -496,5 +496,6 @@ stampa documento
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

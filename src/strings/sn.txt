@@ -98,8 +98,8 @@ Isa password ya %s
 Error loading PDF file.
 Tatadza kulodha faira rePDF
 
-F&ullscreen\tCtrl-L
-Zadza Screen\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Zadza Screen\tCtrl-Shift-L
 
 Facing
 Facing
@@ -270,6 +270,7 @@ Duputsa
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

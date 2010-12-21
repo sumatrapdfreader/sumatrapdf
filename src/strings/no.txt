@@ -208,8 +208,8 @@ Feil ved åpning av PDF fil.
 F&orward\tAlt+Right Arrow
 Fremover\tAlt+Pil høyre
 
-F&ullscreen\tCtrl-L
-Fullskjerm\tCtrl+L
+F&ullscreen\tCtrl-Shift-L
+Fullskjerm\tCtrl+Shift+L
 
 Facing
 Motstående
@@ -447,6 +447,7 @@ Zoom til
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Subject:
 #SumatraPDF Update

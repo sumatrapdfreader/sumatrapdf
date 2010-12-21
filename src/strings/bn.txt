@@ -102,8 +102,8 @@ Enter password for %s
 Error loading PDF file.
 পিডিএফ সঞ্চিকা ভরণে ত্রুটি
 
-F&ullscreen\tCtrl-L
-পূর্ণ পর্দা\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+পূর্ণ পর্দা\tCtrl-Shift-L
 
 Facing
 দুটি পৃষ্ঠায়
@@ -278,6 +278,7 @@ Zoom Out
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

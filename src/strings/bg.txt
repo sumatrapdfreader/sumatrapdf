@@ -191,8 +191,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 Напред\tAlt+->
 
-F&ullscreen\tCtrl-L
-Цял Екран\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Цял Екран\tCtrl-Shift-L
 
 Facing
 Две страници
@@ -408,6 +408,7 @@ Zoom factor
 #PDF Version:
 #Page Size:
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Send by &E-mail...
 #Subject:

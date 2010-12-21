@@ -191,8 +191,8 @@ PDF ファイルの読み込みエラーです。
 F&orward\tAlt+Right Arrow
 次に進む\tAlt+→
 
-F&ullscreen\tCtrl-L
-全画面表示\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+全画面表示\tCtrl-Shift-L
 
 Facing
 見返し
@@ -416,6 +416,7 @@ Zoom factor
 #PDF Version:
 #Page Size:
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Subject:
 #SumatraPDF Update

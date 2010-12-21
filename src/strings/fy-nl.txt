@@ -206,8 +206,8 @@ Flater by laden PDF bestân.
 F&orward\tAlt+Right Arrow
 Fierder\tAlt+->
 
-F&ullscreen\tCtrl-L
-Folslein skerm\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Folslein skerm\tCtrl-Shift-L
 
 Facing
 Dûbele side
@@ -445,6 +445,7 @@ Zoomfaktor
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Subject:
 #SumatraPDF Update

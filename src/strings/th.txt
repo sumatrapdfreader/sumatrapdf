@@ -101,8 +101,8 @@ Enter password for %s
 Error loading PDF file.
 การเปิดไฟล์ผิดพลาด
 
-F&ullscreen\tCtrl-L
-เต็มจอภาพ\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+เต็มจอภาพ\tCtrl-Shift-L
 
 Facing
 เป็นหน้า
@@ -265,6 +265,7 @@ Zoom Out
 #Page scaling
 #Page:
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

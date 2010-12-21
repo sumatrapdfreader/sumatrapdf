@@ -180,8 +180,8 @@ Enter password for %s
 Error loading PDF file.
 Грешка при учитавању PDF документа
 
-F&ullscreen\tCtrl-L
-Цео екран\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Цео екран\tCtrl-Shift-L
 
 Facing
 Две стране
@@ -406,6 +406,7 @@ Zoom factor
 #PDF Version:
 #Page Size:
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Send by &E-mail...
 #Subject:

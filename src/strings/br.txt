@@ -248,8 +248,8 @@ Erro ao abrir o arquivo PDF.
 F&orward\tAlt+Right Arrow
 Avançar\tAlt+->
 
-F&ullscreen\tCtrl-L
-Tela cheia\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Tela cheia\tCtrl-Shift-L
 
 Facing
 Página dupla
@@ -491,5 +491,6 @@ imprimindo documento
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 

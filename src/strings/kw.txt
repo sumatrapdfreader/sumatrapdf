@@ -193,8 +193,8 @@ Gwall ow karga restren PDF.
 F&orward\tAlt+Right Arrow
 Yn-rag\tAlt+->
 
-F&ullscreen\tCtrl-L
-Skrin Leun\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Skrin Leun\tCtrl-Shift-L
 
 Facing
 A-dal
@@ -418,6 +418,7 @@ Faktor-zoum
 #PDF Version:
 #Page Size:
 #Page scaling
+#Pr&esentation\tCtrl-L
 #Print range
 #Subject:
 #SumatraPDF Update

@@ -98,8 +98,8 @@ Enter password for %s
 Error loading PDF file.
 ဖိုင် ဖွင့်ရာ အမှားအယွင်းရှိ
 
-F&ullscreen\tCtrl-L
-မြင်ကွင်း ပြည့်\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+မြင်ကွင်း ပြည့်\tCtrl-Shift-L
 
 Facing
  အရှေ့မျက်နှာ
@@ -275,6 +275,7 @@ Zoom Out
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

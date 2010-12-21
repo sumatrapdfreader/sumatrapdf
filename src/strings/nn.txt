@@ -98,8 +98,8 @@ Skriv inn passord for %s
 Error loading PDF file.
 Feil under lasting av PDF-fil
 
-F&ullscreen\tCtrl-L
-Full skjerm\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+Full skjerm\tCtrl-Shift-L
 
 Facing
 Motståande
@@ -275,6 +275,7 @@ Zoom ut
 #Page number %u inexistant
 #Page scaling
 #Please wait - rendering...
+#Pr&esentation\tCtrl-L
 #Print range
 #Remember &opened files
 #Searching %d of %d...

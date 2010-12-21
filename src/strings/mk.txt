@@ -248,8 +248,8 @@ Error loading PDF file.
 F&orward\tAlt+Right Arrow
 Напред\tAlt+Right Arrow
 
-F&ullscreen\tCtrl-L
-На цел екран\tCtrl-L
+F&ullscreen\tCtrl-Shift-L
+На цел екран\tCtrl-Shift-L
 
 Facing
 Две страници
@@ -491,5 +491,6 @@ printing document
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Pr&esentation\tCtrl-L
 #SumatraPDF Update
 
