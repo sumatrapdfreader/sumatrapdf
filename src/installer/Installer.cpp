@@ -28,6 +28,7 @@
 #include <shlobj.h>
 #include <gdiplus.h>
 #include <psapi.h>
+#include <Shlwapi.h>
 
 #include "Resource.h"
 #include "base_util.h"
@@ -44,19 +45,23 @@
 
 using namespace Gdiplus;
 
-#define INSATLLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_INSTALLER_FRAME")
-#define ID_BUTTON_INSTALL 1
+// set to 1 when testing as uninstaller
+#define FORCE_TO_BE_UNINSTALLER 0
+
+#define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
+#define UNINSTALLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_UNINSTALLER_FRAME")
+#define ID_BUTTON_INSTALL       1
+#define ID_BUTTON_UNINSTALL     2
 #define ABOUT_BG_COLOR          RGB(255,242,0)
-#define INVALID_SIZE DWORD(-1)
+#define INVALID_SIZE            DWORD(-1)
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
 static HWND             gHwndButtonInstall;
+static HWND             gHwndButtonUninstall;
 static HFONT            gFontDefault;
 
 static ULONG_PTR        gGdiplusToken;
-
-static NONCLIENTMETRICS gNonClientMetrics = { sizeof (NONCLIENTMETRICS) };
 
 int gBallX, gBallY;
 
@@ -68,6 +73,7 @@ int gBallX, gBallY;
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 #define REG_PATH_UNINST     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") TAPP
+#define REG_PATH_SOFTWARE   _T("Software\\") TAPP
 
 // Keys we'll set in REG_PATH_UNINST path
 
@@ -102,6 +108,8 @@ struct EmbeddedPart {
     uint32_t        fileOffset;  // offset in the executable of the file start
     char *          fileName;    // name of the file
 };
+
+static EmbeddedPart *   gEmbeddedParts;
 
 void FreeEmbeddedParts(EmbeddedPart *root)
 {
@@ -258,12 +266,14 @@ DWORD GetFilePointer(HANDLE h)
    Data is laid out so that it can be read sequentially from the end, because
    it's easier for the installer to seek to the end of itself than parse
    PE header to figure out where the data starts. */
-
-EmbeddedPart *LoadEmbeddedPartsInfo() {
+EmbeddedPart *GetEmbeddedPartsInfo() {
     EmbeddedPart *  root = NULL;
     EmbeddedPart *  part;
     DWORD           res;
     char *           msg;
+
+    if (gEmbeddedParts)
+        return gEmbeddedParts;
 
     TCHAR *exePath = GetExePath();
     HANDLE h = ::CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -343,6 +353,7 @@ ReadNextPart:
 
 Exit:
     CloseHandle(h);
+    gEmbeddedParts = root;
     return root;
 Error:
     FreeEmbeddedParts(root);
@@ -524,9 +535,12 @@ Error:
     goto Exit;
 }
 
-BOOL IsUninstaller(EmbeddedPart *root)
+BOOL IsUninstaller()
 {
-    EmbeddedPart *p = root;
+#if FORCE_TO_BE_UNINSTALLER
+    return TRUE;
+#else
+    EmbeddedPart *p = GetEmbeddedPartsInfo();
     while (p) {
         EmbeddedPart *next = p->next;
         if (str_ieq(p->type, INSTALLER_PART_UNINSTALLER))
@@ -534,6 +548,7 @@ BOOL IsUninstaller(EmbeddedPart *root)
         p = next;
     }
     return FALSE;
+#endif
 }
 
 // Process all messages currently in a message queue.
@@ -563,9 +578,11 @@ DWORD GetDirSize(TCHAR *dir)
     DWORD totalSize = 0;
     WIN32_FIND_DATA findData;
 
-    HANDLE h = FindFirstFile(dir, &findData);
+    TCHAR *dirPattern = tstr_cat(dir, _T("\\*"));
+
+    HANDLE h = FindFirstFile(dirPattern, &findData);
     if (h == INVALID_HANDLE_VALUE)
-        return 0;
+        goto Exit;
 
     do {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -575,6 +592,8 @@ DWORD GetDirSize(TCHAR *dir)
         }
     } while (FindNextFile(h, &findData) != 0);
     FindClose(h);
+Exit:
+    free(dirPattern);
     return totalSize;
 }
 
@@ -600,6 +619,91 @@ void WriteUninstallerRegistryInfo()
     free(uninstallerPath);
 }
 
+void RemoveUninstallerRegistryInfo()
+{
+    BOOL ok = TRUE;
+    if (ERROR_SUCCESS != SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_UNINST)) {
+        SeeLastError();
+        ok = FALSE;
+    }
+
+    // Note: we delete this key because the old nsis installer was setting it
+    // but we're not setting or using it (I assume it's used by nsis to remember
+    // installation directory to better support the case when they allow
+    // changing it, but we don't so it's not needed).
+    if (ERROR_SUCCESS != SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE)) {
+        SeeLastError();
+        ok = FALSE;
+    }
+
+    if (!ok)
+        NotifyFailed("Failed to delete uninstaller registry keys");
+}
+
+// Note: doesn't recurse, but it's good enough for us
+void RemoveDirectoryWithFiles(TCHAR *dir)
+{
+    WIN32_FIND_DATA findData;
+
+    TCHAR *dirPattern = tstr_cat(dir, _T("\\*"));
+    HANDLE h = FindFirstFile(dirPattern, &findData);
+    if (h != INVALID_HANDLE_VALUE)
+    {
+        do {
+            TCHAR *path = tstr_cat3(dir, _T("\\"), findData.cFileName);
+            DWORD attrs = findData.dwFileAttributes;
+            // filter out directories. Even though there shouldn't be any
+            // subdirectories, it also filters out the standard "." and ".."
+            if (!(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+                // per http://msdn.microsoft.com/en-us/library/aa363915(v=VS.85).aspx
+                // have to remove read-only attribute for DeleteFile() to work
+                if (attrs & FILE_ATTRIBUTE_READONLY) {
+                    attrs = attrs & ~FILE_ATTRIBUTE_READONLY;
+                    ::SetFileAttributes(path, attrs);
+                }
+                ::DeleteFile(path);
+                free(path);
+            }
+        } while (FindNextFile(h, &findData) != 0);
+        FindClose(h);
+    }
+
+    if (!::RemoveDirectory(dir)) {
+        if (ERROR_PATH_NOT_FOUND != GetLastError()) {
+            SeeLastError();
+            NotifyFailed("Couldn't remove installation directory");
+        }
+    }
+    free(dirPattern);
+}
+
+void RemoveInstallationDirectory()
+{
+    RemoveDirectoryWithFiles(GetInstallationDir());
+}
+
+void UnregisterFromBeingDefaultViewer()
+{
+    // TODO: write me
+}
+
+void CreateShortcut()
+{
+    /* TODO: write equivalent of this nsis snippet:
+; Always create the link for all users
+SetShellVarContext all
+CreateShortCut "$SMPROGRAMS\SumatraPDF.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\${EXE}" 0
+    */
+}
+
+void RemoveShortcut()
+{
+    /* TODO: write equivalent of thsi nsis snippet:
+SetShellVarContext all
+Delete "$SMPROGRAMS\SumatraPDF.lnk"
+    */
+}
+
 void OnButtonInstall()
 {
     char *msg = NULL;
@@ -608,13 +712,13 @@ void OnButtonInstall()
     ProcessMessageLoop(gHwndFrame);
 
     // TODO: do it on a background thread so that UI is still responsive
-    EmbeddedPart *parts = LoadEmbeddedPartsInfo();
+    EmbeddedPart *parts = GetEmbeddedPartsInfo();
     if (NULL == parts) {
         msg = "Didn't find embedded parts";
         goto Error;
     }
 
-    if (IsUninstaller(parts)) {
+    if (IsUninstaller()) {
         msg = "This is uninstaller, not an installer";
         goto Error;
     }
@@ -629,6 +733,7 @@ void OnButtonInstall()
         goto Error;
 
     WriteUninstallerRegistryInfo();
+    CreateShortcut();
 
     /* TODO:
         - launch the program
@@ -641,10 +746,14 @@ Error:
     return;
 }
 
-void OnUninstall()
+void OnButtonUninstall()
 {
     /* if the app is running, we have to kill it to delete the files */
     KillProcess(EXE, TRUE);
+    RemoveUninstallerRegistryInfo();
+    RemoveShortcut();
+    UnregisterFromBeingDefaultViewer();
+    RemoveInstallationDirectory();
 }
 
 inline void SetFont(HWND hwnd, HFONT font)
@@ -672,15 +781,16 @@ void ResizeClientArea(HWND hwnd, int dx, int dy)
 
 static HFONT CreateDefaultGuiFont()
 {
-    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &gNonClientMetrics, 0))
+    NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
+    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
     {
         // fonts: lfMenuFont, lfStatusFont, lfMessageFont, lfCaptionFont
-        return ::CreateFontIndirect(&gNonClientMetrics.lfMessageFont);
+        return ::CreateFontIndirect(&m.lfMessageFont);
     }
     return NULL;
 }
 
-void DrawMain(HWND hwnd, HDC hdc, RECT *rect)
+void DrawUninstaller(HWND hwnd, HDC hdc, RECT *rect)
 {
     HBRUSH brushBg = ::CreateSolidBrush(ABOUT_BG_COLOR);
 
@@ -714,12 +824,55 @@ void DrawMain(HWND hwnd, HDC hdc, RECT *rect)
     ::DeleteObject(brushBg);
 }
 
-void OnPaintMain(HWND hwnd)
+void DrawInstaller(HWND hwnd, HDC hdc, RECT *rect)
+{
+    HBRUSH brushBg = ::CreateSolidBrush(ABOUT_BG_COLOR);
+
+/*
+    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
+    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
+    HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
+
+    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
+    HFONT fontVersionTxt = Win32_Font_GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
+    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
+    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
+
+    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
+    */
+
+    ::SetBkMode(hdc, TRANSPARENT);
+
+    RECT rc;
+    ::GetClientRect(hwnd, &rc);
+    rc.bottom -= 48;
+    ::FillRect(hdc, &rc, brushBg);
+
+    Rect ellipseRect(gBallX-5, gBallY-5, 10, 10);
+    Graphics g(hdc);
+    g.SetCompositingQuality(CompositingQualityHighQuality);
+    g.SetSmoothingMode(SmoothingModeHighQuality);
+    SolidBrush blackBrush(Color(255, 0, 0, 0));
+    g.FillEllipse(&blackBrush, ellipseRect);
+
+    ::DeleteObject(brushBg);
+}
+
+void OnPaintInstaller(HWND hwnd)
 {
     PAINTSTRUCT ps;
     RECT rc;
     HDC hdc = ::BeginPaint(hwnd, &ps);
-    DrawMain(hwnd, hdc, &rc);
+    DrawInstaller(hwnd, hdc, &rc);
+    ::EndPaint(hwnd, &ps);
+}
+
+void OnPaintUninstaller(HWND hwnd)
+{
+    PAINTSTRUCT ps;
+    RECT rc;
+    HDC hdc = ::BeginPaint(hwnd, &ps);
+    DrawUninstaller(hwnd, hdc, &rc);
     ::EndPaint(hwnd, &ps);
 }
 
@@ -730,7 +883,58 @@ void OnMouseMove(HWND hwnd, int x, int y)
     ::InvalidateRect(hwnd, NULL, TRUE);
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    int         wmId;
+    RECT        r;
+    int         x, y;
+
+    switch (message)
+    {
+        case WM_CREATE:
+            ::GetClientRect(hwnd, &r);
+            x = RectDx(&r) - 128 - 8;
+            y = RectDy(&r) - 22 - 8;
+            gHwndButtonUninstall = ::CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
+                                BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                                x, y, 128, 22, hwnd, (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
+            ::SetFont(gHwndButtonUninstall, gFontDefault);
+            break;
+
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+
+        case WM_ERASEBKGND:
+            // do nothing, helps to avoid flicker
+            return TRUE;
+
+        case WM_PAINT:
+            OnPaintUninstaller(hwnd);
+            break;
+
+        case WM_COMMAND:
+            wmId    = LOWORD(wParam);
+            switch (wmId)
+            {
+                case ID_BUTTON_UNINSTALL:
+                    OnButtonUninstall();
+                    break;
+                default:
+                    return DefWindowProc(hwnd, message, wParam, lParam);
+            }
+            break;
+
+        case WM_MOUSEMOVE:
+            x = GET_X_LPARAM(lParam); y = GET_Y_LPARAM(lParam);
+            OnMouseMove(hwnd, x, y);
+            break;
+    }
+
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int         wmId;
     RECT        r;
@@ -757,7 +961,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             return TRUE;
 
         case WM_PAINT:
-            OnPaintMain(hwnd);
+            OnPaintInstaller(hwnd);
             break;
 
         case WM_COMMAND:
@@ -771,6 +975,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
             break;
+
         case WM_MOUSEMOVE:
             x = GET_X_LPARAM(lParam); y = GET_Y_LPARAM(lParam);
             OnMouseMove(hwnd, x, y);
@@ -806,13 +1011,24 @@ static void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) {
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
+    ATOM        atom;
+
     FillWndClassEx(wcex, hInstance);
-    wcex.lpfnWndProc    = WndProcFrame;
-    wcex.lpszClassName  = INSATLLER_FRAME_CLASS_NAME;
+    wcex.lpfnWndProc    = InstallerWndProcFrame;
+    wcex.lpszClassName  = INSTALLER_FRAME_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    ATOM atom = RegisterClassEx(&wcex);
+    atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
+
+    FillWndClassEx(wcex, hInstance);
+    wcex.lpfnWndProc    = UninstallerWndProcFrame;
+    wcex.lpszClassName  = UNINSTALLER_FRAME_CLASS_NAME;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    atom = RegisterClassEx(&wcex);
+    if (!atom)
+        return FALSE;
+
     return TRUE;
 }
 
@@ -825,13 +1041,23 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     
     gFontDefault = CreateDefaultGuiFont();
 
-    gHwndFrame = CreateWindow(
-            INSATLLER_FRAME_CLASS_NAME, _T("SumatraPDF Installer"),
-            //WS_OVERLAPPEDWINDOW,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-            CW_USEDEFAULT, CW_USEDEFAULT, 320, 480,
-            NULL, NULL,
-            ghinst, NULL);
+    if (IsUninstaller()) {
+        gHwndFrame = CreateWindow(
+                UNINSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Uninstaller"),
+                //WS_OVERLAPPEDWINDOW,
+                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                CW_USEDEFAULT, CW_USEDEFAULT, 320, 480,
+                NULL, NULL,
+                ghinst, NULL);
+    } else {
+        gHwndFrame = CreateWindow(
+                INSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Installer"),
+                //WS_OVERLAPPEDWINDOW,
+                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                CW_USEDEFAULT, CW_USEDEFAULT, 320, 480,
+                NULL, NULL,
+                ghinst, NULL);
+    }
     if (!gHwndFrame)
         return FALSE;
     ShowWindow(gHwndFrame, SW_SHOW);
@@ -841,7 +1067,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG                 msg = {0};
+    MSG msg = {0};
 
     INITCOMMONCONTROLSEX cex = {0};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -850,6 +1076,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (!RegisterWinClass(hInstance))
         goto Exit;
+
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
@@ -861,6 +1088,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
 Exit:
+    FreeEmbeddedParts(gEmbeddedParts);
     GdiplusShutdown(gGdiplusToken);
     CoUninitialize();
 
