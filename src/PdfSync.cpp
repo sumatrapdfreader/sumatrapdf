@@ -24,48 +24,46 @@ UINT CreateSynchronizer(LPCTSTR pdffilename, Synchronizer **sync)
     if (!sync)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    TCHAR syncfile[MAX_PATH];
-    size_t n = lstrlen(pdffilename);
-    size_t u = dimof(PDF_EXTENSION)-1;
-    if (n>u && _tcsicmp(pdffilename+(n-u), PDF_EXTENSION) == 0 ) {
-        // Check if a PDFSYNC file is present
-        tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-        tstr_cat_s(syncfile, dimof(syncfile), PDFSYNC_EXTENSION);
-        if (file_exists(syncfile)) 
-        {
-            *sync = new Pdfsync(syncfile);
-            return PDFSYNCERR_SUCCESS;
-        }
-
-        #ifdef SYNCTEX_FEATURE
-            // check if a compressed SYNCTEX file is present
-            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEXGZ_EXTENSION);
-            BOOL exist = file_exists(syncfile);
-
-            // check if a SYNCTEX file is present
-            tstr_copyn(syncfile, dimof(syncfile), pdffilename, n-u);
-            tstr_cat_s(syncfile, dimof(syncfile), SYNCTEX_EXTENSION);
-            exist |= file_exists(syncfile);
-
-            if(exist)
-            {
-                // due to a bug with synctex_parser.c, this must always be 
-                // the path to the .synctex file (even if a .synctex.gz file is used instead)
-                *sync = new SyncTex(syncfile);
-                return PDFSYNCERR_SUCCESS;
-            }
-            else
-            {
-                return PDFSYNCERR_SYNCFILE_NOTFOUND;
-            }
-
-        #endif
-    }
-    else {
+    if (!tstr_endswithi(pdffilename, PDF_EXTENSION)) {
         DBG_OUT_T("Bad PDF filename! (%s)\n", pdffilename);
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
+
+    TCHAR buffer[MAX_PATH];
+    TCHAR *syncfile;
+    size_t n = lstrlen(pdffilename);
+    size_t u = dimof(PDF_EXTENSION)-1;
+
+    // Check if a PDFSYNC file is present
+    tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
+    syncfile = tstr_cat_s(buffer, dimof(buffer), PDFSYNC_EXTENSION);
+    if (syncfile && file_exists(syncfile)) 
+    {
+        *sync = new Pdfsync(syncfile);
+        return PDFSYNCERR_SUCCESS;
+    }
+
+#ifdef SYNCTEX_FEATURE
+    // check if a compressed SYNCTEX file is present
+    tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
+    syncfile = tstr_cat_s(buffer, dimof(buffer), SYNCTEXGZ_EXTENSION);
+    bool exist = syncfile && file_exists(syncfile);
+
+    // check if a SYNCTEX file is present
+    tstr_copyn(buffer, dimof(buffer), pdffilename, n-u);
+    syncfile = tstr_cat_s(buffer, dimof(buffer), SYNCTEX_EXTENSION);
+    exist |= syncfile && file_exists(syncfile);
+
+    if (exist)
+    {
+        // due to a bug with synctex_parser.c, this must always be 
+        // the path to the .synctex file (even if a .synctex.gz file is used instead)
+        *sync = new SyncTex(syncfile);
+        return PDFSYNCERR_SUCCESS;
+    }
+#endif
+
+    return PDFSYNCERR_SYNCFILE_NOTFOUND;
 }
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'

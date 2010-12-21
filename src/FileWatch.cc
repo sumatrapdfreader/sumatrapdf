@@ -220,7 +220,7 @@ bool FileWatcher::ReadDir()
         // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
         pFileNotify->FileName[min(pFileNotify->FileNameLength/sizeof(WCHAR), _MAX_FNAME-1)] = 0;
         TCHAR *ptNotifyFilename = wstr_to_tstr(pFileNotify->FileName);
-        bool isWatchedFile = !_tcsicmp(ptNotifyFilename, pszFilename);
+        BOOL isWatchedFile = tstr_ieq(ptNotifyFilename, pszFilename);
         free(ptNotifyFilename);
 
         // is it the file that is being watched?
