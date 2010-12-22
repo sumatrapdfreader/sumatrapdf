@@ -47,18 +47,21 @@
 using namespace Gdiplus;
 
 // set to 1 when testing as uninstaller
-#define FORCE_TO_BE_UNINSTALLER 1
+#define FORCE_TO_BE_UNINSTALLER 0
 
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 #define UNINSTALLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_UNINSTALLER_FRAME")
-#define ID_BUTTON_INSTALL       1
-#define ID_BUTTON_UNINSTALL     2
-#define ABOUT_BG_COLOR          RGB(255,242,0)
-#define INVALID_SIZE            DWORD(-1)
+
+#define ID_BUTTON_INSTALL             1
+#define ID_BUTTON_UNINSTALL           2
+#define ID_CHECKBOX_MAKE_DEAFULT      3
+#define ABOUT_BG_COLOR                RGB(255,242,0)
+#define INVALID_SIZE                  DWORD(-1)
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
 static HWND             gHwndButtonInstall;
+static HWND             gHwndCheckboxRegisterDefault;
 static HWND             gHwndButtonUninstall;
 static HFONT            gFontDefault;
 
@@ -589,6 +592,72 @@ void ProcessMessageLoop(HWND hwnd)
     }
 } 
 
+inline int RectDx(RECT *r)
+{
+    return r->right - r->left;
+}
+
+inline int RectDy(RECT *r)
+{
+    return r->bottom - r->top;
+}
+
+inline void SetFont(HWND hwnd, HFONT font)
+{
+    ::SendMessage(hwnd, WM_SETFONT, WPARAM(font), TRUE);
+}
+
+void SetCheckboxState(HWND hwnd, int checked)
+{
+    ::SendMessage(hwnd, BM_SETCHECK, checked, 0L);
+}
+
+BOOL GetCheckboxState(HWND hwnd)
+{
+    return (BOOL)::SendMessage(hwnd, BM_GETCHECK, 0, 0L);
+}
+
+#if 0
+void ResizeClientArea(HWND hwnd, int dx, int dy)
+{
+    RECT rwin, rcln;
+    ::GetClientRect(hwnd, &rwin);
+}
+#endif
+
+static HFONT CreateDefaultGuiFont()
+{
+    NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
+    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
+    {
+        // fonts: lfMenuFont, lfStatusFont, lfMessageFont, lfCaptionFont
+        return ::CreateFontIndirect(&m.lfMessageFont);
+    }
+    return NULL;
+}
+
+HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si = {0};
+    si.cb = sizeof(si);
+    TCHAR *cmd;
+    // per msdn, cmd has to be writeable
+    if (args) {
+        // Note: doesn't quote the args if but it's good enough for us
+        cmd = tstr_cat3(exe, _T(" "), args);
+    }
+    else
+        cmd = tstr_dup(exe);
+    if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        free(cmd);
+        return NULL;
+    }
+    free(cmd);
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
 // Note: doesn't recurse and the size might overflow, but it's good enough for
 // our purpose
 DWORD GetDirSize(TCHAR *dir)
@@ -786,6 +855,7 @@ BOOL CreateInstallationDirectory()
 void OnButtonInstall()
 {
     char *msg = NULL;
+    BOOL registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
 
     // disable the button during installation
     ::EnableWindow(gHwndButtonInstall, FALSE);
@@ -818,9 +888,15 @@ void OnButtonInstall()
     WriteUninstallerRegistryInfo();
     CreateAppShortcut();
 
-    /* TODO:
-        - launch the program
-    */
+    if (registerAsDefault) {
+        // need to sublaunch SumatraPDF.exe instead of replicating the code
+        // because registration uses translated strings
+        TCHAR *installedExePath = GetInstalledExePath();
+        HANDLE h = CreateProcessHelper(installedExePath, _T("-register-for-pdf"));
+        CloseHandle(h);
+        free(installedExePath);
+    }
+
 Exit:
     ::EnableWindow(gHwndButtonInstall, TRUE);
     return;
@@ -844,40 +920,6 @@ void OnButtonUninstall()
     RemoveInstallationDirectory();
 
     ::EnableWindow(gHwndButtonUninstall, TRUE);
-}
-
-inline void SetFont(HWND hwnd, HFONT font)
-{
-    ::SendMessage(hwnd, WM_SETFONT, WPARAM(font), TRUE);
-}
-
-inline int RectDx(RECT *r)
-{
-    return r->right - r->left;
-}
-
-inline int RectDy(RECT *r)
-{
-    return r->bottom - r->top;
-}
-
-#if 0
-void ResizeClientArea(HWND hwnd, int dx, int dy)
-{
-    RECT rwin, rcln;
-    ::GetClientRect(hwnd, &rwin);
-}
-#endif
-
-static HFONT CreateDefaultGuiFont()
-{
-    NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
-    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
-    {
-        // fonts: lfMenuFont, lfStatusFont, lfMessageFont, lfCaptionFont
-        return ::CreateFontIndirect(&m.lfMessageFont);
-    }
-    return NULL;
 }
 
 void DrawUninstaller(HWND hwnd, HDC hdc, RECT *rect)
@@ -973,22 +1015,31 @@ void OnMouseMove(HWND hwnd, int x, int y)
     ::InvalidateRect(hwnd, NULL, TRUE);
 }
 
+void OnCreateUninstaller(HWND hwnd)
+{
+    RECT        r;
+    int         x, y;
+
+    ::GetClientRect(hwnd, &r);
+    x = RectDx(&r) - 128 - 8;
+    y = RectDy(&r) - 22 - 8;
+    // TODO: determine the sizes of buttons by measuring their real size
+    // and adjust size of the window appropriately
+    gHwndButtonUninstall = ::CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
+                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        x, y, 128, 22, hwnd, (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
+    ::SetFont(gHwndButtonUninstall, gFontDefault);
+}
+
 static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int         wmId;
-    RECT        r;
     int         x, y;
 
     switch (message)
     {
         case WM_CREATE:
-            ::GetClientRect(hwnd, &r);
-            x = RectDx(&r) - 128 - 8;
-            y = RectDy(&r) - 22 - 8;
-            gHwndButtonUninstall = ::CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
-                                BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
-                                x, y, 128, 22, hwnd, (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
-            ::SetFont(gHwndButtonUninstall, gFontDefault);
+            OnCreateUninstaller(hwnd);
             break;
 
         case WM_DESTROY:
@@ -1004,7 +1055,7 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
             break;
 
         case WM_COMMAND:
-            wmId    = LOWORD(wParam);
+            wmId = LOWORD(wParam);
             switch (wmId)
             {
                 case ID_BUTTON_UNINSTALL:
@@ -1024,22 +1075,38 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
+void OnCreateInstaller(HWND hwnd)
+{
+    RECT        r;
+    int         x, y;
+
+    // TODO: determine the sizes of buttons by measuring their real size
+    // and adjust size of the window appropriately
+    ::GetClientRect(hwnd, &r);
+    x = RectDx(&r) - 120 - 8;
+    y = RectDy(&r) - 22 - 8;
+    gHwndButtonInstall = ::CreateWindow(WC_BUTTON, _T("Install SumatraPDF"),
+                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        x, y, 120, 22, hwnd, (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
+    ::SetFont(gHwndButtonInstall, gFontDefault);
+
+    gHwndCheckboxRegisterDefault = ::CreateWindow(
+        WC_BUTTON, _T("Use as default PDF Reader"),
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEAFULT, ghinst, NULL);
+    ::SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
+    SetCheckboxState(gHwndCheckboxRegisterDefault, TRUE);
+}
+
 static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int         wmId;
-    RECT        r;
     int         x, y;
 
     switch (message)
     {
         case WM_CREATE:
-            ::GetClientRect(hwnd, &r);
-            x = RectDx(&r) - 120 - 8;
-            y = RectDy(&r) - 22 - 8;
-            gHwndButtonInstall = ::CreateWindow(WC_BUTTON, _T("Install SumatraPDF"),
-                                BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
-                                x, y, 120, 22, hwnd, (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
-            ::SetFont(gHwndButtonInstall, gFontDefault);
+            OnCreateInstaller(hwnd);
             break;
 
         case WM_DESTROY:
@@ -1055,7 +1122,7 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             break;
 
         case WM_COMMAND:
-            wmId    = LOWORD(wParam);
+            wmId = LOWORD(wParam);
             switch (wmId)
             {
                 case ID_BUTTON_INSTALL:
@@ -1176,17 +1243,6 @@ TCHAR *GetValidTempDir()
         return NULL;
     }
     return tstr_dup(d);
-}
-
-HANDLE CreateProcessHelper(TCHAR *exe)
-{
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si = {0};
-    si.cb = sizeof(si);
-    if (!CreateProcess(NULL, exe, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-        return NULL;
-    CloseHandle(pi.hThread);
-    return pi.hProcess;
 }
 
 // If this is uninstaller and we're running from installation directory,
