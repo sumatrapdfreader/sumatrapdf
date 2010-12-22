@@ -1545,7 +1545,7 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
         IDM_GOTO_FIRST_PAGE, IDM_GOTO_LAST_PAGE, IDM_GOTO_NAV_BACK, IDM_GOTO_NAV_FORWARD,
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SEND_BY_EMAIL,
-        IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE, IDM_VIEW_FULLSCREEN };
+        IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE };
 
     bool fileCloseEnabled = FileCloseMenuEnabled();
     assert(!fileCloseEnabled == !win->loadedFilePath);
@@ -4599,14 +4599,13 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
         !IsWindowVisible(win->hwndFrame) || gPluginMode)
         return;
 
+    assert(presentation ? !win->fullScreen : !win->presentation);
     if (presentation) {
         assert(win->dm);
         if (!win->dm)
             return;
 
-        if (win->fullScreen)
-            win->_windowStateBeforePresentation = WIN_STATE_FULLSCREEN;
-        else if (IsZoomed(win->hwndFrame))
+        if (IsZoomed(win->hwndFrame))
             win->_windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
         else
             win->_windowStateBeforePresentation = WIN_STATE_NORMAL;
@@ -4663,7 +4662,7 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
 
 static void WindowInfo_ExitFullscreen(WindowInfo *win)
 {
-    if (!win->fullScreen && PM_DISABLED == win->presentation) 
+    if (!win->fullScreen && !win->presentation) 
         return;
 
     bool wasPresentation = PM_DISABLED != win->presentation;
@@ -4682,11 +4681,6 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
     if (win->dm && (wasPresentation ? win->_tocBeforePresentation : win->_tocBeforeFullScreen))
         win->ShowTocBox();
 
-    if (win->fullScreen) {
-        assert(wasPresentation);
-        return;
-    }
-
     if (gGlobalPrefs.m_showToolbar)
         ShowWindow(win->hwndReBar, SW_SHOW);
     SetMenu(win->hwndFrame, win->hMenu);
@@ -4697,34 +4691,26 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
                  SWP_FRAMECHANGED|SWP_NOZORDER);
 }
 
-static void OnMenuViewPresentation(WindowInfo *win)
+static void OnMenuViewFullscreen(WindowInfo *win, bool presentation=false)
 {
     assert(win);
     if (!win)
         return;
 
-    if (win->presentation != PM_DISABLED)
+    bool enterFullscreen = presentation ? !win->presentation : !win->fullScreen;
+
+    if (!win->presentation && !win->fullScreen)
+        RememberWindowPosition(win);
+    else
         WindowInfo_ExitFullscreen(win);
-    else if (win->dm)
-        WindowInfo_EnterFullscreen(win, true);
+
+    if (enterFullscreen)
+        WindowInfo_EnterFullscreen(win, presentation);
 }
 
-static void OnMenuViewFullscreen(WindowInfo *win)
+static void OnMenuViewPresentation(WindowInfo *win)
 {
-    assert(win);
-    if (!win)
-        return;
-
-    RememberWindowPosition(win);
-
-    if (win->presentation) {
-        WindowInfo_ExitFullscreen(win);
-        WindowInfo_EnterFullscreen(win);
-    }
-    else if (win->fullScreen)
-        WindowInfo_ExitFullscreen(win);
-    else
-        WindowInfo_EnterFullscreen(win);
+    OnMenuViewFullscreen(win, true);
 }
 
 static void WindowInfo_ShowSearchResult(WindowInfo *win, PdfSel *result, bool wasModified)
