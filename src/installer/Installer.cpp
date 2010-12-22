@@ -777,28 +777,75 @@ void WriteUninstallerRegistryInfo()
     free(installedExePath);
 }
 
-void RemoveUninstallerRegistryInfo()
+BOOL RegDelKeyRecurse(HKEY hkey, TCHAR *path)
 {
-    BOOL ok = TRUE;
     LSTATUS res;
-    res = SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_UNINST);
+    res = SHDeleteKey(hkey, path);
     if ((ERROR_SUCCESS != res) && (res != ERROR_FILE_NOT_FOUND)) {
         SeeLastError(res);
-        ok = FALSE;
+        return FALSE;
     }
+    return TRUE;
+}
 
+void RemoveUninstallerRegistryInfo()
+{
+    BOOL ok1 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_UNINST);
     // Note: we delete this key because the old nsis installer was setting it
     // but we're not setting or using it (I assume it's used by nsis to remember
     // installation directory to better support the case when they allow
     // changing it, but we don't so it's not needed).
-    res = SHDeleteKey(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE);
-    if ((ERROR_SUCCESS != res) && (res != ERROR_FILE_NOT_FOUND)) {
-        SeeLastError(res);
-        ok = FALSE;
-    }
+    BOOL ok2 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE);
 
-    if (!ok)
+    if (!ok1 || !ok2)
         NotifyFailed("Failed to delete uninstaller registry keys");
+}
+
+#define REG_CLASSES_APP _T("Software\\Classes\\") TAPP
+#define REG_CLASSES_PDF _T("Software\\Classes\\.pdf")
+
+/* Undo what DoAssociateExeWithPdfExtension() in SumatraPDF.cpp did */
+void UnregisterFromBeingDefaultViewer(HKEY hkey)
+{
+    TCHAR buf[MAX_PATH + 8];
+    bool ok = ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), buf, dimof(buf));
+    if (ok) {
+        WriteRegStr(hkey, REG_CLASSES_PDF, NULL, buf);
+    } else {
+        bool ok = ReadRegStr(hkey, REG_CLASSES_PDF, NULL, buf, dimof(buf));
+        if (ok && tstr_eq(TAPP, buf))
+            RegDelKeyRecurse(hkey, REG_CLASSES_PDF);
+    }
+    RegDelKeyRecurse(hkey, REG_CLASSES_APP);
+}
+
+#define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
+#define PROG_ID _T("ProgId")
+
+void UnregisterExplorerFileExts()
+{
+    TCHAR buf[MAX_PATH + 8];
+    bool ok = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID, buf, dimof(buf));
+    if (!ok || !tstr_eq(buf, TAPP))
+        return;
+
+    HKEY hk;
+    LONG res = RegOpenKeyEx(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, 0, KEY_SET_VALUE, &hk);
+    if (ERROR_SUCCESS != res)
+        return;
+
+    res = RegDeleteValue(hk, PROG_ID);
+    if (res != ERROR_SUCCESS) {
+        SeeLastError(res);
+    }
+    RegCloseKey(hk);
+}
+
+void UnregisterFromBeingDefaultViewer()
+{
+    UnregisterFromBeingDefaultViewer(HKEY_LOCAL_MACHINE);
+    UnregisterFromBeingDefaultViewer(HKEY_CURRENT_USER);
+    UnregisterExplorerFileExts();
 }
 
 // Note: doesn't recurse, but it's good enough for us
@@ -882,11 +929,6 @@ Exit:
     }    
 }
 
-void UnregisterFromBeingDefaultViewer()
-{
-    // TODO: write me
-}
-
 void CreateAppShortcut()
 {
     TCHAR *workingDir = GetInstallationDir();
@@ -934,11 +976,6 @@ void OnButtonInstall()
     EmbeddedPart *parts = GetEmbeddedPartsInfo();
     if (NULL == parts) {
         msg = "Didn't find embedded parts";
-        goto Error;
-    }
-
-    if (IsUninstaller()) {
-        msg = "This is uninstaller, not an installer";
         goto Error;
     }
 

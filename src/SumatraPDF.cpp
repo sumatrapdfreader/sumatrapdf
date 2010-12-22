@@ -2243,17 +2243,17 @@ HKEY_CLASSES_ROOT\.pdf\OpenWithList
 HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
 HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
 
-Note: When making changes below, please also adjust the installer.nsi script.
+Note: When making changes below, please also adjust the installer.nsi script
+and UnregisterFromBeingDefaultViewer() in Installer.cpp.
 */
 static void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    bool ok;
     TCHAR exePath[MAX_PATH];
     TCHAR cmdPath[MAX_PATH * 2 + 64];
     TCHAR previousPdfHandler[MAX_PATH + 8];
 
     // Remember the previous default app for the Uninstaller
-    ok = ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, previousPdfHandler, dimof(previousPdfHandler));
+    bool ok = ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, previousPdfHandler, dimof(previousPdfHandler));
     if (ok && !tstr_eq(previousPdfHandler, APP_NAME_STR)) {
         WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), previousPdfHandler);
     }

@@ -180,7 +180,7 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
     }
 
     if (ERROR_SUCCESS != res)
-        SeeLastError();
+        SeeLastError(res);
     return ERROR_SUCCESS == res;
 }
 
@@ -195,7 +195,7 @@ bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const 
     }
 
     if (ERROR_SUCCESS != res)
-        SeeLastError();
+        SeeLastError(res);
     return ERROR_SUCCESS == res;
 }
 
@@ -210,7 +210,7 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
     }
 
     if (ERROR_SUCCESS != res)
-        SeeLastError();
+        SeeLastError(res);
     return ERROR_SUCCESS == res;
 }
 
