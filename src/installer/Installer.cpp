@@ -31,6 +31,8 @@
 #include <Shlwapi.h>
 #include <objidl.h>
 
+#include "zlib.h"
+
 #include "Resource.h"
 #include "base_util.h"
 #include "str_util.h"
@@ -101,13 +103,14 @@ int gBallX, gBallY;
 #define URL_INFO_ABOUT _T("UrlInfoAbout")
 
 #define INSTALLER_PART_FILE         "kifi"
+#define INSTALLER_PART_FILE_ZLIB    "kifz"
 #define INSTALLER_PART_END          "kien"
 #define INSTALLER_PART_UNINSTALLER  "kiun"
 
 struct EmbeddedPart {
     EmbeddedPart *  next;
     char            type[5];     // we only use 4, 5th is for 0-termination
-    // fields valid if type is INSTALLER_PART_FILE
+    // fields valid if type is INSTALLER_PART_FILE or INSTALLER_PART_FILE_ZLIB
     uint32_t        fileSize;    // size of the file
     uint32_t        fileOffset;  // offset in the executable of the file start
     char *          fileName;    // name of the file
@@ -292,6 +295,7 @@ DWORD GetFilePointer(HANDLE h)
     return ::SetFilePointer(h, 0, NULL, FILE_CURRENT);
 }
 
+
 /* Load information about parts embedded in the installer.
    The format of the data is:
 
@@ -299,7 +303,7 @@ DWORD GetFilePointer(HANDLE h)
      $fileData      - blob
      $fileDataLen   - length of $data, 32-bit unsigned integer, little-endian
      $fileName      - ascii string, name of the file (without terminating zero!)
-     $fileNameLne   - length of $fileName, 32-bit unsigned integer, little-endian
+     $fileNameLen   - length of $fileName, 32-bit unsigned integer, little-endian
      'kifi'         - 4 byte unique header
 
    For a part that signifies end of parts:
@@ -357,7 +361,8 @@ ReadNextPart:
         goto Exit;
     }
 
-    if (str_eqn(part->type, INSTALLER_PART_FILE, 4)) {
+    if (str_eqn(part->type, INSTALLER_PART_FILE, 4) ||
+        str_eqn(part->type, INSTALLER_PART_FILE_ZLIB, 4)) {
         uint32_t nameLen;
         if (SEEK_FAILED == SeekBackwards(h, 8, "Couldn't seek to file name size"))
             goto Error;
@@ -407,13 +412,13 @@ BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
 {
     BOOL    ok;
     DWORD   bytesTransferred;
-    char *  buf[1024*8];
-    DWORD   toCopyLeft = size;
+    char    buf[1024*8];
+    DWORD   left = size;
 
-    while (0 != toCopyLeft) {
+    while (0 != left) {
         DWORD toRead = dimof(buf);
-        if (toRead > toCopyLeft)
-            toRead = toCopyLeft;
+        if (toRead > left)
+            toRead = left;
 
         ok = ReadFile(hSrc, (LPVOID)buf, toRead, &bytesTransferred, NULL);
         if (!ok || (toRead != bytesTransferred)) {
@@ -427,10 +432,73 @@ BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
             goto Error;
         }
 
-        toCopyLeft -= toRead;
+        left -= toRead;
     }       
     return TRUE;
 Error:
+    return FALSE;
+}
+
+BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
+{
+    BOOL                ok;
+    DWORD               bytesTransferred;
+    unsigned char       in[1024*8];
+    unsigned char       out[1024*16];
+    int                 ret;
+    DWORD               left = size;
+
+    z_stream    strm = {0};
+
+    ret = inflateInit(&strm);
+    if (ret != Z_OK) {
+        NotifyFailed("inflateInit() failed");
+        return FALSE;
+    }
+
+    while (0 != left) {
+        DWORD toRead = dimof(in);
+        if (toRead > left)
+            toRead = left;
+
+        ok = ReadFile(hSrc, (LPVOID)in, toRead, &bytesTransferred, NULL);
+        if (!ok || (toRead != bytesTransferred)) {
+            NotifyFailed("Failed to read from file part");
+            goto Error;
+        }
+
+        strm.avail_in = bytesTransferred;
+        strm.next_in = in;
+
+        do {
+            strm.avail_out = sizeof(out);
+            strm.next_out = out;
+            ret = inflate(&strm, Z_NO_FLUSH);
+
+            switch (ret) {
+                case Z_NEED_DICT:
+                case Z_DATA_ERROR:
+                case Z_MEM_ERROR:
+                    goto Error;
+            }
+
+            DWORD toWrite = sizeof(out) - strm.avail_out;
+
+            ok = WriteFile(hDst, (LPVOID)out, toWrite, &bytesTransferred, NULL);
+            if (!ok || (toWrite != bytesTransferred)) {
+                NotifyFailed("Failed to write to hDst");
+                goto Error;
+            }
+        } while (strm.avail_out == 0);
+
+        left -= toRead;
+    }
+    if (ret == Z_STREAM_END)
+        ret = Z_OK;
+    ret = inflateEnd(&strm);
+    return ret == Z_OK;
+Error:
+    inflateEnd(&strm);
     return FALSE;
 }
 
@@ -466,9 +534,6 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
     HANDLE  hDst = INVALID_HANDLE_VALUE, hSrc = INVALID_HANDLE_VALUE;
     BOOL    ok = FALSE;
 
-    if (!str_ieq(INSTALLER_PART_FILE, p->type)) // double-check
-        return FALSE;
-
     dstName = utf8_to_tstr(p->fileName);
     dstPath = tstr_cat3(dir, _T("\\"), dstName);
     TCHAR *exePath = GetExePath();
@@ -485,7 +550,10 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
     if (!OpenFileForWriting(dstPath, &hDst))
         goto Error;
 
-    ok = CopyFileData(hSrc, hDst, p->fileSize);
+    if (str_ieq(INSTALLER_PART_FILE, p->type))
+        ok = CopyFileData(hSrc, hDst, p->fileSize);
+    else if (str_ieq(INSTALLER_PART_FILE_ZLIB, p->type))
+        ok = CopyFileDataZipped(hSrc, hDst, p->fileSize);
 
 Error:
     CloseHandle(hDst); CloseHandle(hSrc);
@@ -499,7 +567,8 @@ BOOL InstallCopyFiles(EmbeddedPart *root)
     EmbeddedPart *p = root;
     while (p) {
         EmbeddedPart *next = p->next;
-        if (str_ieq(INSTALLER_PART_FILE, p->type)) {
+        if (str_ieq(INSTALLER_PART_FILE, p->type) ||
+            str_ieq(INSTALLER_PART_FILE_ZLIB, p->type)) {
             if (!ExtractPartFile(installDir, p))
                 return FALSE;
         }

@@ -21,6 +21,8 @@ import subprocess
 import sys
 import struct
 import time
+import zlib
+import bz2
 
 def test_for_flag(args, arg):
   try:
@@ -159,8 +161,9 @@ def write_with_size(fo, data, name=None):
   log("Writing %d bytes at %d (data size)" % (len(tmp), fo.tell()))
   fo.write(tmp)
 
-INSTALLER_HEADER_FILE = "kifi"
-INSTALLER_HEADER_END  = "kien"
+INSTALLER_HEADER_FILE      = "kifi"
+INSTALLER_HEADER_FILE_ZLIB = "kifz"
+INSTALLER_HEADER_END       = "kien"
 
 def append_installer_file(fo, path, name_in_installer):
   fi = open(path, "rb")
@@ -170,6 +173,26 @@ def append_installer_file(fo, path, name_in_installer):
   write_with_size(fo, data, name_in_installer)
   write_with_size(fo, name_in_installer)
   write_no_size(fo, INSTALLER_HEADER_FILE)
+
+def append_installer_file_zlib(fo, path, name_in_installer):
+  fi = open(path, "rb")
+  data = fi.read()
+  fi.close()
+  assert len(data) == os.path.getsize(path)
+  data2 = zlib.compress(data, 9)
+  assert len(data2) < os.path.getsize(path)
+  write_with_size(fo, data2, name_in_installer)
+  write_with_size(fo, name_in_installer)
+  write_no_size(fo, INSTALLER_HEADER_FILE_ZLIB)
+  
+  """
+  data3 = bz2.compress(data, 9)  
+  print("")
+  print("uncompressed: %d" % len(data))
+  print("zlib        : %d" % len(data2))
+  print("bz2         : %d" % len(data3))
+  print("")
+  """
 
 def mark_installer_end(fo):
   write_no_size(fo, INSTALLER_HEADER_END)
@@ -207,7 +230,7 @@ def build_installer_native(builds_dir, ver):
   # TOD: write compressed
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join(SCRIPT_DIR, "..", "mupdf", "fonts", "droid", font_name)
-  append_installer_file(fo, font_path, font_name)
+  append_installer_file_zlib(fo, font_path, font_name)
   fo.close()
   return installer_exe
 
@@ -227,7 +250,7 @@ def build_installer_for_testing():
   # TODO: write compressed
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join(os.getcwd(), "mupdf", "fonts", "droid", font_name)
-  append_installer_file(fo, font_path, font_name)
+  append_installer_file_zlib(fo, font_path, font_name)
   fo.close()
   return installer_exe
 
