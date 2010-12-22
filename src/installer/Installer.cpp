@@ -47,7 +47,7 @@
 using namespace Gdiplus;
 
 // set to 1 when testing as uninstaller
-#define FORCE_TO_BE_UNINSTALLER 0
+#define FORCE_TO_BE_UNINSTALLER 1
 
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 #define UNINSTALLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_UNINSTALLER_FRAME")
@@ -1155,9 +1155,97 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
+// Try harder getting temporary directory
+// Ensures that name ends with \, to make life easier on callers.
+// Caller needs to free() the result.
+// Returns NULL if fails for any reason.
+TCHAR *GetValidTempDir()
+{
+    TCHAR d[MAX_PATH];
+    DWORD res = GetTempPath(dimof(d), d);
+    if ((0 == res) || (res >= MAX_PATH)) {
+        NotifyFailed("Couldn't obtain temporary directory");
+        return NULL;
+    }
+    if (!tstr_endswithi(d, _T("\\")))
+        tstr_cat_s(d, dimof(d), _T("\\"));
+    res = CreateDirectory(d, NULL);
+    if ((res == 0) && (ERROR_ALREADY_EXISTS != GetLastError())) {
+        SeeLastError();
+        NotifyFailed("Couldn't create temporary directory");
+        return NULL;
+    }
+    return tstr_dup(d);
+}
+
+HANDLE CreateProcessHelper(TCHAR *exe)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si = {0};
+    si.cb = sizeof(si);
+    if (!CreateProcess(NULL, exe, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        return NULL;
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
+// If this is uninstaller and we're running from installation directory,
+// copy uninstaller to temp directory and execute from there, exiting
+// ourselves. This is needed so that uninstaller can delete itself
+// from installation directory and remove installation directory
+// If returns TRUE, this is an installer and we sublaunched ourselves,
+// so the caller needs to exit
+BOOL ExecuteFromTempIfUninstaller()
+{
+    TCHAR *tempDir = NULL;
+    if (!IsUninstaller())
+        return FALSE;
+
+    tempDir = GetValidTempDir();
+    if (!tempDir)
+        return FALSE;
+
+    // already running from temp directory?
+    //if (tstr_startswith(GetExePath(), tempDir))
+    //    return FALSE;
+
+    // only need to sublaunch if running from installation dir
+    if (!tstr_startswith(GetExePath(), GetInstallationDir())) {
+        // TODO: use MoveFileEx() to mark this file as 'delete on reboot'
+        // with MOVEFILE_DELAY_UNTIL_REBOOT flag?
+        return FALSE;
+    }
+
+    // Using fixed (unlikely) name instead of GetTempFileName()
+    // so that we don't litter temp dir with copies of ourselves
+    // Not sure how to ensure that we get deleted after we're done
+    TCHAR *tempPath = tstr_cat(tempDir, _T("sum~inst.exe"));
+
+    if (!CopyFile(GetExePath(), tempPath, FALSE)) {
+        NotifyFailed("Failed to copy uninstaller to temp directory");
+        free(tempPath);
+        return FALSE;
+    }
+
+    HANDLE h = CreateProcessHelper(tempPath);
+    if (!h) {
+        free(tempPath);
+        return FALSE;
+    }
+
+    CloseHandle(h);
+    free(tempPath);
+    return TRUE;
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     MSG msg = {0};
+
+    SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+
+    if (ExecuteFromTempIfUninstaller())
+        return 0;
 
     CoInitialize(NULL);
 
