@@ -119,6 +119,7 @@
     <ClCompile Include="src\FileHistory.cc" />
     <ClCompile Include="src\FileWatch.cc" />
     <ClCompile Include="src\Http.cpp" />
+    <ClCompile Include="src\installer\Installer.cpp" />
     <ClCompile Include="src\LangMenuDef.cpp" />
     <ClCompile Include="src\PdfEngine.cc" />
     <ClCompile Include="src\PdfSearch.cc" />
@@ -237,6 +238,7 @@
     <ClInclude Include="src\FileHistory.h" />
     <ClInclude Include="src\FileWatch.h" />
     <ClInclude Include="src\Http.h" />
+    <ClInclude Include="src\installer\Resource.h" />
     <ClInclude Include="src\LangMenuDef.h" />
     <ClInclude Include="src\PdfEngine.h" />
     <ClInclude Include="src\PdfSearch.h" />
@@ -343,9 +345,12 @@
     <None Include="src\todo.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Manifest Include="src\installer\Installer.exe.manifest" />
     <Manifest Include="src\SumatraPDF.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="src\installer\Installer.manifest.rc" />
+    <ResourceCompile Include="src\installer\Installer.rc" />
     <ResourceCompile Include="src\SumatraPDF.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
