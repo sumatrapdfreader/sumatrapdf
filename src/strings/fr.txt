@@ -161,7 +161,7 @@ Automatically check for &updates
 Vérifier &automatiquement les mises à jour
 
 Book View
-Comme livre
+Comme un livre
 
 Book&marks\tF12
 Signets\tF12
@@ -191,13 +191,13 @@ Check for &Updates
 Vérifier les mises à jour
 
 Continuous
-Continue
+Vue continue
 
 Continuous book view
-Continue comme livre
+Vue continue, comme un livre
 
 Continuous facing
-Continue - Page double
+Vue continue, page double
 
 Contribute Translation
 Contribuer à la traduction
@@ -260,7 +260,7 @@ Facing
 Page double
 
 Failed to save a file
-Échec d'enregistrement du fichier
+Échec à l'enregistrement du fichier
 
 File Size:
 Taille du fichier :
@@ -300,6 +300,12 @@ Page entière
 
 Fit Width
 Pleine largeur
+
+Fit Width and Show Pages Continuously
+Pleine largeur, vue continue
+
+Fit a Single Page
+Page unique
 
 Found text at page %d
 Texte trouvé à la page %d
@@ -347,7 +353,7 @@ No result found around line %u in file %s
 Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 
 No synchronization file found
-Aucun fichier de synchronization trouvé
+Aucun fichier de synchronisation trouvé
 
 No synchronization info at this position
 Pas de synchronisation des informations à cette position
@@ -395,7 +401,10 @@ Page:
 Page :
 
 Please wait - rendering...
-Patientez s'il vous plaît - génération...
+Patientez s'il vous plaît (génération...)
+
+Pr&esentation\tCtrl-L
+Prés&entation\tCtrl-L
 
 Previous Page
 Page précédente
@@ -431,7 +440,7 @@ Show &Toolbar
 Afficher la barre d'outils
 
 Show &pages continuously
-Afficher les pages en continu
+Vue continue
 
 Show the &bookmarks sidebar when available
 Voir la barre latérale des signets quand elle est disponible
@@ -504,9 +513,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Pr&esentation\tCtrl-L
 
