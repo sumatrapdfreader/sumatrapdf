@@ -7,7 +7,7 @@
 Lang: vn Vietnamese (Việt Nam)
 
 Contributor: Nguyễn Lương Đống (http://sites.google.com/site/nguyenluongdong)
-Contributor: Tào Trần Vương Thắng
+Contributor: Tào Trần Vương Thắng (https://sites.google.com/site/moihoctinhoc)
 
 &About
 Giới thiệu
@@ -297,6 +297,12 @@ Vừa trang
 Fit Width
 Vừa chiều rộng
 
+Fit Width and Show Pages Continuously
+Vừa chiều rộng và Xem trang liên tiếp
+
+Fit a Single Page
+Vừa một trang đơn
+
 Found text at page %d
 Tìm thấy từ ở trang %d
 
@@ -383,6 +389,9 @@ Trang:
 
 Please wait - rendering...
 Xin chờ đợi, đang hiện...
+
+Pr&esentation\tCtrl-L
+Trình chiếu\tCtrl-L
 
 Previous Page
 Trang trước
@@ -491,9 +500,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Pr&esentation\tCtrl-L
 
