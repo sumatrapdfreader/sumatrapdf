@@ -1027,99 +1027,115 @@ void OnButtonUninstall()
 
     EnableWindow(gHwndButtonUninstall, TRUE);
 }
+
 #define BOTTOM_PART_DY 48
 
-void DrawUninstaller(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
+void DrawInstallerFrame(Graphics &g, RECT *r)
 {
-    HBRUSH brushBg = CreateSolidBrush(ABOUT_BG_COLOR);
-    HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-
-/*
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
-    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
-    HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
-
-    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontVersionTxt = Win32_Font_GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-
-    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
-    */
-
-    SetBkMode(hdc, TRANSPARENT);
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
-    FillRect(hdc, &rc, brushBg);
-
-    rc.bottom += BOTTOM_PART_DY;
-    rc.top = rc.bottom - BOTTOM_PART_DY;
-    RECT rcTmp;
-    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
-        FillRect(hdc, &rc, brushNativeBg);
-    }
-
-    Rect ellipseRect(gBallX-5, gBallY-5, 10, 10);
-    Graphics g(hdc);
     g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeHighQuality);
-    SolidBrush blackBrush(Color(255, 0, 0, 0));
-    g.FillEllipse(&blackBrush, ellipseRect);
+    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    Unit cu = g.GetPageUnit();
+    g.SetPageUnit(UnitPixel);
 
-    DeleteObject(brushBg);
-    DeleteObject(brushNativeBg);
+    SolidBrush bgBrush(Color(255,242,0));
+    Rect r2(r->top, r->left, RectDx(r), RectDy(r));
+    g.FillRectangle(&bgBrush, r2);
+
+    Rect ballRect(gBallX-5, gBallY-5, 10, 10);
+    SolidBrush blackBrush(Color(255, 0, 0, 0));
+    g.FillEllipse(&blackBrush, ballRect);
+
+    FontFamily fontFamily(L"Arial");
+    StringFormat strformat;
+    TCHAR s[] = _T("SumatraPDF");
+
+    GraphicsPath p;
+    Pen pen(Color(0,0,0), 5);
+    p.AddString(s, tstr_len(s), &fontFamily, FontStyleRegular, 48, Point(0, 0), &strformat);
+
+#if 0 // TODO: centering doesn't work, the bounds of p seem to be too big
+    // center the string
+    Rect rp;
+    p.GetBounds(&rp, NULL, &pen);
+    int offX = (RectDx(r) - rp.Width) / 2;
+    Matrix m;
+    m.Translate((REAL)offX, 20.f, MatrixOrderAppend);
+    p.Transform(&m);
+#else
+    Matrix m;
+    m.Translate(5.f, 20.f, MatrixOrderAppend);
+    p.Transform(&m);
+#endif
+
+    g.DrawPath(&pen, &p);
+    g.FillPath(&bgBrush, &p);
 }
 
-void DrawInstaller(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
+void DrawUninstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
 {
-    HBRUSH brushBg = CreateSolidBrush(ABOUT_BG_COLOR);
-    HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-
-/*
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
-    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
-    HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
-
-    HFONT fontSumatraTxt = Win32_Font_GetSimple(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE);
-    HFONT fontVersionTxt = Win32_Font_GetSimple(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE);
-    HFONT fontLeftTxt = Win32_Font_GetSimple(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE);
-    HFONT fontRightTxt = Win32_Font_GetSimple(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE);
-
-    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
-    */
-
-    SetBkMode(hdc, TRANSPARENT);
-
     RECT rc;
     GetClientRect(hwnd, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
-    FillRect(hdc, &rc, brushBg);
-
-    rc.bottom += BOTTOM_PART_DY;
     rc.top = rc.bottom - BOTTOM_PART_DY;
     RECT rcTmp;
     if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
-        FillRect(hdc, &rc, brushNativeBg);
+        HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+        FillRect(dc, &rc, brushNativeBg);
+        DeleteObject(brushNativeBg);
     }
 
-    Rect ellipseRect(gBallX-5, gBallY-5, 10, 10);
-    Graphics g(hdc);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeHighQuality);
-    SolidBrush blackBrush(Color(255, 0, 0, 0));
-    g.FillEllipse(&blackBrush, ellipseRect);
+#if 1 // DoubleBuffer
+        // TODO: cache bmp object?
+        Graphics g(dc);
+        GetClientRect(hwnd, &rc);
+        rc.bottom -= BOTTOM_PART_DY;
+        int dx = RectDx(&rc); int dy = RectDy(&rc);
+        Bitmap bmp(dx, dy, &g);
+        Graphics g2((Image*)&bmp);
+        DrawInstallerFrame(g2, &rc);
+        g.DrawImage(&bmp, 0, 0);
+#else
+        GetClientRect(hwnd, &rc);
+        rc.bottom -= BOTTOM_PART_DY;
+        Graphics g(dc);
+        DrawInstallerFrame(g, &rc);
+#endif
+}
 
-    DeleteObject(brushBg);
-    DeleteObject(brushNativeBg);
+void DrawInstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
+{
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    rc.top = rc.bottom - BOTTOM_PART_DY;
+    RECT rcTmp;
+    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
+        HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+        FillRect(dc, &rc, brushNativeBg);
+        DeleteObject(brushNativeBg);
+    }
+
+#if 1 // DoubleBuffer
+    // TODO: cache bmp object?
+    Graphics g(dc);
+    GetClientRect(hwnd, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    int dx = RectDx(&rc); int dy = RectDy(&rc);
+    Bitmap bmp(dx, dy, &g);
+    Graphics g2((Image*)&bmp);
+    DrawInstallerFrame(g2, &rc);
+    g.DrawImage(&bmp, 0, 0);
+#else
+    GetClientRect(hwnd, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    Graphics g(dc);
+    DrawInstallerFrame(g, &rc);
+#endif
 }
 
 void OnPaintInstaller(HWND hwnd)
 {
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    DrawInstaller(hwnd, hdc, &ps);
+    HDC dc = BeginPaint(hwnd, &ps);
+    DrawInstaller(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
 }
 
@@ -1173,7 +1189,6 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
             break;
 
         case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
             return TRUE;
 
         case WM_PAINT:
@@ -1240,7 +1255,6 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             break;
 
         case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
             return TRUE;
 
         case WM_PAINT:
