@@ -54,11 +54,21 @@ using namespace Gdiplus;
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 #define UNINSTALLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_UNINSTALLER_FRAME")
 
+#define INSTALLER_WIN_DX    420
+#define INSTALLER_WIN_DY    320
+#define UNINSTALLER_WIN_DX  420
+#define UNINSTALLER_WIN_DY  320
+
 #define ID_BUTTON_INSTALL             1
 #define ID_BUTTON_UNINSTALL           2
 #define ID_CHECKBOX_MAKE_DEAFULT      3
-#define ABOUT_BG_COLOR                RGB(255,242,0)
 #define INVALID_SIZE                  DWORD(-1)
+
+// The window is divided in two parts:
+// * top part, where we display nice graphics
+// * bottom part, with install/uninstall button
+// This is the height of the lower part
+#define BOTTOM_PART_DY 38
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
@@ -1028,47 +1038,126 @@ void OnButtonUninstall()
     EnableWindow(gHwndButtonUninstall, TRUE);
 }
 
-#define BOTTOM_PART_DY 48
+
+// This display is inspired by http://letteringjs.com/
+typedef struct {
+    // part that doesn't change
+    char c;
+    int r1, g1, b1; // foreground color
+    int r2, g2, b2; // shadow color
+    REAL rotation;
+    REAL dyOff; // displacement
+
+    // part calculated during layout
+    REAL dx, dy;
+    REAL x;
+} LetterInfo;
+
+LetterInfo gSumatraLetters[] = {
+    { 'S', 196, 64,  50, 134, 48, 39, -3.f,     0, 0, 0 },
+    { 'U', 227, 107, 35, 155, 77, 31,  0.f,     0, 0, 0 },
+    { 'M', 93,  160, 40,  51, 87, 39,  2.f,  -2.f, 0, 0 },
+    { 'A', 69, 132, 190,  47, 89, 127, 0.f,  -2.4f, 0, 0 },
+    { 'T', 112, 115, 207, 66, 71, 118, 0.f,     0, 0, 0 },
+    { 'R', 112, 115, 207, 66, 71, 118, 2.3f,  -1.4f, 0, 0 },
+    { 'A', 69, 132, 190,  47, 89, 127, 0.f,     0, 0, 0 },
+    { 'P', 93,  160, 40,  51, 87, 39,  0.f,  -2.3f, 0, 0 },
+    { 'D', 227, 107, 35, 155, 77, 31,  0.f,   3.f, 0, 0 },
+    { 'F', 196, 64, 50, 134, 48, 39,   0.f,     0, 0, 0 }
+};
+
+void CalcLettersLayout(Graphics& g, Font *f, int dx)
+{
+    static BOOL didLayout = FALSE;
+    if (didLayout) return;
+
+    LetterInfo *li;
+    StringFormat sfmt;
+    const REAL letterSpacing = -12.f;
+    REAL totalDx = -letterSpacing; // counter last iteration of the loop
+    WCHAR s[2] = { 0 };
+    PointF origin(0.f, 0.f);
+    RectF bbox;
+    for (int i=0; i<dimof(gSumatraLetters); i++) {
+        li = &gSumatraLetters[i];
+        s[0] = li->c;
+        g.MeasureString(s, 1, f, origin, &sfmt, &bbox);
+        li->dx = bbox.Width;
+        li->dy = bbox.Height;
+        totalDx += li->dx;
+        totalDx += letterSpacing;
+    }
+
+    REAL x = ((REAL)dx - totalDx) / 2.f;
+    for (int i=0; i<dimof(gSumatraLetters); i++) {
+        li = &gSumatraLetters[i];
+        li->x = x;
+        x += li->dx;
+        x += letterSpacing;
+    }
+
+    didLayout = TRUE;
+}
+
+void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
+{
+    LetterInfo *li;
+    WCHAR s[2] = { 0 };
+    for (int i=0; i<dimof(gSumatraLetters); i++) {
+        li = &gSumatraLetters[i];
+        s[0] = li->c;
+
+        g.RotateTransform(li->rotation, MatrixOrderAppend);
+        // draw shadow first
+        Color c2(li->r2, li->g2, li->b2);
+        SolidBrush b2(c2);
+        PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
+        g.DrawString(s, 1, f, o2, &b2);
+
+        Color c1(li->r1, li->g1, li->b1);
+        SolidBrush b1(c1);
+        PointF o1(li->x, y + li->dyOff);
+        g.DrawString(s, 1, f, o1, &b1);
+        g.RotateTransform(li->rotation, MatrixOrderAppend);
+        g.ResetTransform();
+    }
+}
 
 void DrawInstallerFrame(Graphics &g, RECT *r)
 {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
-    Unit cu = g.GetPageUnit();
     g.SetPageUnit(UnitPixel);
 
+    Font f(L"Impact", 40, FontStyleRegular);
+    CalcLettersLayout(g, &f, RectDx(r));
+
     SolidBrush bgBrush(Color(255,242,0));
-    Rect r2(r->top, r->left, RectDx(r), RectDy(r));
+    Rect r2(r->top-1, r->left-1, RectDx(r)+1, RectDy(r)+1);
     g.FillRectangle(&bgBrush, r2);
 
+#if 0
     Rect ballRect(gBallX-5, gBallY-5, 10, 10);
     SolidBrush blackBrush(Color(255, 0, 0, 0));
     g.FillEllipse(&blackBrush, ballRect);
+#endif
 
-    FontFamily fontFamily(L"Arial");
+    DrawSumatraLetters(g, &f, 18.f);
+
+#if 0
+    FontFamily fontFamily(_T("Impact"));
     StringFormat strformat;
     TCHAR s[] = _T("SumatraPDF");
 
+    strformat.SetAlignment(StringAlignmentCenter);
     GraphicsPath p;
     Pen pen(Color(0,0,0), 5);
-    p.AddString(s, tstr_len(s), &fontFamily, FontStyleRegular, 48, Point(0, 0), &strformat);
-
-#if 0 // TODO: centering doesn't work, the bounds of p seem to be too big
-    // center the string
-    Rect rp;
-    p.GetBounds(&rp, NULL, &pen);
-    int offX = (RectDx(r) - rp.Width) / 2;
-    Matrix m;
-    m.Translate((REAL)offX, 20.f, MatrixOrderAppend);
-    p.Transform(&m);
-#else
-    Matrix m;
-    m.Translate(5.f, 20.f, MatrixOrderAppend);
-    p.Transform(&m);
-#endif
+    Rect b(0, 20, RectDx(r), 80);
+    p.AddString(s, tstr_len(s), &fontFamily, FontStyleRegular, 48, b, &strformat);
 
     g.DrawPath(&pen, &p);
     g.FillPath(&bgBrush, &p);
+#endif
 }
 
 void DrawUninstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
@@ -1149,12 +1238,14 @@ void OnPaintUninstaller(HWND hwnd)
 
 void OnMouseMove(HWND hwnd, int x, int y)
 {
+#if 0
     gBallX = x;
     gBallY = y;
     RECT rc;
     GetClientRect(hwnd, &rc);
     rc.bottom -= BOTTOM_PART_DY;
     InvalidateRect(hwnd, &rc, FALSE);
+#endif
 }
 
 void OnCreateUninstaller(HWND hwnd)
@@ -1343,7 +1434,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 UNINSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Uninstaller"),
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-                CW_USEDEFAULT, CW_USEDEFAULT, 320, 480,
+                CW_USEDEFAULT, CW_USEDEFAULT, 
+                UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
     } else {
@@ -1351,7 +1443,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 INSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Installer"),
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-                CW_USEDEFAULT, CW_USEDEFAULT, 320, 480,
+                CW_USEDEFAULT, CW_USEDEFAULT,                
+                INSTALLER_WIN_DX, INSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
     }
