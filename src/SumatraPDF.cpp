@@ -504,67 +504,6 @@ DWORD FileTimeDiffInSecs(FILETIME *ft1, FILETIME *ft2)
     return (DWORD)diff;
 }
 
-#ifdef DEBUG
-// TODO: move these into their own app / hide them behind a command line flag / drop them?
-void u_hexstr()
-{
-    unsigned char buf[6] = {1, 2, 33, 255, 0, 18};
-    unsigned char buf2[6] = {0};
-    char *s = mem_to_hexstr(buf, sizeof(buf));
-    BOOL ok = hexstr_to_mem(s, buf2, sizeof(buf2));
-    assert(ok);
-    for (int i=0; i<sizeof(buf); i++) {
-        assert(buf[i] == buf2[i]);
-    }
-    free(s);
-    FILETIME ft1, ft2;
-    GetSystemTimeAsFileTime(&ft1);
-    s = FileTimeToStr(&ft1);
-    StrToFileTime(s, &ft2);
-    DWORD diff = FileTimeDiffInSecs(&ft1, &ft2);
-    assert(0 == diff);
-    assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
-    assert(ft1.dwHighDateTime == ft2.dwHighDateTime);
-    free(s);
-}
-
-void u_testMemSegment()
-{
-    MemSegment *ms;
-    DWORD size;
-    char *data;
-
-    char buf[2] = {'a', '\0'};
-    ms = new MemSegment();
-    for (int i=0; i<7; i++) {
-        ms->add(buf, 1);
-        buf[0] = buf[0] + 1;
-    }
-    data = (char*)ms->getData(&size);
-    delete ms;
-    assert(str_eq("abcdefg", data));
-    assert(7 == size);
-    free(data);
-
-    ms = new MemSegment();
-    ms->add("a", 1);
-    data = (char*)ms->getData(&size);
-    ms->clearFree();
-    delete ms;
-    assert(str_eq("a", data));
-    assert(1 == size);
-    free(data);
-}
-
-static void u_DoAllTests(void)
-{
-    DBG_OUT("Running tests\n");
-    u_RectI_Intersect();
-    u_testMemSegment();
-    u_hexstr();
-}
-#endif
-
 #define KEY_PRESSED_MASK 0x8000
 static bool WasKeyDown(int virtKey)
 {
@@ -7063,6 +7002,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 #ifdef DEBUG
     DynSetProcessDPIAware(); // in release enabled via manifest
+    extern void u_DoAllTests(void);
     u_DoAllTests();
 #endif
 

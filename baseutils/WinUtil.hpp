@@ -38,4 +38,9 @@ bool ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const T
 bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value);
 bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value);
 
+void DynSetProcessDPIAware();
+void EnableNx();
+void RedirectIOToConsole();
+TCHAR *ResolveLnk(TCHAR * path);
+
 #endif

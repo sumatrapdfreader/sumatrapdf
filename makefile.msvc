@@ -96,7 +96,8 @@ SUMATRA_OBJS = \
 	$(O)\PdfSearch.obj $(O)\SumatraAbout.obj $(O)\SumatraDialogs.obj $(O)\SumatraProperties.obj \
 	$(O)\SumatraPDF.obj $(O)\translations.obj $(O)\translations_txt.obj $(O)\LangMenuDef.obj \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
-  $(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(SUMATRA_RES)
+	$(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(O)\ParseCommandLine.obj \
+	$(SUMATRA_RES)
 
 INSTALLER_OBJS = \
   $(BASEUTILS_OBJS) $(O)\Installer.obj $(INSTALLER_RES)
@@ -110,12 +111,6 @@ INSTALLER_OBJS = \
 SUMATRA_OBJS = $(SUMATRA_OBJS) $(SUMATRA_MANIFEST)
 INSTALLER_OBJS = $(INSTALLER_OBJS) $(INSTALLER_MANIFEST)
 !endif
-
-SUMATRA_PDB = $(O)\SumatraPDF.pdb
-SUMATRA_MAP = $(O)\SumatraPDF.map
-
-INSTALLER_PDB = $(O)\SumatraPDF-installer.pdb
-INSTALLER_MAP = $(O)\SumatraPDF-installer.map
 
 ##### SumatraPDF-specific build rules #####
 
@@ -134,21 +129,17 @@ $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 $(SUMATRA_MANIFEST): src\SumatraPDF.manifest.rc
 	rc /r /fo$(SUMATRA_MANIFEST) src\SumatraPDF.manifest.rc
 
-$(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(SUMATRA_APP) /PDB:$(SUMATRA_PDB) \
-	$(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(LIBS) \
-	/MAP:$(SUMATRA_MAP)
+$(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(O)\UnitTests.obj
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /MAP:$*.map /OUT:$@ 
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h
 	rc /r /fo$(INSTALLER_RES) $(EXTCFLAGS) src\installer\Installer.rc
 
 $(INSTALLER_MANIFEST): src\installer\Installer.manifest.rc
-	rc /r /fo$(INSTALLER_MANIFEST) src\installer\Installer.manifest.rc
+	rc /r /fo$@ src\installer\Installer.manifest.rc
 
-$(INSTALLER_APP): $(INSTALLER_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(INSTALLER_APP) /PDB:$(INSTALLER_PDB) \
-	$(ZLIB_OBJS) $(INSTALLER_OBJS) $(LIBS_INSTALLER) \
-	/MAP:$(INSTALLER_MAP)
+$(INSTALLER_APP): $(ZLIB_OBJS) $(INSTALLER_OBJS) 
+	$(LD) $(LDFLAGS) $** $(LIBS_INSTALLER) /PDB:$*.pdb /MAP:$*.map /OUT:$@
 
 # sumatra directories
 {baseutils}.c{$(O)}.obj::
