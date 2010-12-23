@@ -139,13 +139,13 @@ void ShowLastError(char *msg)
     } else {
         errorMsg = str_printf("%s\n\nError %d", msg, (int)GetLastError());
     }
-    ::MessageBoxA(gHwndFrame, errorMsg, "Installer failed", MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxA(gHwndFrame, errorMsg, "Installer failed", MB_OK | MB_ICONEXCLAMATION);
     free(errorMsg);
 }
 
 void NotifyFailed(char *msg)
 {
-    ::MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
+    MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
 }
 
 BOOL ReadData(HANDLE h, LPVOID data, DWORD size, char *errMsg)
@@ -292,7 +292,7 @@ TCHAR *GetShortcutPath()
 
 DWORD GetFilePointer(HANDLE h)
 {
-    return ::SetFilePointer(h, 0, NULL, FILE_CURRENT);
+    return SetFilePointer(h, 0, NULL, FILE_CURRENT);
 }
 
 
@@ -322,7 +322,7 @@ EmbeddedPart *GetEmbeddedPartsInfo() {
         return gEmbeddedParts;
 
     TCHAR *exePath = GetExePath();
-    HANDLE h = ::CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE)
     {
         NotifyFailed("Couldn't open myself for reading");
@@ -344,7 +344,7 @@ ReadNextPart:
     res = GetFilePos(h);
 #if 0
     msg = str_printf("Curr pos: %d", (int)res);
-    ::MessageBoxA(gHwndFrame, msg, "Info", MB_ICONINFORMATION | MB_OK);
+    MessageBoxA(gHwndFrame, msg, "Info", MB_ICONINFORMATION | MB_OK);
     free(msg);
 #endif
 
@@ -387,7 +387,7 @@ ReadNextPart:
         part->fileOffset = res + 4;
 #if 0
         msg = str_printf("Found file '%s' of size %d at offset %d", part->fileName, part->fileSize, part->fileOffset);
-        ::MessageBoxA(gHwndFrame, msg, "Installer", MB_ICONINFORMATION | MB_OK);
+        MessageBoxA(gHwndFrame, msg, "Installer", MB_ICONINFORMATION | MB_OK);
         free(msg);
 #endif
         goto ReadNextPart;
@@ -504,7 +504,7 @@ Error:
 
 BOOL OpenFileForReading(TCHAR *s, HANDLE *hOut)
 {
-    *hOut = ::CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    *hOut = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (*hOut == INVALID_HANDLE_VALUE) {
         char *msg1 = tstr_to_utf8(s);
         char *msg2 = str_printf("Couldn't open %s for reading", msg1);
@@ -517,7 +517,7 @@ BOOL OpenFileForReading(TCHAR *s, HANDLE *hOut)
 
 BOOL OpenFileForWriting(TCHAR *s, HANDLE *hOut)
 {
-    *hOut = ::CreateFile(s, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    *hOut = CreateFile(s, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (*hOut == INVALID_HANDLE_VALUE) {
         char *msg1 = tstr_to_utf8(s);
         char *msg2 = str_printf("Couldn't open %s for writing", msg1);
@@ -653,7 +653,7 @@ void ProcessMessageLoop(HWND hwnd)
     MSG msg;
     BOOL hasMsg;
     for (;;) {
-        hasMsg = ::PeekMessage(&msg, hwnd,  0, 0, PM_REMOVE);
+        hasMsg = PeekMessage(&msg, hwnd,  0, 0, PM_REMOVE);
         if (!hasMsg)
             return;
         TranslateMessage(&msg);
@@ -673,34 +673,34 @@ inline int RectDy(RECT *r)
 
 inline void SetFont(HWND hwnd, HFONT font)
 {
-    ::SendMessage(hwnd, WM_SETFONT, WPARAM(font), TRUE);
+    SendMessage(hwnd, WM_SETFONT, WPARAM(font), TRUE);
 }
 
 void SetCheckboxState(HWND hwnd, int checked)
 {
-    ::SendMessage(hwnd, BM_SETCHECK, checked, 0L);
+    SendMessage(hwnd, BM_SETCHECK, checked, 0L);
 }
 
 BOOL GetCheckboxState(HWND hwnd)
 {
-    return (BOOL)::SendMessage(hwnd, BM_GETCHECK, 0, 0L);
+    return (BOOL)SendMessage(hwnd, BM_GETCHECK, 0, 0L);
 }
 
 #if 0
 void ResizeClientArea(HWND hwnd, int dx, int dy)
 {
     RECT rwin, rcln;
-    ::GetClientRect(hwnd, &rwin);
+    GetClientRect(hwnd, &rwin);
 }
 #endif
 
 static HFONT CreateDefaultGuiFont()
 {
     NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
-    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
+    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
     {
         // fonts: lfMenuFont, lfStatusFont, lfMessageFont, lfCaptionFont
-        return ::CreateFontIndirect(&m.lfMessageFont);
+        return CreateFontIndirect(&m.lfMessageFont);
     }
     return NULL;
 }
@@ -867,16 +867,16 @@ void RemoveDirectoryWithFiles(TCHAR *dir)
                 // have to remove read-only attribute for DeleteFile() to work
                 if (attrs & FILE_ATTRIBUTE_READONLY) {
                     attrs = attrs & ~FILE_ATTRIBUTE_READONLY;
-                    ::SetFileAttributes(path, attrs);
+                    SetFileAttributes(path, attrs);
                 }
-                ::DeleteFile(path);
+                DeleteFile(path);
             }
             free(path);
         } while (FindNextFile(h, &findData) != 0);
         FindClose(h);
     }
 
-    if (!::RemoveDirectory(dir)) {
+    if (!RemoveDirectory(dir)) {
         if (ERROR_FILE_NOT_FOUND != GetLastError()) {
             SeeLastError();
             NotifyFailed("Couldn't remove installation directory");
@@ -942,7 +942,7 @@ void CreateAppShortcut()
 void RemoveShortcut()
 {
     TCHAR *p = GetShortcutPath();
-    BOOL ok = ::DeleteFile(p);
+    BOOL ok = DeleteFile(p);
     if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
         SeeLastError();
         NotifyFailed("Couldn't remove the shortcut");
@@ -969,7 +969,7 @@ void OnButtonInstall()
     BOOL registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
 
     // disable the button during installation
-    ::EnableWindow(gHwndButtonInstall, FALSE);
+    EnableWindow(gHwndButtonInstall, FALSE);
     ProcessMessageLoop(gHwndFrame);
 
     // TODO: do it on a background thread so that UI is still responsive
@@ -1004,7 +1004,7 @@ void OnButtonInstall()
     }
 
 Exit:
-    ::EnableWindow(gHwndButtonInstall, TRUE);
+    EnableWindow(gHwndButtonInstall, TRUE);
     return;
 Error:
     if (msg)
@@ -1015,7 +1015,7 @@ Error:
 void OnButtonUninstall()
 {
     // disable the button during uninstallation
-    ::EnableWindow(gHwndButtonUninstall, FALSE);
+    EnableWindow(gHwndButtonUninstall, FALSE);
     ProcessMessageLoop(gHwndFrame);
 
     /* if the app is running, we have to kill it to delete the files */
@@ -1025,12 +1025,14 @@ void OnButtonUninstall()
     UnregisterFromBeingDefaultViewer();
     RemoveInstallationDirectory();
 
-    ::EnableWindow(gHwndButtonUninstall, TRUE);
+    EnableWindow(gHwndButtonUninstall, TRUE);
 }
+#define BOTTOM_PART_DY 48
 
-void DrawUninstaller(HWND hwnd, HDC hdc, RECT *rect)
+void DrawUninstaller(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
 {
-    HBRUSH brushBg = ::CreateSolidBrush(ABOUT_BG_COLOR);
+    HBRUSH brushBg = CreateSolidBrush(ABOUT_BG_COLOR);
+    HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
 /*
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
@@ -1045,12 +1047,19 @@ void DrawUninstaller(HWND hwnd, HDC hdc, RECT *rect)
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
     */
 
-    ::SetBkMode(hdc, TRANSPARENT);
+    SetBkMode(hdc, TRANSPARENT);
 
     RECT rc;
-    ::GetClientRect(hwnd, &rc);
-    rc.bottom -= 48;
-    ::FillRect(hdc, &rc, brushBg);
+    GetClientRect(hwnd, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    FillRect(hdc, &rc, brushBg);
+
+    rc.bottom += BOTTOM_PART_DY;
+    rc.top = rc.bottom - BOTTOM_PART_DY;
+    RECT rcTmp;
+    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
+        FillRect(hdc, &rc, brushNativeBg);
+    }
 
     Rect ellipseRect(gBallX-5, gBallY-5, 10, 10);
     Graphics g(hdc);
@@ -1059,12 +1068,14 @@ void DrawUninstaller(HWND hwnd, HDC hdc, RECT *rect)
     SolidBrush blackBrush(Color(255, 0, 0, 0));
     g.FillEllipse(&blackBrush, ellipseRect);
 
-    ::DeleteObject(brushBg);
+    DeleteObject(brushBg);
+    DeleteObject(brushNativeBg);
 }
 
-void DrawInstaller(HWND hwnd, HDC hdc, RECT *rect)
+void DrawInstaller(HWND hwnd, HDC hdc, PAINTSTRUCT *ps)
 {
-    HBRUSH brushBg = ::CreateSolidBrush(ABOUT_BG_COLOR);
+    HBRUSH brushBg = CreateSolidBrush(ABOUT_BG_COLOR);
+    HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
 /*
     HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
@@ -1079,12 +1090,19 @@ void DrawInstaller(HWND hwnd, HDC hdc, RECT *rect)
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt);
     */
 
-    ::SetBkMode(hdc, TRANSPARENT);
+    SetBkMode(hdc, TRANSPARENT);
 
     RECT rc;
-    ::GetClientRect(hwnd, &rc);
-    rc.bottom -= 48;
-    ::FillRect(hdc, &rc, brushBg);
+    GetClientRect(hwnd, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    FillRect(hdc, &rc, brushBg);
+
+    rc.bottom += BOTTOM_PART_DY;
+    rc.top = rc.bottom - BOTTOM_PART_DY;
+    RECT rcTmp;
+    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
+        FillRect(hdc, &rc, brushNativeBg);
+    }
 
     Rect ellipseRect(gBallX-5, gBallY-5, 10, 10);
     Graphics g(hdc);
@@ -1093,32 +1111,34 @@ void DrawInstaller(HWND hwnd, HDC hdc, RECT *rect)
     SolidBrush blackBrush(Color(255, 0, 0, 0));
     g.FillEllipse(&blackBrush, ellipseRect);
 
-    ::DeleteObject(brushBg);
+    DeleteObject(brushBg);
+    DeleteObject(brushNativeBg);
 }
 
 void OnPaintInstaller(HWND hwnd)
 {
     PAINTSTRUCT ps;
-    RECT rc;
-    HDC hdc = ::BeginPaint(hwnd, &ps);
-    DrawInstaller(hwnd, hdc, &rc);
-    ::EndPaint(hwnd, &ps);
+    HDC hdc = BeginPaint(hwnd, &ps);
+    DrawInstaller(hwnd, hdc, &ps);
+    EndPaint(hwnd, &ps);
 }
 
 void OnPaintUninstaller(HWND hwnd)
 {
     PAINTSTRUCT ps;
-    RECT rc;
-    HDC hdc = ::BeginPaint(hwnd, &ps);
-    DrawUninstaller(hwnd, hdc, &rc);
-    ::EndPaint(hwnd, &ps);
+    HDC hdc = BeginPaint(hwnd, &ps);
+    DrawUninstaller(hwnd, hdc, &ps);
+    EndPaint(hwnd, &ps);
 }
 
 void OnMouseMove(HWND hwnd, int x, int y)
 {
     gBallX = x;
     gBallY = y;
-    ::InvalidateRect(hwnd, NULL, TRUE);
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    InvalidateRect(hwnd, &rc, FALSE);
 }
 
 void OnCreateUninstaller(HWND hwnd)
@@ -1126,15 +1146,15 @@ void OnCreateUninstaller(HWND hwnd)
     RECT        r;
     int         x, y;
 
-    ::GetClientRect(hwnd, &r);
+    GetClientRect(hwnd, &r);
     x = RectDx(&r) - 128 - 8;
     y = RectDy(&r) - 22 - 8;
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
-    gHwndButtonUninstall = ::CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
+    gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, 128, 22, hwnd, (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
-    ::SetFont(gHwndButtonUninstall, gFontDefault);
+    SetFont(gHwndButtonUninstall, gFontDefault);
 }
 
 static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1188,19 +1208,19 @@ void OnCreateInstaller(HWND hwnd)
 
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
-    ::GetClientRect(hwnd, &r);
+    GetClientRect(hwnd, &r);
     x = RectDx(&r) - 120 - 8;
     y = RectDy(&r) - 22 - 8;
-    gHwndButtonInstall = ::CreateWindow(WC_BUTTON, _T("Install SumatraPDF"),
+    gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install SumatraPDF"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, 120, 22, hwnd, (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
-    ::SetFont(gHwndButtonInstall, gFontDefault);
+    SetFont(gHwndButtonInstall, gFontDefault);
 
-    gHwndCheckboxRegisterDefault = ::CreateWindow(
+    gHwndCheckboxRegisterDefault = CreateWindow(
         WC_BUTTON, _T("Use as default PDF Reader"),
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
         8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEAFULT, ghinst, NULL);
-    ::SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
+    SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
     SetCheckboxState(gHwndCheckboxRegisterDefault, TRUE);
 }
 
