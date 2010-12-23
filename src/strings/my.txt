@@ -7,6 +7,7 @@
 Lang: my Malaysian (Bahasa Melayu)
 
 Contributor: Masley b. Mastil
+Contributor: Muhammad Syawal
 
 &About
 &Mengenai
@@ -14,26 +15,47 @@ Contributor: Masley b. Mastil
 &Actual Size\tCtrl-1
 &Saiz sebenar\tCtrl-1
 
+&All selected pages
+&Semua mukasurat pilihan
+
+&Back\tAlt+Left Arrow
+&Kembali\tAlt+Left Arrow
+
 &Close\tCtrl-W
 &Tutup\tCtrl-W
+
+&Copy Selection\tCtrl-C
+&Salin pilihan\tCtrl-C
+
+&Don't ask me again
+&Jangan tanya saya lagi
+
+&Even pages only
+&Mukasurat genap sahaja
 
 &File
 &Fail
 
+&Find what:
+&carian:
+
 &First Page\tHome
-Mukasurat pertama\tHome
+&Halaman pertama\tHome
+
+&Fit pages to printable area
+&Muatkan halaman pada kawasan boleh cetak
 
 &Go To
-&Pergi Ke
+&Pergi 
 
 &Go to page:
-&Pergi ke mukasurat:
+&Pergi ke halaman:
 
 &Help
 &Bantuan
 
 &Last Page\tEnd
-Mukasurat terakhir
+&Halaman terakhir
 
 &Magnification:
 &Pembesaran:
@@ -42,7 +64,7 @@ Mukasurat terakhir
 &Manual
 
 &Next Page\tRight Arrow
-Mukasurat seterusnya\t->
+&Halaman seterusnya\t->
 
 &No
 &Tidak
@@ -50,23 +72,29 @@ Mukasurat seterusnya\t->
 &No, thanks
 &Tidak, terima kasih
 
+&Odd pages only
+&Mukasurat ganjil sahaja
+
 &Open\tCtrl-O
 &Buka\tCtrl-O
 
 &Options...
-&Opsyen-opsyen...
+&Pilihan...
 
 &Password:
 &Kata laluan
 
 &Previous Page\tLeft Arrow
-Mukasurat sebelumnya\t<-
+&Halaman sebelumnya\t<-
 
 &Print...\tCtrl-P
 &Cetak\tCtrl-P
 
 &Print... (denied)
 &Cetak... (dinafikan)
+
+&Remember the password for this document
+&Ingat katalaluan untuk dokumen ini 
 
 &Remember these settings for each document
 &Ingat tetapan-tetapan ini untuk setiap dokumen
@@ -150,7 +178,7 @@ Enter password for %s
 Masukkan kata laluan untuk %s
 
 Error loading PDF file.
-Masalah memuatkan fail PDF
+Ralat memuatkan fail PDF
 
 F&ullscreen\tCtrl-Shift-L
 Mukasurat Penuh\tCtrl-Shift-L
@@ -174,10 +202,10 @@ Find
 Cari
 
 Find Next
-Cari selepas
+Cari seterusnya
 
 Find Previous
-Cari sebelum
+Cari sebelumnya
 
 Find:
 Cari:
@@ -294,16 +322,7 @@ printing document
 mencetak dokumen
 
 # Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Copy Selection\tCtrl-C
-#&Don't ask me again
-#&Even pages only
-#&Find what:
-#&Fit pages to printable area
 #&Match case
-#&Odd pages only
-#&Remember the password for this document
 #&Shrink pages to printable area (if necessary)
 #&Use original page sizes
 #(of %d)
