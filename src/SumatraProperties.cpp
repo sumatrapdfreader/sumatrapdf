@@ -324,7 +324,7 @@ static void UpdatePropertiesLayout(HWND hwnd, HDC hdc, RECT *rect) {
     if (rect) {
         rect->left = 0;
         rect->top = 0;
-        rect->right = totalDx;
+        rect->right = totalDx + 2 * offset;
         rect->bottom = totalDy + offset;
     }
 
