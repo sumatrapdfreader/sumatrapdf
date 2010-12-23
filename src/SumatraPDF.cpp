@@ -15,6 +15,7 @@
 #include "WinUtil.hpp"
 #include "Http.h"
 #include "CrashHandler.h"
+#include "ParseCommandLine.h"
 
 #include "translations.h"
 #include "Version.h"
@@ -108,7 +109,6 @@ static bool             gUseGdiRenderer = false;
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
 #define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
-#define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
 #define CANVAS_CLASS_NAME       _T("SUMATRA_PDF_CANVAS")
 #define SPLITER_CLASS_NAME      _T("Spliter")
 #define FINDSTATUS_CLASS_NAME   _T("FindStatus")
@@ -814,9 +814,9 @@ static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool k
 
 static UINT AllocNewMenuId(void)
 {
-    static UINT firstId = 1000;
-    ++firstId;
-    return firstId;
+    static UINT id = 1000;
+    ++id;
+    return id;
 }
 
 enum menuFlags {
@@ -2357,50 +2357,6 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
     AssociateExeWithPdfExtension();
     return true;
-}
-
-static TCHAR * ResolveLnk(TCHAR * path)
-{
-    IShellLink *lnk = NULL;
-    IPersistFile *file = NULL;
-    TCHAR *resolvedPath = NULL;
-
-    LPCOLESTR olePath = tstr_to_wstr(path);
-    if (!olePath)
-        return NULL;
-
-    HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                                    IID_IShellLink, (LPVOID *)&lnk);
-    if (FAILED(hRes))
-        goto Exit;
-
-    hRes = lnk->QueryInterface(IID_IPersistFile, (LPVOID *)&file);
-    if (FAILED(hRes))
-        goto Exit;
-
-    hRes = file->Load(olePath, STGM_READ);
-    if (FAILED(hRes))
-        goto Exit;
-
-    hRes = lnk->Resolve(NULL, SLR_UPDATE);
-    if (FAILED(hRes))
-        goto Exit;
-
-    TCHAR newPath[MAX_PATH];
-    hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
-    if (FAILED(hRes))
-        goto Exit;
-
-    resolvedPath = tstr_dup(newPath);
-
-Exit:
-    if (file)
-        file->Release();
-    if (lnk)
-        lnk->Release();
-    free((void *)olePath);
-
-    return resolvedPath;
 }
 
 static void OnDropFiles(WindowInfo *win, HDROP hDrop)
@@ -6922,20 +6878,6 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
-{
-    assert(strList && cmdLine);
-    if (!strList || !cmdLine)
-        return;
-
-    for (;;) {
-        TCHAR *txt = tstr_parse_possibly_quoted(&cmdLine);
-        if (!txt)
-            break;
-        strList->push_back(txt);
-    }
-}
-
 static void PrintFile(WindowInfo *win, const TCHAR *printerName)
 {
     TCHAR       devstring[256];      // array for WIN.INI data 
@@ -7023,76 +6965,6 @@ Exit:
     DeleteDC(hdcPrint);
 }
 
-#ifdef DEBUG
-static void EnumeratePrinters()
-{
-    PRINTER_INFO_5 *info5Arr = NULL;
-    DWORD bufSize = 0, printersCount;
-    BOOL fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
-        5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
-    if (!fOk) {
-        info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
-        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
-            5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
-    }
-    if (!info5Arr)
-        return;
-    assert(fOk);
-    if (!fOk) return;
-    printf("Printers: %ld\n", printersCount);
-    for (DWORD i=0; i < printersCount; i++) {
-        const TCHAR *printerName = info5Arr[i].pPrinterName;
-        const TCHAR *printerPort = info5Arr[i].pPortName;
-        bool fDefault = false;
-        if (info5Arr[i].Attributes & PRINTER_ATTRIBUTE_DEFAULT)
-            fDefault = true;
-        _tprintf(_T("Name: %s, port: %s, default: %d\n"), printerName, printerPort, (int)fDefault);
-    }
-    TCHAR buf[512];
-    bufSize = dimof(buf);
-    fOk = GetDefaultPrinter(buf, &bufSize);
-    if (!fOk) {
-        if (ERROR_FILE_NOT_FOUND == GetLastError())
-            printf("No default printer\n");
-    }
-    free(info5Arr);
-}
-#endif
-
-/* Get the name of default printer or NULL if not exists.
-   The caller needs to free() the result */
-TCHAR *GetDefaultPrinterName()
-{
-    TCHAR buf[512];
-    DWORD bufSize = dimof(buf);
-    if (GetDefaultPrinter(buf, &bufSize))
-        return tstr_dup(buf);
-    return NULL;
-}
-
-/* Parse 'txt' as hex color and return the result in 'destColor' */
-static void ParseColor(int *destColor, const TCHAR* txt)
-{
-    if(!destColor)
-        return;
-    if (tstr_startswith(txt, _T("0x")))
-        txt += 2;
-    else if (tstr_startswith(txt, _T("#")))
-        txt += 1;
-    int r = hex_tstr_decode_byte(&txt);
-    if (-1 == r)
-        return;
-    int g = hex_tstr_decode_byte(&txt);
-    if (-1 == g)
-        return;
-    int b = hex_tstr_decode_byte(&txt);
-    if (-1 == b)
-        return;
-    if (*txt)
-        return;
-    *destColor = RGB(r,g,b);
-}
-
 HDDEDATA CALLBACK DdeCallback(UINT uType,
     UINT uFmt,
     HCONV hconv,
@@ -7174,82 +7046,12 @@ static void MakePluginWindow(WindowInfo *win, HWND hwndParent)
     SetFocus(win->hwndFrame);
 }
 
-// Code from http://www.halcyon.com/~ast/dload/guicon.htm
-void RedirectIOToConsole(void)
-{
-    CONSOLE_SCREEN_BUFFER_INFO coninfo;
-    int hConHandle;
-
-    // allocate a console for this app
-    AllocConsole();
-
-    // set the screen buffer to be big enough to let us scroll text
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
-    coninfo.dwSize.Y = 500;
-    SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
-
-    // redirect unbuffered STDOUT to the console
-    hConHandle = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-    *stdout = *(FILE *)_fdopen(hConHandle, "w");
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    // redirect unbuffered STDERR to the console
-    hConHandle = _open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-    *stderr = *(FILE *)_fdopen(hConHandle, "w");
-    setvbuf(stderr, NULL, _IONBF, 0);
-
-    // redirect unbuffered STDIN to the console
-    hConHandle = _open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
-    *stdin = *(FILE *)_fdopen(hConHandle, "r");
-    setvbuf(stdin, NULL, _IONBF, 0);
-}
-
-#define PROCESS_EXECUTE_FLAGS 0x22
-
-/*
- * enable "NX" execution prevention for XP, 2003
- * cf. http://www.uninformed.org/?v=2&a=4
- */
-typedef HRESULT (WINAPI *_NtSetInformationProcess)(
-   HANDLE  ProcessHandle,
-   UINT    ProcessInformationClass,
-   PVOID   ProcessInformation,
-   ULONG   ProcessInformationLength
-   );
-
-static void EnableNx(void)
-{
-    WinLibrary lib(_T("ntdll.dll"));
-    _NtSetInformationProcess ntsip;
-    DWORD dep_mode = 13; /* ENABLE | DISABLE_ATL | PERMANENT */
-
-    ntsip = (_NtSetInformationProcess)lib.GetProcAddr("NtSetInformationProcess");
-    if (ntsip)
-        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &dep_mode, sizeof(dep_mode));
-}
-
-typedef BOOL (WINAPI *procSetProcessDPIAware)(VOID);
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    VStrList            argList;
-    VStrList            fileNames;
     MSG                 msg = {0};
     HACCEL              hAccelTable;
     WindowInfo*         win;
-    bool                exitOnPrint = false;
-    bool                printDialog = false;
-    bool                enterPresentation = false;
-    TCHAR *             destName = NULL;
-    int                 pageNumber = 0;
     bool                firstDocLoaded = false;
-    bool                reuse_instance = false;
-    TCHAR *             printerName = NULL;
-    TCHAR *             newWindowTitle = NULL;
-    HWND                hwndPluginParent = NULL;
-#ifdef BUILD_RM_VERSION
-    bool                deleteFilesOnClose = false; // Delete the files which were passed into the program by command line.
-#endif
 
 #ifdef DEBUG
     // Memory leak detection
@@ -7260,15 +7062,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     EnableNx();
 
 #ifdef DEBUG
-    // in release builds, DPI-awareness is enabled through the manifest
-    {
-        WinLibrary lib(_T("user32.dll"));
-        procSetProcessDPIAware SetProcessDPIAware;
-        SetProcessDPIAware = (procSetProcessDPIAware)lib.GetProcAddr("SetProcessDPIAware");
-        if (SetProcessDPIAware)
-            SetProcessDPIAware();
-    }
-
+    DynSetProcessDPIAware(); // in release enabled via manifest
     u_DoAllTests();
 #endif
 
@@ -7293,111 +7087,37 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             CurrLangNameSet(lang);
     }
 
-    /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
-#define is_arg(txt) tstr_ieq(_T(txt), argList[i])
-#define is_arg_with_param(txt) (is_arg(txt) && i < argCount - 1)
+    CommandLineInfo i;
+    i.bgColor = gGlobalPrefs.m_bgColor;
+    i.fwdsearchOffset = gGlobalPrefs.m_fwdsearchOffset;
+    i.fwdsearchWidth = gGlobalPrefs.m_fwdsearchWidth;
+    i.fwdsearchColor = gGlobalPrefs.m_fwdsearchColor;
+    i.fwdsearchPermanent = gGlobalPrefs.m_fwdsearchPermanent;
+    i.escToExit = gGlobalPrefs.m_escToExit;
+    i.invertColors = gGlobalPrefs.m_invertColors;
 
-    VStrList_FromCmdLine(&argList, GetCommandLine());
-    size_t argCount = argList.size();
-    for (size_t i = 1; i < argCount; i++) {
-        if (is_arg("-register-for-pdf")) {
-            AssociateExeWithPdfExtension();
-            goto Exit;
-        }
-        else if (is_arg("-exit-on-print")) {
-            exitOnPrint = true;
-        }
-        else if (is_arg("-print-to-default") && !printerName) {
-            printerName = GetDefaultPrinterName();
-        }
-        else if (is_arg_with_param("-print-to") && !printerName) {
-            printerName = tstr_dup(argList[++i]);
-        }
-        else if (is_arg("-print-dialog")) {
-            printDialog = true;
-        }
-        else if (is_arg_with_param("-bgcolor")) {
-            ParseColor(&gGlobalPrefs.m_bgColor, argList[++i]);
-        }
-        else if (is_arg_with_param("-inverse-search")) {
-            free(gGlobalPrefs.m_inverseSearchCmdLine);
-            gGlobalPrefs.m_inverseSearchCmdLine = tstr_dup(argList[++i]);
-        }
-        else if (is_arg_with_param("-fwdsearch-offset")) {
-            gGlobalPrefs.m_fwdsearchOffset = _ttoi(argList[++i]);
-        }
-        else if (is_arg_with_param("-fwdsearch-width")) {
-            gGlobalPrefs.m_fwdsearchWidth = _ttoi(argList[++i]);
-        }
-        else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&gGlobalPrefs.m_fwdsearchColor, argList[++i]);
-        }
-        else if (is_arg_with_param("-fwdsearch-permanent")) {
-            gGlobalPrefs.m_fwdsearchPermanent = _ttoi(argList[++i]);
-        }
-        else if (is_arg("-esc-to-exit")) {
-            gGlobalPrefs.m_escToExit = TRUE;
-        }
-        else if (is_arg("-reuse-instance")) {
-            // find the window handle of a running instance of SumatraPDF
-            // TODO: there should be a mutex here to reduce possibility of
-            // race condition and having more than one copy launch because
-            // FindWindow() in one process is called before a window is created
-            // in another process
-            reuse_instance = FindWindow(FRAME_CLASS_NAME, 0) != NULL;
-        }
-        else if (is_arg_with_param("-lang")) {
-            char *s = tstr_to_multibyte(argList[++i], CP_ACP);
-            CurrLangNameSet(s);
-            free(s);
-        }
-        else if (is_arg_with_param("-nameddest")) {
-            destName = tstr_dup(argList[++i]);
-        }
-        else if (is_arg_with_param("-page")) {
-            pageNumber = _ttoi(argList[++i]);
-        }
-        else if (is_arg("-restrict")) {
-            gRestrictedUse = true;
-        }
-        else if (is_arg_with_param("-title")) {
-            newWindowTitle = tstr_dup(argList[++i]); 
-        }
-        else if (is_arg("-invertcolors")) {
-            gGlobalPrefs.m_invertColors = TRUE;
-        }
-        else if (is_arg("-presentation")) {
-            enterPresentation = true;
-        }
-        else if (is_arg("-console")) {
-            RedirectIOToConsole();
-        }
-        else if (is_arg_with_param("-plugin")) {
-            hwndPluginParent = (HWND)_ttoi(argList[++i]);
-        }
-#ifdef BUILD_RM_VERSION
-        else if (is_arg("-delete-these-on-close")) {
-            deleteFilesOnClose = true;
-        }
-#endif
-#ifdef DEBUG
-        else if (is_arg("-enum-printers")) {
-            EnumeratePrinters();
-            /* this is for testing only, exit immediately */
-            goto Exit;
-        }
-#endif
-        else {
-            // Remember this argument as a filename to open
-            TCHAR *filepath = NULL;
-            if (tstr_endswithi(argList[i], _T(".lnk")))
-                filepath = ResolveLnk(argList[i]);
-            if (!filepath)
-                filepath = tstr_dup(argList[i]);
-            fileNames.push_back(filepath);
-        }
+    ParseCommandLine(i, GetCommandLine());
+    if (i.makeDefault) {
+        AssociateExeWithPdfExtension();
+        goto Exit;
     }
-    argList.clearFree();
+
+    gGlobalPrefs.m_bgColor = i.bgColor;
+    gGlobalPrefs.m_fwdsearchOffset = i.fwdsearchOffset;
+    gGlobalPrefs.m_fwdsearchWidth = i.fwdsearchWidth;
+    gGlobalPrefs.m_fwdsearchColor = i.fwdsearchColor;
+    gGlobalPrefs.m_fwdsearchPermanent = i.fwdsearchPermanent;
+    gGlobalPrefs.m_escToExit = i.escToExit;
+    gGlobalPrefs.m_invertColors = i.invertColors;
+    gRestrictedUse = i.restrictedUse;
+
+    if (i.inverseSearchCmdLine) {
+        free(gGlobalPrefs.m_inverseSearchCmdLine);
+        gGlobalPrefs.m_inverseSearchCmdLine = i.inverseSearchCmdLine;
+        i.inverseSearchCmdLine = NULL;
+    }
+    if (i.lang)
+        CurrLangNameSet(i.lang);
 
     TCHAR *crashDumpPath = GetUniqueCrashDumpPath();
     InstallCrashHandler(crashDumpPath);
@@ -7415,75 +7135,72 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gRenderCache.invertColors = &gGlobalPrefs.m_invertColors;
     gRenderCache.useGdiRenderer = &gUseGdiRenderer;
 
-    if (hwndPluginParent && !IsWindow(hwndPluginParent))
-        hwndPluginParent = NULL;
-    if (hwndPluginParent) {
+    if (i.hwndPluginParent && !IsWindow(i.hwndPluginParent))
+        i.hwndPluginParent = NULL;
+    if (i.hwndPluginParent) {
         gPluginMode = true;
-        assert(fileNames.size() == 1);
-        reuse_instance = exitOnPrint = false;
+        assert(i.fileNames.size() == 1);
+        i.reuseInstance = i.exitOnPrint = false;
         // always display the toolbar when embedded (as there's no menubar in that case)
         gGlobalPrefs.m_showToolbar = TRUE;
     }
 
-    for (size_t i = 0; i < fileNames.size(); i++) {
-        if (reuse_instance) {
+    for (size_t n = 0; n < i.fileNames.size(); n++) {
+        if (i.reuseInstance) {
             // delegate file opening to a previously running instance by sending a DDE message 
             TCHAR fullpath[MAX_PATH], command[2 * MAX_PATH + 20];
-            GetFullPathName(fileNames[i], dimof(fullpath), fullpath, NULL);
+            GetFullPathName(i.fileNames[n], dimof(fullpath), fullpath, NULL);
             wsprintf(command, _T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath);
             DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
-            if (destName && !firstDocLoaded) {
-                wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, destName);
+            if (i.destName && !firstDocLoaded) {
+                wsprintf(command, _T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
-            else if (pageNumber > 0 && !firstDocLoaded) {
-                wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, pageNumber);
+            else if (i.pageNumber > 0 && !firstDocLoaded) {
+                wsprintf(command, _T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber);
                 DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, command);
             }
         }
         else {
-            bool showWin = !exitOnPrint;
-            win = LoadPdf(fileNames[i], NULL, showWin, newWindowTitle);
+            bool showWin = !i.exitOnPrint;
+            win = LoadPdf(i.fileNames[n], NULL, showWin, i.newWindowTitle);
             if (!win)
                 goto Exit;
             if (WS_SHOWING_PDF != win->state) {
                 // cancel printing, if there was a load error
-                exitOnPrint = printDialog = FALSE;
-                free(printerName);
-                printerName = NULL;
+                i.exitOnPrint = i.printDialog = FALSE;
+                free(i.printerName);
+                i.printerName = NULL;
            }
-            else if (destName && !firstDocLoaded) {
-                char * destName_utf8 = tstr_to_utf8(destName);
-                win->dm->goToNamedDest(destName_utf8);
-                free(destName_utf8);
+            else if (i.destName && !firstDocLoaded) {
+                char * tmp = tstr_to_utf8(i.destName);
+                win->dm->goToNamedDest(tmp);
+                free(tmp);
             }
-            else if (pageNumber > 0 && !firstDocLoaded) {
-                if (win->dm->validPageNo(pageNumber))
-                    win->dm->goToPage(pageNumber, 0);
+            else if (i.pageNumber > 0 && !firstDocLoaded) {
+                if (win->dm->validPageNo(i.pageNumber))
+                    win->dm->goToPage(i.pageNumber, 0);
             }
-            if (hwndPluginParent)
-                MakePluginWindow(win, hwndPluginParent);
-            if (WS_SHOWING_PDF == win->state && enterPresentation && !firstDocLoaded)
+            if (i.hwndPluginParent)
+                MakePluginWindow(win, i.hwndPluginParent);
+            if (WS_SHOWING_PDF == win->state && i.enterPresentation && !firstDocLoaded)
                 WindowInfo_EnterFullscreen(win, true);
         }
 
-        if (exitOnPrint)
+        if (i.exitOnPrint)
             ShowWindow(win->hwndFrame, SW_HIDE);
 
-        if (printerName) {
+        if (i.printerName) {
             // note: this prints all of PDF files. Another option would be to
             // print only the first one
-            PrintFile(win, printerName);
-        } else if (printDialog) {
+            PrintFile(win, i.printerName);
+        } else if (i.printDialog) {
             OnMenuPrint(win);
         }
         firstDocLoaded = true;
     }
 
-    free(destName);
-    free(printerName);
-
-    if (reuse_instance || ((printerName || printDialog) && exitOnPrint))
+    if (i.reuseInstance || ((i.printerName || i.printDialog) && i.exitOnPrint))
         goto Exit;
  
     if (!firstDocLoaded) {
@@ -7553,7 +7270,7 @@ Exit:
     SerializableGlobalPrefs_Deinit();
 
 #ifdef BUILD_RM_VERSION
-    if (deleteFilesOnClose)
+    if (i.deleteFilesOnClose)
     {
         // Delete the files which where passed to the command line.
         // This only really makes sense if we are in restricted use.
