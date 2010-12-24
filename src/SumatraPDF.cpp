@@ -7038,10 +7038,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     i.invertColors = gGlobalPrefs.m_invertColors;
 
     ParseCommandLine(i, GetCommandLine());
-    if (i.makeDefault) {
+    if (i.makeDefault)
         AssociateExeWithPdfExtension();
+    if (i.exitImmediately)
         goto Exit;
-    }
 
     gGlobalPrefs.m_bgColor = i.bgColor;
     gGlobalPrefs.m_fwdsearchOffset = i.fwdsearchOffset;

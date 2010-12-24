@@ -1,7 +1,7 @@
 #include "SumatraPDF.h"
-#include "vstrlist.h"
 #include "base_util.h"
 #include "tstr_util.h"
+#include "vstrlist.h"
 #include "WinUtil.hpp"
 #include "ParseCommandLine.h"
 
@@ -92,30 +92,31 @@ static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
 /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
 void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
 {
-    VStrList            argList;
-
-#define is_arg(txt) tstr_ieq(_T(txt), s1)
-#define is_arg_with_param(txt) (is_arg(txt) && n < argCount - 1)
-
+    VStrList argList;
     VStrList_FromCmdLine(&argList, cmdLine);
     size_t argCount = argList.size();
-    TCHAR *s1, *s2;
+
+#define is_arg(txt) tstr_ieq(_T(txt), argList[n])
+#define is_arg_with_param(txt) (is_arg(txt) && n < argCount - 1)
+
     for (size_t n = 1; n < argCount; n++) {
-        s1 = argList[n]; s2 = NULL;
-        if (n < argCount - 1)
-            s2 = argList[n+1];
         if (is_arg("-register-for-pdf")) {
             i.makeDefault = true;
-            goto Exit;
+            i.exitImmediately = true;
+            return;
         }
         else if (is_arg("-exit-on-print")) {
             i.exitOnPrint = true;
         }
-        else if (is_arg("-print-to-default") && !i.printerName) {
-            i.SetPrinterName(GetDefaultPrinterName());
+        else if (is_arg("-print-to-default")) {
+            TCHAR *printerName = GetDefaultPrinterName();
+            if (printerName) {
+                i.SetPrinterName(printerName);
+                free(printerName);
+            }
         }
-        else if (is_arg_with_param("-print-to") && !i.printerName) {
-            i.SetPrinterName(tstr_dup(argList[++n]));
+        else if (is_arg_with_param("-print-to")) {
+            i.SetPrinterName(argList[++n]);
         }
         else if (is_arg("-print-dialog")) {
             i.printDialog = true;
@@ -126,7 +127,7 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
             ParseColor(&i.bgColor, argList[++n]);
         }
         else if (is_arg_with_param("-inverse-search")) {
-            i.inverseSearchCmdLine = tstr_dup(argList[++n]);
+            i.SetInverseSearchCmdLine(argList[++n]);
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
             i.fwdsearchOffset = _ttoi(argList[++n]);
@@ -152,12 +153,12 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
             i.reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
         }
         else if (is_arg_with_param("-lang")) {
-            i.lang = tstr_to_multibyte(argList[++n], CP_ACP);
+            i.SetLang(argList[++n]);
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consitency
-            i.destName = tstr_dup(argList[++n]);
+            i.SetDestName(argList[++n]);
         }
         else if (is_arg_with_param("-page")) {
             i.pageNumber = _ttoi(argList[++n]);
@@ -166,7 +167,7 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
             i.restrictedUse = true;
         }
         else if (is_arg_with_param("-title")) {
-            i.newWindowTitle = tstr_dup(argList[++n]); 
+            i.SetNewWindowTitle(argList[++n]);
         }
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
@@ -182,14 +183,17 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
         else if (is_arg_with_param("-plugin")) {
             i.hwndPluginParent = (HWND)_ttoi(argList[++n]);
         }
+#ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             i.deleteFilesOnClose = true;
         }
+#endif
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
-            goto Exit;
+            i.exitImmediately = true;
+            return;
         }
 #endif
         else {
@@ -202,7 +206,4 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
             i.fileNames.push_back(filepath);
         }
     }
-Exit:
-    argList.clearFree();
 }
-

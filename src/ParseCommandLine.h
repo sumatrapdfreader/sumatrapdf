@@ -24,8 +24,11 @@ public:
     BOOL        invertColors;
     bool        enterPresentation;
     HWND        hwndPluginParent;
+    bool        exitImmediately;
+#ifdef BUILD_RM_VERSION
     // Delete the files which were passed into the program by command line.
     bool        deleteFilesOnClose;
+#endif
 
     CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
         printerName(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
@@ -34,10 +37,13 @@ public:
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
         enterPresentation(false), hwndPluginParent(NULL),
-        deleteFilesOnClose(false)
-    {}
+        exitImmediately(false)
+#ifdef BUILD_RM_VERSION
+        , deleteFilesOnClose(false)
+#endif
+    { }
 
-   ~CommandLineInfo() {
+    ~CommandLineInfo() {
         free(printerName);
         free(inverseSearchCmdLine);
         free(lang);
@@ -47,7 +53,27 @@ public:
 
     void SetPrinterName(TCHAR *s) {
         free(printerName);
-        printerName = s;
+        printerName = tstr_dup(s);
+    }
+
+    void SetInverseSearchCmdLine(TCHAR *s) {
+        free(inverseSearchCmdLine);
+        inverseSearchCmdLine = tstr_dup(s);
+    }
+
+    void SetLang(TCHAR *s) {
+        free(lang);
+        lang = tstr_to_multibyte(s, CP_ACP);
+    }
+    
+    void SetDestName(TCHAR *s) {
+        free(destName);
+        destName = tstr_dup(s);
+    }
+
+    void SetNewWindowTitle(TCHAR *s) {
+        free(newWindowTitle);
+        newWindowTitle = tstr_dup(s);
     }
 };
 

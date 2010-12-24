@@ -117,8 +117,8 @@ public:
                 lstrcpy(tmp, joint);
                 tmp += jointLen;
             }
-            lstrcpy(tmp, (*this)[i]);
-            tmp += lstrlen((*this)[i]);
+            lstrcpy(tmp, at(i));
+            tmp += lstrlen(at(i));
         }
 
         return result;
@@ -126,10 +126,8 @@ public:
 
     int find(TCHAR *s)
     {
-        TCHAR *s2;
-        for (size_t i = 0; i<size(); i++) {
-            s2 = at(i);
-            if (tstr_eq(s, s2))
+        for (size_t i = 0; i < size(); i++) {
+            if (tstr_eq(s, at(i)))
                 return (int)i;
         }
         return -1;
@@ -138,7 +136,7 @@ public:
     void clearFree()
     {
         for (size_t i = 0; i < size(); i++)
-            free((*this)[i]);
+            free(at(i));
         clear();
     }
 };

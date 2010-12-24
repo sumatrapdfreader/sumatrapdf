@@ -138,6 +138,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ParseCommandLine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ParseCommandLine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\PdfEngine.cc"
 				>
 			</File>

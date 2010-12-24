@@ -186,6 +186,7 @@ $(O)\FileWatch.obj:    $(SUMATRAPDF_H) baseutils\file_util.h
 $(O)\Http.obj:         $(SUMATRAPDF_H) src\MemSegment.h baseutils\vstrlist.h src\Version.h
 $(O)\LangMenuDef.obj:  src\Resource.h
 $(O)\MemSegment.obj:   baseutils\vstrlist.h
+$(O)\ParseCommandLine.obj: $(SUMATRAPDF_H) baseutils\vstrlist.h baseutils\WinUtil.hpp
 $(O)\PdfEngine.obj:    $(PDFENGINE_H)
 $(O)\PdfSearch.obj:    $(PDFENGINE_H) src\PdfSelection.h
 $(O)\PdfSelection.obj: $(PDFENGINE_H)
@@ -196,7 +197,7 @@ $(O)\SumatraDialogs.obj: $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\LangM
 $(O)\SumatraPDF.obj:   $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\FileHistory.h \
                        src\Http.h src\RenderCache.h baseutils\WinUtil.hpp \
                        src\SumatraDialogs.h src\SumatraProperties.h src\SumatraAbout.h \
-                       src\translations.h src\Version.h src\CrashHandler.h
+                       src\translations.h src\Version.h src\CrashHandler.h src\ParseCommandLine.h
 $(O)\SumatraProperties.obj: $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\translations.h
 $(O)\translations.obj: $(BASEUTILS_H)
 $(O)\WindowInfo.obj:   $(WINDOWINFO_H) baseutils\win_util.h baseutils\file_util.h
