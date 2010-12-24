@@ -250,6 +250,7 @@ public:
 
     void            SetFindMatchCase(bool match) { _pdfSearch->SetSensitive(match); }
     PdfSel *        Find(PdfSearchDirection direction=FIND_FORWARD, TCHAR *text=NULL, UINT fromPage=0);
+    // note: lastFoundPage might not be a valid page number!
     int             lastFoundPage(void) const { return _pdfSearch->findPage; }
     BOOL            bFoundText;
 

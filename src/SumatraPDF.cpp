@@ -5182,7 +5182,8 @@ static DWORD WINAPI FindThread(LPVOID data)
     WindowInfo *win = ftd->win;
 
     PdfSel *rect;
-    if (ftd->wasModified || !win->dm->getPageInfo(win->dm->lastFoundPage())->visible)
+    if (ftd->wasModified || !win->dm->validPageNo(win->dm->lastFoundPage()) ||
+        !win->dm->getPageInfo(win->dm->lastFoundPage())->visible)
         rect = win->dm->Find(ftd->direction, ftd->text);
     else
         rect = win->dm->Find(ftd->direction);
