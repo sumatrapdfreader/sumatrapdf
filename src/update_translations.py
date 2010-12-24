@@ -1,4 +1,4 @@
-from extract_strings import load_strings_file_old, load_strings_file_new, get_lang_list, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files, key_sort_func
+from extract_strings import load_strings_file_new, get_lang_list, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files, key_sort_func
 import simplejson
 
 g_can_upload = True
@@ -295,7 +295,6 @@ def get_untranslated_as_list(untranslated_dict):
     return untranslated
 
 def main():
-    #(strings_dict, langs) = load_strings_file_old()
     (strings_dict, langs, contributors) = load_strings_file_new()
     strings = extract_strings_from_c_files()
     for s in strings_dict.keys():

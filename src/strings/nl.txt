@@ -497,6 +497,8 @@ bestand afdrukken
 # Untranslated:
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #SumatraPDF Update
+#SumatraPDF crashed
 

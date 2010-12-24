@@ -398,6 +398,7 @@ dokumentua imprimatzen
 #No synchronization file found
 #No synchronization info at this position
 #Page scaling
+#Please include the following file in your crash report:
 #Please wait - rendering...
 #Pr&esentation\tCtrl-L
 #Print range
@@ -408,6 +409,7 @@ dokumentua imprimatzen
 #Source file %s has no synchronization point
 #SumatraPDF Options
 #SumatraPDF Update
+#SumatraPDF crashed
 #SumatraPDF is your main PDF reader
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened

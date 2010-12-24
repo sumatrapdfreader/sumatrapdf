@@ -389,6 +389,9 @@ Anpassen der Seitengröße
 Page:
 Seite:
 
+Please include the following file in your crash report:
+Bitte diese Datei bei einer Absturz-Meldung beifügen:
+
 Please wait - rendering...
 Bitte einen Moment Geduld…
 
@@ -448,6 +451,9 @@ SumatraPDF Optionen
 
 SumatraPDF Update
 SumatraPDF Update
+
+SumatraPDF crashed
+SumatraPDF ist abgestürzt
 
 SumatraPDF is your main PDF reader
 PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet

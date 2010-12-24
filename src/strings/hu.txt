@@ -509,5 +509,7 @@ printing document
 Nyomtatás
 
 # Untranslated:
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
+#SumatraPDF crashed
 

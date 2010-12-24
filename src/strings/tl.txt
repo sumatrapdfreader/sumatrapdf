@@ -433,11 +433,13 @@ ipini-print ang dokumento
 #P&roperties\tCtrl-D
 #PDF documents
 #Page scaling
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Source file %s has no synchronization point
 #Subject:
 #SumatraPDF Update
+#SumatraPDF crashed
 #Synchronization file cannot be opened
 #Text documents
 

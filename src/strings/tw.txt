@@ -448,8 +448,10 @@ printing document
 #Fit a Single Page
 #No result found around line %u in file %s
 #Page scaling
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Searching %d of %d...
 #SumatraPDF Update
+#SumatraPDF crashed
 

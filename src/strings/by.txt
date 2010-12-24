@@ -373,6 +373,7 @@ Zoom Out
 #PDF Version:
 #Page Size:
 #Page scaling
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Select content with Ctrl+left mouse button
@@ -380,6 +381,7 @@ Zoom Out
 #Show &pages continuously
 #Subject:
 #SumatraPDF Update
+#SumatraPDF crashed
 #Text documents
 #Title:
 #Zoom

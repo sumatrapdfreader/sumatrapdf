@@ -511,3 +511,7 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Please include the following file in your crash report:
+#SumatraPDF crashed
+

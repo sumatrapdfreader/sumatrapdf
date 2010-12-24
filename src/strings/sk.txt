@@ -444,9 +444,11 @@ prebieha tlač dokumentu
 #No synchronization file found
 #No synchronization info at this position
 #Page scaling
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Source file %s has no synchronization point
 #SumatraPDF Update
+#SumatraPDF crashed
 #Synchronization file cannot be opened
 

@@ -5,6 +5,7 @@
 #include "base_util.h"
 #include "tstr_util.h"
 #include "WinUtil.hpp"
+#include "translations.h"
 
 typedef BOOL WINAPI MiniDumpWriteProc(
     HANDLE hProcess,
@@ -50,7 +51,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     if (!pMiniDumpWriteDump)
     {
 #ifdef SVN_PRE_RELEASE_VER
-        ::MessageBoxA(NULL, "No dbghelp.dll", "Sumatra crashed", MB_ICONINFORMATION | MB_OK);
+        MessageBox(NULL, _T("Couldn't create a crashdump file: dbghelp.dll is unexpectedly missing."), _TR("SumatraPDF crashed"), MB_ICONEXCLAMATION | MB_OK);
 #endif
         return 0;
     }
@@ -59,7 +60,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     if (INVALID_HANDLE_VALUE == dumpFile)
     {
 #ifdef SVN_PRE_RELEASE_VER
-        ::MessageBoxA(NULL, "Couldn't create a crashdump file", "Sumatra crashed", MB_ICONINFORMATION | MB_OK);
+        MessageBox(NULL, _T("Couldn't create a crashdump file."), _TR("SumatraPDF crashed"), MB_ICONEXCLAMATION | MB_OK);
 #endif
         return 0;
     }
@@ -95,7 +96,11 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     // work-around of spinning a thread to do the writing
     SetEvent(g_dumpEvent);
     WaitForSingleObject(g_dumpThread, INFINITE);
-    MessageBox(NULL, g_crashDumpPath, _T("Sumatra crashed"), MB_ICONINFORMATION | MB_OK);
+
+    TCHAR *msg = tstr_printf(_T("%s\n\n%s"), _TR("Please include the following file in your crash report:"), g_crashDumpPath);
+    MessageBox(NULL, msg, _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK);
+    free(msg);
+
     return EXCEPTION_CONTINUE_SEARCH;
 }
 

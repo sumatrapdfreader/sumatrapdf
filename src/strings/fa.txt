@@ -451,8 +451,10 @@ printing document
 #No result found around line %u in file %s
 #No synchronization info at this position
 #Page scaling
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Show the &bookmarks sidebar when available
 #SumatraPDF Update
+#SumatraPDF crashed
 

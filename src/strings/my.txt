@@ -362,6 +362,7 @@ mencetak dokumen
 #PDF Producer:
 #Page number %u inexistant
 #Page scaling
+#Please include the following file in your crash report:
 #Please wait - rendering...
 #Pr&esentation\tCtrl-L
 #Print range
@@ -373,6 +374,7 @@ mencetak dokumen
 #Show the &bookmarks sidebar when available
 #Source file %s has no synchronization point
 #SumatraPDF Update
+#SumatraPDF crashed
 #SumatraPDF should now be your main PDF reader
 #Synchronization file cannot be opened
 #Text documents

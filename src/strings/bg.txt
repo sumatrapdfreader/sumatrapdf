@@ -408,11 +408,13 @@ Zoom factor
 #PDF Version:
 #Page Size:
 #Page scaling
+#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Send by &E-mail...
 #Subject:
 #SumatraPDF Update
+#SumatraPDF crashed
 #Text documents
 #Title:
 #copying text

@@ -10,10 +10,9 @@ about untranslated strings to stdout and adds untranslated strings as
 comments at the end of strings file for each language.
 """
 
-C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", "SumatraDialogs.cc"]
+C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", "SumatraDialogs.cc", "CrashHandler.cpp"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
 STRINGS_PATH = os.path.realpath("strings")
-STRINGS_FILE = os.path.join(STRINGS_PATH, "strings_obsolete.txt")
 
 # strings that don't need to be translated
 TRANSLATION_EXCEPTIONS = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%", "KB", "MB", "GB"]
@@ -176,81 +175,6 @@ def load_strings_file_new():
             strings_dict[s] = []
     return (strings_dict, langs_dict.items(), contributors_dict)
 
-# Returns a tuple (strings, langs)
-# 'strings' maps an original, untranslated string to
-# an array of translation, where each translation is a tuple 
-# [language, text translated into this language]
-# 'langs' is an array of language definition tuples. First item in a tuple
-# is language iso code (e.g. "en" or "sp-rs" and second is language name
-def load_strings_file_old():
-    file_name = STRINGS_FILE
-    strings_dict = {}
-    langs = []
-    lang_codes = {}
-    fo = codecs.open(file_name, "r", "utf-8-sig")
-    state = ST_NONE
-    curr_trans = None
-    line_no = 0
-    for l in fo.readlines():
-        line_no = line_no + 1
-        #print "'%s'" % l
-        l = line_strip_newline(l)
-        if 0 == len(l):
-            continue
-        #print state_name(state)
-        if is_comment_line(l):
-            assert ST_NONE == state or ST_BEFORE_ORIG == state
-            continue
-        if is_lang_line(l):
-            assert ST_NONE == state
-            lang_info = parse_lang_line(l)
-            langs.append(lang_info)
-            lang_iso = lang_info[0]
-            assert lang_iso not in lang_codes
-            lang_codes[lang_iso] = True
-            continue
-        if is_separator_line(l):
-            if None != curr_trans:
-                key = curr_trans[0]
-                value = curr_trans[1:]
-                if key in strings_dict:
-                    report_error(line_no, l, "'%s' is a duplicate text" % key)
-                strings_dict[key] = value
-            state = ST_BEFORE_ORIG
-            curr_trans = None
-            continue
-        if 0 == len(langs):
-            report_error(line_no, l, "Expected list of languages (Languages: ...)")
-        if ST_BEFORE_ORIG == state:
-            if None != curr_trans:
-                print curr_trans
-                assert None == curr_trans
-            if line_with_translation(l):
-                report_error(line_no, l, "Looks like a line with translation and expected the original string")
-            curr_trans = [l]
-            state = ST_IN_TRANSLATIONS
-        elif ST_IN_TRANSLATIONS == state:
-            if not line_with_translation(l):
-                report_error(line_no, l, "Expected line with translation")
-            (lang, txt) = parse_line_with_translation(l)
-            if lang not in lang_codes:
-                langnames = [e[0] for e in langs]
-                report_error(line_no, l, "lang '%s' is not in declared list of languages '%s'" % (lang, ", ".join(langnames)))
-            assert_unique_translation(curr_trans, lang, line_no)
-            curr_trans.append([lang, txt])
-        else:
-            raise ValueError
-        #print l
-    fo.close()
-    # TODO: repeat of a code above
-    if None != curr_trans:
-        key = curr_trans[0]
-        value = curr_trans[1:]
-        if key in strings_dict:
-            report_error(line_no, l, "'%s' is a duplicate text" % key)
-        strings_dict[key] = value
-    return (strings_dict, langs)
-
 def get_lang_list(strings_dict):
     langs = []
     for translations in strings_dict.values():
@@ -283,18 +207,6 @@ def gen_diff(strings_dict, strings):
         else:
             assert strings_all[s] == SS_IN_BOTH
     return strings_all
-
-def dump_diffs(strings_dict, strings):
-    strings_all = gen_diff(strings_dict, strings)
-    only_in_c = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_C]
-    #only_in_c = ["'" + s + "'" for s in only_in_c]
-    if only_in_c:
-        print "\nOnly in C code:"
-        print "\n".join(only_in_c) + "\n"
-    only_in_txt = [s for (s, state) in strings_all.items() if state == SS_ONLY_IN_TXT]
-    if only_in_txt:
-        print "\nOnly in %s file:" % STRINGS_FILE
-        print "\n".join(only_in_txt) + "\n"
 
 def langs_sort_func(x,y):
     return cmp(len(y[1]),len(x[1]))
@@ -406,14 +318,5 @@ def main_obsolete():
     else:
         dump_missing_for_language(strings_dict, sys.argv[1])
     
-def main_old():
-    (strings_dict, langs) = load_strings_file_old()
-    strings = extract_strings_from_c_files()
-    if len(sys.argv) == 1:
-        dump_missing_per_language(strings_dict)
-        dump_diffs(strings_dict, strings)
-    else:
-        dump_missing_for_language(strings_dict, sys.argv[1])
-
 if __name__ == "__main__":
     print("Run update_translations.py instead")

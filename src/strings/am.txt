@@ -509,3 +509,7 @@ copying text
 printing document
 փաստաթուղթը տպվում է
 
+# Untranslated:
+#Please include the following file in your crash report:
+#SumatraPDF crashed
+
