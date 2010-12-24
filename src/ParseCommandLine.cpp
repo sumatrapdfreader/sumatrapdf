@@ -94,12 +94,16 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
 {
     VStrList            argList;
 
-#define is_arg(txt) tstr_ieq(_T(txt), argList[n])
+#define is_arg(txt) tstr_ieq(_T(txt), s1)
 #define is_arg_with_param(txt) (is_arg(txt) && n < argCount - 1)
 
     VStrList_FromCmdLine(&argList, cmdLine);
     size_t argCount = argList.size();
+    TCHAR *s1, *s2;
     for (size_t n = 1; n < argCount; n++) {
+        s1 = argList[n]; s2 = NULL;
+        if (n < argCount - 1)
+            s2 = argList[n+1];
         if (is_arg("-register-for-pdf")) {
             i.makeDefault = true;
             goto Exit;
@@ -116,7 +120,9 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
         else if (is_arg("-print-dialog")) {
             i.printDialog = true;
         }
-        else if (is_arg_with_param("-bgcolor")) {
+        else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
+            // -bgcolor is for backwards compat (was used pre-1.3)
+            // -bg-color is for consitency
             ParseColor(&i.bgColor, argList[++n]);
         }
         else if (is_arg_with_param("-inverse-search")) {
@@ -148,7 +154,9 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
         else if (is_arg_with_param("-lang")) {
             i.lang = tstr_to_multibyte(argList[++n], CP_ACP);
         }
-        else if (is_arg_with_param("-nameddest")) {
+        else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
+            // -nameddest is for backwards compat (was used pre-1.3)
+            // -named-dest is for consitency
             i.destName = tstr_dup(argList[++n]);
         }
         else if (is_arg_with_param("-page")) {
@@ -160,7 +168,9 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
         else if (is_arg_with_param("-title")) {
             i.newWindowTitle = tstr_dup(argList[++n]); 
         }
-        else if (is_arg("-invertcolors")) {
+        else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
+            // -invertcolors is for backwards compat (was used pre-1.3)
+            // -invert-colors is for consitency
             i.invertColors = TRUE;
         }
         else if (is_arg("-presentation")) {

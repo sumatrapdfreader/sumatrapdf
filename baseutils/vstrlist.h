@@ -4,6 +4,8 @@
 #ifndef _VSTRLIST_H_
 #define _VSTRLIST_H_
 
+#include "tstr_util.h"
+
 #ifdef USE_STL
 #include <vector>
 #include <stack>
@@ -14,6 +16,11 @@ template <class _Ty>
 class vector {
 public:
     _Ty &operator[](size_t i) const
+    {
+        assert(i<m_size);
+        return m_data[i];
+    }
+    _Ty at(size_t i) const
     {
         assert(i<m_size);
         return m_data[i];
@@ -115,6 +122,17 @@ public:
         }
 
         return result;
+    }
+
+    int find(TCHAR *s)
+    {
+        TCHAR *s2;
+        for (size_t i = 0; i<size(); i++) {
+            s2 = at(i);
+            if (tstr_eq(s, s2))
+                return (int)i;
+        }
+        return -1;
     }
 
     void clearFree()
