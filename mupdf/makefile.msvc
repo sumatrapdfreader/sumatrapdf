@@ -244,48 +244,31 @@ LIBS_OBJS = $(LIBS_OBJS) $(JPEG_TURBO_OBJS)
 PDFAPP_RES = $(O)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(O)\win_main.obj $(O)\pdfapp.obj $(PDFAPP_RES)
 PDFAPP_APP = $(O)\pdfview.exe
-PDFAPP_PDB = $(O)\pdfview.pdb
-PDFAPP_MAP = $(O)\pdfview.map
 
 PDFBENCH_OBJS = $(LIBS_OBJS) $(O)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
-PDFBENCH_PDB = $(O)\pdfbench.pdb
-PDFBENCH_MAP = $(O)\pdfbench.map
 
 PDFDRAW_OBJS = $(LIBS_OBJS) $(O)\pdfdraw.obj
 PDFDRAW_APP = $(O)\pdfdraw.exe
-PDFDRAW_PDB = $(O)\pdfdraw.pdb
-PDFDRAW_MAP = $(O)\pdfdraw.map
 
 PDFSHOW_OBJS = $(LIBS_OBJS) $(O)\pdfshow.obj
 PDFSHOW_APP = $(O)\pdfshow.exe
-PDFSHOW_PDB = $(O)\pdfshow.pdb
-PDFSHOW_MAP = $(O)\pdfshow.map
 
 PDFCLEAN_OBJS = $(LIBS_OBJS) $(O)\pdfclean.obj
 PDFCLEAN_APP = $(O)\pdfclean.exe
-PDFCLEAN_PDB = $(O)\pdfclean.pdb
-PDFCLEAN_MAP = $(O)\pdfclean.map
 
 PDFINFO_OBJS = $(LIBS_OBJS) $(O)\pdfinfo.obj
 PDFINFO_APP = $(O)\pdfinfo.exe
-PDFINFO_PDB = $(O)\pdfinfo.pdb
-PDFINFO_MAP = $(O)\pdfinfo.map
 
 PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 PDFEXTRACT_PDB = $(O)\pdfextract.pdb
-PDFEXTRACT_MAP = $(O)\pdfextract.map
 
 CMAPDUMP_OBJS =  $(O)\cmapdump.obj
 CMAPDUMP_APP = $(O)\cmapdump.exe
-CMAPDUMP_PDB = $(O)\cmapdump.pdb
-CMAPDUMP_MAP = $(O)\cmapdump.map
 
 FONTDUMP_OBJS = $(O)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
-FONTDUMP_PDB = $(O)\fontdump.pdb
-FONTDUMP_MAP = $(O)\fontdump.map
 
 all: $(O) $(PDFDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFBENCH_APP) $(PDFAPP_APP)
 
@@ -511,57 +494,31 @@ $(O)\font_cjk.c: $(FONTDUMP_APP)
 	$(MUPDF_DIR)\fonts\droid\DroidSansFallback.ttf
 
 $(PDFBENCH_APP): $(PDFBENCH_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFBENCH_APP) /PDB:$(PDFBENCH_PDB) \
-	$(PDFBENCH_OBJS) $(LIBS) \
-	/MAP:$(PDFBENCH_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(FONTDUMP_APP): $(FONTDUMP_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(FONTDUMP_APP) /PDB:$(FONTDUMP_PDB) \
-	$(FONTDUMP_OBJS) $(LIBS) \
-	/MAP:$(FONTDUMP_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(CMAPDUMP_APP): $(CMAPDUMP_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(CMAPDUMP_APP) /PDB:$(CMAPDUMP_PDB) \
-	$(CMAPDUMP_OBJS) $(LIBS) \
-	/MAP:$(CMAPDUMP_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFDRAW_APP): $(PDFDRAW_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFDRAW_APP) /PDB:$(PDFDRAW_PDB) \
-	$(PDFDRAW_OBJS) $(LIBS) \
-	/MAP:$(PDFDRAW_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFSHOW_APP): $(PDFSHOW_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFSHOW_APP) /PDB:$(PDFSHOW_PDB) \
-	$(PDFSHOW_OBJS) $(LIBS) \
-	/MAP:$(PDFSHOW_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFCLEAN_APP): $(PDFCLEAN_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFCLEAN_APP) /PDB:$(PDFCLEAN_PDB) \
-	$(PDFCLEAN_OBJS) $(LIBS) \
-	/MAP:$(PDFCLEAN_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFINFO_APP): $(PDFINFO_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFINFO_APP) /PDB:$(PDFINFO_PDB) \
-	$(PDFINFO_OBJS) $(LIBS) \
-	/MAP:$(PDFINFO_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFAPP_APP): $(PDFAPP_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFAPP_APP) /PDB:$(PDFAPP_PDB) \
-	$(PDFAPP_OBJS) $(LIBS) \
-	/MAP:$(PDFAPP_MAP)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:WINDOWS
 
 $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
-	$(LD) $(LDFLAGS) /OUT:$(PDFEXTRACT_APP) /PDB:$(PDFEXTRACT_PDB) \
-	$(PDFEXTRACT_OBJS) $(LIBS) \
-	/MAP:$(PDFEXTRACT_MAP) \
-	/SUBSYSTEM:CONSOLE
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories
 {$(FREETYPE_DIR)\builds\win32}.c{$(O)}.obj::
