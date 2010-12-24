@@ -130,7 +130,7 @@ $(SUMATRA_MANIFEST): src\SumatraPDF.manifest.rc
 	rc /r /fo$(SUMATRA_MANIFEST) src\SumatraPDF.manifest.rc
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS) $(O)\UnitTests.obj
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /MAP:$*.map /OUT:$@ 
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ 
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h
 	rc /r /fo$(INSTALLER_RES) $(EXTCFLAGS) src\installer\Installer.rc
@@ -139,7 +139,7 @@ $(INSTALLER_MANIFEST): src\installer\Installer.manifest.rc
 	rc /r /fo$@ src\installer\Installer.manifest.rc
 
 $(INSTALLER_APP): $(ZLIB_OBJS) $(INSTALLER_OBJS) 
-	$(LD) $(LDFLAGS) $** $(LIBS_INSTALLER) /PDB:$*.pdb /MAP:$*.map /OUT:$@
+	$(LD) $(LDFLAGS) $** $(LIBS_INSTALLER) /PDB:$*.pdb /OUT:$@
 
 # sumatra directories
 {baseutils}.c{$(O)}.obj::

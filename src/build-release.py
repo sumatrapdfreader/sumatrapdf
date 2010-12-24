@@ -318,6 +318,11 @@ def main():
   local_exe_uncompr = os.path.join(builds_dir, "SumatraPDF-uncompr.exe")
   local_pdb = os.path.join(builds_dir, "SumatraPDF-%s.pdb" % ver)
   local_installer = os.path.join(builds_dir, "Installer.exe")
+
+  stripreloc = os.path.join(SCRIPT_DIR, "bin", "StripReloc")
+  builds_dir_rel = os.path.join("src", "builds", ver)
+  run_cmd_throw(stripreloc, os.path.join(builds_dir_rel, "Installer.exe"))
+
   shutil.copy(tmp_exe, local_exe)
   shutil.copy(tmp_exe, local_exe_uncompr)
   shutil.copy(tmp_pdb, local_pdb)
