@@ -12,19 +12,25 @@ Contributor: Nardog (nardog.takoweb.com)
 バージョン情報(&A)
 
 &Actual Size\tCtrl-1
-実際のサイズ(&U)\tCtrl-1
+実際のサイズ(&A)\tCtrl-1
+
+&All selected pages
+すべての選択されたページ(&A)
 
 &Back\tAlt+Left Arrow
-前に戻る\tAlt+←
+前に戻る(&B)\tAlt+←
 
 &Close\tCtrl-W
 閉じる(&C)\tCtrl-W
 
 &Copy Selection\tCtrl-C
-選択範囲のコピー\tCtrl-C
+選択範囲のコピー(&C)\tCtrl-C
 
 &Don't ask me again
 再び質問しない(&D)
+
+&Even pages only
+偶数ページのみ(&E)
 
 &File
 ファイル(&F)
@@ -33,7 +39,10 @@ Contributor: Nardog (nardog.takoweb.com)
 検索する文字列(&F):
 
 &First Page\tHome
-最初のページ\tHome
+最初のページ(&F)\tHome
+
+&Fit pages to printable area
+ページを印刷可能領域に合わせる(&F)
 
 &Go To
 移動(&G)
@@ -45,7 +54,7 @@ Contributor: Nardog (nardog.takoweb.com)
 ヘルプ(&H)
 
 &Last Page\tEnd
-最後のページ\tEnd
+最後のページ(&L)\tEnd
 
 &Magnification:
 拡大率(&M):
@@ -57,13 +66,16 @@ Contributor: Nardog (nardog.takoweb.com)
 大文字と小文字を区別する(&M)
 
 &Next Page\tRight Arrow
-次のページ\t→
+次のページ(&N)\t→
 
 &No
 いいえ(&N)
 
 &No, thanks
 いいえ(&N)
+
+&Odd pages only
+偶数ページのみ(&O)
 
 &Open\tCtrl-O
 開く(&O)\tCtrl-O
@@ -75,22 +87,34 @@ Contributor: Nardog (nardog.takoweb.com)
 パスワード(&P):
 
 &Previous Page\tLeft Arrow
-前のページ\t←
+前のページ(&P)\t←
 
 &Print...\tCtrl-P
-印刷(&P)\tCtrl-P
+印刷(&P)...\tCtrl-P
+
+&Print... (denied)
+印刷... (拒否されました)(&P)
+
+&Remember the password for this document
+このドキュメントのパスワードを記憶する(&R)
 
 &Remember these settings for each document
 ドキュメントごとにこれらの設定を記憶する(&R)
 
 &Save As...\tCtrl-S
-名前を付けて保存(&S)\tCtrl-S
+名前を付けて保存(&S)...\tCtrl-S
 
 &Settings
 設定(&S)
 
+&Shrink pages to printable area (if necessary)
+ページを印刷可能領域に縮小する (必要なら)(&S)
+
 &Skip this version
 このバージョンをスキップする(&S)
+
+&Use original page sizes
+元のページ サイズを使用する(&U)
 
 &View
 表示(&V)
@@ -99,7 +123,7 @@ Contributor: Nardog (nardog.takoweb.com)
 はい(&Y)
 
 &Zoom
-拡大と縮小(&Z)
+ズーム(&Z)
 
 (of %d)
 (%d 中)
@@ -113,20 +137,38 @@ Advanced
 All files
 すべてのファイル
 
+Application:
+アプリケーション:
+
 Associate with PDF files?
 PDF ファイルと関連付けますか?
+
+Attachment: %s
+添付: %s
+
+Author:
+作者:
 
 Automatic
 自動
 
 Automatically check for &updates
-自動的にチェックする(&U)
+自動的に更新をチェックする(&U)
 
 Book View
 ブック ビュー
 
 Book&marks\tF12
-ブックマーク(&B)\tF12
+ブックマーク(&M)\tF12
+
+Bookmarks
+ブックマーク
+
+Bytes
+バイト
+
+Can't connect to the Internet (error %#x).
+インターネットへ接続できません (エラー %#x)。
 
 Cancel
 キャンセル
@@ -141,7 +183,7 @@ Change Language
 言語の変更 (Change Language)
 
 Check for &Updates
-新しいバージョンのチェック(&C)
+更新のチェック(&U)
 
 Continuous
 連続
@@ -155,6 +197,9 @@ Continuous facing
 Contribute Translation
 翻訳の提供
 
+Copying text was denied (copying as image only)
+テキストのコピーは拒否されました (イメージとしてのコピーのみ)
+
 Could not open Printer
 プリンターを開くことができませんでした
 
@@ -164,14 +209,23 @@ Couldn't initialize printer
 Couldn't render the page
 ページを描画できませんでした
 
+Created:
+作成日時:
+
 Custom &Zoom...\tCtrl-Y
-カスタム ズーム(&C)...\tCtrl-Y
+拡大率の指定(&Z)...\tCtrl-Y
 
 Default &Layout:
 既定のレイアウト(&L):
 
 Default &Zoom:
 既定の拡大率(&Z):
+
+Denied Permissions:
+拒否された権限:
+
+Document Properties
+ドキュメントのプロパティ
 
 Download
 ダウンロード
@@ -185,14 +239,17 @@ Enter password
 Enter password for %s
 %s のパスワードを入力します
 
+Enter the command-line to invoke when you double-click on the PDF document:
+PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力します:
+
 Error loading PDF file.
 PDF ファイルの読み込みエラーです。
 
 F&orward\tAlt+Right Arrow
-次に進む\tAlt+→
+次に進む(&O)\tAlt+→
 
 F&ullscreen\tCtrl-Shift-L
-全画面表示\tCtrl-Shift-L
+全画面表示(&U)\tCtrl-Shift-L
 
 Facing
 見返し
@@ -200,8 +257,14 @@ Facing
 Failed to save a file
 ファイルの保存に失敗しました
 
+File Size:
+ファイル サイズ:
+
+File:
+ファイル:
+
 Fin&d...\tCtrl-F
-検索...\tCtrl-F
+検索(&D)...\tCtrl-F
 
 Find
 検索
@@ -215,17 +278,29 @@ Find Previous
 Find:
 検索:
 
+Fit &Content\tCtrl-3
+内容に合わせる(&C)\tCtrl-3
+
 Fit &Page\tCtrl-0
 ページに合わせる(&P)\tCtrl-0
 
 Fit &Width\tCtrl-2
-幅に合わせる(&H)\tCtrl-2
+幅に合わせる(&W)\tCtrl-2
+
+Fit Content
+内容に合わせる
 
 Fit Page
 ページに合わせる
 
 Fit Width
 幅に合わせる
+
+Fit Width and Show Pages Continuously
+幅に合わせて連続してページを表示する
+
+Fit a Single Page
+単一のページに合わせる
 
 Found text at page %d
 ページ %d でテキストが見つかりました
@@ -248,6 +323,9 @@ SumatraPDF をメイン PDF リーダーにする
 Match Case
 大文字と小文字を区別する
 
+Modified:
+変更日時:
+
 New version %s is available. Download new version?
 新しいバージョン %s が利用可能です。新しいバージョンをダウンロードしますか？
 
@@ -266,6 +344,9 @@ No synchronization file found
 No synchronization info at this position
 この位置に同期化情報がありません
 
+Number of Pages:
+ページ数:
+
 OK
 OK
 
@@ -275,26 +356,50 @@ Open
 Open in &Adobe Reader
 Adobe Reader で開く(&A)
 
+P&roperties\tCtrl-D
+プロパティ(&R)\tCtrl-D
+
 PDF Document
 PDF ドキュメント
+
+PDF Producer:
+PDF 出力:
+
+PDF Version:
+PDF バージョン:
 
 PDF documents
 PDF ドキュメント
 
 Pa&ge...\tCtrl-G
-ページ指定...\tCtrl-G
+ページ指定(&G)...\tCtrl-G
+
+Page Size:
+ページ サイズ:
 
 Page number %u inexistant
 ページ番号 %u が存在しません
 
+Page scaling
+ページの拡大縮小
+
 Page:
 ページ:
+
+Please include the following file in your crash report:
+クラッシュの報告に次のファイルを含めてください:
 
 Please wait - rendering...
 お待ちください - 描画しています...
 
+Pr&esentation\tCtrl-L
+プレゼンテーション(&E)\tCtrl-L
+
 Previous Page
 前のページ
+
+Print range
+印刷範囲
 
 Printing problem.
 印刷の問題です。
@@ -303,10 +408,10 @@ Remember &opened files
 開かれたファイルを記憶する(&O)
 
 Rotate &Left\tCtrl-Shift--
-左に回転\tCtrl-Shift--
+左に回転(&L)\tCtrl-Shift--
 
 Rotate &Right\tCtrl-Shift-+
-右に回転\tCtrl-Shift-+
+右に回転(&R)\tCtrl-Shift-+
 
 Searching %d of %d...
 %d (%d 中) を検索しています...
@@ -321,10 +426,10 @@ Set inverse search command-line
 逆順検索コマンドラインの設定
 
 Show &Toolbar
-ツール バーの表示
+ツール バーの表示(&T)
 
 Show &pages continuously
-連続してページを表示します
+連続してページを表示(&P)
 
 Show the &bookmarks sidebar when available
 利用可能ならブックマーク サイド バーを表示する(&B)
@@ -335,8 +440,17 @@ Single Page
 Source file %s has no synchronization point
 ソース ファイル %s には同期化ポイントがありません
 
+Subject:
+題名:
+
 SumatraPDF Options
 SumatraPDF のオプション
+
+SumatraPDF Update
+SumatraPDF の更新
+
+SumatraPDF crashed
+SumatraPDF がクラッシュしました
 
 SumatraPDF is your main PDF reader
 SumatraPDF はメイン PDF リーダーです
@@ -350,6 +464,9 @@ Synchronization file cannot be opened
 Text documents
 テキスト ドキュメント
 
+Title:
+タイトル:
+
 Unknown source file (%s)
 不明なソース ファイル (%s)
 
@@ -357,7 +474,7 @@ View
 表示
 
 Visit &Website
-Web サイトの訪問(&V)
+Web サイトの訪問(&W)
 
 Warning
 警告
@@ -369,7 +486,7 @@ You have version %s
 バージョン %s です
 
 Zoom
-拡大と縮小
+OK
 
 Zoom In
 拡大
@@ -383,46 +500,9 @@ Zoom factor
 [Changes detected; refreshing] %s
 [変更が検出されました。更新しています] %s
 
-# Untranslated:
-#&All selected pages
-#&Even pages only
-#&Fit pages to printable area
-#&Odd pages only
-#&Print... (denied)
-#&Remember the password for this document
-#&Shrink pages to printable area (if necessary)
-#&Use original page sizes
-#Application:
-#Attachment: %s
-#Author:
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Copying text was denied (copying as image only)
-#Created:
-#Denied Permissions:
-#Document Properties
-#Enter the command-line to invoke when you double-click on the PDF document:
-#File Size:
-#File:
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Modified:
-#Number of Pages:
-#P&roperties\tCtrl-D
-#PDF Producer:
-#PDF Version:
-#Page Size:
-#Page scaling
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#Print range
-#Subject:
-#SumatraPDF Update
-#SumatraPDF crashed
-#Title:
-#copying text
-#printing document
+copying text
+コピーするテキスト
+
+printing document
+印刷するドキュメント
 
