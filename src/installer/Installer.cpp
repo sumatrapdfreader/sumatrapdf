@@ -54,6 +54,9 @@ using namespace Gdiplus;
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 #define UNINSTALLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_UNINSTALLER_FRAME")
 
+#define INSTALLER_WIN_TITLE    _T("SumatraPDF ") CURR_VERSION_STR _T(" Installer")
+#define UNINSTALLER_WIN_TITLE  _T("SumatraPDF ") CURR_VERSION_STR _T(" Uninstaller")
+
 #define INSTALLER_WIN_DX    420
 #define INSTALLER_WIN_DY    320
 #define UNINSTALLER_WIN_DX  420
@@ -1159,21 +1162,26 @@ void InvalidateFrame()
 
 static FrameTimeoutCalculator *gFrameTimeoutInstallerAnim = NULL;
 
+void RotatingLettersAnim()
+{
+    assert (gUiState == InstallerUiAnim1);
+    DWORD timeOut = gFrameTimeoutInstallerAnim->GetTimeoutInMilliseconds();
+    if (0 == timeOut) {
+        RandomizeLetters();
+        InvalidateFrame();
+        gFrameTimeoutInstallerAnim->Step();
+        if (gFrameTimeoutInstallerAnim->ElapsedTotal() > 3) {
+            delete gFrameTimeoutInstallerAnim;
+            gFrameTimeoutInstallerAnim = NULL;
+            SetLettersSumatra();
+            gUiState = InstallerUiAfterAnim1;
+        }
+    }
+}
+
 void AnimStep() {
     if (gFrameTimeoutInstallerAnim) {
-        assert (gUiState == InstallerUiAnim1);
-        DWORD timeOut = gFrameTimeoutInstallerAnim->GetTimeoutInMilliseconds();
-        if (0 == timeOut) {
-            RandomizeLetters();
-            InvalidateFrame();
-            gFrameTimeoutInstallerAnim->Step();
-            if (gFrameTimeoutInstallerAnim->ElapsedTotal() > 3) {
-                delete gFrameTimeoutInstallerAnim;
-                gFrameTimeoutInstallerAnim = NULL;
-                SetLettersSumatra();
-                gUiState = InstallerUiAfterAnim1;
-            }
-        }
+        RotatingLettersAnim();
     }
 }
 
@@ -1546,7 +1554,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     if (IsUninstaller()) {
         gHwndFrame = CreateWindow(
-                UNINSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Uninstaller"),
+                UNINSTALLER_FRAME_CLASS_NAME, INSTALLER_WIN_TITLE,
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                 CW_USEDEFAULT, CW_USEDEFAULT, 
@@ -1556,7 +1564,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
         gUiState = UninstallerUiInitial;
     } else {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Installer"),
+                INSTALLER_FRAME_CLASS_NAME, UNINSTALLER_WIN_TITLE,
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                 CW_USEDEFAULT, CW_USEDEFAULT,                
