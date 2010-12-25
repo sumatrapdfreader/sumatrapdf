@@ -64,6 +64,18 @@ using namespace Gdiplus;
 #define ID_CHECKBOX_MAKE_DEAFULT      3
 #define INVALID_SIZE                  DWORD(-1)
 
+// Describes different states of ui. What we display
+// on screen depends on this.
+enum InstallerUiState {
+    InstallerUiInitial,
+    InstallerUiAnim1,
+    InstallerUiAfterAnim1,
+    InstallerUiInstallOk,
+    InstallerUiInstallFailed
+};
+
+static InstallerUiState gInstallerUiState = InstallerUiInitial;
+
 // The window is divided in two parts:
 // * top part, where we display nice graphics
 // * bottom part, with install/uninstall button
@@ -1038,7 +1050,6 @@ void OnButtonUninstall()
     EnableWindow(gHwndButtonUninstall, TRUE);
 }
 
-
 // This display is inspired by http://letteringjs.com/
 typedef struct {
     // part that doesn't change
@@ -1065,6 +1076,38 @@ LetterInfo gSumatraLetters[] = {
     { 'D', 227, 107, 35, 155, 77, 31,  0.f,   3.f, 0, 0 },
     { 'F', 196, 64, 50, 134, 48, 39,   0.f,     0, 0, 0 }
 };
+
+char RandUppercaseLetter()
+{
+    // TODO: clearly, not random
+    static char l = 'A' - 1;
+    l++;
+    if (l > 'Z')
+        l = 'A';
+    return l;
+}
+
+void RandomizeLetters()
+{
+    for (int i=0; i<dimof(gSumatraLetters); i++) {
+        gSumatraLetters[i[.c = RandUppercaseLetter();
+    }
+}
+
+void SetLettersSumatra()
+{
+    char *s = "SUMATRAPDF";
+    for (int i=0; i<dimof(gSumatraLetters); i++) {
+        gSumatraLetters[i].c = s[i];
+    }
+}
+
+void Anim1Thread() {
+    
+    while (1) {
+
+    }
+}
 
 void CalcLettersLayout(Graphics& g, Font *f, int dx)
 {

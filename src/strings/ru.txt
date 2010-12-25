@@ -397,6 +397,9 @@ Page scaling
 Page:
 Страница:
 
+Please include the following file in your crash report:
+Пожалуйста, приложите следующий файл к Вашему отчету об аварийном завершении работы:
+
 Please wait - rendering...
 Формируется изображение, подождите...
 
@@ -457,6 +460,9 @@ SumatraPDF Options
 SumatraPDF Update
 Обновление SumatraPDF
 
+SumatraPDF crashed
+Аварийное завершение работы SumatraPDF
+
 SumatraPDF is your main PDF reader
 SumatraPDF ассоциирована с файлами PDF
 
@@ -510,8 +516,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Please include the following file in your crash report:
-#SumatraPDF crashed
 
