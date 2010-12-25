@@ -1114,7 +1114,8 @@ typedef struct {
     REAL x;
 } LetterInfo;
 
-LetterInfo gSumatraLetters[] = {
+#define SUMATRA_LETTERS_COUNT 10
+LetterInfo gSumatraLetters[SUMATRA_LETTERS_COUNT] = {
     { 'S', 196, 64,  50, 134, 48, 39, -3.f,     0, 0, 0 },
     { 'U', 227, 107, 35, 155, 77, 31,  0.f,     0, 0, 0 },
     { 'M', 93,  160, 40,  51, 87, 39,  2.f,  -2.f, 0, 0 },
@@ -1144,12 +1145,21 @@ void RandomizeLetters()
     }
 }
 
-void SetLettersSumatra()
+void SetLettersSumatraUpTo(int n)
 {
     char *s = "SUMATRAPDF";
     for (int i=0; i<dimof(gSumatraLetters); i++) {
-        gSumatraLetters[i].c = s[i];
+        if (i < n) {
+            gSumatraLetters[i].c = s[i];
+        } else {
+            gSumatraLetters[i].c = ' ';
+        }
     }
+}
+
+void SetLettersSumatra()
+{
+    SetLettersSumatraUpTo(SUMATRA_LETTERS_COUNT);
 }
 
 void InvalidateFrame()
@@ -1160,36 +1170,86 @@ void InvalidateFrame()
     InvalidateRect(gHwndFrame, &rc, FALSE);
 }
 
-static FrameTimeoutCalculator *gFrameTimeoutInstallerAnim = NULL;
+// an animation that 'rotates' random letters 
+static FrameTimeoutCalculator *gRotatingLettersAnim = NULL;
+
+void RotatingLettersAnimStart()
+{
+    //assert(gUiState == InstallerUiInitial);
+    //gUiState = InstallerUiAnim1;
+    gRotatingLettersAnim = new FrameTimeoutCalculator(20);
+}
+
+void RotatingLettersAnimStop()
+{
+    delete gRotatingLettersAnim;
+    gRotatingLettersAnim = NULL;
+    SetLettersSumatra();
+    InvalidateFrame();
+    //gUiState = InstallerUiAfterAnim1;
+}
 
 void RotatingLettersAnim()
 {
-    assert (gUiState == InstallerUiAnim1);
-    DWORD timeOut = gFrameTimeoutInstallerAnim->GetTimeoutInMilliseconds();
-    if (0 == timeOut) {
-        RandomizeLetters();
-        InvalidateFrame();
-        gFrameTimeoutInstallerAnim->Step();
-        if (gFrameTimeoutInstallerAnim->ElapsedTotal() > 3) {
-            delete gFrameTimeoutInstallerAnim;
-            gFrameTimeoutInstallerAnim = NULL;
-            SetLettersSumatra();
-            gUiState = InstallerUiAfterAnim1;
-        }
+    if (gRotatingLettersAnim->ElapsedTotal() > 3) {
+        RotatingLettersAnimStop();
+        return;
     }
+    DWORD timeOut = gRotatingLettersAnim->GetTimeoutInMilliseconds();
+    if (timeOut != 0)
+        return;
+    RandomizeLetters();
+    InvalidateFrame();
+    gRotatingLettersAnim->Step();
+}
+
+// an animation that reveals letters one by one
+
+// how long the animation lasts, in seconds
+#define REVEALING_ANIM_DUR double(2)
+
+static FrameTimeoutCalculator *gRevealingLettersAnim = NULL;
+
+int gRevealingLettersAnimLettersToShow;
+
+void RevealingLettersAnimStart()
+{
+    int framesPerSec = (int)(double(SUMATRA_LETTERS_COUNT) / REVEALING_ANIM_DUR);
+    gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
+    gRevealingLettersAnimLettersToShow = 0;
+    SetLettersSumatraUpTo(0);
+    InvalidateFrame();
+}
+
+void RevealingLettersAnimStop()
+{
+    delete gRevealingLettersAnim;
+    gRevealingLettersAnim = NULL;
+    SetLettersSumatra();
+    InvalidateFrame();
+}
+
+void RevealingLettersAnim()
+{
+    if (gRevealingLettersAnim->ElapsedTotal() > REVEALING_ANIM_DUR) {
+        RevealingLettersAnimStop();
+        return;
+    }
+    DWORD timeOut = gRevealingLettersAnim->GetTimeoutInMilliseconds();
+    if (timeOut != 0)
+        return;
+    SetLettersSumatraUpTo(++gRevealingLettersAnimLettersToShow);
+    InvalidateFrame();
+    gRevealingLettersAnim->Step();
 }
 
 void AnimStep() {
-    if (gFrameTimeoutInstallerAnim) {
+    if (gRotatingLettersAnim) {
         RotatingLettersAnim();
     }
-}
-
-void StartLettersAnim()
-{
-    assert(gUiState == InstallerUiInitial);
-    gUiState = InstallerUiAnim1;
-    gFrameTimeoutInstallerAnim = new FrameTimeoutCalculator(20);
+    if (gRevealingLettersAnim) {
+        RevealingLettersAnim();
+    }
 }
 
 void CalcLettersLayout(Graphics& g, Font *f, int dx)
@@ -1221,7 +1281,8 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
         x += li->dx;
         x += letterSpacing;
     }
-    StartLettersAnim();
+    //RotatingLettersAnimStart();
+    RevealingLettersAnimStart();
     didLayout = TRUE;
 }
 
