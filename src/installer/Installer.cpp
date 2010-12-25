@@ -1277,7 +1277,7 @@ void RevealingLettersAnimStart()
     gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
     gRevealingLettersAnimLettersToShow = 0;
     SetLettersSumatraUpTo(0);
-    InvalidateFrame();
+    //InvalidateFrame();
 }
 
 void RevealingLettersAnimStop()
@@ -1298,8 +1298,8 @@ void RevealingLettersAnim()
     if (timeOut != 0)
         return;
     SetLettersSumatraUpTo(++gRevealingLettersAnimLettersToShow);
-    InvalidateFrame();
     gRevealingLettersAnim->Step();
+    InvalidateFrame();
 }
 
 void AnimStep() {
@@ -1352,6 +1352,8 @@ void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
     for (int i=0; i<dimof(gSumatraLetters); i++) {
         li = &gSumatraLetters[i];
         s[0] = li->c;
+        if (s[0] == ' ')
+            return;
 
         g.RotateTransform(li->rotation, MatrixOrderAppend);
         // draw shadow first
@@ -1493,17 +1495,20 @@ void OnMouseMove(HWND hwnd, int x, int y)
 
 void OnCreateUninstaller(HWND hwnd)
 {
-    RECT        r;
-    int         x, y;
+    RECT    r;
+    int     x, y;
+    int     buttonDx = 128;
+    int     buttonDy = 22;
 
     GetClientRect(hwnd, &r);
-    x = RectDx(&r) - 128 - 8;
-    y = RectDy(&r) - 22 - 8;
+    x = RectDx(&r) - buttonDx - 8;
+    y = RectDy(&r) - buttonDy - 8;
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
     gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
-                        x, y, 128, 22, hwnd, (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
+                        x, y, buttonDx, buttonDy, hwnd,
+                        (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
     SetFont(gHwndButtonUninstall, gFontDefault);
 }
 
