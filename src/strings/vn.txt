@@ -387,6 +387,9 @@ Thước đo trang
 Page:
 Trang:
 
+Please include the following file in your crash report:
+Xin vui lòng thêm tập tin sau vào báo cáo ngưng hoạt động
+
 Please wait - rendering...
 Xin chờ đợi, đang hiện...
 
@@ -447,6 +450,9 @@ Tuỳ chọn SumatraPDF
 SumatraPDF Update
 Cập nhật SumatraPDF
 
+SumatraPDF crashed
+SumatraPDF đã ngưng hoạt đọng
+
 SumatraPDF is your main PDF reader
 SumatraPDF là trình đọc PDF chính của bạn
 
@@ -500,8 +506,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Please include the following file in your crash report:
-#SumatraPDF crashed
 
