@@ -69,28 +69,13 @@ using namespace Gdiplus;
 #define ID_BUTTON_EXIT                5
 #define INVALID_SIZE                  DWORD(-1)
 
-// Describes different states of ui. What we display
-// on screen depends on this.
-enum UiState {
-    InstallerUiInitial,
-    InstallerUiAnim1,
-    InstallerUiAfterAnim1,
-    InstallerUiInstallOk,
-    InstallerUiInstallFailed,
-
-    UninstallerUiInitial,
-    UninstallerUiInstallOk,
-    UninstallerUiInstallFailed,
-};
-
-static UiState gUiState = InstallerUiInitial;
-
 // The window is divided in two parts:
 // * top part, where we display nice graphics
 // * bottom part, with install/uninstall button
 // This is the height of the lower part
 #define BOTTOM_PART_DY 38
 
+static ULONG_PTR        gGdiplusToken;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
 static HWND             gHwndButtonInstall;
@@ -100,7 +85,19 @@ static HWND             gHwndCheckboxRegisterDefault;
 static HWND             gHwndButtonUninstall;
 static HFONT            gFontDefault;
 
-static ULONG_PTR        gGdiplusToken;
+static TCHAR *          gMsg;
+static Color            gMsgColor;
+
+Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
+Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
+Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
+Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
+Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
+
+static Color            COLOR_MSG_OK(gCol3Shadow);
+static Color            COLOR_MSG_FAILED(gCol1Shadow);
+static Color            COLOR_MSG_WELCOME(gCol5Shadow);
+static Color            COLOR_MSG_INSTALLATION_IN_PROGRESS(0,0,0);
 
 int gBallX, gBallY;
 
@@ -781,6 +778,14 @@ static HFONT CreateDefaultGuiFont()
     return NULL;
 }
 
+void InvalidateFrame()
+{
+    RECT rc;
+    GetClientRect(gHwndFrame, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    InvalidateRect(gHwndFrame, &rc, FALSE);
+}
+
 HANDLE CreateProcessHelper(TCHAR *exe, TCHAR *args=NULL)
 {
     PROCESS_INFORMATION pi;
@@ -1094,6 +1099,9 @@ void OnButtonInstall()
 
     // disable the button during installation
     EnableWindow(gHwndButtonInstall, FALSE);
+    gMsg = _T("Installation in progress...");
+    gMsgColor = COLOR_MSG_INSTALLATION_IN_PROGRESS;
+    InvalidateFrame();
     ProcessMessageLoop(gHwndFrame);
 
     // TODO: do it on a background thread so that UI is still responsive
@@ -1130,10 +1138,16 @@ void OnButtonInstall()
 Exit:
     DestroyWindow(gHwndCheckboxRegisterDefault);
     DestroyWindow(gHwndButtonInstall);
-    if (ok)
+    if (ok) {
         CreateButtonRunSumatra(gHwndFrame);
-    else
+        gMsg = _T("Installation has finished!");
+        gMsgColor = COLOR_MSG_OK;
+    } else {
         CreateButtonExit(gHwndFrame);
+        gMsg = _T("Installation failed!");
+        gMsgColor = COLOR_MSG_FAILED;
+    }
+    InvalidateFrame();
     return;
 Error:
     if (msg)
@@ -1146,6 +1160,9 @@ void OnButtonUninstall()
 {
     // disable the button during uninstallation
     EnableWindow(gHwndButtonUninstall, FALSE);
+    gMsg = _T("Uninstallation in progress...");
+    gMsgColor = COLOR_MSG_INSTALLATION_IN_PROGRESS;
+    InvalidateFrame();
     ProcessMessageLoop(gHwndFrame);
 
     /* if the app is running, we have to kill it to delete the files */
@@ -1157,6 +1174,10 @@ void OnButtonUninstall()
 
     DestroyWindow(gHwndButtonUninstall);
     CreateButtonExit(gHwndFrame);
+
+    gMsg = _T("Uninstallation has finished!");
+    gMsgColor = COLOR_MSG_OK;
+    InvalidateFrame();
 }
 
 // This display is inspired by http://letteringjs.com/
@@ -1171,12 +1192,6 @@ typedef struct {
     REAL dx, dy;
     REAL x;
 } LetterInfo;
-
-Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
-Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
-Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
-Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
-Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
 
 LetterInfo gSumatraLetters[] = {
     { 'S', gCol1, gCol1Shadow, -3.f,     0, 0, 0 },
@@ -1227,21 +1242,11 @@ void SetLettersSumatra()
     SetLettersSumatraUpTo(SUMATRA_LETTERS_COUNT);
 }
 
-void InvalidateFrame()
-{
-    RECT rc;
-    GetClientRect(gHwndFrame, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
-    InvalidateRect(gHwndFrame, &rc, FALSE);
-}
-
 // an animation that 'rotates' random letters 
 static FrameTimeoutCalculator *gRotatingLettersAnim = NULL;
 
 void RotatingLettersAnimStart()
 {
-    //assert(gUiState == InstallerUiInitial);
-    //gUiState = InstallerUiAnim1;
     gRotatingLettersAnim = new FrameTimeoutCalculator(20);
 }
 
@@ -1251,7 +1256,6 @@ void RotatingLettersAnimStop()
     gRotatingLettersAnim = NULL;
     SetLettersSumatra();
     InvalidateFrame();
-    //gUiState = InstallerUiAfterAnim1;
 }
 
 void RotatingLettersAnim()
@@ -1351,6 +1355,29 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
     didLayout = TRUE;
 }
 
+void DrawMessage(Graphics &g, REAL y, REAL dx)
+{
+    if (!gMsg)
+        return;
+    TCHAR *s = gMsg;
+
+    SolidBrush b(gMsgColor);
+    Font f(L"Impact", 16, FontStyleRegular);
+    StringFormat sfmt;
+
+    RectF bbox;
+    g.MeasureString(s, -1, &f, PointF(0,0), &sfmt, &bbox);
+
+#if 0
+    g.DrawString(s, -1, &f, PointF(0,0), &b);
+    Pen pen(Color(0,0,0), 2);
+    g.DrawRectangle(&pen, bbox);
+#endif
+
+    REAL x = (dx - bbox.Width) / 2.f;
+    g.DrawString(s, -1, &f, PointF(x,y), &b);
+}
+
 void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
 {
     LetterInfo *li;
@@ -1395,6 +1422,9 @@ void DrawInstallerFrame(Graphics &g, RECT *r)
 #endif
 
     DrawSumatraLetters(g, &f, 18.f);
+
+    REAL msgY = (REAL)(RectDy(r) / 2);
+    DrawMessage(g, msgY, (REAL)RectDx(r));
 
 #if 0
     FontFamily fontFamily(_T("Impact"));
@@ -1589,6 +1619,14 @@ void OnCreateInstaller(HWND hwnd)
         8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEAFULT, ghinst, NULL);
     SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
     SetCheckboxState(gHwndCheckboxRegisterDefault, TRUE);
+
+#if 0
+    gMsg = _T("SumatraPDF has been installed!");
+    gMsgColor = COLOR_MSG_OK;
+#endif
+
+    gMsg = _T("Installation failed!");
+    gMsgColor = COLOR_MSG_FAILED;
 }
 
 static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1709,7 +1747,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gUiState = UninstallerUiInitial;
+        gMsg = _T("Welcome to SumatraPDF!");
+        gMsgColor = COLOR_MSG_WELCOME;
     } else {
         gHwndFrame = CreateWindow(
                 INSTALLER_FRAME_CLASS_NAME, UNINSTALLER_WIN_TITLE,
@@ -1719,7 +1758,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 INSTALLER_WIN_DX, INSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gUiState = InstallerUiInitial;
+        gMsg = _T("Welcome to SumatraPDF uninstaller");
+        gMsgColor = COLOR_MSG_WELCOME;
     }
     if (!gHwndFrame)
         return FALSE;
