@@ -65,6 +65,8 @@ using namespace Gdiplus;
 #define ID_BUTTON_INSTALL             1
 #define ID_BUTTON_UNINSTALL           2
 #define ID_CHECKBOX_MAKE_DEAFULT      3
+#define ID_BUTTON_START_SUMATRA       4
+#define ID_BUTTON_EXIT                5
 #define INVALID_SIZE                  DWORD(-1)
 
 // Describes different states of ui. What we display
@@ -92,6 +94,8 @@ static UiState gUiState = InstallerUiInitial;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
 static HWND             gHwndButtonInstall;
+static HWND             gHwndButtonExit;
+static HWND             gHwndButtonRunSumatra;
 static HWND             gHwndCheckboxRegisterDefault;
 static HWND             gHwndButtonUninstall;
 static HFONT            gFontDefault;
@@ -1035,10 +1039,58 @@ BOOL CreateInstallationDirectory()
     return ok;
 }
 
+void CreateButtonExit(HWND hwndParent)
+{
+    RECT    r;
+    int     x, y;
+    int     buttonDx = 80;
+    int     buttonDy = 22;
+
+    // TODO: determine the sizes of buttons by measuring their real size
+    // and adjust size of the window appropriately
+    GetClientRect(hwndParent, &r);
+    x = RectDx(&r) - buttonDx - 8;
+    y = RectDy(&r) - buttonDy - 8;
+    gHwndButtonExit = CreateWindow(WC_BUTTON, _T("Exit"),
+                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        x, y, buttonDx, buttonDy, hwndParent, 
+                        (HMENU)ID_BUTTON_EXIT,
+                        ghinst, NULL);
+    SetFont(gHwndButtonExit, gFontDefault);
+}
+
+void CreateButtonRunSumatra(HWND hwndParent)
+{
+    RECT    r;
+    int     x, y;
+    int     buttonDx = 120;
+    int     buttonDy = 22;
+
+    // TODO: determine the sizes of buttons by measuring their real size
+    // and adjust size of the window appropriately
+    GetClientRect(hwndParent, &r);
+    x = RectDx(&r) - buttonDx - 8;
+    y = RectDy(&r) - buttonDy - 8;
+    gHwndButtonRunSumatra= CreateWindow(WC_BUTTON, _T("Start SumatraPDF"),
+                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        x, y, buttonDx, buttonDy, hwndParent, 
+                        (HMENU)ID_BUTTON_START_SUMATRA,
+                        ghinst, NULL);
+    SetFont(gHwndButtonRunSumatra, gFontDefault);
+}
+
+void OnButtonStartSumatra()
+{
+    TCHAR *s = GetInstalledExePath();
+    CreateProcessHelper(s);
+    free(s);
+}
+
 void OnButtonInstall()
 {
     char *msg = NULL;
     BOOL registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
+    BOOL ok = TRUE;
 
     // disable the button during installation
     EnableWindow(gHwndButtonInstall, FALSE);
@@ -1076,11 +1128,17 @@ void OnButtonInstall()
     }
 
 Exit:
-    EnableWindow(gHwndButtonInstall, TRUE);
+    DestroyWindow(gHwndCheckboxRegisterDefault);
+    DestroyWindow(gHwndButtonInstall);
+    if (ok)
+        CreateButtonRunSumatra(gHwndFrame);
+    else
+        CreateButtonExit(gHwndFrame);
     return;
 Error:
     if (msg)
         NotifyFailed(msg);
+    ok = FALSE;
     goto Exit;
 }
 
@@ -1097,7 +1155,8 @@ void OnButtonUninstall()
     UnregisterFromBeingDefaultViewer();
     RemoveInstallationDirectory();
 
-    EnableWindow(gHwndButtonUninstall, TRUE);
+    DestroyWindow(gHwndButtonUninstall);
+    CreateButtonExit(gHwndFrame);
 }
 
 // This display is inspired by http://letteringjs.com/
@@ -1477,6 +1536,12 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
                 case ID_BUTTON_UNINSTALL:
                     OnButtonUninstall();
                     break;
+
+                case ID_BUTTON_EXIT:
+                    SendMessage(hwnd, WM_CLOSE, 0, 0);
+                    //DestroyWindow(hwnd);
+                    break;
+
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
@@ -1493,17 +1558,20 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
 
 void OnCreateInstaller(HWND hwnd)
 {
-    RECT        r;
-    int         x, y;
+    RECT    r;
+    int     x, y;
+    int     buttonDx = 120;
+    int     buttonDy = 22;
 
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
     GetClientRect(hwnd, &r);
-    x = RectDx(&r) - 120 - 8;
-    y = RectDy(&r) - 22 - 8;
+    x = RectDx(&r) - buttonDx - 8;
+    y = RectDy(&r) - buttonDy - 8;
     gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install SumatraPDF"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
-                        x, y, 120, 22, hwnd, (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
+                        x, y, buttonDx, buttonDy, hwnd, 
+                        (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
     SetFont(gHwndButtonInstall, gFontDefault);
 
     gHwndCheckboxRegisterDefault = CreateWindow(
@@ -1543,6 +1611,16 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
                 case ID_BUTTON_INSTALL:
                     OnButtonInstall();
                     break;
+
+                case ID_BUTTON_START_SUMATRA:
+                    OnButtonStartSumatra();
+                    break;
+
+                case ID_BUTTON_EXIT:
+                    SendMessage(hwnd, WM_CLOSE, 0, 0);
+                    //DestroyWindow(hwnd);
+                    break;
+
                 default:
                     return DefWindowProc(hwnd, message, wParam, lParam);
             }
