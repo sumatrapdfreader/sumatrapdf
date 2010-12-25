@@ -4,30 +4,6 @@
 #ifndef SUMATRAPDF_H_
 #define SUMATRAPDF_H_
 
-/* TODO: those should be set from the makefile */
-// Modify the following defines if you have to target a platform prior to the ones specified below.
-// Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
-// and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
-// We set the features uniformly to Win 2000 or later.
-#ifndef WINVER
-#define WINVER 0x0500
-#endif
-
-#ifndef _WIN32_WINNT 
-#define _WIN32_WINNT 0x0500
-// the following is only defined for _WIN32_WINNT >= 0x0600
-#define USER_DEFAULT_SCREEN_DPI 96
-#endif
-
-#ifndef _WIN32_WINDOWS
-#define _WIN32_WINDOWS 0x0500
-#endif
-
-// Allow use of features specific to IE 6.0 or later.
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0600
-#endif
-
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif

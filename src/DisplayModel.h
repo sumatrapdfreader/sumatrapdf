@@ -8,6 +8,11 @@
 #include "PdfSelection.h"
 #include "PdfSearch.h"
 
+#ifndef USER_DEFAULT_SCREEN_DPI
+// the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
+#define USER_DEFAULT_SCREEN_DPI 96
+#endif
+
 #define INVALID_ZOOM        -99
 #define INVALID_BIG_ZOOM    999999.0   /* arbitrary but big */
 

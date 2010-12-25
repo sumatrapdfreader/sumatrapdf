@@ -44,14 +44,21 @@ SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP)
 CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
 !endif
 
-SUMATRA_CFLAGS = $(CFLAGS) /Ibaseutils /Ibaseutils/msvc \
-	/I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
+# Modify the following defines if you have to target a platform prior to the ones specified below.
+# Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
+# and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
+# We set the features uniformly to Win 2000 or later.
+WINVER_DEFS =  /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
+
+# /D "_WIN32_WINDOWS=0x0500" /D "_WIN32_IE=0x0600"
+
+SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WINVER_DEFS) \
+	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
 	/I$(ZLIB_DIR) /Isrc /IDialogSizer 
 
-INSTALLER_CFLAGS = $(CFLAGS) /D "_WINDOWS" $(EXTCFLAGS) /Ibaseutils /Ibaseutils/msvc /Isrc/installer /I$(ZLIB_DIR)
+INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WINVER_DEFS) \
+	/Ibaseutils /Ibaseutils/msvc /Isrc/installer /I$(ZLIB_DIR)
 
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_WINDOWS"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) $(EXTCFLAGS)
 # Flag for TeX enhancements
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
 !if "$(TEXBUILD)"=="1"
