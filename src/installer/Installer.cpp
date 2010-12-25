@@ -1090,7 +1090,7 @@ char RandUppercaseLetter()
 void RandomizeLetters()
 {
     for (int i=0; i<dimof(gSumatraLetters); i++) {
-        gSumatraLetters[i[.c = RandUppercaseLetter();
+        gSumatraLetters[i].c = RandUppercaseLetter();
     }
 }
 
