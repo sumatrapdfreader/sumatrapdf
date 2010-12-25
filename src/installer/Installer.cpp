@@ -1163,8 +1163,7 @@ void OnButtonUninstall()
 typedef struct {
     // part that doesn't change
     char c;
-    int r1, g1, b1; // foreground color
-    int r2, g2, b2; // shadow color
+    Color col, colShadow;
     REAL rotation;
     REAL dyOff; // displacement
 
@@ -1173,19 +1172,26 @@ typedef struct {
     REAL x;
 } LetterInfo;
 
-#define SUMATRA_LETTERS_COUNT 10
-LetterInfo gSumatraLetters[SUMATRA_LETTERS_COUNT] = {
-    { 'S', 196, 64,  50, 134, 48, 39, -3.f,     0, 0, 0 },
-    { 'U', 227, 107, 35, 155, 77, 31,  0.f,     0, 0, 0 },
-    { 'M', 93,  160, 40,  51, 87, 39,  2.f,  -2.f, 0, 0 },
-    { 'A', 69, 132, 190,  47, 89, 127, 0.f,  -2.4f, 0, 0 },
-    { 'T', 112, 115, 207, 66, 71, 118, 0.f,     0, 0, 0 },
-    { 'R', 112, 115, 207, 66, 71, 118, 2.3f,  -1.4f, 0, 0 },
-    { 'A', 69, 132, 190,  47, 89, 127, 0.f,     0, 0, 0 },
-    { 'P', 93,  160, 40,  51, 87, 39,  0.f,  -2.3f, 0, 0 },
-    { 'D', 227, 107, 35, 155, 77, 31,  0.f,   3.f, 0, 0 },
-    { 'F', 196, 64, 50, 134, 48, 39,   0.f,     0, 0, 0 }
+Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
+Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
+Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
+Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
+Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
+
+LetterInfo gSumatraLetters[] = {
+    { 'S', gCol1, gCol1Shadow, -3.f,     0, 0, 0 },
+    { 'U', gCol2, gCol2Shadow,  0.f,     0, 0, 0 },
+    { 'M', gCol3, gCol3Shadow,  2.f,  -2.f, 0, 0 },
+    { 'A', gCol4, gCol4Shadow,  0.f, -2.4f, 0, 0 },
+    { 'T', gCol5, gCol5Shadow,  0.f,     0, 0, 0 },
+    { 'R', gCol5, gCol5Shadow, 2.3f, -1.4f, 0, 0 },
+    { 'A', gCol4, gCol4Shadow,  0.f,     0, 0, 0 },
+    { 'P', gCol3, gCol3Shadow,  0.f, -2.3f, 0, 0 },
+    { 'D', gCol2, gCol2Shadow,  0.f,   3.f, 0, 0 },
+    { 'F', gCol1, gCol1Shadow,  0.f,     0, 0, 0 }
 };
+
+#define SUMATRA_LETTERS_COUNT (dimof(gSumatraLetters))
 
 char RandUppercaseLetter()
 {
@@ -1357,13 +1363,11 @@ void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
 
         g.RotateTransform(li->rotation, MatrixOrderAppend);
         // draw shadow first
-        Color c2(li->r2, li->g2, li->b2);
-        SolidBrush b2(c2);
+        SolidBrush b2(li->colShadow);
         PointF o2(li->x - 3.f, y + 4.f + li->dyOff);
         g.DrawString(s, 1, f, o2, &b2);
 
-        Color c1(li->r1, li->g1, li->b1);
-        SolidBrush b1(c1);
+        SolidBrush b1(li->col);
         PointF o1(li->x, y + li->dyOff);
         g.DrawString(s, 1, f, o1, &b1);
         g.RotateTransform(li->rotation, MatrixOrderAppend);
