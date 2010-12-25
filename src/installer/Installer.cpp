@@ -66,15 +66,19 @@ using namespace Gdiplus;
 
 // Describes different states of ui. What we display
 // on screen depends on this.
-enum InstallerUiState {
+enum UiState {
     InstallerUiInitial,
     InstallerUiAnim1,
     InstallerUiAfterAnim1,
     InstallerUiInstallOk,
-    InstallerUiInstallFailed
+    InstallerUiInstallFailed,
+
+    UninstallerUiInitial,
+    UninstallerUiInstallOk,
+    UninstallerUiInstallFailed,
 };
 
-static InstallerUiState gInstallerUiState = InstallerUiInitial;
+static UiState gUiState = InstallerUiInitial;
 
 // The window is divided in two parts:
 // * top part, where we display nice graphics
@@ -317,6 +321,49 @@ DWORD GetFilePointer(HANDLE h)
     return SetFilePointer(h, 0, NULL, FILE_CURRENT);
 }
 
+class FrameTimeoutCalculator {
+
+    LARGE_INTEGER   timeStart;
+    LARGE_INTEGER   timeLast;
+    LONGLONG        ticksPerFrame;
+    LONGLONG        ticsPerMs;
+    LARGE_INTEGER   timeFreq;
+
+public:
+    FrameTimeoutCalculator(int framesPerSecond) {
+        QueryPerformanceFrequency(&timeFreq); // number of ticks per second
+        ticsPerMs = timeFreq.QuadPart / 1000;
+        ticksPerFrame = timeFreq.QuadPart / framesPerSecond;
+        QueryPerformanceCounter(&timeStart);
+        timeLast = timeStart;
+    }
+
+    // in seconds, as a double
+    double ElapsedTotal() {
+        LARGE_INTEGER timeCurr;
+        QueryPerformanceCounter(&timeCurr);
+        LONGLONG elapsedTicks =  timeCurr.QuadPart - timeStart.QuadPart;
+        double res = (double)elapsedTicks / (double)timeFreq.QuadPart;
+        return res;
+    }
+
+    DWORD GetTimeoutInMilliseconds() {
+        LARGE_INTEGER timeCurr;
+        LONGLONG elapsedTicks;
+        QueryPerformanceCounter(&timeCurr);
+        elapsedTicks = timeCurr.QuadPart - timeLast.QuadPart;
+        if (elapsedTicks > ticksPerFrame) {
+            return 0;
+        } else {
+            LONGLONG timeoutMs = (ticksPerFrame - elapsedTicks) / ticsPerMs;
+            return (DWORD)timeoutMs;
+        }
+    }
+
+    void Step() {
+        timeLast.QuadPart += ticksPerFrame;
+    }
+};
 
 /* Load information about parts embedded in the installer.
    The format of the data is:
@@ -1102,11 +1149,39 @@ void SetLettersSumatra()
     }
 }
 
-void Anim1Thread() {
-    
-    while (1) {
+void InvalidateFrame()
+{
+    RECT rc;
+    GetClientRect(gHwndFrame, &rc);
+    rc.bottom -= BOTTOM_PART_DY;
+    InvalidateRect(gHwndFrame, &rc, FALSE);
+}
 
+static FrameTimeoutCalculator *gFrameTimeoutInstallerAnim = NULL;
+
+void AnimStep() {
+    if (gFrameTimeoutInstallerAnim) {
+        assert (gUiState == InstallerUiAnim1);
+        DWORD timeOut = gFrameTimeoutInstallerAnim->GetTimeoutInMilliseconds();
+        if (0 == timeOut) {
+            RandomizeLetters();
+            InvalidateFrame();
+            gFrameTimeoutInstallerAnim->Step();
+            if (gFrameTimeoutInstallerAnim->ElapsedTotal() > 3) {
+                delete gFrameTimeoutInstallerAnim;
+                gFrameTimeoutInstallerAnim = NULL;
+                SetLettersSumatra();
+                gUiState = InstallerUiAfterAnim1;
+            }
+        }
     }
+}
+
+void StartLettersAnim()
+{
+    assert(gUiState == InstallerUiInitial);
+    gUiState = InstallerUiAnim1;
+    gFrameTimeoutInstallerAnim = new FrameTimeoutCalculator(20);
 }
 
 void CalcLettersLayout(Graphics& g, Font *f, int dx)
@@ -1138,7 +1213,7 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
         x += li->dx;
         x += letterSpacing;
     }
-
+    StartLettersAnim();
     didLayout = TRUE;
 }
 
@@ -1284,10 +1359,7 @@ void OnMouseMove(HWND hwnd, int x, int y)
 #if 0
     gBallX = x;
     gBallY = y;
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
-    InvalidateRect(hwnd, &rc, FALSE);
+    InvalidateFrame();
 #endif
 }
 
@@ -1481,6 +1553,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
+        gUiState = UninstallerUiInitial;
     } else {
         gHwndFrame = CreateWindow(
                 INSTALLER_FRAME_CLASS_NAME, _T("SumatraPDF Installer"),
@@ -1490,6 +1563,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 INSTALLER_WIN_DX, INSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
+        gUiState = InstallerUiInitial;
     }
     if (!gHwndFrame)
         return FALSE;
@@ -1570,9 +1644,36 @@ BOOL ExecuteFromTempIfUninstaller()
     return TRUE;
 }
 
+// inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
+int RunApp()
+{
+    MSG msg;
+    FrameTimeoutCalculator ftc(60);
+    for (;;) {
+        const DWORD timeout = ftc.GetTimeoutInMilliseconds();
+        DWORD res = WAIT_TIMEOUT;
+        if (timeout > 0) {
+            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLEVENTS);
+        }
+        if (res == WAIT_TIMEOUT) {
+            AnimStep();
+            ftc.Step();
+        }
+
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                return msg.wParam;
+            }
+
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG msg = {0};
+    int ret = 0;
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
@@ -1592,16 +1693,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+    ret = RunApp();
 
 Exit:
     FreeEmbeddedParts(gEmbeddedParts);
     GdiplusShutdown(gGdiplusToken);
     CoUninitialize();
 
-    return msg.wParam;
+    return ret;
 }
