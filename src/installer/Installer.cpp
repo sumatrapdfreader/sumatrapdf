@@ -1,3 +1,13 @@
+/*
+The installer is good enough for production but it doesn't mean it couldn't be improved:
+* show version number somewhere e.g. in the upper-right corner of "SUMATRAPDF" 
+* some more fanciful animations e.g.:
+ * letters could drop down and back up when cursor is over it
+ * messages could scroll-in
+ * some background thing could be going on, e.g. a spinning 3d cube
+ * show fireworks on successful installation/uninstallation
+*/
+
 /* TODO: those should be set from the makefile */
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
@@ -52,7 +62,6 @@ using namespace Gdiplus;
 #define FORCE_TO_BE_UNINSTALLER 0
 
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
-#define UNINSTALLER_FRAME_CLASS_NAME  _T("SUMATRA_PDF_UNINSTALLER_FRAME")
 
 #define INSTALLER_WIN_TITLE    _T("SumatraPDF ") CURR_VERSION_STR _T(" Installer")
 #define UNINSTALLER_WIN_TITLE  _T("SumatraPDF ") CURR_VERSION_STR _T(" Uninstaller")
@@ -67,6 +76,9 @@ using namespace Gdiplus;
 #define ID_CHECKBOX_MAKE_DEAFULT      3
 #define ID_BUTTON_START_SUMATRA       4
 #define ID_BUTTON_EXIT                5
+
+#define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
+
 #define INVALID_SIZE                  DWORD(-1)
 
 // The window is divided in two parts:
@@ -99,8 +111,6 @@ static Color            COLOR_MSG_FAILED(gCol1Shadow);
 static Color            COLOR_MSG_WELCOME(gCol5Shadow);
 static Color            COLOR_MSG_INSTALLATION_IN_PROGRESS(0,0,0);
 
-int gBallX, gBallY;
-
 #define APP                 "SumatraPDF"
 #define TAPP                _T("SumatraPDF")
 #define EXENAME             "SumatraPDF.exe"
@@ -110,6 +120,12 @@ int gBallX, gBallY;
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 #define REG_PATH_UNINST     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") TAPP
 #define REG_PATH_SOFTWARE   _T("Software\\") TAPP
+
+#define REG_CLASSES_APP     _T("Software\\Classes\\") TAPP
+#define REG_CLASSES_PDF     _T("Software\\Classes\\.pdf")
+
+#define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
+#define PROG_ID               _T("ProgId")
 
 // Keys we'll set in REG_PATH_UNINST path
 
@@ -759,14 +775,6 @@ BOOL GetCheckboxState(HWND hwnd)
     return (BOOL)SendMessage(hwnd, BM_GETCHECK, 0, 0L);
 }
 
-#if 0
-void ResizeClientArea(HWND hwnd, int dx, int dy)
-{
-    RECT rwin, rcln;
-    GetClientRect(hwnd, &rwin);
-}
-#endif
-
 static HFONT CreateDefaultGuiFont()
 {
     NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
@@ -882,9 +890,6 @@ void RemoveUninstallerRegistryInfo()
         NotifyFailed("Failed to delete uninstaller registry keys");
 }
 
-#define REG_CLASSES_APP _T("Software\\Classes\\") TAPP
-#define REG_CLASSES_PDF _T("Software\\Classes\\.pdf")
-
 /* Undo what DoAssociateExeWithPdfExtension() in SumatraPDF.cpp did */
 void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
@@ -899,9 +904,6 @@ void UnregisterFromBeingDefaultViewer(HKEY hkey)
     }
     RegDelKeyRecurse(hkey, REG_CLASSES_APP);
 }
-
-#define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
-#define PROG_ID _T("ProgId")
 
 void UnregisterExplorerFileExts()
 {
@@ -971,12 +973,17 @@ void RemoveInstallationDirectory()
     RemoveDirectoryWithFiles(GetInstallationDir());
 }
 
-void CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHAR *description)
+BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHAR *description)
 {
     IShellLink* sl = NULL;
     IPersistFile* pf = NULL;
+    BOOL ok = TRUE;
 
-    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
+    HRESULT hr = CoInitialize(NULL);
+    if (FAILED(hr)) 
+        goto Exit;
+
+    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
     if (FAILED(hr)) 
         goto Exit;
 
@@ -1005,19 +1012,23 @@ Exit:
       sl->Release();
 
     if (FAILED(hr)) {
+        ok = FALSE;
         SeeLastError();
         NotifyFailed("Failed to create a shortcut");
-    }    
+    }
+    CoUninitialize();
+    return ok;
 }
 
-void CreateAppShortcut()
+BOOL CreateAppShortcut()
 {
     TCHAR *workingDir = GetInstallationDir();
     TCHAR *installedExePath = GetInstalledExePath();
     TCHAR *shortcutPath = GetShortcutPath();
-    CreateShortcut(shortcutPath, installedExePath, workingDir, NULL);
+    BOOL ok = CreateShortcut(shortcutPath, installedExePath, workingDir, NULL);
     free(installedExePath);
     free(shortcutPath);
+    return ok;
 }
 
 void RemoveShortcut()
@@ -1091,23 +1102,26 @@ void OnButtonStartSumatra()
     free(s);
 }
 
-void OnButtonInstall()
+typedef struct {
+    // arguments
+    BOOL    registerAsDefault;
+    HWND    hwndToNotify;
+    HANDLE  hThread;
+
+    // results
+    BOOL    ok;
+    char  * msg;
+} InstallerThreadData;
+
+static DWORD WINAPI InstallerThread(LPVOID data)
 {
-    char *msg = NULL;
-    BOOL registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
-    BOOL ok = TRUE;
+    InstallerThreadData *td = (InstallerThreadData *)data;
+    td->ok = TRUE;
+    td->msg = NULL;
 
-    // disable the button during installation
-    EnableWindow(gHwndButtonInstall, FALSE);
-    gMsg = _T("Installation in progress...");
-    gMsgColor = COLOR_MSG_INSTALLATION_IN_PROGRESS;
-    InvalidateFrame();
-    ProcessMessageLoop(gHwndFrame);
-
-    // TODO: do it on a background thread so that UI is still responsive
     EmbeddedPart *parts = GetEmbeddedPartsInfo();
     if (NULL == parts) {
-        msg = "Didn't find embedded parts";
+        td->msg = "Didn't find embedded parts";
         goto Error;
     }
 
@@ -1124,9 +1138,10 @@ void OnButtonInstall()
         goto Error;
 
     WriteUninstallerRegistryInfo();
-    CreateAppShortcut();
+    if (!CreateAppShortcut())
+        goto Error;
 
-    if (registerAsDefault) {
+    if (td->registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
         TCHAR *installedExePath = GetInstalledExePath();
@@ -1136,9 +1151,33 @@ void OnButtonInstall()
     }
 
 Exit:
+    PostMessage(td->hwndToNotify, WM_APP_INSTALLATION_FINISHED, (WPARAM)td, (LPARAM)0);
+    return 0;
+Error:
+    td->ok = FALSE;
+    goto Exit;
+}
+
+void OnButtonInstall()
+{
+    // disable the install button and remove checkbox during installation
     DestroyWindow(gHwndCheckboxRegisterDefault);
+    EnableWindow(gHwndButtonInstall, FALSE);
+
+    gMsg = _T("Installation in progress...");
+    gMsgColor = COLOR_MSG_INSTALLATION_IN_PROGRESS;
+    InvalidateFrame();
+
+    InstallerThreadData *td = SA(InstallerThreadData);
+    td->hwndToNotify = gHwndFrame;
+    td->registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
+    td->hThread = CreateThread(NULL, 0, InstallerThread, td, 0, 0);
+}
+
+void OnInstallationFinished(InstallerThreadData *td)
+{
     DestroyWindow(gHwndButtonInstall);
-    if (ok) {
+    if (td->ok) {
         CreateButtonRunSumatra(gHwndFrame);
         gMsg = _T("Installation has finished!");
         gMsgColor = COLOR_MSG_OK;
@@ -1148,12 +1187,12 @@ Exit:
         gMsgColor = COLOR_MSG_FAILED;
     }
     InvalidateFrame();
-    return;
-Error:
-    if (msg)
-        NotifyFailed(msg);
-    ok = FALSE;
-    goto Exit;
+
+    if (td->msg)
+        NotifyFailed(td->msg);
+
+    CloseHandle(td->hThread);
+    free(td);
 }
 
 void OnButtonUninstall()
@@ -1210,7 +1249,7 @@ LetterInfo gSumatraLetters[] = {
 
 char RandUppercaseLetter()
 {
-    // TODO: clearly, not random
+    // TODO: clearly, not random but seem to work ok anyway
     static char l = 'A' - 1;
     l++;
     if (l > 'Z')
@@ -1287,7 +1326,6 @@ void RevealingLettersAnimStart()
     gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
     gRevealingLettersAnimLettersToShow = 0;
     SetLettersSumatraUpTo(0);
-    //InvalidateFrame();
 }
 
 void RevealingLettersAnimStop()
@@ -1368,12 +1406,6 @@ void DrawMessage(Graphics &g, REAL y, REAL dx)
     RectF bbox;
     g.MeasureString(s, -1, &f, PointF(0,0), &sfmt, &bbox);
 
-#if 0
-    g.DrawString(s, -1, &f, PointF(0,0), &b);
-    Pen pen(Color(0,0,0), 2);
-    g.DrawRectangle(&pen, bbox);
-#endif
-
     REAL x = (dx - bbox.Width) / 2.f;
     g.DrawString(s, -1, &f, PointF(x,y), &b);
 }
@@ -1402,7 +1434,7 @@ void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
     }
 }
 
-void DrawInstallerFrame(Graphics &g, RECT *r)
+void DrawFrame2(Graphics &g, RECT *r)
 {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
@@ -1415,34 +1447,13 @@ void DrawInstallerFrame(Graphics &g, RECT *r)
     Rect r2(r->top-1, r->left-1, RectDx(r)+1, RectDy(r)+1);
     g.FillRectangle(&bgBrush, r2);
 
-#if 0
-    Rect ballRect(gBallX-5, gBallY-5, 10, 10);
-    SolidBrush blackBrush(Color(255, 0, 0, 0));
-    g.FillEllipse(&blackBrush, ballRect);
-#endif
-
     DrawSumatraLetters(g, &f, 18.f);
 
     REAL msgY = (REAL)(RectDy(r) / 2);
     DrawMessage(g, msgY, (REAL)RectDx(r));
-
-#if 0
-    FontFamily fontFamily(_T("Impact"));
-    StringFormat strformat;
-    TCHAR s[] = _T("SumatraPDF");
-
-    strformat.SetAlignment(StringAlignmentCenter);
-    GraphicsPath p;
-    Pen pen(Color(0,0,0), 5);
-    Rect b(0, 20, RectDx(r), 80);
-    p.AddString(s, tstr_len(s), &fontFamily, FontStyleRegular, 48, b, &strformat);
-
-    g.DrawPath(&pen, &p);
-    g.FillPath(&bgBrush, &p);
-#endif
 }
 
-void DrawUninstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
+void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
 {
     RECT rc;
     GetClientRect(hwnd, &rc);
@@ -1454,37 +1465,6 @@ void DrawUninstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
         DeleteObject(brushNativeBg);
     }
 
-#if 1 // DoubleBuffer
-        // TODO: cache bmp object?
-        Graphics g(dc);
-        GetClientRect(hwnd, &rc);
-        rc.bottom -= BOTTOM_PART_DY;
-        int dx = RectDx(&rc); int dy = RectDy(&rc);
-        Bitmap bmp(dx, dy, &g);
-        Graphics g2((Image*)&bmp);
-        DrawInstallerFrame(g2, &rc);
-        g.DrawImage(&bmp, 0, 0);
-#else
-        GetClientRect(hwnd, &rc);
-        rc.bottom -= BOTTOM_PART_DY;
-        Graphics g(dc);
-        DrawInstallerFrame(g, &rc);
-#endif
-}
-
-void DrawInstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
-{
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    rc.top = rc.bottom - BOTTOM_PART_DY;
-    RECT rcTmp;
-    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
-        HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-        FillRect(dc, &rc, brushNativeBg);
-        DeleteObject(brushNativeBg);
-    }
-
-#if 1 // DoubleBuffer
     // TODO: cache bmp object?
     Graphics g(dc);
     GetClientRect(hwnd, &rc);
@@ -1492,39 +1472,21 @@ void DrawInstaller(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
     int dx = RectDx(&rc); int dy = RectDy(&rc);
     Bitmap bmp(dx, dy, &g);
     Graphics g2((Image*)&bmp);
-    DrawInstallerFrame(g2, &rc);
+    DrawFrame2(g2, &rc);
     g.DrawImage(&bmp, 0, 0);
-#else
-    GetClientRect(hwnd, &rc);
-    rc.bottom -= BOTTOM_PART_DY;
-    Graphics g(dc);
-    DrawInstallerFrame(g, &rc);
-#endif
 }
 
-void OnPaintInstaller(HWND hwnd)
+void OnPaintFrame(HWND hwnd)
 {
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
-    DrawInstaller(hwnd, dc, &ps);
-    EndPaint(hwnd, &ps);
-}
-
-void OnPaintUninstaller(HWND hwnd)
-{
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    DrawUninstaller(hwnd, hdc, &ps);
+    DrawFrame(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
 }
 
 void OnMouseMove(HWND hwnd, int x, int y)
 {
-#if 0
-    gBallX = x;
-    gBallY = y;
-    InvalidateFrame();
-#endif
+    // nothing so far
 }
 
 void OnCreateUninstaller(HWND hwnd)
@@ -1565,7 +1527,7 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
             return TRUE;
 
         case WM_PAINT:
-            OnPaintUninstaller(hwnd);
+            OnPaintFrame(hwnd);
             break;
 
         case WM_COMMAND:
@@ -1578,7 +1540,6 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
 
                 case ID_BUTTON_EXIT:
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
-                    //DestroyWindow(hwnd);
                     break;
 
                 default:
@@ -1619,14 +1580,6 @@ void OnCreateInstaller(HWND hwnd)
         8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEAFULT, ghinst, NULL);
     SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
     SetCheckboxState(gHwndCheckboxRegisterDefault, TRUE);
-
-#if 0
-    gMsg = _T("SumatraPDF has been installed!");
-    gMsgColor = COLOR_MSG_OK;
-#endif
-
-    gMsg = _T("Installation failed!");
-    gMsgColor = COLOR_MSG_FAILED;
 }
 
 static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1648,7 +1601,7 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             return TRUE;
 
         case WM_PAINT:
-            OnPaintInstaller(hwnd);
+            OnPaintFrame(hwnd);
             break;
 
         case WM_COMMAND:
@@ -1665,7 +1618,6 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
 
                 case ID_BUTTON_EXIT:
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
-                    //DestroyWindow(hwnd);
                     break;
 
                 default:
@@ -1678,18 +1630,12 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             OnMouseMove(hwnd, x, y);
             break;
 
-#if 0
-        case WM_SIZE:
+        case WM_APP_INSTALLATION_FINISHED:
+            {
+                InstallerThreadData *td = (InstallerThreadData*)wParam;
+                OnInstallationFinished(td);
+            }
             break;
-
-
-        case WM_CHAR:
-            break;
-
-        case WM_KEYDOWN:
-            break;
-
-#endif
 
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
@@ -1711,17 +1657,14 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     ATOM        atom;
 
     FillWndClassEx(wcex, hInstance);
-    wcex.lpfnWndProc    = InstallerWndProcFrame;
     wcex.lpszClassName  = INSTALLER_FRAME_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return FALSE;
 
-    FillWndClassEx(wcex, hInstance);
-    wcex.lpfnWndProc    = UninstallerWndProcFrame;
-    wcex.lpszClassName  = UNINSTALLER_FRAME_CLASS_NAME;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    if (IsUninstaller())
+        wcex.lpfnWndProc    = UninstallerWndProcFrame;
+    else
+        wcex.lpfnWndProc    = InstallerWndProcFrame;
+
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return FALSE;
@@ -1740,14 +1683,14 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     if (IsUninstaller()) {
         gHwndFrame = CreateWindow(
-                UNINSTALLER_FRAME_CLASS_NAME, INSTALLER_WIN_TITLE,
+                INSTALLER_FRAME_CLASS_NAME, INSTALLER_WIN_TITLE,
                 //WS_OVERLAPPEDWINDOW,
                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                 CW_USEDEFAULT, CW_USEDEFAULT, 
                 UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gMsg = _T("Welcome to SumatraPDF!");
+        gMsg = _T("Welcome to SumatraPDF uninstaller");
         gMsgColor = COLOR_MSG_WELCOME;
     } else {
         gHwndFrame = CreateWindow(
@@ -1758,7 +1701,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
                 INSTALLER_WIN_DX, INSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gMsg = _T("Welcome to SumatraPDF uninstaller");
+        gMsg = _T("Welcome to SumatraPDF installer!");
         gMsgColor = COLOR_MSG_WELCOME;
     }
     if (!gHwndFrame)
