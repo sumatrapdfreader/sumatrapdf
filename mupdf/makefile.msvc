@@ -59,18 +59,33 @@ CFLAGS = $(CFLAGS) /D "WIN32"  /D "_WIN32"
 # suppress warning C4996: 'function': was declared deprecated
 CFLAGS = $(CFLAGS) /wd4996
 
+# /W3  : bump warnings level from 1 to 3
+# /WX  : treat warnings as errors
+# /GR- : disable RTTI
+# /Zi  : enable debug information
+# /GS  : enable security checks
+# /Gy  : separate functions for linker
 CFLAGS = $(CFLAGS) /W3 /WX /GR- /Zi /GS /Gy
 
 !if "$(CFG)"=="rel"
+# /Os  : favor code space
+# /Ox  : maximum optimizations
+# /GL  : enable link-time code generation
 CFLAGS = $(CFLAGS) /Os /Ox /GL /D "NDEBUG"
 LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
 # http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
 LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
+# /EHs-c : disable C++ exception handler
 CFLAGS = $(CFLAGS) /EHs-c- 
 !else
+# /Od   : disable optimizations
+# /RTCs : stack frame runtime checking
+# /RTCu : ununitialized local usage checks
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu
 # exception handling must be activated to enable memory leak detection
+# /MDd  : link with msvcrtd.lib
+# /EHsc : enable C++ EH (no SEH exceptions)
 CFLAGS = $(CFLAGS) /MDd /EHsc
 !endif
 
@@ -283,7 +298,7 @@ $(O): force
 	@if not exist $(O) mkdir $(O)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
-	rc /r /fo$(PDFAPP_RES) $(MUPDF_DIR)\apps\win_res.rc
+	rc /r /fo$(PDFAPP_RES) $<
 
 $(O)\cmap_tounicode.obj: $(O)\cmap_tounicode.c
 $(O)\cmap_cns.obj: $(O)\cmap_cns.c
