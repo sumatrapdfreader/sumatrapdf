@@ -1,3 +1,6 @@
+/* Copyright 2010-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
 * show version number somewhere e.g. in the upper-right corner of "SUMATRAPDF" 
@@ -1208,7 +1211,7 @@ typedef struct {
     REAL x;
 } LetterInfo;
 
-LetterInfo gSumatraLetters[] = {
+LetterInfo gLetters[] = {
     { 'S', gCol1, gCol1Shadow, -3.f,     0, 0, 0 },
     { 'U', gCol2, gCol2Shadow,  0.f,     0, 0, 0 },
     { 'M', gCol3, gCol3Shadow,  2.f,  -2.f, 0, 0 },
@@ -1221,7 +1224,7 @@ LetterInfo gSumatraLetters[] = {
     { 'F', gCol1, gCol1Shadow,  0.f,     0, 0, 0 }
 };
 
-#define SUMATRA_LETTERS_COUNT (dimof(gSumatraLetters))
+#define SUMATRA_LETTERS_COUNT (dimof(gLetters))
 
 char RandUppercaseLetter()
 {
@@ -1235,19 +1238,19 @@ char RandUppercaseLetter()
 
 void RandomizeLetters()
 {
-    for (int i=0; i<dimof(gSumatraLetters); i++) {
-        gSumatraLetters[i].c = RandUppercaseLetter();
+    for (int i=0; i<dimof(gLetters); i++) {
+        gLetters[i].c = RandUppercaseLetter();
     }
 }
 
 void SetLettersSumatraUpTo(int n)
 {
     char *s = "SUMATRAPDF";
-    for (int i=0; i<dimof(gSumatraLetters); i++) {
+    for (int i=0; i<dimof(gLetters); i++) {
         if (i < n) {
-            gSumatraLetters[i].c = s[i];
+            gLetters[i].c = s[i];
         } else {
-            gSumatraLetters[i].c = ' ';
+            gLetters[i].c = ' ';
         }
     }
 }
@@ -1347,8 +1350,8 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
     WCHAR s[2] = { 0 };
     PointF origin(0.f, 0.f);
     RectF bbox;
-    for (int i=0; i<dimof(gSumatraLetters); i++) {
-        li = &gSumatraLetters[i];
+    for (int i=0; i<dimof(gLetters); i++) {
+        li = &gLetters[i];
         s[0] = li->c;
         g.MeasureString(s, 1, f, origin, &sfmt, &bbox);
         li->dx = bbox.Width;
@@ -1358,8 +1361,8 @@ void CalcLettersLayout(Graphics& g, Font *f, int dx)
     }
 
     REAL x = ((REAL)dx - totalDx) / 2.f;
-    for (int i=0; i<dimof(gSumatraLetters); i++) {
-        li = &gSumatraLetters[i];
+    for (int i=0; i<dimof(gLetters); i++) {
+        li = &gLetters[i];
         li->x = x;
         x += li->dx;
         x += letterSpacing;
@@ -1390,8 +1393,8 @@ void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
 {
     LetterInfo *li;
     WCHAR s[2] = { 0 };
-    for (int i=0; i<dimof(gSumatraLetters); i++) {
-        li = &gSumatraLetters[i];
+    for (int i=0; i<dimof(gLetters); i++) {
+        li = &gLetters[i];
         s[0] = li->c;
         if (s[0] == ' ')
             return;
