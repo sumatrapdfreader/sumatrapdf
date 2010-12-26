@@ -400,6 +400,9 @@ Mise à l'échelle
 Page:
 Page :
 
+Please include the following file in your crash report:
+Veuillez le fichier suivant dans votre rapport de plantage :
+
 Please wait - rendering...
 Patientez s'il vous plaît (génération...)
 
@@ -460,6 +463,9 @@ SumatraPDF Options
 SumatraPDF Update
 Mise à jour de SumatraPDF
 
+SumatraPDF crashed
+SumatraPDF a planté
+
 SumatraPDF is your main PDF reader
 SumatraPDF est votre lecteur de PDF
 
@@ -513,8 +519,4 @@ copier le text
 
 printing document
 imprimer le document
-
-# Untranslated:
-#Please include the following file in your crash report:
-#SumatraPDF crashed
 
