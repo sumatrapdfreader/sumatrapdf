@@ -13,9 +13,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include <windows.h>
 #include <windowsx.h>
+#include <GdiPlus.h>
 #include <tchar.h>
 #include <shlobj.h>
-#include <gdiplus.h>
 #include <psapi.h>
 #include <Shlwapi.h>
 #include <objidl.h>
@@ -30,12 +30,12 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "WinUtil.hpp"
 #include "../Version.h"
 
+using namespace Gdiplus;
+
 #ifdef DEBUG
 // debug builds use a manifest created by the linker instead of our own, so ensure visual styles this way
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #endif
-
-using namespace Gdiplus;
 
 // set to 1 when testing as uninstaller
 #define FORCE_TO_BE_UNINSTALLER 0
@@ -66,7 +66,6 @@ using namespace Gdiplus;
 // This is the height of the lower part
 #define BOTTOM_PART_DY 38
 
-static ULONG_PTR        gGdiplusToken;
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
 static HWND             gHwndButtonInstall;
@@ -729,31 +728,6 @@ void ProcessMessageLoop(HWND hwnd)
     }
 } 
 
-inline int RectDx(RECT *r)
-{
-    return r->right - r->left;
-}
-
-inline int RectDy(RECT *r)
-{
-    return r->bottom - r->top;
-}
-
-inline void SetFont(HWND hwnd, HFONT font)
-{
-    SendMessage(hwnd, WM_SETFONT, WPARAM(font), TRUE);
-}
-
-void SetCheckboxState(HWND hwnd, int checked)
-{
-    SendMessage(hwnd, BM_SETCHECK, checked, 0L);
-}
-
-BOOL GetCheckboxState(HWND hwnd)
-{
-    return (BOOL)SendMessage(hwnd, BM_GETCHECK, 0, 0L);
-}
-
 static HFONT CreateDefaultGuiFont()
 {
     NONCLIENTMETRICS m = { sizeof (NONCLIENTMETRICS) };
@@ -958,11 +932,9 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
     IPersistFile* pf = NULL;
     BOOL ok = TRUE;
 
-    HRESULT hr = CoInitialize(NULL);
-    if (FAILED(hr)) 
-        goto Exit;
+    ComScope();
 
-    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
+    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
     if (FAILED(hr)) 
         goto Exit;
 
@@ -995,7 +967,6 @@ Exit:
         SeeLastError();
         NotifyFailed("Failed to create a shortcut");
     }
-    CoUninitialize();
     return ok;
 }
 
@@ -1622,14 +1593,6 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
     return 0;
 }
 
-static void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) {
-    memzero(&wcex, sizeof(wcex));
-    wcex.cbSize         = sizeof(wcex);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.hInstance      = hInstance;
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-}
-
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
@@ -1654,9 +1617,6 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
 static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
-
-    GdiplusStartupInput gdiplusStartupInput;
-    GdiplusStartup(&gGdiplusToken, &gdiplusStartupInput, NULL);
     
     gFontDefault = CreateDefaultGuiFont();
 
@@ -1789,6 +1749,15 @@ int RunApp()
     }
 }
 
+class GdiPlusScope {
+protected:
+    GdiplusStartupInput si;
+    ULONG_PTR           token;
+public:
+    GdiPlusScope() { GdiplusStartup(&token, &si, NULL); }
+    ~GdiPlusScope() { GdiplusShutdown(token); }
+};
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 0;
@@ -1798,12 +1767,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (ExecuteFromTempIfUninstaller())
         return 0;
 
-    CoInitialize(NULL);
-
-    INITCOMMONCONTROLSEX cex = {0};
-    cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
-    InitCommonControlsEx(&cex);
+    ComScope();
+    GdiPlusScope();
+    InitAllCommonControls();
 
     if (!RegisterWinClass(hInstance))
         goto Exit;
@@ -1815,7 +1781,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 Exit:
     FreeEmbeddedParts(gEmbeddedParts);
-    GdiplusShutdown(gGdiplusToken);
     CoUninitialize();
 
     return ret;

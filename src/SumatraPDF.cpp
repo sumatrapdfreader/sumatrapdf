@@ -6719,19 +6719,6 @@ InitMouseWheelInfo:
     return 0;
 }
 
-static void FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance) {
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = 0;
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = NULL;
-    wcex.lpszMenuName   = NULL;
-    wcex.hIconSm        = 0;
-}
-
 static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
@@ -7007,12 +6994,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     u_DoAllTests();
 #endif
 
-    INITCOMMONCONTROLSEX cex = {0};
-    cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES ;
-    InitCommonControlsEx(&cex);
-
-    CoInitialize(NULL);
+    ComScope();
+    InitAllCommonControls();
 
     SerializableGlobalPrefs_Init();
 #ifndef BUILD_RM_VERSION
@@ -7229,8 +7212,6 @@ Exit:
         }
     }
 #endif // BUILD_RM_VERSION
-
-    CoUninitialize();
 
     return msg.wParam;
 }

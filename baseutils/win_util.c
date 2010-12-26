@@ -32,11 +32,6 @@ void rect_set(RECT *r, int x, int y, int dx, int dy)
     r->bottom = y + dy;
 }
 
-void win_set_font(HWND hwnd, HFONT font)
-{
-    SendMessage(hwnd, WM_SETFONT, (WPARAM)font, 0);
-}
-
 int win_get_text_len(HWND hwnd)
 {
     return (int)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);

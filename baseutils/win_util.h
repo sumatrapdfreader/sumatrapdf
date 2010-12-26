@@ -40,8 +40,6 @@ int     rect_dx(RECT *r);
 int     rect_dy(RECT *r);
 void    rect_set(RECT *r, int x, int y, int dx, int dy);
 
-void    win_set_font(HWND hwnd, HFONT font);
-
 int     win_get_text_len(HWND hwnd);
 TCHAR * win_get_text(HWND hwnd);
 WCHAR * win_get_textw(HWND hwnd);
