@@ -645,16 +645,16 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             // editor tends to overwrite conditional stuff which isn't its own)
             RECT rc;
             GetWindowRect(GetDlgItem(hDlg, IDC_SECTION_INVERSESEARCH), &rc);
-            UINT addHeight = rect_dy(&rc) + 8;
+            UINT addHeight = RectDy(&rc) + 8;
             GetWindowRect(hDlg, &rc);
-            MoveWindow(hDlg, rc.left, rc.top, rect_dx(&rc), rect_dy(&rc) + addHeight, TRUE);
+            MoveWindow(hDlg, rc.left, rc.top, RectDx(&rc), RectDy(&rc) + addHeight, TRUE);
 
             GetClientRect(GetDlgItem(hDlg, IDOK), &rc);
             MapWindowPoints(GetDlgItem(hDlg, IDOK), hDlg, (LPPOINT)&rc, 2);
-            MoveWindow(GetDlgItem(hDlg, IDOK), rc.left, rc.top + addHeight, rect_dx(&rc), rect_dy(&rc), TRUE);
+            MoveWindow(GetDlgItem(hDlg, IDOK), rc.left, rc.top + addHeight, RectDx(&rc), RectDy(&rc), TRUE);
             GetClientRect(GetDlgItem(hDlg, IDCANCEL), &rc);
             MapWindowPoints(GetDlgItem(hDlg, IDCANCEL), hDlg, (LPPOINT)&rc, 2);
-            MoveWindow(GetDlgItem(hDlg, IDCANCEL), rc.left, rc.top + addHeight, rect_dx(&rc), rect_dy(&rc), TRUE);
+            MoveWindow(GetDlgItem(hDlg, IDCANCEL), rc.left, rc.top + addHeight, RectDx(&rc), RectDy(&rc), TRUE);
 
             SetDlgItemText(hDlg, IDC_SECTION_INVERSESEARCH, _TR("Set inverse search command-line"));
             SetDlgItemText(hDlg, IDC_CMDLINE_LABEL, _TR("Enter the command-line to invoke when you double-click on the PDF document:"));

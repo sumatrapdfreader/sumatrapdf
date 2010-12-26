@@ -36,10 +36,6 @@ extern "C"
 #define WIN_COL_GREEN   RGB(0,255,0)
 #define WIN_COL_GRAY    RGB(215,215,215)
 
-int     rect_dx(RECT *r);
-int     rect_dy(RECT *r);
-void    rect_set(RECT *r, int x, int y, int dx, int dy);
-
 int     win_get_text_len(HWND hwnd);
 TCHAR * win_get_text(HWND hwnd);
 WCHAR * win_get_textw(HWND hwnd);
@@ -104,6 +100,7 @@ void    paint_round_rect_around_hwnd(HDC hdc, HWND hwnd_edit_parent, HWND hwnd_e
 #endif
 
 #ifdef __cplusplus
+#include "WinUtil.hpp"
 class AppBarData {
 public:
     AppBarData() {
@@ -115,8 +112,8 @@ public:
         m_abd.uEdge = ABE_TOP;
         SHAppBarMessage(ABM_GETTASKBARPOS, &m_abd);
     }
-    int dx() { return rect_dx(&m_abd.rc); }
-    int dy() { return rect_dy(&m_abd.rc); }
+    int dx() { return RectDx(&m_abd.rc); }
+    int dy() { return RectDy(&m_abd.rc); }
     int x() const { return m_abd.rc.left; }
     int y() const { return m_abd.rc.top; }
     bool atTop() const { return ABE_TOP == m_abd.uEdge; }

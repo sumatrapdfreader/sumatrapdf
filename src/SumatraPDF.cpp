@@ -1196,7 +1196,7 @@ static void RememberWindowPosition(WindowInfo *win)
         gGlobalPrefs.m_windowState = WIN_STATE_NORMAL;
 
     RECT rc;
-    gGlobalPrefs.m_tocDx = GetWindowRect(win->hwndTocBox, &rc) ? rect_dx(&rc) : 0;
+    gGlobalPrefs.m_tocDx = GetWindowRect(win->hwndTocBox, &rc) ? RectDx(&rc) : 0;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
     if (WIN_STATE_NORMAL == gGlobalPrefs.m_windowState &&
@@ -1206,8 +1206,8 @@ static void RememberWindowPosition(WindowInfo *win)
         GetWindowRect(win->hwndFrame, &rc);
         gGlobalPrefs.m_windowPosX = rc.left;
         gGlobalPrefs.m_windowPosY = rc.top;
-        gGlobalPrefs.m_windowDx = rect_dx(&rc);
-        gGlobalPrefs.m_windowDy = rect_dy(&rc);
+        gGlobalPrefs.m_windowDx = RectDx(&rc);
+        gGlobalPrefs.m_windowDy = RectDy(&rc);
     }
 }
 
@@ -1548,10 +1548,10 @@ static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
 
     // make sure that the window is neither too small nor bigger than the monitor
-    if (*dx < MIN_WIN_DX || *dx > rect_dx(&mi.rcWork))
-        *dx = min(rect_dy(&mi.rcWork) * DEF_PAGE_RATIO, rect_dx(&mi.rcWork));
-    if (*dy < MIN_WIN_DY || *dy > rect_dy(&mi.rcWork))
-        *dy = rect_dy(&mi.rcWork);
+    if (*dx < MIN_WIN_DX || *dx > RectDx(&mi.rcWork))
+        *dx = min(RectDy(&mi.rcWork) * DEF_PAGE_RATIO, RectDx(&mi.rcWork));
+    if (*dy < MIN_WIN_DY || *dy > RectDy(&mi.rcWork))
+        *dy = RectDy(&mi.rcWork);
 
     // check whether the lower half of the window's title bar is
     // inside a visible working area
@@ -1574,9 +1574,9 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         RECT workArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
         winY = workArea.top;
-        winDy = rect_dy(&workArea);
-        winDx = min(winDy * DEF_PAGE_RATIO, rect_dx(&workArea));
-        winX = (rect_dx(&workArea) - winDx) / 2;
+        winDy = RectDy(&workArea);
+        winDx = min(winDy * DEF_PAGE_RATIO, RectDx(&workArea));
+        winX = (RectDx(&workArea) - winDx) / 2;
     }
     else {
         winX = gGlobalPrefs.m_windowPosX;
@@ -1640,7 +1640,7 @@ static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int def
     if (!GetWindowRect(win->hwndTocBox, &rc))
         return;
 
-    int width = rect_dx(&rc);
+    int width = RectDx(&rc);
     if (ds && !gGlobalPrefs.m_globalPrefsOnly)
         width = ds->tocDx;
     else if (!defaultDx)
@@ -1649,7 +1649,7 @@ static void UpdateTocWidth(WindowInfo *win, const DisplayState *ds=NULL, int def
     if (!width) // first time
         width = defaultDx;
 
-    SetWindowPos(win->hwndTocBox, NULL, rc.left, rc.top, width, rect_dy(&rc), SWP_NOZORDER);
+    SetWindowPos(win->hwndTocBox, NULL, rc.left, rc.top, width, RectDy(&rc), SWP_NOZORDER);
 }
 
 static void RecalcSelectionPosition (WindowInfo *win) {
@@ -1770,7 +1770,7 @@ static bool LoadPdfIntoWindow(
     // otherwise the bookmark window reappear even if state->showToc=false.
     RECT rect;
     GetClientRect(win->hwndFrame, &rect);
-    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
+    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(RectDx(&rect),RectDy(&rect)));
     */
 
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -1824,7 +1824,7 @@ Error:
             // This shouldn't happen until win->state != WS_ABOUT, so that we don't
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame,
-                rect.left, rect.top, rect_dx(&rect), rect_dy(&rect), TRUE);
+                rect.left, rect.top, RectDx(&rect), RectDy(&rect), TRUE);
         }
 #if 0 // not ready yet
         else {
@@ -2337,7 +2337,7 @@ static void WinResizeIfNeeded(WindowInfo *win, bool resizeWindow=true)
     RECT rc;
     GetClientRect(win->hwndCanvas, &rc);
 
-    if (!win->hdcToDraw || win->winDx() != rect_dx(&rc) || win->winDy() != rect_dy(&rc)) {
+    if (!win->hdcToDraw || win->winDx() != RectDx(&rc) || win->winDy() != RectDy(&rc)) {
         win->DoubleBuffer_New();
         if (resizeWindow)
             win->ResizeToWindow();
@@ -2695,7 +2695,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         if (bmpDC) {
             SelectObject(bmpDC, gBitmapReloadingCue);
             int size = 16 * win->uiDPIFactor;
-            int cx = min(rect_dx(&bounds), 2 * size), cy = min(rect_dy(&bounds), 2 * size);
+            int cx = min(RectDx(&bounds), 2 * size), cy = min(RectDy(&bounds), 2 * size);
             StretchBlt(hdc, bounds.right - min((cx + size) / 2, cx),
                 bounds.top + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
                 bmpDC, 0, 0, 16, 16, SRCCOPY);
@@ -4320,7 +4320,7 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
             ShowWindow(win->hwndReBar, SW_HIDE);
         RECT rect;
         GetClientRect(win->hwndFrame, &rect);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect_dx(&rect),rect_dy(&rect)));
+        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(RectDx(&rect),RectDy(&rect)));
         MenuUpdateShowToolbarStateForWindow(win);
     }
 }
@@ -4531,8 +4531,8 @@ static void WindowInfo_EnterFullscreen(WindowInfo *win, bool presentation)
     else {
         x = mi.rcMonitor.left;
         y = mi.rcMonitor.top;
-        w = rect_dx(&mi.rcMonitor);
-        h = rect_dy(&mi.rcMonitor);
+        w = RectDx(&mi.rcMonitor);
+        h = RectDy(&mi.rcMonitor);
     }
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
     if (!presentation || !win->fullScreen)
@@ -4582,7 +4582,7 @@ static void WindowInfo_ExitFullscreen(WindowInfo *win)
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->prevStyle);
     SetWindowPos(win->hwndFrame, HWND_NOTOPMOST,
                  win->frameRc.left, win->frameRc.top,
-                 rect_dx(&win->frameRc), rect_dy(&win->frameRc),
+                 RectDx(&win->frameRc), RectDy(&win->frameRc),
                  SWP_FRAMECHANGED|SWP_NOZORDER);
 }
 
@@ -5311,8 +5311,8 @@ static void UpdateToolbarFindText(WindowInfo *win)
 
     RECT findWndRect;
     GetWindowRect(win->hwndFindBg, &findWndRect);
-    int findWndDx = rect_dx(&findWndRect);
-    int findWndDy = rect_dy(&findWndRect);
+    int findWndDx = RectDx(&findWndRect);
+    int findWndDy = RectDy(&findWndRect);
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
@@ -5431,8 +5431,8 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
 
     RECT pageWndRect;
     GetWindowRect(win->hwndPageBg, &pageWndRect);
-    int pageWndDx = rect_dx(&pageWndRect);
-    int pageWndDy = rect_dy(&pageWndRect);
+    int pageWndDx = RectDx(&pageWndRect);
+    int pageWndDy = RectDy(&pageWndRect);
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDM_OPEN, (LPARAM)&r);
@@ -5581,7 +5581,7 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
 
     SetWindowPos(win->hwndReBar, NULL, 0, 0, 0, 0, SWP_NOZORDER);
     GetWindowRect(win->hwndReBar, &rc);
-    gReBarDy = rect_dy(&rc);
+    gReBarDy = RectDy(&rc);
     //TODO: this was inherited but doesn't seem to be right (makes toolbar
     // partially unpainted if using classic scheme on xp or vista
     //gReBarDyFrame = bIsAppThemed ? 0 : 2;
@@ -5606,8 +5606,8 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
 
                 RECT r;
                 GetClientRect(win->hwndFrame, &r);
-                int width = rect_dx(&r) - tocWidth - SPLITTER_DX;
-                int height = rect_dy(&r);
+                int width = RectDx(&r) - tocWidth - SPLITTER_DX;
+                int height = RectDy(&r);
 
                 // TODO: ensure that the window is always wide enough for both
                 if (tocWidth <= SPLITTER_MIN_WIDTH || width <= SPLITTER_MIN_WIDTH)
@@ -5731,9 +5731,9 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         size.cy += 2 * offset;
 
         HWND closeIcon = GetDlgItem(hwnd, 1);
-        MoveWindow(titleLabel, offset, offset, rect_dx(&rc) - 2 * offset, size.cy - 2 * offset, true);
-        MoveWindow(closeIcon, rect_dx(&rc) - 16, (size.cy - 16) / 2, 16, 16, true);
-        MoveWindow(win->hwndTocTree, 0, size.cy, rect_dx(&rc), rect_dy(&rc) - size.cy, true);
+        MoveWindow(titleLabel, offset, offset, RectDx(&rc) - 2 * offset, size.cy - 2 * offset, true);
+        MoveWindow(closeIcon, RectDx(&rc) - 16, (size.cy - 16) / 2, 16, 16, true);
+        MoveWindow(win->hwndTocTree, 0, size.cy, RectDx(&rc), RectDy(&rc) - size.cy, true);
         break;
     }
     case WM_DRAWITEM:
@@ -5995,17 +5995,17 @@ void WindowInfo::ShowTocBox()
     int cw, ch, cx, cy;
 
     GetClientRect(hwndFrame, &rframe);
-    UpdateTocWidth(this, NULL, rect_dx(&rframe) / 4);
+    UpdateTocWidth(this, NULL, RectDx(&rframe) / 4);
     GetWindowRect(hwndTocBox, &rtoc);
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
     else
         cy = 0;
-    ch = rect_dy(&rframe) - cy;
+    ch = RectDy(&rframe) - cy;
 
-    cx = rect_dx(&rtoc);
-    cw = rect_dx(&rframe) - cx - SPLITTER_DX;
+    cx = RectDx(&rtoc);
+    cw = RectDx(&rframe) - cx - SPLITTER_DX;
 
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
     SetWindowPos(hwndSpliter, NULL, cx, cy, SPLITTER_DX, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -6021,7 +6021,7 @@ void WindowInfo::HideTocBox()
     GetClientRect(hwndFrame, &r);
 
     int cy = 0;
-    int cw = rect_dx(&r), ch = rect_dy(&r);
+    int cw = RectDx(&r), ch = RectDy(&r);
 
     if (gGlobalPrefs.m_showToolbar && !fullScreen && !presentation)
         cy = gReBarDy + gReBarDyFrame;
@@ -6968,7 +6968,7 @@ static void MakePluginWindow(WindowInfo *win, HWND hwndParent)
     RECT rc;
     SetParent(win->hwndFrame, hwndParent);
     GetClientRect(hwndParent, &rc);
-    MoveWindow(win->hwndFrame, 0, 0, rect_dx(&rc), rect_dy(&rc), FALSE);
+    MoveWindow(win->hwndFrame, 0, 0, RectDx(&rc), RectDy(&rc), FALSE);
     // from here on, we depend on the plugin's host to resize us
     SetFocus(win->hwndFrame);
 }

@@ -105,8 +105,8 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 
     offX = rect->left;
     offY = rect->top;
-    totalDx = rect_dx(rect);
-    totalDy = rect_dy(rect);
+    totalDx = RectDx(rect);
+    totalDy = RectDy(rect);
 
     /* render title */
     const TCHAR *txt = SUMATRA_TXT;
@@ -265,8 +265,8 @@ void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RECT * rect)
 
     RECT rc;
     GetClientRect(hwnd, &rc);
-    offX = (rect_dx(&rc) - totalDx) / 2;
-    offY = (rect_dy(&rc) - totalDy) / 2;
+    offX = (RectDx(&rc) - totalDx) / 2;
+    offY = (RectDy(&rc) - totalDy) / 2;
 
     if (rect) {
         rect->left = offX;
@@ -358,9 +358,9 @@ void OnMenuAbout() {
     RECT wRc, cRc;
     GetWindowRect(gHwndAbout, &wRc);
     GetClientRect(gHwndAbout, &cRc);
-    wRc.right += rect_dx(&rc) - rect_dx(&cRc);
-    wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
-    MoveWindow(gHwndAbout, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
+    wRc.right += RectDx(&rc) - RectDx(&cRc);
+    wRc.bottom += RectDy(&rc) - RectDy(&cRc);
+    MoveWindow(gHwndAbout, wRc.left, wRc.top, RectDx(&wRc), RectDy(&wRc), FALSE);
 
     ShowWindow(gHwndAbout, SW_SHOW);
 }

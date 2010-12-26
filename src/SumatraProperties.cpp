@@ -368,9 +368,9 @@ static void CreatePropertiesWindow(WindowInfo *win, PdfPropertiesLayout *layoutD
     RECT wRc, cRc;
     GetWindowRect(win->hwndPdfProperties, &wRc);
     GetClientRect(win->hwndPdfProperties, &cRc);
-    wRc.right += rect_dx(&rc) - rect_dx(&cRc);
-    wRc.bottom += rect_dy(&rc) - rect_dy(&cRc);
-    MoveWindow(win->hwndPdfProperties, wRc.left, wRc.top, rect_dx(&wRc), rect_dy(&wRc), FALSE);
+    wRc.right += RectDx(&rc) - RectDx(&cRc);
+    wRc.bottom += RectDy(&rc) - RectDy(&cRc);
+    MoveWindow(win->hwndPdfProperties, wRc.left, wRc.top, RectDx(&wRc), RectDy(&wRc), FALSE);
 
     ShowWindow(win->hwndPdfProperties, SW_SHOW);
 }

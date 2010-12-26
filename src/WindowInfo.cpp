@@ -177,8 +177,8 @@ void WindowInfo::ZoomToSelection(double factor, bool relative)
 
         RECT rc;
         GetClientRect(this->hwndCanvas, &rc);
-        pt.x = 2 * selRect.x + selRect.dx - rect_dx(&rc) / 2;
-        pt.y = 2 * selRect.y + selRect.dy - rect_dy(&rc) / 2;
+        pt.x = 2 * selRect.x + selRect.dx - RectDx(&rc) / 2;
+        pt.y = 2 * selRect.y + selRect.dy - RectDy(&rc) / 2;
 
         pt.x = CLAMP(pt.x, selRect.x, selRect.x + selRect.dx);
         pt.y = CLAMP(pt.y, selRect.y, selRect.y + selRect.dy);

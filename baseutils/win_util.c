@@ -10,28 +10,6 @@
 #define ListView_GetSelectionMark(w) (INT)SNDMSG((w),LVM_GETSELECTIONMARK,0,0)
 #endif
 
-int rect_dx(RECT *r)
-{
-    int dx = r->right - r->left;
-    assert(dx >= 0);
-    return dx;
-}
-
-int rect_dy(RECT *r)
-{
-    int dy = r->bottom - r->top;
-    assert(dy >= 0);
-    return dy;
-}
-
-void rect_set(RECT *r, int x, int y, int dx, int dy)
-{
-    r->left = x;
-    r->top = y;
-    r->right = x + dx;
-    r->bottom = y + dy;
-}
-
 int win_get_text_len(HWND hwnd)
 {
     return (int)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
