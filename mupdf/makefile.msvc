@@ -122,7 +122,7 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_TURBO_DIR)
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib
 
 LD = link.exe
-LDFLAGS = $(LDFLAGS) /nologo /DEBUG
+LDFLAGS = $(LDFLAGS) /nologo /DEBUG /RELEASE
 
 !if "$(CFG)"=="rel"
 LDFLAGS = $(LDFLAGS) /opt:ref /opt:icf
