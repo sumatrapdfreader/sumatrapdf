@@ -67,6 +67,35 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { NULL, NULL, NULL, 0 }
 };
 
+#define COL1 RGB(196, 64, 50)
+#define COL2 RGB(227, 107, 35)
+#define COL3 RGB(93,  160, 40)
+#define COL4 RGB(69, 132, 190)
+#define COL5 RGB(112, 115, 207)
+
+void DrawSumatraPDF(HDC hdc, int x, int y)
+{
+    const TCHAR *txt = SUMATRA_TXT;
+#if 0
+    // simple black version
+    SetTextColor(hdc, ABOUT_BORDER_COL);
+    TextOut(hdc, x, y, txt, lstrlen(txt));
+#else
+    // colorful version
+    SIZE txtSize = {0};
+    COLORREF  cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };    
+    int col = 0;
+    int offx = 0;
+    for (int i=0; i < lstrlen(SUMATRA_TXT); i++)
+    {
+        SetTextColor(hdc, cols[col % dimof(cols)]);
+        col++;
+        TextOut(hdc, x + txtSize.cx, y, txt+i, 1);
+        GetTextExtentPoint32(hdc, txt, i+1, &txtSize);
+    }
+#endif
+}
+
 /* Draws the about screen a remember some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
@@ -118,13 +147,12 @@ void DrawAbout(HWND hwnd, HDC hdc, RECT *rect)
 
     Rectangle(hdc, offX, offY + ABOUT_LINE_OUTER_SIZE, offX + totalDx, offY + boxDy + ABOUT_LINE_OUTER_SIZE);
 
-    SetTextColor(hdc, ABOUT_BORDER_COL);
     SelectObject(hdc, fontSumatraTxt);
     x = offX + (totalDx - sumatraPdfTxtDx) / 2;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
-    txt = SUMATRA_TXT;
-    TextOut(hdc, x, y, txt, lstrlen(txt));
+    DrawSumatraPDF(hdc, x, y);
 
+    SetTextColor(hdc, ABOUT_BORDER_COL);
     SelectObject(hdc, fontVersionTxt);
     x = offX + (totalDx - sumatraPdfTxtDx) / 2 + sumatraPdfTxtDx + 6;
     y = offY + (boxDy - sumatraPdfTxtDy) / 2;
