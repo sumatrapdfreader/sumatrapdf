@@ -796,7 +796,7 @@ int str_skip(const char **strp, const char *expect)
 
 /* Copy the string from <*strp> into <dst> until <stop> is found, and point
     <*strp> at the end. Returns TRUE unless <dst_size> isn't big enough, in
-    which case <*strp> is still updated, but FALE is returned and <dst> is
+    which case <*strp> is still updated, but FALSE is returned and <dst> is
     truncated. If <delim> is not found, <*strp> will point to the end of the
     string and FALSE is returned. */
 int
