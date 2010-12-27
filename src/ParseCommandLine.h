@@ -4,6 +4,12 @@
 class CommandLineInfo {
 public:
     VStrList    fileNames;
+    // filesToBenchmark contain 2 strings per each file to benchmark:
+    // - name of the file to benchmark
+    // - optional (NULL if not available) string that represents which pages
+    //   to benchmark. It can also be a string "loadonly" which means we'll
+    //   only benchmark loading of the catalog
+    VStrList    filesToBenchmark;
     bool        makeDefault;
     bool        exitOnPrint;
     bool        printDialog;
@@ -78,5 +84,5 @@ public:
 };
 
 void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine);
-
+bool IsBenchPagesInfo(TCHAR *s);
 #endif

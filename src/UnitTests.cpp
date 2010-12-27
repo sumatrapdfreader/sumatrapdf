@@ -63,6 +63,50 @@ static void ParseCommandLineTest()
 {
     {
         CommandLineInfo i;
+        ParseCommandLine(i, _T("SumatraPDF.exe -bench foo.pdf"));
+        assert(2 == i.filesToBenchmark.size());
+        assert(tstr_eq(_T("foo.pdf"), i.filesToBenchmark.at(0)));
+        assert(NULL == i.filesToBenchmark.at(1));
+    }
+
+    {
+        CommandLineInfo i;
+        ParseCommandLine(i, _T("SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5"));
+        assert(i.fwdsearchWidth == 5);
+        assert(2 == i.filesToBenchmark.size());
+        assert(tstr_eq(_T("foo.pdf"), i.filesToBenchmark.at(0)));
+        assert(NULL == i.filesToBenchmark.at(1));
+    }
+
+    {
+        CommandLineInfo i;
+        ParseCommandLine(i, _T("SumatraPDF.exe -bench bar.pdf loadonly"));
+        assert(2 == i.filesToBenchmark.size());
+        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.at(0)));
+        assert(tstr_eq(_T("loadonly"), i.filesToBenchmark.at(1)));
+    }
+
+    {
+        CommandLineInfo i;
+        ParseCommandLine(i, _T("SumatraPDF.exe -bench bar.pdf 1 -invert-colors"));
+        assert(TRUE == i.invertColors);
+        assert(2 == i.filesToBenchmark.size());
+        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.at(0)));
+        assert(tstr_eq(_T("1"), i.filesToBenchmark.at(1)));
+    }
+
+    {
+        CommandLineInfo i;
+        ParseCommandLine(i, _T("SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34"));
+        assert(4 == i.filesToBenchmark.size());
+        assert(tstr_eq(_T("bar.pdf"), i.filesToBenchmark.at(0)));
+        assert(tstr_eq(_T("1-5,3"), i.filesToBenchmark.at(1)));
+        assert(tstr_eq(_T("some.pdf"), i.filesToBenchmark.at(2)));
+        assert(tstr_eq(_T("1,3,8-34"), i.filesToBenchmark.at(3)));
+    }
+
+    {
+        CommandLineInfo i;
         ParseCommandLine(i, _T("SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf"));
         assert(true == i.enterPresentation);
         assert(TRUE == i.invertColors);

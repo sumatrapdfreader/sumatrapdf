@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "SumatraPDF.h"
+#include <shlobj.h>
+
 #include "WindowInfo.h"
 #include "RenderCache.h"
 
@@ -11,7 +13,6 @@
 #include "SumatraAbout.h"
 #include "FileHistory.h"
 
-#include <shlobj.h>
 #include "WinUtil.hpp"
 #include "Http.h"
 #include "CrashHandler.h"
@@ -1352,8 +1353,7 @@ static void WindowInfo_UpdateFindbox(WindowInfo *win) {
     if (!win->dm) {  // Avoid focus on Find box
         SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
         HideCaret(NULL);
-    }
-    else {
+    } else {
         SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorIBeam);
         ShowCaret(NULL);
     }
@@ -1666,7 +1666,7 @@ static void RecalcSelectionPosition (WindowInfo *win) {
             selOnPage->selectionCanvas.y = -100;
             selOnPage->selectionCanvas.dx = 0;
             selOnPage->selectionCanvas.dy = 0;
-        } else {//page is visible
+        } else {
             selD = selOnPage->selectionPage;
             win->dm->rectCvtUserToScreen (selOnPage->pageNo, &selD);
             RectI_FromRectD (&selOnPage->selectionCanvas, &selD);
@@ -1784,7 +1784,7 @@ static bool LoadPdfIntoWindow(
 
     if (!is_new_window) {
         win->RedrawAll();
-        OnMenuFindMatchCase(win); 
+        OnMenuFindMatchCase(win);
     }
     WindowInfo_UpdateFindbox(win);
 

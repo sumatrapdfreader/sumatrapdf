@@ -89,6 +89,57 @@ static void VStrList_FromCmdLine(VStrList *strList, TCHAR *cmdLine)
     }
 }
 
+static bool IsDigit(TCHAR c)
+{
+    return (c >= '0') && (c <= '9');
+}
+
+static bool IsNumber(TCHAR *s, int len)
+{
+    if (0 == len)
+        return false;
+    for (int i=0; i<len; i++)
+    {
+        if (!IsDigit(*s++))
+            return false;
+    }
+    return true;
+}
+
+static bool IsPagesInfoSepOrEnd(TCHAR c)
+{
+    return (c == '-') || (c == ',') || (c == 0);
+}
+
+static int FindPagesInfoSepOrEnd(TCHAR *s)
+{
+    TCHAR *end = s;
+    while (!IsPagesInfoSepOrEnd(*end))
+        ++end;
+    return end - s;
+}
+
+// <s> can be:
+// * "loadonly"
+// * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
+bool IsBenchPagesInfo(TCHAR *s)
+{
+    if (tstr_eq(s, _T("loadonly")))
+        return true;
+
+    while (*s) {
+        int len = FindPagesInfoSepOrEnd(s);
+        if (!IsNumber(s, len))
+            return false;
+        s = s + len;
+        if (!*s)
+            return true;
+        ++s;
+    }
+    
+    return false;
+}
+
 /* parse argument list. we assume that all unrecognized arguments are PDF file names. */
 void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
 {
@@ -183,6 +234,16 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
         else if (is_arg_with_param("-plugin")) {
             i.hwndPluginParent = (HWND)_ttoi(argList[++n]);
         }
+        else if (is_arg_with_param("-bench")) {
+            TCHAR *s = tstr_dup(argList[++n]);
+            i.filesToBenchmark.push_back(s);
+            if ((n + 1 < argCount) && IsBenchPagesInfo(argList[n+1])) {
+                s = tstr_dup(argList[++n]);
+                i.filesToBenchmark.push_back(s);
+            } else {
+                i.filesToBenchmark.push_back(NULL);
+            }
+        }
 #ifdef BUILD_RM_VERSION
         else if (is_arg("-delete-these-on-close")) {
             i.deleteFilesOnClose = true;
@@ -206,4 +267,6 @@ void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine)
             i.fileNames.push_back(filepath);
         }
     }
+#undef is_arg
+#undef is_arg_with_param
 }
