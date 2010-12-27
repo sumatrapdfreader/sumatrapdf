@@ -48,6 +48,7 @@ public:
     double GetTimeInMs()
     {
         LARGE_INTEGER   freq;
+        QueryPerformanceFrequency(&freq);
         double timeInSecs = (double)(end.QuadPart-start.QuadPart)/(double)freq.QuadPart;
         return timeInSecs * 1000.0;
     }
