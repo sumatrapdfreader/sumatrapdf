@@ -104,7 +104,7 @@ SUMATRA_OBJS = \
 	$(O)\SumatraPDF.obj $(O)\translations.obj $(O)\translations_txt.obj $(O)\LangMenuDef.obj \
 	$(O)\FileWatch.obj $(O)\PdfSync.obj $(O)\synctex_parser.obj $(O)\synctex_parser_utils.obj \
 	$(O)\RenderCache.obj $(O)\PdfSelection.obj $(O)\WindowInfo.obj $(O)\ParseCommandLine.obj \
-	$(SUMATRA_RES)
+	$(O)\Benchmark.obj $(SUMATRA_RES)
 
 INSTALLER_OBJS = \
   $(BASEUTILS_OBJS) $(O)\Installer.obj $(INSTALLER_RES)
@@ -211,3 +211,4 @@ $(O)\WindowInfo.obj:   $(WINDOWINFO_H) baseutils\win_util.h baseutils\file_util.
 
 # all objs depend on the equally named header
 $(SUMATRA_OBJS): src\$$(@B).h
+

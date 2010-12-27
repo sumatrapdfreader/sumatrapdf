@@ -5,6 +5,7 @@
 #define _VSTRLIST_H_
 
 #include "tstr_util.h"
+#include <assert.h>
 
 #ifdef USE_STL
 #include <vector>
