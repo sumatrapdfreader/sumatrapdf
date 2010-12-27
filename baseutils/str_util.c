@@ -696,12 +696,6 @@ char *str_url_encode(const char *str)
     return result;
 }
 
-char *str_escape(const char *txt)
-{
-    /* TODO: */
-    return str_dup(txt);
-}
-
 char *str_printf(const char *format, ...)
 {
     char *result;

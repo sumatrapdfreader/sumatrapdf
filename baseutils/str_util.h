@@ -89,7 +89,6 @@ void    str_strip_right(char *txt, const char *to_strip);
 void    str_strip_ws_right(char *txt);
 void    str_strip_both(char *txt, const char *to_strip);
 void    str_strip_ws_both(char *txt);
-char *  str_escape(const char *txt);
 int     str_skip(const char **strp, const char *expect);
 int     str_copy_skip_until(const char **strp, char *dst, size_t dst_size, char stop);
 char *  str_parse_possibly_quoted(char **txt);
