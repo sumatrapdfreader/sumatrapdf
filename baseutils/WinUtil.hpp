@@ -38,6 +38,21 @@ public:
     ~ComScope() { CoUninitialize(); }
 };
 
+class MillisecondTimer {
+    LARGE_INTEGER   start;
+    LARGE_INTEGER   end;
+public:
+    void Start() { QueryPerformanceCounter(&start); }
+    void Stop() { QueryPerformanceCounter(&end); }
+
+    double GetTimeInMs()
+    {
+        LARGE_INTEGER   freq;
+        double timeInSecs = (double)(end.QuadPart-start.QuadPart)/(double)freq.QuadPart;
+        return timeInSecs * 1000.0;
+    }
+};
+
 static inline void InitAllCommonControls()
 {
     INITCOMMONCONTROLSEX cex = {0};
