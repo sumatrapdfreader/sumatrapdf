@@ -7000,6 +7000,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InitAllCommonControls();
     fz_accelerate();
 
+    SerializableGlobalPrefs_Init();
+#ifndef BUILD_RM_VERSION
+    prefsLoaded = Prefs_Load();
+#endif
+
     CommandLineInfo i;
     i.bgColor = gGlobalPrefs.m_bgColor;
     i.fwdsearchOffset = gGlobalPrefs.m_fwdsearchOffset;
@@ -7016,10 +7021,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    SerializableGlobalPrefs_Init();
-#ifndef BUILD_RM_VERSION
-    prefsLoaded = Prefs_Load();
-#endif
     if (!prefsLoaded) {
         // assume that this is because prefs file didn't exist i.e. this is
         // the first time Sumatra is launched.
