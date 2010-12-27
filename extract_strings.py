@@ -12,7 +12,7 @@ comments at the end of strings file for each language.
 
 C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", "SumatraDialogs.cc", "CrashHandler.cpp"]
 translation_pattern = r'_TRN?\("(.*?)"\)'
-STRINGS_PATH = os.path.realpath("strings")
+STRINGS_PATH = os.path.realpath(os.path.join("src", "strings"))
 
 # strings that don't need to be translated
 TRANSLATION_EXCEPTIONS = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%", "KB", "MB", "GB"]
@@ -188,6 +188,7 @@ def extract_strings_from_c_files():
     files = C_FILES_TO_PROCESS
     strings = []
     for f in files:
+        f = os.path.join("src", f)
         file_content = file(f, "rb").read()
         strings += re.findall(translation_pattern, file_content)
     return seq_uniq(strings)

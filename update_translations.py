@@ -1,5 +1,6 @@
 from extract_strings import load_strings_file_new, get_lang_list, untranslated_count_for_lang, extract_strings_from_c_files, dump_missing_per_language, write_out_strings_files, key_sort_func
 import simplejson
+import os.path
 
 g_can_upload = True
 
@@ -254,8 +255,8 @@ def gen_lang_menu_def_c(langs, file_name):
 def gen_code(strings_dict, langs, h_file_name, c_file_name):
     gen_h_code(strings_dict, h_file_name)
     gen_c_code(strings_dict, c_file_name)
-    gen_lang_menu_def_c(langs, "LangMenuDef.cpp")
-    gen_lang_menu_def_h(langs, "LangMenuDef.h")
+    gen_lang_menu_def_c(langs, os.path.join("src", "LangMenuDef.cpp"))
+    gen_lang_menu_def_h(langs, os.path.join("src", "LangMenuDef.h"))
 
 def contributors_for_lang(contributors, lang):
     return sorted(contributors.get(lang, []))
@@ -306,8 +307,8 @@ def main():
     for s in untranslated:
         if s not in strings_dict:
             strings_dict[s] = []
-    h_file_name = "translations_txt.h"
-    c_file_name = "translations_txt.c"
+    h_file_name = os.path.join("src", "translations_txt.h")
+    c_file_name = os.path.join("src", "translations_txt.c")
     gen_code(strings_dict, langs, h_file_name, c_file_name)
     gen_and_upload_js(strings_dict, langs, contributors)
 
