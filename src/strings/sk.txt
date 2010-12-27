@@ -441,6 +441,9 @@ prebieha tlač dokumentu
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#GB
+#KB
+#MB
 #No synchronization file found
 #No synchronization info at this position
 #Page scaling

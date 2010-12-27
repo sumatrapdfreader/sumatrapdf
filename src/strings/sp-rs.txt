@@ -399,6 +399,9 @@ Faktor uvećanja
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#GB
+#KB
+#MB
 #Modified:
 #Number of Pages:
 #P&roperties\tCtrl-D

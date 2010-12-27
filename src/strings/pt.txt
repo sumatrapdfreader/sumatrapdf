@@ -500,6 +500,9 @@ printing document
 imprimindo documento
 
 # Untranslated:
+#GB
+#KB
+#MB
 #Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #SumatraPDF crashed

@@ -224,8 +224,11 @@ Micşorează
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
 #Found text at page %d
+#GB
 #Go to page
 #Hint: Use the F3 key for finding again
+#KB
+#MB
 #Main PDF reader can't be changed in portable mode
 #Make SumatraPDF default application for PDF files?
 #Modified:

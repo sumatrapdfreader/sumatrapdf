@@ -227,7 +227,6 @@ def build_installer_native(builds_dir, ver):
   # append installer data to installer exe
   mark_installer_end(fo) # this are read backwards so end marker is written first
   append_installer_file(fo, exe, "SumatraPDF.exe")
-  # TOD: write compressed
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join(SCRIPT_DIR, "..", "mupdf", "fonts", "droid", font_name)
   append_installer_file_zlib(fo, font_path, font_name)
@@ -247,7 +246,6 @@ def build_installer_for_testing():
   # append installer data to installer exe
   mark_installer_end(fo) # this are read backwards so end marker is written first
   append_installer_file(fo, exe, "SumatraPDF.exe")
-  # TODO: write compressed
   font_name =  "DroidSansFallback.ttf"
   font_path = os.path.join(os.getcwd(), "mupdf", "fonts", "droid", font_name)
   append_installer_file_zlib(fo, font_path, font_name)
@@ -267,7 +265,6 @@ def main():
   if len(args) != 1:
     usage()
 
-  os.chdir("..")
   srcdir = os.getcwd()
 
   if build_test_installer:
@@ -298,9 +295,12 @@ def main():
   tmp_exe = os.path.join(srcdir, objdir, "SumatraPDF.exe")
   tmp_pdb = os.path.join(srcdir, objdir, "SumatraPDF.pdb")
   tmp_installer = os.path.join(srcdir, objdir, "Installer.exe")
+  tmp_installer_pdb = os.path.join(srcdir, objdir, "Installer.pdb")
 
   ensure_path_exists(tmp_exe)
   ensure_path_exists(tmp_pdb)
+  ensure_path_exists(tmp_installer)
+  ensure_path_exists(tmp_installer_pdb)
 
   builds_dir = os.path.join(SCRIPT_DIR, "builds", ver)
 
@@ -318,6 +318,7 @@ def main():
   local_exe_uncompr = os.path.join(builds_dir, "SumatraPDF-uncompr.exe")
   local_pdb = os.path.join(builds_dir, "SumatraPDF-%s.pdb" % ver)
   local_installer = os.path.join(builds_dir, "Installer.exe")
+  local_installer_pdb = os.path.join(builds_dir, "Installer.pdb")
 
   stripreloc = os.path.join(SCRIPT_DIR, "bin", "StripReloc")
   builds_dir_rel = os.path.join("src", "builds", ver)
@@ -327,6 +328,7 @@ def main():
   shutil.copy(tmp_exe, local_exe_uncompr)
   shutil.copy(tmp_pdb, local_pdb)
   shutil.copy(tmp_installer, local_installer)
+  shutil.copy(tmp_installer_pdb, local_installer_pdb)
 
   os.chdir(builds_dir)
 
@@ -339,7 +341,6 @@ def main():
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
-
   local_installer_exe = build_installer_nsis(builds_dir, ver)
   local_installer_native_exe = build_installer_native(builds_dir, ver)
 

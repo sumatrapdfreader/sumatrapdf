@@ -14,9 +14,6 @@ C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.c
 translation_pattern = r'_TRN?\("(.*?)"\)'
 STRINGS_PATH = os.path.realpath(os.path.join("src", "strings"))
 
-# strings that don't need to be translated
-TRANSLATION_EXCEPTIONS = ["6400%", "3200%", "1600%", "800%", "400%", "200%", "150%", "100%", "125%", "50%", "25%", "12.5%", "8.33%", "KB", "MB", "GB"]
-
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
 
 def state_name(state):
@@ -170,9 +167,6 @@ def load_strings_file_new():
     for lang_code in lang_codes:
         path = os.path.join(STRINGS_PATH, lang_code + ".txt")
         load_one_strings_file(path, lang_code, strings_dict, langs_dict, contributors_dict)
-    for s in TRANSLATION_EXCEPTIONS:
-        if s not in strings_dict:
-            strings_dict[s] = []
     return (strings_dict, langs_dict.items(), contributors_dict)
 
 def get_lang_list(strings_dict):
@@ -218,7 +212,6 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
     for lang in get_lang_list(strings_dict):
         untranslated = []
         for s in strings:
-            if s in TRANSLATION_EXCEPTIONS: continue
             if not s in strings_dict:
                 untranslated.append(s)
                 continue
@@ -297,7 +290,7 @@ def dump_missing_for_language(strings_dict, lang):
     print "Untranslated strings for '%s':" % lang
     for k in strings_dict:
         is_translated = len([item[1] for item in strings_dict[k] if item[0] == lang]) == 1
-        if not is_translated and k not in TRANSLATION_EXCEPTIONS:
+        if not is_translated:
             print k
 
 def untranslated_count_for_lang(strings_dict, lang):
@@ -305,7 +298,7 @@ def untranslated_count_for_lang(strings_dict, lang):
     count = 0
     for k in strings_dict:
         is_translated = len([item[1] for item in strings_dict[k] if item[0] == lang]) == 1
-        if not is_translated and k not in TRANSLATION_EXCEPTIONS:
+        if not is_translated:
             #print("%s: %s" % (lang, k))
             count += 1
     return count

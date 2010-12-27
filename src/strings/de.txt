@@ -509,3 +509,8 @@ Text kopieren verweigert
 printing document
 Dokument drucken verweigert
 
+# Untranslated:
+#GB
+#KB
+#MB
+
