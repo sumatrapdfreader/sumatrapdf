@@ -5,6 +5,7 @@
 		TJBUFSIZE;
 		tjInitDecompress;
 		tjDecompressHeader;
+		tjDecompressHeader2;
 		tjDecompress;
 		tjDestroy;
 		tjGetErrorStr;
