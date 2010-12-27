@@ -7107,7 +7107,7 @@ TCHAR *GetNumber(TCHAR *s, int& n)
     n = 0;
     while (*s) {
         if (IsDigit(*s)) {
-            int d = *s++ - '0';
+            int d = *s - '0';
             n = n * 10 + d;
         } else {
             if (*s == '-')
@@ -7115,18 +7115,22 @@ TCHAR *GetNumber(TCHAR *s, int& n)
             else
                 return NULL;
         }
+        s++;
     }
     return NULL;
 }
 
 // <s> can be in form "1" or "3-58". Error is returned by setting <start>
 // and <end> to values that won't be valid to the caller
-void GetRange(TCHAR *s, int& start, int& end)
+TCHAR *GetRange(TCHAR *s, int& start, int& end)
 {
     start = end = 0; // error case
-    s = GetNumber(s, start);
-    if (s)
-        GetNumber(s, end);
+    TCHAR *s2 = GetNumber(s, start);
+    if (s2)
+        GetNumber(s2, end);
+    else
+        end = start;
+    return s + tstr_len(s) + 1;
 }
 
 int RangesCount(TCHAR *s)
@@ -7137,6 +7141,7 @@ int RangesCount(TCHAR *s)
             *s = 0;
             ++n;
         }
+        s++;
     }
     return n;
 }
@@ -7197,13 +7202,12 @@ void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
     int n = RangesCount(pagesSpec);
     for (int i = 0; i < n; i++) {
         int start, end;
-        GetRange(pagesSpec, start, end);
+        pagesSpec = GetRange(pagesSpec, start, end);
         for (int j = start; j <= end; j++) {
             if ((j >= 1) && (j <= pages)) {
                 BenchLoadRender(j);
             }
         }
-        pagesSpec = pagesSpec + tstr_len(pagesSpec) + 1;
     }
 
 Exit:
