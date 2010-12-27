@@ -226,7 +226,7 @@ int wstr_skip(const WCHAR **strp, const WCHAR *expect)
 
 /* Copy the string from <*strp> into <dst> until <stop> is found, and point
     <*strp> at the end. Returns TRUE unless <dst_size> isn't big enough, in
-    which case <*strp> is still updated, but FALE is returned and <dst> is
+    which case <*strp> is still updated, but FALSE is returned and <dst> is
     truncated. If <delim> is not found, <*strp> will point to the end of the
     string and FALSE is returned. */
 int
@@ -242,7 +242,6 @@ wstr_copy_skip_until(const WCHAR **strp, WCHAR *dst, size_t dst_size, WCHAR stop
     else
         return wstr_copyn(dst, dst_size, str, *strp - str);
 }
-
 
 /* Given a pointer to a string in '*txt', skip past whitespace in the string
    and put the result in '*txt' */
