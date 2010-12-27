@@ -6901,10 +6901,10 @@ HDDEDATA CALLBACK DdeCallback(UINT uType,
     ULONG_PTR dwData1,
     ULONG_PTR dwData2)
 {
-  return (0);
+  return 0;
 }
 
-void DDEExecute (LPCTSTR server, LPCTSTR topic, LPCTSTR command)
+void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
 {
     DBG_OUT_T("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
     unsigned long inst = 0;
