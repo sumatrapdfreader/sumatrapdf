@@ -74,6 +74,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Benchmark.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\Benchmark.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CrashHandler.cpp"
 				>
 			</File>

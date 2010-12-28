@@ -185,6 +185,7 @@ WINDOWINFO_H = $(PDFENGINE_H) $(DISPLAYMODEL_H) src\WindowInfo.h src\FileWatch.h
 
 $(O)\AppPrefs.obj:     $(BASEUTILS_H) $(APPPREFS_H) baseutils\benc_util.h baseutils\file_util.h \
                        src\FileHistory.h
+$(O)\Benchmark.obj:    $(PDFENGINE_H) baseutils\WinUtil.hpp baseutils\file_util.h baseutils\vstrlist.h
 $(O)\CrashHandler.obj: $(BASEUTILS_H) baseutils\WinUtil.hpp
 $(O)\DisplayModel.obj: $(SUMATRAPDF_H) $(WINDOWINFO_H)
 $(O)\DisplayState.obj: $(BASEUTILS_H)
@@ -207,6 +208,7 @@ $(O)\SumatraPDF.obj:   $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\FileHis
                        src\translations.h src\Version.h src\CrashHandler.h src\ParseCommandLine.h
 $(O)\SumatraProperties.obj: $(SUMATRAPDF_H) $(APPPREFS_H) $(WINDOWINFO_H) src\translations.h
 $(O)\translations.obj: $(BASEUTILS_H)
+$(O)\UnitTests.obj:    $(SUMATRAPDF_H) src\MemSegment.h src\ParseCommandLine.h
 $(O)\WindowInfo.obj:   $(WINDOWINFO_H) baseutils\win_util.h baseutils\file_util.h
 
 # all objs depend on the equally named header

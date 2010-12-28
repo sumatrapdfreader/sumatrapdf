@@ -308,11 +308,20 @@ An eine einzelne Seite anpassen
 Found text at page %d
 Text auf Seite %d gefunden
 
+GB
+GB
+
 Go to page
 Gehe zu Seite
 
 Hint: Use the F3 key for finding again
 Tipp: F3-Taste verwenden, um weiterzusuchen
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Standardanwendung im portablen Modus nicht veränderbar
@@ -508,9 +517,4 @@ Text kopieren verweigert
 
 printing document
 Dokument drucken verweigert
-
-# Untranslated:
-#GB
-#KB
-#MB
 
