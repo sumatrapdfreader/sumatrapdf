@@ -6996,7 +6996,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     u_DoAllTests();
 #endif
 
-    ComScope();
+    ComScope comScope();
     InitAllCommonControls();
     fz_accelerate();
 

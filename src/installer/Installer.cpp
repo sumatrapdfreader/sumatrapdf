@@ -932,7 +932,7 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
     IPersistFile* pf = NULL;
     BOOL ok = TRUE;
 
-    ComScope();
+    ComScope comScope();
 
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
     if (FAILED(hr)) 
@@ -1767,9 +1767,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (ExecuteFromTempIfUninstaller())
         return 0;
 
-    ComScope();
-    GdiPlusScope();
+    ComScope comScope;
     InitAllCommonControls();
+    GdiPlusScope gdiScope;
 
     if (!RegisterWinClass(hInstance))
         goto Exit;
