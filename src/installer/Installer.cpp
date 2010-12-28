@@ -1365,7 +1365,7 @@ void DrawMessage(Graphics &g, REAL y, REAL dx)
     g.DrawString(s, -1, &f, PointF(x,y), &b);
 }
 
-void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
+void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
 {
     LetterInfo *li;
     WCHAR s[2] = { 0 };
@@ -1387,6 +1387,19 @@ void DrawSumatraLetters(Graphics &g, Font *f, REAL y)
         g.RotateTransform(li->rotation, MatrixOrderAppend);
         g.ResetTransform();
     }
+
+    // draw version number
+    REAL x = gLetters[dimof(gLetters)-1].x;
+    g.TranslateTransform(x, y);
+    g.RotateTransform(45.f);
+    REAL x2 = 15; REAL y2 = -34;
+    SolidBrush b1(Color(0,0,0));
+#define VER_S _T("v") _T(QM(CURR_VERSION))
+    g.DrawString(VER_S, -1, fVer, PointF(x2-2,y2-1), &b1);
+    SolidBrush b2(Color(255,255,255));
+    g.DrawString(VER_S, -1, fVer, PointF(x2,y2), &b2);
+    g.ResetTransform();
+#undef VS
 }
 
 void DrawFrame2(Graphics &g, RECT *r)
@@ -1402,7 +1415,8 @@ void DrawFrame2(Graphics &g, RECT *r)
     Rect r2(r->top-1, r->left-1, RectDx(r)+1, RectDy(r)+1);
     g.FillRectangle(&bgBrush, r2);
 
-    DrawSumatraLetters(g, &f, 18.f);
+    Font f2(L"Impact", 16, FontStyleRegular);
+    DrawSumatraLetters(g, &f, &f2, 18.f);
 
     REAL msgY = (REAL)(RectDy(r) / 2);
     DrawMessage(g, msgY, (REAL)RectDx(r));
