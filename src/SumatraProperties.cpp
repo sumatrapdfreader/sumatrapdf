@@ -171,13 +171,13 @@ static TCHAR *FormatSizeSuccint(uint64_t size) {
 
     if (size > GB) {
         s /= GB;
-        unit = _TR("GB");
+        unit = _T("GB");
     } else if (size > MB) {
         s /= MB;
-        unit = _TR("MB");
+        unit = _T("MB");
     } else {
         s /= KB;
-        unit = _TR("KB");
+        unit = _T("KB");
     }
 
     return FormatFloatWithThousandSep(s, unit);
