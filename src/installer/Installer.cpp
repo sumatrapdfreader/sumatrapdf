@@ -932,7 +932,7 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
     IPersistFile* pf = NULL;
     BOOL ok = TRUE;
 
-    ComScope comScope();
+    ComScope comScope;
 
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&sl);
     if (FAILED(hr)) 
