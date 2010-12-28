@@ -77,6 +77,7 @@ static HFONT            gFontDefault;
 
 static TCHAR *          gMsg;
 static Color            gMsgColor;
+static bool             gMsgDrawShadow = true;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
 Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
@@ -84,10 +85,10 @@ Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
 Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
 Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
 
-static Color            COLOR_MSG_OK(gCol3Shadow);
-static Color            COLOR_MSG_FAILED(gCol1Shadow);
-static Color            COLOR_MSG_WELCOME(gCol5Shadow);
-static Color            COLOR_MSG_INSTALLATION_IN_PROGRESS(0,0,0);
+static Color            COLOR_MSG_WELCOME(gCol5);
+static Color            COLOR_MSG_OK(gCol5);
+static Color            COLOR_MSG_INSTALLATION(gCol5);
+static Color            COLOR_MSG_FAILED(gCol1);
 
 #define APP                 "SumatraPDF"
 #define TAPP                _T("SumatraPDF")
@@ -1017,7 +1018,7 @@ void CreateButtonExit(HWND hwndParent)
     GetClientRect(hwndParent, &r);
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
-    gHwndButtonExit = CreateWindow(WC_BUTTON, _T("Exit"),
+    gHwndButtonExit = CreateWindow(WC_BUTTON, _T("Close"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_EXIT,
@@ -1115,7 +1116,7 @@ void OnButtonInstall()
     EnableWindow(gHwndButtonInstall, FALSE);
 
     gMsg = _T("Installation in progress...");
-    gMsgColor = COLOR_MSG_INSTALLATION_IN_PROGRESS;
+    gMsgColor = COLOR_MSG_INSTALLATION;
     InvalidateFrame();
 
     InstallerThreadData *td = SA(InstallerThreadData);
@@ -1129,7 +1130,7 @@ void OnInstallationFinished(InstallerThreadData *td)
     DestroyWindow(gHwndButtonInstall);
     if (td->ok) {
         CreateButtonRunSumatra(gHwndFrame);
-        gMsg = _T("Installation has finished!");
+        gMsg = _T("Thank you! SumatraPDF has been installed.");
         gMsgColor = COLOR_MSG_OK;
     } else {
         CreateButtonExit(gHwndFrame);
@@ -1150,7 +1151,7 @@ void OnButtonUninstall()
     // disable the button during uninstallation
     EnableWindow(gHwndButtonUninstall, FALSE);
     gMsg = _T("Uninstallation in progress...");
-    gMsgColor = COLOR_MSG_INSTALLATION_IN_PROGRESS;
+    gMsgColor = COLOR_MSG_INSTALLATION;
     InvalidateFrame();
     ProcessMessageLoop(gHwndFrame);
 
@@ -1164,7 +1165,7 @@ void OnButtonUninstall()
     DestroyWindow(gHwndButtonUninstall);
     CreateButtonExit(gHwndFrame);
 
-    gMsg = _T("Uninstallation has finished!");
+    gMsg = _T("SumatraPDF has been uninstalled.");
     gMsgColor = COLOR_MSG_OK;
     InvalidateFrame();
 }
@@ -1349,7 +1350,6 @@ void DrawMessage(Graphics &g, REAL y, REAL dx)
         return;
     TCHAR *s = gMsg;
 
-    SolidBrush b(gMsgColor);
     Font f(L"Impact", 16, FontStyleRegular);
     StringFormat sfmt;
 
@@ -1357,6 +1357,11 @@ void DrawMessage(Graphics &g, REAL y, REAL dx)
     g.MeasureString(s, -1, &f, PointF(0,0), &sfmt, &bbox);
 
     REAL x = (dx - bbox.Width) / 2.f;
+    if (gMsgDrawShadow) {
+        SolidBrush b(Color(255,255,255));
+        g.DrawString(s, -1, &f, PointF(x-1,y+1), &b);
+    }
+    SolidBrush b(gMsgColor);
     g.DrawString(s, -1, &f, PointF(x,y), &b);
 }
 
