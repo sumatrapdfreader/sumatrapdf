@@ -24,9 +24,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)\src\bin\nasm.exe"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)\src\bin\nasm.exe rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)\src\bin\nasm.exe clean"
+				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe rebuild"
+				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;_DEBUG;SYNCTEX_FEATURE"
 				IncludeSearchPath="baseutils;mupdf\mupdf;mupdf\fitz"
@@ -44,9 +44,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)\src\bin\nasm.exe"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)\src\bin\nasm.exe rebuild"
-				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)\src\bin\nasm.exe clean"
+				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe"
+				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe rebuild"
+				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=$(ProjectDir)bin\nasm.exe clean"
 				Output="obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;SYNCTEX_FEATURE"
 				IncludeSearchPath=""
