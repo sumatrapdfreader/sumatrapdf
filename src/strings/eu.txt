@@ -392,10 +392,7 @@ dokumentua imprimatzen
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#GB
 #Hint: Use the F3 key for finding again
-#KB
-#MB
 #Main PDF reader can't be changed in portable mode
 #No result found around line %u in file %s
 #No synchronization file found

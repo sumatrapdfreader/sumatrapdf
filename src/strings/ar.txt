@@ -301,20 +301,11 @@ Fit Width
 Found text at page %d
 تم العثور على النص في صفحة %d
 
-GB
-ج.ب
-
 Go to page
 اذهب لصفحة
 
 Hint: Use the F3 key for finding again
 للبحث مرةً أخرى ، اضغط F3
-
-KB
-ك.ب
-
-MB
-م.ب
 
 Main PDF reader can't be changed in portable mode
 لايمكن تغيير قاريء ملفات البي دي إف في وضح النسخة المحمولة

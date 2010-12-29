@@ -388,8 +388,14 @@ Ajuste de páginas
 Page:
 Página:
 
+Please include the following file in your crash report:
+Por favor, inclua o seguinte ficheiro no seu relatório:
+
 Please wait - rendering...
 Por favor, aguarde - a processar...
+
+Pr&esentation\tCtrl-L
+Apr&esentação\tCtrl-L
 
 Previous Page
 Página anterior
@@ -445,6 +451,9 @@ Opções do SumatraPDF
 SumatraPDF Update
 Atualização do SumatraPDF
 
+SumatraPDF crashed
+O SumatraPDF terminou
+
 SumatraPDF is your main PDF reader
 SumatraPDF é o leitor de PDFs omisso
 
@@ -488,7 +497,7 @@ Zoom Out
 Reduzir
 
 Zoom factor
-Tamanho
+Ampliação
 
 [Changes detected; refreshing] %s
 [Mudanças detetadas; atualizando] %s
@@ -498,12 +507,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#GB
-#KB
-#MB
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF crashed
 

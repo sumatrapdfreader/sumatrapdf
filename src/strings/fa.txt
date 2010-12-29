@@ -447,9 +447,6 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#GB
-#KB
-#MB
 #No matches were found
 #No result found around line %u in file %s
 #No synchronization info at this position

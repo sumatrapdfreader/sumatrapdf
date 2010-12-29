@@ -307,20 +307,11 @@ Fit a Single Page
 Found text at page %d
 Текст найден на стр. %d
 
-GB
-Гб
-
 Go to page
 Перейти на страницу
 
 Hint: Use the F3 key for finding again
 Для повторного поиска используйте клавишу F3
-
-KB
-Кб
-
-MB
-Мб
 
 Main PDF reader can't be changed in portable mode
 В мобильном режиме ассоциирование невозможно

@@ -427,9 +427,6 @@ ipini-print ang dokumento
 #F&orward\tAlt+Right Arrow
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#GB
-#KB
-#MB
 #Main PDF reader can't be changed in portable mode
 #No synchronization file found
 #No synchronization info at this position

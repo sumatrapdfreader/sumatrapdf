@@ -446,9 +446,6 @@ printing document
 #Fit Content
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
-#GB
-#KB
-#MB
 #No result found around line %u in file %s
 #Page scaling
 #Please include the following file in your crash report:

@@ -506,8 +506,3 @@ copying text
 printing document
 印刷するドキュメント
 
-# Untranslated:
-#GB
-#KB
-#MB
-
