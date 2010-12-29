@@ -8,6 +8,8 @@ extern "C"
 {
 #endif
 
+/* TODO: Are DirIter_* and FileInfo_* and FileList_* needed at all? */
+
 typedef struct DirIterState {
     char *          fileName;
     char *          cleanPath;
@@ -47,52 +49,21 @@ void            FileList_Delete(FileList *fl);
 int             FileList_Len(FileList *fl);
 FileInfo *      FileList_GetFileInfo(FileList *fl, int file_no);
 
-const char *    FilePath_GetBaseNameA(const char *path);
-const WCHAR *   FilePath_GetBaseNameW(const WCHAR *path);
-#ifdef _UNICODE
-#define FilePath_GetBaseName   FilePath_GetBaseNameW
-#else
-#define FilePath_GetBaseName   FilePath_GetBaseNameA
-#endif
+const TCHAR *   FilePath_GetBaseName(const TCHAR *path);
+TCHAR *         FilePath_GetDir(const TCHAR *path);
 
-char *          FilePath_GetDirA(const char *path);
-WCHAR *         FilePath_GetDirW(const WCHAR *path);
-#ifdef _UNICODE
-#define FilePath_GetDir   FilePath_GetDirW
-#else
-#define FilePath_GetDir   FilePath_GetDirA
-#endif
+TCHAR *         FilePath_Normalize(const TCHAR *f, BOOL bLowerCase);
+int             FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs);
 
-WCHAR *         FilePath_NormalizeW(const WCHAR *f, BOOL bLowerCase);
-char *         FilePath_NormalizeA(const char *f, BOOL bLowerCase);
-#ifdef _UNICODE
-#define FilePath_Normalize   FilePath_NormalizeW
-#else
-#define FilePath_Normalize   FilePath_NormalizeA
-#endif
-
-int             FilePath_CompareW(const WCHAR *lhs, const WCHAR *rhs);
-int             FilePath_CompareA(const char *lhs, const char *rhs);
-#ifdef _UNICODE
-#define FilePath_Compare   FilePath_CompareW
-#else
-#define FilePath_Compare   FilePath_CompareA
-#endif
+BOOL            file_exists(const TCHAR *file_path);
 
 #ifdef _WIN32
 char *          file_read_all(const TCHAR *file_path, uint64_t *file_size_out);
+BOOL            write_to_file(const TCHAR *file_path, void *data, uint64_t data_len);
 #else
 char *          file_read_all(const char *file_path, uint64_t *file_size_out);
 #endif
-uint64_t        file_size_get(const char *file_path);
-BOOL            write_to_file(const TCHAR *file_path, void *data, uint64_t data_len);
-BOOL            file_existsA(const char *file_path);
-BOOL            file_existsW(const WCHAR *file_path);
-#ifdef _UNICODE
-#define file_exists   file_existsW
-#else
-#define file_exists   file_existsA
-#endif
+uint64_t        file_size_get(const TCHAR *file_path);
 
 #ifdef __cplusplus
 }

@@ -24,7 +24,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include "Resource.h"
 #include "base_util.h"
-#include "str_util.h"
 #include "tstr_util.h"
 #include "win_util.h"
 #include "WinUtil.hpp"
@@ -90,9 +89,8 @@ static Color            COLOR_MSG_OK(gCol5);
 static Color            COLOR_MSG_INSTALLATION(gCol5);
 static Color            COLOR_MSG_FAILED(gCol1);
 
-#define APP                 "SumatraPDF"
 #define TAPP                _T("SumatraPDF")
-#define EXENAME             "SumatraPDF.exe"
+#define EXENAME             TAPP _T(".exe")
 
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
@@ -138,7 +136,7 @@ struct EmbeddedPart {
     // fields valid if type is INSTALLER_PART_FILE or INSTALLER_PART_FILE_ZLIB
     uint32_t        fileSize;    // size of the file
     uint32_t        fileOffset;  // offset in the executable of the file start
-    char *          fileName;    // name of the file
+    TCHAR *         fileName;    // name of the file (UTF-8 encoded in file)
 };
 
 static EmbeddedPart *   gEmbeddedParts;
@@ -155,34 +153,34 @@ void FreeEmbeddedParts(EmbeddedPart *root)
     }
 }
 
-void ShowLastError(char *msg)
+void ShowLastError(TCHAR *msg)
 {
-    char *msgBuf, *errorMsg;
-    if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPSTR)&msgBuf, 0, NULL)) {
-        errorMsg = str_printf("%s\n\n%s", msg, msgBuf);
+    TCHAR *msgBuf, *errorMsg;
+    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPTSTR)&msgBuf, 0, NULL)) {
+        errorMsg = tstr_printf(_T("%s\n\n%s"), msg, msgBuf);
         LocalFree(msgBuf);
     } else {
-        errorMsg = str_printf("%s\n\nError %d", msg, (int)GetLastError());
+        errorMsg = tstr_printf(_T("%s\n\nError %d"), msg, (int)GetLastError());
     }
-    MessageBoxA(gHwndFrame, errorMsg, "Installer failed", MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(gHwndFrame, errorMsg, _T("Installer failed"), MB_OK | MB_ICONEXCLAMATION);
     free(errorMsg);
 }
 
-void NotifyFailed(char *msg)
+void NotifyFailed(TCHAR *msg)
 {
-    MessageBoxA(gHwndFrame, msg, "Installer failed",  MB_ICONINFORMATION | MB_OK);
+    MessageBox(gHwndFrame, msg, _T("Installer failed"),  MB_ICONEXCLAMATION | MB_OK);
 }
 
-BOOL ReadData(HANDLE h, LPVOID data, DWORD size, char *errMsg)
+BOOL ReadData(HANDLE h, LPVOID data, DWORD size, TCHAR *errMsg)
 {
     DWORD bytesRead;
     BOOL ok = ReadFile(h, data, size, &bytesRead, NULL);
-    char *msg;
+    TCHAR *msg;
     if (!ok || (bytesRead != size)) {        
         if (!ok) {
-            msg = str_printf("%s: ok=%d", errMsg, ok);
+            msg = tstr_printf(_T("%s: ok=%d"), errMsg, ok);
         } else {
-            msg = str_printf("%s: bytesRead=%d, wanted=%d", errMsg, (int)bytesRead, (int)size);
+            msg = tstr_printf(_T("%s: bytesRead=%d, wanted=%d"), errMsg, (int)bytesRead, (int)size);
         }
         ShowLastError(msg);
         return FALSE;
@@ -192,7 +190,7 @@ BOOL ReadData(HANDLE h, LPVOID data, DWORD size, char *errMsg)
 
 #define SEEK_FAILED INVALID_SET_FILE_POINTER
 
-DWORD SeekBackwards(HANDLE h, LONG distance, char *errMsg)
+DWORD SeekBackwards(HANDLE h, LONG distance, TCHAR *errMsg)
 {
     DWORD res = SetFilePointer(h, -distance, NULL, FILE_CURRENT);
     if (INVALID_SET_FILE_POINTER == res) {
@@ -203,7 +201,7 @@ DWORD SeekBackwards(HANDLE h, LONG distance, char *errMsg)
 
 DWORD GetFilePos(HANDLE h)
 {
-    return SeekBackwards(h, 0, "");
+    return SeekBackwards(h, 0, _T(""));
 }
 
 #define TEN_SECONDS_IN_MS 10*1000
@@ -211,10 +209,10 @@ DWORD GetFilePos(HANDLE h)
 // Kill a process with given <processId> if it's named <processName>.
 // If <waitUntilTerminated> is TRUE, will wait until process is fully killed.
 // Returns TRUE if killed a process
-BOOL KillProcIdWithName(DWORD processId, char *processName, BOOL waitUntilTerminated)
+BOOL KillProcIdWithName(DWORD processId, TCHAR *processName, BOOL waitUntilTerminated)
 {
     HANDLE      hProcess = NULL;
-    char        currentProcessName[1024];
+    TCHAR       currentProcessName[1024];
     HMODULE     modulesArray[1024];
     DWORD       modulesCount;
     BOOL        killed = FALSE;
@@ -227,10 +225,10 @@ BOOL KillProcIdWithName(DWORD processId, char *processName, BOOL waitUntilTermin
     if (!ok)
         goto Exit;
 
-    if (0 == GetModuleBaseNameA(hProcess, modulesArray[0], currentProcessName, 1024))
+    if (0 == GetModuleBaseName(hProcess, modulesArray[0], currentProcessName, 1024))
         goto Exit;
 
-    if (!str_ieq(currentProcessName, processName))
+    if (!tstr_ieq(currentProcessName, processName))
         goto Exit;
 
     killed = TerminateProcess(hProcess, 0);
@@ -240,7 +238,7 @@ BOOL KillProcIdWithName(DWORD processId, char *processName, BOOL waitUntilTermin
     if (waitUntilTerminated)
         WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
 
-    UpdateWindow(FindWindowA(NULL, "Shell_TrayWnd"));    
+    UpdateWindow(FindWindow(NULL, _T("Shell_TrayWnd")));
     UpdateWindow(GetDesktopWindow());
 
 Exit:
@@ -250,7 +248,7 @@ Exit:
 
 #define MAX_PROCESSES 1024
 
-static int KillProcess(char *processName, BOOL waitUntilTerminated)
+static int KillProcess(TCHAR *processName, BOOL waitUntilTerminated)
 {
     DWORD  pidsArray[MAX_PROCESSES];
     DWORD  cbPidsArraySize;
@@ -370,7 +368,7 @@ public:
    For a part that is a file:
      $fileData      - blob
      $fileDataLen   - length of $data, 32-bit unsigned integer, little-endian
-     $fileName      - ascii string, name of the file (without terminating zero!)
+     $fileName      - UTF-8 string, name of the file (without terminating zero!)
      $fileNameLen   - length of $fileName, 32-bit unsigned integer, little-endian
      'kifi'         - 4 byte unique header
 
@@ -384,7 +382,7 @@ EmbeddedPart *GetEmbeddedPartsInfo() {
     EmbeddedPart *  root = NULL;
     EmbeddedPart *  part;
     DWORD           res;
-    char *           msg;
+    TCHAR *         msg;
 
     if (gEmbeddedParts)
         return gEmbeddedParts;
@@ -393,14 +391,14 @@ EmbeddedPart *GetEmbeddedPartsInfo() {
     HANDLE h = CreateFile(exePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE)
     {
-        NotifyFailed("Couldn't open myself for reading");
+        NotifyFailed(_T("Couldn't open myself for reading"));
         goto Error;
     }
 
     // position at the header of the last part
     res = SetFilePointer(h, -4, NULL, FILE_END);
     if (INVALID_SET_FILE_POINTER == res) {
-        NotifyFailed("Couldn't seek to end");
+        NotifyFailed(_T("Couldn't seek to end"));
         goto Error;
     }
 
@@ -411,13 +409,13 @@ ReadNextPart:
 
     res = GetFilePos(h);
 #if 0
-    msg = str_printf("Curr pos: %d", (int)res);
-    MessageBoxA(gHwndFrame, msg, "Info", MB_ICONINFORMATION | MB_OK);
+    msg = tstr_printf(_T("Curr pos: %d"), (int)res);
+    MessageBox(gHwndFrame, msg, _T("Info"), MB_ICONINFORMATION | MB_OK);
     free(msg);
 #endif
 
     // at this point we have to be positioned in the file at the beginning of the header
-    if (!ReadData(h, (LPVOID)part->type, 4, "Couldn't read the header"))
+    if (!ReadData(h, (LPVOID)part->type, 4, _T("Couldn't read the header")))
         goto Error;
 
     if (str_eqn(part->type, INSTALLER_PART_END, 4)) {
@@ -432,38 +430,41 @@ ReadNextPart:
     if (str_eqn(part->type, INSTALLER_PART_FILE, 4) ||
         str_eqn(part->type, INSTALLER_PART_FILE_ZLIB, 4)) {
         uint32_t nameLen;
-        if (SEEK_FAILED == SeekBackwards(h, 8, "Couldn't seek to file name size"))
+        if (SEEK_FAILED == SeekBackwards(h, 8, _T("Couldn't seek to file name size")))
             goto Error;
 
-        if (!ReadData(h, (LPVOID)&nameLen, 4, "Couldn't read file name size"))
+        if (!ReadData(h, (LPVOID)&nameLen, 4, _T("Couldn't read file name size")))
             goto Error;
-        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, "Couldn't seek to file name"))
-            goto Error;
-
-        part->fileName = (char*)zmalloc(nameLen+1);
-        if (!ReadData(h, (LPVOID)part->fileName, nameLen, "Couldn't read file name"))
-            goto Error;
-        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, "Couldn't seek to file size"))
+        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, _T("Couldn't seek to file name")))
             goto Error;
 
-        if (!ReadData(h, (LPVOID)&part->fileSize, 4, "Couldn't read file size"))
+        char *fileNameUTF8 = (char*)zmalloc(nameLen+1);
+        if (!ReadData(h, (LPVOID)fileNameUTF8, nameLen, _T("Couldn't read file name")))
             goto Error;
-        res = SeekBackwards(h, 4 + part->fileSize + 4,  "Couldn't seek to header");
+        if (SEEK_FAILED == SeekBackwards(h, 4 + nameLen, _T("Couldn't seek to file size")))
+            goto Error;
+        part->fileName = utf8_to_tstr(fileNameUTF8);
+        free(fileNameUTF8);
+
+        if (!ReadData(h, (LPVOID)&part->fileSize, 4, _T("Couldn't read file size")))
+            goto Error;
+        res = SeekBackwards(h, 4 + part->fileSize + 4,  _T("Couldn't seek to header"));
         if (SEEK_FAILED == res)
             goto Error;
 
         part->fileOffset = res + 4;
 #if 0
-        msg = str_printf("Found file '%s' of size %d at offset %d", part->fileName, part->fileSize, part->fileOffset);
-        MessageBoxA(gHwndFrame, msg, "Installer", MB_ICONINFORMATION | MB_OK);
+        msg = tstr_printf(_T("Found file '%s' of size %d at offset %d"), part->fileName, part->fileSize, part->fileOffset);
+        MessageBox(gHwndFrame, msg, _T("Installer"), MB_ICONINFORMATION | MB_OK);
         free(msg);
 #endif
         goto ReadNextPart;
     }
 
-    msg = str_printf("Unknown part: %s", part->type);
+    TCHAR *ttype = utf8_to_tstr(part->type);
+    msg = tstr_printf(_T("Unknown part: %s"), ttype);
     NotifyFailed(msg);
-    free(msg);
+    free(msg); free(ttype);
     goto Error;
 
 Exit:
@@ -490,13 +491,13 @@ BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
 
         ok = ReadFile(hSrc, (LPVOID)buf, toRead, &bytesTransferred, NULL);
         if (!ok || (toRead != bytesTransferred)) {
-            NotifyFailed("Failed to read from file part");
+            NotifyFailed(_T("Failed to read from file part"));
             goto Error;
         }
 
         ok = WriteFile(hDst, (LPVOID)buf, toRead, &bytesTransferred, NULL);
         if (!ok || (toRead != bytesTransferred)) {
-            NotifyFailed("Failed to write to hDst");
+            NotifyFailed(_T("Failed to write to hDst"));
             goto Error;
         }
 
@@ -520,7 +521,7 @@ BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
 
     ret = inflateInit(&strm);
     if (ret != Z_OK) {
-        NotifyFailed("inflateInit() failed");
+        NotifyFailed(_T("inflateInit() failed"));
         return FALSE;
     }
 
@@ -531,7 +532,7 @@ BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
 
         ok = ReadFile(hSrc, (LPVOID)in, toRead, &bytesTransferred, NULL);
         if (!ok || (toRead != bytesTransferred)) {
-            NotifyFailed("Failed to read from file part");
+            NotifyFailed(_T("Failed to read from file part"));
             goto Error;
         }
 
@@ -554,7 +555,7 @@ BOOL CopyFileDataZipped(HANDLE hSrc, HANDLE hDst, DWORD size)
 
             ok = WriteFile(hDst, (LPVOID)out, toWrite, &bytesTransferred, NULL);
             if (!ok || (toWrite != bytesTransferred)) {
-                NotifyFailed("Failed to write to hDst");
+                NotifyFailed(_T("Failed to write to hDst"));
                 goto Error;
             }
         } while (strm.avail_out == 0);
@@ -574,10 +575,9 @@ BOOL OpenFileForReading(TCHAR *s, HANDLE *hOut)
 {
     *hOut = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (*hOut == INVALID_HANDLE_VALUE) {
-        char *msg1 = tstr_to_utf8(s);
-        char *msg2 = str_printf("Couldn't open %s for reading", msg1);
-        NotifyFailed(msg2);
-        free(msg2); free(msg1);
+        TCHAR *msg = tstr_printf(_T("Couldn't open %s for reading"), s);
+        NotifyFailed(msg);
+        free(msg);
         return FALSE;
     }
     return TRUE;
@@ -587,10 +587,9 @@ BOOL OpenFileForWriting(TCHAR *s, HANDLE *hOut)
 {
     *hOut = CreateFile(s, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (*hOut == INVALID_HANDLE_VALUE) {
-        char *msg1 = tstr_to_utf8(s);
-        char *msg2 = str_printf("Couldn't open %s for writing", msg1);
-        ShowLastError(msg2);
-        free(msg2); free(msg1);
+        TCHAR *msg = tstr_printf(_T("Couldn't open %s for writing"), s);
+        ShowLastError(msg);
+        free(msg);
         return FALSE;
     }
     return TRUE;
@@ -602,8 +601,7 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
     HANDLE  hDst = INVALID_HANDLE_VALUE, hSrc = INVALID_HANDLE_VALUE;
     BOOL    ok = FALSE;
 
-    dstName = utf8_to_tstr(p->fileName);
-    dstPath = tstr_cat3(dir, _T("\\"), dstName);
+    dstPath = tstr_cat3(dir, _T("\\"), p->fileName);
     TCHAR *exePath = GetExePath();
 
     if (!OpenFileForReading(exePath, &hSrc))
@@ -611,7 +609,7 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
 
     DWORD res = SetFilePointer(hSrc, p->fileOffset, NULL, FILE_BEGIN);
     if (INVALID_SET_FILE_POINTER == res) {
-        ShowLastError("Couldn't seek to file part");
+        ShowLastError(_T("Couldn't seek to file part"));
         goto Error;
     }
 
@@ -625,7 +623,7 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
 
 Error:
     CloseHandle(hDst); CloseHandle(hSrc);
-    free(dstPath); free(dstName);
+    free(dstPath);
     return ok;
 }
 
@@ -681,7 +679,7 @@ BOOL CreateUninstaller(EmbeddedPart *parts)
 
     ok = WriteFile(hDst, (LPVOID)INSTALLER_PART_UNINSTALLER, 4, &bytesTransferred, NULL);
     if (!ok || (4 != bytesTransferred)) {
-        NotifyFailed("Failed to write to hDst");
+        NotifyFailed(_T("Failed to write to hDst"));
         goto Error;
     }
 
@@ -841,7 +839,7 @@ void RemoveUninstallerRegistryInfo()
     BOOL ok2 = RegDelKeyRecurse(HKEY_LOCAL_MACHINE, REG_PATH_SOFTWARE);
 
     if (!ok1 || !ok2)
-        NotifyFailed("Failed to delete uninstaller registry keys");
+        NotifyFailed(_T("Failed to delete uninstaller registry keys"));
 }
 
 /* Undo what DoAssociateExeWithPdfExtension() in SumatraPDF.cpp did */
@@ -916,7 +914,7 @@ void RemoveDirectoryWithFiles(TCHAR *dir)
     if (!RemoveDirectory(dir)) {
         if (ERROR_FILE_NOT_FOUND != GetLastError()) {
             SeeLastError();
-            NotifyFailed("Couldn't remove installation directory");
+            NotifyFailed(_T("Couldn't remove installation directory"));
         }
     }
     free(dirPattern);
@@ -953,9 +951,12 @@ BOOL CreateShortcut(TCHAR *shortcutPath, TCHAR *exePath, TCHAR *workingDir, TCHA
         sl->SetDescription(description);
 
 #ifndef _UNICODE
-#error "must be compiled as Unicode!"
+    WCHAR *shortcutPathW = multibyte_to_wstr(shortcutPath, CP_ACP);
+    hr = pf->Save(shortcutPathW, TRUE);
+    free(shortcutPathW);
+#else
+    hr = pf->Save(shortcutPath, TRUE);
 #endif
-    hr = pf->Save(shortcutPath,TRUE);
 
 Exit:
     if (pf)
@@ -966,7 +967,7 @@ Exit:
     if (FAILED(hr)) {
         ok = FALSE;
         SeeLastError();
-        NotifyFailed("Failed to create a shortcut");
+        NotifyFailed(_T("Failed to create a shortcut"));
     }
     return ok;
 }
@@ -988,7 +989,7 @@ void RemoveShortcut()
     BOOL ok = DeleteFile(p);
     if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
         SeeLastError();
-        NotifyFailed("Couldn't remove the shortcut");
+        NotifyFailed(_T("Couldn't remove the shortcut"));
     }
     free(p);
 }
@@ -999,7 +1000,7 @@ BOOL CreateInstallationDirectory()
     BOOL ok = CreateDirectory(dir, NULL);
     if (!ok && (GetLastError() != ERROR_ALREADY_EXISTS)) {
         SeeLastError();
-        NotifyFailed("Couldn't create installation directory");
+        NotifyFailed(_T("Couldn't create installation directory"));
     } else {
         ok = TRUE;
     }
@@ -1061,7 +1062,7 @@ typedef struct {
 
     // results
     BOOL    ok;
-    char  * msg;
+    TCHAR * msg;
 } InstallerThreadData;
 
 static DWORD WINAPI InstallerThread(LPVOID data)
@@ -1072,7 +1073,7 @@ static DWORD WINAPI InstallerThread(LPVOID data)
 
     EmbeddedPart *parts = GetEmbeddedPartsInfo();
     if (NULL == parts) {
-        td->msg = "Didn't find embedded parts";
+        td->msg = _T("Didn't find embedded parts");
         goto Error;
     }
 
@@ -1348,7 +1349,7 @@ void DrawMessage(Graphics &g, REAL y, REAL dx)
 {
     if (!gMsg)
         return;
-    TCHAR *s = gMsg;
+    WCHAR *s = tstr_to_wstr(gMsg);
 
     Font f(L"Impact", 16, FontStyleRegular);
     StringFormat sfmt;
@@ -1363,6 +1364,7 @@ void DrawMessage(Graphics &g, REAL y, REAL dx)
     }
     SolidBrush b(gMsgColor);
     g.DrawString(s, -1, &f, PointF(x,y), &b);
+    free(s);
 }
 
 void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
@@ -1394,12 +1396,13 @@ void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.RotateTransform(45.f);
     REAL x2 = 15; REAL y2 = -34;
     SolidBrush b1(Color(0,0,0));
-#define VER_S _T("v") _T(QM(CURR_VERSION))
-    g.DrawString(VER_S, -1, fVer, PointF(x2-2,y2-1), &b1);
+
+    WCHAR *ver_s = tstr_to_wstr(_T("v") CURR_VERSION_STR);
+    g.DrawString(ver_s, -1, fVer, PointF(x2-2,y2-1), &b1);
     SolidBrush b2(Color(255,255,255));
-    g.DrawString(VER_S, -1, fVer, PointF(x2,y2), &b2);
+    g.DrawString(ver_s, -1, fVer, PointF(x2,y2), &b2);
     g.ResetTransform();
-#undef VS
+    free(ver_s);
 }
 
 void DrawFrame2(Graphics &g, RECT *r)
@@ -1678,7 +1681,7 @@ TCHAR *GetValidTempDir()
     TCHAR d[MAX_PATH];
     DWORD res = GetTempPath(dimof(d), d);
     if ((0 == res) || (res >= MAX_PATH)) {
-        NotifyFailed("Couldn't obtain temporary directory");
+        NotifyFailed(_T("Couldn't obtain temporary directory"));
         return NULL;
     }
     if (!tstr_endswithi(d, _T("\\")))
@@ -1686,7 +1689,7 @@ TCHAR *GetValidTempDir()
     res = CreateDirectory(d, NULL);
     if ((res == 0) && (ERROR_ALREADY_EXISTS != GetLastError())) {
         SeeLastError();
-        NotifyFailed("Couldn't create temporary directory");
+        NotifyFailed(_T("Couldn't create temporary directory"));
         return NULL;
     }
     return tstr_dup(d);
@@ -1725,7 +1728,7 @@ BOOL ExecuteFromTempIfUninstaller()
     TCHAR *tempPath = tstr_cat(tempDir, _T("sum~inst.exe"));
 
     if (!CopyFile(GetExePath(), tempPath, FALSE)) {
-        NotifyFailed("Failed to copy uninstaller to temp directory");
+        NotifyFailed(_T("Failed to copy uninstaller to temp directory"));
         free(tempPath);
         return FALSE;
     }

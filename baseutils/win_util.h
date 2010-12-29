@@ -38,15 +38,7 @@ extern "C"
 
 int     win_get_text_len(HWND hwnd);
 TCHAR * win_get_text(HWND hwnd);
-WCHAR * win_get_textw(HWND hwnd);
-void    win_set_texta(HWND hwnd, const char *txt);
-void    win_set_textw(HWND hwnd, const WCHAR *txt);
-
-#ifdef _UNICODE
-#define win_set_text win_set_textw
-#else
-#define win_set_text win_set_texta
-#endif
+void    win_set_text(HWND hwnd, const TCHAR *txt);
 
 void win_edit_set_selection(HWND hwnd, DWORD selStart, DWORD selEnd);
 void win_edit_select_all(HWND hwnd);
@@ -59,7 +51,6 @@ LRESULT lv_set_column(HWND hwnd, int col, LVCOLUMN *lvc);
 LRESULT lv_set_column_dx(HWND hwnd, int col, int dx);
 LRESULT lv_insert_item(HWND hwnd, int row, LVITEM *lvi);
 LRESULT lv_insert_item_text(HWND hwnd, int row, const TCHAR *txt);
-LRESULT lv_insert_item_textw(HWND hwnd, int row, const WCHAR *txt);
 int     lv_get_selection_pos(HWND hwnd);
 LRESULT lb_delete_all_items(HWND hwnd);
 #if 0 /* doesn't seem to be supported under wince */
@@ -67,7 +58,6 @@ LRESULT lb_set_items_count(HWND hwnd, int items_count);
 #endif
 LRESULT lb_insert_item_text(HWND hwnd, int row, const TCHAR *txt);
 LRESULT lb_append_string_no_sort(HWND hwnd, const TCHAR *txt);
-LRESULT lb_append_stringw_no_sort(HWND hwnd, const WCHAR *txt);
 LRESULT lb_get_items_count(HWND hwnd);
 LRESULT lb_set_selection(HWND hwnd, int item);
 LRESULT lb_get_selection(HWND hwnd);

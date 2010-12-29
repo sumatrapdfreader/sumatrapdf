@@ -14,7 +14,7 @@
 #endif
 
 #ifdef _UNICODE
-  #define tstr_len      wcslen
+  #define tstr_len      wstr_len
   #define tstr_dup      wstr_dup
   #define tstr_dupn     wstr_dupn
   #define tstr_cat_s    wstr_cat_s
@@ -28,12 +28,12 @@
   #define tstr_endswithi wstr_endswithi
   #define tstr_startswithi wstr_startswithi
   #define tstr_url_encode wstr_url_encode
-  #define tchar_needs_url_escape wchar_needs_url_escape
   #define tstr_contains wstr_contains
   #define tstr_printf   wstr_printf
   #define tstr_printf_s wstr_printf_s
   #define tstr_eq       wstr_eq
   #define tstr_ieq      wstr_ieq
+  #define tstr_eqn      wstr_eqn
   #define tstr_empty    wstr_empty
   #define tstr_find_char wstr_find_char
   #define tstr_skip     wstr_skip
@@ -48,7 +48,7 @@
   #define hex_tstr_decode_byte                        hex_wstr_decode_byte
   #define DBG_OUT_T     DBG_OUT_W
 #else
-  #define tstr_len      strlen
+  #define tstr_len      str_len
   #define tstr_dup      str_dup
   #define tstr_dupn     str_dupn
   #define tstr_cat_s    str_cat_s
@@ -62,12 +62,12 @@
   #define tstr_endswithi str_endswithi
   #define tstr_startswithi str_startswithi
   #define tstr_url_encode str_url_encode
-  #define tchar_needs_url_escape char_needs_url_escape
   #define tstr_contains str_contains
   #define tstr_printf   str_printf
   #define tstr_printf_s str_printf_s
   #define tstr_eq       str_eq
   #define tstr_ieq      str_ieq
+  #define tstr_eqn      str_eqn
   #define tstr_empty    str_empty
   #define tstr_find_char  str_find_char
   #define tstr_skip     str_skip

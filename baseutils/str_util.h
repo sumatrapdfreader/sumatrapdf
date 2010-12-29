@@ -49,12 +49,14 @@ extern "C"
   #define DBG_OUT_HEX(...) no_op()
 #endif
 
-int char_is_ws_or_zero(char c);
-int char_is_ws(char c);
-int char_is_digit(char c);
+#define char_is_ws isspace
+#define char_is_digit isdigit
 int char_is_dir_sep(char c);
 
 #define str_len strlen
+#define str_dup _strdup
+#define str_find_char strchr
+
 int     str_eq(const char *str1, const char *str2);
 int     str_ieq(const char *str1, const char *str2);
 #define str_eq_no_case str_ieq
@@ -67,7 +69,6 @@ int     str_endswith_char(const char *str, char c);
 int     str_empty(const char *str);
 int     str_copy(char *dst, size_t dst_cch_size, const char *src);
 int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
-char *  str_dup(const char *str);
 char *  str_dupn(const char *str, size_t len);
 char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
 char *  str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
@@ -75,12 +76,10 @@ char *  str_cat(const char *str1, const char *str2);
 char *  str_cat3(const char *str1, const char *str2, const char *str3);
 char *  str_cat4(const char *str1, const char *str2, const char *str3, const char *str4);
 char *  str_url_encode(const char *str);
-int     char_needs_url_escape(char c);
 int     str_contains(const char *str, char c);
 char *  str_printf_args(const char *format, va_list args);
 char *  str_printf(const char *format, ...);
 int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
-const char *str_find_char(const char *txt, char c);
 char *  str_split_iter(char **txt, char c);
 char *  str_normalize_newline(const char *txt, const char *replace);
 void    str_strip_left(char *txt, const char *to_strip);

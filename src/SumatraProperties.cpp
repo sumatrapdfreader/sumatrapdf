@@ -35,7 +35,7 @@ static uint64_t WinFileSizeGet(const TCHAR *file_path)
 static TCHAR *PdfToString(fz_obj *obj) {
     WCHAR *s = (WCHAR *)pdf_toucs2(obj);
     TCHAR *str = NULL;
-    if (s && *s)
+    if (!wstr_empty(s))
         str = wstr_to_tstr(s);
     fz_free(s);
     return str;

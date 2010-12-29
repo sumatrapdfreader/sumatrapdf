@@ -86,11 +86,6 @@ WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
     return copy;
 }
 
-WCHAR *wstr_dup(const WCHAR *str)
-{
-    return wstr_dupn(str, wstrlen(str));
-}
-
 int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size)
 {
     size_t len = min(src_cch_size + 1, dst_cch_size);
@@ -130,17 +125,21 @@ int wstr_ieq(const WCHAR *str1, const WCHAR *str2)
     return FALSE;
 }
 
-/* return true if 'str' starts with 'txt', case-sensitive */
-int  wstr_startswith(const WCHAR *str, const WCHAR *txt)
+int wstr_eqn(const WCHAR *str1, const WCHAR *str2, int len)
 {
-    if (!str && !txt)
+    if (!str1 && !str2)
         return TRUE;
-    if (!str || !txt)
+    if (!str1 || !str2)
         return FALSE;
-
-    if (0 == wcsncmp(str, txt, wcslen(txt)))
+    if (0 == wcsncmp(str1, str2, len))
         return TRUE;
     return FALSE;
+}
+
+/* return true if 'str' starts with 'txt', case-sensitive */
+int wstr_startswith(const WCHAR *str, const WCHAR *txt)
+{
+    return wstr_eqn(str, txt, wcslen(txt));
 }
 
 int wstr_endswithi(const WCHAR *txt, const WCHAR *end)
@@ -161,7 +160,7 @@ int wstr_endswithi(const WCHAR *txt, const WCHAR *end)
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-int  wstr_startswithi(const WCHAR *str, const WCHAR *txt)
+int wstr_startswithi(const WCHAR *str, const WCHAR *txt)
 {
     if (!str && !txt)
         return TRUE;
@@ -193,18 +192,6 @@ int wstr_contains(const WCHAR *str, WCHAR c)
 {
     while (*str) {
         if (c == *str++)
-            return TRUE;
-    }
-    return FALSE;
-}
-
-static int wchar_is_ws(WCHAR c)
-{
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
             return TRUE;
     }
     return FALSE;
@@ -314,12 +301,6 @@ WCHAR *wstr_url_encode(const WCHAR *str)
     return result;
 }
 
-WCHAR *wstr_escape(const WCHAR *txt)
-{
-    /* TODO: */
-    return wstr_dup(txt);
-}
-
 WCHAR *wstr_printf(const WCHAR *format, ...)
 {
     va_list args;
@@ -365,42 +346,6 @@ int wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...)
     va_end(args);
 
     return count;
-}
-
-/* Find character 'c' in string 'txt'.
-   Return pointer to this character or NULL if not found */
-const WCHAR *wstr_find_char(const WCHAR *txt, WCHAR c)
-{
-    while (*txt != c) {
-        if (0 == *txt)
-            return NULL;
-        ++txt;
-    }
-    return txt;
-}
-
-/* A simplistic (and potentially wrong) conversion from ascii to unicode by
-   setting unicode character value to ascii code, without taking encoding
-   into account. 
-   TODO: This is a band-aid and all callers should be changed
-   to use the right conversion, eventually.
-   The caller needs to free() return value.
-*/
-WCHAR *str_to_wstr_simplistic(const char *s)
-{
-    WCHAR *tmp;
-    WCHAR *ret;
-
-    assert(s);
-    ret = (WCHAR*)malloc(sizeof(WCHAR)*(strlen(s)+1));
-    if (!ret)
-        return NULL;
-    tmp = ret;
-    while (*s) {
-        *tmp++ = *s++;
-    }
-    *tmp = 0;
-    return ret;
 }
 
 /* Caller needs to free() the result */
@@ -507,38 +452,18 @@ static WCHAR *wstr_parse_quoted(WCHAR **txt)
     return strCopy;
 }
 
-static int wchar_is_ws_or_zero(WCHAR c)
-{
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-        case 0:
-            return TRUE;
-    }
-    return FALSE;
-}
-
 static WCHAR *wstr_parse_non_quoted(WCHAR **txt)
 {
     WCHAR * cur;
     WCHAR * strStart;
     WCHAR * strCopy;
-    WCHAR   c;
     size_t  strLen;
 
     strStart = *txt;
     assert(strStart);
     if (!strStart) return NULL;
     assert('"' != *strStart);
-    cur = strStart;
-    for (;;) {
-        c = *cur;
-        if (wchar_is_ws_or_zero(c))
-            break;
-        ++cur;
-    }
+    for (cur = strStart; *cur && !wchar_is_ws(*cur); cur++);
 
     strLen = cur - strStart;
     assert(strLen > 0);

@@ -25,7 +25,7 @@ private:
 
 class WinProcess {
 public:
-    static WinProcess* Create(const char *cmd, char *args="");
+    static WinProcess* Create(const TCHAR *cmd, TCHAR *args=NULL);
     
 private:
     WinProcess(PROCESS_INFORMATION *);  // we don't want just anyone to make us

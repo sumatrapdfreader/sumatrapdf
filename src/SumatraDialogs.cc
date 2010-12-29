@@ -367,8 +367,8 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int idx = 0;
         for (int i=0; i < LANGS_COUNT; i++) {
-            WCHAR *langName = utf8_to_wstr(g_menuDefLang[i].m_title);
-            lb_append_stringw_no_sort(langList, langName);
+            TCHAR *langName = utf8_to_tstr(g_menuDefLang[i].m_title);
+            lb_append_string_no_sort(langList, langName);
             free(langName);
             if (g_menuDefLang[i].m_id == data->langId)
                 idx = i;

@@ -15,14 +15,9 @@ int win_get_text_len(HWND hwnd)
     return (int)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
 }
 
-void win_set_texta(HWND hwnd, const char *txt)
+void win_set_text(HWND hwnd, const TCHAR *txt)
 {
-    SendMessageA(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
-}
-
-void win_set_textw(HWND hwnd, const WCHAR *txt)
-{
-    SendMessageW(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
+    SendMessage(hwnd, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
 }
 
 /* return a text in edit control represented by hwnd
@@ -37,19 +32,6 @@ TCHAR *win_get_text(HWND hwnd)
         return NULL;
 
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
-    txt[cchTxtLen] = 0;
-    return txt;
-}
-
-WCHAR *win_get_textw(HWND hwnd)
-{
-    int     cchTxtLen = win_get_text_len(hwnd);
-    WCHAR * txt = (WCHAR*)malloc((cchTxtLen+1)*sizeof(WCHAR));
-
-    if (NULL == txt)
-        return NULL;
-
-    SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     return txt;
 }
@@ -151,19 +133,9 @@ LRESULT lb_insert_item_text(HWND hwnd, int row, const TCHAR *txt)
     return SendMessage(hwnd, LB_INSERTSTRING, (WPARAM)row, (LPARAM)txt);
 }
 
-LRESULT lb_insert_item_textw(HWND hwnd, int row, const WCHAR *txt)
-{
-    return SendMessageW(hwnd, LB_INSERTSTRING, (WPARAM)row, (LPARAM)txt);
-}
-
 LRESULT lb_append_string_no_sort(HWND hwnd, const TCHAR *txt)
 {
     return lb_insert_item_text(hwnd, -1, txt);
-}
-
-LRESULT lb_append_stringw_no_sort(HWND hwnd, const WCHAR *txt)
-{
-    return lb_insert_item_textw(hwnd, -1, txt);
 }
 
 /* lb_get_selection and lb_set_selection only work for single-selection listbox */

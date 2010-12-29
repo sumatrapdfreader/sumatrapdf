@@ -181,7 +181,8 @@ PDFENGINE_H =  $(BASEUTILS_H) src\PdfEngine.h $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_D
 DISPLAYMODEL_H=$(PDFENGINE_H) src\DisplayModel.h src\PdfSearch.h src\DisplayState.h src\PdfSelection.h \
                baseutils\vstrlist.h
 SUMATRAPDF_H = $(BASEUTILS_H) src\SumatraPDF.h baseutils\win_util.h src\Resource.h
-WINDOWINFO_H = $(PDFENGINE_H) $(DISPLAYMODEL_H) src\WindowInfo.h src\FileWatch.h src\PdfSync.h
+WINDOWINFO_H = $(PDFENGINE_H) $(DISPLAYMODEL_H) src\WindowInfo.h src\FileWatch.h \
+               src\PdfSync.h baseutils\file_util.h
 
 $(O)\AppPrefs.obj:     $(BASEUTILS_H) $(APPPREFS_H) baseutils\benc_util.h baseutils\file_util.h \
                        src\FileHistory.h
@@ -192,6 +193,7 @@ $(O)\DisplayState.obj: $(BASEUTILS_H)
 $(O)\FileHistory.obj:  baseutils\tstr_util.h src\DisplayState.h
 $(O)\FileWatch.obj:    $(SUMATRAPDF_H) baseutils\file_util.h
 $(O)\Http.obj:         $(SUMATRAPDF_H) src\MemSegment.h baseutils\vstrlist.h src\Version.h
+$(O)\Installer.obj:    $(BASEUTILS_H) baseutils\win_util.h baseutils\WinUtil.hpp src\Version.h
 $(O)\LangMenuDef.obj:  src\Resource.h
 $(O)\MemSegment.obj:   baseutils\vstrlist.h
 $(O)\ParseCommandLine.obj: $(SUMATRAPDF_H) baseutils\vstrlist.h baseutils\WinUtil.hpp src\Benchmark.h
@@ -213,4 +215,3 @@ $(O)\WindowInfo.obj:   $(WINDOWINFO_H) baseutils\win_util.h baseutils\file_util.
 
 # all objs depend on the equally named header
 $(SUMATRA_OBJS): src\$$(@B).h
-

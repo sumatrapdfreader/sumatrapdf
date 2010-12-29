@@ -5,7 +5,6 @@
 
 #include "base_util.h"
 #include "WinUtil.hpp"
-#include "str_util.h"
 #include "tstr_util.h"
 #include <shlwapi.h>
 #include <shlobj.h>
@@ -38,15 +37,12 @@ HMODULE WinLibrary::_LoadSystemLibrary(const TCHAR *libName) {
 // return WinProcess object that makes it easier to handle the process
 // Returns NULL if failed to create the process. Caller can use GetLastError()
 // for detailed error information.
-// TODO: exe name might be unicode so to support everything cmd or args
-// should be unicode or we can assume that cmd and args are utf8 and
-// convert them to utf16 and call CreateProcessW
-WinProcess * WinProcess::Create(const char* cmd, char* args)
+WinProcess * WinProcess::Create(const TCHAR *cmd, TCHAR *args)
 {
     UINT                res;
     HANDLE              stdOut = INVALID_HANDLE_VALUE;
     HANDLE              stdErr = INVALID_HANDLE_VALUE;
-    STARTUPINFOA        siStartupInfo;
+    STARTUPINFO         siStartupInfo;
     PROCESS_INFORMATION piProcessInfo;
     SECURITY_ATTRIBUTES sa;
 
@@ -58,27 +54,27 @@ WinProcess * WinProcess::Create(const char* cmd, char* args)
     memzero(&piProcessInfo, sizeof(piProcessInfo));
     siStartupInfo.cb = sizeof(siStartupInfo);
 
-    char stdoutTempName[MAX_PATH] = {0};
-    char stderrTempName[MAX_PATH] = {0};
-    char *stdoutTempNameCopy = NULL;
-    char *stderrTempNameCopy = NULL;
+    TCHAR stdoutTempName[MAX_PATH] = {0};
+    TCHAR stderrTempName[MAX_PATH] = {0};
+    TCHAR *stdoutTempNameCopy = NULL;
+    TCHAR *stderrTempNameCopy = NULL;
 
-    char buf[MAX_PATH] = {0};
-    DWORD len = GetTempPathA(sizeof(buf), buf);
+    TCHAR buf[MAX_PATH] = {0};
+    DWORD len = GetTempPath(sizeof(buf), buf);
     assert(len < sizeof(buf));
     // create temporary files for capturing stdout and stderr or the command
-    res = GetTempFileNameA(buf, "stdout", 0, stdoutTempName);
+    res = GetTempFileName(buf, _T("stdout"), 0, stdoutTempName);
     if (0 == res)
         goto Error;
 
-    res = GetTempFileNameA(buf, "stderr", 0, stderrTempName);
+    res = GetTempFileName(buf, _T("stderr"), 0, stderrTempName);
     if (0 == res)
         goto Error;
 
-    stdoutTempNameCopy = str_dup(stdoutTempName);
-    stderrTempNameCopy = str_dup(stderrTempName);
+    stdoutTempNameCopy = tstr_dup(stdoutTempName);
+    stderrTempNameCopy = tstr_dup(stderrTempName);
 
-    stdOut = CreateFileA(stdoutTempNameCopy,
+    stdOut = CreateFile(stdoutTempNameCopy,
         GENERIC_READ|GENERIC_WRITE,
         FILE_SHARE_WRITE|FILE_SHARE_READ,
         &sa, CREATE_ALWAYS,
@@ -86,7 +82,7 @@ WinProcess * WinProcess::Create(const char* cmd, char* args)
     if (INVALID_HANDLE_VALUE == stdOut)
         goto Error;
 
-    stdErr = CreateFileA(stderrTempNameCopy,
+    stdErr = CreateFile(stderrTempNameCopy,
         GENERIC_READ|GENERIC_WRITE,
         FILE_SHARE_WRITE|FILE_SHARE_READ,
         &sa, CREATE_ALWAYS,
@@ -97,7 +93,7 @@ WinProcess * WinProcess::Create(const char* cmd, char* args)
     siStartupInfo.hStdOutput = stdOut;
     siStartupInfo.hStdError = stdErr;
 
-    BOOL ok = CreateProcessA(cmd, args, NULL, NULL, DONT_INHERIT_HANDLES,
+    BOOL ok = CreateProcess(cmd, args, NULL, NULL, DONT_INHERIT_HANDLES,
         CREATE_DEFAULT_ERROR_MODE, NULL /*env*/, NULL /*curr dir*/,
         &siStartupInfo, &piProcessInfo);
 

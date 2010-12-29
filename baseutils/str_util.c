@@ -23,38 +23,6 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
     return dst;
 }
 
-int char_is_ws_or_zero(char c)
-{
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-        case 0:
-            return TRUE;
-    }
-    return FALSE;
-}
-
-int char_is_ws(char c)
-{
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-            return TRUE;
-    }
-    return FALSE;
-}
-
-int char_is_digit(char c)
-{
-    if ((c >= '0') && (c <= '9'))
-        return TRUE;
-    return FALSE;
-}
-
 int char_is_dir_sep(char c)
 {
 #ifdef _WIN32
@@ -126,11 +94,6 @@ char *str_cat(const char *str1, const char *str2)
     return str_cat4(str1, str2, NULL, NULL);
 }
 
-char *str_dup(const char *str)
-{
-    return str_dupn(str, strlen(str));
-}
-
 char *str_dupn(const char *str, size_t str_len_cch)
 {
     char *copy;
@@ -194,20 +157,13 @@ int str_eqn(const char *str1, const char *str2, int len)
 }
 
 /* return true if 'str' starts with 'txt', case-sensitive */
-int  str_startswith(const char *str, const char *txt)
+int str_startswith(const char *str, const char *txt)
 {
-    if (!str && !txt)
-        return TRUE;
-    if (!str || !txt)
-        return FALSE;
-
-    if (0 == strncmp(str, txt, strlen(txt)))
-        return TRUE;
-    return FALSE;
+    return str_eqn(str, txt, strlen(txt));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-int  str_startswithi(const char *str, const char *txt)
+int str_startswithi(const char *str, const char *txt)
 {
     if (!str && !txt)
         return TRUE;
@@ -268,18 +224,6 @@ int str_empty(const char *str)
     if (0 == *str)
         return TRUE;
     return FALSE;
-}
-
-/* Find character 'c' in string 'txt'.
-   Return pointer to this character or NULL if not found */
-const char *str_find_char(const char *txt, char c)
-{
-    while (*txt != c) {
-        if (0 == *txt)
-            return NULL;
-        ++txt;
-    }
-    return txt;
 }
 
 /* split a string '*txt' at the border character 'c'. Something like python's
@@ -896,20 +840,13 @@ char *str_parse_non_quoted(char **txt)
     char *  cur;
     char *  strStart;
     char *  strCopy;
-    char    c;
     size_t  strLen;
 
     strStart = *txt;
     assert(strStart);
     if (!strStart) return NULL;
     assert('"' != *strStart);
-    cur = strStart;
-    for (;;) {
-        c = *cur;
-        if (char_is_ws_or_zero(c))
-            break;
-        ++cur;
-    }
+    for (cur = strStart; *cur && !char_is_ws(*cur); cur++);
 
     strLen = cur - strStart;
     assert(strLen > 0);
