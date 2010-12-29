@@ -112,8 +112,8 @@ static void ParseCommandLineTest()
         assert(TRUE == i.invertColors);
         assert(1248426 == i.bgColor);
         assert(2 == i.fileNames.size());
-        assert(-1 != i.fileNames.find(_T("foo.pdf")));
-        assert(-1 != i.fileNames.find(_T("bar.pdf")));
+        assert(0 == i.fileNames.find(_T("foo.pdf")));
+        assert(1 == i.fileNames.find(_T("bar.pdf")));
     }
 
     {
@@ -122,7 +122,15 @@ static void ParseCommandLineTest()
         assert(TRUE == i.invertColors);
         assert(1248426 == i.bgColor);
         assert(1 == i.fileNames.size());
-        assert(-1 != i.fileNames.find(_T("rosanna.pdf")));
+        assert(0 == i.fileNames.find(_T("rosanna.pdf")));
+    }
+
+    {
+        CommandLineInfo i;
+        i.ParseCommandLine(_T("SumatraPDF.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf"));
+        assert(2 == i.fileNames.size());
+        assert(0 == i.fileNames.find(_T("foo \" bar \\\\.pdf")));
+        assert(1 == i.fileNames.find(_T("un\\\"quoted.pdf")));
     }
 }
 

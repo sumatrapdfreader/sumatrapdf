@@ -209,14 +209,6 @@ int str_endswithi(const char *txt, const char *end)
     return FALSE;
 }
 
-int str_endswith_char(const char *str, char c)
-{
-    char end[2];
-    end[0] = c;
-    end[1] = 0;
-    return str_endswith(str, end);
-}
-
 int str_empty(const char *str)
 {
     if (!str)
@@ -394,48 +386,6 @@ void str_strip_ws_both(char *txt)
     str_strip_ws_right(txt);
 }
 
-#if 0
-int utf8_eq(const utf8* str1, const utf8* str2)
-{
-    return str_eq(str1, str2);
-}
-
-int utf8_eqn(const utf8* str1, const utf8* str2, int len)
-{
-    return str_eqn(str1, str2, len);
-}
-
-int   utf8_copy(utf8 *dst, int dst_size_bytes, utf8* src)
-{
-    return str_copy(dst, dst_size_bytes, src);
-}
-
-utf8 *utf8_dup(const utf8 *str)
-{
-    return str_dup(str);
-}
-
-utf8 *utf8_cat4(const utf8 *str1, const utf8 *str2, const utf8 *str3, const utf8 *str4)
-{
-    return str_cat4(str1, str2, str3, str4);
-}
-
-utf8 *utf8_cat3(const utf8 *str1, const utf8 *str2, const utf8 *str3)
-{
-    return str_cat4(str1, str2, str3, NULL);
-}
-
-utf8 *utf8_cat(const utf8 *str1, const utf8 *str2)
-{
-    return str_cat4(str1, str2, NULL, NULL);
-}
-
-int utf8_endswith(const utf8 *str, const utf8 *end)
-{
-    return str_endswith(str, end);
-}
-#endif
-
 #define  HEX_NUMBERS "0123456789ABCDEF"
 static void char_to_hex(unsigned char c, char* buffer)
 {
@@ -502,25 +452,6 @@ BOOL str_dup_replace(char **dst, const char *src)
     return TRUE;
 }
 
-/* replace in <str> the chars from <oldChars> with their equivalents
-   from <newChars> (similar to UNIX's tr command)
-   Returns the number of replaced characters. */
-int str_trans_chars(char *str, const char *oldChars, const char *newChars)
-{
-    int findCount = 0;
-    char *c = str;
-    while (*c) {
-        const char *found = str_find_char(oldChars, *c);
-        if (found) {
-            *c = newChars[found - oldChars];
-            findCount++;
-        }
-        c++;
-    }
-
-    return findCount;
-}
-
 /* Caller needs to free() the result */
 static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePage2)
 {
@@ -580,64 +511,6 @@ int str_contains(const char *str, char c)
     if (!pos)
         return FALSE;
     return TRUE;
-}
-
-#define CHAR_URL_DONT_ENCODE   "-_.!~*'()"
-
-int char_needs_url_encode(char c)
-{
-    if ((c >= 'a') && (c <= 'z'))
-        return FALSE;
-    if ((c >= 'A') && (c <= 'Z'))
-        return FALSE;
-    if ((c >= '0') && (c <= '9'))
-        return FALSE;
-    if (str_contains(CHAR_URL_DONT_ENCODE, c))
-        return FALSE;
-    return TRUE;
-}
-
-/* url-encode 'str'. Returns NULL in case of error. Caller needs to free()
-   the result */
-char *str_url_encode(const char *str)
-{
-    char *          encoded;
-    char *          result;
-    int             res_len = 0;
-    const char *    tmp = str;
-
-    /* calc the size of the string after url encoding */
-    while (*tmp) {
-        if (char_needs_url_encode(*tmp))
-            res_len += 3;
-        else
-            ++res_len;
-        tmp++;
-    }
-    if (0 == res_len)
-        return NULL;
-
-    encoded = (char*)malloc(res_len+1);
-    if (!encoded)
-        return NULL;
-
-    result = encoded;
-    tmp = str;
-    while (*tmp) {
-        if (char_needs_url_encode(*tmp)) {
-            *encoded++ = '%';
-            char_to_hex(*tmp, encoded);
-            encoded += 2;
-        } else {
-            if (' ' == *tmp)
-                *encoded++ = '+';
-            else
-                *encoded++ = *tmp;
-        }
-        tmp++;
-    }
-    *encoded = 0;
-    return result;
 }
 
 char *str_printf(const char *format, ...)
@@ -717,171 +590,6 @@ void win32_dbg_out_hex(const char *dsc, const unsigned char *data, int dataLen)
     free(hexStr);
 }
 #endif
-
-/* If the string at <*strp> starts with string at <expect>, skip <*strp> past
-    it and return TRUE; otherwise return FALSE. */
-int str_skip(const char **strp, const char *expect)
-{
-    size_t len = str_len(expect);
-    if (0 == strncmp(*strp, expect, len)) {
-        *strp += len;
-        return TRUE;
-    }
-    else {
-        return FALSE;
-    }
-}
-
-/* Copy the string from <*strp> into <dst> until <stop> is found, and point
-    <*strp> at the end. Returns TRUE unless <dst_size> isn't big enough, in
-    which case <*strp> is still updated, but FALSE is returned and <dst> is
-    truncated. If <delim> is not found, <*strp> will point to the end of the
-    string and FALSE is returned. */
-int
-str_copy_skip_until(const char **strp, char *dst, size_t dst_size, char stop)
-{
-    const char *const str = *strp;
-    size_t len = str_len(str);
-    *strp = memchr(str, stop, len);
-    if (NULL==*strp) {
-        *strp = str+len;
-        return FALSE;
-    }
-    else
-        return str_copyn(dst, dst_size, str, *strp - str);
-}
-
-/* Given a pointer to a string in '*txt', skip past whitespace in the string
-   and put the result in '*txt' */
-void str_skip_ws(char **txtInOut)
-{
-    char *cur;
-    if (!txtInOut)
-        return;
-    cur = *txtInOut;
-    if (!cur)
-        return;
-    while (char_is_ws(*cur)) {
-        ++cur;
-    }
-    *txtInOut = cur;
-}
-
-char *str_parse_quoted(char **txt)
-{
-    char *      strStart;
-    char *      strCopy;
-    char *      cur;
-    char *      dst;
-    char        c;
-    size_t      len;
-
-    assert(txt);
-    if (!txt) return NULL;
-    strStart = *txt;
-    assert(strStart);
-    if (!strStart) return NULL;
-
-    assert('"' == *strStart);
-    /* TODO: rewrite as 2-phase logic so that counting and copying are always in sync */
-    ++strStart;
-    cur = strStart;
-    len = 0;
-    for (;;) {
-        c = *cur;
-        if ((0 == c) || ('"' == c))
-            break;
-        if ('\\' == c) {
-            /* TODO: should I un-escape more than '"' ?
-               I used to un-escape '\' as well, but it wasn't right and
-               files with UNC path like "\\foo\file.pdf" failed to load */
-            if ('"' == cur[1]) {
-                ++cur;
-                c = *cur;
-            }
-        }
-        ++cur;
-        ++len;
-    }
-
-    strCopy = (char*)malloc(len+1);
-    if (!strCopy)
-        return NULL;
-
-    cur = strStart;
-    dst = strCopy;
-    for (;;) {
-        c = *cur;
-        if (0 == c)
-            break;
-        if ('"' == c) {
-            ++cur;
-            break;
-        }
-        if ('\\' == c) {
-            /* TODO: should I un-escape more than '"' ?
-               I used to un-escape '\' as well, but it wasn't right and
-               files with UNC path like "\\foo\file.pdf" failed to load */
-            if ('"' == cur[1]) {
-                ++cur;
-                c = *cur;
-            }
-        }
-        *dst++ = c;
-        ++cur;
-    }
-    *dst = 0;
-    *txt = cur;
-    return strCopy;
-}
-
-char *str_parse_non_quoted(char **txt)
-{
-    char *  cur;
-    char *  strStart;
-    char *  strCopy;
-    size_t  strLen;
-
-    strStart = *txt;
-    assert(strStart);
-    if (!strStart) return NULL;
-    assert('"' != *strStart);
-    for (cur = strStart; *cur && !char_is_ws(*cur); cur++);
-
-    strLen = cur - strStart;
-    assert(strLen > 0);
-    strCopy = str_dupn(strStart, strLen);
-    *txt = cur;
-    return strCopy;
-}
-
-/* 'txt' is path that can be:
-  - escaped, in which case it starts with '"', ends with '"' and each '"' that is part of the name is escaped
-    with '\'
-  - unescaped, in which case it start with != '"' and ends with ' ' or eol (0)
-  This function extracts escaped or unescaped path from 'txt'. Returns NULL in case of error.
-  Caller needs to free() the result. */
-char *str_parse_possibly_quoted(char **txt)
-{
-    char *  cur;
-    char *  str_copy;
-
-    if (!txt)
-        return NULL;
-    cur = *txt;
-    if (!cur)
-        return NULL;
-
-    str_skip_ws(&cur);
-    if (0 == *cur)
-        return NULL;
-    if ('"' == *cur)
-        str_copy = str_parse_quoted(&cur);
-    else
-        str_copy = str_parse_non_quoted(&cur);
-    *txt = cur;
-    return str_copy;
-}
 
 BOOL str_to_double(const char *txt, double *resOut)
 {

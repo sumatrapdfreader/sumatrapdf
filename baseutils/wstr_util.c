@@ -142,6 +142,23 @@ int wstr_startswith(const WCHAR *str, const WCHAR *txt)
     return wstr_eqn(str, txt, wcslen(txt));
 }
 
+int wstr_endswith(const WCHAR *txt, const WCHAR *end)
+{
+    size_t end_len;
+    size_t txt_len;
+
+    if (!txt || !end)
+        return FALSE;
+
+    txt_len = wstrlen(txt);
+    end_len = wstrlen(end);
+    if (end_len > txt_len)
+        return FALSE;
+    if (wstr_eq(txt+txt_len-end_len, end))
+        return TRUE;
+    return FALSE;
+}
+
 int wstr_endswithi(const WCHAR *txt, const WCHAR *end)
 {
     size_t end_len;
@@ -195,110 +212,6 @@ int wstr_contains(const WCHAR *str, WCHAR c)
             return TRUE;
     }
     return FALSE;
-}
-
-/* If the string at <*strp> starts with string at <expect>, skip <*strp> past
-    it and return TRUE; otherwise return FALSE. */
-int wstr_skip(const WCHAR **strp, const WCHAR *expect)
-{
-    size_t len = wstr_len(expect);
-    if (0 == wcsncmp(*strp, expect, len)) {
-        *strp += len;
-        return TRUE;
-    }
-    else {
-        return FALSE;
-    }
-}
-
-/* Copy the string from <*strp> into <dst> until <stop> is found, and point
-    <*strp> at the end. Returns TRUE unless <dst_size> isn't big enough, in
-    which case <*strp> is still updated, but FALSE is returned and <dst> is
-    truncated. If <delim> is not found, <*strp> will point to the end of the
-    string and FALSE is returned. */
-int
-wstr_copy_skip_until(const WCHAR **strp, WCHAR *dst, size_t dst_size, WCHAR stop)
-{
-    const WCHAR *const str = *strp;
-    size_t len = wstr_len(str);
-    *strp = wmemchr(str, stop, len);
-    if (NULL==*strp) {
-        *strp = str+len;
-        return FALSE;
-    }
-    else
-        return wstr_copyn(dst, dst_size, str, *strp - str);
-}
-
-/* Given a pointer to a string in '*txt', skip past whitespace in the string
-   and put the result in '*txt' */
-void wstr_skip_ws(WCHAR **txtInOut)
-{
-    WCHAR *cur;
-    if (!txtInOut)
-        return;
-    cur = *txtInOut;
-    if (!cur)
-        return;
-    while (wchar_is_ws(*cur)) {
-        ++cur;
-    }
-    *txtInOut = cur;
-}
-
-#define WCHAR_URL_DONT_ENCODE L"-_.!~*'()"
-
-int wchar_needs_url_encode(WCHAR c)
-{
-    if ((c >= L'a') && (c <= L'z'))
-        return FALSE;
-    if ((c >= L'A') && (c <= L'Z'))
-        return FALSE;
-    if ((c >= L'0') && (c <= L'9'))
-        return FALSE;
-    if (wstr_contains(WCHAR_URL_DONT_ENCODE, c))
-        return FALSE;
-    return TRUE;
-}
-
-WCHAR *wstr_url_encode(const WCHAR *str)
-{
-    WCHAR *         encoded;
-    WCHAR *         result;
-    int             res_len = 0;
-    const WCHAR *   tmp = str;
-
-    while (*tmp) {
-        if (wchar_needs_url_encode(*tmp))
-            res_len += 3;
-        else
-            ++res_len;
-        tmp++;
-    }
-    if (0 == res_len)
-        return NULL;
-
-    encoded = (WCHAR*)malloc((res_len+1)*sizeof(WCHAR));
-    if (!encoded)
-        return NULL;
-
-    result = encoded;
-    tmp = str;
-    while (*tmp) {
-        if (wchar_needs_url_encode(*tmp)) {
-            *encoded++ = L'%';
-            wchar_to_hex(*tmp, encoded);
-            encoded += 2;
-        } else {
-            if (L' ' == *tmp)
-                *encoded++ = L'+';
-            else
-                *encoded++ = *tmp;
-        }
-        tmp++;
-    }
-    *encoded = 0;
-    return result;
 }
 
 WCHAR *wstr_printf(const WCHAR *format, ...)
@@ -384,94 +297,6 @@ WCHAR *utf8_to_wstr(const char *utf8)
     return multibyte_to_wstr(utf8, CP_UTF8);
 }
 
-static WCHAR *wstr_parse_quoted(WCHAR **txt)
-{
-    WCHAR *     strStart;
-    WCHAR *     strCopy;
-    WCHAR *     cur;
-    WCHAR *     dst;
-    WCHAR       c;
-    size_t      len;
-
-    assert(txt);
-    if (!txt) return NULL;
-    strStart = *txt;
-    assert(strStart);
-    if (!strStart) return NULL;
-
-    assert('"' == *strStart);
-    /* TODO: rewrite as 2-phase logic so that counting and copying are always in sync */
-    ++strStart;
-    cur = strStart;
-    len = 0;
-    for (;;) {
-        c = *cur;
-        if ((0 == c) || ('"' == c))
-            break;
-        if ('\\' == c) {
-            /* TODO: should I un-escape more than '"' ?
-               I used to un-escape '\' as well, but it wasn't right and
-               files with UNC path like "\\foo\file.pdf" failed to load */
-            if ('"' == cur[1]) {
-                ++cur;
-                c = *cur;
-            }
-        }
-        ++cur;
-        ++len;
-    }
-
-    strCopy = (WCHAR *)malloc(sizeof(WCHAR)*(len+1));
-    if (!strCopy)
-        return NULL;
-
-    cur = strStart;
-    dst = strCopy;
-    for (;;) {
-        c = *cur;
-        if (0 == c)
-            break;
-        if ('"' == c) {
-            ++cur;
-            break;
-        }
-        if ('\\' == c) {
-            /* TODO: should I un-escape more than '"' ?
-               I used to un-escape '\' as well, but it wasn't right and
-               files with UNC path like "\\foo\file.pdf" failed to load */
-            if ('"' == cur[1]) {
-                ++cur;
-                c = *cur;
-            }
-        }
-        *dst++ = c;
-        ++cur;
-    }
-    *dst = 0;
-    *txt = cur;
-    return strCopy;
-}
-
-static WCHAR *wstr_parse_non_quoted(WCHAR **txt)
-{
-    WCHAR * cur;
-    WCHAR * strStart;
-    WCHAR * strCopy;
-    size_t  strLen;
-
-    strStart = *txt;
-    assert(strStart);
-    if (!strStart) return NULL;
-    assert('"' != *strStart);
-    for (cur = strStart; *cur && !wchar_is_ws(*cur); cur++);
-
-    strLen = cur - strStart;
-    assert(strLen > 0);
-    strCopy = wstr_dupn(strStart, strLen);
-    *txt = cur;
-    return strCopy;
-}
-
 /* replace a string pointed by <dst> with a copy of <src>
    (i.e. free existing <dst>).
    Returns FALSE if failed to replace (due to out of memory) */
@@ -483,82 +308,6 @@ BOOL wstr_dup_replace(WCHAR **dst, const WCHAR *src)
     free(*dst);
     *dst = dup;
     return TRUE;
-}
-
-/* replace in <str> the chars from <oldChars> with their equivalents
-   from <newChars> (similar to UNIX's tr command)
-   Returns the number of replaced characters. */
-int wstr_trans_chars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
-{
-    int findCount = 0;
-    WCHAR *c = str;
-    while (*c) {
-        const WCHAR *found = wstr_find_char(oldChars, *c);
-        if (found) {
-            *c = newChars[found - oldChars];
-            findCount++;
-        }
-        c++;
-    }
-
-    return findCount;
-}
-
-
-/* 'txt' is path that can be:
-  - escaped, in which case it starts with '"', ends with '"' and each '"' that is part of the name is escaped
-    with '\'
-  - unescaped, in which case it start with != '"' and ends with ' ' or eol (0)
-  This function extracts escaped or unescaped path from 'txt'. Returns NULL in case of error.
-  Caller needs to free() the result. */
-WCHAR *wstr_parse_possibly_quoted(WCHAR **txt)
-{
-    WCHAR *  cur;
-    WCHAR *  str_copy;
-
-    if (!txt)
-        return NULL;
-    cur = *txt;
-    if (!cur)
-        return NULL;
-
-    wstr_skip_ws(&cur);
-    if (0 == *cur)
-        return NULL;
-    if (L'"' == *cur)
-        str_copy = wstr_parse_quoted(&cur);
-    else
-        str_copy = wstr_parse_non_quoted(&cur);
-    *txt = cur;
-    return str_copy;
-}
-
-static int hex_wchar_to_num(WCHAR c)
-{
-    if ((c >= '0') && (c <= '9'))
-        return c - '0';
-    if ((c >= 'a') && (c <= 'f'))
-        return c - 'a' + 10;
-    if ((c >= 'A') && (c <= 'F'))
-        return c - 'A' + 10;
-    return -1;
-}
-
-int hex_wstr_decode_byte(const WCHAR **txt)
-{
-    const WCHAR *s;
-    int c1, c2;
-    if (!txt) 
-        return -1;
-    s = *txt;
-    c1 = hex_wchar_to_num(*s++);
-    if (-1 == c1)
-        return -1;
-    c2 = hex_wchar_to_num(*s++);
-    if (-1 == c2)
-        return -1;
-    *txt = s;
-    return (16 * c1) + c2;
 }
 
 #ifdef _WIN32

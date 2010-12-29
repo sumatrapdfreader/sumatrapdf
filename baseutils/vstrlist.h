@@ -21,7 +21,7 @@ public:
         assert(i<m_size);
         return m_data[i];
     }
-    _Ty at(size_t i) const
+    _Ty &at(size_t i) const
     {
         assert(i<m_size);
         return m_data[i];
@@ -85,50 +85,55 @@ public:
     }
     _Ty &top() {
         assert(this->size()>0);
-        return (*this)[this->size()-1];
+        return at(this->size()-1);
     }
 };
 
 #endif
 
-class VStrList : public vector<TCHAR *>
+class VStrList : public vector<tchar_t *>
 {
 public:
     ~VStrList() { clearFree(); }
 
-    TCHAR *join(TCHAR *joint=NULL)
+    tchar_t *join(tchar_t *joint=NULL)
     {
         int len = 0;
-        int jointLen = joint ? lstrlen(joint) : 0;
-        TCHAR *result, *tmp;
+        int jointLen = joint ? tstr_len(joint) : 0;
+        tchar_t *result, *tmp;
 
-        for (size_t i = size(); i > 0; i--)
-            len += lstrlen((*this)[i - 1]) + jointLen;
+        size_t n = size();
+        for (size_t i = n; i > 0; i--)
+            len += tstr_len(at(i - 1)) + jointLen;
         len -= jointLen;
         if (len <= 0)
-            return (TCHAR *)calloc(1, sizeof(TCHAR));
+            return (tchar_t *)calloc(1, sizeof(tchar_t));
 
-        result = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+        result = (tchar_t *)malloc((len + 1) * sizeof(tchar_t));
         if (!result)
             return NULL;
 
+        assert(size() == n);
         tmp = result;
-        for (size_t i = 0; i < size(); i++) {
+        tchar_t *end = result + len + 1;
+        for (size_t i = 0; i < n; i++) {
             if (jointLen > 0 && i > 0) {
-                lstrcpy(tmp, joint);
+                tstr_copy(tmp, end - tmp, joint);
                 tmp += jointLen;
             }
-            lstrcpy(tmp, at(i));
-            tmp += lstrlen(at(i));
+            tstr_copy(tmp, end - tmp, at(i));
+            tmp += tstr_len(at(i));
         }
 
         return result;
     }
 
-    int find(TCHAR *s)
+    int find(tchar_t *string)
     {
-        for (size_t i = 0; i < size(); i++) {
-            if (tstr_eq(s, at(i)))
+        size_t n = size();
+        for (size_t i = 0; i < n; i++) {
+            tchar_t *item = at(i);
+            if (tstr_eq(string, item))
                 return (int)i;
         }
         return -1;

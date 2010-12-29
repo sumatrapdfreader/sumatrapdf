@@ -356,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\baseutils\tstr_util.c"
+				>
+			</File>
+			<File
 				RelativePath=".\baseutils\tstr_util.h"
 				>
 			</File>

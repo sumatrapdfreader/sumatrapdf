@@ -59,13 +59,11 @@ int char_is_dir_sep(char c);
 
 int     str_eq(const char *str1, const char *str2);
 int     str_ieq(const char *str1, const char *str2);
-#define str_eq_no_case str_ieq
 int     str_eqn(const char *str1, const char *str2, int len);
 int     str_startswith(const char *str, const char *txt);
 int     str_startswithi(const char *str, const char *txt);
 int     str_endswith(const char *str, const char *end);
 int     str_endswithi(const char *str, const char *end);
-int     str_endswith_char(const char *str, char c);
 int     str_empty(const char *str);
 int     str_copy(char *dst, size_t dst_cch_size, const char *src);
 int     str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
@@ -75,11 +73,12 @@ char *  str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_c
 char *  str_cat(const char *str1, const char *str2);
 char *  str_cat3(const char *str1, const char *str2, const char *str3);
 char *  str_cat4(const char *str1, const char *str2, const char *str3, const char *str4);
-char *  str_url_encode(const char *str);
 int     str_contains(const char *str, char c);
-char *  str_printf_args(const char *format, va_list args);
 char *  str_printf(const char *format, ...);
 int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
+BOOL    str_dup_replace(char **dst, const char *src);
+
+char *  str_printf_args(const char *format, va_list args);
 char *  str_split_iter(char **txt, char c);
 char *  str_normalize_newline(const char *txt, const char *replace);
 void    str_strip_left(char *txt, const char *to_strip);
@@ -88,15 +87,10 @@ void    str_strip_right(char *txt, const char *to_strip);
 void    str_strip_ws_right(char *txt);
 void    str_strip_both(char *txt, const char *to_strip);
 void    str_strip_ws_both(char *txt);
-int     str_skip(const char **strp, const char *expect);
-int     str_copy_skip_until(const char **strp, char *dst, size_t dst_size, char stop);
-char *  str_parse_possibly_quoted(char **txt);
 BOOL    str_to_double(const char *txt, double *resOut);
 char *  mem_to_hexstr(const unsigned char *buf, int len);
 BOOL    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
 int     hex_str_decode_byte(const char **txt);
-BOOL    str_dup_replace(char **dst, const char *src);
-int     str_trans_chars(char *str, const char *oldChars, const char *newChars);
 
 char *  str_to_multibyte(const char *src, UINT CodePage);
 char *  multibyte_to_str(const char *src, UINT CodePage);
