@@ -461,10 +461,8 @@ pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, p
 	fz_obj *obj;
 	float d0, d1;
 	int e0, e1;
-	struct vertex p1, p2, p3, p4;
-	struct vertex ep1, ep2, ep3, ep4;
 	float x0, y0, x1, y1;
-	float theta;
+	struct vertex p1, p2;
 
 	pdf_logshade("load type2 (axial) shading\n");
 
@@ -497,45 +495,20 @@ pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, p
 	if (error)
 		return fz_rethrow(error, "unable to sample shading function");
 
-	theta = atan2f(y1 - y0, x1 - x0);
-	theta += (float)M_PI * 0.5f;
+	shade->type = FZ_LINEAR;
 
-	p1.x = x0 + HUGENUM * cosf(theta);
-	p1.y = y0 + HUGENUM * sinf(theta);
+	shade->extend[0] = e0;
+	shade->extend[1] = e1;
+
+	p1.x = x0;
+	p1.y = y0;
 	p1.c[0] = 0;
-	p2.x = x1 + HUGENUM * cosf(theta);
-	p2.y = y1 + HUGENUM * sinf(theta);
+	pdf_addvertex(shade, &p1);
+
+	p2.x = x1;
+	p2.y = y1;
 	p2.c[0] = 1;
-	p3.x = x0 - HUGENUM * cosf(theta);
-	p3.y = y0 - HUGENUM * sinf(theta);
-	p3.c[0] = 0;
-	p4.x = x1 - HUGENUM * cosf(theta);
-	p4.y = y1 - HUGENUM * sinf(theta);
-	p4.c[0] = 1;
-
-	pdf_addquad(shade, &p1, &p2, &p4, &p3);
-
-	if (e0)
-	{
-		ep1.x = p1.x - (x1 - x0) * HUGENUM;
-		ep1.y = p1.y - (y1 - y0) * HUGENUM;
-		ep1.c[0] = 0;
-		ep3.x = p3.x - (x1 - x0) * HUGENUM;
-		ep3.y = p3.y - (y1 - y0) * HUGENUM;
-		ep3.c[0] = 0;
-		pdf_addquad(shade, &ep1, &p1, &p3, &ep3);
-	}
-
-	if (e1)
-	{
-		ep2.x = p2.x + (x1 - x0) * HUGENUM;
-		ep2.y = p2.y + (y1 - y0) * HUGENUM;
-		ep2.c[0] = 1;
-		ep4.x = p4.x + (x1 - x0) * HUGENUM;
-		ep4.y = p4.y + (y1 - y0) * HUGENUM;
-		ep4.c[0] = 1;
-		pdf_addquad(shade, &p2, &ep2, &ep4, &p4);
-	}
+	pdf_addvertex(shade, &p2);
 
 	return fz_okay;
 }
@@ -1146,10 +1119,13 @@ pdf_loadshadingdict(fz_shade **shadep, pdf_xref *xref, fz_obj *dict, fz_matrix t
 
 	shade = fz_malloc(sizeof(fz_shade));
 	shade->refs = 1;
+	shade->type = FZ_MESH;
 	shade->usebackground = 0;
 	shade->usefunction = 0;
 	shade->matrix = transform;
 	shade->bbox = fz_infiniterect;
+	shade->extend[0] = 0;
+	shade->extend[1] = 0;
 
 	shade->meshlen = 0;
 	shade->meshcap = 0;

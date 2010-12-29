@@ -497,10 +497,12 @@ gdiplusgetpath(fz_path *path, fz_matrix ctm, int evenodd=1)
 	assert(len <= path->len / 2);
 	
 	// clipping intermittently fails for overly large regions (cf. pathscan.c::fz_insertgel)
+	fz_rect BBOX_BOUNDS = { -(1<<20), -(1<<20) , (1<<20), (1<<20) };
+	BBOX_BOUNDS = fz_transformrect(fz_invertmatrix(ctm), BBOX_BOUNDS);
 	for (int i = 0; i < len; i++)
 	{
-		points[i].X = CLAMP(points[i].X, -(1<<20), (1<<20));
-		points[i].Y = CLAMP(points[i].Y, -(1<<20), (1<<20));
+		points[i].X = CLAMP(points[i].X, BBOX_BOUNDS.x0, BBOX_BOUNDS.x1);
+		points[i].Y = CLAMP(points[i].Y, BBOX_BOUNDS.y0, BBOX_BOUNDS.y1);
 	}
 	
 	GraphicsPath *gpath = new GraphicsPath(points, types, len, evenodd ? FillModeAlternate : FillModeWinding);

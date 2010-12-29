@@ -70,6 +70,7 @@ fz_readall(fz_buffer **bufp, fz_stream *stm, int initial)
 		if (buf->len == buf->cap)
 			fz_growbuffer(buf);
 
+		/* cf. http://code.google.com/p/sumatrapdf/source/detail?r=2569 */
 		if (buf->len > initial * 200)
 		{
 			fz_dropbuffer(buf);

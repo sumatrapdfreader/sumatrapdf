@@ -310,39 +310,90 @@ fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox 
  * mesh drawing
  */
 
-void
-fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+#define HUGENUM 32000
+
+static void
+fz_renderlinear(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
-	unsigned char clut[256][FZ_MAXCOLORS];
-	fz_pixmap *temp, *conv;
-	float color[FZ_MAXCOLORS];
+	float v[4][3];
+	float e[2][3];
+	fz_point p0, p1;
+	float theta;
+
+	p0.x = shade->mesh[0];
+	p0.y = shade->mesh[1];
+	p0 = fz_transformpoint(ctm, p0);
+
+	p1.x = shade->mesh[3];
+	p1.y = shade->mesh[4];
+	p1 = fz_transformpoint(ctm, p1);
+
+	theta = atan2f(p1.y - p0.y, p1.x - p0.x);
+	theta += (float)M_PI * 0.5f;
+
+	v[0][0] = p0.x + HUGENUM * cosf(theta);
+	v[0][1] = p0.y + HUGENUM * sinf(theta);
+	v[0][2] = 0;
+
+	v[1][0] = p1.x + HUGENUM * cosf(theta);
+	v[1][1] = p1.y + HUGENUM * sinf(theta);
+	v[1][2] = 255;
+
+	v[2][0] = p0.x - HUGENUM * cosf(theta);
+	v[2][1] = p0.y - HUGENUM * sinf(theta);
+	v[2][2] = 0;
+
+	v[3][0] = p1.x - HUGENUM * cosf(theta);
+	v[3][1] = p1.y - HUGENUM * sinf(theta);
+	v[3][2] = 255;
+
+	fz_drawtriangle(dest, v[0], v[1], v[2], 3, bbox);
+	fz_drawtriangle(dest, v[1], v[2], v[3], 3, bbox);
+
+	if (shade->extend[0])
+	{
+		e[0][0] = v[0][0] - (p1.x - p0.x) * HUGENUM;
+		e[0][1] = v[0][1] - (p1.y - p0.y) * HUGENUM;
+		e[0][2] = v[0][2];
+
+		e[1][0] = v[2][0] - (p1.x - p0.x) * HUGENUM;
+		e[1][1] = v[2][1] - (p1.y - p0.y) * HUGENUM;
+		e[1][2] = v[2][2];
+
+		fz_drawtriangle(dest, e[0], v[0], v[2], 3, bbox);
+		fz_drawtriangle(dest, e[0], v[2], e[1], 3, bbox);
+	}
+
+	if (shade->extend[1])
+	{
+		e[0][0] = v[1][0] + (p1.x - p0.x) * HUGENUM;
+		e[0][1] = v[1][1] + (p1.y - p0.y) * HUGENUM;
+		e[0][2] = v[1][2];
+
+		e[1][0] = v[3][0] + (p1.x - p0.x) * HUGENUM;
+		e[1][1] = v[3][1] + (p1.y - p0.y) * HUGENUM;
+		e[1][2] = v[3][2];
+
+		fz_drawtriangle(dest, e[0], v[1], v[3], 3, bbox);
+		fz_drawtriangle(dest, e[0], v[3], e[1], 3, bbox);
+	}
+}
+
+static void
+fz_rendermesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+{
 	float tri[3][MAXN];
 	fz_point p;
 	float *mesh;
 	int ntris;
-	int i, j, k;
+	int i, k;
 
-	ctm = fz_concat(shade->matrix, ctm);
 	mesh = shade->mesh;
 
 	if (shade->usefunction)
-	{
-		for (i = 0; i < 256; i++)
-		{
-			fz_convertcolor(shade->cs, shade->function[i], dest->colorspace, color);
-			for (k = 0; k < dest->colorspace->n; k++)
-				clut[i][k] = color[k] * 255;
-		}
-		conv = fz_newpixmapwithrect(dest->colorspace, bbox);
-		temp = fz_newpixmapwithrect(fz_devicegray, bbox);
-		fz_clearpixmap(temp);
 		ntris = shade->meshlen / 9;
-	}
 	else
-	{
-		temp = dest;
 		ntris = shade->meshlen / ((2 + shade->cs->n) * 3);
-	}
 
 	while (ntris--)
 	{
@@ -357,13 +408,52 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 				tri[k][2] = *mesh++ * 255;
 			else
 			{
-				fz_convertcolor(shade->cs, mesh, temp->colorspace, tri[k] + 2);
-				for (j = 0; j < temp->colorspace->n; j++)
-					tri[k][j + 2] *= 255;
+				fz_convertcolor(shade->cs, mesh, dest->colorspace, tri[k] + 2);
+				for (i = 0; i < dest->colorspace->n; i++)
+					tri[k][i + 2] *= 255;
 				mesh += shade->cs->n;
 			}
 		}
-		fz_drawtriangle(temp, tri[0], tri[1], tri[2], 2 + temp->colorspace->n, bbox);
+		fz_drawtriangle(dest, tri[0], tri[1], tri[2], 2 + dest->colorspace->n, bbox);
+	}
+}
+
+void
+fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+{
+	unsigned char clut[256][FZ_MAXCOLORS];
+	fz_pixmap *temp, *conv;
+	float color[FZ_MAXCOLORS];
+	int i, k;
+
+	ctm = fz_concat(shade->matrix, ctm);
+
+	if (shade->usefunction)
+	{
+		for (i = 0; i < 256; i++)
+		{
+			fz_convertcolor(shade->cs, shade->function[i], dest->colorspace, color);
+			for (k = 0; k < dest->colorspace->n; k++)
+				clut[i][k] = color[k] * 255;
+		}
+		conv = fz_newpixmapwithrect(dest->colorspace, bbox);
+		temp = fz_newpixmapwithrect(fz_devicegray, bbox);
+		fz_clearpixmap(temp);
+	}
+	else
+	{
+		temp = dest;
+	}
+
+	switch (shade->type)
+	{
+	case FZ_LINEAR:
+		fz_renderlinear(shade, ctm, temp, bbox);
+		break;
+	/* TODO: FZ_RADIAL */
+	case FZ_MESH:
+		fz_rendermesh(shade, ctm, temp, bbox);
+		break;
 	}
 
 	if (shade->usefunction)
@@ -384,3 +474,4 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 		fz_droppixmap(temp);
 	}
 }
+

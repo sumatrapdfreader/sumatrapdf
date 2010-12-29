@@ -32,6 +32,11 @@ fz_boundshade(fz_shade *shade, fz_matrix ctm)
 	nvert = shade->meshlen / ncomp;
 	v = shade->mesh;
 
+	if (shade->type == FZ_LINEAR)
+		return fz_infiniterect;
+	if (shade->type == FZ_RADIAL)
+		return fz_infiniterect;
+
 	if (nvert == 0)
 		return fz_emptyrect;
 
@@ -65,6 +70,13 @@ fz_debugshade(fz_shade *shade)
 	int triangle;
 
 	printf("shading {\n");
+
+	switch (shade->type)
+	{
+	case FZ_LINEAR: printf("\ttype linear\n"); break;
+	case FZ_RADIAL: printf("\ttype radial\n"); break;
+	case FZ_MESH: printf("\ttype mesh\n"); break;
+	}
 
 	printf("\tbbox [%g %g %g %g]\n",
 		shade->bbox.x0, shade->bbox.y0,
