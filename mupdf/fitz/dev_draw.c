@@ -516,7 +516,7 @@ fz_drawfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 		}
 	}
 
-	fz_rendershade(shade, ctm, dest, bbox);
+	fz_paintshade(shade, ctm, dest, bbox);
 
 	if (alpha < 1)
 	{

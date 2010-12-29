@@ -979,7 +979,7 @@ fz_gdiplusfillshade(void *user, fz_shade *shade, fz_matrix ctm, float alpha)
 		}
 	}
 	
-	fz_rendershade(shade, ctm, dest, bbox);
+	fz_paintshade(shade, ctm, dest, bbox);
 	
 	ctm = fz_concat(fz_scale(dest->w, -dest->h), fz_translate(dest->x, dest->y + dest->h));
 	((userData *)user)->drawPixmap(dest, ctm, alpha);

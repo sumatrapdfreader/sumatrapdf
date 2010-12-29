@@ -507,60 +507,10 @@ pdf_loadaxialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, p
 
 	p2.x = x1;
 	p2.y = y1;
-	p2.c[0] = 1;
+	p2.c[0] = 0;
 	pdf_addvertex(shade, &p2);
 
 	return fz_okay;
-}
-
-static void
-pdf_buildannulusmesh(fz_shade *shade,
-	float x0, float y0, float r0, float c0,
-	float x1, float y1, float r1, float c1)
-{
-	struct vertex a, b, c, d;
-	float start = atan2(y1 - y0, x1 - x0);
-	float step = (float)M_PI * 2 / RADSEGS;
-	float angle;
-	int i;
-
-	a.c[0] = c0;
-	b.c[0] = c0;
-	c.c[0] = c1;
-	d.c[0] = c1;
-
-	for (i = 0; i < RADSEGS / 2; i ++)
-	{
-		/* top side */
-		angle = start + i * step;
-		a.x = x0 + cosf(angle) * r0;
-		a.y = y0 + sinf(angle) * r0;
-		b.x = x0 + cosf(angle + step) * r0;
-		b.y = y0 + sinf(angle + step) * r0;
-		c.x = x1 + cosf(angle) * r1;
-		c.y = y1 + sinf(angle) * r1;
-		d.x = x1 + cosf(angle + step) * r1;
-		d.y = y1 + sinf(angle + step) * r1;
-		if (r1 > 0) /* a == b, c != d */
-			pdf_addtriangle(shade, &a, &c, &d);
-		if (r0 > 0) /* a != b, c == d */
-			pdf_addtriangle(shade, &a, &d, &b);
-
-		/* bottom side */
-		angle = start - i * step;
-		a.x = x0 + cosf(angle) * r0;
-		a.y = y0 + sinf(angle) * r0;
-		b.x = x0 + cosf(angle - step) * r0;
-		b.y = y0 + sinf(angle - step) * r0;
-		c.x = x1 + cosf(angle) * r1;
-		c.y = y1 + sinf(angle) * r1;
-		d.x = x1 + cosf(angle - step) * r1;
-		d.y = y1 + sinf(angle - step) * r1;
-		if (r1 > 0) /* a == b, c != d */
-			pdf_addtriangle(shade, &a, &c, &d);
-		if (r0 > 0) /* a != b, c == d */
-			pdf_addtriangle(shade, &a, &d, &b);
-	}
 }
 
 static fz_error
@@ -571,9 +521,7 @@ pdf_loadradialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, 
 	float d0, d1;
 	int e0, e1;
 	float x0, y0, r0, x1, y1, r1;
-	float ex0, ey0, er0;
-	float ex1, ey1, er1;
-	float rs;
+	struct vertex p1, p2;
 
 	pdf_logshade("load type3 (radial) shading\n");
 
@@ -608,30 +556,20 @@ pdf_loadradialshading(fz_shade *shade, pdf_xref *xref, fz_obj *dict, int funcs, 
 	if (error)
 		return fz_rethrow(error, "unable to sample shading function");
 
-	if (r0 < r1)
-		rs = r0 / (r0 - r1);
-	else
-		rs = -HUGENUM;
+	shade->type = FZ_RADIAL;
 
-	ex0 = x0 + (x1 - x0) * rs;
-	ey0 = y0 + (y1 - y0) * rs;
-	er0 = r0 + (r1 - r0) * rs;
+	shade->extend[0] = e0;
+	shade->extend[1] = e1;
 
-	if (r0 > r1)
-		rs = r1 / (r1 - r0);
-	else
-		rs = -HUGENUM;
+	p1.x = x0;
+	p1.y = y0;
+	p1.c[0] = r0;
+	pdf_addvertex(shade, &p1);
 
-	ex1 = x1 + (x0 - x1) * rs;
-	ey1 = y1 + (y0 - y1) * rs;
-	er1 = r1 + (r0 - r1) * rs;
-
-	if (e0)
-		pdf_buildannulusmesh(shade, ex0, ey0, er0, 0, x0, y0, r0, 0);
-	pdf_buildannulusmesh(shade, x0, y0, r0, 0, x1, y1, r1, 1);
-	if (e1)
-		pdf_buildannulusmesh(shade, x1, y1, r1, 1, ex1, ey1, er1, 1);
-
+	p2.x = x1;
+	p2.y = y1;
+	p2.c[0] = r1;
+	pdf_addvertex(shade, &p2);
 	return fz_okay;
 }
 

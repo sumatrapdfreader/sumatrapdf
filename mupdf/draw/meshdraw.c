@@ -122,7 +122,7 @@ static int clippoly(float src[MAXV][MAXN],
  */
 
 static inline void
-drawscan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
+paintscan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
 {
 	unsigned char *p = pix->samples + ((y - pix->y) * pix->w + (x1 - pix->x)) * pix->n;
 	int v[FZ_MAXCOLORS];
@@ -217,7 +217,7 @@ stepedge(int *ael, int *del, int n)
 }
 
 static void
-fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox bbox)
+fz_painttriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox bbox)
 {
 	float poly[MAXV][MAXN];
 	float temp[MAXV][MAXN];
@@ -282,9 +282,9 @@ fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox 
 		int x1 = ael[1][0] >> 16;
 
 		if (ael[0][0] < ael[1][0])
-			drawscan(pix, y, x0, x1, ael[0]+2, ael[1]+2, n-2);
+			paintscan(pix, y, x0, x1, ael[0]+2, ael[1]+2, n-2);
 		else
-			drawscan(pix, y, x1, x0, ael[1]+2, ael[0]+2, n-2);
+			paintscan(pix, y, x1, x0, ael[1]+2, ael[0]+2, n-2);
 
 		stepedge(ael[0], del[0], n);
 		stepedge(ael[1], del[1], n);
@@ -306,18 +306,56 @@ fz_drawtriangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox 
 	}
 }
 
-/*
- * mesh drawing
- */
-
-#define HUGENUM 32000
-
 static void
-fz_renderlinear(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+fz_paintquad(fz_pixmap *pix,
+		fz_point p0, fz_point p1, fz_point p2, fz_point p3,
+		float c0, float c1, float c2, float c3,
+		int n, fz_bbox bbox)
 {
 	float v[4][3];
-	float e[2][3];
+
+	v[0][0] = p0.x;
+	v[0][1] = p0.y;
+	v[0][2] = c0;
+
+	v[1][0] = p1.x;
+	v[1][1] = p1.y;
+	v[1][2] = c1;
+
+	v[2][0] = p2.x;
+	v[2][1] = p2.y;
+	v[2][2] = c2;
+
+	v[3][0] = p3.x;
+	v[3][1] = p3.y;
+	v[3][2] = c3;
+
+	fz_painttriangle(pix, v[0], v[2], v[3], n, bbox);
+	fz_painttriangle(pix, v[0], v[3], v[1], n, bbox);
+}
+
+/*
+ * linear, radial and mesh painting
+ */
+
+#define HUGENUM 32000 /* how far to extend axial/radial shadings */
+#define RADSEGS 32 /* how many segments to generate for radial meshes */
+
+static fz_point
+fz_pointoncircle(fz_point p, float r, float theta)
+{
+	p.x = p.x + cosf(theta) * r;
+	p.y = p.y + sinf(theta) * r;
+
+	return p;
+}
+
+static void
+fz_paintlinear(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+{
 	fz_point p0, p1;
+	fz_point v0, v1, v2, v3;
+	fz_point e0, e1;
 	float theta;
 
 	p0.x = shade->mesh[0];
@@ -331,56 +369,123 @@ fz_renderlinear(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 	theta = atan2f(p1.y - p0.y, p1.x - p0.x);
 	theta += (float)M_PI * 0.5f;
 
-	v[0][0] = p0.x + HUGENUM * cosf(theta);
-	v[0][1] = p0.y + HUGENUM * sinf(theta);
-	v[0][2] = 0;
+	v0 = fz_pointoncircle(p0, HUGENUM, theta);
+	v1 = fz_pointoncircle(p1, HUGENUM, theta);
+	v2 = fz_pointoncircle(p0, -HUGENUM, theta);
+	v3 = fz_pointoncircle(p1, -HUGENUM, theta);
 
-	v[1][0] = p1.x + HUGENUM * cosf(theta);
-	v[1][1] = p1.y + HUGENUM * sinf(theta);
-	v[1][2] = 255;
-
-	v[2][0] = p0.x - HUGENUM * cosf(theta);
-	v[2][1] = p0.y - HUGENUM * sinf(theta);
-	v[2][2] = 0;
-
-	v[3][0] = p1.x - HUGENUM * cosf(theta);
-	v[3][1] = p1.y - HUGENUM * sinf(theta);
-	v[3][2] = 255;
-
-	fz_drawtriangle(dest, v[0], v[1], v[2], 3, bbox);
-	fz_drawtriangle(dest, v[1], v[2], v[3], 3, bbox);
+	fz_paintquad(dest, v0, v1, v2, v3, 0, 255, 0, 255, 3, bbox);
 
 	if (shade->extend[0])
 	{
-		e[0][0] = v[0][0] - (p1.x - p0.x) * HUGENUM;
-		e[0][1] = v[0][1] - (p1.y - p0.y) * HUGENUM;
-		e[0][2] = v[0][2];
+		e0.x = v0.x - (p1.x - p0.x) * HUGENUM;
+		e0.y = v0.y - (p1.y - p0.y) * HUGENUM;
 
-		e[1][0] = v[2][0] - (p1.x - p0.x) * HUGENUM;
-		e[1][1] = v[2][1] - (p1.y - p0.y) * HUGENUM;
-		e[1][2] = v[2][2];
+		e1.x = v2.x - (p1.x - p0.x) * HUGENUM;
+		e1.y = v2.y - (p1.y - p0.y) * HUGENUM;
 
-		fz_drawtriangle(dest, e[0], v[0], v[2], 3, bbox);
-		fz_drawtriangle(dest, e[0], v[2], e[1], 3, bbox);
+		fz_paintquad(dest, e0, v0, v2, e1, 0, 0, 0, 0, 3, bbox);
 	}
 
 	if (shade->extend[1])
 	{
-		e[0][0] = v[1][0] + (p1.x - p0.x) * HUGENUM;
-		e[0][1] = v[1][1] + (p1.y - p0.y) * HUGENUM;
-		e[0][2] = v[1][2];
+		e0.x = v1.x - (p1.x - p0.x) * HUGENUM;
+		e0.y = v1.y - (p1.y - p0.y) * HUGENUM;
 
-		e[1][0] = v[3][0] + (p1.x - p0.x) * HUGENUM;
-		e[1][1] = v[3][1] + (p1.y - p0.y) * HUGENUM;
-		e[1][2] = v[3][2];
+		e1.x = v3.x - (p1.x - p0.x) * HUGENUM;
+		e1.y = v3.y - (p1.y - p0.y) * HUGENUM;
 
-		fz_drawtriangle(dest, e[0], v[1], v[3], 3, bbox);
-		fz_drawtriangle(dest, e[0], v[3], e[1], 3, bbox);
+		fz_paintquad(dest, e0, v1, v3, e1, 255, 255, 255, 255, 3, bbox);
 	}
 }
 
 static void
-fz_rendermesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+fz_paintannulus(fz_matrix ctm,
+		fz_point p0, float r0, float c0,
+		fz_point p1, float r1, float c1,
+		fz_pixmap *dest, fz_bbox bbox)
+{
+	fz_point t0, t1, t2, t3, b0, b1, b2, b3;
+	float theta, step;
+	int i;
+
+	theta = atan2f(p1.y - p0.y, p1.x - p0.x);
+	step = (float)M_PI * 2 / RADSEGS;
+
+	for (i = 0; i < RADSEGS / 2; i++)
+	{
+		t0 = fz_pointoncircle(p0, r0, theta + i * step);
+		t1 = fz_pointoncircle(p0, r0, theta + i * step + step);
+		t2 = fz_pointoncircle(p1, r1, theta + i * step);
+		t3 = fz_pointoncircle(p1, r1, theta + i * step + step);
+		b0 = fz_pointoncircle(p0, r0, theta - i * step);
+		b1 = fz_pointoncircle(p0, r0, theta - i * step - step);
+		b2 = fz_pointoncircle(p1, r1, theta - i * step);
+		b3 = fz_pointoncircle(p1, r1, theta - i * step - step);
+
+		t0 = fz_transformpoint(ctm, t0);
+		t1 = fz_transformpoint(ctm, t1);
+		t2 = fz_transformpoint(ctm, t2);
+		t3 = fz_transformpoint(ctm, t3);
+		b0 = fz_transformpoint(ctm, b0);
+		b1 = fz_transformpoint(ctm, b1);
+		b2 = fz_transformpoint(ctm, b2);
+		b3 = fz_transformpoint(ctm, b3);
+
+		fz_paintquad(dest, t0, t1, t2, t3, c0, c0, c1, c1, 3, bbox);
+		fz_paintquad(dest, b0, b1, b2, b3, c0, c0, c1, c1, 3, bbox);
+	}
+}
+
+static void
+fz_paintradial(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+{
+	fz_point p0, p1;
+	float r0, r1;
+	fz_point e;
+	float er, rs;
+
+	p0.x = shade->mesh[0];
+	p0.y = shade->mesh[1];
+	r0 = shade->mesh[2];
+
+	p1.x = shade->mesh[3];
+	p1.y = shade->mesh[4];
+	r1 = shade->mesh[5];
+
+	fz_paintannulus(ctm, p0, r0, 0, p1, r1, 255, dest, bbox);
+
+	if (shade->extend[0])
+	{
+		if (r0 < r1)
+			rs = r0 / (r0 - r1);
+		else
+			rs = -HUGENUM;
+
+		e.x = p0.x + (p1.x - p0.x) * rs;
+		e.y = p0.y + (p1.y - p0.y) * rs;
+		er = r0 + (r1 - r0) * rs;
+
+		fz_paintannulus(ctm, e, er, 0, p0, r0, 0, dest, bbox);
+	}
+
+	if (shade->extend[1])
+	{
+		if (r0 > r1)
+			rs = r1 / (r1 - r0);
+		else
+			rs = -HUGENUM;
+
+		e.x = p1.x + (p0.x - p1.x) * rs;
+		e.y = p1.y + (p0.y - p1.y) * rs;
+		er = r1 + (r0 - r1) * rs;
+
+		fz_paintannulus(ctm, p1, r1, 255, e, er, 255, dest, bbox);
+	}
+}
+
+static void
+fz_paintmesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	float tri[3][MAXN];
 	fz_point p;
@@ -414,12 +519,12 @@ fz_rendermesh(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 				mesh += shade->cs->n;
 			}
 		}
-		fz_drawtriangle(dest, tri[0], tri[1], tri[2], 2 + dest->colorspace->n, bbox);
+		fz_painttriangle(dest, tri[0], tri[1], tri[2], 2 + dest->colorspace->n, bbox);
 	}
 }
 
 void
-fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+fz_paintshade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 {
 	unsigned char clut[256][FZ_MAXCOLORS];
 	fz_pixmap *temp, *conv;
@@ -447,13 +552,9 @@ fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 
 	switch (shade->type)
 	{
-	case FZ_LINEAR:
-		fz_renderlinear(shade, ctm, temp, bbox);
-		break;
-	/* TODO: FZ_RADIAL */
-	case FZ_MESH:
-		fz_rendermesh(shade, ctm, temp, bbox);
-		break;
+	case FZ_LINEAR: fz_paintlinear(shade, ctm, temp, bbox); break;
+	case FZ_RADIAL: fz_paintradial(shade, ctm, temp, bbox); break;
+	case FZ_MESH: fz_paintmesh(shade, ctm, temp, bbox); break;
 	}
 
 	if (shade->usefunction)

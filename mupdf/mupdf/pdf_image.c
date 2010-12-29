@@ -248,7 +248,7 @@ pdf_loadinlineimage(fz_pixmap **pixp, pdf_xref *xref, fz_obj *rdb, fz_obj *dict,
 		return fz_rethrow(error, "cannot load inline image");
 
 	pdf_logimage("}\n");
-	
+
 	return fz_okay;
 }
 

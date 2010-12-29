@@ -833,7 +833,7 @@ struct fz_shade_s
 
 	int meshlen;
 	int meshcap;
-	float *mesh; /* [x y t] or [x y c1 ... cn] */
+	float *mesh; /* [x y 0], [x y r], [x y t] or [x y c1 ... cn] */
 };
 
 fz_shade *fz_keepshade(fz_shade *shade);
@@ -841,7 +841,7 @@ void fz_dropshade(fz_shade *shade);
 void fz_debugshade(fz_shade *shade);
 
 fz_rect fz_boundshade(fz_shade *shade, fz_matrix ctm);
-void fz_rendershade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dst, fz_bbox bbox);
+void fz_paintshade(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox);
 
 /*
  * Glyph cache
