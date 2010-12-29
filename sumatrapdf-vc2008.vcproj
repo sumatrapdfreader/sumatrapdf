@@ -756,6 +756,26 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="installer"
+			>
+			<File
+				RelativePath=".\src\installer\Installer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\Installer.exe.manifest"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\Installer.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\Resource.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\src\todo.txt"
 			>

@@ -3,8 +3,7 @@
 
 /*
 The installer is good enough for production but it doesn't mean it couldn't be improved:
-* show version number somewhere e.g. in the upper-right corner of "SUMATRAPDF" 
-* some more fanciful animations e.g.:
+ * some more fanciful animations e.g.:
  * letters could drop down and back up when cursor is over it
  * messages could scroll-in
  * some background thing could be going on, e.g. a spinning 3d cube
@@ -20,7 +19,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <Shlwapi.h>
 #include <objidl.h>
 
-#include "zlib.h"
+#include <zlib.h>
 
 #include "Resource.h"
 #include "base_util.h"
@@ -41,9 +40,6 @@ using namespace Gdiplus;
 
 #define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
 
-#define INSTALLER_WIN_TITLE    _T("SumatraPDF ") CURR_VERSION_STR _T(" Installer")
-#define UNINSTALLER_WIN_TITLE  _T("SumatraPDF ") CURR_VERSION_STR _T(" Uninstaller")
-
 #define INSTALLER_WIN_DX    420
 #define INSTALLER_WIN_DY    320
 #define UNINSTALLER_WIN_DX  420
@@ -51,7 +47,7 @@ using namespace Gdiplus;
 
 #define ID_BUTTON_INSTALL             1
 #define ID_BUTTON_UNINSTALL           2
-#define ID_CHECKBOX_MAKE_DEAFULT      3
+#define ID_CHECKBOX_MAKE_DEFAULT      3
 #define ID_BUTTON_START_SUMATRA       4
 #define ID_BUTTON_EXIT                5
 
@@ -67,11 +63,11 @@ using namespace Gdiplus;
 
 static HINSTANCE        ghinst;
 static HWND             gHwndFrame;
-static HWND             gHwndButtonInstall;
-static HWND             gHwndButtonExit;
-static HWND             gHwndButtonRunSumatra;
-static HWND             gHwndCheckboxRegisterDefault;
-static HWND             gHwndButtonUninstall;
+static HWND             gHwndButtonInstall = NULL;
+static HWND             gHwndButtonExit = NULL;
+static HWND             gHwndButtonRunSumatra = NULL;
+static HWND             gHwndCheckboxRegisterDefault = NULL;
+static HWND             gHwndButtonUninstall = NULL;
 static HFONT            gFontDefault;
 
 static TCHAR *          gMsg;
@@ -281,21 +277,20 @@ TCHAR *GetInstallationDir()
     BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return NULL;
-    tstr_cat_s(dir, dimof(dir), _T("\\"));
-    tstr_cat_s(dir, dimof(dir), TAPP);
+    tstr_cat_s(dir, dimof(dir), _T("\\") TAPP);
     return dir;    
 }
 
 TCHAR *GetUninstallerPath()
 {
     TCHAR *installDir = GetInstallationDir();
-    return tstr_cat3(installDir, _T("\\"), _T("uninstall.exe"));
+    return tstr_cat(installDir, _T("\\") _T("uninstall.exe"));
 }
 
 TCHAR *GetInstalledExePath()
 {
     TCHAR *installDir = GetInstallationDir();
-    return tstr_cat(installDir, _T("\\SumatraPDF.exe"));
+    return tstr_cat(installDir, _T("\\") EXENAME);
 }
 
 TCHAR *GetStartMenuProgramsPath()
@@ -310,7 +305,7 @@ TCHAR *GetStartMenuProgramsPath()
 
 TCHAR *GetShortcutPath()
 {
-    return tstr_cat(GetStartMenuProgramsPath(), _T("\\SumatraPDF.lnk"));
+    return tstr_cat(GetStartMenuProgramsPath(), _T("\\") TAPP _T(".lnk"));
 }
 
 DWORD GetFilePointer(HANDLE h)
@@ -467,14 +462,14 @@ ReadNextPart:
     free(msg); free(ttype);
     goto Error;
 
+Error:
+    FreeEmbeddedParts(root);
+    root = NULL;
+
 Exit:
     CloseHandle(h);
     gEmbeddedParts = root;
     return root;
-Error:
-    FreeEmbeddedParts(root);
-    root = NULL;
-    goto Exit;
 }
 
 BOOL CopyFileData(HANDLE hSrc, HANDLE hDst, DWORD size)
@@ -883,6 +878,15 @@ void UnregisterFromBeingDefaultViewer()
     UnregisterExplorerFileExts();
 }
 
+bool HasOtherDefaultViewer()
+{
+    TCHAR buf[MAX_PATH];
+    bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, buf, dimof(buf));
+    if (ok && !tstr_eq(buf, TAPP))
+        return true;
+    return false;
+}
+
 // Note: doesn't recurse, but it's good enough for us
 void RemoveDirectoryWithFiles(TCHAR *dir)
 {
@@ -1020,11 +1024,13 @@ void CreateButtonExit(HWND hwndParent)
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
     gHwndButtonExit = CreateWindow(WC_BUTTON, _T("Close"),
-                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_EXIT,
                         ghinst, NULL);
     SetFont(gHwndButtonExit, gFontDefault);
+
+    SendMessage(gHwndButtonExit, WM_SETFOCUS, 0, 0);
 }
 
 void CreateButtonRunSumatra(HWND hwndParent)
@@ -1039,18 +1045,21 @@ void CreateButtonRunSumatra(HWND hwndParent)
     GetClientRect(hwndParent, &r);
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
-    gHwndButtonRunSumatra= CreateWindow(WC_BUTTON, _T("Start SumatraPDF"),
+    gHwndButtonRunSumatra= CreateWindow(WC_BUTTON, _T("Start ") TAPP,
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_START_SUMATRA,
                         ghinst, NULL);
     SetFont(gHwndButtonRunSumatra, gFontDefault);
+
+    SendMessage(gHwndButtonRunSumatra, WM_SETFOCUS, 0, 0);
 }
 
 void OnButtonStartSumatra()
 {
     TCHAR *s = GetInstalledExePath();
-    CreateProcessHelper(s);
+    HANDLE h = CreateProcessHelper(s);
+    CloseHandle(h);
     free(s);
 }
 
@@ -1114,6 +1123,7 @@ void OnButtonInstall()
 {
     // disable the install button and remove checkbox during installation
     DestroyWindow(gHwndCheckboxRegisterDefault);
+    gHwndCheckboxRegisterDefault = NULL;
     EnableWindow(gHwndButtonInstall, FALSE);
 
     gMsg = _T("Installation in progress...");
@@ -1129,9 +1139,11 @@ void OnButtonInstall()
 void OnInstallationFinished(InstallerThreadData *td)
 {
     DestroyWindow(gHwndButtonInstall);
+    gHwndButtonInstall = NULL;
+
     if (td->ok) {
         CreateButtonRunSumatra(gHwndFrame);
-        gMsg = _T("Thank you! SumatraPDF has been installed.");
+        gMsg = _T("Thank you! ") TAPP _T(" has been installed.");
         gMsgColor = COLOR_MSG_OK;
     } else {
         CreateButtonExit(gHwndFrame);
@@ -1164,9 +1176,10 @@ void OnButtonUninstall()
     RemoveInstallationDirectory();
 
     DestroyWindow(gHwndButtonUninstall);
+    gHwndButtonUninstall = NULL;
     CreateButtonExit(gHwndFrame);
 
-    gMsg = _T("SumatraPDF has been uninstalled.");
+    gMsg = TAPP _T(" has been uninstalled.");
     gMsgColor = COLOR_MSG_OK;
     InvalidateFrame();
 }
@@ -1461,6 +1474,30 @@ void OnMouseMove(HWND hwnd, int x, int y)
     // nothing so far
 }
 
+void OnChar(HWND hwnd, int key)
+{
+    if (VK_TAB == key) {
+        // TODO: this always returns gHwndFrame - why?
+        HWND focus = GetFocus();
+        if (gHwndButtonInstall && focus != gHwndButtonInstall)
+            SetFocus(gHwndButtonInstall);
+        else if (gHwndCheckboxRegisterDefault && focus != gHwndCheckboxRegisterDefault)
+            SetFocus(gHwndCheckboxRegisterDefault);
+        else if (gHwndButtonRunSumatra && focus != gHwndButtonRunSumatra)
+            SetFocus(gHwndButtonRunSumatra);
+        else if (gHwndButtonExit && focus != gHwndButtonExit)
+            SetFocus(gHwndButtonExit);
+        else if (gHwndButtonUninstall && focus != gHwndButtonUninstall)
+            SetFocus(gHwndButtonUninstall);
+    } else if (VK_ESCAPE == key) {
+        if (gHwndButtonExit || gHwndButtonRunSumatra ||
+            gHwndButtonInstall && IsWindowEnabled(gHwndButtonInstall) ||
+            gHwndButtonUninstall && IsWindowEnabled(gHwndButtonUninstall)) {
+            SendMessage(hwnd, WM_CLOSE, 0, 0);
+        }
+    }
+}
+
 void OnCreateUninstaller(HWND hwnd)
 {
     RECT    r;
@@ -1473,8 +1510,8 @@ void OnCreateUninstaller(HWND hwnd)
     y = RectDy(&r) - buttonDy - 8;
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
-    gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall SumatraPDF"),
-                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+    gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall ") TAPP,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, buttonDx, buttonDy, hwnd,
                         (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
     SetFont(gHwndButtonUninstall, gFontDefault);
@@ -1523,6 +1560,14 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
             x = GET_X_LPARAM(lParam); y = GET_Y_LPARAM(lParam);
             OnMouseMove(hwnd, x, y);
             break;
+
+        case WM_CHAR:
+            OnChar(hwnd, wParam);
+            break;
+
+        case WM_SETFOCUS:
+            OnChar(hwnd, VK_TAB);
+            break;
     }
 
     return DefWindowProc(hwnd, message, wParam, lParam);
@@ -1540,8 +1585,8 @@ void OnCreateInstaller(HWND hwnd)
     GetClientRect(hwnd, &r);
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
-    gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install SumatraPDF"),
-                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+    gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install ") TAPP,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE,
                         x, y, buttonDx, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
     SetFont(gHwndButtonInstall, gFontDefault);
@@ -1549,9 +1594,14 @@ void OnCreateInstaller(HWND hwnd)
     gHwndCheckboxRegisterDefault = CreateWindow(
         WC_BUTTON, _T("Use as default PDF Reader"),
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEAFULT, ghinst, NULL);
+        8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
     SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
-    SetCheckboxState(gHwndCheckboxRegisterDefault, TRUE);
+    // only check the "Use as default" checkbox when no other PDF viewer
+    // is currently selected (not going to intrude)
+    BOOL checkDefaultRegister = !HasOtherDefaultViewer();
+    SetCheckboxState(gHwndCheckboxRegisterDefault, checkDefaultRegister);
+
+    SetFocus(gHwndButtonInstall);
 }
 
 static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1602,6 +1652,14 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             OnMouseMove(hwnd, x, y);
             break;
 
+        case WM_CHAR:
+            OnChar(hwnd, wParam);
+            break;
+
+        case WM_SETFOCUS:
+            OnChar(hwnd, VK_TAB);
+            break;
+
         case WM_APP_INSTALLATION_FINISHED:
             {
                 InstallerThreadData *td = (InstallerThreadData*)wParam;
@@ -1644,25 +1702,25 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     if (IsUninstaller()) {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, INSTALLER_WIN_TITLE,
+                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
                 //WS_OVERLAPPEDWINDOW,
-                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                 CW_USEDEFAULT, CW_USEDEFAULT, 
                 UNINSTALLER_WIN_DX, UNINSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gMsg = _T("Welcome to SumatraPDF uninstaller");
+        gMsg = _T("Welcome to ") TAPP _T(" uninstaller");
         gMsgColor = COLOR_MSG_WELCOME;
     } else {
         gHwndFrame = CreateWindow(
-                INSTALLER_FRAME_CLASS_NAME, UNINSTALLER_WIN_TITLE,
+                INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
                 //WS_OVERLAPPEDWINDOW,
-                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
                 CW_USEDEFAULT, CW_USEDEFAULT,                
                 INSTALLER_WIN_DX, INSTALLER_WIN_DY,
                 NULL, NULL,
                 ghinst, NULL);
-        gMsg = _T("Welcome to SumatraPDF installer!");
+        gMsg = _T("Welcome to ") TAPP _T(" installer!");
         gMsgColor = COLOR_MSG_WELCOME;
     }
     if (!gHwndFrame)
@@ -1760,7 +1818,7 @@ int RunApp()
             ftc.Step();
         }
 
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
                 return msg.wParam;
             }
