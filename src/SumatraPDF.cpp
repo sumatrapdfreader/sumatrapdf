@@ -7004,6 +7004,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #ifndef BUILD_RM_VERSION
     prefsLoaded = Prefs_Load();
 #endif
+    if (!prefsLoaded) {
+        // assume that this is because prefs file didn't exist i.e. this is
+        // the first time Sumatra is launched.
+        const char *lang = GuessLanguage();
+        if (lang)
+            CurrLangNameSet(lang);
+    }
 
     CommandLineInfo i;
     i.bgColor = gGlobalPrefs.m_bgColor;
@@ -7014,23 +7021,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     i.escToExit = gGlobalPrefs.m_escToExit;
     i.invertColors = gGlobalPrefs.m_invertColors;
 
-    ParseCommandLine(i, GetCommandLine());
-
-    if (i.filesToBenchmark.size() > 0) {
-        Bench(i.filesToBenchmark);
-        goto Exit;
-    }
-
-    if (!prefsLoaded) {
-        // assume that this is because prefs file didn't exist i.e. this is
-        // the first time Sumatra is launched.
-        const char *lang = GuessLanguage();
-        if (lang)
-            CurrLangNameSet(lang);
-    }
+    i.ParseCommandLine(GetCommandLine());
 
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
+    if (i.filesToBenchmark.size() > 0)
+        Bench(i.filesToBenchmark);
     if (i.exitImmediately)
         goto Exit;
 

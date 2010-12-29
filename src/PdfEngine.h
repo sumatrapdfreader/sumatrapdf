@@ -159,6 +159,10 @@ public:
     fz_buffer* getStreamData(int num=0, int gen=0);
     bool       isImagePage(int pageNo);
 
+    bool       _benchLoadPage(int pageNo) {
+        return getPdfPage(pageNo) != NULL;
+    }
+
 protected:
     const TCHAR *_fileName;
     char *_decryptionKey;

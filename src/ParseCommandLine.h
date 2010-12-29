@@ -57,6 +57,9 @@ public:
         free(newWindowTitle);
     }
 
+    void ParseCommandLine(TCHAR *cmdLine);
+
+protected:
     void SetPrinterName(TCHAR *s) {
         free(printerName);
         printerName = tstr_dup(s);
@@ -83,6 +86,4 @@ public:
     }
 };
 
-void ParseCommandLine(CommandLineInfo& i, TCHAR *cmdLine);
-bool IsBenchPagesInfo(TCHAR *s);
 #endif

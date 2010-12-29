@@ -337,6 +337,8 @@ OpenEmbeddedFile:
 
     if (pdf_needspassword(_xref)) {
         assert(win);
+        if (!win)
+            return false;
 
         unsigned char digest[16 + 32] = { 0 };
         pdf_streamfingerprint(_xref->file, digest);

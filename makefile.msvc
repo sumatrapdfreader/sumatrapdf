@@ -194,7 +194,7 @@ $(O)\FileWatch.obj:    $(SUMATRAPDF_H) baseutils\file_util.h
 $(O)\Http.obj:         $(SUMATRAPDF_H) src\MemSegment.h baseutils\vstrlist.h src\Version.h
 $(O)\LangMenuDef.obj:  src\Resource.h
 $(O)\MemSegment.obj:   baseutils\vstrlist.h
-$(O)\ParseCommandLine.obj: $(SUMATRAPDF_H) baseutils\vstrlist.h baseutils\WinUtil.hpp
+$(O)\ParseCommandLine.obj: $(SUMATRAPDF_H) baseutils\vstrlist.h baseutils\WinUtil.hpp src\Benchmark.h
 $(O)\PdfEngine.obj:    $(PDFENGINE_H)
 $(O)\PdfSearch.obj:    $(PDFENGINE_H) src\PdfSelection.h
 $(O)\PdfSelection.obj: $(PDFENGINE_H)

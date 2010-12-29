@@ -262,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\UnitTests.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Version.h"
 				>
 			</File>
