@@ -98,7 +98,7 @@ static bool             gUseGdiRenderer = false;
 #define WM_APP_GOTO_TOC_LINK   (WM_APP + 16)
 #define WM_APP_AUTO_RELOAD     (WM_APP + 17)
 
-#ifdef SVN_PRE_RELEASE_VER
+#if defined(SVN_PRE_RELEASE_VER) && !defined(BLACK_ON_YELLOW)
 #define ABOUT_BG_COLOR          RGB(255,0,0)
 #else
 #define ABOUT_BG_COLOR          RGB(255,242,0)

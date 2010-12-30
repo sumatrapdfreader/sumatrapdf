@@ -76,22 +76,20 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 void DrawSumatraPDF(HDC hdc, int x, int y)
 {
     const TCHAR *txt = SUMATRA_TXT;
-#if 0
+#ifdef BLACK_ON_YELLOW
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
     TextOut(hdc, x, y, txt, lstrlen(txt));
 #else
     // colorful version
-    SIZE txtSize = {0};
-    COLORREF  cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };    
-    int col = 0;
-    int offx = 0;
-    for (int i=0; i < lstrlen(SUMATRA_TXT); i++)
-    {
-        SetTextColor(hdc, cols[col % dimof(cols)]);
-        col++;
-        TextOut(hdc, x + txtSize.cx, y, txt+i, 1);
-        GetTextExtentPoint32(hdc, txt, i+1, &txtSize);
+    COLORREF cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
+    for (int i = 0; i < lstrlen(txt); i++) {
+        SetTextColor(hdc, cols[i % dimof(cols)]);
+        TextOut(hdc, x, y, txt + i, 1);
+
+        SIZE txtSize;
+        GetTextExtentPoint32(hdc, txt + i, 1, &txtSize);
+        x += txtSize.cx;
     }
 #endif
 }
