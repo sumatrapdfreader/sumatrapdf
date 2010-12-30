@@ -41,40 +41,18 @@ static TCHAR *PdfToString(fz_obj *obj) {
     return str;
 }
 
-static TCHAR *PdfDateParseInt(TCHAR *s, int numDigits, WORD *valOut) {
-    if (!s)
-        return NULL;
-
-    int n = 0;
-    while (numDigits > 0) {
-        TCHAR c = *s++;
-        if (c < '0' || c > '9') {
-            return NULL;
-        }
-        n = n * 10 + (c - '0');
-        numDigits--;
-    }
-    *valOut = n;
-    return s;
-}
-
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
 static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if ('D' == pdfDate[0] && ':' == pdfDate[1]) {
+    if (tstr_startswith(pdfDate, _T("D:")))
         pdfDate += 2;
-    }
-    pdfDate = PdfDateParseInt(pdfDate, 4, &timeOut->wYear);
-    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wMonth);
-    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wDay);
-    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wHour);
-    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wMinute);
-    pdfDate = PdfDateParseInt(pdfDate, 2, &timeOut->wSecond);
+    return 6 == _stscanf(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
+        &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
+        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     // don't bother about the day of week, we won't display it anyway
-    return pdfDate != NULL;
 }
 
 // Convert a date in PDF format, e.g. "D:20091222171933-05'00'" to a display
@@ -83,42 +61,34 @@ static bool PdfDateParse(TCHAR *pdfDate, SYSTEMTIME *timeOut) {
 // Caller needs to free this string
 static TCHAR *PdfDateToDisplay(fz_obj *dateObj) {
     SYSTEMTIME date;
-    bool ok;
-    int ret;
-    TCHAR *tmp;
-    TCHAR buf[512];
-    TCHAR *s;
-    int cchBufLen = dimof(buf);
 
-    if (!dateObj) {
-        return NULL;
+    bool ok = false;
+    TCHAR *s = PdfToString(dateObj);
+    if (s) {
+        ok = PdfDateParse(s, &date);
+        free(s);
     }
-    s = PdfToString(dateObj);
-    if (!s) {
-        return NULL;
-    }
-    ok = PdfDateParse(s, &date);
     if (!ok) {
-        goto Error;
+        return NULL;
     }
 
-    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
+    TCHAR buf[512];
+    int cchBufLen = dimof(buf);
+    int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
     if (0 == ret) {
         // GetDateFormat() failed
-        goto Error;
+        return NULL;
     }
-    tmp = buf + ret - 1;
+
+    TCHAR *tmp = buf + ret - 1;
     *tmp++ = _T(' ');
     cchBufLen -= ret;
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
     if (0 == ret) {
         // GetTimeFormat() failed
-        goto Error;
+        return NULL;
     }
-    free(s);
     return tstr_dup(buf);
-Error:
-    return s;
 }
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
@@ -128,7 +98,7 @@ static TCHAR *FormatNumWithThousandSep(uint64_t num) {
 
     tstr_printf_s(buf, dimof(buf), _T("%I64d"), num);
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep));
-    
+
     TCHAR *src = buf, *dst = buf2;
     int len = lstrlen(src);
     while (*src) {
@@ -233,7 +203,7 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
         denials.push_back(tstr_dup(_TR("copying text")));
 
     TCHAR *denialList = denials.join(_T(", "));
-    if (denialList && !*denialList) {
+    if (tstr_empty(denialList)) {
         free(denialList);
         denialList = NULL;
     }
@@ -242,6 +212,10 @@ static TCHAR *FormatPdfPermissions(PdfEngine *pdfEngine) {
 }
 
 static void AddPdfProperty(PdfPropertiesLayout *layoutData, const TCHAR *left, const TCHAR *right) {
+    // don't display value-less properties
+    if (!right)
+        return;
+
     PdfPropertyEl *el = (PdfPropertyEl *)malloc(sizeof(PdfPropertyEl));
     el->leftTxt = left;
     el->rightTxt = tstr_dup(right);
@@ -396,25 +370,6 @@ Example xref->info ("Info") object:
 // TODO: add information about fonts ?
 void OnMenuProperties(WindowInfo *win)
 {
-    uint64_t    fileSize;
-    TCHAR *     tmp;
-    fz_obj *    info = NULL;
-    fz_obj *    subject = NULL;
-    fz_obj *    author = NULL;
-    fz_obj *    title = NULL;
-    fz_obj *    producer = NULL;
-    fz_obj *    creator = NULL;
-    fz_obj *    creationDate = NULL;
-    fz_obj *    modDate = NULL;
-
-    TCHAR *     subjectStr = NULL;
-    TCHAR *     authorStr = NULL;
-    TCHAR *     titleStr = NULL;
-    TCHAR *     producerStr = NULL;
-    TCHAR *     creatorStr  = NULL;
-    TCHAR *     creationDateStr = NULL;
-    TCHAR *     modDateStr = NULL;
-
     if (win->hwndPdfProperties) {
         SetActiveWindow(win->hwndPdfProperties);
         return;
@@ -424,102 +379,70 @@ void OnMenuProperties(WindowInfo *win)
     if (!dm || !dm->pdfEngine) {
         return;
     }
-
     PdfPropertiesLayout *layoutData = (PdfPropertiesLayout *)malloc(sizeof(PdfPropertiesLayout));
-    assert(layoutData);
     if (!layoutData)
         return;
     layoutData->first = layoutData->last = NULL;
 
-    info = dm->pdfEngine->getPdfInfo();
-    if (fz_isdict(info)) {
-        title = fz_dictgets(info, "Title");
-        if (title) {
-            titleStr = PdfToString(title);
-        }
-        author = fz_dictgets(info, "Author");
-        if (author) {
-            authorStr = PdfToString(author);
-        }
-        subject = fz_dictgets(info, "Subject");
-        if (subject) {
-            subjectStr = PdfToString(subject);
-        }
-        producer = fz_dictgets(info, "Producer");
-        if (producer) {
-            producerStr = PdfToString(producer);
-        }
-        creator = fz_dictgets(info, "Creator");
-        if (creator) {
-            creatorStr = PdfToString(creator);
-        }
-        creationDate = fz_dictgets(info, "CreationDate");
-        creationDateStr = PdfDateToDisplay(creationDate);
+    fz_obj *info = dm->pdfEngine->getPdfInfo();
 
-        modDate = fz_dictgets(info, "ModDate");
-        modDateStr = PdfDateToDisplay(modDate);
-    }
+    TCHAR *str = (TCHAR *)win->dm->fileName();
+    AddPdfProperty(layoutData, _TR("File:"), str);
 
-    if (win->dm->fileName()) {
-        AddPdfProperty(layoutData, _TR("File:"), win->dm->fileName());
-    }
-    if (titleStr) {
-        AddPdfProperty(layoutData, _TR("Title:"), titleStr);
-        free(titleStr);
-    }
-    if (subjectStr) {
-        AddPdfProperty(layoutData, _TR("Subject:"), subjectStr);
-        free(subjectStr);
-    }
-    if (authorStr) {
-        AddPdfProperty(layoutData, _TR("Author:"), authorStr);
-        free(authorStr);
-    }
-    if (creationDateStr) {
-        AddPdfProperty(layoutData, _TR("Created:"), creationDateStr);
-        free(creationDateStr);
-    }
-    if (modDateStr) {
-        AddPdfProperty(layoutData, _TR("Modified:"), modDateStr);
-        free(modDateStr);
-    }
-    if (creatorStr) {
-        AddPdfProperty(layoutData, _TR("Application:"), creatorStr);
-        free(creatorStr);
-    }
-    if (producerStr) {
-        AddPdfProperty(layoutData, _TR("PDF Producer:"), producerStr);
-        free(producerStr);
-    }
+    str = PdfToString(fz_dictgets(info, "Title"));
+    AddPdfProperty(layoutData, _TR("Title:"), str);
+    free(str);
+
+    str = PdfToString(fz_dictgets(info, "Subject"));
+    AddPdfProperty(layoutData, _TR("Subject:"), str);
+    free(str);
+
+    str = PdfToString(fz_dictgets(info, "Author"));
+    AddPdfProperty(layoutData, _TR("Author:"), str);
+    free(str);
+
+    str = PdfDateToDisplay(fz_dictgets(info, "CreationDate"));
+    AddPdfProperty(layoutData, _TR("Created:"), str);
+    free(str);
+
+    str = PdfDateToDisplay(fz_dictgets(info, "ModDate"));
+    AddPdfProperty(layoutData, _TR("Modified:"), str);
+    free(str);
+
+    str = PdfToString(fz_dictgets(info, "Creator"));
+    AddPdfProperty(layoutData, _TR("Application:"), str);
+    free(str);
+
+    str = PdfToString(fz_dictgets(info, "Producer"));
+    AddPdfProperty(layoutData, _TR("PDF Producer:"), str);
+    free(str);
 
     int version = win->dm->pdfEngine->getPdfVersion();
-    tmp = tstr_printf(_T("%d.%d"), version / 10, version % 10);
-    AddPdfProperty(layoutData, _TR("PDF Version:"), tmp);
-    free(tmp);
+    str = tstr_printf(_T("%d.%d"), version / 10, version % 10);
+    AddPdfProperty(layoutData, _TR("PDF Version:"), str);
+    free(str);
 
-    fileSize = WinFileSizeGet(win->dm->fileName());
+    uint64_t fileSize = WinFileSizeGet(win->dm->fileName());
     if (fileSize == INVALID_FILE_SIZE) {
         fz_buffer *data = win->dm->pdfEngine->getStreamData();
         fileSize = data->len;
         fz_dropbuffer(data);
     }
-    tmp = FormatPdfSize(fileSize);
-    AddPdfProperty(layoutData, _TR("File Size:"), tmp);
-    free(tmp);
+    str = FormatPdfSize(fileSize);
+    AddPdfProperty(layoutData, _TR("File Size:"), str);
+    free(str);
 
-    tmp = tstr_printf(_T("%d"), dm->pageCount());
-    AddPdfProperty(layoutData, _TR("Number of Pages:"), tmp);
-    free(tmp);
+    str = tstr_printf(_T("%d"), dm->pageCount());
+    AddPdfProperty(layoutData, _TR("Number of Pages:"), str);
+    free(str);
 
-    tmp = FormatPdfPageSize(dm->getPageInfo(dm->currentPageNo())->page);
-    AddPdfProperty(layoutData, _TR("Page Size:"), tmp);
-    free(tmp);
+    str = FormatPdfPageSize(dm->getPageInfo(dm->currentPageNo())->page);
+    AddPdfProperty(layoutData, _TR("Page Size:"), str);
+    free(str);
 
-    tmp = FormatPdfPermissions(dm->pdfEngine);
-    if (tmp) {
-        AddPdfProperty(layoutData, _TR("Denied Permissions:"), tmp);
-        free(tmp);
-    }
+    str = FormatPdfPermissions(dm->pdfEngine);
+    AddPdfProperty(layoutData, _TR("Denied Permissions:"), str);
+    free(str);
 
     // TODO: this is about linearlized PDF. Looks like mupdf would
     // have to be extended to detect linearlized PDF. The rules are described

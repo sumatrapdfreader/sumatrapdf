@@ -253,6 +253,7 @@ PdfEngine::PdfEngine() :
         , _xref(NULL)
         , _outline(NULL)
         , _attachments(NULL)
+        , _info(NULL)
         , _pages(NULL)
         , _drawcache(NULL)
         , _decryptionKey(NULL)
@@ -279,6 +280,8 @@ PdfEngine::~PdfEngine()
         pdf_freeoutline(_outline);
     if (_attachments)
         pdf_freeoutline(_attachments);
+    if (_info)
+        fz_dropobj(_info);
 
     if (_xref) {
         pdf_freexref(_xref);
@@ -403,6 +406,12 @@ OpenEmbeddedFile:
     // error might prevent loading some pdfs that would
     // otherwise get displayed
     _attachments = pdf_loadattachments(_xref);
+    // keep a copy of the Info dictionary, as accessing the original
+    // isn't thread safe and we don't want to block for this when
+    // displaying document properties
+    _info = fz_dictgets(_xref->trailer, "Info");
+    if (_info)
+        _info = fz_copydict(_info);
     LeaveCriticalSection(&_xrefAccess);
 
     _pages = (pdf_page **)calloc(_pageCount, sizeof(pdf_page *));

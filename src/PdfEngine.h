@@ -153,8 +153,8 @@ public:
     TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL, RenderTarget target=Target_View) {
         return ExtractPageText(getPdfPage(pageNo), lineSep, coords_out, target);
     };
-    fz_obj   * getPdfInfo(void) { return _xref ? fz_dictgets(_xref->trailer, "Info") : NULL; }
-    int        getPdfVersion(void) const { return _xref->version; }
+    fz_obj   * getPdfInfo(void) { return _info; };
+    int        getPdfVersion(void) const { return _xref ? _xref->version : -1; }
     char     * getDecryptionKey(void) const { return _decryptionKey ? fz_strdup(_decryptionKey) : NULL; }
     fz_buffer* getStreamData(int num=0, int gen=0);
     bool       isImagePage(int pageNo);
@@ -196,6 +196,7 @@ protected:
 
     pdf_outline   * _outline;
     pdf_outline   * _attachments;
+    fz_obj        * _info;
     fz_glyphcache * _drawcache;
 };
 
