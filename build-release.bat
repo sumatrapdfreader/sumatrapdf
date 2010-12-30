@@ -1,12 +1,12 @@
 @echo off
 
 :TRYVC9
-@call vc9.bat
+@call scripts\vc9.bat
 IF ERRORLEVEL 1 GOTO TRYVC8
 GOTO HAS_VC
 
 :TRYVC8
-@call vc8.bat
+@call scripts\vc8.bat
 IF ERRORLEVEL 1 GOTO VS_NEEDED
 GOTO HAS_VC
 
@@ -38,7 +38,7 @@ zip -? >nul
 IF ERRORLEVEL 1 goto ZIP_NEEDED
 
 :BUILD
-python build-release.py %1
+python scripts\build-release.py %1
 goto END
 
 :VS_NEEDED

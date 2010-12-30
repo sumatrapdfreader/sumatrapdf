@@ -3,6 +3,7 @@ import simplejson
 import os.path
 
 g_can_upload = True
+g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 
 try:
     import boto.s3
@@ -255,8 +256,8 @@ def gen_lang_menu_def_c(langs, file_name):
 def gen_code(strings_dict, langs, h_file_name, c_file_name):
     gen_h_code(strings_dict, h_file_name)
     gen_c_code(strings_dict, c_file_name)
-    gen_lang_menu_def_c(langs, os.path.join("src", "LangMenuDef.cpp"))
-    gen_lang_menu_def_h(langs, os.path.join("src", "LangMenuDef.h"))
+    gen_lang_menu_def_c(langs, os.path.join(g_src_dir, "LangMenuDef.cpp"))
+    gen_lang_menu_def_h(langs, os.path.join(g_src_dir, "LangMenuDef.h"))
 
 def contributors_for_lang(contributors, lang):
     return sorted(contributors.get(lang, []))
@@ -307,8 +308,8 @@ def main():
     for s in untranslated:
         if s not in strings_dict:
             strings_dict[s] = []
-    h_file_name = os.path.join("src", "translations_txt.h")
-    c_file_name = os.path.join("src", "translations_txt.c")
+    h_file_name = os.path.join(g_src_dir, "translations_txt.h")
+    c_file_name = os.path.join(g_src_dir, "translations_txt.c")
     gen_code(strings_dict, langs, h_file_name, c_file_name)
     gen_and_upload_js(strings_dict, langs, contributors)
 

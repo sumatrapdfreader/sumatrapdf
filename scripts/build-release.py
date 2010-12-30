@@ -57,7 +57,9 @@ if upload or upload_tmp:
 TESTING = False
 
 SCRIPT_DIR = os.path.dirname(__file__)
-if SCRIPT_DIR == "":
+if SCRIPT_DIR:
+  SCRIPT_DIR = os.path.split(SCRIPT_DIR)[0]
+else:
   SCRIPT_DIR = os.getcwd()
 
 S3_BUCKET = "kjkpub"
@@ -141,7 +143,7 @@ def direxists(path):
 
 def build_installer_nsis(builds_dir, ver):
   os.chdir(SCRIPT_DIR)
-  run_cmd_throw("makensis", "/DSUMVER=%s" % ver, "installer")
+  run_cmd_throw("makensis", "/DSUMVER=%s" % ver, "scripts/installer")
   local_installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
   shutil.move("SumatraPDF-%s-install.exe" % ver, local_installer_exe)
   ensure_path_exists(local_installer_exe)
@@ -228,7 +230,7 @@ def build_installer_native(builds_dir, ver):
   mark_installer_end(fo) # this are read backwards so end marker is written first
   append_installer_file(fo, exe, "SumatraPDF.exe")
   font_name =  "DroidSansFallback.ttf"
-  font_path = os.path.join(SCRIPT_DIR, "..", "mupdf", "fonts", "droid", font_name)
+  font_path = os.path.join(SCRIPT_DIR, "mupdf", "fonts", "droid", font_name)
   append_installer_file_zlib(fo, font_path, font_name)
   fo.close()
   return installer_exe

@@ -11,8 +11,9 @@ comments at the end of strings file for each language.
 """
 
 C_FILES_TO_PROCESS = ["SumatraPDF.cpp", "SumatraAbout.cpp", "SumatraProperties.cpp", "SumatraDialogs.cc", "CrashHandler.cpp"]
-translation_pattern = r'_TRN?\("(.*?)"\)'
-STRINGS_PATH = os.path.realpath(os.path.join("src", "strings"))
+C_FILES_TO_PROCESS = [os.path.join("..", "src", f) for f in C_FILES_TO_PROCESS]
+STRINGS_PATH = os.path.join("..", "src", "strings")
+TRANSLATION_PATTERN = r'_TRN?\("(.*?)"\)'
 
 (ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
 
@@ -179,12 +180,10 @@ def get_lang_list(strings_dict):
     return langs
 
 def extract_strings_from_c_files():
-    files = C_FILES_TO_PROCESS
     strings = []
-    for f in files:
-        f = os.path.join("src", f)
+    for f in C_FILES_TO_PROCESS:
         file_content = file(f, "rb").read()
-        strings += re.findall(translation_pattern, file_content)
+        strings += re.findall(TRANSLATION_PATTERN, file_content)
     return seq_uniq(strings)
 
 (SS_ONLY_IN_C, SS_ONLY_IN_TXT, SS_IN_BOTH) = range(3)
