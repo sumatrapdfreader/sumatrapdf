@@ -72,7 +72,6 @@ char *  str_cat_s(char *dst, size_t dst_cch_size, const char *src);
 char *  str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_size);
 char *  str_cat(const char *str1, const char *str2);
 char *  str_cat3(const char *str1, const char *str2, const char *str3);
-char *  str_cat4(const char *str1, const char *str2, const char *str3, const char *str4);
 int     str_contains(const char *str, char c);
 char *  str_printf(const char *format, ...);
 int     str_printf_s(char *out, size_t out_cch_size, const char *format, ...);
@@ -90,13 +89,11 @@ void    str_strip_ws_both(char *txt);
 BOOL    str_to_double(const char *txt, double *resOut);
 char *  mem_to_hexstr(const unsigned char *buf, int len);
 BOOL    hexstr_to_mem(const char *s, unsigned char *buf, int bufLen);
-int     hex_str_decode_byte(const char **txt);
 
 char *  str_to_multibyte(const char *src, UINT CodePage);
 char *  multibyte_to_str(const char *src, UINT CodePage);
 
 char *  str_parse_possibly_quoted(char  **txt);
-int     hex_str_decode_byte(const char **txt);
 
 size_t  digits_for_number(int64_t num);
 

@@ -24,11 +24,11 @@ int tstr_trans_chars(tchar_t *str, const tchar_t *oldChars, const tchar_t *newCh
     return findCount;
 }
 
-#define CHAR_URL_DONT_ENCODE   _T("-_.!~*'()")
+#define CHAR_URL_DONT_ENCODE _T(" -_.!~*'()")
 
 static int tchar_needs_url_encode(tchar_t c)
 {
-    if (_istalnum(c))
+    if (_istalnum(c) && _istascii(c))
         return FALSE;
     if (tstr_contains(CHAR_URL_DONT_ENCODE, c))
         return FALSE;
@@ -59,7 +59,7 @@ tchar_t *tstr_url_encode(const tchar_t *str)
     encoded = result;
     for (tmp = str; *tmp; tmp++) {
         if (tchar_needs_url_encode(*tmp)) {
-            _stprintf(encoded, _T("%%%2x"), *tmp);
+            _stprintf(encoded, _T("%%%02x"), *tmp);
             encoded += 3;
         } else if (_T(' ') == *tmp) {
             *encoded++ = _T('+');
@@ -86,10 +86,10 @@ int tstr_skip(const tchar_t **strp, const tchar_t *expect)
 }
 
 /* Copy the string from <*strp> into <dst> until <stop> is found, and point
-    <*strp> at the end. Returns TRUE unless <dst_size> isn't big enough, in
-    which case <*strp> is still updated, but FALSE is returned and <dst> is
-    truncated. If <delim> is not found, <*strp> will point to the end of the
-    string and FALSE is returned. */
+    <*strp> at the end (after <stop>). Returns TRUE unless <dst_size> isn't
+    big enough, in which case <*strp> is still updated, but FALSE is returned
+    and <dst> is truncated. If <delim> is not found, <*strp> will point to
+    the end of the string and FALSE is returned. */
 int tstr_copy_skip_until(const tchar_t **strp, tchar_t *dst, size_t dst_size, tchar_t stop)
 {
     const tchar_t *start = *strp;
@@ -101,7 +101,7 @@ int tstr_copy_skip_until(const tchar_t **strp, tchar_t *dst, size_t dst_size, tc
         return FALSE;
     }
 
-    *strp = end;
+    *strp = end + 1;
     return tstr_copyn(dst, dst_size, start, end - start);
 }
 

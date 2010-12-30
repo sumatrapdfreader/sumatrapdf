@@ -40,7 +40,6 @@ extern "C"
   #define tstr_catn_s   wstr_catn_s
   #define tstr_cat      wstr_cat
   #define tstr_cat3     wstr_cat3
-  #define tstr_cat4     wstr_cat4
   #define tstr_contains wstr_contains
   #define tstr_printf   wstr_printf
   #define tstr_printf_s wstr_printf_s
@@ -73,7 +72,6 @@ extern "C"
   #define tstr_catn_s   str_catn_s
   #define tstr_cat      str_cat
   #define tstr_cat3     str_cat3
-  #define tstr_cat4     str_cat4
   #define tstr_contains str_contains
   #define tstr_printf   str_printf
   #define tstr_printf_s str_printf_s

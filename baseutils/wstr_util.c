@@ -14,64 +14,36 @@ WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t sr
 {
     WCHAR *dstEnd = dst + wstrlen(dst);
     size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
+    if (dst_cch_size <= (size_t)(dstEnd - dst))
+        return NULL;
     
     wcsncpy(dstEnd, src, len);
-    dstEnd[len - 1] = '\0';
+    dstEnd[len - 1] = L'\0';
     
-    if (src_cch_size > len)
+    if (src_cch_size >= len)
         return NULL;
     return dst;
 }
 
-WCHAR *wstr_cat4(const WCHAR *str1, const WCHAR *str2, const WCHAR *str3, const WCHAR *str4)
-{
-    WCHAR *str;
-    WCHAR *tmp;
-    size_t str1_len = 0;
-    size_t str2_len = 0;
-    size_t str3_len = 0;
-    size_t str4_len = 0;
-
-    if (str1)
-        str1_len = wstrlen(str1);
-    if (str2)
-        str2_len = wstrlen(str2);
-    if (str3)
-        str3_len = wstrlen(str3);
-    if (str4)
-        str4_len = wstrlen(str4);
-
-    str = (WCHAR*)zmalloc((str1_len + str2_len + str3_len + str4_len + 1)*sizeof(WCHAR));
-    if (!str)
-        return NULL;
-
-    tmp = str;
-    if (str1) {
-        memcpy(tmp, str1, str1_len*sizeof(WCHAR));
-        tmp += str1_len;
-    }
-    if (str2) {
-        memcpy(tmp, str2, str2_len*sizeof(WCHAR));
-        tmp += str2_len;
-    }
-    if (str3) {
-        memcpy(tmp, str3, str3_len*sizeof(WCHAR));
-        tmp += str3_len;
-    }
-    if (str4) {
-        memcpy(tmp, str4, str1_len*sizeof(WCHAR));
-    }
-    return str;
-}
-
+/* Concatenate 3 strings. Any string can be NULL.
+   Caller needs to free() memory. */
 WCHAR *wstr_cat3(const WCHAR *str1, const WCHAR *str2, const WCHAR *str3)
 {
-    return wstr_cat4(str1, str2, str3, NULL);
+    if (!str1)
+        str1 = L"";
+    if (!str2)
+        str2 = L"";
+    if (!str3)
+        str3 = L"";
+
+    return wstr_printf(L"%s%s%s", str1, str2, str3);
 }
 
+/* Concatenate 2 strings. Any string can be NULL.
+   Caller needs to free() memory. */
 WCHAR *wstr_cat(const WCHAR *str1, const WCHAR *str2)
 {
-    return wstr_cat4(str1, str2, NULL, NULL);
+    return wstr_cat3(str1, str2, NULL);
 }
 
 WCHAR *wstr_dupn(const WCHAR *str, size_t str_len_cch)
@@ -91,9 +63,9 @@ int wstr_copyn(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch
     size_t len = min(src_cch_size + 1, dst_cch_size);
     
     wcsncpy(dst, src, len);
-    dst[len - 1] = '\0';
+    dst[len - 1] = L'\0';
     
-    if (src_cch_size > dst_cch_size)
+    if (src_cch_size >= dst_cch_size)
         return FALSE;
     return TRUE;
 }
@@ -196,13 +168,6 @@ int wstr_empty(const WCHAR *str)
     if (0 == *str)
         return TRUE;
     return FALSE;
-}
-
-static void wchar_to_hex(WCHAR c, WCHAR* buffer)
-{
-    const WCHAR* numbers = L"0123456789ABCDEF";
-    buffer[0]=numbers[c / 16];
-    buffer[1]=numbers[c % 16];
 }
 
 int wstr_contains(const WCHAR *str, WCHAR c)

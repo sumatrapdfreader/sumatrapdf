@@ -14,11 +14,13 @@ char * str_catn_s(char *dst, size_t dst_cch_size, const char *src, size_t src_cc
 {
     char *dstEnd = dst + strlen(dst);
     size_t len = min(src_cch_size + 1, dst_cch_size - (dstEnd - dst));
+    if (dst_cch_size <= (size_t)(dstEnd - dst))
+        return NULL;
     
     strncpy(dstEnd, src, len);
     dstEnd[len - 1] = '\0';
     
-    if (src_cch_size > len)
+    if (src_cch_size >= len)
         return NULL;
     return dst;
 }
@@ -37,61 +39,25 @@ int char_is_dir_sep(char c)
     }
 }
 
-/* Concatenate 4 strings. Any string can be NULL.
-   Caller needs to free() memory. */
-char *str_cat4(const char *str1, const char *str2, const char *str3, const char *str4)
-{
-    char *str;
-    char *tmp;
-    size_t str1_len = 0;
-    size_t str2_len = 0;
-    size_t str3_len = 0;
-    size_t str4_len = 0;
-
-    if (str1)
-        str1_len = strlen(str1);
-    if (str2)
-        str2_len = strlen(str2);
-    if (str3)
-        str3_len = strlen(str3);
-    if (str4)
-        str4_len = strlen(str4);
-
-    str = (char*)zmalloc(str1_len + str2_len + str3_len + str4_len + 1);
-    if (!str)
-        return NULL;
-
-    tmp = str;
-    if (str1) {
-        memcpy(tmp, str1, str1_len);
-        tmp += str1_len;
-    }
-    if (str2) {
-        memcpy(tmp, str2, str2_len);
-        tmp += str2_len;
-    }
-    if (str3) {
-        memcpy(tmp, str3, str3_len);
-        tmp += str3_len;
-    }
-    if (str4) {
-        memcpy(tmp, str4, str1_len);
-    }
-    return str;
-}
-
 /* Concatenate 3 strings. Any string can be NULL.
    Caller needs to free() memory. */
 char *str_cat3(const char *str1, const char *str2, const char *str3)
 {
-    return str_cat4(str1, str2, str3, NULL);
+    if (!str1)
+        str1 = "";
+    if (!str2)
+        str2 = "";
+    if (!str3)
+        str3 = "";
+
+    return str_printf("%s%s%s", str1, str2, str3);
 }
 
 /* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
 char *str_cat(const char *str1, const char *str2)
 {
-    return str_cat4(str1, str2, NULL, NULL);
+    return str_cat3(str1, str2, NULL);
 }
 
 char *str_dupn(const char *str, size_t str_len_cch)
@@ -113,7 +79,7 @@ int str_copyn(char *dst, size_t dst_cch_size, const char *src, size_t src_cch_si
     strncpy(dst, src, len);
     dst[len - 1] = '\0';
     
-    if (src_cch_size > dst_cch_size)
+    if (src_cch_size >= dst_cch_size)
         return FALSE;
     return TRUE;
 }
@@ -386,56 +352,18 @@ void str_strip_ws_both(char *txt)
     str_strip_ws_right(txt);
 }
 
-#define  HEX_NUMBERS "0123456789ABCDEF"
-static void char_to_hex(unsigned char c, char* buffer)
-{
-    buffer[0] = HEX_NUMBERS[c / 16];
-    buffer[1] = HEX_NUMBERS[c % 16];
-}
-
-static int hex_char_to_num(char c)
-{
-    if ((c >= '0') && (c <= '9'))
-        return c - '0';
-    if ((c >= 'a') && (c <= 'f'))
-        return c - 'a' + 10;
-    if ((c >= 'A') && (c <= 'F'))
-        return c - 'A' + 10;
-    return -1;
-}
-
-int hex_str_decode_byte(const char **txt)
-{
-    const char *s;
-    int c1, c2;
-    if (!txt) 
-        return -1;
-    s = *txt;
-    c1 = hex_char_to_num(*s++);
-    if (-1 == c1)
-        return -1;
-    c2 = hex_char_to_num(*s++);
-    if (-1 == c2)
-        return -1;
-    *txt = s;
-    return (16 * c1) + c2;
-}
-
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 char *mem_to_hexstr(const unsigned char *buf, int len)
 {
     int i;
-    char *tmp;
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char *ret = (char*)malloc(len * 2 + 1);
+    char *ret = malloc(len * 2 + 1);
     if (!ret)
         return NULL;
-    tmp = ret;
     for (i = 0; i < len; i++) {
-        char_to_hex(*buf++, tmp);
-        tmp += 2;
+        sprintf(ret + 2 * i, "%02x", *buf++);
     }
-    *tmp = 0;
+    ret[2 * len] = '\0';
     return ret;
 }
 
@@ -495,14 +423,14 @@ char *multibyte_to_str(const char *src, UINT CodePage)
    Returns FALSE if size of <s> doesn't match <bufLen>. */
 BOOL hexstr_to_mem(const char *s, unsigned char *buf, int bufLen)
 {
-    int i, c;
-    for (i=0; i<bufLen; i++) {
-        c = hex_str_decode_byte(&s);
-        if (-1 == c)
+    for (; bufLen > 0; bufLen--) {
+        int c;
+        if (1 != sscanf(s, "%02x", &c))
             return FALSE;
+        s += 2;
         *buf++ = (unsigned char)c;
     }
-    return *s == 0;
+    return *s == '\0';
 }
 
 int str_contains(const char *str, char c)

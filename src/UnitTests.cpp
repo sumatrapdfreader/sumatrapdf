@@ -1,5 +1,6 @@
 #include "SumatraPDF.h"
-#include "str_util.h"
+#include "base_util.h"
+#include "tstr_util.h"
 #include "MemSegment.h"
 #include "geom_util.h"
 #include "ParseCommandLine.h"
@@ -14,12 +15,12 @@ static void hexstrTest()
     unsigned char buf[6] = {1, 2, 33, 255, 0, 18};
     unsigned char buf2[6] = {0};
     char *s = mem_to_hexstr(buf, sizeof(buf));
+    assert(str_eq(s, "010221ff0012"));
     BOOL ok = hexstr_to_mem(s, buf2, sizeof(buf2));
     assert(ok);
-    for (int i=0; i<sizeof(buf); i++) {
-        assert(buf[i] == buf2[i]);
-    }
+    assert(memcmp(buf, buf2, sizeof(buf)) == 0);
     free(s);
+
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
     s = FileTimeToStr(&ft1);
@@ -134,6 +135,79 @@ static void ParseCommandLineTest()
     }
 }
 
+static void tstr_test()
+{
+    tchar_t buf[32];
+    tchar_t *str = _T("a string");
+    assert(tstr_len(str) == 8);
+    assert(tstr_eq(str, _T("a string")) && tstr_eq(str, str));
+    assert(!tstr_eq(str, NULL) && !tstr_eq(str, _T("A String")));
+    assert(tstr_ieq(str, _T("A String")) && tstr_ieq(str, str));
+    assert(!tstr_ieq(str, NULL) && tstr_ieq(NULL, NULL));
+    assert(tstr_startswith(str, _T("a s")) && tstr_startswithi(str, _T("A Str")));
+    assert(!tstr_startswith(str, _T("Astr")));
+    assert(tstr_endswith(str, _T("ing")) && tstr_endswithi(str, _T("ING")));
+    assert(!tstr_endswith(str, _T("ung")));
+    assert(tstr_empty(NULL) && tstr_empty(_T("")) && !tstr_empty(str));
+    assert(tstr_contains(str, _T('s')) && !tstr_contains(str, _T('S')));
+    int res = tstr_copyn(buf, dimof(buf), str, 4);
+    assert(res && tstr_eq(buf, _T("a st")));
+    res = tstr_copyn(buf, 4, str, 4);
+    assert(!res && tstr_eq(buf, _T("a s")));
+    res = tstr_printf_s(buf, 4, _T("%s"), str);
+    assert(tstr_eq(buf, _T("a s")) && res < 0);
+    res = tstr_printf_s(buf, dimof(buf), _T("%s!!"), str);
+    assert(tstr_startswith(buf, str) && tstr_endswith(buf, _T("!!")) && res == 10);
+    tstr_copy(buf, dimof(buf), str);
+    assert(tstr_eq(buf, str));
+
+    str = tstr_dup(buf);
+    assert(tstr_eq(str, buf));
+    free(str);
+    str = tstr_dupn(buf, 4);
+    assert(tstr_eq(str, _T("a st")));
+    free(str);
+    str = tstr_printf(_T("%s"), buf);
+    assert(tstr_eq(str, buf));
+    free(str);
+    str = tstr_cat(buf, buf);
+    assert(tstr_len(str) == 2 * tstr_len(buf));
+    free(str);
+    str = tstr_cat3(_T("ab"), NULL, _T("ef"));
+    assert(tstr_eq(str, _T("abef")));
+    free(str);
+
+    tstr_copy(buf, 6, _T("abc"));
+    str = tstr_cat_s(buf, 6, _T("def"));
+    assert(tstr_eq(buf, _T("abcde")) && !str);
+    str = tstr_cat_s(buf, 6, _T("ghi"));
+    assert(tstr_eq(buf, _T("abcde")) && !str);
+    str = tstr_cat_s(buf, dimof(buf), _T("jkl"));
+    assert(buf == str && tstr_eq(buf, _T("abcdejkl")));
+    str = tstr_catn_s(buf, dimof(buf), _T("mno"), 2);
+    assert(buf == str && tstr_eq(buf, _T("abcdejklmn")));
+
+    tstr_copy(buf, dimof(buf), _T("abc\1efg\1"));
+    tstr_trans_chars(buf, _T("ace"), _T("ACE"));
+    assert(tstr_eq(buf, _T("AbC\1Efg\1")));
+    tstr_trans_chars(buf, _T("\1"), _T("\0"));
+    assert(tstr_eq(buf, _T("AbC")) && tstr_eq(buf + 4, _T("Efg")));
+
+    tchar_t *url = tstr_url_encode(_T("key=value&key2=more data! (even \"\xFCmlauts\")'\b"));
+    assert(tstr_eq(url, _T("key%3dvalue%26key2%3dmore+data!+(even+%22%fcmlauts%22)'%08")));
+    free(url);
+
+    const tchar_t *pos = _T("[Open(\"filename.pdf\",0,1,0)]");
+    assert(tstr_skip(&pos, _T("[Open(\"")));
+    assert(tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
+    assert(tstr_eq(buf, _T("filename.pdf")));
+    assert(!tstr_skip(&pos, _T("0,1")));
+    assert(tstr_eq(pos, _T(",0,1,0)]")));
+    *buf = _T('\0');
+    assert(!tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
+    assert(!*pos && !*buf);
+}
+
 void u_DoAllTests(void)
 {
     DBG_OUT("Running tests\n");
@@ -141,5 +215,6 @@ void u_DoAllTests(void)
     MemSegmentTest();
     hexstrTest();
     ParseCommandLineTest();
+    tstr_test();
 }
 #endif

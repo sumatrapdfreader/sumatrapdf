@@ -775,10 +775,10 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             if ( (pos = curCommand) &&
                 tstr_skip(&pos, _T("[") DDECOMMAND_SYNC _T("(\"")) &&
                 tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                (tstr_skip(&pos, _T("\",\"")) || tstr_skip(&pos, _T("\", \""))) &&
+                (tstr_skip(&pos, _T(",\"")) || tstr_skip(&pos, _T(", \""))) &&
                 tstr_copy_skip_until(&pos, srcfile, dimof(srcfile), '"') &&
-                (4 == _stscanf(pos, _T("\",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus)
-                || 2 == _stscanf(pos, _T("\",%u,%u)]"), &line, &col))
+                (4 == _stscanf(pos, _T(",%u,%u,%u,%u)]"), &line, &col, &newwindow, &setfocus)
+                || 2 == _stscanf(pos, _T(",%u,%u)]"), &line, &col))
                 )
             {
                 // Execute the command.
@@ -812,7 +812,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             else if ( (pos = curCommand) &&
                 tstr_skip(&pos, _T("[") DDECOMMAND_OPEN _T("(\"")) &&
                 tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), '"') &&
-                (3 == _stscanf(pos, _T("\",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || tstr_skip(&pos, _T("\")")))
+                (3 == _stscanf(pos, _T(",%u,%u,%u)]"), &newwindow, &setfocus, &forcerefresh) || tstr_skip(&pos, _T(")")))
                 )
             {
                 // check if the PDF is already opened
@@ -840,7 +840,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             else if ( (pos = curCommand) &&
                 tstr_skip(&pos, _T("[") DDECOMMAND_GOTO _T("(\"")) &&
                 tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-                (tstr_skip(&pos, _T("\",\"")) || tstr_skip(&pos, _T("\", \""))) &&
+                (tstr_skip(&pos, _T(",\"")) || tstr_skip(&pos, _T(", \""))) &&
                 tstr_copy_skip_until(&pos, destname, dimof(destname), _T('"'))
                 )
             {
@@ -863,7 +863,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
             else if ( (pos = curCommand) &&
                 tstr_skip(&pos, _T("[") DDECOMMAND_PAGE _T("(\"")) &&
                 tstr_copy_skip_until(&pos, pdffile, dimof(pdffile), _T('"')) &&
-                1 == _stscanf(pos, _T("\",%u)]"), &page)
+                1 == _stscanf(pos, _T(",%u)]"), &page)
                 )
             {
                // check if the PDF is already opened
@@ -883,7 +883,6 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
             // next command
             tstr_copy_skip_until(&pos, dump, dimof(dump), ']');
-            tstr_skip(&pos, _T("]"));
             curCommand = pos;
         }
         free(pwCommand);

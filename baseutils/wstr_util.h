@@ -31,7 +31,6 @@ WCHAR * wstr_cat_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src);
 WCHAR * wstr_catn_s(WCHAR *dst, size_t dst_cch_size, const WCHAR *src, size_t src_cch_size);
 WCHAR * wstr_cat(const WCHAR *str1, const WCHAR *str2);
 WCHAR * wstr_cat3(const WCHAR *str1, const WCHAR *str2, const WCHAR *str3);
-WCHAR * wstr_cat4(const WCHAR *str1, const WCHAR *str2, const WCHAR *str3, const WCHAR *str4);
 int     wstr_contains(const WCHAR *str, WCHAR c);
 WCHAR * wstr_printf(const WCHAR *format, ...);
 int     wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...);
