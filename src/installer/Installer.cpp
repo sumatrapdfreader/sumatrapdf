@@ -878,13 +878,14 @@ void UnregisterFromBeingDefaultViewer()
     UnregisterExplorerFileExts();
 }
 
-bool HasOtherDefaultViewer()
+/* Caller needs to free() the result. */
+TCHAR *GetDefaultPdfViewer()
 {
     TCHAR buf[MAX_PATH];
     bool ok = ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL, buf, dimof(buf));
-    if (ok && !tstr_eq(buf, TAPP))
-        return true;
-    return false;
+    if (!ok)
+        return NULL;
+    return tstr_dup(buf);
 }
 
 // Note: doesn't recurse, but it's good enough for us
@@ -1121,6 +1122,10 @@ Error:
 
 void OnButtonInstall()
 {
+    InstallerThreadData *td = SA(InstallerThreadData);
+    td->hwndToNotify = gHwndFrame;
+    td->registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
+
     // disable the install button and remove checkbox during installation
     DestroyWindow(gHwndCheckboxRegisterDefault);
     gHwndCheckboxRegisterDefault = NULL;
@@ -1130,9 +1135,6 @@ void OnButtonInstall()
     gMsgColor = COLOR_MSG_INSTALLATION;
     InvalidateFrame();
 
-    InstallerThreadData *td = SA(InstallerThreadData);
-    td->hwndToNotify = gHwndFrame;
-    td->registerAsDefault = GetCheckboxState(gHwndCheckboxRegisterDefault);
     td->hThread = CreateThread(NULL, 0, InstallerThread, td, 0, 0);
 }
 
@@ -1598,8 +1600,13 @@ void OnCreateInstaller(HWND hwnd)
     SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
     // only check the "Use as default" checkbox when no other PDF viewer
     // is currently selected (not going to intrude)
-    BOOL checkDefaultRegister = !HasOtherDefaultViewer();
-    SetCheckboxState(gHwndCheckboxRegisterDefault, checkDefaultRegister);
+    TCHAR *defaultViewer = GetDefaultPdfViewer();
+    BOOL hasOtherViewer = defaultViewer && !tstr_eq(defaultViewer, TAPP);
+    SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer);
+    // disable the checkbox, if we're already the default PDF viewer
+    if (defaultViewer && !hasOtherViewer)
+        EnableWindow(gHwndCheckboxRegisterDefault, FALSE);
+    free(defaultViewer);
 
     SetFocus(gHwndButtonInstall);
 }
