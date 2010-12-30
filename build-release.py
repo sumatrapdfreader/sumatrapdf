@@ -13,6 +13,7 @@
 #
 #   * file sumatrapdf/sumpdf-latest.txt must be manually updated
 
+import bz2
 import os
 import os.path
 import re
@@ -22,7 +23,6 @@ import sys
 import struct
 import time
 import zlib
-import bz2
 
 def test_for_flag(args, arg):
   try:
