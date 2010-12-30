@@ -92,14 +92,17 @@ int tstr_skip(const tchar_t **strp, const tchar_t *expect)
     string and FALSE is returned. */
 int tstr_copy_skip_until(const tchar_t **strp, tchar_t *dst, size_t dst_size, tchar_t stop)
 {
-    tchar_t *end = tstr_find_char(*strp, stop);
+    const tchar_t *start = *strp;
+    tchar_t *end = tstr_find_char(start, stop);
+
     if (!end) {
         size_t len = tstr_len(*strp);
         *strp += len;
         return FALSE;
     }
 
-    return tstr_copyn(dst, dst_size, *strp, end - *strp);
+    *strp = end;
+    return tstr_copyn(dst, dst_size, start, end - start);
 }
 
 /* Given a pointer to a string in '*txt', skip past whitespace in the string
