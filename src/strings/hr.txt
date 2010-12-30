@@ -257,11 +257,20 @@ Namjesti po širini
 Found text at page %d
 Tekst je pronađen na %d. stranici
 
+GB
+GiB
+
 Go to page
 Idi na stranicu
 
 Hint: Use the F3 key for finding again
 Pomoć: upotrijebite tipku F3 za ponovnu pretragu
+
+KB
+KiB
+
+MB
+MiB
 
 Main PDF reader can't be changed in portable mode
 Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu

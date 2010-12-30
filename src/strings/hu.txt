@@ -307,11 +307,20 @@ Teljes oldalankénti nézet
 Found text at page %d
 Találat a(z) %d. oldalon
 
+GB
+Gb
+
 Go to page
 Ugrás adott oldalra
 
 Hint: Use the F3 key for finding again
 Tipp: Nyomja meg az F3-at a következő találathoz
+
+KB
+Kb
+
+MB
+Mb
 
 Main PDF reader can't be changed in portable mode
 Nem tehető alapértelmezett PDF-olvasóvá hordozható módban

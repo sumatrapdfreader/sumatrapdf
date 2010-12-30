@@ -297,11 +297,20 @@ Visas puslapio plotis
 Found text at page %d
 Ieškoti teksto %d puslapyje
 
+GB
+GB
+
 Go to page
 Eiti į puslapį
 
 Hint: Use the F3 key for finding again
 Patarimas: ieškodami kito atitikmens naudokite klavišą F3
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Naudojant portatyvią programą negalima pakeisti numatytosios PDF skaityklės

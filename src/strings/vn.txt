@@ -306,11 +306,20 @@ Vừa một trang đơn
 Found text at page %d
 Tìm thấy từ ở trang %d
 
+GB
+GB
+
 Go to page
 Nhảy đến trang
 
 Hint: Use the F3 key for finding again
 Gợi ý: Nhấn phím F3 để tìm lại
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Không thay đổi được trình đọc PDF chính ở chế độ di động

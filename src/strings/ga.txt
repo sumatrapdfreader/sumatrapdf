@@ -132,8 +132,17 @@ Oiriúnaigh don Lch
 Fit Width
 Oiriúnaigh don Leithead
 
+GB
+GB
+
 Go to page
 Téigh chuig lch
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe agat?

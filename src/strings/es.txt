@@ -302,11 +302,20 @@ Ancho de Página
 Found text at page %d
 Se encontró el texto en la página %d
 
+GB
+GB
+
 Go to page
 Ir a la página
 
 Hint: Use the F3 key for finding again
 Usar "F3" para mostrar el siguiente resultado
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 No se puede cambiar el lector PDF por defecto en modo portátil

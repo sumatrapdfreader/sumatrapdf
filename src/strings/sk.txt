@@ -250,11 +250,20 @@ Na šírku obrazovky
 Found text at page %d
 Text bol nájdený na strane %d
 
+GB
+GB
+
 Go to page
 Ísť na stranu
 
 Hint: Use the F3 key for finding again
 Rada: Použite klávesu F3 pre ďalšie hľadanie
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Hlavný prehliadač PDF dokumentov nemôže byť zmenený, pokiaľ nie je nainštalovaný

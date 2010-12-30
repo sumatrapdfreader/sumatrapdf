@@ -252,11 +252,20 @@ Ajusta a l'amplada
 Found text at page %d
 S'ha trobat el text a la pagina %d
 
+GB
+GB
+
 Go to page
 Vés a la pàgina
 
 Hint: Use the F3 key for finding again
 Suggeriment: Feu servir la tecla F3 per tornar a cercar
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 No es pot canviar el lector de PDF per defecte en mode portable.

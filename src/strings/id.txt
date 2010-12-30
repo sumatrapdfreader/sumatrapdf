@@ -259,11 +259,20 @@ Sesuaikan dengan Lebar
 Found text at page %d
 Teks ditemukan pada halaman %d
 
+GB
+GB
+
 Go to page
 Pergi ke halaman
 
 Hint: Use the F3 key for finding again
 Tips : Gunakan tombol F3 untuk mengulangi pencarian
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Pembaca PDF utama tidak dapat diubah dalam mode portabel

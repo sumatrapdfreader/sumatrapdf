@@ -303,11 +303,20 @@ Anpassa efter bredd
 Found text at page %d
 Hittade text på sidan %d
 
+GB
+GB
+
 Go to page
 Gå till sida
 
 Hint: Use the F3 key for finding again
 Tips: Tryck F3 för att söka vidare
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 SumatraPDF kan ej göras förvald i portabelt läge

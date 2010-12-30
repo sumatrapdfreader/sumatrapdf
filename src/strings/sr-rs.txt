@@ -219,11 +219,20 @@ Fit Width
 Found text at page %d
 Текст је пронађен на страни %d
 
+GB
+GB
+
 Go to page
 Иди на страну
 
 Hint: Use the F3 key for finding again
 Савет: Користите тастер F3 за наставак претраге
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Главни PDF читач не може бити промењен у преносивном мôду

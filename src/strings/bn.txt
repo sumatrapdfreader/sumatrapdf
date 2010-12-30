@@ -135,8 +135,17 @@ Fit Page
 Fit Width
 প্রস্থ অনুরূপ
 
+GB
+GB
+
 Go to page
 এর পৃষ্ঠায় চলুন
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?

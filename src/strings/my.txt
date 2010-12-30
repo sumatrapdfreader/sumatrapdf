@@ -222,8 +222,17 @@ Muatkan mukasurat
 Fit Width
 Muatkan lebar
 
+GB
+GB
+
 Go to page
 Pergi ke mukasurat
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih

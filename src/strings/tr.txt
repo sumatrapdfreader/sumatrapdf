@@ -110,6 +110,15 @@ Sayfaya sığdır
 Fit Width
 Genişliğe sığdır
 
+GB
+GB
+
+KB
+KB
+
+MB
+MB
+
 Make SumatraPDF my main PDF reader
 &Varsayılan PDF okuyucusu yap
 

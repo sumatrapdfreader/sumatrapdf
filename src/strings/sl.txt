@@ -301,11 +301,20 @@ Prilagodi po širini
 Found text at page %d
 Besedilo najdeno na strani %d
 
+GB
+GB
+
 Go to page
 Pojdi na stran
 
 Hint: Use the F3 key for finding again
 Namig: Uporabite tipko F3 za ponovno iskanje
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu

@@ -134,8 +134,17 @@ Páxina enteira
 Fit Width
 Axustar ao ancho
 
+GB
+GB
+
 Go to page
 Ir a páxina
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 Facer o SumatraPDF a aplicación por defecto para arquivos PDF?

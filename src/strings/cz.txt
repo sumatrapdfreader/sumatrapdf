@@ -293,11 +293,20 @@ Podle šířky
 Found text at page %d
 Položka nalezena na stránce %d
 
+GB
+GB
+
 Go to page
 Přejít na stránku
 
 Hint: Use the F3 key for finding again
 Nápověda: Klávesou F3 vyhledáte další výskyt
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 V přenosném režimu nelze měnit výchozí PDF prohlížeč

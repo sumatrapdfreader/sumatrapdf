@@ -305,11 +305,20 @@ Passend in breedte
 Found text at page %d
 Tekst gevonden op pagina %d
 
+GB
+GB
+
 Go to page
 Ga naar pagina
 
 Hint: Use the F3 key for finding again
 Tip: Gebruik de funtietoets F3 om verder te zoeken
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Standaard PDF-lezer kan niet worden aangepast in portable modus

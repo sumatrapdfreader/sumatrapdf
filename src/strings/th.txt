@@ -122,8 +122,17 @@ Fit Page
 Fit Width
 พอดีความกว้าง
 
+GB
+GB
+
 Go to page
 ไปที่หน้า
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF

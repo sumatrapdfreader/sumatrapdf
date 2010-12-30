@@ -252,11 +252,20 @@ Ipagkasya ang Lapad
 Found text at page %d
 Nakita ang salita sa pahina %d
 
+GB
+GB
+
 Go to page
 Pumunta sa Pahina
 
 Hint: Use the F3 key for finding again
 Payo: Pindutin ang F3 para maghanap muli
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?

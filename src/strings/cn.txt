@@ -299,11 +299,20 @@ Fit Width
 Found text at page %d
 在第%d页找到文本
 
+GB
+GB
+
 Go to page
 转到页面
 
 Hint: Use the F3 key for finding again
 提示：按F3键再次查找
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 便携模式不能改变默认 PDF 阅读器

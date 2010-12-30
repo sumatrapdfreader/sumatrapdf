@@ -131,8 +131,17 @@ Kwanisa Peji
 Fit Width
 Kwanisa hupamhu
 
+GB
+GB
+
 Go to page
 Enda kupeji
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF my main PDF reader
 Ita SumatraPDF igovhura maPDF ese

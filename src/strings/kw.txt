@@ -232,11 +232,20 @@ Desedha Les
 Found text at page %d
 Tekst kevys war folen %d
 
+GB
+GB
+
 Go to page
 Mos dhe folen
 
 Hint: Use the F3 key for finding again
 Hynt: Devnydhya alhwedhen F3 rag daskavos
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Ny yll an pennredyer PDF bos chanjyes yn modh porthadow

@@ -110,6 +110,15 @@ Pagină întreagă
 Fit Width
 Lăţime pagină
 
+GB
+GB
+
+KB
+KB
+
+MB
+MB
+
 Make SumatraPDF my main PDF reader
 Fă SumatraPDF un cititor implicit de PDF
 

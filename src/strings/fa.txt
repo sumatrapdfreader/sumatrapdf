@@ -259,11 +259,20 @@ Fit Width
 Found text at page %d
 پیدا شد %d متن در صفحه
 
+GB
+GB
+
 Go to page
 برو به صفحه
 
 Hint: Use the F3 key for finding again
 استفاده کنید F3 اشاره: برای جستجو مجدد از کلید
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 باشد PDF نسخه همراه برنامه نمی‌تواند مجری استاندارد فایلهای

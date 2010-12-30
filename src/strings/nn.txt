@@ -131,8 +131,17 @@ Tilpass side
 Fit Width
 Tilpass breidde
 
+GB
+GB
+
 Go to page
 Gå til side
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 Gjere SumatraPDF til standardprogram for PDF-filer?

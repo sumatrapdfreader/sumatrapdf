@@ -107,6 +107,15 @@ Fit Page
 Fit Width
 അകലം പൊരുത്തപ്പെടുത്തുക
 
+GB
+GB
+
+KB
+KB
+
+MB
+MB
+
 Make SumatraPDF my main PDF reader
 സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
 

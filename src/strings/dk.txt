@@ -301,11 +301,20 @@ Tilpas bredde
 Found text at page %d
 Fandt tekst på side %d
 
+GB
+GB
+
 Go to page
 Gå til side
 
 Hint: Use the F3 key for finding again
 Vink: Brug F3 knappen for at finde igen
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Standard PDF-læser kan ikke ændres i mobil tilstand

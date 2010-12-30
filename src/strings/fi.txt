@@ -258,11 +258,20 @@ Sovita sivu vaakasuunnassa
 Found text at page %d
 Tekstiä löytyi sivulta %d
 
+GB
+Gt
+
 Go to page
 Siirry sivulle
 
 Hint: Use the F3 key for finding again
 Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
+
+KB
+Kt
+
+MB
+Mt
 
 Main PDF reader can't be changed in portable mode
 Pää-PDF-lukijaa ei voida muuttaa kannettavassa tilassa

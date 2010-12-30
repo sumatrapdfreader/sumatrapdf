@@ -255,11 +255,20 @@ Fit Width
 Found text at page %d
 வாசகத்தை %d பக்கத்தில் கண்டுபிடிக்கப்பட்டுள்ளது
 
+GB
+GB
+
 Go to page
 பக்கததிர்க்கு செல்
 
 Hint: Use the F3 key for finding again
 சிறுகுரிப்பு: F3 தட்டை¨Â மருமுறை தேட பயண் படுத்து
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை

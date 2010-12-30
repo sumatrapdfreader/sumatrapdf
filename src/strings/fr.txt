@@ -310,11 +310,20 @@ Page unique
 Found text at page %d
 Texte trouvé à la page %d
 
+GB
+Go
+
 Go to page
 Aller à la page
 
 Hint: Use the F3 key for finding again
 Remarque : utilisez la touche F3 pour trouver de nouveau
+
+KB
+Ko
+
+MB
+Mo
 
 Main PDF reader can't be changed in portable mode
 Le lecteur de PDF ne peut être changé en mode portable

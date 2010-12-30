@@ -198,8 +198,17 @@ Fit Width
 Found text at page %d
 Тэкст знойдзены на стар. %d
 
+GB
+GB
+
 Go to page
 Перайсці на старонку
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 У мабільным рэжыме змяніць PDF-в'юер нельга

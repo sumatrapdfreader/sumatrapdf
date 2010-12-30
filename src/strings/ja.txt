@@ -305,11 +305,20 @@ Fit a Single Page
 Found text at page %d
 ページ %d でテキストが見つかりました
 
+GB
+GB
+
 Go to page
 ページへ移動
 
 Hint: Use the F3 key for finding again
 ヒント: 再び検索するには F3 キーを使用します
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 メイン PDF リーダーはポータブル モードでは変更できません

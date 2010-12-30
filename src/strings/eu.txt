@@ -236,8 +236,17 @@ Orriaren zabalera egokitu
 Found text at page %d
 Textua aurkito %d orrian
 
+GB
+GB
+
 Go to page
 ...garren orrira joan
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 PDF fitxategiak irakurtzeko SumatraPFD defektuzko aplikazioa izatea nahi al duzu?

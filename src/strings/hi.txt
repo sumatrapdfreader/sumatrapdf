@@ -132,8 +132,17 @@ Fit Page
 Fit Width
 चौड़ाई के अनुसार
 
+GB
+GB
+
 Go to page
 पृष्ठ संख्या पर जाए(&G)
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 सभी PDF फाईलें SumatraPDF में खोलें ?

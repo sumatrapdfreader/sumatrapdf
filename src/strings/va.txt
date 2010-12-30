@@ -131,8 +131,17 @@ Ajustar Pàgina
 Fit Width
 Amplària de la Pàgina
 
+GB
+GB
+
 Go to page
 Anar a la pàgina
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 ¿Convertir SumatraPDF en l'aplicació per defecte per archius PDF?

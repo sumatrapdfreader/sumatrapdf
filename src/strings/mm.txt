@@ -131,8 +131,17 @@ Fit Page
 Fit Width
 အလျားနှင့်အမြင့် အပြည့်
 
+GB
+GB
+
 Go to page
 သွားရန် စာမျက်နှာ
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။

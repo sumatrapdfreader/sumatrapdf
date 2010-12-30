@@ -134,8 +134,17 @@ Pas Blad In
 Fit Width
 Pas In Breedte
 
+GB
+GB
+
 Go to page
 Gaan Na Bladsy
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 Maak Sumatra Die Automatiese Program Vir PDF Lêers?

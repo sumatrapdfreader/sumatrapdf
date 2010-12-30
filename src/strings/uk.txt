@@ -131,8 +131,17 @@ Fit Page
 Fit Width
 Припасувати до ширини
 
+GB
+GB
+
 Go to page
 Перейти на сторінку
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 Зробити SumatraPDF типовою програмою для PDF-файлів?

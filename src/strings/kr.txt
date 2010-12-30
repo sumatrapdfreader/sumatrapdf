@@ -277,11 +277,20 @@ Fit Width
 Found text at page %d
 %d 페이지에서 찾았습니다
 
+GB
+GB
+
 Go to page
 페이지로 가기
 
 Hint: Use the F3 key for finding again
 계속 찾으려면 F3을 누르십시오
+
+KB
+KB
+
+MB
+MB
 
 Make SumatraPDF default application for PDF files?
 SumatraPDF를 기본 PDF 뷰어로 설정할까요?

@@ -299,11 +299,20 @@ Ajustar pela largura
 Found text at page %d
 Texto encontrado na página %d
 
+GB
+GB
+
 Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
 Dica: tecle F3 para achar a próxima ocorrência
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Não é possível alterar o leitor PDF padrão no modo portátil

@@ -307,11 +307,20 @@ Ajustar a uma página
 Found text at page %d
 Texto encontrado na página %d
 
+GB
+GB
+
 Go to page
 Ir para a página
 
 Hint: Use the F3 key for finding again
 Dica: utilize F3 para procurar a seguinte
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 No modo portátil, não é possível alterar o leitor de PDFs

@@ -255,11 +255,20 @@ Dopasuj do szerokości
 Found text at page %d
 Znaleziono tekst na stronie %d
 
+GB
+GB
+
 Go to page
 Idź do strony
 
 Hint: Use the F3 key for finding again
 Wskazówka: Użyj klawisza F3, aby wyszukać ponownie
+
+KB
+KB
+
+MB
+MB
 
 Main PDF reader can't be changed in portable mode
 Główny czytnik PDF nie może zostać zmieniony na tryb przenośny

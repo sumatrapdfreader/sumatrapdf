@@ -305,11 +305,20 @@ Fit a Single Page
 Found text at page %d
 Տեքստը գտնվել է %d էջում
 
+GB
+ԳԲ
+
 Go to page
 Անցնել էջին
 
 Hint: Use the F3 key for finding again
 Փնտրումը կրկնելու համար օգտագործեք F3 կոճակը
+
+KB
+ԿԲ
+
+MB
+ՄԲ
 
 Main PDF reader can't be changed in portable mode
 Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
