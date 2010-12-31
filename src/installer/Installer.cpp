@@ -45,11 +45,11 @@ using namespace Gdiplus;
 #define UNINSTALLER_WIN_DX  420
 #define UNINSTALLER_WIN_DY  320
 
-#define ID_BUTTON_INSTALL             1
-#define ID_BUTTON_UNINSTALL           2
-#define ID_CHECKBOX_MAKE_DEFAULT      3
-#define ID_BUTTON_START_SUMATRA       4
-#define ID_BUTTON_EXIT                5
+#define ID_BUTTON_INSTALL             11
+#define ID_BUTTON_UNINSTALL           12
+#define ID_CHECKBOX_MAKE_DEFAULT      13
+#define ID_BUTTON_START_SUMATRA       14
+#define ID_BUTTON_EXIT                15
 
 #define WM_APP_INSTALLATION_FINISHED        (WM_APP + 1)
 
@@ -283,14 +283,12 @@ TCHAR *GetInstallationDir()
 
 TCHAR *GetUninstallerPath()
 {
-    TCHAR *installDir = GetInstallationDir();
-    return tstr_cat(installDir, _T("\\") _T("uninstall.exe"));
+    return tstr_cat(GetInstallationDir(), _T("\\") _T("uninstall.exe"));
 }
 
 TCHAR *GetInstalledExePath()
 {
-    TCHAR *installDir = GetInstallationDir();
-    return tstr_cat(installDir, _T("\\") EXENAME);
+    return tstr_cat(GetInstallationDir(), _T("\\") EXENAME);
 }
 
 TCHAR *GetStartMenuProgramsPath()
@@ -456,6 +454,10 @@ ReadNextPart:
         goto ReadNextPart;
     }
 
+    if (str_empty(part->type)) {
+        goto Error;
+    }
+
     TCHAR *ttype = utf8_to_tstr(part->type);
     msg = tstr_printf(_T("Unknown part: %s"), ttype);
     NotifyFailed(msg);
@@ -611,9 +613,9 @@ BOOL ExtractPartFile(TCHAR *dir, EmbeddedPart *p)
     if (!OpenFileForWriting(dstPath, &hDst))
         goto Error;
 
-    if (str_ieq(INSTALLER_PART_FILE, p->type))
+    if (str_eqn(p->type, INSTALLER_PART_FILE, 4))
         ok = CopyFileData(hSrc, hDst, p->fileSize);
-    else if (str_ieq(INSTALLER_PART_FILE_ZLIB, p->type))
+    else if (str_eqn(p->type, INSTALLER_PART_FILE_ZLIB, 4))
         ok = CopyFileDataZipped(hSrc, hDst, p->fileSize);
 
 Error:
@@ -628,8 +630,8 @@ BOOL InstallCopyFiles(EmbeddedPart *root)
     EmbeddedPart *p = root;
     while (p) {
         EmbeddedPart *next = p->next;
-        if (str_ieq(INSTALLER_PART_FILE, p->type) ||
-            str_ieq(INSTALLER_PART_FILE_ZLIB, p->type)) {
+        if (str_eqn(p->type, INSTALLER_PART_FILE, 4) ||
+            str_eqn(p->type, INSTALLER_PART_FILE_ZLIB, 4)) {
             if (!ExtractPartFile(installDir, p))
                 return FALSE;
         }
@@ -643,7 +645,7 @@ DWORD GetInstallerTemplateSize(EmbeddedPart *parts)
     EmbeddedPart *p = parts;
     while (p) {
         EmbeddedPart *next = p->next;
-        if (str_ieq(INSTALLER_PART_END, p->type))
+        if (str_eqn(p->type, INSTALLER_PART_END, 4))
             return p->fileSize;
         p = next;
     }
@@ -695,7 +697,7 @@ BOOL IsUninstaller()
     EmbeddedPart *p = GetEmbeddedPartsInfo();
     while (p) {
         EmbeddedPart *next = p->next;
-        if (str_ieq(p->type, INSTALLER_PART_UNINSTALLER))
+        if (str_eqn(p->type, INSTALLER_PART_UNINSTALLER, 4))
             return TRUE;
         p = next;
     }
@@ -712,15 +714,13 @@ BOOL IsUninstaller()
 void ProcessMessageLoop(HWND hwnd)
 {
     MSG msg;
-    BOOL hasMsg;
-    for (;;) {
-        hasMsg = PeekMessage(&msg, hwnd,  0, 0, PM_REMOVE);
-        if (!hasMsg)
-            return;
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+    while (PeekMessage(&msg, hwnd,  0, 0, PM_REMOVE)) {
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
-} 
+}
 
 static HFONT CreateDefaultGuiFont()
 {
@@ -1025,13 +1025,11 @@ void CreateButtonExit(HWND hwndParent)
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
     gHwndButtonExit = CreateWindow(WC_BUTTON, _T("Close"),
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_EXIT,
                         ghinst, NULL);
     SetFont(gHwndButtonExit, gFontDefault);
-
-    SendMessage(gHwndButtonExit, WM_SETFOCUS, 0, 0);
 }
 
 void CreateButtonRunSumatra(HWND hwndParent)
@@ -1047,13 +1045,11 @@ void CreateButtonRunSumatra(HWND hwndParent)
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
     gHwndButtonRunSumatra= CreateWindow(WC_BUTTON, _T("Start ") TAPP,
-                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwndParent, 
                         (HMENU)ID_BUTTON_START_SUMATRA,
                         ghinst, NULL);
     SetFont(gHwndButtonRunSumatra, gFontDefault);
-
-    SendMessage(gHwndButtonRunSumatra, WM_SETFOCUS, 0, 0);
 }
 
 void OnButtonStartSumatra()
@@ -1184,6 +1180,11 @@ void OnButtonUninstall()
     gMsg = TAPP _T(" has been uninstalled.");
     gMsgColor = COLOR_MSG_OK;
     InvalidateFrame();
+}
+
+void OnButtonExit()
+{
+    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
 // This display is inspired by http://letteringjs.com/
@@ -1476,30 +1477,6 @@ void OnMouseMove(HWND hwnd, int x, int y)
     // nothing so far
 }
 
-void OnChar(HWND hwnd, int key)
-{
-    if (VK_TAB == key) {
-        // TODO: this always returns gHwndFrame - why?
-        HWND focus = GetFocus();
-        if (gHwndButtonInstall && focus != gHwndButtonInstall)
-            SetFocus(gHwndButtonInstall);
-        else if (gHwndCheckboxRegisterDefault && focus != gHwndCheckboxRegisterDefault)
-            SetFocus(gHwndCheckboxRegisterDefault);
-        else if (gHwndButtonRunSumatra && focus != gHwndButtonRunSumatra)
-            SetFocus(gHwndButtonRunSumatra);
-        else if (gHwndButtonExit && focus != gHwndButtonExit)
-            SetFocus(gHwndButtonExit);
-        else if (gHwndButtonUninstall && focus != gHwndButtonUninstall)
-            SetFocus(gHwndButtonUninstall);
-    } else if (VK_ESCAPE == key) {
-        if (gHwndButtonExit || gHwndButtonRunSumatra ||
-            gHwndButtonInstall && IsWindowEnabled(gHwndButtonInstall) ||
-            gHwndButtonUninstall && IsWindowEnabled(gHwndButtonUninstall)) {
-            SendMessage(hwnd, WM_CLOSE, 0, 0);
-        }
-    }
-}
-
 void OnCreateUninstaller(HWND hwnd)
 {
     RECT    r;
@@ -1513,7 +1490,7 @@ void OnCreateUninstaller(HWND hwnd)
     // TODO: determine the sizes of buttons by measuring their real size
     // and adjust size of the window appropriately
     gHwndButtonUninstall = CreateWindow(WC_BUTTON, _T("Uninstall ") TAPP,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd,
                         (HMENU)ID_BUTTON_UNINSTALL, ghinst, NULL);
     SetFont(gHwndButtonUninstall, gFontDefault);
@@ -1545,12 +1522,20 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
             wmId = LOWORD(wParam);
             switch (wmId)
             {
+                case IDOK:
+                    if (gHwndButtonUninstall)
+                        OnButtonUninstall();
+                    else if (gHwndButtonExit)
+                        OnButtonExit();
+                    break;
+
                 case ID_BUTTON_UNINSTALL:
                     OnButtonUninstall();
                     break;
 
                 case ID_BUTTON_EXIT:
-                    SendMessage(hwnd, WM_CLOSE, 0, 0);
+                case IDCANCEL:
+                    OnButtonExit();
                     break;
 
                 default:
@@ -1561,14 +1546,6 @@ static LRESULT CALLBACK UninstallerWndProcFrame(HWND hwnd, UINT message, WPARAM 
         case WM_MOUSEMOVE:
             x = GET_X_LPARAM(lParam); y = GET_Y_LPARAM(lParam);
             OnMouseMove(hwnd, x, y);
-            break;
-
-        case WM_CHAR:
-            OnChar(hwnd, wParam);
-            break;
-
-        case WM_SETFOCUS:
-            OnChar(hwnd, VK_TAB);
             break;
     }
 
@@ -1588,20 +1565,20 @@ void OnCreateInstaller(HWND hwnd)
     x = RectDx(&r) - buttonDx - 8;
     y = RectDy(&r) - buttonDy - 8;
     gHwndButtonInstall = CreateWindow(WC_BUTTON, _T("Install ") TAPP,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE,
+                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         x, y, buttonDx, buttonDy, hwnd, 
                         (HMENU)ID_BUTTON_INSTALL, ghinst, NULL);
     SetFont(gHwndButtonInstall, gFontDefault);
 
     gHwndCheckboxRegisterDefault = CreateWindow(
-        WC_BUTTON, _T("Use as default PDF Reader"),
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        WC_BUTTON, _T("Use as &default PDF Reader"),
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
         8, y, 160, 22, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
     SetFont(gHwndCheckboxRegisterDefault, gFontDefault);
     // only check the "Use as default" checkbox when no other PDF viewer
     // is currently selected (not going to intrude)
     TCHAR *defaultViewer = GetDefaultPdfViewer();
-    BOOL hasOtherViewer = defaultViewer && !tstr_eq(defaultViewer, TAPP);
+    BOOL hasOtherViewer = defaultViewer && !tstr_ieq(defaultViewer, TAPP);
     SetCheckboxState(gHwndCheckboxRegisterDefault, !hasOtherViewer);
     // disable the checkbox, if we're already the default PDF viewer
     if (defaultViewer && !hasOtherViewer)
@@ -1637,6 +1614,15 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             wmId = LOWORD(wParam);
             switch (wmId)
             {
+                case IDOK:
+                    if (gHwndButtonInstall)
+                        OnButtonInstall();
+                    else if (gHwndButtonRunSumatra)
+                        OnButtonStartSumatra();
+                    else if (gHwndButtonExit)
+                        OnButtonExit();
+                    break;
+
                 case ID_BUTTON_INSTALL:
                     OnButtonInstall();
                     break;
@@ -1646,7 +1632,8 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
                     break;
 
                 case ID_BUTTON_EXIT:
-                    SendMessage(hwnd, WM_CLOSE, 0, 0);
+                case IDCANCEL:
+                    OnButtonExit();
                     break;
 
                 default:
@@ -1659,18 +1646,14 @@ static LRESULT CALLBACK InstallerWndProcFrame(HWND hwnd, UINT message, WPARAM wP
             OnMouseMove(hwnd, x, y);
             break;
 
-        case WM_CHAR:
-            OnChar(hwnd, wParam);
-            break;
-
-        case WM_SETFOCUS:
-            OnChar(hwnd, VK_TAB);
-            break;
-
         case WM_APP_INSTALLATION_FINISHED:
             {
                 InstallerThreadData *td = (InstallerThreadData*)wParam;
                 OnInstallationFinished(td);
+                if (gHwndButtonRunSumatra)
+                    SetFocus(gHwndButtonRunSumatra);
+                else if (gHwndButtonExit)
+                    SetFocus(gHwndButtonExit);
             }
             break;
 
@@ -1829,9 +1812,10 @@ int RunApp()
             if (msg.message == WM_QUIT) {
                 return msg.wParam;
             }
-
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            if (!IsDialogMessage(gHwndFrame, &msg)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
     }
 }
