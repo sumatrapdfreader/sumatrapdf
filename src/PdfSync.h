@@ -13,9 +13,6 @@
 #include "tstr_util.h"
 #include "file_util.h"
 #include "vstrlist.h"
-#ifdef SYNCTEX_FEATURE
-#include "synctex_parser.h"
-#endif
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE                            10 
@@ -180,38 +177,6 @@ protected:
     PTSTR dir;            // directory where the syncfile lies
 };
 
-#ifdef SYNCTEX_FEATURE
-
-#define SYNCTEX_EXTENSION       _T(".synctex")
-#define SYNCTEXGZ_EXTENSION     _T(".synctex.gz")
-
-// Synchronizer based on .synctex file generated with SyncTex
-class SyncTex : public Synchronizer
-{
-public:
-    SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
-    {
-        assert(tstr_endswithi(_syncfilename, SYNCTEX_EXTENSION) ||
-               tstr_endswithi(_syncfilename, SYNCTEXGZ_EXTENSION));
-        
-        this->scanner = NULL;
-        this->coordsys = TopLeft;
-    }
-    virtual ~SyncTex()
-    {
-        synctex_scanner_free(scanner);
-    }
-    void discard_index() { Synchronizer::discard_index();}
-    bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
-
-    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
-    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects);
-    int rebuild_index();
-
-private:
-    synctex_scanner_t scanner;
-};
-#endif
 
 
 

@@ -2,7 +2,8 @@
 #define _PDF_SELECTION_H
 
 #include "PdfEngine.h"
-#include "vstrlist.h"
+
+class VStrList;
 
 typedef struct {
     int len;

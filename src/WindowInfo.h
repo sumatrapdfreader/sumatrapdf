@@ -7,8 +7,9 @@
 #include <shlobj.h>
 #include "DisplayModel.h"
 #include "FileWatch.h"
-#include "PdfSync.h"
 #include "vstrlist.h"
+
+class Synchronizer;
 
 /* Current state of a window:
   - WS_ERROR_LOADING_PDF - showing an error message after failing to open a PDF

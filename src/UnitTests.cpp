@@ -206,6 +206,15 @@ static void tstr_test()
     *buf = _T('\0');
     assert(!tstr_copy_skip_until(&pos, buf, dimof(buf), '"'));
     assert(!*pos && !*buf);
+
+#define TEST_STRING "a'ü 1€"
+    char *strA = tstr_to_ansi(_T(TEST_STRING));
+    assert(str_eq(strA, TEST_STRING));
+    str = ansi_to_tstr(strA);
+    free(strA);
+    assert(tstr_eq(str, _T(TEST_STRING)));
+    free(str);
+#undef TEST_STRING
 }
 
 void u_DoAllTests(void)

@@ -200,4 +200,12 @@ protected:
     fz_glyphcache * _drawcache;
 };
 
+static inline TCHAR *pdf_to_tstr(fz_obj *obj)
+{
+    WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
+    TCHAR *tstr = wstr_to_tstr(ucs2);
+    fz_free(ucs2);
+    return tstr;
+}
+
 #endif

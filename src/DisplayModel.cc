@@ -45,7 +45,10 @@
 
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "Resource.h"
 #include "vstrlist.h"
+#include "win_util.h"
+#include "file_util.h"
 
 #ifndef DEBUG
 #define PREDICTIVE_RENDER 1
@@ -1336,20 +1339,18 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
 
     switch (link ? link->kind : -1) {
         case PDF_LURI:
-            path = utf8_to_tstr(fz_tostrbuf(link->dest));
+            path = pdf_to_tstr(link->dest);
             break;
         case PDF_LLAUNCH:
             obj = fz_dictgets(link->dest, "Type");
-            if (!fz_isname(obj) || strcmp(fz_toname(obj), "Filespec") != 0)
+            if (!fz_isname(obj) || !str_eq(fz_toname(obj), "Filespec"))
                 break;
             obj = fz_dictgets(link->dest, "UF"); 
             if (!fz_isstring(obj))
                 obj = fz_dictgets(link->dest, "F"); 
 
             if (fz_isstring(obj)) {
-                WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
-                path = wstr_to_tstr(ucs2);
-                free(ucs2);
+                path = pdf_to_tstr(obj);
                 tstr_trans_chars(path, _T("/"), _T("\\"));
             }
             break;
@@ -1357,12 +1358,10 @@ TCHAR *DisplayModel::getLinkPath(pdf_link *link)
             obj = fz_dictgets(link->dest, "S");
             if (!fz_isname(obj))
                 break;
-            if (!strcmp(fz_toname(obj), "GoToR")) {
+            if (str_eq(fz_toname(obj), "GoToR")) {
                 obj = fz_dictgets(link->dest, "F");
                 if (fz_isstring(obj)) {
-                    WCHAR *ucs2 = (WCHAR *)pdf_toucs2(obj);
-                    path = wstr_to_tstr(ucs2);
-                    free(ucs2);
+                    path = pdf_to_tstr(obj);
                     tstr_trans_chars(path, _T("/"), _T("\\"));
                 }
             }
@@ -1418,27 +1417,27 @@ void DisplayModel::goToTocLink(pdf_link* link)
     }
     else if (PDF_LNAMED == link->kind) {
         char *name = fz_toname(link->dest);
-        if (!strcmp(name, "NextPage"))
+        if (str_eq(name, "NextPage"))
             goToNextPage(0);
-        else if (!strcmp(name, "PrevPage"))
+        else if (str_eq(name, "PrevPage"))
             goToPrevPage(0);
-        else if (!strcmp(name, "FirstPage"))
+        else if (str_eq(name, "FirstPage"))
             goToFirstPage();
-        else if (!strcmp(name, "LastPage"))
+        else if (str_eq(name, "LastPage"))
             goToLastPage();
         // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-        else if (!strcmp(name, "FullScreen"))
+        else if (str_eq(name, "FullScreen"))
             PostMessage(((WindowInfo *)appData())->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-        else if (!strcmp(name, "GoBack"))
+        else if (str_eq(name, "GoBack"))
             navigate(-1);
-        else if (!strcmp(name, "GoForward"))
+        else if (str_eq(name, "GoForward"))
             navigate(1);
-        else if (!strcmp(name, "Print"))
+        else if (str_eq(name, "Print"))
             PostMessage(((WindowInfo *)appData())->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
     }
     else if (PDF_LACTION == link->kind) {
         char *type = fz_toname(fz_dictgets(link->dest, "S"));
-        if (type && !strcmp(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
+        if (type && str_eq(type, "GoToR") && fz_dictgets(link->dest, "D") && (path = getLinkPath(link))) {
             /* for safety, only handle relative PDF paths and only open them in SumatraPDF */
             if (!tstr_startswith(path, _T("\\")) && tstr_endswithi(path, _T(".pdf"))) {
                 TCHAR *basePath = FilePath_GetDir(fileName());
@@ -1462,7 +1461,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
     if (pageNo > 0) {
         double scrollY = 0, scrollX = -1;
         fz_obj *obj = fz_arrayget(dest, 1);
-        if (fz_isname(obj) && !strcmp(fz_toname(obj), "XYZ")) {
+        if (fz_isname(obj) && str_eq(fz_toname(obj), "XYZ")) {
             scrollX = fz_toint(fz_arrayget(dest, 2));
             scrollY = fz_toint(fz_arrayget(dest, 3));
             cvtUserToScreen(pageNo, &scrollX, &scrollY);

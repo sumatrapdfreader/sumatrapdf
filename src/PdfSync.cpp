@@ -3,9 +3,43 @@
 // License: GPLv2
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "Resource.h"
 #include "PdfSync.h"
 #include <shlwapi.h>
-#include <sys/stat.h>
+
+#ifdef SYNCTEX_FEATURE
+#include "synctex_parser.h"
+
+#define SYNCTEX_EXTENSION       _T(".synctex")
+#define SYNCTEXGZ_EXTENSION     _T(".synctex.gz")
+
+// Synchronizer based on .synctex file generated with SyncTex
+class SyncTex : public Synchronizer
+{
+public:
+    SyncTex(LPCTSTR _syncfilename) : Synchronizer(_syncfilename)
+    {
+        assert(tstr_endswithi(_syncfilename, SYNCTEX_EXTENSION) ||
+               tstr_endswithi(_syncfilename, SYNCTEXGZ_EXTENSION));
+        
+        this->scanner = NULL;
+        this->coordsys = TopLeft;
+    }
+    virtual ~SyncTex()
+    {
+        synctex_scanner_free(scanner);
+    }
+    void discard_index() { Synchronizer::discard_index();}
+    bool is_index_discarded() { return Synchronizer::is_index_discarded(); }
+
+    UINT pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT cchFilepath, UINT *line, UINT *col);
+    UINT source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page, vector<RectI> &rects);
+    int rebuild_index();
+
+private:
+    synctex_scanner_t scanner;
+};
+#endif
 
 // convert a coordinate from the sync file into a PDF coordinate
 #define SYNCCOORDINATE_TO_PDFCOORDINATE(c)          (c/65781.76)
@@ -415,7 +449,7 @@ UINT Pdfsync::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
 
     // get the file name from the record section
     PSTR srcFilenameA = this->srcfiles[record_sections[sec].srcfile].filename;
-    PTSTR srcFilename = multibyte_to_tstr(srcFilenameA, CP_ACP);
+    PTSTR srcFilename = ansi_to_tstr(srcFilenameA);
 
     // Convert the source filepath to an absolute path
     if (PathIsRelative(srcFilename))
@@ -463,7 +497,7 @@ UINT Pdfsync::source_to_record(FILE *fp, LPCTSTR srcfilename, UINT line, UINT co
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    char *mb_srcfilename = tstr_to_multibyte(srcfilename, CP_ACP);
+    char *mb_srcfilename = tstr_to_ansi(srcfilename);
     if (!mb_srcfilename)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -607,7 +641,7 @@ int SyncTex::rebuild_index() {
     if (this->scanner)
         synctex_scanner_free(this->scanner);
 
-    char *mb_syncfname = tstr_to_multibyte(this->syncfilepath, CP_ACP);
+    char *mb_syncfname = tstr_to_ansi(this->syncfilepath);
     if (mb_syncfname==NULL)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -631,7 +665,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
             *line = synctex_node_line(node);
             *col = synctex_node_column(node);
             const char *name = synctex_scanner_get_name(this->scanner,synctex_node_tag(node));
-            TCHAR *srcfilename = multibyte_to_tstr(name, CP_ACP);
+            TCHAR *srcfilename = ansi_to_tstr(name);
             if (srcfilename==NULL)
                 return PDFSYNCERR_OUTOFMEMORY;
 
@@ -670,7 +704,7 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
     else
         tstr_copy(srcfilepath, dimof(srcfilepath), srcfilename);
 
-    char *mb_srcfilepath = tstr_to_multibyte(srcfilepath, CP_ACP);
+    char *mb_srcfilepath = tstr_to_ansi(srcfilepath);
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner,mb_srcfilepath,line,col);
@@ -757,7 +791,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         }
         else {
             DBG_OUT("The client window is ANSI!\n");
-            pwCommand = multibyte_to_tstr((LPCSTR)command, CP_ACP);
+            pwCommand = ansi_to_tstr((LPCSTR)command);
         }
 
         // Parse the command
@@ -769,7 +803,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         const TCHAR *pos, *curCommand;
         
         curCommand = pos = pwCommand;
-        while (pos < (curCommand + lstrlen(curCommand))) {
+        while (*pos) {
             // Synchronization command.
             // format is [<DDECOMMAND_SYNC>("<pdffile>","<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
             if ( (pos = curCommand) &&

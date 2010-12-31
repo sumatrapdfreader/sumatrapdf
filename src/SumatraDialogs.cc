@@ -5,6 +5,7 @@
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
 #include "WindowInfo.h"
+#include "Resource.h"
 
 #include "win_util.h"
 #include "dialogsizer.h"

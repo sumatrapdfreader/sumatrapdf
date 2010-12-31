@@ -229,9 +229,8 @@ int wstr_printf_s(WCHAR *out, size_t out_cch_size, const WCHAR *format, ...)
 /* Caller needs to free() the result */
 char *wstr_to_multibyte(const WCHAR *txt,  UINT CodePage)
 {
-    char *res;
     int requiredBufSize = WideCharToMultiByte(CodePage, 0, txt, -1, NULL, 0, NULL, NULL);
-    res = (char*)malloc(requiredBufSize);
+    char *res = malloc(requiredBufSize);
     if (!res)
         return NULL;
     WideCharToMultiByte(CodePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
@@ -247,9 +246,8 @@ char *wstr_to_utf8(const WCHAR *txt)
 /* Caller needs to free() the result */
 WCHAR *multibyte_to_wstr(const char *src, UINT CodePage)
 {
-    WCHAR *res;
     int requiredBufSize = MultiByteToWideChar(CodePage, 0, src, -1, NULL, 0);
-    res = (WCHAR*)malloc(requiredBufSize * sizeof(WCHAR));
+    WCHAR *res = malloc(requiredBufSize * sizeof(WCHAR));
     if (!res)
         return NULL;
     MultiByteToWideChar(CodePage, 0, src, -1, res, requiredBufSize);

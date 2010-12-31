@@ -174,7 +174,7 @@ pdf_outline *pdf_loadattachments(pdf_xref *xref)
         fz_obj *type = fz_dictgets(dest, "Type");
 
         node->title = strdup(fz_toname(name));
-        if (fz_isname(type) && !strcmp(fz_toname(type), "Filespec")) {
+        if (fz_isname(type) && str_eq(fz_toname(type), "Filespec")) {
             node->link = (pdf_link *)zmalloc(sizeof(pdf_link));
             node->link->kind = PDF_LLAUNCH;
             node->link->dest = fz_keepobj(dest);
@@ -356,7 +356,7 @@ OpenEmbeddedFile:
             }
 
             char *pwd_utf8 = tstr_to_utf8(pwd);
-            char *pwd_ansi = tstr_to_multibyte(pwd, CP_ACP);
+            char *pwd_ansi = tstr_to_ansi(pwd);
             if (pwd_utf8)
                 okay = !!pdf_authenticatepassword(_xref, pwd_utf8);
             // for some documents, only the ANSI-encoded password works
@@ -816,8 +816,9 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         fz_rect bbox;
 
         // look for words starting with "http://", "https://" or "www."
-        if (('h' != *start || _tcsncmp(start, _T("http://"), 7) != 0 && _tcsncmp(start, _T("https://"), 8) != 0) &&
-            ('w' != *start || _tcsncmp(start, _T("www."), 4) != 0) ||
+        if (('h' != *start || !tstr_startswith(start, _T("http://")) &&
+                              !tstr_startswith(start, _T("https://"))) &&
+            ('w' != *start || !tstr_startswith(start, _T("www."))) ||
             (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
             continue;
 

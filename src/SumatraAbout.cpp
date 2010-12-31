@@ -7,6 +7,8 @@
 #include "translations.h"
 #include "Version.h"
 #include "AppPrefs.h"
+#include "win_util.h"
+#include "WinUtil.hpp"
 
 #define ABOUT_LINE_OUTER_SIZE       2
 #define ABOUT_LINE_SEP_SIZE         1

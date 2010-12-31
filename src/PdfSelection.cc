@@ -1,4 +1,5 @@
 #include "PdfSelection.h"
+#include "vstrlist.h"
 
 PdfSelection::PdfSelection(PdfEngine *engine) : engine(engine)
 {

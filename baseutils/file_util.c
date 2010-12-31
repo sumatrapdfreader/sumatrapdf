@@ -100,7 +100,7 @@ TCHAR *FilePath_Normalize(const TCHAR *f, BOOL bLowerCase)
 //         -1 if an error occured
 int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
 {
-    LPWSTR nl, nr;
+    LPTSTR nl, nr;
     int ret;
 
     nl = FilePath_Normalize(lhs, TRUE);

@@ -387,11 +387,10 @@ void FileHistory_Add(FileHistoryList **fileHistoryRoot, DisplayState *state)
     // TODO: add a check if a file exists, to filter out deleted files
     // but only if a file is on a non-network drive (because
     // accessing network drives can be slow and unnecessarily spin
-    // the drives. Also, the filePath is utf8, so convert to unicode
-    // first.
+    // the drives).
 #if 0
     if (!file_exists(state->filePath)) {
-        DBG_OUT_T(_T("FileHistory_Add() file '%s' doesn't exist anymore\n"), state->filePath);
+        DBG_OUT_T("FileHistory_Add() file '%s' doesn't exist anymore\n", state->filePath);
         return;
     }
 #endif

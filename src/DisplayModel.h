@@ -5,7 +5,6 @@
 
 #include "PdfEngine.h"
 #include "DisplayState.h"
-#include "PdfSelection.h"
 #include "PdfSearch.h"
 
 #ifndef USER_DEFAULT_SCREEN_DPI

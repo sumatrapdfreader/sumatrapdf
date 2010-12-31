@@ -86,6 +86,8 @@ extern "C"
 
 #define   utf8_to_tstr(src) multibyte_to_tstr((src), CP_UTF8)
 #define   tstr_to_utf8(src) tstr_to_multibyte((src), CP_UTF8)
+#define   ansi_to_tstr(src) multibyte_to_tstr((src), CP_ACP)
+#define   tstr_to_ansi(src) tstr_to_multibyte((src), CP_ACP)
 
 int       tstr_trans_chars(tchar_t *str, const tchar_t *oldChars, const tchar_t *newChars);
 tchar_t * tstr_url_encode(const tchar_t *str);

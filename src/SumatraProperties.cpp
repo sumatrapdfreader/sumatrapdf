@@ -6,6 +6,8 @@
 #include "SumatraProperties.h"
 #include "AppPrefs.h"
 #include "translations.h"
+#include "win_util.h"
+#include "WinUtil.hpp"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
 #define PROPERTIES_RECT_PADDING     8
@@ -33,12 +35,9 @@ static uint64_t WinFileSizeGet(const TCHAR *file_path)
 
 // Note: returns NULL instead of an empty string
 static TCHAR *PdfToString(fz_obj *obj) {
-    WCHAR *s = (WCHAR *)pdf_toucs2(obj);
-    TCHAR *str = NULL;
-    if (!wstr_empty(s))
-        str = wstr_to_tstr(s);
-    fz_free(s);
-    return str;
+    if (fz_tostrlen(obj) == 0)
+        return NULL;
+    return pdf_to_tstr(obj);
 }
 
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm

@@ -6,6 +6,8 @@
 
 #include "WindowInfo.h"
 #include "RenderCache.h"
+#include "PdfSync.h"
+#include "Resource.h"
 
 #include "AppPrefs.h"
 #include "SumatraDialogs.h"
@@ -13,6 +15,7 @@
 #include "SumatraAbout.h"
 #include "FileHistory.h"
 
+#include "win_util.h"
 #include "WinUtil.hpp"
 #include "Http.h"
 #include "CrashHandler.h"
@@ -2451,7 +2454,7 @@ static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
         goto Exit;
     }
 
-    TCHAR *verTxt = multibyte_to_tstr(txt, CP_ACP);
+    TCHAR *verTxt = ansi_to_tstr(txt);
     /* reduce the string to a single line (resp. drop the newline) */
     tstr_trans_chars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) > 0) {

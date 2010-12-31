@@ -72,7 +72,7 @@ protected:
 
     void SetLang(TCHAR *s) {
         free(lang);
-        lang = tstr_to_multibyte(s, CP_ACP);
+        lang = tstr_to_ansi(s);
     }
     
     void SetDestName(TCHAR *s) {

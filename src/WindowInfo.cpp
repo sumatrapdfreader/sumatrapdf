@@ -1,8 +1,9 @@
 #include "WindowInfo.h"
+#include "PdfSync.h"
 #include "Resource.h"
-#include "win_util.h"
 #include "file_util.h"
 #include "tstr_util.h"
+#include "WinUtil.hpp"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), state(WS_ABOUT), hwndFrame(hwnd),

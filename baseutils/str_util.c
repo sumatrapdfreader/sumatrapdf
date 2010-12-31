@@ -387,16 +387,16 @@ static char *multibyte_to_multibyte(const char *src, UINT CodePage1, UINT CodePa
     WCHAR *tmp;
     int requiredBufSize = MultiByteToWideChar(CodePage1, 0, src, -1, NULL, 0);
     tmp = malloc(requiredBufSize * sizeof(WCHAR));
-    if (!tmp) goto Error_OOM;
+    if (!tmp)
+        return NULL;
     MultiByteToWideChar(CodePage1, 0, src, -1, tmp, requiredBufSize);
 
     requiredBufSize = WideCharToMultiByte(CodePage2, 0, tmp, -1, NULL, 0, NULL, NULL);
     res = malloc(requiredBufSize);
-    if (!res) goto Error_OOM;
-    WideCharToMultiByte(CodePage2, 0, tmp, -1, res, requiredBufSize, NULL, NULL);
+    if (res)
+        WideCharToMultiByte(CodePage2, 0, tmp, -1, res, requiredBufSize, NULL, NULL);
     free(tmp);
 
-Error_OOM:
     return res;
 }
 
