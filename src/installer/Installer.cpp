@@ -26,7 +26,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "tstr_util.h"
 #include "win_util.h"
 #include "WinUtil.hpp"
-#include "../Version.h"
+#include "Version.h"
 
 using namespace Gdiplus;
 

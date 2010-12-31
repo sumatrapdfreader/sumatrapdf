@@ -55,7 +55,7 @@ CC = cl.exe
 
 CFLAGS = $(CFLAGS) /nologo /c
 # standard windows defines
-CFLAGS = $(CFLAGS) /D "WIN32"  /D "_WIN32"
+CFLAGS = $(CFLAGS) /D "WIN32" /D "_WIN32"
 # suppress warning C4996: 'function': was declared deprecated
 CFLAGS = $(CFLAGS) /wd4996
 
@@ -150,24 +150,24 @@ JPEG_OBJS = \
 	$(O)\jdmerge.obj $(O)\jmemnobs.obj # should I use jmemansi.obj or jmemname.obj ?
 !else
 JPEG_TURBO_OBJS = \
-  $(O)\jsimdcpu.obj $(O)\jccolmmx.obj $(O)\jdcolmmx.obj $(O)\jcsammmx.obj \
-  $(O)\jdsammmx.obj $(O)\jdmermmx.obj $(O)\jcqntmmx.obj $(O)\jfmmxfst.obj $(O)\jfmmxint.obj \
-  $(O)\jimmxred.obj $(O)\jimmxint.obj $(O)\jimmxfst.obj $(O)\jcqnt3dn.obj $(O)\jf3dnflt.obj \
-  $(O)\ji3dnflt.obj $(O)\jcqntsse.obj $(O)\jfsseflt.obj $(O)\jisseflt.obj $(O)\jccolss2.obj \
-  $(O)\jdcolss2.obj $(O)\jcsamss2.obj $(O)\jdsamss2.obj $(O)\jdmerss2.obj $(O)\jcqnts2i.obj \
-  $(O)\jfss2fst.obj $(O)\jfss2int.obj $(O)\jiss2red.obj $(O)\jiss2int.obj $(O)\jiss2fst.obj \
-  $(O)\jcqnts2f.obj $(O)\jiss2flt.obj \
-  $(O)\jsimd_i386.obj $(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jccoefct.obj $(O)\jccolor.obj \
-  $(O)\jcdctmgr.obj $(O)\jchuff.obj $(O)\jcinit.obj $(O)\jcmainct.obj $(O)\jcmarker.obj \
-  $(O)\jcmaster.obj $(O)\jcomapi.obj $(O)\jcparam.obj \
-  $(O)\jcprepct.obj $(O)\jcsample.obj $(O)\jctrans.obj $(O)\jdapimin.obj $(O)\jdapistd.obj \
-  $(O)\jdatadst.obj $(O)\jdatasrc.obj $(O)\jdcoefct.obj $(O)\jdcolor.obj $(O)\jddctmgr.obj \
-  $(O)\jdhuff.obj $(O)\jdinput.obj $(O)\jdmainct.obj $(O)\jdmarker.obj $(O)\jdmaster.obj \
-  $(O)\jdmerge.obj $(O)\jdpostct.obj $(O)\jdsample.obj $(O)\jdtrans.obj $(O)\jerror.obj \
-  $(O)\jfdctflt.obj $(O)\jfdctint.obj $(O)\jidctflt.obj $(O)\jidctfst.obj $(O)\jidctint.obj \
-  $(O)\jquant1.obj $(O)\jquant2.obj $(O)\jutils.obj $(O)\jmemmgr.obj $(O)\jmemnobs.obj \
-  $(O)\jaricom.obj $(O)\jcarith.obj $(O)\jdarith.obj $(O)\jfdctfst.obj \
-  $(O)\jidctred.obj $(O)\jdphuff.obj $(O)\jcphuff.obj
+	$(O)\jsimdcpu.obj $(O)\jccolmmx.obj $(O)\jdcolmmx.obj $(O)\jcsammmx.obj \
+	$(O)\jdsammmx.obj $(O)\jdmermmx.obj $(O)\jcqntmmx.obj $(O)\jfmmxfst.obj $(O)\jfmmxint.obj \
+	$(O)\jimmxred.obj $(O)\jimmxint.obj $(O)\jimmxfst.obj $(O)\jcqnt3dn.obj $(O)\jf3dnflt.obj \
+	$(O)\ji3dnflt.obj $(O)\jcqntsse.obj $(O)\jfsseflt.obj $(O)\jisseflt.obj $(O)\jccolss2.obj \
+	$(O)\jdcolss2.obj $(O)\jcsamss2.obj $(O)\jdsamss2.obj $(O)\jdmerss2.obj $(O)\jcqnts2i.obj \
+	$(O)\jfss2fst.obj $(O)\jfss2int.obj $(O)\jiss2red.obj $(O)\jiss2int.obj $(O)\jiss2fst.obj \
+	$(O)\jcqnts2f.obj $(O)\jiss2flt.obj \
+	$(O)\jsimd_i386.obj $(O)\jcapimin.obj $(O)\jcapistd.obj $(O)\jccoefct.obj $(O)\jccolor.obj \
+	$(O)\jcdctmgr.obj $(O)\jchuff.obj $(O)\jcinit.obj $(O)\jcmainct.obj $(O)\jcmarker.obj \
+	$(O)\jcmaster.obj $(O)\jcomapi.obj $(O)\jcparam.obj \
+	$(O)\jcprepct.obj $(O)\jcsample.obj $(O)\jctrans.obj $(O)\jdapimin.obj $(O)\jdapistd.obj \
+	$(O)\jdatadst.obj $(O)\jdatasrc.obj $(O)\jdcoefct.obj $(O)\jdcolor.obj $(O)\jddctmgr.obj \
+	$(O)\jdhuff.obj $(O)\jdinput.obj $(O)\jdmainct.obj $(O)\jdmarker.obj $(O)\jdmaster.obj \
+	$(O)\jdmerge.obj $(O)\jdpostct.obj $(O)\jdsample.obj $(O)\jdtrans.obj $(O)\jerror.obj \
+	$(O)\jfdctflt.obj $(O)\jfdctint.obj $(O)\jidctflt.obj $(O)\jidctfst.obj $(O)\jidctint.obj \
+	$(O)\jquant1.obj $(O)\jquant2.obj $(O)\jutils.obj $(O)\jmemmgr.obj $(O)\jmemnobs.obj \
+	$(O)\jaricom.obj $(O)\jcarith.obj $(O)\jdarith.obj $(O)\jfdctfst.obj \
+	$(O)\jidctred.obj $(O)\jdphuff.obj $(O)\jcphuff.obj
 
 #TODO: do I need those? They show up in mac compilation log but don't seem to be necessary
 !endif
@@ -275,7 +275,7 @@ PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
 PDFEXTRACT_PDB = $(O)\pdfextract.pdb
 
-CMAPDUMP_OBJS =  $(O)\cmapdump.obj
+CMAPDUMP_OBJS = $(O)\cmapdump.obj
 CMAPDUMP_APP = $(O)\cmapdump.exe
 
 FONTDUMP_OBJS = $(O)\fontdump.obj
@@ -533,130 +533,130 @@ $(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
 
 # freetype directories
 {$(FREETYPE_DIR)\builds\win32}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\builds\unix}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\autofit}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\base}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\bdf}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\cache}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\cff}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\cid}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\gxvalid}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\gzip}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\lzw}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\otvalid}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\pcf}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\pfr}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\psaux}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\pshinter}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\psnames}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\raster}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\sfnt}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\smooth}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\truetype}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\type1}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\type42}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\winfonts}.c{$(O)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # zlib directories
 {$(ZLIB_DIR)}.c{$(O)}.obj::
-	$(CC) $(ZLIB_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(ZLIB_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 !if "$(JPEG_TURBO_OBJS)"==""
 # libjpeg directories
 {$(JPEG_DIR)}.c{$(O)}.obj::
-	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(JPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 !else
 # jpeg-turbo directories
 {$(JPEG_TURBO_DIR)}.c{$(O)}.obj::
-	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(JPEG_TURBO_DIR)\simd}.c{$(O)}.obj::
-	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(JPEG_TURBO_DIR)\simd}.asm{$(O)}.obj:
-  $(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
+	$(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
 !endif
 
 # openjpeg directories
 {$(OPENJPEG_DIR)}.c{$(O)}.obj::
-	$(CC) $(OPENJPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(OPENJPEG_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # jbig2 directories
 {$(JBIG2_DIR)}.c{$(O)}.obj::
-	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(JBIG2_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # mupdf directories
 {$(MUPDF_DIR)\apps}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\mupdf}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\draw}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\fitz}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\fitz}.cpp{$(O)}.obj::
-	$(CC) $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\fonts}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\cmaps}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # files generated during build process (fonts and cmaps)
 {$(O)}.c{$(O)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb  $<
+	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(MUPDF_DIR)\fitz\fitz.h
 $(MUPDF_OBJS): $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\mupdf\mupdf.h
