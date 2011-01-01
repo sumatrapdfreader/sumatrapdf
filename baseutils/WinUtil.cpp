@@ -214,16 +214,6 @@ bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWOR
     return ERROR_SUCCESS == res;
 }
 
-void DynSetProcessDPIAware()
-{
-    typedef BOOL (WINAPI *procSetProcessDPIAware)(VOID);
-    WinLibrary lib(_T("user32.dll"));
-    procSetProcessDPIAware SetProcessDPIAware;
-    SetProcessDPIAware = (procSetProcessDPIAware)lib.GetProcAddr("SetProcessDPIAware");
-    if (SetProcessDPIAware)
-        SetProcessDPIAware();
-}
-
 #define PROCESS_EXECUTE_FLAGS 0x22
 
 /*

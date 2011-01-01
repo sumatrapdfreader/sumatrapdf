@@ -27,6 +27,10 @@ MUPDF_DIR=mupdf
 EXTLIBSDIR=ext
 !endif
 
+!if "$(MT)"==""
+MT=mt.exe
+!endif
+
 SUMATRA_APP = $(O)\SumatraPDF.exe
 INSTALLER_APP = $(O)\Installer.exe
 
@@ -129,14 +133,14 @@ $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
 	$(LD) $(LDFLAGS) /MANIFESTFILE:$(SUMATRA_LINKER_MANIFEST) $** $(LIBS) /PDB:$*.pdb /OUT:$@ 
-	mt -manifest $(SUMATRA_LINKER_MANIFEST) src\SumatraPDF.exe.manifest -outputresource:$(SUMATRA_APP);#1
+	$(MT) -manifest $(SUMATRA_LINKER_MANIFEST) src\SumatraPDF.exe.manifest -outputresource:$(SUMATRA_APP);#1
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$(INSTALLER_RES) $(EXTCFLAGS) src\installer\Installer.rc
 
 $(INSTALLER_APP): $(ZLIB_OBJS) $(BASEUTILS_OBJS) $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) /MANIFESTFILE:$(INSTALLER_LINKER_MANIFEST) $** $(LIBS_INSTALLER) /PDB:$*.pdb /OUT:$@
-	mt -manifest $(INSTALLER_LINKER_MANIFEST) src\installer\Installer.exe.manifest -outputresource:$(INSTALLER_APP);#1
+	$(MT) -manifest $(INSTALLER_LINKER_MANIFEST) src\installer\Installer.exe.manifest -outputresource:$(INSTALLER_APP);#1
 
 # baseutils directory
 {baseutils}.c{$(O)}.obj::

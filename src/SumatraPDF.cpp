@@ -6989,7 +6989,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     EnableNx();
 
 #ifdef DEBUG
-    DynSetProcessDPIAware(); // in release enabled via manifest
     extern void u_DoAllTests(void);
     u_DoAllTests();
 #endif
