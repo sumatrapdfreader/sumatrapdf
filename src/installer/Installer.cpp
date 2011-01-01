@@ -30,11 +30,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 using namespace Gdiplus;
 
-#ifdef DEBUG
-// debug builds use a manifest created by the linker instead of our own, so ensure visual styles this way
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#endif
-
 // set to 1 when testing as uninstaller
 #define FORCE_TO_BE_UNINSTALLER 0
 

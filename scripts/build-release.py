@@ -144,7 +144,7 @@ def direxists(path):
 def build_installer_nsis(builds_dir, ver):
   os.chdir(SCRIPT_DIR)
   run_cmd_throw("makensis", "/DSUMVER=%s" % ver, "scripts/installer")
-  local_installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
+  local_installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install-nsis.exe" % ver)
   shutil.move("SumatraPDF-%s-install.exe" % ver, local_installer_exe)
   ensure_path_exists(local_installer_exe)
   return local_installer_exe
@@ -199,15 +199,6 @@ def append_installer_file_zlib(fo, path, name_in_installer):
 def mark_installer_end(fo):
   write_no_size(fo, INSTALLER_HEADER_END)
 
-def copy_installer_manifest(src, dst):
-  fo = open(src, "r")
-  d = fo.read()
-  fo.close()
-  d = d.replace("asInvoker", "requireAdministrator")
-  fo = open(dst, "w")
-  fo.write(d)
-  fo.close()
-
 # construct a full installer by appending data at the end of installer executable.
 # appended data is in the format:
 #  $data - data as binary. In our case it's Sumatra's binary
@@ -220,7 +211,7 @@ def copy_installer_manifest(src, dst):
 # and data starts)
 def build_installer_native(builds_dir, ver):
   installer_template_exe = os.path.join(builds_dir, "Installer.exe")
-  installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install-native.exe" % ver)
+  installer_exe = os.path.join(builds_dir, "SumatraPDF-%s-install.exe" % ver)
   exe = os.path.join(builds_dir, "SumatraPDF-%s.exe" % ver)
 
   shutil.copy(installer_template_exe, installer_exe)
@@ -236,12 +227,12 @@ def build_installer_native(builds_dir, ver):
   return installer_exe
 
 def build_installer_for_testing():
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
+  (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc", "CFG=dbg")
+  #print(out); print(err)
   objdir = os.path.join(os.getcwd(), "obj-dbg")
   installer_template_exe = os.path.join(objdir, "Installer.exe")
   installer_exe = os.path.join(objdir, "SumatraPDF-installer.exe")
   shutil.copy(installer_template_exe, installer_exe)
-  copy_installer_manifest(os.path.join(objdir, "Installer.exe.manifest"), os.path.join(objdir, "SumatraPDF-installer.exe.manifest"))
 
   exe = os.path.join(objdir, "SumatraPDF.exe")
   fo = open(installer_exe, "ab")
@@ -343,14 +334,14 @@ def main():
 
   local_zip = os.path.join(builds_dir, "SumatraPDF-%s.zip" % ver)
   ensure_path_exists(local_zip)
-  local_installer_exe = build_installer_nsis(builds_dir, ver)
+  #local_installer_exe = build_installer_nsis(builds_dir, ver)
   local_installer_native_exe = build_installer_native(builds_dir, ver)
 
   if upload or upload_tmp:
     s3UploadFilePublic(local_exe_uncompr, remote_exe)
     s3UploadFilePublic(local_pdb, remote_pdb)
     s3UploadFilePublic(local_zip, remote_zip)
-    s3UploadFilePublic(local_installer_exe, remote_installer_exe)
+    s3UploadFilePublic(local_installer_native_exe, remote_installer_exe)
 
 if __name__ == "__main__":
   main()

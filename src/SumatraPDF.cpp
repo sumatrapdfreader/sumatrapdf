@@ -32,11 +32,6 @@
 #define IDM_ZOOM_FIRST                  IDM_ZOOM_FIT_PAGE
 #define IDM_ZOOM_LAST                   IDM_ZOOM_CUSTOM
 
-#ifdef DEBUG
-// debug builds use a manifest created by the linker instead of our own, so ensure visual styles this way
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#endif
-
 // Undefine any of these two, if you prefer MuPDF/Fitz to render the whole page
 // (using FreeType for fonts) at the expense of higher memory/spooler requirements.
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
