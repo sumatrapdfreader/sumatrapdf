@@ -150,6 +150,7 @@ public:
     int        findPageNo(fz_obj *dest);
     fz_obj   * getNamedDest(const char *name);
     char     * getPageLayoutName(void);
+    bool       isDocumentDirectionR2L(void);
     TCHAR    * ExtractPageText(int pageNo, TCHAR *lineSep=_T(DOS_NEWLINE), fz_bbox **coords_out=NULL, RenderTarget target=Target_View) {
         return ExtractPageText(getPdfPage(pageNo), lineSep, coords_out, target);
     };

@@ -257,6 +257,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
         else
             _displayMode = DM_CONTINUOUS;
     }
+    _displayR2L = pdfEngine->isDocumentDirectionR2L();
 
     if (!buildPagesInfo())
         return false;
@@ -590,6 +591,9 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
         // center the cover page over the first two spots in non-continuous mode
         if (displayModeShowCover(displayMode()) && pageNo == 1 && !displayModeContinuous(displayMode()))
             pageInfo->currPos.x = offX + _padding->pageBorderLeft + (columnOffsets[0] + _padding->betweenPagesX + columnOffsets[1] - pageInfo->currPos.dx) / 2;
+        // mirror the page layout when displaying a Right-to-Left document
+        if (_displayR2L && columns > 1)
+            pageInfo->currPos.x = totalAreaDx - pageInfo->currPos.x - pageInfo->currPos.dx;
         pageOffX += columnOffsets[pageInARow++] + _padding->betweenPagesX;
         assert(pageOffX >= 0 && pageInfo->currPos.x >= 0);
 

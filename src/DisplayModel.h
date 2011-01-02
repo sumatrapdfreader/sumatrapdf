@@ -324,6 +324,9 @@ protected:
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     double          _dpiFactor;
+    /* whether to display pages Left-to-Right or Right-to-Left.
+       this value is extracted from the PDF document */
+    bool            _displayR2L;
 
     /* if we're in presentation mode, _pres* contains the pre-presentation values */
     bool            _presentationMode;

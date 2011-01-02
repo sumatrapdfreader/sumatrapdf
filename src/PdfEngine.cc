@@ -924,7 +924,21 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
 
 char *PdfEngine::getPageLayoutName(void)
 {
-    return fz_toname(fz_dictgets(fz_dictgets(_xref->trailer, "Root"), "PageLayout"));
+    EnterCriticalSection(&_xrefAccess);
+    fz_obj *root = fz_dictgets(_xref->trailer, "Root");
+    char *name = fz_toname(fz_dictgets(root, "PageLayout"));
+    LeaveCriticalSection(&_xrefAccess);
+    return name;
+}
+
+bool PdfEngine::isDocumentDirectionR2L(void)
+{
+    EnterCriticalSection(&_xrefAccess);
+    fz_obj *root = fz_dictgets(_xref->trailer, "Root");
+    fz_obj *prefs = fz_dictgets(root, "ViewerPreferences");
+    char *direction = fz_toname(fz_dictgets(prefs, "Direction"));
+    LeaveCriticalSection(&_xrefAccess);
+    return !!str_eq(direction, "R2L");
 }
 
 fz_buffer *PdfEngine::getStreamData(int num, int gen)
