@@ -554,13 +554,36 @@ pdf_openxrefwithstream(pdf_xref **xrefp, fz_stream *file, char *password)
 			xref->table = NULL;
 			xref->len = 0;
 		}
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1146 */
+		encrypt = fz_dictgets(xref->trailer, "Encrypt");
+		if (encrypt)
+			fz_keepobj(encrypt);
+		id = fz_dictgets(xref->trailer, "ID");
+		if (id)
+			fz_keepobj(id);
 		/* SumatraPDF: fix memory leak */
 		if (xref->trailer)
 		{
 			fz_dropobj(xref->trailer);
 			xref->trailer = nil;
 		}
+
 		error = pdf_repairxref(xref, xref->scratch, sizeof xref->scratch);
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1146 */
+		if (!error && xref->trailer)
+		{
+			if (encrypt && !fz_dictgets(xref->trailer, "Encrypt"))
+				fz_dictputs(xref->trailer, "Encrypt", encrypt);
+			if (id && !fz_dictgets(xref->trailer, "ID"))
+				fz_dictputs(xref->trailer, "ID", id);
+		}
+		if (encrypt)
+			fz_dropobj(encrypt);
+		if (id)
+			fz_dropobj(id);
+
 		if (error)
 		{
 			pdf_freexref(xref);

@@ -285,11 +285,21 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 			obj = fz_dictgets(dict, "Encrypt");
 			if (obj)
+			{
+				/* SumatraPDF: fix memory leak */
+				if (encrypt)
+					fz_dropobj(encrypt);
 				encrypt = fz_keepobj(obj);
+			}
 
 			obj = fz_dictgets(dict, "ID");
 			if (obj)
+			{
+				/* SumatraPDF: fix memory leak */
+				if (id)
+					fz_dropobj(id);
 				id = fz_keepobj(obj);
+			}
 
 			fz_dropobj(dict);
 		}
