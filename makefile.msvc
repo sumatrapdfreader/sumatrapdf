@@ -13,8 +13,8 @@ CFG=dbg
 !endif
 
 # O is directory where object and binary files go
-!if "$(EXB)"=="rm"
-O = obj-rm-$(CFG)
+!if "$(EXB)"!=""
+O = obj-$(EXB)-$(CFG)
 !else
 O = obj-$(CFG)
 !endif
@@ -41,8 +41,6 @@ SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP)
 
 !INCLUDE $(MUPDF_DIR)\makefile.msvc
 
-LDFLAGS = $(LDFLAGS) /MANIFEST /MANIFESTUAC:NO 
-
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 
 # external build settings not part of core SumatraPDF
@@ -54,31 +52,35 @@ CFLAGS = $(CFLAGS) /D "BUILD_RM_VERSION"
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
 # and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
 # We set the features uniformly to Win 2000 or later.
-WINVER_DEFS = /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
+CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 
 # /D "_WIN32_WINDOWS=0x0500" /D "_WIN32_IE=0x0600"
 
-SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WINVER_DEFS) \
+SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\mupdf \
 	/I$(ZLIB_DIR) /Isrc /IDialogSizer 
 
-INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WINVER_DEFS) \
+INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Ibaseutils /Ibaseutils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR)
 
 # Flag for TeX enhancements
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "SYNCTEX_FEATURE"
-!if "$(TEXBUILD)"=="1"
+!if "$(TEXBUILD)"!=""
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "_TEX_ENHANCEMENT" /D \
 	"SUMATRA_UPDATE_INFO_URL=_T(\"http://william.famille-blum.org/software/sumatra/sumpdftex-latest.txt\")" \
-	/D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")" /D "CURR_VERSION=$(VERSION)"
+	/D "SVN_UPDATE_LINK=_T(\"http://william.famille-blum.org/software/sumatra/\")"
+!if "$(VERSION)"!=""
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "CURR_VERSION=$(VERSION)"
+!endif
 !endif
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""
-FITZ_CFLAGS = $(FITZ_CFLAGS) /D "UNICODE" /D "_UNICODE"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
+
+LDFLAGS = $(LDFLAGS) /MANIFEST /MANIFESTUAC:NO 
 
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
 
@@ -243,12 +245,12 @@ $(O)\SumatraAbout.obj: src\SumatraPDF.h src\translations.h src\Version.h
 $(O)\SumatraAbout.obj: src\WindowInfo.h
 $(O)\SumatraDialogs.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
 $(O)\SumatraDialogs.obj: baseutils\tstr_util.h baseutils\vstrlist.h baseutils\win_util.h
-$(O)\SumatraDialogs.obj: baseutils\wstr_util.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
-$(O)\SumatraDialogs.obj: src\AppPrefs.h src\DisplayModel.h src\DisplayState.h
-$(O)\SumatraDialogs.obj: src\FileWatch.h src\LangMenuDef.h src\PdfEngine.h
-$(O)\SumatraDialogs.obj: src\PdfSearch.h src\PdfSelection.h src\Resource.h
-$(O)\SumatraDialogs.obj: src\SumatraDialogs.h src\SumatraPDF.h src\translations.h
-$(O)\SumatraDialogs.obj: src\WindowInfo.h
+$(O)\SumatraDialogs.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h mupdf\fitz\fitz.h
+$(O)\SumatraDialogs.obj: mupdf\mupdf\mupdf.h src\AppPrefs.h src\DisplayModel.h
+$(O)\SumatraDialogs.obj: src\DisplayState.h src\FileWatch.h src\LangMenuDef.h
+$(O)\SumatraDialogs.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
+$(O)\SumatraDialogs.obj: src\Resource.h src\SumatraDialogs.h src\SumatraPDF.h
+$(O)\SumatraDialogs.obj: src\translations.h src\WindowInfo.h
 $(O)\SumatraPDF.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_util.h
 $(O)\SumatraPDF.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\SumatraPDF.obj: baseutils\win_util.h baseutils\WinUtil.hpp baseutils\wstr_util.h

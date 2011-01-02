@@ -228,6 +228,11 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
 FONT_OBJS = $(FONT_OBJS) $(O)\font_cjk.obj
 !endif
 
+# Make it easy to compile as ANSI or UNICODE application
+!if "$(_ANSI)"==""
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "UNICODE" /D "_UNICODE"
+!endif
+
 CMAP_OBJS = \
 	$(O)\cmap_tounicode.obj \
 	$(O)\cmap_cns.obj \
@@ -273,7 +278,6 @@ PDFINFO_APP = $(O)\pdfinfo.exe
 
 PDFEXTRACT_OBJS = $(LIBS_OBJS) $(O)\pdfextract.obj
 PDFEXTRACT_APP = $(O)\pdfextract.exe
-PDFEXTRACT_PDB = $(O)\pdfextract.pdb
 
 CMAPDUMP_OBJS = $(O)\cmapdump.obj
 CMAPDUMP_APP = $(O)\cmapdump.exe
