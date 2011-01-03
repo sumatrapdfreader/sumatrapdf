@@ -211,6 +211,8 @@ pdf_dropfont(pdf_fontdesc *fontdesc)
 {
 	if (fontdesc && --fontdesc->refs == 0)
 	{
+		/* SumatraPDF: free vertical glyph substitution data (before font!) */
+		pdf_ft_free_vsubst(fontdesc);
 		if (fontdesc->font)
 			fz_dropfont(fontdesc->font);
 		if (fontdesc->buffer)
@@ -277,6 +279,9 @@ pdf_newfontdesc(void)
 	fontdesc->dvmtx.w = -1000;
 
 	fontdesc->isembedded = 0;
+
+	/* SumatraPDF: vertical glyph substitution */
+	fontdesc->_vsubst = nil;
 
 	return fontdesc;
 }

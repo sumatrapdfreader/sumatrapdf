@@ -720,9 +720,9 @@ ftgetcharcode(fz_font *font, fz_textel *el)
 	
 	FT_UInt gid;
 	WCHAR ucs = FT_Get_First_Char(face, &gid), prev = ucs - 1;
-	while (gid != 0 && ucs != prev)
+	while (gid != 0 && ucs != prev && ucs < 256)
 	{
-		if (gid == el->gid && ucs < 256)
+		if (gid == el->gid)
 			return ucs;
 		ucs = FT_Get_Next_Char(face, (prev = ucs), &gid);
 	}

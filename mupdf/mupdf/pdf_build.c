@@ -568,12 +568,15 @@ pdf_showglyph(pdf_csi *csi, int cid)
 	}
 
 	gid = pdf_fontcidtogid(fontdesc, cid);
+
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=855 */
 	/* some chinese fonts only ship the similarly looking 0x2026 */
 	if (gid == 0 && ucsbuf[0] == 0x22ef && fontdesc->font->ftface)
-	{
 		gid = FT_Get_Char_Index(fontdesc->font->ftface, 0x2026);
-	}
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1149 */
+	if (fontdesc->wmode == 1 && fontdesc->font->ftface)
+		gid = pdf_ft_get_vgid(fontdesc, gid);
 
 	if (fontdesc->wmode == 1)
 	{

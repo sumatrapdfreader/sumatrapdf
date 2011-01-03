@@ -410,6 +410,9 @@ struct pdf_fontdesc_s
 	pdf_vmtx *vmtx;
 
 	int isembedded;
+
+	/* SumatraPDF: store vertical glyph substitution data for the font's lifetime */
+	void *_vsubst;
 };
 
 /* fontmtx.c */
@@ -442,6 +445,11 @@ pdf_fontdesc * pdf_newfontdesc(void);
 pdf_fontdesc * pdf_keepfont(pdf_fontdesc *fontdesc);
 void pdf_dropfont(pdf_fontdesc *font);
 void pdf_debugfont(pdf_fontdesc *fontdesc);
+
+/* ft_tools.c */
+
+int pdf_ft_get_vgid(pdf_fontdesc *fontdesc, int gid);
+void pdf_ft_free_vsubst(pdf_fontdesc *fontdesc);
 
 /*
  * Interactive features

@@ -684,9 +684,9 @@ struct fz_font_s
 	int widthcount;
 	int *widthtable;
 
-	/* SumatraPDF */
-	const char *_data; /* font file content or file path                */
-	int _data_len;     /* 0 for file paths, -1 for "not needed by GDI+" */
+	/* SumatraPDF: allow access to raw font data from a rendering device  */
+	const char *_data; /* font file content or file path                  */
+	int _data_len;     /* 0 for file paths, -1 for "not needed by device" */
 };
 
 fz_error fz_newfreetypefont(fz_font **fontp, char *name, int substitute);

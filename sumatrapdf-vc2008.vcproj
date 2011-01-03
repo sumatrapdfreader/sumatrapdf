@@ -683,6 +683,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\mupdf\pdf_ft_tools.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\mupdf\pdf_function.c"
 					>
 				</File>

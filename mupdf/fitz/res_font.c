@@ -34,7 +34,7 @@ fz_newfont(void)
 	font->widthcount = 0;
 	font->widthtable = nil;
 
-	/* SumatraPDF */
+	/* SumatraPDF: raw font data */
 	font->_data = nil;
 
 	return font;
@@ -76,7 +76,7 @@ fz_dropfont(fz_font *font)
 
 		if (font->widthtable)
 			fz_free(font->widthtable);
-		/* SumatraPDF */
+		/* SumatraPDF: free raw font data */
 		if (font->_data)
 			fz_free((void *)font->_data);
 
@@ -190,7 +190,7 @@ fz_newfontfromfile(fz_font **fontp, char *path, int index)
 		return fz_throw("freetype: cannot load font: %s", ft_errorstring(fterr));
 	}
 
-	/* SumatraPDF */
+	/* SumatraPDF: give rendering device access to used font path */
 	font->_data = fz_strdup(path);
 	font->_data_len = 0;
 
@@ -211,7 +211,8 @@ fz_newfontfrombuffer(fz_font **fontp, unsigned char *data, int len, int index)
 
 	font = fz_newfont();
 
-	/* SumatraPDF: make sure that the buffer isn't freed with the font descriptor */
+	/* SumatraPDF: give rendering device access to raw font data (also make */
+	/* sure that the buffer isn't prematurely freed with the font descriptor) */
 	font->_data = fz_malloc(len);
 	memcpy((void *)font->_data, data, len);
 	font->_data_len = len;

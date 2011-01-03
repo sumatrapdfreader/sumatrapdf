@@ -111,7 +111,7 @@ MUPDF_CFLAGS = $(CFLAGS) /D "NEED_MATH" /D "NEED_GETTIMEOFDAY" /D "HAVE_JBIG2DEC
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "HAVE_OPENJPEG" /I$(OPENJPEG_DIR)
 
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/mupdf /I$(MUPDF_DIR)/apps \
-	/I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) /I$(JBIG2_DIR)
+	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) /I$(JBIG2_DIR)
 
 !if "$(JPEG_TURBO_DIR)"==""
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /I$(JPEG_DIR)
@@ -127,7 +127,7 @@ LDFLAGS = $(LDFLAGS) /nologo /DEBUG /RELEASE /opt:ref /opt:icf
 FT_OBJS = \
 	$(O)\ftdebug.obj $(O)\ftsystem.obj $(O)\ftglyph.obj $(O)\ftbitmap.obj $(O)\ftinit.obj $(O)\ftxf86.obj \
 	$(O)\autofit.obj $(O)\ftbase.obj $(O)\bdf.obj $(O)\ftcache.obj $(O)\cff.obj $(O)\cffparse.obj \
-	$(O)\type1cid.obj $(O)\gxvalid.obj $(O)\otvalid.obj $(O)\pcf.obj $(O)\pfr.obj $(O)\pfrsbit.obj \
+	$(O)\type1cid.obj $(O)\otvalid.obj $(O)\ftotval.obj $(O)\pcf.obj $(O)\pfr.obj $(O)\pfrsbit.obj \
 	$(O)\psaux.obj $(O)\pshinter.obj $(O)\psnames.obj $(O)\raster.obj $(O)\sfnt.obj \
 	$(O)\smooth.obj $(O)\truetype.obj $(O)\type1.obj $(O)\type42.obj $(O)\winfnt.obj $(O)\ftstroke.obj
 
@@ -213,7 +213,7 @@ MUPDF_OBJS = \
 	$(O)\pdf_parse.obj $(O)\pdf_pattern.obj $(O)\pdf_repair.obj $(O)\pdf_shade.obj \
 	$(O)\pdf_store.obj $(O)\pdf_stream.obj $(O)\pdf_type3.obj $(O)\pdf_unicode.obj \
 	$(O)\pdf_xobject.obj $(O)\pdf_xref.obj $(O)\pdf_fontfile.obj \
-	$(O)\pdf_cmap_load.obj $(O)\pdf_cmap_parse.obj $(O)\pdf_cmap_table.obj
+	$(O)\pdf_cmap_load.obj $(O)\pdf_cmap_parse.obj $(O)\pdf_cmap_table.obj $(O)\pdf_ft_tools.obj
 
 FONT_OBJS = \
 	$(O)\font_misc.obj \
