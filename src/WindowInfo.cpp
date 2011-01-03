@@ -1,3 +1,7 @@
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#include "DisplayModel.h"
 #include "WindowInfo.h"
 #include "PdfSync.h"
 #include "Resource.h"
@@ -20,12 +24,14 @@ WindowInfo::WindowInfo(HWND hwnd) :
     showSelection(false), showForwardSearchMark(false), fwdsearchmarkHideStep(0),
     mouseAction(MA_IDLE), needrefresh(false),
     hdcToDraw(NULL), hdcDoubleBuffer(NULL), bmpDoubleBuffer(NULL),
+    prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     title(NULL), loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), resizingTocBox(false),
     pdfsync(NULL), pluginParent(NULL)
 {
     ZeroMemory(&selectionRect, sizeof(selectionRect));
+    prevCanvasBR.x = prevCanvasBR.y = -1;
     fwdsearchmarkRects.clear();
 
     HDC hdcFrame = GetDC(hwndFrame);
@@ -211,12 +217,18 @@ void WindowInfo::UpdateToolbarState()
         state &= ~TBSTATE_CHECKED;
     SendMessage(this->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
 
+    bool isChecked = (state & TBSTATE_CHECKED);
+
     state = SendMessage(this->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
     if (this->dm->displayMode() == DM_SINGLE_PAGE && this->dm->zoomVirtual() == ZOOM_FIT_PAGE)
         state |= TBSTATE_CHECKED;
     else
         state &= ~TBSTATE_CHECKED;
     SendMessage(this->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
+
+    isChecked &= (state & TBSTATE_CHECKED);
+    if (!isChecked)
+        prevZoomVirtual = INVALID_ZOOM;
 }
 
 /* :::::: WindowInfoList :::::: */

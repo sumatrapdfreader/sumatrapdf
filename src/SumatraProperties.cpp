@@ -3,6 +3,7 @@
 
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "DisplayModel.h"
 #include "SumatraProperties.h"
 #include "AppPrefs.h"
 #include "translations.h"

@@ -422,12 +422,12 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_LBUTTONDOWN:
-            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            url = AboutGetLink(NULL, LOWORD(lParam), HIWORD(lParam));
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)url);
             break;
 
         case WM_LBUTTONUP:
-            url = AboutGetLink(NULL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            url = AboutGetLink(NULL, LOWORD(lParam), HIWORD(lParam));
             if (url && url == (const TCHAR *)GetWindowLongPtr(hwnd, GWLP_USERDATA))
                 LaunchBrowser(url);
             SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);

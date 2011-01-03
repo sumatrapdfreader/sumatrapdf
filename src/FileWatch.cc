@@ -1,5 +1,4 @@
 // By william blum, 2008
-#include "SumatraPDF.h"
 #include "FileWatch.h"
 #include "tstr_util.h"
 #include "file_util.h"

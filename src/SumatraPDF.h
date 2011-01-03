@@ -4,25 +4,7 @@
 #ifndef SUMATRAPDF_H_
 #define SUMATRAPDF_H_
 
-#ifdef DEBUG
-#define _CRTDBG_MAP_ALLOC
-#endif
-#include <stdlib.h>
-#ifdef DEBUG
-#include <crtdbg.h>
-#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
-#define new DEBUG_NEW
-#endif
-
-#include <windows.h>
-#include <windowsx.h>
-#include <tchar.h>
-
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <direct.h>
+#include "base_util.h"
 
 #define APP_NAME_STR            _T("SumatraPDF")
 #define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")

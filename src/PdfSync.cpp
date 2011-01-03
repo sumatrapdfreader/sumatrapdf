@@ -1,8 +1,9 @@
 // Copyright William Blum 2008 http://william.famille-blum.org/
 // PDF-source synchronizer based on .pdfsync file
 // License: GPLv2
-#include "SumatraPDF.h"
+#include "base_util.h"
 #include "WindowInfo.h"
+#include "DisplayModel.h"
 #include "Resource.h"
 #include "PdfSync.h"
 #include <shlwapi.h>

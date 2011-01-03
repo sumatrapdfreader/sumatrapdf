@@ -1,14 +1,17 @@
-/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #ifndef _WINDOWINFO_H_
 #define _WINDOWINFO_H_
 
 #include <shlobj.h>
-#include "DisplayModel.h"
+#include "geom_util.h"
+#include "DisplayState.h"
 #include "FileWatch.h"
+#include "PdfSearch.h"
 #include "vstrlist.h"
 
+class DisplayModel;
 class Synchronizer;
 
 /* Current state of a window:
@@ -158,6 +161,8 @@ public:
     RECT            frameRc;
     RECT            canvasRc;
     POINT           prevCanvasBR;
+    double          prevZoomVirtual;
+    DisplayMode     prevDisplayMode;
 
     TCHAR *         title;
     int             currPageNo;

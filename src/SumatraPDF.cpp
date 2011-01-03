@@ -1,8 +1,9 @@
-/* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2006-2011 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "SumatraPDF.h"
 #include <shlobj.h>
+#include <windowsx.h>
 
 #include "WindowInfo.h"
 #include "RenderCache.h"
@@ -4369,24 +4370,38 @@ static void OnMenuViewContinuous(WindowInfo *win)
     SwitchToDisplayMode(win, newMode, false);
 }
 
-static void OnMenuFitWidthContinuous(WindowInfo *win)
+static void ToogleToolbarViewButton(WindowInfo *win, double newZoom, bool pagesContinuously)
 {
     assert(win && win->dm);
     if (!win || !win->dm) return;
 
-    if (!displayModeContinuous(win->dm->displayMode()))
-        OnMenuViewContinuous(win);
-    OnMenuZoom(win, IDM_ZOOM_FIT_WIDTH);
+    double zoom = win->dm->zoomVirtual();
+    DisplayMode mode = win->dm->displayMode();
+
+    if (displayModeContinuous(mode) != pagesContinuously || zoom != newZoom) {
+        if (displayModeContinuous(mode) != pagesContinuously)
+            OnMenuViewContinuous(win);
+        OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
+    }
+    else if (win->prevZoomVirtual != INVALID_ZOOM) {
+        double prevZoom = win->prevZoomVirtual;
+        SwitchToDisplayMode(win, win->prevDisplayMode, false);
+        win->ZoomToSelection(prevZoom, false);
+    }
+
+    // remember the previous values for when the toolbar button is unchecked
+    win->prevZoomVirtual = zoom;
+    win->prevDisplayMode = mode;
+}
+
+static void OnMenuFitWidthContinuous(WindowInfo *win)
+{
+    ToogleToolbarViewButton(win, ZOOM_FIT_WIDTH, true);
 }
 
 static void OnMenuFitSinglePage(WindowInfo *win)
 {
-    assert(win && win->dm);
-    if (!win || !win->dm) return;
-
-    if (displayModeContinuous(win->dm->displayMode()))
-        OnMenuViewContinuous(win);
-    OnMenuZoom(win, IDM_ZOOM_FIT_PAGE);
+    ToogleToolbarViewButton(win, ZOOM_FIT_PAGE, false);
 }
 
 static void OnMenuGoToNextPage(WindowInfo *win)

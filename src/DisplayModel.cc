@@ -43,8 +43,9 @@
   those pages to a bitmap and display those bitmaps.
 */
 
-#include "SumatraPDF.h"
+#include "base_util.h"
 #include "WindowInfo.h"
+#include "DisplayModel.h"
 #include "Resource.h"
 #include "vstrlist.h"
 #include "win_util.h"

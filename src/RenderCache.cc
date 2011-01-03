@@ -1,7 +1,7 @@
 /* Copyright 2006-2010 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "SumatraPDF.h"
+#include "base_util.h"
 #include "RenderCache.h"
 
 /* Define if you want to conserve memory by always freeing cached bitmaps

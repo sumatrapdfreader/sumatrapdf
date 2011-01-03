@@ -1,4 +1,3 @@
-#include "SumatraPDF.h"
 #include "base_util.h"
 #include "tstr_util.h"
 #include "MemSegment.h"
