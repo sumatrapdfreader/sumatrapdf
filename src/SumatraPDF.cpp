@@ -160,6 +160,8 @@ static HCURSOR                      gCursorArrow;
 static HCURSOR                      gCursorDrag;
 static HCURSOR                      gCursorIBeam;
 static HCURSOR                      gCursorScroll;
+static HCURSOR                      gCursorSizeWE;
+static HCURSOR                      gCursorNo;
 static HBRUSH                       gBrushBg;
 static HBRUSH                       gBrushWhite;
 static HBRUSH                       gBrushBlack;
@@ -5619,13 +5621,20 @@ static LRESULT CALLBACK WndProcSpliter(HWND hwnd, UINT message, WPARAM wParam, L
                 int tocWidth = pcur.x;
 
                 RECT r;
+                GetClientRect(win->hwndTocBox, &r);
+                int prevTocWidth = RectDx(&r);
                 GetClientRect(win->hwndFrame, &r);
                 int width = RectDx(&r) - tocWidth - SPLITTER_DX;
+                int prevCanvasWidth = RectDx(&r) - prevTocWidth - SPLITTER_DX;
                 int height = RectDy(&r);
 
                 // TODO: ensure that the window is always wide enough for both
-                if (tocWidth <= SPLITTER_MIN_WIDTH || width <= SPLITTER_MIN_WIDTH)
+                if (tocWidth < min(SPLITTER_MIN_WIDTH, prevTocWidth) ||
+                    width < min(SPLITTER_MIN_WIDTH, prevCanvasWidth)) {
+                    SetCursor(gCursorNo);
                     break;
+                }
+                SetCursor(gCursorSizeWE);
 
                 int tocY = 0;
                 if (gGlobalPrefs.m_showToolbar && !win->fullScreen && !win->presentation) {
@@ -6018,7 +6027,14 @@ void WindowInfo::ShowTocBox()
         cy = 0;
     ch = RectDy(&rframe) - cy;
 
+    // make sure that the sidebar is never too wide or too narrow
     cx = RectDx(&rtoc);
+    if (RectDx(&rframe) <= 2 * SPLITTER_MIN_WIDTH)
+        cx = RectDx(&rframe) / 2;
+    else if (cx >= RectDx(&rframe) - SPLITTER_MIN_WIDTH)
+        cx = RectDx(&rframe) - SPLITTER_MIN_WIDTH;
+    else if (cx < SPLITTER_MIN_WIDTH)
+        cx = SPLITTER_MIN_WIDTH;
     cw = RectDx(&rframe) - cx - SPLITTER_DX;
 
     SetWindowPos(hwndTocBox, NULL, 0, cy, cx, ch, SWP_NOZORDER|SWP_SHOWWINDOW);
@@ -6805,6 +6821,8 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     if (!gCursorHand)
         gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gCursorDrag  = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
+    gCursorSizeWE = LoadCursor(NULL, IDC_SIZEWE);
+    gCursorNo    = LoadCursor(NULL, IDC_NO);
     gBrushBg     = CreateSolidBrush(COL_WINDOW_BG);
     gBrushWhite  = CreateSolidBrush(WIN_COL_WHITE);
     gBrushBlack  = CreateSolidBrush(WIN_COL_BLACK);
