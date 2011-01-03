@@ -24,6 +24,9 @@
 
 FT_BEGIN_HEADER
 
+#define _FTC_FACE_ID_HASH( i )                              \
+          ((FT_PtrDist)(( (FT_PtrDist)(i) >> 3 ) ^ ( (FT_PtrDist)(i) << 7 )))
+
   /* handle to cache object */
   typedef struct FTC_CacheRec_*  FTC_Cache;
 
@@ -56,7 +59,7 @@ FT_BEGIN_HEADER
   {
     FTC_MruNodeRec  mru;          /* circular mru list pointer           */
     FTC_Node        link;         /* used for hashing                    */
-    FT_UInt32       hash;         /* used for hashing too                */
+    FT_PtrDist      hash;         /* used for hashing too                */
     FT_UShort       cache_index;  /* index of cache the node belongs to  */
     FT_Short        ref_count;    /* reference count for this node       */
 
@@ -168,14 +171,14 @@ FT_BEGIN_HEADER
 #ifndef FTC_INLINE
   FT_LOCAL( FT_Error )
   FTC_Cache_Lookup( FTC_Cache   cache,
-                    FT_UInt32   hash,
+                    FT_PtrDist  hash,
                     FT_Pointer  query,
                     FTC_Node   *anode );
 #endif
 
   FT_LOCAL( FT_Error )
   FTC_Cache_NewNode( FTC_Cache   cache,
-                     FT_UInt32   hash,
+                     FT_PtrDist  hash,
                      FT_Pointer  query,
                      FTC_Node   *anode );
 
@@ -200,7 +203,7 @@ FT_BEGIN_HEADER
   FT_BEGIN_STMNT                                                         \
     FTC_Node             *_bucket, *_pnode, _node;                       \
     FTC_Cache             _cache   = FTC_CACHE(cache);                   \
-    FT_UInt32             _hash    = (FT_UInt32)(hash);                  \
+    FT_PtrDist            _hash    = (FT_PtrDist)(hash);                 \
     FTC_Node_CompareFunc  _nodcomp = (FTC_Node_CompareFunc)(nodecmp);    \
     FT_UFast              _idx;                                          \
                                                                          \

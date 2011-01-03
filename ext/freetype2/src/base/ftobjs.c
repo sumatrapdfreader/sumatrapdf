@@ -1062,6 +1062,7 @@
       if ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE    &&
            cur[0]->encoding_id == TT_APPLE_ID_VARIANT_SELECTOR &&
            FT_Get_CMap_Format( cur[0] ) == 14                  )
+      {
 #ifdef FT_MAX_CHARMAP_CACHEABLE
         if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
         {
@@ -1071,6 +1072,7 @@
         }
 #endif
         return cur[0];
+      }
     }
 
     return NULL;
@@ -1849,6 +1851,7 @@
     char *     file_names[FT_RACCESS_N_RULES];
     FT_Long    offsets[FT_RACCESS_N_RULES];
     FT_Error   errors[FT_RACCESS_N_RULES];
+    FT_Bool    is_darwin_vfs, vfs_rfork_has_no_font = FALSE; /* not tested */
 
     FT_Open_Args  args2;
     FT_Stream     stream2 = 0;
@@ -1859,6 +1862,15 @@
 
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )
     {
+      is_darwin_vfs = raccess_rule_by_darwin_vfs( i );
+      if ( is_darwin_vfs && vfs_rfork_has_no_font )
+      {
+        FT_TRACE3(( "Skip rule %d: darwin vfs resource fork"
+                    " is already checked and"
+                    " no font is found\n", i ));
+        continue;
+      }  
+
       if ( errors[i] )
       {
         FT_TRACE3(( "Error[%d] has occurred in rule %d\n", errors[i], i ));
@@ -1872,6 +1884,9 @@
                   i, args2.pathname, offsets[i] ));
 
       error = FT_Stream_New( library, &args2, &stream2 );
+      if ( is_darwin_vfs && error == FT_Err_Cannot_Open_Stream )
+        vfs_rfork_has_no_font = TRUE;
+
       if ( error )
       {
         FT_TRACE3(( "failed\n" ));
@@ -1886,6 +1901,8 @@
 
       if ( !error )
           break;
+      else if ( is_darwin_vfs )
+          vfs_rfork_has_no_font = TRUE;
     }
 
     for (i = 0; i < FT_RACCESS_N_RULES; i++)

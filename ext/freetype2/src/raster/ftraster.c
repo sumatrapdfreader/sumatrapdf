@@ -302,7 +302,6 @@
   typedef short           Short;
   typedef unsigned short  UShort, *PUShort;
   typedef long            Long, *PLong;
-  typedef unsigned long   ULong;
 
   typedef unsigned char   Byte, *PByte;
   typedef char            Bool;
@@ -448,7 +447,6 @@
     Int         precision_bits;     /* precision related variables         */
     Int         precision;
     Int         precision_half;
-    Long        precision_mask;
     Int         precision_shift;
     Int         precision_step;
     Int         precision_jitter;
@@ -671,7 +669,6 @@
     ras.precision       = 1 << ras.precision_bits;
     ras.precision_half  = ras.precision / 2;
     ras.precision_shift = ras.precision_bits - Pixel_Bits;
-    ras.precision_mask  = -ras.precision;
   }
 
 
@@ -725,13 +722,13 @@
       if ( overshoot )
         ras.cProfile->flags |= Overshoot_Bottom;
 
-      FT_TRACE6(( "New ascending profile = %lx\n", (long)ras.cProfile ));
+      FT_TRACE6(( "New ascending profile = %p\n", ras.cProfile ));
       break;
 
     case Descending_State:
       if ( overshoot )
         ras.cProfile->flags |= Overshoot_Top;
-      FT_TRACE6(( "New descending profile = %lx\n", (long)ras.cProfile ));
+      FT_TRACE6(( "New descending profile = %p\n", ras.cProfile ));
       break;
 
     default:
@@ -784,8 +781,8 @@
 
     if ( h > 0 )
     {
-      FT_TRACE6(( "Ending profile %lx, start = %ld, height = %ld\n",
-                  (long)ras.cProfile, ras.cProfile->start, h ));
+      FT_TRACE6(( "Ending profile %p, start = %ld, height = %ld\n",
+                  ras.cProfile, ras.cProfile->start, h ));
 
       ras.cProfile->height = h;
       if ( overshoot )
@@ -1094,7 +1091,7 @@
         return SUCCESS;
       else
       {
-        x1 += FMulDiv( Dx, ras.precision - f1, Dy );
+        x1 += SMulDiv( Dx, ras.precision - f1, Dy );
         e1 += 1;
       }
     }
@@ -1122,13 +1119,13 @@
 
     if ( Dx > 0 )
     {
-      Ix = SMulDiv( ras.precision, Dx,  Dy);
+      Ix = SMulDiv( ras.precision, Dx, Dy);
       Rx = ( ras.precision * Dx ) % Dy;
       Dx = 1;
     }
     else
     {
-      Ix = SMulDiv( ras.precision, -Dx,  Dy) * -1;
+      Ix = SMulDiv( ras.precision, -Dx, Dy) * -1;
       Rx =    ( ras.precision * -Dx ) % Dy;
       Dx = -1;
     }

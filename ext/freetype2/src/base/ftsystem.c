@@ -229,6 +229,13 @@
     if ( !stream )
       return FT_Err_Invalid_Stream_Handle;
 
+    stream->descriptor.pointer = NULL;
+    stream->pathname.pointer   = (char*)filepathname;
+    stream->base               = 0;
+    stream->pos                = 0;
+    stream->read               = NULL;
+    stream->close              = NULL;
+
     file = ft_fopen( filepathname, "rb" );
     if ( !file )
     {
@@ -240,12 +247,16 @@
 
     ft_fseek( file, 0, SEEK_END );
     stream->size = ft_ftell( file );
+    if ( !stream->size )
+    {
+      FT_ERROR(( "FT_Stream_Open:" ));
+      FT_ERROR(( " opened `%s' but zero-sized\n", filepathname ));
+      ft_fclose( file );
+      return FT_Err_Cannot_Open_Stream;
+    }
     ft_fseek( file, 0, SEEK_SET );
 
     stream->descriptor.pointer = file;
-    stream->pathname.pointer   = (char*)filepathname;
-    stream->pos                = 0;
-
     stream->read  = ft_ansi_stream_io;
     stream->close = ft_ansi_stream_close;
 

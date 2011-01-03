@@ -318,7 +318,7 @@
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
     FT_Error           error;
-    FT_UInt32          hash;
+    FT_PtrDist         hash;
 
 
     /* some argument checks are delayed to FTC_Cache_Lookup */
@@ -414,7 +414,7 @@
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
     FT_Error           error;
-    FT_UInt32          hash;
+    FT_PtrDist         hash;
 
 
     /* some argument checks are delayed to FTC_Cache_Lookup */
@@ -656,7 +656,7 @@
     FT_Error           error;
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
-    FT_UInt32          hash;
+    FT_PtrDist         hash;
 
 
     if ( anode )
@@ -753,7 +753,7 @@
     FT_Error           error;
     FTC_BasicQueryRec  query;
     FTC_Node           node = 0; /* make compiler happy */
-    FT_UInt32          hash;
+    FT_PtrDist         hash;
 
 
     if ( anode )

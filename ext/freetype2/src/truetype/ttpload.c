@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType-specific tables loader (body).                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009 by       */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -135,6 +135,12 @@
 
           if ( diff > 0 && diff < dist )
             dist = diff;
+        }
+
+        if ( entry == limit )
+        {
+          /* `loca' is the last table */
+          dist = stream->size - pos;
         }
 
         if ( new_loca_len <= dist )
@@ -307,7 +313,7 @@
       FT_Short*  limit = cur + face->cvt_size;
 
 
-      for ( ; cur <  limit; cur++ )
+      for ( ; cur < limit; cur++ )
         *cur = FT_GET_SHORT();
     }
 

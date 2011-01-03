@@ -130,7 +130,7 @@
     FT_Int     j;
     FT_Int     first;
     FT_Memory  memory = stream->memory;
-    FT_Error   error = TT_Err_Ok;
+    FT_Error   error  = TT_Err_Ok;
 
     FT_UNUSED( error );
 
@@ -154,7 +154,7 @@
         runcnt = runcnt & GX_PT_POINT_RUN_COUNT_MASK;
         first  = points[i++] = FT_GET_USHORT();
 
-        if ( runcnt < 1 )
+        if ( runcnt < 1 || i + runcnt >= n )
           goto Exit;
 
         /* first point not included in runcount */
@@ -165,7 +165,7 @@
       {
         first = points[i++] = FT_GET_BYTE();
 
-        if ( runcnt < 1 )
+        if ( runcnt < 1 || i + runcnt >= n )
           goto Exit;
 
         for ( j = 0; j < runcnt; ++j )

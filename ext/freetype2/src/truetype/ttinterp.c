@@ -478,8 +478,7 @@
     return TT_Err_Ok;
 
   Fail_Memory:
-    FT_ERROR(( "Init_Context: not enough memory for 0x%08lx\n",
-               (FT_Long)exec ));
+    FT_ERROR(( "Init_Context: not enough memory for %p\n", exec ));
     TT_Done_Context( exec );
 
     return error;
@@ -596,6 +595,12 @@
       exec->storage   = size->storage;
 
       exec->twilight  = size->twilight;
+
+      /* In case of multi-threading it can happen that the old size object */
+      /* no longer exists, thus we must clear all glyph zone references.   */
+      ft_memset( &exec->zp0, 0, sizeof ( exec->zp0 ) );
+      exec->zp1 = exec->zp0;
+      exec->zp2 = exec->zp0;
     }
 
     /* XXX: We reserve a little more elements on the stack to deal safely */
@@ -5795,7 +5800,16 @@
     if ( CUR.GS.gep2 == 0 && CUR.zp2.n_points > 0 )
       last_point = (FT_UShort)( CUR.zp2.n_points - 1 );
     else if ( CUR.GS.gep2 == 1 && CUR.zp2.n_contours > 0 )
+    {
       last_point = (FT_UShort)( CUR.zp2.contours[CUR.zp2.n_contours - 1] );
+
+      if ( BOUNDS( last_point, CUR.zp2.n_points ) )
+      {
+        if ( CUR.pedantic_hinting )
+          CUR.error = TT_Err_Invalid_Reference;
+        return;
+      }
+    }
     else
       last_point = 0;
 

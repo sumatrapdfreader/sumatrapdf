@@ -384,6 +384,10 @@
 
     entry = face->dir_tables;
 
+    FT_TRACE2(( "\n"
+                "  tag    offset    length   checksum\n"
+                "  ----------------------------------\n" ));
+
     for ( nn = 0; nn < sfnt.num_tables; nn++ )
     {
       entry->Tag      = FT_GET_TAG4();
@@ -396,13 +400,14 @@
         continue;
       else
       {
-        FT_TRACE2(( "  %c%c%c%c  -  %08lx  -  %08lx\n",
+        FT_TRACE2(( "  %c%c%c%c  %08lx  %08lx  %08lx\n",
                     (FT_Char)( entry->Tag >> 24 ),
                     (FT_Char)( entry->Tag >> 16 ),
                     (FT_Char)( entry->Tag >> 8  ),
                     (FT_Char)( entry->Tag       ),
                     entry->Offset,
-                    entry->Length ));
+                    entry->Length,
+                    entry->CheckSum ));
         entry++;
       }
     }

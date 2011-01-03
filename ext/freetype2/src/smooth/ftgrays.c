@@ -91,11 +91,6 @@
 #define FT_COMPONENT  trace_smooth
 
 
-  /* The maximum distance of a curve from the chord, in 64ths of a pixel; */
-  /* used when flattening curves.                                         */
-#define FT_MAX_CURVE_DEVIATION  16
-
-
 #ifdef _STANDALONE_
 
 
@@ -882,40 +877,35 @@ typedef ptrdiff_t  FT_PtrDist;
     FT_Vector*  arc;
 
 
-    dx = DOWNSCALE( ras.x ) + to->x - ( control->x << 1 );
-    if ( dx < 0 )
-      dx = -dx;
-    dy = DOWNSCALE( ras.y ) + to->y - ( control->y << 1 );
-    if ( dy < 0 )
-      dy = -dy;
-    if ( dx < dy )
-      dx = dy;
-
-    if ( dx <= FT_MAX_CURVE_DEVIATION )
-    {
-      gray_render_line( RAS_VAR_ UPSCALE( to->x ), UPSCALE( to->y ) );
-      return;
-    }
-
-    level = 1;
-    dx /= FT_MAX_CURVE_DEVIATION;
-    while ( dx > 1 )
-    {
-      dx >>= 2;
-      level++;
-    }
-
-    arc       = ras.bez_stack;
-    levels    = ras.lev_stack;
-    top       = 0;
-    levels[0] = level;
-
+    arc      = ras.bez_stack;
     arc[0].x = UPSCALE( to->x );
     arc[0].y = UPSCALE( to->y );
     arc[1].x = UPSCALE( control->x );
     arc[1].y = UPSCALE( control->y );
     arc[2].x = ras.x;
     arc[2].y = ras.y;
+
+    dx = FT_ABS( arc[2].x + arc[0].x - 2 * arc[1].x );
+    dy = FT_ABS( arc[2].y + arc[0].y - 2 * arc[1].y );
+    if ( dx < dy )
+      dx = dy;
+
+    if ( dx <= ONE_PIXEL / 4 )
+    {
+      gray_render_line( RAS_VAR_ arc[0].x, arc[0].y );
+      return;
+    }
+
+    level = 0;
+    while ( dx > ONE_PIXEL / 4 )
+    {
+      dx >>= 2;
+      level++;
+    }
+
+    levels    = ras.lev_stack;
+    levels[0] = level;
+    top       = 0;
 
     while ( top >= 0 )
     {
@@ -1067,14 +1057,20 @@ typedef ptrdiff_t  FT_PtrDist;
 
         dx_ = FT_ABS( dx );
         dy_ = FT_ABS( dy );
-        L = ( 236 * FT_MAX( dx_, dy_ ) + 97 * FT_MIN( dx_, dy_ ) ) >> 8;
+
+        /* This is the same as                     */
+        /*                                         */
+        /*   L = ( 236 * FT_MAX( dx_, dy_ )        */
+        /*       + 97 * FT_MIN( dx_, dy_ ) ) >> 8; */
+        L = ( dx_ > dy_ ? 236 * dx_ +  97 * dy_
+                        :  97 * dx_ + 236 * dy_ ) >> 8;
 
         /* Avoid possible arithmetic overflow below by splitting. */
         if ( L > 32767 )
           goto Split;
 
         /* Max deviation may be as much as (s/L) * 3/4 (if Hain's v = 1). */
-        s_limit = L * (TPos)( FT_MAX_CURVE_DEVIATION / 0.75 );
+        s_limit = L * (TPos)( ONE_PIXEL / 6 );
 
         /* s is L * the perpendicular distance from P1 to the line P0-P3. */
         dx1 = arc[1].x - arc[0].x;

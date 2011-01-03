@@ -1,3 +1,337 @@
+2010-11-28  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.4 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-4'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.4
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.3/2.4.4/, s/243/244/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 4.
+
+	* builds/unix/configure.raw (version_info): Set to 12:2:6.
+
+2010-11-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[ftsmooth]: Minor code simplification.
+
+	* src/smooth/ftgrays (gray_render_cubic): Do only one comparison
+	instead of two.
+
+2010-11-26  Johnson Y. Yan  <yinsen_yan@foxitsoftware.com>
+
+	[truetype] Better multi-threading support.
+
+	* src/truetype/ttinterp.c (TT_Load_Context): Reset glyph zone
+	references.
+
+2010-11-23  John Tytgat  <John.Tytgat@esko.com>
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstring): Expand
+	start_point, check_points, add_point, add_point1, close_contour
+	macros.
+	Remove add_contour macro.
+	Return error code from t1_builder_start_point and
+	t1_builder_check_points when there was one (instead of returning 0).
+
+2010-11-22  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Identify the tricky fonts by cvt/fpgm/prep checksums.
+	Some Latin TrueType fonts are still expected to be unhinted.
+	Fix Savannah bug #31645.
+
+	* src/truetype/ttobjs.c (tt_check_trickyness): Divided to...
+	(tt_check_trickyness_family): this checking family name, and
+	(tt_check_trickyness_sfnt_ids): this checking cvt/fpgm/prep.
+	(tt_get_sfnt_checksum): Function to retrieve the sfnt checksum
+	for specified subtable even if cleared by lazy PDF generators.
+	(tt_synth_sfnt_checksum): Function to calculate the checksum.
+
+2010-11-18  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix `loca' handling for inconsistent number of glyphs.
+	Reported by Johnson Y. Yan <yinsen_yan@foxitsoftware.com>.
+
+	* src/truetype/ttpload.c (tt_face_load_loca): While sanitizing,
+	handle case where `loca' is the last table in the font.
+
+2010-11-18  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Ignore all errors while loading `OS/2' table.
+	Suggested by Johnson Y. Yan <yinsen_yan@foxitsoftware.com>.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Do it.
+
+2010-11-18  Johnson Y. Yan  <yinsen_yan@foxitsoftware.com>
+
+	[type1] Fix matrix normalization.
+
+	* src/type1/t1load.c (parse_font_matrix): Handle sign of scaling
+	factor.
+
+2010-11-18  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Improve guard against malformed data.
+	Based on a patch submitted by Johnson Y. Yan
+	<yinsen_yan@foxitsoftware.com>
+
+	* src/type1/t1load.c (read_binary_data): Check `size'.
+
+2010-11-17  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] While tracing, output table checksums also.
+
+	* src/sfnt/ttload.c (tt_face_load_font_dir): Do it.
+
+2010-11-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[UVS] Fix find_variant_selector_charmap(), Savannah bug #31545.
+
+	Since 2010-07-04, find_variant_selector_charmap() returns
+	the first cmap subtable always under rogue-compatible
+	configuration, it causes NULL pointer dereference and
+	make UVS-related functions crashed.
+
+	* src/base/ftobjs.c (Fix find_variant_selector_charmap):
+	Returns UVS cmap correctly.
+
+2010-11-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[ftsmooth] Improve rendering.
+
+	* src/smooth/ftsmooth.c (gray_render_conic): Since version 2.4.3,
+	cubic deviations have been estimated _after_ UPSCALE, whereas
+	conic ones have been evaluated _before_ UPSCALE, which produces
+	inferior rendering results.  Fix this.
+	Partially undo change from 2010-10-15 by using ONE_PIXEL/4; this has
+	been tested with demo images sent to the mailing list.  See
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2010-10/msg00055.html
+
+	and later mails in this thread.
+
+2010-10-28  Werner Lemberg  <wl@gnu.org>
+
+	[ftraster] Minor fixes.
+
+	Reported by Tom Bishop <wenlin@wenlin.com>.
+
+	* src/raster/ftraster.c (ULong): Remove unused typedef.
+	(TWorker): Remove unused variable `precision_mask'.
+
+2010-10-28  Werner Lemberg  <wl@gnu.org>
+
+	[ftraster] Fix rendering.
+
+	Problem reported by Tom Bishop <wenlin@wenlin.com>; see
+	thread starting with
+
+	  http://lists.gnu.org/archive/html/freetype/2010-10/msg00049.html
+
+	* src/raster/ftraster.c (Line_Up): Replace FMulDiv with SMulDiv
+	since the involved multiplication exceeds 32 bits.
+
+2010-10-25  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Revert a change of `_idx' type in FTC_CACHE_LOOKUP_CMP().
+
+	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Revert
+	the type of `_idx' from FT_PtrDist (by previous change)
+	to original FT_UFast, to match with FT_CacheRec.
+
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Change the hash types to FT_PtrDist.
+
+	On LLP64 platforms (e.g. Win64), FT_ULong (32-bit)
+	variables are inappropriate to calculate hash values
+	from the memory address (64-bit).  The hash variables  
+	are extended from FT_ULong to FT_PtrDist and new
+	hashing macro functions are introduced.  The hash
+	values on 16-bit memory platforms are changed, but
+	ILP32 and LP64 are not changed.  The hash value in
+	the cache subsystem is not reverted to the memory
+	address, so using signed type FT_PtrDist is safe.
+
+	* src/cache/ftccache.h (_FTC_FACE_ID_HASH): New hash
+	function to replace FTC_FACE_ID_HASH() for portability.
+	* src/cache/ftcmanag.h (FTC_SCALER_HASH): Replace 
+	FTC_FACE_ID_HASH() by _FTC_FACE_ID_HASH().
+	* src/cache/ftccmap.c (FTC_CMAP_HASH): Ditto.
+
+	* src/cache/ftccache.h (FTC_NodeRec): The type of the
+	member `hash' is changed from FT_UInt32 to FT_PtrDist.
+
+	* src/cache/ftccache.h (FTC_Cache_Lookup): The type of the
+	argument `hash' is changed from FT_UInt32 to FT_PtrDist.
+	(FTC_Cache_NewNode): Ditto.
+	* src/cache/ftccache.c (ftc_cache_add): Ditto.
+	(FTC_Cache_Lookup): Ditto.  (FTC_Cache_NewNode): Ditto.
+	* src/cache/ftcglyph.h (FTC_GCache_Lookup): Ditto.
+	* src/cache/ftcglyph.c (FTC_GCache_Lookup): Ditto.
+
+	* src/cache/ftcbasic.c (FTC_ImageCache_Lookup): The type
+	of the internal variable `hash' is changed to FT_PtrDist
+	from FT_UInt32.  (FTC_ImageCache_LookupScaler): Ditto.
+	(FTC_SBitCache_Lookup): Ditto.
+	(FTC_SBitCache_LookupScaler): Ditto.
+	* src/cache/ftccmap.c (FTC_CMapCache_Lookup): Ditto.
+	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Ditto.
+	Also the type of the internal variable `_idx' is changed to
+	FT_PtrDist from FT_UFast for better pointer calculation.
+	
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Hide internal macros incompatible with LLP64.
+
+	FT_POINTER_TO_ULONG(), FTC_FACE_ID_HASH() and
+	FTC_IMAGE_TYPE_HASH() are enclosed by
+	FT_CONFIG_OPTION_OLD_INTERNALS and hidden from
+	normal clients.
+
+	For the history of these macros, see the investigation:
+	http://lists.gnu.org/archive/html/freetype/2010-10/msg00022.html
+
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Change the type of FT_MEM_VAL() from FT_ULong to FT_PtrDist.
+
+	On LLP64 platforms (e.g. Win64), unsigned long (32-bit)
+	cannot cover the memory address (64-bit).  FT_MEM_VAL() is
+	used for hashing only and not dereferred, so using signed
+	type FT_PtrDist is safe.
+
+	* src/base/ftdbgmem.c (FT_MEM_VAL): Change the type of the
+	return value from FT_ULong to FT_PtrDist.
+	(ft_mem_table_resize): The type of hash is changed to
+	FT_PtrDist.  (ft_mem_table_get_nodep): Ditto.
+
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Replace "%lx" for memory address by "%p", LLP64 platforms.
+
+	On LLP64 platforms (e.g. Win64), long (32-bit) cannot cover
+	the memory address (64-bit).  Also the casts from the pointer
+	type to long int should be removed to preserve the address
+	correctly.
+
+	* src/raster/ftraster.c (New_Profile): Replace "%lx" by "%p".
+	(End_Profile) Ditto.
+	* src/truetype/ttinterp.c (Init_Context): Ditto.
+
+2010-10-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Fix thinko in spline flattening.
+
+	FT_MAX_CURVE_DEVIATION is dependent on the value of ONE_PIXEL.
+
+	* src/smooth/ftgrays.c (FT_MAX_CURVE_DEVIATION): Remove it and
+	replace it everywhere with ONE_PIXEL/8.
+
+2010-10-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Skip unrequired resource access rules by Darwin VFS.
+
+	When a resource fork access rule by Darwin VFS could open the
+	resource fork but no font is found in it, the rest of rules
+	by Darwin VFS are skipped.  It reduces the warnings of the
+	deprecated resource fork access method by recent Darwin kernel.
+	Fix MacPorts ticket #18859:
+		http://trac.macports.org/ticket/18859
+
+	* src/base/ftobjs.c (load_face_in_embedded_rfork):
+	When FT_Stream_New() returns FT_Err_Cannot_Open_Stream, it
+	means that the file is possible to be fopen()-ed but zero-sized.
+	Also there is a case that the resource fork is not zero-sized, 
+	but no supported font exists in it.  If a rule by Darwin VFS
+	falls into such cases, there is no need to try other Darwin VFS
+	rules anymore.  Such cases are marked by vfs_rfork_has_no_font.
+	If it is TRUE, the Darwin VFS rules are skipped.
+
+2010-10-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Grouping resource access rules based on Darwin VFS.
+
+	MacOS X/Darwin kernel supports a few tricky methods to access
+	a resource fork via ANSI C or POSIX interface.  Current resource
+	fork accessor tries all possible methods to support all kernels.
+	But if a method could open a resource fork but no font is found,
+	there is no need to try other methods older than tested method. 
+	To determine whether the rule index is for Darwin VFS, a local
+	function ftrfork.c::raccess_rule_by_darwin_vfs() is introduced.
+	To use this function in ftobjs.c etc but it should be inlined,
+	it is exposed by ftbase.h.
+
+	* src/base/ftrfork.c (FT_RFork_Rule): New enum type to identify
+	the rules to access the resource fork.
+	(raccess_guess_rec): New structure to bind the rule function and
+	rule enum type.
+	(FT_Raccess_Guess): The list of the rule functions is replaced by
+	(raccess_guess_table): This.  This is exposed to be used by other
+	intra module functions.
+	(raccess_rule_by_darwin_vfs): A function to return a boolean
+	if the rule specified by the rule index is based on Darwin VFS.
+
+2010-10-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Prevent to open a FT_Stream for zero-sized file on non-Unix.
+
+	builds/unix/ftsystem.c prevents to open an useless stream from
+	zero-sized file and returns FT_Err_Cannot_Open_Stream, but the
+	stream drivers for ANSI C, Amiga and VMS return useless streams.
+	For cross-platform consistency, all stream drivers should act
+	same.
+
+	* src/base/ftsystem.c (FT_Stream_Open): If the size of the opened
+	file is zero, FT_Err_Cannot_Open_Stream is returned.
+	* builds/amiga/src/base/ftsystem.c (FT_Stream_Open): Ditto.
+	* src/vms/ftsystem.c (FT_Stream_Open): Ditto.
+
+2010-10-12  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #31310.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackedpoints): Protect against
+	invalid `runcnt' values.
+
+2010-10-08  Chris Liddell  <chris.liddell@artifex.com>
+
+	Fix Savannah bug #31275.
+
+	* src/sfnt/ttpost.c: Include FT_INTERNAL_DEBUG_H.
+
+2010-10-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve error handling of `SHZ' bytecode instruction.
+	Problem reported by Chris Evans <scarybeasts@gmail.com>.
+
+	* src/truetype/ttinterp.c (Ins_SHZ): Check `last_point'.
+
+2010-10-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #31253.
+	Patch submitted by an anonymous reporter.
+
+	* configure: Use `awk' instead of `sed' to manipulate output of `ls
+	-id'.
+
 2010-10-03  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.3 released.

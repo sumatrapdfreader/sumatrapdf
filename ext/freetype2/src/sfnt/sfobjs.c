@@ -691,9 +691,7 @@
       LOAD_( os2 );
       if ( error )
       {
-        if ( error != SFNT_Err_Table_Missing )
-          goto Exit;
-
+        /* we treat the table as missing if there are any errors */
         face->os2.version = 0xFFFFU;
       }
     }

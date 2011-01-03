@@ -87,7 +87,7 @@
 
   /* compute a query/node hash */
 #define FTC_CMAP_HASH( faceid, index, charcode )         \
-          ( FTC_FACE_ID_HASH( faceid ) + 211 * (index) + \
+          ( _FTC_FACE_ID_HASH( faceid ) + 211 * (index) + \
             ( (charcode) / FTC_CMAP_INDICES_MAX )      )
 
   /* the charmap query */
@@ -287,7 +287,7 @@
     FTC_Node          node;
     FT_Error          error;
     FT_UInt           gindex = 0;
-    FT_UInt32         hash;
+    FT_PtrDist        hash;
     FT_Int            no_cmap_change = 0;
 
 
