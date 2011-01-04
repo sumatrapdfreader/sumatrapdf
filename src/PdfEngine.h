@@ -120,7 +120,8 @@ public:
         return false;
     }
 
-    bool load(const TCHAR *fileName, WindowInfo *windowInfo, bool tryrepair);
+    bool load(const TCHAR *fileName, WindowInfo *windowInfo);
+    bool load(fz_stream *stm, TCHAR *password=NULL);
     int pageRotation(int pageNo);
     SizeD pageSize(int pageNo);
     fz_rect pageMediabox(int pageNo);
@@ -176,6 +177,8 @@ protected:
 
     CRITICAL_SECTION _pagesAccess;
     pdf_page **     _pages;
+
+    bool            finishLoading(void);
     pdf_page      * getPdfPage(int pageNo, bool failIfBusy=false);
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotate);
     bool            renderPage(HDC hDC, pdf_page *page, RECT *screenRect,

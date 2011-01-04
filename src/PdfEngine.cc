@@ -303,10 +303,9 @@ PdfEngine::~PdfEngine()
     DeleteCriticalSection(&_pagesAccess);
 }
 
-bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
+bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win)
 {
-    fz_error error;
-    assert(!_fileName);
+    assert(!_fileName && !_xref);
     _fileName = tstr_dup(fileName);
 
     // File names ending in :<digits>:<digits> are interpreted as containing
@@ -333,7 +332,7 @@ bool PdfEngine::load(const TCHAR *fileName, WindowInfo *win, bool tryrepair)
     fz_stream *file = fz_openfile(fd);
 OpenEmbeddedFile:
     // don't pass in a password so that _xref isn't thrown away if it was wrong
-    error = pdf_openxrefwithstream(&_xref, file, NULL);
+    fz_error error = pdf_openxrefwithstream(&_xref, file, NULL);
     fz_close(file);
     if (error || !_xref)
         return false;
@@ -394,7 +393,41 @@ OpenEmbeddedFile:
         goto OpenEmbeddedFile;
     }
 
-    error = pdf_loadpagetree(_xref);
+    return finishLoading();
+}
+
+bool PdfEngine::load(fz_stream *stm, TCHAR *password)
+{
+    assert(!_fileName && !_xref);
+
+    // don't pass in a password so that _xref isn't thrown away if it was wrong
+    fz_error error = pdf_openxrefwithstream(&_xref, stm, NULL);
+    if (error || !_xref)
+        return false;
+
+    if (pdf_needspassword(_xref)) {
+        if (!password)
+            return false;
+
+        char *pwd_utf8 = tstr_to_utf8(password);
+        char *pwd_ansi = tstr_to_ansi(password);
+        bool okay = pwd_utf8 && !!pdf_authenticatepassword(_xref, pwd_utf8);
+        // for some documents, only the ANSI-encoded password works
+        if (!okay && pwd_ansi)
+            okay = !!pdf_authenticatepassword(_xref, pwd_ansi);
+        free(pwd_utf8);
+        free(pwd_ansi);
+
+        if (!okay)
+            return false;
+    }
+
+    return finishLoading();
+}
+
+bool PdfEngine::finishLoading(void)
+{
+    fz_error error = pdf_loadpagetree(_xref);
     if (error)
         return false;
 

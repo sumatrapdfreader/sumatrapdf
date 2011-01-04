@@ -178,7 +178,20 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             RedirectIOToConsole();
         }
         else if (is_arg_with_param("-plugin")) {
-            this->hwndPluginParent = (HWND)_ttoi(argList[++n]);
+            // the argument is a (nummeric) window handle to
+            // become the parent of a frameless SumatraPDF
+            // (used e.g. for embedding it into a browser plugin)
+            this->hwndPluginParent = (HWND)_ttol(argList[++n]);
+        }
+        else if (is_arg_with_param("-ifiltermmap")) {
+            // the argument is a (nummeric) handle to a shared memory
+            // file mapping containing the content of a PDF file to be
+            // reduced to indexable text (needed as long as we don't
+            // build a reusable DLL containing the rendering code)
+            // Note: the memory handle must be owned by the calling
+            //       process and inherited by SumatraPDF.exe
+            this->hIFilterMMap = (HANDLE)_ttol(argList[++n]);
+            this->exitImmediately = true;
         }
         else if (is_arg_with_param("-bench")) {
             TCHAR *s = tstr_dup(argList[++n]);

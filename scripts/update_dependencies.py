@@ -8,7 +8,7 @@ import os, re, fnmatch
 pjoin = os.path.join
 
 BASE_DIR = ".."
-DIRS = ["baseutils", "src", pjoin("src", "installer")]
+DIRS = ["baseutils", "src", pjoin("src", "installer"), pjoin("src", "ifilter")]
 INCLUDE_DIRS = DIRS + [pjoin("mupdf", "mupdf"), pjoin("mupdf", "fitz")]
 MAKEFILE = "makefile.msvc"
 DEPENDENCIES_PER_LINE = 3

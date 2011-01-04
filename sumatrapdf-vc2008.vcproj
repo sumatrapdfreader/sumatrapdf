@@ -106,6 +106,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\ExtHelpers.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ExtHelpers.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\FileHistory.cc"
 				>
 			</File>
@@ -777,6 +785,34 @@
 			</File>
 			<File
 				RelativePath=".\src\installer\Resource.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="IFilter DLL"
+			>
+			<File
+				RelativePath=".\src\ifilter\CPdfFilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ifilter\CPdfFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ifilter\FilterBase.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ifilter\PdfFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ifilter\PdfFilter.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\ifilter\PdfFilterDll.cpp"
 				>
 			</File>
 		</Filter>

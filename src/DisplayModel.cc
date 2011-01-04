@@ -234,11 +234,11 @@ PdfPageInfo *DisplayModel::getPageInfo(int pageNo) const
     return &(_pagesInfo[pageNo-1]);
 }
 
-bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair)
+bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win)
 { 
     assert(fileName);
     PdfEngine *engine = new PdfEngine();
-    if (!engine->load(fileName, win, tryrepair)) {
+    if (!engine->load(fileName, win)) {
         delete engine;
         return false;
     }
@@ -1281,7 +1281,7 @@ DisplayModel *DisplayModel_CreateFromFileName(
   const TCHAR *fileName,
   SizeD totalDrawAreaSize,
   DisplayMode displayMode, int startPage,
-  WindowInfo *win, bool tryrepair)
+  WindowInfo *win)
 {
     DisplayModel *    dm = NULL;
 
@@ -1289,7 +1289,7 @@ DisplayModel *DisplayModel_CreateFromFileName(
     if (!dm)
         goto Error;
 
-    if (!dm->load(fileName, startPage, win, tryrepair))
+    if (!dm->load(fileName, startPage, win))
         goto Error;
 
     dm->setTotalDrawAreaSize(totalDrawAreaSize);

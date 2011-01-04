@@ -22,6 +22,7 @@
 #include "CrashHandler.h"
 #include "ParseCommandLine.h"
 #include "Benchmark.h"
+#include "ExtHelpers.h"
 
 #include "translations.h"
 #include "Version.h"
@@ -175,10 +176,6 @@ static WindowInfoList               gWindowList;
 static int                          gReBarDy;
 static int                          gReBarDyFrame;
 
-// in plugin mode, the window's frame isn't drawn and closing and
-// fullscreen are disabled, so that SumatraPDF can be displayed
-// embedded (e.g. in a web browser)
-       bool                         gPluginMode = false;
 // in restricted mode, all commands that could affect the OS are
 // disabled (such as opening files, printing, following URLs), so
 // that SumatraPDF can be used as a PDF reader on locked down systems
@@ -1720,7 +1717,7 @@ static bool LoadPdfIntoWindow(
     free(win->loadedFilePath);
     win->loadedFilePath = tstr_dup(fileName);
     win->dm = DisplayModel_CreateFromFileName(fileName, win->winSize(),
-        displayMode, startPage, win, tryrepair);
+        displayMode, startPage, win);
 
     if (!win->dm) {
         DBG_OUT_T("failed to load file %s\n", fileName);
@@ -6986,25 +6983,6 @@ exit:
     DdeUninitialize(inst);
 }
 
-static void MakePluginWindow(WindowInfo *win, HWND hwndParent)
-{
-    assert(IsWindow(hwndParent));
-    assert(gPluginMode);
-    win->pluginParent = hwndParent;
-
-    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
-    ws &= ~(WS_POPUP|WS_BORDER|WS_CAPTION|WS_THICKFRAME);
-    ws |= WS_CHILD;
-    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
-
-    RECT rc;
-    SetParent(win->hwndFrame, hwndParent);
-    GetClientRect(hwndParent, &rc);
-    MoveWindow(win->hwndFrame, 0, 0, RectDx(&rc), RectDy(&rc), FALSE);
-    // from here on, we depend on the plugin's host to resize us
-    SetFocus(win->hwndFrame);
-}
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     MSG                 msg = {0};
@@ -7057,6 +7035,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         AssociateExeWithPdfExtension();
     if (i.filesToBenchmark.size() > 0)
         Bench(i.filesToBenchmark);
+    if (i.hIFilterMMap)
+        UpdateMMapForIndexing(i.hIFilterMMap);
     if (i.exitImmediately)
         goto Exit;
 

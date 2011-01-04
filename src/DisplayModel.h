@@ -145,7 +145,7 @@ public:
 
     /* number of pages in PDF document */
     int  pageCount() const { return pdfEngine->pageCount(); }
-    bool load(const TCHAR *fileName, int startPage, WindowInfo *win, bool tryrepair);
+    bool load(const TCHAR *fileName, int startPage, WindowInfo *win);
     bool validPageNo(int pageNo) const { return pdfEngine->validPageNo(pageNo); }
     bool hasTocTree() { return pdfEngine->hasTocTree(); }
     PdfTocItem *getTocTree() { return pdfEngine->getTocTree(); }
@@ -351,6 +351,6 @@ DisplayModel *DisplayModel_CreateFromFileName(
   const TCHAR *fileName,
   SizeD totalDrawAreaSize,
   DisplayMode displayMode, int startPage,
-  WindowInfo *win, bool tryrepair);
+  WindowInfo *win);
 
 #endif

@@ -81,7 +81,7 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
 
     MillisecondTimer t;
     t.Start();
-    bool success = engine->load(filePath, NULL, true);
+    bool success = engine->load(filePath, NULL);
     t.Stop();
 
     if (!success) {

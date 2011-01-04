@@ -298,7 +298,7 @@ $(O): force
 	@if not exist $(O) mkdir $(O)
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
-	rc /r /fo$(PDFAPP_RES) $<
+	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
 
 $(O)\cmap_tounicode.obj: $(O)\cmap_tounicode.c
 $(O)\cmap_cns.obj: $(O)\cmap_cns.c

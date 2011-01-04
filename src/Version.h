@@ -31,6 +31,6 @@
  #define UPDATE_CHECK_VER  _T(QM(SVN_PRE_RELEASE_VER))
 #endif
 
-#define COPYRIGHT_STR      "Copyright 2006-2010 all authors (GPLv3)"
+#define COPYRIGHT_STR      "Copyright 2006-2011 all authors (GPLv3)"
 
 #endif

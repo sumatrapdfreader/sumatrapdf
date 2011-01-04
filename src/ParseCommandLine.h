@@ -30,6 +30,7 @@ public:
     BOOL        invertColors;
     bool        enterPresentation;
     HWND        hwndPluginParent;
+    HANDLE      hIFilterMMap;
     bool        exitImmediately;
 #ifdef BUILD_RM_VERSION
     // Delete the files which were passed into the program by command line.
@@ -42,7 +43,7 @@ public:
         fwdsearchPermanent(FALSE), escToExit(FALSE),
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
-        enterPresentation(false), hwndPluginParent(NULL),
+        enterPresentation(false), hwndPluginParent(NULL), hIFilterMMap(NULL),
         exitImmediately(false)
 #ifdef BUILD_RM_VERSION
         , deleteFilesOnClose(false)
