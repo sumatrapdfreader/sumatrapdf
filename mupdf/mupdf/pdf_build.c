@@ -293,9 +293,15 @@ pdf_showimage(pdf_csi *csi, fz_pixmap *image)
 
 	bbox = fz_transformrect(gstate->ctm, fz_unitrect);
 
-	pdf_begingroup(csi, bbox); /* SumatraPDF: always apply transparency mask */
 	if (image->mask)
+	{
+		/* SumatraPDF: always apply blend group */
+		if (gstate->blendmode != FZ_BNORMAL)
+			csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 		csi->dev->clipimagemask(csi->dev->user, image->mask, gstate->ctm);
+	}
+	else /* TODO: only skip gstate softmask for softmasked images? */
+		pdf_begingroup(csi, bbox);
 
 	if (!image->colorspace)
 	{
@@ -332,8 +338,14 @@ pdf_showimage(pdf_csi *csi, fz_pixmap *image)
 	}
 
 	if (image->mask)
+	{
 		csi->dev->popclip(csi->dev->user);
-	pdf_endgroup(csi); /* SumatraPDF: always apply transparency mask */
+		/* SumatraPDF: always apply blend group */
+		if (gstate->blendmode != FZ_BNORMAL)
+			csi->dev->endgroup(csi->dev->user);
+	}
+	else
+		pdf_endgroup(csi);
 }
 
 void
