@@ -264,8 +264,7 @@ bool DisplayModel::load(const TCHAR *fileName, int startPage, WindowInfo *win, b
         return false;
 
     textSelection = new PdfSelection(pdfEngine);
-    _pdfSearch = new PdfSearch(pdfEngine);
-    _pdfSearch->tracker = (PdfSearchTracker *)win;
+    _pdfSearch = new PdfSearch(pdfEngine, (PdfSearchTracker *)win);
     return true;
 }
 

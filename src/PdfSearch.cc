@@ -3,18 +3,12 @@
 
 #define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
 #define islatinalnum(c) (_istalnum(c) && (unsigned short)(c) < 256)
+#define iswordchar(c) _istalnum(c)
 
-PdfSearch::PdfSearch(PdfEngine *engine) : PdfSelection(engine)
-{
-    tracker = NULL;
-    text = NULL;
-    anchor = NULL;
-    pageText = NULL;
-    sensitive = false;
-    forward = true;
-    findPage = 1;
-    findIndex = 0;
-}
+PdfSearch::PdfSearch(PdfEngine *engine, PdfSearchTracker *tracker) : PdfSelection(engine),
+    tracker(tracker), text(NULL), anchor(NULL), pageText(NULL),
+    caseSensitive(false), wholeWords(false), forward(true),
+    findPage(0), findIndex(0) { }
 
 PdfSearch::~PdfSearch()
 {
@@ -33,17 +27,29 @@ void PdfSearch::Reset()
 void PdfSearch::SetText(TCHAR *text)
 {
     this->Clear();
+
+    // all whitespace characters before the first word will be ignored
+    // (we're similarly fuzzy about whitespace as Adobe Reader in this regard)
+    SkipWhitespace(text);
     this->text = tstr_dup(text);
 
     // extract anchor string (the first word or the first symbol) for faster searching
-    TCHAR *c = this->text, *end;
-    SkipWhitespace(c);
-    if (islatinalnum(*c)) {
-        for (end = c; islatinalnum(*end); end++);
-        this->anchor = tstr_dupn(c, end - c);
+    if (islatinalnum(*text)) {
+        TCHAR *end;
+        for (end = text; islatinalnum(*end); end++);
+        this->anchor = tstr_dupn(text, end - text);
     }
     else
-        this->anchor = tstr_dupn(c, 1);
+        this->anchor = tstr_dupn(text, 1);
+
+    // search text ending in a single space enables the 'Whole words' option
+    // (that behavior already "kind of" exists without special treatment, but
+    // usually is not quite what a user expects, so let's try to be cleverer)
+    this->wholeWords = false;
+    if (tstr_endswith(text, _T(" "))) {
+        this->wholeWords = !tstr_endswith(text, _T("  "));
+        this->text[tstr_len(this->text) - 1] = '\0';
+    }
 }
 
 void PdfSearch::SetDirection(bool forward)
@@ -59,14 +65,16 @@ void PdfSearch::SetDirection(bool forward)
 int PdfSearch::MatchLen(TCHAR *start)
 {
     TCHAR *match = text, *end = start;
-    SkipWhitespace(match);
     assert(!_istspace(*end));
+
+    if (wholeWords && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
+        return -1;
 
     while (*match) {
         if (!*end)
-            return 0;
-        if (sensitive ? *match != *end : _totlower(*match) != _totlower(*end))
-            return 0;
+            return -1;
+        if (caseSensitive ? *match != *end : _totlower(*match) != _totlower(*end))
+            return -1;
         match++;
         end++;
         if (!islatinalnum(*(match - 1)) || _istspace(*(match - 1)) && _istspace(*(end - 1))) {
@@ -75,13 +83,16 @@ int PdfSearch::MatchLen(TCHAR *start)
         }
     }
 
+    if (wholeWords && end > pageText && iswordchar(end[-1]) && iswordchar(end[0]))
+        return -1;
+
     return end - start;
 }
 
 // TODO: use Boyer-Moore algorithm here (if it proves to be faster)
 bool PdfSearch::FindTextInPage(int pageNo)
 {
-    if (!text)
+    if (tstr_empty(anchor))
         return false;
     if (!pageNo)
         pageNo = findPage;
@@ -91,14 +102,14 @@ bool PdfSearch::FindTextInPage(int pageNo)
     int length;
     do {
         if (forward)
-            found = (sensitive ? StrStr : StrStrI)(pageText + findIndex, anchor);
+            found = (caseSensitive ? StrStr : StrStrI)(pageText + findIndex, anchor);
         else
             found = StrRStrI(pageText, pageText + findIndex, anchor);
         if (!found)
             return false;
         findIndex = found - pageText + (forward ? 1 : 0);
         length = MatchLen(found);
-    } while (!length);
+    } while (length <= 0);
 
     StartAt(pageNo, found - pageText);
     SelectUpTo(pageNo, found - pageText + length);
@@ -113,7 +124,7 @@ bool PdfSearch::FindTextInPage(int pageNo)
 
 bool PdfSearch::FindStartingAtPage(int pageNo)
 {
-    if (!text || !anchor || !*anchor)
+    if (tstr_empty(anchor))
         return false;
 
     int total = engine->pageCount();

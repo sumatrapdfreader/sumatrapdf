@@ -19,11 +19,11 @@ public:
 class PdfSearch : public PdfSelection
 {
 public:
-    PdfSearch(PdfEngine *engine);
+    PdfSearch(PdfEngine *engine, PdfSearchTracker *tracker=NULL);
     ~PdfSearch();
 
     void SetText(TCHAR *text);
-    void SetSensitive(bool sensitive) { this->sensitive = sensitive; }
+    void SetSensitive(bool sensitive) { caseSensitive = sensitive; }
     void SetDirection(bool forward);
     bool FindFirst(int page, TCHAR *text);
     bool FindNext();
@@ -34,8 +34,11 @@ public:
 protected:
     TCHAR *text;
     TCHAR *anchor;
-    bool  forward;
-    bool  sensitive;
+    bool forward;
+    bool caseSensitive;
+    // the 'Whole words' option is implicitly set when the search text
+    // ends in a single space (many users already search that way)
+    bool wholeWords;
 
     bool FindTextInPage(int pageNo = 0);
     bool FindStartingAtPage(int pageNo);
