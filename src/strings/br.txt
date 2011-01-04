@@ -7,6 +7,7 @@
 Lang: br Portuguese - Brazil (Português)
 
 Contributor: Francisco Fuchs (pontocinza.blogspot.com)
+Contributor: Paulo R. M. Cereda (cereda AT users DOT sf DOT net)
 
 &About
 S&obre o SumatraPDF
@@ -296,6 +297,12 @@ Página inteira
 Fit Width
 Ajustar pela largura
 
+Fit Width and Show Pages Continuously
+Ajustar largura e exibir páginas de forma contínua
+
+Fit a Single Page
+Ajustar em uma única página
+
 Found text at page %d
 Texto encontrado na página %d
 
@@ -389,8 +396,14 @@ Ajuste da página
 Page:
 Página:
 
+Please include the following file in your crash report:
+Por favor, inclua o seguinte arquivo em seu relatório de travamento:
+
 Please wait - rendering...
 Por favor aguarde, renderizando...
+
+Pr&esentation\tCtrl-L
+Apresentação\tCtrl-L
 
 Previous Page
 Página anterior
@@ -442,6 +455,12 @@ Assunto:
 
 SumatraPDF Options
 Opções do SumatraPDF
+
+SumatraPDF Update
+Atualização do SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF travou
 
 SumatraPDF is your main PDF reader
 O SumatraPDF é o seu leitor PDF padrão
@@ -496,12 +515,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF Update
-#SumatraPDF crashed
 
