@@ -12,6 +12,7 @@ Contributor: Alessandro Visentin
 Contributor: Alessandro Mariani
 Contributor: Massimiliano Beltrando
 Contributor: Mirco Scottà
+Contributor: Cosimo Prete Damiano
 
 &About
 &Informazioni
@@ -20,22 +21,22 @@ Contributor: Mirco Scottà
 &Dimensioni reali\tCtrl-1
 
 &All selected pages
-Tutte le pagine selezionate
+&Tutte le pagine selezionate
 
 &Back\tAlt+Left Arrow
-Indietro\tAlt+Freccia sinistra
+&Indietro\tAlt+Freccia sinistra
 
 &Close\tCtrl-W
 &Chiudi\tCtrl-W
 
 &Copy Selection\tCtrl-C
-Copia Selezione\tCtrl-C
+&Copia Selezione\tCtrl-C
 
 &Don't ask me again
 &Non chiedermelo più
 
 &Even pages only
-Solo pagine pari
+&Solo pagine pari
 
 &File
 &File
@@ -44,10 +45,10 @@ Solo pagine pari
 &Ricerca:
 
 &First Page\tHome
-Prima pagina\tHome
+&Prima pagina\tHome
 
 &Fit pages to printable area
-Adatta le pagine alla zona stampabile
+&Adatta le pagine alla zona stampabile
 
 &Go To
 &Vai a
@@ -59,7 +60,7 @@ Adatta le pagine alla zona stampabile
 &Aiuto
 
 &Last Page\tEnd
-Ultima pagina\tEnd
+&Ultima pagina\tEnd
 
 &Magnification:
 &Ingrandimento:
@@ -80,7 +81,7 @@ Pagina successiva\tFreccia destra
 &No, grazie
 
 &Odd pages only
-Solo pagine dispari
+&Solo pagine dispari
 
 &Open\tCtrl-O
 &Apri\tCtrl-O
@@ -92,7 +93,7 @@ Solo pagine dispari
 &Password:
 
 &Previous Page\tLeft Arrow
-Pagina precedente\tFreccia destra
+&Pagina precedente\tFreccia destra
 
 &Print...\tCtrl-P
 &Stampa\tCtrl-P
@@ -101,7 +102,7 @@ Pagina precedente\tFreccia destra
 &Stampa... (rifiutato)
 
 &Remember the password for this document
-Ricorda la password per questo documento
+&Ricorda la password per questo documento
 
 &Remember these settings for each document
 &Ricorda le impostazioni per ogni documento
@@ -113,7 +114,7 @@ Ricorda la password per questo documento
 &Impostazioni
 
 &Shrink pages to printable area (if necessary)
-Riduci le pagine alla zona stampabile (se necessario)
+&Riduci le pagine alla zona stampabile (se necessario)
 
 &Skip this version
 &Salta questa versione
@@ -250,9 +251,6 @@ Inserire la linea di comando da eseguire quando fai doppio clic su un documento 
 Error loading PDF file.
 Errore durante l'apertura del file.
 
-F&orward\tAlt+Right Arrow
-Avanti\tAlt+Freccia destra
-
 F&ullscreen\tCtrl-Shift-L
 Schermo intero\tCtrl-Shift-L
 
@@ -388,125 +386,50 @@ Dimensione pagina:
 Page number %u inexistant
 Pagina numero %u inesistente
 
-Page scaling
-Dimensionamento pagina
-
-Page:
-Pagina:
-
-Please wait - rendering...
-Prego attendere - sto renderizzando...
-
-Previous Page
-Pagina precedente
-
-Print range
-Stampare pagine
-
-Printing problem.
-Problema di stampa.
-
-Remember &opened files
-R&icorda i file aperti
-
-Rotate &Left\tCtrl-Shift--
-Ruota a sinistra\tCtrl-Shift--
-
-Rotate &Right\tCtrl-Shift-+
-Ruota a destra\tCtrl-Shift-+
-
-Searching %d of %d...
-In ricerca %d di %d...
-
-Select content with Ctrl+left mouse button
-Seleziona contenuti con Ctrl+tasto sinistro del mouse
-
-Send by &E-mail...
-Invia per &mail...
-
-Set inverse search command-line
-Imposta comando di ricerca inversa
-
-Show &Toolbar
-Mostra barra strumenti
-
-Show &pages continuously
-Mostra le pagine in modo continuo
-
-Show the &bookmarks sidebar when available
-Mostra la &barra dei segnalibri quando è disponibile
-
-Single Page
-Pagina singola
-
-Source file %s has no synchronization point
-Il file sorgente non ha punti di sincronizzazione
-
-Subject:
-Soggetto:
-
-SumatraPDF Options
-Opzioni SumatraPDF
-
-SumatraPDF is your main PDF reader
-SumatraPDF è il lettore PDF predefinito
-
-SumatraPDF should now be your main PDF reader
-SumatraPDF dev'essere ora il lettore PDF predefinito
-
-Synchronization file cannot be opened
-Il file di sincronizzazione non può essere aperto
-
-Text documents
-Documenti di testo
-
-Title:
-Titolo:
-
-Unknown source file (%s)
-File sorgente ignoto
-
-View
-Visualizza
-
-Visit &Website
-&Visita il sito
-
-Warning
-Avviso
-
-You have the latest version.
-Hai l'ultima versione disponibile
-
-You have version %s
-La tua versione è la %s
-
-Zoom
-Ingrandimento
-
-Zoom In
-Ingrandisci
-
-Zoom Out
-Riduci
-
-Zoom factor
-Fattore ingrandimento
-
-[Changes detected; refreshing] %s
-[Cambiamenti rilevati; in aggiornamento] %s
-
-copying text
-copia testo
-
-printing document
-stampa documento
-
 # Untranslated:
+#F&orward\tAlt+Right Arrow
 #Fit Width and Show Pages Continuously
 #Fit a Single Page
+#Page scaling
+#Page:
 #Please include the following file in your crash report:
+#Please wait - rendering...
 #Pr&esentation\tCtrl-L
+#Previous Page
+#Print range
+#Printing problem.
+#Remember &opened files
+#Rotate &Left\tCtrl-Shift--
+#Rotate &Right\tCtrl-Shift-+
+#Searching %d of %d...
+#Select content with Ctrl+left mouse button
+#Send by &E-mail...
+#Set inverse search command-line
+#Show &Toolbar
+#Show &pages continuously
+#Show the &bookmarks sidebar when available
+#Single Page
+#Source file %s has no synchronization point
+#Subject:
+#SumatraPDF Options
 #SumatraPDF Update
 #SumatraPDF crashed
+#SumatraPDF is your main PDF reader
+#SumatraPDF should now be your main PDF reader
+#Synchronization file cannot be opened
+#Text documents
+#Title:
+#Unknown source file (%s)
+#View
+#Visit &Website
+#Warning
+#You have the latest version.
+#You have version %s
+#Zoom
+#Zoom In
+#Zoom Out
+#Zoom factor
+#[Changes detected; refreshing] %s
+#copying text
+#printing document
 
