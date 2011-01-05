@@ -384,18 +384,18 @@ fz_paintlinear(fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
 		e1.x = v2.x - (p1.x - p0.x) * HUGENUM;
 		e1.y = v2.y - (p1.y - p0.y) * HUGENUM;
 
-		fz_paintquad(dest, e0, v0, v2, e1, 0, 0, 0, 0, 3, bbox);
+		fz_paintquad(dest, e0, e1, v0, v2, 0, 0, 0, 0, 3, bbox);
 	}
 
 	if (shade->extend[1])
 	{
-		e0.x = v1.x - (p1.x - p0.x) * HUGENUM;
-		e0.y = v1.y - (p1.y - p0.y) * HUGENUM;
+		e0.x = v1.x + (p1.x - p0.x) * HUGENUM;
+		e0.y = v1.y + (p1.y - p0.y) * HUGENUM;
 
-		e1.x = v3.x - (p1.x - p0.x) * HUGENUM;
-		e1.y = v3.y - (p1.y - p0.y) * HUGENUM;
+		e1.x = v3.x + (p1.x - p0.x) * HUGENUM;
+		e1.y = v3.y + (p1.y - p0.y) * HUGENUM;
 
-		fz_paintquad(dest, e0, v1, v3, e1, 255, 255, 255, 255, 3, bbox);
+		fz_paintquad(dest, e0, e1, v1, v3, 255, 255, 255, 255, 3, bbox);
 	}
 }
 
