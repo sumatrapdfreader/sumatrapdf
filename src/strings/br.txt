@@ -298,7 +298,7 @@ Fit Width
 Ajustar pela largura
 
 Fit Width and Show Pages Continuously
-Ajustar largura e exibir páginas de forma contínua
+Ajustar pela largura e exibir páginas de modo contínuo
 
 Fit a Single Page
 Ajustar em uma única página
@@ -403,7 +403,7 @@ Please wait - rendering...
 Por favor aguarde, renderizando...
 
 Pr&esentation\tCtrl-L
-Apresentação\tCtrl-L
+Apr&esentação\tCtrl-L
 
 Previous Page
 Página anterior
@@ -460,7 +460,7 @@ SumatraPDF Update
 Atualização do SumatraPDF
 
 SumatraPDF crashed
-SumatraPDF travou
+O SumatraPDF travou
 
 SumatraPDF is your main PDF reader
 O SumatraPDF é o seu leitor PDF padrão
