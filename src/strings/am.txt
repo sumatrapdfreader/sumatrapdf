@@ -395,6 +395,9 @@ Page scaling
 Page:
 Էջը.
 
+Please include the following file in your crash report:
+Ներառեք հետևյալ ֆայլը ձախողման հաշվետվության մեջ.
+
 Please wait - rendering...
 Խնդրում ենք սպասել...
 
@@ -455,6 +458,9 @@ SumatraPDF Options
 SumatraPDF Update
 SumatraPDF-ի թարմացումները
 
+SumatraPDF crashed
+SumatraPDF-ն ձախողվեց
+
 SumatraPDF is your main PDF reader
 PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 
@@ -508,8 +514,4 @@ copying text
 
 printing document
 փաստաթուղթը տպվում է
-
-# Untranslated:
-#Please include the following file in your crash report:
-#SumatraPDF crashed
 
