@@ -15,6 +15,7 @@
 
 char *output = NULL;
 float resolution = 72;
+float rotation = 0;
 
 int showxml = 0;
 int showtext = 0;
@@ -59,6 +60,7 @@ static void usage(void)
 		"\t-x\tshow display list\n"
 		"\t-d\tdisable use of display list\n"
 		"\t-5\tshow md5 checksums\n"
+		"\t-R -\trotate clockwise by given number of degrees\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
 }
@@ -272,6 +274,7 @@ static void drawpage(pdf_xref *xref, int pagenum)
 		ctm = fz_translate(0, -page->mediabox.y1);
 		ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
 		ctm = fz_concat(ctm, fz_rotate(page->rotate));
+		ctm = fz_concat(ctm, fz_rotate(rotation));
 		bbox = fz_roundrect(fz_transformrect(ctm, page->mediabox));
 
 		/* TODO: banded rendering and multi-page ppm */
@@ -398,13 +401,14 @@ int main(int argc, char **argv)
 	fz_error error;
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "o:p:r:Aadgmtx5")) != -1)
+	while ((c = fz_getopt(argc, argv, "o:p:r:R:Aadgmtx5")) != -1)
 	{
 		switch (c)
 		{
 		case 'o': output = fz_optarg; break;
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atof(fz_optarg); break;
+		case 'R': rotation = atof(fz_optarg); break;
 		case 'A': accelerate = 0; break;
 		case 'a': savealpha = 1; break;
 		case 'm': showtime++; break;

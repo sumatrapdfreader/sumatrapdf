@@ -599,8 +599,8 @@ fz_drawfillimage(void *user, fz_pixmap *image, fz_matrix ctm, float alpha)
 	}
 
 #ifdef SMOOTHSCALE
-	dx = sqrtf(ctm.a * ctm.a + ctm.c * ctm.c);
-	dy = sqrtf(ctm.b * ctm.b + ctm.d * ctm.d);
+	dx = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	dy = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	if (dx < image->w && dy < image->h)
 	{
 		scaled = fz_smoothtransformpixmap(image, &ctm, dev->dest->x, dev->dest->y, dx, dy);

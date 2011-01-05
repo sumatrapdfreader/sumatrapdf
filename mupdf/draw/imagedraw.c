@@ -291,9 +291,9 @@ fz_paintimageimp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *img, fz_matrix ctm,
 	dolerp = 0;
 	if (!fz_isrectilinear(ctm))
 		dolerp = 1;
-	if (sqrtf(ctm.a * ctm.a + ctm.c * ctm.c) > img->w)
+	if (sqrtf(ctm.a * ctm.a + ctm.b * ctm.b) > img->w)
 		dolerp = 1;
-	if (sqrtf(ctm.b * ctm.b + ctm.d * ctm.d) > img->h)
+	if (sqrtf(ctm.c * ctm.c + ctm.d * ctm.d) > img->h)
 		dolerp = 1;
 
 	bbox = fz_roundrect(fz_transformrect(ctm, fz_unitrect));
