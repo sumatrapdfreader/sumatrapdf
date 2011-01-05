@@ -26,41 +26,6 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
     SetFocus(win->hwndFrame);
 }
 
-
-struct MMapPos {
-    char *data;
-    int len;
-
-    MMapPos(char *data, int len) : data(data), len(len) { }
-    ~MMapPos() { UnmapViewOfFile(data); }
-};
-
-static int readmmap(fz_stream *stm, unsigned char *buf, int len)
-{
-    MMapPos *mpos = (MMapPos *)stm->state;
-    len = MIN(len, mpos->len - stm->pos);
-    memcpy(buf, mpos->data + stm->pos, len);
-    return len;
-}
-
-static void seekmmap(fz_stream *stm, int offset, int whence)
-{
-    MMapPos *mpos = (MMapPos *)stm->state;
-    switch (whence) {
-    case 0: stm->pos = offset; break;
-    case 1: stm->pos += offset; break;
-    case 2: stm->pos = mpos->len - offset; break;
-    }
-    stm->pos = CLAMP(stm->pos, 0, mpos->len);
-	stm->rp = stm->bp;
-	stm->wp = stm->bp;
-}
-
-static void closemmap(fz_stream *stm)
-{
-    delete (MMapPos *)stm->state;
-}
-
 /**
  * Communication protocol:
  * -> IFilter DLL opens an anonymous shared memory map and fills it with
@@ -74,12 +39,16 @@ static void closemmap(fz_stream *stm)
  * -> IFilter DLL can then easily iterate over these properties and return them
  *    through the IFilter API.
  */
+
+#define MMAP_HEADER_SIZE 64
+
 void UpdateMMapForIndexing(HANDLE hIFilterMMap)
 {
     PdfEngine engine;
     VStrList pages;
+    fz_buffer *filedata = NULL;
 
-    char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, 64);
+    char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, MMAP_HEADER_SIZE);
     assert(data);
     if (!data)
         return;
@@ -88,13 +57,14 @@ void UpdateMMapForIndexing(HANDLE hIFilterMMap)
         goto Error;
     UnmapViewOfFile(data);
 
-    data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count + 64);
+    data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count + MMAP_HEADER_SIZE);
     if (!data)
         goto Error;
 
-    MMapPos *mpos = new MMapPos(data + strlen(data) + 1, count);
-	fz_stream *stm = fz_newstream(mpos, readmmap, closemmap);
-	stm->seek = seekmmap;
+    filedata = fz_newbuffer(count);
+    filedata->len = count;
+    memcpy(filedata->data, data + str_len(data) + 1, count);
+    fz_stream *stm = fz_openbuffer(filedata);
     bool success = engine.load(stm);
     fz_close(stm);
     if (!success)
@@ -121,15 +91,25 @@ void UpdateMMapForIndexing(HANDLE hIFilterMMap)
         pages.push_back(engine.ExtractPageText(pageNo, _T(DOS_NEWLINE)));
     TCHAR *content = pages.join();
     char *contentUTF8 = tstr_to_utf8(content);
-    out += str_printf_s(out, end - out, "Content:%s", contentUTF8) + 1;
+    int len = str_printf_s(out, end - out, "Content:%s", contentUTF8);
+    out += (len > 0 ? len : strlen(out)) + 1;
     free(contentUTF8);
     free(content);
 
-    str_printf_s(out, end - out, "");
+    // ensure the double-zero termination
+    if (out < end)
+        *out = '\0';
+    *(end - 1) = *(end - 2) = '\0';
+
+    UnmapViewOfFile(data);
+    fz_dropbuffer(filedata);
     return;
+
 Error:
     if (data) {
-        memset(data, 0, 4);
+        *data = 0;
         UnmapViewOfFile(data);
     }
+    if (filedata)
+        fz_dropbuffer(filedata);
 }

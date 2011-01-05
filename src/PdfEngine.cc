@@ -985,8 +985,11 @@ fz_buffer *PdfEngine::getStreamData(int num, int gen)
         stream = fz_keepstream(_xref->file);
 
     if (stream) {
+        fz_seek(stream, 0, 2);
+        int len = fz_tell(stream);
         fz_seek(stream, 0, 0);
-        fz_readall(&data, stream, 1024);
+        if (len > 0 && fz_tell(stream) == 0)
+            fz_readall(&data, stream, len);
         fz_close(stream);
     }
 

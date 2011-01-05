@@ -178,7 +178,7 @@ $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 
 # IFilter directory
 {src\ifilter}.cpp{$(O)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /wd4995 /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # Installer directory
 {src\installer}.cpp{$(O)}.obj::

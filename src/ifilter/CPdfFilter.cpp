@@ -8,7 +8,13 @@
 #include "wstr_util.h"
 #include "CPdfFilter.h"
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4995)
+#endif
+
 extern HINSTANCE g_hInstance;
+
+#define MMAP_HEADER_SIZE 64
 
 HRESULT CPdfFilter::OnInit()
 {
@@ -16,17 +22,21 @@ HRESULT CPdfFilter::OnInit()
     HRESULT res = m_pStream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res))
         return res;
-    stat.cbSize.LowPart += 64;
+
+    ULONG size = stat.cbSize.LowPart;
     SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, TRUE };
-    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, stat.cbSize.LowPart, NULL);
+    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size + MMAP_HEADER_SIZE, NULL);
     if (!m_hMap)
         return E_OUTOFMEMORY;
-    m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, stat.cbSize.LowPart);
+    m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size + MMAP_HEADER_SIZE);
     if (!m_pData)
         return E_OUTOFMEMORY;
-    sprintf(m_pData, "IFilterMMap 1.3 %ul", stat.cbSize.LowPart - 64);
+
+    sprintf(m_pData, "IFilterMMap 1.3 %ul", size);
     char *out = m_pData + strlen(m_pData) + 1;
-    res = m_pStream->Read(out, stat.cbSize.LowPart - 64, NULL);
+    LARGE_INTEGER zero = { 0 };
+    m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
+    res = m_pStream->Read(out, size, NULL);
     if (FAILED(res))
         return E_FAIL;
 
@@ -49,8 +59,7 @@ HRESULT CPdfFilter::OnInit()
 
     if (!*(int32_t *)m_pData || strcmp(m_pData, "IFilterMMap 1.3") != 0)
         return E_FAIL;
-    m_pSection = m_pData + strlen(m_pData) + 1;
-    m_bSentType = false;
+    m_pSection = m_pData;
 
     return S_OK;
 }
@@ -70,47 +79,43 @@ static bool PdfDateParse(char *pdfDate, SYSTEMTIME *timeOut) {
 HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
     SYSTEMTIME systime;
+    chunkValue.Clear();
 
-    if (!m_bSentType) {
-        m_bSentType = true;
-        chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
-        return S_OK;
-    }
-    
+    m_pSection += strlen(m_pSection) + 1;
     if (!*m_pSection)
         return FILTER_E_END_OF_CHUNKS;
-
-    chunkValue.Clear();
 
     if (!strncmp(m_pSection, "Author:", 7) && m_pSection[7]) {
         WCHAR *author = utf8_to_wstr(m_pSection + 7);
         chunkValue.SetTextValue(PKEY_Author, author);
         free(author);
+        return S_OK;
     }
-    else if (!strncmp(m_pSection, "Title:", 6) && m_pSection[6]) {
+
+    if (!strncmp(m_pSection, "Title:", 6) && m_pSection[6]) {
         WCHAR *title = utf8_to_wstr(m_pSection + 6);
         chunkValue.SetTextValue(PKEY_Title, title);
         free(title);
+        return S_OK;
     }
-    else if (!strncmp(m_pSection, "Date:", 5) && PdfDateParse(m_pSection + 5, &systime)) {
+
+    if (!strncmp(m_pSection, "Date:", 5) && PdfDateParse(m_pSection + 5, &systime)) {
         FILETIME filetime;
         SystemTimeToFileTime(&systime, &filetime);
         chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
+        return S_OK;
     }
-    else if (!strncmp(m_pSection, "Content:", 8)) {
+
+    if (!strncmp(m_pSection, "Content:", 8)) {
         WCHAR *content = utf8_to_wstr(m_pSection + 8);
-        chunkValue.SetTextValue(PKEY_Search_Contents, content);
+        chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT);
         free(content);
-    }
-    else {
-        // fprintf(stderr, "Unknown or empty section: %s\n", m_pSection);
-        m_pSection += strlen(m_pSection) + 1;
-        return GetNextChunkValue(chunkValue);
+        return S_OK;
     }
 
-    m_pSection += strlen(m_pSection) + 1;
-
-    return S_OK;
+    // if (m_pSection[strlen(m_pSection)-1] != ':')
+    //     fprintf(stderr, "Unexpected data: %s\n", m_pSection);
+    return GetNextChunkValue(chunkValue);
 }
 
 
@@ -121,6 +126,9 @@ HRESULT CFilterBase::Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC 
     m_iText = 0;
     m_currentChunk.Clear();
     *pFlags = 0;
+
+    if (m_pStream)
+        return OnInit();
     return S_OK;
 }
 

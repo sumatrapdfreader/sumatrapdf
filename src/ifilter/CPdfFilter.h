@@ -7,7 +7,7 @@ class CPdfFilter : public CFilterBase
 {
 public:
     CPdfFilter(long *plRefCount) : m_lRef(1), m_pData(NULL),
-        m_plModuleRef(plRefCount), m_hMap(NULL), m_bSentType(false)
+        m_plModuleRef(plRefCount), m_hMap(NULL)
     {
         InterlockedIncrement(m_plModuleRef);
     }
@@ -59,5 +59,4 @@ private:
     HANDLE m_hMap;
     char * m_pData;
     char * m_pSection;
-    bool   m_bSentType;
 };
