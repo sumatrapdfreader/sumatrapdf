@@ -1465,7 +1465,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
     if (pageNo > 0) {
         double scrollY = 0, scrollX = -1;
         fz_obj *obj = fz_arrayget(dest, 1);
-        if (fz_isname(obj) && str_eq(fz_toname(obj), "XYZ")) {
+        if (str_eq(fz_toname(obj), "XYZ")) {
             scrollX = fz_toint(fz_arrayget(dest, 2));
             scrollY = fz_toint(fz_arrayget(dest, 3));
             cvtUserToScreen(pageNo, &scrollX, &scrollY);
@@ -1478,7 +1478,18 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
                 scrollX -= pageInfo->pageOnScreen.x;
                 scrollY -= pageInfo->pageOnScreen.y;
             }
+
+            // NULL values for the coordinates mean: keep the current position
+            if (fz_isnull(fz_arrayget(dest, 2)))
+                scrollX = -1;
+            if (fz_isnull(fz_arrayget(dest, 3))) {
+                pageInfo = getPageInfo(currentPageNo());
+                scrollY = -(pageInfo->pageOnScreen.y - _padding->pageBorderTop);
+                scrollY = MAX(scrollY, 0); // Adobe Reader never shows the previous page
+            }
         }
+        else if (str_eq(fz_toname(obj), "Fit"))
+            zoomTo(ZOOM_FIT_PAGE);
         goToPage(pageNo, scrollY, true, scrollX);
     }
 }
