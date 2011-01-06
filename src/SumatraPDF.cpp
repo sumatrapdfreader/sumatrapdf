@@ -7031,10 +7031,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     i.ParseCommandLine(GetCommandLine());
 
+    if (i.showConsole)
+        RedirectIOToConsole();
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
-    if (i.filesToBenchmark.size() > 0)
+    if (i.filesToBenchmark.size() > 0) {
         Bench(i.filesToBenchmark);
+        // TODO: allow to redirect stdout/stderr to file
+        if (i.showConsole)
+            system("pause");
+    }
     if (i.hIFilterMMap)
         UpdateMMapForIndexing(i.hIFilterMMap);
     if (i.exitImmediately)

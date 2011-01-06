@@ -29,6 +29,7 @@ public:
     TCHAR *     newWindowTitle;
     BOOL        invertColors;
     bool        enterPresentation;
+    bool        showConsole;
     HWND        hwndPluginParent;
     HANDLE      hIFilterMMap;
     bool        exitImmediately;
@@ -44,7 +45,7 @@ public:
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
         enterPresentation(false), hwndPluginParent(NULL), hIFilterMMap(NULL),
-        exitImmediately(false)
+        showConsole(false), exitImmediately(false)
 #ifdef BUILD_RM_VERSION
         , deleteFilesOnClose(false)
 #endif

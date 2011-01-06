@@ -175,7 +175,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->enterPresentation = true;
         }
         else if (is_arg("-console")) {
-            RedirectIOToConsole();
+            this->showConsole = true;
         }
         else if (is_arg_with_param("-plugin")) {
             // the argument is a (nummeric) window handle to

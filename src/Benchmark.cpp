@@ -76,6 +76,9 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
         return;
     }
 
+    MillisecondTimer total;
+    total.Start();
+
     PdfEngine *engine = new PdfEngine();
     logbench("Starting: %s\n", filePath);
 
@@ -112,8 +115,10 @@ static void BenchFile(TCHAR *filePath, TCHAR *pagesSpec)
             pagesSpec++;
     }
 
-    logbench("Finished: %s\n", filePath);
     delete engine;
+    total.Stop();
+
+    logbench("Finished (in %.2f ms): %s\n", total.GetTimeInMs(), filePath);
 }
 
 void Bench(VStrList& filesToBench)
