@@ -81,6 +81,8 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "UNICODE" /D "_UNICODE"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 !endif
 
+PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
+
 LDFLAGS = $(LDFLAGS) /MANIFEST /MANIFESTUAC:NO 
 
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
@@ -124,6 +126,11 @@ INSTALLER_OBJS = \
 
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(O)\base_util.obj $(O)\wstr_util.obj $(PDFFILTER_RES)
+
+!if "$(STANDALONE_PDFFILTER)"!=""
+PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D BUILTIN_MUPDF
+PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\str_util.obj $(LIBS_OBJS) $(O)\PdfEngine.obj $(O)\ExtHelpers.obj
+!endif
 
 ##### SumatraPDF-specific build rules #####
 
@@ -178,7 +185,7 @@ $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 
 # IFilter directory
 {src\ifilter}.cpp{$(O)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(PDFFILTER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # Installer directory
 {src\installer}.cpp{$(O)}.obj::
@@ -196,8 +203,10 @@ $(O)\Benchmark.obj: baseutils\base_util.h baseutils\file_util.h baseutils\geom_u
 $(O)\Benchmark.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\Benchmark.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h mupdf\fitz\fitz.h
 $(O)\Benchmark.obj: mupdf\mupdf\mupdf.h src\Benchmark.h src\PdfEngine.h
-$(O)\CPdfFilter.obj: baseutils\wstr_util.h src\ifilter\CPdfFilter.h src\ifilter\FilterBase.h
-$(O)\CPdfFilter.obj: src\ifilter\PdfFilter.h
+$(O)\CPdfFilter.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_util.h
+$(O)\CPdfFilter.obj: baseutils\tstr_util.h baseutils\wstr_util.h mupdf\fitz\fitz.h
+$(O)\CPdfFilter.obj: mupdf\mupdf\mupdf.h src\ExtHelpers.h src\ifilter\CPdfFilter.h
+$(O)\CPdfFilter.obj: src\ifilter\FilterBase.h src\ifilter\PdfFilter.h src\PdfEngine.h
 $(O)\CrashHandler.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\CrashHandler.obj: baseutils\WinUtil.hpp baseutils\wstr_util.h src\CrashHandler.h
 $(O)\CrashHandler.obj: src\translations.h

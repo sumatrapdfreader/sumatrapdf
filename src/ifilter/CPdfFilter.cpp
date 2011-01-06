@@ -8,6 +8,16 @@
 #include "wstr_util.h"
 #include "CPdfFilter.h"
 
+#ifdef BUILTIN_MUPDF
+#include "PdfEngine.h"
+#include "ExtHelpers.h"
+
+TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref, unsigned char *decryptionKey, bool *saveKey)
+{
+    return NULL;
+}
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(disable: 4995)
 #endif
@@ -40,6 +50,7 @@ HRESULT CPdfFilter::OnInit()
     if (FAILED(res))
         return E_FAIL;
 
+#ifndef BUILTIN_MUPDF
     TCHAR cmdline[MAX_PATH * 2];
     _tcscpy(cmdline,_T( "\""));
     GetModuleFileName(g_hInstance, cmdline + 1, MAX_PATH);
@@ -56,6 +67,9 @@ HRESULT CPdfFilter::OnInit()
     CloseHandle(pi.hThread);
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
+#else
+    UpdateMMapForIndexing(m_hMap);
+#endif
 
     if (!*(int32_t *)m_pData || strcmp(m_pData, "IFilterMMap 1.3") != 0)
         return E_FAIL;
