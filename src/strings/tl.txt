@@ -96,6 +96,9 @@ I-save Bilang...\tCtrl-S
 &Settings
 Mga Setting
 
+&Shrink pages to printable area (if necessary)
+Paliitin ang pahina sa printable na area (kung kinakailangan)
+
 &Skip this version
 Laktawan ang bersyong ito
 
@@ -109,7 +112,7 @@ Tignan
 Oo
 
 &Zoom
-Baguhin ang laki
+Palakihin/paliitin
 
 (of %d)
 (ng %d)
@@ -127,16 +130,19 @@ Associate with PDF files?
 I-associate sa mga PDF file?
 
 Attachment: %s
-Naka-attach: %s
+Nakasama: %s
 
 Author:
-May gawa:
+May-akda:
 
 Automatic
 Awtomatiko
 
 Automatically check for &updates
-Awtomatikong tignan kung may mga &updates
+Awtomatikong tignan kung may mga pagbabago
+
+Book View
+Pang-aklat na tingin
 
 Book&marks\tF12
 Mga Pananda\tF12
@@ -186,6 +192,15 @@ Hindi maipakita ang pahina
 Created:
 Ginawa noong:
 
+Default &Layout:
+Default na Ayos:
+
+Denied Permissions:
+Mga hindi maaaring gawin:
+
+Document Properties
+Mga katangian ng dokumento
+
 Download
 I-download
 
@@ -198,8 +213,14 @@ Ipasok ang password
 Enter password for %s
 Ipasok ang password ng %s
 
+Enter the command-line to invoke when you double-click on the PDF document:
+Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
+
 Error loading PDF file.
 Hindi mabuksan ang PDF file.
+
+F&orward\tAlt+Right Arrow
+Susunod\tAlt+Right Arrow
 
 F&ullscreen\tCtrl-Shift-L
 Pagkasyahin sa buong screen\tCtrl-Shift-L
@@ -249,6 +270,9 @@ Ipagkasya ang Pahina
 Fit Width
 Ipagkasya ang Lapad
 
+Fit a Single Page
+Pagkasyahin ang isang pahina
+
 Found text at page %d
 Nakita ang salita sa pahina %d
 
@@ -266,6 +290,9 @@ KB
 
 MB
 MB
+
+Main PDF reader can't be changed in portable mode
+Hindi maaaring palitan ang default na PDF reader sa portable na mode
 
 Make SumatraPDF default application for PDF files?
 Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
@@ -303,6 +330,9 @@ Buksan
 Open in &Adobe Reader
 Buksan sa Adobe Reader
 
+P&roperties\tCtrl-D
+Mga Katangian\tCtrl-D
+
 PDF Document
 PDF Document
 
@@ -311,6 +341,9 @@ Gumawa ng PDF:
 
 PDF Version:
 Bersyon ng PDF:
+
+PDF documents
+Mga PDF na dokumento
 
 Pa&ge...\tCtrl-G
 Pahina...\tCtrl-G
@@ -321,8 +354,14 @@ Laki ng Page
 Page number %u inexistant
 Walang pahinang %u
 
+Page scaling
+Pagkalaki ng pahina
+
 Page:
 Pahina:
+
+Please include the following file in your crash report:
+Maaaring pakisama ang mga sumusunod na file sa iyong crash report:
 
 Please wait - rendering...
 Maghintay - pinapakita...
@@ -366,14 +405,26 @@ Ipakita ang &bookmarks sidebar kung naangkop
 Single Page
 Iisang Pahina
 
+Subject:
+Paksa:
+
 SumatraPDF Options
 Mga Opsyon para sa SumatraPDF
+
+SumatraPDF Update
+Update sa SumatraPDF
+
+SumatraPDF crashed
+Nag-crash ang SumatraPDF
 
 SumatraPDF is your main PDF reader
 SumatraPDF ang iyong default na pambasa ng mga PDF file
 
 SumatraPDF should now be your main PDF reader
 SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
+
+Text documents
+Mga tekstong dokumento
 
 Title:
 Pamagat:
@@ -409,7 +460,7 @@ Zoom factor
 Antas ng laki
 
 [Changes detected; refreshing] %s
-[May napansing pagbabago; nagre-refresh] %s
+[May napansing mga pagbabago; nagre-refresh] %s
 
 copying text
 kinokopya ang mensahe
@@ -422,33 +473,16 @@ ipini-print ang dokumento
 #&Fit pages to printable area
 #&Match case
 #&Odd pages only
-#&Shrink pages to printable area (if necessary)
 #Advanced
-#Book View
 #Cannot start inverse search command. Please check the command line in the settings.
 #Continuous book view
 #Custom &Zoom...\tCtrl-Y
-#Default &Layout:
 #Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Enter the command-line to invoke when you double-click on the PDF document:
-#F&orward\tAlt+Right Arrow
 #Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Main PDF reader can't be changed in portable mode
 #No synchronization file found
 #No synchronization info at this position
-#P&roperties\tCtrl-D
-#PDF documents
-#Page scaling
-#Please include the following file in your crash report:
 #Pr&esentation\tCtrl-L
 #Print range
 #Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Update
-#SumatraPDF crashed
 #Synchronization file cannot be opened
-#Text documents
 
