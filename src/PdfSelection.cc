@@ -87,7 +87,7 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, TCHAR *tex
         fz_bbox c1 = *c;
         fz_bbox bbox = fz_intersectbbox(fz_unionbbox(c0, c1), mediabox);
         // skip text that's completely outside a page's mediabox
-        if (fz_isemptyrect(bbox))
+        if (fz_isemptybbox(bbox))
             continue;
 
         if (text && lines) {

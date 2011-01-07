@@ -113,7 +113,7 @@ fz_renderglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix ctm)
 	else
 	{
 		fz_warn("assert: uninitialized font structure");
-		return NULL;
+		return nil;
 	}
 
 	if (val)
@@ -130,5 +130,5 @@ fz_renderglyph(fz_glyphcache *cache, fz_font *font, int cid, fz_matrix ctm)
 		return val;
 	}
 
-	return NULL;
+	return nil;
 }

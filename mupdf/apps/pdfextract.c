@@ -5,7 +5,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static pdf_xref *xref = NULL;
+static pdf_xref *xref = nil;
 static int dorgb = 0;
 
 void die(fz_error error)
@@ -142,7 +142,7 @@ static void savefont(fz_obj *dict, int num)
 	printf("extracting font %s\n", name);
 
 	f = fopen(name, "wb");
-	if (f == NULL)
+	if (f == nil)
 		die(fz_throw("Error creating font file"));
 
 	n = fwrite(buf->data, 1, buf->len, f);

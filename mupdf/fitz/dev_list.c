@@ -358,7 +358,7 @@ fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix topctm, f
 	fz_rect bbox;
 	/* SumatraPDF: accelerate execution through a prior visibility check */
 	unsigned int clipped = 0;
-	if (!fz_isinfiniterect(bounds)) {
+	if (!fz_isinfinitebbox(bounds)) {
 		// add some fuzz at the edges, as especially glyph rects
 		// are sometimes not actually completely bounding the glyph
 		bounds.x0 -= 20; bounds.y0 -= 20;
@@ -368,7 +368,7 @@ fz_executedisplaylist2(fz_displaylist *list, fz_device *dev, fz_matrix topctm, f
 	{
 		fz_matrix ctm = fz_concat(node->ctm, topctm);
 		/* SumatraPDF: accelerate execution through a prior visibility check */
-		if (clipped || fz_isemptyrect(fz_intersectbbox(fz_roundrect(node->rect), bounds)))
+		if (clipped || fz_isemptybbox(fz_intersectbbox(fz_roundrect(node->rect), bounds)))
 		{
 			switch (node->cmd)
 			{

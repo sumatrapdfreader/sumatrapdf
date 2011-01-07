@@ -132,7 +132,7 @@ static void pageSizeAfterRotation(PdfPageInfo *pageInfo, int rotation,
         return;
 
     if (fitToContent) {
-        if (fz_isemptyrect(pageInfo->contentBox))
+        if (fz_isemptybbox(pageInfo->contentBox))
             return pageSizeAfterRotation(pageInfo, rotation, pageDxOut, pageDyOut);
         *pageDxOut = pageInfo->contentBox.x1 - pageInfo->contentBox.x0;
         *pageDyOut = pageInfo->contentBox.y1 - pageInfo->contentBox.y0;
@@ -365,7 +365,7 @@ float DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
     double pageDx, pageDy;
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
     bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
-    if (fitToContent && fz_isemptyrect(pageInfo->contentBox))
+    if (fitToContent && fz_isemptybbox(pageInfo->contentBox))
         pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
     pageSizeAfterRotation(pageInfo, _rotation, &pageDx, &pageDy, fitToContent);
 
@@ -889,7 +889,7 @@ fz_rect DisplayModel::getContentBox(int pageNo, fz_matrix ctm, RenderTarget targ
     // we cache the contentBox for the View target
     if (Target_View == target) {
         PdfPageInfo *pageInfo = getPageInfo(pageNo);
-        if (fz_isemptyrect(pageInfo->contentBox))
+        if (fz_isemptybbox(pageInfo->contentBox))
             pageInfo->contentBox = pdfEngine->pageContentBox(pageNo);
         cbox = pageInfo->contentBox;
     }

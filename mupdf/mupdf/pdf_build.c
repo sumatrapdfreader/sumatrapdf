@@ -151,7 +151,7 @@ pdf_setshade(pdf_csi *csi, int what, fz_shade *shade)
 	mat->shade = fz_keepshade(shade);
 }
 
-void
+static void
 pdf_showpattern(pdf_csi *csi, pdf_pattern *pat, fz_rect bbox, int what)
 {
 	pdf_gstate *gstate;
@@ -231,7 +231,7 @@ cleanup:
 	pdf_grestore(csi);
 }
 
-void
+static void
 pdf_begingroup(pdf_csi *csi, fz_rect bbox)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
@@ -258,7 +258,7 @@ pdf_begingroup(pdf_csi *csi, fz_rect bbox)
 		csi->dev->begingroup(csi->dev->user, bbox, 0, 0, gstate->blendmode, 1);
 }
 
-void
+static void
 pdf_endgroup(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;

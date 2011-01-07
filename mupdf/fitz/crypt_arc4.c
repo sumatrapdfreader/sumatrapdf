@@ -61,7 +61,7 @@ fz_arc4init(fz_arc4 *arc4, const unsigned char *key, const unsigned keylen)
 	}
 }
 
-unsigned char
+static unsigned char
 fz_arc4next(fz_arc4 *arc4)
 {
 	unsigned int x;

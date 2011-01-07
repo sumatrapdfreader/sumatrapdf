@@ -48,11 +48,10 @@ fz_copydict(fz_obj *obj)
 	fz_obj *new;
 	int i;
 
-	obj = fz_resolveindirect(obj); /* SumatraPDF: else obj->u.d.cap might be way off */
 	if (!fz_isdict(obj))
 		fz_throw("assert: not a dict (%s)", fz_objkindstr(obj));
 
-	new = fz_newdict(obj->u.d.cap);
+	new = fz_newdict(fz_dictlen(obj));
 	for (i = 0; i < fz_dictlen(obj); i++)
 		fz_dictput(new, fz_dictgetkey(obj, i), fz_dictgetval(obj, i));
 

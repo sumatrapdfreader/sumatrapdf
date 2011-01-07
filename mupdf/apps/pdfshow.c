@@ -5,7 +5,7 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static pdf_xref *xref = NULL;
+static pdf_xref *xref = nil;
 static int showbinary = 0;
 static int showdecode = 1;
 static int showcolumn;
@@ -192,7 +192,7 @@ static void showgrep(char *filename)
 
 int main(int argc, char **argv)
 {
-	char *password = NULL; /* don't throw errors if encrypted */
+	char *password = nil; /* don't throw errors if encrypted */
 	char *filename;
 	fz_error error;
 	int c;

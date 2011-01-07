@@ -12,18 +12,18 @@
 #include "fitz.h"
 #include "mupdf.h"
 
-static FILE *out = NULL;
+static FILE *out = nil;
 
-static char *uselist = NULL;
-static int *ofslist = NULL;
-static int *genlist = NULL;
-static int *renumbermap = NULL;
+static char *uselist = nil;
+static int *ofslist = nil;
+static int *genlist = nil;
+static int *renumbermap = nil;
 
 static int dogarbage = 0;
 static int doexpand = 0;
 static int doascii = 0;
 
-static pdf_xref *xref = NULL;
+static pdf_xref *xref = nil;
 
 void die(fz_error error)
 {

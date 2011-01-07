@@ -204,3 +204,27 @@ fz_transformrect(fz_matrix m, fz_rect r)
 	r.y1 = MAX4(s.y, t.y, u.y, v.y);
 	return r;
 }
+
+fz_bbox
+fz_transformbbox(fz_matrix m, fz_bbox b)
+{
+	fz_point s, t, u, v;
+
+	if (fz_isinfinitebbox(b))
+		return b;
+
+	s.x = b.x0; s.y = b.y0;
+	t.x = b.x0; t.y = b.y1;
+	u.x = b.x1; u.y = b.y1;
+	v.x = b.x1; v.y = b.y0;
+	s = fz_transformpoint(m, s);
+	t = fz_transformpoint(m, t);
+	u = fz_transformpoint(m, u);
+	v = fz_transformpoint(m, v);
+	b.x0 = MIN4(s.x, t.x, u.x, v.x);
+	b.y0 = MIN4(s.y, t.y, u.y, v.y);
+	b.x1 = MAX4(s.x, t.x, u.x, v.x);
+	b.y1 = MAX4(s.y, t.y, u.y, v.y);
+	return b;
+
+}

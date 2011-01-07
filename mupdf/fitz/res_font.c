@@ -331,7 +331,7 @@ fz_renderftglyph(fz_font *font, int gid, fz_matrix trm)
 		return nil;
 	}
 
-	glyph = fz_newpixmap(NULL,
+	glyph = fz_newpixmap(nil,
 		face->glyph->bitmap_left,
 		face->glyph->bitmap_top - face->glyph->bitmap.rows,
 		face->glyph->bitmap.width,
@@ -421,7 +421,7 @@ fz_renderftstrokedglyph(fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz
 	}
 
 	bitmap = (FT_BitmapGlyph)glyph;
-	pix = fz_newpixmap(NULL,
+	pix = fz_newpixmap(nil,
 		bitmap->left,
 		bitmap->top - bitmap->bitmap.rows,
 		bitmap->bitmap.width,
@@ -478,11 +478,11 @@ fz_rendert3glyph(fz_font *font, int gid, fz_matrix trm)
 	fz_pixmap *result;
 
 	if (gid < 0 || gid > 255)
-		return NULL;
+		return nil;
 
 	contents = font->t3procs[gid];
 	if (!contents)
-		return NULL;
+		return nil;
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_newbboxdevice(&bbox);

@@ -174,7 +174,7 @@ pdf_freeannot(pdf_annot *annot)
 	fz_free(annot);
 }
 
-void
+static void
 pdf_transformannot(pdf_annot *annot)
 {
 	fz_matrix matrix = annot->ap->matrix;

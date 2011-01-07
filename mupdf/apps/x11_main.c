@@ -93,7 +93,7 @@ void winerror(pdfapp_t *app, fz_error error)
 char *winpassword(pdfapp_t *app, char *filename)
 {
 	char *r = password;
-	password = NULL;
+	password = nil;
 	return r;
 }
 
@@ -289,7 +289,7 @@ static void winblit(pdfapp_t *app)
 	{
 		int i = gapp.image->w*gapp.image->h;
 		unsigned char *color = malloc(i*4);
-		if (color != NULL)
+		if (color != nil)
 		{
 			unsigned char *s = gapp.image->samples;
 			unsigned char *d = color;

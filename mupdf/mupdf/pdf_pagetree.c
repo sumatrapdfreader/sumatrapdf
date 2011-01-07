@@ -43,7 +43,7 @@ pdf_findpageobject(pdf_xref *xref, fz_obj *page)
 	return 0;
 }
 
-void
+static void
 pdf_loadpagetreenode(pdf_xref *xref, fz_obj *node, struct info info)
 {
 	fz_obj *dict, *kids, *count;

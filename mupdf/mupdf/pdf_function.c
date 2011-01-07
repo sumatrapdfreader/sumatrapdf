@@ -1643,7 +1643,7 @@ pdf_evalfunction(pdf_function *func, float *in, int inlen, float *out, int outle
 	return fz_okay;
 }
 
-void
+static void
 pdf_debugindent(char *prefix, int level, char *suffix)
 {
 	int i;
@@ -1656,7 +1656,7 @@ pdf_debugindent(char *prefix, int level, char *suffix)
 	printf("%s", suffix);
 }
 
-void
+static void
 pdf_debugpsfunccode(psobj *funccode, psobj *code, int level)
 {
 	int eof, wasop;
@@ -1742,7 +1742,7 @@ pdf_debugpsfunccode(psobj *funccode, psobj *code, int level)
 	pdf_debugindent("", --level, "} ");
 }
 
-void
+static void
 pdf_debugfunctionimp(pdf_function *func, int level)
 {
 	int i;

@@ -872,7 +872,7 @@ void PdfEngine::linkifyPageText(pdf_page *page)
         bbox.y1 = coords[end - pageText - 1].y1;
         for (pdf_link *link = firstLink; link && *start; link = link->next) {
             fz_bbox isect = fz_intersectbbox(fz_roundrect(bbox), fz_roundrect(link->rect));
-            if (!fz_isemptyrect(isect))
+            if (!fz_isemptybbox(isect))
                 start = end;
         }
 

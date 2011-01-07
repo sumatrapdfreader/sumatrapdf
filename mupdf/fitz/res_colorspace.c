@@ -9,10 +9,10 @@ fz_newcolorspace(char *name, int n)
 	cs->refs = 1;
 	fz_strlcpy(cs->name, name, sizeof cs->name);
 	cs->n = n;
-	cs->toxyz = NULL;
-	cs->fromxyz = NULL;
-	cs->freedata = NULL;
-	cs->data = NULL;
+	cs->toxyz = nil;
+	cs->fromxyz = nil;
+	cs->freedata = nil;
+	cs->data = nil;
 	return cs;
 }
 

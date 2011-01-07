@@ -71,12 +71,6 @@ pdf_dropcmap(pdf_cmap *cmap)
 	}
 }
 
-pdf_cmap *
-pdf_getusecmap(pdf_cmap *cmap)
-{
-	return cmap->usecmap;
-}
-
 void
 pdf_setusecmap(pdf_cmap *cmap, pdf_cmap *usecmap)
 {

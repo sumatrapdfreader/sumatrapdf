@@ -2726,7 +2726,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
             int linkCount = dm->getPdfLinks(pageNo, &links);
             for (int i = 0; i < linkCount; i++) {
                 fz_bbox isect = fz_intersectbbox(fz_roundrect(links[i].rect), drawAreaRect);
-                if (fz_isemptyrect(isect))
+                if (fz_isemptybbox(isect))
                     continue;
 
                 RECT rectScreen = { isect.x0, isect.y0, isect.x1, isect.y1 };

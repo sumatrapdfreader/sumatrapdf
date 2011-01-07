@@ -13,7 +13,7 @@ enum panning
 	PAN_TO_BOTTOM
 };
 
-static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage);
+static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint);
 
 static void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
 {
@@ -103,7 +103,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	 */
 
 	file = fz_openfile(fd);
-	error = pdf_openxrefwithstream(&app->xref, file, NULL);
+	error = pdf_openxrefwithstream(&app->xref, file, nil);
 	if (error)
 		pdfapp_error(app, fz_rethrow(error, "cannot open document '%s'", filename));
 	fz_close(file);
@@ -168,7 +168,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int fd)
 	app->panx = 0;
 	app->pany = 0;
 
-	pdfapp_showpage(app, 1, 1);
+	pdfapp_showpage(app, 1, 1, 1);
 }
 
 void pdfapp_close(pdfapp_t *app)
@@ -234,23 +234,20 @@ static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 	app->pany = newy;
 }
 
-static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
+static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint)
 {
 	char buf[256];
 	fz_error error;
 	fz_device *idev, *tdev, *mdev;
+	fz_colorspace *colorspace;
 	fz_matrix ctm;
 	fz_bbox bbox;
 	fz_obj *obj;
 
-	sprintf(buf, "%s - %d/%d (%d dpi)", app->doctitle,
-		app->pageno, app->pagecount, app->resolution);
-	wintitle(app, buf);
+	wincursor(app, WAIT);
 
 	if (loadpage)
 	{
-		wincursor(app, WAIT);
-
 		if (app->page)
 			pdf_freepage(app->page);
 		app->page = nil;
@@ -275,23 +272,23 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		app->hit = -1;
 		app->hitlen = 0;
 
+		/* Extract text */
+		app->page->text = fz_newtextspan();
+		tdev = fz_newtextdevice(app->page->text);
+		fz_executedisplaylist(app->page->list, tdev, fz_identity);
+		fz_freedevice(tdev);
+
 		pdf_agestore(app->xref->store, 3);
 	}
 
 	if (drawpage)
 	{
-		fz_colorspace *colorspace;
-
-		wincursor(app, WAIT);
+		sprintf(buf, "%s - %d/%d (%d dpi)", app->doctitle,
+				app->pageno, app->pagecount, app->resolution);
+		wintitle(app, buf);
 
 		ctm = pdfapp_viewctm(app);
 		bbox = fz_roundrect(fz_transformrect(ctm, app->page->mediabox));
-
-		/* Extract text */
-		app->page->text = fz_newtextspan();
-		tdev = fz_newtextdevice(app->page->text);
-		fz_executedisplaylist(app->page->list, tdev, ctm);
-		fz_freedevice(tdev);
 
 		/* Draw */
 		if (app->image)
@@ -311,27 +308,30 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage)
 		fz_freedevice(idev);
 	}
 
-	pdfapp_panview(app, app->panx, app->pany);
-
-	if (app->shrinkwrap)
+	if (repaint)
 	{
-		int w = app->image->w;
-		int h = app->image->h;
-		if (app->winw == w)
-			app->panx = 0;
-		if (app->winh == h)
-			app->pany = 0;
-		if (w > app->scrw * 90 / 100)
-			w = app->scrw * 90 / 100;
-		if (h > app->scrh * 90 / 100)
-			h = app->scrh * 90 / 100;
-		if (w != app->winw || h != app->winh)
-			winresize(app, w, h);
+		pdfapp_panview(app, app->panx, app->pany);
+
+		if (app->shrinkwrap)
+		{
+			int w = app->image->w;
+			int h = app->image->h;
+			if (app->winw == w)
+				app->panx = 0;
+			if (app->winh == h)
+				app->pany = 0;
+			if (w > app->scrw * 90 / 100)
+				w = app->scrw * 90 / 100;
+			if (h > app->scrh * 90 / 100)
+				h = app->scrh * 90 / 100;
+			if (w != app->winw || h != app->winh)
+				winresize(app, w, h);
+		}
+
+		winrepaint(app);
+
+		wincursor(app, ARROW);
 	}
-
-	winrepaint(app);
-
-	wincursor(app, ARROW);
 }
 
 static void pdfapp_gotouri(pdfapp_t *app, fz_obj *uri)
@@ -357,7 +357,7 @@ static void pdfapp_gotopage(pdfapp_t *app, fz_obj *obj)
 	}
 	app->hist[app->histlen++] = app->pageno;
 	app->pageno = page;
-	pdfapp_showpage(app, 1, 1);
+	pdfapp_showpage(app, 1, 1, 1);
 }
 
 static inline fz_bbox bboxcharat(fz_textspan *span, int idx)
@@ -405,7 +405,14 @@ void pdfapp_inverthit(pdfapp_t *app)
 	}
 
 	if (!fz_isemptyrect(hitbox))
+	{
+		fz_matrix ctm;
+
+		ctm = pdfapp_viewctm(app);
+		hitbox = fz_transformbbox(ctm, hitbox);
+
 		pdfapp_invert(app, hitbox);
+	}
 }
 
 static inline int charat(fz_textspan *span, int idx)
@@ -466,28 +473,47 @@ static void pdfapp_searchforward(pdfapp_t *app)
 	int matchlen;
 	int test;
 	int len;
+	int startpage;
 
-	len = textlen(app->page->text);
+	wincursor(app, WAIT);
 
-	if (app->hit >= 0)
-		test = app->hit + strlen(app->search);
-	else
-		test = 0;
+	startpage = app->pageno;
 
-	while (test < len)
+	do
 	{
-		matchlen = match(app->search, app->page->text, test);
-		if (matchlen)
-		{
-			printf("found hit at %d + %d\n", test, matchlen);
-			app->hit = test;
-			app->hitlen = matchlen;
-			return;
-		}
-		test++;
-	}
+		len = textlen(app->page->text);
 
-	printf("hit not found\n");
+		if (app->hit >= 0)
+			test = app->hit + strlen(app->search);
+		else
+			test = 0;
+
+		while (test < len)
+		{
+			matchlen = match(app->search, app->page->text, test);
+			if (matchlen)
+			{
+				app->hit = test;
+				app->hitlen = matchlen;
+				wincursor(app, HAND);
+				return;
+			}
+			test++;
+		}
+
+		app->pageno++;
+		if (app->pageno > app->pagecount)
+			app->pageno = 1;
+
+		pdfapp_showpage(app, 1, 0, 0);
+		app->pany = 0;
+
+	} while (app->pageno != startpage);
+
+	if (app->pageno == startpage)
+		printf("hit not found\n");
+
+	wincursor(app, HAND);
 }
 
 static void pdfapp_searchbackward(pdfapp_t *app)
@@ -495,28 +521,47 @@ static void pdfapp_searchbackward(pdfapp_t *app)
 	int matchlen;
 	int test;
 	int len;
+	int startpage;
 
-	len = textlen(app->page->text);
+	wincursor(app, WAIT);
 
-	if (app->hit >= 0)
-		test = app->hit - 1;
-	else
-		test = len;
+	startpage = app->pageno;
 
-	while (test >= 0)
+	do
 	{
-		matchlen = match(app->search, app->page->text, test);
-		if (matchlen)
-		{
-			printf("found hit at %d\n", test);
-			app->hit = test;
-			app->hitlen = matchlen;
-			return;
-		}
-		test--;
-	}
+		len = textlen(app->page->text);
 
-	printf("hit not found\n");
+		if (app->hit >= 0)
+			test = app->hit - 1;
+		else
+			test = len;
+
+		while (test >= 0)
+		{
+			matchlen = match(app->search, app->page->text, test);
+			if (matchlen)
+			{
+				app->hit = test;
+				app->hitlen = matchlen;
+				wincursor(app, HAND);
+				return;
+			}
+			test--;
+		}
+
+		app->pageno--;
+		if (app->pageno < 1)
+			app->pageno = app->pagecount;
+
+		pdfapp_showpage(app, 1, 0, 0);
+		app->pany = -2000;
+
+	} while (app->pageno != startpage);
+
+	if (app->pageno == startpage)
+		printf("hit not found\n");
+
+	wincursor(app, HAND);
 }
 
 void pdfapp_onresize(pdfapp_t *app, int w, int h)
@@ -534,6 +579,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 {
 	int oldpage = app->pageno;
 	enum panning panto = PAN_TO_TOP;
+	int loadpage;
 
 	if (app->isediting)
 	{
@@ -595,37 +641,37 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		app->resolution *= ZOOMSTEP;
 		if (app->resolution > MAXRES)
 			app->resolution = MAXRES;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 	case '-':
 		app->resolution /= ZOOMSTEP;
 		if (app->resolution < MINRES)
 			app->resolution = MINRES;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 
 	case 'L':
 		app->rotate -= 90;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 	case 'R':
 		app->rotate += 90;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 
 	case 'c':
 		app->grayscale ^= 1;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 
 #ifndef NDEBUG
 	case 'a':
 		app->rotate -= 15;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 	case 's':
 		app->rotate += 15;
-		pdfapp_showpage(app, 0, 1);
+		pdfapp_showpage(app, 0, 1, 1);
 		break;
 #endif
 
@@ -636,27 +682,27 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 	case 'w':
 		app->shrinkwrap = 1;
 		app->panx = app->pany = 0;
-		pdfapp_showpage(app, 0, 0);
+		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'h':
 		app->panx += app->image->w / 10;
-		pdfapp_showpage(app, 0, 0);
+		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'j':
 		app->pany -= app->image->h / 10;
-		pdfapp_showpage(app, 0, 0);
+		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'k':
 		app->pany += app->image->h / 10;
-		pdfapp_showpage(app, 0, 0);
+		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	case 'l':
 		app->panx -= app->image->w / 10;
-		pdfapp_showpage(app, 0, 0);
+		pdfapp_showpage(app, 0, 0, 1);
 		break;
 
 	/*
@@ -772,15 +818,15 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		break;
 
 	case 'n':
-		printf("search forward for: '%s'\n", app->search);
 		pdfapp_searchforward(app);
 		winrepaint(app);
+		loadpage = 0;
 		break;
 
 	case 'N':
-		printf("search backward for: '%s'\n", app->search);
 		pdfapp_searchbackward(app);
 		winrepaint(app);
+		loadpage = 0;
 		break;
 
 	}
@@ -806,7 +852,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		case DONT_PAN:
 			break;
 		}
-		pdfapp_showpage(app, 1, 1);
+		pdfapp_showpage(app, loadpage, 1, 1);
 	}
 }
 
@@ -881,7 +927,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 					app->resolution = MAXRES;
 				if (app->resolution < MINRES)
 					app->resolution = MINRES;
-				pdfapp_showpage(app, 0, 1);
+				pdfapp_showpage(app, 0, 1, 1);
 			}
 			else
 			{

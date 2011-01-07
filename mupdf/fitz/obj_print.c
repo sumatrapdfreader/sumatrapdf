@@ -273,7 +273,7 @@ static void fmtobj(struct fmt *fmt, fz_obj *obj)
 		fmtputs(fmt, "<unknown object>");
 }
 
-int
+static int
 fz_sprintobj(char *s, int n, fz_obj *obj, int tight)
 {
 	struct fmt fmt;

@@ -10,7 +10,7 @@ struct fz_flate_s
 	z_stream z;
 };
 
-static void * zmalloc(void *opaque, unsigned int items, unsigned int size)
+static void *zmalloc(void *opaque, unsigned int items, unsigned int size)
 {
 	return fz_malloc(items * size);
 }

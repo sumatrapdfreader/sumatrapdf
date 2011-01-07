@@ -38,7 +38,7 @@ fz_newpixmapwithdata(fz_colorspace *colorspace, int x, int y, int w, int h, unsi
 fz_pixmap *
 fz_newpixmap(fz_colorspace *colorspace, int x, int y, int w, int h)
 {
-	return fz_newpixmapwithdata(colorspace, x, y, w, h, NULL);
+	return fz_newpixmapwithdata(colorspace, x, y, w, h, nil);
 }
 
 fz_pixmap *
@@ -105,22 +105,6 @@ fz_boundpixmap(fz_pixmap *pix)
 	bbox.x1 = pix->x + pix->w;
 	bbox.y1 = pix->y + pix->h;
 	return bbox;
-}
-
-void
-fz_gammapixmap(fz_pixmap *pix, float gamma)
-{
-	unsigned char table[256];
-	int n = pix->w * pix->h * pix->n;
-	unsigned char *p = pix->samples;
-	int i;
-	for (i = 0; i < 256; i++)
-		table[i] = CLAMP(powf(i / 255.0f, gamma) * 255, 0, 255);
-	while (n--)
-	{
-		*p = table[*p];
-		p++;
-	}
 }
 
 fz_pixmap *
@@ -283,7 +267,7 @@ static void putchunk(char *tag, unsigned char *data, int size, FILE *fp)
 	put32(size, fp);
 	fwrite(tag, 1, 4, fp);
 	fwrite(data, 1, size, fp);
-	sum = crc32(0, NULL, 0);
+	sum = crc32(0, nil, 0);
 	sum = crc32(sum, (unsigned char*)tag, 4);
 	sum = crc32(sum, data, size);
 	put32(sum, fp);

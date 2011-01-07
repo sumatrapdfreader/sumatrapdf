@@ -27,6 +27,7 @@ static void debug_print(const char *fmt, ...)
 	vsprintf(text, fmt, args);
 	va_end(args);
 	OutputDebugStringA(text);
+	printf(text);
 }
 #else
 static void debug_print(const char *fmt, ...)
@@ -1003,6 +1004,21 @@ fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 
 	/* Find the destination bbox, width/height, and sub pixel offset,
 	 * allowing for whether we're flipping or not. */
+	/* Note that the x and y sub pixel offsets here are different, due to
+	 * the different way we scale horizontally and vertically. When scaling
+	 * rows horizontally, we always read forwards through the source, and
+	 * store either forwards or in reverse as required. When scaling
+	 * vertically, we always store out forwards, but may feed source rows
+	 * in in a different order.
+	 *
+	 * Consider the image rectange 'r' to which the image is mapped,
+	 * and the (possibly) larger rectangle 'R', given by expanding 'r' to
+	 * complete pixels.
+	 *
+	 * x can either be r.xmin-R.xmin or R.xmax-r.xmax depending on whether
+	 * the image is x flipped or not. Whatever happens 0 <= x < 1.
+	 * y is always r.ymin - R.ymin.
+	 */
 	flip_x = (w < 0);
 	if (flip_x)
 	{
@@ -1023,20 +1039,12 @@ fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 	flip_y = (h < 0);
 	if (flip_y)
 	{
-		float tmp;
 		h = -h;
-		dst_y_int = floor(y-h);
-		tmp = ceilf(y);
-		dst_h_int = (int)tmp;
-		y = tmp - y;
-		dst_h_int -= dst_y_int;
+		y -= h;
 	}
-	else
-	{
-		dst_y_int = floor(y);
-		y -= (float)dst_y_int;
-		dst_h_int = (int)ceilf(y + h);
-	}
+	dst_y_int = floor(y);
+	y -= (float)dst_y_int;
+	dst_h_int = (int)ceilf(y + h);
 
 	DBUG(("Result image: (%d,%d) at (%d,%d) (subpix=%g,%g)\n", dst_w_int, dst_h_int, dst_x_int, dst_y_int, x, y));
 
@@ -1105,18 +1113,18 @@ fz_smoothscalepixmap(fz_pixmap *src, float x, float y, float w, float h)
 			goto cleanup;
 		switch (src->n)
 		{
-			default:
-				row_scale = scale_row_to_temp;
-				break;
-			case 1: /* Image mask case */
-				row_scale = scale_row_to_temp1;
-				break;
-			case 2: /* Greyscale with alpha case */
-				row_scale = scale_row_to_temp2;
-				break;
-			case 4: /* RGBA */
-				row_scale = scale_row_to_temp4;
-				break;
+		default:
+			row_scale = scale_row_to_temp;
+			break;
+		case 1: /* Image mask case */
+			row_scale = scale_row_to_temp1;
+			break;
+		case 2: /* Greyscale with alpha case */
+			row_scale = scale_row_to_temp2;
+			break;
+		case 4: /* RGBA */
+			row_scale = scale_row_to_temp4;
+			break;
 		}
 		max_row = 0;
 		for (row = 0; row < contrib_rows->count; row++)

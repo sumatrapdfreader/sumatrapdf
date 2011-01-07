@@ -199,7 +199,7 @@ fz_paintspanmaskN(byte * restrict dp, byte * restrict sp, byte * restrict mp, in
 	}
 }
 
-void
+static void
 fz_paintspanmask(byte * restrict dp, byte * restrict sp, byte * restrict mp, int n, int w)
 {
 	switch (n)

@@ -128,7 +128,7 @@ pdf_removeitem(pdf_store *store, void *dropfunc, fz_obj *key)
 	}
 	else
 	{
-		prev = NULL;
+		prev = nil;
 		for (item = store->root; item; item = next)
 		{
 			next = item->next;
@@ -169,7 +169,7 @@ pdf_agestore(pdf_store *store, int maxage)
 		}
 	}
 
-	prev = NULL;
+	prev = nil;
 	for (item = store->root; item; item = next)
 	{
 		next = item->next;

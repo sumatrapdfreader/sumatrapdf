@@ -130,7 +130,7 @@ char *winpassword(pdfapp_t *app, char *filename)
 		win32error("cannot create password dialog");
 	if (pd_okay)
 		return pd_password;
-	return NULL;
+	return nil;
 }
 
 INT CALLBACK
