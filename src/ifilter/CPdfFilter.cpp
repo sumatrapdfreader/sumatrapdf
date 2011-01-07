@@ -32,10 +32,18 @@ HRESULT CPdfFilter::OnInit()
     HRESULT res = m_pStream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res))
         return res;
-
     ULONG size = stat.cbSize.LowPart;
+
+    GUID unique;
+    UuidCreate(&unique);
+    RPC_WSTR uniqueStr;
+    UuidToString(&unique, &uniqueStr);
+    TCHAR uniqueName[72];
+    wsprintf(uniqueName, _T("%ul-SumatraPDF-Filter-%s"), size + MMAP_HEADER_SIZE, uniqueStr);
+    RpcStringFree(&uniqueStr);
+
     SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, TRUE };
-    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size + MMAP_HEADER_SIZE, NULL);
+    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size + MMAP_HEADER_SIZE, uniqueName);
     if (!m_hMap)
         return E_OUTOFMEMORY;
     m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size + MMAP_HEADER_SIZE);
@@ -51,24 +59,29 @@ HRESULT CPdfFilter::OnInit()
         return E_FAIL;
 
 #ifndef BUILTIN_MUPDF
-    TCHAR cmdline[MAX_PATH * 2];
-    _tcscpy(cmdline,_T( "\""));
-    GetModuleFileName(g_hInstance, cmdline + 1, MAX_PATH);
-    _tcscpy(PathFindFileName(cmdline + 1), _T("SumatraPDF.exe"));
-    if (!PathFileExists(cmdline + 1))
+    TCHAR exePath[MAX_PATH], args[MAX_PATH];
+    GetModuleFileName(g_hInstance, exePath, MAX_PATH);
+    _tcscpy(PathFindFileName(exePath), _T("SumatraPDF.exe"));
+    if (!PathFileExists(exePath))
         return E_FAIL;
 
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si = { 0 };
-    si.cb = sizeof(si);
-    _stprintf(cmdline + lstrlen(cmdline), _T("\" -ifiltermmap %ul"), m_hMap);
-    if (!CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+    SHELLEXECUTEINFO sei = { 0 };
+    sei.cbSize = sizeof(sei);
+#ifndef SEE_MASK_NOZONECHECKS
+#define SEE_MASK_NOZONECHECKS      0x00800000
+#endif
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOZONECHECKS;
+    sei.lpVerb = _T("open");
+    sei.lpFile = exePath;
+    wsprintf((LPTSTR)(sei.lpParameters = args), _T("-ifiltermmap %s"), uniqueName);
+    sei.nShow = SW_HIDE;
+    sei.hInstApp = g_hInstance;
+    if (!ShellExecuteEx(&sei) || !sei.hProcess || (int)sei.hInstApp <= 32)
         return E_FAIL;
-    CloseHandle(pi.hThread);
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
+    WaitForSingleObject(sei.hProcess, INFINITE);
+    CloseHandle(sei.hProcess);
 #else
-    UpdateMMapForIndexing(m_hMap);
+    UpdateMMapForIndexing(uniqueName);
 #endif
 
     if (!*(int32_t *)m_pData || strcmp(m_pData, "IFilterMMap 1.3") != 0)

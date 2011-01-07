@@ -31,7 +31,7 @@ public:
     bool        enterPresentation;
     bool        showConsole;
     HWND        hwndPluginParent;
-    HANDLE      hIFilterMMap;
+    TCHAR *     IFilterMMap;
     bool        exitImmediately;
 #ifdef BUILD_RM_VERSION
     // Delete the files which were passed into the program by command line.
@@ -44,7 +44,7 @@ public:
         fwdsearchPermanent(FALSE), escToExit(FALSE),
         reuseInstance(false), lang(NULL), destName(NULL), pageNumber(-1),
         restrictedUse(false), newWindowTitle(NULL), invertColors(FALSE),
-        enterPresentation(false), hwndPluginParent(NULL), hIFilterMMap(NULL),
+        enterPresentation(false), hwndPluginParent(NULL), IFilterMMap(NULL),
         showConsole(false), exitImmediately(false)
 #ifdef BUILD_RM_VERSION
         , deleteFilesOnClose(false)
@@ -57,6 +57,7 @@ public:
         free(lang);
         free(destName);
         free(newWindowTitle);
+        free(IFilterMMap);
     }
 
     void ParseCommandLine(TCHAR *cmdLine);
@@ -85,6 +86,11 @@ protected:
     void SetNewWindowTitle(TCHAR *s) {
         free(newWindowTitle);
         newWindowTitle = tstr_dup(s);
+    }
+
+    void SetIFilterMMap(TCHAR *s) {
+        free(IFilterMMap);
+        IFilterMMap = tstr_dup(s);
     }
 };
 

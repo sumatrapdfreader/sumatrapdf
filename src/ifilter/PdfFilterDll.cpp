@@ -43,9 +43,7 @@ public:
     {
         long cRef = InterlockedDecrement(&m_lRef);
         if (cRef == 0)
-        {
             delete this;
-        }
         return cRef;
     }
 
@@ -54,9 +52,7 @@ public:
     {
         *ppv = NULL;
         if (punkOuter)
-        {
             return CLASS_E_NOAGGREGATION;
-        }
         
         CLSID clsid;
         if (!SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) ||

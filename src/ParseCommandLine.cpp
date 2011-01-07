@@ -184,13 +184,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             this->hwndPluginParent = (HWND)_ttol(argList[++n]);
         }
         else if (is_arg_with_param("-ifiltermmap")) {
-            // the argument is a (nummeric) handle to a shared memory
+            // the argument is a named handle to a shared memory
             // file mapping containing the content of a PDF file to be
             // reduced to indexable text (needed as long as we don't
             // build a reusable DLL containing the rendering code)
-            // Note: the memory handle must be owned by the calling
-            //       process and inherited by SumatraPDF.exe
-            this->hIFilterMMap = (HANDLE)_ttol(argList[++n]);
+            this->SetIFilterMMap(argList[++n]);
             this->exitImmediately = true;
         }
         else if (is_arg_with_param("-bench")) {

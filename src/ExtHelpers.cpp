@@ -30,7 +30,7 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
  * Communication protocol:
  * -> IFilter DLL opens an anonymous shared memory map and fills it with
  *    "IFilterMMap 1.3 %ul\0%s" where %ul is the size of the PDF document content
- *    included as %s. Finally, the handle to the mapping object is past to a
+ *    included as %s. Finally, the name to the file mapping is past to a
  *    newly started (windowless) SumatraPDF.
  * <- SumatraPDF replaces the memory map's content with a double-zero terminated
  *    list of zero terminated properties extracted from the PDF document, currently
@@ -39,26 +39,22 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
  * -> IFilter DLL can then easily iterate over these properties and return them
  *    through the IFilter API.
  */
-
-#define MMAP_HEADER_SIZE 64
-
-void UpdateMMapForIndexing(HANDLE hIFilterMMap)
+void UpdateMMapForIndexing(TCHAR *IFilterMMap)
 {
     PdfEngine engine;
     VStrList pages;
     fz_buffer *filedata = NULL;
 
-    char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, MMAP_HEADER_SIZE);
-    assert(data);
-    if (!data)
-        return;
     ULONG count;
-    if (sscanf(data, "IFilterMMap 1.3 %ul", &count) != 1)
-        goto Error;
-    UnmapViewOfFile(data);
+    if (!IFilterMMap || _stscanf(IFilterMMap, _T("%ul-"), &count) != 1)
+        return;
+    HANDLE hIFilterMMap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, IFilterMMap);
+    if (!hIFilterMMap)
+        return;
 
-    data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count + MMAP_HEADER_SIZE);
-    if (!data)
+    char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count);
+    assert(data);
+    if (!data || sscanf(data, "IFilterMMap 1.3 %ul", &count) != 1)
         goto Error;
 
     filedata = fz_newbuffer(count);
@@ -102,6 +98,7 @@ void UpdateMMapForIndexing(HANDLE hIFilterMMap)
     *(end - 1) = *(end - 2) = '\0';
 
     UnmapViewOfFile(data);
+    CloseHandle(hIFilterMMap);
     fz_dropbuffer(filedata);
     return;
 
@@ -110,6 +107,7 @@ Error:
         *data = 0;
         UnmapViewOfFile(data);
     }
+    CloseHandle(hIFilterMMap);
     if (filedata)
         fz_dropbuffer(filedata);
 }
