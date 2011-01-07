@@ -34,9 +34,10 @@ MT=mt.exe
 SUMATRA_APP = $(O)\SumatraPDF.exe
 INSTALLER_APP = $(O)\Installer.exe
 PDFFILTER_DLL = $(O)\PdfFilter.dll
+BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 
 # default target
-SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP) $(PDFFILTER_DLL)
+SumatraPDF: $(O) $(SUMATRA_APP) $(INSTALLER_APP) $(PDFFILTER_DLL) $(BROWSER_PLUGIN)
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -89,6 +90,8 @@ LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwa
 
 LIBS_INSTALLER = $(LIBS) psapi.lib
 
+LIBS_BROWSER_PLUGIN = user32.lib gdi32.lib advapi32.lib shlwapi.lib
+
 !if "$(CFG)"=="dbg"
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
 INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
@@ -106,6 +109,8 @@ INSTALLER_RES = $(O)\Installer.res
 INSTALLER_LINKER_MANIFEST=$(O)\Installer.linker.manifest
 
 PDFFILTER_RES = $(O)\PdfFilter.res
+
+BROWSER_PLUGIN_RES = $(O)\npPdfViewer.res
 
 BASEUTILS_OBJS = \
 	$(O)\base_util.obj $(O)\benc_util.obj $(O)\file_util.obj $(O)\geom_util.obj \
@@ -126,6 +131,9 @@ INSTALLER_OBJS = \
 
 PDFFILTER_OBJS = \
 	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(O)\base_util.obj $(O)\wstr_util.obj $(PDFFILTER_RES)
+
+BROWSER_PLUGIN_OBJS = \
+	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
 
 !if "$(STANDALONE_PDFFILTER)"!=""
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D IFILTER_BUILTIN_MUPDF
@@ -164,6 +172,12 @@ $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
 $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) Rpcrt4.lib /PDB:$*.pdb /OUT:$@
 
+$(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
+	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc
+
+$(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
+	$(LD) /DLL $(LDFLAGS) $** $(LIBS_BROWSER_PLUGIN) /PDB:$*.pdb /OUT:$@
+
 # baseutils directory
 {baseutils}.c{$(O)}.obj::
 	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
@@ -183,6 +197,10 @@ $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 
 {src}.c{$(O)}.obj::
 	$(CC) /TC $(SUMATRA_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
+
+# browserplugin directory
+{src\browserplugin}.c{$(O)}.obj::
+	$(CC) /TC $(PDFFILTER_CFLAGS) /Fo$(O)\ /Fd$(O)\vc80.pdb $<
 
 # IFilter directory
 {src\ifilter}.cpp{$(O)}.obj::
@@ -240,6 +258,8 @@ $(O)\Installer.obj: src\installer\Resource.h src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h src\Resource.h
 $(O)\MemSegment.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\MemSegment.obj: baseutils\wstr_util.h src\MemSegment.h
+$(O)\npPdfViewer.obj: src\browserplugin\npapi/npapi.h src\browserplugin\npapi/npfunctions.h src\browserplugin\npapi/npruntime.h
+$(O)\npPdfViewer.obj: src\browserplugin\npapi/nptypes.h
 $(O)\ParseCommandLine.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\ParseCommandLine.obj: baseutils\vstrlist.h baseutils\WinUtil.hpp baseutils\wstr_util.h
 $(O)\ParseCommandLine.obj: src\Benchmark.h src\ParseCommandLine.h src\SumatraPDF.h

@@ -1,0 +1,27 @@
+#include <windows.h>
+#include <winver.h>
+
+1 VERSIONINFO
+FILEVERSION 0,2,2,0
+PRODUCTVERSION 0,2,2,0
+FILETYPE VFT_DLL
+{
+	BLOCK "StringFileInfo"
+	{
+		BLOCK "040904E4"
+		{
+			VALUE "FileDescription", "SumatraPDF Browser Plugin"
+			VALUE "FileVersion", "0.2.2"
+			VALUE "LegalCopyright", "© 2010 ~ Simon Bünzli"
+
+			VALUE "ProductName", "SumatraPDF Browser Plugin"
+			VALUE "MIMEType", "application/pdf"
+			VALUE "FileExtents", "pdf"
+			VALUE "FileOpenName", "PDF Document"
+		}
+	}
+	BLOCK "VarFileInfo"
+	{
+		VALUE "Translation", 0x0409, 1252
+	}
+}
