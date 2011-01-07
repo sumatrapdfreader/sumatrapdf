@@ -6,4 +6,4 @@ class WindowInfo;
 extern bool gPluginMode;
 
 void MakePluginWindow(WindowInfo *win, HWND hwndParent);
-void UpdateMMapForIndexing(TCHAR *IFilterMMap);
+DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap);

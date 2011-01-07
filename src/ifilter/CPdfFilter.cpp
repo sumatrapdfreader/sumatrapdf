@@ -8,7 +8,7 @@
 #include "wstr_util.h"
 #include "CPdfFilter.h"
 
-#ifdef BUILTIN_MUPDF
+#ifdef IFILTER_BUILTIN_MUPDF
 #include "PdfEngine.h"
 #include "ExtHelpers.h"
 
@@ -16,6 +16,12 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref
 {
     return NULL;
 }
+
+struct MMapHandles {
+    TCHAR id[4];
+    HANDLE hProduce, hConsume, hMMap;
+    ULONG size;
+};
 #endif
 
 #ifdef _MSC_VER
@@ -24,10 +30,10 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref
 
 extern HINSTANCE g_hInstance;
 
-#define MMAP_HEADER_SIZE 64
-
 HRESULT CPdfFilter::OnInit()
 {
+    CleanUp();
+
     STATSTG stat;
     HRESULT res = m_pStream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res))
@@ -39,26 +45,33 @@ HRESULT CPdfFilter::OnInit()
     RPC_WSTR uniqueStr;
     UuidToString(&unique, &uniqueStr);
     TCHAR uniqueName[72];
-    wsprintf(uniqueName, _T("%ul-SumatraPDF-Filter-%s"), size + MMAP_HEADER_SIZE, uniqueStr);
+    wsprintf(uniqueName, _T("SumatraPDF-%ul-%s"), size, uniqueStr);
     RpcStringFree(&uniqueStr);
 
-    SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, TRUE };
-    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size + MMAP_HEADER_SIZE, uniqueName);
+    // TODO: create a DACL for the file mapping and the events,
+    //       else they can't be opened by another process/thread
+    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, uniqueName);
     if (!m_hMap)
         return E_OUTOFMEMORY;
-    m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size + MMAP_HEADER_SIZE);
+    m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!m_pData)
         return E_OUTOFMEMORY;
 
-    sprintf(m_pData, "IFilterMMap 1.3 %ul", size);
-    char *out = m_pData + strlen(m_pData) + 1;
     LARGE_INTEGER zero = { 0 };
     m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
-    res = m_pStream->Read(out, size, NULL);
+    res = m_pStream->Read(m_pData, size, NULL);
     if (FAILED(res))
         return E_FAIL;
 
-#ifndef BUILTIN_MUPDF
+    TCHAR eventName[96];
+    wsprintf(eventName, _T("%s-Produce"), uniqueName);
+    m_hProduce = CreateEvent(NULL, FALSE, TRUE, eventName);
+    wsprintf(eventName, _T("%s-Consume"), uniqueName);
+    m_hConsume = CreateEvent(NULL, FALSE, FALSE, eventName);
+    if (!m_hProduce || !m_hConsume)
+        return E_FAIL;
+
+#ifndef IFILTER_BUILTIN_MUPDF
     TCHAR exePath[MAX_PATH], args[MAX_PATH];
     GetModuleFileName(g_hInstance, exePath, MAX_PATH);
     _tcscpy(PathFindFileName(exePath), _T("SumatraPDF.exe"));
@@ -68,7 +81,7 @@ HRESULT CPdfFilter::OnInit()
     SHELLEXECUTEINFO sei = { 0 };
     sei.cbSize = sizeof(sei);
 #ifndef SEE_MASK_NOZONECHECKS
-#define SEE_MASK_NOZONECHECKS      0x00800000
+#define SEE_MASK_NOZONECHECKS 0x00800000
 #endif
     sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOZONECHECKS;
     sei.lpVerb = _T("open");
@@ -78,15 +91,17 @@ HRESULT CPdfFilter::OnInit()
     sei.hInstApp = g_hInstance;
     if (!ShellExecuteEx(&sei) || !sei.hProcess || (int)sei.hInstApp <= 32)
         return E_FAIL;
-    WaitForSingleObject(sei.hProcess, INFINITE);
-    CloseHandle(sei.hProcess);
+    m_hProcess = sei.hProcess;
 #else
-    UpdateMMapForIndexing(uniqueName);
+    m_pHandleInfo = malloc(sizeof(struct MMapHandles));
+    struct MMapHandles *mmh = (struct MMapHandles *)m_pHandleInfo;
+    lstrcpy(mmh->id, _T("MMH"));
+    mmh->hProduce = m_hProduce;
+    mmh->hConsume = m_hConsume;
+    mmh->hMMap = m_hMap;
+    mmh->size = size;
+    m_hProcess = CreateThread(NULL, 0, UpdateMMapForIndexing, m_pHandleInfo, 0, NULL);
 #endif
-
-    if (!*(int32_t *)m_pData || strcmp(m_pData, "IFilterMMap 1.3") != 0)
-        return E_FAIL;
-    m_pSection = m_pData;
 
     return S_OK;
 }
@@ -108,55 +123,76 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
     SYSTEMTIME systime;
     chunkValue.Clear();
 
-    m_pSection += strlen(m_pSection) + 1;
-    if (!*m_pSection)
+    if (m_bDone)
+        return FILTER_E_END_OF_CHUNKS;
+    if (WaitForSingleObject(m_hConsume, 1000) != WAIT_OBJECT_0)
+        m_bDone = true;
+    if (!*m_pData)
+        m_bDone = true;
+    if (m_bDone)
         return FILTER_E_END_OF_CHUNKS;
 
-    if (!strncmp(m_pSection, "Author:", 7) && m_pSection[7]) {
-        WCHAR *author = utf8_to_wstr(m_pSection + 7);
+    if (!strncmp(m_pData, "Type:", 5) && m_pData[5]) {
+        WCHAR *type = utf8_to_wstr(m_pData + 5);
+        chunkValue.SetTextValue(PKEY_PerceivedType, type);
+        free(type);
+        goto Success;
+    }
+
+    if (!strncmp(m_pData, "Author:", 7) && m_pData[7]) {
+        WCHAR *author = utf8_to_wstr(m_pData + 7);
         chunkValue.SetTextValue(PKEY_Author, author);
         free(author);
-        return S_OK;
+        goto Success;
     }
 
-    if (!strncmp(m_pSection, "Title:", 6) && m_pSection[6]) {
-        WCHAR *title = utf8_to_wstr(m_pSection + 6);
+    if (!strncmp(m_pData, "Title:", 6) && m_pData[6]) {
+        WCHAR *title = utf8_to_wstr(m_pData + 6);
         chunkValue.SetTextValue(PKEY_Title, title);
         free(title);
-        return S_OK;
+        goto Success;
     }
 
-    if (!strncmp(m_pSection, "Date:", 5) && PdfDateParse(m_pSection + 5, &systime)) {
+    if (!strncmp(m_pData, "Date:", 5) && PdfDateParse(m_pData + 5, &systime)) {
         FILETIME filetime;
         SystemTimeToFileTime(&systime, &filetime);
         chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-        return S_OK;
+        goto Success;
     }
 
-    if (!strncmp(m_pSection, "Content:", 8)) {
-        WCHAR *content = utf8_to_wstr(m_pSection + 8);
-        chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT);
+    if (!strncmp(m_pData, "Content:", 8)) {
+        WCHAR *content = utf8_to_wstr(m_pData + 8);
+        chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT, 0, 0, 0, CHUNK_EOW);
         free(content);
-        return S_OK;
+        goto Success;
     }
 
-    // if (m_pSection[strlen(m_pSection)-1] != ':')
-    //     fprintf(stderr, "Unexpected data: %s\n", m_pSection);
+    // if (m_pData[strlen(m_pData)-1] != ':')
+    //     fprintf(stderr, "Unexpected data: %s\n", m_pData);
+
+    *m_pData = '\0';
+    SetEvent(m_hProduce);
     return GetNextChunkValue(chunkValue);
+
+Success:
+    *m_pData = '\0';
+    SetEvent(m_hProduce);
+    return S_OK;
 }
 
 
 
 HRESULT CFilterBase::Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags)
 {
+    if (cAttributes > 0 && !aAttributes)
+        return E_INVALIDARG;
+
     m_dwChunkId = 0;
     m_iText = 0;
     m_currentChunk.Clear();
     *pFlags = 0;
 
-    if (m_pStream)
-        return OnInit();
-    return S_OK;
+    return OnInit();
 }
 
 HRESULT CFilterBase::GetChunk(STAT_CHUNK *pStat)
@@ -176,8 +212,11 @@ HRESULT CFilterBase::GetChunk(STAT_CHUNK *pStat)
         if (!m_currentChunk.IsValid())
              return E_INVALIDARG;
 
+        m_iText = 0;
         m_currentChunk.CopyChunk(pStat);
         pStat->idChunk = ++m_dwChunkId;
+        if (pStat->flags == CHUNK_TEXT)
+            pStat->idChunkSource = pStat->idChunk;
     }
 
     return hr;
@@ -200,7 +239,7 @@ HRESULT CFilterBase::GetText(ULONG *pcwcBuffer, WCHAR *awcBuffer)
 
     if (!cchToCopy)
         return FILTER_E_NO_MORE_TEXT;
-        
+
     PCWSTR psz = m_currentChunk.GetString() + m_iText;
     StringCchCopyN(awcBuffer, *pcwcBuffer, psz, cchToCopy);
     awcBuffer[cchToCopy] = '\0';
@@ -217,14 +256,14 @@ HRESULT CFilterBase::GetText(ULONG *pcwcBuffer, WCHAR *awcBuffer)
 
 HRESULT CFilterBase::GetValue(PROPVARIANT **ppPropValue)
 {
-    if (m_currentChunk.GetChunkType() != CHUNK_VALUE)
+    if (!m_currentChunk.IsValid())
         return FILTER_E_NO_MORE_VALUES;
+
+    if (m_currentChunk.GetChunkType() != CHUNK_VALUE)
+        return FILTER_E_NO_VALUES;
 
     if (ppPropValue == NULL)
         return E_INVALIDARG;
-
-    if (!m_currentChunk.IsValid())
-        return FILTER_E_NO_MORE_VALUES;
 
     HRESULT hr = m_currentChunk.GetValue(ppPropValue);
     m_currentChunk.Clear();

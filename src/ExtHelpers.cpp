@@ -28,86 +28,145 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
 
 /**
  * Communication protocol:
- * -> IFilter DLL opens an anonymous shared memory map and fills it with
- *    "IFilterMMap 1.3 %ul\0%s" where %ul is the size of the PDF document content
- *    included as %s. Finally, the name to the file mapping is past to a
- *    newly started (windowless) SumatraPDF.
- * <- SumatraPDF replaces the memory map's content with a double-zero terminated
- *    list of zero terminated properties extracted from the PDF document, currently
- *    "Author:", "Title:", "Date:" and "Content:", with the first entry being a
- *    "IFilterMMap 1.3" header. Once done, SumatraPDF exits immediately.
- * -> IFilter DLL can then easily iterate over these properties and return them
- *    through the IFilter API.
+ * -> IFilter DLL opens an named shared memory map and fills it with the PDF
+ *    document content. The name of the file mapping is then passed to a newly
+ *    started (windowless) SumatraPDF through the command line.
+ *    The DLL also creates two named events for of which the DLL will set
+ *    the "-Produce" event when it wants more data and SumatraPDF is supposed to
+ *    set the "-Consume" event when the DLL can get the next chunk.
+ * <- SumatraPDF reads the whole file content into its own buffer and then
+ *    repeatedly waits for the "-Produce" event, puts data for the next chunk
+ *    into the memory map and sets the "-Consume" event. When no more data is
+ *    available, an empty string is returned.
+ * -> IFilter DLL can then repeatedly wait for "-Consume" events, return the next
+ *    chunk to the search indexer and reset the "-Produce" event.
  */
-void UpdateMMapForIndexing(TCHAR *IFilterMMap)
+
+#ifdef IFILTER_BUILTIN_MUPDF
+struct MMapHandles {
+    TCHAR id[4];
+    HANDLE hProduce, hConsume, hMMap;
+    ULONG size;
+};
+#endif
+
+DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
 {
     PdfEngine engine;
     VStrList pages;
     fz_buffer *filedata = NULL;
 
     ULONG count;
-    if (!IFilterMMap || _stscanf(IFilterMMap, _T("%ul-"), &count) != 1)
-        return;
-    HANDLE hIFilterMMap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, IFilterMMap);
+    if (!IFilterMMap)
+        return 1;
+
+#ifndef IFILTER_BUILTIN_MUPDF
+    // TODO: OpenXXX fails with error ACCESS_DENIED because IFilter DLLs are
+    //       loaded into an underpriviledged context
+    if (_stscanf((LPTSTR)IFilterMMap, _T("SumatraPDF-%ul-"), &count) != 1)
+        return 1;
+    HANDLE hIFilterMMap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, (LPTSTR)IFilterMMap);
     if (!hIFilterMMap)
-        return;
+        return 1;
+
+    TCHAR eventName[96];
+    tstr_printf_s(eventName, dimof(eventName), _T("%s-Produce"), IFilterMMap);
+    HANDLE hProduceEvent = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, eventName);
+    tstr_printf_s(eventName, dimof(eventName), _T("%s-Consume"), IFilterMMap);
+    HANDLE hConsumeEvent = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, eventName);
+#else
+    struct MMapHandles *mmh = (struct MMapHandles *)IFilterMMap;
+    if (lstrcmp(mmh->id, _T("MMH")) != 0)
+        return 1;
+    HANDLE hIFilterMMap = mmh->hMMap;
+    HANDLE hProduceEvent = mmh->hProduce;
+    HANDLE hConsumeEvent = mmh->hConsume;
+    count = mmh->size;
+#endif
 
     char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count);
     assert(data);
-    if (!data || sscanf(data, "IFilterMMap 1.3 %ul", &count) != 1)
+    if (!data)
         goto Error;
 
     filedata = fz_newbuffer(count);
     filedata->len = count;
-    memcpy(filedata->data, data + str_len(data) + 1, count);
+    memcpy(filedata->data, data, count);
     fz_stream *stm = fz_openbuffer(filedata);
     bool success = engine.load(stm);
     fz_close(stm);
     if (!success)
         goto Error;
-
-    char *out = data, *end = data + count;
-    out += str_printf_s(out, end - out, "IFilterMMap 1.3") + 1;
     fz_obj *info = engine.getPdfInfo();
+
+    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+        goto Error;
+    str_printf_s(data, count, "Type:document");
+    SetEvent(hConsumeEvent);
+
+    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+        goto Error;
     char *author = pdf_toutf8(fz_dictgets(info, "Author"));
-    out += str_printf_s(out, end - out, "Author:%s", author) + 1;
+    str_printf_s(data, count, "Author:%s", author);
     free(author);
+    SetEvent(hConsumeEvent);
+
+    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+        goto Error;
     char *title = pdf_toutf8(fz_dictgets(info, "Title"));
-    out += str_printf_s(out, end - out, "Title:%s", title) + 1;
+    str_printf_s(data, count, "Title:%s", title);
     free(title);
+    SetEvent(hConsumeEvent);
+
+    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+        goto Error;
     char *date = pdf_toutf8(fz_dictgets(info, "ModDate"));
     if (str_empty(date)) {
         free(date);
         date = pdf_toutf8(fz_dictgets(info, "CreationDate"));
     }
-    out += str_printf_s(out, end - out, "Date:%s", date) + 1;
+    str_printf_s(data, count, "Date:%s", date);
     free(date);
+    SetEvent(hConsumeEvent);
 
-    for (int pageNo = 1; pageNo <= engine.pageCount(); pageNo++)
-        pages.push_back(engine.ExtractPageText(pageNo, _T(DOS_NEWLINE)));
-    TCHAR *content = pages.join();
-    char *contentUTF8 = tstr_to_utf8(content);
-    int len = str_printf_s(out, end - out, "Content:%s", contentUTF8);
-    out += (len > 0 ? len : strlen(out)) + 1;
-    free(contentUTF8);
-    free(content);
+    for (int pageNo = 1; pageNo <= engine.pageCount(); pageNo++) {
+        if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+            goto Error;
+        TCHAR *content = engine.ExtractPageText(pageNo);
+        char *contentUTF8 = tstr_to_utf8(content);
+        str_printf_s(data, count, "Content:%s", contentUTF8);
+        free(contentUTF8);
+        free(content);
+        SetEvent(hConsumeEvent);
+    }
 
-    // ensure the double-zero termination
-    if (out < end)
-        *out = '\0';
-    *(end - 1) = *(end - 2) = '\0';
+    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+        goto Error;
+    *data = '\0';
+    SetEvent(hConsumeEvent);
 
+    CloseHandle(hProduceEvent);
+    CloseHandle(hConsumeEvent);
     UnmapViewOfFile(data);
     CloseHandle(hIFilterMMap);
     fz_dropbuffer(filedata);
-    return;
+
+    return 0;
 
 Error:
-    if (data) {
-        *data = 0;
-        UnmapViewOfFile(data);
+    if (hProduceEvent)
+        CloseHandle(hProduceEvent);
+    if (hConsumeEvent) {
+        if (data) {
+            *data = '\0';
+            SetEvent(hConsumeEvent);
+        }
+        CloseHandle(hConsumeEvent);
     }
+    if (data)
+        UnmapViewOfFile(data);
     CloseHandle(hIFilterMMap);
     if (filedata)
         fz_dropbuffer(filedata);
+    return 1;
 }

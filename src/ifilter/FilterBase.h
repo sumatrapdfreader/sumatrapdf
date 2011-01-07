@@ -13,13 +13,6 @@
 #include <filterr.h>
 #include "PdfFilter.h"
 
-// This is a class which simplifies both chunk and property value pair logic
-// To use, you simply create a ChunkValue class of the right kind
-// Example:
-//      CChunkValue chunk;
-//      hr = chunk.SetBoolValue(PKEY_IsAttachment, true);
-//      or
-//      hr = chunk.SetFileTimeValue(PKEY_ItemDate, ftLastModified);
 class CChunkValue
 {
 public:
@@ -41,7 +34,6 @@ public:
     }
 
     BOOL IsValid() { return m_fIsValid; }
-
 
     HRESULT GetValue(PROPVARIANT **ppPropVariant)
     {
@@ -157,7 +149,7 @@ inline HRESULT CChunkValue::SetChunk(REFPROPERTYKEY pkey,
 class CFilterBase : public IFilter, public IInitializeWithStream, public IPersistStream, public IPersistFile
 {
 public:
-    // OnInit() is called after the IStream is valid
+    // OnInit() is called when the IFilter is initialized (at the end of IFilter::Init)
     virtual HRESULT OnInit() = 0;
 
     // When GetNextChunkValue() is called you should fill in the ChunkValue by calling SetXXXValue() with the property.
@@ -191,8 +183,7 @@ public:
             m_pStream->Release();
         m_pStream = pStm;
         m_pStream->AddRef();
-
-        return OnInit();  // derived class inits now
+        return S_OK;
     };
 
     // IPersist
@@ -205,7 +196,7 @@ public:
     IFACEMETHODIMP Save(IStream *pStm, BOOL fClearDirty) { return E_NOTIMPL; }
     IFACEMETHODIMP GetSizeMax(ULARGE_INTEGER *pcbSize) { return E_NOTIMPL; }
 
-    // IPersistFile
+    // IPersistFile (for compatibility with older Windows Desktop Search versions and ifilttst.exe)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
         HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
