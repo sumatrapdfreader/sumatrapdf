@@ -42,11 +42,12 @@ HRESULT CPdfFilter::OnInit()
     TCHAR *uniqueName = tstr_printf(_T("SumatraPDF-%ul-%s"), size, uniqueStr);
     RpcStringFree(&uniqueStr);
 
-    // allow all access to the Local System (and for debugging also any authenticated user)
+    // allow all access to the Local System (and for debugging also to any authenticated user)
     // to the global objects we share with the UpdateMMapForIndexing thread
     SECURITY_ATTRIBUTES sa = { 0 };
     sa.nLength = sizeof(sa);
-    if (!ConvertStringSecurityDescriptorToSecurityDescriptor(_T("D:P(A;OICI;GA;;;AU)(A;OICI;GA;;;SY)"), SDDL_REVISION_1, &sa.lpSecurityDescriptor, NULL))
+    if (!ConvertStringSecurityDescriptorToSecurityDescriptor(_T("D:P(A;OICI;GA;;;SY)(A;OICI;GA;;;AU)"),
+        SDDL_REVISION_1, &sa.lpSecurityDescriptor, NULL))
         return E_FAIL;
 
     m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size, uniqueName);
@@ -84,7 +85,9 @@ HRESULT CPdfFilter::OnInit()
     STARTUPINFO si;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
-    // TODO: This fails with ERROR_NOT_ENOUGH_QUOTA
+    // TODO: This might not be possible at all, as SearchFilterHost.exe runs in a
+    //       low-privilege environment which might prevent the creation of new threads.
+    //       Currently, it fails with ERROR_NOT_ENOUGH_QUOTA.
     if (!CreateProcess(NULL, cmdline, &sa, &sa, FALSE, 0, NULL, NULL, &si, &pi))
         goto ErrorFail;
     CloseHandle(pi.hThread);
@@ -158,7 +161,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     if (str_startswith(m_pData, "Content:")) {
         WCHAR *content = utf8_to_wstr(m_pData + 8);
-        chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT, 0, 0, 0, CHUNK_EOW);
+        chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT);
         free(content);
         goto Success;
     }
