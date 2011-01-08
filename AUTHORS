@@ -16,9 +16,10 @@
 * Danilo Roascio
 * Simon Bünzli (zeniko at gmail.com)
 
-Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner and FAMFAMFAM
+Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
+FAMFAMFAM and Yusuke Kamiyamane.
 
-Translations by various translators (see src/strings.txt)
+Translations by various translators (see src/strings/*.txt)
 
 External projects are by their various authors:
 
@@ -30,3 +31,5 @@ External projects are by their various authors:
 * zlib          see http://www.zlib.net/
 * Dialog sizer  see http://gipsysoft.com/articles/dialogsizer/
 * SyncTeX       see http://itexmac.sourceforge.net/SyncTeX.html
+
+* Fugue Icons   see http://p.yusukekamiyamane.com/

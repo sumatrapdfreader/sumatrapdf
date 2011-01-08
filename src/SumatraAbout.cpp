@@ -60,7 +60,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #endif
     { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com"), 0 },
     { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/"), 0 },
-    { _T("toolbar icons"),  _T("Mark James"),           _T("http://www.famfamfam.com/lab/icons/silk/"), 0 },
+    { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/"), 0 },
     { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html"), 0 },
     { _T("translations"),   _T("Contribute translation"), _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"), 0 },
 #ifdef _TEX_ENHANCEMENT
