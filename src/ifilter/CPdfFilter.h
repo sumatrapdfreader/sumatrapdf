@@ -65,12 +65,14 @@ public:
             m_hConsume = NULL;
         }
         if (m_hProcess) {
+            if (WaitForSingleObject(m_hProcess, FILTER_TIMEOUT_IN_MS * 2) != WAIT_OBJECT_0) {
 #ifndef IFILTER_BUILTIN_MUPDF
-            // don't let a stuck SumatraPDF.exe hang around
-            TerminateProcess(m_hProcess, 99);
+                // don't let a stuck SumatraPDF.exe hang around
+                TerminateProcess(m_hProcess, 99);
 #else
-            TerminateThread(m_hProcess, 99);
+                TerminateThread(m_hProcess, 99);
 #endif
+            }
             CloseHandle(m_hProcess);
             m_hProcess = NULL;
         }

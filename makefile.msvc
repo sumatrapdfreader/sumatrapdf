@@ -130,14 +130,15 @@ INSTALLER_OBJS = \
 	$(O)\Installer.obj $(INSTALLER_RES)
 
 PDFFILTER_OBJS = \
-	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(O)\base_util.obj $(O)\wstr_util.obj $(PDFFILTER_RES)
+	$(O)\PdfFilterDll.obj $(O)\CPdfFilter.obj $(PDFFILTER_RES) \
+	$(O)\base_util.obj $(O)\wstr_util.obj $(O)\str_util.obj
 
 BROWSER_PLUGIN_OBJS = \
 	$(O)\npPdfViewer.obj $(BROWSER_PLUGIN_RES)
 
 !if "$(STANDALONE_PDFFILTER)"!=""
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D IFILTER_BUILTIN_MUPDF
-PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(O)\str_util.obj $(LIBS_OBJS) $(O)\PdfEngine.obj $(O)\ExtHelpers.obj
+PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(LIBS_OBJS) $(O)\PdfEngine.obj $(O)\ExtHelpers.obj
 !endif
 
 ##### SumatraPDF-specific build rules #####
@@ -239,8 +240,8 @@ $(O)\ExtHelpers.obj: baseutils\base_util.h baseutils\geom_util.h baseutils\str_u
 $(O)\ExtHelpers.obj: baseutils\tstr_util.h baseutils\vstrlist.h baseutils\WinUtil.hpp
 $(O)\ExtHelpers.obj: baseutils\wstr_util.h mupdf\fitz\fitz.h mupdf\mupdf\mupdf.h
 $(O)\ExtHelpers.obj: src\DisplayState.h src\ExtHelpers.h src\FileWatch.h
-$(O)\ExtHelpers.obj: src\PdfEngine.h src\PdfSearch.h src\PdfSelection.h
-$(O)\ExtHelpers.obj: src\WindowInfo.h
+$(O)\ExtHelpers.obj: src\ifilter\PdfFilter.h src\PdfEngine.h src\PdfSearch.h
+$(O)\ExtHelpers.obj: src\PdfSelection.h src\WindowInfo.h
 $(O)\file_util.obj: baseutils\base_util.h baseutils\file_util.h baseutils\str_util.h
 $(O)\file_util.obj: baseutils\tstr_util.h baseutils\wstr_util.h
 $(O)\FileHistory.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
@@ -257,8 +258,8 @@ $(O)\Installer.obj: src\installer\Resource.h src\Version.h
 $(O)\LangMenuDef.obj: src\LangMenuDef.h src\Resource.h
 $(O)\MemSegment.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\MemSegment.obj: baseutils\wstr_util.h src\MemSegment.h
-$(O)\npPdfViewer.obj: src\browserplugin\npapi/npapi.h src\browserplugin\npapi/npfunctions.h src\browserplugin\npapi/npruntime.h
-$(O)\npPdfViewer.obj: src\browserplugin\npapi/nptypes.h
+$(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
+$(O)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h
 $(O)\ParseCommandLine.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\ParseCommandLine.obj: baseutils\vstrlist.h baseutils\WinUtil.hpp baseutils\wstr_util.h
 $(O)\ParseCommandLine.obj: src\Benchmark.h src\ParseCommandLine.h src\SumatraPDF.h

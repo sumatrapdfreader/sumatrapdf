@@ -4,6 +4,7 @@
 #include "ExtHelpers.h"
 #include "WinUtil.hpp"
 #include "vstrlist.h"
+#include "ifilter/PdfFilter.h"
 
 bool gPluginMode = false;
 
@@ -31,15 +32,15 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
  * -> IFilter DLL opens an named shared memory map and fills it with the PDF
  *    document content. The name of the file mapping is then passed to a newly
  *    started (windowless) SumatraPDF through the command line.
- *    The DLL also creates two named events for of which the DLL will set
- *    the "-Produce" event when it wants more data and SumatraPDF is supposed to
- *    set the "-Consume" event when the DLL can get the next chunk.
+ *    The DLL also creates two named events of which the DLL will set
+ *    the "Produce-" event when it wants more data and SumatraPDF is supposed to
+ *    set the "Consume-" event when the DLL can get the next chunk of data.
  * <- SumatraPDF reads the whole file content into its own buffer and then
- *    repeatedly waits for the "-Produce" event, puts data for the next chunk
- *    into the memory map and sets the "-Consume" event. When no more data is
- *    available, an empty string is returned.
- * -> IFilter DLL can then repeatedly wait for "-Consume" events, return the next
- *    chunk to the search indexer and reset the "-Produce" event.
+ *    repeatedly waits for the "Produce-" event, puts data for the next chunk
+ *    into the memory map and sets the "Consume-" event. When no more data is
+ *    available or an error occurs, an empty string is returned.
+ * -> IFilter DLL can then repeatedly wait for "Consume-" events, return the next
+ *    chunk to the search indexer and reset the "Produce-" event.
  */
 DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
 {
@@ -54,10 +55,10 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
     if (!hIFilterMMap)
         return 1;
 
-    TCHAR eventName[96];
-    tstr_printf_s(eventName, dimof(eventName), _T("%s-Produce"), IFilterMMap);
+    TCHAR eventName[EVENT_NAME_SIZE_MAX];
+    tstr_printf_s(eventName, dimof(eventName), _T("Produce-%s"), IFilterMMap);
     HANDLE hProduceEvent = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, eventName);
-    tstr_printf_s(eventName, dimof(eventName), _T("%s-Consume"), IFilterMMap);
+    tstr_printf_s(eventName, dimof(eventName), _T("Consume-%s"), IFilterMMap);
     HANDLE hConsumeEvent = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, eventName);
 
     char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count);
@@ -74,19 +75,19 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
         goto Error;
     fz_obj *info = engine.getPdfInfo();
 
-    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(hProduceEvent, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         goto Error;
     str_printf_s(data, count, "Type:document");
     SetEvent(hConsumeEvent);
 
-    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(hProduceEvent, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         goto Error;
     char *author = pdf_toutf8(fz_dictgets(info, "Author"));
     str_printf_s(data, count, "Author:%s", author);
     free(author);
     SetEvent(hConsumeEvent);
 
-    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(hProduceEvent, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         goto Error;
     char *title = pdf_toutf8(fz_dictgets(info, "Title"));
     if (str_empty(title)) {
@@ -97,7 +98,7 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
     free(title);
     SetEvent(hConsumeEvent);
 
-    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(hProduceEvent, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         goto Error;
     char *date = pdf_toutf8(fz_dictgets(info, "ModDate"));
     if (str_empty(date)) {
@@ -109,17 +110,20 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
     SetEvent(hConsumeEvent);
 
     for (int pageNo = 1; pageNo <= engine.pageCount(); pageNo++) {
-        if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
-            goto Error;
         TCHAR *content = engine.ExtractPageText(pageNo);
         char *contentUTF8 = tstr_to_utf8(content);
+        if (WaitForSingleObject(hProduceEvent, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0) {
+            free(content);
+            free(contentUTF8);
+            goto Error;
+        }
         str_printf_s(data, count, "Content:%s", contentUTF8);
+        SetEvent(hConsumeEvent);
         free(contentUTF8);
         free(content);
-        SetEvent(hConsumeEvent);
     }
 
-    if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(hProduceEvent, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         goto Error;
     *data = '\0';
     SetEvent(hConsumeEvent);

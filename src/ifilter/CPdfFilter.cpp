@@ -6,7 +6,7 @@
 #include <sddl.h>
 #include <tchar.h>
 #include <inttypes.h>
-#include "wstr_util.h"
+#include "tstr_util.h"
 #include "CPdfFilter.h"
 
 #ifdef IFILTER_BUILTIN_MUPDF
@@ -39,8 +39,7 @@ HRESULT CPdfFilter::OnInit()
     UuidCreate(&unique);
     RPC_WSTR uniqueStr;
     UuidToString(&unique, &uniqueStr);
-    TCHAR uniqueName[72];
-    wsprintf(uniqueName, _T("SumatraPDF-%ul-%s"), size, uniqueStr);
+    TCHAR *uniqueName = tstr_printf(_T("SumatraPDF-%ul-%s"), size, uniqueStr);
     RpcStringFree(&uniqueStr);
 
     // allow all access to the Local System (and for debugging also any authenticated user)
@@ -56,10 +55,10 @@ HRESULT CPdfFilter::OnInit()
     if (!m_pData)
         goto ErrorFail;
 
-    TCHAR eventName[96];
-    wsprintf(eventName, _T("%s-Produce"), uniqueName);
+    TCHAR eventName[EVENT_NAME_SIZE_MAX];
+    tstr_printf_s(eventName, EVENT_NAME_SIZE_MAX, _T("Produce-%s"), uniqueName);
     m_hProduce = CreateEvent(&sa, FALSE, TRUE, eventName);
-    wsprintf(eventName, _T("%s-Consume"), uniqueName);
+    tstr_printf_s(eventName, EVENT_NAME_SIZE_MAX, _T("Consume-%s"), uniqueName);
     m_hConsume = CreateEvent(&sa, FALSE, FALSE, eventName);
     if (!m_hProduce || !m_hConsume)
         goto ErrorFail;
@@ -74,12 +73,13 @@ HRESULT CPdfFilter::OnInit()
 #ifndef IFILTER_BUILTIN_MUPDF
     TCHAR exePath[MAX_PATH];
     GetModuleFileName(g_hInstance, exePath, MAX_PATH);
-    _tcscpy(PathFindFileName(exePath), _T("SumatraPDF.exe"));
+    *PathFindFileName(exePath) = '\0';
+    tstr_cat_s(exePath, MAX_PATH, _T("SumatraPDF.exe"));
     if (!PathFileExists(exePath))
         goto ErrorFail;
 
     TCHAR cmdline[MAX_PATH * 2];
-    wsprintf(cmdline, _T("\"%s\" -ifiltermmap %s"), exePath, uniqueName);
+    tstr_printf_s(cmdline, MAX_PATH * 2, _T("\"%s\" -ifiltermmap %s"), exePath, uniqueName);
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
     ZeroMemory(&si, sizeof(si));
@@ -91,7 +91,7 @@ HRESULT CPdfFilter::OnInit()
     LocalFree(sa.lpSecurityDescriptor);
     m_hProcess = pi.hProcess;
 #else
-    m_pUniqueName = _tcsdup(uniqueName);
+    m_pUniqueName = tstr_dup(uniqueName);
     m_hProcess = CreateThread(NULL, 0, UpdateMMapForIndexing, m_pUniqueName, 0, NULL);
 #endif
 
@@ -106,7 +106,7 @@ ErrorFail:
 static bool PdfDateParse(char *pdfDate, SYSTEMTIME *timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (pdfDate[0] == 'D' && pdfDate[1] == ':')
+    if (str_startswith(pdfDate, "D:"))
         pdfDate += 2;
     return 6 == sscanf(pdfDate, "%4d%2d%2d" "%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
@@ -121,49 +121,49 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     if (m_bDone)
         return FILTER_E_END_OF_CHUNKS;
-    if (WaitForSingleObject(m_hConsume, 1000) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(m_hConsume, FILTER_TIMEOUT_IN_MS) != WAIT_OBJECT_0)
         m_bDone = true;
     if (!*m_pData)
         m_bDone = true;
     if (m_bDone)
         return FILTER_E_END_OF_CHUNKS;
 
-    if (!strncmp(m_pData, "Type:", 5) && m_pData[5]) {
+    if (str_startswith(m_pData, "Type:") && m_pData[5]) {
         WCHAR *type = utf8_to_wstr(m_pData + 5);
         chunkValue.SetTextValue(PKEY_PerceivedType, type);
         free(type);
         goto Success;
     }
 
-    if (!strncmp(m_pData, "Author:", 7) && m_pData[7]) {
+    if (str_startswith(m_pData, "Author:") && m_pData[7]) {
         WCHAR *author = utf8_to_wstr(m_pData + 7);
         chunkValue.SetTextValue(PKEY_Author, author);
         free(author);
         goto Success;
     }
 
-    if (!strncmp(m_pData, "Title:", 6) && m_pData[6]) {
+    if (str_startswith(m_pData, "Title:") && m_pData[6]) {
         WCHAR *title = utf8_to_wstr(m_pData + 6);
         chunkValue.SetTextValue(PKEY_Title, title);
         free(title);
         goto Success;
     }
 
-    if (!strncmp(m_pData, "Date:", 5) && PdfDateParse(m_pData + 5, &systime)) {
+    if (str_startswith(m_pData, "Date:") && PdfDateParse(m_pData + 5, &systime)) {
         FILETIME filetime;
         SystemTimeToFileTime(&systime, &filetime);
         chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
         goto Success;
     }
 
-    if (!strncmp(m_pData, "Content:", 8)) {
+    if (str_startswith(m_pData, "Content:")) {
         WCHAR *content = utf8_to_wstr(m_pData + 8);
         chunkValue.SetTextValue(PKEY_Search_Contents, content, CHUNK_TEXT, 0, 0, 0, CHUNK_EOW);
         free(content);
         goto Success;
     }
 
-    // if (m_pData[strlen(m_pData)-1] != ':')
+    // if (!str_endswith(m_pData, ":"))
     //     fprintf(stderr, "Unexpected data: %s\n", m_pData);
 
     *m_pData = '\0';

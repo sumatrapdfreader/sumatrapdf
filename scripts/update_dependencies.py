@@ -53,6 +53,7 @@ def prependPath(files, basefile=None):
 def extractIncludes(file):
 	content = open(file, "r").read()
 	includes = re.findall(r'(?m)^#include ["<]([^">]+)[">]', content)
+	includes = [path.replace("/", os.path.sep) for path in includes]
 	includes = prependPath(includes, file)
 	
 	for inc in includes:
