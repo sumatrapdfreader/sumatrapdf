@@ -41,15 +41,6 @@ void MakePluginWindow(WindowInfo *win, HWND hwndParent)
  * -> IFilter DLL can then repeatedly wait for "-Consume" events, return the next
  *    chunk to the search indexer and reset the "-Produce" event.
  */
-
-#ifdef IFILTER_BUILTIN_MUPDF
-struct MMapHandles {
-    TCHAR id[4];
-    HANDLE hProduce, hConsume, hMMap;
-    ULONG size;
-};
-#endif
-
 DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
 {
     PdfEngine engine;
@@ -57,13 +48,7 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
     fz_buffer *filedata = NULL;
 
     ULONG count;
-    if (!IFilterMMap)
-        return 1;
-
-#ifndef IFILTER_BUILTIN_MUPDF
-    // TODO: OpenXXX fails with error ACCESS_DENIED because IFilter DLLs are
-    //       loaded into an underpriviledged context
-    if (_stscanf((LPTSTR)IFilterMMap, _T("SumatraPDF-%ul-"), &count) != 1)
+    if (!IFilterMMap || _stscanf((LPTSTR)IFilterMMap, _T("SumatraPDF-%ul-"), &count) != 1)
         return 1;
     HANDLE hIFilterMMap = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, (LPTSTR)IFilterMMap);
     if (!hIFilterMMap)
@@ -74,18 +59,8 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
     HANDLE hProduceEvent = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, eventName);
     tstr_printf_s(eventName, dimof(eventName), _T("%s-Consume"), IFilterMMap);
     HANDLE hConsumeEvent = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, eventName);
-#else
-    struct MMapHandles *mmh = (struct MMapHandles *)IFilterMMap;
-    if (lstrcmp(mmh->id, _T("MMH")) != 0)
-        return 1;
-    HANDLE hIFilterMMap = mmh->hMMap;
-    HANDLE hProduceEvent = mmh->hProduce;
-    HANDLE hConsumeEvent = mmh->hConsume;
-    count = mmh->size;
-#endif
 
     char *data = (char *)MapViewOfFile(hIFilterMMap, FILE_MAP_ALL_ACCESS, 0, 0, count);
-    assert(data);
     if (!data)
         goto Error;
 
@@ -114,6 +89,10 @@ DWORD WINAPI UpdateMMapForIndexing(LPVOID IFilterMMap)
     if (WaitForSingleObject(hProduceEvent, 1000) != WAIT_OBJECT_0)
         goto Error;
     char *title = pdf_toutf8(fz_dictgets(info, "Title"));
+    if (str_empty(title)) {
+        free(title);
+        title = pdf_toutf8(fz_dictgets(info, "Subject"));
+    }
     str_printf_s(data, count, "Title:%s", title);
     free(title);
     SetEvent(hConsumeEvent);

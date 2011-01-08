@@ -11,7 +11,7 @@ public:
         m_hProcess(NULL), m_hProduce(NULL), m_hConsume(NULL),
         m_bDone(false)
 #ifdef IFILTER_BUILTIN_MUPDF
-        , m_pHandleInfo(NULL)
+        , m_pUniqueName(NULL)
 #endif
     {
         InterlockedIncrement(m_plModuleRef);
@@ -83,9 +83,9 @@ public:
             m_hMap = NULL;
         }
 #ifdef IFILTER_BUILTIN_MUPDF
-        if (m_pHandleInfo) {
-            free(m_pHandleInfo);
-            m_pHandleInfo = NULL;
+        if (m_pUniqueName) {
+            free(m_pUniqueName);
+            m_pUniqueName = NULL;
         }
 #endif
         m_bDone = false;
@@ -98,6 +98,6 @@ private:
     char * m_pData;
     bool m_bDone;
 #ifdef IFILTER_BUILTIN_MUPDF
-    VOID * m_pHandleInfo;
+    VOID * m_pUniqueName;
 #endif
 };

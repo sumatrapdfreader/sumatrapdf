@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <shlwapi.h>
+#include <sddl.h>
 #include <tchar.h>
 #include <inttypes.h>
 #include "wstr_util.h"
@@ -16,12 +17,6 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName, pdf_xref *xref
 {
     return NULL;
 }
-
-struct MMapHandles {
-    TCHAR id[4];
-    HANDLE hProduce, hConsume, hMMap;
-    ULONG size;
-};
 #endif
 
 #ifdef _MSC_VER
@@ -48,62 +43,63 @@ HRESULT CPdfFilter::OnInit()
     wsprintf(uniqueName, _T("SumatraPDF-%ul-%s"), size, uniqueStr);
     RpcStringFree(&uniqueStr);
 
-    // TODO: create a DACL for the file mapping and the events,
-    //       else they can't be opened by another process/thread
-    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, uniqueName);
-    if (!m_hMap)
-        return E_OUTOFMEMORY;
-    m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size);
-    if (!m_pData)
-        return E_OUTOFMEMORY;
-
-    LARGE_INTEGER zero = { 0 };
-    m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
-    res = m_pStream->Read(m_pData, size, NULL);
-    if (FAILED(res))
+    // allow all access to the Local System (and for debugging also any authenticated user)
+    // to the global objects we share with the UpdateMMapForIndexing thread
+    SECURITY_ATTRIBUTES sa = { 0 };
+    sa.nLength = sizeof(sa);
+    if (!ConvertStringSecurityDescriptorToSecurityDescriptor(_T("D:P(A;OICI;GA;;;AU)(A;OICI;GA;;;SY)"), SDDL_REVISION_1, &sa.lpSecurityDescriptor, NULL))
         return E_FAIL;
+
+    m_hMap = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0, size, uniqueName);
+    if (m_hMap)
+        m_pData = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, size);
+    if (!m_pData)
+        goto ErrorFail;
 
     TCHAR eventName[96];
     wsprintf(eventName, _T("%s-Produce"), uniqueName);
-    m_hProduce = CreateEvent(NULL, FALSE, TRUE, eventName);
+    m_hProduce = CreateEvent(&sa, FALSE, TRUE, eventName);
     wsprintf(eventName, _T("%s-Consume"), uniqueName);
-    m_hConsume = CreateEvent(NULL, FALSE, FALSE, eventName);
+    m_hConsume = CreateEvent(&sa, FALSE, FALSE, eventName);
     if (!m_hProduce || !m_hConsume)
-        return E_FAIL;
+        goto ErrorFail;
+
+    LARGE_INTEGER zero;
+    zero.QuadPart = 0;
+    m_pStream->Seek(zero, STREAM_SEEK_SET, NULL);
+    res = m_pStream->Read(m_pData, size, NULL);
+    if (FAILED(res))
+        goto ErrorFail;
 
 #ifndef IFILTER_BUILTIN_MUPDF
-    TCHAR exePath[MAX_PATH], args[MAX_PATH];
+    TCHAR exePath[MAX_PATH];
     GetModuleFileName(g_hInstance, exePath, MAX_PATH);
     _tcscpy(PathFindFileName(exePath), _T("SumatraPDF.exe"));
     if (!PathFileExists(exePath))
-        return E_FAIL;
+        goto ErrorFail;
 
-    SHELLEXECUTEINFO sei = { 0 };
-    sei.cbSize = sizeof(sei);
-#ifndef SEE_MASK_NOZONECHECKS
-#define SEE_MASK_NOZONECHECKS 0x00800000
-#endif
-    sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOZONECHECKS;
-    sei.lpVerb = _T("open");
-    sei.lpFile = exePath;
-    wsprintf((LPTSTR)(sei.lpParameters = args), _T("-ifiltermmap %s"), uniqueName);
-    sei.nShow = SW_HIDE;
-    sei.hInstApp = g_hInstance;
-    if (!ShellExecuteEx(&sei) || !sei.hProcess || (int)sei.hInstApp <= 32)
-        return E_FAIL;
-    m_hProcess = sei.hProcess;
+    TCHAR cmdline[MAX_PATH * 2];
+    wsprintf(cmdline, _T("\"%s\" -ifiltermmap %s"), exePath, uniqueName);
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    // TODO: This fails with ERROR_NOT_ENOUGH_QUOTA
+    if (!CreateProcess(NULL, cmdline, &sa, &sa, FALSE, 0, NULL, NULL, &si, &pi))
+        goto ErrorFail;
+    CloseHandle(pi.hThread);
+    LocalFree(sa.lpSecurityDescriptor);
+    m_hProcess = pi.hProcess;
 #else
-    m_pHandleInfo = malloc(sizeof(struct MMapHandles));
-    struct MMapHandles *mmh = (struct MMapHandles *)m_pHandleInfo;
-    lstrcpy(mmh->id, _T("MMH"));
-    mmh->hProduce = m_hProduce;
-    mmh->hConsume = m_hConsume;
-    mmh->hMMap = m_hMap;
-    mmh->size = size;
-    m_hProcess = CreateThread(NULL, 0, UpdateMMapForIndexing, m_pHandleInfo, 0, NULL);
+    m_pUniqueName = _tcsdup(uniqueName);
+    m_hProcess = CreateThread(NULL, 0, UpdateMMapForIndexing, m_pUniqueName, 0, NULL);
 #endif
 
     return S_OK;
+
+ErrorFail:
+    LocalFree(sa.lpSecurityDescriptor);
+    return E_FAIL;
 }
 
 // adapted from SumatraProperties.cpp
@@ -190,7 +186,8 @@ HRESULT CFilterBase::Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC 
     m_dwChunkId = 0;
     m_iText = 0;
     m_currentChunk.Clear();
-    *pFlags = 0;
+    if (pFlags)
+        *pFlags = 0;
 
     return OnInit();
 }
