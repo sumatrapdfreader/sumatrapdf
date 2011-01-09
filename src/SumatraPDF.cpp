@@ -6599,6 +6599,29 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             }
             break;
 
+        case WM_APPCOMMAND:
+            // both keyboard and mouse drivers should produce WM_APPCOMMAND
+            // messages for their special keys, so handle these here and return
+            // TRUE so as to not make them bubble up further
+            switch (GET_APPCOMMAND_LPARAM(lParam)) {
+            case APPCOMMAND_BROWSER_BACKWARD:
+                SendMessage(hwnd, WM_COMMAND, IDM_GOTO_NAV_BACK, 0);
+                return TRUE;
+            case APPCOMMAND_BROWSER_FORWARD:
+                SendMessage(hwnd, WM_COMMAND, IDM_GOTO_NAV_FORWARD, 0);
+                return TRUE;
+            case APPCOMMAND_BROWSER_REFRESH:
+                SendMessage(hwnd, WM_COMMAND, IDM_REFRESH, 0);
+                return TRUE;
+            case APPCOMMAND_BROWSER_SEARCH:
+                SendMessage(hwnd, WM_COMMAND, IDM_FIND_FIRST, 0);
+                return TRUE;
+            case APPCOMMAND_BROWSER_FAVORITES:
+                SendMessage(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
+                return TRUE;
+            }
+            break;
+
         case WM_CHAR:
             OnChar(win, wParam);
             break;
