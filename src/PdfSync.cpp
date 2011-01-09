@@ -837,8 +837,11 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                         vector<RectI> rects;
                         UINT ret = win->pdfsync->source_to_pdf(srcfile, line, col, &page, rects);
                         WindowInfo_ShowForwardSearchResult(win, srcfile, line, col, ret, page, rects);
-                        if (setfocus)
+                        if (setfocus) {
+                            if (IsIconic(win->hwndFrame))
+                                ShowWindow(win->hwndFrame, SW_RESTORE);
                             SetFocus(win->hwndFrame);
+                        }
                     }
                 }
             }
@@ -866,8 +869,11 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     ack.fAck = 1;
                     if (forcerefresh)
                         PostMessage(win->hwndFrame, WM_COMMAND, IDM_REFRESH, TRUE);
-                    if (setfocus)
+                    if (setfocus) {
+                        if (IsIconic(win->hwndFrame))
+                            ShowWindow(win->hwndFrame, SW_RESTORE);
                         SetFocus(win->hwndFrame);
+                    }
                 }
             }
             // Jump to named destination DDE command.
@@ -888,6 +894,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     if (destname_utf8) {
                         win->dm->goToNamedDest(destname_utf8);
                         ack.fAck = 1;
+                        if (IsIconic(win->hwndFrame))
+                            ShowWindow(win->hwndFrame, SW_RESTORE);
                         SetFocus(win->hwndFrame);
                         free(destname_utf8);
                     }
@@ -909,6 +917,8 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
                     if (win->dm->validPageNo(page)) {
                         win->dm->goToPage(page, 0, true);
                         ack.fAck = 1;
+                        if (IsIconic(win->hwndFrame))
+                            ShowWindow(win->hwndFrame, SW_RESTORE);
                         SetFocus(win->hwndFrame);
                     }
                 }
