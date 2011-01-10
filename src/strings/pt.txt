@@ -20,7 +20,7 @@ Contributor: Sérgio Marques <smarquespt@gmail.com>, 2010
 &Todas as páginas selecionadas
 
 &Back\tAlt+Left Arrow
-&Voltar\tAlt+<-
+V&oltar\tAlt + <-
 
 &Close\tCtrl-W
 &Fechar\tCtrl-W
@@ -248,7 +248,7 @@ Error loading PDF file.
 Erro ao carregar o PDF.
 
 F&orward\tAlt+Right Arrow
-Ava&nçar\tAlt+->
+A&vançar\tAlt + ->
 
 F&ullscreen\tCtrl-Shift-L
 Ecrã co&mpleto\tCtrl-Shift-L
@@ -404,7 +404,7 @@ Please wait - rendering...
 Por favor, aguarde - a processar...
 
 Pr&esentation\tCtrl-L
-Apr&esentação\tCtrl-L
+Aprese&ntação\tCtrl-L
 
 Previous Page
 Página anterior
