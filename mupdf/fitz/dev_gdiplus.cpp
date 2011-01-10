@@ -418,7 +418,8 @@ protected:
 			0.0f, 0.0f, 0.0f, alpha, 0.0f,
 			0.0f, 0.0f, 0.0f, 0.0f, 1.0f
 		};
-		imgAttrs->SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+		if (alpha != 1.0f)
+			imgAttrs->SetColorMatrix(&matrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
 		// imgAttrs.SetWrapMode(WrapModeClamp);
 	}
 };
