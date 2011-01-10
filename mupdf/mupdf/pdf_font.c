@@ -1016,6 +1016,7 @@ pdf_makewidthtable(pdf_fontdesc *fontdesc)
 		{
 			cid = pdf_lookupcmap(fontdesc->encoding, k);
 			gid = pdf_fontcidtogid(fontdesc, cid);
+			if (gid >= 0) /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1164 */
 			font->widthtable[gid] = fontdesc->hmtx[i].w;
 		}
 	}
