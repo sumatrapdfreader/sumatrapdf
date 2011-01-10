@@ -595,6 +595,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\draw\imagesmooth.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\draw\imageunpack.c"
 					>
 				</File>
