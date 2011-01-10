@@ -30,6 +30,9 @@ Isara\tCtrl-W
 &Don't ask me again
 Huwag na akong tanunging muli
 
+&Even pages only
+Mga &even na pahina lamang
+
 &File
 &File
 
@@ -38,6 +41,9 @@ Hanapin ang:
 
 &First Page\tHome
 Unang Pahina\tHome
+
+&Fit pages to printable area
+Pagkasyahin ang mga pahina sa printable na area
 
 &Go To
 Pumun&ta Sa...
@@ -65,6 +71,9 @@ Hindi
 
 &No, thanks
 'Di bale na lang
+
+&Odd pages only
+Mga odd na pahina lamang
 
 &Open\tCtrl-O
 Buksan\tCtrl-O
@@ -120,6 +129,9 @@ Palakihin/paliitin
 About SumatraPDF
 Tungkol sa SumatraPDF
 
+Advanced
+Advanced
+
 All files
 Lahat ng files
 
@@ -170,6 +182,9 @@ Tignan kung may bagong &bersyon
 
 Continuous
 Tuloy-tuloy
+
+Continuous book view
+Tuluy-tuloy na tinging pang-aklat
 
 Continuous facing
 Tuloy-tuloy na Magkaharap
@@ -269,6 +284,9 @@ Ipagkasya ang Pahina
 
 Fit Width
 Ipagkasya ang Lapad
+
+Fit Width and Show Pages Continuously
+Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 
 Fit a Single Page
 Pagkasyahin ang isang pahina
@@ -469,16 +487,10 @@ printing document
 ipini-print ang dokumento
 
 # Untranslated:
-#&Even pages only
-#&Fit pages to printable area
 #&Match case
-#&Odd pages only
-#Advanced
 #Cannot start inverse search command. Please check the command line in the settings.
-#Continuous book view
 #Custom &Zoom...\tCtrl-Y
 #Default &Zoom:
-#Fit Width and Show Pages Continuously
 #No synchronization file found
 #No synchronization info at this position
 #Pr&esentation\tCtrl-L
