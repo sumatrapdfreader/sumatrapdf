@@ -298,6 +298,12 @@ Prilagodi stran
 Fit Width
 Prilagodi po širini
 
+Fit Width and Show Pages Continuously
+Prilagodi po širini in prikaži strani nepretrgano
+
+Fit a Single Page
+Prilagodi enostransko
+
 Found text at page %d
 Besedilo najdeno na strani %d
 
@@ -391,8 +397,14 @@ Merilo strani
 Page:
 Stran:
 
+Please include the following file in your crash report:
+Prosim, vključite naslednjo datoteko v vaše poročilo o sesutju:
+
 Please wait - rendering...
 Počakajte trenutek, upodobitev poteka …
+
+Pr&esentation\tCtrl-L
+Pr&edstavitev\tCtrl-L
 
 Previous Page
 Predhodna stran
@@ -444,6 +456,12 @@ Zadeva:
 
 SumatraPDF Options
 Možnosti SumatraPDF
+
+SumatraPDF Update
+Posodobitev SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF se je sesul
 
 SumatraPDF is your main PDF reader
 SumatraPDF je vaš privzeti bralnik PDF
@@ -498,12 +516,4 @@ kopiranje besedila
 
 printing document
 tiskanje dokumenta
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF Update
-#SumatraPDF crashed
 
