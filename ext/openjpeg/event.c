@@ -30,7 +30,7 @@
      Utility functions
    ==========================================================*/
 
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
+#ifndef _WIN32
 static char*
 i2a(unsigned i, char *a, unsigned r) {
 	if (i/r > 0) a = i2a(i/r,a,r);
@@ -57,7 +57,7 @@ _itoa(int i, char *a, int r) {
 	return a;
 }
 
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 
 /* ----------------------------------------------------------------------- */
 

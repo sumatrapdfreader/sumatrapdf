@@ -418,12 +418,19 @@ void tcd_init_encode(opj_tcd_t *tcd, opj_image_t * image, opj_cp_t * cp, int cur
 		/* Modification of the RATE >> */
 		for (j = 0; j < tcp->numlayers; j++) {
 			tcp->rates[j] = tcp->rates[j] ? 
-						((float) (tile->numcomps 
-								* (tile->x1 - tile->x0) 
-								* (tile->y1 - tile->y0) 
-								* image->comps[0].prec))/ 
-						(tcp->rates[j] * 8 * image->comps[0].dx * image->comps[0].dy) 
-						: 0;
+				cp->tp_on ? 
+					(((float) (tile->numcomps 
+					* (tile->x1 - tile->x0) 
+					* (tile->y1 - tile->y0)
+					* image->comps[0].prec))
+					/(tcp->rates[j] * 8 * image->comps[0].dx * image->comps[0].dy)) - (((tcd->cur_totnum_tp - 1) * 14 )/ tcp->numlayers)
+					:
+				((float) (tile->numcomps 
+					* (tile->x1 - tile->x0) 
+					* (tile->y1 - tile->y0) 
+					* image->comps[0].prec))/ 
+					(tcp->rates[j] * 8 * image->comps[0].dx * image->comps[0].dy)
+					: 0;
 
 			if (tcp->rates[j]) {
 				if (j && tcp->rates[j] < tcp->rates[j - 1] + 10) {
@@ -584,7 +591,9 @@ void tcd_init_encode(opj_tcd_t *tcd, opj_image_t * image, opj_cp_t * cp, int cur
 							cblk->y0 = int_max(cblkystart, prc->y0);
 							cblk->x1 = int_min(cblkxend, prc->x1);
 							cblk->y1 = int_min(cblkyend, prc->y1);
-							cblk->data = (unsigned char*) opj_calloc(8192, sizeof(unsigned char));
+							cblk->data = (unsigned char*) opj_calloc(8192+2, sizeof(unsigned char));
+							/* FIXME: mqc_init_enc and mqc_byteout underrun the buffer if we don't do this. Why? */
+							cblk->data += 2;
 							cblk->layers = (opj_tcd_layer_t*) opj_calloc(100, sizeof(opj_tcd_layer_t));
 							cblk->passes = (opj_tcd_pass_t*) opj_calloc(100, sizeof(opj_tcd_pass_t));
 						}
@@ -1085,7 +1094,7 @@ bool tcd_rateallocate(opj_tcd_t *tcd, unsigned char *dest, int len, opj_codestre
 			opj_t2_t *t2 = t2_create(tcd->cinfo, tcd->image, cp);
 			double thresh = 0;
 
-			for (i = 0; i < 32; i++) {
+			for (i = 0; i < 128; i++) {
 				int l = 0;
 				double distoachieved = 0;	/* fixed_quality */
 				thresh = (lo + hi) / 2;
@@ -1502,5 +1511,6 @@ void tcd_free_decode_tile(opj_tcd_t *tcd, int tileno) {
 	}
 	opj_free(tile->comps);
 }
+
 
 

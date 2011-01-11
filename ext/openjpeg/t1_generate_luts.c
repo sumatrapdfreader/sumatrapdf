@@ -260,16 +260,16 @@ int main(){
 	}
 
 	printf("static short lut_nmsedec_sig[1 << T1_NMSEDEC_BITS] = {\n  ");
-	dump_array16(&lut_nmsedec_sig, 1 << T1_NMSEDEC_BITS);
+	dump_array16(lut_nmsedec_sig, 1 << T1_NMSEDEC_BITS);
 
 	printf("static short lut_nmsedec_sig0[1 << T1_NMSEDEC_BITS] = {\n  ");
-	dump_array16(&lut_nmsedec_sig0, 1 << T1_NMSEDEC_BITS);
+	dump_array16(lut_nmsedec_sig0, 1 << T1_NMSEDEC_BITS);
 
 	printf("static short lut_nmsedec_ref[1 << T1_NMSEDEC_BITS] = {\n  ");
-	dump_array16(&lut_nmsedec_ref, 1 << T1_NMSEDEC_BITS);
+	dump_array16(lut_nmsedec_ref, 1 << T1_NMSEDEC_BITS);
 
 	printf("static short lut_nmsedec_ref0[1 << T1_NMSEDEC_BITS] = {\n  ");
-	dump_array16(&lut_nmsedec_ref0, 1 << T1_NMSEDEC_BITS);
+	dump_array16(lut_nmsedec_ref0, 1 << T1_NMSEDEC_BITS);
 
 	return 0;
 }

@@ -268,6 +268,7 @@ Decode a tile from a buffer into a raw image
 @param src Source buffer
 @param len Length of source buffer
 @param tileno Number that identifies one of the tiles to be decoded
+@param cstr_info Codestream information structure
 */
 bool tcd_decode_tile(opj_tcd_t *tcd, unsigned char *src, int len, int tileno, opj_codestream_info_t *cstr_info);
 /**

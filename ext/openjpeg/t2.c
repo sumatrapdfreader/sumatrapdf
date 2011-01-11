@@ -59,7 +59,8 @@ Encode a packet of a tile to a destination buffer
 */
 static int t2_encode_packet(opj_tcd_tile_t *tile, opj_tcp_t *tcp, opj_pi_iterator_t *pi, unsigned char *dest, int len, opj_codestream_info_t *cstr_info, int tileno);
 /**
-@param seg
+@param cblk
+@param index
 @param cblksty
 @param first
 */
@@ -72,6 +73,7 @@ Decode a packet of a tile from a source buffer
 @param tile Tile for which to write the packets
 @param tcp Tile coding parameters
 @param pi Packet identity
+@param pack_info Packet information
 @return 
 */
 static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_tile_t *tile, 
@@ -494,6 +496,7 @@ static int t2_decode_packet(opj_t2_t* t2, unsigned char *src, int len, opj_tcd_t
 	if (tcp->csty & J2K_CP_CSTY_EPH) {
 		if ((*hd) != 0xff || (*(hd + 1) != 0x92)) {
 			opj_event_msg(t2->cinfo, EVT_ERROR, "Expected EPH marker\n");
+			return -999;
 		} else {
 			hd += 2;
 		}
@@ -614,6 +617,7 @@ int t2_encode_packets(opj_t2_t* t2,int tileno, opj_tcd_tile_t *tile, int maxlaye
 				int tpnum = compno;
 				if (pi_create_encode(pi, cp,tileno,poc,tpnum,tppos,t2_mode,cur_totnum_tp)) {
 					opj_event_msg(t2->cinfo, EVT_ERROR, "Error initializing Packet Iterator\n");
+					pi_destroy(pi, cp, tileno);
 					return -999;
 				}
 				while (pi_next(&pi[poc])) {
@@ -710,7 +714,7 @@ int t2_decode_packets(opj_t2_t *t2, unsigned char *src, int len, int tileno, opj
 			} else {
 				e = 0;
 			}
-			
+			if(e == -999) return -999;
 			/* progression in resolution */
 			image->comps[pi[pino].compno].resno_decoded =	
 				(e > 0) ? 

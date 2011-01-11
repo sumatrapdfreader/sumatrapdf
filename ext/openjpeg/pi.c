@@ -209,14 +209,14 @@ if (!pi->tp_on){
 					try1 = int_ceildiv(pi->ty1, comp->dy << levelno);
 					rpx = res->pdx + levelno;
 					rpy = res->pdy + levelno;
-					if (!((pi->y % (comp->dy << rpy) == 0) || ((pi->y == pi->ty0) && ((try0 << levelno) % (1 << rpx))))){
+					if (!((pi->y % (comp->dy << rpy) == 0) || ((pi->y == pi->ty0) && ((try0 << levelno) % (1 << rpy))))){
 						continue;	
 					}
 					if (!((pi->x % (comp->dx << rpx) == 0) || ((pi->x == pi->tx0) && ((trx0 << levelno) % (1 << rpx))))){
 						continue; 
 					}
 					
-					if ((res->pw==0)||(res->pw==0)) continue;
+					if ((res->pw==0)||(res->ph==0)) continue;
 					
 					if ((trx0==trx1)||(try0==try1)) continue;
 					
@@ -290,14 +290,14 @@ static bool pi_next_pcrl(opj_pi_iterator_t * pi) {
 					try1 = int_ceildiv(pi->ty1, comp->dy << levelno);
 					rpx = res->pdx + levelno;
 					rpy = res->pdy + levelno;
-					if (!((pi->y % (comp->dy << rpy) == 0) || ((pi->y == pi->ty0) && ((try0 << levelno) % (1 << rpx))))){
+					if (!((pi->y % (comp->dy << rpy) == 0) || ((pi->y == pi->ty0) && ((try0 << levelno) % (1 << rpy))))){
 						continue;	
 					}
 					if (!((pi->x % (comp->dx << rpx) == 0) || ((pi->x == pi->tx0) && ((trx0 << levelno) % (1 << rpx))))){
 						continue; 
 					}
 					
-					if ((res->pw==0)||(res->pw==0)) continue;
+					if ((res->pw==0)||(res->ph==0)) continue;
 					
 					if ((trx0==trx1)||(try0==try1)) continue;
 					
@@ -369,14 +369,14 @@ static bool pi_next_cprl(opj_pi_iterator_t * pi) {
 					try1 = int_ceildiv(pi->ty1, comp->dy << levelno);
 					rpx = res->pdx + levelno;
 					rpy = res->pdy + levelno;
-					if (!((pi->y % (comp->dy << rpy) == 0) || ((pi->y == pi->ty0) && ((try0 << levelno) % (1 << rpx))))){
+					if (!((pi->y % (comp->dy << rpy) == 0) || ((pi->y == pi->ty0) && ((try0 << levelno) % (1 << rpy))))){
 						continue;	
 					}
 					if (!((pi->x % (comp->dx << rpx) == 0) || ((pi->x == pi->tx0) && ((trx0 << levelno) % (1 << rpx))))){
 						continue; 
 					}
 					
-					if ((res->pw==0)||(res->pw==0)) continue;
+					if ((res->pw==0)||(res->ph==0)) continue;
 					
 					if ((trx0==trx1)||(try0==try1)) continue;
 					

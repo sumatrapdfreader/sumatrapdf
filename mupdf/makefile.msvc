@@ -40,7 +40,7 @@ JPEG_TURBO_DIR=$(EXTLIBSDIR)\libjpeg-turbo
 !endif
 !endif
 
-OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg-1.3\libopenjpeg
+OPENJPEG_DIR=$(EXTLIBSDIR)\openjpeg
 JBIG2_DIR=$(EXTLIBSDIR)\jbig2dec
 
 # full path to NASM can be passed in or we'll assume it's in PATH

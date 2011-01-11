@@ -24,14 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
+#include "opj_config.h"
 #include "opj_includes.h"
 
 /* ---------------------------------------------------------------------- */
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef OPJ_STATIC
 BOOL APIENTRY
 DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
@@ -48,17 +49,17 @@ DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     return TRUE;
 }
 #endif /* OPJ_STATIC */
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 /* ---------------------------------------------------------------------- */
 
 
 const char* OPJ_CALLCONV opj_version(void) {
-    return OPENJPEG_VERSION;
+    return PACKAGE_VERSION;
 }
 
 opj_dinfo_t* OPJ_CALLCONV opj_create_decompress(OPJ_CODEC_FORMAT format) {
-	opj_dinfo_t *dinfo = (opj_dinfo_t*)opj_malloc(sizeof(opj_dinfo_t));
+	opj_dinfo_t *dinfo = (opj_dinfo_t*)opj_calloc(1, sizeof(opj_dinfo_t));
 	if(!dinfo) return NULL;
 	dinfo->is_decompressor = true;
 	switch(format) {
@@ -169,7 +170,7 @@ opj_image_t* OPJ_CALLCONV opj_decode_with_info(opj_dinfo_t *dinfo, opj_cio_t *ci
 }
 
 opj_cinfo_t* OPJ_CALLCONV opj_create_compress(OPJ_CODEC_FORMAT format) {
-	opj_cinfo_t *cinfo = (opj_cinfo_t*)opj_malloc(sizeof(opj_cinfo_t));
+	opj_cinfo_t *cinfo = (opj_cinfo_t*)opj_calloc(1, sizeof(opj_cinfo_t));
 	if(!cinfo) return NULL;
 	cinfo->is_decompressor = false;
 	switch(format) {
@@ -238,6 +239,12 @@ void OPJ_CALLCONV opj_set_default_encoder_parameters(opj_cparameters_t *paramete
 		parameters->tp_on = 0;
 		parameters->decod_format = -1;
 		parameters->cod_format = -1;
+		parameters->tcp_rates[0] = 0;   
+		parameters->tcp_numlayers = 0;
+    parameters->cp_disto_alloc = 0;
+		parameters->cp_fixed_alloc = 0;
+		parameters->cp_fixed_quality = 0;
+
 /* UniPG>> */
 #ifdef USE_JPWL
 		parameters->jpwl_epc_on = false;
@@ -325,5 +332,6 @@ void OPJ_CALLCONV opj_destroy_cstr_info(opj_codestream_info_t *cstr_info) {
 		}
 		opj_free(cstr_info->tile);
 		opj_free(cstr_info->marker);
+		opj_free(cstr_info->numdecompos);
 	}
 }

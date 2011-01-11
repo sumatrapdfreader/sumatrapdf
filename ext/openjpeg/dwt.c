@@ -570,6 +570,20 @@ static void v4dwt_interleave_h(v4dwt_t* restrict w, float* restrict a, int x, in
 	int count = w->sn;
 	int i, k;
 	for(k = 0; k < 2; ++k){
+		if (count + 3 * x < size && ((int) a & 0x0f) == 0 && ((int) bi & 0x0f) == 0 && (x & 0x0f) == 0) {
+			/* Fast code path */
+			for(i = 0; i < count; ++i){
+				int j = i;
+				bi[i*8    ] = a[j];
+				j += x;
+				bi[i*8 + 1] = a[j];
+				j += x;
+				bi[i*8 + 2] = a[j];
+				j += x;
+				bi[i*8 + 3] = a[j];
+			}
+		} else {
+			/* Slow code path */
 		for(i = 0; i < count; ++i){
 			int j = i;
 			bi[i*8    ] = a[j];
@@ -582,6 +596,7 @@ static void v4dwt_interleave_h(v4dwt_t* restrict w, float* restrict a, int x, in
 			j += x;
 			if(j > size) continue;
 			bi[i*8 + 3] = a[j];
+		}
 		}
 		bi = (float*) (w->wavelet + 1 - w->cas);
 		a += w->sn;
@@ -608,9 +623,21 @@ static void v4dwt_interleave_v(v4dwt_t* restrict v , float* restrict a , int x){
 static void v4dwt_decode_step1_sse(v4* w, int count, const __m128 c){
 	__m128* restrict vw = (__m128*) w;
 	int i;
+	/* 4x unrolled loop */
+	for(i = 0; i < count >> 2; ++i){
+		*vw = _mm_mul_ps(*vw, c);
+		vw += 2;
+		*vw = _mm_mul_ps(*vw, c);
+		vw += 2;
+		*vw = _mm_mul_ps(*vw, c);
+		vw += 2;
+		*vw = _mm_mul_ps(*vw, c);
+		vw += 2;
+	}
+	count &= 3;
 	for(i = 0; i < count; ++i){
-		__m128 tmp = vw[i*2];
-		vw[i*2] = tmp * c;
+		*vw = _mm_mul_ps(*vw, c);
+		vw += 2;
 	}
 }
 
@@ -618,22 +645,24 @@ static void v4dwt_decode_step2_sse(v4* l, v4* w, int k, int m, __m128 c){
 	__m128* restrict vl = (__m128*) l;
 	__m128* restrict vw = (__m128*) w;
 	int i;
+	__m128 tmp1, tmp2, tmp3;
+	tmp1 = vl[0];
 	for(i = 0; i < m; ++i){
-		__m128 tmp1 = vl[ 0];
-		__m128 tmp2 = vw[-1];
-		__m128 tmp3 = vw[ 0];
-		vw[-1] = tmp2 + ((tmp1 + tmp3) * c);
-		vl = vw;
+		tmp2 = vw[-1];
+		tmp3 = vw[ 0];
+		vw[-1] = _mm_add_ps(tmp2, _mm_mul_ps(_mm_add_ps(tmp1, tmp3), c));
+		tmp1 = tmp3;
 		vw += 2;
 	}
+	vl = vw - 2;
 	if(m >= k){
 		return;
 	}
-	c += c;
-	c *= vl[0];
+	c = _mm_add_ps(c, c);
+	c = _mm_mul_ps(c, vl[0]);
 	for(; m < k; ++m){
 		__m128 tmp = vw[-1];
-		vw[-1] = tmp + c;
+		vw[-1] = _mm_add_ps(tmp, c);
 		vw += 2;
 	}
 }
@@ -773,19 +802,24 @@ void dwt_decode_real(opj_tcd_tilecomp_t* restrict tilec, int numres){
 		h.dn = rw - h.sn;
 		h.cas = res->x0 % 2;
 
-		for(j = rh; j > 0; j -= 4){
+		for(j = rh; j > 3; j -= 4){
+			int k;
 			v4dwt_interleave_h(&h, aj, w, bufsize);
 			v4dwt_decode(&h);
-			if(j >= 4){
-				int k;
 				for(k = rw; --k >= 0;){
 					aj[k    ] = h.wavelet[k].f[0];
 					aj[k+w  ] = h.wavelet[k].f[1];
 					aj[k+w*2] = h.wavelet[k].f[2];
 					aj[k+w*3] = h.wavelet[k].f[3];
 				}
-			}else{
+			aj += w*4;
+			bufsize -= w*4;
+		}
+		if (rh & 0x03) {
 				int k;
+			j = rh & 0x03;
+			v4dwt_interleave_h(&h, aj, w, bufsize);
+			v4dwt_decode(&h);
 				for(k = rw; --k >= 0;){
 					switch(j) {
 						case 3: aj[k+w*2] = h.wavelet[k].f[2];
@@ -794,30 +828,29 @@ void dwt_decode_real(opj_tcd_tilecomp_t* restrict tilec, int numres){
 					}
 				}
 			}
-			aj += w*4;
-			bufsize -= w*4;
-		}
 
 		v.dn = rh - v.sn;
 		v.cas = res->y0 % 2;
 
 		aj = (float*) tilec->data;
-		for(j = rw; j > 0; j -= 4){
+		for(j = rw; j > 3; j -= 4){
+			int k;
 			v4dwt_interleave_v(&v, aj, w);
 			v4dwt_decode(&v);
-			if(j >= 4){
-				int k;
 				for(k = 0; k < rh; ++k){
 					memcpy(&aj[k*w], &v.wavelet[k], 4 * sizeof(float));
 				}
-			}else{
+			aj += 4;
+		}
+		if (rw & 0x03){
 				int k;
+			j = rw & 0x03;
+			v4dwt_interleave_v(&v, aj, w);
+			v4dwt_decode(&v);
 				for(k = 0; k < rh; ++k){
 					memcpy(&aj[k*w], &v.wavelet[k], j * sizeof(float));
 				}
 			}
-			aj += 4;
-		}
 	}
 
 	opj_aligned_free(h.wavelet);

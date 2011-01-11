@@ -115,8 +115,10 @@ Modify the packet iterator for enabling tile part generation
 @param pi Handle to the packet iterator generated in pi_initialise_encode  
 @param cp Coding parameters
 @param tileno Number that identifies the tile for which to list the packets
+@param pino Iterator index for pi
 @param tpnum Tile part number of the current tile
 @param tppos The position of the tile part flag in the progression order
+@param t2_mode If == 0 In Threshold calculation ,If == 1 Final pass
 @param cur_totnum_tp The total number of tile parts in the current tile
 @return Returns true if an error is detected 
 */
