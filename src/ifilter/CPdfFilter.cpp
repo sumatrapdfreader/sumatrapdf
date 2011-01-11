@@ -37,7 +37,11 @@ HRESULT CPdfFilter::OnInit()
 
     GUID unique;
     UuidCreate(&unique);
+#ifdef UNICODE
     RPC_WSTR uniqueStr;
+#else
+    RPC_CSTR uniqueStr;
+#endif
     UuidToString(&unique, &uniqueStr);
     TCHAR *uniqueName = tstr_printf(_T("SumatraPDF-%ul-%s"), size, uniqueStr);
     RpcStringFree(&uniqueStr);
@@ -120,7 +124,6 @@ static bool PdfDateParse(char *pdfDate, SYSTEMTIME *timeOut) {
 HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 {
     SYSTEMTIME systime;
-    chunkValue.Clear();
 
     if (m_bDone)
         return FILTER_E_END_OF_CHUNKS;
@@ -177,96 +180,4 @@ Success:
     *m_pData = '\0';
     SetEvent(m_hProduce);
     return S_OK;
-}
-
-
-
-HRESULT CFilterBase::Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags)
-{
-    if (cAttributes > 0 && !aAttributes)
-        return E_INVALIDARG;
-
-    m_dwChunkId = 0;
-    m_iText = 0;
-    m_currentChunk.Clear();
-    if (pFlags)
-        *pFlags = 0;
-
-    return OnInit();
-}
-
-HRESULT CFilterBase::GetChunk(STAT_CHUNK *pStat)
-{
-    HRESULT hr = S_FALSE;
-    int cIterations = 0;
-
-    while (S_FALSE == hr && cIterations < 256)
-    {
-        pStat->idChunk = m_dwChunkId;
-        hr = GetNextChunkValue(m_currentChunk);
-        ++cIterations;
-    }
-
-    if (hr == S_OK)
-    {
-        if (!m_currentChunk.IsValid())
-             return E_INVALIDARG;
-
-        m_iText = 0;
-        m_currentChunk.CopyChunk(pStat);
-        pStat->idChunk = ++m_dwChunkId;
-        if (pStat->flags == CHUNK_TEXT)
-            pStat->idChunkSource = pStat->idChunk;
-    }
-
-    return hr;
-}
-
-HRESULT CFilterBase::GetText(ULONG *pcwcBuffer, WCHAR *awcBuffer)
-{
-    if (!pcwcBuffer || !*pcwcBuffer)
-        return E_INVALIDARG;
-
-    if (!m_currentChunk.IsValid())
-        return FILTER_E_NO_MORE_TEXT;
-
-    if (m_currentChunk.GetChunkType() != CHUNK_TEXT)
-        return FILTER_E_NO_TEXT;
-
-    ULONG cchTotal = static_cast<ULONG>(wcslen(m_currentChunk.GetString()));
-    ULONG cchLeft = cchTotal - m_iText;
-    ULONG cchToCopy = min(*pcwcBuffer - 1, cchLeft);
-
-    if (!cchToCopy)
-        return FILTER_E_NO_MORE_TEXT;
-
-    PCWSTR psz = m_currentChunk.GetString() + m_iText;
-    StringCchCopyN(awcBuffer, *pcwcBuffer, psz, cchToCopy);
-    awcBuffer[cchToCopy] = '\0';
-
-    *pcwcBuffer = cchToCopy;
-    m_iText += cchToCopy;
-    cchLeft -= cchToCopy;
-
-    if (!cchLeft)
-        return FILTER_S_LAST_TEXT;
-
-    return S_OK;
-}
-
-HRESULT CFilterBase::GetValue(PROPVARIANT **ppPropValue)
-{
-    if (!m_currentChunk.IsValid())
-        return FILTER_E_NO_MORE_VALUES;
-
-    if (m_currentChunk.GetChunkType() != CHUNK_VALUE)
-        return FILTER_E_NO_VALUES;
-
-    if (ppPropValue == NULL)
-        return E_INVALIDARG;
-
-    HRESULT hr = m_currentChunk.GetValue(ppPropValue);
-    m_currentChunk.Clear();
-
-    return hr;
 }

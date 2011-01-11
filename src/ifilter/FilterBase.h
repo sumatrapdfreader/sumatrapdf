@@ -84,7 +84,7 @@ public:
         if (!pszCoTaskValue)
             return E_OUTOFMEMORY;
 
-        StringCchCopy(pszCoTaskValue, cch, pszValue);
+        StringCchCopyW(pszCoTaskValue, cch, pszValue);
         m_fIsValid = true;
         if (chunkType == CHUNK_VALUE)
         {
@@ -153,7 +153,7 @@ public:
     virtual HRESULT OnInit() = 0;
 
     // When GetNextChunkValue() is called you should fill in the ChunkValue by calling SetXXXValue() with the property.
-    // example:  chunkValue.SetTextValue(PKYE_ItemName,L"blah de blah");
+    // example:  chunkValue.SetTextValue(PKYE_ItemName, L"foo bar");
     // return FILTER_E_END_OF_CHUNKS when there are no more chunks
     virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue) = 0;
 
@@ -163,22 +163,86 @@ protected:
 public:
     CFilterBase() : m_dwChunkId(0), m_iText(0), m_pStream(NULL) { }
 
-    virtual ~CFilterBase()
-    {
+    virtual ~CFilterBase() {
         if (m_pStream)
             m_pStream->Release();
     }
 
     // IFilter
-    IFACEMETHODIMP Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags);
-    IFACEMETHODIMP GetChunk(STAT_CHUNK *pStat);
-    IFACEMETHODIMP GetText(ULONG *pcwcBuffer, WCHAR *awcBuffer);
-    IFACEMETHODIMP GetValue(PROPVARIANT **ppPropValue);
+    IFACEMETHODIMP Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags) {
+        if (cAttributes > 0 && !aAttributes)
+            return E_INVALIDARG;
+
+        m_dwChunkId = 0;
+        m_iText = 0;
+        m_currentChunk.Clear();
+        if (pFlags)
+            *pFlags = 0;
+
+        return OnInit();
+    }
+    IFACEMETHODIMP GetChunk(STAT_CHUNK *pStat) {
+        m_currentChunk.Clear();
+        HRESULT hr = GetNextChunkValue(m_currentChunk);
+        if (hr != S_OK)
+            return hr;
+        if (!m_currentChunk.IsValid())
+             return E_INVALIDARG;
+
+        m_iText = 0;
+        m_currentChunk.CopyChunk(pStat);
+        pStat->idChunk = ++m_dwChunkId;
+        if (pStat->flags == CHUNK_TEXT)
+            pStat->idChunkSource = pStat->idChunk;
+
+        return hr;
+    }
+    IFACEMETHODIMP GetText(ULONG *pcwcBuffer, WCHAR *awcBuffer) {
+        if (!pcwcBuffer || !*pcwcBuffer)
+            return E_INVALIDARG;
+        if (!m_currentChunk.IsValid())
+            return FILTER_E_NO_MORE_TEXT;
+        if (m_currentChunk.GetChunkType() != CHUNK_TEXT)
+            return FILTER_E_NO_TEXT;
+
+        ULONG cchTotal = static_cast<ULONG>(wcslen(m_currentChunk.GetString()));
+        ULONG cchLeft = cchTotal - m_iText;
+        ULONG cchToCopy = min(*pcwcBuffer - 1, cchLeft);
+
+        if (!cchToCopy)
+            return FILTER_E_NO_MORE_TEXT;
+
+        PCWSTR psz = m_currentChunk.GetString() + m_iText;
+        StringCchCopyNW(awcBuffer, *pcwcBuffer, psz, cchToCopy);
+        awcBuffer[cchToCopy] = '\0';
+
+        *pcwcBuffer = cchToCopy;
+        m_iText += cchToCopy;
+        cchLeft -= cchToCopy;
+
+        if (!cchLeft)
+            return FILTER_S_LAST_TEXT;
+
+        return S_OK;
+    }
+
+    IFACEMETHODIMP GetValue(PROPVARIANT **ppPropValue) {
+        if (!m_currentChunk.IsValid())
+            return FILTER_E_NO_MORE_VALUES;
+        if (m_currentChunk.GetChunkType() != CHUNK_VALUE)
+            return FILTER_E_NO_VALUES;
+        if (ppPropValue == NULL)
+            return E_INVALIDARG;
+
+        HRESULT hr = m_currentChunk.GetValue(ppPropValue);
+        m_currentChunk.Clear();
+
+        return hr;
+    }
     IFACEMETHODIMP BindRegion(FILTERREGION, REFIID, void **) { return E_NOTIMPL; }
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode)
-    {
+    IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
         if (m_pStream)
             m_pStream->Release();
         m_pStream = pStm;

@@ -579,7 +579,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 {
 	int oldpage = app->pageno;
 	enum panning panto = PAN_TO_TOP;
-	int loadpage;
+	int loadpage = 1;
 
 	if (app->isediting)
 	{

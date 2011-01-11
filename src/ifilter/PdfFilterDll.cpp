@@ -5,9 +5,7 @@
 #include <new>
 #include <shlwapi.h>
 #include <tchar.h>
-
 #include "CPdfFilter.h"
-#include "PdfFilter.h"
 
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
@@ -87,9 +85,7 @@ private:
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
     if (dwReason == DLL_PROCESS_ATTACH)
-    {
         g_hInstance = hInstance;
-    }
 
     return TRUE;
 }
@@ -128,8 +124,8 @@ HRESULT CreateRegKeyAndSetValue(HKEY hKeyRoot, const REGISTRY_ENTRY *pRegistryEn
         return HRESULT_FROM_WIN32(lRet);
 
     lRet = RegSetValueExW(hKey, pRegistryEntry->pszValueName, 0, REG_SZ,
-                        (LPBYTE) pRegistryEntry->pszData,
-                        ((DWORD) lstrlen(pRegistryEntry->pszData) + 1) * sizeof(WCHAR));
+                          (LPBYTE)pRegistryEntry->pszData,
+                          ((DWORD)lstrlenW(pRegistryEntry->pszData) + 1) * sizeof(WCHAR));
 
     hr = HRESULT_FROM_WIN32(lRet);
     RegCloseKey(hKey);
@@ -178,8 +174,8 @@ STDAPI DllUnregisterServer()
     };
 
     for (int i = 0; i < ARRAYSIZE(rgpszKeys) && SUCCEEDED(hr); i++) {
-        DWORD dwError = SHDeleteKey(HKEY_LOCAL_MACHINE, rgpszKeys[i]);
-        dwError = SHDeleteKey(HKEY_CURRENT_USER, rgpszKeys[i]);
+        DWORD dwError = SHDeleteKeyW(HKEY_LOCAL_MACHINE, rgpszKeys[i]);
+        dwError = SHDeleteKeyW(HKEY_CURRENT_USER, rgpszKeys[i]);
         if (ERROR_FILE_NOT_FOUND == dwError)
             hr = S_OK;
         else
