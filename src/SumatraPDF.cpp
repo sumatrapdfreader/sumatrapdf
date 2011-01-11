@@ -7027,6 +7027,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     u_DoAllTests();
 #endif
 
+    // don't show system-provided dialog boxes when accessing files on drives
+    // that are not mounted (e.g. a: drive without floppy or cd rom drive
+    // without a cd).
+    SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+
     ComScope comScope;
     InitAllCommonControls();
     fz_accelerate();
