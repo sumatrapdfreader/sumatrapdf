@@ -5,7 +5,7 @@ IF ERRORLEVEL 1 GOTO VC9_NEEDED
 GOTO BUILD
 
 :BUILD
-c:\Python26\python scripts\build-pre-release.py
+c:\Python26\python -u scripts\build-pre-release.py
 GOTO END
 
 :VC9_NEEDED
