@@ -4378,19 +4378,29 @@ static void ToogleToolbarViewButton(WindowInfo *win, double newZoom, bool pagesC
     DisplayMode mode = win->dm->displayMode();
 
     if (displayModeContinuous(mode) != pagesContinuously || zoom != newZoom) {
+        DisplayMode prevMode = win->prevDisplayMode;
+        double prevZoom = win->prevZoomVirtual;
+
         if (displayModeContinuous(mode) != pagesContinuously)
             OnMenuViewContinuous(win);
         OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
+
+        // remember the previous values for when the toolbar button is unchecked
+        if (INVALID_ZOOM == prevZoom) {
+            win->prevZoomVirtual = zoom;
+            win->prevDisplayMode = mode;
+        }
+        // keep the rememberd values when toggling between the two toolbar buttons
+        else {
+            win->prevZoomVirtual = prevZoom;
+            win->prevDisplayMode = prevMode;
+        }
     }
     else if (win->prevZoomVirtual != INVALID_ZOOM) {
         double prevZoom = win->prevZoomVirtual;
         SwitchToDisplayMode(win, win->prevDisplayMode, false);
         win->ZoomToSelection(prevZoom, false);
     }
-
-    // remember the previous values for when the toolbar button is unchecked
-    win->prevZoomVirtual = zoom;
-    win->prevDisplayMode = mode;
 }
 
 static void OnMenuFitWidthContinuous(WindowInfo *win)
