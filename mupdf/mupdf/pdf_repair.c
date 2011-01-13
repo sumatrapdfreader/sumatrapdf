@@ -13,7 +13,7 @@ struct entry
 };
 
 static fz_error
-fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz_obj **encrypt, fz_obj **id)
+fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz_obj **encrypt, fz_obj **id, fz_obj **info)
 {
 	fz_error error;
 	pdf_token_e tok;
@@ -55,6 +55,15 @@ fz_repairobj(fz_stream *file, char *buf, int cap, int *stmofsp, int *stmlenp, fz
 				if (*id)
 					fz_dropobj(*id);
 				*id = fz_keepobj(obj);
+			}
+
+			/* SumatraPDF: also repair document /Info */
+			obj = fz_dictgets(dict, "Info");
+			if (obj)
+			{
+				if (*info)
+					fz_dropobj(*info);
+				*info = fz_keepobj(obj);
 			}
 		}
 
@@ -187,6 +196,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 	fz_obj *encrypt = nil;
 	fz_obj *id = nil;
+	fz_obj *info = nil; /* SumatraPDF: also repair document /Info */
 
 	struct entry *list = nil;
 	int listlen;
@@ -254,7 +264,7 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 
 		if (tok == PDF_TOBJ)
 		{
-			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &encrypt, &id);
+			error = fz_repairobj(xref->file, buf, bufsize, &stmofs, &stmlen, &encrypt, &id, &info);
 			if (error)
 			{
 				error = fz_rethrow(error, "cannot parse object (%d %d R)", num, gen);
@@ -305,6 +315,15 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 				if (id)
 					fz_dropobj(id);
 				id = fz_keepobj(obj);
+			}
+
+			/* SumatraPDF: also repair document /Info */
+			obj = fz_dictgets(dict, "Info");
+			if (obj)
+			{
+				if (info)
+					fz_dropobj(info);
+				info = fz_keepobj(obj);
 			}
 
 			fz_dropobj(dict);
@@ -401,6 +420,20 @@ pdf_repairxref(pdf_xref *xref, char *buf, int bufsize)
 		}
 		fz_dictputs(xref->trailer, "ID", id);
 		fz_dropobj(id);
+	}
+
+	/* SumatraPDF: also repair document /Info */
+	if (info)
+	{
+		if (fz_isindirect(info))
+		{
+			/* create new reference with non-nil xref pointer */
+			obj = fz_newindirect(fz_tonum(info), fz_togen(info), xref);
+			fz_dropobj(info);
+			info = obj;
+		}
+		fz_dictputs(xref->trailer, "Info", info);
+		fz_dropobj(info);
 	}
 
 	fz_free(list);
