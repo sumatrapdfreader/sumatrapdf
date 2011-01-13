@@ -3453,7 +3453,7 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
     double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
                            GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
     bool bPrintPortrait = paperWidth < paperHeight;
-    if (devMode->dmFields & DM_ORIENTATION)
+    if (devMode && devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
 
     // print all the pages the user requested
@@ -3627,8 +3627,8 @@ public:
         }
         return S_FALSE;
     };
-    STDMETHODIMP InitDone() { return E_NOTIMPL; };
-    STDMETHODIMP SelectionChange() { return E_NOTIMPL; };
+    STDMETHODIMP InitDone() { return S_FALSE; };
+    STDMETHODIMP SelectionChange() { return S_FALSE; };
 protected:
     LONG m_cRef;
     WNDPROC m_wndProc;
@@ -3677,7 +3677,7 @@ static void OnMenuPrint(WindowInfo *win)
     pd.hwndOwner   = win->hwndFrame;
     pd.hDevMode    = NULL;   
     pd.hDevNames   = NULL;   
-    pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE;
+    pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->selectionOnPage)
         pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
@@ -3700,8 +3700,8 @@ static void OnMenuPrint(WindowInfo *win)
     pd.nPropertyPages = 1;
 
     if (PrintDlgEx(&pd) == S_OK) {
-        if (pd.dwResultAction==PD_RESULT_PRINT) {
-            if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)){
+        if (pd.dwResultAction == PD_RESULT_PRINT) {
+            if (CheckPrinterStretchDibSupport(win->hwndFrame, pd.hDC)) {
                 if (pd.Flags & PD_CURRENTPAGE) {
                     pd.nPageRanges=1;
                     pd.lpPageRanges->nFromPage=dm->currentPageNo();
@@ -3715,8 +3715,11 @@ static void OnMenuPrint(WindowInfo *win)
                     pd.lpPageRanges->nFromPage=1;
                     pd.lpPageRanges->nToPage  =dm->pageCount();
                 }
-                PrintToDevice(dm, pd.hDC, (LPDEVMODE)pd.hDevMode, pd.nPageRanges, pd.lpPageRanges,
+                LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
+                PrintToDevice(dm, pd.hDC, devMode, pd.nPageRanges, pd.lpPageRanges,
                               advanced.range, advanced.scale, win->selectionOnPage);
+                if (devMode)
+                    GlobalUnlock(pd.hDevMode);
             }
         }
     }
@@ -6944,11 +6947,10 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
         MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
-    PRINTPAGERANGE pr;
-    pr.nFromPage =1;
-    pr.nToPage =win->dm->pageCount();
-    if (CheckPrinterStretchDibSupport(win->hwndFrame, hdcPrint))
-        PrintToDevice(win->dm, hdcPrint, devMode, 1, &pr );
+    if (CheckPrinterStretchDibSupport(win->hwndFrame, hdcPrint)) {
+        PRINTPAGERANGE pr = { 1, win->dm->pageCount() };
+        PrintToDevice(win->dm, hdcPrint, devMode, 1, &pr);
+    }
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);
