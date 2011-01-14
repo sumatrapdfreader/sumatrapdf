@@ -1749,8 +1749,11 @@ static bool LoadPdfIntoWindow(
     if (state) {
         if (win->dm->validPageNo(startPage)) {
             ss.page = startPage;
-            ss.x = state->scrollX;
-            ss.y = state->scrollY;
+            if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
+                ss.x = state->scrollX;
+                ss.y = state->scrollY;
+            }
+            // else let win->dm->relayout scroll to fit the page (again)
         }
         else if (startPage > win->dm->pageCount())
             ss.page = win->dm->pageCount();
