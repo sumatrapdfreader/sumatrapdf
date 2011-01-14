@@ -7,6 +7,7 @@
 Lang: ro Romanian (Română)
 
 Contributor: Elly Câmpeanu
+Contributor: Gabriel Lazăr
 
 &About
 &Despre
@@ -14,17 +15,41 @@ Contributor: Elly Câmpeanu
 &Actual Size\tCtrl-1
 Mărime &actuală\tCtrl-1
 
+&All selected pages
+Toate paginile selectate
+
+&Back\tAlt+Left Arrow
+Înapoi\tAlt+Left Arrow
+
 &Close\tCtrl-W
 Înc&hidere\tCtrl-W
+
+&Copy Selection\tCtrl-C
+&Copiere selecţie\tCtrl-C
+
+&Don't ask me again
+Nu mă întreba din nou
+
+&Even pages only
+Doar paginile pare
 
 &File
 &Fişier
 
+&Find what:
+Obiect căutare:
+
 &First Page\tHome
 Prima pagină\tHome
 
+&Fit pages to printable area
+Potrivire pagini cu aria de imprimare
+
 &Go To
 Sal&t la...
+
+&Go to page:
+Salt la pagina:
 
 &Help
 A&jutor
@@ -32,11 +57,35 @@ A&jutor
 &Last Page\tEnd
 Ultima pagină\tEnd
 
+&Magnification:
+Factor mărire:
+
+&Manual
+Manual
+
+&Match case
+Diferenţiază litere mari şi mici
+
 &Next Page\tRight Arrow
 Pagina următoare\t->
 
+&No
+&Nu
+
+&No, thanks
+&Nu, mulţumesc
+
+&Odd pages only
+Doar paginile impare
+
 &Open\tCtrl-O
 &Deschidere\tCtrl-O
+
+&Options...
+&Opţiuni...
+
+&Password:
+&Parola:
 
 &Previous Page\tLeft Arrow
 Pagina anterioară\t<-
@@ -44,23 +93,104 @@ Pagina anterioară\t<-
 &Print...\tCtrl-P
 I&mprimare\tCtrl-P
 
+&Print... (denied)
+&Imprimare... (interzisă)
+
+&Remember the password for this document
+&Reţine parola acestui document
+
+&Remember these settings for each document
+&Reţine aceste opţiuni pentru fiecare document
+
 &Save As...\tCtrl-S
 Salvare c&a...\tCtrl-S
+
+&Settings
+&Opţiuni
+
+&Shrink pages to printable area (if necessary)
+&Micşorează paginile la aria de imprimare (dacă e necesar)
+
+&Skip this version
+&Sari peste această versiune
+
+&Use original page sizes
+&Utilizează mărimile originale de pagină
 
 &View
 &Vizualizare
 
+&Yes
+&Da
+
 &Zoom
-&Panoramare
+&Mărime
+
+(of %d)
+(de %d)
 
 About SumatraPDF
 Despre SumatraPDF
 
+Advanced
+Avansat
+
+All files
+Toate fişierele
+
+Application:
+Program:
+
+Associate with PDF files?
+Asociază cu fişiere PDF?
+
+Attachment: %s
+Fişier ataşat: %s
+
+Author:
+Autor:
+
+Automatic
+Automat
+
+Automatically check for &updates
+Urmăreşte automat versiuni noi
+
+Book View
+Vedere în format carte
+
 Book&marks\tF12
 Marcaje\tF12
 
+Bookmarks
+Marcaje
+
+Bytes
+Octeţi
+
+Can't connect to the Internet (error %#x).
+Conectare la Internet eşuată (eroare %#x).
+
+Cancel
+Anulare
+
+Cannot print this file
+Nu pot imprima acest fişier
+
+Cannot start inverse search command. Please check the command line in the settings.
+Nu pot lansa comanda de căutare inversă. Verificaţi va rog linia de comandă la opţiuni.
+
+Change Language
+Schimbare limbă
+
+Check for &Updates
+Verifică apariţia unei versiuni noi
+
 Continuous
 Continuu
+
+Continuous book view
+Vedere în format carte, continuu
 
 Continuous facing
 Pagină dublă continuu
@@ -68,14 +198,56 @@ Pagină dublă continuu
 Contribute Translation
 Contribuie la traducere
 
+Copying text was denied (copying as image only)
+Copierea textului interzisă (s-a copiat ca imagine)
+
 Could not open Printer
 Imprimantă inaccesibilă
+
+Couldn't initialize printer
+Nu s-a putut iniţializa imprimanta
+
+Couldn't render the page
+Nu s-a putut afişa pagina
+
+Created:
+Creat:
+
+Custom &Zoom...\tCtrl-Y
+Factor de mărire... \tCtrl-Y
+
+Default &Layout:
+Design implicit:
+
+Default &Zoom:
+Factor de mărire implicit:
+
+Denied Permissions:
+Permisiuni interzise:
+
+Document Properties
+Proprietăti document
+
+Download
+Descarcă
 
 E&xit\tCtrl-Q
 &Ieşire\tCtrl-Q
 
+Enter password
+Introduceţi parola
+
+Enter password for %s
+Introduceţi parola pentru %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Introduceţi comanda invocată la dublu click pe documentul PDF:
+
 Error loading PDF file.
-Erroare la încărcarea unui fişier PDF.
+Erroare la încărcarea fişierului PDF.
+
+F&orward\tAlt+Right Arrow
+Înainte\tAlt+Right Arrow
 
 F&ullscreen\tCtrl-Shift-L
 Ecran complet\tCtrl-Shift-L
@@ -86,8 +258,17 @@ Două pagini
 Failed to save a file
 Eroare la salvarea unui fişier
 
+File Size:
+Mărime fişier:
+
+File:
+Fişier:
+
 Fin&d...\tCtrl-F
 Caută...\tCtrl-F
+
+Find
+Caută
 
 Find Next
 Caută înainte
@@ -98,11 +279,17 @@ Caută înapoi
 Find:
 Caută:
 
+Fit &Content\tCtrl-3
+Potrivire după conţinut\tCtrl-3
+
 Fit &Page\tCtrl-0
 &Pagină întreagă\tCtrl-0
 
 Fit &Width\tCtrl-2
 Lăţime pagină
+
+Fit Content
+Potrivire după conţinut
 
 Fit Page
 Pagină întreagă
@@ -110,38 +297,125 @@ Pagină întreagă
 Fit Width
 Lăţime pagină
 
+Fit Width and Show Pages Continuously
+Potrivire după lăţime şi afişare continuă a paginilor
+
+Fit a Single Page
+Potrivire pentru o singură pagină
+
+Found text at page %d
+Am găsit text la pagina %d
+
 GB
 GB
+
+Go to page
+Salt la pagina
+
+Hint: Use the F3 key for finding again
+Sugestie: Utilizaţi tasta F3 pentru a căuta mai departe
 
 KB
 KB
 
 MB
 MB
+
+Main PDF reader can't be changed in portable mode
+Cititorul PDF principal nu poate fi schimbat în modul portabil
+
+Make SumatraPDF default application for PDF files?
+Faceţi SumatraPDF programul implicit pentru fişiere PDF?
 
 Make SumatraPDF my main PDF reader
-Fă SumatraPDF un cititor implicit de PDF
+Faceţi SumatraPDF cititorul implicit de PDF
 
 Match Case
 Potrivire litere mari şi mici
 
+Modified:
+Modificat:
+
+New version %s is available. Download new version?
+O nouă versiune %s este disponibilă. Descărcaţi versiunea nouă?
+
 Next Page
 Pagina următoare
+
+No matches were found
+Nu s-au găsit rezultate
+
+No result found around line %u in file %s
+Nici un rezultat în jurul liniei %u în fişierul %s
+
+No synchronization file found
+Nu s-a găsit fişier de sincronizare
+
+No synchronization info at this position
+Nu există informaţie de sincronizare la această poziţie
+
+Number of Pages:
+Număr de pagini:
+
+OK
+În regulă
 
 Open
 Deschide
 
+Open in &Adobe Reader
+Deschide în &Adobe Reader
+
+P&roperties\tCtrl-D
+P&roprietăţi\tCtrl-D
+
+PDF Document
+Document PDF
+
+PDF Producer:
+Producător PDF:
+
+PDF Version:
+Versiune PDF:
+
+PDF documents
+Documente PDF
+
 Pa&ge...\tCtrl-G
 Pagina...\tCtrl-G
+
+Page Size:
+Mărime pagină:
+
+Page number %u inexistant
+Număr de pagină %u inexistent
+
+Page scaling
+Scalare pagină
 
 Page:
 Pagina:
 
+Please include the following file in your crash report:
+Vă rugăm să includeţi următorul fişier în raportul programului terminat incorect:
+
+Please wait - rendering...
+Vă rugăm aşteptaţi - afişare...
+
+Pr&esentation\tCtrl-L
+Pr&ezentare\tCtrl-L
+
 Previous Page
 Pagina anterioară
 
+Print range
+Interval imprimare
+
 Printing problem.
 Problemă la imprimare.
+
+Remember &opened files
+Ţine minte fişierele deschise
 
 Rotate &Left\tCtrl-Shift--
 Roteşte spre stânga\tCtrl-Shift--
@@ -149,11 +423,62 @@ Roteşte spre stânga\tCtrl-Shift--
 Rotate &Right\tCtrl-Shift-+
 Roteşte spre dreapta\tCtrl-Shift-+
 
+Searching %d of %d...
+Caut %d din %d...
+
+Select content with Ctrl+left mouse button
+Selectaţi conţinut cu Ctrl+buton stânga maus
+
+Send by &E-mail...
+Trimite pe &E-mail...
+
+Set inverse search command-line
+Setaţi comandă pentru căutare inversă
+
 Show &Toolbar
 Arată bara de instrumente
 
+Show &pages continuously
+Arată &paginile continuu
+
+Show the &bookmarks sidebar when available
+Arată bara laterală pentru &marcaje, când există
+
 Single Page
 O singură pagină
+
+Source file %s has no synchronization point
+Fişierul sursă %s nu are punct de sincronizare
+
+Subject:
+Subiect:
+
+SumatraPDF Options
+Opţiuni SumatraPDF
+
+SumatraPDF Update
+Versiune nouă SumatraPDF
+
+SumatraPDF crashed
+SumatraPDF s-a terminat incorect
+
+SumatraPDF is your main PDF reader
+SumatraPDF este cititorul PDF implicit
+
+SumatraPDF should now be your main PDF reader
+SumatraPDF ar trebui să fie acum cititorul PDF implicit
+
+Synchronization file cannot be opened
+Fişierul de sincronizare nu poate fi deschis
+
+Text documents
+Fişiere text
+
+Title:
+Titlu:
+
+Unknown source file (%s)
+Fişier sursă necunoscut (%s)
 
 View
 Vizualizare
@@ -161,127 +486,33 @@ Vizualizare
 Visit &Website
 &Vizitează website-ul
 
+Warning
+Avertisment
+
+You have the latest version.
+Aveţi ultima versiune.
+
+You have version %s
+Aveţi versiunea %s
+
+Zoom
+Mărire
+
 Zoom In
 Măreşte
 
 Zoom Out
 Micşorează
 
-# Untranslated:
-#&All selected pages
-#&Back\tAlt+Left Arrow
-#&Copy Selection\tCtrl-C
-#&Don't ask me again
-#&Even pages only
-#&Find what:
-#&Fit pages to printable area
-#&Go to page:
-#&Magnification:
-#&Manual
-#&Match case
-#&No
-#&No, thanks
-#&Odd pages only
-#&Options...
-#&Password:
-#&Print... (denied)
-#&Remember the password for this document
-#&Remember these settings for each document
-#&Settings
-#&Shrink pages to printable area (if necessary)
-#&Skip this version
-#&Use original page sizes
-#&Yes
-#(of %d)
-#Advanced
-#All files
-#Application:
-#Associate with PDF files?
-#Attachment: %s
-#Author:
-#Automatic
-#Automatically check for &updates
-#Book View
-#Bookmarks
-#Bytes
-#Can't connect to the Internet (error %#x).
-#Cancel
-#Cannot print this file
-#Cannot start inverse search command. Please check the command line in the settings.
-#Change Language
-#Check for &Updates
-#Continuous book view
-#Copying text was denied (copying as image only)
-#Couldn't initialize printer
-#Couldn't render the page
-#Created:
-#Custom &Zoom...\tCtrl-Y
-#Default &Layout:
-#Default &Zoom:
-#Denied Permissions:
-#Document Properties
-#Download
-#Enter password
-#Enter password for %s
-#Enter the command-line to invoke when you double-click on the PDF document:
-#F&orward\tAlt+Right Arrow
-#File Size:
-#File:
-#Find
-#Fit &Content\tCtrl-3
-#Fit Content
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Found text at page %d
-#Go to page
-#Hint: Use the F3 key for finding again
-#Main PDF reader can't be changed in portable mode
-#Make SumatraPDF default application for PDF files?
-#Modified:
-#New version %s is available. Download new version?
-#No matches were found
-#No result found around line %u in file %s
-#No synchronization file found
-#No synchronization info at this position
-#Number of Pages:
-#OK
-#Open in &Adobe Reader
-#P&roperties\tCtrl-D
-#PDF Document
-#PDF Producer:
-#PDF Version:
-#PDF documents
-#Page Size:
-#Page number %u inexistant
-#Page scaling
-#Please include the following file in your crash report:
-#Please wait - rendering...
-#Pr&esentation\tCtrl-L
-#Print range
-#Remember &opened files
-#Searching %d of %d...
-#Select content with Ctrl+left mouse button
-#Send by &E-mail...
-#Set inverse search command-line
-#Show &pages continuously
-#Show the &bookmarks sidebar when available
-#Source file %s has no synchronization point
-#Subject:
-#SumatraPDF Options
-#SumatraPDF Update
-#SumatraPDF crashed
-#SumatraPDF is your main PDF reader
-#SumatraPDF should now be your main PDF reader
-#Synchronization file cannot be opened
-#Text documents
-#Title:
-#Unknown source file (%s)
-#Warning
-#You have the latest version.
-#You have version %s
-#Zoom
-#Zoom factor
-#[Changes detected; refreshing] %s
-#copying text
-#printing document
+Zoom factor
+Factor de mărire
+
+[Changes detected; refreshing] %s
+[Schimbări detectate; actualizare] %s
+
+copying text
+se copiază text
+
+printing document
+se imprimă documentul
 
