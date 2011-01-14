@@ -6,13 +6,13 @@
 
 Lang: nl Dutch (Nederlands)
 
-Contributor: Barry Haveman
 Contributor: Kristof Bal
-Contributor: Stephan Paternotte
-Contributor: Marco La Fors
 Contributor: Wim Benes
-Contributor: Ricki Yani Setiawan
 Contributor: Jaap Ginder
+Contributor: Barry Haveman
+Contributor: Marco La Fors
+Contributor: Stephan Paternotte
+Contributor: Ricki Yani Setiawan
 
 &About
 &Over
@@ -302,6 +302,12 @@ Hele pagina
 Fit Width
 Passend in breedte
 
+Fit Width and Show Pages Continuously
+Passend in breedte en pagina's doorlopend
+
+Fit a Single Page
+Hele pagina passend maken
+
 Found text at page %d
 Tekst gevonden op pagina %d
 
@@ -395,8 +401,14 @@ Pagina schalen
 Page:
 Pagina:
 
+Please include the following file in your crash report:
+Voeg het volgende bestand toe aan uw foutrapportage:
+
 Please wait - rendering...
 Een ogenblik - weergeven...
+
+Pr&esentation\tCtrl-L
+Pr&esentatie\tCtrl-L
 
 Previous Page
 Vorige pagina
@@ -448,6 +460,12 @@ Onderwerp:
 
 SumatraPDF Options
 SumatraPDF Opties
+
+SumatraPDF Update
+SumatraPDF Update
+
+SumatraPDF crashed
+SumatraPDF is vastgelopen
 
 SumatraPDF is your main PDF reader
 SumatraPDF is de standaard PDF-lezer
@@ -502,12 +520,4 @@ tekst kopieren
 
 printing document
 bestand afdrukken
-
-# Untranslated:
-#Fit Width and Show Pages Continuously
-#Fit a Single Page
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF Update
-#SumatraPDF crashed
 
