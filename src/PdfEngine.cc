@@ -209,6 +209,8 @@ bool fz_isptinrect(fz_rect rect, double x, double y)
            MIN(rect.y0, rect.y1) <= y && MAX(rect.y0, rect.y1) >= y;
 }
 
+#define fz_sizeofrect(rect) (((rect).x1 - (rect).x0) * ((rect).y1 - (rect).y0))
+
 RenderedBitmap::RenderedBitmap(fz_pixmap *pixmap, HDC hDC) :
     _hbmp(fz_pixtobitmap(hDC, pixmap, TRUE)),
     _width(pixmap->w), _height(pixmap->h), outOfDate(false) { }
@@ -819,10 +821,82 @@ int PdfEngine::getPdfLinks(int pageNo, pdf_link **links)
     return count;
 }
 
+static bool isMultilineLink(TCHAR *pageText, TCHAR *pos, fz_bbox *coords)
+{
+    // multiline links end in a non-alphanumeric character and continue on a line
+    // that starts left and only slightly below where the current line ended
+    // (and that doesn't start with http itself)
+    return
+        '\n' == *pos && pos > pageText && !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
+        coords[pos - pageText + 1].y1 > coords[pos - pageText - 1].y0 &&
+        coords[pos - pageText + 1].y0 <= coords[pos - pageText - 1].y1 &&
+        coords[pos - pageText + 1].x0 < coords[pos - pageText - 1].x1 &&
+        !tstr_startswith(pos + 1, _T("http"));
+}
+
+static TCHAR *findLinkEnd(TCHAR *start)
+{
+    TCHAR *end;
+
+    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
+    for (end = start; *end && !_istspace(*end); end++);
+    if (',' == end[-1] || '.' == end[-1])
+        end--;
+    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
+    if (')' == end[-1] && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
+        end--;
+
+    return end;
+}
+
+static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, fz_bbox *coords)
+{
+    pdf_link *firstLink = page->links;
+    char *uri = str_dup(fz_tostrbuf(firstLink->dest));
+    TCHAR *end = start;
+    bool multiline = false;
+
+    do {
+        end = findLinkEnd(start);
+        multiline = isMultilineLink(pageText, end, coords);
+        *end = 0;
+
+        // add a new link for this line
+        fz_rect bbox;
+        bbox.x0 = coords[start - pageText].x0;
+        bbox.y0 = coords[start - pageText].y0;
+        bbox.x1 = coords[end - pageText - 1].x1;
+        bbox.y1 = coords[end - pageText - 1].y1;
+
+        char *uriPart = tstr_to_utf8(start);
+        char *newUri = str_cat(uri, uriPart);
+        free(uriPart);
+        free(uri);
+        uri = newUri;
+
+        pdf_link *link = (pdf_link *)zmalloc(sizeof(pdf_link));
+        link->kind = PDF_LURI;
+        link->rect = bbox;
+        link->next = page->links;
+        page->links = link;
+
+        start = end + 1;
+    } while (multiline);
+
+    // update the link URL for all partial links
+    fz_dropobj(firstLink->dest);
+    firstLink->dest = fz_newstring(uri, (int)strlen(uri));
+    for (pdf_link *link = page->links; link != firstLink; link = link->next)
+        link->dest = fz_keepobj(firstLink->dest);
+    free(uri);
+
+    return end;
+}
+
 void PdfEngine::linkifyPageText(pdf_page *page)
 {
     fz_bbox *coords;
-    TCHAR *pageText = ExtractPageText(page, _T(" "), &coords, Target_View, true);
+    TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
     if (!pageText)
         return;
 
@@ -845,9 +919,6 @@ void PdfEngine::linkifyPageText(pdf_page *page)
 
     pdf_link *firstLink = page->links;
     for (TCHAR *start = pageText; *start; start++) {
-        TCHAR *end;
-        fz_rect bbox;
-
         // look for words starting with "http://", "https://" or "www."
         if (('h' != *start || !tstr_startswith(start, _T("http://")) &&
                               !tstr_startswith(start, _T("https://"))) &&
@@ -855,24 +926,19 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             (start > pageText && (_istalnum(start[-1]) || '/' == start[-1])))
             continue;
 
-        // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-        for (end = start; !_istspace(*end); end++);
-        assert(*end);
-        if (',' == *(end - 1) || '.' == *(end - 1))
-            end--;
-        // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-        if (')' == *(end - 1) && (!_tcschr(start, '(') || _tcschr(start, '(') > end))
-            end--;
+        TCHAR *end = findLinkEnd(start);
+        bool multiline = isMultilineLink(pageText, end, coords);
         *end = 0;
 
         // make sure that no other link is associated with this area
+        fz_rect bbox;
         bbox.x0 = coords[start - pageText].x0;
         bbox.y0 = coords[start - pageText].y0;
         bbox.x1 = coords[end - pageText - 1].x1;
         bbox.y1 = coords[end - pageText - 1].y1;
         for (pdf_link *link = firstLink; link && *start; link = link->next) {
             fz_bbox isect = fz_intersectbbox(fz_roundrect(bbox), fz_roundrect(link->rect));
-            if (!fz_isemptybbox(isect))
+            if (!fz_isemptybbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))
                 start = end;
         }
 
@@ -890,7 +956,11 @@ void PdfEngine::linkifyPageText(pdf_page *page)
             if (httpUri != uri)
                 free(httpUri);
             free(uri);
+
+            if (multiline)
+                end = parseMultilineLink(page, pageText, end + 1, coords);
         }
+
         start = end;
     }
     free(coords);
