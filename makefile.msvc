@@ -27,10 +27,6 @@ MUPDF_DIR=mupdf
 EXTLIBSDIR=ext
 !endif
 
-!if "$(MT)"==""
-MT=mt.exe
-!endif
-
 SUMATRA_APP = $(O)\SumatraPDF.exe
 INSTALLER_APP = $(O)\Installer.exe
 PDFFILTER_DLL = $(O)\PdfFilter.dll
@@ -84,7 +80,7 @@ INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "UNICODE" /D "_UNICODE"
 
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
-LDFLAGS = $(LDFLAGS) /MANIFEST /MANIFESTUAC:NO 
+LDFLAGS = $(LDFLAGS) 
 
 LIBS = $(LIBS) comctl32.lib Msimg32.lib Winspool.lib wininet.lib ole32.lib shlwapi.lib version.lib
 
@@ -103,10 +99,8 @@ INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /GL /MT /O2
 !endif
 
 SUMATRA_RES = $(O)\sumatrapdf.res
-SUMATRA_LINKER_MANIFEST=$(O)\SumatraPDF.linker.manifest
 
 INSTALLER_RES = $(O)\Installer.res
-INSTALLER_LINKER_MANIFEST=$(O)\Installer.linker.manifest
 
 PDFFILTER_RES = $(O)\PdfFilter.res
 
@@ -156,15 +150,13 @@ $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\SumatraPDF.rc
 
 $(SUMATRA_APP): $(LIBS_OBJS) $(BASEUTILS_OBJS) $(SUMATRA_OBJS)
-	$(LD) $(LDFLAGS) /MANIFESTFILE:$(SUMATRA_LINKER_MANIFEST) $** $(LIBS) /PDB:$*.pdb /OUT:$@ 
-	$(MT) -manifest $(SUMATRA_LINKER_MANIFEST) src\SumatraPDF.exe.manifest -outputresource:$(SUMATRA_APP);#1
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ 
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\installer\Installer.rc
 
 $(INSTALLER_APP): $(ZLIB_OBJS) $(BASEUTILS_OBJS) $(INSTALLER_OBJS)
-	$(LD) $(LDFLAGS) /MANIFESTFILE:$(INSTALLER_LINKER_MANIFEST) $** $(LIBS_INSTALLER) /PDB:$*.pdb /OUT:$@
-	$(MT) -manifest $(INSTALLER_LINKER_MANIFEST) src\installer\Installer.exe.manifest -outputresource:$(INSTALLER_APP);#1
+	$(LD) $(LDFLAGS) $** $(LIBS_INSTALLER) /PDB:$*.pdb /OUT:$@
 
 $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ifilter\PdfFilter.rc

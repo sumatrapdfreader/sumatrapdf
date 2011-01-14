@@ -33,3 +33,5 @@ BEGIN
 END
 
 IDI_SUMATRAPDF          ICON                    "..\SumatraPDF-smaller.ico"
+
+1                       RT_MANIFEST             "Installer.exe.manifest"

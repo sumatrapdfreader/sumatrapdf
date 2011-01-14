@@ -255,6 +255,8 @@ BEGIN
     CONTROL         "&Use original page sizes",IDC_PRINT_SCALE_NONE,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,13,100,266,9
 END
 
+1                       RT_MANIFEST             "SumatraPDF.exe.manifest"
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
