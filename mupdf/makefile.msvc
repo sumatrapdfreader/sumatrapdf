@@ -76,17 +76,16 @@ LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
 # http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
 LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
-# /EHs-c : disable C++ exception handler
+# /EHs-c- : disable C++ exceptions (generates smaller binaries)
 CFLAGS = $(CFLAGS) /EHs-c- 
 !else
 # /Od   : disable optimizations
 # /RTCs : stack frame runtime checking
 # /RTCu : ununitialized local usage checks
 CFLAGS = $(CFLAGS) /Od /RTCs /RTCu
-# exception handling must be activated to enable memory leak detection
-# /MDd  : link with msvcrtd.lib
-# /EHsc : enable C++ EH (no SEH exceptions)
-CFLAGS = $(CFLAGS) /MDd /EHsc
+# /MTd  : statically link debut crt (libcmtd.lib)
+# /EHs-c- : disable C++ exceptions (generates smaller binaries)
+CFLAGS = $(CFLAGS) /MTd /EHs-c-
 !endif
 
 ZLIB_CFLAGS = $(CFLAGS)
