@@ -965,7 +965,7 @@ static TCHAR *ExePathGet(void)
     TCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
-    return tstr_dup(buf);
+    return FilePath_Normalize(buf, FALSE);
 }
 
 static void AddFileToHistory(const TCHAR *filePath)
@@ -1011,25 +1011,19 @@ TCHAR *GetPasswordForFile(WindowInfo *win, const TCHAR *fileName,
     return Dialog_GetPassword(win, fileName, gGlobalPrefs.m_rememberOpenedFiles ? saveKey : NULL);
 }
 
-/* Return true if this program has been started from "Program Files" directory
-   (which is an indicator that it has been installed */
-static bool runningFromProgramFiles(void)
+/* Return false if this program has been started from "Program Files" directory
+   (which is an indicator that it has been installed) */
+bool IsRunningInPortableMode(void)
 {
     TCHAR programFilesDir[MAX_PATH];
     BOOL fOk = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
     TCHAR *exePath = ExePathGet();
-    if (!exePath) return true; // again, assume it is
-    bool fromProgramFiles = false;
-    if (fOk)
-        if (tstr_startswithi(exePath, programFilesDir))
-            fromProgramFiles = true;
+    // if we can't get either path, assume we're not running from "Program Files"
+    bool portableMode = true;
+    if (fOk && exePath)
+        portableMode = !tstr_startswithi(exePath, programFilesDir);
     free(exePath);
-    return fromProgramFiles;
-}
-
-bool IsRunningInPortableMode(void)
-{
-    return !runningFromProgramFiles();
+    return false;
 }
 
 /* Caller needs to free() the result. */
@@ -1039,7 +1033,7 @@ static TCHAR *AppGetAppDir(void)
     TCHAR * appDir;
 
     SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-    appDir = tstr_printf(_T("%s/%s"), dir, APP_NAME_STR);
+    appDir = tstr_cat3(dir, _T(DIR_SEP_STR), APP_NAME_STR);
     if (appDir)
         _tmkdir(appDir);
 
@@ -1054,8 +1048,7 @@ static TCHAR *AppGenDataFilename(TCHAR *pFilename)
     if (!pFilename) return NULL;
 
     TCHAR * path = NULL;
-    bool portable = IsRunningInPortableMode();
-    if (portable) {
+    if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
         TCHAR *exePath = ExePathGet();
         if (exePath) {
@@ -2189,9 +2182,11 @@ and UnregisterFromBeingDefaultViewer() in Installer.cpp.
 */
 static void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    TCHAR exePath[MAX_PATH];
     TCHAR cmdPath[MAX_PATH * 2 + 64];
     TCHAR previousPdfHandler[MAX_PATH + 8];
+    TCHAR *exePath = ExePathGet();
+    if (!exePath)
+        return;
 
     // Remember the previous default app for the Uninstaller
     bool ok = ReadRegStr(hkey, _T("Software\\Classes\\.pdf"), NULL, previousPdfHandler, dimof(previousPdfHandler));
@@ -2199,7 +2194,6 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
         WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, _T("previous.pdf"), previousPdfHandler);
     }
 
-    GetModuleFileName(NULL, exePath, dimof(exePath));
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR, NULL, _TR("PDF Document"));
     TCHAR *icon_path = tstr_cat(exePath, _T(",1"));
     WriteRegStr(hkey, _T("Software\\Classes\\") APP_NAME_STR _T("\\DefaultIcon"), NULL, icon_path);
@@ -2221,13 +2215,14 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
             WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"), _T("Progid"), APP_NAME_STR);
         }
     }
+
+    free(exePath);
 }
 
 // verify that all registry entries that need to be set in order to associate
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension(void)
 {
-    TCHAR exePath[MAX_PATH];
     TCHAR tmp[MAX_PATH];
     bool ok;
 
@@ -2251,10 +2246,11 @@ bool IsExeAssociatedWithPdfExtension(void)
     if (!ok)
         return false;
 
-    GetModuleFileName(NULL, exePath, dimof(exePath));
+    TCHAR *exePath = ExePathGet();
     TCHAR *cmd_path = tstr_cat3(_T("\""), exePath, _T("\" \"%1\"")); // "${exePath}" "%1"
-    bool same = !!tstr_eq(tmp, cmd_path);
+    bool same = !!tstr_ieq(tmp, cmd_path);
     free(cmd_path);
+    free(exePath);
     
     return same;
 }
