@@ -54,6 +54,7 @@ TCHAR *         FilePath_GetDir(const TCHAR *path);
 
 TCHAR *         FilePath_Normalize(const TCHAR *f, BOOL bLowerCase);
 int             FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs);
+BOOL            FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2);
 
 BOOL            file_exists(const TCHAR *file_path);
 

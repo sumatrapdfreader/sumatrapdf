@@ -1020,8 +1020,16 @@ bool IsRunningInPortableMode(void)
     TCHAR *exePath = ExePathGet();
     // if we can't get either path, assume we're not running from "Program Files"
     bool portableMode = true;
-    if (fOk && exePath)
-        portableMode = !tstr_startswithi(exePath, programFilesDir);
+    if (fOk && exePath) {
+        // check if one of the exePath's parent directories is "Program Files"
+        // (or a junction to it)
+        TCHAR *baseName;
+        while ((baseName = (TCHAR *)FilePath_GetBaseName(exePath)) > exePath) {
+            baseName[-1] = '\0';
+            if (FilePath_IsSameFile(programFilesDir, exePath))
+                portableMode = false;
+        }
+    }
     free(exePath);
     return portableMode;
 }
@@ -2223,7 +2231,7 @@ static void DoAssociateExeWithPdfExtension(HKEY hkey)
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension(void)
 {
-    TCHAR tmp[MAX_PATH];
+    TCHAR tmp[MAX_PATH + 8];
     bool ok;
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
@@ -2243,15 +2251,19 @@ bool IsExeAssociatedWithPdfExtension(void)
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
     ok = ReadRegStr(HKEY_CLASSES_ROOT, _T("SumatraPDF\\shell\\open\\command"), NULL, tmp, dimof(tmp));
-    if (!ok)
+    if (!ok || '"' != tmp[0])
         return false;
 
+    TCHAR *exePathEnd = tstr_find_char(tmp + 1, '"');
+    if (!exePathEnd || !tstr_eq(exePathEnd, _T("\" \"%1\"")))
+        return false;
+    *exePathEnd = '\0';
     TCHAR *exePath = ExePathGet();
-    TCHAR *cmd_path = tstr_cat3(_T("\""), exePath, _T("\" \"%1\"")); // "${exePath}" "%1"
-    bool same = !!tstr_ieq(tmp, cmd_path);
-    free(cmd_path);
+    if (!exePath)
+        return false;
+
+    bool same = !!FilePath_IsSameFile(exePath, tmp + 1);
     free(exePath);
-    
     return same;
 }
 

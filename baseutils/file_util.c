@@ -100,24 +100,52 @@ TCHAR *FilePath_Normalize(const TCHAR *f, BOOL bLowerCase)
 //         -1 if an error occured
 int FilePath_Compare(const TCHAR *lhs, const TCHAR *rhs)
 {
-    LPTSTR nl, nr;
-    int ret;
+    LPTSTR nl = NULL, nr = NULL;
+    int ret = 0;
 
     nl = FilePath_Normalize(lhs, TRUE);
     if (!nl)
-        return -1;
+        goto CleanUp;
 
     nr = FilePath_Normalize(rhs, TRUE);
     if (!nr)
-        return -1;
+        goto CleanUp;
 
     ret = tstr_eq(nl, nr) ? 0 : 1;
 
+CleanUp:
     free(nr);
     free(nl);
     return ret;
 }
 
+// Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
+// Determine if 2 paths point ot the same file...
+BOOL FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2)
+{
+    BOOL isSame = FALSE, needFallback = TRUE;
+    HANDLE handle1 = CreateFile(path1, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    HANDLE handle2 = CreateFile(path2, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+    if (handle1 != INVALID_HANDLE_VALUE && handle2 != INVALID_HANDLE_VALUE) {
+        BY_HANDLE_FILE_INFORMATION fi1, fi2;
+        if (GetFileInformationByHandle(handle1, &fi1) && GetFileInformationByHandle(handle2, &fi2)) {
+            isSame = fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber &&
+                     fi1.nFileIndexHigh == fi2.nFileIndexHigh &&
+                     fi1.nFileIndexLow == fi2.nFileIndexLow;
+            needFallback = FALSE;
+        }
+    }
+
+    if (handle1 != INVALID_HANDLE_VALUE)
+        CloseHandle(handle1);
+    if (handle2 != INVALID_HANDLE_VALUE)
+        CloseHandle(handle2);
+
+    if (needFallback)
+        return FilePath_Compare(path1, path2) == 1;
+    return isSame;
+}
 
 /* TODO: handle TCHAR (UNICODE) properly by converting to path to unicode
    if UNICODE or _UNICODE symbols are defined */
