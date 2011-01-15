@@ -1023,7 +1023,7 @@ bool IsRunningInPortableMode(void)
     if (fOk && exePath)
         portableMode = !tstr_startswithi(exePath, programFilesDir);
     free(exePath);
-    return false;
+    return portableMode;
 }
 
 /* Caller needs to free() the result. */
