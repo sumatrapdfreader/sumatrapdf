@@ -180,7 +180,7 @@ Cannot start inverse search command. Please check the command line in the settin
 ප්‍රතිලෝම සෙවුමේ විධානය ආරම්භකළ නොහැක. කරුණාකර  සැකසුම්හි හි විධාන පෙළ බලන්න.
 
 Change Language
-භාෂාව වෙනස්කරන්න
+භාෂාව වෙනස්කරන්න (Change Language)
 
 Check for &Updates
 &යාවත්කාලීනකිරීම් සදහා සොයන්න
