@@ -193,7 +193,7 @@ LANG_ORDER = [
     "sk", "vn", "kr", "bn", "cn", "fr", "ru", "gl", "es", 
     "ar", "uk", "eu", "gr", "hr", "tl", "va", "sn", "tw", 
     "cy", "ga", "mm", "pa", "hi", "nn", "sv", "pl", "dk", 
-    "ta", "cz", "th", "no", "kw", "fy-nl"
+    "ta", "cz", "th", "no", "kw", "fy-nl", "si"
 ]
 
 # This is just to make the order the same as the old code that was parsing
