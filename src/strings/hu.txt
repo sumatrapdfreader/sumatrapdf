@@ -397,8 +397,14 @@ Lapmérethez igazítás
 Page:
 Oldal:
 
+Please include the following file in your crash report:
+Kérlek mellékeld a következő hiba üzenetet a hiba bejelentéskor:
+
 Please wait - rendering...
 Feldolgozás, kérem várjon
+
+Pr&esentation\tCtrl-L
+Bemutató\tCtrl-L
 
 Previous Page
 Előző oldal
@@ -454,6 +460,9 @@ A SumatraPDF beállításai
 SumatraPDF Update
 SumatraPDF: programfrissítés keresése
 
+SumatraPDF crashed
+SumatraPDF működése leállt
+
 SumatraPDF is your main PDF reader
 A Sumatra az alapértelmezett PDF-olvasója
 
@@ -507,9 +516,4 @@ Szöveg vágólapra
 
 printing document
 Nyomtatás
-
-# Untranslated:
-#Please include the following file in your crash report:
-#Pr&esentation\tCtrl-L
-#SumatraPDF crashed
 
