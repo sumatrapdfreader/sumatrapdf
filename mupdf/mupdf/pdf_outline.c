@@ -7,6 +7,10 @@ pdf_loadoutlineimp(pdf_xref *xref, fz_obj *dict)
 	pdf_outline *node;
 	fz_obj *obj;
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1172 */
+	if (fz_isnull(dict))
+		return nil;
+
 	node = fz_malloc(sizeof(pdf_outline));
 	node->title = nil;
 	node->link = nil;

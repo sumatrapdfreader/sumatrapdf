@@ -40,15 +40,8 @@ public:
     PdfTocItem *child;
     PdfTocItem *next;
 
-    PdfTocItem(TCHAR *title, pdf_link *link)
-    {
-        this->title = title;
-        this->link = link;
-        this->child = NULL;
-        this->next = NULL;
-        this->open = true;
-        this->pageNo = 0;
-    }
+    PdfTocItem(TCHAR *title, pdf_link *link) :
+        title(title), link(link), open(true), pageNo(0), child(NULL), next(NULL) { }
 
     ~PdfTocItem()
     {
@@ -57,29 +50,11 @@ public:
         free(title);
     }
 
-    void AddChild(PdfTocItem *child)
-    {
-        AppendTo(&this->child, child);
-    }
-    
     void AddSibling(PdfTocItem *sibling)
     {
-        AppendTo(&this->next, sibling);
-    }
-
-private:
-    void AppendTo(PdfTocItem **root, PdfTocItem *item)
-    {
-        if (!root || !item)
-            return;
-        if (!*root) {
-            *root = item;
-            return;
-        }
-        PdfTocItem *p = *root;
-        while (p->next)
-            p = p->next;
-        p->next = item;
+        PdfTocItem *item;
+        for (item = this; item->next; item = item->next);
+        item->next = sibling;
     }
 };
 

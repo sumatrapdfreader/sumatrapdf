@@ -455,17 +455,16 @@ bool PdfEngine::finishLoading(void)
 
 PdfTocItem *PdfEngine::buildTocTree(pdf_outline *entry)
 {
-    TCHAR *name = utf8_to_tstr(entry->title);
+    TCHAR *name = entry->title ? utf8_to_tstr(entry->title) : tstr_dup(_T(""));
     PdfTocItem *node = new PdfTocItem(name, entry->link);
     node->open = entry->count >= 0;
+
     if (entry->link && PDF_LGOTO == entry->link->kind)
         node->pageNo = findPageNo(entry->link->dest);
-
     if (entry->child)
-        node->AddChild(buildTocTree(entry->child));
-    
+        node->child = buildTocTree(entry->child);
     if (entry->next)
-        node->AddSibling(buildTocTree(entry->next));
+        node->next = buildTocTree(entry->next);
 
     return node;
 }
