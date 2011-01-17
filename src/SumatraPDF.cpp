@@ -78,6 +78,8 @@ static bool             gUseGdiRenderer = false;
 #define DEFAULT_ZOOM            ZOOM_FIT_PAGE
 #define DEFAULT_ROTATION        0
 
+#define DEFAULT_LANGUAGE "en"
+
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
 #define MAX_LOADSTRING 100
@@ -183,6 +185,7 @@ static int                          gReBarDyFrame;
 
 SerializableGlobalPrefs             gGlobalPrefs = {
     0, // int  m_globalPrefsOnly
+    DEFAULT_LANGUAGE, // const char *m_currentLanguage
     TRUE, // BOOL m_showToolbar
     FALSE, // BOOL m_pdfAssociateDontAskAgain
     FALSE, // BOOL m_pdfAssociateShouldAssociate
@@ -242,11 +245,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { 9,   IDM_FIND_MATCH,        _TRN("Match Case"),     0,             },
 };
 
-#define DEFAULT_LANGUAGE "en"
-
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
-
-static const char *g_currLangName = NULL;
 
 static void CreateToolbar(WindowInfo *win, HINSTANCE hInst);
 static void CreateTocBox(WindowInfo *win, HINSTANCE hInst);
@@ -271,15 +270,10 @@ static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
 #define SEP_ITEM "-----"
 
-/* according to http://wiki.snap.com/index.php/User_talk:Snap, Serbian (latin) should 
-   be sp-rs and Serbian (Cyrillic) should be sr-rs */
 #include "LangMenuDef.h"
 
-#define NEW_LANG_DETECTION
-
-#ifdef NEW_LANG_DETECTION
 #define _MAKELANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
-// based on http://msdn.microsoft.com/en-us/library/dd318693%28VS.85%29.aspx
+// based on http://msdn.microsoft.com/en-us/library/dd318693.aspx
 static struct {
     const char *lang;
     LANGID langId;
@@ -287,20 +281,23 @@ static struct {
     { "en", _MAKELANGID(LANG_ENGLISH) },
     { "af", _MAKELANGID(LANG_AFRIKAANS) },
     { "ar", _MAKELANGID(LANG_ARABIC) },
+    { "am", _MAKELANGID(LANG_ARMENIAN) },
     { "eu", _MAKELANGID(LANG_BASQUE) },
     { "by", _MAKELANGID(LANG_BELARUSIAN) },
     { "bn", _MAKELANGID(LANG_BENGALI) },
     { "bg", _MAKELANGID(LANG_BULGARIAN) },
-//  { "mm", Burmese },
+    { "mm", -1 /* Burmese */ },
     { "ca", _MAKELANGID(LANG_CATALAN) },
     { "cn", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) },
     { "tw", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) },
+    { "kw", -1 /* Cornish */ },
     { "hr", _MAKELANGID(LANG_CROATIAN) },
     { "cz", _MAKELANGID(LANG_CZECH) },
     { "dk", _MAKELANGID(LANG_DANISH) },
     { "nl", _MAKELANGID(LANG_DUTCH) },
     { "fi", _MAKELANGID(LANG_FINNISH) },
     { "fr", _MAKELANGID(LANG_FRENCH) },
+    { "fy-nl", _MAKELANGID(LANG_FRISIAN) },
     { "gl", _MAKELANGID(LANG_GALICIAN) },
     { "de", _MAKELANGID(LANG_GERMAN) },
     { "gr", _MAKELANGID(LANG_GREEK) },
@@ -327,20 +324,20 @@ static struct {
     { "ru", _MAKELANGID(LANG_RUSSIAN) },
     { "sp-rs", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN) },
     { "sr-rs", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC) },
+    { "sn", -1 /* Shona */ },
+    { "si", _MAKELANGID(LANG_SINHALESE) },
     { "sk", _MAKELANGID(LANG_SLOVAK) },
-    { "si", _MAKELANGID(LANG_SLOVENIAN) },
-//  { "sn", Shona },
+    { "sl", _MAKELANGID(LANG_SLOVENIAN) },
     { "es", _MAKELANGID(LANG_SPANISH) },
     { "sv", _MAKELANGID(LANG_SWEDISH) },
-//  { "tl", Tagalog },
+    { "tl", _MAKELANGID(LANG_FILIPINO) },
     { "ta", _MAKELANGID(LANG_TAMIL) },
     { "th", _MAKELANGID(LANG_THAI) },
     { "tr", _MAKELANGID(LANG_TURKISH) },
     { "uk", _MAKELANGID(LANG_UKRAINIAN) },
-//  { "va", Valencian },
+    { "va", -1 /* Valencian */ },
     { "vn", _MAKELANGID(LANG_VIETNAMESE) },
     { "cy", _MAKELANGID(LANG_WELSH) },
-    { NULL, 0 }
 };
 
 static const char *GuessLanguage()
@@ -351,7 +348,7 @@ static const char *GuessLanguage()
 
     // Either find the exact primary/sub lang id match, or a neutral sublang if it exists
     // (don't return any sublang for a given language, it might be too different)
-    for (int i = 0; g_lcidLangMap[i].lang; i++) {
+    for (int i = 0; i < dimof(g_lcidLangMap); i++) {
         if (langId == g_lcidLangMap[i].langId) {
             langName = g_lcidLangMap[i].lang;
             break;
@@ -363,104 +360,30 @@ static const char *GuessLanguage()
 
     return langName;
 }
-#else
-// based on http://msdn2.microsoft.com/en-us/library/ms776260.aspx
-static const char *g_lcidLangMap[] = {
-    "en", "0409", NULL, // English
-    "pl", "0415", NULL, // Polish
-    "fr", "080c", "0c0c", "040c", "140c", "180c", "100c", NULL, // French
-    "de", "0407", "0c07", "1407", "1007", "0807", NULL, // German
-    "tr", "041f", NULL, // Turkish
-    "by", "0423", NULL, // Belarusian
-    "ja", "0411", NULL, // Japanese
-    "hu", "040e", NULL, // Hungarian
-    "fa", "0429", NULL, // Persian
-    "dk", "0406", NULL, // Danish
-    "it", "0410", NULL, // Italian
-    "nl", "0813", "0413", NULL, // Dutch
-    "ta", "0449", NULL, // Tamil
-    "es", "0c0a", "040a", "500a", "280a", "3c0a", "180a", "080a", "2c0a", NULL, // Spanish
-    "hr", "101a", "041a", NULL, // Croatian
-    "ru", "0419", NULL, // Russian
-    "ar", "1401", "3c01", "0c01", "0801", "2c01", "3401", "3001", "1001", "1801", "2001", "4001", "0401", "2801", "1c01", "3801", "2401", NULL, // Arabic
-    "cn", NULL, // Chinese Simplified
-    "sv", "081d", "041d", NULL, // Swedish
-    "cz", "0405", NULL, // Czech
-    "gr", "0408", NULL, // Greek
-    "th", "041e", NULL, // Thai
-    "pt", "0816", NULL, // Portuguese (Portugal)
-    "br", "0416", NULL, // Portuguese (Brazillian)
-    "no", "0414", "0814", NULL, // Norwegian
-    "sk", "041b", NULL, // Slovak
-    "vn", "042a", NULL, // Vietnamese
-    "lt", NULL, NULL, // Lithuanian
-    "my", NULL, NULL, // Malaysian
-    "fi", NULL, NULL, // Finnish
-    "ca", NULL, NULL, // Catalan
-    "si", NULL, NULL, // Slovenian
-    "tw", NULL, NULL, // Chinese Traditional
-    "ml", NULL, NULL, // Malayalam
-    "he", NULL, NULL, // Hebrew
-    "sp-rs", NULL, NULL, // Serbian (Latin)
-    "id", NULL, NULL, // Indonesian
-    "mk", NULL, NULL, // Macedonian
-    "ro", NULL, NULL, // Romanian
-    "sr-rs", NULL, NULL, // Serbian (Cyrillic)
-    "kr", NULL, NULL, // Korean
-    "gl", NULL, NULL, // Galician
-    "bg", NULL, NULL, // Bulgarian
-    "uk", NULL, NULL, // Ukrainian
-    NULL
-};
 
-static const char *GuessLanguage()
+static int LangGetIndex(const char *name)
 {
-    char langBuf[20];
-    int res = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE, langBuf, sizeof(langBuf));
-    assert(0 != res);
-    if (0 == res)
-        return NULL;
+    // TODO: merge g_lcidLangMap and g_langs
+    assert(dimof(g_lcidLangMap) == LANGS_COUNT);
 
-    const char *langName;
-    int i = 0;
-    while ((langName = g_lcidLangMap[i++])) {
-        const char *langLcid;
-        while ((langLcid = g_lcidLangMap[i++])) {
-            if (str_eq(langBuf, langLcid))
-                return langName;
-        }
+    for (int i = 0; i < LANGS_COUNT; i++) {
+        const char *langName = g_langs[i]._langName;
+        if (str_eq(name, langName))
+            return i;
     }
-    return NULL;
-}
-#endif
-
-const char* CurrLangNameGet() {
-    if (!g_currLangName)
-        return DEFAULT_LANGUAGE;
-    return g_currLangName;
+    return -1;
 }
 
-bool CurrLangNameSet(const char* langName) {
-    bool validLang = false;
-    for (int i=0; i < LANGS_COUNT; i++) {
-        if (str_eq(langName, g_langs[i]._langName)) {
-            validLang = true;
-            break;
-        }
-    }
-    if (!validLang) 
+bool CurrLangNameSet(const char* langName)
+{
+    int langIndex = LangGetIndex(langName);
+    if (-1 == langIndex)
         return false;
-    free((void*)g_currLangName);
-    g_currLangName = str_dup(langName);
+    gGlobalPrefs.m_currentLanguage = g_langs[langIndex]._langName;
 
     bool ok = Translations_SetCurrentLanguage(langName);
     assert(ok);
-    return true;
-}
-
-static void CurrLangNameFree() {
-    free((void*)g_currLangName);
-    g_currLangName = NULL;
+    return ok;
 }
 
 /* Convert FILETIME to a string.
@@ -1443,19 +1366,6 @@ static void MenuUpdateShowToolbarStateForWindow(WindowInfo *win) {
         CheckMenuItem(win->hMenu, IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
 }
 
-// show which language is being used via check in Language/* menu
-static void MenuUpdateLanguage(WindowInfo *win) {
-    HMENU hmenu = win->hMenu;
-    for (int i = 0; i < LANGS_COUNT; i++) {
-        const char *langName = g_langs[i]._langName;
-        int langMenuId = g_langs[i]._langId;
-        if (str_eq(CurrLangNameGet(), langName))
-            CheckMenuItem(hmenu, langMenuId, MF_BYCOMMAND | MF_CHECKED);
-        else
-            CheckMenuItem(hmenu, langMenuId, MF_BYCOMMAND | MF_UNCHECKED);
-    }
-}
-
 static void MenuUpdatePrintItem(WindowInfo *win) {
     HMENU hmenu = win->hMenu;
     bool filePrintEnabled = false;
@@ -1502,7 +1412,6 @@ static void MenuUpdateStateForWindow(WindowInfo *win) {
     MenuUpdatePrintItem(win);
     MenuUpdateBookmarksStateForWindow(win);
     MenuUpdateShowToolbarStateForWindow(win);
-    MenuUpdateLanguage(win);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -4262,42 +4171,6 @@ static void RebuildProgramMenus(void)
     }
 }
 
-static void LanguageChanged(const char *langName)
-{
-    assert(!str_eq(langName, CurrLangNameGet()));
-
-    CurrLangNameSet(langName);
-    RebuildProgramMenus();
-    UpdateToolbarToolText();
-}
-
-static int LangIdFromName(const char *name)
-{
-    for (int i=0; i < LANGS_COUNT; i++) {
-        const char *langName = g_langs[i]._langName;
-        if (str_eq(name, langName))
-            return g_langs[i]._langId;
-    }
-    return -1;
-}
-
-static void OnMenuLanguage(int langId)
-{
-    const char *langName = NULL;
-    for (int i=0; i < LANGS_COUNT; i++) {
-        if (g_langs[i]._langId == langId) {
-            langName = g_langs[i]._langName;
-            break;
-        }
-    }
-
-    assert(langName);
-    if (!langName) return;
-    if (str_eq(langName, CurrLangNameGet()))
-        return;
-    LanguageChanged(langName);
-}
-
 void OnMenuCheckUpdate(WindowInfo *win)
 {
     DownloadSumatraUpdateInfo(win, false);
@@ -4305,12 +4178,19 @@ void OnMenuCheckUpdate(WindowInfo *win)
 
 static void OnMenuChangeLanguage(WindowInfo *win)
 {
-    int langId = LangIdFromName(CurrLangNameGet());
+    int langId = LangGetIndex(gGlobalPrefs.m_currentLanguage);
     int newLangId = Dialog_ChangeLanguge(win->hwndFrame, langId);
-    if (-1 == newLangId)
-        return;
-    if (langId != newLangId)
-        OnMenuLanguage(newLangId);
+
+    if (newLangId != -1 && langId != newLangId) {
+        assert(0 <= newLangId && newLangId < LANGS_COUNT);
+        if (newLangId < 0 || LANGS_COUNT <= newLangId)
+            return;
+        const char *langName = g_langs[newLangId]._langName;
+
+        CurrLangNameSet(langName);
+        RebuildProgramMenus();
+        UpdateToolbarToolText();
+    }
 }
 
 static void OnMenuViewShowHideToolbar(WindowInfo *win)
@@ -7259,7 +7139,6 @@ Exit:
     DeleteBitmap(gBitmapReloadingCue);
 
     Translations_FreeData();
-    CurrLangNameFree();
     SerializableGlobalPrefs_Deinit();
 
 #ifdef BUILD_RM_VERSION

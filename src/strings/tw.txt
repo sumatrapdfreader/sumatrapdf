@@ -142,7 +142,7 @@ Cannot start inverse search command. Please check the command line in the settin
 無法進行逆向搜尋。請檢查設定裡的命令列。
 
 Change Language
-變更語系
+變更語系 (Change Language)
 
 Check for &Updates
 檢查是否有新版本(&C)

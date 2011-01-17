@@ -182,7 +182,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Kan ikke starte invers søgning kommando. Tjek venligst kommandolinjen i indstillingerne.
 
 Change Language
-Skift sprog
+Skift sprog (Change Language)
 
 Check for &Updates
 Tjek for ny &version

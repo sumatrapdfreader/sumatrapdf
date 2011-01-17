@@ -247,7 +247,7 @@ $(O)\Http.obj: src\MemSegment.h src\SumatraPDF.h src\Version.h
 $(O)\Installer.obj: baseutils\base_util.h baseutils\str_util.h baseutils\tstr_util.h
 $(O)\Installer.obj: baseutils\win_util.h baseutils\WinUtil.hpp baseutils\wstr_util.h
 $(O)\Installer.obj: src\installer\Resource.h src\Version.h
-$(O)\LangMenuDef.obj: src\LangMenuDef.h src\Resource.h
+$(O)\LangMenuDef.obj: src\LangMenuDef.h
 $(O)\MemSegment.obj: baseutils\str_util.h baseutils\tstr_util.h baseutils\vstrlist.h
 $(O)\MemSegment.obj: baseutils\wstr_util.h src\MemSegment.h
 $(O)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h

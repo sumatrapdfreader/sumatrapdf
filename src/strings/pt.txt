@@ -182,7 +182,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Não é possível iniciar o comando da pesquisa inversa. Verifique a linha de comandos nas definições.
 
 Change Language
-&Mudar idioma
+&Mudar idioma (Change Language)
 
 Check for &Updates
 Verificar at&ualizações

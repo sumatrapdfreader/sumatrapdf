@@ -28,7 +28,7 @@ const char **g_transTranslations;
 
 // numeric index of the current language. 0 ... g_transLangsCount-1
 static int currLangIdx = 0;
-static TCHAR **g_translations = NULL;  // cached translations
+static const TCHAR **g_translations = NULL;  // cached translations
 
 bool Translations_SetCurrentLanguage(const char* lang)
 {
@@ -70,7 +70,7 @@ static const char* Translations_GetTranslationAndIndex(const char* txt, int& idx
 const TCHAR* Translations_GetTranslation(const char* txt)
 {
     if (!g_translations) {
-        g_translations = (TCHAR**)zmalloc(sizeof(TCHAR*) * g_transTranslationsCount * g_transLangsCount);
+        g_translations = (const TCHAR **)zmalloc(sizeof(TCHAR*) * g_transTranslationsCount * g_transLangsCount);
         if (!g_translations)
             return NULL;
     }
@@ -78,10 +78,10 @@ const TCHAR* Translations_GetTranslation(const char* txt)
     txt = Translations_GetTranslationAndIndex(txt, idx);
     if (!txt || (-1 == idx)) return NULL;
     int transIdx = (currLangIdx * g_transTranslationsCount) + idx;
-    TCHAR *trans = g_translations[transIdx];
+    const TCHAR *trans = g_translations[transIdx];
     if (!trans)
         trans = g_translations[transIdx] = utf8_to_tstr(txt);
-    return (const TCHAR*)trans;
+    return trans;
 }
 
 // Call at program exit to free all memory related to traslations functionality.
@@ -90,9 +90,8 @@ void Translations_FreeData()
     if (!g_translations)
         return;
     for (int i=0; i < (g_transTranslationsCount * g_transLangsCount); i++) {
-        free(g_translations[i]);
+        free((void *)g_translations[i]);
     }
-    free(g_translations);
+    free((void *)g_translations);
     g_translations = NULL;
 }
-

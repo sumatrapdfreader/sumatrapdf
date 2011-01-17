@@ -186,7 +186,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni
 
 Change Language
-Cambia lingua
+Cambia lingua (Change Language)
 
 Check for &Updates
 &Controlla aggiornamenti

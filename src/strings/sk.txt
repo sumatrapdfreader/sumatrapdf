@@ -146,7 +146,7 @@ Cannot print this file
 Tento súbor nie je možné vytlačiť
 
 Change Language
-Zmeniť jazyk
+Zmeniť jazyk (Change Language)
 
 Check for &Updates
 &Skontrolovať novú verziu

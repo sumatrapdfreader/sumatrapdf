@@ -181,7 +181,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Nu pot lansa comanda de căutare inversă. Verificaţi va rog linia de comandă la opţiuni.
 
 Change Language
-Schimbare limbă
+Schimbare limbă (Change Language)
 
 Check for &Updates
 Verifică apariţia unei versiuni noi

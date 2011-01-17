@@ -15,11 +15,10 @@ typedef struct MenuDef {
 } MenuDef;
 
 typedef struct LangDef {
-    const char* _langName;
-    int         _langId;
+    const char *_langName;
+    const char *_langMenuTitle;
 } LangDef;
 
 extern LangDef g_langs[LANGS_COUNT];
-extern MenuDef g_menuDefLang[LANGS_COUNT];
 
 #endif

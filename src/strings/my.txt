@@ -148,7 +148,7 @@ Cannot print this file
 Tidak boleh cetak fail ini
 
 Change Language
-Tukar bahasa
+Tukar bahasa (Change Language)
 
 Continuous
 Bersambung

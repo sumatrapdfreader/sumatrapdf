@@ -149,7 +149,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Kan ikke starte inversert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
 
 Change Language
-Endre språk
+Endre språk (Change Language)
 
 Check for &Updates
 &Se etter ny versjon...

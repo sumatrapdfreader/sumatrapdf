@@ -181,7 +181,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
 
 Change Language
-Keisti kalbą
+Keisti kalbą (Change Language)
 
 Check for &Updates
 Tikrinti, ar yra na&ujinimų

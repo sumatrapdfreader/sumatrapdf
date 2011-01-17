@@ -152,7 +152,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Tidak dapat memulai perintah pencarian mundur. Harap periksa baris perintah di bagian pengaturan.
 
 Change Language
-Ubah bahasa
+Ubah bahasa (Change Language)
 
 Check for &Updates
 &Periksa versi baru

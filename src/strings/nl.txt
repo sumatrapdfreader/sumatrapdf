@@ -186,7 +186,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Kan de omgekeerde zoekrichting niet starten. Controleer de opdrachtregel in de instellingen.
 
 Change Language
-Taal wijzigen
+Taal wijzigen (Change Language)
 
 Check for &Updates
 Controleren op &Updates

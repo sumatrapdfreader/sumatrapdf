@@ -148,7 +148,7 @@ Cannot print this file
 கோப்பை அச்சிட முடியவில்லை
 
 Change Language
-மொழியை மாற்று
+மொழியை மாற்று (Change Language)
 
 Check for &Updates
 புதிய பதிப்பை தேடு

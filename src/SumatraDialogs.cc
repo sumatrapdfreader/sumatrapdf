@@ -350,7 +350,6 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
 {
     Dialog_ChangeLanguage_Data *  data;
     HWND                          langList;
-    int                           sel;
 
     if (WM_INITDIALOG == message)
     {
@@ -367,15 +366,12 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
         // otherwise all the user will see are squares
         win_set_text(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-        int idx = 0;
-        for (int i=0; i < LANGS_COUNT; i++) {
-            TCHAR *langName = utf8_to_tstr(g_menuDefLang[i].m_title);
+        for (int i = 0; i < LANGS_COUNT; i++) {
+            TCHAR *langName = utf8_to_tstr(g_langs[i]._langMenuTitle);
             lb_append_string_no_sort(langList, langName);
             free(langName);
-            if (g_menuDefLang[i].m_id == data->langId)
-                idx = i;
         }
-        lb_set_selection(langList, idx);
+        lb_set_selection(langList, data->langId);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
@@ -393,8 +389,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
                 assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 assert(langList == (HWND)lParam);
-                sel = lb_get_selection(langList);                    
-                data->langId = g_menuDefLang[sel].m_id;
+                data->langId = lb_get_selection(langList);
                 EndDialog(hDlg, DIALOG_OK_PRESSED);
                 return FALSE;
             }
@@ -402,8 +397,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT message, WPAR
             {
                 case IDOK:
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-                    sel = lb_get_selection(langList);                    
-                    data->langId = g_menuDefLang[sel].m_id;
+                    data->langId = lb_get_selection(langList);
                     EndDialog(hDlg, DIALOG_OK_PRESSED);
                     return TRUE;
 

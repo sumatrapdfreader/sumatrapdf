@@ -175,7 +175,7 @@ Cannot print this file
 Hindi mai-print ang file
 
 Change Language
-Ibahin ang Wika
+Ibahin ang Wika (Change Language)
 
 Check for &Updates
 Tignan kung may bagong &bersyon

@@ -177,7 +177,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 
 Change Language
-&Změnit jazyk
+&Změnit jazyk (Change Language)
 
 Check for &Updates
 &Zkontrolovat aktualizace

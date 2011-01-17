@@ -11,7 +11,6 @@
 #include "FileHistory.h"
 
 extern bool CurrLangNameSet(const char* langName);
-extern const char* CurrLangNameGet();
 
 #if 0
 #define DEFAULT_WINDOW_X     40
@@ -93,7 +92,7 @@ benc_dict* Prefs_SerializeGlobal(void)
     DICT_ADD_TSTR(prefs, INVERSE_SEARCH_COMMANDLINE, gGlobalPrefs.m_inverseSearchCmdLine);
     DICT_ADD_TSTR(prefs, VERSION_TO_SKIP_STR, gGlobalPrefs.m_versionToSkip);
     DICT_ADD_STR(prefs, LAST_UPDATE_STR, gGlobalPrefs.m_lastUpdateTime);
-    DICT_ADD_STR(prefs, UI_LANGUAGE_STR, CurrLangNameGet());
+    DICT_ADD_STR(prefs, UI_LANGUAGE_STR, gGlobalPrefs.m_currentLanguage);
     DICT_ADD_INT64(prefs, FWDSEARCH_OFFSET, gGlobalPrefs.m_fwdsearchOffset);
     DICT_ADD_INT64(prefs, FWDSEARCH_COLOR, gGlobalPrefs.m_fwdsearchColor);
     DICT_ADD_INT64(prefs, FWDSEARCH_WIDTH, gGlobalPrefs.m_fwdsearchWidth);
