@@ -58,11 +58,12 @@ struct userDataStackItem
 	Rect bounds;
 	bool luminosity;
 	fz_blendmode blendmode;
+	int accumulated;
 	userDataStackItem *prev;
 
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
-		luminosity(false), blendmode(FZ_BNORMAL), layerAlpha(1.0) { }
+		luminosity(false), blendmode(FZ_BNORMAL), accumulated(0), layerAlpha(1.0) { }
 };
 
 static PointF
@@ -113,8 +114,13 @@ public:
 
 	void pushClip(Region *clipRegion=NULL, float alpha=1.0, bool accumulate=false)
 	{
-		stack = new userDataStackItem(stack->alpha * alpha, stack);
-		graphics->GetClip(&stack->clip);
+		if (!accumulate)
+		{
+			stack = new userDataStackItem(stack->alpha * alpha, stack);
+			graphics->GetClip(&stack->clip);
+		}
+		else
+			stack->accumulated++;
 		
 		if (clipRegion)
 			graphics->SetClip(clipRegion, !accumulate ? CombineModeIntersect : CombineModeUnion);
@@ -186,6 +192,12 @@ public:
 
 	void popClip()
 	{
+		if (stack->accumulated)
+		{
+			stack->accumulated--;
+			return;
+		}
+
 		assert(stack->prev);
 		if (!stack->prev)
 			return;
