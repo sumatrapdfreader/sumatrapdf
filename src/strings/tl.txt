@@ -63,6 +63,9 @@ Huling Pahina\tEnd
 &Manual
 Gabay
 
+&Match case
+Itug&ma ang laki ng mga letra
+
 &Next Page\tRight Arrow
 Sunod na Pahina\t->
 
@@ -174,6 +177,9 @@ Ikansela
 Cannot print this file
 Hindi mai-print ang file
 
+Cannot start inverse search command. Please check the command line in the settings.
+Hindi ma-execute ang command para sa inverse search. Pakitingnan ang command line sa settings.
+
 Change Language
 Ibahin ang Wika (Change Language)
 
@@ -207,8 +213,14 @@ Hindi maipakita ang pahina
 Created:
 Ginawa noong:
 
+Custom &Zoom...\tCtrl-Y
+Custom na laki...\tCtrl-Y
+
 Default &Layout:
 Default na Ayos:
+
+Default &Zoom:
+Default na Laki:
 
 Denied Permissions:
 Mga hindi maaaring gawin:
@@ -336,6 +348,12 @@ Walang makitang kapareha
 No result found around line %u in file %s
 Walang resultang mahanap sa linya %s ng file %s
 
+No synchronization file found
+Walang makitang synchronization file
+
+No synchronization info at this position
+Walang makitang detalye ng synchronization dito
+
 Number of Pages:
 Bilang ng mga pahina:
 
@@ -384,8 +402,14 @@ Maaaring pakisama ang mga sumusunod na file sa iyong crash report:
 Please wait - rendering...
 Maghintay - pinapakita...
 
+Pr&esentation\tCtrl-L
+Pr&esentasyon\tCtrl-L
+
 Previous Page
 Naunang Pahina
+
+Print range
+Mga ipi-print na pahina
 
 Printing problem.
 May Problema sa Pagpi-print.
@@ -423,6 +447,9 @@ Ipakita ang &bookmarks sidebar kung naangkop
 Single Page
 Iisang Pahina
 
+Source file %s has no synchronization point
+Walang synchronization point ang source file na %s
+
 Subject:
 Paksa:
 
@@ -440,6 +467,9 @@ SumatraPDF ang iyong default na pambasa ng mga PDF file
 
 SumatraPDF should now be your main PDF reader
 SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
+
+Synchronization file cannot be opened
+Hindi mabuksan ang synchronization file
 
 Text documents
 Mga tekstong dokumento
@@ -485,16 +515,4 @@ kinokopya ang mensahe
 
 printing document
 ipini-print ang dokumento
-
-# Untranslated:
-#&Match case
-#Cannot start inverse search command. Please check the command line in the settings.
-#Custom &Zoom...\tCtrl-Y
-#Default &Zoom:
-#No synchronization file found
-#No synchronization info at this position
-#Pr&esentation\tCtrl-L
-#Print range
-#Source file %s has no synchronization point
-#Synchronization file cannot be opened
 
