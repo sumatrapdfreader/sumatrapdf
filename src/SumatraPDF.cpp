@@ -2251,18 +2251,6 @@ static void PaintRectangle(HDC hdc, RECT * rect)
     LineTo(hdc, rect->left, rect->top);
 }
 
-static void WinResizeIfNeeded(WindowInfo *win, bool resizeWindow=true)
-{
-    RECT rc;
-    GetClientRect(win->hwndCanvas, &rc);
-
-    if (!win->hdcToDraw || win->winDx() != RectDx(&rc) || win->winDy() != RectDy(&rc)) {
-        win->DoubleBuffer_New();
-        if (resizeWindow)
-            win->ResizeToWindow();
-    }
-}
-
 bool WindowInfo::DoubleBuffer_New()
 {
     this->DoubleBuffer_Delete();
@@ -2658,22 +2646,6 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     }
 }
 
-static void WinMoveDocBy(WindowInfo *win, int dx, int dy)
-{
-    assert(win);
-    if (!win) return;
-    assert (WS_SHOWING_PDF == win->state);
-    if (WS_SHOWING_PDF != win->state) return;
-    assert(win->dm);
-    if (!win->dm) return;
-    assert(!win->linkOnLastButtonDown);
-    if (win->linkOnLastButtonDown) return;
-    if (0 != dx)
-        win->dm->scrollXBy(dx);
-    if (0 != dy)
-        win->dm->scrollYBy(dy, FALSE);
-}
-
 static void CopySelectionToClipboard(WindowInfo *win)
 {
     assert(win);
@@ -2928,7 +2900,7 @@ static void OnDraggingStop(WindowInfo *win, int x, int y)
             dragDx = x - win->dragPrevPosX;
             dragDy = y - win->dragPrevPosY;
             DBG_OUT(" dragging ends, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
-            WinMoveDocBy(win, dragDx, -dragDy*2);
+            win->MoveDocBy(dragDx, -dragDy*2);
             win->dragPrevPosX = x;
             win->dragPrevPosY = y;
         }
@@ -2976,7 +2948,7 @@ static void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 
     if (dx != 0 || dy != 0) {
         int oldX = win->dm->areaOffset.x, oldY = win->dm->areaOffset.y;
-        WinMoveDocBy(win, dx, dy);
+        win->MoveDocBy(dx, dy);
 
         dx = win->dm->areaOffset.x - oldX;
         dy = win->dm->areaOffset.y - oldY;
@@ -3036,7 +3008,7 @@ static void OnMouseMove(WindowInfo *win, int x, int y, WPARAM flags)
         dragDx = win->dragPrevPosX - x;
         dragDy = win->dragPrevPosY - y;
         DBG_OUT(" drag move, x=%d, y=%d, dx=%d, dy=%d\n", x, y, dragDx, dragDy);
-        WinMoveDocBy(win, dragDx, dragDy);
+        win->MoveDocBy(dragDx, dragDy);
         break;
     }
 
@@ -3186,7 +3158,7 @@ static void OnPaint(WindowInfo *win)
     GetClientRect(win->hwndCanvas, &rc);
 
     if (WS_ABOUT == win->state) {
-        WinResizeIfNeeded(win, false);
+        win->ResizeIfNeeded(false);
         UpdateAboutLayoutInfo(win->hwndCanvas, win->hdcToDraw, &rc);
         DrawAbout(win->hwndCanvas, win->hdcToDraw, &rc);
         win->DoubleBuffer_Show(hdc);
@@ -3208,7 +3180,7 @@ static void OnPaint(WindowInfo *win)
             FillRect(hdc, &ps.rcPaint, gBrushWhite);
             break;
         default:
-            WinResizeIfNeeded(win);
+            win->ResizeIfNeeded();
             WindowInfo_Paint(win, hdc, &ps);
             win->DoubleBuffer_Show(hdc);
         }
@@ -4156,7 +4128,7 @@ static void OnSize(WindowInfo *win, int dx, int dy)
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy-rebBarDy, SWP_NOZORDER);
     // Need this here, so that -page and -nameddest work correctly in continuous mode
     if (WS_SHOWING_PDF == win->state)
-        WinResizeIfNeeded(win);
+        win->ResizeIfNeeded();
 }
 
 static void RebuildProgramMenus(void)
@@ -6157,7 +6129,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                     break;
                 case SMOOTHSCROLL_TIMER_ID:
                     if (MA_SCROLLING == win->mouseAction)
-                        WinMoveDocBy(win, win->xScrollSpeed, win->yScrollSpeed);
+                        win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
                     else if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction) {
                         POINT pt;
                         GetCursorPos(&pt);

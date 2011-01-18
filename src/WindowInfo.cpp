@@ -147,12 +147,19 @@ void WindowInfo::UpdateTocSelection(int currPageNo)
         TreeView_SelectItem(this->hwndTocTree, hCurrItem);
 }
 
-void WindowInfo::ResizeToWindow()
+void WindowInfo::ResizeIfNeeded(bool resizeWindow)
 {
-    assert(this->dm);
-    if (!this->dm) return;
+    RECT rc;
+    GetClientRect(this->hwndCanvas, &rc);
 
-    this->dm->changeTotalDrawAreaSize(this->winSize());
+    if (!this->hdcToDraw || this->winDx() != RectDx(&rc) || this->winDy() != RectDy(&rc)) {
+        this->DoubleBuffer_New();
+        if (resizeWindow) {
+            assert(this->dm);
+            if (!this->dm) return;
+            this->dm->changeTotalDrawAreaSize(this->winSize());
+        }
+    }
 }
 
 void WindowInfo::ToggleZoom()
@@ -231,6 +238,20 @@ void WindowInfo::UpdateToolbarState()
         prevZoomVirtual = INVALID_ZOOM;
 }
 
+void WindowInfo::MoveDocBy(int dx, int dy)
+{
+    assert (WS_SHOWING_PDF == this->state);
+    if (WS_SHOWING_PDF != this->state) return;
+    assert(this->dm);
+    if (!this->dm) return;
+    assert(!this->linkOnLastButtonDown);
+    if (this->linkOnLastButtonDown) return;
+    if (0 != dx)
+        this->dm->scrollXBy(dx);
+    if (0 != dy)
+        this->dm->scrollYBy(dy, FALSE);
+}
+
 /* :::::: WindowInfoList :::::: */
 
 void WindowInfoList::remove(WindowInfo *win) {
@@ -283,7 +304,7 @@ WindowInfo* WindowInfoList::find(TCHAR * file) {
     WindowInfo *found = NULL;
     for (size_t i = 0; i < this->size(); i++) {
         WindowInfo *win = (*this)[i];
-        if (win->loadedFilePath && tstr_ieq(win->loadedFilePath, normFile)) {
+        if (win->loadedFilePath && FilePath_IsSameFile(win->loadedFilePath, normFile)) {
             found = win;
             break;
         }

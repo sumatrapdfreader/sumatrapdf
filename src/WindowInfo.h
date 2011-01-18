@@ -195,9 +195,10 @@ public:
     void UpdateTocSelection(int currPageNo);
     void UpdateToolbarState();
 
-    void ResizeToWindow();
+    void ResizeIfNeeded(bool resizeWindow=true);
     void ToggleZoom();
     void ZoomToSelection(double factor, bool relative);
+    void MoveDocBy(int dx, int dy);
 };
 
 class WindowInfoList : public vector<WindowInfo *>
