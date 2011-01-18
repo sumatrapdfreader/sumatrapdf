@@ -15,41 +15,16 @@ C_FILES_TO_PROCESS = [os.path.join("..", "src", f) for f in C_FILES_TO_PROCESS]
 STRINGS_PATH = os.path.join("..", "src", "strings")
 TRANSLATION_PATTERN = r'_TRN?\("(.*?)"\)'
 
-(ST_NONE, ST_BEFORE_ORIG, ST_IN_TRANSLATIONS) = range(3)
-
-def state_name(state):
-    if ST_NONE == state: return "ST_NONE"
-    if ST_BEFORE_ORIG == state: return "ST_BEFORE_ORIG"
-    assert ST_IN_TRANSLATIONS == state, "UNKNOWN STATE %d" % state
-    if ST_IN_TRANSLATIONS == state: return "ST_IN_TRANSLATIONS"
-    return "UNKNOWN STATE"
-
 LANG_TXT = "Lang:"
 CONTRIBUTOR_TXT = "Contributor:"
 
 def is_lang_line(l): return l.startswith(LANG_TXT)
-def is_separator_line(l): return l == "-"
 def is_comment_line(l): return l.startswith("#")
 def is_contributor_line(l): return l.startswith(CONTRIBUTOR_TXT)
 
 def seq_uniq(seq): 
     # Not order preserving
     return list(set(seq))
-
-def line_strip_newline(l, newline_chars="\r\n"):
-    while True:
-        if 0  == len(l): return l
-        if l[-1] not in newline_chars: return l
-        l = l[:-1]
-
-def line_with_translation(l):
-    if len(l) > 2 and ':' == l[2]: return True
-    if len(l) > 5 and ':' == l[5]: return True
-    return False
-
-def parse_line_with_translation(l):
-    lang, translation = l.split(':', 1)
-    return lang, translation
 
 def parse_lang_line(l):
     assert is_lang_line(l)
@@ -59,7 +34,7 @@ def parse_lang_line(l):
     lang_iso = l_parts[0]
     lang_name = l_parts[1].strip()
     # lang format is either "fr" or "en-us"
-    assert 2 == len(lang_iso) or 5 == len(lang_iso)
+    assert len(lang_iso) in [2, 5]
     return (lang_iso, lang_name)
 
 def parse_contrib_line(l):
@@ -82,7 +57,7 @@ def assert_unique_translation(curr_trans, lang, line_no):
 # Extract language code (e.g. "br") from language translation file name
 # (e.g. "br.txt" or "sr-sr.txt"). Returns None if file name doesn't fit expected pattern
 def lang_code_from_file_name(file_name):
-    match = re.match(r"(\w{2,3}(?:-\w{2,3})?)\.txt", file_name)
+    match = re.match(r"(\w{2}(?:-\w{2})?)\.txt", file_name)
     return match and match.group(1)
 
 # The structure of strings file should be: comments section at the beginning of the file,
@@ -99,8 +74,8 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
     all_origs = {}
     for l in fo.readlines():
         line_no = line_no + 1
+        l = l[:-1] # strip trailing new line
         #print "'%s'" % l
-        l = line_strip_newline(l)
         if 0 == len(l):
             if curr_orig is None: continue
             assert curr_orig not in all_origs, "Duplicate entry for '%s'" % curr_orig
@@ -112,15 +87,12 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             all_origs[curr_orig] = True
             curr_orig = None
             curr_trans = None
-            continue
-        #print state_name(state)
-        if is_comment_line(l):
+        elif is_comment_line(l):
             if seen_lang:
                 bottom_comments.append(l)
             else:
                 top_comments.append(l)
-            continue
-        if is_lang_line(l):
+        elif is_lang_line(l):
             assert not seen_lang
             assert 0 == len(contributors)
             (lang_iso, lang_name) = parse_lang_line(l)
@@ -128,19 +100,18 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert lang_iso not in langs_dict
             langs_dict[lang_iso] = lang_name
             seen_lang = True
-            continue
-        if is_contributor_line(l):
+        elif is_contributor_line(l):
             assert seen_lang
             contributors.append(parse_contrib_line(l))
-            continue
-        if curr_orig is None:
+        elif curr_orig is None:
             curr_orig = l
+            #print l
         else:
             if curr_trans != None:
                 print("curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path)))
             assert curr_trans is None, "curr_trans: '%s', line: %d in '%s'" % (curr_trans, line_no, os.path.basename(file_path))
             curr_trans = l
-        #print l
+            #print l
 
     if curr_orig:
         assert curr_trans
@@ -182,7 +153,7 @@ def get_lang_list(strings_dict):
 def extract_strings_from_c_files():
     strings = []
     for f in C_FILES_TO_PROCESS:
-        file_content = file(f, "rb").read()
+        file_content = open(f, "r").read()
         strings += re.findall(TRANSLATION_PATTERN, file_content)
     return seq_uniq(strings)
 
@@ -237,7 +208,7 @@ TOP_COMMENT = """
 
 # correctly sorts strings containing escaped tabulators
 def key_sort_func(a, b):
-	return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
+    return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
 
 # converts strings_dict which maps english text to array of (lang, translation)
 # tuples to a hash that maps language to an array (english phrase, translation)
@@ -301,6 +272,11 @@ def untranslated_count_for_lang(strings_dict, lang):
             #print("%s: %s" % (lang, k))
             count += 1
     return count
+
+def load_lang_index():
+    index = open(os.path.join(STRINGS_PATH, "index.tsv"), "r").read()
+    index = re.sub(r"#.*", "", index)
+    return re.findall("^(\S+)\t([^\t\n]*)(?:\t(.*))?", index, re.M)
 
 def main_obsolete():
     (strings_dict, langs, contributors) = load_strings_file_new()

@@ -24,6 +24,7 @@
 #include "Benchmark.h"
 #include "ExtHelpers.h"
 
+#include "LangMenuDef.h"
 #include "translations.h"
 #include "Version.h"
 
@@ -268,94 +269,21 @@ static bool CanViewWithAcrobat(WindowInfo *win=NULL);
 static bool ViewWithAcrobat(WindowInfo *win, TCHAR *args=NULL);
 static bool CanSendAsEmailAttachment(WindowInfo *win=NULL);
 
-#define SEP_ITEM "-----"
-
-#include "LangMenuDef.h"
-
-#define _MAKELANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
-// based on http://msdn.microsoft.com/en-us/library/dd318693.aspx
-static struct {
-    const char *lang;
-    LANGID langId;
-} g_lcidLangMap[] = {
-    { "en", _MAKELANGID(LANG_ENGLISH) },
-    { "af", _MAKELANGID(LANG_AFRIKAANS) },
-    { "ar", _MAKELANGID(LANG_ARABIC) },
-    { "am", _MAKELANGID(LANG_ARMENIAN) },
-    { "eu", _MAKELANGID(LANG_BASQUE) },
-    { "by", _MAKELANGID(LANG_BELARUSIAN) },
-    { "bn", _MAKELANGID(LANG_BENGALI) },
-    { "bg", _MAKELANGID(LANG_BULGARIAN) },
-    { "mm", -1 /* Burmese */ },
-    { "ca", _MAKELANGID(LANG_CATALAN) },
-    { "cn", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) },
-    { "tw", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) },
-    { "kw", -1 /* Cornish */ },
-    { "hr", _MAKELANGID(LANG_CROATIAN) },
-    { "cz", _MAKELANGID(LANG_CZECH) },
-    { "dk", _MAKELANGID(LANG_DANISH) },
-    { "nl", _MAKELANGID(LANG_DUTCH) },
-    { "fi", _MAKELANGID(LANG_FINNISH) },
-    { "fr", _MAKELANGID(LANG_FRENCH) },
-    { "fy-nl", _MAKELANGID(LANG_FRISIAN) },
-    { "gl", _MAKELANGID(LANG_GALICIAN) },
-    { "de", _MAKELANGID(LANG_GERMAN) },
-    { "gr", _MAKELANGID(LANG_GREEK) },
-    { "he", _MAKELANGID(LANG_HEBREW) },
-    { "hi", _MAKELANGID(LANG_HINDI) },
-    { "hu", _MAKELANGID(LANG_HUNGARIAN) },
-    { "id", _MAKELANGID(LANG_INDONESIAN) },
-    { "ga", _MAKELANGID(LANG_IRISH) },
-    { "it", _MAKELANGID(LANG_ITALIAN) },
-    { "ja", _MAKELANGID(LANG_JAPANESE) },
-    { "kr", _MAKELANGID(LANG_KOREAN) },
-    { "lt", _MAKELANGID(LANG_LITHUANIAN) },
-    { "mk", _MAKELANGID(LANG_MACEDONIAN) },
-    { "ml", _MAKELANGID(LANG_MALAYALAM) },
-    { "my", _MAKELANGID(LANG_MALAY) },
-    { "no", MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL) },
-    { "nn", MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NYNORSK) },
-    { "fa", _MAKELANGID(LANG_FARSI) },
-    { "pl", _MAKELANGID(LANG_POLISH) },
-    { "br", MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN) },
-    { "pt", _MAKELANGID(LANG_PORTUGUESE) }, // SUBLANG_PORTUGUESE
-    { "pa", _MAKELANGID(LANG_PUNJABI) },
-    { "ro", _MAKELANGID(LANG_ROMANIAN) },
-    { "ru", _MAKELANGID(LANG_RUSSIAN) },
-    { "sp-rs", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN) },
-    { "sr-rs", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC) },
-    { "sn", -1 /* Shona */ },
-    { "si", _MAKELANGID(LANG_SINHALESE) },
-    { "sk", _MAKELANGID(LANG_SLOVAK) },
-    { "sl", _MAKELANGID(LANG_SLOVENIAN) },
-    { "es", _MAKELANGID(LANG_SPANISH) },
-    { "sv", _MAKELANGID(LANG_SWEDISH) },
-    { "tl", _MAKELANGID(LANG_FILIPINO) },
-    { "ta", _MAKELANGID(LANG_TAMIL) },
-    { "th", _MAKELANGID(LANG_THAI) },
-    { "tr", _MAKELANGID(LANG_TURKISH) },
-    { "uk", _MAKELANGID(LANG_UKRAINIAN) },
-    { "va", -1 /* Valencian */ },
-    { "vn", _MAKELANGID(LANG_VIETNAMESE) },
-    { "cy", _MAKELANGID(LANG_WELSH) },
-};
-
 static const char *GuessLanguage()
 {
     LANGID langId = GetUserDefaultUILanguage();
-    LANGID langIdNoSublang = _MAKELANGID(PRIMARYLANGID(langId));
+    LANGID langIdNoSublang = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
     const char *langName = NULL;
 
     // Either find the exact primary/sub lang id match, or a neutral sublang if it exists
     // (don't return any sublang for a given language, it might be too different)
-    for (int i = 0; i < dimof(g_lcidLangMap); i++) {
-        if (langId == g_lcidLangMap[i].langId) {
-            langName = g_lcidLangMap[i].lang;
-            break;
-        }
-        if (langIdNoSublang == g_lcidLangMap[i].langId)
-            langName = g_lcidLangMap[i].lang;
-            // continue searching after finding a match with a neutral sublanguage
+    for (int i = 0; i < LANGS_COUNT; i++) {
+        if (langId == g_langs[i]._langId)
+            return g_langs[i]._langName;
+
+        if (langIdNoSublang == g_langs[i]._langId)
+            langName = g_langs[i]._langName;
+        // continue searching after finding a match with a neutral sublanguage
     }
 
     return langName;
@@ -363,9 +291,6 @@ static const char *GuessLanguage()
 
 static int LangGetIndex(const char *name)
 {
-    // TODO: merge g_lcidLangMap and g_langs
-    assert(dimof(g_lcidLangMap) == LANGS_COUNT);
-
     for (int i = 0; i < LANGS_COUNT; i++) {
         const char *langName = g_langs[i]._langName;
         if (str_eq(name, langName))
@@ -681,10 +606,18 @@ static UINT AllocNewMenuId(void)
     return id;
 }
 
+#define SEP_ITEM "-----"
+
 enum menuFlags {
     MF_NOT_IN_RESTRICTED = 0x1,
     MF_NO_TRANSLATE      = 0x2
 };
+
+typedef struct MenuDef {
+    const char *m_title;
+    int         m_id;
+    int         m_flags;
+} MenuDef;
 
 MenuDef menuDefFile[] = {
     { _TRN("&Open\tCtrl-O"),                IDM_OPEN ,                  MF_NOT_IN_RESTRICTED },
@@ -744,15 +677,15 @@ MenuDef menuDefZoom[] = {
     { "1600%",                              IDM_ZOOM_1600,              MF_NO_TRANSLATE  },
     { "800%",                               IDM_ZOOM_800,               MF_NO_TRANSLATE  },
 #endif
-    { "400%",                             IDM_ZOOM_400,                 MF_NO_TRANSLATE  },
-    { "200%",                             IDM_ZOOM_200,                 MF_NO_TRANSLATE  },
-    { "150%",                             IDM_ZOOM_150,                 MF_NO_TRANSLATE  },
-    { "125%",                             IDM_ZOOM_125,                 MF_NO_TRANSLATE  },
-    { "100%",                             IDM_ZOOM_100,                 MF_NO_TRANSLATE  },
-    { "50%",                              IDM_ZOOM_50,                  MF_NO_TRANSLATE  },
-    { "25%",                              IDM_ZOOM_25,                  MF_NO_TRANSLATE  },
-    { "12.5%",                            IDM_ZOOM_12_5,                MF_NO_TRANSLATE  },
-    { "8.33%",                            IDM_ZOOM_8_33,                MF_NO_TRANSLATE  },
+    { "400%",                               IDM_ZOOM_400,               MF_NO_TRANSLATE  },
+    { "200%",                               IDM_ZOOM_200,               MF_NO_TRANSLATE  },
+    { "150%",                               IDM_ZOOM_150,               MF_NO_TRANSLATE  },
+    { "125%",                               IDM_ZOOM_125,               MF_NO_TRANSLATE  },
+    { "100%",                               IDM_ZOOM_100,               MF_NO_TRANSLATE  },
+    { "50%",                                IDM_ZOOM_50,                MF_NO_TRANSLATE  },
+    { "25%",                                IDM_ZOOM_25,                MF_NO_TRANSLATE  },
+    { "12.5%",                              IDM_ZOOM_12_5,              MF_NO_TRANSLATE  },
+    { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE  },
 };
 
 MenuDef menuDefLang[] = {
@@ -4929,11 +4862,6 @@ static const TCHAR *RecentFileNameFromMenuItemId(UINT  menuId) {
     return NULL;
 }
 
-static void OnMenuContributeTranslation()
-{
-    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
-}
-
 static void GoToTocLinkForTVItem(WindowInfo *win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
     if (!hItem)
@@ -6405,7 +6333,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
                     
                 case IDM_CONTRIBUTE_TRANSLATION:
-                    OnMenuContributeTranslation();
+                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html"));
                     break;
 
                 case IDM_ABOUT:
