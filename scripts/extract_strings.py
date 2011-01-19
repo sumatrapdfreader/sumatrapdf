@@ -276,7 +276,7 @@ def untranslated_count_for_lang(strings_dict, lang):
 def load_lang_index():
     index = open(os.path.join(STRINGS_PATH, "index.tsv"), "r").read()
     index = re.sub(r"#.*", "", index)
-    return re.findall("^(\S+)\t([^\t\n]*)(?:\t(.*))?", index, re.M)
+    return re.findall("^(\S+)\t([^\t\r\n]*)(?:\t(.*))?", index, re.M)
 
 def main_obsolete():
     (strings_dict, langs, contributors) = load_strings_file_new()
