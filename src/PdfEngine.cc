@@ -1024,6 +1024,23 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
 #endif
 }
 
+TCHAR *PdfEngine::ExtractPageText(int pageNo, TCHAR *lineSep, fz_bbox **coords_out, RenderTarget target)
+{
+    pdf_page *page = getPdfPage(pageNo, true);
+    if (page)
+        return ExtractPageText(page, lineSep, coords_out, target);
+
+    EnterCriticalSection(&_xrefAccess);
+    fz_error error = pdf_loadpage(&page, _xref, pdf_getpageobject(_xref, pageNo));
+    LeaveCriticalSection(&_xrefAccess);
+    if (error)
+        return NULL;
+
+    TCHAR *text = ExtractPageText(page, lineSep, coords_out, target);
+    pdf_freepage(page);
+    return text;
+};
+
 char *PdfEngine::getPageLayoutName(void)
 {
     EnterCriticalSection(&_xrefAccess);
