@@ -61,7 +61,7 @@ def lang_code_from_file_name(file_name):
     return match and match.group(1)
 
 # The structure of strings file should be: comments section at the beginning of the file,
-# Lang: and Contributor: lines, translations, (optional) comments sectin at the end of the file
+# Lang: and Contributor: lines, translations, (optional) comments section at the end of the file
 def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contributors_dict):
     fo = codecs.open(file_path, "r", "utf-8-sig")
     seen_lang = False
@@ -74,7 +74,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
     all_origs = {}
     for l in fo.readlines():
         line_no = line_no + 1
-        l = l[:-1] # strip trailing new line
+        l = l.strip("\r\n") # strip trailing new line
         #print "'%s'" % l
         if 0 == len(l):
             if curr_orig is None: continue
