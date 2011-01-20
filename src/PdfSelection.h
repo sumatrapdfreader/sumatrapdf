@@ -17,6 +17,7 @@ public:
     PdfSelection(PdfEngine *engine);
     ~PdfSelection();
 
+    bool IsOverGlyph(int pageNo, double x, double y);
     void StartAt(int pageNo, int glyphIx);
     void StartAt(int pageNo, double x, double y) {
         StartAt(pageNo, FindClosestGlyph(pageNo, x, y));

@@ -972,7 +972,10 @@ TCHAR *PdfEngine::ExtractPageText(pdf_page *page, TCHAR *lineSep, fz_bbox **coor
         return NULL;
 
     fz_textspan *text = fz_newtextspan();
-    fz_error error = runPage(page, fz_newtextdevice(text), fz_identity, target, page->mediabox, cacheRun);
+    // use an infinite rectangle as bounds (instead of page->mediabox) to ensure that
+    // the extracted text is consistent between cached runs using a list device and
+    // fresh runs (otherwise the list device omits text outside the mediabox bounds)
+    fz_error error = runPage(page, fz_newtextdevice(text), fz_identity, target, fz_infiniterect, cacheRun);
     if (fz_okay != error) {
         fz_freetextspan(text);
         return NULL;

@@ -2961,8 +2961,8 @@ static void OnSelectionStart(WindowInfo *win, int x, int y)
         win->showSelection = true;
         win->mouseAction = MA_SELECTING;
 
-        // Ctrl+Shift+drag initiates text selection
-        if (WasKeyDown(VK_CONTROL) && WasKeyDown(VK_SHIFT)) {
+        // Ctrl+Shift+drag always initiates text selection
+        if (win->dm->isOverText(x, y) || WasKeyDown(VK_CONTROL) && WasKeyDown(VK_SHIFT)) {
             int pageNo;
             double dX = x, dY = y;
             if (win->dm->cvtScreenToUser(&pageNo, &dX, &dY)) {
@@ -3029,7 +3029,12 @@ static void OnMouseLeftButtonDown(WindowInfo *win, int x, int y, int key)
 
     SetFocus(win->hwndFrame);
 
-    if (!gRestrictedUse && (key & MK_CONTROL) != 0)
+    // If not in restricted mode:
+    // - select text when either over text or the user presses Ctrl+Shift
+    // - make a rectangular selection when not over text and the user presses Ctrl
+    // drag otherwise (i.e. when either in restricted mode, not over text or
+    // when the user presses Ctrl)
+    if (!gRestrictedUse && win->dm->isOverText(x, y) != ((key & MK_CONTROL) != 0))
         OnSelectionStart(win, x, y);
     else
         OnDraggingStart(win, x, y);
@@ -6035,7 +6040,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT message, WPARAM wParam, LP
                         SetCursor(gCursorHand);
                         return TRUE;
                     }
-                    else if (GetCursor() == gCursorHand) {
+                    else if (GetCursor() && win->dm->isOverText(pt.x, pt.y)) {
+                        SetCursor(gCursorIBeam);
+                        return TRUE;
+                    }
+                    else if (GetCursor()) {
                         SetCursor(gCursorArrow);
                         return TRUE;
                     }

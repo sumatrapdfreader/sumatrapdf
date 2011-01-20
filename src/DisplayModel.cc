@@ -839,6 +839,16 @@ int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
     return count;
 }
 
+bool DisplayModel::isOverText(int x, int y)
+{
+    int pageNo = INVALID_PAGE_NO;
+    double posX = x, posY = y;
+    if (!cvtScreenToUser(&pageNo, &posX, &posY))
+        return false;
+
+    return textSelection->IsOverGlyph(pageNo, posX, posY);
+}
+
 void DisplayModel::renderVisibleParts(void)
 {
     int             pageNo;

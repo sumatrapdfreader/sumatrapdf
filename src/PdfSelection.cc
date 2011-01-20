@@ -107,6 +107,15 @@ void PdfSelection::FillResultRects(int pageNo, int glyph, int length, TCHAR *tex
     }
 }
 
+bool PdfSelection::IsOverGlyph(int pageNo, double x, double y)
+{
+    int glyphIx = FindClosestGlyph(pageNo, x, y);
+    fz_bbox *_coords = coords[pageNo - 1];
+    bool isPtInRect = _coords[glyphIx].x0 <= x && x < _coords[glyphIx].x1 &&
+                      _coords[glyphIx].y0 <= y && y < _coords[glyphIx].y1;
+    return isPtInRect;
+}
+
 void PdfSelection::StartAt(int pageNo, int glyphIx)
 {
     startPage = pageNo;

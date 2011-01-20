@@ -244,6 +244,7 @@ public:
     TCHAR *         getLinkPath(pdf_link *link);
     void            goToTocLink(pdf_link *link);
     void            goToNamedDest(const char *name);
+    bool            isOverText(int x, int y);
 
     bool            cvtUserToScreen(int pageNo, double *x, double *y);
     bool            cvtScreenToUser(int *pageNo, double *x, double *y);
