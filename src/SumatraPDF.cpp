@@ -51,8 +51,8 @@
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
 #define THREAD_BASED_FILEWATCH
 
-#define ZOOM_IN_FACTOR      1.2
-#define ZOOM_OUT_FACTOR     1.0 / ZOOM_IN_FACTOR
+#define ZOOM_IN_FACTOR      1.2f
+#define ZOOM_OUT_FACTOR     1.0f / ZOOM_IN_FACTOR
 
 /* if TRUE, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier.
@@ -731,7 +731,7 @@ static bool Prefs_Load(void)
 
     TCHAR * prefsFilename = Prefs_GetFileName();
     assert(prefsFilename);
-    uint64_t prefsFileLen;
+    size_t prefsFileLen;
     prefsTxt = file_read_all(prefsFilename, &prefsFileLen);
     if (!str_empty(prefsTxt)) {
         ok = Prefs_Deserialize(prefsTxt, prefsFileLen, &gFileHistoryRoot);
@@ -745,7 +745,7 @@ static bool Prefs_Load(void)
 
 static struct {
     unsigned short itemId;
-    double zoom;
+    float zoom;
 } gZoomMenuIds[] = {
     { IDM_ZOOM_6400,    6400.0 },
     { IDM_ZOOM_3200,    3200.0 },
@@ -759,7 +759,7 @@ static struct {
     { IDM_ZOOM_50,      50.0   },
     { IDM_ZOOM_25,      25.0   },
     { IDM_ZOOM_12_5,    12.5   },
-    { IDM_ZOOM_8_33,    8.33   },
+    { IDM_ZOOM_8_33,    8.33f  },
     { IDM_ZOOM_CUSTOM,  0      },
     { IDM_ZOOM_FIT_PAGE,    ZOOM_FIT_PAGE    },
     { IDM_ZOOM_FIT_WIDTH,   ZOOM_FIT_WIDTH   },
@@ -776,7 +776,7 @@ static UINT MenuIdFromVirtualZoom(double virtualZoom)
     return IDM_ZOOM_CUSTOM;
 }
 
-static double ZoomMenuItemToZoom(UINT menuItemId)
+static float ZoomMenuItemToZoom(UINT menuItemId)
 {
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         if (menuItemId == gZoomMenuIds[i].itemId)
@@ -1161,7 +1161,7 @@ static void EnsureWindowVisibility(int *x, int *y, int *dx, int *dy)
 
     // make sure that the window is neither too small nor bigger than the monitor
     if (*dx < MIN_WIN_DX || *dx > RectDx(&mi.rcWork))
-        *dx = min(RectDy(&mi.rcWork) * DEF_PAGE_RATIO, RectDx(&mi.rcWork));
+        *dx = (int)min(RectDy(&mi.rcWork) * DEF_PAGE_RATIO, RectDx(&mi.rcWork));
     if (*dy < MIN_WIN_DY || *dy > RectDy(&mi.rcWork))
         *dy = RectDy(&mi.rcWork);
 
@@ -1187,7 +1187,7 @@ static WindowInfo* WindowInfo_CreateEmpty(void) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
         winY = workArea.top;
         winDy = RectDy(&workArea);
-        winDx = min(winDy * DEF_PAGE_RATIO, RectDx(&workArea));
+        winDx = (int)min(winDy * DEF_PAGE_RATIO, RectDx(&workArea));
         winX = (RectDx(&workArea) - winDx) / 2;
     }
     else {
@@ -1355,7 +1355,7 @@ static bool LoadPdfIntoWindow(
 
     win->dm->setAppData((void*)win);
 
-    double zoomVirtual = gGlobalPrefs.m_defaultZoom;
+    float zoomVirtual = (float)gGlobalPrefs.m_defaultZoom;
     int rotation = DEFAULT_ROTATION;
 
     win->state = WS_SHOWING_PDF;
@@ -1370,7 +1370,7 @@ static bool LoadPdfIntoWindow(
         }
         else if (startPage > win->dm->pageCount())
             ss.page = win->dm->pageCount();
-        zoomVirtual = state->zoomVirtual;
+        zoomVirtual = (float)state->zoomVirtual;
         rotation = state->rotation;
         win->dm->_showToc = state->showToc;
     }
@@ -1706,7 +1706,7 @@ void DisplayModel::setScrollbarsState(void)
 
         if (ZOOM_FIT_PAGE != _zoomVirtual) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
-            si.nPage *= 0.95;
+            si.nPage = (UINT)(si.nPage * 0.95);
             si.nMax -= drawAreaDy - si.nPage;
         }
     }
@@ -1826,7 +1826,7 @@ static BOOL ShowNewVersionDialog(WindowInfo *win, const TCHAR *newVersion)
 static void OnUrlDownloaded(WindowInfo *win, HttpReqCtx *ctx)
 {
     if (!tstr_startswith(ctx->url, SUMATRA_UPDATE_INFO_URL)) {
-        goto Exit;
+        return;
     }
 
     // see http://code.google.com/p/sumatrapdf/issues/detail?id=725
@@ -1976,7 +1976,7 @@ static void PaintForwardSearchMark(WindowInfo *win, HDC hdc) {
             recD.dy += 8;
         }
         RectI_FromRectD(&recI, &recD);
-        BYTE alpha = 0x5f * (double) (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmarkHideStep) / HIDE_FWDSRCHMARK_STEPS;
+        BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdsearchmarkHideStep) / HIDE_FWDSRCHMARK_STEPS);
         PaintTransparentRectangle(win, hdc, &recI, gGlobalPrefs.m_fwdsearchColor, alpha, 0);
     }
 }
@@ -2079,7 +2079,7 @@ static void WindowInfo_Paint(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
             SelectObject(bmpDC, gBitmapReloadingCue);
-            int size = 16 * win->uiDPIFactor;
+            int size = (int)(16 * win->uiDPIFactor);
             int cx = min(RectDx(&bounds), 2 * size), cy = min(RectDy(&bounds), 2 * size);
             StretchBlt(hdc, bounds.right - min((cx + size) / 2, cx),
                 bounds.top + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
@@ -2150,11 +2150,7 @@ static void CopySelectionToClipboard(WindowInfo *win)
             lstrcpy(globalText, selText);
             GlobalUnlock(handle);
 
-#ifdef UNICODE
-            if (!SetClipboardData(CF_UNICODETEXT, handle))
-#else
-            if (!SetClipboardData(CF_TEXT, handle))
-#endif
+            if (!SetClipboardData(CF_T_TEXT, handle))
                 SeeLastError();
         }
         free(selText);
@@ -2172,8 +2168,8 @@ static void CopySelectionToClipboard(WindowInfo *win)
     SelectionOnPage *selOnPage = win->selectionOnPage;
     RectD * r = &selOnPage->selectionPage;
     fz_rect clipRegion;
-    clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
-    clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
+    clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
+    clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
 
     RenderedBitmap * bmp = win->dm->renderBitmap(selOnPage->pageNo, win->dm->zoomReal(),
         win->dm->rotation(), &clipRegion, NULL, NULL, Target_Export, gUseGdiRenderer);
@@ -2431,11 +2427,11 @@ static void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
 
     if (dx != 0 || dy != 0) {
-        int oldX = win->dm->areaOffset.x, oldY = win->dm->areaOffset.y;
+        int oldX = (int)win->dm->areaOffset.x, oldY = (int)win->dm->areaOffset.y;
         win->MoveDocBy(dx, dy);
 
-        dx = win->dm->areaOffset.x - oldX;
-        dy = win->dm->areaOffset.y - oldY;
+        dx = (int)win->dm->areaOffset.x - oldX;
+        dy = (int)win->dm->areaOffset.y - oldY;
         win->selectionRect.x -= dx;
         win->selectionRect.y -= dy;
         win->selectionRect.dx += dx;
@@ -2767,7 +2763,7 @@ static void OnMenuZoom(WindowInfo *win, UINT menuId)
     if (!win->dm)
         return;
 
-    double zoom = ZoomMenuItemToZoom(menuId);
+    float zoom = ZoomMenuItemToZoom(menuId);
     win->ZoomToSelection(zoom, false);
     ZoomMenuItemCheck(win->hMenu, menuId, TRUE);
 }
@@ -2777,7 +2773,7 @@ static void OnMenuCustomZoom(WindowInfo *win)
     if (!win->dm)
         return;
 
-    double zoom = win->dm->zoomVirtual();
+    float zoom = win->dm->zoomVirtual();
     if (DIALOG_CANCEL_PRESSED == Dialog_CustomZoom(win->hwndFrame, &zoom))
         return;
     win->ZoomToSelection(zoom, false);
@@ -2831,8 +2827,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
     int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
     int rightMargin = paperWidth - printableWidth - leftMargin;
     int bottomMargin = paperHeight - printableHeight - topMargin;
-    double dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
-                           GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
+    float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / PDF_FILE_DPI,
+                          GetDeviceCaps(hdc, LOGPIXELSY) / PDF_FILE_DPI);
     bool bPrintPortrait = paperWidth < paperHeight;
     if (devMode && devMode->dmFields & DM_ORIENTATION)
         bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
@@ -2848,14 +2844,14 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
 
                 RectD * r = &sel->selectionPage;
                 fz_rect clipRegion;
-                clipRegion.x0 = r->x; clipRegion.x1 = r->x + r->dx;
-                clipRegion.y0 = r->y; clipRegion.y1 = r->y + r->dy;
+                clipRegion.x0 = (float)r->x; clipRegion.x1 = (float)(r->x + r->dx);
+                clipRegion.y0 = (float)r->y; clipRegion.y1 = (float)(r->y + r->dy);
 
                 int rotation = pdfEngine->pageRotation(sel->pageNo) + dm->rotation();
                 // Swap width and height for rotated documents
                 SizeD sSize = (rotation % 180) == 0 ? SizeD(r->dx, r->dy) : SizeD(r->dy, r->dx);
 
-                double zoom = min((double)printableWidth / sSize.dx(), (double)printableHeight / sSize.dy());
+                float zoom = (float)min((double)printableWidth / sSize.dx(), (double)printableHeight / sSize.dy());
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv)
@@ -2865,8 +2861,8 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
 
 #ifdef USE_GDI_FOR_PRINTING
                 RECT rc;
-                rc.left = (printableWidth - sSize.dx() * zoom) / 2;
-                rc.top = (printableHeight - sSize.dy() * zoom) / 2;
+                rc.left = (LONG)(printableWidth - sSize.dx() * zoom) / 2;
+                rc.top = (LONG)(printableHeight - sSize.dy() * zoom) / 2;
                 rc.right = printableWidth - rc.left;
                 rc.bottom = printableHeight - rc.top;
                 dm->renderPage(hdc, sel->pageNo, &rc, zoom, dm->rotation(), &clipRegion, Target_Print);
@@ -2914,39 +2910,39 @@ static void PrintToDevice(DisplayModel *dm, HDC hdc, LPDEVMODE devMode,
             }
 
             // dpiFactor means no physical zoom
-            double zoom = dpiFactor;
+            float zoom = dpiFactor;
             // offset of the top-left corner of the page from the printable area
             // (positive values move the page into the left/top margins, etc.);
             // offset adjustments are needed because the GDI coordinate system
             // starts at the corner of the printable area and because the page
             // is consequently scaled from the center of the printable area;
             // default to centering the document page on the paper page
-            int horizOffset = leftMargin + 0.5 * (printableWidth - paperWidth);;
-            int vertOffset = topMargin + 0.5 * (printableHeight - paperHeight);
+            int horizOffset = leftMargin + (printableWidth - paperWidth) / 2;
+            int vertOffset = topMargin + (printableHeight - paperHeight) / 2;
 
             if (scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 fz_rect cbox = dm->getContentBox(pageNo, pdfEngine->viewctm(pageNo, 1.0, rotation), Target_Print);
-                zoom = min((double)printableWidth / (cbox.x1 - cbox.x0),
-                       min((double)printableHeight / (cbox.y1 - cbox.y0),
-                       min((double)paperWidth / pSize.dx(),
-                           (double)paperHeight / pSize.dy())));
+                zoom = (float)min((double)printableWidth / (cbox.x1 - cbox.x0),
+                              min((double)printableHeight / (cbox.y1 - cbox.y0),
+                              min((double)paperWidth / pSize.dx(),
+                                  (double)paperHeight / pSize.dy())));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
                 if (leftMargin > cbox.x0 * zoom || rightMargin > (pSize.dx() - cbox.x1) * zoom)
-                    horizOffset = 0.5 * (cbox.x0 - (pSize.dx() - cbox.x1)) * zoom;
+                    horizOffset = (int)(0.5 * (cbox.x0 - (pSize.dx() - cbox.x1)) * zoom);
                 if (topMargin > cbox.y0 * zoom || bottomMargin > (pSize.dy() - cbox.y1) * zoom)
-                    vertOffset = 0.5 * (cbox.y0 - (pSize.dy() - cbox.y1)) * zoom;
+                    vertOffset = (int)(0.5 * (cbox.y0 - (pSize.dy() - cbox.y1)) * zoom);
             }
 
 #ifdef USE_GDI_FOR_PRINTING
             RECT rc;
-            rc.left = (printableWidth - pSize.dx() * zoom) / 2;
-            rc.top = (printableHeight - pSize.dy() * zoom) / 2;
+            rc.left = (LONG)(printableWidth - pSize.dx() * zoom) / 2;
+            rc.top = (LONG)(printableHeight - pSize.dy() * zoom) / 2;
             rc.right = printableWidth - rc.left;
             rc.bottom = printableHeight - rc.top;
             OffsetRect(&rc, -horizOffset, -vertOffset);
@@ -3670,12 +3666,12 @@ static void ToogleToolbarViewButton(WindowInfo *win, double newZoom, bool pagesC
     assert(win && win->dm);
     if (!win || !win->dm) return;
 
-    double zoom = win->dm->zoomVirtual();
+    float zoom = win->dm->zoomVirtual();
     DisplayMode mode = win->dm->displayMode();
 
     if (displayModeContinuous(mode) != pagesContinuously || zoom != newZoom) {
         DisplayMode prevMode = win->prevDisplayMode;
-        double prevZoom = win->prevZoomVirtual;
+        float prevZoom = win->prevZoomVirtual;
 
         if (displayModeContinuous(mode) != pagesContinuously)
             OnMenuViewContinuous(win);
@@ -3693,7 +3689,7 @@ static void ToogleToolbarViewButton(WindowInfo *win, double newZoom, bool pagesC
         }
     }
     else if (win->prevZoomVirtual != INVALID_ZOOM) {
-        double prevZoom = win->prevZoomVirtual;
+        float prevZoom = win->prevZoomVirtual;
         SwitchToDisplayMode(win, win->prevDisplayMode, false);
         win->ZoomToSelection(prevZoom, false);
     }
@@ -4645,18 +4641,18 @@ static void UpdateToolbarFindText(WindowInfo *win)
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = size.cx + findWndDx + 12;
+    bi.cx = (WORD)(size.cx + findWndDx + 12);
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
 }
 
 static void CreateFindBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, FIND_BOX_WIDTH * win->uiDPIFactor, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 4,
+                            0, 1, (int)(FIND_BOX_WIDTH * win->uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 4),
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
-                            0, 1, FIND_BOX_WIDTH * win->uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE), TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
+                            0, 1, (int)(FIND_BOX_WIDTH * win->uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2),
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
@@ -4775,18 +4771,18 @@ static void UpdateToolbarPageText(WindowInfo *win, int pageCount)
     TBBUTTONINFO bi;
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    bi.cx = size.cx + pageWndDx + size2.cx + 12;
+    bi.cx = (WORD)(size.cx + pageWndDx + size2.cx + 12);
     SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
 }
 
 static void CreatePageBox(WindowInfo *win, HINSTANCE hInst)
 {
     HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
-                            0, 1, PAGE_BOX_WIDTH * win->uiDPIFactor, TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 4,
+                            0, 1, (int)(PAGE_BOX_WIDTH * win->uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 4),
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, PAGE_BOX_WIDTH * win->uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE), TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2,
+                            0, 1, (int)(PAGE_BOX_WIDTH * win->uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor + 2),
                             win->hwndToolbar, (HMENU)0, hInst, NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
@@ -4840,8 +4836,8 @@ static void CreateToolbar(WindowInfo *win, HINSTANCE hInst) {
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
     if (win->uiDPIFactor > 1 && bmp.bmHeight < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
-        bmp.bmWidth *= win->uiDPIFactor;
-        bmp.bmHeight *= win->uiDPIFactor;
+        bmp.bmWidth = (LONG)(bmp.bmWidth * win->uiDPIFactor);
+        bmp.bmHeight = (LONG)(bmp.bmHeight * win->uiDPIFactor);
         hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmp.bmWidth, bmp.bmHeight, LR_COPYDELETEORG);
     }
     // Assume square icons
@@ -5047,7 +5043,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT message, WPARAM wParam, LP
         SIZE size = TextSizeInHwnd(titleLabel, text);
         free(text);
 
-        int offset = 2 * win->uiDPIFactor;
+        int offset = (int)(2 * win->uiDPIFactor);
         if (size.cy < 16) size.cy = 16;
         size.cy += 2 * offset;
 
@@ -5417,7 +5413,7 @@ static void CreateInfotipForPdfLink(WindowInfo *win, int pageNo, void *linkObj)
     pdf_link *link = (pdf_link *)linkObj;
     if (pageNo > 0 && (ti.lpszText = win->dm->getLinkPath(link))) {
         fz_rect rect = win->dm->rectCvtUserToScreen(pageNo, link->rect);
-        SetRect(&ti.rect, rect.x0, rect.y0, rect.x1, rect.y1);
+        SetRect(&ti.rect, (int)rect.x0, (int)rect.y0, (int)rect.x1, (int)rect.y1);
 
         SendMessage(win->hwndInfotip, win->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
         free(ti.lpszText);
@@ -5974,7 +5970,7 @@ InitMouseWheelInfo:
                 ScreenToClient(win->hwndCanvas, &pt);
 
                 short delta = GET_WHEEL_DELTA_WPARAM(wParam);
-                double factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
+                float factor = delta < 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
                 win->dm->zoomBy(factor, &pt);
                 win->UpdateToolbarState();
                 return 0;
@@ -6246,68 +6242,6 @@ static void PrintFile(WindowInfo *win, const TCHAR *printerName)
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);
-}
-
-HDDEDATA CALLBACK DdeCallback(UINT uType,
-    UINT uFmt,
-    HCONV hconv,
-    HSZ hsz1,
-    HSZ hsz2,
-    HDDEDATA hdata,
-    ULONG_PTR dwData1,
-    ULONG_PTR dwData2)
-{
-    return 0;
-}
-
-void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
-{
-    DBG_OUT_T("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
-    unsigned long inst = 0;
-    HSZ hszServer = NULL, hszTopic = NULL;
-    HCONV hconv = NULL;
-    HDDEDATA hddedata = NULL;
-#ifdef UNICODE
-    int codepage = CP_WINUNICODE;
-    int dataFormat = CF_UNICODETEXT;
-#else
-    int codepage = CP_WINANSI;
-    int dataFormat = CF_TEXT;
-#endif
-
-    UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
-    if (result != DMLERR_NO_ERROR) {
-        DBG_OUT("DDE communication could not be initiated %d.", result);
-        goto exit;
-    }
-    hszServer = DdeCreateStringHandle(inst, server, codepage);
-    if (hszServer == 0) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
-        goto exit;
-    }
-    hszTopic = DdeCreateStringHandle(inst, topic, codepage);
-    if (hszTopic == 0) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
-        goto exit;
-    }
-    hconv = DdeConnect(inst, hszServer, hszTopic, 0);
-    if (hconv == 0) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
-        goto exit;
-    }
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(tstr_len(command) + 1) * sizeof(TCHAR), 0, 0, dataFormat, 0);
-    if (hddedata == 0) {
-        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
-    }
-    if (DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0) == 0) {
-        DBG_OUT("DDE transaction failed %u.", DdeGetLastError(inst));
-    }
-exit:
-    DdeFreeDataHandle(hddedata);
-    DdeDisconnect(hconv);
-    DdeFreeStringHandle(inst, hszTopic);
-    DdeFreeStringHandle(inst, hszServer);
-    DdeUninitialize(inst);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)

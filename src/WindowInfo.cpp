@@ -37,7 +37,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     HDC hdcFrame = GetDC(hwndFrame);
     dpi = GetDeviceCaps(hdcFrame, LOGPIXELSY);
     // round untypical resolutions up to the nearest quarter
-    uiDPIFactor = ceil(dpi * 4.0 / USER_DEFAULT_SCREEN_DPI) / 4.0;
+    uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
     ReleaseDC(hwndFrame, hdcFrame);
 }
 
@@ -176,7 +176,7 @@ void WindowInfo::ToggleZoom()
         this->dm->zoomTo(ZOOM_FIT_PAGE);
 }
 
-void WindowInfo::ZoomToSelection(double factor, bool relative)
+void WindowInfo::ZoomToSelection(float factor, bool relative)
 {
     assert(this->dm);
     if (!this->dm) return;

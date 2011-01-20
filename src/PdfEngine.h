@@ -4,8 +4,16 @@
 #define _PDF_ENGINE_H_
 
 extern "C" {
+#ifdef _MSC_VER
+__pragma(warning(push))
+#endif
+
 #include <fitz.h>
 #include <mupdf.h>
+
+#ifdef _MSC_VER
+__pragma(warning(pop))
+#endif
 }
 
 #include "base_util.h"
@@ -17,7 +25,7 @@ class WindowInfo;
 #define INVALID_PAGE_NO     -1
 #define INVALID_ROTATION    -1
 /* one PDF user space unit equals 1/72 inch */
-#define PDF_FILE_DPI        72.0
+#define PDF_FILE_DPI        72.0f
 // number of page content trees to cache for quicker rendering
 #define MAX_PAGE_RUN_CACHE  8
 
@@ -115,7 +123,7 @@ public:
 
     bool hasPermission(int permission);
     int getPdfLinks(int pageNo, pdf_link **links);
-    pdf_link *getLinkAtPosition(int pageNo, double x, double y);
+    pdf_link *getLinkAtPosition(int pageNo, float x, float y);
     bool hasTocTree() const { 
         return _outline != NULL || _attachments != NULL; 
     }

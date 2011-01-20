@@ -488,8 +488,8 @@ INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data)
     return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_NEW_VERSION), hwnd, Dialog_NewVersion_Proc, (LPARAM)data);
 }
 
-static double gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_FIT_CONTENT, 0,
-    6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 125.0, 100.0, 50.0, 25.0, 12.5, 8.33 };
+static float gItemZoom[] = { ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH, ZOOM_FIT_CONTENT, 0,
+    6400.0, 3200.0, 1600.0, 800.0, 400.0, 200.0, 150.0, 125.0, 100.0, 50.0, 25.0, 12.5, 8.33f };
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, double currZoom)
 {
@@ -523,14 +523,14 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, double currZoom)
     }
 }
 
-static double GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, double defaultZoom)
+static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
 {
-    double newZoom = defaultZoom;
+    float newZoom = defaultZoom;
 
     int ix = SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0);
     if (ix == -1) {
         TCHAR *customZoom = win_get_text(GetDlgItem(hDlg, idComboBox));
-        double zoom = _tstof(customZoom);
+        float zoom = (float)_tstof(customZoom);
         if (zoom >= ZOOM_MIN && zoom <= ZOOM_MAX)
             newZoom = zoom;
         free(customZoom);
@@ -542,12 +542,12 @@ static double GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, double defaultZoo
 
 static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    double *currZoom;
+    float *currZoom;
 
     switch (message)
     {
     case WM_INITDIALOG:
-        currZoom = (double *)lParam;
+        currZoom = (float *)lParam;
         assert(currZoom);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)currZoom);
 
@@ -565,7 +565,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM w
         switch (LOWORD(wParam))
         {
         case IDOK:
-            currZoom = (double *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+            currZoom = (float *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(currZoom);
             *currZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, *currZoom);
             EndDialog(hDlg, DIALOG_OK_PRESSED);
@@ -580,7 +580,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT message, WPARAM w
     return FALSE;
 }
 
-INT_PTR Dialog_CustomZoom(HWND hwnd, double *currZoom)
+INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom)
 {
     return DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_DIALOG_CUSTOM_ZOOM), hwnd, Dialog_CustomZoom_Proc, (LPARAM)currZoom);
 }
@@ -692,7 +692,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT message, WPARAM wPa
             prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(prefs);
             prefs->m_defaultDisplayMode = (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST);
-            prefs->m_defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->m_defaultZoom);
+            prefs->m_defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, (float)prefs->m_defaultZoom);
 
             prefs->m_showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
             prefs->m_globalPrefsOnly = (BST_CHECKED != IsDlgButtonChecked(hDlg, IDC_GLOBAL_PREFS_ONLY));

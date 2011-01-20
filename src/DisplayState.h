@@ -22,8 +22,8 @@ enum DisplayMode {
 #define ZOOM_FIT_WIDTH      -2
 #define ZOOM_FIT_CONTENT    -3
 #define ZOOM_ACTUAL_SIZE    100.0
-#define ZOOM_MAX            6400.1  /* max zoom in % */
-#define ZOOM_MIN            8.0     /* min zoom in % */
+#define ZOOM_MAX            6400.1f /* max zoom in % */
+#define ZOOM_MIN            8.0f    /* min zoom in % */
 
 #define DM_AUTOMATIC_STR            "automatic"
 #define DM_SINGLE_PAGE_STR          "single page"

@@ -660,7 +660,7 @@ UINT SyncTex::pdf_to_source(UINT sheet, UINT x, UINT y, PTSTR srcfilepath, UINT 
     if (this->is_index_discarded())
         if (rebuild_index())
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-    if (synctex_edit_query(this->scanner,sheet,x,y)>0) {
+    if (synctex_edit_query(this->scanner, sheet, (float)x, (float)y) > 0) {
         synctex_node_t node;
         while (node = synctex_next_result(this->scanner)) {
             *line = synctex_node_line(node);
@@ -729,10 +729,10 @@ UINT SyncTex::source_to_pdf(LPCTSTR srcfilename, UINT line, UINT col, UINT *page
                 if (synctex_node_page(node) != firstpage)
                     continue;
 
-                rc.x = synctex_node_box_visible_h(node);
-                rc.y  = synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node);
-                rc.dx =  synctex_node_box_visible_width(node),
-                rc.dy = synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node);
+                rc.x = (int)synctex_node_box_visible_h(node);
+                rc.y  = (int)(synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node));
+                rc.dx =  (int)synctex_node_box_visible_width(node),
+                rc.dy = (int)(synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node));
                 rects.push_back(rc);
             }
             return ( firstpage > 0 ) ? PDFSYNCERR_SUCCESS : PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;

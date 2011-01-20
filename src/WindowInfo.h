@@ -161,7 +161,7 @@ public:
     RECT            frameRc;
     RECT            canvasRc;
     POINT           prevCanvasBR;
-    double          prevZoomVirtual;
+    float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 
     TCHAR *         title;
@@ -197,7 +197,7 @@ public:
 
     void ResizeIfNeeded(bool resizeWindow=true);
     void ToggleZoom();
-    void ZoomToSelection(double factor, bool relative);
+    void ZoomToSelection(float factor, bool relative);
     void MoveDocBy(int dx, int dy);
 };
 

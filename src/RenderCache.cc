@@ -128,10 +128,10 @@ static fz_rect GetTileRect(PdfEngine *engine, int pageNo, int rotation, float zo
     fz_rect mediabox = engine->pageMediabox(pageNo);
 
     if (tile.res && tile.res != INVALID_TILE_RES) {
-        double width = (mediabox.x1 - mediabox.x0) / (1 << tile.res);
+        float width = (mediabox.x1 - mediabox.x0) / (1 << tile.res);
         mediabox.x0 += tile.col * width;
         mediabox.x1 = mediabox.x0 + width;
-        double height = (mediabox.y1 - mediabox.y0) / (1 << tile.res);
+        float height = (mediabox.y1 - mediabox.y0) / (1 << tile.res);
         mediabox.y0 += ((1 << tile.res) - tile.row - 1) * height;
         mediabox.y1 = mediabox.y0 + height;
     }
@@ -139,8 +139,8 @@ static fz_rect GetTileRect(PdfEngine *engine, int pageNo, int rotation, float zo
     fz_matrix ctm = engine->viewctm(pageNo, zoom, rotation);
     fz_bbox pixelbox = fz_roundrect(fz_transformrect(ctm, mediabox));
 
-    mediabox.x0 = pixelbox.x0; mediabox.x1 = pixelbox.x1;
-    mediabox.y0 = pixelbox.y0; mediabox.y1 = pixelbox.y1;
+    mediabox.x0 = (float)pixelbox.x0; mediabox.x1 = (float)pixelbox.x1;
+    mediabox.y0 = (float)pixelbox.y0; mediabox.y1 = (float)pixelbox.y1;
     mediabox = fz_transformrect(fz_invertmatrix(ctm), mediabox);
 
     return mediabox;
@@ -158,11 +158,13 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
 {
     PdfPageInfo *pageInfo = dm->getPageInfo(pageNo);
     fz_matrix ctm = dm->pdfEngine->viewctm(pageNo, zoom, rotation);
-    ctm = fz_concat(ctm, fz_translate(pageInfo->pageOnScreen.x, pageInfo->pageOnScreen.y));
+    ctm = fz_concat(ctm, fz_translate((float)pageInfo->pageOnScreen.x, (float)pageInfo->pageOnScreen.y));
     RectI tileOnScreen = GetTileOnScreen(dm->pdfEngine, pageNo, rotation, zoom, tile, ctm);
     // consider nearby tiles visible depending on the fuzz factor
-    tileOnScreen.x -= tileOnScreen.dx * fuzz * 0.5; tileOnScreen.dx *= fuzz + 1;
-    tileOnScreen.y -= tileOnScreen.dy * fuzz * 0.5; tileOnScreen.dy *= fuzz + 1;
+    tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
+    tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
+    tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
+    tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
     RectI screen = { 0, 0, dm->drawAreaSize.dxI(), dm->drawAreaSize.dyI() };
     return RectI_Intersect(&tileOnScreen, &screen, NULL) != 0;
 }
@@ -272,7 +274,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 
     USHORT res = 0;
     if (factorW > 1 || factorH > 1)
-        res = ceill(log(max(factorW, factorH)) / log(2.0));
+        res = (USHORT)ceill(log(max(factorW, factorH)) / log(2.0));
     return res;
 }
 
@@ -576,12 +578,13 @@ UINT RenderCache::PaintTile(HDC hdc, RectI *bounds, DisplayModel *dm, int pageNo
         int renderedBmpDy = renderedBmp->dy();
         int xSrc = -min(tileOnScreen->x, 0);
         int ySrc = -min(tileOnScreen->y, 0);
-        float factor = min(1.0 * renderedBmpDx / tileOnScreen->dx, 1.0 * renderedBmpDy / tileOnScreen->dy);
+        float factor = min(1.0f * renderedBmpDx / tileOnScreen->dx, 1.0f * renderedBmpDy / tileOnScreen->dy);
 
         SelectObject(bmpDC, hbmp);
-        if (factor != 1.0)
+        if (factor != 1.0f)
             StretchBlt(hdc, bounds->x, bounds->y, bounds->dx, bounds->dy,
-                bmpDC, xSrc * factor, ySrc * factor, bounds->dx * factor, bounds->dy * factor, SRCCOPY);
+                bmpDC, (int)(xSrc * factor), (int)(ySrc * factor),
+                (int)(bounds->dx * factor), (int)(bounds->dy * factor), SRCCOPY);
         else
             BitBlt(hdc, bounds->x, bounds->y, bounds->dx, bounds->dy,
                 bmpDC, xSrc, ySrc, SRCCOPY);
@@ -609,7 +612,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RECT *bounds, DisplayModel *dm, int pageNo
     RectI isectPOS, isect;
 
     fz_matrix ctm = dm->pdfEngine->viewctm(pageNo, zoom, rotation);
-    ctm = fz_concat(ctm, fz_translate(pageOnScreen->x, pageOnScreen->y));
+    ctm = fz_concat(ctm, fz_translate((float)pageOnScreen->x, (float)pageOnScreen->y));
 
     UINT renderTimeMin = (UINT)-1;
     for (tile.row = 0; tile.row < tileCount; tile.row++) {

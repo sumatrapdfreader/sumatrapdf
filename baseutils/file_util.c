@@ -516,7 +516,7 @@ uint64_t file_size_get(const char *file_path)
 #endif
 
 #ifdef _WIN32
-char *file_read_all(const TCHAR *file_path, uint64_t *file_size_out)
+char *file_read_all(const TCHAR *file_path, size_t *file_size_out)
 {
     DWORD       size, size_read;
     HANDLE      h;
@@ -587,7 +587,7 @@ Error:
 #endif
 
 #ifdef _WIN32
-BOOL write_to_file(const TCHAR *file_path, void *data, uint64_t data_len)
+BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
 {
     DWORD       size;
     HANDLE      h;

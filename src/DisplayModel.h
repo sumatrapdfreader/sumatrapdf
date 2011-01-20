@@ -164,7 +164,7 @@ public:
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
-    double zoomVirtual(void) const { return _zoomVirtual; }
+    float zoomVirtual(void) const { return _zoomVirtual; }
 
     float zoomReal(void) const { return _zoomReal; }
     float zoomReal(int pageNo);
@@ -215,7 +215,7 @@ public:
     bool            pageVisibleNearby(int pageNo);
     bool            firstBookPageVisible();
     bool            lastBookPageVisible();
-    void            relayout(double zoomVirtual, int rotation);
+    void            relayout(float zoomVirtual, int rotation);
 
     void            goToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            goToPrevPage(int scrollY);
@@ -229,8 +229,8 @@ public:
     void            scrollYTo(int yOff);
     void            scrollYBy(int dy, bool changePage);
 
-    void            zoomTo(double zoomVirtual, POINT *fixPt=NULL);
-    void            zoomBy(double zoomFactor, POINT *fixPt=NULL);
+    void            zoomTo(float zoomVirtual, POINT *fixPt=NULL);
+    void            zoomBy(float zoomFactor, POINT *fixPt=NULL);
     void            rotateBy(int rotation);
 
     TCHAR *         getTextInRegion(int pageNo, RectD *region);
@@ -261,7 +261,7 @@ public:
 
     BOOL            _showToc;
 
-    int             getPageNoByPoint (double x, double y);
+    int             getPageNoByPoint(double x, double y);
 
     BOOL            ShowResultRectToScreen(PdfSel *res);
 
@@ -283,11 +283,11 @@ protected:
     void            startRenderingPage(int pageNo);
 
     bool            buildPagesInfo(void);
-    float           zoomRealFromVirtualForPage(double zoomVirtual, int pageNo);
+    float           zoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
     int             firstVisiblePageNo(void) const;
     void            changeStartPage(int startPage);
     void            getContentStart(int pageNo, int *x, int *y);
-    void            setZoomVirtual(double zoomVirtual);
+    void            setZoomVirtual(float zoomVirtual);
     void            recalcVisibleParts(void);
     void            recalcSearchHitCanvasPos(void);
     void            renderVisibleParts(void);
@@ -320,18 +320,18 @@ protected:
     /* real zoom value calculated from zoomVirtual. Same as zoomVirtual * 0.01 except
        for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     float           _zoomReal;
-    double          _zoomVirtual;
+    float           _zoomVirtual;
     int             _rotation;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
-    double          _dpiFactor;
+    float           _dpiFactor;
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
     bool            _displayR2L;
 
     /* if we're in presentation mode, _pres* contains the pre-presentation values */
     bool            _presentationMode;
-    double          _presZoomVirtual;
+    float           _presZoomVirtual;
     DisplayMode     _presDisplayMode;
 
     ScrollState   * _navHistory;

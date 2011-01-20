@@ -26,10 +26,10 @@ fz_error pdf_getmediabox(fz_rect *mediabox, fz_obj *page)
         bbox = fz_intersectbbox(bbox, cropbox);
     }
 
-    mediabox->x0 = MIN(bbox.x0, bbox.x1);
-    mediabox->y0 = MIN(bbox.y0, bbox.y1);
-    mediabox->x1 = MAX(bbox.x0, bbox.x1);
-    mediabox->y1 = MAX(bbox.y0, bbox.y1);
+    mediabox->x0 = (float)MIN(bbox.x0, bbox.x1);
+    mediabox->y0 = (float)MIN(bbox.y0, bbox.y1);
+    mediabox->x1 = (float)MAX(bbox.x0, bbox.x1);
+    mediabox->y1 = (float)MAX(bbox.y0, bbox.y1);
 
     if (mediabox->x1 - mediabox->x0 < 1 || mediabox->y1 - mediabox->y0 < 1)
         return fz_throw("invalid page size");
@@ -241,7 +241,7 @@ void RenderedBitmap::grayOut(float alpha) {
         int dataLen = _width * _height * 4;
         for (int i = 0; i < dataLen; i++)
             if ((i + 1) % 4) // don't affect the alpha channel
-                bmpData[i] = bmpData[i] * alpha + (alpha > 0 ? 0 : 255);
+                bmpData[i] = (unsigned char)(bmpData[i] * alpha + (alpha > 0 ? 0 : 255));
         SetDIBits(hDC, _hbmp, 0, _height, bmpData, &bmi, DIB_RGB_COLORS);
     }
 
@@ -685,7 +685,7 @@ fz_matrix PdfEngine::viewctm(pdf_page *page, float zoom, int rotate)
         ctm = fz_concat(ctm, fz_translate(-page->mediabox.x0, -page->mediabox.y1));
 
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    ctm = fz_concat(ctm, fz_rotate(rotate));
+    ctm = fz_concat(ctm, fz_rotate((float)rotate));
     return ctm;
 }
 
@@ -711,11 +711,11 @@ bool PdfEngine::renderPage(HDC hDC, pdf_page *page, RECT *screenRect, fz_matrix 
         pageRect = &page->mediabox;
     if (!ctm) {
         if (!zoom)
-            zoom = min(1.0 * (screenRect->right - screenRect->left) / (page->mediabox.x1 - page->mediabox.x0),
-                       1.0 * (screenRect->bottom - screenRect->top) / (page->mediabox.y1 - page->mediabox.y0));
+            zoom = min(1.0f * (screenRect->right - screenRect->left) / (page->mediabox.x1 - page->mediabox.x0),
+                       1.0f * (screenRect->bottom - screenRect->top) / (page->mediabox.y1 - page->mediabox.y0));
         ctm2 = viewctm(page, zoom, rotation);
         fz_bbox bbox = fz_roundrect(fz_transformrect(ctm2, *pageRect));
-        ctm2 = fz_concat(ctm2, fz_translate(screenRect->left - bbox.x0, screenRect->top - bbox.y0));
+        ctm2 = fz_concat(ctm2, fz_translate((float)screenRect->left - bbox.x0, (float)screenRect->top - bbox.y0));
         ctm = &ctm2;
     }
 
@@ -751,7 +751,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
 
     if (useGdi) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
-        ctm = fz_concat(ctm, fz_translate(-bbox.x0, -bbox.y0));
+        ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 
         // for now, don't render directly into a DC but produce an HBITMAP instead
         HDC hDC = GetDC(NULL);
@@ -790,7 +790,7 @@ RenderedBitmap *PdfEngine::renderBitmap(
     return bitmap;
 }
 
-pdf_link *PdfEngine::getLinkAtPosition(int pageNo, double x, double y)
+pdf_link *PdfEngine::getLinkAtPosition(int pageNo, float x, float y)
 {
     pdf_page *page = getPdfPage(pageNo, true);
     if (!page)
@@ -864,10 +864,10 @@ static TCHAR *parseMultilineLink(pdf_page *page, TCHAR *pageText, TCHAR *start, 
 
         // add a new link for this line
         fz_rect bbox;
-        bbox.x0 = coords[start - pageText].x0;
-        bbox.y0 = coords[start - pageText].y0;
-        bbox.x1 = coords[end - pageText - 1].x1;
-        bbox.y1 = coords[end - pageText - 1].y1;
+        bbox.x0 = (float)coords[start - pageText].x0;
+        bbox.y0 = (float)coords[start - pageText].y0;
+        bbox.x1 = (float)coords[end - pageText - 1].x1;
+        bbox.y1 = (float)coords[end - pageText - 1].y1;
 
         char *uriPart = tstr_to_utf8(start);
         char *newUri = str_cat(uri, uriPart);
@@ -904,14 +904,14 @@ void PdfEngine::linkifyPageText(pdf_page *page)
     // there are PDFs that have x,y positions in reverse order, so fix them up
     for (pdf_link *link = page->links; link; link = link->next) {
         if (link->rect.x0 > link->rect.x1) {
-            double tmp = link->rect.x0;
+            float tmp = link->rect.x0;
             link->rect.x0 = link->rect.x1;
             link->rect.x1 = tmp;
         }
         assert(link->rect.x1 >= link->rect.x0);
 
         if (link->rect.y0 > link->rect.y1) {
-            double tmp = link->rect.y0;
+            float tmp = link->rect.y0;
             link->rect.y0 = link->rect.y1;
             link->rect.y1 = tmp;
         }
@@ -933,10 +933,10 @@ void PdfEngine::linkifyPageText(pdf_page *page)
 
         // make sure that no other link is associated with this area
         fz_rect bbox;
-        bbox.x0 = coords[start - pageText].x0;
-        bbox.y0 = coords[start - pageText].y0;
-        bbox.x1 = coords[end - pageText - 1].x1;
-        bbox.y1 = coords[end - pageText - 1].y1;
+        bbox.x0 = (float)coords[start - pageText].x0;
+        bbox.y0 = (float)coords[start - pageText].y0;
+        bbox.x1 = (float)coords[end - pageText - 1].x1;
+        bbox.y1 = (float)coords[end - pageText - 1].y1;
         for (pdf_link *link = firstLink; link && *start; link = link->next) {
             fz_bbox isect = fz_intersectbbox(fz_roundrect(bbox), fz_roundrect(link->rect));
             if (!fz_isemptybbox(isect) && fz_sizeofrect(isect) >= 0.25 * fz_sizeofrect(link->rect))

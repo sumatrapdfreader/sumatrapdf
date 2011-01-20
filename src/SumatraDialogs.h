@@ -26,7 +26,7 @@ typedef struct {
 
 INT_PTR Dialog_NewVersionAvailable(HWND hwnd, Dialog_NewVersion_Data *data);
 
-INT_PTR Dialog_CustomZoom(HWND hwnd, double *currZoom);
+INT_PTR Dialog_CustomZoom(HWND hwnd, float *currZoom);
 INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
 
 enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };

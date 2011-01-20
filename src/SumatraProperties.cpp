@@ -120,7 +120,7 @@ static TCHAR *FormatNumWithThousandSep(uint64_t num) {
 // Caller needs to free the result.
 static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) {
     TCHAR buf[64];
-    uint64_t num = number * 100;
+    uint64_t num = (uint64_t)(number * 100);
 
     TCHAR *tmp = FormatNumWithThousandSep(num / 100);
     TCHAR decimal[4];
@@ -140,7 +140,7 @@ static TCHAR *FormatFloatWithThousandSep(double number, const TCHAR *unit=NULL) 
 // Caller needs to free the result.
 static TCHAR *FormatSizeSuccint(uint64_t size) {
     const TCHAR *unit = NULL;
-    double s = size;
+    double s = (double)size;
 
     if (size > GB) {
         s /= GB;
@@ -545,11 +545,7 @@ void CopyPropertiesToClipboard(HWND hwnd)
             GlobalUnlock(handle);
 
             EmptyClipboard();
-#ifdef UNICODE
-            SetClipboardData(CF_UNICODETEXT, handle);
-#else
-            SetClipboardData(CF_TEXT, handle);
-#endif
+            SetClipboardData(CF_T_TEXT, handle);
         }
         CloseClipboard();
     }

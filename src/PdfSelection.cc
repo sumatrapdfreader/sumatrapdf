@@ -70,7 +70,7 @@ int PdfSelection::FindClosestGlyph(int pageNo, double x, double y)
     // the result indexes the first glyph to be selected in a forward selection
     fz_matrix ctm = engine->viewctm(pageNo, 1.0, 0);
     fz_bbox bbox = fz_transformbbox(ctm, _coords[result]);
-    fz_point pt = { x, y };
+    fz_point pt = { (float)x, (float)y };
     pt = fz_transformpoint(ctm, pt);
     if (-1 == result || pt.x > 0.5 * (bbox.x0 + bbox.x1))
         result++;
@@ -123,7 +123,7 @@ bool fz_isptinbbox(fz_bbox bbox, fz_point pt)
 bool PdfSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int glyphIx = FindClosestGlyph(pageNo, x, y);
-    fz_point pt = { x, y };
+    fz_point pt = { (float)x, (float)y };
     fz_bbox *_coords = coords[pageNo - 1];
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented

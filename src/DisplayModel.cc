@@ -113,8 +113,8 @@ bool DisplayModel::displayStateFromModel(DisplayState *ds)
     ScrollState ss;
     getScrollState(&ss);
     ds->pageNo = ss.page;
-    ds->scrollX = presMode ? 0 : floor(ss.x + 0.5);
-    ds->scrollY = presMode ? 0 : floor(ss.y + 0.5);
+    ds->scrollX = presMode ? 0 : (int)floor(ss.x + 0.5);
+    ds->scrollY = presMode ? 0 : (int)floor(ss.y + 0.5);
 
     ds->decryptionKey = pdfEngine->getDecryptionKey();
 
@@ -193,7 +193,7 @@ DisplayModel::DisplayModel(DisplayMode displayMode, int dpi)
     _padding = &gDisplaySettings;
     _presentationMode = false;
     _zoomReal = INVALID_ZOOM;
-    _dpiFactor = dpi * 1.0 / PDF_FILE_DPI;
+    _dpiFactor = dpi / PDF_FILE_DPI;
     _showToc = TRUE;
     _startPage = INVALID_PAGE_NO;
     _appData = NULL;
@@ -357,10 +357,10 @@ bool DisplayModel::lastBookPageVisible()
 
 /* Given a zoom level that can include a "virtual" zoom levels like ZOOM_FIT_WIDTH,
    ZOOM_FIT_PAGE or ZOOM_FIT_CONTENT, calculate an absolute zoom level */
-float DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
+float DisplayModel::zoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
 {
     if (zoomVirtual != ZOOM_FIT_WIDTH && zoomVirtual != ZOOM_FIT_PAGE && zoomVirtual != ZOOM_FIT_CONTENT)
-        return zoomVirtual * 0.01 * this->_dpiFactor;
+        return zoomVirtual * 0.01f * this->_dpiFactor;
 
     double pageDx, pageDy;
     PdfPageInfo *pageInfo = getPageInfo(pageNo);
@@ -373,17 +373,17 @@ float DisplayModel::zoomRealFromVirtualForPage(double zoomVirtual, int pageNo)
     assert(0 != (int)pageDy);
 
     int columns = columnsFromDisplayMode(displayMode());
-    double areaForPageDx = (drawAreaSize.dx() - _padding->pageBorderLeft - _padding->pageBorderRight);
+    float areaForPageDx = (float)(drawAreaSize.dx() - _padding->pageBorderLeft - _padding->pageBorderRight);
     areaForPageDx -= _padding->betweenPagesX * (columns - 1);
     // TODO: this doesn't really work for ZOOM_FIT_CONTENT
-    int areaForPageDxInt = areaForPageDx / columns;
-    areaForPageDx = areaForPageDxInt;
-    int areaForPageDy = drawAreaSize.dy() - _padding->pageBorderTop - _padding->pageBorderBottom;
+    int areaForPageDxInt = (int)(areaForPageDx / columns);
+    areaForPageDx = (float)areaForPageDxInt;
+    int areaForPageDy = (int)drawAreaSize.dy() - _padding->pageBorderTop - _padding->pageBorderBottom;
     if (areaForPageDx <= 0 || areaForPageDy <= 0)
         return 0;
 
-    float zoomX = areaForPageDx / pageDx;
-    float zoomY = areaForPageDy / pageDy;
+    float zoomX = areaForPageDx / (float)pageDx;
+    float zoomY = areaForPageDy / (float)pageDy;
     if (zoomX < zoomY || ZOOM_FIT_WIDTH == zoomVirtual)
         return zoomX;
     return zoomY;
@@ -435,7 +435,7 @@ int DisplayModel::currentPageNo(void) const
     return mostVisiblePage;
 }
 
-void DisplayModel::setZoomVirtual(double zoomVirtual)
+void DisplayModel::setZoomVirtual(float zoomVirtual)
 {
     assert(ValidZoomVirtual(zoomVirtual));
     _zoomVirtual = zoomVirtual;
@@ -464,7 +464,7 @@ void DisplayModel::setZoomVirtual(double zoomVirtual)
             this->_zoomReal < zoomRealFromVirtualForPage(ZOOM_FIT_PAGE, currentPageNo()))
             this->_zoomReal = newZoom;
     } else
-        this->_zoomReal = zoomVirtual * 0.01 * this->_dpiFactor;
+        this->_zoomReal = zoomVirtual * 0.01f * this->_dpiFactor;
 }
 
 float DisplayModel::zoomReal(int pageNo)
@@ -486,7 +486,7 @@ float DisplayModel::zoomReal(int pageNo)
      * rotation changes
      * switching between display modes
      * navigating to another page in non-continuous mode */
-void DisplayModel::relayout(double zoomVirtual, int rotation)
+void DisplayModel::relayout(float zoomVirtual, int rotation)
 {
     int         pageNo;
     PdfPageInfo*pageInfo = NULL;
@@ -535,8 +535,8 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
             continue;
         }
         pageSizeAfterRotation(pageInfo, rotation, &pageDx, &pageDy);
-        currDxInt = pageDx * _zoomReal + 0.5;
-        currDyInt = pageDy * _zoomReal + 0.5;
+        currDxInt = (int)(pageDx * _zoomReal + 0.5);
+        currDyInt = (int)(pageDy * _zoomReal + 0.5);
         pageInfo->currPos.dx = currDxInt;
         pageInfo->currPos.dy = currDyInt;
 
@@ -547,7 +547,7 @@ void DisplayModel::relayout(double zoomVirtual, int rotation)
         if (displayModeShowCover(displayMode()) && pageNo == 1 && columns - pageInARow > 1)
             pageInARow++;
         if (columnOffsets[pageInARow] < pageInfo->currPos.dx)
-            columnOffsets[pageInARow] = pageInfo->currPos.dx;
+            columnOffsets[pageInARow] = (int)pageInfo->currPos.dx;
 
         pageInARow++;
         assert(pageInARow <= columns);
@@ -674,10 +674,10 @@ void DisplayModel::recalcVisibleParts(void)
     if (!_pagesInfo)
         return;
 
-    drawAreaRect.x = areaOffset.x;
-    drawAreaRect.y = areaOffset.y;
-    drawAreaRect.dx = drawAreaSize.dxI();
-    drawAreaRect.dy = drawAreaSize.dyI();
+    drawAreaRect.x = (int)areaOffset.x;
+    drawAreaRect.y = (int)areaOffset.y;
+    drawAreaRect.dx = (int)drawAreaSize.dxI();
+    drawAreaRect.dy = (int)drawAreaSize.dyI();
 
 //    DBG_OUT("DisplayModel::recalcVisibleParts() draw area         (x=%3d,y=%3d,dx=%4d,dy=%4d)\n",
 //        drawAreaRect.x, drawAreaRect.y, drawAreaRect.dx, drawAreaRect.dy);
@@ -696,14 +696,14 @@ void DisplayModel::recalcVisibleParts(void)
             pageInfo->visible = 1.0 * intersect.dx * intersect.dy / (pageInfo->currPos.dx * pageInfo->currPos.dy);
             
             pageInfo->bitmap = intersect;
-            pageInfo->bitmap.x = (double)intersect.x - pageInfo->currPos.x;
+            pageInfo->bitmap.x = intersect.x - (int)pageInfo->currPos.x;
             assert(pageInfo->bitmap.x >= 0);
-            pageInfo->bitmap.y = (double)intersect.y - pageInfo->currPos.y;
+            pageInfo->bitmap.y = intersect.y - (int)pageInfo->currPos.y;
             assert(pageInfo->bitmap.y >= 0);
-            pageInfo->screenX = (double)intersect.x - areaOffset.x;
+            pageInfo->screenX = intersect.x - (int)areaOffset.x;
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenX <= drawAreaSize.dx());
-            pageInfo->screenY = (double)intersect.y - areaOffset.y;
+            pageInfo->screenY = intersect.y - (int)areaOffset.y;
             assert(pageInfo->screenX >= 0);
             assert(pageInfo->screenY <= drawAreaSize.dy());
 /*            DBG_OUT("                                  visible page = %d, (x=%3d,y=%3d,dx=%4d,dy=%4d) at (x=%d,y=%d)\n",
@@ -713,8 +713,8 @@ void DisplayModel::recalcVisibleParts(void)
         }
 
         pageInfo->pageOnScreen = pageRect;
-        pageInfo->pageOnScreen.x -= areaOffset.x;
-        pageInfo->pageOnScreen.y -= areaOffset.y;
+        pageInfo->pageOnScreen.x -= (int)areaOffset.x;
+        pageInfo->pageOnScreen.y -= (int)areaOffset.y;
         assert(max(pageInfo->pageOnScreen.x, 0) == pageInfo->screenX || !pageInfo->visible);
         assert(max(pageInfo->pageOnScreen.y, 0) == pageInfo->screenY || !pageInfo->visible);
     }
@@ -739,14 +739,14 @@ bool DisplayModel::rectCvtUserToScreen(int pageNo, RectD *r)
 
 fz_rect DisplayModel::rectCvtUserToScreen(int pageNo, fz_rect rect)
 {
-    double x0 = rect.x0; double x1 = rect.x1;
-    double y0 = rect.y0; double y1 = rect.y1;
+    double x0 = rect.x0, x1 = rect.x1;
+    double y0 = rect.y0, y1 = rect.y1;
 
     if (!cvtUserToScreen(pageNo, &x0, &y0) || !cvtUserToScreen(pageNo, &x1, &y1))
         return fz_emptyrect;
     
-    rect.x0 = MIN(x0, x1); rect.x1 = MAX(x0, x1);
-    rect.y0 = MIN(y0, y1); rect.y1 = MAX(y0, y1);
+    rect.x0 = (float)MIN(x0, x1); rect.x1 = (float)MAX(x0, x1);
+    rect.y0 = (float)MIN(y0, y1); rect.y1 = (float)MAX(y0, y1);
     
     return rect;
 }
@@ -778,7 +778,7 @@ int DisplayModel::getPageNoByPoint (double x, double y)
         if (!pageInfo->shown)
             continue;
 
-        if (RectI_Inside(&pageInfo->pageOnScreen, x, y))
+        if (RectI_Inside(&pageInfo->pageOnScreen, (int)x, (int)y))
             return pageNo;
     }
     return POINT_OUT_OF_PAGE;
@@ -828,7 +828,7 @@ pdf_link *DisplayModel::getLinkAtPosition(int x, int y)
     if (!cvtScreenToUser(&pageNo, &posX, &posY))
         return NULL;
 
-    return pdfEngine->getLinkAtPosition(pageNo, posX, posY);
+    return pdfEngine->getLinkAtPosition(pageNo, (float)posX, (float)posY);
 }
 
 int DisplayModel::getPdfLinks(int pageNo, pdf_link **links)
@@ -906,7 +906,7 @@ fz_rect DisplayModel::getContentBox(int pageNo, fz_matrix ctm, RenderTarget targ
     else
         cbox = pdfEngine->pageContentBox(pageNo, target);
 
-    fz_rect rect = { cbox.x0, cbox.y0, cbox.x1, cbox.y1 };
+    fz_rect rect = { (float)cbox.x0, (float)cbox.y0, (float)cbox.x1, (float)cbox.y1 };
     return fz_transformrect(ctm, rect);
 }
 
@@ -921,8 +921,8 @@ void DisplayModel::getContentStart(int pageNo, int *x, int *y)
         return;
     }
 
-    *x = min(contentBox.x0, contentBox.x1);
-    *y = min(contentBox.y0, contentBox.y1);
+    *x = (int)min(contentBox.x0, contentBox.x1);
+    *y = (int)min(contentBox.y0, contentBox.y1);
 }
 
 void DisplayModel::goToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
@@ -1136,7 +1136,7 @@ void DisplayModel::scrollXBy(int dx)
 
     double newOffX = limitValue(areaOffset.x + dx, 0, _canvasSize.dx() - drawAreaSize.dx());
     if (newOffX != areaOffset.x)
-        scrollXTo(newOffX);
+        scrollXTo((int)newOffX);
 }
 
 void DisplayModel::scrollYTo(int yOff)
@@ -1160,7 +1160,7 @@ void DisplayModel::scrollYTo(int yOff)
 void DisplayModel::scrollYBy(int dy, bool changePage)
 {
     PdfPageInfo *   pageInfo;
-    int             currYOff = areaOffset.y;
+    int             currYOff = (int)areaOffset.y;
     int             newPageNo;
     int             currPageNo;
 
@@ -1194,7 +1194,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     }
 
     newYOff += dy;
-    newYOff = limitValue(newYOff, 0, _canvasSize.dy() - drawAreaSize.dy());
+    newYOff = (int)limitValue(newYOff, 0, _canvasSize.dy() - drawAreaSize.dy());
     if (newYOff == currYOff)
         return;
 
@@ -1209,7 +1209,7 @@ void DisplayModel::scrollYBy(int dy, bool changePage)
     repaintDisplay();
 }
 
-void DisplayModel::zoomTo(double zoomVirtual, POINT *fixPt)
+void DisplayModel::zoomTo(float zoomVirtual, POINT *fixPt)
 {
     ScrollState ss;
     if (getScrollState(&ss)) {
@@ -1233,17 +1233,17 @@ void DisplayModel::zoomTo(double zoomVirtual, POINT *fixPt)
             // scroll so that the fix point remains in the same screen location after zooming
             cvtUserToScreen(center.page, &center.x, &center.y);
             if ((int)(center.x - fixPt->x) != 0)
-                scrollXBy(center.x - fixPt->x);
+                scrollXBy((int)(center.x - fixPt->x));
             if ((int)(center.y - fixPt->y) != 0)
-                scrollYBy(center.y - fixPt->y, false);
+                scrollYBy((int)(center.y - fixPt->y), false);
         }
     }
 }
 
-void DisplayModel::zoomBy(double zoomFactor, POINT *fixPt)
+void DisplayModel::zoomBy(float zoomFactor, POINT *fixPt)
 {
     // zoomTo expects a zoomVirtual, so undo the _dpiFactor here
-    double newZoom = 100.0 * _zoomReal / _dpiFactor * zoomFactor;
+    float newZoom = 100.0f * _zoomReal / _dpiFactor * zoomFactor;
     //DBG_OUT("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f\n", dm->zoomReal, zoomFactor, newZoom);
     if (newZoom > ZOOM_MAX)
         newZoom = ZOOM_MAX;
@@ -1318,7 +1318,7 @@ bool DisplayModel::cvtUserToScreen(int pageNo, double *x, double *y)
     if (!pageInfo)
         return false;
 
-    fz_point p = { *x, *y };
+    fz_point p = { (float)*x, (float)*y };
     fz_matrix ctm = pdfEngine->viewctm(pageNo, _zoomReal, _rotation);
     fz_point tp = fz_transformpoint(ctm, p);
 
@@ -1335,8 +1335,8 @@ bool DisplayModel::cvtScreenToUser(int *pageNo, double *x, double *y)
     const PdfPageInfo *pageInfo = getPageInfo(*pageNo);
 
     fz_point p;
-    p.x = *x - 0.5 - pageInfo->currPos.x + areaOffset.x;
-    p.y = *y - 0.5 - pageInfo->currPos.y + areaOffset.y;
+    p.x = (float)(*x - 0.5 - pageInfo->currPos.x + areaOffset.x);
+    p.y = (float)(*y - 0.5 - pageInfo->currPos.y + areaOffset.y);
 
     fz_matrix ctm = pdfEngine->viewctm(*pageNo, _zoomReal, _rotation);
     fz_point tp = fz_transformpoint(fz_invertmatrix(ctm), p);
@@ -1500,7 +1500,7 @@ void DisplayModel::goToPdfDest(fz_obj *dest)
         }
         else if (str_eq(fz_toname(obj), "Fit"))
             zoomTo(ZOOM_FIT_PAGE);
-        goToPage(pageNo, scrollY, true, scrollX);
+        goToPage(pageNo, (int)scrollY, true, (int)scrollX);
     }
 }
 
@@ -1567,7 +1567,8 @@ BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
         RectD rectD;
         RectD_FromRectI(&rectD, &rect);
         rectCvtUserToScreen(res->pages[i], &rectD);
-        RectI_FromXY(&rect, floor(rectD.x), ceil(rectD.x + rectD.dx), floor(rectD.y), ceil(rectD.y + rectD.dy));
+        RectI_FromXY(&rect, (int)floor(rectD.x), (int)ceil(rectD.x + rectD.dx),
+                            (int)floor(rectD.y), (int)ceil(rectD.y + rectD.dy));
 
         if (0 == i)
             extremes = rect;
@@ -1589,14 +1590,14 @@ BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
     }
     // scroll down to make top side of selection visible
     else if (extremes.y >= drawAreaSize.dy()) {
-        sy = extremes.y - drawAreaSize.dy() + 5;
+        sy = extremes.y - (int)drawAreaSize.dy() + 5;
     }
 
     // scroll up to make bottom side of selection visible
     // (if selection height fits in visible area)
     if (extremes.y + extremes.dy > drawAreaSize.dy()
         && extremes.dy <= drawAreaSize.dy() + 5) {
-        sy = extremes.y + extremes.dy - drawAreaSize.dy() + 5;
+        sy = extremes.y + extremes.dy - (int)drawAreaSize.dy() + 5;
     }
 
     //
@@ -1611,13 +1612,13 @@ BOOL DisplayModel::ShowResultRectToScreen(PdfSel *res)
     }
     // scroll right to make left side of selection visible
     else if (extremes.x >= drawAreaSize.dx()) {
-        sx = extremes.x - drawAreaSize.dx() + 5;
+        sx = extremes.x - (int)drawAreaSize.dx() + 5;
     }
     // scroll left to make right side of selection visible
     // (if selection width fits in visible area)
     if (extremes.x + extremes.dx > drawAreaSize.dx()
         && extremes.dx <= drawAreaSize.dx() - 5) {
-        sx = extremes.x + extremes.dx - drawAreaSize.dx() + 5;
+        sx = extremes.x + extremes.dx - (int)drawAreaSize.dx() + 5;
     }
 
     if (sx != 0)
@@ -1672,7 +1673,7 @@ void DisplayModel::setScrollState(ScrollState *state)
         newX += areaOffset.x;
     if (state->y < 0)
         newY = 0;
-    goToPage(state->page, newY, false, newX);
+    goToPage(state->page, (int)newY, false, (int)newX);
 }
 
 /* Records the current scroll state for later navigating back to. */

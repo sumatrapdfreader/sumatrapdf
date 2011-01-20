@@ -59,8 +59,8 @@ BOOL            FilePath_IsSameFile(const TCHAR *path1, const TCHAR *path2);
 BOOL            file_exists(const TCHAR *file_path);
 
 #ifdef _WIN32
-char *          file_read_all(const TCHAR *file_path, uint64_t *file_size_out);
-BOOL            write_to_file(const TCHAR *file_path, void *data, uint64_t data_len);
+char *          file_read_all(const TCHAR *file_path, size_t *file_size_out);
+BOOL            write_to_file(const TCHAR *file_path, void *data, size_t data_len);
 #else
 char *          file_read_all(const char *file_path, uint64_t *file_size_out);
 #endif

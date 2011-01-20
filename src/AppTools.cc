@@ -433,6 +433,61 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     return firstEditor;
 }
 
+static HDDEDATA CALLBACK DdeCallback(UINT uType,
+    UINT uFmt,
+    HCONV hconv,
+    HSZ hsz1,
+    HSZ hsz2,
+    HDDEDATA hdata,
+    ULONG_PTR dwData1,
+    ULONG_PTR dwData2)
+{
+    return 0;
+}
+
+void DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command)
+{
+    DBG_OUT_T("DDEExecute(\"%s\",\"%s\",\"%s\")", server, topic, command);
+    unsigned long inst = 0;
+    HSZ hszServer = NULL, hszTopic = NULL;
+    HCONV hconv = NULL;
+    HDDEDATA hddedata = NULL;
+
+    UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
+    if (result != DMLERR_NO_ERROR) {
+        DBG_OUT("DDE communication could not be initiated %d.", result);
+        goto exit;
+    }
+    hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
+    if (hszServer == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
+    }
+    hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
+    if (hszTopic == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
+    }
+    hconv = DdeConnect(inst, hszServer, hszTopic, 0);
+    if (hconv == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+        goto exit;
+    }
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(tstr_len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
+    if (hddedata == 0) {
+        DBG_OUT("DDE communication could not be initiated %u.", DdeGetLastError(inst));
+    }
+    if (DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0) == 0) {
+        DBG_OUT("DDE transaction failed %u.", DdeGetLastError(inst));
+    }
+exit:
+    DdeFreeDataHandle(hddedata);
+    DdeDisconnect(hconv);
+    DdeFreeStringHandle(inst, hszTopic);
+    DdeFreeStringHandle(inst, hszServer);
+    DdeUninitialize(inst);
+}
+
 
 #ifndef USER_DEFAULT_SCREEN_DPI
 // the following is only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
