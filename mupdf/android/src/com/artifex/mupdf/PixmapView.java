@@ -16,16 +16,18 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
     private SurfaceHolder holder;
     private MuPDFThread   thread = null;
     private boolean       threadStarted = false;
+    private MuPDFCore     core;
 
     /* Constructor */
-    public PixmapView(Context context, String filename)
+    public PixmapView(Context context, MuPDFCore core)
     {
         super(context);
         System.out.println("PixmapView construct");
+        this.core = core;
         holder = getHolder();
-	holder.addCallback(this);
-	thread = new MuPDFThread(holder, filename);
-	setFocusable(true); // need to get the key events
+        holder.addCallback(this);
+        thread = new MuPDFThread(holder, core);
+        setFocusable(true); // need to get the key events
     }
 
     /* load our native library */
@@ -86,7 +88,9 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder)
     {
         boolean retry = true;
+        System.out.println("Surface destroyed 1 this="+this);
         thread.setRunning(false);
+        System.out.println("Surface destroyed 2");
         while (retry)
         {
             try
@@ -99,6 +103,7 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
             }
         }
         threadStarted = false;
+        System.out.println("Surface destroyed 3");
     }
 
     class MuPDFThread extends Thread
@@ -106,12 +111,11 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
         private SurfaceHolder holder;
         private boolean       running = false;
         private int           keycode = -1;
-        private String        filename;
         private int           screenWidth;
         private int           screenHeight;
         private int           screenGeneration;
         private Bitmap        bitmap;
-        private int           numPages;
+        private MuPDFCore     core;
 
         /* The following variables deal with the size of the current page;
          * specifically, its position on the screen, its raw size, its
@@ -120,8 +124,6 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
          */
         private int           pageOriginX;
         private int           pageOriginY;
-        private float         pageRawWidth;
-        private float         pageRawHeight;
         private float         pageScale;
         private int           pageWidth;
         private int           pageHeight;
@@ -155,10 +157,10 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
         private Rect          srcRect;
         private RectF         dstRect;
 
-        public MuPDFThread(SurfaceHolder holder, String filename)
+        public MuPDFThread(SurfaceHolder holder, MuPDFCore core)
         {
             this.holder   = holder;
-            this.filename = filename;
+            this.core     = core;
             touchZoomMidpoint = new PointF(0,0);
             srcRect           = new Rect(0,0,0,0);
             dstRect           = new RectF(0,0,0,0);
@@ -167,6 +169,22 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
         public void setRunning(boolean running)
         {
             this.running = running;
+            if (!running)
+            {
+                System.out.println("killing 1");
+                synchronized(this)
+                {
+                    System.out.println("killing 2");
+                    action = DIE;
+                    if (wakeMe)
+                    {
+                        wakeMe = false;
+                        System.out.println("killing 3");
+                        this.notify();
+                        System.out.println("killing 4");
+                    }
+                }
+            }
         }
 
         public void newScreenSize(int width, int height)
@@ -193,14 +211,14 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
             if (delta == Integer.MIN_VALUE)
                 actionPageNum  = 1;
             else if (delta == Integer.MAX_VALUE)
-                actionPageNum  = numPages;
+                actionPageNum  = core.numPages;
             else
             {
                 actionPageNum += delta;
                 if (actionPageNum < 1)
                     actionPageNum = 1;
-                if (actionPageNum > numPages)
-                    actionPageNum = numPages;
+                if (actionPageNum > core.numPages)
+                    actionPageNum = core.numPages;
             }
             if (wakeMe)
             {
@@ -270,24 +288,24 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
             /* Find new scaled page sizes */
             synchronized(this)
             {
-                pageWidth  = (int)(pageRawWidth*scale+0.5);
+                pageWidth  = (int)(core.pageWidth*scale+0.5);
                 if (pageWidth < screenWidth/2)
                 {
-                    scale     = screenWidth/2/pageRawWidth;
-                    pageWidth = (int)(pageRawWidth*scale+0.5);
+                    scale     = screenWidth/2/core.pageWidth;
+                    pageWidth = (int)(core.pageWidth*scale+0.5);
                 }
-                pageHeight = (int)(pageRawHeight*scale+0.5);
+                pageHeight = (int)(core.pageHeight*scale+0.5);
                 if (pageHeight < screenHeight/2)
                 {
-                    scale      = screenHeight/2/pageRawHeight;
-                    pageWidth  = (int)(pageRawWidth *scale+0.5);
-                    pageHeight = (int)(pageRawHeight*scale+0.5);
+                    scale      = screenHeight/2/core.pageHeight;
+                    pageWidth  = (int)(core.pageWidth *scale+0.5);
+                    pageHeight = (int)(core.pageHeight*scale+0.5);
                 }
                 pageScale = scale;
                 /* Now given this new scale, calculate page origins so that
                  * x and y are at midpoint */
-                float xscale = (float)pageWidth /(float)pageRawWidth;
-                float yscale = (float)pageHeight/(float)pageRawHeight;
+                float xscale = (float)pageWidth /core.pageWidth;
+                float yscale = (float)pageHeight/core.pageHeight;
                 setPageOriginTo((int)(midpoint.x - x*xscale + 0.5),
                                 (int)(midpoint.y - y*yscale + 0.5));
             }
@@ -296,22 +314,22 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
         public void scalePageToScreen()
         {
             float scaleX, scaleY;
-            scaleX = (float)screenWidth/pageRawWidth;
-            scaleY = (float)screenHeight/pageRawHeight;
+            scaleX = (float)screenWidth /core.pageWidth;
+            scaleY = (float)screenHeight/core.pageHeight;
             synchronized(this)
             {
                 if (scaleX < scaleY)
                     pageScale = scaleX;
                 else
                     pageScale = scaleY;
-                pageWidth   = (int)(pageRawWidth  * pageScale + 0.5);
-                pageHeight  = (int)(pageRawHeight * pageScale + 0.5);
+                pageWidth   = (int)(core.pageWidth  * pageScale + 0.5);
+                pageHeight  = (int)(core.pageHeight * pageScale + 0.5);
                 pageOriginX = (screenWidth  - pageWidth)/2;
                 pageOriginY = (screenHeight - pageHeight)/2;
                 forceRedraw();
             }
             System.out.println("scalePageToScreen: Raw="+
-                               pageRawWidth+"x"+pageRawHeight+" scaled="+
+                               core.pageWidth+"x"+core.pageHeight+" scaled="+
                                pageWidth+","+pageHeight+" pageScale="+
                                pageScale);
         }
@@ -386,16 +404,10 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
             int     localPageH = 0;
             int     localScreenGeneration = screenGeneration;
             int     localAction;
-            int     localActionPageNum = 1;
-            numPages = mupdfOpenFile(filename);
-            if (numPages <= 0)
-            {
-                /* Error whilst loading file */
-            }
-            System.out.println("File loaded: "+numPages+" pages");
+            int     localActionPageNum = core.pageNum;
             /* Set up our default action */
             action         = GOTOPAGE;
-            actionPageNum  = 1;
+            actionPageNum  = core.pageNum;
             while (action != DIE)
             {
                 synchronized(this)
@@ -421,6 +433,9 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
                      */
                     switch (action)
                     {
+                        case DIE:
+                            System.out.println("Woken to die!");
+                            break;
                         case GOTOPAGE:
                             localActionPageNum = actionPageNum;
                             break;
@@ -429,7 +444,7 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
                              * redraw (in local variables, in docspace).
                              * We'll always draw a screensized lump, unless
                              * that's too big. */
-                            System.out.println("page="+pageWidth+","+pageHeight+" ("+pageRawWidth+","+pageRawHeight+"@"+pageScale+") @ "+pageOriginX+","+pageOriginY);
+                            System.out.println("page="+pageWidth+","+pageHeight+" ("+core.pageWidth+","+core.pageHeight+"@"+pageScale+") @ "+pageOriginX+","+pageOriginY);
                             localPageW   = pageWidth;
                             localPageH   = pageHeight;
                             patchW       = pageWidth;
@@ -490,7 +505,8 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
                             break;
                     }
                     localAction = action;
-                    action = SLEEP;
+                    if (action != DIE)
+                        action = SLEEP;
                 }
                 /* In the redraw case:
                  * pW, pH, pX, pY, localPageW, localPageH are now all set
@@ -501,9 +517,7 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
                 switch (localAction)
                 {
                     case GOTOPAGE:
-                        mupdfGotoPage(localActionPageNum);
-                        pageRawWidth  = mupdfPageWidth();
-                        pageRawHeight = mupdfPageHeight();
+                        core.gotoPage(localActionPageNum);
                         scalePageToScreen();
                         action = REDRAW;
                         break;
@@ -517,7 +531,7 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
                                                     Bitmap.Config.ARGB_8888);
                         }
                         System.out.println("Calling redraw native method");
-                        mupdfDrawPage(bitmap, localPageW, localPageH,
+                        core.drawPage(bitmap, localPageW, localPageH,
                                       patchX, patchY, patchW, patchH);
                         System.out.println("Called native method");
                         {
@@ -561,17 +575,4 @@ public class PixmapView extends SurfaceView implements SurfaceHolder.Callback
             canvas.drawBitmap(bitmap, srcRect, dstRect, (Paint)null);
         }
     }
-
-    /* These should be native functions */
-    private static native int     mupdfOpenFile(String filename);
-    private static native void    mupdfGotoPage(int localActionPageNum);
-    private static native float   mupdfPageWidth();
-    private static native float   mupdfPageHeight();
-    private static native void    mupdfDrawPage(Bitmap bitmap,
-                                                int    pageW,
-                                                int    pageH,
-                                                int    patchX,
-                                                int    patchY,
-                                                int    patchW,
-                                                int    patchH);
 }

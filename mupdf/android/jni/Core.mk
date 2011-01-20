@@ -4,15 +4,16 @@ include $(CLEAR_VARS)
 
 MY_ROOT := ../..
 
-LOCAL_CFLAGS := \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/jbig2dec \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/openjpeg/libopenjpeg \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/jpeg \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/zlib \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/freetype/include \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/draw \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/fitz \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/mupdf
+LOCAL_C_INCLUDES := \
+	../thirdparty/jbig2dec \
+	../thirdparty/openjpeg/libopenjpeg \
+	../thirdparty/jpeg \
+	../thirdparty/zlib \
+	../thirdparty/freetype/include \
+	../draw \
+	../fitz \
+	../mupdf \
+	..
 
 LOCAL_MODULE    := mupdfcore
 LOCAL_SRC_FILES := \

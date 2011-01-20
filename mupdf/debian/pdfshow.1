@@ -9,6 +9,7 @@ pdfshow \- show objects and streams that make up a PDF document
 .RI [ xref ]
 .RI [ trailer ]
 .RI [ pages ]
+.RI [ grep ]
 .RI [ object-number... ]
 .SH DESCRIPTION
 .B pdfshow
@@ -19,6 +20,8 @@ Specify objects with their number.
 The special names xref, trailer and pages will
 respectively print the cross reference, trailer,
 and the object numbers for all pages.
+The special name grep will print all objects in the file
+in a compact one-line format suitable for piping to grep.
 .PP
 .SH OPTIONS
 .TP

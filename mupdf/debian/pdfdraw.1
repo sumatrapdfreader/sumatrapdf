@@ -10,7 +10,7 @@ pdfdraw \- render PDF documents
 .SH DESCRIPTION
 .B pdfdraw
 will render a PDF document to image files.
-The supported image formats are: png, ppm, pam and png.
+The supported image formats are: pgm, ppm, pam and png.
 Select the pages to be rendered by specifying a comma
 separated list of ranges and individual page numbers (for example: 1,5,10-15).
 In no pages are specified all the pages will be rendered.
@@ -26,6 +26,9 @@ Use the specified password if the file is encrypted.
 .B \-r resolution
 Render the page at the specified resolution.
 The default resolution is 72 dpi.
+.TP
+.B \-R angle
+Rotate clockwise by given number of degrees.
 .TP
 .B \-a
 Save the alpha channel.

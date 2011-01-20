@@ -4,12 +4,14 @@ include $(CLEAR_VARS)
 
 MY_ROOT := ../..
 
+LOCAL_C_INCLUDES := \
+	../thirdparty/jbig2dec \
+	../thirdparty/openjpeg/libopenjpeg \
+	../thirdparty/jpeg \
+	../thirdparty/zlib \
+	../thirdparty/freetype/include \
+	
 LOCAL_CFLAGS := \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/jbig2dec \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/openjpeg/libopenjpeg \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/jpeg \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/zlib \
-	-I$(LOCAL_PATH)/$(MY_ROOT)/thirdparty/freetype/include \
 	-DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON -DHAVE_STDINT_H
 
 LOCAL_MODULE    := mupdfthirdparty

@@ -13,17 +13,23 @@ On linux/macos add the equivalent.
 
 2) Download the android ndk, and install in. On windows I unpacked it as:
 
-   C:\Program Files\android-ndk-r4b
+   C:\Program Files\android-ndk-r5
 
 on Macos as:
 
-   /Library/android-ndk-r4b
+   /Library/android-ndk-r5
 
-On windows add: C:/Progra~1/android-ndk-r4b to your patyh. On linux/macos
+On windows add: C:/Progra~1/android-ndk-r5 to your path. On linux/macos
 add the equivalent.
 
 3) On windows, to use the ndk, you *must* be running under cygwin. This means
 you need to install Cygwin 1.7 or greater now.
+
+In the current release of the ndk (r5), when running under cygwin, there are
+bugs to do with the automatic conversion of dependencies from DOS format
+paths to cygwin format paths. The 2 fixes can be found in:
+
+ <http://groups.google.com/group/android-ndk/msg/b385e47e1484c2d4>
 
 4) Bring up a shell, and run 'android'. This will bring up a graphical
 gui for the sdk. From here you can install the different SDK components

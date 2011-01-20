@@ -157,7 +157,7 @@ $(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
 	rc /r /fo$@ $(EXTCFLAGS) src\ifilter\PdfFilter.rc
 
 $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
-	$(LD) /DLL $(LDFLAGS) $** $(LIBS) Rpcrt4.lib /PDB:$*.pdb /OUT:$@
+	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc
 	rc /r /fo$@ $(EXTCFLAGS) src\browserplugin\npPdfViewer.rc

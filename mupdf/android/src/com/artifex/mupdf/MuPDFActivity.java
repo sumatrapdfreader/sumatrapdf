@@ -13,29 +13,59 @@ import com.artifex.mupdf.PixmapView;
 
 public class MuPDFActivity extends Activity
 {
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        String state = Environment.getExternalStorageState();
+    /* The core rendering instance */
+    private MuPDFCore core;
 
-        if (Environment.MEDIA_MOUNTED.equals(state))
+    private MuPDFCore openFile()
+    {
+        String    storageState = Environment.getExternalStorageState();
+        File      path, file;
+        MuPDFCore core;
+
+        if (Environment.MEDIA_MOUNTED.equals(storageState))
         {
             System.out.println("Media mounted read/write");
         }
-        else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state))
+        else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState))
         {
             System.out.println("Media mounted read only");
         }
         else
         {
             System.out.println("No media at all! Bale!\n");
+            return null;
+        }
+        path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        file = new File(path, "test.pdf");
+        System.out.println("Trying to open "+file.toString());
+        try
+        {
+            core = new MuPDFCore(file.toString());
+        }
+        catch (Exception e)
+        {
+            System.out.println(e);
+            return null;
+        }
+        return core;
+    }
+
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        PixmapView pixmapView;
+
+        core = (MuPDFCore)getLastNonConfigurationInstance();
+        if (core == null)
+            core = openFile();
+        if (core == null)
+        {
+            /* FIXME: Error handling here! */
             return;
         }
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File file = new File(path, "test.pdf");
-        System.out.println("Trying to open "+file.toString());
-        PixmapView pixmapView = new PixmapView(this, file.toString());
+
+        pixmapView = new PixmapView(this, core);
         super.onCreate(savedInstanceState);
 
         /* Now create the UI */
@@ -84,6 +114,11 @@ public class MuPDFActivity extends Activity
         layout.addView(pixmapView, pixmapParams);
 
         setContentView(layout);
+    }
+
+    public Object onRetainNonConfigurationInstance()
+    {
+        return core;
     }
 
     private class MyButtonHandler implements OnClickListener

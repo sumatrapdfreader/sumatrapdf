@@ -7,7 +7,7 @@
                       android:normalScreens="true"
                       android:largeScreens="true"
                       android:anyDensity="true" />
-    <uses-sdk android:minSdkVersion="3" />
+    <uses-sdk android:minSdkVersion="8" />
     <application android:label="@string/app_name"
                  android:icon="@drawable/icon"
                  android:debuggable="true">

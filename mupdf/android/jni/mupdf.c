@@ -18,16 +18,18 @@
 #define DEBUG 0
 
 /* Globals */
-fz_colorspace *colorspace;
-fz_glyphcache *glyphcache;
-pdf_xref      *xref;
-int            pagenum = 1;
-int            resolution = 160;
-pdf_page      *currentPage;
-float          pageWidth  = 100;
-float          pageHeight = 100;
+fz_colorspace  *colorspace;
+fz_glyphcache  *glyphcache;
+pdf_xref       *xref;
+int             pagenum = 1;
+int             resolution = 160;
+float           pageWidth  = 100;
+float           pageHeight = 100;
+fz_displaylist *currentPageList;
+fz_rect         currentMediabox;
+int             currentRotate;
 
-JNIEXPORT int JNICALL Java_com_artifex_mupdf_PixmapView_mupdfOpenFile(JNIEnv * env, jobject thiz, jstring jfilename)
+JNIEXPORT int JNICALL Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jfilename)
 {
     const char *filename;
     char *password = "";
@@ -66,7 +68,7 @@ JNIEXPORT int JNICALL Java_com_artifex_mupdf_PixmapView_mupdfOpenFile(JNIEnv * e
     return pdf_getpagecount(xref);
 }
 
-JNIEXPORT void JNICALL Java_com_artifex_mupdf_PixmapView_mupdfGotoPage(
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(
                                             JNIEnv  *env,
                                             jobject  thiz,
                                             int      page)
@@ -76,19 +78,19 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_PixmapView_mupdfGotoPage(
     fz_obj    *pageobj;
     fz_bbox    bbox;
     fz_error   error;
+    fz_device *dev;
+    pdf_page  *currentPage;
 
     /* In the event of an error, ensure we give a non-empty page */
     pageWidth  = 100;
     pageHeight = 100;
 
-    /* Free any current page */
-    if (currentPage != NULL)
-    {
-	pdf_freepage(currentPage);
-	currentPage = NULL;
-    }
-
     LOGE("Goto page %d...", page);
+    if (currentPageList != NULL)
+    {
+	fz_freedisplaylist(currentPageList);
+	currentPageList = NULL;
+    }
     pagenum = page;
     pageobj = pdf_getpageobject(xref, pagenum);
     if (pageobj == NULL)
@@ -97,16 +99,25 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_PixmapView_mupdfGotoPage(
     if (error)
         return;
     zoom = resolution / 72;
-    ctm = fz_translate(0, -currentPage->mediabox.y1);
+    currentMediabox = currentPage->mediabox;
+    currentRotate   = currentPage->rotate;
+    ctm = fz_translate(0, -currentMediabox.y1);
     ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-    ctm = fz_concat(ctm, fz_rotate(currentPage->rotate));
-    bbox = fz_roundrect(fz_transformrect(ctm, currentPage->mediabox));
+    ctm = fz_concat(ctm, fz_rotate(currentRotate));
+    bbox = fz_roundrect(fz_transformrect(ctm, currentMediabox));
     pageWidth  = bbox.x1-bbox.x0;
     pageHeight = bbox.y1-bbox.y0;
-    LOGE("Success [w=%g, h=%g]", pageWidth, pageHeight);
+    /* Render to list */
+    currentPageList = fz_newdisplaylist();
+    dev = fz_newlistdevice(currentPageList);
+    error = pdf_runpage(xref, currentPage, dev, fz_identity);
+    pdf_freepage(currentPage);
+    if (error)
+        LOGE("cannot make displaylist from page %d", pagenum);
+    fz_freedevice(dev);
 }
 
-JNIEXPORT float JNICALL Java_com_artifex_mupdf_PixmapView_mupdfPageWidth(
+JNIEXPORT float JNICALL Java_com_artifex_mupdf_MuPDFCore_getPageWidth(
                                                                JNIEnv  *env,
                                                                jobject  thiz)
 {
@@ -114,7 +125,7 @@ JNIEXPORT float JNICALL Java_com_artifex_mupdf_PixmapView_mupdfPageWidth(
     return pageWidth;
 }
 
-JNIEXPORT float JNICALL Java_com_artifex_mupdf_PixmapView_mupdfPageHeight(
+JNIEXPORT float JNICALL Java_com_artifex_mupdf_MuPDFCore_getPageHeight(
                                                                JNIEnv  *env,
                                                                jobject  thiz)
 {
@@ -123,7 +134,7 @@ JNIEXPORT float JNICALL Java_com_artifex_mupdf_PixmapView_mupdfPageHeight(
 }
 
 
-JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_PixmapView_mupdfDrawPage(
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_MuPDFCore_drawPage(
                                             JNIEnv  *env,
                                             jobject  thiz,
                                             jobject  bitmap,
@@ -135,8 +146,15 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_PixmapView_mupdfDrawPage(
                                             int      patchH)
 {
     AndroidBitmapInfo  info;
-    void*              pixels;
-    int                ret, i, c;
+    void              *pixels;
+    int                ret;
+    fz_error           error;
+    fz_device         *dev;
+    float              zoom;
+    fz_matrix          ctm;
+    fz_bbox            bbox;
+    fz_pixmap         *pix;
+    float              xscale, yscale;
 
     LOGI("In native method\n");
     if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
@@ -156,84 +174,40 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_PixmapView_mupdfDrawPage(
         return 0;
     }
 
-    LOGI("render page\n");
-    /* Call mupdf to render page */
+    /* Call mupdf to render display list to screen */
+    LOGE("Rendering page=%dx%d patch=[%d,%d,%d,%d]",
+         pageW, pageH, patchX, patchY, patchW, patchH);
+
+    pix = fz_newpixmapwithdata(colorspace,
+                               patchX,
+                               patchY,
+                               patchW,
+                               patchH,
+                               pixels);
+    if (currentPageList == NULL)
     {
-        fz_error error;
-        fz_displaylist *list;
-        fz_device *dev;
-
-        /* Render to list */
-        LOGI("make list\n");
-	list = fz_newdisplaylist();
-        LOGI("make device\n");
-	dev = fz_newlistdevice(list);
-        LOGI("render to device\n");
-	error = pdf_runpage(xref, currentPage, dev, fz_identity);
-	if (error)
-	{
-            LOGE("cannot draw page %d", pagenum);
-            return 0;
-        }
-        LOGI("free device\n");
-	fz_freedevice(dev);
-
-	/* Render to screen */
-        LOGE("Rendering page=%dx%d patch=[%d,%d,%d,%d]",
-             pageW, pageH, patchX, patchY, patchW, patchH);
-	{
-            float zoom;
-            fz_matrix ctm;
-            fz_bbox bbox;
-            fz_pixmap *pix;
-            float xscale, yscale;
-
-            zoom = resolution / 72;
-            ctm = fz_translate(0, -currentPage->mediabox.y1);
-            ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
-            ctm = fz_concat(ctm, fz_rotate(currentPage->rotate));
-            bbox = fz_roundrect(fz_transformrect(ctm,currentPage->mediabox));
-
-            LOGE("mediabox=%g %g %g %g zoom=%g rotate=%d",
-                 currentPage->mediabox.x0,
-                 currentPage->mediabox.y0,
-                 currentPage->mediabox.x1,
-                 currentPage->mediabox.y1,
-                 zoom,
-                 currentPage->rotate);
-            LOGE("ctm = [%g %g %g %g %g %g] to [%d %d %d %d]", ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
-            /* Now, adjust ctm so that it would give the correct page width
-             * heights. */
-            xscale = (float)pageW/(float)(bbox.x1-bbox.x0);
-            yscale = (float)pageH/(float)(bbox.y1-bbox.y0);
-            ctm = fz_concat(ctm, fz_scale(xscale, yscale));
-            bbox = fz_roundrect(fz_transformrect(ctm,currentPage->mediabox));
-            LOGE("ctm = [%g %g %g %g %g %g] to [%d %d %d %d]", ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
-
-            pix = fz_newpixmapwithdata(colorspace,
-                                       patchX,
-                                       patchY,
-                                       patchW,
-                                       patchH,
-                                       pixels);
-            LOGE("Clearing");
-            fz_clearpixmapwithcolor(pix, 0xff);
-            LOGE("Cleared");
-            dev = fz_newdrawdevice(glyphcache, pix);
-            fz_executedisplaylist(list, dev, ctm);
-            fz_freedevice(dev);
-            fz_droppixmap(pix);
-	}
-        LOGE("Rendered");
-	fz_freedisplaylist(list);
+        fz_clearpixmapwithcolor(pix, 0xd0);
+        return 0;
     }
+    fz_clearpixmapwithcolor(pix, 0xff);
+
+    zoom = resolution / 72;
+    ctm = fz_translate(0, -currentMediabox.y1);
+    ctm = fz_concat(ctm, fz_scale(zoom, -zoom));
+    ctm = fz_concat(ctm, fz_rotate(currentRotate));
+    bbox = fz_roundrect(fz_transformrect(ctm,currentMediabox));
+    /* Now, adjust ctm so that it would give the correct page width
+     * heights. */
+    xscale = (float)pageW/(float)(bbox.x1-bbox.x0);
+    yscale = (float)pageH/(float)(bbox.y1-bbox.y0);
+    ctm = fz_concat(ctm, fz_scale(xscale, yscale));
+    dev = fz_newdrawdevice(glyphcache, pix);
+    fz_executedisplaylist(currentPageList, dev, ctm);
+    fz_freedevice(dev);
+    fz_droppixmap(pix);
+    LOGE("Rendered");
 
     AndroidBitmap_unlockPixels(env, bitmap);
 
     return 1;
-}
-
-void android_log(char *err, int n)
-{
-    LOGE(err, n);
 }
