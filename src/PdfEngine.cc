@@ -96,7 +96,7 @@ HBITMAP fz_pixtobitmap(HDC hDC, fz_pixmap *pixmap, BOOL paletted)
     
     if (paletted)
     {
-        rows8 = ((w + 3) / 4) * 4;    
+        rows8 = ((w + 3) / 4) * 4;
         dest = bmpData = (unsigned char *)malloc(rows8 * h);
         source = pixmap->samples;
         
@@ -141,20 +141,12 @@ ProducingPaletteDone:
     bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
     
-    if (!hasPalette)
-    {
-        VOID *dibData;
-        hbmp = CreateDIBSection(hDC, bmi, DIB_RGB_COLORS, &dibData, NULL, 0);
-        memcpy(dibData, pixmap->samples, bmi->bmiHeader.biSizeImage);
-        GdiFlush();
-    }
-    else
-        hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, bmpData, bmi, DIB_RGB_COLORS);
+    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
+        hasPalette ? bmpData : pixmap->samples, bmi, DIB_RGB_COLORS);
     
     fz_droppixmap(bgrPixmap);
     free(bmi);
-    if (bmpData)
-        free(bmpData);
+    free(bmpData);
     
     return hbmp;
 }
